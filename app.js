@@ -42,7 +42,7 @@
     async latest(force = false) {
       if (latestCache && !force && Date.now() - latestCache.t < 10 * 60000) return latestCache.r;
       const res = await fetch(`https://api.github.com/repos/${REPO}/releases/latest`, { headers: { Accept: "application/vnd.github+json" }, cache: "no-store" });
-      if (!res.ok) throw new Error(res.status === 404 ? "No releases found yet" : `GitHub said ${res.status}`);
+      if (!res.ok) throw new Error(res.status === 404 ? "automatic updates switch on once the game's GitHub page is public" : `GitHub said ${res.status}`);
       const j = await res.json(), asset = (j.assets || []).find((a) => /\.apk$/i.test(a.name));
       const build = parseInt(String(j.tag_name).replace(/\D+/g, ""), 10) || 0;
       if (!asset) throw new Error("The newest release has no app file");
