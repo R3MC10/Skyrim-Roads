@@ -253,31 +253,51 @@ const TOWNS = (() => {
 
   // ---- the forge: improving weapons and armor ([Skyrim] quality names; [OURS] simplified improvement amounts)
   const QUALITY = ["", "Fine", "Superior", "Exquisite", "Flawless", "Epic", "Legendary"];
+  // [Skyrim] each improvement uses one piece of the item's own material (value, weight)
+  Object.assign(D.ITEMS, {
+    mat_iron: { name: "Iron Ingot", slot: "material", weight: 1, value: 7 }, mat_steel: { name: "Steel Ingot", slot: "material", weight: 1, value: 20 },
+    mat_leather: { name: "Leather", slot: "material", weight: 2, value: 10 }, mat_firewood: { name: "Firewood", slot: "material", weight: 5, value: 5 },
+    mat_moonstone: { name: "Refined Moonstone", slot: "material", weight: 1, value: 25 }, mat_dwarven: { name: "Dwarven Metal Ingot", slot: "material", weight: 1, value: 30 },
+  });
+  D.SHOP_STOCK.blacksmith.push("mat_iron", "mat_steel", "mat_leather", "mat_firewood");
+  D.LOOT.humanoid.push(["mat_iron", 0.08], ["mat_leather", 0.06]);
+  D.LOOT.elite.push(["mat_steel", 0.15], ["mat_moonstone", 0.06], ["mat_dwarven", 0.04]);
+  for (const [theme, mats] of Object.entries({ mine: ["mat_iron", "mat_iron", "mat_steel"], dwemer: ["mat_dwarven", "mat_dwarven"], cave: ["mat_leather"], fort: ["mat_steel", "mat_iron"], forsworn: ["mat_leather"], barrow: ["mat_steel"] }))
+    DUNGEONS.THEMES[theme]?.loot.push(...mats);
+  const baseOf = (id) => (id.startsWith("ench|") ? id.split("|")[1] : id);
+  function ingotFor(id) {
+    const b = baseOf(id);
+    if (/dwarven/.test(b)) return "mat_dwarven"; if (/elven/.test(b)) return "mat_moonstone"; if (/^steel|ancient_nord/.test(b)) return "mat_steel";
+    if (/hide|leather|forsworn/.test(b)) return "mat_leather"; if (/hunting_bow|long_bow/.test(b)) return "mat_firewood"; return "mat_iron";
+  }
   function material(id) {
+    id = baseOf(id);
     if (/^steel|ancient_nord/.test(id)) return "steel_smithing"; if (/^elven/.test(id)) return "elven_smithing"; if (/^dwarven/.test(id)) return "dwarven_smithing";
     if (/chainmail/.test(id)) return "advanced_armors"; return null;
   }
   function temperInfo(s, row) {
     const it = D.ITEMS[row.item];
-    if (!(it.slot === "weapon" || G.ARMOR_SLOTS.includes(it.slot))) return null;
+    if (!(it.slot === "weapon" || G.ARMOR_SLOTS.includes(it.slot)) || it.type === "cloth") return null;
     const mat = material(row.item);
     const per = (it.slot === "weapon" ? 1 : 2) * (mat && P(s, mat) ? 2 : 1);
     const maxQ = Math.min(6, 1 + Math.floor(G.skill(s, "Smithing") / 20));
-    const q = row.tq || 0, cost = Math.max(5, Math.round(it.value * 0.1));
+    const q = row.tq || 0, ingot = ingotFor(row.item), have = countItem(s, ingot);
     let block = null;
-    if (it.enchant && !P(s, "arcane_blacksmith")) block = "Enchanted gear needs the Arcane Blacksmith perk.";
+    if ((it.enchant || it.aenchant) && !P(s, "arcane_blacksmith")) block = "Enchanted gear needs the Arcane Blacksmith perk.";
     else if (q >= maxQ) block = `Your Smithing (${G.skill(s, "Smithing")}) can't improve it past ${QUALITY[q] || "plain"}.`;
-    return { q, maxQ, per, cost, block };
+    else if (!have) block = `Needs 1 ${D.ITEMS[ingot].name} (${["mat_moonstone", "mat_dwarven"].includes(ingot) ? "found in dungeons and on tough foes" : "blacksmiths sell it"}).`;
+    return { q, maxQ, per, ingot, have, block };
   }
   function temper(s, rowId) {
     if (!s.location || !G.shopTypes(s.location).includes("blacksmith")) return "You need a forge. Blacksmiths have one.";
     const r = G.invRow(s, rowId), info = r && temperInfo(s, r);
     if (!info) return "That can't be improved.";
     if (info.block) return info.block;
-    if (s.gold < info.cost) return `Materials cost ${info.cost} gold.`;
-    s.gold -= info.cost; r.tq = info.q + 1; r.temper = (r.temper || 0) + info.per;
+    const ing = s.inv.find((x) => x.item === info.ingot);
+    if (!ing) return `You need 1 ${D.ITEMS[info.ingot].name}.`;
+    G.take(s, ing.id); r.tq = info.q + 1; r.temper = (r.temper || 0) + info.per;
     const sk = G.useSkill(s, "Smithing", 25 + 3 * D.ITEMS[r.item].value ** 0.65);              // [Skyrim] smithing XP = 25 + 3×value^0.65
-    return `${D.ITEMS[r.item].name} is now ${QUALITY[r.tq]} (+${r.temper} ${D.ITEMS[r.item].slot === "weapon" ? "damage" : "armor"}).` + (sk.length ? " " + sk.join(". ") : "");
+    return `You hammer 1 ${D.ITEMS[info.ingot].name} into it. ${D.ITEMS[r.item].name} is now ${QUALITY[r.tq]} (+${r.temper} ${D.ITEMS[r.item].slot === "weapon" ? "damage" : "armor"}).` + (sk.length ? " " + sk.join(". ") : "");
   }
 
   // ---- crime ([Skyrim] bounties: pickpocketing 25, assault 40, murder 1000, escaping jail 100; stolen goods are taken when you pay)
@@ -517,6 +537,6 @@ const TOWNS = (() => {
 
   return { HOMES, home, buyHome, sleepHome, stash, unstash, gardenReady, harvest, BIG, SMALL, carriageFrom, carriageDests, rideCarriage, CARRIAGE_SPEED, FOLLOWERS, followerMax, followerHp, followersHere, hire, dismiss, deliverDragonstone,
     EFFECTS, INGREDIENT_FX, INNS, TRAINERS, CAP, QUALITY, known, brewPreview, brew, eat, drink, applyPoison, roomPrice, rentRoom, rumour, trainCost, trainedThisLevel, train,
-    temperInfo, temper, bounty, totalBounty, addBounty, wanted, guardCheck, guardChoice, pickChance, pickTownsfolk, canFence, jobsAt, takeJob, dropJob, checkJobs, handIn, countItem, isTown, RUMOUR,
+    temperInfo, temper, ingotFor, bounty, totalBounty, addBounty, wanted, guardCheck, guardChoice, pickChance, pickTownsfolk, canFence, jobsAt, takeJob, dropJob, checkJobs, handIn, countItem, isTown, RUMOUR,
     POTION_MINUTES: (d) => Math.round(d * SECONDS_PER_REAL_SECOND_OF_SKYRIM / 60) };
 })();

@@ -749,7 +749,7 @@
     const groups = {};
     for (const r of S.inv) {
       const it = D.ITEMS[r.item]; if (!it) continue;
-      const g = { weapon: "Weapons", potion: "Potions", poison: "Poisons", scroll: "Scrolls", tome: "Spell tomes", soulgem: "Soul gems", ingredient: "Ingredients", trophy: "Trophies" }[it.slot] || "Armor";
+      const g = { weapon: "Weapons", potion: "Potions", poison: "Poisons", scroll: "Scrolls", tome: "Spell tomes", soulgem: "Soul gems", ingredient: "Ingredients", trophy: "Trophies", material: "Crafting materials" }[it.slot] || "Armor";
       (groups[g] = groups[g] || []).push(r);
     }
     const canShop = S.location && G.shopTypes(S.location).length && G.shopsOpen();
@@ -844,10 +844,10 @@
         <button class="btn pri" data-act="brew" style="width:100%" ${alchSel.length >= 2 ? "" : "disabled"}>Brew</button>`
         : '<p class="sub">You have no ingredients. Gather them on the road, in dungeons, or buy them at the general store and court wizard.</p>';
     } else if (townShop === "forge") {
-      note = `Improve weapons and armor. Your Smithing (${G.skill(S, "Smithing")}) sets how far: every 20 points allows one more quality level. Steel, Elven and Dwarven gear improve twice as much with the right perk.`;
+      note = `Improve weapons and armor. Each step uses one piece of the item's material, like Skyrim: Iron or Steel Ingots, Leather, Firewood for wooden bows, Refined Moonstone for Elven and Dwarven Metal for Dwarven gear. Blacksmiths sell the common ones; the rest turn up in dungeons. Your Smithing (${G.skill(S, "Smithing")}) sets how far: every 20 points allows one more quality level.`;
       const rows = S.inv.filter((r) => TOWNS.temperInfo(S, r));
       body = rows.map((r) => { const i = TOWNS.temperInfo(S, r);
-        return `<div class="item"><div class="t">${esc((r.tq ? TOWNS.QUALITY[r.tq] + " " : "") + D.ITEMS[r.item].name)}<span>${i.block ? esc(i.block) : `→ ${TOWNS.QUALITY[i.q + 1]} (+${i.per} ${D.ITEMS[r.item].slot === "weapon" ? "damage" : "armor"})`}</span></div><span class="num gold">${i.cost}</span><button class="btn sm" data-act="temper" data-id="${r.id}" ${i.block || S.gold < i.cost ? "disabled" : ""}>Improve</button></div>`; }).join("") || '<p class="sub">Nothing to improve.</p>';
+        return `<div class="item"><div class="t">${esc((r.tq ? TOWNS.QUALITY[r.tq] + " " : "") + D.ITEMS[r.item].name)}<span>${i.block ? esc(i.block) : `→ ${TOWNS.QUALITY[i.q + 1]} (+${i.per} ${D.ITEMS[r.item].slot === "weapon" ? "damage" : "armor"}) · uses 1 ${esc(D.ITEMS[i.ingot].name)} (you have ${i.have})`}</span></div><button class="btn sm" data-act="temper" data-id="${r.id}" ${i.block ? "disabled" : ""}>Improve</button></div>`; }).join("") || '<p class="sub">Nothing to improve.</p>';
     } else if (townShop === "jobs") {
       const avail = TOWNS.jobsAt(S, l), mine = S.jobs || [];
       note = "New jobs every in-game day (2 real hours). You can hold three at once. Clearing and delivery jobs pay out by themselves when done.";

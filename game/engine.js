@@ -9,7 +9,7 @@ const G = (() => {
   const SLOTS = ["weapon", "shield", "head", "chest", "hands", "feet"];
   const ARMOR_SLOTS = ["head", "chest", "hands", "feet", "shield"];
   const ARMOR_SKILL = { light: "Light Armor", medium: "Medium Armor", heavy: "Heavy Armor" };
-  const STACKABLE = new Set(["potion", "scroll", "soulgem", "tome", "ingredient", "trophy", "poison"]);
+  const STACKABLE = new Set(["potion", "scroll", "soulgem", "tome", "ingredient", "trophy", "poison", "material"]);
   const P = (s, id) => (typeof PERKS !== "undefined" ? PERKS.rank(s, id) : 0);
   // spell tiers for the "Novice ... Expert <school>" perks [Skyrim]
   const SPELL_TIER = { flames: "novice", frostbite: "novice", sparks: "novice", healing: "novice", oakflesh: "novice", conjure_familiar: "novice", fury: "novice",
@@ -214,6 +214,7 @@ const G = (() => {
     if (it.slot === "soulgem") return `${it.charge} charge`;
     if (it.slot === "ingredient") return "Ingredient";
     if (it.slot === "trophy") return "Trophy";
+    if (it.slot === "material") return "Crafting material";
     return "";
   }
 
