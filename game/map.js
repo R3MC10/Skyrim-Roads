@@ -294,17 +294,33 @@ const WorldMap = (() => {
       label(g, n, x * W, y * H + 17 * s, s, size, "#fbf3dc", kind === "city" ? 700 : 600, italic);
     }
     if (v.selected && !v.discovered.includes(v.selected)) { const [x, y] = WORLD.places[v.selected]; g.strokeStyle = "#9fd0f0"; g.lineWidth = 2.6 * s; g.beginPath(); g.arc(x * W, y * H, 14 * s, 0, 7); g.stroke(); label(g, v.selected, x * W, y * H + 20 * s, s, 14); }
+    // people and bags: try a few spots around each dot and take the first that doesn't cover another label
+    const hit = (bx, by, bw, bh) => boxes.some(([X, Y, Wd, Hd]) => bx < X + Wd && bx + bw > X && by < Y + Hd && by + bh > Y);
+    function smartLabel(text, x, y, size, color) {
+      g.font = FONT(size * s, 700, "");
+      const w = g.measureText(text).width, h = size * s * 1.25;
+      const spots = [[x + 11 * s, y, "left"], [x - 11 * s, y, "right"], [x, y - 15 * s, "center"], [x, y + 16 * s, "center"],
+        [x + 11 * s, y - h, "left"], [x + 11 * s, y + h, "left"], [x - 11 * s, y - h, "right"], [x - 11 * s, y + h, "right"]];
+      const box = ([lx, ly, al]) => [al === "left" ? lx : al === "right" ? lx - w : lx - w / 2, ly - h / 2, w, h];
+      let pick = spots.find((sp) => !hit(...box(sp)));
+      if (!pick) { for (let k = 2; k < 8 && !pick; k++) { const sp = [x + 11 * s, y + k * h, "left"]; if (!hit(...box(sp))) pick = sp; } }
+      pick = pick || spots[0];
+      boxes.push(box(pick));
+      label(g, text, pick[0], pick[1], s, size, color, 700, false, pick[2]);
+    }
+    // your own name goes first so nothing covers it
+    g.font = FONT(14 * s, 700, ""); { const w = g.measureText(v.name).width; boxes.push([px + 12 * s, py - 13 * s - 9 * s, w, 18 * s]); }
+    for (const o of v.others) {
+      const [x, y] = P(o.pos);
+      g.fillStyle = "#2f62a8"; g.strokeStyle = "#e6f0ff"; g.lineWidth = 2 * s; g.beginPath(); g.arc(x, y, 6.5 * s, 0, 7); g.fill(); g.stroke();
+    }
     for (const b of v.bags) {
       const [x, y] = P(b.pos), R = 9 * s;
       g.fillStyle = "#7a1414"; g.strokeStyle = "#ffdcc8"; g.lineWidth = 2 * s; g.beginPath(); g.arc(x, y, R, 0, 7); g.fill(); g.stroke();
       g.fillStyle = "#ffe6d2"; g.fillRect(x - 1.5 * s, y - 5 * s, 3 * s, 10 * s); g.fillRect(x - 5 * s, y - 1.5 * s, 10 * s, 3 * s);
-      label(g, b.label, x + 13 * s, y, s, 13, "#ffc8b4", 700, false, "left");
     }
-    for (const o of v.others) {
-      const [x, y] = P(o.pos);
-      g.fillStyle = "#2f62a8"; g.strokeStyle = "#e6f0ff"; g.lineWidth = 2 * s; g.beginPath(); g.arc(x, y, 6.5 * s, 0, 7); g.fill(); g.stroke();
-      label(g, o.name, x + 11 * s, y, s, 13, "#cde0ff", 700, false, "left");
-    }
+    for (const o of v.others) { const [x, y] = P(o.pos); smartLabel(o.name, x, y, 13, "#cde0ff"); }
+    for (const b of v.bags) { const [x, y] = P(b.pos); smartLabel(b.label, x, y, 13, "#ffc8b4"); }
     const pulse = v.reduceMotion ? 0.5 : (Math.sin(v.t * 3) + 1) / 2;
     g.fillStyle = `rgba(110,200,255,${0.18 + 0.12 * pulse})`; g.beginPath(); g.arc(px, py, (15 + 6 * pulse) * s, 0, 7); g.fill();
     g.fillStyle = "#8fd3ff"; g.strokeStyle = "#0b2233"; g.lineWidth = 2.4 * s; g.beginPath(); g.arc(px, py, 7.5 * s, 0, 7); g.fill(); g.stroke();

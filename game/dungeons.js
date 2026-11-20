@@ -298,7 +298,7 @@ const DUNGEONS = (() => {
         }
       }
       let partyChest = null;
-      if (res.f.allies?.length) {   // fought with your party: the boss chest is shared... in theory
+      if (res.f.allies?.some((a) => a.player)) {   // fought with your party: the boss chest is shared... in theory
         partyChest = { gold: g, items: [] };
         s.gold -= g; d.gold -= g;
         for (const name of extra) { const row = [...s.inv].reverse().find((x) => D.ITEMS[x.item].name === name && !["golden_claw", "dragonstone"].includes(x.item)); if (row) { partyChest.items.push(row.item); G.take(s, row.id); d.found.splice(d.found.indexOf(name), 1); } }

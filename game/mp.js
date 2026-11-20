@@ -85,7 +85,7 @@ const MP = (() => {
     for (const m of party.members) { const c = cards.find((o) => o.id === m.id); if (c?.speed) v = Math.min(v, c.speed); }
     return v;
   }
-  function allyFromCard(c) { return { name: c.name, dmg: Math.max(2, (c.dmg || 5) * 0.7) }; }   // [OURS] allies hit for 70% of their usual damage
+  function allyFromCard(c) { return { name: c.name, dmg: Math.max(2, (c.dmg || 5) * 0.7), player: true }; }   // [OURS] allies hit for 70% of their usual damage
 
   // ---- the party chest
   function shareOf(chest, uid) {

@@ -171,7 +171,7 @@ const G = (() => {
     }, 0);
   }
   const capacity = (s) => F.BASE_CARRY + Math.floor(s.spBonus / F.ATTRIBUTE_PER_LEVEL) * F.CARRY_PER_STAMINA_LEVEL
-    + (s.horse ? D.HORSE_CARRY : 0) + (P(s, "extra_pockets") ? 100 : 0) + fxSum(s, "carry") + (s.stone === "steed" ? 100 : 0);
+    + (s.horse ? D.HORSE_CARRY : 0) + (P(s, "extra_pockets") ? 100 : 0) + fxSum(s, "carry") + (s.stone === "steed" ? 100 : 0) + (s.follower ? 100 : 0);   // [OURS] a follower carries 100 for you
   const overweight = (s) => carried(s) > capacity(s);
   const lo = (s) => s.loadouts[s.loadout] || Object.values(s.loadouts)[0];
   function equipment(s) {
@@ -280,6 +280,10 @@ const G = (() => {
         * ((sk0 === "One-Handed" && P(s, "fighting_stance")) || (sk0 === "Two-Handed" && P(s, "champions_stance")) ? 0.75 : 1);
       this.temper = w?.temper || 0;
       this.allies = allyProvider(s) || [];   // party members fighting beside you: [{name, dmg}]
+      if (s.follower && typeof TOWNS !== "undefined") {   // your follower fights too, and can fall
+        const fd = TOWNS.FOLLOWERS[s.follower.id];
+        this.allies.push({ name: fd[0], dmg: fd[4] * 0.55 * (1 + 0.05 * (s.level - 1)), hp: TOWNS.followerHp(s, t), follower: true });   // [OURS] 55% of their listed damage
+      }
       this.pw = typeof POWERS !== "undefined" ? POWERS.fightState() : null;
       this.bleed = []; this.eParalyzed = 0; this.flurry = 0; this.firstHit = true; this.shadowUsed = false; this.sneakNext = false;
     }
@@ -511,7 +515,17 @@ const G = (() => {
       if (this.calmTurns > 0) { this.calmTurns--; return `${n} isn't fighting`; }
       if (this.eParalyzed > 0) { this.eParalyzed--; return `${n} is paralyzed`; }
       if (this.stagger) { this.stagger = false; return `${n} is staggered`; }
-      if (this.allies.length && Math.random() < this.allies.length / (this.allies.length + 1)) { this.blocking = false; return `${n} goes for ${pick(this.allies).name}`; }
+      if (this.allies.length && Math.random() < this.allies.length / (this.allies.length + 1) * 0.7) {   // [OURS] you're still the main target
+        this.blocking = false;
+        const al = pick(this.allies);
+        if (al.follower && Math.random() < F.HIT_CHANCE) {
+          const d = this.e.damage * rnd(...F.DAMAGE_SPREAD) * 0.8;   // [OURS] followers wear armor
+          al.hp -= d;
+          if (al.hp <= 0) { this.allies = this.allies.filter((x) => x !== al); this.followerDied = al.name; return `${n} cuts down ${al.name}!`; }
+          return `${n} hits ${al.name} ${Math.round(d)}`;
+        }
+        return `${n} goes for ${al.name}`;
+      }
       if (Math.random() > F.HIT_CHANCE) { this.blocking = false; return `${n} misses`; }
       const bareNow = !Object.values(this.armor).some((a) => ARMOR_SKILL[a.type]), lightNow = Object.values(this.armor).some((a) => a.type === "light");
       if ((P(s, "evasion") && Math.random() < 0.1) || (lightNow && P(s, "deft_movement") && Math.random() < 0.1) || (bareNow && P(s, "dodge") && Math.random() < 0.15)) { this.blocking = false; return `${n} attacks, but you dodge`; }
@@ -569,12 +583,17 @@ const G = (() => {
         if (extra) { const row = invRow(this.s, this.weaponInv); const cap = this.weapon.enchant.capacity; this.charges[this.weaponInv] = Math.min(cap, (this.charges[this.weaponInv] ?? row.charge ?? 0) + cap * extra); }
       }
       setHealth(this.s, this.hp, t);
+      if (this.s.follower && !this.s._test) {
+        const fa = this.allies.find((a) => a.follower);
+        if (this.followerDied || !fa) { if (this.followerDied) { note(this.s, `⚰️ ${this.followerDied} has fallen.`); this.s.follower = null; } }
+        else { this.s.follower.hp = Math.max(1, fa.hp); this.s.follower.ts = t; }
+      }
       const extraMsgs = this.won && this.tags.has("dragon") && typeof POWERS !== "undefined" && !this.s._test ? [POWERS.absorb(this.s)] : [];
       for (const [id, q] of Object.entries(this.used)) take(this.s, +id, q);
       for (const [id, c] of Object.entries(this.charges)) { const r = invRow(this.s, +id); if (r) r.charge = c; }
       const msgs = [];
       for (const [k, v] of Object.entries(this.xp)) msgs.push(...useSkill(this.s, k, v));
-      return [...extraMsgs, ...msgs];
+      return [...(this.followerDied ? [`${this.followerDied} has fallen.`] : []), ...extraMsgs, ...msgs];
     }
   }
 
@@ -711,7 +730,7 @@ const G = (() => {
         out.arrived = tr.destName;
         return out;
       }
-      const rate = ENCOUNTER_PER_MIN * (isNight(stepT) ? D.NIGHT_ENCOUNTER_MULT : 1);
+      const rate = tr.carriage ? 0 : ENCOUNTER_PER_MIN * (isNight(stepT) ? D.NIGHT_ENCOUNTER_MULT : 1);   // nobody robs a carriage on a Jarl's road
       if (Math.random() < 1 - (1 - rate) ** (dt / 60)) {
         const e = rollEncounter(s, stepT);
         if (e.danger === "low") {

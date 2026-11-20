@@ -407,7 +407,64 @@ const TOWNS = (() => {
     return `The alchemist counts them twice and pays ${j.reward} gold.`;
   }
 
-  return { EFFECTS, INGREDIENT_FX, INNS, TRAINERS, CAP, QUALITY, known, brewPreview, brew, eat, drink, applyPoison, roomPrice, rentRoom, rumour, trainCost, trainedThisLevel, train,
+  // ---- carriages ([Skyrim] drivers wait at the stables of the five big cities: 20 gold to a big city, 50 to a small hold capital)
+  const BIG = ["Whiterun", "Solitude", "Windhelm", "Markarth", "Riften"], SMALL = ["Dawnstar", "Falkreath", "Morthal", "Winterhold"];
+  const carriageFrom = (place) => BIG.includes(place) && G.shopTypes(place).includes("stables");
+  const carriageDests = (s) => [...BIG, ...SMALL].filter((n) => n !== s.location).map((n) => ({ n, price: BIG.includes(n) ? 20 : 50 }));
+  const CARRIAGE_SPEED = 17.2 * 1.75 * 2;   // [OURS] about as fast as riding a horse; Skyrim's carriages are instant
+  function rideCarriage(s, dest, t = G.now()) {
+    if (!carriageFrom(s.location)) return "There's no carriage here. Drivers wait at the stables of Whiterun, Solitude, Windhelm, Markarth and Riften.";
+    if (wanted(s)) return "The driver takes one look at the guards and shakes his head.";
+    const d = carriageDests(s).find((x) => x.n === dest);
+    if (!d) return "The driver doesn't go there.";
+    if (s.gold < d.price) return `The ride costs ${d.price} gold.`;
+    const err = G.startTrip(s, dest, WORLD.places[dest].slice(0, 2), t);
+    if (err) return err;
+    s.gold -= d.price; s.trip.carriage = true; s.trip.speed = CARRIAGE_SPEED;
+    return null;
+  }
+
+  // ---- followers ([Skyrim] hirelings cost 500 gold, one follower at a time; Lydia is the Jarl's gift; [OURS] combat numbers)
+  const FOLLOWERS = {
+    lydia: ["Lydia", "Whiterun", 0, 150, 10, "Housecarl. Sword and shield. Sworn to carry your burdens."],
+    jenassa: ["Jenassa", "Whiterun", 500, 110, 11, "Dark elf archer. Drunken Huntsman regular. Enjoys her work a little too much."],
+    belrand: ["Belrand", "Solitude", 500, 130, 11, "Spellsword: a blade in one hand, a spell in the other."],
+    marcurio: ["Marcurio", "Riften", 500, 100, 13, "Mage for hire. Fire, frost and an opinion on everything."],
+    vorstag: ["Vorstag", "Markarth", 500, 150, 11, "Sellsword with heavy armor and a heavier axe."],
+    stenvar: ["Stenvar", "Windhelm", 500, 160, 11, "Two-handed warrior. Asks no questions."],
+    erik: ["Erik the Slayer", "Rorikstead", 100, 120, 9, "A farm boy who wants adventure. Cheap, eager, a bit green."],
+  };
+  const fScale = (s) => 1 + 0.05 * (s.level - 1);
+  const followerMax = (s, id) => Math.round(FOLLOWERS[id][3] * fScale(s));
+  function followerHp(s, t = G.now()) {
+    const f = s.follower; if (!f) return 0;
+    const max = followerMax(s, f.id);
+    return Math.min(max, f.hp + Math.max(0, t - f.ts) * 0.007 * max);   // [Skyrim] same 0.7%/s as you
+  }
+  const followersHere = (s) => Object.entries(FOLLOWERS).filter(([, f]) => f[1] === s.location);
+  function hire(s, id, t = G.now()) {
+    const f = FOLLOWERS[id];
+    if (!f || f[1] !== s.location) return "They aren't here.";
+    if (s.follower) return `${FOLLOWERS[s.follower.id][0]} is already with you. Dismiss them first.`;
+    if (id === "lydia" && !s.thaneWhiterun) return "Lydia serves the Jarl. Bring Farengar the Dragonstone from Bleak Falls Barrow first.";
+    if (wanted(s)) return `${f[0]} won't follow a wanted criminal.`;
+    if (s.gold < f[2]) return `${f[0]} wants ${f[2]} gold.`;
+    s.gold -= f[2];
+    s.follower = { id, hp: followerMax(s, id), ts: t };
+    return id === "lydia" ? "\"I am sworn to carry your burdens.\" Lydia joins you." : `${f[0]} takes your ${f[2]} gold. "Lead the way."`;
+  }
+  function dismiss(s) { if (!s.follower) return "No one is following you."; const n = FOLLOWERS[s.follower.id][0]; s.follower = null; return `${n} heads home.`; }
+  function deliverDragonstone(s) {   // [Skyrim] Bleak Falls Barrow quest: bring the Dragonstone to Farengar
+    if (s.location !== "Whiterun") return "Farengar works in Dragonsreach, in Whiterun.";
+    const r = s.inv.find((x) => x.item === "dragonstone");
+    if (!r) return "You don't have the Dragonstone. It waits at the end of Bleak Falls Barrow.";
+    G.take(s, r.id); s.gold += 300; s.thaneWhiterun = true;
+    G.note(s, "📜 Gave Farengar the Dragonstone. The Jarl names Lydia your housecarl.");
+    return "Farengar snatches the Dragonstone. The Jarl pays you 300 gold and assigns Lydia as your housecarl. Hire her (free) in Whiterun.";
+  }
+
+  return { BIG, SMALL, carriageFrom, carriageDests, rideCarriage, CARRIAGE_SPEED, FOLLOWERS, followerMax, followerHp, followersHere, hire, dismiss, deliverDragonstone,
+    EFFECTS, INGREDIENT_FX, INNS, TRAINERS, CAP, QUALITY, known, brewPreview, brew, eat, drink, applyPoison, roomPrice, rentRoom, rumour, trainCost, trainedThisLevel, train,
     temperInfo, temper, bounty, totalBounty, addBounty, wanted, guardCheck, guardChoice, pickChance, pickTownsfolk, canFence, jobsAt, takeJob, dropJob, checkJobs, handIn, countItem, isTown, RUMOUR,
     POTION_MINUTES: (d) => Math.round(d * SECONDS_PER_REAL_SECOND_OF_SKYRIM / 60) };
 })();

@@ -180,7 +180,7 @@
   let lastEventAt = Date.now();
   const EVENT_PER_SECOND = 1 / 180, EVENT_GAP_MS = 60000;
   function maybeRoadEvent() {
-    if (document.hidden || $("#modal") || S.trip?.status !== "travel" || Date.now() - lastEventAt < EVENT_GAP_MS) return;
+    if (document.hidden || $("#modal") || S.trip?.status !== "travel" || S.trip.carriage || Date.now() - lastEventAt < EVENT_GAP_MS) return;
     if (G.minutesLeft(S) < 0.5 || Math.random() > EVENT_PER_SECOND) return;
     lastEventAt = Date.now();
     [S.x, S.y] = livePos();
@@ -242,7 +242,7 @@
     const pace = sp >= 1.2 ? "fast going" : sp >= 0.95 ? "steady" : sp >= 0.6 ? "slow going" : "very slow going";
     el.innerHTML = `<div class="trip"><div class="row"><b>${esc(tr.origin)} → ${esc(tr.destName)}</b><span class="num sub">${fmtMin(mins)}</span><button class="btn sm" data-act="stop">Stop</button></div>
       <div class="bar"><i style="width:${p}%;background:var(--frost)"></i></div>
-      <div class="sub">${esc(ground)} · ${pace} · ${S.horse ? "on horseback" : G.overweight(S) ? "too heavy to run" : "on foot"}</div>
+      <div class="sub">${tr.carriage ? "🐎 by carriage · safe on the Jarl's roads" : `${esc(ground)} · ${pace} · ${S.horse ? "on horseback" : G.overweight(S) ? "too heavy to run" : "on foot"}`}${S.follower ? ` · ${esc(TOWNS.FOLLOWERS[S.follower.id][0])} with you` : ""}</div>
       ${tr.log.length ? `<div class="sub">${esc(tr.log[0])}</div>` : `<div class="sub">The trip keeps going while the page is closed.</div>`}</div>`;
   }
   function renderTabs() {
@@ -689,7 +689,8 @@
       return `<div class="item" style="flex-wrap:wrap"><div class="t">${esc(name)} <span class="num">${words.map((w) => POWERS.known(S, w) ? (POWERS.unlocked(S, w) ? `<b>${w}</b>` : `${w}🔒`) : "···").join(" ")}</span><span>${esc(desc)}${lv ? ` · cooldown ${cds[lv - 1]} s` : ""}</span></div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;width:100%">${words.filter((w) => POWERS.known(S, w) && !POWERS.unlocked(S, w)).map((w) => `<button class="btn sm" data-act="unlock" data-id="${w}" ${(S.souls || 0) > 0 ? "" : "disabled"}>Unlock ${w} (1 soul)</button>`).join("")}
         ${POWERS.ROAD_SHOUTS.includes(id) && lv ? `<button class="btn sm pri" data-act="roadshout" data-id="${id}" ${POWERS.voiceReady(S) ? "" : "disabled"}>Shout</button>` : ""}</div></div>`; }).join("");
-    const powersHtml = `<div class="panel"><h2>Powers & shouts</h2><div class="list">
+    const fol = S.follower ? `<div class="panel"><h2>Follower</h2><div class="item"><div class="t">${esc(TOWNS.FOLLOWERS[S.follower.id][0])}<span>${Math.round(TOWNS.followerHp(S))}/${TOWNS.followerMax(S, S.follower.id)} health · fights beside you · carries 100 for you</span></div><button class="btn sm" data-act="dismiss">Dismiss</button></div></div>` : "";
+    const powersHtml = fol + `<div class="panel"><h2>Powers & shouts</h2><div class="list">
       <div class="item"><div class="t">${esc(rp[0])} <span class="num">${cd(S.powerAt)}</span><span>${esc(rp[1])} Once a day: put "Use my racial power" in your tactics.</span></div></div>
       <div class="item"><div class="t">${S.stone ? esc(POWERS.STONES[S.stone][0]) : "No standing stone"}${S.stone && POWERS.stoneHasPower(S) ? ` <span class="num">${cd(S.stonePowerAt)}</span>` : ""}<span>${S.stone ? esc(POWERS.STONES[S.stone][1]) : "Visit one of the 13 standing stones (Guardian Stones are near Riverwood) to take its blessing."}</span></div></div>
       ${shoutRows || `<p class="sub">No Words of Power yet. Word Walls wait at the end of Nordic barrows (Bleak Falls Barrow has one), and the Greybeards at High Hrothgar teach Unrelenting Force.</p>`}</div>
@@ -775,9 +776,9 @@
       return `<div class="panel"><h2>${l ? esc(l) : "The wilds"}</h2><p class="sub">${l ? "There's nothing to buy here." : "You're out on the road."} Cities and towns have shops, inns, trainers, alchemy labs, forges and jobs.</p></div>`;
     }
     const open = G.shopsOpen(), wanted = TOWNS.wanted(S), hold = G.holdAt(WORLD.places[l]);
-    const sections = [...types.filter((x) => x !== "stables"), ...(TOWNS.INNS[l] ? ["inn"] : []), ...(TOWNS.TRAINERS[l] ? ["train"] : []), "alchemy", ...(types.includes("blacksmith") ? ["forge"] : []), "jobs", "streets", ...(types.includes("stables") ? ["stables"] : [])];
+    const sections = [...types.filter((x) => x !== "stables"), ...(TOWNS.INNS[l] ? ["inn"] : []), ...(TOWNS.TRAINERS[l] ? ["train"] : []), "alchemy", ...(types.includes("blacksmith") ? ["forge"] : []), "jobs", "streets", ...(TOWNS.followersHere(S).length || l === "Whiterun" ? ["hire"] : []), ...(TOWNS.carriageFrom(l) ? ["carriage"] : []), ...(types.includes("stables") ? ["stables"] : [])];
     townShop = sections.includes(townShop) ? townShop : sections[0];
-    const names = { general: "General goods", blacksmith: "Blacksmith", wizard: "Court wizard", stables: "Stables", fence: "Ragged Flagon (fence)", inn: TOWNS.INNS[l] || "Inn", train: "Trainers", alchemy: "Alchemy lab", forge: "Forge", jobs: "Jobs", streets: "Streets" };
+    const names = { general: "General goods", blacksmith: "Blacksmith", wizard: "Court wizard", stables: "Stables", fence: "Ragged Flagon (fence)", inn: TOWNS.INNS[l] || "Inn", train: "Trainers", alchemy: "Alchemy lab", forge: "Forge", jobs: "Jobs", streets: "Streets", hire: l === "Whiterun" ? "Dragonsreach & hirelings" : "Hirelings", carriage: "Carriage" };
     const fac = F.priceFactor(G.skill(S, "Mercantile"));
     let body = "", note = "";
     const shopRow = (i, sell = true) => { const p = G.buyPrice(S, i); return `<div class="item"><div class="t">${esc(D.ITEMS[i].name)}<span>${esc(G.itemStats(i))} · ${D.ITEMS[i].weight} wt</span></div><span class="num gold">${p}</span><button class="btn sm" data-act="buy" data-item="${esc(i)}" ${open && !wanted && S.gold >= p ? "" : "disabled"}>Buy</button></div>`; };
@@ -816,6 +817,14 @@
       body = `<h3>Your jobs</h3>${mine.length ? mine.map((j) => `<div class="item" style="flex-wrap:wrap"><div class="t">${esc(j.type === "clear" ? `Clear ${j.target}` : j.type === "deliver" ? `Deliver to ${j.target}` : `Bring ${j.n} ${D.ITEMS[j.item].name}`)}<span>${j.type === "gather" ? `You have ${TOWNS.countItem(S, j.item)}/${j.n} · ` : ""}from ${esc(j.town)} · ${j.reward} gold</span></div>
           ${j.type === "gather" ? `<button class="btn sm pri" data-act="handin" data-id="${esc(j.id)}" ${TOWNS.countItem(S, j.item) >= j.n ? "" : "disabled"}>Hand in</button>` : ""}<button class="btn sm" data-act="dropjob" data-id="${esc(j.id)}">Drop</button></div>`).join("") : '<p class="sub">None yet.</p>'}
         <h3 style="margin-top:12px">Notice board</h3>${avail.length ? avail.map((j) => `<div class="item"><div class="t">${esc(j.text)}<span>${j.reward} gold</span></div><button class="btn sm pri" data-act="takejob" data-id="${esc(j.id)}" ${mine.length >= 3 || wanted ? "disabled" : ""}>Take</button></div>`).join("") : '<p class="sub">Nothing new today.</p>'}`;
+    } else if (townShop === "carriage") {
+      note = "Skyrim fares: 20 gold to a big city, 50 to a small hold capital. The carriage goes as fast as a horse, and nothing attacks you on the way.";
+      body = TOWNS.carriageDests(S).map(({ n, price }) => { const mins = G.pxDist(WORLD.places[l], WORLD.places[n]) * 1.15 / TOWNS.CARRIAGE_SPEED;
+        return `<div class="item"><div class="t">${esc(n)}<span>about ${fmtMin(mins)}</span></div><span class="num gold">${price}</span><button class="btn sm pri" data-act="carriage" data-id="${esc(n)}" ${S.gold >= price && !wanted ? "" : "disabled"}>Ride</button></div>`; }).join("");
+    } else if (townShop === "hire") {
+      note = "One follower at a time. They fight beside you, carry 100 weight for you, and heal between fights, but they can die. Hirelings cost 500 gold, like in Skyrim.";
+      body = (l === "Whiterun" ? `<div class="item"><div class="t">Farengar, court wizard<span>${S.thaneWhiterun ? "Thanks you again for the Dragonstone." : "Wants the Dragonstone from Bleak Falls Barrow. The Jarl rewards whoever brings it."}</span></div>${S.thaneWhiterun ? "" : `<button class="btn sm pri" data-act="dragonstone" ${S.inv.some((r) => r.item === "dragonstone") ? "" : "disabled"}>Give it</button>`}</div>` : "")
+        + TOWNS.followersHere(S).map(([id, [name, , cost, hp, dmg, desc]]) => `<div class="item"><div class="t">${esc(name)}<span>${esc(desc)} · ${TOWNS.followerMax(S, id)} health · hits for ~${Math.round(dmg * (1 + 0.05 * (S.level - 1)))}</span></div><span class="num gold">${cost || "free"}</span><button class="btn sm pri" data-act="hire" data-id="${id}" ${S.follower || S.gold < cost || wanted || (id === "lydia" && !S.thaneWhiterun) ? "disabled" : ""}>${S.follower?.id === id ? "With you" : "Hire"}</button></div>`).join("");
     } else if (townShop === "streets") {
       const b = TOWNS.bounty(S, hold);
       note = `Crime has a price: Skyrim bounties are 25 gold for pickpocketing, 40 for assault and 1000 for murder, per hold. Guards stop you when you come into a town where you're wanted.`;
@@ -876,11 +885,15 @@
     switch (a) {
       case "go": travelTo(b.dataset.place); renderPanel(true); break;
       case "unpick": selected = null; renderPicked(); break;
-      case "stop": if (S.trip?.status === "travel" || S.trip?.status === "event") { [S.x, S.y] = livePos(); S.trip = null; S.location = Object.keys(WORLD.places).find((n) => G.pxDist([S.x, S.y], WORLD.places[n]) < 12) || null; persist(true); toast("You stop and look around."); } break;
+      case "stop": if (S.trip?.carriage) { toast("The driver won't stop until you get there."); break; } if (S.trip?.status === "travel" || S.trip?.status === "event") { [S.x, S.y] = livePos(); S.trip = null; S.location = Object.keys(WORLD.places).find((n) => G.pxDist([S.x, S.y], WORLD.places[n]) < 12) || null; persist(true); toast("You stop and look around."); } break;
       case "openenc": openEncounter(); break;
       case "openev": openEvent(); break;
       case "online": openOnline(); break;
       case "stone": say(POWERS.takeStone(S, b.dataset.id)); publishCard(); break;
+      case "carriage": { const err = TOWNS.rideCarriage(S, b.dataset.id); if (err) return toast(err); S.trip.total = G.minutesLeft(S); persist(true); toast(`The driver cracks the reins. ${fmtMin(S.trip.total)} to ${b.dataset.id}.`); tab = "map"; renderTabs(); renderPanel(true); $("#mapwrap").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" }); follow = true; break; }
+      case "hire": say(TOWNS.hire(S, b.dataset.id)); publishCard(); break;
+      case "dismiss": say(TOWNS.dismiss(S)); publishCard(); break;
+      case "dragonstone": { const m = TOWNS.deliverDragonstone(S); persist(true); renderPanel(true); showMessage("Dragonsreach", m); break; }
       case "greybeards": { const m = POWERS.greybeards(S); persist(true); renderPanel(true); showMessage("High Hrothgar", m); break; }
       case "unlock": say(POWERS.unlock(S, b.dataset.id)); break;
       case "roadshout": { const m = POWERS.roadShout(S, b.dataset.id); liveCache.key = ""; persist(true); toast(m); renderPanel(true); break; }
