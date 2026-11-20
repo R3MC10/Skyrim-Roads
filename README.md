@@ -13,10 +13,13 @@ Every change pushed here builds a new version by itself (about 5 minutes). Insta
 ## Playing with friends (phone to phone)
 - Everyone who has the app plays in **one shared world**. To bring a friend in, send them the APK.
 - Phones find each other through free public Nostr relays, then talk directly (WebRTC). No server, no accounts.
+- Relay mesh: each phone links straight to up to 6 others and passes messages on for everyone else, so players
+  who can't reach each other directly still hear each other through the players in between.
 - Every phone keeps a full copy of the world (players, dropped bags, parties, party chests, news) and merges it with
   every phone it meets, so the world lives on as long as anyone plays.
 - Only friends who are online right now show up and can be fought, robbed or invited.
-- Some mobile networks block direct connections. If two phones never find each other, put one of them on Wi-Fi.
+- If two phones can't link directly, messages hop through other online players. With only two players online and
+  a network that blocks direct links, put one of them on Wi-Fi.
 
 ## For whoever edits the code
 - `game/` is the game itself (the same files as the online version).

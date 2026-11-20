@@ -254,5 +254,5 @@ const Store = (() => {
   return { init, loadSave, save, publish, watchPlayers, watchBags, addBag, takeBag, wipe, watch, put, remove, change,
     joinWorld: (code) => joinWorld(String(code).toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 12) || newCode()),
     onStatus: (f) => { statusL.push(f); f({ status: p2pStatus, peers: online.size, code: worldCode }); },
-    get online() { return mode === "shared" || mode === "p2p"; }, get worldCode() { return worldCode; }, get peers() { return online.size; }, get mode() { return mode; }, get uid() { return uid; }, get writable() { return writable; } };
+    get online() { return mode === "shared" || mode === "p2p"; }, get worldCode() { return worldCode; }, get peers() { return online.size; }, get direct() { return Math.min(online.size, net?.direct?.() ?? online.size); }, get mode() { return mode; }, get uid() { return uid; }, get writable() { return writable; } };
 })();
