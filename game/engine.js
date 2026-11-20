@@ -174,7 +174,8 @@ const G = (() => {
     }, 0);
   }
   const capacity = (s) => F.BASE_CARRY + Math.floor(s.spBonus / F.ATTRIBUTE_PER_LEVEL) * F.CARRY_PER_STAMINA_LEVEL
-    + (s.horse ? D.HORSE_CARRY : 0) + (P(s, "extra_pockets") ? 100 : 0) + fxSum(s, "carry") + (s.stone === "steed" ? 100 : 0) + (s.follower ? 100 : 0);   // [OURS] a follower carries 100 for you
+    + (s.horse ? D.HORSE_CARRY : 0) + (P(s, "extra_pockets") ? 100 : 0) + fxSum(s, "carry") + (s.stone === "steed" ? 100 : 0) + (s.follower ? 100 : 0)   // [OURS] a follower carries 100 for you
+    + (typeof HALL !== "undefined" ? HALL.carryBonus() : 0);   // [OURS] Jarl's Keep tier of the shared hall
   const overweight = (s) => carried(s) > capacity(s);
   const lo = (s) => s.loadouts[s.loadout] || Object.values(s.loadouts)[0];
   function equipment(s) {

@@ -5,6 +5,7 @@ Each round: build one batch, test it (Node sims in /home/claude/tests + headless
 our own marked [OURS]; plain-language UI; phone first.
 
 ## Done
+- Round 11: the Hall of the North by Whiterun, built by everyone together with gold and materials. 5 sizes (Camp, Longhouse, Mead Hall, Fortified Hall, Jarl's Keep) give every player free rest, cheaper training, more carry weight and a shared chest (take 3 a day). Trophy wall, Hall Builder title, banner on the map, news when it grows.
 - Round 10: character backups. Settings > Your character: Back up (one text code: copy or share) and Restore (checks the code, asks before replacing). Automatic copies of the last 3 saves on the phone.
 - Round 9: chat. World and party channels in the Journal, quick phrases (Need help!, Meet me at..., Dragon at...!), coloured names, unread dot, toast + sound for new messages, tap a name to mute. Messages last a day, newest 60 kept.
 - Main menu and auto-update: Skyrim-style title screen (fog, snow, title music) with Continue, New Character, Settings, Updates, How to Play, Credits. The app checks GitHub for new builds, shows what's new, downloads and opens Android's installer. Signing key now stored encrypted; the password lives in GitHub secrets.
@@ -21,6 +22,6 @@ our own marked [OURS]; plain-language UI; phone first.
 - Round 3: homes (Breezehome, Honeyside, Vlindrel Hall, Hjerim, Proudspire Manor at Skyrim prices): death-proof chest, Well Rested bed (+10%; inns now Rested +5%), daily garden.
 
 ## Next rounds (in order)
-11. Player homes you can visit and a shared guild hall that the whole world builds up together.
+11. Visit other players' homes (leave a gift, see their trophies).
 12. Weekly world events: a bounty board with goals for everyone online (kill X wolves, clear Y dungeons) and rewards.
 13. Horses you can buy, name and stable, and mounted travel on the map.

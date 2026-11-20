@@ -231,7 +231,7 @@ const TOWNS = (() => {
   function trainCost(s, skill) {                                                              // [Skyrim] n(10b+5n+45) etc. for one session
     const b = s.skills[skill].lvl;
     const c = b > 75 ? 50 * b + 50 : b > 50 ? 30 * b + 50 : 10 * b + 50;
-    return Math.round(c * etiquette(s));
+    return Math.round(c * etiquette(s) * (typeof HALL !== "undefined" ? HALL.trainMult() : 1));   // [OURS] the Hall of the North makes training cheaper
   }
   const trainedThisLevel = (s) => (s.trained && s.trained.level === s.level ? s.trained.n : 0);
   function train(s, who) {

@@ -16,7 +16,7 @@ const Store = (() => {
      so they spread too. Only players who are online right now show up and can be interacted with. */
   let world = {}, worldCode = null, net = null, peerUid = {}, online = new Set(), p2pStatus = "offline", saveWorldT = null;
   const wl = {};   // watchers per collection
-  const COLS = ["players", "bags", "attacks", "parties", "chests", "news", "raids", "trades", "ladder", "chat"];
+  const COLS = ["players", "bags", "attacks", "parties", "chests", "news", "raids", "trades", "ladder", "chat", "hall", "hallchest"];
   const now = () => Date.now();
   let lastSaveJson = null, lastPubJson = null, saving = null, pendingSave = null;
   const listeners = { players: [], bags: [] };
@@ -92,6 +92,8 @@ const Store = (() => {
     news.slice(40).forEach(([id]) => delete world.news[id]);
     const chat = Object.entries(world.chat || {}).filter(([, d]) => live(d)).sort((a, b) => b[1]._v - a[1]._v);
     chat.slice(60).forEach(([id]) => delete world.chat[id]);
+    const hc = Object.entries(world.hallchest || {}).filter(([, d]) => live(d)).sort((a, b) => b[1]._v - a[1]._v);
+    hc.slice(60).forEach(([id]) => delete world.hallchest[id]);
   }
   function localPut(col, id, doc) {
     const rec = { ...doc, _v: Math.max(now(), ((world[col] || {})[id]?._v || 0) + 1), _by: uid };

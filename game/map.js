@@ -321,6 +321,13 @@ const WorldMap = (() => {
     }
     for (const o of v.others) { const [x, y] = P(o.pos); smartLabel(o.name, x, y, 13, "#cde0ff"); }
     for (const b of v.bags) { const [x, y] = P(b.pos); smartLabel(b.label, x, y, 13, "#ffc8b4"); }
+    if (v.hall) {   // the shared Hall of the North: a banner on a pole
+      const [hx, hy] = P(v.hall.pos), u = s;
+      g.strokeStyle = "#2a1d08"; g.lineWidth = 3 * u; g.beginPath(); g.moveTo(hx, hy + 9 * u); g.lineTo(hx, hy - 12 * u); g.stroke();
+      g.fillStyle = "#8c2b22"; g.strokeStyle = "#e2bb64"; g.lineWidth = 1.5 * u;
+      g.beginPath(); g.moveTo(hx, hy - 12 * u); g.lineTo(hx + 12 * u, hy - 12 * u); g.lineTo(hx + 12 * u, hy - 1 * u); g.lineTo(hx + 6 * u, hy - 4 * u); g.lineTo(hx, hy - 1 * u); g.closePath(); g.fill(); g.stroke();
+      smartLabel(v.hall.label, hx, hy, 12, "#f0d79a");
+    }
     if (v.quest) {   // the current quest's destination: a gold diamond
       const [qx, qy] = P(v.quest), r = 10 * s;
       g.fillStyle = "rgba(226,187,100,.9)"; g.strokeStyle = "#2a1d08"; g.lineWidth = 2 * s;

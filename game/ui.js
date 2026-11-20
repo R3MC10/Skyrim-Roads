@@ -429,6 +429,8 @@
     Store.watch("raids", (docs) => { raidDocs = docs; });
     Store.watch("trades", (docs) => onTrades(docs));
     Store.watch("chat", (docs) => onChat(docs));
+    Store.watch("hall", (docs) => { HALL.setDonors(docs, S); if (tab === "town") bump(); });
+    Store.watch("hallchest", (docs) => { HALL.setChest(docs); if (tab === "town") bump(); });
     Store.watch("ladder", (docs) => { ladderDocs = docs; if (tab === "log") bump(); });
     $("#picked").addEventListener("click", onPanelClick);
     Store.watchPlayers((ps) => { others = ps; if (tab === "log") bump(); });
@@ -569,7 +571,7 @@
       player: pos, name: S.name, trail: S.trip?.trail, dest: S.trip ? { pos: S.trip.dest, name: S.trip.destName } : null,
       route: S.trip ? (S.trip.status === "travel" ? S.trip.path.slice(S.trip.idx + 1) : [S.trip.dest]) : null,
       discovered: S.discovered, explored: [...S.explored, pos], others: others.filter((o) => !o.hiding || G.pxDist(livePos(), otherPos(o)) < MP.NEAR_PX).map((o) => ({ name: o.name + (party?.members.some((m) => m.id === o.id) ? " ⚑" : ""), pos: otherPos(o) })),
-      bags: visibleBags(), selected, t: ts / 1000, zoom, center, reduceMotion, weather: WEVENTS.weather(pos).id, quest: questPos(),
+      bags: visibleBags(), selected, t: ts / 1000, zoom, center, reduceMotion, weather: WEVENTS.weather(pos).id, quest: questPos(), hall: S.discovered.includes(HALL.TOWN) || known(HALL.TOWN) ? { pos: HALL.POS, label: `Hall of the North · ${HALL.progress().name}` } : null,
     };
     WorldMap.draw($("#map"), view);
   }
@@ -1385,9 +1387,9 @@
       return `<div class="panel"><h2>${l ? esc(l) : "The wilds"}</h2><p class="sub">${l ? "There's nothing to buy here." : "You're out on the road."} Cities and towns have shops, inns, trainers, alchemy labs, forges and jobs.</p></div>`;
     }
     const open = G.shopsOpen(), wanted = TOWNS.wanted(S), hold = G.holdAt(WORLD.places[l]);
-    const sections = [...types.filter((x) => x !== "stables"), ...(TOWNS.INNS[l] ? ["inn"] : []), ...(TOWNS.TRAINERS[l] ? ["train"] : []), "alchemy", ...(types.includes("blacksmith") ? ["forge"] : []), "jobs", "streets", ...(TOWNS.followersHere(S).length || l === "Whiterun" ? ["hire"] : []), ...(TOWNS.carriageFrom(l) ? ["carriage"] : []), ...(TOWNS.HOMES[l] ? ["home"] : []), ...(ENCH.hasEnchanter(l) ? ["enchanter"] : []), ...(types.includes("stables") ? ["stables"] : [])];
+    const sections = [...types.filter((x) => x !== "stables"), ...(TOWNS.INNS[l] ? ["inn"] : []), ...(TOWNS.TRAINERS[l] ? ["train"] : []), "alchemy", ...(types.includes("blacksmith") ? ["forge"] : []), "jobs", "streets", ...(TOWNS.followersHere(S).length || l === "Whiterun" ? ["hire"] : []), ...(TOWNS.carriageFrom(l) ? ["carriage"] : []), ...(TOWNS.HOMES[l] ? ["home"] : []), ...(l === HALL.TOWN ? ["hall"] : []), ...(ENCH.hasEnchanter(l) ? ["enchanter"] : []), ...(types.includes("stables") ? ["stables"] : [])];
     townShop = sections.includes(townShop) ? townShop : sections[0];
-    const names = { general: "General goods", blacksmith: "Blacksmith", wizard: "Court wizard", stables: "Stables", fence: "Ragged Flagon (fence)", inn: TOWNS.INNS[l] || "Inn", train: "Trainers", alchemy: "Alchemy lab", forge: "Forge", jobs: "Jobs", streets: "Streets", hire: l === "Whiterun" ? "Dragonsreach & hirelings" : "Hirelings", carriage: "Carriage", enchanter: "Arcane enchanter", home: TOWNS.home(S, l) ? `🏠 ${TOWNS.HOMES[l]?.[0]}` : `Buy ${TOWNS.HOMES[l]?.[0]}` };
+    const names = { general: "General goods", blacksmith: "Blacksmith", wizard: "Court wizard", stables: "Stables", fence: "Ragged Flagon (fence)", inn: TOWNS.INNS[l] || "Inn", train: "Trainers", alchemy: "Alchemy lab", forge: "Forge", jobs: "Jobs", streets: "Streets", hire: l === "Whiterun" ? "Dragonsreach & hirelings" : "Hirelings", hall: "⚑ Hall of the North", carriage: "Carriage", enchanter: "Arcane enchanter", home: TOWNS.home(S, l) ? `🏠 ${TOWNS.HOMES[l]?.[0]}` : `Buy ${TOWNS.HOMES[l]?.[0]}` };
     const fac = F.priceFactor(G.skill(S, "Mercantile"));
     let body = "", note = "";
     const shopRow = (i, sell = true) => { const p = G.buyPrice(S, i); return `<div class="item"><div class="t">${esc(D.ITEMS[i].name)}<span>${esc(G.itemStats(i))} · ${D.ITEMS[i].weight} wt</span></div><span class="num gold">${p}</span><button class="btn sm" data-act="buy" data-item="${esc(i)}" ${open && !wanted && S.gold >= p ? "" : "disabled"}>Buy</button></div>`; };
@@ -1426,6 +1428,24 @@
       body = `<h3>Your jobs</h3>${mine.length ? mine.map((j) => `<div class="item" style="flex-wrap:wrap"><div class="t">${esc(j.type === "clear" ? `Clear ${j.target}` : j.type === "deliver" ? `Deliver to ${j.target}` : `Bring ${j.n} ${D.ITEMS[j.item].name}`)}<span>${j.type === "gather" ? `You have ${TOWNS.countItem(S, j.item)}/${j.n} · ` : ""}from ${esc(j.town)} · ${j.reward} gold</span></div>
           ${j.type === "gather" ? `<button class="btn sm pri" data-act="handin" data-id="${esc(j.id)}" ${TOWNS.countItem(S, j.item) >= j.n ? "" : "disabled"}>Hand in</button>` : ""}<button class="btn sm" data-act="dropjob" data-id="${esc(j.id)}">Drop</button></div>`).join("") : '<p class="sub">None yet.</p>'}
         <h3 style="margin-top:12px">Notice board</h3>${avail.length ? avail.map((j) => `<div class="item"><div class="t">${esc(j.text)}<span>${j.reward} gold</span></div><button class="btn sm pri" data-act="takejob" data-id="${esc(j.id)}" ${mine.length >= 3 || wanted ? "disabled" : ""}>Take</button></div>`).join("") : '<p class="sub">Nothing new today.</p>'}`;
+    } else if (townShop === "hall") {
+      const pr = HALL.progress(), mats = S.inv.filter((r) => HALL.MAT_PTS[r.item]), mine = S.hallPts || 0;
+      note = "One hall for everyone in the world. Every gold coin and ingot anyone gives makes it bigger, and every size gives all players something.";
+      const tiers = HALL.TIERS.map(([n, need, what], i) => `<div class="item ${i === pr.tier ? "on" : ""}"><div class="t">${i <= pr.tier ? "✔" : "○"} ${esc(n)}${need ? ` · ${need.toLocaleString()}` : ""}<span>${esc(what)}</span></div></div>`).join("");
+      const chestOpen = pr.tier >= 2, left = HALL.CHEST_PER_DAY - HALL.takenToday(S);
+      const putRows = S.inv.filter((r) => HALL.canDeposit(r) && !Object.values(G.loadout(S).equipment || {}).includes(r.id)).slice(0, 15);
+      body = `<div class="card"><h3>${esc(pr.name)}${pr.next ? ` → ${esc(pr.next)}` : " · fully built"}</h3>
+          <div class="bar" style="margin:6px 0"><i style="width:${pr.pct}%;background:var(--gold)"></i></div>
+          <p class="sub" style="margin:0">${pr.points.toLocaleString()}${pr.need ? ` of ${pr.need.toLocaleString()}` : ""} given by ${HALL.top(999).length} ${HALL.top(999).length === 1 ? "player" : "players"} · you gave ${mine.toLocaleString()}${mine < HALL.BUILDER_PTS ? ` (${HALL.BUILDER_PTS} earns the title Hall Builder)` : ""}</p></div>
+        <div class="item"><div class="t">${pr.tier ? "Sleep in the hall" : "Rest by the fire"}<span>${pr.tier >= 3 ? "Free · full health and Well Rested (+10%)" : pr.tier ? "Free · full health and Rested (+5%)" : "Free · full health"}</span></div><button class="btn sm pri" data-act="hallrest">Rest</button></div>
+        <h3 style="margin-top:12px">Give gold</h3><div class="chips">${[50, 100, 500, 1000, 5000].map((n) => `<button class="chip" data-act="hallgold" data-id="${n}" ${S.gold >= n ? "" : "disabled"}>${n}</button>`).join("")}</div>
+        <h3 style="margin-top:12px">Give materials</h3>${mats.length ? mats.map((r) => `<div class="item"><div class="t">${esc(D.ITEMS[r.item].name)} ×${r.qty}<span>${HALL.MAT_PTS[r.item]} each</span></div><button class="btn sm" data-act="hallmat" data-id="${r.id}" data-n="1">Give 1</button>${r.qty > 1 ? `<button class="btn sm" data-act="hallmat" data-id="${r.id}" data-n="${r.qty}">All</button>` : ""}</div>`).join("") : `<p class="sub">Ingots, leather, firewood and the like count for more than their price. Blacksmiths sell them, mines and forts hide them.</p>`}
+        <h3 style="margin-top:12px">What the hall gives everyone</h3>${tiers}
+        <h3 style="margin-top:12px">Shared chest</h3>${chestOpen ? `<p class="sub" style="margin-top:0">Leave things for others. You can take ${HALL.CHEST_PER_DAY} a day (${left} left today).</p>
+          ${HALL.chest.length ? HALL.chest.slice(0, 20).map((d) => `<div class="item"><div class="t">${esc(D.ITEMS[d.item].name)}<span>from ${esc(d.by || "someone")}</span></div><button class="btn sm" data-act="halltake" data-id="${esc(d.id)}" ${left > 0 ? "" : "disabled"}>Take</button></div>`).join("") : `<p class="sub">Empty for now.</p>`}
+          <details style="margin-top:6px"><summary class="sub" style="cursor:pointer;min-height:36px">Put something in</summary>${putRows.length ? putRows.map((r) => `<div class="item"><div class="t">${esc(D.ITEMS[r.item].name)}${r.qty > 1 ? ` ×${r.qty}` : ""}</div><button class="btn sm" data-act="hallput" data-id="${r.id}">Put in</button></div>`).join("") : `<p class="sub">Nothing you can leave (equipped, stolen and improved things stay with you).</p>`}</details>`
+          : `<p class="sub">Opens when the hall becomes a Mead Hall.</p>`}
+        <h3 style="margin-top:12px">Trophy wall</h3>${HALL.top(10).length ? `<div class="list">${HALL.top(10).map((d, i) => `<div class="item ${d.id === S.id ? "on" : ""}"><span class="num" style="width:1.6em;color:var(--gold)">${i + 1}</span><div class="t">${esc(d.name)}${d.id === S.id ? " (you)" : ""}</div><span class="num gold">${d.pts.toLocaleString()}</span></div>`).join("")}</div>` : `<p class="sub">No names yet. Be the first.</p>`}`;
     } else if (townShop === "home") {
       const [hname, price, hdesc] = TOWNS.HOMES[l], h = TOWNS.home(S);
       if (!h) {
@@ -1619,6 +1639,21 @@
       case "drinkrow": packOpen = null; say(TOWNS.drink(S, +b.dataset.id)); publishCard(); break;
       case "poison": packOpen = null; say(TOWNS.applyPoison(S, +b.dataset.id)); break;
       case "eat": packOpen = null; say(TOWNS.eat(S, +b.dataset.id)); break;
+      case "hallrest": say(HALL.rest(S)); break;
+      case "hallgold": case "hallmat": {
+        const r = a === "hallgold" ? HALL.donateGold(S, +b.dataset.id) : HALL.donateMat(S, +b.dataset.id, +b.dataset.n);
+        if (r.err) return toast(r.err);
+        Store.put("hall", S.id, { name: S.name, pts: S.hallPts, t: G.now() });
+        if (r.after > r.before) { postNews(`⚑ The Hall of the North is now a ${HALL.TIERS[r.after][0]}, thanks to ${S.name} and everyone who gave.`); SOUND.fx("levelup"); } else SOUND.fx("coin");
+        say(r.text); publishCard(); break;
+      }
+      case "hallput": { const r = HALL.deposit(S, +b.dataset.id); if (r.err) return toast(r.err); Store.put("hallchest", nid(), { item: r.item, by: S.name, t: G.now() }); say(r.text); break; }
+      case "halltake": {
+        if (!HALL.canTake(S)) return toast(`You've taken ${HALL.CHEST_PER_DAY} things today. Come back tomorrow.`);
+        const id = b.dataset.id;
+        Promise.resolve(Store.change("hallchest", id, () => null)).then((res) => { if (!res?.before?.item) return toast("Too late. Someone took it."); say(HALL.took(S, res.before.item)); });
+        break;
+      }
       case "inn": say(b.dataset.c === "room" ? TOWNS.rentRoom(S) : TOWNS.rumour(S)); break;
       case "train": say(TOWNS.train(S, b.dataset.id)); publishCard(); break;
       case "alch": { const id = +b.dataset.id; alchSel = alchSel.includes(id) ? alchSel.filter((x) => x !== id) : [...alchSel, id].slice(-3); renderPanel(true); break; }
