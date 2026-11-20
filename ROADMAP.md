@@ -5,6 +5,7 @@ Each round: build one batch, test it (Node sims in /home/claude/tests + headless
 our own marked [OURS]; plain-language UI; phone first.
 
 ## Done
+- Round 14: visiting homes. Town tab > Neighbours lists other players' houses in that town: their motto, mounted dragon skulls, dungeons cleared, titles and a display case (3 items). Leave gold, an item or a note; the owner gets a toast and takes it in at their house (items go in the chest).
 - Round 13: horses. Buy at stables, name it, pick a coat (6), Ride/Walk while travelling (walking beside, it still carries 100), steel and elven horse armor, own health that comes back over time. Horses never die: badly hurt, they limp to the nearest stables; fetch them after 30 min or pay to patch them up. Horseshoe in its colour on your map marker. Also: travel bar buttons no longer miss taps.
 - Round 12: the Jarl's bounty board. 3 shared goals for the whole world each week (fights won, dungeons cleared, dragons slain, potions brewed, places reached, jobs done). Everyone who helped claims gold + materials once a goal is met; the top helper earns a title. In the Journal and every town.
 - Round 11: the Hall of the North by Whiterun, built by everyone together with gold and materials. 5 sizes (Camp, Longhouse, Mead Hall, Fortified Hall, Jarl's Keep) give every player free rest, cheaper training, more carry weight and a shared chest (take 3 a day). Trophy wall, Hall Builder title, banner on the map, news when it grows.
@@ -25,7 +26,6 @@ our own marked [OURS]; plain-language UI; phone first.
 
 ## Next rounds (in order)
 11. Visit other players' homes (leave a gift, see their trophies).
-13. Player homes you can visit: leave a gift, see their trophies and mounted dragon skulls.
 14. Fishing and cooking at campfires and inns, with recipes that give buffs.
 15. Duel arena in Windhelm: friendly bets between players, a ranked ladder, seasons.
 16. Better map: zoom with two fingers, place pins, see party members' routes.

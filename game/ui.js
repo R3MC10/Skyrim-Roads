@@ -39,7 +39,7 @@
     el.textContent = text; el.classList.remove("hide");
     clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.add("hide"), 3800);
   }
-  function persist(pub = false) { Store.save(S); if (pub) publishCard(); bump(); }
+  function persist(pub = false) { Store.save(S); if (pub) { publishCard(); publishHome(); } bump(); }
   function publishCard(force = true) {
     const tr = S.trip;
     const card = { name: S.name, race: S.race, level: S.level, x: S.x, y: S.y,
@@ -429,6 +429,8 @@
     Store.watch("raids", (docs) => { raidDocs = docs; });
     Store.watch("trades", (docs) => onTrades(docs));
     Store.watch("chat", (docs) => onChat(docs));
+    Store.watch("homes", (docs) => { homeDocs = docs; if (tab === "town") bump(); });
+    Store.watch("gifts", (docs) => onGifts(docs));
     Store.watch("bounty", (docs) => { BOUNTY.setDocs(docs, S); if (tab === "log" || tab === "town") bump(); });
     Store.watch("hall", (docs) => { HALL.setDonors(docs, S); if (tab === "town") bump(); });
     Store.watch("hallchest", (docs) => { HALL.setChest(docs); if (tab === "town") bump(); });
@@ -494,7 +496,7 @@
     }
     followParty(); checkAmbush(); renderRaid(); soundTick();
     if (Math.floor(t) % 3 === 0) { const qm = QUESTS.check(S); if (qm.length) { persist(true); showMessage("Quest", qm.join(" ")); } }
-    if (Math.floor(t) % 30 === 0) publishCard(false);
+    if (Math.floor(t) % 30 === 0) { publishCard(false); publishHome(); }
     if (Math.floor(t) % 60 === 0) BACKUP.autoSave(S);
     renderTop(); renderVitals(); renderTrip(); renderTabs();
     if (version !== rendered || Date.now() - lastPanelRender > 20000) renderPanel(false);
@@ -1046,6 +1048,53 @@
 
   // ------------------------------------------------------------ the Jarl's bounty board
   let lastDragons = null;
+  // ------------------------------------------------------------ visiting homes and gifts
+  let homeDocs = [], giftDocs = [], seenGifts = new Set(), lastHomeJson = "", visitId = null;
+  const myGifts = () => giftDocs.filter((g) => g.to === S.id);
+  function onGifts(docs) {
+    giftDocs = docs.filter((g) => g && g.to && g.from && g.town);
+    for (const g of myGifts()) {
+      if (seenGifts.has(g.id)) continue;
+      seenGifts.add(g.id);
+      if (g.t > bootT) { SOUND.fx("quest"); toast(`🎁 ${g.fromName} left something at your house in ${g.town}.`); }
+    }
+    if (tab === "town") bump();
+  }
+  function publishHome() {
+    const rec = VISITS.record(S), json = JSON.stringify(rec);
+    if (json === lastHomeJson) return;
+    lastHomeJson = json;
+    if (rec) Store.put("homes", S.id, { ...rec, t: G.now() }); else Store.remove("homes", S.id);
+  }
+  function visitHTML(d) {
+    const town = S.location, hn = TOWNS.HOMES[town]?.[0] || "their house";
+    const skulls = Math.min(12, d.dragons || 0);
+    const pack = S.inv.filter((r) => !Object.values(G.loadout(S).equipment || {}).includes(r.id) && !r.stolen).slice(0, 30);
+    return `<p class="sub" style="margin:0">${esc(hn)} · ${esc(town)}</p><h2 style="margin:4px 0">${esc(d.name)}'s home</h2>
+      ${d.motto ? `<p class="motto">“${esc(d.motto)}”</p>` : ""}
+      <p class="sub">Level ${d.level} ${esc(D.RACES[d.race]?.name || "")}${d.titles?.length ? ` · ${d.titles.map(esc).join(" · ")}` : ""}</p>
+      <div class="trophies">${skulls ? `<span>🐲 ${skulls} dragon skull${skulls > 1 ? "s" : ""} on the wall</span>` : `<span>No dragon skulls yet</span>`}<span>🏆 ${d.cleared || 0} dungeons cleared</span>${d.souls ? `<span>✨ ${d.souls} soul${d.souls > 1 ? "s" : ""} unspent</span>` : ""}</div>
+      ${d.show?.length ? `<h3>Display case</h3><div class="list">${d.show.map((x) => `<div class="item"><div class="t">${esc(x.name)}</div></div>`).join("")}</div>` : ""}
+      <h3 style="margin-top:12px">Leave a gift</h3><p class="sub" style="margin-top:0">It waits in their house until they come home. Gifts can't be taken back.</p>
+      <input id="giftnote" maxlength="${VISITS.NOTE_MAX}" placeholder="A note (optional)" autocomplete="off" aria-label="Note">
+      <div class="chips">${[50, 100, 500, 1000].map((n) => `<button class="chip" data-act="giftgold" data-id="${n}" ${S.gold >= n ? "" : "disabled"}>${n} gold</button>`).join("")}<button class="chip" data-act="giftnote">Just the note</button></div>
+      <details style="margin-top:6px"><summary class="sub" style="cursor:pointer;min-height:36px">Give something from your pack</summary>${pack.length ? pack.map((r) => `<div class="item"><div class="t">${esc(VISITS.itemName(r))}${r.qty > 1 ? ` ×${r.qty}` : ""}</div><button class="btn sm" data-act="giftitem" data-id="${r.id}">Give</button></div>`).join("") : `<p class="sub">Nothing you can give.</p>`}</details>
+      <button class="btn" data-act="close" style="width:100%;margin-top:10px">Leave</button>`;
+  }
+  function openVisit(id) {
+    const d = homeDocs.find((x) => x.id === id);
+    if (!d || !d.towns?.includes(S.location)) { closeModal(); return toast("They don't have a house here."); }
+    visitId = id; const note = $("#giftnote")?.value || "";
+    openModal(visitHTML(d)); if ($("#giftnote")) $("#giftnote").value = note;
+  }
+  function sendGift(kind, arg) {
+    const d = homeDocs.find((x) => x.id === visitId), note = $("#giftnote")?.value || "", town = S.location;
+    const r = kind === "gold" ? VISITS.giftGold(S, d, town, arg, note) : kind === "item" ? VISITS.giftItem(S, d, town, arg, note) : VISITS.giftNote(S, d, town, note);
+    if (r.err) return toast(r.err);
+    Store.put("gifts", nid(), r.gift); persist(true); SOUND.fx(kind === "gold" ? "coin" : "click"); toast(r.text);
+    if ($("#giftnote")) $("#giftnote").value = "";
+    openVisit(visitId);
+  }
   function tally(kind, n = 1) {
     if (!BOUNTY.add(S, kind, n)) return;
     const rec = BOUNTY.record(S);
@@ -1436,9 +1485,9 @@
       return `<div class="panel"><h2>${l ? esc(l) : "The wilds"}</h2><p class="sub">${l ? "There's nothing to buy here." : "You're out on the road."} Cities and towns have shops, inns, trainers, alchemy labs, forges and jobs.</p></div>`;
     }
     const open = G.shopsOpen(), wanted = TOWNS.wanted(S), hold = G.holdAt(WORLD.places[l]);
-    const sections = [...types.filter((x) => x !== "stables"), ...(TOWNS.INNS[l] ? ["inn"] : []), ...(TOWNS.TRAINERS[l] ? ["train"] : []), "alchemy", ...(types.includes("blacksmith") ? ["forge"] : []), "jobs", "streets", ...(TOWNS.followersHere(S).length || l === "Whiterun" ? ["hire"] : []), ...(TOWNS.carriageFrom(l) ? ["carriage"] : []), ...(TOWNS.HOMES[l] ? ["home"] : []), ...(l === HALL.TOWN ? ["hall"] : []), "notice", ...(ENCH.hasEnchanter(l) ? ["enchanter"] : []), ...(types.includes("stables") ? ["stables"] : [])];
+    const sections = [...types.filter((x) => x !== "stables"), ...(TOWNS.INNS[l] ? ["inn"] : []), ...(TOWNS.TRAINERS[l] ? ["train"] : []), "alchemy", ...(types.includes("blacksmith") ? ["forge"] : []), "jobs", "streets", ...(TOWNS.followersHere(S).length || l === "Whiterun" ? ["hire"] : []), ...(TOWNS.carriageFrom(l) ? ["carriage"] : []), ...(TOWNS.HOMES[l] ? ["home", "homes"] : []), ...(l === HALL.TOWN ? ["hall"] : []), "notice", ...(ENCH.hasEnchanter(l) ? ["enchanter"] : []), ...(types.includes("stables") ? ["stables"] : [])];
     townShop = sections.includes(townShop) ? townShop : sections[0];
-    const names = { general: "General goods", blacksmith: "Blacksmith", wizard: "Court wizard", stables: "Stables", fence: "Ragged Flagon (fence)", inn: TOWNS.INNS[l] || "Inn", train: "Trainers", alchemy: "Alchemy lab", forge: "Forge", jobs: "Jobs", streets: "Streets", hire: l === "Whiterun" ? "Dragonsreach & hirelings" : "Hirelings", hall: "⚑ Hall of the North", notice: "📜 Jarl's bounty", carriage: "Carriage", enchanter: "Arcane enchanter", home: TOWNS.home(S, l) ? `🏠 ${TOWNS.HOMES[l]?.[0]}` : `Buy ${TOWNS.HOMES[l]?.[0]}` };
+    const names = { general: "General goods", blacksmith: "Blacksmith", wizard: "Court wizard", stables: "Stables", fence: "Ragged Flagon (fence)", inn: TOWNS.INNS[l] || "Inn", train: "Trainers", alchemy: "Alchemy lab", forge: "Forge", jobs: "Jobs", streets: "Streets", hire: l === "Whiterun" ? "Dragonsreach & hirelings" : "Hirelings", hall: "⚑ Hall of the North", notice: "📜 Jarl's bounty", homes: "🏘 Neighbours", carriage: "Carriage", enchanter: "Arcane enchanter", home: TOWNS.home(S, l) ? `🏠 ${TOWNS.HOMES[l]?.[0]}` : `Buy ${TOWNS.HOMES[l]?.[0]}` };
     const fac = F.priceFactor(G.skill(S, "Mercantile"));
     let body = "", note = "";
     const shopRow = (i, sell = true) => { const p = G.buyPrice(S, i); return `<div class="item"><div class="t">${esc(D.ITEMS[i].name)}<span>${esc(G.itemStats(i))} · ${D.ITEMS[i].weight} wt</span></div><span class="num gold">${p}</span><button class="btn sm" data-act="buy" data-item="${esc(i)}" ${open && !wanted && S.gold >= p ? "" : "disabled"}>Buy</button></div>`; };
@@ -1477,6 +1526,11 @@
       body = `<h3>Your jobs</h3>${mine.length ? mine.map((j) => `<div class="item" style="flex-wrap:wrap"><div class="t">${esc(j.type === "clear" ? `Clear ${j.target}` : j.type === "deliver" ? `Deliver to ${j.target}` : `Bring ${j.n} ${D.ITEMS[j.item].name}`)}<span>${j.type === "gather" ? `You have ${TOWNS.countItem(S, j.item)}/${j.n} · ` : ""}from ${esc(j.town)} · ${j.reward} gold</span></div>
           ${j.type === "gather" ? `<button class="btn sm pri" data-act="handin" data-id="${esc(j.id)}" ${TOWNS.countItem(S, j.item) >= j.n ? "" : "disabled"}>Hand in</button>` : ""}<button class="btn sm" data-act="dropjob" data-id="${esc(j.id)}">Drop</button></div>`).join("") : '<p class="sub">None yet.</p>'}
         <h3 style="margin-top:12px">Notice board</h3>${avail.length ? avail.map((j) => `<div class="item"><div class="t">${esc(j.text)}<span>${j.reward} gold</span></div><button class="btn sm pri" data-act="takejob" data-id="${esc(j.id)}" ${mine.length >= 3 || wanted ? "disabled" : ""}>Take</button></div>`).join("") : '<p class="sub">Nothing new today.</p>'}`;
+    } else if (townShop === "homes") {
+      const list = VISITS.inTown(homeDocs, l, S.id);
+      note = `Other players who own ${TOWNS.HOMES[l][0]} in their own world. Drop in to see their trophies, or leave a gift.`;
+      body = list.length ? list.map((d) => `<div class="item"><div class="t">${esc(d.name)}<span>Level ${d.level}${d.dragons ? ` · ${d.dragons} dragon skull${d.dragons > 1 ? "s" : ""}` : ""}${d.motto ? ` · “${esc(d.motto)}”` : ""}</span></div><button class="btn sm pri" data-act="visit" data-id="${esc(d.id)}">Visit</button></div>`).join("")
+        : `<p class="sub">Nobody else has a house here yet${Store.online ? "" : " (or you're playing offline)"}.</p>`;
     } else if (townShop === "notice") {
       note = "The same three goals hang in every town this week. Progress counts wherever you are.";
       body = bountyPanel().replace('<div class="panel"><h2>Bounty board</h2>', "<div>");
@@ -1508,7 +1562,9 @@
         const pack = S.inv.filter((r) => !Object.values(G.loadout(S).equipment).includes(r.id));
         body = `<div class="item"><div class="t">Your bed<span>Full health and Well Rested (+10% skills for 40 min)</span></div><button class="btn sm pri" data-act="homebed">Sleep</button></div>
           <div class="item"><div class="t">Garden<span>${TOWNS.gardenReady(S) ? "Ripe: harvest ingredients" : `Growing. Ready in ${Math.ceil(((h.garden || 0) + 7200 - G.now()) / 60)} min`}</span></div><button class="btn sm" data-act="harvest" ${TOWNS.gardenReady(S) ? "" : "disabled"}>Harvest</button></div>
-          <h3 style="margin-top:12px">Chest (${h.chest.length})</h3>${h.chest.length ? h.chest.map((r, i) => `<div class="item"><div class="t">${esc((r.tq ? TOWNS.QUALITY[r.tq] + " " : "") + D.ITEMS[r.item].name)}${r.qty > 1 ? ` ×${r.qty}` : ""}<span>${esc(G.itemStats(r.item))}</span></div><button class="btn sm" data-act="unstash" data-id="${i}">Take</button></div>`).join("") : '<p class="sub">Empty.</p>'}
+          ${(() => { const gs = myGifts().filter((g) => g.town === l); return gs.length ? `<h3 style="margin-top:12px">🎁 Gifts at your door (${gs.length})</h3><div class="list">${gs.map((g) => `<div class="item on"><div class="t">From ${esc(g.fromName)}<span>${[g.gold ? `${g.gold} gold` : "", g.row && D.ITEMS[g.row.item] ? VISITS.itemName(g.row) + (g.row.qty > 1 ? ` ×${g.row.qty}` : "") : "", g.note ? `“${esc(g.note)}”` : ""].filter(Boolean).join(" · ")}</span></div><button class="btn sm pri" data-act="giftopen" data-id="${esc(g.id)}">Take in</button></div>`).join("")}</div>` : ""; })()}
+          <h3 style="margin-top:12px">Over the door</h3><div class="chatrow"><input id="motto" maxlength="${VISITS.MOTTO_MAX}" placeholder="A motto visitors will see" value="${esc(S.motto || "")}" autocomplete="off" aria-label="Motto"><button class="btn" data-act="motto">Carve</button></div>
+          <h3 style="margin-top:12px">Chest (${h.chest.length})</h3><p class="sub" style="margin-top:0">Put up to ${VISITS.SHOW_MAX} things in the display case for visitors to see.</p>${h.chest.length ? h.chest.map((r, i) => `<div class="item"><div class="t">${r.shown ? "🖼 " : ""}${esc((r.tq ? TOWNS.QUALITY[r.tq] + " " : "") + D.ITEMS[r.item].name)}${r.qty > 1 ? ` ×${r.qty}` : ""}<span>${esc(G.itemStats(r.item))}</span></div><button class="btn sm" data-act="showcase" data-id="${i}">${r.shown ? "Hide" : "Show"}</button><button class="btn sm" data-act="unstash" data-id="${i}">Take</button></div>`).join("") : '<p class="sub">Empty.</p>'}
           <h3 style="margin-top:12px">Put away from your pack</h3>${pack.length ? pack.map((r) => `<div class="item"><div class="t">${esc((r.tq ? TOWNS.QUALITY[r.tq] + " " : "") + D.ITEMS[r.item].name)}${r.qty > 1 ? ` ×${r.qty}` : ""}<span>${+(D.ITEMS[r.item].weight * r.qty).toFixed(2)} wt</span></div><button class="btn sm" data-act="stash" data-id="${r.id}">Store</button></div>`).join("") : '<p class="sub">Nothing loose in your pack (equipped gear stays on you).</p>'}`;
       }
     } else if (townShop === "enchanter") {
@@ -1650,7 +1706,7 @@
       case "homebed": say(TOWNS.sleepHome(S)); break;
       case "harvest": say(TOWNS.harvest(S)); break;
       case "stash": say(TOWNS.stash(S, +b.dataset.id)); publishCard(); break;
-      case "unstash": say(TOWNS.unstash(S, +b.dataset.id)); publishCard(); break;
+      case "unstash": say(TOWNS.unstash(S, +b.dataset.id)); publishCard(); publishHome(); break;
       case "dismiss": say(TOWNS.dismiss(S)); publishCard(); break;
       case "dragonstone": { const m = TOWNS.deliverDragonstone(S); persist(true); renderPanel(true); showMessage("Dragonsreach", m); break; }
       case "greybeards": { const m = POWERS.greybeards(S); persist(true); renderPanel(true); showMessage("High Hrothgar", m); break; }
@@ -1692,6 +1748,20 @@
       case "poison": packOpen = null; say(TOWNS.applyPoison(S, +b.dataset.id)); break;
       case "eat": packOpen = null; say(TOWNS.eat(S, +b.dataset.id)); break;
       case "hallrest": say(HALL.rest(S)); break;
+      case "visit": openVisit(b.dataset.id); break;
+      case "giftgold": sendGift("gold", +b.dataset.id); break;
+      case "giftitem": sendGift("item", +b.dataset.id); break;
+      case "giftnote": sendGift("note"); break;
+      case "motto": say(VISITS.setMotto(S, $("#motto")?.value)); publishHome(); break;
+      case "showcase": say(VISITS.toggleShow(S, S.location, +b.dataset.id)); publishHome(); break;
+      case "giftopen": {
+        const id = b.dataset.id;
+        Promise.resolve(Store.change("gifts", id, (g) => (g.to === S.id ? null : g))).then((res) => {
+          if (!res?.before || res.before.to !== S.id || res.after) return toast("That gift is gone.");
+          SOUND.fx("coin"); say(VISITS.receive(S, res.before)); publishHome();
+        });
+        break;
+      }
       case "hcoat": horseCoat = b.dataset.id; renderPanel(true); break;
       case "hbuy": say(HORSES.buy(S, $("#hname")?.value, horseCoat)); publishCard(); break;
       case "hrename": say(HORSES.rename(S, $("#hname")?.value)); break;
