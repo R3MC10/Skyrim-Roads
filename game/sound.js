@@ -178,6 +178,7 @@ const SOUND = (() => {
     arrive(t) { tone(hz(57), t, 0.5, { type: "sawtooth", vol: 0.09, a: 0.12, cut: 900, wet: 0.5 }); tone(hz(62), t + 0.45, 1.1, { type: "sawtooth", vol: 0.1, a: 0.15, cut: 1000, wet: 0.6 }); },
     victory(t) { [[62, 0], [69, 0.16], [74, 0.32]].forEach(([n, d]) => tone(hz(n), t + d, d === 0.32 ? 1.2 : 0.3, { type: "sawtooth", vol: 0.09, a: 0.03, cut: 1600, wet: 0.5 })); },
     death(t) { tone(hz(38), t, 2.5, { type: "sawtooth", vol: 0.14, a: 0.3, cut: 500, glide: 0.7, wet: 0.6 }); tone(hz(45), t + 0.2, 2.2, { type: "sawtooth", vol: 0.08, a: 0.4, cut: 400, glide: 0.7, wet: 0.6 }); },
+    chat(t) { tone(hz(81), t, 0.25, { type: "sine", vol: 0.07, a: 0.005, wet: 0.3 }); tone(hz(86), t + 0.09, 0.4, { type: "sine", vol: 0.06, a: 0.005, wet: 0.4 }); },
     potion(t) { for (let i = 0; i < 4; i++) tone(500 + i * 120 + Math.random() * 60, t + i * 0.07, 0.08, { type: "sine", vol: 0.08, glide: 1.8, wet: 0.1 }); },
     shout(t) {   // the Voice: a deep distorted blast with a rush of air
       const o = ctx.createOscillator(), o2 = ctx.createOscillator(), ws = grit(40), f = ctx.createBiquadFilter(), g = ctx.createGain();

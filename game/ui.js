@@ -25,6 +25,8 @@
   let zoom = innerWidth < 700 ? 2.4 : 1, follow = true, center = [0.5, 0.5], view = {}, version = 0, rendered = -1, lastPanelRender = 0;
   let tacticsDraft = { if: "always", pct: 50, do: "attack" }, testResult = null, townShop = null, packOpen = null, searchText = "";
   let raidDocs = [], raidSeen = null, enchDraft = {};
+  let chatDocs = [], chatRaw = [], chatCh = "world", chatDraft = "", chatSeen = 0, chatSeenIds = new Set(), lastChatSend = 0;
+  const bootT = Date.now() / 1000;
   let trades = [], ladderDocs = [], ladderCat = "level", tradeSel = [], tradeTo = null, seenTrades = new Set(), lastLadderJson = "";
   let perkSkill = null, alchSel = [], party = null, invites = [], chests = [], news = [], seenAttacks = new Set(), lastCardJson = "", lastAmbushCheck = 0;
   const app = $("#app"), tabsEl = $("#tabs");
@@ -361,10 +363,12 @@
     $("#side").addEventListener("click", onPanelClick);
     $("#side").addEventListener("change", onPanelChange);
     $("#side").addEventListener("input", onPanelInput);
+    $("#side").addEventListener("keydown", (e) => { if (e.target.id === "chatin" && e.key === "Enter") { e.preventDefault(); chatSend(e.target.value); } });
     $("#trip").addEventListener("click", onPanelClick);
     $("#raid").addEventListener("click", onPanelClick);
     Store.watch("raids", (docs) => { raidDocs = docs; });
     Store.watch("trades", (docs) => onTrades(docs));
+    Store.watch("chat", (docs) => onChat(docs));
     Store.watch("ladder", (docs) => { ladderDocs = docs; if (tab === "log") bump(); });
     $("#picked").addEventListener("click", onPanelClick);
     Store.watchPlayers((ps) => { others = ps; if (tab === "log") bump(); });
@@ -486,7 +490,7 @@
     tabsEl.querySelectorAll(".tab").forEach((b) => {
       const on = b.dataset.tab === tab;
       b.classList.toggle("on", on); b.setAttribute("aria-selected", on);
-      const needDot = (b.dataset.tab === "hero" && (S.pendingLevels > 0 || PERKS.pointsLeft(S) > 0)) || (b.dataset.tab === "log" && (invites.length || chests.length));
+      const needDot = (b.dataset.tab === "hero" && (S.pendingLevels > 0 || PERKS.pointsLeft(S) > 0)) || (b.dataset.tab === "log" && (invites.length || chests.length || chatUnread() > 0));
       if (needDot && !b.querySelector(".dot")) b.insertAdjacentHTML("beforeend", '<span class="dot"></span>');
       if (!needDot) b.querySelector(".dot")?.remove();
     });
@@ -969,6 +973,57 @@
     showMessage("Quest", [r.text, ...(r.msgs || [])].join(" "));
   }
 
+  // ------------------------------------------------------------ chat
+  const CHAT_MAX = 200;
+  const chatMuted = () => getPref("muted", []);
+  const chatHue = (id) => { let h = 0; for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) % 360; return h; };
+  const chatOk = (d) => d && typeof d.text === "string" && d.t > Date.now() / 1000 - 86400 && !chatMuted().includes(d.from);
+  const myChannels = () => ["world", ...(party ? [party.id] : [])];
+  const chatUnread = () => chatDocs.filter((d) => d.from !== S?.id && d.t > chatSeen && myChannels().includes(d.ch)).length;
+  function onChat(docs) {
+    chatRaw = docs;
+    chatDocs = docs.filter(chatOk).sort((a, b) => a.t - b.t);
+    for (const d of chatDocs) {
+      if (chatSeenIds.has(d.id)) continue;
+      chatSeenIds.add(d.id);
+      if (d.from === S.id || d.t < bootT || !myChannels().includes(d.ch)) continue;
+      if (tab === "log" && !document.hidden) continue;
+      SOUND.fx("chat");
+      toast(`💬 ${d.name}${d.ch === "world" ? "" : " (party)"}: ${d.text.slice(0, 70)}${d.text.length > 70 ? "…" : ""}`);
+    }
+    if (party == null && chatCh !== "world") chatCh = "world";
+    bump(); renderTabs();
+    if (tab === "log") { const box = $("#chatlog"); if (box && !(document.activeElement?.id === "chatin")) renderPanel(false); }
+  }
+  function chatSend(text) {
+    text = String(text || "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, CHAT_MAX);
+    if (!text) return;
+    if (Date.now() - lastChatSend < 1500) return toast("Easy. Wait a moment before the next message.");
+    lastChatSend = Date.now();
+    const ch = chatCh === "world" || !party ? "world" : party.id;
+    Store.put("chat", nid(), { from: S.id, name: S.name, text, ch, t: G.now() });
+    chatDraft = ""; SOUND.fx("click");
+    renderPanel(true);
+    $("#chatin")?.focus({ preventScroll: true });
+  }
+  function quickPhrases() {
+    const raid = WEVENTS.activeRaid(), here = S.location || G.holdAt(livePos());
+    return ["Need help!", "On my way", `Meet me at ${here}`, ...(raid ? [`🐉 Dragon at ${raid.town}!`] : []), "Trade?", "Group up?", "Thanks!", "GG"];
+  }
+  function chatPanel() {
+    if (!Store.online) return "";
+    const ch = chatCh === "world" || !party ? "world" : party.id, muted = chatMuted();
+    const msgs = chatDocs.filter((d) => d.ch === ch).slice(-40);
+    chatSeen = Math.max(chatSeen, ...chatDocs.filter((d) => myChannels().includes(d.ch)).map((d) => d.t), 0);
+    const line = (d) => `<div class="cm ${d.from === S.id ? "me" : ""}"><time>${new Date(d.t * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time><button class="cn" data-act="chatmute" data-id="${esc(d.from)}" data-name="${esc(d.name)}" style="color:hsl(${chatHue(d.from)},65%,70%)" ${d.from === S.id ? "disabled" : ""}>${esc(d.name)}</button><span>${esc(d.text)}</span></div>`;
+    return `<div class="panel"><h2>Chat</h2>
+      <div class="chips">${[["world", "World"], ...(party ? [[party.id, "Party"]] : [])].map(([id, l]) => `<button class="chip ${id === ch ? "on" : ""}" data-act="chatch" data-id="${esc(id)}">${l}</button>`).join("")}</div>
+      <div class="chatlog" id="chatlog" aria-live="polite">${msgs.length ? msgs.map(line).join("") : `<p class="sub">${ch === "world" ? "No messages yet. Say hello to everyone online." : "Talk to your party here. Only party members see these in the game."}</p>`}</div>
+      <div class="chips quick">${quickPhrases().map((q) => `<button class="chip" data-act="chatq" data-id="${esc(q)}">${esc(q)}</button>`).join("")}</div>
+      <div class="chatrow"><input id="chatin" maxlength="${CHAT_MAX}" placeholder="${ch === "world" ? "Message everyone" : "Message your party"}" value="${esc(chatDraft)}" autocomplete="off" enterkeyhint="send" aria-label="Chat message"><button class="btn pri" data-act="chatsend">Send</button></div>
+      ${muted.length ? `<p class="sub" style="margin:6px 0 0">Muted: ${muted.length} player${muted.length > 1 ? "s" : ""}. <button class="linkbtn" data-act="chatunmute">Unmute all</button></p>` : `<p class="sub" style="margin:6px 0 0">Tap a name to mute that player.</p>`}</div>`;
+  }
+
   // ------------------------------------------------------------ trading
   function onTrades(docs) {
     trades = docs;
@@ -1139,6 +1194,7 @@
     const openD = [...side.querySelectorAll("details")].map((d) => d.open), y = scrollY;
     side.innerHTML = ({ map: panelTravel, hero: panelHero, pack: panelPack, tactics: panelTactics, town: panelTown, log: panelLog }[tab])();
     if (!force) { side.querySelectorAll("details").forEach((d, i) => { if (openD[i] != null) d.open = openD[i]; }); scrollTo(0, y); }
+    const cl = $("#chatlog"); if (cl) cl.scrollTop = cl.scrollHeight;
   }
 
   function panelTravel() {
@@ -1401,12 +1457,12 @@
     const ladderHtml = shared ? `<div class="panel"><h2>Leaderboard</h2><div class="chips">${cats.map(([k, l]) => `<button class="chip ${k === ladderCat ? "on" : ""}" data-act="ladder" data-id="${k}">${l}</button>`).join("")}</div>
       <div class="list">${board.slice(0, 10).map((d, i) => `<div class="item ${d.id === S.id ? "on" : ""}"><span class="num" style="width:1.6em;color:var(--gold)">${i + 1}</span><div class="t">${esc(d.name)}${d.id === S.id ? " (you)" : ""}<span>Level ${d.level} ${esc(D.RACES[d.race]?.name || "")}</span></div><b class="num">${d[ladderCat] || 0}</b></div>`).join("")}</div>
       ${myRank > 10 ? `<p class="sub" style="margin-top:6px">You're number ${myRank}.</p>` : ""}</div>` : "";
-    return `${questPanel()}${worldHtml}${tradeHtml}${partyHtml}${travellers}${ladderHtml}${bounty}${word}
+    return `${questPanel()}${chatPanel()}${worldHtml}${tradeHtml}${partyHtml}${travellers}${ladderHtml}${bounty}${word}
       <div class="panel"><h2>Journal</h2><div class="log">${S.journal.map((j) => `<div><time>${new Date(j.t * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time>${esc(j.text)}</div>`).join("")}</div></div>`;
   }
 
   // ------------------------------------------------------------ panel events
-  function onPanelInput(e) { if (e.target.id === "search") { searchText = e.target.value; const pos = e.target.selectionStart; renderPanel(true); const s = $("#search"); s.focus(); s.setSelectionRange(pos, pos); } }
+  function onPanelInput(e) { if (e.target.id === "chatin") { chatDraft = e.target.value; return; } if (e.target.id === "search") { searchText = e.target.value; const pos = e.target.selectionStart; renderPanel(true); const s = $("#search"); s.focus(); s.setSelectionRange(pos, pos); } }
   function onPanelChange(e) {
     const id = e.target.id;
     if (id === "tc") { tacticsDraft.if = e.target.value; renderPanel(true); }
@@ -1477,6 +1533,11 @@
       case "evbuy": { const m = G.buyFrom(S, b.dataset.item); persist(); openEvent(m); break; }
       case "enc": encounterAction(b.dataset.a); break;
       case "close": closeModal(); break;
+      case "chatsend": chatSend($("#chatin")?.value); break;
+      case "chatq": chatSend(b.dataset.id); break;
+      case "chatch": chatCh = b.dataset.id; renderPanel(true); break;
+      case "chatmute": { const m = chatMuted(), id = b.dataset.id; if (m.includes(id)) return; setPref("muted", [...m, id]); toast(`Muted ${b.dataset.name}. Their messages are hidden.`); onChat(chatRaw); renderPanel(true); break; }
+      case "chatunmute": setPref("muted", []); toast("Everyone is unmuted."); onChat(chatRaw); renderPanel(true); break;
       case "pref": settingsAction("pref", b); openSound(); break;
       case "totitle": Store.save(S); try { sessionStorage.setItem("rotn_open", "menu"); } catch { /* ignore */ } location.reload(); break;
       case "toupdate": Store.save(S); try { sessionStorage.setItem("rotn_open", "update"); } catch { /* ignore */ } location.reload(); break;

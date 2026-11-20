@@ -204,6 +204,16 @@ input,select{border-radius:3px;border-color:rgba(228,220,200,.22);background:rgb
 @keyframes tfade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @keyframes tpulse{0%,100%{opacity:.35}50%{opacity:1}}
 @media (prefers-reduced-motion:reduce){.title *{animation:none!important}}
+/* ---- chat ---- */
+.chatlog{max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;margin:8px 0;padding:8px;background:#121417;border:1px solid var(--line);border-radius:6px;overscroll-behavior:contain}
+.cm{display:flex;gap:6px;align-items:baseline;font-size:15px;line-height:1.35;flex-wrap:wrap}
+.cm time{color:#6f695c;font-size:12px;font-variant-numeric:tabular-nums}
+.cm .cn{background:none;border:0;padding:0;font-weight:600;min-height:0}.cm .cn:disabled{cursor:default;opacity:1}
+.cm span{flex:1 1 60%;overflow-wrap:anywhere;color:var(--ink)}
+.cm.me span{color:#d9d2c0}
+.chips.quick{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}.chips.quick .chip{white-space:nowrap;flex:none}
+.chatrow{display:flex;gap:8px;margin-top:6px}.chatrow input{flex:1;margin:0}.chatrow .btn{flex:none}
+.linkbtn{background:none;border:0;padding:0;color:var(--frost);text-decoration:underline;min-height:0}
 </style>
 </head>
 <body>

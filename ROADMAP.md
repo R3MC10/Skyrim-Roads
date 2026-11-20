@@ -5,6 +5,7 @@ Each round: build one batch, test it (Node sims in /home/claude/tests + headless
 our own marked [OURS]; plain-language UI; phone first.
 
 ## Done
+- Round 9: chat. World and party channels in the Journal, quick phrases (Need help!, Meet me at..., Dragon at...!), coloured names, unread dot, toast + sound for new messages, tap a name to mute. Messages last a day, newest 60 kept.
 - Main menu and auto-update: Skyrim-style title screen (fog, snow, title music) with Continue, New Character, Settings, Updates, How to Play, Credits. The app checks GitHub for new builds, shows what's new, downloads and opens Android's installer. Signing key now stored encrypted; the password lives in GitHub secrets.
 - Round 8: sound. Music made live on the phone (day, night, dungeon and fight moods) and effects (hits, gold, level up, quests, arrival, shouts, dragon roars), with a sound button for volume and mute. The app sends a phone notification when you arrive somewhere or a dragon attacks while it's closed.
 - Round 7: quest lines. Main quest (Before the Storm → Bleak Falls Barrow → Dragon Rising → The Way of the Voice → Horn of Jurgen Windcaller → A Blade in the Dark), Companions, Thieves Guild, College of Winterhold. Gold diamond on the map, rewards and titles.
@@ -19,4 +20,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Round 3: homes (Breezehome, Honeyside, Vlindrel Hall, Hjerim, Proudspire Manor at Skyrim prices): death-proof chest, Well Rested bed (+10%; inns now Rested +5%), daily garden.
 
 ## Next rounds (in order)
-9. Chat between players: world and party channels, quick phrases, mute.
+10. Save backup: export/import your character as a code, and a cloud-free backup to the phone's files.
+11. Player homes you can visit and a shared guild hall that the whole world builds up together.
+12. Weekly world events: a bounty board with goals for everyone online (kill X wolves, clear Y dungeons) and rewards.
+13. Horses you can buy, name and stable, and mounted travel on the map.
