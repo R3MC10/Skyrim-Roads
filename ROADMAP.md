@@ -5,6 +5,7 @@ Each round: build one batch, test it (Node sims in /home/claude/tests + headless
 our own marked [OURS]; plain-language UI; phone first.
 
 ## Done
+- Round 12: the Jarl's bounty board. 3 shared goals for the whole world each week (fights won, dungeons cleared, dragons slain, potions brewed, places reached, jobs done). Everyone who helped claims gold + materials once a goal is met; the top helper earns a title. In the Journal and every town.
 - Round 11: the Hall of the North by Whiterun, built by everyone together with gold and materials. 5 sizes (Camp, Longhouse, Mead Hall, Fortified Hall, Jarl's Keep) give every player free rest, cheaper training, more carry weight and a shared chest (take 3 a day). Trophy wall, Hall Builder title, banner on the map, news when it grows.
 - Round 10: character backups. Settings > Your character: Back up (one text code: copy or share) and Restore (checks the code, asks before replacing). Automatic copies of the last 3 saves on the phone.
 - Round 9: chat. World and party channels in the Journal, quick phrases (Need help!, Meet me at..., Dragon at...!), coloured names, unread dot, toast + sound for new messages, tap a name to mute. Messages last a day, newest 60 kept.
@@ -23,5 +24,4 @@ our own marked [OURS]; plain-language UI; phone first.
 
 ## Next rounds (in order)
 11. Visit other players' homes (leave a gift, see their trophies).
-12. Weekly world events: a bounty board with goals for everyone online (kill X wolves, clear Y dungeons) and rewards.
 13. Horses you can buy, name and stable, and mounted travel on the map.

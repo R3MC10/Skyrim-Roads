@@ -370,7 +370,7 @@
   }
 
   // ------------------------------------------------------------ main screen
-  window.__dbg = { save: () => S, openEvent: (n) => openEvent(n) };   // for testing in the browser console
+  window.__dbg = { save: () => S, openEvent: (n) => openEvent(n), tally: (k, n) => tally(k, n) };   // for testing in the browser console
   /* phone back button: close what's on top, step back to the map, and only then leave the app */
   window.__ui = {
     back() {
@@ -429,6 +429,7 @@
     Store.watch("raids", (docs) => { raidDocs = docs; });
     Store.watch("trades", (docs) => onTrades(docs));
     Store.watch("chat", (docs) => onChat(docs));
+    Store.watch("bounty", (docs) => { BOUNTY.setDocs(docs, S); if (tab === "log" || tab === "town") bump(); });
     Store.watch("hall", (docs) => { HALL.setDonors(docs, S); if (tab === "town") bump(); });
     Store.watch("hallchest", (docs) => { HALL.setChest(docs); if (tab === "town") bump(); });
     Store.watch("ladder", (docs) => { ladderDocs = docs; if (tab === "log") bump(); });
@@ -481,10 +482,10 @@
         if (out.died) { SOUND.fx("death"); showMessage("You died", out.died, true); }
         else if (out.encounter) openEncounter();
         else if (out.arrived) {
-          SOUND.fx("arrive");
+          SOUND.fx("arrive"); tally("arrivals");
           toast(`Arrived at ${out.arrived}.` + (G.shopTypes(out.arrived).length ? " Shops are in the Town tab." : DUNGEONS.enterable(out.arrived) ? " You can go inside." : ""));
           selected = null; renderPanel(true);
-          const jm = TOWNS.checkJobs(S); if (jm.length) { persist(); setTimeout(() => toast(jm.join(" ")), 1500); }
+          const jm = TOWNS.checkJobs(S); if (jm.length) { tally("jobs", jm.length); persist(); setTimeout(() => toast(jm.join(" ")), 1500); }
           if (TOWNS.guardCheck(S)) openGuard();
           const qa = QUESTS.active(S).find((a) => a.st.obj.talk === out.arrived);
           if (qa) setTimeout(() => toast(`📜 ${qa.st.title}: "${qa.st.obj.label}" is waiting in the Journal.`), 2500);
@@ -507,6 +508,8 @@
     if (lastGold != null && S.gold !== lastGold) SOUND.fx("coin");
     if (lastPending != null && S.pendingLevels > lastPending) SOUND.fx("levelup", 0.3);
     lastGold = S.gold; lastPending = S.pendingLevels;
+    if (lastDragons != null && (S.dragons || 0) > lastDragons) tally("dragons", (S.dragons || 0) - lastDragons);
+    lastDragons = S.dragons || 0;
   }
   function openSound() {
     openModal(`<h2>Settings</h2>${settingsHTML()}
@@ -718,6 +721,7 @@
     showFightResult(r);
   }
   function showFightResult(r) {
+    if (r.fight && !r.died && !r.fight.nonlethal) tally("foes");
     if (r.fight || r.died) SOUND.fight(r); else if (/potion|drink/i.test(r.text || "")) SOUND.fx("potion");
     const skills = (r.skills || []).length ? `<p class="sub">📈 ${r.skills.map(esc).join(" · ")}</p>` : "";
     if (r.died) {
@@ -804,6 +808,7 @@
   }
   function dungeonAct(c) {
     const r = DUNGEONS.act(S, c);
+    if (r.fight && !r.died) tally("foes");
     if (r.fight || r.died) SOUND.fight(r); else if (r.trap || /trap|dart|blade/i.test(r.text || "")) SOUND.fx("hit");
     if (r.bag) Store.addBag(r.bag);
     persist(true);
@@ -814,7 +819,7 @@
         members: party.members, place: S.dungeon?.place || "", byName: S.name, t: G.now() });
       postNews(`💰 ${S.name}'s party cleared ${S.dungeon?.place}. The chest is waiting to be shared.`);
     } else if (r.partyChest) { S.gold += r.partyChest.gold; r.partyChest.items.forEach((i) => G.give(S, i)); }
-    if (r.cleared) { const jm = TOWNS.checkJobs(S); if (jm.length) r.text += " " + jm.join(" "); postNews(`🏆 ${S.name} cleared ${S.dungeon?.place}.`); }
+    if (r.cleared) { tally("dungeons"); const jm = TOWNS.checkJobs(S); if (jm.length) { tally("jobs", jm.length); r.text += " " + jm.join(" "); } postNews(`🏆 ${S.name} cleared ${S.dungeon?.place}.`); }
     persist(true);
     dunNote = r; renderDungeon();
   }
@@ -1034,6 +1039,30 @@
     if (r.fight && r.msgs?.length) SOUND.fx("quest", 2);
     if (r.fight) return showFightResult({ ...r, text: [r.text, ...(r.msgs || [])].join(" "), loot: [], gold: 0 });
     showMessage("Quest", [r.text, ...(r.msgs || [])].join(" "));
+  }
+
+  // ------------------------------------------------------------ the Jarl's bounty board
+  let lastDragons = null;
+  function tally(kind, n = 1) {
+    if (!BOUNTY.add(S, kind, n)) return;
+    const rec = BOUNTY.record(S);
+    Store.put("bounty", `${rec.week}-${S.id}`, rec);
+    BOUNTY.setDocs(null, S);   // show our own new numbers right away; the feed brings everyone else's
+    Store.save(S);
+  }
+  function bountyPanel() {
+    const w = BOUNTY.week(), left = BOUNTY.weekEnds(w) - Date.now(), days = Math.floor(left / 864e5), hrs = Math.floor((left % 864e5) / 36e5);
+    const row = (g, wk) => {
+      const can = BOUNTY.claimable(S, wk, g.kind), claimed = (S.bountyClaimed || {})[`${wk}:${g.kind}`];
+      return `<div class="item" style="flex-wrap:wrap"><div class="t">${g.done ? "✔ " : ""}${esc(g.title)}<span>${esc(g.text)} · reward ${g.gold} gold + ${g.item[1]} ${esc(D.ITEMS[g.item[0]]?.name || "")}${g.top ? ` · most: ${esc(g.top.name)} (${g.top.n})` : ""}</span></div>
+        <span class="num ${g.done ? "gold" : "sub"}">${Math.min(g.total, g.target)}/${g.target}</span>
+        <div class="bar" style="width:100%;margin:4px 0 2px"><i style="width:${g.pct}%;background:${g.done ? "var(--gold)" : "var(--frost)"}"></i></div>
+        <div style="display:flex;gap:8px;align-items:center;width:100%"><span class="sub" style="flex:1">You: ${g.mine} · ${g.helpers} helping</span>${can ? `<button class="btn sm pri" data-act="bclaim" data-w="${wk}" data-id="${g.kind}">Claim reward</button>` : claimed ? `<span class="sub">Reward taken</span>` : g.done && !g.mine ? `<span class="sub">Help next time to share</span>` : ""}</div></div>`;
+    };
+    const last = BOUNTY.board(w - 1, S.id).filter((g) => BOUNTY.claimable(S, w - 1, g.kind));
+    return `<div class="panel"><h2>Bounty board</h2><p class="sub">The Jarls post three goals for the whole world each week. Everyone who helps gets the reward once a goal is met; whoever did the most earns a title. ${days}d ${hrs}h left.</p>
+      <div class="list">${BOUNTY.board(w, S.id).map((g) => row(g, w)).join("")}</div>
+      ${last.length ? `<h3 style="margin-top:10px">Last week, still unclaimed</h3><div class="list">${last.map((g) => row(g, w - 1)).join("")}</div>` : ""}</div>`;
   }
 
   // ------------------------------------------------------------ chat
@@ -1387,9 +1416,9 @@
       return `<div class="panel"><h2>${l ? esc(l) : "The wilds"}</h2><p class="sub">${l ? "There's nothing to buy here." : "You're out on the road."} Cities and towns have shops, inns, trainers, alchemy labs, forges and jobs.</p></div>`;
     }
     const open = G.shopsOpen(), wanted = TOWNS.wanted(S), hold = G.holdAt(WORLD.places[l]);
-    const sections = [...types.filter((x) => x !== "stables"), ...(TOWNS.INNS[l] ? ["inn"] : []), ...(TOWNS.TRAINERS[l] ? ["train"] : []), "alchemy", ...(types.includes("blacksmith") ? ["forge"] : []), "jobs", "streets", ...(TOWNS.followersHere(S).length || l === "Whiterun" ? ["hire"] : []), ...(TOWNS.carriageFrom(l) ? ["carriage"] : []), ...(TOWNS.HOMES[l] ? ["home"] : []), ...(l === HALL.TOWN ? ["hall"] : []), ...(ENCH.hasEnchanter(l) ? ["enchanter"] : []), ...(types.includes("stables") ? ["stables"] : [])];
+    const sections = [...types.filter((x) => x !== "stables"), ...(TOWNS.INNS[l] ? ["inn"] : []), ...(TOWNS.TRAINERS[l] ? ["train"] : []), "alchemy", ...(types.includes("blacksmith") ? ["forge"] : []), "jobs", "streets", ...(TOWNS.followersHere(S).length || l === "Whiterun" ? ["hire"] : []), ...(TOWNS.carriageFrom(l) ? ["carriage"] : []), ...(TOWNS.HOMES[l] ? ["home"] : []), ...(l === HALL.TOWN ? ["hall"] : []), "notice", ...(ENCH.hasEnchanter(l) ? ["enchanter"] : []), ...(types.includes("stables") ? ["stables"] : [])];
     townShop = sections.includes(townShop) ? townShop : sections[0];
-    const names = { general: "General goods", blacksmith: "Blacksmith", wizard: "Court wizard", stables: "Stables", fence: "Ragged Flagon (fence)", inn: TOWNS.INNS[l] || "Inn", train: "Trainers", alchemy: "Alchemy lab", forge: "Forge", jobs: "Jobs", streets: "Streets", hire: l === "Whiterun" ? "Dragonsreach & hirelings" : "Hirelings", hall: "⚑ Hall of the North", carriage: "Carriage", enchanter: "Arcane enchanter", home: TOWNS.home(S, l) ? `🏠 ${TOWNS.HOMES[l]?.[0]}` : `Buy ${TOWNS.HOMES[l]?.[0]}` };
+    const names = { general: "General goods", blacksmith: "Blacksmith", wizard: "Court wizard", stables: "Stables", fence: "Ragged Flagon (fence)", inn: TOWNS.INNS[l] || "Inn", train: "Trainers", alchemy: "Alchemy lab", forge: "Forge", jobs: "Jobs", streets: "Streets", hire: l === "Whiterun" ? "Dragonsreach & hirelings" : "Hirelings", hall: "⚑ Hall of the North", notice: "📜 Jarl's bounty", carriage: "Carriage", enchanter: "Arcane enchanter", home: TOWNS.home(S, l) ? `🏠 ${TOWNS.HOMES[l]?.[0]}` : `Buy ${TOWNS.HOMES[l]?.[0]}` };
     const fac = F.priceFactor(G.skill(S, "Mercantile"));
     let body = "", note = "";
     const shopRow = (i, sell = true) => { const p = G.buyPrice(S, i); return `<div class="item"><div class="t">${esc(D.ITEMS[i].name)}<span>${esc(G.itemStats(i))} · ${D.ITEMS[i].weight} wt</span></div><span class="num gold">${p}</span><button class="btn sm" data-act="buy" data-item="${esc(i)}" ${open && !wanted && S.gold >= p ? "" : "disabled"}>Buy</button></div>`; };
@@ -1428,6 +1457,9 @@
       body = `<h3>Your jobs</h3>${mine.length ? mine.map((j) => `<div class="item" style="flex-wrap:wrap"><div class="t">${esc(j.type === "clear" ? `Clear ${j.target}` : j.type === "deliver" ? `Deliver to ${j.target}` : `Bring ${j.n} ${D.ITEMS[j.item].name}`)}<span>${j.type === "gather" ? `You have ${TOWNS.countItem(S, j.item)}/${j.n} · ` : ""}from ${esc(j.town)} · ${j.reward} gold</span></div>
           ${j.type === "gather" ? `<button class="btn sm pri" data-act="handin" data-id="${esc(j.id)}" ${TOWNS.countItem(S, j.item) >= j.n ? "" : "disabled"}>Hand in</button>` : ""}<button class="btn sm" data-act="dropjob" data-id="${esc(j.id)}">Drop</button></div>`).join("") : '<p class="sub">None yet.</p>'}
         <h3 style="margin-top:12px">Notice board</h3>${avail.length ? avail.map((j) => `<div class="item"><div class="t">${esc(j.text)}<span>${j.reward} gold</span></div><button class="btn sm pri" data-act="takejob" data-id="${esc(j.id)}" ${mine.length >= 3 || wanted ? "disabled" : ""}>Take</button></div>`).join("") : '<p class="sub">Nothing new today.</p>'}`;
+    } else if (townShop === "notice") {
+      note = "The same three goals hang in every town this week. Progress counts wherever you are.";
+      body = bountyPanel().replace('<div class="panel"><h2>Bounty board</h2>', "<div>");
     } else if (townShop === "hall") {
       const pr = HALL.progress(), mats = S.inv.filter((r) => HALL.MAT_PTS[r.item]), mine = S.hallPts || 0;
       note = "One hall for everyone in the world. Every gold coin and ingot anyone gives makes it bigger, and every size gives all players something.";
@@ -1538,7 +1570,7 @@
     const ladderHtml = shared ? `<div class="panel"><h2>Leaderboard</h2><div class="chips">${cats.map(([k, l]) => `<button class="chip ${k === ladderCat ? "on" : ""}" data-act="ladder" data-id="${k}">${l}</button>`).join("")}</div>
       <div class="list">${board.slice(0, 10).map((d, i) => `<div class="item ${d.id === S.id ? "on" : ""}"><span class="num" style="width:1.6em;color:var(--gold)">${i + 1}</span><div class="t">${esc(d.name)}${d.id === S.id ? " (you)" : ""}<span>Level ${d.level} ${esc(D.RACES[d.race]?.name || "")}</span></div><b class="num">${d[ladderCat] || 0}</b></div>`).join("")}</div>
       ${myRank > 10 ? `<p class="sub" style="margin-top:6px">You're number ${myRank}.</p>` : ""}</div>` : "";
-    return `${questPanel()}${chatPanel()}${worldHtml}${tradeHtml}${partyHtml}${travellers}${ladderHtml}${bounty}${word}
+    return `${questPanel()}${bountyPanel()}${chatPanel()}${worldHtml}${tradeHtml}${partyHtml}${travellers}${ladderHtml}${bounty}${word}
       <div class="panel"><h2>Journal</h2><div class="log">${S.journal.map((j) => `<div><time>${new Date(j.t * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time>${esc(j.text)}</div>`).join("")}</div></div>`;
   }
 
@@ -1640,6 +1672,7 @@
       case "poison": packOpen = null; say(TOWNS.applyPoison(S, +b.dataset.id)); break;
       case "eat": packOpen = null; say(TOWNS.eat(S, +b.dataset.id)); break;
       case "hallrest": say(HALL.rest(S)); break;
+      case "bclaim": { const m = BOUNTY.claim(S, +b.dataset.w, b.dataset.id); if (!m) return toast("Nothing to claim there."); SOUND.fx("quest"); say(m); publishCard(); break; }
       case "hallgold": case "hallmat": {
         const r = a === "hallgold" ? HALL.donateGold(S, +b.dataset.id) : HALL.donateMat(S, +b.dataset.id, +b.dataset.n);
         if (r.err) return toast(r.err);
@@ -1657,7 +1690,7 @@
       case "inn": say(b.dataset.c === "room" ? TOWNS.rentRoom(S) : TOWNS.rumour(S)); break;
       case "train": say(TOWNS.train(S, b.dataset.id)); publishCard(); break;
       case "alch": { const id = +b.dataset.id; alchSel = alchSel.includes(id) ? alchSel.filter((x) => x !== id) : [...alchSel, id].slice(-3); renderPanel(true); break; }
-      case "brew": { const r = TOWNS.brew(S, alchSel); alchSel = []; persist(); renderPanel(true); showMessage("Alchemy", r.text + ((r.skills || []).length ? " 📈 " + r.skills.join(" · ") : "")); break; }
+      case "brew": { const before = S.inv.filter((x) => String(x.item).startsWith("brew|")).reduce((a, x) => a + x.qty, 0); const r = TOWNS.brew(S, alchSel); const made = S.inv.filter((x) => String(x.item).startsWith("brew|")).reduce((a, x) => a + x.qty, 0) - before; if (made > 0) tally("potions", made); alchSel = []; persist(); renderPanel(true); showMessage("Alchemy", r.text + ((r.skills || []).length ? " 📈 " + r.skills.join(" · ") : "")); break; }
       case "temper": say(TOWNS.temper(S, +b.dataset.id)); publishCard(); break;
       case "takejob": say(TOWNS.takeJob(S, b.dataset.id)); break;
       case "dropjob": say(TOWNS.dropJob(S, b.dataset.id)); break;
