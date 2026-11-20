@@ -7,6 +7,7 @@ our own marked [OURS]; plain-language UI; phone first.
 ## Done
 - Round 1: standing stones (13), racial powers (10), dragon shouts (10 shouts, 30 words), dragon souls, Greybeards.
 - Round 2: carriages (Skyrim fares, safe roads), followers (Lydia via the Dragonstone, 6 hirelings at 500 gold), map labels for players and bags that dodge each other.
+- Followers go down (kneel) instead of dying, and get back up after the fight at 10% health.
 - Round 3: homes (Breezehome, Honeyside, Vlindrel Hall, Hjerim, Proudspire Manor at Skyrim prices): death-proof chest, Well Rested bed (+10%; inns now Rested +5%), daily garden.
 
 ## Next rounds (in order)

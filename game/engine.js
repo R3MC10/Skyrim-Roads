@@ -521,7 +521,7 @@ const G = (() => {
         if (al.follower && Math.random() < F.HIT_CHANCE) {
           const d = this.e.damage * rnd(...F.DAMAGE_SPREAD) * 0.8;   // [OURS] followers wear armor
           al.hp -= d;
-          if (al.hp <= 0) { this.allies = this.allies.filter((x) => x !== al); this.followerDied = al.name; return `${n} cuts down ${al.name}!`; }
+          if (al.hp <= 0) { this.allies = this.allies.filter((x) => x !== al); this.followerDown = al.name; return `${n} knocks ${al.name} to their knees. ${al.name} is down!`; }   // [Skyrim] protected followers kneel instead of dying
           return `${n} hits ${al.name} ${Math.round(d)}`;
         }
         return `${n} goes for ${al.name}`;
@@ -585,15 +585,15 @@ const G = (() => {
       setHealth(this.s, this.hp, t);
       if (this.s.follower && !this.s._test) {
         const fa = this.allies.find((a) => a.follower);
-        if (this.followerDied || !fa) { if (this.followerDied) { note(this.s, `⚰️ ${this.followerDied} has fallen.`); this.s.follower = null; } }
-        else { this.s.follower.hp = Math.max(1, fa.hp); this.s.follower.ts = t; }
+        if (this.followerDown) { this.s.follower.hp = Math.max(1, TOWNS.followerMax(this.s, this.s.follower.id) * 0.1); this.s.follower.ts = t; }   // gets back up after the fight, badly hurt
+        else if (fa) { this.s.follower.hp = Math.max(1, fa.hp); this.s.follower.ts = t; }
       }
       const extraMsgs = this.won && this.tags.has("dragon") && typeof POWERS !== "undefined" && !this.s._test ? [POWERS.absorb(this.s)] : [];
       for (const [id, q] of Object.entries(this.used)) take(this.s, +id, q);
       for (const [id, c] of Object.entries(this.charges)) { const r = invRow(this.s, +id); if (r) r.charge = c; }
       const msgs = [];
       for (const [k, v] of Object.entries(this.xp)) msgs.push(...useSkill(this.s, k, v));
-      return [...(this.followerDied ? [`${this.followerDied} has fallen.`] : []), ...extraMsgs, ...msgs];
+      return [...(this.followerDown ? [`${this.followerDown} gets back up after the fight, badly hurt.`] : []), ...extraMsgs, ...msgs];
     }
   }
 
