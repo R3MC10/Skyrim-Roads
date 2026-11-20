@@ -1,0 +1,41 @@
+name: Build the Android app
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: android-actions/setup-android@v3
+      - run: npm ci
+      - name: Put the game inside the app
+        run: npm run sync
+      - name: Build the APK
+        working-directory: android
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: chmod +x gradlew && ./gradlew assembleRelease --no-daemon --stacktrace
+      - run: cp android/app/build/outputs/apk/release/app-release.apk RoadsOfTheNorth.apk
+      - name: Publish it as a download
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: Roads of the North (build ${{ github.run_number }})
+          make_latest: true
+          files: RoadsOfTheNorth.apk
+          body: |
+            Open this page on your Android phone, tap **RoadsOfTheNorth.apk**, then open the download.
+            The first time, Android asks to allow installing apps from your browser: allow it.
+            Newer builds install over the old one and keep your offline save.

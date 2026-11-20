@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Roads of the North</string>
+    <string name="title_activity_main">Roads of the North</string>
+    <string name="package_name">com.r3mc10.roadsofthenorth</string>
+    <string name="custom_url_scheme">com.r3mc10.roadsofthenorth</string>
+</resources>

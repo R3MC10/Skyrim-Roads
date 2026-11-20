@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Skyrim: Roads of the North</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Barlow+Semi+Condensed:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE: a Nord's field kit at night — iron, frost, candle-lit parchment.
+   IDEA: the game behaves like a folded campaign map in an iron case: the map is the screen, everything else hangs below it.
+   PICTURE: the live parchment map of Skyrim with fog, your frost-blue marker and the dashed road ahead.
+   COLOUR and TYPE: forged-iron charcoal, parchment map, frost blue for you and travel, ember red for danger, coin gold. Cinzel titles, Barlow Semi Condensed for the interface (Skyrim's condensed UI voice), Cormorant on the map.
+   LAYOUT: phone first — status line, map, vitals, then the active panel; tab bar fixed at the bottom. Wider screens put the panel beside the map. */
+:root{color-scheme:dark;--bg:#121417;--panel:#1b1e22;--panel2:#23272c;--line:#33383f;--ink:#ebe5d6;--mute:#a49d8c;--frost:#8fd3ff;--frost2:#2b5f80;--gold:#e2bb64;--ember:#d65a4a;--hp:#c4413a;--mp:#3f7fd6;--sp:#4fa35c;--parch:#d9c69c}
+:root[data-theme=light]{color-scheme:dark}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%}
+body{margin:0;background:radial-gradient(120% 60% at 50% 0%,#1d2228 0%,var(--bg) 60%);color:var(--ink);font:16px/1.45 "Barlow Semi Condensed",system-ui,sans-serif;overflow-x:clip;-webkit-tap-highlight-color:transparent}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+h1,h2,h3{font-family:Cinzel,Georgia,serif;font-weight:700;margin:0;line-height:1.1;letter-spacing:.02em}
+h2{font-size:20px}h3{font-size:15px;color:var(--parch)}
+.app{max-width:1240px;margin:0 auto;padding:0 12px calc(84px + env(safe-area-inset-bottom))}
+.top{display:flex;align-items:center;gap:10px;padding:10px 2px 8px}
+.top .who{flex:1}
+.top .who b{font-family:Cinzel,serif;font-size:18px;display:block;line-height:1.1}
+.top .who span,.top .meta{color:var(--mute);font-size:14px}
+.top .meta{text-align:right;white-space:nowrap}
+.gold{color:var(--gold);font-weight:600}
+.layout{display:grid;gap:12px}
+@media(max-width:700px){.layout .mapwrap{aspect-ratio:auto;height:min(56vh,560px);width:100%}}
+@media(min-width:900px){.layout{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);align-items:start}.side{position:sticky;top:8px}}
+.mapwrap{position:relative;border-radius:10px;overflow:hidden;background:#0c0d10;box-shadow:0 10px 30px rgba(0,0,0,.45),inset 0 0 0 1px #3a3229;aspect-ratio:10/7;touch-action:none}
+.mapwrap canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.mapbtns{position:absolute;right:8px;top:8px;display:flex;flex-direction:column;gap:6px}
+.iconbtn{width:44px;height:44px;border-radius:10px;border:1px solid #4a4237;background:rgba(18,20,23,.82);display:grid;place-items:center;font-size:20px}
+.picked{position:absolute;left:8px;right:8px;bottom:8px;display:flex;align-items:center;gap:10px;padding:8px 8px 8px 12px;border-radius:10px;background:rgba(18,20,23,.9);border:1px solid #4a4237}
+.picked .t{flex:1;line-height:1.2}.picked .t b{font-family:Cinzel,serif}.picked .t span{color:var(--mute);font-size:14px;display:block}
+.vitals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+.bar{height:8px;border-radius:5px;background:#2a2e34;overflow:hidden}.bar i{display:block;height:100%;border-radius:5px;transition:width .4s}
+.vital small{display:flex;justify-content:space-between;color:var(--mute);font-size:13px}
+.trip{margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--panel);border:1px solid var(--line);display:grid;gap:6px}
+.trip.enc{border-color:var(--ember);background:#2a1715}
+.trip .row{display:flex;align-items:center;gap:10px}.trip .row b{flex:1}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+.panel+.panel{margin-top:12px}
+.sub{color:var(--mute);font-size:14px}
+.btn{min-height:44px;padding:0 16px;border-radius:10px;border:1px solid #4d5560;background:var(--panel2);font-weight:600}
+.btn.pri{background:var(--frost2);border-color:#4a8cb3;color:#eaf7ff}
+.btn.danger{background:#5a1f1a;border-color:#8a3a30}
+.btn.sm{min-height:36px;padding:0 10px;font-size:14px}
+.btn:disabled{opacity:.45;cursor:default}
+.btn:focus-visible,.iconbtn:focus-visible,select:focus-visible,input:focus-visible,.tab:focus-visible{outline:2px solid var(--frost);outline-offset:2px}
+input,select{min-height:44px;font-size:16px;border-radius:10px;border:1px solid #4d5560;background:#14171a;padding:0 10px;width:100%}
+.list{display:grid;gap:6px;margin-top:10px}
+.item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:var(--panel2);border:1px solid transparent}
+.item.on{border-color:#4a8cb3}
+.item .t{flex:1;line-height:1.25}.item .t span{display:block;color:var(--mute);font-size:14px}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.chip{padding:6px 12px;border-radius:999px;border:1px solid #4d5560;background:transparent;min-height:36px;font-size:14px}
+.chip.on{background:var(--frost2);border-color:#4a8cb3}
+.evc{display:flex;flex-direction:column;gap:8px;margin-top:10px}.evc .btn{width:100%;min-height:46px}
+.dun{position:fixed;inset:0;z-index:8;overflow:auto;background:radial-gradient(90% 50% at 50% 0%,#2a2620 0%,#0d0e10 70%);padding:12px 12px calc(24px + env(safe-area-inset-bottom))}
+.dun .in{width:min(560px,100%);margin:0 auto;display:grid;gap:10px}
+.dun .hd{display:flex;align-items:center;gap:8px}.dun .hd h2{flex:1;margin:0;font-size:20px}
+.dun .card{background:var(--panel);border:1px solid #4a4237;border-radius:12px;padding:14px}
+.dun .card.foe{border-color:var(--ember)}.dun .card.res{border-color:#5c6a52}
+.dun .card h3{margin:0 0 6px;font-family:Cinzel,serif;font-size:17px}
+.dun .card p{margin:6px 0}
+.dun svg{width:100%;height:auto;display:block}
+.dun .node{cursor:pointer}.dun .node:focus{outline:none}
+.dun .node circle{fill:#24282d;stroke:#4d5560;stroke-width:2}
+.dun .node.done circle{fill:#3a3427;stroke:#8a7a5c}
+.dun .node.here circle{stroke:var(--gold);stroke-width:3}
+.dun .node.next circle{stroke:var(--frost);stroke-width:3;animation:pulse 1.6s ease-in-out infinite}
+.dun .node.boss circle{stroke:var(--ember)}
+@keyframes pulse{50%{stroke-opacity:.35}}
+@media (prefers-reduced-motion:reduce){.dun .node.next circle{animation:none}}
+.dun .legend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:13px;color:var(--mute)}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.skills{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px 14px;margin-top:8px}
+.skill small{display:flex;justify-content:space-between}.skill .bar{height:5px;margin-top:3px}
+.log{display:grid;gap:4px;margin-top:8px;font-size:15px}
+.log div{padding:6px 0;border-bottom:1px solid #2a2e34}
+.log time{color:var(--mute);font-size:13px;margin-right:6px}
+.tabs{position:fixed;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));background:rgba(14,16,19,.96);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);z-index:5;backdrop-filter:blur(6px)}
+.tab{border:0;background:none;padding:8px 2px 10px;min-height:56px;color:var(--mute);font-size:12px;display:grid;justify-items:center;gap:2px;position:relative}
+.tab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8}
+.tab.on{color:var(--frost)}
+.tab .dot{position:absolute;top:6px;right:calc(50% - 16px);width:9px;height:9px;border-radius:50%;background:var(--gold)}
+.modal{position:fixed;inset:0;background:rgba(5,6,8,.72);display:grid;place-items:end center;z-index:10;padding:12px}
+@media(min-width:700px){.modal{place-items:center}}
+.sheet{width:min(560px,100%);max-height:88vh;overflow:auto;background:var(--panel);border:1px solid #4a4237;border-radius:14px;padding:16px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.sheet.enc{border-color:var(--ember)}
+.danger-low{color:#8fd08f}.danger-medium{color:var(--gold)}.danger-high{color:var(--ember)}
+.flog{font-size:14px;margin-top:10px;max-height:260px;overflow:auto;border-top:1px solid var(--line)}
+.flog div{display:grid;grid-template-columns:2.6em minmax(0,1fr);gap:6px;padding:4px 0;border-bottom:1px solid #2a2e34}
+.flog .r{color:var(--frost)}
+.toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#24292f;border:1px solid #4d5560;border-radius:10px;padding:10px 14px;z-index:20;max-width:min(92vw,520px);box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.races{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:10px}
+.race{text-align:left;padding:10px;border-radius:10px;border:1px solid #4d5560;background:var(--panel2);min-height:44px}
+.race.on{border-color:var(--frost);background:#1c2c38}
+.race b{font-family:Cinzel,serif;display:block}.race span{font-size:13px;color:var(--mute)}
+.status{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--mute)}
+.status i{width:8px;height:8px;border-radius:50%;background:var(--mute)}.status.live i{background:var(--sp)}
+.hide{display:none!important}
+.rule{display:grid;grid-template-columns:2em minmax(0,1fr) auto;gap:8px;align-items:center;padding:8px 10px;background:var(--panel2);border-radius:10px}
+.rule .n{color:var(--frost);font-weight:600}
+.rule .acts{display:flex;gap:4px}
+.slotgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;margin-top:8px}
+.slot{padding:8px 10px;border-radius:10px;background:var(--panel2);font-size:14px}.slot span{color:var(--mute);display:block;font-size:12px}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div id="loading" class="panel" style="margin-top:24px"><h2>Skyrim: Roads of the North</h2><p class="sub">Unrolling the map…</p></div>
+</div>
+<div class="tabs hide" id="tabs" role="tablist"></div>
+<script src="data.js"></script>
+<script src="world.js"></script>
+<script src="terrain.js"></script>
+<script src="formulas.js"></script>
+<script src="perks.js"></script>
+<script src="engine.js"></script>
+<script src="events.js"></script>
+<script src="dungeons.js"></script>
+<script src="towns.js"></script>
+<script src="mp.js"></script>
+<script src="store.js"></script>
+<script src="map.js"></script>
+<script src="ui.js"></script>
+</body>
+</html>

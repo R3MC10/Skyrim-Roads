@@ -1,0 +1,33 @@
+{
+  "name": "roads-of-the-north",
+  "version": "1.0.0",
+  "description": "Roads of the North: a multiplayer Skyrim-inspired RPG for friends (Android app)",
+  "main": "index.js",
+  "scripts": {
+    "net": "esbuild src/p2pnet.mjs --bundle --minify --format=iife --target=es2020 --outfile=game/p2pnet.js",
+    "build": "npm run net && node scripts/build.mjs",
+    "sync": "npm run build && npx cap sync android"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@capacitor/android": "^8.6.2",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/browser": "^8.0.5",
+    "@capacitor/core": "^8.6.2",
+    "@capacitor/share": "^8.0.3",
+    "@capacitor/splash-screen": "^8.0.2",
+    "@fontsource/barlow-semi-condensed": "^5.3.0",
+    "@fontsource/cinzel": "^5.3.0",
+    "@fontsource/cormorant-garamond": "^5.3.0",
+    "trystero": "^0.27.0"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^4.0.0",
+    "@capacitor/cli": "^8.6.2",
+    "esbuild": "^0.28.2"
+  },
+  "private": true,
+  "type": "commonjs"
+}

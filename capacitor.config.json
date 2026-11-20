@@ -1,0 +1,11 @@
+{
+  "appId": "com.r3mc10.roadsofthenorth",
+  "appName": "Roads of the North",
+  "webDir": "www",
+  "backgroundColor": "#121417",
+  "android": { "backgroundColor": "#121417" },
+  "plugins": {
+    "SplashScreen": { "launchShowDuration": 1500, "launchAutoHide": true, "backgroundColor": "#121417", "showSpinner": false },
+    "SystemBars": { "insetsHandling": "native", "style": "DARK" }
+  }
+}
