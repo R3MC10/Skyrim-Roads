@@ -88,18 +88,18 @@ const G = (() => {
 
   // ---------------------------------------------------------------- stats
   const maxHealth = (s) => 100 + s.hpBonus + fxSum(s, "max:health");
-  const maxMagicka = (s) => D.RACES[s.race].magicka + s.mpBonus + fxSum(s, "max:magicka");
+  const maxMagicka = (s) => D.RACES[s.race].magicka + s.mpBonus + fxSum(s, "max:magicka") + (s.stone === "atronach" ? 50 : 0);   // [Skyrim] Atronach Stone
   const maxStamina = (s) => 100 + s.spBonus + fxSum(s, "max:stamina");
   function curHealth(s, t = now()) {
     if (s.dungeon) return Math.min(maxHealth(s), s.health);   // [OURS] no regeneration inside a dungeon
-    return Math.min(maxHealth(s), s.health + Math.max(0, t - s.healthTs) * F.REGEN_PER_SECOND.health * maxHealth(s) * (1 + fxSum(s, "regen:health", t) / 100));
+    return Math.min(maxHealth(s), s.health + Math.max(0, t - s.healthTs) * F.REGEN_PER_SECOND.health * maxHealth(s) * (1 + fxSum(s, "regen:health", t) / 100) * (s.stone === "lady" ? 1.25 : 1));
   }
   function setHealth(s, hp, t = now()) { s.health = Math.max(0, Math.min(maxHealth(s), hp)); s.healthTs = t; }
   const skill = (s, name) => s.skills[name].lvl + fxSum(s, "skill:" + name);   // potions add skill points [OURS simplification]
 
   function useSkill(s, name, baseXp) {
     const sk = s.skills[name];
-    sk.xp += F.skillXpGained(name, baseXp) * (rested(s) ? 1.1 : 1);   // [Skyrim] Rested: skills improve 10% faster
+    sk.xp += F.skillXpGained(name, baseXp) * (rested(s) ? 1.1 : 1) * (typeof POWERS !== "undefined" ? POWERS.xpMult(s, name) : 1);   // Rested; standing stones   // [Skyrim] Rested: skills improve 10% faster
     const msgs = [];
     while (sk.lvl < 100 && sk.xp >= F.skillXpNeeded(name, sk.lvl)) {
       sk.xp -= F.skillXpNeeded(name, sk.lvl);
@@ -162,6 +162,7 @@ const G = (() => {
     const worn = new Set(Object.values(lo(s).equipment));
     return s.inv.reduce((sum, r) => {
       const it = D.ITEMS[r.item]; let w = (it?.weight || 0) * r.qty;
+      if (worn.has(r.id) && it.type && s.stone === "steed") w = 0;   // [Skyrim] Steed Stone
       if (worn.has(r.id) && it.type) {
         if ((it.type === "heavy" && P(s, "conditioning")) || (it.type === "light" && P(s, "unhindered"))) w = 0;   // [Skyrim]
         if (it.type === "medium" && P(s, "balanced_load")) w /= 2;
@@ -170,7 +171,7 @@ const G = (() => {
     }, 0);
   }
   const capacity = (s) => F.BASE_CARRY + Math.floor(s.spBonus / F.ATTRIBUTE_PER_LEVEL) * F.CARRY_PER_STAMINA_LEVEL
-    + (s.horse ? D.HORSE_CARRY : 0) + (P(s, "extra_pockets") ? 100 : 0) + fxSum(s, "carry");
+    + (s.horse ? D.HORSE_CARRY : 0) + (P(s, "extra_pockets") ? 100 : 0) + fxSum(s, "carry") + (s.stone === "steed" ? 100 : 0);
   const overweight = (s) => carried(s) > capacity(s);
   const lo = (s) => s.loadouts[s.loadout] || Object.values(s.loadouts)[0];
   function equipment(s) {
@@ -240,6 +241,7 @@ const G = (() => {
     if (kind === "spell") return `Cast ${D.SPELLS[arg]?.name || arg}`;
     if (kind === "potion") return `Drink a ${arg} potion`;
     if (kind === "scroll") return `Read ${D.ITEMS[arg]?.name || arg}`;
+    if ((kind === "power" || kind === "shout") && typeof POWERS !== "undefined") return POWERS.describe(a);
     return a;
   }
   function describeRule(r) {
@@ -268,15 +270,17 @@ const G = (() => {
       for (const sl of ARMOR_SLOTS) if (this.eq[sl]) this.armor[sl] = D.ITEMS[this.eq[sl].item];
       this.shield = this.armor.shield || null;
       const regen = Object.values(this.armor).reduce((a, x) => a + (x.magicka_regen || 0), 0);
-      this.regenMp = maxMagicka(s) * F.REGEN_PER_SECOND.magicka * (1 + regen) * (1 + 0.25 * P(s, "recovery")) * (1 + fxSum(s, "regen:magicka") / 100);
+      this.regenMp = maxMagicka(s) * F.REGEN_PER_SECOND.magicka * (1 + regen) * (1 + 0.25 * P(s, "recovery")) * (1 + fxSum(s, "regen:magicka") / 100)
+        * (s.stone === "atronach" ? 0.5 : s.stone === "apprentice" ? 2 : 1);
       const lightWorn = Object.values(this.armor).some((a) => a.type === "light");
-      this.regenSp = maxStamina(s) * F.REGEN_PER_SECOND.stamina * (1 + (lightWorn && P(s, "wind_walker") ? 0.5 : 0) + 0.25 * P(s, "second_wind")) * (1 + fxSum(s, "regen:stamina") / 100);
+      this.regenSp = maxStamina(s) * F.REGEN_PER_SECOND.stamina * (1 + (lightWorn && P(s, "wind_walker") ? 0.5 : 0) + 0.25 * P(s, "second_wind")) * (1 + fxSum(s, "regen:stamina") / 100) * (s.stone === "lady" ? 1.25 : 1);
       this.wt = wtype(w?.item);
       const sk0 = this.weapon?.skill;
       this.paCost = F.powerAttackCost(this.weapon ? this.weapon.weight : 0)
         * ((sk0 === "One-Handed" && P(s, "fighting_stance")) || (sk0 === "Two-Handed" && P(s, "champions_stance")) ? 0.75 : 1);
       this.temper = w?.temper || 0;
       this.allies = allyProvider(s) || [];   // party members fighting beside you: [{name, dmg}]
+      this.pw = typeof POWERS !== "undefined" ? POWERS.fightState() : null;
       this.bleed = []; this.eParalyzed = 0; this.flurry = 0; this.firstHit = true; this.shadowUsed = false; this.sneakNext = false;
     }
     addXp(k, v) { this.xp[k] = (this.xp[k] || 0) + v; }
@@ -297,7 +301,7 @@ const G = (() => {
     }
     armorRating() {
       const s = this.s;
-      let rating = this.armorSpell, pieces = 0;
+      let rating = this.armorSpell + (s.stone === "lord" ? 50 : 0), pieces = 0;   // [Skyrim] Lord Stone
       const perkMult = { heavy: 0.2 * P(s, "juggernaut"), light: 0.2 * P(s, "agile_defender"), medium: 0.2 * P(s, "chain_drills") };
       const counts = {};
       for (const [sl, a] of Object.entries(this.armor)) {
@@ -351,6 +355,7 @@ const G = (() => {
       if (a === "power_attack") return this.sp >= this.paCost;
       if (a === "block") return this.sp >= F.BLOCK_STAMINA && !(this.weapon && this.weapon.skill === "Archery");
       const [kind, arg] = a.split(":");
+      if ((kind === "power" || kind === "shout") && this.pw) return POWERS.affordable(this, kind, arg);
       if (kind === "spell") return this.s.spells.includes(arg) && D.SPELLS[arg] && this.mp >= spellCost(this.s, D.SPELLS[arg]);
       if (kind === "potion") return !!this.findPotion(arg);
       if (kind === "scroll") return !!this.findItem(arg);
@@ -378,6 +383,7 @@ const G = (() => {
       const [cc, cm] = this.critChance();
       if (cc && Math.random() < cc) { dmg += (this.weapon ? this.weapon.damage : 0) * cm + (wt === "spear" ? dmg * 0.5 : 0); label += " (critical)"; }
       if (wt === "spear" && this.firstHit && P(s, "long_reach")) dmg *= 1.5;
+      if (this.pw) dmg *= POWERS.dmgOut(this);
       this.firstHit = false;
       if (wt === "fist") { if (P(s, "flurry")) { dmg *= 1 + Math.min(0.5, 0.1 * this.flurry); this.flurry++; } }
       // enemy armor (other players): maces and warhammers ignore some of it
@@ -482,6 +488,7 @@ const G = (() => {
         return "Raises guard";
       }
       const [kind, arg] = a.split(":");
+      if ((kind === "power" || kind === "shout") && this.pw) return POWERS.act(this, kind, arg);
       if (kind === "spell") return this.cast(arg, false);
       if (kind === "potion") {
         const r = this.findPotion(arg), it = D.ITEMS[r.item];
@@ -522,6 +529,7 @@ const G = (() => {
       const { rating, pieces, empty } = this.armorRating();
       dmg *= 1 - F.damageReduction(rating, pieces);
       if (this.tags.has("mage") || this.tags.has("dragon")) dmg *= (1 - 0.1 * P(s, "magic_resistance")) * (1 - Math.min(0.5, fxSum(s, "resist") / 100));
+      if (this.pw) { dmg = POWERS.dmgIn(this, dmg, this.tags.has("mage") || this.tags.has("dragon")); if (dmg === 0) return `${n}'s blow passes through you`; }
       if (Object.values(this.armor).some((a) => a.type === "heavy") && P(s, "reflect_blows") && Math.random() < 0.1) { this.ehp -= dmg; return `${n}'s blow is reflected back (${Math.round(dmg)})`; }
       this.hp -= dmg;
       if (this.hp <= 0 && P(s, "shadow_warrior") && !this.shadowUsed) { this.shadowUsed = true; this.hp = 1; this.sneakNext = true; return `${n} hits ${Math.round(dmg)}, but you vanish into the shadows`; }
@@ -544,6 +552,7 @@ const G = (() => {
         for (const al of this.allies) if (this.ehp > 0) { const d = al.dmg * rnd(...F.DAMAGE_SPREAD); this.ehp -= d; line.me += ` · ${al.name} ${Math.round(d)}`; }
         if (this.summonTurns > 0 && this.ehp > 0) { this.summonTurns--; this.ehp -= this.summonDmg; line.me += ` · familiar ${this.summonDmg}`; }
         if (this.ehp > 0) line.them = this.enemyTurn();
+        if (this.pw) POWERS.tick(this, line);
         line.hp = Math.max(0, Math.round(this.hp)); line.ehp = Math.max(0, Math.round(this.ehp));
         this.log.push(line);
         this.sp = Math.min(maxStamina(this.s), this.sp + this.regenSp);
@@ -560,11 +569,12 @@ const G = (() => {
         if (extra) { const row = invRow(this.s, this.weaponInv); const cap = this.weapon.enchant.capacity; this.charges[this.weaponInv] = Math.min(cap, (this.charges[this.weaponInv] ?? row.charge ?? 0) + cap * extra); }
       }
       setHealth(this.s, this.hp, t);
+      const extraMsgs = this.won && this.tags.has("dragon") && typeof POWERS !== "undefined" && !this.s._test ? [POWERS.absorb(this.s)] : [];
       for (const [id, q] of Object.entries(this.used)) take(this.s, +id, q);
       for (const [id, c] of Object.entries(this.charges)) { const r = invRow(this.s, +id); if (r) r.charge = c; }
       const msgs = [];
       for (const [k, v] of Object.entries(this.xp)) msgs.push(...useSkill(this.s, k, v));
-      return msgs;
+      return [...extraMsgs, ...msgs];
     }
   }
 

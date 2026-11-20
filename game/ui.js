@@ -429,6 +429,12 @@
   let dunNote = null;   // result of the last action, shown above the map
   function placeHere() {
     const l = S.location;
+    if (l && !S.trip && POWERS.STONE_AT[l]) {
+      return `<div class="panel" style="border-color:var(--gold)"><h2>${esc(l)}</h2><p class="sub">A standing stone. You can carry the blessing of one stone at a time; touching another replaces it.${S.stone ? ` Yours now: ${esc(POWERS.STONES[S.stone][0])}.` : ""}</p>
+        <div class="list">${POWERS.STONE_AT[l].map((id) => `<div class="item ${S.stone === id ? "on" : ""}"><div class="t">${esc(POWERS.STONES[id][0])}<span>${esc(POWERS.STONES[id][1])}</span></div><button class="btn sm pri" data-act="stone" data-id="${id}" ${S.stone === id ? "disabled" : ""}>${S.stone === id ? "Yours" : "Choose"}</button></div>`).join("")}</div></div>`;
+    }
+    if (l === "High Hrothgar" && !S.trip) return `<div class="panel" style="border-color:var(--gold)"><h2>High Hrothgar</h2><p class="sub">Seven thousand steps up the Throat of the World, the Greybeards wait in silence.</p>
+      <button class="btn pri" data-act="greybeards" style="width:100%" ${S.greybeards ? "disabled" : ""}>${S.greybeards ? "They have taught you all they will, for now" : "Speak with the Greybeards"}</button></div>`;
     if (!l || !DUNGEONS.enterable(l) || S.trip) return "";
     const left = DUNGEONS.refillLeft(S, l), lvl = { 1: 1, 2: 6, 3: 12 }[DUNGEONS.info(l).tier];
     const th = DUNGEONS.info(l).theme, rec = th === "lair" ? 20 : th === "giantcamp" ? 10 : lvl;
@@ -676,7 +682,19 @@
     const effects = fx.length || G.rested(S) || S.poison ? `<div class="panel"><h2>Active effects</h2><div class="list">${G.rested(S) ? `<div class="item"><div class="t">Rested<span>Skills improve 10% faster · ${Math.ceil((S.rested - t) / 60)} min left</span></div></div>` : ""}
       ${S.poison ? `<div class="item"><div class="t">${esc(S.poison.name)} on your weapon<span>${S.poison.hits} hit${S.poison.hits > 1 ? "s" : ""} left</span></div></div>` : ""}
       ${fx.map((f) => `<div class="item"><div class="t">${esc(f.name)} ${f.mag}<span>${Math.ceil((f.until - t) / 60)} min left</span></div></div>`).join("")}</div></div>` : "";
-    return `${lvl}${effects}<div class="panel"><h2>${esc(S.name)}</h2><p class="sub">Level ${S.level} ${esc(D.RACES[S.race].name)} · ${esc(D.RACES[S.race].desc)}</p>
+    const tnow = G.now(), rp = POWERS.RACE[S.race];
+    const cd = (at) => { const m = Math.ceil(((at || 0) + POWERS.DAY - tnow) / 60); return m > 0 ? `ready in ${m} min` : "ready"; };
+    const shoutRows = Object.entries(POWERS.SHOUTS).filter(([, [, words]]) => words.some((w) => POWERS.known(S, w))).map(([id, [name, words, cds, desc]]) => {
+      const lv = POWERS.level(S, id);
+      return `<div class="item" style="flex-wrap:wrap"><div class="t">${esc(name)} <span class="num">${words.map((w) => POWERS.known(S, w) ? (POWERS.unlocked(S, w) ? `<b>${w}</b>` : `${w}🔒`) : "···").join(" ")}</span><span>${esc(desc)}${lv ? ` · cooldown ${cds[lv - 1]} s` : ""}</span></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;width:100%">${words.filter((w) => POWERS.known(S, w) && !POWERS.unlocked(S, w)).map((w) => `<button class="btn sm" data-act="unlock" data-id="${w}" ${(S.souls || 0) > 0 ? "" : "disabled"}>Unlock ${w} (1 soul)</button>`).join("")}
+        ${POWERS.ROAD_SHOUTS.includes(id) && lv ? `<button class="btn sm pri" data-act="roadshout" data-id="${id}" ${POWERS.voiceReady(S) ? "" : "disabled"}>Shout</button>` : ""}</div></div>`; }).join("");
+    const powersHtml = `<div class="panel"><h2>Powers & shouts</h2><div class="list">
+      <div class="item"><div class="t">${esc(rp[0])} <span class="num">${cd(S.powerAt)}</span><span>${esc(rp[1])} Once a day: put "Use my racial power" in your tactics.</span></div></div>
+      <div class="item"><div class="t">${S.stone ? esc(POWERS.STONES[S.stone][0]) : "No standing stone"}${S.stone && POWERS.stoneHasPower(S) ? ` <span class="num">${cd(S.stonePowerAt)}</span>` : ""}<span>${S.stone ? esc(POWERS.STONES[S.stone][1]) : "Visit one of the 13 standing stones (Guardian Stones are near Riverwood) to take its blessing."}</span></div></div>
+      ${shoutRows || `<p class="sub">No Words of Power yet. Word Walls wait at the end of Nordic barrows (Bleak Falls Barrow has one), and the Greybeards at High Hrothgar teach Unrelenting Force.</p>`}</div>
+      <p class="sub" style="margin-top:8px">Dragon souls: <b>${S.souls || 0}</b>${S.dragons ? ` · dragons slain: ${S.dragons}` : ""}. Kill a dragon to absorb its soul; each soul unlocks one word.${!POWERS.voiceReady(S) ? ` Your voice recovers in ${Math.ceil(S.voiceAt - tnow)} s.` : ""}</p></div>`;
+    return `${lvl}${effects}${powersHtml}<div class="panel"><h2>${esc(S.name)}</h2><p class="sub">Level ${S.level} ${esc(D.RACES[S.race].name)} · ${esc(D.RACES[S.race].desc)}</p>
       <div class="bar" style="margin-top:8px"><i style="width:${pct(S.charXp, need)}%;background:var(--gold)"></i></div><p class="sub num">${Math.round(S.charXp)}/${need} toward level ${S.level + 1}</p>
       <div class="grid2" style="grid-template-columns:repeat(3,minmax(0,1fr));margin-top:8px">
         <div class="slot">Health<b class="num" style="display:block">${G.maxHealth(S)}</b></div><div class="slot">Magicka<b class="num" style="display:block">${G.maxMagicka(S)}</b></div><div class="slot">Stamina<b class="num" style="display:block">${G.maxStamina(S)}</b></div></div>
@@ -726,7 +744,10 @@
     const actOpts = [...Object.entries(D.BASIC_ACTIONS).map(([id, l]) => [id, l]),
       ...S.spells.map((s) => [`spell:${s}`, `Cast ${D.SPELLS[s].name} (${G.spellCost(S, D.SPELLS[s])} magicka)`]),
       ...["health", "magicka", "stamina"].map((r) => [`potion:${r}`, `Drink a ${r} potion (have ${G.countRestore(S, r)})`]),
-      ...[...new Set(S.inv.filter((r) => D.ITEMS[r.item]?.slot === "scroll").map((r) => r.item))].map((i) => [`scroll:${i}`, `Read ${D.ITEMS[i].name}`])]
+      ...[...new Set(S.inv.filter((r) => D.ITEMS[r.item]?.slot === "scroll").map((r) => r.item))].map((i) => [`scroll:${i}`, `Read ${D.ITEMS[i].name}`]),
+      ["power:race", `Use ${POWERS.RACE[S.race][0]} (racial power, once a day)`],
+      ...(POWERS.stoneHasPower(S) && S.stone !== "tower" ? [["power:stone", `Use ${POWERS.STONES[S.stone][0]}'s power (once a day)`]] : []),
+      ...Object.keys(POWERS.SHOUTS).filter((id) => !POWERS.ROAD_SHOUTS.includes(id) && POWERS.level(S, id)).map((id) => [`shout:${id}`, `Shout ${POWERS.SHOUTS[id][0]} (${POWERS.level(S, id)} word${POWERS.level(S, id) > 1 ? "s" : ""})`])]
       .map(([id, l]) => `<option value="${esc(id)}" ${tacticsDraft.do === id ? "selected" : ""}>${esc(l)}</option>`).join("");
     const needPct = D.CONDITIONS[tacticsDraft.if]?.[1];
     const enemies = D.ENCOUNTERS.filter((e) => e.kind !== "event");
@@ -750,7 +771,7 @@
   function panelTown() {
     const l = S.location, types = l ? G.shopTypes(l) : [];
     if (!l || (!types.length && !TOWNS.isTown(l))) {
-      if (l && DUNGEONS.enterable(l)) return placeHere();
+      if (l && (DUNGEONS.enterable(l) || POWERS.STONE_AT[l] || l === "High Hrothgar")) return placeHere();
       return `<div class="panel"><h2>${l ? esc(l) : "The wilds"}</h2><p class="sub">${l ? "There's nothing to buy here." : "You're out on the road."} Cities and towns have shops, inns, trainers, alchemy labs, forges and jobs.</p></div>`;
     }
     const open = G.shopsOpen(), wanted = TOWNS.wanted(S), hold = G.holdAt(WORLD.places[l]);
@@ -859,6 +880,10 @@
       case "openenc": openEncounter(); break;
       case "openev": openEvent(); break;
       case "online": openOnline(); break;
+      case "stone": say(POWERS.takeStone(S, b.dataset.id)); publishCard(); break;
+      case "greybeards": { const m = POWERS.greybeards(S); persist(true); renderPanel(true); showMessage("High Hrothgar", m); break; }
+      case "unlock": say(POWERS.unlock(S, b.dataset.id)); break;
+      case "roadshout": { const m = POWERS.roadShout(S, b.dataset.id); liveCache.key = ""; persist(true); toast(m); renderPanel(true); break; }
       case "enter": { const err = DUNGEONS.enter(S); if (err) return toast(err); selected = null; renderPicked(); dunNote = null; persist(true); renderDungeon(); break; }
       case "dun": renderDungeon(); break;
       case "droom": dungeonRoom(b.dataset.c); break;
@@ -911,7 +936,7 @@
       case "preset": L.rules = G.clone(D.PRESETS[b.dataset.id].rules); say(`${D.PRESETS[b.dataset.id].name} tactics loaded. Rules for spells you don't know are skipped.`); break;
       case "test": {
         const name = $("#te").value, e2 = G.scaleEnemy(D.ENCOUNTERS.find((x) => x.name === name), S.level);
-        const sim = G.clone(S); sim.health = G.maxHealth(sim); sim.healthTs = G.now();
+        const sim = G.clone(S); sim.health = G.maxHealth(sim); sim.healthTs = G.now(); sim._test = true;
         const f = new G.Fight(sim, e2); f.run();
         testResult = { f, name }; renderPanel(true); break;
       }

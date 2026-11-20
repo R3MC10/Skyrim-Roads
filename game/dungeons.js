@@ -236,7 +236,7 @@ const DUNGEONS = (() => {
     if (r.type === "fight" || r.type === "elite") return [["fight", "Fight"], ["sneak", "Sneak past"], ...pot];
     if (r.type === "boss") return [["fight", "Fight"], ...pot];
     if (r.type === "trap") return [["dash", "Time it and dash through (Acrobatics)"], ["trigger", "Look for the trigger (Sneak)"], ["walk", "Just push through"]];
-    if (r.type === "treasure") return [["pick", `Pick the lock (${r.tries} picks left)`], ["smash", "Smash it open"], ["skip", "Leave it"]];
+    if (r.type === "treasure") return [["pick", `Pick the lock (${r.tries} picks left)`], ...(POWERS.stone(s) === "tower" && r.tier <= 3 && POWERS.powerReady(s, "stone") ? [["tower", "Use the Tower Stone's power"]] : []), ["smash", "Smash it open"], ["skip", "Leave it"]];
     if (r.type === "rest") return [["rest", "Rest and bandage your wounds"], ["search", "Search the place"]];
     if (r.type === "puzzle") return [...r.options.map((o) => [`set:${o}`, `Set them to ${o.replace(/-/g, ", ")}`]), ["skip", "Ignore it"]];
     if (r.m === "book") return [["read", "Read it"], ["skip", "Leave it"]];
@@ -290,10 +290,12 @@ const DUNGEONS = (() => {
       extra.push(...themeLoot(s, 0.9));
       if (d.place === "Bleak Falls Barrow" && !s.inv.some((x) => x.item === "golden_claw")) { extra.push(giveFound(s, "golden_claw")); extra.push(giveFound(s, "dragonstone")); }
       let word = "";
-      if (THEMES[d.theme]?.words && (d.place === "Bleak Falls Barrow" || Math.random() < 0.6)) {
-        s.words = s.words || [];
-        const w = d.place === "Bleak Falls Barrow" ? WORDS[0] : WORDS.find((x) => !s.words.includes(x[0])) || null;
-        if (w && !s.words.includes(w[0])) { s.words.push(w[0]); word = ` Behind the throne, a Word Wall hums. One word burns itself into your mind: ${w[0]} (${w[1]}). Shouts aren't in the game yet, but you'll keep it.`; }
+      if (THEMES[d.theme]?.words && (d.place === "Bleak Falls Barrow" || Math.random() < 0.6)) {   // [Skyrim] Word Walls
+        const w = d.place === "Bleak Falls Barrow" && !POWERS.known(s, "FUS") ? ["FUS", "Unrelenting Force"] : POWERS.nextWord(s);
+        if (w) {
+          POWERS.learnWord(s, w[0]);
+          word = ` Behind the throne, a Word Wall hums. One word burns itself into your mind: ${w[0]} (${w[1]}). ${POWERS.unlocked(s, w[0]) ? "" : "A dragon soul will unlock it (Hero tab)."}`;
+        }
       }
       let partyChest = null;
       if (res.f.allies?.length) {   // fought with your party: the boss chest is shared... in theory
@@ -337,7 +339,8 @@ const DUNGEONS = (() => {
         if (Math.random() < 0.35) { const g = goldFound(s, rint(5, 25) * (r.tier + 1)); return done({ text: `You batter it open. Most of what was inside is ruined; you salvage ${g} gold.` }); }
         return done({ text: "The chest wins. You move on with sore arms." });
       }
-      const ch = G.lockChance(s, r.tier);
+      if (choice === "tower") s.stonePowerAt = t;
+      const ch = choice === "tower" ? 1 : G.lockChance(s, r.tier);
       if (Math.random() < ch) {
         const skills = G.useSkill(s, "Lockpicking", LOCK_TIERS[r.tier][1]);                            // [Skyrim] XP per lock tier
         const g = goldFound(s, Math.round(rint(15, 40) * (r.tier + 1) * (G.P(s, "golden_touch") ? 1.5 : 1))), loot = [];

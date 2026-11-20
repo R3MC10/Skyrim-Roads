@@ -45,9 +45,10 @@ const ROAD_EVENTS = (() => {
 
     { id: "chest", weight: 3,
       make: () => { const tier = rint(0, 4) > 3 ? rint(3, 4) : rint(0, 2); return { tier, tries: 3, text: `In the ruins of a wayside shrine sits an iron-banded chest. The lock looks ${LOCK_TIERS[tier][0].toLowerCase()}.` }; },
-      choices: (e) => [["pick", `Pick the lock (${e.tries} picks left)`], ["smash", "Smash it open"], ["leave", "Leave it"]],
-      pick: (s, e) => {
-        const ch = G.lockChance(s, e.tier);
+      choices: (e, s) => [["pick", `Pick the lock (${e.tries} picks left)`], ...(POWERS.stone(s) === "tower" && e.tier <= 3 && POWERS.powerReady(s, "stone") ? [["tower", "Use the Tower Stone's power"]] : []), ["smash", "Smash it open"], ["leave", "Leave it"]],
+      tower: (s, e) => { s.stonePowerAt = G.now(); return byId.chest.pick(s, e, true); },
+      pick: (s, e, sure) => {
+        const ch = sure ? 1 : G.lockChance(s, e.tier);
         if (Math.random() < ch) {
           const skills = xp(s, "Lockpicking", LOCK_TIERS[e.tier][1]);
           const gold = Math.round(rint(10, 40) * (e.tier + 1) * (G.P(s, "golden_touch") ? 1.5 : 1)), loot = [];
