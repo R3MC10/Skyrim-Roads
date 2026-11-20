@@ -99,7 +99,7 @@ const G = (() => {
 
   function useSkill(s, name, baseXp) {
     const sk = s.skills[name];
-    sk.xp += F.skillXpGained(name, baseXp) * (rested(s) ? 1.1 : 1) * (typeof POWERS !== "undefined" ? POWERS.xpMult(s, name) : 1);   // Rested; standing stones   // [Skyrim] Rested: skills improve 10% faster
+    sk.xp += F.skillXpGained(name, baseXp) * (rested(s) ? 1 + (s.restBonus || 0.05) : 1) * (typeof POWERS !== "undefined" ? POWERS.xpMult(s, name) : 1);   // Rested; standing stones   // [Skyrim] Rested: skills improve 10% faster
     const msgs = [];
     while (sk.lvl < 100 && sk.xp >= F.skillXpNeeded(name, sk.lvl)) {
       sk.xp -= F.skillXpNeeded(name, sk.lvl);

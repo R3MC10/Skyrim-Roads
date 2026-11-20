@@ -181,8 +181,8 @@ const TOWNS = (() => {
     if (wanted(s)) return "The innkeeper glances at the guards and says there are no rooms.";
     const p = roomPrice(s);
     if (s.gold < p) return `A room costs ${p} gold.`;
-    s.gold -= p; G.setHealth(s, G.maxHealth(s), t); s.rested = t + RESTED_SECONDS;
-    return `You sleep in a warm bed at ${inn}. Fully healed and Rested: skills improve 10% faster for 40 minutes.`;
+    s.gold -= p; G.setHealth(s, G.maxHealth(s), t); s.rested = t + RESTED_SECONDS; s.restBonus = 0.05;   // [Skyrim] Rested: +5% (a bed you own: Well Rested +10%)
+    return `You sleep in a warm bed at ${inn}. Fully healed and Rested: skills improve 5% faster for 40 minutes. Your own bed would do better.`;
   }
   const BARD = ["A bard plays \"Ragnar the Red\" for the fourth time tonight.", "A drunk argues that the Dragonborn is a myth. Loudly.", "Someone is telling the arrow-in-the-knee story again.",
     "The innkeeper complains about the price of mead.", "Two farmers bet on whether the Jarl will raise taxes."];
@@ -463,7 +463,59 @@ const TOWNS = (() => {
     return "Farengar snatches the Dragonstone. The Jarl pays you 300 gold and assigns Lydia as your housecarl. Hire her (free) in Whiterun.";
   }
 
-  return { BIG, SMALL, carriageFrom, carriageDests, rideCarriage, CARRIAGE_SPEED, FOLLOWERS, followerMax, followerHp, followersHere, hire, dismiss, deliverDragonstone,
+  // ---- homes ([Skyrim] prices; Breezehome needs the Jarl's favour). A chest that's safe from death, your own bed, a garden.
+  const HOMES = {
+    Whiterun: ["Breezehome", 5000, "A cosy house by the city gate."], Riften: ["Honeyside", 8000, "A lakeside house with its own back door."],
+    Markarth: ["Vlindrel Hall", 8000, "Carved into the rock of the Reach."], Windhelm: ["Hjerim", 12000, "A big, cold house with a dark past."],
+    Solitude: ["Proudspire Manor", 25000, "The finest house in Skyrim."],
+  };
+  const GARDEN = ["ing_blue_flower", "ing_lavender", "ing_wheat", "ing_garlic", "ing_red_flower", "ing_purple_flower", "ing_juniper", "ing_snowberries"];
+  const home = (s, town = s.location) => (s.homes || {})[town] || null;
+  function buyHome(s, t = G.now()) {
+    const h = HOMES[s.location];
+    if (!h) return "No house for sale here.";
+    if (home(s)) return "You already own it.";
+    if (wanted(s)) return "The steward won't sell to a wanted criminal.";
+    if (s.location === "Whiterun" && !s.thaneWhiterun) return "The steward only sells Breezehome to someone the Jarl trusts. Bring Farengar the Dragonstone first.";
+    if (s.gold < h[1]) return `${h[0]} costs ${h[1]} gold. You have ${s.gold}.`;
+    s.gold -= h[1];
+    s.homes = { ...(s.homes || {}), [s.location]: { chest: [], garden: 0 } };
+    G.note(s, `🏠 Bought ${h[0]} in ${s.location}.`);
+    return `The steward hands you the key to ${h[0]}. Your chest is safe even if you die, your bed makes you Well Rested, and the garden grows ingredients.`;
+  }
+  function sleepHome(s, t = G.now()) {
+    if (!home(s)) return "You don't own a house here.";
+    G.setHealth(s, G.maxHealth(s), t); s.rested = t + RESTED_SECONDS; s.restBonus = 0.1;   // [Skyrim] Well Rested: +10%
+    return "You sleep in your own bed. Fully healed and Well Rested: skills improve 10% faster for 40 minutes.";
+  }
+  function stash(s, rowId) {
+    const h = home(s); if (!h) return "You don't own a house here.";
+    const r = G.invRow(s, rowId); if (!r) return "You don't have that.";
+    const copy = { ...r }; delete copy.id;
+    G.take(s, rowId, r.qty);
+    const same = h.chest.find((x) => x.item === copy.item && !x.temper && !copy.temper && x.charge == null && copy.charge == null && !x.stolen === !copy.stolen);
+    if (same && ["potion", "scroll", "soulgem", "tome", "ingredient", "trophy", "poison"].includes(D.ITEMS[copy.item].slot)) same.qty += copy.qty; else h.chest.push(copy);
+    return `${D.ITEMS[copy.item].name}${copy.qty > 1 ? ` ×${copy.qty}` : ""} goes in the chest.`;
+  }
+  function unstash(s, idx) {
+    const h = home(s); if (!h) return "You don't own a house here.";
+    const r = h.chest[idx]; if (!r) return "It's not in the chest.";
+    h.chest.splice(idx, 1);
+    const id = G.give(s, r.item, r.qty, r.charge);
+    const row = G.invRow(s, id); if (row && (r.temper || r.stolen)) Object.assign(row, { temper: r.temper, tq: r.tq, stolen: r.stolen });
+    return `You take ${D.ITEMS[r.item].name}${r.qty > 1 ? ` ×${r.qty}` : ""}.`;
+  }
+  const gardenReady = (s, t = G.now()) => home(s) && (home(s).garden || 0) + 2 * 3600 <= t;   // [OURS] one harvest per game day
+  function harvest(s, t = G.now()) {
+    const h = home(s); if (!h) return "You don't own a house here.";
+    if (!gardenReady(s, t)) return `Nothing is ripe yet. Come back in ${Math.ceil(((h.garden || 0) + 7200 - t) / 60)} minutes.`;
+    h.garden = t;
+    const got = {}; for (let i = 0; i < 4 * (G.P(s, "green_thumb") ? 2 : 1); i++) { const it = GARDEN[Math.floor(Math.random() * GARDEN.length)]; got[it] = (got[it] || 0) + 1; }
+    for (const [it, n] of Object.entries(got)) G.give(s, it, n);
+    return `You harvest the garden: ${Object.entries(got).map(([it, n]) => `${D.ITEMS[it].name} ×${n}`).join(", ")}.`;
+  }
+
+  return { HOMES, home, buyHome, sleepHome, stash, unstash, gardenReady, harvest, BIG, SMALL, carriageFrom, carriageDests, rideCarriage, CARRIAGE_SPEED, FOLLOWERS, followerMax, followerHp, followersHere, hire, dismiss, deliverDragonstone,
     EFFECTS, INGREDIENT_FX, INNS, TRAINERS, CAP, QUALITY, known, brewPreview, brew, eat, drink, applyPoison, roomPrice, rentRoom, rumour, trainCost, trainedThisLevel, train,
     temperInfo, temper, bounty, totalBounty, addBounty, wanted, guardCheck, guardChoice, pickChance, pickTownsfolk, canFence, jobsAt, takeJob, dropJob, checkJobs, handIn, countItem, isTown, RUMOUR,
     POTION_MINUTES: (d) => Math.round(d * SECONDS_PER_REAL_SECOND_OF_SKYRIM / 60) };
