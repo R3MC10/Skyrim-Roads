@@ -129,11 +129,21 @@
       return false;
     },
     save() { if (S) Store.save(S); },
+    /* things worth a phone notification while the app is closed: arrival and the next dragon attack (times in ms) */
+    upcoming() {
+      if (!S) return [];
+      const out = [], now = Date.now(), tr = S.trip;
+      if (tr && tr.status === "travel") { const m = tripMinutesLeft(); if (m > 0.5) out.push({ id: 1, at: now + m * 60000, title: `You've reached ${tr.destName}`, body: tr.carriage ? "The carriage pulls up. Tap to see where you are." : "Your trip is over. Tap to see what's there." }); }
+      const r = WEVENTS.nextRaid();
+      if (r) out.push({ id: 2, at: r.start * 1000, title: `🐉 A dragon attacks ${r.town}!`, body: "Every player can fight it together for the next 20 minutes." });
+      return out.filter((n) => n.at > now + 5000);
+    },
   };
   function start() {
     app.innerHTML = `
       <div class="top"><div class="who"><b id="nm"></b><span id="sub"></span></div>
-        <div class="meta"><div id="clock"></div><div class="gold" id="goldv"></div></div></div>
+        <div class="meta"><div id="clock"></div><div class="gold" id="goldv"></div></div>
+        <button class="iconbtn snd" id="sndBtn" aria-label="Sound and music">${SOUND.settings.mute ? "🔇" : "🔊"}</button></div>
       <div class="layout">
         <div>
           <div class="mapwrap" id="mapwrap"><canvas id="map" aria-label="Map of Skyrim"></canvas>
@@ -148,10 +158,11 @@
     tabsEl.classList.remove("hide");
     window.scrollTo(0, 0);
     tabsEl.innerHTML = TABS.map(([id, label, svg]) => `<button class="tab ${id === tab ? "on" : ""}" role="tab" aria-selected="${id === tab}" data-tab="${id}"><svg viewBox="0 0 24 24">${svg}</svg>${label}</button>`).join("");
-    tabsEl.onclick = (e) => { const b = e.target.closest("[data-tab]"); if (!b) return; if (b.dataset.tab === "pack") return openMenu("items"); closeMenu(); tab = b.dataset.tab; testResult = null; bump(); renderTabs(); renderPanel(true); $("#side").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" }); };
+    tabsEl.onclick = (e) => { const b = e.target.closest("[data-tab]"); if (!b) return; SOUND.fx("click"); if (b.dataset.tab === "pack") return openMenu("items"); closeMenu(); tab = b.dataset.tab; testResult = null; bump(); renderTabs(); renderPanel(true); $("#side").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" }); };
     $("#zoomBtn").onclick = () => { zoom = zoom > 1.01 ? 1 : 2.4; follow = true; $("#zoomBtn").textContent = zoom > 1.01 ? "－" : "＋"; };
     $("#centerBtn").onclick = () => { follow = true; if (zoom === 1) zoom = 2.4; $("#zoomBtn").textContent = "－"; };
     bindMap();
+    $("#sndBtn").onclick = openSound;
     $("#side").addEventListener("click", onPanelClick);
     $("#side").addEventListener("change", onPanelChange);
     $("#side").addEventListener("input", onPanelInput);
@@ -206,9 +217,10 @@
         out.taken.forEach((id) => Store.takeBag(id));
         if (out.bag) Store.addBag(out.bag);
         persist(true);
-        if (out.died) showMessage("You died", out.died, true);
+        if (out.died) { SOUND.fx("death"); showMessage("You died", out.died, true); }
         else if (out.encounter) openEncounter();
         else if (out.arrived) {
+          SOUND.fx("arrive");
           toast(`Arrived at ${out.arrived}.` + (G.shopTypes(out.arrived).length ? " Shops are in the Town tab." : DUNGEONS.enterable(out.arrived) ? " You can go inside." : ""));
           selected = null; renderPanel(true);
           const jm = TOWNS.checkJobs(S); if (jm.length) { persist(); setTimeout(() => toast(jm.join(" ")), 1500); }
@@ -218,13 +230,32 @@
         }
       } else { Store.save(S); maybeRoadEvent(); }
     }
-    followParty(); checkAmbush(); renderRaid();
+    followParty(); checkAmbush(); renderRaid(); soundTick();
     if (Math.floor(t) % 3 === 0) { const qm = QUESTS.check(S); if (qm.length) { persist(true); showMessage("Quest", qm.join(" ")); } }
     if (Math.floor(t) % 30 === 0) publishCard(false);
     renderTop(); renderVitals(); renderTrip(); renderTabs();
     if (version !== rendered || Date.now() - lastPanelRender > 20000) renderPanel(false);
   }
 
+  /* music follows what you're doing; little sounds for gold and level-ups */
+  let lastGold = null, lastPending = null;
+  function soundTick() {
+    const raid = WEVENTS.activeRaid();
+    SOUND.mood(S.dungeon ? (S.dungeon.room?.enemy ? "combat" : "dungeon") : S.trip?.status === "encounter" || (raid && S.location === raid.town && !S.trip) ? "combat" : G.isNight() ? "night" : "day");
+    if (lastGold != null && S.gold !== lastGold) SOUND.fx("coin");
+    if (lastPending != null && S.pendingLevels > lastPending) SOUND.fx("levelup", 0.3);
+    lastGold = S.gold; lastPending = S.pendingLevels;
+  }
+  function openSound() {
+    const c = SOUND.settings, sl = (id, label, v) => `<label class="sndrow"><span>${label}</span><input type="range" id="${id}" min="0" max="100" step="5" value="${Math.round(v * 100)}" aria-label="${label}"></label>`;
+    openModal(`<h2>Sound</h2><p class="sub">Music and effects are made live on your device. Music changes for day, night, dungeons and fights.</p>
+      ${sl("snd_music", "Music", c.music)}${sl("snd_sfx", "Effects", c.sfx)}
+      <div class="grid2" style="margin-top:12px"><button class="btn ${c.mute ? "pri" : ""}" data-act="sndmute">${c.mute ? "🔇 Muted · turn on" : "🔇 Mute all"}</button><button class="btn" data-act="sndtest">▶ Test</button></div>
+      <button class="btn pri" data-act="close" style="width:100%;margin-top:10px">Done</button>`);
+    const m = $("#modal");
+    m.addEventListener("input", (e) => { if (e.target.id === "snd_music") SOUND.set("music", e.target.value / 100); if (e.target.id === "snd_sfx") SOUND.set("sfx", e.target.value / 100); });
+    m.addEventListener("change", (e) => { if (e.target.id === "snd_sfx") SOUND.fx("coin"); });
+  }
   function renderTop() {
     $("#nm").textContent = S.name;
     const where = S.location || `the wilds of ${G.holdAt(livePos())}`;
@@ -376,6 +407,7 @@
   }
   const closeModal = () => $("#modal")?.remove();
   function showMessage(title, text, bad) {
+    if (/quest/i.test(title) || /📜/.test(text)) SOUND.fx("quest");
     openModal(`<h2>${esc(title)}</h2><p>${esc(text)}</p><button class="btn ${bad ? "danger" : "pri"}" data-act="close" style="width:100%">Continue</button>`, bad ? "enc" : "");
   }
   function fightLog(f) {
@@ -427,6 +459,7 @@
     showFightResult(r);
   }
   function showFightResult(r) {
+    if (r.fight || r.died) SOUND.fight(r); else if (/potion|drink/i.test(r.text || "")) SOUND.fx("potion");
     const skills = (r.skills || []).length ? `<p class="sub">📈 ${r.skills.map(esc).join(" · ")}</p>` : "";
     if (r.died) {
       openModal(`<h2>💀 Defeated</h2><p>${esc(r.text)}</p>${r.fight ? fightLog(r.fight) : ""}<p>${esc(r.died)}</p><button class="btn danger" data-act="close" style="width:100%">Continue</button>`, "enc");
@@ -512,6 +545,7 @@
   }
   function dungeonAct(c) {
     const r = DUNGEONS.act(S, c);
+    if (r.fight || r.died) SOUND.fight(r); else if (r.trap || /trap|dart|blade/i.test(r.text || "")) SOUND.fx("hit");
     if (r.bag) Store.addBag(r.bag);
     persist(true);
     if (r.died) { dunNote = null; closeDungeon(); renderPanel(true); openModal(`<h2>💀 Defeated</h2><p>${esc(r.text)}</p>${r.fight ? fightLog(r.fight) : ""}<p>${esc(r.died)}</p><button class="btn danger" data-act="close" style="width:100%">Continue</button>`, "enc"); return; }
@@ -546,7 +580,7 @@
   const MAGIC_CATS = [["all", "All"], ["destruction", "Destruction"], ["restoration", "Restoration"], ["alteration", "Alteration"], ["conjuration", "Conjuration"], ["illusion", "Illusion"], ["powers", "Powers"], ["shouts", "Shouts"], ["effects", "Active effects"]];
   const SKILL_CATS = [["all", "All"], ["combat", "Warrior"], ["magic", "Mage"], ["stealth", "Thief"], ["other", "Other"]];
   const SKILL_GROUP = { combat: "Warrior", magic: "Mage", stealth: "Thief" };
-  function openMenu(page = "items") { sky = { ...sky, page, cat: "all", sel: null }; renderMenu(); }
+  function openMenu(page = "items") { SOUND.fx("page"); sky = { ...sky, page, cat: "all", sel: null }; renderMenu(); }
   function closeMenu() { $("#sky")?.remove(); }
   function itemStat(r) {
     const it = D.ITEMS[r.item];
@@ -686,7 +720,7 @@
       el.innerHTML = ""; return;
     }
     if (raidSeen !== r.id) {
-      raidSeen = r.id; toast(`🐉 A dragon is attacking ${r.town}!`);
+      raidSeen = r.id; SOUND.fx("dragon"); toast(`🐉 A dragon is attacking ${r.town}!`);
       if (!news.some((n) => n.text.includes(r.id))) postNews(`🐉 A dragon is attacking ${r.town}! Every warrior is needed. (${r.id})`);
     }
     const tl = WEVENTS.tally(r, raidDocs, S), left = Math.max(0, Math.ceil((r.end - G.now()) / 60)), done = tl.total >= tl.need;
@@ -738,6 +772,7 @@
     if (r.bag) Store.addBag(r.bag);
     persist(true); renderPanel(true);
     if (!r.fight && !r.msgs) return toast(r.text);
+    if (r.fight && r.msgs?.length) SOUND.fx("quest", 2);
     if (r.fight) return showFightResult({ ...r, text: [r.text, ...(r.msgs || [])].join(" "), loot: [], gold: 0 });
     showMessage("Quest", [r.text, ...(r.msgs || [])].join(" "));
   }
@@ -1239,7 +1274,7 @@
       case "dragonstone": { const m = TOWNS.deliverDragonstone(S); persist(true); renderPanel(true); showMessage("Dragonsreach", m); break; }
       case "greybeards": { const m = POWERS.greybeards(S); persist(true); renderPanel(true); showMessage("High Hrothgar", m); break; }
       case "unlock": say(POWERS.unlock(S, b.dataset.id)); break;
-      case "roadshout": { const m = POWERS.roadShout(S, b.dataset.id); liveCache.key = ""; persist(true); toast(m); renderPanel(true); break; }
+      case "roadshout": { SOUND.fx("shout"); const m = POWERS.roadShout(S, b.dataset.id); liveCache.key = ""; persist(true); toast(m); renderPanel(true); break; }
       case "enter": { const err = DUNGEONS.enter(S); if (err) return toast(err); selected = null; renderPicked(); dunNote = null; persist(true); renderDungeon(); break; }
       case "dun": renderDungeon(); break;
       case "droom": dungeonRoom(b.dataset.c); break;
@@ -1250,6 +1285,8 @@
       case "evbuy": { const m = G.buyFrom(S, b.dataset.item); persist(); openEvent(m); break; }
       case "enc": encounterAction(b.dataset.a); break;
       case "close": closeModal(); break;
+      case "sndmute": SOUND.set("mute", !SOUND.settings.mute); $("#sndBtn").textContent = SOUND.settings.mute ? "🔇" : "🔊"; openSound(); break;
+      case "sndtest": SOUND.fx("arrive"); SOUND.fx("coin", 1.4); break;
       case "lvl": say(G.levelUp(S, b.dataset.a)); publishCard(); break;
       case "wipe": Store.wipe().then(() => { S = null; tabsEl.classList.add("hide"); location.reload(); }); break;
       case "packrow": if (!e.target.closest("button")) { packOpen = packOpen === +b.dataset.id ? null : +b.dataset.id; renderPanel(true); } break;
