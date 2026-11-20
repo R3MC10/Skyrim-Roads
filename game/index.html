@@ -113,6 +113,61 @@ input,select{min-height:44px;font-size:16px;border-radius:10px;border:1px solid 
 .slotgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;margin-top:8px}
 .slot{padding:8px 10px;border-radius:10px;background:var(--panel2);font-size:14px}.slot span{color:var(--mute);display:block;font-size:12px}
 @media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+
+/* ---- Skyrim look: smoky panels, thin silver rules, centred small-caps headings */
+.panel{background:linear-gradient(180deg,rgba(26,28,31,.96),rgba(14,15,17,.96));border:1px solid rgba(228,220,200,.16);border-radius:4px;box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 8px 24px rgba(0,0,0,.35)}
+.panel>h2{display:flex;align-items:center;gap:12px;justify-content:center;font-size:15px;letter-spacing:.16em;text-transform:uppercase;color:#efe8d6;margin:2px 0 6px}
+.panel>h2::before,.panel>h2::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(228,220,200,.45))}
+.panel>h2::after{background:linear-gradient(90deg,rgba(228,220,200,.45),transparent)}
+.panel h3{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#cfc6b0;border-bottom:1px solid rgba(228,220,200,.12);padding-bottom:4px}
+.item{background:rgba(255,255,255,.035);border:0;border-left:2px solid transparent;border-radius:2px}
+.item.on{border-left-color:var(--gold);background:linear-gradient(90deg,rgba(226,187,100,.12),rgba(255,255,255,.03))}
+.btn{border-radius:3px;border-color:rgba(228,220,200,.28);background:rgba(255,255,255,.04);letter-spacing:.03em}
+.btn.pri{background:rgba(143,211,255,.12);border-color:rgba(143,211,255,.55);color:#eaf7ff}
+.btn.danger{background:rgba(214,90,74,.16);border-color:rgba(214,90,74,.6)}
+.chip{border-radius:2px;border-color:rgba(228,220,200,.22)}
+.chip.on{background:rgba(255,255,255,.1);border-color:rgba(228,220,200,.7);color:#fff}
+.trip{border-radius:4px;background:linear-gradient(180deg,rgba(26,28,31,.96),rgba(14,15,17,.96));border-color:rgba(228,220,200,.16)}
+.tabs{background:linear-gradient(180deg,rgba(14,15,17,.92),rgba(6,7,8,.98));border-top:1px solid rgba(228,220,200,.18)}
+.tab.on{color:#f4ecd8}.tab.on::before{content:"";position:absolute;top:0;left:25%;right:25%;height:2px;background:#e8e1cf}
+.sheet{border-radius:4px;background:linear-gradient(180deg,rgba(26,28,31,.98),rgba(12,13,15,.98));border-color:rgba(228,220,200,.22)}
+input,select{border-radius:3px;border-color:rgba(228,220,200,.22);background:rgba(0,0,0,.35)}
+/* ---- the Skyrim / SkyUI menu */
+.sky{position:fixed;inset:0;z-index:9;background:radial-gradient(120% 70% at 0% 0%,#15171a 0%,#050607 70%);display:flex;justify-content:center}
+.sky-in{width:min(720px,100%);display:flex;flex-direction:column;height:100%;padding:8px 10px calc(8px + env(safe-area-inset-bottom))}
+.sky-top{display:flex;align-items:center;gap:8px}
+.sky-pages{flex:1;display:flex;justify-content:center;gap:6px}
+.sky-page{background:none;border:0;border-bottom:2px solid transparent;color:#8c877a;font-family:Cinzel,serif;font-size:15px;letter-spacing:.2em;text-transform:uppercase;padding:10px 10px;min-height:44px}
+.sky-page.on{color:#f4ecd8;border-bottom-color:#e8e1cf}
+.sky-cats{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;margin-top:6px;border-top:1px solid rgba(228,220,200,.14);border-bottom:1px solid rgba(228,220,200,.14);padding:4px 0}
+.sky-cats::-webkit-scrollbar{display:none}
+.sky-cat{flex:none;display:grid;justify-items:center;gap:2px;min-width:64px;min-height:52px;background:none;border:0;color:#8c877a;font-size:11px;padding:4px 6px;border-radius:2px}
+.sky-cat svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.6}
+.sky-cat.on{color:#f4ecd8;background:rgba(255,255,255,.07)}
+.sky-title{font-family:Cinzel,serif;letter-spacing:.18em;text-transform:uppercase;font-size:13px;color:#cfc6b0;margin:8px 4px 2px}
+.sky-cols{display:grid;grid-template-columns:minmax(0,1fr) 3.4em 3.2em 3.8em;gap:8px;align-items:center}
+.sky-cols2{display:grid;grid-template-columns:minmax(0,1fr) 4em;gap:8px;align-items:center}
+.sky-head{padding:4px 10px;color:#8c877a;font-size:11px;letter-spacing:.12em;text-transform:uppercase}
+.sky-head button,.sky-head span{background:none;border:0;color:inherit;font:inherit;letter-spacing:inherit;text-align:right;padding:6px 0}
+.sky-head>:first-child{text-align:left}
+.sky-list{flex:1;overflow:auto;display:flex;flex-direction:column;border-top:1px solid rgba(228,220,200,.1)}
+.sky-row{background:none;border:0;border-left:2px solid transparent;text-align:right;padding:9px 10px;min-height:44px;color:#ddd5c2;font-size:16px}
+.sky-row .nm{text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sky-row .nm i{font-style:normal;color:#8c877a}.sky-row .nm .ench{color:#9fd0f0}.sky-row .nm .stolen{color:var(--ember)}
+.sky-row .nm small{display:block;color:#8c877a;font-size:12px}
+.sky-row .nm .bar{display:block;height:3px;margin-top:4px;max-width:180px}
+.sky-row.eq .nm::before{content:"◆ ";color:#e8e1cf;font-size:12px}
+.sky-row.sel{background:linear-gradient(90deg,rgba(255,255,255,.14),rgba(255,255,255,.02));border-left-color:#e8e1cf;color:#fff}
+.sky-empty{padding:16px 10px}
+.sky-detail{border-top:1px solid rgba(228,220,200,.18);padding:10px 6px 4px;max-height:44vh;overflow:auto}
+.sky-detail h3{font-family:Cinzel,serif;font-size:19px;letter-spacing:.06em;color:#f4ecd8;text-transform:none;border:0;padding:0}
+.sky-stats{display:flex;flex-wrap:wrap;gap:6px 18px;margin:6px 0}
+.sky-stats div{display:flex;gap:6px;align-items:baseline}.sky-stats span{color:#8c877a;font-size:12px;letter-spacing:.1em;text-transform:uppercase}
+.sky-detail p{margin:4px 0}
+.sky-acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.sky-acts .btn{flex:1 1 auto}
+.sky-foot{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;border-top:1px solid rgba(228,220,200,.18);margin-top:6px;padding:8px 6px 4px;font-size:13px;color:#8c877a;letter-spacing:.08em;text-transform:uppercase}
+.sky-foot b{color:#f4ecd8;letter-spacing:0;margin-left:4px}.sky-foot .gold{text-transform:none;letter-spacing:0}
+.sky-vitals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:2px 6px 4px}.sky-vitals .bar{height:5px}
 </style>
 </head>
 <body>

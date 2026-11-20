@@ -8,6 +8,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Round 1: standing stones (13), racial powers (10), dragon shouts (10 shouts, 30 words), dragon souls, Greybeards.
 - Round 2: carriages (Skyrim fares, safe roads), followers (Lydia via the Dragonstone, 6 hirelings at 500 gold), map labels for players and bags that dodge each other.
 - Followers go down (kneel) instead of dying, and get back up after the fight at 10% health.
+- Skyrim/SkyUI-style menu (Items / Magic / Skills tabs, category icons, sortable columns, item details, footer with armor/damage/weight/gold) and a Skyrim look for all panels.
 - The forge uses Skyrim materials per improvement (Iron/Steel Ingots, Leather, Firewood, Refined Moonstone, Dwarven Metal) instead of gold.
 - Round 5: enchanting at arcane enchanters (court wizards, Winterhold): break enchanted gear to learn 4 weapon and 13 armor effects, enchant with soul gems; enchanted armor in loot and shops.
 - Round 4: Skyrim calendar (starts 17 Last Seed) and seasons, weather per hold every 30 min (slows travel, hides you, shown on the map), dragon attacks on towns every 3 hours that all players fight together.

@@ -118,6 +118,7 @@
   /* phone back button: close what's on top, step back to the map, and only then leave the app */
   window.__ui = {
     back() {
+      if ($("#sky") && !$("#modal")) { closeMenu(); return true; }
       if ($("#modal")) { if (!$("#modal [data-act=enc], #modal [data-act=ev], #modal [data-act=guard]")) closeModal(); return true; }
       if ($("#dun")) { closeDungeon(); return true; }
       if (selected) { selected = null; renderPicked(); return true; }
@@ -144,7 +145,7 @@
     tabsEl.classList.remove("hide");
     window.scrollTo(0, 0);
     tabsEl.innerHTML = TABS.map(([id, label, svg]) => `<button class="tab ${id === tab ? "on" : ""}" role="tab" aria-selected="${id === tab}" data-tab="${id}"><svg viewBox="0 0 24 24">${svg}</svg>${label}</button>`).join("");
-    tabsEl.onclick = (e) => { const b = e.target.closest("[data-tab]"); if (!b) return; tab = b.dataset.tab; testResult = null; bump(); renderTabs(); renderPanel(true); $("#side").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" }); };
+    tabsEl.onclick = (e) => { const b = e.target.closest("[data-tab]"); if (!b) return; if (b.dataset.tab === "pack") return openMenu("items"); closeMenu(); tab = b.dataset.tab; testResult = null; bump(); renderTabs(); renderPanel(true); $("#side").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" }); };
     $("#zoomBtn").onclick = () => { zoom = zoom > 1.01 ? 1 : 2.4; follow = true; $("#zoomBtn").textContent = zoom > 1.01 ? "－" : "＋"; };
     $("#centerBtn").onclick = () => { follow = true; if (zoom === 1) zoom = 2.4; $("#zoomBtn").textContent = "－"; };
     bindMap();
@@ -515,6 +516,157 @@
     if (r.cleared) { const jm = TOWNS.checkJobs(S); if (jm.length) r.text += " " + jm.join(" "); postNews(`🏆 ${S.name} cleared ${S.dungeon?.place}.`); }
     persist(true);
     dunNote = r; renderDungeon();
+  }
+
+
+  // ------------------------------------------------------------ Skyrim-style menu (Items / Magic / Skills), SkyUI-like lists
+  let sky = { page: "items", cat: "all", sort: "name", dir: 1, sel: null };
+  const ICONS = {
+    all: '<path d="M4 6h16M4 12h16M4 18h16"/>', weapons: '<path d="M5 19L17 7l2-4-4 2L3 17zM7 14l3 3"/>', apparel: '<path d="M8 3l4 2 4-2 4 4-3 3v11H7V10L4 7z"/>',
+    potions: '<path d="M10 3h4M10 3v5l-4 8a4 4 0 004 6h4a4 4 0 004-6l-4-8V3"/>', scrolls: '<path d="M7 4h10a2 2 0 010 4H9v12H7a2 2 0 01-2-2V6a2 2 0 012-2zM9 8h8v10a2 2 0 01-2 2H9"/>',
+    books: '<path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2zM4 19V5"/>', ingredients: '<path d="M12 21V11M12 11c-4 0-6-3-6-7 4 0 6 3 6 7zm0 0c4 0 6-3 6-7-4 0-6 3-6 7z"/>',
+    misc: '<path d="M12 3l8 4v10l-8 4-8-4V7zM4 7l8 4 8-4M12 11v10"/>',
+    destruction: '<path d="M12 3c3 4 6 6 6 10a6 6 0 01-12 0c0-3 2-4 3-7 1 2 2 3 3 3 0-2-1-4 0-6z"/>', restoration: '<path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="5"/>',
+    alteration: '<path d="M12 3l7 4v10l-7 4-7-4V7z"/>', conjuration: '<circle cx="12" cy="12" r="8"/><path d="M12 4v16M4 12h16"/>', illusion: '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+    powers: '<path d="M12 2l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/>', shouts: '<path d="M4 9v6h4l6 5V4L8 9zM17 8a5 5 0 010 8M19 5a9 9 0 010 14"/>', effects: '<path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l3 3M16 16l3 3M5 19l3-3M16 8l3-3"/>',
+    combat: '<path d="M5 19L19 5M14 5h5v5"/>', magic: '<circle cx="12" cy="12" r="8"/><path d="M12 4l2 8-2 8-2-8z"/>', stealth: '<path d="M3 12s4-6 9-6 9 6 9 6-4 6-9 6-9-6-9-6z"/>', other: '<circle cx="12" cy="12" r="2"/><circle cx="5" cy="12" r="2"/><circle cx="19" cy="12" r="2"/>',
+  };
+  const svgI = (k) => `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[k] || ICONS.misc}</svg>`;
+  const ITEM_CATS = [["all", "All"], ["weapons", "Weapons"], ["apparel", "Apparel"], ["potions", "Potions"], ["scrolls", "Scrolls"], ["books", "Books"], ["ingredients", "Ingredients"], ["misc", "Misc"]];
+  const catOf = (it) => it.slot === "weapon" ? "weapons" : G.ARMOR_SLOTS.includes(it.slot) ? "apparel" : ["potion", "poison"].includes(it.slot) ? "potions"
+    : it.slot === "scroll" ? "scrolls" : it.slot === "tome" ? "books" : it.slot === "ingredient" ? "ingredients" : "misc";
+  const MAGIC_CATS = [["all", "All"], ["destruction", "Destruction"], ["restoration", "Restoration"], ["alteration", "Alteration"], ["conjuration", "Conjuration"], ["illusion", "Illusion"], ["powers", "Powers"], ["shouts", "Shouts"], ["effects", "Active effects"]];
+  const SKILL_CATS = [["all", "All"], ["combat", "Warrior"], ["magic", "Mage"], ["stealth", "Thief"], ["other", "Other"]];
+  const SKILL_GROUP = { combat: "Warrior", magic: "Mage", stealth: "Thief" };
+  function openMenu(page = "items") { sky = { ...sky, page, cat: "all", sel: null }; renderMenu(); }
+  function closeMenu() { $("#sky")?.remove(); }
+  function itemStat(r) {
+    const it = D.ITEMS[r.item];
+    if (it.slot === "weapon") return it.damage + (r.temper || 0);
+    if (G.ARMOR_SLOTS.includes(it.slot)) return (it.armor || 0) + (r.temper || 0);
+    if (it.restore) return it.restore[1];
+    if (it.effects) return it.effects[0][1];
+    if (it.slot === "soulgem") return it.charge;
+    return null;
+  }
+  function itemRows() {
+    const eqIds = new Set(Object.values(G.loadout(S).equipment));
+    let rows = S.inv.filter((r) => D.ITEMS[r.item] && (sky.cat === "all" || catOf(D.ITEMS[r.item]) === sky.cat)).map((r) => {
+      const it = D.ITEMS[r.item];
+      return { id: r.id, r, it, name: (r.tq ? TOWNS.QUALITY[r.tq] + " " : "") + it.name, stat: itemStat(r), weight: +(it.weight * r.qty).toFixed(2), value: it.value, eq: eqIds.has(r.id) };
+    });
+    const k = sky.sort, d = sky.dir;
+    rows.sort((a, b) => (b.eq - a.eq) || (k === "name" ? a.name.localeCompare(b.name) * d : (((a[k] ?? -1) - (b[k] ?? -1)) * -d) || a.name.localeCompare(b.name)));
+    return rows;
+  }
+  function itemDetail(row) {
+    const { r, it } = row, eq = row.eq;
+    const canShop = S.location && G.shopTypes(S.location).length && G.shopsOpen();
+    const gems = S.inv.filter((x) => D.ITEMS[x.item]?.slot === "soulgem");
+    const stats = [];
+    if (it.slot === "weapon") stats.push(["Damage", it.damage + (r.temper ? ` (+${r.temper})` : "")], ["Skill", it.skill], ["Hands", it.hands === 2 ? "Two" : "One"]);
+    if (G.ARMOR_SLOTS.includes(it.slot)) stats.push(["Armor", (it.armor || 0) + (r.temper ? ` (+${r.temper})` : "")], ["Type", it.type || "—"], ["Slot", it.slot]);
+    stats.push(["Weight", +(it.weight * r.qty).toFixed(2)], ["Value", it.value]);
+    if (r.qty > 1) stats.push(["Count", r.qty]);
+    const lines = [];
+    if (it.enchant) lines.push(`${it.enchant.magnitude} ${it.enchant.effect} damage per hit · charge ${Math.round(100 * (r.charge || 0) / it.enchant.capacity)}%`);
+    if (it.aenchant) lines.push(`${it.aenchant.name} ${it.aenchant.mag} while worn`);
+    if (it.effects) lines.push(it.effects.map(([e, m, dd]) => `${e} ${m}${dd * 5 >= 60 ? ` for ${Math.round(dd * 5 / 60)} min` : ""}`).join(" · "));
+    else if (it.restore) lines.push(`Restores ${it.restore[1]} ${it.restore[0]}`);
+    if (it.slot === "scroll" || it.slot === "tome") lines.push(`${it.slot === "tome" ? "Teaches" : "Casts"} ${D.SPELLS[it.spell].name}${it.slot === "tome" && S.spells.includes(it.spell) ? " (you know it)" : ""}`);
+    if (it.slot === "ingredient" && TOWNS.INGREDIENT_FX[r.item]) lines.push("Effects: " + TOWNS.INGREDIENT_FX[r.item][1].map((e, i) => TOWNS.known(S, r.item)[i] ? e : "?").join(", "));
+    if (it.slot === "material") lines.push("Used at the forge to improve gear.");
+    if (r.stolen) lines.push("Stolen. Only a fence will buy it.");
+    const acts = [];
+    if (G.SLOTS.includes(it.slot)) acts.push(eq ? `<button class="btn" data-act="uneq" data-slot="${it.slot}">Unequip</button>` : `<button class="btn pri" data-act="eq" data-id="${r.id}">Equip</button>`);
+    if (it.slot === "tome") acts.push(`<button class="btn pri" data-act="read" data-id="${r.id}">Read</button>`);
+    if (it.slot === "potion") acts.push(`<button class="btn pri" data-act="drinkrow" data-id="${r.id}">Drink</button>`);
+    if (it.slot === "poison") acts.push(`<button class="btn pri" data-act="poison" data-id="${r.id}">Coat weapon</button>`);
+    if (it.slot === "ingredient") acts.push(`<button class="btn" data-act="eat" data-id="${r.id}">Eat</button>`);
+    if (it.enchant) acts.push(...gems.map((g) => `<button class="btn" data-act="recharge" data-id="${r.id}" data-gem="${g.id}">Recharge (${esc(D.ITEMS[g.item].name.split(" (")[0])})</button>`));
+    if (canShop) acts.push(`<button class="btn" data-act="sell" data-id="${r.id}">Sell · ${G.sellPrice(S, r)} gold</button>`);
+    return `<div class="sky-detail"><h3>${esc(row.name)}</h3><div class="sky-stats">${stats.map(([k, v]) => `<div><span>${k}</span><b class="num">${esc(String(v))}</b></div>`).join("")}</div>
+      ${lines.map((l) => `<p class="sub">${esc(l)}</p>`).join("")}<div class="sky-acts">${acts.join("")}</div></div>`;
+  }
+  // ---- magic
+  const inTactics = (a) => G.loadout(S).rules.some((r) => r.do === a);
+  function magicRows() {
+    const out = [];
+    for (const id of S.spells) { const sp = D.SPELLS[id]; out.push({ id: `spell:${id}`, cat: sp.school.toLowerCase(), name: sp.name, cost: G.spellCost(S, sp), sub: sp.school }); }
+    out.push({ id: "power:race", cat: "powers", name: POWERS.RACE[S.race][0], cost: null, sub: POWERS.powerReady(S, "race") ? "Ready" : "Used today" });
+    if (POWERS.stoneHasPower(S)) out.push({ id: "power:stone", cat: "powers", name: POWERS.STONES[S.stone][0], cost: null, sub: POWERS.powerReady(S, "stone") ? "Ready" : "Used today" });
+    for (const [id, [name, words]] of Object.entries(POWERS.SHOUTS)) if (words.some((w) => POWERS.known(S, w))) out.push({ id: `shout:${id}`, cat: "shouts", name, cost: null, sub: words.map((w) => POWERS.known(S, w) ? (POWERS.unlocked(S, w) ? w : w + "🔒") : "···").join(" ") });
+    const t = G.now();
+    for (const f of (S.fx || []).filter((f) => f.until > t)) out.push({ id: `fx:${f.name}:${f.until}`, cat: "effects", name: f.name, cost: null, sub: `${f.mag} · ${Math.ceil((f.until - t) / 60)} min` });
+    if (G.rested(S)) out.push({ id: "fx:rested", cat: "effects", name: (S.restBonus || 0.05) >= 0.1 ? "Well Rested" : "Rested", cost: null, sub: `${Math.ceil((S.rested - t) / 60)} min` });
+    if (S.stone) out.push({ id: "fx:stone", cat: "effects", name: POWERS.STONES[S.stone][0], cost: null, sub: "Standing stone" });
+    return out.filter((r) => sky.cat === "all" ? !r.id.startsWith("fx:") : r.cat === sky.cat);
+  }
+  function magicDetail(row) {
+    const [kind, arg] = row.id.split(":");
+    let desc = "", acts = [];
+    if (kind === "spell") {
+      const sp = D.SPELLS[arg];
+      desc = { damage: `${sp.amount} ${sp.element === "sun" ? "sun damage to undead" : `${sp.element} damage`}`, heal: `Heals ${sp.amount} health`, armor: `+${sp.amount} armor for the fight`, summon: `A familiar fights for you (${sp.amount} damage a turn)`, calm: `Stops a foe up to level ${sp.max_level} from fighting` }[sp.kind] || "";
+      desc += ` · ${row.cost} magicka · ${sp.school}`;
+    } else if (kind === "power") desc = arg === "race" ? POWERS.RACE[S.race][1] + " Once a day." : POWERS.STONES[S.stone][1];
+    else if (kind === "shout") {
+      const sh = POWERS.SHOUTS[arg], lv = POWERS.level(S, arg);
+      desc = `${sh[3]} ${lv ? `You can shout ${lv} word${lv > 1 ? "s" : ""}; cooldown ${sh[2][lv - 1]} s.` : "Unlock its first word with a dragon soul."}`;
+      acts.push(...sh[1].filter((w) => POWERS.known(S, w) && !POWERS.unlocked(S, w)).map((w) => `<button class="btn" data-act="unlock" data-id="${w}" ${(S.souls || 0) > 0 ? "" : "disabled"}>Unlock ${w} (dragon soul: ${S.souls || 0})</button>`));
+      if (POWERS.ROAD_SHOUTS.includes(arg) && lv) acts.push(`<button class="btn pri" data-act="roadshout" data-id="${arg}" ${POWERS.voiceReady(S) ? "" : "disabled"}>Shout now</button>`);
+    } else return `<div class="sky-detail"><h3>${esc(row.name)}</h3><p class="sub">${esc(row.sub)}</p></div>`;
+    const usable = kind === "spell" || kind === "power" || (kind === "shout" && !POWERS.ROAD_SHOUTS.includes(arg) && POWERS.level(S, arg));
+    if (usable) acts.unshift(inTactics(row.id) ? `<button class="btn" data-act="skytacx" data-id="${esc(row.id)}">Remove from tactics</button>` : `<button class="btn pri" data-act="skytac" data-id="${esc(row.id)}">Use first in every fight</button>`);
+    return `<div class="sky-detail"><h3>${esc(row.name)}</h3><p class="sub">${esc(desc)}</p>${usable && inTactics(row.id) ? '<p class="sub">In your tactics. Fine-tune when it fires in the Tactics tab.</p>' : ""}<div class="sky-acts">${acts.join("")}</div></div>`;
+  }
+  // ---- skills
+  function skillRows() {
+    const group = (sk) => Object.entries(D.SKILL_GROUPS).find(([, l]) => l.includes(sk))?.[0];
+    return D.ALL_SKILLS.map((sk) => ({ id: sk, name: sk, lvl: S.skills[sk].lvl, prog: pct(S.skills[sk].xp, F.skillXpNeeded(sk, S.skills[sk].lvl)), g: group(sk), perks: (PERKS.TREES[sk] || []).filter(([id]) => PERKS.rank(S, id)).length }))
+      .filter((r) => sky.cat === "all" || (SKILL_GROUP[sky.cat] ? r.g === SKILL_GROUP[sky.cat] : !Object.values(SKILL_GROUP).includes(r.g)))
+      .sort((a, b) => sky.sort === "name" ? a.name.localeCompare(b.name) * sky.dir : (b.lvl - a.lvl) * sky.dir);
+  }
+  function renderMenu() {
+    let el = $("#sky");
+    if (!el) {
+      el = document.createElement("div"); el.id = "sky"; el.className = "sky"; el.setAttribute("role", "dialog"); el.setAttribute("aria-label", "Menu");
+      el.addEventListener("click", onPanelClick); document.body.appendChild(el);
+    }
+    const cats = sky.page === "items" ? ITEM_CATS : sky.page === "magic" ? MAGIC_CATS : SKILL_CATS;
+    let head = "", list = "", detail = "";
+    if (sky.page === "items") {
+      const rows = itemRows(); const sel = rows.find((r) => r.id === sky.sel) || null;
+      const arrow = (k) => sky.sort === k ? (sky.dir > 0 ? " ▾" : " ▴") : "";
+      head = `<div class="sky-head sky-cols"><button data-act="skysort" data-id="name">Name${arrow("name")}</button><button data-act="skysort" data-id="stat">${{ weapons: "Dmg", apparel: "Armor", potions: "Power" }[sky.cat] || "Stat"}${arrow("stat")}</button><button data-act="skysort" data-id="weight">Wt${arrow("weight")}</button><button data-act="skysort" data-id="value">Value${arrow("value")}</button></div>`;
+      list = rows.map((r) => `<button class="sky-row sky-cols ${r.id === sky.sel ? "sel" : ""} ${r.eq ? "eq" : ""}" data-act="skysel" data-id="${r.id}"><span class="nm">${esc(r.name)}${r.r.qty > 1 ? ` <i>(${r.r.qty})</i>` : ""}${r.it.enchant || r.it.aenchant ? ' <i class="ench">✦</i>' : ""}${r.r.stolen ? ' <i class="stolen">✋</i>' : ""}</span><span class="num">${r.stat ?? "–"}</span><span class="num">${r.weight}</span><span class="num">${r.value}</span></button>`).join("") || '<p class="sub sky-empty">Nothing here.</p>';
+      detail = sel ? itemDetail(sel) : "";
+    } else if (sky.page === "magic") {
+      const rows = magicRows(); const sel = rows.find((r) => r.id === sky.sel) || null;
+      head = `<div class="sky-head sky-cols2"><span>Name</span><span>Cost</span></div>`;
+      list = rows.map((r) => `<button class="sky-row sky-cols2 ${r.id === sky.sel ? "sel" : ""} ${inTactics(r.id) ? "eq" : ""}" data-act="skysel" data-id="${esc(r.id)}"><span class="nm">${esc(r.name)}<small>${esc(r.sub)}</small></span><span class="num">${r.cost ?? ""}</span></button>`).join("") || '<p class="sub sky-empty">Nothing here.</p>';
+      detail = sel ? magicDetail(sel) : "";
+    } else {
+      const rows = skillRows(); const sel = rows.find((r) => r.id === sky.sel) || null;
+      head = `<div class="sky-head sky-cols2"><button data-act="skysort" data-id="name">Skill</button><button data-act="skysort" data-id="lvl">Level</button></div>`;
+      list = rows.map((r) => `<button class="sky-row sky-cols2 ${r.id === sky.sel ? "sel" : ""}" data-act="skysel" data-id="${esc(r.id)}"><span class="nm">${esc(r.name)}<span class="bar"><i style="width:${r.prog}%;background:var(--frost)"></i></span></span><span class="num">${r.lvl}</span></button>`).join("");
+      detail = sel ? `<div class="sky-detail"><h3>${esc(sel.name)} ${sel.lvl}</h3><p class="sub">${sel.prog}% of the way to ${sel.lvl + 1}. ${sel.perks ? `${sel.perks} perk${sel.perks > 1 ? "s" : ""} taken.` : ""} Perk points to spend: ${PERKS.pointsLeft(S)}.</p>
+        <div class="sky-acts">${PERKS.TREES[sel.id] ? `<button class="btn pri" data-act="skyperks" data-id="${esc(sel.id)}">Perk tree</button>` : ""}</div></div>` : "";
+      if (S.pendingLevels > 0) detail = `<div class="sky-detail"><h3>Level up</h3><p class="sub">Choose what grows (+10), like Skyrim.</p><div class="sky-acts"><button class="btn" data-act="lvl" data-a="health">Health</button><button class="btn" data-act="lvl" data-a="magicka">Magicka</button><button class="btn" data-act="lvl" data-a="stamina">Stamina</button></div></div>` + detail;
+    }
+    const f = new G.Fight(S, { name: "-", health: 1, damage: 0, tags: [] });
+    const armor = Math.round(f.armorRating().rating);
+    let dmg = 0; for (let i = 0; i < 8; i++) dmg += f.weaponDamage(); dmg = Math.round(dmg / 8);
+    const hp = G.curHealth(S), mh = G.maxHealth(S);
+    el.innerHTML = `<div class="sky-in">
+      <div class="sky-top"><button class="iconbtn" data-act="skyclose" aria-label="Close menu">✕</button>
+        <div class="sky-pages">${[["items", "Items"], ["magic", "Magic"], ["skills", "Skills"]].map(([p, l]) => `<button class="sky-page ${p === sky.page ? "on" : ""}" data-act="skytab" data-id="${p}">${l}</button>`).join("")}</div></div>
+      <div class="sky-cats">${cats.map(([k, l]) => `<button class="sky-cat ${k === sky.cat ? "on" : ""}" data-act="skycat" data-id="${k}" aria-label="${l}">${svgI(k)}<span>${l}</span></button>`).join("")}</div>
+      <div class="sky-title">${esc((cats.find(([k]) => k === sky.cat) || cats[0])[1])}</div>
+      ${head}<div class="sky-list">${list}</div>${detail}
+      <div class="sky-foot"><span>Armor <b class="num">${armor}</b></span><span>Damage <b class="num">${dmg}</b></span><span>Weight <b class="num">${G.carried(S).toFixed(0)}/${G.capacity(S)}</b></span><span class="gold">${S.gold} gold</span></div>
+      <div class="sky-vitals"><div class="bar"><i style="width:${pct(hp, mh)}%;background:var(--hp)"></i></div><div class="bar"><i style="width:100%;background:var(--mp)"></i></div><div class="bar"><i style="width:100%;background:var(--sp)"></i></div></div>
+    </div>`;
   }
 
   // ------------------------------------------------------------ dragon attacks (world events)
@@ -955,7 +1107,7 @@
     const b = e.target.closest("[data-act]");
     if (!b || b.disabled) return;
     const a = b.dataset.act, L = G.loadout(S);
-    const say = (m) => { toast(m); persist(); renderPanel(true); };
+    const say = (m) => { toast(m); persist(); renderPanel(true); if ($("#sky")) renderMenu(); };
     switch (a) {
       case "go": travelTo(b.dataset.place); renderPanel(true); break;
       case "unpick": selected = null; renderPicked(); break;
@@ -964,6 +1116,14 @@
       case "openev": openEvent(); break;
       case "online": openOnline(); break;
       case "raidfight": raidFight(); break;
+      case "skytab": sky.page = b.dataset.id; sky.cat = "all"; sky.sel = null; sky.sort = sky.page === "skills" ? "lvl" : "name"; sky.dir = 1; renderMenu(); break;
+      case "skycat": sky.cat = b.dataset.id; sky.sel = null; renderMenu(); break;
+      case "skysort": { const k = b.dataset.id; sky.dir = sky.sort === k ? -sky.dir : 1; sky.sort = k; renderMenu(); break; }
+      case "skysel": { const id = isNaN(+b.dataset.id) ? b.dataset.id : +b.dataset.id; sky.sel = sky.sel === id ? null : id; renderMenu(); break; }
+      case "skyclose": closeMenu(); break;
+      case "skyperks": closeMenu(); perkSkill = b.dataset.id; tab = "hero"; bump(); renderTabs(); renderPanel(true); setTimeout(() => $("#side").scrollIntoView({ block: "start" }), 50); break;
+      case "skytac": { const L = G.loadout(S); if (!inTactics(b.dataset.id)) L.rules.unshift({ if: "always", pct: 50, do: b.dataset.id }); say("Added to the top of your tactics: you'll use it whenever it's ready."); break; }
+      case "skytacx": { const L = G.loadout(S); L.rules = L.rules.filter((r) => r.do !== b.dataset.id); say("Removed from your tactics."); break; }
       case "disench": say(ENCH.disenchant(S, +b.dataset.id)); break;
       case "enchant": { const m = ENCH.enchant(S, enchDraft.item, enchDraft.eff, enchDraft.gem); persist(true); renderPanel(true); showMessage("Arcane enchanter", m); publishCard(); break; }
       case "stone": say(POWERS.takeStone(S, b.dataset.id)); publishCard(); break;
