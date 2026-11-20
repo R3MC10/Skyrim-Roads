@@ -1,0 +1,41 @@
+# One-time job: removes builds 2-15 (release pages, their tags and their build logs).
+# They point at the old history that still had the signing key in it. Delete this file afterwards.
+name: One-time cleanup of old builds
+on:
+  push:
+    paths: [.github/workflows/cleanup.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: write
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Delete old releases and tags (builds 2-15)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for n in $(seq 2 15); do
+            gh release delete "build-$n" --yes --cleanup-tag -R "$GITHUB_REPOSITORY" && echo "deleted build-$n" || true
+            git push origin --delete "build-$n" 2>/dev/null && echo "deleted tag build-$n" || true
+          done
+      - name: Delete build logs of commits that are no longer in the history
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --paginate "repos/$GITHUB_REPOSITORY/actions/runs?per_page=100" --jq '.workflow_runs[] | "\(.id) \(.head_sha)"' | while read id sha; do
+            [ "$id" = "$GITHUB_RUN_ID" ] && continue
+            if ! git cat-file -e "$sha^{commit}" 2>/dev/null; then
+              gh api -X DELETE "repos/$GITHUB_REPOSITORY/actions/runs/$id" && echo "deleted run $id ($sha)"
+            fi
+          done
+      - name: What's left
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "Releases:"; gh release list -R "$GITHUB_REPOSITORY"
+          echo "Tags:"; git ls-remote --tags origin

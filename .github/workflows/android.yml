@@ -2,6 +2,7 @@ name: Build the Android app
 on:
   push:
     branches: [main]
+    paths-ignore: ["**.md", ".github/workflows/cleanup.yml"]
   workflow_dispatch:
 permissions:
   contents: write
