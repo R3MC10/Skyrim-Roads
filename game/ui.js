@@ -98,16 +98,12 @@
         </div>
         <p class="sub" style="margin-top:10px">${esc(D.RACES[race].desc)} Also +5 ${esc(D.RACES[race].skills.slice(1).join(", "))}.</p>
         <button class="btn pri" id="begin" style="width:100%;margin-top:8px">Begin in ${esc(D.START_LOCATION)}</button>
-        ${net.mode === "p2p" ? `<label class="sub" for="wcode" style="display:block;margin-top:12px">World code: friends with the same code share one world</label>
-          <input id="wcode" maxlength="12" autocomplete="off" autocapitalize="characters" value="${esc(Store.worldCode || "")}" style="text-transform:uppercase;letter-spacing:.15em">` : ""}
-        <p class="sub status ${net.mode === "shared" || net.mode === "p2p" ? "live" : ""}" style="margin-top:10px"><i></i>${net.mode === "shared" ? "Shared world: other players will see you on the map." : net.mode === "p2p" ? "Phone-to-phone: your game is saved on this phone and syncs straight with your friends' phones." : APP ? "Offline game: saved on this phone." : "Saved in this browser only (shared saving unavailable here)."}</p>${net.mode === "shared" || net.mode === "p2p" ? "" : onlineBtn().replace('data-act="online"', 'id="online"')}
+        <p class="sub status ${net.mode === "shared" || net.mode === "p2p" ? "live" : ""}" style="margin-top:10px"><i></i>${net.mode === "shared" ? "Shared world: other players will see you on the map." : net.mode === "p2p" ? "One world for everyone with the app: your game is saved on this phone and syncs straight with everyone else's." : APP ? "Offline game: saved on this phone." : "Saved in this browser only (shared saving unavailable here)."}</p>${net.mode === "shared" || net.mode === "p2p" ? "" : onlineBtn().replace('data-act="online"', 'id="online"')}
       </div>`;
       app.querySelectorAll("[data-race]").forEach((b) => b.onclick = () => { race = b.dataset.race; const v = $("#nm").value; draw(); $("#nm").value = v; });
       if ($("#online")) $("#online").onclick = openOnline;
       $("#begin").onclick = () => {
         const name = ($("#nm").value || "").trim().slice(0, 24) || "Dovahkiin";
-        const wc = $("#wcode")?.value.trim().toUpperCase();
-        if (wc && wc !== Store.worldCode) Store.joinWorld(wc);
         S = G.newSave(Store.uid, name, race);
         persist(true);
         start();
@@ -168,7 +164,7 @@
     G.setAllyProvider(() => allies());
     let lastPeers = 0;
     Store.onStatus?.((st) => {
-      if (st.peers > lastPeers) { publishCard(); toast(`${st.peers} friend${st.peers > 1 ? "s" : ""} online in your world.`); }
+      if (st.peers > lastPeers) { publishCard(); toast(`${st.peers} other player${st.peers > 1 ? "s" : ""} online.`); }
       lastPeers = st.peers; bump(); if (["map", "log"].includes(tab)) renderPanel(false);
     });
     if (TOWNS.guardCheck(S) && !TOWNS.wanted(S)) setTimeout(openGuard, 400);
@@ -656,7 +652,7 @@
       <input id="search" placeholder="Search places" value="${esc(searchText)}" autocomplete="off" aria-label="Search places">
       <div class="list">${bag ? `<div class="item on"><div class="t">🎒 Your lost bag<span>${bag.gold} gold · ${Math.max(0, Math.floor((bag.expires - G.now()) / 60))} min left before it's fair game</span></div><button class="btn pri sm" data-act="go" data-place="__bag">Go</button></div>` : ""}
       ${places.slice(0, 40).map(({ n, d }) => { const k = WORLD.places[n][2]; return `<div class="item"><div class="t">${esc(n)}<span>${KIND[k]} · ${esc(G.holdAt(WORLD.places[n]))}${S.discovered.includes(n) ? "" : " · unvisited"}</span></div><span class="num sub">${d * 1.1 / G.speed(S) < 1 ? "" : "~"}${fmtMin(d * 1.1 / G.speed(S))}</span><button class="btn sm" data-act="go" data-place="${esc(n)}">Go</button></div>`; }).join("") || `<p class="sub">No places match.</p>`}</div>
-      <p class="sub status ${Store.online ? "live" : ""}" style="margin-top:12px"><i></i>${Store.mode === "p2p" ? `World ${esc(Store.worldCode)} · ${Store.peers ? `${Store.peers} other ${Store.peers === 1 ? "phone" : "phones"} online` : "looking for friends…"}` : Store.online ? `Shared world · ${others.length} other ${others.length === 1 ? "traveller" : "travellers"}` : APP ? "Offline game · saved on this phone" : "Saved in this browser only"}</p>${Store.online ? "" : onlineBtn()}</div>`;
+      <p class="sub status ${Store.online ? "live" : ""}" style="margin-top:12px"><i></i>${Store.mode === "p2p" ? `The world · ${Store.peers ? `${Store.peers} other ${Store.peers === 1 ? "phone" : "phones"} online` : "looking for friends…"}` : Store.online ? `Shared world · ${others.length} other ${others.length === 1 ? "traveller" : "travellers"}` : APP ? "Offline game · saved on this phone" : "Saved in this browser only"}</p>${Store.online ? "" : onlineBtn()}</div>`;
   }
 
   function panelHero() {
@@ -830,17 +826,15 @@
           <div style="display:flex;gap:6px;width:100%;flex-wrap:wrap">${inParty(o.id) ? "" : `<button class="btn sm" data-act="invite" data-id="${esc(o.id)}">Invite</button>`}
           ${near && !inParty(o.id) ? `<button class="btn sm" data-act="pick" data-id="${esc(o.id)}">Pickpocket</button><button class="btn sm danger" data-act="attack" data-id="${esc(o.id)}">Attack</button>` : ""}</div></div>`; }).join("")}</div>
           <p class="sub" style="margin-top:8px">To rob or attack someone you must be in the same place. Fights use their gear and stats. Killing someone in a town is always seen; out in the wilds, sometimes.</p>`
-        : `<p class="sub">No one else ${Store.mode === "p2p" ? "online right now. Share your world code and friends" : "yet. Share this page and friends"} appear here and on the map.</p>`)
+        : `<p class="sub">No one else ${Store.mode === "p2p" ? "online right now. Send friends the app and they" : "yet. Share this page and friends"} appear here and on the map.</p>`)
       : APP ? `<p class="sub">This is the offline game: just you. Other players live in the online world.</p>${onlineBtn()}` : '<p class="sub">Shared saving isn\'t available in this view, so you\'re playing alone in this browser.</p>'}
       ${shared ? `<div class="item" style="margin-top:8px"><div class="t">🏹 Lie in ambush<span>${S.ambush ? "Hidden by the road. The next traveller to pass close by gets a sneak attack." : canAmbush ? "Hide here off the road (you must be standing in the wilds). You're hidden from the map." : "Stop somewhere in the wilds first."}</span></div><button class="btn sm ${S.ambush ? "danger" : ""}" data-act="ambush" ${canAmbush || S.ambush ? "" : "disabled"}>${S.ambush ? "Stop" : "Hide"}</button></div>` : ""}</div>`;
     const bnt = Object.entries(S.bounty || {}).filter(([, v]) => v > 0);
     const bounty = bnt.length ? `<div class="panel"><h2>Bounties</h2><div class="list">${bnt.map(([h, v]) => `<div class="item"><div class="t">${esc(h)}<span>${v} gold${(S.resisted || {})[h] ? " · resisted arrest" : ""}</span></div></div>`).join("")}</div><p class="sub" style="margin-top:6px">Pay it to a guard in that hold's towns, or to a bounty hunter on the road.</p></div>` : "";
     const word = shared ? `<div class="panel"><h2>Word on the road</h2>${news.length ? `<div class="log">${news.slice(0, 20).map((n) => `<div><time>${new Date(n.t * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time>${esc(n.text)}</div>`).join("")}</div>` : '<p class="sub">Quiet, for now.</p>'}</div>` : "";
-    const worldHtml = Store.mode === "p2p" ? `<div class="panel"><h2>Your world</h2>
-      <p class="sub">Phones with the same world code play together, straight from phone to phone. Every phone keeps a copy of the world, so it lives on as long as any of you play. Only people online right now appear here.</p>
-      <div class="item"><div class="t"><b style="font-size:22px;letter-spacing:.2em">${esc(Store.worldCode)}</b><span>${Store.peers ? `${Store.peers} other ${Store.peers === 1 ? "phone" : "phones"} connected` : "Looking for friends with this code…"}</span></div><button class="btn sm pri" data-act="sharecode">Share</button></div>
-      <div style="display:flex;gap:8px;margin-top:8px"><input id="joincode" maxlength="12" placeholder="Friend's code" autocapitalize="characters" style="text-transform:uppercase;flex:1"><button class="btn" data-act="joincode">Join</button></div>
-      <p class="sub" style="margin-top:6px">Joining another world keeps your character; the old world stays saved on this phone.</p></div>` : "";
+    const worldHtml = Store.mode === "p2p" ? `<div class="panel"><h2>The world</h2>
+      <p class="sub">Everyone with the app plays in this one world, straight from phone to phone. Every phone keeps a copy of it, so it lives on as long as anyone plays. Only people online right now appear here. To bring a friend in, send them the app.</p>
+      <div class="item"><div class="t">${Store.peers ? `${Store.peers} other ${Store.peers === 1 ? "player" : "players"} online` : "Looking for other players…"}<span>${Store.peers ? "Connected" : "It can take up to a minute to find each other"}</span></div></div></div>` : "";
     return `${worldHtml}${partyHtml}${travellers}${bounty}${word}
       <div class="panel"><h2>Journal</h2><div class="log">${S.journal.map((j) => `<div><time>${new Date(j.t * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time>${esc(j.text)}</div>`).join("")}</div></div>`;
   }
@@ -865,21 +859,6 @@
       case "openenc": openEncounter(); break;
       case "openev": openEvent(); break;
       case "online": openOnline(); break;
-      case "sharecode": {
-        const text = `Join my world in Roads of the North! World code: ${Store.worldCode}`;
-        const Sh = window.Capacitor?.Plugins?.Share;
-        if (Sh) Sh.share({ title: "Roads of the North", text }).catch(() => {});
-        else if (navigator.share) navigator.share({ text }).catch(() => {});
-        else { navigator.clipboard?.writeText(Store.worldCode); toast("World code copied."); }
-        break;
-      }
-      case "joincode": {
-        const v = ($("#joincode")?.value || "").trim().toUpperCase();
-        if (v.length < 4) return toast("Codes are at least 4 letters.");
-        Store.joinWorld(v); party = null; invites = []; chests = []; news = [];
-        publishCard(); toast(`Joined world ${Store.worldCode}. Looking for friends…`); renderPanel(true);
-        break;
-      }
       case "enter": { const err = DUNGEONS.enter(S); if (err) return toast(err); selected = null; renderPicked(); dunNote = null; persist(true); renderDungeon(); break; }
       case "dun": renderDungeon(); break;
       case "droom": dungeonRoom(b.dataset.c); break;

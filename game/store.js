@@ -39,7 +39,7 @@ const Store = (() => {
       ls.set("sk.uid", uid);
       localBags = ls.get("sk.bags") || [];
       const T = transport();
-      if (T) { mode = "p2p"; joinWorld(ls.get("sk.world") || newCode(), T); }
+      if (T) { mode = "p2p"; joinWorld(ONE_WORLD, T); }
     }
     return { mode, uid, writable };
   }
@@ -64,6 +64,7 @@ const Store = (() => {
     };
     return window.P2PNET || null;
   }
+  const ONE_WORLD = "NORTH";   // everyone who has the app plays in this one world
   const newCode = () => Array.from({ length: 6 }, () => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[Math.floor(Math.random() * 32)]).join("");
   const live = (d) => d && !d._del;
   function emit(col) { const docs = list(col); (wl[col] || []).forEach((f) => f(docs)); }

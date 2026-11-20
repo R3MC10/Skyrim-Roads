@@ -11,7 +11,7 @@ dungeons, perks, towns, and a lot of betrayal.
 Every change pushed here builds a new version by itself (about 5 minutes). Installing a newer build keeps your save.
 
 ## Playing with friends (phone to phone)
-- Everyone with the same **world code** plays in the same world. Find yours in the Journal tab and press **Share**.
+- Everyone who has the app plays in **one shared world**. To bring a friend in, send them the APK.
 - Phones find each other through free public Nostr relays, then talk directly (WebRTC). No server, no accounts.
 - Every phone keeps a full copy of the world (players, dropped bags, parties, party chests, news) and merges it with
   every phone it meets, so the world lives on as long as anyone plays.
