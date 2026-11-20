@@ -352,6 +352,10 @@ const WorldMap = (() => {
     }
     const pulse = v.reduceMotion ? 0.5 : (Math.sin(v.t * 3) + 1) / 2;
     g.fillStyle = `rgba(110,200,255,${0.18 + 0.12 * pulse})`; g.beginPath(); g.arc(px, py, (15 + 6 * pulse) * s, 0, 7); g.fill();
+    if (v.horse) {   // riding: a horseshoe in your horse's coat colour around your marker
+      g.lineCap = "round"; g.strokeStyle = "#0b2233"; g.lineWidth = 5.5 * s; g.beginPath(); g.arc(px, py, 11.5 * s, 0.72 * Math.PI, 2.28 * Math.PI); g.stroke();
+      g.strokeStyle = v.horse; g.lineWidth = 3.2 * s; g.beginPath(); g.arc(px, py, 11.5 * s, 0.72 * Math.PI, 2.28 * Math.PI); g.stroke(); g.lineCap = "butt";
+    }
     g.fillStyle = "#8fd3ff"; g.strokeStyle = "#0b2233"; g.lineWidth = 2.4 * s; g.beginPath(); g.arc(px, py, 7.5 * s, 0, 7); g.fill(); g.stroke();
     label(g, v.name, px + 12 * s, py - 13 * s, s, 14, "#d8f0ff", 700, false, "left");
   }

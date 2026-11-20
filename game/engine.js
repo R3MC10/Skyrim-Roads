@@ -173,8 +173,11 @@ const G = (() => {
       return sum + w;
     }, 0);
   }
+  /* horses: riding gives speed; a horse that's with you (ridden or led) carries for you */
+  const riding = (s) => (typeof HORSES !== "undefined" ? HORSES.riding(s) : !!s.horse);
+  const withHorse = (s) => (typeof HORSES !== "undefined" ? HORSES.present(s) : !!s.horse);
   const capacity = (s) => F.BASE_CARRY + Math.floor(s.spBonus / F.ATTRIBUTE_PER_LEVEL) * F.CARRY_PER_STAMINA_LEVEL
-    + (s.horse ? D.HORSE_CARRY : 0) + (P(s, "extra_pockets") ? 100 : 0) + fxSum(s, "carry") + (s.stone === "steed" ? 100 : 0) + (s.follower ? 100 : 0)   // [OURS] a follower carries 100 for you
+    + (withHorse(s) ? D.HORSE_CARRY : 0) + (P(s, "extra_pockets") ? 100 : 0) + fxSum(s, "carry") + (s.stone === "steed" ? 100 : 0) + (s.follower ? 100 : 0)   // [OURS] a follower carries 100 for you
     + (typeof HALL !== "undefined" ? HALL.carryBonus() : 0);   // [OURS] Jarl's Keep tier of the shared hall
   const overweight = (s) => carried(s) > capacity(s);
   const lo = (s) => s.loadouts[s.loadout] || Object.values(s.loadouts)[0];
@@ -683,7 +686,7 @@ const G = (() => {
     if (c > cap && P(s, "marathon")) v = (v + F.travelSpeed(BASE_WALK, skill(s, "Athletics"), cap, cap)) / 2;
     v *= 1 + 0.05 * P(s, "long_strider");
     if (typeof WEVENTS !== "undefined") v *= WEVENTS.weather([s.x, s.y]).speed;   // [OURS] snow and storms slow you down
-    if (s.horse) v *= D.HORSE_SPEED;
+    if (riding(s)) v *= D.HORSE_SPEED;
     return v;
   }
   function startTrip(s, destName, dest, t = now()) {
@@ -723,7 +726,7 @@ const G = (() => {
       if (!last || pxDist(last, [s.x, s.y]) >= TRAIL_STEP_PX) s.explored.push([+s.x.toFixed(4), +s.y.toFixed(4)]);
       tr.trail.push([+s.x.toFixed(4), +s.y.toFixed(4)]);
       if (tr.trail.length > 120) tr.trail.splice(1, 1);
-      if (!s.horse && !overweight(s)) for (const m of useSkill(s, "Athletics", dt * F.ATHLETICS_XP_PER_SECOND)) tripLog(s, "📈 " + m);
+      if (!riding(s) && !overweight(s)) for (const m of useSkill(s, "Athletics", dt * F.ATHLETICS_XP_PER_SECOND)) tripLog(s, "📈 " + m);
       for (const [n, [lx, ly]] of Object.entries(PLACES))
         if (!s.discovered.includes(n) && pxDist([s.x, s.y], [lx, ly]) <= DISCOVER_PX) { s.discovered.push(n); tripLog(s, `🗺 Discovered ${n}`); }
       const pk = pickUpBags(s, bags.filter((b) => !out.taken.includes(b.id)), stepT);
@@ -750,10 +753,12 @@ const G = (() => {
             if (f.won) {
               const g = rint(...e.gold); s.gold += g; const loot = rollLoot(s, e);
               tripLog(s, `${e.text} You deal with it.${g ? ` (+${g} gold)` : ""}${loot.length ? " Loot: " + loot.join(", ") : ""}`);
+              const hm = typeof HORSES !== "undefined" ? HORSES.hurt(s, e, stepT, 0.08) : null; if (hm) tripLog(s, hm);
             } else { const d = die(s, e.name, stepT); out.died = d.msg; out.bag = d.bag; return out; }
           }
         } else {
-          if (s.horse && Math.random() < 0.12) { tripLog(s, `🐴 The ${e.name} kills your horse, ${s.horse.name}!`); s.horse = null; }
+          const hm = typeof HORSES !== "undefined" ? HORSES.hurt(s, e, stepT, 0.25) : null;   // horses go down, they never die
+          if (hm) tripLog(s, hm);
           tr.status = "encounter"; tr.encounter = e;
           out.encounter = e;
           note(s, `⚠️ Encounter: ${e.name}`);
@@ -784,9 +789,9 @@ const G = (() => {
     }
     let enemyFirst = !!opts.enemyFirst;
     if (action === "flee") {
-      const ch = 0.55 + skill(s, "Athletics") / 250 - (e.danger === "high" ? 0.2 : 0) + (s.horse ? 0.15 : 0);   // [OURS]
+      const ch = 0.55 + skill(s, "Athletics") / 250 - (e.danger === "high" ? 0.2 : 0) + (riding(s) ? 0.15 : 0);   // [OURS]
       lines.push(...useSkill(s, "Athletics", 10 * F.ATHLETICS_XP_PER_SECOND));
-      if (Math.random() < ch) { tr.status = "travel"; tr.encounter = null; tr.lastTick = t; tripLog(s, `🏃 Escaped the ${e.name}`); return { text: `You ${s.horse ? "ride" : "run"} and lose the ${e.name}.`, skills: lines }; }
+      if (Math.random() < ch) { tr.status = "travel"; tr.encounter = null; tr.lastTick = t; tripLog(s, `🏃 Escaped the ${e.name}`); return { text: `You ${riding(s) ? "ride" : "run"} and lose the ${e.name}.`, skills: lines }; }
       enemyFirst = true; lines.unshift(`You try to escape, but the ${e.name} catches you!`);
     } else if (action === "sneak") {
       lines.push(...useSkill(s, "Sneak", 2.5 + 0.625 * 10));   // [Skyrim] 2.5 for hiding + 0.625/s hidden
@@ -861,6 +866,7 @@ const G = (() => {
     if (!shopsOpen(t)) return `The shops are closed (${clockText(t)}). They open at 08:00.`;
     if (item === "horse") {
       if (!shopTypes(s.location).includes("stables")) return "No stables here.";
+      if (typeof HORSES !== "undefined") return HORSES.buy(s);
       if (s.horse) return "You already have a horse.";
       if (s.gold < D.HORSE_PRICE) return `A horse costs ${D.HORSE_PRICE} gold.`;
       s.gold -= D.HORSE_PRICE;
@@ -915,7 +921,7 @@ const G = (() => {
   return {
     MAP_W, MAP_H, STEP_SECONDS, SLOTS, ARMOR_SLOTS, now, pxDist, holdAt, clock, isNight, shopsOpen, clockText,
     P, wtype, fxSum, lockChance, setAllyProvider, hiddenChance, rested, haggle, SPELL_TIER, newSave, maxHealth, maxMagicka, maxStamina, curHealth, setHealth, skill, useSkill, levelUp,
-    give, take, invRow, carried, capacity, overweight, equipment, equip, unequip, countRestore, itemStats,
+    riding, withHorse, give, take, invRow, carried, capacity, overweight, equipment, equip, unequip, countRestore, itemStats,
     loadout: lo, saveLoadoutAs, deleteLoadout, spellCost, describeRule, describeAction, Fight, scaleEnemy, rollLoot,
     rollEncounter, die, speed, startTrip, startEvent, eventChoices, eventChoice, buyFrom, minutesLeft, minutesTo, posAfter, advance, encounterAction, migrate, PLACES,
     shopTypes, shopStock, buyPrice, sellPrice, buy, sell, readTome, drinkPotion, recharge, clone, note,

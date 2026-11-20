@@ -534,23 +534,26 @@
   }
   function renderTrip() {
     const el = $("#trip"), tr = S.trip;
-    if (S.dungeon) { el.innerHTML = `<div class="trip enc"><div class="row"><b>🕯 You're inside ${esc(S.dungeon.place)}</b><button class="btn danger sm" data-act="dun">Go back in</button></div></div>`; return; }
-    if (!tr) { el.innerHTML = ""; return; }
+    const put = (html) => { if (el.dataset.html !== html) { el.innerHTML = html; el.dataset.html = html; } };   // only redraw on change, so taps don't get lost
+    if (S.dungeon) { put(`<div class="trip enc"><div class="row"><b>🕯 You're inside ${esc(S.dungeon.place)}</b><button class="btn danger sm" data-act="dun">Go back in</button></div></div>`); return; }
+    if (!tr) { put(""); return; }
     if (tr.status === "event") {
-      el.innerHTML = `<div class="trip"><div class="row"><b>🛤 Something by the road</b><button class="btn pri sm" data-act="openev">Look</button></div></div>`;
+      put(`<div class="trip"><div class="row"><b>🛤 Something by the road</b><button class="btn pri sm" data-act="openev">Look</button></div></div>`);
       return;
     }
     if (tr.status === "encounter") {
-      el.innerHTML = `<div class="trip enc"><div class="row"><b>⚠️ ${esc(tr.encounter.name)} blocks the road</b><button class="btn danger sm" data-act="openenc">Face it</button></div></div>`;
+      put(`<div class="trip enc"><div class="row"><b>⚠️ ${esc(tr.encounter.name)} blocks the road</b><button class="btn danger sm" data-act="openenc">Face it</button></div></div>`);
       return;
     }
     const mins = tripMinutesLeft(), total = Math.max(mins, tr.total || mins), p = pct(total - mins, total);
     const here = livePos(), ground = Terrain.NAMES[Terrain.typeAtPos(here)], sp = Terrain.speedAt(here);
     const pace = sp >= 1.2 ? "fast going" : sp >= 0.95 ? "steady" : sp >= 0.6 ? "slow going" : "very slow going";
-    el.innerHTML = `<div class="trip"><div class="row"><b>${esc(tr.origin)} → ${esc(tr.destName)}</b><span class="num sub">${fmtMin(mins)}</span><button class="btn sm" data-act="stop">Stop</button></div>
-      <div class="bar"><i style="width:${p}%;background:var(--frost)"></i></div>
-      <div class="sub">${tr.carriage ? "🐎 by carriage · safe on the Jarl's roads" : `${esc(ground)} · ${pace} · ${S.horse ? "on horseback" : G.overweight(S) ? "too heavy to run" : "on foot"}`}${S.follower ? ` · ${esc(TOWNS.FOLLOWERS[S.follower.id][0])} with you` : ""}</div>
+    const html = `<div class="trip"><div class="row"><b>${esc(tr.origin)} → ${esc(tr.destName)}</b><span class="num sub">${fmtMin(mins)}</span>${!tr.carriage && HORSES.present(S) ? `<button class="btn sm" data-act="hride">${HORSES.riding(S) ? "Walk" : "Ride"}</button>` : ""}<button class="btn sm" data-act="stop">Stop</button></div>
+      <div class="bar"><i style="background:var(--frost)"></i></div>
+      <div class="sub">${tr.carriage ? "🐎 by carriage · safe on the Jarl's roads" : `${esc(ground)} · ${pace} · ${HORSES.riding(S) ? `riding ${esc(S.horse.name)}` : HORSES.present(S) ? `walking beside ${esc(S.horse.name)}` : G.overweight(S) ? "too heavy to run" : "on foot"}`}${S.follower ? ` · ${esc(TOWNS.FOLLOWERS[S.follower.id][0])} with you` : ""}</div>
       ${tr.log.length ? `<div class="sub">${esc(tr.log[0])}</div>` : `<div class="sub">The trip keeps going while the page is closed.</div>`}</div>`;
+    put(html);
+    const bar = el.querySelector(".bar i"); if (bar) bar.style.width = `${p}%`;
   }
   function renderTabs() {
     tabsEl.querySelectorAll(".tab").forEach((b) => {
@@ -574,7 +577,7 @@
       player: pos, name: S.name, trail: S.trip?.trail, dest: S.trip ? { pos: S.trip.dest, name: S.trip.destName } : null,
       route: S.trip ? (S.trip.status === "travel" ? S.trip.path.slice(S.trip.idx + 1) : [S.trip.dest]) : null,
       discovered: S.discovered, explored: [...S.explored, pos], others: others.filter((o) => !o.hiding || G.pxDist(livePos(), otherPos(o)) < MP.NEAR_PX).map((o) => ({ name: o.name + (party?.members.some((m) => m.id === o.id) ? " ⚑" : ""), pos: otherPos(o) })),
-      bags: visibleBags(), selected, t: ts / 1000, zoom, center, reduceMotion, weather: WEVENTS.weather(pos).id, quest: questPos(), hall: S.discovered.includes(HALL.TOWN) || known(HALL.TOWN) ? { pos: HALL.POS, label: `Hall of the North · ${HALL.progress().name}` } : null,
+      bags: visibleBags(), selected, t: ts / 1000, zoom, center, reduceMotion, weather: WEVENTS.weather(pos).id, quest: questPos(), horse: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, hall: S.discovered.includes(HALL.TOWN) || known(HALL.TOWN) ? { pos: HALL.POS, label: `Hall of the North · ${HALL.progress().name}` } : null,
     };
     WorldMap.draw($("#map"), view);
   }
@@ -1409,6 +1412,23 @@
       <div class="list"><input id="lon" maxlength="20" placeholder="New loadout name, e.g. Dragon" aria-label="New loadout name"><div class="grid2"><button class="btn" data-act="losave">Save current as</button><button class="btn danger" data-act="lodel">Delete ${esc(S.loadout)}</button></div></div></div>`;
   }
 
+  let horseCoat = "bay";
+  function stablesHTML(open, wanted) {
+    const h = HORSES.fix(S), l = S.location;
+    const swatch = (c, on, act) => `<button class="coat ${on ? "on" : ""}" ${act ? `data-act="hcoat" data-id="${c[0]}"` : "disabled"} style="background:${c[2]}" aria-label="${esc(c[1])}" aria-pressed="${on}"></button>`;
+    if (!h) return `<div class="card"><h3>Buy a horse · ${D.HORSE_PRICE} gold</h3><p class="sub">Riding, you travel ${D.HORSE_SPEED}× faster and flee more easily. Your horse carries ${D.HORSE_CARRY} for you even when you walk beside it. Horses never die: if badly hurt, they limp back to the nearest stables to rest.</p>
+      <div class="coats">${HORSES.COATS.map((c) => swatch(c, c[0] === horseCoat, true)).join("")}</div><p class="sub" style="margin:4px 0 0">${esc(HORSES.coat(horseCoat)[1])}</p>
+      <div class="chatrow"><input id="hname" maxlength="16" placeholder="Name your horse" autocomplete="off" aria-label="Horse name"><button class="btn pri" data-act="hbuy" ${open && !wanted && S.gold >= D.HORSE_PRICE ? "" : "disabled"}>Buy</button></div>
+      ${!open ? `<p class="sub">The stables open at 08:00.</p>` : S.gold < D.HORSE_PRICE ? `<p class="sub">You have ${S.gold} gold.</p>` : ""}</div>`;
+    const c = HORSES.coat(h.coat), mh = HORSES.maxHp(h), hp = HORSES.hp(S), aw = HORSES.away(S);
+    const here = aw && h.away.town === l, mins = Math.ceil(HORSES.readyIn(S) / 60);
+    return `<div class="card"><div class="row" style="display:flex;gap:10px;align-items:center">${swatch(c, true, false)}<div style="flex:1"><h3 style="margin:0">${esc(h.name)}</h3><span class="sub">${esc(c[1])} · ${esc(HORSES.ARMOR[h.armor].name)}</span></div></div>
+        ${aw ? `<p>${here ? (mins > 0 ? `${esc(h.name)} is resting here. Ready in about ${mins} min.` : `${esc(h.name)} is rested and waiting for you.`) : `${esc(h.name)} is resting at the stables in ${esc(h.away.town)}.`}</p>
+          ${here ? `<div class="grid2"><button class="btn pri" data-act="hfetch" ${mins > 0 ? "disabled" : ""}>Take ${esc(h.name)}</button><button class="btn" data-act="hhurry" ${mins > 0 ? "" : "disabled"}>Patch up now (${HORSES.HURRY_PRICE} gold)</button></div>` : ""}`
+        : `<div class="vital" style="margin-top:8px"><small><span>Health</span><span class="num">${Math.round(hp)}/${mh}</span></small><div class="bar"><i style="width:${pct(hp, mh)}%;background:var(--sp)"></i></div></div>`}
+        <div class="chatrow" style="margin-top:8px"><input id="hname" maxlength="16" placeholder="New name" autocomplete="off" aria-label="New name"><button class="btn" data-act="hrename">Rename</button></div></div>
+      <h3 style="margin-top:12px">Horse armor</h3>${Object.entries(HORSES.ARMOR).filter(([id]) => id !== "none").map(([id, a]) => `<div class="item"><div class="t">${esc(a.name)}<span>+${a.hp} health · takes ${Math.round(a.guard * 100)}% less damage</span></div><span class="num gold">${a.price}</span><button class="btn sm" data-act="harmor" data-id="${id}" ${h.armor === id || !open || S.gold < a.price || wanted ? "disabled" : ""}>${h.armor === id ? "Worn" : "Buy"}</button></div>`).join("")}`;
+  }
   function panelTown() {
     const l = S.location, types = l ? G.shopTypes(l) : [];
     if (!l || (!types.length && !TOWNS.isTown(l))) {
@@ -1422,7 +1442,7 @@
     const fac = F.priceFactor(G.skill(S, "Mercantile"));
     let body = "", note = "";
     const shopRow = (i, sell = true) => { const p = G.buyPrice(S, i); return `<div class="item"><div class="t">${esc(D.ITEMS[i].name)}<span>${esc(G.itemStats(i))} · ${D.ITEMS[i].weight} wt</span></div><span class="num gold">${p}</span><button class="btn sm" data-act="buy" data-item="${esc(i)}" ${open && !wanted && S.gold >= p ? "" : "disabled"}>Buy</button></div>`; };
-    if (townShop === "stables") body = `<div class="item"><div class="t">A horse<span>${D.HORSE_SPEED}× faster travel · +${D.HORSE_CARRY} carry weight · can die in an encounter</span></div><span class="num gold">${D.HORSE_PRICE}</span><button class="btn sm pri" data-act="buy" data-item="horse" ${open && !S.horse && !wanted ? "" : "disabled"}>${S.horse ? "Owned" : "Buy"}</button></div>`;
+    if (townShop === "stables") body = stablesHTML(open, wanted);
     else if (["general", "blacksmith", "wizard", "fence"].includes(townShop)) {
       note = `${open ? "Shops are open." : `Shops are closed for the night. They open at 08:00 (${esc(G.clockText())}).`} At Mercantile ${G.skill(S, "Mercantile")} you buy at about ${(fac / G.haggle(S)).toFixed(2)}× value. Sell from the Pack tab.${townShop === "fence" ? " The fence buys stolen goods." : ""}`;
       body = (D.SHOP_STOCK[townShop] || []).map((i) => shopRow(i)).join("");
@@ -1672,6 +1692,13 @@
       case "poison": packOpen = null; say(TOWNS.applyPoison(S, +b.dataset.id)); break;
       case "eat": packOpen = null; say(TOWNS.eat(S, +b.dataset.id)); break;
       case "hallrest": say(HALL.rest(S)); break;
+      case "hcoat": horseCoat = b.dataset.id; renderPanel(true); break;
+      case "hbuy": say(HORSES.buy(S, $("#hname")?.value, horseCoat)); publishCard(); break;
+      case "hrename": say(HORSES.rename(S, $("#hname")?.value)); break;
+      case "harmor": say(HORSES.buyArmor(S, b.dataset.id)); break;
+      case "hfetch": say(HORSES.fetch(S)); publishCard(); break;
+      case "hhurry": say(HORSES.hurry(S)); publishCard(); break;
+      case "hride": { const m = HORSES.toggle(S); liveCache.key = ""; S.trip && (S.trip.total = G.minutesLeft(S)); say(m); renderTrip(); publishCard(); break; }
       case "bclaim": { const m = BOUNTY.claim(S, +b.dataset.w, b.dataset.id); if (!m) return toast("Nothing to claim there."); SOUND.fx("quest"); say(m); publishCard(); break; }
       case "hallgold": case "hallmat": {
         const r = a === "hallgold" ? HALL.donateGold(S, +b.dataset.id) : HALL.donateMat(S, +b.dataset.id, +b.dataset.n);

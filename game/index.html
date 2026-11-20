@@ -215,6 +215,9 @@ input,select{border-radius:3px;border-color:rgba(228,220,200,.22);background:rgb
 .chatrow{display:flex;gap:8px;margin-top:6px}.chatrow input{flex:1;margin:0}.chatrow .btn{flex:none}
 .linkbtn{background:none;border:0;padding:0;color:var(--frost);text-decoration:underline;min-height:0}
 textarea.code{width:100%;margin:8px 0;padding:10px;border-radius:6px;border:1px solid var(--line);background:#0f1114;color:var(--ink);font:13px/1.35 ui-monospace,Menlo,monospace;word-break:break-all;resize:vertical}
+.coats{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.coat{width:40px;height:40px;border-radius:50%;border:2px solid #4a4237;padding:0;box-shadow:inset 0 0 0 3px #121417}
+.coat.on{border-color:var(--gold);box-shadow:inset 0 0 0 3px #121417,0 0 0 2px rgba(226,187,100,.35)}.coat:disabled{opacity:1;cursor:default}
 </style>
 </head>
 <body>
@@ -235,6 +238,7 @@ textarea.code{width:100%;margin:8px 0;padding:10px;border-radius:6px;border:1px 
 <script src="wevents.js"></script>
 <script src="enchanting.js"></script>
 <script src="quests.js"></script>
+<script src="horses.js"></script>
 <script src="hall.js"></script>
 <script src="bounty.js"></script>
 <script src="mp.js"></script>
