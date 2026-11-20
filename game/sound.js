@@ -17,6 +17,7 @@ const SOUND = (() => {
     day:     { root: 50, scale: [0, 2, 3, 5, 7, 9, 10], beat: 0.85, dens: 0.55, oct: 12, cut: 900, chords: [0, -2, -4, -2], voice: "flute", drone: 0.16 },
     night:   { root: 45, scale: [0, 2, 3, 5, 7, 8, 10], beat: 1.25, dens: 0.28, oct: 24, cut: 520, chords: [0, -4, -2, 0], voice: "bell", drone: 0.13 },
     dungeon: { root: 38, scale: [0, 1, 3, 5, 7, 8, 10], beat: 1.4, dens: 0.16, oct: 24, cut: 330, chords: [0, 1, 0, -2], voice: "bell", drone: 0.2 },
+    title:   { root: 38, scale: [0, 2, 3, 5, 7, 8, 10], beat: 1.0, dens: 0.6, oct: 12, cut: 700, chords: [0, -4, -2, -5], voice: "choir", drone: 0.2, drums: "slow" },
     combat:  { root: 38, scale: [0, 2, 3, 5, 7, 8, 10], beat: 0.42, dens: 0.5, oct: 12, cut: 1500, chords: [0, 0, -4, -2], voice: "strings", drone: 0.18, drums: true },
   };
 
@@ -116,6 +117,16 @@ const SOUND = (() => {
     const v = MOODS[mood].voice;
     if (v === "flute") { tone(freq, t, len * 0.9, { type: "triangle", vol: 0.13, a: 0.09, bus: musicBus, wet: 0.45, vib: 3 }); tone(freq * 2, t, len * 0.6, { type: "sine", vol: 0.025, a: 0.1, bus: musicBus, wet: 0.5 }); }
     else if (v === "bell") { tone(freq, t, 2.4, { type: "sine", vol: 0.1, a: 0.005, bus: musicBus, wet: 0.7 }); tone(freq * 2.76, t, 1.1, { type: "sine", vol: 0.025, a: 0.005, bus: musicBus, wet: 0.7 }); }
+    else if (v === "choir") {   // a low male chant: detuned saws through vowel-like filters
+      [-7, 7].forEach((det) => {
+        const o = ctx.createOscillator(), f1 = ctx.createBiquadFilter(), f2 = ctx.createBiquadFilter(), g = ctx.createGain(), w = ctx.createGain();
+        o.type = "sawtooth"; o.frequency.value = freq / 2; o.detune.value = det;
+        f1.type = "bandpass"; f1.frequency.value = 600; f1.Q.value = 4; f2.type = "bandpass"; f2.frequency.value = 1000; f2.Q.value = 5;
+        o.connect(f1); o.connect(f2); f1.connect(g); f2.connect(g);
+        const d = len * 0.95; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.16, t + 0.35); g.gain.setValueAtTime(0.16, t + Math.max(0.4, d - 0.4)); g.gain.exponentialRampToValueAtTime(0.0001, t + d + 0.3);
+        g.connect(musicBus); w.gain.value = 0.7; g.connect(w); w.connect(verbIn); o.start(t); o.stop(t + d + 0.4);
+      });
+    }
     else { tone(freq, t, len * 0.8, { type: "sawtooth", vol: 0.06, a: 0.04, bus: musicBus, wet: 0.3, cut: 1800 }); }
   }
   function newPhrase(m) {
@@ -135,7 +146,8 @@ const SOUND = (() => {
     while (nextBeat < ctx.currentTime + 0.4) {
       const t = nextBeat;
       if (beat % 8 === 0) { chordIx = (chordIx + 1) % m.chords.length; setDrone(m.chords[chordIx]); }
-      if (m.drums) { if (beat % 4 === 0) drum(t, 0.45); else if (beat % 4 === 2) drum(t, 0.3, 160); else if (Math.random() < 0.3) drum(t, 0.15, 200); }
+      if (m.drums === "slow") { if (beat % 4 === 0) { drum(t, 0.55, 90); } else if (beat % 8 === 6) drum(t, 0.3, 110); }
+      else if (m.drums) { if (beat % 4 === 0) drum(t, 0.45); else if (beat % 4 === 2) drum(t, 0.3, 160); else if (Math.random() < 0.3) drum(t, 0.15, 200); }
       if (hold > 0) hold--;
       else if (phrase.length) {
         const n = phrase.shift(), deg = m.scale[n.ix % m.scale.length] + 12 * Math.floor(n.ix / m.scale.length);

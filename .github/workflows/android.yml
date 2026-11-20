@@ -20,6 +20,13 @@ jobs:
           java-version: 21
       - name: Use the Android SDK already on the runner
         run: echo "sdk.dir=$ANDROID_HOME" > android/local.properties && ls $ANDROID_HOME/platforms | tail -3
+      - name: Unlock the signing key (stored encrypted, password lives in GitHub secrets)
+        env:
+          SIGNING_PASSPHRASE: ${{ secrets.SIGNING_PASSPHRASE }}
+        run: |
+          if [ -z "$SIGNING_PASSPHRASE" ]; then echo "::error::Add the SIGNING_PASSPHRASE secret (Settings > Secrets and variables > Actions)"; exit 1; fi
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 300000 -in android/app/roads.keystore.enc -out android/app/roads.keystore -pass env:SIGNING_PASSPHRASE
+          printf 'storeFile=roads.keystore\nstorePassword=%s\nkeyAlias=roads\nkeyPassword=%s\n' "$SIGNING_PASSPHRASE" "$SIGNING_PASSPHRASE" > android/keystore.properties
       - run: npm ci
       - name: Put the game inside the app
         run: npm run sync
@@ -37,6 +44,9 @@ jobs:
           make_latest: true
           files: RoadsOfTheNorth.apk
           body: |
+            ${{ github.event.head_commit.message }}
+
+            ---
             Open this page on your Android phone, tap **RoadsOfTheNorth.apk**, then open the download.
             The first time, Android asks to allow installing apps from your browser: allow it.
             Newer builds install over the old one and keep your offline save.

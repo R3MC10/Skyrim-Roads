@@ -5,6 +5,7 @@ Each round: build one batch, test it (Node sims in /home/claude/tests + headless
 our own marked [OURS]; plain-language UI; phone first.
 
 ## Done
+- Main menu and auto-update: Skyrim-style title screen (fog, snow, title music) with Continue, New Character, Settings, Updates, How to Play, Credits. The app checks GitHub for new builds, shows what's new, downloads and opens Android's installer. Signing key now stored encrypted; the password lives in GitHub secrets.
 - Round 8: sound. Music made live on the phone (day, night, dungeon and fight moods) and effects (hits, gold, level up, quests, arrival, shouts, dragon roars), with a sound button for volume and mute. The app sends a phone notification when you arrive somewhere or a dragon attacks while it's closed.
 - Round 7: quest lines. Main quest (Before the Storm → Bleak Falls Barrow → Dragon Rising → The Way of the Voice → Horn of Jurgen Windcaller → A Blade in the Dark), Companions, Thieves Guild, College of Winterhold. Gold diamond on the map, rewards and titles.
 - Round 1: standing stones (13), racial powers (10), dragon shouts (10 shouts, 30 words), dragon souls, Greybeards.
@@ -18,3 +19,4 @@ our own marked [OURS]; plain-language UI; phone first.
 - Round 3: homes (Breezehome, Honeyside, Vlindrel Hall, Hjerim, Proudspire Manor at Skyrim prices): death-proof chest, Well Rested bed (+10%; inns now Rested +5%), daily garden.
 
 ## Next rounds (in order)
+9. Chat between players: world and party channels, quick phrases, mute.

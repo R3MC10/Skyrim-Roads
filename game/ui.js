@@ -83,7 +83,9 @@
     try { await Promise.race([document.fonts?.ready, new Promise((r) => setTimeout(r, 2500))]); } catch { /* fonts optional */ }
     S = await Store.loadSave();
     if (S) S = G.migrate(S);
-    if (!S) showCreate(); else start();
+    if (getPref("zoomFar", false)) zoom = 1;
+    let open = null; try { open = sessionStorage.getItem("rotn_open"); sessionStorage.removeItem("rotn_open"); } catch { /* ignore */ }
+    if (open === "update") { showTitle("update"); checkUpdate(true); } else showTitle(open === "menu" ? "menu" : "press");
   }
 
   function showCreate() {
@@ -102,18 +104,207 @@
         </div>
         <p class="sub" style="margin-top:10px">${esc(D.RACES[race].desc)} Also +5 ${esc(D.RACES[race].skills.slice(1).join(", "))}.</p>
         <button class="btn pri" id="begin" style="width:100%;margin-top:8px">Begin in ${esc(D.START_LOCATION)}</button>
+        <button class="btn" id="toTitle" style="width:100%;margin-top:8px">Back to the main menu</button>
         <p class="sub status ${net.mode === "shared" || net.mode === "p2p" ? "live" : ""}" style="margin-top:10px"><i></i>${net.mode === "shared" ? "Shared world: other players will see you on the map." : net.mode === "p2p" ? "One world for everyone with the app: your game is saved on this phone and syncs straight with everyone else's." : APP ? "Offline game: saved on this phone." : "Saved in this browser only (shared saving unavailable here)."}</p>${net.mode === "shared" || net.mode === "p2p" ? "" : onlineBtn().replace('data-act="online"', 'id="online"')}
       </div>`;
       app.querySelectorAll("[data-race]").forEach((b) => b.onclick = () => { race = b.dataset.race; const v = $("#nm").value; draw(); $("#nm").value = v; });
       if ($("#online")) $("#online").onclick = openOnline;
+      $("#toTitle").onclick = () => { app.innerHTML = ""; showTitle("menu"); };
       $("#begin").onclick = () => {
         const name = ($("#nm").value || "").trim().slice(0, 24) || "Dovahkiin";
         S = G.newSave(Store.uid, name, race);
         persist(true);
-        start();
+        startGame();
       };
     };
     draw();
+  }
+
+  // ------------------------------------------------------------ title screen (main menu)
+  const PREFS_KEY = "rotn_prefs";
+  const getPref = (k, d) => { try { const v = JSON.parse(localStorage.getItem(PREFS_KEY) || "{}")[k]; return v === undefined ? d : v; } catch { return d; } };
+  const setPref = (k, v) => { try { const p = JSON.parse(localStorage.getItem(PREFS_KEY) || "{}"); p[k] = v; localStorage.setItem(PREFS_KEY, JSON.stringify(p)); } catch { /* storage blocked */ } };
+  let titlePage = "press", titleAnim = 0, update = null, updateMsg = "", updatePct = -1, updateBusy = false, gameStarted = false;
+  const EMBLEM = `<svg class="emb" viewBox="0 0 100 100" aria-hidden="true"><defs><linearGradient id="eg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3e7c4"/><stop offset=".6" stop-color="#c9a75e"/><stop offset="1" stop-color="#7d6230"/></linearGradient></defs>
+    <circle cx="50" cy="50" r="45" fill="none" stroke="url(#eg)" stroke-width="1.6"/><circle cx="50" cy="50" r="39" fill="none" stroke="url(#eg)" stroke-width=".8" stroke-dasharray="2 4"/>
+    <path d="M14 70 L36 38 L45 50 L58 28 L86 70 Z" fill="none" stroke="url(#eg)" stroke-width="2.4" stroke-linejoin="round"/>
+    <path d="M52 37 L58 28 L64 37" fill="none" stroke="#f3e7c4" stroke-width="2.2" stroke-linejoin="round"/>
+    <path d="M50 92 C47 80 56 76 50 70" fill="none" stroke="url(#eg)" stroke-width="2" stroke-dasharray="3 3"/>
+    <path d="M50 8 l2.2 5 5 .6 -3.8 3.4 1 5 -4.4-2.6 -4.4 2.6 1-5 -3.8-3.4 5-.6z" fill="url(#eg)"/></svg>`;
+  const versionText = async () => { try { if (window.__app) { const c = await window.__app.current(); return `Build ${c.build}`; } } catch { /* ignore */ } return APP ? "App" : "Web version"; };
+  function worldText() {
+    if (Store.mode === "p2p") return Store.peers ? `The world · ${Store.peers} other ${Store.peers === 1 ? "player" : "players"} online` : "The world · looking for friends…";
+    if (Store.online) return `Shared world · ${others.length} other travellers`;
+    return APP ? "Offline game" : "Saved in this browser";
+  }
+  function showTitle(page = "press") {
+    titlePage = page;
+    let el = $("#title");
+    if (!el) {
+      el = document.createElement("div"); el.id = "title"; el.className = "title";
+      el.innerHTML = `<canvas id="tfog"></canvas><div class="vign"></div><div class="inner" id="tinner"></div><div class="foot" id="tfoot"></div>`;
+      document.body.appendChild(el);
+      el.addEventListener("click", onTitleClick);
+      el.addEventListener("input", onSettingsInput);
+      el.addEventListener("change", onSettingsInput);
+      startFog();
+      const foot = async () => { if (!$("#title")) return; $("#tfoot").textContent = `${await versionText()} · ${worldText()}`; setTimeout(foot, 3000); };
+      foot();
+    }
+    tabsEl.classList.add("hide");
+    SOUND.mood("title");
+    renderTitle();
+  }
+  function closeTitle() { cancelAnimationFrame(titleAnim); $("#title")?.remove(); }
+  function renderTitle() {
+    const inner = $("#tinner"); if (!inner) return;
+    if (!$("#thead")) inner.innerHTML = `<div id="thead" style="display:flex;flex-direction:column;align-items:center">${EMBLEM}<h1>Roads of the North</h1><div class="tag">A shared journey across Skyrim</div></div><div id="tbody" style="display:flex;flex-direction:column;align-items:center;width:100%;flex:1"></div>`;
+    let body = "";
+    if (titlePage === "press") body = `<button class="press" data-t="menu">Tap to begin</button>`;
+    else if (titlePage === "menu") {
+      const item = (t, label, sub = "", badge = "") => `<button class="mi" data-t="${t}"><span class="lbl">${label}${badge ? `<span class="badge">${badge}</span>` : ""}</span>${sub ? `<small>${esc(sub)}</small>` : ""}</button>`;
+      body = `<nav class="menu" aria-label="Main menu">
+        ${S ? item("continue", "Continue", `${S.name} · Level ${S.level} ${D.RACES[S.race].name} · ${S.location || G.holdAt([S.x, S.y])}`) : ""}
+        ${item("new", S ? "New Character" : "Begin")}
+        ${item("settings", "Settings")}
+        ${item("update", "Updates", "", update?.newer ? "New" : "")}
+        ${item("howto", "How to Play")}
+        ${item("credits", "Credits")}</nav>`;
+    }
+    else body = `<div class="page">${titleSubpage()}</div>`;
+    $("#tbody").innerHTML = body;
+    if (titlePage !== "press") inner.querySelector(".mi, .page .btn")?.focus({ preventScroll: true });
+    if (titlePage !== "menu" && titlePage !== "press") inner.scrollTop = 0;
+  }
+  const backBtn = `<button class="btn" data-t="menu">Back</button>`;
+  function titleSubpage() {
+    if (titlePage === "settings") return `<h2>Settings</h2>${settingsHTML()}${backBtn}`;
+    if (titlePage === "confirmNew") return `<h2>Start over?</h2><p>${esc(S.name)} (level ${S.level}) and everything they carry will be gone for good. Other players' worlds aren't affected.</p>
+      <button class="btn danger" data-t="wipe">Yes, make a new character</button>${backBtn}`;
+    if (titlePage === "update") return `<h2>Updates</h2>${updateHTML()}${backBtn}`;
+    if (titlePage === "howto") return `<h2>How to Play</h2>
+      <h3>Travel</h3><p>Tap a place on the map and press Go. You walk in real time, even with the app closed: about ten minutes from Whiterun to Windhelm. Roads are fast; snow, marsh and mountains are slow. Carriages are safe and quick.</p>
+      <h3>Fights</h3><p>Bandits, wolves and worse block the road. Fight, flee, sneak past or drink a potion. Fights follow your tactics (Tactics tab), rules like “below 40% health, drink a potion”.</p>
+      <h3>Towns</h3><p>The Town tab has shops, inns, trainers, the forge, alchemy, jobs, homes and followers. Rest at an inn or your own bed for a bonus.</p>
+      <h3>Dungeons</h3><p>At a barrow or cave, press Go inside. Pick your way room by room down to the boss. Health doesn't come back on its own in there, so bring potions.</p>
+      <h3>Quests</h3><p>The Journal tab shows your quests. The gold diamond on the map marks where to go next.</p>
+      <h3>Playing together</h3><p>Everyone with the app shares one world. Form a party, trade, fight dragons that attack towns, or rob each other. Watch your back.</p>
+      <h3>Dying</h3><p>You wake at the nearest town and drop a bag with your gold. Get back to it within ten minutes before someone else does.</p>${backBtn}`;
+    if (titlePage === "credits") return `<h2>Credits</h2>
+      <p><b>Created by</b> Remigiusz (R3MC10)</p><p><b>Built with</b> Claude</p>
+      <p><b>Music and sound</b> composed live on your device</p>
+      <p><b>Fonts</b> Cinzel, Cormorant Garamond, Barlow Semi Condensed (SIL Open Font License)</p>
+      <p><b>Networking</b> Trystero, phone to phone</p>
+      <p class="sub" style="margin-top:12px">A fan project inspired by The Elder Scrolls V: Skyrim. Not made by or affiliated with Bethesda.</p>${backBtn}`;
+    return backBtn;
+  }
+  function onTitleClick(e) {
+    const b = e.target.closest("[data-t], [data-act]"); if (!b) return;
+    if (b.dataset.act) { settingsAction(b.dataset.act, b) && renderTitle(); return; }
+    const t = b.dataset.t;
+    SOUND.fx(t === "menu" && titlePage === "press" ? "arrive" : "click");
+    switch (t) {
+      case "continue": closeTitle(); startGame(); break;
+      case "new": if (S) { titlePage = "confirmNew"; renderTitle(); } else { closeTitle(); showCreate(); } break;
+      case "wipe": Store.wipe().then(() => { S = null; closeTitle(); showCreate(); }); break;
+      case "update": titlePage = "update"; renderTitle(); checkUpdate(true); break;
+      case "doupdate": runUpdate(); break;
+      default: titlePage = t; renderTitle();
+    }
+  }
+  function startGame() { if (gameStarted) return; gameStarted = true; start(); }
+
+  // ---- settings (title page and in-game sheet share these)
+  function settingsHTML() {
+    const c = SOUND.settings, sl = (id, label, v) => `<label class="sndrow"><span>${label}</span><input type="range" id="${id}" min="0" max="100" step="5" value="${Math.round(v * 100)}" aria-label="${label}"></label>`;
+    const seg = (key, opts, cur) => `<div class="seg" role="group">${opts.map(([v, l]) => `<button data-act="pref" data-k="${key}" data-v="${v}" class="${String(cur) === String(v) ? "on" : ""}" aria-pressed="${String(cur) === String(v)}">${l}</button>`).join("")}</div>`;
+    return `<h3>Sound</h3>${sl("snd_music", "Music", c.music)}${sl("snd_sfx", "Effects", c.sfx)}
+      <div class="setrow"><span>All sound</span>${seg("mute", [[false, "On"], [true, "Off"]], c.mute)}</div>
+      <h3>Map</h3><div class="setrow"><span>Map opens</span>${seg("zoomFar", [[false, "Close up"], [true, "All Skyrim"]], getPref("zoomFar", false))}</div>
+      ${APP ? `<h3>Phone</h3><div class="setrow"><span>Notifications</span>${seg("notify", [[true, "On"], [false, "Off"]], getPref("notify", true))}</div>
+      <div class="setrow"><span>Check for updates</span>${seg("autoUpdate", [[true, "Automatically"], [false, "Only when I ask"]], getPref("autoUpdate", true))}</div>` : ""}`;
+  }
+  function onSettingsInput(e) {
+    if (e.target.id === "snd_music") SOUND.set("music", e.target.value / 100);
+    if (e.target.id === "snd_sfx") { SOUND.set("sfx", e.target.value / 100); if (e.type === "change") SOUND.fx("coin"); }
+  }
+  /* returns true when the caller should re-render */
+  function settingsAction(act, b) {
+    if (act !== "pref") return false;
+    const k = b.dataset.k, v = b.dataset.v === "true";
+    if (k === "mute") { SOUND.set("mute", v); if ($("#sndBtn")) $("#sndBtn").textContent = v ? "🔇" : "⚙"; }
+    else setPref(k, v);
+    SOUND.fx("click");
+    return true;
+  }
+
+  // ---- updates
+  function updateHTML() {
+    if (!window.__app) return `<p>You're playing the web version, which is always up to date. The phone app checks for new versions and installs them itself.</p>`;
+    if (!update) return `<p class="sub">${esc(updateMsg || "Checking for a new version…")}</p>`;
+    const cur = update.current.build, lat = update.latest;
+    const when = lat.date ? new Date(lat.date).toLocaleDateString() : "";
+    if (!update.newer) return `<p>You have the newest version: <b>build ${cur}</b>.</p>${updateMsg ? `<p class="sub">${esc(updateMsg)}</p>` : ""}<button class="btn" data-t="update">Check again</button>`;
+    return `<p>A new version is ready: <b>build ${lat.build}</b>${when ? ` (${esc(when)})` : ""}. You have build ${cur}.</p>
+      ${lat.notes ? `<h3>What's new</h3><div class="notes">${esc(lat.notes)}</div>` : ""}
+      <p class="sub">Your character and progress stay. ${(lat.size / 1048576).toFixed(1)} MB download.</p>
+      ${updateMsg ? `<p id="umsg">${esc(updateMsg)}</p><div class="uprog"><i id="ubar" style="width:${Math.max(0, updatePct)}%"></i></div>` : ""}
+      <button class="btn pri" data-t="doupdate" ${updateBusy ? "disabled" : ""}>${updateBusy ? "Updating…" : "Update now"}</button>`;
+  }
+  async function checkUpdate(force) {
+    if (!window.__app) return;
+    if (force) { update = null; updateMsg = ""; }
+    try { update = await window.__app.check(force); }
+    catch (err) { updateMsg = `Couldn't reach GitHub (${err.message}). Check your internet and try again.`; update = null; }
+    if (titlePage === "update") renderTitle(); else if ($("#title")) renderTitle();
+  }
+  async function runUpdate() {
+    if (!update?.newer || updateBusy) return;
+    updateBusy = true; updateMsg = "Starting…"; updatePct = 0; renderTitle();
+    try {
+      const r = await window.__app.install(update.latest, (text, pct) => {
+        updateMsg = text; updatePct = pct;
+        const m = $("#umsg"), bar = $("#ubar");
+        if (m && bar) { m.textContent = text; bar.style.width = `${Math.max(0, pct)}%`; } else if (titlePage === "update") renderTitle();
+      });
+      if (r === "installer") updateMsg = "Tap Install (or Update) on Android's screen. The game reopens on the new version.";
+    } catch (err) { updateMsg = `The update didn't finish: ${err.message}. Try again.`; }
+    updateBusy = false;
+    if (titlePage === "update") renderTitle();
+  }
+  function updateAvailable(r) {
+    update = r;
+    if ($("#title")) { if (titlePage === "menu") renderTitle(); return; }
+    toast(`A new version (build ${r.latest.build}) is ready. Open ⚙ to update.`);
+  }
+
+  // ---- fog and snow
+  function startFog() {
+    const cv = $("#tfog"), cx = cv.getContext("2d");
+    const fit = () => { const d = Math.min(2, devicePixelRatio || 1); cv.width = innerWidth * d; cv.height = innerHeight * d; cx.setTransform(d, 0, 0, d, 0, 0); };
+    fit(); addEventListener("resize", fit);
+    const W = () => innerWidth, H = () => innerHeight;
+    const blobs = Array.from({ length: 9 }, (_, i) => ({ x: Math.random() * W(), y: H() * (0.35 + Math.random() * 0.7), r: 160 + Math.random() * 260, v: 6 + Math.random() * 12, a: 0.05 + Math.random() * 0.06, ph: i }));
+    const flakes = Array.from({ length: 70 }, () => ({ x: Math.random() * W(), y: Math.random() * H(), s: 0.6 + Math.random() * 1.8, v: 12 + Math.random() * 30, w: Math.random() * 6 }));
+    let last = performance.now();
+    const draw = (ts) => {
+      if (!$("#title")) return;
+      const dt = Math.min(0.1, (ts - last) / 1000); last = ts;
+      cx.clearRect(0, 0, W(), H());
+      for (const b of blobs) {
+        if (!reduceMotion) { b.x += b.v * dt; if (b.x - b.r > W()) b.x = -b.r; }
+        const g = cx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r);
+        g.addColorStop(0, `rgba(200,210,220,${b.a})`); g.addColorStop(1, "rgba(200,210,220,0)");
+        cx.fillStyle = g; cx.fillRect(b.x - b.r, b.y - b.r, b.r * 2, b.r * 2);
+      }
+      cx.fillStyle = "rgba(235,240,245,.55)";
+      for (const f of flakes) {
+        if (!reduceMotion) { f.y += f.v * dt; f.x += Math.sin(ts / 1000 + f.w) * 8 * dt; if (f.y > H()) { f.y = -4; f.x = Math.random() * W(); } }
+        cx.beginPath(); cx.arc(f.x, f.y, f.s, 0, 7); cx.fill();
+      }
+      if (!reduceMotion) titleAnim = requestAnimationFrame(draw);
+    };
+    titleAnim = requestAnimationFrame(draw);
   }
 
   // ------------------------------------------------------------ main screen
@@ -121,6 +312,8 @@
   /* phone back button: close what's on top, step back to the map, and only then leave the app */
   window.__ui = {
     back() {
+      if ($("#title")) { if (titlePage !== "menu" && titlePage !== "press") { titlePage = "menu"; renderTitle(); return true; } return false; }
+      if (!S && $("#toTitle")) { app.innerHTML = ""; showTitle("menu"); return true; }
       if ($("#sky") && !$("#modal")) { closeMenu(); return true; }
       if ($("#modal")) { if (!$("#modal [data-act=enc], #modal [data-act=ev], #modal [data-act=guard]")) closeModal(); return true; }
       if ($("#dun")) { closeDungeon(); return true; }
@@ -129,6 +322,8 @@
       return false;
     },
     save() { if (S) Store.save(S); },
+    updateAvailable: (r) => updateAvailable(r),
+    permissionBack: () => { if ($("#title") && titlePage === "update") { updateMsg = "Thanks. Tap Update now again."; renderTitle(); } },
     /* things worth a phone notification while the app is closed: arrival and the next dragon attack (times in ms) */
     upcoming() {
       if (!S) return [];
@@ -143,7 +338,7 @@
     app.innerHTML = `
       <div class="top"><div class="who"><b id="nm"></b><span id="sub"></span></div>
         <div class="meta"><div id="clock"></div><div class="gold" id="goldv"></div></div>
-        <button class="iconbtn snd" id="sndBtn" aria-label="Sound and music">${SOUND.settings.mute ? "🔇" : "🔊"}</button></div>
+        <button class="iconbtn snd" id="sndBtn" aria-label="Settings and menu">${SOUND.settings.mute ? "🔇" : "⚙"}</button></div>
       <div class="layout">
         <div>
           <div class="mapwrap" id="mapwrap"><canvas id="map" aria-label="Map of Skyrim"></canvas>
@@ -247,14 +442,11 @@
     lastGold = S.gold; lastPending = S.pendingLevels;
   }
   function openSound() {
-    const c = SOUND.settings, sl = (id, label, v) => `<label class="sndrow"><span>${label}</span><input type="range" id="${id}" min="0" max="100" step="5" value="${Math.round(v * 100)}" aria-label="${label}"></label>`;
-    openModal(`<h2>Sound</h2><p class="sub">Music and effects are made live on your device. Music changes for day, night, dungeons and fights.</p>
-      ${sl("snd_music", "Music", c.music)}${sl("snd_sfx", "Effects", c.sfx)}
-      <div class="grid2" style="margin-top:12px"><button class="btn ${c.mute ? "pri" : ""}" data-act="sndmute">${c.mute ? "🔇 Muted · turn on" : "🔇 Mute all"}</button><button class="btn" data-act="sndtest">▶ Test</button></div>
+    openModal(`<h2>Settings</h2>${settingsHTML()}
+      <div class="grid2" style="margin-top:14px">${window.__app ? `<button class="btn" data-act="toupdate">${update?.newer ? "⬆ Update ready" : "Check for updates"}</button>` : ""}<button class="btn" data-act="totitle" ${window.__app ? "" : 'style="grid-column:1/-1"'}>Main menu</button></div>
       <button class="btn pri" data-act="close" style="width:100%;margin-top:10px">Done</button>`);
     const m = $("#modal");
-    m.addEventListener("input", (e) => { if (e.target.id === "snd_music") SOUND.set("music", e.target.value / 100); if (e.target.id === "snd_sfx") SOUND.set("sfx", e.target.value / 100); });
-    m.addEventListener("change", (e) => { if (e.target.id === "snd_sfx") SOUND.fx("coin"); });
+    m.addEventListener("input", onSettingsInput); m.addEventListener("change", onSettingsInput);
   }
   function renderTop() {
     $("#nm").textContent = S.name;
@@ -1285,8 +1477,9 @@
       case "evbuy": { const m = G.buyFrom(S, b.dataset.item); persist(); openEvent(m); break; }
       case "enc": encounterAction(b.dataset.a); break;
       case "close": closeModal(); break;
-      case "sndmute": SOUND.set("mute", !SOUND.settings.mute); $("#sndBtn").textContent = SOUND.settings.mute ? "🔇" : "🔊"; openSound(); break;
-      case "sndtest": SOUND.fx("arrive"); SOUND.fx("coin", 1.4); break;
+      case "pref": settingsAction("pref", b); openSound(); break;
+      case "totitle": Store.save(S); try { sessionStorage.setItem("rotn_open", "menu"); } catch { /* ignore */ } location.reload(); break;
+      case "toupdate": Store.save(S); try { sessionStorage.setItem("rotn_open", "update"); } catch { /* ignore */ } location.reload(); break;
       case "lvl": say(G.levelUp(S, b.dataset.a)); publishCard(); break;
       case "wipe": Store.wipe().then(() => { S = null; tabsEl.classList.add("hide"); location.reload(); }); break;
       case "packrow": if (!e.target.closest("button")) { packOpen = packOpen === +b.dataset.id ? null : +b.dataset.id; renderPanel(true); } break;

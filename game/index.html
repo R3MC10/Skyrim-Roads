@@ -170,6 +170,40 @@ input,select{border-radius:3px;border-color:rgba(228,220,200,.22);background:rgb
 .sky-foot{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;border-top:1px solid rgba(228,220,200,.18);margin-top:6px;padding:8px 6px 4px;font-size:13px;color:#8c877a;letter-spacing:.08em;text-transform:uppercase}
 .sky-foot b{color:#f4ecd8;letter-spacing:0;margin-left:4px}.sky-foot .gold{text-transform:none;letter-spacing:0}
 .sky-vitals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:2px 6px 4px}.sky-vitals .bar{height:5px}
+
+/* ---- title screen ---- */
+.title{position:fixed;inset:0;z-index:60;background:radial-gradient(90% 70% at 50% 35%,#20262d 0%,#0b0d10 70%,#050607 100%);display:flex;flex-direction:column;align-items:center;overflow:hidden;color:var(--ink)}
+.title canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.title .vign{position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 90% at 50% 45%,transparent 50%,rgba(0,0,0,.75) 100%)}
+.title .inner{position:relative;z-index:1;width:min(520px,100%);flex:1;display:flex;flex-direction:column;align-items:center;padding:calc(env(safe-area-inset-top) + 7vh) 20px calc(env(safe-area-inset-bottom) + 18px);overflow-y:auto}
+.title .emb{width:92px;height:92px;opacity:.95;filter:drop-shadow(0 0 18px rgba(226,187,100,.25));animation:tfade 1.6s ease both}
+.title h1{margin-top:14px;text-align:center;font-size:clamp(30px,9vw,46px);letter-spacing:.14em;line-height:1.05;background:linear-gradient(180deg,#f4efe2 0%,#c9c1ad 55%,#8d8571 100%);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 2px 24px rgba(0,0,0,.6);animation:tfade 1.8s .2s ease both}
+.title .tag{margin-top:8px;font-family:"Cormorant Garamond",Georgia,serif;font-style:italic;font-size:19px;color:var(--mute);letter-spacing:.04em;animation:tfade 2s .5s ease both}
+.title .press:focus{outline:none}
+.title .press{margin-top:auto;margin-bottom:12vh;font-family:Cinzel,serif;letter-spacing:.3em;font-size:15px;color:#d8d1c0;text-transform:uppercase;background:none;border:0;padding:20px 30px;animation:tpulse 2.6s ease-in-out infinite}
+.title .menu{margin-top:auto;margin-bottom:4vh;display:flex;flex-direction:column;align-items:center;gap:2px;width:100%;animation:tfade .8s ease both}
+.title .mi{position:relative;background:none;border:0;padding:12px 8px;min-height:52px;width:100%;font-family:Cinzel,serif;font-weight:600;font-size:20px;letter-spacing:.16em;text-transform:uppercase;color:#b9b2a1;transition:color .2s,text-shadow .2s;display:flex;flex-direction:column;align-items:center}
+.title .mi small{font-family:"Barlow Semi Condensed",sans-serif;font-weight:500;font-size:14px;letter-spacing:.04em;text-transform:none;color:var(--mute);margin-top:2px}
+.title .mi .lbl{position:relative;display:inline-block;padding:0 6px}
+.title .mi .lbl::before,.title .mi .lbl::after{content:"";position:absolute;top:50%;width:0;height:1px;opacity:0;transition:width .25s,opacity .25s}
+.title .mi .lbl::before{right:100%;background:linear-gradient(270deg,rgba(255,255,255,.85),transparent)}
+.title .mi .lbl::after{left:100%;background:linear-gradient(90deg,rgba(255,255,255,.85),transparent)}
+.title .mi:hover,.title .mi:focus-visible,.title .mi.sel{color:#fff;text-shadow:0 0 14px rgba(255,255,255,.35);outline:none}
+.title .mi:hover .lbl::before,.title .mi:hover .lbl::after,.title .mi:focus-visible .lbl::before,.title .mi:focus-visible .lbl::after,.title .mi.sel .lbl::before,.title .mi.sel .lbl::after{width:min(70px,14vw);opacity:1}
+.title .mi .badge{display:inline-block;margin-left:8px;padding:1px 7px;border-radius:999px;background:var(--gold);color:#1b1408;font:600 12px "Barlow Semi Condensed",sans-serif;letter-spacing:.04em;vertical-align:middle}
+.title .foot{position:relative;z-index:1;font-size:13px;color:#7d7768;text-align:center;padding:0 16px calc(env(safe-area-inset-bottom) + 10px);letter-spacing:.03em}
+.title .page{margin-top:22px;width:100%;background:rgba(14,16,19,.82);border:1px solid #3a3530;border-radius:4px;padding:18px 18px 16px;box-shadow:0 10px 40px rgba(0,0,0,.5);animation:tfade .4s ease both}
+.title .page h2{text-align:center;letter-spacing:.12em;text-transform:uppercase;font-size:18px;margin-bottom:10px}
+.title .page h3{margin:14px 0 4px}
+.title .page p{margin:6px 0}
+.title .page .btn{width:100%;margin-top:10px}
+.title .notes{white-space:pre-wrap;background:#0f1114;border:1px solid var(--line);border-radius:4px;padding:10px 12px;font-size:15px;max-height:32vh;overflow:auto}
+.uprog{height:6px;background:#2a2e33;border-radius:3px;overflow:hidden;margin-top:10px}.uprog i{display:block;height:100%;background:var(--gold);width:0;transition:width .2s}
+.setrow{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:10px 0;font-size:16px}
+.seg{display:flex;border:1px solid #4a4237;border-radius:8px;overflow:hidden}.seg button{background:none;border:0;padding:8px 12px;min-height:40px;color:var(--mute)}.seg button.on{background:#3a3327;color:var(--ink)}
+@keyframes tfade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes tpulse{0%,100%{opacity:.35}50%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.title *{animation:none!important}}
 </style>
 </head>
 <body>

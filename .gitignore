@@ -2,3 +2,7 @@ node_modules/
 www/
 *.apk
 .DS_Store
+
+# signing key: only the encrypted copy is committed
+android/app/roads.keystore
+android/keystore.properties

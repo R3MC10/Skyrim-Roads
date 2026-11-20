@@ -1,6 +1,6 @@
 apply plugin: 'com.android.application'
 
-// signing key lives in the repo so every build can update the installed app (and keep your offline save)
+// signing key: stored encrypted in the repo (roads.keystore.enc); GitHub Actions unlocks it with the SIGNING_PASSPHRASE secret
 def keystoreProps = new Properties()
 def keystoreFile = rootProject.file('keystore.properties')
 if (keystoreFile.exists()) keystoreProps.load(new FileInputStream(keystoreFile))
