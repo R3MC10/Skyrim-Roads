@@ -213,10 +213,13 @@
           selected = null; renderPanel(true);
           const jm = TOWNS.checkJobs(S); if (jm.length) { persist(); setTimeout(() => toast(jm.join(" ")), 1500); }
           if (TOWNS.guardCheck(S)) openGuard();
+          const qa = QUESTS.active(S).find((a) => a.st.obj.talk === out.arrived);
+          if (qa) setTimeout(() => toast(`📜 ${qa.st.title}: "${qa.st.obj.label}" is waiting in the Journal.`), 2500);
         }
       } else { Store.save(S); maybeRoadEvent(); }
     }
     followParty(); checkAmbush(); renderRaid();
+    if (Math.floor(t) % 3 === 0) { const qm = QUESTS.check(S); if (qm.length) { persist(true); showMessage("Quest", qm.join(" ")); } }
     if (Math.floor(t) % 30 === 0) publishCard(false);
     renderTop(); renderVitals(); renderTrip(); renderTabs();
     if (version !== rendered || Date.now() - lastPanelRender > 20000) renderPanel(false);
@@ -278,7 +281,7 @@
       player: pos, name: S.name, trail: S.trip?.trail, dest: S.trip ? { pos: S.trip.dest, name: S.trip.destName } : null,
       route: S.trip ? (S.trip.status === "travel" ? S.trip.path.slice(S.trip.idx + 1) : [S.trip.dest]) : null,
       discovered: S.discovered, explored: [...S.explored, pos], others: others.filter((o) => !o.hiding || G.pxDist(livePos(), otherPos(o)) < MP.NEAR_PX).map((o) => ({ name: o.name + (party?.members.some((m) => m.id === o.id) ? " ⚑" : ""), pos: otherPos(o) })),
-      bags: visibleBags(), selected, t: ts / 1000, zoom, center, reduceMotion, weather: WEVENTS.weather(pos).id,
+      bags: visibleBags(), selected, t: ts / 1000, zoom, center, reduceMotion, weather: WEVENTS.weather(pos).id, quest: questPos(),
     };
     WorldMap.draw($("#map"), view);
   }
@@ -706,6 +709,39 @@
     showFightResult({ ...out, text: out.text, loot: [], gold: 0 });
   }
 
+  // ------------------------------------------------------------ quests
+  function questPos() {
+    const a = QUESTS.active(S)[0]; if (!a) return null;
+    const n = QUESTS.target(a.st); return n && WORLD.places[n] && S.location !== n ? WORLD.places[n] : null;
+  }
+  function questPanel() {
+    QUESTS.ensure(S);
+    const act = QUESTS.active(S);
+    const rows = act.map((a) => {
+      const n = QUESTS.target(a.st), here = n && S.location === n, o = a.st.obj;
+      const btns = [o.talk && here ? `<button class="btn sm pri" data-act="qtalk" data-id="${a.id}">${esc(o.label)}</button>` : "",
+        n && !here && WORLD.places[n] ? `<button class="btn sm" data-act="go" data-place="${esc(n)}">Travel to ${esc(n)}</button>` : ""].join("");
+      return `<div class="item on" style="flex-wrap:wrap"><div class="t">${esc(a.def.name)} · ${esc(a.st.title)}<span>${esc(a.st.text)}${o.count ? ` (${Math.max(0, ((S.stats || {})[o.count] || 0) - ((a.base || {})[o.count] || 0))}/${o.n})` : ""}</span></div>${btns ? `<div style="display:flex;gap:6px;flex-wrap:wrap;width:100%">${btns}</div>` : ""}</div>`;
+    }).join("");
+    const avail = QUESTS.list().filter((id) => QUESTS.L[id].start && !(S.quests || {})[id]).map((id) => {
+      const d = QUESTS.L[id];
+      return `<div class="item"><div class="t">${esc(d.name)}<span>${QUESTS.canJoin(S, id) ? "They're here. Ask to join." : `Find them at ${esc(d.giver)}.`}</span></div>${QUESTS.canJoin(S, id) ? `<button class="btn sm pri" data-act="qjoin" data-id="${id}">Join</button>` : ""}</div>`;
+    }).join("");
+    const done = Object.entries(S.quests || {}).filter(([, v]) => v.done).map(([id]) => QUESTS.L[id]?.name).filter(Boolean);
+    return `<div class="panel"><h2>Quests</h2><div class="list">${rows || '<p class="sub">No active quests.</p>'}</div>
+      ${avail ? `<h3 style="margin-top:12px">Guilds</h3><div class="list">${avail}</div>` : ""}
+      ${done.length ? `<p class="sub" style="margin-top:8px">Completed: ${done.map(esc).join(", ")}</p>` : ""}
+      <p class="sub" style="margin-top:6px">The gold diamond on the map marks where your current quest leads.</p></div>`;
+  }
+  function questTalk(id) {
+    const r = QUESTS.talk(S, id);
+    if (r.bag) Store.addBag(r.bag);
+    persist(true); renderPanel(true);
+    if (!r.fight && !r.msgs) return toast(r.text);
+    if (r.fight) return showFightResult({ ...r, text: [r.text, ...(r.msgs || [])].join(" "), loot: [], gold: 0 });
+    showMessage("Quest", [r.text, ...(r.msgs || [])].join(" "));
+  }
+
   // ------------------------------------------------------------ trading
   function onTrades(docs) {
     trades = docs;
@@ -924,7 +960,7 @@
       <div class="item"><div class="t">${S.stone ? esc(POWERS.STONES[S.stone][0]) : "No standing stone"}${S.stone && POWERS.stoneHasPower(S) ? ` <span class="num">${cd(S.stonePowerAt)}</span>` : ""}<span>${S.stone ? esc(POWERS.STONES[S.stone][1]) : "Visit one of the 13 standing stones (Guardian Stones are near Riverwood) to take its blessing."}</span></div></div>
       ${shoutRows || `<p class="sub">No Words of Power yet. Word Walls wait at the end of Nordic barrows (Bleak Falls Barrow has one), and the Greybeards at High Hrothgar teach Unrelenting Force.</p>`}</div>
       <p class="sub" style="margin-top:8px">Dragon souls: <b>${S.souls || 0}</b>${S.dragons ? ` · dragons slain: ${S.dragons}` : ""}. Kill a dragon to absorb its soul; each soul unlocks one word.${!POWERS.voiceReady(S) ? ` Your voice recovers in ${Math.ceil(S.voiceAt - tnow)} s.` : ""}</p></div>`;
-    return `${lvl}${effects}${powersHtml}<div class="panel"><h2>${esc(S.name)}</h2><p class="sub">Level ${S.level} ${esc(D.RACES[S.race].name)} · ${esc(D.RACES[S.race].desc)}</p>
+    return `${lvl}${effects}${powersHtml}<div class="panel"><h2>${esc(S.name)}</h2>${(S.titles || []).length ? `<p class="sub" style="text-align:center;color:var(--gold)">${S.titles.map(esc).join(" · ")}</p>` : ""}<p class="sub">Level ${S.level} ${esc(D.RACES[S.race].name)} · ${esc(D.RACES[S.race].desc)}</p>
       <div class="bar" style="margin-top:8px"><i style="width:${pct(S.charXp, need)}%;background:var(--gold)"></i></div><p class="sub num">${Math.round(S.charXp)}/${need} toward level ${S.level + 1}</p>
       <div class="grid2" style="grid-template-columns:repeat(3,minmax(0,1fr));margin-top:8px">
         <div class="slot">Health<b class="num" style="display:block">${G.maxHealth(S)}</b></div><div class="slot">Magicka<b class="num" style="display:block">${G.maxMagicka(S)}</b></div><div class="slot">Stamina<b class="num" style="display:block">${G.maxStamina(S)}</b></div></div>
@@ -1138,7 +1174,7 @@
     const ladderHtml = shared ? `<div class="panel"><h2>Leaderboard</h2><div class="chips">${cats.map(([k, l]) => `<button class="chip ${k === ladderCat ? "on" : ""}" data-act="ladder" data-id="${k}">${l}</button>`).join("")}</div>
       <div class="list">${board.slice(0, 10).map((d, i) => `<div class="item ${d.id === S.id ? "on" : ""}"><span class="num" style="width:1.6em;color:var(--gold)">${i + 1}</span><div class="t">${esc(d.name)}${d.id === S.id ? " (you)" : ""}<span>Level ${d.level} ${esc(D.RACES[d.race]?.name || "")}</span></div><b class="num">${d[ladderCat] || 0}</b></div>`).join("")}</div>
       ${myRank > 10 ? `<p class="sub" style="margin-top:6px">You're number ${myRank}.</p>` : ""}</div>` : "";
-    return `${worldHtml}${tradeHtml}${partyHtml}${travellers}${ladderHtml}${bounty}${word}
+    return `${questPanel()}${worldHtml}${tradeHtml}${partyHtml}${travellers}${ladderHtml}${bounty}${word}
       <div class="panel"><h2>Journal</h2><div class="log">${S.journal.map((j) => `<div><time>${new Date(j.t * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time>${esc(j.text)}</div>`).join("")}</div></div>`;
   }
 
@@ -1167,6 +1203,8 @@
       case "online": openOnline(); break;
       case "raidfight": raidFight(); break;
       case "ladder": ladderCat = b.dataset.id; renderPanel(true); break;
+      case "qtalk": questTalk(b.dataset.id); break;
+      case "qjoin": { const m = QUESTS.join(S, b.dataset.id); persist(true); renderPanel(true); showMessage("A new path", m); break; }
       case "trade": { const c = cardOf(b.dataset.id); if (c) { tradeSel = []; openTrade(c); } break; }
       case "tradepick": { const id = +b.dataset.id; tradeSel = tradeSel.includes(id) ? tradeSel.filter((x) => x !== id) : [...tradeSel, id]; const c = cardOf(tradeTo); if (c) openTrade(c); break; }
       case "tradesend": {

@@ -361,7 +361,7 @@ const TOWNS = (() => {
     const hold = G.holdAt(WORLD.places[s.location]), gold = rint(5, 45);
     const target = pick(["a merchant", "a drunk farmer", "a guard off duty", "a noble", "a priest", "a bard"]);
     if (Math.random() < pickChance(s, { gold, level: rint(1, 20) })) {
-      s.gold += gold;
+      s.gold += gold; s.stats = { ...(s.stats || {}), pp: ((s.stats || {}).pp || 0) + 1 };
       const sk = G.useSkill(s, "Pickpocket", gold);                                           // [Skyrim] XP = value stolen
       let item = "";
       if (Math.random() < 0.25) { const it = pick(["potion_health_minor", "ing_hawk_feathers", "soul_gem_common", "iron_dagger", "scroll_healing"]); const id = G.give(s, it); const r = G.invRow(s, id); if (r) r.stolen = true; item = ` and a ${D.ITEMS[it].name}`; }
@@ -371,7 +371,7 @@ const TOWNS = (() => {
     const b = addBounty(s, hold, "pickpocket");
     return { text: `"Thief!" ${target[0].toUpperCase() + target.slice(1)} grabs your wrist. Bounty in ${hold}: ${b} gold.` };
   }
-  const canFence = (s) => P(s, "fence") || (s.location === "Riften") || (P(s, "underworld_contacts") && G.shopTypes(s.location || "").includes("general"));
+  const canFence = (s) => P(s, "fence") || (s.guildThief && G.shopTypes(s.location || "").includes("general")) || (s.location === "Riften") || (P(s, "underworld_contacts") && G.shopTypes(s.location || "").includes("general"));
 
   // ---- jobs: three a day on every town's notice board ([OURS] rewards)
   function seeded(seed) { let x = 0; for (const c of seed) x = (x * 31 + c.charCodeAt(0)) >>> 0; return () => ((x = (x * 1664525 + 1013904223) >>> 0) / 4294967296); }

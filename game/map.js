@@ -321,6 +321,11 @@ const WorldMap = (() => {
     }
     for (const o of v.others) { const [x, y] = P(o.pos); smartLabel(o.name, x, y, 13, "#cde0ff"); }
     for (const b of v.bags) { const [x, y] = P(b.pos); smartLabel(b.label, x, y, 13, "#ffc8b4"); }
+    if (v.quest) {   // the current quest's destination: a gold diamond
+      const [qx, qy] = P(v.quest), r = 10 * s;
+      g.fillStyle = "rgba(226,187,100,.9)"; g.strokeStyle = "#2a1d08"; g.lineWidth = 2 * s;
+      g.beginPath(); g.moveTo(qx, qy - r); g.lineTo(qx + r * 0.75, qy); g.lineTo(qx, qy + r); g.lineTo(qx - r * 0.75, qy); g.closePath(); g.fill(); g.stroke();
+    }
     // weather over everything, in screen space
     if (v.weather && v.weather !== "clear") {
       g.save(); g.setTransform(1, 0, 0, 1, 0, 0);

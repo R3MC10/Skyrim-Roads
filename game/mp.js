@@ -54,7 +54,7 @@ const MP = (() => {
     const id = `${s.id}-${Math.floor(t)}-${rint(100, 999)}`;
     if (!purse) return { text: `${card.name}'s purse is empty. Nothing to take.` };
     if (Math.random() < chance) {
-      s.gold += want;
+      s.gold += want; s.stats = { ...(s.stats || {}), pp: ((s.stats || {}).pp || 0) + 1 };
       const skills = G.useSkill(s, "Pickpocket", want);   // [Skyrim] XP = value stolen
       return { text: `Your fingers find ${card.name}'s purse. +${want} gold. They have no idea.`, skills, doc: { type: "pickpocket", from: s.id, fromName: s.name, to: card.id, amount: want, t }, id };
     }
