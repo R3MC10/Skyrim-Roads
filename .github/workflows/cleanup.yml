@@ -29,7 +29,7 @@ jobs:
         run: |
           gh api --paginate "repos/$GITHUB_REPOSITORY/actions/runs?per_page=100" --jq '.workflow_runs[] | "\(.id) \(.head_sha)"' | while read id sha; do
             [ "$id" = "$GITHUB_RUN_ID" ] && continue
-            if ! git cat-file -e "$sha^{commit}" 2>/dev/null; then
+            if ! git merge-base --is-ancestor "$sha" origin/main 2>/dev/null; then
               gh api -X DELETE "repos/$GITHUB_REPOSITORY/actions/runs/$id" && echo "deleted run $id ($sha)"
             fi
           done
