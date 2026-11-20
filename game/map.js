@@ -321,6 +321,23 @@ const WorldMap = (() => {
     }
     for (const o of v.others) { const [x, y] = P(o.pos); smartLabel(o.name, x, y, 13, "#cde0ff"); }
     for (const b of v.bags) { const [x, y] = P(b.pos); smartLabel(b.label, x, y, 13, "#ffc8b4"); }
+    // weather over everything, in screen space
+    if (v.weather && v.weather !== "clear") {
+      g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+      const cw2 = canvas.width, ch2 = canvas.height, tt = v.reduceMotion ? 0 : v.t;
+      if (["cloudy", "fog", "storm", "blizzard"].includes(v.weather)) { g.fillStyle = v.weather === "fog" ? "rgba(210,215,220,.22)" : v.weather === "blizzard" ? "rgba(235,240,250,.2)" : "rgba(40,45,55,.18)"; g.fillRect(0, 0, cw2, ch2); }
+      if (["rain", "storm"].includes(v.weather)) {
+        g.strokeStyle = "rgba(190,210,235,.35)"; g.lineWidth = 1.2 * dpr; g.beginPath();
+        for (let i = 0; i < 90; i++) { const x = ((i * 137.5 + tt * 60) % cw2), y = ((i * 89.3 + tt * 520) % ch2); g.moveTo(x, y); g.lineTo(x - 4 * dpr, y + 14 * dpr); }
+        g.stroke();
+        if (v.weather === "storm" && !v.reduceMotion && Math.sin(tt * 0.9) > 0.995) { g.fillStyle = "rgba(255,255,255,.25)"; g.fillRect(0, 0, cw2, ch2); }
+      }
+      if (["snow", "blizzard"].includes(v.weather)) {
+        g.fillStyle = "rgba(255,255,255,.75)"; const n = v.weather === "blizzard" ? 160 : 70, drift = v.weather === "blizzard" ? 140 : 40;
+        for (let i = 0; i < n; i++) { const x = ((i * 97.1 + tt * drift + Math.sin(i + tt) * 10) % cw2 + cw2) % cw2, y = ((i * 53.7 + tt * 45) % ch2); g.beginPath(); g.arc(x, y, (1 + (i % 3) * 0.6) * dpr, 0, 7); g.fill(); }
+      }
+      g.restore();
+    }
     const pulse = v.reduceMotion ? 0.5 : (Math.sin(v.t * 3) + 1) / 2;
     g.fillStyle = `rgba(110,200,255,${0.18 + 0.12 * pulse})`; g.beginPath(); g.arc(px, py, (15 + 6 * pulse) * s, 0, 7); g.fill();
     g.fillStyle = "#8fd3ff"; g.strokeStyle = "#0b2233"; g.lineWidth = 2.4 * s; g.beginPath(); g.arc(px, py, 7.5 * s, 0, 7); g.fill(); g.stroke();

@@ -24,6 +24,7 @@
   let S = null, net = {}, tab = "map", selected = null, others = [], bags = [];
   let zoom = innerWidth < 700 ? 2.4 : 1, follow = true, center = [0.5, 0.5], view = {}, version = 0, rendered = -1, lastPanelRender = 0;
   let tacticsDraft = { if: "always", pct: 50, do: "attack" }, testResult = null, townShop = null, packOpen = null, searchText = "";
+  let raidDocs = [], raidSeen = null;
   let perkSkill = null, alchSel = [], party = null, invites = [], chests = [], news = [], seenAttacks = new Set(), lastCardJson = "", lastAmbushCheck = 0;
   const app = $("#app"), tabsEl = $("#tabs");
   const bump = () => { version++; };
@@ -136,6 +137,7 @@
             <div class="picked hide" id="picked"></div></div>
           <div class="vitals" id="vitals"></div>
           <div id="trip"></div>
+          <div id="raid"></div>
         </div>
         <div class="side" id="side"></div>
       </div>`;
@@ -150,6 +152,8 @@
     $("#side").addEventListener("change", onPanelChange);
     $("#side").addEventListener("input", onPanelInput);
     $("#trip").addEventListener("click", onPanelClick);
+    $("#raid").addEventListener("click", onPanelClick);
+    Store.watch("raids", (docs) => { raidDocs = docs; });
     $("#picked").addEventListener("click", onPanelClick);
     Store.watchPlayers((ps) => { others = ps; if (tab === "log") bump(); });
     Store.watchBags((b) => { bags = b; });
@@ -206,7 +210,7 @@
         }
       } else { Store.save(S); maybeRoadEvent(); }
     }
-    followParty(); checkAmbush();
+    followParty(); checkAmbush(); renderRaid();
     if (Math.floor(t) % 30 === 0) publishCard(false);
     renderTop(); renderVitals(); renderTrip(); renderTabs();
     if (version !== rendered || Date.now() - lastPanelRender > 20000) renderPanel(false);
@@ -216,7 +220,8 @@
     $("#nm").textContent = S.name;
     const where = S.location || `the wilds of ${G.holdAt(livePos())}`;
     $("#sub").textContent = `Level ${S.level} ${D.RACES[S.race].name} · ${where}`;
-    $("#clock").textContent = `${G.isNight() ? "🌙" : "☀️"} ${G.clockText()}`;
+    const wx = WEVENTS.weather(livePos()), dt = WEVENTS.date();
+    $("#clock").textContent = `${G.isNight() ? "🌙" : "☀️"} ${dt.day} ${dt.month}, ${G.clockText().split(", ")[1]} · ${wx.icon} ${wx.name}`;
     $("#goldv").textContent = `${S.gold} gold`;
   }
   function renderVitals() {
@@ -267,7 +272,7 @@
       player: pos, name: S.name, trail: S.trip?.trail, dest: S.trip ? { pos: S.trip.dest, name: S.trip.destName } : null,
       route: S.trip ? (S.trip.status === "travel" ? S.trip.path.slice(S.trip.idx + 1) : [S.trip.dest]) : null,
       discovered: S.discovered, explored: [...S.explored, pos], others: others.filter((o) => !o.hiding || G.pxDist(livePos(), otherPos(o)) < MP.NEAR_PX).map((o) => ({ name: o.name + (party?.members.some((m) => m.id === o.id) ? " ⚑" : ""), pos: otherPos(o) })),
-      bags: visibleBags(), selected, t: ts / 1000, zoom, center, reduceMotion,
+      bags: visibleBags(), selected, t: ts / 1000, zoom, center, reduceMotion, weather: WEVENTS.weather(pos).id,
     };
     WorldMap.draw($("#map"), view);
   }
@@ -510,6 +515,38 @@
     if (r.cleared) { const jm = TOWNS.checkJobs(S); if (jm.length) r.text += " " + jm.join(" "); postNews(`🏆 ${S.name} cleared ${S.dungeon?.place}.`); }
     persist(true);
     dunNote = r; renderDungeon();
+  }
+
+  // ------------------------------------------------------------ dragon attacks (world events)
+  function renderRaid() {
+    const el = $("#raid"); if (!el) return;
+    const r = WEVENTS.activeRaid();
+    if (!r) {
+      if (S.raid && !S.raid.claimed) { /* the dragon might have died after the window: nothing to show */ }
+      el.innerHTML = ""; return;
+    }
+    if (raidSeen !== r.id) {
+      raidSeen = r.id; toast(`🐉 A dragon is attacking ${r.town}!`);
+      if (!news.some((n) => n.text.includes(r.id))) postNews(`🐉 A dragon is attacking ${r.town}! Every warrior is needed. (${r.id})`);
+    }
+    const tl = WEVENTS.tally(r, raidDocs, S), left = Math.max(0, Math.ceil((r.end - G.now()) / 60)), done = tl.total >= tl.need;
+    const msg = WEVENTS.claim(S, r, raidDocs);
+    if (msg) { persist(true); showMessage("The dragon falls", msg); }
+    const here = S.location === r.town;
+    el.innerHTML = `<div class="trip enc" style="margin-top:10px"><div class="row"><b>🐉 ${done ? `The dragon over ${esc(r.town)} is dead` : `A dragon is attacking ${esc(r.town)}`}</b><span class="num sub">${done ? "" : `${left} min`}</span></div>
+      <div class="bar"><i style="width:${pct(tl.total, tl.need)}%;background:var(--ember)"></i></div>
+      <div class="sub">${done ? "Everyone who fought shares the soul and the spoils." : `${tl.total}/${tl.need} damage dealt${tl.people ? ` by ${tl.people} ${tl.people === 1 ? "fighter" : "fighters"}` : ""}. Everyone who hurts it gets its soul, 300 gold, dragon bone and scales. The more people fight, the tougher it gets.`}</div>
+      ${done ? "" : here ? `<button class="btn danger" data-act="raidfight" style="width:100%">⚔️ Fight the dragon</button>` : `<button class="btn" data-act="go" data-place="${esc(r.town)}" style="width:100%">Travel to ${esc(r.town)}</button>`}</div>`;
+  }
+  function raidFight() {
+    const r = WEVENTS.activeRaid(); if (!r) return toast("The dragon is gone.");
+    const out = WEVENTS.fight(S, r, raidDocs);
+    if (!out.fight) return toast(out.text);
+    Store.put("raids", `${r.id}-${S.id}`, { raid: r.id, uid: S.id, name: S.name, dmg: S.raid.dmg, t: G.now() });
+    if (out.bag) Store.addBag(out.bag);
+    if (out.slain) postNews(`🐉 ${S.name} struck the killing blow on the dragon over ${r.town}!`);
+    persist(true); renderPanel(true); renderRaid();
+    showFightResult({ ...out, text: out.text, loot: [], gold: 0 });
   }
 
   // ------------------------------------------------------------ multiplayer
@@ -902,6 +939,7 @@
       case "openenc": openEncounter(); break;
       case "openev": openEvent(); break;
       case "online": openOnline(); break;
+      case "raidfight": raidFight(); break;
       case "stone": say(POWERS.takeStone(S, b.dataset.id)); publishCard(); break;
       case "carriage": { const err = TOWNS.rideCarriage(S, b.dataset.id); if (err) return toast(err); S.trip.total = G.minutesLeft(S); persist(true); toast(`The driver cracks the reins. ${fmtMin(S.trip.total)} to ${b.dataset.id}.`); tab = "map"; renderTabs(); renderPanel(true); $("#mapwrap").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" }); follow = true; break; }
       case "hire": say(TOWNS.hire(S, b.dataset.id)); publishCard(); break;

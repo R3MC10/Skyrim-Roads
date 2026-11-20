@@ -249,7 +249,8 @@ const G = (() => {
     return { cond: pct ? `${label} ${r.pct}%` : label, act: describeAction(r.do) };
   }
   function hiddenChance(s, e, t) {   // [OURS] Skyrim detection is real-time line of sight; this is our stand-in
-    const base = 0.25 + skill(s, "Sneak") / 150 - (e.danger === "high" ? 0.15 : 0) + (isNight(t) ? 0.1 : 0) + 0.15 * P(s, "detect_life");
+    const base = 0.25 + skill(s, "Sneak") / 150 - (e.danger === "high" ? 0.15 : 0) + (isNight(t) ? 0.1 : 0) + 0.15 * P(s, "detect_life")
+      + (typeof WEVENTS !== "undefined" ? WEVENTS.weather([s.x, s.y], t || now()).sneak : 0);   // rain, fog and snow hide you
     const seen = (1 - base) * (1 - 0.12 * P(s, "stealth"));   // [Skyrim] Stealth: 20% harder to detect per rank (our scale)
     return Math.max(0.05, Math.min(0.92, 1 - seen));
   }
@@ -676,6 +677,7 @@ const G = (() => {
     let v = F.travelSpeed(BASE_WALK, skill(s, "Athletics"), c, cap);
     if (c > cap && P(s, "marathon")) v = (v + F.travelSpeed(BASE_WALK, skill(s, "Athletics"), cap, cap)) / 2;
     v *= 1 + 0.05 * P(s, "long_strider");
+    if (typeof WEVENTS !== "undefined") v *= WEVENTS.weather([s.x, s.y]).speed;   // [OURS] snow and storms slow you down
     if (s.horse) v *= D.HORSE_SPEED;
     return v;
   }
@@ -730,7 +732,7 @@ const G = (() => {
         out.arrived = tr.destName;
         return out;
       }
-      const rate = tr.carriage ? 0 : ENCOUNTER_PER_MIN * (isNight(stepT) ? D.NIGHT_ENCOUNTER_MULT : 1);   // nobody robs a carriage on a Jarl's road
+      const rate = tr.carriage ? 0 : ENCOUNTER_PER_MIN * (isNight(stepT) ? D.NIGHT_ENCOUNTER_MULT : 1) * (typeof WEVENTS !== "undefined" ? WEVENTS.weather([s.x, s.y], stepT).encounters : 1);   // nobody robs a carriage on a Jarl's road
       if (Math.random() < 1 - (1 - rate) ** (dt / 60)) {
         const e = rollEncounter(s, stepT);
         if (e.danger === "low") {
