@@ -184,6 +184,8 @@
     if (titlePage === "confirmNew") return `<h2>Start over?</h2><p>${esc(S.name)} (level ${S.level}) and everything they carry will be gone for good. Other players' worlds aren't affected.</p>
       <button class="btn danger" data-t="wipe">Yes, make a new character</button>${backBtn}`;
     if (titlePage === "update") return `<h2>Updates</h2>${updateHTML()}${backBtn}`;
+    if (titlePage === "backup") return `<h2>Back up</h2>${backupHTML()}<button class="btn" data-t="settings">Back</button>`;
+    if (titlePage === "restore") return `<h2>Restore</h2>${restoreHTML()}<button class="btn" data-t="settings">Back</button>`;
     if (titlePage === "howto") return `<h2>How to Play</h2>
       <h3>Travel</h3><p>Tap a place on the map and press Go. You walk in real time, even with the app closed: about ten minutes from Whiterun to Windhelm. Roads are fast; snow, marsh and mountains are slow. Carriages are safe and quick.</p>
       <h3>Fights</h3><p>Bandits, wolves and worse block the road. Fight, flee, sneak past or drink a potion. Fights follow your tactics (Tactics tab), rules like “below 40% health, drink a potion”.</p>
@@ -202,6 +204,7 @@
   }
   function onTitleClick(e) {
     const b = e.target.closest("[data-t], [data-act]"); if (!b) return;
+    if (b.dataset.act === "bk") { bkClick(b); return; }
     if (b.dataset.act) { settingsAction(b.dataset.act, b) && renderTitle(); return; }
     const t = b.dataset.t;
     SOUND.fx(t === "menu" && titlePage === "press" ? "arrive" : "click");
@@ -222,6 +225,7 @@
     const seg = (key, opts, cur) => `<div class="seg" role="group">${opts.map(([v, l]) => `<button data-act="pref" data-k="${key}" data-v="${v}" class="${String(cur) === String(v) ? "on" : ""}" aria-pressed="${String(cur) === String(v)}">${l}</button>`).join("")}</div>`;
     return `<h3>Sound</h3>${sl("snd_music", "Music", c.music)}${sl("snd_sfx", "Effects", c.sfx)}
       <div class="setrow"><span>All sound</span>${seg("mute", [[false, "On"], [true, "Off"]], c.mute)}</div>
+      ${S ? `<h3>Your character</h3><div class="grid2"><button class="btn" data-act="bk" data-bk="openbackup">Back up</button><button class="btn" data-act="bk" data-bk="openrestore">Restore</button></div>` : `<h3>Your character</h3><button class="btn" data-act="bk" data-bk="openrestore" style="width:100%">Restore from a backup</button>`}
       <h3>Map</h3><div class="setrow"><span>Map opens</span>${seg("zoomFar", [[false, "Close up"], [true, "All Skyrim"]], getPref("zoomFar", false))}</div>
       ${APP ? `<h3>Phone</h3><div class="setrow"><span>Notifications</span>${seg("notify", [[true, "On"], [false, "Off"]], getPref("notify", true))}</div>
       <div class="setrow"><span>Check for updates</span>${seg("autoUpdate", [[true, "Automatically"], [false, "Only when I ask"]], getPref("autoUpdate", true))}</div>` : ""}`;
@@ -238,6 +242,62 @@
     else setPref(k, v);
     SOUND.fx("click");
     return true;
+  }
+
+  // ---- character backups
+  let bkCode = null, bkNote = "", bkArmed = null;
+  function backupHTML() {
+    return `<p>This code is your whole character: level, skills, gear, gold, quests and home. Keep it somewhere safe (notes, a message to yourself). Paste it into Restore on any phone to get your hero back.</p>
+      <textarea id="bkcode" class="code" readonly rows="5" aria-label="Your backup code">${esc(bkCode || "Making your code…")}</textarea>
+      <div class="grid2"><button class="btn pri" data-act="bk" data-bk="copy" ${bkCode ? "" : "disabled"}>Copy</button><button class="btn" data-act="bk" data-bk="share" ${bkCode ? "" : "disabled"}>Share…</button></div>
+      ${bkNote ? `<p class="sub" role="status">${esc(bkNote)}</p>` : ""}`;
+  }
+  function restoreHTML() {
+    const auto = BACKUP.autoList();
+    return `<p>Paste a backup code below. ${S ? `<b>This replaces ${esc(S.name)} (level ${S.level}) on this phone.</b> Back them up first if you want to keep them.` : ""}</p>
+      <textarea id="rscode" class="code" rows="4" placeholder="ROTN1.…" aria-label="Backup code" autocomplete="off" spellcheck="false"></textarea>
+      <button class="btn ${bkArmed === "code" ? "danger" : "pri"}" data-act="bk" data-bk="restore" style="width:100%">${bkArmed === "code" ? `Yes, replace ${esc(S?.name || "")}` : "Restore this code"}</button>
+      ${auto.length ? `<h3>Automatic copies on this phone</h3><p class="sub" style="margin-top:0">Saved every 10 minutes while you play. They're gone if the app is deleted, so keep a code too.</p>
+      <div class="list">${auto.map((a, i) => `<div class="item"><div class="t">${esc(a.name)} · level ${a.level}<span>${new Date(a.t).toLocaleString([], { weekday: "short", hour: "2-digit", minute: "2-digit" })}${a.where ? " · " + esc(a.where) : ""}</span></div><button class="btn sm" data-act="bk" data-bk="auto" data-i="${i}">${bkArmed === "auto" + i ? "Yes, replace" : "Restore"}</button></div>`).join("")}</div>` : ""}
+      ${bkNote ? `<p class="sub" role="status" style="color:var(--ember)">${esc(bkNote)}</p>` : ""}`;
+  }
+  function bkRender(page) {
+    if ($("#title")) { titlePage = page; renderTitle(); return; }
+    const keep = $("#rscode")?.value || "";
+    openModal(`<h2>${page === "backup" ? "Back up" : "Restore"}</h2>${page === "backup" ? backupHTML() : restoreHTML()}<button class="btn" data-act="close" style="width:100%;margin-top:10px">Close</button>`);
+    if ($("#rscode")) $("#rscode").value = keep;
+  }
+  async function bkClick(b) {
+    const k = b.dataset.bk;
+    SOUND.fx("click");
+    if (k === "openbackup") { bkCode = null; bkNote = ""; bkRender("backup"); bkCode = await BACKUP.make(S); bkRender("backup"); return; }
+    if (k === "openrestore") { bkNote = ""; bkArmed = null; bkRender("restore"); return; }
+    if (k === "copy") {
+      try { await navigator.clipboard.writeText(bkCode); bkNote = "Copied. Paste it somewhere safe."; }
+      catch { const t = $("#bkcode"); t.select(); bkNote = document.execCommand("copy") ? "Copied. Paste it somewhere safe." : "Select the code and copy it by hand."; }
+      bkRender("backup"); return;
+    }
+    if (k === "share") {
+      const text = `Roads of the North backup: ${S.name}, level ${S.level}\n${bkCode}`;
+      try {
+        if (window.Capacitor?.Plugins?.Share && APP) await window.Capacitor.Plugins.Share.share({ title: "Roads of the North backup", text, dialogTitle: "Save your backup" });
+        else if (navigator.share) await navigator.share({ title: "Roads of the North backup", text });
+        else { await navigator.clipboard.writeText(bkCode); bkNote = "Sharing isn't available here, so the code was copied instead."; bkRender("backup"); }
+      } catch { /* cancelled */ }
+      return;
+    }
+    if (k === "restore" || k === "auto") {
+      const code = k === "auto" ? BACKUP.autoList()[+b.dataset.i]?.code : $("#rscode")?.value;
+      const armKey = k === "auto" ? "auto" + b.dataset.i : "code";
+      let save;
+      try { save = await BACKUP.read(code); } catch (err) { bkNote = err.message; bkArmed = null; bkRender("restore"); return; }
+      if (S && bkArmed !== armKey) { bkArmed = armKey; bkNote = ""; bkRender("restore"); if ($("#rscode") && k === "restore") $("#rscode").value = code; return; }
+      if (S) await BACKUP.autoSave(S, true);   // one last copy of the character being replaced
+      save = G.migrate(save); save.id = Store.uid;
+      Store.save(save); await Store.flush();
+      try { sessionStorage.setItem("rotn_open", "menu"); } catch { /* ignore */ }
+      location.reload();
+    }
   }
 
   // ---- updates
@@ -432,6 +492,7 @@
     followParty(); checkAmbush(); renderRaid(); soundTick();
     if (Math.floor(t) % 3 === 0) { const qm = QUESTS.check(S); if (qm.length) { persist(true); showMessage("Quest", qm.join(" ")); } }
     if (Math.floor(t) % 30 === 0) publishCard(false);
+    if (Math.floor(t) % 60 === 0) BACKUP.autoSave(S);
     renderTop(); renderVitals(); renderTrip(); renderTabs();
     if (version !== rendered || Date.now() - lastPanelRender > 20000) renderPanel(false);
   }
@@ -1539,6 +1600,7 @@
       case "chatmute": { const m = chatMuted(), id = b.dataset.id; if (m.includes(id)) return; setPref("muted", [...m, id]); toast(`Muted ${b.dataset.name}. Their messages are hidden.`); onChat(chatRaw); renderPanel(true); break; }
       case "chatunmute": setPref("muted", []); toast("Everyone is unmuted."); onChat(chatRaw); renderPanel(true); break;
       case "pref": settingsAction("pref", b); openSound(); break;
+      case "bk": bkClick(b); break;
       case "totitle": Store.save(S); try { sessionStorage.setItem("rotn_open", "menu"); } catch { /* ignore */ } location.reload(); break;
       case "toupdate": Store.save(S); try { sessionStorage.setItem("rotn_open", "update"); } catch { /* ignore */ } location.reload(); break;
       case "lvl": say(G.levelUp(S, b.dataset.a)); publishCard(); break;
