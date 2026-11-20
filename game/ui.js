@@ -25,6 +25,7 @@
   let zoom = innerWidth < 700 ? 2.4 : 1, follow = true, center = [0.5, 0.5], view = {}, version = 0, rendered = -1, lastPanelRender = 0;
   let tacticsDraft = { if: "always", pct: 50, do: "attack" }, testResult = null, townShop = null, packOpen = null, searchText = "";
   let raidDocs = [], raidSeen = null, enchDraft = {};
+  let trades = [], ladderDocs = [], ladderCat = "level", tradeSel = [], tradeTo = null, seenTrades = new Set(), lastLadderJson = "";
   let perkSkill = null, alchSel = [], party = null, invites = [], chests = [], news = [], seenAttacks = new Set(), lastCardJson = "", lastAmbushCheck = 0;
   const app = $("#app"), tabsEl = $("#tabs");
   const bump = () => { version++; };
@@ -47,6 +48,8 @@
     if (!force && json === lastCardJson) return;
     lastCardJson = json;
     Store.publish({ ...card, updated: Date.now() });
+    const lad = MP.ladder(S), lj = JSON.stringify({ ...lad, t: 0 });
+    if (lj !== lastLadderJson && Store.online) { lastLadderJson = lj; Store.put("ladder", S.id, lad); }
   }
   let liveCache = { t: 0, key: "", pos: null };
   function livePos(t = G.now()) {
@@ -155,6 +158,8 @@
     $("#trip").addEventListener("click", onPanelClick);
     $("#raid").addEventListener("click", onPanelClick);
     Store.watch("raids", (docs) => { raidDocs = docs; });
+    Store.watch("trades", (docs) => onTrades(docs));
+    Store.watch("ladder", (docs) => { ladderDocs = docs; if (tab === "log") bump(); });
     $("#picked").addEventListener("click", onPanelClick);
     Store.watchPlayers((ps) => { others = ps; if (tab === "log") bump(); });
     Store.watchBags((b) => { bags = b; });
@@ -701,6 +706,41 @@
     showFightResult({ ...out, text: out.text, loot: [], gold: 0 });
   }
 
+  // ------------------------------------------------------------ trading
+  function onTrades(docs) {
+    trades = docs;
+    for (const d of docs) {
+      if (d.from === S.id && d.status !== "open") {           // my offer was answered: settle it
+        const m = MP.settle(S, d); Store.remove("trades", d.id);
+        if (m) { persist(true); toast(m); }
+      } else if (d.to === S.id && d.status === "open" && !seenTrades.has(d.id)) { seenTrades.add(d.id); toast(`🤝 ${d.fromName} offers you a trade. See the Journal.`); }
+    }
+    if (tab === "log") bump();
+  }
+  function openTrade(card, note) {
+    const eq = new Set(Object.values(G.loadout(S).equipment));
+    const rows = S.inv.filter((r) => !eq.has(r.id) && D.ITEMS[r.item]);
+    const gv = $("#tgive")?.value || "", av = $("#task")?.value || "";
+    tradeTo = card.id;
+    openModal(`<h2>Trade with ${esc(card.name)}</h2><p class="sub">What you offer leaves your pack now and comes back if they say no.</p>${note ? `<p class="sub">${esc(note)}</p>` : ""}
+      <div class="list" style="max-height:38vh;overflow:auto">${rows.map((r) => `<div class="item ${tradeSel.includes(r.id) ? "on" : ""}" data-act="tradepick" data-id="${r.id}" role="button" tabindex="0"><div class="t">${tradeSel.includes(r.id) ? "☑" : "☐"} ${esc((r.tq ? TOWNS.QUALITY[r.tq] + " " : "") + D.ITEMS[r.item].name)}${r.qty > 1 ? ` ×${r.qty}` : ""}<span>worth ${D.ITEMS[r.item].value}</span></div></div>`).join("") || '<p class="sub">Nothing loose in your pack.</p>'}</div>
+      <div class="grid2" style="margin-top:10px"><label class="sub">Gold you give<input id="tgive" inputmode="numeric" value="${esc(gv)}" placeholder="0"></label><label class="sub">Gold you ask<input id="task" inputmode="numeric" value="${esc(av)}" placeholder="0 = gift"></label></div>
+      <div class="evc"><button class="btn pri" data-act="tradesend">Send offer</button><button class="btn" data-act="close">Cancel</button></div>`);
+  }
+  async function answerTrade(id, yes) {
+    let ok = false, poor = false;
+    await Store.change("trades", id, (d) => {
+      if (d.status !== "open") return d;
+      if (!yes) { ok = true; return { ...d, status: "declined" }; }
+      const nx = MP.accept(S, { ...d }); if (!nx) { poor = true; return d; }
+      ok = true; return nx;
+    });
+    if (poor) return toast("You can't afford that.");
+    if (!ok) return toast("That offer is gone.");
+    persist(true); renderPanel(true); toast(yes ? "Deal. The goods are in your pack." : "You turn the offer down.");
+  }
+  async function cancelTrade(id) { await Store.change("trades", id, (d) => (d.status === "open" ? { ...d, status: "cancelled" } : d)); }
+
   // ------------------------------------------------------------ multiplayer
   const nid = () => `${S.id}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
   function postNews(text) { Store.put("news", nid(), { text, t: G.now() }); }
@@ -1077,7 +1117,7 @@
           return `<div class="item" style="flex-wrap:wrap"><div class="t">${esc(o.name)}${inParty(o.id) ? " ⚑" : ""}<span>Level ${o.level} ${esc(D.RACES[o.race]?.name || "")} · ${esc(o.loc || G.holdAt(o.pos))}${o.moving ? " · travelling" : ""}${o.dungeon ? " · in a dungeon" : ""}${o.bounty ? ` · wanted (${o.bounty})` : ""}</span></div>
           <span class="num sub">${near ? "here" : o.d < 60 ? "nearby" : "~" + fmtMin(o.d * 1.1 / G.speed(S)) + " away"}</span>
           <div style="display:flex;gap:6px;width:100%;flex-wrap:wrap">${inParty(o.id) ? "" : `<button class="btn sm" data-act="invite" data-id="${esc(o.id)}">Invite</button>`}
-          ${near && !inParty(o.id) ? `<button class="btn sm" data-act="pick" data-id="${esc(o.id)}">Pickpocket</button><button class="btn sm danger" data-act="attack" data-id="${esc(o.id)}">Attack</button>` : ""}</div></div>`; }).join("")}</div>
+          ${near ? `<button class="btn sm" data-act="trade" data-id="${esc(o.id)}">Trade</button>` : ""}${near && !inParty(o.id) ? `<button class="btn sm" data-act="pick" data-id="${esc(o.id)}">Pickpocket</button><button class="btn sm danger" data-act="attack" data-id="${esc(o.id)}">Attack</button>` : ""}</div></div>`; }).join("")}</div>
           <p class="sub" style="margin-top:8px">To rob or attack someone you must be in the same place. Fights use their gear and stats. Killing someone in a town is always seen; out in the wilds, sometimes.</p>`
         : `<p class="sub">No one else ${Store.mode === "p2p" ? "online right now. Send friends the app and they" : "yet. Share this page and friends"} appear here and on the map.</p>`)
       : APP ? `<p class="sub">This is the offline game: just you. Other players live in the online world.</p>${onlineBtn()}` : '<p class="sub">Shared saving isn\'t available in this view, so you\'re playing alone in this browser.</p>'}
@@ -1088,7 +1128,17 @@
     const worldHtml = Store.mode === "p2p" ? `<div class="panel"><h2>The world</h2>
       <p class="sub">Everyone with the app plays in this one world, straight from phone to phone. Every phone keeps a copy of it, so it lives on as long as anyone plays. Only people online right now appear here. To bring a friend in, send them the app.</p>
       <div class="item"><div class="t">${Store.peers ? `${Store.peers} other ${Store.peers === 1 ? "player" : "players"} online` : "Looking for other players…"}<span>${Store.peers ? `${Store.direct} linked straight to you${Store.peers > Store.direct ? `, ${Store.peers - Store.direct} reached through other players` : ""}` : "It can take up to a minute to find each other"}</span></div></div></div>` : "";
-    return `${worldHtml}${partyHtml}${travellers}${bounty}${word}
+    const incoming = trades.filter((d) => d.to === S.id && d.status === "open"), outgoing = trades.filter((d) => d.from === S.id && d.status === "open");
+    const tradeHtml = incoming.length || outgoing.length ? `<div class="panel"><h2>Trades</h2><div class="list">
+      ${incoming.map((d) => `<div class="item on" style="flex-wrap:wrap"><div class="t">${esc(d.fromName)} offers ${esc(MP.describe(d))}<span>${d.ask ? `for ${d.ask} gold (you have ${S.gold})` : "as a gift"}</span></div><div style="display:flex;gap:6px;width:100%"><button class="btn sm pri" data-act="tradeyes" data-id="${esc(d.id)}" ${S.gold >= d.ask ? "" : "disabled"}>Accept</button><button class="btn sm" data-act="tradeno" data-id="${esc(d.id)}">Decline</button></div></div>`).join("")}
+      ${outgoing.map((d) => `<div class="item"><div class="t">To ${esc(d.toName)}: ${esc(MP.describe(d))}<span>${d.ask ? `asking ${d.ask} gold` : "gift"} · waiting</span></div><button class="btn sm" data-act="tradecancel" data-id="${esc(d.id)}">Withdraw</button></div>`).join("")}</div></div>` : "";
+    const cats = [["level", "Level"], ["gold", "Gold"], ["dragons", "Dragons"], ["cleared", "Dungeons"], ["kills", "Duels won"]];
+    const board = [...ladderDocs.filter((d) => d.id !== S.id), { ...MP.ladder(S), id: S.id }].sort((a, b) => (b[ladderCat] || 0) - (a[ladderCat] || 0) || b.level - a.level);
+    const myRank = board.findIndex((d) => d.id === S.id) + 1;
+    const ladderHtml = shared ? `<div class="panel"><h2>Leaderboard</h2><div class="chips">${cats.map(([k, l]) => `<button class="chip ${k === ladderCat ? "on" : ""}" data-act="ladder" data-id="${k}">${l}</button>`).join("")}</div>
+      <div class="list">${board.slice(0, 10).map((d, i) => `<div class="item ${d.id === S.id ? "on" : ""}"><span class="num" style="width:1.6em;color:var(--gold)">${i + 1}</span><div class="t">${esc(d.name)}${d.id === S.id ? " (you)" : ""}<span>Level ${d.level} ${esc(D.RACES[d.race]?.name || "")}</span></div><b class="num">${d[ladderCat] || 0}</b></div>`).join("")}</div>
+      ${myRank > 10 ? `<p class="sub" style="margin-top:6px">You're number ${myRank}.</p>` : ""}</div>` : "";
+    return `${worldHtml}${tradeHtml}${partyHtml}${travellers}${ladderHtml}${bounty}${word}
       <div class="panel"><h2>Journal</h2><div class="log">${S.journal.map((j) => `<div><time>${new Date(j.t * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time>${esc(j.text)}</div>`).join("")}</div></div>`;
   }
 
@@ -1116,6 +1166,19 @@
       case "openev": openEvent(); break;
       case "online": openOnline(); break;
       case "raidfight": raidFight(); break;
+      case "ladder": ladderCat = b.dataset.id; renderPanel(true); break;
+      case "trade": { const c = cardOf(b.dataset.id); if (c) { tradeSel = []; openTrade(c); } break; }
+      case "tradepick": { const id = +b.dataset.id; tradeSel = tradeSel.includes(id) ? tradeSel.filter((x) => x !== id) : [...tradeSel, id]; const c = cardOf(tradeTo); if (c) openTrade(c); break; }
+      case "tradesend": {
+        const c = cardOf(tradeTo); if (!c) { closeModal(); return toast("They're gone."); }
+        const err = MP.canTarget(S, c, livePos(), otherPos(c)); if (err && !party?.members.some((m) => m.id === c.id)) return openTrade(c, err);
+        const r = MP.makeOffer(S, c, tradeSel, $("#tgive")?.value, $("#task")?.value);
+        if (!r.doc) return openTrade(c, r.text);
+        Store.put("trades", r.id, r.doc); tradeSel = []; persist(true); closeModal(); renderPanel(true); toast(r.text); break;
+      }
+      case "tradeyes": answerTrade(b.dataset.id, true); break;
+      case "tradeno": answerTrade(b.dataset.id, false); break;
+      case "tradecancel": cancelTrade(b.dataset.id); break;
       case "skytab": sky.page = b.dataset.id; sky.cat = "all"; sky.sel = null; sky.sort = sky.page === "skills" ? "lvl" : "name"; sky.dir = 1; renderMenu(); break;
       case "skycat": sky.cat = b.dataset.id; sky.sel = null; renderMenu(); break;
       case "skysort": { const k = b.dataset.id; sky.dir = sky.sort === k ? -sky.dir : 1; sky.sort = k; renderMenu(); break; }

@@ -8,6 +8,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Round 1: standing stones (13), racial powers (10), dragon shouts (10 shouts, 30 words), dragon souls, Greybeards.
 - Round 2: carriages (Skyrim fares, safe roads), followers (Lydia via the Dragonstone, 6 hirelings at 500 gold), map labels for players and bags that dodge each other.
 - Followers go down (kneel) instead of dying, and get back up after the fight at 10% health.
+- Round 6: trading between players (offers held safely until accepted, declined or withdrawn) and a shared leaderboard (level, gold, dragons, dungeons, duels).
 - Skyrim/SkyUI-style menu (Items / Magic / Skills tabs, category icons, sortable columns, item details, footer with armor/damage/weight/gold) and a Skyrim look for all panels.
 - The forge uses Skyrim materials per improvement (Iron/Steel Ingots, Leather, Firewood, Refined Moonstone, Dwarven Metal) instead of gold.
 - Round 5: enchanting at arcane enchanters (court wizards, Winterhold): break enchanted gear to learn 4 weapon and 13 armor effects, enchant with soul gems; enchanted armor in loot and shops.
@@ -15,6 +16,5 @@ our own marked [OURS]; plain-language UI; phone first.
 - Round 3: homes (Breezehome, Honeyside, Vlindrel Hall, Hjerim, Proudspire Manor at Skyrim prices): death-proof chest, Well Rested bed (+10%; inns now Rested +5%), daily garden.
 
 ## Next rounds (in order)
-6. Trading between players (offers through the shared world), a leaderboard (dragons slain, gold, level).
 7. Quest lines: a short main quest (Dragon Rising, The Way of the Voice...) and guild quests (Companions, Thieves Guild, College).
 8. Sound: generated ambient music and effects (WebAudio), arrival notifications in the app.
