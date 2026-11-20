@@ -8,11 +8,11 @@ our own marked [OURS]; plain-language UI; phone first.
 - Round 1: standing stones (13), racial powers (10), dragon shouts (10 shouts, 30 words), dragon souls, Greybeards.
 - Round 2: carriages (Skyrim fares, safe roads), followers (Lydia via the Dragonstone, 6 hirelings at 500 gold), map labels for players and bags that dodge each other.
 - Followers go down (kneel) instead of dying, and get back up after the fight at 10% health.
+- Round 5: enchanting at arcane enchanters (court wizards, Winterhold): break enchanted gear to learn 4 weapon and 13 armor effects, enchant with soul gems; enchanted armor in loot and shops.
 - Round 4: Skyrim calendar (starts 17 Last Seed) and seasons, weather per hold every 30 min (slows travel, hides you, shown on the map), dragon attacks on towns every 3 hours that all players fight together.
 - Round 3: homes (Breezehome, Honeyside, Vlindrel Hall, Hjerim, Proudspire Manor at Skyrim prices): death-proof chest, Well Rested bed (+10%; inns now Rested +5%), daily garden.
 
 ## Next rounds (in order)
-5. Enchanting: disenchant to learn effects, enchant weapons and armor with soul gems (Skyrim formulas).
 6. Trading between players (offers through the shared world), a leaderboard (dragons slain, gold, level).
 7. Quest lines: a short main quest (Dragon Rising, The Way of the Voice...) and guild quests (Companions, Thieves Guild, College).
 8. Sound: generated ambient music and effects (WebAudio), arrival notifications in the app.

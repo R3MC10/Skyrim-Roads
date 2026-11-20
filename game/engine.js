@@ -22,7 +22,10 @@ const G = (() => {
     if (/war_axe|_axe/.test(id)) return "axe"; if (/mace/.test(id)) return "mace"; return "sword";
   }
   /* active potion effects: s.fx = [{key, mag, until, name}]. key e.g. "skill:Sneak", "dmg:One-Handed", "max:health", "carry", "barter" */
-  function fxSum(s, key, t = now()) { return (s.fx || []).filter((f) => f.key === key && f.until > t).reduce((a, f) => a + f.mag, 0); }
+  function fxSum(s, key, t = now()) {
+    return (s.fx || []).filter((f) => f.key === key && f.until > t).reduce((a, f) => a + f.mag, 0)
+      + (typeof ENCH !== "undefined" && s.loadouts ? ENCH.worn(s, key) : 0);   // potions + enchanted armor you wear
+  }
   const rested = (s, t = now()) => (s.rested || 0) > t;
   const now = () => Date.now() / 1000;
   const rnd = (a, b) => a + Math.random() * (b - a);
@@ -204,7 +207,7 @@ const G = (() => {
   function itemStats(item) {
     const it = D.ITEMS[item];
     if (it.slot === "weapon") return `${it.damage} dmg · ${it.skill}${it.hands === 2 ? " · 2 hands" : ""}${it.enchant ? ` · +${it.enchant.magnitude} ${it.enchant.effect}` : ""}`;
-    if (ARMOR_SLOTS.includes(it.slot)) return `${it.armor} armor · ${it.type}`;
+    if (ARMOR_SLOTS.includes(it.slot)) return `${it.armor} armor · ${it.type}${it.aenchant ? ` · ${it.aenchant.name} ${it.aenchant.mag}` : ""}`;
     if (it.effects) return it.effects.map(([e, m, d]) => `${e} ${m}${d * 5 >= 60 ? ` · ${Math.round(d * 5 / 60)} min` : ""}`).join(", ");
     if (it.slot === "potion") return `+${it.restore[1]} ${it.restore[0]}`;
     if (it.slot === "scroll" || it.slot === "tome") return D.SPELLS[it.spell].name;

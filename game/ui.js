@@ -24,7 +24,7 @@
   let S = null, net = {}, tab = "map", selected = null, others = [], bags = [];
   let zoom = innerWidth < 700 ? 2.4 : 1, follow = true, center = [0.5, 0.5], view = {}, version = 0, rendered = -1, lastPanelRender = 0;
   let tacticsDraft = { if: "always", pct: 50, do: "attack" }, testResult = null, townShop = null, packOpen = null, searchText = "";
-  let raidDocs = [], raidSeen = null;
+  let raidDocs = [], raidSeen = null, enchDraft = {};
   let perkSkill = null, alchSel = [], party = null, invites = [], chests = [], news = [], seenAttacks = new Set(), lastCardJson = "", lastAmbushCheck = 0;
   const app = $("#app"), tabsEl = $("#tabs");
   const bump = () => { version++; };
@@ -813,9 +813,9 @@
       return `<div class="panel"><h2>${l ? esc(l) : "The wilds"}</h2><p class="sub">${l ? "There's nothing to buy here." : "You're out on the road."} Cities and towns have shops, inns, trainers, alchemy labs, forges and jobs.</p></div>`;
     }
     const open = G.shopsOpen(), wanted = TOWNS.wanted(S), hold = G.holdAt(WORLD.places[l]);
-    const sections = [...types.filter((x) => x !== "stables"), ...(TOWNS.INNS[l] ? ["inn"] : []), ...(TOWNS.TRAINERS[l] ? ["train"] : []), "alchemy", ...(types.includes("blacksmith") ? ["forge"] : []), "jobs", "streets", ...(TOWNS.followersHere(S).length || l === "Whiterun" ? ["hire"] : []), ...(TOWNS.carriageFrom(l) ? ["carriage"] : []), ...(TOWNS.HOMES[l] ? ["home"] : []), ...(types.includes("stables") ? ["stables"] : [])];
+    const sections = [...types.filter((x) => x !== "stables"), ...(TOWNS.INNS[l] ? ["inn"] : []), ...(TOWNS.TRAINERS[l] ? ["train"] : []), "alchemy", ...(types.includes("blacksmith") ? ["forge"] : []), "jobs", "streets", ...(TOWNS.followersHere(S).length || l === "Whiterun" ? ["hire"] : []), ...(TOWNS.carriageFrom(l) ? ["carriage"] : []), ...(TOWNS.HOMES[l] ? ["home"] : []), ...(ENCH.hasEnchanter(l) ? ["enchanter"] : []), ...(types.includes("stables") ? ["stables"] : [])];
     townShop = sections.includes(townShop) ? townShop : sections[0];
-    const names = { general: "General goods", blacksmith: "Blacksmith", wizard: "Court wizard", stables: "Stables", fence: "Ragged Flagon (fence)", inn: TOWNS.INNS[l] || "Inn", train: "Trainers", alchemy: "Alchemy lab", forge: "Forge", jobs: "Jobs", streets: "Streets", hire: l === "Whiterun" ? "Dragonsreach & hirelings" : "Hirelings", carriage: "Carriage", home: TOWNS.home(S, l) ? `🏠 ${TOWNS.HOMES[l]?.[0]}` : `Buy ${TOWNS.HOMES[l]?.[0]}` };
+    const names = { general: "General goods", blacksmith: "Blacksmith", wizard: "Court wizard", stables: "Stables", fence: "Ragged Flagon (fence)", inn: TOWNS.INNS[l] || "Inn", train: "Trainers", alchemy: "Alchemy lab", forge: "Forge", jobs: "Jobs", streets: "Streets", hire: l === "Whiterun" ? "Dragonsreach & hirelings" : "Hirelings", carriage: "Carriage", enchanter: "Arcane enchanter", home: TOWNS.home(S, l) ? `🏠 ${TOWNS.HOMES[l]?.[0]}` : `Buy ${TOWNS.HOMES[l]?.[0]}` };
     const fac = F.priceFactor(G.skill(S, "Mercantile"));
     let body = "", note = "";
     const shopRow = (i, sell = true) => { const p = G.buyPrice(S, i); return `<div class="item"><div class="t">${esc(D.ITEMS[i].name)}<span>${esc(G.itemStats(i))} · ${D.ITEMS[i].weight} wt</span></div><span class="num gold">${p}</span><button class="btn sm" data-act="buy" data-item="${esc(i)}" ${open && !wanted && S.gold >= p ? "" : "disabled"}>Buy</button></div>`; };
@@ -867,6 +867,27 @@
           <h3 style="margin-top:12px">Chest (${h.chest.length})</h3>${h.chest.length ? h.chest.map((r, i) => `<div class="item"><div class="t">${esc((r.tq ? TOWNS.QUALITY[r.tq] + " " : "") + D.ITEMS[r.item].name)}${r.qty > 1 ? ` ×${r.qty}` : ""}<span>${esc(G.itemStats(r.item))}</span></div><button class="btn sm" data-act="unstash" data-id="${i}">Take</button></div>`).join("") : '<p class="sub">Empty.</p>'}
           <h3 style="margin-top:12px">Put away from your pack</h3>${pack.length ? pack.map((r) => `<div class="item"><div class="t">${esc((r.tq ? TOWNS.QUALITY[r.tq] + " " : "") + D.ITEMS[r.item].name)}${r.qty > 1 ? ` ×${r.qty}` : ""}<span>${+(D.ITEMS[r.item].weight * r.qty).toFixed(2)} wt</span></div><button class="btn sm" data-act="stash" data-id="${r.id}">Store</button></div>`).join("") : '<p class="sub">Nothing loose in your pack (equipped gear stays on you).</p>'}`;
       }
+    } else if (townShop === "enchanter") {
+      const known = ENCH.known(S), gems = S.inv.filter((r) => D.ITEMS[r.item]?.slot === "soulgem");
+      const breakable = S.inv.filter((r) => ENCH.isEnchanted(D.ITEMS[r.item]) && !Object.values(G.loadout(S).equipment).includes(r.id));
+      const blanks = S.inv.filter((r) => { const it = D.ITEMS[r.item]; return (it.slot === "weapon" || G.ARMOR_SLOTS.includes(it.slot)) && !ENCH.isEnchanted(it); });
+      enchDraft.item = blanks.some((r) => r.id === enchDraft.item) ? enchDraft.item : blanks[0]?.id;
+      const bit = enchDraft.item != null ? D.ITEMS[G.invRow(S, enchDraft.item).item] : null;
+      const fits = bit ? known.filter((e) => ENCH.canTake(bit, e)) : [];
+      enchDraft.eff = fits.includes(enchDraft.eff) ? enchDraft.eff : fits[0];
+      enchDraft.gem = gems.some((r) => r.id === enchDraft.gem) ? enchDraft.gem : gems[0]?.id;
+      const pv = enchDraft.item != null && enchDraft.eff && enchDraft.gem != null ? ENCH.preview(S, enchDraft.item, enchDraft.eff, enchDraft.gem) : null;
+      const effName = (e) => (ENCH.WEAPON[e] || ENCH.ARMOR[e])[0];
+      note = `Break an enchanted item to learn its effect (the item is destroyed), then put it on your own gear with a filled soul gem. Stronger with a bigger soul and higher Enchanting (${G.skill(S, "Enchanting")}).`;
+      body = `<h3>Effects you know</h3><p class="sub">${known.length ? known.map(effName).map(esc).join(", ") : "None yet. Find or buy enchanted gear and break it down here."}</p>
+        <h3 style="margin-top:10px">Break down (learn)</h3>${breakable.length ? breakable.map((r) => `<div class="item"><div class="t">${esc(D.ITEMS[r.item].name)}<span>${known.includes(ENCH.effectOf(r.item)) ? "You know this effect already" : `Teaches ${esc(effName(ENCH.effectOf(r.item)))}`}</span></div><button class="btn sm" data-act="disench" data-id="${r.id}" ${known.includes(ENCH.effectOf(r.item)) ? "disabled" : ""}>Break</button></div>`).join("") : '<p class="sub">No loose enchanted items in your pack (take equipped ones off first).</p>'}
+        <h3 style="margin-top:10px">Enchant</h3>${blanks.length && known.length && gems.length ? `
+          <label class="sub" for="ench_item">Item</label><select id="ench_item">${blanks.map((r) => `<option value="${r.id}" ${r.id === enchDraft.item ? "selected" : ""}>${esc(D.ITEMS[r.item].name)}</option>`).join("")}</select>
+          <label class="sub" for="ench_eff">Effect</label><select id="ench_eff">${fits.length ? fits.map((e) => `<option value="${e}" ${e === enchDraft.eff ? "selected" : ""}>${esc(effName(e))}</option>`).join("") : '<option value="">Nothing you know fits this item</option>'}</select>
+          <label class="sub" for="ench_gem">Soul gem</label><select id="ench_gem">${gems.map((r) => `<option value="${r.id}" ${r.id === enchDraft.gem ? "selected" : ""}>${esc(D.ITEMS[r.item].name)} ×${r.qty}</option>`).join("")}</select>
+          <p class="sub" style="margin-top:6px">${pv ? `Result: ${esc(effName(enchDraft.eff))} ${pv.mag}${ENCH.WEAPON[enchDraft.eff] ? " damage per hit, " + pv.cap + " charge" : ""}` : ""}</p>
+          <button class="btn pri" data-act="enchant" style="width:100%" ${pv ? "" : "disabled"}>Enchant</button>`
+          : `<p class="sub">You need an unenchanted weapon or armor, a known effect, and a filled soul gem (court wizards sell them).</p>`}`;
     } else if (townShop === "carriage") {
       note = "Skyrim fares: 20 gold to a big city, 50 to a small hold capital. The carriage goes as fast as a horse, and nothing attacks you on the way.";
       body = TOWNS.carriageDests(S).map(({ n, price }) => { const mins = G.pxDist(WORLD.places[l], WORLD.places[n]) * 1.15 / TOWNS.CARRIAGE_SPEED;
@@ -926,6 +947,9 @@
     if (id === "tc") { tacticsDraft.if = e.target.value; renderPanel(true); }
     if (id === "tp") tacticsDraft.pct = +e.target.value;
     if (id === "ta") tacticsDraft.do = e.target.value;
+    if (id === "ench_item") { enchDraft.item = +e.target.value; renderPanel(true); }
+    if (id === "ench_eff") { enchDraft.eff = e.target.value; renderPanel(true); }
+    if (id === "ench_gem") { enchDraft.gem = +e.target.value; renderPanel(true); }
   }
   function onPanelClick(e) {
     const b = e.target.closest("[data-act]");
@@ -940,6 +964,8 @@
       case "openev": openEvent(); break;
       case "online": openOnline(); break;
       case "raidfight": raidFight(); break;
+      case "disench": say(ENCH.disenchant(S, +b.dataset.id)); break;
+      case "enchant": { const m = ENCH.enchant(S, enchDraft.item, enchDraft.eff, enchDraft.gem); persist(true); renderPanel(true); showMessage("Arcane enchanter", m); publishCard(); break; }
       case "stone": say(POWERS.takeStone(S, b.dataset.id)); publishCard(); break;
       case "carriage": { const err = TOWNS.rideCarriage(S, b.dataset.id); if (err) return toast(err); S.trip.total = G.minutesLeft(S); persist(true); toast(`The driver cracks the reins. ${fmtMin(S.trip.total)} to ${b.dataset.id}.`); tab = "map"; renderTabs(); renderPanel(true); $("#mapwrap").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" }); follow = true; break; }
       case "hire": say(TOWNS.hire(S, b.dataset.id)); publishCard(); break;
