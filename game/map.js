@@ -321,6 +321,19 @@ const WorldMap = (() => {
     }
     for (const o of v.others) { const [x, y] = P(o.pos); smartLabel(o.name, x, y, 13, "#cde0ff"); }
     for (const b of v.bags) { const [x, y] = P(b.pos); smartLabel(b.label, x, y, 13, "#ffc8b4"); }
+    for (const r of v.routes || []) {   // where your party members are heading
+      const [fx, fy] = P(r.from), path = r.path.slice(1);
+      g.setLineDash([5 * s, 6 * s]); g.strokeStyle = "rgba(205,224,255,.85)"; g.lineWidth = 2.2 * s;
+      g.beginPath(); g.moveTo(fx, fy); path.forEach((p) => g.lineTo(...P(p))); g.stroke(); g.setLineDash([]);
+      const [ex, ey] = P(path[path.length - 1] || r.from); g.fillStyle = "#cde0ff"; g.strokeStyle = "#13243a"; g.lineWidth = 2 * s; g.beginPath(); g.arc(ex, ey, 4.5 * s, 0, 7); g.fill(); g.stroke();
+    }
+    for (const p of v.pins || []) {   // your own pins
+      const [x, y] = P(p.pos), r = (p.on ? 9 : 7) * s;
+      g.fillStyle = p.on ? "#e2bb64" : "#d65a4a"; g.strokeStyle = "#1b1408"; g.lineWidth = 2 * s;
+      g.beginPath(); g.moveTo(x, y); g.arc(x, y - r * 1.6, r, Math.PI * 0.8, Math.PI * 2.2); g.closePath(); g.fill(); g.stroke();
+      g.fillStyle = "#fff6df"; g.beginPath(); g.arc(x, y - r * 1.6, r * 0.38, 0, 7); g.fill();
+      smartLabel(p.label, x, y - r * 1.6, 12, p.on ? "#f0d79a" : "#ffd6c8");
+    }
     if (v.hall) {   // the shared Hall of the North: a banner on a pole
       const [hx, hy] = P(v.hall.pos), u = s;
       g.strokeStyle = "#2a1d08"; g.lineWidth = 3 * u; g.beginPath(); g.moveTo(hx, hy + 9 * u); g.lineTo(hx, hy - 12 * u); g.stroke();

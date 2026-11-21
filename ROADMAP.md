@@ -5,6 +5,7 @@ Each round: build one batch, test it (Node sims in /home/claude/tests + headless
 our own marked [OURS]; plain-language UI; phone first.
 
 ## Done
+- Round 17: better map. Hold a finger on the map to drop a named pin (8 icons, up to 20), tap it to travel there, remove it, or share it with your party (it shows in party chat with "Add to my map"). Party members' routes show as dashed lines. Zoom goes closer (6×).
 - Round 16: the Arena in Windhelm. Challenge a player who's also in Windhelm, with no bet or 100/500/1000 gold; stakes are held until the bout is settled and the winner takes both. Nobody dies: the loser kneels. Monthly seasons with ratings (start 1000), a season ladder and an Arena tab on the leaderboard. Build retries once if a download fails.
 - Round 15: fishing and cooking. Buy a rod at a general store, fish in towns or the wilds near rivers, lakes or the sea (tap Reel in when the needle hits the green; rarer fish are trickier). Cook at an inn's pot or your own campfire (1 Firewood): Vegetable Soup, Salmon Steak, Horker Stew, Venison Stew, Fisherman's Stew (+50 carry), Hot Fish Soup (halves snow slowdown). New Food tab in the pack.
 - Round 14: visiting homes. Town tab > Neighbours lists other players' houses in that town: their motto, mounted dragon skulls, dungeons cleared, titles and a display case (3 items). Leave gold, an item or a note; the owner gets a toast and takes it in at their house (items go in the chest).
@@ -28,4 +29,7 @@ our own marked [OURS]; plain-language UI; phone first.
 
 ## Next rounds (in order)
 11. Visit other players' homes (leave a gift, see their trophies).
-16. Better map: zoom with two fingers, place pins, see party members' routes.
+17. A short tutorial for new players: a guided first trip from Riverwood with tips that pop up the first time you see each tab.
+18. Achievements (first dragon, 10 dungeons, 100 fish, all 13 standing stones...) shown on your Hero tab and to visitors of your home.
+19. Clan banners: players form a clan with a name and banner colours, a clan chat channel, and banners on the map at their members' homes.
+20. Seasonal world events: Frostfall blizzards, the New Life Festival, the Witchingmoon (more undead at night), each with its own rewards.

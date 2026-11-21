@@ -580,7 +580,8 @@
       player: pos, name: S.name, trail: S.trip?.trail, dest: S.trip ? { pos: S.trip.dest, name: S.trip.destName } : null,
       route: S.trip ? (S.trip.status === "travel" ? S.trip.path.slice(S.trip.idx + 1) : [S.trip.dest]) : null,
       discovered: S.discovered, explored: [...S.explored, pos], others: others.filter((o) => !o.hiding || G.pxDist(livePos(), otherPos(o)) < MP.NEAR_PX).map((o) => ({ name: o.name + (party?.members.some((m) => m.id === o.id) ? " ⚑" : ""), pos: otherPos(o) })),
-      bags: visibleBags(), selected, t: ts / 1000, zoom, center, reduceMotion, weather: WEVENTS.weather(pos).id, quest: questPos(), horse: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, hall: S.discovered.includes(HALL.TOWN) || known(HALL.TOWN) ? { pos: HALL.POS, label: `Hall of the North · ${HALL.progress().name}` } : null,
+      bags: visibleBags(), selected: selected && WORLD.places[selected] ? selected : null, t: ts / 1000, zoom, center, reduceMotion, weather: WEVENTS.weather(pos).id, quest: questPos(), pins: (S.pins || []).map((p) => ({ pos: [p.x, p.y], label: `${p.icon} ${p.label}`, on: selected === "__pin:" + p.id })),
+      routes: party ? others.filter((o) => o.moving && o.path?.length > 1 && party.members.some((m) => m.id === o.id)).map((o) => ({ path: o.path, from: otherPos(o), name: o.name })) : [], horse: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, hall: S.discovered.includes(HALL.TOWN) || known(HALL.TOWN) ? { pos: HALL.POS, label: `Hall of the North · ${HALL.progress().name}` } : null,
     };
     WorldMap.draw($("#map"), view);
   }
@@ -588,7 +589,7 @@
     const c = $("#map"), pts = new Map();
     let down = null, moved = false, pinch = null;
     const setZoom = (z, fx, fy) => {     // zoom keeping the point under the fingers still
-      z = Math.max(1, Math.min(4, z));
+      z = Math.max(1, Math.min(6, z));
       if (view.transform && fx != null) {
         const { k, ox, oy } = view.transform, mx = (fx - ox) / k / WorldMap.W, my = (fy - oy) / k / WorldMap.H;
         const r = c.getBoundingClientRect(), nk = k * z / zoom;
@@ -597,8 +598,16 @@
       }
       zoom = z; $("#zoomBtn").textContent = zoom > 1.01 ? "－" : "＋";
     };
+    let press = null, pressed = false;
     c.addEventListener("pointerdown", (e) => {
       pts.set(e.pointerId, [e.clientX, e.clientY]); c.setPointerCapture(e.pointerId);
+      clearTimeout(press); pressed = false;
+      if (pts.size === 1) press = setTimeout(() => {   // hold a finger still on the map: drop a pin there
+        if (moved || pts.size !== 1 || !view.transform) return;
+        pressed = true; const r = c.getBoundingClientRect(); const [wx, wy] = screenToWorld(e.clientX - r.left, e.clientY - r.top);
+        if (navigator.vibrate) try { navigator.vibrate(30); } catch { /* not allowed */ }
+        openPinDialog(wx, wy);
+      }, 550);
       if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]), z: zoom }; moved = true; }
       else { down = { x: e.clientX, y: e.clientY, c: [...center] }; moved = false; }
     });
@@ -613,7 +622,7 @@
       }
       if (!down) return;
       const dx = e.clientX - down.x, dy = e.clientY - down.y;
-      if (Math.hypot(dx, dy) > 8) moved = true;
+      if (Math.hypot(dx, dy) > 8) { moved = true; clearTimeout(press); }
       if (moved && zoom > 1 && view.transform) { follow = false; center = [down.c[0] - dx / (WorldMap.W * view.transform.k), down.c[1] - dy / (WorldMap.H * view.transform.k)]; }
     });
     const up = (e) => {
@@ -621,10 +630,11 @@
       if (pts.size < 2) pinch = null;
       if (pts.size === 1) { const [p] = [...pts.values()]; down = { x: p[0], y: p[1], c: [...center] }; return; }
       if (!down) return;
-      const wasMove = moved; down = null;
-      if (wasMove || !view.transform || e.type === "pointercancel") return;
+      const wasMove = moved; down = null; clearTimeout(press);
+      if (wasMove || pressed || !view.transform || e.type === "pointercancel") return;
       const r = c.getBoundingClientRect();
-      selected = WorldMap.placeAt(view, e.clientX - r.left, e.clientY - r.top, known);
+      const pin = pinAt(e.clientX - r.left, e.clientY - r.top);
+      selected = pin ? "__pin:" + pin.id : WorldMap.placeAt(view, e.clientX - r.left, e.clientY - r.top, known);
       renderPicked();
     };
     c.addEventListener("pointerup", up); c.addEventListener("pointercancel", up);
@@ -633,6 +643,13 @@
   function renderPicked() {
     const el = $("#picked");
     if (!selected) { el.classList.add("hide"); return; }
+    if (selected.startsWith("__pin:")) {
+      const p = (S.pins || []).find((q) => "__pin:" + q.id === selected); if (!p) { selected = null; return renderPicked(); }
+      el.classList.remove("hide");
+      el.innerHTML = `<div class="t"><b>${esc(p.icon)} ${esc(p.label)}</b><span>Your pin · ${esc(G.holdAt([p.x, p.y]))} · ${fmtMin(G.minutesTo(S, [p.x, p.y]))}</span></div>
+        <button class="btn pri" data-act="go" data-place="${esc(selected)}">Travel</button>${party ? `<button class="btn" data-act="pinshare" data-id="${esc(p.id)}">Share</button>` : ""}<button class="btn" data-act="pindel" data-id="${esc(p.id)}">Remove</button><button class="btn" data-act="unpick" aria-label="Close">✕</button>`;
+      return;
+    }
     const [x, y, kind] = WORLD.places[selected];
     const here = S.location === selected;
     const mins = here ? 0 : G.minutesTo(S, [x, y]);
@@ -645,6 +662,7 @@
   function travelTo(name) {
     let pos;
     if (name === "__bag") { const b = myBag(); if (!b) return toast("Your bag is gone."); pos = [b.x, b.y]; name = "your lost bag"; }
+    else if (name.startsWith("__pin:")) { const p = (S.pins || []).find((q) => "__pin:" + q.id === name); if (!p) return toast("That pin is gone."); pos = [p.x, p.y]; name = p.label; }
     else pos = WORLD.places[name].slice(0, 2);
     if (S.location === name) return toast(`You're already in ${name}.`);
     const err = G.startTrip(S, name, pos);
@@ -1051,6 +1069,36 @@
 
   // ------------------------------------------------------------ the Jarl's bounty board
   let lastDragons = null;
+  // ------------------------------------------------------------ map pins
+  const PIN_ICONS = ["📍", "⭐", "⚔️", "💰", "🌿", "🏕", "❗", "🐉"], PIN_MAX = 20;
+  let pinDraft = null;
+  function screenToWorld(sx, sy) { const { k, ox, oy } = view.transform; return [(sx - ox) / k / WorldMap.W, (sy - oy) / k / WorldMap.H]; }
+  function pinAt(sx, sy) {
+    if (!view.transform) return null;
+    const { k, ox, oy } = view.transform;
+    let best = null, bd = 22;
+    for (const p of S.pins || []) { const d = Math.hypot(p.x * WorldMap.W * k + ox - sx, p.y * WorldMap.H * k + oy - sy); if (d < bd) { bd = d; best = p; } }
+    return best;
+  }
+  function openPinDialog(x, y) {
+    if (x < 0 || y < 0 || x > 1 || y > 1) return;
+    pinDraft = { x, y, icon: pinDraft?.icon || "📍" };
+    openModal(`<h2>Drop a pin</h2><p class="sub" style="margin-top:0">${esc(G.holdAt([x, y]))} · about ${fmtMin(G.minutesTo(S, [x, y]))} away. Only you see your pins, unless you share one with your party.</p>
+      <div class="chips">${PIN_ICONS.map((i) => `<button class="chip ${i === pinDraft.icon ? "on" : ""}" data-act="pinicon" data-id="${i}" aria-label="${i}">${i}</button>`).join("")}</div>
+      <input id="pinlabel" maxlength="24" placeholder="Name it (e.g. Good fishing)" autocomplete="off" style="margin-top:8px" aria-label="Pin name">
+      <div class="grid2" style="margin-top:10px"><button class="btn pri" data-act="pinsave">Drop pin</button><button class="btn" data-act="close">Cancel</button></div>
+      ${(S.pins || []).length >= PIN_MAX ? `<p class="sub">You have ${PIN_MAX} pins. Remove one first.</p>` : ""}`);
+    setTimeout(() => $("#pinlabel")?.focus(), 50);
+  }
+  function addPin(x, y, label, icon) {
+    S.pins = S.pins || [];
+    if (S.pins.length >= PIN_MAX) return toast(`You have ${PIN_MAX} pins. Remove one first.`);
+    label = String(label || "").replace(/[\u0000-\u001f]/g, " ").trim().slice(0, 24) || "Pin";
+    const id = Date.now().toString(36);
+    S.pins.push({ id, x: Math.min(1, Math.max(0, +x)), y: Math.min(1, Math.max(0, +y)), label, icon: PIN_ICONS.includes(icon) ? icon : "📍" });
+    persist(); return id;
+  }
+
   // ------------------------------------------------------------ fishing and cooking
   function cookList() {
     return Object.entries(COOK.RECIPES).map(([id, [name, ings, , what]]) => {
@@ -1223,7 +1271,7 @@
     const ch = chatCh === "world" || !party ? "world" : party.id, muted = chatMuted();
     const msgs = chatDocs.filter((d) => d.ch === ch).slice(-40);
     chatSeen = Math.max(chatSeen, ...chatDocs.filter((d) => myChannels().includes(d.ch)).map((d) => d.t), 0);
-    const line = (d) => `<div class="cm ${d.from === S.id ? "me" : ""}"><time>${new Date(d.t * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time><button class="cn" data-act="chatmute" data-id="${esc(d.from)}" data-name="${esc(d.name)}" style="color:hsl(${chatHue(d.from)},65%,70%)" ${d.from === S.id ? "disabled" : ""}>${esc(d.name)}</button><span>${esc(d.text)}</span></div>`;
+    const line = (d) => `<div class="cm ${d.from === S.id ? "me" : ""}"><time>${new Date(d.t * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time><button class="cn" data-act="chatmute" data-id="${esc(d.from)}" data-name="${esc(d.name)}" style="color:hsl(${chatHue(d.from)},65%,70%)" ${d.from === S.id ? "disabled" : ""}>${esc(d.name)}</button><span>${esc(d.text)}${d.pin && typeof d.pin.x === "number" ? ` <button class="linkbtn" data-act="pinadd" data-id="${esc(d.id)}">Add to my map</button>` : ""}</span></div>`;
     return `<div class="panel"><h2>Chat</h2>
       <div class="chips">${[["world", "World"], ...(party ? [[party.id, "Party"]] : [])].map(([id, l]) => `<button class="chip ${id === ch ? "on" : ""}" data-act="chatch" data-id="${esc(id)}">${l}</button>`).join("")}</div>
       <div class="chatlog" id="chatlog" aria-live="polite">${msgs.length ? msgs.map(line).join("") : `<p class="sub">${ch === "world" ? "No messages yet. Say hello to everyone online." : "Talk to your party here. Only party members see these in the game."}</p>`}</div>
@@ -1861,6 +1909,11 @@
       case "eat": packOpen = null; say(TOWNS.eat(S, +b.dataset.id)); break;
       case "hallrest": say(HALL.rest(S)); break;
       case "visit": openVisit(b.dataset.id); break;
+      case "pinicon": pinDraft.icon = b.dataset.id; { const v = $("#pinlabel")?.value || ""; openPinDialog(pinDraft.x, pinDraft.y); $("#pinlabel").value = v; } break;
+      case "pinsave": { const id = addPin(pinDraft.x, pinDraft.y, $("#pinlabel")?.value, pinDraft.icon); closeModal(); if (id) { selected = "__pin:" + id; renderPicked(); SOUND.fx("click"); } break; }
+      case "pindel": S.pins = (S.pins || []).filter((p) => p.id !== b.dataset.id); selected = null; renderPicked(); persist(); break;
+      case "pinshare": { const p = (S.pins || []).find((q) => q.id === b.dataset.id); if (!p || !party) break; Store.put("chat", nid(), { from: S.id, name: S.name, text: `${p.icon} ${p.label}`, ch: party.id, t: G.now(), pin: { x: p.x, y: p.y, label: p.label, icon: p.icon } }); toast("Shared with your party in the chat."); break; }
+      case "pinadd": { const d = chatDocs.find((x) => x.id === b.dataset.id); if (!d?.pin) break; const id = addPin(d.pin.x, d.pin.y, d.pin.label, d.pin.icon); if (id) { tab = "map"; renderTabs(); renderPanel(true); selected = "__pin:" + id; renderPicked(); follow = false; center = [d.pin.x, d.pin.y]; if (zoom < 2) zoom = 2.4; $("#mapwrap").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" }); } break; }
       case "duelstake": arenaStake = +b.dataset.id; renderPanel(true); break;
       case "duelgo": { const c = others.find((o) => o.id === b.dataset.id); const r = ARENA.challenge(S, c && { ...c, id: c.id }, arenaStake); if (r.err) return toast(r.err); Store.put("duels", r.id, r.doc); persist(true); say(r.text); break; }
       case "duelyes": answerDuel(b.dataset.id, true); break;
