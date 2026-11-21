@@ -35,7 +35,6 @@ const MAGIC = (() => {
     ["guardian_circle", "Guardian Circle", "Restoration", "Master", 420, "regen", 25, { turns: 10 }],
     // Alteration
     ["candlelight", "Candlelight", "Alteration", "Novice", 21, "utility", 0, { use: "candlelight" }],
-    ["detect_life", "Detect Life", "Alteration", "Apprentice", 73, "utility", 0, { use: "detect_life" }],
     ["transmute", "Transmute Mineral Ore", "Alteration", "Adept", 138, "utility", 0, { use: "transmute" }],
     ["paralyze", "Paralyze", "Alteration", "Expert", 247, "paralyze", 3, {}],
     ["mass_paralysis", "Mass Paralysis", "Alteration", "Master", 420, "paralyze", 5, {}],
@@ -44,13 +43,19 @@ const MAGIC = (() => {
     ["bound_sword", "Bound Sword", "Conjuration", "Novice", 52, "bound", 9, { skill: "One-Handed", wt: "sword" }],
     ["bound_battleaxe", "Bound Battleaxe", "Conjuration", "Apprentice", 82, "bound", 15, { skill: "Two-Handed", wt: "battleaxe" }],
     ["bound_bow", "Bound Bow", "Conjuration", "Adept", 115, "bound", 24, { skill: "Archery", wt: "bow" }],
-    ["soul_trap", "Soul Trap", "Conjuration", "Novice", 51, "soultrap", 0, {}],
     ["raise_zombie", "Raise Zombie", "Conjuration", "Novice", 75, "reanimate", 6, { fights: 2 }],
     ["reanimate_corpse", "Reanimate Corpse", "Conjuration", "Apprentice", 98, "reanimate", 13, { fights: 2 }],
     ["revenant", "Revenant", "Conjuration", "Adept", 145, "reanimate", 21, { fights: 3 }],
     ["dread_zombie", "Dread Zombie", "Conjuration", "Expert", 197, "reanimate", 30, { fights: 3 }],
     ["dead_thrall", "Dead Thrall", "Conjuration", "Master", 380, "reanimate", 40, { fights: 8 }],
     ["dremora_lord", "Conjure Dremora Lord", "Conjuration", "Expert", 291, "summon", 40, { turns: 60 }],
+    // Mysticism ([OURS] the old Morrowind school of the soul and the unseen, kept as its own skill here)
+    ["soul_trap", "Soul Trap", "Mysticism", "Novice", 51, "soultrap", 0, {}],
+    ["detect_life", "Detect Life", "Mysticism", "Novice", 60, "utility", 0, { use: "detect_life" }],
+    ["dispel", "Dispel", "Mysticism", "Apprentice", 90, "utility", 0, { use: "dispel" }],
+    ["mark", "Mark", "Mysticism", "Adept", 120, "utility", 0, { use: "mark" }],
+    ["recall", "Recall", "Mysticism", "Adept", 160, "utility", 0, { use: "recall" }],
+    ["spell_absorb", "Spell Absorption", "Mysticism", "Expert", 210, "ward", 120, {}],
     // Illusion
     ["clairvoyance", "Clairvoyance", "Illusion", "Novice", 24, "utility", 0, { use: "clairvoyance" }],
     ["courage", "Courage", "Illusion", "Novice", 48, "courage", 30, {}],
@@ -75,7 +80,7 @@ const MAGIC = (() => {
   const tomesOf = (lv) => NEW.filter((r) => r[3] === lv).map((r) => `tome_${r[0]}`);
   D.SHOP_STOCK.wizard.push("tome_candlelight", "tome_lesser_ward", "tome_bound_sword", "tome_soul_trap", "tome_raise_zombie", "tome_clairvoyance", "tome_courage", "tome_turn_lesser_undead",
     "tome_fire_rune", "tome_muffle", "soul_gem_common_empty");
-  addStock("Whiterun", "wizard", ["tome_flame_cloak", "tome_detect_life", "tome_bound_battleaxe"]);         // Farengar
+  addStock("Whiterun", "wizard", ["tome_flame_cloak", "tome_detect_life", "tome_bound_battleaxe", "tome_dispel"]);         // Farengar
   addStock("Solitude", "wizard", ["tome_steadfast_ward", "tome_turn_undead", "tome_fear"]);                  // Sybille Stentor
   addStock("Windhelm", "wizard", ["tome_frost_rune", "tome_frost_cloak", "tome_reanimate_corpse"]);         // Wuunferth the Unliving
   addStock("Markarth", "wizard", ["tome_transmute", "tome_lightning_rune", "tome_revenant"]);                // Calcelmo
@@ -202,7 +207,8 @@ const MAGIC = (() => {
       if (row) {
         const full = row.item === "soul_gem_greater_empty" ? "soul_gem_greater" : "soul_gem_common";
         G.take(s, row.id); G.give(s, full);
-        msgs.push(`💜 You trap its soul: ${D.ITEMS[full].name}.`);
+        const my = G.useSkill(s, "Mysticism", full === "soul_gem_greater" ? 25 : 12);   // [OURS] catching a soul trains Mysticism
+        msgs.push(`💜 You trap its soul: ${D.ITEMS[full].name}.`, ...my);
       } else msgs.push("💜 The soul slips away: you had no empty soul gem.");
     }
     if (s.thrall && f.thrallFought) { s.thrall.fights--; if (s.thrall.fights <= 0) { msgs.push(`${s.thrall.name} crumbles to dust.`); s.thrall = null; } }
@@ -221,13 +227,14 @@ const MAGIC = (() => {
   // ---- out of fights: a short rest between casts instead of a magicka bar ([OURS])
   const COOLDOWN = 60;   // real seconds
   const outOfFight = (sp) => sp && (sp.kind === "utility" || sp.kind === "heal");
-  const cdLeft = (s, id, t = G.now()) => Math.max(0, ((s.castAt || {})[id] || 0) + (D.SPELLS[id]?.use === "transmute" ? 300 : COOLDOWN) - t);
+  const CD = { transmute: 300, recall: 1800 };   // Recall: once every 30 real minutes (6 in-game hours)
+  const cdLeft = (s, id, t = G.now()) => Math.max(0, ((s.castAt || {})[id] || 0) + (CD[D.SPELLS[id]?.use] || COOLDOWN) - t);
   function castOut(s, id, t = G.now()) {
     const sp = D.SPELLS[id];
     if (!s.spells.includes(id)) return "You don't know that spell.";
     if (!outOfFight(sp)) return "That spell is for fights. Put it in your tactics.";
     if (s.dungeon == null && s.trip?.status === "encounter") return "Not now: you're in a fight.";
-    const left = cdLeft(s, id, t); if (left > 0) return `You need ${Math.ceil(left)} s to gather your magicka again.`;
+    const left = cdLeft(s, id, t); if (left > 0) return `You need ${left > 120 ? Math.ceil(left / 60) + " more minutes" : Math.ceil(left) + " s"} to gather your magicka again.`;
     if (Math.random() < failChance(s, id)) { s.castAt = { ...(s.castAt || {}), [id]: t }; return `${sp.name} fizzles. It's beyond your ${sp.school} for now.`; }
     let text;
     const hour = 3600 / G.GAME_SPEED;   // one in-game hour in real seconds
@@ -251,6 +258,23 @@ const MAGIC = (() => {
       let left = n; for (const r of [...s.inv]) if (r.item === from && left > 0) { const k = Math.min(left, r.qty); G.take(s, r.id, k); left -= k; }
       G.give(s, to, n);
       text = `Transmute: ${n} ${D.ITEMS[from].name} turn${n > 1 ? "" : "s"} into ${D.ITEMS[to].name}.`;
+    } else if (sp.use === "dispel") {
+      const cured = typeof CURSE !== "undefined" ? CURSE.cureDisease(s) : null;
+      const bad = (s.fx || []).filter((x) => x.mag < 0); s.fx = (s.fx || []).filter((x) => !(x.mag < 0));
+      if (!cured && !bad.length) return "Dispel: there's nothing on you to dispel.";
+      text = `Dispel: the magic unravels.${cured ? " " + cured : ""}${bad.length ? ` Gone: ${bad.map((x) => x.name).join(", ")}.` : ""}`;
+    } else if (sp.use === "mark") {
+      if (s.dungeon) return "Mark needs open sky. Step outside first.";
+      if (s.trip?.status === "travel") return "Stand still to set a Mark.";
+      s.mark = { x: s.x, y: s.y, place: s.location || null, label: s.location || (typeof ROAM !== "undefined" ? ROAM.nameFor(s, [s.x, s.y]) : "this spot") };
+      text = `Mark: you fix ${s.mark.label} in your mind. Cast Recall to return here from anywhere.`;
+    } else if (sp.use === "recall") {
+      if (!s.mark) return "Recall needs a Mark. Cast Mark somewhere first.";
+      if (s.dungeon) return "Leave the dungeon first.";
+      if (s.trip?.status === "encounter") return "Not now: you're in a fight.";
+      s.trip = null; s.x = s.mark.x; s.y = s.mark.y; s.location = s.mark.place;
+      if (s.mark.place && !s.discovered.includes(s.mark.place)) s.discovered.push(s.mark.place);
+      text = `Recall: the world folds, and you stand in ${s.mark.label} again.`;
     } else if (sp.use === "clairvoyance") {
       const q = typeof QUESTS !== "undefined" ? QUESTS.active(s)[0] : null, n = q && QUESTS.target(q.st), p = n && WORLD.places[n];
       if (!p) text = "Clairvoyance: a faint trail flickers and fades. You have no quest target right now.";
@@ -287,7 +311,7 @@ const MAGIC = (() => {
       bound: () => `A ${sp.wt === "bow" ? "bow (no arrows needed)" : sp.wt} of light: ${sp.amount} base damage, using ${sp.skill}`,
       soultrap: () => "If the foe dies, its soul fills an empty soul gem",
       reanimate: () => `A slain foe up to level ${sp.amount} rises to fight beside you for ${sp.fights} fights`,
-      utility: () => ({ candlelight: "Out of fights: better odds against dungeon traps for 6 in-game hours", detect_life: "Out of fights: +15% to stay hidden for 3 in-game hours", muffle: "Out of fights: +10% to stay hidden for 6 in-game hours", transmute: "Out of fights: up to 3 iron ore → silver, or silver ore → gold", clairvoyance: "Out of fights: shows the way to your quest" }[sp.use]),
+      utility: () => ({ candlelight: "Out of fights: better odds against dungeon traps for 6 in-game hours", detect_life: "Out of fights: +15% to stay hidden for 3 in-game hours", muffle: "Out of fights: +10% to stay hidden for 6 in-game hours", transmute: "Out of fights: up to 3 iron ore → silver, or silver ore → gold", clairvoyance: "Out of fights: shows the way to your quest", dispel: "Out of fights: cures diseases and removes harmful effects", mark: "Out of fights: remember this spot", recall: "Out of fights: return to your Mark from anywhere (every 6 in-game hours)" }[sp.use]),
     }[sp.kind] || (() => ""))();
   }
   return { LEVELS, REQ, NEW, STAFFS, byId, KINDS, levelOf, canBuy, gap, costMult, failChance, DUAL_COST, DUAL_POWER, dualable, elem, isCaster, beforeEnemy, tick, soak, after,
