@@ -353,6 +353,23 @@ html.art-pixel .bar,html.art-pixel .bar i{border-radius:0}
 .item img.npcport{flex:none;border-radius:6px}
 img.art.scene.evt{margin:0 0 10px}.modal img.art.scene.evt{margin:-2px 0 10px}
 img.art.wagon{display:block;flex:none}.cvcard .cvhead{display:flex;gap:10px;align-items:center}.cvguards{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}.cvguards span{display:flex;align-items:center;gap:4px;font-size:13px;color:var(--mute)}
+/* ---- sky (skyart.js): the little weather picture in the top bar */
+#clock .skyw{display:inline-block;vertical-align:-6px;margin-right:4px}#clock img.skyic{display:inline-block;border-radius:5px}
+@keyframes skybob{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.5px)}}@keyframes skyglow{0%,100%{filter:brightness(1)}50%{filter:brightness(1.18)}}
+#clock img.skyic.wx-cloudy,#clock img.skyic.wx-rain,#clock img.skyic.wx-storm,#clock img.skyic.wx-snow,#clock img.skyic.wx-blizzard,#clock img.skyic.wx-fog{animation:skybob 3.2s ease-in-out infinite}
+#clock img.skyic.wx-clear{animation:skyglow 4s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){#clock img.skyic{animation:none!important}}
+/* ---- raids, arena, clans (raidart.js) */
+.raidhp{margin:8px 0 6px}.raidhp-top{display:flex;justify-content:space-between;font-weight:600;font-size:14px}.raidhp-bar{height:10px;background:#2a1a16;border:1px solid #5a2a22;border-radius:5px;overflow:hidden;margin-top:4px}.raidhp-bar i{display:block;height:100%;background:linear-gradient(90deg,#7a1f17,#c4372a 60%,#e8923a);transition:width .6s}
+.raidtop{display:flex;flex-direction:column;gap:4px;margin-top:8px}.raidtop .rt{display:flex;align-items:center;gap:8px;font-size:14px}.raidtop .rt img{flex:none;border-radius:50%}.raidtop .rt .rn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.raidtop .rt.me .rn{color:var(--gold)}
+.arena-scene{margin:4px 0 8px;border:1px solid #4a4237;border-radius:6px;overflow:hidden;line-height:0;cursor:pointer}.arena-scene canvas{display:block;width:100%;height:auto}
+img.season-banner{display:block;width:100%;height:auto;margin:2px 0 8px}
+.podium{display:flex;justify-content:center;align-items:flex-end;gap:10px;margin:4px 0 10px}.pod{display:flex;flex-direction:column;align-items:center;gap:2px;width:30%;min-width:0}.pod b{font-size:13px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pod span{display:flex;align-items:center;gap:3px;font-size:12px;color:var(--gold)}.pod img{border-radius:50%}.pod i{display:flex;align-items:flex-start;justify-content:center;width:100%;font-style:normal;font-family:Cinzel,serif;font-weight:700;color:#3b2c1e;background:linear-gradient(180deg,#d6b25e,#a4853e);border:1px solid #6b5640;border-radius:4px 4px 0 0;padding-top:3px}.pod.p2 i{background:linear-gradient(180deg,#c9c9c9,#8f8f8f)}.pod.p3 i{background:linear-gradient(180deg,#c88a52,#8a5a34)}
+.versus{display:flex;align-items:center;gap:6px;width:100%;margin-bottom:6px}.versus img{flex:none;border-radius:50%}.versus .vn{flex:1;min-width:0;font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.versus .vn:last-of-type{text-align:right}.versus .vs{display:flex;flex-direction:column;align-items:center;color:var(--ember);font-size:18px;line-height:1}.versus .vs small{font-size:10px;color:var(--gold);margin-top:2px}
+.clanhead{display:flex;gap:12px;align-items:center;margin:4px 0 6px}.clanhead b{display:block;font-family:Cinzel,serif;font-size:18px}.clanhead .num{display:block;color:var(--gold);font-weight:700}.clanhead .sub{display:block}img.clan-banner{flex:none;filter:drop-shadow(0 3px 5px rgba(0,0,0,.45))}
+img.holds-map{display:block;width:100%;height:auto;border-radius:6px;margin:6px 0 10px;border:1px solid #4a4237}
+#toast img.clan-banner{vertical-align:middle;margin-right:4px}
+.hscene{position:relative;margin:2px 0 8px}.hscene img.art.scene{margin:0}.hscene .hot{position:absolute;background:transparent;border:0;padding:0;border-radius:8px;cursor:pointer;-webkit-tap-highlight-color:rgba(214,178,94,.25)}.hscene .hot:focus-visible{outline:2px solid var(--gold)}
 </style>
 </head>
 <body>
@@ -398,6 +415,7 @@ img.art.wagon{display:block;flex:none}.cvcard .cvhead{display:flex;gap:10px;alig
 <script src="backup.js"></script>
 <script src="sound.js"></script>
 <script src="art.js"></script>
+<script src="skyart.js"></script>
 <script src="fightart.js"></script>
 <script src="heroart.js"></script>
 <script src="mapart.js"></script>
@@ -408,6 +426,8 @@ img.art.wagon{display:block;flex:none}.cvcard .cvhead{display:flex;gap:10px;alig
 <script src="npcart.js"></script>
 <script src="dunart.js"></script>
 <script src="dollart.js"></script>
+<script src="raidart.js"></script>
+<script src="homeart.js"></script>
 <script src="polish.js"></script>
 <script src="caravans.js"></script>
 <script src="skillinfo.js"></script>

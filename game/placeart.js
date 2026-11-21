@@ -56,13 +56,15 @@ const PLACEART = (() => {
   // ---------------------------------------------------------------- climate backdrops
   const CLIMATE = { Winterhold: "snow", "The Pale": "snow", Eastmarch: "snow", Whiterun: "tundra", Falkreath: "forest", "The Rift": "autumn", Hjaalmarch: "marsh", "The Reach": "reach", Haafingar: "coast" };
   function climateOf(name) { const p = WORLD.places[name]; return p ? CLIMATE[G.holdAt(p)] || "tundra" : "tundra"; }
+  let curSky = null;   // the SKY state while a picture is being drawn
   function backdrop(g, H, w, h, clim, seed, mood) {
-    H.sky(g, w, h, mood === "night" ? "night" : clim === "snow" ? "snow" : mood === "dusk" ? "dusk" : "day");
+    if (curSky) SKY.backdrop(g, H, w, h, curSky, { horizon: 0.62, seed }); else H.sky(g, w, h, mood === "night" ? "night" : clim === "snow" ? "snow" : mood === "dusk" ? "dusk" : "day");
     const mfill = clim === "reach" ? "#9a6e54" : clim === "snow" ? "#9aa3a8" : P.rock;
     H.mountains(g, w, h * 0.62, h * 0.42, seed + "m", mfill, clim !== "reach");
     if (clim === "coast") water(g, h * 0.58, h * 0.72, w);
     const groundCol = { snow: "#e8edf0", tundra: "#b9a98d", forest: "#6f8a52", autumn: "#a88a4e", marsh: "#7d8a6a", reach: "#a48468", coast: "#a7a78a" }[clim];
     ground(g, H, w, h, h * 0.7, groundCol, seed);
+    if (curSky && clim !== "snow") SKY.snowCover(g, w, h, h * 0.7, curSky.snow, seed);   // winter snow on the ground, by season
     const r = rnd(seed + "veg");
     if (clim === "forest" || clim === "snow" || clim === "coast") H.pines(g, w, h * 0.72, clim === "forest" ? 16 : 8, seed + "p", 12);
     if (clim === "snow") { g.fillStyle = "rgba(244,246,248,0.7)"; for (let i = 0; i < 10; i++) g.fillRect(r() * w, h * 0.72 + r() * 6, 10, 2); }
@@ -335,7 +337,20 @@ const PLACEART = (() => {
   /* the big picture for a place (360×160), as an <img> string */
   function scene(name, opts = {}) {
     if (!name || !WORLD.places[name]) return "";
-    const d = drawerFor(name), clim = climateOf(name), md = opts.mood || mood(), wx = opts.weather || weatherId(name);
+    const d = drawerFor(name), clim = climateOf(name);
+    if (typeof SKY !== "undefined") {   // shared sky: time of day, season, weather, moons and aurora
+      const st = SKY.forOpts(WORLD.places[name], { mood: opts.mood, tod: opts.tod, weather: opts.weather, season: opts.season });
+      const draw = (g, H, w, h) => {
+        curSky = st;
+        try {
+          if (d.back) backdrop(g, H, w, h, clim, name, SKY.mood(st)); else SKY.backdrop(g, H, w, h, st, { horizon: 0.62, seed: name });
+          d.draw(g, H, w, h, clim);
+          SKY.overlay(g, H, w, h, st, { seed: name, ground: h * 0.7, cover: false }); frame(g, w, h);
+        } finally { curSky = null; }
+      };
+      return ART.html(W, HH, draw, { key: `place|${name}|${st.key}`, cls: "scene", alt: name, style: opts.style });
+    }
+    const md = opts.mood || mood(), wx = opts.weather || weatherId(name);
     const draw = (g, H, w, h) => {
       if (d.back) backdrop(g, H, w, h, clim, name, md); else H.sky(g, w, h, md === "night" ? "night" : clim === "snow" ? "snow" : md === "dusk" ? "dusk" : "day");
       d.draw(g, H, w, h, clim);

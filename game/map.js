@@ -271,6 +271,31 @@ const WorldMap = (() => {
     g.putImageData(img, 0, 0);
     return (tintCache[key] = c);
   }
+  /* the season, painted softly over the ground: built once per season at terrain-grid size and scaled up ([OURS]) */
+  const seasonCache = {};
+  function seasonLayer(season) {
+    if (!season || season === "summer") return null;
+    if (seasonCache[season]) return seasonCache[season];
+    const GW = Terrain.GW, GH = Terrain.GH, grid = Terrain.grid, T = Terrain.T;
+    const c = document.createElement("canvas"); c.width = GW; c.height = GH;
+    const g = c.getContext("2d"), img = g.createImageData(GW, GH), d = img.data;
+    for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) {
+      const t = grid[y * GW + x], i = (y * GW + x) * 4, north = 1 - y / GH;   // 1 at the top of the map
+      let col = null, a = 0;
+      if (season === "winter") {   // snow creeps south over the open ground and the forests
+        if ([T.GRASS, T.TUNDRA, T.FOREST, T.PINE, T.AUTUMN, T.MARSH, T.ROCKY, T.MOUNTAIN, T.ROAD].includes(t)) { col = [242, 245, 248]; a = (t === T.PINE || t === T.FOREST ? 0.1 : 0.14) + 0.3 * north * north + (t === T.MOUNTAIN || t === T.ROCKY ? 0.18 : 0); }
+      } else if (season === "autumn") {
+        if (t === T.AUTUMN) { col = [214, 112, 46]; a = 0.3; }
+        else if (t === T.FOREST) { col = [205, 140, 60]; a = 0.26; }
+        else if (t === T.GRASS || t === T.TUNDRA) { col = [214, 170, 92]; a = 0.14; }
+      } else if (season === "spring") {
+        if ([T.GRASS, T.TUNDRA, T.FOREST, T.MARSH].includes(t)) { col = [120, 170, 90]; a = t === T.TUNDRA ? 0.12 : 0.18; }
+      }
+      if (col) { d[i] = col[0]; d[i + 1] = col[1]; d[i + 2] = col[2]; d[i + 3] = Math.round(Math.min(0.7, a) * 255); }
+    }
+    g.putImageData(img, 0, 0);
+    return (seasonCache[season] = c);
+  }
   function draw(canvas, v) {
     base = base || drawBase();
     const dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -285,6 +310,7 @@ const WorldMap = (() => {
     g.setTransform(k, 0, 0, k, ox, oy);
     g.imageSmoothingEnabled = true; g.imageSmoothingQuality = "high";
     g.drawImage(base, 0, 0, W, H);
+    const sl = seasonLayer(v.season ?? (typeof WEVENTS !== "undefined" ? WEVENTS.season() : null)); if (sl) g.drawImage(sl, 0, 0, W, H);   // winter snow, autumn colours, spring green
     const s = dpr / k;                    // 1 screen px in map units: keeps icons and labels the same size at any zoom
     const MA = typeof MAPART !== "undefined" ? MAPART : null;
     const viewBox = [-ox / k, -oy / k, (canvas.width - ox) / k, (canvas.height - oy) / k];
@@ -436,6 +462,7 @@ const WorldMap = (() => {
       g.drawImage(sp, cx - 21 * s, cy - 25 * s + bob2, 42 * s, 30 * s);
       if (v.zoom >= 1.5) label(g, c.label, cx, cy + 12 * s, s, 11, c.mine ? "#ffe6a0" : "#f3e7c4", 700, true);
     }
+    if (v.raid && typeof RAIDART !== "undefined") RAIDART.mapRaid(g, v.raid, P, s, v.t, v.reduceMotion);   // a dragon over a town (raidart.js)
     if (v.cart && typeof CARAVANS !== "undefined") { const sp = CARAVANS.sprite(false, false); if (sp) g.drawImage(sp, px - 50 * s, py - 16 * s, 34 * s, 24 * s); }
     const pulse = v.reduceMotion ? 0.5 : (Math.sin(v.t * 3) + 1) / 2;
     g.fillStyle = `rgba(110,200,255,${0.18 + 0.12 * pulse})`; g.beginPath(); g.arc(px, py, (15 + 6 * pulse) * s, 0, 7); g.fill();

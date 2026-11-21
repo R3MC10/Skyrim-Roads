@@ -464,7 +464,7 @@
     Store.watch("chat", (docs) => onChat(docs));
     Store.watch("homes", (docs) => { homeDocs = docs; if (tab === "town") bump(); });
     Store.watch("gifts", (docs) => onGifts(docs));
-    Store.watch("war", (docs) => { WARS.setDocs(docs, S); if (tab === "log") bump(); });
+    Store.watch("war", (docs) => { WARS.setDocs(docs, S); holdChange(); if (tab === "log") bump(); });
     Store.watch("bounty", (docs) => { BOUNTY.setDocs(docs, S); if (tab === "log" || tab === "town") bump(); });
     Store.watch("hall", (docs) => { HALL.setDonors(docs, S); if (tab === "town") bump(); });
     Store.watch("hallchest", (docs) => { HALL.setChest(docs); if (tab === "town") bump(); });
@@ -570,7 +570,12 @@
     const where = S.location || `the wilds of ${G.holdAt(livePos())}`;
     $("#sub").textContent = `Level ${S.level} ${D.RACES[S.race].name} · ${where}`;
     const wx = WEVENTS.weather(livePos()), dt = WEVENTS.date();
-    $("#clock").textContent = `${G.isNight() ? "🌙" : "☀️"} ${dt.day} ${dt.month}, ${G.clockText().split(", ")[1]} · ${wx.icon} ${wx.name}`;
+    const clk = $("#clock"), when = `${dt.day} ${dt.month}, ${G.clockText().split(", ")[1]}`;
+    if (typeof SKY !== "undefined") {   // a small drawn sky: sun or moon phase, clouds, rain, snow
+      const st = SKY.state(livePos()), ic = SKY.icon(st, 22);
+      if (clk._ic !== ic) { clk._ic = ic; clk.innerHTML = `<span class="skyw">${ic}</span><span class="skyt"></span>`; }
+      const txt = `${when} · ${wx.name}`; const tEl = clk.querySelector(".skyt"); if (tEl && tEl.textContent !== txt) tEl.textContent = txt;
+    } else clk.textContent = `${G.isNight() ? "🌙" : "☀️"} ${when} · ${wx.icon} ${wx.name}`;
     $("#goldv").textContent = `${S.gold} gold`;
   }
   function renderVitals() {
@@ -624,11 +629,13 @@
     const moving = S?.trip?.status === "travel" || performance.now() - mapTouchedAt < 1500;
     const wx = WEVENTS.weather(livePos()).id, weatherAnim = !reduceMotion && !["clear", "cloudy", "fog"].includes(wx);
     const mapAnim = typeof MAPART !== "undefined" && MAPART.active();   // a discovery burst playing
-    if (document.hidden || !m || !mapOnScreen || ts - lastFrame < (moving || mapAnim ? 33 : weatherAnim ? 66 : 125)) return;
+    const raidNow = typeof RAIDART !== "undefined" && WEVENTS.activeRaid();
+    if (document.hidden || !m || !mapOnScreen || ts - lastFrame < (moving || mapAnim ? 33 : weatherAnim || (raidNow && !reduceMotion) ? 66 : 125)) return;
     lastFrame = ts;
     const pos = livePos();
     if (follow) center = pos;
     view = {
+      raid: raidNow ? raidView(raidNow) : null,
       player: pos, name: S.name, look: myLook(), moving: S.trip?.status === "travel", trail: S.trip?.trail, dest: S.trip ? { pos: S.trip.dest, name: S.trip.destName, roam: !!S.trip.roam } : null, spot: selected === "__spot" ? roamSpot : null,
       route: S.trip ? (S.trip.status === "travel" ? S.trip.path.slice(S.trip.idx + 1) : [S.trip.dest]) : null,
       discovered: S.discovered, explored: [...S.explored, pos], others: others.filter((o) => !o.hiding || G.pxDist(livePos(), otherPos(o)) < MP.NEAR_PX).map((o) => ({ name: (o.clan ? `[${o.clan}] ` : "") + o.name + (party?.members.some((m) => m.id === o.id) ? " ⚑" : ""), pos: otherPos(o), look: o.look, race: o.race, party: !!party?.members.some((m) => m.id === o.id) })),
@@ -1172,6 +1179,12 @@
   }
 
   // ------------------------------------------------------------ dragon attacks (world events)
+  // ---- raid / arena / clan art helpers (raidart.js)
+  const raPortrait = (id, size) => { if (typeof HEROART === "undefined") return ""; const c = id === S.id ? S : cardOf(id) || ladderDocs.find((d) => d.id === id); return c ? HEROART.portrait(c, size) : ""; };
+  function raidView(r) {
+    const tl = WEVENTS.tally(r, raidDocs, S), visible = S.discovered.includes(r.town) || G.pxDist(livePos(), WORLD.places[r.town]) < 160;
+    return visible ? { pos: WORLD.places[r.town].slice(0, 2), done: tl.total >= tl.need, left: tl.need ? Math.max(0, tl.need - tl.total) / tl.need : 1, fighters: tl.people } : null;
+  }
   function renderRaid() {
     const el = $("#raid"); if (!el) return;
     const r = WEVENTS.activeRaid();
@@ -1188,7 +1201,7 @@
     if (msg) { persist(true); showMessage("The dragon falls", msg); }
     const here = S.location === r.town;
     el.innerHTML = `<div class="trip enc" style="margin-top:10px">${typeof EVENTART !== "undefined" ? EVENTART.raid(r.town, done) : ""}<div class="row"><b>🐉 ${done ? `The dragon over ${esc(r.town)} is dead` : `A dragon is attacking ${esc(r.town)}`}</b><span class="num sub">${done ? "" : `${left} min`}</span></div>
-      <div class="bar"><i style="width:${pct(tl.total, tl.need)}%;background:var(--ember)"></i></div>
+      ${typeof RAIDART !== "undefined" ? RAIDART.raidHealth(tl, raidDocs, r, S, raPortrait) : `<div class="bar"><i style="width:${pct(tl.total, tl.need)}%;background:var(--ember)"></i></div>`}
       <div class="sub">${done ? "Everyone who fought shares the soul and the spoils." : `${tl.total}/${tl.need} damage dealt${tl.people ? ` by ${tl.people} ${tl.people === 1 ? "fighter" : "fighters"}` : ""}. Everyone who hurts it gets its soul, 300 gold, dragon bone and scales. The more people fight, the tougher it gets.`}</div>
       ${done ? "" : here ? `<button class="btn danger" data-act="raidfight" style="width:100%">⚔️ Fight the dragon</button>` : `<button class="btn" data-act="go" data-place="${esc(r.town)}" style="width:100%">Travel to ${esc(r.town)}</button>`}</div>`;
   }
@@ -1275,11 +1288,28 @@
     if (!WARS.add(S, kind, hold)) return;
     const rec = WARS.record(S); Store.put("war", `${rec.week}-${S.id}`, rec); WARS.setDocs(null, S); Store.save(S);
   }
+  /* a toast with the banner when a hold changes hands (compared with what this phone last saw) */
+  function holdChange() {
+    if (!Store.online || !CLANS.all.length) return;
+    let seen = {}; try { seen = JSON.parse(localStorage.getItem("rotn_rulers") || "{}"); } catch { /* ignore */ }
+    const now = {}, rul = WARS.rulers(S);
+    for (const [h, c] of Object.entries(rul)) now[h] = c.tag;
+    const first = !localStorage.getItem("rotn_rulers");
+    try { localStorage.setItem("rotn_rulers", JSON.stringify(now)); } catch { /* ignore */ }
+    if (first) return;
+    for (const [h, tag] of Object.entries(now)) if (seen[h] !== tag) {
+      const c = rul[h];
+      if (typeof POLISH !== "undefined" && typeof RAIDART !== "undefined") POLISH.banner("hold", "Hold captured", `[${c.tag}] rules ${h}`, RAIDART.clanBanner(c, 30, 42));
+      else toast(`⚑ ${c.name} [${c.tag}] now rules ${h}.`);
+      break;
+    }
+  }
   function holdsPanel() {
     if (!Store.online || !CLANS.all.length) return "";
     const w = WARS.week(), st = WARS.standings(w, S), rul = WARS.rulers(S), mine = myClan();
     const left = BOUNTY.weekEnds(w) - Date.now(), days = Math.floor(left / 864e5), hrs = Math.floor((left % 864e5) / 36e5);
     return `<div class="panel"><h2>Holds</h2><p class="sub">Clans fight for the nine holds each week. Win fights, clear dungeons and fight dragons inside a hold to earn it points (Arena wins count for Eastmarch). Whoever leads when the week ends rules it all next week, and their members shop 10% cheaper there. ${days}d ${hrs}h left.</p>
+      ${typeof RAIDART !== "undefined" ? RAIDART.holdsMap(rul) : ""}
       <div class="list">${Object.keys(WORLD.holds).map((h) => { const r = rul[h], list = st[h], lead = list[0], me = mine && list.find((x) => x.clan.id === mine.id);
         return `<div class="item" style="flex-wrap:wrap">${r ? bannerHTML(r) : `<span class="banner" style="background:#2a2e33" aria-hidden="true"></span>`}<div class="t">${esc(h)}<span>${r ? `Ruled by ${esc(r.name)} [${esc(r.tag)}]` : "Nobody rules it"} · this week: ${lead ? `${esc(lead.clan.tag)} ${lead.pts}` : "no points yet"}${list[1] ? `, ${esc(list[1].clan.tag)} ${list[1].pts}` : ""}${me && me !== lead ? ` · you: ${me.pts}` : ""}</span></div></div>`; }).join("")}</div>
       ${mine ? "" : `<p class="sub">Join or found a clan (below) to take part.</p>`}</div>`;
@@ -1492,7 +1522,7 @@
     const skulls = Math.min(12, d.dragons || 0);
     const pack = S.inv.filter((r) => !Object.values(G.loadout(S).equipment || {}).includes(r.id) && !r.stolen).slice(0, 30);
     return `<p class="sub" style="margin:0">${esc(hn)} · ${esc(town)}</p><h2 style="margin:4px 0">${esc(d.name)}'s home</h2>
-      ${d.motto ? `<p class="motto">“${esc(d.motto)}”</p>` : ""}
+      ${typeof HOMEART !== "undefined" ? HOMEART.visit(d, town, visitGifted.has(d.id)) : ""}${d.motto ? `<p class="motto">“${esc(d.motto)}”</p>` : ""}
       <p class="sub">Level ${d.level} ${esc(D.RACES[d.race]?.name || "")}${d.titles?.length ? ` · ${d.titles.map(esc).join(" · ")}` : ""}</p>
       <div class="trophies">${skulls ? `<span>🐲 ${skulls} dragon skull${skulls > 1 ? "s" : ""} on the wall</span>` : `<span>No dragon skulls yet</span>`}<span>🏆 ${d.cleared || 0} dungeons cleared</span>${d.souls ? `<span>✨ ${d.souls} soul${d.souls > 1 ? "s" : ""} unspent</span>` : ""}${d.ach ? `<span>🏆 ${d.ach.n}/${d.ach.total} achievements</span>` : ""}</div>
       ${d.ach?.latest?.length ? `<p class="sub">Latest: ${d.ach.latest.map(esc).join(" · ")}</p>` : ""}
@@ -1503,6 +1533,7 @@
       <details style="margin-top:6px"><summary class="sub" style="cursor:pointer;min-height:36px">Give something from your pack</summary>${pack.length ? pack.map((r) => `<div class="item"><div class="t">${esc(VISITS.itemName(r))}${r.qty > 1 ? ` ×${r.qty}` : ""}</div><button class="btn sm" data-act="giftitem" data-id="${r.id}">Give</button></div>`).join("") : `<p class="sub">Nothing you can give.</p>`}</details>
       <button class="btn" data-act="close" style="width:100%;margin-top:10px">Leave</button>`;
   }
+  const visitGifted = new Set();
   function openVisit(id) {
     const d = homeDocs.find((x) => x.id === id);
     if (!d || !d.towns?.includes(S.location)) { closeModal(); return toast("They don't have a house here."); }
@@ -1513,7 +1544,7 @@
     const d = homeDocs.find((x) => x.id === visitId), note = $("#giftnote")?.value || "", town = S.location;
     const r = kind === "gold" ? VISITS.giftGold(S, d, town, arg, note) : kind === "item" ? VISITS.giftItem(S, d, town, arg, note) : VISITS.giftNote(S, d, town, note);
     if (r.err) return toast(r.err);
-    Store.put("gifts", nid(), r.gift); persist(true); SOUND.fx(kind === "gold" ? "coin" : "click"); toast(r.text);
+    Store.put("gifts", nid(), r.gift); visitGifted.add(visitId); persist(true); SOUND.fx(kind === "gold" ? "coin" : "click"); toast(r.text);
     if ($("#giftnote")) $("#giftnote").value = "";
     openVisit(visitId);
   }
@@ -1552,12 +1583,13 @@
         <p class="sub">Found your own clan: a name, a short tag shown next to your members' names, and a banner that flies over their houses on the map. Your clan gets its own chat.</p>
         <div class="grid2"><input id="clanname" maxlength="24" placeholder="Clan name" value="${esc(clanDraft.name || "")}" autocomplete="off" aria-label="Clan name"><input id="clantag" maxlength="4" placeholder="Tag (e.g. NORD)" value="${esc(clanDraft.tag || "")}" autocomplete="off" aria-label="Clan tag" style="text-transform:uppercase"></div>
         <p class="sub" style="margin-bottom:4px">Banner top</p><div class="coats">${sw(0)}</div><p class="sub" style="margin-bottom:4px">Banner bottom</p><div class="coats">${sw(1)}</div>
-        <div style="display:flex;align-items:center;gap:10px;margin-top:10px">${bannerHTML(clanDraft)}<button class="btn pri" data-act="clanfound" style="flex:1">Raise the banner</button></div></div>`;
+        <div style="display:flex;align-items:center;gap:10px;margin-top:10px">${typeof RAIDART !== "undefined" && clanDraft.colors?.length >= 2 ? RAIDART.clanBanner({ ...clanDraft, tag: (clanDraft.tag || "").toUpperCase() }, 56, 80) : bannerHTML(clanDraft)}<button class="btn pri" data-act="clanfound" style="flex:1">Raise the banner</button></div></div>`;
     }
     const mem = CLANS.members(c), founder = c.founder === S.id, onlineIds = new Set(others.map((o) => o.id));
     const invitable = founder ? others.filter((o) => !mem.some((m) => m.id === o.id) && !(c.invites || []).includes(o.id)) : [];
-    return `<div class="panel"><h2>Clan</h2><div class="item">${bannerHTML(c)}<div class="t">${esc(c.name)} [${esc(c.tag)}]<span>Founded by ${esc(c.founderName)} · ${mem.length} member${mem.length > 1 ? "s" : ""}</span></div></div>
-      <h3 style="margin-top:10px">Members</h3><div class="list">${mem.map((m) => `<div class="item"><div class="t">${esc(m.name)}${m.id === c.founder ? " ⚑" : ""}${m.id === S.id ? " (you)" : ""}<span>${m.id === S.id || onlineIds.has(m.id) ? "online" : "away"}</span></div>${founder && m.id !== S.id ? `<button class="btn sm" data-act="clankick" data-id="${esc(m.id)}">Send away</button>` : ""}</div>`).join("")}</div>
+    const RAc = typeof RAIDART !== "undefined";
+    return `<div class="panel"><h2>Clan</h2>${RAc ? `<div class="clanhead">${RAIDART.clanBanner(c)}<div><b>${esc(c.name)}</b><span class="num">[${esc(c.tag)}]</span><span class="sub">Founded by ${esc(c.founderName)} · ${mem.length} member${mem.length > 1 ? "s" : ""}</span></div></div>` : `<div class="item">${bannerHTML(c)}<div class="t">${esc(c.name)} [${esc(c.tag)}]<span>Founded by ${esc(c.founderName)} · ${mem.length} member${mem.length > 1 ? "s" : ""}</span></div></div>`}
+      <h3 style="margin-top:10px">Members</h3><div class="list">${mem.map((m) => `<div class="item">${RAc ? raPortrait(m.id, 32) : ""}<div class="t">${esc(m.name)}${m.id === c.founder ? " ⚑" : ""}${m.id === S.id ? " (you)" : ""}<span>${m.id === S.id || onlineIds.has(m.id) ? "online" : "away"}</span></div>${founder && m.id !== S.id ? `<button class="btn sm" data-act="clankick" data-id="${esc(m.id)}">Send away</button>` : ""}</div>`).join("")}</div>
       ${founder ? `<h3 style="margin-top:10px">Invite</h3>${invitable.length ? invitable.map((o) => `<div class="item"><div class="t">${esc(o.name)}<span>Level ${o.level}${o.clan ? ` · in [${esc(o.clan)}]` : ""}</span></div><button class="btn sm" data-act="claninv" data-id="${esc(o.id)}">Invite</button></div>`).join("") : `<p class="sub">Nobody else online to invite right now.</p>`}` : ""}
       <button class="btn danger" data-act="clanleave" style="width:100%;margin-top:10px">${founder ? "Lower the banner (disband)" : "Leave the clan"}</button></div>`;
   }
@@ -1747,10 +1779,11 @@
     const inc = duels.filter((d) => d.to === S.id && d.status === "open" && t - d.t < ARENA.OPEN_MIN * 60), out = duels.filter((d) => d.from === S.id && d.status === "open");
     const fighters = others.filter((o) => o.loc === ARENA.TOWN && o.id !== S.id);
     const board = ARENA.board(ladderDocs, S).slice(0, 10);
-    return `<div class="card"><h3 class="ico-h">${UIART.rank(a.rating, 30)} Season of ${esc(ARENA.seasonName())}</h3><p class="sub" style="margin:0">Your rating ${a.rating} · ${a.w} won, ${a.l} lost. Nobody dies in the Arena: the loser kneels and the healers patch everyone up.</p></div>
-      ${inc.length ? `<h3 style="margin-top:12px">Challenges for you</h3>${inc.map((d) => `<div class="item on" style="flex-wrap:wrap"><div class="t">${esc(d.fromName)}<span>${d.stake ? `Stake ${d.stake} gold each · winner takes ${d.stake * 2}` : "A friendly bout, no bet"} · rating ${d.aRating}</span></div>
+    const RA = typeof RAIDART !== "undefined" ? RAIDART : null;
+    return `${RA ? RA.arenaHTML() + RA.seasonBanner(ARENA.seasonName()) + RA.podium(board.slice(0, 3), raPortrait, UIART.rank) : ""}<div class="card"><h3 class="ico-h">${UIART.rank(a.rating, 30)} ${RA ? "Your standing" : `Season of ${esc(ARENA.seasonName())}`}</h3><p class="sub" style="margin:0">Your rating ${a.rating} · ${a.w} won, ${a.l} lost. Nobody dies in the Arena: the loser kneels and the healers patch everyone up.</p></div>
+      ${inc.length ? `<h3 style="margin-top:12px">Challenges for you</h3>${inc.map((d) => `<div class="item on" style="flex-wrap:wrap">${RA ? RA.versus({ id: d.from, name: d.fromName }, { id: S.id, name: S.name }, d.stake, raPortrait) : ""}<div class="t">${esc(d.fromName)}<span>${d.stake ? `Stake ${d.stake} gold each · winner takes ${d.stake * 2}` : "A friendly bout, no bet"} · rating ${d.aRating}</span></div>
         <div style="display:flex;gap:6px"><button class="btn sm pri" data-act="duelyes" data-id="${esc(d.id)}" ${S.gold >= d.stake ? "" : "disabled"}>Fight</button><button class="btn sm" data-act="duelno" data-id="${esc(d.id)}">No</button></div></div>`).join("")}` : ""}
-      ${out.length ? `<h3 style="margin-top:12px">Waiting for an answer</h3>${out.map((d) => `<div class="item"><div class="t">${esc(d.toName)}<span>${d.stake ? `${d.stake} gold held` : "Friendly bout"}</span></div><button class="btn sm" data-act="duelcancel" data-id="${esc(d.id)}">Withdraw</button></div>`).join("")}` : ""}
+      ${out.length ? `<h3 style="margin-top:12px">Waiting for an answer</h3>${out.map((d) => `<div class="item" style="flex-wrap:wrap">${RA ? RA.versus({ id: S.id, name: S.name }, { id: d.to, name: d.toName }, d.stake, raPortrait) : ""}<div class="t">${esc(d.toName)}<span>${d.stake ? `${d.stake} gold held` : "Friendly bout"}</span></div><button class="btn sm" data-act="duelcancel" data-id="${esc(d.id)}">Withdraw</button></div>`).join("")}` : ""}
       <h3 style="margin-top:12px">Challenge someone</h3>
       <div class="chips">${[0, 100, 500, 1000].map((n) => `<button class="chip ${arenaStake === n ? "on" : ""}" data-act="duelstake" data-id="${n}">${n ? n + " gold" : "No bet"}</button>`).join("")}</div>
       ${!Store.online ? `<p class="sub">You're playing offline. The Arena needs other players.</p>` : fighters.length ? fighters.map((o) => `<div class="item"><div class="t">${esc(o.name)}<span>Level ${o.level} ${esc(D.RACES[o.race]?.name || "")}${(() => { const l = ladderDocs.find((x) => x.id === o.id); return l?.arena ? ` · rating ${l.arena.rating}` : ""; })()}</span></div><button class="btn sm pri" data-act="duelgo" data-id="${esc(o.id)}" ${S.gold >= arenaStake && ARENA.here(S) ? "" : "disabled"}>Challenge</button></div>`).join("")
@@ -1769,7 +1802,7 @@
     persist(true); renderPanel(true);
     if (!yes) return toast("You turn the challenge down.");
     if (res) { festCount("duel"); if (res.doc.winner === S.id) warPoint("duel", "Eastmarch"); }
-    if (res) { SOUND.fight({ fight: res.fight, died: res.doc.winner !== S.id }); postNews(`⚔ ${res.doc.winner === S.id ? S.name : res.doc.fromName} beat ${res.doc.winner === S.id ? res.doc.fromName : S.name} in the Windhelm Arena${res.doc.pot ? ` and won ${res.doc.pot} gold` : ""}.`);
+    if (res) { if (typeof RAIDART !== "undefined") RAIDART.cheer(4000); SOUND.fight({ fight: res.fight, died: res.doc.winner !== S.id }); postNews(`⚔ ${res.doc.winner === S.id ? S.name : res.doc.fromName} beat ${res.doc.winner === S.id ? res.doc.fromName : S.name} in the Windhelm Arena${res.doc.pot ? ` and won ${res.doc.pot} gold` : ""}.`);
       openModal(`<h2>${res.doc.winner === S.id ? "Victory in the Arena" : "Beaten, not broken"}</h2><p>${esc(res.text)}</p>${fightLog(res.fight)}${skillLine(res)}<button class="btn pri" data-act="close" style="width:100%">Continue</button>`); }
   }
   async function cancelTrade(id) { await Store.change("trades", id, (d) => (d.status === "open" ? { ...d, status: "cancelled" } : d)); }
@@ -2253,7 +2286,7 @@
       const tiers = HALL.TIERS.map(([n, need, what], i) => `<div class="item ${i === pr.tier ? "on" : ""}"><div class="t">${i <= pr.tier ? "✔" : "○"} ${esc(n)}${need ? ` · ${need.toLocaleString()}` : ""}<span>${esc(what)}</span></div></div>`).join("");
       const chestOpen = pr.tier >= 2, left = HALL.CHEST_PER_DAY - HALL.takenToday(S);
       const putRows = S.inv.filter((r) => HALL.canDeposit(r) && !Object.values(G.loadout(S).equipment || {}).includes(r.id)).slice(0, 15);
-      body = `<div class="card"><h3>${esc(pr.name)}${pr.next ? ` → ${esc(pr.next)}` : " · fully built"}</h3>
+      body = `${typeof HOMEART !== "undefined" ? HOMEART.hall(pr.tier, HALL.top(6), HALL.chest.length, pr.pct) : ""}<div class="card"><h3>${esc(pr.name)}${pr.next ? ` → ${esc(pr.next)}` : " · fully built"}</h3>
           <div class="bar" style="margin:6px 0"><i style="width:${pr.pct}%;background:var(--gold)"></i></div>
           <p class="sub" style="margin:0">${pr.points.toLocaleString()}${pr.need ? ` of ${pr.need.toLocaleString()}` : ""} given by ${HALL.top(999).length} ${HALL.top(999).length === 1 ? "player" : "players"} · you gave ${mine.toLocaleString()}${mine < HALL.BUILDER_PTS ? ` (${HALL.BUILDER_PTS} earns the title Hall Builder)` : ""}</p></div>
         <div class="item"><div class="t">${pr.tier ? "Sleep in the hall" : "Rest by the fire"}<span>${pr.tier >= 3 ? "Free · full health and Well Rested (+10%)" : pr.tier ? "Free · full health and Rested (+5%)" : "Free · full health"}</span></div><button class="btn sm pri" data-act="hallrest">Rest</button></div>
@@ -2273,12 +2306,12 @@
       } else {
         note = "Your home. Things in the chest are safe even if you die on the road.";
         const pack = S.inv.filter((r) => !Object.values(G.loadout(S).equipment).includes(r.id));
-        body = `<div class="item"><div class="t">Your bed<span>Full health and Well Rested (+10% skills for 40 min)</span></div><button class="btn sm pri" data-act="homebed">Sleep</button></div>
+        body = `${typeof HOMEART !== "undefined" ? HOMEART.mine(S, l) : ""}<div class="item"><div class="t">Your bed<span>Full health and Well Rested (+10% skills for 40 min)</span></div><button class="btn sm pri" data-act="homebed">Sleep</button></div>
           <div class="item"><div class="t">Garden<span>${TOWNS.gardenReady(S) ? "Ripe: harvest ingredients" : `Growing. Ready in ${Math.ceil(((h.garden || 0) + 7200 - G.now()) / 60)} min`}</span></div><button class="btn sm" data-act="harvest" ${TOWNS.gardenReady(S) ? "" : "disabled"}>Harvest</button></div>
           ${(() => { const gs = myGifts().filter((g) => g.town === l); return gs.length ? `<h3 style="margin-top:12px">🎁 Gifts at your door (${gs.length})</h3><div class="list">${gs.map((g) => `<div class="item on"><div class="t">From ${esc(g.fromName)}<span>${[g.gold ? `${g.gold} gold` : "", g.row && D.ITEMS[g.row.item] ? VISITS.itemName(g.row) + (g.row.qty > 1 ? ` ×${g.row.qty}` : "") : "", g.note ? `“${esc(g.note)}”` : ""].filter(Boolean).join(" · ")}</span></div><button class="btn sm pri" data-act="giftopen" data-id="${esc(g.id)}">Take in</button></div>`).join("")}</div>` : ""; })()}
           ${(() => { const st = MARKET.mine(stalls, S.id).filter((d) => d.town === l); return `<h3 style="margin-top:12px">🛒 Your stall</h3><div class="item"><div class="t">${st.length ? `${st.length} thing${st.length > 1 ? "s" : ""} for sale<span>${esc(st.map((d) => MARKET.itemName(d.row)).slice(0, 3).join(", "))}${st.length > 3 ? "…" : ""}</span>` : "Nothing for sale<span>Sell things here even while you're away</span>"}</div><button class="btn sm" data-act="shop" data-id="market">Open stall</button></div>`; })()}
           <h3 style="margin-top:12px">Over the door</h3><div class="chatrow"><input id="motto" maxlength="${VISITS.MOTTO_MAX}" placeholder="A motto visitors will see" value="${esc(S.motto || "")}" autocomplete="off" aria-label="Motto"><button class="btn" data-act="motto">Carve</button></div>
-          <h3 style="margin-top:12px">Chest (${h.chest.length})</h3><p class="sub" style="margin-top:0">Put up to ${VISITS.SHOW_MAX} things in the display case for visitors to see.</p>${h.chest.length ? h.chest.map((r, i) => `<div class="item"><div class="t">${r.shown ? "🖼 " : ""}${esc((r.tq ? TOWNS.QUALITY[r.tq] + " " : "") + D.ITEMS[r.item].name)}${r.qty > 1 ? ` ×${r.qty}` : ""}<span>${esc(G.itemStats(r.item))}</span></div><button class="btn sm" data-act="showcase" data-id="${i}">${r.shown ? "Hide" : "Show"}</button><button class="btn sm" data-act="unstash" data-id="${i}">Take</button></div>`).join("") : '<p class="sub">Empty.</p>'}
+          <h3 style="margin-top:12px" id="homechest">Chest (${h.chest.length})</h3><p class="sub" style="margin-top:0">Put up to ${VISITS.SHOW_MAX} things in the display case for visitors to see.</p>${h.chest.length ? h.chest.map((r, i) => `<div class="item"><div class="t">${r.shown ? "🖼 " : ""}${esc((r.tq ? TOWNS.QUALITY[r.tq] + " " : "") + D.ITEMS[r.item].name)}${r.qty > 1 ? ` ×${r.qty}` : ""}<span>${esc(G.itemStats(r.item))}</span></div><button class="btn sm" data-act="showcase" data-id="${i}">${r.shown ? "Hide" : "Show"}</button><button class="btn sm" data-act="unstash" data-id="${i}">Take</button></div>`).join("") : '<p class="sub">Empty.</p>'}
           <h3 style="margin-top:12px">Put away from your pack</h3>${pack.length ? pack.map((r) => `<div class="item"><div class="t">${esc((r.tq ? TOWNS.QUALITY[r.tq] + " " : "") + D.ITEMS[r.item].name)}${r.qty > 1 ? ` ×${r.qty}` : ""}<span>${+(D.ITEMS[r.item].weight * r.qty).toFixed(2)} wt</span></div><button class="btn sm" data-act="stash" data-id="${r.id}">Store</button></div>`).join("") : '<p class="sub">Nothing loose in your pack (equipped gear stays on you).</p>'}`;
       }
     } else if (townShop === "enchanter") {
@@ -2319,7 +2352,7 @@
     }
     return `<div class="panel"><h2>${esc(l)}</h2>${PLACEART.scene(l)}${wanted ? `<p class="sub danger-high">You're wanted in ${esc(hold)}. Shops, inns and trainers turn you away.</p>` : ""}
       <div class="chips" style="flex-wrap:wrap">${sections.map((t) => `<button class="chip ${t === townShop ? "on" : ""}" data-act="shop" data-id="${t}">${esc(names[t])}</button>`).join("")}</div>
-      ${PLACEART.section(townShop === "hire" ? "hall" : townShop === "cook" ? "inn" : townShop === "home" && TOWNS.home(S, l) ? "home" : townShop)}${typeof NPCART !== "undefined" ? NPCART.talk(l, townShop, S) : ""}${note ? `<p class="sub" style="margin-top:8px">${note}</p>` : ""}<div class="list">${body}</div><p class="sub" style="margin-top:10px">You have <b class="gold">${S.gold} gold</b>.</p></div>`;
+      ${(townShop === "home" && TOWNS.home(S, l)) || (townShop === "hall" && typeof HOMEART !== "undefined") ? "" : PLACEART.section(townShop === "hire" ? "hall" : townShop === "cook" ? "inn" : townShop === "home" && TOWNS.home(S, l) ? "home" : townShop)}${typeof NPCART !== "undefined" ? NPCART.talk(l, townShop, S) : ""}${note ? `<p class="sub" style="margin-top:8px">${note}</p>` : ""}<div class="list">${body}</div><p class="sub" style="margin-top:10px">You have <b class="gold">${S.gold} gold</b>.</p></div>`;
   }
 
   function panelLog() {
@@ -2428,6 +2461,7 @@
       case "hire": say(TOWNS.hire(S, b.dataset.id)); publishCard(); break;
       case "buyhome": { const m = TOWNS.buyHome(S); persist(true); renderPanel(true); showMessage("A home of your own", m); break; }
       case "homebed": say(TOWNS.sleepHome(S)); break;
+      case "homejump": { const el = $("#homechest"); if (el) { const y = el.getBoundingClientRect().top + scrollY - 70; scrollTo({ top: y, behavior: reduceMotion ? "auto" : "smooth" }); } break; }
       case "harvest": say(TOWNS.harvest(S)); break;
       case "stash": say(TOWNS.stash(S, +b.dataset.id)); publishCard(); break;
       case "unstash": say(TOWNS.unstash(S, +b.dataset.id)); publishCard(); publishHome(); break;

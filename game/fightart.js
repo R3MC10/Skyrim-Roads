@@ -47,7 +47,7 @@ const FIGHTART = (() => {
   }
 
   // ---------------------------------------------------------------- backgrounds (cached per kind, size, style)
-  function drawBg(g, H, w, h, kind) {
+  function drawBg(g, H, w, h, kind, sky) {
     const ground = h * 0.8;
     if (kind === "cave" || kind === "dwemer") {
       H.sky(g, w, h, "cave");
@@ -61,27 +61,31 @@ const FIGHTART = (() => {
       return;
     }
     if (kind === "ruin") {
-      H.sky(g, w, h, "dusk"); H.mountains(g, w, h * 0.62, h * 0.32, 7, "#7d6c58", true);
+      if (sky) SKY.backdrop(g, H, w, h, sky, { horizon: 0.62, seed: "ruin" }); else H.sky(g, w, h, "dusk");
+      H.mountains(g, w, h * 0.62, h * 0.32, 7, "#7d6c58", true);
       const r = H.seeded("ruin");
       for (let i = 0; i < 4; i++) { const x = w * (0.08 + i * 0.28) + r() * 10, ph = h * (0.25 + r() * 0.25); H.poly(g, [[x, ground], [x, ground - ph], [x + 16, ground - ph - 6], [x + 22, ground]], "#8f8574", P.ink, 1.2); }
       g.fillStyle = "#6f6656"; g.fillRect(0, ground, w, h - ground); H.inkPath(g, [[0, ground], [w, ground]], false, 1.4);
+      if (sky) { SKY.snowCover(g, w, h, ground, sky.snow, "ruin"); SKY.overlay(g, H, w, h, sky, { seed: "ruin", ground, cover: false, weather: false }); }
       return;
     }
     const mood = kind === "snow" ? "snow" : kind === "ash" ? "dusk" : "day";
-    H.sky(g, w, h, mood);
+    if (sky) SKY.backdrop(g, H, w, h, kind === "snow" && sky.weather === "clear" && sky.tod === "day" ? { ...sky, weather: "snow" } : sky, { horizon: 0.6, seed: kind }); else H.sky(g, w, h, mood);
     H.mountains(g, w, h * 0.6, h * 0.36, kind.length * 7, kind === "ash" ? "#5a4a40" : P.rock, kind !== "ash");
     const grounds = { snow: P.snow, forest: "#6f7f48", autumn: "#a07a44", marsh: "#5f6a48", ash: "#6a5a50", rocky: "#9a8a72", tundra: P.tundra, camp: P.tundra, arena: "#b9a07a" };
     if (kind === "forest" || kind === "snow") H.pines(g, w, h * 0.72, 16, 11, 20);
     if (kind === "autumn") { const r = H.seeded("aut"); for (let i = 0; i < 14; i++) H.circle(g, r() * w, h * (0.6 + r() * 0.1), 8 + r() * 6, ["#a8622e", "#c08a3c", "#c9a24c"][i % 3], P.ink, 1); }
     if (kind === "camp") { H.poly(g, [[w * 0.06, ground], [w * 0.16, ground - 40], [w * 0.26, ground]], "#9a7a50", P.ink, 1.2); H.poly(g, [[w * 0.8, ground], [w * 0.88, ground - 30], [w * 0.96, ground]], "#8a6a44", P.ink, 1.2); }
     if (kind === "arena") { g.fillStyle = "#8f7a66"; g.fillRect(0, h * 0.45, w, ground - h * 0.45); for (let x = 0; x < w; x += 26) H.poly(g, [[x, ground - 2], [x, h * 0.45], [x + 22, h * 0.45], [x + 22, ground - 2]], "#a48f78", P.ink, 1); }
+    if (kind === "arena" && typeof RAIDART !== "undefined") RAIDART.stands(g, w, h, h * 0.08, h * 0.45);   // the crowd in the stands (raidart.js)
     g.fillStyle = grounds[kind] || P.tundra; g.fillRect(0, ground, w, h - ground); H.inkPath(g, [[0, ground], [w, ground]], false, 1.4);
-    if (kind === "snow") { const r = H.seeded("flk"); g.fillStyle = "#fff"; for (let i = 0; i < 40; i++) g.fillRect(r() * w, r() * ground, 1.6, 1.6); }
+    if (kind === "snow" && !sky) { const r = H.seeded("flk"); g.fillStyle = "#fff"; for (let i = 0; i < 40; i++) g.fillRect(r() * w, r() * ground, 1.6, 1.6); }
+    if (sky) { if (kind !== "snow") SKY.snowCover(g, w, h, ground, sky.snow, kind); SKY.overlay(g, H, w, h, sky, { seed: kind, ground, cover: false, weather: false }); }   // seasons and the light of the hour
   }
   const bgCache = new Map();
-  function bgFor(kind, w, h, style, wagon) {
-    const k = `${kind}|${w}|${h}|${style}|${wagon || ""}`;
-    const draw = (g, H) => { drawBg(g, H, w, h, kind); if (wagon && typeof CARAVANS !== "undefined") { g.save(); g.translate(w * 0.36, h * 0.38); g.globalAlpha = 0.9; CARAVANS.drawWagon(g, H, w * 0.3, h * 0.42, { khajiit: wagon === "khajiit", cover: wagon !== "cart", animal: true }); g.restore(); } };   // a caravan or your cart behind the fight
+  function bgFor(kind, w, h, style, wagon, sky) {
+    const k = `${kind}|${w}|${h}|${style}|${wagon || ""}|${sky ? sky.key : ""}`;
+    const draw = (g, H) => { drawBg(g, H, w, h, kind, sky); if (wagon && typeof CARAVANS !== "undefined") { g.save(); g.translate(w * 0.36, h * 0.38); g.globalAlpha = 0.9; CARAVANS.drawWagon(g, H, w * 0.3, h * 0.42, { khajiit: wagon === "khajiit", cover: wagon !== "cart", animal: true }); g.restore(); } };   // a caravan or your cart behind the fight
     if (!bgCache.has(k)) { if (bgCache.size > 12) bgCache.delete(bgCache.keys().next().value); bgCache.set(k, ART.canvas(w, h, draw, { style, block: 3 })); }
     return bgCache.get(k);
   }
@@ -250,6 +254,7 @@ const FIGHTART = (() => {
     const id = nextId++; IDS.set(f, id);
     const arena = !f.e && f.log && f.log.length && /hits for/.test(f.log[0].them || "");
     REG.set(id, { f, scene: arena ? "arena" : sceneOf(s), hero: { ...heroOf(s, f), bound: (f.log || []).some((l) => /bound/i.test(l.me || "")) }, foe: arena ? "bandit" : foeOf(f.e), wagon: f.e?.cart ? "cart" : f.e?.caravan ? (f.e.khajiit ? "khajiit" : "nord") : null, foeName: f.e?.name || (arena && (f.log[0].them.match(/^(.+?) hits for/) || [])[1]) || "Opponent", played: false });
+    { const rec = REG.get(id), outdoor = !["cave", "dwemer"].includes(rec.scene) && !s?.dungeon; if (outdoor && typeof SKY !== "undefined" && s) rec.sky = SKY.state([s.x, s.y]); }   // the sky over this fight
     if (REG.size > 40) REG.delete(REG.keys().next().value);
     return id;
   }
@@ -266,7 +271,9 @@ const FIGHTART = (() => {
     const k = pixel ? 1 / 3 : dpr;
     const work = pixel ? Object.assign(document.createElement("canvas"), { width: Math.round(W * k), height: Math.round(Hh * k) }) : cv;
     const wg = work.getContext("2d");
-    const bg = bgFor(rec.scene, W, Hh, style, rec.wagon);
+    const bg = bgFor(rec.scene, W, Hh, style, rec.wagon, rec.sky);
+    const wxp = rec.sky ? SKY.particles(rec.sky, W, Hh, { reduce: reduce() }) : null;   // snow, rain, leaves or fireflies during the replay
+    let lastNow = performance.now();
     const f = rec.f, beats = beatsOf(f, rec.hero);
     const hp0 = f.hp0 ?? Math.max(1, ...((f.log || []).map((l) => l.hp).filter((v) => v != null)));
     const ehp0 = f.ehp0 ?? Math.max(1, ...((f.log || []).map((l) => l.ehp).filter((v) => v != null)));
@@ -344,6 +351,8 @@ const FIGHTART = (() => {
       }
       foeFig(wg, rec.foe, themL, tt);
       wg.restore();
+      // weather in front of the fighters
+      if (wxp) { const dt = Math.min(0.05, Math.max(0, (now - lastNow) / 1000)); lastNow = now; wxp.step(wg, done ? 0 : dt); }
       // arrows
       if (beat && beat.who === "me" && beat.kind === "arrow") { const ax = hx0 + 30 * s + (fx0 - hx0 - 40 * s) * Math.min(1, bt * 1.8), ay = groundY - 38 * s; wg.strokeStyle = P.ink; wg.lineWidth = 2; wg.beginPath(); wg.moveTo(ax - 14 * s, ay); wg.lineTo(ax, ay); wg.stroke(); wg.fillStyle = P.steel; wg.beginPath(); wg.moveTo(ax + 4 * s, ay); wg.lineTo(ax - 1, ay - 3); wg.lineTo(ax - 1, ay + 3); wg.fill(); }
       // block flash

@@ -84,8 +84,13 @@ const ART = (() => {
 
   const cache = new Map();
   /* draw(g, H, w, h) into a canvas of w×h CSS pixels; opts.style overrides the player's choice */
+  let drawing = null;   // the style of the picture being drawn right now (drawers can ask: ART.drawingStyle())
   function canvas(w, h, draw, opts = {}) {
     const st = opts.style || style(), dpr = DPR();
+    const prev = drawing; drawing = st;
+    try { return canvasIn(w, h, draw, opts, st, dpr); } finally { drawing = prev; }
+  }
+  function canvasIn(w, h, draw, opts, st, dpr) {
     const c = document.createElement("canvas");
     c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); c.style.width = w + "px"; c.style.height = h + "px";
     const g = c.getContext("2d");
@@ -110,5 +115,6 @@ const ART = (() => {
   }
   const html = (w, h, draw, opts = {}) => { const u = url(w, h, draw, opts); return u ? `<img class="art ${opts.cls || ""}" src="${u}" width="${w}" height="${h}" alt="${(opts.alt || "").replace(/"/g, "&quot;")}" ${style() === "pixel" ? 'style="image-rendering:pixelated"' : ""}>` : ""; };
   function setStyle(st) { try { const p = JSON.parse(localStorage.getItem(PREFS_KEY) || "{}"); p.artStyle = st; localStorage.setItem(PREFS_KEY, JSON.stringify(p)); } catch { /* ignore */ } cache.clear(); }
-  return { PAL, H, style, setStyle, canvas, url, html, seeded };
+  const drawingStyle = () => drawing || style();
+  return { PAL, H, style, setStyle, drawingStyle, canvas, url, html, seeded };
 })();

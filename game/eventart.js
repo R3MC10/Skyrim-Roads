@@ -73,9 +73,10 @@ const EVENTART = (() => {
   function groundHere(pos) { try { return Terrain.NAMES[Terrain.typeAtPos(pos)] || "Tundra"; } catch { return "Tundra"; } }
   function moodNow() { try { const t = G.now(); if (G.isNight(t)) return "night"; const hr = G.clock(t).hour; return hr < 8 || hr >= 18 ? "dusk" : "day"; } catch { return "day"; } }
   function weatherHere(pos) { try { return typeof WEVENTS !== "undefined" ? WEVENTS.weather(pos).id : "clear"; } catch { return "clear"; } }
+  let curSky = null;   // the SKY state while a road picture is drawn
   function backdrop(g, H, w, h, ground, md, seed, road = true) {
     const [col, skyK] = GROUND[ground] || GROUND.Tundra;
-    H.sky(g, w, h, md === "night" ? "night" : skyK === "snow" ? "snow" : md === "dusk" ? "dusk" : "day");
+    if (curSky) SKY.backdrop(g, H, w, h, curSky, { horizon: 0.6, seed }); else H.sky(g, w, h, md === "night" ? "night" : skyK === "snow" ? "snow" : md === "dusk" ? "dusk" : "day");
     const snowy = /Snow|peaks/.test(ground), ash = ground === "Volcanic tundra";
     H.mountains(g, w, h * 0.6, h * (ground === "Mountains" || ground === "High peaks" || ground === "Rocky hills" ? 0.5 : 0.36), seed + "m", ash ? "#6f6a64" : snowy ? "#9aa3a8" : P.rock, !ash);
     const r = rnd(seed + "gnd");
@@ -88,6 +89,7 @@ const EVENTART = (() => {
     if (ash) { g.fillStyle = "rgba(60,55,50,0.35)"; for (let i = 0; i < 12; i++) g.fillRect(r() * w, h * 0.66 + r() * h * 0.3, 6, 2); }
     if (ground === "Tundra" || ground === "Grassland" || ground === "Road") { g.fillStyle = "#8c9a5a"; for (let i = 0; i < 16; i++) g.fillRect(r() * w, h * 0.66 + r() * h * 0.3, 4, 2); }
     if (snowy) { g.fillStyle = "rgba(255,255,255,0.75)"; for (let i = 0; i < 10; i++) g.fillRect(r() * w, h * 0.66 + r() * h * 0.3, 10, 2); }
+    if (curSky && !snowy) SKY.snowCover(g, w, h, h * 0.62, curSky.snow, seed);   // seasonal snow on the ground
     if (road) {   // the road runs across the foreground
       g.fillStyle = snowy ? "#cfc6b4" : "#c6b48e"; g.beginPath(); g.moveTo(0, h * 0.86); g.bezierCurveTo(w * 0.3, h * 0.8, w * 0.6, h * 0.92, w, h * 0.84); g.lineTo(w, h * 0.95); g.bezierCurveTo(w * 0.6, h, w * 0.3, h * 0.9, 0, h * 0.97); g.closePath(); g.fill();
       g.strokeStyle = "rgba(59,44,30,0.35)"; g.lineWidth = 1; g.stroke();
@@ -412,6 +414,18 @@ const EVENTART = (() => {
     const ground = opts.ground || groundHere(pos), md = opts.mood || moodNow(), wx = opts.weather || weatherHere(pos);
     const variant = ev.id === "shrine" ? ev.god : ev.id === "herbs" ? ev.item : ev.id === "chest" ? ev.tier : "";
     const k = ZOOM[ev.id] || 1;
+    if (typeof SKY !== "undefined") {   // shared sky: time of day, season, weather
+      const st = SKY.forOpts(pos, { mood: opts.mood, tod: opts.tod, weather: opts.weather, season: opts.season });
+      const draw = (g, H, w, h) => {
+        curSky = st;
+        try {
+          backdrop(g, H, w, h, ground, SKY.mood(st), ev.id + ground);
+          g.save(); g.translate(w / 2, h * 0.9); g.scale(k, k); g.translate(-w / 2, -h * 0.9); ROAD[ev.id](g, H, w, h, ev); g.restore();
+          SKY.overlay(g, H, w, h, st, { seed: ev.id, ground: h * 0.62, cover: false }); frame(g, w, h);
+        } finally { curSky = null; }
+      };
+      return ART.html(W, H0, draw, { key: `evt|${ev.id}|${variant}|${ground}|${st.key}`, cls: "scene evt", alt: "", style: opts.style });
+    }
     const draw = (g, H, w, h) => {
       backdrop(g, H, w, h, ground, md, ev.id + ground);
       g.save(); g.translate(w / 2, h * 0.9); g.scale(k, k); g.translate(-w / 2, -h * 0.9); ROAD[ev.id](g, H, w, h, ev); g.restore();
