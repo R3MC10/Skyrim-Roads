@@ -5,6 +5,7 @@ Each round: build one batch, test it (Node sims in /home/claude/tests + headless
 our own marked [OURS]; plain-language UI; phone first.
 
 ## Done
+- Round 25: market stalls. Own a house in a town and you can run a stall there (up to 8 things). Other players in that town see your stall under Town → 🛒 Market stalls and can buy, even while you're away; your game collects the gold next time it's open (the market keeps 5%). Take things back any time. Your house page shows what's on your stall.
 - Round 24: werewolf and vampire paths. Werewolf: the Circle offers it after the Companions' quest line; Beast Form once a day in tactics (10 turns: much harder hits, less damage taken, a heal, no potions); no Rested bonus; immune to disease; cleansing at Jorrvaskr for 1000 gold. Vampire: night vampires may infect you; cure with a Potion of Cure Disease or a shrine within 3 hours, or you turn; hunger stages over real hours make Destruction/Illusion and night blows stronger but slow healing in daylight; feed at inns; cure at a court wizard (soul gem + 500 gold).
 - Round 23: clan wars over the holds. Members earn their clan points in the hold where they win fights (1), clear dungeons (5) and fight dragon attacks (3); Arena wins count for Eastmarch (3). The clan on top at the end of a week rules that hold all next week: its colour tints the hold on the map and its members shop 10% cheaper there. Holds panel in the Journal.
 - Round 22: clean-up. The map only draws while it's on screen, and slows to 8 frames a second when nothing moves (less battery). Quick-jump menu at the top of the Journal. Shorter help texts. Old ladder, home and clan records of players gone for months are pruned from every phone's copy of the world.
@@ -35,8 +36,6 @@ our own marked [OURS]; plain-language UI; phone first.
 - Round 3: homes (Breezehome, Honeyside, Vlindrel Hall, Hjerim, Proudspire Manor at Skyrim prices): death-proof chest, Well Rested bed (+10%; inns now Rested +5%), daily garden.
 
 ## Next rounds (in order)
-24. Mounts for the road: a cart you can buy to carry a lot more, and caravans between holds that players can guard together for pay.
-25. Spell crafting at the College: combine two effects you know into your own spell.
-26. A bard's song: players can write a short line about a deed; the best-liked lines become songs that innkeepers sing.
-23. Player shops: sell your goods from a stall in your house's town while you're offline.
-11. Visit other players' homes (leave a gift, see their trophies).
+26. Mounts for the road: a cart you can buy to carry a lot more, and caravans between holds that players can guard together for pay.
+27. Spell crafting at the College: combine two effects you know into your own spell.
+28. A bard's song: players can write a short line about a deed; the best-liked lines become songs that innkeepers sing.
