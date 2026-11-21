@@ -5,6 +5,7 @@ Each round: build one batch, test it (Node sims in /home/claude/tests + headless
 our own marked [OURS]; plain-language UI; phone first.
 
 ## Done
+- Round 20: clans. Found a clan in the Journal (name, 2-4 letter tag, two banner colours), invite online players, they join from the invite; founder can send people away or disband. Clan chat channel, [TAG] next to members' names on the map, and a banner in the clan's colours over every town where a member owns a house.
 - Round 19: 18 achievements (levels, places, dungeons, dragons, Words of Power, all 13 standing stones, quest lines, houses, fish, pickpockets, the Hall, Arena wins, an armored horse, 10,000 gold) on the Hero tab with progress bars; a toast, a sound and a news line when earned; visitors to your home see your count and latest ones. Old characters get credit for what they've done.
 - Round 18: tutorial. New characters get a 5-step guided first trip (travel to Whiterun, arrive, Town, Journal, Tactics; 100 gold at the end), then a one-time tip on each tab. Tips sit at the top of the panel, never block anything, can be skipped, and the tutorial can be replayed from How to Play in the main menu.
 - Round 17: better map. Hold a finger on the map to drop a named pin (8 icons, up to 20), tap it to travel there, remove it, or share it with your party (it shows in party chat with "Add to my map"). Party members' routes show as dashed lines. Zoom goes closer (6×).
@@ -30,6 +31,8 @@ our own marked [OURS]; plain-language UI; phone first.
 - Round 3: homes (Breezehome, Honeyside, Vlindrel Hall, Hjerim, Proudspire Manor at Skyrim prices): death-proof chest, Well Rested bed (+10%; inns now Rested +5%), daily garden.
 
 ## Next rounds (in order)
+21. Clan wars: clans claim holds by winning weekly contests (bounty points, Arena wins, Hall gifts); the hold map shows who rules where.
+22. Werewolf and vampire paths (from the Companions and a rare night encounter), with their own powers and drawbacks.
+23. Player shops: sell your goods from a stall in your house's town while you're offline.
 11. Visit other players' homes (leave a gift, see their trophies).
-19. Clan banners: players form a clan with a name and banner colours, a clan chat channel, and banners on the map at their members' homes.
 20. Seasonal world events: Frostfall blizzards, the New Life Festival, the Witchingmoon (more undead at night), each with its own rewards.

@@ -39,13 +39,19 @@
     el.textContent = text; el.classList.remove("hide");
     clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.add("hide"), 3800);
   }
-  function persist(pub = false) { Store.save(S); if (pub) { publishCard(); publishHome(); } bump(); }
+  function persist(pub = false) { Store.save(S); if (pub) { publishCard(); publishHome(); publishClan(); } bump(); }
+  let lastClanJson = "";
+  function publishClan() {
+    const json = JSON.stringify([S.clan || null, S.name]);
+    if (json === lastClanJson) return; lastClanJson = json;
+    if (S.clan) Store.put("clanmem", S.id, { clan: S.clan, name: S.name, t: G.now() }); else Store.remove("clanmem", S.id);
+  }
   function publishCard(force = true) {
     const tr = S.trip;
     const card = { name: S.name, race: S.race, level: S.level, x: S.x, y: S.y,
       t0: tr ? tr.lastTick : G.now(), moving: !!(tr && tr.status === "travel"), dest: tr ? tr.dest : null,
       path: tr && tr.status === "travel" ? [[S.x, S.y], ...tr.path.slice(tr.idx + 1)].slice(0, 120) : null,
-      speed: G.speed(S), party: party?.id || null, hiding: !!S.ambush, ...MP.stats(S) };
+      speed: G.speed(S), party: party?.id || null, hiding: !!S.ambush, clan: myClan()?.tag || null, ...MP.stats(S) };
     const json = JSON.stringify({ ...card, t0: 0, cur: Math.round(card.cur / 10) });
     if (!force && json === lastCardJson) return;
     lastCardJson = json;
@@ -432,6 +438,8 @@
     Store.watch("raids", (docs) => { raidDocs = docs; });
     Store.watch("trades", (docs) => onTrades(docs));
     Store.watch("duels", (docs) => onDuels(docs));
+    Store.watch("clans", (docs) => { const before = CLANS.invitesFor(S.id).length; CLANS.set(docs, null); if (CLANS.invitesFor(S.id).length > before && !myClan()) toast(`🏴 You're invited to join a clan. See the Journal.`); bump(); renderTabs(); });
+    Store.watch("clanmem", (docs) => { CLANS.set(null, docs); bump(); });
     Store.watch("chat", (docs) => onChat(docs));
     Store.watch("homes", (docs) => { homeDocs = docs; if (tab === "town") bump(); });
     Store.watch("gifts", (docs) => onGifts(docs));
@@ -502,7 +510,7 @@
     if (S.tut?.step > 0 && TUT[S.tut.step]?.done()) bump();
     if (Math.floor(t) % 5 === 0) checkAch();
     if (Math.floor(t) % 3 === 0) { const qm = QUESTS.check(S); if (qm.length) { persist(true); showMessage("Quest", qm.join(" ")); } }
-    if (Math.floor(t) % 30 === 0) { publishCard(false); publishHome(); }
+    if (Math.floor(t) % 30 === 0) { publishCard(false); publishHome(); publishClan(); }
     if (Math.floor(t) % 60 === 0) BACKUP.autoSave(S);
     renderTop(); renderVitals(); renderTrip(); renderTabs();
     if (version !== rendered || Date.now() - lastPanelRender > 20000) renderPanel(false);
@@ -584,7 +592,8 @@
     view = {
       player: pos, name: S.name, trail: S.trip?.trail, dest: S.trip ? { pos: S.trip.dest, name: S.trip.destName } : null,
       route: S.trip ? (S.trip.status === "travel" ? S.trip.path.slice(S.trip.idx + 1) : [S.trip.dest]) : null,
-      discovered: S.discovered, explored: [...S.explored, pos], others: others.filter((o) => !o.hiding || G.pxDist(livePos(), otherPos(o)) < MP.NEAR_PX).map((o) => ({ name: o.name + (party?.members.some((m) => m.id === o.id) ? " ⚑" : ""), pos: otherPos(o) })),
+      discovered: S.discovered, explored: [...S.explored, pos], others: others.filter((o) => !o.hiding || G.pxDist(livePos(), otherPos(o)) < MP.NEAR_PX).map((o) => ({ name: (o.clan ? `[${o.clan}] ` : "") + o.name + (party?.members.some((m) => m.id === o.id) ? " ⚑" : ""), pos: otherPos(o) })),
+      banners: CLANS.banners(homeDocs, S, VISITS.record(S)).filter((b) => WORLD.places[b.town]).map((b) => ({ ...b, pos: WORLD.places[b.town].slice(0, 2) })),
       bags: visibleBags(), selected: selected && WORLD.places[selected] ? selected : null, t: ts / 1000, zoom, center, reduceMotion, weather: WEVENTS.weather(pos).id, quest: questPos(), pins: (S.pins || []).map((p) => ({ pos: [p.x, p.y], label: `${p.icon} ${p.label}`, on: selected === "__pin:" + p.id })),
       routes: party ? others.filter((o) => o.moving && o.path?.length > 1 && party.members.some((m) => m.id === o.id)).map((o) => ({ path: o.path, from: otherPos(o), name: o.name })) : [], horse: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, hall: S.discovered.includes(HALL.TOWN) || known(HALL.TOWN) ? { pos: HALL.POS, label: `Hall of the North · ${HALL.progress().name}` } : null,
     };
@@ -1279,12 +1288,37 @@
       ${last.length ? `<h3 style="margin-top:10px">Last week, still unclaimed</h3><div class="list">${last.map((g) => row(g, w - 1)).join("")}</div>` : ""}</div>`;
   }
 
+  // ------------------------------------------------------------ clans
+  let clanDraft = { colors: ["#8c2b22", "#c9a75e"] };
+  const bannerHTML = (c) => `<span class="banner" style="background:linear-gradient(180deg,${c.colors[0]} 0 58%,${c.colors[1]} 58% 100%)" aria-hidden="true"></span>`;
+  function clanPanel() {
+    if (!Store.online) return "";
+    const c = myClan(), inv = CLANS.invitesFor(S.id).filter((x) => x.id !== c?.id);
+    if (!c) {
+      const sw = (i) => CLANS.COLORS.map((col) => `<button class="swatch ${clanDraft.colors[i] === col ? "on" : ""}" style="background:${col}" data-act="clancol" data-i="${i}" data-id="${col}" aria-label="Colour"></button>`).join("");
+      return `<div class="panel"><h2>Clan</h2>
+        ${inv.length ? `<div class="list">${inv.map((x) => `<div class="item on">${bannerHTML(x)}<div class="t">${esc(x.name)} [${esc(x.tag)}]<span>${esc(x.founderName)} invites you</span></div><button class="btn sm pri" data-act="clanjoin" data-id="${esc(x.id)}">Join</button></div>`).join("")}</div>` : ""}
+        <p class="sub">Found your own clan: a name, a short tag shown next to your members' names, and a banner that flies over their houses on the map. Your clan gets its own chat.</p>
+        <div class="grid2"><input id="clanname" maxlength="24" placeholder="Clan name" value="${esc(clanDraft.name || "")}" autocomplete="off" aria-label="Clan name"><input id="clantag" maxlength="4" placeholder="Tag (e.g. NORD)" value="${esc(clanDraft.tag || "")}" autocomplete="off" aria-label="Clan tag" style="text-transform:uppercase"></div>
+        <p class="sub" style="margin-bottom:4px">Banner top</p><div class="coats">${sw(0)}</div><p class="sub" style="margin-bottom:4px">Banner bottom</p><div class="coats">${sw(1)}</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:10px">${bannerHTML(clanDraft)}<button class="btn pri" data-act="clanfound" style="flex:1">Raise the banner</button></div></div>`;
+    }
+    const mem = CLANS.members(c), founder = c.founder === S.id, onlineIds = new Set(others.map((o) => o.id));
+    const invitable = founder ? others.filter((o) => !mem.some((m) => m.id === o.id) && !(c.invites || []).includes(o.id)) : [];
+    return `<div class="panel"><h2>Clan</h2><div class="item">${bannerHTML(c)}<div class="t">${esc(c.name)} [${esc(c.tag)}]<span>Founded by ${esc(c.founderName)} · ${mem.length} member${mem.length > 1 ? "s" : ""}</span></div></div>
+      <h3 style="margin-top:10px">Members</h3><div class="list">${mem.map((m) => `<div class="item"><div class="t">${esc(m.name)}${m.id === c.founder ? " ⚑" : ""}${m.id === S.id ? " (you)" : ""}<span>${m.id === S.id || onlineIds.has(m.id) ? "online" : "away"}</span></div>${founder && m.id !== S.id ? `<button class="btn sm" data-act="clankick" data-id="${esc(m.id)}">Send away</button>` : ""}</div>`).join("")}</div>
+      ${founder ? `<h3 style="margin-top:10px">Invite</h3>${invitable.length ? invitable.map((o) => `<div class="item"><div class="t">${esc(o.name)}<span>Level ${o.level}${o.clan ? ` · in [${esc(o.clan)}]` : ""}</span></div><button class="btn sm" data-act="claninv" data-id="${esc(o.id)}">Invite</button></div>`).join("") : `<p class="sub">Nobody else online to invite right now.</p>`}` : ""}
+      <button class="btn danger" data-act="clanleave" style="width:100%;margin-top:10px">${founder ? "Lower the banner (disband)" : "Leave the clan"}</button></div>`;
+  }
+
   // ------------------------------------------------------------ chat
   const CHAT_MAX = 200;
   const chatMuted = () => getPref("muted", []);
   const chatHue = (id) => { let h = 0; for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) % 360; return h; };
   const chatOk = (d) => d && typeof d.text === "string" && d.t > Date.now() / 1000 - 86400 && !chatMuted().includes(d.from);
-  const myChannels = () => ["world", ...(party ? [party.id] : [])];
+  const myClan = () => (S ? CLANS.of(S.id, S) : null);
+  const myChannels = () => ["world", ...(party ? [party.id] : []), ...(myClan() ? ["clan:" + myClan().id] : [])];
+  const curChannel = () => (chatCh === "clan" && myClan() ? "clan:" + myClan().id : chatCh !== "world" && chatCh !== "clan" && party ? party.id : "world");
   const chatUnread = () => chatDocs.filter((d) => d.from !== S?.id && d.t > chatSeen && myChannels().includes(d.ch)).length;
   function onChat(docs) {
     chatRaw = docs;
@@ -1295,9 +1329,9 @@
       if (d.from === S.id || d.t < bootT || !myChannels().includes(d.ch)) continue;
       if (tab === "log" && !document.hidden) continue;
       SOUND.fx("chat");
-      toast(`💬 ${d.name}${d.ch === "world" ? "" : " (party)"}: ${d.text.slice(0, 70)}${d.text.length > 70 ? "…" : ""}`);
+      toast(`💬 ${d.name}${d.ch === "world" ? "" : d.ch.startsWith("clan:") ? " (clan)" : " (party)"}: ${d.text.slice(0, 70)}${d.text.length > 70 ? "…" : ""}`);
     }
-    if (party == null && chatCh !== "world") chatCh = "world";
+    if (party == null && chatCh !== "world" && chatCh !== "clan") chatCh = "world";
     bump(); renderTabs();
     if (tab === "log") { const box = $("#chatlog"); if (box && !(document.activeElement?.id === "chatin")) renderPanel(false); }
   }
@@ -1306,7 +1340,7 @@
     if (!text) return;
     if (Date.now() - lastChatSend < 1500) return toast("Easy. Wait a moment before the next message.");
     lastChatSend = Date.now();
-    const ch = chatCh === "world" || !party ? "world" : party.id;
+    const ch = curChannel();
     Store.put("chat", nid(), { from: S.id, name: S.name, text, ch, t: G.now() });
     chatDraft = ""; SOUND.fx("click");
     renderPanel(true);
@@ -1318,12 +1352,12 @@
   }
   function chatPanel() {
     if (!Store.online) return "";
-    const ch = chatCh === "world" || !party ? "world" : party.id, muted = chatMuted();
+    const ch = curChannel(), muted = chatMuted();
     const msgs = chatDocs.filter((d) => d.ch === ch).slice(-40);
     chatSeen = Math.max(chatSeen, ...chatDocs.filter((d) => myChannels().includes(d.ch)).map((d) => d.t), 0);
     const line = (d) => `<div class="cm ${d.from === S.id ? "me" : ""}"><time>${new Date(d.t * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time><button class="cn" data-act="chatmute" data-id="${esc(d.from)}" data-name="${esc(d.name)}" style="color:hsl(${chatHue(d.from)},65%,70%)" ${d.from === S.id ? "disabled" : ""}>${esc(d.name)}</button><span>${esc(d.text)}${d.pin && typeof d.pin.x === "number" ? ` <button class="linkbtn" data-act="pinadd" data-id="${esc(d.id)}">Add to my map</button>` : ""}</span></div>`;
     return `<div class="panel"><h2>Chat</h2>
-      <div class="chips">${[["world", "World"], ...(party ? [[party.id, "Party"]] : [])].map(([id, l]) => `<button class="chip ${id === ch ? "on" : ""}" data-act="chatch" data-id="${esc(id)}">${l}</button>`).join("")}</div>
+      <div class="chips">${[["world", "World"], ...(party ? [[party.id, "Party"]] : []), ...(myClan() ? [["clan", `[${myClan().tag}] Clan`]] : [])].map(([id, l]) => `<button class="chip ${(id === "clan" ? "clan:" + myClan()?.id : id) === ch ? "on" : ""}" data-act="chatch" data-id="${esc(id)}">${l}</button>`).join("")}</div>
       <div class="chatlog" id="chatlog" aria-live="polite">${msgs.length ? msgs.map(line).join("") : `<p class="sub">${ch === "world" ? "No messages yet. Say hello to everyone online." : "Talk to your party here. Only party members see these in the game."}</p>`}</div>
       <div class="chips quick">${quickPhrases().map((q) => `<button class="chip" data-act="chatq" data-id="${esc(q)}">${esc(q)}</button>`).join("")}</div>
       <div class="chatrow"><input id="chatin" maxlength="${CHAT_MAX}" placeholder="${ch === "world" ? "Message everyone" : "Message your party"}" value="${esc(chatDraft)}" autocomplete="off" enterkeyhint="send" aria-label="Chat message"><button class="btn pri" data-act="chatsend">Send</button></div>
@@ -1856,7 +1890,7 @@
     const ladderHtml = shared ? `<div class="panel"><h2>Leaderboard</h2><div class="chips">${cats.map(([k, l]) => `<button class="chip ${k === ladderCat ? "on" : ""}" data-act="ladder" data-id="${k}">${l}</button>`).join("")}</div>
       <div class="list">${board.slice(0, 10).map((d, i) => `<div class="item ${d.id === S.id ? "on" : ""}"><span class="num" style="width:1.6em;color:var(--gold)">${i + 1}</span><div class="t">${esc(d.name)}${d.id === S.id ? " (you)" : ""}<span>Level ${d.level} ${esc(D.RACES[d.race]?.name || "")}</span></div><b class="num">${d[ladderCat] || 0}</b></div>`).join("")}</div>
       ${myRank > 10 ? `<p class="sub" style="margin-top:6px">You're number ${myRank}.</p>` : ""}</div>` : "";
-    return `${questPanel()}${bountyPanel()}${chatPanel()}${worldHtml}${tradeHtml}${partyHtml}${travellers}${ladderHtml}${bounty}${word}
+    return `${questPanel()}${bountyPanel()}${chatPanel()}${clanPanel()}${worldHtml}${tradeHtml}${partyHtml}${travellers}${ladderHtml}${bounty}${word}
       <div class="panel"><h2>Journal</h2><div class="log">${S.journal.map((j) => `<div><time>${new Date(j.t * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time>${esc(j.text)}</div>`).join("")}</div></div>`;
   }
 
@@ -1959,6 +1993,12 @@
       case "eat": packOpen = null; say(TOWNS.eat(S, +b.dataset.id)); break;
       case "hallrest": say(HALL.rest(S)); break;
       case "visit": openVisit(b.dataset.id); break;
+      case "clancol": clanDraft = { ...clanDraft, name: $("#clanname")?.value, tag: $("#clantag")?.value }; clanDraft.colors[+b.dataset.i] = b.dataset.id; renderPanel(true); break;
+      case "clanfound": { const r = CLANS.found(S, $("#clanname")?.value, $("#clantag")?.value, clanDraft.colors); if (r.err) return toast(r.err); Store.put("clans", S.id, r.clan); CLANS.set([...CLANS.all.filter((x) => x.id !== S.id), { ...r.clan, id: S.id }], null); persist(true); postNews(`🏴 ${S.name} raised the banner of ${r.clan.name} [${r.clan.tag}].`); say(r.text); break; }
+      case "claninv": { const c = myClan(); if (!c || c.founder !== S.id) break; const r = CLANS.invite(c, b.dataset.id); if (r.err) return toast(r.err); Store.put("clans", S.id, (({ id, ...x }) => x)(r.clan)); toast("Invitation sent."); break; }
+      case "clankick": { const c = myClan(); if (!c || c.founder !== S.id) break; Store.put("clans", S.id, (({ id, ...x }) => x)(CLANS.kick(c, b.dataset.id).clan)); toast("They're no longer in the clan."); break; }
+      case "clanjoin": { const r = CLANS.join(S, CLANS.byId(b.dataset.id)); if (r.err) return toast(r.err); persist(true); say(r.text); break; }
+      case "clanleave": { const c = myClan(); if (c && c.founder === S.id) { Store.remove("clans", S.id); postNews(`🏴 The banner of ${c.name} was lowered.`); } say(CLANS.leave(S)); persist(true); break; }
       case "achmore": achOpen = !achOpen; renderPanel(true); break;
       case "tutskip": S.tut = { ...S.tut, step: 0, off: true }; persist(); renderPanel(true); toast("Tutorial skipped. You can replay it from How to Play in the main menu."); break;
       case "tutseen": S.tut.seen = { ...(S.tut.seen || {}), [tab]: true }; persist(); renderPanel(true); break;

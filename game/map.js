@@ -321,6 +321,16 @@ const WorldMap = (() => {
     }
     for (const o of v.others) { const [x, y] = P(o.pos); smartLabel(o.name, x, y, 13, "#cde0ff"); }
     for (const b of v.bags) { const [x, y] = P(b.pos); smartLabel(b.label, x, y, 13, "#ffc8b4"); }
+    const perTown = {};
+    for (const b of v.banners || []) {   // clan banners over members' houses
+      const n = (perTown[b.town] = (perTown[b.town] || 0) + 1) - 1;
+      const [tx, ty] = P(b.pos), x = tx - (22 + n * 18) * s, y = ty - 30 * s, w = 14 * s, h = 22 * s;
+      g.strokeStyle = "#2a1d08"; g.lineWidth = 1.6 * s; g.beginPath(); g.moveTo(x, y - 2 * s); g.lineTo(x, y + h + 6 * s); g.stroke();
+      g.fillStyle = b.colors[0]; g.beginPath(); g.moveTo(x, y); g.lineTo(x + w, y); g.lineTo(x + w, y + h * 0.58); g.lineTo(x, y + h * 0.58); g.fill();
+      g.fillStyle = b.colors[1]; g.beginPath(); g.moveTo(x, y + h * 0.58); g.lineTo(x + w, y + h * 0.58); g.lineTo(x + w, y + h); g.lineTo(x + w / 2, y + h * 0.8); g.lineTo(x, y + h); g.fill();
+      g.strokeStyle = "#140e06"; g.lineWidth = 1.6 * s; g.beginPath(); g.moveTo(x, y); g.lineTo(x + w, y); g.lineTo(x + w, y + h); g.lineTo(x + w / 2, y + h * 0.8); g.lineTo(x, y + h); g.closePath(); g.stroke();
+      g.beginPath(); g.moveTo(x, y + h * 0.58); g.lineTo(x + w, y + h * 0.58); g.stroke();
+    }
     for (const r of v.routes || []) {   // where your party members are heading
       const [fx, fy] = P(r.from), path = r.path.slice(1);
       g.setLineDash([5 * s, 6 * s]); g.strokeStyle = "rgba(205,224,255,.85)"; g.lineWidth = 2.2 * s;
