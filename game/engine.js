@@ -331,7 +331,7 @@ const G = (() => {
         * (s.stone === "atronach" ? 0.5 : s.stone === "apprentice" ? 2 : 1);
       const lightWorn = Object.values(this.armor).some((a) => a.type === "light");
       this.regenSp = maxStamina(s) * F.REGEN_PER_SECOND.stamina * (1 + (lightWorn && P(s, "wind_walker") ? 0.5 : 0) + 0.25 * P(s, "second_wind")) * (1 + fxSum(s, "regen:stamina") / 100) * (s.stone === "lady" ? 1.25 : 1);
-      this.wt = wtype(w?.item);
+      this.wt = wtype(w?.item); this.wt0 = this.wt;   // wt0: the weapon you came with (bound weapons change wt), for the fight scene
       const sk0 = this.weapon?.skill;
       this.paCost = F.powerAttackCost(this.weapon ? this.weapon.weight : 0)
         * ((sk0 === "One-Handed" && P(s, "fighting_stance")) || (sk0 === "Two-Handed" && P(s, "champions_stance")) ? 0.75 : 1);
@@ -669,7 +669,7 @@ const G = (() => {
       while (this.hp > 0 && this.ehp > 0 && !this.endWon && this.turn < maxTurns) {
         this.turn++;
         const [rule, a] = this.choose();
-        const line = { turn: this.turn, rule, me: this.act(a), them: "" };
+        const line = { turn: this.turn, rule, me: this.act(a), them: "", a, wt: this.wt };   // a / wt: what was done, for the fight scene only
         if (this.bleed.length && this.ehp > 0) { const b = this.bleed.reduce((x, y) => x + y.dmg, 0); this.ehp -= b; this.bleed = this.bleed.map((y) => ({ ...y, turns: y.turns - 1 })).filter((y) => y.turns > 0); line.me += ` · bleeds ${Math.round(b)}`; }
         for (const al of this.allies) if (this.ehp > 0) { const d = al.dmg * rnd(...F.DAMAGE_SPREAD); this.ehp -= d; line.me += ` · ${al.name} ${Math.round(d)}`; }
         if (this.summonTurns > 0 && this.ehp > 0) { this.summonTurns--; this.ehp -= this.summonDmg; line.me += ` · familiar ${this.summonDmg}`; }
@@ -707,6 +707,22 @@ const G = (() => {
     }
   }
 
+  /* [OURS] story foes (quest fights, dragon priests) have a recommended level and scale inside a band, like Skyrim's
+     leveled quest encounters with a min and max level. Under the recommended level the foe stands at most
+     QUEST_LEVEL_OVER levels above you; from there it is never below its recommended level, follows you at
+     QUEST_LEVEL_FOLLOW speed, and stops QUEST_LEVEL_SPAN levels above it. It is scaled as an equal-level foe at
+     that level, without the road catch-up for under-levelled foes. */
+  function questLevel(level, rec) {
+    if (level <= rec) return Math.min(rec, level + D.QUEST_LEVEL_OVER);
+    return Math.round(rec + Math.min(D.QUEST_LEVEL_SPAN, (level - rec) * D.QUEST_LEVEL_FOLLOW));
+  }
+  function scaleQuestFoe(e, level, rec = e.rec ?? e.level ?? level) {
+    e = clone(e);
+    const lv = questLevel(level, rec), sc = 1 + 0.02 * (lv - 1), curve = 1 + D.QUEST_HP_CURVE * Math.max(0, lv - 10) ** 2 / sc;
+    e.health = Math.floor(e.health * sc * curve * D.ENEMY_HEALTH_MULT); e.hp = e.health;
+    e.damage = Math.round(e.damage * sc * D.ENEMY_DAMAGE_MULT * 10) / 10;
+    return Object.assign(e, { level: lv, rec, qlevel: lv });
+  }
   function scaleEnemy(e, level) {
     e = clone(e);
     if (e.kind !== "event") {
@@ -1054,7 +1070,7 @@ const G = (() => {
     MAP_W, MAP_H, STEP_SECONDS, SLOTS, ARMOR_SLOTS, GAME_SPEED, now, pxDist, holdAt, clock, isNight, shopsOpen, clockText,
     P, wtype, fxSum, lockChance, lockRoll, setAllyProvider, hiddenChance, rested, haggle, SPELL_TIER, newSave, maxHealth, maxMagicka, maxStamina, curHealth, setHealth, skill, useSkill, levelUp,
     riding, withHorse, give, take, invRow, carried, capacity, overweight, equipment, equip, unequip, countRestore, itemStats,
-    loadout: lo, addRule, ruleSlot, deadRules, fixTactics, saveLoadoutAs, deleteLoadout, spellCost, describeRule, describeAction, Fight, scaleEnemy, rollLoot,
+    loadout: lo, addRule, ruleSlot, deadRules, fixTactics, saveLoadoutAs, deleteLoadout, spellCost, describeRule, describeAction, Fight, scaleEnemy, scaleQuestFoe, questLevel, rollLoot,
     rollEncounter, die, speed, discoverRadius, startTrip, startEvent, eventChoices, eventChoice, buyFrom, minutesLeft, minutesTo, posAfter, advance, encounterAction, migrate, PLACES,
     shopTypes, shopStock, buyPrice, sellPrice, buy, sell, readTome, drinkPotion, recharge, clone, note,
   };

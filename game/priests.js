@@ -40,7 +40,7 @@ const PRIESTS = (() => {
   D.ITEMS.mask_wooden = { name: "Wooden Mask", slot: "head", type: "light", armor: 2, weight: 2, value: 200, mask: "wooden", noTrade: true };
   const isMask = (item) => !!D.ITEMS[item]?.mask;
   if (typeof DUNGEONS !== "undefined") for (const p of LIST) DUNGEONS.ENEMY["priest_" + p.id] = {
-    name: `${p.name}, dragon priest`, health: 400, damage: 27, tags: ["undead", "elite", "big", "mage"], gold: [200, 400], level: 30, danger: "high", priest: p.id,
+    name: `${p.name}, dragon priest`, health: 250, damage: 17, tags: ["undead", "elite", "big", "mage"], gold: [200, 400], level: 30, danger: "high", priest: p.id,
     text: `The sarcophagus lid grinds aside. ${p.name} rises in a cloud of ${p.el === "fire" ? "embers" : p.el === "frost" ? "frost" : "crackling light"}, mask gleaming.`,
   };
 
@@ -90,6 +90,9 @@ const PRIESTS = (() => {
       obj: { talk: SHRINE, label: "Place the masks at the shrine", need: (s) => allCarried(s) ? null : `The shrine wants all eight masks and the Wooden Mask in your pack. Missing: ${[...LIST.filter((p) => !carried(s, maskId(p.id))).map((p) => p.name), ...(carried(s, "mask_wooden") ? [] : ["the Wooden Mask"])].join(", ")}.` },
       reward: { gold: 2000, items: ["mask_konahrik"], title: "Konahrik" } },
   ] };
+  /* [OURS] recommended level of the next priest: 20 for the first mask, +2 per mask after (the Journal shows it) */
+  const recFor = (n) => typeof QUESTS !== "undefined" && QUESTS.recOf ? QUESTS.recOf("masks", Math.min(n, LIST.length - 1)) : MIN_LEVEL + 2 * n;
+  const rec = (s) => recFor(count(s));
   function shouldStart(s) { return s.level >= MIN_LEVEL || count(s) > 0; }
   /* a copy of the stage with the next ruin filled in: the Journal's travel button and the hint */
   function stageFor(s, stg) {
@@ -176,5 +179,5 @@ const PRIESTS = (() => {
 
   if (typeof QUESTS !== "undefined") QUESTS.L.masks = QUEST;
   return { LIST, BY, BY_LAIR, SHRINE, MIN_LEVEL, QUEST, COLOR, maskId, isMask, got, count, carried, allCarried, left, nextLair, marker, questOn,
-    onEnter, onBoss, shouldStart, stageFor, syncDone, enemyAct, guard, immune, drawMask };
+    onEnter, onBoss, shouldStart, stageFor, rec, recFor, syncDone, enemyAct, guard, immune, drawMask };
 })();

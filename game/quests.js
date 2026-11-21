@@ -47,16 +47,21 @@ const QUESTS = (() => {
       { title: "The Silence Has Been Broken", text: "The old Sanctuary in Dawnstar is the Family's new home. Go there.", obj: { talk: "Dawnstar Sanctuary", label: "Open the Dawnstar door" }, reward: { gold: 300 } },
       { title: "Breaching Security", text: "Get the Emperor's itinerary from a courier's lockbox at Dragon Bridge.", obj: { talk: "Dragon Bridge", label: "Open the lockbox", check: { skill: "Lockpicking", need: 40, bounty: "Haafingar" } }, reward: { gold: 400 } },
       { title: "The Cure for Madness", text: "Cicero, the Keeper, has turned on the Family. Stop him in the Dawnstar Sanctuary.", obj: { talk: "Dawnstar Sanctuary", label: "Face Cicero", fight: E("Cicero", 240, 19, ["humanoid", "elite"]) }, reward: { gold: 500 } },
-      { title: "To Kill an Empire", text: "The Emperor's ship, the Katariah, is anchored off Solitude. Board it and fulfil the great contract.", obj: { talk: "Solitude", label: "Board the Katariah", fight: E("The Emperor's bodyguards", 330, 23, ["humanoid", "elite"]) }, reward: { gold: 800 } },
+      { title: "To Kill an Empire", text: "The Emperor's ship, the Katariah, is anchored off Solitude. Board it and fulfil the great contract.", obj: { talk: "Solitude", label: "Board the Katariah", fight: E("The Emperor's bodyguards", 265, 18, ["humanoid", "elite"]) }, reward: { gold: 800 } },
       { title: "Hail Sithis!", text: "Return to the Night Mother in the Dawnstar Sanctuary.", obj: { talk: "Dawnstar Sanctuary", label: "Speak with the Night Mother" }, reward: { gold: 2000, horse: "shadowmere", flag: "listener", title: "Listener of the Dark Brotherhood" } },
     ] },
     college: { name: "The College of Winterhold", giver: "Faralda, Winterhold", start: "Winterhold", stages: [
       { title: "First Lessons", text: "Show Faralda you can cast at the College bridge.", obj: { talk: "Winterhold", label: "Cast a spell for Faralda", needSpell: true }, reward: { gold: 50, items: ["tome_firebolt"] } },
       { title: "Under Saarthal", text: "Join the expedition to Saarthal and clear it.", obj: { clear: "Saarthal" }, reward: { gold: 200 } },
       { title: "Good Intentions", text: "The Psijic Order warns of danger. Find answers in the Dwemer ruin of Mzulft.", obj: { clear: "Mzulft" }, reward: { gold: 300 } },
-      { title: "The Eye of Magnus", text: "Return to the College and stand against what you woke.", obj: { talk: "Winterhold", label: "Face Ancano", fight: E("Ancano", 260, 24, ["humanoid", "mage", "elite"]) }, reward: { gold: 500, items: ["archmage_robes"], title: "Arch-Mage of the College" } },
+      { title: "The Eye of Magnus", text: "Return to the College and stand against what you woke.", obj: { talk: "Winterhold", label: "Face Ancano", fight: E("Ancano", 210, 19, ["humanoid", "mage", "elite"]) }, reward: { gold: 500, items: ["archmage_robes"], title: "Arch-Mage of the College" } },
     ] },
   };
+  /* [OURS] recommended level per stage (shown in the Journal); a stage's fight scales from it (G.scaleQuestFoe) */
+  const REC = { main: [1, 3, 6, 10, 14, 18], companions: [3, 6, 10, 14], thieves: [2, 3, 6, 8, 10, 14, 16, 18, 22, 24],
+    brotherhood: [3, 5, 10, 12, 14, 18, 22, 24], college: [2, 6, 10, 16], masks: [20, 21, 23, 24, 26, 27, 29, 30, 30] };
+  const recOf = (id, i) => (REC[id] || [])[i] ?? (L[id]?.stages[i]?.rec || 0);
+  const foeFor = (s, id, i, def) => G.scaleQuestFoe({ ...def }, s.level, recOf(id, i));
   const q = (s) => (s.quests = s.quests || {});
   function ensure(s) {
     if (!q(s).main) q(s).main = { stage: 0, t: G.now() };   // everyone is on the main quest
@@ -129,7 +134,7 @@ const QUESTS = (() => {
       }
     }
     if (fightDef) { const o2 = { ...o, fight: fightDef };
-      const e = G.scaleEnemy({ ...o2.fight }, s.level);
+      const e = foeFor(s, id, v.stage, o2.fight);
       const f = new G.Fight(s, e, null, t);
       (o.allies || []).forEach(([name, dmg]) => f.allies.push({ name, dmg }));   // [Skyrim] you don't face these alone
       f.run({ t }); const skills = f.apply(t);
@@ -145,5 +150,5 @@ const QUESTS = (() => {
   }
   /* chance to pass a stage's skill check: 50% at the needed level, +/-1% per point ([OURS]) */
   function checkChance(s, c) { return Math.max(0.15, Math.min(0.95, 0.5 + (G.skill(s, c.skill) - c.need) / 60)); }
-  return { L, ensure, active, canJoin, join, target, check, talk, checkChance, advance, list: () => Object.keys(L) };
+  return { L, REC, recOf, foeFor, ensure, active, canJoin, join, target, check, talk, checkChance, advance, list: () => Object.keys(L) };
 })();

@@ -621,6 +621,10 @@ const D = {
  "ENEMY_CATCHUP_MAX": 24,
  "ENEMY_CATCHUP_GRACE": 6,
  "ENEMY_HP_CURVE": 0.0025,
+ "QUEST_LEVEL_OVER": 6,
+ "QUEST_LEVEL_FOLLOW": 0.5,
+ "QUEST_LEVEL_SPAN": 10,
+ "QUEST_HP_CURVE": 0,
  "ITEMS": {
   "iron_dagger": {
    "name": "Iron Dagger",

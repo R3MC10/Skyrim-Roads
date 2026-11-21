@@ -162,7 +162,7 @@ const DUNGEONS = (() => {
   }
 
   function foe(s, key, tier, boss = false) {
-    const e = G.scaleEnemy({ ...ENEMY[key] }, s.level);
+    const def = ENEMY[key], e = def.priest && typeof PRIESTS !== "undefined" ? G.scaleQuestFoe({ ...def }, s.level, PRIESTS.rec(s)) : G.scaleEnemy({ ...def }, s.level);   // [OURS] priests are story foes
     const m = boss ? 0.8 : [0, 0.8, 0.95, 1.1][tier];   // [OURS] bosses already pick a tougher foe per tier
     e.health = Math.round(e.health * m); e.hp = e.health; e.damage = Math.round(e.damage * m * 10) / 10;
     return e;
