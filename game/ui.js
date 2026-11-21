@@ -115,6 +115,7 @@
       $("#begin").onclick = () => {
         const name = ($("#nm").value || "").trim().slice(0, 24) || "Dovahkiin";
         S = G.newSave(Store.uid, name, race);
+        if (!/[?&]notut/.test(location.search)) S.tut = { step: 1, seen: {} };   // new characters get the guided first trip
         persist(true);
         startGame();
       };
@@ -193,7 +194,8 @@
       <h3>Dungeons</h3><p>At a barrow or cave, press Go inside. Pick your way room by room down to the boss. Health doesn't come back on its own in there, so bring potions.</p>
       <h3>Quests</h3><p>The Journal tab shows your quests. The gold diamond on the map marks where to go next.</p>
       <h3>Playing together</h3><p>Everyone with the app shares one world. Form a party, trade, fight dragons that attack towns, or rob each other. Watch your back.</p>
-      <h3>Dying</h3><p>You wake at the nearest town and drop a bag with your gold. Get back to it within ten minutes before someone else does.</p>${backBtn}`;
+      <h3>Dying</h3><p>You wake at the nearest town and drop a bag with your gold. Get back to it within ten minutes before someone else does.</p>
+      ${S ? `<button class="btn pri" data-t="tutorial">Play the guided tutorial with ${esc(S.name)}</button>` : ""}${backBtn}`;
     if (titlePage === "credits") return `<h2>Credits</h2>
       <p><b>Created by</b> Remigiusz (R3MC10)</p><p><b>Built with</b> Claude</p>
       <p><b>Music and sound</b> composed live on your device</p>
@@ -210,6 +212,7 @@
     SOUND.fx(t === "menu" && titlePage === "press" ? "arrive" : "click");
     switch (t) {
       case "continue": closeTitle(); startGame(); break;
+      case "tutorial": S.tut = { step: 1, seen: {} }; Store.save(S); closeTitle(); startGame(); break;
       case "new": if (S) { titlePage = "confirmNew"; renderTitle(); } else { closeTitle(); showCreate(); } break;
       case "wipe": Store.wipe().then(() => { S = null; closeTitle(); showCreate(); }); break;
       case "update": titlePage = "update"; renderTitle(); checkUpdate(true); break;
@@ -496,6 +499,7 @@
       } else { Store.save(S); maybeRoadEvent(); }
     }
     followParty(); checkAmbush(); renderRaid(); soundTick();
+    if (S.tut?.step > 0 && TUT[S.tut.step]?.done()) bump();
     if (Math.floor(t) % 3 === 0) { const qm = QUESTS.check(S); if (qm.length) { persist(true); showMessage("Quest", qm.join(" ")); } }
     if (Math.floor(t) % 30 === 0) { publishCard(false); publishHome(); }
     if (Math.floor(t) % 60 === 0) BACKUP.autoSave(S);
@@ -1069,6 +1073,33 @@
 
   // ------------------------------------------------------------ the Jarl's bounty board
   let lastDragons = null;
+  // ------------------------------------------------------------ tutorial: a guided first trip, then one tip per tab
+  const TUT = [
+    null,
+    { title: "Your first trip", text: () => `Welcome to Skyrim, ${S.name}. Everything happens in real time. Tap <b>Whiterun</b> on the map and press <b>Travel</b>, or press <b>Go</b> next to it in the list below.`, done: () => !!S.trip || S.location === "Whiterun" },
+    { title: "On the road", text: () => "You're walking. Trips keep going even when the app is closed, and something may happen by the road. You can ride a horse later, or take a carriage between cities.", done: () => !S.trip },
+    { title: "You've arrived", text: () => `Open the <b>Town</b> tab. In towns and cities it has shops, the inn, trainers, the forge, jobs and more${S.location && TOWNS.isTown(S.location) ? "" : " (this spot is out in the wilds, so it shows what you can do here)"}.`, done: () => tab === "town" },
+    { title: "Quests", text: () => "Now open the <b>Journal</b>. Your quests are there, and the gold diamond on the map shows where to go next. It's also where you chat with other players.", done: () => tab === "log" },
+    { title: "Fights", text: () => "One more: the <b>Tactics</b> tab. Fights play out by themselves, following your rules, like “below 40% health, drink a potion”.", done: () => tab === "tactics" },
+  ];
+  const TAB_TIPS = {
+    map: "Tap any place to see how far it is. Hold your finger on the map to drop a pin.",
+    hero: "Your level, perks, standing stone, shouts and follower. A dot on this tab means you can level up.",
+    tactics: "Set rules for fights. They're checked top to bottom every turn. Test them against a dummy before a real fight.",
+    town: "Each town has different things to do. Cities have the most. Shops close at night.",
+    log: "Quests, the weekly bounty board, chat, your party, other travellers and the leaderboard.",
+  };
+  function tutTip() {
+    const t = S.tut; if (!t || t.off) return "";
+    if (t.step > 0 && t.step < TUT.length) {
+      while (t.step < TUT.length && TUT[t.step].done()) t.step++;
+      if (t.step >= TUT.length) { t.step = 0; S.gold += 100; Store.save(S); setTimeout(() => { SOUND.fx("quest"); toast("Tutorial done. Riverwood's steward sends you 100 gold for the road."); }, 300); }
+      else { const st = TUT[t.step]; return `<div class="tut"><div class="tut-h"><b>${esc(st.title)}</b><span class="sub">${t.step} of ${TUT.length - 1}</span></div><p>${st.text()}</p><button class="linkbtn" data-act="tutskip">Skip the tutorial</button></div>`; }
+    }
+    if (TAB_TIPS[tab] && !t.seen?.[tab]) return `<div class="tut"><p>💡 ${TAB_TIPS[tab]}</p><button class="btn sm" data-act="tutseen">Got it</button></div>`;
+    return "";
+  }
+
   // ------------------------------------------------------------ map pins
   const PIN_ICONS = ["📍", "⭐", "⚔️", "💰", "🌿", "🏕", "❗", "🐉"], PIN_MAX = 20;
   let pinDraft = null;
@@ -1487,7 +1518,7 @@
     if (!force && side.contains(document.activeElement) && document.activeElement.matches("input,select")) return;
     rendered = version; lastPanelRender = Date.now();
     const openD = [...side.querySelectorAll("details")].map((d) => d.open), y = scrollY;
-    side.innerHTML = ({ map: panelTravel, hero: panelHero, pack: panelPack, tactics: panelTactics, town: panelTown, log: panelLog }[tab])();
+    side.innerHTML = tutTip() + ({ map: panelTravel, hero: panelHero, pack: panelPack, tactics: panelTactics, town: panelTown, log: panelLog }[tab])();
     if (!force) { side.querySelectorAll("details").forEach((d, i) => { if (openD[i] != null) d.open = openD[i]; }); scrollTo(0, y); }
     const cl = $("#chatlog"); if (cl) cl.scrollTop = cl.scrollHeight;
   }
@@ -1909,6 +1940,8 @@
       case "eat": packOpen = null; say(TOWNS.eat(S, +b.dataset.id)); break;
       case "hallrest": say(HALL.rest(S)); break;
       case "visit": openVisit(b.dataset.id); break;
+      case "tutskip": S.tut = { ...S.tut, step: 0, off: true }; persist(); renderPanel(true); toast("Tutorial skipped. You can replay it from How to Play in the main menu."); break;
+      case "tutseen": S.tut.seen = { ...(S.tut.seen || {}), [tab]: true }; persist(); renderPanel(true); break;
       case "pinicon": pinDraft.icon = b.dataset.id; { const v = $("#pinlabel")?.value || ""; openPinDialog(pinDraft.x, pinDraft.y); $("#pinlabel").value = v; } break;
       case "pinsave": { const id = addPin(pinDraft.x, pinDraft.y, $("#pinlabel")?.value, pinDraft.icon); closeModal(); if (id) { selected = "__pin:" + id; renderPicked(); SOUND.fx("click"); } break; }
       case "pindel": S.pins = (S.pins || []).filter((p) => p.id !== b.dataset.id); selected = null; renderPicked(); persist(); break;
