@@ -468,6 +468,7 @@
     document.addEventListener("visibilitychange", () => { if (document.hidden) Store.save(S); else tick(); });
     tick();
     setInterval(tick, 1000);
+    festAnnounce();
     requestAnimationFrame(frame);
     if (S.trip?.status === "encounter") openEncounter();
     else if (S.trip?.status === "event") openEvent();
@@ -496,7 +497,7 @@
         if (out.died) { SOUND.fx("death"); showMessage("You died", out.died, true); }
         else if (out.encounter) openEncounter();
         else if (out.arrived) {
-          SOUND.fx("arrive"); tally("arrivals");
+          SOUND.fx("arrive"); tally("arrivals"); festCount("arrive");
           toast(`Arrived at ${out.arrived}.` + (G.shopTypes(out.arrived).length ? " Shops are in the Town tab." : DUNGEONS.enterable(out.arrived) ? " You can go inside." : ""));
           selected = null; renderPanel(true);
           const jm = TOWNS.checkJobs(S); if (jm.length) { tally("jobs", jm.length); persist(); setTimeout(() => toast(jm.join(" ")), 1500); }
@@ -759,7 +760,7 @@
     showFightResult(r);
   }
   function showFightResult(r) {
-    if (r.fight && !r.died && !r.fight.nonlethal) tally("foes");
+    if (r.fight && !r.died && !r.fight.nonlethal) { tally("foes"); if ((r.fight.e?.tags || []).includes("undead")) festCount("undead"); }
     if (r.fight || r.died) SOUND.fight(r); else if (/potion|drink/i.test(r.text || "")) SOUND.fx("potion");
     const skills = (r.skills || []).length ? `<p class="sub">📈 ${r.skills.map(esc).join(" · ")}</p>` : "";
     if (r.died) {
@@ -846,7 +847,7 @@
   }
   function dungeonAct(c) {
     const r = DUNGEONS.act(S, c);
-    if (r.fight && !r.died) tally("foes");
+    if (r.fight && !r.died) { tally("foes"); if ((r.fight.e?.tags || []).includes("undead")) festCount("undead"); }
     if (r.fight || r.died) SOUND.fight(r); else if (r.trap || /trap|dart|blade/i.test(r.text || "")) SOUND.fx("hit");
     if (r.bag) Store.addBag(r.bag);
     persist(true);
@@ -1108,6 +1109,26 @@
     }
     if (TAB_TIPS[tab] && !t.seen?.[tab]) return `<div class="tut"><p>💡 ${TAB_TIPS[tab]}</p><button class="btn sm" data-act="tutseen">Got it</button></div>`;
     return "";
+  }
+
+  // ------------------------------------------------------------ seasonal events
+  function festCount(key, n = 1) { const m = FEST.count(S, key, n); if (m) { persist(); SOUND.fx("quest"); setTimeout(() => toast(m), 800); } }
+  function festPanel() {
+    const st = FEST.status(S), nx = FEST.next();
+    if (!st) return nx ? `<div class="panel"><h2>Coming up</h2><p class="sub">${nx.icon} ${esc(nx.name)} starts in ${nx.days} day${nx.days > 1 ? "s" : ""}. ${esc(nx.text)}</p></div>` : "";
+    const { ev } = st;
+    return `<div class="panel" style="border-color:var(--gold)"><h2>${ev.icon} ${esc(ev.name)}</h2><p class="sub">${esc(ev.text)}</p>
+      <div class="item" style="flex-wrap:wrap"><div class="t">${esc(ev.goal.what)}<span>Reward: ${ev.reward.gold} gold, ${ev.reward.item[1]} ${esc(D.ITEMS[ev.reward.item[0]]?.name || "")} and the title “${esc(ev.reward.title)}”</span></div>
+        <span class="num ${st.done || st.ready ? "gold" : "sub"}">${st.n}/${ev.goal.n}</span>
+        <div class="bar" style="width:100%;margin-top:4px"><i style="width:${(100 * st.n) / ev.goal.n}%;background:var(--gold)"></i></div>
+        ${st.ready ? `<button class="btn pri" data-act="festclaim" style="width:100%;margin-top:8px">Claim your reward</button>` : st.done ? `<p class="sub" style="width:100%;margin:6px 0 0">Reward claimed. See you next year.</p>` : ""}</div></div>`;
+  }
+  function festAnnounce() {
+    const ev = FEST.active(); if (!ev) return;
+    S.festSeen = S.festSeen || {};
+    if (S.festSeen[ev.key]) return;
+    S.festSeen[ev.key] = 1; Store.save(S);
+    setTimeout(() => { SOUND.fx("quest"); toast(`${ev.icon} ${ev.name} has begun! See the Journal.`); }, 2500);
   }
 
   // ------------------------------------------------------------ achievements
@@ -1402,7 +1423,7 @@
   function onDuels(docs) {
     duels = docs;
     for (const d of docs) {
-      if (d.from === S.id && d.status !== "open") { const m = ARENA.settle(S, d); Store.remove("duels", d.id); if (m) { persist(true); SOUND.fx(d.winner === S.id ? "victory" : "click"); toast("⚔ " + m); } }
+      if (d.from === S.id && d.status !== "open") { if (d.status === "done") festCount("duel"); const m = ARENA.settle(S, d); Store.remove("duels", d.id); if (m) { persist(true); SOUND.fx(d.winner === S.id ? "victory" : "click"); toast("⚔ " + m); } }
       else if (d.to === S.id && d.status === "open" && !seenDuels.has(d.id)) { seenDuels.add(d.id); if (d.t > bootT) { SOUND.fx("shout"); toast(`⚔ ${d.fromName} challenges you in the Windhelm Arena${d.stake ? ` for ${d.stake} gold` : ""}!`); } }
     }
     if (tab === "town") bump();
@@ -1433,6 +1454,7 @@
     if (err) return toast(err);
     persist(true); renderPanel(true);
     if (!yes) return toast("You turn the challenge down.");
+    if (res) festCount("duel");
     if (res) { SOUND.fight({ fight: res.fight, died: res.doc.winner !== S.id }); postNews(`⚔ ${res.doc.winner === S.id ? S.name : res.doc.fromName} beat ${res.doc.winner === S.id ? res.doc.fromName : S.name} in the Windhelm Arena${res.doc.pot ? ` and won ${res.doc.pot} gold` : ""}.`);
       openModal(`<h2>${res.doc.winner === S.id ? "Victory in the Arena" : "Beaten, not broken"}</h2><p>${esc(res.text)}</p>${fightLog(res.fight)}${skillLine(res)}<button class="btn pri" data-act="close" style="width:100%">Continue</button>`); }
   }
@@ -1731,8 +1753,8 @@
       note = `${open ? "Shops are open." : `Shops are closed for the night. They open at 08:00 (${esc(G.clockText())}).`} At Mercantile ${G.skill(S, "Mercantile")} you buy at about ${(fac / G.haggle(S)).toFixed(2)}× value. Sell from the Pack tab.${townShop === "fence" ? " The fence buys stolen goods." : ""}`;
       body = (D.SHOP_STOCK[townShop] || []).map((i) => shopRow(i)).join("");
     } else if (townShop === "inn") {
-      note = "Sleep to heal fully and become Rested (skills improve 5% faster for 40 minutes; your own bed gives 10%). Buy a round and the locals talk.";
-      body = `<div class="item"><div class="t">Rent a room<span>${G.rested(S) ? "You're already rested" : "Full health and Rested"}</span></div><span class="num gold">${TOWNS.roomPrice(S)}</span><button class="btn sm pri" data-act="inn" data-c="room" ${wanted ? "disabled" : ""}>Sleep</button></div>
+      note = "Sleep to heal fully and become Rested (skills improve 5% faster for 40 minutes; your own bed gives 10%). Buy a round and the locals talk." + (FEST.freeInn() ? " 🎉 New Life Festival: rooms are free!" : "");
+      body = (FEST.freeInn() ? `<div class="item on"><div class="t">🎉 The innkeeper's New Life gift<span>Once a day: a hot meal and a little gold</span></div><button class="btn sm pri" data-act="festgift">Take it</button></div>` : "") + `<div class="item"><div class="t">Rent a room<span>${G.rested(S) ? "You're already rested" : "Full health and Rested"}</span></div><span class="num gold">${TOWNS.roomPrice(S)}</span><button class="btn sm pri" data-act="inn" data-c="room" ${wanted ? "disabled" : ""}>Sleep</button></div>
         <div class="item"><div class="t">Buy a round, listen for rumours<span>Reveals ${G.P(S, "rumour_monger") ? "two places" : "a place"} you haven't found yet</span></div><span class="num gold">${G.P(S, "rumour_monger") ? 0 : TOWNS.RUMOUR}</span><button class="btn sm" data-act="inn" data-c="rumour">Listen</button></div>`;
     } else if (townShop === "train") {
       const n = TOWNS.trainedThisLevel(S);
@@ -1890,7 +1912,7 @@
     const ladderHtml = shared ? `<div class="panel"><h2>Leaderboard</h2><div class="chips">${cats.map(([k, l]) => `<button class="chip ${k === ladderCat ? "on" : ""}" data-act="ladder" data-id="${k}">${l}</button>`).join("")}</div>
       <div class="list">${board.slice(0, 10).map((d, i) => `<div class="item ${d.id === S.id ? "on" : ""}"><span class="num" style="width:1.6em;color:var(--gold)">${i + 1}</span><div class="t">${esc(d.name)}${d.id === S.id ? " (you)" : ""}<span>Level ${d.level} ${esc(D.RACES[d.race]?.name || "")}</span></div><b class="num">${d[ladderCat] || 0}</b></div>`).join("")}</div>
       ${myRank > 10 ? `<p class="sub" style="margin-top:6px">You're number ${myRank}.</p>` : ""}</div>` : "";
-    return `${questPanel()}${bountyPanel()}${chatPanel()}${clanPanel()}${worldHtml}${tradeHtml}${partyHtml}${travellers}${ladderHtml}${bounty}${word}
+    return `${festPanel()}${questPanel()}${bountyPanel()}${chatPanel()}${clanPanel()}${worldHtml}${tradeHtml}${partyHtml}${travellers}${ladderHtml}${bounty}${word}
       <div class="panel"><h2>Journal</h2><div class="log">${S.journal.map((j) => `<div><time>${new Date(j.t * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time>${esc(j.text)}</div>`).join("")}</div></div>`;
   }
 
@@ -1993,6 +2015,8 @@
       case "eat": packOpen = null; say(TOWNS.eat(S, +b.dataset.id)); break;
       case "hallrest": say(HALL.rest(S)); break;
       case "visit": openVisit(b.dataset.id); break;
+      case "festclaim": { const m = FEST.claim(S); if (!m) break; SOUND.fx("levelup"); say(m); publishCard(); break; }
+      case "festgift": { const m = FEST.innGift(S); if (m) { SOUND.fx("coin"); say(m); } break; }
       case "clancol": clanDraft = { ...clanDraft, name: $("#clanname")?.value, tag: $("#clantag")?.value }; clanDraft.colors[+b.dataset.i] = b.dataset.id; renderPanel(true); break;
       case "clanfound": { const r = CLANS.found(S, $("#clanname")?.value, $("#clantag")?.value, clanDraft.colors); if (r.err) return toast(r.err); Store.put("clans", S.id, r.clan); CLANS.set([...CLANS.all.filter((x) => x.id !== S.id), { ...r.clan, id: S.id }], null); persist(true); postNews(`🏴 ${S.name} raised the banner of ${r.clan.name} [${r.clan.tag}].`); say(r.text); break; }
       case "claninv": { const c = myClan(); if (!c || c.founder !== S.id) break; const r = CLANS.invite(c, b.dataset.id); if (r.err) return toast(r.err); Store.put("clans", S.id, (({ id, ...x }) => x)(r.clan)); toast("Invitation sent."); break; }

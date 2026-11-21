@@ -25,7 +25,8 @@ const WEVENTS = (() => {
   function weatherAt(hold, t = now()) {
     const block = Math.floor(t / 1800), r = hash(hold + ":" + block), se = season(t), cold = COLD.includes(hold);
     let table;
-    if (cold) table = [["snow", 4], ["blizzard", se === "winter" ? 3 : 1.5], ["cloudy", 2], ["clear", se === "summer" ? 2 : 1], ["fog", 1]];
+    if (typeof FEST !== "undefined" && FEST.weatherBoost(t)) table = cold ? [["blizzard", 4], ["snow", 3], ["fog", 1]] : [["snow", 4], ["blizzard", 2], ["cloudy", 2], ["clear", 1]];   // Frostfall Blizzards
+    else if (cold) table = [["snow", 4], ["blizzard", se === "winter" ? 3 : 1.5], ["cloudy", 2], ["clear", se === "summer" ? 2 : 1], ["fog", 1]];
     else if (se === "winter") table = [["snow", 3], ["cloudy", 3], ["clear", 2], ["fog", 1], ["blizzard", 0.7]];
     else if (se === "summer") table = [["clear", 5], ["cloudy", 2], ["rain", 1], ["storm", 1]];
     else table = [["clear", 3], ["cloudy", 3], ["rain", WET.includes(hold) ? 3 : 2], ["fog", WET.includes(hold) ? 2 : 1], ["storm", 0.7]];

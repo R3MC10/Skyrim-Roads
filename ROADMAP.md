@@ -5,6 +5,7 @@ Each round: build one batch, test it (Node sims in /home/claude/tests + headless
 our own marked [OURS]; plain-language UI; phone first.
 
 ## Done
+- Round 21: seasonal events on the real calendar. Witchingmoon (Oct 25–Nov 1: undead at night, more gold), Frostfall Blizzards (Nov 15–30: snow everywhere), New Life Festival (Dec 28–Jan 3: free inn rooms, a daily innkeeper's gift), Midyear Celebration (Jun 16–22: shops 10% off). Each has a goal with gold, materials and a title once a year; shown in the Journal with an announcement when it starts.
 - Round 20: clans. Found a clan in the Journal (name, 2-4 letter tag, two banner colours), invite online players, they join from the invite; founder can send people away or disband. Clan chat channel, [TAG] next to members' names on the map, and a banner in the clan's colours over every town where a member owns a house.
 - Round 19: 18 achievements (levels, places, dungeons, dragons, Words of Power, all 13 standing stones, quest lines, houses, fish, pickpockets, the Hall, Arena wins, an armored horse, 10,000 gold) on the Hero tab with progress bars; a toast, a sound and a news line when earned; visitors to your home see your count and latest ones. Old characters get credit for what they've done.
 - Round 18: tutorial. New characters get a 5-step guided first trip (travel to Whiterun, arrive, Town, Journal, Tactics; 100 gold at the end), then a one-time tip on each tab. Tips sit at the top of the panel, never block anything, can be skipped, and the tutorial can be replayed from How to Play in the main menu.
@@ -35,4 +36,3 @@ our own marked [OURS]; plain-language UI; phone first.
 22. Werewolf and vampire paths (from the Companions and a rare night encounter), with their own powers and drawbacks.
 23. Player shops: sell your goods from a stall in your house's town while you're offline.
 11. Visit other players' homes (leave a gift, see their trophies).
-20. Seasonal world events: Frostfall blizzards, the New Life Festival, the Witchingmoon (more undead at night), each with its own rewards.

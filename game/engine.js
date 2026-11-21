@@ -641,7 +641,14 @@ const G = (() => {
     if (onGround.length) pool = onGround;
     const filtered = pool.filter((e) => !e.rare || Math.random() < 0.25);
     if (filtered.length) pool = filtered;
+    let witching = false;
+    if (night && typeof FEST !== "undefined" && FEST.undeadNight(t) && Math.random() < 0.6) {   // the Witchingmoon: the dead walk
+      const dead = D.ENCOUNTERS.filter((x) => (x.tags || []).includes("undead") && (!x.holds || x.holds.includes(hold)));
+      const same = dead.filter((x) => x.danger === danger);
+      if (same.length || dead.length) { pool = same.length ? same : dead; witching = true; }
+    }
     const e = scaleEnemy(pick(pool), s.level);
+    if (witching) e.gold = [Math.round(e.gold[0] * 1.5), Math.round(e.gold[1] * 1.5)];
     e.hold = hold;
     return e;
   }
@@ -853,7 +860,7 @@ const G = (() => {
   const shopTypes = (l) => D.SHOPS[l] || [];
   const shopStock = (l) => [...new Set(shopTypes(l).flatMap((k) => D.SHOP_STOCK[k] || []))];
   const haggle = (s) => 1 + [0, 0.1, 0.15, 0.2, 0.25, 0.3][P(s, "haggling")] + fxSum(s, "barter") / 100;   // [Skyrim] Haggling; Fortify Barter
-  const buyPrice = (s, item) => Math.max(1, Math.round(F.buyPrice(D.ITEMS[item].value, skill(s, "Mercantile")) / haggle(s)));
+  const buyPrice = (s, item) => Math.max(1, Math.round(F.buyPrice(D.ITEMS[item].value, skill(s, "Mercantile")) / haggle(s) * (typeof FEST !== "undefined" ? FEST.shopDiscount() : 1)));   // Midyear: 10% off
   function sellPrice(s, row) {
     const it = D.ITEMS[row.item];
     let v = it.value;

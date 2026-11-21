@@ -174,7 +174,7 @@ const TOWNS = (() => {
     Rorikstead: "Frostfruit Inn", "Dragon Bridge": "Four Shields Tavern", Kynesgrove: "Braidwood Inn", "Old Hroldan": "Old Hroldan Inn" };
   const ROOM = 10, RUMOUR = 10, RESTED_SECONDS = 8 * 2 * 3600 / 24;   // [Skyrim] Rested lasts 8 game hours = 40 real minutes here
   const etiquette = (s) => (P(s, "courtly_manners") ? 0.8 : 1);
-  const roomPrice = (s) => Math.round(ROOM * etiquette(s));
+  const roomPrice = (s) => (typeof FEST !== "undefined" && FEST.freeInn()) ? 0 : Math.round(ROOM * etiquette(s));
   function rentRoom(s, t = G.now()) {
     const inn = INNS[s.location];
     if (!inn) return "There's no inn here.";
