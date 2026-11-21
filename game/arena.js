@@ -13,6 +13,7 @@ const ARENA = (() => {
     const a = me(s), before = a.rating;
     a.rating = Math.round(a.rating + K * ((won ? 1 : 0) - expected(a.rating, oppRating || START)));
     if (won) a.w++; else a.l++;
+    s.stats = { ...(s.stats || {}), duels: ((s.stats || {}).duels || 0) + (won ? 1 : 0) };   // all-time, for achievements
     return a.rating - before;
   }
   const here = (s) => s.location === TOWN && !s.trip && !s.dungeon;

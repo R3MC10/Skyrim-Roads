@@ -5,6 +5,7 @@ Each round: build one batch, test it (Node sims in /home/claude/tests + headless
 our own marked [OURS]; plain-language UI; phone first.
 
 ## Done
+- Round 19: 18 achievements (levels, places, dungeons, dragons, Words of Power, all 13 standing stones, quest lines, houses, fish, pickpockets, the Hall, Arena wins, an armored horse, 10,000 gold) on the Hero tab with progress bars; a toast, a sound and a news line when earned; visitors to your home see your count and latest ones. Old characters get credit for what they've done.
 - Round 18: tutorial. New characters get a 5-step guided first trip (travel to Whiterun, arrive, Town, Journal, Tactics; 100 gold at the end), then a one-time tip on each tab. Tips sit at the top of the panel, never block anything, can be skipped, and the tutorial can be replayed from How to Play in the main menu.
 - Round 17: better map. Hold a finger on the map to drop a named pin (8 icons, up to 20), tap it to travel there, remove it, or share it with your party (it shows in party chat with "Add to my map"). Party members' routes show as dashed lines. Zoom goes closer (6×).
 - Round 16: the Arena in Windhelm. Challenge a player who's also in Windhelm, with no bet or 100/500/1000 gold; stakes are held until the bout is settled and the winner takes both. Nobody dies: the loser kneels. Monthly seasons with ratings (start 1000), a season ladder and an Arena tab on the leaderboard. Build retries once if a download fails.
@@ -30,6 +31,5 @@ our own marked [OURS]; plain-language UI; phone first.
 
 ## Next rounds (in order)
 11. Visit other players' homes (leave a gift, see their trophies).
-18. Achievements (first dragon, 10 dungeons, 100 fish, all 13 standing stones...) shown on your Hero tab and to visitors of your home.
 19. Clan banners: players form a clan with a name and banner colours, a clan chat channel, and banners on the map at their members' homes.
 20. Seasonal world events: Frostfall blizzards, the New Life Festival, the Witchingmoon (more undead at night), each with its own rewards.

@@ -14,7 +14,8 @@ const VISITS = (() => {
     const show = [];
     for (const t of homes) for (const r of s.homes[t].chest || []) if (r.shown && show.length < SHOW_MAX && D.ITEMS[r.item]) show.push({ name: itemName(r), town: t });
     return { name: s.name, race: s.race, level: s.level, towns: homes, motto: clean(s.motto, MOTTO_MAX), dragons: s.dragons || 0,
-      cleared: Object.keys(s.cleared || {}).length, titles: (s.titles || []).slice(-6), show, souls: s.souls || 0 };
+      cleared: Object.keys(s.cleared || {}).length, titles: (s.titles || []).slice(-6), show, souls: s.souls || 0,
+      ...(typeof ACH !== "undefined" ? { ach: { n: ACH.count(s), total: ACH.total, latest: ACH.latest(s, 4) } } : {}) };
   }
   /* homes of other players in this town */
   const inTown = (docs, town, meId) => docs.filter((d) => d.id !== meId && Array.isArray(d.towns) && d.towns.includes(town) && typeof d.name === "string");

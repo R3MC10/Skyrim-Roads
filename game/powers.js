@@ -26,7 +26,7 @@ const POWERS = (() => {
   const stone = (s) => s.stone || null;
   function takeStone(s, id) {
     if (!(STONE_AT[s.location] || []).includes(id)) return "That stone isn't here.";
-    s.stone = id; s.stonePowerAt = 0;
+    s.stone = id; s.stonePowerAt = 0; s.stonesSeen = [...new Set([...(s.stonesSeen || []), id])];   // for the achievement
     return `${STONES[id][0]} glows under your hand. ${STONES[id][1]}`;
   }
   function xpMult(s, skill) {

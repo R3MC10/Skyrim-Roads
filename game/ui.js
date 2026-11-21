@@ -500,6 +500,7 @@
     }
     followParty(); checkAmbush(); renderRaid(); soundTick();
     if (S.tut?.step > 0 && TUT[S.tut.step]?.done()) bump();
+    if (Math.floor(t) % 5 === 0) checkAch();
     if (Math.floor(t) % 3 === 0) { const qm = QUESTS.check(S); if (qm.length) { persist(true); showMessage("Quest", qm.join(" ")); } }
     if (Math.floor(t) % 30 === 0) { publishCard(false); publishHome(); }
     if (Math.floor(t) % 60 === 0) BACKUP.autoSave(S);
@@ -1100,6 +1101,23 @@
     return "";
   }
 
+  // ------------------------------------------------------------ achievements
+  let achOpen = false;
+  function achPanel() {
+    const all = ACH.progress(S), got = all.filter((a) => a.done);
+    const list = achOpen ? all : [...got, ...all.filter((a) => !a.done).sort((a, b) => b.cur / b.goal - a.cur / a.goal).slice(0, 3)];
+    return `<div class="panel"><h2>Achievements · ${got.length}/${all.length}</h2><div class="list">${list.map((a) => `<div class="item ${a.done ? "on" : ""}" style="flex-wrap:wrap;${a.done ? "" : "opacity:.85"}"><div class="t">${a.icon} ${esc(a.name)}<span>${esc(a.what)}</span></div><span class="num ${a.done ? "gold" : "sub"}">${a.done ? "✔" : `${a.cur.toLocaleString()}/${a.goal.toLocaleString()}`}</span>
+      ${a.done ? "" : `<div class="bar" style="width:100%;margin-top:4px"><i style="width:${(100 * a.cur) / a.goal}%;background:var(--frost)"></i></div>`}</div>`).join("")}</div>
+      <button class="btn" data-act="achmore" style="width:100%;margin-top:8px">${achOpen ? "Show fewer" : `Show all ${all.length}`}</button></div>`;
+  }
+  function checkAch() {
+    const fresh = ACH.check(S);
+    if (!fresh.length) return;
+    persist(true);
+    fresh.forEach((a, i) => setTimeout(() => { SOUND.fx("levelup"); toast(`🏆 Achievement: ${a.icon} ${a.name}`); }, 1200 * i));
+    for (const a of fresh) if (Store.online) postNews(`🏆 ${S.name} earned “${a.name}”.`);
+  }
+
   // ------------------------------------------------------------ map pins
   const PIN_ICONS = ["📍", "⭐", "⚔️", "💰", "🌿", "🏕", "❗", "🐉"], PIN_MAX = 20;
   let pinDraft = null;
@@ -1216,7 +1234,8 @@
     return `<p class="sub" style="margin:0">${esc(hn)} · ${esc(town)}</p><h2 style="margin:4px 0">${esc(d.name)}'s home</h2>
       ${d.motto ? `<p class="motto">“${esc(d.motto)}”</p>` : ""}
       <p class="sub">Level ${d.level} ${esc(D.RACES[d.race]?.name || "")}${d.titles?.length ? ` · ${d.titles.map(esc).join(" · ")}` : ""}</p>
-      <div class="trophies">${skulls ? `<span>🐲 ${skulls} dragon skull${skulls > 1 ? "s" : ""} on the wall</span>` : `<span>No dragon skulls yet</span>`}<span>🏆 ${d.cleared || 0} dungeons cleared</span>${d.souls ? `<span>✨ ${d.souls} soul${d.souls > 1 ? "s" : ""} unspent</span>` : ""}</div>
+      <div class="trophies">${skulls ? `<span>🐲 ${skulls} dragon skull${skulls > 1 ? "s" : ""} on the wall</span>` : `<span>No dragon skulls yet</span>`}<span>🏆 ${d.cleared || 0} dungeons cleared</span>${d.souls ? `<span>✨ ${d.souls} soul${d.souls > 1 ? "s" : ""} unspent</span>` : ""}${d.ach ? `<span>🏆 ${d.ach.n}/${d.ach.total} achievements</span>` : ""}</div>
+      ${d.ach?.latest?.length ? `<p class="sub">Latest: ${d.ach.latest.map(esc).join(" · ")}</p>` : ""}
       ${d.show?.length ? `<h3>Display case</h3><div class="list">${d.show.map((x) => `<div class="item"><div class="t">${esc(x.name)}</div></div>`).join("")}</div>` : ""}
       <h3 style="margin-top:12px">Leave a gift</h3><p class="sub" style="margin-top:0">It waits in their house until they come home. Gifts can't be taken back.</p>
       <input id="giftnote" maxlength="${VISITS.NOTE_MAX}" placeholder="A note (optional)" autocomplete="off" aria-label="Note">
@@ -1577,7 +1596,7 @@
       ${(S.words || []).length ? `<p class="sub">Words of Power: ${S.words.map(esc).join(", ")}</p>` : ""}
       ${groups}
       <p class="sub" style="margin-top:14px">Skills rise as you use them, with Skyrim's own rates.</p>
-      <details style="margin-top:8px"><summary class="sub" style="cursor:pointer;min-height:36px">Start over</summary><p class="sub">Deletes this character for good.</p><button class="btn danger" data-act="wipe">Delete ${esc(S.name)}</button></details></div>${perks}`;
+      <details style="margin-top:8px"><summary class="sub" style="cursor:pointer;min-height:36px">Start over</summary><p class="sub">Deletes this character for good.</p><button class="btn danger" data-act="wipe">Delete ${esc(S.name)}</button></details></div>${perks}${achPanel()}`;
   }
 
   function panelPack() {
@@ -1940,6 +1959,7 @@
       case "eat": packOpen = null; say(TOWNS.eat(S, +b.dataset.id)); break;
       case "hallrest": say(HALL.rest(S)); break;
       case "visit": openVisit(b.dataset.id); break;
+      case "achmore": achOpen = !achOpen; renderPanel(true); break;
       case "tutskip": S.tut = { ...S.tut, step: 0, off: true }; persist(); renderPanel(true); toast("Tutorial skipped. You can replay it from How to Play in the main menu."); break;
       case "tutseen": S.tut.seen = { ...(S.tut.seen || {}), [tab]: true }; persist(); renderPanel(true); break;
       case "pinicon": pinDraft.icon = b.dataset.id; { const v = $("#pinlabel")?.value || ""; openPinDialog(pinDraft.x, pinDraft.y); $("#pinlabel").value = v; } break;
