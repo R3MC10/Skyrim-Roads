@@ -244,13 +244,33 @@ const FXART = (() => {
       horse(g, H, x + 40, base, ph, "#6b4a2e"); x -= 6; base -= 16;
       H.poly(g, [[x - 4, base - 16], [x + 4, base - 16], [x + 4, base - 2], [x - 4, base - 2]], body, PAL.ink, 1); H.circle(g, x, base - 20, 4.2, skin, PAL.ink, 1); return;
     }
-    if (riding) { horse(g, H, x, base, ph, horseColor || "#6b4a2e"); base -= 18; }
+    if (riding) { horse(g, H, x, base, ph, horseColor || "#6b4a2e"); base -= 9; g.strokeStyle = PAL.ink; g.lineWidth = 2.6; g.lineCap = "round"; g.beginPath(); g.moveTo(x, base - 12); g.lineTo(x + 3, base - 3); g.stroke(); g.lineCap = "butt"; }   // sitting in the saddle, a leg down the side
     const swing = riding ? 0 : Math.sin(ph) * 5, bob = riding ? Math.abs(Math.sin(ph)) * 1.2 : Math.abs(Math.sin(ph)) * 1.5;
     if (!riding) { g.strokeStyle = PAL.ink; g.lineWidth = 2.6; g.lineCap = "round"; g.beginPath(); g.moveTo(x, base - 12 - bob); g.lineTo(x + swing, base); g.moveTo(x, base - 12 - bob); g.lineTo(x - swing, base); g.stroke(); g.lineCap = "butt"; }
     H.poly(g, [[x - 5, base - 26 - bob], [x + 5, base - 26 - bob], [x + 5, base - 11 - bob], [x - 5, base - 11 - bob]], body, PAL.ink, 1);
     H.poly(g, [[x - 5, base - 25 - bob], [x - 10, base - 12 - bob], [x - 5, base - 13 - bob]], "#8e2b25", PAL.ink, 0.8);   // a cape
     H.circle(g, x, base - 30 - bob, 4.4, skin, PAL.ink, 1);
-    g.strokeStyle = PAL.ink; g.lineWidth = 2; g.beginPath(); g.moveTo(x + 4, base - 22 - bob); g.lineTo(x + 6 + (riding ? 2 : -swing * 0.5), base - 14 - bob); g.stroke();
+    const hx = x + 6 + (riding ? 2 : -swing * 0.5), hy = base - 14 - bob;
+    g.strokeStyle = PAL.ink; g.lineWidth = 2; g.beginPath(); g.moveTo(x + 4, base - 22 - bob); g.lineTo(hx, hy); g.stroke();
+    gear(g, H, x, base - bob, hx, hy, look);
+  }
+  /* what they carry: the helmet on their head, a shield on the far arm, the weapon in hand (bows and staffs on the shoulder) */
+  function gear(g, H, x, base, hx, hy, look) {
+    const eq = look?.eq; if (!eq || typeof HEROART === "undefined") return;
+    const matC = (id) => { try { return HEROART.MAT[HEROART.matOf(id)]?.c || "#8f8a84"; } catch { return "#8f8a84"; } };
+    if (eq.head) H.poly(g, [[x - 4.8, base - 30], [x - 4.2, base - 35.4], [x + 4.2, base - 35.4], [x + 4.8, base - 30]], matC(eq.head), PAL.ink, 0.9);
+    if (eq.shield) { H.poly(g, [[x - 9, base - 24], [x - 3, base - 24], [x - 2.5, base - 17], [x - 6, base - 13], [x - 9.5, base - 17]], matC(eq.shield), PAL.ink, 0.9); }
+    const wk = (() => { try { return HEROART.weaponKind(eq.weapon); } catch { return null; } })();
+    if (!wk || wk === "fist") return;
+    const c = matC(eq.weapon), line = (x1, y1, x2, y2, col, w) => { g.strokeStyle = PAL.ink; g.lineWidth = w + 1.4; g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke(); g.strokeStyle = col; g.lineWidth = w; g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke(); };
+    if (wk === "bow" || wk === "crossbow") { g.strokeStyle = PAL.wood; g.lineWidth = 1.6; g.beginPath(); g.arc(x - 3, base - 20, 9, -1.2, 1.2); g.stroke(); return; }   // across the back
+    if (wk === "staff") { line(hx, hy + 6, hx + 1, hy - 18, PAL.wood, 1.4); H.circle(g, hx + 1, hy - 19, 2, "#c9b6ff", PAL.ink, 0.6); return; }
+    const big = wk === "greatsword" || wk === "battleaxe" || wk === "warhammer";
+    if (big) { line(x - 6, base - 6, x + 6, base - 34, c, 2); if (wk !== "greatsword") H.poly(g, [[x + 4, base - 34], [x + 10, base - 36], [x + 9, base - 29]], c, PAL.ink, 0.8); return; }   // on the back
+    const len = wk === "dagger" ? 5 : wk === "spear" ? 16 : 9;
+    line(hx, hy, hx + 2, hy - len, c, wk === "dagger" ? 1.2 : 1.6);
+    if (wk === "axe") H.poly(g, [[hx + 2, hy - len], [hx + 6, hy - len - 1], [hx + 5, hy - len + 4]], c, PAL.ink, 0.7);
+    if (wk === "mace") H.circle(g, hx + 2, hy - len, 2, c, PAL.ink, 0.7);
   }
   function horse(g, H, x, base, ph, color) {
     const k = Math.sin(ph) * 4;
@@ -307,14 +327,34 @@ const FXART = (() => {
     g.fillStyle = "rgba(185,169,141,0.9)"; g.fillRect(0, VH * 0.8, VW, 8); g.strokeStyle = PAL.ink; g.lineWidth = 0.8; g.beginPath(); g.moveTo(0, VH * 0.8); g.lineTo(VW, VH * 0.8); g.moveTo(0, VH * 0.8 + 8); g.lineTo(VW, VH * 0.8 + 8); g.stroke();
     g.fillStyle = "rgba(59,44,30,0.35)"; for (let x = -(vig.off % 22); x < VW; x += 22) g.fillRect(x, VH * 0.8 + 3.5, 8, 1.2);   // ruts in the road
     if (st && typeof SKY !== "undefined") g.drawImage(overLayer(st), 0, 0, VW, VH);
-    const p = Math.max(0, Math.min(1, info.progress || 0)), x = 40 + p * (VW - 110);
+    const p = Math.max(0, Math.min(1, info.progress || 0)), room = Math.min(3, (info.company || []).length) * 30, x = 40 + room + p * (VW - 110 - room);   // leave room behind you for your company
+    const co = (info.company || []).slice(0, 5), tags = [];
+    co.forEach((m, i) => {   // your party and followers walk (or ride) a step behind you
+      const cx = x - (info.riding || info.carriage ? 16 : 0) - (m.riding ? 34 : 24) * (i + 1) * 1.1, cy = VH * 0.8 + 6 - (i % 2) * 2;
+      if (cx < -20) return;
+      g.save(); g.translate(cx, cy); g.scale(1.2, 1.2);
+      walker(g, H, 0, 0, vig.off * 0.35 + (i + 1) * 1.7, m.look, m.riding, false, m.horse); g.restore();
+      tags.push([m.name, cx, cy - (m.riding ? 60 : 50), m.follower, false]);
+    });
     g.save(); g.translate(x, VH * 0.8 + 6); g.scale(1.35, 1.35);
     walker(g, H, 0, 0, vig.off * 0.35, info.look, info.riding, info.carriage, info.horse); g.restore();
+    if (co.length) tags.push(["You", x, VH * 0.8 + 6 - (info.riding ? 68 : 56), false, true]);
     // where you're heading: a little signpost at the right edge
     g.fillStyle = PAL.wood; g.fillRect(VW - 30, VH * 0.48, 2.4, VH * 0.34); H.poly(g, [[VW - 44, VH * 0.48], [VW - 16, VH * 0.48], [VW - 11, VH * 0.53], [VW - 16, VH * 0.58], [VW - 44, VH * 0.58]], "#c9a75e", PAL.ink, 1);
     g.strokeStyle = PAL.ink; g.lineWidth = 2; g.strokeRect(1, 1, VW - 2, VH - 2);
     if (pixel) { g0.setTransform(1, 0, 0, 1, 0, 0); g0.imageSmoothingEnabled = false; g0.clearRect(0, 0, c.width, c.height); g0.drawImage(small, 0, 0, c.width, c.height); c.style.imageRendering = "pixelated"; }
     else c.style.imageRendering = "";
+    if (tags.length) { g0.setTransform(dpr, 0, 0, dpr, 0, 0); for (const t of tags) nameTag(g0, ...t); }   // names stay crisp in both styles
+  }
+  function nameTag(g, name, x, y, follower, you) {
+    if (!name) return;
+    y = Math.max(8, y);
+    g.save(); g.font = `600 ${you ? 9 : 8}px "Barlow Semi Condensed", sans-serif`; g.textAlign = "center"; g.textBaseline = "middle";
+    const w = g.measureText(name).width + 8;
+    g.fillStyle = "rgba(14,15,18,0.72)"; g.fillRect(x - w / 2, y - 6, w, 12);
+    g.strokeStyle = you ? "rgba(214,178,94,0.9)" : follower ? "rgba(180,170,150,0.6)" : "rgba(143,224,138,0.8)"; g.lineWidth = 0.8; g.strokeRect(x - w / 2 + 0.4, y - 5.6, w - 0.8, 11.2);
+    g.fillStyle = you ? "#f0d890" : follower ? "#e4dccb" : "#c8f0c0"; g.fillText(name, x, y + 0.5);
+    g.restore();
   }
   /* for tests: paint a frame without a host */
   function vignetteFrame(info, off = 0) { const c = document.createElement("canvas"); const save = vig; vig = { canvas: c, info, last: 0, off, raf: 0 }; c.width = VW; c.height = VH; paint(0); vig = save; return c; }

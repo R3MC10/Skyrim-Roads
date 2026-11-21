@@ -31,7 +31,8 @@ const FIGHTART = (() => {
     const chest = f?.armor?.chest;
     const body = !chest ? "#8a7a62" : chest.type === "heavy" ? P.steel : chest.type === "cloth" ? P.cloth : chest.type === "medium" ? "#9a9a8e" : P.leather;
     const allies = (f?.allies || []).length + (s?.thrall ? 1 : 0);
-    return { skin: SKIN[s?.race] || SKIN.nord, wt, shield: !!f?.shield, body, helm: !!f?.armor?.head, allies, beast: !!s?.beastForm };
+    const mates = (f?.allies || []).filter((a) => a.look).slice(0, 3).map((a) => ({ name: a.name, look: a.look }));   // party members: drawn in their own gear
+    return { skin: SKIN[s?.race] || SKIN.nord, wt, shield: !!f?.shield, body, helm: !!f?.armor?.head, allies, mates, beast: !!s?.beastForm };
   }
   function foeOf(e) {
     const n = (e?.name || "").toLowerCase(), tg = new Set(e?.tags || []);
@@ -233,6 +234,16 @@ const FIGHTART = (() => {
     const wt = pose?.wt || h.wt;
     person(g, { skin: h.skin, body: h.body, head: h.helm ? "helm" : "hair", wt: wt === "fist" ? null : wt, shield: h.shield && !TWO_HANDED.has(wt), lunge, glow: pose ? pose.glow : h.bound, cape: "#7a2a22",
       aim: pose?.aim, back: pose?.back, hunch: pose?.lean || 0, draw: pose?.draw, flask: pose?.flask });
+  }
+  /* a party member from their published look: skin, armor colour, helmet, weapon and shield */
+  function matePerson(L) {
+    const eq = L?.eq || {}, mc = (id) => { try { return typeof HEROART !== "undefined" ? HEROART.MAT[HEROART.matOf(id)]?.c : null; } catch { return null; } };
+    let wt = "fist"; try { if (eq.weapon && typeof HEROART !== "undefined") wt = HEROART.weaponKind(eq.weapon) || "fist"; } catch { /* bare hands */ }
+    const robe = /robe/.test(eq.chest || "");
+    return { skin: SKIN[L?.r] || SKIN.nord, body: eq.chest ? mc(eq.chest) || P.leather : "#8a7a62", head: eq.head ? "helm" : "hair", helmColor: eq.head ? mc(eq.head) : null, wt, shield: !!eq.shield, shieldColor: eq.shield ? mc(eq.shield) : null, legs: robe ? "robe" : "legs", glow: !!L?.gl?.w };
+  }
+  function mate(g, m) {
+    g.save(); g.scale(0.78, 0.78); person(g, matePerson(m.look)); g.restore();
   }
   function ally(g, i) { g.save(); g.scale(0.62, 0.62); g.globalAlpha = 0.9; person(g, { skin: [SKIN.nord, SKIN.redguard, SKIN.dunmer][i % 3], body: ["#6a5a40", P.steel, "#4a5a3a"][i % 3], head: i % 2 ? "helm" : "hair", wt: ["sword", "axe", "bow"][i % 3], shield: i % 3 === 0 }); g.restore(); }
 
@@ -710,7 +721,9 @@ const FIGHTART = (() => {
       if (b && b.fx === "rune" && b.who === "me" && u > 0.4) rune(fx0, groundY, COL[b.el]?.[0] || "#ffb347", tt);
       if (b && b.fx === "summon" && b.who === "me" && u > 0.2) portal(hx0 + 46 * s, groundY, Math.min(1, (u - 0.2) * 3) * (u > 0.85 ? (1 - u) / 0.15 : 1), tt);
       // allies behind you
-      for (let i = 0; i < Math.min(3, rec.hero.allies); i++) { const lunge = b && b.who === "me" && b.ally && u > 0.5 && u < 0.85 ? Math.sin((u - 0.5) / 0.35 * Math.PI) * 14 : 0; wg.save(); wg.translate(hx0 - (26 + i * 18 - lunge) * s, groundY + 2 - i * 2); wg.scale(s, s); ally(wg, i); wg.restore(); }
+      const mateTags = [];
+      for (let i = 0; i < Math.min(3, rec.hero.allies); i++) { if (rec.hero.mates?.[i]) { const ax = hx0 - (28 + i * 24) * s, ay = groundY + 2 - i * 2 - 66 * s; mateTags.push([rec.hero.mates[i].name, ax * z + ox + zcx - zcx * z, ay * z + oy + zcy - zcy * z]); }
+        const lunge = b && b.who === "me" && b.ally && u > 0.5 && u < 0.85 ? Math.sin((u - 0.5) / 0.35 * Math.PI) * 14 : 0; wg.save(); wg.translate(hx0 - (28 + i * (rec.hero.mates?.length ? 24 : 18) - lunge) * s, groundY + 2 - i * 2); wg.scale(s, s); if (rec.hero.mates?.[i]) mate(wg, rec.hero.mates[i]); else ally(wg, i); wg.restore(); }
       // your familiar
       if ((st && b && b.wolf) || (b && b.fx === "summon" && b.who === "me" && u > 0.5)) {
         const lunge = wolfT < 1 ? Math.sin(wolfT * Math.PI) : 0;
@@ -784,6 +797,8 @@ const FIGHTART = (() => {
         g.font = pixel ? `bold ${sz}px monospace` : `700 ${sz}px Cinzel, Georgia, serif`; g.globalAlpha = Math.max(0, Math.min(1, fl[i] * 2.5));
         g.fillStyle = "#1c2128"; g.fillText(ftx[i], fxs[i] + 1.5, fys[i] + 1.5); g.fillStyle = fcl[i]; g.fillText(ftx[i], fxs[i], fys[i]);
       }
+      g.globalAlpha = 1;
+      for (const [nm, tx2, ty2] of mateTags) { g.font = pixel ? "bold 10px monospace" : '600 11px "Barlow Semi Condensed", sans-serif'; const w = g.measureText(nm).width + 10; g.fillStyle = "rgba(14,15,18,0.72)"; g.fillRect(tx2 - w / 2, ty2 - 11, w, 15); g.fillStyle = "#c8f0c0"; g.fillText(nm, tx2, ty2 + 0.5); }   // party members' names, crisp in both styles
       if (label && labelT > 0) { const a = Math.min(1, labelT * 3), sz = pixel ? 16 : 20; g.globalAlpha = a; g.font = pixel ? `bold ${sz}px monospace` : `700 ${sz}px Cinzel, Georgia, serif`; const y = Hh * 0.25 - (1 - a) * 8; g.fillStyle = "rgba(28,33,40,0.7)"; const w = g.measureText(label).width + 18; g.fillRect(W / 2 - w / 2, y - sz + 2, w, sz + 8); g.fillStyle = labelC; g.fillText(label, W / 2, y); }
       g.restore();
       // end banner

@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b65", build: 65, date: "22 Nov 2026", title: "The real Skyrim map and parties that fight together", items: [
+      "The world map now follows Skyrim's real layout: the coast and Sea of Ghosts, the Throat of the World, the Velothi and Jerall mountains, the White River, Lake Ilinalta and Honrich, and every town and dungeon where it belongs. High Rock, Hammerfell, Cyrodiil and Morrowind show beyond the border.",
+      "Roads follow the real roads. Your character moves to the same spot on the new map automatically.",
+      "Party members close by now fight beside you in road and dungeon fights, each by their own tactics, and everyone gets their own share of the spoils.",
+      "Travelling together: your party and followers walk or ride with you on the road, each in their own armour and weapons, with name tags."] },
     { id: "b63", build: 63, date: "22 Nov 2026", title: "Smart fights, crafting games and motion", items: [
       "Smart AI combat is on by default: your hero picks the best move every turn, uses weaknesses, heals only when it matters and saves potions. Prefer your own rules? Switch to Custom tactics on the Tactics tab — your rules are kept.",
       "Followers fight smarter too and step in front of you when you're in trouble.",
@@ -135,8 +140,10 @@ const PATCHNOTES = (() => {
       "A main menu and in-app updates."] },
   ];
   const NEXT = [
-    "The real Skyrim map layout",
-    "Party members fighting beside you and walking with you in their gear",
+    "A favourites wheel for quick weapon and spell swaps",
+    "Dragon Shouts learned from word walls",
+    "Werewolf and vampire paths",
+    "Weather that changes fights and travel",
   ];
   const KEY = "rotn_notes_seen";
   const latest = () => LIST[0];

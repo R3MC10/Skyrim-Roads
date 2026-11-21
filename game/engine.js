@@ -37,7 +37,7 @@ const G = (() => {
   const pxDist = (a, b) => Math.hypot((a[0] - b[0]) * MAP_W, (a[1] - b[1]) * MAP_H);
   const PLACES = WORLD.places;
   const loc = (name) => PLACES[name];
-  const holdAt = (pos) => WORLD.isSol?.(pos) ? "Solstheim" : Object.keys(WORLD.holds).reduce((best, h) =>
+  const holdAt = (pos) => WORLD.isSol?.(pos) ? "Solstheim" : WORLD.holdAt ? WORLD.holdAt(pos) : Object.keys(WORLD.holds).reduce((best, h) =>
     pxDist(pos, WORLD.holds[h][1]) < pxDist(pos, WORLD.holds[best][1]) ? h : best);
 
   // ---------------------------------------------------------------- clock
@@ -62,7 +62,7 @@ const G = (() => {
     });
     const [x, y] = loc(D.START_LOCATION);
     const s = {
-      v: 2, id, name, race: raceId, level: 1, charXp: 0, pendingLevels: 0, hpBonus: 0, mpBonus: 0, spBonus: 0,
+      v: 3, id, name, race: raceId, level: 1, charXp: 0, pendingLevels: 0, hpBonus: 0, mpBonus: 0, spBonus: 0,
       health: 100, healthTs: now(), gold: D.START_GOLD, x, y, location: D.START_LOCATION,
       discovered: [...D.START_DISCOVERED], explored: [[x, y]], skills, spells: [...D.START_SPELLS], horse: null,
       inv: [], nextInv: 1, loadouts: {}, loadout: "Main", trip: null, journal: [], created: now(),
@@ -84,8 +84,27 @@ const G = (() => {
       [s.x, s.y] = loc(at); s.location = at; s.trip = null;
       s.discovered = [...new Set([...s.discovered.filter((n) => PLACES[n]), ...D.START_DISCOVERED])];
       s.explored = s.discovered.map((n) => [...loc(n).slice(0, 2)]);
-      s.v = 2;
+      s.v = 3;   // already placed on the current map
       note(s, "The world map was redrawn. You find yourself in " + at + ".");
+    }
+    if (s.v < 3 && WORLD.v2Places) {   // the map became 1:1 with Skyrim: move you (and the trail you've walked) to the same spot on it
+      const moveOld = (p) => {
+        if (WORLD.isSol?.(p)) return p;   // Solstheim didn't move
+        let best = null, bd = Infinity;
+        for (const [n, q] of Object.entries(WORLD.v2Places)) { const d = pxDist(p, q); if (d < bd && PLACES[n]) { bd = d; best = n; } }
+        if (!best) return [...loc(D.START_LOCATION).slice(0, 2)];
+        const o = WORLD.v2Places[best], n = loc(best), k = bd < 25 ? 1 : 25 / bd;   // keep a small offset from the nearest place
+        let q = [n[0] + (p[0] - o[0]) * k, n[1] + (p[1] - o[1]) * k];
+        if (typeof ROAM !== "undefined") q = ROAM.snap(q) || [n[0], n[1]];
+        return [+q[0].toFixed(4), +q[1].toFixed(4)];
+      };
+      if (PLACES[s.location]) [s.x, s.y] = loc(s.location).slice(0, 2);
+      else [s.x, s.y] = moveOld([s.x, s.y]);
+      if (s.trip && !s.trip.boat) { s.trip = null; note(s, "Your journey was interrupted: the world map was redrawn to match Skyrim's real layout."); }
+      s.explored = (s.explored || []).map((p) => moveOld(p)).filter((p, i, a) => !i || pxDist(p, a[i - 1]) > 2).slice(-400);
+      if (!s.explored.length) s.explored = [[s.x, s.y]];
+      s.v = 3;
+      note(s, "🗺 The world map now matches Skyrim 1:1 — coast, borders, holds, roads and every place where it really is.");
     }
     s.discovered = s.discovered.filter((n) => PLACES[n]);
     if (typeof AMMO !== "undefined") { const m = AMMO.migrate(s); if (m) note(s, m); }

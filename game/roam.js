@@ -38,7 +38,7 @@ const ROAM = (() => {
   function plan(s, p) {
     if (!inMap(p)) return { err: "That's off the edge of the map." };
     const q = snap(p);
-    if (!q) return { err: "That's open water. Pick a spot on land." };
+    if (!q) return { err: !WORLD.isSol?.(p) && Terrain.typeAtPos(p) === Terrain.T.BEYOND ? "That's beyond Skyrim's borders. Pick a spot inside Skyrim." : "That's open water. Pick a spot on land." };
     if (PX([s.x, s.y], q) < 4) return { err: "You're already there." };
     return { pos: [+q[0].toFixed(4), +q[1].toFixed(4)], name: nameFor(s, q), snapped: q !== p, ground: Terrain.NAMES[Terrain.typeAtPos(q)] };
   }

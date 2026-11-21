@@ -2,7 +2,7 @@
    Each player keeps their own donation record ("hall" collection, id = their id), so two people donating
    at once never overwrite each other; the hall's size is the sum of everyone's donations. [OURS] */
 const HALL = (() => {
-  const TOWN = "Whiterun", POS = [0.505, 0.468];   // on the plains just east of Whiterun
+  const TOWN = "Whiterun", POS = [0.566, 0.51];   // on the plains just east of Whiterun
   const TIERS = [
     // name, points needed, what it gives everyone
     ["Camp", 0, "A fire and a few tents. Rest by the fire to heal for free."],

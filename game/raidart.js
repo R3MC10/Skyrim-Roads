@@ -203,10 +203,12 @@ const RAIDART = (() => {
     return ART.html(w, h, (g) => {
       H.parchment(g, w, h, 9);
       const holds = Object.entries(WORLD.holds), CW = 4, cols = Math.ceil(w / CW), rows = Math.ceil(h / CW), owner = new Int8Array(cols * rows).fill(-1);
-      const land = (x, y) => typeof Terrain === "undefined" || Terrain.typeAtPos([x, y]) > 1;
+      const land = (x, y) => { if (typeof Terrain === "undefined") return true; const t = Terrain.typeAtPos([x, y]); return t > 1 && t !== Terrain.T.BEYOND; };
       for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
         const x = (i + 0.5) / cols, y = (j + 0.5) / rows; if (!land(x, y)) continue;
-        let best = 0, bd = 9; holds.forEach(([, v], k) => { const d = (v[0][0] - x) ** 2 + (v[0][1] - y) ** 2; if (d < bd) { bd = d; best = k; } }); owner[j * cols + i] = best;
+        let best = 0, bd = 9; const hn = WORLD.holdAt && WORLD.holdAt([x, y]);
+        if (hn) best = holds.findIndex(([k]) => k === hn); else holds.forEach(([, v], k) => { const d = (v[0][0] - x) ** 2 + (v[0][1] - y) ** 2; if (d < bd) { bd = d; best = k; } });
+        owner[j * cols + i] = best;
       }
       const mix = (hex, k) => { const n = parseInt(hex.slice(1), 16), p2 = [233, 220, 192]; return `rgb(${[(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v, i) => Math.round(v * k + p2[i] * (1 - k))).join(",")})`; };
       for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {

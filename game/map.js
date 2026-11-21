@@ -11,6 +11,10 @@ const WorldMap = (() => {
     [T.ROCKY]: [182, 152, 126], [T.MOUNTAIN]: [168, 156, 136], [T.PEAK]: [214, 216, 220],
   };
   let base = null;
+  /* which hold (index into WORLD.holds) a 0..1 point is in */
+  const HOLD_NAMES = Object.keys(WORLD.holds);
+  const holdIndex = (x, y) => { const h = WORLD.holdAt ? WORLD.holdAt([x, y]) : null; if (h) return HOLD_NAMES.indexOf(h);
+    let best = 0, bd = 1e12; HOLD_NAMES.forEach((n, k) => { const s = WORLD.holds[n][1], d = (s[0] - x) ** 2 * 100 + (s[1] - y) ** 2 * 49; if (d < bd) { bd = d; best = k; } }); return best; };
 
   function smoothPath(g, pts, close) {
     g.beginPath();
@@ -40,11 +44,14 @@ const WorldMap = (() => {
     const region = new Uint8Array(GW * GH);
     for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) {
       const i = y * GW + x, mx = (x + 0.5) * 4, my = (y + 0.5) * 4;
-      let best = 0, bd = 1e12;
-      holds.forEach((h, k) => { const d = (h[1][0] * W - mx) ** 2 + (h[1][1] * H - my) ** 2; if (d < bd) { bd = d; best = k; } });
+      const best = holdIndex(mx / W, my / H);
       region[i] = best;
       let t = grid[i];
       if (t === T.SEA) { img.data[i * 4 + 3] = 0; continue; }
+      if (t === T.BEYOND) {   // a neighbouring province: plain, faded parchment
+        const n = Terrain.fbm(mx / 30, my / 30, 3) - 0.5;
+        img.data[i * 4] = 168 + n * 30; img.data[i * 4 + 1] = 154 + n * 28; img.data[i * 4 + 2] = 124 + n * 24; img.data[i * 4 + 3] = 255; continue;
+      }
       if (t <= T.BRIDGE) t = T.GRASS;
       const col = COLORS[t] || COLORS[T.GRASS], tint = holds[best][2], n = Terrain.fbm(mx / 30, my / 30, 3) - 0.5;
       for (let k = 0; k < 3; k++) img.data[i * 4 + k] = Math.max(0, Math.min(255, col[k] * 0.86 + tint[k] * 0.14 + n * 34));
@@ -81,10 +88,21 @@ const WorldMap = (() => {
     g.fillStyle = "rgba(120,62,50,.6)";
     for (let y = 1; y < GH; y++) for (let x = 1; x < GW; x++) {
       const v = region[y * GW + x];
-      if ((v !== region[y * GW + x - 1] || v !== region[(y - 1) * GW + x]) && (x + y) % 3 === 0 && grid[y * GW + x] !== T.SEA)
+      if ((v !== region[y * GW + x - 1] || v !== region[(y - 1) * GW + x]) && (x + y) % 3 === 0 && grid[y * GW + x] !== T.SEA && grid[y * GW + x] !== T.BEYOND && grid[(y - 1) * GW + x] !== T.BEYOND && grid[y * GW + x - 1] !== T.BEYOND)
         { g.beginPath(); g.arc(x * 4, y * 4, 1.1, 0, 7); g.fill(); }
     }
 
+    // ---- the land beyond Skyrim's borders: dimmed, with the border drawn like the province map (dark line + red dashes)
+    if (Terrain.border && Terrain.border.length) {
+      const bp = new Path2D(); Terrain.border.forEach(([x, y], i) => (i ? bp.lineTo(x, y) : bp.moveTo(x, y))); bp.closePath();
+      const outside = new Path2D(); outside.rect(0, 0, W, H); outside.addPath(bp);
+      g.fillStyle = "rgba(52,40,28,.34)"; g.fill(outside, "evenodd");
+      g.save(); g.strokeStyle = "rgba(40,28,18,.5)"; g.lineWidth = 7; g.stroke(bp); g.restore();
+      g.strokeStyle = "#2c2116"; g.lineWidth = 2.2; g.lineJoin = "round"; g.stroke(bp);
+      g.save(); g.setLineDash([4, 3]); g.strokeStyle = "rgba(150,48,36,.85)"; g.lineWidth = 1.2;
+      const inner = new Path2D(); Terrain.border.forEach(([x, y], i) => { const cx = 0.5 * W, cy = 0.55 * H, k = 0.985; const px = cx + (x - cx) * k, py = cy + (y - cy) * k; i ? inner.lineTo(px, py) : inner.moveTo(px, py); }); inner.closePath();
+      g.clip(bp); g.stroke(inner); g.restore();
+    }
     // ---- lakes
     for (const [lx, ly, rx, ry] of WORLD.lakes) {
       const x = lx * W, y = ly * H, ex = rx * W, ey = ry * H;
@@ -194,9 +212,9 @@ const WorldMap = (() => {
       g.save(); g.translate(x * W, y * H); g.rotate(rot * Math.PI / 180); g.font = FONT(15, 700); g.fillStyle = "rgba(245,240,230,.55)";
       if (g.letterSpacing !== undefined) g.letterSpacing = "6px"; g.fillText(name, 0, 0); g.restore();
     }
-    g.font = FONT(20, 600, "italic"); g.fillStyle = "rgba(190,214,222,.75)"; g.fillText("Sea of Ghosts", 0.4 * W, 0.05 * H);
+    g.font = FONT(20, 600, "italic"); g.fillStyle = "rgba(190,214,222,.75)"; g.fillText("Sea of Ghosts", (WORLD.seaLabel || [0.4])[0] * W, (WORLD.seaLabel || [0, 0.05])[1] * H);
     // compass
-    const cx = W - 52, cy = H - 70;
+    const cx = WORLD.border ? 64 : W - 52, cy = WORLD.border ? H - 64 : H - 70;   // over Hammerfell, off the land
     g.fillStyle = "rgba(240,232,210,.9)"; g.strokeStyle = "#2c2116"; g.lineWidth = 1;
     g.beginPath(); g.moveTo(cx, cy - 30); g.lineTo(cx + 7, cy); g.lineTo(cx, cy + 30); g.lineTo(cx - 7, cy); g.closePath(); g.fill(); g.stroke();
     g.beginPath(); g.moveTo(cx - 30, cy); g.lineTo(cx, cy - 7); g.lineTo(cx + 30, cy); g.lineTo(cx, cy + 7); g.closePath(); g.fill(); g.stroke();
@@ -259,9 +277,8 @@ const WorldMap = (() => {
     if (!regionGrid) {
       regionGrid = new Uint8Array(GW * GH);
       for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) {
-        const mx = (x + 0.5) * 4, my = (y + 0.5) * 4; let best = 0, bd = 1e12;
-        holds.forEach((h, k) => { const d = (WORLD.holds[h][1][0] * W - mx) ** 2 + (WORLD.holds[h][1][1] * H - my) ** 2; if (d < bd) { bd = d; best = k; } });
-        regionGrid[y * GW + x] = Terrain.grid[y * GW + x] === Terrain.T.SEA ? 255 : best;
+        const mx = (x + 0.5) * 4, my = (y + 0.5) * 4, best = holdIndex(mx / W, my / H), t = Terrain.grid[y * GW + x];
+        regionGrid[y * GW + x] = t === Terrain.T.SEA || t === Terrain.T.BEYOND ? 255 : best;
       }
     }
     const c = document.createElement("canvas"); c.width = GW; c.height = GH;
@@ -524,5 +541,5 @@ const WorldMap = (() => {
     return best;
   }
   const ready = () => { base = base || drawBase(); };
-  return { draw, placeAt, ready, W, H };
+  return { draw, placeAt, ready, W, H, base: () => (base = base || drawBase()) };
 })();
