@@ -3,7 +3,7 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b65", build: 65, date: "22 Nov 2026", title: "The real Skyrim map and parties that fight together", items: [
+    { id: "b64", build: 64, date: "22 Nov 2026", title: "The real Skyrim map and parties that fight together", items: [
       "The world map now follows Skyrim's real layout: the coast and Sea of Ghosts, the Throat of the World, the Velothi and Jerall mountains, the White River, Lake Ilinalta and Honrich, and every town and dungeon where it belongs. High Rock, Hammerfell, Cyrodiil and Morrowind show beyond the border.",
       "Roads follow the real roads. Your character moves to the same spot on the new map automatically.",
       "Party members close by now fight beside you in road and dungeon fights, each by their own tactics, and everyone gets their own share of the spoils.",
