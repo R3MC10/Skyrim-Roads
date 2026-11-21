@@ -428,6 +428,7 @@
     $("#raid").addEventListener("click", onPanelClick);
     Store.watch("raids", (docs) => { raidDocs = docs; });
     Store.watch("trades", (docs) => onTrades(docs));
+    Store.watch("duels", (docs) => onDuels(docs));
     Store.watch("chat", (docs) => onChat(docs));
     Store.watch("homes", (docs) => { homeDocs = docs; if (tab === "town") bump(); });
     Store.watch("gifts", (docs) => onGifts(docs));
@@ -1264,6 +1265,45 @@
     if (!ok) return toast("That offer is gone.");
     persist(true); renderPanel(true); toast(yes ? "Deal. The goods are in your pack." : "You turn the offer down.");
   }
+  // ------------------------------------------------------------ the Arena (Windhelm)
+  let duels = [], seenDuels = new Set(), arenaStake = 100;
+  function onDuels(docs) {
+    duels = docs;
+    for (const d of docs) {
+      if (d.from === S.id && d.status !== "open") { const m = ARENA.settle(S, d); Store.remove("duels", d.id); if (m) { persist(true); SOUND.fx(d.winner === S.id ? "victory" : "click"); toast("⚔ " + m); } }
+      else if (d.to === S.id && d.status === "open" && !seenDuels.has(d.id)) { seenDuels.add(d.id); if (d.t > bootT) { SOUND.fx("shout"); toast(`⚔ ${d.fromName} challenges you in the Windhelm Arena${d.stake ? ` for ${d.stake} gold` : ""}!`); } }
+    }
+    if (tab === "town") bump();
+  }
+  function arenaHTML() {
+    const a = ARENA.me(S), t = G.now();
+    const inc = duels.filter((d) => d.to === S.id && d.status === "open" && t - d.t < ARENA.OPEN_MIN * 60), out = duels.filter((d) => d.from === S.id && d.status === "open");
+    const fighters = others.filter((o) => o.loc === ARENA.TOWN && o.id !== S.id);
+    const board = ARENA.board(ladderDocs, S).slice(0, 10);
+    return `<div class="card"><h3>Season of ${esc(ARENA.seasonName())}</h3><p class="sub" style="margin:0">Your rating ${a.rating} · ${a.w} won, ${a.l} lost. Nobody dies in the Arena: the loser kneels and the healers patch everyone up.</p></div>
+      ${inc.length ? `<h3 style="margin-top:12px">Challenges for you</h3>${inc.map((d) => `<div class="item on" style="flex-wrap:wrap"><div class="t">${esc(d.fromName)}<span>${d.stake ? `Stake ${d.stake} gold each · winner takes ${d.stake * 2}` : "A friendly bout, no bet"} · rating ${d.aRating}</span></div>
+        <div style="display:flex;gap:6px"><button class="btn sm pri" data-act="duelyes" data-id="${esc(d.id)}" ${S.gold >= d.stake ? "" : "disabled"}>Fight</button><button class="btn sm" data-act="duelno" data-id="${esc(d.id)}">No</button></div></div>`).join("")}` : ""}
+      ${out.length ? `<h3 style="margin-top:12px">Waiting for an answer</h3>${out.map((d) => `<div class="item"><div class="t">${esc(d.toName)}<span>${d.stake ? `${d.stake} gold held` : "Friendly bout"}</span></div><button class="btn sm" data-act="duelcancel" data-id="${esc(d.id)}">Withdraw</button></div>`).join("")}` : ""}
+      <h3 style="margin-top:12px">Challenge someone</h3>
+      <div class="chips">${[0, 100, 500, 1000].map((n) => `<button class="chip ${arenaStake === n ? "on" : ""}" data-act="duelstake" data-id="${n}">${n ? n + " gold" : "No bet"}</button>`).join("")}</div>
+      ${!Store.online ? `<p class="sub">You're playing offline. The Arena needs other players.</p>` : fighters.length ? fighters.map((o) => `<div class="item"><div class="t">${esc(o.name)}<span>Level ${o.level} ${esc(D.RACES[o.race]?.name || "")}${(() => { const l = ladderDocs.find((x) => x.id === o.id); return l?.arena ? ` · rating ${l.arena.rating}` : ""; })()}</span></div><button class="btn sm pri" data-act="duelgo" data-id="${esc(o.id)}" ${S.gold >= arenaStake && ARENA.here(S) ? "" : "disabled"}>Challenge</button></div>`).join("")
+        : `<p class="sub">Nobody else is in Windhelm right now. Ask a friend in the chat to meet you here.</p>`}
+      <h3 style="margin-top:12px">Season ladder</h3>${board.length ? `<div class="list">${board.map((r, i) => `<div class="item ${r.id === S.id ? "on" : ""}"><span class="num" style="width:1.6em;color:var(--gold)">${i + 1}</span><div class="t">${esc(r.name)}${r.id === S.id ? " (you)" : ""}<span>${r.w} won · ${r.l} lost</span></div><span class="num gold">${r.rating}</span></div>`).join("")}</div>` : `<p class="sub">No bouts yet this season.</p>`}`;
+  }
+  async function answerDuel(id, yes) {
+    let res = null, err = null;
+    await Store.change("duels", id, (d) => {
+      if (d.status !== "open") { err = "That challenge is gone."; return d; }
+      if (!yes) return { ...d, status: "declined" };
+      const r = ARENA.accept(S, { ...d }); if (r.err) { err = r.err; return d; }
+      res = r; return r.doc;
+    });
+    if (err) return toast(err);
+    persist(true); renderPanel(true);
+    if (!yes) return toast("You turn the challenge down.");
+    if (res) { SOUND.fight({ fight: res.fight, died: res.doc.winner !== S.id }); postNews(`⚔ ${res.doc.winner === S.id ? S.name : res.doc.fromName} beat ${res.doc.winner === S.id ? res.doc.fromName : S.name} in the Windhelm Arena${res.doc.pot ? ` and won ${res.doc.pot} gold` : ""}.`);
+      openModal(`<h2>${res.doc.winner === S.id ? "Victory in the Arena" : "Beaten, not broken"}</h2><p>${esc(res.text)}</p>${fightLog(res.fight)}${skillLine(res)}<button class="btn pri" data-act="close" style="width:100%">Continue</button>`); }
+  }
   async function cancelTrade(id) { await Store.change("trades", id, (d) => (d.status === "open" ? { ...d, status: "cancelled" } : d)); }
 
   // ------------------------------------------------------------ multiplayer
@@ -1548,9 +1588,9 @@
       return wildsFood() + `<div class="panel"><h2>${l ? esc(l) : "The wilds"}</h2><p class="sub">${l ? "There's nothing to buy here." : "You're out on the road."} Cities and towns have shops, inns, trainers, alchemy labs, forges and jobs.</p></div>`;
     }
     const open = G.shopsOpen(), wanted = TOWNS.wanted(S), hold = G.holdAt(WORLD.places[l]);
-    const sections = [...types.filter((x) => x !== "stables"), ...(TOWNS.INNS[l] ? ["inn"] : []), ...(TOWNS.TRAINERS[l] ? ["train"] : []), "alchemy", ...(types.includes("blacksmith") ? ["forge"] : []), "jobs", "streets", ...(TOWNS.followersHere(S).length || l === "Whiterun" ? ["hire"] : []), ...(TOWNS.carriageFrom(l) ? ["carriage"] : []), ...(TOWNS.HOMES[l] ? ["home", "homes"] : []), ...(l === HALL.TOWN ? ["hall"] : []), "notice", ...(TOWNS.INNS[l] ? ["cook"] : []), ...(COOK.waterNear(WORLD.places[l]) ? ["fish"] : []), ...(ENCH.hasEnchanter(l) ? ["enchanter"] : []), ...(types.includes("stables") ? ["stables"] : [])];
+    const sections = [...types.filter((x) => x !== "stables"), ...(TOWNS.INNS[l] ? ["inn"] : []), ...(TOWNS.TRAINERS[l] ? ["train"] : []), "alchemy", ...(types.includes("blacksmith") ? ["forge"] : []), "jobs", "streets", ...(TOWNS.followersHere(S).length || l === "Whiterun" ? ["hire"] : []), ...(TOWNS.carriageFrom(l) ? ["carriage"] : []), ...(TOWNS.HOMES[l] ? ["home", "homes"] : []), ...(l === HALL.TOWN ? ["hall"] : []), "notice", ...(TOWNS.INNS[l] ? ["cook"] : []), ...(l === ARENA.TOWN ? ["arena"] : []), ...(COOK.waterNear(WORLD.places[l]) ? ["fish"] : []), ...(ENCH.hasEnchanter(l) ? ["enchanter"] : []), ...(types.includes("stables") ? ["stables"] : [])];
     townShop = sections.includes(townShop) ? townShop : sections[0];
-    const names = { general: "General goods", blacksmith: "Blacksmith", wizard: "Court wizard", stables: "Stables", fence: "Ragged Flagon (fence)", inn: TOWNS.INNS[l] || "Inn", train: "Trainers", alchemy: "Alchemy lab", forge: "Forge", jobs: "Jobs", streets: "Streets", hire: l === "Whiterun" ? "Dragonsreach & hirelings" : "Hirelings", hall: "⚑ Hall of the North", notice: "📜 Jarl's bounty", homes: "🏘 Neighbours", cook: "🍲 Cooking pot", fish: "🎣 Fishing", carriage: "Carriage", enchanter: "Arcane enchanter", home: TOWNS.home(S, l) ? `🏠 ${TOWNS.HOMES[l]?.[0]}` : `Buy ${TOWNS.HOMES[l]?.[0]}` };
+    const names = { general: "General goods", blacksmith: "Blacksmith", wizard: "Court wizard", stables: "Stables", fence: "Ragged Flagon (fence)", inn: TOWNS.INNS[l] || "Inn", train: "Trainers", alchemy: "Alchemy lab", forge: "Forge", jobs: "Jobs", streets: "Streets", hire: l === "Whiterun" ? "Dragonsreach & hirelings" : "Hirelings", hall: "⚑ Hall of the North", notice: "📜 Jarl's bounty", homes: "🏘 Neighbours", cook: "🍲 Cooking pot", arena: "⚔ The Arena", fish: "🎣 Fishing", carriage: "Carriage", enchanter: "Arcane enchanter", home: TOWNS.home(S, l) ? `🏠 ${TOWNS.HOMES[l]?.[0]}` : `Buy ${TOWNS.HOMES[l]?.[0]}` };
     const fac = F.priceFactor(G.skill(S, "Mercantile"));
     let body = "", note = "";
     const shopRow = (i, sell = true) => { const p = G.buyPrice(S, i); return `<div class="item"><div class="t">${esc(D.ITEMS[i].name)}<span>${esc(G.itemStats(i))} · ${D.ITEMS[i].weight} wt</span></div><span class="num gold">${p}</span><button class="btn sm" data-act="buy" data-item="${esc(i)}" ${open && !wanted && S.gold >= p ? "" : "disabled"}>Buy</button></div>`; };
@@ -1589,6 +1629,9 @@
       body = `<h3>Your jobs</h3>${mine.length ? mine.map((j) => `<div class="item" style="flex-wrap:wrap"><div class="t">${esc(j.type === "clear" ? `Clear ${j.target}` : j.type === "deliver" ? `Deliver to ${j.target}` : `Bring ${j.n} ${D.ITEMS[j.item].name}`)}<span>${j.type === "gather" ? `You have ${TOWNS.countItem(S, j.item)}/${j.n} · ` : ""}from ${esc(j.town)} · ${j.reward} gold</span></div>
           ${j.type === "gather" ? `<button class="btn sm pri" data-act="handin" data-id="${esc(j.id)}" ${TOWNS.countItem(S, j.item) >= j.n ? "" : "disabled"}>Hand in</button>` : ""}<button class="btn sm" data-act="dropjob" data-id="${esc(j.id)}">Drop</button></div>`).join("") : '<p class="sub">None yet.</p>'}
         <h3 style="margin-top:12px">Notice board</h3>${avail.length ? avail.map((j) => `<div class="item"><div class="t">${esc(j.text)}<span>${j.reward} gold</span></div><button class="btn sm pri" data-act="takejob" data-id="${esc(j.id)}" ${mine.length >= 3 || wanted ? "disabled" : ""}>Take</button></div>`).join("") : '<p class="sub">Nothing new today.</p>'}`;
+    } else if (townShop === "arena") {
+      note = "Friendly duels between players, with an optional bet. Both of you must be in Windhelm. Seasons last a month; ratings start at 1000.";
+      body = arenaHTML();
     } else if (townShop === "cook") {
       note = `The inn's cooking pot. Cooked meals give buffs for a while; a new meal replaces the last one's.`;
       body = cookList();
@@ -1709,7 +1752,7 @@
     const tradeHtml = incoming.length || outgoing.length ? `<div class="panel"><h2>Trades</h2><div class="list">
       ${incoming.map((d) => `<div class="item on" style="flex-wrap:wrap"><div class="t">${esc(d.fromName)} offers ${esc(MP.describe(d))}<span>${d.ask ? `for ${d.ask} gold (you have ${S.gold})` : "as a gift"}</span></div><div style="display:flex;gap:6px;width:100%"><button class="btn sm pri" data-act="tradeyes" data-id="${esc(d.id)}" ${S.gold >= d.ask ? "" : "disabled"}>Accept</button><button class="btn sm" data-act="tradeno" data-id="${esc(d.id)}">Decline</button></div></div>`).join("")}
       ${outgoing.map((d) => `<div class="item"><div class="t">To ${esc(d.toName)}: ${esc(MP.describe(d))}<span>${d.ask ? `asking ${d.ask} gold` : "gift"} · waiting</span></div><button class="btn sm" data-act="tradecancel" data-id="${esc(d.id)}">Withdraw</button></div>`).join("")}</div></div>` : "";
-    const cats = [["level", "Level"], ["gold", "Gold"], ["dragons", "Dragons"], ["cleared", "Dungeons"], ["kills", "Duels won"]];
+    const cats = [["level", "Level"], ["gold", "Gold"], ["dragons", "Dragons"], ["cleared", "Dungeons"], ["kills", "Kills"], ["arenaRating", "Arena"]];
     const board = [...ladderDocs.filter((d) => d.id !== S.id), { ...MP.ladder(S), id: S.id }].sort((a, b) => (b[ladderCat] || 0) - (a[ladderCat] || 0) || b.level - a.level);
     const myRank = board.findIndex((d) => d.id === S.id) + 1;
     const ladderHtml = shared ? `<div class="panel"><h2>Leaderboard</h2><div class="chips">${cats.map(([k, l]) => `<button class="chip ${k === ladderCat ? "on" : ""}" data-act="ladder" data-id="${k}">${l}</button>`).join("")}</div>
@@ -1818,6 +1861,11 @@
       case "eat": packOpen = null; say(TOWNS.eat(S, +b.dataset.id)); break;
       case "hallrest": say(HALL.rest(S)); break;
       case "visit": openVisit(b.dataset.id); break;
+      case "duelstake": arenaStake = +b.dataset.id; renderPanel(true); break;
+      case "duelgo": { const c = others.find((o) => o.id === b.dataset.id); const r = ARENA.challenge(S, c && { ...c, id: c.id }, arenaStake); if (r.err) return toast(r.err); Store.put("duels", r.id, r.doc); persist(true); say(r.text); break; }
+      case "duelyes": answerDuel(b.dataset.id, true); break;
+      case "duelno": answerDuel(b.dataset.id, false); break;
+      case "duelcancel": Store.change("duels", b.dataset.id, (d) => (d.status === "open" ? { ...d, status: "cancelled" } : d)); break;
       case "fishgo": openFishing(); break;
       case "fishreel": reelIn(); break;
       case "fishstop": cancelAnimationFrame(fishRaf); fishState = null; closeModal(); renderPanel(true); break;

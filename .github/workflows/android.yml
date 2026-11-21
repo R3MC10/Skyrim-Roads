@@ -35,7 +35,7 @@ jobs:
         working-directory: android
         env:
           BUILD_NUMBER: ${{ github.run_number }}
-        run: chmod +x gradlew && ./gradlew assembleRelease --no-daemon --stacktrace
+        run: chmod +x gradlew && (./gradlew assembleRelease --no-daemon --stacktrace || (echo "Retrying once (downloads sometimes fail)"; sleep 30; ./gradlew assembleRelease --no-daemon --stacktrace --refresh-dependencies))
       - run: cp android/app/build/outputs/apk/release/app-release.apk RoadsOfTheNorth.apk
       - name: Publish it as a download
         uses: softprops/action-gh-release@v2

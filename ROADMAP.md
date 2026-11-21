@@ -5,6 +5,7 @@ Each round: build one batch, test it (Node sims in /home/claude/tests + headless
 our own marked [OURS]; plain-language UI; phone first.
 
 ## Done
+- Round 16: the Arena in Windhelm. Challenge a player who's also in Windhelm, with no bet or 100/500/1000 gold; stakes are held until the bout is settled and the winner takes both. Nobody dies: the loser kneels. Monthly seasons with ratings (start 1000), a season ladder and an Arena tab on the leaderboard. Build retries once if a download fails.
 - Round 15: fishing and cooking. Buy a rod at a general store, fish in towns or the wilds near rivers, lakes or the sea (tap Reel in when the needle hits the green; rarer fish are trickier). Cook at an inn's pot or your own campfire (1 Firewood): Vegetable Soup, Salmon Steak, Horker Stew, Venison Stew, Fisherman's Stew (+50 carry), Hot Fish Soup (halves snow slowdown). New Food tab in the pack.
 - Round 14: visiting homes. Town tab > Neighbours lists other players' houses in that town: their motto, mounted dragon skulls, dungeons cleared, titles and a display case (3 items). Leave gold, an item or a note; the owner gets a toast and takes it in at their house (items go in the chest).
 - Round 13: horses. Buy at stables, name it, pick a coat (6), Ride/Walk while travelling (walking beside, it still carries 100), steel and elven horse armor, own health that comes back over time. Horses never die: badly hurt, they limp to the nearest stables; fetch them after 30 min or pay to patch them up. Horseshoe in its colour on your map marker. Also: travel bar buttons no longer miss taps.
@@ -27,5 +28,4 @@ our own marked [OURS]; plain-language UI; phone first.
 
 ## Next rounds (in order)
 11. Visit other players' homes (leave a gift, see their trophies).
-15. Duel arena in Windhelm: friendly bets between players, a ranked ladder, seasons.
 16. Better map: zoom with two fingers, place pins, see party members' routes.

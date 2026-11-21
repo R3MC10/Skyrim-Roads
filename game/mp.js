@@ -125,7 +125,8 @@ const MP = (() => {
     return null;
   }
   /* leaderboard entry, shared by everyone */
-  const ladder = (s) => ({ name: s.name, race: s.race, level: s.level, gold: s.gold, dragons: s.dragons || 0, cleared: Object.keys(s.cleared || {}).length, kills: s.pvpKills || 0, t: G.now() });
+  const ladder = (s) => ({ name: s.name, race: s.race, level: s.level, gold: s.gold, dragons: s.dragons || 0, cleared: Object.keys(s.cleared || {}).length, kills: s.pvpKills || 0,
+    ...(typeof ARENA !== "undefined" && s.arena && s.arena.season === ARENA.season() ? { arena: s.arena, arenaRating: s.arena.rating } : {}), t: G.now() });
 
   return { makeOffer, accept, settle, describe, ladder, NEAR_PX, AMBUSH_PX, stats, canTarget, attack, pickpocket, receive, partySpeed, allyFromCard, shareOf, witnessed };
 })();
