@@ -973,7 +973,8 @@ const G = (() => {
     const it = D.ITEMS[row.item];
     let v = it.value;
     if (it.enchant && row.charge != null) v = it.value * (0.5 + 0.5 * row.charge / it.enchant.capacity);   // [OURS]
-    return Math.max(1, Math.min(Math.round(v), Math.round(F.sellPrice(v, skill(s, "Mercantile")) * haggle(s) * (P(s, "master_trader") ? 1.1 : 1))));
+    const guild = typeof GUILDS !== "undefined" ? GUILDS.fenceMult(s, row) : 1;   // Thieves Guild ranks: the fence pays more
+    return Math.max(1, Math.round(Math.min(Math.round(v), Math.round(F.sellPrice(v, skill(s, "Mercantile")) * haggle(s) * (P(s, "master_trader") ? 1.1 : 1))) * guild));
   }
   function buy(s, item, qty = 1, t = now()) {
     if (!s.location || !shopTypes(s.location).length) return "There's no shop here.";

@@ -195,6 +195,10 @@ const UIART = (() => {
     companions: (g) => { shield(g, "#8e2b25"); G_.wolf(g, "#c8ccce"); },
     thieves: (g) => { shield(g, "#3a3440"); circ(g, 20, 18, 7, "#d6b25e"); poly(g, [[12, 14], [28, 14], [26, 20], [14, 20]], "#14100c", null); },
     college: (g) => { shield(g, "#2f5f9a"); G_.eye(g, "#9fc0f0"); },
+    brotherhood: (g) => { shield(g, "#1c1414");   // the black hand on a dark shield, a red rim
+      poly(g, [[14, 30], [13, 20], [27, 20], [26, 30]], "#8e2b25", null);
+      for (const [x, l] of [[13.6, 9], [17.4, 11], [21.2, 11], [24.6, 9]]) rect(g, x, 20 - l, 3, l, "#8e2b25", null, 0);
+      poly(g, [[26, 22], [31, 17], [32.5, 19], [27, 26]], "#8e2b25", null); },
     bounty: (g) => { rect(g, 9, 6, 22, 28, "#efe4cc"); for (const y of [12, 16, 20]) line(g, [[13, y], [27, y]], "#9c8662", 1.1); circ(g, 20, 27, 4, "#8e2b25"); },
     jobs: (g) => { rect(g, 8, 8, 24, 24, "#8a5a34"); rect(g, 12, 12, 7, 8, "#efe4cc", INK, 0.8); rect(g, 21, 14, 7, 9, "#efe4cc", INK, 0.8); circ(g, 15.5, 12.5, 1, "#c43a3a", null); circ(g, 24.5, 14.5, 1, "#c43a3a", null); },
   };

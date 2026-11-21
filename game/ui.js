@@ -119,9 +119,10 @@
         <p class="sub">A shared Skyrim you travel in real time. Walking from Whiterun to Windhelm takes about ten minutes, and the road is rarely empty.</p>
         <label class="sub" for="nm">Your name</label>
         <input id="nm" maxlength="24" autocomplete="off" placeholder="e.g. Remigiusz" value="${esc($("#nm")?.value || "")}">
+        ${TITLEART.createScene(race)}
         <h3 style="margin-top:14px">Choose your race</h3>
         ${DOLL.racePicker(race)}
-        ${DOLL.showcase(race)}
+        <div class="cshow">${DOLL.showcase(race)}</div>
         <button class="btn pri" id="begin" style="width:100%;margin-top:8px">Begin in ${esc(D.START_LOCATION)}</button>
         <button class="btn" id="toTitle" style="width:100%;margin-top:8px">Back to the main menu</button>
         <p class="sub status ${net.mode === "shared" || net.mode === "p2p" ? "live" : ""}" style="margin-top:10px"><i></i>${net.mode === "shared" ? "Shared world: other players will see you on the map." : net.mode === "p2p" ? "One world for everyone with the app: your game is saved on this phone and syncs straight with everyone else's." : APP ? "Offline game: saved on this phone." : "Saved in this browser only (shared saving unavailable here)."}</p>${net.mode === "shared" || net.mode === "p2p" ? "" : onlineBtn().replace('data-act="online"', 'id="online"')}
@@ -133,8 +134,11 @@
         const name = ($("#nm").value || "").trim().slice(0, 24) || "Dovahkiin";
         S = G.newSave(Store.uid, name, race);
         if (!/[?&]notut/.test(location.search)) S.tut = { step: 1, seen: {} };   // new characters get the guided first trip
+        const wantIntro = !/[?&]notut/.test(location.search) && (!navigator.webdriver || /[?&]intro/.test(location.search));
+        if (wantIntro) S.introSeen = true;
         persist(true);
         startGame();
+        if (wantIntro) try { TITLEART.intro(null, { reduce: reduceMotion }); } catch (e) { console.warn("intro", e); }
       };
     };
     draw();
@@ -162,12 +166,13 @@
     let el = $("#title");
     if (!el) {
       el = document.createElement("div"); el.id = "title"; el.className = "title";
-      el.innerHTML = `<div class="tpano">${UIART.panorama(480, 300)}</div><canvas id="tfog"></canvas><div class="vign"></div><div class="inner" id="tinner"></div><div class="foot" id="tfoot"></div>`;
+      el.innerHTML = `<canvas id="tanim" class="tanim" aria-hidden="true"></canvas><canvas id="tfog"></canvas><div class="vign"></div><div class="inner" id="tinner"></div><div class="foot" id="tfoot"></div>`;
       document.body.appendChild(el);
       el.addEventListener("click", onTitleClick);
       el.addEventListener("input", onSettingsInput);
       el.addEventListener("change", onSettingsInput);
       startFog();
+      try { titleStop = TITLEART.start($("#tanim"), { reduce: reduceMotion }); } catch (e) { console.warn("title art", e); }
       const foot = async () => { if (!$("#title")) return; $("#tfoot").textContent = `${await versionText()} · ${worldText()}`; setTimeout(foot, 3000); };
       foot();
     }
@@ -175,7 +180,15 @@
     SOUND.mood("title");
     renderTitle();
   }
-  function closeTitle() { cancelAnimationFrame(titleAnim); $("#title")?.remove(); }
+  let titleStop = null;
+  /* fade the title out instead of cutting; it stops taking taps at once and drops its id so a new title can open */
+  function closeTitle() {
+    cancelAnimationFrame(titleAnim); try { titleStop?.(); } catch { /* ignore */ } titleStop = null;
+    const el = $("#title"); if (!el) return;
+    el.id = "title-out"; el.style.pointerEvents = "none";
+    if (reduceMotion) { el.remove(); return; }
+    el.classList.add("tout"); setTimeout(() => el.remove(), 320);
+  }
   function renderTitle() {
     const inner = $("#tinner"); if (!inner) return;
     if (!$("#thead")) inner.innerHTML = `<div id="thead" style="display:flex;flex-direction:column;align-items:center">${EMBLEM}<h1>Roads of the North</h1><div class="tag">A shared journey across Skyrim</div></div><div id="tbody" style="display:flex;flex-direction:column;align-items:center;width:100%;flex:1"></div>`;
@@ -606,8 +619,9 @@
       <div class="bar"><i style="background:var(--frost)"></i></div>
       <div class="sub">${tr.carriage ? "🐎 by carriage · safe on the Jarl's roads" : `${esc(ground)} · ${pace} · ${HORSES.riding(S) ? `riding ${esc(S.horse.name)}` : HORSES.present(S) ? `walking beside ${esc(S.horse.name)}` : G.overweight(S) ? "too heavy to run" : "on foot"}`}${S.follower ? ` · ${esc(TOWNS.FOLLOWERS[S.follower.id][0])} with you` : ""}</div>
       ${tr.log.length ? `<div class="sub">${esc(tr.log[0])}</div>` : `<div class="sub">The trip keeps going while the page is closed.</div>`}</div>`;
-    put(html);
+    put(html.replace(/<\/div>$/, `<div class="tripvig"></div></div>`));
     const bar = el.querySelector(".bar i"); if (bar) bar.style.width = `${p}%`;
+    if (typeof FXART !== "undefined") FXART.vignette(el.querySelector(".tripvig"), { ground, progress: p / 100, riding: HORSES.riding(S), carriage: !!tr.carriage, horse: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, look: myLook(), reduce: reduceMotion, sky: typeof SKY !== "undefined" ? SKY.state(here) : null });
   }
   function renderTabs() {
     tabsEl.querySelectorAll(".tab").forEach((b) => {
@@ -632,12 +646,13 @@
     const wx = WEVENTS.weather(livePos()).id, weatherAnim = !reduceMotion && !["clear", "cloudy", "fog"].includes(wx);
     const mapAnim = typeof MAPART !== "undefined" && MAPART.active();   // a discovery burst playing
     const raidNow = typeof RAIDART !== "undefined" && WEVENTS.activeRaid();
-    if (document.hidden || !m || !mapOnScreen || ts - lastFrame < (moving || mapAnim ? 33 : weatherAnim || (raidNow && !reduceMotion) ? 66 : 125)) return;
+    const fxNow = typeof FXART !== "undefined" && S ? FXART.state(S) : null;   // spell and shout effects on the map
+    if (document.hidden || !m || !mapOnScreen || ts - lastFrame < (moving || mapAnim ? 33 : weatherAnim || (raidNow && !reduceMotion) || (fxNow?.anim && !reduceMotion) ? 66 : 125)) return;
     lastFrame = ts;
     const pos = livePos();
     if (follow) center = pos;
     view = {
-      raid: raidNow ? raidView(raidNow) : null,
+      raid: raidNow ? raidView(raidNow) : null, fx: fxNow,
       player: pos, name: S.name, look: myLook(), moving: S.trip?.status === "travel", trail: S.trip?.trail, dest: S.trip ? { pos: S.trip.dest, name: S.trip.destName, roam: !!S.trip.roam } : null, spot: selected === "__spot" ? roamSpot : null,
       route: S.trip ? (S.trip.status === "travel" ? S.trip.path.slice(S.trip.idx + 1) : [S.trip.dest]) : null,
       discovered: S.discovered, explored: [...S.explored, pos], others: others.filter((o) => !o.hiding || G.pxDist(livePos(), otherPos(o)) < MP.NEAR_PX).map((o) => ({ name: (o.clan ? `[${o.clan}] ` : "") + o.name + (party?.members.some((m) => m.id === o.id) ? " ⚑" : ""), pos: otherPos(o), look: o.look, race: o.race, party: !!party?.members.some((m) => m.id === o.id) })),
@@ -1272,17 +1287,36 @@
       const n = QUESTS.target(a.st), here = n && S.location === n, o = a.st.obj;
       const btns = [o.talk && here ? `<button class="btn sm pri" data-act="qtalk" data-id="${a.id}">${esc(o.label)}</button>` : "",
         n && !here && WORLD.places[n] ? `<button class="btn sm" data-act="go" data-place="${esc(n)}">Travel to ${esc(n)}</button>` : ""].join("");
-      return `<div class="item on" style="flex-wrap:wrap">${UIART.quest(a.id, 32)}<div class="t">${esc(a.def.name)} · ${esc(a.st.title)}<span>${esc(a.st.text)}${o.count ? ` (${Math.max(0, ((S.stats || {})[o.count] || 0) - ((a.base || {})[o.count] || 0))}/${o.n})` : ""}</span></div>${btns ? `<div style="display:flex;gap:6px;flex-wrap:wrap;width:100%">${btns}</div>` : ""}</div>`;
+      return `<div class="item on" style="flex-wrap:wrap">${UIART.quest(a.id, 32)}<div class="t">${esc(a.def.name)} · ${esc(a.st.title)}<span>${esc(a.st.text)}${o.count ? ` (${Math.max(0, ((S.stats || {})[o.count] || 0) - ((a.base || {})[o.count] || 0))}/${o.n})` : ""}${o.check ? ` · ${esc(o.check.skill)} check: ${Math.round(QUESTS.checkChance(S, o.check) * 100)}% chance${o.check.fight ? " (a fight if you're seen)" : o.check.bounty ? " (a bounty if you're seen)" : ""}` : ""}${(a.retryAt || 0) > G.now() ? ` · lie low ${Math.ceil((a.retryAt - G.now()) / 60)} more min` : ""}</span></div>${btns ? `<div style="display:flex;gap:6px;flex-wrap:wrap;width:100%">${btns}</div>` : ""}</div>`;
     }).join("");
     const avail = QUESTS.list().filter((id) => QUESTS.L[id].start && !(S.quests || {})[id]).map((id) => {
       const d = QUESTS.L[id];
       return `<div class="item">${UIART.quest(id, 32)}${NPCART.giver(id, 32)}<div class="t">${esc(d.name)}<span>${QUESTS.canJoin(S, id) ? "They're here. Ask to join." : `Find them at ${esc(d.giver)}.`}</span></div>${QUESTS.canJoin(S, id) ? `<button class="btn sm pri" data-act="qjoin" data-id="${id}">Join</button>` : ""}</div>`;
     }).join("");
     const done = Object.entries(S.quests || {}).filter(([, v]) => v.done).map(([id]) => QUESTS.L[id]?.name).filter(Boolean);
+    const work = ["thieves", "brotherhood"].filter((id) => GUILDS.canTake(S, id)).map((id) => {
+      const st = GUILDS.state(S)[id], r = GUILDS.rank(S, id), j = st.job, who = id === "thieves" ? "Delvin and Vex" : "Nazir";
+      const head = `${UIART.quest(id, 32)}<div class="t">${id === "thieves" ? "Thieves Guild work" : "Dark Brotherhood contracts"}<span>Rank: <b>${esc(r?.name || "—")}</b> · ${st.jobs} done${r?.next ? ` · ${esc(r.next[0])} at ${r.next[1]}` : ""}</span></div>`;
+      if (j) { const here = S.location === j.town;
+        return `<div class="item on" style="flex-wrap:wrap">${head}<p class="sub" style="width:100%;margin:4px 0">${esc(j.label)}: ${esc(j.text)} Pays ${j.pay} gold. ${esc(j.skill)} check: ${Math.round(GUILDS.chance(S, j) * 100)}%.</p>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;width:100%">${here ? `<button class="btn sm pri" data-act="gdo" data-id="${id}">${id === "thieves" ? "Do the job" : "Fulfil the contract"}</button>` : `<button class="btn sm" data-act="go" data-place="${esc(j.town)}">Travel to ${esc(j.town)}</button>`}<button class="btn sm" data-act="gdrop" data-id="${id}">Drop it</button></div></div>`; }
+      const at = GUILDS.takeAt(id).includes(S.location), wait = Math.max(0, st.next - G.now());
+      return `<div class="item" style="flex-wrap:wrap">${head}<p class="sub" style="width:100%;margin:4px 0">${wait > 0 ? `${who} will have more work in about ${Math.ceil(wait / 60)} min.` : at ? `${who} ${id === "thieves" ? "have" : "has"} work for you.` : `Ask ${who} for work ${id === "thieves" ? "in the Ragged Flagon (Riften)" : "at the Sanctuary (Falkreath or Dawnstar)"}.`}</p>${at && wait <= 0 ? `<button class="btn sm pri" data-act="gtake" data-id="${id}">${id === "thieves" ? "Ask for a job" : "Ask for a contract"}</button>` : ""}</div>`;
+    }).join("");
     return `<div class="panel"><h2>Quests</h2><div class="list">${rows || '<p class="sub">No active quests.</p>'}</div>
+      ${work ? `<h3 style="margin-top:12px">Guild work</h3><div class="list">${work}</div>` : ""}
       ${avail ? `<h3 style="margin-top:12px">Guilds</h3><div class="list">${avail}</div>` : ""}
       ${done.length ? `<p class="sub" style="margin-top:8px">Completed: ${done.map(esc).join(", ")}</p>` : ""}
       <p class="sub" style="margin-top:6px">The gold diamond on the map marks where your current quest leads.</p></div>`;
+  }
+  function guildWork(id) {
+    const r = GUILDS.work(S, id);
+    if (r.bag) Store.addBag(r.bag);
+    persist(true); renderPanel(true);
+    const text = [r.text, ...(r.msgs || [])].join(" ");
+    if (r.fight) return showFightResult({ ...r, text, loot: [], gold: 0 });
+    SOUND.fx(/off|run/.test(r.text) ? "click" : "coin");
+    showMessage(id === "thieves" ? "Thieves Guild" : "Dark Brotherhood", text);
   }
   function questTalk(id) {
     const r = QUESTS.talk(S, id);
@@ -2505,6 +2539,9 @@
       case "raidfight": raidFight(); break;
       case "ladder": ladderCat = b.dataset.id; renderPanel(true); break;
       case "qtalk": questTalk(b.dataset.id); break;
+      case "gtake": { const r = GUILDS.offer(S, b.dataset.id); if (r.err) return toast(r.err); persist(true); renderPanel(true); showMessage(b.dataset.id === "thieves" ? "A job from the Guild" : "A contract", r.text); break; }
+      case "gdrop": toast(GUILDS.drop(S, b.dataset.id)); persist(true); renderPanel(true); break;
+      case "gdo": guildWork(b.dataset.id); break;
       case "qjoin": { const m = QUESTS.join(S, b.dataset.id); persist(true); renderPanel(true); showMessage("A new path", m); break; }
       case "trade": { const c = cardOf(b.dataset.id); if (c) { tradeSel = []; openTrade(c); } break; }
       case "tradepick": { const id = +b.dataset.id; tradeSel = tradeSel.includes(id) ? tradeSel.filter((x) => x !== id) : [...tradeSel, id]; const c = cardOf(tradeTo); if (c) openTrade(c); break; }
@@ -2520,7 +2557,16 @@
       case "tradeyes": answerTrade(b.dataset.id, true); break;
       case "tradeno": answerTrade(b.dataset.id, false); break;
       case "tradecancel": cancelTrade(b.dataset.id); break;
-      case "castout": { const m = MAGIC.castOut(S, b.dataset.id); persist(true); SOUND.fx("page"); say(m); renderMenu?.(); break; }
+      case "castout": {
+        const from = [S.x, S.y], sid = b.dataset.id, use = D.SPELLS[sid]?.use;
+        const m = MAGIC.castOut(S, sid); persist(true); SOUND.fx("page"); say(m); renderMenu?.();
+        if (typeof FXART !== "undefined" && typeof m === "string" && !/fizzles|need|can't|isn't|nothing|Not now|first/i.test(m.split(":")[0] + (m.includes(":") ? "" : m))) {
+          if (use === "clairvoyance" && questPos()) FXART.cast("clairvoyance", { to: questPos().slice(0, 2) });
+          else if (use === "recall" && /^Recall:/.test(m)) FXART.cast("recall", { from, to: [S.x, S.y] });
+          else if (use === "transmute" && /^Transmute:/.test(m)) FXART.cast("transmute");
+        }
+        break;
+      }
       case "skytab": sky.page = b.dataset.id; sky.cat = "all"; sky.sel = null; sky.sort = sky.page === "skills" ? "lvl" : "name"; sky.dir = 1; renderMenu(); break;
       case "skycat": sky.cat = b.dataset.id; sky.sel = null; renderMenu(); break;
       case "skysort": { const k = b.dataset.id; sky.dir = sky.sort === k ? -sky.dir : 1; sky.sort = k; renderMenu(); break; }
@@ -2544,7 +2590,8 @@
       case "dragonstone": { const m = TOWNS.deliverDragonstone(S); persist(true); renderPanel(true); showMessage("Dragonsreach", m); break; }
       case "greybeards": { const m = POWERS.greybeards(S); persist(true); renderPanel(true); showMessage("High Hrothgar", m); break; }
       case "unlock": say(POWERS.unlock(S, b.dataset.id)); break;
-      case "roadshout": { SOUND.fx("shout"); const m = POWERS.roadShout(S, b.dataset.id); liveCache.key = ""; persist(true); toast(m); renderPanel(true); break; }
+      case "roadshout": { SOUND.fx("shout"); const from = livePos(); const m = POWERS.roadShout(S, b.dataset.id); liveCache.key = ""; persist(true); toast(m); renderPanel(true);
+        if (typeof FXART !== "undefined" && /^WULD/.test(m || "")) FXART.cast("whirlwind", { from }); break; }
       case "enter": { const err = DUNGEONS.enter(S); if (err) return toast(err); selected = null; renderPicked(); dunNote = null; persist(true); renderDungeon(); break; }
       case "dun": renderDungeon(); break;
       case "droom": dungeonRoom(b.dataset.c); break;

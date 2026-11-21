@@ -247,7 +247,7 @@ const NPCART = (() => {
     return portrait({ name: f[0], race, sex, role, mat }, size);
   }
   const GIVERS = { companions: T("Kodlak Whitemane", "nord", "m", { role: "warrior", mat: "nord" }), thieves: T("Brynjolf", "nord", "m", { role: "thief" }),
-    college: T("Faralda", "altmer", "f", { role: "wizard", robe: "#9a3a24" }), main: T("Balgruuf the Greater", "nord", "m", { role: "jarl", hold: "Whiterun" }) };
+    college: T("Faralda", "altmer", "f", { role: "wizard", robe: "#9a3a24" }), brotherhood: T("Astrid", "nord", "f", { role: "thief" }), main: T("Balgruuf the Greater", "nord", "m", { role: "jarl", hold: "Whiterun" }) };
   function giver(qid, size = 32) { const g = GIVERS[qid]; return g ? portrait(g, size) : ""; }
 
   // ---- what they say: plain, Skyrim-flavoured, steady for the in-game day

@@ -305,6 +305,19 @@ const EVENTART = (() => {
       person(g, H, w * 0.3, h * 0.9, { body: "#6b5640", legs: P.inkSoft, skin: P.skin[0], hair: "#c9a24c", arm: "wave", s: 1.1 });
       person(g, H, w * 0.7, h * 0.9, { body: P.iron, legs: P.inkSoft, skin: P.skin[0], hair: "#3b2c1e", arm: "hold", face: -1, s: 1.1 });
     },
+    sanctuary(g, H, w, h) {   // the Black Door of the Dark Brotherhood, set in rock among dark pines
+      H.sky(g, w, h, "night"); g.fillStyle = "#2a2a26"; g.fillRect(0, h * 0.72, w, h * 0.28);
+      poly(g, H, [[w * 0.18, h * 0.72], [w * 0.28, h * 0.22], [w * 0.5, h * 0.1], [w * 0.72, h * 0.22], [w * 0.82, h * 0.72]], "#4a4640", P.ink, 1.4);
+      const dx = w * 0.5, dy = h * 0.42, dw = w * 0.16, dh = h * 0.3;
+      poly(g, H, [[dx - dw / 2, dy + dh], [dx - dw / 2, dy], [dx, dy - dh * 0.25], [dx + dw / 2, dy], [dx + dw / 2, dy + dh]], "#141210", "#5a1a18", 2);
+      // a skull above a red hand print, the door's sign
+      H.circle(g, dx, dy + dh * 0.22, 7, "#d8d0bc", P.ink, 1); rect(g, H, dx - 4, dy + dh * 0.3, 8, 4, "#d8d0bc", P.ink, 0.8);
+      const hx = dx, hy = dy + dh * 0.68; poly(g, H, [[hx - 6, hy + 6], [hx - 7, hy - 2], [hx + 7, hy - 2], [hx + 6, hy + 6]], "#8e2b25", null);
+      for (const [fx, fl] of [[-6, 8], [-2.5, 10], [1.5, 10], [5, 8]]) rect(g, H, hx + fx - 1.4, hy - 2 - fl, 2.8, fl, "#8e2b25", null); poly(g, H, [[hx + 7, hy], [hx + 11, hy - 5], [hx + 12, hy - 3], [hx + 7, hy + 4]], "#8e2b25", null);
+      glow(g, dx, dy + dh * 0.5, 60, "142,43,37", 0.25);
+      H.pines(g, w, h * 0.74, 10, 9, 22);
+      person(g, H, w * 0.24, h * 0.92, { body: "#2a1e1e", legs: "#1c1414", skin: P.skin[0], hood: "#1c1414", arm: "hold", s: 1.1 });
+    },
     flagon(g, H, w, h) {   // the Ragged Flagon under Riften: lanterns over black water
       H.sky(g, w, h, "cave"); g.fillStyle = "#1f2a30"; g.fillRect(0, h * 0.68, w, h * 0.32);
       for (let i = 0; i < 5; i++) { const x = 30 + i * 74; rect(g, H, x, h * 0.2, 6, h * 0.5, "#4a3a2e"); line(g, [[x + 3, h * 0.32], [x + 3, h * 0.4]], 1, P.ink); rect(g, H, x - 2, h * 0.4, 10, 10, "#f6d36a", P.ink, 0.8); glow(g, x + 3, h * 0.45, 26, "246,211,106", 0.35); }
@@ -395,7 +408,8 @@ const EVENTART = (() => {
       if (/Horn of Jurgen|Ustengrav/i.test(x)) return "horn";
       if (/Dragon Rising|A Blade in the Dark|Mirmulnir|Sahloknir/i.test(x)) return /done|falls|dead|slain|absorb/i.test(x) ? "dragonFalls" : "dragonAttack";
       if (/Companions|Jorrvaskr|Kodlak|Vilkas|Harbinger|Silver Hand|Wuuthrad|Proving Honor|Take Up Arms|Glory of the Dead/i.test(x)) return "hall";
-      if (/Thieves|Brynjolf|Ragged Flagon|Pinewatch|purse|Loud and Clear|Darkness Returns|Chance Arrangement/i.test(x)) return "flagon";
+      if (/Dark Brotherhood|Astrid|Night Mother|Sithis|Sanctuary|Cicero|Nazir|Grelod|Innocence Lost|Katariah|contract/i.test(x)) return "sanctuary";
+      if (/Thieves|Brynjolf|Ragged Flagon|Pinewatch|purse|Loud and Clear|Darkness Returns|Chance Arrangement|Nightingale|Mercer|Karliah|Honningbrew|Dampened Spirits|Snow Veil|Calcelmo|Skeleton Key|Delvin|Vex/i.test(x)) return "flagon";
       if (/College|Winterhold|Faralda|Saarthal|Mzulft|Ancano|Magnus|First Lessons/i.test(x)) return "college";
       if (/Dragonborn|Before the Storm|Whiterun/i.test(x)) return "dragonAttack";
       return "road";

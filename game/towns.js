@@ -184,7 +184,7 @@ const TOWNS = (() => {
     if (s.gold < p) return `A room costs ${p} gold.`;
     s.gold -= p; G.setHealth(s, G.maxHealth(s), t); s.rested = t + RESTED_SECONDS; s.restBonus = 0.05;   // [Skyrim] Rested: +5% (a bed you own: Well Rested +10%)
     const et = G.useSkill(s, "Etiquette", 6);   // [OURS] good manners at the inn
-    return `You sleep in a warm bed at ${inn}. Fully healed and Rested: skills improve 5% faster for 40 minutes. Your own bed would do better.` + (et.length ? " " + et.join(". ") : "");
+    return `You sleep in a warm bed at ${inn}. Fully healed and Rested: skills improve 5% faster for 40 minutes. Your own bed would do better.` + (et.length ? " " + et.join(". ") : "") + (typeof GUILDS !== "undefined" ? GUILDS.innWake(s) : "");
   }
   const BARD = ["A bard plays \"Ragnar the Red\" for the fourth time tonight.", "A drunk argues that the Dragonborn is a myth. Loudly.", "Someone is telling the arrow-in-the-knee story again.",
     "The innkeeper complains about the price of mead.", "Two farmers bet on whether the Jarl will raise taxes."];
@@ -309,6 +309,7 @@ const TOWNS = (() => {
   function addBounty(s, hold, crime, extra = 0) {
     s.bounty = s.bounty || {};
     s.bounty[hold] = (s.bounty[hold] || 0) + CRIME[crime] + extra;
+    if (crime === "murder") s.murdered = true;   // the Dark Brotherhood takes note (guilds.js)
     G.note(s, `⚖️ Bounty in ${hold}: ${s.bounty[hold]} gold (${crime}).`);
     return s.bounty[hold];
   }

@@ -338,30 +338,33 @@ const PLACEART = (() => {
   function scene(name, opts = {}) {
     if (!name || !WORLD.places[name]) return "";
     const d = drawerFor(name), clim = climateOf(name);
+    const fest = typeof FXART !== "undefined" && ["town", "city"].includes(kindOf(name)) ? FXART.festId() : null;   // festival decorations (fxart.js)
+    const deco = (g, H, w, h) => { if (fest) FXART.festDecor(g, H, w, h, fest, name); };
     if (typeof SKY !== "undefined") {   // shared sky: time of day, season, weather, moons and aurora
       const st = SKY.forOpts(WORLD.places[name], { mood: opts.mood, tod: opts.tod, weather: opts.weather, season: opts.season });
       const draw = (g, H, w, h) => {
         curSky = st;
         try {
           if (d.back) backdrop(g, H, w, h, clim, name, SKY.mood(st)); else SKY.backdrop(g, H, w, h, st, { horizon: 0.62, seed: name });
-          d.draw(g, H, w, h, clim);
+          d.draw(g, H, w, h, clim); deco(g, H, w, h);
           SKY.overlay(g, H, w, h, st, { seed: name, ground: h * 0.7, cover: false }); frame(g, w, h);
         } finally { curSky = null; }
       };
-      return ART.html(W, HH, draw, { key: `place|${name}|${st.key}`, cls: "scene", alt: name, style: opts.style });
+      return ART.html(W, HH, draw, { key: `place|${name}|${st.key}|${fest || ""}`, cls: "scene", alt: name, style: opts.style });
     }
     const md = opts.mood || mood(), wx = opts.weather || weatherId(name);
     const draw = (g, H, w, h) => {
       if (d.back) backdrop(g, H, w, h, clim, name, md); else H.sky(g, w, h, md === "night" ? "night" : clim === "snow" ? "snow" : md === "dusk" ? "dusk" : "day");
-      d.draw(g, H, w, h, clim);
+      d.draw(g, H, w, h, clim); deco(g, H, w, h);
       overlay(g, H, w, h, md, wx, name); frame(g, w, h);
     };
-    return ART.html(W, HH, draw, { key: `place|${name}|${md}|${wx}`, cls: "scene", alt: name, style: opts.style });
+    return ART.html(W, HH, draw, { key: `place|${name}|${md}|${wx}|${fest || ""}`, cls: "scene", alt: name, style: opts.style });
   }
   /* a slimmer banner for a town section (360×96); null when there's no picture for it */
   function section(id, opts = {}) {
     const d = SECTION[id]; if (!d) return "";
-    return ART.html(SW, SH, (g, H, w, h) => { d(g, H, w, h); frame(g, w, h); }, { key: `sec|${id}`, cls: "scene sec", alt: id, style: opts.style });
+    const fest = typeof FXART !== "undefined" ? FXART.festId() : null;
+    return ART.html(SW, SH, (g, H, w, h) => { d(g, H, w, h); if (fest) FXART.festSection(g, H, w, h, fest, id); frame(g, w, h); }, { key: `sec|${id}|${fest || ""}`, cls: "scene sec", alt: id, style: opts.style });
   }
   function room(type, opts = {}) {
     const d = ROOM[type] || ROOM.mystery;

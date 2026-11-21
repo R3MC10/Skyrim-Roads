@@ -7,6 +7,10 @@ const QUESTS = (() => {
     wuuthrad: { name: "Wuuthrad", slot: "weapon", hands: 2, skill: "Two-Handed", damage: 25, weight: 25, value: 2000 },
     horn_jurgen: { name: "Horn of Jurgen Windcaller", slot: "trophy", weight: 2, value: 100 },
     guild_armor: { name: "Thieves Guild Armor", slot: "chest", type: "light", armor: 29, weight: 6, value: 1000, aenchant: { key: "skill:Lockpicking", mag: 15, name: "Fortify Lockpicking" } },
+    nightingale_armor: { name: "Nightingale Armor", slot: "chest", type: "light", armor: 34, weight: 12, value: 1800, aenchant: { key: "max:stamina", mag: 30, name: "Fortify Stamina" } },
+    nightingale_blade: { name: "Nightingale Blade", slot: "weapon", hands: 1, skill: "One-Handed", damage: 14, weight: 14, value: 1600 },
+    shrouded_armor: { name: "Shrouded Armor", slot: "chest", type: "light", armor: 29, weight: 7, value: 1100, aenchant: { key: "skill:Sneak", mag: 10, name: "Fortify Sneak" } },
+    blade_of_woe: { name: "Blade of Woe", slot: "weapon", hands: 1, skill: "One-Handed", damage: 12, weight: 7, value: 880 },
     archmage_robes: { name: "Arch-Mage's Robes", slot: "chest", type: "cloth", armor: 0, weight: 1, value: 2000, magicka_regen: 1.0, aenchant: { key: "max:magicka", mag: 50, name: "Fortify Magicka" } },
   });
   const L = {
@@ -27,8 +31,24 @@ const QUESTS = (() => {
     thieves: { name: "The Thieves Guild", giver: "Brynjolf, Riften", start: "Riften", stages: [
       { title: "A Chance Arrangement", text: "Brynjolf wants proof you have quick fingers. Pick a pocket in Riften (Town tab, Streets).", obj: { count: "pp", n: 1, at: "Riften" }, reward: { gold: 100 } },
       { title: "Taking Care of Business", text: "Prove you're worth the Guild's time: lift three more purses, anywhere.", obj: { count: "pp", n: 3 }, reward: { gold: 200 } },
-      { title: "Loud and Clear", text: "A rival gang squats in Pinewatch. Clear it and take what's theirs.", obj: { clear: "Pinewatch" }, reward: { gold: 300 } },
-      { title: "Darkness Returns", text: "Return to the Ragged Flagon in Riften.", obj: { talk: "Riften", label: "Go down to the Ragged Flagon" }, reward: { gold: 500, items: ["guild_armor"], flag: "guildThief", title: "Guild Master of the Thieves Guild" } },
+      { title: "Loud and Clear", text: "A rival gang squats in Pinewatch. Clear it and take what's theirs.", obj: { clear: "Pinewatch" }, reward: { gold: 300, items: ["guild_armor"] } },
+      { title: "Dampened Spirits", text: "Honningbrew Meadery outside Whiterun is stealing the Guild's customers. Slip in and spoil their mead.", obj: { talk: "Honningbrew Meadery", label: "Sneak into the meadery", check: { skill: "Sneak", need: 25, bounty: "Whiterun" } }, reward: { gold: 300 } },
+      { title: "Scoundrel's Folly", text: "Something's wrong with Mercer Frey. Search his house in Riften for answers. His guard won't like it.", obj: { talk: "Riften", label: "Pick the lock on Mercer's house", check: { skill: "Lockpicking", need: 35, fight: E("Vald", 150, 14, ["humanoid"]) } }, reward: { gold: 400 } },
+      { title: "Speaking With Silence", text: "Mercer has fled. Gallus's journal is in Snow Veil Sanctum. Clear it with Karliah.", obj: { clear: "Snow Veil Sanctum" }, reward: { gold: 400 } },
+      { title: "Hard Answers", text: "Gallus wrote in old Falmer. Calcelmo in Markarth can read it. Get into his tower unseen.", obj: { talk: "Markarth", label: "Slip into Calcelmo's tower", check: { skill: "Sneak", need: 40, bounty: "The Reach" } }, reward: { gold: 400 } },
+      { title: "Trinity Restored", text: "Karliah waits at Nightingale Hall. Take the oath of the Nightingales.", obj: { talk: "Nightingale Hall", label: "Swear the Nightingale oath" }, reward: { gold: 500, items: ["nightingale_armor"] } },
+      { title: "Blindsighted", text: "Mercer is in the Dwemer ruin of Irkngthand, after the Eyes of the Falmer. Face him.", obj: { talk: "Irkngthand", label: "Confront Mercer Frey", fight: E("Mercer Frey", 420, 27, ["humanoid", "elite"]), allies: [["Karliah", 11], ["Brynjolf", 10]] }, reward: { gold: 600 } },
+      { title: "Darkness Returns", text: "Return the Skeleton Key to the Twilight Sepulcher and restore the Guild's luck.", obj: { talk: "Twilight Sepulcher", label: "Return the Skeleton Key" }, reward: { gold: 1000, items: ["nightingale_blade"], flag: "guildThief", title: "Guild Master of the Thieves Guild" } },
+    ] },
+    brotherhood: { name: "The Dark Brotherhood", giver: "Aventus Aretino, Windhelm", start: "Windhelm", stages: [
+      { title: "Innocence Lost", text: "A boy in Windhelm asks for Grelod the Kind, who runs the Riften orphanage, to be dealt with. Go to Riften.", obj: { talk: "Riften", label: "Deal with Grelod the Kind", fight: E("Grelod the Kind", 60, 5, ["humanoid"]) }, reward: { gold: 100 } },
+      { title: "With Friends Like These…", text: "You wake in an abandoned shack. Astrid gives you a choice, then the way to the Sanctuary near Falkreath.", obj: { talk: "Dark Brotherhood Sanctuary", label: "Answer Astrid and open the Black Door" }, reward: { gold: 200, items: ["shrouded_armor", "blade_of_woe"] } },
+      { title: "Bound Until Death", text: "A contract at a wedding in Solitude. Do it quietly if you can.", obj: { talk: "Solitude", label: "Fulfil the wedding contract", check: { skill: "Sneak", need: 30, fight: E("Penitus Oculatus guards", 180, 14, ["humanoid"]) } }, reward: { gold: 400 } },
+      { title: "The Silence Has Been Broken", text: "The old Sanctuary in Dawnstar is the Family's new home. Go there.", obj: { talk: "Dawnstar Sanctuary", label: "Open the Dawnstar door" }, reward: { gold: 300 } },
+      { title: "Breaching Security", text: "Get the Emperor's itinerary from a courier's lockbox at Dragon Bridge.", obj: { talk: "Dragon Bridge", label: "Open the lockbox", check: { skill: "Lockpicking", need: 40, bounty: "Haafingar" } }, reward: { gold: 400 } },
+      { title: "The Cure for Madness", text: "Cicero, the Keeper, has turned on the Family. Stop him in the Dawnstar Sanctuary.", obj: { talk: "Dawnstar Sanctuary", label: "Face Cicero", fight: E("Cicero", 240, 19, ["humanoid", "elite"]) }, reward: { gold: 500 } },
+      { title: "To Kill an Empire", text: "The Emperor's ship, the Katariah, is anchored off Solitude. Board it and fulfil the great contract.", obj: { talk: "Solitude", label: "Board the Katariah", fight: E("The Emperor's bodyguards", 330, 23, ["humanoid", "elite"]) }, reward: { gold: 800 } },
+      { title: "Hail Sithis!", text: "Return to the Night Mother in the Dawnstar Sanctuary.", obj: { talk: "Dawnstar Sanctuary", label: "Speak with the Night Mother" }, reward: { gold: 2000, horse: "shadowmere", flag: "listener", title: "Listener of the Dark Brotherhood" } },
     ] },
     college: { name: "The College of Winterhold", giver: "Faralda, Winterhold", start: "Winterhold", stages: [
       { title: "First Lessons", text: "Show Faralda you can cast at the College bridge.", obj: { talk: "Winterhold", label: "Cast a spell for Faralda", needSpell: true }, reward: { gold: 50, items: ["tome_firebolt"] } },
@@ -38,7 +58,11 @@ const QUESTS = (() => {
     ] },
   };
   const q = (s) => (s.quests = s.quests || {});
-  function ensure(s) { if (!q(s).main) q(s).main = { stage: 0, t: G.now() }; }   // everyone is on the main quest
+  function ensure(s) {
+    if (!q(s).main) q(s).main = { stage: 0, t: G.now() };   // everyone is on the main quest
+    const th = q(s).thieves;   // the Thieves Guild line grew from 4 to 10 stages: finished old runs pick up the new chapters
+    if (th && !th.v2) { th.v2 = true; if (th.done) { th.done = false; th.stage = 3; th.t = G.now(); G.note(s, "📜 Brynjolf has more work for you: the Thieves Guild story goes on (Journal)."); } }
+  }
   const active = (s) => Object.entries(q(s)).filter(([id, v]) => !v.done && L[id]).map(([id, v]) => ({ id, ...v, def: L[id], st: L[id].stages[v.stage] }));
   const canJoin = (s, id) => L[id].start && !q(s)[id] && s.location === L[id].start;
   function join(s, id) {
@@ -60,7 +84,8 @@ const QUESTS = (() => {
     if (r.gold) s.gold += r.gold;
     (r.items || []).forEach((i) => G.give(s, i));
     if (r.flag) s[r.flag] = true;
-    if (r.title) s.titles = [...(s.titles || []), r.title];
+    if (r.title && !(s.titles || []).includes(r.title)) s.titles = [...(s.titles || []), r.title];
+    if (r.horse && typeof GUILDS !== "undefined") GUILDS.giveHorse(s, r.horse, msgs);
     const got = [r.gold ? `${r.gold} gold` : "", ...(r.items || []).map((i) => D.ITEMS[i].name), r.title ? `the title ${r.title}` : ""].filter(Boolean).join(", ");
     msgs.push(`📜 ${L[id].name}: “${st.title}” done${got ? ` (${got})` : ""}.`);
     G.note(s, msgs[msgs.length - 1]);
@@ -87,8 +112,20 @@ const QUESTS = (() => {
     if (s.location !== o.talk) return { text: `Go to ${o.talk} first.` };
     if (o.needSpell && !s.spells.some((sp) => D.SPELLS[sp]?.kind === "damage")) return { text: "You need a destruction spell to show her." };
     const msgs = [];
-    if (o.fight) {
-      const e = G.scaleEnemy({ ...o.fight }, s.level);
+    let fightDef = o.fight, quiet = "";
+    if (o.check) {   // [OURS] a skill check: Sneak, Lockpicking or Pickpocket against the stage's difficulty
+      if ((v.retryAt || 0) > t) return { text: `Lie low for a while first (about ${Math.ceil((v.retryAt - t) / 60)} min).` };
+      const ch = checkChance(s, o.check);
+      if (Math.random() < ch) { quiet = `${o.check.skill} ${G.skill(s, o.check.skill)}: done without a sound. `; G.useSkill(s, o.check.skill, 20); fightDef = null; }
+      else if (o.check.fight) { quiet = "You're spotted! "; fightDef = o.check.fight; }
+      else {
+        v.retryAt = t + 300;
+        if (o.check.bounty && typeof TOWNS !== "undefined") TOWNS.addBounty(s, o.check.bounty, "theft", 100);
+        return { text: `You're spotted and have to run.${o.check.bounty ? ` Bounty in ${o.check.bounty}: +100 gold.` : ""} Try again later, or train ${o.check.skill} (${Math.round(ch * 100)}% chance now).` };
+      }
+    }
+    if (fightDef) { const o2 = { ...o, fight: fightDef };
+      const e = G.scaleEnemy({ ...o2.fight }, s.level);
       const f = new G.Fight(s, e, null, t);
       (o.allies || []).forEach(([name, dmg]) => f.allies.push({ name, dmg }));   // [Skyrim] you don't face these alone
       f.run({ t }); const skills = f.apply(t);
@@ -97,10 +134,12 @@ const QUESTS = (() => {
         const d = G.die(s, e.name, t, true); return { text: `${e.name} was too much for you.`, fight: f, skills, died: d.msg, bag: d.bag };
       }
       advance(s, id, msgs);
-      return { text: o.nonlethal ? `You win the bout. Vilkas grunts approval.` : `${e.name} falls.`, fight: f, skills, msgs };
+      return { text: quiet + (o.nonlethal ? `You win the bout. Vilkas grunts approval.` : `${e.name} falls.`), fight: f, skills, msgs };
     }
     advance(s, id, msgs);
-    return { text: st.title, msgs };
+    return { text: quiet + st.title, msgs };
   }
-  return { L, ensure, active, canJoin, join, target, check, talk, list: () => Object.keys(L) };
+  /* chance to pass a stage's skill check: 50% at the needed level, +/-1% per point ([OURS]) */
+  function checkChance(s, c) { return Math.max(0.15, Math.min(0.95, 0.5 + (G.skill(s, c.skill) - c.need) / 60)); }
+  return { L, ensure, active, canJoin, join, target, check, talk, checkChance, advance, list: () => Object.keys(L) };
 })();
