@@ -5,6 +5,7 @@ Each round: build one batch, test it (Node sims in /home/claude/tests + headless
 our own marked [OURS]; plain-language UI; phone first.
 
 ## Done
+- Round 31: more magic. 44 new Skyrim spells (72 total): runes, cloaks, walls, Master storms, wards, Turn Undead, Grand Healing, Guardian Circle, Paralyze, Transmute, Candlelight, Detect Life, bound weapons, Soul Trap, raise the dead, Dremora Lord, Fear, Invisibility, Courage, Harmony. Spell levels Novice→Master, dual casting in tactics, elemental weaknesses, out-of-fight utility spells, 12 staffs with charges, empty soul gems.
 - Round 30: free roam (tap any spot on the map → Walk here, off-road, with discovery on the way) and skills explained (what each skill does, real numbers now vs later, how to raise it; in the skills menu, Hero tab and perks). Mysticism, Etiquette and Streetwise can now be raised by playing.
 - Rounds 28–29: all of Skyrim's map (256 places, up from 95: caves, barrows, Dwemer ruins, Forsworn camps, giant camps, dragon lairs, Orc strongholds, farms, forts, mines, shrines) hidden until discovered (📍 popup, count on Hero). Spell tomes at court wizards, the College and some general stores (14 new spells). Arrows and crossbow bolts (bows need ammo; crossbows added; craft 24 at the forge). 📖 Newbie guide with Show-me buttons and FAQ.
 - Round 27: social menu (👥 button at the top): friends list with online/last seen and where they are, 'added you' requests, private messages with unread badges, and trading with friends from anywhere by courier (arrives after ~1 in-game hour). Ores now drop as loot. Cleared places refill after 3 in-game days.
@@ -44,7 +45,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Round 3: homes (Breezehome, Honeyside, Vlindrel Hall, Hjerim, Proudspire Manor at Skyrim prices): death-proof chest, Well Rested bed (+10%; inns now Rested +5%), daily garden.
 
 ## Next rounds (in order)
-29. More magic: many more Skyrim spells across all schools (with new effects the fights can use), spell levels, dual casting, and staffs.
+29. Balance pass: warriors fall far behind at higher levels (a level-30 warrior wins ~1% against a same-level bandit in the sim, mages ~75%). Rebalance enemy scaling vs weapon/armor/perks so every build works.
 30. Mounts for the road: a cart you can buy to carry a lot more, and caravans between holds that players can guard together for pay.
 31. Spell crafting at the College: combine two effects you know into your own spell.
 32. A bard's song: players can write a short line about a deed; the best-liked lines become songs that innkeepers sing.

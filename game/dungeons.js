@@ -315,7 +315,7 @@ const DUNGEONS = (() => {
 
     if (r.type === "trap") {
       if (choice === "dash") {
-        const ch = clamp(0.45 + G.skill(s, "Acrobatics") / 150 + 0.15 * G.P(s, "sure_footed"), 0.1, 0.95), skills = G.useSkill(s, "Acrobatics", 3);   // [OURS]
+        const ch = clamp(0.45 + G.skill(s, "Acrobatics") / 150 + 0.15 * G.P(s, "sure_footed") + G.fxSum(s, "trapdodge") / 100, 0.1, 0.95), skills = G.useSkill(s, "Acrobatics", 3);   // [OURS]
         if (Math.random() < ch) return done({ text: `You time it and dive past ${r.trap}.`, skills });
         const x = dmg(s, 0.15, 0.3);
         if (G.curHealth(s) <= 0) return lose({ text: `${r.trap} catches you.` }, r.trap);

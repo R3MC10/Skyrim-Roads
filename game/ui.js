@@ -1015,6 +1015,7 @@
     if (r.qty > 1) stats.push(["Count", r.qty]);
     const lines = [];
     if (it.enchant) lines.push(`${it.enchant.magnitude} ${it.enchant.effect} damage per hit · charge ${Math.round(100 * (r.charge || 0) / it.enchant.capacity)}%`);
+    if (it.staff) lines.push(`Casts ${D.SPELLS[it.staff.spell].name} instead of swinging · charge ${Math.round(100 * MAGIC.staffCharge(r) / it.staff.capacity)}% (${Math.floor(MAGIC.staffCharge(r) / it.staff.perCast)} casts)`);
     if (it.aenchant) lines.push(`${it.aenchant.name} ${it.aenchant.mag} while worn`);
     if (it.effects) lines.push(it.effects.map(([e, m, dd]) => `${e} ${m}${dd * 5 >= 60 ? ` for ${Math.round(dd * 5 / 60)} min` : ""}`).join(" · "));
     else if (it.restore) lines.push(`Restores ${it.restore[1]} ${it.restore[0]}`);
@@ -1030,7 +1031,7 @@
     if (it.slot === "ingredient") acts.push(`<button class="btn" data-act="eat" data-id="${r.id}">Eat</button>`);
     if (it.slot === "food" && r.item !== "fishing_rod") acts.push(`<button class="btn pri" data-act="eatfood" data-id="${r.id}">Eat${it.dish ? "" : " (raw)"}</button>`);
     if (it.dish) lines.push(`${it.desc}. A new meal replaces the last one's effect.`);
-    if (it.enchant) acts.push(...gems.map((g) => `<button class="btn" data-act="recharge" data-id="${r.id}" data-gem="${g.id}">Recharge (${esc(D.ITEMS[g.item].name.split(" (")[0])})</button>`));
+    if (it.enchant || it.staff) acts.push(...gems.map((g) => `<button class="btn" data-act="recharge" data-id="${r.id}" data-gem="${g.id}">Recharge (${esc(D.ITEMS[g.item].name.split(" (")[0])})</button>`));
     if (canShop) acts.push(`<button class="btn" data-act="sell" data-id="${r.id}">Sell · ${G.sellPrice(S, r)} gold</button>`);
     return `<div class="sky-detail"><h3>${esc(row.name)}</h3><div class="sky-stats">${stats.map(([k, v]) => `<div><span>${k}</span><b class="num">${esc(String(v))}</b></div>`).join("")}</div>
       ${lines.map((l) => `<p class="sub">${esc(l)}</p>`).join("")}<div class="sky-acts">${acts.join("")}</div></div>`;
@@ -1039,7 +1040,7 @@
   const inTactics = (a) => G.loadout(S).rules.some((r) => r.do === a);
   function magicRows() {
     const out = [];
-    for (const id of S.spells) { const sp = D.SPELLS[id]; out.push({ id: `spell:${id}`, cat: sp.school.toLowerCase(), name: sp.name, cost: G.spellCost(S, sp), sub: sp.school }); }
+    for (const id of S.spells) { const sp = D.SPELLS[id]; if (!sp) continue; out.push({ id: `spell:${id}`, cat: sp.school.toLowerCase(), name: sp.name, cost: sp.kind === "utility" ? null : G.spellCost(S, sp), sub: `${sp.school} · ${sp.level || "Novice"}` }); }
     out.push({ id: "power:race", cat: "powers", name: POWERS.RACE[S.race][0], cost: null, sub: POWERS.powerReady(S, "race") ? "Ready" : "Used today" });
     if (S.werewolf) out.push({ id: "power:beast", cat: "powers", name: "Beast Form", cost: null, sub: CURSE.beastReady(S) ? "Ready" : "Used today" });
     if (POWERS.stoneHasPower(S)) out.push({ id: "power:stone", cat: "powers", name: POWERS.STONES[S.stone][0], cost: null, sub: POWERS.powerReady(S, "stone") ? "Ready" : "Used today" });
@@ -1056,8 +1057,9 @@
     let desc = "", acts = [];
     if (kind === "spell") {
       const sp = D.SPELLS[arg];
-      desc = { damage: `${sp.amount} ${sp.element === "sun" ? "sun damage to undead" : `${sp.element} damage`}`, heal: `Heals ${sp.amount} health`, armor: `+${sp.amount} armor for the fight`, summon: `A familiar fights for you (${sp.amount} damage a turn)`, calm: `Stops a foe up to level ${sp.max_level} from fighting` }[sp.kind] || "";
-      desc += ` · ${row.cost} magicka · ${sp.school}`;
+      const fail = MAGIC.failChance(S, arg);
+      desc = `${MAGIC.describe(sp)} · ${sp.level || "Novice"} ${sp.school} · ${row.cost == null ? "no magicka: a short rest between casts" : `${row.cost} magicka`}${MAGIC.dualable(sp) ? ` (dual-cast: ${Math.round(row.cost * MAGIC.DUAL_COST)} for ×${MAGIC.DUAL_POWER} power)` : ""}${fail ? ` · ⚠ above your ${sp.school} (${G.skill(S, sp.school)} of ${MAGIC.REQ[sp.level]}): costs more and fizzles ${Math.round(fail * 100)}% of the time` : ""}`;
+      if (MAGIC.outOfFight(sp)) { const cd = MAGIC.cdLeft(S, arg); acts.push(`<button class="btn pri" data-act="castout" data-id="${esc(arg)}" ${cd ? "disabled" : ""}>${cd ? `Ready in ${Math.ceil(cd)} s` : "Cast now"}</button>`); }
     } else if (kind === "power") desc = arg === "race" ? POWERS.RACE[S.race][1] + " Once a day." : POWERS.STONES[S.stone][1];
     else if (kind === "shout") {
       const sh = POWERS.SHOUTS[arg], lv = POWERS.level(S, arg);
@@ -1065,7 +1067,7 @@
       acts.push(...sh[1].filter((w) => POWERS.known(S, w) && !POWERS.unlocked(S, w)).map((w) => `<button class="btn" data-act="unlock" data-id="${w}" ${(S.souls || 0) > 0 ? "" : "disabled"}>Unlock ${w} (dragon soul: ${S.souls || 0})</button>`));
       if (POWERS.ROAD_SHOUTS.includes(arg) && lv) acts.push(`<button class="btn pri" data-act="roadshout" data-id="${arg}" ${POWERS.voiceReady(S) ? "" : "disabled"}>Shout now</button>`);
     } else return `<div class="sky-detail"><h3>${esc(row.name)}</h3><p class="sub">${esc(row.sub)}</p></div>`;
-    const usable = kind === "spell" || kind === "power" || (kind === "shout" && !POWERS.ROAD_SHOUTS.includes(arg) && POWERS.level(S, arg));
+    const usable = (kind === "spell" && D.SPELLS[arg]?.kind !== "utility") || kind === "power" || (kind === "shout" && !POWERS.ROAD_SHOUTS.includes(arg) && POWERS.level(S, arg));
     if (usable) acts.unshift(inTactics(row.id) ? `<button class="btn" data-act="skytacx" data-id="${esc(row.id)}">Remove from tactics</button>` : `<button class="btn pri" data-act="skytac" data-id="${esc(row.id)}">Use first in every fight</button>`);
     return `<div class="sky-detail"><h3>${esc(row.name)}</h3><p class="sub">${esc(desc)}</p>${usable && inTactics(row.id) ? '<p class="sub">In your tactics. Fine-tune when it fires in the Tactics tab.</p>' : ""}<div class="sky-acts">${acts.join("")}</div></div>`;
   }
@@ -1951,14 +1953,14 @@
     const enchanted = S.inv.filter((r) => D.ITEMS[r.item]?.enchant), gems = S.inv.filter((r) => D.ITEMS[r.item]?.slot === "soulgem");
     const row = (r) => {
       const it = D.ITEMS[r.item], open = packOpen === r.id, on = eqIds.has(r.id);
-      const charge = it.enchant ? ` · ${Math.round(100 * (r.charge || 0) / it.enchant.capacity)}% charge` : "";
+      const charge = it.enchant ? ` · ${Math.round(100 * (r.charge || 0) / it.enchant.capacity)}% charge` : it.staff ? ` · ${Math.round(100 * MAGIC.staffCharge(r) / it.staff.capacity)}% charge` : "";
       const acts = [];
       if (G.SLOTS.includes(it.slot)) acts.push(on ? `<button class="btn sm" data-act="uneq" data-slot="${it.slot}">Take off</button>` : `<button class="btn sm pri" data-act="eq" data-id="${r.id}">Equip</button>`);
       if (it.slot === "tome") acts.push(`<button class="btn sm pri" data-act="read" data-id="${r.id}">Read</button>`);
       if (it.slot === "potion") acts.push(`<button class="btn sm pri" data-act="drinkrow" data-id="${r.id}">Drink</button>`);
       if (it.slot === "poison") acts.push(`<button class="btn sm pri" data-act="poison" data-id="${r.id}">Coat weapon</button>`);
       if (it.slot === "ingredient") acts.push(`<button class="btn sm" data-act="eat" data-id="${r.id}">Eat (learn an effect)</button>`);
-      if (it.enchant && gems.length) acts.push(...gems.map((g) => `<button class="btn sm" data-act="recharge" data-id="${r.id}" data-gem="${g.id}">Recharge (${esc(D.ITEMS[g.item].name.split(" (")[0])})</button>`));
+      if ((it.enchant || it.staff) && gems.length) acts.push(...gems.map((g) => `<button class="btn sm" data-act="recharge" data-id="${r.id}" data-gem="${g.id}">Recharge (${esc(D.ITEMS[g.item].name.split(" (")[0])})</button>`));
       if (canShop) acts.push(`<button class="btn sm" data-act="sell" data-id="${r.id}">Sell ${G.sellPrice(S, r)}g</button>`);
       const ingFx = it.slot === "ingredient" && TOWNS.INGREDIENT_FX[r.item] ? TOWNS.INGREDIENT_FX[r.item][1].map((e, i) => TOWNS.known(S, r.item)[i] ? e : "?").join(", ") : "";
       const qual = r.tq ? TOWNS.QUALITY[r.tq] + " " : "";
@@ -1974,7 +1976,8 @@
   let pendingPreset = null, pendingDel = false;
   function tacticActions() {
     return [...Object.entries(D.BASIC_ACTIONS).map(([id, l]) => [id, l]),
-      ...S.spells.filter((x) => D.SPELLS[x]).map((x) => [`spell:${x}`, `Cast ${D.SPELLS[x].name} (${G.spellCost(S, D.SPELLS[x])} magicka)`]),
+      ...S.spells.filter((x) => D.SPELLS[x] && D.SPELLS[x].kind !== "utility").map((x) => [`spell:${x}`, `Cast ${D.SPELLS[x].name} (${G.spellCost(S, D.SPELLS[x])} magicka)`]),
+      ...S.spells.filter((x) => D.SPELLS[x] && MAGIC.dualable(D.SPELLS[x])).map((x) => [`dual:${x}`, `Dual-cast ${D.SPELLS[x].name} (×${MAGIC.DUAL_POWER}, ${Math.round(G.spellCost(S, D.SPELLS[x]) * MAGIC.DUAL_COST)} magicka)`]),
       ...["health", "magicka", "stamina"].map((r) => [`potion:${r}`, `Drink a ${r} potion (have ${G.countRestore(S, r)})`]),
       ...[...new Set(S.inv.filter((r) => D.ITEMS[r.item]?.slot === "scroll").map((r) => r.item))].map((i) => [`scroll:${i}`, `Read ${D.ITEMS[i].name}`]),
       ["power:race", `Use ${POWERS.RACE[S.race][0]} (racial power, once a day)`],
@@ -2324,6 +2327,7 @@
       case "tradeyes": answerTrade(b.dataset.id, true); break;
       case "tradeno": answerTrade(b.dataset.id, false); break;
       case "tradecancel": cancelTrade(b.dataset.id); break;
+      case "castout": { const m = MAGIC.castOut(S, b.dataset.id); persist(true); SOUND.fx("page"); say(m); renderMenu?.(); break; }
       case "skytab": sky.page = b.dataset.id; sky.cat = "all"; sky.sel = null; sky.sort = sky.page === "skills" ? "lvl" : "name"; sky.dir = 1; renderMenu(); break;
       case "skycat": sky.cat = b.dataset.id; sky.sel = null; renderMenu(); break;
       case "skysort": { const k = b.dataset.id; sky.dir = sky.sort === k ? -sky.dir : 1; sky.sort = k; renderMenu(); break; }

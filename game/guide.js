@@ -23,7 +23,7 @@ const GUIDE = (() => {
     ["How long is an in-game day?", "One in-game day is 2 real hours. Timers (cleared dungeons, mines) count in-game time; shops are open 08:00–20:00 in-game."],
     ["How do I get around faster?", "Roads are fastest. A horse makes you quicker, and carriages run between cities (Town → Carriage)."],
     ["Do my bows need arrows?", "Yes. Bows shoot arrows and crossbows shoot bolts; the best ones you carry are used automatically. Buy them at blacksmiths and general stores, or make them at the forge."],
-    ["Where do I learn new spells?", "Read spell tomes. Court wizards sell them; Farengar and the other court wizards stock some rarer ones; the College in Winterhold has the strongest."],
+    ["Where do I learn new spells?", "Read spell tomes. Every court wizard sells Novice and some Apprentice tomes (and staffs); each court wizard has a few rarer ones (Farengar in Whiterun, Wuunferth in Windhelm, Calcelmo in Markarth…); the College in Winterhold has them all, up to Master, which it only teaches once your skill in that school is 90. Spells above your level cost more magicka and sometimes fizzle. Utility spells like Candlelight, Transmute and Clairvoyance are cast from the Magic menu, outside fights."],
   ];
   const progress = (s) => { const done = STEPS.filter((st) => st[3](s)).length; return { done, total: STEPS.length }; };
   return { STEPS, FAQ, mark, flag, progress };

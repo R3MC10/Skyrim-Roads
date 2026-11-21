@@ -274,15 +274,16 @@ const G = (() => {
 
   // ---------------------------------------------------------------- combat
   function spellCost(s, sp) {
-    const id = Object.keys(D.SPELLS).find((k) => D.SPELLS[k] === sp), tier = SPELL_TIER[id];
+    const id = Object.keys(D.SPELLS).find((k) => D.SPELLS[k] === sp), tier = SPELL_TIER[id] || (sp.level || "").toLowerCase();
     const half = tier && P(s, `${tier}_${sp.school.toLowerCase()}`) ? 0.5 : 1;   // [Skyrim] "<tier> <school>" perks: half cost
-    return Math.floor(F.spellCost(sp.cost, skill(s, sp.school)) * half);
+    return Math.floor(F.spellCost(sp.cost, skill(s, sp.school)) * half * (typeof MAGIC !== "undefined" && id ? MAGIC.costMult(s, id) : 1));   // spells above your level cost more
   }
   const enchantCost = (e, s) => F.enchantCost(e.base_cost, e.magnitude, e.max_magnitude, skill(s, "Enchanting")) * (1 - 0.1 * P(s, "enchanter"));
   function describeAction(a) {
     if (D.BASIC_ACTIONS[a]) return D.BASIC_ACTIONS[a];
     const [kind, arg] = a.split(":");
     if (kind === "spell") return `Cast ${D.SPELLS[arg]?.name || arg}`;
+    if (kind === "dual") return `Dual-cast ${D.SPELLS[arg]?.name || arg}`;
     if (kind === "potion") return `Drink a ${arg} potion`;
     if (kind === "scroll") return `Read ${D.ITEMS[arg]?.name || arg}`;
     if ((kind === "power" || kind === "shout") && typeof POWERS !== "undefined") return POWERS.describe(a);
@@ -293,7 +294,7 @@ const G = (() => {
     return { cond: kind === "turn" ? `${label} ${r.pct || 2}` : kind ? `${label} ${r.pct}%` : label, act: describeAction(r.do) };
   }
   function hiddenChance(s, e, t) {   // [OURS] Skyrim detection is real-time line of sight; this is our stand-in
-    const base = 0.25 + skill(s, "Sneak") / 150 - (e.danger === "high" ? 0.15 : 0) + (isNight(t) ? 0.1 : 0) + 0.15 * P(s, "detect_life")
+    const base = 0.25 + skill(s, "Sneak") / 150 - (e.danger === "high" ? 0.15 : 0) + (isNight(t) ? 0.1 : 0) + 0.15 * P(s, "detect_life") + fxSum(s, "hide", t || now()) / 100
       + (typeof WEVENTS !== "undefined" ? WEVENTS.weather([s.x, s.y], t || now()).sneak : 0);   // rain, fog and snow hide you
     const seen = (1 - base) * (1 - 0.12 * P(s, "stealth"));   // [Skyrim] Stealth: 20% harder to detect per rank (our scale)
     return Math.max(0.05, Math.min(0.92, 1 - seen));
@@ -329,13 +330,15 @@ const G = (() => {
         const fd = TOWNS.FOLLOWERS[s.follower.id];
         this.allies.push({ name: fd[0], dmg: fd[4] * 0.55 * (1 + 0.05 * (s.level - 1)), hp: TOWNS.followerHp(s, t), follower: true });   // [OURS] 55% of their listed damage
       }
+      if (s.thrall && s.thrall.fights > 0) { this.allies.push({ name: s.thrall.name, dmg: s.thrall.dmg, thrall: true }); this.thrallFought = true; }   // a raised corpse fights for you
       this.pw = typeof POWERS !== "undefined" ? POWERS.fightState() : null;
       this.bleed = []; this.eParalyzed = 0; this.flurry = 0; this.firstHit = true; this.shadowUsed = false; this.sneakNext = false;
     }
     addXp(k, v) { this.xp[k] = (this.xp[k] || 0) + v; }
-    weaponSkill() { return this.weapon ? this.weapon.skill : "Hand-to-Hand"; }
+    weaponSkill() { return this.bound ? this.bound.skill : this.weapon ? this.weapon.skill : "Hand-to-Hand"; }
     weaponDamage() {
       const s = this.s;
+      if (this.bound && (!this.weapon || this.weapon.staff || this.bound.dmg >= this.weapon.damage + this.temper)) return F.weaponDamage(this.bound.dmg, skill(s, this.bound.skill), this.bound.skill === "Archery");   // [Skyrim] bound weapons
       if (!this.weapon) { const [a, b] = F.unarmedRange(skill(s, "Hand-to-Hand"), s.race); return rnd(a, b) + 4 * P(s, "iron_fists"); }
       const sk = this.weapon.skill;
       const perk = { "One-Handed": 0.2 * P(s, "armsman"), "Two-Handed": 0.2 * P(s, "barbarian"), "Archery": 0.2 * P(s, "overdraw"), "Spear": 0.15 * P(s, "long_reach") }[sk] || 0;
@@ -431,6 +434,7 @@ const G = (() => {
       const [kind, arg] = a.split(":");
       if ((kind === "power" || kind === "shout") && this.pw) return POWERS.affordable(this, kind, arg);
       if (kind === "spell") return this.s.spells.includes(arg) && D.SPELLS[arg] && this.mp >= spellCost(this.s, D.SPELLS[arg]);
+      if (kind === "dual") return this.s.spells.includes(arg) && D.SPELLS[arg] && typeof MAGIC !== "undefined" && MAGIC.dualable(D.SPELLS[arg]) && this.mp >= spellCost(this.s, D.SPELLS[arg]) * MAGIC.DUAL_COST;
       if (kind === "potion") return !!this.findPotion(arg) && !(typeof CURSE !== "undefined" && CURSE.noPotions(this));   // no potions in Beast Form
       if (kind === "scroll") return !!this.findItem(arg);
       return false;
@@ -443,9 +447,10 @@ const G = (() => {
       return [0, "attack"];
     }
     attack(power) {
+      if (this.weapon?.staff && !this.bound && typeof MAGIC !== "undefined") { if (power) this.sp -= this.paCost; return MAGIC.staffAttack(this); }   // a staff casts instead of swinging
       const sk = this.weaponSkill();
       if (power) this.sp -= this.paCost;
-      const ammoK = this.ammoKind(), shot = ammoK ? this.shoot() : null;
+      const ammoK = this.bound ? null : this.ammoKind(), shot = ammoK ? this.shoot() : null;
       const sneak = (this.turn === 1 && this.hidden) || this.sneakNext;
       this.sneakNext = false;
       if (!sneak && Math.random() > F.HIT_CHANCE) return power ? "Power attack misses" : "Attack misses";
@@ -510,17 +515,21 @@ const G = (() => {
       }
       return `${label}: ${Math.round(dmg)}`;
     }
-    cast(id, free) {
-      const sp = D.SPELLS[id];
-      if (!free) this.mp -= spellCost(this.s, sp);
+    cast(id, free, dual) {
+      let sp = D.SPELLS[id];
+      const mg = typeof MAGIC !== "undefined";
+      if (!free) this.mp -= spellCost(this.s, sp) * (dual && mg ? MAGIC.DUAL_COST : 1);
+      if (dual && mg) sp = { ...sp, amount: (sp.amount || 0) * MAGIC.DUAL_POWER, name: `${sp.name} (dual)` };   // [Skyrim] dual casting
       const s = this.s;
+      if (!free && mg && Math.random() < MAGIC.failChance(s, id)) { this.addXp(sp.school, sp.xp * 0.25); return `${sp.name} fizzles (too advanced for you yet)`; }
+      if (mg && MAGIC.KINDS[sp.kind]) { this.addXp(sp.school, sp.xp); return MAGIC.KINDS[sp.kind](this, sp, id); }
       if (sp.kind === "damage") {
         this.addXp(sp.school, sp.xp);
         if (Math.random() > F.SPELL_HIT_CHANCE) return `${sp.name} misses`;
         if (sp.element === "sun" && !this.tags.has("undead")) return `${sp.name}: no effect (undead only)`;
         if (sp.element === "frost") this.slowed = 2;
         const aug = { fire: P(s, "augmented_flames"), frost: P(s, "augmented_frost"), shock: P(s, "augmented_shock") }[sp.element] || 0;
-        let amt = sp.amount * (1 + 0.25 * aug) * (1 + fxSum(s, "spell:" + sp.school) / 100) * (this.tags.has("undead") && P(s, "necromage") ? 1.25 : 1);
+        let amt = sp.amount * (1 + 0.25 * aug) * (1 + fxSum(s, "spell:" + sp.school) / 100) * (this.tags.has("undead") && P(s, "necromage") ? 1.25 : 1) * (mg && sp.element !== "sun" ? MAGIC.elem(this, sp.element) : 1);   // weaknesses and resistances
         let label = sp.name;
         if (this.turn === 1 && this.hidden && P(s, "quiet_casting")) { amt *= 2; label += " (sneak ×2)"; }
         if (sp.school === "Destruction" && P(s, "impact") && Math.random() < 0.3) { this.stagger = true; label += ", staggers"; }
@@ -569,6 +578,7 @@ const G = (() => {
       const [kind, arg] = a.split(":");
       if ((kind === "power" || kind === "shout") && this.pw) return POWERS.act(this, kind, arg);
       if (kind === "spell") return this.cast(arg, false);
+      if (kind === "dual") return this.cast(arg, false, true);
       if (kind === "potion") {
         const r = this.findPotion(arg), it = D.ITEMS[r.item];
         this.used[r.id] = (this.used[r.id] || 0) + 1;
@@ -586,6 +596,12 @@ const G = (() => {
       return this.attack(false);
     }
     enemyTurn() {
+      const pre = typeof MAGIC !== "undefined" ? MAGIC.beforeEnemy(this) : null;   // runes, fear, invisibility
+      if (pre?.end) return pre.text;
+      if (pre) return pre.text + " · " + this.enemyTurnInner();
+      return this.enemyTurnInner();
+    }
+    enemyTurnInner() {
       const n = this.e.name, s = this.s;
       if (this.calmTurns > 0) { this.calmTurns--; return `${n} isn't fighting`; }
       if (this.eParalyzed > 0) { this.eParalyzed--; return `${n} is paralyzed`; }
@@ -620,6 +636,7 @@ const G = (() => {
       if (this.tags.has("mage") || this.tags.has("dragon")) dmg *= (1 - 0.1 * P(s, "magic_resistance")) * (1 - Math.min(0.5, fxSum(s, "resist") / 100));
       if (this.pw) { dmg = POWERS.dmgIn(this, dmg, this.tags.has("mage") || this.tags.has("dragon")); if (dmg === 0) return `${n}'s blow passes through you`; }
       if (Object.values(this.armor).some((a) => a.type === "heavy") && P(s, "reflect_blows") && Math.random() < 0.1) { this.ehp -= dmg; return `${n}'s blow is reflected back (${Math.round(dmg)})`; }
+      if (typeof MAGIC !== "undefined" && this.ward) { const before = dmg; dmg = MAGIC.soak(this, dmg); if (dmg < before) extra += ` (ward soaks ${Math.round(before - dmg)})`; }
       this.hp -= dmg;
       if (this.hp <= 0 && P(s, "shadow_warrior") && !this.shadowUsed) { this.shadowUsed = true; this.hp = 1; this.sneakNext = true; return `${n} hits ${Math.round(dmg)}, but you vanish into the shadows`; }
       if (empty && Math.random() < empty / ARMOR_SLOTS.length) this.addXp("Unarmored", F.UNARMORED_XP_PER_HIT);
@@ -633,14 +650,15 @@ const G = (() => {
     run({ enemyFirst = false, trySneak = true, maxTurns = 60, t, hidden = null } = {}) {
       this.hidden = hidden != null && !enemyFirst ? hidden : trySneak && !enemyFirst && Math.random() < hiddenChance(this.s, this.e, t);
       if (enemyFirst) this.log.push({ turn: 0, rule: null, me: "", them: this.enemyTurn() });
-      while (this.hp > 0 && this.ehp > 0 && this.turn < maxTurns) {
+      while (this.hp > 0 && this.ehp > 0 && !this.endWon && this.turn < maxTurns) {
         this.turn++;
         const [rule, a] = this.choose();
         const line = { turn: this.turn, rule, me: this.act(a), them: "" };
         if (this.bleed.length && this.ehp > 0) { const b = this.bleed.reduce((x, y) => x + y.dmg, 0); this.ehp -= b; this.bleed = this.bleed.map((y) => ({ ...y, turns: y.turns - 1 })).filter((y) => y.turns > 0); line.me += ` · bleeds ${Math.round(b)}`; }
         for (const al of this.allies) if (this.ehp > 0) { const d = al.dmg * rnd(...F.DAMAGE_SPREAD); this.ehp -= d; line.me += ` · ${al.name} ${Math.round(d)}`; }
         if (this.summonTurns > 0 && this.ehp > 0) { this.summonTurns--; this.ehp -= this.summonDmg; line.me += ` · familiar ${this.summonDmg}`; }
-        if (this.ehp > 0) line.them = this.enemyTurn();
+        if (typeof MAGIC !== "undefined" && !this.endWon) MAGIC.tick(this, line);   // cloaks, burning walls, healing circles
+        if (this.ehp > 0 && !this.endWon) line.them = this.enemyTurn();
         if (this.pw) POWERS.tick(this, line);
         line.hp = Math.max(0, Math.round(this.hp)); line.ehp = Math.max(0, Math.round(this.ehp));
         this.log.push(line);
@@ -648,7 +666,8 @@ const G = (() => {
         this.mp = Math.min(maxMagicka(this.s), this.mp + this.regenMp);
         this.slowed = Math.max(0, this.slowed - 1);
       }
-      this.won = this.ehp <= 0;
+      this.won = this.ehp <= 0 || !!this.endWon;
+      if (this.endWon) { this.e.fled = true; this.e.gold = [0, 0]; }   // turned undead run off and leave nothing
       this.e.hp = Math.max(0, Math.round(this.ehp));
       return this.won;
     }
@@ -666,7 +685,7 @@ const G = (() => {
       const extraMsgs = this.won && this.tags.has("dragon") && typeof POWERS !== "undefined" && !this.s._test ? [POWERS.absorb(this.s)] : [];
       for (const [id, q] of Object.entries(this.used)) take(this.s, +id, q);
       for (const [id, c] of Object.entries(this.charges)) { const r = invRow(this.s, +id); if (r) r.charge = c; }
-      const msgs = [];
+      const msgs = typeof MAGIC !== "undefined" ? MAGIC.after(this) : [];
       for (const [k, v] of Object.entries(this.xp)) msgs.push(...useSkill(this.s, k, v));
       return [...(this.followerDown ? [`${this.followerDown} gets back up after the fight, badly hurt.`] : []), ...extraMsgs, ...msgs];
     }
@@ -685,6 +704,7 @@ const G = (() => {
   const ammoQty = (item) => { const it = D.ITEMS[item]; return it?.slot === "ammo" && typeof AMMO !== "undefined" ? rint(...AMMO.LOOT_QTY[it.ammo]) : 1; };
   function rollLoot(s, e) {
     const got = [], tags = new Set(e.tags || []);
+    if (e.fled) return got;
     for (const table of [...(tags.has("humanoid") ? ["humanoid"] : []), ...(tags.has("elite") ? ["elite"] : [])])
       for (const [item, ch] of D.LOOT[table]) if (Math.random() < ch) { const q = ammoQty(item); give(s, item, q); got.push(D.ITEMS[item].name + (q > 1 ? ` ×${q}` : "")); }
     if (tags.has("beast") && typeof SMITH !== "undefined") { const p = SMITH.peltFor(e.name); if (p && Math.random() < 0.7) { give(s, p); got.push(D.ITEMS[p].name); } }   // [Skyrim] pelts from animals
@@ -941,6 +961,7 @@ const G = (() => {
     if (!s.location || !shopTypes(s.location).length) return "There's no shop here.";
     if (typeof TOWNS !== "undefined" && TOWNS.wanted(s)) return "The merchant won't trade with a wanted criminal.";
     if (!shopsOpen(t)) return `The shops are closed (${clockText(t)}). They open at 08:00.`;
+    if (typeof MAGIC !== "undefined") { const no = MAGIC.canBuy(s, item); if (no) return no; }
     if (item === "horse") {
       if (!shopTypes(s.location).includes("stables")) return "No stables here.";
       if (typeof HORSES !== "undefined") return HORSES.buy(s);
@@ -977,7 +998,7 @@ const G = (() => {
     if (s.spells.includes(sp)) return "You already know that spell.";
     take(s, id); s.spells.push(sp);
     const my = useSkill(s, "Mysticism", 15);   // [OURS] studying magic deepens your grasp of its roots
-    return `You learned ${D.SPELLS[sp].name}. Add it to your tactics.` + (my.length ? " " + my.join(". ") : "");
+    return `You learned ${D.SPELLS[sp].name}. ${typeof MAGIC !== "undefined" && D.SPELLS[sp].kind === "utility" ? "Cast it from the Magic menu (Pack → Magic), outside fights." : "Add it to your tactics."}` + (my.length ? " " + my.join(". ") : "");
   }
   function drinkPotion(s, t = now()) {
     const f = new Fight(s, { name: "-", health: 1, damage: 0 }), r = f.findPotion("health");
@@ -988,9 +1009,10 @@ const G = (() => {
   }
   function recharge(s, wId, gId) {
     const w = invRow(s, wId), g = invRow(s, gId);
-    if (!w || !D.ITEMS[w.item].enchant) return "Pick an enchanted weapon.";
+    if (!w || !(D.ITEMS[w.item].enchant || D.ITEMS[w.item].staff)) return "Pick an enchanted weapon or a staff.";
     if (!g || D.ITEMS[g.item].slot !== "soulgem") return "Pick a filled soul gem.";
-    const cap = D.ITEMS[w.item].enchant.capacity, gem = D.ITEMS[g.item].charge * (P(s, "soul_squeezer") ? 1.5 : 1);
+    if (D.ITEMS[w.item].staff && w.charge == null) w.charge = D.ITEMS[w.item].staff.capacity;
+    const cap = (D.ITEMS[w.item].enchant || D.ITEMS[w.item].staff).capacity, gem = D.ITEMS[g.item].charge * (P(s, "soul_squeezer") ? 1.5 : 1);
     w.charge = Math.min(cap, (w.charge || 0) + gem);
     take(s, gId);
     const m = useSkill(s, "Enchanting", F.RECHARGE_XP[gem] || 0.2);
