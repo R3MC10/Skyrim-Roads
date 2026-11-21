@@ -4,9 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Skyrim: Roads of the North</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Barlow+Semi+Condensed:wght@400;500;600&display=swap" rel="stylesheet">
+<style>/* fonts bundled with the game (work offline) */
+@font-face{font-family:"Cinzel";font-style:normal;font-weight:600;font-display:swap;src:url(font-cinzel-600.woff2) format("woff2")}
+@font-face{font-family:"Cinzel";font-style:normal;font-weight:700;font-display:swap;src:url(font-cinzel-700.woff2) format("woff2")}
+@font-face{font-family:"Barlow Semi Condensed";font-style:normal;font-weight:400;font-display:swap;src:url(font-barlow-semi-condensed-400.woff2) format("woff2")}
+@font-face{font-family:"Barlow Semi Condensed";font-style:normal;font-weight:500;font-display:swap;src:url(font-barlow-semi-condensed-500.woff2) format("woff2")}
+@font-face{font-family:"Barlow Semi Condensed";font-style:normal;font-weight:600;font-display:swap;src:url(font-barlow-semi-condensed-600.woff2) format("woff2")}
+@font-face{font-family:"Barlow Condensed";font-style:normal;font-weight:500;font-display:swap;src:url(font-barlow-condensed-500.woff2) format("woff2")}
+@font-face{font-family:"Barlow Condensed";font-style:normal;font-weight:600;font-display:swap;src:url(font-barlow-condensed-600.woff2) format("woff2")}
+@font-face{font-family:"Cormorant Garamond";font-style:normal;font-weight:600;font-display:swap;src:url(font-cormorant-garamond-600.woff2) format("woff2")}
+@font-face{font-family:"Cormorant Garamond";font-style:normal;font-weight:700;font-display:swap;src:url(font-cormorant-garamond-700.woff2) format("woff2")}
+@font-face{font-family:"Cormorant Garamond";font-style:italic;font-weight:600;font-display:swap;src:url(font-cormorant-garamond-600-italic.woff2) format("woff2")}
+
+</style>
 <style>
 /* VOICE: a Nord's field kit at night — iron, frost, candle-lit parchment.
    IDEA: the game behaves like a folded campaign map in an iron case: the map is the screen, everything else hangs below it.
@@ -392,6 +402,235 @@ img.holds-map{display:block;width:100%;height:auto;border-radius:6px;margin:6px 
 .title .press{background:rgba(12,14,18,.62);border:1px solid rgba(214,178,94,.45);border-radius:999px;padding:14px 30px;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}@keyframes tpulse{0%,100%{opacity:.7}50%{opacity:1}}
 /* ---- effects (fxart.js): the travel strip */
 .tripvig{margin-top:8px;line-height:0}.tripvig canvas{display:block;width:100%;height:auto;border-radius:6px;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+
+/* ==== SkyUI theme (skyui) ==== */
+/* Skyrim's menus: black smoke, off-white condensed small caps, thin silver rules that fade at the ends,
+   a soft white bar for the selected row, almost no colour. Panels keep a silver corner flourish. */
+:root{--sk-bg:rgba(0,0,0,.74);--sk-bg2:rgba(0,0,0,.55);--sk-ink:#ece8de;--sk-mute:#9d978a;--sk-line:rgba(236,232,222,.16);--sk-line2:rgba(236,232,222,.32);--sk-sel:linear-gradient(90deg,rgba(255,255,255,.17),rgba(255,255,255,.05) 70%,rgba(255,255,255,0));--sk-ui:"Barlow Condensed","Barlow Semi Condensed",system-ui,sans-serif;
+  --sk-c1:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2226%22%20height%3D%2226%22%20viewBox%3D%220%200%2026%2026%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23d9d4c7%22%20stroke-width%3D%221.1%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20d%3D%22M1.5%2024%20V7%20Q1.5%201.5%207%201.5%20H24%22/%3E%3Cpath%20d%3D%22M5%2018%20V9%20Q5%205%209%205%20H18%22%20stroke-opacity%3D%22.55%22/%3E%3Cpath%20d%3D%22M9%209%20l3%203%22%20stroke-opacity%3D%22.7%22/%3E%3C/g%3E%3Crect%20x%3D%2210.5%22%20y%3D%2210.5%22%20width%3D%223%22%20height%3D%223%22%20transform%3D%22rotate%2845%2012%2012%29%22%20fill%3D%22%23d9d4c7%22/%3E%3C/svg%3E");--sk-c2:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2226%22%20height%3D%2226%22%20viewBox%3D%220%200%2026%2026%22%3E%3Cg%20transform%3D%22translate%2826%200%29%20scale%28-1%201%29%22%20fill%3D%22none%22%20stroke%3D%22%23d9d4c7%22%20stroke-width%3D%221.1%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20d%3D%22M1.5%2024%20V7%20Q1.5%201.5%207%201.5%20H24%22/%3E%3Cpath%20d%3D%22M5%2018%20V9%20Q5%205%209%205%20H18%22%20stroke-opacity%3D%22.55%22/%3E%3Cpath%20d%3D%22M9%209%20l3%203%22%20stroke-opacity%3D%22.7%22/%3E%3C/g%3E%3Crect%20transform%3D%22translate%2826%200%29%20scale%28-1%201%29%20rotate%2845%2012%2012%29%22%20x%3D%2210.5%22%20y%3D%2210.5%22%20width%3D%223%22%20height%3D%223%22%20fill%3D%22%23d9d4c7%22/%3E%3C/svg%3E");--sk-c3:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2226%22%20height%3D%2226%22%20viewBox%3D%220%200%2026%2026%22%3E%3Cg%20transform%3D%22translate%280%2026%29%20scale%281%20-1%29%22%20fill%3D%22none%22%20stroke%3D%22%23d9d4c7%22%20stroke-width%3D%221.1%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20d%3D%22M1.5%2024%20V7%20Q1.5%201.5%207%201.5%20H24%22/%3E%3Cpath%20d%3D%22M5%2018%20V9%20Q5%205%209%205%20H18%22%20stroke-opacity%3D%22.55%22/%3E%3Cpath%20d%3D%22M9%209%20l3%203%22%20stroke-opacity%3D%22.7%22/%3E%3C/g%3E%3Crect%20transform%3D%22translate%280%2026%29%20scale%281%20-1%29%20rotate%2845%2012%2012%29%22%20x%3D%2210.5%22%20y%3D%2210.5%22%20width%3D%223%22%20height%3D%223%22%20fill%3D%22%23d9d4c7%22/%3E%3C/svg%3E");--sk-c4:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2226%22%20height%3D%2226%22%20viewBox%3D%220%200%2026%2026%22%3E%3Cg%20transform%3D%22translate%2826%2026%29%20scale%28-1%20-1%29%22%20fill%3D%22none%22%20stroke%3D%22%23d9d4c7%22%20stroke-width%3D%221.1%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20d%3D%22M1.5%2024%20V7%20Q1.5%201.5%207%201.5%20H24%22/%3E%3Cpath%20d%3D%22M5%2018%20V9%20Q5%205%209%205%20H18%22%20stroke-opacity%3D%22.55%22/%3E%3Cpath%20d%3D%22M9%209%20l3%203%22%20stroke-opacity%3D%22.7%22/%3E%3C/g%3E%3Crect%20transform%3D%22translate%2826%2026%29%20scale%28-1%20-1%29%20rotate%2845%2012%2012%29%22%20x%3D%2210.5%22%20y%3D%2210.5%22%20width%3D%223%22%20height%3D%223%22%20fill%3D%22%23d9d4c7%22/%3E%3C/svg%3E");--sk-orn:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22120%22%20height%3D%2210%22%20viewBox%3D%220%200%20120%2010%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20x2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23d9d4c7%22%20stop-opacity%3D%220%22/%3E%3Cstop%20offset%3D%22.5%22%20stop-color%3D%22%23d9d4c7%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23d9d4c7%22%20stop-opacity%3D%220%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath%20d%3D%22M0%205%20H52%20M68%205%20H120%22%20stroke%3D%22url%28%23g%29%22%20stroke-width%3D%221%22/%3E%3Cpath%20d%3D%22M60%201%20L64%205%20L60%209%20L56%205Z%22%20fill%3D%22none%22%20stroke%3D%22%23d9d4c7%22/%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%225%22%20r%3D%221.2%22%20fill%3D%22%23d9d4c7%22/%3E%3C/svg%3E")}
+body{background:radial-gradient(130% 70% at 50% 0%,#1a1d21 0%,#0b0c0e 62%,#060708 100%);color:var(--sk-ink)}
+.sub{color:var(--sk-mute)}
+/* panels: smoked glass, no box, silver corners */
+#side .panel,.dun .card,.sheet{background:linear-gradient(180deg,rgba(0,0,0,.80),rgba(0,0,0,.68)),var(--tex,none);background-size:auto,160px 160px;border:0;border-radius:0;box-shadow:0 0 0 1px rgba(0,0,0,.5),0 10px 30px rgba(0,0,0,.45)}
+#side .panel::before,.dun .card::before,.sheet::before{content:"";position:absolute;inset:0;border:0;border-top:1px solid transparent;border-bottom:1px solid transparent;border-image:linear-gradient(90deg,transparent,var(--sk-line2) 18%,var(--sk-line2) 82%,transparent) 1;pointer-events:none;border-radius:0}
+#side .panel::after,.dun .card::after,.sheet::after{content:"";position:absolute;inset:4px;pointer-events:none;background:var(--sk-c1) left top/22px 22px no-repeat,var(--sk-c2) right top/22px 22px no-repeat,var(--sk-c3) left bottom/22px 22px no-repeat,var(--sk-c4) right bottom/22px 22px no-repeat;opacity:.75;border:0}
+.dun .card,.sheet{position:relative}
+.dun .card.foe{box-shadow:inset 0 0 0 1px rgba(214,90,74,.35),0 10px 30px rgba(0,0,0,.45)}
+/* headings: condensed small caps between fading rules */
+#side .panel>h2,.sheet>h2,.dun .card>h3{font-family:var(--sk-ui);font-weight:600;font-size:17px;letter-spacing:.22em;text-transform:uppercase;color:#f4f0e6;text-shadow:0 1px 2px #000}
+#side .panel>h2::before{background:linear-gradient(90deg,transparent,var(--sk-line2))}#side .panel>h2::after{background:linear-gradient(90deg,var(--sk-line2),transparent)}
+#side .panel h3,.sheet h3{font-family:var(--sk-ui);font-weight:600;font-size:14px;letter-spacing:.16em;text-transform:uppercase;color:#d6d1c5;border-bottom:0;padding-bottom:6px;background:linear-gradient(90deg,var(--sk-line2),transparent) left bottom/100% 1px no-repeat}
+/* list rows: SkyUI lines, white bar when selected */
+.item{background:transparent;border:0;border-radius:0;border-bottom:1px solid rgba(236,232,222,.07);padding:9px 6px}
+.list{gap:0}
+.item:hover{background:linear-gradient(90deg,rgba(255,255,255,.06),transparent 80%)}
+.item.on{background:var(--sk-sel);border-left:0;box-shadow:inset 2px 0 0 #ece8de}
+.item .t{font-size:16px}.item .t span{color:var(--sk-mute)}
+.item .num.gold,.item .gold{color:#e9d9a8}
+/* buttons: thin outlined small caps; primary glows white, danger smoulders */
+.btn{border-radius:1px;border:1px solid rgba(236,232,222,.26);background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.01));color:#ece8de;font-family:var(--sk-ui);font-weight:600;letter-spacing:.09em;text-transform:uppercase;font-size:15px}
+.btn.sm{font-size:13px;letter-spacing:.07em;min-height:38px}
+.btn:hover:not(:disabled){border-color:rgba(236,232,222,.55);background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.03))}
+.btn.pri{background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,.06));border-color:rgba(255,255,255,.62);color:#fff;text-shadow:0 0 8px rgba(255,255,255,.35)}
+.btn.pri:hover:not(:disabled){background:linear-gradient(180deg,rgba(255,255,255,.26),rgba(255,255,255,.09));border-color:#fff}
+.btn.danger{background:linear-gradient(180deg,rgba(176,52,40,.32),rgba(120,28,20,.18));border-color:rgba(214,90,74,.62);color:#f6dcd6}
+.btn:disabled{opacity:.38}
+input,select,textarea{border-radius:1px;border:0;border-bottom:1px solid var(--sk-line2);background:rgba(255,255,255,.05);color:var(--sk-ink)}
+input:focus,select:focus{outline:none;border-bottom-color:#fff;background:rgba(255,255,255,.09)}
+/* category chips and segmented tabs: SkyUI header strip, white underline on the active one */
+.chip{border:0;border-radius:0;background:none;color:var(--sk-mute);font-family:var(--sk-ui);font-weight:600;letter-spacing:.12em;text-transform:uppercase;font-size:13px;padding:6px 10px;border-bottom:2px solid transparent}
+.chip.on{color:#fff;background:linear-gradient(0deg,rgba(255,255,255,.12),transparent);border-bottom-color:#ece8de}
+.seg{border:0;border-top:1px solid var(--sk-line);border-bottom:1px solid var(--sk-line);border-radius:0}
+.seg button{font-family:var(--sk-ui);letter-spacing:.2em;text-transform:uppercase;color:var(--sk-mute)}
+.seg button.on{background:var(--sk-sel);color:#fff;box-shadow:inset 0 -2px 0 #ece8de}
+/* town: the place list reads like Skyrim's dialogue options, centred, no boxes */
+.chips:has(>[data-act=shop]){display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;margin:8px 0 4px;padding:6px 0;border-top:1px solid var(--sk-line);border-bottom:1px solid var(--sk-line)}
+.chips:has(>[data-act=shop]) .chip{text-transform:none;letter-spacing:.02em;font-family:"Barlow Semi Condensed",system-ui,sans-serif;font-weight:500;font-size:16px;color:#bdb7a9;min-height:40px;border:0;text-align:center;padding:6px 4px}
+.chips:has(>[data-act=shop]) .chip.on{color:#fff;background:radial-gradient(60% 100% at 50% 50%,rgba(255,255,255,.16),transparent 75%);text-shadow:0 0 10px rgba(255,255,255,.4)}
+/* who you're talking to: Skyrim's dialogue header */
+.npctalk{background:radial-gradient(80% 120% at 50% 0%,rgba(255,255,255,.06),transparent 70%);border:0;border-radius:0;border-top:1px solid var(--sk-line);border-bottom:1px solid var(--sk-line);padding:10px 6px}
+.npct b{font-family:var(--sk-ui);font-weight:600;letter-spacing:.2em;text-transform:uppercase;font-size:15px;color:#fff}
+.npcrole{letter-spacing:.14em!important;color:var(--sk-mute)!important}
+.npct q{font-style:normal;color:#ece8de;font-size:16px;quotes:none}
+/* barter: your purse vs the trader, SkyUI's bottom line */
+.barter-head{font-family:var(--sk-ui);letter-spacing:.14em;text-transform:uppercase;font-size:13px;color:var(--sk-mute);border-top:1px solid var(--sk-line);border-bottom:1px solid var(--sk-line);padding:8px 4px;margin:8px 0 4px}
+.barter-head b{font-size:16px;letter-spacing:.02em}
+/* modals: Skyrim message box, centred */
+.modal{place-items:center;background:radial-gradient(80% 60% at 50% 50%,rgba(0,0,0,.55),rgba(0,0,0,.82))}
+.sheet{border-radius:0;padding:20px 18px}
+.sheet>h2{font-size:18px;text-align:center}
+.sheet>p{text-align:center;font-size:16px}
+.sheet:has(img.art.death){box-shadow:inset 0 0 80px rgba(120,20,14,.55),0 0 0 1px rgba(160,40,30,.45),0 20px 60px rgba(0,0,0,.7)}
+.sheet:has(img.art.death)>h2{font-family:Cinzel,serif;font-size:26px;letter-spacing:.3em;color:#e9c8c0;text-shadow:0 0 18px rgba(200,40,30,.6)}
+/* level up: three Skyrim choices */
+.panel:has([data-act=lvl]) .grid2{gap:10px!important}
+.btn[data-act=lvl]{min-height:76px;display:flex;flex-direction:column;justify-content:center;gap:6px;font-size:14px;letter-spacing:.18em;border-color:rgba(236,232,222,.3);background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(0,0,0,.2))}
+.btn[data-act=lvl]::after{content:"";display:block;height:5px;width:70%;margin:0 auto;border-radius:3px}
+.btn[data-a=health]::after{background:linear-gradient(90deg,#7a1d18,#d24a3e)}.btn[data-a=magicka]::after{background:linear-gradient(90deg,#1d3f7a,#4f8fe0)}.btn[data-a=stamina]::after{background:linear-gradient(90deg,#1f5a2a,#5fbf6a)}
+/* tactics: rule cards as SkyUI rows */
+.rcard{background:transparent;border:0;border-radius:0;border-bottom:1px solid rgba(236,232,222,.08);border-left:2px solid rgba(236,232,222,.25);padding:10px 8px}
+.rcard.dead{border-left-color:#b5473a}.rlist{gap:4px}
+/* the skills menu (Pack): finer SkyUI type */
+.sky{background:radial-gradient(120% 70% at 0% 0%,#121416 0%,#030304 72%)}
+.sky-row{font-family:var(--sk-ui);font-weight:500;font-size:17px;letter-spacing:.02em;border-bottom:1px solid rgba(236,232,222,.05)}
+.sky-row.sel{background:var(--sk-sel);border-left-color:#fff}
+.sky-head{font-family:var(--sk-ui);font-weight:600;font-size:12px;letter-spacing:.2em}
+.sky-cat{font-family:var(--sk-ui);font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+.sky-page{font-family:var(--sk-ui);font-weight:600;letter-spacing:.28em}
+.sky-detail{background:linear-gradient(0deg,rgba(255,255,255,.04),transparent);border-top:0;background-image:var(--sk-orn);background-repeat:no-repeat;background-position:center top;background-size:100% 10px;padding-top:16px}
+.sky-detail h3{font-family:var(--sk-ui);font-weight:600;letter-spacing:.14em;text-transform:uppercase;font-size:20px}
+.sky-stats span{font-family:var(--sk-ui);letter-spacing:.16em}
+.sky-foot{font-family:var(--sk-ui);letter-spacing:.16em}
+/* the Journal: Skyrim's quest book — parchment pages, ink type, ribbon bookmarks */
+#side[data-tab=log] .panel{background:radial-gradient(130% 90% at 50% 40%,#efe3c4 0%,#e2d1a8 62%,#c9b386 100%);color:#3a2c1c;box-shadow:0 0 0 1px #6b5640,0 8px 26px rgba(0,0,0,.55),inset 0 0 40px rgba(110,80,40,.35)}
+#side[data-tab=log] .panel::before{border-image:linear-gradient(90deg,transparent,rgba(90,62,30,.5) 18%,rgba(90,62,30,.5) 82%,transparent) 1}
+#side[data-tab=log] .panel::after{filter:invert(1) sepia(1) saturate(2) hue-rotate(-10deg) brightness(.45);opacity:.6}
+#side[data-tab=log] .panel>h2{font-family:Cinzel,serif;color:#3a2a17;text-shadow:none;letter-spacing:.14em}
+#side[data-tab=log] .panel>h2::before{background:linear-gradient(90deg,transparent,rgba(90,62,30,.55))}#side[data-tab=log] .panel>h2::after{background:linear-gradient(90deg,rgba(90,62,30,.55),transparent)}
+#side[data-tab=log] .panel h3{color:#4a3720;background:linear-gradient(90deg,rgba(90,62,30,.5),transparent) left bottom/100% 1px no-repeat}
+#side[data-tab=log] .sub,#side[data-tab=log] .item .t span,#side[data-tab=log] .log time{color:#6b5640}
+#side[data-tab=log] .item{border-bottom-color:rgba(90,62,30,.18)}
+#side[data-tab=log] .item.on{background:linear-gradient(90deg,rgba(90,62,30,.16),transparent 80%);box-shadow:inset 2px 0 0 #5a3e1e}
+#side[data-tab=log] .item .t,#side[data-tab=log] p,#side[data-tab=log] .log div{color:#3a2c1c}
+#side[data-tab=log] .log div{border-bottom-color:rgba(90,62,30,.18)}
+#side[data-tab=log] .gold,#side[data-tab=log] .num.gold{color:#7a4f10}
+#side[data-tab=log] .btn{color:#3a2a17;border-color:rgba(90,62,30,.55);background:linear-gradient(180deg,rgba(255,255,255,.35),rgba(255,255,255,.08));text-shadow:none}
+#side[data-tab=log] .btn.pri{background:linear-gradient(180deg,#5a3e1e,#3d2911);color:#f4e9cc;border-color:#2e1f0d}
+#side[data-tab=log] .btn.danger{background:linear-gradient(180deg,#7a2a1c,#521a10);color:#f6dcd6}
+#side[data-tab=log] .chip{color:#6b5640}#side[data-tab=log] .chip.on{color:#2e1f0d;border-bottom-color:#5a3e1e;background:linear-gradient(0deg,rgba(90,62,30,.15),transparent)}
+#side[data-tab=log] input,#side[data-tab=log] select{background:rgba(255,255,255,.4);color:#2e1f0d;border-bottom-color:rgba(90,62,30,.6)}
+#side[data-tab=log] .chatlog{background:rgba(255,255,255,.25);border-color:rgba(90,62,30,.3);color:#2e1f0d}
+#side[data-tab=log] .bar{background:rgba(90,62,30,.2)}
+#side[data-tab=log] a{color:#5a3e1e}
+#side[data-tab=log] .danger-high{color:#9b2a1c}#side[data-tab=log] .danger-medium{color:#8a5a12}#side[data-tab=log] .danger-low{color:#2f6a2a}
+.jnav{gap:2px!important}.jnav .chip{background:linear-gradient(180deg,#4a2a22,#2c1712);color:#e9d9b8;letter-spacing:.14em;font-size:12px;border-radius:0 0 3px 3px;border:0;box-shadow:0 2px 4px rgba(0,0,0,.4)}
+.jnav .chip:nth-child(3n+2){background:linear-gradient(180deg,#273a4a,#14202a)}.jnav .chip:nth-child(3n){background:linear-gradient(180deg,#36402a,#1c2314)}
+/* the stars of a skill (perk constellation, skyui.js) */
+.skc{position:relative;margin:8px 0 6px;border-top:1px solid var(--sk-line);border-bottom:1px solid var(--sk-line);background:radial-gradient(120% 90% at 50% 100%,#14233a 0%,#070b12 70%);overflow:hidden}
+.skc svg{display:block;width:100%;height:auto}
+.skc .lbl{font-family:var(--sk-ui);fill:#cfd6e4;font-size:11px;letter-spacing:.08em}
+.skc .st{cursor:pointer}
+.skc .st circle.core{fill:#9aa7bd}.skc .st.on circle.core{fill:#fff}.skc .st.can circle.core{fill:#cfe3ff}
+.skc .st .glow{fill:url(#skglow);opacity:0}.skc .st.on .glow{opacity:.9}.skc .st.can .glow{opacity:.5}
+.skc line{stroke:#5f6f88;stroke-width:1}.skc line.on{stroke:#e8f0ff;stroke-width:1.4}
+.skc .twinkle{animation:sktw 3.2s ease-in-out infinite}
+@keyframes sktw{50%{opacity:.25}}
+.item.skflash{animation:skflash 1.2s ease-out}
+@keyframes skflash{from{background:rgba(255,255,255,.28)}}
+/* dungeon screen */
+.dun{background:radial-gradient(90% 50% at 50% 0%,#1c1a17 0%,#060607 72%)}
+.dun .hd h2{font-family:var(--sk-ui);font-weight:600;letter-spacing:.2em;text-transform:uppercase}
+/* skill checks (guild jobs, locks): a thin chance gauge */
+.chance{font-family:var(--sk-ui);letter-spacing:.1em}
+/* pixel style: squarer, no corner curls */
+html.art-pixel #side .panel::after,html.art-pixel .sheet::after,html.art-pixel .dun .card::after{background:none}
+@media (prefers-reduced-motion:reduce){.skc .twinkle,.item.skflash{animation:none}}
+.skc .st:focus{outline:none}.skc .st:focus-visible circle.core{stroke:#fff;stroke-width:2}
+.chips:has(>[data-act=pskill]){flex-wrap:nowrap!important;overflow-x:auto;scrollbar-width:none;border-top:1px solid var(--sk-line);border-bottom:1px solid var(--sk-line);padding:2px 0;-webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent)}
+.chips:has(>[data-act=pskill])::-webkit-scrollbar{display:none}.chips:has(>[data-act=pskill]) .chip{flex:none}
+.chips:has(>[data-act=shop]) .chip{min-height:36px}
+.slot{background:transparent;border-radius:0;border-top:1px solid var(--sk-line);font-family:var(--sk-ui);letter-spacing:.08em}
+/* tips and the guide offer: a Skyrim loading-screen hint — dark, centred rule, gold only on the title */
+.tut{border:0;border-radius:0;background:linear-gradient(180deg,rgba(0,0,0,.82),rgba(0,0,0,.7));box-shadow:0 0 0 1px rgba(0,0,0,.5);position:relative;padding:14px 16px;border-top:1px solid transparent;border-bottom:1px solid transparent;border-image:linear-gradient(90deg,transparent,rgba(226,187,100,.55) 20%,rgba(226,187,100,.55) 80%,transparent) 1}
+.tut .tut-h{font-family:var(--sk-ui);font-weight:600;letter-spacing:.18em;text-transform:uppercase;font-size:14px;color:#efe2bd}
+.tut p{color:#ddd6c6}
+/* chips that hold sentences (verse ideas, chat phrases) read as text, not tabs */
+.deedchips .chip,.chips.quick .chip{text-transform:none;letter-spacing:.01em;font-family:"Barlow Semi Condensed",system-ui,sans-serif;font-weight:500;font-size:15px;color:#ddd6c6;border:1px solid var(--sk-line);border-radius:1px;text-align:left;padding:8px 10px}
+.deedchips .chip.on,.chips.quick .chip:active{border-color:#ece8de;background:var(--sk-sel)}
+.bardsong{border:0!important;border-radius:0!important;background:radial-gradient(90% 120% at 50% 0%,rgba(255,255,255,.06),rgba(0,0,0,.35))!important;border-top:1px solid var(--sk-line)!important;border-bottom:1px solid var(--sk-line)!important}
+/* ==== end SkyUI theme ==== */
+/* ==== HUD (hud.js) ==== Skyrim: thin, mostly transparent, white text with a dark glow, small gold ornaments */
+.hico{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;display:block}
+/* top bar */
+.top{gap:8px;padding:8px 2px 6px;border-bottom:1px solid transparent;border-image:linear-gradient(90deg,transparent,rgba(226,187,100,.45) 20%,rgba(226,187,100,.45) 80%,transparent) 1}
+.top .lvlb{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font:700 15px/1 Cinzel,Georgia,serif;color:#f6eedb;background:radial-gradient(circle at 50% 40%,#2a2c30,#0c0d10);box-shadow:inset 0 0 0 1px rgba(226,187,100,.7),0 0 0 2px rgba(0,0,0,.6),0 0 10px rgba(226,187,100,.18);text-shadow:0 1px 2px #000}
+.top .who b{font-size:17px;letter-spacing:.06em;text-shadow:0 1px 3px #000,0 0 10px rgba(0,0,0,.6)}
+.top .who span{font-size:12.5px;letter-spacing:.02em}
+.top .meta{font-size:12.5px;text-shadow:0 1px 2px #000}
+.top .meta .gold{display:inline-flex;align-items:center;gap:4px;font-weight:600;color:#f1cd72}
+.top .meta .gold::before{content:"";width:12px;height:12px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff3c8 0 18%,#e2bb64 19% 62%,#8a6a2a 63%);box-shadow:0 0 0 1px #3b2c1e;flex:none}
+.top .iconbtn.snd,.top .iconbtn.soc{width:38px;height:38px;border-radius:50%;background:rgba(10,11,13,.55);border:1px solid rgba(226,187,100,.38);color:#e9e2d0;box-shadow:inset 0 0 8px rgba(0,0,0,.6)}
+.top .iconbtn.soc.on{border-color:#e2bb64;color:#ffe9b0;box-shadow:0 0 10px rgba(226,187,100,.35),inset 0 0 8px rgba(0,0,0,.6)}
+/* map buttons */
+.mapbtns .iconbtn{width:40px;height:40px;border-radius:50%;background:rgba(8,9,11,.62);border:1px solid rgba(226,187,100,.38);color:#efe8d6;font:600 20px/1 Georgia,serif;text-shadow:0 1px 2px #000;box-shadow:0 2px 8px rgba(0,0,0,.45)}
+/* compass */
+.compass{position:absolute;top:8px;left:10px;right:58px;height:30px;pointer-events:none;z-index:3;overflow:hidden;
+  background:linear-gradient(90deg,transparent,rgba(6,7,9,.62) 14%,rgba(6,7,9,.62) 86%,transparent)}
+.compass::before,.compass::after{content:"";position:absolute;left:6%;right:6%;height:1px;background:linear-gradient(90deg,transparent,rgba(233,226,208,.55) 25%,rgba(233,226,208,.55) 75%,transparent)}
+.compass::before{top:0}.compass::after{bottom:0}
+.compass .ctape,.compass .cmarks{position:absolute;inset:0}
+.compass .ctick{position:absolute;bottom:3px;width:1px;height:5px;background:rgba(233,226,208,.45);transform:translateX(-50%)}
+.compass .ctick.mid{height:8px;background:rgba(233,226,208,.6)}
+.compass .cdir{position:absolute;top:50%;transform:translate(-50%,-50%);font:700 13px/1 Cinzel,Georgia,serif;color:#f1ead8;text-shadow:0 0 4px #000,0 1px 2px #000;letter-spacing:.04em}
+.compass .cdir.n{color:#f1cd72}
+.compass .cm{position:absolute;top:50%;transform:translate(-50%,-50%);line-height:0;color:#efe8d6}.compass .cm .hico{paint-order:stroke}
+.compass .cm .hico{width:15px;height:15px;stroke-width:1.7}
+.compass .cm[data-place]{pointer-events:auto;cursor:pointer;padding:6px}
+.compass .cm.unk em{font:italic 700 13px/1 Georgia,serif;color:rgba(233,226,208,.55)}
+.compass .cm.pp i{display:block;width:6px;height:6px;border-radius:50%;background:#8fd3ff;box-shadow:0 0 0 1px #0b2333}
+.compass .cm.quest{color:#f1cd72;z-index:2}.compass .cm.quest .hico{width:16px;height:16px;fill:#f1cd72;stroke:#3b2c1e;stroke-width:1.2}
+.compass .cm.raid{color:#ff8a6a;animation:hudpulse 1.4s ease-in-out infinite}
+.compass i.cl,.compass i.cr{position:absolute;top:50%;width:5px;height:5px;background:#e2bb64;transform:translateY(-50%) rotate(45deg);opacity:.8}
+.compass i.cl{left:11%}.compass i.cr{right:11%}
+@keyframes hudpulse{50%{opacity:.45}}
+/* attribute bars */
+.vitals{display:block;margin-top:10px}
+.hbars{display:grid;grid-template-columns:1fr 1.25fr 1fr;gap:10px;align-items:center}
+.hb{position:relative;display:flex;align-items:center;height:16px;transition:opacity .6s}
+.hb.full{opacity:.42}
+.hb .cap{flex:none;width:7px;height:7px;transform:rotate(45deg);background:linear-gradient(135deg,#efe8d6,#7b7466);box-shadow:0 0 0 1px #0b0c0e}
+.hb .track{flex:1;height:7px;margin:0 3px;position:relative;background:linear-gradient(#0a0b0d,#1b1d21);box-shadow:0 0 0 1px #0b0c0e,0 0 0 2px rgba(200,190,165,.35);clip-path:polygon(4px 0,calc(100% - 4px) 0,100% 50%,calc(100% - 4px) 100%,4px 100%,0 50%);display:flex}
+.hb .track i{display:block;height:100%;width:var(--p);transition:width .5s ease}
+.hb.hp .track{justify-content:center}.hb.mp .track{justify-content:flex-end}
+.hb.hp .track i{background:linear-gradient(#e46a5f,#a52c25 60%,#7d1e19)}
+.hb.mp .track i{background:linear-gradient(#77a8ee,#2f63b4 60%,#234c8a)}
+.hb.sp .track i{background:linear-gradient(#86c98d,#3d8a47 60%,#2b6533)}
+.hb small{position:absolute;left:50%;top:100%;transform:translateX(-50%);font-size:10px;line-height:1;color:rgba(233,226,208,.7);margin-top:1px;text-shadow:0 1px 1px #000}
+.hb.low .track{box-shadow:0 0 0 1px #0b0c0e,0 0 0 2px rgba(214,90,74,.7),0 0 8px rgba(214,90,74,.5)}
+.hb.flash .track{animation:hudflash .65s ease-out}
+@keyframes hudflash{0%{filter:brightness(2.2)}100%{filter:none}}
+.hline{display:flex;justify-content:space-between;align-items:center;margin-top:12px;min-height:20px;font-size:12px;color:var(--mute)}
+.hline .carry{display:inline-flex;align-items:center;gap:4px;letter-spacing:.03em}.hline .carry .hico{width:13px;height:13px}
+.hline .carry.over{color:#e07b6a}
+.hstat{display:inline-flex;gap:6px}
+.hstat .hs{width:20px;height:20px;display:grid;place-items:center;border-radius:50%;background:rgba(8,9,11,.6);box-shadow:inset 0 0 0 1px rgba(226,187,100,.35);color:#e9e2d0}
+.hstat .hs .hico{width:13px;height:13px;stroke-width:1.8}
+.hstat .hs.vamp,.hstat .hs.law,.hstat .hs.over,.hstat .hs.sick{color:#ff8a6a}.hstat .hs.rest{color:#f1cd72}.hstat .hs.wolf{color:#d9c69c}.hstat .hs.ride{color:#8fd3ff}
+/* bottom tab bar: Skyrim's tween menu */
+.tabs{background:linear-gradient(180deg,rgba(10,11,13,.86),rgba(4,5,6,.97));border-top:0;box-shadow:0 -1px 0 rgba(226,187,100,.0)}
+.tabs::before{content:"";position:absolute;left:0;right:0;top:0;height:1px;background:linear-gradient(90deg,transparent,rgba(226,187,100,.65) 18%,rgba(226,187,100,.65) 82%,transparent)}
+.tab{color:rgba(214,207,190,.62);font:600 10.5px/1.1 Cinzel,Georgia,serif;letter-spacing:.12em;text-transform:uppercase;padding-top:9px}
+.tab svg{stroke-width:1.5;width:21px;height:21px;transition:filter .2s,color .2s}
+.tab.on{color:#f6eedb;text-shadow:0 0 10px rgba(226,187,100,.45)}
+.tab.on svg{filter:drop-shadow(0 0 5px rgba(226,187,100,.55));color:#ffe9b0}
+.tab.on::before{content:"";position:absolute;top:-4px;left:50%;width:7px;height:7px;background:#e2bb64;transform:translateX(-50%) rotate(45deg);box-shadow:0 0 8px rgba(226,187,100,.8)}
+.tab.on::after{content:"";position:absolute;bottom:4px;left:30%;right:30%;height:1px;background:linear-gradient(90deg,transparent,#e2bb64,transparent)}
+/* Skyrim's top-left messages: newest on top, older lines fade beneath */
+#hudlog{position:fixed;left:8px;top:calc(env(safe-area-inset-top) + 56px);z-index:25;display:flex;flex-direction:column;align-items:flex-start;gap:3px;max-width:min(82vw,440px);pointer-events:none}
+#hudlog .toast{position:static;transform:none;left:auto;bottom:auto;max-width:100%;border:0;border-radius:0;padding:6px 26px 6px 10px;background:linear-gradient(90deg,rgba(6,7,9,.86),rgba(6,7,9,.7) 70%,transparent);box-shadow:none;color:#f3ecdb;font-size:14px;line-height:1.35;text-shadow:0 1px 2px #000;pointer-events:none;border-left:2px solid rgba(226,187,100,.8)}
+#hudlog .toast.pop{animation:hudin .28s cubic-bezier(.2,.8,.2,1)}
+#hudlog .hlog{padding:3px 24px 3px 10px;font-size:12.5px;color:rgba(233,226,208,.72);background:linear-gradient(90deg,rgba(6,7,9,.6),transparent);text-shadow:0 1px 2px #000;transition:opacity .6s,transform .6s}
+#hudlog .hlog.gone{opacity:0;transform:translateX(-12px)}
+@keyframes hudin{from{opacity:0;transform:translateX(-18px)}}
+/* banners: Skyrim's thin centred lines */
+.pban{background:radial-gradient(ellipse at center,rgba(4,5,6,.82) 0,rgba(4,5,6,.6) 55%,transparent 75%);padding:10px 40px}
+.pban::before,.pban::after{background:linear-gradient(90deg,transparent,rgba(240,232,212,.8) 30%,rgba(240,232,212,.8) 70%,transparent)}
+.pban .ptx small{color:#e9e2d0;letter-spacing:.28em}
+/* pixel style: square corners */
+html.art-pixel .top .lvlb,html.art-pixel .top .iconbtn,html.art-pixel .mapbtns .iconbtn,html.art-pixel .hstat .hs{border-radius:0}
+@media (prefers-reduced-motion:reduce){.compass .cm.raid,.hb.flash .track,#hudlog .toast.pop{animation:none!important}.hb .track i{transition:none}}
+/* HUD: top bar fits a small phone; messages and banners clear of the compass */
+.top .who span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;-webkit-line-clamp:unset}
+.top .meta{max-width:50%;min-width:0}.top .meta #clock{display:flex;align-items:center;justify-content:flex-end;gap:4px;min-width:0}
+.top .meta .skyt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;font-size:12px}
+#hudlog{top:calc(env(safe-area-inset-top) + 142px)}
+#pbanners{top:calc(env(safe-area-inset-top) + 30vh)}
+.top{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;grid-template-areas:"l w s g" "l m m m";column-gap:8px;row-gap:3px;align-items:center}
+.top .lvlb{grid-area:l;align-self:start;margin-top:3px}.top .who{grid-area:w}.top .iconbtn.soc{grid-area:s}.top .iconbtn.snd{grid-area:g}
+.top .meta{grid-area:m;max-width:none;display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:left}
+.top .meta #clock{justify-content:flex-start;flex:1}
+/* popups must stay readable over the map: solid sheet, darker veil */
+.modal{background:radial-gradient(80% 60% at 50% 50%,rgba(0,0,0,.7),rgba(0,0,0,.88))}.modal .sheet{background:linear-gradient(180deg,rgba(16,17,19,.97),rgba(6,7,8,.985)),var(--tex,none);background-size:auto,160px 160px}
 </style>
 </head>
 <body>
@@ -454,6 +693,8 @@ img.holds-map{display:block;width:100%;height:auto;border-radius:6px;margin:6px 
 <script src="homeart.js"></script>
 <script src="titleart.js"></script>
 <script src="fxart.js"></script>
+<script src="skyui.js"></script>
+<script src="hud.js"></script>
 <script src="polish.js"></script>
 <script src="caravans.js"></script>
 <script src="bards.js"></script>

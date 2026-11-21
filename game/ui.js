@@ -33,9 +33,11 @@
   const bump = () => { version++; };
 
   // ------------------------------------------------------------ helpers
+  const hudIcon = (k, fallback) => (typeof HUD !== "undefined" ? HUD.icon(k) : fallback);
   function toast(text) {
     let el = $("#toast");
     if (!el) { el = document.createElement("div"); el.id = "toast"; el.className = "toast"; el.setAttribute("role", "status"); document.body.appendChild(el); }
+    if (typeof HUD !== "undefined") HUD.log(el, text);
     el.textContent = text; el.classList.remove("hide");
     if (typeof POLISH !== "undefined") POLISH.toast(el, text);
     clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.add("hide"), 3800);
@@ -273,7 +275,7 @@
     if (act !== "pref") return false;
     const k = b.dataset.k, v = b.dataset.v === "true";
     if (k === "artStyle") { ART.setStyle(b.dataset.v); SOUND.fx("click"); if (typeof POLISH !== "undefined") POLISH.texture(); if (S) { try { renderPanel(true); } catch { /* title screen */ } } return true; }
-    if (k === "mute") { SOUND.set("mute", v); if ($("#sndBtn")) $("#sndBtn").textContent = v ? "🔇" : "⚙"; }
+    if (k === "mute") { SOUND.set("mute", v); if ($("#sndBtn")) $("#sndBtn").innerHTML = hudIcon(v ? "mute" : "gear", v ? "🔇" : "⚙"); }
     else setPref(k, v);
     SOUND.fx("click");
     return true;
@@ -405,7 +407,7 @@
   }
 
   // ------------------------------------------------------------ main screen
-  window.__dbg = { save: () => S, openEvent: (n) => openEvent(n), tally: (k, n) => tally(k, n), message: (t, x, b) => showMessage(t, x, b) };   // for testing in the browser console
+  window.__dbg = { save: () => S, openEvent: (n) => openEvent(n), tally: (k, n) => tally(k, n), message: (t, x, b) => showMessage(t, x, b), toast: (t) => toast(t) };   // for testing in the browser console
   /* phone back button: close what's on top, step back to the map, and only then leave the app */
   window.__ui = {
     back() {
@@ -434,10 +436,10 @@
   function start() {
     if (typeof POLISH !== "undefined") POLISH.texture();
     app.innerHTML = `
-      <div class="top"><div class="who"><b id="nm"></b><span id="sub"></span></div>
+      <div class="top"><span class="lvlb num" id="lvlb" aria-label="Level"></span><div class="who"><b id="nm"></b><span id="sub"></span></div>
         <div class="meta"><div id="clock"></div><div class="gold" id="goldv"></div></div>
-        <button class="iconbtn soc" id="socBtn" aria-label="Friends, messages and trades">👥</button>
-        <button class="iconbtn snd" id="sndBtn" aria-label="Settings and menu">${SOUND.settings.mute ? "🔇" : "⚙"}</button></div>
+        <button class="iconbtn soc" id="socBtn" aria-label="Friends, messages and trades">${hudIcon("people", "👥")}</button>
+        <button class="iconbtn snd" id="sndBtn" aria-label="Settings and menu">${hudIcon(SOUND.settings.mute ? "mute" : "gear", SOUND.settings.mute ? "🔇" : "⚙")}</button></div>
       <div class="layout">
         <div>
           <div class="mapwrap" id="mapwrap"><canvas id="map" aria-label="Map of Skyrim"></canvas>
@@ -456,6 +458,7 @@
     $("#zoomBtn").onclick = () => { mapTouchedAt = performance.now(); zoom = zoom > 1.01 ? 1 : 2.4; follow = true; $("#zoomBtn").textContent = zoom > 1.01 ? "－" : "＋"; };
     $("#centerBtn").onclick = () => { mapTouchedAt = performance.now(); follow = true; if (zoom === 1) zoom = 2.4; $("#zoomBtn").textContent = "－"; };
     bindMap();
+    if (typeof HUD !== "undefined") HUD.mount($("#mapwrap"), (name) => { if (WORLD.places[name]) { SOUND.fx("click"); selected = name; roamSpot = null; renderPicked(); } });
     $("#sndBtn").onclick = openSound;
     $("#socBtn").onclick = () => { SOUND.fx("click"); closeMenu(); tab = "social"; bump(); renderTabs(); renderPanel(true); $("#side").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" }); };
     $("#side").addEventListener("click", onPanelClick);
@@ -557,7 +560,7 @@
     if (Math.floor(t) % 3 === 0) { const qm = QUESTS.check(S); if (qm.length) { persist(true); showMessage("Quest", qm.join(" ")); } }
     if (Math.floor(t) % 30 === 0) { publishCard(false); publishHome(); publishClan(); }
     if (Math.floor(t) % 60 === 0) BACKUP.autoSave(S);
-    renderTop(); renderVitals(); renderTrip(); renderTabs();
+    renderTop(); renderVitals(); renderTrip(); renderTabs(); hudCompass();
     if (version !== rendered || Date.now() - lastPanelRender > 20000) renderPanel(false);
   }
 
@@ -583,18 +586,46 @@
   function renderTop() {
     $("#nm").textContent = S.name;
     const where = S.location || `the wilds of ${G.holdAt(livePos())}`;
-    $("#sub").textContent = `Level ${S.level} ${D.RACES[S.race].name} · ${where}`;
+    $("#sub").textContent = typeof HUD !== "undefined" ? `${D.RACES[S.race].name} · ${where}` : `Level ${S.level} ${D.RACES[S.race].name} · ${where}`;
+    const lb = $("#lvlb"); if (lb && lb.textContent !== String(S.level)) lb.textContent = S.level;
     const wx = WEVENTS.weather(livePos()), dt = WEVENTS.date();
     const clk = $("#clock"), when = `${dt.day} ${dt.month}, ${G.clockText().split(", ")[1]}`;
     if (typeof SKY !== "undefined") {   // a small drawn sky: sun or moon phase, clouds, rain, snow
       const st = SKY.state(livePos()), ic = SKY.icon(st, 22);
       if (clk._ic !== ic) { clk._ic = ic; clk.innerHTML = `<span class="skyw">${ic}</span><span class="skyt"></span>`; }
-      const txt = `${when} · ${wx.name}`; const tEl = clk.querySelector(".skyt"); if (tEl && tEl.textContent !== txt) tEl.textContent = txt;
+      const txt = `${when} · ${wx.name}`; const tEl = clk.querySelector(".skyt"); if (tEl && tEl.textContent !== txt) { tEl.textContent = txt; clk.title = txt; }
     } else clk.textContent = `${G.isNight() ? "🌙" : "☀️"} ${when} · ${wx.icon} ${wx.name}`;
     $("#goldv").textContent = `${S.gold} gold`;
   }
+  function hudCompass() {
+    if (typeof HUD === "undefined") return;
+    const pos = livePos(), tr = S.trip, W = G.MAP_W, H = G.MAP_H;
+    let target = null;
+    if (tr && tr.status === "travel" && tr.path) { target = tr.path.slice(tr.idx + 1).find((p) => G.pxDist(pos, p) > 4) || tr.dest; }
+    const near = [], unk = [];
+    for (const [n, p] of Object.entries(WORLD.places)) {
+      if (n === S.location) continue;
+      const d = G.pxDist(pos, p);
+      if (known(n)) { if (d < 170) near.push({ name: n, pos: p, kind: p[2], known: true, d }); }
+      else if (d < 70) unk.push({ name: n, pos: p, kind: p[2], known: false, d });
+    }
+    near.sort((a, b) => a.d - b.d); unk.sort((a, b) => a.d - b.d);
+    const qp = questPos(), qa = qp ? QUESTS.active(S)[0] : null;
+    const raid = WEVENTS.activeRaid();
+    HUD.compass({ pos, target, W, H, places: [...near.slice(0, 8), ...unk.slice(0, 3)],
+      players: others.filter((o) => !o.hiding).map((o) => ({ name: o.name, pos: otherPos(o) })).filter((o) => G.pxDist(pos, o.pos) < 220).slice(0, 8),
+      quest: qp ? { pos: qp, name: qa ? QUESTS.target(qa.st) : "" } : null,
+      raid: raid && WORLD.places[raid.town] ? { town: raid.town, pos: WORLD.places[raid.town] } : null });
+  }
   function renderVitals() {
     const hp = G.curHealth(S), mh = G.maxHealth(S);
+    if (typeof HUD !== "undefined") {
+      const w = G.carried(S), cap = G.capacity(S), bty = TOWNS.totalBounty(S);
+      HUD.bars($("#vitals"), { hp, hpMax: mh, mp: G.maxMagicka(S), mpMax: G.maxMagicka(S), sp: G.maxStamina(S), spMax: G.maxStamina(S), w, cap, over: G.overweight(S),
+        danger: S.trip?.status === "encounter" || !!S.dungeon?.room?.enemy, hidden: !!S.ambush, vampire: !!S.vampire, werewolf: !!S.werewolf,
+        rested: G.rested(S) ? ((S.restBonus || 0.05) >= 0.1 ? "Well Rested" : "Rested") : "", sick: !!(S.sanguinare && !S.vampire), bounty: bty, riding: HORSES.riding(S) });
+      return;
+    }
     const row = (label, cur, max, color) => `<div class="vital"><small><span>${label}</span><span class="num">${Math.round(cur)}/${max}</span></small><div class="bar"><i style="width:${pct(cur, max)}%;background:${color}"></i></div></div>`;
     const w = G.carried(S), cap = G.capacity(S);
     $("#vitals").innerHTML = row("Health", hp, mh, "var(--hp)") + row("Magicka", G.maxMagicka(S), G.maxMagicka(S), "var(--mp)") + row(G.overweight(S) ? "Weight · too heavy" : "Weight", w, cap, w > cap ? "var(--ember)" : "#8a7a5c");
@@ -2020,6 +2051,7 @@
     const side = $("#side");
     if (!force && side.contains(document.activeElement) && document.activeElement.matches("input,select")) return;
     rendered = version; lastPanelRender = Date.now();
+    side.dataset.tab = tab;
     const openD = [...side.querySelectorAll("details")].map((d) => d.open), y = scrollY;
     side.innerHTML = tutTip() + ({ map: panelTravel, hero: panelHero, pack: panelPack, tactics: panelTactics, town: panelTown, log: panelLog, social: panelSocial }[tab] || panelTravel)();
     if (!force) { side.querySelectorAll("details").forEach((d, i) => { if (openD[i] != null) d.open = openD[i]; }); scrollTo(0, y); }
