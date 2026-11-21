@@ -38,7 +38,8 @@ const CURSE = (() => {
   // ---- vampire
   const infected = (s, t = nowS()) => !!s.sanguinare && !s.vampire;
   function maybeInfect(s, enemy, t = nowS()) {   // after any fight with a vampire
-    if (!enemy || !/vampire/i.test(enemy.name || "") || s.vampire || s.sanguinare || s.werewolf) return null;   // [Skyrim] werewolves are immune to disease
+    if (!enemy || !/vampire/i.test(enemy.name || "") || s.vampire || s.sanguinare || s.werewolf) return null;
+    if (typeof PRIESTS !== "undefined" && PRIESTS.immune(s)) return null;   // [Skyrim] Hevnoraak: immune to disease   // [Skyrim] werewolves are immune to disease
     if (Math.random() >= INFECT_CHANCE) return null;
     s.sanguinare = { at: t };
     return "You feel a strange chill where the vampire's claws caught you. (Sanguinare Vampiris: cure it within 3 hours with a Cure Disease potion or at a shrine, or you'll turn.)";

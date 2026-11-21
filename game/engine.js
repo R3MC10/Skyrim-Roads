@@ -138,6 +138,13 @@ const G = (() => {
     const perk = ["novice_locks", "apprentice_locks", "adept_locks", "expert_locks", "master_locks"][tier];
     return Math.max(0.05, Math.min(0.97, 0.92 - tier * 0.17 + (skill(s, "Lockpicking") - 15) / 110 + (P(s, perk) ? 0.3 : 0)));
   }
+  /* one pick attempt: the lockpicking mini-game can decide it (s._lockForce), else the old roll */
+  function lockRoll(s, chance) {
+    let ok;
+    if (s && s._lockForce !== undefined) { ok = !!s._lockForce; delete s._lockForce; } else ok = Math.random() < chance;
+    if (ok && s) { s.lt = s.lt || {}; s.lt.locks = (s.lt.locks || 0) + 1; }
+    return ok;
+  }
   let allyProvider = () => [];
   const setAllyProvider = (fn) => { allyProvider = fn; };
 
@@ -218,7 +225,7 @@ const G = (() => {
   function itemStats(item) {
     const it = D.ITEMS[item];
     if (it.slot === "weapon") return `${it.damage} dmg · ${it.skill}${it.hands === 2 ? " · 2 hands" : ""}${it.enchant ? ` · +${it.enchant.magnitude} ${it.enchant.effect}` : ""}`;
-    if (ARMOR_SLOTS.includes(it.slot)) return `${it.armor} armor · ${it.type}${it.aenchant ? ` · ${it.aenchant.name} ${it.aenchant.mag}` : ""}`;
+    if (ARMOR_SLOTS.includes(it.slot)) return `${it.armor} armor · ${it.type}${it.aenchant ? ` · ${it.aenchant.name}${it.aenchant.mag > 1 ? " " + it.aenchant.mag : ""}${it.aenchant.more?.length ? ` +${it.aenchant.more.length} more` : ""}` : ""}`;
     if (it.effects) return it.effects.map(([e, m, d]) => `${e} ${m}${d * 5 >= 60 ? ` · ${Math.round(d * 5 / 60)} min` : ""}`).join(", ");
     if (it.slot === "potion") return it.restore ? `+${it.restore[1]} ${it.restore[0]}` : it.cures ? "Cures diseases" : "";
     if (it.slot === "scroll" || it.slot === "tome") return D.SPELLS[it.spell].name;
@@ -279,7 +286,7 @@ const G = (() => {
     if (sp?.parts && typeof SPELLCRAFT !== "undefined") return Math.max(1, Math.round(sp.parts.reduce((a, p) => a + (D.SPELLS[p] ? spellCost(s, D.SPELLS[p]) : 0), 0) * SPELLCRAFT.PREMIUM[sp.parts.length]));   // crafted: its parts, each at its own school
     const id = Object.keys(D.SPELLS).find((k) => D.SPELLS[k] === sp), tier = SPELL_TIER[id] || (sp.level || "").toLowerCase();
     const half = tier && P(s, `${tier}_${sp.school.toLowerCase()}`) ? 0.5 : 1;   // [Skyrim] "<tier> <school>" perks: half cost
-    return Math.floor(F.spellCost(sp.cost, skill(s, sp.school)) * half * (typeof MAGIC !== "undefined" && id ? MAGIC.costMult(s, id) : 1));   // spells above your level cost more
+    return Math.floor(F.spellCost(sp.cost, skill(s, sp.school)) * half * (typeof MAGIC !== "undefined" && id ? MAGIC.costMult(s, id) : 1) * (1 - Math.min(0.5, fxSum(s, "cost:" + sp.school) / 100)));   // dragon priest masks   // spells above your level cost more
   }
   const enchantCost = (e, s) => F.enchantCost(e.base_cost, e.magnitude, e.max_magnitude, skill(s, "Enchanting")) * (1 - 0.1 * P(s, "enchanter"));
   function describeAction(a) {
@@ -602,8 +609,13 @@ const G = (() => {
     enemyTurn() {
       const pre = typeof MAGIC !== "undefined" ? MAGIC.beforeEnemy(this) : null;   // runes, fear, invisibility
       if (pre?.end) return pre.text;
-      if (pre) return pre.text + " · " + this.enemyTurnInner();
-      return this.enemyTurnInner();
+      const head = pre ? pre.text + " · " : "";
+      let pr = null;   // [Skyrim] dragon priests: cloak, summons, ward and spells (priests.js)
+      if (this.e.priest && typeof PRIESTS !== "undefined" && !(this.calmTurns > 0) && !(this.eParalyzed > 0) && !this.stagger) pr = PRIESTS.enemyAct(this);
+      let out = pr?.end ? head + pr.text : head + (pr?.text ? pr.text + " · " : "") + this.enemyTurnInner();
+      const kon = typeof PRIESTS !== "undefined" ? PRIESTS.guard(this) : null;   // Konahrik
+      if (kon) out += " · " + kon;
+      return out;
     }
     enemyTurnInner() {
       const n = this.e.name, s = this.s;
@@ -757,7 +769,7 @@ const G = (() => {
   function die(s, cause, t = now(), byPlayer = false) {
     const keep = equippedAnywhere(s);
     const items = [];
-    s.inv = s.inv.filter((r) => { if (keep.has(r.id)) return true; items.push([r.item, r.qty, r.charge]); return false; });
+    s.inv = s.inv.filter((r) => { if (keep.has(r.id) || D.ITEMS[r.item]?.noTrade) return true; items.push([r.item, r.qty, r.charge]); return false; });
     const bag = (s.gold || items.length) ? { id: `${s.id}-${Math.floor(t)}`, ownerId: s.id, ownerName: s.name,
       x: s.x, y: s.y, gold: s.gold, items, expires: t + BAG_MINUTES * 60 } : null;
     const lost = `${s.gold} gold and ${items.reduce((a, i) => a + i[1], 0)} items`;
@@ -1004,6 +1016,7 @@ const G = (() => {
     if (!shopsOpen(t)) return `The shops are closed (${clockText(t)}).`;
     const r = invRow(s, id);
     if (!r || r.qty < qty) return "You don't have that.";
+    if (D.ITEMS[r.item].noTrade) return `The ${D.ITEMS[r.item].name} is bound to you. No merchant will take it.`;
     const price = sellPrice(s, r) * qty, name = D.ITEMS[r.item].name;
     const wasStolen = !!invRow(s, id)?.stolen;
     take(s, id, qty); s.gold += price;
@@ -1039,7 +1052,7 @@ const G = (() => {
 
   return {
     MAP_W, MAP_H, STEP_SECONDS, SLOTS, ARMOR_SLOTS, GAME_SPEED, now, pxDist, holdAt, clock, isNight, shopsOpen, clockText,
-    P, wtype, fxSum, lockChance, setAllyProvider, hiddenChance, rested, haggle, SPELL_TIER, newSave, maxHealth, maxMagicka, maxStamina, curHealth, setHealth, skill, useSkill, levelUp,
+    P, wtype, fxSum, lockChance, lockRoll, setAllyProvider, hiddenChance, rested, haggle, SPELL_TIER, newSave, maxHealth, maxMagicka, maxStamina, curHealth, setHealth, skill, useSkill, levelUp,
     riding, withHorse, give, take, invRow, carried, capacity, overweight, equipment, equip, unequip, countRestore, itemStats,
     loadout: lo, addRule, ruleSlot, deadRules, fixTactics, saveLoadoutAs, deleteLoadout, spellCost, describeRule, describeAction, Fight, scaleEnemy, rollLoot,
     rollEncounter, die, speed, discoverRadius, startTrip, startEvent, eventChoices, eventChoice, buyFrom, minutesLeft, minutesTo, posAfter, advance, encounterAction, migrate, PLACES,

@@ -68,7 +68,7 @@ const HALL = (() => {
   // ---- shared chest (Mead Hall and up): anyone can put things in; you can take 3 a day
   const day = () => Math.floor(Date.now() / 864e5);
   const takenToday = (s) => (s.hallTaken?.day === day() ? s.hallTaken.n : 0);
-  function canDeposit(r) { return r && D.ITEMS[r.item] && !r.stolen && !r.temper && !D.ITEMS[r.item].quest; }
+  function canDeposit(r) { return r && D.ITEMS[r.item] && !r.stolen && !r.temper && !D.ITEMS[r.item].quest && !D.ITEMS[r.item].noTrade; }
   function deposit(s, rowId) {
     if (tier() < 2) return { err: "The shared chest opens when the hall becomes a Mead Hall." };
     const r = G.invRow(s, rowId);

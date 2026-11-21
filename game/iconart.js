@@ -272,6 +272,7 @@ const ICONART = (() => {
         else if (it.skill === "Archery") bow(g, m, bid);
         else { const t = (G.wtype && G.wtype(bid)) || "sword", f = W[t === "sword" && /great|claymore/.test(bid) ? "greatsword" : t] || (it.hands === 2 ? W.greatsword : W.sword); diag(g, (g) => f(g, m)); }
       } else if (slot === "shield") shield(g, bid, m);
+      else if (slot === "head" && it.mask && typeof PRIESTS !== "undefined") PRIESTS.drawMask(g, 20, 20, 1.3, it.mask);   // dragon priest masks
       else if (slot === "head") helmet(g, bid, m, it.type);
       else if (slot === "chest") cuirass(g, bid, m, it.type);
       else if (slot === "hands") gloves(g, bid, m, it.type);

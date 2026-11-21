@@ -201,9 +201,11 @@ const UIART = (() => {
       poly(g, [[26, 22], [31, 17], [32.5, 19], [27, 26]], "#8e2b25", null); },
     bounty: (g) => { rect(g, 9, 6, 22, 28, "#efe4cc"); for (const y of [12, 16, 20]) line(g, [[13, y], [27, y]], "#9c8662", 1.1); circ(g, 20, 27, 4, "#8e2b25"); },
     jobs: (g) => { rect(g, 8, 8, 24, 24, "#8a5a34"); rect(g, 12, 12, 7, 8, "#efe4cc", INK, 0.8); rect(g, 21, 14, 7, 9, "#efe4cc", INK, 0.8); circ(g, 15.5, 12.5, 1, "#c43a3a", null); circ(g, 24.5, 14.5, 1, "#c43a3a", null); },
+    masks: (g) => { glow(g, 20, 20, 16, "#c9a24c", 0.4); if (typeof PRIESTS !== "undefined") PRIESTS.drawMask(g, 20, 20.5, 1.25, "morokei", INK); },   // [Skyrim] a dragon priest mask
   };
   const ACH = {
     first_steps: (g) => SKILL.Athletics(g), seasoned: (g) => SKILL["One-Handed"](g), explorer: (g) => { circ(g, 20, 20, 11, "#efe4cc"); poly(g, [[20, 9], [23, 20], [20, 31], [17, 20]], "#c43a3a", INK, 0.9); poly(g, [[20, 20], [23, 20], [20, 31], [17, 20]], "#efe4cc", INK, 0.9); },
+    masks: (g) => { if (typeof PRIESTS !== "undefined") PRIESTS.drawMask(g, 20, 20, 1.05, "konahrik", INK); },
     delver: G_.candle, dragonslayer: QUEST.main, dragonbane: (g) => G_.skull(g, "#efe4cc"), thuum: (g) => { for (const p of SHOUT_MARK.unrelenting_force) { line(g, p, "#14100c", 3.6); line(g, p, "#e8f4fb", 1.8); } },
     stones: (g) => { poly(g, [[13, 34], [14, 10], [18, 6], [22, 6], [26, 10], [27, 34]], "#7d7a72"); star(g, 20, 18, 4, 5, "#9fd0f0", null); }, hero: QUEST.bounty, legend: (g) => star(g, 20, 20, 12, 5, "#d6b25e"),
     homeowner: (g) => { poly(g, [[8, 20], [20, 9], [32, 20]], "#8e2b25"); rect(g, 11, 20, 18, 13, "#c49c70"); rect(g, 17, 25, 6, 8, "#5a3a2a"); }, landlord: (g) => { rect(g, 9, 14, 22, 19, "#8f8a80"); for (const x of [9, 14, 19, 24, 29]) rect(g, x, 10, 3, 4, "#8f8a80", INK, 0.8); rect(g, 17, 24, 6, 9, "#5a3a2a"); },

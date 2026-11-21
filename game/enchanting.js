@@ -56,6 +56,7 @@ const ENCH = (() => {
     if (!hasEnchanter(s.location)) return "You need an arcane enchanter: court wizards' towers and the College of Winterhold have one.";
     const r = G.invRow(s, rowId), it = r && D.ITEMS[r.item];
     if (!isEnchanted(it)) return "That isn't enchanted.";
+    if (it.mask) return "The mask's old magic won't come loose. It isn't something you can break for its secrets.";
     if (Object.values(G.loadout(s).equipment).includes(rowId)) return "Take it off first.";
     const eff = effectOf(r.item);
     if (known(s).includes(eff)) return `You already know ${(WEAPON[eff] || ARMOR[eff])[0]}. Breaking it would teach you nothing.`;
@@ -93,7 +94,7 @@ const ENCH = (() => {
   /* worn armor enchantments, read by fxSum in the engine */
   function worn(s, key) {
     let n = 0;
-    for (const id of Object.values(G.loadout(s).equipment)) { const r = G.invRow(s, id), it = r && D.ITEMS[r.item]; if (it?.aenchant?.key === key) n += it.aenchant.mag; }
+    for (const id of Object.values(G.loadout(s).equipment)) { const r = G.invRow(s, id), it = r && D.ITEMS[r.item]; if (!it?.aenchant) continue; if (it.aenchant.key === key) n += it.aenchant.mag; for (const m of it.aenchant.more || []) if (m.key === key) n += m.mag; }   // masks carry several
     return n;
   }
   return { WEAPON, ARMOR, known, hasEnchanter, disenchant, preview, enchant, canTake, worn, isEnchanted, effectOf, strength };

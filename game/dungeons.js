@@ -180,6 +180,7 @@ const DUNGEONS = (() => {
       s.dungeon = { place: name, theme: i.theme, tier: i.tier, rows: [[{ type: "boss", links: [] }]], row: -1, col: 0, room: null, found: [], gold: 0, t };
       s.dungeon.boss = key;
     } else s.dungeon = { place: name, theme: i.theme, tier: i.tier, rows: layout(i.theme, i.tier), row: -1, col: 0, room: null, found: [], gold: 0, t };
+    if (typeof PRIESTS !== "undefined") PRIESTS.onEnter(s);   // [Skyrim] a dragon priest sleeps at the end
     G.setHealth(s, G.curHealth(s, t), t);
     G.note(s, `🕯 Entered ${name}`);
     return null;
@@ -291,6 +292,7 @@ const DUNGEONS = (() => {
       const g = goldFound(s, rint(60, 160) * d.tier);
       for (const [item, c] of D.LOOT.elite) if (Math.random() < c * (0.6 + 0.3 * d.tier)) extra.push(giveFound(s, item));
       extra.push(...themeLoot(s, 0.9));
+      if (typeof PRIESTS !== "undefined") extra.push(...PRIESTS.onBoss(s, d, e));   // the dragon priest's mask, once
       if (d.place === "Bleak Falls Barrow" && !s.inv.some((x) => x.item === "golden_claw")) { extra.push(giveFound(s, "golden_claw")); extra.push(giveFound(s, "dragonstone")); }
       let word = "";
       if (THEMES[d.theme]?.words && (d.place === "Bleak Falls Barrow" || Math.random() < 0.6)) {   // [Skyrim] Word Walls
@@ -304,13 +306,14 @@ const DUNGEONS = (() => {
       if (res.f.allies?.some((a) => a.player)) {   // fought with your party: the boss chest is shared... in theory
         partyChest = { gold: g, items: [] };
         s.gold -= g; d.gold -= g;
-        for (const name of extra) { const row = [...s.inv].reverse().find((x) => D.ITEMS[x.item].name === name && !["golden_claw", "dragonstone"].includes(x.item)); if (row) { partyChest.items.push(row.item); G.take(s, row.id); d.found.splice(d.found.indexOf(name), 1); } }
+        for (const name of extra) { const row = [...s.inv].reverse().find((x) => D.ITEMS[x.item].name === name && !["golden_claw", "dragonstone"].includes(x.item) && !D.ITEMS[x.item].noTrade); if (row) { partyChest.items.push(row.item); G.take(s, row.id); d.found.splice(d.found.indexOf(name), 1); } }
       }
       s.cleared = s.cleared || {}; s.cleared[d.place] = t;
       d.room = null; d.done = true;
       G.note(s, `🏆 Cleared ${d.place}`);
-      if (partyChest) return { text: `The ${e.name.toLowerCase()} falls. Behind it stands a chest full of treasure: ${g} gold${partyChest.items.length ? ", " + partyChest.items.map((i) => D.ITEMS[i].name).join(", ") : ""}. It belongs to the whole party... for now.${word}`, fight: res.f, skills: res.skills, gold: res.gold, loot: res.loot, cleared: true, partyChest };
-      return { text: `The ${e.name.toLowerCase()} falls. In the chest behind it: ${g} gold${extra.length ? ", " + extra.join(", ") : ""}.${word}`, fight: res.f, skills: res.skills, gold: res.gold, loot: res.loot, cleared: true };
+      const falls = e.priest ? `${e.name.split(",")[0]} falls, and the mask clatters to the floor.` : `The ${e.name.toLowerCase()} falls.`;   // dragon priests have names
+      if (partyChest) return { text: `${falls} Behind it stands a chest full of treasure: ${g} gold${partyChest.items.length ? ", " + partyChest.items.map((i) => D.ITEMS[i].name).join(", ") : ""}. It belongs to the whole party... for now.${word}`, fight: res.f, skills: res.skills, gold: res.gold, loot: res.loot, cleared: true, partyChest };
+      return { text: `${falls} In the chest behind it: ${g} gold${extra.length ? ", " + extra.join(", ") : ""}.${word}`, fight: res.f, skills: res.skills, gold: res.gold, loot: res.loot, cleared: true };
     }
 
     if (r.type === "trap") {
@@ -344,7 +347,7 @@ const DUNGEONS = (() => {
       }
       if (choice === "tower") s.stonePowerAt = t;
       const ch = choice === "tower" ? 1 : G.lockChance(s, r.tier);
-      if (Math.random() < ch) {
+      if (choice === "tower" || G.lockRoll(s, ch)) {
         const skills = G.useSkill(s, "Lockpicking", LOCK_TIERS[r.tier][1]);                            // [Skyrim] XP per lock tier
         const g = goldFound(s, Math.round(rint(15, 40) * (r.tier + 1) * (G.P(s, "golden_touch") ? 1.5 : 1))), loot = [];
         for (const [item, c] of D.LOOT[r.tier >= 3 ? "elite" : "humanoid"]) if (Math.random() < c * 1.5 * (G.P(s, "treasure_hunter") ? 1.5 : 1)) loot.push(giveFound(s, item));

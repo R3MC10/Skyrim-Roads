@@ -99,7 +99,7 @@ const MP = (() => {
   function makeOffer(s, card, rowIds, giveGold, askGold, t = G.now()) {
     giveGold = Math.max(0, Math.floor(+giveGold || 0)); askGold = Math.max(0, Math.floor(+askGold || 0));
     const eq = new Set(Object.values(G.loadout(s).equipment));
-    const rows = rowIds.map((id) => G.invRow(s, id)).filter((r) => r && !eq.has(r.id));
+    const rows = rowIds.map((id) => G.invRow(s, id)).filter((r) => r && !eq.has(r.id) && !D.ITEMS[r.item]?.noTrade);   // dragon priest masks are bound to you
     if (!rows.length && !giveGold) return { text: "Put something in the offer: items or gold." };
     if (giveGold > s.gold) return { text: `You only have ${s.gold} gold.` };
     const items = rows.map(rowCopy);

@@ -19,6 +19,7 @@ const MARKET = (() => {
     if (!r || !D.ITEMS[r.item]) return { err: "You don't have that." };
     if (Object.values(G.loadout(s).equipment || {}).includes(rowId)) return { err: "Take it off first." };
     if (r.stolen) return { err: "Stolen goods go to a fence, not the market." };
+    if (D.ITEMS[r.item].noTrade) return { err: "That's bound to you. It can't be sold." };
     price = Math.floor(+price);
     if (!(price >= 1) || price > MAX_PRICE) return { err: "Set a price between 1 and 100,000 gold." };
     const row = { item: r.item, qty: r.qty, charge: r.charge ?? null, temper: r.temper || 0, tq: r.tq || 0 };

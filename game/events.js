@@ -49,7 +49,7 @@ const ROAD_EVENTS = (() => {
       tower: (s, e) => { s.stonePowerAt = G.now(); return byId.chest.pick(s, e, true); },
       pick: (s, e, sure) => {
         const ch = sure ? 1 : G.lockChance(s, e.tier);
-        if (Math.random() < ch) {
+        if (sure || G.lockRoll(s, ch)) {
           const skills = xp(s, "Lockpicking", LOCK_TIERS[e.tier][1]);
           const gold = Math.round(rint(10, 40) * (e.tier + 1) * (G.P(s, "golden_touch") ? 1.5 : 1)), loot = [];
           s.gold += gold;

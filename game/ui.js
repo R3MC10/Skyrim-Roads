@@ -180,6 +180,7 @@
     }
     tabsEl.classList.add("hide");
     SOUND.mood("title");
+    SOUND.ambience?.({ scene: "wild", weather: "snow", tod: "night", ground: "snow", coldLand: true });   // the title: wind over the mountains
     renderTitle();
   }
   let titleStop = null;
@@ -258,7 +259,7 @@
   function settingsHTML() {
     const c = SOUND.settings, sl = (id, label, v) => `<label class="sndrow"><span>${label}</span><input type="range" id="${id}" min="0" max="100" step="5" value="${Math.round(v * 100)}" aria-label="${label}"></label>`;
     const seg = (key, opts, cur) => `<div class="seg" role="group">${opts.map(([v, l]) => `<button data-act="pref" data-k="${key}" data-v="${v}" class="${String(cur) === String(v) ? "on" : ""}" aria-pressed="${String(cur) === String(v)}">${l}</button>`).join("")}</div>`;
-    return `<h3>Sound</h3>${sl("snd_music", "Music", c.music)}${sl("snd_sfx", "Effects", c.sfx)}
+    return `<h3>Sound</h3>${sl("snd_music", "Music", c.music)}${sl("snd_sfx", "Effects", c.sfx)}${sl("snd_amb", "Ambience", c.amb ?? 0.5)}
       <div class="setrow"><span>All sound</span>${seg("mute", [[false, "On"], [true, "Off"]], c.mute)}</div>
       ${S ? `<h3>Your character</h3><div class="grid2"><button class="btn" data-act="bk" data-bk="openbackup">Back up</button><button class="btn" data-act="bk" data-bk="openrestore">Restore</button></div>` : `<h3>Your character</h3><button class="btn" data-act="bk" data-bk="openrestore" style="width:100%">Restore from a backup</button>`}
       <h3>Look</h3><div class="setrow"><span>Art style</span>${seg("artStyle", [["ink", "Hand-drawn"], ["pixel", "Pixel art"]], ART.style())}</div>
@@ -268,6 +269,7 @@
   }
   function onSettingsInput(e) {
     if (e.target.id === "snd_music") SOUND.set("music", e.target.value / 100);
+    if (e.target.id === "snd_amb") SOUND.set("amb", e.target.value / 100);
     if (e.target.id === "snd_sfx") { SOUND.set("sfx", e.target.value / 100); if (e.type === "change") SOUND.fx("coin"); }
   }
   /* returns true when the caller should re-render */
@@ -530,6 +532,7 @@
     const t = G.now();
     { const cm = CARAVANS.tick(S, t); if (cm) { persist(true); toast(cm); if (S.caravanJob === null) Store.change("guards", `${lastJobId}-${S.id}`, (d) => (d && d.status === "signed" ? { ...d, status: "left" } : d)); bump(); } lastJobId = S.caravanJob?.id || lastJobId; }
     tickTimers(t); discoveryToast(); if (Math.floor(t) % 5 === 0) courierCheck();
+    if (typeof IMM !== "undefined") { IMM.tick(S); if (S.lastSeen && t - S.lastSeen > 3600 && !S.trip?.status) IMM.loading("Welcome back to Skyrim"); S.lastSeen = t; }
     if (S.trip?.status === "travel") {
       const out = G.advance(S, t, reachableBags());
       if (out.taken.length || out.bag || out.died || out.encounter || out.arrived) {
@@ -540,6 +543,7 @@
         else if (out.encounter) openEncounter();
         else if (out.arrived) {
           SOUND.fx("arrive"); tally("arrivals"); festCount("arrive");
+          if (typeof IMM !== "undefined") IMM.bark(S, out.arrived);
           if (!WORLD.places[out.arrived]) {   // free roam or a pin: say what's around
             const near = ROAM.around(S), msg = `You stop in ${ROAM.isRoam(out.arrived) ? out.arrived : `the spot you marked (${out.arrived})`}. ${Terrain.NAMES[Terrain.typeAtPos([S.x, S.y])]} all around.${near.length ? ` Nearby: ${near.join(", ")}.` : " Nothing you know of nearby."}`;
             G.note(S, "🧭 " + msg); toast(msg);
@@ -566,8 +570,28 @@
 
   /* music follows what you're doing; little sounds for gold and level-ups */
   let lastGold = null, lastPending = null;
+  /* what you'd hear right now: the scene, the weather, the ground under your feet ([OURS] sound.js ambience) */
+  function ambState(raid) {
+    const pos = livePos(), T = typeof Terrain !== "undefined" ? Terrain : null;
+    const ty = T ? T.typeAtPos(pos) : 5, wx = WEVENTS.weather(pos)?.id || "clear";
+    const near = T ? [[0, 0], [0.012, 0], [-0.012, 0], [0, 0.012], [0, -0.012]].map(([dx, dy]) => T.typeAtPos([pos[0] + dx, pos[1] + dy])) : [];
+    const sky = typeof SKY !== "undefined" ? SKY.state(pos) : null;
+    const inTown = !!S.location && !S.trip && TOWNS.isTown(S.location);
+    const scene = S.dungeon ? "dungeon" : inTown ? (tab === "town" && townShop === "inn" ? "inn" : tab === "town" && (townShop === "forge" || townShop === "blacksmith") ? "forge" : "town") : "wild";
+    const snowy = ty === 11 || ty === 15 || wx === "snow" || wx === "blizzard";
+    return {
+      scene, weather: wx, tod: G.isNight() ? "night" : "day",
+      ground: snowy ? "snow" : [3, 4, 12, 13, 14].includes(ty) ? "stone" : ty === 10 ? "marsh" : "grass",
+      leafy: [5, 7, 8, 9].includes(ty), coldLand: [11, 14, 15].includes(ty) || !!sky?.cold, wet: wx === "rain" || wx === "storm" || wx === "blizzard",
+      water: near.some((k) => k <= 2), sea: near.includes(0), dwemer: S.dungeon?.theme === "dwemer",
+      raid: !!(raid && (S.location === raid.town || (WORLD.places[raid.town] && G.pxDist(pos, WORLD.places[raid.town]) < 120))),
+      moving: S.trip?.status === "travel", speed: T ? Math.round(T.speedAt(pos) * 10) / 10 : 1,
+      riding: typeof HORSES !== "undefined" && HORSES.riding(S), cart: typeof CARAVANS !== "undefined" && CARAVANS.hasCart(S),
+    };
+  }
   function soundTick() {
     const raid = WEVENTS.activeRaid();
+    try { SOUND.ambience?.(ambState(raid)); } catch (e) { /* sound never breaks the game */ }
     SOUND.mood(S.dungeon ? (S.dungeon.room?.enemy ? "combat" : "dungeon") : S.trip?.status === "encounter" || (raid && S.location === raid.town && !S.trip) ? "combat" : G.isNight() ? "night" : "day");
     if (lastGold != null && S.gold !== lastGold) { SOUND.fx("coin"); if (typeof POLISH !== "undefined") POLISH.gold(S.gold - lastGold); }
     if (lastPending != null && S.pendingLevels > lastPending) { SOUND.fx("levelup", 0.3); if (typeof POLISH !== "undefined") POLISH.levelUp(S.level); }
@@ -689,7 +713,7 @@
       discovered: S.discovered, explored: [...S.explored, pos], others: others.filter((o) => !o.hiding || G.pxDist(livePos(), otherPos(o)) < MP.NEAR_PX).map((o) => ({ name: (o.clan ? `[${o.clan}] ` : "") + o.name + (party?.members.some((m) => m.id === o.id) ? " ⚑" : ""), pos: otherPos(o), look: o.look, race: o.race, party: !!party?.members.some((m) => m.id === o.id) })),
       rulers: Object.entries(WARS.rulers(S)).map(([hold, c]) => ({ hold, color: c.colors[0] })),
       banners: CLANS.banners(homeDocs, S, VISITS.record(S)).filter((b) => WORLD.places[b.town]).map((b) => ({ ...b, pos: WORLD.places[b.town].slice(0, 2) })),
-      cleared: clearedLeft(), bags: visibleBags(), selected: selected && WORLD.places[selected] ? selected : null, t: ts / 1000, zoom, center, reduceMotion, weather: WEVENTS.weather(pos).id, quest: questPos(), pins: (S.pins || []).map((p) => ({ pos: [p.x, p.y], label: `${p.icon} ${p.label}`, on: selected === "__pin:" + p.id })),
+      cleared: clearedLeft(), bags: visibleBags(), selected: selected && WORLD.places[selected] ? selected : null, t: ts / 1000, zoom, center, reduceMotion, weather: WEVENTS.weather(pos).id, quest: questPos(), mask: typeof PRIESTS !== "undefined" ? PRIESTS.marker(S)?.pos : null, pins: (S.pins || []).map((p) => ({ pos: [p.x, p.y], label: `${p.icon} ${p.label}`, on: selected === "__pin:" + p.id })),
       routes: party ? others.filter((o) => o.moving && o.path?.length > 1 && party.members.some((m) => m.id === o.id)).map((o) => ({ path: o.path, from: otherPos(o), name: o.name })) : [], horse: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, cart: CARAVANS.hasCart(S), caravans: CARAVANS.all().map((c) => { const cp = CARAVANS.pos(c); return { cp, c }; }).map(({ cp, c }) => ({ pos: cp, visible: G.pxDist(cp, pos) < 160 || S.discovered.some((n) => WORLD.places[n] && ["city", "town"].includes(WORLD.places[n][2]) && G.pxDist(cp, WORLD.places[n]) < 45), khajiit: c.line.khajiit, moving: c.phase === "road", mine: S.caravanJob?.id === c.id, label: c.line.name.replace(/'s caravan$/, "") })).filter((c) => !(c.mine && S.trip?.caravan)), hall: S.discovered.includes(HALL.TOWN) || known(HALL.TOWN) ? { pos: HALL.POS, label: `Hall of the North · ${HALL.progress().name}` } : null,
     };
     WorldMap.draw($("#map"), view);
@@ -1173,7 +1197,7 @@
     for (const [id, [name, words]] of Object.entries(POWERS.SHOUTS)) if (words.some((w) => POWERS.known(S, w))) out.push({ id: `shout:${id}`, cat: "shouts", name, cost: null, sub: words.map((w) => POWERS.known(S, w) ? (POWERS.unlocked(S, w) ? w : w + "🔒") : "···").join(" ") });
     const t = G.now();
     for (const f of (S.fx || []).filter((f) => f.until > t)) out.push({ id: `fx:${f.name}:${f.until}`, cat: "effects", name: f.name, cost: null, sub: `${f.mag} · ${Math.ceil((f.until - t) / 60)} min` });
-    for (const g of gearFx()) out.push({ id: `fx:gear:${g.from}:${g.key}`, cat: "effects", name: `${g.name} +${g.mag}${FX_UNIT(g.key)}`, cost: null, sub: `Worn: ${g.from}` });
+    for (const g of gearFx()) out.push({ id: `fx:gear:${g.from}:${g.key}`, cat: "effects", name: fxLabel(g), cost: null, sub: `Worn: ${g.from}` });
     if (G.rested(S)) out.push({ id: "fx:rested", cat: "effects", name: (S.restBonus || 0.05) >= 0.1 ? "Well Rested" : "Rested", cost: null, sub: `${Math.ceil((S.rested - t) / 60)} min` });
     if (S.stone) out.push({ id: "fx:stone", cat: "effects", name: POWERS.STONES[S.stone][0], cost: null, sub: "Standing stone" });
     return out.filter((r) => sky.cat === "all" ? !r.id.startsWith("fx:") : r.cat === sky.cat);
@@ -1200,10 +1224,11 @@
   // ---- what your worn gear and potions add (shown next to skills)
   function gearFx() {
     const out = [];
-    for (const id of Object.values(G.loadout(S).equipment || {})) { const r = G.invRow(S, id), it = r && D.ITEMS[r.item]; if (it?.aenchant) out.push({ name: it.aenchant.name, mag: it.aenchant.mag, key: it.aenchant.key, from: it.name }); }
+    for (const id of Object.values(G.loadout(S).equipment || {})) { const r = G.invRow(S, id), it = r && D.ITEMS[r.item]; if (it?.aenchant) for (const e of [it.aenchant, ...(it.aenchant.more || [])]) out.push({ name: e.name, mag: e.mag, key: e.key, from: it.name }); }   // masks carry several
     return out;
   }
-  const FX_UNIT = (key) => key.startsWith("dmg:") ? "% damage" : key.startsWith("spell:") ? "% stronger spells" : key === "barter" ? "% better prices" : key === "resist" ? "% resist magic" : key === "carry" ? " carry weight" : key.startsWith("max:") ? " " + key.slice(4) : key.startsWith("skill:") ? " skill" : "";
+  const FX_UNIT = (key) => key.startsWith("dmg:") ? "% damage" : key.startsWith("spell:") ? "% stronger spells" : key === "barter" ? "% better prices" : key === "resist" ? "% resist magic" : key === "carry" ? " carry weight" : key.startsWith("max:") ? " " + key.slice(4) : key.startsWith("skill:") ? " skill" : key.startsWith("cost:") ? "% cheaper" : key.startsWith("regen:") ? "% faster regen" : "";
+  const fxLabel = (g) => ["immune", "konahrik"].includes(g.key) ? g.name : `${g.name} +${g.mag}${FX_UNIT(g.key)}`;
   function boost(sk) {
     const add = G.skill(S, sk) - S.skills[sk].lvl, dmg = G.fxSum(S, "dmg:" + sk), spell = G.fxSum(S, "spell:" + sk);
     const bits = [add ? `+${add} from gear/potions` : "", dmg ? `+${dmg}% damage` : "", spell ? `+${spell}% stronger spells` : ""].filter(Boolean);
@@ -1657,6 +1682,7 @@
     openVisit(visitId);
   }
   function tally(kind, n = 1) {
+    if (typeof IMM !== "undefined") IMM.count(S, kind, n);   // lifetime counters for Journal → Stats
     if (!BOUNTY.add(S, kind, n)) return;
     const rec = BOUNTY.record(S);
     Store.put("bounty", `${rec.week}-${S.id}`, rec);
@@ -2091,7 +2117,7 @@
           ${r < ranks ? `<button class="btn sm ${err ? "" : "pri"}" data-act="perk" data-id="${id}" ${err ? "disabled" : ""}>Take</button>` : ""}</div>`; }).join("")}</div></div>`;
     const t = G.now(), fx = (S.fx || []).filter((f) => f.until > t);
     const gfx = gearFx();
-    const effects = fx.length || gfx.length || G.rested(S) || S.poison ? `<div class="panel"><h2>Active effects</h2><div class="list">${gfx.map((g) => `<div class="item"><div class="t">${esc(g.name)} +${g.mag}${esc(FX_UNIT(g.key))}<span>from ${esc(g.from)} (while worn)</span></div></div>`).join("")}${G.rested(S) ? `<div class="item"><div class="t">${(S.restBonus || 0.05) >= 0.1 ? "Well Rested" : "Rested"}<span>Skills improve ${Math.round((S.restBonus || 0.05) * 100)}% faster · ${Math.ceil((S.rested - t) / 60)} min left</span></div></div>` : ""}
+    const effects = fx.length || gfx.length || G.rested(S) || S.poison ? `<div class="panel"><h2>Active effects</h2><div class="list">${gfx.map((g) => `<div class="item"><div class="t">${esc(fxLabel(g))}<span>from ${esc(g.from)} (while worn)</span></div></div>`).join("")}${G.rested(S) ? `<div class="item"><div class="t">${(S.restBonus || 0.05) >= 0.1 ? "Well Rested" : "Rested"}<span>Skills improve ${Math.round((S.restBonus || 0.05) * 100)}% faster · ${Math.ceil((S.rested - t) / 60)} min left</span></div></div>` : ""}
       ${S.poison ? `<div class="item"><div class="t">${esc(S.poison.name)} on your weapon<span>${S.poison.hits} hit${S.poison.hits > 1 ? "s" : ""} left</span></div></div>` : ""}
       ${fx.map((f) => `<div class="item"><div class="t">${esc(f.name)} ${f.mag}<span>${Math.ceil((f.until - t) / 60)} min left</span></div></div>`).join("")}</div></div>` : "";
     const tnow = G.now(), rp = POWERS.RACE[S.race];
@@ -2508,7 +2534,7 @@
       ${myRank > 10 ? `<p class="sub" style="margin-top:6px">You're number ${myRank}.</p>` : ""}</div>` : "";
     // a quick-jump menu: the Journal has grown long
     const parts = [["guide", "📖 Guide", guideCard()], ["event", "Event", festPanel()], ["quests", "Quests", questPanel()], ["bounty", "Bounty", bountyPanel()], ["chat", "Chat", chatPanel()], ["holds", "Holds", holdsPanel()], ["clan", "Clan", clanPanel()],
-      ["world", "World", worldHtml], ["trades", "Trades", tradeHtml], ["party", "Party", partyHtml], ["people", "Travellers", travellers], ["ladder", "Leaderboard", ladderHtml], ["crimes", "Bounties", bounty], ["cleared", "Cleared", clearedPanel()], ["caravan", "Caravan", caravanJobPanel()], ["news", "News", word]]
+      ["world", "World", worldHtml], ["trades", "Trades", tradeHtml], ["party", "Party", partyHtml], ["people", "Travellers", travellers], ["ladder", "Leaderboard", ladderHtml], ["crimes", "Bounties", bounty], ["cleared", "Cleared", clearedPanel()], ["caravan", "Caravan", caravanJobPanel()], ["news", "News", word], ["stats", "Stats", typeof IMM !== "undefined" ? IMM.stats(S) : ""]]
       .filter(([, , h]) => h && h.trim()).map(([id, label, h]) => [id, label, h.replace(/<div class="panel"/, `<div id="j-${id}" class="panel"`)]);
     const nav = `<nav class="jnav" aria-label="Journal sections">${[...parts.map(([id, label]) => [id, label]), ["log", "Diary"]].map(([id, label]) => `<button class="chip" data-act="jgo" data-id="${id}">${label}</button>`).join("")}</nav>`;
     return `${nav}${parts.map(([, , h]) => h).join("")}
@@ -2610,7 +2636,7 @@
       case "disench": say(ENCH.disenchant(S, +b.dataset.id)); break;
       case "enchant": { const m = ENCH.enchant(S, enchDraft.item, enchDraft.eff, enchDraft.gem); persist(true); renderPanel(true); showMessage("Arcane enchanter", m); publishCard(); break; }
       case "stone": say(POWERS.takeStone(S, b.dataset.id)); publishCard(); break;
-      case "carriage": { const err = TOWNS.rideCarriage(S, b.dataset.id); if (err) return toast(err); S.trip.total = G.minutesLeft(S); persist(true); toast(`The driver cracks the reins. ${fmtMin(S.trip.total)} to ${b.dataset.id}.`); tab = "map"; renderTabs(); renderPanel(true); $("#mapwrap").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" }); follow = true; break; }
+      case "carriage": { const err = TOWNS.rideCarriage(S, b.dataset.id); if (err) return toast(err); if (typeof IMM !== "undefined") IMM.loading(`The carriage rolls toward ${b.dataset.id}…`); S.trip.total = G.minutesLeft(S); persist(true); toast(`The driver cracks the reins. ${fmtMin(S.trip.total)} to ${b.dataset.id}.`); tab = "map"; renderTabs(); renderPanel(true); $("#mapwrap").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" }); follow = true; break; }
       case "hire": say(TOWNS.hire(S, b.dataset.id)); publishCard(); break;
       case "buyhome": { const m = TOWNS.buyHome(S); persist(true); renderPanel(true); showMessage("A home of your own", m); break; }
       case "homebed": say(TOWNS.sleepHome(S)); break;
@@ -2624,13 +2650,13 @@
       case "unlock": say(POWERS.unlock(S, b.dataset.id)); break;
       case "roadshout": { SOUND.fx("shout"); const from = livePos(); const m = POWERS.roadShout(S, b.dataset.id); liveCache.key = ""; persist(true); toast(m); renderPanel(true);
         if (typeof FXART !== "undefined" && /^WULD/.test(m || "")) FXART.cast("whirlwind", { from }); break; }
-      case "enter": { const err = DUNGEONS.enter(S); if (err) return toast(err); selected = null; renderPicked(); dunNote = null; persist(true); renderDungeon(); break; }
+      case "enter": { const err = DUNGEONS.enter(S); if (err) return toast(err); if (typeof IMM !== "undefined") IMM.loading(`Entering ${S.dungeon?.place || "the dungeon"}…`); selected = null; renderPicked(); dunNote = null; persist(true); renderDungeon(); break; }
       case "dun": renderDungeon(); break;
       case "droom": dungeonRoom(b.dataset.c); break;
-      case "dact": dungeonAct(b.dataset.c); break;
+      case "dact": if (b.dataset.c === "pick" && typeof IMM !== "undefined" && IMM.wantsGame()) { IMM.pick("dungeon", dungeonAct, S); break; } dungeonAct(b.dataset.c); break;
       case "dmin": closeDungeon(); tab = "pack"; renderTabs(); renderPanel(true); break;
-      case "dleave": { const m = DUNGEONS.leave(S); dunNote = null; persist(true); closeDungeon(); renderPanel(true); showMessage("Back outside", m); break; }
-      case "ev": eventAction(b.dataset.c); break;
+      case "dleave": { if (typeof IMM !== "undefined") IMM.loading("Back to the open road…"); const m = DUNGEONS.leave(S); dunNote = null; persist(true); closeDungeon(); renderPanel(true); showMessage("Back outside", m); break; }
+      case "ev": if (b.dataset.c === "pick" && typeof IMM !== "undefined" && IMM.wantsGame()) { IMM.pick("event", eventAction, S); break; } eventAction(b.dataset.c); break;
       case "evbuy": { const m = G.buyFrom(S, b.dataset.item); persist(); openEvent(m); break; }
       case "enc": encounterAction(b.dataset.a); break;
       case "close": closeModal(); break;

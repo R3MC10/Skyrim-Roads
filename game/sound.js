@@ -14,11 +14,11 @@
    back with variations, the odd horn call or choir; combat adds war drums. */
 const SOUND = (() => {
   const KEY = "rotn_sound";
-  let cfg = { music: 0.35, sfx: 0.6, mute: false };
+  let cfg = { music: 0.35, sfx: 0.6, amb: 0.5, mute: false };
   try { Object.assign(cfg, JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (e) { /* storage blocked */ }
   const saveCfg = () => { try { localStorage.setItem(KEY, JSON.stringify(cfg)); } catch (e) { /* ignore */ } };
 
-  let ctx = null, out, master, musicBus, sfxBus, verbIn, sends = {}, noiseBuf = null, gritCache = {};
+  let ctx = null, out, master, musicBus, sfxBus, ambBus, verbIn, sends = {}, noiseBuf = null, gritCache = {};
   const hz = (midi) => 440 * Math.pow(2, (midi - 69) / 12);
   const rnd = (a, b) => a + Math.random() * (b - a), pick = (a) => a[Math.floor(Math.random() * a.length)];
 
@@ -40,6 +40,7 @@ const SOUND = (() => {
     master.connect(hp); hp.connect(tone); tone.connect(comp); comp.connect(lim); lim.connect(ctx.destination);
     musicBus = ctx.createGain(); musicBus.gain.value = 0; musicBus.connect(master);
     sfxBus = ctx.createGain(); sfxBus.gain.value = 0; sfxBus.connect(master);
+    ambBus = ctx.createGain(); ambBus.gain.value = 0; ambBus.connect(master);   // the world around you: wind, rain, towns, caves, footsteps
     // one short, soft hall: 1.4 s, mono (a third of the old reverb's CPU), filtered noise faded in so it never clicks
     const verb = ctx.createConvolver(), sr = ctx.sampleRate, len = Math.round(sr * 1.4), ir = ctx.createBuffer(1, len, sr);
     for (let c = 0; c < 1; c++) {
@@ -68,10 +69,11 @@ const SOUND = (() => {
     master.gain.setTargetAtTime(cfg.mute || hidden ? 0 : 1, t, k);
     musicBus.gain.setTargetAtTime(Math.pow(cfg.music, 1.3) * 0.9, t, 0.25);
     sfxBus.gain.setTargetAtTime(Math.pow(cfg.sfx, 1.3) * 1.1, t, k);
+    ambBus.gain.setTargetAtTime(Math.pow(cfg.amb ?? 0.5, 1.3) * AMB_LEVEL, t, 0.3);
   }
 
   // ------------------------------------------------------------ voices (each one starts and ends at exactly zero)
-  const voices = { music: [], sfx: [] }, CAP = { music: 26, sfx: 32 };
+  const voices = { music: [], sfx: [], amb: [] }, CAP = { music: 26, sfx: 32, amb: 16 };
   let fxScale = 1;   // per-effect loudness trim, set while an effect is being built
   function room(kind, t, end) {   // keep count of what will be sounding at the same time; refuse when full
     const v = voices[kind], now = ctx.currentTime;
@@ -360,12 +362,182 @@ const SOUND = (() => {
     return true;
   }
 
+
+  // ------------------------------------------------------------ ambience: the world around you ([OURS], all procedural)
+  /* A few looping "beds" (filtered noise from the one shared buffer, a gain each, a slow wobble) that crossfade over
+     ~2 s when the scene changes, plus sparse one-shot events (birds, drips, clangs, howls, footsteps) scheduled
+     from a 250 ms timer and capped like other voices. Everything goes through ambBus → master → limiter. */
+  const AMB_LEVEL = 0.55;   // the whole layer sits well under the music
+  let ambWant = null, ambKey = "", ambTimer = null, nextStep = 0, stepFoot = 0;
+  const beds = {};          // name → { g, nodes:[], target }
+  const nextAt = {};        // event name → next time it may fire
+  function lfo(freq, depth, dest) {   // a slow wobble on an AudioParam
+    const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = freq; g.gain.value = depth; o.connect(g); g.connect(dest); o.start(); return o;
+  }
+  /* each bed: build(g) wires nodes into the bed's gain g and returns them (to stop later) */
+  const BEDS = {
+    wind(g, w) {
+      const s = ctx.createBufferSource(); s.buffer = noiseBuf; s.loop = true;
+      const f = ctx.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = w.cold ? 700 : 450; f.Q.value = 0.7;
+      const gust = ctx.createGain(); gust.gain.value = 0.6; s.connect(f); f.connect(gust); gust.connect(g);
+      const l1 = lfo(0.06 + Math.random() * 0.04, w.cold ? 260 : 180, f.frequency), l2 = lfo(0.11, 0.35, gust.gain);
+      const nodes = [s, l1, l2];
+      if (w.howl) {   // blizzard: a thin howling whistle on top
+        const h = ctx.createBiquadFilter(); h.type = "bandpass"; h.frequency.value = 900; h.Q.value = 9; const hg = ctx.createGain(); hg.gain.value = 0.9;
+        s.connect(h); h.connect(hg); hg.connect(g); nodes.push(lfo(0.09, 380, h.frequency), lfo(0.13, 0.6, hg.gain));
+      }
+      s.start(0, Math.random() * 1.5); return nodes;
+    },
+    rain(g) {
+      const s = ctx.createBufferSource(); s.buffer = noiseBuf; s.loop = true;
+      const hp = ctx.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 1400; const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 6500;
+      s.connect(hp); hp.connect(lp); lp.connect(g); s.start(0, Math.random() * 1.5); return [s, lfo(0.05, 400, hp.frequency)];
+    },
+    water(g, w) {   // a river murmur, or the slow swell of the sea
+      const s = ctx.createBufferSource(); s.buffer = noiseBuf; s.loop = true;
+      const f = ctx.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = w.sea ? 500 : 900; f.Q.value = 0.5;
+      const amp = ctx.createGain(); amp.gain.value = 0.7; s.connect(f); f.connect(amp); amp.connect(g); s.start(0, Math.random() * 1.5);
+      return [s, lfo(w.sea ? 0.09 : 0.3, w.sea ? 0.45 : 0.15, amp.gain), lfo(w.sea ? 0.09 : 0.2, 200, f.frequency)];
+    },
+    crowd(g, w) {   // the murmur of a town or a full inn: band-limited noise with a restless, speech-like wobble
+      const s = ctx.createBufferSource(); s.buffer = noiseBuf; s.loop = true;
+      const f = ctx.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = w.inn ? 520 : 650; f.Q.value = 1.1;
+      const f2 = ctx.createBiquadFilter(); f2.type = "lowpass"; f2.frequency.value = w.inn ? 1100 : 1600;
+      const amp = ctx.createGain(); amp.gain.value = 0.6; s.connect(f); f.connect(f2); f2.connect(amp); amp.connect(g); s.start(0, Math.random() * 1.5);
+      return [s, lfo(2.7, 0.18, amp.gain), lfo(4.3, 0.12, amp.gain), lfo(0.7, 180, f.frequency)];
+    },
+    hearth(g) {   // a low fire rumble (the pops are events)
+      const s = ctx.createBufferSource(); s.buffer = noiseBuf; s.loop = true;
+      const f = ctx.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 380; s.connect(f); f.connect(g); s.start(0, Math.random() * 1.5);
+      return [s, lfo(0.4, 60, f.frequency)];
+    },
+    cave(g, w) {   // a deep room tone: a soft hollow drone and a far-off rumble
+      const o = ctx.createOscillator(); o.type = "triangle"; o.frequency.value = 73.4;
+      const o2 = ctx.createOscillator(); o2.type = "sine"; o2.frequency.value = 110.3;
+      const og = ctx.createGain(); og.gain.value = 0.25; o.connect(og); o2.connect(og); og.connect(g);
+      const s = ctx.createBufferSource(); s.buffer = noiseBuf; s.loop = true;
+      const f = ctx.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 220; s.connect(f); f.connect(g);
+      o.start(); o2.start(); s.start(0, Math.random() * 1.5);
+      const nodes = [o, o2, s, lfo(0.05, 0.12, og.gain)];
+      if (w.dwemer) {   // steam in the pipes
+        const h = ctx.createBufferSource(); h.buffer = noiseBuf; h.loop = true;
+        const hp = ctx.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 3200; const hg = ctx.createGain(); hg.gain.value = 0.18;
+        h.connect(hp); hp.connect(hg); hg.connect(g); h.start(0, Math.random() * 1.5); nodes.push(h, lfo(0.17, 0.12, hg.gain));
+      }
+      return nodes;
+    },
+  };
+  // how loud each bed sits (before ambBus), tuned offline so the layer stays even
+  const BED_VOL = { wind: 0.5, rain: 0.07, water: 0.3, crowd: 0.3, hearth: 0.26, cave: 0.12 };
+  function setBed(name, level, opts, keyExtra = "") {
+    const id = name + keyExtra, b = beds[id], t = ctx.currentTime;
+    if (level <= 0) { if (b && b.target > 0) { b.g.gain.setTargetAtTime(0, t, 0.6); b.target = 0; b.die = t + 4.5; } return; }
+    const vol = BED_VOL[name] * level;
+    if (b) { if (Math.abs(b.target - vol) > 0.001) { b.g.gain.setTargetAtTime(vol, t, 0.6); b.target = vol; b.die = 0; } return; }
+    const g = ctx.createGain(); g.gain.value = 0; g.connect(ambBus);
+    let nodes = [];
+    try { nodes = BEDS[name](g, opts || {}); } catch (e) { return; }
+    g.gain.setTargetAtTime(vol, t, 0.6);   // fades in over ~2 s
+    beds[id] = { g, nodes, target: vol, die: 0, name };
+  }
+  function reapBeds() {
+    const t = ctx.currentTime;
+    for (const [id, b] of Object.entries(beds)) if (b.die && t > b.die) {
+      for (const n of b.nodes) { try { n.stop(); } catch (e) { /* not started */ } try { n.disconnect(); } catch (e) { /* ignore */ } }
+      try { b.g.disconnect(); } catch (e) { /* ignore */ }
+      delete beds[id];
+    }
+  }
+  /* one-shots: { every: mean seconds between, when: (w) => bool, play: (t, w) => {} } */
+  const A = (f, t, o) => osc(f, t, { ...o, kind: "amb", dest: o.dest || ambBus });
+  const N = (t, o) => noise(t, { ...o, kind: "amb", dest: o.dest || ambBus });
+  const EVENTS = {
+    bird: { every: 7, when: (w) => w.scene === "wild" && w.tod !== "night" && w.leafy && !w.wet,
+      play(t) { const f = rnd(2600, 4200), n = 2 + Math.floor(Math.random() * 4); for (let i = 0; i < n; i++) A(f * rnd(0.92, 1.1), t + i * rnd(0.07, 0.12), { vol: 0.035, a: 0.006, r: 0.03, glide: rnd(1.15, 1.45) }); } },
+    cricket: { every: 2.2, when: (w) => w.scene === "wild" && w.tod === "night" && !w.coldLand && !w.wet,
+      play(t) { const f = rnd(4300, 5200); for (let i = 0; i < 3; i++) A(f, t + i * 0.045, { vol: 0.012, a: 0.003, r: 0.008 }); } },
+    owl: { every: 45, when: (w) => w.scene === "wild" && w.tod === "night" && w.leafy,
+      play(t) { [0, 0.55, 0.85].forEach((d, i) => A(i === 0 ? 420 : 395, t + d, { vol: 0.05, a: 0.04, h: 0.12, r: 0.08, glide: 0.92, cut: 1200 })); } },
+    wolf: { every: 110, when: (w) => w.scene === "wild" && w.tod === "night",
+      play(t) { A(rnd(440, 520), t, { type: "triangle", vol: 0.04, a: 0.5, h: 1.4, r: 0.6, glide: 0.75, cut: 1400, dest: sends.hi || ambBus }); } },
+    thunder: { every: 22, when: (w) => w.weather === "storm",
+      play(t) { N(t, { type: "lowpass", freq: 260, vol: 0.5, a: 0.3, h: 1.2, r: 0.9, sweep: 0.5 }); N(t + 0.05, { type: "lowpass", freq: 900, vol: 0.18, a: 0.01, h: 0.15, r: 0.2 }); } },
+    hammer: { every: 6, when: (w) => w.scene === "town",
+      play(t) { const n = 2 + Math.floor(Math.random() * 2); for (let i = 0; i < n; i++) { [1700, 2400, 3300].forEach((f, k) => A(f * rnd(0.98, 1.02), t + i * 0.42, { vol: [0.022, 0.014, 0.008][k], a: 0.001, r: 0.09, cut: 3500, dest: sends.mid || ambBus })); } } },
+    clink: { every: 5, when: (w) => w.scene === "inn",
+      play(t) { const f = rnd(2300, 2900); A(f, t, { vol: 0.03, a: 0.001, r: 0.05 }); A(f * 1.37, t + 0.01, { vol: 0.016, a: 0.001, r: 0.04 }); } },
+    crackle: { every: 0.6, when: (w) => w.scene === "inn",
+      play(t) { const n = 1 + Math.floor(Math.random() * 3); for (let i = 0; i < n; i++) N(t + i * rnd(0.02, 0.08), { type: "bandpass", freq: rnd(1500, 4500), q: 1.5, vol: 0.09, a: 0.001, r: 0.006 }); } },
+    drip: { every: 3.2, when: (w) => w.scene === "dungeon",
+      play(t) { const f = rnd(700, 1200); A(f, t, { vol: 0.05, a: 0.002, r: 0.04, glide: 1.9, dest: sends.hi || ambBus }); } },
+    rumble: { every: 30, when: (w) => w.scene === "dungeon",
+      play(t) { N(t, { type: "lowpass", freq: 180, vol: 0.4, a: 0.8, h: 1.2, r: 0.8 }); } },
+    gears: { every: 4, when: (w) => w.scene === "dungeon" && w.dwemer,
+      play(t) { for (let i = 0; i < 4; i++) N(t + i * 0.16, { type: "bandpass", freq: 2400, q: 4, vol: 0.06, a: 0.001, r: 0.01, dest: sends.mid || ambBus }); } },
+    bellows: { every: 4.5, when: (w) => w.scene === "forge",
+      play(t) { N(t, { type: "lowpass", freq: 500, vol: 0.22, a: 0.5, h: 0.3, r: 0.25 }); } },
+    anvil: { every: 3, when: (w) => w.scene === "forge",
+      play(t) { const n = 2 + Math.floor(Math.random() * 2); for (let i = 0; i < n; i++) [1900, 2650, 3720].forEach((f, k) => A(f * rnd(0.98, 1.02), t + i * 0.36, { vol: [0.05, 0.035, 0.02][k], a: 0.001, r: 0.12, dest: sends.mid || ambBus })); } },
+    roar: { every: 14, when: (w) => w.raid,
+      play(t) { A(rnd(60, 80), t, { type: "sawtooth", vol: 0.12, a: 0.3, h: 1.1, r: 0.4, glide: 0.6, cut: 420, dest: sends.hi || ambBus }); N(t + 0.1, { type: "lowpass", freq: 500, vol: 0.12, a: 0.3, h: 1, r: 0.3 }); } },
+  };
+  /* footsteps: soft, their pace follows your speed; crunch on snow, thud on grass, tap on stone; hooves when riding */
+  function footstep(t, w) {
+    const g = w.ground;
+    if (w.riding) {   // a two-beat clop, two hooves close together
+      [0, 0.09].forEach((d) => { N(t + d, { type: "bandpass", freq: g === "snow" ? 1400 : 900, q: 1.4, vol: 0.07, a: 0.001, r: 0.02 }); A(160, t + d, { vol: 0.05, a: 0.002, r: 0.03, glide: 0.6 }); });
+    } else if (g === "snow") N(t, { type: "bandpass", freq: rnd(2200, 3200), q: 0.9, vol: 0.08, a: 0.01, h: 0.03, r: 0.03 });
+    else if (g === "stone") { N(t, { type: "bandpass", freq: rnd(1600, 2200), q: 1.5, vol: 0.06, a: 0.001, r: 0.015 }); A(180, t, { vol: 0.02, a: 0.002, r: 0.02, glide: 0.7 }); }
+    else if (g === "marsh") N(t, { type: "bandpass", freq: rnd(600, 900), q: 2, vol: 0.07, a: 0.01, h: 0.02, r: 0.04, sweep: 1.6 });
+    else N(t, { type: "lowpass", freq: rnd(700, 1000), vol: 0.09, a: 0.003, r: 0.03 });
+    if (w.cart && Math.random() < 0.18) A(rnd(160, 240), t + 0.05, { type: "sawtooth", vol: 0.012, a: 0.08, h: 0.12, r: 0.08, glide: 1.25, cut: 900 });
+  }
+  function ambStep(force) {
+    if (!ctx || !ambWant || (!force && (ctx.state !== "running" || hidden))) return;
+    const t = ctx.currentTime, w = ambWant;
+    reapBeds();
+    if (!(cfg.amb > 0) || cfg.mute) return;
+    for (const [name, ev] of Object.entries(EVENTS)) {
+      if (!ev.when(w)) { nextAt[name] = 0; continue; }
+      if (!nextAt[name]) { nextAt[name] = t + rnd(0.3, 1) * ev.every; continue; }
+      if (t >= nextAt[name]) { try { ev.play(t + 0.05, w); } catch (e) { /* never break the game */ } nextAt[name] = t + ev.every * rnd(0.6, 1.5); }
+    }
+    if (w.moving && w.scene === "wild") {
+      const every = w.riding ? 0.62 : Math.max(0.42, 0.62 / Math.max(0.6, Math.min(1.6, w.speed || 1)));
+      if (nextStep < t - 1) nextStep = t + 0.1;
+      while (nextStep < t + 0.3) { footstep(nextStep, w); nextStep += every * rnd(0.95, 1.05); }
+    } else nextStep = 0;
+  }
+  /* the scene → which beds, how loud */
+  function applyAmb() {
+    if (!ctx || !ambWant) return;
+    if (!(cfg.amb > 0) || cfg.mute) { for (const b of Object.values(beds)) setBed(b.name, 0, null, Object.keys(beds).find((k) => beds[k] === b).slice(b.name.length)); return; }
+    const w = ambWant, out = w.scene !== "dungeon" && w.scene !== "inn";
+    const windLv = !out ? 0 : w.weather === "blizzard" ? 0.8 : w.weather === "snow" ? 0.75 : w.weather === "storm" ? 0.55 : w.weather === "rain" ? 0.4 : w.scene === "town" ? 0.3 : w.coldLand ? 0.9 : 0.7;
+    setBed("wind", windLv, { cold: w.coldLand, howl: w.weather === "blizzard" }, w.weather === "blizzard" ? "+howl" : w.coldLand ? "+cold" : "");
+    // a wind bed built for a different weather fades out
+    for (const id of Object.keys(beds)) if (beds[id].name === "wind" && id !== "wind" + (w.weather === "blizzard" ? "+howl" : w.coldLand ? "+cold" : "")) setBed("wind", 0, null, id.slice(4));
+    setBed("rain", out && (w.weather === "rain" || w.weather === "storm") ? (w.weather === "storm" ? 1.4 : 1) : 0);
+    setBed("water", out && w.water ? (w.scene === "town" ? 0.5 : 1) : 0, { sea: w.sea }, w.sea ? "+sea" : "");
+    for (const id of Object.keys(beds)) if (beds[id].name === "water" && id !== "water" + (w.sea ? "+sea" : "")) setBed("water", 0, null, id.slice(5));
+    setBed("crowd", w.scene === "town" ? (w.tod === "night" ? 0.35 : 1) : w.scene === "inn" ? 0.5 : w.scene === "forge" ? 0.15 : 0, { inn: w.scene === "inn" }, w.scene === "inn" ? "+inn" : "");
+    for (const id of Object.keys(beds)) if (beds[id].name === "crowd" && id !== "crowd" + (w.scene === "inn" ? "+inn" : "")) setBed("crowd", 0, null, id.slice(5));
+    setBed("hearth", w.scene === "inn" ? 1 : w.scene === "forge" ? 0.8 : 0);
+    setBed("cave", w.scene === "dungeon" ? 1 : 0, { dwemer: w.dwemer }, w.dwemer ? "+dw" : "");
+    for (const id of Object.keys(beds)) if (beds[id].name === "cave" && id !== "cave" + (w.dwemer ? "+dw" : "")) setBed("cave", 0, null, id.slice(4));
+  }
+  function startAmb() {
+    if (!ctx || ambTimer || typeof setInterval === "undefined") return;
+    ambTimer = setInterval(ambStep, 250);
+  }
+
   // ------------------------------------------------------------ waking up, sleeping, and the phone's background
   let unlocked = false, hidden = typeof document !== "undefined" && document.hidden, sleepT = null;
   function unlock() {
     if (!unlocked) { if (!init()) return; unlocked = true; }
     if (ctx.state !== "running" && !hidden) ctx.resume?.().catch(() => {});
     if (!cfg.mute && cfg.music > 0 && !playing) startMusic();
+    startAmb(); applyAmb();
   }
   if (typeof document !== "undefined") {
     ["pointerdown", "keydown", "touchstart"].forEach((ev) => document.addEventListener(ev, unlock, { capture: true, passive: true }));   // stays on: also wakes audio the phone stopped
@@ -379,6 +551,7 @@ const SOUND = (() => {
       clearTimeout(sleepT);
       (ctx.resume ? ctx.resume() : Promise.resolve()).catch(() => {}).then(() => {
         if (playing) { queue = []; nextBeat = ctx.currentTime + 0.25; }
+        nextStep = 0; for (const k of Object.keys(nextAt)) nextAt[k] = 0;
         applyVolume();
       });
     };
@@ -403,18 +576,30 @@ const SOUND = (() => {
       if (!MOODS[m] || m === wantMood) return;
       wantMood = m; switchMood(m);
     },
+    /* what's around you: { scene: wild|town|inn|forge|dungeon, weather, tod, ground, leafy, coldLand, wet, water, sea,
+       dwemer, raid, moving, speed, riding, cart } — call it whenever any of that may have changed (cheap) */
+    ambience(w) {
+      if (!w) return;
+      const key = JSON.stringify(w);
+      if (key === ambKey) return;
+      ambKey = key; ambWant = { ...w };
+      if (ctx && unlocked) applyAmb();
+    },
     get settings() { return { ...cfg }; },
     set(k, v) {
       cfg[k] = v; saveCfg();
       if (!ctx) return;
       applyVolume();
       if (cfg.mute || cfg.music <= 0) { if (playing) stopMusic(); } else if (unlocked && !playing) startMusic();
+      if (k === "amb" || k === "mute") applyAmb();
     },
-    get state() { return { ctx: ctx?.state || "none", unlocked, mood, music: playing, voices: voices.music.length + voices.sfx.length }; },
+    get state() { return { ctx: ctx?.state || "none", unlocked, mood, music: playing, voices: voices.music.length + voices.sfx.length + voices.amb.length, amb: ambWant?.scene || null, beds: Object.keys(beds), ambVoices: voices.amb.length }; },
     /* for tests and the offline renderer: drive the same engine on any AudioContext */
     _test: {
-      init: () => { const ok = init(); unlocked = true; if (ctx) { master.gain.value = 1; musicBus.gain.value = Math.pow(cfg.music, 1.3) * 0.9; sfxBus.gain.value = Math.pow(cfg.sfx, 1.3) * 1.1; } return ok; },
+      init: () => { const ok = init(); unlocked = true; if (ctx) { master.gain.value = 1; musicBus.gain.value = Math.pow(cfg.music, 1.3) * 0.9; sfxBus.gain.value = Math.pow(cfg.sfx, 1.3) * 1.1; ambBus.gain.value = Math.pow(cfg.amb ?? 0.5, 1.3) * AMB_LEVEL; } return ok; },
       FX, step, fire, get ctx() { return ctx; },
+      amb: (w) => { ambWant = { ...w }; ambKey = ""; if (ambBus) ambBus.gain.value = Math.pow(cfg.amb ?? 0.5, 1.3) * AMB_LEVEL; applyAmb(); },
+      ambStep: () => ambStep(true), EVENTS, BEDS,
       startMusic: () => { if (timer) { clearInterval(timer); timer = null; } playing = true; layer = makeLayer(mood); beat = 0; chordIx = 0; queue = []; motif = null; restBars = 1; nextBeat = ctx.currentTime + 0.2; step(); },
       setMood: (m) => { mood = m; wantMood = m; if (playing) switchMood(m); },
     },

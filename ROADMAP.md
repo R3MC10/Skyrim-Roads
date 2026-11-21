@@ -5,6 +5,7 @@ Each round: build one batch, test it (Node sims in /home/claude/tests + headless
 our own marked [OURS]; plain-language UI; phone first.
 
 ## Done
+- Round 42: immersion and dragon priests. Skyrim lockpicking mini-game (same odds as before, Quick roll option), QUEST STARTED / OBJECTIVE banners, guard barks on arrival, loading cards with 44 tips, Journal → Stats. Ambient sound beds (wind, rain/thunder, birds, crickets/owls/wolves, water, town, inn, forge, caves, Dwemer, dragon raids) and footsteps/hooves/cart, with an Ambience slider. The eight dragon priests in their ruins (from level 20) with wearable masks, Konahrik at Bromjunaar, a questline and an achievement.
 - Round 41: Skyrim + SkyUI interface. HUD: Skyrim compass on the map (quest marker, nearby places, players, raids), slim framed health/magicka/stamina bars that fade when full, status icons, top-left message log, line-icon tab bar, round icon buttons. SkyUI panels: smoked-glass menus with silver rules and corner flourishes, condensed small-caps type, SkyUI item lists, town options as Skyrim dialogue, Journal as a parchment quest book, perk constellations, Skyrim level-up, YOU DIED screen. Fonts bundled (work offline). Popups made solid so they read well over the map.
 - Round 40: Thieves Guild (10 stages to the Twilight Sepulcher, Nightingale gear, Delvin/Vex jobs, ranks with fence bonus) and Dark Brotherhood (8 stages to Hail Sithis!, Nazir's contracts, Shrouded gear, Blade of Woe, Shadowmere, ranks). Animated title (drifting aurora and mountains, a dragon), creation scene, 3-picture intro. Festival decorations in towns and inns, spell/shout effects on the map (Candlelight, Detect Life, Clairvoyance trail, Mark rune, Recall, Whirlwind Sprint, Transmute), and an animated travel strip.
 - Round 39: spell crafting at the College of Winterhold (combine 1–2 effects you know, set strength, name it; costs more than the parts, max 8; works in fights, tactics and dual casting) and bard songs (write a verse about your deeds at an inn, others cheer it, the week's best verses become the Song of the North sung in every inn; authors get 100 gold and the title Sung in the halls; filter for links and bad words, hide authors).
@@ -55,7 +56,6 @@ our own marked [OURS]; plain-language UI; phone first.
 - Round 3: homes (Breezehome, Honeyside, Vlindrel Hall, Hjerim, Proudspire Manor at Skyrim prices): death-proof chest, Well Rested bed (+10%; inns now Rested +5%), daily garden.
 
 ## Next rounds (in order)
-34. Dragon priests and their masks (hunt the eight masks in Nordic ruins).
 35. Solstheim: a new island map reached by boat from Windhelm.
 36. Mounted combat on horseback.
 37. Quest fights at high level: story foes (level 10) can be too hard for plain-gear level-40 heroes; scale them by quest stage.

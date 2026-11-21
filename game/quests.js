@@ -61,9 +61,11 @@ const QUESTS = (() => {
   function ensure(s) {
     if (!q(s).main) q(s).main = { stage: 0, t: G.now() };   // everyone is on the main quest
     const th = q(s).thieves;   // the Thieves Guild line grew from 4 to 10 stages: finished old runs pick up the new chapters
+    if (!q(s).masks && L.masks && typeof PRIESTS !== "undefined" && PRIESTS.shouldStart(s)) { q(s).masks = { stage: 0, t: G.now() }; G.note(s, "🎭 New quest: Masks of the Dragon Priests (Journal)."); }   // [Skyrim] the dragon priests
     if (th && !th.v2) { th.v2 = true; if (th.done) { th.done = false; th.stage = 3; th.t = G.now(); G.note(s, "📜 Brynjolf has more work for you: the Thieves Guild story goes on (Journal)."); } }
   }
-  const active = (s) => Object.entries(q(s)).filter(([id, v]) => !v.done && L[id]).map(([id, v]) => ({ id, ...v, def: L[id], st: L[id].stages[v.stage] }));
+  const stageOf = (s, id, v) => { const st = L[id].stages[v.stage]; return typeof PRIESTS !== "undefined" ? PRIESTS.stageFor(s, st) : st; };   // masks: the next ruin filled in
+  const active = (s) => Object.entries(q(s)).filter(([id, v]) => !v.done && L[id]).map(([id, v]) => ({ id, ...v, def: L[id], st: stageOf(s, id, v) }));
   const canJoin = (s, id) => L[id].start && !q(s)[id] && s.location === L[id].start;
   function join(s, id) {
     if (!canJoin(s, id)) return "You can only join where they are.";
@@ -73,6 +75,7 @@ const QUESTS = (() => {
   function target(st) { const o = st.obj; return o.go || o.clear || o.talk || o.at || (o.flag === "thaneWhiterun" ? "Whiterun" : o.flag === "greybeards" ? "High Hrothgar" : null); }
   function met(s, id, st, v) {
     const o = st.obj;
+    if (o.masks) return typeof PRIESTS !== "undefined" && PRIESTS.count(s) >= o.masks;
     if (o.go) return s.location === o.go;
     if (o.clear) return (s.cleared || {})[o.clear] >= v.t;
     if (o.flag) return !!s[o.flag];
@@ -110,6 +113,7 @@ const QUESTS = (() => {
     const st = L[id].stages[v.stage], o = st.obj;
     if (!o.talk) return { text: "Not this way." };
     if (s.location !== o.talk) return { text: `Go to ${o.talk} first.` };
+    if (o.need) { const why = o.need(s); if (why) return { text: why }; }
     if (o.needSpell && !s.spells.some((sp) => D.SPELLS[sp]?.kind === "damage")) return { text: "You need a destruction spell to show her." };
     const msgs = [];
     let fightDef = o.fight, quiet = "";

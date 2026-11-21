@@ -68,6 +68,11 @@ const POLISH = (() => {
     }
     const q = text.match(/📜 ([^:]+): “([^”]+)” done/);
     if (q) banner("quest", "Quest completed", q[2], has("UIART") ? UIART.quest(LINE[q[1]] || "jobs", 36) : "");
+    // Skyrim: the next quest in the line starts, with its first objective
+    const no = text.match(/New objective: ([^.]+)\. ([^]*)$/);
+    if (no) { banner("quest", "Quest started", no[1].trim(), q && has("UIART") ? UIART.quest(LINE[q[1]] || "jobs", 36) : ""); const first = no[2].split(/(?<=[.!?])\s/)[0]; if (first) banner("objective", "Objective", first.length > 80 ? first.slice(0, 77) + "…" : first, ""); }
+    const lineDone = text.match(/🏆 ([^!]+) complete!/);
+    if (lineDone) banner("quest", "Questline completed", lineDone[1], "");
     const job = !q && text.match(/📜 Job done: ([^.]+)\./);
     if (job) banner("quest", "Job done", job[1], has("UIART") ? UIART.quest("jobs", 36) : "");
     const a = text.match(/🏆 Achievement: (\S+) (.+)$/);

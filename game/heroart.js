@@ -211,6 +211,10 @@ const HEROART = (() => {
 
   function drawHelmet(g, H, id) {
     const ink = P().ink, m = matOf(id), c = MAT[m];
+    if (D.ITEMS[id]?.mask && typeof PRIESTS !== "undefined") {   // [Skyrim] a dragon priest mask: a hood behind, the mask over the face
+      g.beginPath(); g.ellipse(80, 38, 17, 15, 0, Math.PI, Math.PI * 2); g.lineTo(97, 56); g.lineTo(63, 56); g.closePath(); g.fillStyle = "#2c2420"; g.fill(); g.strokeStyle = ink; g.lineWidth = 1.4; g.stroke();
+      PRIESTS.drawMask(g, 80, 45, 1.42, D.ITEMS[id].mask, ink); return;
+    }
     if (/coif/.test(id)) { g.beginPath(); g.moveTo(63, 62); g.quadraticCurveTo(58, 24, 80, 24); g.quadraticCurveTo(102, 24, 97, 62); g.quadraticCurveTo(92, 42, 80, 40); g.quadraticCurveTo(68, 42, 63, 62); g.fillStyle = c.c; g.fill(); g.strokeStyle = ink; g.lineWidth = 1.4; g.stroke(); g.fillStyle = c.d; for (let y = 30; y < 60; y += 5) for (let x = 64; x < 97; x += 5) if (Math.abs(x - 80) > 10 || y < 38) { g.beginPath(); g.arc(x, y, 0.9, 0, 7); g.fill(); } return; }
     if (m === "hide" || m === "leather") {   // fur cap / leather hood-cap
       g.beginPath(); g.ellipse(80, 34, 16, 12, 0, Math.PI, Math.PI * 2); g.lineTo(96, 40); g.lineTo(64, 40); g.closePath(); g.fillStyle = c.c; g.fill(); g.strokeStyle = ink; g.lineWidth = 1.4; g.stroke();

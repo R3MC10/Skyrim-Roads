@@ -10,6 +10,7 @@ const ACH = (() => {
     ["explorer", "🗺", "Explorer", "Discover 30 places", (s) => [(s.discovered || []).length, 30]],
     ["delver", "🕯", "Delver", "Clear 10 dungeons", (s) => [Object.keys(s.cleared || {}).length, 10]],
     ["dragonslayer", "🐉", "Dragonslayer", "Slay a dragon", (s) => [n(s.dragons), 1]],
+    ["masks", "🎭", "Masked Marauder", "Take all eight dragon priest masks", (s) => [typeof PRIESTS !== "undefined" ? PRIESTS.count(s) : 0, 8]],
     ["dragonbane", "💀", "Bane of Dragons", "Slay 10 dragons", (s) => [n(s.dragons), 10]],
     ["thuum", "🗣", "The Voice", "Learn 10 Words of Power", (s) => [(s.words || []).length, 10]],
     ["stones", "🪨", "Touched by the Stones", "Take the blessing of all 13 standing stones", (s) => [new Set([...(s.stonesSeen || []), ...(s.stone ? [s.stone] : [])]).size, 13]],

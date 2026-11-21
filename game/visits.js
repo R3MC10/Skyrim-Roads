@@ -37,6 +37,7 @@ const VISITS = (() => {
     if (s.location !== town || !owner?.towns?.includes(town)) return { err: "You have to be in their town to leave a gift." };
     const r = G.invRow(s, rowId);
     if (!r) return { err: "You don't have that." };
+    if (D.ITEMS[r.item]?.noTrade) return { err: "That's bound to you." };
     if (Object.values(G.loadout(s).equipment || {}).includes(rowId)) return { err: "Take it off first." };
     if (r.stolen) return { err: "You can't give stolen goods. The guards check deliveries." };
     const copy = { item: r.item, qty: r.qty, charge: r.charge ?? null, temper: r.temper, tq: r.tq };

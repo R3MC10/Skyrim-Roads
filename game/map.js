@@ -436,6 +436,11 @@ const WorldMap = (() => {
       g.fillStyle = "rgba(226,187,100,.9)"; g.strokeStyle = "#2a1d08"; g.lineWidth = 2 * s;
       g.beginPath(); g.moveTo(qx, qy - r); g.lineTo(qx + r * 0.75, qy); g.lineTo(qx, qy + r); g.lineTo(qx - r * 0.75, qy); g.closePath(); g.fill(); g.stroke();
     }
+    if (v.mask && typeof PRIESTS !== "undefined") {   // the next dragon priest's ruin: a small mask
+      const [mx, my] = P(v.mask);
+      if (MA) { const R = 30 * s; g.globalAlpha = 0.5; g.drawImage(MA.glowSprite("rgba(200,160,90,.9)"), mx - R / 2, my - R / 2, R, R); g.globalAlpha = 1; }
+      PRIESTS.drawMask(g, mx, my - 2 * s, 0.75 * s, "morokei");
+    }
     // weather over everything, in screen space
     if (v.weather && v.weather !== "clear") {
       g.save(); g.setTransform(1, 0, 0, 1, 0, 0);

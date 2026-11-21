@@ -387,6 +387,14 @@ const EVENTART = (() => {
       glow(g, w * 0.52, h * 0.42, 40, "214,178,94", 0.4);
       for (const x of [w * 0.2, w * 0.8]) { rect(g, H, x - 4, h * 0.3, 8, h * 0.6, "#5a5048"); poly(g, H, [[x - 3, h * 0.3], [x, h * 0.22], [x + 3, h * 0.3]], P.fire, null); glow(g, x, h * 0.27, 18, "232,146,58", 0.4); }
     },
+    masks(g, H, w, h) {   // a dragon priest's tomb: the open sarcophagus, the mask floating over it in its own light
+      H.sky(g, w, h, "cave");
+      for (const x of [w * 0.12, w * 0.88]) { rect(g, H, x - 5, h * 0.25, 10, h * 0.65, "#4e4740"); poly(g, H, [[x - 3, h * 0.25], [x, h * 0.16], [x + 3, h * 0.25]], P.fire, null); glow(g, x, h * 0.21, 18, "232,146,58", 0.4); }
+      poly(g, H, [[w * 0.3, h * 0.92], [w * 0.34, h * 0.7], [w * 0.66, h * 0.7], [w * 0.7, h * 0.92]], "#5f5850");
+      poly(g, H, [[w * 0.62, h * 0.72], [w * 0.8, h * 0.58], [w * 0.84, h * 0.64], [w * 0.68, h * 0.78]], "#6f6860");   // the lid, pushed aside
+      glow(g, w * 0.5, h * 0.42, 60, "214,178,94", 0.5);
+      if (typeof PRIESTS !== "undefined") PRIESTS.drawMask(g, w * 0.5, h * 0.42, 2.4, "morokei", P.ink);
+    },
     road(g, H, w, h) { backdrop(g, H, w, h, "Tundra", "dusk", "rd"); person(g, H, w * 0.5, h * 0.88, { body: P.leather, legs: P.inkSoft, skin: P.skin[0], cape: "#8e2b25", s: 1.1 }); },
     ambush(g, H, w, h) { backdrop(g, H, w, h, "Pine forest", "night", "am"); overlay(g, H, w, h, "night", "clear", "am"); person(g, H, w * 0.4, h * 0.9, { body: "#2a2a26", legs: "#1c1c1a", skin: P.skin[0], hood: "#1c1c1a", arm: "hold", s: 1.2 }); line(g, [[w * 0.45, h * 0.66], [w * 0.5, h * 0.58]], 2, P.steel); },
   };
@@ -411,6 +419,7 @@ const EVENTART = (() => {
       if (/Dark Brotherhood|Astrid|Night Mother|Sithis|Sanctuary|Cicero|Nazir|Grelod|Innocence Lost|Katariah|contract/i.test(x)) return "sanctuary";
       if (/Thieves|Brynjolf|Ragged Flagon|Pinewatch|purse|Loud and Clear|Darkness Returns|Chance Arrangement|Nightingale|Mercer|Karliah|Honningbrew|Dampened Spirits|Snow Veil|Calcelmo|Skeleton Key|Delvin|Vex/i.test(x)) return "flagon";
       if (/College|Winterhold|Faralda|Saarthal|Mzulft|Ancano|Magnus|First Lessons/i.test(x)) return "college";
+      if (/Dragon Priests|Bromjunaar|Konahrik/i.test(x)) return "masks";
       if (/Dragonborn|Before the Storm|Whiterun/i.test(x)) return "dragonAttack";
       return "road";
     }
