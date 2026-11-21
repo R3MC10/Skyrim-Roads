@@ -315,6 +315,12 @@ const WorldMap = (() => {
       boxes.push([bx, by, bw, bh]);
       label(g, n, x * W, y * H + 17 * s, s, size, "#fbf3dc", kind === "city" ? 700 : 600, italic);
     }
+    // cleared dungeons: a small timer badge until they open again
+    if (v.cleared) for (const [n, x, y, kind] of shown) {
+      const left = v.cleared[n]; if (!left || !(v.zoom >= KIND_MIN_ZOOM[kind] || v.selected === n)) continue;
+      const h = Math.floor(left / 3600), m = Math.ceil((left % 3600) / 60);
+      label(g, `⏳ ${h ? h + "h" : m + "m"}`, x * W + 9 * s, y * H - 10 * s, s, 11, "#e8c98a", 700, false, "left");
+    }
     if (v.selected && !v.discovered.includes(v.selected)) { const [x, y] = WORLD.places[v.selected]; g.strokeStyle = "#9fd0f0"; g.lineWidth = 2.6 * s; g.beginPath(); g.arc(x * W, y * H, 14 * s, 0, 7); g.stroke(); label(g, v.selected, x * W, y * H + 20 * s, s, 14); }
     // people and bags: try a few spots around each dot and take the first that doesn't cover another label
     const hit = (bx, by, bw, bh) => boxes.some(([X, Y, Wd, Hd]) => bx < X + Wd && bx + bw > X && by < Y + Hd && by + bh > Y);

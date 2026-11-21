@@ -490,6 +490,7 @@
   function tick() {
     if (!S) return;
     const t = G.now();
+    tickTimers(t);
     if (S.trip?.status === "travel") {
       const out = G.advance(S, t, reachableBags());
       if (out.taken.length || out.bag || out.died || out.encounter || out.arrived) {
@@ -604,7 +605,7 @@
       discovered: S.discovered, explored: [...S.explored, pos], others: others.filter((o) => !o.hiding || G.pxDist(livePos(), otherPos(o)) < MP.NEAR_PX).map((o) => ({ name: (o.clan ? `[${o.clan}] ` : "") + o.name + (party?.members.some((m) => m.id === o.id) ? " ⚑" : ""), pos: otherPos(o) })),
       rulers: Object.entries(WARS.rulers(S)).map(([hold, c]) => ({ hold, color: c.colors[0] })),
       banners: CLANS.banners(homeDocs, S, VISITS.record(S)).filter((b) => WORLD.places[b.town]).map((b) => ({ ...b, pos: WORLD.places[b.town].slice(0, 2) })),
-      bags: visibleBags(), selected: selected && WORLD.places[selected] ? selected : null, t: ts / 1000, zoom, center, reduceMotion, weather: WEVENTS.weather(pos).id, quest: questPos(), pins: (S.pins || []).map((p) => ({ pos: [p.x, p.y], label: `${p.icon} ${p.label}`, on: selected === "__pin:" + p.id })),
+      cleared: clearedLeft(), bags: visibleBags(), selected: selected && WORLD.places[selected] ? selected : null, t: ts / 1000, zoom, center, reduceMotion, weather: WEVENTS.weather(pos).id, quest: questPos(), pins: (S.pins || []).map((p) => ({ pos: [p.x, p.y], label: `${p.icon} ${p.label}`, on: selected === "__pin:" + p.id })),
       routes: party ? others.filter((o) => o.moving && o.path?.length > 1 && party.members.some((m) => m.id === o.id)).map((o) => ({ path: o.path, from: otherPos(o), name: o.name })) : [], horse: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, hall: S.discovered.includes(HALL.TOWN) || known(HALL.TOWN) ? { pos: HALL.POS, label: `Hall of the North · ${HALL.progress().name}` } : null,
     };
     WorldMap.draw($("#map"), view);
@@ -787,6 +788,30 @@
 
   // ------------------------------------------------------------ dungeons
   let dunNote = null;   // result of the last action, shown above the map
+  // ------------------------------------------------------------ cleared places: live "opens again in" timers
+  const fmtLeft = (sec) => { sec = Math.max(0, Math.ceil(sec)); const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s2 = sec % 60;
+    return h ? `${h} h ${String(m).padStart(2, "0")} min` : m ? `${m} min ${String(s2).padStart(2, "0")} s` : `${s2} s`; };
+  const cdSpan = (until) => `<span class="cd num" data-until="${Math.ceil(until)}">${fmtLeft(until - G.now())}</span>`;
+  function clearedLeft() {
+    const out = {}, t = G.now();
+    for (const n of Object.keys(S.cleared || {})) { const left = DUNGEONS.enterable(n) ? DUNGEONS.refillLeft(S, n, t) : 0; if (left > 0) out[n] = left; }
+    return out;
+  }
+  function refillCard(l, left) {
+    const total = DUNGEONS.REFILL_SECONDS || 216000, pct = Math.max(0, Math.min(100, 100 - (left / total) * 100));
+    return `<div class="refill"><div class="t">🔒 Cleared. Opens again in ${cdSpan(G.now() + left)}</div><div class="bar"><i style="width:${pct.toFixed(1)}%"></i></div><p class="sub" style="margin:4px 0 0">Something new moves in when the timer runs out (${new Date((G.now() + left) * 1000).toLocaleString([], { weekday: "short", hour: "2-digit", minute: "2-digit" })}).</p></div>`;
+  }
+  function clearedPanel() {
+    const list = Object.entries(clearedLeft()).sort((a, b) => a[1] - b[1]);
+    if (!list.length) return "";
+    return `<div class="panel"><h2>Cleared places</h2><p class="sub">When each one opens again.</p><div class="list">${list.map(([n, left]) => `<div class="item"><div class="t">${esc(n)}<span>${esc(DUNGEONS.describe(n))}</span></div>${cdSpan(G.now() + left)}</div>`).join("")}</div></div>`;
+  }
+  function tickTimers(t) {
+    let done = false;
+    for (const el of document.querySelectorAll(".cd[data-until]")) { const left = +el.dataset.until - t; if (left <= 0) done = true; else { const txt = fmtLeft(left); if (el.textContent !== txt) el.textContent = txt; } }
+    if (done) renderPanel(true);
+  }
+
   function placeHere() {
     const l = S.location;
     if (l && !S.trip && POWERS.STONE_AT[l]) {
@@ -799,7 +824,7 @@
     const left = DUNGEONS.refillLeft(S, l), lvl = { 1: 1, 2: 6, 3: 12 }[DUNGEONS.info(l).tier];
     const th = DUNGEONS.info(l).theme, rec = th === "lair" ? 20 : th === "giantcamp" ? 10 : lvl;
     return `<div class="panel" style="border-color:var(--ember)"><h2>${esc(l)}</h2><p class="sub">${esc(DUNGEONS.describe(l))} · good from about level ${rec}. Inside, you pick your own way room by room down to the boss. Health doesn't come back on its own in there, and you can leave between rooms whenever you like.</p>
-      ${left ? `<p class="sub">You cleared it. Something new moves in within about ${Math.ceil(left / 3600)} hours.</p>` : `<button class="btn danger" data-act="enter" style="width:100%">🕯 Go inside</button>`}</div>`;
+      ${left ? refillCard(l, left) : `<button class="btn danger" data-act="enter" style="width:100%">🕯 Go inside</button>`}</div>`;
   }
   function closeDungeon() { $("#dun")?.remove(); }
   function dunMap(d) {
@@ -1691,7 +1716,7 @@
     return `${placeHere()}<div class="panel"><h2>Where to?</h2><p class="sub">Tap a place on the map or pick one below. You'll follow roads where they help: they're fast, while marsh, snow and mountains are slow. New places appear as you pass near them.</p>
       <input id="search" placeholder="Search places" value="${esc(searchText)}" autocomplete="off" aria-label="Search places">
       <div class="list">${bag ? `<div class="item on"><div class="t">🎒 Your lost bag<span>${bag.gold} gold · ${Math.max(0, Math.floor((bag.expires - G.now()) / 60))} min left before it's fair game</span></div><button class="btn pri sm" data-act="go" data-place="__bag">Go</button></div>` : ""}
-      ${places.slice(0, 40).map(({ n, d }) => { const k = WORLD.places[n][2]; return `<div class="item"><div class="t">${esc(n)}<span>${KIND[k]} · ${esc(G.holdAt(WORLD.places[n]))}${S.discovered.includes(n) ? "" : " · unvisited"}</span></div><span class="num sub">${d * 1.1 / G.speed(S) < 1 ? "" : "~"}${fmtMin(d * 1.1 / G.speed(S))}</span><button class="btn sm" data-act="go" data-place="${esc(n)}">Go</button></div>`; }).join("") || `<p class="sub">No places match.</p>`}</div>
+      ${places.slice(0, 40).map(({ n, d }) => { const k = WORLD.places[n][2]; return `<div class="item"><div class="t">${esc(n)}<span>${KIND[k]} · ${esc(G.holdAt(WORLD.places[n]))}${S.discovered.includes(n) ? "" : " · unvisited"}${(() => { const lf = DUNGEONS.enterable(n) ? DUNGEONS.refillLeft(S, n) : 0; return lf ? ` · 🔒 opens in ${cdSpan(G.now() + lf)}` : ""; })()}</span></div><span class="num sub">${d * 1.1 / G.speed(S) < 1 ? "" : "~"}${fmtMin(d * 1.1 / G.speed(S))}</span><button class="btn sm" data-act="go" data-place="${esc(n)}">Go</button></div>`; }).join("") || `<p class="sub">No places match.</p>`}</div>
       <p class="sub status ${Store.online ? "live" : ""}" style="margin-top:12px"><i></i>${Store.mode === "p2p" ? `The world · ${Store.peers ? `${Store.peers} other ${Store.peers === 1 ? "phone" : "phones"} online` : "looking for friends…"}` : Store.online ? `Shared world · ${others.length} other ${others.length === 1 ? "traveller" : "travellers"}` : APP ? "Offline game · saved on this phone" : "Saved in this browser only"}</p>${Store.online ? "" : onlineBtn()}</div>`;
   }
 
@@ -2004,7 +2029,7 @@
       ${myRank > 10 ? `<p class="sub" style="margin-top:6px">You're number ${myRank}.</p>` : ""}</div>` : "";
     // a quick-jump menu: the Journal has grown long
     const parts = [["event", "Event", festPanel()], ["quests", "Quests", questPanel()], ["bounty", "Bounty", bountyPanel()], ["chat", "Chat", chatPanel()], ["holds", "Holds", holdsPanel()], ["clan", "Clan", clanPanel()],
-      ["world", "World", worldHtml], ["trades", "Trades", tradeHtml], ["party", "Party", partyHtml], ["people", "Travellers", travellers], ["ladder", "Leaderboard", ladderHtml], ["crimes", "Bounties", bounty], ["news", "News", word]]
+      ["world", "World", worldHtml], ["trades", "Trades", tradeHtml], ["party", "Party", partyHtml], ["people", "Travellers", travellers], ["ladder", "Leaderboard", ladderHtml], ["crimes", "Bounties", bounty], ["cleared", "Cleared", clearedPanel()], ["news", "News", word]]
       .filter(([, , h]) => h && h.trim()).map(([id, label, h]) => [id, label, h.replace(/<div class="panel"/, `<div id="j-${id}" class="panel"`)]);
     const nav = `<nav class="jnav" aria-label="Journal sections">${[...parts.map(([id, label]) => [id, label]), ["log", "Diary"]].map(([id, label]) => `<button class="chip" data-act="jgo" data-id="${id}">${label}</button>`).join("")}</nav>`;
     return `${nav}${parts.map(([, , h]) => h).join("")}

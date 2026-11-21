@@ -415,5 +415,5 @@ const DUNGEONS = (() => {
     return `You climb back into daylight with ${got}.`;
   }
 
-  return { enterable, info, describe, refillLeft, enter, nextChoices, enterRoom, roomChoices, act, leave, ICON, LABEL, THEMES, ENEMY, layout };
+  return { REFILL_SECONDS, enterable, info, describe, refillLeft, enter, nextChoices, enterRoom, roomChoices, act, leave, ICON, LABEL, THEMES, ENEMY, layout };
 })();
