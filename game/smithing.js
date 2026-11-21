@@ -32,11 +32,13 @@ const SMITH = (() => {
 
   // ---- where they turn up
   D.SHOP_STOCK.blacksmith.push("ore_iron", "ore_corundum", "mat_strips");
+  D.LOOT.humanoid.push(["ore_iron", 0.08], ["ore_corundum", 0.04], ["ore_silver", 0.025], ["ore_gold", 0.01]);   // [OURS] ore drops: miners, bandits, smugglers
+  D.LOOT.elite.push(["ore_iron", 0.12], ["ore_corundum", 0.08], ["ore_silver", 0.06], ["ore_gold", 0.04], ["ore_moonstone", 0.05]);
   D.LOOT.humanoid.push(["gem_garnet", 0.03], ["gem_amethyst", 0.025], ["gem_ruby", 0.015], ["silver_ring", 0.02]);
   D.LOOT.elite.push(["gem_sapphire", 0.06], ["gem_emerald", 0.025], ["gem_diamond", 0.02], ["gem_flawless_garnet", 0.04], ["gem_flawless_amethyst", 0.03], ["gem_flawless_ruby", 0.025],
     ["gem_flawless_sapphire", 0.015], ["gold_ring", 0.04], ["gold_necklace", 0.02], ["silver_necklace", 0.04], ["mat_gold", 0.03], ["mat_silver", 0.05]);
   for (const [theme, items] of Object.entries({ mine: ["ore_iron", "ore_iron", "ore_iron", "ore_corundum", "ore_corundum", "ore_silver", "ore_silver", "ore_gold", "ore_moonstone", "gem_garnet", "gem_amethyst"],
-    dwemer: ["gem_sapphire", "ore_gold"], barrow: ["gold_ring", "silver_necklace", "gem_garnet"], vampire: ["gem_ruby", "silver_ring"], thalmor: ["ore_moonstone", "gem_flawless_amethyst"], cave: ["pelt_wolf", "pelt_bear"] }))
+    dwemer: ["gem_sapphire", "ore_gold", "ore_corundum"], barrow: ["gold_ring", "silver_necklace", "gem_garnet", "ore_silver"], fort: ["ore_iron", "ore_corundum"], forsworn: ["ore_silver", "ore_iron"], vampire: ["gem_ruby", "silver_ring"], thalmor: ["ore_moonstone", "gem_flawless_amethyst"], cave: ["pelt_wolf", "pelt_bear"] }))
     DUNGEONS.THEMES[theme]?.loot.push(...items);
   const peltFor = (name) => (/wolf/i.test(name) ? "pelt_wolf" : /bear/i.test(name) ? "pelt_bear" : /sabre/i.test(name) ? "pelt_sabre" : null);
 

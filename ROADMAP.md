@@ -5,6 +5,7 @@ Each round: build one batch, test it (Node sims in /home/claude/tests + headless
 our own marked [OURS]; plain-language UI; phone first.
 
 ## Done
+- Round 27: social menu (👥 button at the top): friends list with online/last seen and where they are, 'added you' requests, private messages with unread badges, and trading with friends from anywhere by courier (arrives after ~1 in-game hour). Ores now drop as loot. Cleared places refill after 3 in-game days.
 - Mining: ⛏ Mine at Markarth, Karthwasten, Dawnstar, Darkwater Crossing, Kynesgrove, Shor's Stone, Embershard Mine and Bilegulch Mine (needs a pickaxe; veins grow back each in-game day; sometimes a gem). Trade window: every shop has Buy | Sell with Sell all. Timers count in-game time.
 - Tactics fixed (new rules went under 'Always attack'), bigger cards, 26 conditions.
 - Round 26: smithing and valuables. Forge → ⚒ Make: weapons, armor and jewellery (iron, steel, elven, dwarven, hide & leather, bows; better metals need Smithing perks). 🔥 Smelt & tan: ore → ingots, pelts → leather → strips. Wolves, bears and sabre cats drop pelts; mines have ore. Gems (garnet to flawless diamond, 100–1000) and gold/silver rings and necklaces (up to 1200) drop from tough foes, treasure chests and bosses.
@@ -41,7 +42,8 @@ our own marked [OURS]; plain-language UI; phone first.
 - Round 3: homes (Breezehome, Honeyside, Vlindrel Hall, Hjerim, Proudspire Manor at Skyrim prices): death-proof chest, Well Rested bed (+10%; inns now Rested +5%), daily garden.
 
 ## Next rounds (in order)
-27. Social menu: friends list (add from Travellers or by name, see who's online and where), private messages, and trading with friends from anywhere (sent by courier).
-28. Mounts for the road: a cart you can buy to carry a lot more, and caravans between holds that players can guard together for pay.
-29. Spell crafting at the College: combine two effects you know into your own spell.
-30. A bard's song: players can write a short line about a deed; the best-liked lines become songs that innkeepers sing.
+28. All of Skyrim's locations on the map (cities, towns, dungeons, forts, camps, shrines, landmarks), hidden until you discover them by passing near.
+29. Spell tomes at merchants like in Skyrim; arrows and crossbow bolts as ammunition (bows and crossbows need them); a newbie guide.
+30. Mounts for the road: a cart you can buy to carry a lot more, and caravans between holds that players can guard together for pay.
+31. Spell crafting at the College: combine two effects you know into your own spell.
+32. A bard's song: players can write a short line about a deed; the best-liked lines become songs that innkeepers sing.

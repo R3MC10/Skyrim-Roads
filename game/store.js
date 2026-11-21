@@ -16,7 +16,7 @@ const Store = (() => {
      so they spread too. Only players who are online right now show up and can be interacted with. */
   let world = {}, worldCode = null, net = null, peerUid = {}, online = new Set(), p2pStatus = "offline", saveWorldT = null;
   const wl = {};   // watchers per collection
-  const COLS = ["players", "bags", "attacks", "parties", "chests", "news", "raids", "trades", "ladder", "chat", "hall", "hallchest", "bounty", "homes", "gifts", "duels", "clans", "clanmem", "war", "stalls"];
+  const COLS = ["players", "bags", "attacks", "parties", "chests", "news", "raids", "trades", "ladder", "chat", "hall", "hallchest", "bounty", "homes", "gifts", "duels", "clans", "clanmem", "war", "stalls", "friends", "dms"];
   const now = () => Date.now();
   let lastSaveJson = null, lastPubJson = null, saving = null, pendingSave = null;
   const listeners = { players: [], bags: [] };
@@ -85,7 +85,7 @@ const Store = (() => {
     const t = now(), sec = t / 1000;
     for (const col of COLS) for (const [id, d] of Object.entries(world[col] || {})) {
       const age = t - d._v;
-      if ((d._del && age > 2 * 864e5) || (col === "bags" && live(d) && d.expires < sec) || (col === "attacks" && age > 36e5) || (col === "raids" && age > 864e5) || (col === "trades" && age > 7 * 864e5) || (col === "players" && age > 30 * 864e5) || (col === "chat" && age > 864e5) || (["bounty", "war"].includes(col) && age > 15 * 864e5) || (col === "gifts" && age > 30 * 864e5) || (col === "duels" && age > 864e5)
+      if ((d._del && age > 2 * 864e5) || (col === "bags" && live(d) && d.expires < sec) || (col === "attacks" && age > 36e5) || (col === "raids" && age > 864e5) || (col === "trades" && age > 7 * 864e5) || (col === "players" && age > 30 * 864e5) || (col === "chat" && age > 864e5) || (["bounty", "war"].includes(col) && age > 15 * 864e5) || (col === "gifts" && age > 30 * 864e5) || (col === "duels" && age > 864e5) || (col === "dms" && age > 14 * 864e5)
         || (["ladder", "homes"].includes(col) && age > 60 * 864e5) || (col === "clanmem" && age > 90 * 864e5))   // players gone for months
         delete world[col][id];
     }
@@ -95,6 +95,8 @@ const Store = (() => {
     chat.slice(60).forEach(([id]) => delete world.chat[id]);
     const hc = Object.entries(world.hallchest || {}).filter(([, d]) => live(d)).sort((a, b) => b[1]._v - a[1]._v);
     hc.slice(60).forEach(([id]) => delete world.hallchest[id]);
+    const dms = Object.entries(world.dms || {}).filter(([, d]) => live(d)).sort((a, b) => b[1]._v - a[1]._v);
+    dms.slice(400).forEach(([id]) => delete world.dms[id]);
   }
   function localPut(col, id, doc) {
     const rec = { ...doc, _v: Math.max(now(), ((world[col] || {})[id]?._v || 0) + 1), _by: uid };

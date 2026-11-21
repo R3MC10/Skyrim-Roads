@@ -1,7 +1,7 @@
 /* Dungeons: a branching map of rooms you pick your way through, ending in a boss.
    Health doesn't regenerate inside ([OURS]: the dark wears you down); heal with potions, spells, shrines and rest rooms.
    Everything you pick up goes straight into your pack, so if you die it's in your bag at the entrance.
-   [Skyrim] cleared dungeons refill after 30 in-game days (60 real hours here). */
+   Cleared dungeons refill after 3 in-game days (6 real hours here). */
 
 // ---- dungeon gear (Skyrim items; stats close to Skyrim's, values approximate)
 Object.assign(D.ITEMS, {
@@ -30,7 +30,7 @@ Object.assign(D.ITEMS, {
 const DUNGEONS = (() => {
   const rnd = (a, b) => a + Math.random() * (b - a), rint = (a, b) => Math.floor(rnd(a, b + 1)), pick = (a) => a[Math.floor(Math.random() * a.length)];
   const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
-  const REFILL_SECONDS = 30 * 2 * 3600;   // [Skyrim] 30 in-game days; 1 day = 2 real hours here
+  const REFILL_SECONDS = 3 * 2 * 3600;    // 3 in-game days (6 real hours; 1 in-game day = 2 real hours). Skyrim uses 10–30 days; shortened on request
 
   // dungeon foes ([OURS] numbers on the same scale as the road encounters in data.js)
   const E = (name, health, damage, tags, gold, text) => ({ name, health, damage, tags, gold, text, level: 1, danger: tags.includes("elite") ? "high" : "medium" });

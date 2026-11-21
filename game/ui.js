@@ -51,7 +51,7 @@
     const card = { name: S.name, race: S.race, level: S.level, x: S.x, y: S.y,
       t0: tr ? tr.lastTick : G.now(), moving: !!(tr && tr.status === "travel"), dest: tr ? tr.dest : null,
       path: tr && tr.status === "travel" ? [[S.x, S.y], ...tr.path.slice(tr.idx + 1)].slice(0, 120) : null,
-      speed: G.speed(S), party: party?.id || null, hiding: !!S.ambush, clan: myClan()?.tag || null, ...MP.stats(S) };
+      speed: G.speed(S), loc: S.location || null, party: party?.id || null, hiding: !!S.ambush, clan: myClan()?.tag || null, ...MP.stats(S) };
     const json = JSON.stringify({ ...card, t0: 0, cur: Math.round(card.cur / 10) });
     if (!force && json === lastCardJson) return;
     lastCardJson = json;
@@ -409,6 +409,7 @@
     app.innerHTML = `
       <div class="top"><div class="who"><b id="nm"></b><span id="sub"></span></div>
         <div class="meta"><div id="clock"></div><div class="gold" id="goldv"></div></div>
+        <button class="iconbtn soc" id="socBtn" aria-label="Friends, messages and trades">👥</button>
         <button class="iconbtn snd" id="sndBtn" aria-label="Settings and menu">${SOUND.settings.mute ? "🔇" : "⚙"}</button></div>
       <div class="layout">
         <div>
@@ -429,16 +430,20 @@
     $("#centerBtn").onclick = () => { mapTouchedAt = performance.now(); follow = true; if (zoom === 1) zoom = 2.4; $("#zoomBtn").textContent = "－"; };
     bindMap();
     $("#sndBtn").onclick = openSound;
+    $("#socBtn").onclick = () => { SOUND.fx("click"); closeMenu(); tab = "social"; bump(); renderTabs(); renderPanel(true); $("#side").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" }); };
     $("#side").addEventListener("click", onPanelClick);
     $("#side").addEventListener("change", onPanelChange);
     $("#side").addEventListener("input", onPanelInput);
-    $("#side").addEventListener("keydown", (e) => { if (e.target.id === "chatin" && e.key === "Enter") { e.preventDefault(); chatSend(e.target.value); } });
+    $("#side").addEventListener("keydown", (e) => { if (e.target.id === "chatin" && e.key === "Enter") { e.preventDefault(); chatSend(e.target.value); } if (e.target.id === "dmin" && e.key === "Enter") { e.preventDefault(); sendDM(); } });
     $("#trip").addEventListener("click", onPanelClick);
     $("#raid").addEventListener("click", onPanelClick);
     Store.watch("raids", (docs) => { raidDocs = docs; });
     Store.watch("trades", (docs) => onTrades(docs));
     Store.watch("duels", (docs) => onDuels(docs));
     Store.watch("stalls", (docs) => onStalls(docs));
+    Store.watch("friends", (docs) => onFriends(docs));
+    Store.watch("dms", (docs) => onDMs(docs));
+    if (Store.online) Store.put("friends", S.id, SOCIAL.record(S));
     Store.watch("clans", (docs) => { const before = CLANS.invitesFor(S.id).length; CLANS.set(docs, null); if (CLANS.invitesFor(S.id).length > before && !myClan()) toast(`🏴 You're invited to join a clan. See the Journal.`); bump(); renderTabs(); });
     Store.watch("clanmem", (docs) => { CLANS.set(null, docs); bump(); });
     Store.watch("chat", (docs) => onChat(docs));
@@ -490,7 +495,7 @@
   function tick() {
     if (!S) return;
     const t = G.now();
-    tickTimers(t);
+    tickTimers(t); if (Math.floor(t) % 5 === 0) courierCheck();
     if (S.trip?.status === "travel") {
       const out = G.advance(S, t, reachableBags());
       if (out.taken.length || out.bag || out.died || out.encounter || out.arrived) {
@@ -583,6 +588,7 @@
       if (needDot && !b.querySelector(".dot")) b.insertAdjacentHTML("beforeend", '<span class="dot"></span>');
       if (!needDot) b.querySelector(".dot")?.remove();
     });
+    const sb = $("#socBtn"); if (sb) { const n = socialBadge(); sb.classList.toggle("on", tab === "social"); if (n && !sb.querySelector(".dot")) sb.insertAdjacentHTML("beforeend", '<span class="dot"></span>'); if (!n) sb.querySelector(".dot")?.remove(); }
   }
 
   // ------------------------------------------------------------ map
@@ -1551,7 +1557,8 @@
     const rows = S.inv.filter((r) => !eq.has(r.id) && D.ITEMS[r.item]);
     const gv = $("#tgive")?.value || "", av = $("#task")?.value || "";
     tradeTo = card.id;
-    openModal(`<h2>Trade with ${esc(card.name)}</h2><p class="sub">What you offer leaves your pack now and comes back if they say no.</p>${note ? `<p class="sub">${esc(note)}</p>` : ""}
+    const far = card.x == null || !!MP.canTarget(S, card, livePos(), otherPos(card));
+    openModal(`<h2>Trade with ${esc(card.name)}</h2><p class="sub">${far && SOCIAL.isFriend(S, card.id) ? "📦 They're not here, so a courier will carry your offer (about an hour of game time). " : ""}What you offer leaves your pack now and comes back if they say no.</p>${note ? `<p class="sub">${esc(note)}</p>` : ""}
       <div class="list" style="max-height:38vh;overflow:auto">${rows.map((r) => `<div class="item ${tradeSel.includes(r.id) ? "on" : ""}" data-act="tradepick" data-id="${r.id}" role="button" tabindex="0"><div class="t">${tradeSel.includes(r.id) ? "☑" : "☐"} ${esc((r.tq ? TOWNS.QUALITY[r.tq] + " " : "") + D.ITEMS[r.item].name)}${r.qty > 1 ? ` ×${r.qty}` : ""}<span>worth ${D.ITEMS[r.item].value}</span></div></div>`).join("") || '<p class="sub">Nothing loose in your pack.</p>'}</div>
       <div class="grid2" style="margin-top:10px"><label class="sub">Gold you give<input id="tgive" inputmode="numeric" value="${esc(gv)}" placeholder="0"></label><label class="sub">Gold you ask<input id="task" inputmode="numeric" value="${esc(av)}" placeholder="0 = gift"></label></div>
       <div class="evc"><button class="btn pri" data-act="tradesend">Send offer</button><button class="btn" data-act="close">Cancel</button></div>`);
@@ -1559,7 +1566,7 @@
   async function answerTrade(id, yes) {
     let ok = false, poor = false;
     await Store.change("trades", id, (d) => {
-      if (d.status !== "open") return d;
+      if (d.status !== "open" || !SOCIAL.arrived(d)) return d;
       if (!yes) { ok = true; return { ...d, status: "declined" }; }
       const nx = MP.accept(S, { ...d }); if (!nx) { poor = true; return d; }
       ok = true; return nx;
@@ -1568,6 +1575,88 @@
     if (!ok) return toast("That offer is gone.");
     persist(true); renderPanel(true); toast(yes ? "Deal. The goods are in your pack." : "You turn the offer down.");
   }
+  // ------------------------------------------------------------ social: friends, private messages, courier trades
+  let friendDocs = [], dmDocs = [], socTab = "friends", socWith = null, socSearch = "", dmDraft = "", seenDMs = null, seenAdds = new Set(), courierToasted = new Set(), fRemoveAsk = null;
+  function onFriends(docs) {
+    friendDocs = docs;
+    for (const d of SOCIAL.addedMe(docs, S)) if (!seenAdds.has(d.id)) { seenAdds.add(d.id); if ((d.t || 0) > G.now() - 3600) toast(`👥 ${d.name} added you as a friend.`); }
+    renderTabs(); if (tab === "social") bump();
+  }
+  function onDMs(docs) {
+    dmDocs = docs.filter((d) => d && d.from && d.to && typeof d.text === "string");
+    const first = seenDMs === null; seenDMs = seenDMs || new Set();
+    for (const d of dmDocs) if (!seenDMs.has(d.id)) {
+      seenDMs.add(d.id);
+      if (!first && d.to === S.id && !(tab === "social" && socTab === "msgs" && socWith === d.from)) { toast(`💬 ${d.fromName}: ${d.text.slice(0, 60)}`); SOUND.fx("page"); }
+    }
+    if (tab === "social" && socTab === "msgs" && socWith) { SOCIAL.markRead(S, dmDocs, socWith); refreshThread(); }
+    renderTabs(); if (tab === "social") bump();
+  }
+  const myIncoming = () => trades.filter((d) => d.to === S.id && d.status === "open" && SOCIAL.arrived(d));
+  const socialBadge = () => SOCIAL.unread(S, dmDocs) + SOCIAL.addedMe(friendDocs, S).length + myIncoming().length;
+  function courierCheck() {
+    for (const d of trades) if (d.to === S.id && d.courier && d.status === "open" && SOCIAL.arrived(d) && !courierToasted.has(d.id)) { courierToasted.add(d.id); toast(`📦 A courier brings an offer from ${d.fromName}. Open 👥 Trades.`); renderTabs(); if (tab === "social") bump(); }
+  }
+  function publishFriends() { if (Store.online) Store.put("friends", S.id, SOCIAL.record(S)); }
+  function friendCard(id) { return cardOf(id) || (SOCIAL.friends(S)[id] ? { id, name: SOCIAL.friends(S)[id].name } : null); }
+  function panelSocial() {
+    const nDm = SOCIAL.unread(S, dmDocs), nAdd = SOCIAL.addedMe(friendDocs, S).length, inc = myIncoming();
+    const chips = `<div class="seg">${[["friends", `Friends${nAdd ? ` (${nAdd})` : ""}`], ["msgs", `Messages${nDm ? ` (${nDm})` : ""}`], ["trades", `Trades${inc.length ? ` (${inc.length})` : ""}`]].map(([k, l]) => `<button class="${socTab === k ? "on" : ""}" data-act="soctab" data-id="${k}">${l}</button>`).join("")}</div>`;
+    const off = Store.online ? "" : `<p class="sub">You're playing offline. Go online (Travel tab) to see friends and messages.</p>`;
+    let body = "";
+    if (socTab === "friends") {
+      const fr = Object.entries(SOCIAL.friends(S)).map(([id, f]) => ({ id, name: f.name, card: cardOf(id) })).map((f) => ({ ...f, st: SOCIAL.status(f.card) })).sort((a, b) => b.st.online - a.st.online || a.name.localeCompare(b.name));
+      const q = socSearch.trim().toLowerCase();
+      const found = q.length >= 2 ? others.filter((o) => o.name?.toLowerCase().includes(q) && !SOCIAL.isFriend(S, o.id)).slice(0, 8) : [];
+      const adds = SOCIAL.addedMe(friendDocs, S);
+      body = `${adds.length ? `<h3>Added you</h3>${adds.map((d) => `<div class="item on"><div class="t">${esc(d.name)}<span>wants to be friends</span></div><button class="btn sm pri" data-act="faddrec" data-id="${esc(d.id)}">Add back</button></div>`).join("")}` : ""}
+        <h3 style="margin-top:8px">Your friends · ${fr.length}</h3>
+        ${fr.length ? fr.map((f) => `<div class="item" style="flex-wrap:wrap"><div class="t"><i class="onl ${f.st.online ? "on" : ""}"></i>${esc(f.name)}<span>${esc(f.st.text)}</span></div>
+          <div class="fbtns"><button class="btn sm" data-act="fmsg" data-id="${esc(f.id)}">💬 Message</button><button class="btn sm" data-act="ftrade" data-id="${esc(f.id)}">🤝 Trade</button>${fRemoveAsk === f.id ? `<button class="btn sm danger" data-act="fdel" data-id="${esc(f.id)}">Really remove?</button>` : `<button class="btn sm" data-act="fdelask" data-id="${esc(f.id)}" aria-label="Remove friend">✕</button>`}</div></div>`).join("")
+          : `<p class="sub">No friends yet. Add people from the Travellers list (Journal), or search below.</p>`}
+        <h3 style="margin-top:12px">Add a friend</h3>
+        <input id="socsearch" placeholder="Type a name" value="${esc(socSearch)}" autocomplete="off" aria-label="Search players by name">
+        ${q.length >= 2 ? (found.length ? found.map((o) => `<div class="item"><div class="t">${esc(o.name)}<span>${esc(SOCIAL.status(o).text)}</span></div><button class="btn sm pri" data-act="fadd" data-id="${esc(o.id)}">＋ Add</button></div>`).join("") : `<p class="sub">Nobody by that name has been seen in this world.</p>`) : ""}`;
+    } else if (socTab === "msgs") {
+      if (socWith) {
+        const f = friendCard(socWith) || { name: SOCIAL.conversations(S, dmDocs).find((c) => c.id === socWith)?.name || "Traveller" };
+        SOCIAL.markRead(S, dmDocs, socWith);
+        const th = SOCIAL.thread(dmDocs, S.id, socWith).slice(-60);
+        body = `<div class="item"><button class="btn sm" data-act="dmback">‹ Back</button><div class="t" style="margin-left:8px">${esc(f.name)}<span>${esc(SOCIAL.status(cardOf(socWith)).text)}</span></div></div>
+          <div class="chatlog" id="chatlog">${th.length ? th.map(dmLine).join("") : `<p class="sub">No messages yet. Only the two of you can read this.</p>`}</div>
+          <div class="chatrow"><input id="dmin" maxlength="${SOCIAL.DM_MAX}" placeholder="Message ${esc(f.name)}" value="${esc(dmDraft)}" autocomplete="off" enterkeyhint="send" aria-label="Private message"><button class="btn pri" data-act="dmsend">Send</button></div>`;
+      } else {
+        const conv = SOCIAL.conversations(S, dmDocs), seen = new Set(conv.map((c) => c.id));
+        const more = Object.entries(SOCIAL.friends(S)).filter(([id]) => !seen.has(id));
+        body = (conv.length ? conv.map((c) => { const n = SOCIAL.unreadFrom(S, dmDocs, c.id); return `<div class="item ${n ? "on" : ""}" data-act="fmsg" data-id="${esc(c.id)}" role="button" tabindex="0"><div class="t">${esc(c.name)}${n ? ` <b class="gold">· ${n} new</b>` : ""}<span>${c.mine ? "You: " : ""}${esc(c.last.slice(0, 70))}</span></div><span class="num sub">${new Date(c.t * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span></div>`; }).join("") : `<p class="sub">No messages yet.</p>`)
+          + (more.length ? `<h3 style="margin-top:10px">Write to a friend</h3>${more.map(([id, f]) => `<div class="item"><div class="t">${esc(f.name)}</div><button class="btn sm" data-act="fmsg" data-id="${esc(id)}">💬 Write</button></div>`).join("")}` : "");
+      }
+    } else {
+      const outC = trades.filter((d) => d.from === S.id && d.status === "open"), onWay = trades.filter((d) => d.to === S.id && d.status === "open" && !SOCIAL.arrived(d));
+      body = `${inc.length ? inc.map((d) => `<div class="item on" style="flex-wrap:wrap"><div class="t">${d.courier ? "📦 " : ""}${esc(d.fromName)} offers ${esc(MP.describe(d))}<span>${d.ask ? `for ${d.ask} gold (you have ${S.gold})` : "as a gift"}</span></div><div class="fbtns"><button class="btn sm pri" data-act="tradeyes" data-id="${esc(d.id)}" ${S.gold >= d.ask ? "" : "disabled"}>Accept</button><button class="btn sm" data-act="tradeno" data-id="${esc(d.id)}">Decline</button></div></div>`).join("") : `<p class="sub">No offers waiting for you.</p>`}
+        ${onWay.length ? `<h3 style="margin-top:10px">Couriers on the way to you</h3>${onWay.map((d) => `<div class="item"><div class="t">📦 From ${esc(d.fromName)}<span>arrives in ${cdSpan(d.arrive)}</span></div></div>`).join("")}` : ""}
+        ${outC.length ? `<h3 style="margin-top:10px">Your offers</h3>${outC.map((d) => `<div class="item"><div class="t">${d.courier ? "📦 " : ""}To ${esc(d.toName)}: ${esc(MP.describe(d))}<span>${d.ask ? `asking ${d.ask} gold` : "gift"} · ${d.courier && !SOCIAL.arrived(d) ? `courier arrives in ${cdSpan(d.arrive)}` : "waiting for an answer"}</span></div><button class="btn sm" data-act="tradecancel" data-id="${esc(d.id)}">Withdraw</button></div>`).join("")}` : ""}
+        <p class="sub" style="margin-top:10px">To send an offer, tap 🤝 Trade next to a friend. If they're not in the same place, a courier carries it (about an hour of game time). What you offer leaves your pack at once and comes back if they say no.</p>`;
+    }
+    return `<div class="panel"><h2>👥 Friends & messages</h2>${chips}${off}${body}</div>`;
+  }
+  const dmLine = (d) => `<div class="cm ${d.from === S.id ? "me" : ""}"><time>${new Date(d.t * 1000).toLocaleString([], { weekday: "short", hour: "2-digit", minute: "2-digit" })}</time><span class="cx">${esc(d.text)}</span></div>`;
+  function refreshThread() {   // update the open conversation even while you're typing (the panel won't redraw then)
+    const cl = $("#chatlog"); if (!cl || !socWith) return;
+    const th = SOCIAL.thread(dmDocs, S.id, socWith).slice(-60);
+    const html = th.length ? th.map(dmLine).join("") : `<p class="sub">No messages yet. Only the two of you can read this.</p>`;
+    if (cl.innerHTML !== html) { cl.innerHTML = html; cl.scrollTop = cl.scrollHeight; }
+  }
+  async function sendDM() {
+    const r = SOCIAL.dm(S, socWith, friendCard(socWith)?.name || "Traveller", $("#dmin")?.value);
+    if (r.err) return toast(r.err);
+    if (!Store.online) return toast("You're offline. Go online to send messages.");
+    if (Date.now() - lastChatSend < 1200) return;
+    lastChatSend = Date.now();
+    seenDMs?.add(r.id); Store.put("dms", r.id, r.doc); if (!dmDocs.some((d) => d.id === r.id)) dmDocs.push({ ...r.doc, id: r.id }); dmDraft = ""; renderPanel(true);
+    setTimeout(() => $("#dmin")?.focus(), 30);
+  }
+
   // ------------------------------------------------------------ the Arena (Windhelm)
   let duels = [], seenDuels = new Set(), arenaStake = 100;
   function onDuels(docs) {
@@ -1743,7 +1832,7 @@
     if (!force && side.contains(document.activeElement) && document.activeElement.matches("input,select")) return;
     rendered = version; lastPanelRender = Date.now();
     const openD = [...side.querySelectorAll("details")].map((d) => d.open), y = scrollY;
-    side.innerHTML = tutTip() + ({ map: panelTravel, hero: panelHero, pack: panelPack, tactics: panelTactics, town: panelTown, log: panelLog }[tab])();
+    side.innerHTML = tutTip() + ({ map: panelTravel, hero: panelHero, pack: panelPack, tactics: panelTactics, town: panelTown, log: panelLog, social: panelSocial }[tab] || panelTravel)();
     if (!force) { side.querySelectorAll("details").forEach((d, i) => { if (openD[i] != null) d.open = openD[i]; }); scrollTo(0, y); }
     const cl = $("#chatlog"); if (cl) cl.scrollTop = cl.scrollHeight;
   }
@@ -2091,7 +2180,7 @@
       ? (ppl.length ? `<div class="list">${ppl.map((o) => { const near = !MP.canTarget(S, o, me, o.pos);
           return `<div class="item" style="flex-wrap:wrap"><div class="t">${esc(o.name)}${inParty(o.id) ? " ⚑" : ""}<span>Level ${o.level} ${esc(D.RACES[o.race]?.name || "")} · ${esc(o.loc || G.holdAt(o.pos))}${o.moving ? " · travelling" : ""}${o.dungeon ? " · in a dungeon" : ""}${o.bounty ? ` · wanted (${o.bounty})` : ""}</span></div>
           <span class="num sub">${near ? "here" : o.d < 60 ? "nearby" : "~" + fmtMin(o.d * 1.1 / G.speed(S)) + " away"}</span>
-          <div style="display:flex;gap:6px;width:100%;flex-wrap:wrap">${inParty(o.id) ? "" : `<button class="btn sm" data-act="invite" data-id="${esc(o.id)}">Invite</button>`}
+          <div style="display:flex;gap:6px;width:100%;flex-wrap:wrap">${SOCIAL.isFriend(S, o.id) ? "" : `<button class="btn sm" data-act="fadd" data-id="${esc(o.id)}">＋ Friend</button>`}${inParty(o.id) ? "" : `<button class="btn sm" data-act="invite" data-id="${esc(o.id)}">Invite</button>`}
           ${near ? `<button class="btn sm" data-act="trade" data-id="${esc(o.id)}">Trade</button>` : ""}${near && !inParty(o.id) ? `<button class="btn sm" data-act="pick" data-id="${esc(o.id)}">Pickpocket</button><button class="btn sm danger" data-act="attack" data-id="${esc(o.id)}">Attack</button>` : ""}</div></div>`; }).join("")}</div>
           <p class="sub" style="margin-top:8px">To rob or attack someone you must be in the same place. Fights use their gear and stats. Killing someone in a town is always seen; out in the wilds, sometimes.</p>`
         : `<p class="sub">No one else ${Store.mode === "p2p" ? "online right now. Send friends the app and they" : "yet. Share this page and friends"} appear here and on the map.</p>`)
@@ -2103,7 +2192,7 @@
     const worldHtml = Store.mode === "p2p" ? `<div class="panel"><h2>The world</h2>
       <p class="sub">One world for everyone with the app, shared straight between phones. Only people online right now appear here. To bring a friend in, send them the app: github.com/R3MC10/Skyrim-Roads/releases</p>
       <div class="item"><div class="t">${Store.peers ? `${Store.peers} other ${Store.peers === 1 ? "player" : "players"} online` : "Looking for other players…"}<span>${Store.peers ? `${Store.direct} linked straight to you${Store.peers > Store.direct ? `, ${Store.peers - Store.direct} reached through other players` : ""}` : "It can take up to a minute to find each other"}</span></div></div></div>` : "";
-    const incoming = trades.filter((d) => d.to === S.id && d.status === "open"), outgoing = trades.filter((d) => d.from === S.id && d.status === "open");
+    const incoming = trades.filter((d) => d.to === S.id && d.status === "open" && SOCIAL.arrived(d)), outgoing = trades.filter((d) => d.from === S.id && d.status === "open");
     const tradeHtml = incoming.length || outgoing.length ? `<div class="panel"><h2>Trades</h2><div class="list">
       ${incoming.map((d) => `<div class="item on" style="flex-wrap:wrap"><div class="t">${esc(d.fromName)} offers ${esc(MP.describe(d))}<span>${d.ask ? `for ${d.ask} gold (you have ${S.gold})` : "as a gift"}</span></div><div style="display:flex;gap:6px;width:100%"><button class="btn sm pri" data-act="tradeyes" data-id="${esc(d.id)}" ${S.gold >= d.ask ? "" : "disabled"}>Accept</button><button class="btn sm" data-act="tradeno" data-id="${esc(d.id)}">Decline</button></div></div>`).join("")}
       ${outgoing.map((d) => `<div class="item"><div class="t">To ${esc(d.toName)}: ${esc(MP.describe(d))}<span>${d.ask ? `asking ${d.ask} gold` : "gift"} · waiting</span></div><button class="btn sm" data-act="tradecancel" data-id="${esc(d.id)}">Withdraw</button></div>`).join("")}</div></div>` : "";
@@ -2123,7 +2212,8 @@
   }
 
   // ------------------------------------------------------------ panel events
-  function onPanelInput(e) { if (e.target.id === "chatin") { chatDraft = e.target.value; return; } if (e.target.id === "search") { searchText = e.target.value; const pos = e.target.selectionStart; renderPanel(true); const s = $("#search"); s.focus(); s.setSelectionRange(pos, pos); } }
+  function onPanelInput(e) { if (e.target.id === "chatin") { chatDraft = e.target.value; return; } if (e.target.id === "dmin") { dmDraft = e.target.value; return; }
+    if (e.target.id === "socsearch") { socSearch = e.target.value; const pos = e.target.selectionStart; renderPanel(true); const q = $("#socsearch"); q.focus(); q.setSelectionRange(pos, pos); return; } if (e.target.id === "search") { searchText = e.target.value; const pos = e.target.selectionStart; renderPanel(true); const s = $("#search"); s.focus(); s.setSelectionRange(pos, pos); } }
   function onPanelChange(e) {
     const id = e.target.id;
     if (id === "tc") { tacticsDraft.if = e.target.value; renderPanel(true); }
@@ -2152,9 +2242,11 @@
       case "trade": { const c = cardOf(b.dataset.id); if (c) { tradeSel = []; openTrade(c); } break; }
       case "tradepick": { const id = +b.dataset.id; tradeSel = tradeSel.includes(id) ? tradeSel.filter((x) => x !== id) : [...tradeSel, id]; const c = cardOf(tradeTo); if (c) openTrade(c); break; }
       case "tradesend": {
-        const c = cardOf(tradeTo); if (!c) { closeModal(); return toast("They're gone."); }
-        const err = MP.canTarget(S, c, livePos(), otherPos(c)); if (err && !party?.members.some((m) => m.id === c.id)) return openTrade(c, err);
-        const r = MP.makeOffer(S, c, tradeSel, $("#tgive")?.value, $("#task")?.value);
+        const c = cardOf(tradeTo) || (SOCIAL.isFriend(S, tradeTo) ? { id: tradeTo, name: SOCIAL.friends(S)[tradeTo].name } : null); if (!c) { closeModal(); return toast("They're gone."); }
+        const err = c.x == null ? "far away" : MP.canTarget(S, c, livePos(), otherPos(c));
+        const courier = err && !party?.members.some((m) => m.id === c.id);
+        if (courier && !SOCIAL.isFriend(S, c.id)) return openTrade(c, err);
+        const r = courier ? SOCIAL.courierOffer(S, c, tradeSel, $("#tgive")?.value, $("#task")?.value) : MP.makeOffer(S, c, tradeSel, $("#tgive")?.value, $("#task")?.value);
         if (!r.doc) return openTrade(c, r.text);
         Store.put("trades", r.id, r.doc); tradeSel = []; persist(true); closeModal(); renderPanel(true); toast(r.text); break;
       }
@@ -2300,6 +2392,14 @@
       case "alch": { const id = +b.dataset.id; alchSel = alchSel.includes(id) ? alchSel.filter((x) => x !== id) : [...alchSel, id].slice(-3); renderPanel(true); break; }
       case "brew": { const before = S.inv.filter((x) => String(x.item).startsWith("brew|")).reduce((a, x) => a + x.qty, 0); const r = TOWNS.brew(S, alchSel); const made = S.inv.filter((x) => String(x.item).startsWith("brew|")).reduce((a, x) => a + x.qty, 0) - before; if (made > 0) tally("potions", made); alchSel = []; persist(); renderPanel(true); showMessage("Alchemy", r.text + ((r.skills || []).length ? " 📈 " + r.skills.join(" · ") : "")); break; }
       case "temper": say(TOWNS.temper(S, +b.dataset.id)); publishCard(); break;
+      case "soctab": socTab = b.dataset.id; socWith = null; renderPanel(true); break;
+      case "fadd": case "faddrec": { const c = cardOf(b.dataset.id) || (() => { const d = friendDocs.find((x) => x.id === b.dataset.id); return d ? { id: d.id, name: d.name } : null; })(); if (!c) return toast("They're not around."); const m = SOCIAL.add(S, c); persist(true); publishFriends(); toast(m); renderPanel(true); renderTabs(); break; }
+      case "fdelask": fRemoveAsk = b.dataset.id; renderPanel(true); break;
+      case "fdel": toast(SOCIAL.remove(S, b.dataset.id)); fRemoveAsk = null; persist(true); publishFriends(); renderPanel(true); break;
+      case "fmsg": socTab = "msgs"; socWith = b.dataset.id; tab = "social"; renderTabs(); renderPanel(true); setTimeout(() => { const cl = $("#chatlog"); if (cl) cl.scrollTop = cl.scrollHeight; }, 20); break;
+      case "dmback": socWith = null; renderPanel(true); break;
+      case "dmsend": sendDM(); break;
+      case "ftrade": { const c = friendCard(b.dataset.id); if (c) { tradeSel = []; openTrade(c); } break; }
       case "mine": { const m = SMITH.mine(S); if (m.startsWith("⛏")) { SOUND.fx("clang"); persist(true); } say(m); renderPanel(true); break; }
       case "ftab": forgeTab = b.dataset.id; renderPanel(true); break;
       case "fgroup": forgeGroup = b.dataset.id; renderPanel(true); break;
