@@ -79,9 +79,10 @@ const FIGHTART = (() => {
     if (kind === "snow") { const r = H.seeded("flk"); g.fillStyle = "#fff"; for (let i = 0; i < 40; i++) g.fillRect(r() * w, r() * ground, 1.6, 1.6); }
   }
   const bgCache = new Map();
-  function bgFor(kind, w, h, style) {
-    const k = `${kind}|${w}|${h}|${style}`;
-    if (!bgCache.has(k)) { if (bgCache.size > 12) bgCache.delete(bgCache.keys().next().value); bgCache.set(k, ART.canvas(w, h, (g, H) => drawBg(g, H, w, h, kind), { style, block: 3 })); }
+  function bgFor(kind, w, h, style, wagon) {
+    const k = `${kind}|${w}|${h}|${style}|${wagon || ""}`;
+    const draw = (g, H) => { drawBg(g, H, w, h, kind); if (wagon && typeof CARAVANS !== "undefined") { g.save(); g.translate(w * 0.36, h * 0.38); g.globalAlpha = 0.9; CARAVANS.drawWagon(g, H, w * 0.3, h * 0.42, { khajiit: wagon === "khajiit", cover: wagon !== "cart", animal: true }); g.restore(); } };   // a caravan or your cart behind the fight
+    if (!bgCache.has(k)) { if (bgCache.size > 12) bgCache.delete(bgCache.keys().next().value); bgCache.set(k, ART.canvas(w, h, draw, { style, block: 3 })); }
     return bgCache.get(k);
   }
 
@@ -248,7 +249,7 @@ const FIGHTART = (() => {
     if (IDS.has(f)) return IDS.get(f);
     const id = nextId++; IDS.set(f, id);
     const arena = !f.e && f.log && f.log.length && /hits for/.test(f.log[0].them || "");
-    REG.set(id, { f, scene: arena ? "arena" : sceneOf(s), hero: { ...heroOf(s, f), bound: (f.log || []).some((l) => /bound/i.test(l.me || "")) }, foe: arena ? "bandit" : foeOf(f.e), foeName: f.e?.name || (arena && (f.log[0].them.match(/^(.+?) hits for/) || [])[1]) || "Opponent", played: false });
+    REG.set(id, { f, scene: arena ? "arena" : sceneOf(s), hero: { ...heroOf(s, f), bound: (f.log || []).some((l) => /bound/i.test(l.me || "")) }, foe: arena ? "bandit" : foeOf(f.e), wagon: f.e?.cart ? "cart" : f.e?.caravan ? (f.e.khajiit ? "khajiit" : "nord") : null, foeName: f.e?.name || (arena && (f.log[0].them.match(/^(.+?) hits for/) || [])[1]) || "Opponent", played: false });
     if (REG.size > 40) REG.delete(REG.keys().next().value);
     return id;
   }
@@ -265,7 +266,7 @@ const FIGHTART = (() => {
     const k = pixel ? 1 / 3 : dpr;
     const work = pixel ? Object.assign(document.createElement("canvas"), { width: Math.round(W * k), height: Math.round(Hh * k) }) : cv;
     const wg = work.getContext("2d");
-    const bg = bgFor(rec.scene, W, Hh, style);
+    const bg = bgFor(rec.scene, W, Hh, style, rec.wagon);
     const f = rec.f, beats = beatsOf(f, rec.hero);
     const hp0 = f.hp0 ?? Math.max(1, ...((f.log || []).map((l) => l.hp).filter((v) => v != null)));
     const ehp0 = f.ehp0 ?? Math.max(1, ...((f.log || []).map((l) => l.ehp).filter((v) => v != null)));

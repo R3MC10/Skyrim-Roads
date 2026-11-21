@@ -455,6 +455,7 @@
     Store.watch("trades", (docs) => onTrades(docs));
     Store.watch("duels", (docs) => onDuels(docs));
     Store.watch("stalls", (docs) => onStalls(docs));
+    Store.watch("guards", (docs) => { guardDocs = docs; if (tab === "town" || tab === "log") bump(); });
     Store.watch("friends", (docs) => onFriends(docs));
     Store.watch("dms", (docs) => onDMs(docs));
     if (Store.online) Store.put("friends", S.id, SOCIAL.record(S));
@@ -509,6 +510,7 @@
   function tick() {
     if (!S) return;
     const t = G.now();
+    { const cm = CARAVANS.tick(S, t); if (cm) { persist(true); toast(cm); if (S.caravanJob === null) Store.change("guards", `${lastJobId}-${S.id}`, (d) => (d && d.status === "signed" ? { ...d, status: "left" } : d)); bump(); } lastJobId = S.caravanJob?.id || lastJobId; }
     tickTimers(t); discoveryToast(); if (Math.floor(t) % 5 === 0) courierCheck();
     if (S.trip?.status === "travel") {
       const out = G.advance(S, t, reachableBags());
@@ -526,6 +528,7 @@
           } else
           toast(`Arrived at ${out.arrived}.` + (G.shopTypes(out.arrived).length ? " Shops are in the Town tab." : DUNGEONS.enterable(out.arrived) ? " You can go inside." : ""));
           selected = null; renderPanel(true);
+          caravanPay();
           const jm = TOWNS.checkJobs(S); if (jm.length) { tally("jobs", jm.length); persist(); setTimeout(() => toast(jm.join(" ")), 1500); }
           if (TOWNS.guardCheck(S)) openGuard();
           const qa = QUESTS.active(S).find((a) => a.st.obj.talk === out.arrived);
@@ -632,7 +635,7 @@
       rulers: Object.entries(WARS.rulers(S)).map(([hold, c]) => ({ hold, color: c.colors[0] })),
       banners: CLANS.banners(homeDocs, S, VISITS.record(S)).filter((b) => WORLD.places[b.town]).map((b) => ({ ...b, pos: WORLD.places[b.town].slice(0, 2) })),
       cleared: clearedLeft(), bags: visibleBags(), selected: selected && WORLD.places[selected] ? selected : null, t: ts / 1000, zoom, center, reduceMotion, weather: WEVENTS.weather(pos).id, quest: questPos(), pins: (S.pins || []).map((p) => ({ pos: [p.x, p.y], label: `${p.icon} ${p.label}`, on: selected === "__pin:" + p.id })),
-      routes: party ? others.filter((o) => o.moving && o.path?.length > 1 && party.members.some((m) => m.id === o.id)).map((o) => ({ path: o.path, from: otherPos(o), name: o.name })) : [], horse: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, hall: S.discovered.includes(HALL.TOWN) || known(HALL.TOWN) ? { pos: HALL.POS, label: `Hall of the North · ${HALL.progress().name}` } : null,
+      routes: party ? others.filter((o) => o.moving && o.path?.length > 1 && party.members.some((m) => m.id === o.id)).map((o) => ({ path: o.path, from: otherPos(o), name: o.name })) : [], horse: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, cart: CARAVANS.hasCart(S), caravans: CARAVANS.all().map((c) => { const cp = CARAVANS.pos(c); return { cp, c }; }).map(({ cp, c }) => ({ pos: cp, visible: G.pxDist(cp, pos) < 160 || S.discovered.some((n) => WORLD.places[n] && ["city", "town"].includes(WORLD.places[n][2]) && G.pxDist(cp, WORLD.places[n]) < 45), khajiit: c.line.khajiit, moving: c.phase === "road", mine: S.caravanJob?.id === c.id, label: c.line.name.replace(/'s caravan$/, "") })).filter((c) => !(c.mine && S.trip?.caravan)), hall: S.discovered.includes(HALL.TOWN) || known(HALL.TOWN) ? { pos: HALL.POS, label: `Hall of the North · ${HALL.progress().name}` } : null,
     };
     WorldMap.draw($("#map"), view);
   }
@@ -731,7 +734,7 @@
   function travelTo(name) {
     let pos;
     if (name === "__bag") { const b = myBag(); if (!b) return toast("Your bag is gone."); pos = [b.x, b.y]; name = "your lost bag"; }
-    else if (name === "__spot") { const r = roamSpot && ROAM.plan(S, roamSpot); if (!r || r.err) return toast(r?.err || "Pick a spot first."); pos = r.pos; name = r.name; }
+    else if (name === "__spot") { const cb = CARAVANS.roamBlocked(S); if (cb) return toast(cb); const r = roamSpot && ROAM.plan(S, roamSpot); if (!r || r.err) return toast(r?.err || "Pick a spot first."); pos = r.pos; name = r.name; }
     else if (name.startsWith("__pin:")) { const p = (S.pins || []).find((q) => "__pin:" + q.id === name); if (!p) return toast("That pin is gone."); pos = [p.x, p.y]; name = p.label; }
     else pos = WORLD.places[name].slice(0, 2);
     if (S.location === name) return toast(`You're already in ${name}.`);
@@ -1647,6 +1650,7 @@
     persist(true); renderPanel(true); toast(yes ? "Deal. The goods are in your pack." : "You turn the offer down.");
   }
   // ------------------------------------------------------------ social: friends, private messages, courier trades
+  let guardDocs = [], lastJobId = null;
   let friendDocs = [], dmDocs = [], socTab = "friends", socWith = null, socSearch = "", dmDraft = "", seenDMs = null, seenAdds = new Set(), courierToasted = new Set(), fRemoveAsk = null;
   function onFriends(docs) {
     friendDocs = docs;
@@ -1787,6 +1791,10 @@
   }
   function cardOf(id) { return others.find((o) => o.id === id); }
   function allies() {
+    if (S.trip?.caravan) {   // guarding a caravan: the other guards who signed on fight with you, plus two hired swords
+      const id = S.trip.caravan, mates = guardDocs.filter((g) => g.caravanId === id && g.uid !== S.id && g.status !== "left");
+      return [...mates.map((g) => MP.allyFromCard(cardOf(g.uid) || { name: g.name, dmg: 4 + (g.level || 1) * 0.6 })), { name: "Caravan guard", dmg: 4 + S.level * 0.3 }, { name: "Caravan guard", dmg: 4 + S.level * 0.3 }];
+    }
     if (!party) return [];
     const me = livePos();
     return others.filter((o) => party.members.some((m) => m.id === o.id) && (S.dungeon ? o.dungeon === S.dungeon.place : (!o.dungeon && G.pxDist(otherPos(o), me) <= MP.NEAR_PX)))
@@ -2097,6 +2105,44 @@
   }
 
   let horseCoat = "bay";
+  function cartHTML(open, wanted) {
+    const c = S.cart, coat = S.horse ? HORSES.coat(S.horse.coat)[2] : undefined;
+    if (!c) return `<div class="card cvcard"><div class="cvhead">${CARAVANS.wagonHTML(96, 64, { cover: false, coat })}<div><h3 style="margin:0">A cart · ${CARAVANS.CART_PRICE} gold</h3><p class="sub" style="margin:2px 0 0">Hitched to your horse it carries +${CARAVANS.CART_CARRY}. You go 10% slower, keep to the roads, and bandits sometimes come for the cargo.</p></div></div>
+      <button class="btn pri" data-act="cartbuy" style="width:100%;margin-top:8px" ${S.horse && open && !wanted && S.gold >= CARAVANS.CART_PRICE ? "" : "disabled"}>${S.horse ? "Buy the cart" : "You need a horse first"}</button></div>`;
+    const here = c.parked === S.location;
+    return `<div class="card cvcard"><div class="cvhead">${CARAVANS.wagonHTML(96, 64, { cover: false, coat, wheels: c.wheels })}<div><h3 style="margin:0">Your cart</h3><p class="sub" style="margin:2px 0 0">${c.parked ? `Waiting at the stables in ${esc(c.parked)}.` : CARAVANS.hasCart(S) ? `Hitched up: +${CARAVANS.CART_CARRY} carry weight, roads only.` : "Your horse isn't here to pull it."}${c.wheels ? " Iron-bound wheels." : ""}</p></div></div>
+      <div class="grid2" style="margin-top:8px"><button class="btn" data-act="carttoggle" ${c.parked && !here ? "disabled" : ""}>${c.parked ? "Hitch it up" : "Leave it here"}</button><button class="btn" data-act="cartwheels" ${c.wheels || !open || S.gold < CARAVANS.WHEELS_PRICE ? "disabled" : ""}>${c.wheels ? "Iron wheels fitted" : `Iron wheels (${CARAVANS.WHEELS_PRICE})`}</button></div></div>`;
+  }
+  function caravansHTML(l) {
+    const list = CARAVANS.at(l), j = S.caravanJob;
+    if (!list.length) {
+      const next = CARAVANS.all().filter((c) => c.to === l).sort((a, b) => a.arrive - b.arrive)[0];
+      return `<p class="sub">No caravans in ${esc(l)} right now.${next ? ` ${esc(next.line.name)} is on the road from ${esc(next.from)} and arrives in ${cdSpan(next.arrive)}.` : ""}</p>`;
+    }
+    return list.map((c) => {
+      const g = guardDocs.filter((d) => d.caravanId === c.id && d.status !== "left"), mine = j?.id === c.id, sh = CARAVANS.share(c.id, mine ? g : [...g, { caravanId: c.id }], c.from, c.to), p = CARAVANS.plan(c);
+      const guards = g.length ? `<div class="cvguards">${g.map((d) => `<span>${typeof HEROART !== "undefined" ? HEROART.portrait(cardOf(d.uid) || { race: d.race || "nord", id: d.uid, name: d.name }, 26) : ""}${esc(d.name)} · ${d.level || 1}</span>`).join("")}</div>` : `<p class="sub" style="margin:4px 0">No guards yet.</p>`;
+      const goods = c.here ? CARAVANS.stock(c).map((i) => `<div class="item">${typeof ICONART !== "undefined" ? ICONART.item(i, 32) : ""}<div class="t">${esc(D.ITEMS[i].name)}<span>${esc(G.itemStats(i))}</span></div><span class="num gold">${CARAVANS.price(S, i)}</span><button class="btn sm" data-act="cvbuy" data-id="${esc(c.id)}" data-item="${esc(i)}" ${S.gold >= CARAVANS.price(S, i) ? "" : "disabled"}>Buy</button></div>`).join("") : "";
+      return `<div class="card cvcard"><div class="cvhead">${CARAVANS.wagonHTML(110, 72, { khajiit: c.line.khajiit })}<div><h3 style="margin:0">${esc(c.line.name)}</h3><p class="sub" style="margin:2px 0 0">${c.here ? `To ${esc(c.to)} · leaves in ${cdSpan(c.depart)}` : `Arriving from ${esc(c.from)} in ${cdSpan(c.arrive)}`}</p></div></div>
+        ${c.here ? `<p class="sub" style="margin:6px 0 0">Expect ${p.at.length === 2 ? "two ambushes" : "an ambush"} on the road. Pay: about <b class="gold">${sh.each}</b> gold each with ${sh.n} guard${sh.n > 1 ? "s" : ""} (more guards, bigger contract).</p>${guards}
+          ${mine ? `<button class="btn" data-act="cvleave" style="width:100%">Leave the caravan</button>` : `<button class="btn pri" data-act="cvsign" data-id="${esc(c.id)}" style="width:100%" ${j || S.trip ? "disabled" : ""}>${j ? "You're guarding another caravan" : "Sign on as a guard"}</button>`}
+          <h3 style="margin-top:10px">Wares</h3>${goods}` : ""}</div>`;
+    }).join("");
+  }
+  function caravanJobPanel() {
+    const j = S.caravanJob; if (!j) return "";
+    const st = j.status === "signed" ? `Waiting in ${esc(j.from)}. The wagons leave in ${cdSpan(j.depart)} — be there.` : `On the road to ${esc(j.to)}. Arrives in ${cdSpan(j.arrive)}. ${j.ambush ? `Ambushes fought off: ${j.ambush}.` : "Stay sharp."}`;
+    return `<div class="panel"><h2>🐫 Caravan job</h2><div class="cvhead">${CARAVANS.wagonHTML(84, 56, { khajiit: CARAVANS.LINES.find((x) => x.id === j.line)?.khajiit })}<div><b>${esc(j.name)}</b><p class="sub" style="margin:2px 0 0">${st}</p></div></div><button class="btn" data-act="cvleave" style="width:100%;margin-top:8px">Leave the caravan</button></div>`;
+  }
+  async function caravanPay() {
+    const a = CARAVANS.arrived(S, guardDocs); if (!a) return;
+    S.caravanJob = null;
+    let paid = false;
+    await Store.change("guards", a.recId, (d) => { const nd = CARAVANS.claim(d || { caravanId: a.recId.split("-").slice(0, 3).join("-"), uid: S.id, name: S.name }, a.pay); if (nd) paid = true; return nd || d; });
+    if (!paid) { persist(true); return; }
+    S.gold += a.pay; persist(true); SOUND.fx("coin");
+    showMessage("Caravan", `🐫 ${a.name} rolls safely into ${a.to}. The caravan master counts out your share: ${a.pay} gold${a.n > 1 ? ` (${a.n} guards)` : ""}.`);
+  }
   function stablesHTML(open, wanted) {
     const h = HORSES.fix(S), l = S.location;
     const swatch = (c, on, act) => `<button class="coat ${on ? "on" : ""}" ${act ? `data-act="hcoat" data-id="${c[0]}"` : "disabled"} style="background:${c[2]}" aria-label="${esc(c[1])}" aria-pressed="${on}"></button>`;
@@ -2120,13 +2166,13 @@
       return wildsFood() + `<div class="panel"><h2>${l ? esc(l) : "The wilds"}</h2><p class="sub">${l ? "There's nothing to buy here." : "You're out on the road."} Cities and towns have shops, inns, trainers, alchemy labs, forges and jobs.</p></div>`;
     }
     const open = G.shopsOpen(), wanted = TOWNS.wanted(S), hold = G.holdAt(WORLD.places[l]);
-    const sections = [...types.filter((x) => x !== "stables"), ...(TOWNS.INNS[l] ? ["inn"] : []), ...(TOWNS.TRAINERS[l] ? ["train"] : []), "alchemy", ...(types.includes("blacksmith") ? ["forge"] : []), "jobs", "streets", ...(TOWNS.followersHere(S).length || l === "Whiterun" ? ["hire"] : []), ...(TOWNS.carriageFrom(l) ? ["carriage"] : []), ...(TOWNS.HOMES[l] ? ["home", "homes", "market"] : []), ...(SMITH.MINES[l] ? ["mine"] : []), ...(l === HALL.TOWN ? ["hall"] : []), "notice", ...(TOWNS.INNS[l] ? ["cook"] : []), ...(l === ARENA.TOWN ? ["arena"] : []), ...(COOK.waterNear(WORLD.places[l]) ? ["fish"] : []), ...(ENCH.hasEnchanter(l) ? ["enchanter"] : []), ...(types.includes("stables") ? ["stables"] : [])];
+    const sections = [...types.filter((x) => x !== "stables"), ...(TOWNS.INNS[l] ? ["inn"] : []), ...(TOWNS.TRAINERS[l] ? ["train"] : []), "alchemy", ...(types.includes("blacksmith") ? ["forge"] : []), "jobs", "streets", ...(TOWNS.followersHere(S).length || l === "Whiterun" ? ["hire"] : []), ...(TOWNS.carriageFrom(l) ? ["carriage"] : []), ...(TOWNS.HOMES[l] ? ["home", "homes", "market"] : []), ...(SMITH.MINES[l] ? ["mine"] : []), ...(CARAVANS.stopsAt(l) ? ["caravans"] : []), ...(l === HALL.TOWN ? ["hall"] : []), "notice", ...(TOWNS.INNS[l] ? ["cook"] : []), ...(l === ARENA.TOWN ? ["arena"] : []), ...(COOK.waterNear(WORLD.places[l]) ? ["fish"] : []), ...(ENCH.hasEnchanter(l) ? ["enchanter"] : []), ...(types.includes("stables") ? ["stables"] : [])];
     townShop = sections.includes(townShop) ? townShop : sections[0];
-    const names = { general: "General goods", blacksmith: "Blacksmith", wizard: "Court wizard", stables: "Stables", fence: "Ragged Flagon (fence)", inn: TOWNS.INNS[l] || "Inn", train: "Trainers", alchemy: "Alchemy lab", forge: "Forge", jobs: "Jobs", streets: "Streets", hire: l === "Whiterun" ? "Dragonsreach & hirelings" : "Hirelings", hall: "⚑ Hall of the North", notice: "📜 Jarl's bounty", homes: "🏘 Neighbours", market: "🛒 Market stalls", mine: "⛏ Mine", cook: "🍲 Cooking pot", arena: "⚔ The Arena", fish: "🎣 Fishing", carriage: "Carriage", enchanter: "Arcane enchanter", home: TOWNS.home(S, l) ? `🏠 ${TOWNS.HOMES[l]?.[0]}` : `Buy ${TOWNS.HOMES[l]?.[0]}` };
+    const names = { general: "General goods", blacksmith: "Blacksmith", wizard: "Court wizard", stables: "Stables", fence: "Ragged Flagon (fence)", inn: TOWNS.INNS[l] || "Inn", train: "Trainers", alchemy: "Alchemy lab", forge: "Forge", jobs: "Jobs", streets: "Streets", hire: l === "Whiterun" ? "Dragonsreach & hirelings" : "Hirelings", hall: "⚑ Hall of the North", notice: "📜 Jarl's bounty", homes: "🏘 Neighbours", market: "🛒 Market stalls", mine: "⛏ Mine", caravans: "🐫 Caravans", cook: "🍲 Cooking pot", arena: "⚔ The Arena", fish: "🎣 Fishing", carriage: "Carriage", enchanter: "Arcane enchanter", home: TOWNS.home(S, l) ? `🏠 ${TOWNS.HOMES[l]?.[0]}` : `Buy ${TOWNS.HOMES[l]?.[0]}` };
     const fac = F.priceFactor(G.skill(S, "Mercantile"));
     let body = "", note = "";
     const shopRow = (i, sell = true) => { const p = G.buyPrice(S, i), it = D.ITEMS[i], tome = it.slot === "tome" && typeof TOMES !== "undefined" ? ` · ${TOMES.level(it.spell)}${S.spells.includes(it.spell) ? " · you know it" : ""}` : ""; return `<div class="item">${ICONART.item(i, 34)}<div class="t">${esc(it.name)}<span>${esc(G.itemStats(i))}${tome} · ${it.weight} wt</span></div><span class="num gold">${p}</span><button class="btn sm" data-act="buy" data-item="${esc(i)}" ${open && !wanted && S.gold >= p ? "" : "disabled"}>Buy</button>${it.slot === "ammo" ? `<button class="btn sm" data-act="buyn" data-item="${esc(i)}" data-n="20" ${open && !wanted && S.gold >= p * 20 ? "" : "disabled"}>×20</button>` : ""}</div>`; };
-    if (townShop === "stables") body = stablesHTML(open, wanted);
+    if (townShop === "stables") body = stablesHTML(open, wanted) + cartHTML(open, wanted);
     else if (["general", "blacksmith", "wizard", "fence"].includes(townShop)) {
       note = `${open ? "Shops are open." : `Shops are closed for the night. They open at 08:00 (${esc(G.clockText())}).`} At Mercantile ${G.skill(S, "Mercantile")} you buy at about ${(fac / G.haggle(S)).toFixed(2)}× value.${townShop === "fence" ? " The fence buys stolen goods." : ""}`;
       body = barterHTML(townShop, open, wanted, shopRow);
@@ -2184,6 +2230,9 @@
     } else if (townShop === "fish") {
       note = `Water nearby: ${COOK.waterNear(WORLD.places[l])}. Cast, wait for a bite, and reel in when the needle is in the green.`;
       body = fishCard();
+    } else if (townShop === "caravans") {
+      note = "Caravans roll between the holds on a timetable everyone shares. Sign on as a guard while the wagons wait, travel with them, fight off the ambushes, and collect your pay on arrival.";
+      body = caravansHTML(l);
     } else if (townShop === "mine") {
       note = "Dig ore with a pickaxe, then smelt it into ingots at the forge.";
       body = mineHTML(l);
@@ -2313,7 +2362,7 @@
       ${myRank > 10 ? `<p class="sub" style="margin-top:6px">You're number ${myRank}.</p>` : ""}</div>` : "";
     // a quick-jump menu: the Journal has grown long
     const parts = [["guide", "📖 Guide", guideCard()], ["event", "Event", festPanel()], ["quests", "Quests", questPanel()], ["bounty", "Bounty", bountyPanel()], ["chat", "Chat", chatPanel()], ["holds", "Holds", holdsPanel()], ["clan", "Clan", clanPanel()],
-      ["world", "World", worldHtml], ["trades", "Trades", tradeHtml], ["party", "Party", partyHtml], ["people", "Travellers", travellers], ["ladder", "Leaderboard", ladderHtml], ["crimes", "Bounties", bounty], ["cleared", "Cleared", clearedPanel()], ["news", "News", word]]
+      ["world", "World", worldHtml], ["trades", "Trades", tradeHtml], ["party", "Party", partyHtml], ["people", "Travellers", travellers], ["ladder", "Leaderboard", ladderHtml], ["crimes", "Bounties", bounty], ["cleared", "Cleared", clearedPanel()], ["caravan", "Caravan", caravanJobPanel()], ["news", "News", word]]
       .filter(([, , h]) => h && h.trim()).map(([id, label, h]) => [id, label, h.replace(/<div class="panel"/, `<div id="j-${id}" class="panel"`)]);
     const nav = `<nav class="jnav" aria-label="Journal sections">${[...parts.map(([id, label]) => [id, label]), ["log", "Diary"]].map(([id, label]) => `<button class="chip" data-act="jgo" data-id="${id}">${label}</button>`).join("")}</nav>`;
     return `${nav}${parts.map(([, , h]) => h).join("")}
@@ -2485,6 +2534,12 @@
         break;
       }
       case "hcoat": horseCoat = b.dataset.id; renderPanel(true); break;
+      case "cartbuy": say(CARAVANS.buyCart(S)); publishCard(); break;
+      case "cartwheels": say(CARAVANS.buyWheels(S)); break;
+      case "carttoggle": say(CARAVANS.toggleCart(S)); break;
+      case "cvsign": { const r = CARAVANS.signOn(S, b.dataset.id); if (r.err) return toast(r.err); Store.put("guards", r.id, r.doc); guardDocs.push({ ...r.doc, id: r.id }); lastJobId = S.caravanJob.id; persist(true); say(r.text); break; }
+      case "cvleave": { const id = S.caravanJob?.id, m = CARAVANS.leave(S); if (id) Store.change("guards", `${id}-${S.id}`, (d) => (d ? { ...d, status: "left" } : d)); persist(true); say(m || "You're not with a caravan."); break; }
+      case "cvbuy": say(CARAVANS.buy(S, b.dataset.id, b.dataset.item)); break;
       case "hbuy": say(HORSES.buy(S, $("#hname")?.value, horseCoat)); publishCard(); break;
       case "hrename": say(HORSES.rename(S, $("#hname")?.value)); break;
       case "harmor": say(HORSES.buyArmor(S, b.dataset.id)); break;

@@ -428,6 +428,15 @@ const WorldMap = (() => {
       g.restore();
     }
     if (MA) { MA.trackDiscoveries(v.discovered); MA.drawBursts(g, s, W, H, v.reduceMotion); }
+    // caravans rolling between the holds, and your cart behind your horse
+    if (v.caravans && typeof CARAVANS !== "undefined") for (const c of v.caravans) {
+      const sp = CARAVANS.sprite(c.khajiit, true); if (!sp) continue;
+      if (!c.visible) continue;   // only where you've been: no wagons drawn into the fog
+      const [cx, cy] = P(c.pos), bob2 = c.moving && !v.reduceMotion ? Math.sin(v.t * 6 + cx) * 0.8 * s : 0;
+      g.drawImage(sp, cx - 21 * s, cy - 25 * s + bob2, 42 * s, 30 * s);
+      if (v.zoom >= 1.5) label(g, c.label, cx, cy + 12 * s, s, 11, c.mine ? "#ffe6a0" : "#f3e7c4", 700, true);
+    }
+    if (v.cart && typeof CARAVANS !== "undefined") { const sp = CARAVANS.sprite(false, false); if (sp) g.drawImage(sp, px - 50 * s, py - 16 * s, 34 * s, 24 * s); }
     const pulse = v.reduceMotion ? 0.5 : (Math.sin(v.t * 3) + 1) / 2;
     g.fillStyle = `rgba(110,200,255,${0.18 + 0.12 * pulse})`; g.beginPath(); g.arc(px, py, (15 + 6 * pulse) * s, 0, 7); g.fill();
     if (MA) {

@@ -183,7 +183,8 @@ const G = (() => {
   const withHorse = (s) => (typeof HORSES !== "undefined" ? HORSES.present(s) : !!s.horse);
   const capacity = (s) => F.BASE_CARRY + Math.floor(s.spBonus / F.ATTRIBUTE_PER_LEVEL) * F.CARRY_PER_STAMINA_LEVEL
     + (withHorse(s) ? D.HORSE_CARRY : 0) + (P(s, "extra_pockets") ? 100 : 0) + fxSum(s, "carry") + (s.stone === "steed" ? 100 : 0) + (s.follower ? 100 : 0)   // [OURS] a follower carries 100 for you
-    + (typeof HALL !== "undefined" ? HALL.carryBonus() : 0);   // [OURS] Jarl's Keep tier of the shared hall
+    + (typeof HALL !== "undefined" ? HALL.carryBonus() : 0)   // [OURS] Jarl's Keep tier of the shared hall
+    + (typeof CARAVANS !== "undefined" ? CARAVANS.cartCarry(s) : 0);   // [OURS] a cart behind your horse
   const overweight = (s) => carried(s) > capacity(s);
   const lo = (s) => s.loadouts[s.loadout] || Object.values(s.loadouts)[0];
   function equipment(s) {
@@ -719,6 +720,8 @@ const G = (() => {
   }
   function rollEncounter(s, t) {
     const night = isNight(t), hold = holdAt([s.x, s.y]);
+    const raid = typeof CARAVANS !== "undefined" ? CARAVANS.cartAmbush(s) : null;   // bandits after your cart's cargo
+    if (raid) { const e = scaleEnemy(raid, s.level); e.hold = hold; return e; }
     const owed = (s.bounty || {})[hold] || 0;
     if (owed && Math.random() < Math.min(0.5, 0.1 + owed / 1500)) {   // [Skyrim] bounty collectors find wanted people ([OURS] chance)
       const e = scaleEnemy({ name: "Bounty hunter", danger: "medium", level: 10, tags: ["humanoid"], health: 90, damage: 16, gold: [20, 60],
@@ -789,6 +792,7 @@ const G = (() => {
     v *= 1 + 0.05 * P(s, "long_strider");
     if (typeof WEVENTS !== "undefined") { const wf = WEVENTS.weather([s.x, s.y]).speed; v *= wf < 1 && fxSum(s, "warmth") > 0 ? (1 + wf) / 2 : wf; }   // [OURS] snow and storms slow you down; hot soup halves that
     if (riding(s)) v *= D.HORSE_SPEED;
+    if (typeof CARAVANS !== "undefined") v *= CARAVANS.cartSpeed(s);   // [OURS] a loaded cart is a little slower
     return v;
   }
   function startTrip(s, destName, dest, t = now()) {
@@ -843,6 +847,11 @@ const G = (() => {
         out.arrived = tr.destName;
         return out;
       }
+      if (tr.caravan && typeof CARAVANS !== "undefined") {   // guarding a caravan: its ambushes come on its own schedule
+        const ce = CARAVANS.ambushDue(s, tr, stepT);
+        if (ce) { const e = scaleEnemy(ce, s.level); tr.status = "encounter"; tr.encounter = e; out.encounter = e; note(s, `⚠️ Caravan ambush: ${e.name}`); return out; }
+        continue;
+      }
       const rate = tr.carriage ? 0 : ENCOUNTER_PER_MIN * (isNight(stepT) ? D.NIGHT_ENCOUNTER_MULT : 1) * (typeof WEVENTS !== "undefined" ? WEVENTS.weather([s.x, s.y], stepT).encounters : 1);   // nobody robs a carriage on a Jarl's road
       if (Math.random() < 1 - (1 - rate) ** (dt / 60)) {
         const e = rollEncounter(s, stepT);
@@ -894,7 +903,7 @@ const G = (() => {
     if (action === "flee") {
       const ch = 0.55 + skill(s, "Athletics") / 250 - (e.danger === "high" ? 0.2 : 0) + (riding(s) ? 0.15 : 0);   // [OURS]
       lines.push(...useSkill(s, "Athletics", 10 * F.ATHLETICS_XP_PER_SECOND));
-      if (Math.random() < ch) { tr.status = "travel"; tr.encounter = null; tr.lastTick = t; tripLog(s, `🏃 Escaped the ${e.name}`); return { text: `You ${riding(s) ? "ride" : "run"} and lose the ${e.name}.`, skills: lines }; }
+      if (Math.random() < ch) { tr.status = "travel"; tr.encounter = null; tr.lastTick = t; tripLog(s, `🏃 Escaped the ${e.name}`); const ds = e.caravan && typeof CARAVANS !== "undefined" ? CARAVANS.deserted(s) : null; return { text: `You ${riding(s) ? "ride" : "run"} and lose the ${e.name}.${ds ? " " + ds : ""}`, skills: lines }; }
       enemyFirst = true; lines.unshift(`You try to escape, but the ${e.name} catches you!`);
     } else if (action === "sneak") {
       lines.push(...useSkill(s, "Sneak", 2.5 + 0.625 * 10));   // [Skyrim] 2.5 for hiding + 0.625/s hidden

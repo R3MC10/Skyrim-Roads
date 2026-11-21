@@ -5,6 +5,7 @@ Each round: build one batch, test it (Node sims in /home/claude/tests + headless
 our own marked [OURS]; plain-language UI; phone first.
 
 ## Done
+- Round 37: carts and caravans. Cart at the stables (needs a horse; +300 carry, 10% slower, roads only, bandits sometimes raid; iron-bound wheels halve raids; park at any stables). Four caravan lines loop between the capitals on a shared timetable; sign on as a guard (alone or with other players), fight 1–2 ambushes together with hired guards, get paid on arrival; buy their wares while they're in town; wagons on the map.
 - Round 36 (visuals 4): portraits and greetings for townspeople (named Skyrim shopkeepers, innkeepers, Jarls, stewards, guards in hold colours, all trainers, followers, Greybeards); pictures for every road event and story moment (dragon attacks, Word Walls, guild halls, vampire/werewolf moments, quest stages, dragon raids); equipment screen (character with gear slots, picker with stat comparison, loadout thumbnails) and a race showcase at character creation.
 - Round 35 (visuals 3): map with hand-drawn markers per place kind, your portrait token (on horseback when riding), other players' tokens, footprint routes, water glints, cloud shadows, birds, day/night lighting with lit towns, quest glow, discovery bursts. Skyrim-style UI: textured gold-framed panels, gold buttons, animated tabs/popups, banners for skill increases, quests, level-ups, achievements and discoveries, floating gold. Drawn dungeon map with torch-lit corridors, tappable rooms, chest animation, loot icons, Cleared seal.
 - Round 34: spell icons (all 78, by school and level) and visuals across the game (skills, perks, stones, shouts, quests, achievements, followers, horses, guide, title panorama, death scene). Sound rewrite: no pops, one master limiter, cheaper reverb, voice caps and spam limits, smooth background/resume, crossfading moods, new modal Nordic music.
@@ -50,6 +51,5 @@ our own marked [OURS]; plain-language UI; phone first.
 - Round 3: homes (Breezehome, Honeyside, Vlindrel Hall, Hjerim, Proudspire Manor at Skyrim prices): death-proof chest, Well Rested bed (+10%; inns now Rested +5%), daily garden.
 
 ## Next rounds (in order)
-30. Mounts for the road: a cart you can buy to carry a lot more, and caravans between holds that players can guard together for pay.
 31. Spell crafting at the College: combine two effects you know into your own spell.
 32. A bard's song: players can write a short line about a deed; the best-liked lines become songs that innkeepers sing.
