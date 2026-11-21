@@ -965,8 +965,9 @@ const G = (() => {
     const r = invRow(s, id);
     if (!r || r.qty < qty) return "You don't have that.";
     const price = sellPrice(s, r) * qty, name = D.ITEMS[r.item].name;
+    const wasStolen = !!invRow(s, id)?.stolen;
     take(s, id, qty); s.gold += price;
-    const m = useSkill(s, "Mercantile", price);
+    const m = [...useSkill(s, "Mercantile", price), ...(wasStolen ? useSkill(s, "Streetwise", 8 + price / 10) : [])];   // [OURS] fencing teaches Streetwise
     return `Sold ${name} for ${price} gold.` + (m.length ? " " + m.join(". ") : "");
   }
   function readTome(s, id) {
@@ -975,7 +976,8 @@ const G = (() => {
     const sp = D.ITEMS[r.item].spell;
     if (s.spells.includes(sp)) return "You already know that spell.";
     take(s, id); s.spells.push(sp);
-    return `You learned ${D.SPELLS[sp].name}. Add it to your tactics.`;
+    const my = useSkill(s, "Mysticism", 15);   // [OURS] studying magic deepens your grasp of its roots
+    return `You learned ${D.SPELLS[sp].name}. Add it to your tactics.` + (my.length ? " " + my.join(". ") : "");
   }
   function drinkPotion(s, t = now()) {
     const f = new Fight(s, { name: "-", health: 1, damage: 0 }), r = f.findPotion("health");

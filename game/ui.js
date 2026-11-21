@@ -28,7 +28,7 @@
   let chatDocs = [], chatRaw = [], chatCh = "world", chatDraft = "", chatSeen = 0, chatSeenIds = new Set(), lastChatSend = 0;
   const bootT = Date.now() / 1000;
   let trades = [], ladderDocs = [], ladderCat = "level", tradeSel = [], tradeTo = null, seenTrades = new Set(), lastLadderJson = "";
-  let perkSkill = null, alchSel = [], party = null, invites = [], chests = [], news = [], seenAttacks = new Set(), lastCardJson = "", lastAmbushCheck = 0;
+  let perkSkill = null, heroSkill = null, alchSel = [], party = null, invites = [], chests = [], news = [], seenAttacks = new Set(), lastCardJson = "", lastAmbushCheck = 0;
   const app = $("#app"), tabsEl = $("#tabs");
   const bump = () => { version++; };
 
@@ -519,6 +519,10 @@
         else if (out.encounter) openEncounter();
         else if (out.arrived) {
           SOUND.fx("arrive"); tally("arrivals"); festCount("arrive");
+          if (!WORLD.places[out.arrived]) {   // free roam or a pin: say what's around
+            const near = ROAM.around(S), msg = `You stop in ${ROAM.isRoam(out.arrived) ? out.arrived : `the spot you marked (${out.arrived})`}. ${Terrain.NAMES[Terrain.typeAtPos([S.x, S.y])]} all around.${near.length ? ` Nearby: ${near.join(", ")}.` : " Nothing you know of nearby."}`;
+            G.note(S, "🧭 " + msg); toast(msg);
+          } else
           toast(`Arrived at ${out.arrived}.` + (G.shopTypes(out.arrived).length ? " Shops are in the Town tab." : DUNGEONS.enterable(out.arrived) ? " You can go inside." : ""));
           selected = null; renderPanel(true);
           const jm = TOWNS.checkJobs(S); if (jm.length) { tally("jobs", jm.length); persist(); setTimeout(() => toast(jm.join(" ")), 1500); }
@@ -620,7 +624,7 @@
     const pos = livePos();
     if (follow) center = pos;
     view = {
-      player: pos, name: S.name, trail: S.trip?.trail, dest: S.trip ? { pos: S.trip.dest, name: S.trip.destName } : null,
+      player: pos, name: S.name, trail: S.trip?.trail, dest: S.trip ? { pos: S.trip.dest, name: S.trip.destName, roam: !!S.trip.roam } : null, spot: selected === "__spot" ? roamSpot : null,
       route: S.trip ? (S.trip.status === "travel" ? S.trip.path.slice(S.trip.idx + 1) : [S.trip.dest]) : null,
       discovered: S.discovered, explored: [...S.explored, pos], others: others.filter((o) => !o.hiding || G.pxDist(livePos(), otherPos(o)) < MP.NEAR_PX).map((o) => ({ name: (o.clan ? `[${o.clan}] ` : "") + o.name + (party?.members.some((m) => m.id === o.id) ? " ⚑" : ""), pos: otherPos(o) })),
       rulers: Object.entries(WARS.rulers(S)).map(([hold, c]) => ({ hold, color: c.colors[0] })),
@@ -681,14 +685,25 @@
       const r = c.getBoundingClientRect();
       const pin = pinAt(e.clientX - r.left, e.clientY - r.top);
       selected = pin ? "__pin:" + pin.id : WorldMap.placeAt(view, e.clientX - r.left, e.clientY - r.top, known);
+      if (!selected) { const w = screenToWorld(e.clientX - r.left, e.clientY - r.top); if (w[0] >= 0 && w[1] >= 0 && w[0] <= 1 && w[1] <= 1) { roamSpot = w; selected = "__spot"; } }
       renderPicked();
     };
     c.addEventListener("pointerup", up); c.addEventListener("pointercancel", up);
     c.addEventListener("wheel", (e) => { e.preventDefault(); mapTouchedAt = performance.now(); const r = c.getBoundingClientRect(); setZoom(zoom * (e.deltaY < 0 ? 1.15 : 1 / 1.15), e.clientX - r.left, e.clientY - r.top); }, { passive: false });
   }
+  let roamSpot = null;
   function renderPicked() {
     const el = $("#picked");
     if (!selected) { el.classList.add("hide"); return; }
+    if (selected === "__spot") {   // free roam: any spot on the map
+      if (!roamSpot) { selected = null; return renderPicked(); }
+      const r = ROAM.plan(S, roamSpot);
+      el.classList.remove("hide");
+      el.innerHTML = r.err ? `<div class="t"><b>🧭 ${esc(r.err)}</b><span>Tap somewhere on land to roam there.</span></div><button class="iconbtn" data-act="unpick" aria-label="Close">✕</button>`
+        : `<div class="t"><b>🧭 ${esc(r.name[0].toUpperCase() + r.name.slice(1))}</b><span>${esc(r.ground)} · ${esc(G.holdAt(r.pos))} · ${fmtMin(G.minutesTo(S, r.pos))}${r.snapped ? " · nearest dry land" : ""}</span></div>
+        <button class="btn pri" data-act="go" data-place="__spot">Walk here</button><button class="btn" data-act="spotpin">Pin</button><button class="iconbtn" data-act="unpick" aria-label="Close">✕</button>`;
+      return;
+    }
     if (selected.startsWith("__pin:")) {
       const p = (S.pins || []).find((q) => "__pin:" + q.id === selected); if (!p) { selected = null; return renderPicked(); }
       el.classList.remove("hide");
@@ -708,6 +723,7 @@
   function travelTo(name) {
     let pos;
     if (name === "__bag") { const b = myBag(); if (!b) return toast("Your bag is gone."); pos = [b.x, b.y]; name = "your lost bag"; }
+    else if (name === "__spot") { const r = roamSpot && ROAM.plan(S, roamSpot); if (!r || r.err) return toast(r?.err || "Pick a spot first."); pos = r.pos; name = r.name; }
     else if (name.startsWith("__pin:")) { const p = (S.pins || []).find((q) => "__pin:" + q.id === name); if (!p) return toast("That pin is gone."); pos = [p.x, p.y]; name = p.label; }
     else pos = WORLD.places[name].slice(0, 2);
     if (S.location === name) return toast(`You're already in ${name}.`);
@@ -721,7 +737,8 @@
       if (near.length) toast(`Your party follows. Pace set by the slowest: ${fmtMin(G.minutesLeft(S))}.`);
     }
     S.trip.total = G.minutesLeft(S);
-    toast(`You set off for ${name}. About ${fmtMin(S.trip.total)}.`);
+    if (ROAM.isRoam(name)) { S.trip.roam = true; roamSpot = null; }
+    toast(`You set off ${ROAM.isRoam(name) ? "into" : "for"} ${name}. About ${fmtMin(S.trip.total)}.`);
     follow = true;
     $("#mapwrap").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
     persist(true);
@@ -1065,6 +1082,12 @@
     return { add, lvl: S.skills[sk].lvl + add, any: bits.length > 0, text: bits.join(" · ") };
   }
   const skillNum = (sk) => { const b = boost(sk); return `${b.lvl}${b.any ? `<span class="boost" title="${esc(b.text)}">▲</span>` : ""}`; };
+  // ---- what a skill does and how to raise it (skillinfo.js)
+  function skillInfoHTML(sk) {
+    const i = SKILLINFO.get(S, sk); if (!i) return "";
+    return `<div class="sinfo"><p>${esc(i.what)}</p>${i.now.length ? `<h4>What your level gives</h4><ul>${i.now.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>` : ""}
+      <h4>How to raise it</h4><ul>${i.raise.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>${i.perks ? `<p class="sub">Perks (level needed): ${esc(i.perks)}</p>` : ""}</div>`;
+  }
   // ---- skills
   function skillRows() {
     const group = (sk) => Object.entries(D.SKILL_GROUPS).find(([, l]) => l.includes(sk))?.[0];
@@ -1095,7 +1118,7 @@
       const rows = skillRows(); const sel = rows.find((r) => r.id === sky.sel) || null;
       head = `<div class="sky-head sky-cols2"><button data-act="skysort" data-id="name">Skill</button><button data-act="skysort" data-id="lvl">Level</button></div>`;
       list = rows.map((r) => `<button class="sky-row sky-cols2 ${r.id === sky.sel ? "sel" : ""}" data-act="skysel" data-id="${esc(r.id)}"><span class="nm">${esc(r.name)}<span class="bar"><i style="width:${r.prog}%;background:var(--frost)"></i></span></span><span class="num">${r.lvl}${r.bst.any ? '<span class="boost">▲</span>' : ""}</span></button>`).join("");
-      detail = sel ? `<div class="sky-detail"><h3>${esc(sel.name)} ${sel.lvl}</h3>${sel.bst.any ? `<p class="sub boost-t">${esc(sel.bst.text)}</p>` : ""}<p class="sub">${sel.prog}% of the way to ${sel.lvl + 1}. ${sel.perks ? `${sel.perks} perk${sel.perks > 1 ? "s" : ""} taken.` : ""} Perk points to spend: ${PERKS.pointsLeft(S)}.</p>
+      detail = sel ? `<div class="sky-detail"><h3>${esc(sel.name)} ${sel.lvl}</h3>${sel.bst.any ? `<p class="sub boost-t">${esc(sel.bst.text)}</p>` : ""}<p class="sub">${sel.prog}% of the way to ${sel.lvl + 1}. ${sel.perks ? `${sel.perks} perk${sel.perks > 1 ? "s" : ""} taken.` : ""} Perk points to spend: ${PERKS.pointsLeft(S)}.</p>${skillInfoHTML(sel.id)}
         <div class="sky-acts">${PERKS.TREES[sel.id] ? `<button class="btn pri" data-act="skyperks" data-id="${esc(sel.id)}">Perk tree</button>` : ""}</div></div>` : "";
       if (S.pendingLevels > 0) detail = `<div class="sky-detail"><h3>Level up</h3><p class="sub">Choose what grows (+10), like Skyrim.</p><div class="sky-acts"><button class="btn" data-act="lvl" data-a="health">Health</button><button class="btn" data-act="lvl" data-a="magicka">Magicka</button><button class="btn" data-act="lvl" data-a="stamina">Stamina</button></div></div>` + detail;
     }
@@ -1859,7 +1882,7 @@
     const places = Object.keys(WORLD.places).filter((n) => known(n) && n !== S.location && n.toLowerCase().includes(searchText.toLowerCase()))
       .map((n) => ({ n, d: G.pxDist(here, WORLD.places[n]) })).sort((a, b) => a.d - b.d);
     const bag = myBag();
-    return `${placeHere()}<div class="panel"><h2>Where to?</h2><p class="sub">Tap a place on the map or pick one below. You'll follow roads where they help: they're fast, while marsh, snow and mountains are slow. New places appear as you pass near them.</p>
+    return `${placeHere()}<div class="panel"><h2>Where to?</h2><p class="sub">Tap a place on the map or pick one below. 🧭 Or tap anywhere else on the map to roam there, off the roads. You'll follow roads where they help: they're fast, while marsh, snow and mountains are slow. New places appear as you pass near them.</p>
       <input id="search" placeholder="Search places" value="${esc(searchText)}" autocomplete="off" aria-label="Search places">
       <div class="list">${bag ? `<div class="item on"><div class="t">🎒 Your lost bag<span>${bag.gold} gold · ${Math.max(0, Math.floor((bag.expires - G.now()) / 60))} min left before it's fair game</span></div><button class="btn pri sm" data-act="go" data-place="__bag">Go</button></div>` : ""}
       ${places.slice(0, 40).map(({ n, d }) => { const k = WORLD.places[n][2]; return `<div class="item"><div class="t">${esc(n)}<span>${KIND[k]} · ${esc(G.holdAt(WORLD.places[n]))}${S.discovered.includes(n) ? "" : " · unvisited"}${(() => { const lf = DUNGEONS.enterable(n) ? DUNGEONS.refillLeft(S, n) : 0; return lf ? ` · 🔒 opens in ${cdSpan(G.now() + lf)}` : ""; })()}</span></div><span class="num sub">${d * 1.1 / G.speed(S) < 1 ? "" : "~"}${fmtMin(d * 1.1 / G.speed(S))}</span><button class="btn sm" data-act="go" data-place="${esc(n)}">Go</button></div>`; }).join("") || `<p class="sub">No places match.</p>`}</div>
@@ -1873,13 +1896,14 @@
     const groups = Object.entries(D.SKILL_GROUPS).map(([g, list]) => `<h3 style="margin-top:14px">${esc(g)}</h3><div class="skills">${list.map((sk) => {
       const s = S.skills[sk], n = F.skillXpNeeded(sk, s.lvl);
       const bs = boost(sk);
-      return `<div class="skill"><small><span>${esc(sk)}</span><b class="num">${skillNum(sk)}</b></small><div class="bar"><i style="width:${pct(s.xp, n)}%;background:var(--frost)"></i></div>${bs.any ? `<small class="boost-t">${esc(bs.text)}</small>` : ""}</div>`;
+      return `<button class="skill ${heroSkill === sk ? "on" : ""}" data-act="skinfo" data-id="${esc(sk)}" aria-expanded="${heroSkill === sk}"><small><span>${esc(sk)} <i class="sk-i">ⓘ</i></span><b class="num">${skillNum(sk)}</b></small><div class="bar"><i style="width:${pct(s.xp, n)}%;background:var(--frost)"></i></div>${bs.any ? `<small class="boost-t">${esc(bs.text)}</small>` : ""}</button>${heroSkill === sk ? `<div class="skcard">${skillInfoHTML(sk)}</div>` : ""}`;
     }).join("")}</div>`).join("");
     const pts = PERKS.pointsLeft(S);
     const skillsWithPerks = Object.keys(PERKS.TREES);
     perkSkill = perkSkill && skillsWithPerks.includes(perkSkill) ? perkSkill : skillsWithPerks.slice().sort((a, b) => S.skills[b].lvl - S.skills[a].lvl)[0];
     const perks = `<div class="panel"><h2>Perks ${pts > 0 ? `<span class="gold">· ${pts} to spend</span>` : ""}</h2><p class="sub">One perk point per level, like Skyrim. Pick a skill:</p>
       <div class="chips" style="flex-wrap:wrap">${skillsWithPerks.map((k) => { const n = PERKS.TREES[k].filter(([id]) => PERKS.rank(S, id)).length; return `<button class="chip ${k === perkSkill ? "on" : ""}" data-act="pskill" data-id="${esc(k)}">${esc(k)} ${S.skills[k].lvl}${n ? ` · ${n}` : ""}</button>`; }).join("")}</div>
+      <p class="sub perk-sum">${esc(SKILLINFO.summary(perkSkill))} <button class="linkbtn" data-act="skinfo" data-id="${esc(perkSkill)}">How to raise it</button></p>
       <div class="list" style="margin-top:8px">${PERKS.TREES[perkSkill].map(([id, name, ranks]) => {
         const r = PERKS.rank(S, id), p = PERKS.BY_ID[id], err = PERKS.canTake(S, id);
         return `<div class="item ${r ? "on" : ""}" style="flex-wrap:wrap"><div class="t">${esc(name)}${ranks > 1 ? ` <span class="num">${r}/${ranks}</span>` : r ? " ✓" : ""}<span>${esc(p.desc)}${r < ranks ? ` · needs ${esc(perkSkill)} ${p.req[r]}${p.needs.length ? ` and ${p.needs.map((n) => esc(PERKS.BY_ID[n].name)).join(" or ")}` : ""}` : ""}</span></div>
@@ -2276,7 +2300,8 @@
     const say = (m) => { toast(m); persist(); renderPanel(true); if ($("#sky")) renderMenu(); };
     switch (a) {
       case "go": travelTo(b.dataset.place); renderPanel(true); break;
-      case "unpick": selected = null; renderPicked(); break;
+      case "unpick": selected = null; roamSpot = null; renderPicked(); break;
+      case "spotpin": if (roamSpot) { const [x, y] = roamSpot; selected = null; renderPicked(); openPinDialog(x, y); } break;
       case "stop": if (S.trip?.carriage) { toast("The driver won't stop until you get there."); break; } if (S.trip?.status === "travel" || S.trip?.status === "event") { [S.x, S.y] = livePos(); S.trip = null; S.location = Object.keys(WORLD.places).find((n) => G.pxDist([S.x, S.y], WORLD.places[n]) < 12) || null; persist(true); toast("You stop and look around."); } break;
       case "openenc": openEncounter(); break;
       case "openev": openEvent(); break;
@@ -2356,6 +2381,7 @@
       case "buyn": { const m = G.buy(S, b.dataset.item, +b.dataset.n || 1); if (/^Bought/.test(m)) GUIDE.mark(S, "trade"); say(m); break; }
       case "shop": townShop = b.dataset.id; renderPanel(true); break;
       case "pskill": perkSkill = b.dataset.id; renderPanel(true); break;
+      case "skinfo": heroSkill = heroSkill === b.dataset.id ? null : b.dataset.id; renderPanel(true); if (heroSkill) setTimeout(() => $(".skcard")?.scrollIntoView({ block: "nearest", behavior: reduceMotion ? "auto" : "smooth" }), 30); break;
       case "perk": say(PERKS.take(S, b.dataset.id)); publishCard(); break;
       case "drinkrow": packOpen = null; say(TOWNS.drink(S, +b.dataset.id)); publishCard(); break;
       case "poison": packOpen = null; say(TOWNS.applyPoison(S, +b.dataset.id)); break;

@@ -183,7 +183,8 @@ const TOWNS = (() => {
     const p = roomPrice(s);
     if (s.gold < p) return `A room costs ${p} gold.`;
     s.gold -= p; G.setHealth(s, G.maxHealth(s), t); s.rested = t + RESTED_SECONDS; s.restBonus = 0.05;   // [Skyrim] Rested: +5% (a bed you own: Well Rested +10%)
-    return `You sleep in a warm bed at ${inn}. Fully healed and Rested: skills improve 5% faster for 40 minutes. Your own bed would do better.`;
+    const et = G.useSkill(s, "Etiquette", 6);   // [OURS] good manners at the inn
+    return `You sleep in a warm bed at ${inn}. Fully healed and Rested: skills improve 5% faster for 40 minutes. Your own bed would do better.` + (et.length ? " " + et.join(". ") : "");
   }
   const BARD = ["A bard plays \"Ragnar the Red\" for the fourth time tonight.", "A drunk argues that the Dragonborn is a myth. Loudly.", "Someone is telling the arrow-in-the-knee story again.",
     "The innkeeper complains about the price of mead.", "Two farmers bet on whether the Jarl will raise taxes."];
@@ -196,7 +197,7 @@ const TOWNS = (() => {
     const here = WORLD.places[s.location];
     const unknown = Object.entries(WORLD.places).filter(([n, p]) => !s.discovered.includes(n) && (["dungeon", "fort", "camp", "lair", "stone", "shrine", "landmark"].includes(p[2]) || WORLD.hidden?.has(n)))
       .map(([n, p]) => ({ n, d: G.pxDist(here, p), p })).sort((a, b) => a.d - b.d).slice(0, 6);
-    const sk = G.useSkill(s, "Speechcraft", 10);
+    const sk = [...G.useSkill(s, "Speechcraft", 10), ...G.useSkill(s, "Streetwise", 12)];   // [OURS] Streetwise: hearing what the street knows
     if (!unknown.length) return `${pick(BARD)} Nobody knows anything you don't.`;
     const got = [];
     for (let i = 0; i < (free ? 2 : 1) && unknown.length; i++) {
@@ -411,7 +412,7 @@ const TOWNS = (() => {
       let ok = false;
       if (j.type === "clear") ok = (s.cleared || {})[j.target] >= j.t;
       if (j.type === "deliver") ok = s.location === j.target;
-      if (ok) { done.push(j.id); s.gold += j.reward; msgs.push(`📜 Job done: ${j.type === "clear" ? `${j.target} is cleared` : `the bag reached ${j.target}`}. +${j.reward} gold.`); }
+      if (ok) { done.push(j.id); s.gold += j.reward; msgs.push(`📜 Job done: ${j.type === "clear" ? `${j.target} is cleared` : `the bag reached ${j.target}`}. +${j.reward} gold.`, ...G.useSkill(s, "Etiquette", 20)); }   // [OURS] Etiquette: serving the hold
     }
     if (done.length) { s.jobs = s.jobs.filter((j) => !done.includes(j.id)); s.jobsDone = [...(s.jobsDone || []), ...done].slice(-40); msgs.forEach((m) => G.note(s, m)); }
     return msgs;

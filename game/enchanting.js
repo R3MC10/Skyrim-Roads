@@ -61,7 +61,7 @@ const ENCH = (() => {
     if (known(s).includes(eff)) return `You already know ${(WEAPON[eff] || ARMOR[eff])[0]}. Breaking it would teach you nothing.`;
     G.take(s, rowId);
     s.enchants = [...known(s), eff];
-    const sk = G.useSkill(s, "Enchanting", 0.5);
+    const sk = [...G.useSkill(s, "Enchanting", 0.5), ...G.useSkill(s, "Mysticism", 10)];   // [OURS] unravelling a soul-bound enchantment
     return `The ${it.name} crumbles into light. You learned ${(WEAPON[eff] || ARMOR[eff])[0]}.` + (sk.length ? " " + sk.join(". ") : "");
   }
   /* how strong an enchantment would be ([OURS] scaling): soul size × (0.4 + 0.6 × skill/100), Enchanter perk +10% per rank */

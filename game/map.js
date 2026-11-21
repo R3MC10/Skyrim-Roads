@@ -299,7 +299,12 @@ const WorldMap = (() => {
       g.beginPath(); g.moveTo(px, py); v.route.forEach((p) => g.lineTo(...P(p))); g.stroke(); g.setLineDash([]);
       const [bx, by] = P(v.route[v.route.length - 1]);
       g.strokeStyle = "#fff0cd"; g.lineWidth = 2.4 * s; g.beginPath(); g.arc(bx, by, 9 * s, 0, 7); g.stroke();
-      if (v.dest && !v.discovered.includes(v.dest.name)) label(g, v.dest.name + " ?", bx + 13 * s, by, s, 15, "#ffeac0", 700, false, "left");
+      if (v.dest && !v.discovered.includes(v.dest.name)) label(g, v.dest.roam ? "🧭 " + v.dest.name : v.dest.name + " ?", bx + 13 * s, by, s, 15, "#ffeac0", 700, false, "left");
+    }
+    if (v.spot) {   // a tapped spot for free roam
+      const [sx2, sy2] = P(v.spot);
+      g.strokeStyle = "#ffeac0"; g.lineWidth = 2.4 * s; g.beginPath(); g.arc(sx2, sy2, 8 * s, 0, 7); g.stroke();
+      g.beginPath(); g.moveTo(sx2 - 12 * s, sy2); g.lineTo(sx2 - 4 * s, sy2); g.moveTo(sx2 + 4 * s, sy2); g.lineTo(sx2 + 12 * s, sy2); g.moveTo(sx2, sy2 - 12 * s); g.lineTo(sx2, sy2 - 4 * s); g.moveTo(sx2, sy2 + 4 * s); g.lineTo(sx2, sy2 + 12 * s); g.stroke();
     }
     // places: icons when discovered; labels by zoom level, skipping any that would overlap
     const RANK = { city: 0, town: 1, landmark: 2, farm: 4 };
