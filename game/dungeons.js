@@ -33,7 +33,7 @@ const DUNGEONS = (() => {
   const REFILL_SECONDS = 3 * 2 * 3600;    // 3 in-game days (6 real hours; 1 in-game day = 2 real hours). Skyrim uses 10–30 days; shortened on request
 
   // dungeon foes ([OURS] numbers on the same scale as the road encounters in data.js)
-  const E = (name, health, damage, tags, gold, text) => ({ name, health, damage, tags, gold, text, level: 1, danger: tags.includes("elite") ? "high" : "medium" });
+  const E = (name, health, damage, tags, gold, text) => ({ name, health, damage, tags, gold, text, level: tags.includes("big") ? 20 : tags.includes("elite") ? 12 : 6, danger: tags.includes("elite") ? "high" : "medium" });   // [OURS] levels: how far below you a foe has to be before it catches up
   const ENEMY = {
     skeever: E("Skeever", 15, 3, ["beast"], [0, 0], "Skeevers boil out of a crack in the wall."),
     restless: E("Restless draugr", 40, 8, ["undead"], [2, 10], "A shrivelled corpse in a burial niche opens glowing eyes."),

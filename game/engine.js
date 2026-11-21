@@ -694,9 +694,15 @@ const G = (() => {
   function scaleEnemy(e, level) {
     e = clone(e);
     if (e.kind !== "event") {
-      const sc = 1 + 0.02 * (level - 1);            // [OURS] slow until perks exist
-      e.health = Math.floor(e.health * sc * D.ENEMY_HEALTH_MULT);
-      e.damage = Math.round(e.damage * sc * D.ENEMY_DAMAGE_MULT * 10) / 10;
+      const sc = 1 + 0.02 * (level - 1);            // [OURS] everything grows a little with you
+      // [OURS, after Skyrim's leveled lists] foes from below your level catch up: a level-30 hero meets bandit
+      // marauders, not the outlaws a level-6 hero met. Foes at or above your level (dragons, giants) don't.
+      const gap = Math.min(D.ENEMY_CATCHUP_MAX, Math.max(0, level - (e.level ?? level) - D.ENEMY_CATCHUP_GRACE));   // a few levels' head start before they catch up
+      const soft = (e.tags || []).includes("elite") ? D.ENEMY_CATCHUP_ELITE : 1;   // tough foes and bosses are already tough: they catch up more slowly
+      const hpC = 1 + D.ENEMY_CATCHUP_HP * soft * gap, dmgC = 1 + D.ENEMY_CATCHUP_DMG * soft * gap;
+      const curve = 1 + D.ENEMY_HP_CURVE * Math.max(0, level - 10) ** 2 / sc;   // [OURS] from level 10 on, health keeps pace with your gear and perks (×1.18 at 20, ×1.6 at 30, ×2.2 at 40)
+      e.health = Math.floor(e.health * sc * curve * hpC * D.ENEMY_HEALTH_MULT);
+      e.damage = Math.round(e.damage * sc * dmgC * D.ENEMY_DAMAGE_MULT * 10) / 10;
       e.hp = e.health;
     }
     return e;
