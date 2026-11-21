@@ -220,6 +220,11 @@ textarea.code{width:100%;margin:8px 0;padding:10px;border-radius:6px;border:1px 
 .coat.on{border-color:var(--gold);box-shadow:inset 0 0 0 3px #121417,0 0 0 2px rgba(226,187,100,.35)}.coat:disabled{opacity:1;cursor:default}
 .trophies{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}.trophies span{padding:4px 10px;border:1px solid #4a4237;border-radius:999px;font-size:14px;color:var(--parch)}
 .motto{font-family:"Cormorant Garamond",Georgia,serif;font-style:italic;font-size:19px;color:var(--parch);text-align:center;margin:6px 0 10px}
+.fishbar{position:relative;height:34px;border-radius:6px;background:linear-gradient(180deg,#16324a,#0d1e2c);border:1px solid #2b4a63;overflow:hidden;margin-top:10px}
+.fishbar .zone{position:absolute;top:0;bottom:0;background:rgba(79,163,92,.55);border-left:2px solid #8fe39d;border-right:2px solid #8fe39d}
+.fishbar .needle{position:absolute;top:-2px;bottom:-2px;width:4px;margin-left:-2px;background:#ffe9b0;box-shadow:0 0 8px rgba(255,233,176,.8)}
+.fishbar .bob{position:absolute;left:50%;top:50%;width:12px;height:12px;margin:-6px;border-radius:50%;background:#d65a4a;border:2px solid #fff;animation:bob 1.6s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(-3px)}50%{transform:translateY(3px)}}
 </style>
 </head>
 <body>
@@ -244,6 +249,7 @@ textarea.code{width:100%;margin:8px 0;padding:10px;border-radius:6px;border:1px 
 <script src="hall.js"></script>
 <script src="bounty.js"></script>
 <script src="visits.js"></script>
+<script src="cooking.js"></script>
 <script src="mp.js"></script>
 <script src="store.js"></script>
 <script src="map.js"></script>

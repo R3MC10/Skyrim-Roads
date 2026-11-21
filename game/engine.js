@@ -9,7 +9,7 @@ const G = (() => {
   const SLOTS = ["weapon", "shield", "head", "chest", "hands", "feet"];
   const ARMOR_SLOTS = ["head", "chest", "hands", "feet", "shield"];
   const ARMOR_SKILL = { light: "Light Armor", medium: "Medium Armor", heavy: "Heavy Armor" };
-  const STACKABLE = new Set(["potion", "scroll", "soulgem", "tome", "ingredient", "trophy", "poison", "material"]);
+  const STACKABLE = new Set(["potion", "scroll", "soulgem", "tome", "ingredient", "trophy", "poison", "material", "food"]);
   const P = (s, id) => (typeof PERKS !== "undefined" ? PERKS.rank(s, id) : 0);
   // spell tiers for the "Novice ... Expert <school>" perks [Skyrim]
   const SPELL_TIER = { flames: "novice", frostbite: "novice", sparks: "novice", healing: "novice", oakflesh: "novice", conjure_familiar: "novice", fury: "novice",
@@ -685,7 +685,7 @@ const G = (() => {
     let v = F.travelSpeed(BASE_WALK, skill(s, "Athletics"), c, cap);
     if (c > cap && P(s, "marathon")) v = (v + F.travelSpeed(BASE_WALK, skill(s, "Athletics"), cap, cap)) / 2;
     v *= 1 + 0.05 * P(s, "long_strider");
-    if (typeof WEVENTS !== "undefined") v *= WEVENTS.weather([s.x, s.y]).speed;   // [OURS] snow and storms slow you down
+    if (typeof WEVENTS !== "undefined") { const wf = WEVENTS.weather([s.x, s.y]).speed; v *= wf < 1 && fxSum(s, "warmth") > 0 ? (1 + wf) / 2 : wf; }   // [OURS] snow and storms slow you down; hot soup halves that
     if (riding(s)) v *= D.HORSE_SPEED;
     return v;
   }

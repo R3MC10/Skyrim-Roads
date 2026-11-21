@@ -836,15 +836,15 @@
     all: '<path d="M4 6h16M4 12h16M4 18h16"/>', weapons: '<path d="M5 19L17 7l2-4-4 2L3 17zM7 14l3 3"/>', apparel: '<path d="M8 3l4 2 4-2 4 4-3 3v11H7V10L4 7z"/>',
     potions: '<path d="M10 3h4M10 3v5l-4 8a4 4 0 004 6h4a4 4 0 004-6l-4-8V3"/>', scrolls: '<path d="M7 4h10a2 2 0 010 4H9v12H7a2 2 0 01-2-2V6a2 2 0 012-2zM9 8h8v10a2 2 0 01-2 2H9"/>',
     books: '<path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2zM4 19V5"/>', ingredients: '<path d="M12 21V11M12 11c-4 0-6-3-6-7 4 0 6 3 6 7zm0 0c4 0 6-3 6-7-4 0-6 3-6 7z"/>',
-    misc: '<path d="M12 3l8 4v10l-8 4-8-4V7zM4 7l8 4 8-4M12 11v10"/>',
+    misc: '<path d="M12 3l8 4v10l-8 4-8-4V7zM4 7l8 4 8-4M12 11v10"/>', food: '<path d="M4 11h16a8 8 0 01-16 0zM9 7c0-2 2-2 2-4M13 7c0-2 2-2 2-4"/>',
     destruction: '<path d="M12 3c3 4 6 6 6 10a6 6 0 01-12 0c0-3 2-4 3-7 1 2 2 3 3 3 0-2-1-4 0-6z"/>', restoration: '<path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="5"/>',
     alteration: '<path d="M12 3l7 4v10l-7 4-7-4V7z"/>', conjuration: '<circle cx="12" cy="12" r="8"/><path d="M12 4v16M4 12h16"/>', illusion: '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
     powers: '<path d="M12 2l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/>', shouts: '<path d="M4 9v6h4l6 5V4L8 9zM17 8a5 5 0 010 8M19 5a9 9 0 010 14"/>', effects: '<path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l3 3M16 16l3 3M5 19l3-3M16 8l3-3"/>',
     combat: '<path d="M5 19L19 5M14 5h5v5"/>', magic: '<circle cx="12" cy="12" r="8"/><path d="M12 4l2 8-2 8-2-8z"/>', stealth: '<path d="M3 12s4-6 9-6 9 6 9 6-4 6-9 6-9-6-9-6z"/>', other: '<circle cx="12" cy="12" r="2"/><circle cx="5" cy="12" r="2"/><circle cx="19" cy="12" r="2"/>',
   };
   const svgI = (k) => `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[k] || ICONS.misc}</svg>`;
-  const ITEM_CATS = [["all", "All"], ["weapons", "Weapons"], ["apparel", "Apparel"], ["potions", "Potions"], ["scrolls", "Scrolls"], ["books", "Books"], ["ingredients", "Ingredients"], ["misc", "Misc"]];
-  const catOf = (it) => it.slot === "weapon" ? "weapons" : G.ARMOR_SLOTS.includes(it.slot) ? "apparel" : ["potion", "poison"].includes(it.slot) ? "potions"
+  const ITEM_CATS = [["all", "All"], ["weapons", "Weapons"], ["apparel", "Apparel"], ["potions", "Potions"], ["scrolls", "Scrolls"], ["books", "Books"], ["ingredients", "Ingredients"], ["food", "Food"], ["misc", "Misc"]];
+  const catOf = (it) => it.slot === "food" ? "food" : it.slot === "weapon" ? "weapons" : G.ARMOR_SLOTS.includes(it.slot) ? "apparel" : ["potion", "poison"].includes(it.slot) ? "potions"
     : it.slot === "scroll" ? "scrolls" : it.slot === "tome" ? "books" : it.slot === "ingredient" ? "ingredients" : "misc";
   const MAGIC_CATS = [["all", "All"], ["destruction", "Destruction"], ["restoration", "Restoration"], ["alteration", "Alteration"], ["conjuration", "Conjuration"], ["illusion", "Illusion"], ["powers", "Powers"], ["shouts", "Shouts"], ["effects", "Active effects"]];
   const SKILL_CATS = [["all", "All"], ["combat", "Warrior"], ["magic", "Mage"], ["stealth", "Thief"], ["other", "Other"]];
@@ -894,6 +894,8 @@
     if (it.slot === "potion") acts.push(`<button class="btn pri" data-act="drinkrow" data-id="${r.id}">Drink</button>`);
     if (it.slot === "poison") acts.push(`<button class="btn pri" data-act="poison" data-id="${r.id}">Coat weapon</button>`);
     if (it.slot === "ingredient") acts.push(`<button class="btn" data-act="eat" data-id="${r.id}">Eat</button>`);
+    if (it.slot === "food" && r.item !== "fishing_rod") acts.push(`<button class="btn pri" data-act="eatfood" data-id="${r.id}">Eat${it.dish ? "" : " (raw)"}</button>`);
+    if (it.dish) lines.push(`${it.desc}. A new meal replaces the last one's effect.`);
     if (it.enchant) acts.push(...gems.map((g) => `<button class="btn" data-act="recharge" data-id="${r.id}" data-gem="${g.id}">Recharge (${esc(D.ITEMS[g.item].name.split(" (")[0])})</button>`));
     if (canShop) acts.push(`<button class="btn" data-act="sell" data-id="${r.id}">Sell · ${G.sellPrice(S, r)} gold</button>`);
     return `<div class="sky-detail"><h3>${esc(row.name)}</h3><div class="sky-stats">${stats.map(([k, v]) => `<div><span>${k}</span><b class="num">${esc(String(v))}</b></div>`).join("")}</div>
@@ -1048,6 +1050,67 @@
 
   // ------------------------------------------------------------ the Jarl's bounty board
   let lastDragons = null;
+  // ------------------------------------------------------------ fishing and cooking
+  function cookList() {
+    return Object.entries(COOK.RECIPES).map(([id, [name, ings, , what]]) => {
+      const miss = COOK.missing(S, id);
+      return `<div class="item" style="flex-wrap:wrap"><div class="t">${esc(name)}<span>${esc(what)} · ${ings.map(([it, q]) => `${q > 1 ? q + " " : ""}${it === "fish" ? "any fish" : esc(D.ITEMS[it].name)}`).join(", ")}</span></div>
+        <button class="btn sm ${miss.length ? "" : "pri"}" data-act="cook" data-id="${id}" ${miss.length || !COOK.canCook(S) ? "disabled" : ""}>Cook</button>${miss.length ? `<span class="sub" style="width:100%">Missing: ${esc(miss.join(", "))}</span>` : ""}</div>`;
+    }).join("") + `<p class="sub" style="margin-top:8px">General stores sell salt, vegetables and meat. Garlic and lavender grow in home gardens and are sold by alchemists.</p>`;
+  }
+  function fishCard() {
+    const c = COOK.canFish(S, livePos()), caught = (S.stats || {}).fish || 0;
+    return `<div class="item"><div class="t">🎣 Go fishing<span>${c.err ? esc(c.err) : `You've caught ${caught} fish so far.`}</span></div><button class="btn sm pri" data-act="fishgo" ${c.err ? "disabled" : ""}>Cast</button></div>`;
+  }
+  function wildsFood() {
+    if (S.trip?.status === "travel" || S.trip?.status === "encounter" || S.dungeon) return "";
+    const lit = COOK.campLit(S), water = COOK.waterNear(livePos());
+    return `<div class="panel"><h2>Camp</h2>
+      ${lit ? `<p class="sub">Your fire crackles. ${Math.ceil((S.camp.until - G.now()) / 60)} minutes of warmth left.</p>${cookList()}` : `<div class="item"><div class="t">🔥 Make a campfire<span>Uses 1 Firewood · lets you cook here for ${COOK.CAMP_MIN} minutes</span></div><button class="btn sm" data-act="camp">Light</button></div>`}
+      ${water ? fishCard() : ""}</div>`;
+  }
+  let fishState = null, fishRaf = 0;
+  function openFishing() {
+    const c = COOK.canFish(S, livePos());
+    if (c.err) return toast(c.err);
+    cancelAnimationFrame(fishRaf);
+    fishState = { phase: "wait", water: c.water, at: performance.now() + 1500 + Math.random() * 3000, bite: null };
+    drawFishing("You cast your line and wait…");
+    const loop = (ts) => {
+      if (!fishState || !$("#fishbar")) return;
+      if (fishState.phase === "wait" && ts >= fishState.at) {
+        fishState.phase = "bite"; fishState.bite = COOK.bite(fishState.water); fishState.t0 = ts; fishState.until = ts + 5000;
+        SOUND.fx("click"); if (navigator.vibrate) try { navigator.vibrate(60); } catch { /* not allowed */ }
+        drawFishing("A bite! Reel in when the needle is in the green.");
+      }
+      if (fishState.phase === "bite") {
+        const period = fishState.bite.zone[1] - fishState.bite.zone[0] < 0.22 ? 1900 : 2500;   // rarer fish: a narrower zone and a quicker needle
+        const ph = ((ts - fishState.t0) % period) / period; fishState.needle = ph < 0.5 ? ph * 2 : 2 - ph * 2;
+        const n = $("#fishneedle"); if (n) n.style.left = `${fishState.needle * 100}%`;
+        if (ts > fishState.until) { fishState.phase = "done"; drawFishing("Too slow. It got away.", true); return; }
+      }
+      fishRaf = requestAnimationFrame(loop);
+    };
+    fishRaf = requestAnimationFrame(loop);
+  }
+  function drawFishing(msg, done = false) {
+    const b = fishState?.bite;
+    openModal(`<h2>Fishing</h2><p class="sub" style="margin-top:0">${esc({ river: "A river", lake: "A lake", sea: "The Sea of Ghosts" }[fishState?.water] || "Water")} · rod in hand</p>
+      <p id="fishmsg">${esc(msg)}</p>
+      <div class="fishbar" id="fishbar">${b ? `<i class="zone" style="left:${b.zone[0] * 100}%;width:${(b.zone[1] - b.zone[0]) * 100}%"></i><i class="needle" id="fishneedle"></i>` : `<i class="bob"></i>`}</div>
+      ${done ? `<div class="grid2" style="margin-top:12px"><button class="btn pri" data-act="fishgo">Cast again</button><button class="btn" data-act="fishstop">Done</button></div>`
+        : `<button class="btn pri" data-act="fishreel" style="width:100%;margin-top:12px;min-height:64px;font-size:20px">Reel in!</button><button class="btn" data-act="fishstop" style="width:100%;margin-top:8px">Stop</button>`}`);
+  }
+  function reelIn() {
+    if (!fishState) return;
+    if (fishState.phase === "wait") { fishState.phase = "done"; cancelAnimationFrame(fishRaf); return drawFishing("Too soon. You scared it off.", true); }
+    if (fishState.phase !== "bite") return;
+    cancelAnimationFrame(fishRaf); fishState.phase = "done";
+    const r = COOK.reel(S, fishState.bite, fishState.needle ?? 0);
+    if (r.ok) { SOUND.fx("coin"); persist(); }
+    drawFishing(r.text, true);
+  }
+
   // ------------------------------------------------------------ visiting homes and gifts
   let homeDocs = [], giftDocs = [], seenGifts = new Set(), lastHomeJson = "", visitId = null;
   const myGifts = () => giftDocs.filter((g) => g.to === S.id);
@@ -1482,12 +1545,12 @@
     const l = S.location, types = l ? G.shopTypes(l) : [];
     if (!l || (!types.length && !TOWNS.isTown(l))) {
       if (l && (DUNGEONS.enterable(l) || POWERS.STONE_AT[l] || l === "High Hrothgar")) return placeHere();
-      return `<div class="panel"><h2>${l ? esc(l) : "The wilds"}</h2><p class="sub">${l ? "There's nothing to buy here." : "You're out on the road."} Cities and towns have shops, inns, trainers, alchemy labs, forges and jobs.</p></div>`;
+      return wildsFood() + `<div class="panel"><h2>${l ? esc(l) : "The wilds"}</h2><p class="sub">${l ? "There's nothing to buy here." : "You're out on the road."} Cities and towns have shops, inns, trainers, alchemy labs, forges and jobs.</p></div>`;
     }
     const open = G.shopsOpen(), wanted = TOWNS.wanted(S), hold = G.holdAt(WORLD.places[l]);
-    const sections = [...types.filter((x) => x !== "stables"), ...(TOWNS.INNS[l] ? ["inn"] : []), ...(TOWNS.TRAINERS[l] ? ["train"] : []), "alchemy", ...(types.includes("blacksmith") ? ["forge"] : []), "jobs", "streets", ...(TOWNS.followersHere(S).length || l === "Whiterun" ? ["hire"] : []), ...(TOWNS.carriageFrom(l) ? ["carriage"] : []), ...(TOWNS.HOMES[l] ? ["home", "homes"] : []), ...(l === HALL.TOWN ? ["hall"] : []), "notice", ...(ENCH.hasEnchanter(l) ? ["enchanter"] : []), ...(types.includes("stables") ? ["stables"] : [])];
+    const sections = [...types.filter((x) => x !== "stables"), ...(TOWNS.INNS[l] ? ["inn"] : []), ...(TOWNS.TRAINERS[l] ? ["train"] : []), "alchemy", ...(types.includes("blacksmith") ? ["forge"] : []), "jobs", "streets", ...(TOWNS.followersHere(S).length || l === "Whiterun" ? ["hire"] : []), ...(TOWNS.carriageFrom(l) ? ["carriage"] : []), ...(TOWNS.HOMES[l] ? ["home", "homes"] : []), ...(l === HALL.TOWN ? ["hall"] : []), "notice", ...(TOWNS.INNS[l] ? ["cook"] : []), ...(COOK.waterNear(WORLD.places[l]) ? ["fish"] : []), ...(ENCH.hasEnchanter(l) ? ["enchanter"] : []), ...(types.includes("stables") ? ["stables"] : [])];
     townShop = sections.includes(townShop) ? townShop : sections[0];
-    const names = { general: "General goods", blacksmith: "Blacksmith", wizard: "Court wizard", stables: "Stables", fence: "Ragged Flagon (fence)", inn: TOWNS.INNS[l] || "Inn", train: "Trainers", alchemy: "Alchemy lab", forge: "Forge", jobs: "Jobs", streets: "Streets", hire: l === "Whiterun" ? "Dragonsreach & hirelings" : "Hirelings", hall: "⚑ Hall of the North", notice: "📜 Jarl's bounty", homes: "🏘 Neighbours", carriage: "Carriage", enchanter: "Arcane enchanter", home: TOWNS.home(S, l) ? `🏠 ${TOWNS.HOMES[l]?.[0]}` : `Buy ${TOWNS.HOMES[l]?.[0]}` };
+    const names = { general: "General goods", blacksmith: "Blacksmith", wizard: "Court wizard", stables: "Stables", fence: "Ragged Flagon (fence)", inn: TOWNS.INNS[l] || "Inn", train: "Trainers", alchemy: "Alchemy lab", forge: "Forge", jobs: "Jobs", streets: "Streets", hire: l === "Whiterun" ? "Dragonsreach & hirelings" : "Hirelings", hall: "⚑ Hall of the North", notice: "📜 Jarl's bounty", homes: "🏘 Neighbours", cook: "🍲 Cooking pot", fish: "🎣 Fishing", carriage: "Carriage", enchanter: "Arcane enchanter", home: TOWNS.home(S, l) ? `🏠 ${TOWNS.HOMES[l]?.[0]}` : `Buy ${TOWNS.HOMES[l]?.[0]}` };
     const fac = F.priceFactor(G.skill(S, "Mercantile"));
     let body = "", note = "";
     const shopRow = (i, sell = true) => { const p = G.buyPrice(S, i); return `<div class="item"><div class="t">${esc(D.ITEMS[i].name)}<span>${esc(G.itemStats(i))} · ${D.ITEMS[i].weight} wt</span></div><span class="num gold">${p}</span><button class="btn sm" data-act="buy" data-item="${esc(i)}" ${open && !wanted && S.gold >= p ? "" : "disabled"}>Buy</button></div>`; };
@@ -1526,6 +1589,12 @@
       body = `<h3>Your jobs</h3>${mine.length ? mine.map((j) => `<div class="item" style="flex-wrap:wrap"><div class="t">${esc(j.type === "clear" ? `Clear ${j.target}` : j.type === "deliver" ? `Deliver to ${j.target}` : `Bring ${j.n} ${D.ITEMS[j.item].name}`)}<span>${j.type === "gather" ? `You have ${TOWNS.countItem(S, j.item)}/${j.n} · ` : ""}from ${esc(j.town)} · ${j.reward} gold</span></div>
           ${j.type === "gather" ? `<button class="btn sm pri" data-act="handin" data-id="${esc(j.id)}" ${TOWNS.countItem(S, j.item) >= j.n ? "" : "disabled"}>Hand in</button>` : ""}<button class="btn sm" data-act="dropjob" data-id="${esc(j.id)}">Drop</button></div>`).join("") : '<p class="sub">None yet.</p>'}
         <h3 style="margin-top:12px">Notice board</h3>${avail.length ? avail.map((j) => `<div class="item"><div class="t">${esc(j.text)}<span>${j.reward} gold</span></div><button class="btn sm pri" data-act="takejob" data-id="${esc(j.id)}" ${mine.length >= 3 || wanted ? "disabled" : ""}>Take</button></div>`).join("") : '<p class="sub">Nothing new today.</p>'}`;
+    } else if (townShop === "cook") {
+      note = `The inn's cooking pot. Cooked meals give buffs for a while; a new meal replaces the last one's.`;
+      body = cookList();
+    } else if (townShop === "fish") {
+      note = `Water nearby: ${COOK.waterNear(WORLD.places[l])}. Cast, wait for a bite, and reel in when the needle is in the green.`;
+      body = fishCard();
     } else if (townShop === "homes") {
       const list = VISITS.inTown(homeDocs, l, S.id);
       note = `Other players who own ${TOWNS.HOMES[l][0]} in their own world. Drop in to see their trophies, or leave a gift.`;
@@ -1749,6 +1818,12 @@
       case "eat": packOpen = null; say(TOWNS.eat(S, +b.dataset.id)); break;
       case "hallrest": say(HALL.rest(S)); break;
       case "visit": openVisit(b.dataset.id); break;
+      case "fishgo": openFishing(); break;
+      case "fishreel": reelIn(); break;
+      case "fishstop": cancelAnimationFrame(fishRaf); fishState = null; closeModal(); renderPanel(true); break;
+      case "cook": say(COOK.cook(S, b.dataset.id)); SOUND.fx("potion"); break;
+      case "camp": say(COOK.makeCamp(S)); break;
+      case "eatfood": say(COOK.eatFood(S, +b.dataset.id)); if ($("#sky")) renderMenu(); break;
       case "giftgold": sendGift("gold", +b.dataset.id); break;
       case "giftitem": sendGift("item", +b.dataset.id); break;
       case "giftnote": sendGift("note"); break;
