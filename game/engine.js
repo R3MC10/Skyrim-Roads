@@ -90,6 +90,7 @@ const G = (() => {
     s.discovered = s.discovered.filter((n) => PLACES[n]);
     if (typeof AMMO !== "undefined") { const m = AMMO.migrate(s); if (m) note(s, m); }
     if (fixTactics(s)) note(s, "⚔ Your tactics were fixed: rules you added under \"Always → Attack\" never fired. They now come first.");
+    if (typeof SPELLCRAFT !== "undefined") SPELLCRAFT.register(s);   // crafted spells back into the spellbook
     return s;
   }
   function note(s, text) { s.journal.unshift({ t: now(), text }); s.journal = s.journal.slice(0, 60); }
@@ -275,6 +276,7 @@ const G = (() => {
 
   // ---------------------------------------------------------------- combat
   function spellCost(s, sp) {
+    if (sp?.parts && typeof SPELLCRAFT !== "undefined") return Math.max(1, Math.round(sp.parts.reduce((a, p) => a + (D.SPELLS[p] ? spellCost(s, D.SPELLS[p]) : 0), 0) * SPELLCRAFT.PREMIUM[sp.parts.length]));   // crafted: its parts, each at its own school
     const id = Object.keys(D.SPELLS).find((k) => D.SPELLS[k] === sp), tier = SPELL_TIER[id] || (sp.level || "").toLowerCase();
     const half = tier && P(s, `${tier}_${sp.school.toLowerCase()}`) ? 0.5 : 1;   // [Skyrim] "<tier> <school>" perks: half cost
     return Math.floor(F.spellCost(sp.cost, skill(s, sp.school)) * half * (typeof MAGIC !== "undefined" && id ? MAGIC.costMult(s, id) : 1));   // spells above your level cost more

@@ -117,6 +117,22 @@ const UIART = (() => {
   }
   function drawSpell(id) {
     const sp = D.SPELLS[id] || {}, sc = SCHOOL[sp.school] || ["#7a6a5a", "#cdb98f"];
+    if (sp.parts) {   // a crafted spell: a medallion split between its effects, each half in its own school's colour
+      const ps = sp.parts.map((p) => [p, D.SPELLS[p] || {}]);
+      return (g) => {
+        medal(g, sc[0]);
+        ps.forEach(([pid, p], i) => {
+          const c = SCHOOL[p.school] || sc, n = ps.length;
+          g.save(); g.beginPath(); if (n === 1) g.arc(20, 20, 15, 0, 7); else if (i === 0) { g.moveTo(20, 20); g.arc(20, 20, 15, Math.PI * 0.75, Math.PI * 1.75); } else { g.moveTo(20, 20); g.arc(20, 20, 15, -Math.PI * 0.25, Math.PI * 0.75); }
+          g.closePath(); g.clip(); glow(g, 20, 20, 15, c[1], 0.3);
+          g.translate(n === 1 ? 0 : i === 0 ? -4 : 4, n === 1 ? 0 : i === 0 ? -4 : 4); g.translate(20, 20); g.scale(n === 1 ? 1 : 0.72, n === 1 ? 1 : 0.72); g.translate(-20, -20);
+          spellGlyph(pid, p)(g); g.restore();
+        });
+        if (ps.length > 1) line(g, [[9.4, 30.6], [30.6, 9.4]], "#f4dc96", 1.4);
+        star(g, 31, 9, 2.6);   // the crafter's mark
+        pips(g, sp.level || "Novice", sc[1]);
+      };
+    }
     return (g) => { medal(g, sc[0]); g.save(); g.beginPath(); g.arc(20, 20, 15, 0, 7); g.clip(); glow(g, 20, 20, 15, sc[1], 0.25); spellGlyph(id, sp)(g); g.restore(); pips(g, sp.level || "Novice", sc[1]); };
   }
 

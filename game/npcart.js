@@ -132,6 +132,7 @@ const NPCART = (() => {
       case "guard": return { body: "#6f6a64", trim: "#8f8a84", tabard: hc, helmet: 1 };
       case "greybeard": return { body: "#8f8f8a", trim: "#6b6b66", hood: 1, greyBeard: 1 };
       case "arena": return { body: "#a9b0b4", trim: "#d0d5d8", plate: 1, scar: 1 };
+      case "bard": return { body: "#6a3a5a", trim: "#d6b25e", collar: 1, fur: "#8f7a66" };
       case "keeper": return { body: "#5e4630", trim: "#d6b25e", fur: "#cdb98f" };
       case "warrior": { const m = (typeof HEROART !== "undefined" && HEROART.MAT[n.mat || "steel"]) || { c: "#a9b0b4", d: "#7d858a", trim: "#d0d5d8" }; return { body: m.c, trim: m.trim, plate: 1, dark: m.d }; }
       case "ranger": return { body: "#7a5232", trim: "#a87a50", strap: 1, hood: hash(n.name) % 2 === 0 };
