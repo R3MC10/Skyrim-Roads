@@ -55,19 +55,14 @@ our own marked [OURS]; plain-language UI; phone first.
 - Round 4: Skyrim calendar (starts 17 Last Seed) and seasons, weather per hold every 30 min (slows travel, hides you, shown on the map), dragon attacks on towns every 3 hours that all players fight together.
 - Round 3: homes (Breezehome, Honeyside, Vlindrel Hall, Hjerim, Proudspire Manor at Skyrim prices): death-proof chest, Well Rested bed (+10%; inns now Rested +5%), daily garden.
 
-## Next rounds (in order)
-Current list (in progress / next):
-35. Fight animations per weapon and spell, natural speed, particles (helper running).
-36. Clearer screens: less confusing menus (helper running).
-37. Arena fights use your tactics; heal-loop fix (helper running).
-38. Solstheim: a new island reached by boat from Windhelm (helper running).
-39. Mounted combat on horseback.
-40. Bigger multiplayer: co-op dungeons (enter with friends, share rooms and the boss chest).
-41. Player shops and guild halls (build, decorate, hire NPCs).
-42. More quests and story: Civil War and Daedric quests.
+## Shipped tonight (builds 60–63)
+- Fight animations per weapon/spell/enemy; quest scaling (60)
+- Co-op dungeons, horseback, real Arena duels, Civil War, 13 Daedric quests, economy, fair crafting, Legendary skills, exploration rewards, player & guild halls, patch notes (61)
+- Solstheim, Skyrim compass home screen with swipes, constellation perks, clearer screens (62)
+- Smart AI combat (default; custom tactics optional), crafting mini-games, motion design (63)
 
-"Better than Bethesda" ideas (after the current list):
-43. Real economy: prices driven by what all players buy and sell, shortages, trade routes, merchants restocked by caravans.
-44. Crafting that can't be exploited: balanced alchemy, enchanting and smithing loops, recipes found in the world, named crafted items.
-45. Fair levelling: no useless skills, no odd level scaling, clear progress, legendary skills.
-46. Exploration rewards: hand-placed secrets, unique loot per dungeon, puzzles, lore books, treasure maps.
+## Next rounds (in order)
+1. Real 1:1 Skyrim map layout (being rebased onto Solstheim).
+2. Party members fight beside you and walk with you in their gear (in progress).
+3. Ideas offered: favourites wheel, Dragon Shouts from word walls, werewolf/vampire paths, weather that matters.
+4. ElevenLabs sounds/music (needs api.elevenlabs.io allowed + an API key).
