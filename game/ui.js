@@ -983,6 +983,7 @@
     for (const [id, [name, words]] of Object.entries(POWERS.SHOUTS)) if (words.some((w) => POWERS.known(S, w))) out.push({ id: `shout:${id}`, cat: "shouts", name, cost: null, sub: words.map((w) => POWERS.known(S, w) ? (POWERS.unlocked(S, w) ? w : w + "🔒") : "···").join(" ") });
     const t = G.now();
     for (const f of (S.fx || []).filter((f) => f.until > t)) out.push({ id: `fx:${f.name}:${f.until}`, cat: "effects", name: f.name, cost: null, sub: `${f.mag} · ${Math.ceil((f.until - t) / 60)} min` });
+    for (const g of gearFx()) out.push({ id: `fx:gear:${g.from}:${g.key}`, cat: "effects", name: `${g.name} +${g.mag}${FX_UNIT(g.key)}`, cost: null, sub: `Worn: ${g.from}` });
     if (G.rested(S)) out.push({ id: "fx:rested", cat: "effects", name: (S.restBonus || 0.05) >= 0.1 ? "Well Rested" : "Rested", cost: null, sub: `${Math.ceil((S.rested - t) / 60)} min` });
     if (S.stone) out.push({ id: "fx:stone", cat: "effects", name: POWERS.STONES[S.stone][0], cost: null, sub: "Standing stone" });
     return out.filter((r) => sky.cat === "all" ? !r.id.startsWith("fx:") : r.cat === sky.cat);
@@ -1005,10 +1006,23 @@
     if (usable) acts.unshift(inTactics(row.id) ? `<button class="btn" data-act="skytacx" data-id="${esc(row.id)}">Remove from tactics</button>` : `<button class="btn pri" data-act="skytac" data-id="${esc(row.id)}">Use first in every fight</button>`);
     return `<div class="sky-detail"><h3>${esc(row.name)}</h3><p class="sub">${esc(desc)}</p>${usable && inTactics(row.id) ? '<p class="sub">In your tactics. Fine-tune when it fires in the Tactics tab.</p>' : ""}<div class="sky-acts">${acts.join("")}</div></div>`;
   }
+  // ---- what your worn gear and potions add (shown next to skills)
+  function gearFx() {
+    const out = [];
+    for (const id of Object.values(G.loadout(S).equipment || {})) { const r = G.invRow(S, id), it = r && D.ITEMS[r.item]; if (it?.aenchant) out.push({ name: it.aenchant.name, mag: it.aenchant.mag, key: it.aenchant.key, from: it.name }); }
+    return out;
+  }
+  const FX_UNIT = (key) => key.startsWith("dmg:") ? "% damage" : key.startsWith("spell:") ? "% stronger spells" : key === "barter" ? "% better prices" : key === "resist" ? "% resist magic" : key === "carry" ? " carry weight" : key.startsWith("max:") ? " " + key.slice(4) : key.startsWith("skill:") ? " skill" : "";
+  function boost(sk) {
+    const add = G.skill(S, sk) - S.skills[sk].lvl, dmg = G.fxSum(S, "dmg:" + sk), spell = G.fxSum(S, "spell:" + sk);
+    const bits = [add ? `+${add} from gear/potions` : "", dmg ? `+${dmg}% damage` : "", spell ? `+${spell}% stronger spells` : ""].filter(Boolean);
+    return { add, lvl: S.skills[sk].lvl + add, any: bits.length > 0, text: bits.join(" · ") };
+  }
+  const skillNum = (sk) => { const b = boost(sk); return `${b.lvl}${b.any ? `<span class="boost" title="${esc(b.text)}">▲</span>` : ""}`; };
   // ---- skills
   function skillRows() {
     const group = (sk) => Object.entries(D.SKILL_GROUPS).find(([, l]) => l.includes(sk))?.[0];
-    return D.ALL_SKILLS.map((sk) => ({ id: sk, name: sk, lvl: S.skills[sk].lvl, prog: pct(S.skills[sk].xp, F.skillXpNeeded(sk, S.skills[sk].lvl)), g: group(sk), perks: (PERKS.TREES[sk] || []).filter(([id]) => PERKS.rank(S, id)).length }))
+    return D.ALL_SKILLS.map((sk) => ({ id: sk, name: sk, lvl: boost(sk).lvl, bst: boost(sk), prog: pct(S.skills[sk].xp, F.skillXpNeeded(sk, S.skills[sk].lvl)), g: group(sk), perks: (PERKS.TREES[sk] || []).filter(([id]) => PERKS.rank(S, id)).length }))
       .filter((r) => sky.cat === "all" || (SKILL_GROUP[sky.cat] ? r.g === SKILL_GROUP[sky.cat] : !Object.values(SKILL_GROUP).includes(r.g)))
       .sort((a, b) => sky.sort === "name" ? a.name.localeCompare(b.name) * sky.dir : (b.lvl - a.lvl) * sky.dir);
   }
@@ -1034,8 +1048,8 @@
     } else {
       const rows = skillRows(); const sel = rows.find((r) => r.id === sky.sel) || null;
       head = `<div class="sky-head sky-cols2"><button data-act="skysort" data-id="name">Skill</button><button data-act="skysort" data-id="lvl">Level</button></div>`;
-      list = rows.map((r) => `<button class="sky-row sky-cols2 ${r.id === sky.sel ? "sel" : ""}" data-act="skysel" data-id="${esc(r.id)}"><span class="nm">${esc(r.name)}<span class="bar"><i style="width:${r.prog}%;background:var(--frost)"></i></span></span><span class="num">${r.lvl}</span></button>`).join("");
-      detail = sel ? `<div class="sky-detail"><h3>${esc(sel.name)} ${sel.lvl}</h3><p class="sub">${sel.prog}% of the way to ${sel.lvl + 1}. ${sel.perks ? `${sel.perks} perk${sel.perks > 1 ? "s" : ""} taken.` : ""} Perk points to spend: ${PERKS.pointsLeft(S)}.</p>
+      list = rows.map((r) => `<button class="sky-row sky-cols2 ${r.id === sky.sel ? "sel" : ""}" data-act="skysel" data-id="${esc(r.id)}"><span class="nm">${esc(r.name)}<span class="bar"><i style="width:${r.prog}%;background:var(--frost)"></i></span></span><span class="num">${r.lvl}${r.bst.any ? '<span class="boost">▲</span>' : ""}</span></button>`).join("");
+      detail = sel ? `<div class="sky-detail"><h3>${esc(sel.name)} ${sel.lvl}</h3>${sel.bst.any ? `<p class="sub boost-t">${esc(sel.bst.text)}</p>` : ""}<p class="sub">${sel.prog}% of the way to ${sel.lvl + 1}. ${sel.perks ? `${sel.perks} perk${sel.perks > 1 ? "s" : ""} taken.` : ""} Perk points to spend: ${PERKS.pointsLeft(S)}.</p>
         <div class="sky-acts">${PERKS.TREES[sel.id] ? `<button class="btn pri" data-act="skyperks" data-id="${esc(sel.id)}">Perk tree</button>` : ""}</div></div>` : "";
       if (S.pendingLevels > 0) detail = `<div class="sky-detail"><h3>Level up</h3><p class="sub">Choose what grows (+10), like Skyrim.</p><div class="sky-acts"><button class="btn" data-act="lvl" data-a="health">Health</button><button class="btn" data-act="lvl" data-a="magicka">Magicka</button><button class="btn" data-act="lvl" data-a="stamina">Stamina</button></div></div>` + detail;
     }
@@ -1726,7 +1740,8 @@
       <div class="grid2" style="grid-template-columns:repeat(3,minmax(0,1fr))"><button class="btn" data-act="lvl" data-a="health">❤️ Health</button><button class="btn" data-act="lvl" data-a="magicka">🔷 Magicka</button><button class="btn" data-act="lvl" data-a="stamina">🟩 Stamina</button></div></div>` : "";
     const groups = Object.entries(D.SKILL_GROUPS).map(([g, list]) => `<h3 style="margin-top:14px">${esc(g)}</h3><div class="skills">${list.map((sk) => {
       const s = S.skills[sk], n = F.skillXpNeeded(sk, s.lvl);
-      return `<div class="skill"><small><span>${esc(sk)}</span><b class="num">${s.lvl}</b></small><div class="bar"><i style="width:${pct(s.xp, n)}%;background:var(--frost)"></i></div></div>`;
+      const bs = boost(sk);
+      return `<div class="skill"><small><span>${esc(sk)}</span><b class="num">${skillNum(sk)}</b></small><div class="bar"><i style="width:${pct(s.xp, n)}%;background:var(--frost)"></i></div>${bs.any ? `<small class="boost-t">${esc(bs.text)}</small>` : ""}</div>`;
     }).join("")}</div>`).join("");
     const pts = PERKS.pointsLeft(S);
     const skillsWithPerks = Object.keys(PERKS.TREES);
@@ -1738,7 +1753,8 @@
         return `<div class="item ${r ? "on" : ""}" style="flex-wrap:wrap"><div class="t">${esc(name)}${ranks > 1 ? ` <span class="num">${r}/${ranks}</span>` : r ? " ✓" : ""}<span>${esc(p.desc)}${r < ranks ? ` · needs ${esc(perkSkill)} ${p.req[r]}${p.needs.length ? ` and ${p.needs.map((n) => esc(PERKS.BY_ID[n].name)).join(" or ")}` : ""}` : ""}</span></div>
           ${r < ranks ? `<button class="btn sm ${err ? "" : "pri"}" data-act="perk" data-id="${id}" ${err ? "disabled" : ""}>Take</button>` : ""}</div>`; }).join("")}</div></div>`;
     const t = G.now(), fx = (S.fx || []).filter((f) => f.until > t);
-    const effects = fx.length || G.rested(S) || S.poison ? `<div class="panel"><h2>Active effects</h2><div class="list">${G.rested(S) ? `<div class="item"><div class="t">${(S.restBonus || 0.05) >= 0.1 ? "Well Rested" : "Rested"}<span>Skills improve ${Math.round((S.restBonus || 0.05) * 100)}% faster · ${Math.ceil((S.rested - t) / 60)} min left</span></div></div>` : ""}
+    const gfx = gearFx();
+    const effects = fx.length || gfx.length || G.rested(S) || S.poison ? `<div class="panel"><h2>Active effects</h2><div class="list">${gfx.map((g) => `<div class="item"><div class="t">${esc(g.name)} +${g.mag}${esc(FX_UNIT(g.key))}<span>from ${esc(g.from)} (while worn)</span></div></div>`).join("")}${G.rested(S) ? `<div class="item"><div class="t">${(S.restBonus || 0.05) >= 0.1 ? "Well Rested" : "Rested"}<span>Skills improve ${Math.round((S.restBonus || 0.05) * 100)}% faster · ${Math.ceil((S.rested - t) / 60)} min left</span></div></div>` : ""}
       ${S.poison ? `<div class="item"><div class="t">${esc(S.poison.name)} on your weapon<span>${S.poison.hits} hit${S.poison.hits > 1 ? "s" : ""} left</span></div></div>` : ""}
       ${fx.map((f) => `<div class="item"><div class="t">${esc(f.name)} ${f.mag}<span>${Math.ceil((f.until - t) / 60)} min left</span></div></div>`).join("")}</div></div>` : "";
     const tnow = G.now(), rp = POWERS.RACE[S.race];
