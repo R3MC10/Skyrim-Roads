@@ -387,6 +387,27 @@ const EVENTART = (() => {
       glow(g, w * 0.52, h * 0.42, 40, "214,178,94", 0.4);
       for (const x of [w * 0.2, w * 0.8]) { rect(g, H, x - 4, h * 0.3, 8, h * 0.6, "#5a5048"); poly(g, H, [[x - 3, h * 0.3], [x, h * 0.22], [x + 3, h * 0.3]], P.fire, null); glow(g, x, h * 0.27, 18, "232,146,58", 0.4); }
     },
+    battle(g, H, w, h) {   // [OURS] the Civil War: a fort wall at dusk, red and blue banners, two lines of soldiers clashing
+      backdrop(g, H, w, h, "Tundra", "dusk", "cw", false);
+      poly(g, H, [[w * 0.05, h * 0.62], [w * 0.05, h * 0.3], [w * 0.15, h * 0.3], [w * 0.15, h * 0.36], [w * 0.22, h * 0.36], [w * 0.22, h * 0.3], [w * 0.32, h * 0.3], [w * 0.32, h * 0.62]], "#6e665c");   // the fort
+      smoke(g, w * 0.18, h * 0.3, 1.4); smoke(g, w * 0.8, h * 0.42, 1.1);
+      const banner = (x, col, mark) => { line(g, [[x, h * 0.9], [x, h * 0.2]], 2, P.wood); poly(g, H, [[x, h * 0.21], [x + 26, h * 0.21], [x + 26, h * 0.44], [x + 13, h * 0.39], [x, h * 0.44]], col); H.circle(g, x + 13, h * 0.3, 5, mark, P.ink, 0.8); };
+      banner(w * 0.36, "#9c2026", "#e2bb64"); banner(w * 0.62, "#2f5a94", "#eef2f6");
+      for (let i = 0; i < 4; i++) person(g, H, w * (0.3 + i * 0.045), h * 0.9 - (i % 2) * 4, { body: "#8e2b25", legs: "#5a4a3a", skin: P.skin[i % P.skin.length], helm: P.steel, arm: i % 2 ? "spear" : "hold", s: 1.05, face: 1 });
+      for (let i = 0; i < 4; i++) person(g, H, w * (0.58 + i * 0.045), h * 0.9 - ((i + 1) % 2) * 4, { body: "#3a5a8a", legs: "#4a3a2a", skin: P.skin[(i + 1) % P.skin.length], hair: "#6a4a2a", arm: i % 2 ? "hold" : "spear", s: 1.05, face: -1 });
+      glow(g, w * 0.5, h * 0.75, 40, "232,146,58", 0.35);
+    },
+    daedra(g, H, w, h) {   // [OURS] a Daedric shrine at night: a spiked stone arch with a prince's light inside, offerings on the step
+      H.sky(g, w, h, "night"); g.fillStyle = "#2e2a26"; g.fillRect(0, h * 0.8, w, h * 0.2);
+      glow(g, w * 0.5, h * 0.48, 90, "170,90,220", 0.45);
+      poly(g, H, [[w * 0.3, h * 0.82], [w * 0.3, h * 0.36], [w * 0.5, h * 0.08], [w * 0.7, h * 0.36], [w * 0.7, h * 0.82]], "#3e352f", P.ink, 1.5);
+      poly(g, H, [[w * 0.37, h * 0.82], [w * 0.37, h * 0.4], [w * 0.5, h * 0.2], [w * 0.63, h * 0.4], [w * 0.63, h * 0.82]], "#9a5ad0", P.ink, 1.2);
+      glow(g, w * 0.5, h * 0.55, 36, "255,230,255", 0.55);
+      for (const [x, y] of [[0.27, 0.36], [0.73, 0.36], [0.5, 0.06], [0.37, 0.2], [0.63, 0.2]]) poly(g, H, [[w * x - 4, h * y + 6], [w * x, h * y - 8], [w * x + 4, h * y + 6]], "#3e352f", P.ink, 1);
+      rect(g, H, w * 0.26, h * 0.82, w * 0.48, h * 0.05, "#5a524a");
+      for (const x of [0.32, 0.66]) { fire(g, H, w * x, h * 0.82, 0.6); }
+      person(g, H, w * 0.2, h * 0.94, { body: P.leather, legs: P.inkSoft, skin: P.skin[0], cape: "#3a2a4a", arm: "hold", s: 1.1, face: 1 });
+    },
     masks(g, H, w, h) {   // a dragon priest's tomb: the open sarcophagus, the mask floating over it in its own light
       H.sky(g, w, h, "cave");
       for (const x of [w * 0.12, w * 0.88]) { rect(g, H, x - 5, h * 0.25, 10, h * 0.65, "#4e4740"); poly(g, H, [[x - 3, h * 0.25], [x, h * 0.16], [x + 3, h * 0.25]], P.fire, null); glow(g, x, h * 0.21, 18, "232,146,58", 0.4); }
@@ -411,6 +432,7 @@ const EVENTART = (() => {
     if (/home of your own/i.test(t)) return "house";
     if (/^The guard/i.test(t)) return "guard";
     if (/Quest|A new path/i.test(t)) {
+      if (typeof QUESTS !== "undefined") { const id = Object.keys(QUESTS.L).find((k) => x.includes(QUESTS.L[k].name + ":") || x.includes(QUESTS.L[k].name + " complete")); if (QUESTS.L[id]?.daedric) return "daedra"; if (/^cw_/.test(id || "")) return "battle"; }   // Daedric quests and the Civil War
       if (/Bleak Falls|Golden Claw|Dragonstone/i.test(x)) return "claw";
       if (/Way of the Voice|Greybeard|High Hrothgar/i.test(x)) return "mountainSteps";
       if (/Horn of Jurgen|Ustengrav/i.test(x)) return "horn";

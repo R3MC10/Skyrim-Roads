@@ -664,6 +664,84 @@ html.art-pixel .top .lvlb,html.art-pixel .top .iconbtn,html.art-pixel .mapbtns .
 .fsbtn{font:600 12px/1 var(--font-ui,inherit);color:#fbf3dc;background:rgba(28,33,40,.72);border:1px solid #8e6b2b;border-radius:5px;padding:6px 9px;min-height:28px;cursor:pointer;opacity:.85}
 .fsbtn:hover,.fsbtn:focus-visible{background:rgba(60,50,36,.9);outline:none;border-color:#d6b25e}
 .flog>div{transition:opacity .25s}.flog>div.fpend{opacity:.3}
+/* co-op dungeons (coop.js): SkyUI-style lobby and party strip */
+.coop{margin-top:10px;padding:10px 12px;border:1px solid rgba(214,178,94,.28);border-radius:6px;background:linear-gradient(180deg,rgba(20,21,24,.82),rgba(8,9,11,.9))}
+.coop.on{border-color:rgba(214,178,94,.55);box-shadow:inset 0 0 0 1px rgba(0,0,0,.5),0 0 18px rgba(214,178,94,.08)}
+.coop h3{margin:0 0 6px;font-family:var(--title,inherit);letter-spacing:.08em;text-transform:uppercase;font-size:.86rem;color:var(--gold,#d6b25e)}
+.coop .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.coop .row .btn.danger{flex:1}
+.coop .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.coopbar{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 6px}
+.coopbar .cm{display:inline-flex;flex-direction:column;padding:3px 9px;border:1px solid rgba(255,255,255,.12);border-radius:4px;background:rgba(0,0,0,.35);font-size:.8rem;line-height:1.2}
+.coopbar .cm small{opacity:.7;font-size:.7rem}
+.coopbar .cm.with{border-color:rgba(214,178,94,.6);color:var(--gold,#d6b25e)}
+.coopwait{margin:0 0 8px;color:var(--gold,#d6b25e)}
+
+/* economy.js: price arrows and the market card */
+.econ-b{font-size:11px;font-weight:700;padding:1px 5px;border-radius:8px;margin-right:6px;white-space:nowrap;letter-spacing:.02em}
+.econ-b.econ-up,.econ-card .econ-up{color:#e08a6a}
+.econ-b.econ-down,.econ-card .econ-down{color:#8fc48a}
+.econ-b.econ-up{background:rgba(224,138,106,.12);border:1px solid rgba(224,138,106,.35)}
+.econ-b.econ-down{background:rgba(143,196,138,.12);border:1px solid rgba(143,196,138,.35)}
+.econ-card{margin:6px 0 8px;padding:6px 10px;border:1px solid rgba(214,178,94,.28);border-radius:8px;background:rgba(10,11,13,.45)}
+.econ-card summary{cursor:pointer;font-size:13px;list-style:none}
+.econ-card summary::-webkit-details-marker{display:none}
+.econ-card .sub{margin:6px 0 0}
+.econ-routes div{font-size:12.5px;padding:3px 0;border-top:1px solid rgba(255,255,255,.06)}
+
+/* ---- exploration rewards: ring mini-game, discoveries, library */
+.xgame{position:fixed;inset:0;z-index:95;display:flex;align-items:center;justify-content:center;background:radial-gradient(80% 60% at 50% 50%,rgba(0,0,0,.72),rgba(0,0,0,.9));padding:16px}
+.xgame .xg-in{width:min(420px,100%);background:linear-gradient(180deg,rgba(22,22,24,.98),rgba(8,8,10,.99));border:1px solid rgba(214,178,94,.45);border-radius:6px;padding:16px 14px;box-shadow:0 10px 40px rgba(0,0,0,.6);text-align:center}
+.xgame h3{margin:0 0 6px;font-family:var(--serif,serif);letter-spacing:.08em;text-transform:uppercase;color:#e8d6a8}
+.xgame .xg-sub{margin:0 0 12px;color:#bfb6a2;font-size:.92em;line-height:1.4}
+.xgame .xg-rings{display:flex;gap:10px;justify-content:center;margin-bottom:14px}
+.xgame .xg-ring{display:flex;flex-direction:column;align-items:center;gap:6px}
+.xgame .xg-face{width:84px;height:84px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(circle at 40% 35%,#6d6a62,#36342f 60%,#1d1c19);border:3px solid #8b7b55;box-shadow:inset 0 0 14px rgba(0,0,0,.75),0 0 0 2px #1a1710}
+.xgame .xg-sym{font-size:34px;line-height:1;filter:grayscale(.5) sepia(.5) drop-shadow(0 1px 1px #000)}
+.xgame .xg-face small{margin-top:3px;color:#e8d6a8;font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.xgame .xg-arr{width:48px;height:34px;border-radius:4px;border:1px solid rgba(214,178,94,.4);background:rgba(30,28,24,.9);color:#e8d6a8;font-size:16px;cursor:pointer}
+.xgame .xg-arr:active{background:rgba(80,68,40,.9)}
+.xgame .xg-btns{display:flex;gap:8px}.xgame .xg-btns .btn{flex:1}
+.xstats{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.xstats span{flex:1 1 40%;padding:6px 8px;border:1px solid rgba(214,178,94,.25);border-radius:4px;background:rgba(0,0,0,.25);font-size:.9em}
+.xstats b{color:var(--gold,#e2bb64);float:right}
+.xh{margin:12px 0 6px;font-size:.85em;letter-spacing:.1em;text-transform:uppercase;color:#cdbb8e}
+.item.dim{opacity:.5}.xbook{font-size:22px;width:28px;text-align:center}
+.xread p{font-family:var(--serif,Georgia,serif);font-size:1.05em;line-height:1.6;color:#e9e1cc;background:linear-gradient(180deg,rgba(64,52,34,.35),rgba(30,24,16,.35));border:1px solid rgba(214,178,94,.25);padding:12px;border-radius:4px}
+.panel.xcard{border-color:var(--gold,#e2bb64)}
+/* ---- fair levelling: progress view and Legendary skills (legendary.js) */
+.leg-stars{color:#e8c66a;text-shadow:0 0 6px rgba(232,198,106,.55);font-weight:700;letter-spacing:1px}
+.leg-box{margin-top:10px;padding:10px 12px;border:1px solid rgba(214,178,94,.5);border-radius:8px;background:linear-gradient(180deg,rgba(214,178,94,.12),rgba(214,178,94,.03))}
+.leg-box p{margin:0 0 8px}
+.prog-panel .bar{height:8px}
+.prog-row{width:100%;text-align:left;background:none;border:0;color:inherit;font:inherit;cursor:pointer}
+.prog-row .t .bar{display:inline-block;width:90px;height:5px;vertical-align:middle;margin-right:6px}
+.leg-ready{margin-top:8px;color:#e8c66a}
+.cw-hold{display:flex;align-items:center;gap:7px;margin:6px 0 2px;font-variant:small-caps;letter-spacing:.04em}
+.cw-flag{display:inline-block;width:12px;height:16px;flex:0 0 auto;clip-path:polygon(0 0,100% 0,100% 100%,50% 78%,0 100%);box-shadow:inset 0 0 0 1px rgba(0,0,0,.4)}
+.cw-imperial{background:linear-gradient(180deg,#b3242a,#6d1215)}.cw-stormcloak{background:linear-gradient(180deg,#3f6fb0,#1d3963)}.cw-neutral{background:linear-gradient(180deg,#c9a24c,#7a5f22)}
+.cf-name{display:inline-flex;gap:6px;align-items:center}.cf-name input{width:9.5em;min-height:36px;background:rgba(0,0,0,.35);border:1px solid rgba(214,178,94,.35);color:inherit;border-radius:4px;padding:4px 8px;font:inherit}
+/* player halls and guild halls */
+.hallnav{margin:8px 0 4px;flex-wrap:wrap}
+.hallnav .chip{min-height:36px}
+/* ---- patch notes (patchnotes.js) */
+.pnotes{text-align:left;width:100%;max-width:560px;margin:0 auto}
+.pnotes .pn{background:linear-gradient(180deg,rgba(18,19,22,.92),rgba(8,9,11,.95));border:1px solid rgba(214,178,94,.28);border-radius:6px;margin:8px 0;padding:0 12px}
+.pnotes .pn[open]{border-color:rgba(214,178,94,.55);box-shadow:0 0 0 1px rgba(214,178,94,.08) inset}
+.pnotes summary{cursor:pointer;list-style:none;display:flex;flex-direction:column;gap:2px;padding:11px 0;min-height:44px;justify-content:center}
+.pnotes summary::-webkit-details-marker{display:none}
+.pnotes .pnt{font-family:Cinzel,serif;color:#e8cf8e;font-size:15px;letter-spacing:.04em}
+.pnotes .pn[open] .pnt{color:#f3dfa6}
+.pnotes .pnm{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#9a927f}
+.pnotes ul{margin:0 0 12px;padding:8px 0 0 18px;border-top:1px solid rgba(214,178,94,.18)}
+.pnotes li{margin:6px 0;line-height:1.45;color:#ddd6c4;font-size:14px}
+.pnotes li::marker{color:#c9a75e}
+.pnotes .pnnext{border-style:dashed;background:rgba(30,26,16,.55)}
+.pnotes .pnnext .pnt{color:#cfe0f0}
+.pnwhat{text-align:center}.pnwhat h2{margin:4px 0 8px}.pnwhat ul{text-align:left;border-top:1px solid rgba(214,178,94,.3)}
+.pnwhat .pnkick{font-family:Cinzel,serif;letter-spacing:.32em;text-transform:uppercase;font-size:11px;color:#c9a75e}
+.title .page .pnotes{max-height:none}
+.sheet.pnsheet{max-width:600px}
 </style>
 </head>
 <body>
@@ -676,6 +754,7 @@ html.art-pixel .top .lvlb,html.art-pixel .top .iconbtn,html.art-pixel .mapbtns .
 <script src="terrain.js"></script>
 <script src="formulas.js"></script>
 <script src="perks.js"></script>
+<script src="legendary.js"></script>
 <script src="powers.js"></script>
 <script src="engine.js"></script>
 <script src="events.js"></script>
@@ -686,7 +765,10 @@ html.art-pixel .top .lvlb,html.art-pixel .top .iconbtn,html.art-pixel .mapbtns .
 <script src="quests.js"></script>
 <script src="guilds.js"></script>
 <script src="priests.js"></script>
+<script src="civilwar.js"></script>
+<script src="daedric.js"></script>
 <script src="horses.js"></script>
+<script src="horseback.js"></script>
 <script src="hall.js"></script>
 <script src="bounty.js"></script>
 <script src="visits.js"></script>
@@ -698,15 +780,20 @@ html.art-pixel .top .lvlb,html.art-pixel .top .iconbtn,html.art-pixel .mapbtns .
 <script src="wars.js"></script>
 <script src="curses.js"></script>
 <script src="smithing.js"></script>
+<script src="craftfair.js"></script>
 <script src="social.js"></script>
 <script src="roam.js"></script>
+<script src="explore.js"></script>
 <script src="ammo.js"></script>
 <script src="tomes.js"></script>
 <script src="magic.js"></script>
 <script src="spellcraft.js"></script>
 <script src="guide.js"></script>
+<script src="patchnotes.js"></script>
 <script src="market.js"></script>
+<script src="halls.js"></script>
 <script src="mp.js"></script>
+<script src="coop.js"></script>
 <script src="store.js"></script>
 <script src="map.js"></script>
 <script src="backup.js"></script>
@@ -732,6 +819,7 @@ html.art-pixel .top .lvlb,html.art-pixel .top .iconbtn,html.art-pixel .mapbtns .
 <script src="immerse.js"></script>
 <script src="polish.js"></script>
 <script src="caravans.js"></script>
+<script src="economy.js"></script>
 <script src="bards.js"></script>
 <script src="skillinfo.js"></script>
 <script src="ui.js"></script>

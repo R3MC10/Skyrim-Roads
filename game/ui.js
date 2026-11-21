@@ -28,7 +28,7 @@
   let chatDocs = [], chatRaw = [], chatCh = "world", chatDraft = "", chatSeen = 0, chatSeenIds = new Set(), lastChatSend = 0;
   const bootT = Date.now() / 1000;
   let trades = [], ladderDocs = [], ladderCat = "level", tradeSel = [], tradeTo = null, seenTrades = new Set(), lastLadderJson = "";
-  let perkSkill = null, heroSkill = null, alchSel = [], party = null, invites = [], chests = [], news = [], seenAttacks = new Set(), lastCardJson = "", lastAmbushCheck = 0;
+  let coopUI = null, perkSkill = null, heroSkill = null, alchSel = [], party = null, invites = [], chests = [], news = [], seenAttacks = new Set(), lastCardJson = "", lastAmbushCheck = 0;
   const app = $("#app"), tabsEl = $("#tabs");
   const bump = () => { version++; };
 
@@ -42,7 +42,7 @@
     if (typeof POLISH !== "undefined") POLISH.toast(el, text);
     clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.add("hide"), 3800);
   }
-  function persist(pub = false) { Store.save(S); if (pub) { publishCard(); publishHome(); publishClan(); } bump(); }
+  function persist(pub = false) { Store.save(S); if (pub) { publishCard(); publishHome(); publishClan(); publishHall(); } bump(); }
   let lastClanJson = "";
   function publishClan() {
     const json = JSON.stringify([S.clan || null, S.name]);
@@ -54,7 +54,7 @@
     const card = { name: S.name, race: S.race, level: S.level, x: S.x, y: S.y,
       t0: tr ? tr.lastTick : G.now(), moving: !!(tr && tr.status === "travel"), dest: tr ? tr.dest : null,
       path: tr && tr.status === "travel" ? [[S.x, S.y], ...tr.path.slice(tr.idx + 1)].slice(0, 120) : null,
-      speed: G.speed(S), loc: S.location || null, look: HEROART.lookOf(S), party: party?.id || null, hiding: !!S.ambush, clan: myClan()?.tag || null, ...MP.stats(S) };
+      speed: G.speed(S), loc: S.location || null, look: HEROART.lookOf(S), party: party?.id || null, hiding: !!S.ambush, clan: myClan()?.tag || null, ...MP.stats(S), coop: coopUI?.card() || null };
     const json = JSON.stringify({ ...card, t0: 0, cur: Math.round(card.cur / 10) });
     if (!force && json === lastCardJson) return;
     lastCardJson = json;
@@ -135,6 +135,7 @@
       $("#begin").onclick = () => {
         const name = ($("#nm").value || "").trim().slice(0, 24) || "Dovahkiin";
         S = G.newSave(Store.uid, name, race);
+        if (typeof PATCHNOTES !== "undefined") PATCHNOTES.markSeen();   // a new character starts on the current version
         if (!/[?&]notut/.test(location.search)) S.tut = { step: 1, seen: {} };   // new characters get the guided first trip
         const wantIntro = !/[?&]notut/.test(location.search) && (!navigator.webdriver || /[?&]intro/.test(location.search));
         if (wantIntro) S.introSeen = true;
@@ -204,6 +205,7 @@
         ${item("new", S ? "New Character" : "Begin")}
         ${item("settings", "Settings")}
         ${item("update", "Updates", "", update?.newer ? "New" : "")}
+        ${typeof PATCHNOTES !== "undefined" ? item("notes", "Patch Notes", "", PATCHNOTES.unseen() && S ? "New" : "") : ""}
         ${item("howto", "How to Play")}
         ${item("credits", "Credits")}</nav>`;
     }
@@ -214,7 +216,8 @@
   }
   const backBtn = `<button class="btn" data-t="menu">Back</button>`;
   function titleSubpage() {
-    if (titlePage === "settings") return `<h2>Settings</h2>${settingsHTML()}${backBtn}`;
+    if (titlePage === "settings") return `<h2>Settings</h2>${settingsHTML()}${typeof PATCHNOTES !== "undefined" ? `<button class="btn" data-t="notes" style="width:100%;margin-top:12px">📜 Patch notes</button>` : ""}${backBtn}`;
+    if (titlePage === "notes") { PATCHNOTES.markSeen(); return `<h2>Patch Notes</h2>${PATCHNOTES.html()}${backBtn}`; }
     if (titlePage === "confirmNew") return `<h2>Start over?</h2><p>${esc(S.name)} (level ${S.level}) and everything they carry will be gone for good. Other players' worlds aren't affected.</p>
       <button class="btn danger" data-t="wipe">Yes, make a new character</button>${backBtn}`;
     if (titlePage === "update") return `<h2>Updates</h2>${updateHTML()}${backBtn}`;
@@ -473,6 +476,8 @@
     Store.watch("trades", (docs) => onTrades(docs));
     Store.watch("duels", (docs) => onDuels(docs));
     Store.watch("stalls", (docs) => onStalls(docs));
+    Store.watch("halls", (docs) => onHalls(docs));
+    if (typeof ECON !== "undefined") Store.watch("econ", (docs) => { ECON.set(docs); if (tab === "town") bump(); });
     Store.watch("verses", (docs) => { verseDocs = docs.filter((d) => d && d.uid && typeof d.text === "string"); onSong(); });
     Store.watch("verselikes", (docs) => { likeDocs = docs.filter((d) => d && d.verseId && d.voter); onSong(); });
     Store.watch("guards", (docs) => { guardDocs = docs; if (tab === "town" || tab === "log") bump(); });
@@ -498,6 +503,11 @@
       invites = docs.filter((p) => p.invites?.includes(S.id) && !p.members.some((m) => m.id === S.id));
       if (tab === "log") bump();
     });
+    if (typeof COOP !== "undefined") {   // co-op dungeons (coop.js)
+      coopUI = COOP.ui({ S: () => S, toast, esc, Store, others: () => others, party: () => party, cardOf, persist, publishCard, renderDungeon, renderPanel, bump,
+        sendDm: (id, name, text) => { const r = SOCIAL.dm(S, id, name, text); if (!r.err && Store.online) Store.put("dms", r.id, r.doc); } });
+      Store.watch("runs", (docs) => coopUI.onRuns(docs));
+    }
     Store.watch("chests", (docs) => { const had = chests.length; chests = docs.filter((c) => c.members?.some((m) => m.id === S.id)); if (chests.length > had) toast("💰 A party chest is waiting. See the Journal tab."); if (tab === "log") bump(); });
     Store.watch("news", (docs) => { news = docs.sort((a, b) => b.t - a.t); if (news.length > 40) news.slice(40).forEach((n) => Store.remove("news", n.id)); if (tab === "log") bump(); });
     G.setAllyProvider(() => allies());
@@ -515,6 +525,20 @@
     if (S.trip?.status === "encounter") openEncounter();
     else if (S.trip?.status === "event") openEvent();
     if (S.dungeon) renderDungeon();
+    setTimeout(whatsNew, 1500);
+  }
+  /* "What's new": once per update, for characters who were here before it; never over another popup */
+  function whatsNew(tries = 0) {
+    if (typeof PATCHNOTES === "undefined" || !PATCHNOTES.unseen()) return;
+    if (navigator.webdriver && !/[?&]whatsnew/.test(location.search)) return;   // automated checks don't want surprise popups
+    if (S.tut?.step) { PATCHNOTES.markSeen(); return; }                           // brand-new players get the tutorial instead
+    if ($("#modal") || document.querySelector(".intro")) { if (tries < 20) setTimeout(() => whatsNew(tries + 1), 3000); return; }
+    PATCHNOTES.markSeen();
+    openModal(`${PATCHNOTES.whatsNewHTML()}<div class="grid2" style="margin-top:12px"><button class="btn" data-act="notes">All patch notes</button><button class="btn pri" data-act="close">Continue</button></div>`, "pnsheet");
+  }
+  function openNotes() {
+    PATCHNOTES.markSeen();
+    openModal(`<h2>Patch Notes</h2>${PATCHNOTES.html()}<button class="btn pri" data-act="close" style="width:100%;margin-top:12px">Done</button>`, "pnsheet");
   }
   /* road events: only while you're watching. About one every 3 minutes of walking, never two within a minute. */
   let lastEventAt = Date.now();
@@ -531,7 +555,7 @@
     if (!S) return;
     const t = G.now();
     { const cm = CARAVANS.tick(S, t); if (cm) { persist(true); toast(cm); if (S.caravanJob === null) Store.change("guards", `${lastJobId}-${S.id}`, (d) => (d && d.status === "signed" ? { ...d, status: "left" } : d)); bump(); } lastJobId = S.caravanJob?.id || lastJobId; }
-    tickTimers(t); discoveryToast(); if (Math.floor(t) % 5 === 0) courierCheck();
+    tickTimers(t); hallTick(t); discoveryToast(); if (Math.floor(t) % 5 === 0) courierCheck();
     if (typeof IMM !== "undefined") { IMM.tick(S); if (S.lastSeen && t - S.lastSeen > 3600 && !S.trip?.status) IMM.loading("Welcome back to Skyrim"); S.lastSeen = t; }
     if (S.trip?.status === "travel") {
       const out = G.advance(S, t, reachableBags());
@@ -602,6 +626,7 @@
   function openSound() {
     openModal(`<h2>Settings</h2>${settingsHTML()}
       <button class="btn" data-act="guide" style="width:100%;margin-top:14px">📖 Guide for new players</button>
+      ${typeof PATCHNOTES !== "undefined" ? `<button class="btn" data-act="notes" style="width:100%;margin-top:8px">📜 Patch notes</button>` : ""}
       <div class="grid2" style="margin-top:8px">${window.__app ? `<button class="btn" data-act="toupdate">${update?.newer ? "⬆ Update ready" : "Check for updates"}</button>` : ""}<button class="btn" data-act="totitle" ${window.__app ? "" : 'style="grid-column:1/-1"'}>Main menu</button></div>
       <button class="btn pri" data-act="close" style="width:100%;margin-top:10px">Done</button>`);
     const m = $("#modal");
@@ -713,7 +738,7 @@
       discovered: S.discovered, explored: [...S.explored, pos], others: others.filter((o) => !o.hiding || G.pxDist(livePos(), otherPos(o)) < MP.NEAR_PX).map((o) => ({ name: (o.clan ? `[${o.clan}] ` : "") + o.name + (party?.members.some((m) => m.id === o.id) ? " ⚑" : ""), pos: otherPos(o), look: o.look, race: o.race, party: !!party?.members.some((m) => m.id === o.id) })),
       rulers: Object.entries(WARS.rulers(S)).map(([hold, c]) => ({ hold, color: c.colors[0] })),
       banners: CLANS.banners(homeDocs, S, VISITS.record(S)).filter((b) => WORLD.places[b.town]).map((b) => ({ ...b, pos: WORLD.places[b.town].slice(0, 2) })),
-      cleared: clearedLeft(), bags: visibleBags(), selected: selected && WORLD.places[selected] ? selected : null, t: ts / 1000, zoom, center, reduceMotion, weather: WEVENTS.weather(pos).id, quest: questPos(), mask: typeof PRIESTS !== "undefined" ? PRIESTS.marker(S)?.pos : null, pins: (S.pins || []).map((p) => ({ pos: [p.x, p.y], label: `${p.icon} ${p.label}`, on: selected === "__pin:" + p.id })),
+      cleared: clearedLeft(), bags: visibleBags(), selected: selected && WORLD.places[selected] ? selected : null, t: ts / 1000, zoom, center, reduceMotion, weather: WEVENTS.weather(pos).id, quest: questPos(), mask: typeof PRIESTS !== "undefined" ? PRIESTS.marker(S)?.pos : null, tmaps: typeof EXPLORE !== "undefined" ? EXPLORE.marks(S) : [], pins: (S.pins || []).map((p) => ({ pos: [p.x, p.y], label: `${p.icon} ${p.label}`, on: selected === "__pin:" + p.id })),
       routes: party ? others.filter((o) => o.moving && o.path?.length > 1 && party.members.some((m) => m.id === o.id)).map((o) => ({ path: o.path, from: otherPos(o), name: o.name })) : [], horse: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, cart: CARAVANS.hasCart(S), caravans: CARAVANS.all().map((c) => { const cp = CARAVANS.pos(c); return { cp, c }; }).map(({ cp, c }) => ({ pos: cp, visible: G.pxDist(cp, pos) < 160 || S.discovered.some((n) => WORLD.places[n] && ["city", "town"].includes(WORLD.places[n][2]) && G.pxDist(cp, WORLD.places[n]) < 45), khajiit: c.line.khajiit, moving: c.phase === "road", mine: S.caravanJob?.id === c.id, label: c.line.name.replace(/'s caravan$/, "") })).filter((c) => !(c.mine && S.trip?.caravan)), hall: S.discovered.includes(HALL.TOWN) || known(HALL.TOWN) ? { pos: HALL.POS, label: `Hall of the North · ${HALL.progress().name}` } : null,
     };
     WorldMap.draw($("#map"), view);
@@ -859,7 +884,7 @@
     if (!e) return;
     openModal(`<p class="sub danger-${e.danger}" style="margin:0">${e.danger === "high" ? "Deadly" : e.danger === "medium" ? "Dangerous" : "Minor"} encounter · ${esc(e.hold)}${G.isNight() ? " · night" : ""}</p>
       <h2 style="margin:4px 0 8px">${esc(e.name)}</h2><p>${esc(e.text)}</p>
-      ${note ? `<p class="sub">${esc(note)}</p>` : ""}${(() => { const am = typeof AMMO !== "undefined" ? AMMO.status(S) : null; return am && !am.best ? ammoNote() : ""; })()}
+      ${note ? `<p class="sub">${esc(note)}</p>` : ""}${(() => { const am = typeof AMMO !== "undefined" ? AMMO.status(S) : null; return am && !am.best ? ammoNote() : ""; })()}${typeof HORSEBACK !== "undefined" ? HORSEBACK.note(S) : ""}
       <div class="grid2" style="margin:10px 0"><div class="vital"><small><span>You</span><span class="num">${Math.round(G.curHealth(S))}/${G.maxHealth(S)}</span></small><div class="bar"><i style="width:${pct(G.curHealth(S), G.maxHealth(S))}%;background:var(--hp)"></i></div></div>
       <div class="vital"><small><span>${esc(e.name)}</span><span class="num">${e.hp}/${e.health}</span></small><div class="bar"><i style="width:${pct(e.hp, e.health)}%;background:var(--ember)"></i></div></div></div>
       <div class="grid2">
@@ -874,7 +899,7 @@
   function openEvent(note) {
     const ev = S.trip?.event;
     if (!ev) return;
-    const shop = ev.shop ? `<div class="list" style="margin:8px 0">${ev.shop.map((i) => { const p = G.buyPrice(S, i); return `<div class="item"><div class="t">${esc(D.ITEMS[i].name)}<span>${esc(G.itemStats(i))} · ${D.ITEMS[i].weight} wt</span></div><span class="num gold">${p}</span><button class="btn sm" data-act="evbuy" data-item="${i}" ${S.gold >= p ? "" : "disabled"}>Buy</button></div>`; }).join("")}</div><p class="sub">You have ${S.gold} gold.</p>` : "";
+    const shop = ev.shop ? `<div class="list" style="margin:8px 0">${ev.shop.map((i) => { const p = G.buyPrice(S, i, null); return `<div class="item"><div class="t">${esc(D.ITEMS[i].name)}<span>${esc(G.itemStats(i))} · ${D.ITEMS[i].weight} wt</span></div><span class="num gold">${p}</span><button class="btn sm" data-act="evbuy" data-item="${i}" ${S.gold >= p ? "" : "disabled"}>Buy</button></div>`; }).join("")}</div><p class="sub">You have ${S.gold} gold.</p>` : "";
     const choices = ev.shop ? [["leave", "Say goodbye and move on"]] : G.eventChoices(S);
     openModal(`${typeof EVENTART !== "undefined" ? EVENTART.road(ev) : ""}<p class="sub" style="margin:0">On the road · ${esc(G.holdAt([S.x, S.y]))} · ${esc(Terrain.NAMES[Terrain.typeAtPos([S.x, S.y])])}</p>
       <h2 style="margin:4px 0 8px">Something by the road</h2><p>${esc(ev.text)}</p>
@@ -945,17 +970,19 @@
 
   // ---- the trade window: Buy and Sell side by side, like Skyrim's barter menu
   let shopMode = "buy";
+  const econB = (item) => (typeof ECON !== "undefined" ? ECON.badge(S.location, item) : "");   // ▲/▼ price arrows (economy.js)
   function barterHTML(shop, open, wanted, shopRow) {
     const wt = Math.round(G.carried(S)), cap = Math.round(G.capacity(S));
     const head = `<div class="barter-head"><span>💰 <b class="gold num">${S.gold}</b> gold</span>${Number.isFinite(wt) && cap ? `<span>⚖ ${wt}/${cap}</span>` : ""}</div>
       <div class="seg"><button class="${shopMode === "buy" ? "on" : ""}" data-act="smode" data-id="buy">Buy</button><button class="${shopMode === "sell" ? "on" : ""}" data-act="smode" data-id="sell">Sell</button></div>`;
-    if (shopMode === "buy") return head + (typeof TOMES !== "undefined" ? TOMES.stockAt(S.location, shop) : D.SHOP_STOCK[shop] || []).map((i) => shopRow(i)).join("");
+    const mk = typeof ECON !== "undefined" ? ECON.report(S, S.location) : "";
+    if (shopMode === "buy") return head + mk + (typeof TOMES !== "undefined" ? TOMES.stockAt(S.location, shop) : D.SHOP_STOCK[shop] || []).map((i) => shopRow(i)).join("");
     const eq = new Set(Object.values(G.loadout(S).equipment || {}));
     const fence = shop === "fence" || (typeof TOWNS !== "undefined" && TOWNS.canFence(S));
     const rows = S.inv.filter((r) => !eq.has(r.id) && D.ITEMS[r.item] && !["golden_claw", "dragonstone"].includes(r.item) && (!r.stolen || fence))
       .map((r) => ({ r, p: G.sellPrice(S, r) })).sort((a, b) => b.p * b.r.qty - a.p * a.r.qty);
     const ok = open && !wanted;
-    return head + (rows.length ? rows.map(({ r, p }) => `<div class="item">${ICONART.item(r.item, 34, r)}<div class="t">${esc((r.tq ? TOWNS.QUALITY[r.tq] + " " : "") + D.ITEMS[r.item].name)}${r.qty > 1 ? ` ×${r.qty}` : ""}${r.stolen ? ' <span class="danger-high">stolen</span>' : ""}<span>${esc(G.itemStats(r.item))} · ${D.ITEMS[r.item].weight} wt</span></div><span class="num gold">${p}</span><button class="btn sm pri" data-act="sell" data-id="${r.id}" ${ok ? "" : "disabled"}>Sell</button>${r.qty > 1 ? `<button class="btn sm" data-act="sellall" data-id="${r.id}" ${ok ? "" : "disabled"}>All ${p * r.qty}</button>` : ""}</div>`).join("")
+    return head + mk + (rows.length ? rows.map(({ r, p }) => `<div class="item">${ICONART.item(r.item, 34, r)}<div class="t">${esc((r.tq ? TOWNS.QUALITY[r.tq] + " " : "") + D.ITEMS[r.item].name)}${r.qty > 1 ? ` ×${r.qty}` : ""}${r.stolen ? ' <span class="danger-high">stolen</span>' : ""}<span>${esc(G.itemStats(r.item))} · ${D.ITEMS[r.item].weight} wt</span></div>${econB(r.item)}<span class="num gold">${p}</span><button class="btn sm pri" data-act="sell" data-id="${r.id}" ${ok ? "" : "disabled"}>Sell</button>${r.qty > 1 ? `<button class="btn sm" data-act="sellall" data-id="${r.id}" ${ok ? "" : "disabled"}>All ${G.lotPrice ? G.lotPrice(S, r.item, r.qty, "sell", r) : p * r.qty}</button>` : ""}</div>`).join("")
       : `<p class="sub">Nothing to sell${eq.size ? " (worn gear stays on you)" : ""}.</p>`) + (S.inv.some((r) => r.stolen) && !fence ? `<p class="sub">Stolen things only sell to a fence.</p>` : "");
   }
   // ------------------------------------------------------------ the bard's corner: verses, likes, the Song of the North
@@ -1021,7 +1048,7 @@
     const left = DUNGEONS.refillLeft(S, l), lvl = { 1: 1, 2: 6, 3: 12 }[DUNGEONS.info(l).tier];
     const th = DUNGEONS.info(l).theme, rec = th === "lair" ? 20 : th === "giantcamp" ? 10 : lvl;
     return `<div class="panel" style="border-color:var(--ember)"><h2>${esc(l)}</h2>${PLACEART.scene(l)}<p class="sub">${esc(DUNGEONS.describe(l))} · good from about level ${rec}. Inside, you pick your own way room by room down to the boss. Health doesn't come back on its own in there, and you can leave between rooms whenever you like.</p>
-      ${left ? refillCard(l, left) : `<button class="btn danger" data-act="enter" style="width:100%">🕯 Go inside</button>`}${SMITH.MINES[l] ? `<div style="margin-top:10px">${mineHTML(l)}</div>` : ""}</div>`;
+      ${left ? refillCard(l, left) : `<button class="btn danger" data-act="enter" style="width:100%">🕯 Go inside</button>${coopUI ? coopUI.lobbyHTML(l) : ""}`}${SMITH.MINES[l] ? `<div style="margin-top:10px">${mineHTML(l)}</div>` : ""}</div>`;
   }
   function closeDungeon() { $("#dun")?.remove(); }
   function dunMap(d) {
@@ -1064,10 +1091,11 @@
       main = `<div class="card">${d.row < 0 ? PLACEART.scene(d.place) : ""}<h3>${d.row < 0 ? "The entrance" : "Which way?"}</h3><p class="sub">${d.row < 0 ? `You light a torch and step into ${esc(d.place)}.` : "The passage splits."} Tap a glowing room on the map, or pick here:</p>
         <div class="evc">${nx.map((c) => `<button class="btn ${row[c].type === "boss" ? "danger" : ""}" data-act="droom" data-c="${c}">${DUNGEONS.ICON[row[c].type]} ${DUNGEONS.LABEL[row[c].type]}</button>`).join("")}</div></div>`;
     }
+    if (coopUI && d.run) { if (!d.done && !r && coopUI.waiting()) main = coopUI.waitHTML(); else if (!d.done && !r) main = coopUI.behindHTML() + main; if (d.done) main += coopUI.chestHTML(); }
     el.innerHTML = `<div class="in">
       <div class="hd"><h2>🕯 ${esc(d.place)}</h2><button class="btn sm" data-act="dmin">🎒 Pack</button>${d.done || r?.type === "boss" ? "" : `<button class="btn sm" data-act="dleave">Leave</button>`}</div>
       <div class="vital"><small><span>Health${r ? "" : " · no natural healing in here"}</span><span class="num">${Math.round(hp)}/${mh}</span></small><div class="bar"><i style="width:${pct(hp, mh)}%;background:var(--hp)"></i></div></div>
-      <p class="sub" style="margin:0">Room ${step} of ${total} · found ${d.gold} gold${d.found.length ? ` and ${d.found.length} item${d.found.length > 1 ? "s" : ""}` : ""} · ${G.countRestore(S, "health")} healing potions</p>
+      ${coopUI && d.run ? coopUI.bar() : ""}<p class="sub" style="margin:0">Room ${step} of ${total} · found ${d.gold} gold${d.found.length ? ` and ${d.found.length} item${d.found.length > 1 ? "s" : ""}` : ""} · ${G.countRestore(S, "health")} healing potions</p>
       ${res}${main}
       <div class="card dmapcard"><div class="legend">${["fight", "elite", "trap", "treasure", "puzzle", "rest", "mystery", "boss"].filter((k) => d.rows.some((row) => row.some((n) => n.type === k))).map((k) => `<span>${DUNGEONS.ICON[k]} ${DUNGEONS.LABEL[k]}</span>`).join("")}</div>${DUNART.mapHTML(d)}</div>
     </div>`;
@@ -1076,13 +1104,25 @@
     if (dunNote?.hurt && !reduceMotion) { el.classList.remove("hurt"); void el.offsetWidth; el.classList.add("hurt"); }
   }
   function dungeonRoom(c) {
+    const ce = S.dungeon?.run && coopUI ? coopUI.beforePick() : null;
+    if (ce) return toast(ce);
     const d = S.dungeon, err = DUNGEONS.enterRoom(S, +c);
     if (err) return toast(err);
     d.path = d.path || []; d.path.push([d.row, d.col]);
     dunNote = null; persist(); renderDungeon();
+    if (d.run && coopUI) coopUI.afterPick();
+  }
+  function exploreAct(what, id) {
+    const r = EXPLORE.act(S, what, id);
+    if (r.html) return openModal(r.html);
+    if (r.err) return toast(r.err);
+    SOUND.fx(r.got ? "coin" : "click");
+    if (r.got) G.note(S, `🔍 ${r.text}`);
+    persist(true); renderPanel(true);
+    openModal(`<h2>${what === "xdig" ? "⛏ Buried treasure" : "🔍 Searching"}</h2><p>${esc(r.text)}</p>${r.book ? `<button class="btn" data-act="xread" data-id="${esc(r.book.id)}" style="width:100%;margin-bottom:6px">📖 Read "${esc(r.book.title)}"</button>` : ""}<button class="btn pri" data-act="close" style="width:100%">Continue</button>`);
   }
   function dungeonAct(c) {
-    const roomType = S.dungeon?.room?.type, hp0 = G.curHealth(S), found0 = S.dungeon?.found.length || 0, gold0 = S.dungeon?.gold || 0;
+    const runId = S.dungeon?.run || null, roomType = S.dungeon?.room?.type, hp0 = G.curHealth(S), found0 = S.dungeon?.found.length || 0, gold0 = S.dungeon?.gold || 0;
     const r = DUNGEONS.act(S, c);
     if (S.dungeon) { const newFound = S.dungeon.found.slice(found0); r.stripLoot = [...new Set([...(r.loot || []), ...newFound])]; r.stripGold = r.gold || (S.dungeon.gold - gold0) || 0; }
     r.roomType = roomType; r.hurt = roomType === "trap" && G.curHealth(S) < hp0 - 0.5;
@@ -1091,6 +1131,7 @@
     if (r.fight || r.died) SOUND.fight(r); else if (r.trap || /trap|dart|blade/i.test(r.text || "")) SOUND.fx("hit");
     if (r.bag) Store.addBag(r.bag);
     persist(true);
+    if (runId && coopUI) coopUI.afterAct(r, runId);
     if (r.died) { dunNote = null; closeDungeon(); renderPanel(true); openModal(`<h2>💀 Defeated</h2><p>${esc(r.text)}</p>${r.fight ? fightLog(r.fight) : ""}<p>${esc(r.died)}</p><button class="btn danger" data-act="close" style="width:100%">Continue</button>`, "enc"); return; }
     if (r.partyChest && party) {
       const id = `${S.id}-${Math.floor(G.now())}`;
@@ -1120,7 +1161,7 @@
   const svgI = (k) => `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[k] || ICONS.misc}</svg>`;
   const ITEM_CATS = [["gear", "Worn"], ["all", "All"], ["weapons", "Weapons"], ["apparel", "Apparel"], ["potions", "Potions"], ["scrolls", "Scrolls"], ["books", "Books"], ["ingredients", "Ingredients"], ["food", "Food"], ["misc", "Misc"]];
   const catOf = (it) => it.slot === "food" ? "food" : it.slot === "weapon" || it.slot === "ammo" ? "weapons" : G.ARMOR_SLOTS.includes(it.slot) ? "apparel" : ["potion", "poison"].includes(it.slot) ? "potions"
-    : it.slot === "scroll" ? "scrolls" : it.slot === "tome" ? "books" : it.slot === "ingredient" ? "ingredients" : "misc";
+    : it.slot === "scroll" ? "scrolls" : it.slot === "tome" || it.slot === "recipe" ? "books" : it.slot === "ingredient" ? "ingredients" : "misc";
   const MAGIC_CATS = [["all", "All"], ["destruction", "Destruction"], ["restoration", "Restoration"], ["alteration", "Alteration"], ["conjuration", "Conjuration"], ["illusion", "Illusion"], ["powers", "Powers"], ["shouts", "Shouts"], ["effects", "Active effects"]];
   const SKILL_CATS = [["all", "All"], ["combat", "Warrior"], ["magic", "Mage"], ["stealth", "Thief"], ["other", "Other"]];
   const SKILL_GROUP = { combat: "Warrior", magic: "Mage", stealth: "Thief" };
@@ -1139,7 +1180,7 @@
     const eqIds = new Set(Object.values(G.loadout(S).equipment));
     let rows = S.inv.filter((r) => D.ITEMS[r.item] && (sky.cat === "all" || catOf(D.ITEMS[r.item]) === sky.cat)).map((r) => {
       const it = D.ITEMS[r.item];
-      return { id: r.id, r, it, name: (r.tq ? TOWNS.QUALITY[r.tq] + " " : "") + it.name, stat: itemStat(r), weight: +(it.weight * r.qty).toFixed(2), value: it.value, eq: eqIds.has(r.id) };
+      return { id: r.id, r, it, name: (r.tq ? TOWNS.QUALITY[r.tq] + " " : "") + it.name + (r.nm ? ` “${r.nm}”` : ""), stat: itemStat(r), weight: +(it.weight * r.qty).toFixed(2), value: it.value, eq: eqIds.has(r.id) };
     });
     const k = sky.sort, d = sky.dir;
     rows.sort((a, b) => (b.eq - a.eq) || (k === "name" ? a.name.localeCompare(b.name) * d : (((a[k] ?? -1) - (b[k] ?? -1)) * -d) || a.name.localeCompare(b.name)));
@@ -1157,16 +1198,21 @@
     const lines = [];
     if (it.enchant) lines.push(`${it.enchant.magnitude} ${it.enchant.effect} damage per hit · charge ${Math.round(100 * (r.charge || 0) / it.enchant.capacity)}%`);
     if (it.staff) lines.push(`Casts ${D.SPELLS[it.staff.spell].name} instead of swinging · charge ${Math.round(100 * MAGIC.staffCharge(r) / it.staff.capacity)}% (${Math.floor(MAGIC.staffCharge(r) / it.staff.perCast)} casts)`);
-    if (it.aenchant) lines.push(`${it.aenchant.name} ${it.aenchant.mag} while worn`);
+    if (it.aenchant) lines.push(`${[it.aenchant, ...(it.aenchant.more || [])].map((e) => e.key.startsWith("dae:") ? e.name : `${e.name} ${e.mag}`).join(" · ")} while worn`);
+    if (it.desc) lines.push(it.desc);   // Daedric artifacts and other named items
     if (it.effects) lines.push(it.effects.map(([e, m, dd]) => `${e} ${m}${dd * 5 >= 60 ? ` for ${Math.round(dd * 5 / 60)} min` : ""}`).join(" · "));
     else if (it.restore) lines.push(`Restores ${it.restore[1]} ${it.restore[0]}`);
     if (it.slot === "scroll" || it.slot === "tome") lines.push(`${it.slot === "tome" ? "Teaches" : "Casts"} ${D.SPELLS[it.spell].name}${it.slot === "tome" && S.spells.includes(it.spell) ? " (you know it)" : ""}`);
     if (it.slot === "ingredient" && TOWNS.INGREDIENT_FX[r.item]) lines.push("Effects: " + TOWNS.INGREDIENT_FX[r.item][1].map((e, i) => TOWNS.known(S, r.item)[i] ? e : "?").join(", "));
     if (it.slot === "material") lines.push("Used at the forge to improve gear.");
     if (r.stolen) lines.push("Stolen. Only a fence will buy it.");
+    if (it.slot === "recipe" && typeof CRAFTFAIR !== "undefined") lines.push(CRAFTFAIR.knows(S, it.recipe) ? "You already know these forge recipes." : `Read it to learn new forge recipes: ${Object.keys(SMITH.RECIPES).filter((k) => SMITH.RECIPES[k].needs === it.recipe).map((k) => D.ITEMS[k].name).join(", ")}.`);
+    if (r.cv != null && it.slot !== "potion") lines.push(`You made this. Shops pay no more than its materials were worth${r.nm ? "" : ", but you can give it a name"}.`);
     const acts = [];
     if (G.SLOTS.includes(it.slot)) acts.push(eq ? `<button class="btn" data-act="uneq" data-slot="${it.slot}">Unequip</button>` : `<button class="btn pri" data-act="eq" data-id="${r.id}">Equip</button>`);
     if (it.slot === "tome") acts.push(`<button class="btn pri" data-act="read" data-id="${r.id}">Read</button>`);
+    if (it.slot === "recipe") acts.push(`<button class="btn pri" data-act="cfread" data-id="${r.id}">Read</button>`);
+    if (typeof CRAFTFAIR !== "undefined" && CRAFTFAIR.canName(r)) acts.push(`<span class="cf-name"><input id="cfname-${r.id}" maxlength="${CRAFTFAIR.NAME_MAX}" placeholder="Name it" value="${esc(r.nm || "")}" aria-label="Name for this item"><button class="btn" data-act="cfname" data-id="${r.id}">${r.nm ? "Rename" : "Name it"}</button></span>`);
     if (it.slot === "potion") acts.push(`<button class="btn pri" data-act="drinkrow" data-id="${r.id}">Drink</button>`);
     if (it.slot === "poison") acts.push(`<button class="btn pri" data-act="poison" data-id="${r.id}">Coat weapon</button>`);
     if (it.slot === "ingredient") acts.push(`<button class="btn" data-act="eat" data-id="${r.id}">Eat</button>`);
@@ -1174,6 +1220,7 @@
     if (it.dish) lines.push(`${it.desc}. A new meal replaces the last one's effect.`);
     if (it.enchant || it.staff) acts.push(...gems.map((g) => `<button class="btn" data-act="recharge" data-id="${r.id}" data-gem="${g.id}">Recharge (${esc(D.ITEMS[g.item].name.split(" (")[0])})</button>`));
     if (canShop) acts.push(`<button class="btn" data-act="sell" data-id="${r.id}">Sell · ${G.sellPrice(S, r)} gold</button>`);
+    if (typeof ECON !== "undefined" && !it.noTrade && !["golden_claw", "dragonstone"].includes(r.item)) { const bp = ECON.bestPlace(S, r); if (bp && bp.p > 1) lines.push(`Sells best in ${bp.to} right now (about ${bp.p} gold each).`); }
     return `<div class="sky-detail"><div class="sky-ico">${ICONART.item(r.item, 64, r)}</div><h3>${esc(row.name)}</h3><div class="sky-stats">${stats.map(([k, v]) => `<div><span>${k}</span><b class="num">${esc(String(v))}</b></div>`).join("")}</div>
       ${lines.map((l) => `<p class="sub">${esc(l)}</p>`).join("")}<div class="sky-acts">${acts.join("")}</div></div>`;
   }
@@ -1224,22 +1271,46 @@
   // ---- what your worn gear and potions add (shown next to skills)
   function gearFx() {
     const out = [];
-    for (const id of Object.values(G.loadout(S).equipment || {})) { const r = G.invRow(S, id), it = r && D.ITEMS[r.item]; if (it?.aenchant) for (const e of [it.aenchant, ...(it.aenchant.more || [])]) out.push({ name: e.name, mag: e.mag, key: e.key, from: it.name }); }   // masks carry several
+    for (const id of Object.values(G.loadout(S).equipment || {})) { const r = G.invRow(S, id), it = r && D.ITEMS[r.item]; if (it?.aenchant) for (const e of [it.aenchant, ...(it.aenchant.more || [])]) if (!e.key.startsWith("dae:")) out.push({ name: e.name, mag: e.mag, key: e.key, from: it.name }); }   // masks carry several
     return out;
   }
   const FX_UNIT = (key) => key.startsWith("dmg:") ? "% damage" : key.startsWith("spell:") ? "% stronger spells" : key === "barter" ? "% better prices" : key === "resist" ? "% resist magic" : key === "carry" ? " carry weight" : key.startsWith("max:") ? " " + key.slice(4) : key.startsWith("skill:") ? " skill" : key.startsWith("cost:") ? "% cheaper" : key.startsWith("regen:") ? "% faster regen" : "";
   const fxLabel = (g) => ["immune", "konahrik"].includes(g.key) ? g.name : `${g.name} +${g.mag}${FX_UNIT(g.key)}`;
   function boost(sk) {
-    const add = G.skill(S, sk) - S.skills[sk].lvl, dmg = G.fxSum(S, "dmg:" + sk), spell = G.fxSum(S, "spell:" + sk);
-    const bits = [add ? `+${add} from gear/potions` : "", dmg ? `+${dmg}% damage` : "", spell ? `+${spell}% stronger spells` : ""].filter(Boolean);
-    return { add, lvl: S.skills[sk].lvl + add, any: bits.length > 0, text: bits.join(" · ") };
+    const leg = typeof LEGEND !== "undefined" ? LEGEND.bonus(S, sk) : 0;
+    const add = G.skill(S, sk) - S.skills[sk].lvl - leg, dmg = G.fxSum(S, "dmg:" + sk), spell = G.fxSum(S, "spell:" + sk);
+    const bits = [add ? `+${add} from gear/potions` : "", leg ? `+${leg} Legendary` : "", dmg ? `+${dmg}% damage` : "", spell ? `+${spell}% stronger spells` : ""].filter(Boolean);
+    return { add: add + leg, lvl: S.skills[sk].lvl + add + leg, any: bits.length > 0, text: bits.join(" · ") };
   }
   const skillNum = (sk) => { const b = boost(sk); return `${b.lvl}${b.any ? `<span class="boost" title="${esc(b.text)}">▲</span>` : ""}`; };
   // ---- what a skill does and how to raise it (skillinfo.js)
   function skillInfoHTML(sk) {
     const i = SKILLINFO.get(S, sk); if (!i) return "";
     return `<div class="sinfo"><p class="sinfo-what">${UIART.skill(sk, 36)}<span>${esc(i.what)}</span></p>${i.now.length ? `<h4>What your level gives</h4><ul>${i.now.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>` : ""}
-      <h4>How to raise it</h4><ul>${i.raise.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>${i.perks ? `<p class="sub">Perks (level needed): ${esc(i.perks)}</p>` : ""}</div>`;
+      <h4>How to raise it</h4><ul>${i.raise.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>${i.perks ? `<p class="sub">Perks (level needed): ${esc(i.perks)}</p>` : ""}${legendHTML(sk)}</div>`;
+  }
+  /* Legendary skills (legendary.js): at 100, start the skill again for a permanent star */
+  let legendArm = null;
+  function legendHTML(sk) {
+    if (typeof LEGEND === "undefined") return "";
+    const r = LEGEND.row(S, sk), st = r.stars ? `<p class="sub leg-st"><b class="leg-stars">${LEGEND.starText(r.stars)}</b> Legendary ${r.stars}× · +${r.bonus} to ${esc(sk)} for good</p>` : "";
+    if (!r.ready) return st + (r.lvl >= 80 ? `<p class="sub">At 100 you can make ${esc(sk)} Legendary: it starts again from ${LEGEND.START}, keeps your perks and gives +${LEGEND.BONUS_PER_STAR} for good.</p>` : "");
+    const armed = legendArm === sk;
+    return `${st}<div class="leg-box"><p><b>${esc(sk)} is at 100.</b> Make it Legendary: it drops to ${LEGEND.START} and grows again (so your level keeps rising), you keep your perks, and you get +${LEGEND.BONUS_PER_STAR} ${esc(sk)} for good${r.bonus >= LEGEND.MAX_BONUS ? " (bonus already at its most: a star for show)" : ""}.</p>
+      <button class="btn ${armed ? "danger" : "pri"}" data-act="legend" data-id="${esc(sk)}">${armed ? `Yes, reset ${esc(sk)} to ${LEGEND.START}` : "⭐ Make Legendary"}</button>${armed ? ` <button class="btn" data-act="legendno">Not now</button>` : ""}</div>`;
+  }
+  /* a clear view of where your levels stand (top of the Character screen) */
+  function progressPanel() {
+    if (typeof LEGEND === "undefined") return "";
+    const p = LEGEND.progress(S);
+    const near = p.closest.map((r) => `<button class="item prog-row" data-act="skinfo" data-id="${esc(r.sk)}">${UIART.skill(r.sk, 24)}<div class="t">${esc(r.sk)} ${r.lvl} → ${r.lvl + 1}<span><span class="bar"><i style="width:${r.pct}%;background:var(--frost)"></i></span>${r.pct}% there</span></div></button>`).join("");
+    const ready = p.ready.length ? `<p class="sub leg-ready">⭐ Ready to make Legendary: ${p.ready.map((r) => `<button class="linkbtn" data-act="skinfo" data-id="${esc(r.sk)}">${esc(r.sk)}</button>`).join(", ")}</p>` : "";
+    return `<div class="panel prog-panel"><h2>Progress</h2>
+      <p class="sub">Level ${p.level} · ${p.charPct}% to level ${p.level + 1}. Every skill point you gain moves this bar (higher skills move it more), so every skill counts.</p>
+      <div class="bar"><i style="width:${p.charPct}%;background:var(--gold)"></i></div>
+      <p class="sub" style="margin-top:8px">Perk points to spend: <b>${PERKS.pointsLeft(S)}</b>${p.stars ? ` · Legendary stars: <b class="leg-stars">${p.stars}★</b>` : ""}</p>
+      <p class="sub">Foes match your <b>fighting level ${p.fightLevel}</b>${p.fightLevel < p.level ? ` (lower than your level ${p.level}: crafting, trading and sneaking don't make the road harder)` : ""}. It follows your best weapon or spell skill and your best armor or defence skill, so better gear and skills always win you fights.</p>
+      ${near ? `<h4 style="margin:10px 0 4px">Closest to going up</h4><div class="list">${near}</div>` : ""}${ready}</div>`;
   }
   // ---- skills
   function skillRows() {
@@ -1272,8 +1343,8 @@
     } else {
       const rows = skillRows(); const sel = rows.find((r) => r.id === sky.sel) || null;
       head = `<div class="sky-head sky-cols2"><button data-act="skysort" data-id="name">Skill</button><button data-act="skysort" data-id="lvl">Level</button></div>`;
-      list = rows.map((r) => `<button class="sky-row sky-cols2 ${r.id === sky.sel ? "sel" : ""}" data-act="skysel" data-id="${esc(r.id)}"><span class="nm">${UIART.skill(r.id, 22)} ${esc(r.name)}<span class="bar"><i style="width:${r.prog}%;background:var(--frost)"></i></span></span><span class="num">${r.lvl}${r.bst.any ? '<span class="boost">▲</span>' : ""}</span></button>`).join("");
-      detail = sel ? `<div class="sky-detail"><div class="sky-ico">${UIART.skill(sel.id, 56)}</div><h3>${esc(sel.name)} ${sel.lvl}</h3>${sel.bst.any ? `<p class="sub boost-t">${esc(sel.bst.text)}</p>` : ""}<p class="sub">${sel.prog}% of the way to ${sel.lvl + 1}. ${sel.perks ? `${sel.perks} perk${sel.perks > 1 ? "s" : ""} taken.` : ""} Perk points to spend: ${PERKS.pointsLeft(S)}.</p>${skillInfoHTML(sel.id)}
+      list = rows.map((r) => `<button class="sky-row sky-cols2 ${r.id === sky.sel ? "sel" : ""}" data-act="skysel" data-id="${esc(r.id)}"><span class="nm">${UIART.skill(r.id, 22)} ${esc(r.name)}<span class="bar"><i style="width:${r.prog}%;background:var(--frost)"></i></span></span><span class="num">${typeof LEGEND !== "undefined" && LEGEND.stars(S, r.id) ? `<b class="leg-stars">${LEGEND.stars(S, r.id)}★</b> ` : ""}${r.lvl}${r.bst.any ? '<span class="boost">▲</span>' : ""}</span></button>`).join("");
+      detail = sel ? `<div class="sky-detail"><div class="sky-ico">${UIART.skill(sel.id, 56)}</div><h3>${esc(sel.name)} ${sel.lvl}</h3>${sel.bst.any ? `<p class="sub boost-t">${esc(sel.bst.text)}</p>` : ""}<p class="sub">${S.skills[sel.id].lvl >= 100 ? "At 100: ready to be made Legendary." : `${sel.prog}% of the way to ${sel.lvl + 1}.`} ${sel.perks ? `${sel.perks} perk${sel.perks > 1 ? "s" : ""} taken.` : ""} Perk points to spend: ${PERKS.pointsLeft(S)}.</p>${skillInfoHTML(sel.id)}
         <div class="sky-acts">${PERKS.TREES[sel.id] ? `<button class="btn pri" data-act="skyperks" data-id="${esc(sel.id)}">Perk tree</button>` : ""}</div></div>` : "";
       if (S.pendingLevels > 0) detail = `<div class="sky-detail"><h3>Level up</h3><p class="sub">Choose what grows (+10), like Skyrim.</p><div class="sky-acts"><button class="btn" data-act="lvl" data-a="health">Health</button><button class="btn" data-act="lvl" data-a="magicka">Magicka</button><button class="btn" data-act="lvl" data-a="stamina">Stamina</button></div></div>` + detail;
     }
@@ -1345,7 +1416,7 @@
         n && !here && WORLD.places[n] ? `<button class="btn sm" data-act="go" data-place="${esc(n)}">Travel to ${esc(n)}</button>` : ""].join("");
       return `<div class="item on" style="flex-wrap:wrap">${UIART.quest(a.id, 32)}<div class="t">${esc(a.def.name)} · ${esc(a.st.title)}<span>${esc(a.st.text)}${o.count ? ` (${Math.max(0, ((S.stats || {})[o.count] || 0) - ((a.base || {})[o.count] || 0))}/${o.n})` : ""}${o.check ? ` · ${esc(o.check.skill)} check: ${Math.round(QUESTS.checkChance(S, o.check) * 100)}% chance${o.check.fight ? " (a fight if you're seen)" : o.check.bounty ? " (a bounty if you're seen)" : ""}` : ""}${(a.retryAt || 0) > G.now() ? ` · lie low ${Math.ceil((a.retryAt - G.now()) / 60)} more min` : ""}${rec > 1 ? ` · <b class="qrec" style="color:var(${S.level < rec ? "--hp" : "--gold"})">Recommended level ${rec}</b>` : ""}</span></div>${btns ? `<div style="display:flex;gap:6px;flex-wrap:wrap;width:100%">${btns}</div>` : ""}</div>`;
     }).join("");
-    const avail = QUESTS.list().filter((id) => QUESTS.L[id].start && !(S.quests || {})[id]).map((id) => {
+    const avail = QUESTS.list().filter((id) => QUESTS.L[id].start && !(S.quests || {})[id] && (!QUESTS.visible || QUESTS.visible(S, id))).map((id) => {
       const d = QUESTS.L[id];
       return `<div class="item">${UIART.quest(id, 32)}${NPCART.giver(id, 32)}<div class="t">${esc(d.name)}<span>${QUESTS.canJoin(S, id) ? "They're here. Ask to join." : `Find them at ${esc(d.giver)}.`}</span></div>${QUESTS.canJoin(S, id) ? `<button class="btn sm pri" data-act="qjoin" data-id="${id}">Join</button>` : ""}</div>`;
     }).join("");
@@ -1479,14 +1550,14 @@
     if (tab === "town") bump();
   }
   function marketHTML(l) {
-    const forSale = MARKET.inTown(stalls, l, S.id), own = MARKET.mine(stalls, S.id), hereOwn = own.filter((d) => d.town === l), house = (S.homes || {})[l];
-    const row = (d, btn) => `<div class="item">${ICONART.item(d.row.item, 34, d.row)}<div class="t">${esc(MARKET.itemName(d.row))}${d.row.qty > 1 ? ` ×${d.row.qty}` : ""}<span>${btn === "buy" ? `${esc(d.sellerName)}'s stall · ${esc(G.itemStats(d.row.item))}` : "on your stall"}</span></div><span class="num gold">${d.price}</span>${btn === "buy" ? `<button class="btn sm pri" data-act="mbuy" data-id="${esc(d.id)}" ${S.gold >= d.price ? "" : "disabled"}>Buy</button>` : `<button class="btn sm" data-act="mpull" data-id="${esc(d.id)}">Take back</button>`}</div>`;
+    const forSale = MARKET.inTown(stalls, l, S.id), own = MARKET.mine(stalls, S.id), hereOwn = own.filter((d) => d.town === l), house = (S.homes || {})[l] || MARKET.hallShop(S, l);
+    const row = (d, btn) => `<div class="item">${ICONART.item(d.row.item, 34, d.row)}<div class="t">${esc(MARKET.itemName(d.row))}${d.row.qty > 1 ? ` ×${d.row.qty}` : ""}<span>${btn === "buy" ? `${d.hall ? `🏰 ${esc(d.hallName || d.sellerName + "'s hall")}` : `${esc(d.sellerName)}'s stall`} · ${esc(G.itemStats(d.row.item))}` : d.hall ? "on your hall counter" : "on your stall"}</span></div><span class="num gold">${d.price}</span>${btn === "buy" ? `<button class="btn sm pri" data-act="mbuy" data-id="${esc(d.id)}" ${S.gold >= d.price ? "" : "disabled"}>Buy</button>` : `<button class="btn sm" data-act="mpull" data-id="${esc(d.id)}">Take back</button>`}</div>`;
     let h = `<h3>For sale here</h3>${forSale.length ? forSale.map((d) => row(d, "buy")).join("") : `<p class="sub">No player stalls in ${esc(l)} right now.</p>`}`;
-    if (!house) return h + `<p class="sub" style="margin-top:10px">Own a house in ${esc(l)} to run your own stall here.</p>`;
+    if (!house) return h + `<p class="sub" style="margin-top:10px">Own a house in ${esc(l)}, or a hall here with a shop counter, to run your own stall.</p>`;
     const eq = new Set(Object.values(G.loadout(S).equipment || {}));
     const pack = S.inv.filter((r) => !eq.has(r.id) && !r.stolen && D.ITEMS[r.item]).slice(0, 40);
     const pick = pack.find((r) => r.id === stallPick);
-    h += `<h3 style="margin-top:12px">Your stall · ${own.length}/${MARKET.MAX_LISTINGS}</h3>${hereOwn.length ? hereOwn.map((d) => row(d, "pull")).join("") : `<p class="sub">Nothing on your stall here.</p>`}
+    h += `<h3 style="margin-top:12px">Your stall · ${own.length}/${MARKET.capFor(S)}</h3>${hereOwn.length ? hereOwn.map((d) => row(d, "pull")).join("") : `<p class="sub">Nothing on your stall here.</p>`}
       <p class="sub">Things on your stall sell even while you're away; your game collects the gold next time it's open. The market keeps ${Math.round(MARKET.FEE * 100)}%.</p>
       ${pick ? `<div class="card"><h3>${esc(MARKET.itemName(pick))}${pick.qty > 1 ? ` ×${pick.qty}` : ""}</h3><div class="chatrow"><input id="mprice" inputmode="numeric" value="${MARKET.suggest(pick)}" aria-label="Price in gold"><button class="btn pri" data-act="mlist">Put on stall</button><button class="btn" data-act="mpick" data-id="">Cancel</button></div><p class="sub" style="margin:4px 0 0">Price for all of it, in gold. A shop would pay you about ${G.sellPrice(S, pick) * pick.qty}.</p></div>`
         : `<details><summary class="sub" style="cursor:pointer;min-height:36px">Put something on your stall</summary>${pack.map((r) => `<div class="item"><div class="t">${esc(MARKET.itemName(r))}${r.qty > 1 ? ` ×${r.qty}` : ""}</div><button class="btn sm" data-act="mpick" data-id="${r.id}">Choose</button></div>`).join("")}</details>`}`;
@@ -1498,6 +1569,135 @@
     if (out.err) return toast(out.err);
     if (!out.text) return toast("Someone bought it first.");
     persist(true); SOUND.fx("coin"); toast(out.text); renderPanel(true);
+  }
+
+  // ------------------------------------------------------------ player halls, shops and guild halls (halls.js)
+  let hallDocs = [], lastHallJson = null, hallView = null, hallLast = 0, hallTab = "rooms";
+  const clanHall = () => { const c = myClan(); return c ? HALLS.clanHallOf(hallDocs, c.id) : null; };
+  function onHalls(docs) {
+    hallDocs = docs.filter((d) => d && d.town && d.name);
+    HALLS.setClanHall(clanHall());
+    if (tab === "town") bump();
+  }
+  function publishHall() {
+    if (!Store.online) return;
+    const rec = HALLS.card(S), json = JSON.stringify(rec);
+    if (json === lastHallJson) return;
+    lastHallJson = json;
+    if (rec) Store.put("halls", S.id, { ...rec, t: G.now() }); else Store.remove("halls", S.id);
+  }
+  /* every half minute: wages, the steward, thieves, travellers buying from your counter, the guild hall's day */
+  function hallTick(t) {
+    if (t - hallLast < 30) return; hallLast = t;
+    if (S.hall) {
+      const msgs = HALLS.settle(S.hall, t);
+      HALLS.refreshTrophies(S, t);
+      const sell = HALLS.travellerBuys(S, stalls, t);
+      for (const id of sell) Store.change("stalls", id, (d) => (d.status === "open" && d.seller === S.id ? { ...d, status: "sold", buyer: "npc", buyerName: "A traveller", soldAt: G.now() } : d));
+      if (msgs.length || sell.length) { persist(true); msgs.forEach((m) => toast(m)); }
+    }
+    const ch = clanHall();
+    if (ch && HALLS.canUse(S, ch) && Math.floor(t / HALLS.DAY) > Math.floor((ch.paid || t) / HALLS.DAY))
+      Store.change("halls", ch.id, (d) => { HALLS.settle(d, t); return d; });
+  }
+  /* run a change on a hall: your own (in the save) or the guild's (shared, under a lease) */
+  async function hallDo(clan, fn) {
+    if (!clan) { if (!S.hall) return toast("You don't have a hall."); const r = fn(S.hall, { s: S }); if (r.err) return toast(r.err); persist(true); toast(r.text); renderPanel(true); return; }
+    const ch = clanHall(); if (!ch) return toast("Your clan has no hall.");
+    let out = null;
+    const res = await Store.change("halls", ch.id, (d) => { const h = { ...d }; HALLS.settle(h); out = fn(h, { h }); return out.err ? d : h; });
+    if (!res && !out) return toast("Someone else is changing the hall. Try again.");
+    if (out?.err) return toast(out.err);
+    persist(true); if (out?.text) toast(out.text); renderPanel(true);
+  }
+  const hallPurseFor = (clan) => (clan ? "guild funds" : "your gold and pack");
+  function hallCostText(room, level, clan) {
+    const c = HALLS.cost(room, level, clan); if (!c) return "";
+    return [`${c.gold.toLocaleString()} gold`, ...Object.entries(c.mats).map(([m, n]) => `${D.ITEMS[m]?.name || m} ×${n}`)].join(" · ");
+  }
+  function hallManageHTML(h, clan) {
+    const own = !clan || h.founder === S.id, c = clan ? "1" : "", purse = clan ? { h } : { s: S }, here = S.location === h.town;
+    const tabs = [["rooms", "Rooms"], ["decor", "Decor"], ["staff", "Staff"], ["store", clan ? "Storage" : "Storage & trophies"], ...(clan ? [] : [["shop", "Shop"]]), ["log", clan ? "Members" : "Coffer"]];
+    if (!tabs.some(([k]) => k === hallTab)) hallTab = "rooms";
+    let b = "";
+    if (hallTab === "rooms") {
+      b = (clan ? HALLS.CLAN_ROOMS : Object.keys(HALLS.ROOMS)).map((id) => {
+        const [nm, desc] = HALLS.ROOMS[id], L = HALLS.lvl(h, id), next = L + 1, e = next <= 2 ? HALLS.canPay(purse, HALLS.cost(id, next, clan).gold, HALLS.cost(id, next, clan).mats) : "done";
+        return `<div class="item ${L ? "on" : ""}"><div class="t">${L ? "✔" : "○"} ${esc(nm)}${L ? ` · level ${L}` : ""}<span>${esc(desc)}${next <= 2 ? `<br>${L ? "Improve" : "Build"}: ${esc(hallCostText(id, next, clan))}` : ""}</span></div>${next <= 2 ? `<button class="btn sm ${e ? "" : "pri"}" data-act="hbuild" data-id="${id}" data-c="${c}" ${e || !here || !own ? "disabled" : ""} title="${esc(e || "")}">${L ? "Improve" : "Build"}</button>` : ""}</div>`;
+      }).join("") + (clan ? `<p class="sub">Guild halls pay for everything from the guild funds (materials are bought in gold). Only the founder builds; any member can give gold.</p>` : `<p class="sub">Materials come from your pack: ingots from the forge, leather, firewood. Mines and blacksmiths have them.</p>`);
+      b += `<div class="item"><div class="t">The hearth<span>Rest here for free. Comfort ${HALLS.comfort(h)}/${HALLS.COSY}: ${HALLS.comfort(h) >= HALLS.COSY ? "Well Rested (+10% skills)" : "Rested (+5%); decorate for Well Rested"}</span></div><button class="btn sm pri" data-act="hrest" data-c="${c}" ${here ? "" : "disabled"}>Rest</button></div>`;
+      if (HALLS.lvl(h, "shrine")) b += `<div class="item"><div class="t">The shrine<span>Once a day: +${HALLS.lvl(h, "shrine") >= 2 ? 50 : 25} health for a day, diseases cured</span></div><button class="btn sm" data-act="hpray" data-c="${c}" ${here ? "" : "disabled"}>Pray</button></div>`;
+      if (HALLS.lvl(h, "forge")) b += `<div class="item"><div class="t">The forge<span>Smithing improves ${HALLS.lvl(h, "forge") * 10}% faster here</span></div><button class="btn sm" data-act="shop" data-id="forge" ${here ? "" : "disabled"}>Use</button></div>`;
+    } else if (hallTab === "decor") {
+      b = `<p class="sub" style="margin-top:0">${(h.decor || []).length}/${HALLS.decorCap(h)} spaces · each room built gives one more.</p>` + Object.entries(HALLS.DECOR).map(([id, [nm, price, cf]]) => {
+        const has = (h.decor || []).includes(id), e = HALLS.canPay(purse, price);
+        return `<div class="item ${has ? "on" : ""}"><div class="t">${has ? "✔ " : ""}${esc(nm)}<span>+${cf} comfort</span></div>${has ? (own ? `<button class="btn sm" data-act="hundecor" data-id="${id}" data-c="${c}">Take down</button>` : "") : `<span class="num gold">${price}</span><button class="btn sm" data-act="hdecor" data-id="${id}" data-c="${c}" ${e || !here || !own || (h.decor || []).length >= HALLS.decorCap(h) ? "disabled" : ""}>Put up</button>`}</div>`;
+      }).join("");
+    } else if (hallTab === "staff") {
+      b = `<p class="sub" style="margin-top:0">Wages come out of the ${clan ? "guild funds" : "coffer"} once an in-game day (every 2 real hours): ${HALLS.wages(h)} gold a day now. Unpaid staff leave.</p>` + (clan ? HALLS.CLAN_STAFF : Object.keys(HALLS.STAFF)).map((id) => {
+        const [nm, fee, wage, need, desc] = HALLS.STAFF[id], has = (h.staff || {})[id], e = HALLS.canPay(purse, fee) || (need && !HALLS.lvl(h, need) ? `Build the ${HALLS.ROOMS[need][0].toLowerCase()} first.` : null);
+        return `<div class="item ${has ? "on" : ""}">${typeof HOMEART !== "undefined" ? "" : ""}<div class="t">${has ? "✔ " : ""}${esc(nm)}<span>${esc(desc)} · ${wage} gold a day</span></div>${has ? (own ? `<button class="btn sm" data-act="hfire" data-id="${id}" data-c="${c}">Let go</button>` : "") : `<span class="num gold">${fee}</span><button class="btn sm" data-act="hhire" data-id="${id}" data-c="${c}" ${e || !here || !own ? "disabled" : ""} title="${esc(e || "")}">Hire</button>`}</div>`;
+      }).join("");
+    } else if (hallTab === "store") {
+      const eq = new Set(Object.values(G.loadout(S).equipment || {})), pack = S.inv.filter((r) => !eq.has(r.id) && D.ITEMS[r.item] && !(clan && (r.stolen || D.ITEMS[r.item].noTrade)));
+      const left = clan && h.founder !== S.id ? HALLS.CLAN_TAKES_PER_DAY - ((h.takes?.[S.id]?.day === Math.floor(G.now() / HALLS.DAY)) ? h.takes[S.id].n : 0) : null;
+      b = HALLS.cap(h) ? `<h3 style="margin-top:0">Storage · ${(h.storage || []).length}/${HALLS.cap(h)}${h.staff?.guard ? " · guarded" : " · no guard"}</h3>${left != null ? `<p class="sub" style="margin-top:0">You can take ${left} more today.</p>` : ""}
+        ${(h.storage || []).length ? h.storage.map((r, i) => `<div class="item">${ICONART.item(r.item, 30, r)}<div class="t">${esc(HALLS.name(r))}${r.qty > 1 ? ` ×${r.qty}` : ""}<span>${clan ? `from ${esc(r.by || "someone")}` : esc(G.itemStats(r.item))}</span></div><button class="btn sm" data-act="hunstash" data-id="${i}" data-c="${c}" ${here && left !== 0 ? "" : "disabled"}>Take</button></div>`).join("") : `<p class="sub">Empty.</p>`}
+        <details><summary class="sub" style="cursor:pointer;min-height:36px">Put something in</summary>${pack.length ? pack.slice(0, 40).map((r) => `<div class="item"><div class="t">${esc(HALLS.name(r))}${r.qty > 1 ? ` ×${r.qty}` : ""}</div><button class="btn sm" data-act="hstash" data-id="${r.id}" data-c="${c}" ${here ? "" : "disabled"}>Store</button></div>`).join("") : `<p class="sub">Nothing loose to store.</p>`}</details>` : `<p class="sub">Build storage to keep things here.</p>`;
+      if (HALLS.trophyCap(h)) {
+        const tro = pack.filter(HALLS.trophyOk);
+        b += `<h3 style="margin-top:12px">Trophy wall · ${(h.trophies || []).length}/${HALLS.trophyCap(h)}${clan ? "" : ` · +${Math.min(HALLS.trophyCap(h), (h.trophies || []).length)}% better prices`}</h3>${(h.trophies || []).map((r, i) => `<div class="item">${ICONART.item(r.item, 30, r)}<div class="t">${esc(HALLS.name(r))}<span>put up by ${esc(r.by || "you")}</span></div>${own ? `<button class="btn sm" data-act="hunmount" data-id="${i}" data-c="${c}" ${here ? "" : "disabled"}>Take down</button>` : ""}</div>`).join("") || `<p class="sub">Nothing on the wall yet.</p>`}
+          ${tro.length ? tro.map((r) => `<div class="item"><div class="t">${esc(HALLS.name(r))}</div><button class="btn sm" data-act="hmount" data-id="${r.id}" data-c="${c}" ${here ? "" : "disabled"}>Mount</button></div>`).join("") : `<p class="sub">Dragon bones, scales, golden claws and treasures from the road go on the wall.</p>`}`;
+      }
+    } else if (hallTab === "shop") {
+      const open = MARKET.mine(stalls, S.id).filter((d) => d.town === h.town && d.hall);
+      b = HALLS.lvl(h, "counter") ? `<p class="sub" style="margin-top:0">List things from the Market stalls in ${esc(h.town)}: up to ${MARKET.capFor(S)}, and the market keeps only ${Math.round(HALLS.HALL_FEE * 100)}% (stalls pay ${Math.round(MARKET.FEE * 100)}%). ${h.staff?.shopkeeper ? `Your shopkeeper sells up to ${2 * HALLS.lvl(h, "counter")} a day to travellers when the price is fair (no more than about 1.25× value).` : "Hire a shopkeeper and travellers will buy from you too."}</p>
+        ${open.length ? open.map((d) => `<div class="item">${ICONART.item(d.row.item, 30, d.row)}<div class="t">${esc(MARKET.itemName(d.row))}${d.row.qty > 1 ? ` ×${d.row.qty}` : ""}<span>${d.price <= (D.ITEMS[d.row.item].value || 1) * d.row.qty ? "Fair price: sells quickly" : d.price <= (D.ITEMS[d.row.item].value || 1) * d.row.qty * 1.25 ? "A bit high: sells slowly" : "Too dear for travellers; only players"}</span></div><span class="num gold">${d.price}</span></div>`).join("") : `<p class="sub">Nothing on your counter yet.</p>`}
+        <button class="btn pri" data-act="shop" data-id="market" style="width:100%;margin-top:6px" ${here ? "" : "disabled"}>Open the Market stalls</button>` : `<p class="sub">Build a shop counter to sell from your hall.</p>`;
+    } else if (hallTab === "log") {
+      if (clan) {
+        const donors = Object.values(h.donors || {}).sort((a, b) => b.gold - a.gold);
+        b = `<div class="item"><div class="t">Guild funds<span>${(h.funds || 0).toLocaleString()} gold · wages ${HALLS.wages(h)} a day</span></div></div>
+          <div class="chips">${[100, 500, 1000, 5000].map((n) => `<button class="chip" data-act="hdep" data-id="${n}" data-c="1" ${S.gold >= n ? "" : "disabled"}>Give ${n}</button>`).join("")}</div>
+          <h3 style="margin-top:12px">Who gave</h3>${donors.length ? donors.slice(0, 12).map((d) => `<div class="item"><div class="t">${esc(d.name)}</div><span class="num gold">${d.gold.toLocaleString()}</span></div>`).join("") : `<p class="sub">Nobody yet.</p>`}`;
+      } else {
+        b = `<div class="item"><div class="t">The coffer<span>${(h.coffer || 0).toLocaleString()} gold · wages ${HALLS.wages(h)} a day${h.staff?.steward ? ` · steward brings ${10 * HALLS.roomCount(h)} a day` : ""}</span></div></div>
+          <div class="chips">${[100, 500, 1000].map((n) => `<button class="chip" data-act="hdep" data-id="${n}" ${S.gold >= n ? "" : "disabled"}>Put in ${n}</button>`).join("")}${(h.coffer || 0) > 0 ? `<button class="chip" data-act="hwd" data-id="${h.coffer}">Take all</button>` : ""}</div>`;
+      }
+      b += `<h3 style="margin-top:12px">Lately</h3>${(h.log || []).length ? h.log.map((l) => `<p class="sub" style="margin:2px 0">${esc(l)}</p>`).join("") : `<p class="sub">Quiet.</p>`}`;
+    }
+    return `${typeof HOMEART !== "undefined" ? HOMEART.guild(h) : ""}<div class="card"><h3>${clan ? `🏴 ${esc(h.name)} [${esc(h.tag || "")}]` : `🏰 ${esc(h.name)}`}</h3><p class="sub" style="margin:0">${esc(h.town)} · ${HALLS.roomCount(h)} room${HALLS.roomCount(h) === 1 ? "" : "s"} · ${clan ? `funds ${(h.funds || 0).toLocaleString()}` : `coffer ${(h.coffer || 0).toLocaleString()}`} gold${here ? "" : ` · you're away (${esc(S.location || "on the road")})`}</p></div>
+      <div class="chips hallnav">${tabs.map(([k, n]) => `<button class="chip ${k === hallTab ? "on" : ""}" data-act="htab" data-id="${k}">${n}</button>`).join("")}</div><div class="list">${b}</div>`;
+  }
+  function hallsHTML(l) {
+    if (hallView) {
+      const d = hallDocs.find((x) => x.id === hallView);
+      if (d) return `<button class="btn sm" data-act="hback">← Back</button>${typeof HOMEART !== "undefined" ? HOMEART.guild(d) : ""}<div class="card"><h3>${d.clan ? "🏴" : "🏰"} ${esc(d.name)}</h3><p class="sub" style="margin:0">${d.clan ? `Guild hall of ${esc(d.clanName || "a clan")}` : `${esc(d.ownerName)}'s hall · level ${d.level || 1}`}</p></div>
+        <div class="list">${Object.entries(d.rooms || {}).filter(([, v]) => v).map(([k, v]) => `<div class="item"><div class="t">${esc(HALLS.ROOMS[k]?.[0] || k)}${v > 1 ? " · level 2" : ""}</div></div>`).join("") || `<p class="sub">Bare walls and a hearth, for now.</p>`}
+        ${(d.trophies || []).length ? `<h3 style="margin-top:10px">On the trophy wall</h3><p class="sub">${d.trophies.map((t) => esc(D.ITEMS[typeof t === "string" ? t : t.item]?.name || "")).filter(Boolean).join(", ")}</p>` : ""}
+        ${d.shop ? `<button class="btn pri" data-act="shop" data-id="market" style="width:100%;margin-top:6px">See ${esc(d.ownerName)}'s shop in the Market stalls</button>` : ""}</div>`;
+      hallView = null;
+    }
+    let h = "";
+    const mine = S.hall, c = myClan(), ch = clanHall();
+    if (mine && mine.town === l) h += hallManageHTML(mine, false);
+    else if (mine) h += `<div class="item"><div class="t">🏰 ${esc(mine.name)}<span>Your hall is in ${esc(mine.town)} · coffer ${(mine.coffer || 0).toLocaleString()} gold</span></div></div>`;
+    else if (HALLS.plotHere(l)) h += `<div class="card"><h3>Buy a hall plot in ${esc(l)}</h3><p class="sub">Your own hall: build a forge, a shrine, a trophy room, storage and a shop counter; decorate it; hire a shopkeeper, a steward and a guard.</p>
+      <div class="chatrow"><input id="hname" maxlength="28" placeholder="${esc(S.name)}'s Hall" autocomplete="off" aria-label="Hall name"><button class="btn pri" data-act="hplot" ${S.gold >= HALLS.plotPrice(l) ? "" : "disabled"}>Buy · ${HALLS.plotPrice(l).toLocaleString()}</button></div></div>`;
+    if (c && ch && ch.town === l) h += `<h3 style="margin-top:14px">Your guild hall</h3>` + hallManageHTML(ch, true);
+    else if (c && ch) h += `<div class="item"><div class="t">🏴 ${esc(ch.name)}<span>Your clan's hall is in ${esc(ch.town)}</span></div></div>`;
+    else if (c && c.founder === S.id && HALLS.plotHere(l)) h += `<div class="card"><h3>Raise a guild hall for ${esc(c.name)}</h3><p class="sub">One hall for the whole clan: shared storage, a forge and a shrine for every member. Members give gold to build it.</p>
+      <div class="chatrow"><input id="chname" maxlength="28" placeholder="Hall of ${esc(c.name)}" autocomplete="off" aria-label="Guild hall name"><button class="btn pri" data-act="hclanplot" ${S.gold >= HALLS.plotPrice(l, true) ? "" : "disabled"}>Buy · ${HALLS.plotPrice(l, true).toLocaleString()}</button></div></div>`;
+    else if (c && !ch) h += `<p class="sub" style="margin-top:10px">Your clan has no guild hall yet. The founder can buy one in a hold capital.</p>`;
+    const others = hallDocs.filter((d) => d.town === l && d.id !== S.id && !(ch && d.id === ch.id));
+    h += `<h3 style="margin-top:14px">Other halls in ${esc(l)}</h3>${others.length ? others.map((d) => `<div class="item"><div class="t">${d.clan ? "🏴" : "🏰"} ${esc(d.name)}<span>${d.clan ? `Guild hall · ${esc(d.clanName || "")}` : `${esc(d.ownerName)} · ${HALLS.roomCount(d)} rooms${d.shop ? " · has a shop" : ""}`}</span></div><button class="btn sm" data-act="hvisit" data-id="${esc(d.id)}">Visit</button></div>`).join("") : `<p class="sub">None yet${Store.online ? "" : " (or you're playing offline)"}.</p>`}`;
+    return h;
+  }
+  async function clanPlot() {
+    const c = myClan(), r = HALLS.foundClanHall(S, c, $("#chname")?.value, clanHall());
+    if (r.err) return toast(r.err);
+    await Store.put("halls", r.id, r.doc); hallDocs.push({ ...r.doc, id: r.id }); HALLS.setClanHall(clanHall());
+    persist(true); toast(r.text); renderPanel(true);
   }
 
   // ------------------------------------------------------------ werewolf and vampire
@@ -1962,6 +2162,7 @@
       const id = S.trip.caravan, mates = guardDocs.filter((g) => g.caravanId === id && g.uid !== S.id && g.status !== "left");
       return [...mates.map((g) => MP.allyFromCard(cardOf(g.uid) || { name: g.name, dmg: 4 + (g.level || 1) * 0.6 })), { name: "Caravan guard", dmg: 4 + S.level * 0.3 }, { name: "Caravan guard", dmg: 4 + S.level * 0.3 }];
     }
+    if (S.dungeon?.run && coopUI) return coopUI.allies();   // a co-op run: whoever is in your room
     if (!party) return [];
     const me = livePos();
     return others.filter((o) => party.members.some((m) => m.id === o.id) && (S.dungeon ? o.dungeon === S.dungeon.place : (!o.dungeon && G.pxDist(otherPos(o), me) <= MP.NEAR_PX)))
@@ -2089,7 +2290,7 @@
     const places = Object.keys(WORLD.places).filter((n) => known(n) && n !== S.location && n.toLowerCase().includes(searchText.toLowerCase()))
       .map((n) => ({ n, d: G.pxDist(here, WORLD.places[n]) })).sort((a, b) => a.d - b.d);
     const bag = myBag();
-    return `${placeHere()}<div class="panel"><h2>Where to?</h2><p class="sub">Tap a place on the map or pick one below. 🧭 Or tap anywhere else on the map to roam there, off the roads. You'll follow roads where they help: they're fast, while marsh, snow and mountains are slow. New places appear as you pass near them.</p>
+    return `${placeHere()}${typeof EXPLORE !== "undefined" ? EXPLORE.placeCard(S) : ""}<div class="panel"><h2>Where to?</h2><p class="sub">Tap a place on the map or pick one below. 🧭 Or tap anywhere else on the map to roam there, off the roads. You'll follow roads where they help: they're fast, while marsh, snow and mountains are slow. New places appear as you pass near them.</p>
       <input id="search" placeholder="Search places" value="${esc(searchText)}" autocomplete="off" aria-label="Search places">
       <div class="list">${bag ? `<div class="item on"><div class="t">🎒 Your lost bag<span>${bag.gold} gold · ${Math.max(0, Math.floor((bag.expires - G.now()) / 60))} min left before it's fair game</span></div><button class="btn pri sm" data-act="go" data-place="__bag">Go</button></div>` : ""}
       ${places.slice(0, 40).map(({ n, d }) => { const k = WORLD.places[n][2]; return `<div class="item"><div class="t">${esc(n)}<span>${KIND[k]} · ${esc(G.holdAt(WORLD.places[n]))}${S.discovered.includes(n) ? "" : " · unvisited"}${(() => { const lf = DUNGEONS.enterable(n) ? DUNGEONS.refillLeft(S, n) : 0; return lf ? ` · 🔒 opens in ${cdSpan(G.now() + lf)}` : ""; })()}</span></div><span class="num sub">${d * 1.1 / G.speed(S) < 1 ? "" : "~"}${fmtMin(d * 1.1 / G.speed(S))}</span><button class="btn sm" data-act="go" data-place="${esc(n)}">Go</button></div>`; }).join("") || `<p class="sub">No places match.</p>`}</div>
@@ -2103,7 +2304,7 @@
     const groups = Object.entries(D.SKILL_GROUPS).map(([g, list]) => `<h3 style="margin-top:14px">${esc(g)}</h3><div class="skills">${list.map((sk) => {
       const s = S.skills[sk], n = F.skillXpNeeded(sk, s.lvl);
       const bs = boost(sk);
-      return `<button class="skill ${heroSkill === sk ? "on" : ""}" data-act="skinfo" data-id="${esc(sk)}" aria-expanded="${heroSkill === sk}"><small><span>${UIART.skill(sk, 20)} ${esc(sk)} <i class="sk-i">ⓘ</i></span><b class="num">${skillNum(sk)}</b></small><div class="bar"><i style="width:${pct(s.xp, n)}%;background:var(--frost)"></i></div>${bs.any ? `<small class="boost-t">${esc(bs.text)}</small>` : ""}</button>${heroSkill === sk ? `<div class="skcard">${skillInfoHTML(sk)}</div>` : ""}`;
+      return `<button class="skill ${heroSkill === sk ? "on" : ""}" data-act="skinfo" data-id="${esc(sk)}" aria-expanded="${heroSkill === sk}"><small><span>${UIART.skill(sk, 20)} ${esc(sk)}${typeof LEGEND !== "undefined" && LEGEND.stars(S, sk) ? ` <b class="leg-stars">${LEGEND.starText(LEGEND.stars(S, sk))}</b>` : ""} <i class="sk-i">ⓘ</i></span><b class="num">${skillNum(sk)}</b></small><div class="bar"><i style="width:${pct(s.xp, n)}%;background:var(--frost)"></i></div>${bs.any ? `<small class="boost-t">${esc(bs.text)}</small>` : ""}</button>${heroSkill === sk ? `<div class="skcard">${skillInfoHTML(sk)}</div>` : ""}`;
     }).join("")}</div>`).join("");
     const pts = PERKS.pointsLeft(S);
     const skillsWithPerks = Object.keys(PERKS.TREES);
@@ -2134,7 +2335,7 @@
       ${shoutRows || `<p class="sub">No Words of Power yet. Word Walls wait at the end of Nordic barrows (Bleak Falls Barrow has one), and the Greybeards at High Hrothgar teach Unrelenting Force.</p>`}</div>
       <p class="sub" style="margin-top:8px">Dragon souls: <b>${S.souls || 0}</b>${S.dragons ? ` · dragons slain: ${S.dragons}` : ""}. Kill a dragon to absorb its soul; each soul unlocks one word.${!POWERS.voiceReady(S) ? ` Your voice recovers in ${Math.ceil(S.voiceAt - tnow)} s.` : ""}</p></div>`;
     const amN = typeof AMMO !== "undefined" ? AMMO.status(S) : null;
-    return `${lvl}${amN && !amN.best ? `<div class="panel" style="border-color:var(--ember)">${ammoNote()}</div>` : ""}${effects}${powersHtml}<div class="panel"><h2>${esc(S.name)}</h2><div class="herobox">${HEROART.figure(S, 160, 220)}</div>${amN?.best ? ammoNote() : ""}${(S.titles || []).length ? `<p class="sub" style="text-align:center;color:var(--gold)">${S.titles.map(esc).join(" · ")}</p>` : ""}<p class="sub">Level ${S.level} ${esc(D.RACES[S.race].name)} · ${esc(D.RACES[S.race].desc)}</p><p class="sub">📍 Places discovered: <b>${placesFound().got}</b> of ${placesFound().all}</p>
+    return `${lvl}${progressPanel()}${amN && !amN.best ? `<div class="panel" style="border-color:var(--ember)">${ammoNote()}</div>` : ""}${effects}${powersHtml}<div class="panel"><h2>${esc(S.name)}</h2><div class="herobox">${HEROART.figure(S, 160, 220)}</div>${amN?.best ? ammoNote() : ""}${(S.titles || []).length ? `<p class="sub" style="text-align:center;color:var(--gold)">${S.titles.map(esc).join(" · ")}</p>` : ""}<p class="sub">Level ${S.level} ${esc(D.RACES[S.race].name)} · ${esc(D.RACES[S.race].desc)}</p><p class="sub">📍 Places discovered: <b>${placesFound().got}</b> of ${placesFound().all}</p>
       <div class="bar" style="margin-top:8px"><i style="width:${pct(S.charXp, need)}%;background:var(--gold)"></i></div><p class="sub num">${Math.round(S.charXp)}/${need} toward level ${S.level + 1}</p>
       <div class="grid2" style="grid-template-columns:repeat(3,minmax(0,1fr));margin-top:8px">
         <div class="slot">Health<b class="num" style="display:block">${G.maxHealth(S)}</b></div><div class="slot">Magicka<b class="num" style="display:block">${G.maxMagicka(S)}</b></div><div class="slot">Stamina<b class="num" style="display:block">${G.maxStamina(S)}</b></div></div>
@@ -2162,6 +2363,7 @@
       const acts = [];
       if (G.SLOTS.includes(it.slot)) acts.push(on ? `<button class="btn sm" data-act="uneq" data-slot="${it.slot}">Take off</button>` : `<button class="btn sm pri" data-act="eq" data-id="${r.id}">Equip</button>`);
       if (it.slot === "tome") acts.push(`<button class="btn sm pri" data-act="read" data-id="${r.id}">Read</button>`);
+      if (it.slot === "recipe") acts.push(`<button class="btn sm pri" data-act="cfread" data-id="${r.id}">Read</button>`);
       if (it.slot === "potion") acts.push(`<button class="btn sm pri" data-act="drinkrow" data-id="${r.id}">Drink</button>`);
       if (it.slot === "poison") acts.push(`<button class="btn sm pri" data-act="poison" data-id="${r.id}">Coat weapon</button>`);
       if (it.slot === "ingredient") acts.push(`<button class="btn sm" data-act="eat" data-id="${r.id}">Eat (learn an effect)</button>`);
@@ -2169,7 +2371,7 @@
       if (canShop) acts.push(`<button class="btn sm" data-act="sell" data-id="${r.id}">Sell ${G.sellPrice(S, r)}g</button>`);
       const ingFx = it.slot === "ingredient" && TOWNS.INGREDIENT_FX[r.item] ? TOWNS.INGREDIENT_FX[r.item][1].map((e, i) => TOWNS.known(S, r.item)[i] ? e : "?").join(", ") : "";
       const qual = r.tq ? TOWNS.QUALITY[r.tq] + " " : "";
-      return `<div class="item ${on ? "on" : ""}" data-act="packrow" data-id="${r.id}" style="flex-wrap:wrap">${ICONART.item(r.item, 34, r)}<div class="t">${esc(qual + it.name)}${r.qty > 1 ? ` ×${r.qty}` : ""}${on ? " ✓" : ""}${r.stolen ? ' <span class="danger-high">stolen</span>' : ""}<span>${esc(ingFx || G.itemStats(r.item))}${r.temper ? ` · +${r.temper} improved` : ""}${charge} · ${+(it.weight * r.qty).toFixed(2)} wt</span></div>
+      return `<div class="item ${on ? "on" : ""}" data-act="packrow" data-id="${r.id}" style="flex-wrap:wrap">${ICONART.item(r.item, 34, r)}<div class="t">${esc(qual + it.name + (r.nm ? ` “${r.nm}”` : ""))}${r.qty > 1 ? ` ×${r.qty}` : ""}${on ? " ✓" : ""}${r.stolen ? ' <span class="danger-high">stolen</span>' : ""}<span>${esc(ingFx || G.itemStats(r.item))}${r.temper ? ` · +${r.temper} improved` : ""}${charge} · ${+(it.weight * r.qty).toFixed(2)} wt</span></div>
         ${open ? `<div style="display:flex;gap:6px;flex-wrap:wrap;width:100%">${acts.join("") || '<span class="sub">Nothing to do with this here.</span>'}</div>` : ""}</div>`;
     };
     return `<div class="panel"><h2>Equipped · ${esc(S.loadout)}</h2>${dollScreen()}${typeof AMMO !== "undefined" && AMMO.status(S) && !AMMO.status(S).best ? ammoNote() : ""}
@@ -2334,12 +2536,12 @@
       return wildsFood() + `<div class="panel"><h2>${l ? esc(l) : "The wilds"}</h2><p class="sub">${l ? "There's nothing to buy here." : "You're out on the road."} Cities and towns have shops, inns, trainers, alchemy labs, forges and jobs.</p></div>`;
     }
     const open = G.shopsOpen(), wanted = TOWNS.wanted(S), hold = G.holdAt(WORLD.places[l]);
-    const sections = [...types.filter((x) => x !== "stables"), ...(TOWNS.INNS[l] ? ["inn"] : []), ...(TOWNS.TRAINERS[l] ? ["train"] : []), "alchemy", ...(types.includes("blacksmith") ? ["forge"] : []), "jobs", "streets", ...(TOWNS.followersHere(S).length || l === "Whiterun" ? ["hire"] : []), ...(TOWNS.carriageFrom(l) ? ["carriage"] : []), ...(TOWNS.HOMES[l] ? ["home", "homes", "market"] : []), ...(SMITH.MINES[l] ? ["mine"] : []), ...(l === SPELLCRAFT.TOWN ? ["craft"] : []), ...(CARAVANS.stopsAt(l) ? ["caravans"] : []), ...(l === HALL.TOWN ? ["hall"] : []), "notice", ...(TOWNS.INNS[l] ? ["cook"] : []), ...(l === ARENA.TOWN ? ["arena"] : []), ...(COOK.waterNear(WORLD.places[l]) ? ["fish"] : []), ...(ENCH.hasEnchanter(l) ? ["enchanter"] : []), ...(types.includes("stables") ? ["stables"] : [])];
+    const sections = [...types.filter((x) => x !== "stables"), ...(TOWNS.INNS[l] ? ["inn"] : []), ...(TOWNS.TRAINERS[l] ? ["train"] : []), "alchemy", ...(types.includes("blacksmith") || HALLS.hasForge(S, l) ? ["forge"] : []), "jobs", "streets", ...(TOWNS.followersHere(S).length || l === "Whiterun" ? ["hire"] : []), ...(TOWNS.carriageFrom(l) ? ["carriage"] : []), ...(TOWNS.HOMES[l] ? ["home", "homes", "market"] : []), ...(SMITH.MINES[l] ? ["mine"] : []), ...(l === SPELLCRAFT.TOWN ? ["craft"] : []), ...(CARAVANS.stopsAt(l) ? ["caravans"] : []), ...(l === HALL.TOWN ? ["hall"] : []), ...(HALLS.plotHere(l) || hallDocs.some((d) => d.town === l) || S.hall?.town === l ? ["halls"] : []), "notice", ...(TOWNS.INNS[l] ? ["cook"] : []), ...(l === ARENA.TOWN ? ["arena"] : []), ...(COOK.waterNear(WORLD.places[l]) ? ["fish"] : []), ...(ENCH.hasEnchanter(l) ? ["enchanter"] : []), ...(types.includes("stables") ? ["stables"] : [])];
     townShop = sections.includes(townShop) ? townShop : sections[0];
-    const names = { general: "General goods", blacksmith: "Blacksmith", wizard: "Court wizard", stables: "Stables", fence: "Ragged Flagon (fence)", inn: TOWNS.INNS[l] || "Inn", train: "Trainers", alchemy: "Alchemy lab", forge: "Forge", jobs: "Jobs", streets: "Streets", hire: l === "Whiterun" ? "Dragonsreach & hirelings" : "Hirelings", hall: "⚑ Hall of the North", notice: "📜 Jarl's bounty", homes: "🏘 Neighbours", market: "🛒 Market stalls", mine: "⛏ Mine", craft: "✨ Spell crafting", caravans: "🐫 Caravans", cook: "🍲 Cooking pot", arena: "⚔ The Arena", fish: "🎣 Fishing", carriage: "Carriage", enchanter: "Arcane enchanter", home: TOWNS.home(S, l) ? `🏠 ${TOWNS.HOMES[l]?.[0]}` : `Buy ${TOWNS.HOMES[l]?.[0]}` };
+    const names = { general: "General goods", blacksmith: "Blacksmith", wizard: "Court wizard", stables: "Stables", fence: "Ragged Flagon (fence)", inn: TOWNS.INNS[l] || "Inn", train: "Trainers", alchemy: "Alchemy lab", forge: "Forge", jobs: "Jobs", streets: "Streets", hire: l === "Whiterun" ? "Dragonsreach & hirelings" : "Hirelings", hall: "⚑ Hall of the North", halls: "🏰 Halls & shops", notice: "📜 Jarl's bounty", homes: "🏘 Neighbours", market: "🛒 Market stalls", mine: "⛏ Mine", craft: "✨ Spell crafting", caravans: "🐫 Caravans", cook: "🍲 Cooking pot", arena: "⚔ The Arena", fish: "🎣 Fishing", carriage: "Carriage", enchanter: "Arcane enchanter", home: TOWNS.home(S, l) ? `🏠 ${TOWNS.HOMES[l]?.[0]}` : `Buy ${TOWNS.HOMES[l]?.[0]}` };
     const fac = F.priceFactor(G.skill(S, "Mercantile"));
     let body = "", note = "";
-    const shopRow = (i, sell = true) => { const p = G.buyPrice(S, i), it = D.ITEMS[i], tome = it.slot === "tome" && typeof TOMES !== "undefined" ? ` · ${TOMES.level(it.spell)}${S.spells.includes(it.spell) ? " · you know it" : ""}` : ""; return `<div class="item">${ICONART.item(i, 34)}<div class="t">${esc(it.name)}<span>${esc(G.itemStats(i))}${tome} · ${it.weight} wt</span></div><span class="num gold">${p}</span><button class="btn sm" data-act="buy" data-item="${esc(i)}" ${open && !wanted && S.gold >= p ? "" : "disabled"}>Buy</button>${it.slot === "ammo" ? `<button class="btn sm" data-act="buyn" data-item="${esc(i)}" data-n="20" ${open && !wanted && S.gold >= p * 20 ? "" : "disabled"}>×20</button>` : ""}</div>`; };
+    const shopRow = (i, sell = true) => { const p = G.buyPrice(S, i), it = D.ITEMS[i], tome = it.slot === "tome" && typeof TOMES !== "undefined" ? ` · ${TOMES.level(it.spell)}${S.spells.includes(it.spell) ? " · you know it" : ""}` : ""; return `<div class="item">${ICONART.item(i, 34)}<div class="t">${esc(it.name)}<span>${esc(G.itemStats(i))}${tome} · ${it.weight} wt</span></div>${econB(i)}<span class="num gold">${p}</span><button class="btn sm" data-act="buy" data-item="${esc(i)}" ${open && !wanted && S.gold >= p ? "" : "disabled"}>Buy</button>${it.slot === "ammo" ? (() => { const p20 = G.lotPrice ? G.lotPrice(S, i, 20, "buy") : p * 20; return `<button class="btn sm" data-act="buyn" data-item="${esc(i)}" data-n="20" title="${p20} gold" ${open && !wanted && S.gold >= p20 ? "" : "disabled"}>×20</button>`; })() : ""}</div>`; };
     if (townShop === "stables") body = stablesHTML(open, wanted) + cartHTML(open, wanted);
     else if (["general", "blacksmith", "wizard", "fence"].includes(townShop)) {
       note = `${open ? "Shops are open." : `Shops are closed for the night. They open at 08:00 (${esc(G.clockText())}).`} At Mercantile ${G.skill(S, "Mercantile")} you buy at about ${(fac / G.haggle(S)).toFixed(2)}× value.${townShop === "fence" ? " The fence buys stolen goods." : ""}`;
@@ -2347,7 +2549,7 @@
     } else if (townShop === "inn") {
       note = "Sleep to heal fully and become Rested (skills improve 5% faster for 40 minutes; your own bed gives 10%). Buy a round and the locals talk." + (FEST.freeInn() ? " 🎉 New Life Festival: rooms are free!" : "");
       body = (S.vampire ? `<div class="item"><div class="t">🩸 Feed on a sleeping traveller<span>Resets your hunger. Someone might wake up (bounty).</span></div><button class="btn sm danger" data-act="vfeed">Feed</button></div>` : "") + (FEST.freeInn() ? `<div class="item on"><div class="t">🎉 The innkeeper's New Life gift<span>Once a day: a hot meal and a little gold</span></div><button class="btn sm pri" data-act="festgift">Take it</button></div>` : "") + `<div class="item"><div class="t">Rent a room<span>${G.rested(S) ? "You're already rested" : "Full health and Rested"}</span></div><span class="num gold">${TOWNS.roomPrice(S)}</span><button class="btn sm pri" data-act="inn" data-c="room" ${wanted ? "disabled" : ""}>Sleep</button></div>
-        <div class="item"><div class="t">Buy a round, listen for rumours<span>Reveals ${G.P(S, "rumour_monger") ? "two places" : "a place"} you haven't found yet</span></div><span class="num gold">${G.P(S, "rumour_monger") ? 0 : TOWNS.RUMOUR}</span><button class="btn sm" data-act="inn" data-c="rumour">Listen</button></div>`;
+        <div class="item"><div class="t">Buy a round, listen for rumours<span>Reveals ${G.P(S, "rumour_monger") ? "two places" : "a place"} you haven't found yet</span></div><span class="num gold">${TOWNS.rumourPrice ? TOWNS.rumourPrice(S) : G.P(S, "rumour_monger") ? 0 : TOWNS.RUMOUR}</span><button class="btn sm" data-act="inn" data-c="rumour">Listen</button></div>`;
       body += bardHTML(l);
     } else if (townShop === "train") {
       const n = TOWNS.trainedThisLevel(S);
@@ -2372,8 +2574,9 @@
         const g = forgeGroup, ids = SMITH.byGroup(g);
         body = ftabs + `<div class="chips" style="margin-bottom:6px;flex-wrap:wrap">${SMITH.GROUPS.map(([k, l2]) => `<button class="chip ${g === k ? "on" : ""}" data-act="fgroup" data-id="${k}">${l2}</button>`).join("")}</div>`
           + (SMITH.PERK_FOR[g] && !G.P(S, SMITH.PERK_FOR[g]) ? `<p class="sub">🔒 Needs the ${esc(PERKS.BY_ID[SMITH.PERK_FOR[g]].name)} perk (Hero tab → Perks → Smithing).</p>` : "")
+          + (g === "found" && typeof CRAFTFAIR !== "undefined" ? CRAFTFAIR.foundNote(S, esc) : "")
           + ids.map((id) => { const i = SMITH.info(S, id), it = D.ITEMS[id];
-            return `<div class="item">${ICONART.item(id, 34)}<div class="t">${esc(it.name)}${i.out > 1 ? ` ×${i.out}` : ""}<span>${esc(G.itemStats(id))}${it.slot === "valuable" ? ` · worth ${it.value}` : ""}</span><span>${i.mats.map(([m, n], k) => `<b class="${i.have[k] >= n ? "" : "miss"}">${n} ${esc(D.ITEMS[m].name)}</b> (${i.have[k]})`).join(" · ")}</span></div><button class="btn sm ${i.block ? "" : "pri"}" data-act="smake" data-id="${esc(id)}" ${i.block ? "disabled" : ""}>Make</button></div>`; }).join("");
+            return `<div class="item">${ICONART.item(id, 34)}<div class="t">${esc(it.name)}${i.out > 1 ? ` ×${i.out}` : ""}<span>${esc(G.itemStats(id))}${it.slot === "valuable" ? ` · worth ${it.value}` : ""}${i.xpMult != null && i.xpMult < 0.99 ? ` · ${Math.round(i.xpMult * 100)}% XP (made recently)` : ""}${i.needs && typeof CRAFTFAIR !== "undefined" && !CRAFTFAIR.knows(S, i.needs) ? " · 🔒 recipe needed" : ""}</span><span>${i.mats.map(([m, n], k) => `<b class="${i.have[k] >= n ? "" : "miss"}">${n} ${esc(D.ITEMS[m].name)}</b> (${i.have[k]})`).join(" · ")}</span></div><button class="btn sm ${i.block ? "" : "pri"}" data-act="smake" data-id="${esc(id)}" ${i.block ? "disabled" : ""}>Make</button></div>`; }).join("");
       } else if (forgeTab === "refine") {
         note = "Smelt ore into ingots and tan pelts into leather. Ores come from mines; pelts from wolves, bears and sabre cats.";
         body = ftabs + SMITH.REFINE.map((r, k) => { const i = SMITH.refineInfo(S, k);
@@ -2411,6 +2614,9 @@
     } else if (townShop === "market") {
       note = "Players sell their own things here. Buy, or run your own stall if you own a house in this town.";
       body = marketHTML(l);
+    } else if (townShop === "halls") {
+      note = "Build your own hall here, or a guild hall for your clan. Staff are paid every in-game day.";
+      body = hallsHTML(l);
     } else if (townShop === "homes") {
       const list = VISITS.inTown(homeDocs, l, S.id);
       note = `Other players who own ${TOWNS.HOMES[l][0]} in their own world. Drop in to see their trophies, or leave a gift.`;
@@ -2489,9 +2695,9 @@
         <div class="item"><div class="t">Your bounty in ${esc(hold)}<span>${b ? `${b} gold${wanted ? " · you resisted arrest: shops won't serve you" : ""}` : "Clean. For now."}</span></div>${b ? `<button class="btn sm" data-act="guardopen">Talk to a guard</button>` : ""}</div>
         <p class="sub" style="margin-top:8px">Stolen goods only sell to a fence: the Ragged Flagon in Riften, or anywhere with the Fence perk.</p>`;
     }
-    return `<div class="panel"><h2>${esc(l)}</h2>${PLACEART.scene(l)}${wanted ? `<p class="sub danger-high">You're wanted in ${esc(hold)}. Shops, inns and trainers turn you away.</p>` : ""}
+    return `<div class="panel"><h2>${esc(l)}</h2>${PLACEART.scene(l)}${typeof CIVILWAR !== "undefined" ? CIVILWAR.townLine(S, l) : ""}${wanted ? `<p class="sub danger-high">You're wanted in ${esc(hold)}. Shops, inns and trainers turn you away.</p>` : ""}
       <div class="chips" style="flex-wrap:wrap">${sections.map((t) => `<button class="chip ${t === townShop ? "on" : ""}" data-act="shop" data-id="${t}">${esc(names[t])}</button>`).join("")}</div>
-      ${(townShop === "home" && TOWNS.home(S, l)) || (townShop === "hall" && typeof HOMEART !== "undefined") ? "" : PLACEART.section(townShop === "hire" ? "hall" : townShop === "cook" ? "inn" : townShop === "home" && TOWNS.home(S, l) ? "home" : townShop)}${typeof NPCART !== "undefined" ? NPCART.talk(l, townShop, S) : ""}${note ? `<p class="sub" style="margin-top:8px">${note}</p>` : ""}<div class="list">${body}</div><p class="sub" style="margin-top:10px">You have <b class="gold">${S.gold} gold</b>.</p></div>`;
+      ${(townShop === "home" && TOWNS.home(S, l)) || (townShop === "hall" && typeof HOMEART !== "undefined") || townShop === "halls" ? "" : PLACEART.section(townShop === "hire" ? "hall" : townShop === "cook" ? "inn" : townShop === "home" && TOWNS.home(S, l) ? "home" : townShop)}${typeof NPCART !== "undefined" ? NPCART.talk(l, townShop, S) : ""}${note ? `<p class="sub" style="margin-top:8px">${note}</p>` : ""}<div class="list">${body}</div><p class="sub" style="margin-top:10px">You have <b class="gold">${S.gold} gold</b>.</p></div>`;
   }
 
   function panelLog() {
@@ -2534,7 +2740,7 @@
       ${myRank > 10 ? `<p class="sub" style="margin-top:6px">You're number ${myRank}.</p>` : ""}</div>` : "";
     // a quick-jump menu: the Journal has grown long
     const parts = [["guide", "📖 Guide", guideCard()], ["event", "Event", festPanel()], ["quests", "Quests", questPanel()], ["bounty", "Bounty", bountyPanel()], ["chat", "Chat", chatPanel()], ["holds", "Holds", holdsPanel()], ["clan", "Clan", clanPanel()],
-      ["world", "World", worldHtml], ["trades", "Trades", tradeHtml], ["party", "Party", partyHtml], ["people", "Travellers", travellers], ["ladder", "Leaderboard", ladderHtml], ["crimes", "Bounties", bounty], ["cleared", "Cleared", clearedPanel()], ["caravan", "Caravan", caravanJobPanel()], ["news", "News", word], ["stats", "Stats", typeof IMM !== "undefined" ? IMM.stats(S) : ""]]
+      ["world", "World", worldHtml], ["trades", "Trades", tradeHtml], ["coop", "Co-op", coopUI ? coopUI.invitesHTML() : ""], ["party", "Party", partyHtml], ["people", "Travellers", travellers], ["ladder", "Leaderboard", ladderHtml], ["crimes", "Bounties", bounty], ["cleared", "Cleared", clearedPanel()], ["finds", "Discoveries", typeof EXPLORE !== "undefined" ? EXPLORE.panel(S) : ""], ["caravan", "Caravan", caravanJobPanel()], ["news", "News", word], ["stats", "Stats", typeof IMM !== "undefined" ? IMM.stats(S) : ""]]
       .filter(([, , h]) => h && h.trim()).map(([id, label, h]) => [id, label, h.replace(/<div class="panel"/, `<div id="j-${id}" class="panel"`)]);
     const nav = `<nav class="jnav" aria-label="Journal sections">${[...parts.map(([id, label]) => [id, label]), ["log", "Diary"]].map(([id, label]) => `<button class="chip" data-act="jgo" data-id="${id}">${label}</button>`).join("")}</nav>`;
     return `${nav}${parts.map(([, , h]) => h).join("")}
@@ -2585,10 +2791,12 @@
     const b = e.target.closest("[data-act]");
     if (!b || b.disabled) return;
     const a = b.dataset.act, L = G.loadout(S);
+    if (a.startsWith("coop") && coopUI) return void coopUI.act(b);
     const say = (m) => { toast(m); persist(); renderPanel(true); if ($("#sky")) renderMenu(); };
     switch (a) {
       case "go": travelTo(b.dataset.place); renderPanel(true); break;
       case "unpick": selected = null; roamSpot = null; renderPicked(); break;
+      case "xsearch": case "xdig": case "xread": exploreAct(b.dataset.act, b.dataset.id); break;
       case "spotpin": if (roamSpot) { const [x, y] = roamSpot; selected = null; renderPicked(); openPinDialog(x, y); } break;
       case "stop": if (S.trip?.carriage) { toast("The driver won't stop until you get there."); break; } if (S.trip?.status === "travel" || S.trip?.status === "event") { [S.x, S.y] = livePos(); S.trip = null; S.location = Object.keys(WORLD.places).find((n) => G.pxDist([S.x, S.y], WORLD.places[n]) < 12) || null; persist(true); toast("You stop and look around."); } break;
       case "openenc": openEncounter(); break;
@@ -2653,9 +2861,9 @@
       case "enter": { const err = DUNGEONS.enter(S); if (err) return toast(err); if (typeof IMM !== "undefined") IMM.loading(`Entering ${S.dungeon?.place || "the dungeon"}…`); selected = null; renderPicked(); dunNote = null; persist(true); renderDungeon(); break; }
       case "dun": renderDungeon(); break;
       case "droom": dungeonRoom(b.dataset.c); break;
-      case "dact": if (b.dataset.c === "pick" && typeof IMM !== "undefined" && IMM.wantsGame()) { IMM.pick("dungeon", dungeonAct, S); break; } dungeonAct(b.dataset.c); break;
+      case "dact": if (b.dataset.c.startsWith("game:") && typeof EXPLORE !== "undefined") { EXPLORE.openGame(S, dungeonAct); break; } if (b.dataset.c === "pick" && typeof IMM !== "undefined" && IMM.wantsGame()) { IMM.pick("dungeon", dungeonAct, S); break; } dungeonAct(b.dataset.c); break;
       case "dmin": closeDungeon(); tab = "pack"; renderTabs(); renderPanel(true); break;
-      case "dleave": { if (typeof IMM !== "undefined") IMM.loading("Back to the open road…"); const m = DUNGEONS.leave(S); dunNote = null; persist(true); closeDungeon(); renderPanel(true); showMessage("Back outside", m); break; }
+      case "dleave": { if (S.dungeon?.run && coopUI) coopUI.left(); if (typeof IMM !== "undefined") IMM.loading("Back to the open road…"); const m = DUNGEONS.leave(S); dunNote = null; persist(true); closeDungeon(); renderPanel(true); showMessage("Back outside", m); break; }
       case "ev": if (b.dataset.c === "pick" && typeof IMM !== "undefined" && IMM.wantsGame()) { IMM.pick("event", eventAction, S); break; } eventAction(b.dataset.c); break;
       case "evbuy": { const m = G.buyFrom(S, b.dataset.item); persist(); openEvent(m); break; }
       case "enc": encounterAction(b.dataset.a); break;
@@ -2678,6 +2886,8 @@
       case "dolloff": G.unequip(S, b.dataset.slot); closeModal(); publishCard(); say("Taken off."); break;
       case "uneq": G.unequip(S, b.dataset.slot); say("Taken off."); break;
       case "read": say(G.readTome(S, +b.dataset.id)); break;
+      case "cfread": say(CRAFTFAIR.read(S, +b.dataset.id)); persist(true); renderPanel(true); break;
+      case "cfname": { const inp = document.getElementById("cfname-" + b.dataset.id); say(CRAFTFAIR.rename(S, +b.dataset.id, inp ? inp.value : "")); persist(true); renderPanel(true); break; }
       case "drink": say(G.drinkPotion(S)); break;
       case "recharge": say(G.recharge(S, +b.dataset.id, +b.dataset.gem)); break;
       case "sell": { packOpen = null; const m = G.sell(S, +b.dataset.id, 1); if (/^Sold/.test(m)) GUIDE.mark(S, "trade"); say(m); break; }
@@ -2685,15 +2895,35 @@
       case "smode": shopMode = b.dataset.id; renderPanel(true); break;
       case "buy": { const m = G.buy(S, b.dataset.item, 1); if (/^Bought/.test(m)) GUIDE.mark(S, "trade"); say(m); break; }
       case "buyn": { const m = G.buy(S, b.dataset.item, +b.dataset.n || 1); if (/^Bought/.test(m)) GUIDE.mark(S, "trade"); say(m); break; }
-      case "shop": townShop = b.dataset.id; renderPanel(true); break;
+      case "shop": townShop = b.dataset.id; if (townShop === "halls") hallView = null; renderPanel(true); break;
       case "pskill": perkSkill = b.dataset.id; renderPanel(true); break;
       case "skinfo": heroSkill = heroSkill === b.dataset.id ? null : b.dataset.id; renderPanel(true); if (heroSkill) setTimeout(() => $(".skcard")?.scrollIntoView({ block: "nearest", behavior: reduceMotion ? "auto" : "smooth" }), 30); break;
       case "perk": say(PERKS.take(S, b.dataset.id)); publishCard(); break;
+      case "legend": if (legendArm !== b.dataset.id) { legendArm = b.dataset.id; renderPanel(true); if ($("#sky")) renderMenu(); break; } legendArm = null; say(LEGEND.make(S, b.dataset.id)); publishCard(); break;
+      case "legendno": legendArm = null; renderPanel(true); if ($("#sky")) renderMenu(); break;
       case "drinkrow": packOpen = null; say(TOWNS.drink(S, +b.dataset.id)); publishCard(); break;
       case "poison": packOpen = null; say(TOWNS.applyPoison(S, +b.dataset.id)); break;
       case "eat": packOpen = null; say(TOWNS.eat(S, +b.dataset.id)); break;
       case "hallrest": say(HALL.rest(S)); break;
       case "visit": openVisit(b.dataset.id); break;
+      case "hplot": { const r = HALLS.buyPlot(S, $("#hname")?.value); if (r.err) return toast(r.err); hallTab = "rooms"; SOUND.fx("coin"); persist(true); toast(r.text); renderPanel(true); break; }
+      case "hclanplot": clanPlot(); break;
+      case "htab": hallTab = b.dataset.id; renderPanel(true); break;
+      case "hvisit": hallView = b.dataset.id; renderPanel(true); break;
+      case "hback": hallView = null; renderPanel(true); break;
+      case "hbuild": hallDo(!!b.dataset.c, (h, purse) => HALLS.build(h, b.dataset.id, purse, S.name)); SOUND.fx("clang"); break;
+      case "hdecor": hallDo(!!b.dataset.c, (h, purse) => HALLS.addDecor(h, b.dataset.id, purse, S.name)); break;
+      case "hundecor": hallDo(!!b.dataset.c, (h) => HALLS.removeDecor(h, b.dataset.id)); break;
+      case "hhire": hallDo(!!b.dataset.c, (h, purse) => HALLS.hire(h, b.dataset.id, purse, G.now(), S.name)); break;
+      case "hfire": hallDo(!!b.dataset.c, (h) => HALLS.dismiss(h, b.dataset.id)); break;
+      case "hdep": hallDo(!!b.dataset.c, (h) => HALLS.deposit(S, h, +b.dataset.id)); SOUND.fx("coin"); break;
+      case "hwd": hallDo(false, (h) => HALLS.withdraw(S, h, +b.dataset.id)); SOUND.fx("coin"); break;
+      case "hrest": hallDo(!!b.dataset.c, (h) => HALLS.rest(S, h)); break;
+      case "hpray": hallDo(!!b.dataset.c, (h) => HALLS.pray(S, h)); break;
+      case "hstash": hallDo(!!b.dataset.c, (h) => HALLS.stash(S, h, +b.dataset.id)); break;
+      case "hunstash": hallDo(!!b.dataset.c, (h) => HALLS.unstash(S, h, +b.dataset.id)); break;
+      case "hmount": hallDo(!!b.dataset.c, (h) => { const r = HALLS.stash(S, h, +b.dataset.id, true); if (!b.dataset.c) HALLS.refreshTrophies(S); return r; }); break;
+      case "hunmount": hallDo(!!b.dataset.c, (h) => { const r = HALLS.unstash(S, h, +b.dataset.id, true); if (!b.dataset.c) HALLS.refreshTrophies(S); return r; }); break;
       case "mpick": stallPick = b.dataset.id ? +b.dataset.id : null; renderPanel(true); break;
       case "mlist": { const r = MARKET.list(S, stallPick, $("#mprice")?.value, stalls); if (r.err) return toast(r.err); Store.put("stalls", r.id, r.doc); stalls.push({ ...r.doc, id: r.id }); stallPick = null; persist(true); say(r.text); break; }
       case "mbuy": marketBuy(b.dataset.id); break;
@@ -2714,6 +2944,7 @@
       case "clanleave": { const c = myClan(); if (c && c.founder === S.id) { Store.remove("clans", S.id); postNews(`🏴 The banner of ${c.name} was lowered.`); } say(CLANS.leave(S)); persist(true); break; }
       case "achmore": achOpen = !achOpen; renderPanel(true); break;
       case "guide": openGuide(); persist(); break;
+      case "notes": openNotes(); break;
       case "guideno": S.guideOffered = true; persist(); renderPanel(true); toast("You can open the guide any time from ⚙ or the Journal."); break;
       case "guidego": guideGo(b.dataset.id); break;
       case "tutskip": S.tut = { ...S.tut, step: 0, off: true }; persist(); renderPanel(true); toast("Tutorial skipped. You can replay it from How to Play in the main menu."); break;

@@ -101,7 +101,8 @@ const TOWNS = (() => {
   }
   function potency(s, effect, isPoison) {
     const [, mag] = EFFECTS[effect];
-    const skillMult = 1 + (1.5 - 1) * G.skill(s, "Alchemy") / 100;                         // [Skyrim] fAlchemySkillFactor 1.5
+    const alch = /^Fortify (Alchemy|Enchanting|Smithing)$/.test(effect) ? s.skills.Alchemy.lvl : G.skill(s, "Alchemy");   // [OURS] crafting-fortify brews use your real skill: no feedback loops
+    const skillMult = 1 + (1.5 - 1) * alch / 100;                         // [Skyrim] fAlchemySkillFactor 1.5
     let m = 4 * mag * skillMult * (1 + 0.2 * P(s, "alchemist"));                            // [Skyrim] fAlchemyIngredientInitMult 4, Alchemist
     if (effect.startsWith("Restore ") && P(s, "physician")) m *= 1.25;                      // [Skyrim] Physician
     if (!isPoison && EFFECTS[effect][4] && P(s, "benefactor")) m *= 1.25;                   // [Skyrim] Benefactor
@@ -174,7 +175,9 @@ const TOWNS = (() => {
     Riften: "The Bee and Barb", Falkreath: "Dead Man's Drink", Dawnstar: "Windpeak Inn", Winterhold: "The Frozen Hearth", Morthal: "Moorside Inn", Ivarstead: "Vilemyr Inn",
     Rorikstead: "Frostfruit Inn", "Dragon Bridge": "Four Shields Tavern", Kynesgrove: "Braidwood Inn", "Old Hroldan": "Old Hroldan Inn" };
   const ROOM = 10, RUMOUR = 10, RESTED_SECONDS = 8 * 2 * 3600 / 24;   // [Skyrim] Rested lasts 8 game hours = 40 real minutes here
-  const etiquette = (s) => (P(s, "courtly_manners") ? 0.8 : 1);
+  const etLv = (s) => Math.min(100, G.skill(s, "Etiquette"));
+  const etiquette = (s) => (P(s, "courtly_manners") ? 0.8 : 1) * (1 - 0.15 * etLv(s) / 100);   // [OURS] fair levelling: good manners cut inn and trainer prices up to 15% at 100
+  const rumourPrice = (s) => (P(s, "rumour_monger") ? 0 : Math.round(RUMOUR * (1 - 0.5 * Math.min(100, G.skill(s, "Streetwise")) / 100)));   // [OURS] Streetwise: the street tells you for less (half at 100)
   const roomPrice = (s) => (typeof FEST !== "undefined" && FEST.freeInn()) ? 0 : Math.round(ROOM * etiquette(s));
   function rentRoom(s, t = G.now()) {
     const inn = INNS[s.location];
@@ -191,7 +194,7 @@ const TOWNS = (() => {
   function rumour(s) {
     const inn = INNS[s.location];
     if (!inn) return "There's no inn here.";
-    const free = P(s, "rumour_monger"), price = free ? 0 : RUMOUR;
+    const free = P(s, "rumour_monger"), price = rumourPrice(s);
     if (s.gold < price) return `A drink to loosen tongues costs ${price} gold.`;
     s.gold -= price;
     const here = WORLD.places[s.location];
@@ -382,7 +385,7 @@ const TOWNS = (() => {
     if (!isTown(town)) return [];
     const day = Math.floor(t / (2 * 3600)), r = seeded(town + day), here = WORLD.places[town], list = [];
     const pk = (a) => a[Math.floor(r() * a.length)];
-    const pay = P(s, "diplomat") ? 1.25 : 1;
+    const pay = (P(s, "diplomat") ? 1.25 : 1) * (1 + 0.2 * etLv(s) / 100);   // [OURS] Etiquette: the hold pays a well-mannered hero up to 20% more
     const dungeons = Object.entries(WORLD.places).filter(([n]) => DUNGEONS.enterable(n) && !["camp", "lair"].includes(kind(n)) && G.pxDist(here, WORLD.places[n]) < 320).map(([n]) => n);
     const towns = Object.keys(WORLD.places).filter((n) => isTown(n) && n !== town && G.pxDist(here, WORLD.places[n]) > 120 && G.pxDist(here, WORLD.places[n]) < 600);
     const giver = kind(town) === "city" ? "The Jarl's steward" : "A worried local";
@@ -516,7 +519,7 @@ const TOWNS = (() => {
     const r = G.invRow(s, rowId); if (!r) return "You don't have that.";
     const copy = { ...r }; delete copy.id;
     G.take(s, rowId, r.qty);
-    const same = h.chest.find((x) => x.item === copy.item && !x.temper && !copy.temper && x.charge == null && copy.charge == null && !x.stolen === !copy.stolen);
+    const same = h.chest.find((x) => x.item === copy.item && !x.temper && !copy.temper && x.charge == null && copy.charge == null && !x.stolen === !copy.stolen && (x.cv ?? null) === (copy.cv ?? null));
     if (same && ["potion", "scroll", "soulgem", "tome", "ingredient", "trophy", "poison"].includes(D.ITEMS[copy.item].slot)) same.qty += copy.qty; else h.chest.push(copy);
     return `${D.ITEMS[copy.item].name}${copy.qty > 1 ? ` ×${copy.qty}` : ""} goes in the chest.`;
   }
@@ -526,6 +529,7 @@ const TOWNS = (() => {
     h.chest.splice(idx, 1);
     const id = G.give(s, r.item, r.qty, r.charge);
     const row = G.invRow(s, id); if (row && (r.temper || r.stolen)) Object.assign(row, { temper: r.temper, tq: r.tq, stolen: r.stolen });
+    if (typeof CRAFTFAIR !== "undefined") CRAFTFAIR.carry(s, id, r, r.qty);
     return `You take ${D.ITEMS[r.item].name}${r.qty > 1 ? ` ×${r.qty}` : ""}.`;
   }
   const gardenReady = (s, t = G.now()) => home(s) && (home(s).garden || 0) + 2 * 3600 <= t;   // [OURS] one harvest per game day
@@ -540,6 +544,6 @@ const TOWNS = (() => {
 
   return { HOMES, home, buyHome, sleepHome, stash, unstash, gardenReady, harvest, BIG, SMALL, carriageFrom, carriageDests, rideCarriage, CARRIAGE_SPEED, FOLLOWERS, followerMax, followerHp, followersHere, hire, dismiss, deliverDragonstone,
     EFFECTS, INGREDIENT_FX, INNS, TRAINERS, CAP, QUALITY, known, brewPreview, brew, eat, drink, applyPoison, roomPrice, rentRoom, rumour, trainCost, trainedThisLevel, train,
-    temperInfo, temper, ingotFor, bounty, totalBounty, addBounty, wanted, guardCheck, guardChoice, pickChance, pickTownsfolk, canFence, jobsAt, takeJob, dropJob, checkJobs, handIn, countItem, isTown, RUMOUR,
+    temperInfo, temper, ingotFor, bounty, totalBounty, addBounty, wanted, guardCheck, guardChoice, pickChance, pickTownsfolk, canFence, jobsAt, takeJob, dropJob, checkJobs, handIn, countItem, isTown, RUMOUR, rumourPrice,
     POTION_MINUTES: (d) => Math.round(d * SECONDS_PER_REAL_SECOND_OF_SKYRIM / 60) };
 })();

@@ -162,7 +162,7 @@ const DUNGEONS = (() => {
   }
 
   function foe(s, key, tier, boss = false) {
-    const def = ENEMY[key], e = def.priest && typeof PRIESTS !== "undefined" ? G.scaleQuestFoe({ ...def }, s.level, PRIESTS.rec(s)) : G.scaleEnemy({ ...def }, s.level);   // [OURS] priests are story foes
+    const def = ENEMY[key], e = def.priest && typeof PRIESTS !== "undefined" ? G.scaleQuestFoe({ ...def }, G.fightLevel ? G.fightLevel(s) : s.level, PRIESTS.rec(s)) : G.scaleEnemy({ ...def }, G.fightLevel ? G.fightLevel(s) : s.level);   // fair levelling: foes follow your fighting skills   // [OURS] priests are story foes
     const m = boss ? 0.8 : [0, 0.8, 0.95, 1.1][tier];   // [OURS] bosses already pick a tougher foe per tier
     e.health = Math.round(e.health * m); e.hp = e.health; e.damage = Math.round(e.damage * m * 10) / 10;
     return e;
@@ -303,7 +303,8 @@ const DUNGEONS = (() => {
         }
       }
       let partyChest = null;
-      if (res.f.allies?.some((a) => a.player)) {   // fought with your party: the boss chest is shared... in theory
+      if (res.f.allies?.some((a) => a.player) && !d.run) {   // (co-op runs share a fair chest instead: coop.js)
+          // fought with your party: the boss chest is shared... in theory
         partyChest = { gold: g, items: [] };
         s.gold -= g; d.gold -= g;
         for (const name of extra) { const row = [...s.inv].reverse().find((x) => D.ITEMS[x.item].name === name && !["golden_claw", "dragonstone"].includes(x.item) && !D.ITEMS[x.item].noTrade); if (row) { partyChest.items.push(row.item); G.take(s, row.id); d.found.splice(d.found.indexOf(name), 1); } }

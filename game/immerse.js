@@ -232,7 +232,9 @@ const IMM = (() => {
     if (["altmer", "bosmer", "dunmer", "highelf", "woodelf", "darkelf"].includes(s.race)) pool.push(...BARKS.elf);
     if (s.race === "nord") pool.push(...BARKS.nord);
     if ((s.skills?.Destruction?.lvl || 0) > 40) pool.push(...BARKS.mage);
-    if (BARKS[place]) pool.push(...BARKS[place]);
+    const cw = typeof CIVILWAR !== "undefined" ? CIVILWAR.barks(s, place) : null;   // the war changes who guards the gate
+    if (BARKS[place] && !cw?.replace) pool.push(...BARKS[place]);
+    if (cw) pool.push(...cw.lines, ...cw.lines);
     const line = pool[Math.floor(Math.random() * pool.length)];
     const who = typeof NPCART !== "undefined" ? NPCART.who(place, "streets") : null;
     show(line, who);

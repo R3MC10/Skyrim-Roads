@@ -5,7 +5,7 @@
 const VISITS = (() => {
   const SHOW_MAX = 3, NOTE_MAX = 80, MOTTO_MAX = 60, GOLD_MAX = 100000;
   const clean = (t, n) => String(t || "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, n);
-  const itemName = (r) => (r.tq ? TOWNS.QUALITY[r.tq] + " " : "") + D.ITEMS[r.item].name;
+  const itemName = (r) => (r.tq ? TOWNS.QUALITY[r.tq] + " " : "") + D.ITEMS[r.item].name + (r.nm ? ` “${r.nm}”` : "");
 
   /* what other players see about you */
   function record(s) {
@@ -40,7 +40,7 @@ const VISITS = (() => {
     if (D.ITEMS[r.item]?.noTrade) return { err: "That's bound to you." };
     if (Object.values(G.loadout(s).equipment || {}).includes(rowId)) return { err: "Take it off first." };
     if (r.stolen) return { err: "You can't give stolen goods. The guards check deliveries." };
-    const copy = { item: r.item, qty: r.qty, charge: r.charge ?? null, temper: r.temper, tq: r.tq };
+    const copy = { item: r.item, qty: r.qty, charge: r.charge ?? null, temper: r.temper, tq: r.tq, ...(typeof CRAFTFAIR !== "undefined" ? CRAFTFAIR.pack(r) : {}) };
     G.take(s, rowId, r.qty);
     return { gift: { to: owner.id, toName: owner.name, from: s.id, fromName: s.name, town, row: copy, note: clean(note, NOTE_MAX), t: G.now() },
       text: `You leave ${itemName(copy)}${copy.qty > 1 ? ` ×${copy.qty}` : ""} for ${owner.name}.` };
@@ -68,7 +68,9 @@ const VISITS = (() => {
     if (g.row && D.ITEMS[g.row.item]) {
       const row = { item: g.row.item, qty: Math.max(1, Math.min(999, Math.floor(g.row.qty) || 1)), charge: g.row.charge ?? null };
       if (g.row.temper) { row.temper = g.row.temper; row.tq = g.row.tq; }
-      if (h) h.chest.push(row); else { const id = G.give(s, row.item, row.qty, row.charge); const r = G.invRow(s, id); if (r && row.temper) Object.assign(r, { temper: row.temper, tq: row.tq }); }
+      if (typeof g.row.cv === "number" && g.row.cv >= 0) row.cv = g.row.cv;
+      if (g.row.nm && typeof CRAFTFAIR !== "undefined") row.nm = String(g.row.nm).replace(/[<>"'`\\]/g, "").slice(0, CRAFTFAIR.NAME_MAX);
+      if (h) h.chest.push(row); else { const id = G.give(s, row.item, row.qty, row.charge); const r = G.invRow(s, id); if (r && row.temper) Object.assign(r, { temper: row.temper, tq: row.tq }); if (typeof CRAFTFAIR !== "undefined") CRAFTFAIR.carry(s, id, row, row.qty); }
       bits.push(`${itemName(row)}${row.qty > 1 ? ` ×${row.qty}` : ""}`);
     }
     return `From ${g.fromName}: ${bits.length ? bits.join(" and ") : "a note"}${g.note ? ` — “${g.note}”` : ""}.${g.row && h ? " It's in your chest." : ""}`;

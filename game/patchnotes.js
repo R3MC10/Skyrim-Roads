@@ -1,0 +1,157 @@
+/* Patch notes: what changed in each build, newest first, in plain words. [OURS]
+   To add a build: put a new entry at the TOP of LIST with a new id. The newest id is what the
+   one-time "What's new" popup keys on. */
+const PATCHNOTES = (() => {
+  const LIST = [
+    { id: "b61", build: 61, date: "21 Nov 2026", title: "Together on the roads", items: [
+      "Co-op dungeons: invite up to 3 friends at a dungeon door, clear the rooms together and each get your own share of the boss chest.",
+      "Fight on horseback: charge into road fights from the saddle. If your horse goes down you're thrown clear and fight on foot.",
+      "Arena duels are real fights now, using each player's own gear, spells and tactics. Healing loops are fixed too.",
+      "The Civil War: join the Imperials in Solitude or the Stormcloaks in Windhelm and win the holds. Jarls and guards change with the war.",
+      "Daedric quests: 13 princes, each with a shrine, a quest and an artifact that really works.",
+      "A real economy: every town has its own prices, daily shortages and gluts, and what all players buy and sell moves them. Look for the Market today card.",
+      "Fairer crafting: repeating the same item gives less XP, crafted things don't sell for more than their materials, and crafting fortify loops are capped. Find recipe scrolls in the world and name your masterworks.",
+      "Legendary skills: at 100, make a skill Legendary for a permanent bonus. Every skill now does something on its own, and a Progress card shows what's next.",
+      "Exploration: hidden caches, a unique item in every notable dungeon, claw doors and ring puzzles, lore books for your library and treasure maps.",
+      "Player halls: buy a plot, build a forge, shrine, trophy room and shop counter, and hire staff. Clans can build guild halls together."] },
+    { id: "b60", build: 60, date: "21 Nov 2026", title: "Fights come alive", items: [
+      "Every weapon has its own move: dagger double stabs, sword slashes, axe chops, hammer slams with a shockwave, spear thrusts, bows that draw and loose, and more.",
+      "Every spell looks different: fire, frost and lightning, wards, runes, summons and shouts all have their own effects and particles.",
+      "Fights play at a natural pace, about a second per move. Use ×2 or Skip if you're in a hurry.",
+      "Power attacks wind up and shake the screen, critical hits and sneak attacks slow down, and the last blow gets a slow-motion finish.",
+      "Enemies fight like themselves: wolves bite, giants slam, dragons breathe fire, draugr shout.",
+      "Story quests now scale with you, and the Journal shows a recommended level for each quest.",
+      "Patch notes: you're reading them! Find them in the main menu and in Settings."] },
+    { id: "b58", build: 58, date: "21 Nov 2026", title: "Lockpicking, sounds of Skyrim and the dragon priests", items: [
+      "Skyrim-style lockpicking mini-game (or a quick roll if you'd rather not).",
+      "Big banners for new quests and objectives, guards who comment when you arrive, and loading cards with tips.",
+      "Ambient sound everywhere: wind, rain and thunder, birds, wolves at night, busy towns, inns, forges, caves and Dwemer ruins. New Ambience slider.",
+      "The eight dragon priests wait in their ruins from level 20. Collect their masks and find Konahrik at Bromjunaar."] },
+    { id: "b57", build: 57, date: "21 Nov 2026", title: "Looks and feels like Skyrim with SkyUI", items: [
+      "A Skyrim compass on the map with your quest marker, nearby places, players and dragon raids.",
+      "Slim health, magicka and stamina bars that fade when full, and a message log in the corner.",
+      "Smoked-glass menus, SkyUI item lists, town options as Skyrim dialogue, the Journal as a quest book, perk constellations and a proper YOU DIED screen."] },
+    { id: "b56", build: 56, date: "21 Nov 2026", title: "Thieves Guild, Dark Brotherhood and magic you can see", items: [
+      "Full Thieves Guild questline up to the Twilight Sepulcher, with Nightingale gear and fence bonuses.",
+      "Full Dark Brotherhood questline up to Hail Sithis!, with contracts, Shrouded gear, the Blade of Woe and Shadowmere.",
+      "Animated title screen with aurora and a dragon, plus a short story intro.",
+      "Festival decorations in towns, and spells and shouts now show on the map."] },
+    { id: "b55", build: 55, date: "21 Nov 2026", title: "Spell crafting and bard songs", items: [
+      "Make your own spells at the College of Winterhold: combine effects you know, set the strength and name it.",
+      "Write a verse about your deeds at an inn. The best verses of the week are sung in every inn."] },
+    { id: "b54", build: 54, date: "21 Nov 2026", title: "Weather, seasons and homes in every picture", items: [
+      "Sun, two moons, stars, aurora, snow, rain, fog, storms and autumn leaves in every picture.",
+      "Drawn interiors for all five houses, your neighbours' homes and the Hall of the North.",
+      "Dragon raids circle on the map, the Arena has a cheering crowd, and clan banners fly over their holds."] },
+    { id: "b53", build: 53, date: "21 Nov 2026", title: "Carts and caravans", items: [
+      "Buy a cart at the stables to carry 300 more (slower, roads only, sometimes raided).",
+      "Four caravans loop between the big cities. Sign on as a guard, fight off ambushes together, and get paid when you arrive."] },
+    { id: "b52", build: 52, date: "21 Nov 2026", title: "Faces and an equipment screen", items: [
+      "Portraits for shopkeepers, innkeepers, Jarls, guards, trainers and followers.",
+      "Pictures for every road event and story moment.",
+      "An equipment screen showing your character with gear slots and stat comparisons."] },
+    { id: "b51", build: 51, date: "21 Nov 2026", title: "A living map and drawn dungeon maps", items: [
+      "Hand-drawn map markers, your portrait on the map, footprints, birds, cloud shadows and towns that light up at night.",
+      "Dungeons get a torch-lit drawn map where you tap rooms to move."] },
+    { id: "b50", build: 50, date: "21 Nov 2026", title: "Spell icons and smoother sound", items: [
+      "An icon for every spell, skill, perk, stone, shout, quest and achievement.",
+      "Sound rewritten: no more pops or crackles, and new Nordic music."] },
+    { id: "b49", build: 49, date: "21 Nov 2026", title: "The game gets pictures", items: [
+      "Two art styles to choose from in Settings: hand-drawn or pixel art.",
+      "Animated fight scenes, pictures for every place, icons for items and enemies, and your character drawn in their gear."] },
+    { id: "b48", build: 48, date: "21 Nov 2026", title: "Fights stay exciting at higher levels", items: [
+      "Weak enemies now catch up to your level like in Skyrim, so fights at level 20–40 are a real challenge again."] },
+    { id: "b47", build: 47, date: "21 Nov 2026", title: "Mysticism gets its own magic", items: [
+      "Mysticism is now its own school: Soul Trap, Detect Life, Dispel, Mark and Recall, and Spell Absorption.",
+      "Breaking down enchanted gear now only trains Enchanting."] },
+    { id: "b46", build: 46, date: "21 Nov 2026", title: "Much more magic", items: [
+      "44 new spells: runes, cloaks, walls, storms, wards, bound weapons, raising the dead, fear, invisibility and more.",
+      "Dual casting, elemental weaknesses, staffs with charges, and spells you can use outside fights."] },
+    { id: "b45", build: 45, date: "21 Nov 2026", title: "Free roam and skills explained", items: [
+      "Tap any spot on the map and walk there, off the roads.",
+      "Every skill now says what it does, what you get later, and how to raise it."] },
+    { id: "b44", build: 44, date: "21 Nov 2026", title: "All of Skyrim to discover", items: [
+      "256 places from Skyrim, hidden until you find them.",
+      "Spell tomes sold by court wizards and the College.",
+      "Bows need arrows, crossbows need bolts, and you can make both at the forge.",
+      "A guide for new players with Show-me buttons."] },
+    { id: "b43", build: 43, date: "21 Nov 2026", title: "Friends and messages", items: [
+      "A friends list, private messages, and trading with friends anywhere by courier.",
+      "Ores drop as loot, and cleared places refill after 3 in-game days."] },
+    { id: "b42", build: 42, date: "21 Nov 2026", title: "Mining and a proper trade window", items: [
+      "Mine ore at Skyrim's mines with a pickaxe (sometimes you find a gem).",
+      "Every shop has a Buy and Sell window with Sell all.",
+      "Timers now count in-game time."] },
+    { id: "b41", build: 41, date: "21 Nov 2026", title: "Smithing, gems and jewellery", items: [
+      "Make weapons, armor and jewellery at the forge, and smelt ore and tan pelts.",
+      "Valuable gems and jewellery drop from tough enemies and chests.",
+      "Tactics fixed: new rules now work, plus bigger cards and more conditions."] },
+    { id: "b40", build: 40, date: "21 Nov 2026", title: "Gear bonuses show on your character", items: [
+      "Skills boosted by your gear show a green ▲, and Active effects lists your enchantments."] },
+    { id: "b39", build: 39, date: "21 Nov 2026", title: "Cleared places show when they open again", items: [
+      "A live countdown on cleared dungeons, badges on the map, and a Cleared places list in the Journal."] },
+    { id: "b38", build: 38, date: "21 Nov 2026", title: "Market stalls", items: [
+      "Own a house and run a stall in that town. Other players can buy from it while you're away."] },
+    { id: "b37", build: 37, date: "21 Nov 2026", title: "Werewolves and vampires", items: [
+      "Join the Circle for Beast Form, or catch vampirism at night. Both have cures if you change your mind."] },
+    { id: "b36", build: 36, date: "21 Nov 2026", title: "Clan wars over the holds", items: [
+      "Clans earn points in each hold. The weekly winner rules the hold: their colour on the map and cheaper shops for members."] },
+    { id: "b35", build: 35, date: "21 Nov 2026", title: "Smoother, lighter on battery, and a Journal menu", items: [
+      "The map uses less battery, and the Journal has a quick-jump menu."] },
+    { id: "b34", build: 34, date: "21 Nov 2026", title: "Seasonal events", items: [
+      "Real-calendar festivals: Witchingmoon, Frostfall Blizzards, New Life Festival and Midyear Celebration."] },
+    { id: "b33", build: 33, date: "21 Nov 2026", title: "Clans", items: [
+      "Found a clan with a tag and banner colours, invite players, and chat in your clan channel."] },
+    { id: "b32", build: 32, date: "21 Nov 2026", title: "Achievements", items: [
+      "18 achievements with progress bars on the Hero tab."] },
+    { id: "b31", build: 31, date: "21 Nov 2026", title: "A tutorial for new players", items: [
+      "A guided first trip to Whiterun, plus one-time tips on each tab."] },
+    { id: "b30", build: 30, date: "21 Nov 2026", title: "Map pins and party routes", items: [
+      "Hold a finger on the map to drop a pin, share it with your party, and see party members' routes."] },
+    { id: "b28", build: 28, date: "21 Nov 2026", title: "The Arena in Windhelm", items: [
+      "Duel other players for gold, with monthly seasons and a ladder. Nobody dies."] },
+    { id: "b27", build: 27, date: "21 Nov 2026", title: "Fishing, cooking, horses and visits", items: [
+      "Fish in rivers, lakes and the sea, and cook stews and soups.",
+      "Buy a horse, name it and pick its coat. Horses never die; they limp back to the stables.",
+      "Visit other players' homes and leave gifts."] },
+    { id: "early", build: null, date: "20 Nov 2026", title: "The first day", items: [
+      "Roads of the North arrives on Android with one shared world for everyone.",
+      "Standing stones, racial powers, dragon shouts and dragon souls.",
+      "Carriages, followers, homes, enchanting, weather, seasons and dragon attacks on towns.",
+      "Quest lines: the main quest, Companions, Thieves Guild and the College.",
+      "Trading between players, a leaderboard, chat, backups, music and sound.",
+      "The Hall of the North that everyone builds together, and the Jarl's weekly bounty board.",
+      "A main menu and in-app updates."] },
+  ];
+  const NEXT = [
+    "Clearer, less confusing screens",
+    "Solstheim, by boat from Windhelm",
+    "A Skyrim-style compass menu: swipe to Magic, Items, Skills and Map",
+    "The real Skyrim map layout",
+    "Crafting mini-games",
+    "Motion and animations across all menus",
+    "Smart auto-combat that plays the best moves for you",
+  ];
+  const KEY = "rotn_notes_seen";
+  const latest = () => LIST[0];
+  function seen() { try { return localStorage.getItem(KEY); } catch { return null; } }
+  function markSeen() { try { localStorage.setItem(KEY, latest().id); } catch { /* ignore */ } }
+  const unseen = () => seen() !== latest().id;
+  const e = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  function entryHTML(n, open) {
+    const head = `<span class="pnt">${e(n.title)}</span><span class="pnm">${n.build ? `Build ${n.build} · ` : ""}${e(n.date)}</span>`;
+    return `<details class="pn"${open ? " open" : ""}><summary>${head}</summary><ul>${n.items.map((i) => `<li>${e(i)}</li>`).join("")}</ul></details>`;
+  }
+  /* the full list; the newest entry is open */
+  function html() {
+    return `<div class="pnotes"><details class="pn pnnext" open><summary><span class="pnt">Coming next</span><span class="pnm">Being built now</span></summary><ul>${NEXT.map((i) => `<li>${e(i)}</li>`).join("")}</ul></details>
+      ${LIST.map((n, i) => entryHTML(n, i === 0)).join("")}</div>`;
+  }
+  /* the one-time popup after an update: just the newest entry */
+  function whatsNewHTML() {
+    const n = latest();
+    return `<div class="pnotes pnwhat"><div class="pnkick">What's new</div><h2>${e(n.title)}</h2><ul>${n.items.map((i) => `<li>${e(i)}</li>`).join("")}</ul></div>`;
+  }
+  return { LIST, NEXT, latest, seen, markSeen, unseen, html, whatsNewHTML, KEY };
+})();
+if (typeof module !== "undefined") module.exports = PATCHNOTES;

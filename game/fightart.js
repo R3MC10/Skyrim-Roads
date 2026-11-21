@@ -395,9 +395,10 @@ const FIGHTART = (() => {
     if (!f) return 0;
     if (IDS.has(f)) return IDS.get(f);
     const id = nextId++; IDS.set(f, id);
-    const arena = !f.e && f.log && f.log.length && /hits for/.test(f.log[0].them || "");
-    REG.set(id, { f, scene: arena ? "arena" : sceneOf(s), hero: { ...heroOf(s, f), bound: false }, foe: arena ? "bandit" : foeOf(f.e), wagon: f.e?.cart ? "cart" : f.e?.caravan ? (f.e.khajiit ? "khajiit" : "nord") : null, foeName: f.e?.name || (arena && (f.log[0].them.match(/^(.+?) hits for/) || [])[1]) || "Opponent", played: false });
+    const arena = !!f.arena || !f.e && f.log && f.log.length && /hits for/.test(f.log[0].them || "");
+    REG.set(id, { f, scene: arena ? "arena" : sceneOf(s), hero: { ...heroOf(s, f), bound: false }, foe: arena ? "bandit" : foeOf(f.e), wagon: f.e?.cart ? "cart" : f.e?.caravan ? (f.e.khajiit ? "khajiit" : "nord") : null, foeName: f.e?.name || f.foeName || (arena && (f.log[0].them.match(/^(.+?) hits for/) || [])[1]) || "Opponent", played: false });
     { const rec = REG.get(id), outdoor = !["cave", "dwemer"].includes(rec.scene) && !s?.dungeon; if (outdoor && typeof SKY !== "undefined" && s) rec.sky = SKY.state([s.x, s.y]); }   // the sky over this fight
+    { const rec = REG.get(id); if (f.mount && !f.mount.foot && typeof HORSEBACK !== "undefined") rec.horse = typeof HORSES !== "undefined" && s?.horse ? HORSES.coat(s.horse.coat)[2] : "#6b4a2e"; }   // [OURS] fighting from the saddle
     if (REG.size > 40) REG.delete(REG.keys().next().value);
     return id;
   }
@@ -719,7 +720,10 @@ const FIGHTART = (() => {
       wg.save(); wg.translate(hx0 + (heroP.dx - heroKnock - hdg * 18) * s, groundY + (heroP.dy - hdg * 3) * s); wg.scale(s, s);
       if (meDown) { wg.translate(-6 * fallE, 0); wg.rotate(-Math.PI / 2 * fallE); wg.translate(0, 6 * fallE); }
       if (st.invis && !(b && b.who === "me" && b.move !== "self" && b.move !== "shout")) wg.globalAlpha = 0.28 + Math.sin(tt * 3) * 0.05;
+      const onHorse = rec.horse && !meDown && typeof HORSEBACK !== "undefined" && HORSEBACK.upAt(f, phase === "play" ? bi / Math.max(1, beats.length) : 1);   // the rider sits up on the horse
+      if (onHorse) { HORSEBACK.drawHorse(wg, rec.horse, 0, tt, "back"); wg.translate(0, -30); }
       heroFig(wg, rec.hero, 0, tt, heroP);
+      if (onHorse) { wg.translate(0, 30); HORSEBACK.drawHorse(wg, rec.horse, 0, tt, "front"); }
       wg.restore();
       // auras on you: ward, cloak, armor, bound
       if (st.ward || (b && b.who === "me" && b.fx === "ward" && u > 0.4)) hexWard(hx0 + 26 * s, heroChest, b && b.who === "them" && b.absorbed && u > 0.4 ? 1 : 0.5, tt);

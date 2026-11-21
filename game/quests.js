@@ -61,7 +61,7 @@ const QUESTS = (() => {
   const REC = { main: [1, 3, 6, 10, 14, 18], companions: [3, 6, 10, 14], thieves: [2, 3, 6, 8, 10, 14, 16, 18, 22, 24],
     brotherhood: [3, 5, 10, 12, 14, 18, 22, 24], college: [2, 6, 10, 16], masks: [20, 21, 23, 24, 26, 27, 29, 30, 30] };
   const recOf = (id, i) => (REC[id] || [])[i] ?? (L[id]?.stages[i]?.rec || 0);
-  const foeFor = (s, id, i, def) => G.scaleQuestFoe({ ...def }, s.level, recOf(id, i));
+  const foeFor = (s, id, i, def) => G.scaleQuestFoe({ ...def }, G.fightLevel ? G.fightLevel(s) : s.level, recOf(id, i));
   const q = (s) => (s.quests = s.quests || {});
   function ensure(s) {
     if (!q(s).main) q(s).main = { stage: 0, t: G.now() };   // everyone is on the main quest

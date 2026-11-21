@@ -281,6 +281,7 @@ const UIART = (() => {
 
   // ---- public: <img> HTML, cached per style
   const box = (size, key, draw, alt = "", cls = "uico") => ART.html(size, size, (g, H, w) => { g.scale(w / 40, w / 40); draw(g, H); }, { key, cls: "ico " + cls, alt });
+  if (typeof QUESTS !== "undefined") for (const [id, d] of Object.entries(QUESTS.L)) if (!QUEST[id] && d.emblem) QUEST[id] = d.emblem;   // emblems drawn by the quest modules (civilwar.js, daedric.js)
   return {
     LEVELS, SCHOOL, GROUP, SKILL, CONST, QUEST, ACH, GUIDE,
     spell: (id, size = 32) => (D.SPELLS[id] ? box(size, "sp:" + id, drawSpell(id), D.SPELLS[id].name, "sico") : ""),

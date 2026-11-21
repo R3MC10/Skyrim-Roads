@@ -625,6 +625,7 @@ const D = {
  "QUEST_LEVEL_FOLLOW": 0.5,
  "QUEST_LEVEL_SPAN": 10,
  "QUEST_HP_CURVE": 0,
+ "SCALE_LEVEL_CAP": 60,
  "ITEMS": {
   "iron_dagger": {
    "name": "Iron Dagger",
@@ -1619,7 +1620,8 @@ const D = {
   "sneak_ready": ["I'm hidden (sneak attack ready)", false],
   "summon_active": ["My summon is fighting", false],
   "follower_fighting": ["My follower is fighting with me", false],
-  "follower_down": ["My follower is down", false]
+  "follower_down": ["My follower is down", false],
+  "mounted": ["I'm on horseback", false]
  },
  "PERCENTS": [
   10,

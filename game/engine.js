@@ -104,11 +104,22 @@ const G = (() => {
     return Math.min(maxHealth(s), s.health + Math.max(0, t - s.healthTs) * F.REGEN_PER_SECOND.health * maxHealth(s) * (1 + fxSum(s, "regen:health", t) / 100) * (s.stone === "lady" ? 1.25 : 1));
   }
   function setHealth(s, hp, t = now()) { s.health = Math.max(0, Math.min(maxHealth(s), hp)); s.healthTs = t; }
-  const skill = (s, name) => s.skills[name].lvl + fxSum(s, "skill:" + name);   // potions add skill points [OURS simplification]
+  const skill = (s, name) => s.skills[name].lvl + fxSum(s, "skill:" + name) + (typeof LEGEND !== "undefined" ? LEGEND.bonus(s, name) : 0);   // potions add skill points [OURS simplification]; legendary stars add a little
+  /* [OURS] fair levelling: foes scale with how strong you are in a fight, not just your level. Levelling by crafting,
+     trading or sneaking raises your level but not your fighting, so foes follow your best attack and defence skills
+     (never lower than 60% of your level), and stop growing at D.SCALE_LEVEL_CAP so legendary skills don't snowball. */
+  const FIGHT_ATK = ["One-Handed", "Two-Handed", "Archery", "Spear", "Hand-to-Hand", "Destruction", "Conjuration"];
+  const FIGHT_DEF = ["Heavy Armor", "Light Armor", "Medium Armor", "Unarmored", "Blocking", "Alteration", "Restoration"];
+  function fightLevel(s) {
+    if (!s || !s.skills) return s?.level || 1;
+    const best = (l) => Math.max(15, ...l.filter((k) => s.skills[k]).map((k) => s.skills[k].lvl + (typeof LEGEND !== "undefined" ? LEGEND.bonus(s, k) : 0)));
+    const combat = Math.round(((best(FIGHT_ATK) + best(FIGHT_DEF)) / 2 - 15) * 0.6) + 1;
+    return Math.max(1, Math.min(s.level, D.SCALE_LEVEL_CAP ?? 60, Math.max(Math.round(s.level * 0.6), combat)));
+  }
 
   function useSkill(s, name, baseXp) {
     const sk = s.skills[name];
-    sk.xp += F.skillXpGained(name, baseXp) * (rested(s) && !s.werewolf ? 1 + (s.restBonus || 0.05) : 1) * (typeof POWERS !== "undefined" ? POWERS.xpMult(s, name) : 1);   // Rested; standing stones   // [Skyrim] Rested: skills improve 10% faster
+    sk.xp += F.skillXpGained(name, baseXp) * (rested(s) && !s.werewolf ? 1 + (s.restBonus || 0.05) : 1) * (typeof POWERS !== "undefined" ? POWERS.xpMult(s, name) : 1) * (typeof HALLS !== "undefined" ? HALLS.xpMult(s, name) : 1);   // Rested; standing stones   // [Skyrim] Rested: skills improve 10% faster
     const msgs = [];
     while (sk.lvl < 100 && sk.xp >= F.skillXpNeeded(name, sk.lvl)) {
       sk.xp -= F.skillXpNeeded(name, sk.lvl);
@@ -231,7 +242,7 @@ const G = (() => {
     if (it.slot === "scroll" || it.slot === "tome") return D.SPELLS[it.spell].name;
     if (it.slot === "soulgem") return `${it.charge} charge`;
     if (it.slot === "ingredient") return "Ingredient";
-    if (it.slot === "trophy") return "Trophy";
+    if (it.slot === "trophy") return it.dae || it.desc ? "Daedric artifact" : "Trophy";
     if (it.slot === "material") return "Crafting material";
     if (it.slot === "valuable") return "Valuable · sells well";
     if (it.slot === "ammo") return `${it.damage} damage · ${it.ammo === "bolt" ? "crossbow bolt" : "arrow"}`;
@@ -435,6 +446,7 @@ const G = (() => {
         case "sneak_ready": return (this.turn === 1 && this.hidden) || this.sneakNext;
         case "follower_down": return !!this.followerDown;
         case "follower_fighting": return this.allies.some((a) => a.follower);
+        case "mounted": return !!this.mount?.up;
       }
       return false;
     }
@@ -453,9 +465,27 @@ const G = (() => {
     choose() {
       for (let i = 0; i < this.rules.length; i++) {
         const r = this.rules[i];
+        if (this.healSkip && this.healSkip[i + 1] >= this.turn) continue;   // a heal that wasn't keeping up sits out a couple of turns
         if (r && !r.off && this.cond(r) && this.affordable(r.do)) return [i + 1, r.do];
       }
       return [0, "attack"];
+    }
+    /* [OURS] heal-loop guard: a "health below X → heal" rule that fires twice running without lifting you over X
+       would otherwise heal forever while the enemy wins. It sits out the next 2 turns and you fight instead. */
+    isHealRule(r) {
+      if (!r || r.if !== "hp_below" || !r.do) return false;
+      const [k, arg] = r.do.split(":");
+      if (k === "potion") return arg === "health";
+      const sp = D.SPELLS[k === "scroll" ? D.ITEMS[arg]?.spell : arg];
+      return (k === "spell" || k === "dual" || k === "scroll") && !!sp && (sp.kind === "heal" || sp.kind === "regen");
+    }
+    healGuard(ruleNo) {
+      const r = ruleNo ? this.rules[ruleNo - 1] : null;
+      if (!this.isHealRule(r) || !this.cond(r)) { this.healRun = null; return ""; }
+      this.healRun = this.healRun && this.healRun.rule === ruleNo ? { rule: ruleNo, n: this.healRun.n + 1 } : { rule: ruleNo, n: 1 };
+      if (this.healRun.n < 2) return "";
+      this.healRun = null; (this.healSkip = this.healSkip || {})[ruleNo] = this.turn + 2;
+      return "Healing isn't keeping up — you press the attack";
     }
     attack(power) {
       if (this.weapon?.staff && !this.bound && typeof MAGIC !== "undefined") { if (power) this.sp -= this.paCost; return MAGIC.staffAttack(this); }   // a staff casts instead of swinging
@@ -464,7 +494,8 @@ const G = (() => {
       const ammoK = this.bound ? null : this.ammoKind(), shot = ammoK ? this.shoot() : null;
       const sneak = (this.turn === 1 && this.hidden) || this.sneakNext;
       this.sneakNext = false;
-      if (!sneak && Math.random() > F.HIT_CHANCE) return power ? "Power attack misses" : "Attack misses";
+      const mt = this.mount && typeof HORSEBACK !== "undefined" ? HORSEBACK.strike(this, power, sneak) : null;   // [OURS] fighting from the saddle (horseback.js)
+      if (!sneak && !mt?.sure && Math.random() > F.HIT_CHANCE) return power ? "Power attack misses" : "Attack misses";
       const s = this.s, wt = this.wt;
       let dmg = this.weaponDamage() * rnd(...F.DAMAGE_SPREAD) * (power ? F.POWER_ATTACK_DAMAGE : 1);
       if (power && ((sk === "One-Handed" && P(s, "savage_strike")) || (sk === "Two-Handed" && P(s, "devastating_blow")))) dmg *= 1.25;
@@ -474,6 +505,7 @@ const G = (() => {
         const m = wt === "dagger" && P(s, "assassins_blade") ? 15 : sk === "One-Handed" && P(s, "backstab") ? 6 : sk === "Archery" && P(s, "deadly_aim") ? 3 : F.sneakMultiplier(sk);   // [Skyrim]
         dmg *= m; this.addXp("Sneak", 30); label = `Sneak attack ×${m}`;
       }
+      if (mt) { dmg *= mt.mult; if (mt.label && !sneak) label = mt.label; }
       const [cc, cm] = this.critChance();
       if (cc && Math.random() < cc) { dmg += (this.weapon ? this.weapon.damage : 0) * cm + (wt === "spear" ? dmg * 0.5 : 0); label += " (critical)"; }
       if (wt === "spear" && this.firstHit && P(s, "long_reach")) dmg *= 1.5;
@@ -519,6 +551,7 @@ const G = (() => {
         label += ` · ${s.poison.name}`;
         if (--s.poison.hits <= 0) s.poison = null;
       }
+      if (this.weapon?.dae && typeof DAEDRIC !== "undefined") { const dr = DAEDRIC.onHit(this, dmg); dmg = dr.dmg; label += dr.label; }   // Daedric artifacts
       this.ehp -= dmg;
       if (wt === "bow" && P(s, "quick_shot") && Math.random() < 0.3 && this.ehp > 0) {   // a second arrow
         if (this.ammoKind() && !this.shoot()) return `${label}: ${Math.round(dmg)}`;
@@ -615,6 +648,8 @@ const G = (() => {
       let out = pr?.end ? head + pr.text : head + (pr?.text ? pr.text + " · " : "") + this.enemyTurnInner();
       const kon = typeof PRIESTS !== "undefined" ? PRIESTS.guard(this) : null;   // Konahrik
       if (kon) out += " · " + kon;
+      const dae = typeof DAEDRIC !== "undefined" ? DAEDRIC.onEnemy(this) : null;   // Ebony Mail, Sanguine Rose, Wabbajack
+      if (dae) out += " · " + dae;
       return out;
     }
     enemyTurnInner() {
@@ -625,6 +660,7 @@ const G = (() => {
       if (this.allies.length && Math.random() < this.allies.length / (this.allies.length + 1) * 0.7) {   // [OURS] you're still the main target
         this.blocking = false;
         const al = pick(this.allies);
+        if (al.coop && typeof COOP !== "undefined") return COOP.hitAlly(this, al);   // co-op party members take their own blows
         if (al.follower && Math.random() < F.HIT_CHANCE) {
           const d = this.e.damage * rnd(...F.DAMAGE_SPREAD) * 0.8;   // [OURS] followers wear armor
           al.hp -= d;
@@ -633,6 +669,7 @@ const G = (() => {
         }
         return `${n} goes for ${al.name}`;
       }
+      if (this.mount && typeof HORSEBACK !== "undefined") { const hr = HORSEBACK.enemyTurn(this); if (hr) { this.blocking = false; return hr; } }   // [OURS] foes go for your horse
       if (Math.random() > F.HIT_CHANCE) { this.blocking = false; return `${n} misses`; }
       const bareNow = !Object.values(this.armor).some((a) => ARMOR_SKILL[a.type]), lightNow = Object.values(this.armor).some((a) => a.type === "light");
       if ((P(s, "evasion") && Math.random() < 0.1) || (lightNow && P(s, "deft_movement") && Math.random() < 0.1) || (bareNow && P(s, "dodge") && Math.random() < 0.15)) { this.blocking = false; return `${n} attacks, but you dodge`; }
@@ -671,9 +708,10 @@ const G = (() => {
         const [rule, a] = this.choose();
         const line = { turn: this.turn, rule, me: this.act(a), them: "", a, wt: this.wt };   // a / wt: what was done, for the fight scene only
         if (this.bleed.length && this.ehp > 0) { const b = this.bleed.reduce((x, y) => x + y.dmg, 0); this.ehp -= b; this.bleed = this.bleed.map((y) => ({ ...y, turns: y.turns - 1 })).filter((y) => y.turns > 0); line.me += ` · bleeds ${Math.round(b)}`; }
-        for (const al of this.allies) if (this.ehp > 0) { const d = al.dmg * rnd(...F.DAMAGE_SPREAD); this.ehp -= d; line.me += ` · ${al.name} ${Math.round(d)}`; }
+        for (const al of [...this.allies]) if (this.ehp > 0) { if (al.coop && typeof COOP !== "undefined") { line.me += COOP.allyAct(this, al); continue; } const d = al.dmg * rnd(...F.DAMAGE_SPREAD); this.ehp -= d; line.me += ` · ${al.name} ${Math.round(d)}`; }
         if (this.summonTurns > 0 && this.ehp > 0) { this.summonTurns--; this.ehp -= this.summonDmg; line.me += ` · familiar ${this.summonDmg}`; }
         if (typeof MAGIC !== "undefined" && !this.endWon) MAGIC.tick(this, line);   // cloaks, burning walls, healing circles
+        { const g = this.healGuard(rule); if (g) line.me += " · " + g; }
         if (this.ehp > 0 && !this.endWon) line.them = this.enemyTurn();
         if (this.pw) POWERS.tick(this, line);
         line.hp = Math.max(0, Math.round(this.hp)); line.ehp = Math.max(0, Math.round(this.ehp));
@@ -681,6 +719,7 @@ const G = (() => {
         this.sp = Math.min(maxStamina(this.s), this.sp + this.regenSp);
         this.mp = Math.min(maxMagicka(this.s), this.mp + this.regenMp);
         this.slowed = Math.max(0, this.slowed - 1);
+        if (this.mount && typeof HORSEBACK !== "undefined") HORSEBACK.tick(this);
       }
       this.won = this.ehp <= 0 || !!this.endWon;
       if (this.endWon) { this.e.fled = true; this.e.gold = [0, 0]; }   // turned undead run off and leave nothing
@@ -688,6 +727,7 @@ const G = (() => {
       return this.won;
     }
     apply(t = now()) {
+      const daeMsgs = typeof DAEDRIC !== "undefined" ? DAEDRIC.after(this) : [];   // Azura's Star
       if (this.won && this.weaponInv && this.weapon?.enchant) {   // [Skyrim] Soul Siphon; [OURS] Soul Trap perk
         const extra = 0.05 * P(this.s, "soul_siphon") + 0.1 * P(this.s, "soul_trap");
         if (extra) { const row = invRow(this.s, this.weaponInv); const cap = this.weapon.enchant.capacity; this.charges[this.weaponInv] = Math.min(cap, (this.charges[this.weaponInv] ?? row.charge ?? 0) + cap * extra); }
@@ -702,8 +742,9 @@ const G = (() => {
       for (const [id, q] of Object.entries(this.used)) take(this.s, +id, q);
       for (const [id, c] of Object.entries(this.charges)) { const r = invRow(this.s, +id); if (r) r.charge = c; }
       const msgs = typeof MAGIC !== "undefined" ? MAGIC.after(this) : [];
+      if (this.mount && typeof HORSEBACK !== "undefined") msgs.push(...HORSEBACK.after(this, t));
       for (const [k, v] of Object.entries(this.xp)) msgs.push(...useSkill(this.s, k, v));
-      return [...(this.followerDown ? [`${this.followerDown} gets back up after the fight, badly hurt.`] : []), ...extraMsgs, ...msgs];
+      return [...(this.followerDown ? [`${this.followerDown} gets back up after the fight, badly hurt.`] : []), ...extraMsgs, ...daeMsgs, ...msgs];
     }
   }
 
@@ -751,7 +792,7 @@ const G = (() => {
   function rollEncounter(s, t) {
     const night = isNight(t), hold = holdAt([s.x, s.y]);
     const raid = typeof CARAVANS !== "undefined" ? CARAVANS.cartAmbush(s) : null;   // bandits after your cart's cargo
-    if (raid) { const e = scaleEnemy(raid, s.level); e.hold = hold; return e; }
+    if (raid) { const e = scaleEnemy(raid, fightLevel(s)); e.hold = hold; return e; }
     const owed = (s.bounty || {})[hold] || 0;
     if (owed && Math.random() < Math.min(0.5, 0.1 + owed / 1500)) {   // [Skyrim] bounty collectors find wanted people ([OURS] chance)
       const e = scaleEnemy({ name: "Bounty hunter", danger: "medium", level: 10, tags: ["humanoid"], health: 90, damage: 16, gold: [20, 60],
@@ -775,7 +816,7 @@ const G = (() => {
       const same = dead.filter((x) => x.danger === danger);
       if (same.length || dead.length) { pool = same.length ? same : dead; witching = true; }
     }
-    const e = scaleEnemy(pick(pool), s.level);
+    const e = scaleEnemy(pick(pool), fightLevel(s));
     if (witching) e.gold = [Math.round(e.gold[0] * 1.5), Math.round(e.gold[1] * 1.5)];
     e.hold = hold;
     return e;
@@ -865,7 +906,7 @@ const G = (() => {
       if (!riding(s) && !overweight(s)) for (const m of useSkill(s, "Athletics", dt * F.ATHLETICS_XP_PER_SECOND)) tripLog(s, "📈 " + m);
       const known = new Set(s.discovered);
       for (const [n, [lx, ly, kind]] of Object.entries(PLACES))
-        if (!known.has(n) && pxDist([s.x, s.y], [lx, ly]) <= discoverRadius(kind)) { s.discovered.push(n); tripLog(s, `📍 Discovered ${n}`); }
+        if (!known.has(n) && pxDist([s.x, s.y], [lx, ly]) <= discoverRadius(kind)) { s.discovered.push(n); tripLog(s, `📍 Discovered ${n}`); if (typeof EXPLORE !== "undefined") EXPLORE.onDiscover(s, n, tripLog); }
       const pk = pickUpBags(s, bags.filter((b) => !out.taken.includes(b.id)), stepT);
       out.taken.push(...pk.taken);
       pk.msgs.forEach((m) => tripLog(s, "🎒 " + m));
@@ -879,7 +920,7 @@ const G = (() => {
       }
       if (tr.caravan && typeof CARAVANS !== "undefined") {   // guarding a caravan: its ambushes come on its own schedule
         const ce = CARAVANS.ambushDue(s, tr, stepT);
-        if (ce) { const e = scaleEnemy(ce, s.level); tr.status = "encounter"; tr.encounter = e; out.encounter = e; note(s, `⚠️ Caravan ambush: ${e.name}`); return out; }
+        if (ce) { const e = scaleEnemy(ce, fightLevel(s)); tr.status = "encounter"; tr.encounter = e; out.encounter = e; note(s, `⚠️ Caravan ambush: ${e.name}`); return out; }
         continue;
       }
       const rate = tr.carriage ? 0 : ENCOUNTER_PER_MIN * (isNight(stepT) ? D.NIGHT_ENCOUNTER_MULT : 1) * (typeof WEVENTS !== "undefined" ? WEVENTS.weather([s.x, s.y], stepT).encounters : 1);   // nobody robs a carriage on a Jarl's road
@@ -890,7 +931,7 @@ const G = (() => {
             const g = rint(...e.gold); s.gold += g;
             tripLog(s, e.text + (g ? ` (+${g} gold)` : ""));
           } else {
-            const f = new Fight(s, e, null, stepT); f.run({ t: stepT });
+            const f = new Fight(s, e, null, stepT); if (typeof HORSEBACK !== "undefined") HORSEBACK.engage(f, stepT); f.run({ t: stepT });
             f.apply(stepT).forEach((m) => tripLog(s, "📈 " + m));
             if (f.won) {
               const g = rint(...e.gold); s.gold += g; const loot = rollLoot(s, e);
@@ -941,6 +982,7 @@ const G = (() => {
       enemyFirst = true; lines.unshift(`A twig snaps. The ${e.name} spots you!`);
     }
     const f = new Fight(s, e, null, t);
+    if (typeof HORSEBACK !== "undefined") HORSEBACK.engage(f, t);   // [OURS] riding? you fight from the saddle
     f.run({ enemyFirst, t, hidden: opts.hidden ?? null });
     const skillMsgs = f.apply(t);
     if (f.won) {
@@ -970,7 +1012,7 @@ const G = (() => {
     if (r.shop) ev.shop = r.shop;
     if (r.fight) {
       const base = D.ENCOUNTERS.find((e) => e.name === r.fight) || D.ENCOUNTERS[0];
-      const e = scaleEnemy(base, s.level); e.hold = holdAt([s.x, s.y]);
+      const e = scaleEnemy(base, fightLevel(s)); e.hold = holdAt([s.x, s.y]);
       tr.status = "encounter"; tr.event = null; tr.encounter = e;
       const fr = encounterAction(s, "fight", t, { enemyFirst: r.enemyFirst, hidden: r.hidden ? true : null });
       fr.text = (r.text + " " + (fr.text || "")).trim();
@@ -983,8 +1025,8 @@ const G = (() => {
     if (choice !== "leave") tripLog(s, "🛤 " + r.text);
     return r;
   }
-  function buyFrom(s, item) {   // a travelling merchant: same barter formula as towns, no opening hours
-    const price = buyPrice(s, item);
+  function buyFrom(s, item) {   // a travelling merchant: same barter formula as towns, no opening hours (and no town market)
+    const price = buyPrice(s, item, null);
     if (s.gold < price) return `That costs ${price} gold. You have ${s.gold}.`;
     s.gold -= price; give(s, item);
     const m = useSkill(s, "Mercantile", price);
@@ -995,14 +1037,36 @@ const G = (() => {
   const shopTypes = (l) => D.SHOPS[l] || [];
   const shopStock = (l) => [...new Set(shopTypes(l).flatMap((k) => [...(D.SHOP_STOCK[k] || []), ...(((D.TOWN_STOCK || {})[l] || {})[k] || [])]))];
   const haggle = (s) => 1 + [0, 0.1, 0.15, 0.2, 0.25, 0.3][P(s, "haggling")] + fxSum(s, "barter") / 100;   // [Skyrim] Haggling; Fortify Barter
-  const buyPrice = (s, item) => Math.max(1, Math.round(F.buyPrice(D.ITEMS[item].value, skill(s, "Mercantile")) / haggle(s) * (typeof FEST !== "undefined" ? FEST.shopDiscount() : 1)   // Midyear: 10% off
-    * (typeof WARS !== "undefined" && s.location && PLACES[s.location] ? WARS.discount(s, holdAt(PLACES[s.location])) : 1)));   // your clan rules this hold
-  function sellPrice(s, row) {
+  /* [OURS] the town's market (economy.js): regional goods, today's shortage, caravans and what players trade move prices.
+     Trade goods are dealt wholesale (a smaller merchant's cut). extra = units already in this lot, so bulk deals slide. */
+  const econOn = () => typeof ECON !== "undefined";
+  const econ = (town, item, side, extra) => (econOn() && town ? ECON.mult(town, item, side, extra) : 1);
+  const cutOf = (s, item) => { const pf = F.priceFactor(skill(s, "Mercantile")); return econOn() && ECON.isTrade(item) ? ECON.tradeFactor(pf) : pf; };
+  const buyPrice = (s, item, town = s.location, extra = 0) => {
+    const v = D.ITEMS[item].value * econ(town, item, "buy", extra);
+    const base = econOn() && ECON.isTrade(item) ? Math.max(Math.round(v * 1.05), Math.round(v * cutOf(s, item))) : F.buyPrice(v, skill(s, "Mercantile"));
+    return Math.max(1, Math.round(base / haggle(s) * (typeof FEST !== "undefined" ? FEST.shopDiscount() : 1)   // Midyear: 10% off
+      * (typeof WARS !== "undefined" && town && PLACES[town] ? WARS.discount(s, holdAt(PLACES[town])) : 1)));   // your clan rules this hold
+  };
+  function sellPrice(s, row, town = s.location, extra = 0) {
     const it = D.ITEMS[row.item];
     let v = it.value;
     if (it.enchant && row.charge != null) v = it.value * (0.5 + 0.5 * row.charge / it.enchant.capacity);   // [OURS]
+    v *= econ(town, row.item, "sell", extra);
+    if (typeof CRAFTFAIR !== "undefined") v = CRAFTFAIR.sellValue(row, v);   // things you made sell for no more than their materials
     const guild = typeof GUILDS !== "undefined" ? GUILDS.fenceMult(s, row) : 1;   // Thieves Guild ranks: the fence pays more
-    return Math.max(1, Math.round(Math.min(Math.round(v), Math.round(F.sellPrice(v, skill(s, "Mercantile")) * haggle(s) * (P(s, "master_trader") ? 1.1 : 1))) * guild));
+    const fair = econOn() && ECON.isTrade(row.item) ? Math.min(Math.round(v), Math.round(v / cutOf(s, row.item))) : F.sellPrice(v, skill(s, "Mercantile"));
+    let p = Math.max(1, Math.round(Math.min(Math.round(v), Math.round(fair * haggle(s) * (P(s, "master_trader") ? 1.1 : 1))) * guild * (row.stolen ? 1 + 0.2 * Math.min(100, skill(s, "Streetwise")) / 100 : 1)));   // Streetwise: fences pay up to 20% more
+    if (econOn() && town) p = Math.max(1, Math.min(p, Math.floor(0.9 * buyPrice(s, row.item, town, extra))));   // never more than 90% of their asking price
+    return p;
+  }
+  /* the price of a whole lot: each unit nudges the market a little */
+  function lotPrice(s, item, qty, side = "buy", row = null, town = s.location) {
+    qty = Math.max(1, Math.floor(qty));
+    if (!econOn() || !town || qty === 1) return (side === "buy" ? buyPrice(s, item, town) : sellPrice(s, row || { item }, town)) * qty;
+    let tot = 0;
+    for (let k = 0; k < qty; k++) tot += side === "buy" ? buyPrice(s, item, town, k) : sellPrice(s, row || { item }, town, -k);
+    return tot;
   }
   function buy(s, item, qty = 1, t = now()) {
     if (!s.location || !shopTypes(s.location).length) return "There's no shop here.";
@@ -1019,9 +1083,10 @@ const G = (() => {
       useSkill(s, "Mercantile", D.HORSE_PRICE);
       return `You bought ${s.horse.name}. You travel ${D.HORSE_SPEED}× faster.`;
     }
-    const price = buyPrice(s, item) * qty;
+    const price = lotPrice(s, item, qty, "buy");
     if (s.gold < price) return `That costs ${price} gold. You have ${s.gold}.`;
     s.gold -= price; give(s, item, qty);
+    if (econOn()) ECON.record(s.id, s.location, item, qty, t);
     const m = useSkill(s, "Mercantile", price);
     return `Bought ${D.ITEMS[item].name}${qty > 1 ? " ×" + qty : ""} for ${price} gold.` + (m.length ? " " + m.join(". ") : "");
   }
@@ -1033,9 +1098,10 @@ const G = (() => {
     const r = invRow(s, id);
     if (!r || r.qty < qty) return "You don't have that.";
     if (D.ITEMS[r.item].noTrade) return `The ${D.ITEMS[r.item].name} is bound to you. No merchant will take it.`;
-    const price = sellPrice(s, r) * qty, name = D.ITEMS[r.item].name;
+    const price = lotPrice(s, r.item, qty, "sell", r), name = D.ITEMS[r.item].name, item = r.item;
     const wasStolen = !!invRow(s, id)?.stolen;
     take(s, id, qty); s.gold += price;
+    if (econOn()) ECON.record(s.id, s.location, item, -qty, t);
     const m = [...useSkill(s, "Mercantile", price), ...(wasStolen ? useSkill(s, "Streetwise", 8 + price / 10) : [])];   // [OURS] fencing teaches Streetwise
     return `Sold ${name} for ${price} gold.` + (m.length ? " " + m.join(". ") : "");
   }
@@ -1068,11 +1134,11 @@ const G = (() => {
 
   return {
     MAP_W, MAP_H, STEP_SECONDS, SLOTS, ARMOR_SLOTS, GAME_SPEED, now, pxDist, holdAt, clock, isNight, shopsOpen, clockText,
-    P, wtype, fxSum, lockChance, lockRoll, setAllyProvider, hiddenChance, rested, haggle, SPELL_TIER, newSave, maxHealth, maxMagicka, maxStamina, curHealth, setHealth, skill, useSkill, levelUp,
+    P, wtype, fxSum, lockChance, lockRoll, setAllyProvider, hiddenChance, rested, haggle, SPELL_TIER, newSave, maxHealth, maxMagicka, maxStamina, curHealth, setHealth, skill, useSkill, levelUp, fightLevel,
     riding, withHorse, give, take, invRow, carried, capacity, overweight, equipment, equip, unequip, countRestore, itemStats,
     loadout: lo, addRule, ruleSlot, deadRules, fixTactics, saveLoadoutAs, deleteLoadout, spellCost, describeRule, describeAction, Fight, scaleEnemy, scaleQuestFoe, questLevel, rollLoot,
     rollEncounter, die, speed, discoverRadius, startTrip, startEvent, eventChoices, eventChoice, buyFrom, minutesLeft, minutesTo, posAfter, advance, encounterAction, migrate, PLACES,
-    shopTypes, shopStock, buyPrice, sellPrice, buy, sell, readTome, drinkPotion, recharge, clone, note,
+    shopTypes, shopStock, buyPrice, sellPrice, lotPrice, buy, sell, readTome, drinkPotion, recharge, clone, note,
   };
 })();
 if (typeof module !== "undefined") module.exports = G;

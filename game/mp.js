@@ -94,8 +94,8 @@ const MP = (() => {
   }
 
   // ---- trading: what you offer leaves your pack at once (held in the offer) so nothing can be spent twice
-  const rowCopy = (r) => ({ item: r.item, qty: r.qty, charge: r.charge ?? null, temper: r.temper || 0, tq: r.tq || 0, stolen: !!r.stolen });
-  function giveRow(s, x) { const id = G.give(s, x.item, x.qty, x.charge); const r = G.invRow(s, id); if (r && (x.temper || x.stolen)) Object.assign(r, { temper: x.temper, tq: x.tq, stolen: x.stolen }); }
+  const rowCopy = (r) => ({ item: r.item, qty: r.qty, charge: r.charge ?? null, temper: r.temper || 0, tq: r.tq || 0, stolen: !!r.stolen, ...(typeof CRAFTFAIR !== "undefined" ? CRAFTFAIR.pack(r) : {}) });
+  function giveRow(s, x) { const id = G.give(s, x.item, x.qty, x.charge); const r = G.invRow(s, id); if (r && (x.temper || x.stolen)) Object.assign(r, { temper: x.temper, tq: x.tq, stolen: x.stolen }); if (typeof CRAFTFAIR !== "undefined") CRAFTFAIR.carry(s, id, x, x.qty); }
   function makeOffer(s, card, rowIds, giveGold, askGold, t = G.now()) {
     giveGold = Math.max(0, Math.floor(+giveGold || 0)); askGold = Math.max(0, Math.floor(+askGold || 0));
     const eq = new Set(Object.values(G.loadout(s).equipment));

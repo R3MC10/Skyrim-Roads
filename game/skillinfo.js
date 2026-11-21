@@ -72,9 +72,11 @@ const SKILLINFO = (() => {
       now: (s, L) => [row("Talking past a guard on the road", (x) => pc(clamp(0.3 + x / 100, 0.1, 0.95)), L)],
       raise: ["Buy rumours at inns.", "Talk your way out of trouble on the road."], code: ['useSkill(s, "Speechcraft"', 'xp(s, "Speechcraft"'] },
     "Etiquette": { what: "Manners at court: its perks make training cheaper, halve fines and get you past tolls.",
-      now: () => ["Its value is in its perks."], raise: ["Finish jobs from a town's notice board.", "Rent a room at an inn."], code: ['useSkill(s, "Etiquette", 20)', 'useSkill(s, "Etiquette", 6)'] },
+      now: (s, L) => [row("Inns and trainers charge", (x) => pc(1 - 0.15 * x / 100), L), row("Notice-board jobs pay", (x) => `+${Math.round(20 * x / 100)}%`, L)],
+      raise: ["Finish jobs from a town's notice board.", "Rent a room at an inn."], code: ['useSkill(s, "Etiquette", 20)', 'useSkill(s, "Etiquette", 6)'] },
     "Streetwise": { what: "Knowing the underworld: its perks give free rumours, fences and bribes.",
-      now: () => ["Its value is in its perks."], raise: ["Buy rumours at inns.", "Sell stolen goods to a fence."], code: ['useSkill(s, "Streetwise", 12)', 'useSkill(s, "Streetwise", 8 + price / 10)'] },
+      now: (s, L) => [row("A rumour at the inn costs", (x) => `${Math.round(10 * (1 - 0.5 * x / 100))} gold`, L), row("Fences pay for stolen goods", (x) => `+${Math.round(20 * x / 100)}%`, L)],
+      raise: ["Buy rumours at inns.", "Sell stolen goods to a fence."], code: ['useSkill(s, "Streetwise", 12)', 'useSkill(s, "Streetwise", 8 + price / 10)'] },
     "Smithing": { what: "Making and improving weapons and armor at a forge.",
       now: (s, L) => [row("Best improvement you can make", (x) => (typeof TOWNS !== "undefined" ? TOWNS.QUALITY[Math.min(6, 1 + Math.floor(x / 20))] : ""), L), "At 50: one extra ore every time you mine."],
       raise: ["Make things at a forge (more valuable things teach more).", "Improve gear, smelt ore and tan pelts."], code: ['useSkill(s, "Smithing"'] },
@@ -108,7 +110,13 @@ const SKILLINFO = (() => {
     if (bk.length) raise.push(`Read the skill book "${bk[0]}" (found on the road and in dungeons): +1 at once.`);
     if (!i.raise.length) raise.unshift("No everyday action trains it yet: use trainers and skill books.");
     raise.push("Sleep at an inn or your house first: Rested makes every skill grow 5% faster (10% in your own bed). The Warrior, Mage and Thief stones add 20% to their skills.");
-    return { what: i.what, now: i.now(s, L), raise, perks: perksLine(sk), level: L };
+    const now = i.now(s, L);
+    if (s && s.skills && s.skills[sk]) {   // fair levelling: say plainly how far the next level is
+      const k = s.skills[sk];
+      if (k.lvl < 100) now.push(`Next level: ${Math.floor(k.xp)} of ${Math.ceil(F.skillXpNeeded(sk, k.lvl))} skill XP. Each level up also gives ${k.lvl + 1} toward your character level.`);
+      else now.push(`At 100: you can make it Legendary (it starts again from 15, you keep your perks and get a permanent bonus).`);
+    }
+    return { what: i.what, now, raise, perks: perksLine(sk), level: L };
   }
   const summary = (sk) => INFO[sk]?.what || "";
   return { INFO, get, summary, trainers, books };

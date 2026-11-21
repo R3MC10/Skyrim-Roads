@@ -416,6 +416,12 @@ const WorldMap = (() => {
       g.beginPath(); g.moveTo(fx, fy); path.forEach((p) => g.lineTo(...P(p))); g.stroke(); g.setLineDash([]);
       const [ex, ey] = P(path[path.length - 1] || r.from); g.fillStyle = "#cde0ff"; g.strokeStyle = "#13243a"; g.lineWidth = 2 * s; g.beginPath(); g.arc(ex, ey, 4.5 * s, 0, 7); g.fill(); g.stroke();
     }
+    for (const m of v.tmaps || []) {   // treasure maps: a red X
+      const [x, y] = P(m.pos), r = 7 * s;
+      g.strokeStyle = "#1b1408"; g.lineWidth = 5 * s; g.beginPath(); g.moveTo(x - r, y - r); g.lineTo(x + r, y + r); g.moveTo(x + r, y - r); g.lineTo(x - r, y + r); g.stroke();
+      g.strokeStyle = "#c9392b"; g.lineWidth = 3 * s; g.stroke();
+      smartLabel("🗺 " + m.label, x, y - r, 11, "#ffd6c8");
+    }
     for (const p of v.pins || []) {   // your own pins
       const [x, y] = P(p.pos), r = (p.on ? 9 : 7) * s;
       g.fillStyle = p.on ? "#e2bb64" : "#d65a4a"; g.strokeStyle = "#1b1408"; g.lineWidth = 2 * s;

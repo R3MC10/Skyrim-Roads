@@ -233,5 +233,70 @@ const HOMEART = (() => {
     const shown = (d.show || []).filter((x) => x.town === town && x.item).map((x) => x.item);
     return interior({ town, rested: false, garden: 0.6, chestN: 0, shown, skulls: d.dragons || 0, motto: d.motto || "", gift, visitor: true });
   }
-  return { interior, hall, mine, visit, withSpots, SPOTS, LOOK };
+
+  // ---- player halls and guild halls (halls.js): the rooms you've built, decorations and staff, on one picture
+  function person(g, H, x, y, cloth, prop) {   // a small standing figure: shopkeeper, steward or guard
+    H.circle(g, x, y - 34, 5.5, "#d9b48c", P().ink, 1);
+    H.poly(g, [[x - 8, y - 28], [x + 8, y - 28], [x + 10, y], [x - 10, y]], cloth, P().ink, 1.1);
+    if (prop === "spear") { g.strokeStyle = "#5a4330"; g.lineWidth = 2; g.beginPath(); g.moveTo(x + 12, y + 2); g.lineTo(x + 12, y - 52); g.stroke(); H.poly(g, [[x + 9, y - 52], [x + 12, y - 62], [x + 15, y - 52]], "#a9b0b4", P().ink, 0.8); }
+    if (prop === "ledger") H.poly(g, [[x - 14, y - 22], [x - 6, y - 24], [x - 6, y - 14], [x - 14, y - 12]], "#e9dcc0", P().ink, 0.8);
+    if (prop === "helm") H.poly(g, [[x - 6, y - 37], [x, y - 43], [x + 6, y - 37]], "#8f97a0", P().ink, 0.8);
+  }
+  function guild(h, opts = {}) {
+    if (!h) return "";
+    const L = { ...lookOf(h.town), loft: false }, rooms = h.rooms || {}, decor = h.decor || [], staff = Array.isArray(h.staff) ? h.staff : Object.keys(h.staff || {});
+    const tro = (h.trophies || []).map((r) => (typeof r === "string" ? r : r.item)).slice(0, 4);
+    const night = typeof G !== "undefined" && G.isNight(G.now());
+    const key = `guild|${h.town}|${JSON.stringify(rooms)}|${decor.join(",")}|${staff.join(",")}|${tro.join(",")}|${Math.min(9, (h.storage || []).length)}|${(h.colors || []).join(",")}|${night ? "n" : "d"}`;
+    const draw = (g, H) => {
+      room(g, H, L, h.town.length * 11 + 5);
+      const cols = h.colors?.length === 2 ? h.colors : ["#8e2b25", "#30505e"];
+      if (decor.includes("banner") || h.clan) for (const bx of [W * 0.36, W * 0.6]) H.poly(g, [[bx, 12], [bx + 18, 12], [bx + 18, 52], [bx + 9, 44], [bx, 52]], cols[bx > W / 2 ? 1 : 0], ART.PAL.ink, 1);
+      if (decor.includes("tapestry")) { H.poly(g, [[W * 0.42, 14], [W * 0.58, 14], [W * 0.58, 46], [W * 0.42, 46]], "#5a4a7a", "#d6b25e", 1.2); g.strokeStyle = "#d6b25e"; g.lineWidth = 1; g.beginPath(); g.moveTo(W * 0.45, 30); g.lineTo(W * 0.5, 20); g.lineTo(W * 0.55, 30); g.stroke(); }
+      if (decor.includes("map")) { H.poly(g, [[W * 0.66, 18], [W * 0.8, 18], [W * 0.8, 40], [W * 0.66, 40]], "#d9c9a3", P().ink, 1); g.strokeStyle = "#6f5741"; g.beginPath(); g.moveTo(W * 0.68, 34); g.quadraticCurveTo(W * 0.73, 22, W * 0.78, 30); g.stroke(); }
+      if (decor.includes("antlers")) { g.strokeStyle = "#cdb98f"; g.lineWidth = 2; for (const d of [-1, 1]) { g.beginPath(); g.moveTo(W * 0.5, 62); g.quadraticCurveTo(W * 0.5 + d * 16, 52, W * 0.5 + d * 20, 40); g.stroke(); } H.circle(g, W * 0.5, 64, 4, "#8a6a3e", P().ink, 1); }
+      hearth(g, H, W * 0.5, L, true);
+      if (decor.includes("rug")) { g.fillStyle = "#6f5741"; g.beginPath(); g.ellipse(W * 0.5, HT * 0.9, 54, 9, 0, 0, 7); g.fill(); g.strokeStyle = "#3b2c1e"; g.lineWidth = 1; g.stroke(); }
+      if (decor.includes("candles")) for (const cx of [W * 0.3, W * 0.7]) { g.fillStyle = "#3b2c1e"; g.fillRect(cx - 1, HT * 0.62, 2, HT * 0.18); g.fillRect(cx - 7, HT * 0.62, 14, 2); for (const d of [-6, 0, 6]) { g.fillStyle = "#e9dcc0"; g.fillRect(cx + d - 1, HT * 0.6 - 4, 2, 4); H.circle(g, cx + d, HT * 0.6 - 6, 1.6, "#f6d27a", null); } }
+      if (decor.includes("seat")) H.poly(g, [[W * 0.46, HT * 0.72], [W * 0.46, HT * 0.5], [W * 0.5, HT * 0.44], [W * 0.54, HT * 0.5], [W * 0.54, HT * 0.72]], "#7a5232", "#d6b25e", 1.4);
+      // left side: the forge
+      if (rooms.forge) {
+        const fx = W * 0.06, fy = HT * 0.94;
+        H.poly(g, [[fx, fy], [fx + 40, fy], [fx + 40, fy - 30], [fx, fy - 30]], "#5f5a54", P().ink, 1.2);
+        const gl = g.createRadialGradient(fx + 20, fy - 20, 2, fx + 20, fy - 20, 28); gl.addColorStop(0, "rgba(255,140,60,.8)"); gl.addColorStop(1, "rgba(255,120,40,0)"); g.fillStyle = gl; g.fillRect(fx - 10, fy - 50, 60, 50);
+        H.poly(g, [[fx + 48, fy - 14], [fx + 74, fy - 14], [fx + 70, fy - 20], [fx + 52, fy - 20]], "#3d434a", P().ink, 1); g.fillStyle = "#3d434a"; g.fillRect(fx + 57, fy - 14, 8, 14);
+        if (rooms.forge >= 2) { g.fillStyle = "#6f6a64"; g.fillRect(fx + 6, fy - 64, 6, 34); }   // a chimney for the master forge
+      }
+      // the shrine, under the window
+      if (rooms.shrine) {
+        const sx = W * 0.2, sy = HT * 0.72;
+        H.poly(g, [[sx, sy], [sx + 30, sy], [sx + 26, sy - 14], [sx + 4, sy - 14]], "#9a8a76", P().ink, 1.1);
+        g.strokeStyle = "#d6b25e"; g.lineWidth = 1.6; H.circle(g, sx + 15, sy - 30, 9, null, "#d6b25e", 1.6); g.beginPath(); g.moveTo(sx + 15, sy - 40); g.lineTo(sx + 15, sy - 14); g.stroke();
+        if (rooms.shrine >= 2) { const gl = g.createRadialGradient(sx + 15, sy - 30, 2, sx + 15, sy - 30, 24); gl.addColorStop(0, "rgba(255,240,180,.5)"); gl.addColorStop(1, "rgba(255,240,180,0)"); g.fillStyle = gl; g.fillRect(sx - 10, sy - 56, 50, 50); }
+      }
+      // trophy wall
+      if (rooms.trophy) {
+        const tx = W * 0.62, ty = 56;
+        for (let i = 0; i < (rooms.trophy >= 2 ? 4 : 2); i++) { const sx = tx + i * 28; H.poly(g, [[sx, ty], [sx + 22, ty], [sx + 22, ty + 12], [sx + 11, ty + 20], [sx, ty + 12]], ["#8e2b25", "#30505e", "#3d5d36", "#7a5232"][i], "#d6b25e", 1); if (tro[i]) plaque(g, tro[i], sx + 3, ty, 16); }
+      }
+      // storage: a row of chests
+      if (rooms.storage) { const n = (h.storage || []).length; chest(g, H, W * 0.78, HT * 0.97, n); if (rooms.storage >= 2) chest(g, H, W * 0.88, HT * 0.97, 0); }
+      // the shop counter
+      if (rooms.counter) {
+        const cx = W * 0.62, cy = HT * 0.94;
+        H.poly(g, [[cx, cy], [cx + 50, cy], [cx + 50, cy - 22], [cx, cy - 22]], "#6f4f33", P().ink, 1.2);
+        g.fillStyle = "#4f3826"; g.fillRect(cx - 2, cy - 24, 54, 4);
+        H.circle(g, cx + 10, cy - 28, 3, "#d6b25e", P().ink, 0.8); H.circle(g, cx + 16, cy - 27, 3, "#d6b25e", P().ink, 0.8); H.poly(g, [[cx + 30, cy - 24], [cx + 38, cy - 24], [cx + 37, cy - 34], [cx + 31, cy - 34]], "#6e8fa8", P().ink, 0.8);
+        if (staff.includes("shopkeeper")) person(g, H, cx + 25, cy - 22, "#6a5a3c", null);
+      }
+      if (staff.includes("steward")) person(g, H, W * 0.42, HT * 0.96, "#30505e", "ledger");
+      if (staff.includes("guard")) person(g, H, W * 0.94, HT * 0.9, "#8e7a4a", "spear");
+      // the name over the door
+      g.fillStyle = "rgba(43,32,22,.85)"; g.fillRect(W / 2 - 80, HT * 0.02 + 10, 160, 14); g.fillStyle = "#e9d7a8"; g.font = "bold 10px Georgia, serif"; g.textAlign = "center"; g.fillText(String(h.name || "").slice(0, 28), W / 2, HT * 0.02 + 21); g.textAlign = "left";
+      nightTint(g);
+      g.strokeStyle = "#3b2c1e"; g.lineWidth = 3; g.strokeRect(1.5, 1.5, W - 3, HT - 3);
+    };
+    return ART.html(W, HT, draw, { key, cls: "scene homeart", alt: `${h.name} inside`, style: opts.style });
+  }
+  return { interior, hall, guild, mine, visit, withSpots, SPOTS, LOOK };
 })();
