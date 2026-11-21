@@ -268,6 +268,8 @@
       <div class="setrow"><span>All sound</span>${seg("mute", [[false, "On"], [true, "Off"]], c.mute)}</div>
       ${S ? `<h3>Your character</h3><div class="grid2"><button class="btn" data-act="bk" data-bk="openbackup">Back up</button><button class="btn" data-act="bk" data-bk="openrestore">Restore</button></div>` : `<h3>Your character</h3><button class="btn" data-act="bk" data-bk="openrestore" style="width:100%">Restore from a backup</button>`}
       <h3>Look</h3><div class="setrow"><span>Art style</span>${seg("artStyle", [["ink", "Hand-drawn"], ["pixel", "Pixel art"]], ART.style())}</div>
+      ${typeof MOTION !== "undefined" ? `<div class="setrow"><span>Motion</span>${seg("motion", [["full", "Full"], ["lite", "Lite"], ["off", "Off"]], MOTION.pref())}</div>` : ""}
+      <h3>Crafting</h3><div class="setrow"><span>When you craft</span>${seg("craftGame", [[true, "Mini-games"], [false, "Quick craft"]], getPref("craftGame", true))}</div>
       <h3>Map</h3><div class="setrow"><span>Map opens</span>${seg("zoomFar", [[false, "Close up"], [true, "All Skyrim"]], getPref("zoomFar", false))}</div>
       ${APP ? `<h3>Phone</h3><div class="setrow"><span>Notifications</span>${seg("notify", [[true, "On"], [false, "Off"]], getPref("notify", true))}</div>
       <div class="setrow"><span>Check for updates</span>${seg("autoUpdate", [[true, "Automatically"], [false, "Only when I ask"]], getPref("autoUpdate", true))}</div>` : ""}`;
@@ -281,6 +283,7 @@
   function settingsAction(act, b) {
     if (act !== "pref") return false;
     const k = b.dataset.k, v = b.dataset.v === "true";
+    if (k === "motion") { MOTION.setPref(b.dataset.v); SOUND.fx("click"); return true; }
     if (k === "artStyle") { ART.setStyle(b.dataset.v); SOUND.fx("click"); if (typeof POLISH !== "undefined") POLISH.texture(); if (S) { try { renderPanel(true); } catch { /* title screen */ } } return true; }
     if (k === "mute") { SOUND.set("mute", v); if ($("#sndBtn")) $("#sndBtn").innerHTML = hudIcon(v ? "mute" : "gear", v ? "🔇" : "⚙") + '<small class="ibl" aria-hidden="true">Menu</small>'; }
     else setPref(k, v);
@@ -466,7 +469,7 @@
     tabsEl.classList.remove("hide");
     window.scrollTo(0, 0);
     tabsEl.innerHTML = TABS.map(([id, label, svg]) => `<button class="tab ${id === tab ? "on" : ""}" role="tab" aria-selected="${id === tab}" data-tab="${id}"><svg viewBox="0 0 24 24">${svg}</svg>${label}</button>`).join("");
-    tabsEl.onclick = (e) => { const b = e.target.closest("[data-tab]"); if (!b) return; SOUND.fx("click"); if (b.dataset.tab === "pack") return openMenu("items"); closeMenu(); tab = b.dataset.tab; testResult = null; bump(); renderTabs(); renderPanel(true); if (typeof POLISH !== "undefined") POLISH.swap($("#side")); $("#side").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" }); };
+    tabsEl.onclick = (e) => { const b = e.target.closest("[data-tab]"); if (!b) return; SOUND.fx("click"); if (b.dataset.tab === "pack") return openMenu("items"); closeMenu(); tab = b.dataset.tab; testResult = null; bump(); renderTabs(); renderPanel(true); if (typeof POLISH !== "undefined") POLISH.swap($("#side")); if (typeof MOTION !== "undefined") MOTION.panel($("#side")); $("#side").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" }); };
     $("#zoomBtn").onclick = () => { mapTouchedAt = performance.now(); zoom = zoom > 1.01 ? 1 : 2.4; follow = true; $("#zoomBtn").textContent = zoom > 1.01 ? "－" : "＋"; };
     $("#centerBtn").onclick = () => { mapTouchedAt = performance.now(); follow = true; if (zoom === 1) zoom = 2.4; $("#zoomBtn").textContent = "－"; };
     bindMap();
@@ -645,7 +648,8 @@
     $("#nm").textContent = S.name;
     const where = S.location || (S.trip?.boat ? `at sea on ${S.trip.ship || "the ship"}` : `the wilds of ${G.holdAt(livePos())}`);
     $("#sub").textContent = typeof HUD !== "undefined" ? `${D.RACES[S.race].name} · ${where}` : `Level ${S.level} ${D.RACES[S.race].name} · ${where}`;
-    const lb = $("#lvlb"); if (lb && lb.textContent !== String(S.level)) lb.textContent = S.level;
+    const lb = $("#lvlb"); if (typeof MOTION !== "undefined") MOTION.count(lb, S.level, "", { pop: false }); else if (lb && lb.textContent !== String(S.level)) lb.textContent = S.level;
+    if (typeof MOTION !== "undefined") { MOTION.xp($(".top"), S.charXp / F.charXpNeeded(S.level), S.level); MOTION.place(S.location, !!(S.location && WORLD.places[S.location] && ["city", "town"].includes(WORLD.places[S.location][2]))); }
     const wx = WEVENTS.weather(livePos()), dt = WEVENTS.date();
     const clk = $("#clock"), when = `${dt.day} ${dt.month}, ${G.clockText().split(", ")[1]}`;
     if (typeof SKY !== "undefined") {   // a small drawn sky: sun or moon phase, clouds, rain, snow
@@ -653,7 +657,7 @@
       if (clk._ic !== ic) { clk._ic = ic; clk.innerHTML = `<span class="skyw">${ic}</span><span class="skyt"></span>`; }
       const txt = `${when} · ${wx.name}`; const tEl = clk.querySelector(".skyt"); if (tEl && tEl.textContent !== txt) { tEl.textContent = txt; clk.title = txt; }
     } else clk.textContent = `${G.isNight() ? "🌙" : "☀️"} ${when} · ${wx.icon} ${wx.name}`;
-    $("#goldv").textContent = `${S.gold} gold`;
+    if (typeof MOTION !== "undefined") MOTION.count($("#goldv"), S.gold, " gold"); else $("#goldv").textContent = `${S.gold} gold`;
   }
   function hudCompass() {
     if (typeof HUD === "undefined") return;
@@ -721,6 +725,7 @@
       if (needDot && !b.querySelector(".dot")) b.insertAdjacentHTML("beforeend", '<span class="dot"></span>');
       if (!needDot) b.querySelector(".dot")?.remove();
     });
+    if (typeof MOTION !== "undefined") MOTION.tabs(tabsEl);
     const sb = $("#socBtn"); if (sb) { const n = socialBadge(); sb.classList.toggle("on", tab === "social"); if (n && !sb.querySelector(".dot")) sb.insertAdjacentHTML("beforeend", '<span class="dot"></span>'); if (!n) sb.querySelector(".dot")?.remove(); }
   }
 
@@ -734,7 +739,7 @@
     if (m && mapObserved !== m && window.IntersectionObserver) { mapObserved = m; new IntersectionObserver((es) => { mapOnScreen = es[0].isIntersecting; }).observe(m); }
     const moving = S?.trip?.status === "travel" || performance.now() - mapTouchedAt < 1500;
     const wx = WEVENTS.weather(livePos()).id, weatherAnim = !reduceMotion && !["clear", "cloudy", "fog"].includes(wx);
-    const mapAnim = typeof MAPART !== "undefined" && MAPART.active();   // a discovery burst playing
+    const mapAnim = (typeof MAPART !== "undefined" && MAPART.active()) || (typeof MOTION !== "undefined" && MOTION.mapBusy());   // a discovery burst playing
     const raidNow = typeof RAIDART !== "undefined" && WEVENTS.activeRaid();
     const fxNow = typeof FXART !== "undefined" && S ? FXART.state(S) : null;   // spell and shout effects on the map
     if (document.hidden || !m || !mapOnScreen || ts - lastFrame < (moving || mapAnim ? 33 : weatherAnim || (raidNow && !reduceMotion) || (fxNow?.anim && !reduceMotion) ? 66 : 125)) return;
@@ -887,8 +892,8 @@
     openModal(`${/^You died/.test(title) ? UIART.death(320, 120) : typeof EVENTART !== "undefined" ? EVENTART.story(title, text) : ""}<h2>${esc(title)}</h2><p>${esc(text)}</p><button class="btn ${bad ? "danger" : "pri"}" data-act="close" style="width:100%">Continue</button>`, bad ? "enc" : "");
   }
   function fightLog(f) {
-    return `${typeof FIGHTART !== "undefined" ? FIGHTART.placeholder(f, S) : ""}<details ${f.log.length < 9 ? "open" : ""}><summary class="sub" style="cursor:pointer;min-height:36px">Fight log (${f.turn} turns) — [n] is the tactic rule that fired</summary><div class="flog">${f.log.map((l) =>
-      `<div><span class="r">${l.turn ? `T${l.turn}` : "⚡"}${l.rule != null ? `<br>[${l.rule || "–"}]` : ""}</span><span>${esc(l.me)}${l.me && l.them ? " · " : ""}${esc(l.them)}${l.hp != null ? ` <span class="sub">(you ${l.hp} · foe ${l.ehp})</span>` : ""}</span></div>`).join("")}</div></details>`;
+    return `${typeof FIGHTART !== "undefined" ? FIGHTART.placeholder(f, S) : ""}<details ${f.log.length < 9 ? "open" : ""}><summary class="sub" style="cursor:pointer;min-height:36px">Fight log (${f.turn} turns) — ${f.ai ? "[AI] = Smart AI's move" : "[n] is the tactic rule that fired"}</summary><div class="flog">${f.log.map((l) =>
+      `<div><span class="r">${l.turn ? `T${l.turn}` : "⚡"}${l.ai ? "<br>[AI]" : l.rule != null ? `<br>[${l.rule || "–"}]` : ""}</span><span>${esc(l.me)}${l.me && l.them ? " · " : ""}${esc(l.them)}${l.hp != null ? ` <span class="sub">(you ${l.hp} · foe ${l.ehp})</span>` : ""}${l.why ? `<em class="aiwhy">🧠 ${esc(l.why)}</em>` : ""}</span></div>`).join("")}</div></details>`;
   }
   function openEncounter(note) {
     const e = S.trip?.encounter;
@@ -904,7 +909,7 @@
         <button class="btn" data-act="enc" data-a="sneak">🥷 Sneak past</button>
         <button class="btn" data-act="enc" data-a="potion" ${G.countRestore(S, "health") ? "" : "disabled"}>🧪 Potion (${G.countRestore(S, "health")})</button>
         ${e.bountyHold ? `<button class="btn pri" data-act="enc" data-a="pay" style="grid-column:1/-1">⚖️ Pay your ${esc(e.bountyHold)} bounty (${TOWNS.bounty(S, e.bountyHold)} gold)</button>` : ""}
-      </div><p class="sub" style="margin-bottom:0">Fighting uses your <b>${esc(S.loadout)}</b> tactics. A hidden start gives a sneak attack.</p>`, "enc");
+      </div><p class="sub" style="margin-bottom:0">Fighting uses ${aiOn() ? `<b>Smart AI</b> (${esc(S.loadout)} gear)` : `your <b>${esc(S.loadout)}</b> tactics`}. A hidden start gives a sneak attack.</p>`, "enc");
   }
   const skillLine = (r) => (r.skills || []).length ? `<p class="sub">📈 ${r.skills.map(esc).join(" · ")}</p>` : "";
   function openEvent(note) {
@@ -1097,7 +1102,7 @@
       main = `<div class="card ${e ? "foe" : ""} ${r.type === "rest" ? "rest" : ""}">${PLACEART.room(r.type)}<h3>${DUNGEONS.ICON[r.type]} ${e ? esc(e.name) : DUNGEONS.LABEL[r.type]}</h3><p>${esc(r.text)}</p>
         ${e ? `<div class="vital"><small><span>${esc(e.name)}</span><span class="num">${e.hp}/${e.health} · hits for ~${Math.round(e.damage)}</span></small><div class="bar"><i style="width:100%;background:var(--ember)"></i></div></div>` : ""}
         <div class="evc">${DUNGEONS.roomChoices(S).map(([c, label]) => `<button class="btn ${["fight", "pick", "rest", "read", "pray", "open", "loot", "burn", "dash"].includes(c) || c.startsWith("set:") ? (e ? "danger" : "pri") : ""}" data-act="dact" data-c="${esc(c)}">${esc(label)}</button>`).join("")}</div>
-        ${e ? `<p class="sub" style="margin-bottom:0">Fighting uses your <b>${esc(S.loadout)}</b> tactics.</p>` : ""}</div>`;
+        ${e ? `<p class="sub" style="margin-bottom:0">Fighting uses ${aiOn() ? `<b>Smart AI</b> (${esc(S.loadout)} gear)` : `your <b>${esc(S.loadout)}</b> tactics`}.</p>` : ""}</div>`;
     } else {
       const nx = DUNGEONS.nextChoices(S), row = d.rows[d.row + 1];
       main = `<div class="card">${d.row < 0 ? PLACEART.scene(d.place) : ""}<h3>${d.row < 0 ? "The entrance" : "Which way?"}</h3><p class="sub">${d.row < 0 ? `You light a torch and step into ${esc(d.place)}.` : "The passage splits."} Tap a glowing room on the map, or pick here:</p>
@@ -1377,6 +1382,7 @@
       <div class="sky-foot"><span>Armor <b class="num">${armor}</b></span><span>Damage <b class="num">${dmg}</b></span><span>Weight <b class="num">${G.carried(S).toFixed(0)}/${G.capacity(S)}</b></span><span class="gold">${S.gold} gold</span></div>
       <div class="sky-vitals"><div class="bar"><i style="width:${pct(hp, mh)}%;background:var(--hp)"></i></div><div class="bar"><i style="width:100%;background:var(--mp)"></i></div><div class="bar"><i style="width:100%;background:var(--sp)"></i></div></div>
     </div>`;
+    if (typeof MOTION !== "undefined") MOTION.menu(el, sky.page, sky.cat);
   }
 
   // ------------------------------------------------------------ dragon attacks (world events)
@@ -2433,7 +2439,7 @@
       if (canShop) acts.push(`<button class="btn sm" data-act="sell" data-id="${r.id}">Sell ${G.sellPrice(S, r)}g</button>`);
       const ingFx = it.slot === "ingredient" && TOWNS.INGREDIENT_FX[r.item] ? TOWNS.INGREDIENT_FX[r.item][1].map((e, i) => TOWNS.known(S, r.item)[i] ? e : "?").join(", ") : "";
       const qual = r.tq ? TOWNS.QUALITY[r.tq] + " " : "";
-      return `<div class="item ${on ? "on" : ""}" data-act="packrow" data-id="${r.id}" style="flex-wrap:wrap">${ICONART.item(r.item, 34, r)}<div class="t">${esc(qual + it.name + (r.nm ? ` “${r.nm}”` : ""))}${r.qty > 1 ? ` ×${r.qty}` : ""}${on ? " ✓" : ""}${r.stolen ? ' <span class="danger-high">stolen</span>' : ""}<span>${esc(ingFx || G.itemStats(r.item))}${r.temper ? ` · +${r.temper} improved` : ""}${charge} · ${+(it.weight * r.qty).toFixed(2)} wt</span></div>
+      return `<div class="item ${on ? "on" : ""}" data-act="packrow" data-id="${r.id}" style="flex-wrap:wrap">${ICONART.item(r.item, 34, r)}<div class="t">${esc(qual + it.name + (r.nm ? ` “${r.nm}”` : ""))}${r.qty > 1 ? ` ×${r.qty}` : ""}${on ? " ✓" : ""}${r.stolen ? ' <span class="danger-high">stolen</span>' : ""}<span>${esc(ingFx || G.itemStats(r.item))}${r.temper ? ` · +${r.temper} improved` : ""}${r.mw && typeof CG !== "undefined" ? ` · ${CG.label(r.mw)} work` : ""}${charge} · ${+(it.weight * r.qty).toFixed(2)} wt</span></div>
         ${open ? `<div style="display:flex;gap:6px;flex-wrap:wrap;width:100%">${acts.join("") || '<span class="sub">Nothing to do with this here.</span>'}</div>` : ""}</div>`;
     };
     return `<div class="panel"><h2>Equipped · ${esc(S.loadout)}</h2>${dollScreen()}${typeof AMMO !== "undefined" && AMMO.status(S) && !AMMO.status(S).best ? ammoNote() : ""}
@@ -2466,6 +2472,7 @@
     return "";
   }
   function firedSummary(f) {
+    if (f.ai) { const n = {}; for (const l of f.log) if (l.a) { const k = G.describeAction(l.a); n[k] = (n[k] || 0) + 1; } const top = Object.entries(n).sort((a, b) => b[1] - a[1]).slice(0, 4); return top.length ? "Smart AI used: " + top.map(([k, v]) => `${k} ×${v}`).join(", ") + "." : "Smart AI fought for you."; }
     const n = {}; for (const l of f.log) if (l.rule) n[l.rule] = (n[l.rule] || 0) + 1;
     const ks = Object.keys(n).sort((a, b) => a - b);
     return ks.length ? "Rules used: " + ks.map((k) => `#${k} ×${n[k]}`).join(", ") + "." : "No rule fired: you just attacked.";
@@ -2505,8 +2512,15 @@
     const a = typeof AMMO !== "undefined" ? AMMO.status(S) : null; if (!a) return "";
     return `<p class="sub ammo ${a.best ? "" : "warn"}">🏹 ${esc(a.text)}</p>`;
   }
+  const aiOn = () => typeof COMBATAI !== "undefined" && COMBATAI.isSmart(G.loadout(S));
+  function aiToggle(L) {   // Smart AI or your own rules, per loadout
+    if (typeof COMBATAI === "undefined") return "";
+    const on = COMBATAI.isSmart(L);
+    return `<div class="aimode ${on ? "on" : ""}" role="radiogroup" aria-label="How you fight"><span class="aimode-l">Combat</span><button class="chip ${on ? "on" : ""}" role="radio" aria-checked="${on}" data-act="aimode" data-id="smart">🧠 Smart AI</button><button class="chip ${on ? "" : "on"}" role="radio" aria-checked="${!on}" data-act="aimode" data-id="custom">📜 Custom tactics</button></div>
+      <p class="sub aidesc">${on ? esc(COMBATAI.DESC) + " Your rules below are kept: switch to Custom tactics to use them again." : "Your rules below decide every move. Smart AI is one tap away."}</p>`;
+  }
   function panelTactics() {
-    const L = G.loadout(S), rules = L.rules;
+    const L = G.loadout(S), rules = L.rules, smart = typeof COMBATAI !== "undefined" && COMBATAI.isSmart(L);
     const condOpts = Object.entries(D.CONDITIONS).map(([id, [label, p]]) => `<option value="${id}" ${tacticsDraft.if === id ? "selected" : ""}>${esc(label)}${p === "turn" ? " …" : p ? " …%" : ""}</option>`).join("");
     const actList = tacticActions();
     if (!actList.some(([id]) => id === tacticsDraft.do)) actList.push([tacticsDraft.do, G.describeAction(tacticsDraft.do)]);
@@ -2519,7 +2533,7 @@
     const cards = rules.map((r, i) => { const d = G.describeRule(r), w = dead[i] || ruleWarn(r);
       return `<div class="rcard ${r.off ? "off" : ""} ${dead[i] ? "dead" : ""} ${tacticsDraft.edit === i ? "editing" : ""}"><div class="rhead"><span class="n">${i + 1}</span>${r.do === "power:stone" && S.stone ? UIART.stone(S.stone, 30) : r.do === "power:race" ? UIART.power(S.race, 30) : UIART.action(r.do, 30)}<div class="rtxt"><div><small>IF</small> <b>${esc(d.cond)}</b></div><div><small>THEN</small> <b>${esc(d.act)}</b></div>${r.off ? '<div class="rw">Switched off</div>' : w ? `<div class="rw">⚠ ${esc(w)}</div>` : ""}</div></div>
         <div class="racts"><button class="iconbtn" data-act="rup" data-i="${i}" aria-label="Move up" ${i ? "" : "disabled"}>↑</button><button class="iconbtn" data-act="rdown" data-i="${i}" aria-label="Move down" ${i < rules.length - 1 ? "" : "disabled"}>↓</button><button class="iconbtn" data-act="roff" data-i="${i}" aria-label="${r.off ? "Switch on" : "Switch off"}">${r.off ? "▶" : "⏸"}</button><button class="iconbtn" data-act="redit" data-i="${i}" aria-label="Edit">✎</button><button class="iconbtn" data-act="rdel" data-i="${i}" aria-label="Remove">✕</button></div></div>`; }).join("");
-    return `<div class="panel"><h2>Tactics · ${esc(S.loadout)}</h2><p class="sub">Every turn, the <b>first</b> rule that is true <b>and</b> possible (enough magicka, stamina, potions…) fires. If none does, you attack. Power attacks cost ${F.powerAttackCost(G.equipment(S).weapon ? D.ITEMS[G.equipment(S).weapon.item].weight : 0)} stamina now.</p>${ammoNote()}
+    return `<div class="panel ${smart ? "ai-smart" : ""}"><h2>Tactics · ${esc(S.loadout)}</h2>${aiToggle(L)}<div class="rulesbox"><p class="sub">Every turn, the <b>first</b> rule that is true <b>and</b> possible (enough magicka, stamina, potions…) fires. If none does, you attack. Power attacks cost ${F.powerAttackCost(G.equipment(S).weapon ? D.ITEMS[G.equipment(S).weapon.item].weight : 0)} stamina now.</p>${ammoNote()}
       <div class="rlist">${cards || '<p class="sub">No rules: you will just attack.</p>'}</div>
       <div class="card redit" id="tedit"><h3>${editing ? `Change rule ${tacticsDraft.edit + 1}` : "Add a rule"}</h3>
       <label class="sub">If</label><select id="tc" aria-label="Condition">${condOpts}</select>
@@ -2528,7 +2542,7 @@
       ${editing ? `<div class="grid2"><button class="btn pri" data-act="rsave">Save rule ${tacticsDraft.edit + 1}</button><button class="btn" data-act="rcancel">Cancel</button></div>`
         : `<button class="btn pri" data-act="radd" style="width:100%" ${rules.length >= D.MAX_RULES ? "disabled" : ""}>Add rule ${rules.length >= D.MAX_RULES ? `(max ${D.MAX_RULES})` : ""}</button><p class="sub" style="margin:4px 0 0">New rules go above “Always → Attack”, so they get used.</p>`}</div>
       <h3 style="margin-top:14px">Presets</h3>${pendingPreset ? `<div class="card"><p>Replace your ${rules.length} rule${rules.length === 1 ? "" : "s"} with the <b>${esc(D.PRESETS[pendingPreset].name)}</b> preset?</p><div class="grid2"><button class="btn danger" data-act="presetyes">Replace</button><button class="btn" data-act="presetno">Keep mine</button></div></div>`
-        : `<div class="chips">${Object.entries(D.PRESETS).map(([id, p]) => `<button class="chip" data-act="preset" data-id="${id}">${esc(p.name)}</button>`).join("")}</div>`}</div>
+        : `<div class="chips">${Object.entries(D.PRESETS).map(([id, p]) => `<button class="chip" data-act="preset" data-id="${id}">${esc(p.name)}</button>`).join("")}</div>`}</div></div>
       <div class="panel"><h2>Test fight</h2><p class="sub">A practice fight at full health. Nothing is used up, and you can't die.</p>
       <div class="list"><select id="te" aria-label="Enemy">${enemies.map((e) => `<option>${esc(e.name)}</option>`).join("")}</select><button class="btn pri" data-act="test">Fight it</button></div>
       ${testResult ? `<p style="margin-top:10px;display:flex;align-items:center;gap:10px">${ICONART.enemy(testResult.name, D.ENCOUNTERS.find((x) => x.name === testResult.name)?.tags, 40)}<span><b>${testResult.f.won ? "Victory" : "Defeat"}</b> against the ${esc(testResult.name)}.</span></p><p class="sub">${firedSummary(testResult.f)}</p>${fightLog(testResult.f)}` : ""}</div>
@@ -2936,7 +2950,9 @@
       case "skytac": { const L = G.loadout(S); if (!inTactics(b.dataset.id)) { let k = 0; while (k < L.rules.length && /_below$/.test(L.rules[k].if) && /^potion|^spell:(healing|fast_healing)/.test(L.rules[k].do)) k++; L.rules.splice(k, 0, { if: "always", do: b.dataset.id }); } say("Added to your tactics, right after your healing rules: you'll use it whenever it's ready."); break; }
       case "skytacx": { const L = G.loadout(S); L.rules = L.rules.filter((r) => r.do !== b.dataset.id); say("Removed from your tactics."); break; }
       case "disench": say(ENCH.disenchant(S, +b.dataset.id)); break;
-      case "enchant": { const m = ENCH.enchant(S, enchDraft.item, enchDraft.eff, enchDraft.gem); persist(true); renderPanel(true); showMessage("Arcane enchanter", m); publishCard(); break; }
+      case "enchant": { const d = { ...enchDraft }, ok = ENCH.hasEnchanter(S.location) && ENCH.preview(S, d.item, d.eff, d.gem);
+        const go = (g) => { const m = CG.enchant(S, d.item, d.eff, d.gem, g); persist(true); renderPanel(true); showMessage("Arcane enchanter", m); publishCard(); };
+        if (ok) CG.run("rune", { skill: G.skill(S, "Enchanting"), skillName: "Enchanting", what: `${ENCH.ARMOR[d.eff]?.[0] || ENCH.WEAPON[d.eff]?.[0] || ""} on ${D.ITEMS[G.invRow(S, d.item).item].name}` }, go); else go(CG.QUICK); break; }
       case "stone": say(POWERS.takeStone(S, b.dataset.id)); publishCard(); break;
       case "sail": { const err = SOL.sail(S); if (err) return toast(err); if (typeof IMM !== "undefined") IMM.loading(`${S.trip.ship[0].toUpperCase() + S.trip.ship.slice(1)} casts off for ${S.trip.destName}…`); SOUND.fx("coin"); persist(true); toast(`⛵ You set sail for ${S.trip.destName}. About ${fmtMin(S.trip.total)} at sea.`); tab = "map"; renderTabs(); renderPanel(true); break; }
       case "solact": { const m = SOL.act(S, b.dataset.id); persist(true); toast(m); renderPanel(true); break; }
@@ -3114,7 +3130,9 @@
       case "inn": say(b.dataset.c === "room" ? TOWNS.rentRoom(S) : TOWNS.rumour(S)); break;
       case "train": say(TOWNS.train(S, b.dataset.id)); publishCard(); break;
       case "alch": { const id = +b.dataset.id; alchSel = alchSel.includes(id) ? alchSel.filter((x) => x !== id) : [...alchSel, id].slice(-3); renderPanel(true); break; }
-      case "brew": { const before = S.inv.filter((x) => String(x.item).startsWith("brew|")).reduce((a, x) => a + x.qty, 0); const r = TOWNS.brew(S, alchSel); const made = S.inv.filter((x) => String(x.item).startsWith("brew|")).reduce((a, x) => a + x.qty, 0) - before; if (made > 0) tally("potions", made); alchSel = []; persist(); renderPanel(true); showMessage("Alchemy", r.text + ((r.skills || []).length ? " 📈 " + r.skills.join(" · ") : "")); break; }
+      case "brew": { const sel = [...alchSel], ids = sel.map((id) => G.invRow(S, id)?.item).filter(Boolean), canMix = S.location && TOWNS.isTown(S.location) && ids.length >= 2 && TOWNS.brewPreview(S, ids).length;
+        const go = (g) => { alchSel = sel; const before = S.inv.filter((x) => String(x.item).startsWith("brew|")).reduce((a, x) => a + x.qty, 0); const r = CG.brew(S, alchSel, g); const made = S.inv.filter((x) => String(x.item).startsWith("brew|")).reduce((a, x) => a + x.qty, 0) - before; if (made > 0) tally("potions", made); alchSel = []; persist(); renderPanel(true); showMessage("Alchemy", r.text + ((r.skills || []).length ? " 📈 " + r.skills.join(" · ") : "")); };
+        if (canMix) CG.run("mix", { skill: G.skill(S, "Alchemy"), skillName: "Alchemy", what: ids.map((x) => D.ITEMS[x].name).join(" + ") }, go); else go(CG.QUICK); break; }
       case "temper": GUIDE.mark(S, "smith"); say(TOWNS.temper(S, +b.dataset.id)); publishCard(); break;
       case "soctab": socTab = b.dataset.id; socWith = null; renderPanel(true); break;
       case "fadd": case "faddrec": { const c = cardOf(b.dataset.id) || (() => { const d = friendDocs.find((x) => x.id === b.dataset.id); return d ? { id: d.id, name: d.name } : null; })(); if (!c) return toast("They're not around."); const m = SOCIAL.add(S, c); persist(true); publishFriends(); toast(m); renderPanel(true); renderTabs(); break; }
@@ -3129,8 +3147,12 @@
       case "mine": { const m = SMITH.mine(S); if (m.startsWith("⛏")) { SOUND.fx("clang"); persist(true); } say(m); renderPanel(true); break; }
       case "ftab": forgeTab = b.dataset.id; renderPanel(true); break;
       case "fgroup": forgeGroup = b.dataset.id; renderPanel(true); break;
-      case "smake": { const m = SMITH.make(S, b.dataset.id); if (/^You make/.test(m)) { GUIDE.mark(S, "smith"); SOUND.fx("clang"); tally("crafted"); persist(true); publishCard(); } say(m); break; }
-      case "srefine": case "srefineall": { const m = SMITH.refine(S, +b.dataset.id, a === "srefineall"); if (/^You (smelt|tan)/.test(m)) persist(true); say(m); break; }
+      case "smake": { const id = b.dataset.id, inf = SMITH.atForge(S) && SMITH.info(S, id);
+        const go = (g) => { const m = CG.smithMake(S, id, g); if (/^You make/.test(m)) { GUIDE.mark(S, "smith"); SOUND.fx("clang"); tally("crafted"); publishCard(); } if (/^(You make|Botched)/.test(m)) persist(true); say(m); };
+        if (inf && !inf.block) CG.run(CG.gameFor("smith", id), { skill: G.skill(S, "Smithing"), skillName: "Smithing", what: D.ITEMS[id].name }, go); else go(CG.QUICK); break; }
+      case "srefine": case "srefineall": { const k = +b.dataset.id, all = a === "srefineall", inf = SMITH.atForge(S) && SMITH.refineInfo(S, k);
+        const go = (g) => { const m = CG.refine(S, k, all, g); if (/^(You (smelt|tan)|You work|The heat|Your knife)/.test(m)) persist(true); say(m); };
+        if (inf && inf.times) CG.run(CG.gameFor("refine", k), { skill: G.skill(S, "Smithing"), skillName: "Smithing", what: `${inf.n * (all ? inf.times : 1)} ${D.ITEMS[inf.out].name}` }, go); else go(CG.QUICK); break; }
       case "takejob": say(TOWNS.takeJob(S, b.dataset.id)); break;
       case "dropjob": say(TOWNS.dropJob(S, b.dataset.id)); break;
       case "handin": say(TOWNS.handIn(S, b.dataset.id)); break;
@@ -3161,6 +3183,7 @@
       case "preset": pendingPreset = b.dataset.id; renderPanel(true); break;
       case "presetno": pendingPreset = null; renderPanel(true); break;
       case "presetyes": { const id = pendingPreset; pendingPreset = null; if (!D.PRESETS[id]) break; L.rules = G.clone(D.PRESETS[id].rules); tacticsDraft.edit = null; say(`${D.PRESETS[id].name} tactics loaded. Rules for spells you don't know are skipped.`); break; }
+      case "aimode": { const m = b.dataset.id === "custom" ? "custom" : "smart"; L.mode = m; persist(); renderPanel(true); toast(m === "smart" ? "🧠 Smart AI fights for this loadout." : "📜 Your own tactics fight for this loadout."); break; }
       case "test": {
         const name = $("#te").value, e2 = G.scaleEnemy(D.ENCOUNTERS.find((x) => x.name === name), S.level);
         const sim = G.clone(S); sim.health = G.maxHealth(sim); sim.healthTs = G.now(); sim._test = true;

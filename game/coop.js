@@ -118,6 +118,7 @@ const COOP = (() => {
 
   // ---- who stands beside you, and how they fight (from their own tactics)
   function profile(s) {
+    if (typeof COMBATAI !== "undefined" && COMBATAI.isSmart(G.loadout(s))) { const st = MP.stats(s); return { dmg: st.dmg, hp: st.hp, red: st.red, ...COMBATAI.coopProfile(s) }; }   // Smart AI: worked out from your own kit, on your own phone
     const st = MP.stats(s), rules = (G.loadout(s)?.rules || []).filter((r) => r && !r.off);
     const healRule = rules.find((r) => r.do?.startsWith("spell:") && D.SPELLS[r.do.slice(6)]?.kind === "heal" && s.spells.includes(r.do.slice(6)));
     const healSp = healRule ? D.SPELLS[healRule.do.slice(6)] : null;

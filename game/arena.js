@@ -57,11 +57,12 @@ const ARENA = (() => {
     for (const k of SNAP_KEYS) if (s[k] !== undefined && s[k] !== null) o[k] = cp(s[k]);
     o.skills = Object.fromEntries(Object.entries(s.skills).map(([k, v]) => [k, { lvl: v.lvl, xp: 0 }]));
     o.inv = s.inv.filter((r) => worn.has(r.id) || D.ITEMS[r.item]?.slot === "ammo").map(cp);
-    o.loadouts = { Arena: { rules: cp(L.rules || []), equipment: { ...L.equipment } } }; o.loadout = "Arena";
+    o.loadouts = { Arena: { rules: cp(L.rules || []), equipment: { ...L.equipment }, mode: L.mode === "custom" ? "custom" : "smart" } }; o.loadout = "Arena";   // Smart AI or your own tactics
     return o;
   }
   function fighter(snap, t) {   // a throwaway save: nothing that happens in the bout touches the real one
     const s = cp(snap);
+    if (s.loadouts?.Arena && !s.loadouts.Arena.mode) s.loadouts.Arena.mode = "custom";   // challenges made before Smart AI fought by their rules
     Object.assign(s, { location: TOWN, dungeon: null, trip: null, follower: null, thrall: null, poison: null, horse: null, fx: [], journal: [], discovered: s.discovered || [], _test: true });
     s.skills = s.skills || {}; for (const k of D.ALL_SKILLS) s.skills[k] = s.skills[k] || { lvl: D.BASE_SKILL, xp: 0 };
     s.spells = s.spells || []; s.inv = s.inv || [];

@@ -152,5 +152,5 @@ const SMITH = (() => {
     return `⛏ You work the veins in ${m[0]}: ${Object.entries(got).map(([o, k]) => `${k} ${D.ITEMS[o].name}`).join(", ")}.`;
   }
   const byGroup = (g) => Object.keys(RECIPES).filter((id) => RECIPES[id].group === g).sort((a, b) => D.ITEMS[a].value - D.ITEMS[b].value);
-  return { MINES, VEIN_RENEW, mineLeft, mine, GROUPS, RECIPES, REFINE, GEMS, PERK_FOR, info, make, refineInfo, refine, byGroup, peltFor, atForge, count, matText, xpFor };
+  return { use, MINES, VEIN_RENEW, mineLeft, mine, GROUPS, RECIPES, REFINE, GEMS, PERK_FOR, info, make, refineInfo, refine, byGroup, peltFor, atForge, count, matText, xpFor };
 })();

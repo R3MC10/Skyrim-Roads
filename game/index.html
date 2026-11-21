@@ -865,6 +865,120 @@ body.tw-char #side>*{max-width:720px;margin-left:auto;margin-right:auto}
 .tw-hint2{text-align:center;margin-top:8px}
 .tw.tw-px .tw-rosesvg{shape-rendering:crispEdges}
 @media (prefers-reduced-motion:reduce){.tw,.tw-ring,.tw-ring2,.tw-starsvg .tw{animation:none}}
+/* Smart AI (combatai.js): the Combat switch on the Tactics tab, dimmed rules, the reasons in the fight log */
+.aimode{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:2px 0 6px}
+.aimode-l{font-family:var(--title,inherit);letter-spacing:.14em;text-transform:uppercase;font-size:.72rem;opacity:.75}
+.aimode .chip{min-height:40px;padding:0 14px}
+.aimode .chip.on{border-color:rgba(214,178,94,.75);color:var(--gold,#d6b25e);box-shadow:inset 0 0 0 1px rgba(214,178,94,.25),0 0 14px rgba(214,178,94,.12)}
+.aidesc{margin:0 0 10px}
+.ai-smart .rulesbox{opacity:.5;filter:saturate(.6);transition:opacity .2s}
+.ai-smart .rulesbox:focus-within,.ai-smart .rulesbox:hover{opacity:.85}
+.flog .aiwhy{display:block;font-style:normal;font-size:.78em;opacity:.72;color:var(--gold,#d6b25e)}
+/* ==== crafting mini-games (craftgames.js) ==== */
+.craftgame{position:fixed;inset:0;z-index:60;display:grid;place-items:center;background:radial-gradient(70% 60% at 50% 45%,rgba(0,0,0,.7),rgba(0,0,0,.92));padding:12px}
+.cgcard{position:relative;width:min(360px,100%);text-align:center;background:linear-gradient(180deg,rgba(16,17,19,.97),rgba(6,7,8,.985));box-shadow:0 0 0 1px rgba(228,220,200,.18),0 20px 60px rgba(0,0,0,.6);padding:14px 14px 12px}
+.cgcard h3{font-family:"Barlow Condensed",Cinzel,serif;letter-spacing:.22em;text-transform:uppercase;font-size:17px;margin:0}
+.cgsub{margin:2px 0 8px;color:var(--mute,#a9a395);font-size:13px;letter-spacing:.06em}
+.cgcard canvas{width:100%;max-width:300px;height:auto;touch-action:none;display:block;margin:0 auto;border-radius:4px;user-select:none;-webkit-user-select:none}
+.cghint{font-size:13px;color:var(--mute,#a9a395);margin:6px 0 6px}
+.cgrow{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-top:6px}.cgrow .btn{flex:1;min-height:46px}
+#cgprog{flex:1;min-width:110px;font-size:13px;letter-spacing:.04em;color:#e9dcc0;text-align:left}
+#cgact{user-select:none;-webkit-user-select:none;touch-action:none;flex:1}
+.cgresult{position:absolute;left:0;right:0;top:42%;font-family:"Barlow Condensed",Cinzel,serif;font-size:34px;letter-spacing:.3em;text-transform:uppercase;color:#f1ead8;text-shadow:0 0 14px #000,0 0 24px rgba(214,178,94,.6);animation:cgres .7s ease-out both;pointer-events:none}
+.cgresult.g-perfect,.cgresult.g-masterful{color:#ffe29a}.cgresult.g-botched{color:#ff8a7a}
+@keyframes cgres{from{opacity:0;transform:scale(1.4)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.cgresult{animation:none}}
+/* ---- motion design (motion.js): only transform/opacity move; everything sits behind html.mo-on */
+:root{--mo-out:cubic-bezier(.2,.8,.2,1);--mo-back:cubic-bezier(.34,1.56,.64,1);--mo-io:cubic-bezier(.65,0,.35,1)}
+html.art-pixel{--mo-out:steps(5,end);--mo-back:steps(6,end);--mo-io:steps(6,end)}
+.top{position:relative}
+#moxp{position:absolute;left:6%;right:6%;bottom:-1px;height:3px;border-radius:2px;background:rgba(255,255,255,.06);overflow:hidden;pointer-events:none}
+#moxp b{position:absolute;inset:0;transform-origin:0 50%;transform:scaleX(0);background:linear-gradient(90deg,#8a6a2a,#e2bb64 70%,#fff0c4);transition:transform .55s var(--mo-out)}
+#moxp s{position:absolute;top:0;bottom:0;left:0;width:30%;background:linear-gradient(90deg,transparent,rgba(255,250,230,.85),transparent);transform:translateX(-120%);opacity:0;text-decoration:none}
+.mo-on #moxp.mo-shine s{animation:moshine .9s var(--mo-io) .15s}
+@keyframes moshine{0%{opacity:1;transform:translateX(-120%)}100%{opacity:0;transform:translateX(420%)}}
+html:not(.mo-on) #moxp b{transition:none}
+/* tab underline that glides */
+.mo-uline{position:absolute;left:0;bottom:0;width:100px;height:2px;transform-origin:0 50%;background:linear-gradient(90deg,transparent,#e2bb64 25%,#fff0c4 50%,#e2bb64 75%,transparent);pointer-events:none;transition:transform .32s var(--mo-out);z-index:1}
+html:not(.mo-on) .mo-uline{display:none}
+.mo-on .tabs .mo-uline{top:0;bottom:auto}
+/* button feedback */
+.mo-on .btn,.mo-on .mi,.mo-on .sky-row,.mo-on .sky-cat,.mo-on .sky-page,.mo-on .tab,.mo-on .iconbtn,.mo-on .chip{transition:transform .09s var(--mo-out)}
+.mo-on .btn:active,.mo-on .mi:active,.mo-on .sky-row:active,.mo-on .chip:active,.mo-on .iconbtn:active{transform:scale(.96)}
+.mo-on .tab:active{transform:translateY(1px) scale(.95)}
+.mo-on .mo-press{animation:mopress .42s var(--mo-out)}
+@keyframes mopress{0%{box-shadow:0 0 0 0 rgba(226,187,100,.55)}100%{box-shadow:0 0 0 9px rgba(226,187,100,0)}}
+/* rows ripple in */
+.mo-on .mo-st{animation:most .36s var(--mo-out) both;animation-delay:calc(var(--mo-i,0) * 32ms)}
+@keyframes most{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.mo-lite .mo-st{animation-duration:.22s}
+/* full-screen menu: enter from the side it was opened from, page slides */
+.mo-on .sky.mo-enter{animation:mosky .34s var(--mo-out)}
+.mo-on .sky.mo-enter.mo-from-r .sky-in{animation:mofr .38s var(--mo-out)}
+.mo-on .sky.mo-enter.mo-from-l .sky-in{animation:mofl .38s var(--mo-out)}
+.mo-on .sky.mo-enter.mo-from-t .sky-in{animation:moft .38s var(--mo-out)}
+.mo-on .sky.mo-enter.mo-from-b .sky-in{animation:mofb .38s var(--mo-out)}
+@keyframes mosky{from{opacity:0}}
+@keyframes mofr{from{opacity:0;transform:translateX(40px)}}@keyframes mofl{from{opacity:0;transform:translateX(-40px)}}
+@keyframes moft{from{opacity:0;transform:translateY(-40px)}}@keyframes mofb{from{opacity:0;transform:translateY(40px)}}
+.mo-on .mo-page-r{animation:mopr .3s var(--mo-out)}.mo-on .mo-page-l{animation:mopl .3s var(--mo-out)}
+@keyframes mopr{from{opacity:0;transform:translateX(28px)}}@keyframes mopl{from{opacity:0;transform:translateX(-28px)}}
+/* popups: soft blur fade + pop; content swaps crossfade */
+.mo-on .modal.mo-pop{animation:momodal .22s var(--mo-out);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.mo-lite .modal.mo-pop{-webkit-backdrop-filter:none;backdrop-filter:none}
+.mo-on .modal.mo-pop .sheet{animation:mosheet .34s var(--mo-back)}
+.mo-on .modal.mo-swap .sheet{animation:moswap .16s var(--mo-out)}
+@keyframes momodal{from{opacity:0}}
+@keyframes mosheet{from{opacity:0;transform:translateY(16px) scale(.94)}}
+@keyframes moswap{from{opacity:.4}}
+/* leaving: the old popup / menu / loading card fades instead of vanishing */
+.mo-ghost{animation:moghost .22s var(--mo-out) forwards!important;pointer-events:none!important}
+.mo-ghost .sheet,.mo-ghost .sky-in{animation:moghostin .22s var(--mo-out) forwards!important}
+@keyframes moghost{to{opacity:0}}@keyframes moghostin{to{transform:translateY(10px) scale(.97)}}
+/* toasts bounce in */
+.mo-on .toast.pop{animation:motoast .42s var(--mo-back)}
+.mo-on #hudlog .toast.pop{animation:mohud .42s var(--mo-back)}
+@keyframes motoast{0%{opacity:0;transform:translate(-50%,22px) scale(.92)}100%{opacity:1;transform:translate(-50%,0)}}
+@keyframes mohud{0%{opacity:0;transform:translateX(-26px)}100%{opacity:1;transform:none}}
+/* numbers */
+.mo-on #goldv.mo-up{animation:monum .5s var(--mo-out)}.mo-on #goldv.mo-down{animation:monumd .5s var(--mo-out)}
+@keyframes monum{30%{transform:translateY(-2px) scale(1.12);color:#ffe7a6}}@keyframes monumd{30%{transform:translateY(1px) scale(.95);color:#e9a08a}}
+#goldv{display:inline-block}
+.mo-on #lvlb.mo-lvl{animation:molvl .9s var(--mo-back)}
+@keyframes molvl{0%{transform:scale(1)}35%{transform:scale(1.35);box-shadow:0 0 18px rgba(240,205,120,.9)}100%{transform:scale(1)}}
+/* things fly to your pack */
+.mo-fly{position:fixed;width:28px;height:28px;z-index:30;pointer-events:none;border-radius:50%;will-change:transform,opacity}
+i.mo-fly{background:radial-gradient(circle,#fff0c4 0,#e2bb64 45%,rgba(226,187,100,0) 70%)}
+img.mo-fly{object-fit:contain;filter:drop-shadow(0 0 6px rgba(240,205,120,.9))}
+.mo-on .mo-catch{animation:mocatch .4s var(--mo-back)}
+@keyframes mocatch{40%{transform:scale(1.18)}}
+/* level-up constellation */
+.mo-const{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 30vh - 80px);transform:translateX(-50%);z-index:29;pointer-events:none;animation:moconst 2.6s ease forwards;background:radial-gradient(closest-side,rgba(4,6,12,.82),rgba(4,6,12,.55) 60%,rgba(4,6,12,0));border-radius:50%;padding:20px 30px}
+.mo-const line{stroke:rgba(245,222,160,.95);stroke-width:1.6;stroke-dasharray:var(--len);stroke-dashoffset:var(--len);animation:moline .5s var(--mo-out) forwards;animation-delay:calc(var(--d) + .12s)}
+.mo-const circle{fill:#fff6dc;filter:drop-shadow(0 0 4px #f0d38a);transform:scale(0);animation:mostar .45s var(--mo-back) forwards;animation-delay:var(--d)}
+@keyframes moline{to{stroke-dashoffset:0}}@keyframes mostar{to{transform:scale(1)}}
+@keyframes moconst{0%{opacity:0}8%{opacity:1}75%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-14px)}}
+/* arriving in a town */
+.mo-veil{position:fixed;inset:0;z-index:8;pointer-events:none;display:grid;place-items:center;background:radial-gradient(70% 50% at 50% 45%,rgba(4,5,6,.55),rgba(4,5,6,.85));animation:moveil 1.9s ease forwards}
+.mo-vname{text-align:center;color:#f3e6c4;text-shadow:0 2px 10px #000;animation:movname 1.9s var(--mo-out) forwards}
+.mo-vname small{display:block;font:600 11px/1 var(--sk-ui,sans-serif);letter-spacing:.4em;text-transform:uppercase;color:#b9ab8a;margin-bottom:8px}
+.mo-vname b{display:block;font:700 30px/1.1 Cinzel,Georgia,serif;letter-spacing:.14em}
+.mo-vname i{display:block;height:1px;margin:10px auto 0;width:180px;background:linear-gradient(90deg,transparent,#e2bb64,transparent);transform:scaleX(0);animation:movline .8s var(--mo-out) .25s forwards}
+@keyframes moveil{0%{opacity:0}18%{opacity:1}70%{opacity:1}100%{opacity:0}}
+@keyframes movname{0%{opacity:0;transform:translateY(10px);letter-spacing:.3em}25%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0;transform:translateY(-6px)}}
+@keyframes movline{to{transform:scaleX(1)}}
+/* title: mist and embers */
+.mo-amb{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0;--px:0;--py:0}
+.mo-amb .mist{position:absolute;left:-30%;width:160%;height:45%;border-radius:50%;background:radial-gradient(closest-side,rgba(200,210,220,.10),rgba(200,210,220,0));will-change:transform}
+.mo-amb .m1{bottom:8%;animation:momist1 26s linear infinite alternate}
+.mo-amb .m2{bottom:28%;opacity:.7;animation:momist2 34s linear infinite alternate}
+@keyframes momist1{from{transform:translate(calc(var(--px) * -14px - 6%),calc(var(--py) * -6px))}to{transform:translate(calc(var(--px) * -14px + 6%),calc(var(--py) * -6px))}}
+@keyframes momist2{from{transform:translate(calc(var(--px) * -26px + 5%),calc(var(--py) * -10px))}to{transform:translate(calc(var(--px) * -26px - 7%),calc(var(--py) * -10px))}}
+.mo-amb .emb span{position:absolute;bottom:-8px;width:3px;height:3px;border-radius:50%;background:#ffcf7a;box-shadow:0 0 6px #ff9a3c;opacity:0;animation:moember var(--t) linear infinite;animation-delay:var(--d)}
+html.art-pixel .mo-amb .emb span{border-radius:0;box-shadow:none;width:4px;height:4px}
+@keyframes moember{0%{opacity:0;transform:translate(0,0)}10%{opacity:.9}100%{opacity:0;transform:translate(var(--x),-70vh)}}
+html:not(.mo-on) .mo-amb{display:none}
+@media (prefers-reduced-motion:reduce){.mo-amb,.mo-const,.mo-veil,.mo-fly{display:none!important}.mo-st,.mo-ghost,.mo-press{animation:none!important}}
 </style>
 </head>
 <body>
@@ -913,6 +1027,7 @@ body.tw-char #side>*{max-width:720px;margin-left:auto;margin-right:auto}
 <script src="tomes.js"></script>
 <script src="magic.js"></script>
 <script src="spellcraft.js"></script>
+<script src="combatai.js"></script>
 <script src="guide.js"></script>
 <script src="patchnotes.js"></script>
 <script src="market.js"></script>
@@ -943,6 +1058,8 @@ body.tw-char #side>*{max-width:720px;margin-left:auto;margin-right:auto}
 <script src="skyui.js"></script>
 <script src="hud.js"></script>
 <script src="immerse.js"></script>
+<script src="motion.js"></script>
+<script src="craftgames.js"></script>
 <script src="polish.js"></script>
 <script src="caravans.js"></script>
 <script src="economy.js"></script>

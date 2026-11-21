@@ -75,14 +75,16 @@ const ENCH = (() => {
     return { mag: Math.max(1, Math.round(ARMOR[eff][2] * k)), cap: 0 };
   }
   const canTake = (it, eff) => WEAPON[eff] ? it.slot === "weapon" : ARMOR[eff] && ARMOR[eff][3].includes(it.slot);
-  function enchant(s, rowId, eff, gemRowId) {
+  function enchant(s, rowId, eff, gemRowId, opt = {}) {   // opt.boost: mini-game multiplier on magnitude; opt.botch: the soul slips away (craftgames.js)
     if (!hasEnchanter(s.location)) return "You need an arcane enchanter.";
     const r = G.invRow(s, rowId), g = G.invRow(s, gemRowId), it = r && D.ITEMS[r.item];
     if (!it || isEnchanted(it)) return "Pick an unenchanted weapon or piece of armor.";
     if (!known(s).includes(eff)) return "You don't know that enchantment.";
     if (!canTake(it, eff)) return `${(WEAPON[eff] || ARMOR[eff])[0]} can't go on that. ${ARMOR[eff] ? `It fits: ${ARMOR[eff][3].join(", ")}.` : "Weapons only."}`;
     if (!g || D.ITEMS[g.item].slot !== "soulgem") return "You need a filled soul gem.";
+    if (opt.botch) { G.take(s, gemRowId); const sk = G.useSkill(s, "Enchanting", 0.5); return `The rune breaks and the soul slips out of the gem. The ${it.name} is unharmed, but the soul gem is spent.` + (sk.length ? " " + sk.join(". ") : ""); }
     const p = preview(s, rowId, eff, gemRowId);
+    if (opt.boost > 1) p.mag = Math.max(p.mag, Math.round(p.mag * opt.boost));
     const id = `ench|${r.item}|${eff}|${p.mag}|${p.cap}`;
     const keep = { temper: r.temper, tq: r.tq };
     G.take(s, rowId); G.take(s, gemRowId);

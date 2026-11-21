@@ -327,15 +327,19 @@ const WorldMap = (() => {
       g.beginPath(); v.trail.forEach((p, i) => { const [x, y] = P(p); i ? g.lineTo(x, y) : g.moveTo(x, y); }); g.lineTo(px, py); g.stroke();
     }
     if (v.route?.length) {
-      if (MA) MA.footprints(g, [[px, py], ...v.route.map(P)], s, v.reduceMotion ? 0 : v.t);
+      const MO = typeof MOTION !== "undefined" ? MOTION : null, rt = MO ? MO.routeT(v.dest ? `${v.dest.name}|${v.dest.pos}` : null) : 1;   // a new route draws itself out from you
+      const rpts = rt < 1 ? MO.cutPath([[px, py], ...v.route.map(P)], rt) : [[px, py], ...v.route.map(P)];
+      if (MA) MA.footprints(g, rpts, s, v.reduceMotion ? 0 : v.t);
       else {
         g.setLineDash([7 * s, 7 * s]); g.lineDashOffset = v.reduceMotion ? 0 : -((v.t * 14 * s) % (14 * s));
         g.strokeStyle = "rgba(255,240,205,.95)"; g.lineWidth = 2.6 * s;
-        g.beginPath(); g.moveTo(px, py); v.route.forEach((p) => g.lineTo(...P(p))); g.stroke(); g.setLineDash([]);
+        g.beginPath(); g.moveTo(px, py); rpts.slice(1).forEach((p) => g.lineTo(...p)); g.stroke(); g.setLineDash([]);
       }
+      if (rt < 1) g.globalAlpha = rt;
       const [bx, by] = P(v.route[v.route.length - 1]);
       g.strokeStyle = "#fff0cd"; g.lineWidth = 2.4 * s; g.beginPath(); g.arc(bx, by, 9 * s, 0, 7); g.stroke();
       if (v.dest && !v.discovered.includes(v.dest.name)) label(g, v.dest.roam ? "🧭 " + v.dest.name : v.dest.name + " ?", bx + 13 * s, by, s, 15, "#ffeac0", 700, false, "left");
+      g.globalAlpha = 1;
     }
     if (v.spot) {   // a tapped spot for free roam
       const [sx2, sy2] = P(v.spot);
@@ -428,7 +432,8 @@ const WorldMap = (() => {
       smartLabel("🗺 " + m.label, x, y - r, 11, "#ffd6c8");
     }
     for (const p of v.pins || []) {   // your own pins
-      const [x, y] = P(p.pos), r = (p.on ? 9 : 7) * s;
+      const drop = typeof MOTION !== "undefined" ? MOTION.pinDrop(`${p.pos}|${p.label}`) : { dy: 0, sc: 1 };   // new pins drop in with a bounce
+      const [x, y0] = P(p.pos), r = (p.on ? 9 : 7) * s * drop.sc, y = y0 + drop.dy * r * 1.6;
       g.fillStyle = p.on ? "#e2bb64" : "#d65a4a"; g.strokeStyle = "#1b1408"; g.lineWidth = 2 * s;
       g.beginPath(); g.moveTo(x, y); g.arc(x, y - r * 1.6, r, Math.PI * 0.8, Math.PI * 2.2); g.closePath(); g.fill(); g.stroke();
       g.fillStyle = "#fff6df"; g.beginPath(); g.arc(x, y - r * 1.6, r * 0.38, 0, 7); g.fill();
@@ -475,6 +480,7 @@ const WorldMap = (() => {
       }
       g.restore();
     }
+    if (typeof MOTION !== "undefined") { MOTION.trackDiscoveries(v.discovered); MOTION.fogLift(g, s, W, H); }   // fog wipes off new places
     if (MA) { MA.trackDiscoveries(v.discovered); MA.drawBursts(g, s, W, H, v.reduceMotion); }
     // caravans rolling between the holds, and your cart behind your horse
     if (v.caravans && typeof CARAVANS !== "undefined") for (const c of v.caravans) {

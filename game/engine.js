@@ -324,6 +324,8 @@ const G = (() => {
   class Fight {
     constructor(s, enemy, rules, t = now()) {
       this.s = s; this.e = enemy; this.rules = rules || lo(s).rules; this.t = t;
+      { const L = Object.values(s.loadouts || {}).find((l) => l && l.rules === this.rules) || (s.loadouts ? lo(s) : null);   // [OURS] Smart AI unless this loadout is set to Custom tactics
+        this.ai = typeof COMBATAI !== "undefined" && !!L && COMBATAI.isSmart(L); }
       this.eq = equipment(s);
       this.hp = curHealth(s, t); this.mp = maxMagicka(s); this.sp = maxStamina(s);
       this.ehp = enemy.hp ?? enemy.health;
@@ -463,6 +465,7 @@ const G = (() => {
       return false;
     }
     choose() {
+      if (this.ai) { const [a, why] = COMBATAI.choose(this); this.aiWhy = why; return [0, a]; }   // [OURS] combatai.js
       for (let i = 0; i < this.rules.length; i++) {
         const r = this.rules[i];
         if (this.healSkip && this.healSkip[i + 1] >= this.turn) continue;   // a heal that wasn't keeping up sits out a couple of turns
@@ -657,9 +660,10 @@ const G = (() => {
       if (this.calmTurns > 0) { this.calmTurns--; return `${n} isn't fighting`; }
       if (this.eParalyzed > 0) { this.eParalyzed--; return `${n} is paralyzed`; }
       if (this.stagger) { this.stagger = false; return `${n} is staggered`; }
-      if (this.allies.length && Math.random() < this.allies.length / (this.allies.length + 1) * 0.7) {   // [OURS] you're still the main target
+      const cover = this.coverAl && this.allies.includes(this.coverAl) ? this.coverAl : null; this.coverAl = null;   // a smart follower stepped in front of you
+      if (this.allies.length && (cover || Math.random() < this.allies.length / (this.allies.length + 1) * 0.7)) {   // [OURS] you're still the main target
         this.blocking = false;
-        const al = pick(this.allies);
+        const al = cover || pick(this.allies);
         if (al.coop && typeof COOP !== "undefined") return COOP.hitAlly(this, al);   // co-op party members take their own blows
         if (al.follower && Math.random() < F.HIT_CHANCE) {
           const d = this.e.damage * rnd(...F.DAMAGE_SPREAD) * 0.8;   // [OURS] followers wear armor
@@ -707,8 +711,9 @@ const G = (() => {
         this.turn++;
         const [rule, a] = this.choose();
         const line = { turn: this.turn, rule, me: this.act(a), them: "", a, wt: this.wt };   // a / wt: what was done, for the fight scene only
+        if (this.ai) { line.ai = true; if (this.aiWhy && this.aiWhy !== this.aiLastWhy) line.why = this.aiWhy; this.aiLastWhy = this.aiWhy; }   // why the AI did it (shown when the reason changes)
         if (this.bleed.length && this.ehp > 0) { const b = this.bleed.reduce((x, y) => x + y.dmg, 0); this.ehp -= b; this.bleed = this.bleed.map((y) => ({ ...y, turns: y.turns - 1 })).filter((y) => y.turns > 0); line.me += ` · bleeds ${Math.round(b)}`; }
-        for (const al of [...this.allies]) if (this.ehp > 0) { if (al.coop && typeof COOP !== "undefined") { line.me += COOP.allyAct(this, al); continue; } const d = al.dmg * rnd(...F.DAMAGE_SPREAD); this.ehp -= d; line.me += ` · ${al.name} ${Math.round(d)}`; }
+        for (const al of [...this.allies]) if (this.ehp > 0) { if (al.coop && typeof COOP !== "undefined") { line.me += COOP.allyAct(this, al); continue; } if (al.follower && this.ai) { line.me += COMBATAI.followerAct(this, al); continue; } const d = al.dmg * rnd(...F.DAMAGE_SPREAD); this.ehp -= d; line.me += ` · ${al.name} ${Math.round(d)}`; }
         if (this.summonTurns > 0 && this.ehp > 0) { this.summonTurns--; this.ehp -= this.summonDmg; line.me += ` · familiar ${this.summonDmg}`; }
         if (typeof MAGIC !== "undefined" && !this.endWon) MAGIC.tick(this, line);   // cloaks, burning walls, healing circles
         { const g = this.healGuard(rule); if (g) line.me += " · " + g; }

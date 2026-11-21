@@ -109,13 +109,14 @@ const TOWNS = (() => {
     if (isPoison && !EFFECTS[effect][4] && P(s, "poisoner")) m *= 1.25;                     // [Skyrim] Poisoner
     return Math.round(m);
   }
-  function brew(s, rowIds) {
+  function brew(s, rowIds, opt = {}) {   // opt.boost: crafting mini-game multiplier on strength; opt.botch: the mix spoils (craftgames.js)
     if (!s.location || !isTown(s.location)) return { text: "You need an alchemy lab. Every city and town has one." };
     const rows = [...new Set(rowIds)].map((id) => G.invRow(s, id)).filter(Boolean);
     if (rows.length < 2 || rows.length > 3) return { text: "Pick two or three different ingredients." };
     if (rows.some((r) => D.ITEMS[r.item].slot !== "ingredient")) return { text: "Only ingredients go in the mortar." };
     const ids = rows.map((r) => r.item), shared = brewPreview(s, ids);
     rows.forEach((r) => G.take(s, r.id));                                                    // [Skyrim] ingredients are used up even if it fails
+    if (opt.botch) { const back = ids[Math.floor(Math.random() * ids.length)]; G.give(s, back); const sk = G.useSkill(s, "Alchemy", 1); return { text: `You lose the mix: it boils over and spoils. You save the ${D.ITEMS[back].name}.`, skills: sk, botched: true }; }
     if (!shared.length) { const sk = G.useSkill(s, "Alchemy", 1); return { text: "The mixture fizzles into grey sludge. These don't share any effect.", skills: sk }; }
     for (const id of ids) INGREDIENT_FX[id][1].forEach((e, i) => { if (shared.includes(e)) known(s, id)[i] = true; });   // brewing reveals shared effects
     const value = (e, mag) => EFFECTS[e][0] * Math.max(mag, 1) ** 1.1 * (EFFECTS[e][2] ? (EFFECTS[e][2] / 10) ** 1.1 : 1);
@@ -123,10 +124,12 @@ const TOWNS = (() => {
     const isPoison = !EFFECTS[parts[0][0]][4];
     parts = parts.map(([e, , d]) => [e, potency(s, e, isPoison), d]);
     if (P(s, "purity")) parts = parts.filter(([e]) => EFFECTS[e][4] === !isPoison);                   // [Skyrim] Purity
+    const xpValue = D.ITEMS["brew|" + parts.map((p) => p.join(":")).join(",")].value;          // XP from the plain potion: mini-game bonuses never add XP
+    if (opt.boost > 1) parts = parts.map(([e, m, d]) => [e, Math.round(m * opt.boost), d]);
     const id = "brew|" + parts.map((p) => p.join(":")).join(",");
     G.give(s, id);
     const it = D.ITEMS[id];
-    const skills = G.useSkill(s, "Alchemy", it.value);                                             // [Skyrim] XP ∝ the potion's value
+    const skills = G.useSkill(s, "Alchemy", xpValue);                                              // [Skyrim] XP ∝ the potion's value
     return { text: `You brew a ${it.name}: ${parts.map(([e, m, d]) => `${e} ${m}${d * SECONDS_PER_REAL_SECOND_OF_SKYRIM >= 60 ? ` for ${Math.round(d * SECONDS_PER_REAL_SECOND_OF_SKYRIM / 60)} min` : ""}`).join(", ")}. Worth ${it.value} gold.`, skills };
   }
   function eat(s, rowId) {

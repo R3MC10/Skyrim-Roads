@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b63", build: 63, date: "22 Nov 2026", title: "Smart fights, crafting games and motion", items: [
+      "Smart AI combat is on by default: your hero picks the best move every turn, uses weaknesses, heals only when it matters and saves potions. Prefer your own rules? Switch to Custom tactics on the Tactics tab — your rules are kept.",
+      "Followers fight smarter too and step in front of you when you're in trouble.",
+      "Crafting mini-games: time the hammer at the forge, keep the bellows hot, stir potions, trace enchanting runes. Good play gives a small bonus; Quick craft is always there.",
+      "Motion everywhere: menus slide in from where you swiped, gold and XP count up, level-ups light a constellation, loot flies into your pack, routes draw on the map. Settings → Motion: Full, Lite or Off."] },
     { id: "b62", build: 62, date: "22 Nov 2026", title: "Solstheim and the Skyrim compass", items: [
       "Solstheim: take the Northern Maiden from Windhelm's docks to Raven Rock. A whole new island with ash wastes, Skaal Village, Tel Mithryn, the All-Maker Stones and Miraak's story.",
       "New creatures (ash hoppers, netch, rieklings, lurkers), ash storms, Stalhrim, Chitin and Bonemold gear, and the Bend Will shout.",
@@ -131,9 +136,6 @@ const PATCHNOTES = (() => {
   ];
   const NEXT = [
     "The real Skyrim map layout",
-    "Crafting mini-games",
-    "Motion and animations across all menus",
-    "Smart auto-combat that plays the best moves for you",
     "Party members fighting beside you and walking with you in their gear",
   ];
   const KEY = "rotn_notes_seen";
