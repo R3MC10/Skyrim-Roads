@@ -1,243 +1,422 @@
 /* Sound: all music and effects are made live with WebAudio (no sound files).
-   Music has four moods: day, night, dungeon, combat. It starts only after the first tap,
-   is quiet by default, and goes silent while the app is in the background. */
+   Music has five moods (day, night, dungeon, title, combat) that crossfade into each other. It starts only after
+   the first tap, is quiet by default, and fades out while the app is in the background.
+
+   Built to stay clean on phones [OURS]:
+   - every sound starts and ends at exactly zero volume (linear attack, smooth exponential release, stop after it),
+     so there are no clicks or pops;
+   - one master chain: gentle low-pass → compressor → limiter, so many sounds at once never clip;
+   - one short shared reverb and fixed send buses instead of a reverb send per note; cached noise and distortion
+     curves; a cap on how many voices play at once — few audio nodes, little CPU;
+   - a look-ahead music scheduler that skips (rather than bunches up) notes after a stall;
+   - a minimum gap per sound effect, so twelve coins in a row sound like a jingle, not a buzz.
+   Music: modal and Nordic — Dorian/Aeolian/Phrygian, slow string pads over a low drone, a short motif that comes
+   back with variations, the odd horn call or choir; combat adds war drums. */
 const SOUND = (() => {
   const KEY = "rotn_sound";
   let cfg = { music: 0.35, sfx: 0.6, mute: false };
   try { Object.assign(cfg, JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (e) { /* storage blocked */ }
   const saveCfg = () => { try { localStorage.setItem(KEY, JSON.stringify(cfg)); } catch (e) { /* ignore */ } };
 
-  let ctx = null, master, musicBus, sfxBus, verb, verbIn, drone = null, sched = null;
-  let mood = "day", nextBeat = 0, beat = 0, phrase = [], chordIx = 0, melIx = 3, wantMood = "day";
+  let ctx = null, out, master, musicBus, sfxBus, verbIn, sends = {}, noiseBuf = null, gritCache = {};
   const hz = (midi) => 440 * Math.pow(2, (midi - 69) / 12);
+  const rnd = (a, b) => a + Math.random() * (b - a), pick = (a) => a[Math.floor(Math.random() * a.length)];
 
-  // ------------------------------------------------------------ moods
-  const MOODS = {
-    //       root    scale (semitones)          beat s  melody  octave  drone filter  chords (semitones from root)
-    day:     { root: 50, scale: [0, 2, 3, 5, 7, 9, 10], beat: 0.85, dens: 0.55, oct: 12, cut: 900, chords: [0, -2, -4, -2], voice: "flute", drone: 0.16 },
-    night:   { root: 45, scale: [0, 2, 3, 5, 7, 8, 10], beat: 1.25, dens: 0.28, oct: 24, cut: 520, chords: [0, -4, -2, 0], voice: "bell", drone: 0.13 },
-    dungeon: { root: 38, scale: [0, 1, 3, 5, 7, 8, 10], beat: 1.4, dens: 0.16, oct: 24, cut: 330, chords: [0, 1, 0, -2], voice: "bell", drone: 0.2 },
-    title:   { root: 38, scale: [0, 2, 3, 5, 7, 8, 10], beat: 1.0, dens: 0.6, oct: 12, cut: 700, chords: [0, -4, -2, -5], voice: "choir", drone: 0.2, drums: "slow" },
-    combat:  { root: 38, scale: [0, 2, 3, 5, 7, 8, 10], beat: 0.42, dens: 0.5, oct: 12, cut: 1500, chords: [0, 0, -4, -2], voice: "strings", drone: 0.18, drums: true },
-  };
-
-  function init() {
+  // ------------------------------------------------------------ the chain: buses → master → tone → compressor → limiter
+  function init(ac) {
     if (ctx) return true;
-    const AC = window.AudioContext || window.webkitAudioContext;
+    const AC = ac || window.AudioContext || window.webkitAudioContext;
     if (!AC) return false;
-    ctx = new AC();
-    master = ctx.createGain(); const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -10; comp.ratio.value = 6; master.connect(comp); comp.connect(ctx.destination);
-    musicBus = ctx.createGain(); musicBus.connect(master);
-    sfxBus = ctx.createGain(); sfxBus.connect(master);
-    // a cheap hall reverb: decaying stereo noise
-    verb = ctx.createConvolver();
-    const len = ctx.sampleRate * 2.8, ir = ctx.createBuffer(2, len, ctx.sampleRate);
-    for (let c = 0; c < 2; c++) { const d = ir.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6); }
-    verb.buffer = ir;
-    verbIn = ctx.createGain(); verbIn.gain.value = 0.55; verbIn.connect(verb); verb.connect(master);
-    applyVolume();
+    try { ctx = typeof AC === "function" && !ac ? new AC({ latencyHint: "playback" }) : new AC(); } catch (e) { try { ctx = new AC(); } catch (e2) { return false; } }
+    const tone = ctx.createBiquadFilter(); tone.type = "lowpass"; tone.frequency.value = 9000; tone.Q.value = 0.5;   // takes the fizz off saws and noise
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -20; comp.knee.value = 12; comp.ratio.value = 3.5; comp.attack.value = 0.006; comp.release.value = 0.25;
+    // the limiter: straight up to 0.7, then a soft knee that can never pass 0.91 (a curve is far cheaper than a 2nd compressor)
+    const lim = ctx.createWaveShaper(), n = 2049, cv = new Float32Array(n);
+    for (let i = 0; i < n; i++) { const x = (i - 1024) / 1024, ax = Math.abs(x); cv[i] = Math.sign(x) * (ax < 0.7 ? ax : 0.7 + 0.25 * Math.tanh((ax - 0.7) / 0.25)); }
+    lim.curve = cv;
+    master = ctx.createGain(); master.gain.value = 0;
+    const hp = ctx.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 55; hp.Q.value = 0.6;   // phone speakers can't play sub-bass; it only makes the compressor pump
+    master.connect(hp); hp.connect(tone); tone.connect(comp); comp.connect(lim); lim.connect(ctx.destination);
+    musicBus = ctx.createGain(); musicBus.gain.value = 0; musicBus.connect(master);
+    sfxBus = ctx.createGain(); sfxBus.gain.value = 0; sfxBus.connect(master);
+    // one short, soft hall: 1.4 s, mono (a third of the old reverb's CPU), filtered noise faded in so it never clicks
+    const verb = ctx.createConvolver(), sr = ctx.sampleRate, len = Math.round(sr * 1.4), ir = ctx.createBuffer(1, len, sr);
+    for (let c = 0; c < 1; c++) {
+      const d = ir.getChannelData(c); let lp = 0, mean = 0;
+      for (let i = 0; i < len; i++) { lp += 0.35 * ((Math.random() * 2 - 1) - lp); d[i] = lp; mean += lp; }
+      mean /= len;
+      for (let i = 0; i < len; i++) { const fadeIn = Math.min(1, i / (sr * 0.008)); d[i] = (d[i] - mean) * fadeIn * Math.pow(1 - i / len, 3) * 1.6; }
+    }
+    verb.buffer = ir; verb.normalize = true;
+    verbIn = ctx.createGain(); verbIn.gain.value = 0.5; verbIn.connect(verb); verb.connect(master);
+    // fixed send buses for effects: dry, a little, some, a lot of reverb
+    for (const [k, w] of [["dry", 0], ["lo", 0.15], ["mid", 0.35], ["hi", 0.65]]) {
+      const g = ctx.createGain(); g.connect(sfxBus);
+      if (w) { const s = ctx.createGain(); s.gain.value = w; g.connect(s); s.connect(verbIn); }
+      sends[k] = g;
+    }
+    // two seconds of white noise, made once
+    noiseBuf = ctx.createBuffer(1, sr * 2, sr);
+    const nd = noiseBuf.getChannelData(0); for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+    applyVolume(true);
     return true;
   }
-  function applyVolume() {
+  function applyVolume(now = false) {
     if (!ctx) return;
-    const t = ctx.currentTime;
-    master.gain.setTargetAtTime(cfg.mute ? 0 : 1.5, t, 0.05);
-    musicBus.gain.setTargetAtTime(cfg.music * 0.6, t, 0.2);
-    sfxBus.gain.setTargetAtTime(cfg.sfx, t, 0.05);
+    const t = ctx.currentTime, k = now ? 0.01 : 0.08;
+    master.gain.setTargetAtTime(cfg.mute || hidden ? 0 : 1, t, k);
+    musicBus.gain.setTargetAtTime(Math.pow(cfg.music, 1.3) * 0.9, t, 0.25);
+    sfxBus.gain.setTargetAtTime(Math.pow(cfg.sfx, 1.3) * 1.1, t, k);
   }
 
-  // ------------------------------------------------------------ building blocks
-  function env(g, t, a, peak, d) { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + a + d); }
-  function tone(freq, t, dur, { type = "triangle", vol = 0.2, a = 0.02, bus = sfxBus, wet = 0.3, cut = 0, vib = 0, glide = 0 } = {}) {
-    const o = ctx.createOscillator(), g = ctx.createGain();
-    o.type = type; o.frequency.setValueAtTime(freq, t);
-    if (glide) o.frequency.exponentialRampToValueAtTime(Math.max(20, freq * glide), t + dur);
-    let last = o;
-    if (cut) { const f = ctx.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = cut; o.connect(f); last = f; }
-    if (vib) { const l = ctx.createOscillator(), lg = ctx.createGain(); l.frequency.value = 5; lg.gain.value = vib; l.connect(lg); lg.connect(o.frequency); l.start(t); l.stop(t + a + dur + 0.1); }
-    last.connect(g); env(g, t, a, vol, dur);
-    g.connect(bus);
-    if (wet) { const w = ctx.createGain(); w.gain.value = wet; g.connect(w); w.connect(verbIn); }
-    o.start(t); o.stop(t + a + dur + 0.1);
+  // ------------------------------------------------------------ voices (each one starts and ends at exactly zero)
+  const voices = { music: [], sfx: [] }, CAP = { music: 26, sfx: 32 };
+  let fxScale = 1;   // per-effect loudness trim, set while an effect is being built
+  function room(kind, t, end) {   // keep count of what will be sounding at the same time; refuse when full
+    const v = voices[kind], now = ctx.currentTime;
+    for (let i = v.length - 1; i >= 0; i--) if (v[i][1] < now) v.splice(i, 1);
+    let n = 0; for (const [a, b] of v) if (a < end && b > t) n++;
+    if (n >= CAP[kind]) return false;
+    v.push([t, end]); return true;
   }
-  let noiseBuf = null;
-  function noise(t, dur, { type = "bandpass", freq = 1000, q = 1, vol = 0.3, a = 0.005, bus = sfxBus, sweep = 0, wet = 0.15 } = {}) {
-    if (!noiseBuf) { noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate); const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
-    const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
-    s.buffer = noiseBuf; f.type = type; f.frequency.setValueAtTime(freq, t); f.Q.value = q;
-    if (sweep) f.frequency.exponentialRampToValueAtTime(Math.max(30, freq * sweep), t + dur);
-    s.connect(f); f.connect(g); env(g, t, a, vol, dur); g.connect(bus);
-    if (wet) { const w = ctx.createGain(); w.gain.value = wet; g.connect(w); w.connect(verbIn); }
-    s.start(t, Math.random()); s.stop(t + a + dur + 0.1);
+  /* attack a, hold h, then fade with time-constant r; returns the stop time */
+  function envelope(p, t, peak, a, h, r) {
+    p.setValueAtTime(0, t); p.linearRampToValueAtTime(peak, t + a);
+    if (h > 0) p.setValueAtTime(peak, t + a + h);
+    p.setTargetAtTime(0, t + a + Math.max(0, h), r);
+    return t + a + Math.max(0, h) + r * 7;   // ~ -60 dB: silent enough to stop
   }
-  function grit(amount = 30) {
-    const ws = ctx.createWaveShaper(), n = 1024, c = new Float32Array(n);
-    for (let i = 0; i < n; i++) { const x = i * 2 / n - 1; c[i] = (1 + amount) * x / (1 + amount * Math.abs(x)); }
-    ws.curve = c; return ws;
+  function gainNode(dest) { const g = ctx.createGain(); g.gain.value = 0; g.connect(dest); return g; }
+  /* one oscillator note into dest (a bus or a send). glide: end pitch ratio */
+  function osc(freq, t, { type = "sine", vol = 0.2, a = 0.01, h = 0, r = 0.1, dest, cut = 0, q = 0.7, glide = 0, det = 0, kind = "sfx", vibrato = null } = {}) {
+    const end = t + a + h + r * 7;
+    if (!room(kind, t, end)) return;
+    if (kind === "sfx") vol *= fxScale;
+    const o = ctx.createOscillator(); o.type = type; o.frequency.setValueAtTime(freq, t); if (det) o.detune.value = det;
+    if (glide) o.frequency.exponentialRampToValueAtTime(Math.max(20, freq * glide), t + a + h + r * 2);
+    if (vibrato) vibrato.connect(o.detune);
+    const g = gainNode(dest);
+    if (cut) { const f = ctx.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = Math.min(cut, ctx.sampleRate / 2.2); f.Q.value = q; o.connect(f); f.connect(g); } else o.connect(g);
+    envelope(g.gain, t, vol, a, h, r);
+    o.start(t); o.stop(end + 0.02);
+    return { o, g };
   }
-  function drum(t, vol = 0.5, f0 = 130) {
-    const o = ctx.createOscillator(), g = ctx.createGain();
-    o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.25);
-    o.connect(g); env(g, t, 0.004, vol, 0.35); g.connect(musicBus); o.start(t); o.stop(t + 0.45);
-    noise(t, 0.06, { type: "lowpass", freq: 600, vol: vol * 0.3, bus: musicBus, wet: 0.1 });
+  function noise(t, { type = "bandpass", freq = 1000, q = 1, vol = 0.3, a = 0.004, h = 0, r = 0.05, dest, sweep = 0, kind = "sfx" } = {}) {
+    const end = t + a + h + r * 7;
+    if (!room(kind, t, end)) return;
+    if (kind === "sfx") vol *= fxScale;
+    const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = gainNode(dest);
+    s.buffer = noiseBuf; s.loop = true; f.type = type; f.frequency.setValueAtTime(freq, t); f.Q.value = q;
+    if (sweep) f.frequency.exponentialRampToValueAtTime(Math.max(30, Math.min(ctx.sampleRate / 2.2, freq * sweep)), t + a + h + r * 3);
+    s.connect(f); f.connect(g); envelope(g.gain, t, vol, a, h, r);
+    s.start(t, Math.random() * 1.5); s.stop(end + 0.02);
+  }
+  function grit(amount) {   // soft clipping; odd length so silence stays exactly silent
+    if (!gritCache[amount]) { const n = 1025, c = new Float32Array(n); for (let i = 0; i < n; i++) { const x = (i - 512) / 512; c[i] = (1 + amount) * x / (1 + amount * Math.abs(x)); } gritCache[amount] = c; }
+    const ws = ctx.createWaveShaper(); ws.curve = gritCache[amount]; ws.oversample = "2x"; return ws;
   }
 
-  // ------------------------------------------------------------ the drone (always on while music plays)
-  function startDrone() {
-    if (drone) return;
-    const f = ctx.createBiquadFilter(), g = ctx.createGain();
-    f.type = "lowpass"; f.frequency.value = MOODS[mood].cut; f.Q.value = 0.7;
-    g.gain.value = 0.0001; f.connect(g); g.connect(musicBus);
-    const w = ctx.createGain(); w.gain.value = 0.35; g.connect(w); w.connect(verbIn);
-    const oscs = [[0, "sawtooth", 0.5, -6], [7, "sawtooth", 0.35, 5], [12, "triangle", 0.4, 0], [-12, "sine", 0.6, 0]].map(([iv, type, vol, det]) => {
-      const o = ctx.createOscillator(), og = ctx.createGain(); o.type = type; o.detune.value = det; og.gain.value = vol;
-      o.connect(og); og.connect(f); o.start(); return { o, iv };
+  // ------------------------------------------------------------ music: moods, layers, the composer
+  const DORIAN = [0, 2, 3, 5, 7, 9, 10], AEOLIAN = [0, 2, 3, 5, 7, 8, 10], PHRYGIAN = [0, 1, 3, 5, 7, 8, 10];
+  const MOODS = {
+    //        root  scale     beat  chords (scale degrees, 2 bars each)  lead voice         motif density  extras
+    day:     { root: 50, scale: DORIAN, beat: 0.8, chords: [0, 6, 3, 0, 4, 6, 3, 0], lead: "flute", alt: "pluck", reg: 12, dens: 0.7, cut: 1400, drone: 0.12, pad: 0.05, wet: 0.35, horn: 0.15 },
+    night:   { root: 45, scale: AEOLIAN, beat: 1.05, chords: [0, 5, 2, 6, 0, 3, 5, 6], lead: "pluck", alt: "bell", reg: 12, dens: 0.45, cut: 900, drone: 0.11, pad: 0.05, wet: 0.5, horn: 0 },
+    dungeon: { root: 38, scale: PHRYGIAN, beat: 1.3, chords: [0, 1, 0, 6, 0, 1, 5, 0], lead: "bell", alt: "bell", reg: 24, dens: 0.25, cut: 600, drone: 0.16, pad: 0.035, wet: 0.65, horn: 0, drips: true },
+    title:   { root: 38, scale: AEOLIAN, beat: 0.95, chords: [0, 5, 6, 0, 3, 5, 6, 4], lead: "choir", alt: "horn", reg: 12, dens: 0.75, cut: 1100, drone: 0.15, pad: 0.05, wet: 0.55, horn: 0.35, drums: "slow" },
+    combat:  { root: 38, scale: AEOLIAN, beat: 0.45, chords: [0, 0, 5, 6, 0, 0, 3, 4], lead: "strings", alt: "horn", reg: 12, dens: 0.8, cut: 1700, drone: 0.13, pad: 0.04, wet: 0.3, horn: 0.25, drums: "war" },
+  };
+  let mood = "day", wantMood = "day", layer = null, playing = false, timer = null;
+  let beat = 0, nextBeat = 0, chordIx = 0, queue = [], motif = null, motifUses = 0, restBars = 0;
+
+  function makeLayer(m) {
+    const M = MOODS[m], t = ctx.currentTime;
+    const L = { mood: m, gain: ctx.createGain(), padF: ctx.createBiquadFilter(), oscs: [], born: t };
+    L.gain.gain.value = 0; L.gain.connect(musicBus);
+    const send = ctx.createGain(); send.gain.value = M.wet; L.gain.connect(send); send.connect(verbIn);
+    L.padF.type = "lowpass"; L.padF.frequency.value = M.cut; L.padF.Q.value = 0.6; L.padF.connect(L.gain);
+    // a shared, slow vibrato for the flute and strings (in cents, so one LFO serves every note)
+    const lfo = ctx.createOscillator(), lg = ctx.createGain(); lfo.frequency.value = 4.8; lg.gain.value = 9; lfo.connect(lg); L.vib = lg;
+    // filter "breathing" on the pads
+    const flfo = ctx.createOscillator(), fg = ctx.createGain(); flfo.frequency.value = 0.06; fg.gain.value = M.cut * 0.25; flfo.connect(fg); fg.connect(L.padF.frequency);
+    // the drone: low root and fifth, soft waves only
+    L.droneG = ctx.createGain(); L.droneG.gain.value = 0; L.droneG.connect(L.gain);
+    const df = ctx.createBiquadFilter(); df.type = "lowpass"; df.frequency.value = 600; df.connect(L.droneG);
+    L.drones = [[0, "triangle", 0.55], [7, "sine", 0.35], [12, "sine", 0.25]].map(([iv, type, v]) => {
+      const o = ctx.createOscillator(), g = ctx.createGain(); o.type = type; g.gain.value = v; o.connect(g); g.connect(df);
+      o.frequency.value = hz(droneRoot(M) + iv); o.start(t); return { o, iv };
     });
-    // slow breathing of the filter
-    const lfo = ctx.createOscillator(), lg = ctx.createGain(); lfo.frequency.value = 0.07; lg.gain.value = 140; lfo.connect(lg); lg.connect(f.frequency); lfo.start();
-    drone = { f, g, oscs, lfo };
-    setDrone(0, true);
+    L.droneG.gain.setTargetAtTime(M.drone * 0.6, t, 1.2);
+    lfo.start(t); flfo.start(t);
+    L.oscs = [...L.drones.map((d) => d.o), lfo, flfo];
+    L.gain.gain.setTargetAtTime(1, t, 0.7);
+    return L;
   }
-  function setDrone(chordShift, now = false) {
-    if (!drone) return;
-    const m = MOODS[mood], t = ctx.currentTime, k = now ? 0.05 : 1.2;
-    drone.oscs.forEach(({ o, iv }) => o.frequency.setTargetAtTime(hz(m.root - 12 + chordShift + iv), t, k));
-    drone.f.frequency.setTargetAtTime(m.cut, t, 1.5);
-    drone.g.gain.setTargetAtTime(m.drone, t, 1.5);
+  function dropLayer(L, quick = false) {
+    if (!L) return;
+    const t = ctx.currentTime;
+    L.gain.gain.cancelScheduledValues(t); L.gain.gain.setValueAtTime(L.gain.gain.value, t); L.gain.gain.setTargetAtTime(0, t, quick ? 0.15 : 0.7);
+    L.oscs.forEach((o) => { try { o.stop(t + (quick ? 1.5 : 5)); } catch (e) { /* already stopped */ } });
   }
-  function stopDrone() {
-    if (!drone) return;
-    const d = drone; drone = null; const t = ctx.currentTime;
-    d.g.gain.setTargetAtTime(0.0001, t, 0.4);
-    setTimeout(() => { d.oscs.forEach(({ o }) => o.stop()); d.lfo.stop(); }, 2500);
-  }
+  const droneRoot = (M) => (M.root < 45 ? M.root + 12 : M.root);   // keep the drone above ~70 Hz so phone speakers can play it
+  const degHz = (M, deg, oct = 0) => { const n = M.scale.length, o = Math.floor(deg / n), d = ((deg % n) + n) % n; return hz(M.root + M.reg + oct + M.scale[d] + 12 * o); };
 
-  // ------------------------------------------------------------ the melody scheduler
-  function voice(freq, t, len) {
-    const v = MOODS[mood].voice;
-    if (v === "flute") { tone(freq, t, len * 0.9, { type: "triangle", vol: 0.13, a: 0.09, bus: musicBus, wet: 0.45, vib: 3 }); tone(freq * 2, t, len * 0.6, { type: "sine", vol: 0.025, a: 0.1, bus: musicBus, wet: 0.5 }); }
-    else if (v === "bell") { tone(freq, t, 2.4, { type: "sine", vol: 0.1, a: 0.005, bus: musicBus, wet: 0.7 }); tone(freq * 2.76, t, 1.1, { type: "sine", vol: 0.025, a: 0.005, bus: musicBus, wet: 0.7 }); }
-    else if (v === "choir") {   // a low male chant: detuned saws through vowel-like filters
-      [-7, 7].forEach((det) => {
-        const o = ctx.createOscillator(), f1 = ctx.createBiquadFilter(), f2 = ctx.createBiquadFilter(), g = ctx.createGain(), w = ctx.createGain();
-        o.type = "sawtooth"; o.frequency.value = freq / 2; o.detune.value = det;
-        f1.type = "bandpass"; f1.frequency.value = 600; f1.Q.value = 4; f2.type = "bandpass"; f2.frequency.value = 1000; f2.Q.value = 5;
-        o.connect(f1); o.connect(f2); f1.connect(g); f2.connect(g);
-        const d = len * 0.95; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.16, t + 0.35); g.gain.setValueAtTime(0.16, t + Math.max(0.4, d - 0.4)); g.gain.exponentialRampToValueAtTime(0.0001, t + d + 0.3);
-        g.connect(musicBus); w.gain.value = 0.7; g.connect(w); w.connect(verbIn); o.start(t); o.stop(t + d + 0.4);
-      });
+  // instruments (all into the current layer)
+  function play(inst, freq, t, len, vol = 1) {
+    const L = layer, kind = "music";
+    if (!L) return;
+    if (inst === "flute") {
+      osc(freq, t, { type: "triangle", vol: 0.09 * vol, a: 0.09, h: len * 0.75, r: 0.18, dest: L.gain, kind, vibrato: L.vib });
+      osc(freq * 2, t, { type: "sine", vol: 0.014 * vol, a: 0.12, h: len * 0.5, r: 0.15, dest: L.gain, kind });
+    } else if (inst === "pluck") {
+      osc(freq, t, { type: "triangle", vol: 0.11 * vol, a: 0.004, h: 0, r: 0.45, dest: L.gain, kind });
+      osc(freq * 2, t, { type: "sine", vol: 0.03 * vol, a: 0.003, h: 0, r: 0.2, dest: L.gain, kind });
+    } else if (inst === "bell") {
+      osc(freq, t, { type: "sine", vol: 0.08 * vol, a: 0.004, h: 0, r: 0.9, dest: L.gain, kind });
+      osc(freq * 2.76, t, { type: "sine", vol: 0.014 * vol, a: 0.003, h: 0, r: 0.35, dest: L.gain, kind });
+    } else if (inst === "strings") {
+      osc(freq, t, { type: "sawtooth", vol: 0.05 * vol, a: 0.03, h: len * 0.6, r: 0.12, dest: L.padF, kind, vibrato: L.vib });
+    } else if (inst === "horn") {   // a far-off war horn: soft saw, filter opening during the swell
+      if (!room(kind, t, t + len + 1.5)) return;
+      const o = ctx.createOscillator(), f = ctx.createBiquadFilter(), g = gainNode(L.gain);
+      o.type = "sawtooth"; o.frequency.value = freq; f.type = "lowpass"; f.Q.value = 1.2;
+      f.frequency.setValueAtTime(350, t); f.frequency.linearRampToValueAtTime(1000, t + 0.6); f.frequency.setTargetAtTime(500, t + 0.8, 0.6);
+      o.connect(f); f.connect(g); const end = envelope(g.gain, t, 0.07 * vol, 0.45, len * 0.8, 0.35);
+      o.start(t); o.stop(end + 0.02);
+    } else if (inst === "choir") {   // a low male chant: detuned saw through two vowel formants
+      if (!room(kind, t, t + len + 1.5)) return;
+      const g = gainNode(L.gain), end = t + 0.6 + len * 0.85 + 0.45 * 7;
+      const f1 = ctx.createBiquadFilter(), f2 = ctx.createBiquadFilter(); f1.type = f2.type = "bandpass";
+      const vowel = pick([[600, 1000], [400, 800], [500, 900]]); f1.frequency.value = vowel[0]; f1.Q.value = 5; f2.frequency.value = vowel[1]; f2.Q.value = 6;
+      f1.connect(g); f2.connect(g);
+      [-8, 8].forEach((det) => { const o = ctx.createOscillator(); o.type = "sawtooth"; o.frequency.value = freq; o.detune.value = det; o.connect(f1); o.connect(f2); o.start(t); o.stop(end + 0.02); });
+      envelope(g.gain, t, 0.12 * vol, 0.6, len * 0.85, 0.45);
     }
-    else { tone(freq, t, len * 0.8, { type: "sawtooth", vol: 0.06, a: 0.04, bus: musicBus, wet: 0.3, cut: 1800 }); }
   }
-  function newPhrase(m) {
-    const n = 3 + Math.floor(Math.random() * 4), out = [];
-    for (let i = 0; i < n; i++) {
-      melIx += [-2, -1, -1, 0, 1, 1, 2][Math.floor(Math.random() * 7)];
-      melIx = Math.max(0, Math.min(m.scale.length + 4, melIx));
-      out.push({ ix: melIx, len: Math.random() < 0.3 ? 2 : 1 });
+  function pad(degs, t, len) {   // a string chord: two detuned saws per note, slow swell, through the layer's filter
+    const M = MOODS[mood];
+    for (const d of degs) {
+      const n = M.scale.length, f = hz(M.root + 12 + M.scale[((d % n) + n) % n] + 12 * Math.floor(d / n));   // pads around 150–400 Hz
+      for (const det of [-7, 6]) osc(f, t, { type: "sawtooth", vol: M.pad, a: 1.4, h: len - 1.2, r: 0.7, dest: layer.padF, det, kind: "music" });
     }
-    out[out.length - 1].len = 3;   // phrases end on a held note
-    return out;
   }
-  let hold = 0;
+  function drum(t, vol, f0, dest) {   // frame drum / war drum: a falling sine thump and a soft skin noise
+    osc(f0, t, { type: "sine", vol, a: 0.003, h: 0.02, r: 0.12, dest, glide: 0.55, kind: "music" });
+    if (vol > 0.2) noise(t, { type: "lowpass", freq: 900, q: 0.5, vol: vol * 0.25, a: 0.002, r: 0.03, dest, kind: "music" });   // skin noise on the accents only
+  }
+  // the composer: a short motif per section that comes back moved up or down, with rests in between
+  function newMotif(M) {
+    const n = 3 + Math.floor(Math.random() * 3), notes = []; let d = pick([0, 2, 4, 4, 7]);
+    const rhythm = pick([[1, 1, 2], [2, 1, 1], [1, 1, 1, 1], [1.5, 0.5, 2], [1, 2, 1], [3, 1]]);
+    for (let i = 0; i < n; i++) { notes.push({ d, len: rhythm[i % rhythm.length] }); d += pick([-2, -1, -1, 1, 1, 2, 0]); d = Math.max(-2, Math.min(9, d)); }
+    notes[notes.length - 1].len = Math.max(2, notes[notes.length - 1].len);   // phrases end on a held note
+    return notes;
+  }
+  function planPhrase(M, startBeat) {
+    if (!motif || motifUses >= 4) { motif = newMotif(M); motifUses = 0; }
+    const shift = [0, pick([1, -1, 2]), 0, pick([-2, 3])][motifUses]; motifUses++;
+    const inst = Math.random() < 0.8 ? M.lead : M.alt;
+    let b = startBeat;
+    const chordTones = (() => { const c = M.chords[chordIx]; return [c, c + 2, c + 4, c + 7]; })();
+    for (const [i, n] of motif.entries()) {
+      let d = n.d + shift;
+      if (i === 0 || i === motif.length - 1) d = chordTones.reduce((best, x) => (Math.abs(x - d) < Math.abs(best - d) ? x : best), chordTones[0]);   // start and end on the chord
+      queue.push({ beat: b, d, len: n.len, inst });
+      b += n.len;
+    }
+    return b;
+  }
+  function scheduleBeat(t) {
+    const M = MOODS[mood];
+    // new chord every 2 bars
+    if (beat % 8 === 0) {
+      chordIx = (beat / 8) % M.chords.length;
+      const c = M.chords[chordIx];
+      pad([c, c + 2, c + 4], t, M.beat * 8 + 0.6);
+      const n = M.scale.length, rootSemi = M.scale[((c % n) + n) % n];
+      layer.drones.forEach(({ o, iv }) => o.frequency.setTargetAtTime(hz(droneRoot(M) + iv + (rootSemi > 6 ? rootSemi - 12 : rootSemi)), t, 0.9));
+      if (M.horn && Math.random() < M.horn) { const n2 = M.scale.length; play("horn", hz(M.root + 12 + M.scale[((c % n2) + n2) % n2]), t + M.beat * 2, M.beat * 3, 0.9); }
+    }
+    // the melody
+    if (!queue.length && beat % 4 === 0) {
+      if (restBars > 0) restBars--;
+      else if (Math.random() < M.dens) { planPhrase(M, beat); restBars = Math.random() < 0.5 ? 1 : 2; }
+    }
+    while (queue.length && queue[0].beat <= beat + 0.75) {
+      const n = queue.shift(), off = (n.beat - beat) * M.beat;
+      play(n.inst, degHz(M, n.d), t + Math.max(0, off), n.len * M.beat, 1);
+    }
+    // percussion
+    if (M.drums === "war") {
+      const pat = [1, 0, 0.45, 0, 0.8, 0, 0.45, 0.3][beat % 8];
+      if (pat) drum(t, 0.32 * pat, beat % 4 === 0 ? 120 : 165, layer.gain);
+      if (beat % 16 === 15 && Math.random() < 0.6) drum(t + M.beat / 2, 0.18, 190, layer.gain);
+    } else if (M.drums === "slow") {
+      if (beat % 4 === 0) drum(t, 0.3, 105, layer.gain); else if (beat % 8 === 6) drum(t, 0.16, 135, layer.gain);
+    }
+    if (M.drips && Math.random() < 0.07) noise(t + rnd(0, M.beat), { type: "bandpass", freq: rnd(2200, 3600), q: 22, vol: 0.06, a: 0.002, r: 0.03, dest: layer.gain, kind: "music" });
+    beat++;
+  }
+  const LOOKAHEAD = 0.6, TICK = 90;
   function step() {
-    if (!ctx || !drone) return;
-    const m = MOODS[mood];
-    while (nextBeat < ctx.currentTime + 0.4) {
-      const t = nextBeat;
-      if (beat % 8 === 0) { chordIx = (chordIx + 1) % m.chords.length; setDrone(m.chords[chordIx]); }
-      if (m.drums === "slow") { if (beat % 4 === 0) { drum(t, 0.55, 90); } else if (beat % 8 === 6) drum(t, 0.3, 110); }
-      else if (m.drums) { if (beat % 4 === 0) drum(t, 0.45); else if (beat % 4 === 2) drum(t, 0.3, 160); else if (Math.random() < 0.3) drum(t, 0.15, 200); }
-      if (hold > 0) hold--;
-      else if (phrase.length) {
-        const n = phrase.shift(), deg = m.scale[n.ix % m.scale.length] + 12 * Math.floor(n.ix / m.scale.length);
-        voice(hz(m.root + m.oct + deg), t, n.len * m.beat);
-        hold = n.len - 1;
-      } else if (Math.random() < m.dens * 0.35) phrase = newPhrase(m);
-      else if (mood === "dungeon" && Math.random() < 0.08) noise(t, 0.05, { type: "bandpass", freq: 2500 + Math.random() * 1500, q: 18, vol: 0.08, bus: musicBus, wet: 0.9 });   // a drip
-      beat++; nextBeat += m.beat;
-    }
+    if (!ctx || !playing || !layer) return;
+    const now = ctx.currentTime;
+    if (nextBeat < now - 0.05) { nextBeat = now + 0.05; queue = []; }   // the app stalled: skip, don't bunch notes up
+    while (nextBeat < now + LOOKAHEAD) { scheduleBeat(nextBeat); nextBeat += MOODS[mood].beat; }
   }
   function startMusic() {
-    if (!ctx || sched) return;
-    startDrone(); nextBeat = ctx.currentTime + 0.3; sched = setInterval(step, 150);
+    if (!ctx || playing) return;
+    playing = true; layer = makeLayer(mood); beat = 0; chordIx = 0; queue = []; motif = null; restBars = 1;
+    nextBeat = ctx.currentTime + 0.2;
+    if (!timer && typeof setInterval !== "undefined") timer = setInterval(step, TICK);
+    step();
   }
-  function stopMusic() { clearInterval(sched); sched = null; stopDrone(); }
+  function stopMusic() {
+    playing = false; if (timer) { clearInterval(timer); timer = null; }
+    dropLayer(layer); layer = null; queue = [];
+  }
+  function switchMood(m) {
+    if (!MOODS[m]) return;
+    mood = m;
+    if (!ctx || !playing) return;
+    dropLayer(layer, ctx.currentTime - layer.born < 1.5); layer = makeLayer(m);   // flicking between moods: clear the short-lived ones fast
+    queue = []; motif = null; motifUses = 0; restBars = 0;
+    beat = Math.ceil(beat / 8) * 8;   // start the new mood on a fresh chord
+    nextBeat = Math.max(nextBeat, ctx.currentTime + 0.15);
+  }
 
-  // ------------------------------------------------------------ effects
+  // ------------------------------------------------------------ effects (loudness roughly matched)
+  const S = () => sends;
   const FX = {
-    click(t) { tone(1200, t, 0.03, { type: "square", vol: 0.03, wet: 0, cut: 2500 }); },
-    page(t) { noise(t, 0.12, { type: "highpass", freq: 2500, vol: 0.06, wet: 0 }); },
-    hit(t) { noise(t, 0.09, { freq: 1300 + Math.random() * 600, q: 1.5, vol: 0.5 }); tone(95, t, 0.12, { type: "sine", vol: 0.5, wet: 0.05, glide: 0.5 }); },
-    clang(t) { [1900, 2650, 3700].forEach((f) => tone(f * (0.95 + Math.random() * 0.1), t, 0.35, { type: "sine", vol: 0.05, a: 0.002, wet: 0.3 })); noise(t, 0.04, { freq: 3000, vol: 0.2 }); },
-    swing(t) { noise(t, 0.18, { type: "bandpass", freq: 600, q: 2, vol: 0.18, a: 0.06, sweep: 4, wet: 0.05 }); },
-    spell(t) { noise(t, 0.5, { type: "bandpass", freq: 400, q: 3, vol: 0.25, a: 0.05, sweep: 6 }); tone(330, t, 0.5, { type: "sawtooth", vol: 0.05, glide: 2, cut: 1500 }); },
-    coin(t) { for (let i = 0; i < 3; i++) tone(2100 + Math.random() * 1400, t + i * 0.06 + Math.random() * 0.02, 0.18, { type: "sine", vol: 0.06, a: 0.002, wet: 0.2 }); },
-    levelup(t) { [62, 65, 69, 74, 77].forEach((n, i) => tone(hz(n), t + i * 0.11, 1.4, { type: "triangle", vol: 0.12, a: 0.01, wet: 0.6 })); tone(hz(86), t + 0.55, 1.6, { type: "sine", vol: 0.04, wet: 0.8 }); },
-    quest(t) { [74, 81, 86].forEach((n, i) => tone(hz(n), t + i * 0.18, 1.8, { type: "sine", vol: 0.09, a: 0.005, wet: 0.7 })); },
-    arrive(t) { tone(hz(57), t, 0.5, { type: "sawtooth", vol: 0.09, a: 0.12, cut: 900, wet: 0.5 }); tone(hz(62), t + 0.45, 1.1, { type: "sawtooth", vol: 0.1, a: 0.15, cut: 1000, wet: 0.6 }); },
-    victory(t) { [[62, 0], [69, 0.16], [74, 0.32]].forEach(([n, d]) => tone(hz(n), t + d, d === 0.32 ? 1.2 : 0.3, { type: "sawtooth", vol: 0.09, a: 0.03, cut: 1600, wet: 0.5 })); },
-    death(t) { tone(hz(38), t, 2.5, { type: "sawtooth", vol: 0.14, a: 0.3, cut: 500, glide: 0.7, wet: 0.6 }); tone(hz(45), t + 0.2, 2.2, { type: "sawtooth", vol: 0.08, a: 0.4, cut: 400, glide: 0.7, wet: 0.6 }); },
-    chat(t) { tone(hz(81), t, 0.25, { type: "sine", vol: 0.07, a: 0.005, wet: 0.3 }); tone(hz(86), t + 0.09, 0.4, { type: "sine", vol: 0.06, a: 0.005, wet: 0.4 }); },
-    potion(t) { for (let i = 0; i < 4; i++) tone(500 + i * 120 + Math.random() * 60, t + i * 0.07, 0.08, { type: "sine", vol: 0.08, glide: 1.8, wet: 0.1 }); },
-    shout(t) {   // the Voice: a deep distorted blast with a rush of air
-      const o = ctx.createOscillator(), o2 = ctx.createOscillator(), ws = grit(40), f = ctx.createBiquadFilter(), g = ctx.createGain();
-      o.type = "sawtooth"; o2.type = "square"; o.frequency.setValueAtTime(120, t); o.frequency.exponentialRampToValueAtTime(48, t + 1.1);
+    click(t) { noise(t, { type: "bandpass", freq: 3200, q: 2.5, vol: 0.16, a: 0.001, r: 0.008, dest: S().dry }); osc(1500, t, { vol: 0.05, a: 0.001, r: 0.012, dest: S().dry }); },
+    page(t) { noise(t, { type: "bandpass", freq: 3800, q: 0.8, vol: 0.12, a: 0.02, h: 0.04, r: 0.03, sweep: 0.6, dest: S().dry }); },
+    hit(t) {
+      noise(t, { type: "bandpass", freq: rnd(1100, 1700), q: 1.3, vol: 0.45, a: 0.002, r: 0.03, dest: S().lo });
+      osc(110, t, { vol: 0.55, a: 0.003, h: 0.02, r: 0.05, glide: 0.45, dest: S().lo });
+    },
+    clang(t) {
+      [1900, 2650, 3720, 5100].forEach((f, i) => osc(f * rnd(0.97, 1.03), t, { vol: [0.06, 0.045, 0.03, 0.015][i], a: 0.001, r: 0.12 - i * 0.02, dest: S().mid }));
+      noise(t, { type: "highpass", freq: 2500, vol: 0.12, a: 0.001, r: 0.012, dest: S().mid });
+    },
+    swing(t) { noise(t, { type: "bandpass", freq: 500, q: 2, vol: 0.2, a: 0.07, h: 0.02, r: 0.04, sweep: 5, dest: S().lo }); },
+    spell(t) {
+      noise(t, { type: "bandpass", freq: 400, q: 3, vol: 0.22, a: 0.08, h: 0.2, r: 0.08, sweep: 6, dest: S().mid });
+      osc(330, t, { type: "triangle", vol: 0.07, a: 0.05, h: 0.25, r: 0.1, glide: 2, dest: S().mid });
+      osc(495, t + 0.05, { vol: 0.04, a: 0.05, h: 0.2, r: 0.1, glide: 2, dest: S().hi });
+    },
+    coin(t) { for (let i = 0; i < 3; i++) { const f = rnd(2000, 3200), tt = t + i * 0.055 + rnd(0, 0.015); osc(f, tt, { vol: 0.05, a: 0.001, r: 0.06, dest: S().lo }); osc(f * 1.5, tt, { vol: 0.015, a: 0.001, r: 0.03, dest: S().lo }); } },
+    levelup(t) {
+      [62, 65, 69, 74, 77].forEach((n, i) => osc(hz(n), t + i * 0.11, { type: "triangle", vol: 0.1, a: 0.01, h: 0.15, r: 0.35, dest: S().hi }));
+      osc(hz(86), t + 0.55, { vol: 0.035, a: 0.02, h: 0.3, r: 0.4, dest: S().hi });
+    },
+    quest(t) { [74, 81, 86].forEach((n, i) => osc(hz(n), t + i * 0.18, { vol: 0.09, a: 0.004, h: 0.05, r: 0.4, dest: S().hi })); },
+    arrive(t) {
+      osc(hz(57), t, { type: "sawtooth", vol: 0.07, a: 0.15, h: 0.2, r: 0.12, cut: 900, dest: S().mid });
+      osc(hz(62), t + 0.42, { type: "sawtooth", vol: 0.08, a: 0.18, h: 0.45, r: 0.25, cut: 1000, dest: S().hi });
+    },
+    victory(t) { [[62, 0, 0.12], [69, 0.16, 0.12], [74, 0.32, 0.6]].forEach(([n, d, h]) => osc(hz(n), t + d, { type: "sawtooth", vol: 0.07, a: 0.03, h, r: h > 0.3 ? 0.3 : 0.06, cut: 1600, dest: S().mid })); },
+    death(t) {
+      osc(hz(38), t, { type: "sawtooth", vol: 0.12, a: 0.3, h: 1.2, r: 0.5, cut: 500, glide: 0.7, dest: S().hi });
+      osc(hz(45), t + 0.2, { type: "sawtooth", vol: 0.07, a: 0.4, h: 1.0, r: 0.5, cut: 400, glide: 0.7, dest: S().hi });
+    },
+    chat(t) { osc(hz(81), t, { vol: 0.07, a: 0.004, r: 0.07, dest: S().lo }); osc(hz(86), t + 0.09, { vol: 0.06, a: 0.004, r: 0.1, dest: S().mid }); },
+    potion(t) { for (let i = 0; i < 4; i++) osc(500 + i * 120 + rnd(0, 60), t + i * 0.07, { vol: 0.08, a: 0.004, h: 0.02, r: 0.025, glide: 1.8, dest: S().lo }); },
+    shout(t) {   // the Voice: a deep, gritty blast and a rush of air
+      if (!room("sfx", t, t + 1.8)) return;
+      const o = ctx.createOscillator(), o2 = ctx.createOscillator(), ws = grit(25), f = ctx.createBiquadFilter(), g = gainNode(S().hi);
+      o.type = "sawtooth"; o2.type = "triangle";
+      o.frequency.setValueAtTime(120, t); o.frequency.exponentialRampToValueAtTime(48, t + 1.1);
       o2.frequency.setValueAtTime(61, t); o2.frequency.exponentialRampToValueAtTime(30, t + 1.1);
-      f.type = "lowpass"; f.frequency.setValueAtTime(2200, t); f.frequency.exponentialRampToValueAtTime(300, t + 1.1);
-      o.connect(ws); o2.connect(ws); ws.connect(f); f.connect(g); env(g, t, 0.02, 0.22, 1.1); g.connect(sfxBus);
-      const w = ctx.createGain(); w.gain.value = 0.8; g.connect(w); w.connect(verbIn);
-      o.start(t); o2.start(t); o.stop(t + 1.3); o2.stop(t + 1.3);
-      noise(t, 1.2, { type: "lowpass", freq: 3000, vol: 0.35, a: 0.01, sweep: 0.1, wet: 0.6 });
+      f.type = "lowpass"; f.frequency.setValueAtTime(2000, t); f.frequency.exponentialRampToValueAtTime(300, t + 1.1);
+      const pre = ctx.createGain(); pre.gain.value = 0.6; o.connect(pre); o2.connect(pre); pre.connect(ws); ws.connect(f); f.connect(g);
+      const end = envelope(g.gain, t, 0.2 * fxScale, 0.02, 0.75, 0.1);
+      o.start(t); o2.start(t); o.stop(end + 0.02); o2.stop(end + 0.02);
+      noise(t, { type: "lowpass", freq: 3000, vol: 0.28, a: 0.02, h: 0.5, r: 0.15, sweep: 0.1, dest: S().hi });
     },
     dragon(t) {   // a roar: rough low tone, wobbling, through a sweeping filter
-      const o = ctx.createOscillator(), l = ctx.createOscillator(), lg = ctx.createGain(), ws = grit(60), f = ctx.createBiquadFilter(), g = ctx.createGain();
+      if (!room("sfx", t, t + 2.8)) return;
+      const o = ctx.createOscillator(), l = ctx.createOscillator(), lg = ctx.createGain(), ws = grit(40), f = ctx.createBiquadFilter(), g = gainNode(S().hi);
       o.type = "sawtooth"; o.frequency.setValueAtTime(70, t); o.frequency.linearRampToValueAtTime(110, t + 0.5); o.frequency.exponentialRampToValueAtTime(45, t + 2.2);
       l.frequency.value = 23; lg.gain.value = 25; l.connect(lg); lg.connect(o.frequency);
       f.type = "bandpass"; f.Q.value = 1.2; f.frequency.setValueAtTime(300, t); f.frequency.linearRampToValueAtTime(900, t + 0.5); f.frequency.exponentialRampToValueAtTime(160, t + 2.2);
-      o.connect(ws); ws.connect(f); f.connect(g); env(g, t, 0.25, 0.3, 2.0); g.connect(sfxBus);
-      const w = ctx.createGain(); w.gain.value = 0.9; g.connect(w); w.connect(verbIn);
-      o.start(t); l.start(t); o.stop(t + 2.5); l.stop(t + 2.5);
-      noise(t + 0.1, 2, { type: "bandpass", freq: 700, q: 0.8, vol: 0.25, a: 0.3, sweep: 0.3, wet: 0.7 });
+      const pre = ctx.createGain(); pre.gain.value = 0.6; o.connect(pre); pre.connect(ws); ws.connect(f); f.connect(g);
+      const end = envelope(g.gain, t, 0.45 * fxScale, 0.25, 1.5, 0.12);
+      o.start(t); l.start(t); o.stop(end + 0.02); l.stop(end + 0.02);
+      noise(t + 0.1, { type: "bandpass", freq: 700, q: 0.8, vol: 0.2, a: 0.3, h: 1.2, r: 0.15, sweep: 0.3, dest: S().hi });
     },
   };
-
-  // ------------------------------------------------------------ public
-  let unlocked = false;
-  function unlock() {
-    if (unlocked) return;
-    if (!init()) return;
-    unlocked = true;
-    ctx.resume?.();
-    if (!cfg.mute && cfg.music > 0) startMusic();
+  // the shortest gap between two of the same effect (seconds); closer calls are dropped
+  const GAP = { click: 0.045, page: 0.08, hit: 0.06, clang: 0.08, swing: 0.06, spell: 0.12, coin: 0.12, levelup: 1, quest: 0.6, arrive: 0.8, victory: 0.8, death: 1.5, chat: 0.25, potion: 0.3, shout: 1, dragon: 1.5 };
+  // loudness trims, measured offline so effects sit together: interface ticks quiet, blows medium, big moments louder
+  const TRIM = { click: 1.7, page: 0.7, chat: 1.7, hit: 0.55, clang: 2.2, swing: 3.9, spell: 1.45, coin: 1.95, potion: 1.5, levelup: 1, quest: 1.25, arrive: 2.05, victory: 1.9, death: 0.87, shout: 0.72, dragon: 1 };
+  const lastAt = {};
+  function fire(name, t) {
+    if (lastAt[name] != null && Math.abs(t - lastAt[name]) < (GAP[name] || 0.05)) return false;
+    lastAt[name] = t;
+    fxScale = TRIM[name] || 1;
+    try { FX[name](t); } catch (e) { /* never break the game for a sound */ }
+    fxScale = 1;
+    return true;
   }
-  ["pointerdown", "keydown", "touchstart"].forEach((ev) => document.addEventListener(ev, unlock, { capture: true, passive: true }));
-  document.addEventListener("visibilitychange", () => {
-    if (!ctx) return;
-    if (document.hidden) ctx.suspend?.(); else { ctx.resume?.(); nextBeat = Math.max(nextBeat, ctx.currentTime + 0.2); }
-  });
-  const ready = () => ctx && unlocked && !cfg.mute && ctx.state !== "suspended";
+
+  // ------------------------------------------------------------ waking up, sleeping, and the phone's background
+  let unlocked = false, hidden = typeof document !== "undefined" && document.hidden, sleepT = null;
+  function unlock() {
+    if (!unlocked) { if (!init()) return; unlocked = true; }
+    if (ctx.state !== "running" && !hidden) ctx.resume?.().catch(() => {});
+    if (!cfg.mute && cfg.music > 0 && !playing) startMusic();
+  }
+  if (typeof document !== "undefined") {
+    ["pointerdown", "keydown", "touchstart"].forEach((ev) => document.addEventListener(ev, unlock, { capture: true, passive: true }));   // stays on: also wakes audio the phone stopped
+    const away = () => {
+      hidden = true; if (!ctx) return;
+      applyVolume();
+      clearTimeout(sleepT); sleepT = setTimeout(() => { if (hidden) ctx.suspend?.().catch(() => {}); }, 250);   // fade out, then sleep
+    };
+    const back = () => {
+      hidden = false; if (!ctx) return;
+      clearTimeout(sleepT);
+      (ctx.resume ? ctx.resume() : Promise.resolve()).catch(() => {}).then(() => {
+        if (playing) { queue = []; nextBeat = ctx.currentTime + 0.25; }
+        applyVolume();
+      });
+    };
+    document.addEventListener("visibilitychange", () => (document.hidden ? away() : back()));
+    window.addEventListener?.("pagehide", away); window.addEventListener?.("pageshow", () => { if (!document.hidden) back(); });
+    document.addEventListener("freeze", away); document.addEventListener("resume", () => { if (!document.hidden) back(); });
+  }
+  const ready = () => ctx && unlocked && !cfg.mute && !hidden && ctx.state === "running";
   return {
-    fx(name, delay = 0) { if (!ready() || !cfg.sfx || !FX[name]) return; try { FX[name](ctx.currentTime + 0.01 + delay); } catch (e) { /* never break the game for a sound */ } },
+    fx(name, delay = 0) {
+      if (!ready() || !cfg.sfx || !FX[name]) return;
+      fire(name, ctx.currentTime + 0.02 + delay);
+    },
     /* plays a short fight: a few blows, then a win or loss sting */
     fight(r) {
       if (!ready() || !cfg.sfx) return;
       const n = Math.min(6, Math.max(2, r?.fight?.log?.length || 3));
       for (let i = 0; i < n; i++) this.fx(i % 3 === 2 ? "clang" : i % 2 ? "swing" : "hit", i * 0.2);
-      this.fx(r.died ? "death" : "victory", n * 0.2 + 0.15);
+      this.fx(r?.died ? "death" : "victory", n * 0.2 + 0.15);
     },
     mood(m) {
       if (!MOODS[m] || m === wantMood) return;
-      wantMood = m; mood = m; phrase = []; hold = 0;
-      if (ctx && drone) { chordIx = 0; setDrone(0); nextBeat = Math.max(nextBeat, ctx.currentTime + 0.1); }
+      wantMood = m; switchMood(m);
     },
     get settings() { return { ...cfg }; },
     set(k, v) {
       cfg[k] = v; saveCfg();
       if (!ctx) return;
       applyVolume();
-      if (cfg.mute || cfg.music <= 0) stopMusic(); else if (unlocked) startMusic();
+      if (cfg.mute || cfg.music <= 0) { if (playing) stopMusic(); } else if (unlocked && !playing) startMusic();
     },
-    get state() { return { ctx: ctx?.state || "none", unlocked, mood, music: !!sched }; },
+    get state() { return { ctx: ctx?.state || "none", unlocked, mood, music: playing, voices: voices.music.length + voices.sfx.length }; },
+    /* for tests and the offline renderer: drive the same engine on any AudioContext */
+    _test: {
+      init: () => { const ok = init(); unlocked = true; if (ctx) { master.gain.value = 1; musicBus.gain.value = Math.pow(cfg.music, 1.3) * 0.9; sfxBus.gain.value = Math.pow(cfg.sfx, 1.3) * 1.1; } return ok; },
+      FX, step, fire, get ctx() { return ctx; },
+      startMusic: () => { if (timer) { clearInterval(timer); timer = null; } playing = true; layer = makeLayer(mood); beat = 0; chordIx = 0; queue = []; motif = null; restBars = 1; nextBeat = ctx.currentTime + 0.2; step(); },
+      setMood: (m) => { mood = m; wantMood = m; if (playing) switchMood(m); },
+    },
   };
 })();

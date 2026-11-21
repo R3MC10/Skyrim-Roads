@@ -257,12 +257,17 @@ const ICONART = (() => {
   }
 
   // ---- pick the drawer for an item
+  // a small spell medallion (uiart.js) on tomes, scrolls and staffs
+  function spellBadge(g, spell, x, y, k) {
+    if (typeof UIART === "undefined" || !D.SPELLS?.[spell]) return;
+    g.save(); g.translate(x - 20 * k, y - 20 * k); g.scale(k, k); UIART.drawSpell(spell)(g); g.restore();
+  }
   function drawItem(id, row) {
     const bid = base(id), it = D.ITEMS[id] || D.ITEMS[bid] || {}, m = matOf(bid), slot = it.slot;
     return (g) => {
       tile(g);
       if (slot === "weapon") {
-        if (it.staff) staff(g, it);
+        if (it.staff) { staff(g, it); spellBadge(g, it.staff.spell, 29, 29, 0.32); }
         else if (it.shoots === "bolt" || /crossbow/.test(bid)) crossbow(g, m);
         else if (it.skill === "Archery") bow(g, m, bid);
         else { const t = (G.wtype && G.wtype(bid)) || "sword", f = W[t === "sword" && /great|claymore/.test(bid) ? "greatsword" : t] || (it.hands === 2 ? W.greatsword : W.sword); diag(g, (g) => f(g, m)); }
@@ -273,8 +278,8 @@ const ICONART = (() => {
       else if (slot === "feet") boots(g, bid, m, it.type);
       else if (slot === "ammo") ammo(g, bid, m);
       else if (slot === "potion" || slot === "poison") bottle(g, slot === "poison" ? "#4a7a3a" : potionColor(it), slot === "poison");
-      else if (slot === "scroll") scroll(g, SCHOOL[D.SPELLS?.[it.spell]?.school]);
-      else if (slot === "tome") tome(g, SCHOOL[D.SPELLS?.[it.spell]?.school] || "#7a4f9a");
+      else if (slot === "scroll") { scroll(g, SCHOOL[D.SPELLS?.[it.spell]?.school]); spellBadge(g, it.spell, 30, 10, 0.3); }
+      else if (slot === "tome") { tome(g, SCHOOL[D.SPELLS?.[it.spell]?.school] || "#7a4f9a"); spellBadge(g, it.spell, 21, 19, 0.36); }
       else if (slot === "soulgem") soulgem(g, true, /greater/.test(bid));
       else if (slot === "ingredient") ingredient(g, bid, it);
       else if (slot === "food") { if (/^fish_/.test(bid)) fish(g, /salmon/.test(bid) ? "#d88a62" : /slaughter/.test(bid) ? "#6a7a5a" : /perch|histcarp/.test(bid) ? "#9aa05a" : /mudcrab/.test(bid) ? "#8a6a48" : "#8aa0a8", /slaughter/.test(bid)); else if (/^dish_/.test(bid)) dish(g, bid); else veg(g, bid); }

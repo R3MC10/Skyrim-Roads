@@ -165,7 +165,7 @@
     let el = $("#title");
     if (!el) {
       el = document.createElement("div"); el.id = "title"; el.className = "title";
-      el.innerHTML = `<canvas id="tfog"></canvas><div class="vign"></div><div class="inner" id="tinner"></div><div class="foot" id="tfoot"></div>`;
+      el.innerHTML = `<div class="tpano">${UIART.panorama(480, 300)}</div><canvas id="tfog"></canvas><div class="vign"></div><div class="inner" id="tinner"></div><div class="foot" id="tfoot"></div>`;
       document.body.appendChild(el);
       el.addEventListener("click", onTitleClick);
       el.addEventListener("input", onSettingsInput);
@@ -760,7 +760,7 @@
   const closeModal = () => $("#modal")?.remove();
   function showMessage(title, text, bad) {
     if (/quest/i.test(title) || /📜/.test(text)) SOUND.fx("quest");
-    openModal(`<h2>${esc(title)}</h2><p>${esc(text)}</p><button class="btn ${bad ? "danger" : "pri"}" data-act="close" style="width:100%">Continue</button>`, bad ? "enc" : "");
+    openModal(`${/^You died/.test(title) ? UIART.death(320, 120) : ""}<h2>${esc(title)}</h2><p>${esc(text)}</p><button class="btn ${bad ? "danger" : "pri"}" data-act="close" style="width:100%">Continue</button>`, bad ? "enc" : "");
   }
   function fightLog(f) {
     return `${typeof FIGHTART !== "undefined" ? FIGHTART.placeholder(f, S) : ""}<details ${f.log.length < 9 ? "open" : ""}><summary class="sub" style="cursor:pointer;min-height:36px">Fight log (${f.turn} turns) — [n] is the tactic rule that fired</summary><div class="flog">${f.log.map((l) =>
@@ -881,7 +881,7 @@
     const l = S.location;
     if (l && !S.trip && POWERS.STONE_AT[l]) {
       return `<div class="panel" style="border-color:var(--gold)"><h2>${esc(l)}</h2>${PLACEART.scene(l)}<p class="sub">A standing stone. You can carry the blessing of one stone at a time; touching another replaces it.${S.stone ? ` Yours now: ${esc(POWERS.STONES[S.stone][0])}.` : ""}</p>
-        <div class="list">${POWERS.STONE_AT[l].map((id) => `<div class="item ${S.stone === id ? "on" : ""}"><div class="t">${esc(POWERS.STONES[id][0])}<span>${esc(POWERS.STONES[id][1])}</span></div><button class="btn sm pri" data-act="stone" data-id="${id}" ${S.stone === id ? "disabled" : ""}>${S.stone === id ? "Yours" : "Choose"}</button></div>`).join("")}</div></div>`;
+        <div class="list">${POWERS.STONE_AT[l].map((id) => `<div class="item ${S.stone === id ? "on" : ""}">${UIART.stone(id, 34)}<div class="t">${esc(POWERS.STONES[id][0])}<span>${esc(POWERS.STONES[id][1])}</span></div><button class="btn sm pri" data-act="stone" data-id="${id}" ${S.stone === id ? "disabled" : ""}>${S.stone === id ? "Yours" : "Choose"}</button></div>`).join("")}</div></div>`;
     }
     if (l === "High Hrothgar" && !S.trip) return `<div class="panel" style="border-color:var(--gold)"><h2>High Hrothgar</h2>${PLACEART.scene(l)}<p class="sub">Seven thousand steps up the Throat of the World, the Greybeards wait in silence.</p>
       <button class="btn pri" data-act="greybeards" style="width:100%" ${S.greybeards ? "disabled" : ""}>${S.greybeards ? "They have taught you all they will, for now" : "Speak with the Greybeards"}</button></div>`;
@@ -1042,6 +1042,15 @@
   }
   // ---- magic
   const inTactics = (a) => G.loadout(S).rules.some((r) => r.do === a);
+  // pictures for spells, powers, shouts and stones in menus (uiart.js)
+  function magicIcon(id, size = 24) {
+    const [k, a] = String(id).split(":");
+    if (k === "spell") return UIART.spell(a, size);
+    if (k === "shout") return UIART.shout(a, size);
+    if (k === "power") return a === "stone" && S.stone ? UIART.stone(S.stone, size) : a === "race" ? UIART.power(S.race, size) : UIART.action("power:beast", size);
+    if (k === "fx" && a === "stone" && S.stone) return UIART.stone(S.stone, size);
+    return "";
+  }
   function magicRows() {
     const out = [];
     for (const id of S.spells) { const sp = D.SPELLS[id]; if (!sp) continue; out.push({ id: `spell:${id}`, cat: sp.school.toLowerCase(), name: sp.name, cost: sp.kind === "utility" ? null : G.spellCost(S, sp), sub: `${sp.school} · ${sp.level || "Novice"}` }); }
@@ -1073,7 +1082,7 @@
     } else return `<div class="sky-detail"><h3>${esc(row.name)}</h3><p class="sub">${esc(row.sub)}</p></div>`;
     const usable = (kind === "spell" && D.SPELLS[arg]?.kind !== "utility") || kind === "power" || (kind === "shout" && !POWERS.ROAD_SHOUTS.includes(arg) && POWERS.level(S, arg));
     if (usable) acts.unshift(inTactics(row.id) ? `<button class="btn" data-act="skytacx" data-id="${esc(row.id)}">Remove from tactics</button>` : `<button class="btn pri" data-act="skytac" data-id="${esc(row.id)}">Use first in every fight</button>`);
-    return `<div class="sky-detail"><h3>${esc(row.name)}</h3><p class="sub">${esc(desc)}</p>${usable && inTactics(row.id) ? '<p class="sub">In your tactics. Fine-tune when it fires in the Tactics tab.</p>' : ""}<div class="sky-acts">${acts.join("")}</div></div>`;
+    return `<div class="sky-detail">${magicIcon(row.id, 64) ? `<div class="sky-ico">${magicIcon(row.id, 64)}</div>` : ""}<h3>${esc(row.name)}</h3><p class="sub">${esc(desc)}</p>${usable && inTactics(row.id) ? '<p class="sub">In your tactics. Fine-tune when it fires in the Tactics tab.</p>' : ""}<div class="sky-acts">${acts.join("")}</div></div>`;
   }
   // ---- what your worn gear and potions add (shown next to skills)
   function gearFx() {
@@ -1091,7 +1100,7 @@
   // ---- what a skill does and how to raise it (skillinfo.js)
   function skillInfoHTML(sk) {
     const i = SKILLINFO.get(S, sk); if (!i) return "";
-    return `<div class="sinfo"><p>${esc(i.what)}</p>${i.now.length ? `<h4>What your level gives</h4><ul>${i.now.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>` : ""}
+    return `<div class="sinfo"><p class="sinfo-what">${UIART.skill(sk, 36)}<span>${esc(i.what)}</span></p>${i.now.length ? `<h4>What your level gives</h4><ul>${i.now.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>` : ""}
       <h4>How to raise it</h4><ul>${i.raise.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>${i.perks ? `<p class="sub">Perks (level needed): ${esc(i.perks)}</p>` : ""}</div>`;
   }
   // ---- skills
@@ -1118,13 +1127,13 @@
     } else if (sky.page === "magic") {
       const rows = magicRows(); const sel = rows.find((r) => r.id === sky.sel) || null;
       head = `<div class="sky-head sky-cols2"><span>Name</span><span>Cost</span></div>`;
-      list = rows.map((r) => `<button class="sky-row sky-cols2 ${r.id === sky.sel ? "sel" : ""} ${inTactics(r.id) ? "eq" : ""}" data-act="skysel" data-id="${esc(r.id)}"><span class="nm">${esc(r.name)}<small>${esc(r.sub)}</small></span><span class="num">${r.cost ?? ""}</span></button>`).join("") || '<p class="sub sky-empty">Nothing here.</p>';
+      list = rows.map((r) => `<button class="sky-row sky-cols2 ${r.id === sky.sel ? "sel" : ""} ${inTactics(r.id) ? "eq" : ""}" data-act="skysel" data-id="${esc(r.id)}"><span class="nm sk-nm">${magicIcon(r.id, 26)}<span>${esc(r.name)}<small>${esc(r.sub)}</small></span></span><span class="num">${r.cost ?? ""}</span></button>`).join("") || '<p class="sub sky-empty">Nothing here.</p>';
       detail = sel ? magicDetail(sel) : "";
     } else {
       const rows = skillRows(); const sel = rows.find((r) => r.id === sky.sel) || null;
       head = `<div class="sky-head sky-cols2"><button data-act="skysort" data-id="name">Skill</button><button data-act="skysort" data-id="lvl">Level</button></div>`;
-      list = rows.map((r) => `<button class="sky-row sky-cols2 ${r.id === sky.sel ? "sel" : ""}" data-act="skysel" data-id="${esc(r.id)}"><span class="nm">${esc(r.name)}<span class="bar"><i style="width:${r.prog}%;background:var(--frost)"></i></span></span><span class="num">${r.lvl}${r.bst.any ? '<span class="boost">▲</span>' : ""}</span></button>`).join("");
-      detail = sel ? `<div class="sky-detail"><h3>${esc(sel.name)} ${sel.lvl}</h3>${sel.bst.any ? `<p class="sub boost-t">${esc(sel.bst.text)}</p>` : ""}<p class="sub">${sel.prog}% of the way to ${sel.lvl + 1}. ${sel.perks ? `${sel.perks} perk${sel.perks > 1 ? "s" : ""} taken.` : ""} Perk points to spend: ${PERKS.pointsLeft(S)}.</p>${skillInfoHTML(sel.id)}
+      list = rows.map((r) => `<button class="sky-row sky-cols2 ${r.id === sky.sel ? "sel" : ""}" data-act="skysel" data-id="${esc(r.id)}"><span class="nm">${UIART.skill(r.id, 22)} ${esc(r.name)}<span class="bar"><i style="width:${r.prog}%;background:var(--frost)"></i></span></span><span class="num">${r.lvl}${r.bst.any ? '<span class="boost">▲</span>' : ""}</span></button>`).join("");
+      detail = sel ? `<div class="sky-detail"><div class="sky-ico">${UIART.skill(sel.id, 56)}</div><h3>${esc(sel.name)} ${sel.lvl}</h3>${sel.bst.any ? `<p class="sub boost-t">${esc(sel.bst.text)}</p>` : ""}<p class="sub">${sel.prog}% of the way to ${sel.lvl + 1}. ${sel.perks ? `${sel.perks} perk${sel.perks > 1 ? "s" : ""} taken.` : ""} Perk points to spend: ${PERKS.pointsLeft(S)}.</p>${skillInfoHTML(sel.id)}
         <div class="sky-acts">${PERKS.TREES[sel.id] ? `<button class="btn pri" data-act="skyperks" data-id="${esc(sel.id)}">Perk tree</button>` : ""}</div></div>` : "";
       if (S.pendingLevels > 0) detail = `<div class="sky-detail"><h3>Level up</h3><p class="sub">Choose what grows (+10), like Skyrim.</p><div class="sky-acts"><button class="btn" data-act="lvl" data-a="health">Health</button><button class="btn" data-act="lvl" data-a="magicka">Magicka</button><button class="btn" data-act="lvl" data-a="stamina">Stamina</button></div></div>` + detail;
     }
@@ -1188,11 +1197,11 @@
       const n = QUESTS.target(a.st), here = n && S.location === n, o = a.st.obj;
       const btns = [o.talk && here ? `<button class="btn sm pri" data-act="qtalk" data-id="${a.id}">${esc(o.label)}</button>` : "",
         n && !here && WORLD.places[n] ? `<button class="btn sm" data-act="go" data-place="${esc(n)}">Travel to ${esc(n)}</button>` : ""].join("");
-      return `<div class="item on" style="flex-wrap:wrap"><div class="t">${esc(a.def.name)} · ${esc(a.st.title)}<span>${esc(a.st.text)}${o.count ? ` (${Math.max(0, ((S.stats || {})[o.count] || 0) - ((a.base || {})[o.count] || 0))}/${o.n})` : ""}</span></div>${btns ? `<div style="display:flex;gap:6px;flex-wrap:wrap;width:100%">${btns}</div>` : ""}</div>`;
+      return `<div class="item on" style="flex-wrap:wrap">${UIART.quest(a.id, 32)}<div class="t">${esc(a.def.name)} · ${esc(a.st.title)}<span>${esc(a.st.text)}${o.count ? ` (${Math.max(0, ((S.stats || {})[o.count] || 0) - ((a.base || {})[o.count] || 0))}/${o.n})` : ""}</span></div>${btns ? `<div style="display:flex;gap:6px;flex-wrap:wrap;width:100%">${btns}</div>` : ""}</div>`;
     }).join("");
     const avail = QUESTS.list().filter((id) => QUESTS.L[id].start && !(S.quests || {})[id]).map((id) => {
       const d = QUESTS.L[id];
-      return `<div class="item"><div class="t">${esc(d.name)}<span>${QUESTS.canJoin(S, id) ? "They're here. Ask to join." : `Find them at ${esc(d.giver)}.`}</span></div>${QUESTS.canJoin(S, id) ? `<button class="btn sm pri" data-act="qjoin" data-id="${id}">Join</button>` : ""}</div>`;
+      return `<div class="item">${UIART.quest(id, 32)}<div class="t">${esc(d.name)}<span>${QUESTS.canJoin(S, id) ? "They're here. Ask to join." : `Find them at ${esc(d.giver)}.`}</span></div>${QUESTS.canJoin(S, id) ? `<button class="btn sm pri" data-act="qjoin" data-id="${id}">Join</button>` : ""}</div>`;
     }).join("");
     const done = Object.entries(S.quests || {}).filter(([, v]) => v.done).map(([id]) => QUESTS.L[id]?.name).filter(Boolean);
     return `<div class="panel"><h2>Quests</h2><div class="list">${rows || '<p class="sub">No active quests.</p>'}</div>
@@ -1263,7 +1272,7 @@
     const st = FEST.status(S), nx = FEST.next();
     if (!st) return nx ? `<div class="panel"><h2>Coming up</h2><p class="sub">${nx.icon} ${esc(nx.name)} starts in ${nx.days} day${nx.days > 1 ? "s" : ""}. ${esc(nx.text)}</p></div>` : "";
     const { ev } = st;
-    return `<div class="panel" style="border-color:var(--gold)"><h2>${ev.icon} ${esc(ev.name)}</h2><p class="sub">${esc(ev.text)}</p>
+    return `<div class="panel" style="border-color:var(--gold)"><h2>${ev.icon} ${esc(ev.name)}</h2>${UIART.fest(ev.id, 340, 64)}<p class="sub">${esc(ev.text)}</p>
       <div class="item" style="flex-wrap:wrap"><div class="t">${esc(ev.goal.what)}<span>Reward: ${ev.reward.gold} gold, ${ev.reward.item[1]} ${esc(D.ITEMS[ev.reward.item[0]]?.name || "")} and the title “${esc(ev.reward.title)}”</span></div>
         <span class="num ${st.done || st.ready ? "gold" : "sub"}">${st.n}/${ev.goal.n}</span>
         <div class="bar" style="width:100%;margin-top:4px"><i style="width:${(100 * st.n) / ev.goal.n}%;background:var(--gold)"></i></div>
@@ -1338,7 +1347,7 @@
   function achPanel() {
     const all = ACH.progress(S), got = all.filter((a) => a.done);
     const list = achOpen ? all : [...got, ...all.filter((a) => !a.done).sort((a, b) => b.cur / b.goal - a.cur / a.goal).slice(0, 3)];
-    return `<div class="panel"><h2>Achievements · ${got.length}/${all.length}</h2><div class="list">${list.map((a) => `<div class="item ${a.done ? "on" : ""}" style="flex-wrap:wrap;${a.done ? "" : "opacity:.85"}"><div class="t">${a.icon} ${esc(a.name)}<span>${esc(a.what)}</span></div><span class="num ${a.done ? "gold" : "sub"}">${a.done ? "✔" : `${a.cur.toLocaleString()}/${a.goal.toLocaleString()}`}</span>
+    return `<div class="panel"><h2>Achievements · ${got.length}/${all.length}</h2><div class="list">${list.map((a) => `<div class="item ${a.done ? "on" : ""}" style="flex-wrap:wrap;${a.done ? "" : "opacity:.85"}">${UIART.ach(a.id, 32, a.done)}<div class="t">${esc(a.name)}<span>${esc(a.what)}</span></div><span class="num ${a.done ? "gold" : "sub"}">${a.done ? "✔" : `${a.cur.toLocaleString()}/${a.goal.toLocaleString()}`}</span>
       ${a.done ? "" : `<div class="bar" style="width:100%;margin-top:4px"><i style="width:${(100 * a.cur) / a.goal}%;background:var(--frost)"></i></div>`}</div>`).join("")}</div>
       <button class="btn" data-act="achmore" style="width:100%;margin-top:8px">${achOpen ? "Show fewer" : `Show all ${all.length}`}</button></div>`;
   }
@@ -1718,7 +1727,7 @@
     const inc = duels.filter((d) => d.to === S.id && d.status === "open" && t - d.t < ARENA.OPEN_MIN * 60), out = duels.filter((d) => d.from === S.id && d.status === "open");
     const fighters = others.filter((o) => o.loc === ARENA.TOWN && o.id !== S.id);
     const board = ARENA.board(ladderDocs, S).slice(0, 10);
-    return `<div class="card"><h3>Season of ${esc(ARENA.seasonName())}</h3><p class="sub" style="margin:0">Your rating ${a.rating} · ${a.w} won, ${a.l} lost. Nobody dies in the Arena: the loser kneels and the healers patch everyone up.</p></div>
+    return `<div class="card"><h3 class="ico-h">${UIART.rank(a.rating, 30)} Season of ${esc(ARENA.seasonName())}</h3><p class="sub" style="margin:0">Your rating ${a.rating} · ${a.w} won, ${a.l} lost. Nobody dies in the Arena: the loser kneels and the healers patch everyone up.</p></div>
       ${inc.length ? `<h3 style="margin-top:12px">Challenges for you</h3>${inc.map((d) => `<div class="item on" style="flex-wrap:wrap"><div class="t">${esc(d.fromName)}<span>${d.stake ? `Stake ${d.stake} gold each · winner takes ${d.stake * 2}` : "A friendly bout, no bet"} · rating ${d.aRating}</span></div>
         <div style="display:flex;gap:6px"><button class="btn sm pri" data-act="duelyes" data-id="${esc(d.id)}" ${S.gold >= d.stake ? "" : "disabled"}>Fight</button><button class="btn sm" data-act="duelno" data-id="${esc(d.id)}">No</button></div></div>`).join("")}` : ""}
       ${out.length ? `<h3 style="margin-top:12px">Waiting for an answer</h3>${out.map((d) => `<div class="item"><div class="t">${esc(d.toName)}<span>${d.stake ? `${d.stake} gold held` : "Friendly bout"}</span></div><button class="btn sm" data-act="duelcancel" data-id="${esc(d.id)}">Withdraw</button></div>`).join("")}` : ""}
@@ -1898,21 +1907,21 @@
   function panelHero() {
     const need = 0 + (S.level + 3) * 25;
     const lvl = S.pendingLevels > 0 ? `<div class="panel" style="border-color:var(--gold)"><h2>Level up!</h2><p class="sub">You have ${S.pendingLevels} level-up${S.pendingLevels > 1 ? "s" : ""} to spend. Skyrim rules: +10 to one attribute.</p>
-      <div class="grid2" style="grid-template-columns:repeat(3,minmax(0,1fr))"><button class="btn" data-act="lvl" data-a="health">❤️ Health</button><button class="btn" data-act="lvl" data-a="magicka">🔷 Magicka</button><button class="btn" data-act="lvl" data-a="stamina">🟩 Stamina</button></div></div>` : "";
+      <div class="grid2" style="grid-template-columns:repeat(3,minmax(0,1fr))"><button class="btn attrbtn" data-act="lvl" data-a="health">${UIART.attr("health", 26)} Health</button><button class="btn attrbtn" data-act="lvl" data-a="magicka">${UIART.attr("magicka", 26)} Magicka</button><button class="btn attrbtn" data-act="lvl" data-a="stamina">${UIART.attr("stamina", 26)} Stamina</button></div></div>` : "";
     const groups = Object.entries(D.SKILL_GROUPS).map(([g, list]) => `<h3 style="margin-top:14px">${esc(g)}</h3><div class="skills">${list.map((sk) => {
       const s = S.skills[sk], n = F.skillXpNeeded(sk, s.lvl);
       const bs = boost(sk);
-      return `<button class="skill ${heroSkill === sk ? "on" : ""}" data-act="skinfo" data-id="${esc(sk)}" aria-expanded="${heroSkill === sk}"><small><span>${esc(sk)} <i class="sk-i">ⓘ</i></span><b class="num">${skillNum(sk)}</b></small><div class="bar"><i style="width:${pct(s.xp, n)}%;background:var(--frost)"></i></div>${bs.any ? `<small class="boost-t">${esc(bs.text)}</small>` : ""}</button>${heroSkill === sk ? `<div class="skcard">${skillInfoHTML(sk)}</div>` : ""}`;
+      return `<button class="skill ${heroSkill === sk ? "on" : ""}" data-act="skinfo" data-id="${esc(sk)}" aria-expanded="${heroSkill === sk}"><small><span>${UIART.skill(sk, 20)} ${esc(sk)} <i class="sk-i">ⓘ</i></span><b class="num">${skillNum(sk)}</b></small><div class="bar"><i style="width:${pct(s.xp, n)}%;background:var(--frost)"></i></div>${bs.any ? `<small class="boost-t">${esc(bs.text)}</small>` : ""}</button>${heroSkill === sk ? `<div class="skcard">${skillInfoHTML(sk)}</div>` : ""}`;
     }).join("")}</div>`).join("");
     const pts = PERKS.pointsLeft(S);
     const skillsWithPerks = Object.keys(PERKS.TREES);
     perkSkill = perkSkill && skillsWithPerks.includes(perkSkill) ? perkSkill : skillsWithPerks.slice().sort((a, b) => S.skills[b].lvl - S.skills[a].lvl)[0];
     const perks = `<div class="panel"><h2>Perks ${pts > 0 ? `<span class="gold">· ${pts} to spend</span>` : ""}</h2><p class="sub">One perk point per level, like Skyrim. Pick a skill:</p>
       <div class="chips" style="flex-wrap:wrap">${skillsWithPerks.map((k) => { const n = PERKS.TREES[k].filter(([id]) => PERKS.rank(S, id)).length; return `<button class="chip ${k === perkSkill ? "on" : ""}" data-act="pskill" data-id="${esc(k)}">${esc(k)} ${S.skills[k].lvl}${n ? ` · ${n}` : ""}</button>`; }).join("")}</div>
-      <p class="sub perk-sum">${esc(SKILLINFO.summary(perkSkill))} <button class="linkbtn" data-act="skinfo" data-id="${esc(perkSkill)}">How to raise it</button></p>
+      <p class="sub perk-sum">${UIART.skill(perkSkill, 32)} ${esc(SKILLINFO.summary(perkSkill))} <button class="linkbtn" data-act="skinfo" data-id="${esc(perkSkill)}">How to raise it</button></p>
       <div class="list" style="margin-top:8px">${PERKS.TREES[perkSkill].map(([id, name, ranks]) => {
         const r = PERKS.rank(S, id), p = PERKS.BY_ID[id], err = PERKS.canTake(S, id);
-        return `<div class="item ${r ? "on" : ""}" style="flex-wrap:wrap"><div class="t">${esc(name)}${ranks > 1 ? ` <span class="num">${r}/${ranks}</span>` : r ? " ✓" : ""}<span>${esc(p.desc)}${r < ranks ? ` · needs ${esc(perkSkill)} ${p.req[r]}${p.needs.length ? ` and ${p.needs.map((n) => esc(PERKS.BY_ID[n].name)).join(" or ")}` : ""}` : ""}</span></div>
+        return `<div class="item ${r ? "on" : ""}" style="flex-wrap:wrap">${UIART.skill(perkSkill, 26)}<div class="t">${esc(name)}${ranks > 1 ? ` <span class="num">${r}/${ranks}</span>` : r ? " ✓" : ""}<span>${esc(p.desc)}${r < ranks ? ` · needs ${esc(perkSkill)} ${p.req[r]}${p.needs.length ? ` and ${p.needs.map((n) => esc(PERKS.BY_ID[n].name)).join(" or ")}` : ""}` : ""}</span></div>
           ${r < ranks ? `<button class="btn sm ${err ? "" : "pri"}" data-act="perk" data-id="${id}" ${err ? "disabled" : ""}>Take</button>` : ""}</div>`; }).join("")}</div></div>`;
     const t = G.now(), fx = (S.fx || []).filter((f) => f.until > t);
     const gfx = gearFx();
@@ -1923,13 +1932,13 @@
     const cd = (at) => { const m = Math.ceil(((at || 0) + POWERS.DAY - tnow) / 60); return m > 0 ? `ready in ${m} min` : "ready"; };
     const shoutRows = Object.entries(POWERS.SHOUTS).filter(([, [, words]]) => words.some((w) => POWERS.known(S, w))).map(([id, [name, words, cds, desc]]) => {
       const lv = POWERS.level(S, id);
-      return `<div class="item" style="flex-wrap:wrap"><div class="t">${esc(name)} <span class="num">${words.map((w) => POWERS.known(S, w) ? (POWERS.unlocked(S, w) ? `<b>${w}</b>` : `${w}🔒`) : "···").join(" ")}</span><span>${esc(desc)}${lv ? ` · cooldown ${cds[lv - 1]} s` : ""}</span></div>
+      return `<div class="item" style="flex-wrap:wrap">${UIART.shout(id, 30)}<div class="t">${esc(name)} <span class="num">${words.map((w) => POWERS.known(S, w) ? (POWERS.unlocked(S, w) ? `<b>${w}</b>` : `${w}🔒`) : "···").join(" ")}</span><span>${esc(desc)}${lv ? ` · cooldown ${cds[lv - 1]} s` : ""}</span></div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;width:100%">${words.filter((w) => POWERS.known(S, w) && !POWERS.unlocked(S, w)).map((w) => `<button class="btn sm" data-act="unlock" data-id="${w}" ${(S.souls || 0) > 0 ? "" : "disabled"}>Unlock ${w} (1 soul)</button>`).join("")}
         ${POWERS.ROAD_SHOUTS.includes(id) && lv ? `<button class="btn sm pri" data-act="roadshout" data-id="${id}" ${POWERS.voiceReady(S) ? "" : "disabled"}>Shout</button>` : ""}</div></div>`; }).join("");
-    const fol = S.follower ? `<div class="panel"><h2>Follower</h2><div class="item"><div class="t">${esc(TOWNS.FOLLOWERS[S.follower.id][0])}<span>${Math.round(TOWNS.followerHp(S))}/${TOWNS.followerMax(S, S.follower.id)} health · fights beside you · carries 100 for you · goes down instead of dying</span></div><button class="btn sm" data-act="dismiss">Dismiss</button></div></div>` : "";
+    const fol = S.follower ? `<div class="panel"><h2>Follower</h2><div class="item">${UIART.follower(S.follower.id, 36)}<div class="t">${esc(TOWNS.FOLLOWERS[S.follower.id][0])}<span>${Math.round(TOWNS.followerHp(S))}/${TOWNS.followerMax(S, S.follower.id)} health · fights beside you · carries 100 for you · goes down instead of dying</span></div><button class="btn sm" data-act="dismiss">Dismiss</button></div></div>` : "";
     const powersHtml = fol + `<div class="panel"><h2>Powers & shouts</h2><div class="list">
-      <div class="item"><div class="t">${esc(rp[0])} <span class="num">${cd(S.powerAt)}</span><span>${esc(rp[1])} Once a day: put "Use my racial power" in your tactics.</span></div></div>
-      <div class="item"><div class="t">${S.stone ? esc(POWERS.STONES[S.stone][0]) : "No standing stone"}${S.stone && POWERS.stoneHasPower(S) ? ` <span class="num">${cd(S.stonePowerAt)}</span>` : ""}<span>${S.stone ? esc(POWERS.STONES[S.stone][1]) : "Visit one of the 13 standing stones (Guardian Stones are near Riverwood) to take its blessing."}</span></div></div>
+      <div class="item">${UIART.power(S.race, 30)}<div class="t">${esc(rp[0])} <span class="num">${cd(S.powerAt)}</span><span>${esc(rp[1])} Once a day: put "Use my racial power" in your tactics.</span></div></div>
+      <div class="item">${S.stone ? UIART.stone(S.stone, 30) : ""}<div class="t">${S.stone ? esc(POWERS.STONES[S.stone][0]) : "No standing stone"}${S.stone && POWERS.stoneHasPower(S) ? ` <span class="num">${cd(S.stonePowerAt)}</span>` : ""}<span>${S.stone ? esc(POWERS.STONES[S.stone][1]) : "Visit one of the 13 standing stones (Guardian Stones are near Riverwood) to take its blessing."}</span></div></div>
       ${shoutRows || `<p class="sub">No Words of Power yet. Word Walls wait at the end of Nordic barrows (Bleak Falls Barrow has one), and the Greybeards at High Hrothgar teach Unrelenting Force.</p>`}</div>
       <p class="sub" style="margin-top:8px">Dragon souls: <b>${S.souls || 0}</b>${S.dragons ? ` · dragons slain: ${S.dragons}` : ""}. Kill a dragon to absorb its soul; each soul unlocks one word.${!POWERS.voiceReady(S) ? ` Your voice recovers in ${Math.ceil(S.voiceAt - tnow)} s.` : ""}</p></div>`;
     const amN = typeof AMMO !== "undefined" ? AMMO.status(S) : null;
@@ -2009,7 +2018,7 @@
     const pr = GUIDE.progress(S);
     return `<h2>📖 Guide</h2><p class="sub">Your first hour in Skyrim, step by step. Steps tick off by themselves. ${pr.done} of ${pr.total} done.</p>
       <div class="bar" style="margin:6px 0 10px"><i style="width:${Math.round(pr.done / pr.total * 100)}%;background:var(--gold)"></i></div>
-      <div class="list guide">${GUIDE.STEPS.map(([id, title, text, done], i) => { const d = done(S); return `<div class="item gstep ${d ? "done" : ""}" style="flex-wrap:wrap"><div class="t"><b>${d ? "✓" : i + 1}.</b> ${esc(title)}<span>${esc(text)}</span></div>${d ? "" : `<button class="btn sm pri" data-act="guidego" data-id="${id}">Show me</button>`}</div>`; }).join("")}</div>
+      <div class="list guide">${GUIDE.STEPS.map(([id, title, text, done], i) => { const d = done(S); return `<div class="item gstep ${d ? "done" : ""}" style="flex-wrap:wrap">${UIART.guide(id, 30)}<div class="t"><b>${d ? "✓" : i + 1}.</b> ${esc(title)}<span>${esc(text)}</span></div>${d ? "" : `<button class="btn sm pri" data-act="guidego" data-id="${id}">Show me</button>`}</div>`; }).join("")}</div>
       <h3 style="margin-top:14px">Questions</h3>${GUIDE.FAQ.map(([q, a]) => `<details class="faq"><summary>${esc(q)}</summary><p class="sub">${esc(a)}</p></details>`).join("")}
       <button class="btn pri" data-act="close" style="width:100%;margin-top:12px">Close</button>`;
   }
@@ -2044,7 +2053,7 @@
     const enemies = D.ENCOUNTERS.filter((e) => e.kind !== "event");
     const dead = G.deadRules(rules), editing = tacticsDraft.edit != null && rules[tacticsDraft.edit];
     const cards = rules.map((r, i) => { const d = G.describeRule(r), w = dead[i] || ruleWarn(r);
-      return `<div class="rcard ${r.off ? "off" : ""} ${dead[i] ? "dead" : ""} ${tacticsDraft.edit === i ? "editing" : ""}"><div class="rhead"><span class="n">${i + 1}</span><div class="rtxt"><div><small>IF</small> <b>${esc(d.cond)}</b></div><div><small>THEN</small> <b>${esc(d.act)}</b></div>${r.off ? '<div class="rw">Switched off</div>' : w ? `<div class="rw">⚠ ${esc(w)}</div>` : ""}</div></div>
+      return `<div class="rcard ${r.off ? "off" : ""} ${dead[i] ? "dead" : ""} ${tacticsDraft.edit === i ? "editing" : ""}"><div class="rhead"><span class="n">${i + 1}</span>${r.do === "power:stone" && S.stone ? UIART.stone(S.stone, 30) : r.do === "power:race" ? UIART.power(S.race, 30) : UIART.action(r.do, 30)}<div class="rtxt"><div><small>IF</small> <b>${esc(d.cond)}</b></div><div><small>THEN</small> <b>${esc(d.act)}</b></div>${r.off ? '<div class="rw">Switched off</div>' : w ? `<div class="rw">⚠ ${esc(w)}</div>` : ""}</div></div>
         <div class="racts"><button class="iconbtn" data-act="rup" data-i="${i}" aria-label="Move up" ${i ? "" : "disabled"}>↑</button><button class="iconbtn" data-act="rdown" data-i="${i}" aria-label="Move down" ${i < rules.length - 1 ? "" : "disabled"}>↓</button><button class="iconbtn" data-act="roff" data-i="${i}" aria-label="${r.off ? "Switch on" : "Switch off"}">${r.off ? "▶" : "⏸"}</button><button class="iconbtn" data-act="redit" data-i="${i}" aria-label="Edit">✎</button><button class="iconbtn" data-act="rdel" data-i="${i}" aria-label="Remove">✕</button></div></div>`; }).join("");
     return `<div class="panel"><h2>Tactics · ${esc(S.loadout)}</h2><p class="sub">Every turn, the <b>first</b> rule that is true <b>and</b> possible (enough magicka, stamina, potions…) fires. If none does, you attack. Power attacks cost ${F.powerAttackCost(G.equipment(S).weapon ? D.ITEMS[G.equipment(S).weapon.item].weight : 0)} stamina now.</p>${ammoNote()}
       <div class="rlist">${cards || '<p class="sub">No rules: you will just attack.</p>'}</div>
@@ -2074,7 +2083,7 @@
       ${!open ? `<p class="sub">The stables open at 08:00.</p>` : S.gold < D.HORSE_PRICE ? `<p class="sub">You have ${S.gold} gold.</p>` : ""}</div>`;
     const c = HORSES.coat(h.coat), mh = HORSES.maxHp(h), hp = HORSES.hp(S), aw = HORSES.away(S);
     const here = aw && h.away.town === l, mins = Math.ceil(HORSES.readyIn(S) / 60);
-    return `<div class="card"><div class="row" style="display:flex;gap:10px;align-items:center">${swatch(c, true, false)}<div style="flex:1"><h3 style="margin:0">${esc(h.name)}</h3><span class="sub">${esc(c[1])} · ${esc(HORSES.ARMOR[h.armor].name)}</span></div></div>
+    return `<div class="card"><div class="row" style="display:flex;gap:10px;align-items:center">${UIART.horse(h.coat, 44, h.armor && h.armor !== "none")}<div style="flex:1"><h3 style="margin:0">${esc(h.name)}</h3><span class="sub">${esc(c[1])} · ${esc(HORSES.ARMOR[h.armor].name)}</span></div></div>
         ${aw ? `<p>${here ? (mins > 0 ? `${esc(h.name)} is resting here. Ready in about ${mins} min.` : `${esc(h.name)} is rested and waiting for you.`) : `${esc(h.name)} is resting at the stables in ${esc(h.away.town)}.`}</p>
           ${here ? `<div class="grid2"><button class="btn pri" data-act="hfetch" ${mins > 0 ? "disabled" : ""}>Take ${esc(h.name)}</button><button class="btn" data-act="hhurry" ${mins > 0 ? "" : "disabled"}>Patch up now (${HORSES.HURRY_PRICE} gold)</button></div>` : ""}`
         : `<div class="vital" style="margin-top:8px"><small><span>Health</span><span class="num">${Math.round(hp)}/${mh}</span></small><div class="bar"><i style="width:${pct(hp, mh)}%;background:var(--sp)"></i></div></div>`}
@@ -2228,7 +2237,7 @@
     } else if (townShop === "hire") {
       note = "One follower at a time. They fight beside you, carry 100 for you and heal between fights. Badly hurt, they go down and get back up after the fight; they never die. Hirelings cost 500 gold.";
       body = (l === "Whiterun" ? `<div class="item"><div class="t">Farengar, court wizard<span>${S.thaneWhiterun ? "Thanks you again for the Dragonstone." : "Wants the Dragonstone from Bleak Falls Barrow. The Jarl rewards whoever brings it."}</span></div>${S.thaneWhiterun ? "" : `<button class="btn sm pri" data-act="dragonstone" ${S.inv.some((r) => r.item === "dragonstone") ? "" : "disabled"}>Give it</button>`}</div>` : "")
-        + TOWNS.followersHere(S).map(([id, [name, , cost, hp, dmg, desc]]) => `<div class="item"><div class="t">${esc(name)}<span>${esc(desc)} · ${TOWNS.followerMax(S, id)} health · hits for ~${Math.round(dmg * (1 + 0.05 * (S.level - 1)))}</span></div><span class="num gold">${cost || "free"}</span><button class="btn sm pri" data-act="hire" data-id="${id}" ${S.follower || S.gold < cost || wanted || (id === "lydia" && !S.thaneWhiterun) ? "disabled" : ""}>${S.follower?.id === id ? "With you" : "Hire"}</button></div>`).join("");
+        + TOWNS.followersHere(S).map(([id, [name, , cost, hp, dmg, desc]]) => `<div class="item">${UIART.follower(id, 36)}<div class="t">${esc(name)}<span>${esc(desc)} · ${TOWNS.followerMax(S, id)} health · hits for ~${Math.round(dmg * (1 + 0.05 * (S.level - 1)))}</span></div><span class="num gold">${cost || "free"}</span><button class="btn sm pri" data-act="hire" data-id="${id}" ${S.follower || S.gold < cost || wanted || (id === "lydia" && !S.thaneWhiterun) ? "disabled" : ""}>${S.follower?.id === id ? "With you" : "Hire"}</button></div>`).join("");
     } else if (townShop === "streets") {
       const b = TOWNS.bounty(S, hold);
       note = `Crime has a price: Skyrim bounties are 25 gold for pickpocketing, 40 for assault and 1000 for murder, per hold. Guards stop you when you come into a town where you're wanted.`;
