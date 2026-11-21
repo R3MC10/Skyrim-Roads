@@ -22,6 +22,7 @@ const GUIDE = (() => {
     ["Why am I so slow?", "Too heavy. Check Weight under the map. Sell things, store them in your house, or get a horse or a follower to carry more."],
     ["How long is an in-game day?", "One in-game day is 2 real hours. Timers (cleared dungeons, mines) count in-game time; shops are open 08:00–20:00 in-game."],
     ["How do I get around faster?", "Roads are fastest. A horse makes you quicker, and carriages run between cities (Town → Carriage)."],
+    ["How do I get to Solstheim?", "Go to Windhelm and open Town → ⛵ Docks. The Northern Maiden sails to Raven Rock for 250 gold (about 10 in-game hours at sea, safe). The map switches to the island while you're there, and you only see other players on the same map. The boat back leaves from the Raven Rock docks."],
     ["Do my bows need arrows?", "Yes. Bows shoot arrows and crossbows shoot bolts; the best ones you carry are used automatically. Buy them at blacksmiths and general stores, or make them at the forge."],
     ["Where do I learn new spells?", "Read spell tomes. Every court wizard sells Novice and some Apprentice tomes (and staffs); each court wizard has a few rarer ones (Farengar in Whiterun, Wuunferth in Windhelm, Calcelmo in Markarth…); the College in Winterhold has them all, up to Master, which it only teaches once your skill in that school is 90. Spells above your level cost more magicka and sometimes fizzle. Utility spells like Candlelight, Transmute and Clairvoyance are cast from the Magic menu, outside fights."],
   ];

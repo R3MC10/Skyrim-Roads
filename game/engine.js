@@ -37,7 +37,7 @@ const G = (() => {
   const pxDist = (a, b) => Math.hypot((a[0] - b[0]) * MAP_W, (a[1] - b[1]) * MAP_H);
   const PLACES = WORLD.places;
   const loc = (name) => PLACES[name];
-  const holdAt = (pos) => Object.keys(WORLD.holds).reduce((best, h) =>
+  const holdAt = (pos) => WORLD.isSol?.(pos) ? "Solstheim" : Object.keys(WORLD.holds).reduce((best, h) =>
     pxDist(pos, WORLD.holds[h][1]) < pxDist(pos, WORLD.holds[best][1]) ? h : best);
 
   // ---------------------------------------------------------------- clock
@@ -805,14 +805,15 @@ const G = (() => {
     let r = Math.random() * Object.values(w).reduce((a, b) => a + b), danger = "low";
     for (const [k, v] of Object.entries(w)) { if (r < v) { danger = k; break; } r -= v; }
     const ground = Terrain.NAMES[Terrain.typeAtPos([s.x, s.y])];
-    let pool = D.ENCOUNTERS.filter((e) => e.danger === danger && (!e.holds || e.holds.includes(hold)) && (night || !e.night));
+    const inHold = (e) => (e.holds ? e.holds.includes(hold) : hold !== "Solstheim");   // Solstheim has its own creatures (solworld.js)
+    let pool = D.ENCOUNTERS.filter((e) => e.danger === danger && inHold(e) && (night || !e.night));
     const onGround = pool.filter((e) => !e.terrain || e.terrain.includes(ground));
     if (onGround.length) pool = onGround;
     const filtered = pool.filter((e) => !e.rare || Math.random() < 0.25);
     if (filtered.length) pool = filtered;
     let witching = false;
     if (night && typeof FEST !== "undefined" && FEST.undeadNight(t) && Math.random() < 0.6) {   // the Witchingmoon: the dead walk
-      const dead = D.ENCOUNTERS.filter((x) => (x.tags || []).includes("undead") && (!x.holds || x.holds.includes(hold)));
+      const dead = D.ENCOUNTERS.filter((x) => (x.tags || []).includes("undead") && inHold(x));
       const same = dead.filter((x) => x.danger === danger);
       if (same.length || dead.length) { pool = same.length ? same : dead; witching = true; }
     }
@@ -869,6 +870,7 @@ const G = (() => {
   function startTrip(s, destName, dest, t = now()) {
     if (s.trip?.status === "encounter") return "Deal with the encounter first.";
     if (s.dungeon) return `You're inside ${s.dungeon.place}. Leave it first.`;
+    if (!WORLD.same([s.x, s.y], dest)) return WORLD.isSol(dest) ? "Solstheim is across the sea. Take the Northern Maiden from the Windhelm docks (Town tab)." : "Skyrim is across the sea. Take the boat from the Raven Rock docks (Town tab).";
     const path = Terrain.route([s.x, s.y], dest);
     s.trip = { destName, dest, origin: s.location || "the wilds", start: [s.x, s.y], path, idx: 0, trail: [[s.x, s.y]],
       lastTick: t, status: "travel", encounter: null, log: [] };
@@ -882,7 +884,7 @@ const G = (() => {
     if (seconds <= 0) return [s.x, s.y];
     return Terrain.moveAlong(tr.path, tr.idx, [s.x, s.y], seconds, speed(s) / 60).pos;
   }
-  const minutesLeft = (s) => s.trip ? Terrain.secondsLeft(s.trip.path, s.trip.idx, [s.x, s.y], speed(s) / 60) / 60 : 0;
+  const minutesLeft = (s) => s.trip ? (s.trip.boat ? s.trip.sail / 60 : Terrain.secondsLeft(s.trip.path, s.trip.idx, [s.x, s.y], speed(s) / 60) / 60) : 0;
   const minutesTo = (s, dest) => Terrain.secondsLeft(Terrain.route([s.x, s.y], dest), 0, [s.x, s.y], speed(s) / 60) / 60;
   function tripLog(s, text) { s.trip.log.unshift(text); s.trip.log = s.trip.log.slice(0, 8); note(s, text); }
 
@@ -892,6 +894,7 @@ const G = (() => {
     const out = { events: [], taken: [] };
     const tr = s.trip;
     if (!tr || tr.status !== "travel") return out;
+    if (tr.boat && typeof SOL !== "undefined") return SOL.sailOn(s, t, out);   // at sea: the boat just carries you (solstheim.js)
     while (tr.lastTick + 1 <= t) {
       const dt = Math.min(STEP_SECONDS, t - tr.lastTick);
       const stepT = tr.lastTick + dt;
@@ -916,6 +919,7 @@ const G = (() => {
         tripLog(s, `🏁 Arrived at ${tr.destName}`);
         s.trip = null;
         out.arrived = tr.destName;
+        if (typeof SOL !== "undefined") SOL.arrived(s, tr.destName, out);
         return out;
       }
       if (tr.caravan && typeof CARAVANS !== "undefined") {   // guarding a caravan: its ambushes come on its own schedule

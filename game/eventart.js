@@ -77,7 +77,7 @@ const EVENTART = (() => {
   function backdrop(g, H, w, h, ground, md, seed, road = true) {
     const [col, skyK] = GROUND[ground] || GROUND.Tundra;
     if (curSky) SKY.backdrop(g, H, w, h, curSky, { horizon: 0.6, seed }); else H.sky(g, w, h, md === "night" ? "night" : skyK === "snow" ? "snow" : md === "dusk" ? "dusk" : "day");
-    const snowy = /Snow|peaks/.test(ground), ash = ground === "Volcanic tundra";
+    const snowy = /Snow|peaks/.test(ground), ash = ground === "Volcanic tundra" || ground === "Ash wastes";
     H.mountains(g, w, h * 0.6, h * (ground === "Mountains" || ground === "High peaks" || ground === "Rocky hills" ? 0.5 : 0.36), seed + "m", ash ? "#6f6a64" : snowy ? "#9aa3a8" : P.rock, !ash);
     const r = rnd(seed + "gnd");
     g.fillStyle = col; g.beginPath(); g.moveTo(0, h * 0.62);
@@ -423,7 +423,8 @@ const EVENTART = (() => {
   /* which vignette (if any) fits a popup: by its title, then by words in its text */
   function storyKind(title = "", text = "") {
     const t = String(title), x = String(text);
-    if (/^You died/i.test(t)) return null;                              // UIART.death already draws this
+    if (/^You died/i.test(t)) return null;
+    const sk = typeof SOLART !== "undefined" ? SOLART.storyKind(t, x) : null; if (sk) return sk;   // Solstheim's scenes (solart.js)                              // UIART.death already draws this
     if (/Word Wall/i.test(x)) return "wordWall";
     if (/dragon falls/i.test(t)) return "dragonFalls";
     if (/The Change/i.test(t)) return /cure|cleans|human again|free of/i.test(x) ? "dawn" : /wolf|beast|howl|Hircine/i.test(x) ? "wolf" : "blood";

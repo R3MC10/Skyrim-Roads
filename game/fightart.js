@@ -20,7 +20,7 @@ const FIGHTART = (() => {
     if (t === T.FOREST || t === T.PINE) return "forest";
     if (t === T.AUTUMN) return "autumn";
     if (t === T.MARSH) return "marsh";
-    if (t === T.VOLCANIC) return "ash";
+    if (t === T.VOLCANIC || t === T.ASH) return "ash";
     if (t === T.ROCKY) return "rocky";
     return "tundra";
   }
@@ -35,6 +35,7 @@ const FIGHTART = (() => {
   }
   function foeOf(e) {
     const n = (e?.name || "").toLowerCase(), tg = new Set(e?.tags || []);
+    const sk = typeof SOLART !== "undefined" ? SOLART.foeKind(n) : null; if (sk) return sk;   // Solstheim's creatures (solart.js)
     if (tg.has("dragon") || /^dragon$|dragon\b(?! priest)/.test(n)) return "dragon";
     const R = [[/priest/, "lich"], [/troll/, "troll"], [/mammoth/, "mammoth"], [/giant(?! frostbite)(?!.*spider)/, "giant"], [/dwarven spider/, "dspider"], [/spider/, "spider"],
       [/bear/, "bear"], [/sabre|cat\b/, "cat"], [/wolves|pack/, "wolves"], [/wolf/, "wolf"], [/skeever/, "skeever"], [/mudcrab|crab/, "crab"],
@@ -178,6 +179,7 @@ const FIGHTART = (() => {
   }
   function foeFig(g, kind, lunge, glowT, pose) {
     const humanoid = (o) => { o.lunge = lunge; if (pose) { o.aim = pose.aim; o.back = pose.back; o.hunch = (o.hunch || 0) + pose.lean; o.draw = pose.draw; if (pose.wt) o.wt = pose.wt; } return person(g, o); };
+    if (typeof SOLART !== "undefined" && SOLART.foeFig(g, kind, lunge, glowT, { humanoid, quad: (o) => quad(g, { lunge, ...o }), SKIN })) return;
     switch (kind) {
       case "bandit": return humanoid({ skin: SKIN.imperial, body: P.leather, head: "hood", hoodColor: "#5a4836", wt: "axe", shield: false });
       case "forsworn": return humanoid({ skin: SKIN.breton, body: "#7a5a3a", head: "feathers", wt: "sword", cape: "#5f6a48" });

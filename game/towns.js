@@ -198,7 +198,7 @@ const TOWNS = (() => {
     if (s.gold < price) return `A drink to loosen tongues costs ${price} gold.`;
     s.gold -= price;
     const here = WORLD.places[s.location];
-    const unknown = Object.entries(WORLD.places).filter(([n, p]) => !s.discovered.includes(n) && (["dungeon", "fort", "camp", "lair", "stone", "shrine", "landmark"].includes(p[2]) || WORLD.hidden?.has(n)))
+    const unknown = Object.entries(WORLD.places).filter(([n, p]) => !s.discovered.includes(n) && WORLD.same(here, p) && (["dungeon", "fort", "camp", "lair", "stone", "shrine", "landmark"].includes(p[2]) || WORLD.hidden?.has(n)))
       .map(([n, p]) => ({ n, d: G.pxDist(here, p), p })).sort((a, b) => a.d - b.d).slice(0, 6);
     const sk = [...G.useSkill(s, "Speechcraft", 10), ...G.useSkill(s, "Streetwise", 12)];   // [OURS] Streetwise: hearing what the street knows
     if (!unknown.length) return `${pick(BARD)} Nobody knows anything you don't.`;

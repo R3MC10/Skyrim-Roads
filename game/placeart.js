@@ -55,14 +55,14 @@ const PLACEART = (() => {
 
   // ---------------------------------------------------------------- climate backdrops
   const CLIMATE = { Winterhold: "snow", "The Pale": "snow", Eastmarch: "snow", Whiterun: "tundra", Falkreath: "forest", "The Rift": "autumn", Hjaalmarch: "marsh", "The Reach": "reach", Haafingar: "coast" };
-  function climateOf(name) { const p = WORLD.places[name]; return p ? CLIMATE[G.holdAt(p)] || "tundra" : "tundra"; }
+  function climateOf(name) { const p = WORLD.places[name]; if (p && WORLD.isSol?.(p) && typeof SOLART !== "undefined") return SOLART.climateOf(p); return p ? CLIMATE[G.holdAt(p)] || "tundra" : "tundra"; }
   let curSky = null;   // the SKY state while a picture is being drawn
   function backdrop(g, H, w, h, clim, seed, mood) {
     if (curSky) SKY.backdrop(g, H, w, h, curSky, { horizon: 0.62, seed }); else H.sky(g, w, h, mood === "night" ? "night" : clim === "snow" ? "snow" : mood === "dusk" ? "dusk" : "day");
-    const mfill = clim === "reach" ? "#9a6e54" : clim === "snow" ? "#9aa3a8" : P.rock;
-    H.mountains(g, w, h * 0.62, h * 0.42, seed + "m", mfill, clim !== "reach");
+    const mfill = clim === "reach" ? "#9a6e54" : clim === "snow" ? "#9aa3a8" : clim === "ash" ? "#5e524a" : P.rock;
+    H.mountains(g, w, h * 0.62, h * 0.42, seed + "m", mfill, clim !== "reach" && clim !== "ash");
     if (clim === "coast") water(g, h * 0.58, h * 0.72, w);
-    const groundCol = { snow: "#e8edf0", tundra: "#b9a98d", forest: "#6f8a52", autumn: "#a88a4e", marsh: "#7d8a6a", reach: "#a48468", coast: "#a7a78a" }[clim];
+    const groundCol = { snow: "#e8edf0", tundra: "#b9a98d", forest: "#6f8a52", autumn: "#a88a4e", marsh: "#7d8a6a", reach: "#a48468", coast: "#a7a78a", ash: "#8f857b" }[clim] || "#b9a98d";
     ground(g, H, w, h, h * 0.7, groundCol, seed);
     if (curSky && clim !== "snow") SKY.snowCover(g, w, h, h * 0.7, curSky.snow, seed);   // winter snow on the ground, by season
     const r = rnd(seed + "veg");
@@ -71,6 +71,7 @@ const PLACEART = (() => {
     if (clim === "autumn") for (let i = 0; i < 9; i++) deciduous(g, H, r() * w, h * 0.74 + r() * 6, 0.8 + r() * 0.4, ["#c4572e", "#e8923a", "#d6b25e", "#a8622e"][Math.floor(r() * 4)]);
     if (clim === "marsh") { g.fillStyle = "rgba(95,135,151,0.6)"; for (let i = 0; i < 4; i++) { g.beginPath(); g.ellipse(r() * w, h * 0.82 + r() * 10, 26 + r() * 20, 4, 0, 0, 7); g.fill(); } for (let i = 0; i < 4; i++) deadTree(g, r() * w, h * 0.78, 1); }
     if (clim === "tundra") { g.fillStyle = "#8c9a5a"; for (let i = 0; i < 18; i++) g.fillRect(r() * w, h * 0.73 + r() * h * 0.2, 4, 2); }
+    if (clim === "ash" && typeof SOLART !== "undefined") SOLART.ashGround(g, H, w, h, r);   // Solstheim's ash drifts and dead trees
     if (clim === "reach") for (let i = 0; i < 3; i++) poly(g, H, [[r() * w, h * 0.74], [r() * w + 12, h * 0.6], [r() * w + 28, h * 0.74]], "#8a5c44");
   }
 

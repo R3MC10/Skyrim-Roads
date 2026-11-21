@@ -1,13 +1,14 @@
 /* Terrain: what the ground is at every point, how fast you cross it, and route-finding that prefers roads.
-   Built once from WORLD (deterministic), used by the engine (travel) and the map (painting). */
-const Terrain = (() => {
+   Built once from WORLD (deterministic), used by the engine (travel) and the map (painting).
+   makeTerrain(W, opts) builds one region's ground; Solstheim (solworld.js) builds its own from the same code. */
+function makeTerrain(W, opts = {}) {
   const GW = 250, GH = 175, MW = 1000, MH = 700;             // grid cells are 4×4 map pixels
   const T = { SEA: 0, LAKE: 1, RIVER: 2, ROAD: 3, BRIDGE: 4, GRASS: 5, TUNDRA: 6, FOREST: 7, PINE: 8, AUTUMN: 9,
-    MARSH: 10, SNOW: 11, VOLCANIC: 12, ROCKY: 13, MOUNTAIN: 14, PEAK: 15 };
+    MARSH: 10, SNOW: 11, VOLCANIC: 12, ROCKY: 13, MOUNTAIN: 14, PEAK: 15, ASH: 16 };
   const NAMES = ["Sea", "Lake", "River (ford)", "Road", "Bridge", "Grassland", "Tundra", "Forest", "Pine forest", "Autumn forest",
-    "Marsh", "Snow", "Volcanic tundra", "Rocky hills", "Mountains", "High peaks"];
+    "Marsh", "Snow", "Volcanic tundra", "Rocky hills", "Mountains", "High peaks", "Ash wastes"];
   // [OURS] how fast you cross each kind of ground (1 = open grassland)
-  const SPEED = [0, 0, 0.25, 1.3, 1.3, 1, 1, 0.8, 0.75, 0.8, 0.55, 0.7, 0.9, 0.7, 0.4, 0.12];
+  const SPEED = [0, 0, 0.25, 1.3, 1.3, 1, 1, 0.8, 0.75, 0.8, 0.55, 0.7, 0.9, 0.7, 0.4, 0.12, 0.55];   // [OURS] ash drifts slow you like marsh
 
   // ---- deterministic value noise
   const hash = (x, y) => { let h = (x * 374761393 + y * 668265263) | 0; h = (h ^ (h >>> 13)) * 1274126177 | 0; return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
@@ -36,8 +37,7 @@ const Terrain = (() => {
     }
     return inside;
   }
-  const W = WORLD;
-  const land = [...W.coast.map(px), [MW, MH], [0, MH]];
+  const land = opts.island ? W.coast.map(px) : [...W.coast.map(px), [MW, MH], [0, MH]];   // an island is a closed coast
   const ranges = W.ranges.map((r) => ({ pts: r.pts.map(px), w: r.w * MW, h: r.h }));
   const rivers = W.rivers.map((r) => r.pts.map(px));
   const roads = W.roads.map((chain) => chain.map((c) => px(typeof c === "string" ? W.places[c] : c)));
@@ -59,9 +59,9 @@ const Terrain = (() => {
     let t = T.GRASS;
     for (const [cx, cy, rx, ry, kind] of W.regions) {
       const v = 1 - ((p[0] - cx * MW) / (rx * MW)) ** 2 - ((p[1] - cy * MH) / (ry * MH)) ** 2 + n * 1.1;
-      if (v > 0) t = { tundra: T.TUNDRA, forest: T.FOREST, rocky: T.ROCKY, marsh: T.MARSH, volcanic: T.VOLCANIC, pine: T.PINE, autumn: T.AUTUMN }[kind];
+      if (v > 0) t = { tundra: T.TUNDRA, forest: T.FOREST, rocky: T.ROCKY, marsh: T.MARSH, volcanic: T.VOLCANIC, pine: T.PINE, autumn: T.AUTUMN, ash: T.ASH }[kind];
     }
-    if (p[1] < (W.snowLine + n * 0.06) * MH && t !== T.MARSH && t !== T.FOREST) t = T.SNOW;
+    if (p[1] < (W.snowLine + n * (opts.snowNoise || 0.06)) * MH && t !== T.MARSH && t !== T.FOREST && t !== T.ASH) t = T.SNOW;
     return t;
   }
   function typeAt(p) {
@@ -92,6 +92,7 @@ const Terrain = (() => {
   stamp(roads, (i) => { grid[i] = grid[i] === T.RIVER || grid[i] === T.LAKE ? T.BRIDGE : T.ROAD; });
   // every place stands on walkable ground
   for (const [x, y] of Object.values(W.places)) {
+    if (!(x >= 0 && x <= 1 && y >= 0 && y <= 1)) continue;   // another region's place (Solstheim lives below Skyrim)
     const gx = Math.floor(x * GW), gy = Math.floor(y * GH);
     for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
       const i = (gy + dy) * GW + gx + dx;
@@ -172,5 +173,6 @@ const Terrain = (() => {
     return s;
   }
   return { T, NAMES, SPEED, GW, GH, grid, hgrid, typeAtPos, speedAt, heightAt, typeAt, fbm, vnoise, route, moveAlong, secondsLeft, lineDist, inPoly, land, ranges, rivers, roads };
-})();
+}
+const Terrain = makeTerrain(WORLD);
 if (typeof module !== "undefined") module.exports = Terrain;

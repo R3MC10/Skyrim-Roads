@@ -22,6 +22,11 @@ const NPCART = (() => {
     Windhelm: { general: T("Revyn Sadri", "dunmer", "m"), blacksmith: T("Oengul War-Anvil", "nord", "m"), wizard: T("Wuunferth the Unliving", "nord", "m"),
       inn: T("Elda Early-Dawn", "nord", "f"), alchemy: T("Nurelion", "altmer", "m"), stables: T("Ulundil", "altmer", "m"),
       jarl: T("Ulfric Stormcloak", "nord", "m", { role: "jarl" }), steward: T("Jorleif", "nord", "m"), arena: T("Torvar Iron-Hand", "nord", "m", { ours: 1 }) },
+    "Raven Rock": { general: T("Milore Ienth", "dunmer", "m"), blacksmith: T("Glover Mallory", "breton", "m"), inn: T("Geldis Sadri", "dunmer", "m"),
+      docks: T("Gjalund Salt-Sage", "nord", "m", { title: "Captain of the Northern Maiden" }), steward: T("Adril Arano", "dunmer", "m") },
+    "Skaal Village": { blacksmith: T("Baldor Iron-Shaper", "nord", "m"), inn: T("Fanari Strong-Voice", "nord", "f") },
+    "Tel Mithryn": { wizard: T("Neloth", "dunmer", "m", { title: "Telvanni master wizard" }), alchemy: T("Elynea Mothren", "dunmer", "f") },
+    "Thirsk Mead Hall": { inn: T("Hilund", "nord", "m") },
     Riften: { general: T("Bersi Honey-Hand", "nord", "m"), blacksmith: T("Balimund", "nord", "m"), inn: T("Keerava", "argonian", "f"),
       alchemy: T("Elgrim", "nord", "m"), stables: T("Hofgrir Horse-Crusher", "nord", "m"), fence: T("Tonilia", "redguard", "f"),
       jarl: T("Laila Law-Giver", "nord", "f", { role: "jarl" }), steward: T("Anuriel", "altmer", "f") },
@@ -43,7 +48,7 @@ const NPCART = (() => {
   // [Skyrim] guard tabard colours by hold
   const HOLD_COLOR = { Whiterun: "#c9a24c", Haafingar: "#8e2b25", Eastmarch: "#3f5f8a", "The Rift": "#6a3f6a", "The Reach": "#9a4a2e", Falkreath: "#3d5d36", Hjaalmarch: "#4f7f7a", "The Pale": "#7a2e3a", Winterhold: "#6f95ad" };
   // [Skyrim] trainers' races and looks (the few [OURS] trainers get Nord looks)
-  const TRAINER_RACE = { Amren: ["redguard", "m"], Athis: ["dunmer", "m"], "Aela the Huntress": ["nord", "f"], "Njada Stonearm": ["nord", "f"], Farkas: ["nord", "m"], Vilkas: ["nord", "m"],
+  const TRAINER_RACE = { "Glover Mallory": ["breton", "m"], "Talvas Fathryon": ["dunmer", "m"], Frea: ["nord", "f"], Amren: ["redguard", "m"], Athis: ["dunmer", "m"], "Aela the Huntress": ["nord", "f"], "Njada Stonearm": ["nord", "f"], Farkas: ["nord", "m"], Vilkas: ["nord", "m"],
     "Danica Pure-Spring": ["nord", "f"], "Eorlund Gray-Mane": ["nord", "m"], Arcadia: ["imperial", "f"], "Uthgerd the Unbroken": ["nord", "f"], Faendal: ["bosmer", "m"], "Brina Swift-Foot": ["nord", "f"],
     Runil: ["altmer", "m"], "Wuunferth the Unliving": ["nord", "m"], "Scouts-Many-Marshes": ["argonian", "m"], "Silda the Unseen": ["nord", "f"], "Revyn Sadri": ["dunmer", "m"],
     "Torbjorn Shatter-Shield": ["nord", "m"], "Hilde Chain-Wife": ["nord", "f"], "Sybille Stentor": ["breton", "f"], "Giraud Gemane": ["breton", "m"], "Captain Hrolf": ["nord", "m"], Bryling: ["nord", "f"],
@@ -80,9 +85,9 @@ const NPCART = (() => {
     return { name: first, race, sex, title, role, generic: 1 };
   }
   const ROLE_OF = { general: "merchant", blacksmith: "smith", forge: "smith", wizard: "wizard", enchanter: "wizard", inn: "innkeeper", cook: "innkeeper", alchemy: "alchemist", stables: "stable",
-    carriage: "driver", fence: "fence", jarl: "jarl", steward: "steward", notice: "steward", jobs: "steward", hire: "steward", arena: "arena", hall: "keeper", streets: "guard",
+    carriage: "driver", docks: "sailor", fence: "fence", jarl: "jarl", steward: "steward", notice: "steward", jobs: "steward", hire: "steward", arena: "arena", hall: "keeper", streets: "guard",
     greybeard: "greybeard", mine: "miner", fish: "fisher", market: "steward", home: "steward" };
-  const TITLE = { merchant: "Merchant", smith: "Blacksmith", wizard: "Court wizard", innkeeper: "Innkeeper", alchemist: "Alchemist", stable: "Stable master", driver: "Carriage driver",
+  const TITLE = { merchant: "Merchant", smith: "Blacksmith", wizard: "Court wizard", innkeeper: "Innkeeper", alchemist: "Alchemist", stable: "Stable master", driver: "Carriage driver", sailor: "Ship's captain",
     fence: "Fence", jarl: "Jarl", steward: "Steward", arena: "Arena master", keeper: "Hall-warden", guard: "Guard", greybeard: "Greybeard", miner: "Mine foreman", fisher: "Fisher", market: "Market steward" };
 
   /* who you meet in a town section, or null */
@@ -99,6 +104,7 @@ const NPCART = (() => {
     else if (section === "alchemy") p = t.alchemy;
     else if (section === "stables") p = t.stables;
     else if (section === "carriage") p = t.carriage;
+    else if (section === "docks") p = t.docks || TOWN["Raven Rock"].docks;
     else if (section === "fence") p = t.fence;
     else if (section === "arena") p = t.arena;
     else if (section === "hall") p = t.hall;
@@ -247,7 +253,8 @@ const NPCART = (() => {
     return portrait({ name: f[0], race, sex, role, mat }, size);
   }
   const GIVERS = { companions: T("Kodlak Whitemane", "nord", "m", { role: "warrior", mat: "nord" }), thieves: T("Brynjolf", "nord", "m", { role: "thief" }),
-    college: T("Faralda", "altmer", "f", { role: "wizard", robe: "#9a3a24" }), brotherhood: T("Astrid", "nord", "f", { role: "thief" }), main: T("Balgruuf the Greater", "nord", "m", { role: "jarl", hold: "Whiterun" }) };
+    college: T("Faralda", "altmer", "f", { role: "wizard", robe: "#9a3a24" }), brotherhood: T("Astrid", "nord", "f", { role: "thief" }), main: T("Balgruuf the Greater", "nord", "m", { role: "jarl", hold: "Whiterun" }),
+    dragonborn: T("Frea", "nord", "f", { role: "warrior", mat: "nord" }) };
   function giver(qid, size = 32) { const g = GIVERS[qid]; return g ? portrait(g, size) : ""; }
 
   // ---- what they say: plain, Skyrim-flavoured, steady for the in-game day
@@ -258,6 +265,7 @@ const NPCART = (() => {
     innkeeper: ["Come in, get warm. Mead's cold, fire's hot.", "Need a room? Bed's soft enough.", "Plenty of stories tonight. Some of them true.", "Sit, eat. You look half frozen."],
     alchemist: ["Careful with that one. It's not for drinking.", "Mushrooms, roots, the odd giant's toe. What do you need?", "A cure for every ache, and an ache for every cure."],
     stable: ["Best horses in the hold. Ask anyone.", "She's a good runner. Feed her and she'll carry you.", "Horses don't lie. People do."],
+    sailor: ["The Northern Maiden's the fastest ship on the Sea of Ghosts. Mostly.", "Ash on the wind. We'll be at Raven Rock soon enough.", "Fare first. The sea doesn't take credit."],
     driver: ["Need a ride? Tell me where.", "Climb aboard. Nothing bothers a carriage on the road.", "Fare first, then we go."],
     fence: ["Keep your voice down. What have you got?", "No questions. No names. Just coin.", "If it's hot, I can cool it down. For a price."],
     jarl: ["Speak. The hold is listening.", "What brings you before the Jarl?", "We have dragons to worry about. Be brief."],

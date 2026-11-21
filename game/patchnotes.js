@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b62", build: 62, date: "22 Nov 2026", title: "Solstheim and the Skyrim compass", items: [
+      "Solstheim: take the Northern Maiden from Windhelm's docks to Raven Rock. A whole new island with ash wastes, Skaal Village, Tel Mithryn, the All-Maker Stones and Miraak's story.",
+      "New creatures (ash hoppers, netch, rieklings, lurkers), ash storms, Stalhrim, Chitin and Bonemold gear, and the Bend Will shout.",
+      "The Skyrim compass menu is now your home screen: swipe left for Magic, right for Items, up for Skills and down for the Map. The bottom bar shows your level, gold, carry weight and what you're doing.",
+      "Constellation skill trees: tap a star to read and take a perk.",
+      "Clearer screens: a 'What to do next' card, town places grouped into Shops, Services, Home and more, a tidier Journal with counters, ⓘ help on every screen and a search box in your pack."] },
     { id: "b61", build: 61, date: "21 Nov 2026", title: "Together on the roads", items: [
       "Co-op dungeons: invite up to 3 friends at a dungeon door, clear the rooms together and each get your own share of the boss chest.",
       "Fight on horseback: charge into road fights from the saddle. If your horse goes down you're thrown clear and fight on foot.",
@@ -124,13 +130,11 @@ const PATCHNOTES = (() => {
       "A main menu and in-app updates."] },
   ];
   const NEXT = [
-    "Clearer, less confusing screens",
-    "Solstheim, by boat from Windhelm",
-    "A Skyrim-style compass menu: swipe to Magic, Items, Skills and Map",
     "The real Skyrim map layout",
     "Crafting mini-games",
     "Motion and animations across all menus",
     "Smart auto-combat that plays the best moves for you",
+    "Party members fighting beside you and walking with you in their gear",
   ];
   const KEY = "rotn_notes_seen";
   const latest = () => LIST[0];

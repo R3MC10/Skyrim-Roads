@@ -88,7 +88,7 @@ const SMITH = (() => {
   function info(s, id) {
     const rc = RECIPES[id]; if (!rc) return null;
     const missing = rc.mats.filter(([i, n]) => count(s, i) < n).map(([i, n]) => `${n - count(s, i)} more ${D.ITEMS[i].name}`);
-    const block = rc.perk && !G.P(s, rc.perk) ? `Needs the ${perkName(rc.perk)} perk (Smithing).` : missing.length ? `Missing ${missing.join(", ")}.` : null;
+    const block = rc.where && s.location !== rc.where ? `Only the forge in ${rc.where} can make this.` : rc.perk && !G.P(s, rc.perk) ? `Needs the ${perkName(rc.perk)} perk (Smithing).` : missing.length ? `Missing ${missing.join(", ")}.` : null;
     return { ...rc, block, have: rc.mats.map(([i]) => count(s, i)) };
   }
   function xpFor(value) { return 25 + 3 * value ** 0.65; }     // [Skyrim]

@@ -209,8 +209,8 @@ const WorldMap = (() => {
 
   // ---- fog: rebuilt only when what you've seen changes
   let fog = null, fogKey = "";
-  function fogFor(pts) {
-    const key = pts.length + ":" + (pts[pts.length - 1] || []).join(",");
+  function fogFor(pts, region = "") {
+    const key = region + pts.length + ":" + (pts[pts.length - 1] || []).join(",");
     if (fog && key === fogKey) return fog;
     fogKey = key;
     fog = fog || document.createElement("canvas");
@@ -297,26 +297,30 @@ const WorldMap = (() => {
     return (seasonCache[season] = c);
   }
   function draw(canvas, v) {
-    base = base || drawBase();
+    // Solstheim has its own painted map (solart.js); its places sit SOL_OY map-heights below Skyrim's
+    const SV = v.region === "solstheim" && typeof SOLART !== "undefined" ? SOLART : null, OY = SV ? WORLD.SOL_OY : 0, OYH = OY * H;
+    const bimg = SV ? SV.base() : (base = base || drawBase());
     const dpr = Math.min(2, window.devicePixelRatio || 1);
     const cw = canvas.clientWidth, ch = canvas.clientHeight;
     if (canvas.width !== Math.round(cw * dpr) || canvas.height !== Math.round(ch * dpr)) { canvas.width = Math.round(cw * dpr); canvas.height = Math.round(ch * dpr); }
     const g = canvas.getContext("2d");
     g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, canvas.width, canvas.height);
     const k = Math.max(canvas.width / W, canvas.height / H) * v.zoom;
-    let ox = canvas.width / 2 - v.center[0] * W * k, oy = canvas.height / 2 - v.center[1] * H * k;
+    let ox = canvas.width / 2 - v.center[0] * W * k, oy = canvas.height / 2 - (v.center[1] - OY) * H * k;
     ox = Math.min(0, Math.max(canvas.width - W * k, ox)); oy = Math.min(0, Math.max(canvas.height - H * k, oy));
-    v.transform = { k: k / dpr, ox: ox / dpr, oy: oy / dpr };
+    v.transform = { k: k / dpr, ox: ox / dpr, oy: (oy - OYH * k) / dpr };   // screen ↔ world (Solstheim's y included)
     g.setTransform(k, 0, 0, k, ox, oy);
     g.imageSmoothingEnabled = true; g.imageSmoothingQuality = "high";
-    g.drawImage(base, 0, 0, W, H);
-    const sl = seasonLayer(v.season ?? (typeof WEVENTS !== "undefined" ? WEVENTS.season() : null)); if (sl) g.drawImage(sl, 0, 0, W, H);   // winter snow, autumn colours, spring green
+    g.drawImage(bimg, 0, 0, W, H);
+    const sl = SV ? null : seasonLayer(v.season ?? (typeof WEVENTS !== "undefined" ? WEVENTS.season() : null)); if (sl) g.drawImage(sl, 0, 0, W, H);   // winter snow, autumn colours, spring green
     const s = dpr / k;                    // 1 screen px in map units: keeps icons and labels the same size at any zoom
     const MA = typeof MAPART !== "undefined" ? MAPART : null;
     const viewBox = [-ox / k, -oy / k, (canvas.width - ox) / k, (canvas.height - oy) / k];
-    const dark = MA ? MA.ambient(g, v, s, W, H, viewBox) : 0;   // water glints, cloud shadows, birds (under the fog)
-    g.drawImage(fogFor([...v.explored, ...v.discovered.map((n) => WORLD.places[n])]), 0, 0, W, H);
-    if (v.rulers?.length) { g.globalAlpha = 0.26; for (const r of v.rulers) g.drawImage(tintFor(r.hold, r.color), 0, 0, W, H); g.globalAlpha = 1; }   // holds ruled by a clan
+    const dark = SV ? SV.ambient(g, v, s, W, H, viewBox) : MA ? MA.ambient(g, v, s, W, H, viewBox) : 0;   // water glints, cloud shadows, birds (under the fog)
+    const seen = [...v.explored, ...v.discovered.map((n) => WORLD.places[n])].filter((p) => p && WORLD.isSol(p) === !!SV);
+    g.drawImage(fogFor(OY ? seen.map((p) => [p[0], p[1] - OY]) : seen, SV ? "sol" : ""), 0, 0, W, H);
+    if (v.rulers?.length && !SV) { g.globalAlpha = 0.26; for (const r of v.rulers) g.drawImage(tintFor(r.hold, r.color), 0, 0, W, H); g.globalAlpha = 1; }   // holds ruled by a clan
+    if (OY) g.setTransform(k, 0, 0, k, ox, oy - OYH * k);   // from here on: world coordinates
     const [px, py] = P(v.player), bob = MA && v.moving && !v.reduceMotion ? Math.abs(Math.sin(v.t * 7)) * 2.2 * s : 0;
     if (v.trail?.length > 1) {
       g.strokeStyle = "rgba(170,40,28,.9)"; g.lineWidth = 3.2 * s; g.lineCap = "round"; g.lineJoin = "round";
@@ -340,11 +344,12 @@ const WorldMap = (() => {
     }
     // places: icons when discovered; labels by zoom level, skipping any that would overlap
     const RANK = { city: 0, town: 1, landmark: 2, farm: 4 };
-    const shown = v.discovered.map((n) => [n, ...WORLD.places[n]]).sort((a, b) => (a[0] === v.selected ? -1 : b[0] === v.selected ? 1 : (RANK[a[3]] ?? 3) - (RANK[b[3]] ?? 3)));
+    const shown = v.discovered.filter((n) => WORLD.places[n] && WORLD.isSol(WORLD.places[n]) === !!SV).map((n) => [n, ...WORLD.places[n]]).sort((a, b) => (a[0] === v.selected ? -1 : b[0] === v.selected ? 1 : (RANK[a[3]] ?? 3) - (RANK[b[3]] ?? 3)));
     // zoomed out, the many small spots shrink so cities and towns stay easy to see
     const small = v.zoom < 1.5 && shown.length > 60 ? 0.72 : 1;
     if (MA) {
-      MA.night(g, v, s, W, H, dark, shown);
+      if (OY) { g.save(); g.translate(0, OYH); MA.night(g, v, s, W, H, dark, shown.map(([n, x, y, kd]) => [n, x, y - OY, kd])); g.restore(); }
+      else MA.night(g, v, s, W, H, dark, shown);
       const pulseSel = v.reduceMotion ? 0.5 : (Math.sin(v.t * 4) + 1) / 2;
       for (const [n, x, y, kind] of shown) {
         const f = kind === "city" || kind === "town" || v.selected === n ? 1 : small, m = MA.marker(n, kind), w = m.w * s * f, h = m.h * s * f;
@@ -451,6 +456,12 @@ const WorldMap = (() => {
     if (v.weather && v.weather !== "clear") {
       g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
       const cw2 = canvas.width, ch2 = canvas.height, tt = v.reduceMotion ? 0 : v.t;
+      if (v.weather === "ashstorm") {   // Solstheim: ash blowing across the map
+        g.fillStyle = "rgba(92,78,66,.28)"; g.fillRect(0, 0, cw2, ch2);
+        g.strokeStyle = "rgba(60,52,46,.45)"; g.lineWidth = 1.4 * dpr; g.beginPath();
+        for (let i = 0; i < 120; i++) { const x = ((i * 131.7 + tt * 180) % (cw2 + 40)) - 20, y = ((i * 71.3 + Math.sin(i + tt * 0.7) * 18 + tt * 22) % ch2); g.moveTo(x, y); g.lineTo(x + 12 * dpr, y + 3 * dpr); }
+        g.stroke();
+      }
       if (["cloudy", "fog", "storm", "blizzard"].includes(v.weather)) { g.fillStyle = v.weather === "fog" ? "rgba(210,215,220,.22)" : v.weather === "blizzard" ? "rgba(235,240,250,.2)" : "rgba(40,45,55,.18)"; g.fillRect(0, 0, cw2, ch2); }
       if (["rain", "storm"].includes(v.weather)) {
         g.strokeStyle = "rgba(190,210,235,.35)"; g.lineWidth = 1.2 * dpr; g.beginPath();

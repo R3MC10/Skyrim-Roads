@@ -20,12 +20,14 @@ const WEVENTS = (() => {
   const W = {
     clear: ["Clear", "☀️", 1, 0, 1], cloudy: ["Overcast", "☁️", 1, 0.03, 1], rain: ["Rain", "🌧", 0.92, 0.08, 1], fog: ["Fog", "🌫", 0.95, 0.15, 1],
     storm: ["Thunderstorm", "⛈", 0.9, 0.1, 0.8], snow: ["Snow", "🌨", 0.85, 0.05, 1], blizzard: ["Blizzard", "❄️", 0.7, 0.12, 0.7],
+    ashstorm: ["Ash storm", "🌋", 0.65, 0.15, 0.8],   // [Skyrim] Solstheim's ash storms off Red Mountain ([OURS] effects)
   };
   const COLD = ["Winterhold", "The Pale"], WET = ["The Rift", "Hjaalmarch", "Haafingar"];
   function weatherAt(hold, t = now()) {
     const block = Math.floor(t / 1800), r = hash(hold + ":" + block), se = season(t), cold = COLD.includes(hold);
     let table;
-    if (typeof FEST !== "undefined" && FEST.weatherBoost(t)) table = cold ? [["blizzard", 4], ["snow", 3], ["fog", 1]] : [["snow", 4], ["blizzard", 2], ["cloudy", 2], ["clear", 1]];   // Frostfall Blizzards
+    if (hold === "Solstheim") table = [["ashstorm", 2.2], ["cloudy", 2], ["clear", 2], ["snow", se === "winter" ? 2.5 : 1], ["fog", 1]];
+    else if (typeof FEST !== "undefined" && FEST.weatherBoost(t)) table = cold ? [["blizzard", 4], ["snow", 3], ["fog", 1]] : [["snow", 4], ["blizzard", 2], ["cloudy", 2], ["clear", 1]];   // Frostfall Blizzards
     else if (cold) table = [["snow", 4], ["blizzard", se === "winter" ? 3 : 1.5], ["cloudy", 2], ["clear", se === "summer" ? 2 : 1], ["fog", 1]];
     else if (se === "winter") table = [["snow", 3], ["cloudy", 3], ["clear", 2], ["fog", 1], ["blizzard", 0.7]];
     else if (se === "summer") table = [["clear", 5], ["cloudy", 2], ["rain", 1], ["storm", 1]];

@@ -320,6 +320,7 @@ const ICONART = (() => {
     [/thalmor|justiciar/i, "thalmor"], [/mage|necromancer|conjurer|warlock|witch|wizard/i, "mage"], [/bandit|outlaw|thug|chief|bounty|hunter|marauder|highwayman|smuggler|robber/i, "bandit"],
   ];
   function enemyKind(name = "", tags = []) {
+    const sk = typeof SOLART !== "undefined" ? SOLART.faceKind(name) : null; if (sk) return sk;   // Solstheim's creatures (solart.js)
     for (const [re, k] of ENEMY_RULES) if (re.test(name)) return k;
     const t = new Set(tags || []);
     if (t.has("dragon")) return "dragon"; if (t.has("undead")) return "draugr"; if (t.has("construct")) return "dwemer"; if (t.has("beast")) return "beast"; return "humanoid";
@@ -361,7 +362,7 @@ const ICONART = (() => {
     return ART.html(size, size, (g, H, w) => {
       g.scale(w / 40, w / 40); tile(g, true);
       g.save(); g.beginPath(); g.arc(20, 20, 18.5, 0, 7); g.clip();
-      (FACES[k] || FACES.humanoid)(g, name || "");
+      (FACES[k] || (typeof SOLART !== "undefined" && SOLART.FACES[k]) || FACES.humanoid)(g, name || "");
       g.restore();
       circ(g, 20, 20, 18.5, null, elite ? "#d6b25e" : "#6b5640", elite ? 2 : 1.2);
     }, { key: `e:${k}:${/frost|storm/i.test(name || "") ? name : ""}:${elite ? 1 : 0}`, cls: "ico eico", alt: "" });

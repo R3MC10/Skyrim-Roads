@@ -12,7 +12,7 @@ const SKY = (() => {
   const COLD_HOLDS = ["Winterhold", "The Pale", "Eastmarch"];
   const hash = (str) => { let x = 2166136261; for (const c of String(str)) x = Math.imul(x ^ c.charCodeAt(0), 16777619) >>> 0; return x / 4294967296; };
   const seeded = (s) => (typeof ART !== "undefined" ? ART.seeded(s) : () => Math.random());
-  const WIND = { clear: 0.2, cloudy: 0.35, fog: 0.05, rain: 0.5, storm: 0.9, snow: 0.4, blizzard: 1 };
+  const WIND = { clear: 0.2, cloudy: 0.35, fog: 0.05, rain: 0.5, storm: 0.9, snow: 0.4, blizzard: 1, ashstorm: 0.9 };
 
   function todOf(hour) { return hour >= 20 || hour < 5 ? "night" : hour < 8 ? "dawn" : hour < 18 ? "day" : "dusk"; }
   function snowAmount(st) {
@@ -53,7 +53,7 @@ const SKY = (() => {
   const GRAD = {
     day: ["#93b2c6", "#e8dcc0"], dawn: ["#5e6488", "#efb98c"], dusk: ["#3f3558", "#e59a5c"], night: ["#0e1521", "#2b3a4e"],
   };
-  const DULL = { cloudy: 0.35, fog: 0.5, rain: 0.55, storm: 0.75, snow: 0.45, blizzard: 0.7 };
+  const DULL = { cloudy: 0.35, fog: 0.5, rain: 0.55, storm: 0.75, snow: 0.45, blizzard: 0.7, ashstorm: 0.7 };
   function mix(a, b, k) {
     const pa = [1, 3, 5].map((i) => parseInt(a.slice(i, i + 2), 16)), pb = [1, 3, 5].map((i) => parseInt(b.slice(i, i + 2), 16));
     return "#" + pa.map((v, i) => Math.round(v + (pb[i] - v) * k).toString(16).padStart(2, "0")).join("");
@@ -171,8 +171,12 @@ const SKY = (() => {
       else { const gr = g.createLinearGradient(0, h * 0.25, 0, h); gr.addColorStop(0, "rgba(226,228,228,0.12)"); gr.addColorStop(1, "rgba(226,228,228,0.7)"); g.fillStyle = gr; g.fillRect(0, 0, w, h); }
     }
     if (st.weather === "cloudy") { g.fillStyle = "rgba(120,128,136,0.12)"; g.fillRect(0, 0, w, h); }
+    if (st.weather === "ashstorm") {   // Solstheim: grey ash driven sideways, the light gone brown
+      g.fillStyle = "rgba(96,82,70,0.34)"; g.fillRect(0, 0, w, h);
+      if (falling) { g.strokeStyle = "rgba(70,62,56,0.6)"; g.lineWidth = 1.2; for (let i = 0; i < 90; i++) { const x = r() * w, y = r() * h, l = 5 + r() * 8; g.beginPath(); g.moveTo(x, y); g.lineTo(x + l, y + l * 0.25); g.stroke(); } }
+    }
     // seasons, when the weather lets them show
-    if (!["rain", "storm", "snow", "blizzard"].includes(st.weather) && opts.season !== false && falling) {
+    if (!["rain", "storm", "snow", "blizzard", "ashstorm"].includes(st.weather) && opts.season !== false && falling) {
       if (st.season === "autumn" && !st.cold) for (let i = 0; i < 16; i++) leaf(g, r() * w, gy * 0.3 + r() * (h - gy * 0.3), r() * 6, ["#c4572e", "#e8923a", "#d6b25e", "#a8622e"][i % 4], 1 + r() * 0.5);
       if (st.season === "spring" && st.tod !== "night") for (let i = 0; i < 14; i++) { g.fillStyle = i % 3 ? "rgba(248,214,226,0.9)" : "rgba(255,255,255,0.9)"; g.beginPath(); g.arc(r() * w, gy * 0.4 + r() * (h - gy * 0.4), 1.3 + r(), 0, 7); g.fill(); }
       if (st.season === "summer" && st.tod === "day") { g.fillStyle = "rgba(255,246,196,0.7)"; for (let i = 0; i < 10; i++) g.fillRect(r() * w, gy * 0.5 + r() * (h - gy * 0.5), 1.4, 1.4); }
