@@ -306,6 +306,7 @@ const G = (() => {
       this.eq = equipment(s);
       this.hp = curHealth(s, t); this.mp = maxMagicka(s); this.sp = maxStamina(s);
       this.ehp = enemy.hp ?? enemy.health;
+      this.hp0 = this.hp; this.ehp0 = this.ehp;   // start health, for the fight scene's health bars
       this.tags = new Set(enemy.tags || []);
       this.armorSpell = 0; this.summonTurns = 0; this.summonDmg = 0; this.calmTurns = 0;
       this.slowed = 0; this.stagger = false; this.blocking = false; this.turn = 0; this.hidden = false;
