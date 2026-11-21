@@ -285,18 +285,24 @@ const WorldMap = (() => {
     g.setTransform(k, 0, 0, k, ox, oy);
     g.imageSmoothingEnabled = true; g.imageSmoothingQuality = "high";
     g.drawImage(base, 0, 0, W, H);
+    const s = dpr / k;                    // 1 screen px in map units: keeps icons and labels the same size at any zoom
+    const MA = typeof MAPART !== "undefined" ? MAPART : null;
+    const viewBox = [-ox / k, -oy / k, (canvas.width - ox) / k, (canvas.height - oy) / k];
+    const dark = MA ? MA.ambient(g, v, s, W, H, viewBox) : 0;   // water glints, cloud shadows, birds (under the fog)
     g.drawImage(fogFor([...v.explored, ...v.discovered.map((n) => WORLD.places[n])]), 0, 0, W, H);
     if (v.rulers?.length) { g.globalAlpha = 0.26; for (const r of v.rulers) g.drawImage(tintFor(r.hold, r.color), 0, 0, W, H); g.globalAlpha = 1; }   // holds ruled by a clan
-    const s = dpr / k;                    // 1 screen px in map units: keeps icons and labels the same size at any zoom
-    const [px, py] = P(v.player);
+    const [px, py] = P(v.player), bob = MA && v.moving && !v.reduceMotion ? Math.abs(Math.sin(v.t * 7)) * 2.2 * s : 0;
     if (v.trail?.length > 1) {
       g.strokeStyle = "rgba(170,40,28,.9)"; g.lineWidth = 3.2 * s; g.lineCap = "round"; g.lineJoin = "round";
       g.beginPath(); v.trail.forEach((p, i) => { const [x, y] = P(p); i ? g.lineTo(x, y) : g.moveTo(x, y); }); g.lineTo(px, py); g.stroke();
     }
     if (v.route?.length) {
-      g.setLineDash([7 * s, 7 * s]); g.lineDashOffset = v.reduceMotion ? 0 : -((v.t * 14 * s) % (14 * s));
-      g.strokeStyle = "rgba(255,240,205,.95)"; g.lineWidth = 2.6 * s;
-      g.beginPath(); g.moveTo(px, py); v.route.forEach((p) => g.lineTo(...P(p))); g.stroke(); g.setLineDash([]);
+      if (MA) MA.footprints(g, [[px, py], ...v.route.map(P)], s, v.reduceMotion ? 0 : v.t);
+      else {
+        g.setLineDash([7 * s, 7 * s]); g.lineDashOffset = v.reduceMotion ? 0 : -((v.t * 14 * s) % (14 * s));
+        g.strokeStyle = "rgba(255,240,205,.95)"; g.lineWidth = 2.6 * s;
+        g.beginPath(); g.moveTo(px, py); v.route.forEach((p) => g.lineTo(...P(p))); g.stroke(); g.setLineDash([]);
+      }
       const [bx, by] = P(v.route[v.route.length - 1]);
       g.strokeStyle = "#fff0cd"; g.lineWidth = 2.4 * s; g.beginPath(); g.arc(bx, by, 9 * s, 0, 7); g.stroke();
       if (v.dest && !v.discovered.includes(v.dest.name)) label(g, v.dest.roam ? "🧭 " + v.dest.name : v.dest.name + " ?", bx + 13 * s, by, s, 15, "#ffeac0", 700, false, "left");
@@ -311,7 +317,18 @@ const WorldMap = (() => {
     const shown = v.discovered.map((n) => [n, ...WORLD.places[n]]).sort((a, b) => (a[0] === v.selected ? -1 : b[0] === v.selected ? 1 : (RANK[a[3]] ?? 3) - (RANK[b[3]] ?? 3)));
     // zoomed out, the many small spots shrink so cities and towns stay easy to see
     const small = v.zoom < 1.5 && shown.length > 60 ? 0.72 : 1;
-    for (const [n, x, y, kind] of shown) icon(g, kind, x * W, y * H, s * (kind === "city" || kind === "town" || v.selected === n ? 1 : small), v.selected === n);
+    if (MA) {
+      MA.night(g, v, s, W, H, dark, shown);
+      const pulseSel = v.reduceMotion ? 0.5 : (Math.sin(v.t * 4) + 1) / 2;
+      for (const [n, x, y, kind] of shown) {
+        const f = kind === "city" || kind === "town" || v.selected === n ? 1 : small, m = MA.marker(n, kind), w = m.w * s * f, h = m.h * s * f;
+        if (v.selected === n) {
+          g.drawImage(MA.glowSprite("rgba(160,215,245,.9)"), x * W - 26 * s, y * H - 26 * s, 52 * s, 52 * s);
+          g.strokeStyle = `rgba(159,208,240,${0.6 + 0.4 * pulseSel})`; g.lineWidth = 2.6 * s; g.beginPath(); g.arc(x * W, y * H, (17 + 3 * pulseSel) * s, 0, 7); g.stroke();
+        }
+        g.drawImage(m.c, x * W - w / 2, y * H - h * 0.62, w, h);
+      }
+    } else for (const [n, x, y, kind] of shown) icon(g, kind, x * W, y * H, s * (kind === "city" || kind === "town" || v.selected === n ? 1 : small), v.selected === n);
     const boxes = [];
     for (const [n, x, y, kind] of shown) {
       if (!(v.zoom >= KIND_MIN_ZOOM[kind] || v.selected === n)) continue;
@@ -320,7 +337,7 @@ const WorldMap = (() => {
       const w = g.measureText(n).width, bx = x * W - w / 2 - 2 * s, by = y * H + 9 * s, bw = w + 4 * s, bh = size * s * 1.2;
       if (n !== v.selected && boxes.some(([X, Y, Wd, Hd]) => bx < X + Wd && bx + bw > X && by < Y + Hd && by + bh > Y)) continue;
       boxes.push([bx, by, bw, bh]);
-      label(g, n, x * W, y * H + 17 * s, s, size, "#fbf3dc", kind === "city" ? 700 : 600, italic);
+      label(g, n, x * W, y * H + (MA ? (kind === "city" ? 20 : 16) : 17) * s, s, size, "#fbf3dc", kind === "city" ? 700 : 600, italic);
     }
     // cleared dungeons: a small timer badge until they open again
     if (v.cleared) for (const [n, x, y, kind] of shown) {
@@ -347,7 +364,8 @@ const WorldMap = (() => {
     g.font = FONT(14 * s, 700, ""); { const w = g.measureText(v.name).width; boxes.push([px + 12 * s, py - 13 * s - 9 * s, w, 18 * s]); }
     for (const o of v.others) {
       const [x, y] = P(o.pos);
-      g.fillStyle = "#2f62a8"; g.strokeStyle = "#e6f0ff"; g.lineWidth = 2 * s; g.beginPath(); g.arc(x, y, 6.5 * s, 0, 7); g.fill(); g.stroke();
+      if (MA) MA.token(g, x, y, s, o.look || { r: o.race || "nord", id: o.name, eq: {}, gl: {} }, o.party ? "#8fe08a" : "#6f9fe8", 10);
+      else { g.fillStyle = "#2f62a8"; g.strokeStyle = "#e6f0ff"; g.lineWidth = 2 * s; g.beginPath(); g.arc(x, y, 6.5 * s, 0, 7); g.fill(); g.stroke(); }
     }
     for (const b of v.bags) {
       const [x, y] = P(b.pos), R = 9 * s;
@@ -388,6 +406,7 @@ const WorldMap = (() => {
     }
     if (v.quest) {   // the current quest's destination: a gold diamond
       const [qx, qy] = P(v.quest), r = 10 * s;
+      if (MA) { const qp = v.reduceMotion ? 0.5 : (Math.sin(v.t * 2.6) + 1) / 2, R = (34 + 14 * qp) * s; g.globalAlpha = 0.55 + 0.35 * qp; g.drawImage(MA.glowSprite("rgba(240,200,90,.95)"), qx - R / 2, qy - R / 2, R, R); g.globalAlpha = 1; }
       g.fillStyle = "rgba(226,187,100,.9)"; g.strokeStyle = "#2a1d08"; g.lineWidth = 2 * s;
       g.beginPath(); g.moveTo(qx, qy - r); g.lineTo(qx + r * 0.75, qy); g.lineTo(qx, qy + r); g.lineTo(qx - r * 0.75, qy); g.closePath(); g.fill(); g.stroke();
     }
@@ -408,8 +427,16 @@ const WorldMap = (() => {
       }
       g.restore();
     }
+    if (MA) { MA.trackDiscoveries(v.discovered); MA.drawBursts(g, s, W, H, v.reduceMotion); }
     const pulse = v.reduceMotion ? 0.5 : (Math.sin(v.t * 3) + 1) / 2;
     g.fillStyle = `rgba(110,200,255,${0.18 + 0.12 * pulse})`; g.beginPath(); g.arc(px, py, (15 + 6 * pulse) * s, 0, 7); g.fill();
+    if (MA) {
+      const lift = v.horse ? 15 * s : 0;
+      if (v.horse) g.drawImage(MA.horse(v.horse), px - 27 * s, py - 12 * s - bob * 0.5, 54 * s, 35 * s);   // the horse under you, then you in the saddle
+      MA.token(g, px + (v.horse ? 3 * s : 0), py - lift - bob, s, v.look, "#8fd3ff", v.horse ? 11 : 13);
+      label(g, v.name, px + 16 * s, py - 16 * s - lift, s, 14, "#d8f0ff", 700, false, "left");
+      return;
+    }
     if (v.horse) {   // riding: a horseshoe in your horse's coat colour around your marker
       g.lineCap = "round"; g.strokeStyle = "#0b2233"; g.lineWidth = 5.5 * s; g.beginPath(); g.arc(px, py, 11.5 * s, 0.72 * Math.PI, 2.28 * Math.PI); g.stroke();
       g.strokeStyle = v.horse; g.lineWidth = 3.2 * s; g.beginPath(); g.arc(px, py, 11.5 * s, 0.72 * Math.PI, 2.28 * Math.PI); g.stroke(); g.lineCap = "butt";
