@@ -425,8 +425,8 @@
     window.scrollTo(0, 0);
     tabsEl.innerHTML = TABS.map(([id, label, svg]) => `<button class="tab ${id === tab ? "on" : ""}" role="tab" aria-selected="${id === tab}" data-tab="${id}"><svg viewBox="0 0 24 24">${svg}</svg>${label}</button>`).join("");
     tabsEl.onclick = (e) => { const b = e.target.closest("[data-tab]"); if (!b) return; SOUND.fx("click"); if (b.dataset.tab === "pack") return openMenu("items"); closeMenu(); tab = b.dataset.tab; testResult = null; bump(); renderTabs(); renderPanel(true); $("#side").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" }); };
-    $("#zoomBtn").onclick = () => { zoom = zoom > 1.01 ? 1 : 2.4; follow = true; $("#zoomBtn").textContent = zoom > 1.01 ? "－" : "＋"; };
-    $("#centerBtn").onclick = () => { follow = true; if (zoom === 1) zoom = 2.4; $("#zoomBtn").textContent = "－"; };
+    $("#zoomBtn").onclick = () => { mapTouchedAt = performance.now(); zoom = zoom > 1.01 ? 1 : 2.4; follow = true; $("#zoomBtn").textContent = zoom > 1.01 ? "－" : "＋"; };
+    $("#centerBtn").onclick = () => { mapTouchedAt = performance.now(); follow = true; if (zoom === 1) zoom = 2.4; $("#zoomBtn").textContent = "－"; };
     bindMap();
     $("#sndBtn").onclick = openSound;
     $("#side").addEventListener("click", onPanelClick);
@@ -584,9 +584,15 @@
 
   // ------------------------------------------------------------ map
   let lastFrame = 0;
+  /* battery: draw the map only while it's on screen, at 30 fps while something moves and 8 fps when all is still */
+  let mapOnScreen = true, mapTouchedAt = 0, mapObserved = null;
   function frame(ts) {
     requestAnimationFrame(frame);
-    if (document.hidden || ts - lastFrame < 33 || !$("#map")) return;
+    const m = $("#map");
+    if (m && mapObserved !== m && window.IntersectionObserver) { mapObserved = m; new IntersectionObserver((es) => { mapOnScreen = es[0].isIntersecting; }).observe(m); }
+    const moving = S?.trip?.status === "travel" || performance.now() - mapTouchedAt < 1500;
+    const wx = WEVENTS.weather(livePos()).id, weatherAnim = !reduceMotion && !["clear", "cloudy", "fog"].includes(wx);
+    if (document.hidden || !m || !mapOnScreen || ts - lastFrame < (moving ? 33 : weatherAnim ? 66 : 125)) return;
     lastFrame = ts;
     const pos = livePos();
     if (follow) center = pos;
@@ -615,7 +621,7 @@
     };
     let press = null, pressed = false;
     c.addEventListener("pointerdown", (e) => {
-      pts.set(e.pointerId, [e.clientX, e.clientY]); c.setPointerCapture(e.pointerId);
+      pts.set(e.pointerId, [e.clientX, e.clientY]); c.setPointerCapture(e.pointerId); mapTouchedAt = performance.now();
       clearTimeout(press); pressed = false;
       if (pts.size === 1) press = setTimeout(() => {   // hold a finger still on the map: drop a pin there
         if (moved || pts.size !== 1 || !view.transform) return;
@@ -628,6 +634,7 @@
     });
     c.addEventListener("pointermove", (e) => {
       if (!pts.has(e.pointerId)) return;
+      mapTouchedAt = performance.now();
       pts.set(e.pointerId, [e.clientX, e.clientY]);
       const r = c.getBoundingClientRect();
       if (pinch && pts.size === 2) {
@@ -653,7 +660,7 @@
       renderPicked();
     };
     c.addEventListener("pointerup", up); c.addEventListener("pointercancel", up);
-    c.addEventListener("wheel", (e) => { e.preventDefault(); const r = c.getBoundingClientRect(); setZoom(zoom * (e.deltaY < 0 ? 1.15 : 1 / 1.15), e.clientX - r.left, e.clientY - r.top); }, { passive: false });
+    c.addEventListener("wheel", (e) => { e.preventDefault(); mapTouchedAt = performance.now(); const r = c.getBoundingClientRect(); setZoom(zoom * (e.deltaY < 0 ? 1.15 : 1 / 1.15), e.clientX - r.left, e.clientY - r.top); }, { passive: false });
   }
   function renderPicked() {
     const el = $("#picked");
@@ -1773,7 +1780,7 @@
         <button class="btn pri" data-act="brew" style="width:100%" ${alchSel.length >= 2 ? "" : "disabled"}>Brew</button>`
         : '<p class="sub">You have no ingredients. Gather them on the road, in dungeons, or buy them at the general store and court wizard.</p>';
     } else if (townShop === "forge") {
-      note = `Improve weapons and armor. Each step uses one piece of the item's material, like Skyrim: Iron or Steel Ingots, Leather, Firewood for wooden bows, Refined Moonstone for Elven and Dwarven Metal for Dwarven gear. Blacksmiths sell the common ones; the rest turn up in dungeons. Your Smithing (${G.skill(S, "Smithing")}) sets how far: every 20 points allows one more quality level.`;
+      note = `Each improvement uses one piece of the item's material (ingots, leather, firewood, moonstone or dwarven metal). Blacksmiths sell the common ones; dungeons hide the rest. Your Smithing (${G.skill(S, "Smithing")}) sets how far: every 20 points allows one more quality level.`;
       const rows = S.inv.filter((r) => TOWNS.temperInfo(S, r));
       body = rows.map((r) => { const i = TOWNS.temperInfo(S, r);
         return `<div class="item"><div class="t">${esc((r.tq ? TOWNS.QUALITY[r.tq] + " " : "") + D.ITEMS[r.item].name)}<span>${i.block ? esc(i.block) : `→ ${TOWNS.QUALITY[i.q + 1]} (+${i.per} ${D.ITEMS[r.item].slot === "weapon" ? "damage" : "armor"}) · uses 1 ${esc(D.ITEMS[i.ingot].name)} (you have ${i.have})`}</span></div><button class="btn sm" data-act="temper" data-id="${r.id}" ${i.block ? "disabled" : ""}>Improve</button></div>`; }).join("") || '<p class="sub">Nothing to improve.</p>';
@@ -1859,7 +1866,7 @@
       body = TOWNS.carriageDests(S).map(({ n, price }) => { const mins = G.pxDist(WORLD.places[l], WORLD.places[n]) * 1.15 / TOWNS.CARRIAGE_SPEED;
         return `<div class="item"><div class="t">${esc(n)}<span>about ${fmtMin(mins)}</span></div><span class="num gold">${price}</span><button class="btn sm pri" data-act="carriage" data-id="${esc(n)}" ${S.gold >= price && !wanted ? "" : "disabled"}>Ride</button></div>`; }).join("");
     } else if (townShop === "hire") {
-      note = "One follower at a time. They fight beside you, carry 100 weight for you, and heal between fights. If they take too much they go down and get back up after the fight, badly hurt; they never die. Hirelings cost 500 gold, like in Skyrim.";
+      note = "One follower at a time. They fight beside you, carry 100 for you and heal between fights. Badly hurt, they go down and get back up after the fight; they never die. Hirelings cost 500 gold.";
       body = (l === "Whiterun" ? `<div class="item"><div class="t">Farengar, court wizard<span>${S.thaneWhiterun ? "Thanks you again for the Dragonstone." : "Wants the Dragonstone from Bleak Falls Barrow. The Jarl rewards whoever brings it."}</span></div>${S.thaneWhiterun ? "" : `<button class="btn sm pri" data-act="dragonstone" ${S.inv.some((r) => r.item === "dragonstone") ? "" : "disabled"}>Give it</button>`}</div>` : "")
         + TOWNS.followersHere(S).map(([id, [name, , cost, hp, dmg, desc]]) => `<div class="item"><div class="t">${esc(name)}<span>${esc(desc)} · ${TOWNS.followerMax(S, id)} health · hits for ~${Math.round(dmg * (1 + 0.05 * (S.level - 1)))}</span></div><span class="num gold">${cost || "free"}</span><button class="btn sm pri" data-act="hire" data-id="${id}" ${S.follower || S.gold < cost || wanted || (id === "lydia" && !S.thaneWhiterun) ? "disabled" : ""}>${S.follower?.id === id ? "With you" : "Hire"}</button></div>`).join("");
     } else if (townShop === "streets") {
@@ -1900,7 +1907,7 @@
     const bounty = bnt.length ? `<div class="panel"><h2>Bounties</h2><div class="list">${bnt.map(([h, v]) => `<div class="item"><div class="t">${esc(h)}<span>${v} gold${(S.resisted || {})[h] ? " · resisted arrest" : ""}</span></div></div>`).join("")}</div><p class="sub" style="margin-top:6px">Pay it to a guard in that hold's towns, or to a bounty hunter on the road.</p></div>` : "";
     const word = shared ? `<div class="panel"><h2>Word on the road</h2>${news.length ? `<div class="log">${news.slice(0, 20).map((n) => `<div><time>${new Date(n.t * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time>${esc(n.text)}</div>`).join("")}</div>` : '<p class="sub">Quiet, for now.</p>'}</div>` : "";
     const worldHtml = Store.mode === "p2p" ? `<div class="panel"><h2>The world</h2>
-      <p class="sub">Everyone with the app plays in this one world, straight from phone to phone. Every phone keeps a copy of it, so it lives on as long as anyone plays. Only people online right now appear here. To bring a friend in, send them the app.</p>
+      <p class="sub">One world for everyone with the app, shared straight between phones. Only people online right now appear here. To bring a friend in, send them the app: github.com/R3MC10/Skyrim-Roads/releases</p>
       <div class="item"><div class="t">${Store.peers ? `${Store.peers} other ${Store.peers === 1 ? "player" : "players"} online` : "Looking for other players…"}<span>${Store.peers ? `${Store.direct} linked straight to you${Store.peers > Store.direct ? `, ${Store.peers - Store.direct} reached through other players` : ""}` : "It can take up to a minute to find each other"}</span></div></div></div>` : "";
     const incoming = trades.filter((d) => d.to === S.id && d.status === "open"), outgoing = trades.filter((d) => d.from === S.id && d.status === "open");
     const tradeHtml = incoming.length || outgoing.length ? `<div class="panel"><h2>Trades</h2><div class="list">
@@ -1912,8 +1919,13 @@
     const ladderHtml = shared ? `<div class="panel"><h2>Leaderboard</h2><div class="chips">${cats.map(([k, l]) => `<button class="chip ${k === ladderCat ? "on" : ""}" data-act="ladder" data-id="${k}">${l}</button>`).join("")}</div>
       <div class="list">${board.slice(0, 10).map((d, i) => `<div class="item ${d.id === S.id ? "on" : ""}"><span class="num" style="width:1.6em;color:var(--gold)">${i + 1}</span><div class="t">${esc(d.name)}${d.id === S.id ? " (you)" : ""}<span>Level ${d.level} ${esc(D.RACES[d.race]?.name || "")}</span></div><b class="num">${d[ladderCat] || 0}</b></div>`).join("")}</div>
       ${myRank > 10 ? `<p class="sub" style="margin-top:6px">You're number ${myRank}.</p>` : ""}</div>` : "";
-    return `${festPanel()}${questPanel()}${bountyPanel()}${chatPanel()}${clanPanel()}${worldHtml}${tradeHtml}${partyHtml}${travellers}${ladderHtml}${bounty}${word}
-      <div class="panel"><h2>Journal</h2><div class="log">${S.journal.map((j) => `<div><time>${new Date(j.t * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time>${esc(j.text)}</div>`).join("")}</div></div>`;
+    // a quick-jump menu: the Journal has grown long
+    const parts = [["event", "Event", festPanel()], ["quests", "Quests", questPanel()], ["bounty", "Bounty", bountyPanel()], ["chat", "Chat", chatPanel()], ["clan", "Clan", clanPanel()],
+      ["world", "World", worldHtml], ["trades", "Trades", tradeHtml], ["party", "Party", partyHtml], ["people", "Travellers", travellers], ["ladder", "Leaderboard", ladderHtml], ["crimes", "Bounties", bounty], ["news", "News", word]]
+      .filter(([, , h]) => h && h.trim()).map(([id, label, h]) => [id, label, h.replace(/<div class="panel"/, `<div id="j-${id}" class="panel"`)]);
+    const nav = `<nav class="jnav" aria-label="Journal sections">${[...parts.map(([id, label]) => [id, label]), ["log", "Diary"]].map(([id, label]) => `<button class="chip" data-act="jgo" data-id="${id}">${label}</button>`).join("")}</nav>`;
+    return `${nav}${parts.map(([, , h]) => h).join("")}
+      <div class="panel" id="j-log"><h2>Diary</h2><div class="log">${S.journal.map((j) => `<div><time>${new Date(j.t * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time>${esc(j.text)}</div>`).join("")}</div></div>`;
   }
 
   // ------------------------------------------------------------ panel events
@@ -2015,6 +2027,7 @@
       case "eat": packOpen = null; say(TOWNS.eat(S, +b.dataset.id)); break;
       case "hallrest": say(HALL.rest(S)); break;
       case "visit": openVisit(b.dataset.id); break;
+      case "jgo": { const el = $("#j-" + b.dataset.id); if (el) { const y = el.getBoundingClientRect().top + scrollY - 64; scrollTo({ top: y, behavior: reduceMotion ? "auto" : "smooth" }); } break; }
       case "festclaim": { const m = FEST.claim(S); if (!m) break; SOUND.fx("levelup"); say(m); publishCard(); break; }
       case "festgift": { const m = FEST.innGift(S); if (m) { SOUND.fx("coin"); say(m); } break; }
       case "clancol": clanDraft = { ...clanDraft, name: $("#clanname")?.value, tag: $("#clantag")?.value }; clanDraft.colors[+b.dataset.i] = b.dataset.id; renderPanel(true); break;
