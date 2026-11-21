@@ -1,4 +1,4 @@
-/* Android glue (Roads of the North): back button, saving when the app goes to the background, splash screen,
+/* Android glue for Roads of the North: back button, saving when the app goes to the background, splash screen,
    phone notifications (arrival, dragon attacks) while the app is closed, and the in-app updater. */
 (() => {
   const C = window.Capacitor;
