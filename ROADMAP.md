@@ -56,7 +56,18 @@ our own marked [OURS]; plain-language UI; phone first.
 - Round 3: homes (Breezehome, Honeyside, Vlindrel Hall, Hjerim, Proudspire Manor at Skyrim prices): death-proof chest, Well Rested bed (+10%; inns now Rested +5%), daily garden.
 
 ## Next rounds (in order)
-35. Solstheim: a new island map reached by boat from Windhelm.
-36. Mounted combat on horseback.
-37. Quest fights at high level: story foes (level 10) can be too hard for plain-gear level-40 heroes; scale them by quest stage.
-38. More visual rounds (animated title, spell-casting effects on the map, seasonal festivals in town scenes).
+Current list (in progress / next):
+35. Fight animations per weapon and spell, natural speed, particles (helper running).
+36. Clearer screens: less confusing menus (helper running).
+37. Arena fights use your tactics; heal-loop fix (helper running).
+38. Solstheim: a new island reached by boat from Windhelm (helper running).
+39. Mounted combat on horseback.
+40. Bigger multiplayer: co-op dungeons (enter with friends, share rooms and the boss chest).
+41. Player shops and guild halls (build, decorate, hire NPCs).
+42. More quests and story: Civil War and Daedric quests.
+
+"Better than Bethesda" ideas (after the current list):
+43. Real economy: prices driven by what all players buy and sell, shortages, trade routes, merchants restocked by caravans.
+44. Crafting that can't be exploited: balanced alchemy, enchanting and smithing loops, recipes found in the world, named crafted items.
+45. Fair levelling: no useless skills, no odd level scaling, clear progress, legendary skills.
+46. Exploration rewards: hand-placed secrets, unique loot per dungeon, puzzles, lore books, treasure maps.
