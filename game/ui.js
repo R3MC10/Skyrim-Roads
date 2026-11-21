@@ -73,7 +73,20 @@
     return Terrain.moveAlong(o.path, 0, o.path[0], Math.max(0, t - o.t0), (o.speed || 30) / 60).pos;
   }
   const tripMinutesLeft = () => Math.max(0, G.minutesLeft(S) - (S.trip?.status === "travel" ? (G.now() - S.trip.lastTick) / 60 : 0));
-  const known = (n) => S.discovered.includes(n) || ["city", "town"].includes(WORLD.places[n][2]);
+  // cities and the old towns are on every map; everything in WORLD.hidden has to be found first
+  const known = (n) => S.discovered.includes(n) || (["city", "town"].includes(WORLD.places[n][2]) && !WORLD.hidden?.has(n));
+  const placesFound = () => { const all = Object.keys(WORLD.places).length, got = new Set(S.discovered.filter((n) => WORLD.places[n])).size; return { got, all }; };
+  let discSeen = null;
+  function discoveryToast() {   // a popup for every place you find, however you found it
+    if (!S) return;
+    if (!discSeen) { discSeen = new Set(S.discovered); return; }
+    const fresh = S.discovered.filter((n) => !discSeen.has(n));
+    if (!fresh.length) return;
+    fresh.forEach((n) => discSeen.add(n));
+    if (fresh.length === 1 && fresh[0] === S.location && !S.trip) return;   // the "Arrived at …" popup already says it
+    const pf = placesFound();
+    toast(`📍 Discovered: ${fresh.slice(0, 2).join(", ")}${fresh.length > 2 ? ` and ${fresh.length - 2} more` : ""} · ${pf.got}/${pf.all} places`);
+  }
   const myBag = () => bags.find((b) => b.ownerId === S.id && b.expires > G.now());
   /* a player's bag is private to them and their killer for the first ten minutes */
   const bagOpenTo = (b, t = G.now()) => !b.killerId || b.ownerId === S.id || b.killerId === S.id || t > (b.t || 0) + 600;
@@ -495,7 +508,7 @@
   function tick() {
     if (!S) return;
     const t = G.now();
-    tickTimers(t); if (Math.floor(t) % 5 === 0) courierCheck();
+    tickTimers(t); discoveryToast(); if (Math.floor(t) % 5 === 0) courierCheck();
     if (S.trip?.status === "travel") {
       const out = G.advance(S, t, reachableBags());
       if (out.taken.length || out.bag || out.died || out.encounter || out.arrived) {
@@ -538,7 +551,8 @@
   }
   function openSound() {
     openModal(`<h2>Settings</h2>${settingsHTML()}
-      <div class="grid2" style="margin-top:14px">${window.__app ? `<button class="btn" data-act="toupdate">${update?.newer ? "⬆ Update ready" : "Check for updates"}</button>` : ""}<button class="btn" data-act="totitle" ${window.__app ? "" : 'style="grid-column:1/-1"'}>Main menu</button></div>
+      <button class="btn" data-act="guide" style="width:100%;margin-top:14px">📖 Guide for new players</button>
+      <div class="grid2" style="margin-top:8px">${window.__app ? `<button class="btn" data-act="toupdate">${update?.newer ? "⬆ Update ready" : "Check for updates"}</button>` : ""}<button class="btn" data-act="totitle" ${window.__app ? "" : 'style="grid-column:1/-1"'}>Main menu</button></div>
       <button class="btn pri" data-act="close" style="width:100%;margin-top:10px">Done</button>`);
     const m = $("#modal");
     m.addEventListener("input", onSettingsInput); m.addEventListener("change", onSettingsInput);
@@ -737,7 +751,7 @@
     if (!e) return;
     openModal(`<p class="sub danger-${e.danger}" style="margin:0">${e.danger === "high" ? "Deadly" : e.danger === "medium" ? "Dangerous" : "Minor"} encounter · ${esc(e.hold)}${G.isNight() ? " · night" : ""}</p>
       <h2 style="margin:4px 0 8px">${esc(e.name)}</h2><p>${esc(e.text)}</p>
-      ${note ? `<p class="sub">${esc(note)}</p>` : ""}
+      ${note ? `<p class="sub">${esc(note)}</p>` : ""}${(() => { const am = typeof AMMO !== "undefined" ? AMMO.status(S) : null; return am && !am.best ? ammoNote() : ""; })()}
       <div class="grid2" style="margin:10px 0"><div class="vital"><small><span>You</span><span class="num">${Math.round(G.curHealth(S))}/${G.maxHealth(S)}</span></small><div class="bar"><i style="width:${pct(G.curHealth(S), G.maxHealth(S))}%;background:var(--hp)"></i></div></div>
       <div class="vital"><small><span>${esc(e.name)}</span><span class="num">${e.hp}/${e.health}</span></small><div class="bar"><i style="width:${pct(e.hp, e.health)}%;background:var(--ember)"></i></div></div></div>
       <div class="grid2">
@@ -826,7 +840,7 @@
     const wt = Math.round(G.carried(S)), cap = Math.round(G.capacity(S));
     const head = `<div class="barter-head"><span>💰 <b class="gold num">${S.gold}</b> gold</span>${Number.isFinite(wt) && cap ? `<span>⚖ ${wt}/${cap}</span>` : ""}</div>
       <div class="seg"><button class="${shopMode === "buy" ? "on" : ""}" data-act="smode" data-id="buy">Buy</button><button class="${shopMode === "sell" ? "on" : ""}" data-act="smode" data-id="sell">Sell</button></div>`;
-    if (shopMode === "buy") return head + (D.SHOP_STOCK[shop] || []).map((i) => shopRow(i)).join("");
+    if (shopMode === "buy") return head + (typeof TOMES !== "undefined" ? TOMES.stockAt(S.location, shop) : D.SHOP_STOCK[shop] || []).map((i) => shopRow(i)).join("");
     const eq = new Set(Object.values(G.loadout(S).equipment || {}));
     const fence = shop === "fence" || (typeof TOWNS !== "undefined" && TOWNS.canFence(S));
     const rows = S.inv.filter((r) => !eq.has(r.id) && D.ITEMS[r.item] && !["golden_claw", "dragonstone"].includes(r.item) && (!r.stolen || fence))
@@ -947,7 +961,7 @@
   };
   const svgI = (k) => `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[k] || ICONS.misc}</svg>`;
   const ITEM_CATS = [["all", "All"], ["weapons", "Weapons"], ["apparel", "Apparel"], ["potions", "Potions"], ["scrolls", "Scrolls"], ["books", "Books"], ["ingredients", "Ingredients"], ["food", "Food"], ["misc", "Misc"]];
-  const catOf = (it) => it.slot === "food" ? "food" : it.slot === "weapon" ? "weapons" : G.ARMOR_SLOTS.includes(it.slot) ? "apparel" : ["potion", "poison"].includes(it.slot) ? "potions"
+  const catOf = (it) => it.slot === "food" ? "food" : it.slot === "weapon" || it.slot === "ammo" ? "weapons" : G.ARMOR_SLOTS.includes(it.slot) ? "apparel" : ["potion", "poison"].includes(it.slot) ? "potions"
     : it.slot === "scroll" ? "scrolls" : it.slot === "tome" ? "books" : it.slot === "ingredient" ? "ingredients" : "misc";
   const MAGIC_CATS = [["all", "All"], ["destruction", "Destruction"], ["restoration", "Restoration"], ["alteration", "Alteration"], ["conjuration", "Conjuration"], ["illusion", "Illusion"], ["powers", "Powers"], ["shouts", "Shouts"], ["effects", "Active effects"]];
   const SKILL_CATS = [["all", "All"], ["combat", "Warrior"], ["magic", "Mage"], ["stealth", "Thief"], ["other", "Other"]];
@@ -1185,13 +1199,16 @@
     town: "Each town has different things to do. Cities have the most. Shops close at night.",
     log: "Quests, the weekly bounty board, chat, your party, other travellers and the leaderboard.",
   };
+  const guideOffer = () => !S.guideOffered && S.level < 10 && (!S.tut || S.tut.off || S.tut.step === 0)
+    ? `<div class="tut"><div class="tut-h"><b>📖 New to the game?</b></div><p>The guide walks you through your first hour: trading, tactics, dungeons, smithing, friends and more.</p><div style="display:flex;gap:8px"><button class="btn sm pri" data-act="guide">Open the guide</button><button class="btn sm" data-act="guideno">Not now</button></div></div>` : "";
   function tutTip() {
-    const t = S.tut; if (!t || t.off) return "";
+    const t = S.tut; if (!t || t.off) return guideOffer();
     if (t.step > 0 && t.step < TUT.length) {
       while (t.step < TUT.length && TUT[t.step].done()) t.step++;
       if (t.step >= TUT.length) { t.step = 0; S.gold += 100; Store.save(S); setTimeout(() => { SOUND.fx("quest"); toast("Tutorial done. Riverwood's steward sends you 100 gold for the road."); }, 300); }
       else { const st = TUT[t.step]; return `<div class="tut"><div class="tut-h"><b>${esc(st.title)}</b><span class="sub">${t.step} of ${TUT.length - 1}</span></div><p>${st.text()}</p><button class="linkbtn" data-act="tutskip">Skip the tutorial</button></div>`; }
     }
+    if (guideOffer()) return guideOffer();
     if (TAB_TIPS[tab] && !t.seen?.[tab]) return `<div class="tut"><p>💡 ${TAB_TIPS[tab]}</p><button class="btn sm" data-act="tutseen">Got it</button></div>`;
     return "";
   }
@@ -1885,7 +1902,8 @@
       <div class="item"><div class="t">${S.stone ? esc(POWERS.STONES[S.stone][0]) : "No standing stone"}${S.stone && POWERS.stoneHasPower(S) ? ` <span class="num">${cd(S.stonePowerAt)}</span>` : ""}<span>${S.stone ? esc(POWERS.STONES[S.stone][1]) : "Visit one of the 13 standing stones (Guardian Stones are near Riverwood) to take its blessing."}</span></div></div>
       ${shoutRows || `<p class="sub">No Words of Power yet. Word Walls wait at the end of Nordic barrows (Bleak Falls Barrow has one), and the Greybeards at High Hrothgar teach Unrelenting Force.</p>`}</div>
       <p class="sub" style="margin-top:8px">Dragon souls: <b>${S.souls || 0}</b>${S.dragons ? ` · dragons slain: ${S.dragons}` : ""}. Kill a dragon to absorb its soul; each soul unlocks one word.${!POWERS.voiceReady(S) ? ` Your voice recovers in ${Math.ceil(S.voiceAt - tnow)} s.` : ""}</p></div>`;
-    return `${lvl}${effects}${powersHtml}<div class="panel"><h2>${esc(S.name)}</h2>${(S.titles || []).length ? `<p class="sub" style="text-align:center;color:var(--gold)">${S.titles.map(esc).join(" · ")}</p>` : ""}<p class="sub">Level ${S.level} ${esc(D.RACES[S.race].name)} · ${esc(D.RACES[S.race].desc)}</p>
+    const amN = typeof AMMO !== "undefined" ? AMMO.status(S) : null;
+    return `${lvl}${amN && !amN.best ? `<div class="panel" style="border-color:var(--ember)">${ammoNote()}</div>` : ""}${effects}${powersHtml}<div class="panel"><h2>${esc(S.name)}</h2>${amN?.best ? ammoNote() : ""}${(S.titles || []).length ? `<p class="sub" style="text-align:center;color:var(--gold)">${S.titles.map(esc).join(" · ")}</p>` : ""}<p class="sub">Level ${S.level} ${esc(D.RACES[S.race].name)} · ${esc(D.RACES[S.race].desc)}</p><p class="sub">📍 Places discovered: <b>${placesFound().got}</b> of ${placesFound().all}</p>
       <div class="bar" style="margin-top:8px"><i style="width:${pct(S.charXp, need)}%;background:var(--gold)"></i></div><p class="sub num">${Math.round(S.charXp)}/${need} toward level ${S.level + 1}</p>
       <div class="grid2" style="grid-template-columns:repeat(3,minmax(0,1fr));margin-top:8px">
         <div class="slot">Health<b class="num" style="display:block">${G.maxHealth(S)}</b></div><div class="slot">Magicka<b class="num" style="display:block">${G.maxMagicka(S)}</b></div><div class="slot">Stamina<b class="num" style="display:block">${G.maxStamina(S)}</b></div></div>
@@ -1902,7 +1920,7 @@
     const groups = {};
     for (const r of S.inv) {
       const it = D.ITEMS[r.item]; if (!it) continue;
-      const g = { weapon: "Weapons", potion: "Potions", poison: "Poisons", scroll: "Scrolls", tome: "Spell tomes", soulgem: "Soul gems", ingredient: "Ingredients", trophy: "Trophies", material: "Crafting materials" }[it.slot] || "Armor";
+      const g = { weapon: "Weapons", potion: "Potions", poison: "Poisons", scroll: "Scrolls", tome: "Spell tomes", ammo: "Arrows & bolts", soulgem: "Soul gems", ingredient: "Ingredients", trophy: "Trophies", material: "Crafting materials" }[it.slot] || "Armor";
       (groups[g] = groups[g] || []).push(r);
     }
     const canShop = S.location && G.shopTypes(S.location).length && G.shopsOpen();
@@ -1923,7 +1941,7 @@
       return `<div class="item ${on ? "on" : ""}" data-act="packrow" data-id="${r.id}" style="flex-wrap:wrap"><div class="t">${esc(qual + it.name)}${r.qty > 1 ? ` ×${r.qty}` : ""}${on ? " ✓" : ""}${r.stolen ? ' <span class="danger-high">stolen</span>' : ""}<span>${esc(ingFx || G.itemStats(r.item))}${r.temper ? ` · +${r.temper} improved` : ""}${charge} · ${+(it.weight * r.qty).toFixed(2)} wt</span></div>
         ${open ? `<div style="display:flex;gap:6px;flex-wrap:wrap;width:100%">${acts.join("") || '<span class="sub">Nothing to do with this here.</span>'}</div>` : ""}</div>`;
     };
-    return `<div class="panel"><h2>Equipped · ${esc(S.loadout)}</h2><div class="slotgrid">${G.SLOTS.map((sl) => `<div class="slot"><span>${slotNames[sl]}</span>${eq[sl] ? esc(D.ITEMS[eq[sl].item].name) : "—"}</div>`).join("")}</div>
+    return `<div class="panel"><h2>Equipped · ${esc(S.loadout)}</h2><div class="slotgrid">${G.SLOTS.map((sl) => `<div class="slot"><span>${slotNames[sl]}</span>${eq[sl] ? esc(D.ITEMS[eq[sl].item].name) : "—"}</div>`).join("")}</div>${ammoNote()}
       <p class="sub" style="margin-top:8px">Carrying <span class="num">${G.carried(S).toFixed(1)}/${G.capacity(S)}</span>${G.overweight(S) ? " — too heavy to run" : ""} · ${S.gold} gold${enchanted.length ? ` · ${enchanted.length} enchanted` : ""}</p></div>
       <div class="panel"><h2>Pack</h2><p class="sub">Tap an item for options.${canShop ? " You're in town: you can sell here." : ""}</p>
       ${Object.entries(groups).map(([g, rows]) => `<h3 style="margin-top:12px">${g}</h3><div class="list">${rows.map(row).join("")}</div>`).join("") || '<p class="sub">Empty.</p>'}</div>`;
@@ -1955,6 +1973,34 @@
     const ks = Object.keys(n).sort((a, b) => a - b);
     return ks.length ? "Rules used: " + ks.map((k) => `#${k} ×${n[k]}`).join(", ") + "." : "No rule fired: you just attacked.";
   }
+  // ------------------------------------------------------------ the newbie guide
+  function guideHTML() {
+    const pr = GUIDE.progress(S);
+    return `<h2>📖 Guide</h2><p class="sub">Your first hour in Skyrim, step by step. Steps tick off by themselves. ${pr.done} of ${pr.total} done.</p>
+      <div class="bar" style="margin:6px 0 10px"><i style="width:${Math.round(pr.done / pr.total * 100)}%;background:var(--gold)"></i></div>
+      <div class="list guide">${GUIDE.STEPS.map(([id, title, text, done], i) => { const d = done(S); return `<div class="item gstep ${d ? "done" : ""}" style="flex-wrap:wrap"><div class="t"><b>${d ? "✓" : i + 1}.</b> ${esc(title)}<span>${esc(text)}</span></div>${d ? "" : `<button class="btn sm pri" data-act="guidego" data-id="${id}">Show me</button>`}</div>`; }).join("")}</div>
+      <h3 style="margin-top:14px">Questions</h3>${GUIDE.FAQ.map(([q, a]) => `<details class="faq"><summary>${esc(q)}</summary><p class="sub">${esc(a)}</p></details>`).join("")}
+      <button class="btn pri" data-act="close" style="width:100%;margin-top:12px">Close</button>`;
+  }
+  function openGuide() { S.guideOffered = true; openModal(guideHTML()); }
+  function guideGo(id) {
+    const st = GUIDE.STEPS.find((x) => x[0] === id); if (!st) return;
+    const to = st[4]; closeModal(); closeMenu?.();
+    tab = to.tab;
+    if (to.shop) { if (S.location && G.shopTypes) townShop = to.shop; }
+    if (to.tab === "social") socTab = "friends";
+    renderTabs(); renderPanel(true);
+    $("#side").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+    toast(`📖 ${st[1]}: ${st[2]}`);
+  }
+  function guideCard() {
+    const pr = GUIDE.progress(S); if (pr.done >= pr.total) return "";
+    return `<div class="panel"><h2>📖 Guide</h2><p class="sub">New here? ${pr.done} of ${pr.total} first steps done.</p><button class="btn pri" data-act="guide" style="width:100%">Open the guide</button></div>`;
+  }
+  function ammoNote() {   // what your bow or crossbow shoots, and a warning when you're out
+    const a = typeof AMMO !== "undefined" ? AMMO.status(S) : null; if (!a) return "";
+    return `<p class="sub ammo ${a.best ? "" : "warn"}">🏹 ${esc(a.text)}</p>`;
+  }
   function panelTactics() {
     const L = G.loadout(S), rules = L.rules;
     const condOpts = Object.entries(D.CONDITIONS).map(([id, [label, p]]) => `<option value="${id}" ${tacticsDraft.if === id ? "selected" : ""}>${esc(label)}${p === "turn" ? " …" : p ? " …%" : ""}</option>`).join("");
@@ -1969,7 +2015,7 @@
     const cards = rules.map((r, i) => { const d = G.describeRule(r), w = dead[i] || ruleWarn(r);
       return `<div class="rcard ${r.off ? "off" : ""} ${dead[i] ? "dead" : ""} ${tacticsDraft.edit === i ? "editing" : ""}"><div class="rhead"><span class="n">${i + 1}</span><div class="rtxt"><div><small>IF</small> <b>${esc(d.cond)}</b></div><div><small>THEN</small> <b>${esc(d.act)}</b></div>${r.off ? '<div class="rw">Switched off</div>' : w ? `<div class="rw">⚠ ${esc(w)}</div>` : ""}</div></div>
         <div class="racts"><button class="iconbtn" data-act="rup" data-i="${i}" aria-label="Move up" ${i ? "" : "disabled"}>↑</button><button class="iconbtn" data-act="rdown" data-i="${i}" aria-label="Move down" ${i < rules.length - 1 ? "" : "disabled"}>↓</button><button class="iconbtn" data-act="roff" data-i="${i}" aria-label="${r.off ? "Switch on" : "Switch off"}">${r.off ? "▶" : "⏸"}</button><button class="iconbtn" data-act="redit" data-i="${i}" aria-label="Edit">✎</button><button class="iconbtn" data-act="rdel" data-i="${i}" aria-label="Remove">✕</button></div></div>`; }).join("");
-    return `<div class="panel"><h2>Tactics · ${esc(S.loadout)}</h2><p class="sub">Every turn, the <b>first</b> rule that is true <b>and</b> possible (enough magicka, stamina, potions…) fires. If none does, you attack. Power attacks cost ${F.powerAttackCost(G.equipment(S).weapon ? D.ITEMS[G.equipment(S).weapon.item].weight : 0)} stamina now.</p>
+    return `<div class="panel"><h2>Tactics · ${esc(S.loadout)}</h2><p class="sub">Every turn, the <b>first</b> rule that is true <b>and</b> possible (enough magicka, stamina, potions…) fires. If none does, you attack. Power attacks cost ${F.powerAttackCost(G.equipment(S).weapon ? D.ITEMS[G.equipment(S).weapon.item].weight : 0)} stamina now.</p>${ammoNote()}
       <div class="rlist">${cards || '<p class="sub">No rules: you will just attack.</p>'}</div>
       <div class="card redit" id="tedit"><h3>${editing ? `Change rule ${tacticsDraft.edit + 1}` : "Add a rule"}</h3>
       <label class="sub">If</label><select id="tc" aria-label="Condition">${condOpts}</select>
@@ -2016,7 +2062,7 @@
     const names = { general: "General goods", blacksmith: "Blacksmith", wizard: "Court wizard", stables: "Stables", fence: "Ragged Flagon (fence)", inn: TOWNS.INNS[l] || "Inn", train: "Trainers", alchemy: "Alchemy lab", forge: "Forge", jobs: "Jobs", streets: "Streets", hire: l === "Whiterun" ? "Dragonsreach & hirelings" : "Hirelings", hall: "⚑ Hall of the North", notice: "📜 Jarl's bounty", homes: "🏘 Neighbours", market: "🛒 Market stalls", mine: "⛏ Mine", cook: "🍲 Cooking pot", arena: "⚔ The Arena", fish: "🎣 Fishing", carriage: "Carriage", enchanter: "Arcane enchanter", home: TOWNS.home(S, l) ? `🏠 ${TOWNS.HOMES[l]?.[0]}` : `Buy ${TOWNS.HOMES[l]?.[0]}` };
     const fac = F.priceFactor(G.skill(S, "Mercantile"));
     let body = "", note = "";
-    const shopRow = (i, sell = true) => { const p = G.buyPrice(S, i); return `<div class="item"><div class="t">${esc(D.ITEMS[i].name)}<span>${esc(G.itemStats(i))} · ${D.ITEMS[i].weight} wt</span></div><span class="num gold">${p}</span><button class="btn sm" data-act="buy" data-item="${esc(i)}" ${open && !wanted && S.gold >= p ? "" : "disabled"}>Buy</button></div>`; };
+    const shopRow = (i, sell = true) => { const p = G.buyPrice(S, i), it = D.ITEMS[i], tome = it.slot === "tome" && typeof TOMES !== "undefined" ? ` · ${TOMES.level(it.spell)}${S.spells.includes(it.spell) ? " · you know it" : ""}` : ""; return `<div class="item"><div class="t">${esc(it.name)}<span>${esc(G.itemStats(i))}${tome} · ${it.weight} wt</span></div><span class="num gold">${p}</span><button class="btn sm" data-act="buy" data-item="${esc(i)}" ${open && !wanted && S.gold >= p ? "" : "disabled"}>Buy</button>${it.slot === "ammo" ? `<button class="btn sm" data-act="buyn" data-item="${esc(i)}" data-n="20" ${open && !wanted && S.gold >= p * 20 ? "" : "disabled"}>×20</button>` : ""}</div>`; };
     if (townShop === "stables") body = stablesHTML(open, wanted);
     else if (["general", "blacksmith", "wizard", "fence"].includes(townShop)) {
       note = `${open ? "Shops are open." : `Shops are closed for the night. They open at 08:00 (${esc(G.clockText())}).`} At Mercantile ${G.skill(S, "Mercantile")} you buy at about ${(fac / G.haggle(S)).toFixed(2)}× value.${townShop === "fence" ? " The fence buys stolen goods." : ""}`;
@@ -2049,7 +2095,7 @@
         body = ftabs + `<div class="chips" style="margin-bottom:6px;flex-wrap:wrap">${SMITH.GROUPS.map(([k, l2]) => `<button class="chip ${g === k ? "on" : ""}" data-act="fgroup" data-id="${k}">${l2}</button>`).join("")}</div>`
           + (SMITH.PERK_FOR[g] && !G.P(S, SMITH.PERK_FOR[g]) ? `<p class="sub">🔒 Needs the ${esc(PERKS.BY_ID[SMITH.PERK_FOR[g]].name)} perk (Hero tab → Perks → Smithing).</p>` : "")
           + ids.map((id) => { const i = SMITH.info(S, id), it = D.ITEMS[id];
-            return `<div class="item"><div class="t">${esc(it.name)}<span>${esc(G.itemStats(id))}${it.slot === "valuable" ? ` · worth ${it.value}` : ""}</span><span>${i.mats.map(([m, n], k) => `<b class="${i.have[k] >= n ? "" : "miss"}">${n} ${esc(D.ITEMS[m].name)}</b> (${i.have[k]})`).join(" · ")}</span></div><button class="btn sm ${i.block ? "" : "pri"}" data-act="smake" data-id="${esc(id)}" ${i.block ? "disabled" : ""}>Make</button></div>`; }).join("");
+            return `<div class="item"><div class="t">${esc(it.name)}${i.out > 1 ? ` ×${i.out}` : ""}<span>${esc(G.itemStats(id))}${it.slot === "valuable" ? ` · worth ${it.value}` : ""}</span><span>${i.mats.map(([m, n], k) => `<b class="${i.have[k] >= n ? "" : "miss"}">${n} ${esc(D.ITEMS[m].name)}</b> (${i.have[k]})`).join(" · ")}</span></div><button class="btn sm ${i.block ? "" : "pri"}" data-act="smake" data-id="${esc(id)}" ${i.block ? "disabled" : ""}>Make</button></div>`; }).join("");
       } else if (forgeTab === "refine") {
         note = "Smelt ore into ingots and tan pelts into leather. Ores come from mines; pelts from wolves, bears and sabre cats.";
         body = ftabs + SMITH.REFINE.map((r, k) => { const i = SMITH.refineInfo(S, k);
@@ -2203,7 +2249,7 @@
       <div class="list">${board.slice(0, 10).map((d, i) => `<div class="item ${d.id === S.id ? "on" : ""}"><span class="num" style="width:1.6em;color:var(--gold)">${i + 1}</span><div class="t">${esc(d.name)}${d.id === S.id ? " (you)" : ""}<span>Level ${d.level} ${esc(D.RACES[d.race]?.name || "")}</span></div><b class="num">${d[ladderCat] || 0}</b></div>`).join("")}</div>
       ${myRank > 10 ? `<p class="sub" style="margin-top:6px">You're number ${myRank}.</p>` : ""}</div>` : "";
     // a quick-jump menu: the Journal has grown long
-    const parts = [["event", "Event", festPanel()], ["quests", "Quests", questPanel()], ["bounty", "Bounty", bountyPanel()], ["chat", "Chat", chatPanel()], ["holds", "Holds", holdsPanel()], ["clan", "Clan", clanPanel()],
+    const parts = [["guide", "📖 Guide", guideCard()], ["event", "Event", festPanel()], ["quests", "Quests", questPanel()], ["bounty", "Bounty", bountyPanel()], ["chat", "Chat", chatPanel()], ["holds", "Holds", holdsPanel()], ["clan", "Clan", clanPanel()],
       ["world", "World", worldHtml], ["trades", "Trades", tradeHtml], ["party", "Party", partyHtml], ["people", "Travellers", travellers], ["ladder", "Leaderboard", ladderHtml], ["crimes", "Bounties", bounty], ["cleared", "Cleared", clearedPanel()], ["news", "News", word]]
       .filter(([, , h]) => h && h.trim()).map(([id, label, h]) => [id, label, h.replace(/<div class="panel"/, `<div id="j-${id}" class="panel"`)]);
     const nav = `<nav class="jnav" aria-label="Journal sections">${[...parts.map(([id, label]) => [id, label]), ["log", "Diary"]].map(([id, label]) => `<button class="chip" data-act="jgo" data-id="${id}">${label}</button>`).join("")}</nav>`;
@@ -2303,10 +2349,11 @@
       case "read": say(G.readTome(S, +b.dataset.id)); break;
       case "drink": say(G.drinkPotion(S)); break;
       case "recharge": say(G.recharge(S, +b.dataset.id, +b.dataset.gem)); break;
-      case "sell": packOpen = null; say(G.sell(S, +b.dataset.id, 1)); break;
-      case "sellall": { const r = G.invRow(S, +b.dataset.id); if (r) say(G.sell(S, r.id, r.qty)); break; }
+      case "sell": { packOpen = null; const m = G.sell(S, +b.dataset.id, 1); if (/^Sold/.test(m)) GUIDE.mark(S, "trade"); say(m); break; }
+      case "sellall": { const r = G.invRow(S, +b.dataset.id); if (r) { const m = G.sell(S, r.id, r.qty); if (/^Sold/.test(m)) GUIDE.mark(S, "trade"); say(m); } break; }
       case "smode": shopMode = b.dataset.id; renderPanel(true); break;
-      case "buy": say(G.buy(S, b.dataset.item, 1)); break;
+      case "buy": { const m = G.buy(S, b.dataset.item, 1); if (/^Bought/.test(m)) GUIDE.mark(S, "trade"); say(m); break; }
+      case "buyn": { const m = G.buy(S, b.dataset.item, +b.dataset.n || 1); if (/^Bought/.test(m)) GUIDE.mark(S, "trade"); say(m); break; }
       case "shop": townShop = b.dataset.id; renderPanel(true); break;
       case "pskill": perkSkill = b.dataset.id; renderPanel(true); break;
       case "perk": say(PERKS.take(S, b.dataset.id)); publishCard(); break;
@@ -2334,6 +2381,9 @@
       case "clanjoin": { const r = CLANS.join(S, CLANS.byId(b.dataset.id)); if (r.err) return toast(r.err); persist(true); say(r.text); break; }
       case "clanleave": { const c = myClan(); if (c && c.founder === S.id) { Store.remove("clans", S.id); postNews(`🏴 The banner of ${c.name} was lowered.`); } say(CLANS.leave(S)); persist(true); break; }
       case "achmore": achOpen = !achOpen; renderPanel(true); break;
+      case "guide": openGuide(); persist(); break;
+      case "guideno": S.guideOffered = true; persist(); renderPanel(true); toast("You can open the guide any time from ⚙ or the Journal."); break;
+      case "guidego": guideGo(b.dataset.id); break;
       case "tutskip": S.tut = { ...S.tut, step: 0, off: true }; persist(); renderPanel(true); toast("Tutorial skipped. You can replay it from How to Play in the main menu."); break;
       case "tutseen": S.tut.seen = { ...(S.tut.seen || {}), [tab]: true }; persist(); renderPanel(true); break;
       case "pinicon": pinDraft.icon = b.dataset.id; { const v = $("#pinlabel")?.value || ""; openPinDialog(pinDraft.x, pinDraft.y); $("#pinlabel").value = v; } break;
@@ -2346,10 +2396,10 @@
       case "duelyes": answerDuel(b.dataset.id, true); break;
       case "duelno": answerDuel(b.dataset.id, false); break;
       case "duelcancel": Store.change("duels", b.dataset.id, (d) => (d.status === "open" ? { ...d, status: "cancelled" } : d)); break;
-      case "fishgo": openFishing(); break;
+      case "fishgo": GUIDE.mark(S, "fish"); openFishing(); break;
       case "fishreel": reelIn(); break;
       case "fishstop": cancelAnimationFrame(fishRaf); fishState = null; closeModal(); renderPanel(true); break;
-      case "cook": say(COOK.cook(S, b.dataset.id)); SOUND.fx("potion"); break;
+      case "cook": GUIDE.mark(S, "cook"); say(COOK.cook(S, b.dataset.id)); SOUND.fx("potion"); break;
       case "camp": say(COOK.makeCamp(S)); break;
       case "eatfood": say(COOK.eatFood(S, +b.dataset.id)); if ($("#sky")) renderMenu(); break;
       case "giftgold": sendGift("gold", +b.dataset.id); break;
@@ -2391,7 +2441,7 @@
       case "train": say(TOWNS.train(S, b.dataset.id)); publishCard(); break;
       case "alch": { const id = +b.dataset.id; alchSel = alchSel.includes(id) ? alchSel.filter((x) => x !== id) : [...alchSel, id].slice(-3); renderPanel(true); break; }
       case "brew": { const before = S.inv.filter((x) => String(x.item).startsWith("brew|")).reduce((a, x) => a + x.qty, 0); const r = TOWNS.brew(S, alchSel); const made = S.inv.filter((x) => String(x.item).startsWith("brew|")).reduce((a, x) => a + x.qty, 0) - before; if (made > 0) tally("potions", made); alchSel = []; persist(); renderPanel(true); showMessage("Alchemy", r.text + ((r.skills || []).length ? " 📈 " + r.skills.join(" · ") : "")); break; }
-      case "temper": say(TOWNS.temper(S, +b.dataset.id)); publishCard(); break;
+      case "temper": GUIDE.mark(S, "smith"); say(TOWNS.temper(S, +b.dataset.id)); publishCard(); break;
       case "soctab": socTab = b.dataset.id; socWith = null; renderPanel(true); break;
       case "fadd": case "faddrec": { const c = cardOf(b.dataset.id) || (() => { const d = friendDocs.find((x) => x.id === b.dataset.id); return d ? { id: d.id, name: d.name } : null; })(); if (!c) return toast("They're not around."); const m = SOCIAL.add(S, c); persist(true); publishFriends(); toast(m); renderPanel(true); renderTabs(); break; }
       case "fdelask": fRemoveAsk = b.dataset.id; renderPanel(true); break;
@@ -2403,7 +2453,7 @@
       case "mine": { const m = SMITH.mine(S); if (m.startsWith("⛏")) { SOUND.fx("clang"); persist(true); } say(m); renderPanel(true); break; }
       case "ftab": forgeTab = b.dataset.id; renderPanel(true); break;
       case "fgroup": forgeGroup = b.dataset.id; renderPanel(true); break;
-      case "smake": { const m = SMITH.make(S, b.dataset.id); if (/^You make/.test(m)) { SOUND.fx("clang"); tally("crafted"); persist(true); publishCard(); } say(m); break; }
+      case "smake": { const m = SMITH.make(S, b.dataset.id); if (/^You make/.test(m)) { GUIDE.mark(S, "smith"); SOUND.fx("clang"); tally("crafted"); persist(true); publishCard(); } say(m); break; }
       case "srefine": case "srefineall": { const m = SMITH.refine(S, +b.dataset.id, a === "srefineall"); if (/^You (smelt|tan)/.test(m)) persist(true); say(m); break; }
       case "takejob": say(TOWNS.takeJob(S, b.dataset.id)); break;
       case "dropjob": say(TOWNS.dropJob(S, b.dataset.id)); break;
@@ -2425,7 +2475,7 @@
       case "roff": { const r = L.rules[+b.dataset.i]; if (!r) break; if (r.off) delete r.off; else r.off = true; persist(); renderPanel(true); break; }
       case "redit": { const r = L.rules[+b.dataset.i]; if (!r) break; Object.assign(tacticsDraft, { if: r.if, do: r.do, pct: r.pct ?? 50, edit: +b.dataset.i }); renderPanel(true); $("#tedit")?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "center" }); break; }
       case "rcancel": tacticsDraft.edit = null; renderPanel(true); break;
-      case "rsave": case "radd": {
+      case "rsave": case "radd": { GUIDE.mark(S, "tactics");
         const r = { if: tacticsDraft.if, do: tacticsDraft.do }; if (D.CONDITIONS[r.if]?.[1]) r.pct = tacticsDraft.pct;
         if (a === "rsave" && L.rules[tacticsDraft.edit]) { const old = L.rules[tacticsDraft.edit]; if (old.off) r.off = true; L.rules[tacticsDraft.edit] = r; tacticsDraft.edit = null; toast("Rule saved."); }
         else if (!G.addRule(L.rules, r)) return toast(`Max ${D.MAX_RULES} rules.`);

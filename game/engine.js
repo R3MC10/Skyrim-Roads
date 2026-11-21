@@ -3,13 +3,15 @@
 const G = (() => {
   const MAP_W = 1000, MAP_H = 700;
   const BASE_WALK = 17.2;          // px per real minute walking; running at Athletics 15 → Whiterun–Windhelm ≈ 10 min
+  /* how close you must pass to spot a place: cities from far off, small spots only up close ([OURS]) */
+  const discoverRadius = (kind) => ({ city: 90, town: 65, dungeon: 50, fort: 50, lair: 50, camp: 50 })[kind] || 40;
   const ENCOUNTER_PER_MIN = 0.16, DISCOVER_PX = 55, BAG_PICKUP_PX = 30, BAG_MINUTES = 30, TRAIL_STEP_PX = 25;
   const STEP_SECONDS = 30;          // travel is simulated in 30-second steps (also while the page is closed)
   const GAME_SPEED = 12, GAME_EPOCH = 1795132800, NIGHT_START = 20, NIGHT_END = 6, SHOP_OPEN = 8, SHOP_CLOSE = 20;
   const SLOTS = ["weapon", "shield", "head", "chest", "hands", "feet"];
   const ARMOR_SLOTS = ["head", "chest", "hands", "feet", "shield"];
   const ARMOR_SKILL = { light: "Light Armor", medium: "Medium Armor", heavy: "Heavy Armor" };
-  const STACKABLE = new Set(["potion", "scroll", "soulgem", "tome", "ingredient", "trophy", "poison", "material", "food", "valuable"]);
+  const STACKABLE = new Set(["potion", "scroll", "soulgem", "tome", "ingredient", "trophy", "poison", "material", "food", "valuable", "ammo"]);
   const P = (s, id) => (typeof PERKS !== "undefined" ? PERKS.rank(s, id) : 0);
   // spell tiers for the "Novice ... Expert <school>" perks [Skyrim]
   const SPELL_TIER = { flames: "novice", frostbite: "novice", sparks: "novice", healing: "novice", oakflesh: "novice", conjure_familiar: "novice", fury: "novice",
@@ -86,6 +88,7 @@ const G = (() => {
       note(s, "The world map was redrawn. You find yourself in " + at + ".");
     }
     s.discovered = s.discovered.filter((n) => PLACES[n]);
+    if (typeof AMMO !== "undefined") { const m = AMMO.migrate(s); if (m) note(s, m); }
     if (fixTactics(s)) note(s, "⚔ Your tactics were fixed: rules you added under \"Always → Attack\" never fired. They now come first.");
     return s;
   }
@@ -222,6 +225,8 @@ const G = (() => {
     if (it.slot === "trophy") return "Trophy";
     if (it.slot === "material") return "Crafting material";
     if (it.slot === "valuable") return "Valuable · sells well";
+    if (it.slot === "ammo") return `${it.damage} damage · ${it.ammo === "bolt" ? "crossbow bolt" : "arrow"}`;
+    if (it.shoots === "bolt") return `${it.damage} dmg · Archery · shoots bolts`;
     return "";
   }
 
@@ -334,7 +339,22 @@ const G = (() => {
       if (!this.weapon) { const [a, b] = F.unarmedRange(skill(s, "Hand-to-Hand"), s.race); return rnd(a, b) + 4 * P(s, "iron_fists"); }
       const sk = this.weapon.skill;
       const perk = { "One-Handed": 0.2 * P(s, "armsman"), "Two-Handed": 0.2 * P(s, "barbarian"), "Archery": 0.2 * P(s, "overdraw"), "Spear": 0.15 * P(s, "long_reach") }[sk] || 0;
-      return F.weaponDamage(this.weapon.damage + this.temper, skill(s, sk), sk === "Archery") * (1 + perk) * (1 + fxSum(s, "dmg:" + sk) / 100);
+      let base = this.weapon.damage + this.temper;
+      const ak = this.ammoKind();
+      if (ak) {   // [Skyrim] the arrow's damage adds to the bow's; the formula already counts an iron arrow
+        const am = this.shotAmmo !== undefined ? this.shotAmmo : this.ammoRow();
+        if (!am) return Math.max(1, F.weaponDamage(base * 0.3, skill(s, sk), false));   // no ammo: a weak bash with the bow
+        base += D.ITEMS[am.item].damage - F.IRON_ARROW_DAMAGE;
+        if (ak === "bolt") base *= 0.75;   // [OURS] crossbows reload slowly; fights here are one attack a turn
+      }
+      return F.weaponDamage(base, skill(s, sk), sk === "Archery") * (1 + perk) * (1 + fxSum(s, "dmg:" + sk) / 100);
+    }
+    ammoKind() { return typeof AMMO !== "undefined" ? AMMO.kindFor(this.weapon, this.eq.weapon?.item) : null; }
+    ammoRow() { const k = this.ammoKind(); return k ? AMMO.best(this.s, k, (r) => this.left(r.id)) : null; }
+    shoot() {   // take one arrow/bolt for this shot (some are picked up again afterwards)
+      const r = this.ammoRow(); this.shotAmmo = r;
+      if (r && Math.random() > AMMO.RECOVER) this.used[r.id] = (this.used[r.id] || 0) + 1;
+      return r;
     }
     critChance() {   // [Skyrim] crits only come from perks; crit damage = half the weapon's base damage, perks add 25/50/75%
       const s = this.s, wt = this.wt;
@@ -425,6 +445,7 @@ const G = (() => {
     attack(power) {
       const sk = this.weaponSkill();
       if (power) this.sp -= this.paCost;
+      const ammoK = this.ammoKind(), shot = ammoK ? this.shoot() : null;
       const sneak = (this.turn === 1 && this.hidden) || this.sneakNext;
       this.sneakNext = false;
       if (!sneak && Math.random() > F.HIT_CHANCE) return power ? "Power attack misses" : "Attack misses";
@@ -432,6 +453,7 @@ const G = (() => {
       let dmg = this.weaponDamage() * rnd(...F.DAMAGE_SPREAD) * (power ? F.POWER_ATTACK_DAMAGE : 1);
       if (power && ((sk === "One-Handed" && P(s, "savage_strike")) || (sk === "Two-Handed" && P(s, "devastating_blow")))) dmg *= 1.25;
       let label = power ? "Power attack" : "Attack";
+      if (ammoK && !shot) label = `Bashes with the bow (no ${AMMO.label(ammoK)})`;
       if (sneak) {
         const m = wt === "dagger" && P(s, "assassins_blade") ? 15 : sk === "One-Handed" && P(s, "backstab") ? 6 : sk === "Archery" && P(s, "deadly_aim") ? 3 : F.sneakMultiplier(sk);   // [Skyrim]
         dmg *= m; this.addXp("Sneak", 30); label = `Sneak attack ×${m}`;
@@ -483,6 +505,7 @@ const G = (() => {
       }
       this.ehp -= dmg;
       if (wt === "bow" && P(s, "quick_shot") && Math.random() < 0.3 && this.ehp > 0) {   // a second arrow
+        if (this.ammoKind() && !this.shoot()) return `${label}: ${Math.round(dmg)}`;
         const d2 = this.weaponDamage() * rnd(...F.DAMAGE_SPREAD); this.ehp -= d2; return `${label}: ${Math.round(dmg)} · second arrow ${Math.round(d2)}`;
       }
       return `${label}: ${Math.round(dmg)}`;
@@ -659,10 +682,11 @@ const G = (() => {
     }
     return e;
   }
+  const ammoQty = (item) => { const it = D.ITEMS[item]; return it?.slot === "ammo" && typeof AMMO !== "undefined" ? rint(...AMMO.LOOT_QTY[it.ammo]) : 1; };
   function rollLoot(s, e) {
     const got = [], tags = new Set(e.tags || []);
     for (const table of [...(tags.has("humanoid") ? ["humanoid"] : []), ...(tags.has("elite") ? ["elite"] : [])])
-      for (const [item, ch] of D.LOOT[table]) if (Math.random() < ch) { give(s, item); got.push(D.ITEMS[item].name); }
+      for (const [item, ch] of D.LOOT[table]) if (Math.random() < ch) { const q = ammoQty(item); give(s, item, q); got.push(D.ITEMS[item].name + (q > 1 ? ` ×${q}` : "")); }
     if (tags.has("beast") && typeof SMITH !== "undefined") { const p = SMITH.peltFor(e.name); if (p && Math.random() < 0.7) { give(s, p); got.push(D.ITEMS[p].name); } }   // [Skyrim] pelts from animals
     return got;
   }
@@ -778,8 +802,9 @@ const G = (() => {
       tr.trail.push([+s.x.toFixed(4), +s.y.toFixed(4)]);
       if (tr.trail.length > 120) tr.trail.splice(1, 1);
       if (!riding(s) && !overweight(s)) for (const m of useSkill(s, "Athletics", dt * F.ATHLETICS_XP_PER_SECOND)) tripLog(s, "📈 " + m);
-      for (const [n, [lx, ly]] of Object.entries(PLACES))
-        if (!s.discovered.includes(n) && pxDist([s.x, s.y], [lx, ly]) <= DISCOVER_PX) { s.discovered.push(n); tripLog(s, `🗺 Discovered ${n}`); }
+      const known = new Set(s.discovered);
+      for (const [n, [lx, ly, kind]] of Object.entries(PLACES))
+        if (!known.has(n) && pxDist([s.x, s.y], [lx, ly]) <= discoverRadius(kind)) { s.discovered.push(n); tripLog(s, `📍 Discovered ${n}`); }
       const pk = pickUpBags(s, bags.filter((b) => !out.taken.includes(b.id)), stepT);
       out.taken.push(...pk.taken);
       pk.msgs.forEach((m) => tripLog(s, "🎒 " + m));
@@ -902,7 +927,7 @@ const G = (() => {
 
   // ---------------------------------------------------------------- towns
   const shopTypes = (l) => D.SHOPS[l] || [];
-  const shopStock = (l) => [...new Set(shopTypes(l).flatMap((k) => D.SHOP_STOCK[k] || []))];
+  const shopStock = (l) => [...new Set(shopTypes(l).flatMap((k) => [...(D.SHOP_STOCK[k] || []), ...(((D.TOWN_STOCK || {})[l] || {})[k] || [])]))];
   const haggle = (s) => 1 + [0, 0.1, 0.15, 0.2, 0.25, 0.3][P(s, "haggling")] + fxSum(s, "barter") / 100;   // [Skyrim] Haggling; Fortify Barter
   const buyPrice = (s, item) => Math.max(1, Math.round(F.buyPrice(D.ITEMS[item].value, skill(s, "Mercantile")) / haggle(s) * (typeof FEST !== "undefined" ? FEST.shopDiscount() : 1)   // Midyear: 10% off
     * (typeof WARS !== "undefined" && s.location && PLACES[s.location] ? WARS.discount(s, holdAt(PLACES[s.location])) : 1)));   // your clan rules this hold
@@ -975,7 +1000,7 @@ const G = (() => {
     P, wtype, fxSum, lockChance, setAllyProvider, hiddenChance, rested, haggle, SPELL_TIER, newSave, maxHealth, maxMagicka, maxStamina, curHealth, setHealth, skill, useSkill, levelUp,
     riding, withHorse, give, take, invRow, carried, capacity, overweight, equipment, equip, unequip, countRestore, itemStats,
     loadout: lo, addRule, ruleSlot, deadRules, fixTactics, saveLoadoutAs, deleteLoadout, spellCost, describeRule, describeAction, Fight, scaleEnemy, rollLoot,
-    rollEncounter, die, speed, startTrip, startEvent, eventChoices, eventChoice, buyFrom, minutesLeft, minutesTo, posAfter, advance, encounterAction, migrate, PLACES,
+    rollEncounter, die, speed, discoverRadius, startTrip, startEvent, eventChoices, eventChoice, buyFrom, minutesLeft, minutesTo, posAfter, advance, encounterAction, migrate, PLACES,
     shopTypes, shopStock, buyPrice, sellPrice, buy, sell, readTome, drinkPotion, recharge, clone, note,
   };
 })();

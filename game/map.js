@@ -304,7 +304,9 @@ const WorldMap = (() => {
     // places: icons when discovered; labels by zoom level, skipping any that would overlap
     const RANK = { city: 0, town: 1, landmark: 2, farm: 4 };
     const shown = v.discovered.map((n) => [n, ...WORLD.places[n]]).sort((a, b) => (a[0] === v.selected ? -1 : b[0] === v.selected ? 1 : (RANK[a[3]] ?? 3) - (RANK[b[3]] ?? 3)));
-    for (const [n, x, y, kind] of shown) icon(g, kind, x * W, y * H, s, v.selected === n);
+    // zoomed out, the many small spots shrink so cities and towns stay easy to see
+    const small = v.zoom < 1.5 && shown.length > 60 ? 0.72 : 1;
+    for (const [n, x, y, kind] of shown) icon(g, kind, x * W, y * H, s * (kind === "city" || kind === "town" || v.selected === n ? 1 : small), v.selected === n);
     const boxes = [];
     for (const [n, x, y, kind] of shown) {
       if (!(v.zoom >= KIND_MIN_ZOOM[kind] || v.selected === n)) continue;

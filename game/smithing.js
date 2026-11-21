@@ -97,9 +97,10 @@ const SMITH = (() => {
     const i = info(s, id); if (!i) return "You can't make that.";
     if (i.block) return i.block;
     use(s, i.mats);
-    G.give(s, id);
-    const sk = G.useSkill(s, "Smithing", xpFor(D.ITEMS[id].value));
-    return `You make ${/^[AEIOU]/.test(D.ITEMS[id].name) ? "an" : "a"} ${D.ITEMS[id].name} from ${matText(i.mats)}.` + (sk.length ? " " + sk.join(". ") : "");
+    const out = i.out || 1;
+    G.give(s, id, out);
+    const sk = G.useSkill(s, "Smithing", xpFor(Math.min(400, D.ITEMS[id].value * out)));
+    return `You make ${out > 1 ? `${out} ${D.ITEMS[id].name}s` : `${/^[AEIOU]/.test(D.ITEMS[id].name) ? "an" : "a"} ${D.ITEMS[id].name}`} from ${matText(i.mats)}.` + (sk.length ? " " + sk.join(". ") : "");
   }
   function refineInfo(s, k) {
     const [out, n, mats, kind] = REFINE[k];
@@ -125,10 +126,15 @@ const SMITH = (() => {
     Karthwasten: ["Sanuarach Mine", [["ore_silver", 4], ["ore_iron", 3]]],
     Dawnstar: ["Iron-Breaker Mine", [["ore_iron", 5], ["ore_corundum", 2]]],
     "Darkwater Crossing": ["Goldenrock Mine", [["ore_gold", 3], ["ore_corundum", 3], ["ore_iron", 2]]],
-    Kynesgrove: ["Steamcrag Diggings", [["ore_moonstone", 3], ["ore_corundum", 3], ["ore_iron", 2]]],
+    Kynesgrove: ["Steamscorch Mine", [["ore_moonstone", 3], ["ore_corundum", 3], ["ore_iron", 2]]],
     "Shor's Stone": ["Redbelly Mine", [["ore_iron", 5], ["ore_corundum", 2]]],
     "Embershard Mine": ["Embershard Mine", [["ore_iron", 4], ["ore_corundum", 2], ["ore_silver", 1]]],
     "Bilegulch Mine": ["Bilegulch Mine", [["ore_iron", 3], ["ore_corundum", 3], ["ore_gold", 1]]],
+    "Whistling Mine": ["Whistling Mine", [["ore_iron", 5], ["ore_corundum", 1]]],
+    "Kolskeggr Mine": ["Kolskeggr Mine", [["ore_gold", 5], ["ore_iron", 1]]],
+    "Left Hand Mine": ["Left Hand Mine", [["ore_iron", 5], ["ore_silver", 1]]],
+    "Lost Prospect Mine": ["Lost Prospect Mine", [["ore_gold", 3], ["ore_iron", 2]]],
+    "Gloombound Mine": ["Gloombound Mine", [["ore_corundum", 3], ["ore_iron", 3], ["ore_moonstone", 1]]],
   };
   const VEIN_RENEW = 24 * 3600 / G.GAME_SPEED;     // the veins grow back after one in-game day (2 real hours)
   const mineLeft = (s, place, t = G.now()) => Math.max(0, ((s.mined || {})[place] || 0) + VEIN_RENEW - t);

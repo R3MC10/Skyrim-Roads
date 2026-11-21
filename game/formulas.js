@@ -26,7 +26,7 @@ const F = (() => {
     CARRY_PER_STAMINA_LEVEL: 5,
     BASE_CARRY: 300,
     REGEN_PER_SECOND: { health: 0.007, magicka: 0.03, stamina: 0.05 },
-    IRON_ARROW_DAMAGE: 8,                   // [OURS-simplified] unlimited iron arrows
+    IRON_ARROW_DAMAGE: 8,                   // [Skyrim] an iron arrow; ammo.js swaps in the arrow you actually shoot
     POWER_ATTACK_DAMAGE: 2.0,               // [Skyrim] https://en.uesp.net/wiki/Skyrim:Damage
     BLOCK_STAMINA: 10,                      // [OURS] UESP: "a small amount"
     RECHARGE_XP: { 1000: 0.2, 2000: 0.4, 3000: 0.6 },

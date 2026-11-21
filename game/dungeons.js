@@ -91,6 +91,7 @@ const DUNGEONS = (() => {
       traps: ["a tripwire tied to a spiked log", "a bear trap by the gate"] },
     thalmor: { name: "Thalmor keep", foes: [["thalmor", 1], ["bandit", 1]], elite: ["thalmor"], boss: ["justiciar", "justiciar", "justiciar"], loot: [], traps: ["a rune painted on the floor"] },
   };
+  THEMES.banditcamp = { ...THEMES.fort, name: "bandit camp", traps: ["a tripwire strung between two tents", "a bear trap hidden under leaves"] };
   // place -> [theme, tier 1..3]. Anything not listed uses its map kind.
   const PLACE = {
     "Bleak Falls Barrow": ["barrow", 1], "Embershard Mine": ["mine", 1], "Swindler's Den": ["cave", 1], "Pinewatch": ["cave", 1],
@@ -111,6 +112,8 @@ const DUNGEONS = (() => {
   const kindOf = (name) => WORLD.places[name]?.[2];
   function info(name) {
     if (PLACE[name]) return { theme: PLACE[name][0], tier: PLACE[name][1] };
+    const wt = WORLD.placeThemes?.[name];
+    if (wt && THEMES[wt[0]]) return { theme: wt[0], tier: wt[1] };
     const k = kindOf(name);
     if (k === "fort") return { theme: "fort", tier: 2 };
     if (k === "dungeon") return { theme: /Barrow|Tomb/.test(name) ? "barrow" : "cave", tier: 2 };
@@ -184,7 +187,7 @@ const DUNGEONS = (() => {
   const nextChoices = (s) => { const d = s.dungeon; if (!d || d.room) return []; return d.row < 0 ? d.rows[0].map((_, i) => i) : d.rows[d.row][d.col].links; };
 
   function found(s, text) { s.dungeon.found.push(text); }
-  function giveFound(s, item, n = 1) { G.give(s, item, n); found(s, D.ITEMS[item].name + (n > 1 ? ` ×${n}` : "")); return D.ITEMS[item].name; }
+  function giveFound(s, item, n = 1) { if (n === 1 && D.ITEMS[item]?.slot === "ammo" && typeof AMMO !== "undefined") n = rint(...AMMO.LOOT_QTY[D.ITEMS[item].ammo]); G.give(s, item, n); found(s, D.ITEMS[item].name + (n > 1 ? ` ×${n}` : "")); return D.ITEMS[item].name; }
   function goldFound(s, g) { s.gold += g; s.dungeon.gold += g; return g; }
 
   function buildRoom(s, type) {
