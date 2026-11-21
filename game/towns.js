@@ -143,6 +143,7 @@ const TOWNS = (() => {
     const r = G.invRow(s, rowId), it = r && D.ITEMS[r.item];
     if (!it || it.slot !== "potion") return "That isn't a potion.";
     G.take(s, rowId);
+    if (it.cures === "disease") return (typeof CURSE !== "undefined" && CURSE.cureDisease(s)) || "You drink it. You weren't sick, but it can't hurt.";
     const out = [];
     const parts = it.effects || (it.restore ? [[`Restore ${it.restore[0][0].toUpperCase() + it.restore[0].slice(1)}`, it.restore[1], 0]] : []);
     for (const [e, m, d] of parts) {

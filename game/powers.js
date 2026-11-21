@@ -112,15 +112,17 @@ const POWERS = (() => {
   }
 
   // ---- combat hooks (called from the Fight class in engine.js)
-  function fightState() { return { rage: 0, ether: 0, disarm: 0, aspect: 0, aspectRed: 0, cloak: 0, hist: 0, adren: 0, high: 0, skin: 0 }; }
+  function fightState() { return { rage: 0, ether: 0, disarm: 0, aspect: 0, aspectRed: 0, cloak: 0, hist: 0, adren: 0, high: 0, skin: 0, beast: 0 }; }
   function affordable(f, kind, arg) {
     const s = f.s;
+    if (kind === "power" && arg === "beast") return typeof CURSE !== "undefined" && CURSE.beastReady(s, f.t) && !f.usedBeast;
     if (kind === "power") return arg === "race" ? powerReady(s, "race", f.t) && !f.usedPower : stoneHasPower(s) && stone(s) !== "tower" && powerReady(s, "stone", f.t) && !f.usedStone;
     if (kind === "shout") return !ROAD_SHOUTS.includes(arg) && level(s, arg) > 0 && voiceReady(s, f.t) && !f.shoutedThisTurn;
     return false;
   }
   function act(f, kind, arg) {
     const s = f.s, p = f.pw, tags = f.tags, t = f.t;
+    if (kind === "power" && arg === "beast") { f.usedBeast = true; return CURSE.transform(f); }
     if (kind === "power" && arg === "race") {
       f.usedPower = true; if (!s._test) s.powerAt = t;
       const name = RACE[s.race][0];
@@ -163,11 +165,11 @@ const POWERS = (() => {
     }
     return "Nothing happens";
   }
-  const dmgOut = (f) => (f.pw.rage > 0 ? 2 : 1) * (1 + f.pw.aspect);
+  const dmgOut = (f) => (f.pw.rage > 0 ? 2 : 1) * (1 + f.pw.aspect) * (typeof CURSE !== "undefined" ? CURSE.dmgMult(f) : 1);
   function dmgIn(f, dmg, magic) {
     const p = f.pw, s = f.s;
     if (p.ether > 0) return 0;
-    let d = dmg * (p.rage > 0 ? 0.5 : 1) * (1 - p.disarm) * (1 - p.aspectRed);
+    let d = dmg * (p.rage > 0 ? 0.5 : 1) * (1 - p.disarm) * (1 - p.aspectRed) * (typeof CURSE !== "undefined" ? CURSE.dmgInMult(f) : 1);
     if (magic) d *= (p.skin > 0 ? 0.5 : 1) * (stone(s) === "lord" ? 0.75 : 1) * (stone(s) === "apprentice" ? 2 : 1);
     return d;
   }
@@ -178,10 +180,12 @@ const POWERS = (() => {
     if (p.hist > 0) f.hp = Math.min(G.maxHealth(s), f.hp + G.maxHealth(s) * 0.07);
     if (p.adren > 0) f.sp = Math.min(G.maxStamina(s), f.sp + f.regenSp * 9);
     if (p.high > 0) f.mp = Math.min(G.maxMagicka(s), f.mp + f.regenMp * 24);
-    for (const k of ["rage", "ether", "cloak", "hist", "adren", "high", "skin"]) if (p[k] > 0) p[k]--;
+    if (p.beast === 1) line.me += " · you change back";
+    for (const k of ["rage", "ether", "cloak", "hist", "adren", "high", "skin", "beast"]) if (p[k] > 0) p[k]--;
   }
   function describe(a) {
     const [kind, arg] = a.split(":");
+    if (kind === "power" && arg === "beast") return "Turn into the beast (werewolf, once a day)";
     if (kind === "power") return arg === "race" ? "Use my racial power (once a day)" : "Use my standing stone's power (once a day)";
     if (kind === "shout") return `Shout ${SHOUTS[arg]?.[0] || arg}`;
     return a;

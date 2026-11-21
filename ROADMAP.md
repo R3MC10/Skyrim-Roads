@@ -5,6 +5,7 @@ Each round: build one batch, test it (Node sims in /home/claude/tests + headless
 our own marked [OURS]; plain-language UI; phone first.
 
 ## Done
+- Round 24: werewolf and vampire paths. Werewolf: the Circle offers it after the Companions' quest line; Beast Form once a day in tactics (10 turns: much harder hits, less damage taken, a heal, no potions); no Rested bonus; immune to disease; cleansing at Jorrvaskr for 1000 gold. Vampire: night vampires may infect you; cure with a Potion of Cure Disease or a shrine within 3 hours, or you turn; hunger stages over real hours make Destruction/Illusion and night blows stronger but slow healing in daylight; feed at inns; cure at a court wizard (soul gem + 500 gold).
 - Round 23: clan wars over the holds. Members earn their clan points in the hold where they win fights (1), clear dungeons (5) and fight dragon attacks (3); Arena wins count for Eastmarch (3). The clan on top at the end of a week rules that hold all next week: its colour tints the hold on the map and its members shop 10% cheaper there. Holds panel in the Journal.
 - Round 22: clean-up. The map only draws while it's on screen, and slows to 8 frames a second when nothing moves (less battery). Quick-jump menu at the top of the Journal. Shorter help texts. Old ladder, home and clan records of players gone for months are pruned from every phone's copy of the world.
 - Round 21: seasonal events on the real calendar. Witchingmoon (Oct 25–Nov 1: undead at night, more gold), Frostfall Blizzards (Nov 15–30: snow everywhere), New Life Festival (Dec 28–Jan 3: free inn rooms, a daily innkeeper's gift), Midyear Celebration (Jun 16–22: shops 10% off). Each has a goal with gold, materials and a title once a year; shown in the Journal with an announcement when it starts.
@@ -34,6 +35,8 @@ our own marked [OURS]; plain-language UI; phone first.
 - Round 3: homes (Breezehome, Honeyside, Vlindrel Hall, Hjerim, Proudspire Manor at Skyrim prices): death-proof chest, Well Rested bed (+10%; inns now Rested +5%), daily garden.
 
 ## Next rounds (in order)
-22. Werewolf and vampire paths (from the Companions and a rare night encounter), with their own powers and drawbacks.
+24. Mounts for the road: a cart you can buy to carry a lot more, and caravans between holds that players can guard together for pay.
+25. Spell crafting at the College: combine two effects you know into your own spell.
+26. A bard's song: players can write a short line about a deed; the best-liked lines become songs that innkeepers sing.
 23. Player shops: sell your goods from a stall in your house's town while you're offline.
 11. Visit other players' homes (leave a gift, see their trophies).

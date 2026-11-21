@@ -125,7 +125,7 @@ const ROAD_EVENTS = (() => {
     { id: "shrine", weight: 2,
       make: () => { const god = pick(DIVINES); return { god, text: `A weathered roadside shrine to ${god} stands among the stones.` }; },
       choices: (e) => [["pray", `Pray to ${e.god}`], ["leave", "Walk on"]],
-      pray: (s, e) => { G.setHealth(s, G.maxHealth(s)); return { text: `You kneel. A calm settles over you, and your wounds close. Blessing of ${e.god}.` }; } },
+      pray: (s, e) => { G.setHealth(s, G.maxHealth(s)); const cured = typeof CURSE !== "undefined" && CURSE.cureDisease(s); return { text: `You kneel. A calm settles over you, and your wounds close. Blessing of ${e.god}.${cured ? " " + cured : ""}` }; } },
 
     { id: "climb", weight: 2,
       when: (s, ground) => ["Mountains", "Rocky hills", "Snow", "Pine forest", "Forest"].includes(ground),

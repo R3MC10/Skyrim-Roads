@@ -24,7 +24,8 @@ const G = (() => {
   /* active potion effects: s.fx = [{key, mag, until, name}]. key e.g. "skill:Sneak", "dmg:One-Handed", "max:health", "carry", "barter" */
   function fxSum(s, key, t = now()) {
     return (s.fx || []).filter((f) => f.key === key && f.until > t).reduce((a, f) => a + f.mag, 0)
-      + (typeof ENCH !== "undefined" && s.loadouts ? ENCH.worn(s, key) : 0);   // potions + enchanted armor you wear
+      + (typeof ENCH !== "undefined" && s.loadouts ? ENCH.worn(s, key) : 0)   // potions + enchanted armor you wear
+      + (typeof CURSE !== "undefined" ? CURSE.fx(s, key, t) : 0);             // vampire strengths and weaknesses
   }
   const rested = (s, t = now()) => (s.rested || 0) > t;
   const now = () => Date.now() / 1000;
@@ -102,7 +103,7 @@ const G = (() => {
 
   function useSkill(s, name, baseXp) {
     const sk = s.skills[name];
-    sk.xp += F.skillXpGained(name, baseXp) * (rested(s) ? 1 + (s.restBonus || 0.05) : 1) * (typeof POWERS !== "undefined" ? POWERS.xpMult(s, name) : 1);   // Rested; standing stones   // [Skyrim] Rested: skills improve 10% faster
+    sk.xp += F.skillXpGained(name, baseXp) * (rested(s) && !s.werewolf ? 1 + (s.restBonus || 0.05) : 1) * (typeof POWERS !== "undefined" ? POWERS.xpMult(s, name) : 1);   // Rested; standing stones   // [Skyrim] Rested: skills improve 10% faster
     const msgs = [];
     while (sk.lvl < 100 && sk.xp >= F.skillXpNeeded(name, sk.lvl)) {
       sk.xp -= F.skillXpNeeded(name, sk.lvl);
@@ -213,7 +214,7 @@ const G = (() => {
     if (it.slot === "weapon") return `${it.damage} dmg · ${it.skill}${it.hands === 2 ? " · 2 hands" : ""}${it.enchant ? ` · +${it.enchant.magnitude} ${it.enchant.effect}` : ""}`;
     if (ARMOR_SLOTS.includes(it.slot)) return `${it.armor} armor · ${it.type}${it.aenchant ? ` · ${it.aenchant.name} ${it.aenchant.mag}` : ""}`;
     if (it.effects) return it.effects.map(([e, m, d]) => `${e} ${m}${d * 5 >= 60 ? ` · ${Math.round(d * 5 / 60)} min` : ""}`).join(", ");
-    if (it.slot === "potion") return `+${it.restore[1]} ${it.restore[0]}`;
+    if (it.slot === "potion") return it.restore ? `+${it.restore[1]} ${it.restore[0]}` : it.cures ? "Cures diseases" : "";
     if (it.slot === "scroll" || it.slot === "tome") return D.SPELLS[it.spell].name;
     if (it.slot === "soulgem") return `${it.charge} charge`;
     if (it.slot === "ingredient") return "Ingredient";
@@ -370,7 +371,7 @@ const G = (() => {
       const [kind, arg] = a.split(":");
       if ((kind === "power" || kind === "shout") && this.pw) return POWERS.affordable(this, kind, arg);
       if (kind === "spell") return this.s.spells.includes(arg) && D.SPELLS[arg] && this.mp >= spellCost(this.s, D.SPELLS[arg]);
-      if (kind === "potion") return !!this.findPotion(arg);
+      if (kind === "potion") return !!this.findPotion(arg) && !(typeof CURSE !== "undefined" && CURSE.noPotions(this));   // no potions in Beast Form
       if (kind === "scroll") return !!this.findItem(arg);
       return false;
     }

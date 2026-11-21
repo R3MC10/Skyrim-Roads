@@ -510,7 +510,7 @@
     }
     followParty(); checkAmbush(); renderRaid(); soundTick();
     if (S.tut?.step > 0 && TUT[S.tut.step]?.done()) bump();
-    if (Math.floor(t) % 5 === 0) checkAch();
+    if (Math.floor(t) % 5 === 0) { checkAch(); bloodTick(); }
     if (Math.floor(t) % 3 === 0) { const qm = QUESTS.check(S); if (qm.length) { persist(true); showMessage("Quest", qm.join(" ")); } }
     if (Math.floor(t) % 30 === 0) { publishCard(false); publishHome(); publishClan(); }
     if (Math.floor(t) % 60 === 0) BACKUP.autoSave(S);
@@ -769,6 +769,7 @@
     showFightResult(r);
   }
   function showFightResult(r) {
+    if (r.fight) { const inf = CURSE.maybeInfect(S, r.fight.e); if (inf) { persist(); setTimeout(() => toast(inf), 1800); } }
     if (r.fight && !r.died && !r.fight.nonlethal) { tally("foes"); warPoint("fight", G.holdAt(livePos())); if ((r.fight.e?.tags || []).includes("undead")) festCount("undead"); }
     if (r.fight || r.died) SOUND.fight(r); else if (/potion|drink/i.test(r.text || "")) SOUND.fx("potion");
     const skills = (r.skills || []).length ? `<p class="sub">📈 ${r.skills.map(esc).join(" · ")}</p>` : "";
@@ -856,6 +857,7 @@
   }
   function dungeonAct(c) {
     const r = DUNGEONS.act(S, c);
+    if (r.fight) { const inf = CURSE.maybeInfect(S, r.fight.e); if (inf) setTimeout(() => toast(inf), 1800); }
     if (r.fight && !r.died) { tally("foes"); warPoint("fight", G.holdAt(WORLD.places[S.dungeon?.place] || livePos())); if ((r.fight.e?.tags || []).includes("undead")) festCount("undead"); }
     if (r.fight || r.died) SOUND.fight(r); else if (r.trap || /trap|dart|blade/i.test(r.text || "")) SOUND.fx("hit");
     if (r.bag) Store.addBag(r.bag);
@@ -950,6 +952,7 @@
     const out = [];
     for (const id of S.spells) { const sp = D.SPELLS[id]; out.push({ id: `spell:${id}`, cat: sp.school.toLowerCase(), name: sp.name, cost: G.spellCost(S, sp), sub: sp.school }); }
     out.push({ id: "power:race", cat: "powers", name: POWERS.RACE[S.race][0], cost: null, sub: POWERS.powerReady(S, "race") ? "Ready" : "Used today" });
+    if (S.werewolf) out.push({ id: "power:beast", cat: "powers", name: "Beast Form", cost: null, sub: CURSE.beastReady(S) ? "Ready" : "Used today" });
     if (POWERS.stoneHasPower(S)) out.push({ id: "power:stone", cat: "powers", name: POWERS.STONES[S.stone][0], cost: null, sub: POWERS.powerReady(S, "stone") ? "Ready" : "Used today" });
     for (const [id, [name, words]] of Object.entries(POWERS.SHOUTS)) if (words.some((w) => POWERS.known(S, w))) out.push({ id: `shout:${id}`, cat: "shouts", name, cost: null, sub: words.map((w) => POWERS.known(S, w) ? (POWERS.unlocked(S, w) ? w : w + "🔒") : "···").join(" ") });
     const t = G.now();
@@ -1154,6 +1157,30 @@
     if (S.festSeen[ev.key]) return;
     S.festSeen[ev.key] = 1; Store.save(S);
     setTimeout(() => { SOUND.fx("quest"); toast(`${ev.icon} ${ev.name} has begun! See the Journal.`); }, 2500);
+  }
+
+  // ------------------------------------------------------------ werewolf and vampire
+  function bloodTick() {
+    const m = CURSE.update(S);
+    if (m) { persist(true); SOUND.fx("death"); showMessage("The Change", m); }
+    if (CURSE.offered(S) && !S.wolfOfferSeen) { S.wolfOfferSeen = true; persist(); toast("🐺 The Circle of the Companions wants a word with you in Whiterun. See the Hero tab."); }
+  }
+  function bloodPanel() {
+    const t = G.now(), here = S.location, wiz = here && G.shopTypes(here).includes("wizard");
+    if (S.vampire) {
+      const st = CURSE.stage(S), h = Math.floor(CURSE.hoursUnfed(S));
+      return `<div class="panel" style="border-color:#7a1414"><h2>🩸 Vampire</h2><p class="sub">Hunger: stage ${st} of 4 (${h} hour${h === 1 ? "" : "s"} since you fed). The hungrier you are, the stronger your Destruction and Illusion and your night-time blows, and the more the sun slows your healing outside by day. Feed at an inn (Town tab) to reset it.</p>
+        <div class="item"><div class="t">Cure vampirism<span>A court wizard's ritual: a filled Common Soul Gem and ${CURSE.CURE_VAMPIRE_GOLD} gold${wiz ? "" : " · go to a city with a court wizard"}</span></div><button class="btn sm" data-act="curevamp" ${wiz ? "" : "disabled"}>Cure</button></div></div>`;
+    }
+    if (S.sanguinare) {
+      const left = Math.max(0, Math.ceil((CURSE.TURN_AFTER - (t - S.sanguinare.at)) / 60));
+      return `<div class="panel" style="border-color:#7a1414"><h2>🩸 Sanguinare Vampiris</h2><p class="sub">A vampire's disease. In about ${left} minutes you'll turn into a vampire. Drink a Potion of Cure Disease (general stores, court wizards) or pray at a roadside shrine to stop it, or let it happen.</p></div>`;
+    }
+    if (S.werewolf) return `<div class="panel" style="border-color:var(--gold)"><h2>🐺 Werewolf</h2><p class="sub">Beast Form, once a day, is in your Tactics: for ${CURSE.BEAST_TURNS} turns you hit much harder, take less damage and heal a bit, but can't drink potions. Beds no longer make you Rested, and you can't catch diseases.</p>
+      <div class="item"><div class="t">Be cleansed<span>At Jorrvaskr in Whiterun, ${CURSE.CURE_WEREWOLF} gold</span></div><button class="btn sm" data-act="curewolf" ${here === "Whiterun" ? "" : "disabled"}>Cure</button></div></div>`;
+    if (CURSE.offered(S)) return `<div class="panel" style="border-color:var(--gold)"><h2>🐺 The Circle's offer</h2><p class="sub">The Companions' inner circle offers you their secret: the blood of the beast. Once a day you can turn into a werewolf in a fight. Beds won't make you Rested any more. You can be cleansed later for ${CURSE.CURE_WEREWOLF} gold.</p>
+      <div class="grid2"><button class="btn pri" data-act="wolfyes" ${here === "Whiterun" ? "" : "disabled"}>Accept${here === "Whiterun" ? "" : " (in Whiterun)"}</button><button class="btn" data-act="wolfno">No, thank you</button></div></div>`;
+    return "";
   }
 
   // ------------------------------------------------------------ achievements
@@ -1677,7 +1704,7 @@
       ${(S.words || []).length ? `<p class="sub">Words of Power: ${S.words.map(esc).join(", ")}</p>` : ""}
       ${groups}
       <p class="sub" style="margin-top:14px">Skills rise as you use them, with Skyrim's own rates.</p>
-      <details style="margin-top:8px"><summary class="sub" style="cursor:pointer;min-height:36px">Start over</summary><p class="sub">Deletes this character for good.</p><button class="btn danger" data-act="wipe">Delete ${esc(S.name)}</button></details></div>${perks}${achPanel()}`;
+      <details style="margin-top:8px"><summary class="sub" style="cursor:pointer;min-height:36px">Start over</summary><p class="sub">Deletes this character for good.</p><button class="btn danger" data-act="wipe">Delete ${esc(S.name)}</button></details></div>${perks}${bloodPanel()}${achPanel()}`;
   }
 
   function panelPack() {
@@ -1721,6 +1748,7 @@
       ...["health", "magicka", "stamina"].map((r) => [`potion:${r}`, `Drink a ${r} potion (have ${G.countRestore(S, r)})`]),
       ...[...new Set(S.inv.filter((r) => D.ITEMS[r.item]?.slot === "scroll").map((r) => r.item))].map((i) => [`scroll:${i}`, `Read ${D.ITEMS[i].name}`]),
       ["power:race", `Use ${POWERS.RACE[S.race][0]} (racial power, once a day)`],
+      ...(S.werewolf ? [["power:beast", "Beast Form (werewolf, once a day: much stronger, no potions)"]] : []),
       ...(POWERS.stoneHasPower(S) && S.stone !== "tower" ? [["power:stone", `Use ${POWERS.STONES[S.stone][0]}'s power (once a day)`]] : []),
       ...Object.keys(POWERS.SHOUTS).filter((id) => !POWERS.ROAD_SHOUTS.includes(id) && POWERS.level(S, id)).map((id) => [`shout:${id}`, `Shout ${POWERS.SHOUTS[id][0]} (${POWERS.level(S, id)} word${POWERS.level(S, id) > 1 ? "s" : ""})`])]
       .map(([id, l]) => `<option value="${esc(id)}" ${tacticsDraft.do === id ? "selected" : ""}>${esc(l)}</option>`).join("");
@@ -1779,7 +1807,7 @@
       body = (D.SHOP_STOCK[townShop] || []).map((i) => shopRow(i)).join("");
     } else if (townShop === "inn") {
       note = "Sleep to heal fully and become Rested (skills improve 5% faster for 40 minutes; your own bed gives 10%). Buy a round and the locals talk." + (FEST.freeInn() ? " 🎉 New Life Festival: rooms are free!" : "");
-      body = (FEST.freeInn() ? `<div class="item on"><div class="t">🎉 The innkeeper's New Life gift<span>Once a day: a hot meal and a little gold</span></div><button class="btn sm pri" data-act="festgift">Take it</button></div>` : "") + `<div class="item"><div class="t">Rent a room<span>${G.rested(S) ? "You're already rested" : "Full health and Rested"}</span></div><span class="num gold">${TOWNS.roomPrice(S)}</span><button class="btn sm pri" data-act="inn" data-c="room" ${wanted ? "disabled" : ""}>Sleep</button></div>
+      body = (S.vampire ? `<div class="item"><div class="t">🩸 Feed on a sleeping traveller<span>Resets your hunger. Someone might wake up (bounty).</span></div><button class="btn sm danger" data-act="vfeed">Feed</button></div>` : "") + (FEST.freeInn() ? `<div class="item on"><div class="t">🎉 The innkeeper's New Life gift<span>Once a day: a hot meal and a little gold</span></div><button class="btn sm pri" data-act="festgift">Take it</button></div>` : "") + `<div class="item"><div class="t">Rent a room<span>${G.rested(S) ? "You're already rested" : "Full health and Rested"}</span></div><span class="num gold">${TOWNS.roomPrice(S)}</span><button class="btn sm pri" data-act="inn" data-c="room" ${wanted ? "disabled" : ""}>Sleep</button></div>
         <div class="item"><div class="t">Buy a round, listen for rumours<span>Reveals ${G.P(S, "rumour_monger") ? "two places" : "a place"} you haven't found yet</span></div><span class="num gold">${G.P(S, "rumour_monger") ? 0 : TOWNS.RUMOUR}</span><button class="btn sm" data-act="inn" data-c="rumour">Listen</button></div>`;
     } else if (townShop === "train") {
       const n = TOWNS.trainedThisLevel(S);
@@ -2045,6 +2073,11 @@
       case "eat": packOpen = null; say(TOWNS.eat(S, +b.dataset.id)); break;
       case "hallrest": say(HALL.rest(S)); break;
       case "visit": openVisit(b.dataset.id); break;
+      case "wolfyes": SOUND.fx("dragon"); say(CURSE.acceptWolf(S)); publishCard(); break;
+      case "wolfno": say(CURSE.declineWolf(S)); break;
+      case "curewolf": say(CURSE.cureWolf(S)); break;
+      case "curevamp": say(CURSE.cureVampire(S)); break;
+      case "vfeed": say(CURSE.feed(S)); break;
       case "jgo": { const el = $("#j-" + b.dataset.id); if (el) { const y = el.getBoundingClientRect().top + scrollY - 64; scrollTo({ top: y, behavior: reduceMotion ? "auto" : "smooth" }); } break; }
       case "festclaim": { const m = FEST.claim(S); if (!m) break; SOUND.fx("levelup"); say(m); publishCard(); break; }
       case "festgift": { const m = FEST.innGift(S); if (m) { SOUND.fx("coin"); say(m); } break; }
