@@ -23,7 +23,7 @@
   ];
   let S = null, net = {}, tab = "map", selected = null, others = [], bags = [];
   let zoom = innerWidth < 700 ? 2.4 : 1, follow = true, center = [0.5, 0.5], view = {}, version = 0, rendered = -1, lastPanelRender = 0;
-  let tacticsDraft = { if: "always", pct: 50, do: "attack" }, testResult = null, townShop = null, packOpen = null, searchText = "";
+  let tacticsDraft = { if: "hp_below", pct: 40, do: "potion:health", edit: null }, testResult = null, townShop = null, forgeTab = "make", forgeGroup = "iron", packOpen = null, searchText = "";
   let raidDocs = [], raidSeen = null, enchDraft = {};
   let chatDocs = [], chatRaw = [], chatCh = "world", chatDraft = "", chatSeen = 0, chatSeenIds = new Set(), lastChatSend = 0;
   const bootT = Date.now() / 1000;
@@ -1814,35 +1814,62 @@
       ${Object.entries(groups).map(([g, rows]) => `<h3 style="margin-top:12px">${g}</h3><div class="list">${rows.map(row).join("")}</div>`).join("") || '<p class="sub">Empty.</p>'}</div>`;
   }
 
-  function panelTactics() {
-    const L = G.loadout(S), rules = L.rules;
-    const condOpts = Object.entries(D.CONDITIONS).map(([id, [label, p]]) => `<option value="${id}" ${tacticsDraft.if === id ? "selected" : ""}>${esc(label)}${p ? " …%" : ""}</option>`).join("");
-    const actOpts = [...Object.entries(D.BASIC_ACTIONS).map(([id, l]) => [id, l]),
-      ...S.spells.map((s) => [`spell:${s}`, `Cast ${D.SPELLS[s].name} (${G.spellCost(S, D.SPELLS[s])} magicka)`]),
+  let pendingPreset = null, pendingDel = false;
+  function tacticActions() {
+    return [...Object.entries(D.BASIC_ACTIONS).map(([id, l]) => [id, l]),
+      ...S.spells.filter((x) => D.SPELLS[x]).map((x) => [`spell:${x}`, `Cast ${D.SPELLS[x].name} (${G.spellCost(S, D.SPELLS[x])} magicka)`]),
       ...["health", "magicka", "stamina"].map((r) => [`potion:${r}`, `Drink a ${r} potion (have ${G.countRestore(S, r)})`]),
       ...[...new Set(S.inv.filter((r) => D.ITEMS[r.item]?.slot === "scroll").map((r) => r.item))].map((i) => [`scroll:${i}`, `Read ${D.ITEMS[i].name}`]),
       ["power:race", `Use ${POWERS.RACE[S.race][0]} (racial power, once a day)`],
       ...(S.werewolf ? [["power:beast", "Beast Form (werewolf, once a day: much stronger, no potions)"]] : []),
       ...(POWERS.stoneHasPower(S) && S.stone !== "tower" ? [["power:stone", `Use ${POWERS.STONES[S.stone][0]}'s power (once a day)`]] : []),
-      ...Object.keys(POWERS.SHOUTS).filter((id) => !POWERS.ROAD_SHOUTS.includes(id) && POWERS.level(S, id)).map((id) => [`shout:${id}`, `Shout ${POWERS.SHOUTS[id][0]} (${POWERS.level(S, id)} word${POWERS.level(S, id) > 1 ? "s" : ""})`])]
-      .map(([id, l]) => `<option value="${esc(id)}" ${tacticsDraft.do === id ? "selected" : ""}>${esc(l)}</option>`).join("");
-    const needPct = D.CONDITIONS[tacticsDraft.if]?.[1];
+      ...Object.keys(POWERS.SHOUTS).filter((id) => !POWERS.ROAD_SHOUTS.includes(id) && POWERS.level(S, id)).map((id) => [`shout:${id}`, `Shout ${POWERS.SHOUTS[id][0]} (${POWERS.level(S, id)} word${POWERS.level(S, id) > 1 ? "s" : ""})`])];
+  }
+  /* why a rule may not fire right now */
+  function ruleWarn(r) {
+    const [kind, arg] = r.do.split(":");
+    if (kind === "spell" && !S.spells.includes(arg)) return "You don't know this spell, so it's skipped.";
+    if (kind === "potion" && !G.countRestore(S, arg)) return `You have no ${arg} potions.`;
+    if (kind === "scroll" && !S.inv.some((x) => x.item === arg)) return "You have none of these scrolls.";
+    if (kind === "shout" && !POWERS.level(S, arg)) return "You can't shout this yet.";
+    if (!D.CONDITIONS[r.if]) return "Unknown condition.";
+    return "";
+  }
+  function firedSummary(f) {
+    const n = {}; for (const l of f.log) if (l.rule) n[l.rule] = (n[l.rule] || 0) + 1;
+    const ks = Object.keys(n).sort((a, b) => a - b);
+    return ks.length ? "Rules used: " + ks.map((k) => `#${k} ×${n[k]}`).join(", ") + "." : "No rule fired: you just attacked.";
+  }
+  function panelTactics() {
+    const L = G.loadout(S), rules = L.rules;
+    const condOpts = Object.entries(D.CONDITIONS).map(([id, [label, p]]) => `<option value="${id}" ${tacticsDraft.if === id ? "selected" : ""}>${esc(label)}${p === "turn" ? " …" : p ? " …%" : ""}</option>`).join("");
+    const actList = tacticActions();
+    if (!actList.some(([id]) => id === tacticsDraft.do)) actList.push([tacticsDraft.do, G.describeAction(tacticsDraft.do)]);
+    const actOpts = actList.map(([id, l]) => `<option value="${esc(id)}" ${tacticsDraft.do === id ? "selected" : ""}>${esc(l)}</option>`).join("");
+    const kind = D.CONDITIONS[tacticsDraft.if]?.[1];
+    const vals = kind === "turn" ? D.TURNS : D.PERCENTS;
+    if (kind && !vals.includes(tacticsDraft.pct)) tacticsDraft.pct = kind === "turn" ? 3 : 50;
     const enemies = D.ENCOUNTERS.filter((e) => e.kind !== "event");
-    return `<div class="panel"><h2>Tactics</h2><p class="sub">Every turn, the first rule that is true <b>and</b> affordable fires. If none fires, you attack. Power attacks cost 40 + 2 × weapon weight stamina (${F.powerAttackCost(G.equipment(S).weapon ? D.ITEMS[G.equipment(S).weapon.item].weight : 0)} now).</p>
-      <div class="list">${rules.map((r, i) => { const d = G.describeRule(r); return `<div class="rule"><span class="n">${i + 1}</span><span>If <b>${esc(d.cond)}</b> → ${esc(d.act)}</span><span class="acts">
-        <button class="iconbtn" style="width:36px;height:36px" data-act="rup" data-i="${i}" aria-label="Move up" ${i ? "" : "disabled"}>↑</button><button class="iconbtn" style="width:36px;height:36px" data-act="rdown" data-i="${i}" aria-label="Move down" ${i < rules.length - 1 ? "" : "disabled"}>↓</button><button class="iconbtn" style="width:36px;height:36px" data-act="rdel" data-i="${i}" aria-label="Remove">✕</button></span></div>`; }).join("") || '<p class="sub">No rules — you will just attack.</p>'}</div>
-      <h3 style="margin-top:14px">Add a rule</h3>
-      <div class="list"><select id="tc" aria-label="Condition">${condOpts}</select>
-      ${needPct ? `<select id="tp" aria-label="Percent">${D.PERCENTS.map((p) => `<option ${tacticsDraft.pct === p ? "selected" : ""}>${p}</option>`).join("")}</select>` : ""}
-      <select id="ta" aria-label="Action">${actOpts}</select>
-      <button class="btn pri" data-act="radd" ${rules.length >= D.MAX_RULES ? "disabled" : ""}>Add rule</button></div>
-      <h3 style="margin-top:14px">Presets</h3><div class="chips">${Object.entries(D.PRESETS).map(([id, p]) => `<button class="chip" data-act="preset" data-id="${id}">${esc(p.name)}</button>`).join("")}</div></div>
+    const dead = G.deadRules(rules), editing = tacticsDraft.edit != null && rules[tacticsDraft.edit];
+    const cards = rules.map((r, i) => { const d = G.describeRule(r), w = dead[i] || ruleWarn(r);
+      return `<div class="rcard ${r.off ? "off" : ""} ${dead[i] ? "dead" : ""} ${tacticsDraft.edit === i ? "editing" : ""}"><div class="rhead"><span class="n">${i + 1}</span><div class="rtxt"><div><small>IF</small> <b>${esc(d.cond)}</b></div><div><small>THEN</small> <b>${esc(d.act)}</b></div>${r.off ? '<div class="rw">Switched off</div>' : w ? `<div class="rw">⚠ ${esc(w)}</div>` : ""}</div></div>
+        <div class="racts"><button class="iconbtn" data-act="rup" data-i="${i}" aria-label="Move up" ${i ? "" : "disabled"}>↑</button><button class="iconbtn" data-act="rdown" data-i="${i}" aria-label="Move down" ${i < rules.length - 1 ? "" : "disabled"}>↓</button><button class="iconbtn" data-act="roff" data-i="${i}" aria-label="${r.off ? "Switch on" : "Switch off"}">${r.off ? "▶" : "⏸"}</button><button class="iconbtn" data-act="redit" data-i="${i}" aria-label="Edit">✎</button><button class="iconbtn" data-act="rdel" data-i="${i}" aria-label="Remove">✕</button></div></div>`; }).join("");
+    return `<div class="panel"><h2>Tactics · ${esc(S.loadout)}</h2><p class="sub">Every turn, the <b>first</b> rule that is true <b>and</b> possible (enough magicka, stamina, potions…) fires. If none does, you attack. Power attacks cost ${F.powerAttackCost(G.equipment(S).weapon ? D.ITEMS[G.equipment(S).weapon.item].weight : 0)} stamina now.</p>
+      <div class="rlist">${cards || '<p class="sub">No rules: you will just attack.</p>'}</div>
+      <div class="card redit" id="tedit"><h3>${editing ? `Change rule ${tacticsDraft.edit + 1}` : "Add a rule"}</h3>
+      <label class="sub">If</label><select id="tc" aria-label="Condition">${condOpts}</select>
+      ${kind ? `<select id="tp" aria-label="${kind === "turn" ? "Turn" : "Percent"}">${vals.map((p) => `<option value="${p}" ${tacticsDraft.pct === p ? "selected" : ""}>${p}${kind === "turn" ? "" : "%"}</option>`).join("")}</select>` : ""}
+      <label class="sub">Then</label><select id="ta" aria-label="Action">${actOpts}</select>
+      ${editing ? `<div class="grid2"><button class="btn pri" data-act="rsave">Save rule ${tacticsDraft.edit + 1}</button><button class="btn" data-act="rcancel">Cancel</button></div>`
+        : `<button class="btn pri" data-act="radd" style="width:100%" ${rules.length >= D.MAX_RULES ? "disabled" : ""}>Add rule ${rules.length >= D.MAX_RULES ? `(max ${D.MAX_RULES})` : ""}</button><p class="sub" style="margin:4px 0 0">New rules go above “Always → Attack”, so they get used.</p>`}</div>
+      <h3 style="margin-top:14px">Presets</h3>${pendingPreset ? `<div class="card"><p>Replace your ${rules.length} rule${rules.length === 1 ? "" : "s"} with the <b>${esc(D.PRESETS[pendingPreset].name)}</b> preset?</p><div class="grid2"><button class="btn danger" data-act="presetyes">Replace</button><button class="btn" data-act="presetno">Keep mine</button></div></div>`
+        : `<div class="chips">${Object.entries(D.PRESETS).map(([id, p]) => `<button class="chip" data-act="preset" data-id="${id}">${esc(p.name)}</button>`).join("")}</div>`}</div>
       <div class="panel"><h2>Test fight</h2><p class="sub">A practice fight at full health. Nothing is used up, and you can't die.</p>
       <div class="list"><select id="te" aria-label="Enemy">${enemies.map((e) => `<option>${esc(e.name)}</option>`).join("")}</select><button class="btn pri" data-act="test">Fight it</button></div>
-      ${testResult ? `<p style="margin-top:10px"><b>${testResult.f.won ? "Victory" : "Defeat"}</b> against the ${esc(testResult.name)}.</p>${fightLog(testResult.f)}` : ""}</div>
+      ${testResult ? `<p style="margin-top:10px"><b>${testResult.f.won ? "Victory" : "Defeat"}</b> against the ${esc(testResult.name)}.</p><p class="sub">${firedSummary(testResult.f)}</p>${fightLog(testResult.f)}` : ""}</div>
       <div class="panel"><h2>Loadouts</h2><p class="sub">A loadout is gear + rules. Switch before a fight.</p>
       <div class="chips">${Object.keys(S.loadouts).map((n) => `<button class="chip ${n === S.loadout ? "on" : ""}" data-act="lo" data-name="${esc(n)}">${esc(n)}</button>`).join("")}</div>
-      <div class="list"><input id="lon" maxlength="20" placeholder="New loadout name, e.g. Dragon" aria-label="New loadout name"><div class="grid2"><button class="btn" data-act="losave">Save current as</button><button class="btn danger" data-act="lodel">Delete ${esc(S.loadout)}</button></div></div></div>`;
+      <div class="list"><input id="lon" maxlength="20" placeholder="New loadout name, e.g. Dragon" aria-label="New loadout name"><div class="grid2"><button class="btn" data-act="losave">Save current as</button>${pendingDel ? `<button class="btn danger" data-act="lodelyes">Really delete ${esc(S.loadout)}?</button>` : `<button class="btn danger" data-act="lodel">Delete ${esc(S.loadout)}</button>`}</div></div></div>`;
   }
 
   let horseCoat = "bay";
@@ -1900,10 +1927,24 @@
         <button class="btn pri" data-act="brew" style="width:100%" ${alchSel.length >= 2 ? "" : "disabled"}>Brew</button>`
         : '<p class="sub">You have no ingredients. Gather them on the road, in dungeons, or buy them at the general store and court wizard.</p>';
     } else if (townShop === "forge") {
+      const ftabs = `<div class="chips" style="margin-bottom:8px">${[["make", "⚒ Make"], ["refine", "🔥 Smelt & tan"], ["improve", "✨ Improve"]].map(([k, l2]) => `<button class="chip ${forgeTab === k ? "on" : ""}" data-act="ftab" data-id="${k}">${l2}</button>`).join("")}</div>`;
+      if (forgeTab === "make") {
+        note = `Make weapons, armor and jewellery from ingots, leather and gems. Better metals need Smithing perks. Smithing ${G.skill(S, "Smithing")}.`;
+        const g = forgeGroup, ids = SMITH.byGroup(g);
+        body = ftabs + `<div class="chips" style="margin-bottom:6px;flex-wrap:wrap">${SMITH.GROUPS.map(([k, l2]) => `<button class="chip ${g === k ? "on" : ""}" data-act="fgroup" data-id="${k}">${l2}</button>`).join("")}</div>`
+          + (SMITH.PERK_FOR[g] && !G.P(S, SMITH.PERK_FOR[g]) ? `<p class="sub">🔒 Needs the ${esc(PERKS.BY_ID[SMITH.PERK_FOR[g]].name)} perk (Hero tab → Perks → Smithing).</p>` : "")
+          + ids.map((id) => { const i = SMITH.info(S, id), it = D.ITEMS[id];
+            return `<div class="item"><div class="t">${esc(it.name)}<span>${esc(G.itemStats(id))}${it.slot === "valuable" ? ` · worth ${it.value}` : ""}</span><span>${i.mats.map(([m, n], k) => `<b class="${i.have[k] >= n ? "" : "miss"}">${n} ${esc(D.ITEMS[m].name)}</b> (${i.have[k]})`).join(" · ")}</span></div><button class="btn sm ${i.block ? "" : "pri"}" data-act="smake" data-id="${esc(id)}" ${i.block ? "disabled" : ""}>Make</button></div>`; }).join("");
+      } else if (forgeTab === "refine") {
+        note = "Smelt ore into ingots and tan pelts into leather. Ores come from mines; pelts from wolves, bears and sabre cats.";
+        body = ftabs + SMITH.REFINE.map((r, k) => { const i = SMITH.refineInfo(S, k);
+          return `<div class="item"><div class="t">${i.kind === "smelt" ? "🔥" : "🪶"} ${i.n} ${esc(D.ITEMS[i.out].name)}<span>from ${esc(SMITH.matText(i.mats))} · you can make ${i.times}</span></div><button class="btn sm ${i.times ? "pri" : ""}" data-act="srefine" data-id="${k}" ${i.times ? "" : "disabled"}>Once</button><button class="btn sm" data-act="srefineall" data-id="${k}" ${i.times > 1 ? "" : "disabled"}>All</button></div>`; }).join("");
+      } else {
       note = `Each improvement uses one piece of the item's material (ingots, leather, firewood, moonstone or dwarven metal). Blacksmiths sell the common ones; dungeons hide the rest. Your Smithing (${G.skill(S, "Smithing")}) sets how far: every 20 points allows one more quality level.`;
       const rows = S.inv.filter((r) => TOWNS.temperInfo(S, r));
-      body = rows.map((r) => { const i = TOWNS.temperInfo(S, r);
+      body = ftabs + rows.map((r) => { const i = TOWNS.temperInfo(S, r);
         return `<div class="item"><div class="t">${esc((r.tq ? TOWNS.QUALITY[r.tq] + " " : "") + D.ITEMS[r.item].name)}<span>${i.block ? esc(i.block) : `→ ${TOWNS.QUALITY[i.q + 1]} (+${i.per} ${D.ITEMS[r.item].slot === "weapon" ? "damage" : "armor"}) · uses 1 ${esc(D.ITEMS[i.ingot].name)} (you have ${i.have})`}</span></div><button class="btn sm" data-act="temper" data-id="${r.id}" ${i.block ? "disabled" : ""}>Improve</button></div>`; }).join("") || '<p class="sub">Nothing to improve.</p>';
+      }
     } else if (townShop === "jobs") {
       const avail = TOWNS.jobsAt(S, l), mine = S.jobs || [];
       note = "New jobs every in-game day (2 real hours). You can hold three at once. Clearing and delivery jobs pay out by themselves when done.";
@@ -2097,7 +2138,7 @@
       case "skysel": { const id = isNaN(+b.dataset.id) ? b.dataset.id : +b.dataset.id; sky.sel = sky.sel === id ? null : id; renderMenu(); break; }
       case "skyclose": closeMenu(); break;
       case "skyperks": closeMenu(); perkSkill = b.dataset.id; tab = "hero"; bump(); renderTabs(); renderPanel(true); setTimeout(() => $("#side").scrollIntoView({ block: "start" }), 50); break;
-      case "skytac": { const L = G.loadout(S); if (!inTactics(b.dataset.id)) L.rules.unshift({ if: "always", pct: 50, do: b.dataset.id }); say("Added to the top of your tactics: you'll use it whenever it's ready."); break; }
+      case "skytac": { const L = G.loadout(S); if (!inTactics(b.dataset.id)) { let k = 0; while (k < L.rules.length && /_below$/.test(L.rules[k].if) && /^potion|^spell:(healing|fast_healing)/.test(L.rules[k].do)) k++; L.rules.splice(k, 0, { if: "always", do: b.dataset.id }); } say("Added to your tactics, right after your healing rules: you'll use it whenever it's ready."); break; }
       case "skytacx": { const L = G.loadout(S); L.rules = L.rules.filter((r) => r.do !== b.dataset.id); say("Removed from your tactics."); break; }
       case "disench": say(ENCH.disenchant(S, +b.dataset.id)); break;
       case "enchant": { const m = ENCH.enchant(S, enchDraft.item, enchDraft.eff, enchDraft.gem); persist(true); renderPanel(true); showMessage("Arcane enchanter", m); publishCard(); break; }
@@ -2228,6 +2269,10 @@
       case "alch": { const id = +b.dataset.id; alchSel = alchSel.includes(id) ? alchSel.filter((x) => x !== id) : [...alchSel, id].slice(-3); renderPanel(true); break; }
       case "brew": { const before = S.inv.filter((x) => String(x.item).startsWith("brew|")).reduce((a, x) => a + x.qty, 0); const r = TOWNS.brew(S, alchSel); const made = S.inv.filter((x) => String(x.item).startsWith("brew|")).reduce((a, x) => a + x.qty, 0) - before; if (made > 0) tally("potions", made); alchSel = []; persist(); renderPanel(true); showMessage("Alchemy", r.text + ((r.skills || []).length ? " 📈 " + r.skills.join(" · ") : "")); break; }
       case "temper": say(TOWNS.temper(S, +b.dataset.id)); publishCard(); break;
+      case "ftab": forgeTab = b.dataset.id; renderPanel(true); break;
+      case "fgroup": forgeGroup = b.dataset.id; renderPanel(true); break;
+      case "smake": { const m = SMITH.make(S, b.dataset.id); if (/^You make/.test(m)) { SOUND.fx("clang"); tally("crafted"); persist(true); publishCard(); } say(m); break; }
+      case "srefine": case "srefineall": { const m = SMITH.refine(S, +b.dataset.id, a === "srefineall"); if (/^You (smelt|tan)/.test(m)) persist(true); say(m); break; }
       case "takejob": say(TOWNS.takeJob(S, b.dataset.id)); break;
       case "dropjob": say(TOWNS.dropJob(S, b.dataset.id)); break;
       case "handin": say(TOWNS.handIn(S, b.dataset.id)); break;
@@ -2243,19 +2288,31 @@
       case "attack": { const c = cardOf(b.dataset.id); if (c) doAttack(c); break; }
       case "pick": { const c = cardOf(b.dataset.id); if (c) doPickpocket(c); break; }
       case "ambush": S.ambush = !S.ambush; persist(true); toast(S.ambush ? "You crouch in the brush beside the road and wait." : "You step back onto the road."); renderPanel(true); break;
-      case "rup": case "rdown": { const i = +b.dataset.i, j = a === "rup" ? i - 1 : i + 1; [L.rules[i], L.rules[j]] = [L.rules[j], L.rules[i]]; persist(); renderPanel(true); break; }
-      case "rdel": L.rules.splice(+b.dataset.i, 1); persist(); renderPanel(true); break;
-      case "radd": { const r = { if: tacticsDraft.if, do: tacticsDraft.do }; if (D.CONDITIONS[r.if][1]) r.pct = tacticsDraft.pct; L.rules.push(r); persist(); renderPanel(true); break; }
-      case "preset": L.rules = G.clone(D.PRESETS[b.dataset.id].rules); say(`${D.PRESETS[b.dataset.id].name} tactics loaded. Rules for spells you don't know are skipped.`); break;
+      case "rup": case "rdown": { const i = +b.dataset.i, j = a === "rup" ? i - 1 : i + 1; if (j < 0 || j >= L.rules.length || !L.rules[i]) break; [L.rules[i], L.rules[j]] = [L.rules[j], L.rules[i]]; tacticsDraft.edit = null; persist(); renderPanel(true); break; }
+      case "rdel": { const i = +b.dataset.i; if (!L.rules[i]) break; const [gone] = L.rules.splice(i, 1); tacticsDraft.edit = null; persist(); renderPanel(true); toast(`Removed: ${G.describeRule(gone).cond} → ${G.describeRule(gone).act}`); break; }
+      case "roff": { const r = L.rules[+b.dataset.i]; if (!r) break; if (r.off) delete r.off; else r.off = true; persist(); renderPanel(true); break; }
+      case "redit": { const r = L.rules[+b.dataset.i]; if (!r) break; Object.assign(tacticsDraft, { if: r.if, do: r.do, pct: r.pct ?? 50, edit: +b.dataset.i }); renderPanel(true); $("#tedit")?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "center" }); break; }
+      case "rcancel": tacticsDraft.edit = null; renderPanel(true); break;
+      case "rsave": case "radd": {
+        const r = { if: tacticsDraft.if, do: tacticsDraft.do }; if (D.CONDITIONS[r.if]?.[1]) r.pct = tacticsDraft.pct;
+        if (a === "rsave" && L.rules[tacticsDraft.edit]) { const old = L.rules[tacticsDraft.edit]; if (old.off) r.off = true; L.rules[tacticsDraft.edit] = r; tacticsDraft.edit = null; toast("Rule saved."); }
+        else if (!G.addRule(L.rules, r)) return toast(`Max ${D.MAX_RULES} rules.`);
+        else toast(`Rule ${L.rules.indexOf(r) + 1} added.`);
+        persist(); renderPanel(true); break;
+      }
+      case "preset": pendingPreset = b.dataset.id; renderPanel(true); break;
+      case "presetno": pendingPreset = null; renderPanel(true); break;
+      case "presetyes": { const id = pendingPreset; pendingPreset = null; if (!D.PRESETS[id]) break; L.rules = G.clone(D.PRESETS[id].rules); tacticsDraft.edit = null; say(`${D.PRESETS[id].name} tactics loaded. Rules for spells you don't know are skipped.`); break; }
       case "test": {
         const name = $("#te").value, e2 = G.scaleEnemy(D.ENCOUNTERS.find((x) => x.name === name), S.level);
         const sim = G.clone(S); sim.health = G.maxHealth(sim); sim.healthTs = G.now(); sim._test = true;
         const f = new G.Fight(sim, e2); f.run();
         testResult = { f, name }; renderPanel(true); break;
       }
-      case "lo": if (S.trip?.status === "encounter") return toast("Not in the middle of a fight!"); S.loadout = b.dataset.name; say(`Switched to ${S.loadout}.`); break;
+      case "lo": if (S.trip?.status === "encounter") return toast("Not in the middle of a fight!"); S.loadout = b.dataset.name; tacticsDraft.edit = null; pendingPreset = null; say(`Switched to ${S.loadout}: its own gear and tactics.`); break;
       case "losave": { const n = ($("#lon").value || "").trim().slice(0, 20); if (!n) return toast("Give it a name first."); say(G.saveLoadoutAs(S, n)); break; }
-      case "lodel": say(G.deleteLoadout(S, S.loadout)); break;
+      case "lodel": pendingDel = true; renderPanel(true); setTimeout(() => { if (pendingDel) { pendingDel = false; if (tab === "tactics") renderPanel(true); } }, 5000); break;
+      case "lodelyes": pendingDel = false; tacticsDraft.edit = null; say(G.deleteLoadout(S, S.loadout)); break;
     }
   }
 

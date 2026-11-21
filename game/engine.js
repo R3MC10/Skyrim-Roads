@@ -9,7 +9,7 @@ const G = (() => {
   const SLOTS = ["weapon", "shield", "head", "chest", "hands", "feet"];
   const ARMOR_SLOTS = ["head", "chest", "hands", "feet", "shield"];
   const ARMOR_SKILL = { light: "Light Armor", medium: "Medium Armor", heavy: "Heavy Armor" };
-  const STACKABLE = new Set(["potion", "scroll", "soulgem", "tome", "ingredient", "trophy", "poison", "material", "food"]);
+  const STACKABLE = new Set(["potion", "scroll", "soulgem", "tome", "ingredient", "trophy", "poison", "material", "food", "valuable"]);
   const P = (s, id) => (typeof PERKS !== "undefined" ? PERKS.rank(s, id) : 0);
   // spell tiers for the "Novice ... Expert <school>" perks [Skyrim]
   const SPELL_TIER = { flames: "novice", frostbite: "novice", sparks: "novice", healing: "novice", oakflesh: "novice", conjure_familiar: "novice", fury: "novice",
@@ -86,6 +86,7 @@ const G = (() => {
       note(s, "The world map was redrawn. You find yourself in " + at + ".");
     }
     s.discovered = s.discovered.filter((n) => PLACES[n]);
+    if (fixTactics(s)) note(s, "⚔ Your tactics were fixed: rules you added under \"Always → Attack\" never fired. They now come first.");
     return s;
   }
   function note(s, text) { s.journal.unshift({ t: now(), text }); s.journal = s.journal.slice(0, 60); }
@@ -220,7 +221,36 @@ const G = (() => {
     if (it.slot === "ingredient") return "Ingredient";
     if (it.slot === "trophy") return "Trophy";
     if (it.slot === "material") return "Crafting material";
+    if (it.slot === "valuable") return "Valuable · sells well";
     return "";
+  }
+
+  /* tactics: a rule that is always true and always affordable (plain attack) ends the list: nothing under it can fire.
+     New rules go just above such a catch-all so they actually get used. */
+  const catchAll = (r) => r && !r.off && r.if === "always" && r.do === "attack";
+  function ruleSlot(rules) { const i = rules.findIndex(catchAll); return i < 0 ? rules.length : i; }
+  function addRule(rules, r, max = D.MAX_RULES) {
+    if (rules.length >= max) return false;
+    rules.splice(ruleSlot(rules), 0, r); return true;
+  }
+  /* which rules can never fire, and why (shown in the Tactics tab) */
+  function deadRules(rules) {
+    const out = {}, stop = rules.findIndex(catchAll);
+    if (stop >= 0) for (let i = stop + 1; i < rules.length; i++) if (!rules[i].off) out[i] = `Never used: rule ${stop + 1} (always attack) is above it.`;
+    return out;
+  }
+  /* [OURS] fixing older saves: rules the player added used to land under "always → attack" and never fired */
+  function fixTactics(s) {
+    if (s.tacV >= 2) return false;
+    let moved = false;
+    for (const l of Object.values(s.loadouts || {})) {
+      if (!Array.isArray(l.rules)) { l.rules = clone(D.PRESETS[D.DEFAULT_PRESET].rules); continue; }
+      l.rules = l.rules.filter((r) => r && r.if && r.do);
+      const i = l.rules.findIndex(catchAll);
+      if (i >= 0 && i < l.rules.length - 1) { const [c] = l.rules.splice(i, 1); l.rules.push(c); moved = true; }
+    }
+    s.tacV = 2;
+    return moved;
   }
 
   // loadouts
@@ -254,8 +284,8 @@ const G = (() => {
     return a;
   }
   function describeRule(r) {
-    const [label, pct] = D.CONDITIONS[r.if] || [r.if, false];
-    return { cond: pct ? `${label} ${r.pct}%` : label, act: describeAction(r.do) };
+    const [label, kind] = D.CONDITIONS[r.if] || [r.if, false];
+    return { cond: kind === "turn" ? `${label} ${r.pct || 2}` : kind ? `${label} ${r.pct}%` : label, act: describeAction(r.do) };
   }
   function hiddenChance(s, e, t) {   // [OURS] Skyrim detection is real-time line of sight; this is our stand-in
     const base = 0.25 + skill(s, "Sneak") / 150 - (e.danger === "high" ? 0.15 : 0) + (isNight(t) ? 0.1 : 0) + 0.15 * P(s, "detect_life")
@@ -360,7 +390,17 @@ const G = (() => {
         case "enemy_humanoid": return this.tags.has("humanoid");
         case "enemy_big": return this.tags.has("big");
         case "no_summon": return this.summonTurns === 0;
+        case "summon_active": return this.summonTurns > 0;
         case "no_armor_spell": return this.armorSpell === 0;
+        case "turn_at_least": return this.turn >= (r.pct || 2);
+        case "hp_lower_than_enemy": return this.pct(this.hp, maxHealth(s)) < this.pct(this.ehp, this.e.health);
+        case "enemy_dragon": return this.tags.has("dragon");
+        case "enemy_construct": return this.tags.has("construct");
+        case "enemy_tough": return this.tags.has("elite") || this.e.danger === "high";
+        case "enemy_boss": return !!this.e.boss;
+        case "sneak_ready": return (this.turn === 1 && this.hidden) || this.sneakNext;
+        case "follower_down": return !!this.followerDown;
+        case "follower_fighting": return this.allies.some((a) => a.follower);
       }
       return false;
     }
@@ -376,8 +416,10 @@ const G = (() => {
       return false;
     }
     choose() {
-      for (let i = 0; i < this.rules.length; i++)
-        if (this.cond(this.rules[i]) && this.affordable(this.rules[i].do)) return [i + 1, this.rules[i].do];
+      for (let i = 0; i < this.rules.length; i++) {
+        const r = this.rules[i];
+        if (r && !r.off && this.cond(r) && this.affordable(r.do)) return [i + 1, r.do];
+      }
       return [0, "attack"];
     }
     attack(power) {
@@ -621,6 +663,7 @@ const G = (() => {
     const got = [], tags = new Set(e.tags || []);
     for (const table of [...(tags.has("humanoid") ? ["humanoid"] : []), ...(tags.has("elite") ? ["elite"] : [])])
       for (const [item, ch] of D.LOOT[table]) if (Math.random() < ch) { give(s, item); got.push(D.ITEMS[item].name); }
+    if (tags.has("beast") && typeof SMITH !== "undefined") { const p = SMITH.peltFor(e.name); if (p && Math.random() < 0.7) { give(s, p); got.push(D.ITEMS[p].name); } }   // [Skyrim] pelts from animals
     return got;
   }
   function rollEncounter(s, t) {
@@ -931,7 +974,7 @@ const G = (() => {
     MAP_W, MAP_H, STEP_SECONDS, SLOTS, ARMOR_SLOTS, now, pxDist, holdAt, clock, isNight, shopsOpen, clockText,
     P, wtype, fxSum, lockChance, setAllyProvider, hiddenChance, rested, haggle, SPELL_TIER, newSave, maxHealth, maxMagicka, maxStamina, curHealth, setHealth, skill, useSkill, levelUp,
     riding, withHorse, give, take, invRow, carried, capacity, overweight, equipment, equip, unequip, countRestore, itemStats,
-    loadout: lo, saveLoadoutAs, deleteLoadout, spellCost, describeRule, describeAction, Fight, scaleEnemy, rollLoot,
+    loadout: lo, addRule, ruleSlot, deadRules, fixTactics, saveLoadoutAs, deleteLoadout, spellCost, describeRule, describeAction, Fight, scaleEnemy, rollLoot,
     rollEncounter, die, speed, startTrip, startEvent, eventChoices, eventChoice, buyFrom, minutesLeft, minutesTo, posAfter, advance, encounterAction, migrate, PLACES,
     shopTypes, shopStock, buyPrice, sellPrice, buy, sell, readTome, drinkPotion, recharge, clone, note,
   };

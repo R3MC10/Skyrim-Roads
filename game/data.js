@@ -1599,10 +1599,17 @@ const D = {
    "I have no summon",
    false
   ],
-  "no_armor_spell": [
-   "No armor spell active",
-   false
-  ]
+  "no_armor_spell": ["No armor spell active", false],
+  "turn_at_least": ["Turn number is at least", "turn"],
+  "hp_lower_than_enemy": ["My health % is lower than the enemy's", false],
+  "enemy_dragon": ["Enemy is a dragon", false],
+  "enemy_construct": ["Enemy is a Dwarven machine", false],
+  "enemy_tough": ["Enemy is tough (elite or deadly)", false],
+  "enemy_boss": ["Fighting a dungeon boss", false],
+  "sneak_ready": ["I'm hidden (sneak attack ready)", false],
+  "summon_active": ["My summon is fighting", false],
+  "follower_fighting": ["My follower is fighting with me", false],
+  "follower_down": ["My follower is down", false]
  },
  "PERCENTS": [
   10,
@@ -1712,7 +1719,8 @@ const D = {
   }
  },
  "DEFAULT_PRESET": "warrior",
- "MAX_RULES": 10,
+ "MAX_RULES": 16,
+ "TURNS": [2, 3, 4, 5, 6, 8, 10],
  "MAX_LOADOUTS": 5
 };
 if (typeof module !== 'undefined') module.exports = D;

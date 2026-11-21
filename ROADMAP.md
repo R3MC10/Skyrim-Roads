@@ -5,6 +5,8 @@ Each round: build one batch, test it (Node sims in /home/claude/tests + headless
 our own marked [OURS]; plain-language UI; phone first.
 
 ## Done
+- Round 26: smithing and valuables. Forge → ⚒ Make: weapons, armor and jewellery (iron, steel, elven, dwarven, hide & leather, bows; better metals need Smithing perks). 🔥 Smelt & tan: ore → ingots, pelts → leather → strips. Wolves, bears and sabre cats drop pelts; mines have ore. Gems (garnet to flawless diamond, 100–1000) and gold/silver rings and necklaces (up to 1200) drop from tough foes, treasure chests and bosses.
+- Gear bonuses show on your character (green ▲ on boosted skills; Active effects lists worn enchantments).
 - Cleared-place timers: a live countdown on a cleared dungeon (with a progress bar and the time it opens), ⏳ badges on the map, "opens in" in the Where-to list, and a Cleared places list in the Journal.
 - Round 25: market stalls. Own a house in a town and you can run a stall there (up to 8 things). Other players in that town see your stall under Town → 🛒 Market stalls and can buy, even while you're away; your game collects the gold next time it's open (the market keeps 5%). Take things back any time. Your house page shows what's on your stall.
 - Round 24: werewolf and vampire paths. Werewolf: the Circle offers it after the Companions' quest line; Beast Form once a day in tactics (10 turns: much harder hits, less damage taken, a heal, no potions); no Rested bonus; immune to disease; cleansing at Jorrvaskr for 1000 gold. Vampire: night vampires may infect you; cure with a Potion of Cure Disease or a shrine within 3 hours, or you turn; hunger stages over real hours make Destruction/Illusion and night blows stronger but slow healing in daylight; feed at inns; cure at a court wizard (soul gem + 500 gold).
@@ -37,7 +39,6 @@ our own marked [OURS]; plain-language UI; phone first.
 - Round 3: homes (Breezehome, Honeyside, Vlindrel Hall, Hjerim, Proudspire Manor at Skyrim prices): death-proof chest, Well Rested bed (+10%; inns now Rested +5%), daily garden.
 
 ## Next rounds (in order)
-26. Smithing: make your own weapons and armour at a forge from ingots and leather (iron → steel → elven → dwarven …, unlocked by Smithing perks), plus smelting ore and tanning hides.
 27. Social menu: friends list (add from Travellers or by name, see who's online and where), private messages, and trading with friends from anywhere (sent by courier).
 28. Mounts for the road: a cart you can buy to carry a lot more, and caravans between holds that players can guard together for pay.
 29. Spell crafting at the College: combine two effects you know into your own spell.
