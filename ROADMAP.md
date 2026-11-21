@@ -5,6 +5,8 @@ Each round: build one batch, test it (Node sims in /home/claude/tests + headless
 our own marked [OURS]; plain-language UI; phone first.
 
 ## Done
+- Mining: ⛏ Mine at Markarth, Karthwasten, Dawnstar, Darkwater Crossing, Kynesgrove, Shor's Stone, Embershard Mine and Bilegulch Mine (needs a pickaxe; veins grow back each in-game day; sometimes a gem). Trade window: every shop has Buy | Sell with Sell all. Timers count in-game time.
+- Tactics fixed (new rules went under 'Always attack'), bigger cards, 26 conditions.
 - Round 26: smithing and valuables. Forge → ⚒ Make: weapons, armor and jewellery (iron, steel, elven, dwarven, hide & leather, bows; better metals need Smithing perks). 🔥 Smelt & tan: ore → ingots, pelts → leather → strips. Wolves, bears and sabre cats drop pelts; mines have ore. Gems (garnet to flawless diamond, 100–1000) and gold/silver rings and necklaces (up to 1200) drop from tough foes, treasure chests and bosses.
 - Gear bonuses show on your character (green ▲ on boosted skills; Active effects lists worn enchantments).
 - Cleared-place timers: a live countdown on a cleared dungeon (with a progress bar and the time it opens), ⏳ badges on the map, "opens in" in the Where-to list, and a Cleared places list in the Journal.

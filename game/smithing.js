@@ -115,6 +115,34 @@ const SMITH = (() => {
     const sk = G.useSkill(s, "Smithing", (kind === "smelt" ? 3 : 1) * reps);
     return `${kind === "smelt" ? "You smelt" : "You tan"} ${matText(mats.map(([i, m]) => [i, m * reps]))} into ${n * reps} ${D.ITEMS[out].name}.` + (sk.length ? " " + sk.join(". ") : "");
   }
+  // ---- mining ([Skyrim] mines near these places; which ores each gives is [OURS], loosely after the real ones)
+  D.ITEMS.pickaxe = { name: "Pickaxe", slot: "misc", weight: 5, value: 5 };
+  D.SHOP_STOCK.blacksmith.push("pickaxe"); D.SHOP_STOCK.general?.push("pickaxe");
+  const MINES = {
+    Markarth: ["Cidhna Mine", [["ore_silver", 5], ["ore_iron", 2], ["ore_gold", 1]]],
+    Karthwasten: ["Sanuarach Mine", [["ore_silver", 4], ["ore_iron", 3]]],
+    Dawnstar: ["Iron-Breaker Mine", [["ore_iron", 5], ["ore_corundum", 2]]],
+    "Darkwater Crossing": ["Goldenrock Mine", [["ore_gold", 3], ["ore_corundum", 3], ["ore_iron", 2]]],
+    Kynesgrove: ["Steamcrag Diggings", [["ore_moonstone", 3], ["ore_corundum", 3], ["ore_iron", 2]]],
+    "Shor's Stone": ["Redbelly Mine", [["ore_iron", 5], ["ore_corundum", 2]]],
+    "Embershard Mine": ["Embershard Mine", [["ore_iron", 4], ["ore_corundum", 2], ["ore_silver", 1]]],
+    "Bilegulch Mine": ["Bilegulch Mine", [["ore_iron", 3], ["ore_corundum", 3], ["ore_gold", 1]]],
+  };
+  const VEIN_RENEW = 24 * 3600 / G.GAME_SPEED;     // the veins grow back after one in-game day (2 real hours)
+  const mineLeft = (s, place, t = G.now()) => Math.max(0, ((s.mined || {})[place] || 0) + VEIN_RENEW - t);
+  function mine(s, place = s.location, t = G.now()) {
+    const m = MINES[place];
+    if (!m || s.trip) return "There are no ore veins here.";
+    if (!count(s, "pickaxe")) return "You need a pickaxe. Blacksmiths and general stores sell them for a few coins.";
+    if (mineLeft(s, place, t) > 0) return "You've mined the veins here bare. They grow back in a day.";
+    const bag = m[1].flatMap(([o, w]) => Array(w).fill(o)), got = {};
+    const n = 3 + Math.floor(Math.random() * 3) + (G.skill(s, "Smithing") >= 50 ? 1 : 0);
+    for (let i = 0; i < n; i++) { const o = bag[Math.floor(Math.random() * bag.length)]; got[o] = (got[o] || 0) + 1; }
+    if (Math.random() < 0.15) { const g = "gem_" + ["garnet", "garnet", "amethyst", "amethyst", "ruby", "sapphire"][Math.floor(Math.random() * 6)]; got[g] = (got[g] || 0) + 1; }
+    for (const [o, k] of Object.entries(got)) G.give(s, o, k);
+    s.mined = { ...(s.mined || {}), [place]: t };
+    return `⛏ You work the veins in ${m[0]}: ${Object.entries(got).map(([o, k]) => `${k} ${D.ITEMS[o].name}`).join(", ")}.`;
+  }
   const byGroup = (g) => Object.keys(RECIPES).filter((id) => RECIPES[id].group === g).sort((a, b) => D.ITEMS[a].value - D.ITEMS[b].value);
-  return { GROUPS, RECIPES, REFINE, GEMS, PERK_FOR, info, make, refineInfo, refine, byGroup, peltFor, atForge, count, matText, xpFor };
+  return { MINES, VEIN_RENEW, mineLeft, mine, GROUPS, RECIPES, REFINE, GEMS, PERK_FOR, info, make, refineInfo, refine, byGroup, peltFor, atForge, count, matText, xpFor };
 })();
