@@ -19,6 +19,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
+          cache: gradle   # keep downloaded libraries between builds (Maven Central rate-limits busy runners)
       - name: Use the Android SDK already on the runner
         run: echo "sdk.dir=$ANDROID_HOME" > android/local.properties && ls $ANDROID_HOME/platforms | tail -3
       - name: Unlock the signing key (stored encrypted, password lives in GitHub secrets)
@@ -35,7 +36,7 @@ jobs:
         working-directory: android
         env:
           BUILD_NUMBER: ${{ github.run_number }}
-        run: chmod +x gradlew && (./gradlew assembleRelease --no-daemon --stacktrace || (echo "Retrying once (downloads sometimes fail)"; sleep 30; ./gradlew assembleRelease --no-daemon --stacktrace --refresh-dependencies))
+        run: chmod +x gradlew && (./gradlew assembleRelease --no-daemon --stacktrace || (echo "Retrying once (downloads sometimes fail)"; sleep 90; ./gradlew assembleRelease --no-daemon --stacktrace --refresh-dependencies))
       - run: cp android/app/build/outputs/apk/release/app-release.apk RoadsOfTheNorth.apk
       - name: Publish it as a download
         uses: softprops/action-gh-release@v2
