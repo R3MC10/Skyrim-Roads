@@ -36,6 +36,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Round 3: homes (Breezehome, Honeyside, Vlindrel Hall, Hjerim, Proudspire Manor at Skyrim prices): death-proof chest, Well Rested bed (+10%; inns now Rested +5%), daily garden.
 
 ## Next rounds (in order)
-26. Mounts for the road: a cart you can buy to carry a lot more, and caravans between holds that players can guard together for pay.
-27. Spell crafting at the College: combine two effects you know into your own spell.
-28. A bard's song: players can write a short line about a deed; the best-liked lines become songs that innkeepers sing.
+26. Smithing: make your own weapons and armour at a forge from ingots and leather (iron → steel → elven → dwarven …, unlocked by Smithing perks), plus smelting ore and tanning hides.
+27. Mounts for the road: a cart you can buy to carry a lot more, and caravans between holds that players can guard together for pay.
+28. Spell crafting at the College: combine two effects you know into your own spell.
+29. A bard's song: players can write a short line about a deed; the best-liked lines become songs that innkeepers sing.
