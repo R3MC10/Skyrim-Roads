@@ -860,7 +860,8 @@ const G = (() => {
   const shopTypes = (l) => D.SHOPS[l] || [];
   const shopStock = (l) => [...new Set(shopTypes(l).flatMap((k) => D.SHOP_STOCK[k] || []))];
   const haggle = (s) => 1 + [0, 0.1, 0.15, 0.2, 0.25, 0.3][P(s, "haggling")] + fxSum(s, "barter") / 100;   // [Skyrim] Haggling; Fortify Barter
-  const buyPrice = (s, item) => Math.max(1, Math.round(F.buyPrice(D.ITEMS[item].value, skill(s, "Mercantile")) / haggle(s) * (typeof FEST !== "undefined" ? FEST.shopDiscount() : 1)));   // Midyear: 10% off
+  const buyPrice = (s, item) => Math.max(1, Math.round(F.buyPrice(D.ITEMS[item].value, skill(s, "Mercantile")) / haggle(s) * (typeof FEST !== "undefined" ? FEST.shopDiscount() : 1)   // Midyear: 10% off
+    * (typeof WARS !== "undefined" && s.location && PLACES[s.location] ? WARS.discount(s, holdAt(PLACES[s.location])) : 1)));   // your clan rules this hold
   function sellPrice(s, row) {
     const it = D.ITEMS[row.item];
     let v = it.value;

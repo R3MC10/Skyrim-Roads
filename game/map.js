@@ -250,6 +250,27 @@ const WorldMap = (() => {
   }
 
   /* v = {player, name, trail, route, dest:{pos,name}, discovered, explored, others, bags, selected, t, zoom, center, reduceMotion} */
+  /* a soft tint over one hold, in a ruling clan's colour (built once at low resolution, then cached) */
+  const tintCache = {};
+  let regionGrid = null;
+  function tintFor(hold, color) {
+    const key = hold + color; if (tintCache[key]) return tintCache[key];
+    const GW = Terrain.GW, GH = Terrain.GH, holds = Object.keys(WORLD.holds), want = holds.indexOf(hold);
+    if (!regionGrid) {
+      regionGrid = new Uint8Array(GW * GH);
+      for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) {
+        const mx = (x + 0.5) * 4, my = (y + 0.5) * 4; let best = 0, bd = 1e12;
+        holds.forEach((h, k) => { const d = (WORLD.holds[h][1][0] * W - mx) ** 2 + (WORLD.holds[h][1][1] * H - my) ** 2; if (d < bd) { bd = d; best = k; } });
+        regionGrid[y * GW + x] = Terrain.grid[y * GW + x] === Terrain.T.SEA ? 255 : best;
+      }
+    }
+    const c = document.createElement("canvas"); c.width = GW; c.height = GH;
+    const g = c.getContext("2d"), img = g.createImageData(GW, GH);
+    const r = parseInt(color.slice(1, 3), 16), gg = parseInt(color.slice(3, 5), 16), b = parseInt(color.slice(5, 7), 16);
+    for (let i = 0; i < GW * GH; i++) if (regionGrid[i] === want) { img.data[i * 4] = r; img.data[i * 4 + 1] = gg; img.data[i * 4 + 2] = b; img.data[i * 4 + 3] = 255; }
+    g.putImageData(img, 0, 0);
+    return (tintCache[key] = c);
+  }
   function draw(canvas, v) {
     base = base || drawBase();
     const dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -265,6 +286,7 @@ const WorldMap = (() => {
     g.imageSmoothingEnabled = true; g.imageSmoothingQuality = "high";
     g.drawImage(base, 0, 0, W, H);
     g.drawImage(fogFor([...v.explored, ...v.discovered.map((n) => WORLD.places[n])]), 0, 0, W, H);
+    if (v.rulers?.length) { g.globalAlpha = 0.26; for (const r of v.rulers) g.drawImage(tintFor(r.hold, r.color), 0, 0, W, H); g.globalAlpha = 1; }   // holds ruled by a clan
     const s = dpr / k;                    // 1 screen px in map units: keeps icons and labels the same size at any zoom
     const [px, py] = P(v.player);
     if (v.trail?.length > 1) {

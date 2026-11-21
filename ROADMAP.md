@@ -5,6 +5,7 @@ Each round: build one batch, test it (Node sims in /home/claude/tests + headless
 our own marked [OURS]; plain-language UI; phone first.
 
 ## Done
+- Round 23: clan wars over the holds. Members earn their clan points in the hold where they win fights (1), clear dungeons (5) and fight dragon attacks (3); Arena wins count for Eastmarch (3). The clan on top at the end of a week rules that hold all next week: its colour tints the hold on the map and its members shop 10% cheaper there. Holds panel in the Journal.
 - Round 22: clean-up. The map only draws while it's on screen, and slows to 8 frames a second when nothing moves (less battery). Quick-jump menu at the top of the Journal. Shorter help texts. Old ladder, home and clan records of players gone for months are pruned from every phone's copy of the world.
 - Round 21: seasonal events on the real calendar. Witchingmoon (Oct 25–Nov 1: undead at night, more gold), Frostfall Blizzards (Nov 15–30: snow everywhere), New Life Festival (Dec 28–Jan 3: free inn rooms, a daily innkeeper's gift), Midyear Celebration (Jun 16–22: shops 10% off). Each has a goal with gold, materials and a title once a year; shown in the Journal with an announcement when it starts.
 - Round 20: clans. Found a clan in the Journal (name, 2-4 letter tag, two banner colours), invite online players, they join from the invite; founder can send people away or disband. Clan chat channel, [TAG] next to members' names on the map, and a banner in the clan's colours over every town where a member owns a house.
@@ -33,7 +34,6 @@ our own marked [OURS]; plain-language UI; phone first.
 - Round 3: homes (Breezehome, Honeyside, Vlindrel Hall, Hjerim, Proudspire Manor at Skyrim prices): death-proof chest, Well Rested bed (+10%; inns now Rested +5%), daily garden.
 
 ## Next rounds (in order)
-21. Clan wars: clans claim holds by winning weekly contests (bounty points, Arena wins, Hall gifts); the hold map shows who rules where.
 22. Werewolf and vampire paths (from the Companions and a rare night encounter), with their own powers and drawbacks.
 23. Player shops: sell your goods from a stall in your house's town while you're offline.
 11. Visit other players' homes (leave a gift, see their trophies).
