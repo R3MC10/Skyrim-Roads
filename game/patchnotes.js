@@ -3,6 +3,9 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b106", build: 106, date: "22 Nov 2026", title: "Big screens", items: [
+      "On a PC the game scales up on big monitors (1440p, 4K) and spreads out on wide and ultrawide screens: a bigger map, wider menus, the tab bar kept in the middle.",
+    ] },
     { id: "b105", build: 105, date: "22 Nov 2026", title: "Shop tabs, loot list, new names", items: [
       "Shops and player trades have SkyUI-style tabs (Weapons, Apparel, Potions and so on) for both buying and selling.",
       "Loot after a fight shows as a list with item pictures, weight and value.",
