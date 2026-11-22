@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b88", build: 88, date: "22 Nov 2026", title: "Accessibility options", items: [
+      "New in Settings → Accessibility: Text size with four steps (Normal, Big, Bigger, Biggest). Everything grows together, buttons included, so nothing gets cut off.",
+      "Colour-blind help for red, green or blue colour-blindness: health, magicka and stamina bars, danger levels, buffs and debuffs, item quality colours, enemy health bars in fights and danger marks on the map switch to colours that stay easy to tell apart.",
+      "High-contrast text: brighter grey text, solid dark panels and firmer outlines.",
+      "Reduce motion: no screen shake, hit flashes, drifting or sliding effects. It follows your phone's setting by default, and you can switch it on or off yourself.",
+      "One-hand mode: the Menu, Friends, map zoom, favourites and compass buttons gather at the bottom of the screen, on the left or right side, where your thumb can reach them.",
+      "All of it is saved on your phone like your other settings and works with both art styles."] },
     { id: "b87", build: 87, date: "22 Nov 2026", title: "World events for everyone", items: [
       "World events: the same events run for every player at the same time, on a fixed schedule. A banner and a Journal line tell you when one starts, a strip under the map shows how the North is doing, and the Journal's Misc tab lists what's coming next.",
       "Daedric invasion (about 3 times a day, 2 hours each): three Oblivion gates open in one hold. Travel to a gate and fight the Daedra (scamps, atronachs, dremora) to weaken it. Everyone's wins count, and more fighters means a sturdier gate. Each gate you helped close pays 150 gold. Close all three for a Sigil Stone (a huge reusable soul for enchanting) and the title Gatecloser.",
