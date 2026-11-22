@@ -1552,6 +1552,8 @@ body:has(#favBtn) .app,body:has(#twBtn) .app{padding-bottom:calc(190px + env(saf
 .pickgame.won .lpcard{animation:lpwon .5s ease-out}
 .pickgame.caught .lpcard{animation:lpsnap .35s;box-shadow:0 0 0 1px rgba(196,87,46,.7),0 20px 60px rgba(0,0,0,.6)}
 @media (prefers-reduced-motion:reduce){.pickgame .lpcard{animation:none!important}}
+/* ==== sneak mode (sneakmode.js) ==== */
+.mapbtns .sneakbtn{display:grid;place-items:center}.mapbtns .sneakbtn.on{color:#d8c8ff;box-shadow:0 0 0 1px rgba(190,165,255,.7),0 0 12px rgba(120,90,200,.5);background:rgba(40,28,70,.85)}
 </style>
 <script src="access.js"></script>
 </head>
@@ -1653,6 +1655,7 @@ body:has(#favBtn) .app,body:has(#twBtn) .app{padding-bottom:calc(190px + env(saf
 <script src="hud.js"></script>
 <script src="immerse.js"></script>
 <script src="pickgame.js"></script>
+<script src="sneakmode.js"></script>
 <script src="rumours.js"></script>
 <script src="motion.js"></script>
 <script src="favwheel.js"></script>
