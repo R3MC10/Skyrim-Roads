@@ -18,7 +18,7 @@
   }
   async function clearAll() {
     if (!LN) return;
-    try { await LN.cancel({ notifications: [{ id: 1 }, { id: 2 }] }); } catch (e) { /* nothing scheduled */ }
+    try { const ids = [1, 2, ...(typeof REMIND !== "undefined" ? REMIND.NOTE_IDS : [])]; await LN.cancel({ notifications: ids.map((id) => ({ id })) }); } catch (e) { /* nothing scheduled */ }
   }
   async function scheduleAway() {
     if (!LN || !pref("notify", true)) return;

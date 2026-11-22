@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b89", build: 89, date: "22 Nov 2026", title: "Never miss what's ready", items: [
+      "A new Today card in the Travel tab lists everything that's ready or running out of time: your house gardens, homestead goods, bounty board and festival rewards, world event rewards, a caravan you signed on with, courier trades from friends, your horse resting at the stables, rumour leads before they go cold, cleared places filling up again, a hall coffer running low, level-ups and perk points.",
+      "Each line has a Go button that takes you straight to the right screen, or picks the place on the map when you need to travel there first.",
+      "Small number badges on the Hero, Town, Journal and Travel tabs, the Friends button and the compass show how many things are waiting there.",
+      "Phone reminders while the game is closed: when your garden or homestead goods are ready, your caravan leaves in 10 minutes, a courier arrives, your horse is rested or a world event starts. Turn each kind on or off in Settings → Phone → Reminders. Never more than 4 a day."] },
     { id: "b88", build: 88, date: "22 Nov 2026", title: "Accessibility options", items: [
       "New in Settings → Accessibility: Text size with four steps (Normal, Big, Bigger, Biggest). Everything grows together, buttons included, so nothing gets cut off.",
       "Colour-blind help for red, green or blue colour-blindness: health, magicka and stamina bars, danger levels, buffs and debuffs, item quality colours, enemy health bars in fights and danger marks on the map switch to colours that stay easy to tell apart.",
