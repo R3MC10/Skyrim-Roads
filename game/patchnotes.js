@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b79", build: 79, date: "22 Nov 2026", title: "Party play, loot rolls and grown-up followers", items: [
+      "The map now follows the real game's layout much more closely: towns, roads and landmarks sit where you remember them.",
+      "Parties of up to 8: the leader picks where to go, everyone gets a Ready check first, then the party travels together. If the leader stops for something on the road, the others wait and fight beside them. Gold found on the road is split evenly.",
+      "Dungeons with your party: only the leader picks rooms and actions, the rest follow along. Everything found goes into one loot pile, and at the end everyone taps Want or Pass on each item. If more than one of you wants something, you all roll a d100 and the highest wins (ties roll again). Gold is split evenly. Dungeons get longer and busier with a bigger party.",
+      "New Lockpicking perk, Lucky Draw: +5/+10 on your loot rolls.",
+      "Followers grew up: they carry their own gear (which decides how hard they hit and how much they shrug off), level up from fights, and pick their own perks based on their style (Lydia sword and shield, Jenassa bow, Marcurio fire...). They still never die and never count as party members. New Speech perk: Leadership.",
+      "Bandits, mages and other people you fight now have perks of their own, shown on the encounter card and in the fight log."] },
     { id: "b78", build: 78, date: "22 Nov 2026", title: "The whole world, painted", items: [
       "All the new realistic artwork is in: every wilderness and dungeon background (Reach, Rift, marsh, hot springs, coast, ash wastes, caves, Nordic tombs, Dwemer ruins, Falmer caves and more), all 32 enemies in fights, and new textures for panels, parchment, the compass, the night sky and window frames."] },
     { id: "b76", build: 76, date: "22 Nov 2026", title: "Real paintings arrive", items: [

@@ -1,8 +1,7 @@
-const __GAME = process.env.W || require("path").join(__dirname, "../game/");
 // followers: their own pack and gear drive their stats and look, they level and pick perks by archetype, never count as
 // party members, and party members see and fight beside each other's followers. W=/path/to/web/ node test_followers2.js
 const fs = require("fs"), vm = require("vm");
-const W = process.env.W || __GAME + "";
+const W = process.env.W || "/home/claude/web_fol/";
 const c = { console, Math, Date, JSON, Float64Array, Float32Array, Uint8Array, Int32Array, Uint16Array, Int16Array, Object, Array, Set, Map, Proxy, Number, String };
 vm.createContext(c);
 for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "legendary.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "enchanting.js", "quests.js", "guilds.js", "priests.js", "horses.js", "horseback.js", "hall.js", "bounty.js", "visits.js", "cooking.js", "arena.js", "market.js", "smithing.js", "craftfair.js", "social.js", "ammo.js", "tomes.js", "magic.js", "combatai.js", "mp.js", "coop.js", "party.js", "followers2.js"])

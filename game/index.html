@@ -1192,6 +1192,44 @@ h3[class*="cat-"]{color:var(--cat)}
 .rcard .rdrag{cursor:grab;touch-action:none}.rcard.dragging{opacity:.6;outline:1px dashed var(--gold,#c9a45a)}.rcard.dropat{box-shadow:0 -3px 0 var(--gold,#c9a45a)}
 #sharein{width:100%;font-family:monospace;font-size:12px;min-height:64px;background:#11100c;color:inherit;border:1px solid #3a3226;border-radius:6px;padding:6px}
 .aiprev{margin-top:8px}.aiprev b{color:var(--gold,#c9a45a)}.sneak2{margin:6px 0 0}
+/* party play (partyplay.js): ready check chips, the leader / following card */
+.ppcard{border-color:rgba(214,178,94,.45)!important;background:linear-gradient(180deg,rgba(40,34,22,.55),rgba(16,15,12,.6))}
+.ppcard h3{margin:0 0 6px}
+.pprc{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.ppchip{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;border:1px solid rgba(200,190,170,.35);background:rgba(10,11,13,.55);font-size:13px;color:#d8cfbd}
+.ppchip.ok{border-color:rgba(143,224,138,.7);color:#c8f0c0;background:rgba(30,60,30,.45)}
+.ppchip.no{border-color:rgba(232,101,58,.7);color:#f4b8a0;background:rgba(70,25,15,.45)}
+.ppfollow{font-size:12px;padding:3px 8px;border-color:rgba(214,178,94,.55);color:#f0d890}
+/* followers: their own pack, perks and style (followers2.js) */
+.fol2 .fol2head{align-items:flex-start}
+.fol2 .fol2head .t{flex:1;min-width:0}
+.fol2 .fol2xp{height:5px;margin:5px 0 3px}
+.fol2 .fol2xp i{background:linear-gradient(90deg,#b98a3a,#e8c46a)}
+.fol2 .fol2tabs{margin:8px 0}
+.fol2 .fol2gear .slot b{color:#e8dcc0;font-weight:600;margin-top:2px}
+.fol2 .fol2skills{margin:6px 0 10px}
+.fol2 .fol2skills .slot .bar{height:4px;margin-top:4px}
+.fol2 .fol2skills .slot .bar i{background:linear-gradient(90deg,#6f8fb8,#bcd6ff)}
+.fol2 .fol2list .item.on{box-shadow:inset 3px 0 0 #8fc0ff}
+.fol2 .fol2sky{margin:6px 0}
+/* foe perks (foeperks.js) */
+.foeperks{margin:2px 0 6px;font-size:.86em;color:#e0c48a}.foeperks b{color:#f0d9a0}.foeperks span{color:#ffb36b}.foeperks small{opacity:.7}
+.foeperks.el-fire span{color:#ff8a4c}.foeperks.el-frost span{color:#8fd3ff}.foeperks.el-shock span{color:#c9a7ff}.foeperks.el-heal span{color:#9be38b}
+.flog .fpline span:last-child{color:#ffb36b;font-style:italic}
+/* party loot vote (lootvote.js) */
+.lv-list{display:flex;flex-direction:column;gap:6px;margin:8px 0;max-height:52vh;overflow:auto}
+.lv-row{display:flex;align-items:center;gap:8px;padding:6px 8px;border:1px solid rgba(214,178,94,.25);border-radius:8px;background:rgba(0,0,0,.25)}
+.lv-row .nm{flex:1;min-width:0;display:flex;flex-direction:column}.lv-row .nm small{opacity:.7;color:#ffb36b}
+.lv-row.won{border-color:#e0c060;box-shadow:0 0 8px rgba(224,192,96,.35)}
+.lv-tag{font-size:.8em;color:#e0c48a}.lv-gold{color:#f0d070;margin:4px 0}.lv-timer{text-align:center}
+.lv-dice{display:flex;flex-wrap:wrap;gap:4px;align-items:center}.lv-dice em{font-size:.75em;opacity:.7}
+.lv-dice .die{display:inline-grid;place-items:center;min-width:26px;height:26px;border-radius:6px;background:#efe3c4;color:#2a1d10;font-style:normal;font-weight:700;box-shadow:inset 0 -2px 0 rgba(0,0,0,.25);animation:lvroll .9s ease-out}
+.lv-dice small{font-size:.72em;margin-right:6px;opacity:.85}
+.lv-dice .plus{font-size:.75em;color:#9be38b;margin-left:-2px}
+@keyframes lvroll{0%{transform:rotate(-200deg) scale(.4);opacity:0}60%{transform:rotate(20deg) scale(1.15);opacity:1}100%{transform:none}}
+.lv-wait h3{margin:0 0 4px}
+html.px .lv-row,html.px .lv-dice .die{border-radius:0}
+@media (prefers-reduced-motion:reduce){.lv-dice .die{animation:none}}
 
 /* [gear] gear preview paper dolls in the item details, and gear thumbnails on other players' cards */
 .gearprev{display:flex;gap:10px;justify-content:center;margin:8px 0 4px}
@@ -1213,6 +1251,7 @@ h3[class*="cat-"]{color:var(--cat)}
 <script src="formulas.js"></script>
 <script src="perks.js"></script>
 <script src="perkfx.js"></script>
+<script src="foeperks.js"></script>
 <script src="legendary.js"></script>
 <script src="powers.js"></script>
 <script src="engine.js"></script>
@@ -1262,6 +1301,9 @@ h3[class*="cat-"]{color:var(--cat)}
 <script src="mp.js"></script>
 <script src="coop.js"></script>
 <script src="party.js"></script>
+<script src="followers2.js"></script>
+<script src="partyplay.js"></script>
+<script src="lootvote.js"></script>
 <script src="store.js"></script>
 <script src="map.js"></script>
 <script src="backup.js"></script>
