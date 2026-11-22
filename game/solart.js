@@ -320,7 +320,7 @@ const SOLART = (() => {
     PLACEART.THEME.ashcave = (g, H2, w, h, clim) => { PLACEART.THEME.cave(g, H2, w, h, clim); g.fillStyle = "rgba(110,100,92,.35)"; g.fillRect(0, h * 0.72, w, h * 0.28); glow(g, w / 2, h * 0.66, 30, "230,120,60", 0.25); };
     PLACEART.THEME.miraak = PLACEART.THEME.temple;
   }
-  // the docks banner in the Town tab
+  // the docks banner in the Area tab
   if (typeof PLACEART !== "undefined") PLACEART.SECTION.docks = (g, H2, w, h) => {
     H2.sky(g, w, h, "dusk"); g.fillStyle = P.sea; g.fillRect(0, h * 0.55, w, h * 0.45);
     g.strokeStyle = "rgba(255,255,255,.3)"; for (let i = 0; i < 10; i++) { const x = (i * 41) % w, y = h * 0.62 + (i * 7) % (h * 0.3); g.beginPath(); g.moveTo(x, y); g.lineTo(x + 14, y); g.stroke(); }

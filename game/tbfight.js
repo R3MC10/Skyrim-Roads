@@ -27,7 +27,8 @@ const TB = (() => {
     rounds: { normal: 8, tough: 12, boss: 16 },                          // how long a fight should roughly last
     min: { normal: 1.2, tough: 1.5, boss: 1.8 }, max: { normal: 6, tough: 7, boss: 8 } };   // bounds on the health boost
   const FOE_HP = T.hp.normal;
-  const PARTY_HP = 0.45;        // +45% foe health per extra real player in the fight
+  const PARTY_HP = 0.45;        // +45% foe health per extra real player in the fight (shared out over the extra foes below)
+  const MAX_FOES = 6;           // [OURS] a party meets one foe per hero, one after another (like dungeon rooms), at most 6; bosses stay alone
   const MAX_ROUNDS = 40;
   const MP_REGEN = 1.6, SP_REGEN = 1.4;
   const TURN_SECONDS = 60;      // a real player's turn in a party fight, then Auto
@@ -94,7 +95,9 @@ const TB = (() => {
       // within bounds, so fights don't end in two rounds at one level and drag on at another
       const dpr = this.estimate(f);
       const base = Math.max(1, f.ehp), kk = dpr > 0 ? clamp(dpr * T.rounds[this.kind] / base, T.min[this.kind], T.max[this.kind]) : T.hp[this.kind];
-      const k = kk * (1 + PARTY_HP * this.players);
+      // a party faces more foes, not one sponge: the same total toughness, split over one foe per hero
+      this.waves = this.players > 0 && !f.e.boss ? Math.min(MAX_FOES, 1 + this.players) : 1; this.wave = 1;
+      const k = kk * (1 + PARTY_HP * this.players) / this.waves;
       f.ehp = Math.round(f.ehp * k); f.ehp0 = f.ehp; this.ehpMax = f.ehp;
       f.e.tbHp = this.ehpMax;
       f.regenMp *= MP_REGEN; f.regenSp *= SP_REGEN;   // several actions a round need a bit more breath and magicka per round
@@ -118,7 +121,14 @@ const TB = (() => {
       return Math.max(w, m) + al;
     }
     emit(who, text, kind, extra = {}) { const e = { who, text, kind, round: this.round, hp: Math.max(0, Math.round(this.f.hp)), ehp: Math.max(0, Math.round(this.f.ehp)), ...extra }; this.ev.push(e); return e; }
-    get over() { const f = this.f; return f.hp <= 0 || f.ehp <= 0 || !!f.endWon || this.round > MAX_ROUNDS; }
+    get over() { const f = this.f; if (f.ehp <= 0 && f.hp > 0 && !f.endWon && this.wave < this.waves) this.nextFoe(); return f.hp <= 0 || f.ehp <= 0 || !!f.endWon || this.round > MAX_ROUNDS; }
+    /* a party fight: the foe fell, the next one steps in */
+    nextFoe() {
+      const f = this.f; this.wave++;
+      f.ehp = this.ehpMax; f.fpAvoided = false;
+      const left = this.waves - this.wave;
+      this.emit("foe", `Another ${String(f.e.name).toLowerCase()} steps in! ${left ? `(${left} more behind it)` : "(the last one)"}`, "foe", { wave: this.wave });
+    }
     /* initiative order for a new round */
     rollOrder() {
       const f = this.f, out = [{ id: "me", name: this.s.name || "You", init: this.st.init + d10() }];
@@ -456,6 +466,7 @@ const TB = (() => {
     return out.slice(0, 2);
   }
   function render(state) {
+    try { ui?.sess?.remote?.sync?.(ui.sess); } catch (e) { /* the party view never breaks the fight */ }
     const el = document.getElementById("tbf"); if (!el || !ui) return;
     const sess = ui.sess, f = sess.f, s = f.s;
     const newEv = sess.ev.slice(ui.shown); ui.shown = sess.ev.length;
@@ -541,38 +552,86 @@ const TB = (() => {
     if (cb) cb();
   }
 
-  // ------------------------------------------------------------------ live party turns (each player picks on their own phone)
-  /* The phone that started the fight runs it and owns the record tbf/<id>; when a party member's turn comes it writes
-     {turn:{pid, until}} and waits for that member's phone to write back {reply:{pid, move}}. 60 s, then Auto. */
+  // ------------------------------------------------------------------ live party fights (everyone sees the fight; each player picks on their own phone)
+  /* The phone that started the fight runs it and owns the record tbf/<id>. It keeps the record up to date (foe, health,
+     log, who's in it) so party members in the fight watch it live on their own screen. When a member's turn comes the
+     record holds {turn:{pid, until}} and the member's phone writes back {reply:{pid, move}}. 60 s, then Auto. */
+  function fightState(sess) {
+    const f = sess.f, w = sess.waiting;
+    return { foe: f.e.name, boss: !!f.e.boss, round: sess.round, wave: sess.wave || 1, waves: sess.waves || 1,
+      ehp: Math.max(0, Math.round(f.ehp)), ehpMax: sess.ehpMax, ownerName: f.s.name, hp: Math.max(0, Math.round(f.hp)), hpMax: G.maxHealth(f.s),
+      pids: f.allies.filter((a) => a.player && a.pid).map((a) => a.pid),
+      allies: f.allies.filter((a) => !a.summon).slice(0, 9).map((a) => ({ name: a.name, pid: a.pid || null, hp: Math.max(0, Math.round(a.hp ?? 0)), hpMax: Math.round(a.hp0 || a.maxHp || a.hp || 1), down: !!a.down })),
+      turn: w ? { pid: w.pid, until: w.until, name: w.name, heals: w.al?.heals || 0, pots: w.al?.pots || 0 } : null,
+      log: sess.ev.filter((e) => e.kind !== "round").slice(-6).map((e) => e.text),
+      done: !!sess.done, won: sess.done ? !!f.won : null, t: Date.now() / 1000 };
+  }
   function remoteFor(store, myId) {
     if (!store || typeof store.put !== "function") return null;
-    let fid = null, cur = null, watching = false;
+    let fid = null, cur = null, watching = false, last = "", lastT = 0, made = false, timer = null;
+    const push = (force) => {
+      const sess = cur; if (!sess || !fid) return;
+      const st = fightState(sess); if (!st.pids.length) return;
+      const k = JSON.stringify({ ...st, t: 0 });
+      if (k === last) return;
+      if (!force && Date.now() - lastT < 600) { clearTimeout(timer); timer = setTimeout(() => push(true), 650); return; }
+      last = k; lastT = Date.now();
+      if (!made) { made = true; store.put("tbf", fid, { owner: myId, ...st }); }
+      else store.change("tbf", fid, (x) => ({ ...(x || {}), owner: myId, ...st }));
+    };
+    const watchReplies = () => {
+      if (watching || !store.watch) return; watching = true;
+      store.watch("tbf", (docs) => { const s2 = cur, d = fid && docs.find((x) => x.id === fid); if (s2 && d?.reply && s2.waiting && d.reply.pid === s2.waiting.pid && d.reply.round === s2.round) s2.waiting.move = d.reply.move; });
+    };
+    const start = (sess) => { cur = sess; fid = fid || `${myId}-${Math.floor(Date.now() / 1000)}`; watchReplies(); };
     return {
-      ask(sess, al) {
-        cur = sess;
-        fid = fid || `${myId}-${Math.floor(Date.now() / 1000)}`;
-        const f = sess.f;
-        store.put("tbf", fid, { owner: myId, foe: f.e.name, round: sess.round, ehp: Math.round(f.ehp), ehpMax: sess.ehpMax, turn: { pid: al.pid, until: sess.waiting.until, name: al.name, heals: al.heals || 0, pots: al.pots || 0 }, log: sess.ev.slice(-4).map((e) => e.text), t: Date.now() / 1000 });
-        if (!watching && store.watch) { watching = true; store.watch("tbf", (docs) => { const s2 = cur, d = fid && docs.find((x) => x.id === fid); if (s2 && d?.reply && s2.waiting && d.reply.pid === s2.waiting.pid && d.reply.round === s2.round) s2.waiting.move = d.reply.move; }); }
-      },
+      /* called whenever the fight screen updates */
+      sync(sess) { if (!sess.f.allies.some((a) => a.player && a.pid)) return; start(sess); push(sess.done); },
+      ask(sess) { start(sess); push(true); },
       live: () => !!store.online,
-      end() { if (fid) store.remove?.("tbf", fid); fid = null; cur = null; },
+      end() {
+        clearTimeout(timer);
+        if (cur && fid) { push(true); const id = fid; setTimeout(() => store.remove?.("tbf", id), 12000); }   // members see the ending, then it's tidied away
+        fid = null; cur = null; made = false; last = "";
+      },
     };
   }
-  /* the member's side: when a fight record asks for my move, show a small picker */
+  /* the member's side: a fight I'm standing in shows up on my screen, live; on my turn I pick a move there */
+  const watchClosed = {};
   function watchTurns(store, getMe) {
     if (!store?.watch) return;
+    const bar = (v, m, cls) => `<span class="tbw-bar ${cls}"><i style="width:${Math.max(0, Math.min(100, Math.round(100 * v / Math.max(1, m))))}%"></i></span>`;
     store.watch("tbf", (docs) => {
       const me = getMe(); if (!me) return;
-      const d = docs.find((x) => x.turn && x.turn.pid === me && !(x.reply && x.reply.round === x.round) && x.turn.until > Date.now());
-      const el = document.getElementById("tbask");
-      if (!d) { if (el) el.remove(); return; }
-      if (el && el.dataset.k === `${d.id}:${d.round}`) return;
-      const box = el || document.createElement("div"); box.id = "tbask"; box.className = "tbask"; box.dataset.k = `${d.id}:${d.round}`;
-      const opts = [["attack", "⚔ Attack"], ["power", "💥 Power attack"], ["guard", "🛡 Guard"], ...(d.turn.heals ? [["heal", "✚ Heal the leader"]] : []), ...(d.turn.pots ? [["potion", "🧪 Potion"]] : [])];
-      box.innerHTML = `<b>Your turn vs ${esc(d.foe)} (round ${d.round})</b><div class="sub">${esc((d.log || []).slice(-2).join(" · "))}</div><div class="tbaskb">${opts.map(([k, l]) => `<button class="btn" data-tbmove="${k}">${l}</button>`).join("")}</div>`;
-      box.onclick = (ev) => { const b = ev.target.closest("[data-tbmove]"); if (!b) return; store.change("tbf", d.id, (x) => ({ ...x, reply: { pid: me, move: b.dataset.tbmove, round: d.round } })); box.remove(); };
-      if (!el) document.body.appendChild(box);
+      const nowS = Date.now() / 1000;
+      const d = docs.find((x) => x.owner !== me && (x.pids || []).includes(me) && nowS - (x.t || 0) < 180 && !watchClosed[x.id])
+        || docs.find((x) => x.turn && x.turn.pid === me && !(x.reply && x.reply.round === x.round) && x.turn.until > Date.now() && !watchClosed[x.id]);
+      let el = document.getElementById("tbwatch");
+      if (!d || open) { if (el) el.remove(); return; }
+      if (!el) {
+        el = document.createElement("div"); el.id = "tbwatch"; el.className = "tbwatch"; el.setAttribute("role", "dialog"); el.setAttribute("aria-label", "Party fight");
+        el.addEventListener("click", (ev) => {
+          const b = ev.target.closest("button"); if (!b) return;
+          const id = el.dataset.id;
+          if (b.dataset.tbwclose) { watchClosed[id] = true; el.remove(); return; }
+          if (b.dataset.tbmove) { const rd = +el.dataset.round; store.change("tbf", id, (x) => (x ? { ...x, reply: { pid: getMe(), move: b.dataset.tbmove, round: rd } } : x)); el.querySelector(".tbw-turn")?.classList.add("sent"); }
+        });
+        document.body.appendChild(el);
+      }
+      el.dataset.id = d.id; el.dataset.round = d.round;
+      const myTurn = d.turn && d.turn.pid === me && !(d.reply && d.reply.round === d.round) && d.turn.until > Date.now();
+      const opts = [["attack", "⚔ Attack"], ["power", "💥 Power attack"], ["guard", "🛡 Guard"], ...(d.turn?.heals ? [["heal", "✚ Heal the leader"]] : []), ...(d.turn?.pots ? [["potion", "🧪 Potion"]] : [])];
+      const lead = esc(d.ownerName || "your leader");
+      const foeN = d.waves > 1 ? ` <small>foe ${d.wave} of ${d.waves}</small>` : "";
+      el.innerHTML = `<div class="tbw-in">
+        <div class="tbw-head"><b>⚔ Fighting beside ${lead}</b><span>Round ${d.round || 1}</span></div>
+        <div class="tbw-foe"><b>${esc(d.foe)}${foeN}</b>${bar(d.ehp, d.ehpMax, "foe")}</div>
+        <div class="tbw-team"><div class="tbw-m"><span>${lead} ⚑</span>${bar(d.hp, d.hpMax, "hp")}</div>${(d.allies || []).map((a) => `<div class="tbw-m${a.down ? " down" : ""}${a.pid === me ? " me" : ""}"><span>${esc(a.name)}${a.pid === me ? " (you)" : ""}${a.down ? " · down" : ""}</span>${bar(a.hp, a.hpMax, "hp")}</div>`).join("")}</div>
+        <div class="tbw-log">${(d.log || []).map((t) => `<p>${esc(t)}</p>`).join("")}</div>
+        ${d.done ? `<div class="tbw-end ${d.won ? "won" : "lost"}"><b>${d.won ? "Victory!" : "Defeated…"}</b><button class="btn pri" data-tbwclose="1">Continue</button></div>`
+          : myTurn ? `<div class="tbw-turn"><b>Your turn</b> <small class="num">${Math.max(0, Math.ceil((d.turn.until - Date.now()) / 1000))}s</small><div class="tbaskb">${opts.map(([k, l]) => `<button class="btn" data-tbmove="${k}">${l}</button>`).join("")}</div></div>`
+          : `<p class="tbw-wait">${d.turn ? `⏳ ${esc(d.turn.name)} is choosing…` : `${lead} is fighting. Your turn comes up in the turn order.`}</p>`}
+      </div>`;
     });
   }
 

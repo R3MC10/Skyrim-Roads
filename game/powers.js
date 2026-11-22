@@ -11,7 +11,7 @@ const POWERS = (() => {
   const THIEF = ["Alchemy", "Light Armor", "Lockpicking", "Pickpocket", "Sneak", "Speechcraft", "Mercantile", "Acrobatics", "Streetwise"];
   const STONES = {
     warrior: ["The Warrior Stone", "Combat skills improve 20% faster."], mage: ["The Mage Stone", "Magic skills improve 20% faster."],
-    thief: ["The Thief Stone", "Stealth skills improve 20% faster."], lady: ["The Lady Stone", "Health and stamina regenerate 25% faster."],
+    thief: ["The Thief Stone", "Stealth skills improve 20% faster."], lady: ["The Lady Stone", "Healing effects and stamina regenerate 25% faster."],
     lord: ["The Lord Stone", "+50 armor rating and 25% less damage from magic."], steed: ["The Steed Stone", "+100 carry weight; worn armor weighs nothing."],
     lover: ["The Lover Stone", "Every skill improves 15% faster."], atronach: ["The Atronach Stone", "+50 magicka, but magicka regenerates 50% slower."],
     apprentice: ["The Apprentice Stone", "Magicka regenerates twice as fast, but you take double damage from magic."],

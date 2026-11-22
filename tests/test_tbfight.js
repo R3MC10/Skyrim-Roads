@@ -149,10 +149,16 @@ if (!process.env.SIMONLY) {
 { const s = fresh("warrior", 20), f = new G.Fight(s, enc("Bandit outlaw", 20));
   const mate = COOP.allyFromCard({ id: "p2", name: "Beta", coop: { prof: { dmg: 20, hp: 300, red: 0.2, role: "fighter" } } }); mate.pid = "p2"; f.allies.push(mate);
   const asked = []; const ss = new TB.Session(f, { trySneak: false }); ss.remote = { ask: (sess, al) => asked.push(al.pid), end() {} };
-  ok(ss.ehpMax > Math.round(f.e.hp * TB.FOE_HP), "party fights: the foe is tougher with a real player");
+  ok(ss.waves === 2 && ss.ehpMax * ss.waves > Math.round(f.e.hp * TB.FOE_HP), "party fights: two heroes meet two foes, tougher in total");
   let r = ss.begin(), waited = false, g = 0;
   while (!ss.done && g++ < 300) { if (r.turn === "me") { r = ss.act("attack"); if (r.turn === "next") r = ss.advance(); continue; } if (r.turn === "wait") { waited = true; if (asked.length === 1) ss.waiting.move = "power"; else ss.waiting.until = 0; r = ss.advance(); continue; } r = ss.advance(); }
-  ok(waited && asked[0] === "p2", "the fight waited for Beta's phone"); ok(ss.ev.some((e) => /Beta power attack/.test(e.text)), "Beta's chosen move was played"); ok(ss.ev.some((e) => /took too long: Auto/.test(e.text)) || asked.length === 1, "a late player gets Auto"); }
+  ok(waited && asked[0] === "p2", "the fight waited for Beta's phone"); ok(ss.ev.some((e) => /Beta power attack/.test(e.text)), "Beta's chosen move was played"); ok(ss.ev.some((e) => /took too long: Auto/.test(e.text)) || asked.length === 1, "a late player gets Auto");
+  ok(ss.wave === 2 || !f.won, "a won party fight went through every foe"); ok(!f.won || ss.ev.some((e) => /Another .* steps in/.test(e.text)), "the next foe steps in"); }
+// 9. bigger party, more foes (at most 6); a boss stays alone
+{ const s = fresh("warrior", 20), f = new G.Fight(s, enc("Bandit outlaw", 20));
+  for (let i = 0; i < 7; i++) { const m = COOP.allyFromCard({ id: "p" + i, name: "M" + i, coop: { prof: { dmg: 20, hp: 300, red: 0.2, role: "fighter" } } }); m.pid = "p" + i; f.allies.push(m); }
+  const ss = new TB.Session(f, { trySneak: false }); ok(ss.waves === 6, "8 heroes meet 6 foes"); }
+{ const s = fresh("warrior", 20), f = new G.Fight(s, enc("Bandit outlaw", 20)); const ss = new TB.Session(f, { trySneak: false }); ok(ss.waves === 1, "alone: one foe"); }
 }
 console.log(fails ? "FAILED " + fails : "ALL OK");
 globalThis.__fails = fails;

@@ -218,7 +218,7 @@ const TABMENU = (() => {
   function hubHTML(S) {
     const b = bar(S), inTown = S.location && !S.trip && typeof TOWNS !== "undefined" && TOWNS.isTown?.(S.location);
     const dir = (d) => { const m = DIR[d]; return `<button class="tw-dir tw-${d}" data-twgo="${m}" aria-label="${NAME[m]}">${ico(m)}<b>${NAME[m]}</b><small>${SUBT[m]}</small>${m === "char" && b.perks ? '<span class="dot"></span>' : ""}</button>`; };
-    const quick = [inTown ? ["town", "Town", "town"] : null, ["log", "Journal", "log"], ["social", "Social", "people"], ["tactics", "Tactics", "tactics"], ["settings", "Settings", "gear"], typeof SEARCH !== "undefined" ? ["search", "Search", "search"] : null].filter(Boolean);
+    const quick = [inTown ? ["town", "Area", "town"] : null, ["log", "Journal", "log"], ["social", "Social", "people"], ["tactics", "Tactics", "tactics"], ["settings", "Settings", "gear"], typeof SEARCH !== "undefined" ? ["search", "Search", "search"] : null].filter(Boolean);
     return `<div class="tw-bg" aria-hidden="true"></div><div class="tw-veil" aria-hidden="true"></div>${starsBG()}
       <div class="tw-top"><b class="tw-where"></b><span class="tw-when"></span><small class="tw-fc"></small></div>
       <div class="tw-rose">${roseSVG()}${dir("up")}${dir("left")}${dir("right")}${dir("down")}</div>

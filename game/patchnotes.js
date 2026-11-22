@@ -3,6 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b104", build: 104, date: "22 Nov 2026", title: "Party fights together, no free healing, hotkeys", items: [
+      "The Town tab is now called Area (shortcut A on a PC).",
+      "Party fights: everyone in the fight now sees it live on their own screen (the foe's health, the team, what's happening) and picks their move there when their turn comes.",
+      "A party meets more foes: one foe per hero (up to 6), one after another, instead of one big foe with extra health. Bosses still come alone.",
+      "Health no longer comes back by itself. Heal with potions, cooked food, healing spells, a bed at an inn or at home, or a healing effect while it lasts.",
+      "Your marker on the map shows a little arrow pointing the way you're going.",
+      "Keyboard shortcuts on PC: C Character, I Items, P Magic, M Map, J Journal, O Social, A Area, and Tab for the compass menu. The letters show on the tabs.",
+    ] },
     { id: "b103", build: 103, date: "22 Nov 2026", title: "Draggable compass, no more Auto fights, quieter sound", items: [
       "The gold compass menu now follows your finger or mouse as you drag it. It tilts toward where you pull, lights up the direction you're heading, gives a little click, and springs back when you let go.",
       "Music, sound effects and background sounds now start at 10% volume for everyone. Turn them up any time in Settings.",

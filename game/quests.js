@@ -16,7 +16,7 @@ const QUESTS = (() => {
   const L = {
     main: { name: "The Dragonborn", giver: "Main quest", stages: [
       { title: "Before the Storm", text: "Riverwood's smith says Whiterun must be warned about the dragon. Go to Whiterun.", obj: { go: "Whiterun" }, reward: { gold: 50 } },
-      { title: "Bleak Falls Barrow", text: "The court wizard Farengar wants a Dragonstone from Bleak Falls Barrow. Bring it to him in Whiterun (Town tab, Dragonsreach).", obj: { flag: "thaneWhiterun" }, reward: { gold: 100 } },
+      { title: "Bleak Falls Barrow", text: "The court wizard Farengar wants a Dragonstone from Bleak Falls Barrow. Bring it to him in Whiterun (Area tab, Dragonsreach).", obj: { flag: "thaneWhiterun" }, reward: { gold: 100 } },
       { title: "Dragon Rising", text: "A dragon is attacking the Western Watchtower. Go there and kill it.", obj: { talk: "Western Watchtower", label: "Fight the dragon", fight: E("Mirmulnir", 180, 17, ["big", "dragon", "elite"]), allies: [["Irileth", 9], ["Whiterun guard", 6], ["Whiterun guard", 6]] }, reward: { gold: 200 } },
       { title: "The Way of the Voice", text: "The Greybeards have summoned you. Climb to High Hrothgar and speak with them.", obj: { flag: "greybeards" }, reward: { gold: 100 } },
       { title: "The Horn of Jurgen Windcaller", text: "The Greybeards want the Horn of Jurgen Windcaller from Ustengrav. Clear Ustengrav.", obj: { clear: "Ustengrav" }, reward: { gold: 300, items: ["horn_jurgen"] } },
@@ -29,7 +29,7 @@ const QUESTS = (() => {
       { title: "Glory of the Dead", text: "Return to Jorrvaskr. Kodlak's last wish rests with you.", obj: { talk: "Whiterun", label: "Speak with the Circle" }, reward: { gold: 500, items: ["wuuthrad"], title: "Harbinger of the Companions" } },
     ] },
     thieves: { name: "The Thieves Guild", giver: "Brynjolf, Riften", start: "Riften", stages: [
-      { title: "A Chance Arrangement", text: "Brynjolf wants proof you have quick fingers. Pick a pocket in Riften (Town tab, Streets).", obj: { count: "pp", n: 1, at: "Riften" }, reward: { gold: 100 } },
+      { title: "A Chance Arrangement", text: "Brynjolf wants proof you have quick fingers. Pick a pocket in Riften (Area tab, Streets).", obj: { count: "pp", n: 1, at: "Riften" }, reward: { gold: 100 } },
       { title: "Taking Care of Business", text: "Prove you're worth the Guild's time: lift three more purses, anywhere.", obj: { count: "pp", n: 3 }, reward: { gold: 200 } },
       { title: "Loud and Clear", text: "A rival gang squats in Pinewatch. Clear it and take what's theirs.", obj: { clear: "Pinewatch" }, reward: { gold: 300, items: ["guild_armor"] } },
       { title: "Dampened Spirits", text: "Honningbrew Meadery outside Whiterun is stealing the Guild's customers. Slip in and spoil their mead.", obj: { talk: "Honningbrew Meadery", label: "Sneak into the meadery", check: { skill: "Sneak", need: 25, bounty: "Whiterun" } }, reward: { gold: 300 } },

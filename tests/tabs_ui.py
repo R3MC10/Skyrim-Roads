@@ -31,7 +31,6 @@ def checklist():
         ("Library (discoveries, lore books)", [("sub", "library")], "Library"),
         ("Diary", [("sub", "diary")], "Diary"),
         ("Settings (in a tab)", [("sub", "settings")], "Accessibility"),
-        ("Settings: Fights", [], "Turn by turn"),
         ("Settings: Art style", [], "Pixel art"),
         ("Patch notes", [("act", "#side [data-act=notes]")], "Patch Notes"),
         ("Guide", [("close",), ("act", "#side [data-act=guide]")], "Guide"),
