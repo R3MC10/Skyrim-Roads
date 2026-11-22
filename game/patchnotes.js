@@ -9,7 +9,12 @@ const PATCHNOTES = (() => {
       "Spread practice: switch it on and in easy fights the AI rotates your weapon, blocking and every school you know, so all your skills level up, not just your best one. Dangerous fights it still plays to win.",
       "Better tactics: rules can join conditions with AND / OR and NOT, 13 new conditions (enemy weak to fire, burning, staggered, a caster, bad weather and more), a Run away move for road fights (you skip the loot but keep going), and drag a rule's number to reorder.",
       "Hybrid mode: your rules go first, Smart AI fills the gaps. New presets built from your own spells and gear (Warrior, Archer, Battlemage, Healer, Necromancer, Mage, Thief, Skill trainer), share codes to swap tactics with friends, and Run 20 fights to see your win rate before you head out."] },
-    { id: "b79", build: 79, date: "22 Nov 2026", title: "Party play, loot rolls and grown-up followers", items: [
+    { id: "b81", build: 81, date: "22 Nov 2026", title: "Gear you can see", items: [
+      "Every armour set and weapon material now looks like itself: hide and fur with shaggy trim, studded leather with rivets, elven gold, see-through glass and stalhrim, chitin plates, dragonscale and bone, Forsworn feathers, guild hoods and more. It shows on your character, in fights and on the road while you travel.",
+      "Other players see your real gear too, on the map and when you fight side by side.",
+      "Gear preview: tap any armour or weapon and see yourself now next to yourself wearing it.",
+      "Characters breathe and shift when standing still and walk properly on the road."] },
+    { id: "b79", build: 80, date: "22 Nov 2026", title: "Party play, loot rolls and grown-up followers", items: [
       "The map now follows the real game's layout much more closely: towns, roads and landmarks sit where you remember them.",
       "Parties of up to 8: the leader picks where to go, everyone gets a Ready check first, then the party travels together. If the leader stops for something on the road, the others wait and fight beside them. Gold found on the road is split evenly.",
       "Dungeons with your party: only the leader picks rooms and actions, the rest follow along. Everything found goes into one loot pile, and at the end everyone taps Want or Pass on each item. If more than one of you wants something, you all roll a d100 and the highest wins (ties roll again). Gold is split evenly. Dungeons get longer and busier with a bigger party.",
