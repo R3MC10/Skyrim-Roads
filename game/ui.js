@@ -270,6 +270,7 @@
       <h3>Look</h3><div class="setrow"><span>Art style</span>${seg("artStyle", [["ink", "Hand-drawn"], ["pixel", "Pixel art"]], ART.style())}</div>
       ${typeof MOTION !== "undefined" ? `<div class="setrow"><span>Motion</span>${seg("motion", [["full", "Full"], ["lite", "Lite"], ["off", "Off"]], MOTION.pref())}</div>` : ""}
       <h3>Crafting</h3><div class="setrow"><span>When you craft</span>${seg("craftGame", [[true, "Mini-games"], [false, "Quick craft"]], getPref("craftGame", true))}</div>
+      ${S && typeof WFX !== "undefined" ? `<h3>Survival</h3><div class="setrow"><span>Cold meter</span>${seg("survival", [[true, "On (gentle)"], [false, "Off"]], S.survival !== false)}</div>` : ""}
       <h3>Map</h3><div class="setrow"><span>Map opens</span>${seg("zoomFar", [[false, "Close up"], [true, "All Skyrim"]], getPref("zoomFar", false))}</div>
       ${APP ? `<h3>Phone</h3><div class="setrow"><span>Notifications</span>${seg("notify", [[true, "On"], [false, "Off"]], getPref("notify", true))}</div>
       <div class="setrow"><span>Check for updates</span>${seg("autoUpdate", [[true, "Automatically"], [false, "Only when I ask"]], getPref("autoUpdate", true))}</div>` : ""}`;
@@ -283,6 +284,7 @@
   function settingsAction(act, b) {
     if (act !== "pref") return false;
     const k = b.dataset.k, v = b.dataset.v === "true";
+    if (k === "survival") { if (S) { S.survival = v; if (!v) S.coldV = 0; persist(); try { renderPanel(true); } catch { /* title */ } } SOUND.fx("click"); return true; }
     if (k === "motion") { MOTION.setPref(b.dataset.v); SOUND.fx("click"); return true; }
     if (k === "artStyle") { ART.setStyle(b.dataset.v); SOUND.fx("click"); if (typeof POLISH !== "undefined") POLISH.texture(); if (S) { try { renderPanel(true); } catch { /* title screen */ } } return true; }
     if (k === "mute") { SOUND.set("mute", v); if ($("#sndBtn")) $("#sndBtn").innerHTML = hudIcon(v ? "mute" : "gear", v ? "🔇" : "⚙") + '<small class="ibl" aria-hidden="true">Menu</small>'; }
@@ -423,6 +425,7 @@
     back() {
       if ($("#title")) { if (titlePage !== "menu" && titlePage !== "press") { titlePage = "menu"; renderTitle(); return true; } return false; }
       if (!S && $("#toTitle")) { app.innerHTML = ""; showTitle("menu"); return true; }
+      if (typeof FAVWHEEL !== "undefined" && FAVWHEEL.open) { FAVWHEEL.hide(); return true; }
       if ($("#sky") && !$("#modal")) { closeMenu(); if (typeof TABMENU !== "undefined") TABMENU.menuClosed(); return true; }
       if ($("#modal")) { if (!$("#modal [data-act=enc], #modal [data-act=ev], #modal [data-act=guard]")) closeModal(); return true; }
       if ($("#dun")) { closeDungeon(); return true; }
@@ -534,6 +537,7 @@
     festAnnounce();
     requestAnimationFrame(frame);
     if (typeof TABMENU !== "undefined") TABMENU.mount();   // the Tab compass is the home screen
+    if (typeof FAVWHEEL !== "undefined") FAVWHEEL.mount({ save: () => S, persist: () => persist(true), toast: (t) => toast(t), sound: (k) => SOUND.fx(k), refresh: () => { bump(); renderPanel(true); if ($("#sky")) renderMenu(); } });   // the favourites wheel
     if (S.trip?.status === "encounter") openEncounter();
     else if (S.trip?.status === "event") openEvent();
     if (S.dungeon) renderDungeon();
@@ -656,7 +660,7 @@
     if (typeof SKY !== "undefined") {   // a small drawn sky: sun or moon phase, clouds, rain, snow
       const st = SKY.state(livePos()), ic = SKY.icon(st, 22);
       if (clk._ic !== ic) { clk._ic = ic; clk.innerHTML = `<span class="skyw">${ic}</span><span class="skyt"></span>`; }
-      const txt = `${when} · ${wx.name}`; const tEl = clk.querySelector(".skyt"); if (tEl && tEl.textContent !== txt) { tEl.textContent = txt; clk.title = txt; }
+      const cs = typeof WFX !== "undefined" ? WFX.coldState(S) : null, txt = `${when} · ${wx.name}${cs && cs.tier ? ` · ${cs.icon} ${cs.label}` : ""}`; const tEl = clk.querySelector(".skyt"); if (tEl && tEl.textContent !== txt) { tEl.textContent = txt; clk.title = txt; }
     } else clk.textContent = `${G.isNight() ? "🌙" : "☀️"} ${when} · ${wx.icon} ${wx.name}`;
     if (typeof MOTION !== "undefined") MOTION.count($("#goldv"), S.gold, " gold"); else $("#goldv").textContent = `${S.gold} gold`;
   }
@@ -893,7 +897,7 @@
     openModal(`${/^You died/.test(title) ? UIART.death(320, 120) : typeof EVENTART !== "undefined" ? EVENTART.story(title, text) : ""}<h2>${esc(title)}</h2><p>${esc(text)}</p><button class="btn ${bad ? "danger" : "pri"}" data-act="close" style="width:100%">Continue</button>`, bad ? "enc" : "");
   }
   function fightLog(f) {
-    return `${typeof FIGHTART !== "undefined" ? FIGHTART.placeholder(f, S) : ""}<details ${f.log.length < 9 ? "open" : ""}><summary class="sub" style="cursor:pointer;min-height:36px">Fight log (${f.turn} turns) — ${f.ai ? "[AI] = Smart AI's move" : "[n] is the tactic rule that fired"}</summary><div class="flog">${f.log.map((l) =>
+    return `${typeof FIGHTART !== "undefined" ? FIGHTART.placeholder(f, S) : ""}<details ${f.log.length < 9 ? "open" : ""}><summary class="sub" style="cursor:pointer;min-height:36px">Fight log (${f.turn} turns)${f.wx && f.wx.lines.length ? ` · ${f.wx.icon} ${esc(f.wx.name)}` : ""} — ${f.ai ? "[AI] = Smart AI's move" : "[n] is the tactic rule that fired"}</summary><div class="flog">${f.log.map((l) =>
       `<div><span class="r">${l.turn ? `T${l.turn}` : "⚡"}${l.ai ? "<br>[AI]" : l.rule != null ? `<br>[${l.rule || "–"}]` : ""}</span><span>${esc(l.me)}${l.me && l.them ? " · " : ""}${esc(l.them)}${l.hp != null ? ` <span class="sub">(you ${l.hp} · foe ${l.ehp})</span>` : ""}${l.why ? `<em class="aiwhy">🧠 ${esc(l.why)}</em>` : ""}</span></div>`).join("")}</div></details>`;
   }
   function openEncounter(note) {
@@ -901,7 +905,7 @@
     if (!e) return;
     openModal(`<p class="sub danger-${e.danger}" style="margin:0">${e.danger === "high" ? "Deadly" : e.danger === "medium" ? "Dangerous" : "Minor"} encounter · ${esc(e.hold)}${G.isNight() ? " · night" : ""}</p>
       <h2 style="margin:4px 0 8px">${esc(e.name)}</h2><p>${esc(e.text)}</p>
-      ${note ? `<p class="sub">${esc(note)}</p>` : ""}${(() => { const am = typeof AMMO !== "undefined" ? AMMO.status(S) : null; return am && !am.best ? ammoNote() : ""; })()}${typeof HORSEBACK !== "undefined" ? HORSEBACK.note(S) : ""}
+      ${note ? `<p class="sub">${esc(note)}</p>` : ""}${(() => { const am = typeof AMMO !== "undefined" ? AMMO.status(S) : null; return am && !am.best ? ammoNote() : ""; })()}${typeof HORSEBACK !== "undefined" ? HORSEBACK.note(S) : ""}${typeof WFX !== "undefined" ? WFX.noteHTML(S) : ""}
       <div class="grid2" style="margin:10px 0"><div class="vital"><small><span>You</span><span class="num">${Math.round(G.curHealth(S))}/${G.maxHealth(S)}</span></small><div class="bar"><i style="width:${pct(G.curHealth(S), G.maxHealth(S))}%;background:var(--hp)"></i></div></div>
       <div class="vital"><small><span>${esc(e.name)}</span><span class="num">${e.hp}/${e.health}</span></small><div class="bar"><i style="width:${pct(e.hp, e.health)}%;background:var(--ember)"></i></div></div></div>
       <div class="grid2">
@@ -1175,6 +1179,7 @@
     if (r.fight || r.died) SOUND.fight(r); else if (r.trap || /trap|dart|blade/i.test(r.text || "")) SOUND.fx("hit");
     if (r.bag) Store.addBag(r.bag);
     persist(true);
+    if (typeof SHOUTS2 !== "undefined") SHOUTS2.showWallWhenFree();   // a Word Wall was read: its scene after the result
     if (runId && coopUI) coopUI.afterAct(r, runId);
     if (r.died) { dunNote = null; closeDungeon(); renderPanel(true); openModal(`<h2>💀 Defeated</h2><p>${esc(r.text)}</p>${r.fight ? fightLog(r.fight) : ""}<p>${esc(r.died)}</p><button class="btn danger" data-act="close" style="width:100%">Continue</button>`, "enc"); return; }
     if (r.partyChest && party) {
@@ -1276,7 +1281,7 @@
     const [k, a] = String(id).split(":");
     if (k === "spell") return UIART.spell(a, size);
     if (k === "shout") return UIART.shout(a, size);
-    if (k === "power") return a === "stone" && S.stone ? UIART.stone(S.stone, size) : a === "race" ? UIART.power(S.race, size) : UIART.action("power:beast", size);
+    if (k === "power") return a === "stone" && S.stone ? UIART.stone(S.stone, size) : a === "race" ? UIART.power(S.race, size) : UIART.action(a === "lord" ? "power:lord" : "power:beast", size);
     if (k === "fx" && a === "stone" && S.stone) return UIART.stone(S.stone, size);
     return "";
   }
@@ -1285,8 +1290,13 @@
     for (const id of S.spells) { const sp = D.SPELLS[id]; if (!sp) continue; out.push({ id: `spell:${id}`, cat: sp.school.toLowerCase(), name: sp.name, cost: sp.kind === "utility" ? null : G.spellCost(S, sp), sub: `${sp.school} · ${sp.level || "Novice"}` }); }
     out.push({ id: "power:race", cat: "powers", name: POWERS.RACE[S.race][0], cost: null, sub: POWERS.powerReady(S, "race") ? "Ready" : "Used today" });
     if (S.werewolf) out.push({ id: "power:beast", cat: "powers", name: "Beast Form", cost: null, sub: CURSE.beastReady(S) ? "Ready" : "Used today" });
+    if (S.vampire && CURSE.lordReady) out.push({ id: "power:lord", cat: "powers", name: "Vampire Lord", cost: null, sub: CURSE.lordReady(S) ? "Ready" : "Used today" });
     if (POWERS.stoneHasPower(S)) out.push({ id: "power:stone", cat: "powers", name: POWERS.STONES[S.stone][0], cost: null, sub: POWERS.powerReady(S, "stone") ? "Ready" : "Used today" });
     for (const [id, [name, words]] of Object.entries(POWERS.SHOUTS)) if (words.some((w) => POWERS.known(S, w))) out.push({ id: `shout:${id}`, cat: "shouts", name, cost: null, sub: words.map((w) => POWERS.known(S, w) ? (POWERS.unlocked(S, w) ? w : w + "🔒") : "···").join(" ") });
+    if (sky.cat === "shouts") {   // the shouts still out there, with where to look (shouts2.js), and your dragon souls
+      out.unshift({ id: "fx:souls", cat: "shouts", name: `Dragon souls: ${S.souls || 0}`, cost: null, sub: `Words known ${(S.words || []).length} · unlocked ${(S.unlocked || []).length}` });
+      for (const [id, [name]] of Object.entries(POWERS.SHOUTS)) if (!POWERS.SHOUTS[id][1].some((w) => POWERS.known(S, w)) && id !== "bend_will") out.push({ id: `shout:${id}`, cat: "shouts", name: `${name} · not learned`, cost: null, sub: "··· ··· ···" });
+    }
     const t = G.now();
     for (const f of (S.fx || []).filter((f) => f.until > t)) out.push({ id: `fx:${f.name}:${f.until}`, cat: "effects", name: f.name, cost: null, sub: `${f.mag} · ${Math.ceil((f.until - t) / 60)} min` });
     for (const g of gearFx()) out.push({ id: `fx:gear:${g.from}:${g.key}`, cat: "effects", name: fxLabel(g), cost: null, sub: `Worn: ${g.from}` });
@@ -1305,7 +1315,8 @@
     } else if (kind === "power") desc = arg === "race" ? POWERS.RACE[S.race][1] + " Once a day." : POWERS.STONES[S.stone][1];
     else if (kind === "shout") {
       const sh = POWERS.SHOUTS[arg], lv = POWERS.level(S, arg);
-      desc = `${sh[3]} ${lv ? `You can shout ${lv} word${lv > 1 ? "s" : ""}; cooldown ${sh[2][lv - 1]} s.` : "Unlock its first word with a dragon soul."}`;
+      const findIt = typeof SHOUTS2 !== "undefined" && sh[1].some((w) => !POWERS.known(S, w)) ? ` Where to learn more: ${SHOUTS2.hint(S, arg)}` : "";
+      desc = `${sh[3]} ${lv ? `You can shout ${lv} word${lv > 1 ? "s" : ""}; cooldown ${sh[2][lv - 1]} s.` : sh[1].some((w) => POWERS.known(S, w)) ? "Unlock its first word with a dragon soul." : "You don't know any of its words yet."}${findIt}`;
       acts.push(...sh[1].filter((w) => POWERS.known(S, w) && !POWERS.unlocked(S, w)).map((w) => `<button class="btn" data-act="unlock" data-id="${w}" ${(S.souls || 0) > 0 ? "" : "disabled"}>Unlock ${w} (dragon soul: ${S.souls || 0})</button>`));
       if (POWERS.ROAD_SHOUTS.includes(arg) && lv) acts.push(`<button class="btn pri" data-act="roadshout" data-id="${arg}" ${POWERS.voiceReady(S) ? "" : "disabled"}>Shout now</button>`);
     } else return `<div class="sky-detail"><h3>${esc(row.name)}</h3><p class="sub">${esc(row.sub)}</p></div>`;
@@ -1409,6 +1420,7 @@
       <div class="sky-foot"><span>Armor <b class="num">${armor}</b></span><span>Damage <b class="num">${dmg}</b></span><span>Weight <b class="num">${G.carried(S).toFixed(0)}/${G.capacity(S)}</b></span><span class="gold">${S.gold} gold</span></div>
       <div class="sky-vitals"><div class="bar"><i style="width:${pct(hp, mh)}%;background:var(--hp)"></i></div><div class="bar"><i style="width:100%;background:var(--mp)"></i></div><div class="bar"><i style="width:100%;background:var(--sp)"></i></div></div>
     </div>`;
+    if (typeof FAVWHEEL !== "undefined") FAVWHEEL.afterMenu(el, S, sky);   // ★ Favourite in the details
     if (typeof MOTION !== "undefined") MOTION.menu(el, sky.page, sky.cat);
   }
 
@@ -1759,22 +1771,27 @@
     if (CURSE.offered(S) && !S.wolfOfferSeen) { S.wolfOfferSeen = true; persist(); toast("🐺 The Circle of the Companions wants a word with you in Whiterun. See the Hero tab."); }
   }
   function bloodPanel() {
-    const t = G.now(), here = S.location, wiz = here && G.shopTypes(here).includes("wizard");
+    const t = G.now(), here = S.location;
+    const tree = (k) => typeof BEASTART !== "undefined" ? BEASTART.panel(S, k) : "";
+    const cureQ = (id) => { const v = (S.quests || {})[id], d = QUESTS.L[id]; if (!d || !v || v.done) return ""; const st = d.stages[v.stage];
+      return `<div class="item on"><div class="t">📜 ${esc(d.name)}: ${esc(st.title)}<span>${esc(st.text)}</span></div></div>`; };
     if (S.vampire) {
-      const st = CURSE.stage(S), h = Math.floor(CURSE.hoursUnfed(S));
-      return `<div class="panel" style="border-color:#7a1414"><h2>🩸 Vampire</h2><p class="sub">Hunger: stage ${st} of 4 (${h} hour${h === 1 ? "" : "s"} since you fed). The hungrier you are, the stronger your Destruction and Illusion and your night-time blows, and the more the sun slows your healing outside by day. Feed at an inn (Town tab) to reset it.</p>
-        <div class="item"><div class="t">Cure vampirism<span>A court wizard's ritual: a filled Common Soul Gem and ${CURSE.CURE_VAMPIRE_GOLD} gold${wiz ? "" : " · go to a city with a court wizard"}</span></div><button class="btn sm" data-act="curevamp" ${wiz ? "" : "disabled"}>Cure</button></div></div>`;
+      const st = CURSE.stage(S), dd = CURSE.daysUnfed ? CURSE.daysUnfed(S) : CURSE.hoursUnfed(S) / 2, dtxt = dd < 1 ? `${Math.round(dd * 24)} in-game hours` : `${dd.toFixed(1)} in-game days`;
+      return `<div class="panel" style="border-color:#7a1414"><h2>🩸 Vampire</h2><p class="sub">Hunger: stage ${st} of 4 (${dtxt} since you fed; one stage per day). The hungrier you are, the stronger your Destruction and Illusion and your night-time blows, the less frost hurts you, and the more fire burns. Poison barely touches you. By day the sun slows your healing outside. Feed at an inn (Town tab), or win a fight as a Vampire Lord.</p>
+        <div class="item"><div class="t">🦇 Vampire Lord<span>Once a day, in your Tactics: for ${CURSE.LORD_TURNS || 12} turns you drain the foe's life every turn and take less damage. No potions while changed.</span></div><span class="num sub">${CURSE.lordReady(S) ? "Ready" : "Used today"}</span></div>
+        ${cureQ("cure_vamp")}${tree("lord")}</div>`;
     }
     if (S.sanguinare) {
-      const left = Math.max(0, Math.ceil((CURSE.TURN_AFTER - (t - S.sanguinare.at)) / 60));
-      return `<div class="panel" style="border-color:#7a1414"><h2>🩸 Sanguinare Vampiris</h2><p class="sub">A vampire's disease. In about ${left} minutes you'll turn into a vampire. Drink a Potion of Cure Disease (general stores, court wizards) or pray at a roadside shrine to stop it, or let it happen.</p></div>`;
+      const left = Math.max(0, CURSE.TURN_AFTER - (t - S.sanguinare.at)), h = Math.floor(left / 3600), m = Math.ceil((left % 3600) / 60);
+      return `<div class="panel" style="border-color:#7a1414"><h2>🩸 Sanguinare Vampiris</h2><p class="sub">A vampire's disease. In about ${h ? `${h} h ` : ""}${m} min (${(left / CURSE.DAY).toFixed(1)} in-game days) you'll turn into a vampire. Drink a Potion of Cure Disease (general stores, court wizards) or pray at a roadside shrine to stop it, or let it happen.</p></div>`;
     }
-    if (S.werewolf) return `<div class="panel" style="border-color:var(--gold)"><h2>🐺 Werewolf</h2><p class="sub">Beast Form, once a day, is in your Tactics: for ${CURSE.BEAST_TURNS} turns you hit much harder, take less damage and heal a bit, but can't drink potions. Beds no longer make you Rested, and you can't catch diseases.</p>
-      <div class="item"><div class="t">Be cleansed<span>At Jorrvaskr in Whiterun, ${CURSE.CURE_WEREWOLF} gold</span></div><button class="btn sm" data-act="curewolf" ${here === "Whiterun" ? "" : "disabled"}>Cure</button></div></div>`;
-    if (CURSE.offered(S)) return `<div class="panel" style="border-color:var(--gold)"><h2>🐺 The Circle's offer</h2><p class="sub">The Companions' inner circle offers you their secret: the blood of the beast. Once a day you can turn into a werewolf in a fight. Beds won't make you Rested any more. You can be cleansed later for ${CURSE.CURE_WEREWOLF} gold.</p>
+    if (S.werewolf) return `<div class="panel" style="border-color:var(--gold)"><h2>🐺 Werewolf</h2><p class="sub">Beast Form, once a day, is in your Tactics: for ${CURSE.BEAST_TURNS} turns you hit much harder, take less damage and heal a bit, but can't drink potions. Win a fight in Beast Form against a person and you feed: it heals you and grows your werewolf perks. Beds no longer make you Rested, and you can't catch diseases.</p>
+      ${cureQ("cure_wolf")}${tree("wolf")}</div>`;
+    if (CURSE.offered(S)) return `<div class="panel" style="border-color:var(--gold)"><h2>🐺 The Circle's offer</h2><p class="sub">The Companions' inner circle offers you their secret: the blood of the beast. Once a day you can turn into a werewolf in a fight, and feeding grows its own perk stars. Beds won't make you Rested any more. If you ever want it gone, Aela knows how: the Glenmoril witches' heads.</p>
       <div class="grid2"><button class="btn pri" data-act="wolfyes" ${here === "Whiterun" ? "" : "disabled"}>Accept${here === "Whiterun" ? "" : " (in Whiterun)"}</button><button class="btn" data-act="wolfno">No, thank you</button></div></div>`;
     return "";
   }
+
 
   // ------------------------------------------------------------ achievements
   let achOpen = false;
@@ -2387,7 +2404,7 @@
     const places = Object.keys(WORLD.places).filter((n) => known(n) && n !== S.location && WORLD.same(here, WORLD.places[n]) && n.toLowerCase().includes(searchText.toLowerCase()))
       .map((n) => ({ n, d: G.pxDist(here, WORLD.places[n]) })).sort((a, b) => a.d - b.d);
     const bag = myBag();
-    return `${nextCard()}${placeHere()}${typeof EXPLORE !== "undefined" ? EXPLORE.placeCard(S) : ""}<div class="panel"><h2>Where to?</h2><p class="sub">Tap a place on the map, or press <b>Go</b> below. Tap empty ground on the map to roam off the road.</p>
+    return `${typeof WFX !== "undefined" ? WFX.coldHTML(S) : ""}${nextCard()}${placeHere()}${typeof EXPLORE !== "undefined" ? EXPLORE.placeCard(S) : ""}<div class="panel"><h2>Where to?</h2><p class="sub">Tap a place on the map, or press <b>Go</b> below. Tap empty ground on the map to roam off the road.</p>
       <input id="search" placeholder="Search places" value="${esc(searchText)}" autocomplete="off" aria-label="Search places">
       <div class="list">${bag ? `<div class="item on"><div class="t">🎒 Your lost bag<span>${bag.gold} gold · ${Math.max(0, Math.floor((bag.expires - G.now()) / 60))} min left before it's fair game</span></div><button class="btn pri sm" data-act="go" data-place="__bag">Go</button></div>` : ""}
       ${places.slice(0, searchText || uxAllPlaces ? 40 : 8).map(({ n, d }) => { const k = WORLD.places[n][2]; return `<div class="item"><div class="t">${esc(n)}<span>${KIND[k]} · ${esc(G.holdAt(WORLD.places[n]))}${S.discovered.includes(n) ? "" : " · unvisited"}${(() => { const lf = DUNGEONS.enterable(n) ? DUNGEONS.refillLeft(S, n) : 0; return lf ? ` · 🔒 opens in ${cdSpan(G.now() + lf)}` : ""; })()}</span></div><span class="num sub">${d * 1.1 / G.speed(S) < 1 ? "" : "~"}${fmtMin(d * 1.1 / G.speed(S))}</span><button class="btn sm" data-act="go" data-place="${esc(n)}">Go</button></div>`; }).join("") || `<p class="sub">No places match “${esc(searchText)}”. Try part of the name, like “riv”.</p>`}${!searchText && places.length > 8 ? `<button class="btn" data-act="uxall" style="width:100%;margin-top:8px">${uxAllPlaces ? "Show only the nearest" : `Show all ${places.length} places`}</button>` : ""}</div>
@@ -2487,6 +2504,7 @@
       ...[...new Set(S.inv.filter((r) => D.ITEMS[r.item]?.slot === "scroll").map((r) => r.item))].map((i) => [`scroll:${i}`, `Read ${D.ITEMS[i].name}`]),
       ["power:race", `Use ${POWERS.RACE[S.race][0]} (racial power, once a day)`],
       ...(S.werewolf ? [["power:beast", "Beast Form (werewolf, once a day: much stronger, no potions)"]] : []),
+      ...(S.vampire ? [["power:lord", "Vampire Lord (vampire, once a day: drain life every turn, no potions)"]] : []),
       ...(POWERS.stoneHasPower(S) && S.stone !== "tower" ? [["power:stone", `Use ${POWERS.STONES[S.stone][0]}'s power (once a day)`]] : []),
       ...Object.keys(POWERS.SHOUTS).filter((id) => !POWERS.ROAD_SHOUTS.includes(id) && POWERS.level(S, id)).map((id) => [`shout:${id}`, `Shout ${POWERS.SHOUTS[id][0]} (${POWERS.level(S, id)} word${POWERS.level(S, id) > 1 ? "s" : ""})`])];
   }
@@ -2973,6 +2991,7 @@
       case "skytab": sky.page = b.dataset.id; sky.cat = "all"; sky.sel = null; sky.sort = sky.page === "skills" ? "lvl" : "name"; sky.dir = 1; renderMenu(); break;
       case "skycat": sky.cat = b.dataset.id; sky.sel = null; renderMenu(); break;
       case "skysort": { const k = b.dataset.id; sky.dir = sky.sort === k ? -sky.dir : 1; sky.sort = k; renderMenu(); break; }
+      case "favtoggle": { if (typeof FAVWHEEL === "undefined") break; const id = isNaN(+b.dataset.id) ? b.dataset.id : +b.dataset.id; const r = FAVWHEEL.toggle(S, id); toast(r.text); if (r.ok) persist(); renderMenu(); break; }
       case "skysel": { const id = isNaN(+b.dataset.id) ? b.dataset.id : +b.dataset.id; sky.sel = sky.sel === id ? null : id; renderMenu(); break; }
       case "skyclose": closeMenu(); break;
       case "skyperks": closeMenu(); perkSkill = b.dataset.id; tab = "hero"; bump(); renderTabs(); renderPanel(true); setTimeout(() => $("#side").scrollIntoView({ block: "start" }), 50); break;
@@ -3071,8 +3090,8 @@
       case "mpull": Store.change("stalls", b.dataset.id, (d) => (d.status === "open" && d.seller === S.id ? { ...d, status: "withdrawn" } : d)); break;
       case "wolfyes": SOUND.fx("dragon"); say(CURSE.acceptWolf(S)); publishCard(); break;
       case "wolfno": say(CURSE.declineWolf(S)); break;
-      case "curewolf": say(CURSE.cureWolf(S)); break;
-      case "curevamp": say(CURSE.cureVampire(S)); break;
+      case "bpick": if (typeof BEASTART !== "undefined") BEASTART.pick = BEASTART.pick === b.dataset.id ? null : b.dataset.id; renderPanel(true); break;
+      case "bperk": { const [tr, id] = b.dataset.id.split(":"); const m = CURSE.takePerk(S, tr, id); persist(true); SOUND.fx(/: /.test(m) ? "levelup" : "click"); toast(m); renderPanel(true); break; }
       case "vfeed": say(CURSE.feed(S)); break;
       case "jgo": { const f0 = jFolds(); if (f0[b.dataset.id]) { f0[b.dataset.id] = false; try { localStorage.setItem("ux_jfold", JSON.stringify(f0)); } catch { /* fine */ } renderPanel(true); } const el = $("#j-" + b.dataset.id); if (el) { const y = el.getBoundingClientRect().top + scrollY - 64; scrollTo({ top: y, behavior: reduceMotion ? "auto" : "smooth" }); } break; }
       case "festclaim": { const m = FEST.claim(S); if (!m) break; SOUND.fx("levelup"); say(m); publishCard(); break; }

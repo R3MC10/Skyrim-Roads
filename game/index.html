@@ -979,6 +979,66 @@ html.art-pixel .mo-amb .emb span{border-radius:0;box-shadow:none;width:4px;heigh
 @keyframes moember{0%{opacity:0;transform:translate(0,0)}10%{opacity:.9}100%{opacity:0;transform:translate(var(--x),-70vh)}}
 html:not(.mo-on) .mo-amb{display:none}
 @media (prefers-reduced-motion:reduce){.mo-amb,.mo-const,.mo-veil,.mo-fly{display:none!important}.mo-st,.mo-ghost,.mo-press{animation:none!important}}
+/* ==== favourites wheel (favwheel.js): Skyrim's Q menu as a touch wheel ==== */
+.favbtn{position:fixed;right:12px;bottom:calc(128px + env(safe-area-inset-bottom));z-index:9;width:42px;height:42px;border-radius:50%;padding:0;cursor:pointer;font-size:20px;line-height:1;color:#e2bb64;background:radial-gradient(circle at 50% 40%,#2a2c30,#0b0c0e);border:1.5px solid rgba(226,187,100,.6);box-shadow:0 4px 12px rgba(0,0,0,.55)}
+body.tw-on .favbtn{bottom:auto;top:calc(56px + env(safe-area-inset-top))}
+body.tw-char .favbtn{display:none}
+.favwheel{position:fixed;inset:0;z-index:60;display:grid;place-items:center;background:radial-gradient(60% 45% at 50% 50%,rgba(0,0,0,.55),rgba(0,0,0,.86));touch-action:none}
+.favwheel .fw-in{position:relative;width:320px;height:320px}
+.favwheel .fw-ring{position:absolute;inset:24px;border-radius:50%;border:1px solid rgba(214,178,94,.35);box-shadow:inset 0 0 0 10px rgba(214,178,94,.05),0 0 30px rgba(214,178,94,.08)}
+.favwheel .fw-hub{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:118px;height:118px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:2px;background:radial-gradient(circle at 50% 40%,#202226,#08090a);border:1px solid rgba(214,178,94,.5);color:#e8e0cc;font-size:11px;padding:8px}
+.favwheel .fw-hub b{font-family:var(--title,inherit);letter-spacing:.12em;text-transform:uppercase;font-size:11px;color:#e2bb64}
+.favwheel .fw-hub span{opacity:.8;line-height:1.2}
+.favwheel .fw-x{margin-top:4px;background:none;border:1px solid rgba(255,255,255,.2);color:#ddd;border-radius:999px;width:26px;height:26px;cursor:pointer;padding:0}
+.favwheel .fw-slot{position:absolute;left:50%;top:50%;width:84px;margin-left:-42px;margin-top:-38px;transform:translate(var(--x),var(--y));display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 4px;border-radius:10px;cursor:pointer;color:#efe6d0;background:linear-gradient(180deg,rgba(24,25,28,.95),rgba(8,9,10,.95));border:1px solid rgba(255,255,255,.14);box-shadow:0 3px 10px rgba(0,0,0,.6);font:inherit}
+.favwheel .fw-slot.on{border-color:rgba(226,187,100,.85);box-shadow:0 0 0 1px rgba(226,187,100,.4),0 0 14px rgba(226,187,100,.3)}
+.favwheel .fw-slot.off{opacity:.45}
+.favwheel .fw-slot.fw-hit{border-color:#fff2c8;box-shadow:0 0 20px rgba(255,226,150,.7)}
+.favwheel .fw-ico{display:grid;place-items:center;height:36px}
+.favwheel .fw-nm{font-size:11px;line-height:1.15;max-width:78px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.favwheel .fw-sub{font-size:9.5px;color:#e2bb64;opacity:.85}
+.favwheel .fw-empty{position:absolute;left:50%;top:calc(50% + 72px);transform:translateX(-50%);width:250px;text-align:center;color:#ddd;font-size:12.5px}
+.favwheel.fw-pixel .fw-slot,.favwheel.fw-pixel .fw-hub{border-radius:0;box-shadow:3px 3px 0 #000;image-rendering:pixelated}
+.favwheel.fw-pixel .fw-ring{border-radius:0;border-style:dashed}
+.fw-star.on{color:#e2bb64;border-color:rgba(226,187,100,.7)}
+html.mo-on .favwheel.fw-on{animation:fwbg .18s ease-out}
+html.mo-on .favwheel.fw-on .fw-slot{animation:fwslot .26s cubic-bezier(.2,.9,.3,1.25) both;animation-delay:calc(var(--i) * 25ms)}
+html.mo-on .favwheel.fw-pixel.fw-on .fw-slot{animation-timing-function:steps(4)}
+html.mo-on .favwheel.fw-out{animation:fwbg .16s ease-in reverse both}
+@keyframes fwbg{from{opacity:0}to{opacity:1}}
+@keyframes fwslot{from{transform:translate(0,0) scale(.4);opacity:0}to{transform:translate(var(--x),var(--y)) scale(1);opacity:1}}
+@media (prefers-reduced-motion:reduce){.favwheel *,.favwheel{animation:none!important}}
+/* ---- Word Walls (shouts2.js): the curved wall of dragon script, one word burning in */
+.wwall{position:fixed;inset:0;z-index:80;display:grid;place-items:center;background:radial-gradient(70% 55% at 50% 45%,rgba(20,26,34,.78),rgba(0,0,0,.92));animation:wwin .5s ease-out both}
+.wwall.out{animation:wwout .35s ease-in both}
+.ww-card{position:relative;width:min(92vw,420px);padding:22px 18px 18px;text-align:center;border:1px solid rgba(214,178,94,.4);border-radius:8px;background:linear-gradient(180deg,rgba(28,30,34,.96),rgba(10,11,13,.98));box-shadow:0 0 40px rgba(159,208,240,.12);overflow:hidden}
+.ww-wall{position:absolute;inset:0;display:flex;flex-wrap:wrap;align-content:center;justify-content:center;gap:4px 10px;padding:10px;font-size:20px;color:rgba(200,210,214,.13);pointer-events:none;letter-spacing:.1em}
+.ww-wall span{animation:wwrune 2.4s ease-in-out infinite;animation-delay:calc(var(--i) * 70ms)}
+.ww-glyph{position:relative;display:inline-block;margin:4px auto 6px;filter:drop-shadow(0 0 14px rgba(159,208,240,.75));animation:wwglow 2s ease-in-out infinite}
+.ww-word{position:relative;font-family:var(--title,serif);font-size:2.4rem;letter-spacing:.35em;color:#e8f4fb;text-shadow:0 0 18px rgba(159,208,240,.9),0 0 4px #9fd0f0;animation:wwburn 1.6s ease-out both}
+.ww-sub{position:relative;margin:8px 0 2px;color:#d6b25e}.ww-hint{position:relative;margin:0 0 12px;opacity:.8;font-size:.9rem}
+.ww-card .btn{position:relative;width:100%}
+@keyframes wwin{from{opacity:0}to{opacity:1}}@keyframes wwout{to{opacity:0}}
+@keyframes wwrune{0%,100%{color:rgba(200,210,214,.1)}50%{color:rgba(159,208,240,.32)}}
+@keyframes wwglow{0%,100%{filter:drop-shadow(0 0 8px rgba(159,208,240,.5))}50%{filter:drop-shadow(0 0 20px rgba(159,208,240,.95))}}
+@keyframes wwburn{0%{opacity:0;letter-spacing:1.2em;filter:blur(6px)}60%{opacity:1;filter:blur(0)}100%{letter-spacing:.35em}}
+html.art-pixel .ww-word{font-family:inherit;text-shadow:2px 2px 0 #2c4a5c}
+@media (prefers-reduced-motion:reduce){.wwall,.ww-wall span,.ww-glyph,.ww-word{animation:none!important}}
+/* weather that matters (weatherfx.js): the fight-screen note, the cold meter, the compass forecast */
+.wxnote{margin:6px 0 0;padding:6px 9px;border-left:2px solid rgba(150,190,230,.55);background:rgba(20,28,38,.35);border-radius:3px}
+.wxnote b{color:#cfe2f4;margin-right:4px}
+.wxcold{position:relative;margin:0 0 10px;padding:6px 10px;border:1px solid rgba(150,190,230,.35);border-radius:6px;background:rgba(10,16,24,.7);overflow:hidden;font-size:.85rem;color:#d8e6f2}
+.wxcold span{position:relative;z-index:1}
+.wxcold i{position:absolute;left:0;bottom:0;height:3px;background:linear-gradient(90deg,#8fc3ee,#e8f4ff);transition:width .4s}
+.wxcold.t2{border-color:rgba(190,220,255,.7);box-shadow:0 0 12px rgba(160,200,240,.18)}
+.tw-fc{display:block;margin-top:2px;font-family:var(--sk-ui,inherit);color:#a9b8c6;font-size:12px;letter-spacing:.04em}
+/* werewolf and Vampire Lord perk skies (beastart.js) */
+.bstars{margin-top:12px}
+.skc.bsky.wolf{background:radial-gradient(120% 90% at 50% 100%,#1a2230 0%,#07090e 70%)}
+.skc.bsky.lord{background:radial-gradient(120% 90% at 50% 100%,#2a1018 0%,#0a0608 70%)}
+.skc.bsky.lord .st.on circle.core{fill:#ffd0d8}.skc.bsky.lord line.on{stroke:#f0a0b0}
+.bperk h3{margin:6px 0 2px}
+.tw-card.bcard b{color:#e8c8a0}
 </style>
 </head>
 <body>
@@ -999,6 +1059,7 @@ html:not(.mo-on) .mo-amb{display:none}
 <script src="dungeons.js"></script>
 <script src="towns.js"></script>
 <script src="wevents.js"></script>
+<script src="weatherfx.js"></script>
 <script src="enchanting.js"></script>
 <script src="quests.js"></script>
 <script src="guilds.js"></script>
@@ -1042,12 +1103,14 @@ html:not(.mo-on) .mo-amb{display:none}
 <script src="art.js"></script>
 <script src="skyart.js"></script>
 <script src="fightart.js"></script>
+<script src="beastart.js"></script>
 <script src="heroart.js"></script>
 <script src="mapart.js"></script>
 <script src="placeart.js"></script>
 <script src="eventart.js"></script>
 <script src="iconart.js"></script>
 <script src="uiart.js"></script>
+<script src="shouts2.js"></script>
 <script src="npcart.js"></script>
 <script src="dunart.js"></script>
 <script src="dollart.js"></script>
@@ -1060,6 +1123,7 @@ html:not(.mo-on) .mo-amb{display:none}
 <script src="hud.js"></script>
 <script src="immerse.js"></script>
 <script src="motion.js"></script>
+<script src="favwheel.js"></script>
 <script src="craftgames.js"></script>
 <script src="polish.js"></script>
 <script src="caravans.js"></script>

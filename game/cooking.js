@@ -103,6 +103,7 @@ const COOK = (() => {
     const miss = missing(s, id); if (miss.length) return `You still need: ${miss.join(", ")}.`;
     for (const [it, q] of rc[1]) takeN(s, it, q);
     G.give(s, "dish_" + id);
+    if (typeof WFX !== "undefined") WFX.warmUp(s, 40);   // sitting by the fire
     return `You cook ${rc[0]}. It's in your pack. Eat it when you need it: ${rc[3].toLowerCase()} for ${rc[2][0][2]} minutes.`;
   }
   /* eat cooked food (buffs) or raw food (a little health) */

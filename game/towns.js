@@ -188,7 +188,7 @@ const TOWNS = (() => {
     if (wanted(s)) return "The innkeeper glances at the guards and says there are no rooms.";
     const p = roomPrice(s);
     if (s.gold < p) return `A room costs ${p} gold.`;
-    s.gold -= p; G.setHealth(s, G.maxHealth(s), t); s.rested = t + RESTED_SECONDS; s.restBonus = 0.05;   // [Skyrim] Rested: +5% (a bed you own: Well Rested +10%)
+    s.gold -= p; G.setHealth(s, G.maxHealth(s), t); if (typeof WFX !== "undefined") WFX.warmUp(s, 100, t); s.rested = t + RESTED_SECONDS; s.restBonus = 0.05;   // [Skyrim] Rested: +5% (a bed you own: Well Rested +10%)
     const et = G.useSkill(s, "Etiquette", 6);   // [OURS] good manners at the inn
     return `You sleep in a warm bed at ${inn}. Fully healed and Rested: skills improve 5% faster for 40 minutes. Your own bed would do better.` + (et.length ? " " + et.join(". ") : "") + (typeof GUILDS !== "undefined" ? GUILDS.innWake(s) : "");
   }
@@ -514,7 +514,7 @@ const TOWNS = (() => {
   }
   function sleepHome(s, t = G.now()) {
     if (!home(s)) return "You don't own a house here.";
-    G.setHealth(s, G.maxHealth(s), t); s.rested = t + RESTED_SECONDS; s.restBonus = 0.1;   // [Skyrim] Well Rested: +10%
+    G.setHealth(s, G.maxHealth(s), t); if (typeof WFX !== "undefined") WFX.warmUp(s, 100, t); s.rested = t + RESTED_SECONDS; s.restBonus = 0.1;   // [Skyrim] Well Rested: +10%
     return "You sleep in your own bed. Fully healed and Well Rested: skills improve 10% faster for 40 minutes.";
   }
   function stash(s, rowId) {

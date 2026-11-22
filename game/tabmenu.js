@@ -78,6 +78,8 @@ const TABMENU = (() => {
   function skillOrder(S) { return D.ALL_SKILLS.slice(); }
   function stars(S) {
     const list = skillOrder(S);
+    const beastT = typeof BEASTART !== "undefined" && typeof CURSE !== "undefined" && CURSE.trees ? CURSE.trees(S) : [];   // werewolf / Vampire Lord skies
+    if (beastT.length && beastT.map((k) => BEASTART.NAMES[k]).includes(starSkill)) return beastStars(S, list, beastT);
     if (!list.includes(starSkill)) starSkill = list.filter((k) => PERKS.TREES[k]).sort((a, b) => S.skills[b].lvl - S.skills[a].lvl)[0] || list[0];
     const sk = starSkill, s = S.skills[sk], need = F.skillXpNeeded(sk, s.lvl), tree = PERKS.TREES[sk] || [];
     const b = bar(S), pts = PERKS.pointsLeft(S);
@@ -94,12 +96,23 @@ const TABMENU = (() => {
     const info = typeof SKILLINFO !== "undefined" ? SKILLINFO.summary?.(sk) : "";
     return `<div class="panel tw-starp">${lvl}
       <div class="tw-shead"><div><b>Level ${b.level}</b> <span class="sub num">${b.xp}/${b.need}</span></div><div class="${pts > 0 ? "gold" : "sub"}">${pts} perk point${pts === 1 ? "" : "s"}</div></div>
-      <div class="tw-car" role="list">${cards}</div>
+      <div class="tw-car" role="list">${cards}${beastT.map((k) => BEASTART.card(S, k, false)).join("")}</div>
       <div class="tw-skt"><span class="tw-skn">${typeof UIART !== "undefined" ? UIART.skill(sk, 30) : ""}<b>${esc(sk)}</b> <span class="num">${s.lvl}</span></span><span class="sub num">${Math.round(s.xp)}/${Math.round(need)}</span></div>
       <div class="bar"><i style="width:${Math.round(Math.min(1, s.xp / need) * 100)}%;background:var(--frost)"></i></div>
       ${info ? `<p class="sub">${esc(info)}</p>` : ""}
       ${tree.length && typeof SKYUI !== "undefined" ? `<div class="tw-bigw"><div class="skc tw-big">${SKYUI.svg(sk, S)}</div></div>` : ""}
       ${detail}</div>`;
+  }
+  /* the werewolf's or the Vampire Lord's own sky, chosen from the same row of cards */
+  function beastStars(S, list, beastT) {
+    const b = bar(S), pts = PERKS.pointsLeft(S), tree = BEASTART.treeOf(starSkill);
+    const cards = list.map((k) => { const v = S.skills[k], n = F.skillXpNeeded(k, v.lvl), taken = (PERKS.TREES[k] || []).filter(([id]) => PERKS.rank(S, id)).length;
+      return `<button class="tw-card" data-twa="skill" data-id="${esc(k)}" aria-pressed="false">${mini(k, S)}<b>${esc(k)}</b><span class="num">${v.lvl}${taken ? ` · ★${taken}` : ""}</span><i class="tw-cbar"><i style="width:${Math.round(Math.min(1, v.xp / n) * 100)}%"></i></i></button>`; }).join("")
+      + beastT.map((k) => BEASTART.card(S, k, k === tree)).join("");
+    return `<div class="panel tw-starp">
+      <div class="tw-shead"><div><b>Level ${b.level}</b> <span class="sub num">${b.xp}/${b.need}</span></div><div class="${pts > 0 ? "gold" : "sub"}">${pts} perk point${pts === 1 ? "" : "s"}</div></div>
+      <div class="tw-car" role="list">${cards}</div>
+      ${BEASTART.panel(S, tree)}</div>`;
   }
   function perks(S) {
     const pts = PERKS.pointsLeft(S), can = [], had = {};
@@ -190,8 +203,9 @@ const TABMENU = (() => {
     try { if (!where) where = `The wilds of ${G.holdAt(pos)}`; } catch { where = "The wilds"; }
     let when = "", skyI = "";
     try { const dt = WEVENTS.date(), wx = WEVENTS.weather(pos); when = `${dt.day} ${dt.month} · ${G.clockText().split(", ")[1] || ""} · ${wx.name}`; } catch { /* ignore */ }
+    let fc = ""; try { if (typeof WFX !== "undefined") { fc = WFX.forecast(pos); const cs = WFX.coldState(save()); if (cs.tier) fc += ` · ${cs.icon} ${cs.label}`; } } catch { /* ignore */ }
     try { if (typeof SKY !== "undefined") skyI = SKY.icon(SKY.state(pos), 20); } catch { /* ignore */ }
-    return { where, when, skyI };
+    return { where, when, skyI, fc };
   }
   function barHTML(b) {
     const t = b.task;
@@ -204,7 +218,7 @@ const TABMENU = (() => {
     const dir = (d) => { const m = DIR[d]; return `<button class="tw-dir tw-${d}" data-twgo="${m}" aria-label="${NAME[m]}">${ico(m)}<b>${NAME[m]}</b><small>${SUBT[m]}</small>${m === "char" && b.perks ? '<span class="dot"></span>' : ""}</button>`; };
     const quick = [inTown ? ["town", "Town", "town"] : null, ["log", "Journal", "log"], ["social", "Friends", "people"], ["tactics", "Tactics", "tactics"], ["settings", "Settings", "gear"]].filter(Boolean);
     return `<div class="tw-bg" aria-hidden="true"></div><div class="tw-veil" aria-hidden="true"></div>${starsBG()}
-      <div class="tw-top"><b class="tw-where"></b><span class="tw-when"></span></div>
+      <div class="tw-top"><b class="tw-where"></b><span class="tw-when"></span><small class="tw-fc"></small></div>
       <div class="tw-rose">${roseSVG()}${dir("up")}${dir("left")}${dir("right")}${dir("down")}</div>
       <p class="tw-hint">Swipe or tap a direction</p>
       <div class="tw-quick">${quick.map(([id, l, k]) => `<button class="tw-q" data-twq="${id}" aria-label="${l}">${ico(k)}<span>${l}</span></button>`).join("")}</div>
@@ -214,7 +228,7 @@ const TABMENU = (() => {
     const el = $("#tw"), S = save(); if (!el || !S) return;
     drawBG(el.querySelector(".tw-bg"), S);
     const tp = topText(S), tk = JSON.stringify(tp);
-    if (tk !== lastTop) { lastTop = tk; el.querySelector(".tw-where").textContent = tp.where; el.querySelector(".tw-when").innerHTML = `${tp.skyI}<span>${esc(tp.when)}</span>`; }
+    if (tk !== lastTop) { lastTop = tk; el.querySelector(".tw-where").textContent = tp.where; el.querySelector(".tw-when").innerHTML = `${tp.skyI}<span>${esc(tp.when)}</span>`; const fcEl = el.querySelector(".tw-fc"); if (fcEl) fcEl.textContent = tp.fc ? `Forecast: ${tp.fc}` : ""; }
     const bh = barHTML(bar(S));
     if (bh !== lastBar) { lastBar = bh; el.querySelector(".tw-bar").innerHTML = bh; }
     el.classList.toggle("tw-px", pixel());

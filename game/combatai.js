@@ -50,6 +50,7 @@ const COMBATAI = (() => {
     const sk = f.weaponSkill();
     if (power && ((sk === "One-Handed" && G.P(s, "savage_strike")) || (sk === "Two-Handed" && G.P(s, "devastating_blow")))) d *= 1.25;
     let hit = F.HIT_CHANCE;
+    if (f.wx && f.weapon && f.ammoKind && f.ammoKind()) hit *= f.wx.aim;   // fog, blizzards and storms spoil your aim
     if (sneakReady(f)) {
       const wt = f.wt, m = wt === "dagger" && G.P(s, "assassins_blade") ? 15 : sk === "One-Handed" && G.P(s, "backstab") ? 6 : sk === "Archery" && G.P(s, "deadly_aim") ? 3 : F.sneakMultiplier(sk);
       d *= m; hit = 1;
@@ -70,6 +71,7 @@ const COMBATAI = (() => {
     const aug = { fire: G.P(s, "augmented_flames"), frost: G.P(s, "augmented_frost"), shock: G.P(s, "augmented_shock") }[sp.element] || 0;
     let a = (sp.amount || 0) * (dual && hasM() ? MAGIC.DUAL_POWER : 1) * (1 + 0.25 * aug) * (1 + G.fxSum(s, "spell:" + sp.school) / 100)
       * (f.tags.has("undead") && G.P(s, "necromage") ? 1.25 : 1) * (hasM() && sp.element !== "sun" ? MAGIC.elem(f, sp.element) : 1);
+    if (typeof WFX !== "undefined") a *= WFX.elem(f, sp.element) * (f.wx && f.wx.storm && sp.element === "shock" ? 1.1 : 1);   // the weather: rain dulls fire, storms feed shock
     if (f.turn === 1 && f.hidden && G.P(s, "quiet_casting")) a *= 2;
     const fail = !free && hasM() && id ? MAGIC.failChance(s, id) : 0;
     return a * F.SPELL_HIT_CHANCE * (1 - fail);
@@ -84,7 +86,7 @@ const COMBATAI = (() => {
     const scrolls = new Set(); for (const r of s.inv) { const it = D.ITEMS[r.item]; if (it?.slot === "scroll" && it.spell && D.SPELLS[it.spell]) scrolls.add(r.item); }
     for (const it of scrolls) out.push("scroll:" + it);
     if (hasPw(f)) {
-      out.push("power:race", "power:stone"); if (typeof CURSE !== "undefined") out.push("power:beast");
+      out.push("power:race", "power:stone"); if (typeof CURSE !== "undefined") out.push("power:beast", "power:lord");
       for (const id of Object.keys(POWERS.SHOUTS)) if (!POWERS.ROAD_SHOUTS.includes(id) && POWERS.level(s, id) > 0) out.push("shout:" + id);
     }
     return out.filter((a) => { try { return f.affordable(a); } catch { return false; } });
@@ -146,7 +148,7 @@ const COMBATAI = (() => {
       return { v: (pct * p.incNow / p.inc) * wDef(p) + bash * wDef(p) * 0.8 - 0.05, why: "guards against a big hit" };
     }
     if (kind === "potion") {
-      const r = f.findPotion(arg), amt = r ? D.ITEMS[r.item].restore[1] : 0, keep = tough(f) ? 0.15 : 0.45;
+      const r = f.findPotion(arg), amt = r ? D.ITEMS[r.item].restore[1] : 0, keep = typeof FAVWHEEL !== "undefined" && FAVWHEEL.potFree(f, a) ? 0 : tough(f) ? 0.15 : 0.45;   // a queued favourite potion isn't saved
       if (arg === "health") return { v: healV(f, p, amt) - keep, why: "badly hurt" };
       if (arg === "magicka") {
         const bs = bestCastable(f, true); if (!bs) return { v: -1 };
@@ -166,7 +168,7 @@ const COMBATAI = (() => {
     const amt = (sp.amount || 0) * (dual && hasM() ? MAGIC.DUAL_POWER : 1) * (1 + G.fxSum(s, "spell:" + sp.school) / 100);
     const el = sp.element, em = el && hasM() ? MAGIC.elem(f, el) : 1;
     switch (sp.kind) {
-      case "damage": { const d = spellDamage(f, sp, id, dual, free); return d > 0 ? { v: dmgV(d) - mpV, why: em > 1.1 ? `${el} hurts it most` : d >= f.ehp ? "finishing blow" : "" } : { v: -1 }; }
+      case "damage": { const d = spellDamage(f, sp, id, dual, free); return d > 0 ? { v: dmgV(d) - mpV, why: em > 1.1 ? `${el} hurts it most` : d >= f.ehp ? "finishing blow" : typeof WFX !== "undefined" && WFX.elem(f, el) > 1.05 ? `the ${f.wx.name.toLowerCase()} feeds ${el}` : "" } : { v: -1 }; }
       case "heal": {
         return { v: healV(f, p, amt * (G.P(s, "regeneration") ? 1.5 : 1)) * ok - mpV, why: p.margin < 1 ? "losing the race: heals" : "patches up" };
       }
@@ -259,6 +261,7 @@ const COMBATAI = (() => {
       case "disarm": v = f.pw.disarm ? -1 : [0.3, 0.45, 0.6][lv - 1] * Math.min(remT, 15) * d; break;
       case "kynes_peace": v = f.tags.has("beast") && !(f.calmTurns > 0) ? stun([5, 8, 12][lv - 1]) : -1; break;
       case "dragon_aspect": v = f.pw.aspect ? -1 : ([0.2, 0.35, 0.5][lv - 1] * Math.min(remT, 15)) + [0.15, 0.25, 0.35][lv - 1] * Math.min(remT, 15) * d - 1; break;
+      default: if (typeof SHOUTS2 !== "undefined" && SHOUTS2.NEW[arg]) v = SHOUTS2.aiValue(f, arg, lv, { stun, dmgV, remT, d, dps: p.dps }); break;   // the newer shouts (shouts2.js)
     }
     else if (arg === "race") {
       const r = s.race, tg = f.tags;
@@ -267,13 +270,20 @@ const COMBATAI = (() => {
     } else if (arg === "stone") {
       const st = POWERS.stone(s);
       v = st === "serpent" ? stun(5) + dmgV(25) : st === "ritual" ? 8 * Math.min(remT, 10) / p.dps : st === "shadow" ? 1 : 0;
-    } else if (arg === "beast") v = danger && p.margin < 1 ? 3 : -1;
+    } else if (arg === "beast" || arg === "lord") {   // a form for the rest of the fight: worth it when the fight is long enough to use it
+      const reliant = (p.margin < 0.6 && s.inv.some((r) => D.ITEMS[r.item]?.restore?.[0] === "health")) ? 1 : 0;   // no potions while changed
+      v = typeof CURSE.formValue === "function" ? CURSE.formValue(f, arg, remT, d, p.dps) - 1 - reliant : (danger && p.margin < 1 ? 3 : -1);
+      if (remT < 2.5) v = -1;   // nearly over: not worth the change
+      why = arg === "beast" ? "a long fight: the beast hits hardest" : "a long fight: the Lord drains it dry";
+    }
     return { v: v - keep, why };
   }
 
   // ---- the turn's choice. Returns [action, reason or ""]
   function choose(f) {
     const p = picture(f);
+    const op = typeof FAVWHEEL !== "undefined" ? FAVWHEEL.opener(f) : null;   // your readied favourite opens the fight
+    if (op) { let r = null; try { r = value(f, p, op); } catch { /* fine */ } if (r && isFinite(r.v) && r.v > -0.5) { f.aiPlan = p; return [op, "your readied favourite"]; } }
     let best = "attack", bv = -Infinity, why = "";
     for (const a of options(f)) {
       let r; try { r = value(f, p, a); } catch { continue; }

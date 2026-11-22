@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b66", build: 66, date: "22 Nov 2026", title: "Shouts, beasts and weather", items: [
+      "Favourites wheel: star weapons, spells, shouts and potions, then tap ★ or long-press the compass or map to pick one in a ring. Readied spells open your next fight.",
+      "Dragon Shouts: 45 Word Walls across Skyrim, 11 new shouts including Dragonrend, Slow Time, Storm Call, Marked for Death and Call Dragon. Spend dragon souls to unlock words. The Greybeards and Paarthurnax teach the rest.",
+      "Werewolves: Beast Form perks like Bestial Strength and Totem of Ice Brothers; feed after fights to grow stronger.",
+      "Vampires: Sanguinare turns you after 3 in-game days, hunger stages, sun and fire weakness, and the Vampire Lord form with its own perk tree.",
+      "Cures are quests now: Rising at Dawn with Falion in Morthal, and Purity of the Blood with the Glenmoril witch heads.",
+      "Weather matters: rain weakens fire and boosts shock, storms crackle, fog throws off arrows, blizzards drain stamina unless you're dressed warm. A gentle Cold meter up north (Settings → Survival). The compass shows a weather forecast."] },
     { id: "b64", build: 64, date: "22 Nov 2026", title: "The real Skyrim map and parties that fight together", items: [
       "The world map now follows Skyrim's real layout: the coast and Sea of Ghosts, the Throat of the World, the Velothi and Jerall mountains, the White River, Lake Ilinalta and Honrich, and every town and dungeon where it belongs. High Rock, Hammerfell, Cyrodiil and Morrowind show beyond the border.",
       "Roads follow the real roads. Your character moves to the same spot on the new map automatically.",
@@ -140,10 +147,8 @@ const PATCHNOTES = (() => {
       "A main menu and in-app updates."] },
   ];
   const NEXT = [
-    "A favourites wheel for quick weapon and spell swaps",
-    "Dragon Shouts learned from word walls",
-    "Werewolf and vampire paths",
-    "Weather that changes fights and travel",
+    "A sharper Solitude peninsula and map polish",
+    "More quests and characters",
   ];
   const KEY = "rotn_notes_seen";
   const latest = () => LIST[0];

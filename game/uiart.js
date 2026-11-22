@@ -181,7 +181,11 @@ const UIART = (() => {
   // ---- shouts: dragon-script scratches in a ring
   const SHOUT_MARK = { unrelenting_force: [[[12, 26], [20, 12], [28, 26]], [[16, 22], [24, 22]]], fire_breath: [[[12, 12], [20, 28], [28, 12]], [[20, 8], [20, 18]]], frost_breath: [[[12, 14], [28, 14]], [[14, 22], [26, 22]], [[20, 10], [20, 30]]],
     ice_form: [[[12, 12], [28, 28]], [[28, 12], [12, 28]], [[20, 8], [20, 32]]], become_ethereal: [[[12, 28], [20, 10], [28, 28]], [[12, 28], [28, 28]]], disarm: [[[12, 10], [28, 30]], [[12, 30], [20, 20]]], kynes_peace: [[[10, 20], [20, 10], [30, 20], [20, 30], [10, 20]]],
-    dragon_aspect: [[[12, 10], [20, 18], [28, 10]], [[20, 18], [20, 30]], [[12, 30], [28, 30]]], whirlwind_sprint: [[[10, 26], [16, 14], [22, 26], [28, 14]]], aura_whisper: [[[20, 10], [12, 30]], [[20, 10], [28, 30]], [[14, 22], [26, 22]]] };
+    dragon_aspect: [[[12, 10], [20, 18], [28, 10]], [[20, 18], [20, 30]], [[12, 30], [28, 30]]], whirlwind_sprint: [[[10, 26], [16, 14], [22, 26], [28, 14]]], aura_whisper: [[[20, 10], [12, 30]], [[20, 10], [28, 30]], [[14, 22], [26, 22]]],
+    marked_for_death: [[[12, 12], [28, 12], [20, 30], [12, 12]], [[20, 16], [20, 24]]], slow_time: [[[12, 10], [28, 10], [12, 30], [28, 30], [12, 10]]], dragonrend: [[[10, 14], [20, 22], [30, 14]], [[14, 30], [20, 22], [26, 30]]],
+    storm_call: [[[22, 8], [14, 21], [22, 21], [16, 32]]], elemental_fury: [[[10, 12], [30, 12]], [[10, 20], [30, 20]], [[10, 28], [30, 28]]], clear_skies: [[[10, 26], [20, 12], [30, 26]], [[20, 26], [20, 32]]],
+    throw_voice: [[[12, 20], [28, 20]], [[22, 13], [28, 20], [22, 27]]], animal_allegiance: [[[12, 30], [12, 12], [20, 20], [28, 12], [28, 30]]], call_of_valor: [[[20, 8], [20, 32]], [[12, 16], [28, 16]], [[14, 30], [26, 30]]],
+    call_dragon: [[[20, 30], [10, 12]], [[20, 30], [30, 12]], [[14, 20], [26, 20]]], dismay: [[[12, 12], [20, 28], [28, 12]], [[12, 28], [28, 28]]] };
   function drawShout(id) { const m = SHOUT_MARK[id] || SHOUT_MARK.unrelenting_force; return (g) => { medal(g, "#9fb0b6", "#2c3036"); glow(g, 20, 20, 14, "#9fd0f0", 0.4); for (const p of m) { line(g, p, "#14100c", 3.6); line(g, p, "#e8f4fb", 1.8); } }; }
 
   // ---- questlines, achievements, guide steps, actions
@@ -234,6 +238,7 @@ const UIART = (() => {
     if (k === "potion") return (g) => { tile(g); poly(g, [[16, 7], [24, 7], [24, 13], [30, 22], [28, 33], [12, 33], [10, 22], [16, 13]], "#efe4cc"); poly(g, [[11, 22], [29, 22], [28, 33], [12, 33]], { health: "#c43a3a", magicka: "#3a6ac4", stamina: "#3a9a4a" }[a] || "#c43a3a", INK, 1); rect(g, 16, 4, 8, 4, "#7a5232"); };
     if (k === "scroll") return (g) => { tile(g); rect(g, 9, 12, 22, 16, "#efe4cc"); ell(g, 9, 20, 3, 8, "#d9c9a2"); ell(g, 31, 20, 3, 8, "#d9c9a2"); circ(g, 20, 29, 3.4, "#8e2b25"); };
     if (k === "shout") return drawShout(a);
+    if (k === "power" && a === "lord") return (g) => { medal(g, "#4a1a24"); poly(g, [[20, 14], [26, 9], [33, 10], [30, 15], [34, 19], [27, 20], [23, 26], [20, 22], [17, 26], [13, 20], [6, 19], [10, 15], [7, 10], [14, 9]], "#2a1a2a", INK, 1.1); circ(g, 18.3, 16, 0.9, "#ff3030", null); circ(g, 21.7, 16, 0.9, "#ff3030", null); };   // a bat: Vampire Lord
     if (k === "power") return (g) => { medal(g, a === "beast" ? "#5a3a2a" : "#d6b25e"); a === "beast" ? G_.wolf(g, "#7a6a5a") : star(g, 20, 20, 10, 6, "#f4dc96"); };
     const BASIC = { attack: SKILL["One-Handed"], power: SKILL["Two-Handed"], block: SKILL.Blocking, flee: SKILL.Athletics, bash: SKILL.Blocking };
     return (g) => { tile(g); (BASIC[k] || SKILL["One-Handed"])(g); };

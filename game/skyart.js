@@ -188,11 +188,11 @@ const SKY = (() => {
   // ---------------------------------------------------------------- moving weather for fight replays
   function particles(st, w, h, opts = {}) {
     const reduce = !!opts.reduce, r = seeded("pt" + st.key), parts = [];
-    const kind = st.weather === "snow" || st.weather === "blizzard" ? "snow" : st.weather === "rain" || st.weather === "storm" ? "rain"
+    const kind = st.weather === "snow" || st.weather === "blizzard" ? "snow" : st.weather === "rain" || st.weather === "storm" ? "rain" : st.weather === "ashstorm" ? "ash" : st.weather === "fog" ? "mist"
       : st.season === "autumn" && !st.cold && st.weather !== "fog" ? "leaf" : (st.season === "summer" || st.season === "spring") && (st.tod === "night" || st.tod === "dusk") ? "fly"
       : st.season === "spring" && st.tod !== "night" ? "petal" : null;
     if (!kind) return { kind: null, step() {} };
-    const n = { snow: st.weather === "blizzard" ? 90 : 45, rain: st.weather === "storm" ? 70 : 45, leaf: 12, fly: 10, petal: 14 }[kind];
+    const n = { snow: st.weather === "blizzard" ? 90 : 45, rain: st.weather === "storm" ? 70 : 45, ash: 110, mist: 8, leaf: 12, fly: 10, petal: 14 }[kind];
     for (let i = 0; i < n; i++) parts.push({ x: r() * w, y: r() * h, v: 0.6 + r() * 0.8, a: r() * 6, s: 1 + r() * 1.2, c: ["#c4572e", "#e8923a", "#d6b25e"][i % 3] });
     let flash = 0, tt = 0;
     const wind = st.wind;
@@ -203,6 +203,8 @@ const SKY = (() => {
         if (!reduce) for (const p of parts) {
           if (kind === "snow") { p.y += (18 + 30 * p.v) * dt * (1 + wind); p.x += (Math.sin(tt * 1.5 + p.a) * 8 + wind * 40) * dt; }
           else if (kind === "rain") { p.y += 320 * p.v * dt; p.x -= (40 + wind * 90) * dt; }
+          else if (kind === "ash") { p.x += (90 + 60 * p.v) * dt * (0.5 + wind); p.y += (10 + Math.sin(tt * 2 + p.a) * 14) * dt; }
+          else if (kind === "mist") { p.x += (6 + 8 * p.v) * dt; p.y += Math.sin(tt * 0.3 + p.a) * 2 * dt; }
           else if (kind === "leaf" || kind === "petal") { p.y += 20 * p.v * dt; p.x += (Math.sin(tt + p.a) * 14 + 10) * dt; p.a += dt * 2; }
           else { p.x += Math.sin(tt * 0.7 + p.a) * 10 * dt; p.y += Math.cos(tt * 0.6 + p.a) * 6 * dt; }
           if (p.y > h) { p.y -= h; p.x = Math.random() * w; } if (p.x < -10) p.x += w + 20; if (p.x > w + 10) p.x -= w + 20;
@@ -210,6 +212,8 @@ const SKY = (() => {
         g.save();
         if (kind === "snow") { g.fillStyle = "rgba(255,255,255,0.9)"; for (const p of parts) g.fillRect(p.x, p.y, p.s * 1.4, p.s * 1.4); }
         else if (kind === "rain") { g.strokeStyle = "rgba(205,218,230,0.6)"; g.lineWidth = 1; g.beginPath(); for (const p of parts) { g.moveTo(p.x, p.y); g.lineTo(p.x - 2 - wind * 5, p.y + 8); } g.stroke(); }
+        else if (kind === "ash") { for (const p of parts) { g.fillStyle = p.s > 1.6 ? "rgba(60,52,46,0.75)" : "rgba(120,110,100,0.6)"; g.fillRect(p.x, p.y, p.s * 2.2, p.s * 1.4); } }
+        else if (kind === "mist") { for (const p of parts) { const rr = (40 + p.s * 40) * (w / 400); const gr = g.createRadialGradient(p.x, p.y * 0.6 + h * 0.35, 0, p.x, p.y * 0.6 + h * 0.35, rr); gr.addColorStop(0, "rgba(222,228,232,0.32)"); gr.addColorStop(1, "rgba(220,226,230,0)"); g.fillStyle = gr; g.fillRect(p.x - rr, p.y * 0.6 + h * 0.35 - rr, rr * 2, rr * 2); } }
         else if (kind === "leaf") for (const p of parts) leaf(g, p.x, p.y, p.a, p.c, p.s);
         else if (kind === "petal") { for (const p of parts) { g.fillStyle = "rgba(248,214,226,0.9)"; g.beginPath(); g.arc(p.x, p.y, 1.2 * p.s, 0, 7); g.fill(); } }
         else for (const p of parts) { const a = reduce ? 0.8 : 0.4 + 0.6 * Math.abs(Math.sin(tt * 2 + p.a)); g.globalAlpha = a; g.fillStyle = "#eaff9a"; g.beginPath(); g.arc(p.x, p.y, 1.6, 0, 7); g.fill(); }

@@ -264,6 +264,7 @@ const G = (() => {
     if (it.slot === "trophy") return it.dae || it.desc ? "Daedric artifact" : "Trophy";
     if (it.slot === "material") return "Crafting material";
     if (it.slot === "valuable") return "Valuable · sells well";
+    if (it.slot === "misc" && it.desc) return it.desc;
     if (it.slot === "ammo") return `${it.damage} damage · ${it.ammo === "bolt" ? "crossbow bolt" : "arrow"}`;
     if (it.shoots === "bolt") return `${it.damage} dmg · Archery · shoots bolts`;
     return "";
@@ -335,7 +336,7 @@ const G = (() => {
   }
   function hiddenChance(s, e, t) {   // [OURS] Skyrim detection is real-time line of sight; this is our stand-in
     const base = 0.25 + skill(s, "Sneak") / 150 - (e.danger === "high" ? 0.15 : 0) + (isNight(t) ? 0.1 : 0) + 0.15 * P(s, "detect_life") + fxSum(s, "hide", t || now()) / 100
-      + (typeof WEVENTS !== "undefined" ? WEVENTS.weather([s.x, s.y], t || now()).sneak : 0);   // rain, fog and snow hide you
+      + (typeof WEVENTS !== "undefined" ? WEVENTS.weather([s.x, s.y], t || now()).sneak : 0) + (typeof WFX !== "undefined" ? WFX.sneakAdd(s, t || now()) : 0);   // rain, fog and snow hide you; clear nights too
     const seen = (1 - base) * (1 - 0.12 * P(s, "stealth"));   // [Skyrim] Stealth: 20% harder to detect per rank (our scale)
     return Math.max(0.05, Math.min(0.92, 1 - seen));
   }
@@ -348,6 +349,8 @@ const G = (() => {
       this.eq = equipment(s);
       this.hp = curHealth(s, t); this.mp = maxMagicka(s); this.sp = maxStamina(s);
       this.ehp = enemy.hp ?? enemy.health;
+      this.wx = typeof WFX !== "undefined" ? WFX.fight(s, t) : null;   // [OURS] weather that matters (weatherfx.js)
+      if (this.wx && this.wx.stam < 1) this.sp = Math.round(this.sp * this.wx.stam);
       this.hp0 = this.hp; this.ehp0 = this.ehp;   // start health, for the fight scene's health bars
       this.tags = new Set(enemy.tags || []);
       this.armorSpell = 0; this.summonTurns = 0; this.summonDmg = 0; this.calmTurns = 0;
@@ -517,7 +520,7 @@ const G = (() => {
       const sneak = (this.turn === 1 && this.hidden) || this.sneakNext;
       this.sneakNext = false;
       const mt = this.mount && typeof HORSEBACK !== "undefined" ? HORSEBACK.strike(this, power, sneak) : null;   // [OURS] fighting from the saddle (horseback.js)
-      if (!sneak && !mt?.sure && Math.random() > F.HIT_CHANCE) return power ? "Power attack misses" : "Attack misses";
+      if (!sneak && !mt?.sure && Math.random() > F.HIT_CHANCE * (ammoK && this.wx ? this.wx.aim : 1)) return power ? "Power attack misses" : "Attack misses";
       const s = this.s, wt = this.wt;
       let dmg = this.weaponDamage() * rnd(...F.DAMAGE_SPREAD) * (power ? F.POWER_ATTACK_DAMAGE : 1);
       if (power && ((sk === "One-Handed" && P(s, "savage_strike")) || (sk === "Two-Handed" && P(s, "devastating_blow")))) dmg *= 1.25;
@@ -595,8 +598,9 @@ const G = (() => {
         if (sp.element === "sun" && !this.tags.has("undead")) return `${sp.name}: no effect (undead only)`;
         if (sp.element === "frost") this.slowed = 2;
         const aug = { fire: P(s, "augmented_flames"), frost: P(s, "augmented_frost"), shock: P(s, "augmented_shock") }[sp.element] || 0;
-        let amt = sp.amount * (1 + 0.25 * aug) * (1 + fxSum(s, "spell:" + sp.school) / 100) * (this.tags.has("undead") && P(s, "necromage") ? 1.25 : 1) * (mg && sp.element !== "sun" ? MAGIC.elem(this, sp.element) : 1);   // weaknesses and resistances
-        let label = sp.name;
+        let amt = sp.amount * (1 + 0.25 * aug) * (1 + fxSum(s, "spell:" + sp.school) / 100) * (this.tags.has("undead") && P(s, "necromage") ? 1.25 : 1) * (mg && sp.element !== "sun" ? MAGIC.elem(this, sp.element) : 1) * (this.wx ? this.wx.el[sp.element] || 1 : 1);   // weaknesses and resistances; rain dulls fire, storms feed shock
+        const stormHit = typeof WFX !== "undefined" && WFX.stormStrike(this, sp.element); if (stormHit) amt *= 1.5;
+        let label = sp.name + (stormHit ? " ⚡ (the storm answers)" : "");
         if (this.turn === 1 && this.hidden && P(s, "quiet_casting")) { amt *= 2; label += " (sneak ×2)"; }
         if (sp.school === "Destruction" && P(s, "impact") && Math.random() < 0.3) { this.stagger = true; label += ", staggers"; }
         this.ehp -= amt;
@@ -693,9 +697,9 @@ const G = (() => {
         return `${n} goes for ${al.name}`;
       }
       if (this.mount && typeof HORSEBACK !== "undefined") { const hr = HORSEBACK.enemyTurn(this); if (hr) { this.blocking = false; return hr; } }   // [OURS] foes go for your horse
-      if (Math.random() > F.HIT_CHANCE) { this.blocking = false; return `${n} misses`; }
+      if (Math.random() > F.HIT_CHANCE * (this.wx && /archer|bow|hunter|marksman/i.test(this.e.name || "") ? this.wx.aim : 1)) { this.blocking = false; return `${n} misses`; }
       const bareNow = !Object.values(this.armor).some((a) => ARMOR_SKILL[a.type]), lightNow = Object.values(this.armor).some((a) => a.type === "light");
-      if ((P(s, "evasion") && Math.random() < 0.1) || (lightNow && P(s, "deft_movement") && Math.random() < 0.1) || (bareNow && P(s, "dodge") && Math.random() < 0.15)) { this.blocking = false; return `${n} attacks, but you dodge`; }
+      if ((typeof CURSE !== "undefined" && CURSE.dodge && CURSE.dodge(this)) || (P(s, "evasion") && Math.random() < 0.1) || (lightNow && P(s, "deft_movement") && Math.random() < 0.1) || (bareNow && P(s, "dodge") && Math.random() < 0.15)) { this.blocking = false; return `${n} attacks, but you dodge`; }
       const absorb = [0, 0.1, 0.2][P(s, "spell_absorption")];
       if (absorb && Math.random() < absorb) { this.mp = Math.min(maxMagicka(s), this.mp + 15); this.blocking = false; return `${n}'s blow is absorbed into magicka`; }
       const raw = this.e.damage * rnd(...F.DAMAGE_SPREAD) * (this.slowed ? 0.5 : 1);
@@ -751,7 +755,7 @@ const G = (() => {
       return this.won;
     }
     apply(t = now()) {
-      const daeMsgs = typeof DAEDRIC !== "undefined" ? DAEDRIC.after(this) : [];   // Azura's Star
+      const daeMsgs = [...(typeof DAEDRIC !== "undefined" ? DAEDRIC.after(this) : []), ...(typeof CURSE !== "undefined" && CURSE.after ? CURSE.after(this) : [])];   // Azura's Star; feeding, Lord kills
       if (this.won && this.weaponInv && this.weapon?.enchant) {   // [Skyrim] Soul Siphon; [OURS] Soul Trap perk
         const extra = 0.05 * P(this.s, "soul_siphon") + 0.1 * P(this.s, "soul_trap");
         if (extra) { const row = invRow(this.s, this.weaponInv); const cap = this.weapon.enchant.capacity; this.charges[this.weaponInv] = Math.min(cap, (this.charges[this.weaponInv] ?? row.charge ?? 0) + cap * extra); }
@@ -886,7 +890,7 @@ const G = (() => {
     let v = F.travelSpeed(BASE_WALK, skill(s, "Athletics"), c, cap);
     if (c > cap && P(s, "marathon")) v = (v + F.travelSpeed(BASE_WALK, skill(s, "Athletics"), cap, cap)) / 2;
     v *= 1 + 0.05 * P(s, "long_strider");
-    if (typeof WEVENTS !== "undefined") { const wf = WEVENTS.weather([s.x, s.y]).speed; v *= wf < 1 && fxSum(s, "warmth") > 0 ? (1 + wf) / 2 : wf; }   // [OURS] snow and storms slow you down; hot soup halves that
+    if (typeof WEVENTS !== "undefined") { const wf = WEVENTS.weather([s.x, s.y]).speed; v *= wf < 1 && fxSum(s, "warmth") > 0 ? (1 + wf) / 2 : wf; if (typeof WFX !== "undefined") v *= WFX.speedMult(s); }   // [OURS] snow and storms slow you down; hot soup halves that
     if (riding(s)) v *= D.HORSE_SPEED;
     if (typeof CARAVANS !== "undefined") v *= CARAVANS.cartSpeed(s);   // [OURS] a loaded cart is a little slower
     return v;
@@ -916,6 +920,7 @@ const G = (() => {
      Returns {events, bag?, died?, arrived?, encounter?}. bags = shared bags list for pick-ups. */
   function advance(s, t = now(), bags = []) {
     const out = { events: [], taken: [] };
+    if (typeof WFX !== "undefined") WFX.cold(s, t);   // [OURS] the cold meter (weatherfx.js)
     const tr = s.trip;
     if (!tr || tr.status !== "travel") return out;
     if (tr.boat && typeof SOL !== "undefined") return SOL.sailOn(s, t, out);   // at sea: the boat just carries you (solstheim.js)

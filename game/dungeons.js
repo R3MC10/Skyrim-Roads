@@ -295,7 +295,10 @@ const DUNGEONS = (() => {
       if (typeof PRIESTS !== "undefined") extra.push(...PRIESTS.onBoss(s, d, e));   // the dragon priest's mask, once
       if (d.place === "Bleak Falls Barrow" && !s.inv.some((x) => x.item === "golden_claw")) { extra.push(giveFound(s, "golden_claw")); extra.push(giveFound(s, "dragonstone")); }
       let word = "";
-      if (THEMES[d.theme]?.words && (d.place === "Bleak Falls Barrow" || Math.random() < 0.6)) {   // [Skyrim] Word Walls
+      if (typeof SHOUTS2 !== "undefined") {   // [Skyrim] Word Walls stand at fixed places and each teaches its own shout (shouts2.js)
+        const w = SHOUTS2.readWall(s, d.place);
+        if (w) word = ` Behind the throne, a Word Wall hums. One word burns itself into your mind: ${w[0]} (${w[1]}). ${POWERS.unlocked(s, w[0]) ? "" : "A dragon soul will unlock it (Magic → Shouts)."}`;
+      } else if (THEMES[d.theme]?.words && (d.place === "Bleak Falls Barrow" || Math.random() < 0.6)) {   // [Skyrim] Word Walls
         const w = d.place === "Bleak Falls Barrow" && !POWERS.known(s, "FUS") ? ["FUS", "Unrelenting Force"] : POWERS.nextWord(s);
         if (w) {
           POWERS.learnWord(s, w[0]);

@@ -49,7 +49,7 @@ const ARENA = (() => {
      What the other phone needs to rebuild you as a fighter: level, skills, perks, spells, the loadout you
      fight in (its gear and tactics) and your arrows. Arena rules: no potions, scrolls, poisons or followers. */
   const SNAP_KEYS = ["id", "name", "race", "level", "hpBonus", "mpBonus", "spBonus", "perks", "spells", "stone", "words", "unlocked", "greybeards",
-    "vampire", "werewolf", "sanguinare", "beastAt", "powerAt", "stonePowerAt", "voiceAt", "stonesSeen", "souls", "dragons"];
+    "vampire", "werewolf", "sanguinare", "beastAt", "lordAt", "beastPerks", "powerAt", "stonePowerAt", "voiceAt", "stonesSeen", "souls", "dragons"];
   const cp = (o) => JSON.parse(JSON.stringify(o));
   function snapshot(s) {
     const L = G.loadout(s), worn = new Set(Object.values(L.equipment || {}));
