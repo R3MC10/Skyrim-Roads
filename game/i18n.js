@@ -104,12 +104,45 @@ const I18N = (() => {
     [/^Continue to (.+)$/, (m) => `Dalej do: ${m[1]}`], [/^(\d+) of (\d+)$/, (m) => `${m[1]} z ${m[2]}`], [/^Level (\d+): (\d+)% to the next level$/, (m) => `Poziom ${m[1]}: ${m[2]}% do następnego`],
     [/^(\d+)\/(\d+) toward level (\d+)$/, (m) => `${m[1]}/${m[2]} do poziomu ${m[3]}`], [/^~(\d+) min$/, (m) => `~${m[1]} min`],
   ];
+  /* story text: split into sentences, translate each one (exact, or a template whose {markers} are filled from the English) */
+  const ST = typeof I18N_STORY !== "undefined" ? I18N_STORY : { ex: {}, pats: [] };
+  const SPLIT = /(?<=[.!?…])(\s+)|(?<=[.!?]["”])(\s+)/;
+  let STP = null;
+  function storyPats() {
+    if (STP) return STP;
+    const esc = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    STP = ST.pats.map(([en, pl]) => {
+      const names = [];
+      const src = en.split(/(\{\w+\})/).map((part, i) => (i % 2 ? (names.push(part), "(.*?)") : esc(part))).join("");
+      return { re: new RegExp("^" + src + "$"), names, pl, lead: en.replace(/\{\w+\}.*$/, "") };
+    }).sort((a, b) => b.lead.length - a.lead.length);
+    return STP;
+  }
+  function sentence(s) {
+    const ex = ST.ex[s] ?? PL[s];
+    if (ex != null) return ex;
+    for (const p of storyPats()) {
+      if (p.lead && !s.startsWith(p.lead)) continue;
+      const m = s.match(p.re); if (!m) continue;
+      let out = p.pl;
+      p.names.forEach((n, i) => { const v = m[i + 1]; out = out.split(n).join(PL[v] ?? ST.ex[v] ?? v); });
+      return out;
+    }
+    return null;
+  }
+  function story(t) {
+    const parts = t.split(SPLIT).filter((x) => x !== undefined);
+    let hit = false;
+    const out = parts.map((p) => { if (!p.trim()) return p; const r = sentence(p); if (r != null) { hit = true; return r; } return p; });
+    return hit ? out.join("") : null;
+  }
   const cache = new Map(), done = new WeakMap();
   function tr(t) {
     if (cache.has(t)) return cache.get(t);
     let out = PL[t] ?? null;
     if (out == null) for (const [re, f] of PAT) { const m = t.match(re); if (m) { const r = f(m); if (r) { out = r; break; } } }
     if (out == null && t.includes(" · ")) { const parts = t.split(" · "), tp = parts.map((p) => PL[p] ?? p); if (tp.some((p, i) => p !== parts[i])) out = tp.join(" · "); }
+    if (out == null && /[a-z]{2} [a-z]/i.test(t)) out = story(t);
     if (cache.size < 5000) cache.set(t, out);
     return out;
   }
@@ -148,5 +181,5 @@ const I18N = (() => {
     return true;
   }
   if (typeof window !== "undefined" && typeof document !== "undefined") start();
-  return { lang, tr, settingRow, pref: setPref, PL, SKILLS };
+  return { lang, tr, settingRow, pref: setPref, PL, SKILLS, story };
 })();
