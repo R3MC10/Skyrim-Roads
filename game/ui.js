@@ -269,6 +269,7 @@
       ${S ? `<h3>Your character</h3><div class="grid2"><button class="btn" data-act="bk" data-bk="openbackup">Back up</button><button class="btn" data-act="bk" data-bk="openrestore">Restore</button></div>` : `<h3>Your character</h3><button class="btn" data-act="bk" data-bk="openrestore" style="width:100%">Restore from a backup</button>`}
       <h3>Look</h3><div class="setrow"><span>Art style</span>${seg("artStyle", [["ink", "Hand-drawn"], ["pixel", "Pixel art"]], ART.style())}</div>
       ${typeof MOTION !== "undefined" ? `<div class="setrow"><span>Motion</span>${seg("motion", [["full", "Full"], ["lite", "Lite"], ["off", "Off"]], MOTION.pref())}</div>` : ""}
+      ${typeof TB !== "undefined" ? `<h3>Fights</h3><div class="setrow"><span>Fights</span>${seg("turnBased", [[true, "Turn by turn"], [false, "Instant (auto)"]], getPref("turnBased", true))}</div><div class="setrow"><span>Foe turns</span>${seg("tbFast", [[false, "Normal speed"], [true, "Fast"]], getPref("tbFast", false))}</div>` : ""}
       <h3>Crafting</h3><div class="setrow"><span>When you craft</span>${seg("craftGame", [[true, "Mini-games"], [false, "Quick craft"]], getPref("craftGame", true))}</div>
       ${S && typeof WFX !== "undefined" ? `<h3>Survival</h3><div class="setrow"><span>Cold meter</span>${seg("survival", [[true, "On (gentle)"], [false, "Off"]], S.survival !== false)}</div>` : ""}
       <h3>Map</h3><div class="setrow"><span>Map opens</span>${seg("zoomFar", [[false, "Close up"], [true, "All Skyrim"]], getPref("zoomFar", false))}</div>
@@ -433,6 +434,7 @@
     back() {
       if ($("#title")) { if (titlePage !== "menu" && titlePage !== "press") { titlePage = "menu"; renderTitle(); return true; } return false; }
       if (!S && $("#toTitle")) { app.innerHTML = ""; showTitle("menu"); return true; }
+      if (typeof TB !== "undefined" && TB.open) return true;   // a turn-based fight is on: finish it (or Flee)
       if (typeof FAVWHEEL !== "undefined" && FAVWHEEL.open) { FAVWHEEL.hide(); return true; }
       if ($("#sky") && !$("#modal")) { closeMenu(); if (typeof TABMENU !== "undefined") TABMENU.menuClosed(); return true; }
       if ($("#modal")) { if (!$("#modal [data-act=enc], #modal [data-act=ev], #modal [data-act=guard]")) closeModal(); return true; }
@@ -500,6 +502,10 @@
     Store.watch("trades", (docs) => onTrades(docs));
     Store.watch("duels", (docs) => onDuels(docs));
     Store.watch("stalls", (docs) => onStalls(docs));
+    if (typeof TB !== "undefined") {   // turn-based fights: toasts, and live turns for real players in your party
+      TB.init({ toast: (t) => toast(t), remote: Store.online ? TB.remoteFor(Store, S.id) : null });
+      if (Store.online) TB.watchTurns(Store, () => S?.id);
+    }
     Store.watch("halls", (docs) => onHalls(docs));
     Store.watch("pshare", (docs) => onShares(docs));
     if (typeof ECON !== "undefined") Store.watch("econ", (docs) => { ECON.set(docs); if (tab === "town") bump(); });
@@ -941,7 +947,9 @@
   }
   function eventAction(c) {
     const evBefore = S.trip?.event;
-    const r = typeof ENC !== "undefined" ? ENC.decide(S, c) : G.eventChoice(S, c);
+    tbCall(() => (typeof ENC !== "undefined" ? ENC.decide(S, c) : G.eventChoice(S, c)), (r) => eventDone(c, r, evBefore));
+  }
+  function eventDone(c, r, evBefore) {
     if (r.blocked) return toast(r.text);
     if (r.bag) Store.addBag(r.bag);
     persist(true);
@@ -951,8 +959,8 @@
     openModal(`${typeof EVENTART !== "undefined" && evBefore ? EVENTART.road(evBefore) : ""}<h2>${esc(evBefore?.title || "On the road")}</h2><p>${esc(r.text)}</p>${skillLine(r)}
       <button class="btn pri" data-act="close" style="width:100%">Continue to ${esc(S.trip?.destName || "the road")}</button>`);
   }
-  function encounterAction(a) {
-    const r = G.encounterAction(S, a);
+  function encounterAction(a) { tbCall(() => G.encounterAction(S, a), (r) => encounterDone(a, r)); }
+  function encounterDone(a, r) {
     if (r.bag) Store.addBag(r.bag);
     persist(true);
     if (a === "potion" && S.trip?.status === "encounter") return openEncounter(r.text);
@@ -982,6 +990,8 @@
     } finally { sharesBusy = false; }
     renderPanel?.(true);
   }
+  /* turn-based fights (tbfight.js): an action that starts a fight pauses while you play it out */
+  function tbCall(fn, done) { if (typeof TB === "undefined") return done(fn()); closeModal(); TB.call(S, fn, done); }
   function showFightResult(r) {
     shareSpoils(r);
     if (r.fight) { const inf = CURSE.maybeInfect(S, r.fight.e); if (inf) { persist(); setTimeout(() => toast(inf), 1800); } }
@@ -1191,7 +1201,9 @@
   }
   function dungeonAct(c) {
     const runId = S.dungeon?.run || null, roomType = S.dungeon?.room?.type, hp0 = G.curHealth(S), found0 = S.dungeon?.found.length || 0, gold0 = S.dungeon?.gold || 0;
-    const r = DUNGEONS.act(S, c);
+    tbCall(() => DUNGEONS.act(S, c), (r) => dungeonDone(r, runId, roomType, hp0, found0, gold0));
+  }
+  function dungeonDone(r, runId, roomType, hp0, found0, gold0) {
     if (S.dungeon) { const newFound = S.dungeon.found.slice(found0); r.stripLoot = [...new Set([...(r.loot || []), ...newFound])]; r.stripGold = r.gold || (S.dungeon.gold - gold0) || 0; }
     r.roomType = roomType; r.hurt = roomType === "trap" && G.curHealth(S) < hp0 - 0.5;
     if (r.fight) { const inf = CURSE.maybeInfect(S, r.fight.e); if (inf) setTimeout(() => toast(inf), 1800); }
@@ -1479,7 +1491,9 @@
   }
   function raidFight() {
     const r = WEVENTS.activeRaid(); if (!r) return toast("The dragon is gone.");
-    const out = WEVENTS.fight(S, r, raidDocs);
+    tbCall(() => WEVENTS.fight(S, r, raidDocs), (out) => raidDone(r, out));
+  }
+  function raidDone(r, out) {
     if (!out.fight) return toast(out.text);
     Store.put("raids", `${r.id}-${S.id}`, { raid: r.id, uid: S.id, name: S.name, dmg: S.raid.dmg, t: G.now() });
     if (out.bag) Store.addBag(out.bag);
@@ -1524,8 +1538,8 @@
       ${done.length ? `<p class="sub" style="margin-top:8px">Completed: ${done.map(esc).join(", ")}</p>` : ""}
       <p class="sub" style="margin-top:6px">The gold diamond on the map marks where your current quest leads.</p></div>`;
   }
-  function guildWork(id) {
-    const r = GUILDS.work(S, id);
+  function guildWork(id) { tbCall(() => GUILDS.work(S, id), (r) => guildDone(id, r)); }
+  function guildDone(id, r) {
     if (r.bag) Store.addBag(r.bag);
     persist(true); renderPanel(true);
     const text = [r.text, ...(r.msgs || [])].join(" ");
@@ -1533,8 +1547,8 @@
     SOUND.fx(/off|run/.test(r.text) ? "click" : "coin");
     showMessage(id === "thieves" ? "Thieves Guild" : "Dark Brotherhood", text);
   }
-  function questTalk(id) {
-    const r = QUESTS.talk(S, id);
+  function questTalk(id) { tbCall(() => QUESTS.talk(S, id), (r) => questDone(id, r)); }
+  function questDone(id, r) {
     if (r.bag) Store.addBag(r.bag);
     persist(true); renderPanel(true);
     if (!r.fight && !r.msgs) return toast(r.text);
