@@ -3,6 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b85", build: 85, date: "22 Nov 2026", title: "Build your own homestead", items: [
+      "Three plots of land to buy and build on: Pinewatch Hollow by the lake near Falkreath, Fenhollow Rise in the marsh near Morthal and Frostcairn Rest on the coast near Dawnstar. Buy the deed (5000 gold) under Your home in that town.",
+      "Build in stages: a small house first, then a main hall, then three wings of your choice: armory, library, greenhouse, kitchen, trophy room, enchanter's tower, alchemy tower or storage room. Building uses up the materials, and a wing can't be torn down.",
+      "Get materials at the plot: saw logs at the sawmill, dig stone (and sometimes quartz) at the quarry with a pickaxe, and dig clay. Each can be worked once per in-game hour. At the workbench, turn iron ingots into nails, hinges, locks and fittings, and firewood plus quartz into glass.",
+      "Wings make something every in-game day: steel arrows, a study session for one of your skills, ingredients, meals, gold from your trophies, soul gems or potions. The storage room is a 30-slot chest you never lose, and it lets goods pile up longer.",
+      "Sleep in your own bed for full health and Well Rested. Each plot has its own steward to hire (500 gold): they look after the place so goods pile up longer, deliver logs, stone, clay and quartz for gold, or come along and fight with you.",
+      "Every plot gets its own picture that changes as you build, in both art styles.",
+      "New perks: Carpenter (Smithing, building takes fewer materials), Woodsman (Athletics, more logs, stone and clay), Landed Thane (Etiquette, cheaper deeds and stewards) and Estate Income (Mercantile, gold from each wing every day)."] },
     { id: "b84f", build: 84, date: "22 Nov 2026", title: "Small fixes", items: [
       "Trying to buy a spell tome that's too advanced for you now tells you which skill level you need, even when no shop here has it this week."] },
     { id: "b84", build: 83, date: "22 Nov 2026", title: "Turn-by-turn fights", items: [

@@ -63,6 +63,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Smart AI combat (default; custom tactics optional), crafting mini-games, motion design (63)
 
 ## In progress (write your name before you start)
+- Claude (homesteads branch): buildable homesteads (homestead.js): three plots, stages and wings, sawmill/quarry, steward, homestead perks.
 - Claude (Remigiusz): turn-based combat, AI settings/tactics editor, gear visuals, art from ChatGPT, menu simplification.
 - Kacper: (add here)
 

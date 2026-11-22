@@ -252,6 +252,7 @@ const NPCART = (() => {
     return portrait({ name, race, sex, ...trainerRole(skill) }, size);
   }
   FOLLOWER_LOOK.meeko = ["dog", "m", "dog", "fur"];   // the stray dog from the road (encounters.js)
+  Object.assign(FOLLOWER_LOOK, { hs_pinewatch: ["nord", "f", "ranger"], hs_fenhollow: ["breton", "m", "ranger"], hs_frostcairn: ["nord", "m", "warrior", "fur"] });   // homestead stewards (homestead.js)
   function dogPortrait(size) {
     return ART.html(size, size, (g, H, w) => {
       const k = w / 64; g.fillStyle = "#cdb98f"; g.fillRect(0, 0, w, w);
