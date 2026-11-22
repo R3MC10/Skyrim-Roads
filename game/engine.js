@@ -1161,7 +1161,8 @@ const G = (() => {
     const v = D.ITEMS[item].value * econ(town, item, "buy", extra);
     const base = econOn() && ECON.isTrade(item) ? Math.max(Math.round(v * 1.05), Math.round(v * cutOf(s, item))) : F.buyPrice(v, skill(s, "Mercantile"));
     return Math.max(1, Math.round(base / haggle(s) * (typeof FEST !== "undefined" ? FEST.shopDiscount() : 1)   // Midyear: 10% off
-      * (typeof WARS !== "undefined" && town && PLACES[town] ? WARS.discount(s, holdAt(PLACES[town])) : 1)));   // your clan rules this hold
+      * (typeof WARS !== "undefined" && town && PLACES[town] ? WARS.discount(s, holdAt(PLACES[town])) : 1)   // your clan rules this hold
+      * (typeof RUMOURS !== "undefined" && town ? RUMOURS.priceMult(s, town) : 1)));   // local hero discount; knocked-up shop at night (rumours.js)
   };
   function sellPrice(s, row, town = s.location, extra = 0) {
     const it = D.ITEMS[row.item];
@@ -1172,6 +1173,7 @@ const G = (() => {
     const guild = typeof GUILDS !== "undefined" ? GUILDS.fenceMult(s, row) : 1;   // Thieves Guild ranks: the fence pays more
     const fair = econOn() && ECON.isTrade(row.item) ? Math.min(Math.round(v), Math.round(v / cutOf(s, row.item))) : F.sellPrice(v, skill(s, "Mercantile"));
     let p = Math.max(1, Math.round(Math.min(Math.round(v), Math.round(fair * haggle(s) * (P(s, "master_trader") ? 1.1 : 1))) * guild * (row.stolen ? 1 + 0.2 * Math.min(100, skill(s, "Streetwise")) / 100 : 1)));   // Streetwise: fences pay up to 20% more
+    if (typeof RUMOURS !== "undefined" && town) p = Math.max(1, Math.round(p * RUMOURS.sellMult(s, town)));   // night prices after knocking (rumours.js)
     if (econOn() && town) p = Math.max(1, Math.min(p, Math.floor(0.9 * buyPrice(s, row.item, town, extra))));   // never more than 90% of their asking price
     return p;
   }
@@ -1183,10 +1185,11 @@ const G = (() => {
     for (let k = 0; k < qty; k++) tot += side === "buy" ? buyPrice(s, item, town, k) : sellPrice(s, row || { item }, town, -k);
     return tot;
   }
+  const knockOk = (s, t) => typeof RUMOURS !== "undefined" && RUMOURS.knocked(s, s.location, t);   // closed, but you knocked (rumours.js)
   function buy(s, item, qty = 1, t = now()) {
     if (!s.location || !shopTypes(s.location).length) return "There's no shop here.";
     if (typeof TOWNS !== "undefined" && TOWNS.wanted(s)) return "The merchant won't trade with a wanted criminal.";
-    if (!shopsOpen(t)) return `The shops are closed (${clockText(t)}). They open at 08:00.`;
+    if (!shopsOpen(t) && !knockOk(s, t)) return `The shops are closed (${clockText(t)}). They open at 08:00.`;
     if (typeof MAGIC !== "undefined") { const no = MAGIC.canBuy(s, item); if (no) return no; }
     if (item === "horse") {
       if (!shopTypes(s.location).includes("stables")) return "No stables here.";
@@ -1209,7 +1212,7 @@ const G = (() => {
     if (!s.location || !shopTypes(s.location).length) return "There's no shop here.";
     if (typeof TOWNS !== "undefined" && TOWNS.wanted(s)) return "The merchant won't trade with a wanted criminal.";
     if (invRow(s, id)?.stolen && !(typeof TOWNS !== "undefined" && TOWNS.canFence(s))) return "\"That's stolen. I don't want it.\" You need a fence: the Ragged Flagon in Riften, or the Fence perk.";
-    if (!shopsOpen(t)) return `The shops are closed (${clockText(t)}).`;
+    if (!shopsOpen(t) && !knockOk(s, t)) return `The shops are closed (${clockText(t)}).`;
     const r = invRow(s, id);
     if (!r || r.qty < qty) return "You don't have that.";
     if (D.ITEMS[r.item].noTrade) return `The ${D.ITEMS[r.item].name} is bound to you. No merchant will take it.`;

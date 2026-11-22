@@ -470,6 +470,13 @@ const WorldMap = (() => {
       g.strokeStyle = "#c9392b"; g.lineWidth = 3 * s; g.stroke();
       smartLabel("🗺 " + m.label, x, y - r, 11, "#ffd6c8");
     }
+    for (const m of v.rumours || []) {   // rumours you heard (rumours.js): an ember ring with a "?"; it might be true
+      const [x, y] = P(m.pos), r = 8 * s, pulse = v.reduceMotion ? 0.5 : (Math.sin(v.t * 2 + x) + 1) / 2;
+      if (MA) { const R = (26 + 8 * pulse) * s; g.globalAlpha = 0.45 + 0.3 * pulse; g.drawImage(MA.glowSprite("rgba(232,145,58,.9)"), x - R / 2, y - R / 2, R, R); g.globalAlpha = 1; }
+      g.fillStyle = "#3a1d0c"; g.strokeStyle = "#e8913a"; g.lineWidth = 2.2 * s; g.beginPath(); g.arc(x, y - r * 1.2, r, 0, 7); g.fill(); g.stroke();
+      g.fillStyle = "#ffd27a"; g.font = `bold ${Math.round(11 * s)}px sans-serif`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("?", x, y - r * 1.2 + 0.5 * s);
+      if (v.zoom >= 1.6 || m.here) smartLabel(m.label, x, y - r * 2.3, 11, "#ffd9a8");
+    }
     for (const p of v.pins || []) {   // your own pins
       const drop = typeof MOTION !== "undefined" ? MOTION.pinDrop(`${p.pos}|${p.label}`) : { dy: 0, sc: 1 };   // new pins drop in with a bounce
       const [x, y0] = P(p.pos), r = (p.on ? 9 : 7) * s * drop.sc, y = y0 + drop.dy * r * 1.6;

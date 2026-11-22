@@ -299,6 +299,7 @@ const NPCART = (() => {
       if (bounty && ["merchant", "smith", "innkeeper"].includes(role)) return "I've heard about you. Make it quick, and keep your hands where I can see them.";
       const night = hr >= 20 || hr < 6;
       if (night && NIGHT[role] && (role !== "innkeeper" || hr >= 23 || hr < 6)) return NIGHT[role];
+      const deed = typeof RUMOURS !== "undefined" ? RUMOURS.greet(s, n) : null; if (deed) return deed;   // your deeds get around (rumours.js)
       if (s && (s.dragons || 0) > 0 && hash(n.name + day) % 3 === 0) return role === "guard" ? "Dragonborn. The Greybeards called for you, didn't they?" : "You're the one who killed the dragon? By Ysmir, I'm honoured.";
       if (s && s.thaneWhiterun && n.hold === "Whiterun" && hash(n.name + day) % 4 === 0) return "My Thane. It's good to see you in Whiterun.";
       const L = LINES[role] || LINES.merchant;
