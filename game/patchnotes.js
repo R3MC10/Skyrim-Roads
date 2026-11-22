@@ -6,6 +6,13 @@ const PATCHNOTES = (() => {
     { id: "b112", build: 112, date: "23 Nov 2026", title: "Updates on launch", items: [
       "When you open the game it now looks for a new version straight away and installs it before you start playing (a short \"Updating…\" card). No more starting a session on an old version.",
     ] },
+    { id: "b111", build: 111, date: "22 Nov 2026", title: "New fight screen", items: [
+      "Fights got a full makeover: a bigger battle scene, health bars that leave a fading trail when you get hit, the screen shakes and flashes red on big hits, and a banner when your turn starts or the fight ends.",
+      "Drag to fight: drag an action card from the bottom onto the foe to attack, or onto yourself for Shield up, potions and healing. The target lights up, let go to use it. Tapping still works too.",
+      "Everything you press now sits at the bottom of the screen, so you can fight one-handed with your thumb.",
+      "The fight log is easier to read: damage numbers stand out, crits and heals get their own colour. Tap it (or the scroll button) to see the whole fight round by round.",
+      "On a PC: keys 1-9 use the action cards, L opens the log.",
+    ] },
     { id: "b110", build: 110, date: "22 Nov 2026", title: "Fix: players not seeing each other", items: [
       "Fixed friends and other players not showing up for some of you. Phones on mobile data or strict Wi-Fi often couldn't link up directly, so they never saw each other.",
       "Now there's a backup line: if your phone can't link straight to someone, your name, where you are, chat and messages still get through, encrypted, over the same servers used to find each other.",
