@@ -3,7 +3,7 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "bQ-inventory", build: 0, date: "22 Nov 2026", title: "Tidier pack and safer selling", items: [
+    { id: "b95", build: 95, date: "22 Nov 2026", title: "Tidier pack and safer selling", items: [
       "Mark anything Keep (🔒) from its item card. Kept things and your favourites are never sold in bulk.",
       "Sell all junk: at a shop, one button sells cheap trinkets and loose gear that's worse than what you wear. You see the list and the total first. Kept, favourite, quest, unique, enchanted and handmade things never count as junk.",
       "Green ▲ and red ▼ arrows on gear show if it's better or worse than what you're wearing: in the pack, the Items menu, shops and market stalls.",
