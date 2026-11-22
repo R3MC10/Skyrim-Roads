@@ -189,10 +189,16 @@ const PFX = (() => {
     [ "Enchanting", "extra_effect", "Extra Effect", 1, [100], ["corpus_enchanter", "storm_enchanter"], "Every new enchantment is another 10% stronger. [Skyrim: two effects on one item]", [["ench", 0.1, {}]]],
     [ "Enchanting", "deep_charge", "Deep Charge", 1, [60], ["soul_siphon"], "Enchanted weapons hit 10% harder with their enchantment. [OURS]", [["enchhit", 0.1, {}]]],
     [ "Enchanting", "rune_smith", "Rune Smith", 1, [80], ["deep_charge"], "Elemental statuses from your enchanted weapons last a turn longer. [OURS]", [["enchstatus", 1, {}]]],
-    // ---------------------------------------------------------------- Alchemy (8 → 11)
+    // ---------------------------------------------------------------- Alchemy (8 → 13)
     [ "Alchemy", "snakeblood", "Snakeblood", 1, [80], ["concentrated_poison"], "You resist burning, chills and shocks: they hurt 25% less. [Skyrim: 50% poison resistance]", [["statusres", 0.25, {}]]],
     [ "Alchemy", "field_medic", "Field Medic", 1, [40], ["physician"], "Healing potions you drink in a fight heal 20% more. [OURS]", [["potion", 0.2, {}]]],
+    [ "Alchemy", "forager", "Forager", 1, [20], ["alchemist"], "You spot plant patches from twice as far away, and foraging turns up one more ingredient. [OURS, gathering]", [["gspot", 1, {}], ["forage", 1, {}]]],
+    [ "Alchemy", "wildcrafter", "Wildcrafter", 1, [50], ["forager"], "Picked patches grow back twice as fast, and rare finds (Nirnroot, pearls, glowing fungi) turn up when you forage. [OURS, gathering]", [["regrow", 0.5, {}], ["grare", 1, {}]]],
     [ "Alchemy", "master_alchemist", "Master Alchemist", 1, [100], ["purity", "green_thumb"], "Everything you brew is another 10% stronger. [OURS]", [["alch", 0.1, {}]]],
+    // ---------------------------------------------------------------- road encounters (encounters.js)
+    [ "Speechcraft", "smooth_talker", "Smooth Talker", 1, [30], ["persuasion"], "On the road, bluffs, threats and haggling are 10% more likely to work. [OURS]", [["enctalk", 0.1, {}]]],
+    [ "Streetwise", "road_wise", "Road Wise", 1, [30], ["rumour_monger"], "On the road, sneaking past trouble is 10% easier, tolls and bribes cost 20% less, and you read an ambush before it springs more often. [OURS]", [["road", 0.1, {}], ["roadbribe", 0.2, {}]]],
+    [ "Athletics", "pathfinder", "Pathfinder", 1, [40], ["long_strider"], "On the road, outrunning trouble, dodging avalanches and taming wild horses is 15% easier. [OURS]", [["roadrun", 0.15, {}]]],
   ];
   const FX = {};
   if (typeof PERKS !== "undefined") {

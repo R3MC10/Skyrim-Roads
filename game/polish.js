@@ -45,6 +45,7 @@ const POLISH = (() => {
     if (!showing) next();
   }
   function next() {
+    if (queue.length && document.querySelector("#sky, #modal .sheet, #favwheel")) { showing = true; setTimeout(next, 700); return; }   // wait until menus and pop-ups close, like Skyrim
     const b = queue.shift();
     if (!b) { showing = false; return; }
     showing = true;

@@ -233,6 +233,20 @@ const COMBATAI = (() => {
         const gem = s.inv.some((r) => /^soul_gem_(common|greater)_empty$/.test(r.item)); if (!gem || f.ehp < p.dps * 1.2) return { v: -1 };
         return { v: 0.6 - mpV, why: "an easy fight: traps its soul" };
       }
+      case "absorb": {   // spellbook.js: damage that refills magicka
+        const d = amt * (hasM() && MAGIC.isCaster(f) ? 1.3 : 1);
+        return { v: dmgV(d) * ok + (Math.min(d * 0.6, G.maxMagicka(s) - f.mp) > 0 ? 0.15 : 0) - mpV, why: hasM() && MAGIC.isCaster(f) ? "drains the mage's magicka" : "" };
+      }
+      case "healally": case "allyward": case "allyarmor": case "allyimbue": case "allycourage": case "allyunseen": case "allyrescue": case "allythorns":
+        return typeof SPELLBOOK !== "undefined" ? SPELLBOOK.aiValue(f, p, { ...sp, amount: amt }, ok, mpV) : { v: -1 };
+      case "banish": {
+        if (typeof SPELLBOOK === "undefined" || !SPELLBOOK.isDaedra(f) || f.e.boss || (f.e.level ?? 1) > (sp.max_level || 0)) return { v: -1 };
+        return { v: (sp.command ? Math.min(6, remT) * wDef(p) : remT + 1) * ok - mpV, why: sp.command ? "turns the daedra" : "banishes the daedra" };
+      }
+      case "equilibrium": {
+        const bs = p.bestSpell; if (!bs || f.mp >= bs.c || p.margin < 2.5 || f.hp < (sp.amount || 25) * 3) return { v: -1 };
+        return { v: 0.3, why: "trades health for magicka" };
+      }
       case "reanimate": {
         if (f.reanimate || s.thrall || p.margin < 3 || f.tags.has("undead") || f.tags.has("construct") || f.tags.has("dragon") || (f.e.level ?? 1) > (sp.amount || 0)) return { v: -1 };
         return { v: 0.55 - mpV, why: "an easy fight: it will rise for you" };

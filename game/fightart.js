@@ -252,7 +252,7 @@ const FIGHTART = (() => {
   function ally(g, i) { g.save(); g.scale(0.62, 0.62); g.globalAlpha = 0.9; person(g, { skin: [SKIN.nord, SKIN.redguard, SKIN.dunmer][i % 3], body: ["#6a5a40", P.steel, "#4a5a3a"][i % 3], head: i % 2 ? "helm" : "hair", wt: ["sword", "axe", "bow"][i % 3], shield: i % 3 === 0 }); g.restore(); }
 
   /* [summ] every kind of helper gets its own figure: what an ally record is */
-  const ALLY_KINDS = ["follower", "mate", "soldier", "zombie", "icewolf", "werewolf", "gargoyle", "dremora", "valor", "odah", "dragon", "beast", "familiar", "flame_atronach", "frost_atronach", "storm_atronach"];
+  const ALLY_KINDS = ["follower", "mate", "soldier", "zombie", "icewolf", "werewolf", "gargoyle", "dremora", "valor", "odah", "dragon", "beast", "familiar", "flame_atronach", "frost_atronach", "storm_atronach", "dog"];
   const FLYERS = new Set(["odah", "dragon"]);
   const ALLY_W = { mate: 24, follower: 24, soldier: 20, zombie: 20, valor: 26, dremora: 24, icewolf: 36, beast: 40, familiar: 34, werewolf: 30, gargoyle: 30, flame_atronach: 28, frost_atronach: 30, storm_atronach: 32 };   // how much room each figure needs in the line
   function allyKind(a) {
@@ -293,6 +293,10 @@ const FIGHTART = (() => {
         g.scale(0.78, 0.78);
         if (o.look) person(g, { ...matePerson(o.look), lunge });
         else person(g, { skin: SKIN.nord, body: P.steel, head: "helm", wt: "sword", shield: true, lunge });
+        break; }
+      case "dog": {   // Meeko, the stray from the road
+        g.scale(0.62, 0.62);
+        quad(g, { color: "#8a6a48", len: 40, height: 26, head: 8, legW: 3.2, tail: "long", ears: 1, lunge });
         break; }
       case "zombie": {   // grey-green, hunched, tattered, a slow sway
         g.scale(0.7, 0.7); g.rotate(Math.sin(t * 1.7 + i) * 0.04);
@@ -375,7 +379,9 @@ const FIGHTART = (() => {
   const elementOf = (t) => /fire|flame|incinerat|inferno|fireball|firebolt|scorch/i.test(t) ? "fire" : /frost|ice\b|ice |blizzard|freez|frostbite|icy/i.test(t) ? "frost"
     : /lightning|shock|spark|thunder|storm/i.test(t) ? "shock" : /sun|stendarr|turn|repel/i.test(t) ? "sun" : null;
   const KIND_FX = { heal: "heal", armor: "armor", summon: "summon", calm: "illusion", fear: "illusion", courage: "illusion", rune: "rune", cloak: "cloak", dot: "wall", ward: "ward",
-    turn: "turn", regen: "circle", utility: "glow", paralyze: "paralyze", bound: "bound", reanimate: "necro", soultrap: "soultrap", invisibility: "invis" };
+    turn: "turn", regen: "circle", utility: "glow", paralyze: "paralyze", bound: "bound", reanimate: "necro", soultrap: "soultrap", invisibility: "invis",
+    healally: "support", allyward: "support", allyarmor: "support", allyimbue: "support", allycourage: "support", allyunseen: "support", allyrescue: "support", allythorns: "support",
+    banish: "turn", equilibrium: "glow", absorb: "shock" };
   const SHOUT_FX = { unrelenting_force: "fus", disarm: "fus", fire_breath: "breath", frost_breath: "breath", ice_form: "frost", kynes_peace: "illusion", become_ethereal: "invis", dragon_aspect: "armor" };
   const RACE_FX = { dunmer: "cloak", nord: "illusion", imperial: "illusion", bosmer: "illusion", breton: "ward", argonian: "heal", khajiit: "invis", redguard: "glow", altmer: "glow", orc: "glow" };
   const AT_FOE = new Set(["sun", "wall", "rune", "illusion", "soultrap", "necro"]), PROJ = new Set(["fire", "frost", "shock", "paralyze"]);
@@ -562,8 +568,8 @@ const FIGHTART = (() => {
     heal: ["#a8f08a", "#fff2a0", "#ffffff"], circle: ["#a8f08a", "#fff2a0"], ward: ["#9fd0f0", "#d8f0ff"], armor: ["#c9a878", "#8a6a44", "#e0d0a0"], illusion: ["#c89aff", "#ff9ae0", "#ffffff"],
     summon: ["#a07aff", "#e0d0ff"], necro: ["#9a7aff", "#7af0b0"], paralyze: ["#9aff6a", "#e0ffb0"], soultrap: ["#b07aff", "#ffffff"], spark: ["#fff2c0", "#ffd080", "#ffffff"],
     dust: ["#b8a890", "#9a8a72", "#cbbca0"], smoke: ["#5a5450", "#7a726a"], health: ["#ff6a6a", "#ffb0b0"], magicka: ["#6aa8ff", "#b0d8ff"], stamina: ["#7aff8a", "#c0ffc0"],
-    drain: ["#ff4060", "#ff9aa0"], glow: ["#fff2c0", "#ffffff"], invis: ["#d8f0ff", "#ffffff"], bound: ["#bcd8ff", "#ffffff"], turn: ["#fff2a0", "#ffffff"], cloak: ["#ffb347", "#ff7a2a"], rune: ["#ffb347", "#fff2c0"], wall: ["#ffb347", "#ff7a2a"], fizzle: ["#8a8480", "#a8a29a"] };
-  const colOf = (fx, el) => COL[(fx === "cloak" || fx === "rune" || fx === "wall" || fx === "breath" || fx === "staff") && el ? el : fx] || COL[el] || COL.glow;
+    drain: ["#ff4060", "#ff9aa0"], support: ["#9affc0", "#fff2a0", "#ffffff"], glow: ["#fff2c0", "#ffffff"], invis: ["#d8f0ff", "#ffffff"], bound: ["#bcd8ff", "#ffffff"], turn: ["#fff2a0", "#ffffff"], cloak: ["#ffb347", "#ff7a2a"], rune: ["#ffb347", "#fff2c0"], wall: ["#ffb347", "#ff7a2a"], fizzle: ["#8a8480", "#a8a29a"] };
+  const colOf = (fx, el) => COL[(fx === "cloak" || fx === "rune" || fx === "wall" || fx === "breath" || fx === "staff" || fx === "support") && el ? el : fx] || COL[el] || COL.glow;
   const glowSprites = new Map();
   function glowSprite(c) {
     let sp = glowSprites.get(c);
@@ -673,6 +679,7 @@ const FIGHTART = (() => {
         else if (fx === "armor") { burst(cx, cy, 16, 3, cols, 110 * s, 0.6, 2.4, 200); flash = 0.15; flashC = "#e0c890"; }
         else if (fx === "fizzle") burst(handX(1, heroP), handY(1), 10, 2, COL.fizzle, 30 * s, 0.9, 5, -30, true);
         else if (fx === "turn") { burst(cx + 10 * s, cy, 30, 1, COL.turn, 320 * s, 0.6, 2.4, 0); flash = 0.4; flashC = "#fff6c0"; }
+        else if (fx === "support") { beamT = 0; beamC = colOf("support", b.el)[0]; burst(allyX(), groundY - 30 * s, 22, 4, colOf("support", b.el), 70 * s, 1, 3, -40, true); burst(cx, cy, 8, 0, colOf("support", b.el), 40 * s, 0.5, 3, 0); }   // [spellbook] a beam to the ally you help
         else if (fx === "summon") { wolfT = 0; burst(hx0 + 46 * s, groundY - 10 * s, 24, 4, COL.summon, 70 * s, 1, 3, -60, true); }
         else if (fx === "bound") burst(handX(1, heroP), handY(1), 18, 0, COL.bound, 70 * s, 0.5, 3, 0);
         else if (fx === "invis") burst(cx, cy, 18, 4, COL.invis, 50 * s, 0.9, 3, -30, true);
@@ -711,12 +718,13 @@ const FIGHTART = (() => {
       if (b.crit || b.sneak) { slowT = 0.45; shake = Math.max(shake, 4); }
       if (b.final) { slowT = 0.6; shake = Math.max(shake, 8); zoomT = 0.9; zcx = tx; zcy = ty; flash = Math.max(flash, 0.3); flashC = "#fff"; }
     }
-    let ringT = 1, ringX = 0, ringC = "#e9dcc0";
+    let ringT = 1, ringX = 0, ringC = "#e9dcc0", beamT = 1, beamC = "#9affc0";
     function landNumbers(b) {   // the number and the health bars, once per beat (on the last hit)
       const me = b.who === "me", tx = me ? fx0 : hx0, ty = Math.max(46, (me ? foeChest : heroChest) - 18 * s);
       if (b.ehpT != null && b.ehpT !== ehpT) { ehpT = b.ehpT; ehpLT = 0.35; }
       if (b.hpT != null && b.hpT !== hpT) { hpT = b.hpT; hpLT = 0.35; }
-      if (b.dmg && !b.miss) float(tx, ty, b.num, me ? (b.crit || b.sneak ? "#ffd060" : "#fff2c0") : "#ff8a7a", b.crit || b.sneak || b.final ? 22 : b.power ? 18 : 15);
+      const ELC = { fire: "#ff9a4a", frost: "#a8e0ff", shock: "#dcc4ff", poison: "#a6e870" };   // colour-coded damage numbers by element
+      if (b.dmg && !b.miss) float(tx, ty, b.num, ELC[b.el] || (me ? (b.crit || b.sneak ? "#ffd060" : "#fff2c0") : "#ff8a7a"), b.crit || b.sneak || b.final ? 22 : b.power ? 18 : 15);
       if (b.heal) float(hx0, groundY - 70 * s, "+" + b.heal, "#a8f08a", 16);
       if (b.crit) { label = "CRITICAL"; labelT = 1.1; labelC = "#ffd060"; }
       if (b.sneak) { label = b.sneak; labelT = 1.2; labelC = "#c8b8ff"; }
@@ -765,7 +773,7 @@ const FIGHTART = (() => {
       zoom += ((zoomT > 0 && !rm ? 1.12 : 1) - zoom) * Math.min(1, dtr * 8);
       heroKnock *= Math.exp(-dtr * 7); foeKnock *= Math.exp(-dtr * 7);
       heroDodge = Math.min(1, heroDodge + dtr * 2.6); foeDodge = Math.min(1, foeDodge + dtr * 2.6); wolfT = Math.min(1, wolfT + dtr * 1.4);
-      claw *= Math.exp(-dtr * 5); if (labelT > 0) labelT -= dtr; ringT = Math.min(1, ringT + dtr * 2.2);
+      claw *= Math.exp(-dtr * 5); if (labelT > 0) labelT -= dtr; ringT = Math.min(1, ringT + dtr * 2.2); beamT = Math.min(1, beamT + dtr * 1.8);
       for (let i = 0; i < NF; i++) if (fl[i] > 0) { fxs[i] += fvx[i] * dtr; fys[i] += fvy[i] * dtr; fvy[i] += 220 * dtr; fl[i] -= dtr * 0.9; }
       // [OURS] elemental statuses (perkfx.js): flames lick a burning figure, frost mist on a chilled one, sparks on a jolted one
       { const cs = curSt(); const fire = ["#ffb347", "#ff7a2a", "#ffd27a"];
@@ -873,7 +881,7 @@ const FIGHTART = (() => {
       const squeeze = backs.length ? Math.min(1, 76 / backs[backs.length - 1]) : 1;   // keep the whole line inside the scene
       slots.forEach((a, i) => {
         const ax = hx0 - (backs[i] * squeeze - allyLunge * 14) * s, ay = groundY + 2 - i * 2;
-        if (a.name && (a.kind === "mate" || a.kind === "follower" || a.kind === "valor")) mateTags.push([a.name, ax * z + ox + zcx - zcx * z, (ay - 66 * s) * z + oy + zcy - zcy * z]);
+        if (a.name && (a.kind === "mate" || a.kind === "follower" || a.kind === "valor" || a.kind === "dog")) mateTags.push([a.name, ax * z + ox + zcx - zcx * z, (ay - 66 * s) * z + oy + zcy - zcy * z]);
         wg.save(); wg.translate(ax, ay); wg.scale(s, s); allyFig(wg, a.kind, { lunge: allyLunge, t: tt, i, look: a.look }); wg.restore();
         const sp = SPARK[a.kind]; if (sp && Math.random() < 0.18 * pmul) spawn(sp[1], sp[0], ax + (Math.random() - 0.5) * 18 * s, ay + (sp[2] - Math.random() * 30) * s, (Math.random() - 0.5) * 14 * s, -20 * s, 0.7, 2.2, 0);
       });
@@ -917,7 +925,14 @@ const FIGHTART = (() => {
         else { const dr = foeK === "dragon"; wg.translate(0, (dr ? -10 : -6) * fallE); wg.scale(1, 1 - (1 - (dr ? 0.45 : -0.9)) * fallE); wg.translate(0, (dr ? 0 : 12) * fallE); }   // beasts roll over, dragons slump
       }
       const lunge = !isPerson ? foeP.draw : ["skeleton", "sphere", "centurion"].includes(foeK) ? Math.max(0, Math.min(1, (foeP.aim + 0.5) / 1.4)) : 0;
-      foeFig(wg, foeK, lunge, tt, isPerson ? foeP : null);
+      const foePic = typeof ASSETS !== "undefined" ? ASSETS.img(ASSETS.foeKey(rec.foeName, foeK)) : null;
+      if (foePic) {   // a painted foe: stands on the ground line, breathes, leans into its attacks
+        const hU = (foeK === "dragon" ? 120 : 66) * Math.min(1.8, fSize), wU = hU * foePic.naturalWidth / foePic.naturalHeight;
+        const breathe = 1 + Math.sin(tt * 2.2) * 0.012;
+        wg.save(); wg.translate(lunge * 10, 0); wg.scale(1, breathe);
+        wg.drawImage(foePic, -wU / 2, -hU, wU, hU);
+        wg.restore();
+      } else foeFig(wg, foeK, lunge, tt, isPerson ? foeP : null);
       wg.restore();
       // states on the foe: paralysis crackle, fear swirls, soul trap glow
       if ((b && b.who === "them" && b.status === "para") || (b && b.who === "me" && (b.fx === "paralyze" || b.para) && u > 0.6 && !b.miss)) crackle(fx0, foeChest, "#9aff6a", tt);
@@ -941,6 +956,7 @@ const FIGHTART = (() => {
       projX = -1;
       if (boltOn) bolt();
       // shockwave ring
+      if (beamT < 1) { wg.save(); additive(); wg.globalAlpha = (1 - beamT) * 0.85; wg.strokeStyle = beamC; wg.lineWidth = Math.max(pixel ? 3 : 2, 5 * (1 - beamT)) * s; wg.beginPath(); wg.moveTo(hx0 + 8 * s, groundY - 44 * s); wg.quadraticCurveTo((hx0 + allyX()) / 2, groundY - 70 * s, allyX(), groundY - 36 * s); wg.stroke(); wg.restore(); }   // [spellbook] support beam, colour by element
       if (ringT < 1) { wg.save(); additive(); wg.globalAlpha = (1 - ringT) * 0.8; wg.strokeStyle = ringC; wg.lineWidth = Math.max(pixel ? 3 : 2, 6 * (1 - ringT)) * s; wg.beginPath(); wg.ellipse(ringX, groundY, 70 * s * EASE.out(ringT), 14 * s * EASE.out(ringT), 0, 0, 7); wg.stroke(); wg.restore(); }
       // claw marks
       if (Math.abs(claw) > 0.05) { const cx = claw < 0 ? fx0 : hx0, a = Math.abs(claw); wg.save(); wg.globalAlpha = a; wg.strokeStyle = "#fff6e0"; wg.lineWidth = Math.max(pixel ? 3 : 1.6, 2.4 * s); for (let i = -1; i <= 1; i++) { wg.beginPath(); wg.moveTo(cx - 12 * s + i * 7 * s, heroChest - 18 * s); wg.lineTo(cx + 8 * s + i * 7 * s, heroChest + 12 * s); wg.stroke(); } wg.restore(); }

@@ -457,6 +457,13 @@ const WorldMap = (() => {
       g.beginPath(); g.moveTo(fx, fy); path.forEach((p) => g.lineTo(...P(p))); g.stroke(); g.setLineDash([]);
       const [ex, ey] = P(path[path.length - 1] || r.from); g.fillStyle = "#cde0ff"; g.strokeStyle = "#13243a"; g.lineWidth = 2 * s; g.beginPath(); g.arc(ex, ey, 4.5 * s, 0, 7); g.fill(); g.stroke();
     }
+    if (v.zoom >= 1.3) for (const h of v.herbs || []) {   // plant patches you've spotted (gather.js): green leaf ripe, grey picked
+      const [x, y] = P(h.pos), r = 5.4 * s;
+      g.fillStyle = h.ripe ? "#6fb04a" : "#7d7a6e"; g.strokeStyle = "#16210c"; g.lineWidth = 1.2 * s;
+      g.beginPath(); g.moveTo(x, y - r * 1.3); g.quadraticCurveTo(x + r * 1.2, y - r * 0.2, x, y + r); g.quadraticCurveTo(x - r * 1.2, y - r * 0.2, x, y - r * 1.3); g.fill(); g.stroke();
+      g.beginPath(); g.moveTo(x, y - r); g.lineTo(x, y + r * 0.8); g.strokeStyle = h.ripe ? "#2e5a1c" : "#4a483f"; g.lineWidth = 0.8 * s; g.stroke();
+      if (v.zoom >= 2.6) smartLabel(h.label, x, y - r * 1.4, 10, h.ripe ? "#d8f0c0" : "#c8c4b4");
+    }
     for (const m of v.tmaps || []) {   // treasure maps: a red X
       const [x, y] = P(m.pos), r = 7 * s;
       g.strokeStyle = "#1b1408"; g.lineWidth = 5 * s; g.beginPath(); g.moveTo(x - r, y - r); g.lineTo(x + r, y + r); g.moveTo(x + r, y - r); g.lineTo(x - r, y + r); g.stroke();

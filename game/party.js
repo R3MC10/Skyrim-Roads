@@ -98,9 +98,9 @@ const PARTY = (() => {
       if (c.id === s.id || !isMember(party, c.id) || c.dungeon || c.hiding) continue;
       if (G.pxDist(posOf(c), me) > near * 1.5) continue;
       out.push({ name: c.name, look: c.look || { r: c.race || "nord", id: c.name, eq: {}, gl: {} }, riding: !!c.ride, horse: c.ride || null, player: true });
-      if (c.fol && typeof TOWNS !== "undefined" && TOWNS.FOLLOWERS[c.fol]) out.push({ name: TOWNS.FOLLOWERS[c.fol][0], look: followerLook(c.fol), follower: true });
+      if (c.fol && c.fol !== "meeko" && typeof TOWNS !== "undefined" && TOWNS.FOLLOWERS[c.fol]) out.push({ name: TOWNS.FOLLOWERS[c.fol][0], look: followerLook(c.fol), follower: true });
     }
-    if (s.follower && typeof TOWNS !== "undefined" && TOWNS.FOLLOWERS[s.follower.id]) out.unshift({ name: TOWNS.FOLLOWERS[s.follower.id][0], look: followerLook(s.follower.id), follower: true });
+    if (s.follower && s.follower.id !== "meeko" && typeof TOWNS !== "undefined" && TOWNS.FOLLOWERS[s.follower.id]) out.unshift({ name: TOWNS.FOLLOWERS[s.follower.id][0], look: followerLook(s.follower.id), follower: true });
     return out.slice(0, 5);
   }
 

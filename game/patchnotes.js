@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b74", build: 74, date: "22 Nov 2026", title: "Herbs, roads, a big spellbook and colours", items: [
+      "Gathering: 36 new ingredients and 500 herb patches across Skyrim and Solstheim. Spot them as you travel, Gather or Forage, grow a garden at home, and keep Herbalist's Notes. New Alchemy perks: Forager and Wildcrafter.",
+      "31 new road encounters: Khajiit caravans, couriers, giants with mammoths, Thalmor patrols, assassins, a talking mudcrab and more, each with choices. New perks: Smooth Talker, Road Wise, Pathfinder.",
+      "125 spells across all schools, Novice tomes at every general store and alchemist, court wizards and the College sell more as your skill grows, and Master rituals at the College.",
+      "Support magic: heal, shield, empower and rescue your allies, with a Support branch of perks in every school. Smart AI uses it too.",
+      "Colour coding everywhere: item quality (fine green, superior blue, exquisite purple, legendary gold, unique orange), schools and elements, warrior/mage/thief skills, quest types and prices. ⓘ shows the colour key.",
+      "Sharper panels, glowing health/magicka/stamina bars, and slots ready for new painted artwork."] },
     { id: "b73", build: 73, date: "22 Nov 2026", title: "Clearer skills and spells", items: [
       "Skills and perks show only what you have now, plus the next step, instead of long tables.",
       "Every spell shows its real magicka cost and numbers, plus a Dual cast line with its cost and effect. Colours: fire orange, frost blue, shock violet, healing and buffs green, debuffs red, magicka blue.",

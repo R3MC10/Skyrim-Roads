@@ -405,7 +405,7 @@ const G = (() => {
       this.allies = allyProvider(s) || [];   // party members fighting beside you: [{name, dmg}]
       if (s.follower && typeof TOWNS !== "undefined") {   // your follower fights too, and can fall
         const fd = TOWNS.FOLLOWERS[s.follower.id];
-        this.allies.push({ name: fd[0], dmg: fd[4] * 0.55 * (1 + 0.05 * (s.level - 1)), hp: TOWNS.followerHp(s, t), follower: true, fid: s.follower.id, kind: "follower" });   // [OURS] 55% of their listed damage
+        this.allies.push({ name: fd[0], dmg: fd[4] * 0.55 * (1 + 0.05 * (s.level - 1)), hp: TOWNS.followerHp(s, t), follower: true, fid: s.follower.id, kind: fd[6] || "follower" });   // [OURS] 55% of their listed damage
       }
       if (s.thrall && s.thrall.fights > 0) { this.allies.push({ name: s.thrall.name, dmg: s.thrall.dmg, thrall: true, kind: "zombie" }); this.thrallFought = true; }   // a raised corpse fights for you
       this.pw = typeof POWERS !== "undefined" ? POWERS.fightState() : null;
@@ -505,6 +505,7 @@ const G = (() => {
         case "follower_down": return !!this.followerDown;
         case "follower_fighting": return this.allies.some((a) => a.follower);
         case "mounted": return !!this.mount?.up;
+        case "ally_hp_below": case "ally_down": return typeof SPELLBOOK !== "undefined" ? !!SPELLBOOK.condAlly(this, r) : false;   // support spells (spellbook.js)
       }
       return false;
     }
@@ -736,7 +737,8 @@ const G = (() => {
         const al = cover || pick(this.allies);
         if (al.coop && typeof COOP !== "undefined") return COOP.hitAlly(this, al);   // co-op party members take their own blows
         if (al.follower && Math.random() < F.HIT_CHANCE) {
-          const d = this.e.damage * rnd(...F.DAMAGE_SPREAD) * 0.8;   // [OURS] followers wear armor
+          let d = this.e.damage * rnd(...F.DAMAGE_SPREAD) * 0.8;   // [OURS] followers wear armor
+          if (typeof SPELLBOOK !== "undefined") d = SPELLBOOK.allyTakes(this, al, d);   // wards, stoneskin and veils you cast on them
           al.hp -= d;
           if (al.hp <= 0) { this.allies = this.allies.filter((x) => x !== al); this.followerDown = al.name; return `${n} knocks ${al.name} to their knees. ${al.name} is down!`; }   // [Skyrim] protected followers kneel instead of dying
           return `${n} hits ${al.name} ${Math.round(d)}`;
@@ -889,6 +891,7 @@ const G = (() => {
     for (const table of [...(tags.has("humanoid") ? ["humanoid"] : []), ...(tags.has("elite") ? ["elite"] : [])])
       for (const [item, ch] of D.LOOT[table]) if (Math.random() < ch) { const q = ammoQty(item); give(s, item, q); got.push(D.ITEMS[item].name + (q > 1 ? ` ×${q}` : "")); }
     if (tags.has("beast") && typeof SMITH !== "undefined") { const p = SMITH.peltFor(e.name); if (p && Math.random() < 0.7) { give(s, p); got.push(D.ITEMS[p].name); } }   // [Skyrim] pelts from animals
+    if (typeof GATHER !== "undefined") got.push(...GATHER.creatureParts(s, e));   // [Skyrim] claws, teeth, eggs, jelly (gather.js)
     return got;
   }
   function rollEncounter(s, t) {
@@ -1013,6 +1016,7 @@ const G = (() => {
       const known = new Set(s.discovered);
       for (const [n, [lx, ly, kind]] of Object.entries(PLACES))
         if (!known.has(n) && pxDist([s.x, s.y], [lx, ly]) <= discoverRadius(kind)) { s.discovered.push(n); tripLog(s, `📍 Discovered ${n}`); if (typeof EXPLORE !== "undefined") EXPLORE.onDiscover(s, n, tripLog); }
+      if (typeof GATHER !== "undefined") GATHER.onStep(s, (m) => tripLog(s, m), stepT);   // plant patches you pass (gather.js)
       const pk = pickUpBags(s, bags.filter((b) => !out.taken.includes(b.id)), stepT);
       out.taken.push(...pk.taken);
       pk.msgs.forEach((m) => tripLog(s, "🎒 " + m));
@@ -1117,12 +1121,16 @@ const G = (() => {
     const r = ROAD_EVENTS.choose(s, ev, choice);
     if (r.fee) ev.fee = r.fee;
     if (r.shop) ev.shop = r.shop;
-    if (r.fight) {
-      const base = D.ENCOUNTERS.find((e) => e.name === r.fight) || D.ENCOUNTERS[0];
+    if (r.fight || r.foe) {
+      const base = r.foe || D.ENCOUNTERS.find((e) => e.name === r.fight) || D.ENCOUNTERS[0];   // encounters.js can bring its own foe
       const e = scaleEnemy(base, fightLevel(s)); e.hold = holdAt([s.x, s.y]);
       tr.status = "encounter"; tr.event = null; tr.encounter = e;
       const fr = encounterAction(s, "fight", t, { enemyFirst: r.enemyFirst, hidden: r.hidden ? true : null });
-      fr.text = (r.text + " " + (fr.text || "")).trim();
+      let after = "";
+      if (fr.fight && fr.fight.won && r.afterFn) { try { after = r.afterFn(s) || ""; } catch (err) { after = ""; } }
+      fr.text = [r.text, fr.text, after].filter(Boolean).join(" ").trim();
+      if (r.skills?.length) fr.skills = [...r.skills, ...(fr.skills || [])];
+      if (after) tripLog(s, "🛤 " + after);
       return fr;
     }
     if (r.rob) { const lost = Math.min(s.gold, rint(20, 60)); s.gold -= lost; r.text += ` (−${lost} gold)`; }

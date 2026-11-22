@@ -309,6 +309,8 @@ const IMM = (() => {
     const pic = id && typeof ICONART !== "undefined" ? ICONART.item(id, 150) : "";
     const el = document.createElement("div"); el.id = "loadcard"; el.className = "loadcard" + (reduce() ? " still" : "");
     el.innerHTML = `<div class="ldspin">${pic}</div><div class="ldtxt"><p class="ldwhy">${esc(why || "")}</p><p class="ldtip">${esc(tip)}</p></div>`;
+    const bg = typeof ASSETS !== "undefined" ? ASSETS.loading(Math.floor(Math.random() * 4)) : null;
+    if (bg) { el.classList.add("haspic"); el.style.setProperty("--ldbg", `url("${bg.src.split("/").pop()}")`); }   // a painted loading card
     el.addEventListener("click", () => fade(el));
     document.body.appendChild(el);
     setTimeout(() => fade(el), reduce() ? 900 : 1200);

@@ -489,5 +489,6 @@ const EVENTART = (() => {
     const k = done ? "dragonFalls" : "dragonAttack";
     return ART.html(W, 110, (g, H, w, h) => { STORY[k](g, H, w, h, { town }); frame(g, w, h); }, { key: `raid|${k}|${town}`, cls: "scene evt", alt: "", style: opts.style });
   }
-  return { road, story, raid, storyKind, ROAD, STORY, GROUND, W, H: H0 };
+  const kit = { P, rnd, poly, rect, line, glow, fire, smoke, shadow, person, sleeper, tree, godSign, dragon, ZOOM };   // for encart.js
+  return { road, story, raid, storyKind, ROAD, STORY, GROUND, W, H: H0, kit };
 })();

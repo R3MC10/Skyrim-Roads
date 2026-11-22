@@ -341,17 +341,19 @@ const PLACEART = (() => {
     const d = drawerFor(name), clim = climateOf(name);
     const fest = typeof FXART !== "undefined" && ["town", "city"].includes(kindOf(name)) ? FXART.festId() : null;   // festival decorations (fxart.js)
     const deco = (g, H, w, h) => { if (fest) FXART.festDecor(g, H, w, h, fest, name); };
+    const pic = typeof ASSETS !== "undefined" ? ASSETS.img(ASSETS.placeKey(name) || ASSETS.biomeKey(name)) : null;   // a painted backdrop dropped in the game folder
     if (typeof SKY !== "undefined") {   // shared sky: time of day, season, weather, moons and aurora
       const st = SKY.forOpts(WORLD.places[name], { mood: opts.mood, tod: opts.tod, weather: opts.weather, season: opts.season });
       const draw = (g, H, w, h) => {
         curSky = st;
         try {
+          if (pic) { ASSETS.cover(g, pic, w, h, 0.5, 0.55); deco(g, H, w, h); SKY.overlay(g, H, w, h, st, { seed: name, ground: h * 0.7, cover: false }); frame(g, w, h); return; }   // a painted backdrop
           if (d.back) backdrop(g, H, w, h, clim, name, SKY.mood(st)); else SKY.backdrop(g, H, w, h, st, { horizon: 0.62, seed: name });
           d.draw(g, H, w, h, clim); deco(g, H, w, h);
           SKY.overlay(g, H, w, h, st, { seed: name, ground: h * 0.7, cover: false }); frame(g, w, h);
         } finally { curSky = null; }
       };
-      return ART.html(W, HH, draw, { key: `place|${name}|${st.key}|${fest || ""}`, cls: "scene", alt: name, style: opts.style });
+      return ART.html(W, HH, draw, { key: `place|${name}|${st.key}|${fest || ""}|${pic ? "pic" : ""}`, cls: "scene", alt: name, style: opts.style, painted: !!pic });
     }
     const md = opts.mood || mood(), wx = opts.weather || weatherId(name);
     const draw = (g, H, w, h) => {

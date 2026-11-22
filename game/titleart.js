@@ -93,6 +93,14 @@ const TITLEART = (() => {
       last = ts;
       const a = performance.now(), t = (ts - t0) / 1000;
       g.imageSmoothingEnabled = !px;
+      const key = typeof ASSETS !== "undefined" ? ASSETS.img("title") : null;
+      if (key) {   // hand-painted key art: a slow push-in, with the live aurora on top
+        const z = 1.04 + (reduce ? 0 : Math.sin(t * 0.05) * 0.03);
+        g.save(); g.translate(W / 2, Hh / 2); g.scale(z, z); g.translate(-W / 2, -Hh / 2); ASSETS.cover(g, key, W, Hh, 0.5, 0.4); g.restore();
+        g.save(); g.globalAlpha = 0.45; aurora(g, W, Hh, reduce ? 2 : t); g.restore();
+        stat.frames++; stat.ms += performance.now() - a;
+        return;
+      }
       g.drawImage(L.sky, 0, 0);
       aurora(g, W, Hh, reduce ? 2 : t);
       // the dragon crosses every ~18 s, behind the far peaks

@@ -27,13 +27,13 @@ const NPCART = (() => {
     "Skaal Village": { blacksmith: T("Baldor Iron-Shaper", "nord", "m"), inn: T("Fanari Strong-Voice", "nord", "f") },
     "Tel Mithryn": { wizard: T("Neloth", "dunmer", "m", { title: "Telvanni master wizard" }), alchemy: T("Elynea Mothren", "dunmer", "f") },
     "Thirsk Mead Hall": { inn: T("Hilund", "nord", "m") },
-    Riften: { general: T("Bersi Honey-Hand", "nord", "m"), blacksmith: T("Balimund", "nord", "m"), inn: T("Keerava", "argonian", "f"),
+    Riften: { general: T("Bersi Honey-Hand", "nord", "m"), wizard: T("Wylandriah", "bosmer", "f"), blacksmith: T("Balimund", "nord", "m"), inn: T("Keerava", "argonian", "f"),
       alchemy: T("Elgrim", "nord", "m"), stables: T("Hofgrir Horse-Crusher", "nord", "m"), fence: T("Tonilia", "redguard", "f"),
       jarl: T("Laila Law-Giver", "nord", "f", { role: "jarl" }), steward: T("Anuriel", "altmer", "f") },
     Markarth: { general: T("Lisbet", "nord", "f"), blacksmith: T("Ghorza gra-Bagol", "orc", "f"), wizard: T("Calcelmo", "altmer", "m"),
       inn: T("Kleppr", "nord", "m"), alchemy: T("Bothela", "nord", "f"), stables: T("Cedran", "breton", "m"),
       jarl: T("Igmund", "nord", "m", { role: "jarl" }), steward: T("Raerek", "nord", "m") },
-    Dawnstar: { general: T("Frida", "nord", "f"), alchemy: T("Frida", "nord", "f"), blacksmith: T("Rustleif", "nord", "m"), inn: T("Thoring", "nord", "m"),
+    Dawnstar: { general: T("Frida", "nord", "f"), wizard: T("Madena", "breton", "f"), alchemy: T("Frida", "nord", "f"), blacksmith: T("Rustleif", "nord", "m"), inn: T("Thoring", "nord", "m"),
       jarl: T("Skald the Elder", "nord", "m", { role: "jarl" }) },
     Winterhold: { general: T("Birna", "nord", "f"), wizard: T("Tolfdir", "nord", "m"), inn: T("Dagur", "nord", "m"), jarl: T("Korir", "nord", "m", { role: "jarl" }) },
     Morthal: { wizard: T("Falion", "redguard", "m"), inn: T("Jonna", "nord", "f"), alchemy: T("Lami", "nord", "f"), jarl: T("Idgrod Ravencrone", "nord", "f", { role: "jarl" }) },
@@ -247,7 +247,20 @@ const NPCART = (() => {
     const [race, sex] = TRAINER_RACE[name] || ["nord", hash(name) % 2 ? "m" : "f"];
     return portrait({ name, race, sex, ...trainerRole(skill) }, size);
   }
+  FOLLOWER_LOOK.meeko = ["dog", "m", "dog", "fur"];   // the stray dog from the road (encounters.js)
+  function dogPortrait(size) {
+    return ART.html(size, size, (g, H, w) => {
+      const k = w / 64; g.fillStyle = "#cdb98f"; g.fillRect(0, 0, w, w);
+      H.poly(g, [[14 * k, 26 * k], [20 * k, 8 * k], [28 * k, 22 * k]], "#6b4a30", "#3b2c1e", 1);   // ears
+      H.poly(g, [[50 * k, 26 * k], [44 * k, 8 * k], [36 * k, 22 * k]], "#6b4a30", "#3b2c1e", 1);
+      H.circle(g, 32 * k, 34 * k, 18 * k, "#8a6a48", "#3b2c1e", 1.2);
+      H.poly(g, [[24 * k, 40 * k], [32 * k, 56 * k], [40 * k, 40 * k]], "#a8865e", "#3b2c1e", 1);   // muzzle
+      H.circle(g, 32 * k, 52 * k, 3 * k, "#2a2018", null);
+      g.fillStyle = "#2a2018"; g.fillRect(24 * k, 30 * k, 4 * k, 4 * k); g.fillRect(36 * k, 30 * k, 4 * k, 4 * k);
+    }, { key: "npc|dog|" + size, alt: "Meeko", cls: "npcport" });
+  }
   function follower(id, size = 36) {
+    if (id === "meeko") return dogPortrait(size);
     const f = (typeof TOWNS !== "undefined" && TOWNS.FOLLOWERS[id]) || [id];
     const [race, sex, role, mat] = FOLLOWER_LOOK[id] || ["nord", "f", "warrior", "steel"];
     return portrait({ name: f[0], race, sex, role, mat }, size);

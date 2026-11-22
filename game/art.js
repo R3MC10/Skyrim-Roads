@@ -63,7 +63,7 @@ const ART = (() => {
 
   // ---- the pixel filter: draw small, snap to the palette, scale up with hard edges
   function nearest(r, g, b) { let best = PIXEL_PAL[0], bd = 1e9; for (const p of PIXEL_PAL) { const d = (p[0] - r) ** 2 + (p[1] - g) ** 2 + (p[2] - b) ** 2; if (d < bd) { bd = d; best = p; } } return best; }
-  function pixelate(src, w, h, block) {
+  function pixelate(src, w, h, block, painted = false) {
     const sw = Math.max(8, Math.round(w / block)), sh = Math.max(8, Math.round(h / block));
     const small = document.createElement("canvas"); small.width = sw; small.height = sh;
     const sg = small.getContext("2d"); sg.imageSmoothingEnabled = true; sg.drawImage(src, 0, 0, sw, sh);
@@ -74,7 +74,7 @@ const ART = (() => {
     for (let i = 0; i < d.length; i += 4) {
       if (d[i + 3] < 110) { d[i + 3] = 0; continue; }
       const lum = d[i] * 0.3 + d[i + 1] * 0.59 + d[i + 2] * 0.11;
-      if (lum < 70) { const [r, g, b] = nearest(d[i], d[i + 1], d[i + 2]); d[i] = r; d[i + 1] = g; d[i + 2] = b; }
+      if (lum < (painted ? 22 : 70)) { const [r, g, b] = nearest(d[i], d[i + 1], d[i + 2]); d[i] = r; d[i + 1] = g; d[i + 2] = b; }
       else { d[i] = q(d[i]); d[i + 1] = q(d[i + 1]); d[i + 2] = q(d[i + 2]); }
       d[i + 3] = 255;
     }
@@ -97,7 +97,7 @@ const ART = (() => {
     if (st === "pixel") {
       const raw = document.createElement("canvas"); raw.width = w * 2; raw.height = h * 2;
       const rg = raw.getContext("2d"); rg.scale(2, 2); draw(rg, H, w, h);
-      const small = pixelate(raw, w, h, opts.block || Math.max(2, Math.round(Math.min(w, h) / 60)));
+      const small = pixelate(raw, w, h, opts.block || Math.max(2, Math.round(Math.min(w, h) / (opts.painted ? 110 : 60))), !!opts.painted);   // painted pictures keep more detail and their dark tones
       g.imageSmoothingEnabled = false; g.drawImage(small, 0, 0, c.width, c.height);
       c.style.imageRendering = "pixelated";
     } else { g.scale(dpr, dpr); draw(g, H, w, h); }
@@ -116,5 +116,6 @@ const ART = (() => {
   const html = (w, h, draw, opts = {}) => { const u = url(w, h, draw, opts); return u ? `<img class="art ${opts.cls || ""}" src="${u}" width="${w}" height="${h}" alt="${(opts.alt || "").replace(/"/g, "&quot;")}" ${style() === "pixel" ? 'style="image-rendering:pixelated"' : ""}>` : ""; };
   function setStyle(st) { try { const p = JSON.parse(localStorage.getItem(PREFS_KEY) || "{}"); p.artStyle = st; localStorage.setItem(PREFS_KEY, JSON.stringify(p)); } catch { /* ignore */ } cache.clear(); }
   const drawingStyle = () => drawing || style();
-  return { PAL, H, style, setStyle, drawingStyle, canvas, url, html, seeded };
+  const clear = () => cache.clear();
+  return { PAL, H, style, setStyle, drawingStyle, canvas, url, html, seeded, clear };
 })();

@@ -165,7 +165,8 @@ const COOP = (() => {
     const guard = f.allies.find((a) => a.coop && !a.down && a.role === "guard");
     if (guard && guard !== al && Math.random() < 0.5) al = guard;
     if (Math.random() > F.HIT_CHANCE) return `${n} swings at ${al.name} and misses`;
-    const d = f.e.damage * (0.85 + Math.random() * 0.3) * (1 - al.red) * (al.role === "guard" ? 0.6 : 1);   // [OURS] a guard blocks
+    let d = f.e.damage * (0.85 + Math.random() * 0.3) * (1 - al.red) * (al.role === "guard" ? 0.6 : 1);   // [OURS] a guard blocks
+    if (typeof SPELLBOOK !== "undefined") d = SPELLBOOK.allyTakes(f, al, d);   // support spells you cast on them
     al.hp -= d;
     if (al.hp <= 0) { al.down = true; f.allies = f.allies.filter((x) => x !== al); return `${n} knocks ${al.name} down! They'll get back up after the fight`; }
     return `${n} hits ${al.name} ${Math.round(d)}${al.role === "guard" ? " (blocked)" : ""}`;

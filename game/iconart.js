@@ -221,6 +221,18 @@ const ICONART = (() => {
   // ---- ingredients by name keyword
   function ingredient(g, id, it) {
     const n = (it.name || id).toLowerCase();
+    if (/nirnroot/.test(n)) { const gl = g.createRadialGradient(20, 16, 1, 20, 16, 16); gl.addColorStop(0, /crimson/.test(n) ? "rgba(230,90,90,.75)" : "rgba(150,220,255,.75)"); gl.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = gl; g.fillRect(0, 0, 40, 40); line(g, [[20, 34], [20, 12]], "#4f7a3a", 2); for (const [x, y] of [[13, 14], [27, 14], [11, 22], [29, 22]]) ell(g, x, y, 5, 2.2, /crimson/.test(n) ? "#d86a6a" : "#9fd8f0", INK, 0.8, x < 20 ? 0.5 : -0.5); return; }
+    if (/pearl/.test(n)) { ell(g, 20, 26, 13, 7, "#8a8070", INK, 1); circ(g, 20, 22, /small/.test(n) ? 4 : 6, "#f4f0e8", INK, 0.9); shine(g, 18, 20, 1.4); return; }
+    if (/jelly/.test(n)) { poly(g, [[8, 28], [10, 16], [20, 9], [30, 16], [32, 28], [20, 33]], /ash/.test(n) ? "#c8a050" : "#8ac8b0"); shine(g, 15, 16, 2); return; }
+    if (/grape/.test(n)) return berries(g, "#5a3a8a");
+    if (/roe/.test(n)) return berries(g, "#e8743a");
+    if (/moss/.test(n)) { for (let x = 9; x <= 31; x += 4.4) line(g, [[x, 6], [x + 1, 18], [x - 1, 30]], "#6a8a4a", 2.2); line(g, [[6, 6], [34, 6]], WOOD[0], 3); return; }
+    if (/creep/.test(n) && /ash/.test(n)) return mushroom(g, "#4a4a5a", false);
+    if (/dust|ash|ectoplasm/.test(n)) return salts(g, /ectoplasm/.test(n) ? "#b8e8d8" : /spawn|ash/.test(n) ? "#6a6a68" : "#d8d0d8");
+    if (/amanita|crown|white cap|blisterwort|rot|pholiota|scathecraw/.test(n)) return mushroom(g, /amanita/.test(n) ? "#d83a2a" : /crown/.test(n) ? "#8a2a3a" : /white/.test(n) ? "#efe4cc" : /blister/.test(n) ? "#c89a5a" : /rot/.test(n) ? "#9a9a6a" : /scathecraw/.test(n) ? "#6a5a4a" : "#d8a04a", false);
+    if (/tusk|teeth|tooth|ear\b|claw/.test(n) && !/elves/.test(n)) return bone(g, /falmer/.test(n) ? "#c8b8a0" : "#efe4cc");
+    if (/thorax|bee|moth/.test(n)) { ell(g, 14, 18, 7, 9, /luna/.test(n) ? "#b8e8a0" : /bee/.test(n) ? "#e8c03a" : "#e8a040", INK, 1, -0.4); ell(g, 26, 18, 7, 9, /luna/.test(n) ? "#b8e8a0" : /bee/.test(n) ? "#e8c03a" : "#e8a040", INK, 1, 0.4); line(g, [[20, 10], [20, 30]], INK, 2.4); return; }
+    if (/trama|taproot/.test(n)) { line(g, [[20, 6], [20, 22]], "#7a5a3a", 3); for (const [x, y] of [[10, 32], [16, 35], [24, 35], [30, 31]]) line(g, [[20, 20], [x, y]], "#7a5a3a", 2); return; }
     if (/salts/.test(n)) return salts(g, /frost/.test(n) ? "#9fd0f0" : /fire/.test(n) ? "#e8923a" : "#6a4a8a");
     if (/salt/.test(n)) return salts(g, "#f4f6f8");
     if (/mushroom|stool|fungal|pod|cluster|mora|tapinella/.test(n)) return mushroom(g, /glowing/.test(n) ? "#5fb0d8" : /imp/.test(n) ? "#c4572e" : /fungal/.test(n) ? "#6a8a4a" : /creep/.test(n) ? "#8a5bb8" : "#b0463a", /glowing/.test(n));
