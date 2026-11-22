@@ -274,7 +274,7 @@
       <h3>Crafting</h3><div class="setrow"><span>When you craft</span>${seg("craftGame", [[true, "Mini-games"], [false, "Quick craft"]], getPref("craftGame", true))}</div>
       ${S && typeof WFX !== "undefined" ? `<h3>Survival</h3><div class="setrow"><span>Cold meter</span>${seg("survival", [[true, "On (gentle)"], [false, "Off"]], S.survival !== false)}</div>` : ""}
       <h3>Map</h3><div class="setrow"><span>Map opens</span>${seg("zoomFar", [[false, "Close up"], [true, "All Skyrim"]], getPref("zoomFar", false))}</div>
-      ${APP ? `<h3>Phone</h3><div class="setrow"><span>Notifications</span>${seg("notify", [[true, "On"], [false, "Off"]], getPref("notify", true))}</div>
+      ${APP ? `<h3>Phone</h3><div class="setrow"><span>Notifications</span>${seg("notify", [[true, "On"], [false, "Off"]], getPref("notify", true))}</div>${typeof REMIND !== "undefined" ? REMIND.settingsHTML(seg) : ""}
       <div class="setrow"><span>Check for updates</span>${seg("autoUpdate", [[true, "Automatically"], [false, "Only when I ask"]], getPref("autoUpdate", true))}</div>` : ""}`;
   }
   function onSettingsInput(e) {
@@ -453,6 +453,22 @@
     openMenu: (p) => openMenu(p), closeMenu: () => closeMenu(), refresh: () => { bump(); renderPanel(true); }, fight: (r) => showFightResult(r),
     go(t) { closeMenu(); tab = t; testResult = null; bump(); renderTabs(); renderPanel(true); },
     get tab() { return tab; },
+    /* [remind] Go buttons: open a screen ({ tab, shop, jtab, soc, anchor }) or pick a place on the map ({ place }) */
+    remindData: () => ({ trades, stalls }),
+    jump(o) {
+      if (!S || !o) return false;
+      closeModal(); closeMenu(); if (typeof TABMENU !== "undefined" && TABMENU.closeHub) { try { TABMENU.closeHub(); } catch { /* fine */ } }
+      if (o.place && o.place !== S.location && WORLD.places[o.place]) {
+        tab = "map"; selected = o.place; roamSpot = null; bump(); renderTabs(); renderPanel(true); renderPicked();
+        $("#mapwrap")?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" }); return true;
+      }
+      tab = o.tab || "map"; testResult = null;
+      if (o.shop) townShop = o.shop; if (o.jtab) jTab = o.jtab; if (o.soc) socTab = o.soc;
+      bump(); renderTabs(); renderPanel(true);
+      const el = (o.anchor && document.getElementById(o.anchor)) || $("#side");
+      el?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+      return true;
+    },
     updateAvailable: (r) => updateAvailable(r),
     updateStaged: (r) => updateStaged(r),
     permissionBack: () => { if ($("#title") && titlePage === "update") { updateMsg = "Thanks. Tap Update now again."; renderTitle(); } },
@@ -463,6 +479,7 @@
       if (tr && tr.status === "travel") { const m = tripMinutesLeft(); if (m > 0.5) out.push({ id: 1, at: now + m * 60000, title: `You've reached ${tr.destName}`, body: tr.carriage ? "The carriage pulls up. Tap to see where you are." : "Your trip is over. Tap to see what's there." }); }
       const r = WEVENTS.nextRaid();
       if (r) out.push({ id: 2, at: r.start * 1000, title: `🐉 A dragon attacks ${r.town}!`, body: "Every player can fight it together for the next 20 minutes." });
+      if (typeof REMIND !== "undefined") { try { out.push(...REMIND.notes(S, now)); } catch { /* reminders are optional */ } }   // remind.js
       return out.filter((n) => n.at > now + 5000);
     },
   };
@@ -773,6 +790,7 @@
       if (!needDot) b.querySelector(".dot")?.remove();
     });
     if (typeof MOTION !== "undefined") MOTION.tabs(tabsEl);
+    if (typeof REMIND !== "undefined") REMIND.paint(S);   // number badges (remind.js)
     const sb = $("#socBtn"); if (sb) { const n = socialBadge(); sb.classList.toggle("on", tab === "social"); if (n && !sb.querySelector(".dot")) sb.insertAdjacentHTML("beforeend", '<span class="dot"></span>'); if (!n) sb.querySelector(".dot")?.remove(); }
   }
 
@@ -2513,7 +2531,7 @@
     const places = Object.keys(WORLD.places).filter((n) => known(n) && n !== S.location && WORLD.same(here, WORLD.places[n]) && n.toLowerCase().includes(searchText.toLowerCase()))
       .map((n) => ({ n, d: G.pxDist(here, WORLD.places[n]) })).sort((a, b) => a.d - b.d);
     const bag = myBag();
-    return `${ppUI ? ppUI.panelHTML() : ""}${typeof WFX !== "undefined" ? WFX.coldHTML(S) : ""}${nextCard()}${placeHere()}${typeof EXPLORE !== "undefined" ? EXPLORE.placeCard(S) : ""}${typeof RUMOURS !== "undefined" ? RUMOURS.card(S) : ""}${typeof GATHER !== "undefined" ? GATHER.card(S) : ""}<div class="panel"><h2>Where to?</h2><p class="sub">Tap a place on the map, or press <b>Go</b> below. Tap empty ground on the map to roam off the road.</p>
+    return `${ppUI ? ppUI.panelHTML() : ""}${typeof WFX !== "undefined" ? WFX.coldHTML(S) : ""}${nextCard()}${typeof REMIND !== "undefined" ? REMIND.card(S) : ""}${placeHere()}${typeof EXPLORE !== "undefined" ? EXPLORE.placeCard(S) : ""}${typeof RUMOURS !== "undefined" ? RUMOURS.card(S) : ""}${typeof GATHER !== "undefined" ? GATHER.card(S) : ""}<div class="panel"><h2>Where to?</h2><p class="sub">Tap a place on the map, or press <b>Go</b> below. Tap empty ground on the map to roam off the road.</p>
       <input id="search" placeholder="Search places" value="${esc(searchText)}" autocomplete="off" aria-label="Search places">
       <div class="list">${bag ? `<div class="item on"><div class="t">🎒 Your lost bag<span>${bag.gold} gold · ${Math.max(0, Math.floor((bag.expires - G.now()) / 60))} min left before it's fair game</span></div><button class="btn pri sm" data-act="go" data-place="__bag">Go</button></div>` : ""}
       ${places.slice(0, searchText || uxAllPlaces ? 40 : 8).map(({ n, d }) => { const k = WORLD.places[n][2]; return `<div class="item"><div class="t">${esc(n)}<span>${KIND[k]} · ${esc(G.holdAt(WORLD.places[n]))}${S.discovered.includes(n) ? "" : " · unvisited"}${(() => { const lf = DUNGEONS.enterable(n) ? DUNGEONS.refillLeft(S, n) : 0; return lf ? ` · 🔒 opens in ${cdSpan(G.now() + lf)}` : ""; })()}</span></div><span class="num sub">${d * 1.1 / G.speed(S) < 1 ? "" : "~"}${fmtMin(d * 1.1 / G.speed(S))}</span><button class="btn sm" data-act="go" data-place="${esc(n)}">Go</button></div>`; }).join("") || `<p class="sub">No places match “${esc(searchText)}”. Try part of the name, like “riv”.</p>`}${!searchText && places.length > 8 ? `<button class="btn" data-act="uxall" style="width:100%;margin-top:8px">${uxAllPlaces ? "Show only the nearest" : `Show all ${places.length} places`}</button>` : ""}${(() => { const n = Object.keys(clearedLeft()).length; return `<button class="btn" data-act="tabgo" data-id="places" style="width:100%;margin-top:8px">📍 Locations: cleared places${n ? ` (${n})` : ""}</button>`; })()}</div>
