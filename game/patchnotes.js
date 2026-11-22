@@ -17,6 +17,13 @@ const PATCHNOTES = (() => {
       "The compass menu now has a Search button in its row of shortcuts too.",
       "Fixed: after using the compass, opening Items or Magic from the bottom bar and closing it no longer pops the compass back up.",
       "The bottom bar fits on small phones even at the Biggest text size and with one-hand mode on."] },
+    { id: "b90", build: 90, date: "22 Nov 2026", title: "Search everything", items: [
+      "New 🔍 Search button in the top bar: one box that finds your gear, every item in the game, spells, shouts you know, perks, skills, places you know, your quests, followers, recipes and settings.",
+      "Typos are fine: “steal swrod”, “fierball” or “restor helth” still find what you meant. Results come in groups with their pictures, and your last searches are kept for a quick tap.",
+      "Tap a result to go straight there: your item opens in the pack, a perk opens its star in the skill's constellation, a place opens on the map with a Travel button, a quest opens in the Journal, a setting lights up its row.",
+      "Things you don't have yet get a small card: what an item does and where to get it, a spell's numbers and which shops you know sell its tome right now, what a forge or cooking recipe takes (and how much you have), which ingredients you know make a potion, and where a follower waits to be hired.",
+      "Places you haven't found never show their names. If you type one, search only tells you something by that name is still out there.",
+    ] },
     { id: "b89", build: 89, date: "22 Nov 2026", title: "Never miss what's ready", items: [
       "A new Today card in the Travel tab lists everything that's ready or running out of time: your house gardens, homestead goods, bounty board and festival rewards, world event rewards, a caravan you signed on with, courier trades from friends, your horse resting at the stables, rumour leads before they go cold, cleared places filling up again, a hall coffer running low, level-ups and perk points.",
       "Each line has a Go button that takes you straight to the right screen, or picks the place on the map when you need to travel there first.",
