@@ -1395,6 +1395,22 @@ html.a11y-hc .mn-sub button{color:#ece6d8}html.a11y-hc .mn-sub button.on{backgro
 .mn-intro h2{margin-bottom:4px}
 .twbar-tabs{justify-content:flex-start;overflow-x:hidden;scrollbar-width:none}.twbar-tabs::-webkit-scrollbar{display:none}
 .twbar-t{white-space:nowrap;flex:0 0 auto;padding-left:8px;padding-right:8px}
+/* [remind] Today card and number badges (remind.js) */
+.rmd-card .item.rmd-row{align-items:center}
+.rmd-i{flex:none;width:26px;text-align:center;font-size:18px;color:var(--gold)}
+.rmd-card .t{min-width:0;overflow-wrap:anywhere}
+.rmd-card .btn.sm{flex:none;min-width:52px}
+.rmd-when{font-weight:600;color:var(--gold)}
+.rmd-soon .rmd-when{color:var(--mute)}
+.rmd-n{font:600 .62em/1 var(--sans,inherit);color:#15120c;background:var(--gold);border-radius:10px;padding:3px 7px;vertical-align:middle;margin-left:6px;letter-spacing:.02em}
+.rmd-more{display:block;margin:8px auto 0;min-height:36px}
+.rmd-b{position:absolute;top:3px;right:calc(50% - 24px);min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--gold);color:#15120c;font:700 11px/18px system-ui,sans-serif;text-align:center;box-shadow:0 0 0 2px rgba(10,11,13,.85);pointer-events:none;z-index:2}
+.iconbtn > .rmd-b{top:-5px;right:-5px}
+.tw-dir > .rmd-b{top:0;right:auto;left:calc(50% + 14px)}
+.tab:has(> .rmd-b) > .dot,.iconbtn:has(> .rmd-b) > .dot,.tw-dir:has(> .rmd-b) > .dot{display:none}
+.rmd-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.rmd-set{margin:6px 0}.rmd-set summary{cursor:pointer;min-height:40px;display:flex;align-items:center;gap:6px;color:var(--ink,inherit)}.rmd-set summary small{color:var(--mute)}
+html.art-pixel .rmd-b,html.art-pixel .rmd-n{border-radius:0}
 </style>
 <script src="access.js"></script>
 </head>
@@ -1507,6 +1523,7 @@ html.a11y-hc .mn-sub button{color:#ece6d8}html.a11y-hc .mn-sub button.on{backgro
 <script src="skillinfo.js"></script>
 <script src="menus.js"></script>
 <script src="tabmenu.js"></script>
+<script src="remind.js"></script>
 <script src="ui.js"></script>
 </body>
 </html>
