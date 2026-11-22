@@ -3,6 +3,9 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b102", build: 102, date: "22 Nov 2026", title: "Quiet main menu", items: [
+      "The main menu plays only its music now. The howling wind and other background noise there are gone.",
+    ] },
     { id: "b101", build: 101, date: "22 Nov 2026", title: "PC version updates itself", items: [
       "The PC version (installed with the setup file) now keeps itself up to date: it grabs new versions in the background and installs them when you close the game, or right away if you pick Restart now.",
       "Install this version once by hand; after that, updates come by themselves. The portable PC file still needs a fresh download for each update.",

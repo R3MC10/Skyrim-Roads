@@ -626,7 +626,7 @@ const SOUND = (() => {
     const t = ctx.currentTime, w = ambWant;
     reapBeds();
     if (t - lastSync > 3) { lastSync = t; try { syncMusic(); } catch (e) { /* never break the game */ } }   // region / boss changes
-    if (!(cfg.amb > 0) || cfg.mute) return;
+    if (!(cfg.amb > 0) || cfg.mute || w.scene === "title") return;
     for (const [name, ev] of Object.entries(EVENTS)) {
       if (!ev.when(w)) { nextAt[name] = 0; continue; }
       if (!nextAt[name]) { nextAt[name] = t + rnd(0.3, 1) * ev.every; continue; }
@@ -641,7 +641,7 @@ const SOUND = (() => {
   /* the scene → which beds, how loud */
   function applyAmb() {
     if (!ctx || !ambWant) return;
-    if (!(cfg.amb > 0) || cfg.mute) { for (const b of Object.values(beds)) setBed(b.name, 0, null, Object.keys(beds).find((k) => beds[k] === b).slice(b.name.length)); return; }
+    if (!(cfg.amb > 0) || cfg.mute || ambWant.scene === "title") { for (const b of Object.values(beds)) setBed(b.name, 0, null, Object.keys(beds).find((k) => beds[k] === b).slice(b.name.length)); return; }
     const w = ambWant, out = w.scene !== "dungeon" && w.scene !== "inn";
     const windLv = !out ? 0 : w.weather === "blizzard" || w.weather === "ashstorm" ? 0.8 : w.weather === "snow" ? 0.75 : w.weather === "storm" ? 0.55 : w.weather === "rain" ? 0.4 : w.scene === "town" ? 0.3 : w.coldLand ? 0.9 : 0.7;
     setBed("wind", windLv, { cold: w.coldLand, howl: w.weather === "blizzard" }, w.weather === "blizzard" ? "+howl" : w.coldLand ? "+cold" : "");

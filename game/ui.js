@@ -186,7 +186,7 @@
     }
     tabsEl.classList.add("hide");
     SOUND.mood("title");
-    SOUND.ambience?.({ scene: "wild", weather: "snow", tod: "night", ground: "snow", coldLand: true });   // the title: wind over the mountains
+    SOUND.ambience?.({ scene: "title" });   // the title: music only, no wind or other background noise
     renderTitle();
   }
   let titleStop = null;
