@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "bQ-onboard", build: 0, date: "22 Nov 2026", title: "A clearer first hour", items: [
+      "“What to do next” on the Travel tab now suggests up to three ideas that fit where you are: road fights near Whiterun while you're new, your first dungeon, the main quest, a horse once you can afford one, teaming up with others, and later rumours, world events and building a homestead. Tap ✕ to hide one, or turn them off in ⚙ Settings → Help & tips. They stop once you reach level 15.",
+      "First-time tips: a small card pops up the first time you're too heavy, level up, enter a dungeon, play a turn-by-turn fight (it explains initiative and action points), get a party invite or hear a rumour. One at a time, they never get in the way, and “Don't show tips” switches them off.",
+      "New characters get a welcome tip pointing at the “Your first trip” card, which was easy to miss under the map.",
+      "The tutorial, the guide and the road encounter sheet now explain turn-by-turn fights (and Auto) instead of saying fights play out by themselves. In a party, the tutorial tells members that the leader picks where to go.",
+    ] },
     { id: "b88", build: 88, date: "22 Nov 2026", title: "Accessibility options", items: [
       "New in Settings → Accessibility: Text size with four steps (Normal, Big, Bigger, Biggest). Everything grows together, buttons included, so nothing gets cut off.",
       "Colour-blind help for red, green or blue colour-blindness: health, magicka and stamina bars, danger levels, buffs and debuffs, item quality colours, enemy health bars in fights and danger marks on the map switch to colours that stay easy to tell apart.",

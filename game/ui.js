@@ -271,6 +271,7 @@
       ${typeof MOTION !== "undefined" ? `<div class="setrow"><span>Motion</span>${seg("motion", [["full", "Full"], ["lite", "Lite"], ["off", "Off"]], MOTION.pref())}</div>` : ""}
       ${typeof TB !== "undefined" ? `<h3>Fights</h3><div class="setrow"><span>Fights</span>${seg("turnBased", [[true, "Turn by turn"], [false, "Instant (auto)"]], getPref("turnBased", true))}</div><div class="setrow"><span>Foe turns</span>${seg("tbFast", [[false, "Normal speed"], [true, "Fast"]], getPref("tbFast", false))}</div>` : ""}
       ${typeof ACCESS !== "undefined" ? ACCESS.settingsHTML(seg) : ""}
+      ${typeof ONBOARD !== "undefined" ? ONBOARD.settingsHTML(seg) : ""}
       <h3>Crafting</h3><div class="setrow"><span>When you craft</span>${seg("craftGame", [[true, "Mini-games"], [false, "Quick craft"]], getPref("craftGame", true))}</div>
       ${S && typeof WFX !== "undefined" ? `<h3>Survival</h3><div class="setrow"><span>Cold meter</span>${seg("survival", [[true, "On (gentle)"], [false, "Off"]], S.survival !== false)}</div>` : ""}
       <h3>Map</h3><div class="setrow"><span>Map opens</span>${seg("zoomFar", [[false, "Close up"], [true, "All Skyrim"]], getPref("zoomFar", false))}</div>
@@ -287,6 +288,7 @@
     if (act !== "pref") return false;
     const k = b.dataset.k, v = b.dataset.v === "true";
     if (typeof ACCESS !== "undefined" && ACCESS.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }
+    if (typeof ONBOARD !== "undefined" && ONBOARD.pref(k, b.dataset.v)) { SOUND.fx("click"); if (S) { try { renderPanel(true); } catch { /* title */ } } return true; }
     if (k === "survival") { if (S) { S.survival = v; if (!v) S.coldV = 0; persist(); try { renderPanel(true); } catch { /* title */ } } SOUND.fx("click"); return true; }
     if (k === "motion") { MOTION.setPref(b.dataset.v); SOUND.fx("click"); return true; }
     if (k === "artStyle") { ART.setStyle(b.dataset.v); SOUND.fx("click"); if (typeof POLISH !== "undefined") POLISH.texture(); if (S) { try { renderPanel(true); } catch { /* title screen */ } } return true; }
@@ -430,7 +432,7 @@
   }
 
   // ------------------------------------------------------------ main screen
-  window.__dbg = { save: () => S, view: () => view, openEvent: (n) => openEvent(n), tally: (k, n) => tally(k, n), message: (t, x, b) => showMessage(t, x, b), toast: (t) => toast(t), publish: () => publishCard(), others: () => others, party: () => party, pp: () => ppUI, coopRuns: () => coopUI?.runs || [] };   // for testing in the browser console
+  window.__dbg = { save: () => S, view: () => view, openEvent: (n) => openEvent(n), openEncounter: (n) => openEncounter(n), tally: (k, n) => tally(k, n), message: (t, x, b) => showMessage(t, x, b), toast: (t) => toast(t), publish: () => publishCard(), others: () => others, party: () => party, pp: () => ppUI, coopRuns: () => coopUI?.runs || [] };   // for testing in the browser console
   /* phone back button: close what's on top, step back to the map, and only then leave the app */
   window.__ui = {
     back() {
@@ -502,6 +504,7 @@
     $("#trip").addEventListener("click", onPanelClick);
     $("#raid").addEventListener("click", onPanelClick);
     Store.watch("raids", (docs) => { raidDocs = docs; });
+    if (typeof ONBOARD !== "undefined") ONBOARD.mount({ S: () => S, persist, toast, renderPanel, click: onPanelClick, party: () => party, invites: () => invites });   // first-time tips (onboard.js)
     if (typeof WORLDEV !== "undefined") WORLDEV.mount({ S: () => S, persist, toast, showFightResult, showMessage, openModal, closeModal, postNews, click: onPanelClick });   // world events (worldevents.js)
     Store.watch("trades", (docs) => onTrades(docs));
     Store.watch("duels", (docs) => onDuels(docs));
@@ -963,7 +966,7 @@
         <button class="btn" data-act="enc" data-a="sneak">🥷 Sneak past${typeof SNEAK2 !== "undefined" ? ` (${Math.round(SNEAK2.chance(S, e) * 100)}%)` : ""}</button>
         <button class="btn" data-act="enc" data-a="potion" ${G.countRestore(S, "health") ? "" : "disabled"}>🧪 Potion (${G.countRestore(S, "health")})</button>
         ${e.bountyHold ? `<button class="btn pri" data-act="enc" data-a="pay" style="grid-column:1/-1">⚖️ Pay your ${esc(e.bountyHold)} bounty (${TOWNS.bounty(S, e.bountyHold)} gold)</button>` : ""}
-      </div><p class="sub" style="margin-bottom:0">Fighting uses ${aiOn() ? `<b>Smart AI</b> (${esc(S.loadout)} gear)` : `your <b>${esc(S.loadout)}</b> tactics`}.${typeof SNEAK2 !== "undefined" ? "" : " A hidden start gives a sneak attack."}</p>${typeof SNEAK2 !== "undefined" ? SNEAK2.noteHTML(S, e, typeof AISET !== "undefined" ? AISET.get(G.loadout(S)).sneak : "safe", esc) : ""}`, "enc");
+      </div><p class="sub" style="margin-bottom:0">${typeof TB !== "undefined" && TB.enabled() ? `You play the fight turn by turn; <b>Auto</b> plays it for you with ${aiOn() ? `<b>Smart AI</b>` : `your <b>${esc(S.loadout)}</b> tactics`}` : `Fighting uses ${aiOn() ? `<b>Smart AI</b> (${esc(S.loadout)} gear)` : `your <b>${esc(S.loadout)}</b> tactics`}`}.${typeof SNEAK2 !== "undefined" ? "" : " A hidden start gives a sneak attack."}</p>${typeof SNEAK2 !== "undefined" ? SNEAK2.noteHTML(S, e, typeof AISET !== "undefined" ? AISET.get(G.loadout(S)).sneak : "safe", esc) : ""}`, "enc");
   }
   const skillLine = (r) => (r.skills || []).length ? `<p class="sub">📈 ${r.skills.map(esc).join(" · ")}</p>` : "";
   function openEvent(note) {
@@ -1190,7 +1193,7 @@
       main = `<div class="card ${e ? "foe" : ""} ${r.type === "rest" ? "rest" : ""}">${PLACEART.room(r.type)}<h3>${DUNGEONS.ICON[r.type]} ${e ? esc(e.name) : DUNGEONS.LABEL[r.type]}</h3><p>${esc(r.text)}</p>
         ${e ? `<div class="vital"><small><span>${esc(e.name)}</span><span class="num">${e.hp}/${e.health} · hits for ~${Math.round(e.damage)}</span></small><div class="bar"><i style="width:100%;background:var(--ember)"></i></div></div>` : ""}
         <div class="evc">${DUNGEONS.roomChoices(S).map(([c, label]) => `<button class="btn ${["fight", "pick", "rest", "read", "pray", "open", "loot", "burn", "dash"].includes(c) || c.startsWith("set:") ? (e ? "danger" : "pri") : ""}" data-act="dact" data-c="${esc(c)}">${esc(label)}</button>`).join("")}</div>
-        ${e ? `<p class="sub" style="margin-bottom:0">Fighting uses ${aiOn() ? `<b>Smart AI</b> (${esc(S.loadout)} gear)` : `your <b>${esc(S.loadout)}</b> tactics`}.</p>` : ""}</div>`;
+        ${e ? `<p class="sub" style="margin-bottom:0">${typeof TB !== "undefined" && TB.enabled() ? `You play the fight turn by turn; <b>Auto</b> plays it for you with ${aiOn() ? `<b>Smart AI</b>` : `your <b>${esc(S.loadout)}</b> tactics`}` : `Fighting uses ${aiOn() ? `<b>Smart AI</b> (${esc(S.loadout)} gear)` : `your <b>${esc(S.loadout)}</b> tactics`}`}.</p>` : ""}</div>`;
     } else {
       const nx = DUNGEONS.nextChoices(S), row = d.rows[d.row + 1];
       main = `<div class="card">${d.row < 0 ? PLACEART.scene(d.place) : ""}<h3>${d.row < 0 ? "The entrance" : "Which way?"}</h3><p class="sub">${d.row < 0 ? `You light a torch and step into ${esc(d.place)}.` : "The passage splits."} Tap a glowing room on the map, or pick here:</p>
@@ -1615,17 +1618,17 @@
   // ------------------------------------------------------------ tutorial: a guided first trip, then one tip per tab
   const TUT = [
     null,
-    { title: "Your first trip", text: () => `Welcome to Skyrim, ${S.name}. Everything happens in real time. Tap <b>Whiterun</b> on the map and press <b>Travel</b>, or press <b>Go</b> next to it in the list below.`, done: () => !!S.trip || S.location === "Whiterun" },
-    { title: "On the road", text: () => "You're walking. Trips keep going even when the app is closed, and something may happen by the road. You can ride a horse later, or take a carriage between cities.", done: () => !S.trip },
+    { title: "Your first trip", text: () => ppUI && party && !ppUI.canDecide() ? `Welcome to Skyrim, ${S.name}. You're in a party: the leader picks where to go and you travel with them. Watch the map; the next step starts when you set off.` : `Welcome to Skyrim, ${S.name}. Everything happens in real time. Tap <b>Whiterun</b> on the map and press <b>Travel</b>, or press <b>Go</b> next to it in the list below.${party ? " Your party comes along." : ""}`, done: () => !!S.trip || S.location === "Whiterun" },
+    { title: "On the road", text: () => `You're walking. Trips keep going even when the app is closed, and something may happen by the road${typeof TB !== "undefined" && TB.enabled() ? ": if it's a fight, you play it turn by turn (or press Auto)" : ""}. You can ride a horse later, or take a carriage between cities.`, done: () => !S.trip },
     { title: "You've arrived", text: () => `Open the <b>Town</b> tab. In towns and cities it has shops, the inn, trainers, the forge, jobs and more${S.location && TOWNS.isTown(S.location) ? "" : " (this spot is out in the wilds, so it shows what you can do here)"}.`, done: () => tab === "town" },
     { title: "Quests", text: () => "Now open the <b>Journal</b>. Your quests are there, and the gold diamond on the map shows where to go next. Chat and other players are under 👥 Friends.", done: () => tab === "log" },
-    { title: "Fights", text: () => "One more: the <b>Tactics</b> tab. Fights play out by themselves, following your rules, like “below 40% health, drink a potion”.", done: () => tab === "tactics" },
+    { title: "Fights", text: () => typeof TB !== "undefined" && TB.enabled() ? "One more: the <b>Tactics</b> tab. You play fights turn by turn; <b>Auto</b> plays for you with Smart AI, or with your own rules here (like “below 40% health, drink a potion”) if you pick Custom." : "One more: the <b>Tactics</b> tab. Fights play out by themselves, following your rules, like “below 40% health, drink a potion”.", done: () => tab === "tactics" },
   ];
   const TAB_TIPS = {
     map: "Start with the “What to do next” card. Press Go to travel; tap any place on the map to see how far it is.",
     hero: "Your level, skills and perks. A dot on this tab means you can level up or spend a perk point.",
     pack: "Everything you carry. Tap an item to wear or use it; search by name at the top of the list.",
-    tactics: "Set rules for fights. They're checked top to bottom every turn. Test them against a dummy before a real fight.",
+    tactics: "Rules for Auto and instant fights. They're checked top to bottom every turn. Test them against a dummy before a real fight.",
     town: "Places in town are grouped: Shops, Services, Guilds & jobs. Each town has different ones; shops close at night.",
     log: "Only your quests live here: Active, Misc and Completed. ☆ Track the one you're on and the compass and map follow it.",
   };
@@ -2498,14 +2501,16 @@
     }
     if (S.pendingLevels > 0 || PERKS.pointsLeft(S) > 0) row("⬆", S.pendingLevels > 0 ? "You can level up" : `${PERKS.pointsLeft(S)} perk point${PERKS.pointsLeft(S) > 1 ? "s" : ""} to spend`, "Open Hero to choose what grows.", `<button class="btn sm" data-act="uxtab" data-id="hero">Hero</button>`);
     if (S.location && !S.trip && (TOWNS.isTown(S.location) || G.shopTypes(S.location).length)) row("🏘", `You're in ${esc(S.location)}`, "Shops, the inn, trainers and jobs are in the Town tab.", `<button class="btn sm" data-act="uxtab" data-id="town">Town</button>`);
-    const g = typeof GUIDE !== "undefined" && S.level < 15 ? GUIDE.STEPS.find((st) => !st[3](S)) : null;
+    const ob = typeof ONBOARD !== "undefined" ? ONBOARD.rows(S, { here, eta, known, quest: a?.id, online: Store.online, party: !!party, max: 4 - rows.length }) : null;   // [onboard] 1-3 ideas from your state
+    if (ob) rows.push(...ob);
+    const g = !ob && typeof GUIDE !== "undefined" && S.level < 15 ? GUIDE.STEPS.find((st) => !st[3](S)) : null;
     if (g) row("📖", `Next step: ${esc(g[1])}`, esc(g[2]), `<button class="btn sm" data-act="guidego" data-id="${g[0]}">Show me</button>`);
     if (!S.trip) {
       const near = Object.keys(WORLD.places).filter((n) => known(n) && n !== S.location && !S.discovered.includes(n)).map((n) => [n, G.pxDist(here, WORLD.places[n])]).sort((x, y) => x[1] - y[1])[0];
       if (near && rows.length < 4) row("✦", `Explore ${esc(near[0])}`, `${KIND[WORLD.places[near[0]][2]]} you haven't visited · ~${eta(near[0])}`, `<button class="btn sm" data-act="go" data-place="${esc(near[0])}">Go</button>`);
     }
     if (!rows.length) return "";
-    return `<div class="panel nextcard"><h2>What to do next</h2><div class="list">${rows.join("")}</div></div>`;
+    return `<div class="panel nextcard"><h2>What to do next</h2><div class="list">${rows.join("")}</div>${ob && ob.length ? ONBOARD.foot() : ""}</div>`;
   }
   function panelTravel() {
     const here = livePos();
