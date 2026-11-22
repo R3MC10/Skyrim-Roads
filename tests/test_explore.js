@@ -56,9 +56,10 @@ function hero(level=30){
   for(const mm of EXPLORE.MAPS){ const p=EXPLORE.mapPos(mm[0]); ok(p && Terrain.SPEED[Terrain.typeAtPos(p)]>0, "map spot on land: "+mm[0]); }
 }
 // ---- claw door + unique on first clear
-function runTo(s, place, pickFn){
+function runTo(s, place, pickFn, pre){
   s.location=place; [s.x,s.y]=WORLD.places[place]; s.cleared={};
   const e=DUNGEONS.enter(s); if(e) return {err:e};
+  if(pre) pre(s);
   let guard=0, sawClaw=false, notes=[];
   while(s.dungeon && guard++<80){
     const d=s.dungeon;
@@ -116,6 +117,15 @@ function runTo(s, place, pickFn){
 }
 { // counts
   const s=hero(5); const c=EXPLORE.counts(s); ok(c.secrets[1]>=20 && c.uniques[1]>=20 && c.lore[1]>=16 && c.maps[1]===8, "counts: "+JSON.stringify(c));
+}
+{
+  // no claw by the time you reach the door (sold it, lost it, skipped the room): the door still gives you the answer
+  const s=hero(14); s.hpBonus=4000; G.setHealth(s,G.maxHealth(s));
+  let doorText="";
+  const r=runTo(s,"Bleak Falls Barrow",(s2,chs)=>{ doorText=doorText||s2.dungeon.room.text; ok(chs.some(c=>c==="set:Bear-Moth-Owl"), "without the claw beforehand, the door still offers the answer"); return DUNGEONS.act(s2,"set:Bear-Moth-Owl"); }, (s2)=>{ s2.dungeon.gotClaw=true; });
+  ok(r.cleared, "cleared Bleak Falls without finding the claw early");
+  ok(/clutching the Golden Claw/.test(doorText) && /Bear, Moth, Owl/.test(doorText), "the door room hands over the claw and its animals: "+doorText.slice(-140));
+  ok(s.inv.filter(x=>x.item==="golden_claw").length===1, "exactly one claw");
 }
 `, c);
 console.log(fails ? `${fails} FAILED` : "ALL OK");

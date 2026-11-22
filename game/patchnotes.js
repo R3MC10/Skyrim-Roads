@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b97", build: 97, date: "22 Nov 2026", title: "Bleak Falls clues and tidier buttons", items: [
+      "Bleak Falls Barrow: if you reach the claw door without the Golden Claw (sold it, lost it, never picked it up), a dead thief by the door has it. You take it, and it tells you the three animals in order.",
+      "Pillar puzzles in barrows now show their clue right inside the puzzle, instead of hiding it behind the puzzle window.",
+      "The round star and compass buttons fade away while you scroll, so they no longer sit on top of cards and buttons.",
+      "Pages now end with enough room that nothing at the bottom stays stuck under those round buttons.",
+    ] },
     { id: "b96", build: 96, date: "22 Nov 2026", title: "Bug hunt", items: [
       "At the biggest text size, the Items / Magic / Skills names at the top of the item menu no longer pile on top of each other.",
       "World events no longer pop up over a brand-new character. Below level 3 they just go in your Journal.",
