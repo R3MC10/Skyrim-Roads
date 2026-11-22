@@ -94,5 +94,5 @@ const styles = [...html.matchAll(/<style>([\s\S]*?)<\/style>/g)];
 ok(styles.length >= 2 && /\.obtip\{/.test(styles[1][1]) && !/\.obtip/.test(styles[0][1]), "CSS in the second style block");
 ok(/ONBOARD\.rows\(S/.test(ui) && /ONBOARD\.mount\(/.test(ui) && /ONBOARD\.settingsHTML\(seg\)/.test(ui) && /ONBOARD\.pref\(k/.test(ui), "ui.js hooks");
 ok(!/Fights play out by themselves\. In Tactics/.test(fs.readFileSync(W + "guide.js", "utf8")), "guide talks about turn-by-turn fights");
-ok(/bQ-onboard/.test(fs.readFileSync(W + "patchnotes.js", "utf8")), "patch note");
+ok(/A clearer first hour/.test(fs.readFileSync(W + "patchnotes.js", "utf8")), "patch note");
 console.log("onboard ok (" + c.__n + " checks)");
