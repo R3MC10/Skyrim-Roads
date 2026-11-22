@@ -13,7 +13,9 @@
    Loadouts carry mode: "smart" (default) or "custom" (the old rule list). Rules are never deleted, so switching
    back to Custom restores them. */
 const COMBATAI = (() => {
-  const isSmart = (L) => !L || L.mode !== "custom";
+  const isSmart = (L) => !L || L.mode !== "custom";   // "smart" and "hybrid" (your rules first, then Smart AI)
+  /* the loadout's AI settings (aiset.js); decide() can pass others in */
+  const settingsFor = (f) => (typeof AISET === "undefined" ? null : f.stOverride || (f.L ? AISET.get(f.L) : null));
   const avgSpread = () => (F.DAMAGE_SPREAD[0] + F.DAMAGE_SPREAD[1]) / 2;
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const hasM = () => typeof MAGIC !== "undefined";
@@ -56,6 +58,7 @@ const COMBATAI = (() => {
     if (sneakReady(f)) {
       const wt = f.wt, m = wt === "dagger" && G.P(s, "assassins_blade") ? 15 : sk === "One-Handed" && G.P(s, "backstab") ? 6 : sk === "Archery" && G.P(s, "deadly_aim") ? 3 : F.sneakMultiplier(sk);
       d *= m; hit = 1;
+      if (typeof SNEAK2 !== "undefined") { const c = SNEAK2.cap(f); if (c) d = Math.min(d, c); }   // a quiet blow can't fell a strong foe outright
     }
     if (f.mount?.up) d *= 1.05;
     if (typeof PFX !== "undefined") {   // the bigger perk trees: first strikes, dual flurry, sneak bonuses, quick second strikes, a surer aim
@@ -303,12 +306,15 @@ const COMBATAI = (() => {
 
   // ---- the turn's choice. Returns [action, reason or ""]
   function choose(f) {
-    const p = picture(f);
+    const p = picture(f), st = settingsFor(f);
+    let opts = options(f);
+    if (st) opts = opts.filter((a) => AISET.allow(f, a, st));
     const op = typeof FAVWHEEL !== "undefined" ? FAVWHEEL.opener(f) : null;   // your readied favourite opens the fight
-    if (op) { let r = null; try { r = value(f, p, op); } catch { /* fine */ } if (r && isFinite(r.v) && r.v > -0.5) { f.aiPlan = p; return [op, "your readied favourite"]; } }
+    if (op && (!st || AISET.allow(f, op, st))) { let r = null; try { r = value(f, p, op); } catch { /* fine */ } if (r && isFinite(r.v) && r.v > -0.5) { f.aiPlan = p; return [op, "your readied favourite"]; } }
+    if (st && st.train) { const t = AISET.trainPick(f, p, opts, st); if (t) { f.aiPlan = p; return [t.action, `practising ${t.skill}`]; } }   // Spread practice
     let best = "attack", bv = -Infinity, why = "";
-    for (const a of options(f)) {
-      let r; try { r = value(f, p, a); } catch { continue; }
+    for (const a of opts) {
+      let r; try { r = value(f, p, a); if (st) r = AISET.tune(f, p, a, r, st); } catch { continue; }
       if (r && isFinite(r.v) && r.v > bv + 1e-9) { bv = r.v; best = a; why = r.why || ""; }
     }
     f.aiPlan = p;
@@ -333,7 +339,24 @@ const COMBATAI = (() => {
     return { role, sneaky: G.skill(s, "Sneak") >= 40, healAt: 45, healAmt: healSp ? Math.round(healSp.amount || 30) : 0, heals: healSp ? 3 : 0, potAt: 35, pots: Math.min(2, G.countRestore(s, "health")), potAmt: 50 };
   }
 
+  /* one turn at a time (for turn-based fights and the Auto button): no dice, the same state gives the same move.
+     actor: "player" (default) or an ally object { name, dmg, hp, max } for followers. settings: optional AI settings
+     to use instead of the loadout's. Returns { action, rule, why }. */
+  function decide(f, actor = "player", settings = null) {
+    if (actor && typeof actor === "object") {
+      const al = actor, mh = G.maxHealth(f.s), base = (al.dmg || 0) * avgSpread(), amax = al.max ?? al.hp;
+      if (f.hp / mh < 0.35 && al.hp > amax * 0.45 && f.ehp > base) return { action: "cover", rule: 0, why: "steps in front of you" };
+      if (f.eParalyzed > 0 || f.stagger || f.calmTurns > 0) return { action: "exploit", rule: 0, why: "hits the opening" };
+      return { action: "attack", rule: 0, why: "" };
+    }
+    const keep = f.stOverride;
+    if (settings && typeof AISET !== "undefined") f.stOverride = AISET.clean(settings);
+    try { const [rule, a] = f.choose(); return { action: a, rule, why: f.aiWhy || "" }; }
+    finally { f.stOverride = keep; }
+  }
+  const settingsOf = (L) => (typeof AISET !== "undefined" ? AISET.get(L) : null);
+
   const DESC = "Smart AI picks the best move every turn: the right spell for the foe's weakness, power attacks when you have the stamina, healing only when the fight is close, potions and shouts saved for when they matter.";
-  return { isSmart, choose, followerAct, coopProfile, incoming, swing, options, picture, value, DESC };
+  return { isSmart, choose, decide, settingsOf, settingsFor, followerAct, coopProfile, incoming, swing, options, picture, value, DESC };
 })();
 if (typeof module !== "undefined") module.exports = COMBATAI;

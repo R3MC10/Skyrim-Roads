@@ -71,6 +71,13 @@ const TB = (() => {
     try { const [, a] = f.choose(); return a || "attack"; } catch (e) { return "attack"; }
   }
 
+  /* who to hit first (the "Target first" AI setting in aiset.js). Fights today have one foe (a gang or a pack is one foe),
+     so this only picks among several when a fight brings extra foes in f.adds. */
+  function targetOrder(f) {
+    const foes = [f.e, ...(f.adds || [])].filter(Boolean);
+    if (foes.length < 2 || typeof AISET === "undefined" || !AISET.pickTarget) return foes;
+    try { return AISET.pickTarget(G.loadout(f.s), foes); } catch (e) { return foes; }
+  }
   // ------------------------------------------------------------------ one fight, played round by round
   class Session {
     constructor(f, opts = {}) {
@@ -561,5 +568,5 @@ const TB = (() => {
     });
   }
 
-  return { T, stats, cost, aiPick, Session, simulate, call, enabled, init, remoteFor, watchTurns, safeSave, get open() { return open; }, WCOST, TIERC, HIT_CAP, FOE_HP, PARTY_HP, TURN_SECONDS, _origRun: origRun };
+  return { T, stats, cost, aiPick, targetOrder, Session, simulate, call, enabled, init, remoteFor, watchTurns, safeSave, get open() { return open; }, WCOST, TIERC, HIT_CAP, FOE_HP, PARTY_HP, TURN_SECONDS, _origRun: origRun };
 })();
