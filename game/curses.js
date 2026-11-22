@@ -189,8 +189,8 @@ const CURSE = (() => {
     const extra = [];
     if (P(f, "wolf", "totem_terror") && calmable(f)) { f.calmTurns = Math.max(f.calmTurns || 0, 2); extra.push("it cowers"); }
     if (P(f, "wolf", "totem_predator")) { f.stagger = true; extra.push("staggered"); }
-    if (P(f, "wolf", "totem_moon")) { f.allies.push({ name: "Werewolf brother", dmg: 16 }, { name: "Werewolf brother", dmg: 16 }); extra.push("your brothers answer"); }
-    else if (P(f, "wolf", "totem_ice_brothers")) { f.allies.push({ name: "Ice wolf", dmg: 8 }, { name: "Ice wolf", dmg: 8 }); extra.push("ice wolves answer"); }
+    if (P(f, "wolf", "totem_moon")) { f.allies.push({ name: "Werewolf brother", dmg: 16, kind: "werewolf" }, { name: "Werewolf brother", dmg: 16, kind: "werewolf" }); extra.push("your brothers answer"); }
+    else if (P(f, "wolf", "totem_ice_brothers")) { f.allies.push({ name: "Ice wolf", dmg: 8, kind: "icewolf" }, { name: "Ice wolf", dmg: 8, kind: "icewolf" }); extra.push("ice wolves answer"); }
     return `You throw your head back and howl: Beast Form!${extra.length ? ` (${extra.join(", ")})` : ""}`;
   }
   /* Vampire Lord from tactics */
@@ -202,7 +202,7 @@ const CURSE = (() => {
     const extra = [];
     if (P(f, "lord", "corpse_curse") && calmable(f)) { f.eParalyzed = Math.max(f.eParalyzed || 0, 3); extra.push("paralyzed"); }
     else if (P(f, "lord", "vampiric_grip") && !f.tags.has("dragon")) { f.stagger = true; extra.push("yanked off its feet"); }
-    if (P(f, "lord", "summon_gargoyle")) { f.allies.push({ name: "Gargoyle", dmg: 16 }); extra.push("a gargoyle rises"); }
+    if (P(f, "lord", "summon_gargoyle")) { f.allies.push({ name: "Gargoyle", dmg: 16, kind: "gargoyle" }); extra.push("a gargoyle rises"); }
     return `Your skin splits and great wings unfold: Vampire Lord!${extra.length ? ` (${extra.join(", ")})` : ""}`;
   }
   /* the drain a Vampire Lord does each turn, before it happens */

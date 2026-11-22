@@ -32,7 +32,9 @@ const FIGHTART = (() => {
     const body = !chest ? "#8a7a62" : chest.type === "heavy" ? P.steel : chest.type === "cloth" ? P.cloth : chest.type === "medium" ? "#9a9a8e" : P.leather;
     const allies = (f?.allies || []).length + (s?.thrall ? 1 : 0);
     const mates = (f?.allies || []).filter((a) => a.look).slice(0, 3).map((a) => ({ name: a.name, look: a.look }));   // party members: drawn in their own gear
-    return { skin: SKIN[s?.race] || SKIN.nord, wt, shield: !!f?.shield, body, helm: !!f?.armor?.head, allies, mates, beast: !!s?.beastForm };
+    const list = (f?.allies || []).map((a) => ({ kind: allyKind(a), name: a.name, look: a.look || (a.follower && typeof PARTY !== "undefined" && a.fid ? PARTY.followerLook(a.fid) : null) }));
+    if (s?.thrall && !(f?.allies || []).some((a) => a.thrall)) list.push({ kind: "zombie", name: s.thrall.name });
+    return { skin: SKIN[s?.race] || SKIN.nord, wt, shield: !!f?.shield, body, helm: !!f?.armor?.head, allies, mates, list, beast: !!s?.beastForm };
   }
   function foeOf(e) {
     const n = (e?.name || "").toLowerCase(), tg = new Set(e?.tags || []);
@@ -249,6 +251,124 @@ const FIGHTART = (() => {
   }
   function ally(g, i) { g.save(); g.scale(0.62, 0.62); g.globalAlpha = 0.9; person(g, { skin: [SKIN.nord, SKIN.redguard, SKIN.dunmer][i % 3], body: ["#6a5a40", P.steel, "#4a5a3a"][i % 3], head: i % 2 ? "helm" : "hair", wt: ["sword", "axe", "bow"][i % 3], shield: i % 3 === 0 }); g.restore(); }
 
+  /* [summ] every kind of helper gets its own figure: what an ally record is */
+  const ALLY_KINDS = ["follower", "mate", "soldier", "zombie", "icewolf", "werewolf", "gargoyle", "dremora", "valor", "odah", "dragon", "beast", "familiar", "flame_atronach", "frost_atronach", "storm_atronach"];
+  const FLYERS = new Set(["odah", "dragon"]);
+  const ALLY_W = { mate: 24, follower: 24, soldier: 20, zombie: 20, valor: 26, dremora: 24, icewolf: 36, beast: 40, familiar: 34, werewolf: 30, gargoyle: 30, flame_atronach: 28, frost_atronach: 30, storm_atronach: 32 };   // how much room each figure needs in the line
+  function allyKind(a) {
+    if (!a) return "soldier";
+    if (a.kind && ALLY_KINDS.includes(a.kind)) return a.kind;
+    if (a.look) return "mate";
+    if (a.follower) return "follower";
+    if (a.thrall) return "zombie";
+    if (a.valor) return "valor";
+    if (a.odah) return "odah";
+    if (a.beast) return "beast";
+    const n = (a.name || "").toLowerCase();
+    if (/ice wolf/.test(n)) return "icewolf";
+    if (/werewolf/.test(n)) return "werewolf";
+    if (/gargoyle/.test(n)) return "gargoyle";
+    if (/dremora/.test(n)) return "dremora";
+    if (/atronach/.test(n)) return /frost/.test(n) ? "frost_atronach" : /storm/.test(n) ? "storm_atronach" : "flame_atronach";
+    if (/odahviing/.test(n)) return "odah";
+    if (/dragon/.test(n)) return "dragon";
+    if (/risen|zombie|corpse|thrall|revenant|dead/.test(n)) return "zombie";
+    if (/familiar|spectral/.test(n)) return "familiar";
+    if (/wild animal|bear|sabre|wolf/.test(n)) return "beast";
+    return "soldier";
+  }
+  function summonKind(id, txt) {
+    const t = `${id || ""} ${txt || ""}`.toLowerCase();
+    if (/dremora/.test(t)) return "dremora";
+    if (/atronach/.test(t)) return /frost/.test(t) ? "frost_atronach" : /storm|shock/.test(t) ? "storm_atronach" : "flame_atronach";
+    return "familiar";
+  }
+  const ATRO = { flame_atronach: ["#fff2c0", "#e8823a", "rgba(196,87,46,0)"], frost_atronach: ["#ffffff", "#9fd0f0", "rgba(120,170,220,0)"], storm_atronach: ["#f4f0ff", "#9a8ae8", "rgba(110,90,200,0)"] };
+  /* draws one helper at the origin, feet on the ground, facing the foe (right). o: { lunge 0..1, t seconds, i slot, look } */
+  function allyFig(g, kind, o = {}) {
+    const lunge = o.lunge || 0, t = o.t || 0, i = o.i || 0;
+    g.save(); g.lineJoin = "round"; g.lineCap = "round";
+    switch (kind) {
+      case "mate": case "follower": {
+        g.scale(0.78, 0.78);
+        if (o.look) person(g, { ...matePerson(o.look), lunge });
+        else person(g, { skin: SKIN.nord, body: P.steel, head: "helm", wt: "sword", shield: true, lunge });
+        break; }
+      case "zombie": {   // grey-green, hunched, tattered, a slow sway
+        g.scale(0.7, 0.7); g.rotate(Math.sin(t * 1.7 + i) * 0.04);
+        person(g, { skin: "#8a9a7c", body: "#5a5244", head: "hair", hair: "#3a3a30", wt: "fist", hunch: 6, eyes: "#c8f0a0", lunge });
+        g.globalAlpha = 0.35; g.fillStyle = "#9ad070"; g.beginPath(); g.ellipse(0, -2, 14, 3, 0, 0, 7); g.fill();
+        break; }
+      case "icewolf": {   // a pale blue wolf with a breath of frost
+        g.scale(0.78, 0.78); g.translate(0, -Math.abs(Math.sin(t * 9 + i)) * (lunge ? 4 : 1.2));
+        quad(g, { color: "#b8d8f0", len: 44, height: 30, head: 8, legW: 3.4, tail: "bushy", ears: 1, fangs: 1, lunge, eye: "#e8fbff" });
+        g.globalAlpha = 0.45; g.fillStyle = "#e8f6ff"; g.beginPath(); g.arc(30 + lunge * 6, -24, 4 + Math.sin(t * 4) * 1.5, 0, 7); g.fill();
+        break; }
+      case "werewolf": {
+        g.scale(0.62, 0.62);
+        if (typeof BEASTART !== "undefined") BEASTART.wolf(g, { lunge, t: t + i });
+        else quad(g, { color: "#4a4038", len: 50, height: 40, head: 10, legW: 5, tail: "bushy", ears: 1, fangs: 1, lunge });
+        break; }
+      case "gargoyle": {   // stone wings, hovering low, swoops when it strikes
+        const hov = -10 - Math.sin(t * 2.4 + i) * 4 + lunge * 8;
+        g.translate(lunge * 10, hov); g.scale(0.7, 0.7);
+        const stone = "#7d7a72", dark = "#4c4a44", flap = Math.sin(t * 6) * 0.25;
+        for (const side of [-1, 1]) { g.save(); g.translate(-2, -44); g.rotate(side * (0.5 + flap) - 0.35); H.poly(g, [[0, 0], [-34, -16], [-42, 2], [-30, 0], [-26, 12], [-14, 6]], side < 0 ? dark : stone, P.ink, 1.4); g.restore(); }
+        g.beginPath(); g.ellipse(0, -30, 11, 16, 0.15, 0, 7); g.fillStyle = stone; g.fill(); g.strokeStyle = P.ink; g.lineWidth = 1.5; g.stroke();
+        H.inkPath(g, [[-4, -16], [-8, -2], [-2, 0]], false, 5, stone); H.inkPath(g, [[5, -16], [8, -2], [14, 0]], false, 5, stone);
+        H.inkPath(g, [[6, -38], [18 + lunge * 12, -30 + lunge * 6], [24 + lunge * 14, -32]], false, 4.5, stone);
+        g.beginPath(); g.arc(6, -50, 8, 0, 7); g.fillStyle = stone; g.fill(); g.stroke();
+        H.poly(g, [[0, -56], [-4, -68], [4, -57]], dark, P.ink, 1); H.poly(g, [[8, -57], [12, -69], [12, -55]], dark, P.ink, 1);
+        g.fillStyle = "#ff5a3a"; g.fillRect(9, -52, 3, 2);
+        break; }
+      case "dremora": {   // ebony-dark armour, horned helm, red glow
+        g.scale(0.82, 0.82);
+        person(g, { skin: "#7a3a34", body: "#2a2226", head: "horned", helmColor: "#3a2a2c", wt: "greatsword", eyes: "#ff6a3a", armC: "#3a2a2c", cape: "#5a1a1a", lunge });
+        g.globalAlpha = 0.25 + Math.sin(t * 3) * 0.08; g.fillStyle = "#d8402a"; g.beginPath(); g.ellipse(0, -1, 16, 3.5, 0, 0, 7); g.fill();
+        break; }
+      case "valor": {   // a hero of Sovngarde: blue-white, see-through, a soft light
+        g.scale(0.84, 0.84);
+        const gl = g.createRadialGradient(0, -36, 2, 0, -36, 46); gl.addColorStop(0, "rgba(220,236,255,.55)"); gl.addColorStop(1, "rgba(160,200,255,0)");
+        g.fillStyle = gl; g.beginPath(); g.arc(0, -36, 46, 0, 7); g.fill();
+        g.globalAlpha = 0.62 + Math.sin(t * 2.2 + i) * 0.1;
+        person(g, { skin: "#dfe9f6", body: "#a8c4e8", head: "horned", helmColor: "#c8dcf4", wt: ["greatsword", "battleaxe", "sword", "axe"][i % 4], shield: i % 2 === 1, shieldColor: "#b8d0f0", eyes: "#ffffff", cape: "#8aa8d8", lunge });
+        break; }
+      case "beast": {   // Animal Allegiance: a bear or a sabre cat turns on your foe
+        g.scale(0.74, 0.74);
+        if (i % 2) quad(g, { color: "#c8a86a", len: 46, height: 30, head: 9, legW: 3.6, tail: "long", ears: 1, fangs: 1, lunge });
+        else quad(g, { color: "#5a4632", len: 52, height: 40, head: 11, legW: 6, tail: "stub", ears: 1, lunge });
+        break; }
+      case "familiar": {   // the spectral wolf
+        g.scale(0.8, 0.8); g.globalAlpha = 0.62;
+        quad(g, { color: "#8ab8f0", len: 44, height: 30, head: 8, legW: 3.4, tail: "bushy", ears: 1, fangs: 1, lunge, eye: "#ffffff" });
+        break; }
+      case "flame_atronach": case "frost_atronach": case "storm_atronach": {   // floating elementals
+        const c = ATRO[kind], bob = Math.sin(t * 2.6 + i) * 4, fl = (x, y, r) => { const gl = g.createRadialGradient(x, y, 1, x, y, r); gl.addColorStop(0, c[0]); gl.addColorStop(0.5, c[1]); gl.addColorStop(1, c[2]); g.fillStyle = gl; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); };
+        g.translate(lunge * 14, -8 + bob); g.scale(0.85, 0.85);
+        if (kind === "frost_atronach") {   // a hulk of ice shards
+          H.poly(g, [[-14, -20], [-18, -52], [-4, -70], [12, -58], [16, -24], [0, -14]], "#bfe0f4", P.ink, 1.4);
+          H.poly(g, [[-18, -50], [-30, -40], [-22 + lunge * 6, -22]], "#9fc8e8", P.ink, 1.2); H.poly(g, [[14, -54], [28 + lunge * 10, -40], [18, -26]], "#9fc8e8", P.ink, 1.2);
+          g.fillStyle = "#ffffff"; g.fillRect(-2, -60, 3, 3); g.fillRect(5, -60, 3, 3); fl(0, -40, 10);
+        } else if (kind === "storm_atronach") {   // rocks orbiting a crackling core
+          fl(0, -42, 16);
+          for (let k = 0; k < 6; k++) { const a = t * 1.6 + k * 1.047, rx = Math.cos(a) * 18, ry = Math.sin(a) * 26; H.poly(g, [[rx - 5, -42 + ry - 4], [rx + 4, -42 + ry - 5], [rx + 5, -42 + ry + 4], [rx - 4, -42 + ry + 5]], "#6a6478", P.ink, 1); }
+          g.strokeStyle = "#e8e4ff"; g.lineWidth = 1.5; g.beginPath(); g.moveTo(-6, -50); g.lineTo(2, -44); g.lineTo(-3, -38); g.lineTo(6, -32); g.stroke();
+        } else {   // a woman of fire
+          fl(0, -44, 17); fl(0, -64, 9); fl(-10, -22, 9); fl(10 + lunge * 8, -40, 8);
+          g.fillStyle = "#3a1a10"; g.beginPath(); g.ellipse(0, -46, 6, 13, 0, 0, 7); g.fill(); g.beginPath(); g.arc(0, -64, 5, 0, 7); g.fill();
+        }
+        break; }
+      case "odah": case "dragon": {   // flies: the dragon figure, facing the foe
+        g.scale(kind === "odah" ? 0.72 : 0.62, kind === "odah" ? 0.72 : 0.62);
+        foeFig(g, "dragon", lunge, t);
+        if (kind === "odah") { g.globalAlpha = 0.35; g.fillStyle = "#c0402a"; g.beginPath(); g.ellipse(-6, -34, 30, 12, -0.1, 0, 7); g.fill(); }   // Odahviing's red scales
+        break; }
+      default: { g.scale(0.62, 0.62); g.globalAlpha = 0.9; person(g, { skin: [SKIN.nord, SKIN.redguard, SKIN.dunmer][i % 3], body: ["#6a5a40", P.steel, "#4a5a3a"][i % 3], head: i % 2 ? "helm" : "hair", wt: ["sword", "axe", "bow"][i % 3], shield: i % 3 === 0, lunge }); }
+    }
+    g.restore();
+  }
+  const SPARK = { icewolf: ["#e8f6ff", 2, -10], flame_atronach: ["#ffb060", 0, -40], frost_atronach: ["#e8f6ff", 2, 8], storm_atronach: ["#d8d0ff", 1, 0], valor: ["#dcecff", 4, -20], dremora: ["#ff7a4a", 0, -30], familiar: ["#bcd8ff", 4, -10], zombie: ["#a8d080", 2, -6] };
+
   // ---------------------------------------------------------------- what happened each turn
   // The log says what was done each turn (line.a: "attack", "power_attack", "block", "spell:firebolt", "dual:…",
   // "scroll:…", "potion:…", "shout:…", "power:…"; line.wt: the weapon in hand). Older logs (and the arena) only have text.
@@ -311,11 +431,13 @@ const FIGHTART = (() => {
     let hp = f.hp0 ?? null, ehp = f.ehp0 ?? null;
     const nm = (f.e?.name || "").toLowerCase(), strip = (t) => (nm ? t.toLowerCase().split(nm).join("") : t.toLowerCase());
     const kind = foeOf(f.e), archer = /archer|hunter|marksman|ranger|sniper/.test(nm), base = f.wt0 || h.wt;
-    const st = { bound: false, invis: false, rune: null, ward: false, soul: false, cloak: null, guard: false, beast: false, lord: false };
+    const st = { bound: false, invis: false, rune: null, ward: false, soul: false, cloak: null, guard: false, beast: false, lord: false, summon: null };
     let foeAtk = 0;
     lines.forEach((l, li) => {
       const raw = l.me || "", parts = raw.split(" · "), me = parts[0], extra = parts.slice(1).join(" · "), them = strip(l.them || "");
       const nhp = l.hp ?? hp, nehp = l.ehp ?? ehp;
+      if (/dremora/i.test(`${l.me || ""} ${l.them || ""}`)) st.summon = "dremora";   // [summ] the Sanguine Rose's Dremora
+      if (/familiar \d/.test(l.me || "") && !st.summon) st.summon = "familiar";
       st.cloak = /cloak|flames wreathe/i.test(extra) ? elementOf(extra) || "fire" : null;
       if (me) {
         const [k, arg] = (l.a || "").split(":");
@@ -339,6 +461,7 @@ const FIGHTART = (() => {
         } else if (spellish) {
           const id = k === "scroll" ? (typeof D !== "undefined" && D.ITEMS?.[arg]?.spell) : arg;
           const sf = spellFx(id, me);
+          if (sf.fx === "summon") st.summon = summonKind(id, me);   // [summ] what answered your call
           Object.assign(b, { fx: sf.fx, el: sf.el, storm: sf.storm, move: PROJ.has(sf.fx) ? "cast" : AT_FOE.has(sf.fx) ? "cast" : "self" });
           if (/fizzles/i.test(me)) Object.assign(b, { fx: "fizzle", move: "self" });
           b.miss = /misses|no effect|resists|shrugs|too strong|nothing/i.test(me);
@@ -727,14 +850,30 @@ const FIGHTART = (() => {
       if (st.rune) rune(fx0, groundY, COL[st.rune]?.[0] || "#ffb347", tt);
       if (b && b.fx === "rune" && b.who === "me" && u > 0.4) rune(fx0, groundY, COL[b.el]?.[0] || "#ffb347", tt);
       if (b && b.fx === "summon" && b.who === "me" && u > 0.2) portal(hx0 + 46 * s, groundY, Math.min(1, (u - 0.2) * 3) * (u > 0.85 ? (1 - u) / 0.15 : 1), tt);
-      // allies behind you
-      const mateTags = [];
-      for (let i = 0; i < Math.min(3, rec.hero.allies); i++) { if (rec.hero.mates?.[i]) { const ax = hx0 - (28 + i * 24) * s, ay = groundY + 2 - i * 2 - 66 * s; mateTags.push([rec.hero.mates[i].name, ax * z + ox + zcx - zcx * z, ay * z + oy + zcy - zcy * z]); }
-        const lunge = b && b.who === "me" && b.ally && u > 0.5 && u < 0.85 ? Math.sin((u - 0.5) / 0.35 * Math.PI) * 14 : 0; wg.save(); wg.translate(hx0 - (28 + i * (rec.hero.mates?.length ? 24 : 18) - lunge) * s, groundY + 2 - i * 2); wg.scale(s, s); if (rec.hero.mates?.[i]) mate(wg, rec.hero.mates[i]); else ally(wg, i); wg.restore(); }
-      // your familiar
+      // allies behind you: each kind has its own figure (allyFig); dragons fly overhead
+      const mateTags = [], alist = rec.hero.list || [], ground3 = alist.filter((a) => !FLYERS.has(a.kind)).slice(0, 3), flyers = alist.filter((a) => FLYERS.has(a.kind)).slice(0, 1);
+      const nGen = Math.max(0, Math.min(3, rec.hero.allies) - ground3.length - flyers.length);
+      const slots = [...ground3, ...Array.from({ length: Math.min(3 - ground3.length, nGen) }, () => ({ kind: "soldier" }))];
+      const allyLunge = b && b.who === "me" && b.ally && u > 0.5 && u < 0.85 ? Math.sin((u - 0.5) / 0.35 * Math.PI) : 0;
+      const backs = []; slots.forEach((a, i) => backs.push(i ? backs[i - 1] + ((ALLY_W[a.kind] || 20) + (ALLY_W[slots[i - 1].kind] || 20)) / 2 : 26));
+      const squeeze = backs.length ? Math.min(1, 76 / backs[backs.length - 1]) : 1;   // keep the whole line inside the scene
+      slots.forEach((a, i) => {
+        const ax = hx0 - (backs[i] * squeeze - allyLunge * 14) * s, ay = groundY + 2 - i * 2;
+        if (a.name && (a.kind === "mate" || a.kind === "follower" || a.kind === "valor")) mateTags.push([a.name, ax * z + ox + zcx - zcx * z, (ay - 66 * s) * z + oy + zcy - zcy * z]);
+        wg.save(); wg.translate(ax, ay); wg.scale(s, s); allyFig(wg, a.kind, { lunge: allyLunge, t: tt, i, look: a.look }); wg.restore();
+        const sp = SPARK[a.kind]; if (sp && Math.random() < 0.18 * pmul) spawn(sp[1], sp[0], ax + (Math.random() - 0.5) * 18 * s, ay + (sp[2] - Math.random() * 30) * s, (Math.random() - 0.5) * 14 * s, -20 * s, 0.7, 2.2, 0);
+      });
+      for (const a of flyers) {   // a dragon circles above and dives in with fire when it strikes
+        const cx = hx0 - 10 * s + Math.sin(tt * 0.5) * 30 * s + allyLunge * (fx0 - hx0) * 0.35, cy = groundY - (44 - allyLunge * 10) * s + Math.sin(tt * 1.3) * 4 * s;
+        wg.save(); wg.translate(cx, cy); wg.scale(s, s); allyFig(wg, a.kind, { lunge: allyLunge, t: tt }); wg.restore();
+        if (allyLunge > 0.3) for (let k = 0; k < 3; k++) if (Math.random() < pmul) spawn(0, ["#fff2c0", "#ffb347", "#e8653a"][k], cx + 40 * s, cy - 40 * s, (fx0 - cx) * (1.2 + Math.random() * 0.6), (groundY - 40 * s - cy) * (1.1 + Math.random() * 0.5), 0.6, 4, 0);
+        if (a.name) mateTags.push([a.name, cx * z + ox + zcx - zcx * z, (cy - 50 * s) * z + oy + zcy - zcy * z]);
+      }
+      // your summon: the spectral wolf, a Dremora, an atronach
       if ((st && b && b.wolf) || (b && b.fx === "summon" && b.who === "me" && u > 0.5)) {
-        const lunge = wolfT < 1 ? Math.sin(wolfT * Math.PI) : 0;
-        wg.save(); wg.globalAlpha = 0.6; wg.translate(hx0 + (34 + lunge * 50) * s, groundY); wg.scale(s * 0.8, s * 0.8); quad(wg, { color: "#8ab8f0", len: 44, height: 30, head: 8, legW: 3.4, tail: "bushy", ears: 1, fangs: 1, lunge, eye: "#ffffff" }); wg.restore();
+        const lunge = wolfT < 1 ? Math.sin(wolfT * Math.PI) : 0, sk = (b && b.st && b.st.summon) || st.summon || "familiar", sx = hx0 + (34 + lunge * 50) * s;
+        wg.save(); wg.translate(sx, groundY); wg.scale(s, s); allyFig(wg, sk, { lunge, t: tt }); wg.restore();
+        const sp = SPARK[sk]; if (sp && Math.random() < 0.25 * pmul) spawn(sp[1], sp[0], sx + (Math.random() - 0.5) * 16 * s, groundY + (sp[2] - Math.random() * 30) * s, (Math.random() - 0.5) * 12 * s, -24 * s, 0.6, 2.2, 0);
       }
       // you
       const meDown = (phase !== "play") && !won, foeDown = (phase !== "play") && won && !turned, fallE = EASE.out(fall);
@@ -806,7 +945,7 @@ const FIGHTART = (() => {
         g.fillStyle = "#1c2128"; g.fillText(ftx[i], fxs[i] + 1.5, fys[i] + 1.5); g.fillStyle = fcl[i]; g.fillText(ftx[i], fxs[i], fys[i]);
       }
       g.globalAlpha = 1;
-      for (const [nm, tx2, ty2] of mateTags) { g.font = pixel ? "bold 10px monospace" : '600 11px "Barlow Semi Condensed", sans-serif'; const w = g.measureText(nm).width + 10; g.fillStyle = "rgba(14,15,18,0.72)"; g.fillRect(tx2 - w / 2, ty2 - 11, w, 15); g.fillStyle = "#c8f0c0"; g.fillText(nm, tx2, ty2 + 0.5); }   // party members' names, crisp in both styles
+      for (const [nm, tx2, ty2] of mateTags) { g.font = pixel ? "bold 10px monospace" : '600 11px "Barlow Semi Condensed", sans-serif'; const w = g.measureText(nm).width + 10, tx3 = Math.max(w / 2 + 2, Math.min(W - w / 2 - 2, tx2)), ty3 = Math.max(26, ty2); g.fillStyle = "rgba(14,15,18,0.72)"; g.fillRect(tx3 - w / 2, ty3 - 11, w, 15); g.fillStyle = "#c8f0c0"; g.fillText(nm, tx3, ty3 + 0.5); }   // party members' names, crisp in both styles
       if (label && labelT > 0) { const a = Math.min(1, labelT * 3), sz = pixel ? 16 : 20; g.globalAlpha = a; g.font = pixel ? `bold ${sz}px monospace` : `700 ${sz}px Cinzel, Georgia, serif`; const y = Hh * 0.25 - (1 - a) * 8; g.fillStyle = "rgba(28,33,40,0.7)"; const w = g.measureText(label).width + 18; g.fillRect(W / 2 - w / 2, y - sz + 2, w, sz + 8); g.fillStyle = labelC; g.fillText(label, W / 2, y); }
       g.restore();
       // end banner
@@ -951,5 +1090,5 @@ const FIGHTART = (() => {
   const advance = (ms) => { for (const r of LIVE) { if (!r.el.isConnected) { LIVE.delete(r); continue; } r.step(ms); } return [...LIVE].map((r) => ({ beat: r.beat, beats: r.beats.length, done: r.done })); };
   const perf = () => { const n = Math.min(perfN, PERF.length), a = Array.from(PERF.subarray(0, n)).sort((x, y) => x - y); return { frames: perfN, p50: a[Math.floor(n * 0.5)] || 0, p90: a[Math.floor(n * 0.9)] || 0, max: a[n - 1] || 0 }; };
   const resetPerf = () => { perfN = 0; };
-  return { placeholder, register, foeOf, sceneOf, beatsOf, mount, animFor, spellFx, MOVES, WEAPONS, FOE_MOVE, KIND_FX, SHOUT_FX, manual, advance, perf, resetPerf };
+  return { placeholder, register, foeOf, sceneOf, beatsOf, allyKind, allyFig, summonKind, ALLY_KINDS, heroOf, mount, animFor, spellFx, MOVES, WEAPONS, FOE_MOVE, KIND_FX, SHOUT_FX, manual, advance, perf, resetPerf };
 })();

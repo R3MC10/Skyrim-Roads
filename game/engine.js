@@ -62,7 +62,7 @@ const G = (() => {
     });
     const [x, y] = loc(D.START_LOCATION);
     const s = {
-      v: 3, id, name, race: raceId, level: 1, charXp: 0, pendingLevels: 0, hpBonus: 0, mpBonus: 0, spBonus: 0,
+      v: 4, id, name, race: raceId, level: 1, charXp: 0, pendingLevels: 0, hpBonus: 0, mpBonus: 0, spBonus: 0,
       health: 100, healthTs: now(), gold: D.START_GOLD, x, y, location: D.START_LOCATION,
       discovered: [...D.START_DISCOVERED], explored: [[x, y]], skills, spells: [...D.START_SPELLS], horse: null,
       inv: [], nextInv: 1, loadouts: {}, loadout: "Main", trip: null, journal: [], created: now(),
@@ -84,7 +84,7 @@ const G = (() => {
       [s.x, s.y] = loc(at); s.location = at; s.trip = null;
       s.discovered = [...new Set([...s.discovered.filter((n) => PLACES[n]), ...D.START_DISCOVERED])];
       s.explored = s.discovered.map((n) => [...loc(n).slice(0, 2)]);
-      s.v = 3;   // already placed on the current map
+      s.v = 4;   // already placed on the current map
       note(s, "The world map was redrawn. You find yourself in " + at + ".");
     }
     if (s.v < 3 && WORLD.v2Places) {   // the map became 1:1 with Skyrim: move you (and the trail you've walked) to the same spot on it
@@ -105,6 +105,11 @@ const G = (() => {
       if (!s.explored.length) s.explored = [[s.x, s.y]];
       s.v = 3;
       note(s, "🗺 The world map now matches Skyrim 1:1 — coast, borders, holds, roads and every place where it really is.");
+    }
+    if (s.v < 4) {   // the coast was sharpened (Solitude's estuary, the Hjaalmarch inlets, Dawnstar's bay): step out of any new water
+      if (PLACES[s.location]) [s.x, s.y] = loc(s.location).slice(0, 2);
+      else if (!s.trip && typeof ROAM !== "undefined" && !WORLD.isSol?.([s.x, s.y])) { const q = ROAM.snap([s.x, s.y]); if (q) [s.x, s.y] = [+q[0].toFixed(4), +q[1].toFixed(4)]; }
+      s.v = 4;
     }
     s.discovered = s.discovered.filter((n) => PLACES[n]);
     if (typeof AMMO !== "undefined") { const m = AMMO.migrate(s); if (m) note(s, m); }
@@ -374,9 +379,9 @@ const G = (() => {
       this.allies = allyProvider(s) || [];   // party members fighting beside you: [{name, dmg}]
       if (s.follower && typeof TOWNS !== "undefined") {   // your follower fights too, and can fall
         const fd = TOWNS.FOLLOWERS[s.follower.id];
-        this.allies.push({ name: fd[0], dmg: fd[4] * 0.55 * (1 + 0.05 * (s.level - 1)), hp: TOWNS.followerHp(s, t), follower: true });   // [OURS] 55% of their listed damage
+        this.allies.push({ name: fd[0], dmg: fd[4] * 0.55 * (1 + 0.05 * (s.level - 1)), hp: TOWNS.followerHp(s, t), follower: true, fid: s.follower.id, kind: "follower" });   // [OURS] 55% of their listed damage
       }
-      if (s.thrall && s.thrall.fights > 0) { this.allies.push({ name: s.thrall.name, dmg: s.thrall.dmg, thrall: true }); this.thrallFought = true; }   // a raised corpse fights for you
+      if (s.thrall && s.thrall.fights > 0) { this.allies.push({ name: s.thrall.name, dmg: s.thrall.dmg, thrall: true, kind: "zombie" }); this.thrallFought = true; }   // a raised corpse fights for you
       this.pw = typeof POWERS !== "undefined" ? POWERS.fightState() : null;
       this.bleed = []; this.eParalyzed = 0; this.flurry = 0; this.firstHit = true; this.shadowUsed = false; this.sneakNext = false;
     }

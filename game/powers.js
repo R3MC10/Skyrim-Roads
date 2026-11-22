@@ -145,7 +145,7 @@ const POWERS = (() => {
     if (kind === "power") {
       f.usedStone = true; if (!s._test) s.stonePowerAt = t;
       if (stone(s) === "serpent") { f.eParalyzed = Math.max(f.eParalyzed, 5); f.ehp -= 25; return "Serpent: paralyzed and poisoned for 25"; }
-      if (stone(s) === "ritual") { f.allies.push({ name: "Risen dead", dmg: 8 }); return "Ritual: the dead rise to fight for you"; }
+      if (stone(s) === "ritual") { f.allies.push({ name: "Risen dead", dmg: 8, kind: "zombie" }); return "Ritual: the dead rise to fight for you"; }
       if (stone(s) === "shadow") { f.sneakNext = true; p.ether = Math.max(p.ether, 2); return "Shadow: you turn invisible"; }
     }
     if (kind === "shout") {

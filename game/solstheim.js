@@ -79,7 +79,7 @@ const SOL = (() => {
     if (!s._test) s.voiceAt = f.t + cd[lv - 1];
     f.shoutedThisTurn = true;
     const cry = ["GOL", "HAH", "DOV"].slice(0, lv).join(" ") + "!";
-    if (lv >= 3 && tags.has("dragon")) { f.calmTurns = Math.max(f.calmTurns || 0, 10); f.allies.push({ name: "A bent dragon", dmg: 22 }); return `${cry} Bend Will: the dragon bows its head and turns on its own kind`; }
+    if (lv >= 3 && tags.has("dragon")) { f.calmTurns = Math.max(f.calmTurns || 0, 10); f.allies.push({ name: "A bent dragon", dmg: 22, kind: "dragon" }); return `${cry} Bend Will: the dragon bows its head and turns on its own kind`; }
     if (lv >= 2 && (tags.has("beast") || tags.has("humanoid")) && !tags.has("boss")) { f.calmTurns = Math.max(f.calmTurns || 0, 6); return `${cry} Bend Will: your foe lowers its weapon, its will is yours`; }
     f.eParalyzed = Math.max(f.eParalyzed || 0, 1); f.ehp -= 15; return `${cry} Bend Will staggers it (15)`;
   };

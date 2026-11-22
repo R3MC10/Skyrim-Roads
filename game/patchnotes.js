@@ -3,6 +3,9 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b67", build: 67, date: "22 Nov 2026", title: "A truer map and allies that look the part", items: [
+      "Map polish: Solitude now stands at the tip of the Haafingar peninsula over the Karth estuary, the Hjaalmarch coast is jagged marsh, Dawnstar sits on its bay and the College of Winterhold rises on its own islet.",
+      "Every ally in a fight has its own look: followers in their own gear with name tags, ice wolves, werewolf brothers, the stone gargoyle, Dremora, flame, frost and storm atronachs, ghostly heroes of Sovngarde, and Odahviing diving in with fire."] },
     { id: "b66", build: 66, date: "22 Nov 2026", title: "Shouts, beasts and weather", items: [
       "Favourites wheel: star weapons, spells, shouts and potions, then tap ★ or long-press the compass or map to pick one in a ring. Readied spells open your next fight.",
       "Dragon Shouts: 45 Word Walls across Skyrim, 11 new shouts including Dragonrend, Slow Time, Storm Call, Marked for Death and Call Dragon. Spend dragon souls to unlock words. The Greybeards and Paarthurnax teach the rest.",

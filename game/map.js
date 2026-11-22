@@ -196,6 +196,21 @@ const WorldMap = (() => {
         g.fillStyle = "#e8eef1"; g.strokeStyle = "#8aa4b0"; g.lineWidth = 0.8; g.beginPath(); g.ellipse(x, y, a, b, u(-0.4, 0.4), 0, 7); g.fill(); g.stroke();
       }
     }
+    for (const [ix, iy, rx, ry, what] of WORLD.islets || []) {   // little islands: the College of Winterhold on its rock, reached by a stone bridge
+      const cx = ix * W, cy = iy * H, a = rx * W, b = ry * H;
+      if (what === "college" && WORLD.places.Winterhold) {   // the long broken bridge to the town
+        const [tx, ty] = P(WORLD.places.Winterhold);
+        g.strokeStyle = "#3a2c1e"; g.lineWidth = 3.2; g.beginPath(); g.moveTo(cx, cy + b * 0.7); g.lineTo(tx, ty - 6); g.stroke();
+        g.strokeStyle = "#a89880"; g.lineWidth = 1.6; g.beginPath(); g.moveTo(cx, cy + b * 0.7); g.lineTo(tx, ty - 6); g.stroke();
+      }
+      g.fillStyle = "#8d8274"; g.strokeStyle = "#2c2116"; g.lineWidth = 2.2;
+      g.beginPath(); for (let k = 0; k <= 14; k++) { const t = k / 14 * Math.PI * 2, r = 1 + 0.16 * Math.sin(t * 3 + ix * 40); const x = cx + Math.cos(t) * a * r, y = cy + Math.sin(t) * b * r; k ? g.lineTo(x, y) : g.moveTo(x, y); } g.closePath(); g.fill(); g.stroke();
+      g.fillStyle = "#eef2f3"; g.beginPath(); g.ellipse(cx - a * 0.15, cy - b * 0.25, a * 0.6, b * 0.4, 0, 0, 7); g.fill();
+      if (what === "college") {   // towers of the College
+        g.fillStyle = "#4a4038"; g.strokeStyle = "#1e1812"; g.lineWidth = 1;
+        for (const [dx, h, w] of [[-0.35, 1.3, 0.22], [0.05, 1.9, 0.3], [0.42, 1.1, 0.2]]) { const x = cx + dx * a, top = cy - h * b; g.fillRect(x - w * a / 2, top, w * a, h * b); g.strokeRect(x - w * a / 2, top, w * a, h * b); g.beginPath(); g.moveTo(x - w * a * 0.7, top); g.lineTo(x, top - b * 0.55); g.lineTo(x + w * a * 0.7, top); g.closePath(); g.fill(); }
+      }
+    }
     for (let i = 0; i < 260; i++) {
       const x = u(0, W), y = u(0, H * 0.2);
       if (Terrain.inPoly([x, y], Terrain.land)) continue;

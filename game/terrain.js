@@ -66,7 +66,7 @@ function makeTerrain(W, opts = {}) {
     return t;
   }
   function typeAt(p) {
-    if (!inPoly(p, land)) return T.SEA;
+    if (!inPoly(p, land)) return (W.islets || []).some(([cx, cy, rx, ry]) => ((p[0] / MW - cx) / rx) ** 2 + ((p[1] / MH - cy) / ry) ** 2 < 1) ? T.SNOW : T.SEA;   // little islands (the College of Winterhold)
     if (border.length && !inPoly(p, border)) return T.BEYOND;
     for (const [cx, cy, rx, ry] of W.lakes) if (((p[0] - cx * MW) / (rx * MW)) ** 2 + ((p[1] - cy * MH) / (ry * MH)) ** 2 < 1) return T.LAKE;
     return baseType(p, heightAt(p));

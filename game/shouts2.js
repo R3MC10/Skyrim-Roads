@@ -157,11 +157,11 @@ const SHOUTS2 = (() => {
       case "throw_voice": f.sneakNext = true; return `${cry} your voice echoes behind it and it turns away`;
       case "animal_allegiance": {
         if (tags.has("beast")) f.calmTurns = Math.max(f.calmTurns || 0, L([6, 10, 14]));
-        f.allies.push({ name: "Wild animal", dmg: L([6, 9, 12]), beast: true });
+        f.allies.push({ name: "Wild animal", dmg: L([6, 9, 12]), beast: true, kind: "beast" });
         return `${cry} ${tags.has("beast") ? "the beast turns to your side, and" : ""} a wild animal answers the call`;
       }
-      case "call_of_valor": f.allies.push({ name: ["Ysgramor", "Gormlaith Golden-Hilt", "Felldir the Old", "Hakon One-Eye"][(f.turn || 0) % 4], dmg: L([14, 20, 28]), valor: true }); return `${cry} a hero of Sovngarde steps out of the light`;
-      case "call_dragon": f.allies.push({ name: "Odahviing", dmg: 35, odah: true }); return `${cry} Odahviing answers from the sky`;
+      case "call_of_valor": f.allies.push({ name: ["Ysgramor", "Gormlaith Golden-Hilt", "Felldir the Old", "Hakon One-Eye"][(f.turn || 0) % 4], dmg: L([14, 20, 28]), valor: true, kind: "valor" }); return `${cry} a hero of Sovngarde steps out of the light`;
+      case "call_dragon": f.allies.push({ name: "Odahviing", dmg: 35, odah: true, kind: "odah" }); return `${cry} Odahviing answers from the sky`;
       case "dismay":
         if (tags.has("dragon") || tags.has("undead")) return `${cry} Dismay: it feels no fear`;
         f.calmTurns = Math.max(f.calmTurns || 0, L([3, 5, 8])); return `${cry} the foe flees in terror`;
