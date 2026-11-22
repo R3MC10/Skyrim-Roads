@@ -146,12 +146,21 @@ const ACCESS = (() => {
     for (const sh of document.styleSheets) { try { fixUnits(sh.cssRules); } catch { /* cross-origin sheet */ } }
   }
 
+  /* big PC monitors: scale the whole game up so it isn't tiny on a 1440p or 4K screen (mouse screens only, never phones) */
+  function screenScale() {
+    if (!DOM || typeof matchMedia !== "function" || !matchMedia("(hover:hover) and (pointer:fine)").matches) return 1;
+    const f = Math.min(innerWidth / 1600, innerHeight / 1000);
+    return Math.max(1, Math.min(2, Math.round(f * 20) / 20));
+  }
+  let lastScale = 1;
   // ---- put it all on the page
   function apply() {
     if (!DOM) return;
-    const h = document.documentElement, z = SIZES[cur.a11yText];
+    const h = document.documentElement, sc = screenScale(), z = +(SIZES[cur.a11yText] * sc).toFixed(3);
+    lastScale = sc;
     if (z !== 1) fixViewportUnits();
     h.style.setProperty("--tz", String(z));
+    h.style.setProperty("--tzcap", String(+(1.12 * sc).toFixed(3)));
     h.classList.toggle("a11y-zoom", z !== 1);
     h.dataset.a11yText = String(cur.a11yText);
     if (cur.a11yColour !== "none") { h.dataset.cb = cur.a11yColour; patchCanvas(); } else delete h.dataset.cb;
@@ -189,5 +198,9 @@ const ACCESS = (() => {
   }
 
   apply();
+  if (DOM && typeof addEventListener === "function") {
+    let rt = null;
+    addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { if (screenScale() !== lastScale) { apply(); try { window.dispatchEvent(new Event("resize")); } catch { /* fine */ } } }, 200); });
+  }
   return { SIZES, SIZE_NAMES, MODES, PAL, RARITY, CANVAS, read, settings: () => ({ ...cur }), pref, settingsHTML, apply, col, remap, reduceMotion, zoom: () => SIZES[cur.a11yText] };
 })();

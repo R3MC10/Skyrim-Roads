@@ -1339,7 +1339,7 @@ html.a11y-zoom canvas{zoom:calc(1 / var(--tz))}
 .setrow.a11y-col .seg{display:flex;margin:0}
 .setrow.a11y-col .seg button{flex:1 1 0;min-width:0;padding:8px 2px;letter-spacing:.02em;text-transform:none;font-size:15px}
 html.a11y-zoom .seg button{letter-spacing:.04em;padding-left:4px;padding-right:4px}
-html.a11y-zoom .tabs{zoom:calc(min(var(--tz),1.12) / var(--tz))}
+html.a11y-zoom .tabs{zoom:calc(min(var(--tz),var(--tzcap,1.12)) / var(--tz))}
 html.a11y-zoom .tab{letter-spacing:0}
 .a11y-hint{color:var(--mute);font-size:13px;line-height:1.3}
 /* colour-blind help: the same meanings, colours that stay apart */
@@ -1544,6 +1544,8 @@ body:has(#favBtn) .app,body:has(#twBtn) .app{padding-bottom:calc(190px + env(saf
 .loot-row .lr-i{display:grid;place-items:center;width:28px;font-size:18px}.loot-row:nth-child(3){animation-delay:.06s}.loot-row:nth-child(4){animation-delay:.12s}.loot-row:nth-child(n+5){animation-delay:.18s}
 @keyframes lootIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
 .trade-cats{margin:6px 0 8px}
+@media (min-width:1500px){.app{max-width:min(1760px,96vw)}.layout{grid-template-columns:minmax(0,1.55fr) minmax(440px,1fr)}.tabs{padding-left:max(0px,calc(50vw - 640px));padding-right:max(0px,calc(50vw - 640px))}.sky-in{width:min(1000px,100%)}.tw-bar{max-width:900px}}
+@media (min-width:2100px){.app{max-width:min(2100px,96vw)}.layout{grid-template-columns:minmax(0,1.7fr) minmax(480px,1fr)}}
 </style>
 <script src="access.js"></script>
 </head>
