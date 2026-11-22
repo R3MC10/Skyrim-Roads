@@ -3,7 +3,7 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "bQ-tabs", build: 0, date: "22 Nov 2026", title: "Tidier menus", items: [
+    { id: "b91", build: 91, date: "22 Nov 2026", title: "Tidier menus", items: [
       "The bar along the bottom now has seven tabs, like Skyrim: Character, Items, Magic, Map, Journal, Social and Town. Tabs with more than one page show a row of sub-tabs along the top; slide it sideways to see them all.",
       "Character holds everything about you: Skills (the star skies), Character (your sheet, powers, shouts and follower), Perks, Tactics, Stats, Achievements, Library, Diary and Settings.",
       "Tactics used to have its own tab. It's now under Character → Tactics.",
