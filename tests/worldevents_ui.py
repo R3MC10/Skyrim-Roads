@@ -83,8 +83,7 @@ async def main():
                 check(await pg.query_selector(".wevsheet") is None, "Travel from the sheet closes it")
             await clear()
             # Journal: Misc tab lists the events
-            await pg.click("[data-tab=log]"); await pg.wait_for_timeout(500); await clear()
-            await pg.click("[data-act=jtab][data-id=misc]"); await pg.wait_for_timeout(500); await clear()
+            await pg.evaluate("()=>window.__ui.go('world')"); await pg.wait_for_timeout(500); await clear()   # Map → World news (was Journal → Misc)
             j = await pg.query_selector(".wev-j")
             check(j is not None, "World events panel in the Journal")
             if j: await j.scroll_into_view_if_needed(); await j.screenshot(path=os.path.join(OUT, "wev_journal.png"))

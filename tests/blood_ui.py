@@ -20,7 +20,7 @@ async def main():
         for e in el:
             if "CIRCLE" in (await e.inner_text()).upper(): await e.screenshot(path="blood_offer.png")
         await pg.click("[data-act=wolfyes]"); await pg.wait_for_timeout(300); await clear()
-        await pg.click("[data-tab=tactics]"); await pg.wait_for_timeout(300)
+        await pg.click("[data-tab=hero]"); await pg.wait_for_timeout(250); await pg.click("[data-act=tabgo][data-id=tactics]"); await pg.wait_for_timeout(300)
         print("tactics has Beast Form:", "Beast Form" in await pg.inner_text("#side"))
         # vampire path
         await pg.evaluate("()=>{const S=window.__dbg.save(); S.werewolf=null; S.sanguinare={at:G.now()-CURSE.TURN_AFTER-1};}")

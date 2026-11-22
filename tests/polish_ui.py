@@ -15,7 +15,9 @@ async def main():
             await pg.evaluate(f"()=>{{ ART.setStyle('{style}'); POLISH.texture(); }}")
             for t in ["map", "hero", "tactics", "town", "log"]:
                 await pg.evaluate(clear)
-                await pg.click(f"[data-tab={t}]"); await pg.wait_for_timeout(450)
+                await pg.click("[data-tab=hero]" if t == "tactics" else f"[data-tab={t}]")
+                if t == "tactics": await pg.wait_for_timeout(250); await pg.click("[data-act=tabgo][data-id=tactics]")   # Tactics lives under Character now
+                await pg.wait_for_timeout(450)
                 await pg.screenshot(path=f"pol_{style}_{t}.png")
             await pg.evaluate("window.scrollTo(0,0)")
             # banners & gold & level-up

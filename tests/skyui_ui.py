@@ -21,7 +21,9 @@ async def main():
           const t=G.now(); let k=t; while(!G.shopsOpen(k)) k+=600; window.__shopT=k; }""")
         await pg.wait_for_timeout(500); await clear()
         async def tab(t, name, full=True):
-            await clear(); await pg.click(f"[data-tab={t}]"); await pg.wait_for_timeout(600); await clear()
+            await clear(); await (pg.click("[data-tab=hero]") if t == "tactics" else pg.click(f"[data-tab={t}]")); await pg.wait_for_timeout(300)
+            if t == "tactics": await pg.click("[data-act=tabgo][data-id=tactics]")   # Tactics lives under Character now
+            await pg.wait_for_timeout(600); await clear()
             await pg.screenshot(path=OUT + f"{TAG}_{name}.png", full_page=full)
             el = await pg.query_selector("#side")
             if el: await el.screenshot(path=OUT + f"{TAG}_{name}_side.png")

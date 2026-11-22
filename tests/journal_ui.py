@@ -64,7 +64,9 @@ async def main():
                 ok(found >= 1, f"[{style}] Friends → {k} shows {found}/{len(ids)} of {ids}")
                 await pg.screenshot(path=f"{SHOT}social_{k}_{style}.png", full_page=True)
             await go("stats")
-            ok(await pg.query_selector("#j-stats") is not None and await pg.query_selector("#j-finds") is not None, f"[{style}] Character → Stats has stats and Discoveries/Library")
+            ok(await pg.query_selector("#j-stats") is not None, f"[{style}] Character → Stats has stats")
+            await go("library")   # Discoveries moved to their own Character → Library page
+            ok(await pg.query_selector("#j-finds") is not None, f"[{style}] Character → Library has Discoveries")
             await pg.screenshot(path=f"{SHOT}stats_{style}.png", full_page=True)
             await go("diary")
             ok("A test diary line" in await text(), f"[{style}] Character → Diary")
@@ -78,7 +80,7 @@ async def main():
             ok(await pg.query_selector("#j-clan") is not None and await pg.query_selector("#j-quests") is None, f"[{style}] old jgo link redirects to Friends → Realm")
             # hero page has the Character / Stats / Diary switch
             await go("hero")
-            ok(await pg.query_selector("#side .charnav [data-id=stats]") is not None, f"[{style}] Character page links to Stats and Diary")
+            ok(await pg.query_selector("#side .charnav [data-id=stats], #side .mn-sub [data-id=stats]") is not None, f"[{style}] Character page links to Stats and Diary")
             await ctx.close()
         ok(not errs, f"no page errors {errs[:3]}")
         await b.close()

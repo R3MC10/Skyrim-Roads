@@ -20,7 +20,7 @@ async def main():
                 try: await pg.click(sel, timeout=3000); return
                 except Exception: await pg.evaluate("document.querySelector('#modal')?.remove()")
             await pg.click(sel)
-        await click("[data-tab=tactics]"); await pg.wait_for_timeout(600)
+        await click("[data-tab=hero]"); await pg.wait_for_timeout(250); await click("[data-act=tabgo][data-id=tactics]"); await pg.wait_for_timeout(600)
         st = await pg.evaluate("(()=>({smart: !!document.querySelector('.ai-smart'), on: document.querySelector('[data-act=aimode].on')?.dataset.id, desc: document.querySelector('.aidesc')?.innerText}))()")
         print("start:", st)
         assert st["smart"] and st["on"] == "smart", st

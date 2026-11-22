@@ -79,8 +79,7 @@ async def main():
                 await pg.screenshot(path=f"{OUT}{style}_result.png")
                 await close_modals(pg)
             # the Journal: Misc → Word around Skyrim
-            await pg.evaluate("()=>window.__ui.go('log')"); await pg.wait_for_timeout(300)
-            await tap(pg, "[data-act=jtab][data-id=misc]"); await pg.wait_for_timeout(300)
+            await pg.evaluate("()=>window.__ui.go('world')"); await pg.wait_for_timeout(400)   # Map → World news (was Journal → Misc)
             el = await pg.query_selector("#j-rumours")
             t = await el.inner_text() if el else ""
             res.append((f"{style} journal standing", "Whiterun" in t and any(k in t for k in ("Hero", "Friend", "Familiar face"))))

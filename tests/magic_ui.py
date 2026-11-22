@@ -40,7 +40,7 @@ async def main():
         await pg.click("[data-act=skytac]"); await pg.wait_for_timeout(300)
         # test fight in tactics
         await pg.evaluate("()=>{ document.querySelector('#sky')?.remove(); }")
-        await pg.evaluate(clr); await pg.click("[data-tab=tactics]"); await pg.wait_for_timeout(400)
+        await pg.evaluate(clr); await pg.click("[data-tab=hero]"); await pg.wait_for_timeout(250); await pg.click("[data-act=tabgo][data-id=tactics]"); await pg.wait_for_timeout(400)
         opts = await pg.evaluate("[...document.querySelectorAll('select option')].map(o=>o.value).filter(v=>v.startsWith('dual:')).length")
         print("dual options in tactics:", opts)
         await pg.select_option("#te", index=1); await pg.click("[data-act=test]"); await pg.wait_for_timeout(600)

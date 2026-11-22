@@ -81,7 +81,7 @@ async def main():
             ok(await pg.query_selector("#side .bsky.lord") is not None and await pg.query_selector("#side .tw-card.bcard.on") is not None, "Vampire Lord sky in the compass Skills page")
             await pg.screenshot(path=OUT + "beast_compass_lord.png")
         # ---- Tactics and Magic list the Lord
-        await pg.click("[data-tab=tactics]"); await pg.wait_for_timeout(300)
+        await pg.click("[data-tab=hero]"); await pg.wait_for_timeout(250); await pg.click("[data-act=tabgo][data-id=tactics]"); await pg.wait_for_timeout(300)
         ok("Vampire Lord" in await pg.inner_text("#side"), "Tactics offers Vampire Lord")
         ok(not errs, f"no page errors {errs[:3]}")
         await b.close()

@@ -48,7 +48,7 @@ async def main():
         # loadouts: save as Archer, switch, thumbnails
         await pg.evaluate("()=>{const S=window.__dbg.save(); G.saveLoadoutAs(S,'Archer'); S.loadout='Archer'; G.equip(S, S.inv.find(r=>r.item==='hunting_bow').id); S.loadout='Main';}")
         await pg.evaluate("document.querySelector('#sky')?.remove()")
-        await click("[data-tab=tactics]"); await pg.wait_for_timeout(250)
+        await click("[data-tab=hero]"); await pg.wait_for_timeout(250); await click("[data-act=tabgo][data-id=tactics]"); await pg.wait_for_timeout(250)
         print("loadout chips:", await pg.evaluate("[...document.querySelectorAll('.lochip')].map(b=>b.textContent.trim()+':'+!!b.querySelector('img')).join(' ')"))
         await click(".lochip[data-name=Archer]"); await pg.wait_for_timeout(250)
         print("now", await pg.evaluate("window.__dbg.save().loadout"), "weapon", await pg.evaluate("G.equipment(window.__dbg.save()).weapon?.item"))

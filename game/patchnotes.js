@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b96", build: 96, date: "22 Nov 2026", title: "Bug hunt", items: [
+      "At the biggest text size, the Items / Magic / Skills names at the top of the item menu no longer pile on top of each other.",
+      "World events no longer pop up over a brand-new character. Below level 3 they just go in your Journal.",
+      "When two world events start at once you get one pop-up, not two stacked on top of each other. Both are still in your Journal.",
+      "First-time tips no longer cover the category buttons in the item and spell menus. They sit lower while a menu is open.",
+    ] },
     { id: "b95", build: 95, date: "22 Nov 2026", title: "Tidier pack and safer selling", items: [
       "Mark anything Keep (🔒) from its item card. Kept things and your favourites are never sold in bulk.",
       "Sell all junk: at a shop, one button sells cheap trinkets and loose gear that's worse than what you wear. You see the list and the total first. Kept, favourite, quest, unique, enchanted and handmade things never count as junk.",

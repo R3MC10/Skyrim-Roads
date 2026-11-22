@@ -107,7 +107,7 @@ async def main():
             if await pg.evaluate("matchMedia('(prefers-reduced-motion: reduce)').matches"): fails.append("auto motion should follow the phone (not reduced here)")
             for hand in ["right", "left"]:
                 await pg.evaluate(f"ACCESS.pref('a11yHand','{hand}')"); await pg.evaluate(CLEAR); await pg.evaluate("scrollTo(0,0)"); await shot(f"hand_{hand}")
-                pos = await pg.evaluate("['#sndBtn','#socBtn','#zoomBtn','#favBtn','#twBtn'].map(s=>{const r=document.querySelector(s)?.getBoundingClientRect(); return r ? [s, Math.round(r.left+r.width/2), Math.round(r.top+r.height/2)] : [s]})")
+                pos = await pg.evaluate("['#sndBtn','#socBtn','#zoomBtn','#favBtn','#twBtn'].map(s=>{const r=document.querySelector(s)?.getBoundingClientRect(); return r && r.width ? [s, Math.round(r.left+r.width/2), Math.round(r.top+r.height/2)] : [s]})")
                 for s, *xy in pos:
                     if not xy: continue
                     x, y = xy

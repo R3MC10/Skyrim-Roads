@@ -29,7 +29,7 @@ async def main():
             if el: await el.screenshot(path=f"vf_{style}_enc_mid.png"); await pg.wait_for_timeout(3000); await el.screenshot(path=f"vf_{style}_enc_end.png")
             await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
             # tactics test fight
-            await pg.click("[data-tab=tactics]"); await pg.wait_for_timeout(300)
+            await pg.click("[data-tab=hero]"); await pg.wait_for_timeout(250); await pg.click("[data-act=tabgo][data-id=tactics]"); await pg.wait_for_timeout(300)
             await pg.select_option("#te", "Lone wolf"); await pg.click("[data-act=test]"); await pg.wait_for_timeout(3600)
             el = await pg.query_selector("#side .fscene"); print(style, "tactics scene:", bool(el))
             if el: await el.screenshot(path=f"vf_{style}_tac.png")

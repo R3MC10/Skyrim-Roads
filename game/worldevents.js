@@ -549,13 +549,15 @@ const WORLDEV = (() => {
   /* new events: a banner, a toast and a line in the Journal */
   function announce(S, t) {
     S.wevSeen = S.wevSeen || {};
-    let changed = false;
+    let changed = false, shown = 0;
+    const quiet = (S.level || 1) < 3;   // brand-new characters: just a Journal line, no pop-ups over the first steps
     for (const ev of active(t)) {
       if (S.wevSeen[ev.id]) continue;
       S.wevSeen[ev.id] = ev.end; changed = true;
       const line = ev.kind === "inv" ? `Oblivion gates have opened in ${ev.hold}! Close them together.` : ev.kind === "mig" ? `A flight of dragons circles over ${ev.hold} today.` : ev.kind === "fest" ? `${ev.v.name} festival week has begun in every town.` : `The Khajiit's grand caravan has camped outside ${ev.town}.`;
-      if ((typeof POLISH !== "undefined")) POLISH.banner("quest", "World event", ev.kind === "fest" ? ev.v.name : ev.kind === "kc" ? "Khajiit caravan" : ev.kind === "mig" ? "Dragon migration" : "Daedric invasion", `<span class="wev-bic">${ev.icon}</span>`);
       G.note(S, `${ev.icon} ${line}`);
+      if (quiet || shown++) continue;   // one banner + toast at a time, so two new events don't pile on each other
+      if ((typeof POLISH !== "undefined")) POLISH.banner("quest", "World event", ev.kind === "fest" ? ev.v.name : ev.kind === "kc" ? "Khajiit caravan" : ev.kind === "mig" ? "Dragon migration" : "Daedric invasion", `<span class="wev-bic">${ev.icon}</span>`);
       api.toast(`${ev.icon} ${line}`);
     }
     for (const [k, end] of Object.entries(S.wevSeen)) if (!(end > t - 2 * DAY)) { delete S.wevSeen[k]; changed = true; }

@@ -51,7 +51,7 @@ async def main():
         await town("forge"); el = await pg.query_selector("#side"); await el.screenshot(path="icons_forge.png")
         await jsclick("[data-act=fgroup][data-id=jewel]"); await pg.wait_for_timeout(300); el = await pg.query_selector("#side"); await el.screenshot(path="icons_forge_jewel.png")
         # tactics test fight portrait
-        await jsclick("[data-tab=tactics]"); await pg.wait_for_timeout(300)
+        await jsclick("[data-tab=hero]"); await pg.wait_for_timeout(250); await jsclick("[data-act=tabgo][data-id=tactics]"); await pg.wait_for_timeout(300)
         if await pg.query_selector("#te"):
             await pg.evaluate("document.querySelector('#te').value='Frost troll'")
             await jsclick("[data-act=test]"); await pg.wait_for_timeout(400)

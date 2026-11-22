@@ -1511,6 +1511,10 @@ html.a11y-still .srch-flash{animation:none;outline:2px solid #e2bb64}
 .rmd-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .rmd-set{margin:6px 0}.rmd-set summary{cursor:pointer;min-height:40px;display:flex;align-items:center;gap:6px;color:var(--ink,inherit)}.rmd-set summary small{color:var(--mute)}
 html.art-pixel .rmd-b,html.art-pixel .rmd-n{border-radius:0}
+/* bug hunt: at big text the Items/Magic/Skills names get their own row instead of piling on each other */
+.a11y-zoom .sky-top{flex-wrap:wrap}.a11y-zoom .sky-pages{order:3;flex:1 0 100%;min-width:0}.a11y-zoom .sky-page{letter-spacing:.12em;padding:8px 6px}
+/* bug hunt: with the Items/Magic menu open, first-time tips sit low (over the armour/weight footer), not on the category buttons */
+body:has(#sky) .obtip:not(.infight){top:auto!important;bottom:calc(72px + env(safe-area-inset-bottom))!important}
 </style>
 <script src="access.js"></script>
 </head>

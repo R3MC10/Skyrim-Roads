@@ -40,7 +40,7 @@ async def main():
         await pg.evaluate("document.querySelectorAll('#modal,#sky').forEach(m=>m.remove())")
         await pg.click("[data-tab=hero]"); await pg.wait_for_timeout(300)
         print("hero no-ammo warning:", await pg.evaluate("document.querySelector('.sub.ammo')?.innerText"))
-        await pg.evaluate("()=>{const S=window.__dbg.save(); G.give(S,'arrow_steel',60);}"); await pg.click("[data-tab=tactics]"); await pg.wait_for_timeout(300)
+        await pg.evaluate("()=>{const S=window.__dbg.save(); G.give(S,'arrow_steel',60);}"); await pg.click("[data-tab=hero]"); await pg.wait_for_timeout(250); await pg.click("[data-act=tabgo][data-id=tactics]"); await pg.wait_for_timeout(300)
         print("tactics ammo note:", await pg.evaluate("document.querySelector('.sub.ammo')?.innerText"))
         used = await pg.evaluate("()=>{const S=window.__dbg.save(); const e=G.scaleEnemy({name:'Dummy',danger:'low',level:5,tags:['humanoid'],health:300,damage:1,gold:[0,0]},5); const f=new G.Fight(S,e); f.run(); f.apply(G.now()); return 60-S.inv.filter(r=>r.item==='arrow_steel').reduce((a,r)=>a+r.qty,0);}")
         print("arrows used in a real fight:", used)
