@@ -200,6 +200,10 @@ const PFX = (() => {
     [ "Alchemy", "master_alchemist", "Master Alchemist", 1, [100], ["purity", "green_thumb"], "Everything you brew is another 10% stronger. [OURS]", [["alch", 0.1, {}]]],
     // ---------------------------------------------------------------- road encounters (encounters.js)
     [ "Speechcraft", "smooth_talker", "Smooth Talker", 1, [30], ["persuasion"], "On the road, bluffs, threats and haggling are 10% more likely to work. [OURS]", [["enctalk", 0.1, {}]]],
+    // ---------------------------------------------------------------- a living world (rumours.js)
+    [ "Speechcraft", "good_ear", "Good Ear", 1, [25], [], "Rumours you hear are wrong half as often, and leads stay open 50% longer. [OURS]", [["rumtrue", 0.5, {}], ["rumtime", 0.5, {}]]],
+    [ "Etiquette", "local_hero", "Local Hero", 1, [35], ["courtly_manners"], "Word of your deeds spreads 25% faster, and the shop discount for friends and heroes of a hold is doubled. [OURS]", [["fame", 0.25, {}], ["heroprice", 1, {}]]],
+    [ "Streetwise", "night_owl", "Night Owl", 1, [25], ["rumour_monger"], "Shopkeepers you knock up at night don't charge you extra. [OURS]", [["knock", 1, {}]]],
     [ "Streetwise", "road_wise", "Road Wise", 1, [30], ["rumour_monger"], "On the road, sneaking past trouble is 10% easier, tolls and bribes cost 20% less, and you read an ambush before it springs more often. [OURS]", [["road", 0.1, {}], ["roadbribe", 0.2, {}]]],
     [ "Athletics", "pathfinder", "Pathfinder", 1, [40], ["long_strider"], "On the road, outrunning trouble, dodging avalanches and taming wild horses is 15% easier. [OURS]", [["roadrun", 0.15, {}]]],
     // ---------------------------------------------------------------- homesteads (homestead.js)

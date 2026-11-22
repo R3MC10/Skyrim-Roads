@@ -235,6 +235,7 @@ const IMM = (() => {
     const cw = typeof CIVILWAR !== "undefined" ? CIVILWAR.barks(s, place) : null;   // the war changes who guards the gate
     if (BARKS[place] && !cw?.replace) pool.push(...BARKS[place]);
     if (cw) pool.push(...cw.lines, ...cw.lines);
+    if (typeof RUMOURS !== "undefined") { const d = RUMOURS.barks(s, place); pool.push(...d, ...d, ...d); }   // what you did around here (rumours.js)
     const line = pool[Math.floor(Math.random() * pool.length)];
     const who = typeof NPCART !== "undefined" ? NPCART.who(place, "streets") : null;
     show(line, who);

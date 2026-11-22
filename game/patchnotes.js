@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b86", build: 86, date: "22 Nov 2026", title: "A living world: rumours, your good name and town hours", items: [
+      "Rumours that come true: ask the innkeeper \"What's the word?\" for the price of a drink, or chat with the locals in the Streets for free. You'll hear about bandits with a named leader, a lost shipment, strange lights over a barrow, someone gone missing or a big beast taking sheep. Each puts a glowing ? on your map for about a day and a half of game time. Go there and see: most are real (a named foe, extra loot, a rescue with a reward), some are just tavern talk, and street gossip is wrong more often. Up to 3 leads at once.",
+      "Towns know what you did: guards and shopkeepers mention the dragons you killed, places you cleared, quest lines you finished, your guild rank, rumours you saw through and your crimes.",
+      "Your name in the holds: each hold rates you from Trouble to Stranger, Familiar face, Friend of the hold and Hero. Friends get 3% off in that hold's shops, heroes 6%. A bounty drags your name down and ends the discount. See it in the Journal under Misc (Word around Skyrim), with your current leads.",
+      "Day and night in towns: a line tells you what the town is up to, and the inn has a little crowd picture that fills up in the evening (quiet in the morning, packed at night with the bard playing).",
+      "Shops still close at night, but you can knock anyway: they'll let you in and serve you until 08:00 for about 15% more (and 10% less for what you sell). Heroes of the hold pay half that.",
+      "Three new perks: Good Ear (Speechcraft: rumours are wrong half as often and last longer), Local Hero (Etiquette: your name spreads faster and hero discounts are doubled) and Night Owl (Streetwise: no extra charge when you knock at night)."] },
     { id: "b85", build: 85, date: "22 Nov 2026", title: "Build your own homestead", items: [
       "Three plots of land to buy and build on: Pinewatch Hollow by the lake near Falkreath, Fenhollow Rise in the marsh near Morthal and Frostcairn Rest on the coast near Dawnstar. Buy the deed (5000 gold) under Your home in that town.",
       "Build in stages: a small house first, then a main hall, then three wings of your choice: armory, library, greenhouse, kitchen, trophy room, enchanter's tower, alchemy tower or storage room. Building uses up the materials, and a wing can't be torn down.",
