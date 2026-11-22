@@ -339,6 +339,18 @@ const TB = (() => {
   const realRandom = Math.random;
   const clone = (o) => (typeof structuredClone === "function" ? structuredClone(o) : JSON.parse(JSON.stringify(o)));
   function replaceInPlace(target, src) { for (const k of Object.keys(target)) delete target[k]; Object.assign(target, clone(src)); }
+  /* like replaceInPlace, but keeps the same inner objects (the trip, the encounter...) so code that already holds them
+     (e.g. `const tr = s.trip` before the fight) updates the real save. Without this a won road fight left the road blocked. */
+  const plain = (o) => o && typeof o === "object" && !Array.isArray(o) && Object.prototype.toString.call(o) === "[object Object]";
+  function syncInPlace(target, src) {
+    for (const k of Object.keys(target)) if (!(k in src)) delete target[k];
+    for (const k of Object.keys(src)) {
+      const a = target[k], b = src[k];
+      if (plain(a) && plain(b)) syncInPlace(a, b);
+      else if (Array.isArray(a) && Array.isArray(b)) { a.length = 0; for (const x of b) a.push(clone(x)); }
+      else target[k] = b && typeof b === "object" ? clone(b) : b;
+    }
+  }
   const origRun = G.Fight.prototype.run;
   G.Fight.prototype.run = function (opts = {}) {
     if (mode === "capture") { mode = "captured"; pend = { f: this, opts }; throw PENDING; }
@@ -347,7 +359,7 @@ const TB = (() => {
       for (const k of Object.keys(done)) if (k !== "s" && k !== "e") this[k] = done[k];
       Object.assign(eLocal, { hp: done.e.hp, fled: done.e.fled, gold: done.e.gold });
       this.e = eLocal;
-      replaceInPlace(this.s, finalS); finalS = null;
+      syncInPlace(this.s, finalS); finalS = null;
       this.tbPlayed = true;
       return this.won;
     }
@@ -568,5 +580,5 @@ const TB = (() => {
     });
   }
 
-  return { T, stats, cost, aiPick, targetOrder, Session, simulate, call, enabled, init, remoteFor, watchTurns, safeSave, get open() { return open; }, WCOST, TIERC, HIT_CAP, FOE_HP, PARTY_HP, TURN_SECONDS, _origRun: origRun };
+  return { T, stats, cost, aiPick, targetOrder, Session, simulate, call, enabled, init, remoteFor, watchTurns, safeSave, get open() { return open; }, WCOST, TIERC, HIT_CAP, FOE_HP, PARTY_HP, TURN_SECONDS, syncInPlace, _origRun: origRun };
 })();

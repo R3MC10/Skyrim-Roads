@@ -1515,6 +1515,13 @@ html.art-pixel .rmd-b,html.art-pixel .rmd-n{border-radius:0}
 .a11y-zoom .sky-top{flex-wrap:wrap}.a11y-zoom .sky-pages{order:3;flex:1 0 100%;min-width:0}.a11y-zoom .sky-page{letter-spacing:.12em;padding:8px 6px}
 /* bug hunt: with the Items/Magic menu open, first-time tips sit low (over the armour/weight footer), not on the category buttons */
 body:has(#sky) .obtip:not(.infight){top:auto!important;bottom:calc(72px + env(safe-area-inset-bottom))!important}
+/* pillar puzzle: the clue is shown inside the turn-the-pillars window */
+.xgame .xg-clue{margin:0 0 10px;padding:8px 10px;border-left:3px solid var(--gold,#c9a45a);background:rgba(255,255,255,.04);color:#e8dfc8;font-size:.95em;line-height:1.45;font-style:italic}
+/* round buttons step aside while scrolling, and the page ends clear of them (fabdodge.js) */
+body.fab-away .favbtn,body.fab-away .twbtn{opacity:0;pointer-events:none;transform:scale(.8)}
+.favbtn,.twbtn{transition:opacity .2s,transform .2s}
+body:has(#favBtn) .app,body:has(#twBtn) .app{padding-bottom:calc(190px + env(safe-area-inset-bottom))}
+.nickbox{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.82)}.nickin{width:min(420px,100%);padding:18px;border-radius:12px;background:#121417;border:1px solid var(--gold,#d6b25e)}.nickin h2{margin:0 0 6px}.nickin input{width:100%;margin:10px 0 4px;font-size:18px}.nickerr{min-height:1.2em;margin:0 0 8px;color:#e07a6a;font-size:.9em}#nm.nm-bad{outline:2px solid #e07a6a}
 </style>
 <script src="access.js"></script>
 </head>
@@ -1628,6 +1635,9 @@ body:has(#sky) .obtip:not(.infight){top:auto!important;bottom:calc(72px + env(sa
 <script src="skillinfo.js"></script>
 <script src="menus.js"></script>
 <script src="tabmenu.js"></script>
+<script src="fabdodge.js"></script>
+<script src="nickname.js"></script>
+<script src="desktop.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>
 <script src="onboard.js"></script>

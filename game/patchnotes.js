@@ -3,6 +3,17 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b97", build: 97, date: "22 Nov 2026", title: "PC version, no more stuck fights, real nicknames", items: [
+      "Roads of the North now runs on Windows PCs too! Get it from the same download page as the phone app. Same game, same friends.",
+      "On a PC (or with a keyboard), Esc works like the phone's Back button: it closes menus one at a time and never quits the game. F11 switches full screen on the PC app.",
+      "Every hero needs a nickname now. You can't start with a blank name or as \"Dovahkiin\". If your hero is still called Dovahkiin, the game asks you to pick a nickname before you play.",
+      "Fixed: winning a road fight (like the vampire at night) could leave the road \"blocked\" by a dead foe, so you couldn't move on. Wins now clear the road, and anyone already stuck is freed when the game opens (or when you tap Face it).",
+      "Fixed: the same bug inside dungeons. After a won fight the room stayed shut with a dead foe and you couldn't go on. Fixed, and stuck players are freed when the game opens.",
+      "Bleak Falls Barrow: if you reach the claw door without the Golden Claw (sold it, lost it, never picked it up), a dead thief by the door has it. You take it, and it tells you the three animals in order.",
+      "Pillar puzzles in barrows now show their clue right inside the puzzle, instead of hiding it behind the puzzle window.",
+      "The round star and compass buttons fade away while you scroll, so they no longer sit on top of cards and buttons.",
+      "Pages now end with enough room that nothing at the bottom stays stuck under those round buttons.",
+    ] },
     { id: "b96", build: 96, date: "22 Nov 2026", title: "Bug hunt", items: [
       "At the biggest text size, the Items / Magic / Skills names at the top of the item menu no longer pile on top of each other.",
       "World events no longer pop up over a brand-new character. Below level 3 they just go in your Journal.",

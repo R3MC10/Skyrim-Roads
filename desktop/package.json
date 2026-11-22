@@ -1,0 +1,19 @@
+{
+  "name": "roads-of-the-north-pc",
+  "version": "1.0.0",
+  "description": "Roads of the North for Windows",
+  "main": "main.js",
+  "author": "R3MC10",
+  "private": true,
+  "scripts": { "start": "electron .", "dist": "electron-builder --win portable nsis --publish never" },
+  "devDependencies": { "electron": "33.2.1", "electron-builder": "25.1.8" },
+  "build": {
+    "appId": "com.r3mc10.roadsofthenorth",
+    "productName": "Roads of the North",
+    "files": ["main.js", "www/**/*"],
+    "directories": { "output": "dist" },
+    "win": { "artifactName": "RoadsOfTheNorth-${arch}-${target}.${ext}" },
+    "portable": { "artifactName": "RoadsOfTheNorth-PC-portable.exe" },
+    "nsis": { "artifactName": "RoadsOfTheNorth-PC-setup.exe", "oneClick": true }
+  }
+}

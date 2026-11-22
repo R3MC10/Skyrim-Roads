@@ -136,7 +136,9 @@
       if ($("#online")) $("#online").onclick = openOnline;
       $("#toTitle").onclick = () => { app.innerHTML = ""; showTitle("menu"); };
       $("#begin").onclick = () => {
-        const name = ($("#nm").value || "").trim().slice(0, 24) || "Dovahkiin";
+        const name = ($("#nm").value || "").trim().slice(0, 24);
+        const bad = typeof NICK !== "undefined" ? NICK.problem(name) : name ? "" : "Pick a nickname.";
+        if (bad) { toast(bad); const f = $("#nm"); if (f) { f.classList.add("nm-bad"); f.focus(); } return; }
         S = G.newSave(Store.uid, name, race);
         if (typeof PATCHNOTES !== "undefined") PATCHNOTES.markSeen();   // a new character starts on the current version
         if (!/[?&]notut/.test(location.search)) S.tut = { step: 1, seen: {} };   // new characters get the guided first trip
@@ -259,7 +261,7 @@
       default: titlePage = t; renderTitle();
     }
   }
-  function startGame() { if (gameStarted) return; gameStarted = true; start(); }
+  function startGame() { if (gameStarted) return; gameStarted = true; start(); if (typeof NICK !== "undefined" && NICK.needs(S)) NICK.prompt(S, (n) => { persist(true); toast(`Welcome, ${n}.`); try { renderTop(); } catch { /* top bar redraws later */ } }); }
 
   // ---- settings (title page and in-game sheet share these)
   function settingsHTML() {
@@ -975,6 +977,7 @@
   }
   function openEncounter(note) {
     const e = S.trip?.encounter;
+    if (e && e.hp <= 0) { S.trip.status = "travel"; S.trip.encounter = null; S.trip.lastTick = G.now(); persist(); renderTrip(); renderPanel(true); return toast(`The ${e.name} is already dead. Back on the road.`); }
     if (!e) return;
     openModal(`<p class="sub danger-${e.danger}" style="margin:0">${e.danger === "high" ? "Deadly" : e.danger === "medium" ? "Dangerous" : "Minor"} encounter · ${esc(e.hold)}${G.isNight() ? " · night" : ""}</p>
       <h2 style="margin:4px 0 8px">${esc(e.name)}</h2>${typeof FOEPERKS !== "undefined" ? FOEPERKS.html(e, esc) : ""}<p>${esc(e.text)}</p>

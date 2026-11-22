@@ -32,6 +32,12 @@ jobs:
       - run: npm ci
       - name: Put the game inside the app
         run: npm run sync
+      - name: Keep the game files for the PC build
+        uses: actions/upload-artifact@v4
+        with:
+          name: www
+          path: www
+          retention-days: 3
       - name: Build the APK
         working-directory: android
         env:
@@ -60,3 +66,34 @@ jobs:
             The first time, Android asks to allow installing apps from your browser: allow it.
             Newer builds install over the old one and keep your offline save.
             After that, the app updates itself in the background: no reinstalling needed.
+
+            **PC (Windows):** download **RoadsOfTheNorth-PC-setup.exe** (installs, adds a Start menu icon) or **RoadsOfTheNorth-PC-portable.exe** (just run it).
+            Windows may say "unrecognised app": click *More info*, then *Run anyway*. Esc works as Back; F11 toggles full screen.
+
+  windows:
+    needs: build
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          name: www
+          path: desktop/www
+      - name: Build the PC app
+        working-directory: desktop
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+        run: |
+          npm install --no-audit --no-fund
+          npx electron-builder --win portable nsis --publish never
+          dir dist
+      - name: Add it to the same download page
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          files: |
+            desktop/dist/RoadsOfTheNorth-PC-setup.exe
+            desktop/dist/RoadsOfTheNorth-PC-portable.exe

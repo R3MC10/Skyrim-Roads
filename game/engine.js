@@ -90,6 +90,9 @@ const G = (() => {
     return [+q[0].toFixed(4), +q[1].toFixed(4)];
   };
   function migrate(s) {
+    // a won turn-by-turn road fight used to leave the road blocked by a dead foe: clear it
+    if (s.trip?.status === "encounter" && (!s.trip.encounter || s.trip.encounter.hp <= 0)) { s.trip.status = "travel"; s.trip.encounter = null; s.trip.lastTick = now(); }
+    if (s.dungeon?.room?.enemy && s.dungeon.room.enemy.hp <= 0) s.dungeon.room = null;   // same bug inside dungeons: a dead foe kept the room shut
     if ((s.v || 1) < 2) {
       const at = PLACES[s.location] ? s.location : D.START_LOCATION;
       [s.x, s.y] = loc(at); s.location = at; s.trip = null;

@@ -246,8 +246,13 @@ const EXPLORE = (() => {
         const from = [d.row, d.col];
         d.row += 1; d.col = col;
         const name = D.ITEMS[claw.item].name;
+        let found = "";
+        if (!ownClaw(s, claw)) {   // sold it, lost it, or never picked it up: never leave the door without its answer
+          G.give(s, claw.item); d.gotClaw = true; (d.found = d.found || []).push(name);
+          found = ` ${d.place === "Bleak Falls Barrow" ? "A dead Dunmer thief lies by the door, clutching the" : "A dead looter lies by the door, clutching the"} ${name}. You take it. Three animals are carved into its palm: ${claw.combo.join(", ")}.`;
+        }
         d.room = { type: "puzzle", x: "claw", from, order: claw.combo.join("-"), rings: ringsFor(claw.combo), item: claw.item,
-          text: `A great round door bars the way to the inner tomb. Three stone rings carved with animals turn in its face, and in the middle there's a socket shaped like a claw.${ownClaw(s, claw) ? ` The ${name} in your pack would fit.` : " Whoever holds the claw must have the answer."}` };
+          text: `A great round door bars the way to the inner tomb. Three stone rings carved with animals turn in its face, and in the middle there's a socket shaped like a claw.${found || ` The ${name} in your pack would fit. Its palm shows the order.`}` };
         return null;
       }
       return origEnterRoom(s, col);
@@ -314,7 +319,7 @@ const EXPLORE = (() => {
     if (!r || typeof document === "undefined") return;
     const claw = r.x === "claw" ? CLAWS[s.dungeon.place] : null;
     const rings = claw ? r.rings : (() => { const toks = [...new Set(r.options.flatMap((o) => o.split("-")))]; return [0, 1, 2].map(() => toks); })();
-    game = { rings, idx: rings.map(() => 0), run, claw: !!claw, hint: claw && ownClaw(s, claw) ? claw.combo : null };
+    game = { rings, idx: rings.map(() => 0), run, claw: !!claw, hint: claw && ownClaw(s, claw) ? claw.combo : null, clue: claw ? "" : r.text || "" };
     document.querySelector("#xgame")?.remove();
     const el = document.createElement("div");
     el.id = "xgame"; el.className = "xgame"; el.setAttribute("role", "dialog"); el.setAttribute("aria-label", claw ? "Claw door" : "Pillar puzzle");
@@ -330,7 +335,7 @@ const EXPLORE = (() => {
   }
   function drawGame() {
     const el = document.querySelector("#xgame"); if (!el || !game) return;
-    el.innerHTML = `<div class="xg-in"><h3>${game.claw ? "The claw door" : "The pillars"}</h3>
+    el.innerHTML = `<div class="xg-in"><h3>${game.claw ? "The claw door" : "The pillars"}</h3>${game.clue ? `<p class="xg-clue">${esc(game.clue)}</p>` : ""}
       <p class="xg-sub">${game.claw ? "Turn each ring until the animals line up, then press the claw in." : "Turn each pillar to match the clue, then pull the lever."}${game.hint ? ` The claw's palm shows: <b>${game.hint.map((h) => SYM[h] + " " + h).join(", ")}</b>.` : ""}</p>
       <div class="xg-rings">${game.rings.map((ring, i) => { const sym = ring[game.idx[i]]; return `<div class="xg-ring"><button class="xg-arr" data-x="up" data-i="${i}" aria-label="Turn ring ${i + 1} up">▲</button>
         <div class="xg-face"><span class="xg-sym" aria-hidden="true">${SYM[sym] || "◆"}</span><small>${esc(sym)}</small></div><button class="xg-arr" data-x="dn" data-i="${i}" aria-label="Turn ring ${i + 1} down">▼</button></div>`; }).join("")}</div>

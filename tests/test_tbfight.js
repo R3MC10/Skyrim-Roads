@@ -138,6 +138,13 @@ if (!process.env.SIMONLY) {
 // 7. the pause/replay wrapper gives the played result back to the same game action
 { const s = fresh("warrior", 10); s.trip = { status: "encounter", encounter: enc("Bandit outlaw", 10), path: [[s.x, s.y], [s.x + 0.01, s.y]], idx: 0, destName: "X", lastTick: G.now(), log: [] };
   const r = G.encounterAction(s, "fight"); ok(r.fight && r.fight.log.length > 0, "plain engine path still runs fights instantly (tests, sims)"); }
+// 7b. after a played fight the save is updated in place, so a won road fight clears the road (the "vampire blocks the road" bug)
+{ const s = { trip: { status: "encounter", encounter: { name: "Vampire", hp: 40 } }, inv: [1, 2] }, tr = s.trip, e = tr.encounter;
+  TB.syncInPlace(s, { trip: { status: "encounter", encounter: { name: "Vampire", hp: 0 } }, inv: [1] });
+  ok(s.trip === tr && s.trip.encounter === e && e.hp === 0 && s.inv.length === 1, "the fight result lands in the same trip/encounter objects");
+  tr.status = "travel"; ok(s.trip.status === "travel", "setting the held trip clears the real road");
+  const st = fresh("warrior", 10); st.trip = { status: "encounter", encounter: { name: "Vampire", hp: 0 }, path: [[st.x, st.y]], idx: 0, log: [] };
+  G.migrate(st); ok(st.trip.status === "travel" && !st.trip.encounter, "old saves stuck on a dead foe are freed on load"); }
 // 8. party: a real player's turn waits for their own phone; timeout → Auto
 { const s = fresh("warrior", 20), f = new G.Fight(s, enc("Bandit outlaw", 20));
   const mate = COOP.allyFromCard({ id: "p2", name: "Beta", coop: { prof: { dmg: 20, hp: 300, red: 0.2, role: "fighter" } } }); mate.pid = "p2"; f.allies.push(mate);
