@@ -12,6 +12,7 @@ const TABMENU = (() => {
   const NAME = { char: "Skills", items: "Items", map: "Map", magic: "Magic" };
   const SUBT = { char: "Character · perks · tactics", items: "Weapons · apparel · potions", map: "Travel the world", magic: "Spells · powers · shouts" };
   const CHAR_TABS = [["stars", "Skills"], ["hero", "Character"], ["perks", "Perks"], ["tactics", "Tactics"], ["stats", "Stats"], ["diary", "Diary"]];
+  const charTabs = () => typeof MENUS !== "undefined" ? MENUS.charTabs() : CHAR_TABS;   // menus.js owns the Character sub-tabs
   const MIN = 40, RATIO = 1.4;
   let MAXMS = 1500;   // a slow drag isn't a swipe
 
@@ -148,6 +149,7 @@ const TABMENU = (() => {
     people: '<circle cx="9" cy="8" r="3.2"/><path d="M3 19c.6-3.6 3-5.4 6-5.4s5.4 1.8 6 5.4"/><circle cx="17" cy="9" r="2.4"/><path d="M15.8 13.8c2.6.1 4.4 1.7 4.9 4.6"/>',
     tactics: '<path d="M5 19L19 5M14 5h5v5"/><path d="M5 5l6 6M14 14l5 5"/>',
     gear: '<circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.6M12 18.6v2.6M2.8 12h2.6M18.6 12h2.6M5.5 5.5l1.9 1.9M16.6 16.6l1.9 1.9M5.5 18.5l1.9-1.9M16.6 7.4l1.9-1.9"/>',
+    search: '<circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5.5 5.5"/>',
     back: '<path d="M15 5l-7 7 7 7"/>', close: '<path d="M6 6l12 12M18 6L6 18"/>',
   };
   const ico = (k) => `<svg class="tw-i" viewBox="0 0 24 24" aria-hidden="true">${ICO[k] || ""}</svg>`;
@@ -216,7 +218,7 @@ const TABMENU = (() => {
   function hubHTML(S) {
     const b = bar(S), inTown = S.location && !S.trip && typeof TOWNS !== "undefined" && TOWNS.isTown?.(S.location);
     const dir = (d) => { const m = DIR[d]; return `<button class="tw-dir tw-${d}" data-twgo="${m}" aria-label="${NAME[m]}">${ico(m)}<b>${NAME[m]}</b><small>${SUBT[m]}</small>${m === "char" && b.perks ? '<span class="dot"></span>' : ""}</button>`; };
-    const quick = [inTown ? ["town", "Town", "town"] : null, ["log", "Journal", "log"], ["social", "Friends", "people"], ["tactics", "Tactics", "tactics"], ["settings", "Settings", "gear"]].filter(Boolean);
+    const quick = [inTown ? ["town", "Town", "town"] : null, ["log", "Journal", "log"], ["social", "Social", "people"], ["tactics", "Tactics", "tactics"], ["settings", "Settings", "gear"], typeof SEARCH !== "undefined" ? ["search", "Search", "search"] : null].filter(Boolean);
     return `<div class="tw-bg" aria-hidden="true"></div><div class="tw-veil" aria-hidden="true"></div>${starsBG()}
       <div class="tw-top"><b class="tw-where"></b><span class="tw-when"></span><small class="tw-fc"></small></div>
       <div class="tw-rose">${roseSVG()}${dir("up")}${dir("left")}${dir("right")}${dir("down")}</div>
@@ -267,6 +269,7 @@ const TABMENU = (() => {
     if (q) {
       const id = q.dataset.twq; closeHub();
       if (id === "settings") { document.getElementById("sndBtn")?.click(); return; }
+      if (id === "search") { if (typeof SEARCH !== "undefined") SEARCH.open(); return; }
       if (id === "tactics") { enterChar("tactics"); fromHub = true; return; }
       ui().go?.(id); window.scrollTo(0, 0); return;
     }
@@ -286,7 +289,7 @@ const TABMENU = (() => {
     let hb = $("#twbar");
     if (!hb) {
       hb = document.createElement("div"); hb.id = "twbar"; hb.className = "twbar";
-      hb.innerHTML = `<button class="iconbtn" data-twb="hub" aria-label="Back to the compass">${ico("back")}</button><div class="twbar-tabs" role="tablist">${CHAR_TABS.map(([id, l]) => `<button class="twbar-t" data-twb="${id}" role="tab">${l}</button>`).join("")}</div>`;
+      hb.innerHTML = `<button class="iconbtn" data-twb="hub" aria-label="Back to the compass">${ico("back")}</button><div class="twbar-tabs" role="tablist">${charTabs().map(([id, l]) => `<button class="twbar-t" data-twb="${id}" role="tab">${l}</button>`).join("")}</div>`;
       hb.addEventListener("click", (e) => { const b = e.target.closest("[data-twb]"); if (!b) return; if (b.dataset.twb === "hub") return openHub(); setCharTab(b.dataset.twb); });
       document.body.appendChild(hb);
     }
@@ -302,7 +305,7 @@ const TABMENU = (() => {
   /* ui.js tells us after every panel draw, so we leave full-screen mode when something else changes the tab */
   function afterPanel(tab) {
     if (!charMode) return;
-    if (!CHAR_TABS.some(([id]) => id === tab)) exitChar(); else markChar(tab);
+    if (!charTabs().some(([id]) => id === tab)) exitChar(); else markChar(tab);
   }
   /* the phone's back button. true = handled, false = let the app close, null = not ours */
   function back() {
@@ -313,6 +316,8 @@ const TABMENU = (() => {
   }
   /* the Items/Magic menu was just closed (✕ or back): return to the compass if we came from it */
   function menuClosed() { if (fromHub) { fromHub = false; openHub(); } }
+  /* a bottom tab was tapped: the player left the compass on purpose, so closing a menu shouldn't pop it back up */
+  function fromBar() { fromHub = false; if (charMode) exitChar(); }
 
   // ---- swipes
   let sw = null;
@@ -375,7 +380,7 @@ const TABMENU = (() => {
     if (ctx === "char") {
       if (d === "down") { openHub(); return true; }
       if (!st) return false;
-      const cur = document.querySelector("#twbar .twbar-t.on")?.dataset.twb, r = step(CHAR_TABS.map(([id]) => id), cur, st);
+      const cur = document.querySelector("#twbar .twbar-t.on")?.dataset.twb, r = step(charTabs().map(([id]) => id), cur, st);
       if (r.id) { setCharTab(r.id); return true; }
       go(ring("char", r.edge), true); return true;
     }
@@ -420,6 +425,6 @@ const TABMENU = (() => {
     const force = /[?&]hub=1\b/.test(location.search), skip = /[?&]hub=0\b/.test(location.search);
     if (!skip && (force || !navigator.webdriver)) setTimeout(openHub, 60);
   }
-  return { RING, DIR, CHAR_TABS, swipeDir, ring, step, bar, task, mini, stars, perks, mount, openHub, closeHub, go, back, afterPanel, menuClosed, swiped,
+  return { RING, DIR, CHAR_TABS, swipeDir, ring, step, bar, task, mini, stars, perks, mount, openHub, closeHub, go, back, afterPanel, menuClosed, fromBar, swiped,
     get open() { return hubOpen; }, set maxMs(v) { MAXMS = v; }, get charMode() { return charMode; }, get starSkill() { return starSkill; }, set starSkill(v) { starSkill = v; starPick = null; } };
 })();

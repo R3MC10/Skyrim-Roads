@@ -3,6 +3,20 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b91", build: 91, date: "22 Nov 2026", title: "Tidier menus", items: [
+      "The bar along the bottom now has seven tabs, like Skyrim: Character, Items, Magic, Map, Journal, Social and Town. Tabs with more than one page show a row of sub-tabs along the top; slide it sideways to see them all.",
+      "Character holds everything about you: Skills (the star skies), Character (your sheet, powers, shouts and follower), Perks, Tactics, Stats, Achievements, Library, Diary and Settings.",
+      "Tactics used to have its own tab. It's now under Character → Tactics.",
+      "Settings (sound, Accessibility, Fights, Art style and the rest), the guide, patch notes and Main menu are under Character → Settings. The ⚙ Menu button at the top still opens them too.",
+      "Achievements and the Library (your discoveries and lore books) each have their own page under Character now, instead of sitting at the bottom of other pages.",
+      "Items and Magic open the item and spell menus straight away. The bottom bar stays visible over them, so you can jump to another tab in one tap. A new List button in the item menu shows your pack as a plain list (sell, recharge, eat and so on).",
+      "Map has three pages: Travel, Locations (places you've cleared) and World news. World news is the new home of “Word around Skyrim” (rumours and your good name in each hold), world events and festivals, which used to be in the Journal.",
+      "The Journal is now just your quests: Active, Misc and Completed.",
+      "Friends is now called Social and lives in the bottom bar, with a dot when something's waiting for you. Inside: Friends, Messages, Trades, Party, Chat and Realm (holds, clans and the leaderboard). The separate Friends button at the top is gone.",
+      "Town is unchanged: shops, the inn, trainers, your home and homesteads, guilds and jobs.",
+      "The compass menu now has a Search button in its row of shortcuts too.",
+      "Fixed: after using the compass, opening Items or Magic from the bottom bar and closing it no longer pops the compass back up.",
+      "The bottom bar fits on small phones even at the Biggest text size and with one-hand mode on."] },
     { id: "b90", build: 90, date: "22 Nov 2026", title: "Search everything", items: [
       "New 🔍 Search button in the top bar: one box that finds your gear, every item in the game, spells, shouts you know, perks, skills, places you know, your quests, followers, recipes and settings.",
       "Typos are fine: “steal swrod”, “fierball” or “restor helth” still find what you meant. Results come in groups with their pictures, and your last searches are kept for a quick tap.",

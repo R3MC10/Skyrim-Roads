@@ -58,7 +58,7 @@ const CURSE = (() => {
   function update(s, t = nowS()) {
     if (s.sanguinare && !s.vampire && t - s.sanguinare.at >= TURN_AFTER) {
       s.sanguinare = null; s.vampire = { since: t, fedAt: t };
-      return "🩸 You wake up hungry for something that isn't food. You are a vampire now. See the Hero tab.";
+      return "🩸 You wake up hungry for something that isn't food. You are a vampire now. See the Character tab.";
     }
     return null;
   }

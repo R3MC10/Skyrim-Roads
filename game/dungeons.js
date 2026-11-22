@@ -308,7 +308,7 @@ const DUNGEONS = (() => {
         const w = d.place === "Bleak Falls Barrow" && !POWERS.known(s, "FUS") ? ["FUS", "Unrelenting Force"] : POWERS.nextWord(s);
         if (w) {
           POWERS.learnWord(s, w[0]);
-          word = ` Behind the throne, a Word Wall hums. One word burns itself into your mind: ${w[0]} (${w[1]}). ${POWERS.unlocked(s, w[0]) ? "" : "A dragon soul will unlock it (Hero tab)."}`;
+          word = ` Behind the throne, a Word Wall hums. One word burns itself into your mind: ${w[0]} (${w[1]}). ${POWERS.unlocked(s, w[0]) ? "" : "A dragon soul will unlock it (Character tab)."}`;
         }
       }
       let partyChest = null;

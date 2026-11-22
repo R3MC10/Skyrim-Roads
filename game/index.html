@@ -1374,6 +1374,27 @@ html.a11y-1h .mapwrap:has(.picked:not(.hide)) .mapbtns{bottom:72px}
 html.a11y-1h-left :is(.twbtn,.favbtn){right:auto;left:12px}
 html.a11y-1h-left .top :is(.soc,.snd){right:auto;left:66px}
 html.a11y-1h-left .mapbtns{right:auto;left:8px}
+/* [tabs] menu tabs (menus.js): seven bottom tabs, a SkyUI sub-tab strip on top of each screen */
+.tabs.mn-bar{grid-template-columns:repeat(7,minmax(0,1fr))}
+.mn-bar .tab{padding:8px 0 10px;min-width:0;letter-spacing:.04em;font-size:9.5px}
+.mn-bar .tab .mn-l{display:block;max-width:100%;overflow:hidden;white-space:nowrap;text-overflow:clip}
+.mn-bar .tab .dot{right:calc(50% - 15px)}
+@media (max-width:440px){.mn-bar .tab{font:600 10px/1.1 "Barlow Condensed","Barlow Semi Condensed",sans-serif;letter-spacing:.02em}}
+body:has(.tabs.mn-bar) .top .soc{display:none}
+body:has(#sky) .tabs.mn-bar:not(.hide){z-index:10}
+body:has(.tabs.mn-bar:not(.hide)) .sky{bottom:var(--mn-h,58px)}
+body:has(.tabs.mn-bar:not(.hide)) .sky-in{padding-bottom:8px}
+.mn-sub{display:flex;gap:0;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;margin:0 0 10px;border-top:1px solid var(--sk-line,#3a3226);border-bottom:1px solid var(--sk-line,#3a3226);background:linear-gradient(180deg,rgba(10,11,13,.75),rgba(4,5,6,.6))}
+.mn-sub::-webkit-scrollbar{display:none}
+.mn-sub button{flex:1 0 auto;min-height:44px;padding:10px 14px;background:none;border:0;border-bottom:2px solid transparent;color:var(--sk-mute,#a29c8e);font:600 13px/1 var(--sk-ui,inherit);letter-spacing:.14em;text-transform:uppercase;white-space:nowrap;cursor:pointer}
+.mn-sub button.on{color:#f6eedb;border-bottom-color:#e2bb64;background:var(--sk-sel,rgba(255,255,255,.06));text-shadow:0 0 8px rgba(226,187,100,.45)}
+html.art-pixel .mn-sub{border-radius:0}
+html.a11y-zoom .mn-sub button{letter-spacing:.06em;padding-left:10px;padding-right:10px}
+html.a11y-hc .mn-sub button{color:#ece6d8}html.a11y-hc .mn-sub button.on{background:#ece6d8;color:#000;text-shadow:none}
+.mn-list{margin-left:6px;min-height:36px}
+.mn-intro h2{margin-bottom:4px}
+.twbar-tabs{justify-content:flex-start;overflow-x:hidden;scrollbar-width:none}.twbar-tabs::-webkit-scrollbar{display:none}
+.twbar-t{white-space:nowrap;flex:0 0 auto;padding-left:8px;padding-right:8px}
 /* ==== search everything (search.js) ==== */
 .top{grid-template-columns:auto minmax(0,1fr) auto auto auto;grid-template-areas:"l w f s g" "l m m m m"}
 .top .iconbtn.srchb{grid-area:f;width:38px;height:38px;border-radius:50%;background:rgba(10,11,13,.55);border:1px solid rgba(226,187,100,.38);color:#e9e2d0;box-shadow:inset 0 0 8px rgba(0,0,0,.6);flex:none}
@@ -1542,6 +1563,7 @@ html.art-pixel .rmd-b,html.art-pixel .rmd-n{border-radius:0}
 <script src="economy.js"></script>
 <script src="bards.js"></script>
 <script src="skillinfo.js"></script>
+<script src="menus.js"></script>
 <script src="tabmenu.js"></script>
 <script src="search.js"></script>
 <script src="remind.js"></script>
