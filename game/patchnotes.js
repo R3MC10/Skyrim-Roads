@@ -1,16 +1,19 @@
-/* Patch notes: what changed in each build, newest first, in plain words. [OURS]
+﻿/* Patch notes: what changed in each build, newest first, in plain words. [OURS]
    To add a build: put a new entry at the TOP of LIST with a new id. The newest id is what the
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b81", build: 81, date: "22 Nov 2026", title: "Turn-by-turn fights", items: [
+    { id: "b83", build: 83, date: "22 Nov 2026", title: "Turn-by-turn fights", items: [
       "Fights are now played turn by turn. Everyone rolls for who goes first each round: Acrobatics and Sneak make you quicker, heavy armor slows you down.",
       "On your turn you spend action points (the gold dots): a dagger swing costs less than a greatsword, power attacks and stronger spells cost more. Athletics and Stamina give you more points; Alteration and Magicka give extra points just for spells. Points you don't use keep your guard up.",
-      "Attack, power attack, guard, cast from your Magic list, drink potions, read scrolls, shout or try to run. Tap Auto to let your Smart AI play one turn, or Auto ⏩ for the rest of the fight.",
+      "Attack, power attack, guard, cast from your Magic list, drink potions, read scrolls, shout or try to run. Tap Auto to let your Smart AI play one turn, or Auto âŹ© for the rest of the fight.",
       "Followers and summons take their own turns. In a party, each player picks their own move on their own phone (60 seconds, then Auto), and foes get tougher the more of you there are.",
       "Fights last longer and no single blow can take more than 40% of a strong foe's health (or yours). Small fry like skeevers can still go down in one hit.",
       "New perks: Battle Rhythm (Athletics, more action points), Quick Start (Acrobatics) and First Move (Sneak) to act sooner, Quickened Casting (Alteration, a spell point) and Drilled in Steel (Heavy Armor, heavy armor slows you half as much).",
-      "Prefer the old way? Menu → Settings → Fights → Instant (auto). There's also a Fast setting for foe turns."] },
+      "Works for road encounters, dungeon rooms, quests and guild jobs, dragon raids, resisting arrest and attacking other players. The live fight scene plays each turn in both art styles.",
+      "The world waits while you fight. If you close the game mid-fight, you come back just before the fight started.",
+      "The Athletics and Acrobatics skill pages now show your action points and initiative.",
+      "Prefer the old way? Menu â†’ Settings â†’ Fights â†’ Instant (auto). There's also a Fast setting (or the âŹ© button in a fight) that shows foe turns quicker."] },
     { id: "b79", build: 79, date: "22 Nov 2026", title: "Party play, loot rolls and grown-up followers", items: [
       "The map now follows the real game's layout much more closely: towns, roads and landmarks sit where you remember them.",
       "Parties of up to 8: the leader picks where to go, everyone gets a Ready check first, then the party travels together. If the leader stops for something on the road, the others wait and fight beside them. Gold found on the road is split evenly.",
@@ -27,48 +30,48 @@ const PATCHNOTES = (() => {
       "31 new road encounters: Khajiit caravans, couriers, giants with mammoths, Thalmor patrols, assassins, a talking mudcrab and more, each with choices. New perks: Smooth Talker, Road Wise, Pathfinder.",
       "125 spells across all schools, Novice tomes at every general store and alchemist, court wizards and the College sell more as your skill grows, and Master rituals at the College.",
       "Support magic: heal, shield, empower and rescue your allies, with a Support branch of perks in every school. Smart AI uses it too.",
-      "Colour coding everywhere: item quality (fine green, superior blue, exquisite purple, legendary gold, unique orange), schools and elements, warrior/mage/thief skills, quest types and prices. ⓘ shows the colour key.",
+      "Colour coding everywhere: item quality (fine green, superior blue, exquisite purple, legendary gold, unique orange), schools and elements, warrior/mage/thief skills, quest types and prices. â“ shows the colour key.",
       "Sharper panels, glowing health/magicka/stamina bars, and slots ready for new painted artwork."] },
     { id: "b73", build: 73, date: "22 Nov 2026", title: "Clearer skills and spells", items: [
       "Skills and perks show only what you have now, plus the next step, instead of long tables.",
       "Every spell shows its real magicka cost and numbers, plus a Dual cast line with its cost and effect. Colours: fire orange, frost blue, shock violet, healing and buffs green, debuffs red, magicka blue.",
-      "Pinching or holding the map no longer opens the favourites wheel. Long-press the compass or tap ★ instead.",
+      "Pinching or holding the map no longer opens the favourites wheel. Long-press the compass or tap â… instead.",
       "The update screen now says whether your app updates itself or needs one more full install."] },
     { id: "b70", build: 70, date: "22 Nov 2026", title: "Bigger perk trees, burning and a real quest journal", items: [
       "Every skill tree now has 9 to 14 perks (284 in total): Skyrim's own like Dual Flurry, Quick Shot, Eagle Eye, Shield Charge, Juggernaut, Impact, Twin Souls, Necromage and Assassin's Blade, plus new ones for Spear, Hand-to-Hand, Unarmored, Mysticism and more. Your old perks stay.",
-      "Fire sets things burning for 3 turns, frost chills and slows (Deep Freeze can freeze solid), shock drains magicka and interrupts casters. Enemy mages, atronachs and dragons can do it to you too. Look for the 🔥 ❄ ⚡ chips under the health bars.",
+      "Fire sets things burning for 3 turns, frost chills and slows (Deep Freeze can freeze solid), shock drains magicka and interrupts casters. Enemy mages, atronachs and dragons can do it to you too. Look for the đź”Ą âť„ âšˇ chips under the health bars.",
       "The Journal is now only quests: Active, Misc and Completed, grouped by questline, with objectives, stages, recommended level and a Track button that drives the compass bar.",
-      "Moved, not lost: chat, party, trades, clans and the leaderboard are under 👥 Friends; stats, diary and the lore library are on your Character page; cleared places are under Map → Locations."] },
+      "Moved, not lost: chat, party, trades, clans and the leaderboard are under đź‘Ą Friends; stats, diary and the lore library are on your Character page; cleared places are under Map â†’ Locations."] },
     { id: "b68", build: 68, date: "22 Nov 2026", title: "Updates without reinstalling", items: [
-      "Install this version once more by hand. After that the app downloads new versions by itself in the background and switches to them the next time you open it — no Android installer, no tapping Install.",
+      "Install this version once more by hand. After that the app downloads new versions by itself in the background and switches to them the next time you open it â€” no Android installer, no tapping Install.",
       "If an update ever fails to start, the app goes back to the version inside it on its own.",
       "Only rare bigger changes to the app itself still need a normal install; the game tells you when."] },
     { id: "b67", build: 67, date: "22 Nov 2026", title: "A truer map and allies that look the part", items: [
       "Map polish: Solitude now stands at the tip of the Haafingar peninsula over the Karth estuary, the Hjaalmarch coast is jagged marsh, Dawnstar sits on its bay and the College of Winterhold rises on its own islet.",
       "Every ally in a fight has its own look: followers in their own gear with name tags, ice wolves, werewolf brothers, the stone gargoyle, Dremora, flame, frost and storm atronachs, ghostly heroes of Sovngarde, and Odahviing diving in with fire."] },
     { id: "b66", build: 66, date: "22 Nov 2026", title: "Shouts, beasts and weather", items: [
-      "Favourites wheel: star weapons, spells, shouts and potions, then tap ★ or long-press the compass or map to pick one in a ring. Readied spells open your next fight.",
+      "Favourites wheel: star weapons, spells, shouts and potions, then tap â… or long-press the compass or map to pick one in a ring. Readied spells open your next fight.",
       "Dragon Shouts: 45 Word Walls across Skyrim, 11 new shouts including Dragonrend, Slow Time, Storm Call, Marked for Death and Call Dragon. Spend dragon souls to unlock words. The Greybeards and Paarthurnax teach the rest.",
       "Werewolves: Beast Form perks like Bestial Strength and Totem of Ice Brothers; feed after fights to grow stronger.",
       "Vampires: Sanguinare turns you after 3 in-game days, hunger stages, sun and fire weakness, and the Vampire Lord form with its own perk tree.",
       "Cures are quests now: Rising at Dawn with Falion in Morthal, and Purity of the Blood with the Glenmoril witch heads.",
-      "Weather matters: rain weakens fire and boosts shock, storms crackle, fog throws off arrows, blizzards drain stamina unless you're dressed warm. A gentle Cold meter up north (Settings → Survival). The compass shows a weather forecast."] },
+      "Weather matters: rain weakens fire and boosts shock, storms crackle, fog throws off arrows, blizzards drain stamina unless you're dressed warm. A gentle Cold meter up north (Settings â†’ Survival). The compass shows a weather forecast."] },
     { id: "b64", build: 64, date: "22 Nov 2026", title: "The real Skyrim map and parties that fight together", items: [
       "The world map now follows Skyrim's real layout: the coast and Sea of Ghosts, the Throat of the World, the Velothi and Jerall mountains, the White River, Lake Ilinalta and Honrich, and every town and dungeon where it belongs. High Rock, Hammerfell, Cyrodiil and Morrowind show beyond the border.",
       "Roads follow the real roads. Your character moves to the same spot on the new map automatically.",
       "Party members close by now fight beside you in road and dungeon fights, each by their own tactics, and everyone gets their own share of the spoils.",
       "Travelling together: your party and followers walk or ride with you on the road, each in their own armour and weapons, with name tags."] },
     { id: "b63", build: 63, date: "22 Nov 2026", title: "Smart fights, crafting games and motion", items: [
-      "Smart AI combat is on by default: your hero picks the best move every turn, uses weaknesses, heals only when it matters and saves potions. Prefer your own rules? Switch to Custom tactics on the Tactics tab — your rules are kept.",
+      "Smart AI combat is on by default: your hero picks the best move every turn, uses weaknesses, heals only when it matters and saves potions. Prefer your own rules? Switch to Custom tactics on the Tactics tab â€” your rules are kept.",
       "Followers fight smarter too and step in front of you when you're in trouble.",
       "Crafting mini-games: time the hammer at the forge, keep the bellows hot, stir potions, trace enchanting runes. Good play gives a small bonus; Quick craft is always there.",
-      "Motion everywhere: menus slide in from where you swiped, gold and XP count up, level-ups light a constellation, loot flies into your pack, routes draw on the map. Settings → Motion: Full, Lite or Off."] },
+      "Motion everywhere: menus slide in from where you swiped, gold and XP count up, level-ups light a constellation, loot flies into your pack, routes draw on the map. Settings â†’ Motion: Full, Lite or Off."] },
     { id: "b62", build: 62, date: "22 Nov 2026", title: "Solstheim and the Skyrim compass", items: [
       "Solstheim: take the Northern Maiden from Windhelm's docks to Raven Rock. A whole new island with ash wastes, Skaal Village, Tel Mithryn, the All-Maker Stones and Miraak's story.",
       "New creatures (ash hoppers, netch, rieklings, lurkers), ash storms, Stalhrim, Chitin and Bonemold gear, and the Bend Will shout.",
       "The Skyrim compass menu is now your home screen: swipe left for Magic, right for Items, up for Skills and down for the Map. The bottom bar shows your level, gold, carry weight and what you're doing.",
       "Constellation skill trees: tap a star to read and take a perk.",
-      "Clearer screens: a 'What to do next' card, town places grouped into Shops, Services, Home and more, a tidier Journal with counters, ⓘ help on every screen and a search box in your pack."] },
+      "Clearer screens: a 'What to do next' card, town places grouped into Shops, Services, Home and more, a tidier Journal with counters, â“ help on every screen and a search box in your pack."] },
     { id: "b61", build: 61, date: "21 Nov 2026", title: "Together on the roads", items: [
       "Co-op dungeons: invite up to 3 friends at a dungeon door, clear the rooms together and each get your own share of the boss chest.",
       "Fight on horseback: charge into road fights from the saddle. If your horse goes down you're thrown clear and fight on foot.",
@@ -83,7 +86,7 @@ const PATCHNOTES = (() => {
     { id: "b60", build: 60, date: "21 Nov 2026", title: "Fights come alive", items: [
       "Every weapon has its own move: dagger double stabs, sword slashes, axe chops, hammer slams with a shockwave, spear thrusts, bows that draw and loose, and more.",
       "Every spell looks different: fire, frost and lightning, wards, runes, summons and shouts all have their own effects and particles.",
-      "Fights play at a natural pace, about a second per move. Use ×2 or Skip if you're in a hurry.",
+      "Fights play at a natural pace, about a second per move. Use Ă—2 or Skip if you're in a hurry.",
       "Power attacks wind up and shake the screen, critical hits and sneak attacks slow down, and the last blow gets a slow-motion finish.",
       "Enemies fight like themselves: wolves bite, giants slam, dragons breathe fire, draugr shout.",
       "Story quests now scale with you, and the Journal shows a recommended level for each quest.",
@@ -126,7 +129,7 @@ const PATCHNOTES = (() => {
       "Two art styles to choose from in Settings: hand-drawn or pixel art.",
       "Animated fight scenes, pictures for every place, icons for items and enemies, and your character drawn in their gear."] },
     { id: "b48", build: 48, date: "21 Nov 2026", title: "Fights stay exciting at higher levels", items: [
-      "Weak enemies now catch up to your level like in Skyrim, so fights at level 20–40 are a real challenge again."] },
+      "Weak enemies now catch up to your level like in Skyrim, so fights at level 20â€“40 are a real challenge again."] },
     { id: "b47", build: 47, date: "21 Nov 2026", title: "Mysticism gets its own magic", items: [
       "Mysticism is now its own school: Soul Trap, Detect Life, Dispel, Mark and Recall, and Spell Absorption.",
       "Breaking down enchanted gear now only trains Enchanting."] },
@@ -153,7 +156,7 @@ const PATCHNOTES = (() => {
       "Valuable gems and jewellery drop from tough enemies and chests.",
       "Tactics fixed: new rules now work, plus bigger cards and more conditions."] },
     { id: "b40", build: 40, date: "21 Nov 2026", title: "Gear bonuses show on your character", items: [
-      "Skills boosted by your gear show a green ▲, and Active effects lists your enchantments."] },
+      "Skills boosted by your gear show a green â–˛, and Active effects lists your enchantments."] },
     { id: "b39", build: 39, date: "21 Nov 2026", title: "Cleared places show when they open again", items: [
       "A live countdown on cleared dungeons, badges on the map, and a Cleared places list in the Journal."] },
     { id: "b38", build: 38, date: "21 Nov 2026", title: "Market stalls", items: [
@@ -200,7 +203,7 @@ const PATCHNOTES = (() => {
   const unseen = () => seen() !== latest().id;
   const e = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   function entryHTML(n, open) {
-    const head = `<span class="pnt">${e(n.title)}</span><span class="pnm">${n.build ? `Build ${n.build} · ` : ""}${e(n.date)}</span>`;
+    const head = `<span class="pnt">${e(n.title)}</span><span class="pnm">${n.build ? `Build ${n.build} Â· ` : ""}${e(n.date)}</span>`;
     return `<details class="pn"${open ? " open" : ""}><summary>${head}</summary><ul>${n.items.map((i) => `<li>${e(i)}</li>`).join("")}</ul></details>`;
   }
   /* the full list; the newest entry is open */
