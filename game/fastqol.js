@@ -183,5 +183,5 @@ const FASTQOL = (() => {
   }
   init();
 
-  return { record, suggestions, recentHTML, settingsHTML, pref, speed, autoRoad, lootHTML, newRows, dropHeavy, againHTML, mem, setMem, armAutoRoad, wrapTrips };
+  return { itemsNamed, record, suggestions, recentHTML, settingsHTML, pref, speed, autoRoad, lootHTML, newRows, dropHeavy, againHTML, mem, setMem, armAutoRoad, wrapTrips };
 })();
