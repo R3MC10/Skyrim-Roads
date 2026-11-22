@@ -3,6 +3,10 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b98", build: 98, date: "22 Nov 2026", title: "Gra po polsku! (Polish)", items: [
+      "The game now speaks Polish: menus, buttons, tabs, skills, stats and settings. Polish phones and PCs switch to it by themselves.",
+      "Change it any time in Settings → Language (Automatic, English, Polski). Stories and quests are still in English for now; they come next.",
+    ] },
     { id: "b97", build: 97, date: "22 Nov 2026", title: "PC version, no more stuck fights, real nicknames", items: [
       "Roads of the North now runs on Windows PCs too! Get it from the same download page as the phone app. Same game, same friends.",
       "On a PC (or with a keyboard), Esc works like the phone's Back button: it closes menus one at a time and never quits the game. F11 switches full screen on the PC app.",
