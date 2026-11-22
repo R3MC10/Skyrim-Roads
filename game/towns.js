@@ -465,7 +465,7 @@ const TOWNS = (() => {
     erik: ["Erik the Slayer", "Rorikstead", 100, 120, 9, "A farm boy who wants adventure. Cheap, eager, a bit green."],
   };
   const fScale = (s) => 1 + 0.05 * (s.level - 1);
-  const followerMax = (s, id) => Math.round(FOLLOWERS[id][3] * fScale(s));
+  const followerMax = (s, id) => (typeof FOL2 !== "undefined" ? FOL2.maxHp(s, id) : Math.round(FOLLOWERS[id][3] * fScale(s)));   // with FOL2: by the follower's own level
   function followerHp(s, t = G.now()) {
     const f = s.follower; if (!f) return 0;
     const max = followerMax(s, f.id);

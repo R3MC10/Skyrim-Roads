@@ -80,7 +80,7 @@ const TB = (() => {
       this.ap = 0; this.spAp = 0; this.cur = null; this.done = false; this.waiting = null;
       this.lines = { me: [], them: [], a: null };   // this round's log line for the fight log
       this.hitters = 0;
-      this.players = f.allies.filter((a) => a.player).length;   // real players fighting with you
+      this.players = Math.min(7, f.allies.filter((a) => a.player && !a.follower && a.kind !== "follower").length);   // real players with you (a party is up to 8; followers never count)
       // turn-based foes are tougher (you act more than once a round); real players make it harder still
       const tg = f.tags; this.kind = f.e.boss ? "boss" : tg.has("elite") || f.e.danger === "high" ? "tough" : "normal";
       // the foe gets enough health for a fight of about T.rounds rounds against what you (and friends) deal a round,
