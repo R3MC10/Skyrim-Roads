@@ -22,7 +22,7 @@ async def run(b, style, errs, bad):
             except Exception: pass
         await pg.click(sel)
     lo = "window.__dbg.save().loadouts[window.__dbg.save().loadout]"
-    await click("[data-tab=tactics]"); await pg.wait_for_timeout(500)
+    await click("[data-tab=hero]"); await pg.wait_for_timeout(250); await click("[data-act=tabgo][data-id=tactics]"); await pg.wait_for_timeout(500)
     if not await pg.query_selector("#aisetbox"): bad.append(style + " no AI settings card")
     await click("#aisetbox > summary"); await pg.wait_for_timeout(300)
     await click("[data-act=aiset][data-k=style][data-v=careful]"); await pg.wait_for_timeout(200)

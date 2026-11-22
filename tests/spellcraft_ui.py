@@ -43,7 +43,7 @@ async def main():
         # tactics: add rule using it and run a test fight
         cid = await pg.evaluate("window.__dbg.save().customSpells[0].id")
         await pg.evaluate("(id)=>{const S=window.__dbg.save(); const lo=G.loadout(S); lo.rules=[{if:'always',pct:50,do:'spell:'+id},{if:'always',pct:50,do:'attack'}];}", cid)
-        await click("[data-tab=tactics]"); await pg.wait_for_timeout(400)
+        await click("[data-tab=hero]"); await pg.wait_for_timeout(250); await click("[data-act=tabgo][data-id=tactics]"); await pg.wait_for_timeout(400)
         tact = await pg.inner_text("#side")
         print("tactics shows it:", "Fire and Ice" in tact)
         btn = await pg.query_selector("[data-act=test]")

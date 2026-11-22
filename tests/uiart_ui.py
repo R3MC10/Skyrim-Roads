@@ -41,7 +41,7 @@ async def main():
             await pg.screenshot(path=f"uia_skills_{st}.png")
             await pg.evaluate("document.querySelector('#sky')?.remove()")
             # tactics
-            await click("[data-tab=tactics]"); await pg.wait_for_timeout(300)
+            await click("[data-tab=hero]"); await pg.wait_for_timeout(250); await click("[data-act=tabgo][data-id=tactics]"); await pg.wait_for_timeout(300)
             el = await pg.query_selector(".rlist"); 
             if el: await el.screenshot(path=f"uia_tactics_{st}.png")
             # journal: quests, achievements, festival, guide

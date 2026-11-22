@@ -15,7 +15,7 @@ async def main():
         await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Tacto"); await pg.click("#begin"); await pg.wait_for_timeout(1000)
         await pg.evaluate("()=>{const S=window.__dbg.save(); G.give(S,'potion_health_minor',5);}")
         await clear()
-        await pg.click("[data-tab=tactics]"); await pg.wait_for_timeout(400)
+        await pg.click("[data-tab=hero]"); await pg.wait_for_timeout(250); await pg.click("[data-act=tabgo][data-id=tactics]"); await pg.wait_for_timeout(400)
         n0 = await pg.evaluate("G.loadout(window.__dbg.save()).rules.length")
         # rule A: first turn -> power attack
         await pg.select_option("#tc", "first_turn"); await pg.wait_for_timeout(200)
@@ -41,7 +41,7 @@ async def main():
         print("after reload same:", after == rules.replace('"if":"hp_below"','"if":"hp_below"') or after, "| n:", n0, "->", await pg.evaluate("G.loadout(window.__dbg.save()).rules.length"))
         print("rule1 off kept:", await pg.evaluate("!!G.loadout(window.__dbg.save()).rules.find(r=>r.if==='first_turn').off") if False else after)
         # test fight: turn>=3 block should fire
-        await pg.click("[data-tab=tactics]"); await pg.wait_for_timeout(400)
+        await pg.click("[data-tab=hero]"); await pg.wait_for_timeout(250); await pg.click("[data-act=tabgo][data-id=tactics]"); await pg.wait_for_timeout(400)
         await pg.select_option("#te", "Bandit outlaw"); await pg.click("[data-act=test]"); await pg.wait_for_timeout(500)
         txt = await pg.inner_text("#side")
         i = txt.find("Rules used"); print("test:", txt[i:i+80].replace("\n"," "))
