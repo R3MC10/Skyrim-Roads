@@ -70,3 +70,16 @@ our own marked [OURS]; plain-language UI; phone first.
 2. Party members fight beside you and walk with you in their gear (in progress).
 3. Ideas offered: favourites wheel, Dragon Shouts from word walls, werewolf/vampire paths, weather that matters.
 4. ElevenLabs sounds/music (needs api.elevenlabs.io allowed + an API key).
+
+## Loop backlog (pick the next 3–6 each round, after merging finished work)
+- Drop in Remigiusz's generated art as it arrives (art prompts doc), compress to WebP, wire via ASSETS.
+- Followers: personal quests, opinions, banter, loyalty.
+- Living world: NPC schedules, towns reacting to deeds, rumours that come true.
+- Player-run holds: clans elect a Jarl, taxes, raids.
+- World events: server-wide Daedric invasions, festivals, dragon migrations.
+- Housing: build Lakeview/Windstad/Heljarchen-style homesteads.
+- Fishing, mining polish, hunting/skinning.
+- Blackreach and Dwemer ruins deep-dive; Dawnguard-style castle storyline.
+- Accessibility: text size, colour-blind modes, one-hand mode.
+- Performance pass on low-end phones; battery.
+- Balance passes with sims after each big feature; perk trees grow with every system.
