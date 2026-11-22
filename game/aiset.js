@@ -172,6 +172,8 @@ const AISET = (() => {
     return false;
   }
   for (const [id, v] of Object.entries(NEWCOND)) if (!D.CONDITIONS[id]) D.CONDITIONS[id] = v;
+  // a "run away" move for your own rules (engine: road fights only, never from a boss; Smart AI never picks it)
+  if (D.BASIC_ACTIONS && !D.BASIC_ACTIONS.flee) D.BASIC_ACTIONS.flee = "Run away (road fights only, not from bosses)";
 
   // ---------------------------------------------------------------- rules
   const cleanCond = (c) => { const o = { if: c.if }; if (D.CONDITIONS[c.if]?.[1]) o.pct = c.pct ?? (D.CONDITIONS[c.if][1] === "turn" ? 3 : 50); if (c.not) o.not = true; return o; };
@@ -217,6 +219,12 @@ const AISET = (() => {
     necro: { name: "Necromancer", desc: "A summon or a raised corpse first, then curses and spells from behind it.", build: (s) => {
       const sum = bestSpell(s, (sp) => sp.kind === "summon"), dmg = bestSpell(s, (sp) => sp.kind === "damage"), arm = bestSpell(s, (sp) => sp.kind === "armor");
       return { mode: "custom", ai: { prefer: "magic", w: { ...PREFER.magic } }, rules: end([R("hp_below", "potion:health", 40), sum && R("no_summon", "spell:" + sum), arm && R("no_armor_spell", "spell:" + arm), dmg && R("mp_above", "spell:" + dmg, 40)].filter(Boolean)) }; } },
+    mage: { name: "Mage", desc: "Heals when hurt, drinks magicka when low, and casts your strongest spell; the staff or sword only when magicka runs dry.", build: (s) => {
+      const heal = bestSpell(s, (sp) => sp.kind === "heal"), dmg = bestSpell(s, (sp) => sp.kind === "damage"), arm = bestSpell(s, (sp) => sp.kind === "armor");
+      return { mode: "custom", ai: { prefer: "magic", w: { ...PREFER.magic } }, rules: end([heal ? R("hp_below", "spell:" + heal, 40) : R("hp_below", "potion:health", 40), R("mp_below", "potion:magicka", 25),
+        arm && R("no_armor_spell", "spell:" + arm), dmg && R("always", "spell:" + dmg)].filter(Boolean)) }; } },
+    thief: { name: "Thief", desc: "Always tries to sneak up first, opens with a power attack, drinks early.", build: () => ({ mode: "custom", ai: { sneak: "always" },
+      rules: end([R("hp_below", "potion:health", 50), R("first_turn", "power_attack")]) }) },
     trainer: { name: "Skill trainer", desc: "Hybrid + Spread practice: in easy fights it rotates weapons, blocks and every school you know, so all your skills grow. Dangerous fights it plays to win.", build: () => ({ mode: "hybrid", ai: { train: true },
       rules: end([R("hp_below", "potion:health", 35)]) }) },
   };
