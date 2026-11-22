@@ -1187,7 +1187,55 @@ h3[class*="cat-"]{color:var(--cat)}
 .gearprev figcaption{font-size:11px;color:var(--muted,#b8ab90);margin-top:2px}
 .gearprev img{border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.35)}
 .pgear{flex:0 0 auto;margin-right:6px;border-radius:6px;overflow:hidden;line-height:0}
+
+/* [access] Settings → Accessibility (access.js): text size, colour-blind help, high contrast, reduce motion, one hand */
+html.a11y-zoom{zoom:var(--tz)}
+html.a11y-zoom canvas{zoom:calc(1 / var(--tz))}
+.setrow.a11y-col{flex-direction:column;align-items:stretch;gap:6px}
+.setrow.a11y-col .seg{display:flex;margin:0}
+.setrow.a11y-col .seg button{flex:1 1 0;min-width:0;padding:8px 2px;letter-spacing:.02em;text-transform:none;font-size:15px}
+html.a11y-zoom .seg button{letter-spacing:.04em;padding-left:4px;padding-right:4px}
+html.a11y-zoom .tabs{zoom:calc(min(var(--tz),1.12) / var(--tz))}
+html.a11y-zoom .tab{letter-spacing:0}
+.a11y-hint{color:var(--mute);font-size:13px;line-height:1.3}
+/* colour-blind help: the same meanings, colours that stay apart */
+html[data-cb=protan],html[data-cb=deutan]{--hp:#e0601a;--mp:#3f7fd6;--sp:#fff27a;--ember:#ff6a2a;--cb-low:#6fb6ff;--cb-med:#f2d27a;--cb-high:#e0501a;--cb-raid:#ff8a2a;--buff:#6fb6ff;--debuff:#ff8a2a;--stolen:#ff8a2a;--el-poison:#c88aff;--el-heal:#fff27a;--cat-thief:#6fb6ff;--cat-warrior:#ff8a2a}
+html[data-cb=protan]{--hp:#f07020;--ember:#ff7a3a;--cb-high:#ff6a1a}
+html[data-cb=tritan]{--hp:#e0303a;--mp:#2a9ad8;--sp:#ece6dc;--ember:#ff4d5a;--cb-low:#5fd0c8;--cb-med:#ff9ad0;--cb-high:#ff3a3a;--cb-raid:#ff4d5a;--buff:#5fd0c8;--debuff:#ff5a5a;--stolen:#ff5a5a;--el-frost:#bfefff;--el-poison:#c88aff;--sch-mysticism:#c8b4ff;--cat-mage:#c8b4ff}
+html[data-cb]{--q-common:#ece8de;--q-fine:#20c0a0;--q-superior:#5b8cff;--q-exquisite:#f0a8ff;--q-legendary:#ffd84a;--q-unique:#ff5a3a}
+html[data-cb] .hb.hp .track i{background:linear-gradient(color-mix(in srgb,var(--hp) 62%,#fff),var(--hp) 60%,color-mix(in srgb,var(--hp) 62%,#000));color:color-mix(in srgb,var(--hp) 55%,transparent)}
+html[data-cb] .hb.mp .track i{background:linear-gradient(color-mix(in srgb,var(--mp) 62%,#fff),var(--mp) 60%,color-mix(in srgb,var(--mp) 62%,#000));color:color-mix(in srgb,var(--mp) 55%,transparent)}
+html[data-cb] .hb.sp .track i{background:linear-gradient(color-mix(in srgb,var(--sp) 62%,#fff),var(--sp) 60%,color-mix(in srgb,var(--sp) 62%,#000));color:color-mix(in srgb,var(--sp) 55%,transparent)}
+html[data-cb] .hb.low .track{box-shadow:0 0 0 1px #0b0c0e,0 0 0 2px var(--ember),0 0 8px var(--ember)}
+html[data-cb] .danger-low,html[data-cb] #side[data-tab=log] .danger-low{color:var(--cb-low)}
+html[data-cb] .danger-medium,html[data-cb] #side[data-tab=log] .danger-medium{color:var(--cb-med)}
+html[data-cb] .danger-high,html[data-cb] #side[data-tab=log] .danger-high{color:var(--cb-high)}
+html[data-cb] #side[data-tab=log] :is(.danger-low,.danger-medium,.danger-high){text-shadow:0 0 1px #000,0 1px 2px #000}
+html[data-cb] .compass .cm.raid{color:var(--cb-raid)}
+/* high-contrast text */
+html.a11y-hc{--ink:#fff;--mute:#e6e0d2;--sk-ink:#fff;--sk-mute:#e6e0d2;--line:#7a808a;--sk-line:rgba(255,255,255,.45)}
+html.a11y-hc body{color:#fff}
+html.a11y-hc :is(.panel,.sheet,.dun .card,.trip){background:#060708!important;border-color:rgba(255,255,255,.5)!important}
+html.a11y-hc :where(.sub,.a11y-hint,.item .t span,.vital small,.hb small,.top .who span,.top .meta,.top .iconbtn .ibl,.log time,.slot span,.race span,.status,.picked .t span,.dun .legend,.tab,.sky-row .nm i,.seg button:not(.on)){color:#ece6d8!important}
+html.a11y-hc .tab.on{color:#fff!important;text-decoration:underline;text-underline-offset:3px}
+html.a11y-hc #hudlog :is(.toast,.hlog){background:rgba(0,0,0,.92);color:#fff}
+html.a11y-hc :is(.btn,.chip,.seg,input,select,textarea,.iconbtn){border-color:rgba(255,255,255,.75)!important}
+html.a11y-hc .seg button.on{background:#ece6d8!important;color:#000!important}
+html.a11y-hc :focus-visible{outline:3px solid #fff!important;outline-offset:2px}
+/* reduce motion: everything lands at once */
+html.a11y-still *,html.a11y-still *::before,html.a11y-still *::after{animation-duration:1ms!important;animation-delay:0s!important;animation-iteration-count:1!important;transition-duration:1ms!important;transition-delay:0s!important;scroll-behavior:auto!important}
+html.a11y-still :is(.mo-amb,.mo-const,.mo-veil,.mo-fly){display:none!important}
+/* one-hand mode: the main buttons gather at the bottom, right (default) or left */
+html.a11y-1h .top :is(.soc,.snd){position:fixed;right:12px;z-index:6;width:48px;height:48px;border-radius:50%;background:rgba(10,11,13,.82);box-shadow:0 0 0 1px rgba(226,187,100,.45),0 6px 16px rgba(0,0,0,.5)}
+html.a11y-1h .top .snd{right:66px;bottom:calc(124px + env(safe-area-inset-bottom))}
+html.a11y-1h .top .soc{right:66px;bottom:calc(70px + env(safe-area-inset-bottom))}
+html.a11y-1h .mapbtns{top:auto;bottom:8px}
+html.a11y-1h .mapwrap:has(.picked:not(.hide)) .mapbtns{bottom:72px}
+html.a11y-1h-left :is(.twbtn,.favbtn){right:auto;left:12px}
+html.a11y-1h-left .top :is(.soc,.snd){right:auto;left:66px}
+html.a11y-1h-left .mapbtns{right:auto;left:8px}
 </style>
+<script src="access.js"></script>
 </head>
 <body>
 <div class="app" id="app">

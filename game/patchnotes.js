@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b82", build: 82, date: "22 Nov 2026", title: "Accessibility options", items: [
+      "New in Settings → Accessibility: Text size with four steps (Normal, Big, Bigger, Biggest). Everything grows together, buttons included, so nothing gets cut off.",
+      "Colour-blind help for red, green or blue colour-blindness: health, magicka and stamina bars, danger levels, buffs and debuffs, item quality colours, enemy health bars in fights and danger marks on the map switch to colours that stay easy to tell apart.",
+      "High-contrast text: brighter grey text, solid dark panels and firmer outlines.",
+      "Reduce motion: no screen shake, hit flashes, drifting or sliding effects. It follows your phone's setting by default, and you can switch it on or off yourself.",
+      "One-hand mode: the Menu, Friends, map zoom, favourites and compass buttons gather at the bottom of the screen, on the left or right side, where your thumb can reach them.",
+      "All of it is saved on your phone like your other settings and works with both art styles."] },
     { id: "b78", build: 78, date: "22 Nov 2026", title: "The whole world, painted", items: [
       "All the new realistic artwork is in: every wilderness and dungeon background (Reach, Rift, marsh, hot springs, coast, ash wastes, caves, Nordic tombs, Dwemer ruins, Falmer caves and more), all 32 enemies in fights, and new textures for panels, parchment, the compass, the night sky and window frames."] },
     { id: "b76", build: 76, date: "22 Nov 2026", title: "Real paintings arrive", items: [
