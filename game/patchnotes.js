@@ -3,7 +3,7 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b69", build: 69, date: "22 Nov 2026", title: "Bigger perk trees, burning and a real quest journal", items: [
+    { id: "b70", build: 70, date: "22 Nov 2026", title: "Bigger perk trees, burning and a real quest journal", items: [
       "Every skill tree now has 9 to 14 perks (284 in total): Skyrim's own like Dual Flurry, Quick Shot, Eagle Eye, Shield Charge, Juggernaut, Impact, Twin Souls, Necromage and Assassin's Blade, plus new ones for Spear, Hand-to-Hand, Unarmored, Mysticism and more. Your old perks stay.",
       "Fire sets things burning for 3 turns, frost chills and slows (Deep Freeze can freeze solid), shock drains magicka and interrupts casters. Enemy mages, atronachs and dragons can do it to you too. Look for the 🔥 ❄ ⚡ chips under the health bars.",
       "The Journal is now only quests: Active, Misc and Completed, grouped by questline, with objectives, stages, recommended level and a Track button that drives the compass bar.",
