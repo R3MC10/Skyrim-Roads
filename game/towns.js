@@ -366,11 +366,16 @@ const TOWNS = (() => {
     if (asleep && P(s, "night_thief")) c += 0.25;
     return clamp(c, 0.05, 0.95);
   }
-  function pickTownsfolk(s, t = G.now()) {
+  /* who and how hard, worked out before the try (the mini-game needs the chance up front) */
+  function townPickPlan(s) {
+    const gold = rint(5, 45), target = pick(["a merchant", "a drunk farmer", "a guard off duty", "a noble", "a priest", "a bard"]);
+    return { gold, target, chance: pickChance(s, { gold, level: rint(1, 20) }) };
+  }
+  /* plan (optional) = townPickPlan(s) plus hit: true/false from the mini-game; without hit it's the old dice roll */
+  function pickTownsfolk(s, t = G.now(), plan = null) {
     if (!s.location || !isTown(s.location)) return { text: "There's no one around to rob." };
-    const hold = G.holdAt(WORLD.places[s.location]), gold = rint(5, 45);
-    const target = pick(["a merchant", "a drunk farmer", "a guard off duty", "a noble", "a priest", "a bard"]);
-    if (Math.random() < pickChance(s, { gold, level: rint(1, 20) })) {
+    const hold = G.holdAt(WORLD.places[s.location]), { gold, target, chance } = plan || townPickPlan(s);
+    if (typeof plan?.hit === "boolean" ? plan.hit : Math.random() < chance) {
       s.gold += gold; s.stats = { ...(s.stats || {}), pp: ((s.stats || {}).pp || 0) + 1 };
       const sk = G.useSkill(s, "Pickpocket", gold);                                           // [Skyrim] XP = value stolen
       let item = "";
@@ -548,6 +553,6 @@ const TOWNS = (() => {
 
   return { HOMES, home, buyHome, sleepHome, stash, unstash, gardenReady, harvest, BIG, SMALL, carriageFrom, carriageDests, rideCarriage, CARRIAGE_SPEED, FOLLOWERS, followerMax, followerHp, followersHere, hire, dismiss, deliverDragonstone,
     EFFECTS, INGREDIENT_FX, INNS, TRAINERS, CAP, QUALITY, known, brewPreview, brew, eat, drink, applyPoison, roomPrice, rentRoom, rumour, trainCost, trainedThisLevel, train,
-    temperInfo, temper, ingotFor, bounty, totalBounty, addBounty, wanted, guardCheck, guardChoice, pickChance, pickTownsfolk, canFence, jobsAt, takeJob, dropJob, checkJobs, handIn, countItem, isTown, RUMOUR, rumourPrice,
+    temperInfo, temper, ingotFor, bounty, totalBounty, addBounty, wanted, guardCheck, guardChoice, pickChance, townPickPlan, pickTownsfolk, canFence, jobsAt, takeJob, dropJob, checkJobs, handIn, countItem, isTown, RUMOUR, rumourPrice,
     POTION_MINUTES: (d) => Math.round(d * SECONDS_PER_REAL_SECOND_OF_SKYRIM / 60) };
 })();

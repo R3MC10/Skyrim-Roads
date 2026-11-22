@@ -50,10 +50,11 @@ async def main():
             await pg.mouse.move(bb["x"]+bb["width"]/2, bb["y"]+bb["height"]/2); await pg.mouse.down(); await pg.wait_for_timeout(900); await pg.mouse.up(); await pg.wait_for_timeout(200)
             picks = await pg.evaluate("IMM.lock?.picks"); broken = await pg.evaluate("IMM.lock?.broken")
             res.append(f"{style} break: shown {shown} tries {tries0} picks now {picks} broken {broken}")
-            # 3) auto (Quick roll) keeps the old roll and spends the broken pick
-            await pg.click("#lpauto"); await pg.wait_for_timeout(500)
+            # 3) no quick roll any more (mini-games are always on); leave it
+            if await pg.query_selector("#lpauto"): raise SystemExit("Quick roll should be gone")
+            await pg.click("#lpleave"); await pg.wait_for_timeout(500)
             room = await pg.evaluate("JSON.stringify(window.__dbg.save().dungeon?.room||null)")
-            res.append(f"{style} auto: overlay gone {not await pg.query_selector('#lockpick')} room {room}")
+            res.append(f"{style} leave: overlay gone {not await pg.query_selector('#lockpick')} room {room}")
             await clear()
             # quest banner
             await pg.evaluate("()=>{ const S=window.__dbg.save(); IMM.tick(S); const id=Object.keys(QUESTS.L).find(k=>!S.quests[k]); S.quests[id]={stage:0,t:G.now(),base:{}}; IMM.tick(S); }")

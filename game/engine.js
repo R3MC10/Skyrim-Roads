@@ -358,6 +358,9 @@ const G = (() => {
     const bare = !armorWorn.some((a) => a && ARMOR_SKILL[a.type]);
     return sp.amount * (bare && P(s, "mage_armor") ? [1, 2, 2.5, 3][P(s, "mage_armor")] : 1) * (1 + PX(s, "armorspell", f));   // [Skyrim] Mage Armor, Stability
   }
+  /* what a summon spell calls up, in words: "Conjure Flame Atronach" -> "flame atronach" */
+  const SUMMON_NAMES = { conjure_familiar: "spectral wolf", flaming_familiar: "flaming familiar", spectral_archer: "spectral archer", seeker: "seeker" };
+  const summonName = (id, sp) => SUMMON_NAMES[String(id || "").replace(/_dual$/, "")] || String(sp?.name || "summon").replace(/\s*\(dual\)$/, "").replace(/^(conjure|summon|call|raise)\s+/i, "").toLowerCase();
   const spellSummon = (s, sp, f) => ({
     turns: sp.turns + 2 * P(s, "summoner") + PX(s, "summonturns", f),
     dmg: sp.amount * (P(s, "elemental_potency") ? 1.5 : 1) * (P(s, "twin_souls") ? 2 : 1) * (1 + PX(s, "summon", f)),   // Necromancy, Dark Souls
@@ -720,7 +723,8 @@ const G = (() => {
       }
       if (sp.kind === "summon") {
         const sm = spellSummon(s, sp, this); this.summonTurns = sm.turns; this.summonDmg = sm.dmg;
-        return `${sp.name}: ${P(s, "twin_souls") ? "two spectral wolves appear" : "a spectral wolf appears"}`;
+        const who = summonName(id, sp); this.summonId = id; this.summonName = who;
+        return `${sp.name}: ${P(s, "twin_souls") ? `two of them appear (${who})` : `${/^[aeiou]/i.test(who) ? "an" : "a"} ${who} appears`}`;
       }
       if (sp.kind === "calm") {
         if ((this.tags.has("undead") || this.tags.has("construct")) && !P(s, "master_of_the_mind")) return `${sp.name}: no effect on the ${this.tags.has("undead") ? "undead" : "machine"}`;

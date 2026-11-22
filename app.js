@@ -101,17 +101,32 @@
   };
   window.__app = updater;
 
+  /* updates are forced: once the new game files are downloaded, switch over at the first safe moment
+     (the game says when: not mid-fight, dungeon, trade, menu or typing). Progress is saved first. */
+  let forceTimer = null;
+  function applyWhenSafe(r) {
+    clearInterval(forceTimer);
+    const tryNow = async () => {
+      let safe = false;
+      try { safe = !!window.__ui?.safeToUpdate?.(); } catch (e) { safe = false; }
+      if (!safe) return;
+      clearInterval(forceTimer); forceTimer = null;
+      try { window.__ui?.save?.(); } catch (e) { /* nothing to save yet */ }
+      try { await updater.quickUpdate(r.latest, true); } catch (e) { /* try again on the next check */ }
+    };
+    forceTimer = setInterval(tryNow, 15000);
+    tryNow();
+  }
   async function autoCheck() {
-    if (!pref("autoUpdate", true)) return;
     try {
       const r = await updater.check();
       if (!r.newer) return;
       if (r.quick) {
-        if (staged === r.latest.build) return;
+        if (staged === r.latest.build) { if (!forceTimer) applyWhenSafe(r); return; }
         // download quietly; it switches over the next time the game opens (or right away on the title screen)
         const onTitle = !!document.querySelector("#title") && !document.querySelector("#title input:focus");
         await updater.quickUpdate(r.latest, onTitle);
-        if (!onTitle) window.__ui?.updateStaged?.(r);
+        if (!onTitle) { window.__ui?.updateStaged?.(r); applyWhenSafe(r); }
         return;
       }
       window.__ui?.updateAvailable?.(r);
@@ -124,10 +139,11 @@
     clearAll();
     document.dispatchEvent(new Event("visibilitychange"));
     if (waitingForPermission) { waitingForPermission = false; window.__ui?.permissionBack?.(); }
+    setTimeout(autoCheck, 3000);   // back in the game: look for a new version
   });
   setTimeout(() => SplashScreen?.hide(), 400);
   setTimeout(askOnce, 2500);
   setTimeout(autoCheck, 4000);
   setTimeout(() => { try { Updater?.gameReady?.(); } catch (e) { /* older app */ } }, 5000);   // the game started fine on these files
-  setInterval(autoCheck, 30 * 60000);
+  setInterval(autoCheck, 10 * 60000);
 })();

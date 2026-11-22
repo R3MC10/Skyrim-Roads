@@ -133,7 +133,7 @@ const DAEDRIC = (() => {
     const s = f.s, out = [];
     if (G.fxSum(s, "dae:cloak") > 0) { const d = Math.round(5 + (s.level || 1) / 5); f.ehp -= d; out.push(`poison cloak ${d}`); }
     if (f.turn === 1 && !f.daeRose && has(s, "sanguine_rose") && !(f.summonTurns > 0)) {
-      f.daeRose = true; f.summonTurns = 6; f.summonDmg = Math.round(6 + (s.level || 1) / 3); out.push("the Sanguine Rose calls a Dremora to your side");
+      f.daeRose = true; f.summonTurns = 6; f.summonId = "dremora"; f.summonName = "Dremora"; f.summonDmg = Math.round(6 + (s.level || 1) / 3); out.push("the Sanguine Rose calls a Dremora to your side");
     }
     if (f.turn === 2 && !f.daeWabba && has(s, "wabbajack")) { f.daeWabba = true; out.push(wabbajack(f)); }
     return out.length ? out.join(" · ") : null;

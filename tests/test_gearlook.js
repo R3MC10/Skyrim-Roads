@@ -1,7 +1,7 @@
 // [gear] every weapon/armour item maps to a gear look; card look stays small; figures draw for every set
 const __GAME = process.env.W || require("path").join(__dirname, "../game/");
 const vm = require("vm"), fs = require("fs"), path = require("path");
-const W = process.env.W || "/home/claude/web_gear/";
+const W = process.env.W || require("path").join(__dirname, "../game/");
 const stub = new Proxy(function () {}, { get: (t, k) => (k === Symbol.toPrimitive ? () => "" : stub), apply: () => stub, construct: () => stub });
 const ctx = { console, document: stub, localStorage: { getItem: () => null, setItem() {} }, sessionStorage: { getItem: () => null, setItem() {} }, navigator: {}, setTimeout() {}, clearTimeout() {}, setInterval() {}, requestAnimationFrame() {}, addEventListener() {}, matchMedia: () => ({ matches: false }), performance: { now: () => 0 }, location: { search: "", hash: "" }, Image: function () {}, fetch: () => Promise.reject() };
 ctx.window = ctx; ctx.globalThis = ctx; vm.createContext(ctx);

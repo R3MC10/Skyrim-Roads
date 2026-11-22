@@ -1546,6 +1546,12 @@ body:has(#favBtn) .app,body:has(#twBtn) .app{padding-bottom:calc(190px + env(saf
 .trade-cats{margin:6px 0 8px}
 @media (min-width:1500px){.app{max-width:min(1760px,96vw)}.layout{grid-template-columns:minmax(0,1.55fr) minmax(440px,1fr)}.tabs{padding-left:max(0px,calc(50vw - 640px));padding-right:max(0px,calc(50vw - 640px))}.sky-in{width:min(1000px,100%)}.tw-bar{max-width:900px}}
 @media (min-width:2100px){.app{max-width:min(2100px,96vw)}.layout{grid-template-columns:minmax(0,1.7fr) minmax(480px,1fr)}}
+/* ==== pickpocket mini-game (pickgame.js) ==== */
+.pickgame #pplift{user-select:none;-webkit-user-select:none;touch-action:none}
+#ppstage{flex:none;min-width:120px;font-size:13px;letter-spacing:.06em;color:#e9dcc0;text-align:left}
+.pickgame.won .lpcard{animation:lpwon .5s ease-out}
+.pickgame.caught .lpcard{animation:lpsnap .35s;box-shadow:0 0 0 1px rgba(196,87,46,.7),0 20px 60px rgba(0,0,0,.6)}
+@media (prefers-reduced-motion:reduce){.pickgame .lpcard{animation:none!important}}
 </style>
 <script src="access.js"></script>
 </head>
@@ -1646,6 +1652,7 @@ body:has(#favBtn) .app,body:has(#twBtn) .app{padding-bottom:calc(190px + env(saf
 <script src="skyui.js"></script>
 <script src="hud.js"></script>
 <script src="immerse.js"></script>
+<script src="pickgame.js"></script>
 <script src="rumours.js"></script>
 <script src="motion.js"></script>
 <script src="favwheel.js"></script>

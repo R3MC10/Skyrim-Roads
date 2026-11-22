@@ -319,6 +319,8 @@ const FIGHTART = (() => {
   function summonKind(id, txt) {
     const t = `${id || ""} ${txt || ""}`.toLowerCase();
     if (/dremora/.test(t)) return "dremora";
+    if (/flaming_familiar|flaming familiar/.test(t)) return "flame_atronach";
+    if (/zombie|raise|reanimat|corpse|dead thrall/.test(t)) return "zombie";
     if (/atronach/.test(t)) return /frost/.test(t) ? "frost_atronach" : /storm|shock/.test(t) ? "storm_atronach" : "flame_atronach";
     return "familiar";
   }
@@ -487,7 +489,7 @@ const FIGHTART = (() => {
       if (me) {
         const [k, arg] = (l.a || "").split(":");
         const b = { who: "me", li, move: "wait", wt: h.wt, fx: null, el: null, miss: false, crit: false, power: false, sneak: null, dmg: null, heal: null, hpT: hp, ehpT: nehp,
-          ally: /· (?!bleeds|familiar)[A-Z][^·]* \d+/.test(" · " + extra) && (f.allies || []).length > 0, wolf: /familiar/.test(extra), burn: /bleeds|wall|storm|blizzard/i.test(extra) ? elementOf(extra) || "dust" : null, flask: null };
+          ally: /· (?!bleeds|familiar|Your )[A-Z][^·]* \d+/.test(" · " + extra) && (f.allies || []).length > 0, wolf: /familiar \d|^Your .+ strikes \d| · Your .+ strikes \d/.test(extra), burn: /bleeds|wall|storm|blizzard/i.test(extra) ? elementOf(extra) || "dust" : null, flask: null };
         let lwt = l.wt || base; if (lwt === base) lwt = h.wt;   // staffs and crossbows are told apart by the scene, not the engine
         if (l.wt && l.wt !== base) st.bound = true;
         const spellish = k === "spell" || k === "dual" || k === "scroll" || (!k && (elementOf(me) || /ward|cloak|heal|bound|summon|familiar|rune|wall|conjur|raise|paralyz|calm|fear|courage|invisib|soul|turn|oakflesh|dragonhide|armor/i.test(me)) && !/^(power )?attack|^sneak attack/i.test(me));
@@ -941,8 +943,9 @@ const FIGHTART = (() => {
         if (a.name) mateTags.push([a.name, cx * z + ox + zcx - zcx * z, (cy - 50 * s) * z + oy + zcy - zcy * z]);
       }
       // your summon: the spectral wolf, a Dremora, an atronach
-      if ((st && b && b.wolf) || (b && b.fx === "summon" && b.who === "me" && u > 0.5)) {
-        const lunge = wolfT < 1 ? Math.sin(wolfT * Math.PI) : 0, sk = (b && b.st && b.st.summon) || st.summon || "familiar", sx = hx0 + (34 + lunge * 50) * s;
+      const liveSum = f.tbMid && f.summonTurns > 0 && f.summonId ? summonKind(f.summonId, f.summonName) : null;   // a turn-by-turn fight: your summon stays in view between turns
+      if ((st && b && b.wolf) || (b && b.fx === "summon" && b.who === "me" && u > 0.5) || liveSum) {
+        const lunge = wolfT < 1 ? Math.sin(wolfT * Math.PI) : 0, sk = (b && b.st && b.st.summon) || st.summon || liveSum || "familiar", sx = hx0 + (34 + lunge * 50) * s;
         wg.save(); wg.translate(sx, groundY); wg.scale(s, s); allyFig(wg, sk, { lunge, t: tt }); wg.restore();
         const sp = SPARK[sk]; if (sp && Math.random() < 0.25 * pmul) spawn(sp[1], sp[0], sx + (Math.random() - 0.5) * 16 * s, groundY + (sp[2] - Math.random() * 30) * s, (Math.random() - 0.5) * 12 * s, -24 * s, 0.6, 2.2, 0);
       }

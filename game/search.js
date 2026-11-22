@@ -92,7 +92,7 @@ const SEARCH = (() => {
     ["One-hand mode", "Accessibility", "k:a11yHand", "thumb left right hand"],
     ["Crafting mini-games or quick craft", "Crafting", "k:craftGame", "minigame forge smith"], ["Cold meter", "Survival", "k:survival", "freeze cold survival warmth"],
     ["Map opens close up or all Skyrim", "Map", "k:zoomFar", "zoom"], ["Phone notifications", "Phone", "k:notify", "notification alert"],
-    ["Check for updates", "Phone", "k:autoUpdate", "update version"], ["Guide for new players", "Help", "a:guide", "help tutorial how"],
+    ["Guide for new players", "Help", "a:guide", "help tutorial how"],
     ["Patch notes", "Help", "a:notes", "changes news version"], ["Main menu", "Help", "a:totitle", "title quit exit"],
   ];
   let IDX = null, IDXKEY = "";
