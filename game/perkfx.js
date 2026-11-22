@@ -118,6 +118,7 @@ const PFX = (() => {
     // ---------------------------------------------------------------- Sneak (6 → 12)
     [ "Sneak", "muffled_movement", "Muffled Movement", 1, [30], ["stealth"], "Armor makes no noise: another 8% harder to spot. [Skyrim]", [["hide", 8, {}]]],
     [ "Sneak", "silent_roll", "Silent Roll", 1, [50], ["light_foot"], "Rolling clear: 10% chance to dodge any blow while you're hard to see (night, fog, rain). [Skyrim]", [["dodge", 0.1, { dark: 1 }]]],
+    [ "Sneak", "ambusher", "Ambusher", 1, [40], ["muffled_movement"], "Ready for anything: if a foe spots you sneaking up, it gets no free first strike, and your sneak blows can take up to 70% of a strong foe's health (half of a boss's) instead of 50%. [OURS]", [["ambush", 1, {}]]],
     [ "Sneak", "silence", "Silence", 1, [70], ["silent_roll"], "Another 10% harder to spot. [Skyrim]", [["hide", 10, {}]]],
     [ "Sneak", "shadow_dancer", "Shadow Dancer", 1, [60], ["backstab"], "Sneak attacks with any weapon do 25% more. [OURS]", [["out", 0.25, { sneak: 1 }]]],
     [ "Sneak", "assassins_mark", "Assassin's Mark", 1, [80], ["assassins_blade"], "A sneak attack that leaves the foe below 20% health finishes it. [OURS]", [["sneakexec", 0.2, {}]]],

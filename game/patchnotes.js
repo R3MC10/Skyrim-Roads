@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b82", build: 82, date: "22 Nov 2026", title: "Your AI, your way (and fairer sneak attacks)", items: [
+      "Sneak attacks make sense now: heavy armor clanks, daylight gives you away, nights, fog and rain help, and the undead and dragons are hard to fool. The odds show on the encounter card. A sneak blow can't drop a strong foe in one hit any more (weak ones still go down). New Sneak perk: Ambusher.",
+      "Smart AI settings on the Tactics tab: pick a style (Careful, Balanced, Aggressive), lean on melee, bow or magic, switch off schools or single spells, choose when to drink potions, shout, sneak up and heal, and how much magicka to keep back.",
+      "Spread practice: switch it on and in easy fights the AI rotates your weapon, blocking and every school you know, so all your skills level up, not just your best one. Dangerous fights it still plays to win.",
+      "Better tactics: rules can join conditions with AND / OR and NOT, 13 new conditions (enemy weak to fire, burning, staggered, a caster, bad weather and more), a Run away move for road fights (you skip the loot but keep going), and drag a rule's number to reorder.",
+      "Hybrid mode: your rules go first, Smart AI fills the gaps. New presets built from your own spells and gear (Warrior, Archer, Battlemage, Healer, Necromancer, Mage, Thief, Skill trainer), share codes to swap tactics with friends, and Run 20 fights to see your win rate before you head out."] },
     { id: "b81", build: 81, date: "22 Nov 2026", title: "Gear you can see", items: [
       "Every armour set and weapon material now looks like itself: hide and fur with shaggy trim, studded leather with rivets, elven gold, see-through glass and stalhrim, chitin plates, dragonscale and bone, Forsworn feathers, guild hoods and more. It shows on your character, in fights and on the road while you travel.",
       "Other players see your real gear too, on the map and when you fight side by side.",
