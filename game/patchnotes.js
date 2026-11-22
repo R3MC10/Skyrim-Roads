@@ -3,6 +3,15 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "bQ-inventory", build: 0, date: "22 Nov 2026", title: "Tidier pack and safer selling", items: [
+      "Mark anything Keep (🔒) from its item card. Kept things and your favourites are never sold in bulk.",
+      "Sell all junk: at a shop, one button sells cheap trinkets and loose gear that's worse than what you wear. You see the list and the total first. Kept, favourite, quest, unique, enchanted and handmade things never count as junk.",
+      "Green ▲ and red ▼ arrows on gear show if it's better or worse than what you're wearing: in the pack, the Items menu, shops and market stalls.",
+      "New sort buttons in the Items menu: by name, value, weight, value per weight or newest first.",
+      "You can now drop things from your pack.",
+      "A warning before you buy or take something that makes you too heavy, with quick buttons to sell or drop something instead.",
+      "The game asks first before you sell, break at the enchanter, or drop something valuable (500+ gold), one of a kind, enchanted or marked Keep.",
+      "Buy back: undo your last sale at the price you got, while you're still in that town and within an in-game hour."] },
     { id: "b88", build: 88, date: "22 Nov 2026", title: "Accessibility options", items: [
       "New in Settings → Accessibility: Text size with four steps (Normal, Big, Bigger, Biggest). Everything grows together, buttons included, so nothing gets cut off.",
       "Colour-blind help for red, green or blue colour-blindness: health, magicka and stamina bars, danger levels, buffs and debuffs, item quality colours, enemy health bars in fights and danger marks on the map switch to colours that stay easy to tell apart.",

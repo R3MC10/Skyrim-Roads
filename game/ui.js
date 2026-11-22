@@ -1075,10 +1075,11 @@
   // ---- the trade window: Buy and Sell side by side, like Skyrim's barter menu
   let shopMode = "buy";
   const econB = (item) => (typeof ECON !== "undefined" ? ECON.badge(S.location, item) : "");   // ▲/▼ price arrows (economy.js)
+  const iqB = (item, r) => (typeof INVQOL !== "undefined" ? INVQOL.badge(S, item, r) : "");   // 🔒 kept, ▲/▼ better or worse than worn (invqol.js)
   function barterHTML(shop, open, wanted, shopRow) {
     const wt = Math.round(G.carried(S)), cap = Math.round(G.capacity(S));
     const head = `<div class="barter-head"><span>💰 <b class="gold num">${S.gold}</b> gold</span>${Number.isFinite(wt) && cap ? `<span>⚖ ${wt}/${cap}</span>` : ""}</div>
-      <div class="seg"><button class="${shopMode === "buy" ? "on" : ""}" data-act="smode" data-id="buy">Buy</button><button class="${shopMode === "sell" ? "on" : ""}" data-act="smode" data-id="sell">Sell</button></div>`;
+      <div class="seg"><button class="${shopMode === "buy" ? "on" : ""}" data-act="smode" data-id="buy">Buy</button><button class="${shopMode === "sell" ? "on" : ""}" data-act="smode" data-id="sell">Sell</button></div>${typeof INVQOL !== "undefined" ? INVQOL.shopHTML(S, shop, open && !wanted) : ""}`;
     const mk = typeof ECON !== "undefined" ? ECON.report(S, S.location) : "";
     if (shopMode === "buy") return head + mk + (typeof SPELLBOOK !== "undefined" ? SPELLBOOK.shopNote(S, S.location, shop) + (shop === "wizard" ? SPELLBOOK.ritualHTML(S) : "") : "") + (typeof TOMES !== "undefined" ? TOMES.stockAt(S.location, shop, S) : D.SHOP_STOCK[shop] || []).map((i) => shopRow(i)).join("");
     const eq = new Set(Object.values(G.loadout(S).equipment || {}));
@@ -1086,7 +1087,7 @@
     const rows = S.inv.filter((r) => !eq.has(r.id) && D.ITEMS[r.item] && !["golden_claw", "dragonstone"].includes(r.item) && (!r.stolen || fence))
       .map((r) => ({ r, p: G.sellPrice(S, r) })).sort((a, b) => b.p * b.r.qty - a.p * a.r.qty);
     const ok = open && !wanted;
-    return head + mk + (rows.length ? rows.map(({ r, p }) => `<div class="item">${ICONART.item(r.item, 34, r)}<div class="t">${esc((r.tq ? TOWNS.QUALITY[r.tq] + " " : "") + D.ITEMS[r.item].name)}${r.qty > 1 ? ` ×${r.qty}` : ""}${r.stolen ? ' <span class="danger-high">stolen</span>' : ""}<span>${esc(G.itemStats(r.item))} · ${D.ITEMS[r.item].weight} wt</span></div>${econB(r.item)}<span class="num gold">${p}</span><button class="btn sm pri" data-act="sell" data-id="${r.id}" ${ok ? "" : "disabled"}>Sell</button>${r.qty > 1 ? `<button class="btn sm" data-act="sellall" data-id="${r.id}" ${ok ? "" : "disabled"}>All ${G.lotPrice ? G.lotPrice(S, r.item, r.qty, "sell", r) : p * r.qty}</button>` : ""}</div>`).join("")
+    return head + mk + (rows.length ? rows.map(({ r, p }) => `<div class="item">${ICONART.item(r.item, 34, r)}<div class="t">${esc((r.tq ? TOWNS.QUALITY[r.tq] + " " : "") + D.ITEMS[r.item].name)}${r.qty > 1 ? ` ×${r.qty}` : ""}${r.stolen ? ' <span class="danger-high">stolen</span>' : ""}${iqB(r.item, r)}<span>${esc(G.itemStats(r.item))} · ${D.ITEMS[r.item].weight} wt</span></div>${econB(r.item)}<span class="num gold">${p}</span><button class="btn sm pri" data-act="sell" data-id="${r.id}" ${ok ? "" : "disabled"}>Sell</button>${r.qty > 1 ? `<button class="btn sm" data-act="sellall" data-id="${r.id}" ${ok ? "" : "disabled"}>All ${G.lotPrice ? G.lotPrice(S, r.item, r.qty, "sell", r) : p * r.qty}</button>` : ""}</div>`).join("")
       : `<p class="sub">Nothing to sell${eq.size ? " (worn gear stays on you)" : ""}.</p>`) + (S.inv.some((r) => r.stolen) && !fence ? `<p class="sub">Stolen things only sell to a fence.</p>` : "");
   }
   // ------------------------------------------------------------ the bard's corner: verses, likes, the Song of the North
@@ -1311,7 +1312,7 @@
     });
     const k = sky.sort, d = sky.dir;
     rows.sort((a, b) => (b.eq - a.eq) || (k === "name" ? a.name.localeCompare(b.name) * d : (((a[k] ?? -1) - (b[k] ?? -1)) * -d) || a.name.localeCompare(b.name)));
-    return rows;
+    return typeof INVQOL !== "undefined" && S.invSort ? INVQOL.sorted(S, rows, (x) => x.r).sort((a, b) => b.eq - a.eq) : rows;   // pack sort chips (invqol.js)
   }
   function itemDetail(row) {
     const { r, it } = row, eq = row.eq;
@@ -1347,6 +1348,7 @@
     if (it.dish) lines.push(`${it.desc}. A new meal replaces the last one's effect.`);
     if (it.enchant || it.staff) acts.push(...gems.map((g) => `<button class="btn" data-act="recharge" data-id="${r.id}" data-gem="${g.id}">Recharge (${esc(D.ITEMS[g.item].name.split(" (")[0])})</button>`));
     if (canShop) acts.push(`<button class="btn" data-act="sell" data-id="${r.id}">Sell · ${G.sellPrice(S, r)} gold</button>`);
+    if (typeof INVQOL !== "undefined") acts.push(...INVQOL.acts(S, r, eq, false));   // Keep / Drop (invqol.js)
     if (typeof ECON !== "undefined" && !it.noTrade && !["golden_claw", "dragonstone"].includes(r.item)) { const bp = ECON.bestPlace(S, r); if (bp && bp.p > 1) lines.push(`Sells best in ${bp.to} right now (about ${bp.p} gold each).`); }
     return `<div class="sky-detail"><div class="sky-ico">${ICONART.item(r.item, 64, r)}</div><h3 class="q-${typeof CC !== "undefined" ? CC.tier(r.item, r) : "common"}">${esc(row.name)}</h3>${typeof CC !== "undefined" ? `<p class="tierline q-${CC.tier(r.item, r)}">${CC.TIER_NAME[CC.tier(r.item, r)]}${r.stolen ? ' · <span class="is-stolen">Stolen</span>' : ""}</p>` : ""}<div class="sky-stats">${stats.map(([k, v]) => `<div><span>${k}</span><b class="num">${esc(String(v))}</b></div>`).join("")}</div>
       ${lines.map((l) => `<p class="sub">${esc(l)}</p>`).join("")}${gearPreview(r, it, eq)}<div class="sky-acts">${acts.join("")}</div></div>`;
@@ -1478,9 +1480,9 @@
       list = `<div class="sky-doll">${dollScreen()}${typeof AMMO !== "undefined" && AMMO.status(S) && !AMMO.status(S).best ? ammoNote() : ""}<p class="sub" style="text-align:center;margin:8px 0 0">Tap a slot to change what you wear. Loadout: <b>${esc(S.loadout)}</b></p></div>`;
     } else if (sky.page === "items") {
       const rows = itemRows(); const sel = rows.find((r) => r.id === sky.sel) || null;
-      const arrow = (k) => sky.sort === k ? (sky.dir > 0 ? " ▾" : " ▴") : "";
-      head = `<div class="sky-head sky-cols"><button data-act="skysort" data-id="name">Name${arrow("name")}</button><button data-act="skysort" data-id="stat">${{ weapons: "Dmg", apparel: "Armor", potions: "Power" }[sky.cat] || "Stat"}${arrow("stat")}</button><button data-act="skysort" data-id="weight">Wt${arrow("weight")}</button><button data-act="skysort" data-id="value">Value${arrow("value")}</button></div>`;
-      list = rows.map((r) => `<button class="sky-row sky-cols ${r.id === sky.sel ? "sel" : ""} ${r.eq ? "eq" : ""}" data-act="skysel" data-id="${r.id}"><span class="nm q-${typeof CC !== "undefined" ? CC.tier(r.r.item, r.r) : "common"}${r.r.stolen ? " is-stolen" : ""}">${ICONART.item(r.r.item, 24, r.r)}${esc(r.name)}${r.r.qty > 1 ? ` <i>(${r.r.qty})</i>` : ""}${r.it.enchant || r.it.aenchant ? ' <i class="ench">✦</i>' : ""}${r.r.stolen ? ' <i class="stolen">✋</i>' : ""}</span><span class="num">${r.stat ?? "–"}</span><span class="num">${r.weight}</span><span class="num">${r.value}</span></button>`).join("") || `<p class="sub sky-empty">${sky.q ? `Nothing called “${esc(sky.q)}” here. Try “All”, or part of the name.` : "Nothing here. Buy things in town or loot them on the road."}</p>`;
+      const arrow = (k) => sky.sort === k && !S.invSort ? (sky.dir > 0 ? " ▾" : " ▴") : "";
+      head = `${typeof INVQOL !== "undefined" ? INVQOL.sortHTML(S) : ""}<div class="sky-head sky-cols"><button data-act="skysort" data-id="name">Name${arrow("name")}</button><button data-act="skysort" data-id="stat">${{ weapons: "Dmg", apparel: "Armor", potions: "Power" }[sky.cat] || "Stat"}${arrow("stat")}</button><button data-act="skysort" data-id="weight">Wt${arrow("weight")}</button><button data-act="skysort" data-id="value">Value${arrow("value")}</button></div>`;
+      list = rows.map((r) => `<button class="sky-row sky-cols ${r.id === sky.sel ? "sel" : ""} ${r.eq ? "eq" : ""}" data-act="skysel" data-id="${r.id}"><span class="nm q-${typeof CC !== "undefined" ? CC.tier(r.r.item, r.r) : "common"}${r.r.stolen ? " is-stolen" : ""}">${ICONART.item(r.r.item, 24, r.r)}${r.eq ? "" : iqB(r.r.item, r.r)}${esc(r.name)}${r.r.qty > 1 ? ` <i>(${r.r.qty})</i>` : ""}${r.it.enchant || r.it.aenchant ? ' <i class="ench">✦</i>' : ""}${r.r.stolen ? ' <i class="stolen">✋</i>' : ""}</span><span class="num">${r.stat ?? "–"}</span><span class="num">${r.weight}</span><span class="num">${r.value}</span></button>`).join("") || `<p class="sub sky-empty">${sky.q ? `Nothing called “${esc(sky.q)}” here. Try “All”, or part of the name.` : "Nothing here. Buy things in town or loot them on the road."}</p>`;
       detail = sel ? itemDetail(sel) : "";
     } else if (sky.page === "magic") {
       const rows = magicRows(); const sel = rows.find((r) => r.id === sky.sel) || null;
@@ -1708,7 +1710,7 @@
   }
   function marketHTML(l) {
     const forSale = MARKET.inTown(stalls, l, S.id), own = MARKET.mine(stalls, S.id), hereOwn = own.filter((d) => d.town === l), house = (S.homes || {})[l] || MARKET.hallShop(S, l);
-    const row = (d, btn) => `<div class="item">${ICONART.item(d.row.item, 34, d.row)}<div class="t">${esc(MARKET.itemName(d.row))}${d.row.qty > 1 ? ` ×${d.row.qty}` : ""}<span>${btn === "buy" ? `${d.hall ? `🏰 ${esc(d.hallName || d.sellerName + "'s hall")}` : `${esc(d.sellerName)}'s stall`} · ${esc(G.itemStats(d.row.item))}` : d.hall ? "on your hall counter" : "on your stall"}</span></div><span class="num gold">${d.price}</span>${btn === "buy" ? `<button class="btn sm pri" data-act="mbuy" data-id="${esc(d.id)}" ${S.gold >= d.price ? "" : "disabled"}>Buy</button>` : `<button class="btn sm" data-act="mpull" data-id="${esc(d.id)}">Take back</button>`}</div>`;
+    const row = (d, btn) => `<div class="item">${ICONART.item(d.row.item, 34, d.row)}<div class="t">${esc(MARKET.itemName(d.row))}${d.row.qty > 1 ? ` ×${d.row.qty}` : ""}${btn === "buy" ? iqB(d.row.item, d.row) : ""}<span>${btn === "buy" ? `${d.hall ? `🏰 ${esc(d.hallName || d.sellerName + "'s hall")}` : `${esc(d.sellerName)}'s stall`} · ${esc(G.itemStats(d.row.item))}` : d.hall ? "on your hall counter" : "on your stall"}</span></div><span class="num gold">${d.price}</span>${btn === "buy" ? `<button class="btn sm pri" data-act="mbuy" data-id="${esc(d.id)}" ${S.gold >= d.price ? "" : "disabled"}>Buy</button>` : `<button class="btn sm" data-act="mpull" data-id="${esc(d.id)}">Take back</button>`}</div>`;
     let h = `<h3>For sale here</h3>${forSale.length ? forSale.map((d) => row(d, "buy")).join("") : `<p class="sub">No player stalls in ${esc(l)} right now.</p>`}`;
     if (!house) return h + `<p class="sub" style="margin-top:10px">Own a house in ${esc(l)}, or a hall here with a shop counter, to run your own stall.</p>`;
     const eq = new Set(Object.values(G.loadout(S).equipment || {}));
@@ -2591,16 +2593,17 @@
       if (it.slot === "ingredient") acts.push(`<button class="btn sm" data-act="eat" data-id="${r.id}">Eat (learn an effect)</button>`);
       if ((it.enchant || it.staff) && gems.length) acts.push(...gems.map((g) => `<button class="btn sm" data-act="recharge" data-id="${r.id}" data-gem="${g.id}">Recharge (${esc(D.ITEMS[g.item].name.split(" (")[0])})</button>`));
       if (canShop) acts.push(`<button class="btn sm" data-act="sell" data-id="${r.id}">Sell ${G.sellPrice(S, r)}g</button>`);
+      if (typeof INVQOL !== "undefined") acts.push(...INVQOL.acts(S, r, on));   // Keep / Drop (invqol.js)
       const ingFx = it.slot === "ingredient" && TOWNS.INGREDIENT_FX[r.item] ? TOWNS.INGREDIENT_FX[r.item][1].map((e, i) => TOWNS.known(S, r.item)[i] ? e : "?").join(", ") : "";
       const qual = r.tq ? TOWNS.QUALITY[r.tq] + " " : "";
-      return `<div class="item ${on ? "on" : ""}" data-act="packrow" data-id="${r.id}" style="flex-wrap:wrap">${ICONART.item(r.item, 34, r)}<div class="t">${esc(qual + it.name + (r.nm ? ` “${r.nm}”` : ""))}${r.qty > 1 ? ` ×${r.qty}` : ""}${on ? " ✓" : ""}${r.stolen ? ' <span class="danger-high">stolen</span>' : ""}<span>${ingFx && typeof GATHER !== "undefined" ? GATHER.fxHTML(S, r.item) : esc(ingFx || G.itemStats(r.item))}${r.temper ? ` · +${r.temper} improved` : ""}${r.mw && typeof CG !== "undefined" ? ` · ${CG.label(r.mw)} work` : ""}${charge} · ${+(it.weight * r.qty).toFixed(2)} wt</span></div>
+      return `<div class="item ${on ? "on" : ""}" data-act="packrow" data-id="${r.id}" style="flex-wrap:wrap">${ICONART.item(r.item, 34, r)}<div class="t">${esc(qual + it.name + (r.nm ? ` “${r.nm}”` : ""))}${r.qty > 1 ? ` ×${r.qty}` : ""}${on ? " ✓" : ""}${r.stolen ? ' <span class="danger-high">stolen</span>' : ""}${on ? "" : iqB(r.item, r)}<span>${ingFx && typeof GATHER !== "undefined" ? GATHER.fxHTML(S, r.item) : esc(ingFx || G.itemStats(r.item))}${r.temper ? ` · +${r.temper} improved` : ""}${r.mw && typeof CG !== "undefined" ? ` · ${CG.label(r.mw)} work` : ""}${charge} · ${+(it.weight * r.qty).toFixed(2)} wt</span></div>
         ${open ? `<div style="display:flex;gap:6px;flex-wrap:wrap;width:100%">${acts.join("") || '<span class="sub">Nothing to do with this here.</span>'}</div>` : ""}</div>`;
     };
     return `<div class="panel"><h2>Equipped · ${esc(S.loadout)}</h2>${dollScreen()}${typeof AMMO !== "undefined" && AMMO.status(S) && !AMMO.status(S).best ? ammoNote() : ""}
       <p class="sub" style="margin-top:8px">Carrying <span class="num">${G.carried(S).toFixed(1)}/${G.capacity(S)}</span>${G.overweight(S) ? " — too heavy to run" : ""} · ${S.gold} gold${enchanted.length ? ` · ${enchanted.length} enchanted` : ""}</p></div>
       <div class="panel"><h2>Pack</h2><p class="sub">Tap an item for options.${canShop ? " You're in town: you can sell here." : ""}</p>
-      ${S.inv.length > 6 ? `<input id="packsearch" class="uxsearch" type="search" placeholder="🔍 Find an item" value="${esc(packSearch)}" autocomplete="off" aria-label="Find an item in your pack">` : ""}
-      ${Object.entries(groups).map(([g, rows]) => [g, rows.filter((r) => !packSearch || ((r.tq ? TOWNS.QUALITY[r.tq] + " " : "") + D.ITEMS[r.item].name).toLowerCase().includes(packSearch.toLowerCase()))]).filter(([, rows]) => rows.length).map(([g, rows]) => `<h3 style="margin-top:12px">${g}</h3><div class="list">${rows.map(row).join("")}</div>`).join("") || (packSearch ? `<p class="sub">Nothing called “${esc(packSearch)}”. Try part of the name.</p>` : '<p class="sub">Your pack is empty. Buy things in a town (Town tab → Shops) or loot them on the road.</p>')}</div>`;
+      ${typeof INVQOL !== "undefined" && S.inv.length > 1 ? INVQOL.sortHTML(S) : ""}${S.inv.length > 6 ? `<input id="packsearch" class="uxsearch" type="search" placeholder="🔍 Find an item" value="${esc(packSearch)}" autocomplete="off" aria-label="Find an item in your pack">` : ""}
+      ${Object.entries(groups).map(([g, rows]) => [g, (typeof INVQOL !== "undefined" ? INVQOL.sorted(S, rows) : rows).filter((r) => !packSearch || ((r.tq ? TOWNS.QUALITY[r.tq] + " " : "") + D.ITEMS[r.item].name).toLowerCase().includes(packSearch.toLowerCase()))]).filter(([, rows]) => rows.length).map(([g, rows]) => `<h3 style="margin-top:12px">${g}</h3><div class="list">${rows.map(row).join("")}</div>`).join("") || (packSearch ? `<p class="sub">Nothing called “${esc(packSearch)}”. Try part of the name.</p>` : '<p class="sub">Your pack is empty. Buy things in a town (Town tab → Shops) or loot them on the road.</p>')}</div>`;
   }
 
   let pendingPreset = null, pendingDel = false;
@@ -2828,7 +2831,7 @@
     const names = { general: "General goods", blacksmith: "Blacksmith", wizard: "Court wizard", stables: "Stables", fence: "Ragged Flagon (fence)", inn: TOWNS.INNS[l] || "Inn", train: "Trainers", alchemy: "Alchemy lab", forge: "Forge", jobs: "Jobs", streets: "Streets", hire: l === "Whiterun" ? "Dragonsreach & hirelings" : "Hirelings", hall: "⚑ Hall of the North", halls: "🏰 Halls & shops", notice: "📜 Jarl's bounty", homes: "🏘 Neighbours", market: "🛒 Market stalls", mine: "⛏ Mine", craft: "✨ Spell crafting", caravans: "🐫 Caravans", cook: "🍲 Cooking pot", arena: "⚔ The Arena", fish: "🎣 Fishing", carriage: "Carriage", enchanter: "Arcane enchanter", home: TOWNS.home(S, l) ? `🏠 ${TOWNS.HOMES[l]?.[0]}` : `Buy ${TOWNS.HOMES[l]?.[0]}`, ...(typeof SOL !== "undefined" ? SOL.NAMES : {}), ...(typeof HOMESTEAD !== "undefined" ? HOMESTEAD.names(S, l) : {}) };
     const fac = F.priceFactor(G.skill(S, "Mercantile"));
     let body = "", note = "";
-    const shopRow = (i, sell = true) => { const p = G.buyPrice(S, i), it = D.ITEMS[i], tome = it.slot === "tome" && typeof TOMES !== "undefined" ? ` · ${TOMES.level(it.spell)}${S.spells.includes(it.spell) ? " · you know it" : ""}` : ""; return `<div class="item">${ICONART.item(i, 34)}<div class="t">${esc(it.name)}<span>${esc(G.itemStats(i))}${tome} · ${it.weight} wt</span></div>${econB(i)}<span class="num gold">${p}</span><button class="btn sm" data-act="buy" data-item="${esc(i)}" ${open && !wanted && S.gold >= p ? "" : "disabled"}>Buy</button>${it.slot === "ammo" ? (() => { const p20 = G.lotPrice ? G.lotPrice(S, i, 20, "buy") : p * 20; return `<button class="btn sm" data-act="buyn" data-item="${esc(i)}" data-n="20" title="${p20} gold" ${open && !wanted && S.gold >= p20 ? "" : "disabled"}>×20</button>`; })() : ""}</div>`; };
+    const shopRow = (i, sell = true) => { const p = G.buyPrice(S, i), it = D.ITEMS[i], tome = it.slot === "tome" && typeof TOMES !== "undefined" ? ` · ${TOMES.level(it.spell)}${S.spells.includes(it.spell) ? " · you know it" : ""}` : ""; return `<div class="item">${ICONART.item(i, 34)}<div class="t">${esc(it.name)}${iqB(i)}<span>${esc(G.itemStats(i))}${tome} · ${it.weight} wt</span></div>${econB(i)}<span class="num gold">${p}</span><button class="btn sm" data-act="buy" data-item="${esc(i)}" ${open && !wanted && S.gold >= p ? "" : "disabled"}>Buy</button>${it.slot === "ammo" ? (() => { const p20 = G.lotPrice ? G.lotPrice(S, i, 20, "buy") : p * 20; return `<button class="btn sm" data-act="buyn" data-item="${esc(i)}" data-n="20" title="${p20} gold" ${open && !wanted && S.gold >= p20 ? "" : "disabled"}>×20</button>`; })() : ""}</div>`; };
     if (townShop === "stables") body = stablesHTML(open, wanted) + cartHTML(open, wanted);
     else if (["general", "blacksmith", "wizard", "fence"].includes(townShop)) {
       note = `${G.shopsOpen() ? "Shops are open." : open ? "Night prices." : `Shops are closed for the night. They open at 08:00 (${esc(G.clockText())}).`} At Mercantile ${G.skill(S, "Mercantile")} you buy at about ${(fac / G.haggle(S)).toFixed(2)}× value.${townShop === "fence" ? " The fence buys stolen goods." : ""}`;
@@ -3235,6 +3238,9 @@
     if ((a === "lvpick" || a === "lvsend") && lvUI) return void lvUI.act(b);
     if (/^pp(ready|go|cancel|kick|catch)$/.test(a) && ppUI) return void ppUI.act(b);
     const say = (m) => { toast(m); persist(); renderPanel(true); if ($("#sky")) renderMenu(); };
+    if (typeof INVQOL !== "undefined" && INVQOL.onClick(b, S, { say, openModal, closeModal, stall: (id) => stalls.find((d) => d.id === id),   // inventory helpers: Keep, junk, undo sale, confirms (invqol.js)
+      render: () => { persist(); renderPanel(true); if ($("#sky")) renderMenu(); }, again: (ds) => { const x = document.createElement("button"); Object.assign(x.dataset, ds); onPanelClick({ target: x }); },
+      sellMode: () => { shopMode = "sell"; renderPanel(true); }, heavyPack: () => { delete S.invSort; sky = { ...sky, page: "items", cat: "all", q: "", sel: null, sort: "weight", dir: 1 }; renderMenu(); } })) return;
     switch (a) {
       case "go": travelTo(b.dataset.place); renderPanel(true); break;
       case "uxall": uxAllPlaces = !uxAllPlaces; renderPanel(true); break;
@@ -3282,7 +3288,7 @@
       }
       case "skytab": sky.page = b.dataset.id; sky.cat = "all"; sky.sel = null; sky.sort = sky.page === "skills" ? "lvl" : "name"; sky.dir = 1; renderMenu(); break;
       case "skycat": sky.cat = b.dataset.id; sky.sel = null; renderMenu(); break;
-      case "skysort": { const k = b.dataset.id; sky.dir = sky.sort === k ? -sky.dir : 1; sky.sort = k; renderMenu(); break; }
+      case "skysort": { const k = b.dataset.id; delete S.invSort; sky.dir = sky.sort === k ? -sky.dir : 1; sky.sort = k; renderMenu(); break; }
       case "favtoggle": { if (typeof FAVWHEEL === "undefined") break; const id = isNaN(+b.dataset.id) ? b.dataset.id : +b.dataset.id; const r = FAVWHEEL.toggle(S, id); toast(r.text); if (r.ok) persist(); renderMenu(); break; }
       case "skysel": { const id = isNaN(+b.dataset.id) ? b.dataset.id : +b.dataset.id; sky.sel = sky.sel === id ? null : id; renderMenu(); break; }
       case "skyclose": closeMenu(); break;
