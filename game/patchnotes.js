@@ -3,7 +3,7 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "bQ-onboard", build: 0, date: "22 Nov 2026", title: "A clearer first hour", items: [
+    { id: "b92", build: 92, date: "22 Nov 2026", title: "A clearer first hour", items: [
       "“What to do next” on the Travel tab now suggests up to three ideas that fit where you are: road fights near Whiterun while you're new, your first dungeon, the main quest, a horse once you can afford one, teaming up with others, and later rumours, world events and building a homestead. Tap ✕ to hide one, or turn them off in ⚙ Settings → Help & tips. They stop once you reach level 15.",
       "First-time tips: a small card pops up the first time you're too heavy, level up, enter a dungeon, play a turn-by-turn fight (it explains initiative and action points), get a party invite or hear a rumour. One at a time, they never get in the way, and “Don't show tips” switches them off.",
       "New characters get a welcome tip pointing at the “Your first trip” card, which was easy to miss under the map.",
