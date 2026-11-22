@@ -1192,6 +1192,13 @@ h3[class*="cat-"]{color:var(--cat)}
 .rcard .rdrag{cursor:grab;touch-action:none}.rcard.dragging{opacity:.6;outline:1px dashed var(--gold,#c9a45a)}.rcard.dropat{box-shadow:0 -3px 0 var(--gold,#c9a45a)}
 #sharein{width:100%;font-family:monospace;font-size:12px;min-height:64px;background:#11100c;color:inherit;border:1px solid #3a3226;border-radius:6px;padding:6px}
 .aiprev{margin-top:8px}.aiprev b{color:var(--gold,#c9a45a)}.sneak2{margin:6px 0 0}
+
+/* [gear] gear preview paper dolls in the item details, and gear thumbnails on other players' cards */
+.gearprev{display:flex;gap:10px;justify-content:center;margin:8px 0 4px}
+.gearprev figure{margin:0;text-align:center}
+.gearprev figcaption{font-size:11px;color:var(--muted,#b8ab90);margin-top:2px}
+.gearprev img{border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.pgear{flex:0 0 auto;margin-right:6px;border-radius:6px;overflow:hidden;line-height:0}
 </style>
 </head>
 <body>
@@ -1265,6 +1272,7 @@ h3[class*="cat-"]{color:var(--cat)}
 <script src="skyart.js"></script>
 <script src="fightart.js"></script>
 <script src="beastart.js"></script>
+<script src="gearlook.js"></script>
 <script src="heroart.js"></script>
 <script src="mapart.js"></script>
 <script src="placeart.js"></script>
