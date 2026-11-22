@@ -839,6 +839,7 @@ const G = (() => {
         if (this.turn === 0 && fp.opener > 1) { raw *= fp.opener; fpTag += " (sneak attack)"; }
       }
       let dmg = raw, extra = fpTag;
+      if (!this.blocking && typeof SHIELDFX !== "undefined" && SHIELDFX.roll(this)) { this.blocking = true; this.shieldCaught = true; }   // [OURS] a shield on your arm catches some blows by itself (shieldfx.js)
       const wasBlocking = this.blocking, magicHit = this.tags.has("mage") || this.tags.has("dragon");
       if (this.blocking) {
         const shieldBase = this.shield ? this.shield.armor : (this.wt === "spear" && P(s, "phalanx") ? 20 : null);
@@ -846,7 +847,7 @@ const G = (() => {
         pct = Math.min(0.85, pct * (1 + 0.05 * P(s, "shield_wall")) + (this.shield && (this.tags.has("dragon") || this.tags.has("mage")) && P(s, "elemental_protection") ? 0.5 * (1 - pct) : 0));
         if (px) pct = Math.min(0.9, pct + Math.min(0.25, PFX.sum(s, "block", this, {})));   // Guardian, Tower of Strength, Steady Stance
         this.addXp("Blocking", raw * pct);
-        dmg *= 1 - pct; extra = ` (blocked ${Math.round(pct * 100)}%)`; this.blocking = false;
+        dmg *= 1 - pct; extra = ` (${this.shieldCaught ? "caught on your shield" : "blocked"} ${Math.round(pct * 100)}%)`; this.blocking = false; this.shieldCaught = false;
       }
       const { rating, pieces, empty } = this.armorRating();
       dmg *= 1 - F.damageReduction(rating, pieces);

@@ -54,6 +54,7 @@ const TB = (() => {
     if (a === "attack") return WCOST[f.wt] || 3;
     if (a === "power_attack") return (WCOST[f.wt] || 3) + 2;
     if (a === "block") return 2;
+    if (a === "bash") return 3;
     if (a === "flee") return 99;
     const [k, arg] = a.split(":");
     if (k === "spell" || k === "dual") { const c = TIERC[tierOf(arg, D.SPELLS[arg])] || 3; return k === "dual" ? c + 2 : c; }
@@ -177,6 +178,7 @@ const TB = (() => {
     /* ---- your actions */
     canAfford(a) {
       const c = cost(this.f, a), pool = this.ap + (isSpell(a) ? this.spAp : 0);
+      if (a === "bash") return c <= pool && typeof SHIELDFX !== "undefined" && SHIELDFX.can(this.f);
       return c <= pool && (a === "flee" || this.f.affordable(a) || a === "attack");
     }
     pay(a) {
@@ -192,7 +194,7 @@ const TB = (() => {
       if (!this.canAfford(a)) return { err: "Not enough action points" };
       this.pay(a);
       const before = f.ehp, myBefore = f.hp;
-      let text = f.act(a);
+      let text = a === "bash" ? SHIELDFX.bash(f) : f.act(a);
       if (f.hidden) f.hidden = false;   // only your first strike can be a sneak attack
       text += this.capFoe(before);
       if (f.ehp < before) { text += this.flank(before); this.hitters++; }
@@ -274,6 +276,10 @@ const TB = (() => {
     foeAct(prefix) {
       const f = this.f;
       if (f.ehp <= 0 || f.endWon) return;
+      if (typeof SHIELDFX !== "undefined" && SHIELDFX.stunned(f, this.round)) {   // shield bash: the foe loses its whole turn
+        if (this.stunSaid !== this.round) { this.stunSaid = this.round; const t = `${prefix}${f.e.name} is stunned and can't act`; this.lines.them.push(t); this.emit("foe", t, "foe", { dmg: 0 }); }
+        return;
+      }
       const hpB = f.hp;
       // foes go after your healers and casters when they can (party fights)
       if (f.allies.length && !f.coverAl) { const h = f.allies.find((a) => !a.down && a.player && (a.role === "healer" || a.heals > 0)); if (h && Math.random() < 0.5) f.coverAl = h; }
@@ -303,6 +309,7 @@ const TB = (() => {
       return " +flank";
     }
     endRound() {
+      if (typeof SHIELDFX !== "undefined") SHIELDFX.endRound(this.f, this.round);
       const f = this.f, line = { turn: this.round, rule: null, me: this.lines.me.join(" · "), them: this.lines.them.join(" · "), a: this.lines.a || "attack", wt: f.wt, tb: true };
       if (f.ai) line.ai = true;
       if (f.bleed.length && f.ehp > 0) { const b = f.bleed.reduce((x, y) => x + y.dmg, 0); f.ehp -= b; f.bleed = f.bleed.map((y) => ({ ...y, turns: y.turns - 1 })).filter((y) => y.turns > 0); line.me += ` · bleeds ${Math.round(b)}`; }
@@ -439,13 +446,13 @@ const TB = (() => {
   /* where an action is dragged: onto the foe, or onto yourself (tbui.js does the dragging; a tap still works) */
   const SELF_KINDS = new Set(["heal", "armor", "ward", "summon", "cloak", "support", "invis", "bound", "light", "circle", "rune", "utility"]);
   function zoneOf(a) {
-    if (a === "attack" || a === "power_attack" || /^(shout|power):/.test(a)) return "foe";
+    if (a === "attack" || a === "power_attack" || a === "bash" || /^(shout|power):/.test(a)) return "foe";
     if (a === "block" || /^potion:/.test(a)) return "self";
     const sp = spellOf(a);
     if (sp) return SELF_KINDS.has(sp.kind) ? "self" : "foe";
     return "";
   }
-  const ICON = { attack: "⚔", bow: "🏹", power_attack: "💥", block: "🛡", magic: "✦", items: "⚗", flee: "🏃", end: "⏭", shout: "🗣", power: "✴", potion: "🧪", scroll: "📜", heal: "✚" };
+  const ICON = { bash: "🛡", attack: "⚔", bow: "🏹", power_attack: "💥", block: "🛡", magic: "✦", items: "⚗", flee: "🏃", end: "⏭", shout: "🗣", power: "✴", potion: "🧪", scroll: "📜", heal: "✚" };
   function iconOf(f, a) {
     if (a === "attack") return f.wt === "bow" || f.wt === "crossbow" ? ICON.bow : ICON.attack;
     const k = a.split(":")[0];
@@ -472,7 +479,7 @@ const TB = (() => {
       return `<div class="tbmenu"><div class="tbmh"><b>⚗ Items</b><small>Drag a potion onto yourself, or tap it</small></div><div class="tbgrid">${pots || scrolls ? pots + scrolls : `<p class="sub">No potions or scrolls.</p>`}${shouts}</div><button class="tbact back" data-tbm="">‹ Back</button></div>`;
     }
     const sh = shoutsFor(f).map(([a, n]) => B(a, n, "shout")).join("");
-    return `<div class="tbgrid">${B("attack", f.wt === "bow" || f.wt === "crossbow" ? "Shoot" : "Attack", "main")}${B("power_attack", "Power attack", "main")}${B("block", f.shield ? "Shield up" : "Guard", "main")}
+    return `<div class="tbgrid">${B("attack", f.wt === "bow" || f.wt === "crossbow" ? "Shoot" : "Attack", "main")}${B("power_attack", "Power attack", "main")}${f.shield && typeof SHIELDFX !== "undefined" ? B("bash", "Shield bash", "main") : B("block", "Guard", "main")}
       <button class="tbact menu" data-tbm="magic"><span class="ic" aria-hidden="true">${ICON.magic}</span><b>Magic ▸</b><small>${(s.spells || []).length} spells</small></button>
       <button class="tbact menu" data-tbm="items"><span class="ic" aria-hidden="true">${ICON.items}</span><b>Items ▸</b><small>potions</small></button>${sh}
       ${B("flee", "Flee", "flee")}
@@ -566,6 +573,7 @@ const TB = (() => {
     if (st.chill) out.push(`<i class="st chill" data-tip="${typeof TBTIPS !== "undefined" ? TBTIPS.STATUS.chill : ""}">❄${st.chill.turns ?? ""}</i>`);
     if (st.shock) out.push(`<i class="st shock" data-tip="${typeof TBTIPS !== "undefined" ? TBTIPS.STATUS.shock : ""}">⚡${st.shock.turns ?? ""}</i>`);
     if (f.eParalyzed > 0) out.push(`<i class="st para" data-tip="${typeof TBTIPS !== "undefined" ? TBTIPS.STATUS.para : ""}">✋${f.eParalyzed}</i>`);
+    if (f.tbStunLeft > 0) out.push(`<i class="st stun" data-tip="${typeof TBTIPS !== "undefined" ? TBTIPS.STATUS.stun : ""}">💥</i>`);
     if (f.stagger) out.push(`<i class="st stag" data-tip="${typeof TBTIPS !== "undefined" ? TBTIPS.STATUS.stag : ""}">💫</i>`);
     return out.length ? `<div class="tbst">${out.join("")}</div>` : "";
   }

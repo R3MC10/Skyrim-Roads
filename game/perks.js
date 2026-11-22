@@ -29,10 +29,10 @@ const PERKS = (() => {
       ["bullseye", "Bullseye", 1, [100], ["quick_shot"], "15% chance an arrow paralyzes for 2 turns. [Skyrim]"],
     ],
     "Blocking": [
-      ["shield_wall", "Shield Wall", 5, [0, 20, 40, 60, 80], [], "Blocking is 5% more effective per rank. [Skyrim]"],
+      ["shield_wall", "Shield Wall", 5, [0, 20, 40, 60, 80], [], "Blocking is 5% more effective per rank, and your shield catches blows by itself 2% more often per rank. [Skyrim + OURS]"],
       ["quick_reflexes", "Quick Reflexes", 1, [30], ["shield_wall"], "A raised guard also blocks half of the next hit's spell or arrow damage. [OURS stand-in for Skyrim's slow-time]"],
-      ["power_bash", "Power Bash", 1, [30], ["shield_wall"], "Raising your guard has a 30% chance to stagger the enemy. [OURS stand-in for bashing]"],
-      ["deadly_bash", "Deadly Bash", 1, [50], ["power_bash"], "Bashes do 5 damage times your Blocking/20. [OURS]"],
+      ["power_bash", "Power Bash", 1, [30], ["shield_wall"], "Raising your guard has a 30% chance to stagger the enemy, and your Shield bash stuns tough foes and bosses 15% more often. [OURS]"],
+      ["deadly_bash", "Deadly Bash", 1, [50], ["power_bash"], "Bashes hit much harder: Shield bash damage grows with your Blocking skill. [OURS]"],
       ["elemental_protection", "Elemental Protection", 1, [50], ["shield_wall"], "Blocking with a shield takes 50% less damage from dragons and mages. [Skyrim]"],
     ],
     "Heavy Armor": [
