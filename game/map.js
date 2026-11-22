@@ -363,6 +363,12 @@ const WorldMap = (() => {
     if (v.rulers?.length && !SV) { g.globalAlpha = 0.26; for (const r of v.rulers) g.drawImage(tintFor(r.hold, r.color), 0, 0, W, H); g.globalAlpha = 1; }   // holds ruled by a clan
     if (OY) g.setTransform(k, 0, 0, k, ox, oy - OYH * k);   // from here on: world coordinates
     const [px, py] = P(v.player);
+    if (v.sight || v.sneakRing) {   // fog of war: how far you see other heroes; sneaking: how close they must come to see you (sneakmode.js)
+      g.save();
+      if (v.sight) { g.setLineDash([5 * s, 7 * s]); g.strokeStyle = "rgba(230,220,190,.3)"; g.lineWidth = 1.3 * s; g.beginPath(); g.arc(px, py, v.sight, 0, 7); g.stroke(); }
+      if (v.sneakRing) { g.setLineDash([]); g.fillStyle = "rgba(70,50,110,.18)"; g.strokeStyle = "rgba(190,165,255,.6)"; g.lineWidth = 1.6 * s; g.beginPath(); g.arc(px, py, v.sneakRing, 0, 7); g.fill(); g.stroke(); }
+      g.restore();
+    }
     // which way you're heading: from how your marker moved (a tiny arrow points that way while you travel)
     { const l = heading.last, d = l ? Math.hypot(px - l[0], py - l[1]) : 99; if (d > 60) heading.a = null; else if (d > 0.3) heading.a = Math.atan2(py - l[1], px - l[0]); if (d > 0.3) heading.last = [px, py];
       if (heading.a == null && v.moving && v.dest?.pos) { const [dx, dy] = P(v.dest.pos); if (Math.hypot(dx - px, dy - py) > 1) heading.a = Math.atan2(dy - py, dx - px); } }   // just set off: point at where you're going

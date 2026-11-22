@@ -390,10 +390,11 @@ const G = (() => {
     return { cond: kind === "turn" ? `${label} ${r.pct || 2}` : kind ? `${label} ${r.pct}%` : label, act: describeAction(r.do) };
   }
   function hiddenChance(s, e, t) {   // [OURS] Skyrim detection is real-time line of sight; this is our stand-in
-    if (typeof SNEAK2 !== "undefined") return SNEAK2.chance(s, e, t);   // sneak2.js: armor, daylight and the foe's awareness count
+    const sm = typeof SNEAKMODE !== "undefined" ? SNEAKMODE.hideAdd(s) : 0;   // sneaking on the road: they find you, but you saw them first
+    if (typeof SNEAK2 !== "undefined") return Math.min(0.95, SNEAK2.chance(s, e, t) + sm);   // sneak2.js: armor, daylight and the foe's awareness count
     const base = 0.25 + skill(s, "Sneak") / 150 - (e.danger === "high" ? 0.15 : 0) + (isNight(t) ? 0.1 : 0) + 0.15 * P(s, "detect_life") + fxSum(s, "hide", t || now()) / 100 + (typeof PFX !== "undefined" ? Math.min(25, PFX.num(s, "hide")) / 100 : 0)
       + (typeof WEVENTS !== "undefined" ? WEVENTS.weather([s.x, s.y], t || now()).sneak : 0) + (typeof WFX !== "undefined" ? WFX.sneakAdd(s, t || now()) : 0);   // rain, fog and snow hide you; clear nights too
-    const seen = (1 - base) * (1 - 0.12 * P(s, "stealth"));   // [Skyrim] Stealth: 20% harder to detect per rank (our scale)
+    const seen = (1 - base - sm) * (1 - 0.12 * P(s, "stealth"));   // [Skyrim] Stealth: 20% harder to detect per rank (our scale)
     return Math.max(0.05, Math.min(0.92, 1 - seen));
   }
 
@@ -1060,6 +1061,7 @@ const G = (() => {
     if (typeof WEVENTS !== "undefined") { const wf = WEVENTS.weather([s.x, s.y]).speed; v *= wf < 1 && fxSum(s, "warmth") > 0 ? (1 + wf) / 2 : wf; if (typeof WFX !== "undefined") v *= WFX.speedMult(s); }   // [OURS] snow and storms slow you down; hot soup halves that
     if (riding(s)) v *= D.HORSE_SPEED;
     if (typeof CARAVANS !== "undefined") v *= CARAVANS.cartSpeed(s);   // [OURS] a loaded cart is a little slower
+    if (typeof SNEAKMODE !== "undefined") v *= SNEAKMODE.speedMult(s);   // sneaking on the road is slower (sneakmode.js)
     return v;
   }
   function startTrip(s, destName, dest, t = now()) {
@@ -1098,6 +1100,7 @@ const G = (() => {
       if (!tr.path) { tr.path = Terrain.route([s.x, s.y], tr.dest); tr.idx = 0; }
       const mv = Terrain.moveAlong(tr.path, tr.idx, [s.x, s.y], dt, speed(s) / 60);
       [s.x, s.y] = mv.done ? tr.dest : mv.pos; tr.idx = mv.idx;
+      if (typeof SNEAKMODE !== "undefined" && s.sneak && !tr.carriage && !tr.follow) SNEAKMODE.train(s, dt).forEach((m) => tripLog(s, "📈 " + m));
       const last = s.explored[s.explored.length - 1];
       if (!last || pxDist(last, [s.x, s.y]) >= TRAIL_STEP_PX) s.explored.push([+s.x.toFixed(4), +s.y.toFixed(4)]);
       tr.trail.push([+s.x.toFixed(4), +s.y.toFixed(4)]);
@@ -1124,7 +1127,7 @@ const G = (() => {
         if (ce) { const e = scaleEnemy(ce, fightLevel(s)); tr.status = "encounter"; tr.encounter = e; out.encounter = e; note(s, `⚠️ Caravan ambush: ${e.name}`); return out; }
         continue;
       }
-      const rate = tr.carriage || tr.follow ? 0 : ENCOUNTER_PER_MIN * (isNight(stepT) ? D.NIGHT_ENCOUNTER_MULT : 1) * (typeof WEVENTS !== "undefined" ? WEVENTS.weather([s.x, s.y], stepT).encounters : 1);   // nobody robs a carriage on a Jarl's road; party members following their leader leave the road to them (partyplay.js)
+      const rate = tr.carriage || tr.follow ? 0 : ENCOUNTER_PER_MIN * (isNight(stepT) ? D.NIGHT_ENCOUNTER_MULT : 1) * (typeof WEVENTS !== "undefined" ? WEVENTS.weather([s.x, s.y], stepT).encounters : 1) * (typeof SNEAKMODE !== "undefined" ? SNEAKMODE.encounterMult(s) : 1);   // nobody robs a carriage on a Jarl's road; party members following their leader leave the road to them (partyplay.js)
       if (Math.random() < 1 - (1 - rate) ** (dt / 60)) {
         const e = rollEncounter(s, stepT);
         if (e.danger === "low") {

@@ -8,6 +8,12 @@ const PATCHNOTES = (() => {
       "Now there's a backup line: if your phone can't link straight to someone, your name, where you are, chat and messages still get through, encrypted, over the same servers used to find each other.",
       "Players show up within a few seconds of opening the game.",
     ] },
+    { id: "b109", build: 109, date: "22 Nov 2026", title: "Sneak mode and fog of war", items: [
+      "New eye button on the map: sneak while you travel. You walk slower, but fewer bandits and beasts find you, fights start with you hidden more often, and you train Sneak as you go.",
+      "Fog of war for heroes: you only see other players near you on the map (your party always). A sneaking hero can only be spotted from much closer, and the better their Sneak, the closer you have to be.",
+      "The map shows two rings around you: how far you can see, and (while sneaking) how close someone must be to spot you.",
+      "New Sneak perks: Silent Roads (sneak faster, harder to spot) and Shadow Paths (even fewer road fights while sneaking).",
+    ] },
     { id: "b108", build: 108, date: "22 Nov 2026", title: "Painted shops", items: [
       "The general store, blacksmith, inn and alchemist now have painted pictures at the top of their page. More shops get theirs soon.",
     ] },
