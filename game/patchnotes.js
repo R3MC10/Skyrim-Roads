@@ -3,6 +3,8 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b76", build: 76, date: "22 Nov 2026", title: "Real paintings arrive", items: [
+      "New realistic artwork: the title screen, four loading screens, all eleven towns (Whiterun, Solitude, Windhelm, Riften, Markarth and more), and the tundra and pine forest. More backgrounds, enemies and textures are on the way."] },
     { id: "b74", build: 74, date: "22 Nov 2026", title: "Herbs, roads, a big spellbook and colours", items: [
       "Gathering: 36 new ingredients and 500 herb patches across Skyrim and Solstheim. Spot them as you travel, Gather or Forage, grow a garden at home, and keep Herbalist's Notes. New Alchemy perks: Forager and Wildcrafter.",
       "31 new road encounters: Khajiit caravans, couriers, giants with mammoths, Thalmor patrols, assassins, a talking mudcrab and more, each with choices. New perks: Smooth Talker, Road Wise, Pathfinder.",
