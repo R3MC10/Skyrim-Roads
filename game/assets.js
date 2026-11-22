@@ -13,6 +13,9 @@
        slugs: bandit banditchief draugr deathlord wolf bear sabrecat troll frosttroll giant mammoth spider skeever falmer
               centurion dwarvenspider spriggan hagraven vampire necromancer thalmor dragon icewraith flameatronach
               frostatronach stormatronach dremora chaurus mudcrab horker riekling ashspawn
+     shop-<id>                1200×375   painted banners for town sections (shown above each shop's list)
+       ids: general forge (also blacksmith) inn (also cook) alchemy wizard (also enchanter) market stables home hall
+            fence arena mine — raw 3:2 paintings go through art/conv: crop the middle band, WebP q80
      ui-panel                 1024×1024  tileable dark panel texture
      ui-parchment             1024×1024  tileable parchment texture
      ui-compass               1024×1024  transparent compass rose

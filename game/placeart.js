@@ -364,10 +364,14 @@ const PLACEART = (() => {
     return ART.html(W, HH, draw, { key: `place|${name}|${md}|${wx}|${fest || ""}`, cls: "scene", alt: name, style: opts.style });
   }
   /* a slimmer banner for a town section (360×96); null when there's no picture for it */
+  const SHOP_PIC = { blacksmith: "forge", enchanter: "wizard" };   // town sections that share a painted banner
   function section(id, opts = {}) {
-    const d = SECTION[id]; if (!d) return "";
+    const d = SECTION[id];
+    const pic = typeof ASSETS !== "undefined" ? ASSETS.img("shop-" + (SHOP_PIC[id] || id)) : null;   // a painted banner dropped in the game folder
+    if (!d && !pic) return "";
     const fest = typeof FXART !== "undefined" ? FXART.festId() : null;
-    return ART.html(SW, SH, (g, H, w, h) => { d(g, H, w, h); if (fest) FXART.festSection(g, H, w, h, fest, id); frame(g, w, h); }, { key: `sec|${id}|${fest || ""}`, cls: "scene sec", alt: id, style: opts.style });
+    return ART.html(SW, SH, (g, H, w, h) => { if (pic) ASSETS.cover(g, pic, w, h, 0.5, 0.5); else d(g, H, w, h); if (fest) FXART.festSection(g, H, w, h, fest, id); frame(g, w, h); },
+      { key: `sec|${id}|${fest || ""}|${pic ? "pic" : ""}`, cls: "scene sec", alt: id, style: opts.style, painted: !!pic });
   }
   function room(type, opts = {}) {
     const d = ROOM[type] || ROOM.mystery;
