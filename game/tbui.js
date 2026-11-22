@@ -87,6 +87,48 @@ const TBUI = (() => {
     const lg = el.querySelector(".tblog"); if (lg) requestAnimationFrame(() => { lg.scrollTop = lg.scrollHeight; });
   }
 
+  // ------------------------------------------------------------------ tooltips: hold a finger on something, or hover with a mouse
+  let tipEl = null, tipFor = null, holdT = null, held = null;
+  function showTip(t) {
+    const txt = t?.dataset?.tip; if (!txt) return;
+    if (!tipEl) { tipEl = document.createElement("div"); tipEl.className = "tbtip"; tipEl.setAttribute("role", "tooltip"); }
+    tipEl.textContent = txt; tipFor = t;
+    if (!tipEl.isConnected) document.body.appendChild(tipEl);
+    const r = t.getBoundingClientRect(), w = Math.min(280, innerWidth - 16);
+    tipEl.style.maxWidth = w + "px";
+    const tw = tipEl.offsetWidth, th = tipEl.offsetHeight;
+    let x = Math.max(8, Math.min(innerWidth - tw - 8, r.left + r.width / 2 - tw / 2));
+    let y = r.top - th - 10; if (y < 8) y = Math.min(innerHeight - th - 8, r.bottom + 10);
+    tipEl.style.left = x + "px"; tipEl.style.top = y + "px"; tipEl.classList.add("on");
+  }
+  function hideTip() { tipEl?.classList.remove("on"); tipFor = null; }
+  function tipTarget(ev) { return ev.target.closest?.("#tbf [data-tip]") || null; }
+  function overTip(ev) {   // mouse only: hover shows the tip
+    if (ev.pointerType !== "mouse" || d?.on) return;
+    const t = tipTarget(ev); if (t === tipFor) return;
+    if (t) showTip(t); else hideTip();
+  }
+  function holdStart(ev) {
+    clearTimeout(holdT); held = null;
+    if (ev.pointerType === "mouse") return;
+    const t = tipTarget(ev); if (!t) return;
+    const x0 = ev.clientX, y0 = ev.clientY;
+    held = { t, x0, y0, id: ev.pointerId };
+    holdT = setTimeout(() => {
+      if (!held || d?.on) return;
+      d = null;                       // a hold is a look, not a drag
+      held.shown = true; showTip(held.t); buzz(10);
+    }, 430);
+  }
+  function holdMove(ev) {
+    if (held && !held.shown && Math.hypot(ev.clientX - held.x0, ev.clientY - held.y0) > 10) { clearTimeout(holdT); held = null; }
+  }
+  function holdEnd(ev) {
+    clearTimeout(holdT);
+    if (held?.shown) { swallow = Date.now() + 500; setTimeout(hideTip, 900); }   // the lift after a hold doesn't press the button
+    held = null;
+  }
+
   // ------------------------------------------------------------------ dragging action cards onto a target
   let d = null;
   const HINT = { foe: "Let go on the foe", self: "Let go on yourself" };
@@ -97,6 +139,7 @@ const TBUI = (() => {
     d = { card, id: ev.pointerId, x0: ev.clientX, y0: ev.clientY, on: false, zone: card.dataset.tz, hot: null };
   }
   function start(ev) {
+    clearTimeout(holdT); held = null; hideTip();
     const root = document.getElementById("tbf"); if (!root) return (d = null);
     const r = d.card.getBoundingClientRect();
     const g = d.card.cloneNode(true); g.classList.add("tbghost"); g.removeAttribute("data-tba"); g.setAttribute("aria-hidden", "true");
@@ -165,6 +208,13 @@ const TBUI = (() => {
     } else if (ev.key === "l" || ev.key === "L") { root.querySelector('[data-tbx="log"],[data-tbx="logx"]')?.click(); }
   }
   if (DOM && typeof addEventListener === "function") {
+    addEventListener("pointerdown", holdStart, true);
+    addEventListener("pointermove", holdMove, true);
+    addEventListener("pointerup", holdEnd, true);
+    addEventListener("pointercancel", holdEnd, true);
+    addEventListener("pointerover", overTip, true);
+    addEventListener("pointerdown", (ev) => { if (ev.pointerType === "mouse") hideTip(); }, true);
+    addEventListener("scroll", hideTip, true);
     addEventListener("pointerdown", down, true);
     addEventListener("pointermove", move, { capture: true, passive: false });
     addEventListener("pointerup", up, true);

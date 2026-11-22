@@ -1650,6 +1650,11 @@ body:has(#favBtn) .app,body:has(#twBtn) .app{padding-bottom:calc(190px + env(saf
 @media (prefers-reduced-motion:reduce){.tbpop{animation:tbpopfade 1.2s forwards}.tbbar.hitfx,.tbbar.hitfx i{animation:none}}
 @keyframes tbpopfade{0%,80%{opacity:1}100%{opacity:0}}
 .tblog:not([hidden]){display:flex;flex-direction:column;justify-content:flex-end;overflow:auto}
+/* [combat tooltips] tbtips.js + tbui.js: hold a finger on a card / frame / chip, or hover with a mouse */
+.tbtip{position:fixed;z-index:300;left:0;top:0;padding:8px 11px;border-radius:9px;background:rgba(16,15,13,.97);border:1px solid rgba(214,178,94,.55);box-shadow:0 8px 24px rgba(0,0,0,.6);color:#f2ead6;font-size:13px;line-height:1.35;pointer-events:none;opacity:0;transform:translateY(4px);transition:opacity .12s,transform .12s}
+.tbtip.on{opacity:1;transform:none}
+.tbf [data-tip]{-webkit-touch-callout:none}
+.tbf.pixel~.tbtip,body .tbtip.px{border-radius:0}
 </style>
 <script src="access.js"></script>
 </head>
@@ -1709,6 +1714,7 @@ body:has(#favBtn) .app,body:has(#twBtn) .app{padding-bottom:calc(190px + env(saf
 <script src="sneak2.js"></script>
 <script src="aiset.js"></script>
 <script src="tbfight.js"></script>
+<script src="tbtips.js"></script>
 <script src="tbui.js"></script>
 <script src="guide.js"></script>
 <script src="patchnotes.js"></script>
