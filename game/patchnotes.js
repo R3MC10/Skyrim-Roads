@@ -3,10 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b107", build: 107, date: "22 Nov 2026", title: "Pickpocketing mini-game, summons fixed", items: [
+    { id: "b107", build: 107, date: "22 Nov 2026", title: "Pickpocketing mini-game, summons fixed, auto updates", items: [
       "Pickpocketing is now a mini-game: your hand sways over the mark's belt, tap Lift while it's over the purse, twice (in, then out). Miss, or take too long while they get suspicious, and you're caught.",
       "Steady hands do better than the old dice roll. Mini-games are part of the game now: the Quick roll button and the off switch are gone, for lockpicking too.",
       "Works on townsfolk (Area → Streets) and on other players.",
+      "Updates now install by themselves: once a new version is downloaded, the game saves and restarts on it at the next quiet moment, never mid-fight, in a dungeon, a trade or a menu. It checks every 10 minutes and whenever you come back to the app.",
       "Summons show up in the fight scene for as long as they last, not just on the turn you cast them.",
       "Summon spells now bring the right creature: Flaming Familiar, Spectral Archer, Seeker and Dremora Lord no longer all say \"spectral wolf\".",
     ] },

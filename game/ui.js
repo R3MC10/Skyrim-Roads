@@ -280,7 +280,7 @@
       ${S && typeof WFX !== "undefined" ? `<h3>Survival</h3><div class="setrow"><span>Cold meter</span>${seg("survival", [[true, "On (gentle)"], [false, "Off"]], S.survival !== false)}</div>` : ""}
       <h3>Map</h3><div class="setrow"><span>Map opens</span>${seg("zoomFar", [[false, "Close up"], [true, "All Skyrim"]], getPref("zoomFar", false))}</div>
       ${APP ? `<h3>Phone</h3><div class="setrow"><span>Notifications</span>${seg("notify", [[true, "On"], [false, "Off"]], getPref("notify", true))}</div>${typeof REMIND !== "undefined" ? REMIND.settingsHTML(seg) : ""}
-      <div class="setrow"><span>Check for updates</span>${seg("autoUpdate", [[true, "Automatically"], [false, "Only when I ask"]], getPref("autoUpdate", true))}</div>` : ""}`;
+      <p class="mute" style="font-size:13px">Updates download and install by themselves, at a quiet moment (never mid-fight, in a dungeon or a trade).</p>` : ""}`;
   }
   function onSettingsInput(e) {
     if (e.target.id === "snd_music") SOUND.set("music", e.target.value / 100);
@@ -400,7 +400,7 @@
   }
   function updateStaged(r) {
     update = r;
-    toast(`⬆ Build ${r.latest.build} is downloaded. It loads the next time you open the game (or ⚙ → Main menu → Update to switch now).`);
+    toast(`⬆ Build ${r.latest.build} is downloaded. The game restarts on it at the next quiet moment (your progress is saved).`);
   }
   function updateAvailable(r) {
     update = r;
@@ -457,6 +457,16 @@
       return false;
     },
     save() { if (S) Store.save(S); },
+    /* is this a good moment to restart on a new version? not mid-fight, dungeon, trade, menu, mini-game or typing */
+    safeToUpdate() {
+      const el = document.activeElement, typing = /^(INPUT|TEXTAREA|SELECT)$/.test(el?.tagName || "") || el?.isContentEditable;
+      if (typing) return false;
+      if ($("#title")) return true;
+      if (!S || S.dungeon || S.trip?.event || S.encounter) return false;
+      if (["modal", "tbf", "tbwatch", "lockpick", "pickgame", "sky", "tw", "nickbox"].some((id) => document.getElementById(id))) return false;
+      if ((coopUI?.runs || []).length) return false;
+      return true;
+    },
     /* for the Tab compass (tabmenu.js) */
     openMenu: (p) => openMenu(p), closeMenu: () => closeMenu(), refresh: () => { bump(); renderPanel(true); }, fight: (r) => showFightResult(r),
     go(t) { closeMenu(); tab = t; testResult = null; bump(); renderTabs(); renderPanel(true); },
