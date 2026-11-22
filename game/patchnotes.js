@@ -3,6 +3,9 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b108", build: 108, date: "22 Nov 2026", title: "Painted shops", items: [
+      "The general store, blacksmith, inn and alchemist now have painted pictures at the top of their page. More shops get theirs soon.",
+    ] },
     { id: "b107", build: 107, date: "22 Nov 2026", title: "Pickpocketing mini-game, summons fixed, auto updates", items: [
       "Pickpocketing is now a mini-game: your hand sways over the mark's belt, tap Lift while it's over the purse, twice (in, then out). Miss, or take too long while they get suspicious, and you're caught.",
       "Steady hands do better than the old dice roll. Mini-games are part of the game now: the Quick roll button and the off switch are gone, for lockpicking too.",
