@@ -269,7 +269,7 @@
       ${S ? `<h3>Your character</h3><div class="grid2"><button class="btn" data-act="bk" data-bk="openbackup">Back up</button><button class="btn" data-act="bk" data-bk="openrestore">Restore</button></div>` : `<h3>Your character</h3><button class="btn" data-act="bk" data-bk="openrestore" style="width:100%">Restore from a backup</button>`}
       <h3>Look</h3><div class="setrow"><span>Art style</span>${seg("artStyle", [["ink", "Hand-drawn"], ["pixel", "Pixel art"]], ART.style())}</div>
       ${typeof MOTION !== "undefined" ? `<div class="setrow"><span>Motion</span>${seg("motion", [["full", "Full"], ["lite", "Lite"], ["off", "Off"]], MOTION.pref())}</div>` : ""}
-      ${typeof TB !== "undefined" ? `<h3>Fights</h3><div class="setrow"><span>Fights</span>${seg("turnBased", [[true, "Turn by turn"], [false, "Instant (auto)"]], getPref("turnBased", true))}</div><div class="setrow"><span>Foe turns</span>${seg("tbFast", [[false, "Normal speed"], [true, "Fast"]], getPref("tbFast", false))}</div>` : ""}
+      ${typeof TB !== "undefined" ? `<h3>Fights</h3><div class="setrow"><span>Fights</span>${seg("turnBased", [[true, "Turn by turn"], [false, "Instant (auto)"]], getPref("turnBased", true))}</div><div class="setrow"><span>Foe turns</span>${seg("tbFast", [[false, "Normal speed"], [true, "Fast"]], getPref("tbFast", false))}</div>` : ""}${typeof FASTQOL !== "undefined" ? FASTQOL.settingsHTML(seg) : ""}
       ${typeof ACCESS !== "undefined" ? ACCESS.settingsHTML(seg) : ""}
       <h3>Crafting</h3><div class="setrow"><span>When you craft</span>${seg("craftGame", [[true, "Mini-games"], [false, "Quick craft"]], getPref("craftGame", true))}</div>
       ${S && typeof WFX !== "undefined" ? `<h3>Survival</h3><div class="setrow"><span>Cold meter</span>${seg("survival", [[true, "On (gentle)"], [false, "Off"]], S.survival !== false)}</div>` : ""}
@@ -287,6 +287,7 @@
     if (act !== "pref") return false;
     const k = b.dataset.k, v = b.dataset.v === "true";
     if (typeof ACCESS !== "undefined" && ACCESS.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }
+    if (typeof FASTQOL !== "undefined" && FASTQOL.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }   // replay speed, carry on after road events
     if (k === "survival") { if (S) { S.survival = v; if (!v) S.coldV = 0; persist(); try { renderPanel(true); } catch { /* title */ } } SOUND.fx("click"); return true; }
     if (k === "motion") { MOTION.setPref(b.dataset.v); SOUND.fx("click"); return true; }
     if (k === "artStyle") { ART.setStyle(b.dataset.v); SOUND.fx("click"); if (typeof POLISH !== "undefined") POLISH.texture(); if (S) { try { renderPanel(true); } catch { /* title screen */ } } return true; }
@@ -1040,7 +1041,7 @@
     if (!r.fight && S.trip?.status === "encounter") return openEncounter(r.text);
     const loot = r.fight ? [r.gold ? `${r.gold} gold` : "", ...(r.loot || [])].filter(Boolean) : [];
     openModal(`<h2>${r.fled ? "Got away" : r.fight ? "Victory" : "Away"}</h2><p>${esc(r.text)}</p>${r.fight ? fightLog(r.fight) : ""}
-      ${loot.length ? `<p>Loot: <b>${loot.map(esc).join(", ")}</b></p>` : ""}${skills}
+      ${loot.length ? `<p>Loot: <b>${loot.map(esc).join(", ")}</b></p>` : ""}${typeof FASTQOL !== "undefined" ? FASTQOL.lootHTML(S, r) : ""}${skills}
       <button class="btn pri" data-act="close" style="width:100%">Continue to ${esc(S.trip?.destName || "the road")}</button>`);
   }
 
@@ -2271,7 +2272,7 @@
   }
 
   // ------------------------------------------------------------ the Arena (Windhelm)
-  let duels = [], seenDuels = new Set(), arenaStake = 100;
+  let duels = [], seenDuels = new Set(), arenaStake = typeof FASTQOL !== "undefined" ? FASTQOL.mem("arenaStake", 100) : 100;
   function onDuels(docs) {
     duels = docs;
     for (const d of docs) {
@@ -2309,7 +2310,7 @@
     if (!yes) return toast("You turn the challenge down.");
     if (res) { festCount("duel"); if (res.doc.winner === S.id) warPoint("duel", "Eastmarch"); }
     if (res) { if (typeof RAIDART !== "undefined") RAIDART.cheer(4000); SOUND.fight({ fight: res.fight, died: res.doc.winner !== S.id }); postNews(`⚔ ${res.doc.winner === S.id ? S.name : res.doc.fromName} beat ${res.doc.winner === S.id ? res.doc.fromName : S.name} in the Windhelm Arena${res.doc.pot ? ` and won ${res.doc.pot} gold` : ""}.`);
-      openModal(`<h2>${res.doc.winner === S.id ? "Victory in the Arena" : "Beaten, not broken"}</h2><p>${esc(res.text)}</p>${fightLog(res.fight)}${skillLine(res)}<button class="btn pri" data-act="close" style="width:100%">Continue</button>`); }
+      openModal(`<h2>${res.doc.winner === S.id ? "Victory in the Arena" : "Beaten, not broken"}</h2><p>${esc(res.text)}</p>${fightLog(res.fight)}${skillLine(res)}${typeof FASTQOL !== "undefined" ? FASTQOL.againHTML("duel", res.doc.from) : ""}<button class="btn pri" data-act="close" style="width:100%">Continue</button>`); }
   }
   async function cancelTrade(id) { await Store.change("trades", id, (d) => (d.status === "open" ? { ...d, status: "cancelled" } : d)); }
 
@@ -2512,7 +2513,7 @@
     const places = Object.keys(WORLD.places).filter((n) => known(n) && n !== S.location && WORLD.same(here, WORLD.places[n]) && n.toLowerCase().includes(searchText.toLowerCase()))
       .map((n) => ({ n, d: G.pxDist(here, WORLD.places[n]) })).sort((a, b) => a.d - b.d);
     const bag = myBag();
-    return `${ppUI ? ppUI.panelHTML() : ""}${typeof WFX !== "undefined" ? WFX.coldHTML(S) : ""}${nextCard()}${placeHere()}${typeof EXPLORE !== "undefined" ? EXPLORE.placeCard(S) : ""}${typeof RUMOURS !== "undefined" ? RUMOURS.card(S) : ""}${typeof GATHER !== "undefined" ? GATHER.card(S) : ""}<div class="panel"><h2>Where to?</h2><p class="sub">Tap a place on the map, or press <b>Go</b> below. Tap empty ground on the map to roam off the road.</p>
+    return `${ppUI ? ppUI.panelHTML() : ""}${typeof WFX !== "undefined" ? WFX.coldHTML(S) : ""}${nextCard()}${placeHere()}${typeof EXPLORE !== "undefined" ? EXPLORE.placeCard(S) : ""}${typeof RUMOURS !== "undefined" ? RUMOURS.card(S) : ""}${typeof GATHER !== "undefined" ? GATHER.card(S) : ""}<div class="panel"><h2>Where to?</h2><p class="sub">Tap a place on the map, or press <b>Go</b> below. Tap empty ground on the map to roam off the road.</p>${typeof FASTQOL !== "undefined" ? FASTQOL.recentHTML(S) : ""}
       <input id="search" placeholder="Search places" value="${esc(searchText)}" autocomplete="off" aria-label="Search places">
       <div class="list">${bag ? `<div class="item on"><div class="t">🎒 Your lost bag<span>${bag.gold} gold · ${Math.max(0, Math.floor((bag.expires - G.now()) / 60))} min left before it's fair game</span></div><button class="btn pri sm" data-act="go" data-place="__bag">Go</button></div>` : ""}
       ${places.slice(0, searchText || uxAllPlaces ? 40 : 8).map(({ n, d }) => { const k = WORLD.places[n][2]; return `<div class="item"><div class="t">${esc(n)}<span>${KIND[k]} · ${esc(G.holdAt(WORLD.places[n]))}${S.discovered.includes(n) ? "" : " · unvisited"}${(() => { const lf = DUNGEONS.enterable(n) ? DUNGEONS.refillLeft(S, n) : 0; return lf ? ` · 🔒 opens in ${cdSpan(G.now() + lf)}` : ""; })()}</span></div><span class="num sub">${d * 1.1 / G.speed(S) < 1 ? "" : "~"}${fmtMin(d * 1.1 / G.speed(S))}</span><button class="btn sm" data-act="go" data-place="${esc(n)}">Go</button></div>`; }).join("") || `<p class="sub">No places match “${esc(searchText)}”. Try part of the name, like “riv”.</p>`}${!searchText && places.length > 8 ? `<button class="btn" data-act="uxall" style="width:100%;margin-top:8px">${uxAllPlaces ? "Show only the nearest" : `Show all ${places.length} places`}</button>` : ""}${(() => { const n = Object.keys(clearedLeft()).length; return `<button class="btn" data-act="tabgo" data-id="places" style="width:100%;margin-top:8px">📍 Locations: cleared places${n ? ` (${n})` : ""}</button>`; })()}</div>
@@ -2740,9 +2741,9 @@
       ${typeof AISET !== "undefined" ? `<h3 style="margin-top:14px">Share</h3><div class="grid2"><button class="btn" data-act="sharecopy">📋 Copy share code</button><button class="btn" data-act="shareopen">📥 Paste a code</button></div>
         ${shareOpen ? `<div class="list" style="margin-top:6px"><textarea id="sharein" rows="3" placeholder="ROTN1-…" aria-label="Share code"></textarea><button class="btn pri" data-act="shareimport">Use these tactics</button></div>` : ""}${shareMsg ? `<p class="sub">${esc(shareMsg)}</p>` : ""}` : ""}</div></div>
       <div class="panel"><h2>Test fight</h2><p class="sub">A practice fight at full health. Nothing is used up, and you can't die.</p>
-      <div class="list"><select id="te" aria-label="Enemy">${enemies.map((e) => `<option ${previewResult?.foe === e.name || testResult?.name === e.name ? "selected" : ""}>${esc(e.name)}</option>`).join("")}</select><div class="grid2"><button class="btn pri" data-act="test">Fight it</button>${typeof AISET !== "undefined" ? `<button class="btn" data-act="preview">Run 20 fights</button>` : ""}</div></div>
+      <div class="list"><select id="te" aria-label="Enemy">${enemies.map((e) => `<option ${previewResult?.foe === e.name || testResult?.name === e.name || (!previewResult && !testResult && typeof FASTQOL !== "undefined" && FASTQOL.mem("testFoe") === e.name) ? "selected" : ""}>${esc(e.name)}</option>`).join("")}</select><div class="grid2"><button class="btn pri" data-act="test">Fight it</button>${typeof AISET !== "undefined" ? `<button class="btn" data-act="preview">Run 20 fights</button>` : ""}</div></div>
       ${previewResult ? `<div class="card aiprev"><p><b>${previewResult.win}%</b> wins against the ${esc(previewResult.foe)} · ${previewResult.turns} turns on average${previewResult.win ? ` · ${previewResult.hpLeft}% health left` : ""}</p><p class="sub">Skill XP per fight: ${Object.entries(previewResult.xp).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${esc(k)} ${v}`).join(" · ") || "none"}</p></div>` : ""}
-      ${testResult ? `<p style="margin-top:10px;display:flex;align-items:center;gap:10px">${ICONART.enemy(testResult.name, D.ENCOUNTERS.find((x) => x.name === testResult.name)?.tags, 40)}<span><b>${testResult.f.won ? "Victory" : "Defeat"}</b> against the ${esc(testResult.name)}.</span></p><p class="sub">${firedSummary(testResult.f)}</p>${fightLog(testResult.f)}` : ""}</div>
+      ${testResult ? `<p style="margin-top:10px;display:flex;align-items:center;gap:10px">${ICONART.enemy(testResult.name, D.ENCOUNTERS.find((x) => x.name === testResult.name)?.tags, 40)}<span><b>${testResult.f.won ? "Victory" : "Defeat"}</b> against the ${esc(testResult.name)}.</span></p><p class="sub">${firedSummary(testResult.f)}</p>${fightLog(testResult.f)}${typeof FASTQOL !== "undefined" ? FASTQOL.againHTML("test") : ""}` : ""}</div>
       <div class="panel"><h2>Loadouts</h2><p class="sub">A loadout is gear + rules. Switch before a fight.</p>
       <div class="chips">${Object.keys(S.loadouts).map((n) => `<button class="chip lochip ${n === S.loadout ? "on" : ""}" data-act="lo" data-name="${esc(n)}">${DOLL.loadoutThumb(S, n)}${esc(n)}</button>`).join("")}</div>
       <div class="list"><input id="lon" maxlength="20" placeholder="New loadout name, e.g. Dragon" aria-label="New loadout name"><div class="grid2"><button class="btn" data-act="losave">Save current as</button>${pendingDel ? `<button class="btn danger" data-act="lodelyes">Really delete ${esc(S.loadout)}?</button>` : `<button class="btn danger" data-act="lodel">Delete ${esc(S.loadout)}</button>`}</div></div></div>`;
@@ -3415,7 +3416,7 @@
       case "pindel": S.pins = (S.pins || []).filter((p) => p.id !== b.dataset.id); selected = null; renderPicked(); persist(); break;
       case "pinshare": { const p = (S.pins || []).find((q) => q.id === b.dataset.id); if (!p || !party) break; Store.put("chat", nid(), { from: S.id, name: S.name, text: `${p.icon} ${p.label}`, ch: party.id, t: G.now(), pin: { x: p.x, y: p.y, label: p.label, icon: p.icon } }); toast("Shared with your party in the chat."); break; }
       case "pinadd": { const d = chatDocs.find((x) => x.id === b.dataset.id); if (!d?.pin) break; const id = addPin(d.pin.x, d.pin.y, d.pin.label, d.pin.icon); if (id) { tab = "map"; renderTabs(); renderPanel(true); selected = "__pin:" + id; renderPicked(); follow = false; center = [d.pin.x, d.pin.y]; if (zoom < 2) zoom = 2.4; $("#mapwrap").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" }); } break; }
-      case "duelstake": arenaStake = +b.dataset.id; renderPanel(true); break;
+      case "duelstake": arenaStake = +b.dataset.id; if (typeof FASTQOL !== "undefined") FASTQOL.setMem("arenaStake", arenaStake); renderPanel(true); break;
       case "duelgo": { const c = others.find((o) => o.id === b.dataset.id); const r = ARENA.challenge(S, c && { ...c, id: c.id }, arenaStake); if (r.err) return toast(r.err); Store.put("duels", r.id, r.doc); persist(true); say(r.text); break; }
       case "duelyes": answerDuel(b.dataset.id, true); break;
       case "duelno": answerDuel(b.dataset.id, false); break;
@@ -3561,7 +3562,7 @@
         const name = $("#te").value, e2 = G.scaleEnemy(D.ENCOUNTERS.find((x) => x.name === name), S.level);
         const sim = G.clone(S); sim.health = G.maxHealth(sim); sim.healthTs = G.now(); sim._test = true;
         const f = new G.Fight(sim, e2); f.run();
-        testResult = { f, name }; renderPanel(true); break;
+        testResult = { f, name }; if (typeof FASTQOL !== "undefined") FASTQOL.setMem("testFoe", name); renderPanel(true); break;
       }
       case "lo": if (S.trip?.status === "encounter") return toast("Not in the middle of a fight!"); S.loadout = b.dataset.name; tacticsDraft.edit = null; pendingPreset = null; say(`Switched to ${S.loadout}: its own gear and tactics.`); break;
       case "losave": { const n = ($("#lon").value || "").trim().slice(0, 20); if (!n) return toast("Give it a name first."); say(G.saveLoadoutAs(S, n)); break; }
