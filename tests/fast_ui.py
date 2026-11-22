@@ -42,6 +42,7 @@ async def main():
                 pg.on("pageerror", lambda e: errs.append(str(e)))
                 await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=fq{vw}{style}&tb&fightanim"); await pg.wait_for_timeout(1500)
                 await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Quickfoot"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
+                await pg.evaluate("typeof ONBOARD !== 'undefined' && ONBOARD.pref('obTips', false)")   # first-time tips (onboard.js) would sit over the fight screen
                 try: await pg.wait_for_selector("#side", timeout=10000)
                 except Exception: await pg.screenshot(path=os.path.join(OUT, f"{tag}_nostart.png")); print(await pg.evaluate("document.body.innerText.slice(0,300)"))
                 await pg.evaluate(CLEAR)
