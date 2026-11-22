@@ -361,10 +361,12 @@ const G = (() => {
     return a;
   }
   function describeRule(r) {
+    if (r && (r.conds?.length || r.not) && typeof AISET !== "undefined") return AISET.describe(r);   // AND / OR / NOT rules
     const [label, kind] = D.CONDITIONS[r.if] || [r.if, false];
     return { cond: kind === "turn" ? `${label} ${r.pct || 2}` : kind ? `${label} ${r.pct}%` : label, act: describeAction(r.do) };
   }
   function hiddenChance(s, e, t) {   // [OURS] Skyrim detection is real-time line of sight; this is our stand-in
+    if (typeof SNEAK2 !== "undefined") return SNEAK2.chance(s, e, t);   // sneak2.js: armor, daylight and the foe's awareness count
     const base = 0.25 + skill(s, "Sneak") / 150 - (e.danger === "high" ? 0.15 : 0) + (isNight(t) ? 0.1 : 0) + 0.15 * P(s, "detect_life") + fxSum(s, "hide", t || now()) / 100 + (typeof PFX !== "undefined" ? Math.min(25, PFX.num(s, "hide")) / 100 : 0)
       + (typeof WEVENTS !== "undefined" ? WEVENTS.weather([s.x, s.y], t || now()).sneak : 0) + (typeof WFX !== "undefined" ? WFX.sneakAdd(s, t || now()) : 0);   // rain, fog and snow hide you; clear nights too
     const seen = (1 - base) * (1 - 0.12 * P(s, "stealth"));   // [Skyrim] Stealth: 20% harder to detect per rank (our scale)
@@ -375,7 +377,7 @@ const G = (() => {
     constructor(s, enemy, rules, t = now()) {
       this.s = s; this.e = enemy; this.rules = rules || lo(s).rules; this.t = t;
       { const L = Object.values(s.loadouts || {}).find((l) => l && l.rules === this.rules) || (s.loadouts ? lo(s) : null);   // [OURS] Smart AI unless this loadout is set to Custom tactics
-        this.ai = typeof COMBATAI !== "undefined" && !!L && COMBATAI.isSmart(L); }
+        this.ai = typeof COMBATAI !== "undefined" && !!L && COMBATAI.isSmart(L); this.L = L; this.hybrid = !!L && L.mode === "hybrid"; }
       this.eq = equipment(s);
       this.hp = curHealth(s, t); this.mp = maxMagicka(s); this.sp = maxStamina(s);
       this.ehp = enemy.hp ?? enemy.health;
@@ -475,7 +477,14 @@ const G = (() => {
       return best;
     }
     findItem(item) { return this.s.inv.find((r) => r.item === item && this.left(r.id) > 0) || null; }
-    cond(r) {
+    cond(r) {   // a rule's IF: one condition, or several joined with AND / OR (each can be NOT)
+      if (r && Array.isArray(r.conds) && r.conds.length) {
+        const vals = r.conds.map((c) => !!this.cond1(c) !== !!c.not);
+        return r.join === "or" ? vals.some(Boolean) : vals.every(Boolean);
+      }
+      return !!this.cond1(r) !== !!(r && r.not);
+    }
+    cond1(r) {
       const s = this.s, p = r.pct || 0;
       switch (r.if) {
         case "always": return true;
@@ -507,10 +516,12 @@ const G = (() => {
         case "mounted": return !!this.mount?.up;
         case "ally_hp_below": case "ally_down": return typeof SPELLBOOK !== "undefined" ? !!SPELLBOOK.condAlly(this, r) : false;   // support spells (spellbook.js)
       }
+      if (typeof AISET !== "undefined" && AISET.NEWCOND[r.if]) return AISET.cond(this, r);   // the newer conditions (aiset.js)
       return false;
     }
     affordable(a) {
       if (a === "attack") return true;
+      if (a === "flee") return !!this.canFlee && !this.e.boss;   // only on the road, never from a boss
       if (a === "power_attack") return this.sp >= this.paCost;
       if (a === "block") return this.sp >= F.BLOCK_STAMINA && !(this.weapon && this.weapon.skill === "Archery");
       const [kind, arg] = a.split(":");
@@ -522,6 +533,13 @@ const G = (() => {
       return false;
     }
     choose() {
+      if (this.ai && this.hybrid) {   // Hybrid: your rules first (the plain "always → attack" filler doesn't count), Smart AI fills the gaps
+        for (let i = 0; i < this.rules.length; i++) {
+          const r = this.rules[i];
+          if (!r || r.off || catchAll(r) || (this.healSkip && this.healSkip[i + 1] >= this.turn)) continue;
+          if (this.cond(r) && this.affordable(r.do)) { this.aiWhy = ""; return [i + 1, r.do]; }
+        }
+      }
       if (this.ai) { const [a, why] = COMBATAI.choose(this); this.aiWhy = why; return [0, a]; }   // [OURS] combatai.js
       for (let i = 0; i < this.rules.length; i++) {
         const r = this.rules[i];
@@ -620,6 +638,7 @@ const G = (() => {
         if (--s.poison.hits <= 0) s.poison = null;
       }
       if (this.weapon?.dae && typeof DAEDRIC !== "undefined") { const dr = DAEDRIC.onHit(this, dmg); dmg = dr.dmg; label += dr.label; }   // Daedric artifacts
+      if (sneak && typeof SNEAK2 !== "undefined") { const c = SNEAK2.cap(this); if (c && dmg > c) { dmg = c; label += " (it reels, but stands)"; } }   // no one-shots on strong foes
       this.ehp -= dmg;
       if (typeof PFX !== "undefined") {
         label += PFX.onHit(this, px, dmg);
@@ -679,6 +698,12 @@ const G = (() => {
     }
     act(a) {
       if (a === "attack") return this.attack(false);
+      if (a === "flee") {   // break off and run (road fights only)
+        const ch = 0.45 + skill(this.s, "Athletics") / 200 - (this.e.danger === "high" ? 0.2 : 0) + (riding(this.s) ? 0.15 : 0);
+        this.addXp("Athletics", 10);
+        if (Math.random() < ch) { this.fled = true; return "You break away and run!"; }
+        return "You try to run, but it cuts you off";
+      }
       if (a === "power_attack") return this.attack(true);
       if (a === "block") {
         const px = typeof PFX !== "undefined";
@@ -803,20 +828,25 @@ const G = (() => {
     }
     run({ enemyFirst = false, trySneak = true, maxTurns = 60, t, hidden = null } = {}) {
       this.dark = isNight(t || now()) || !!(this.wx && this.wx.aim < 1);   // night, fog, rain: Silent Roll
-      this.hidden = hidden != null && !enemyFirst ? hidden : trySneak && !enemyFirst && Math.random() < hiddenChance(this.s, this.e, t);
+      if (hidden != null && !enemyFirst) this.hidden = hidden;
+      else if (!trySneak || enemyFirst) this.hidden = false;
+      else if (typeof SNEAK2 !== "undefined") {   // sneak2.js: only try when it makes sense; a failed try hands the foe the first blow
+        const o = SNEAK2.opener(this, t); this.sneakTry = o; this.hidden = o.hidden;
+        if (o.spotted) this.log.push({ turn: 0, rule: null, me: `Spotted while sneaking up (${Math.round(o.chance * 100)}% chance)!`, them: this.enemyTurn() });
+      } else this.hidden = Math.random() < hiddenChance(this.s, this.e, t);
       if (enemyFirst) this.log.push({ turn: 0, rule: null, me: "", them: this.enemyTurn() });
-      while (this.hp > 0 && this.ehp > 0 && !this.endWon && this.turn < maxTurns) {
+      while (this.hp > 0 && this.ehp > 0 && !this.endWon && !this.fled && this.turn < maxTurns) {
         this.turn++;
         const [rule, a] = this.choose();
         const line = { turn: this.turn, rule, me: this.act(a), them: "", a, wt: this.wt };   // a / wt: what was done, for the fight scene only
-        if (this.ai) { line.ai = true; if (this.aiWhy && this.aiWhy !== this.aiLastWhy) line.why = this.aiWhy; this.aiLastWhy = this.aiWhy; }   // why the AI did it (shown when the reason changes)
+        if (this.ai && !rule) { line.ai = true; if (this.aiWhy && this.aiWhy !== this.aiLastWhy) line.why = this.aiWhy; this.aiLastWhy = this.aiWhy; }   // why the AI did it (shown when the reason changes)
         if (this.bleed.length && this.ehp > 0) { const b = this.bleed.reduce((x, y) => x + y.dmg, 0); this.ehp -= b; this.bleed = this.bleed.map((y) => ({ ...y, turns: y.turns - 1 })).filter((y) => y.turns > 0); line.me += ` · bleeds ${Math.round(b)}`; }
         for (const al of [...this.allies]) if (this.ehp > 0) { if (al.coop && typeof COOP !== "undefined") { line.me += COOP.allyAct(this, al); continue; } if (al.follower && this.ai) { line.me += COMBATAI.followerAct(this, al); continue; } const d = al.dmg * rnd(...F.DAMAGE_SPREAD); this.ehp -= d; line.me += ` · ${al.name} ${Math.round(d)}`; }
         if (typeof PFX !== "undefined") PFX.tick(this, line);   // burning, chills and jolts
         if (this.summonTurns > 0 && this.ehp > 0) { this.summonTurns--; this.ehp -= this.summonDmg; line.me += ` · familiar ${this.summonDmg}`; }
         if (typeof MAGIC !== "undefined" && !this.endWon) MAGIC.tick(this, line);   // cloaks, burning walls, healing circles
         { const g = this.healGuard(rule); if (g) line.me += " · " + g; }
-        if (this.ehp > 0 && !this.endWon) line.them = this.enemyTurn();
+        if (this.ehp > 0 && !this.endWon && !this.fled) line.them = this.enemyTurn();
         if (this.pw) POWERS.tick(this, line);
         line.hp = Math.max(0, Math.round(this.hp)); line.ehp = Math.max(0, Math.round(this.ehp));
         this.log.push(line);
@@ -1094,8 +1124,13 @@ const G = (() => {
     }
     const f = new Fight(s, e, null, t);
     if (typeof HORSEBACK !== "undefined") HORSEBACK.engage(f, t);   // [OURS] riding? you fight from the saddle
+    f.canFlee = true;   // a "flee" tactic can break off a road fight
     f.run({ enemyFirst, t, hidden: opts.hidden ?? null });
     const skillMsgs = f.apply(t);
+    if (f.fled && !f.won && f.hp > 0) {
+      tr.status = "travel"; tr.encounter = null; tr.lastTick = t; tripLog(s, `🏃 Broke off the fight with the ${e.name}`);
+      return { text: [...lines, `You break off the fight and leave the ${e.name} behind.`].join(" "), fight: f, fled: true, skills: skillMsgs };
+    }
     if (f.won) {
       const g = rint(...e.gold); s.gold += g; const loot = rollLoot(s, e);
       tr.status = "travel"; tr.encounter = null; tr.lastTick = t;
