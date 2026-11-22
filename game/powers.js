@@ -150,14 +150,14 @@ const POWERS = (() => {
     }
     if (kind === "shout") {
       const lv = level(s, arg), [name, words, cd] = SHOUTS[arg];
-      if (!s._test) s.voiceAt = t + cd[lv - 1];
+      if (!s._test) s.voiceAt = t + cd[lv - 1] * (1 - (typeof PFX !== "undefined" ? Math.min(0.5, PFX.num(s, "shoutcd")) : 0));   // Commanding Voice
       f.shoutedThisTurn = true;
       f.addXp && 0;
       const cry = words.slice(0, lv).join(" ") + "!";
       switch (arg) {
         case "unrelenting_force": f.eParalyzed = Math.max(f.eParalyzed, lv); f.ehp -= [10, 20, 35][lv - 1]; return `${cry} ${name} knocks it flat (${[10, 20, 35][lv - 1]})`;
-        case "fire_breath": f.ehp -= [50, 70, 90][lv - 1]; return `${cry} Fire Breath: ${[50, 70, 90][lv - 1]}`;
-        case "frost_breath": f.ehp -= [50, 70, 90][lv - 1]; f.slowed = 3; return `${cry} Frost Breath: ${[50, 70, 90][lv - 1]}, slowed`;
+        case "fire_breath": f.ehp -= [50, 70, 90][lv - 1]; return `${cry} Fire Breath: ${[50, 70, 90][lv - 1]}` + (typeof PFX !== "undefined" ? PFX.hitFoe(f, "fire", [50, 70, 90][lv - 1], "shout") : "");
+        case "frost_breath": f.ehp -= [50, 70, 90][lv - 1]; f.slowed = 3; return `${cry} Frost Breath: ${[50, 70, 90][lv - 1]}, slowed` + (typeof PFX !== "undefined" ? PFX.hitFoe(f, "frost", [50, 70, 90][lv - 1], "shout") : "");
         case "ice_form": f.eParalyzed = Math.max(f.eParalyzed, [3, 5, 8][lv - 1]); return `${cry} Ice Form: frozen solid`;
         case "become_ethereal": p.ether = [3, 5, 8][lv - 1]; return `${cry} you turn ethereal`;
         case "disarm": p.disarm = [0.3, 0.45, 0.6][lv - 1]; return `${cry} its weapon flies away`;

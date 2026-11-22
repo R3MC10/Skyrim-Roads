@@ -249,7 +249,7 @@ const DUNGEONS = (() => {
     if (r.m === "coffin") return [["open", "Push the lid open"], ["skip", "Leave it be"]];
     return [["loot", "Search it"], ["skip", "Leave it"]];
   }
-  const dmg = (s, lo, hi) => { const d = s.dungeon, x = Math.round(G.maxHealth(s) * rnd(lo, hi) * [0, 0.8, 1, 1.2][d.tier]); G.setHealth(s, G.curHealth(s) - x); return x; };
+  const dmg = (s, lo, hi) => { const d = s.dungeon, x = Math.round(G.maxHealth(s) * rnd(lo, hi) * [0, 0.8, 1, 1.2][d.tier] * (1 - (typeof PFX !== "undefined" ? Math.min(0.7, PFX.num(s, "trapdmg")) : 0))); G.setHealth(s, G.curHealth(s) - x); return x; };
   function themeLoot(s, chance) { const T = THEMES[s.dungeon.theme]; return T?.loot?.length && Math.random() < chance ? [giveFound(s, pick(T.loot))] : []; }
 
   function fight(s, e, opts, t) {
@@ -322,14 +322,14 @@ const DUNGEONS = (() => {
 
     if (r.type === "trap") {
       if (choice === "dash") {
-        const ch = clamp(0.45 + G.skill(s, "Acrobatics") / 150 + 0.15 * G.P(s, "sure_footed") + G.fxSum(s, "trapdodge") / 100, 0.1, 0.95), skills = G.useSkill(s, "Acrobatics", 3);   // [OURS]
+        const ch = clamp(0.45 + G.skill(s, "Acrobatics") / 150 + 0.15 * G.P(s, "sure_footed") + G.fxSum(s, "trapdodge") / 100 + (typeof PFX !== "undefined" ? PFX.num(s, "trap") / 100 : 0), 0.1, 0.95), skills = G.useSkill(s, "Acrobatics", 3);   // [OURS]
         if (Math.random() < ch) return done({ text: `You time it and dive past ${r.trap}.`, skills });
         const x = dmg(s, 0.15, 0.3);
         if (G.curHealth(s) <= 0) return lose({ text: `${r.trap} catches you.` }, r.trap);
         return done({ text: `Too slow. ${r.trap[0].toUpperCase() + r.trap.slice(1)} catches you (−${x} health).`, skills });
       }
       if (choice === "trigger") {
-        const ch = G.P(s, "light_foot") ? 1 : clamp(0.35 + G.skill(s, "Sneak") / 120, 0.1, 0.95), skills = G.useSkill(s, "Sneak", 5);
+        const ch = G.P(s, "light_foot") ? 1 : clamp(0.35 + G.skill(s, "Sneak") / 120 + (typeof PFX !== "undefined" ? PFX.num(s, "trap") / 100 : 0), 0.1, 0.95), skills = G.useSkill(s, "Sneak", 5);
         if (Math.random() < ch) {
           const g = goldFound(s, rint(3, 20));
           return done({ text: `You spot the trigger and step around it. Whoever didn't left ${g} gold behind.`, skills });
@@ -353,7 +353,7 @@ const DUNGEONS = (() => {
       const ch = choice === "tower" ? 1 : G.lockChance(s, r.tier);
       if (choice === "tower" || G.lockRoll(s, ch)) {
         const skills = G.useSkill(s, "Lockpicking", LOCK_TIERS[r.tier][1]);                            // [Skyrim] XP per lock tier
-        const g = goldFound(s, Math.round(rint(15, 40) * (r.tier + 1) * (G.P(s, "golden_touch") ? 1.5 : 1))), loot = [];
+        const g = goldFound(s, Math.round(rint(15, 40) * (r.tier + 1) * (G.P(s, "golden_touch") ? 1.5 : 1) * (1 + (typeof PFX !== "undefined" ? Math.min(0.5, PFX.num(s, "gold")) : 0)))), loot = [];
         for (const [item, c] of D.LOOT[r.tier >= 3 ? "elite" : "humanoid"]) if (Math.random() < c * 1.5 * (G.P(s, "treasure_hunter") ? 1.5 : 1)) loot.push(giveFound(s, item));
         loot.push(...themeLoot(s, 0.5));
         return done({ text: `Click. Inside: ${g} gold${loot.length ? ", " + loot.join(", ") : ""}.`, skills });

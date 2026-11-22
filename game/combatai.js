@@ -28,6 +28,7 @@ const COMBATAI = (() => {
     let d = (e.damage || 0) * F.HIT_CHANCE * (now && f.slowed ? 0.5 : 1) * (1 - F.damageReduction(rating, pieces));
     if (magic) d *= (1 - 0.1 * G.P(s, "magic_resistance")) * (1 - Math.min(0.5, G.fxSum(s, "resist") / 100));
     if (hasPw(f)) d = POWERS.dmgIn(f, d, magic);
+    if (typeof PFX !== "undefined") { d *= PFX.inMult(f, { hit: d }) * (1 - Math.min(0.3, PFX.sum(s, "dodge", f, {}))); const fe = PFX.foeElement(e); if (fe && f.meSt?.burn) d += f.meSt.burn.dmg; }   // armor/style perks; you're already burning
     const n = f.allies.length; if (n) d *= 1 - n / (n + 1) * 0.7 * F.HIT_CHANCE;   // allies soak some blows
     if (f.ward && hasM() && MAGIC.isCaster(f)) d = Math.max(0, d - f.ward / 3);
     if (e.priest) d *= 1.3;   // dragon priests also cast
@@ -56,6 +57,11 @@ const COMBATAI = (() => {
       d *= m; hit = 1;
     }
     if (f.mount?.up) d *= 1.05;
+    if (typeof PFX !== "undefined") {   // the bigger perk trees: first strikes, dual flurry, sneak bonuses, quick second strikes, a surer aim
+      const x = { power, sneak: sneakReady(f), sk, wt: f.wt };
+      d *= PFX.out(f, x) * (1 + 0.5 * Math.min(0.5, PFX.sum(s, "extra", f, x))) * (f.riposte ? 1.5 : 1);
+      if (hit < 1) hit = Math.min(0.98, hit + PFX.sum(s, "hit", f, x)); if (PFX.has(s, "sure", f, x)) hit = 1;
+    }
     const [cc, cm] = f.critChance(); if (cc) d += cc * (f.weapon ? f.weapon.damage : 0) * cm;
     if (hasPw(f)) d *= POWERS.dmgOut(f);
     if (f.e.red) d *= 1 - f.e.red;
@@ -74,6 +80,7 @@ const COMBATAI = (() => {
     if (typeof WFX !== "undefined") a *= WFX.elem(f, sp.element) * (f.wx && f.wx.storm && sp.element === "shock" ? 1.1 : 1);   // the weather: rain dulls fire, storms feed shock
     if (f.turn === 1 && f.hidden && G.P(s, "quiet_casting")) a *= 2;
     const fail = !free && hasM() && id ? MAGIC.failChance(s, id) : 0;
+    if (typeof PFX !== "undefined" && sp.element) a += PFX.statusValue(f, sp.element, a);   // a foe already burning to death isn't worth more fire; Disintegrate near the end
     return a * F.SPELL_HIT_CHANCE * (1 - fail);
   }
   const spellCost = (f, id, dual) => G.spellCost(f.s, D.SPELLS[id]) * (dual && hasM() ? MAGIC.DUAL_COST : 1);

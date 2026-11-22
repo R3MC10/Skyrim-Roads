@@ -51,7 +51,7 @@ const ROAD_EVENTS = (() => {
         const ch = sure ? 1 : G.lockChance(s, e.tier);
         if (sure || G.lockRoll(s, ch)) {
           const skills = xp(s, "Lockpicking", LOCK_TIERS[e.tier][1]);
-          const gold = Math.round(rint(10, 40) * (e.tier + 1) * (G.P(s, "golden_touch") ? 1.5 : 1)), loot = [];
+          const gold = Math.round(rint(10, 40) * (e.tier + 1) * (G.P(s, "golden_touch") ? 1.5 : 1) * (1 + (typeof PFX !== "undefined" ? Math.min(0.5, PFX.num(s, "gold")) : 0))), loot = [];
           s.gold += gold;
           for (const [item, c] of D.LOOT.humanoid) if (Math.random() < c * (1 + e.tier * 0.5) * (G.P(s, "treasure_hunter") ? 1.5 : 1)) { G.give(s, item); loot.push(D.ITEMS[item].name); }
           return { text: `Click. The lock gives. Inside: ${gold} gold${loot.length ? ", " + loot.join(", ") : ""}.`, skills };

@@ -11,7 +11,7 @@ const TABMENU = (() => {
   const DIR = { up: "char", right: "items", down: "map", left: "magic" };
   const NAME = { char: "Skills", items: "Items", map: "Map", magic: "Magic" };
   const SUBT = { char: "Character · perks · tactics", items: "Weapons · apparel · potions", map: "Travel the world", magic: "Spells · powers · shouts" };
-  const CHAR_TABS = [["stars", "Skills"], ["hero", "Character"], ["perks", "Perks"], ["tactics", "Tactics"]];
+  const CHAR_TABS = [["stars", "Skills"], ["hero", "Character"], ["perks", "Perks"], ["tactics", "Tactics"], ["stats", "Stats"], ["diary", "Diary"]];
   const MIN = 40, RATIO = 1.4;
   let MAXMS = 1500;   // a slow drag isn't a swipe
 
@@ -55,7 +55,7 @@ const TABMENU = (() => {
       const how = tr.carriage ? "by carriage" : typeof HORSES !== "undefined" && HORSES.riding(S) ? `riding ${S.horse?.name || "your horse"}` : "on foot";
       return { k: "trip", icon: tr.carriage || (typeof HORSES !== "undefined" && HORSES.riding(S)) ? "🐎" : "🥾", text: `${tr.roam ? "Roaming" : "Travelling"} to ${tr.destName}`, sub: `${fmtMin(left)} left · ${how}`, progress: total ? Math.round((total - left) / total * 100) : 0 };
     }
-    const qa = typeof QUESTS !== "undefined" ? QUESTS.active(S)[0] : null;
+    const qa = typeof QUESTS !== "undefined" ? QUESTS.tracked(S) : null;
     if (qa) { const tg = QUESTS.target(qa.st); return { k: "quest", icon: "📜", text: qa.def.name, sub: `${qa.st.title || ""}${tg ? ` · ${tg}` : ""}` }; }
     return { k: "idle", icon: "🧭", text: S.location ? `Resting in ${S.location}` : "Out in the wilds", sub: "No task yet · ask around town or open the Journal" };
   }

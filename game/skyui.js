@@ -15,11 +15,23 @@ const SKYUI = (() => {
     };
     tree.forEach((p) => d(p[0]));
     const rows = {}; tree.forEach((p) => (rows[depth[p[0]]] = rows[depth[p[0]]] || []).push(p[0]));
-    const maxD = Math.max(0, ...Object.values(depth)), H = 40 + (maxD + 1) * ROW, pos = {};
-    for (const [k, ids] of Object.entries(rows)) ids.forEach((id, i) => {
-      const gap = ids.length > 1 ? Math.min(96, (W - 96) / (ids.length - 1)) : 0;
-      pos[id] = [W / 2 + (i - (ids.length - 1) / 2) * gap, H - 26 - k * ROW, ids.length > 3 && i % 2 ? -1 : 1];   // crowded rows: every other label goes above the star
-    });
+    // [OURS] bigger trees: each depth is ordered by where its parents sit (fewer crossing lines), then split into
+    // lines of at most 4 stars, kept away from the edges so labels never run off or collide
+    const pos = {}, lines = [];
+    const depths = Object.keys(rows).map(Number).sort((a, b) => a - b);
+    const px = {};   // provisional x of each placed star, for ordering the next depth
+    const place = (ids) => { const gap = ids.length > 1 ? Math.min(92, (W - 150) / (ids.length - 1)) : 0; ids.forEach((id, i) => { px[id] = W / 2 + (i - (ids.length - 1) / 2) * gap; }); };
+    for (const k of depths) {
+      const ids = rows[k].slice();
+      const want = (id) => { const ps = (byId[id]?.[4] || []).filter((n) => px[n] != null); return ps.length ? ps.reduce((a, n) => a + px[n], 0) / ps.length : W / 2; };
+      ids.sort((a, b) => want(a) - want(b));
+      for (let i = 0; i < ids.length; i += 4) { const chunk = ids.slice(i, i + 4); place(chunk); lines.push(chunk); }
+    }
+    const H = 40 + lines.length * ROW;
+    lines.forEach((ids, k) => ids.forEach((id, i) => {
+      const jog = ids.length > 2 ? (i % 2 ? -7 : 7) : 0;   // a little zig-zag so long lines read as a constellation
+      pos[id] = [Math.round(px[id]), Math.round(H - 26 - k * ROW + jog), 1];
+    }));
     return { pos, H, byId };
   }
   function svg(skill, s) {

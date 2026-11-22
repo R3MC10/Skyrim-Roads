@@ -598,6 +598,12 @@ const FIGHTART = (() => {
     const hpMax = Math.max(hp0, 1), ehpMax = Math.max(ehp0, 1);
     const last = (f.log || [])[f.log.length - 1] || {};
     const won = f.won ?? (last.ehp != null && last.hp != null ? last.hp >= last.ehp : true);
+    const NOST = { me: {}, foe: {} };
+    function curSt() {   // statuses as of the beat being shown (none once the fight has finished playing)
+      if (done || phase === "end") return NOST;
+      const b = beats[Math.min(bi, beats.length - 1)], ln = b ? (f.log || [])[b.li] : null;
+      return ln?.st ? { me: ln.st.me || {}, foe: ln.st.foe || {} } : NOST;
+    }
     const turned = !!f.endWon;
     const groundY = Hh * 0.8, s = Hh / 150, hx0 = W * 0.27, fx0 = W * 0.72;
     const foeK = rec.foe, fSize = SIZE[foeK] || 1, reach = REACH[foeK] || 1, isPerson = PERSON.has(foeK);
@@ -761,6 +767,14 @@ const FIGHTART = (() => {
       heroDodge = Math.min(1, heroDodge + dtr * 2.6); foeDodge = Math.min(1, foeDodge + dtr * 2.6); wolfT = Math.min(1, wolfT + dtr * 1.4);
       claw *= Math.exp(-dtr * 5); if (labelT > 0) labelT -= dtr; ringT = Math.min(1, ringT + dtr * 2.2);
       for (let i = 0; i < NF; i++) if (fl[i] > 0) { fxs[i] += fvx[i] * dtr; fys[i] += fvy[i] * dtr; fvy[i] += 220 * dtr; fl[i] -= dtr * 0.9; }
+      // [OURS] elemental statuses (perkfx.js): flames lick a burning figure, frost mist on a chilled one, sparks on a jolted one
+      { const cs = curSt(); const fire = ["#ffb347", "#ff7a2a", "#ffd27a"];
+        for (const [who, st] of [["me", cs.me], ["foe", cs.foe]]) {
+          const X0 = who === "me" ? hx0 : fx0, Y0 = who === "me" ? heroChest : foeChest;
+          if (st.burn && Math.random() < (rm ? 0.15 : 0.45)) spawn(0, fire[(Math.random() * 3) | 0], X0 + (Math.random() - 0.5) * 22 * s, Y0 + (Math.random() * 20 - 4) * s, (Math.random() - 0.5) * 12 * s, -60 * s, 0.6, 3, -20);
+          if (st.chill && Math.random() < (rm ? 0.08 : 0.25)) spawn(2, "#e0f4ff", X0 + (Math.random() - 0.5) * 24 * s, Y0 + 10 * s, 0, -12 * s, 0.9, 5, 0);
+          if (st.shock && Math.random() < (rm ? 0.08 : 0.25)) spawn(1, "#cfe7ff", X0 + (Math.random() - 0.5) * 20 * s, Y0 + (Math.random() - 0.5) * 20 * s, (Math.random() - 0.5) * 120 * s, (Math.random() - 0.5) * 120 * s, 0.25, 2, 0);
+        } }
       // particles
       alive = 0;
       for (let i = 0; i < NP; i++) { if (pl[i] <= 0) continue; alive++; pl[i] -= dt; pvy[i] += pg[i] * s * dt; const dr = pt[i] === 2 ? 0.96 : 0.985; pvx[i] *= dr; pvy[i] *= dr; px[i] += pvx[i] * dt; py[i] += pvy[i] * dt; if (pt[i] === 2) ps[i] += dt * 6; if (pt[i] === 4) px[i] += Math.sin(py[i] * 0.1) * 0.4; }
@@ -1062,6 +1076,20 @@ const FIGHTART = (() => {
       };
       bar(8, hpD, Math.max(hpL, hpD), hpMax, "#c0392b", "You", false);
       bar(W - 8 - bw, ehpD, Math.max(ehpL, ehpD), ehpMax, "#8e6b2b", rec.foeName.length > 22 ? rec.foeName.slice(0, 21) + "…" : rec.foeName, true);
+      // status icons with turns left, under each name: 🔥 burning · ❄ chilled · ⚡ jolted
+      const cs = curSt(), ICO = { burn: ["🔥", "#ff9a3c"], chill: ["❄", "#bfe6ff"], shock: ["⚡", "#ffe37a"] };
+      const chips = (st, x, right) => {
+        let off = 0;
+        for (const k of ["burn", "chill", "shock"]) if (st[k]) {
+          const txt = `${ICO[k][0]}${st[k]}`, w = 26, cx = right ? x - off - w : x + off;
+          g.fillStyle = "rgba(20,22,26,0.78)"; g.fillRect(cx, y + bh + 20, w, 15);
+          g.strokeStyle = ICO[k][1]; g.lineWidth = 1; g.strokeRect(cx + 0.5, y + bh + 20.5, w - 1, 14);
+          g.font = pixel ? "bold 10px monospace" : "600 10px sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillStyle = ICO[k][1];
+          g.fillText(txt, cx + w / 2, y + bh + 28);
+          off += w + 3;
+        }
+      };
+      chips(cs.me, 8, false); chips(cs.foe, W - 8, true);
       g.restore();
     }
     const runner = {

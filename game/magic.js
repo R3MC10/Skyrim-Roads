@@ -142,7 +142,7 @@ const MAGIC = (() => {
   // ---- what each new kind does in a fight. f = the Fight, sp = the spell (already scaled for dual casting)
   const pot = (f, sp) => 1 + G.fxSum(f.s, "spell:" + sp.school) / 100;
   const KINDS = {
-    rune(f, sp) { f.rune = { dmg: sp.amount * pot(f, sp), el: sp.element, name: sp.name }; return `${sp.name}: a glowing rune waits on the ground`; },
+    rune(f, sp) { f.rune = { dmg: sp.amount * pot(f, sp) * (1 + (typeof PFX !== "undefined" ? PFX.sum(f.s, "spell", f, { kind: "rune" }) : 0)), el: sp.element, name: sp.name }; return `${sp.name}: a glowing rune waits on the ground`; },
     cloak(f, sp) { f.cloak = { dmg: sp.amount * pot(f, sp), el: sp.element, turns: sp.turns, name: sp.name }; return `${sp.name}: ${sp.element === "fire" ? "flames" : sp.element === "frost" ? "frost" : "lightning"} wrap around you`; },
     dot(f, sp) { f.dots = [...(f.dots || []), { dmg: sp.amount * pot(f, sp), el: sp.element, turns: sp.turns, name: sp.name }]; if (sp.element === "frost") f.slowed = Math.max(f.slowed, 2); return `${sp.name}: the ground ${sp.element === "fire" ? "bursts into flame" : sp.element === "frost" ? "freezes over" : "crackles"}`; },
     ward(f, sp) { f.ward = sp.amount * pot(f, sp); return `${sp.name}: a shimmering ward (${Math.round(f.ward)})`; },
@@ -159,12 +159,13 @@ const MAGIC = (() => {
     },
     fear(f, sp) {
       if (f.tags.has("undead") || f.tags.has("construct")) return `${sp.name}: no effect on the ${f.tags.has("undead") ? "undead" : "machine"}`;
-      if ((f.e.level ?? 1) > sp.max_level + (G.P(f.s, "rage") ? 8 : 0)) return `${sp.name}: no effect (level too high)`;
-      f.fearTurns = Math.round(sp.amount); return `${sp.name}: the ${f.e.name.toLowerCase()} cowers`;
+      const fx = typeof PFX !== "undefined" ? PFX.sum(f.s, "fear", f, {}) : 0;   // Aspect of Terror (+6), Rage (+8)
+      if ((f.e.level ?? 1) > sp.max_level + (G.P(f.s, "rage") && !fx ? 8 : fx)) return `${sp.name}: no effect (level too high)`;
+      f.fearTurns = Math.round(sp.amount) + (G.P(f.s, "aspect_of_terror") ? 1 : 0); return `${sp.name}: the ${f.e.name.toLowerCase()} cowers`;
     },
     courage(f, sp) { const k = 1 + sp.amount / 100; f.allies.forEach((a) => { a.dmg *= k; }); f.summonDmg *= k; f.braveHp = sp.amount; f.hp += sp.amount / 2; return `${sp.name}: ${f.allies.length || f.summonTurns ? "your allies fight harder" : "you feel bold"}`; },
     invisibility(f, sp) { f.unseen = 2; f.sneakNext = true; return `${sp.name}: you vanish. Your next blow is a sneak attack`; },
-    bound(f, sp) { f.bound = { dmg: sp.amount, skill: sp.skill, wt: sp.wt, name: sp.name.replace("Bound ", "bound ") }; f.wt = sp.wt; return `${sp.name}: a weapon of light forms in your hand`; },
+    bound(f, sp) { f.bound = { dmg: sp.amount * (1 + (typeof PFX !== "undefined" ? PFX.sum(f.s, "bound", f, {}) : 0)), skill: sp.skill, wt: sp.wt, name: sp.name.replace("Bound ", "bound ") }; f.wt = sp.wt; return `${sp.name}: a weapon of light forms in your hand`; },
     soultrap(f, sp) { f.soulTrap = true; return `${sp.name}: a purple glow surrounds the ${f.e.name.toLowerCase()}`; },
     reanimate(f, sp) {
       f.reanimate = { max: sp.amount, fights: sp.fights, name: sp.name };
@@ -175,14 +176,14 @@ const MAGIC = (() => {
   /* before the foe acts: runes, fear, invisibility. Returns a line to show (and whether its turn is over) */
   function beforeEnemy(f) {
     let pre = "";
-    if (f.rune && f.ehp > 0) { const d = f.rune.dmg * elem(f, f.rune.el); f.ehp -= d; pre = `${f.e.name} steps on your ${f.rune.name} (${Math.round(d)})`; f.rune = null; if (f.ehp <= 0) return { text: pre, end: true }; }
+    if (f.rune && f.ehp > 0) { const d = f.rune.dmg * elem(f, f.rune.el); f.ehp -= d; pre = `${f.e.name} steps on your ${f.rune.name} (${Math.round(d)})` + (typeof PFX !== "undefined" ? PFX.hitFoe(f, f.rune.el, d, "spell") : ""); f.rune = null; if (f.ehp <= 0) return { text: pre, end: true }; }
     if (f.fearTurns > 0) { f.fearTurns--; return { text: (pre ? pre + " · " : "") + `${f.e.name} cowers in fear`, end: true }; }
     if (f.unseen > 0) { f.unseen--; return { text: (pre ? pre + " · " : "") + `${f.e.name} can't find you`, end: true }; }
     return pre ? { text: pre, end: false } : null;
   }
   /* each turn: cloaks, burning walls, healing circles */
   function tick(f, line) {
-    if (f.cloak && f.ehp > 0) { const d = f.cloak.dmg * elem(f, f.cloak.el); f.ehp -= d; line.me += ` · ${f.cloak.name} ${Math.round(d)}`; if (--f.cloak.turns <= 0) f.cloak = null; }
+    if (f.cloak && f.ehp > 0) { const d = f.cloak.dmg * elem(f, f.cloak.el); f.ehp -= d; line.me += ` · ${f.cloak.name} ${Math.round(d)}` + (typeof PFX !== "undefined" && f.cloak.el !== "fire" ? PFX.hitFoe(f, f.cloak.el, d, "spell") : ""); if (--f.cloak.turns <= 0) f.cloak = null; }
     if (f.dots?.length && f.ehp > 0) { for (const x of f.dots) { const d = x.dmg * elem(f, x.el); f.ehp -= d; line.me += ` · ${x.name} ${Math.round(d)}`; x.turns--; } f.dots = f.dots.filter((x) => x.turns > 0); }
     if (f.regen) { const before = f.hp; f.hp = Math.min(G.maxHealth(f.s), f.hp + f.regen.amt); if (f.hp > before) { line.me += ` · +${Math.round(f.hp - before)} health`; f.addXp("Restoration", (f.hp - before) * 0.5); } if (--f.regen.turns <= 0) f.regen = null; }
   }
@@ -190,6 +191,7 @@ const MAGIC = (() => {
   function soak(f, dmg) {
     if (!f.ward || !isCaster(f)) return dmg;
     const used = Math.min(f.ward, dmg); f.ward -= used; f.addXp("Restoration", used * 0.3);
+    if (used > 0 && typeof PFX !== "undefined") { const mp = PFX.sum(f.s, "wardmp", f, {}); if (mp) f.mp = Math.min(G.maxMagicka(f.s), f.mp + mp); }   // Ward Absorb
     return dmg - used;
   }
   /* after the fight: raised dead, trapped souls */
@@ -276,7 +278,7 @@ const MAGIC = (() => {
       if (s.mark.place && !s.discovered.includes(s.mark.place)) s.discovered.push(s.mark.place);
       text = `Recall: the world folds, and you stand in ${s.mark.label} again.`;
     } else if (sp.use === "clairvoyance") {
-      const q = typeof QUESTS !== "undefined" ? QUESTS.active(s)[0] : null, n = q && QUESTS.target(q.st), p = n && WORLD.places[n];
+      const q = typeof QUESTS !== "undefined" ? QUESTS.tracked(s) : null, n = q && QUESTS.target(q.st), p = n && WORLD.places[n];
       if (!p) text = "Clairvoyance: a faint trail flickers and fades. You have no quest target right now.";
       else {
         const dx = p[0] - s.x, dy = p[1] - s.y, d = G.pxDist([s.x, s.y], p);

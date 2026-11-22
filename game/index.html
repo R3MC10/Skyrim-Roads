@@ -1039,6 +1039,33 @@ html.art-pixel .ww-word{font-family:inherit;text-shadow:2px 2px 0 #2c4a5c}
 .skc.bsky.lord .st.on circle.core{fill:#ffd0d8}.skc.bsky.lord line.on{stroke:#f0a0b0}
 .bperk h3{margin:6px 0 2px}
 .tw-card.bcard b{color:#e8c8a0}
+
+/* [journal] quest-only Journal, Skyrim quest book look */
+.journal .jseg{margin:6px 0 10px}
+.jbadge{display:inline-block;min-width:18px;padding:0 5px;margin-left:4px;border-radius:9px;background:var(--gold);color:#16130d;font-size:11px;line-height:18px;font-weight:700}
+.qcat{margin:14px 0 6px;font-family:Cinzel,serif;letter-spacing:.06em;color:var(--gold);font-size:13px;text-transform:uppercase;border-bottom:1px solid rgba(214,178,94,.25);padding-bottom:3px}
+.qcard{border:1px solid rgba(214,178,94,.22);border-radius:8px;padding:10px;margin:0 0 10px;background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(0,0,0,.12))}
+.qcard.tracked{border-color:var(--gold);box-shadow:0 0 0 1px rgba(214,178,94,.35) inset,0 0 14px rgba(214,178,94,.12)}
+.qcard.qcompleted{opacity:.8}
+.qhead{display:flex;gap:10px;align-items:center}
+.qhead .t{flex:1;font-family:"Cormorant Garamond",serif;font-weight:700;font-size:18px;line-height:1.15}
+.qhead .t .qgiver{display:block;font-family:inherit;font-weight:400;font-size:13px;color:inherit;opacity:.7}
+.qstar{color:var(--gold)}
+.qico{font-size:24px;width:34px;text-align:center}
+.qobj{margin-top:8px}
+.qobj b{color:inherit}
+.qobj p{margin:4px 0;color:inherit;font-size:14px;line-height:1.35}
+.qmeta{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12.5px}.qmeta .qrec{color:inherit}.qmeta .qrec.low{color:var(--hp)}
+.qrew{color:inherit;opacity:.8}
+.qbtns{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.qbtns .btn.on{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset}
+.qstages{list-style:none;margin:8px 0 0;padding:6px 0 0;border-top:1px dashed rgba(214,178,94,.2);font-size:13px}
+.qstages li{padding:2px 0}
+.qstages .qdone{color:inherit;opacity:.55;text-decoration:line-through}
+.qstages .qcur{color:inherit;font-weight:700}
+.socseg{flex-wrap:wrap}.socseg button{flex:1 0 33%;min-width:0}
+body.tw-char .charnav{display:none}
+html.px .qcard,html.px .jbadge{border-radius:0}
 </style>
 </head>
 <body>
@@ -1052,6 +1079,7 @@ html.art-pixel .ww-word{font-family:inherit;text-shadow:2px 2px 0 #2c4a5c}
 <script src="solworld.js"></script>
 <script src="formulas.js"></script>
 <script src="perks.js"></script>
+<script src="perkfx.js"></script>
 <script src="legendary.js"></script>
 <script src="powers.js"></script>
 <script src="engine.js"></script>

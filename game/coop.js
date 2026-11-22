@@ -216,7 +216,7 @@ const COOP = (() => {
       runs = docs;
       const t = G.now();
       for (const r of docs) if (!live(r, t) && r.leader === S().id) ctx.Store.remove("runs", r.id);   // tidy old runs you led
-      for (const r of myInvites()) if (!seenInv.has(r.id)) { seenInv.add(r.id); toast(`⚔ ${r.leaderName} asks you to raid ${r.place} together. See the Journal tab.`); }
+      for (const r of myInvites()) if (!seenInv.has(r.id)) { seenInv.add(r.id); toast(`⚔ ${r.leaderName} asks you to raid ${r.place} together. Open 👥 Friends → Party.`); }
       const lob = mine(), s = S();
       if (lob && lob.status === "in" && !s.dungeon && s.location === lob.place && !s.trip) {   // the leader went in: follow
         const err = join(s, lob);
@@ -251,7 +251,7 @@ const COOP = (() => {
       return out.sort((a, b) => (b.here - a.here) || (b.online - a.online) || a.name.localeCompare(b.name)).slice(0, 12);
     }
     function lobbyHTML(place) {
-      if (!ctx.Store.online) return `<div class="coop"><h3>⚔ Go in together</h3><p class="sub">Co-op dungeons need the shared world. Join one from the Journal tab.</p></div>`;
+      if (!ctx.Store.online) return `<div class="coop"><h3>⚔ Go in together</h3><p class="sub">Co-op dungeons need the shared world. Invites show in 👥 Friends → Party.</p></div>`;
       const s = S(), run = mine(), inv = myInvites().filter((r) => r.place === place);
       if (run && run.place !== place) return `<div class="coop"><h3>⚔ Co-op run</h3><p class="sub">You're in ${esc(run.leaderName)}'s run of ${esc(run.place)}.</p><div class="row"><button class="btn sm pri" data-act="go" data-place="${esc(run.place)}">Travel there</button><button class="btn sm" data-act="coopleave" data-id="${esc(run.id)}">Leave the run</button></div></div>`;
       if (!run) {
@@ -382,7 +382,7 @@ const COOP = (() => {
       ctx.bump(); ctx.renderPanel?.(true);
     }
 
-    return { onRuns, sync, card: () => card(S()), allies: () => allies(S(), ctx.others()), lobbyHTML, invitesHTML, bar, waiting, waitHTML, behindHTML, beforePick, afterPick, afterAct, chestHTML, left, act, get runs() { return runs; } };
+    return { onRuns, sync, myInvites, card: () => card(S()), allies: () => allies(S(), ctx.others()), lobbyHTML, invitesHTML, bar, waiting, waitHTML, behindHTML, beforePick, afterPick, afterAct, chestHTML, left, act, get runs() { return runs; } };
   }
 
   return { RUN_SECONDS, MAX_MEMBERS, FOE_BONUS, ROLE, live, isMember, activeMembers, newRun, invite, addMember, decline, removeMember, join, foe, keyOf, canPick, recordPick, shape, follow, picked,

@@ -435,6 +435,8 @@
       if ($("#modal")) { if (!$("#modal [data-act=enc], #modal [data-act=ev], #modal [data-act=guard]")) closeModal(); return true; }
       if ($("#dun")) { closeDungeon(); return true; }
       if (selected) { selected = null; renderPicked(); return true; }
+      if (S && (tab === "stats" || tab === "diary") && !document.body.classList.contains("tw-char")) { tab = "hero"; renderTabs(); renderPanel(true); return true; }   // [journal] Character sub-pages
+      if (S && tab === "places") { tab = "map"; renderTabs(); renderPanel(true); return true; }
       if (typeof TABMENU !== "undefined") { const r = TABMENU.back(); if (r !== null) return r; }   // the compass is home (tabmenu.js)
       if (S && tab !== "map") { tab = "map"; bump(); renderTabs(); renderPanel(true); return true; }
       return false;
@@ -500,41 +502,41 @@
     if (typeof ECON !== "undefined") Store.watch("econ", (docs) => { ECON.set(docs); if (tab === "town") bump(); });
     Store.watch("verses", (docs) => { verseDocs = docs.filter((d) => d && d.uid && typeof d.text === "string"); onSong(); });
     Store.watch("verselikes", (docs) => { likeDocs = docs.filter((d) => d && d.verseId && d.voter); onSong(); });
-    Store.watch("guards", (docs) => { guardDocs = docs; if (tab === "town" || tab === "log") bump(); });
+    Store.watch("guards", (docs) => { guardDocs = docs; if (tab === "town" || (tab === "log" || tab === "social")) bump(); });
     Store.watch("friends", (docs) => onFriends(docs));
     Store.watch("dms", (docs) => onDMs(docs));
     if (Store.online) Store.put("friends", S.id, SOCIAL.record(S));
-    Store.watch("clans", (docs) => { const before = CLANS.invitesFor(S.id).length; CLANS.set(docs, null); if (CLANS.invitesFor(S.id).length > before && !myClan()) toast(`🏴 You're invited to join a clan. See the Journal.`); bump(); renderTabs(); });
+    Store.watch("clans", (docs) => { const before = CLANS.invitesFor(S.id).length; CLANS.set(docs, null); if (CLANS.invitesFor(S.id).length > before && !myClan()) toast(`🏴 You're invited to join a clan. Open 👥 Friends → Realm.`); bump(); renderTabs(); });
     Store.watch("clanmem", (docs) => { CLANS.set(null, docs); bump(); });
     Store.watch("chat", (docs) => onChat(docs));
     Store.watch("homes", (docs) => { homeDocs = docs; if (tab === "town") bump(); });
     Store.watch("gifts", (docs) => onGifts(docs));
-    Store.watch("war", (docs) => { WARS.setDocs(docs, S); holdChange(); if (tab === "log") bump(); });
-    Store.watch("bounty", (docs) => { BOUNTY.setDocs(docs, S); if (tab === "log" || tab === "town") bump(); });
+    Store.watch("war", (docs) => { WARS.setDocs(docs, S); holdChange(); if ((tab === "log" || tab === "social")) bump(); });
+    Store.watch("bounty", (docs) => { BOUNTY.setDocs(docs, S); if ((tab === "log" || tab === "social") || tab === "town") bump(); });
     Store.watch("hall", (docs) => { HALL.setDonors(docs, S); if (tab === "town") bump(); });
     Store.watch("hallchest", (docs) => { HALL.setChest(docs); if (tab === "town") bump(); });
-    Store.watch("ladder", (docs) => { ladderDocs = docs; if (tab === "log") bump(); });
+    Store.watch("ladder", (docs) => { ladderDocs = docs; if ((tab === "log" || tab === "social")) bump(); });
     $("#picked").addEventListener("click", onPanelClick);
-    Store.watchPlayers((ps) => { others = ps; if (tab === "log") bump(); });
+    Store.watchPlayers((ps) => { others = ps; if ((tab === "log" || tab === "social")) bump(); });
     Store.watchBags((b) => { bags = b; });
     Store.watch("attacks", (docs) => onAttacks(docs));
     Store.watch("parties", (docs) => {
       party = docs.find((p) => p.members?.some((m) => m.id === S.id)) || null;
       invites = docs.filter((p) => p.invites?.includes(S.id) && !p.members.some((m) => m.id === S.id));
-      if (tab === "log") bump();
+      if ((tab === "log" || tab === "social")) bump();
     });
     if (typeof COOP !== "undefined") {   // co-op dungeons (coop.js)
       coopUI = COOP.ui({ S: () => S, toast, esc, Store, others: () => others, party: () => party, cardOf, persist, publishCard, renderDungeon, renderPanel, bump,
         sendDm: (id, name, text) => { const r = SOCIAL.dm(S, id, name, text); if (!r.err && Store.online) Store.put("dms", r.id, r.doc); } });
       Store.watch("runs", (docs) => coopUI.onRuns(docs));
     }
-    Store.watch("chests", (docs) => { const had = chests.length; chests = docs.filter((c) => c.members?.some((m) => m.id === S.id)); if (chests.length > had) toast("💰 A party chest is waiting. See the Journal tab."); if (tab === "log") bump(); });
-    Store.watch("news", (docs) => { news = docs.sort((a, b) => b.t - a.t); if (news.length > 40) news.slice(40).forEach((n) => Store.remove("news", n.id)); if (tab === "log") bump(); });
+    Store.watch("chests", (docs) => { const had = chests.length; chests = docs.filter((c) => c.members?.some((m) => m.id === S.id)); if (chests.length > had) toast("💰 A party chest is waiting. Open 👥 Friends → Party."); if (tab === "log") bump(); });
+    Store.watch("news", (docs) => { news = docs.sort((a, b) => b.t - a.t); if (news.length > 40) news.slice(40).forEach((n) => Store.remove("news", n.id)); if ((tab === "log" || tab === "social")) bump(); });
     G.setAllyProvider(() => allies());
     let lastPeers = 0;
     Store.onStatus?.((st) => {
       if (st.peers > lastPeers) { publishCard(); toast(`${st.peers} other player${st.peers > 1 ? "s" : ""} online.`); }
-      lastPeers = st.peers; bump(); if (["map", "log"].includes(tab)) renderPanel(false);
+      lastPeers = st.peers; bump(); if (["map", "log", "social"].includes(tab)) renderPanel(false);
     });
     if (TOWNS.guardCheck(S) && !TOWNS.wanted(S)) setTimeout(openGuard, 400);
     document.addEventListener("visibilitychange", () => { if (document.hidden) Store.save(S); else tick(); });
@@ -683,7 +685,7 @@
       else if (d < 70) unk.push({ name: n, pos: p, kind: p[2], known: false, d });
     }
     near.sort((a, b) => a.d - b.d); unk.sort((a, b) => a.d - b.d);
-    const qp = questPos(), qa = qp ? QUESTS.active(S)[0] : null;
+    const qp = questPos(), qa = qp ? QUESTS.tracked(S) : null;
     const raid = WEVENTS.activeRaid();
     HUD.compass({ pos, target, W, H, places: [...near.slice(0, 8), ...unk.slice(0, 3)],
       players: others.filter((o) => !o.hiding && sameMap(o)).map((o) => ({ name: o.name, pos: otherPos(o) })).filter((o) => G.pxDist(pos, o.pos) < 220).slice(0, 8),
@@ -732,7 +734,7 @@
     tabsEl.querySelectorAll(".tab").forEach((b) => {
       const on = b.dataset.tab === tab;
       b.classList.toggle("on", on); b.setAttribute("aria-selected", on);
-      const needDot = (b.dataset.tab === "hero" && (S.pendingLevels > 0 || PERKS.pointsLeft(S) > 0)) || (b.dataset.tab === "log" && (invites.length || chests.length || chatUnread() > 0));
+      const needDot = (b.dataset.tab === "hero" && (S.pendingLevels > 0 || PERKS.pointsLeft(S) > 0)) || (b.dataset.tab === "log" && journalNew());
       if (needDot && !b.querySelector(".dot")) b.insertAdjacentHTML("beforeend", '<span class="dot"></span>');
       if (!needDot) b.querySelector(".dot")?.remove();
     });
@@ -1472,7 +1474,7 @@
   // ------------------------------------------------------------ quests
   function questPos() {
     const act = QUESTS.active(S), mapOf = (x) => { const n = QUESTS.target(x.st); return n && WORLD.places[n] && WORLD.same(WORLD.places[n], [S.x, S.y]); };
-    const a = act.find(mapOf) || act[0]; if (!a) return null;
+    const tq = QUESTS.tracked(S), a = (tq && mapOf(tq) ? tq : null) || act.find(mapOf) || act[0]; if (!a) return null;
     const n = QUESTS.target(a.st); return n && WORLD.places[n] && S.location !== n ? WORLD.places[n] : null;
   }
   function questPanel() {
@@ -1531,7 +1533,7 @@
     { title: "Your first trip", text: () => `Welcome to Skyrim, ${S.name}. Everything happens in real time. Tap <b>Whiterun</b> on the map and press <b>Travel</b>, or press <b>Go</b> next to it in the list below.`, done: () => !!S.trip || S.location === "Whiterun" },
     { title: "On the road", text: () => "You're walking. Trips keep going even when the app is closed, and something may happen by the road. You can ride a horse later, or take a carriage between cities.", done: () => !S.trip },
     { title: "You've arrived", text: () => `Open the <b>Town</b> tab. In towns and cities it has shops, the inn, trainers, the forge, jobs and more${S.location && TOWNS.isTown(S.location) ? "" : " (this spot is out in the wilds, so it shows what you can do here)"}.`, done: () => tab === "town" },
-    { title: "Quests", text: () => "Now open the <b>Journal</b>. Your quests are there, and the gold diamond on the map shows where to go next. It's also where you chat with other players.", done: () => tab === "log" },
+    { title: "Quests", text: () => "Now open the <b>Journal</b>. Your quests are there, and the gold diamond on the map shows where to go next. Chat and other players are under 👥 Friends.", done: () => tab === "log" },
     { title: "Fights", text: () => "One more: the <b>Tactics</b> tab. Fights play out by themselves, following your rules, like “below 40% health, drink a potion”.", done: () => tab === "tactics" },
   ];
   const TAB_TIPS = {
@@ -1540,7 +1542,7 @@
     pack: "Everything you carry. Tap an item to wear or use it; search by name at the top of the list.",
     tactics: "Set rules for fights. They're checked top to bottom every turn. Test them against a dummy before a real fight.",
     town: "Places in town are grouped: Shops, Services, Guilds & jobs. Each town has different ones; shops close at night.",
-    log: "Your quests first, then chat and the world. Tap a name in the ribbon to jump there; numbers mean something new.",
+    log: "Only your quests live here: Active, Misc and Completed. ☆ Track the one you're on and the compass and map follow it.",
   };
 
   const guideOffer = () => !S.guideOffered && S.level < 10 && (!S.tut || S.tut.off || S.tut.step === 0)
@@ -2019,13 +2021,13 @@
       if (chatSeenIds.has(d.id)) continue;
       chatSeenIds.add(d.id);
       if (d.from === S.id || d.t < bootT || !myChannels().includes(d.ch)) continue;
-      if (tab === "log" && !document.hidden) continue;
+      if ((tab === "social" && socTab === "chat") && !document.hidden) continue;
       SOUND.fx("chat");
       toast(`💬 ${d.name}${d.ch === "world" ? "" : d.ch.startsWith("clan:") ? " (clan)" : " (party)"}: ${d.text.slice(0, 70)}${d.text.length > 70 ? "…" : ""}`);
     }
     if (party == null && chatCh !== "world" && chatCh !== "clan") chatCh = "world";
     bump(); renderTabs();
-    if (tab === "log") { const box = $("#chatlog"); if (box && !(document.activeElement?.id === "chatin")) renderPanel(false); }
+    if ((tab === "social" && socTab === "chat")) { const box = $("#chatlog"); if (box && !(document.activeElement?.id === "chatin")) renderPanel(false); }
   }
   function chatSend(text) {
     text = String(text || "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, CHAT_MAX);
@@ -2063,9 +2065,9 @@
       if (d.from === S.id && d.status !== "open") {           // my offer was answered: settle it
         const m = MP.settle(S, d); Store.remove("trades", d.id);
         if (m) { persist(true); toast(m); }
-      } else if (d.to === S.id && d.status === "open" && !seenTrades.has(d.id)) { seenTrades.add(d.id); toast(`🤝 ${d.fromName} offers you a trade. See the Journal.`); }
+      } else if (d.to === S.id && d.status === "open" && !seenTrades.has(d.id)) { seenTrades.add(d.id); toast(`🤝 ${d.fromName} offers you a trade. Open 👥 Friends → Trades.`); }
     }
-    if (tab === "log") bump();
+    if ((tab === "log" || tab === "social")) bump();
   }
   function openTrade(card, note) {
     const eq = new Set(Object.values(G.loadout(S).equipment));
@@ -2109,15 +2111,16 @@
     renderTabs(); if (tab === "social") bump();
   }
   const myIncoming = () => trades.filter((d) => d.to === S.id && d.status === "open" && SOCIAL.arrived(d));
-  const socialBadge = () => SOCIAL.unread(S, dmDocs) + SOCIAL.addedMe(friendDocs, S).length + myIncoming().length;
+  const partyNews = () => invites.length + chests.length + (coopUI?.myInvites ? coopUI.myInvites().length : 0);
+  const socialBadge = () => SOCIAL.unread(S, dmDocs) + SOCIAL.addedMe(friendDocs, S).length + myIncoming().length + partyNews() + chatUnread();
   function courierCheck() {
     for (const d of trades) if (d.to === S.id && d.courier && d.status === "open" && SOCIAL.arrived(d) && !courierToasted.has(d.id)) { courierToasted.add(d.id); toast(`📦 A courier brings an offer from ${d.fromName}. Open 👥 Trades.`); renderTabs(); if (tab === "social") bump(); }
   }
   function publishFriends() { if (Store.online) Store.put("friends", S.id, SOCIAL.record(S)); }
   function friendCard(id) { return cardOf(id) || (SOCIAL.friends(S)[id] ? { id, name: SOCIAL.friends(S)[id].name } : null); }
   function panelSocial() {
-    const nDm = SOCIAL.unread(S, dmDocs), nAdd = SOCIAL.addedMe(friendDocs, S).length, inc = myIncoming();
-    const chips = `<div class="seg">${[["friends", `Friends${nAdd ? ` (${nAdd})` : ""}`], ["msgs", `Messages${nDm ? ` (${nDm})` : ""}`], ["trades", `Trades${inc.length ? ` (${inc.length})` : ""}`]].map(([k, l]) => `<button class="${socTab === k ? "on" : ""}" data-act="soctab" data-id="${k}">${l}</button>`).join("")}</div>`;
+    const nDm = SOCIAL.unread(S, dmDocs), nAdd = SOCIAL.addedMe(friendDocs, S).length, inc = myIncoming(), nParty = partyNews(), nChat = chatUnread();
+    const chips = `<div class="seg socseg">${[["friends", `Friends${nAdd ? ` (${nAdd})` : ""}`], ["msgs", `Messages${nDm ? ` (${nDm})` : ""}`], ["trades", `Trades${inc.length ? ` (${inc.length})` : ""}`], ["party", `Party${nParty ? ` (${nParty})` : ""}`], ["chat", `Chat${nChat ? ` (${nChat})` : ""}`], ["realm", "Realm"]].map(([k, l]) => `<button class="${socTab === k ? "on" : ""}" data-act="soctab" data-id="${k}">${l}</button>`).join("")}</div>`;
     const off = Store.online ? "" : `<p class="sub">You're playing offline. Go online (Travel tab) to see friends and messages.</p>`;
     let body = "";
     if (socTab === "friends") {
@@ -2129,7 +2132,7 @@
         <h3 style="margin-top:8px">Your friends · ${fr.length}</h3>
         ${fr.length ? fr.map((f) => `<div class="item" style="flex-wrap:wrap">${HEROART.portrait(f.card || { race: "nord", id: f.id }, 38)}<div class="t"><i class="onl ${f.st.online ? "on" : ""}"></i>${esc(f.name)}<span>${esc(f.st.text)}</span></div>
           <div class="fbtns"><button class="btn sm" data-act="fmsg" data-id="${esc(f.id)}">💬 Message</button><button class="btn sm" data-act="ftrade" data-id="${esc(f.id)}">🤝 Trade</button>${fRemoveAsk === f.id ? `<button class="btn sm danger" data-act="fdel" data-id="${esc(f.id)}">Really remove?</button>` : `<button class="btn sm" data-act="fdelask" data-id="${esc(f.id)}" aria-label="Remove friend">✕</button>`}</div></div>`).join("")
-          : `<p class="sub">No friends yet. Add people from the Travellers list (Journal), or search below.</p>`}
+          : `<p class="sub">No friends yet. Add people from Friends → Party (travellers near you), or search below.</p>`}
         <h3 style="margin-top:12px">Add a friend</h3>
         <input id="socsearch" placeholder="Type a name" value="${esc(socSearch)}" autocomplete="off" aria-label="Search players by name">
         ${q.length >= 2 ? (found.length ? found.map((o) => `<div class="item"><div class="t">${esc(o.name)}<span>${esc(SOCIAL.status(o).text)}</span></div><button class="btn sm pri" data-act="fadd" data-id="${esc(o.id)}">＋ Add</button></div>`).join("") : `<p class="sub">Nobody by that name has been seen in this world.</p>`) : ""}`;
@@ -2147,6 +2150,15 @@
         body = (conv.length ? conv.map((c) => { const n = SOCIAL.unreadFrom(S, dmDocs, c.id); return `<div class="item ${n ? "on" : ""}" data-act="fmsg" data-id="${esc(c.id)}" role="button" tabindex="0"><div class="t">${esc(c.name)}${n ? ` <b class="gold">· ${n} new</b>` : ""}<span>${c.mine ? "You: " : ""}${esc(c.last.slice(0, 70))}</span></div><span class="num sub">${new Date(c.t * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span></div>`; }).join("") : `<p class="sub">No messages yet.</p>`)
           + (more.length ? `<h3 style="margin-top:10px">Write to a friend</h3>${more.map(([id, f]) => `<div class="item"><div class="t">${esc(f.name)}</div><button class="btn sm" data-act="fmsg" data-id="${esc(id)}">💬 Write</button></div>`).join("")}` : "");
       }
+    } else if (socTab === "party" || socTab === "chat" || socTab === "realm") {
+      // [journal] the people side that used to live in the Journal
+      const x = socialBits();
+      const blocks = socTab === "party" ? [["coop", coopUI ? coopUI.invitesHTML() : ""], ["party", x.party], ["people", x.people]]
+        : socTab === "chat" ? [["chat", chatPanel()], ["world", x.world], ["news", x.news]]
+        : [["holds", holdsPanel()], ["clan", clanPanel()], ["ladder", x.ladder]];
+      const shown = blocks.filter(([, h]) => h && h.trim()).map(([id, h]) => idPanel(id, h));
+      const intro = { party: "Your party, co-op invites and everyone travelling near you.", chat: "Talk to everyone online, and what's happening in the world.", realm: "Who rules the holds, your clan, and the leaderboard." }[socTab];
+      return `<div class="panel"><h2>👥 Friends & messages</h2>${chips}${off}<p class="sub">${intro}</p></div>${shown.join("") || `<div class="panel"><p class="sub">Nothing here yet.</p></div>`}`;
     } else {
       const outC = trades.filter((d) => d.from === S.id && d.status === "open"), onWay = trades.filter((d) => d.to === S.id && d.status === "open" && !SOCIAL.arrived(d));
       body = `${inc.length ? inc.map((d) => `<div class="item on" style="flex-wrap:wrap"><div class="t">${d.courier ? "📦 " : ""}${esc(d.fromName)} offers ${esc(MP.describe(d))}${(d.items || []).length ? `<span class="icorow">${d.items.slice(0, 4).map((x) => ICONART.item(x.item, 26, x)).join("")}</span>` : ""}<span>${d.ask ? `for ${d.ask} gold (you have ${S.gold})` : "as a gift"}</span></div><div class="fbtns"><button class="btn sm pri" data-act="tradeyes" data-id="${esc(d.id)}" ${S.gold >= d.ask ? "" : "disabled"}>Accept</button><button class="btn sm" data-act="tradeno" data-id="${esc(d.id)}">Decline</button></div></div>`).join("") : `<p class="sub">No offers waiting for you.</p>`}
@@ -2292,7 +2304,7 @@
     if (party && party.leader !== S.id) return toast("Only your party leader can invite.");
     if (party) { await Store.change("parties", party.id, (p) => ({ ...p, invites: [...new Set([...(p.invites || []), card.id])] })); }
     else { const id = nid(); await Store.put("parties", id, { leader: S.id, leaderName: S.name, members: [{ id: S.id, name: S.name }], invites: [card.id], t: G.now() }); }
-    toast(`Invited ${card.name}. They'll see it in their Journal.`);
+    toast(`Invited ${card.name}. They'll see it under 👥 Friends → Party.`);
   }
   async function acceptInvite(pid) {
     if (party) await leaveParty();
@@ -2358,7 +2370,7 @@
     pack: ["Pack", "What you carry and wear", "Open your things to wear, use, compare or drop them. Use the search box to find an item by name. Heavy packs slow you down: sell things or store them at home."],
     tactics: ["Tactics", "How you fight", "Fights play out by themselves. Your rules are checked from the top every turn, like “health below 40% → drink a potion”. Test them against a dummy before a real fight."],
     town: ["Town", "Shops and services here", "Pick a place from the groups: Shops to buy and sell, Services for the inn, trainers and the forge, Guilds & jobs for paid work. Shops close at night (20:00–08:00)."],
-    log: ["Journal", "Quests, chat and the world", "Use the ribbon to jump to a section; numbers show what's new. Quests tell you where to go next. Rarely used sections are folded: tap Show to open them."],
+    log: ["Journal", "Your quests", "Active quests sit on shelves: main story, Solstheim, Civil War, guilds, Daedric and side quests. Misc holds jobs, bounties, cures and treasure maps. ☆ Track a quest to steer the compass, the map and the What to do next card. Chat, party and the world moved to 👥 Friends; stats and the diary to Character."],
     social: ["Friends", "Friends, messages and trades", "Add players as friends, send them messages, and trade by courier from anywhere."],
   };
   function screenHead() {
@@ -2373,7 +2385,7 @@
     side.dataset.tab = tab;
     const openD = [...side.querySelectorAll("details")].map((d) => d.open), y = scrollY;
     const twp = typeof TABMENU !== "undefined" ? { stars: () => TABMENU.stars(S), perks: () => TABMENU.perks(S) } : {};
-    side.innerHTML = tutTip() + screenHead() + ({ map: panelTravel, hero: panelHero, pack: panelPack, tactics: panelTactics, town: panelTown, log: panelLog, social: panelSocial, ...twp }[tab] || panelTravel)();
+    side.innerHTML = tutTip() + screenHead() + ({ map: panelTravel, hero: panelHero, pack: panelPack, tactics: panelTactics, town: panelTown, log: panelLog, social: panelSocial, stats: panelStats, diary: panelDiary, places: panelPlaces, ...twp }[tab] || panelTravel)();
     if (typeof TABMENU !== "undefined") TABMENU.afterPanel(tab);
     if (!force) { side.querySelectorAll("details").forEach((d, i) => { if (openD[i] != null) d.open = openD[i]; }); scrollTo(0, y); }
     const cl = $("#chatlog"); if (cl) cl.scrollTop = cl.scrollHeight;
@@ -2387,7 +2399,7 @@
     const row = (ico, title, sub, btn) => rows.push(`<div class="item nx"><span class="nx-i" aria-hidden="true">${ico}</span><div class="t">${title}<span>${sub}</span></div>${btn || ""}</div>`);
     if (S.trip && S.trip.destName) row("🧭", `On the way to ${esc(S.trip.destName)}`, "You keep travelling even with the app closed.", "");
     QUESTS.ensure(S);
-    const a = QUESTS.active(S)[0];
+    const a = QUESTS.tracked(S);
     if (a) {
       const n = QUESTS.target(a.st), at = n && S.location === n, o = a.st.obj;
       const btn = o.talk && at ? `<button class="btn sm pri" data-act="qtalk" data-id="${a.id}">${esc(o.label)}</button>`
@@ -2413,7 +2425,7 @@
     return `${typeof WFX !== "undefined" ? WFX.coldHTML(S) : ""}${nextCard()}${placeHere()}${typeof EXPLORE !== "undefined" ? EXPLORE.placeCard(S) : ""}<div class="panel"><h2>Where to?</h2><p class="sub">Tap a place on the map, or press <b>Go</b> below. Tap empty ground on the map to roam off the road.</p>
       <input id="search" placeholder="Search places" value="${esc(searchText)}" autocomplete="off" aria-label="Search places">
       <div class="list">${bag ? `<div class="item on"><div class="t">🎒 Your lost bag<span>${bag.gold} gold · ${Math.max(0, Math.floor((bag.expires - G.now()) / 60))} min left before it's fair game</span></div><button class="btn pri sm" data-act="go" data-place="__bag">Go</button></div>` : ""}
-      ${places.slice(0, searchText || uxAllPlaces ? 40 : 8).map(({ n, d }) => { const k = WORLD.places[n][2]; return `<div class="item"><div class="t">${esc(n)}<span>${KIND[k]} · ${esc(G.holdAt(WORLD.places[n]))}${S.discovered.includes(n) ? "" : " · unvisited"}${(() => { const lf = DUNGEONS.enterable(n) ? DUNGEONS.refillLeft(S, n) : 0; return lf ? ` · 🔒 opens in ${cdSpan(G.now() + lf)}` : ""; })()}</span></div><span class="num sub">${d * 1.1 / G.speed(S) < 1 ? "" : "~"}${fmtMin(d * 1.1 / G.speed(S))}</span><button class="btn sm" data-act="go" data-place="${esc(n)}">Go</button></div>`; }).join("") || `<p class="sub">No places match “${esc(searchText)}”. Try part of the name, like “riv”.</p>`}${!searchText && places.length > 8 ? `<button class="btn" data-act="uxall" style="width:100%;margin-top:8px">${uxAllPlaces ? "Show only the nearest" : `Show all ${places.length} places`}</button>` : ""}</div>
+      ${places.slice(0, searchText || uxAllPlaces ? 40 : 8).map(({ n, d }) => { const k = WORLD.places[n][2]; return `<div class="item"><div class="t">${esc(n)}<span>${KIND[k]} · ${esc(G.holdAt(WORLD.places[n]))}${S.discovered.includes(n) ? "" : " · unvisited"}${(() => { const lf = DUNGEONS.enterable(n) ? DUNGEONS.refillLeft(S, n) : 0; return lf ? ` · 🔒 opens in ${cdSpan(G.now() + lf)}` : ""; })()}</span></div><span class="num sub">${d * 1.1 / G.speed(S) < 1 ? "" : "~"}${fmtMin(d * 1.1 / G.speed(S))}</span><button class="btn sm" data-act="go" data-place="${esc(n)}">Go</button></div>`; }).join("") || `<p class="sub">No places match “${esc(searchText)}”. Try part of the name, like “riv”.</p>`}${!searchText && places.length > 8 ? `<button class="btn" data-act="uxall" style="width:100%;margin-top:8px">${uxAllPlaces ? "Show only the nearest" : `Show all ${places.length} places`}</button>` : ""}${(() => { const n = Object.keys(clearedLeft()).length; return `<button class="btn" data-act="tabgo" data-id="places" style="width:100%;margin-top:8px">📍 Locations: cleared places${n ? ` (${n})` : ""}</button>`; })()}</div>
       <p class="sub status ${Store.online ? "live" : ""}" style="margin-top:12px"><i></i>${Store.mode === "p2p" ? `The world · ${Store.peers ? `${Store.peers} other ${Store.peers === 1 ? "phone" : "phones"} online` : "looking for friends…"}` : Store.online ? `Shared world · ${others.length} other ${others.length === 1 ? "traveller" : "travellers"}` : APP ? "Offline game · saved on this phone" : "Saved in this browser only"}</p>${Store.online ? "" : onlineBtn()}</div>`;
   }
 
@@ -2455,7 +2467,7 @@
       ${shoutRows || `<p class="sub">No Words of Power yet. Word Walls wait at the end of Nordic barrows (Bleak Falls Barrow has one), and the Greybeards at High Hrothgar teach Unrelenting Force.</p>`}</div>
       <p class="sub" style="margin-top:8px">Dragon souls: <b>${S.souls || 0}</b>${S.dragons ? ` · dragons slain: ${S.dragons}` : ""}. Kill a dragon to absorb its soul; each soul unlocks one word.${!POWERS.voiceReady(S) ? ` Your voice recovers in ${Math.ceil(S.voiceAt - tnow)} s.` : ""}</p></div>`;
     const amN = typeof AMMO !== "undefined" ? AMMO.status(S) : null;
-    return `${lvl}${progressPanel()}${amN && !amN.best ? `<div class="panel" style="border-color:var(--ember)">${ammoNote()}</div>` : ""}${effects}${powersHtml}<div class="panel"><h2>${esc(S.name)}</h2><div class="herobox">${HEROART.figure(S, 160, 220)}</div>${amN?.best ? ammoNote() : ""}${(S.titles || []).length ? `<p class="sub" style="text-align:center;color:var(--gold)">${S.titles.map(esc).join(" · ")}</p>` : ""}<p class="sub">Level ${S.level} ${esc(D.RACES[S.race].name)} · ${esc(D.RACES[S.race].desc)}</p><p class="sub">📍 Places discovered: <b>${placesFound().got}</b> of ${placesFound().all}</p>
+    return `${charNav("hero")}${lvl}${progressPanel()}${amN && !amN.best ? `<div class="panel" style="border-color:var(--ember)">${ammoNote()}</div>` : ""}${effects}${powersHtml}<div class="panel"><h2>${esc(S.name)}</h2><div class="herobox">${HEROART.figure(S, 160, 220)}</div>${amN?.best ? ammoNote() : ""}${(S.titles || []).length ? `<p class="sub" style="text-align:center;color:var(--gold)">${S.titles.map(esc).join(" · ")}</p>` : ""}<p class="sub">Level ${S.level} ${esc(D.RACES[S.race].name)} · ${esc(D.RACES[S.race].desc)}</p><p class="sub">📍 Places discovered: <b>${placesFound().got}</b> of ${placesFound().all}</p>
       <div class="bar" style="margin-top:8px"><i style="width:${pct(S.charXp, need)}%;background:var(--gold)"></i></div><p class="sub num">${Math.round(S.charXp)}/${need} toward level ${S.level + 1}</p>
       <div class="grid2" style="grid-template-columns:repeat(3,minmax(0,1fr));margin-top:8px">
         <div class="slot">Health<b class="num" style="display:block">${G.maxHealth(S)}</b></div><div class="slot">Magicka<b class="num" style="display:block">${G.maxMagicka(S)}</b></div><div class="slot">Stamina<b class="num" style="display:block">${G.maxStamina(S)}</b></div></div>
@@ -2856,7 +2868,8 @@
     return h.replace(/(<div id="j-[^"]+" class="panel)("[^>]*>|"[^>]*>)/, `$1${folded ? " jfold" : ""}$2`).replace(/<div class="panel" id="j-log">/, `<div class="panel${folded ? " jfold" : ""}" id="j-log">`)
       .replace(/<\/h2>/, `</h2><button class="jfold-b" data-act="jfold" data-id="${id}" aria-expanded="${!folded}">${folded ? "Show ▾" : "Hide ▴"}</button>`);
   }
-  function panelLog() {
+  /* the people side of the game (moved out of the Journal into 👥 Friends): party, travellers, world, news, ladder, crimes */
+  function socialBits() {
     const t = G.now(), me = livePos();
     const ppl = others.filter((o) => sameMap(o) && (!o.hiding || G.pxDist(me, otherPos(o, t)) < MP.NEAR_PX)).map((o) => ({ ...o, pos: otherPos(o, t) })).map((o) => ({ ...o, d: G.pxDist(me, o.pos) })).sort((a, b) => a.d - b.d);
     const inParty = (id) => party?.members.some((m) => m.id === id);
@@ -2894,16 +2907,124 @@
     const ladderHtml = shared ? `<div class="panel"><h2>Leaderboard</h2><div class="chips">${cats.map(([k, l]) => `<button class="chip ${k === ladderCat ? "on" : ""}" data-act="ladder" data-id="${k}">${l}</button>`).join("")}</div>
       <div class="list">${board.slice(0, 10).map((d, i) => `<div class="item ${d.id === S.id ? "on" : ""}"><span class="num" style="width:1.6em;color:var(--gold)">${i + 1}</span><div class="t">${esc(d.name)}${d.id === S.id ? " (you)" : ""}<span>Level ${d.level} ${esc(D.RACES[d.race]?.name || "")}</span></div><b class="num">${d[ladderCat] || 0}</b></div>`).join("")}</div>
       ${myRank > 10 ? `<p class="sub" style="margin-top:6px">You're number ${myRank}.</p>` : ""}</div>` : "";
-    // a quick-jump menu: the Journal has grown long
-    const parts = [["guide", "📖 Guide", guideCard()], ["event", "Event", festPanel()], ["quests", "Quests", questPanel()], ["bounty", "Bounty", bountyPanel()], ["chat", "Chat", chatPanel()], ["holds", "Holds", holdsPanel()], ["clan", "Clan", clanPanel()],
-      ["world", "World", worldHtml], ["trades", "Trades", tradeHtml], ["coop", "Co-op", coopUI ? coopUI.invitesHTML() : ""], ["party", "Party", partyHtml], ["people", "Travellers", travellers], ["ladder", "Leaderboard", ladderHtml], ["crimes", "Bounties", bounty], ["cleared", "Cleared", clearedPanel()], ["finds", "Discoveries", typeof EXPLORE !== "undefined" ? EXPLORE.panel(S) : ""], ["caravan", "Caravan", caravanJobPanel()], ["news", "News", word], ["stats", "Stats", typeof IMM !== "undefined" ? IMM.stats(S) : ""]]
-      .filter(([, , h]) => h && h.trim()).map(([id, label, h]) => [id, label, jFoldWrap(id, h.replace(/<div class="panel"/, `<div id="j-${id}" class="panel"`))]);
-    const badge = { quests: QUESTS.active(S).length, chat: chatUnread(), trades: incoming.length, party: invites.length + chests.length };
-    const nav = `<nav class="jnav" aria-label="Journal sections">${[...parts.map(([id, label]) => [id, label]), ["log", "Diary"]].map(([id, label]) => `<button class="chip ${jFolds()[id] ? "folded" : ""}" data-act="jgo" data-id="${id}">${label}${badge[id] ? ` <b class="jbadge">${badge[id]}</b>` : ""}</button>`).join("")}</nav>`;
-    return `${nav}${parts.map(([, , h]) => h).join("")}
-      ${jFoldWrap("log", `<div class="panel" id="j-log"><h2>Diary</h2>`)}<div class="log">${S.journal.map((j) => `<div><time>${new Date(j.t * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time>${esc(j.text)}</div>`).join("")}</div></div>`;
+    return { party: partyHtml, people: travellers, crimes: bounty, news: word, world: worldHtml, ladder: ladderHtml };
   }
 
+  // ------------------------------------------------------------ the Journal: quests only, like Skyrim's quest book
+  let jTab = "active";
+  const CURE_Q = new Set(["cure_vamp", "cure_wolf"]);
+  /* which shelf of the Journal a quest sits on */
+  function qCat(id) {
+    if (id === "main") return "Main quest";
+    if (id === "dragonborn") return "Solstheim";
+    if (/^cw_/.test(id)) return "Civil War";
+    if (/^dae_/.test(id)) return "Daedric";
+    if (["companions", "thieves", "brotherhood", "college"].includes(id)) return "Guilds";
+    if (CURE_Q.has(id) || /^cure_/.test(id)) return "Misc";
+    return "Side quests";
+  }
+  const Q_ORDER = ["Main quest", "Solstheim", "Civil War", "Guilds", "Daedric", "Side quests"];
+  function rewardHint(r) {
+    if (!r) return "";
+    const bits = [];
+    if (r.gold) bits.push(`${r.gold} gold`);
+    for (const it of r.items || []) bits.push(D.ITEMS[it]?.name || it);
+    if (r.title) bits.push(`the title “${r.title}”`);
+    return bits.length ? `Reward: ${bits.map(esc).join(", ")}` : "";
+  }
+  /* one quest in the book: emblem, giver, current objective with buttons, the stages so far */
+  function questCard(id, v, done) {
+    const def = QUESTS.L[id]; if (!def) return "";
+    const tracked = !done && QUESTS.tracked(S)?.id === id;
+    const stages = def.stages || [];
+    const cur = done ? stages.length : Math.min(v.stage || 0, stages.length - 1);
+    const st = done ? null : (QUESTS.active(S).find((a) => a.id === id)?.st || stages[cur]);
+    const giver = def.giver ? `<span class="qgiver">${esc(def.giver)}</span>` : "";
+    let obj = "";
+    if (st) {
+      const o = st.obj || {}, n = QUESTS.target(st), here = n && S.location === n, rec = QUESTS.recOf ? QUESTS.recOf(id, cur) : 0;
+      const extra = `${o.count ? ` (${Math.max(0, ((S.stats || {})[o.count] || 0) - ((v.base || {})[o.count] || 0))}/${o.n})` : ""}${o.check ? ` · ${esc(o.check.skill)} check: ${Math.round(QUESTS.checkChance(S, o.check) * 100)}% chance${o.check.fight ? " (a fight if you're seen)" : o.check.bounty ? " (a bounty if you're seen)" : ""}` : ""}${(v.retryAt || 0) > G.now() ? ` · lie low ${Math.ceil((v.retryAt - G.now()) / 60)} more min` : ""}`;
+      const btns = [o.talk && here ? `<button class="btn sm pri" data-act="qtalk" data-id="${id}">${esc(o.label)}</button>` : "",
+        n && !here && WORLD.places[n] ? `<button class="btn sm pri" data-act="go" data-place="${esc(n)}">Go to ${esc(n)}</button>` : "",
+        n && WORLD.places[n] ? `<button class="btn sm" data-act="qmap" data-place="${esc(n)}">Show on map</button>` : "",
+        `<button class="btn sm ${tracked ? "on" : ""}" data-act="qtrack" data-id="${id}" aria-pressed="${tracked}">${tracked ? "★ Tracked" : "☆ Track"}</button>`].join("");
+      obj = `<div class="qobj"><b>◆ ${esc(st.title)}</b><p>${esc(st.text)}${extra}</p>
+        <p class="qmeta">${rec > 1 ? `<b class="qrec ${S.level < rec ? "low" : ""}">Recommended level ${rec}</b>` : ""}${rewardHint(st.reward) ? `<span class="qrew">${rewardHint(st.reward)}</span>` : ""}</p>
+        <div class="qbtns">${btns}</div></div>`;
+    }
+    const past = stages.slice(0, cur).map((x) => `<li class="qdone">✓ ${esc(x.title)}</li>`).join("");
+    const list = past || (!done && st) ? `<ol class="qstages">${past}${!done && st ? `<li class="qcur">▸ ${esc(st.title)}</li>` : ""}</ol>` : "";
+    return `<div class="qcard ${tracked ? "tracked" : ""} ${done ? "qcompleted" : ""}" id="q-${esc(id)}"><div class="qhead">${UIART.quest(id, 34)}<div class="t">${esc(def.name)}${tracked ? ' <span class="qstar" title="Tracked">★</span>' : ""}${giver}</div></div>${obj}${list}</div>`;
+  }
+  /* a non-story task in the same shape: icon, title, text, buttons */
+  const miscCard = (icon, title, text, btns = "") => `<div class="qcard misc"><div class="qhead"><span class="qico" aria-hidden="true">${icon}</span><div class="t">${title}</div></div><div class="qobj"><p>${text}</p>${btns ? `<div class="qbtns">${btns}</div>` : ""}</div></div>`;
+  /* the signature of your quest progress: a dot on the Journal tab when it changes */
+  const jSig = () => QUESTS.active(S).map((a) => `${a.id}:${a.stage}`).join(",");
+  const journalNew = () => { try { return !!S && jSig() !== (S.jSeen ?? jSig()); } catch { return false; } };
+  /* keeps the old #j-… ids on sections that moved, so links and bookmarks still find them */
+  const idPanel = (id, h) => (h && /<div class="panel"/.test(h) ? h.replace(/<div class="panel"/, `<div id="j-${id}" class="panel"`) : `<div id="j-${id}">${h || ""}</div>`);
+  /* where each section that used to be in the Journal lives now */
+  const MOVED = { chat: ["social", "chat"], world: ["social", "chat"], news: ["social", "chat"], coop: ["social", "party"], party: ["social", "party"], people: ["social", "party"],
+    trades: ["social", "trades"], holds: ["social", "realm"], clan: ["social", "realm"], ladder: ["social", "realm"], stats: ["stats"], crimes: ["stats"], finds: ["stats"], log: ["diary"], cleared: ["places"],
+    event: ["log", "misc"], bounty: ["log", "misc"], caravan: ["log", "misc"], guide: ["log", "misc"], quests: ["log", "active"] };
+  /* [journal] Character → Stats: lifetime stats, crime, discoveries and the library (moved out of the Journal) */
+  const charNav = (cur) => `<div class="seg charnav">${[["hero", "Character"], ["stats", "Stats"], ["diary", "Diary"]].map(([k, l]) => `<button class="${cur === k ? "on" : ""}" data-act="tabgo" data-id="${k}">${l}</button>`).join("")}</div>`;
+  function panelStats() {
+    const crimes = socialBits().crimes;
+    return `${charNav("stats")}${idPanel("stats", typeof IMM !== "undefined" ? IMM.stats(S) : "")}${crimes ? idPanel("crimes", crimes) : ""}${typeof EXPLORE !== "undefined" ? idPanel("finds", EXPLORE.panel(S)) : ""}`;
+  }
+  function panelDiary() {
+    return `${charNav("diary")}<div class="panel" id="j-log"><h2>📔 Diary</h2><p class="sub">Everything that happened to you, newest first.</p><div class="log">${S.journal.map((j) => `<div><time>${new Date(j.t * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time>${esc(j.text)}</div>`).join("") || '<p class="sub">Nothing yet.</p>'}</div></div>`;
+  }
+  /* [journal] Map → Locations: cleared places and when they fill up again */
+  function panelPlaces() {
+    return `<div class="panel"><button class="btn sm" data-act="tabgo" data-id="map">‹ Back to the map</button></div>${idPanel("cleared", clearedPanel() || '<div class="panel"><h2>Cleared locations</h2><p class="sub">You haven\'t cleared any place yet. Cleared dungeons show here with the time until they fill up again.</p></div>')}`;
+  }
+  function panelLog() {
+    QUESTS.ensure(S);
+    if (S.jSeen === undefined || tab === "log") S.jSeen = jSig();
+    const act = QUESTS.active(S);
+    const story = act.filter((a) => qCat(a.id) !== "Misc"), miscQ = act.filter((a) => qCat(a.id) === "Misc");
+    const doneIds = Object.entries(S.quests || {}).filter(([id, v]) => v.done && QUESTS.L[id]).map(([id]) => id);
+    // misc objectives: cures, guild work, the Jarl's bounty board, events, caravan jobs, treasure maps, the guide
+    const work = ["thieves", "brotherhood"].filter((id) => GUILDS.canTake(S, id)).map((id) => {
+      const st = GUILDS.state(S)[id], r = GUILDS.rank(S, id), j = st.job, who = id === "thieves" ? "Delvin and Vex" : "Nazir";
+      const head = `${UIART.quest(id, 32)}<div class="t">${id === "thieves" ? "Thieves Guild work" : "Dark Brotherhood contracts"}<span>Rank: <b>${esc(r?.name || "—")}</b> · ${st.jobs} done${r?.next ? ` · ${esc(r.next[0])} at ${r.next[1]}` : ""}</span></div>`;
+      if (j) { const here = S.location === j.town;
+        return `<div class="item on qwork" style="flex-wrap:wrap">${head}<p class="sub" style="width:100%;margin:4px 0">${esc(j.label)}: ${esc(j.text)} Pays ${j.pay} gold. ${esc(j.skill)} check: ${Math.round(GUILDS.chance(S, j) * 100)}%.</p>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;width:100%">${here ? `<button class="btn sm pri" data-act="gdo" data-id="${id}">${id === "thieves" ? "Do the job" : "Fulfil the contract"}</button>` : `<button class="btn sm" data-act="go" data-place="${esc(j.town)}">Travel to ${esc(j.town)}</button>`}<button class="btn sm" data-act="gdrop" data-id="${id}">Drop it</button></div></div>`; }
+      const at = GUILDS.takeAt(id).includes(S.location), wait = Math.max(0, st.next - G.now());
+      return `<div class="item qwork" style="flex-wrap:wrap">${head}<p class="sub" style="width:100%;margin:4px 0">${wait > 0 ? `${who} will have more work in about ${Math.ceil(wait / 60)} min.` : at ? `${who} ${id === "thieves" ? "have" : "has"} work for you.` : `Ask ${who} for work ${id === "thieves" ? "in the Ragged Flagon (Riften)" : "at the Sanctuary (Falkreath or Dawnstar)"}.`}</p>${at && wait <= 0 ? `<button class="btn sm pri" data-act="gtake" data-id="${id}">${id === "thieves" ? "Ask for a job" : "Ask for a contract"}</button>` : ""}</div>`;
+    }).join("");
+    const maps = typeof EXPLORE !== "undefined" ? EXPLORE.openMaps(S).map((id) => { const m = EXPLORE.MAPS.find((x) => x[0] === id); return m ? miscCard("🗺", esc(m[3]), `${esc(m[4])} The red X is on your map, near ${esc(m[1])}.`, WORLD.places[m[1]] ? `<button class="btn sm" data-act="qmap" data-place="${esc(m[1])}">Show on map</button>` : "") : ""; }).join("") : "";
+    const avail = QUESTS.list().filter((id) => QUESTS.L[id].start && !(S.quests || {})[id] && (!QUESTS.visible || QUESTS.visible(S, id))).map((id) => {
+      const d = QUESTS.L[id];
+      return `<div class="item">${UIART.quest(id, 32)}${NPCART.giver(id, 32)}<div class="t">${esc(d.name)}<span>${QUESTS.canJoin(S, id) ? "They're here. Ask to join." : `Find them at ${esc(d.giver)}.`}</span></div>${QUESTS.canJoin(S, id) ? `<button class="btn sm pri" data-act="qjoin" data-id="${id}">Join</button>` : ""}</div>`;
+    }).join("");
+    const coopRun = coopUI && coopUI.card ? coopUI.card() : null;
+    const sections = [
+      ["Active", "active", story.length],
+      ["Misc", "misc", miscQ.length + (work ? 1 : 0) + (maps ? 1 : 0)],
+      ["Completed", "done", doneIds.length],
+    ];
+    const seg = `<div class="seg jseg" role="tablist">${sections.map(([l, k, n]) => `<button class="${jTab === k ? "on" : ""}" data-act="jtab" data-id="${k}" role="tab" aria-selected="${jTab === k}">${l}${n ? ` <b class="jbadge">${n}</b>` : ""}</button>`).join("")}</div>`;
+    let body = "", after = "";
+    if (jTab === "active") {
+      const groups = Q_ORDER.map((c) => [c, story.filter((a) => qCat(a.id) === c)]).filter(([, l]) => l.length);
+      body = groups.length ? groups.map(([c, l]) => `<h3 class="qcat">${esc(c)}</h3>${l.map((a) => questCard(a.id, a, false)).join("")}`).join("")
+        : `<p class="sub">No active quests. Quest givers are listed below, and inns (Town tab) sell rumours.</p>`;
+      if (coopRun && S.dungeon) body += `<h3 class="qcat">Co-op</h3>${miscCard("⚔", `Co-op run: ${esc(S.dungeon.place)}`, `You're clearing ${esc(S.dungeon.place)} with your party, room by room. Open the Travel tab to carry on.`, `<button class="btn sm pri" data-act="tabgo" data-id="map">Carry on</button>`)}`;
+      if (avail) body += `<h3 class="qcat">Quest givers</h3><div class="list">${avail}</div>`;
+      body += `<p class="sub" style="margin-top:8px">☆ Track a quest to show it on the compass, the map's gold diamond and the “What to do next” card.</p>`;
+    } else if (jTab === "misc") {
+      body = [miscQ.map((a) => questCard(a.id, a, false)).join(""), work ? `<div class="list">${work}</div>` : "", maps].join("");
+      const extra = [["event", festPanel()], ["bounty", bountyPanel()], ["caravan", caravanJobPanel()], ["guide", guideCard()]].filter(([, h]) => h && h.trim()).map(([id, h]) => idPanel(id, h)).join("");
+      body = body || (extra ? "" : `<p class="sub">No miscellaneous tasks right now.</p>`); after = extra;
+    } else {
+      body = doneIds.length ? doneIds.map((id) => questCard(id, S.quests[id], true)).join("") : `<p class="sub">Nothing finished yet.</p>`;
+    }
+    return `<div class="panel journal" id="j-quests"><h2>📜 Journal</h2>${seg}${body}</div>${after}`;
+  }
   // ------------------------------------------------------------ panel events
   // ---- spell crafting at the College
   let craftDraft = { a: "", am: 0, b: "", bm: 0, name: "" };
@@ -3099,7 +3220,11 @@
       case "bpick": if (typeof BEASTART !== "undefined") BEASTART.pick = BEASTART.pick === b.dataset.id ? null : b.dataset.id; renderPanel(true); break;
       case "bperk": { const [tr, id] = b.dataset.id.split(":"); const m = CURSE.takePerk(S, tr, id); persist(true); SOUND.fx(/: /.test(m) ? "levelup" : "click"); toast(m); renderPanel(true); break; }
       case "vfeed": say(CURSE.feed(S)); break;
-      case "jgo": { const f0 = jFolds(); if (f0[b.dataset.id]) { f0[b.dataset.id] = false; try { localStorage.setItem("ux_jfold", JSON.stringify(f0)); } catch { /* fine */ } renderPanel(true); } const el = $("#j-" + b.dataset.id); if (el) { const y = el.getBoundingClientRect().top + scrollY - 64; scrollTo({ top: y, behavior: reduceMotion ? "auto" : "smooth" }); } break; }
+      case "jtab": jTab = b.dataset.id; renderPanel(true); scrollTo(0, 0); break;
+      case "qtrack": { const id = b.dataset.id; S.trackQ = QUESTS.tracked(S)?.id === id && S.trackQ === id ? null : id; persist(); renderPanel(true); bump(); toast(S.trackQ ? `★ Tracking ${QUESTS.L[id]?.name || "the quest"}.` : "No quest tracked: the first active quest shows."); break; }
+      case "qmap": { const n = b.dataset.place, p = WORLD.places[n]; if (!p) break; closeMenu?.(); tab = "map"; selected = n; follow = false; center = [p[0], p[1]]; if (zoom < 2) zoom = 2.4; testResult = null; renderTabs(); renderPanel(true); renderPicked(); bump(); scrollTo(0, 0); break; }
+      case "tabgo": closeMenu?.(); tab = b.dataset.id; testResult = null; renderTabs(); renderPanel(true); bump(); scrollTo(0, 0); break;
+      case "jgo": { const id = b.dataset.id, to = MOVED[id] || ["log", "active"]; closeMenu?.(); tab = to[0]; if (to[0] === "social") { socTab = to[1]; socWith = null; } if (to[0] === "log") jTab = to[1]; renderTabs(); renderPanel(true); bump(); requestAnimationFrame(() => { const el = $("#j-" + id); if (el) { const y = el.getBoundingClientRect().top + scrollY - 64; scrollTo({ top: y, behavior: "auto" }); } else scrollTo(0, 0); }); break; }
       case "festclaim": { const m = FEST.claim(S); if (!m) break; SOUND.fx("levelup"); say(m); publishCard(); break; }
       case "festgift": { const m = FEST.innGift(S); if (m) { SOUND.fx("coin"); say(m); } break; }
       case "clancol": clanDraft = { ...clanDraft, name: $("#clanname")?.value, tag: $("#clantag")?.value }; clanDraft.colors[+b.dataset.i] = b.dataset.id; renderPanel(true); break;

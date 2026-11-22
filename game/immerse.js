@@ -293,7 +293,7 @@ const IMM = (() => {
     "Improved weapons hit harder. Use the forge's Improve tab.",
     "Turn Undead sends the dead running, but they leave no loot.",
     "Frost barely hurts draugr. Fire works better on undead and trolls.",
-    "The Guide in the Journal walks you through your first hour.",
+    "The Guide (Journal → Misc) walks you through your first hour.",
   ];
   const SPIN = ["dragon_bone", "gem_flawless_diamond", "steel_sword", "elven_bow", "soul_gem_greater", "tome_firebolt", "potion_health", "gold_ruby_necklace", "iron_helmet", "dwarven_armor", "mat_steel", "pelt_wolf"];
   let lastLoad = 0;

@@ -77,6 +77,8 @@ const QUESTS = (() => {
     q(s)[id] = { stage: 0, t: G.now(), base: { ...(s.stats || {}) } };
     return `${L[id].name}: ${L[id].stages[0].title}. ${L[id].stages[0].text}`;
   }
+  /* the quest you chose to track in the Journal (or the first active one) */
+  const tracked = (s) => { const a = active(s); return a.find((x) => x.id === s.trackQ) || a[0] || null; };
   function target(st) { const o = st.obj; return o.go || o.clear || o.talk || o.at || (o.flag === "thaneWhiterun" ? "Whiterun" : o.flag === "greybeards" ? "High Hrothgar" : null); }
   function met(s, id, st, v) {
     const o = st.obj;
@@ -150,5 +152,5 @@ const QUESTS = (() => {
   }
   /* chance to pass a stage's skill check: 50% at the needed level, +/-1% per point ([OURS]) */
   function checkChance(s, c) { return Math.max(0.15, Math.min(0.95, 0.5 + (G.skill(s, c.skill) - c.need) / 60)); }
-  return { L, REC, recOf, foeFor, ensure, active, canJoin, join, target, check, talk, checkChance, advance, list: () => Object.keys(L) };
+  return { L, REC, recOf, foeFor, ensure, active, tracked, canJoin, join, target, check, talk, checkChance, advance, list: () => Object.keys(L) };
 })();

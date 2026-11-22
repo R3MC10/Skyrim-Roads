@@ -107,6 +107,7 @@ const TOWNS = (() => {
     if (effect.startsWith("Restore ") && P(s, "physician")) m *= 1.25;                      // [Skyrim] Physician
     if (!isPoison && EFFECTS[effect][4] && P(s, "benefactor")) m *= 1.25;                   // [Skyrim] Benefactor
     if (isPoison && !EFFECTS[effect][4] && P(s, "poisoner")) m *= 1.25;                     // [Skyrim] Poisoner
+    if (typeof PFX !== "undefined") m *= 1 + Math.min(0.25, PFX.num(s, "alch"));                         // Master Alchemist
     return Math.round(m);
   }
   function brew(s, rowIds, opt = {}) {   // opt.boost: crafting mini-game multiplier on strength; opt.botch: the mix spoils (craftgames.js)
@@ -179,7 +180,7 @@ const TOWNS = (() => {
     Rorikstead: "Frostfruit Inn", "Dragon Bridge": "Four Shields Tavern", Kynesgrove: "Braidwood Inn", "Old Hroldan": "Old Hroldan Inn" };
   const ROOM = 10, RUMOUR = 10, RESTED_SECONDS = 8 * 2 * 3600 / 24;   // [Skyrim] Rested lasts 8 game hours = 40 real minutes here
   const etLv = (s) => Math.min(100, G.skill(s, "Etiquette"));
-  const etiquette = (s) => (P(s, "courtly_manners") ? 0.8 : 1) * (1 - 0.15 * etLv(s) / 100);   // [OURS] fair levelling: good manners cut inn and trainer prices up to 15% at 100
+  const etiquette = (s) => (P(s, "courtly_manners") ? 0.8 : 1) * (1 - 0.15 * etLv(s) / 100) * (1 - (typeof PFX !== "undefined" ? Math.min(0.3, PFX.num(s, "inn")) : 0));   // [OURS] fair levelling: good manners cut inn and trainer prices up to 15% at 100
   const rumourPrice = (s) => (P(s, "rumour_monger") ? 0 : Math.round(RUMOUR * (1 - 0.5 * Math.min(100, G.skill(s, "Streetwise")) / 100)));   // [OURS] Streetwise: the street tells you for less (half at 100)
   const roomPrice = (s) => (typeof FEST !== "undefined" && FEST.freeInn()) ? 0 : Math.round(ROOM * etiquette(s));
   function rentRoom(s, t = G.now()) {
@@ -287,7 +288,7 @@ const TOWNS = (() => {
     const it = D.ITEMS[row.item];
     if (!(it.slot === "weapon" || G.ARMOR_SLOTS.includes(it.slot)) || it.type === "cloth") return null;
     const mat = material(row.item);
-    const per = (it.slot === "weapon" ? 1 : 2) * (mat && P(s, mat) ? 2 : 1);
+    const per = (it.slot === "weapon" ? 1 : 2) * (mat && P(s, mat) ? 2 : 1) + (typeof PFX !== "undefined" ? Math.min(3, PFX.num(s, "temper")) : 0);   // Orcish, Ebony, Daedric, Glass Smithing
     const maxQ = Math.min(6, 1 + Math.floor(G.skill(s, "Smithing") / 20));
     const q = row.tq || 0, ingot = ingotFor(row.item), have = countItem(s, ingot);
     let block = null;
@@ -325,7 +326,7 @@ const TOWNS = (() => {
     if (!s.location || !isTown(s.location)) return null;
     const hold = G.holdAt(WORLD.places[s.location]), b = bounty(s, hold);
     if (!b) return null;
-    return { hold, bounty: b, fine: Math.round(b * (P(s, "noble_friends") ? 0.5 : 1)), bribe: P(s, "bribery") || P(s, "bribe_master") ? Math.round(b * 2 * (P(s, "bribe_master") ? 0.5 : 1)) : null };
+    return { hold, bounty: b, fine: Math.round(b * (P(s, "noble_friends") ? 0.5 : 1) * (1 - (typeof PFX !== "undefined" ? Math.min(0.5, PFX.num(s, "bribe")) : 0))), bribe: P(s, "bribery") || P(s, "bribe_master") ? Math.round(b * 2 * (P(s, "bribe_master") ? 0.5 : 1) * (1 - (typeof PFX !== "undefined" ? Math.min(0.5, PFX.num(s, "bribe")) : 0))) : null };
   }
   function confiscate(s) { const before = s.inv.length; s.inv = s.inv.filter((r) => !r.stolen); return before - s.inv.length; }
   function guardChoice(s, choice, t = G.now()) {
@@ -361,7 +362,7 @@ const TOWNS = (() => {
   // ---- pickpocketing townsfolk ([OURS] chances; [Skyrim] XP and bounty)
   function pickChance(s, { gold = 0, asleep = false, level = 1 } = {}) {
     let c = 0.35 + G.skill(s, "Pickpocket") / 120 - (gold ? gold / 400 * (P(s, "cutpurse") ? 0.5 : 1) : 0) - level / 200;
-    c *= 1 + 0.2 * P(s, "light_fingers");
+    c *= 1 + 0.2 * P(s, "light_fingers") + (typeof PFX !== "undefined" ? PFX.num(s, "pick") : 0);   // Keymaster, Perfect Touch
     if (asleep && P(s, "night_thief")) c += 0.25;
     return clamp(c, 0.05, 0.95);
   }
@@ -388,7 +389,7 @@ const TOWNS = (() => {
     if (!isTown(town)) return [];
     const day = Math.floor(t / (2 * 3600)), r = seeded(town + day), here = WORLD.places[town], list = [];
     const pk = (a) => a[Math.floor(r() * a.length)];
-    const pay = (P(s, "diplomat") ? 1.25 : 1) * (1 + 0.2 * etLv(s) / 100);   // [OURS] Etiquette: the hold pays a well-mannered hero up to 20% more
+    const pay = (P(s, "diplomat") ? 1.25 : 1) * (1 + 0.2 * etLv(s) / 100) * (1 + (typeof PFX !== "undefined" ? Math.min(0.4, PFX.num(s, "job")) : 0));   // [OURS] Etiquette: the hold pays a well-mannered hero up to 20% more
     const dungeons = Object.entries(WORLD.places).filter(([n]) => DUNGEONS.enterable(n) && !["camp", "lair"].includes(kind(n)) && G.pxDist(here, WORLD.places[n]) < 320).map(([n]) => n);
     const towns = Object.keys(WORLD.places).filter((n) => isTown(n) && n !== town && G.pxDist(here, WORLD.places[n]) > 120 && G.pxDist(here, WORLD.places[n]) < 600);
     const giver = kind(town) === "city" ? "The Jarl's steward" : "A worried local";

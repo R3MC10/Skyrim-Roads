@@ -171,7 +171,7 @@ const G = (() => {
   /* [OURS] chance to pick a lock of tier 0..4 (Novice..Master); [Skyrim] "<tier> Locks" perks make that tier much easier */
   function lockChance(s, tier) {
     const perk = ["novice_locks", "apprentice_locks", "adept_locks", "expert_locks", "master_locks"][tier];
-    return Math.max(0.05, Math.min(0.97, 0.92 - tier * 0.17 + (skill(s, "Lockpicking") - 15) / 110 + (P(s, perk) ? 0.3 : 0)));
+    return Math.max(0.05, Math.min(0.97, 0.92 - tier * 0.17 + (skill(s, "Lockpicking") - 15) / 110 + (P(s, perk) ? 0.3 : 0) + (typeof PFX !== "undefined" ? PFX.num(s, "lock") : 0)));   // + Quick Hands
   }
   /* one pick attempt: the lockpicking mini-game can decide it (s._lockForce), else the old roll */
   function lockRoll(s, chance) {
@@ -225,7 +225,7 @@ const G = (() => {
   const riding = (s) => (typeof HORSES !== "undefined" ? HORSES.riding(s) : !!s.horse);
   const withHorse = (s) => (typeof HORSES !== "undefined" ? HORSES.present(s) : !!s.horse);
   const capacity = (s) => F.BASE_CARRY + Math.floor(s.spBonus / F.ATTRIBUTE_PER_LEVEL) * F.CARRY_PER_STAMINA_LEVEL
-    + (withHorse(s) ? D.HORSE_CARRY : 0) + (P(s, "extra_pockets") ? 100 : 0) + fxSum(s, "carry") + (s.stone === "steed" ? 100 : 0) + (s.follower ? 100 : 0)   // [OURS] a follower carries 100 for you
+    + (withHorse(s) ? D.HORSE_CARRY : 0) + (P(s, "extra_pockets") ? 100 : 0) + fxSum(s, "carry") + (typeof PFX !== "undefined" ? PFX.num(s, "carry") : 0) + (s.stone === "steed" ? 100 : 0) + (s.follower ? 100 : 0)   // [OURS] a follower carries 100 for you
     + (typeof HALL !== "undefined" ? HALL.carryBonus() : 0)   // [OURS] Jarl's Keep tier of the shared hall
     + (typeof CARAVANS !== "undefined" ? CARAVANS.cartCarry(s) : 0);   // [OURS] a cart behind your horse
   const overweight = (s) => carried(s) > capacity(s);
@@ -322,7 +322,7 @@ const G = (() => {
     if (sp?.parts && typeof SPELLCRAFT !== "undefined") return Math.max(1, Math.round(sp.parts.reduce((a, p) => a + (D.SPELLS[p] ? spellCost(s, D.SPELLS[p]) : 0), 0) * SPELLCRAFT.PREMIUM[sp.parts.length]));   // crafted: its parts, each at its own school
     const id = Object.keys(D.SPELLS).find((k) => D.SPELLS[k] === sp), tier = SPELL_TIER[id] || (sp.level || "").toLowerCase();
     const half = tier && P(s, `${tier}_${sp.school.toLowerCase()}`) ? 0.5 : 1;   // [Skyrim] "<tier> <school>" perks: half cost
-    return Math.floor(F.spellCost(sp.cost, skill(s, sp.school)) * half * (typeof MAGIC !== "undefined" && id ? MAGIC.costMult(s, id) : 1) * (1 - Math.min(0.5, fxSum(s, "cost:" + sp.school) / 100)));   // dragon priest masks   // spells above your level cost more
+    return Math.floor(F.spellCost(sp.cost, skill(s, sp.school)) * half * (typeof MAGIC !== "undefined" && id ? MAGIC.costMult(s, id) : 1) * (1 - Math.min(0.5, fxSum(s, "cost:" + sp.school) / 100)) * (1 - (typeof PFX !== "undefined" ? Math.min(0.4, PFX.sum(s, "scost", null, { school: sp.school })) : 0)));   // Atromancy, Mystic Focus   // dragon priest masks   // spells above your level cost more
   }
   const enchantCost = (e, s) => F.enchantCost(e.base_cost, e.magnitude, e.max_magnitude, skill(s, "Enchanting")) * (1 - 0.1 * P(s, "enchanter"));
   function describeAction(a) {
@@ -340,7 +340,7 @@ const G = (() => {
     return { cond: kind === "turn" ? `${label} ${r.pct || 2}` : kind ? `${label} ${r.pct}%` : label, act: describeAction(r.do) };
   }
   function hiddenChance(s, e, t) {   // [OURS] Skyrim detection is real-time line of sight; this is our stand-in
-    const base = 0.25 + skill(s, "Sneak") / 150 - (e.danger === "high" ? 0.15 : 0) + (isNight(t) ? 0.1 : 0) + 0.15 * P(s, "detect_life") + fxSum(s, "hide", t || now()) / 100
+    const base = 0.25 + skill(s, "Sneak") / 150 - (e.danger === "high" ? 0.15 : 0) + (isNight(t) ? 0.1 : 0) + 0.15 * P(s, "detect_life") + fxSum(s, "hide", t || now()) / 100 + (typeof PFX !== "undefined" ? Math.min(25, PFX.num(s, "hide")) / 100 : 0)
       + (typeof WEVENTS !== "undefined" ? WEVENTS.weather([s.x, s.y], t || now()).sneak : 0) + (typeof WFX !== "undefined" ? WFX.sneakAdd(s, t || now()) : 0);   // rain, fog and snow hide you; clear nights too
     const seen = (1 - base) * (1 - 0.12 * P(s, "stealth"));   // [Skyrim] Stealth: 20% harder to detect per rank (our scale)
     return Math.max(0.05, Math.min(0.92, 1 - seen));
@@ -367,14 +367,15 @@ const G = (() => {
       for (const sl of ARMOR_SLOTS) if (this.eq[sl]) this.armor[sl] = D.ITEMS[this.eq[sl].item];
       this.shield = this.armor.shield || null;
       const regen = Object.values(this.armor).reduce((a, x) => a + (x.magicka_regen || 0), 0);
-      this.regenMp = maxMagicka(s) * F.REGEN_PER_SECOND.magicka * (1 + regen) * (1 + 0.25 * P(s, "recovery")) * (1 + fxSum(s, "regen:magicka") / 100)
+      this.regenMp = maxMagicka(s) * F.REGEN_PER_SECOND.magicka * (1 + regen) * (1 + 0.25 * P(s, "recovery") + (typeof PFX !== "undefined" ? PFX.sum(s, "regenmp", this, {}) : 0)) * (1 + fxSum(s, "regen:magicka") / 100)
         * (s.stone === "atronach" ? 0.5 : s.stone === "apprentice" ? 2 : 1);
       const lightWorn = Object.values(this.armor).some((a) => a.type === "light");
-      this.regenSp = maxStamina(s) * F.REGEN_PER_SECOND.stamina * (1 + (lightWorn && P(s, "wind_walker") ? 0.5 : 0) + 0.25 * P(s, "second_wind")) * (1 + fxSum(s, "regen:stamina") / 100) * (s.stone === "lady" ? 1.25 : 1);
+      this.regenSp = maxStamina(s) * F.REGEN_PER_SECOND.stamina * (1 + (lightWorn && P(s, "wind_walker") ? 0.5 : 0) + 0.25 * P(s, "second_wind") + (typeof PFX !== "undefined" ? PFX.sum(s, "regensp", this, {}) : 0)) * (1 + fxSum(s, "regen:stamina") / 100) * (s.stone === "lady" ? 1.25 : 1);
       this.wt = wtype(w?.item); this.wt0 = this.wt;   // wt0: the weapon you came with (bound weapons change wt), for the fight scene
       const sk0 = this.weapon?.skill;
       this.paCost = F.powerAttackCost(this.weapon ? this.weapon.weight : 0)
-        * ((sk0 === "One-Handed" && P(s, "fighting_stance")) || (sk0 === "Two-Handed" && P(s, "champions_stance")) ? 0.75 : 1);
+        * ((sk0 === "One-Handed" && P(s, "fighting_stance")) || (sk0 === "Two-Handed" && P(s, "champions_stance")) ? 0.75 : 1)
+        * Math.max(0.3, 1 + (typeof PFX !== "undefined" ? PFX.sum(s, "pa", this, { sk: sk0 || "Hand-to-Hand", wt: this.wt }) : 0));   // Ranger, Brawler, Endurance
       this.temper = w?.temper || 0;
       this.allies = allyProvider(s) || [];   // party members fighting beside you: [{name, dmg}]
       if (s.follower && typeof TOWNS !== "undefined") {   // your follower fights too, and can fall
@@ -383,6 +384,8 @@ const G = (() => {
       }
       if (s.thrall && s.thrall.fights > 0) { this.allies.push({ name: s.thrall.name, dmg: s.thrall.dmg, thrall: true, kind: "zombie" }); this.thrallFought = true; }   // a raised corpse fights for you
       this.pw = typeof POWERS !== "undefined" ? POWERS.fightState() : null;
+      if (typeof PFX !== "undefined") { const ab = Math.min(0.5, PFX.sum(s, "allies", null, {})); if (ab) for (const al of this.allies) if (al.dmg) al.dmg *= 1 + ab; }   // Inspiring, Rally, Thane's Guard
+      this.foeSt = {}; this.meSt = {}; this.bashed = false; this.avoidUsed = false; this.riposte = false;
       this.bleed = []; this.eParalyzed = 0; this.flurry = 0; this.firstHit = true; this.shadowUsed = false; this.sneakNext = false;
     }
     addXp(k, v) { this.xp[k] = (this.xp[k] || 0) + v; }
@@ -390,7 +393,7 @@ const G = (() => {
     weaponDamage() {
       const s = this.s;
       if (this.bound && (!this.weapon || this.weapon.staff || this.bound.dmg >= this.weapon.damage + this.temper)) return F.weaponDamage(this.bound.dmg, skill(s, this.bound.skill), this.bound.skill === "Archery");   // [Skyrim] bound weapons
-      if (!this.weapon) { const [a, b] = F.unarmedRange(skill(s, "Hand-to-Hand"), s.race); return rnd(a, b) + 4 * P(s, "iron_fists"); }
+      if (!this.weapon) { const [a, b] = F.unarmedRange(skill(s, "Hand-to-Hand"), s.race); return rnd(a, b) + 4 * P(s, "iron_fists") + (typeof PFX !== "undefined" && PFX.has(s, "fists", this, {}) && this.armor.hands?.type === "heavy" ? Math.round((this.armor.hands.armor || 0) / 3) : 0); }
       const sk = this.weapon.skill;
       const perk = { "One-Handed": 0.2 * P(s, "armsman"), "Two-Handed": 0.2 * P(s, "barbarian"), "Archery": 0.2 * P(s, "overdraw"), "Spear": 0.15 * P(s, "long_reach") }[sk] || 0;
       let base = this.weapon.damage + this.temper;
@@ -407,7 +410,7 @@ const G = (() => {
     ammoRow() { const k = this.ammoKind(); return k ? AMMO.best(this.s, k, (r) => this.left(r.id)) : null; }
     shoot() {   // take one arrow/bolt for this shot (some are picked up again afterwards)
       const r = this.ammoRow(); this.shotAmmo = r;
-      if (r && Math.random() > AMMO.RECOVER) this.used[r.id] = (this.used[r.id] || 0) + 1;
+      if (r && Math.random() > AMMO.RECOVER * (1 + (typeof PFX !== "undefined" ? PFX.num(this.s, "ammo") : 0))) this.used[r.id] = (this.used[r.id] || 0) + 1;
       return r;
     }
     critChance() {   // [Skyrim] crits only come from perks; crit damage = half the weapon's base damage, perks add 25/50/75%
@@ -433,6 +436,7 @@ const G = (() => {
       for (const [ty, perk] of Object.entries(set)) if (counts[ty] === 4 && P(s, perk)) rating *= 1.25;
       const empty = ARMOR_SLOTS.filter((sl) => !this.armor[sl] || this.armor[sl].type === "cloth").length;
       rating += F.unarmoredRating(skill(s, "Unarmored"), empty) * (1 + 0.25 * P(s, "monks_grace"));
+      if (typeof PFX !== "undefined") rating = (rating + PFX.sum(s, "armor", this, {})) * (1 + PFX.sum(s, "armorpct", this, {}));   // Iron Skin; Dragon Armor
       return { rating, pieces, empty };
     }
     pct(c, m) { return 100 * c / Math.max(1, m); }
@@ -525,14 +529,18 @@ const G = (() => {
       const sneak = (this.turn === 1 && this.hidden) || this.sneakNext;
       this.sneakNext = false;
       const mt = this.mount && typeof HORSEBACK !== "undefined" ? HORSEBACK.strike(this, power, sneak) : null;   // [OURS] fighting from the saddle (horseback.js)
-      if (!sneak && !mt?.sure && Math.random() > F.HIT_CHANCE * (ammoK && this.wx ? this.wx.aim : 1)) return power ? "Power attack misses" : "Attack misses";
+      const px = { power, sneak, sk, wt: this.wt };   // [OURS] for the bigger perk trees (perkfx.js)
+      const aimW = ammoK && this.wx ? 1 - (1 - this.wx.aim) * (typeof PFX !== "undefined" && PFX.has(this.s, "aimwx", this, px) ? 0.5 : 1) : 1;
+      const sure = typeof PFX !== "undefined" && PFX.has(this.s, "sure", this, px);
+      if (!sneak && !mt?.sure && !sure && Math.random() > Math.min(0.98, (F.HIT_CHANCE + (typeof PFX !== "undefined" ? PFX.sum(this.s, "hit", this, px) : 0)) * aimW)) return power ? "Power attack misses" : "Attack misses";
       const s = this.s, wt = this.wt;
       let dmg = this.weaponDamage() * rnd(...F.DAMAGE_SPREAD) * (power ? F.POWER_ATTACK_DAMAGE : 1);
       if (power && ((sk === "One-Handed" && P(s, "savage_strike")) || (sk === "Two-Handed" && P(s, "devastating_blow")))) dmg *= 1.25;
       let label = power ? "Power attack" : "Attack";
       if (ammoK && !shot) label = `Bashes with the bow (no ${AMMO.label(ammoK)})`;
       if (sneak) {
-        const m = wt === "dagger" && P(s, "assassins_blade") ? 15 : sk === "One-Handed" && P(s, "backstab") ? 6 : sk === "Archery" && P(s, "deadly_aim") ? 3 : F.sneakMultiplier(sk);   // [Skyrim]
+        const sx = typeof PFX !== "undefined" ? PFX.sum(s, "sneakx", this, px) : 0;
+        const m = wt === "dagger" && P(s, "assassins_blade") ? 15 : sk === "One-Handed" && P(s, "backstab") ? 6 : sk === "Archery" && P(s, "deadly_aim") ? 3 : sx ? Math.max(sx, F.sneakMultiplier(sk)) : F.sneakMultiplier(sk);   // [Skyrim]
         dmg *= m; this.addXp("Sneak", 30); label = `Sneak attack ×${m}`;
       }
       if (mt) { dmg *= mt.mult; if (mt.label && !sneak) label = mt.label; }
@@ -540,11 +548,12 @@ const G = (() => {
       if (cc && Math.random() < cc) { dmg += (this.weapon ? this.weapon.damage : 0) * cm + (wt === "spear" ? dmg * 0.5 : 0); label += " (critical)"; }
       if (wt === "spear" && this.firstHit && P(s, "long_reach")) dmg *= 1.5;
       if (this.pw) dmg *= POWERS.dmgOut(this);
+      if (typeof PFX !== "undefined") { dmg *= PFX.out(this, px); if (this.riposte) { dmg *= 1.5; label += " (riposte)"; } }   // new perks: first strikes, dual savagery, sneak, saddle...
       this.firstHit = false;
       if (wt === "fist") { if (P(s, "flurry")) { dmg *= 1 + Math.min(0.5, 0.1 * this.flurry); this.flurry++; } }
       // enemy armor (other players): maces and warhammers ignore some of it
       if (this.e.red) {
-        const ignore = wt === "mace" ? 0.25 * P(s, "bone_breaker") : wt === "warhammer" ? 0.25 * P(s, "skullcrusher") : 0;
+        const ignore = Math.min(0.9, (wt === "mace" ? 0.25 * P(s, "bone_breaker") : wt === "warhammer" ? 0.25 * P(s, "skullcrusher") : 0) + (typeof PFX !== "undefined" ? PFX.sum(s, "pierce", this, px) : 0));
         dmg *= 1 - this.e.red * (1 - ignore);
       }
       const bleedR = wt === "axe" ? P(s, "hack_and_slash") : wt === "battleaxe" ? P(s, "limbsplitter") : 0;
@@ -559,8 +568,10 @@ const G = (() => {
           this.charges[this.weaponInv] = charge - cost;
           if (en.effect === "frost") this.slowed = 2;
           if (en.effect === "absorb") this.hp = Math.min(maxHealth(this.s), this.hp + en.magnitude);
-          dmg += en.magnitude;
+          const em = en.magnitude * (1 + (typeof PFX !== "undefined" ? PFX.sum(s, "enchhit", this, px) : 0));   // Deep Charge
+          dmg += em;
           label += ` +${en.effect}`;
+          if (typeof PFX !== "undefined" && ["fire", "frost", "shock"].includes(en.effect)) this.pendingEl = [en.effect, em, "weapon"];   // burning / chill / jolt after the hit lands
         }
       }
       if (power && Math.random() < F.STAGGER_CHANCE) { this.stagger = true; label += ", staggers"; }
@@ -572,8 +583,9 @@ const G = (() => {
       }
       if (s.poison && this.ehp - dmg > 0) {   // a coated weapon delivers its poison on a hit
         for (const [e, m, d] of s.poison.effects) {
-          if (e === "Damage Health") dmg += m;
-          if (e === "Ravage Health") dmg += m * 2;
+          const pm = 1 + (typeof PFX !== "undefined" ? PFX.num(s, "poison") : 0);   // Poisoned
+          if (e === "Damage Health") dmg += m * pm;
+          if (e === "Ravage Health") dmg += m * 2 * pm;
           if (e === "Lingering Damage Health") this.bleed.push({ dmg: m, turns: Math.max(1, Math.round(d / 2)) });
           if (e === "Paralysis") this.eParalyzed = 2;
           if (e === "Slow") this.slowed = 3;
@@ -583,6 +595,10 @@ const G = (() => {
       }
       if (this.weapon?.dae && typeof DAEDRIC !== "undefined") { const dr = DAEDRIC.onHit(this, dmg); dmg = dr.dmg; label += dr.label; }   // Daedric artifacts
       this.ehp -= dmg;
+      if (typeof PFX !== "undefined") {
+        label += PFX.onHit(this, px, dmg);
+        if (this.pendingEl) { const [el, a, src] = this.pendingEl; this.pendingEl = null; label += PFX.hitFoe(this, el, a, src); }
+      }
       if (wt === "bow" && P(s, "quick_shot") && Math.random() < 0.3 && this.ehp > 0) {   // a second arrow
         if (this.ammoKind() && !this.shoot()) return `${label}: ${Math.round(dmg)}`;
         const d2 = this.weaponDamage() * rnd(...F.DAMAGE_SPREAD); this.ehp -= d2; return `${label}: ${Math.round(dmg)} · second arrow ${Math.round(d2)}`;
@@ -592,7 +608,7 @@ const G = (() => {
     cast(id, free, dual) {
       let sp = D.SPELLS[id];
       const mg = typeof MAGIC !== "undefined";
-      if (!free) this.mp -= spellCost(this.s, sp) * (dual && mg ? MAGIC.DUAL_COST : 1);
+      if (!free) this.mp -= spellCost(this.s, sp) * (dual && mg ? MAGIC.DUAL_COST * (1 - (typeof PFX !== "undefined" ? Math.min(0.5, PFX.sum(this.s, "dualcost", this, { school: sp.school })) : 0)) : 1);
       if (dual && mg) sp = { ...sp, amount: (sp.amount || 0) * MAGIC.DUAL_POWER, name: `${sp.name} (dual)` };   // [Skyrim] dual casting
       const s = this.s;
       if (!free && mg && Math.random() < MAGIC.failChance(s, id)) { this.addXp(sp.school, sp.xp * 0.25); return `${sp.name} fizzles (too advanced for you yet)`; }
@@ -609,6 +625,7 @@ const G = (() => {
         if (this.turn === 1 && this.hidden && P(s, "quiet_casting")) { amt *= 2; label += " (sneak ×2)"; }
         if (sp.school === "Destruction" && P(s, "impact") && Math.random() < 0.3) { this.stagger = true; label += ", staggers"; }
         this.ehp -= amt;
+        if (typeof PFX !== "undefined") label += PFX.hitFoe(this, sp.element, amt, "spell");   // fire burns, frost chills, shock jolts
         return `${label}: ${Math.round(amt)}`;
       }
       if (sp.kind === "heal") {
@@ -622,19 +639,19 @@ const G = (() => {
       this.addXp(sp.school, sp.xp);
       if (sp.kind === "armor") {
         const bare = !Object.values(this.armor).some((a) => ARMOR_SKILL[a.type]);
-        const m = bare && P(s, "mage_armor") ? [1, 2, 2.5, 3][P(s, "mage_armor")] : 1;   // [Skyrim] Mage Armor
+        const m = (bare && P(s, "mage_armor") ? [1, 2, 2.5, 3][P(s, "mage_armor")] : 1) * (1 + (typeof PFX !== "undefined" ? PFX.sum(s, "armorspell", this, {}) : 0));   // [Skyrim] Mage Armor, Stability
         this.armorSpell = sp.amount * m; return `${sp.name}: +${Math.round(this.armorSpell)} armor`;
       }
       if (sp.kind === "summon") {
-        this.summonTurns = sp.turns + 2 * P(s, "summoner");
-        this.summonDmg = sp.amount * (P(s, "elemental_potency") ? 1.5 : 1) * (P(s, "twin_souls") ? 2 : 1);
+        this.summonTurns = sp.turns + 2 * P(s, "summoner") + (typeof PFX !== "undefined" ? PFX.sum(s, "summonturns", this, {}) : 0);
+        this.summonDmg = sp.amount * (P(s, "elemental_potency") ? 1.5 : 1) * (P(s, "twin_souls") ? 2 : 1) * (1 + (typeof PFX !== "undefined" ? PFX.sum(s, "summon", this, {}) : 0));   // Necromancy, Dark Souls
         return `${sp.name}: ${P(s, "twin_souls") ? "two spectral wolves appear" : "a spectral wolf appears"}`;
       }
       if (sp.kind === "calm") {
         if ((this.tags.has("undead") || this.tags.has("construct")) && !P(s, "master_of_the_mind")) return `${sp.name}: no effect on the ${this.tags.has("undead") ? "undead" : "machine"}`;
-        const cap = sp.max_level + (this.tags.has("beast") && P(s, "animage") ? 8 : 0) + (this.tags.has("humanoid") && P(s, "kindred_mage") ? 8 : 0);
+        const cap = sp.max_level + (this.tags.has("beast") && P(s, "animage") ? 8 : 0) + (this.tags.has("humanoid") && P(s, "kindred_mage") ? 8 : 0) + (typeof PFX !== "undefined" ? PFX.sum(s, "calm", this, {}) : 0);
         if ((this.e.level ?? 99) > cap) return `${sp.name}: no effect (level too high)`;
-        this.calmTurns = sp.turns; return `${sp.name}: it stops fighting`;
+        this.calmTurns = sp.turns + (typeof PFX !== "undefined" ? PFX.sum(s, "calmturns", this, {}) : 0);   // Hypnotic Gaze return `${sp.name}: it stops fighting`;
       }
       return sp.name;
     }
@@ -642,12 +659,16 @@ const G = (() => {
       if (a === "attack") return this.attack(false);
       if (a === "power_attack") return this.attack(true);
       if (a === "block") {
-        this.sp -= F.BLOCK_STAMINA; this.blocking = true;
-        if (P(this.s, "power_bash") && Math.random() < 0.3) {
+        const px = typeof PFX !== "undefined";
+        this.sp -= F.BLOCK_STAMINA * Math.max(0, 1 - (px ? Math.min(1, PFX.sum(this.s, "blockcost", this, {})) : 0)); this.blocking = true;   // Block Runner, Iron Lungs
+        const first = px && !this.bashed && PFX.has(this.s, "firstbash", this, {}); this.bashed = true;   // Shield Charge
+        if ((P(this.s, "power_bash") && Math.random() < 0.3) || first) {
           this.stagger = true;
           const d = P(this.s, "deadly_bash") ? 5 * skill(this.s, "Blocking") / 20 : 0; this.ehp -= d;
-          return `Shield bash${d ? `: ${Math.round(d)}` : ""}, staggers`;
+          const dis = px ? PFX.sum(this.s, "disarm", this, {}) : 0; if (dis) this.disarmed = dis;   // Disarming Bash
+          return `Shield bash${d ? `: ${Math.round(d)}` : ""}, staggers${dis ? ", knocks their weapon aside" : ""}`;
         }
+        if (px && this.wt === "spear" && PFX.has(this.s, "guardjab", this, {})) { const d = 4 + skill(this.s, "Spear") / 20; this.ehp -= d; return `Raises guard and jabs with the spear: ${Math.round(d)}`; }   // Spear Wall
         return "Raises guard";
       }
       const [kind, arg] = a.split(":");
@@ -658,7 +679,7 @@ const G = (() => {
         const r = this.findPotion(arg), it = D.ITEMS[r.item];
         this.used[r.id] = (this.used[r.id] || 0) + 1;
         const [res, amt] = it.restore;
-        if (res === "health") this.hp = Math.min(maxHealth(this.s), this.hp + amt);
+        if (res === "health") this.hp = Math.min(maxHealth(this.s), this.hp + amt * (1 + (typeof PFX !== "undefined" ? PFX.sum(this.s, "potion", this, {}) : 0)));   // Field Medic
         else if (res === "magicka") this.mp = Math.min(maxMagicka(this.s), this.mp + amt);
         else this.sp = Math.min(maxStamina(this.s), this.sp + amt);
         return `Drinks ${it.name}`;
@@ -702,27 +723,52 @@ const G = (() => {
         return `${n} goes for ${al.name}`;
       }
       if (this.mount && typeof HORSEBACK !== "undefined") { const hr = HORSEBACK.enemyTurn(this); if (hr) { this.blocking = false; return hr; } }   // [OURS] foes go for your horse
-      if (Math.random() > F.HIT_CHANCE * (this.wx && /archer|bow|hunter|marksman/i.test(this.e.name || "") ? this.wx.aim : 1)) { this.blocking = false; return `${n} misses`; }
+      const px = typeof PFX !== "undefined";
+      if (Math.random() > F.HIT_CHANCE * (this.wx && /archer|bow|hunter|marksman/i.test(this.e.name || "") ? this.wx.aim : 1) * (this.foeSt?.chill ? 0.85 : 1)) {   // chilled foes are clumsy
+        this.blocking = false;
+        let back = "";
+        if (px && this.ehp > 0 && Math.random() < PFX.sum(s, "counter", this, {})) { const d = this.weaponDamage() * 0.5; this.ehp -= d; back = ` · you punch back ${Math.round(d)}`; }   // Counterpunch
+        if (px && Math.random() < PFX.sum(s, "vanish", this, {})) { this.sneakNext = true; back += " · you slip back into the shadows"; }   // Vanish
+        return `${n} misses${back}`;
+      }
       const bareNow = !Object.values(this.armor).some((a) => ARMOR_SKILL[a.type]), lightNow = Object.values(this.armor).some((a) => a.type === "light");
-      if ((typeof CURSE !== "undefined" && CURSE.dodge && CURSE.dodge(this)) || (P(s, "evasion") && Math.random() < 0.1) || (lightNow && P(s, "deft_movement") && Math.random() < 0.1) || (bareNow && P(s, "dodge") && Math.random() < 0.15)) { this.blocking = false; return `${n} attacks, but you dodge`; }
+      if ((typeof CURSE !== "undefined" && CURSE.dodge && CURSE.dodge(this)) || (P(s, "evasion") && Math.random() < 0.1) || (lightNow && P(s, "deft_movement") && Math.random() < 0.1) || (bareNow && P(s, "dodge") && Math.random() < 0.15) || (px && Math.random() < Math.min(0.3, PFX.sum(s, "dodge", this, {})))) {   // + Glancing Blows, Perfect Form, Roll, Nimble...
+        if (px && PFX.has(s, "riposte", this, {})) this.riposte = true; this.blocking = false; return `${n} attacks, but you dodge`; }
       const absorb = [0, 0.1, 0.2][P(s, "spell_absorption")];
       if (absorb && Math.random() < absorb) { this.mp = Math.min(maxMagicka(s), this.mp + 15); this.blocking = false; return `${n}'s blow is absorbed into magicka`; }
-      const raw = this.e.damage * rnd(...F.DAMAGE_SPREAD) * (this.slowed ? 0.5 : 1);
+      const raw = this.e.damage * rnd(...F.DAMAGE_SPREAD) * (this.slowed ? 0.5 : 1) * (this.disarmed > 0 ? 0.6 : 1);
+      if (this.disarmed > 0) this.disarmed--;
       let dmg = raw, extra = "";
+      const wasBlocking = this.blocking, magicHit = this.tags.has("mage") || this.tags.has("dragon");
       if (this.blocking) {
         const shieldBase = this.shield ? this.shield.armor : (this.wt === "spear" && P(s, "phalanx") ? 20 : null);
         let pct = F.blockPercent(skill(this.s, "Blocking"), shieldBase, this.tags.has("humanoid") ? this.e.damage : 0);
         pct = Math.min(0.85, pct * (1 + 0.05 * P(s, "shield_wall")) + (this.shield && (this.tags.has("dragon") || this.tags.has("mage")) && P(s, "elemental_protection") ? 0.5 * (1 - pct) : 0));
+        if (px) pct = Math.min(0.9, pct + Math.min(0.25, PFX.sum(s, "block", this, {})));   // Guardian, Tower of Strength, Steady Stance
         this.addXp("Blocking", raw * pct);
         dmg *= 1 - pct; extra = ` (blocked ${Math.round(pct * 100)}%)`; this.blocking = false;
       }
       const { rating, pieces, empty } = this.armorRating();
       dmg *= 1 - F.damageReduction(rating, pieces);
       if (this.tags.has("mage") || this.tags.has("dragon")) dmg *= (1 - 0.1 * P(s, "magic_resistance")) * (1 - Math.min(0.5, fxSum(s, "resist") / 100));
+      if (px) {
+        const k = PFX.inMult(this, { blocking: wasBlocking, hit: dmg });   // armor and fighting-style perks
+        if (k === 0) return `${n}'s arrow glances off your shield`;
+        dmg *= k;
+        if (magicHit && Math.random() < PFX.sum(s, "reflect", this, {})) { this.ehp -= dmg; return `${n}'s magic is reflected back at them (${Math.round(dmg)})`; }   // Spell Reflection
+        const ab = magicHit ? Math.min(0.5, PFX.sum(s, "absorb", this, {})) : 0;   // Atronach
+        if (ab) { this.mp = Math.min(maxMagicka(s), this.mp + dmg * ab); dmg *= 1 - ab; extra += ` (${Math.round(ab * 100)}% absorbed)`; }
+      }
       if (this.pw) { dmg = POWERS.dmgIn(this, dmg, this.tags.has("mage") || this.tags.has("dragon")); if (dmg === 0) return `${n}'s blow passes through you`; }
       if (Object.values(this.armor).some((a) => a.type === "heavy") && P(s, "reflect_blows") && Math.random() < 0.1) { this.ehp -= dmg; return `${n}'s blow is reflected back (${Math.round(dmg)})`; }
       if (typeof MAGIC !== "undefined" && this.ward) { const before = dmg; dmg = MAGIC.soak(this, dmg); if (dmg < before) extra += ` (ward soaks ${Math.round(before - dmg)})`; }
       this.hp -= dmg;
+      if (px) {
+        const fe = PFX.foeElement(this.e);   // fire mages burn you, frost trolls chill you, storm atronachs jolt you
+        if (fe && dmg > 0 && Math.random() < fe.ch) extra += PFX.hitMe(this, fe.el, dmg);
+        const ad = PFX.sum(s, "avoiddeath", this, {});   // Avoid Death
+        if (ad && !this.avoidUsed && this.hp < 0.1 * maxHealth(s)) { this.avoidUsed = true; this.hp = Math.min(maxHealth(s), Math.max(1, this.hp) + ad); extra += ` · Avoid Death heals you ${ad}`; }
+      }
       if (this.hp <= 0 && P(s, "shadow_warrior") && !this.shadowUsed) { this.shadowUsed = true; this.hp = 1; this.sneakNext = true; return `${n} hits ${Math.round(dmg)}, but you vanish into the shadows`; }
       if (empty && Math.random() < empty / ARMOR_SLOTS.length) this.addXp("Unarmored", F.UNARMORED_XP_PER_HIT);
       else if (pieces) {
@@ -733,6 +779,7 @@ const G = (() => {
       return `${n} hits ${Math.round(dmg)}${extra}`;
     }
     run({ enemyFirst = false, trySneak = true, maxTurns = 60, t, hidden = null } = {}) {
+      this.dark = isNight(t || now()) || !!(this.wx && this.wx.aim < 1);   // night, fog, rain: Silent Roll
       this.hidden = hidden != null && !enemyFirst ? hidden : trySneak && !enemyFirst && Math.random() < hiddenChance(this.s, this.e, t);
       if (enemyFirst) this.log.push({ turn: 0, rule: null, me: "", them: this.enemyTurn() });
       while (this.hp > 0 && this.ehp > 0 && !this.endWon && this.turn < maxTurns) {
@@ -742,6 +789,7 @@ const G = (() => {
         if (this.ai) { line.ai = true; if (this.aiWhy && this.aiWhy !== this.aiLastWhy) line.why = this.aiWhy; this.aiLastWhy = this.aiWhy; }   // why the AI did it (shown when the reason changes)
         if (this.bleed.length && this.ehp > 0) { const b = this.bleed.reduce((x, y) => x + y.dmg, 0); this.ehp -= b; this.bleed = this.bleed.map((y) => ({ ...y, turns: y.turns - 1 })).filter((y) => y.turns > 0); line.me += ` · bleeds ${Math.round(b)}`; }
         for (const al of [...this.allies]) if (this.ehp > 0) { if (al.coop && typeof COOP !== "undefined") { line.me += COOP.allyAct(this, al); continue; } if (al.follower && this.ai) { line.me += COMBATAI.followerAct(this, al); continue; } const d = al.dmg * rnd(...F.DAMAGE_SPREAD); this.ehp -= d; line.me += ` · ${al.name} ${Math.round(d)}`; }
+        if (typeof PFX !== "undefined") PFX.tick(this, line);   // burning, chills and jolts
         if (this.summonTurns > 0 && this.ehp > 0) { this.summonTurns--; this.ehp -= this.summonDmg; line.me += ` · familiar ${this.summonDmg}`; }
         if (typeof MAGIC !== "undefined" && !this.endWon) MAGIC.tick(this, line);   // cloaks, burning walls, healing circles
         { const g = this.healGuard(rule); if (g) line.me += " · " + g; }
@@ -749,7 +797,7 @@ const G = (() => {
         if (this.pw) POWERS.tick(this, line);
         line.hp = Math.max(0, Math.round(this.hp)); line.ehp = Math.max(0, Math.round(this.ehp));
         this.log.push(line);
-        this.sp = Math.min(maxStamina(this.s), this.sp + this.regenSp);
+        this.sp = Math.min(maxStamina(this.s), this.sp + this.regenSp * (this.regenSpHold ? 0.5 : 1)); this.regenSpHold = false;   // a chill slows your stamina
         this.mp = Math.min(maxMagicka(this.s), this.mp + this.regenMp);
         this.slowed = Math.max(0, this.slowed - 1);
         if (this.mount && typeof HORSEBACK !== "undefined") HORSEBACK.tick(this);
@@ -762,7 +810,7 @@ const G = (() => {
     apply(t = now()) {
       const daeMsgs = [...(typeof DAEDRIC !== "undefined" ? DAEDRIC.after(this) : []), ...(typeof CURSE !== "undefined" && CURSE.after ? CURSE.after(this) : [])];   // Azura's Star; feeding, Lord kills
       if (this.won && this.weaponInv && this.weapon?.enchant) {   // [Skyrim] Soul Siphon; [OURS] Soul Trap perk
-        const extra = 0.05 * P(this.s, "soul_siphon") + 0.1 * P(this.s, "soul_trap");
+        const extra = 0.05 * P(this.s, "soul_siphon") + 0.1 * P(this.s, "soul_trap") + (typeof PFX !== "undefined" ? PFX.num(this.s, "siphon") : 0);
         if (extra) { const row = invRow(this.s, this.weaponInv); const cap = this.weapon.enchant.capacity; this.charges[this.weaponInv] = Math.min(cap, (this.charges[this.weaponInv] ?? row.charge ?? 0) + cap * extra); }
       }
       setHealth(this.s, this.hp, t);
@@ -894,7 +942,7 @@ const G = (() => {
     const c = carried(s), cap = capacity(s);
     let v = F.travelSpeed(BASE_WALK, skill(s, "Athletics"), c, cap);
     if (c > cap && P(s, "marathon")) v = (v + F.travelSpeed(BASE_WALK, skill(s, "Athletics"), cap, cap)) / 2;
-    v *= 1 + 0.05 * P(s, "long_strider");
+    v *= 1 + 0.05 * P(s, "long_strider") + (typeof PFX !== "undefined" ? Math.min(0.15, PFX.num(s, "travel")) : 0);   // Fleet Foot, Trailblazer...
     if (typeof WEVENTS !== "undefined") { const wf = WEVENTS.weather([s.x, s.y]).speed; v *= wf < 1 && fxSum(s, "warmth") > 0 ? (1 + wf) / 2 : wf; if (typeof WFX !== "undefined") v *= WFX.speedMult(s); }   // [OURS] snow and storms slow you down; hot soup halves that
     if (riding(s)) v *= D.HORSE_SPEED;
     if (typeof CARAVANS !== "undefined") v *= CARAVANS.cartSpeed(s);   // [OURS] a loaded cart is a little slower
@@ -1074,7 +1122,7 @@ const G = (() => {
   // ---------------------------------------------------------------- towns
   const shopTypes = (l) => D.SHOPS[l] || [];
   const shopStock = (l) => [...new Set(shopTypes(l).flatMap((k) => [...(D.SHOP_STOCK[k] || []), ...(((D.TOWN_STOCK || {})[l] || {})[k] || [])]))];
-  const haggle = (s) => 1 + [0, 0.1, 0.15, 0.2, 0.25, 0.3][P(s, "haggling")] + fxSum(s, "barter") / 100;   // [Skyrim] Haggling; Fortify Barter
+  const haggle = (s) => 1 + [0, 0.1, 0.15, 0.2, 0.25, 0.3][P(s, "haggling")] + fxSum(s, "barter") / 100 + (typeof PFX !== "undefined" ? Math.min(0.15, PFX.num(s, "price")) : 0);   // + Merchant, Investor, Silver Tongue...   // [Skyrim] Haggling; Fortify Barter
   /* [OURS] the town's market (economy.js): regional goods, today's shortage, caravans and what players trade move prices.
      Trade goods are dealt wholesale (a smaller merchant's cut). extra = units already in this lot, so bulk deals slide. */
   const econOn = () => typeof ECON !== "undefined";

@@ -67,10 +67,17 @@ const ENCH = (() => {
   }
   /* how strong an enchantment would be ([OURS] scaling): soul size × (0.4 + 0.6 × skill/100), Enchanter perk +10% per rank */
   function strength(s, gemItem) { return (GEM_POWER[gemItem] || 0.6) * (0.4 + 0.6 * Math.min(100, G.skill(s, "Enchanting")) / 100) * (1 + 0.1 * G.P(s, "enchanter")); }
+  /* [OURS] the bigger Enchanting tree: Fire/Frost/Storm Enchanter, Insightful and Corpus Enchanter, Extra Effect (capped) */
+  const CORPUS = ["health", "magicka", "stamina"];
+  function perkBoost(s, eff) {
+    if (typeof PFX === "undefined") return 0;
+    const el = WEAPON[eff] ? (["fire", "frost", "shock"].includes(eff) ? eff : "other") : CORPUS.includes(eff) ? "corpus" : "armor";
+    return Math.min(0.4, PFX.sum(s, "ench", null, { el }));
+  }
   function preview(s, rowId, eff, gemRowId) {
     const r = G.invRow(s, rowId), g = G.invRow(s, gemRowId);
     if (!r || !g) return null;
-    const it = D.ITEMS[r.item], k = strength(s, g.item);
+    const it = D.ITEMS[r.item], k = strength(s, g.item) * (1 + perkBoost(s, eff));
     if (WEAPON[eff]) return { mag: Math.max(1, Math.round(WEAPON[eff][1] * k)), cap: D.ITEMS[g.item].charge };
     return { mag: Math.max(1, Math.round(ARMOR[eff][2] * k)), cap: 0 };
   }
