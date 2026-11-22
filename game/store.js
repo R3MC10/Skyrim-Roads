@@ -146,6 +146,7 @@ const Store = (() => {
 
   /* Save whenever state changed. One write in flight at a time; bursts collapse into one write. */
   function save(state) {
+    if (typeof TB !== "undefined" && TB.safeSave) state = TB.safeSave(state);   // mid turn-by-turn fight: save the game as it was before it
     const json = JSON.stringify(state);
     if (json === lastSaveJson) return;
     if (mode === "local" || mode === "p2p") { ls.set("sk.save", state); lastSaveJson = json; return; }

@@ -199,6 +199,12 @@ const PFX = (() => {
     [ "Speechcraft", "smooth_talker", "Smooth Talker", 1, [30], ["persuasion"], "On the road, bluffs, threats and haggling are 10% more likely to work. [OURS]", [["enctalk", 0.1, {}]]],
     [ "Streetwise", "road_wise", "Road Wise", 1, [30], ["rumour_monger"], "On the road, sneaking past trouble is 10% easier, tolls and bribes cost 20% less, and you read an ambush before it springs more often. [OURS]", [["road", 0.1, {}], ["roadbribe", 0.2, {}]]],
     [ "Athletics", "pathfinder", "Pathfinder", 1, [40], ["long_strider"], "On the road, outrunning trouble, dodging avalanches and taming wild horses is 15% easier. [OURS]", [["roadrun", 0.15, {}]]],
+    // ---------------------------------------------------------------- turn-by-turn fights (tbfight.js): action points and initiative
+    [ "Athletics", "battle_rhythm", "Battle Rhythm", 2, [30, 70], ["long_strider"], "In turn-by-turn fights you get 1/2 more action points every turn. [OURS]", [["tbap", 1, {}]]],
+    [ "Acrobatics", "quick_start", "Quick Start", 2, [25, 60], ["sure_footed"], "In turn-by-turn fights you act sooner: +3/+6 initiative. [OURS]", [["tbinit", 3, {}]]],
+    [ "Sneak", "first_move", "First Move", 1, [40], ["stealth"], "You read a fight before it starts: +4 initiative in turn-by-turn fights. [OURS]", [["tbinit", 4, {}]]],
+    [ "Alteration", "quickened_casting", "Quickened Casting", 1, [40], ["apprentice_alteration"], "In turn-by-turn fights you get 1 more spell point every turn (only for spells). [OURS]", [["tbspap", 1, {}]]],
+    [ "Heavy Armor", "drilled_in_steel", "Drilled in Steel", 1, [50], ["juggernaut"], "Heavy armor slows you only half as much in turn-by-turn fights (initiative). [OURS]", [["tbheavy", 0.5, {}]]],
   ];
   const FX = {};
   if (typeof PERKS !== "undefined") {

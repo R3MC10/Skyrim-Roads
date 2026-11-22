@@ -43,7 +43,7 @@ const TB = (() => {
     const spellAp = clamp(Math.floor(alt / 50) + Math.floor(Math.max(0, mg - 100) / 150) + pfx(s, "tbspap"), 0, 3);
     let heavy = 0, medium = 0;
     for (const a of Object.values(f?.armor || {})) { if (a.type === "heavy") heavy++; else if (a.type === "medium") medium++; }
-    const init = Math.round(10 + acro / 8 + snk / 16 - 2 * heavy - 0.5 * medium + pfx(s, "tbinit"));
+    const init = Math.round(10 + acro / 8 + snk / 16 - (2 * heavy + 0.5 * medium) * (1 - Math.min(1, pfx(s, "tbheavy"))) + pfx(s, "tbinit"));
     return { ap, spellAp, init, heavy };
   }
   const spellOf = (a) => { const [k, arg] = a.split(":"); return k === "spell" || k === "dual" ? D.SPELLS[arg] : k === "scroll" ? D.SPELLS[D.ITEMS[arg]?.spell] : null; };
@@ -147,11 +147,11 @@ const TB = (() => {
           if (this.opts.auto || this.autoRest) { this.autoTurn(); continue; }
           return { turn: "me" };
         }
-        if (o.al && o.al.player && o.al.pid && this.remote && !o.al.down) {   // a real player: their own phone picks
+        if (o.al && o.al.player && o.al.pid && this.remote && !o.al.down && (o.al.late || 0) < 2 && (!this.remote.live || this.remote.live())) {   // a real player: their own phone picks (Auto after missing two turns)
           if (!this.waiting) { this.waiting = { pid: o.al.pid, name: o.al.name, until: Date.now() + TURN_SECONDS * 1000, al: o.al }; this.remote.ask(this, o.al); }
-          if (this.waiting.move) { const m = this.waiting.move; this.waiting = null; this.allyMove(o.al, m); this.idx++; continue; }
+          if (this.waiting.move) { const m = this.waiting.move; this.waiting = null; o.al.late = 0; this.allyMove(o.al, m); this.idx++; continue; }
           if (Date.now() < this.waiting.until) return { turn: "wait", who: o.al.name, until: this.waiting.until };
-          this.waiting = null; this.allyMove(o.al, "auto", true); this.idx++; continue;
+          this.waiting = null; o.al.late = (o.al.late || 0) + 1; this.allyMove(o.al, "auto", true); this.idx++; continue;
         }
         this.autoActor(o); this.idx++;
       }
@@ -355,6 +355,10 @@ const TB = (() => {
   }
   /* Run a game action. If it starts a fight, play the fight on screen, then finish the action with that result.
      done(result) gets the same object the action would have returned. */
+  let saveSnap = null, liveS = null;
+  /* store.js: while a fight is on screen, a save keeps the game as it was just before it (closing the app mid-fight
+     puts you back in front of the fight instead of half-way through the action that started it) */
+  function safeSave(st) { return open && saveSnap && st === liveS ? saveSnap : st; }
   function call(S, fn, done, ctx = {}) {
     if (!enabled() || open || mode) return done(fn());
     const snap0 = clone(S);
@@ -367,7 +371,9 @@ const TB = (() => {
       if (x !== PENDING) { mode = null; throw x; }
       const { f, opts } = pend; pend = null; mode = null;
       const sess = new Session(f, opts);
+      saveSnap = snap0; liveS = S;
       return play(sess, ctx, () => {
+        saveSnap = null; liveS = null;
         finalS = clone(S);
         replaceInPlace(S, snap0);
         fin = f; mode = "replay"; rp = 0;
@@ -442,7 +448,7 @@ const TB = (() => {
     const allies = f.allies.filter((a) => a.hp != null).map((a) => `<div class="tbal"><small>${esc(a.name)}${a.down ? " · down" : ""}</small>${pctBar(Math.max(0, a.hp), a.maxHp || a.hpMax || Math.max(a.hp, 1), "hp")}</div>`).join("");
     const mine = state.turn === "me";
     const wait = state.turn === "wait" ? `<p class="tbwait">⏳ ${esc(state.who)} is choosing their move… <b class="num" id="tbcd">${Math.max(0, Math.ceil((state.until - Date.now()) / 1000))}s</b>, then Auto</p>` : "";
-    const scene = newEv.length && typeof FIGHTART !== "undefined" ? sceneFor(newEv) : "";
+    const scene = (newEv.length || !ui.lastScene) && typeof FIGHTART !== "undefined" ? sceneFor(newEv) : "";
     const log = sess.ev.slice(-7).filter((e) => e.kind !== "round").map((e) => `<div class="tbl ${e.kind}">${e.kind === "foe" ? "☠" : e.kind === "me" || e.kind === "guard" ? "🛡" : e.kind === "tick" ? "✶" : e.kind === "end" ? "★" : "⚑"} ${esc(e.text)}</div>`).join("");
     el.innerHTML = `<div class="tbin">
       <div class="tbtop"><b>Round ${sess.round}</b><span class="tbord">${order}</span><button class="tbff ${fast() ? "on" : ""}" data-tbx="fast" aria-label="Fast foe turns">⏩</button></div>
@@ -452,7 +458,7 @@ const TB = (() => {
       ${allies ? `<div class="tballies">${allies}</div>` : ""}
       <div class="tbap">${mine ? `<span>AP</span>${pips(sess.ap, sess.st.ap, "ap")}${sess.st.spellAp ? `<span>✦</span>${pips(sess.spAp, sess.st.spellAp, "sap")}` : ""}<em>Your turn</em>` : sess.done ? "" : `<em>${esc(sess.cur?.name || "")}'s turn</em>`}</div>
       ${wait}
-      <div class="tblog" aria-live="polite">${log}</div>
+      <div class="tblog" aria-live="polite"${log ? "" : " hidden"}>${log}</div>
       ${sess.done ? `<button class="btn pri tbdone" data-tbx="done">${f.won ? (f.escaped ? "Continue" : "Victory — continue") : "Continue"}</button>` : mine ? actionsHTML(sess) : ""}
     </div>`;
     if (scene) ui.lastScene = scene;
@@ -471,9 +477,12 @@ const TB = (() => {
   function sceneFor(evs) {
     const sess = ui.sess, f = sess.f;
     const lines = evs.filter((e) => ["me", "foe", "ally", "tick"].includes(e.kind)).map((e) => ({ turn: e.round, me: e.kind === "foe" ? "" : e.kind === "ally" ? " · " + e.text : e.text, them: e.kind === "foe" ? e.text : "", a: e.a || "attack", wt: e.wt || f.wt, hp: e.hp, ehp: e.ehp }));
-    if (!lines.length) return "";
+    if (!lines.length && ui.lastScene) return "";
+    if (!lines.length) lines.push({ turn: 0, me: "", them: "", a: "attack", wt: f.wt, hp: Math.round(f.hp), ehp: Math.round(f.ehp) });   // the opening stand-off
+    const keep = fast() && !sess.done ? lines.filter((l, i) => l.me || i === lines.map((x) => !!x.them).lastIndexOf(true)) : lines;   // Fast: your moves and the foe's last blow
     const v = Object.create(f);
-    v.log = lines; v.hp0 = ui.lastHp ?? f.hp0; v.ehp0 = ui.lastEhp ?? f.ehp0; v.won = sess.done ? f.won : undefined;
+    v.log = keep.length ? keep : lines; v.hp0 = ui.lastHp ?? f.hp0; v.ehp0 = ui.lastEhp ?? f.ehp0; v.won = sess.done ? f.won : undefined;
+    v.tbMid = !sess.done; v.tbHpMax = G.maxHealth(f.s); v.tbEhpMax = sess.ehpMax;   // fightart: stay standing between turns, bars against full health
     ui.lastHp = lines[lines.length - 1].hp; ui.lastEhp = lines[lines.length - 1].ehp;
     return FIGHTART.placeholder(v, f.s);
   }
@@ -531,6 +540,7 @@ const TB = (() => {
         store.put("tbf", fid, { owner: myId, foe: f.e.name, round: sess.round, ehp: Math.round(f.ehp), ehpMax: sess.ehpMax, turn: { pid: al.pid, until: sess.waiting.until, name: al.name, heals: al.heals || 0, pots: al.pots || 0 }, log: sess.ev.slice(-4).map((e) => e.text), t: Date.now() / 1000 });
         if (!watching && store.watch) { watching = true; store.watch("tbf", (docs) => { const s2 = cur, d = fid && docs.find((x) => x.id === fid); if (s2 && d?.reply && s2.waiting && d.reply.pid === s2.waiting.pid && d.reply.round === s2.round) s2.waiting.move = d.reply.move; }); }
       },
+      live: () => !!store.online,
       end() { if (fid) store.remove?.("tbf", fid); fid = null; cur = null; },
     };
   }
@@ -551,5 +561,5 @@ const TB = (() => {
     });
   }
 
-  return { T, stats, cost, aiPick, Session, simulate, call, enabled, init, remoteFor, watchTurns, get open() { return open; }, WCOST, TIERC, HIT_CAP, FOE_HP, PARTY_HP, TURN_SECONDS, _origRun: origRun };
+  return { T, stats, cost, aiPick, Session, simulate, call, enabled, init, remoteFor, watchTurns, safeSave, get open() { return open; }, WCOST, TIERC, HIT_CAP, FOE_HP, PARTY_HP, TURN_SECONDS, _origRun: origRun };
 })();

@@ -503,8 +503,8 @@
     Store.watch("duels", (docs) => onDuels(docs));
     Store.watch("stalls", (docs) => onStalls(docs));
     if (typeof TB !== "undefined") {   // turn-based fights: toasts, and live turns for real players in your party
-      TB.init({ toast: (t) => toast(t), remote: Store.online ? TB.remoteFor(Store, S.id) : null });
-      if (Store.online) TB.watchTurns(Store, () => S?.id);
+      TB.init({ toast: (t) => toast(t), remote: TB.remoteFor(Store, S.id) });   // only used while you're online with party members
+      TB.watchTurns(Store, () => S?.id);
     }
     Store.watch("halls", (docs) => onHalls(docs));
     Store.watch("pshare", (docs) => onShares(docs));
@@ -587,6 +587,7 @@
 
   function tick() {
     if (!S) return;
+    if (typeof TB !== "undefined" && TB.open) return;   // the world waits while you play out a turn-by-turn fight
     const t = G.now();
     { const cm = CARAVANS.tick(S, t); if (cm) { persist(true); toast(cm); if (S.caravanJob === null) Store.change("guards", `${lastJobId}-${S.id}`, (d) => (d && d.status === "signed" ? { ...d, status: "left" } : d)); bump(); } lastJobId = S.caravanJob?.id || lastJobId; }
     tickTimers(t); hallTick(t); discoveryToast(); if (Math.floor(t) % 5 === 0) courierCheck();
@@ -2325,7 +2326,9 @@
   function doAttack(card, ambush = false) {
     const err = ambush ? null : MP.canTarget(S, card, livePos(), otherPos(card));
     if (err) return toast(err);
-    const r = MP.attack(S, card, { ambush, pos: livePos() });
+    tbCall(() => MP.attack(S, card, { ambush, pos: livePos() }), (r) => attackDone(r));
+  }
+  function attackDone(r) {
     if (r.doc) Store.put("attacks", r.id, r.doc);
     if (r.news) postNews(r.news);
     if (r.bag) Store.addBag(r.bag);
@@ -2394,8 +2397,8 @@
         <button class="btn danger" data-act="guard" data-c="resist">Resist arrest</button>
       </div>`, "enc");
   }
-  function guardAction(c) {
-    const r = TOWNS.guardChoice(S, c);
+  function guardAction(c) { tbCall(() => TOWNS.guardChoice(S, c), (r) => guardDone(c, r)); }
+  function guardDone(c, r) {
     if (r.bag) Store.addBag(r.bag);
     persist(true); renderPanel(true);
     if (r.stay) return openGuard(r.text);
