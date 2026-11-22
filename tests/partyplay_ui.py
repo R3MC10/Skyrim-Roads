@@ -103,9 +103,9 @@ async def main():
             await A.wait_for_timeout(1500)
             g0 = await B.evaluate("window.__dbg.save().gold")
             await clean(A); await A.evaluate("() => document.querySelector('.tabs [data-tab=map], [data-tab=map]')?.click()"); await A.wait_for_timeout(300)
-            if await A.query_selector("[data-act=openenc]"): await A.click("[data-act=openenc]")
+            await A.evaluate("() => document.querySelectorAll('#modal').forEach(m => m.remove())"); await A.evaluate("() => document.querySelector('[data-act=openenc]')?.click()")
             await A.wait_for_timeout(300)
-            await A.click("[data-act=enc][data-a=fight]"); await A.wait_for_timeout(1500)
+            await A.evaluate("() => document.querySelector('[data-act=enc][data-a=fight]')?.click()"); await A.wait_for_timeout(1500)
             log = await A.evaluate("[...document.querySelectorAll('#modal .flog div')].map(d=>d.textContent).join(' | ')")
             check(f"[{style}] the members fight beside the leader", "Beta" in log or "Ceta" in log, log[:160])
             won = await A.evaluate("() => /Victory/.test(document.querySelector('#modal h2')?.textContent || '')")
@@ -172,59 +172,67 @@ async def main():
             await B.evaluate("() => { const b = document.createElement('button'); b.dataset.act = 'dact'; b.dataset.c = 'fight'; (document.querySelector('#dun') || document.body).appendChild(b); b.click(); b.remove(); }")
             await B.wait_for_timeout(400)
             broom1 = await B.evaluate("() => JSON.stringify(window.__dbg.save().dungeon?.room?.enemy?.hp ?? null)")
-            waitTxt = await B.evaluate("() => document.querySelector('#dun .lead-wait')?.innerText || ''")
-            check(f"[{style}] a member can't act in the leader's room", broom0 == broom1, f"{broom0} {broom1} | {waitTxt[:60]}")
+            waitTxt = await B.evaluate("() => document.querySelector('#dun .lv-wait')?.innerText || ''")
+            check(f"[{style}] a member can't act in the leader's room", broom0 == broom1 and "choosing" in waitTxt.lower(), f"{broom0} {broom1} | {waitTxt[:60]}")
+            if "choosing" in waitTxt.lower(): await safe_shot(B, f"{SHOT}{style}_member_wait.png")
             for pg in (A, B, C): await pg.evaluate("() => { const S = window.__dbg.save(); S.hpBonus = 4000; G.setHealth(S, G.maxHealth(S)); }")
             await A.evaluate("() => { const b = document.createElement('button'); b.dataset.act = 'dact'; b.dataset.c = 'fight'; document.querySelector('#dun').appendChild(b); b.click(); b.remove(); }")
             mir = False
             for _ in range(16):
                 await B.wait_for_timeout(500)
-                mir = await B.evaluate("() => { const d = window.__dbg.save().dungeon; return !!d && Object.values(d.mirrored || {}).some(n => n > 0); }")
+                mir = await B.evaluate("() => { const d = window.__dbg.save().dungeon; return !!d && Object.values(d.lvDone || {}).some(n => n > 0); }")
                 if mir: break
             check(f"[{style}] Beta's hero follows the leader's action", mir)
             rid = await A.evaluate("window.__dbg.save().dungeon?.run")
-            await A.evaluate(f"() => Store.change('runs', '{rid}', (x) => LOOTVOTE.addToPool(x, x.leader, [{{ item: 'steel_sword', qty: 1 }}, {{ item: 'elven_bow', qty: 1 }}], 30, 'ui-test'))")
+            await A.evaluate(f"() => Store.change('runs', '{rid}', (x) => LOOTVOTE.poolAdd(x, [{{ item: 'steel_sword', qty: 1 }}, {{ item: 'elven_bow', qty: 1 }}], 30))")
             await A.wait_for_timeout(800)
             pile = await A.evaluate(f"() => window.__dbg.coopRuns().find(r => r.id === '{rid}')?.pool?.items?.length || 0")
             check(f"[{style}] loot goes to the shared pile", pile >= 2, f"{pile}")
-            for pg in (A, B, C):   # the road vote from the fight earlier: settle it out of the way first
-                await pg.evaluate("() => { const S = window.__dbg.save(); for (const v of window.__dbg.lvVotes()) if (v.kind === 'road') S.voteClaims = { ...(S.voteClaims || {}), [v.id]: 1 }; document.querySelector('#lvote')?.closest('#modal')?.remove(); }")
+            async def dismiss_road(pg):   # an earlier road vote can pop up first: pass on it
+                for _ in range(3):
+                    if await pg.evaluate("() => !!document.querySelector('#modal [data-act=lvsend][data-k^=\"lv:\"]')"):
+                        await pg.evaluate("() => document.querySelector('#modal [data-act=lvsend][data-k^=\"lv:\"]').click()"); await pg.wait_for_timeout(400)
+                    await pg.evaluate("() => document.querySelectorAll('#modal').forEach(m => { if (!m.querySelector('.lv-list')) m.remove(); })")
+            for pg in (A, B, C): await dismiss_road(pg)
             await clean(A); await A.evaluate("() => { const b = document.createElement('button'); b.dataset.act = 'dleave'; document.querySelector('#dun').appendChild(b); b.click(); b.remove(); }")
             got = {}
             for k, pg in (("a", A), ("b", B), ("c", C)):
                 ok5 = False
-                for _ in range(16):
+                for _ in range(20):
                     await pg.wait_for_timeout(600)
-                    ok5 = await pg.evaluate("() => !!document.querySelector('#lvote')")
+                    ok5 = await pg.evaluate("() => !!document.querySelector('#modal [data-act=lvsend][data-k^=\"run:\"]')")
                     if ok5: break
-                    await pg.evaluate("() => document.querySelectorAll('#modal').forEach(m => { if (!m.querySelector('#lvote')) m.remove(); })")
+                    await dismiss_road(pg)
                 got[k] = ok5
             check(f"[{style}] the loot vote opens for all three", all(got.values()), str(got))
-            if not all(got.values()): print(await A.evaluate("() => JSON.stringify({ votes: window.__dbg.lvVotes().map(v => [v.id, v.members.length, v.items.length]), run: window.__dbg.coopRuns().map(r => [r.id, r.voteId, r.ending, (r.members||[]).length]) })"))
             if got.get("b"): await safe_shot(B, f"{SHOT}{style}_vote.png")
-            # Alfa and Beta both want the sword, Ceta wants the bow
-            async def vote(pg, names):
-                await pg.evaluate("""(names) => { const v = document.querySelector('#lvote'); if (!v) return; for (const row of v.querySelectorAll('.lv-item')) { if (names.some(n => row.innerText.includes(n))) row.querySelector('[data-act=lvwant]')?.click(); } }""", names)
-                await pg.wait_for_timeout(200)
-                await pg.evaluate("() => document.querySelector('#lvote [data-act=lvsend]')?.click()")
+            async def vote(pg, names):   # Want on the named items, then send
+                for n in names:
+                    await pg.evaluate("""(n) => { for (const row of document.querySelectorAll('#modal .lv-row')) if (row.innerText.includes(n)) row.querySelector('[data-act=lvpick]')?.click(); }""", n)
+                    await pg.wait_for_timeout(250)
+                await pg.evaluate("() => document.querySelector('#modal [data-act=lvsend][data-k^=\"run:\"]')?.click()")
+            inv0 = {k: await pg.evaluate("() => { const S = window.__dbg.save(); return { sw: S.inv.filter(r => r.item === 'steel_sword').length, bow: S.inv.filter(r => r.item === 'elven_bow').length, g: S.gold }; }") for k, pg in (("a", A), ("b", B), ("c", C))}
             await vote(A, ["Steel Sword"]); await vote(B, ["Steel Sword"]); await vote(C, ["Elven Bow"])
             res = False
-            for _ in range(16):
+            for _ in range(20):
                 await A.wait_for_timeout(600)
-                res = await A.evaluate("() => /Loot shared/.test(document.querySelector('#lvote')?.innerText || '')")
+                res = await A.evaluate("() => /loot shared out/i.test(document.querySelector('#modal')?.innerText || '')")
                 if res: break
-            check(f"[{style}] votes in: results shown", res)
+            check(f"[{style}] votes in: results with dice shown", res)
             if res: await safe_shot(A, f"{SHOT}{style}_vote_result.png")
-            inv0 = {k: await pg.evaluate("() => { const S = window.__dbg.save(); return { sw: S.inv.filter(r => r.item === 'steel_sword').length, bow: S.inv.filter(r => r.item === 'elven_bow').length }; }") for k, pg in (("a", A), ("b", B), ("c", C))}
-            for pg in (A, B, C):
-                for _ in range(10):
-                    if await pg.evaluate("() => /Loot shared/.test(document.querySelector('#lvote')?.innerText || '')"): break
+            for pg in (B, C):
+                for _ in range(12):
+                    if await pg.evaluate("() => /loot shared out/i.test(document.querySelector('#modal')?.innerText || '')"): break
                     await pg.wait_for_timeout(500)
-                await pg.evaluate("() => document.querySelector('#lvote [data-act=lvtake]')?.click()"); await pg.wait_for_timeout(700)
-                await pg.evaluate("() => { const id = window.__dbg.lvVotes().find(v => v.kind === 'dungeon')?.id; if (id) { const b = document.createElement('button'); b.dataset.act = 'lvtake'; b.dataset.id = id; document.body.appendChild(b); b.click(); b.remove(); } }"); await pg.wait_for_timeout(500)
-            inv1 = {k: await pg.evaluate("() => { const S = window.__dbg.save(); return { sw: S.inv.filter(r => r.item === 'steel_sword').length, bow: S.inv.filter(r => r.item === 'elven_bow').length }; }") for k, pg in (("a", A), ("b", B), ("c", C))}
+            inv1 = {k: await pg.evaluate("() => { const S = window.__dbg.save(); return { sw: S.inv.filter(r => r.item === 'steel_sword').length, bow: S.inv.filter(r => r.item === 'elven_bow').length, g: S.gold }; }") for k, pg in (("a", A), ("b", B), ("c", C))}
             sw = sum(inv1[k]["sw"] - inv0[k]["sw"] for k in inv0); bow = sum(inv1[k]["bow"] - inv0[k]["bow"] for k in inv0)
             check(f"[{style}] each item delivered exactly once (sword to A or B, bow to C)", sw == 1 and bow == 1 and inv1["c"]["bow"] - inv0["c"]["bow"] == 1 and inv1["c"]["sw"] == inv0["c"]["sw"], f"{inv0} {inv1}")
+            dg = {k: inv1[k]["g"] - inv0[k]["g"] for k in inv0}
+            check(f"[{style}] gold split evenly (leftover to the leader)", dg["b"] == dg["c"] and dg["a"] >= dg["b"] and dg["b"] > 0, str(dg))
+            for pg in (A, B, C):   # close the results like a player would
+                for _ in range(3):
+                    if not await pg.evaluate("() => !!document.querySelector('#modal [data-act=close]')"): break
+                    await pg.evaluate("() => document.querySelector('#modal [data-act=close]').click()"); await pg.wait_for_timeout(300)
             await clean(A); await clean(B); await clean(C)
 
             # 5. a big party in the fight scene: 7 beside you
@@ -235,8 +243,8 @@ async def main():
                 document.querySelector('#dun')?.remove(); G.startTrip(S, 'Riverwood', WORLD.places.Riverwood.slice(0, 2)); const base = D.ENCOUNTERS.find(e => e.name === 'Bandit outlaw') || D.ENCOUNTERS[0];
                 S.trip.status = 'encounter'; S.trip.encounter = { ...G.scaleEnemy(base, S.level), hold: 'Whiterun', danger: base.danger }; }""")
             await clean(A); await A.evaluate("() => document.querySelector('#dun')?.remove()"); await A.evaluate("() => document.querySelector('.tabs [data-tab=map], [data-tab=map]')?.click()"); await A.wait_for_timeout(300)
-            if await A.query_selector("[data-act=openenc]"): await A.click("[data-act=openenc]")
-            await A.wait_for_timeout(300); await A.click("[data-act=enc][data-a=fight]"); await A.wait_for_timeout(1200)
+            await A.evaluate("() => document.querySelectorAll('#modal').forEach(m => m.remove())"); await A.evaluate("() => document.querySelector('[data-act=openenc]')?.click()")
+            await A.wait_for_timeout(300); await A.evaluate("() => document.querySelector('[data-act=enc][data-a=fight]')?.click()"); await A.wait_for_timeout(1200)
             sc = await A.query_selector("#modal .fscene")
             if sc:
                 await safe_shot(sc, f"{SHOT}{style}_fight8.png"); await A.wait_for_timeout(1600)
@@ -245,6 +253,8 @@ async def main():
                 fps = await A.evaluate("""() => new Promise(r => { let n = 0; const t0 = performance.now(); const f = () => { n++; if (performance.now() - t0 < 1500) requestAnimationFrame(f); else r(n / 1.5); }; requestAnimationFrame(f); })""")
                 print(style, "fight scene frames/s with 7 allies (busy test machine):", round(fps))
             check(f"[{style}] big-party fight scene draws", sc is not None)
+            if sc is None: print("DEBUG trip:", await A.evaluate("() => JSON.stringify({ st: window.__dbg.save().trip?.status, enc: !!window.__dbg.save().trip?.encounter, btn: !!document.querySelector('[data-act=openenc]'), dun: !!document.querySelector('#dun'), fightBtn: !!document.querySelector('[data-act=enc][data-a=fight]') })"))
+            if sc is None: print("DEBUG modal:", (await A.evaluate("() => [...document.querySelectorAll('#modal')].map(m => m.innerText.slice(0, 160)).join(' || ')")))
             # the travel picture with a big company
             await A.evaluate("""() => { const S = window.__dbg.save(); S.trip = null; G.setAllyProvider(() => []); }""")
             vig = await A.evaluate("""() => { if (typeof FXART === 'undefined' || !FXART.vignetteFrame) return null;

@@ -70,7 +70,11 @@ const NPCART = (() => {
     return { role: "runner" };
   }
   const FOLLOWER_LOOK = { lydia: ["nord", "f", "warrior", "steel"], jenassa: ["dunmer", "f", "ranger"], belrand: ["nord", "m", "warrior", "elven"], marcurio: ["imperial", "m", "wizard"],
-    vorstag: ["nord", "m", "warrior", "iron"], stenvar: ["nord", "m", "warrior", "steel"], erik: ["nord", "m", "farmer"] };
+    vorstag: ["nord", "m", "warrior", "iron"], stenvar: ["nord", "m", "warrior", "steel"], erik: ["nord", "m", "farmer"],
+    // more followers (followers2.js)
+    faendal: ["bosmer", "m", "ranger"], uthgerd: ["nord", "f", "warrior", "iron"], mjoll: ["nord", "f", "warrior", "steel"], aela: ["nord", "f", "ranger"], farkas: ["nord", "m", "warrior", "steel"],
+    vilkas: ["nord", "m", "warrior", "steel"], jzargo: ["khajiit", "m", "wizard"], brelyna: ["dunmer", "f", "wizard"], onmund: ["nord", "m", "wizard"], benor: ["nord", "m", "warrior", "iron"],
+    annekke: ["nord", "f", "ranger"], borgakh: ["orc", "f", "warrior", "iron"], teldryn: ["dunmer", "m", "warrior", "elven"] };
 
   // ---- small helpers
   const hash = (s) => { let a = 7; for (const ch of String(s)) a = (a * 31 + ch.charCodeAt(0)) | 0; return Math.abs(a); };

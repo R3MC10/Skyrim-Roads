@@ -31,7 +31,7 @@ const FIGHTART = (() => {
     const chest = f?.armor?.chest;
     const body = !chest ? "#8a7a62" : chest.type === "heavy" ? P.steel : chest.type === "cloth" ? P.cloth : chest.type === "medium" ? "#9a9a8e" : P.leather;
     const allies = (f?.allies || []).length + (s?.thrall ? 1 : 0);
-    const mates = (f?.allies || []).filter((a) => a.look).slice(0, 3).map((a) => ({ name: a.name, look: a.look }));   // party members: drawn in their own gear
+    const mates = (f?.allies || []).filter((a) => a.look).slice(0, 7).map((a) => ({ name: a.name, look: a.look }));   // party members: drawn in their own gear
     const list = (f?.allies || []).map((a) => ({ kind: allyKind(a), name: a.name, look: a.look || (a.follower && typeof PARTY !== "undefined" && a.fid ? PARTY.followerLook(a.fid) : null) }));
     if (s?.thrall && !(f?.allies || []).some((a) => a.thrall)) list.push({ kind: "zombie", name: s.thrall.name });
     return { skin: SKIN[s?.race] || SKIN.nord, wt, shield: !!f?.shield, body, helm: !!f?.armor?.head, allies, mates, list, beast: !!s?.beastForm };
@@ -873,18 +873,25 @@ const FIGHTART = (() => {
       if (b && b.fx === "rune" && b.who === "me" && u > 0.4) rune(fx0, groundY, COL[b.el]?.[0] || "#ffb347", tt);
       if (b && b.fx === "summon" && b.who === "me" && u > 0.2) portal(hx0 + 46 * s, groundY, Math.min(1, (u - 0.2) * 3) * (u > 0.85 ? (1 - u) / 0.15 : 1), tt);
       // allies behind you: each kind has its own figure (allyFig); dragons fly overhead
-      const mateTags = [], alist = rec.hero.list || [], ground3 = alist.filter((a) => !FLYERS.has(a.kind)).slice(0, 3), flyers = alist.filter((a) => FLYERS.has(a.kind)).slice(0, 1);
-      const nGen = Math.max(0, Math.min(3, rec.hero.allies) - ground3.length - flyers.length);
-      const slots = [...ground3, ...Array.from({ length: Math.min(3 - ground3.length, nGen) }, () => ({ kind: "soldier" }))];
+      // up to 7 heroes stand with you (parties of 8): one line of 3, or two staggered lines when there are more
+      const ALLY_MAX = 7, mateTags = [], alist = rec.hero.list || [], groundL = alist.filter((a) => !FLYERS.has(a.kind)).slice(0, ALLY_MAX), flyers = alist.filter((a) => FLYERS.has(a.kind)).slice(0, 1);
+      const nGen = Math.max(0, Math.min(ALLY_MAX, rec.hero.allies) - groundL.length - flyers.length);
+      const slots = [...groundL, ...Array.from({ length: Math.min(ALLY_MAX - groundL.length, nGen) }, () => ({ kind: "soldier" }))];
       const allyLunge = b && b.who === "me" && b.ally && u > 0.5 && u < 0.85 ? Math.sin((u - 0.5) / 0.35 * Math.PI) : 0;
-      const backs = []; slots.forEach((a, i) => backs.push(i ? backs[i - 1] + ((ALLY_W[a.kind] || 20) + (ALLY_W[slots[i - 1].kind] || 20)) / 2 : 26));
-      const squeeze = backs.length ? Math.min(1, 76 / backs[backs.length - 1]) : 1;   // keep the whole line inside the scene
-      slots.forEach((a, i) => {
-        const ax = hx0 - (backs[i] * squeeze - allyLunge * 14) * s, ay = groundY + 2 - i * 2;
-        if (a.name && (a.kind === "mate" || a.kind === "follower" || a.kind === "valor" || a.kind === "dog")) mateTags.push([a.name, ax * z + ox + zcx - zcx * z, (ay - 66 * s) * z + oy + zcy - zcy * z]);
-        wg.save(); wg.translate(ax, ay); wg.scale(s, s); allyFig(wg, a.kind, { lunge: allyLunge, t: tt, i, look: a.look }); wg.restore();
-        const sp = SPARK[a.kind]; if (sp && Math.random() < 0.18 * pmul) spawn(sp[1], sp[0], ax + (Math.random() - 0.5) * 18 * s, ay + (sp[2] - Math.random() * 30) * s, (Math.random() - 0.5) * 14 * s, -20 * s, 0.7, 2.2, 0);
+      const two = slots.length > 3, frontN = two ? Math.ceil(slots.length / 2) : slots.length;
+      const rowsA = two ? [slots.slice(frontN), slots.slice(0, frontN)] : [slots];   // the back line is drawn first
+      rowsA.forEach((row, ri) => {
+        const back = two && ri === 0, crowd = slots.length > 5 ? 0.86 : 1, rs = (back ? 0.8 : 1) * crowd, lift = back ? 9 : 0;
+        const backs = []; row.forEach((a, i) => backs.push(i ? backs[i - 1] + ((ALLY_W[a.kind] || 20) + (ALLY_W[row[i - 1].kind] || 20)) / 2 * rs : 26 + (back ? 10 : 0)));
+        const squeeze = backs.length ? Math.min(1, (back ? 86 : 76) / backs[backs.length - 1]) : 1;   // keep the whole line inside the scene
+        row.forEach((a, i) => {
+          const ax = hx0 - (backs[i] * squeeze - allyLunge * 14) * s, ay = groundY + 2 - i * 2 - lift * s, sc2 = s * rs;
+          if (a.name && !two && (a.kind === "mate" || a.kind === "follower" || a.kind === "valor" || a.kind === "dog")) mateTags.push([a.name, ax * z + ox + zcx - zcx * z, (ay - 66 * sc2) * z + oy + zcy - zcy * z]);
+          wg.save(); wg.translate(ax, ay); wg.scale(sc2, sc2); if (back) wg.globalAlpha = 0.92; allyFig(wg, a.kind, { lunge: allyLunge, t: tt, i, look: a.look }); wg.restore();
+          const sp = SPARK[a.kind]; if (sp && Math.random() < (two ? 0.09 : 0.18) * pmul) spawn(sp[1], sp[0], ax + (Math.random() - 0.5) * 18 * s, ay + (sp[2] - Math.random() * 30) * s, (Math.random() - 0.5) * 14 * s, -20 * s, 0.7, 2.2, 0);
+        });
       });
+      if (two) { const named = slots.filter((a) => a.kind === "mate").length; mateTags.push([`⚑ ${named ? `${named} of your party` : `${slots.length} allies`} with you`, (hx0 - 50 * s) * z + ox + zcx - zcx * z, (groundY - 78 * s) * z + oy + zcy - zcy * z]); }   // a big party: one label instead of a pile of names
       for (const a of flyers) {   // a dragon circles above and dives in with fire when it strikes
         const cx = hx0 - 10 * s + Math.sin(tt * 0.5) * 30 * s + allyLunge * (fx0 - hx0) * 0.35, cy = groundY - (44 - allyLunge * 10) * s + Math.sin(tt * 1.3) * 4 * s;
         wg.save(); wg.translate(cx, cy); wg.scale(s, s); allyFig(wg, a.kind, { lunge: allyLunge, t: tt }); wg.restore();

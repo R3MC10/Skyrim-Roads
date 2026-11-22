@@ -141,6 +141,7 @@ const PFX = (() => {
     [ "Speechcraft", "silver_tongue", "Silver Tongue", 1, [20], [], "Prices are 5% better. [OURS]", [["price", 0.05, {}]]],
     [ "Speechcraft", "commanding_voice", "Commanding Voice", 1, [60], ["intimidation"], "Shouts cool down 15% faster. [OURS]", [["shoutcd", 0.15, {}]]],
     [ "Speechcraft", "inspiring", "Inspiring", 1, [40], ["persuasion"], "Your follower and party allies fight 15% harder. [OURS]", [["allies", 0.15, {}]]],
+    [ "Speechcraft", "leadership", "Leadership", 2, [50, 80], ["inspiring"], "Your follower learns from fights 25/50% faster and shrugs off 10/20% of the blows they take. [OURS]", [["folxp", 0.25, {}], ["foltaken", 0.1, {}]]],
     [ "Speechcraft", "talk_down", "Talk Down", 1, [50], ["bribery"], "Bribes and fines cost 25% less. [OURS]", [["bribe", 0.25, {}]]],
     [ "Speechcraft", "rally", "Rally", 1, [80], ["inspiring"], "Your follower and party allies fight another 15% harder. [OURS]", [["allies", 0.15, {}]]],
     [ "Speechcraft", "orator", "Orator", 1, [100], ["commanding_voice", "rally"], "Jobs pay 10% more and prices are 5% better. [OURS]", [["job", 0.1, {}], ["price", 0.05, {}]]],

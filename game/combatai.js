@@ -32,6 +32,7 @@ const COMBATAI = (() => {
     const n = f.allies.length; if (n) d *= 1 - n / (n + 1) * 0.7 * F.HIT_CHANCE;   // allies soak some blows
     if (f.ward && hasM() && MAGIC.isCaster(f)) d = Math.max(0, d - f.ward / 3);
     if (e.priest) d *= 1.3;   // dragon priests also cast
+    if (typeof FOEPERKS !== "undefined") d *= FOEPERKS.expect(e);   // their perks: power attacks, crits, dual casts
     return Math.max(0.01, d);
   }
   // ---- your weapon swing, on average

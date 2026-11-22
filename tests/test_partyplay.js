@@ -1,7 +1,6 @@
-const __GAME = process.env.W || require("path").join(__dirname, "../game/");
 // party play: the leader leads, ready checks, the leader decides on the road, shared spoils, dungeons that grow with the party (up to 8)
 const fs = require("fs"), vm = require("vm");
-const W = process.env.W || __GAME + "";
+const W = process.env.W || "/home/claude/web_m/";
 const c = { console, Math, Date, JSON, Float64Array, Float32Array, Uint8Array, Int32Array, Uint16Array, Int16Array, Object, Array, Set, Map, Proxy, Number, String };
 vm.createContext(c);
 for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "legendary.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "enchanting.js", "quests.js", "guilds.js", "priests.js", "horses.js", "horseback.js", "hall.js", "bounty.js", "visits.js", "cooking.js", "arena.js", "market.js", "smithing.js", "craftfair.js", "social.js", "ammo.js", "tomes.js", "magic.js", "combatai.js", "mp.js", "coop.js", "party.js", "partyplay.js", "lootvote.js"])
@@ -185,67 +184,70 @@ for (const n2 of [1, 2, 3, 4, 8]) for (let rep = 0; rep < 6; rep++) {
   OK(fightMates.length === 7, "7 fight beside you");
 }
 
-// ---- loot votes: pooled loot, Want/Pass, seeded d100 rolls, even gold split
+// ---- loot votes: shared pile, leader-only actions, Want/Pass, seeded d100 rolls, even gold split
 {
   const L = LOOTVOTE;
-  // the pool: finds are added once (the same key twice counts once)
-  let run = { id: "run-A-1", leader: "A", members: party3.members.map((m) => ({ ...m })), pool: null };
-  run = L.addToPool(run, "A", [{ item: "iron_sword", qty: 1 }], 40, "A|1|1");
-  run = L.addToPool(run, "B", [{ item: "steel_dagger", qty: 1 }, { item: "potion_health", qty: 2 }], 61, "B|1|1");
-  run = L.addToPool(run, "B", [{ item: "steel_dagger", qty: 1 }], 61, "B|1|1");
-  OK(run.pool.items.length === 3 && run.pool.gold === 101, "pool keeps each find once");
-  OK(run.pool.items.find((x) => x.item === "steel_dagger").by === "B", "pool remembers who found it");
-  // members can't pick rooms or act: the leader's acts are recorded for the others to follow
-  run = L.recordAct(run, 2, "fight"); run = L.recordAct(run, 2, "fight");
-  OK(run.acts[2].length === 2, "the leader's room actions are recorded per room");
+  let run = { id: "run-A-1", leader: "A", leaderName: "Alfa", members: party3.members.map((m) => ({ ...m })), path: [], rooms: [], pool: null, tier: 2, theme: "nordic" };
+  OK(L.partyRun(run) && !L.partyRun({ ...run, members: [run.members[0]] }), "2+ heroes: a party run");
+  run = L.poolAdd(run, [{ item: "iron_sword", qty: 1 }], 40);
+  run = L.poolAdd(run, [{ item: "potion_health", qty: 2 }, { item: "iron_dagger", qty: 1 }], 61);
+  run = L.poolAdd(run, [{ item: "potion_health", qty: 1 }], 0);
+  OK(run.pool.items.length === 3 && run.pool.gold === 101 && run.pool.items.find((x) => x.item === "potion_health").qty === 3, "the pile adds stacks, keeps gear apart, sums gold");
+  run = L.recordAct(run, 2, "fight"); run = L.recordAct(run, 2, "loot");
+  OK(run.acts[2].join() === "fight,loot", "the leader's room actions are recorded per room for the others");
   OK(!COOP.canPick(B, { ...run, path: [] }) && COOP.canPick({ id: "A", dungeon: { cstep: 0, room: null } }, { ...run, path: [] }), "only the leader picks rooms");
-  // gather/pull: what you found leaves your pack for the pile
-  const s = mk("Z", "Zed"); const before = L.snap(s); G.give(s, "steel_sword"); G.give(s, "potion_health", 3);
-  const got = L.gained(s, before);
-  OK(got.length === 2, "gained finds what you just picked up");
-  L.pullOut(s, got);
-  OK(JSON.stringify(L.snap(s)) === JSON.stringify(before), "pulled out of your pack again");
-  // a vote with 3 members
-  const t0 = 1000;
-  const items = [{ item: "iron_sword", qty: 1, by: "A" }, { item: "steel_dagger", qty: 1, by: "B" }, { item: "potion_health", qty: 2, by: "B" }, { item: "elven_bow", qty: 1, by: "C" }];
-  let v = L.newVote("dungeon", "vote-run-A-1", { leader: "A", leaderName: "Alfa", members: party3.members, items, gold: 101, place: "Bleak Falls Barrow" }, t0).doc;
-  v.id = "vote-run-A-1";
-  OK(!L.closed(v, t0 + 10), "open while voting");
-  v = L.cast(v, "A", [1, 3], t0 + 5); v = L.cast(v, "B", [1], t0 + 6);
-  OK(!L.closed(v, t0 + 10), "still open until everyone voted or time runs out");
-  v = L.cast(v, "C", [3, 2], t0 + 7);
-  OK(L.closed(v, t0 + 8), "closes when all voted");
-  const late = L.cast(v, "C", [0], t0 + 9); OK(late === v, "no changing votes after it closed");
-  const r = L.results(v);
-  OK(r.per[0].winner === "A" && r.per[0].why === "nobody", "nobody wanted it: the leader keeps it");
-  OK(r.per[2].winner === "C" && r.per[2].why === "only", "single want: theirs");
-  OK(r.per[1].why === "roll" && ["A", "B"].includes(r.per[1].winner) && r.per[1].rolls.length >= 1, "contested: rolled");
-  const top = r.per[1].rolls[r.per[1].rolls.length - 1]; OK(top.find((x) => x.uid === r.per[1].winner).roll === Math.max(...top.map((x) => x.roll)), "highest roll wins");
-  OK(JSON.stringify(L.results(JSON.parse(JSON.stringify(v)))) === JSON.stringify(r), "every phone gets the same result");
-  OK(r.gold.A === 35 && r.gold.B === 33 && r.gold.C === 33, "gold split evenly, the remainder to the leader");
-  // ties roll again: find a seed where the first round ties
+  // strip: what an action gave you leaves your pack for the pile (quest items stay)
+  const s = mk("Z", "Zed"); G.give(s, "potion_health", 1); const before = L.snap(s);
+  G.give(s, "steel_sword"); G.give(s, "potion_health", 3); s.gold += 25;
+  const got = L.strip(s, before);
+  OK(got.items.length === 2 && got.gold === 25 && got.items.find((x) => x.item === "potion_health").qty === 3, "strip finds new rows, bigger stacks and gold");
+  OK(s.inv.filter((r) => r.item === "steel_sword").length === 0 && s.inv.find((r) => r.item === "potion_health").qty === 1 && s.gold === before.gold, "and takes them back out");
+  // the boss chest: each killer's roll joins the pile once
+  run = { ...run, chest: { killers: ["A", "B"] } };
+  const g0 = run.pool.gold; run = L.chestToPool(run); const g1 = run.pool.gold;
+  OK(g1 > g0 && run.chestPooled, "the boss chest rolls go into the pile");
+  OK(L.chestToPool(run).pool.gold === g1, "only once");
+  // the vote
+  run = L.startRunVote(run, 1000);
+  let v = run.vote;
+  OK(v.members.join() === "A,B,C" && v.items.length === run.pool.items.length && v.ends === 1000 + L.VOTE_SECONDS, "the vote opens for everyone still in the run");
+  OK(L.startRunVote(run, 2000).vote === v, "opens once");
+  OK(!L.closed(v, 1010), "open while voting");
+  v = L.castVote(v, "A", [0, 1], 1005); v = L.castVote(v, "B", [1, 99], 1006);
+  OK(v.votes.B.join() === "1", "bad picks are dropped");
+  OK(!L.closed(v, 1010), "open until everyone voted or time is up");
+  v = L.castVote(v, "C", [1, 2], 1007);
+  OK(L.closed(v, 1011), "closes when all voted");
+  OK(L.castVote(v, "C", [0], 1012) === v, "no changing votes after it closed");
+  OK(L.castVote(L.startRunVote({ ...run, vote: null }, 1000).vote, "X", [0], 1001).votes.X === undefined, "outsiders can't vote");
+  const r = L.resolve(v, "run-A-1");
+  OK(r.items.A.some((x) => x.i === 0), "a single want: theirs");
+  const roll1 = r.rolls.find((x) => x.i === 1);
+  OK(roll1 && roll1.rounds[0].length === 3, "contested: everyone who wanted it rolls");
+  const last = roll1.rounds[roll1.rounds.length - 1]; OK(last.find((x) => x.m === roll1.winner).roll === Math.max(...last.map((x) => x.roll)), "highest roll wins");
+  OK(r.items[roll1.winner].some((x) => x.i === 1), "the winner gets it");
+  OK(v.items.filter((it) => !(v.votes.A || []).concat(v.votes.B || [], v.votes.C || []).includes(it.i)).every((it) => r.items.A.some((x) => x.i === it.i)), "nobody wanted it: the leader");
+  const total = Object.values(r.items).reduce((a, x) => a + x.length, 0);
+  OK(total === v.items.length, "every item goes to exactly one hero (no duplicates)");
+  OK(JSON.stringify(L.resolve(JSON.parse(JSON.stringify(v)), "run-A-1")) === JSON.stringify(r), "every phone gets the same result");
+  const gold = v.gold, each = Math.floor(gold / 3);
+  OK(r.gold.B === each && r.gold.C === each && r.gold.A === gold - 2 * each, "gold split evenly, the leftover to the leader");
+  // ties roll again
   let tieSeen = false;
-  for (let k = 0; k < 4000 && !tieSeen; k++) {
-    const vid = "tie" + k, a = L.d100(vid, 0, 0, "A"), b = L.d100(vid, 0, 0, "B");
-    if (a === b) { const vv = { ...v, id: vid, items: [{ item: "iron_sword", qty: 1, idx: 0 }], votes: { A: { wants: [0], sent: true }, B: { wants: [0], sent: true }, C: { wants: [], sent: true } } }; const rr = L.results(vv); tieSeen = rr.per[0].rolls.length >= 2 && rr.per[0].rolls[1].length === 2; }
-  }
-  OK(tieSeen, "a tie re-rolls between the tied players");
-  // claiming: once each, nothing twice
-  let cl = L.claim(v, "B", t0 + 20); OK(cl.got && cl.v.done.B, "B takes their share");
-  const again = L.claim(cl.v, "B", t0 + 21); OK(!again.got, "no second share");
-  OK(!L.claim(v, "X", t0 + 20).got, "outsiders get nothing");
-  OK(!L.claim(L.newVote("road", "v2", { leader: "A", leaderName: "Alfa", members: party3.members, items, gold: 0 }, t0).doc, "B", t0 + 1).got, "no claims while it's still open");
-  const hb = mk("B", "Beta"), g0 = hb.gold;
-  OK(L.give(hb, v.id, cl.got) && hb.gold === g0 + 33, "share delivered");
-  OK(!L.give(hb, v.id, cl.got), "the save remembers: never twice");
-  const all = party3.members.map((m) => L.mine(v, m.id)).flatMap((x) => x.items);
-  OK(all.length === items.length, "every item goes to exactly one player");
-  // default pass: time runs out
-  let v3 = L.newVote("road", "v3", { leader: "A", leaderName: "Alfa", members: party3.members, items: items.slice(0, 2), gold: 9 }, t0).doc; v3.id = "v3";
-  v3 = L.cast(v3, "B", [0], t0 + 1);
-  OK(L.closed(v3, t0 + L.VOTE_SECONDS + 1), "closes after 90 s");
-  OK(L.results(v3).per[0].winner === "B" && L.results(v3).per[1].winner === "A", "no answer counts as Pass");
-  OK(!L.poolable("golden_claw"), "quest items aren't pooled");
+  for (let k = 0; k < 5000 && !tieSeen; k++) { const seed = "tie" + k; if (L.d100(seed, 0, "A", 0) === L.d100(seed, 0, "B", 0)) { const vv = { ...v, items: [{ item: "iron_sword", qty: 1, i: 0 }], votes: { A: [0], B: [0], C: [] }, gold: 0 }; const rr = L.resolve(vv, seed); tieSeen = rr.rolls[0].rounds.length >= 2; } }
+  OK(tieSeen, "a tie rolls again");
+  // delivery: once only
+  const h = mk("B", "Beta"); const g0b = h.gold;
+  const d1 = L.deliver(h, r, "B", "run:run-A-1"), d2 = L.deliver(h, r, "B", "run:run-A-1");
+  OK(d1 && !d2 && h.gold === g0b + r.gold.B, "you take your part once");
+  OK(r.items.B.every((it) => h.inv.some((row) => row.item === it.item)), "your items land in your pack");
+  OK(L.markDone(L.markDone(v, "B"), "B").done.B === L.markDone(v, "B").done.B, "marked done once");
+  // 8 heroes, one contested item
+  const v8 = L.openVote({ items: [{ item: "elven_bow", qty: 1 }], gold: 803 }, ids, "A", 0);
+  let v8b = v8; for (const id of ids) v8b = L.castVote(v8b, id, [0], 1);
+  const r8 = L.resolve(v8b, "run-8");
+  OK(Object.values(r8.items).reduce((a, x) => a + x.length, 0) === 1 && r8.rolls[0].rounds[0].length === 8, "8 heroes roll for one bow");
+  OK(Object.values(r8.gold).reduce((a, x) => a + x, 0) === 803, "all the gold is handed out");
 }
 console.log("partyplay ok · " + n + " checks");
 `, c);
