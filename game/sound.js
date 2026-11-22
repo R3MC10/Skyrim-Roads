@@ -15,9 +15,10 @@
    back with variations, the odd horn call or choir; combat adds war drums. */
 const SOUND = (() => {
   const KEY = "rotn_sound";
-  let cfg = { music: 0.35, sfx: 0.6, amb: 0.5, mute: false };
+  let cfg = { music: 0.1, sfx: 0.1, amb: 0.1, mute: false };
   try { Object.assign(cfg, JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (e) { /* storage blocked */ }
   const saveCfg = () => { try { localStorage.setItem(KEY, JSON.stringify(cfg)); } catch (e) { /* ignore */ } };
+  if (!cfg.quiet10) { Object.assign(cfg, { music: 0.1, sfx: 0.1, amb: 0.1, quiet10: true }); saveCfg(); }   // one-time: everyone starts at 10%, then picks their own
 
   let ctx = null, out, master, musicBus, sfxBus, ambBus, verbIn, sends = {}, noiseBuf = null, gritCache = {};
   const hz = (midi) => 440 * Math.pow(2, (midi - 69) / 12);

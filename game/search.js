@@ -86,7 +86,7 @@ const SEARCH = (() => {
     ["All sound on or off", "Sound", "k:mute", "mute silence quiet"],
     ["Back up your character", "Your character", "a:bk", "save backup export copy"], ["Restore from a backup", "Your character", "a:bk", "load import"],
     ["Art style: hand-drawn or pixel art", "Look", "k:artStyle", "graphics ink pixel retro"], ["Motion and animations", "Look", "k:motion", "animation lite"],
-    ["Fights: turn by turn or instant", "Fights", "k:turnBased", "combat auto battle"], ["Foe turn speed", "Fights", "k:tbFast", "fast combat speed"],
+    ["Foe turn speed", "Fights", "k:tbFast", "fast combat speed"],
     ["Text size", "Accessibility", "k:a11yText", "font bigger zoom large"], ["Colour-blind help", "Accessibility", "k:a11yColour", "color blind protan deutan tritan"],
     ["High-contrast text", "Accessibility", "k:a11yContrast", "contrast"], ["Reduce motion", "Accessibility", "k:a11yMotion", "shake flash"],
     ["One-hand mode", "Accessibility", "k:a11yHand", "thumb left right hand"],

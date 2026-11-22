@@ -352,12 +352,20 @@ const TABMENU = (() => {
     if (sw.ctx !== "hub") return;
     const el = $("#tw"); if (!el) return;
     const ax = Math.abs(dx), ay = Math.abs(dy), d = Math.max(ax, ay) < 18 ? "" : ax > ay ? (dx < 0 ? "left" : "right") : (dy < 0 ? "up" : "down");
-    if (el.dataset.glow !== d) el.dataset.glow = d;
+    if (el.dataset.glow !== d) { el.dataset.glow = d; if (d) try { SOUND.fx("click"); navigator.vibrate?.(8); } catch { /* sound and buzz never break the game */ } }
     const k = Math.min(1, Math.max(ax, ay) / 90); el.style.setProperty("--pull", k.toFixed(2));
+    // the compass follows the finger, with a rubber-band give so it never leaves the screen
+    const band = (v) => Math.sign(v) * 70 * (1 - Math.exp(-Math.abs(v) / 110));
+    el.style.setProperty("--tx", band(dx).toFixed(1)); el.style.setProperty("--ty", band(dy).toFixed(1));
+  }
+  function letGo() {
+    const el = $("#tw"); if (!el) return;
+    el.classList.remove("drag"); el.dataset.glow = "";
+    for (const v of ["--pull", "--tx", "--ty"]) el.style.removeProperty(v);
   }
   function end(x, y) {
     const s = sw; sw = null; if (!s) return false;
-    const el = $("#tw"); if (el) { el.classList.remove("drag"); el.dataset.glow = ""; el.style.removeProperty("--pull"); }
+    letGo();
     const dx = x - s.x, dy = y - s.y;
     let d = swipeDir(dx, dy, Date.now() - s.t);
     if (!d) return s.ctx === "hub" && (s.far || 0) > 18;   // dragged on the compass and let go: no swipe, and no tap either
@@ -394,7 +402,7 @@ const TABMENU = (() => {
     document.addEventListener("touchstart", (e) => { if (e.touches.length === 1) { const t = e.touches[0]; begin(t.clientX, t.clientY, e.target); } else sw = null; }, { capture: true, passive: true });
     document.addEventListener("touchmove", (e) => { const t = e.touches[0]; if (t) move(t.clientX, t.clientY); }, { capture: true, passive: true });
     document.addEventListener("touchend", (e) => { const t = e.changedTouches[0]; if (t && end(t.clientX, t.clientY)) swallowClick(); }, { capture: true, passive: true });
-    document.addEventListener("touchcancel", () => { sw = null; const el = $("#tw"); if (el) { el.classList.remove("drag"); el.dataset.glow = ""; } }, { capture: true, passive: true });
+    document.addEventListener("touchcancel", () => { sw = null; letGo(); }, { capture: true, passive: true });
     // the Items/Magic menu's ✕
     document.addEventListener("click", (e) => { if (e.target.closest?.("[data-act=skyclose]")) setTimeout(menuClosed, 0); });
     // the Skills page's own taps (skill cards, stars, links)

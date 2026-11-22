@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b103", build: 103, date: "22 Nov 2026", title: "Draggable compass, no more Auto fights, quieter sound", items: [
+      "The gold compass menu now follows your finger or mouse as you drag it. It tilts toward where you pull, lights up the direction you're heading, gives a little click, and springs back when you let go.",
+      "Music, sound effects and background sounds now start at 10% volume for everyone. Turn them up any time in Settings.",
+      "Items you have equipped now show a gold diamond and a soft glow in the item list, so you can see at a glance what you're wearing.",
+      "Fights are always played by you now, turn by turn. The Auto buttons and the Instant fights setting are gone. In a party, if someone takes too long, their turn is still played for them so the fight keeps going.",
+    ] },
     { id: "b102", build: 102, date: "22 Nov 2026", title: "Quiet main menu", items: [
       "The main menu plays only its music now. The howling wind and other background noise there are gone.",
     ] },
