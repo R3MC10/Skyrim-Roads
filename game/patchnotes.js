@@ -3,6 +3,10 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b101", build: 101, date: "22 Nov 2026", title: "PC version updates itself", items: [
+      "The PC version (installed with the setup file) now keeps itself up to date: it grabs new versions in the background and installs them when you close the game, or right away if you pick Restart now.",
+      "Install this version once by hand; after that, updates come by themselves. The portable PC file still needs a fresh download for each update.",
+    ] },
     { id: "b100", build: 100, date: "22 Nov 2026", title: "A real soundtrack", items: [
       "New music! 16 full pieces replace the old beeping tunes: the main menu, the open road, towns, snowy weather, dungeons, fights and boss fights each have their own.",
       "When one piece ends, another of the same kind starts, so it doesn't loop the same song forever. The music slider and mute in Settings work as before.",

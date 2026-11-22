@@ -87,6 +87,7 @@ jobs:
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
         run: |
+          npm pkg set version=1.0.${{ github.run_number }}
           npm install --no-audit --no-fund
           npx electron-builder --win portable nsis --publish never
           dir dist
@@ -97,3 +98,5 @@ jobs:
           files: |
             desktop/dist/RoadsOfTheNorth-PC-setup.exe
             desktop/dist/RoadsOfTheNorth-PC-portable.exe
+            desktop/dist/RoadsOfTheNorth-PC-setup.exe.blockmap
+            desktop/dist/latest.yml
