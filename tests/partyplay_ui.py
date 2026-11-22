@@ -14,7 +14,7 @@ def check(name, cond, extra=""):
 
 async def main():
     async with async_playwright() as p:
-        b = await p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-sandbox"])
+        b = await p.chromium.launch(executable_path=__import__("os").environ.get("CHROME") or ("/usr/bin/google-chrome" if __import__("os").path.exists("/usr/bin/google-chrome") else None), args=["--no-sandbox"])
         errs = []
         for style in ["ink", "pixel"]:
             ctx = await b.new_context(viewport={"width": 412, "height": 915}, device_scale_factor=2)
@@ -51,6 +51,7 @@ async def main():
             check(f"[{style}] leader sees the ready card", card is not None)
             # members get the Ready prompt
             gotb = False
+            await B.bring_to_front()   # background tabs only tick now and then on some machines
             for _ in range(10):
                 await B.evaluate("() => document.querySelectorAll('#modal').forEach(m => { if (!m.querySelector('[data-act=ppready]')) m.remove(); })")   # a quest popup first: the prompt waits for it
                 await B.wait_for_timeout(1100)
@@ -243,6 +244,10 @@ async def main():
                 document.querySelector('#dun')?.remove(); G.startTrip(S, 'Riverwood', WORLD.places.Riverwood.slice(0, 2)); const base = D.ENCOUNTERS.find(e => e.name === 'Bandit outlaw') || D.ENCOUNTERS[0];
                 S.trip.status = 'encounter'; S.trip.encounter = { ...G.scaleEnemy(base, S.level), hold: 'Whiterun', danger: base.danger }; }""")
             await clean(A); await A.evaluate("() => document.querySelector('#dun')?.remove()"); await A.evaluate("() => document.querySelector('.tabs [data-tab=map], [data-tab=map]')?.click()"); await A.wait_for_timeout(300)
+            await A.bring_to_front()   # background tabs only tick now and then on some machines
+            for _ in range(20):   # the road bar redraws on the next tick
+                if await A.evaluate("() => !!document.querySelector('[data-act=openenc]')"): break
+                await A.wait_for_timeout(250)
             await A.evaluate("() => document.querySelectorAll('#modal').forEach(m => m.remove())"); await A.evaluate("() => document.querySelector('[data-act=openenc]')?.click()")
             await A.wait_for_timeout(300); await A.evaluate("() => document.querySelector('[data-act=enc][data-a=fight]')?.click()"); await A.wait_for_timeout(1200)
             sc = await A.query_selector("#modal .fscene")

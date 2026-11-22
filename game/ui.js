@@ -969,7 +969,7 @@
     const evBefore = S.trip?.event, gold0 = S.gold, lvBefore = lvUI && ppUI ? LOOTVOTE.snap(S) : null;
     const r = typeof ENC !== "undefined" ? ENC.decide(S, c) : G.eventChoice(S, c);
     if (r.blocked) return toast(r.text);
-    if (lvBefore && !r.died) { const mates = ppUI.mates(); if (mates.length) { const vb = { ...lvBefore, gold: S.gold }; const got = LOOTVOTE.strip(S, vb); if (got.items.length) { const id = `lv-${S.id}-${Math.floor(G.now() * 1000)}`; Store.put("lvotes", id, { ...LOOTVOTE.openVote(LOOTVOTE.addTo(null, got.items, 0), [S.id, ...mates], S.id), what: evBefore?.name || "the road", byName: S.name }); r.text = `${r.text || ""} The party votes on: ${got.items.map((x) => D.ITEMS[x.item]?.name || x.item).join(", ")}.`.trim(); } } }
+    if (lvBefore && !r.died) { const rv = LOOTVOTE.roadVote(S, lvBefore, ppUI.mates(), evBefore?.name); if (rv) { Store.put("lvotes", rv.id, rv.doc); r.text = `${r.text || ""} ${rv.text}`.trim(); } }   // the party votes on the leader's road finds
     if (ppUI && S.gold > gold0) { const sp = ppUI.splitGold(S.gold - gold0, "the road"); if (sp) r.text = `${r.text || ""} ${sp}`.trim(); }
     if (ppUI && S.trip?.status !== "event") ppUI.leaderResolved(r.text || (c === "leave" ? "moves on" : ""));
     if (r.bag) Store.addBag(r.bag);

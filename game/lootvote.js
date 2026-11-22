@@ -4,9 +4,11 @@
    At the end each member votes Want / Pass on every item. One wanter takes it; several roll a d100 (the same roll on every
    phone, seeded by run + item + hero), highest wins and ties roll again; nobody wants it → the leader. Gold is split evenly
    among everyone still in the run (any leftover coins go to the leader).
-   Road encounters in a party work the same way for items (gold is already split by partyplay.js). */
+   Road encounters in a party work the same way for items (gold is already split by partyplay.js).
+   Perk: Lucky Draw (Lockpicking) adds +5/+10 to your d100 rolls; the bonus is written into the vote with your choice, so
+   every phone still works out the same winner. Parties hold up to 8 heroes; followers never vote. */
 const LOOTVOTE = (() => {
-  const VOTE_SECONDS = 90;
+  const VOTE_SECONDS = 90, MAX_HEROES = 8, MAX_BONUS = 10;
   const STACK = new Set(["potion", "scroll", "soulgem", "tome", "ingredient", "trophy", "poison", "material", "food", "valuable", "ammo"]);
   function hash(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
   const mix = (h) => { h ^= h >>> 16; h = Math.imul(h, 0x85ebca6b); h ^= h >>> 13; h = Math.imul(h, 0xc2b2ae35); h ^= h >>> 16; return h >>> 0; };
@@ -46,12 +48,17 @@ const LOOTVOTE = (() => {
 
   // ---- the vote record (lives on the run, or on its own for road loot)
   function openVote(pile, members, leader, t = now()) {
-    return { t, ends: t + VOTE_SECONDS, items: (pile?.items || []).map((r, i) => ({ ...r, i })), gold: pile?.gold || 0, members: [...members], leader, votes: {}, done: {} };
+    const ms = [...new Set(members)].slice(0, MAX_HEROES);
+    if (leader && !ms.includes(leader) && members.includes(leader)) ms[ms.length - 1] = leader;
+    return { t, ends: t + VOTE_SECONDS, items: (pile?.items || []).map((r, i) => ({ ...r, i })), gold: pile?.gold || 0, members: ms, leader, votes: {}, bonus: {}, done: {} };
   }
-  /* inside Store.change: a member's wants (indices of items) */
-  function castVote(vote, uid, wants, t = now()) {
+  /* your roll bonus from perks (Lucky Draw) */
+  const rollBonus = (s) => (typeof PFX !== "undefined" && s ? Math.max(0, Math.min(MAX_BONUS, Math.round(PFX.num(s, "lootroll")))) : 0);
+  /* inside Store.change: a member's wants (indices of items), and their roll bonus */
+  function castVote(vote, uid, wants, t = now(), bonus = 0) {
     if (!vote || !vote.members.includes(uid) || closed(vote, t)) return vote;
-    return { ...vote, votes: { ...vote.votes, [uid]: [...new Set((wants || []).filter((i) => Number.isInteger(i) && i >= 0 && i < vote.items.length))] } };
+    const b = Math.max(0, Math.min(MAX_BONUS, Math.round(+bonus || 0)));
+    return { ...vote, votes: { ...vote.votes, [uid]: [...new Set((wants || []).filter((i) => Number.isInteger(i) && i >= 0 && i < vote.items.length))] }, bonus: { ...(vote.bonus || {}), [uid]: b } };
   }
   const closed = (vote, t = now()) => !!vote && (t >= vote.ends || vote.members.every((m) => vote.votes[m]));
   /* who gets what: the same answer on every phone */
@@ -66,10 +73,10 @@ const LOOTVOTE = (() => {
       else {
         let pool = want, round = 0, rounds = [];
         while (pool.length > 1 && round < 20) {
-          const rs = pool.map((m) => ({ m, roll: d100(seed, i, m, round) }));
+          const rs = pool.map((m) => { const roll = d100(seed, i, m, round), plus = Math.max(0, Math.min(MAX_BONUS, vote.bonus?.[m] || 0)); return { m, roll, plus, total: roll + plus }; });
           rounds.push(rs);
-          const top = Math.max(...rs.map((r) => r.roll));
-          pool = rs.filter((r) => r.roll === top).map((r) => r.m);
+          const top = Math.max(...rs.map((r) => r.total));
+          pool = rs.filter((r) => r.total === top).map((r) => r.m);
           round++;
         }
         winner = pool[0];
@@ -101,6 +108,15 @@ const LOOTVOTE = (() => {
     return { items: mine, gold };
   }
 
+  /* road loot: what one action gave the leader leaves their pack and becomes a vote doc for the travelling party */
+  function roadVote(s, before, mateIds, what, t = now()) {
+    if (!mateIds?.length) return null;
+    const got = strip(s, { ...before, gold: s.gold });   // gold stays: partyplay.js splits it
+    if (!got.items.length) return null;
+    const vote = openVote(addTo(null, got.items, 0), [s.id, ...mateIds], s.id, t);
+    return { id: `lv-${s.id}-${Math.floor(t * 1000)}`, doc: { ...vote, what: what || "the road", byName: s.name }, text: `The party votes on: ${got.items.map((x) => D.ITEMS[x.item]?.name || x.item).join(", ")}.` };
+  }
+
   // ---- a party dungeon run: the shared pile and the leader's actions on the run record
   function poolAdd(run, items, gold) { return { ...run, pool: addTo(run.pool, items, gold) }; }
   function recordAct(run, step, c) { const acts = { ...(run.acts || {}) }; acts[step] = [...(acts[step] || []), c]; return { ...run, acts }; }
@@ -108,11 +124,11 @@ const LOOTVOTE = (() => {
     if (run.vote) return run;
     return { ...run, vote: openVote(run.pool, act(run).map((m) => m.id), run.leader, t) };
   }
-  /* the boss chest: every hero who beat the boss adds their roll to the pile, once */
+  /* the boss chest: every hero in the run (the leader fought the boss for all of them) adds their roll to the pile, once */
   function chestToPool(run) {
     if (!run.chest || run.chestPooled) return run;
     let pile = run.pool;
-    for (const uid of run.chest.killers || []) { const r = COOP.roll(run, uid, 1); pile = addTo(pile, r.items.map((item) => ({ item, qty: 1 })), r.gold); }
+    for (const uid of [...new Set([...(run.chest.killers || []), ...act(run).map((m) => m.id)])]) { const r = COOP.roll(run, uid, 1); pile = addTo(pile, r.items.map((item) => ({ item, qty: 1 })), r.gold); }
     return { ...run, pool: pile, chestPooled: true };
   }
 
@@ -173,19 +189,6 @@ const LOOTVOTE = (() => {
       await Store.change("runs", r.id, (x) => startRunVote(chestToPool(x)));
     }
 
-    // -- road loot: the leader's finds when the party travels together
-    async function roadLoot(beforeSnap, memberIds, what) {
-      const s = S();
-      if (!memberIds?.length) return null;
-      const got = strip(s, beforeSnap);
-      s.gold += got.gold;   // gold is split by partyplay.js; only items go to the vote
-      if (!got.items.length) return null;
-      const id = `lv-${s.id}-${Math.floor(now() * 1000)}`;
-      const vote = openVote(addTo(null, got.items, 0), [s.id, ...memberIds], s.id);
-      await Store.put("lvotes", id, { ...vote, what: what || "the road", byName: s.name });
-      ctx.persist(true);
-      return `The party votes on: ${got.items.map((x) => D.ITEMS[x.item]?.name || x.item).join(", ")}.`;
-    }
     function onVotes(docs) {
       lvotes = docs.filter((v) => v.members?.includes(S().id));
       for (const v of lvotes) showVote(v, `lv:${v.id}`, null, v.id);
@@ -204,7 +207,7 @@ const LOOTVOTE = (() => {
           ${mine ? `<b class="lv-tag">${want ? "Want" : "Pass"}</b>` : `<button class="btn sm ${want ? "pri" : ""}" data-act="lvpick" data-k="${esc(key)}" data-i="${it.i}">${want ? "✔ Want" : "Want"}</button>`}</div>`;
       }).join("") || '<p class="sub">No items this time.</p>';
       const n = v.members.length, each = Math.floor((v.gold || 0) / n);
-      return `<h2>🎲 Party loot</h2><p class="sub">${v.what ? `From ${esc(v.what)}. ` : ""}Tap <b>Want</b> on what you'd like. One person wanting it takes it; if several want it, everyone rolls a d100 and the highest wins. Nobody wants it: it goes to the leader.</p>
+      return `<h2>🎲 Party loot</h2><p class="sub">${v.what ? `From ${esc(v.what)}. ` : ""}Tap <b>Want</b> on what you'd like. One person wanting it takes it; if several want it, everyone rolls a d100 and the highest wins. Nobody wants it: it goes to the leader.${rollBonus(s) ? ` <b>Lucky Draw:</b> +${rollBonus(s)} on your rolls.` : ""}</p>
         ${v.gold ? `<p class="lv-gold">💰 ${v.gold} gold, split evenly: ${each} each${v.gold - each * n ? ` (+${v.gold - each * n} to the leader)` : ""}.</p>` : ""}
         <div class="lv-list">${rows}</div>
         <p class="sub lv-timer">${mine ? `Your vote is in. Waiting for ${v.members.filter((m) => !v.votes?.[m]).length} more…` : `${left}s left · no vote counts as Pass`}</p>
@@ -215,7 +218,7 @@ const LOOTVOTE = (() => {
       const lines = v.items.map((it) => {
         const roll = res.rolls.find((r) => r.i === it.i), winner = Object.keys(res.items).find((m) => res.items[m].some((x) => x.i === it.i));
         const nm = D.ITEMS[it.item]?.name || it.item;
-        const dice = roll ? `<span class="lv-dice">${roll.rounds.map((rs) => rs.map((r) => `<i class="die" style="--n:${r.roll}">${r.roll}</i><small>${esc(name(r.m))}</small>`).join(" ")).join(' <em>tie, again:</em> ')}</span>` : "";
+        const dice = roll ? `<span class="lv-dice">${roll.rounds.map((rs) => rs.map((r) => `<i class="die" style="--n:${r.roll}">${r.roll}</i>${r.plus ? `<b class="plus">+${r.plus}</b>` : ""}<small>${esc(name(r.m))}</small>`).join(" ")).join(' <em>tie, again:</em> ')}</span>` : "";
         return `<div class="lv-row ${winner === s.id ? "won" : ""}"><span class="nm">${it.qty > 1 ? `${it.qty}× ` : ""}${esc(nm)} → <b>${esc(name(winner))}</b></span>${dice}</div>`;
       }).join("");
       return `<h2>🎲 Loot shared out</h2>${v.gold ? `<p class="lv-gold">💰 Your gold: ${res.gold[s.id] || 0}</p>` : ""}<div class="lv-list">${lines || '<p class="sub">No items.</p>'}</div><button class="btn pri" data-act="close" style="width:100%">Continue</button>`;
@@ -255,8 +258,9 @@ const LOOTVOTE = (() => {
         ctx.openModal(voteHTML(c.v, key), "lv");
       } else if (a === "lvsend") {
         const wants = [...(picks[key] || [])], s = S();
-        if (c.runId) await Store.change("runs", c.runId, (x) => (x.vote ? { ...x, vote: castVote(x.vote, s.id, wants) } : x));
-        else await Store.change("lvotes", c.voteId, (x) => castVote(x, s.id, wants));
+        const plus = rollBonus(s);
+        if (c.runId) await Store.change("runs", c.runId, (x) => (x.vote ? { ...x, vote: castVote(x.vote, s.id, wants, now(), plus) } : x));
+        else await Store.change("lvotes", c.voteId, (x) => castVote(x, s.id, wants, now(), plus));
         toast(wants.length ? `Vote sent: you want ${wants.length} item${wants.length > 1 ? "s" : ""}.` : "Vote sent: you pass on everything.");
         ctx.closeModal();
       }
@@ -268,8 +272,8 @@ const LOOTVOTE = (() => {
       for (const v of lvotes) showVote(v, `lv:${v.id}`, null, v.id);
       const m = document.querySelector("#modal .lv-timer"); if (m && shown) { const c = cur(shown); if (c && !c.v.votes?.[S().id]) m.textContent = `${Math.max(0, Math.ceil(c.v.ends - now()))}s left · no vote counts as Pass`; }
     }
-    return { memberLocked, lockedHTML, aroundAct, follow, onRuns, leaderLeaving, roadLoot, onVotes, act, tick, snap: () => snap(S()) };
+    return { memberLocked, lockedHTML, aroundAct, follow, onRuns, leaderLeaving, onVotes, act, tick, snap: () => snap(S()) };
   }
 
-  return { VOTE_SECONDS, partyRun, snap, strip, addTo, pileSize, openVote, castVote, closed, resolve, markDone, deliver, poolAdd, recordAct, startRunVote, chestToPool, d100, ui };
+  return { VOTE_SECONDS, MAX_HEROES, partyRun, rollBonus, roadVote, snap, strip, addTo, pileSize, openVote, castVote, closed, resolve, markDone, deliver, poolAdd, recordAct, startRunVote, chestToPool, d100, ui };
 })();

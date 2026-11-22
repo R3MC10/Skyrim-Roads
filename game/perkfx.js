@@ -122,9 +122,10 @@ const PFX = (() => {
     [ "Sneak", "shadow_dancer", "Shadow Dancer", 1, [60], ["backstab"], "Sneak attacks with any weapon do 25% more. [OURS]", [["out", 0.25, { sneak: 1 }]]],
     [ "Sneak", "assassins_mark", "Assassin's Mark", 1, [80], ["assassins_blade"], "A sneak attack that leaves the foe below 20% health finishes it. [OURS]", [["sneakexec", 0.2, {}]]],
     [ "Sneak", "vanish", "Vanish", 1, [90], ["shadow_warrior"], "After a foe misses you, 15% chance to slip back into hiding: your next hit is a sneak attack. [OURS]", [["vanish", 0.15, {}]]],
-    // ---------------------------------------------------------------- Lockpicking (8 → 10)
+    // ---------------------------------------------------------------- Lockpicking (8 → 11)
     [ "Lockpicking", "quick_hands", "Quick Hands", 1, [40], ["apprentice_locks"], "Every lock is 10% easier. [Skyrim: picking isn't noticed]", [["lock", 0.1, {}]]],
     [ "Lockpicking", "wax_key", "Wax Key", 1, [50], ["quick_hands"], "Chests give 25% more gold. [Skyrim: copy keys]", [["gold", 0.25, {}]]],
+    [ "Lockpicking", "lucky_draw", "Lucky Draw", 2, [60, 90], ["golden_touch"], "In a party loot vote, add 5/10 to your d100 rolls for the things you want. [OURS]", [["lootroll", 5, {}]]],
     // ---------------------------------------------------------------- Pickpocket (5 → 9)
     [ "Pickpocket", "keymaster", "Keymaster", 1, [60], ["cutpurse"], "Pickpocketing is another 10% easier. [Skyrim: steal keys]", [["pick", 0.1, {}]]],
     [ "Pickpocket", "poisoned", "Poisoned", 1, [70], ["misdirection"], "Your weapon poisons hit 25% harder. [Skyrim: reverse-pickpocket poisons]", [["poison", 0.25, {}]]],

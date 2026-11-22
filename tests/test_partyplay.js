@@ -248,6 +248,25 @@ for (const n2 of [1, 2, 3, 4, 8]) for (let rep = 0; rep < 6; rep++) {
   const r8 = L.resolve(v8b, "run-8");
   OK(Object.values(r8.items).reduce((a, x) => a + x.length, 0) === 1 && r8.rolls[0].rounds[0].length === 8, "8 heroes roll for one bow");
   OK(Object.values(r8.gold).reduce((a, x) => a + x, 0) === 803, "all the gold is handed out");
+  OK(L.openVote({ items: [], gold: 0 }, [...ids, "N1", "N2"], "A", 0).members.length === 8, "never more than 8 heroes in a vote");
+  // the boss chest pays a roll for every hero still in the run, even ones whose own boss fight came later
+  const cr = L.chestToPool({ ...run, pool: null, chestPooled: false, chest: { killers: ["A"] } });
+  const crA = L.chestToPool({ ...run, members: [run.members[0]], pool: null, chestPooled: false, chest: { killers: ["A"] } });
+  OK(cr.pool.gold > crA.pool.gold, "three heroes: three chest rolls in the pile");
+  // Lucky Draw (Lockpicking perk): +5/+10 on your rolls, written into the vote so every phone agrees
+  const lucky = mk("L", "Lucky"); lucky.perks = { ...(lucky.perks || {}), lucky_draw: 2 };
+  OK(L.rollBonus(lucky) === 10 && L.rollBonus(mk("U", "Unlucky")) === 0, "Lucky Draw gives +10 at rank 2");
+  let vb = L.openVote({ items: [{ item: "elven_bow", qty: 1 }], gold: 0 }, ["A", "B"], "A", 0);
+  vb = L.castVote(vb, "A", [0], 1, 10); vb = L.castVote(vb, "B", [0], 1, 99);
+  OK(vb.bonus.A === 10 && vb.bonus.B === 10, "the bonus is capped at 10");
+  let edge = false;
+  for (let k = 0; k < 3000 && !edge; k++) { const seed = "luck" + k, ra = L.d100(seed, 0, "A", 0), rb = L.d100(seed, 0, "B", 0); if (rb > ra && rb - ra < 10) { const v2 = L.castVote(L.castVote(L.openVote({ items: [{ item: "elven_bow", qty: 1 }], gold: 0 }, ["A", "B"], "A", 0), "A", [0], 1, 10), "B", [0], 1, 0); const rr = L.resolve(v2, seed); edge = rr.items.A.length === 1 && rr.rolls[0].rounds[0].find((x) => x.m === "A").plus === 10; } }
+  OK(edge, "a lower roll plus Lucky Draw can win");
+  // road loot: the leader's finds become a vote for the travelling party (gold stays for partyplay's split)
+  const rl = mk("A", "Alfa"); const rb0 = L.snap(rl); G.give(rl, "steel_sword"); rl.gold += 50;
+  const rv = L.roadVote(rl, rb0, ["B", "C"], "a bandit camp", 500);
+  OK(rv && rv.doc.members.join() === "A,B,C" && rv.doc.items.length === 1 && rl.gold === rb0.gold + 50 && !rl.inv.some((x) => x.item === "steel_sword"), "road finds go to a party vote, gold stays to be split");
+  OK(L.roadVote(rl, L.snap(rl), [], "x") === null, "no party travelling: nothing to vote on");
 }
 console.log("partyplay ok · " + n + " checks");
 `, c);

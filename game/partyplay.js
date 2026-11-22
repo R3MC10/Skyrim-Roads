@@ -135,7 +135,7 @@ const PARTYPLAY = (() => {
     const { S, party, toast, esc, Store } = ctx;
     bound = { party, S };
     if (typeof ENC !== "undefined") ENC.canDecide = (st) => canDecide(st || S());   // road encounters: only the leader (or someone not following) chooses
-    let seenCheck = null, seenModal = null, seenHalt = null, departed = null, lastHaltText = "";
+    let seenCheck = null, seenHalt = null, departed = null, lastHaltText = "";
 
     const me = () => S();
     const leaderCard = (p) => (p && p.leader !== me().id ? ctx.cardOf(p.leader) : null);
@@ -231,11 +231,12 @@ const PARTYPLAY = (() => {
       }
       ctx.bump();
     }
-    /* the Ready prompt, once per check, as soon as no other window is in the way */
+    /* the Ready prompt, as soon as no other window is in the way. It only has Ready / Not yet, so if another popup
+       pushed it away before you answered, it comes back once that popup is closed. */
     function promptReady(p) {
       const s = me(), rc = p?.ready;
-      if (!rc || !rc.who.includes(s.id) || rc.ok[s.id] || rc.no?.[s.id] || seenModal === rc.id || ctx.modalOpen()) return;
-      seenModal = rc.id; ctx.openModal(readyModal(p));
+      if (!rc || !rc.who.includes(s.id) || rc.ok[s.id] || rc.no?.[s.id] || ctx.modalOpen()) return;
+      ctx.openModal(readyModal(p));
     }
     function resumeFollowing(p) {
       const s = me(), tr = s.trip;
