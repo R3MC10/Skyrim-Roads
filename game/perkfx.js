@@ -199,6 +199,11 @@ const PFX = (() => {
     [ "Speechcraft", "smooth_talker", "Smooth Talker", 1, [30], ["persuasion"], "On the road, bluffs, threats and haggling are 10% more likely to work. [OURS]", [["enctalk", 0.1, {}]]],
     [ "Streetwise", "road_wise", "Road Wise", 1, [30], ["rumour_monger"], "On the road, sneaking past trouble is 10% easier, tolls and bribes cost 20% less, and you read an ambush before it springs more often. [OURS]", [["road", 0.1, {}], ["roadbribe", 0.2, {}]]],
     [ "Athletics", "pathfinder", "Pathfinder", 1, [40], ["long_strider"], "On the road, outrunning trouble, dodging avalanches and taming wild horses is 15% easier. [OURS]", [["roadrun", 0.15, {}]]],
+    // ---------------------------------------------------------------- homesteads (homestead.js)
+    [ "Smithing", "carpenter", "Carpenter", 1, [30], ["steel_smithing"], "Building at your homestead takes 25% fewer materials. [OURS, from Hearthfire]", [["hsmats", 0.25, {}]]],
+    [ "Athletics", "woodsman", "Woodsman", 1, [30], ["long_strider"], "The sawmill, quarry and clay pit at your homestead give 50% more. [OURS]", [["hsyield", 0.5, {}]]],
+    [ "Etiquette", "landed_thane", "Landed Thane", 1, [40], ["courtly_manners"], "Homestead deeds and stewards cost 25% less. [OURS]", [["hsdeed", 0.25, {}]]],
+    [ "Mercantile", "estate_income", "Estate Income", 1, [50], ["haggling"], "Every wing of your homesteads brings in 15 gold a day (collect it there). [OURS]", [["hsrent", 15, {}]]],
   ];
   const FX = {};
   if (typeof PERKS !== "undefined") {

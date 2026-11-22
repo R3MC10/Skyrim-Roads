@@ -1187,6 +1187,21 @@ h3[class*="cat-"]{color:var(--cat)}
 .gearprev figcaption{font-size:11px;color:var(--muted,#b8ab90);margin-top:2px}
 .gearprev img{border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.35)}
 .pgear{flex:0 0 auto;margin-right:6px;border-radius:6px;overflow:hidden;line-height:0}
+
+/* [homestead] Hearthfire-style homesteads (homestead.js) */
+.hs img.art.scene.hsart{margin:2px 0 8px}
+.chips.hstabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;gap:0;margin:0 0 6px;border-top:1px solid var(--sk-line,rgba(236,232,222,.15));border-bottom:1px solid var(--sk-line,rgba(236,232,222,.15))}
+.chips.hstabs::-webkit-scrollbar{display:none}.chips.hstabs .chip{flex:1 0 auto;min-height:40px;border:0;background:transparent;text-transform:uppercase;letter-spacing:.06em;font-size:13px;color:#bdb7a9}
+.chips.hstabs .chip.on{color:#fff;background:radial-gradient(60% 100% at 50% 50%,rgba(255,255,255,.14),transparent 75%);text-shadow:0 0 10px rgba(255,255,255,.4)}
+.hs .hsh{margin:12px 0 4px;font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:#e2d6b8;border-bottom:1px solid rgba(214,178,94,.3);padding-bottom:3px}
+.hs .hsrow{align-items:flex-start}.hs .hsrow .t{min-width:0;flex:1}.hs .hsrow.locked{opacity:.62}.hs .hsrow.on .t{color:#cfe8b0}
+.hs img.hsthumb{flex:none;border-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.hsmats,.hsstock{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.hsm{font-size:12px;line-height:1;padding:4px 6px;border-radius:3px;background:rgba(255,255,255,.06);border:1px solid rgba(236,232,222,.12);white-space:nowrap}
+.hsm.ok{color:#bfe3a0;border-color:rgba(150,200,120,.35)}.hsm.no{color:#f0a08a;border-color:rgba(228,110,90,.35)}
+.hsstock .hsm{flex:1 1 30%;display:flex;gap:4px;align-items:baseline}.hsstock .hsm small{opacity:.7;overflow:hidden;text-overflow:ellipsis}
+.hs .hswhy{display:block;color:#e2bb64;font-size:12px}.hs .hsready{color:#9affc0}.hs .hsbtns{display:flex;gap:4px;flex:none}
+.hs .hscard .btn.pri{margin-top:6px;min-height:44px}.hs .hsother{opacity:.8}
 </style>
 </head>
 <body>
@@ -1245,6 +1260,7 @@ h3[class*="cat-"]{color:var(--cat)}
 <script src="patchnotes.js"></script>
 <script src="market.js"></script>
 <script src="halls.js"></script>
+<script src="homestead.js"></script>
 <script src="mp.js"></script>
 <script src="coop.js"></script>
 <script src="party.js"></script>

@@ -63,6 +63,7 @@ our own marked [OURS]; plain-language UI; phone first.
 
 ## In progress (write your name before you start)
 - Claude (Remigiusz): turn-based combat, AI settings/tactics editor, gear visuals, party+followers merge, art from ChatGPT, menu simplification.
+- Claude (homesteads branch): buildable homesteads (homestead.js): three plots, stages and wings, sawmill/quarry, steward, homestead perks.
 - Kacper: (add here)
 
 ## Standing rules
