@@ -5,6 +5,8 @@ Each round: build one batch, test it (Node sims in /home/claude/tests + headless
 our own marked [OURS]; plain-language UI; phone first.
 
 ## Done
+- Round 45 (builds 89-95): quality of life: reminders & badges, search everywhere, 7-tab menus (Character/Items/Magic/Map/Journal/Social/Town), "what to do next" ideas + first-time tips, recent trips + faster replays, crafting ×5/Max/favourites (+ fixed alchemy/enchant mini-game bonuses), inventory Keep/Sell junk/compare arrows/sort/drop/buy back.
+  Known: Town Services chips and Items name column are cramped at Biggest text on 360px; brand-new players see world-event toasts right away.
 - Round 44 (builds 78-88): gear visuals for every armour set/weapon (seen by others, gear preview, idle/walk); turn-by-turn fights (initiative, action points, Auto, party turns, Settings → Fights); adjustable Smart AI + tactics editor (AND/OR rules, presets, share codes, Hybrid) and fairer sneak attacks; Hearthfire-style homesteads; living world (rumours that come true, towns react, name per hold, knocking at night); server-wide world events (Daedric invasions, dragon migrations, festival weeks, Khajiit grand caravan); accessibility (text size, colour-blind modes, high contrast, reduce motion, one-hand mode); sound.js plays recorded files when present (none yet: ElevenLabs out of credits, scripts/gen_audio.mjs ready).
 - Round 43: party play and followers. Exact map from the game data; parties of up to 8 with a leader, Ready checks, travelling together, the leader stops and decides, road gold split evenly; party dungeons (leader-only choices, shared loot pile, end-of-dungeon Want/Pass vote with d100 rolls, gold split evenly, longer dungeons for bigger parties); Lucky Draw perk. Followers with their own gear, levels and archetype perks (Leadership perk). Perks for humanoid enemies.
 - Round 42: immersion and dragon priests. Skyrim lockpicking mini-game (same odds as before, Quick roll option), QUEST STARTED / OBJECTIVE banners, guard barks on arrival, loading cards with 44 tips, Journal → Stats. Ambient sound beds (wind, rain/thunder, birds, crickets/owls/wolves, water, town, inn, forge, caves, Dwemer, dragon raids) and footsteps/hooves/cart, with an Ambience slider. The eight dragon priests in their ruins (from level 20) with wearable masks, Konahrik at Bromjunaar, a questline and an achievement.
@@ -64,7 +66,6 @@ our own marked [OURS]; plain-language UI; phone first.
 - Smart AI combat (default; custom tactics optional), crafting mini-games, motion design (63)
 
 ## In progress (write your name before you start)
-- Claude (Remigiusz): quality-of-life batch (branches claude/qol-*): menu tabs cleanup, inventory helpers + undo/confirms, faster travel & fights, reminders & badges, search everywhere, crafting shortcuts, new-player flow.
 - Kacper: (add here) — audio: run scripts/gen_audio.mjs once ElevenLabs has credits (music needs a paid plan).
 
 ## Standing rules
