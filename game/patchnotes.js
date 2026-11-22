@@ -3,6 +3,10 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b68", build: 68, date: "22 Nov 2026", title: "Updates without reinstalling", items: [
+      "Install this version once more by hand. After that the app downloads new versions by itself in the background and switches to them the next time you open it — no Android installer, no tapping Install.",
+      "If an update ever fails to start, the app goes back to the version inside it on its own.",
+      "Only rare bigger changes to the app itself still need a normal install; the game tells you when."] },
     { id: "b67", build: 67, date: "22 Nov 2026", title: "A truer map and allies that look the part", items: [
       "Map polish: Solitude now stands at the tip of the Haafingar peninsula over the Karth estuary, the Hjaalmarch coast is jagged marsh, Dawnstar sits on its bay and the College of Winterhold rises on its own islet.",
       "Every ally in a fight has its own look: followers in their own gear with name tags, ice wolves, werewolf brothers, the stone gargoyle, Dremora, flame, frost and storm atronachs, ghostly heroes of Sovngarde, and Odahviing diving in with fire."] },

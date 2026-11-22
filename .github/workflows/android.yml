@@ -38,13 +38,20 @@ jobs:
           BUILD_NUMBER: ${{ github.run_number }}
         run: chmod +x gradlew && (./gradlew assembleRelease --no-daemon --stacktrace || (echo "Retrying once (downloads sometimes fail)"; sleep 90; ./gradlew assembleRelease --no-daemon --stacktrace --refresh-dependencies))
       - run: cp android/app/build/outputs/apk/release/app-release.apk RoadsOfTheNorth.apk
+      - name: Pack the game files for quick in-app updates (no reinstall)
+        run: |
+          SHELL_V=$(grep -o 'int SHELL = [0-9]*' android/app/src/main/java/com/r3mc10/roadsofthenorth/UpdaterPlugin.java | grep -o '[0-9]*$')
+          (cd www && zip -qr9 "../game-shell${SHELL_V}.zip" .)
+          ls -la game-shell*.zip
       - name: Publish it as a download
         uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ github.run_number }}
           name: Roads of the North (build ${{ github.run_number }})
           make_latest: true
-          files: RoadsOfTheNorth.apk
+          files: |
+            RoadsOfTheNorth.apk
+            game-shell*.zip
           body: |
             ${{ github.event.head_commit.message }}
 
@@ -52,3 +59,4 @@ jobs:
             Open this page on your Android phone, tap **RoadsOfTheNorth.apk**, then open the download.
             The first time, Android asks to allow installing apps from your browser: allow it.
             Newer builds install over the old one and keep your offline save.
+            After that, the app updates itself in the background: no reinstalling needed.

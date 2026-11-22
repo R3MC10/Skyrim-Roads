@@ -351,14 +351,14 @@
 
   // ---- updates
   function updateHTML() {
-    if (!window.__app) return `<p>You're playing the web version, which is always up to date. The phone app checks for new versions and installs them itself.</p>`;
+    if (!window.__app) return `<p>You're playing the web version, which is always up to date. The phone app downloads new versions by itself and switches over when you next open it.</p>`;
     if (!update) return `<p class="sub">${esc(updateMsg || "Checking for a new version…")}</p>`;
     const cur = update.current.build, lat = update.latest;
     const when = lat.date ? new Date(lat.date).toLocaleDateString() : "";
     if (!update.newer) return `<p>You have the newest version: <b>build ${cur}</b>.</p>${updateMsg ? `<p class="sub">${esc(updateMsg)}</p>` : ""}<button class="btn" data-t="update">Check again</button>`;
     return `<p>A new version is ready: <b>build ${lat.build}</b>${when ? ` (${esc(when)})` : ""}. You have build ${cur}.</p>
       ${lat.notes ? `<h3>What's new</h3><div class="notes">${esc(lat.notes)}</div>` : ""}
-      <p class="sub">Your character and progress stay. ${(lat.size / 1048576).toFixed(1)} MB download.</p>
+      <p class="sub">Your character and progress stay. ${((update.size || lat.size) / 1048576).toFixed(1)} MB download${update.quick ? ", no reinstall: the game just restarts" : ""}.</p>
       ${updateMsg ? `<p id="umsg">${esc(updateMsg)}</p><div class="uprog"><i id="ubar" style="width:${Math.max(0, updatePct)}%"></i></div>` : ""}
       <button class="btn pri" data-t="doupdate" ${updateBusy ? "disabled" : ""}>${updateBusy ? "Updating…" : "Update now"}</button>`;
   }
@@ -378,10 +378,15 @@
         const m = $("#umsg"), bar = $("#ubar");
         if (m && bar) { m.textContent = text; bar.style.width = `${Math.max(0, pct)}%`; } else if (titlePage === "update") renderTitle();
       });
-      if (r === "installer") updateMsg = "Tap Install (or Update) on Android's screen. The game reopens on the new version.";
+      if (r === "applied") updateMsg = "Restarting on the new version…";
+      else if (r === "installer") updateMsg = "Tap Install (or Update) on Android's screen. The game reopens on the new version.";
     } catch (err) { updateMsg = `The update didn't finish: ${err.message}. Try again.`; }
     updateBusy = false;
     if (titlePage === "update") renderTitle();
+  }
+  function updateStaged(r) {
+    update = r;
+    toast(`⬆ Build ${r.latest.build} is downloaded. It loads the next time you open the game (or ⚙ → Main menu → Update to switch now).`);
   }
   function updateAvailable(r) {
     update = r;
@@ -440,6 +445,7 @@
     go(t) { closeMenu(); tab = t; testResult = null; bump(); renderTabs(); renderPanel(true); },
     get tab() { return tab; },
     updateAvailable: (r) => updateAvailable(r),
+    updateStaged: (r) => updateStaged(r),
     permissionBack: () => { if ($("#title") && titlePage === "update") { updateMsg = "Thanks. Tap Update now again."; renderTitle(); } },
     /* things worth a phone notification while the app is closed: arrival and the next dragon attack (times in ms) */
     upcoming() {
