@@ -30,7 +30,7 @@ async def main():
         for _ in range(4):
             await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())"); await pg.wait_for_timeout(200)
         await click(pg, "[data-act=ftab][data-id=refine]"); await pg.wait_for_timeout(300)
-        await click(pg, "[data-act=srefineall][data-id='0']"); await pg.wait_for_timeout(400)
+        await click(pg, "[data-act=cqask][data-k=refine][data-id='0'][data-n=max]"); await pg.click("#modal [data-act=cqgo]"); await pg.wait_for_timeout(400)
         print("smelt:", await pg.evaluate("[SMITH.count(window.__dbg.save(),'ore_iron'), SMITH.count(window.__dbg.save(),'mat_iron')]"))
         el = await pg.query_selector("#side"); await el.screenshot(path="smith_refine.png")
         await click(pg, "[data-act=ftab][data-id=improve]"); await pg.wait_for_timeout(300)

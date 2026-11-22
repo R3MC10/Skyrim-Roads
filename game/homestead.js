@@ -376,6 +376,7 @@ const HOMESTEAD = (() => {
   // ---------------------------------------------------------------- the screen (a town section)
   let view = "build";
   const VIEWS = [["build", "Build"], ["gather", "Gather"], ["bench", "Workbench"], ["home", "Home"], ["steward", "Steward"]];
+  const CQ = () => (typeof CRAFTQOL !== "undefined" ? CRAFTQOL : null);
   const sections = (town) => (BY_TOWN[town] ? ["homestead"] : []);
   const names = (s, town) => (BY_TOWN[town] ? { homestead: `🏡 ${PLOTS[BY_TOWN[town]].name}` } : {});
   const btn = (act, c, label, ok = true, cls = "") => `<button class="btn sm ${cls}" data-act="hsact" data-id="${act}" data-c="${c}" ${ok ? "" : "disabled"}>${label}</button>`;
@@ -417,9 +418,11 @@ const HOMESTEAD = (() => {
       b += `<h3 class="hsh">At the plot</h3>` + stockHTML(h, esc);
     } else if (view === "bench") {
       b += `<p class="sub" style="margin-top:0">Hammer your own Iron Ingots into parts. Glass is melted from quartz over a Firewood fire. You have ${count(s, "mat_iron")} Iron Ingots and ${count(s, "mat_firewood")} Firewood.</p>`
-        + Object.entries(BENCH).map(([k, [n, inv, st2]]) => { const uses = [...Object.entries(inv).map(([i, m]) => `${m} ${itemName(i)}`), ...Object.entries(st2).map(([q, m]) => `${m} ${MATS[q][0].toLowerCase()}`)].join(" + ");
+        + (CQ() ? CQ().bar(s, "bench", Object.keys(BENCH)) : "")
+        + (CQ() ? CQ().order(s, "bench", Object.keys(BENCH)) : Object.keys(BENCH)).map((k) => { const [n, inv, st2] = BENCH[k], uses = [...Object.entries(inv).map(([i, m]) => `${m} ${itemName(i)}`), ...Object.entries(st2).map(([q, m]) => `${m} ${MATS[q][0].toLowerCase()}`)].join(" + ");
           const can = (x) => Object.entries(inv).every(([i, m]) => count(s, i) >= m * x) && Object.entries(st2).every(([q, m]) => (h.stock[q] || 0) >= m * x);
-          return `<div class="item"><div class="t">${MATS[k][1]} ${esc(MATS[k][0])} ×${n}<span>${esc(uses)} · you have ${h.stock[k] || 0}</span></div><div class="hsbtns">${btn("make", k + ":1", "Make", can(1), "pri")}${btn("make", k + ":5", "×5", can(5))}</div></div>`; }).join("");
+          const q = CQ();   // crafting shortcuts (craftqol.js): status, pin, ×5 and Max made one at a time
+          return `<div class="item${q ? " cqrow" : ""}"><div class="t">${MATS[k][1]} ${esc(MATS[k][0])} ×${n}<span>${esc(uses)} · you have ${h.stock[k] || 0}</span>${q ? q.status(s, "bench", k) : ""}</div><div class="hsbtns${q ? " cqbtns" : ""}">${q ? q.star(s, "bench", k, MATS[k][0]) : ""}${btn("make", k + ":1", "Make", can(1), "pri")}${q ? q.qty(s, "bench", k) : btn("make", k + ":5", "×5", can(5))}</div></div>`; }).join("");
     } else if (view === "home") {
       if (!h.small) b += `<p class="sub">Nothing to live in yet. Build the small house first.</p>`;
       else {

@@ -3,6 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "bQ-craft", build: 0, date: "22 Nov 2026", title: "Crafting shortcuts", items: [
+      "New \"Can make now\" switch at the forge, smelter and tanning rack, improve bench, alchemy lab, cooking pot, enchanter and homestead workbench. Each recipe says how many you can make, or what you're missing (\"Missing: 2 Iron Ingot\").",
+      "×5 and Max buttons: one confirm, then one summary of what you made and what it used. You use the same materials and gain the same skill as making them one at a time.",
+      "Batches skip the crafting mini-games and give the plain result. A single Make still plays the mini-game.",
+      "Tap the ☆ to pin favourite recipes, alchemy mixes and enchantments to the top.",
+      "The forge's recipe groups show how many you can make in each.",
+      "The old smelt \"All\" and workbench \"×5\" now give the same skill as making them one at a time.",
+      "Fix: alchemy and enchanting mini-game bonuses (and botches) now actually count."] },
     { id: "b88", build: 88, date: "22 Nov 2026", title: "Accessibility options", items: [
       "New in Settings → Accessibility: Text size with four steps (Normal, Big, Bigger, Biggest). Everything grows together, buttons included, so nothing gets cut off.",
       "Colour-blind help for red, green or blue colour-blindness: health, magicka and stamina bars, danger levels, buffs and debuffs, item quality colours, enemy health bars in fights and danger marks on the map switch to colours that stay easy to tell apart.",
