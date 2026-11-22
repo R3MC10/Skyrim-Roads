@@ -8,8 +8,9 @@
    Pure logic here; COOP.ui(ctx) wires it into the screens. */
 const COOP = (() => {
   const RUN_SECONDS = 3 * 3600;          // a run record lives 3 real hours (1.5 in-game days), then it's tidied away
-  const MAX_MEMBERS = 4;
+  const MAX_MEMBERS = 8;                 // [OURS] parties of up to 8 go in together
   const FOE_BONUS = 0.35;                // [OURS] foes get +35% health for each extra member in the run
+  const WAVE_BONUS = 0.1;                // with more foes per room (partyplay.js waves) each foe only gets +10% per extra member, at most +50%
   const ALLY_DMG = 0.75;                 // [OURS] members fight beside you at 75% of their usual damage
   const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
   const clone = (x) => JSON.parse(JSON.stringify(x));
@@ -76,10 +77,11 @@ const COOP = (() => {
 
   // ---- rooms: the leader picks the way; the first to step in decides what lives there
   const keyOf = (name) => Object.keys(DUNGEONS.ENEMY).find((k) => DUNGEONS.ENEMY[k]?.name === name) || null;
-  function foe(s, key, tier, members = 1) {
+  function foe(s, key, tier, members = 1, waves = false) {
     const def = DUNGEONS.ENEMY[key];
     if (!def) return null;
-    const e = G.scaleEnemy({ ...def }, s.level), m = [0, 0.8, 0.95, 1.1][tier] * (1 + FOE_BONUS * clamp(members - 1, 0, MAX_MEMBERS - 1));
+    const bonus = waves ? Math.min(0.5, WAVE_BONUS * (members - 1)) : FOE_BONUS * clamp(members - 1, 0, MAX_MEMBERS - 1);
+    const e = G.scaleEnemy({ ...def }, s.level), m = [0, 0.8, 0.95, 1.1][tier] * (1 + bonus);
     e.health = Math.round(e.health * m); e.hp = e.health; e.damage = Math.round(e.damage * [0, 0.8, 0.95, 1.1][tier] * 10) / 10;
     return e;
   }
@@ -96,8 +98,13 @@ const COOP = (() => {
   function shape(s, run, spec) {
     const d = s.dungeon, r = d.room;
     const n = activeMembers(run).length;
-    if (r?.enemy && spec?.key && r.type !== "boss") { const e = foe(s, spec.key, d.tier, n); if (e) { r.enemy = e; r.text = e.text; } }
-    else if (r?.enemy && n > 1) { r.enemy.health = Math.round(r.enemy.health * (1 + FOE_BONUS * clamp(n - 1, 0, MAX_MEMBERS - 1))); r.enemy.hp = r.enemy.health; }
+    const W = typeof PARTYPLAY !== "undefined" && r?.enemy && r.type !== "boss" ? PARTYPLAY.waves(n) : 1;
+    if (r?.enemy && spec?.key && r.type !== "boss") { const e = foe(s, spec.key, d.tier, n, W > 1); if (e) { r.enemy = e; r.text = e.text; } }
+    else if (r?.enemy && n > 1) { const b = W > 1 ? Math.min(0.5, WAVE_BONUS * (n - 1)) : FOE_BONUS * clamp(n - 1, 0, MAX_MEMBERS - 1); r.enemy.health = Math.round(r.enemy.health * (1 + b)); r.enemy.hp = r.enemy.health; }
+    if (W > 1 && r?.enemy) {   // [OURS] a bigger party meets more foes: one after another, one per hero (at most 6)
+      r.waves = W; r.wave = 1; r.wkey = spec?.key || keyOf(r.enemy.name); r.wn = n;
+      r.text = `${r.text} ${W - 1} more ${W - 1 > 1 ? "shapes move" : "shape moves"} in the dark behind it.`;
+    }
   }
   /* catch up with the leader, one room at a time. Returns how many rooms you walked into (0 or 1). */
   function follow(s, run) {
@@ -135,13 +142,13 @@ const COOP = (() => {
   function allies(s, cards) {
     const d = s.dungeon;
     if (!d?.run) return [];
-    return cards.filter((c) => c.id !== s.id && c.coop?.run === d.run && c.coop.step === (d.cstep || 0) && (c.cur ?? 1) > 0).slice(0, MAX_MEMBERS - 1).map(allyFromCard);
+    return cards.filter((c) => c.id !== s.id && c.coop?.run === d.run && c.coop.step === (d.cstep || 0) && (c.cur ?? 1) > 0).slice(0, MAX_MEMBERS - 1).flatMap((c) => [allyFromCard(c), ...(typeof FOL2 !== "undefined" ? FOL2.cardAllies(c) : [])]);   // their followers fight too, never counted as members
   }
   function allyFromCard(c) {
     const p = c.coop?.prof || { dmg: c.dmg || 5, hp: c.hp || 100, red: c.red || 0, role: "fighter" };
     const hp = Math.max(30, c.cur || p.hp);
     return { name: c.name, dmg: Math.max(2, (p.dmg || 5) * ALLY_DMG), hp, maxHp: p.hp || hp, red: clamp(p.red || 0, 0, 0.8), role: p.role || "fighter", sneaky: !!p.sneaky,
-      healAt: p.healAt || 50, healAmt: p.healAmt || 0, heals: p.heals || 0, potAt: p.potAt || 0, pots: p.pots || 0, potAmt: p.potAmt || 50, player: true, coop: true };
+      healAt: p.healAt || 50, healAmt: p.healAmt || 0, heals: p.heals || 0, potAt: p.potAt || 0, pots: p.pots || 0, potAmt: p.potAmt || 50, player: true, coop: true, pid: c.id || null };   // pid: their phone picks their moves in turn-based fights
   }
   /* the ally's turn (called from the fight loop) */
   function allyAct(f, al) {
@@ -175,7 +182,7 @@ const COOP = (() => {
   // ---- the shared boss chest: one fair roll each, claimed once
   function roll(run, uid, level) {
     const r = rng(hash(run.id + "|" + uid)), n = activeMembers(run).length || 1;
-    const gold = Math.round((50 + r() * 70) * run.tier * (1 + 0.15 * (n - 1)));   // [OURS] a bonus for going in together
+    const gold = Math.round((50 + r() * 70) * run.tier * (1 + 0.15 * Math.min(n - 1, 7)) * (run.factor || 1));   // [OURS] a bonus for going in together, and for the longer way through
     const items = [];
     const elite = D.LOOT.elite || [];
     for (const [item, c] of elite) if (D.ITEMS[item] && r() < c * (0.8 + 0.2 * run.tier)) items.push(item);
@@ -386,6 +393,6 @@ const COOP = (() => {
     return { onRuns, sync, myInvites, card: () => card(S()), allies: () => allies(S(), ctx.others()), lobbyHTML, invitesHTML, bar, waiting, waitHTML, behindHTML, beforePick, afterPick, afterAct, chestHTML, left, act, get runs() { return runs; } };
   }
 
-  return { RUN_SECONDS, MAX_MEMBERS, FOE_BONUS, ROLE, live, isMember, activeMembers, newRun, invite, addMember, decline, removeMember, join, foe, keyOf, canPick, recordPick, shape, follow, picked,
+  return { RUN_SECONDS, MAX_MEMBERS, FOE_BONUS, WAVE_BONUS, ROLE, live, isMember, activeMembers, newRun, invite, addMember, decline, removeMember, join, foe, keyOf, canPick, recordPick, shape, follow, picked,
     profile, card, allies, allyFromCard, allyAct, hitAlly, roll, claim, bossDown, give, ui };
 })();

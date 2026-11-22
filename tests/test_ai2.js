@@ -1,8 +1,7 @@
-const __GAME = process.env.W || require("path").join(__dirname, "../game/");
 /* Sneak openers, AI settings, hybrid, richer tactics, share codes, preview, decide() (sneak2.js + aiset.js).
    W=/path/to/web/ node test_ai2.js  — prints "ai2 ok · N checks" */
 const fs = require("fs"), vm = require("vm");
-const W = process.env.W || __GAME + "";
+const W = process.env.W || require("path").join(__dirname, "../game/");
 const c = { process: { env: process.env }, console, Math, Date, JSON, Float64Array, Float32Array, Uint8Array, Int32Array, Uint16Array, Int16Array, Object, Array, Set, Map, Proxy, Number, String, Buffer, escape, unescape, encodeURIComponent, decodeURIComponent };
 vm.createContext(c);
 const FILES = ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "legendary.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "weatherfx.js", "enchanting.js", "quests.js", "horses.js", "hall.js", "bounty.js", "visits.js", "cooking.js", "arena.js", "achievements.js", "clans.js", "festivals.js", "wars.js", "curses.js", "smithing.js", "social.js", "roam.js", "ammo.js", "tomes.js", "magic.js", "spellbook.js", "mp.js", "spellcraft.js", "shouts2.js", "coop.js", "combatai.js", "sneak2.js", "aiset.js"];
