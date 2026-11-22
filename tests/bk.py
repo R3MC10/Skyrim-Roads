@@ -1,0 +1,40 @@
+import asyncio
+from playwright.async_api import async_playwright
+async def main():
+    async with async_playwright() as p:
+        b = await p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-sandbox"])
+        ctx = await b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2)
+        await ctx.grant_permissions(["clipboard-read","clipboard-write"], origin="http://localhost:8765")
+        errs=[]
+        pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
+        await pg.goto("http://localhost:8765/index.html?p=bk1"); await pg.wait_for_timeout(1800)
+        await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm","Remi"); await pg.click("#begin"); await pg.wait_for_timeout(1200)
+        if await pg.query_selector("#modal [data-act=close]"): await pg.click("#modal [data-act=close]")
+        await pg.evaluate("()=>{const S=window.__dbg.save(); S.gold=4321; S.level=7;}")
+        await pg.click("#sndBtn"); await pg.click("[data-bk=openbackup]"); await pg.wait_for_timeout(600)
+        code = await pg.input_value("#bkcode"); print("code length", len(code), code[:24])
+        await pg.click("[data-bk=copy]"); await pg.wait_for_timeout(200)
+        print("note:", await pg.inner_text("#modal p.sub"))
+        await pg.screenshot(path="bk_modal.png")
+        print("auto before:", await pg.evaluate("BACKUP.autoList().length"))
+        # fresh phone
+        q = await ctx.new_page(); q.on("pageerror", lambda e: errs.append("q "+str(e)))
+        await q.goto("http://localhost:8765/index.html?p=bk2"); await q.wait_for_timeout(1800)
+        await q.click(".press"); await q.click(".mi[data-t=settings]"); await q.wait_for_timeout(200)
+        await q.click("[data-bk=openrestore]"); await q.wait_for_timeout(200)
+        await q.fill("#rscode", code[:-6]); await q.click("[data-bk=restore]"); await q.wait_for_timeout(300)
+        print("bad code:", await q.inner_text(".page p[role=status]"))
+        await q.fill("#rscode", "hello"); await q.click("[data-bk=restore]"); await q.wait_for_timeout(300)
+        print("junk:", await q.inner_text(".page p[role=status]"))
+        await q.fill("#rscode", code[:30] + "\n" + code[30:]); await q.click("[data-bk=restore]"); await q.wait_for_timeout(2500)
+        print("after restore menu:", await q.inner_text(".mi[data-t=continue] small"))
+        await q.click(".mi[data-t=continue]"); await q.wait_for_timeout(1000)
+        print("gold:", await q.inner_text("#goldv"), "| id is new uid:", await q.evaluate("window.__dbg.save().id === Store.uid"))
+        # restoring over an existing character asks first
+        await q.click("#sndBtn"); await q.click("[data-bk=openrestore]"); await q.wait_for_timeout(200)
+        await q.fill("#rscode", code); await q.click("[data-bk=restore]"); await q.wait_for_timeout(300)
+        print("confirm button:", await q.inner_text("[data-bk=restore]"))
+        await q.screenshot(path="bk_restore.png")
+        print("errors:", errs)
+        await b.close()
+asyncio.run(main())

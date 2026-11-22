@@ -1,0 +1,24 @@
+name: Tests
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  node-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax check every game file
+        run: for f in game/*.js app.js; do node --check "$f" || exit 1; done
+      - name: Game tests (quick set; long balance sims skipped)
+        working-directory: tests
+        run: |
+          fail=0
+          for t in $(ls test_*.js | grep -vE "bal_sim|qscale|_main"); do
+            if timeout 600 node "$t" > "/tmp/$t.log" 2>&1; then echo "ok   $t"; else echo "FAIL $t"; tail -20 "/tmp/$t.log"; fail=1; fi
+          done
+          exit $fail

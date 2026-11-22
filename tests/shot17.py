@@ -1,0 +1,36 @@
+import asyncio
+from playwright.async_api import async_playwright
+async def main():
+    async with async_playwright() as p:
+        b = await p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-sandbox","--autoplay-policy=no-user-gesture-required"])
+        errs=[]
+        pg = await b.new_page(viewport={"width": 390, "height": 844}, device_scale_factor=2)
+        pg.on("pageerror", lambda e: errs.append(str(e)))
+        await pg.goto("http://localhost:8765/index.html?p=menu17"); await pg.wait_for_timeout(2500)
+        await pg.screenshot(path="t_press.png")
+        await pg.click(".press"); await pg.wait_for_timeout(900)
+        await pg.screenshot(path="t_menu_new.png")
+        print("items (no save):", await pg.eval_on_selector_all(".mi .lbl", "e=>e.map(x=>x.textContent)"))
+        for page in ["settings","howto","credits","update"]:
+            await pg.click(f".mi[data-t={page}]"); await pg.wait_for_timeout(400)
+            await pg.screenshot(path=f"t_{page}.png", full_page=False)
+            await pg.click(".page [data-t=menu]"); await pg.wait_for_timeout(300)
+        await pg.click(".mi[data-t=new]"); await pg.wait_for_timeout(500)
+        await pg.fill("#nm","Remi"); await pg.click("#begin"); await pg.wait_for_timeout(2500)
+        if await pg.query_selector("#modal [data-act=close]"): await pg.click("#modal [data-act=close]")
+        print("in game:", await pg.inner_text("#sub"), "| mood", await pg.evaluate("()=>SOUND.state.mood"))
+        await pg.click("#sndBtn"); await pg.wait_for_timeout(300)
+        await pg.screenshot(path="t_ingame_settings.png")
+        await pg.click("#modal [data-act=pref][data-k=zoomFar][data-v=true]"); await pg.wait_for_timeout(200)
+        print("pref:", await pg.evaluate("()=>localStorage.getItem('rotn_prefs')"))
+        await pg.click("#modal [data-act=totitle]"); await pg.wait_for_timeout(2500)
+        print("after main menu:", await pg.eval_on_selector_all(".mi .lbl", "e=>e.map(x=>x.textContent)"), await pg.inner_text(".mi[data-t=continue] small"))
+        await pg.screenshot(path="t_menu_save.png")
+        await pg.click(".mi[data-t=new]"); await pg.wait_for_timeout(300)
+        print("confirm:", (await pg.inner_text(".page"))[:80].replace("\n"," "))
+        await pg.click(".page [data-t=menu]"); await pg.click(".mi[data-t=continue]"); await pg.wait_for_timeout(1500)
+        print("continued:", await pg.inner_text("#nm"), "title gone:", await pg.query_selector("#title") is None)
+        print("back test:", await pg.evaluate("()=>window.__ui.back()"))
+        print("errors:", errs)
+        await b.close()
+asyncio.run(main())

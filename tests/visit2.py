@@ -1,0 +1,39 @@
+import asyncio
+from playwright.async_api import async_playwright
+async def main():
+    async with async_playwright() as p:
+        b = await p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-sandbox"])
+        ctx = await b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2)
+        errs = []
+        async def clear(pg):
+            for _ in range(6):
+                if await pg.query_selector("#modal [data-act=close]"): await pg.click("#modal [data-act=close]"); await pg.wait_for_timeout(200)
+                elif await pg.query_selector("#modal"): await pg.evaluate("document.querySelector('#modal').remove()")
+                else: break
+        async def phone(tag, name):
+            pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(tag + " " + str(e)))
+            await pg.goto(f"http://localhost:8765/index.html?net=bc&p={tag}"); await pg.wait_for_timeout(1800)
+            await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", name); await pg.click("#begin"); await pg.wait_for_timeout(1000)
+            await pg.evaluate("()=>{const S=window.__dbg.save(); S.location='Riften'; [S.x,S.y]=WORLD.places.Riften; S.gold=20000; S.dragons=3; S.bounty=null; S.discovered.push('Riften');}")
+            await pg.wait_for_timeout(1500); await clear(pg)
+            return pg
+        async def town(pg, sec):
+            await clear(pg); await pg.click("[data-tab=map]"); await pg.click("[data-tab=town]"); await pg.wait_for_timeout(200); await pg.click(f"[data-id={sec}]"); await pg.wait_for_timeout(300)
+        A = await phone("va", "Alfa"); B = await phone("vb", "Beta")
+        await town(A, "home"); await A.click("[data-act=buyhome], [data-act=home]") if await A.query_selector("[data-act=buyhome]") else print("buttons:", await A.evaluate("[...document.querySelectorAll('#side [data-act]')].map(b=>b.dataset.act).join(',')"))
+        await A.wait_for_timeout(300)
+        print("A homes:", await A.evaluate("Object.keys(window.__dbg.save().homes||{})"))
+        await town(A, "home"); await A.fill("#motto", "Home of the brave"); await A.click("[data-act=motto]"); await A.wait_for_timeout(800)
+        await town(B, "homes"); print("B neighbours:", (await B.inner_text("#side .item")).replace("\n"," | "))
+        await B.click("[data-act=visit]"); await B.wait_for_timeout(300)
+        await B.fill("#giftnote", "Nice place!"); await B.click("[data-act=giftgold][data-id='500']"); await B.wait_for_timeout(300)
+        await B.screenshot(path="visit_B.png")
+        await A.wait_for_timeout(600); print("A toast:", await A.evaluate("document.querySelector('#toast')?.textContent"))
+        await town(A, "home"); g = await A.inner_text("#side"); print("A door:", g[g.find("Gifts"):g.find("Gifts")+90].replace("\n"," | "))
+        gold = await A.evaluate("window.__dbg.save().gold")
+        await A.click("[data-act=giftopen]"); await A.wait_for_timeout(500)
+        print("A after:", await A.evaluate("window.__dbg.save().gold") - gold, await A.evaluate("document.querySelector('#toast')?.textContent"))
+        await B.wait_for_timeout(500); print("gifts left:", await B.evaluate("1"), await A.evaluate("document.querySelectorAll('[data-act=giftopen]').length"))
+        print("errors:", errs)
+        await b.close()
+asyncio.run(main())

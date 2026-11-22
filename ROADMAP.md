@@ -61,6 +61,10 @@ our own marked [OURS]; plain-language UI; phone first.
 - Solstheim, Skyrim compass home screen with swipes, constellation perks, clearer screens (62)
 - Smart AI combat (default; custom tactics optional), crafting mini-games, motion design (63)
 
+## In progress (write your name before you start)
+- Claude (Remigiusz): turn-based combat, AI settings/tactics editor, gear visuals, party+followers merge, art from ChatGPT, menu simplification.
+- Kacper: (add here)
+
 ## Standing rules
 - Perk trees grow with the game: every new system (gathering, magic, encounters, crafting, party play...) adds or adjusts perks with real effects in the matching trees (perkfx.js), keeping old perk ids and a clean star layout.
 - Party size up to 8 players.

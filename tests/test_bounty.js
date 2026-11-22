@@ -1,0 +1,26 @@
+const __GAME = process.env.W || require("path").join(__dirname, "../game/");
+const fs=require("fs"),vm=require("vm");
+const c={console,Math,Date,JSON,Float64Array,Float32Array,Uint8Array,Int32Array,Uint16Array,Int16Array,Object,Array,Set,Map,Proxy,Number};vm.createContext(c);
+for(const f of ["data.js","world.js","terrain.js","formulas.js","perks.js","powers.js","engine.js","events.js","dungeons.js","towns.js","wevents.js","enchanting.js","quests.js","hall.js","bounty.js","mp.js"])vm.runInContext(fs.readFileSync(__GAME + ""+f,"utf8").replace(/^const (\w+) =/m,"var $1 ="),c);
+vm.runInContext(`
+const ok=(c,m)=>{ if(!c) throw new Error("FAIL "+m); };
+const w=BOUNTY.week(), gs=BOUNTY.goalsFor(w);
+ok(gs.length===3 && new Set(gs).size===3, "3 distinct");
+ok(JSON.stringify(BOUNTY.goalsFor(w))===JSON.stringify(gs), "deterministic");
+const counts={}; for(let i=0;i<300;i++) for(const k of BOUNTY.goalsFor(i)) counts[k]=(counts[k]||0)+1;
+console.log("goal spread over 300 weeks:", JSON.stringify(counts));
+for (const k of Object.keys(BOUNTY.GOALS)) ok(D.ITEMS[BOUNTY.GOALS[k].item[0]], "reward item "+k);
+const a=G.newSave("A","Alfa","nord"), b=G.newSave("B","Beta","nord");
+const k=gs[0], other=Object.keys(BOUNTY.GOALS).find(x=>!gs.includes(x));
+ok(!BOUNTY.add(a, other), "not this week's goal");
+const T=BOUNTY.GOALS[k].target;
+BOUNTY.add(a,k,Math.ceil(T*0.7)); BOUNTY.add(b,k,Math.ceil(T*0.4));
+BOUNTY.setDocs([BOUNTY.record(a), BOUNTY.record(b), {uid:"bad",name:"x",week:w,c:{[k]:-50}}, {uid:"evil",name:"y",week:"w",c:{}}], a);
+const g=BOUNTY.goal(w,k,"A"); ok(g.done && g.total===Math.ceil(T*0.7)+Math.ceil(T*0.4) && g.top.uid==="A" && g.helpers===2, "goal "+JSON.stringify(g));
+const gold=a.gold, msg=BOUNTY.claim(a,w,k); ok(msg && a.gold===gold+g.gold && a.titles.includes(BOUNTY.GOALS[k].top), "claim A "+msg);
+ok(BOUNTY.claim(a,w,k)===null, "no double claim");
+const m2=BOUNTY.claim(b,w,k); ok(m2 && !(b.titles||[]).includes(BOUNTY.GOALS[k].top), "B gets reward, no title");
+const c3=G.newSave("C","Cee","nord"); ok(!BOUNTY.claimable(c3,w,k), "non-helper can't claim");
+ok(!BOUNTY.claimable(a,w-5,k), "old weeks closed");
+console.log("bounty ok ·", gs.join(", "), "·", msg);
+`,c);
