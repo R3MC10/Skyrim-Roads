@@ -320,6 +320,8 @@ const ICONART = (() => {
   function item(id, size = 34, row = null) {
     if (!id || !(D.ITEMS[id] || D.ITEMS[base(id)])) return "";
     const q = row?.tq || 0;
+    const pic = typeof ASSETS !== "undefined" && typeof Image !== "undefined" ? ASSETS.img("icon-" + base(id).replace(/_/g, "-")) : null;   // [gear] a painted icon dropped in the game folder wins
+    if (pic) return ART.html(size, size, (g, H, w) => { g.drawImage(pic, 0, 0, w, w); const ench = D.ITEMS[id]?.enchant || D.ITEMS[id]?.aenchant; if (ench) { g.strokeStyle = "rgba(169,140,255,.9)"; g.lineWidth = Math.max(1, w / 24); g.strokeRect(1, 1, w - 2, w - 2); } }, { key: `ip:${id}|${q}`, cls: "ico", alt: "", painted: true });
     return ART.html(size, size, (g, H, w) => { g.scale(w / 40, w / 40); drawItem(id, row)(g); }, { key: `i:${id}|${q}`, cls: "ico", alt: "" });
   }
 
