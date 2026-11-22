@@ -1,6 +1,6 @@
 # Handoff — continuing Roads of the North on Remigiusz's PC
 
-Read `CLAUDE.md` first (project layout, rules, how to work). This file is the current state as of 22 Nov 2026, ~12:10 Warsaw time.
+Read `CLAUDE.md` first (project layout, rules, how to work). This file is the current state as of 22 Nov 2026, evening (Warsaw), after build 88.
 
 ## Working with Remigiusz
 - He doesn't code; he tests on his phone. Plain, informal language. Short replies.
@@ -14,12 +14,14 @@ Read `CLAUDE.md` first (project layout, rules, how to work). This file is the cu
 - If he reports the Android installer still popping up: ask what ⚙ → Main menu → Update says (it now shows whether quick updates are active and the last error).
 - A web copy of the game is published as a claude.ai artifact by the cloud session; on the PC you can just test with `python3 -m http.server` in `game/`.
 
-## Branches waiting for you (pushed from the cloud session, 22 Nov ~12:40)
-- `claude/gear` — FINISHED: gear visuals for every armour set/weapon, visible to other players; gear preview; idle/walk animations. Tests: tests/test_gearlook.js, gearlook_ui.py. Ready to merge into main (check conflicts with the other branches in fightart.js, fxart.js, heroart.js, ui.js, index.html).
-- `claude/wip-party-merge` — UNFINISHED: exact map (map3) + party play (party2) + followers overhaul + enemy perks + end-of-dungeon loot vote (lootvote.js). The patches were applied and hand-merged but the loot vote and full test run were not finished. Next: run all node tests and partyplay_ui/followers2_ui/foeperks_ui/map11_ui, fix, then merge.
-- `claude/wip-ai-settings` — UNFINISHED: sneak-attack fix (sneak2.js), adjustable Smart AI settings (aiset.js), better tactics editor. Was in the middle of the full regression.
-- `claude/wip-turn-based` — UNFINISHED: turn-based combat (tbfight.js): initiative, action points, manual turns + Auto, live party turns. Stopped mid-work (ui/store/coop/fightart edits not done).
-All WIP branches were made from build 74 code, so merge main into them first (art + patch notes changed there).
+## State after the PC session (22 Nov, builds 78-88)
+All earlier branches are merged into `main`: gear visuals, party play (map3, party2, followers overhaul, enemy perks, loot vote), Smart AI settings + tactics editor + sneak fix, turn-by-turn fights (on by default; Settings → Fights), homesteads, living world (rumours), world events, accessibility. Every quick node test passes on `main`.
+- Testing on Windows: node tests need `W=C:/.../game/` (forward slashes, trailing slash). Screen tests use the `CHROME` env var or Playwright's Chromium (installed on this PC); run them with `PYTHONIOENCODING=utf-8`.
+- `tests/test_perks2.js` now scans every game/*.js for perk effect keys, so new modules don't need adding there.
+- `test_guilds.js` has a rare random flake ("low-skill sneak check"); rerun if it fails once.
+- Patch notes: entry ids must be unique and newest on top (the What's new popup keys on the newest id). Builds = GitHub Actions run number of android.yml. Turn-based shipped as build 83 with id "b84"; the small fixes entry is "b84f" (build 84).
+- Audio: `sound.js` plays `sfx-*/amb-*/mus-*` files listed in `game/audio.json` with procedural fallback; `scripts/gen_audio.mjs` generates them, but the ElevenLabs account is out of credits (music needs a paid plan). Parked; Kacper may take it.
+- In flight: a quality-of-life batch on branches `claude/qol-*` (menu tabs cleanup, inventory helpers + undo/confirms, faster travel & fights, reminders & badges, search, crafting shortcuts, new-player flow), each with its own PR.
 
 ## Original plan for the work above (for reference)
 1. Merge of: exact map from game data (map3), party play (leader leads, ready check, 8 players, dungeon scaling), **end-of-dungeon loot vote with d100 rolls**, follower overhaul (inventory, auto-levelling, archetypes), perks for humanoid enemies.
@@ -28,11 +30,8 @@ All WIP branches were made from build 74 code, so merge main into them first (ar
 4. Gear visuals: every armour set/weapon visible to other players; better animations.
 5. Realistic art via ChatGPT → branch `art`, folder `art/`. 18 done and shipped (title, loading screens, all towns, tundra, pine forest). Remaining: 12 biomes, 32 enemies (facing right, transparent), 5 UI textures. Converted to WebP and dropped flat into `game/` using names in `game/assets.js`.
 
-**Don't edit** `engine.js`, `ui.js`, `combatai.js`, `fightart.js`, `party.js`, `coop.js`, `world.js` until those land on `main` (pull first), or you'll get conflicts.
-
 ## Next up (his requests not started yet)
-- **Simplify menus into clear tabs** (Character / Items / Magic / Map / Journal (quests only) / Social / Town); move scattered things (settings, patch notes, library) under them.
-- **ElevenLabs sounds and music** (now on the PC, where api.elevenlabs.io is reachable). Key in env var `ELEVENLABS_API_KEY` — never commit it, never print it. Current audio is procedural in `game/sound.js` (`SOUND.fx(name)` for effects, ambient/music layers). Plan: generate SFX (sword hits per weapon, spells per element, footsteps, UI clicks, level up, shouts, creatures) and music loops (exploration per region, town, dungeon, combat, boss, title), save as small `.ogg`/`.mp3` flat in `game/` (e.g. `sfx-sword-hit.ogg`, `mus-tundra.ogg`), and make `sound.js` play files when present with the procedural sounds as fallback. Keep total size reasonable for a phone app.
+- ElevenLabs audio: see above (parked, needs credits).
 - Loop backlog in `ROADMAP.md`.
 
 ## Standing rules (also in CLAUDE.md)
