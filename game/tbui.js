@@ -131,7 +131,7 @@ const TBUI = (() => {
 
   // ------------------------------------------------------------------ dragging action cards onto a target
   let d = null;
-  const HINT = { foe: "Let go on the foe", self: "Let go on yourself" };
+  const HINT = { foe: "Let go on the foe", self: "Let go on yourself or a teammate", ally: "Let go on a teammate" };
   function zoneAt(x, y) { const t = document.elementFromPoint(x, y); return t?.closest?.("[data-tbzone]") || null; }
   function down(ev) {
     const card = ev.target.closest?.("#tbf .tbact[data-tz]");
@@ -149,7 +149,7 @@ const TBUI = (() => {
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg"); svg.setAttribute("class", "tbaim"); svg.setAttribute("aria-hidden", "true");
     svg.innerHTML = '<path d=""/><circle r="7"/>'; document.body.appendChild(svg); d.svg = svg;
     d.card.classList.add("lifted"); root.classList.add("dragging", "dz-" + d.zone);
-    root.querySelectorAll(`[data-tbzone="${d.zone}"]`).forEach((z) => z.classList.add("drop-ok"));
+    root.querySelectorAll(`[data-tbzone~="${d.zone}"]`).forEach((z) => z.classList.add("drop-ok"));
     const h = root.querySelector(".tbhint"); if (h) h.textContent = HINT[d.zone] || "";
     d.on = true; buzz(8);
   }
@@ -162,7 +162,7 @@ const TBUI = (() => {
     const cx = d.r.left + d.r.width / 2, cy = d.r.top;
     d.svg.querySelector("path").setAttribute("d", `M${cx},${cy} Q${cx},${(cy + y) / 2 - 40} ${x},${y}`);
     const c = d.svg.querySelector("circle"); c.setAttribute("cx", x); c.setAttribute("cy", y);
-    const z = zoneAt(x, y), hot = z && z.dataset.tbzone === d.zone ? z : null;
+    const z = zoneAt(x, y), hot = z && z.dataset.tbzone.split(" ").includes(d.zone) ? z : null;
     if (hot !== d.hot) {
       d.hot?.classList.remove("drop-hot"); hot?.classList.add("drop-hot"); d.hot = hot;
       d.svg.classList.toggle("hot", !!hot); d.g.classList.toggle("hot", !!hot);
@@ -171,7 +171,7 @@ const TBUI = (() => {
   }
   function clear(x) {
     const root = document.getElementById("tbf");
-    root?.classList.remove("dragging", "dz-foe", "dz-self");
+    root?.classList.remove("dragging", "dz-foe", "dz-self", "dz-ally");
     root?.querySelectorAll(".drop-ok,.drop-hot").forEach((z) => z.classList.remove("drop-ok", "drop-hot"));
     const h = root?.querySelector(".tbhint"); if (h) h.textContent = "";
     x?.svg?.remove(); x?.card?.classList.remove("lifted");
@@ -186,6 +186,8 @@ const TBUI = (() => {
     if (fire) {
       was.g.classList.add("used"); setTimeout(() => was.g.remove(), 220);
       swallow = Date.now() + 400;
+      const root = document.getElementById("tbf");
+      if (root) { if (was.hot.dataset.ally != null) root.dataset.tbt = was.hot.dataset.ally; else delete root.dataset.tbt; }
       was.card.click();                         // same path as a tap (tbfight.js onClick)
     } else {                                    // slide back to the dock
       const r = was.card.getBoundingClientRect();

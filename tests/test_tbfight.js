@@ -133,6 +133,18 @@ if (!process.env.SIMONLY) {
   const hp0 = f.hp; ss.act("end"); let foeLines = []; g = 0; while (!ss.done && g++ < 30) { const n = ss.ev.length; ss.advance(); foeLines.push(...ss.ev.slice(n).filter((e) => e.kind === "foe").map((e) => e.text)); if (ss.cur?.id === "me") break; }
   ok(/stunned/.test(foeLines[0] || ""), "the stunned foe loses its turn: " + foeLines.join(" | "));
 }
+// 4c. party frames: healing spells, potions and support spells dragged onto a teammate go to that teammate
+{ const s = fresh("mage", 30); G.give(s, "potion_health", 2);
+  for (const id of ["healing", "healing_hands", "stoneskin_touch"]) if (D.SPELLS[id] && !s.spells.includes(id)) s.spells.push(id);
+  const f = new G.Fight(s, enc("Frost troll", 30)), ss = new TB.Session(f, { trySneak: false });
+  const A = COOP.allyFromCard({ id: "p2", name: "Alpha", coop: { prof: { dmg: 20, hp: 300, red: 0.2, role: "fighter" } } }); f.allies.push(A);
+  const B = COOP.allyFromCard({ id: "p3", name: "Bravo", coop: { prof: { dmg: 20, hp: 300, red: 0.2, role: "fighter" } } }); f.allies.push(B);
+  ss.begin(); const prep = () => { f.mp = 9999; f.sp = 9999; ss.ap = 99; ss.spAp = 9; ss.cur = { id: "me" }; ss.idx = ss.order.findIndex((o) => o.id === "me"); f.ehp = 9999; };
+  A.hp = 50; B.hp = 280; prep(); const me0 = f.hp = G.maxHealth(s) - 40;
+  ss.act("potion:health", "0"); ok(A.hp > 50 && Math.round(f.hp) === me0, "a health potion dragged onto Alpha heals Alpha, not you: " + Math.round(A.hp));
+  if (s.spells.includes("healing")) { const a0 = A.hp; prep(); ss.act("spell:healing", "0"); ok(A.hp > a0 && Math.round(f.hp) === me0, "Healing dragged onto Alpha heals Alpha"); }
+  if (s.spells.includes("stoneskin_touch")) { prep(); A.hp = 290; B.hp = 100; ss.act("spell:stoneskin_touch", "0"); ok(A.armorT > 0 && !(B.armorT > 0), "a support spell goes to the teammate you picked, not the most hurt one"); }
+  ok(TB.zoneOf("spell:healing_hands") === "ally" && TB.zoneOf("spell:healing") === "self" && TB.zoneOf("bash") === "foe", "drop zones: support spells on a teammate, heals on you or a teammate, bash on the foe"); }
 // 5. no one-shots on strong foes; sneak still matters on trash
 { let max = 0; for (let i = 0; i < 60; i++) { const s = fresh("sneakarcher", 30), f = new G.Fight(s, boss("deathlord", 30)), ss = new TB.Session(f, { hidden: true }); ss.begin(); if (ss.cur?.id !== "me") ss.advance(); if (ss.cur?.id === "me") { const b = f.ehp; ss.act("attack"); max = Math.max(max, (b - f.ehp) / ss.ehpMax); } }
   ok(max <= TB.HIT_CAP + 0.11, "a sneak shot takes at most ~40% (+flank) of a boss: " + Math.round(max * 100) + "%"); }

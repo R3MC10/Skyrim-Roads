@@ -1655,6 +1655,14 @@ body:has(#favBtn) .app,body:has(#twBtn) .app{padding-bottom:calc(190px + env(saf
 .tbtip.on{opacity:1;transform:none}
 .tbf [data-tip]{-webkit-touch-callout:none}
 .tbf.pixel~.tbtip,body .tbtip.px{border-radius:0}
+/* [party frames] tbfight.js partyHTML: every teammate readable, and a place to drop healing and support spells */
+.tbparty{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.tbparty.many{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (min-width:700px){.tbparty{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.tbu.ally{padding:5px 7px 6px}.tbu.ally .nm{font-size:11.5px;color:#cfe8c4}.tbu.ally .fx{font-size:10px;letter-spacing:1px}
+.tbu.ally .tbbar.mid{margin-top:3px}
+.tbu.ally.down{opacity:.5;filter:grayscale(.7)}.tbu.ally.down.drop-ok{opacity:1}
+.tbf.dz-self .tbu.me .nm::after,.tbf.dz-ally .tbu.ally .nm::after{content:" ⬇";color:#f3d98b}
 </style>
 <script src="access.js"></script>
 </head>

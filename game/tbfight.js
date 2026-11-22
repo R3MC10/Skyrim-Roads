@@ -186,15 +186,18 @@ const TB = (() => {
       if (isSpell(a)) { const u = Math.min(this.spAp, c); this.spAp -= u; c -= u; }
       this.ap -= c;
     }
-    act(a) {
+    act(a, tgt) {
       if (this.cur?.id !== "me" || this.over) return null;
       const f = this.f;
+      const al = tgt != null && tgt !== "" ? (+tgt >= 1000 ? (f._downed || [])[+tgt - 1000] : f.allies[+tgt]) : null;
       if (a === "end") return this.endTurn();
       if (a === "flee") return this.flee();
       if (!this.canAfford(a)) return { err: "Not enough action points" };
       this.pay(a);
       const before = f.ehp, myBefore = f.hp;
-      let text = a === "bash" ? SHIELDFX.bash(f) : f.act(a);
+      let text = null;
+      if (al && zoneOf(a) === "self") text = onAlly(f, a, al);
+      if (text == null) { f.tbTarget = al || null; try { text = a === "bash" ? SHIELDFX.bash(f) : f.act(a); } finally { f.tbTarget = null; } }
       if (f.hidden) f.hidden = false;   // only your first strike can be a sneak attack
       text += this.capFoe(before);
       if (f.ehp < before) { text += this.flank(before); this.hitters++; }
@@ -449,8 +452,26 @@ const TB = (() => {
     if (a === "attack" || a === "power_attack" || a === "bash" || /^(shout|power):/.test(a)) return "foe";
     if (a === "block" || /^potion:/.test(a)) return "self";
     const sp = spellOf(a);
-    if (sp) return SELF_KINDS.has(sp.kind) ? "self" : "foe";
+    if (sp) return typeof SPELLBOOK !== "undefined" && SPELLBOOK.SUPPORT.has(sp.kind) ? "ally" : SELF_KINDS.has(sp.kind) ? "self" : "foe";
     return "";
+  }
+  /* a healing spell, potion or scroll you dragged onto a teammate instead of yourself */
+  function onAlly(f, a, al) {
+    const [k, arg] = a.split(":");
+    const mx = al.maxHp || al.hpMax || al._max || Math.max(al.hp, 60), b = al.hp;
+    if (k === "potion") {
+      const r = f.findPotion(arg); if (!r) return null;
+      const it = D.ITEMS[r.item]; f.used[r.id] = (f.used[r.id] || 0) + 1;
+      if (arg !== "health") { f.used[r.id]--; return null; }   // only health potions can be given
+      al.hp = Math.min(mx, al.hp + it.restore[1]); return `You give ${al.name} a ${it.name}: +${Math.round(al.hp - b)}`;
+    }
+    const sp = spellOf(a); if (!sp || sp.kind !== "heal") return null;
+    const dual = k === "dual", free = k === "scroll";
+    if (free) { const r = f.findItem(arg); if (!r) return null; f.used[r.id] = (f.used[r.id] || 0) + 1; }
+    else f.mp -= (typeof G.spellCost === "function" ? G.spellCost(f.s, sp) : sp.cost) * (dual ? 2.2 : 1);
+    const amt = sp.amount * (1 + (G.fxSum ? G.fxSum(f.s, "spell:Restoration") : 0) / 100) * (dual ? 2.2 : 1) * (1 + (typeof PFX !== "undefined" ? PFX.sum(f.s, "healally", f, {}) : 0));
+    if (typeof f.addXp === "function") f.addXp("Restoration", sp.xp || 10);
+    al.hp = Math.min(mx, al.hp + amt); return `${sp.name} on ${al.name}: +${Math.round(al.hp - b)}`;
   }
   const ICON = { bash: "🛡", attack: "⚔", bow: "🏹", power_attack: "💥", block: "🛡", magic: "✦", items: "⚗", flee: "🏃", end: "⏭", shout: "🗣", power: "✴", potion: "🧪", scroll: "📜", heal: "✚" };
   function iconOf(f, a) {
@@ -498,7 +519,7 @@ const TB = (() => {
     const newEv = sess.ev.slice(ui.shown); ui.shown = sess.ev.length;
     const order = sess.order.map((o, i) => `<span class="tbini ${o.id === sess.cur?.id && !sess.done ? "now" : ""} ${i < sess.idx ? "gone" : ""} ${o.id.startsWith("foe") ? "foe" : o.id === "me" ? "me" : "ally"}" data-tip="${esc(o.name)}: initiative ${o.init}. Higher initiative acts earlier in the round.">${icon(o)} ${esc(o.name.split(" ")[0])}<i>${o.init}</i></span>`).join("");
     const pips = (n, m, cls) => Array.from({ length: m }, (_, i) => `<i class="${i < n ? "on" : ""} ${cls}"></i>`).join("");
-    const allies = f.allies.filter((a) => a.hp != null).map((a) => `<div class="tbal"><small>${esc(a.name)}${a.down ? " · down" : ""}</small>${pctBar(Math.max(0, a.hp), a.maxHp || a.hpMax || Math.max(a.hp, 1), "hp")}</div>`).join("");
+    const allies = partyHTML(f);
     const mine = state.turn === "me";
     const wait = state.turn === "wait" ? `<p class="tbwait">⏳ ${esc(state.who)} is choosing their move… <b class="num" id="tbcd">${Math.max(0, Math.ceil((state.until - Date.now()) / 1000))}s</b>, then Auto</p>` : "";
     const scene = (newEv.length || !ui.lastScene) && typeof FIGHTART !== "undefined" ? sceneFor(newEv) : "";
@@ -520,7 +541,7 @@ const TB = (() => {
       <div class="tbstage" data-tbzone="foe"><div class="tbscene" id="tbscene">${scene || (ui.lastScene || "")}</div>${banner}<div class="tbhint" aria-hidden="true"></div></div>
       <div class="tbvit"><div class="tbu me" data-tbzone="self"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.me(f, sess.st))}"` : ""}><small class="nm">🛡 ${esc(s.name || "You")}</small>${uBar(hpNow, prev.hp, hpMax, "hp")}<div class="tbsub">${rBar(mpNow, prev.mp, mpMax, "mp", "MP")}${rBar(spNow, prev.sp, spMax, "sp", "SP")}</div></div>
         <div class="tbu foe" data-tbzone="foe"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.foe(f, sess.ehpMax))}"` : ""}><small class="nm">☠ ${esc(f.e.name)}</small>${uBar(ehpNow, prev.ehp, sess.ehpMax, "hp foe")}${statusChips(f)}</div></div>
-      ${allies ? `<div class="tballies">${allies}</div>` : ""}
+      ${allies}
       <button class="tblog" aria-live="polite" data-tbx="log" aria-label="Fight log, tap for the full log"${log ? "" : " hidden"}>${log}</button>
       ${wait}
       <div class="tbdock">
@@ -559,6 +580,27 @@ const TB = (() => {
     if (now.mp < was.mp - 0.5) out.push({ at: "me", n: now.mp - was.mp, el: "mp", tag: "MP" });
     if (now.sp < was.sp - 0.5) out.push({ at: "me", n: now.sp - was.sp, el: "sp", tag: "SP" });
     return out.slice(-8);
+  }
+  /* your party, readable at a glance: one frame per teammate (players and followers) with health numbers, what's on them,
+     and a drop target, so spells, scrolls and potions can be dragged onto a teammate */
+  function partyHTML(f) {
+    const pc = (v, m) => (100 * Math.max(0, v) / Math.max(1, m)).toFixed(1);
+    ui.prevAl = ui.prevAl || new Map();
+    const one = (a, i, down) => {
+      const mx = Math.round(a.maxHp || a.hpMax || a._max || Math.max(a.hp || 0, 1)), hp = Math.max(0, Math.round(a.hp || 0));
+      const was = ui.prevAl.get(a) ?? hp; ui.prevAl.set(a, hp);
+      const fx = [a.ward > 0 ? "🔰" : "", a.armorT > 0 ? "🪨" : "", a.imbue?.turns > 0 ? "✨" : "", a.heroT > 0 ? "⚑" : "", a.unseen > 0 ? "👁" : "", a.guard ? "🛡" : ""].join("");
+      const ic = a.player ? "🧑" : a.follower ? "⚔" : a.summon ? "✦" : "🐾";
+      const role = a.role ? ` · ${a.role}` : a.follower ? " · follower" : a.player ? " · player" : "";
+      const tip = `${a.name}${role}. ${down ? "Knocked down" : `${hp} / ${mx} health`}.${down ? " A Rescue spell can bring them back." : " Drag a healing spell, scroll or potion here to use it on them."}`;
+      return `<div class="tbu ally${down ? " down" : ""}" data-tbzone="${down ? "ally" : "self ally"}" data-ally="${down ? 1000 + i : i}" data-tip="${esc(tip)}"><small class="nm">${ic} ${esc(a.name)}${fx ? ` <span class="fx">${fx}</span>` : ""}</small>
+        <div class="tbbar mid hp"><b class="gh" style="width:${pc(Math.max(hp, was), mx)}%" data-to="${pc(hp, mx)}"></b><i style="width:${pc(hp, mx)}%"></i><span class="num">${down ? "down" : `${hp} / ${mx}`}</span></div></div>`;
+    };
+    const live = f.allies.filter((a) => a.hp != null).map((a) => one(a, f.allies.indexOf(a), false));
+    const downed = (f._downed || []).map((a, i) => one(a, i, true));
+    const all = [...live, ...downed];
+    if (!all.length) return "";
+    return `<div class="tbparty${all.length > 4 ? " many" : ""}" aria-label="Your party">${all.join("")}</div>`;
   }
   /* the whole fight so far, newest round first */
   function fullLog(sess, fmt) {
@@ -606,7 +648,8 @@ const TB = (() => {
     if (b.dataset.tbx === "logx") { ui.logOpen = false; return step(); }
     if (b.dataset.tba) {
       ui.menu = null;
-      let r = sess.act(b.dataset.tba);
+      const root = document.getElementById("tbf"), tgt = root?.dataset.tbt; if (root) delete root.dataset.tbt;
+      let r = sess.act(b.dataset.tba, tgt);
       if (r?.err) { if (hooks.toast) hooks.toast(r.err); return; }
       if (r?.turn === "next") r = sess.advance();
       if (typeof SOUND !== "undefined" && SOUND.fx) SOUND.fx(/spell|dual|scroll/.test(b.dataset.tba) ? "spell" : "hit");
