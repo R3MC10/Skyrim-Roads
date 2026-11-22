@@ -22,8 +22,9 @@ const MENUS = (() => {
     ["map", "Map", "map", [["map", "Travel"], ["places", "Locations"], ["world", "World news"]]],
     ["log", "Journal", "log", [["log", "Quests"]]],
     ["social", "Social", "social", [["social", "Social"]]],
-    ["town", "Town", "town", [["town", "Town"]]],
+    ["town", "Area", "town", [["town", "Area"]]],
   ];
+  const HOTKEYS = { hero: "C", pack: "I", magic: "P", map: "M", log: "J", social: "O", town: "A" };   // keyboard: Skyrim-ish letters, shown on the tabs on a PC
   const BY = Object.fromEntries(GROUPS.map((g) => [g[0], g]));
   const OWNER = {};
   for (const [id, , , subs] of GROUPS) for (const [s] of subs) OWNER[s] = OWNER[s] || id;
@@ -49,7 +50,7 @@ const MENUS = (() => {
     if (!el) return false;
     el.classList.add("mn-bar");
     const on = groupOf(tab);
-    el.innerHTML = GROUPS.map(([id, label]) => `<button class="tab ${id === on ? "on" : ""}" role="tab" aria-selected="${id === on}" data-tab="${id}" aria-label="${label}"><svg viewBox="0 0 24 24" aria-hidden="true">${I[id]}</svg><span class="mn-l">${label}</span></button>`).join("");
+    el.innerHTML = GROUPS.map(([id, label]) => `<button class="tab ${id === on ? "on" : ""}" role="tab" aria-selected="${id === on}" data-tab="${id}" aria-label="${label}"><svg viewBox="0 0 24 24" aria-hidden="true">${I[id]}</svg><span class="mn-l">${label}</span>${HOTKEYS[id] ? `<kbd class="hk" aria-hidden="true">${HOTKEYS[id]}</kbd>` : ""}</button>`).join("");
     if (typeof REMIND !== "undefined") { try { REMIND.attach("#tabs [data-tab=social]", "social"); } catch { /* badges are optional */ } }   // remind.js: the 👥 button's badge moves here
     return true;
   }
@@ -104,5 +105,5 @@ const MENUS = (() => {
     if (typeof ResizeObserver !== "undefined") document.addEventListener("DOMContentLoaded", () => { const t = document.getElementById("tabs"); if (t) new ResizeObserver(fit).observe(t); });
     setInterval(fit, 2000);
   }
-  return { GROUPS, groupOf, pick, charTabs, screens, bar, subnav, afterPanel, skyOn, panels };
+  return { HOTKEYS, GROUPS, groupOf, pick, charTabs, screens, bar, subnav, afterPanel, skyOn, panels };
 })();

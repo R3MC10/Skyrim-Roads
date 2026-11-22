@@ -140,7 +140,13 @@ const G = (() => {
   const maxStamina = (s) => 100 + s.spBonus + fxSum(s, "max:stamina");
   function curHealth(s, t = now()) {
     if (s.dungeon) return Math.min(maxHealth(s), s.health);   // [OURS] no regeneration inside a dungeon
-    return Math.min(maxHealth(s), s.health + Math.max(0, t - s.healthTs) * F.REGEN_PER_SECOND.health * maxHealth(s) * (1 + fxSum(s, "regen:health", t) / 100) * (s.stone === "lady" ? 1.25 : 1));
+    // [OURS] no passive healing: health only comes back from potions, food, spells, beds, or a "regenerate health" effect while it lasts
+    const rate = F.REGEN_PER_SECOND.health * maxHealth(s) * (s.stone === "lady" ? 1.25 : 1), from = s.healthTs || t;
+    let gain = 0;
+    for (const f of s.fx || []) if (f.key === "regen:health" && f.mag > 0) gain += Math.max(0, Math.min(t, f.until) - from) * rate * (1 + f.mag / 100);   // food, potions, shrines: only while they last
+    const worn = (typeof ENCH !== "undefined" && s.loadouts ? ENCH.worn(s, "regen:health") : 0) + (typeof CURSE !== "undefined" ? CURSE.fx(s, "regen:health", t) : 0);
+    if (worn > 0) gain += Math.max(0, t - from) * rate * (worn / 100);   // enchanted gear heals slowly
+    return Math.min(maxHealth(s), s.health + gain);
   }
   function setHealth(s, hp, t = now()) { s.health = Math.max(0, Math.min(maxHealth(s), hp)); s.healthTs = t; }
   const skill = (s, name) => s.skills[name].lvl + fxSum(s, "skill:" + name) + (typeof LEGEND !== "undefined" ? LEGEND.bonus(s, name) : 0);   // potions add skill points [OURS simplification]; legendary stars add a little
@@ -1055,7 +1061,7 @@ const G = (() => {
   function startTrip(s, destName, dest, t = now()) {
     if (s.trip?.status === "encounter") return "Deal with the encounter first.";
     if (s.dungeon) return `You're inside ${s.dungeon.place}. Leave it first.`;
-    if (!WORLD.same([s.x, s.y], dest)) return WORLD.isSol(dest) ? "Solstheim is across the sea. Take the Northern Maiden from the Windhelm docks (Town tab)." : "Skyrim is across the sea. Take the boat from the Raven Rock docks (Town tab).";
+    if (!WORLD.same([s.x, s.y], dest)) return WORLD.isSol(dest) ? "Solstheim is across the sea. Take the Northern Maiden from the Windhelm docks (Area tab)." : "Skyrim is across the sea. Take the boat from the Raven Rock docks (Area tab).";
     const path = Terrain.route([s.x, s.y], dest);
     s.trip = { destName, dest, origin: s.location || "the wilds", start: [s.x, s.y], path, idx: 0, trail: [[s.x, s.y]],
       lastTick: t, status: "travel", encounter: null, log: [] };

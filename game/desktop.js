@@ -8,4 +8,23 @@
     e.preventDefault();
     try { window.__ui?.back?.(); } catch (x) { /* nothing to close */ }
   });
+  /* hotkeys: a letter opens its tab (the letters show on the tabs), Tab opens or closes the compass menu */
+  addEventListener("keydown", (e) => {
+    if (e.defaultPrevented || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+    const t = e.target, tag = (t && t.tagName) || "";
+    if (/^(INPUT|TEXTAREA|SELECT)$/.test(tag) || t?.isContentEditable) return;   // typing a name or a chat line
+    if (document.getElementById("nickbox") || document.getElementById("title") || document.getElementById("tbf") || document.getElementById("tbwatch")) return;
+    if (e.key === "Tab") {
+      if (typeof TABMENU === "undefined") return;
+      e.preventDefault();
+      try { document.getElementById("tw") ? TABMENU.closeHub() : TABMENU.openHub(); } catch (x) { /* no menu right now */ }
+      return;
+    }
+    const keys = typeof MENUS !== "undefined" ? MENUS.HOTKEYS : null; if (!keys) return;
+    const id = Object.keys(keys).find((k) => keys[k] === String(e.key).toUpperCase()); if (!id) return;
+    const b = document.querySelector(`#tabs [data-tab="${id}"]`); if (!b) return;
+    e.preventDefault();
+    if (document.getElementById("tw") && typeof TABMENU !== "undefined") { try { TABMENU.closeHub(); } catch (x) { /* ignore */ } }
+    b.click();
+  });
 })();

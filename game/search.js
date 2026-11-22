@@ -437,13 +437,13 @@ const SEARCH = (() => {
       const f = TOWNS.FOLLOWERS[e.id], town = f[1] && knownPlace(S, f[1]) ? f[1] : null;
       h = `<div class="srch-dh">${icon(S, e, 56)}<div><h2>${esc(f[0])}</h2><p class="sub">${esc(f[5] || "")}</p></div></div>
         <div class="srch-kvs">${row("Hire", f[2] ? `${f[2]} gold` : "free (once they trust you)")}${row("Where", town ? esc(town) : "somewhere in Skyrim")}</div>
-        <p class="sub">Followers fight beside you, carry things for you and get knocked down instead of dying. Hire them in town (Town tab).</p>
+        <p class="sub">Followers fight beside you, carry things for you and get knocked down instead of dying. Hire them in town (Area tab).</p>
         <div class="srch-acts">${town && S.location === town ? goBtn("Hirelings in town", "town", "hire", true) : town ? goBtn(`📍 Show ${esc(town)} on the map`, "place", town, true) : ""}</div>`;
     } else if (e.k === "recipe" && e.rk === "smith") {
       const r = SMITH.RECIPES[e.item], it = D.ITEMS[e.item], pk = r.perk ? PERKS.BY_ID[r.perk] : null, okPerk = !r.perk || PERKS.rank(S, r.perk) > 0;
       h = `<div class="srch-dh">${icon(S, e, 56)}<div><h2>${esc(it.name)}</h2><p class="sub">${esc(safe(() => G.itemStats(e.item)))}</p></div></div>
         <h3>What it takes</h3><div class="srch-kvs">${r.mats.map(([m, n]) => row(esc(itemName(m)), have(S, m, n))).join("")}${pk ? row(`Perk: ${esc(pk.name)}`, okPerk ? '<span class="srch-ok">✓ taken</span>' : '<span class="srch-no">not yet</span>') : ""}</div>
-        <p class="sub">Made at any blacksmith's forge (Town tab → Forge). Ore is smelted into ingots there, pelts tanned into leather.</p>
+        <p class="sub">Made at any blacksmith's forge (Area tab → Forge). Ore is smelted into ingots there, pelts tanned into leather.</p>
         <div class="srch-acts">${safe(() => SMITH.atForge(S)) ? goBtn("⚒ Open the forge", "town", "forge", true) : ""}${pk ? goBtn(`★ ${esc(pk.name)}`, "perk", r.perk) : ""}</div>`;
     } else if (e.k === "recipe" && e.rk === "cook") {
       const r = COOK.RECIPES[e.rid];
@@ -457,7 +457,7 @@ const SEARCH = (() => {
         <h3>Ingredients you know have it</h3>
         ${n.known.length ? `<div class="srch-kvs">${n.known.map((id) => row(esc(itemName(id)), `${countOf(S, id)} in pack`)).join("")}</div>` : `<p class="sub">None yet. Eat an ingredient or mix it to learn its effects.</p>`}
         ${n.unknown.length ? `<p class="sub">${n.unknown.length} more ingredient${n.unknown.length === 1 ? "" : "s"} you haven't found out yet also ${n.unknown.length === 1 ? "has" : "have"} it.</p>` : ""}
-        <p class="sub">Mix two ingredients that share ${esc(e.eff)} at an alchemy lab (Town tab → Alchemy lab).</p>
+        <p class="sub">Mix two ingredients that share ${esc(e.eff)} at an alchemy lab (Area tab → Alchemy lab).</p>
         <div class="srch-acts">${S.location && !S.trip ? goBtn("⚗ Alchemy lab", "town", "alchemy", true) : ""}</div>`;
     } else return back;
     return `${back}<div class="srch-d">${h}</div>`;

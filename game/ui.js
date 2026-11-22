@@ -18,7 +18,7 @@
     ["hero", "Hero", '<circle cx="12" cy="7" r="4"/><path d="M4 21c1-5 5-7 8-7s7 2 8 7"/>'],
     ["pack", "Pack", '<path d="M6 8h12l-1 13H7z"/><path d="M9 8V6a3 3 0 016 0v2"/>'],
     ["tactics", "Tactics", '<path d="M5 19L19 5M14 5h5v5"/><path d="M5 5l6 6M14 14l5 5"/>'],
-    ["town", "Town", '<path d="M3 21V10l9-6 9 6v11"/><path d="M9 21v-6h6v6"/>'],
+    ["town", "Area", '<path d="M3 21V10l9-6 9 6v11"/><path d="M9 21v-6h6v6"/>'],
     ["log", "Journal", '<path d="M6 3h12v18H6z"/><path d="M9 8h6M9 12h6M9 16h4"/>'],
   ];
   let S = null, net = {}, tab = "map", selected = null, others = [], bags = [];
@@ -231,7 +231,7 @@
     if (titlePage === "howto") return `<h2>How to Play</h2>
       <h3>Travel</h3><p>Tap a place on the map and press Go. You walk in real time, even with the app closed: about ten minutes from Whiterun to Windhelm. Roads are fast; snow, marsh and mountains are slow. Carriages are safe and quick.</p>
       <h3>Fights</h3><p>Bandits, wolves and worse block the road. Fight, flee, sneak past or drink a potion. Fights follow your tactics (Character → Tactics), rules like “below 40% health, drink a potion”.</p>
-      <h3>Towns</h3><p>The Town tab has shops, inns, trainers, the forge, alchemy, jobs, homes and followers. Rest at an inn or your own bed for a bonus.</p>
+      <h3>Towns</h3><p>The Area tab has shops, inns, trainers, the forge, alchemy, jobs, homes and followers. Rest at an inn or your own bed for a bonus.</p>
       <h3>Dungeons</h3><p>At a barrow or cave, press Go inside. Pick your way room by room down to the boss. Health doesn't come back on its own in there, so bring potions.</p>
       <h3>Quests</h3><p>The Journal tab shows your quests. The gold diamond on the map marks where to go next.</p>
       <h3>Playing together</h3><p>Everyone with the app shares one world. Form a party, trade, fight dragons that attack towns, or rob each other. Watch your back.</p>
@@ -652,7 +652,7 @@
             const near = ROAM.around(S), msg = `You stop in ${ROAM.isRoam(out.arrived) ? out.arrived : `the spot you marked (${out.arrived})`}. ${Terrain.NAMES[Terrain.typeAtPos([S.x, S.y])]} all around.${near.length ? ` Nearby: ${near.join(", ")}.` : " Nothing you know of nearby."}`;
             G.note(S, "🧭 " + msg); toast(msg);
           } else
-          toast(`Arrived at ${out.arrived}.` + (G.shopTypes(out.arrived).length ? " Shops are in the Town tab." : DUNGEONS.enterable(out.arrived) ? " You can go inside." : ""));
+          toast(`Arrived at ${out.arrived}.` + (G.shopTypes(out.arrived).length ? " Shops are in the Area tab." : DUNGEONS.enterable(out.arrived) ? " You can go inside." : ""));
           selected = null; renderPanel(true);
           caravanPay();
           const jm = TOWNS.checkJobs(S); if (jm.length) { tally("jobs", jm.length); persist(); setTimeout(() => toast(jm.join(" ")), 1500); }
@@ -1178,7 +1178,7 @@
       <button class="btn pri" data-act="greybeards" style="width:100%" ${S.greybeards ? "disabled" : ""}>${S.greybeards ? "They have taught you all they will, for now" : "Speak with the Greybeards"}</button></div>`;
     if (l && !S.trip && SMITH.MINES[l] && !TOWNS.isTown?.(l) && !DUNGEONS.enterable(l)) return `<div class="panel"><h2>${esc(l)}</h2>${PLACEART.scene(l)}${mineHTML(l)}</div>`;
     const solLine = typeof SOL !== "undefined" && l ? SOL.placeLine(S, l) : "";
-    if (l && !S.trip && WORLD.places[l] && !DUNGEONS.enterable(l)) return `<div class="panel"><h2>${esc(l)}</h2>${PLACEART.scene(l)}<p class="sub" style="margin:0">${esc(G.holdAt(WORLD.places[l]))}${G.shopTypes(l).length || TOWNS.isTown(l) ? " · shops, inn and more in the Town tab" : ""}</p>${solLine ? `<p class="sub">${esc(solLine)}</p>` : ""}</div>`;
+    if (l && !S.trip && WORLD.places[l] && !DUNGEONS.enterable(l)) return `<div class="panel"><h2>${esc(l)}</h2>${PLACEART.scene(l)}<p class="sub" style="margin:0">${esc(G.holdAt(WORLD.places[l]))}${G.shopTypes(l).length || TOWNS.isTown(l) ? " · shops, inn and more in the Area tab" : ""}</p>${solLine ? `<p class="sub">${esc(solLine)}</p>` : ""}</div>`;
     if (!l || !DUNGEONS.enterable(l) || S.trip) return "";
     const left = DUNGEONS.refillLeft(S, l), lvl = { 1: 1, 2: 6, 3: 12 }[DUNGEONS.info(l).tier];
     const th = DUNGEONS.info(l).theme, rec = th === "lair" ? 20 : th === "giantcamp" ? 10 : lvl;
@@ -1617,7 +1617,7 @@
       const at = GUILDS.takeAt(id).includes(S.location), wait = Math.max(0, st.next - G.now());
       return `<div class="item" style="flex-wrap:wrap">${head}<p class="sub" style="width:100%;margin:4px 0">${wait > 0 ? `${who} will have more work in about ${Math.ceil(wait / 60)} min.` : at ? `${who} ${id === "thieves" ? "have" : "has"} work for you.` : `Ask ${who} for work ${id === "thieves" ? "in the Ragged Flagon (Riften)" : "at the Sanctuary (Falkreath or Dawnstar)"}.`}</p>${at && wait <= 0 ? `<button class="btn sm pri" data-act="gtake" data-id="${id}">${id === "thieves" ? "Ask for a job" : "Ask for a contract"}</button>` : ""}</div>`;
     }).join("");
-    return `<div class="panel"><h2>Quests</h2><div class="list">${rows || '<p class="sub">No active quests. Ask around: quest givers are listed below under Guilds, and the inn (Town tab) sells rumours.</p>'}</div>
+    return `<div class="panel"><h2>Quests</h2><div class="list">${rows || '<p class="sub">No active quests. Ask around: quest givers are listed below under Guilds, and the inn (Area tab) sells rumours.</p>'}</div>
       ${work ? `<h3 style="margin-top:12px">Guild work</h3><div class="list">${work}</div>` : ""}
       ${avail ? `<h3 style="margin-top:12px">Guilds</h3><div class="list">${avail}</div>` : ""}
       ${done.length ? `<p class="sub" style="margin-top:8px">Completed: ${done.map(esc).join(", ")}</p>` : ""}
@@ -1902,7 +1902,7 @@
       return `<div class="item on"><div class="t">📜 ${esc(d.name)}: ${esc(st.title)}<span>${esc(st.text)}</span></div></div>`; };
     if (S.vampire) {
       const st = CURSE.stage(S), dd = CURSE.daysUnfed ? CURSE.daysUnfed(S) : CURSE.hoursUnfed(S) / 2, dtxt = dd < 1 ? `${Math.round(dd * 24)} in-game hours` : `${dd.toFixed(1)} in-game days`;
-      return `<div class="panel" style="border-color:#7a1414"><h2>🩸 Vampire</h2><p class="sub">Hunger: stage ${st} of 4 (${dtxt} since you fed; one stage per day). The hungrier you are, the stronger your Destruction and Illusion and your night-time blows, the less frost hurts you, and the more fire burns. Poison barely touches you. By day the sun slows your healing outside. Feed at an inn (Town tab), or win a fight as a Vampire Lord.</p>
+      return `<div class="panel" style="border-color:#7a1414"><h2>🩸 Vampire</h2><p class="sub">Hunger: stage ${st} of 4 (${dtxt} since you fed; one stage per day). The hungrier you are, the stronger your Destruction and Illusion and your night-time blows, the less frost hurts you, and the more fire burns. Poison barely touches you. By day the sun slows your healing outside. Feed at an inn (Area tab), or win a fight as a Vampire Lord.</p>
         <div class="item"><div class="t">🦇 Vampire Lord<span>Once a day, in your Tactics: for ${CURSE.LORD_TURNS || 12} turns you drain the foe's life every turn and take less damage. No potions while changed.</span></div><span class="num sub">${CURSE.lordReady(S) ? "Ready" : "Used today"}</span></div>
         ${cureQ("cure_vamp")}${tree("lord")}</div>`;
     }
@@ -2532,7 +2532,7 @@
       row("◆", `${esc(a.st.title)} <small class="nx-q">${esc(a.def.name)}</small>`, `${esc(a.st.text)}${n && !at && WORLD.places[n] ? ` · ${esc(n)} is ~${eta(n)} away` : ""}`, btn);
     }
     if (S.pendingLevels > 0 || PERKS.pointsLeft(S) > 0) row("⬆", S.pendingLevels > 0 ? "You can level up" : `${PERKS.pointsLeft(S)} perk point${PERKS.pointsLeft(S) > 1 ? "s" : ""} to spend`, "Open Character to choose what grows.", `<button class="btn sm" data-act="uxtab" data-id="hero">Character</button>`);
-    if (S.location && !S.trip && (TOWNS.isTown(S.location) || G.shopTypes(S.location).length)) row("🏘", `You're in ${esc(S.location)}`, "Shops, the inn, trainers and jobs are in the Town tab.", `<button class="btn sm" data-act="uxtab" data-id="town">Town</button>`);
+    if (S.location && !S.trip && (TOWNS.isTown(S.location) || G.shopTypes(S.location).length)) row("🏘", `You're in ${esc(S.location)}`, "Shops, the inn, trainers and jobs are in the Area tab.", `<button class="btn sm" data-act="uxtab" data-id="town">Town</button>`);
     const ob = typeof ONBOARD !== "undefined" ? ONBOARD.rows(S, { here, eta, known, quest: a?.id, online: Store.online, party: !!party, max: 4 - rows.length }) : null;   // [onboard] 1-3 ideas from your state
     if (ob) rows.push(...ob);
     const g = !ob && typeof GUIDE !== "undefined" && S.level < 15 ? GUIDE.STEPS.find((st) => !st[3](S)) : null;
@@ -2638,7 +2638,7 @@
       <p class="sub" style="margin-top:8px">Carrying <span class="num">${G.carried(S).toFixed(1)}/${G.capacity(S)}</span>${G.overweight(S) ? " — too heavy to run" : ""} · ${S.gold} gold${enchanted.length ? ` · ${enchanted.length} enchanted` : ""}</p></div>
       <div class="panel"><h2>Pack</h2><p class="sub">Tap an item for options.${canShop ? " You're in town: you can sell here." : ""}</p>
       ${typeof INVQOL !== "undefined" && S.inv.length > 1 ? INVQOL.sortHTML(S) : ""}${S.inv.length > 6 ? `<input id="packsearch" class="uxsearch" type="search" placeholder="🔍 Find an item" value="${esc(packSearch)}" autocomplete="off" aria-label="Find an item in your pack">` : ""}
-      ${Object.entries(groups).map(([g, rows]) => [g, (typeof INVQOL !== "undefined" ? INVQOL.sorted(S, rows) : rows).filter((r) => !packSearch || ((r.tq ? TOWNS.QUALITY[r.tq] + " " : "") + D.ITEMS[r.item].name).toLowerCase().includes(packSearch.toLowerCase()))]).filter(([, rows]) => rows.length).map(([g, rows]) => `<h3 style="margin-top:12px">${g}</h3><div class="list">${rows.map(row).join("")}</div>`).join("") || (packSearch ? `<p class="sub">Nothing called “${esc(packSearch)}”. Try part of the name.</p>` : '<p class="sub">Your pack is empty. Buy things in a town (Town tab → Shops) or loot them on the road.</p>')}</div>`;
+      ${Object.entries(groups).map(([g, rows]) => [g, (typeof INVQOL !== "undefined" ? INVQOL.sorted(S, rows) : rows).filter((r) => !packSearch || ((r.tq ? TOWNS.QUALITY[r.tq] + " " : "") + D.ITEMS[r.item].name).toLowerCase().includes(packSearch.toLowerCase()))]).filter(([, rows]) => rows.length).map(([g, rows]) => `<h3 style="margin-top:12px">${g}</h3><div class="list">${rows.map(row).join("")}</div>`).join("") || (packSearch ? `<p class="sub">Nothing called “${esc(packSearch)}”. Try part of the name.</p>` : '<p class="sub">Your pack is empty. Buy things in a town (Area tab → Shops) or loot them on the road.</p>')}</div>`;
   }
 
   let pendingPreset = null, pendingDel = false;
@@ -3187,7 +3187,7 @@
     if (jTab === "active") {
       const groups = Q_ORDER.map((c) => [c, story.filter((a) => qCat(a.id) === c)]).filter(([, l]) => l.length);
       body = groups.length ? groups.map(([c, l]) => `<h3 class="qcat">${esc(c)}</h3>${l.map((a) => questCard(a.id, a, false)).join("")}`).join("")
-        : `<p class="sub">No active quests. Quest givers are listed below, and inns (Town tab) sell rumours.</p>`;
+        : `<p class="sub">No active quests. Quest givers are listed below, and inns (Area tab) sell rumours.</p>`;
       if (coopRun && S.dungeon) body += `<h3 class="qcat">Co-op</h3>${miscCard("⚔", `Co-op run: ${esc(S.dungeon.place)}`, `You're clearing ${esc(S.dungeon.place)} with your party, room by room. Open the Travel tab to carry on.`, `<button class="btn sm pri" data-act="tabgo" data-id="map">Carry on</button>`)}`;
       if (avail) body += `<h3 class="qcat">Quest givers</h3><div class="list">${avail}</div>`;
       body += `<p class="sub" style="margin-top:8px">☆ Track a quest to show it on the compass, the map's gold diamond and the “What to do next” card.</p>`;

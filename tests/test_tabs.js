@@ -8,7 +8,7 @@ c.UI_SRC=fs.readFileSync(W+"ui.js","utf8");
 vm.runInContext(`
 const ok=(c,m)=>{ if(!c) throw new Error("FAIL "+m); };
 const M=MENUS;
-ok(M.GROUPS.map(g=>g[1]).join()==="Character,Items,Magic,Map,Journal,Social,Town","seven tabs in order");
+ok(M.GROUPS.map(g=>g[1]).join()==="Character,Items,Magic,Map,Journal,Social,Area","seven tabs in order");
 ok(M.GROUPS.map(g=>g[0]).join()==="hero,pack,magic,map,log,social,town","tab ids kept (old screen tests click them)");
 // where things live
 for (const [s,g] of Object.entries({stars:"hero",hero:"hero",perks:"hero",tactics:"hero",stats:"hero",ach:"hero",library:"hero",diary:"hero",settings:"hero",

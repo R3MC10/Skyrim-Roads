@@ -231,7 +231,7 @@ const SOL = (() => {
   function placeLine(s, l) {
     if (STONES.includes(l)) return freed(s, l) ? "An All-Maker Stone, free of Miraak's black stone. The Skaal sing here again." : "An All-Maker Stone, caged in Miraak's black stone. Workers stand around it in a trance, building something.";
     if (l === "Temple of Miraak") return "Miraak's temple, half buried in the snow. His cultists come and go.";
-    if (l === "Raven Rock") return "The Dunmer town of Raven Rock, under the Bulwark. The docks are in the Town tab.";
+    if (l === "Raven Rock") return "The Dunmer town of Raven Rock, under the Bulwark. The docks are in the Area tab.";
     return "";
   }
   function act(s, id) {

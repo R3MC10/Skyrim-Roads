@@ -1,5 +1,6 @@
 /* The world map. The painted base is drawn once (seeded, identical for everyone); fog, routes and markers each frame. */
 const WorldMap = (() => {
+  const heading = { a: null, last: null };   // the way your marker last moved
   const W = 1000, H = 700, S = 2.4;          // painted at 2.4× so zooming in stays crisp
   const T = Terrain.T;
   const P = (p) => [p[0] * W, p[1] * H];
@@ -361,7 +362,11 @@ const WorldMap = (() => {
     g.drawImage(fogFor(OY ? seen.map((p) => [p[0], p[1] - OY]) : seen, SV ? "sol" : ""), 0, 0, W, H);
     if (v.rulers?.length && !SV) { g.globalAlpha = 0.26; for (const r of v.rulers) g.drawImage(tintFor(r.hold, r.color), 0, 0, W, H); g.globalAlpha = 1; }   // holds ruled by a clan
     if (OY) g.setTransform(k, 0, 0, k, ox, oy - OYH * k);   // from here on: world coordinates
-    const [px, py] = P(v.player), bob = MA && v.moving && !v.reduceMotion ? Math.abs(Math.sin(v.t * 7)) * 2.2 * s : 0;
+    const [px, py] = P(v.player);
+    // which way you're heading: from how your marker moved (a tiny arrow points that way while you travel)
+    { const l = heading.last, d = l ? Math.hypot(px - l[0], py - l[1]) : 99; if (d > 60) heading.a = null; else if (d > 0.3) heading.a = Math.atan2(py - l[1], px - l[0]); if (d > 0.3) heading.last = [px, py];
+      if (heading.a == null && v.moving && v.dest?.pos) { const [dx, dy] = P(v.dest.pos); if (Math.hypot(dx - px, dy - py) > 1) heading.a = Math.atan2(dy - py, dx - px); } }   // just set off: point at where you're going
+    const bob = MA && v.moving && !v.reduceMotion ? Math.abs(Math.sin(v.t * 7)) * 2.2 * s : 0;
     if (v.trail?.length > 1) {
       g.strokeStyle = "rgba(170,40,28,.9)"; g.lineWidth = 3.2 * s; g.lineCap = "round"; g.lineJoin = "round";
       g.beginPath(); v.trail.forEach((p, i) => { const [x, y] = P(p); i ? g.lineTo(x, y) : g.moveTo(x, y); }); g.lineTo(px, py); g.stroke();
@@ -550,12 +555,21 @@ const WorldMap = (() => {
     if (v.fx && typeof FXART !== "undefined") FXART.mapUnder(g, v.fx, P, s, px, py, v.t, v.reduceMotion, v);   // spells and shouts around you (fxart.js)
     const pulse = v.reduceMotion ? 0.5 : (Math.sin(v.t * 3) + 1) / 2;
     g.fillStyle = `rgba(110,200,255,${0.18 + 0.12 * pulse})`; g.beginPath(); g.arc(px, py, (15 + 6 * pulse) * s, 0, 7); g.fill();
+    const arrow = (cx, cy, rr) => {   // the direction arrow, just outside your marker, pointing the way you're going
+      if (!v.moving || heading.a == null) return;
+      const a = heading.a, z = 7 * s;
+      g.save(); g.translate(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); g.rotate(a);
+      g.fillStyle = "#ffe08a"; g.strokeStyle = "#1a1206"; g.lineWidth = 2.2 * s; g.lineJoin = "round";
+      g.beginPath(); g.moveTo(z, 0); g.lineTo(-z * 0.75, -z * 0.85); g.lineTo(-z * 0.3, 0); g.lineTo(-z * 0.75, z * 0.85); g.closePath(); g.stroke(); g.fill();
+      g.restore();
+    };
     if (MA) {
       const lift = v.horse ? 15 * s : 0;
       if (v.horse) g.drawImage(MA.horse(v.horse), px - 27 * s, py - 12 * s - bob * 0.5, 54 * s, 35 * s);   // the horse under you, then you in the saddle
       MA.token(g, px + (v.horse ? 3 * s : 0), py - lift - bob, s, v.look, "#8fd3ff", v.horse ? 11 : 13);
       if (v.fx && typeof FXART !== "undefined") FXART.mapOver(g, v.fx, P, s, px + (v.horse ? 3 * s : 0), py - lift - bob, v.t, v.reduceMotion);
       label(g, v.name, px + 16 * s, py - 16 * s - lift, s, 14, "#d8f0ff", 700, false, "left");
+      arrow(px + (v.horse ? 3 * s : 0), py - lift - bob, (v.horse ? 18 : 21) * s);
       return;
     }
     if (v.horse) {   // riding: a horseshoe in your horse's coat colour around your marker
@@ -564,6 +578,7 @@ const WorldMap = (() => {
     }
     g.fillStyle = "#8fd3ff"; g.strokeStyle = "#0b2233"; g.lineWidth = 2.4 * s; g.beginPath(); g.arc(px, py, 7.5 * s, 0, 7); g.fill(); g.stroke();
     label(g, v.name, px + 12 * s, py - 13 * s, s, 14, "#d8f0ff", 700, false, "left");
+    arrow(px, py, 15 * s);
   }
 
   /* screen point → nearest place you know (within a finger's reach) */

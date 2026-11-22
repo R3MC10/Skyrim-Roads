@@ -1526,6 +1526,17 @@ body.fab-away .favbtn,body.fab-away .twbtn{opacity:0;pointer-events:none;transfo
 .favbtn,.twbtn{transition:opacity .2s,transform .2s}
 body:has(#favBtn) .app,body:has(#twBtn) .app{padding-bottom:calc(190px + env(safe-area-inset-bottom))}
 .nickbox{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.82)}.nickin{width:min(420px,100%);padding:18px;border-radius:12px;background:#121417;border:1px solid var(--gold,#d6b25e)}.nickin h2{margin:0 0 6px}.nickin input{width:100%;margin:10px 0 4px;font-size:18px}.nickerr{min-height:1.2em;margin:0 0 8px;color:#e07a6a;font-size:.9em}#nm.nm-bad{outline:2px solid #e07a6a}
+.tbwatch{position:fixed;inset:0;z-index:74;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.55);padding:10px 8px calc(10px + env(safe-area-inset-bottom))}
+.tbw-in{width:min(560px,100%);max-height:88vh;overflow:auto;padding:12px;border-radius:12px;background:rgba(14,15,18,.97);border:1px solid var(--gold,#d6b25e);box-shadow:0 8px 30px rgba(0,0,0,.6)}
+.tbw-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px}.tbw-head span{color:#8c877a;font-size:13px}
+.tbw-foe b{display:block;margin-bottom:4px}.tbw-foe small{color:#8c877a;font-weight:400}
+.tbw-bar{display:block;height:8px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden}.tbw-bar i{display:block;height:100%;background:#b8423a;transition:width .3s}.tbw-bar.hp i{background:#5c9a54}
+.tbw-team{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px 10px;margin:10px 0}.tbw-m span{display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tbw-m.down{opacity:.5}.tbw-m.me span{color:#f3d98b}
+.tbw-log{font-size:13px;color:#cfc8b6;border-top:1px solid rgba(255,255,255,.08);padding-top:6px}.tbw-log p{margin:2px 0}
+.tbw-turn{margin-top:8px}.tbw-turn.sent .tbaskb{opacity:.4;pointer-events:none}.tbw-turn .tbaskb{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}
+.tbw-wait{color:#8c877a;margin:8px 0 0}.tbw-end{display:flex;justify-content:space-between;align-items:center;margin-top:8px}.tbw-end.won b{color:#f3d98b}.tbw-end.lost b{color:#c96a5f}
+.tab .hk{display:none}
+@media (hover:hover) and (pointer:fine){.tab .hk{display:block;position:absolute;top:3px;right:calc(50% - 22px);min-width:14px;padding:0 3px;border:1px solid rgba(214,207,190,.35);border-bottom-width:2px;border-radius:3px;background:rgba(0,0,0,.45);color:rgba(236,226,200,.8);font:600 9px/12px system-ui,sans-serif;letter-spacing:0;text-transform:none;text-align:center}.tab.on .hk{color:#fff3cf;border-color:rgba(243,217,139,.6)}}
 </style>
 <script src="access.js"></script>
 </head>

@@ -26,7 +26,7 @@ const I18N = (() => {
     "Back to the main menu": "Wróć do menu głównego", "Close menu": "Zamknij menu", "Tap to begin": "Dotknij, aby zacząć", "Unrolling the map…": "Rozwijanie mapy…",
     "Roads of the North": "Drogi Północy", "Skyrim: Roads of the North": "Skyrim: Drogi Północy", "Continue": "Dalej", "CONTINUE": "DALEJ", "Save and play": "Zapisz i graj",
     // bottom bar and screens
-    Character: "Postać", Items: "Przedmioty", Magic: "Magia", Map: "Mapa", Journal: "Dziennik", Social: "Społeczność", Town: "Miasto", Skills: "Umiejętności",
+    Character: "Postać", Items: "Przedmioty", Magic: "Magia", Map: "Mapa", Journal: "Dziennik", Social: "Społeczność", Town: "Miasto", Area: "Okolica", Skills: "Umiejętności",
     Perks: "Atuty", Tactics: "Taktyka", Stats: "Statystyki", Diary: "Pamiętnik", Library: "Biblioteka", Achievements: "Osiągnięcia", Settings: "Ustawienia",
     Locations: "Lokacje", "World news": "Wieści ze świata", Quests: "Zadania", Party: "Drużyna", Friends: "Przyjaciele", Messages: "Wiadomości", Chat: "Czat",
     Clans: "Klany", Realm: "Królestwo", Shops: "Sklepy", Services: "Usługi", Trainers: "Trenerzy", Forge: "Kuźnia", Jobs: "Zlecenia", Trades: "Wymiany",

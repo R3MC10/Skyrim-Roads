@@ -38,8 +38,8 @@ const ONBOARD = (() => {
     const lv = s.level || 1, gold = s.gold || 0, eta = ctx.eta || (() => "");
     const hurt = typeof G.curHealth === "function" && G.curHealth(s) < G.maxHealth(s) * 0.4;
     const moving = !!(s.trip && s.trip.status === "travel");
-    if (hurt && !s.dungeon) add({ id: "heal", pri: 100, ico: "❤", title: "Patch yourself up", sub: "You're badly hurt. Rest at an inn (Town tab), drink a potion, or just wait: health comes back slowly." + (s.location && TOWNS.isTown(s.location) ? "" : " Fights on the road go badly when you start them hurt."), btn: s.location && TOWNS.isTown(s.location) ? tabBtn("town", "Town") : null });
-    if (typeof G.overweight === "function" && G.overweight(s)) add({ id: "heavy", pri: 95, ico: "⚖", title: "Lighten your pack", sub: "You're carrying too much, so you walk slowly. Sell loot in a town (Town → General goods) or drop what you don't need.", btn: s.location && TOWNS.isTown(s.location) ? tabBtn("town", "Town") : null });
+    if (hurt && !s.dungeon) add({ id: "heal", pri: 100, ico: "❤", title: "Patch yourself up", sub: "You're badly hurt. Rest at an inn (Area tab) or your own bed, drink a potion, eat cooked food, or cast a healing spell. Health doesn't come back by itself." + (s.location && TOWNS.isTown(s.location) ? "" : " Fights on the road go badly when you start them hurt."), btn: s.location && TOWNS.isTown(s.location) ? tabBtn("town", "Area") : null });
+    if (typeof G.overweight === "function" && G.overweight(s)) add({ id: "heavy", pri: 95, ico: "⚖", title: "Lighten your pack", sub: "You're carrying too much, so you walk slowly. Sell loot in a town (Area → General goods) or drop what you don't need.", btn: s.location && TOWNS.isTown(s.location) ? tabBtn("town", "Area") : null });
     // the main quest, when you're tracking something else (the card's first row already shows the tracked quest)
     if ((typeof QUESTS !== "undefined")) {
       const act = QUESTS.active(s), main = act.find((a) => a.id === "main");
@@ -60,13 +60,13 @@ const ONBOARD = (() => {
     const hp = D.HORSE_PRICE || 1000;
     if (!s.horse && gold >= hp + 150 && lv < VETERAN && (typeof HORSES !== "undefined")) {
       const n = HORSES.nearestStables([s.x, s.y]);
-      add({ id: "horse", pri: 55, ico: "🐎", title: "Buy a horse", sub: `You have the ${hp} gold. Riding is much faster and the horse carries things for you. Stables are outside the big cities; ${esc(n)} is closest.`, btn: s.location === n ? tabBtn("town", "Town") : go(n) });
+      add({ id: "horse", pri: 55, ico: "🐎", title: "Buy a horse", sub: `You have the ${hp} gold. Riding is much faster and the horse carries things for you. Stables are outside the big cities; ${esc(n)} is closest.`, btn: s.location === n ? tabBtn("town", "Area") : go(n) });
     }
     // play with others
     if (ctx.online && !ctx.party && lv >= 3) add({ id: "party", pri: 45, ico: "⚑", title: "Team up with other players", sub: "Fights are easier together: in a party you travel as one, each plays their own turns, gold is split evenly and loot is voted on. Open 👥 Friends.", btn: tabBtn("social", "Friends") });
     // rumours: once you can handle a detour and you're in a town with an inn
     if (lv >= 4 && (typeof RUMOURS !== "undefined") && !(s.rw && s.rw.seen) && !RUMOURS.leads(s).length && s.location && TOWNS.INNS && TOWNS.INNS[s.location] && !moving)
-      add({ id: "rumour", pri: 40, ico: "👂", title: "Listen for rumours", sub: "Buy a round at the inn (Town tab) and the locals point you at treasure, trouble or a hidden place. Some of it is just gossip.", btn: tabBtn("town", "Town") });
+      add({ id: "rumour", pri: 40, ico: "👂", title: "Listen for rumours", sub: "Buy a round at the inn (Area tab) and the locals point you at treasure, trouble or a hidden place. Some of it is just gossip.", btn: tabBtn("town", "Area") });
     // world events, once you can survive them
     if (lv >= 8 && (typeof WORLDEV !== "undefined")) {
       const ev = WORLDEV.active()[0];
@@ -74,7 +74,7 @@ const ONBOARD = (() => {
     }
     // a homestead when you're rich and settled
     if ((typeof HOMESTEAD !== "undefined") && !HOMESTEAD.owned(s).length && (gold >= 4000 || lv >= 12))
-      add({ id: "homestead", pri: 30, ico: "🏡", title: "Build your own house", sub: "Buy land near Falkreath, Morthal or Dawnstar from the Jarl's steward and build a home stage by stage. A deed costs about 5000 gold.", btn: s.location !== "Falkreath" ? go("Falkreath") : tabBtn("town", "Town") });
+      add({ id: "homestead", pri: 30, ico: "🏡", title: "Build your own house", sub: "Buy land near Falkreath, Morthal or Dawnstar from the Jarl's steward and build a home stage by stage. A deed costs about 5000 gold.", btn: s.location !== "Falkreath" ? go("Falkreath") : tabBtn("town", "Area") });
     // the next guide step as a fallback
     if ((typeof GUIDE !== "undefined")) { const g = GUIDE.STEPS.find((x) => !x[3](s)); if (g) add({ id: "guide-" + g[0], pri: 20, ico: "📖", title: `Next step: ${esc(g[1])}`, sub: esc(g[2]), btn: { label: "Show me", act: "guidego", attrs: `data-id="${g[0]}"` } }); }
     return out.sort((a, b) => b.pri - a.pri);
