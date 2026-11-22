@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b93", build: 93, date: "22 Nov 2026", title: "Quicker trips and fights", items: [
+      "Recent trips: the travel screen shows the places you went to lately as one-tap buttons, plus \"Again\" to repeat your last trip or \"Back to\" to head home where you came from.",
+      "New setting (Settings → Fights → After road events): pick \"Carry on\" and the result card after a road event or road fight closes by itself after a few seconds, so you keep walking. Touch the card to stop it.",
+      "Fight replays now have ×1, ×2 and ×4 speed (tap the speed button, or pick it in Settings) and a Skip to result button. Tap anywhere on the fight screen or the result card to finish the animation that's playing. With Reduce motion on, replays start at ×2.",
+      "Too much loot? If a won fight leaves you too heavy, you can keep it all or leave the heaviest new pieces by the road.",
+      "Fight again: one tap to rerun a test fight against the practice dummy (Tactics), and Challenge again after an Arena bout.",
+      "The game remembers your last Arena bet and your last test-fight foe. Riding or walking beside your horse was already remembered."] },
     { id: "b92", build: 92, date: "22 Nov 2026", title: "A clearer first hour", items: [
       "“What to do next” on the Travel tab now suggests up to three ideas that fit where you are: road fights near Whiterun while you're new, your first dungeon, the main quest, a horse once you can afford one, teaming up with others, and later rumours, world events and building a homestead. Tap ✕ to hide one, or turn them off in ⚙ Settings → Help & tips. They stop once you reach level 15.",
       "First-time tips: a small card pops up the first time you're too heavy, level up, enter a dungeon, play a turn-by-turn fight (it explains initiative and action points), get a party invite or hear a rumour. One at a time, they never get in the way, and “Don't show tips” switches them off.",

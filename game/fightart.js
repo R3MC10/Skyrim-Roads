@@ -1,7 +1,7 @@
 /* Fight scenes: a little animated stage above every fight log — where you are, you on the left, the foe on the
    right — that replays the whole fight turn by turn at a natural pace (about a second an action: wind-up, strike,
    impact, recovery). Every weapon swings its own way, every spell has its own effect, with particles, screen shake,
-   hit-stop and a slow finishing blow. ⏩ ×2 and Skip buttons; tap the scene to skip. Drawn with the shared ART
+   hit-stop and a slow finishing blow. ⏩ ×1/×2/×4 and Skip to result buttons; tap the scene to skip. Drawn with the shared ART
    toolkit in the player's art style (hand-drawn ink or pixel art).
    It only reads the finished Fight (its log, what was done each turn, start/end health); it never changes a result. [OURS] */
 const FIGHTART = (() => {
@@ -656,7 +656,7 @@ const FIGHTART = (() => {
     const pmul = rm ? 0.4 : 1;
     // ---- state (all allocated once)
     let bi = 0, lt = 0, hitIdx = 0, phase = beats.length ? "play" : "end", phaseT = 0, real = 0, hitstop = 0, slowT = 0, shake = 0, zoom = 1, zoomT = 0, zcx = W / 2, zcy = Hh / 2, flash = 0, flashC = "#fff";
-    let done = false, speed = prefs().fightSpeed === 2 ? 2 : 1, lastNow = performance.now(), raf = 0, revealed = -2;
+    let done = false, speed = [1, 2, 4].includes(prefs().fightSpeed) ? prefs().fightSpeed : rm ? 2 : 1, lastNow = performance.now(), raf = 0, revealed = -2;
     let hpD = hp0, hpT = hp0, hpL = hp0, hpLT = 0, ehpD = ehp0, ehpT = ehp0, ehpL = ehp0, ehpLT = 0;
     const heroP = idlePose({}, rec.hero.wt), foeP = idlePose({}, null), tmpP = {};
     let heroKnock = 0, foeKnock = 0, heroDodge = 1, foeDodge = 1, claw = 0, label = null, labelT = 0, labelC = P.gold, fall = 0, wolfT = 1;
@@ -788,10 +788,12 @@ const FIGHTART = (() => {
     let ctl = null;
     if (!(rec.played || autoSkip() || !beats.length)) {
       ctl = document.createElement("div"); ctl.className = "fsctl";
-      ctl.innerHTML = `<button type="button" class="fsbtn" data-fsx>${speed === 2 ? "▶ ×1" : "⏩ ×2"}</button><button type="button" class="fsbtn" data-fss>Skip</button>`;
+      const spLbl = () => `⏩ ×${speed}`;   // tap to cycle ×1 → ×2 → ×4
+      ctl.innerHTML = `<button type="button" class="fsbtn" data-fsx aria-label="Replay speed, now times ${speed}">${spLbl()}</button><button type="button" class="fsbtn" data-fss>Skip to result</button>`;
       ctl.addEventListener("click", (e) => {
         e.stopPropagation();
-        if (e.target.closest("[data-fsx]")) { speed = speed === 2 ? 1 : 2; setPref("fightSpeed", speed); e.target.closest("[data-fsx]").textContent = speed === 2 ? "▶ ×1" : "⏩ ×2"; }
+        const sx = e.target.closest("[data-fsx]");
+        if (sx) { speed = speed === 1 ? 2 : speed === 2 ? 4 : 1; setPref("fightSpeed", speed); sx.textContent = spLbl(); sx.setAttribute("aria-label", `Replay speed, now times ${speed}`); }
         if (e.target.closest("[data-fss]")) finish();
       });
       el.appendChild(ctl);
@@ -1158,6 +1160,7 @@ const FIGHTART = (() => {
     }
     const runner = {
       step(ms) { for (let left = ms; left > 0; left -= 16) update(Math.min(16, left) / 1000); draw(performance.now()); },
+      finish() { if (!done) finish(); },   // [OURS] tap anywhere on the fight screen (fastqol.js)
       get done() { return done; }, get beat() { return bi; }, beats, el,
     };
     function frame(now) {
@@ -1182,5 +1185,8 @@ const FIGHTART = (() => {
   const advance = (ms) => { for (const r of LIVE) { if (!r.el.isConnected) { LIVE.delete(r); continue; } r.step(ms); } return [...LIVE].map((r) => ({ beat: r.beat, beats: r.beats.length, done: r.done })); };
   const perf = () => { const n = Math.min(perfN, PERF.length), a = Array.from(PERF.subarray(0, n)).sort((x, y) => x - y); return { frames: perfN, p50: a[Math.floor(n * 0.5)] || 0, p90: a[Math.floor(n * 0.9)] || 0, max: a[n - 1] || 0 }; };
   const resetPerf = () => { perfN = 0; };
-  return { placeholder, register, foeOf, sceneOf, beatsOf, allyKind, allyFig, summonKind, ALLY_KINDS, heroOf, mount, animFor, spellFx, MOVES, WEAPONS, FOE_MOVE, KIND_FX, SHOUT_FX, manual, advance, perf, resetPerf };
+  /* [OURS] finish every scene still playing (tap-anywhere on a fight screen, fastqol.js) -> how many were playing */
+  const finishAll = () => { let n = 0; for (const r of [...LIVE]) { if (!r.el.isConnected) { LIVE.delete(r); continue; } if (!r.done) { n++; r.finish(); } } return n; };
+  const playing = () => [...LIVE].some((r) => r.el.isConnected && !r.done);
+  return { placeholder, register, foeOf, sceneOf, beatsOf, allyKind, allyFig, summonKind, ALLY_KINDS, heroOf, mount, animFor, spellFx, MOVES, WEAPONS, FOE_MOVE, KIND_FX, SHOUT_FX, manual, advance, perf, resetPerf, finishAll, playing };
 })();
