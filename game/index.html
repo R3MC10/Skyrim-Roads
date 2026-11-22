@@ -1625,6 +1625,31 @@ body:has(#favBtn) .app,body:has(#twBtn) .app{padding-bottom:calc(190px + env(saf
 .tbf.pixel .tbact{box-shadow:inset -2px -2px 0 rgba(0,0,0,.5),inset 2px 2px 0 rgba(255,255,255,.08)}
 @media (min-height:760px){.tbstage .tbscene{min-height:240px}.tbact{min-height:72px}}
 @media (prefers-reduced-motion:reduce){.tbstage,.tbban,.tbl.fresh,.tbsheet,.tbsh-in{animation:none!important}.tbbar .gh{transition:none}}
+/* [combat overhaul 2] tbui.js: MP/SP numbers, floating damage numbers coloured by element, bars that break off when hit */
+.tbin{position:relative}
+.tbsub{margin-top:5px}.tbbar.mid{height:13px;border-radius:4px;box-shadow:inset 0 1px 2px rgba(0,0,0,.6)}
+.tbbar.mid .num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:4px;font-size:9.5px;font-weight:700;color:#fff;text-shadow:0 1px 2px #000;white-space:nowrap}
+.tbbar.mid .num em{font-style:normal;opacity:.7;font-size:8.5px;letter-spacing:.05em}
+.tbbar.mp i{background:linear-gradient(180deg,#5b8cff,#2c54c9)}.tbbar.sp i{background:linear-gradient(180deg,#7ed36a,#3f8f37)}
+.tbbar .gh{background:linear-gradient(90deg,#ffe7a8,#ff9b6a)}
+.tbbar{overflow:visible}.tbbar.big,.tbbar.mid{isolation:isolate}
+.tbbar.hitfx i{animation:tbbarflash .35s ease}
+.tbbar.hitfx{animation:tbbarjolt .3s ease}
+@keyframes tbbarflash{0%{filter:brightness(3) saturate(0)}100%{filter:none}}
+@keyframes tbbarjolt{0%,100%{transform:none}30%{transform:translateX(-3px)}60%{transform:translateX(2px)}}
+.tbbar .shard{position:absolute;top:0;bottom:0;z-index:3;pointer-events:none;background:#ffd9a0;border-radius:2px;box-shadow:0 0 6px rgba(255,140,80,.8);animation:tbshard .8s cubic-bezier(.2,.6,.4,1) forwards}
+.tbbar.foe .shard,.tbu.foe .tbbar .shard{background:#ffb08a}
+@keyframes tbshard{0%{transform:none;opacity:1}100%{transform:translate(var(--dx),var(--dy)) rotate(var(--rot)) scale(.6);opacity:0}}
+.tbpop{position:absolute;z-index:60;pointer-events:none;transform:translate(-50%,0);font:800 22px/1 Cinzel,serif;color:#fff;letter-spacing:.02em;text-shadow:0 2px 0 #000,0 0 10px rgba(0,0,0,.9),0 0 2px #000;opacity:0;animation:tbpop 1.25s cubic-bezier(.2,.8,.3,1) forwards;white-space:nowrap}
+.tbpop.el-phys{color:#fff4dc}.tbpop.el-fire{color:#ff8a3c}.tbpop.el-frost{color:#8fd8ff}.tbpop.el-shock{color:#c79bff}.tbpop.el-poison{color:#8be36b}.tbpop.el-shout{color:#e6eefc}
+.tbpop.el-heal{color:#6cf08a}.tbpop.el-mp{color:#7aa6ff;font-size:15px}.tbpop.el-sp{color:#c9e86a;font-size:15px}
+.tbpop.crit{font-size:31px;color:#ffd24a;animation-name:tbpopcrit}
+@keyframes tbpop{0%{opacity:0;transform:translate(-50%,8px) scale(.6)}15%{opacity:1;transform:translate(-50%,-6px) scale(1.15)}30%{transform:translate(-50%,-10px) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-46px) scale(.95)}}
+@keyframes tbpopcrit{0%{opacity:0;transform:translate(-50%,8px) scale(.4) rotate(-6deg)}15%{opacity:1;transform:translate(-50%,-8px) scale(1.45) rotate(3deg)}35%{transform:translate(-50%,-12px) scale(1.1) rotate(0)}85%{opacity:1}100%{opacity:0;transform:translate(-50%,-54px) scale(1)}}
+.tbf.pixel .tbpop{font-family:inherit;text-shadow:2px 2px 0 #000}
+@media (prefers-reduced-motion:reduce){.tbpop{animation:tbpopfade 1.2s forwards}.tbbar.hitfx,.tbbar.hitfx i{animation:none}}
+@keyframes tbpopfade{0%,80%{opacity:1}100%{opacity:0}}
+.tblog:not([hidden]){display:flex;flex-direction:column;justify-content:flex-end;overflow:auto}
 </style>
 <script src="access.js"></script>
 </head>

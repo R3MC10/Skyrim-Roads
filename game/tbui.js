@@ -25,11 +25,60 @@ const TBUI = (() => {
     return `<span class="tbl ${esc(k)}${fresh ? " fresh" : ""}"><span class="li" aria-hidden="true">${ICON[k] || "•"}</span><span class="lt">${t}</span></span>`;
   }
 
+  /* a bar that just lost something: flash it white, break the lost piece off in a few shards, then let the ghost drain */
+  function breakBar(bar) {
+    const g = bar.querySelector(".gh[data-to]"); if (!g) return;
+    const from = parseFloat(g.style.width) || 0, to = parseFloat(g.dataset.to) || 0;
+    if (from - to < 0.5) return;
+    bar.classList.remove("hitfx"); void bar.offsetWidth; bar.classList.add("hitfx");
+    if (reduce()) return;
+    const n = Math.max(2, Math.min(6, Math.round((from - to) / 6)));
+    for (let i = 0; i < n; i++) {
+      const c = document.createElement("span"); c.className = "shard";
+      const w = (from - to) / n;
+      c.style.left = (to + w * i) + "%"; c.style.width = w + "%";
+      c.style.setProperty("--dx", (Math.random() * 30 - 8).toFixed(0) + "px");
+      c.style.setProperty("--dy", (14 + Math.random() * 22).toFixed(0) + "px");
+      c.style.setProperty("--rot", (Math.random() * 70 - 35).toFixed(0) + "deg");
+      c.style.animationDelay = (i * 35) + "ms";
+      bar.appendChild(c); setTimeout(() => c.remove(), 900 + i * 35);
+    }
+  }
+
+  /* floating numbers over whoever they hit: coloured by element (fire, frost, shock, poison, shouts), green heals,
+     big gold crits, blue magicka and yellow-green stamina spent */
+  function popNums(el, pops) {
+    if (!pops?.length) return;
+    const host = el.querySelector(".tbin"); if (!host) return;
+    const hb = host.getBoundingClientRect();
+    const spot = { me: el.querySelector(".tbu.me"), foe: el.querySelector(".tbu.foe") };
+    const stage = el.querySelector(".tbstage");
+    const used = { me: 0, foe: 0 };
+    pops.forEach((p, i) => {
+      const t = spot[p.at]; if (!t) return;
+      const r = t.getBoundingClientRect(), sr = stage?.getBoundingClientRect();
+      const k = used[p.at]++;
+      const s = document.createElement("span");
+      s.className = `tbpop el-${p.el}${p.crit ? " crit" : ""}${p.n > 0 ? " up" : ""}`;
+      s.textContent = (p.n > 0 ? "+" : "") + Math.round(p.n) + (p.tag ? " " + p.tag : "") + (p.crit ? "!" : "");
+      // damage rises from the fighter in the scene; spent magicka/stamina from your own frame
+      const overScene = sr && !p.tag;
+      const x = overScene ? (p.at === "foe" ? sr.left + sr.width * 0.72 : sr.left + sr.width * 0.28) : r.left + r.width * 0.5;
+      const y = overScene ? sr.top + sr.height * 0.42 : r.top + 6;
+      s.style.left = (x - hb.left + (k % 2 ? 22 : -14) + Math.random() * 10) + "px";
+      s.style.top = (y - hb.top - k * 18) + "px";
+      s.style.animationDelay = (reduce() ? 0 : i * 170) + "ms";
+      host.appendChild(s); setTimeout(() => s.remove(), 1500 + i * 170);
+    });
+  }
+
   /* after each redraw: let the ghost bars drain, shake on hits */
   function after(el, o) {
     if (!DOM || !el) return;
+    el.querySelectorAll(".tbbar").forEach(breakBar);
     const gh = el.querySelectorAll(".tbbar .gh[data-to]");
-    if (gh.length) setTimeout(() => gh.forEach((g) => { g.style.width = g.dataset.to + "%"; }), reduce() ? 0 : 380);
+    if (gh.length) setTimeout(() => gh.forEach((g) => { g.style.width = g.dataset.to + "%"; }), reduce() ? 0 : 520);
+    popNums(el, o.pops);
     const stage = el.querySelector(".tbstage");
     if (stage && !reduce()) {
       if (o.hurt) { stage.classList.remove("hurt", "big"); void stage.offsetWidth; stage.classList.add("hurt"); if (o.big) { stage.classList.add("big"); buzz(30); } }

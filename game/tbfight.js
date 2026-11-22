@@ -498,16 +498,19 @@ const TB = (() => {
     const recent = sess.ev.filter((e) => e.kind !== "round"), lastE = recent[recent.length - 1];
     const log = recent.slice(-10).map((e) => fmt(e, e === lastE && newEv.includes(e))).join("");
     const hpMax = G.maxHealth(s), hpNow = Math.max(0, Math.round(f.hp)), ehpNow = Math.max(0, Math.round(f.ehp));
-    const prev = ui.prevBars || { hp: hpNow, ehp: ehpNow }; ui.prevBars = { hp: hpNow, ehp: ehpNow };
+    const mpNow = Math.max(0, Math.round(f.mp)), spNow = Math.max(0, Math.round(f.sp)), mpMax = G.maxMagicka(s), spMax = G.maxStamina(s);
+    const prev = ui.prevBars || { hp: hpNow, ehp: ehpNow, mp: mpNow, sp: spNow }; ui.prevBars = { hp: hpNow, ehp: ehpNow, mp: mpNow, sp: spNow };
+    const pops = popsFor(newEv, f, prev, { hp: hpNow, ehp: ehpNow, mp: mpNow, sp: spNow });
     const pc = (v, m) => (100 * Math.max(0, v) / Math.max(1, m)).toFixed(1);
     const uBar = (v, p, m, cls) => `<div class="tbbar big ${cls}"><b class="gh" style="width:${pc(Math.max(v, p), m)}%" data-to="${pc(v, m)}"></b><i style="width:${pc(v, m)}%"></i><span class="num">${v} / ${m}</span></div>`;
+    const rBar = (v, p, m, cls, lb) => `<div class="tbbar mid ${cls}"><b class="gh" style="width:${pc(Math.max(v, p), m)}%" data-to="${pc(v, m)}"></b><i style="width:${pc(v, m)}%"></i><span class="num"><em>${lb}</em> ${v} / ${Math.round(m)}</span></div>`;
     let banner = "";
     if (sess.done) banner = `<div class="tbban ${f.won ? "won" : "lost"}">${f.won ? (f.escaped ? "Escaped" : "Victory") : "Defeated"}</div>`;
     else if (mine && ui.bannerFor !== sess.round) { ui.bannerFor = sess.round; banner = `<div class="tbban me">Your turn</div>`; }
     el.innerHTML = `<div class="tbin">
       <div class="tbtop"><b>Round ${sess.round}</b><span class="tbord">${order}</span><button class="tbff" data-tbx="log" aria-label="Full fight log">📜</button><button class="tbff ${fast() ? "on" : ""}" data-tbx="fast" aria-label="Fast foe turns">⏩</button></div>
       <div class="tbstage" data-tbzone="foe"><div class="tbscene" id="tbscene">${scene || (ui.lastScene || "")}</div>${banner}<div class="tbhint" aria-hidden="true"></div></div>
-      <div class="tbvit"><div class="tbu me" data-tbzone="self"><small class="nm">🛡 ${esc(s.name || "You")}</small>${uBar(hpNow, prev.hp, hpMax, "hp")}<div class="tbsub">${pctBar(f.mp, G.maxMagicka(s), "mp")}${pctBar(f.sp, G.maxStamina(s), "sp")}</div></div>
+      <div class="tbvit"><div class="tbu me" data-tbzone="self"><small class="nm">🛡 ${esc(s.name || "You")}</small>${uBar(hpNow, prev.hp, hpMax, "hp")}<div class="tbsub">${rBar(mpNow, prev.mp, mpMax, "mp", "MP")}${rBar(spNow, prev.sp, spMax, "sp", "SP")}</div></div>
         <div class="tbu foe" data-tbzone="foe"><small class="nm">☠ ${esc(f.e.name)}</small>${uBar(ehpNow, prev.ehp, sess.ehpMax, "hp foe")}${statusChips(f)}</div></div>
       ${allies ? `<div class="tballies">${allies}</div>` : ""}
       <button class="tblog" aria-live="polite" data-tbx="log" aria-label="Fight log, tap for the full log"${log ? "" : " hidden"}>${log}</button>
@@ -519,7 +522,35 @@ const TB = (() => {
       ${ui.logOpen ? fullLog(sess, fmt) : ""}
     </div>`;
     if (scene) ui.lastScene = scene;
-    if (typeof TBUI !== "undefined") TBUI.after(el, { hurt: hpNow < prev.hp, hit: ehpNow < prev.ehp, big: prev.hp - hpNow > hpMax * 0.15, mine });
+    if (typeof TBUI !== "undefined") TBUI.after(el, { hurt: hpNow < prev.hp, hit: ehpNow < prev.ehp, big: prev.hp - hpNow > hpMax * 0.15, mine, pops });
+  }
+  /* floating numbers for what just happened: damage coloured by element, heals, crits, and what you spent */
+  const ELEM = [["fire", /\b(fire|flame|burn|scorch|ember)/i], ["frost", /\b(frost|ice|cold|freez|chill)/i], ["shock", /\b(shock|lightning|spark|thunder)/i], ["poison", /\b(poison|venom|toxic)/i]];
+  function elemOf(e) {
+    const sp = e.a ? spellOf(e.a) : null;
+    if (sp?.element && sp.element !== "none") return sp.element;
+    if (/^shout:/.test(e.a || "")) return "shout";
+    for (const [k, re] of ELEM) if (re.test(e.text || "")) return k;
+    return "phys";
+  }
+  function popsFor(evs, f, was, now) {
+    const out = []; let toFoe = 0, toMe = 0, healMe = 0;
+    for (const e of evs) {
+      const crit = /\b(critical|sneak attack|finishing blow)\b/i.test(e.text || "");
+      if (e.kind === "foe" && e.dmg > 0) { out.push({ at: "me", n: -e.dmg, el: elemOf(e), crit }); toMe += e.dmg; }
+      else if ((e.kind === "me" || e.kind === "ally") && e.dmg > 0) { out.push({ at: "foe", n: -e.dmg, el: elemOf(e), crit }); toFoe += e.dmg; }
+      if (e.healed > 0) { out.push({ at: "me", n: e.healed, el: "heal" }); healMe += e.healed; }
+      if (e.kind === "ally" && e.dmg == null) {   // summons and followers: the line only says the number
+        const m = /\b(?:strikes|hits|deals|for)\s+(\d+)/i.exec(e.text || ""); if (m) { out.push({ at: "foe", n: -+m[1], el: elemOf(e) }); toFoe += +m[1]; }
+      }
+    }
+    // whatever the lines didn't name (burning, poison over time, the foe's own regen...) still shows
+    const restFoe = was.ehp - now.ehp - toFoe, restMe = was.hp - now.hp - toMe + healMe;
+    if (restFoe >= 1) out.push({ at: "foe", n: -Math.round(restFoe), el: f.foeSt?.burn ? "fire" : f.foeSt?.shock ? "shock" : f.foeSt?.chill ? "frost" : "phys" });
+    if (restMe >= 1) out.push({ at: "me", n: -Math.round(restMe), el: "phys" });
+    if (now.mp < was.mp - 0.5) out.push({ at: "me", n: now.mp - was.mp, el: "mp", tag: "MP" });
+    if (now.sp < was.sp - 0.5) out.push({ at: "me", n: now.sp - was.sp, el: "sp", tag: "SP" });
+    return out.slice(-8);
   }
   /* the whole fight so far, newest round first */
   function fullLog(sess, fmt) {
