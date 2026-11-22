@@ -96,7 +96,7 @@ const RUMOURS = (() => {
     if (src === "inn" && !(typeof TOWNS !== "undefined" && TOWNS.INNS[town])) return { err: "There's no inn here." };
     if (typeof TOWNS !== "undefined" && TOWNS.wanted(s)) return { err: "Nobody wants to be seen talking to you." };
     const r = sync(s, t);
-    if (r.list.length >= MAX_ACTIVE) return { err: `You've already got ${MAX_ACTIVE} leads to chase. Check one out first (Journal → Misc).` };
+    if (r.list.length >= MAX_ACTIVE) return { err: `You've already got ${MAX_ACTIVE} leads to chase. Check one out first (Map → World news).` };
     const wait = waitLeft(s, town, src, t);
     if (wait > 0) return { err: `${src === "inn" ? "The innkeeper" : "The locals"} ${src === "inn" ? "has" : "have"} nothing new. Try again in about ${fmtLeft(wait)}.` };
     const p = src === "inn" ? price(s) : 0;

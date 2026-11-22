@@ -1,5 +1,5 @@
 """Tab compass menu (tabmenu.js): swipes open the right menus, the bottom bar shows the right values. Usage: python3 tabmenu_ui.py PORT"""
-import asyncio, sys, json
+import asyncio, sys, json, os
 from playwright.async_api import async_playwright
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"
 OUT = "/home/claude/tests/tabmenu/"
@@ -9,7 +9,8 @@ def ok(c, m):
     if not c: fails.append(m)
 async def main():
     async with async_playwright() as p:
-        b = await p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-sandbox"])
+        exe = os.environ.get("CHROME") or ("/usr/bin/google-chrome" if os.path.exists("/usr/bin/google-chrome") else None)
+        b = await (p.chromium.launch(executable_path=exe, args=["--no-sandbox"]) if exe else p.chromium.launch(args=["--no-sandbox"]))
         ctx = await b.new_context(viewport={"width": 412, "height": 915}, device_scale_factor=2, has_touch=True)
         errs = []
         pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))

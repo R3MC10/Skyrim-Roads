@@ -227,7 +227,7 @@
     if (titlePage === "restore") return `<h2>Restore</h2>${restoreHTML()}<button class="btn" data-t="settings">Back</button>`;
     if (titlePage === "howto") return `<h2>How to Play</h2>
       <h3>Travel</h3><p>Tap a place on the map and press Go. You walk in real time, even with the app closed: about ten minutes from Whiterun to Windhelm. Roads are fast; snow, marsh and mountains are slow. Carriages are safe and quick.</p>
-      <h3>Fights</h3><p>Bandits, wolves and worse block the road. Fight, flee, sneak past or drink a potion. Fights follow your tactics (Tactics tab), rules like “below 40% health, drink a potion”.</p>
+      <h3>Fights</h3><p>Bandits, wolves and worse block the road. Fight, flee, sneak past or drink a potion. Fights follow your tactics (Character → Tactics), rules like “below 40% health, drink a potion”.</p>
       <h3>Towns</h3><p>The Town tab has shops, inns, trainers, the forge, alchemy, jobs, homes and followers. Rest at an inn or your own bed for a bonus.</p>
       <h3>Dungeons</h3><p>At a barrow or cave, press Go inside. Pick your way room by room down to the boss. Health doesn't come back on its own in there, so bring potions.</p>
       <h3>Quests</h3><p>The Journal tab shows your quests. The gold diamond on the map marks where to go next.</p>
@@ -275,7 +275,7 @@
       <h3>Crafting</h3><div class="setrow"><span>When you craft</span>${seg("craftGame", [[true, "Mini-games"], [false, "Quick craft"]], getPref("craftGame", true))}</div>
       ${S && typeof WFX !== "undefined" ? `<h3>Survival</h3><div class="setrow"><span>Cold meter</span>${seg("survival", [[true, "On (gentle)"], [false, "Off"]], S.survival !== false)}</div>` : ""}
       <h3>Map</h3><div class="setrow"><span>Map opens</span>${seg("zoomFar", [[false, "Close up"], [true, "All Skyrim"]], getPref("zoomFar", false))}</div>
-      ${APP ? `<h3>Phone</h3><div class="setrow"><span>Notifications</span>${seg("notify", [[true, "On"], [false, "Off"]], getPref("notify", true))}</div>
+      ${APP ? `<h3>Phone</h3><div class="setrow"><span>Notifications</span>${seg("notify", [[true, "On"], [false, "Off"]], getPref("notify", true))}</div>${typeof REMIND !== "undefined" ? REMIND.settingsHTML(seg) : ""}
       <div class="setrow"><span>Check for updates</span>${seg("autoUpdate", [[true, "Automatically"], [false, "Only when I ask"]], getPref("autoUpdate", true))}</div>` : ""}`;
   }
   function onSettingsInput(e) {
@@ -455,6 +455,22 @@
     openMenu: (p) => openMenu(p), closeMenu: () => closeMenu(), refresh: () => { bump(); renderPanel(true); }, fight: (r) => showFightResult(r),
     go(t) { closeMenu(); tab = t; testResult = null; bump(); renderTabs(); renderPanel(true); },
     get tab() { return tab; },
+    /* [remind] Go buttons: open a screen ({ tab, shop, jtab, soc, anchor }) or pick a place on the map ({ place }) */
+    remindData: () => ({ trades, stalls }),
+    jump(o) {
+      if (!S || !o) return false;
+      closeModal(); closeMenu(); if (typeof TABMENU !== "undefined" && TABMENU.closeHub) { try { TABMENU.closeHub(); } catch { /* fine */ } }
+      if (o.place && o.place !== S.location && WORLD.places[o.place]) {
+        tab = "map"; selected = o.place; roamSpot = null; bump(); renderTabs(); renderPanel(true); renderPicked();
+        $("#mapwrap")?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" }); return true;
+      }
+      tab = o.tab || "map"; testResult = null;
+      if (o.shop) townShop = o.shop; if (o.jtab) jTab = o.jtab; if (o.soc) socTab = o.soc;
+      bump(); renderTabs(); renderPanel(true);
+      const el = (o.anchor && document.getElementById(o.anchor)) || $("#side");
+      el?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+      return true;
+    },
     updateAvailable: (r) => updateAvailable(r),
     updateStaged: (r) => updateStaged(r),
     permissionBack: () => { if ($("#title") && titlePage === "update") { updateMsg = "Thanks. Tap Update now again."; renderTitle(); } },
@@ -465,6 +481,7 @@
       if (tr && tr.status === "travel") { const m = tripMinutesLeft(); if (m > 0.5) out.push({ id: 1, at: now + m * 60000, title: `You've reached ${tr.destName}`, body: tr.carriage ? "The carriage pulls up. Tap to see where you are." : "Your trip is over. Tap to see what's there." }); }
       const r = WEVENTS.nextRaid();
       if (r) out.push({ id: 2, at: r.start * 1000, title: `🐉 A dragon attacks ${r.town}!`, body: "Every player can fight it together for the next 20 minutes." });
+      if (typeof REMIND !== "undefined") { try { out.push(...REMIND.notes(S, now)); } catch { /* reminders are optional */ } }   // remind.js
       return out.filter((n) => n.at > now + 5000);
     },
   };
@@ -473,6 +490,7 @@
     app.innerHTML = `
       <div class="top"><span class="lvlb num" id="lvlb" aria-label="Level"></span><div class="who"><b id="nm"></b><span id="sub"></span></div>
         <div class="meta"><div id="clock"></div><div class="gold" id="goldv"></div></div>
+        ${typeof SEARCH !== "undefined" ? SEARCH.btn() : ""}
         <button class="iconbtn soc" id="socBtn" aria-label="Friends, messages and trades">${hudIcon("people", "👥")}<small class="ibl" aria-hidden="true">Friends</small></button>
         <button class="iconbtn snd" id="sndBtn" aria-label="Settings and menu">${hudIcon(SOUND.settings.mute ? "mute" : "gear", SOUND.settings.mute ? "🔇" : "⚙")}<small class="ibl" aria-hidden="true">Menu</small></button></div>
       <div class="layout">
@@ -488,8 +506,8 @@
       </div>`;
     tabsEl.classList.remove("hide");
     window.scrollTo(0, 0);
-    tabsEl.innerHTML = TABS.map(([id, label, svg]) => `<button class="tab ${id === tab ? "on" : ""}" role="tab" aria-selected="${id === tab}" data-tab="${id}"><svg viewBox="0 0 24 24">${svg}</svg>${label}</button>`).join("");
-    tabsEl.onclick = (e) => { const b = e.target.closest("[data-tab]"); if (!b) return; SOUND.fx("click"); if (b.dataset.tab === "pack") return openMenu("items"); closeMenu(); tab = b.dataset.tab; testResult = null; bump(); renderTabs(); renderPanel(true); if (typeof POLISH !== "undefined") POLISH.swap($("#side")); if (typeof MOTION !== "undefined") MOTION.panel($("#side")); $("#side").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" }); };
+    if (!(typeof MENUS !== "undefined" && MENUS.bar(tabsEl, tab))) tabsEl.innerHTML = TABS.map(([id, label, svg]) => `<button class="tab ${id === tab ? "on" : ""}" role="tab" aria-selected="${id === tab}" data-tab="${id}"><svg viewBox="0 0 24 24">${svg}</svg>${label}</button>`).join("");
+    tabsEl.onclick = (e) => { const b = e.target.closest("[data-tab]"); if (!b) return; SOUND.fx("click"); if (typeof TABMENU !== "undefined" && TABMENU.fromBar) TABMENU.fromBar(); const to = typeof MENUS !== "undefined" ? MENUS.pick(b.dataset.tab) : b.dataset.tab; if (to === "pack" || to[0] === "@") return openMenu(to === "pack" ? "items" : to.slice(1)); closeMenu(); tab = to; testResult = null; bump(); renderTabs(); renderPanel(true); if (typeof POLISH !== "undefined") POLISH.swap($("#side")); if (typeof MOTION !== "undefined") MOTION.panel($("#side")); $("#side").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" }); };
     $("#zoomBtn").onclick = () => { mapTouchedAt = performance.now(); zoom = zoom > 1.01 ? 1 : 2.4; follow = true; $("#zoomBtn").textContent = zoom > 1.01 ? "－" : "＋"; };
     $("#centerBtn").onclick = () => { mapTouchedAt = performance.now(); follow = true; if (zoom === 1) zoom = 2.4; $("#zoomBtn").textContent = "－"; };
     bindMap();
@@ -522,7 +540,7 @@
     Store.watch("friends", (docs) => onFriends(docs));
     Store.watch("dms", (docs) => onDMs(docs));
     if (Store.online) Store.put("friends", S.id, SOCIAL.record(S));
-    Store.watch("clans", (docs) => { const before = CLANS.invitesFor(S.id).length; CLANS.set(docs, null); if (CLANS.invitesFor(S.id).length > before && !myClan()) toast(`🏴 You're invited to join a clan. Open 👥 Friends → Realm.`); bump(); renderTabs(); });
+    Store.watch("clans", (docs) => { const before = CLANS.invitesFor(S.id).length; CLANS.set(docs, null); if (CLANS.invitesFor(S.id).length > before && !myClan()) toast(`🏴 You're invited to join a clan. Open 👥 Social → Realm.`); bump(); renderTabs(); });
     Store.watch("clanmem", (docs) => { CLANS.set(null, docs); bump(); });
     Store.watch("chat", (docs) => onChat(docs));
     Store.watch("homes", (docs) => { homeDocs = docs; if (tab === "town") bump(); });
@@ -559,7 +577,7 @@
       Store.watch("runs", () => { lvUI.onRuns(); if (S.dungeon && $("#dun")) renderDungeon(); });
       Store.watch("lvotes", (docs) => lvUI.onVotes(docs));
     }
-    Store.watch("chests", (docs) => { const had = chests.length; chests = docs.filter((c) => c.members?.some((m) => m.id === S.id)); if (chests.length > had) toast("💰 A party chest is waiting. Open 👥 Friends → Party."); if (tab === "log") bump(); });
+    Store.watch("chests", (docs) => { const had = chests.length; chests = docs.filter((c) => c.members?.some((m) => m.id === S.id)); if (chests.length > had) toast("💰 A party chest is waiting. Open 👥 Social → Party."); if (tab === "log") bump(); });
     Store.watch("news", (docs) => { news = docs.sort((a, b) => b.t - a.t); if (news.length > 40) news.slice(40).forEach((n) => Store.remove("news", n.id)); if ((tab === "log" || tab === "social")) bump(); });
     G.setAllyProvider(() => allies());
     let lastPeers = 0;
@@ -768,13 +786,14 @@
   }
   function renderTabs() {
     tabsEl.querySelectorAll(".tab").forEach((b) => {
-      const on = b.dataset.tab === tab;
+      const on = b.dataset.tab === (typeof MENUS !== "undefined" ? MENUS.groupOf(tab) : tab);
       b.classList.toggle("on", on); b.setAttribute("aria-selected", on);
-      const needDot = (b.dataset.tab === "hero" && (S.pendingLevels > 0 || PERKS.pointsLeft(S) > 0)) || (b.dataset.tab === "log" && journalNew());
+      const needDot = (b.dataset.tab === "hero" && (S.pendingLevels > 0 || PERKS.pointsLeft(S) > 0)) || (b.dataset.tab === "log" && journalNew()) || (b.dataset.tab === "social" && socialBadge() > 0);
       if (needDot && !b.querySelector(".dot")) b.insertAdjacentHTML("beforeend", '<span class="dot"></span>');
       if (!needDot) b.querySelector(".dot")?.remove();
     });
     if (typeof MOTION !== "undefined") MOTION.tabs(tabsEl);
+    if (typeof REMIND !== "undefined") REMIND.paint(S);   // number badges (remind.js)
     const sb = $("#socBtn"); if (sb) { const n = socialBadge(); sb.classList.toggle("on", tab === "social"); if (n && !sb.querySelector(".dot")) sb.insertAdjacentHTML("beforeend", '<span class="dot"></span>'); if (!n) sb.querySelector(".dot")?.remove(); }
   }
 
@@ -1295,7 +1314,7 @@
   const SKILL_CATS = [["all", "All"], ["combat", "Warrior"], ["magic", "Mage"], ["stealth", "Thief"], ["other", "Other"]];
   const SKILL_GROUP = { combat: "Warrior", magic: "Mage", stealth: "Thief" };
   function openMenu(page = "items") { SOUND.fx("page"); sky = { ...sky, page, cat: page === "items" ? "gear" : "all", sel: null }; renderMenu(); }
-  function closeMenu() { $("#sky")?.remove(); }
+  function closeMenu() { if ($("#sky")) { $("#sky").remove(); if (typeof MENUS !== "undefined") MENUS.skyOn(null); } }
   function itemStat(r) {
     const it = D.ITEMS[r.item];
     if (it.slot === "weapon") return it.damage + (r.temper || 0);
@@ -1516,6 +1535,7 @@
     </div>`;
     if (typeof FAVWHEEL !== "undefined") FAVWHEEL.afterMenu(el, S, sky);   // ★ Favourite in the details
     if (typeof MOTION !== "undefined") MOTION.menu(el, sky.page, sky.cat);
+    if (typeof MENUS !== "undefined") MENUS.skyOn(sky.page, el);
   }
 
   // ------------------------------------------------------------ dragon attacks (world events)
@@ -1621,8 +1641,8 @@
     { title: "Your first trip", text: () => ppUI && party && !ppUI.canDecide() ? `Welcome to Skyrim, ${S.name}. You're in a party: the leader picks where to go and you travel with them. Watch the map; the next step starts when you set off.` : `Welcome to Skyrim, ${S.name}. Everything happens in real time. Tap <b>Whiterun</b> on the map and press <b>Travel</b>, or press <b>Go</b> next to it in the list below.${party ? " Your party comes along." : ""}`, done: () => !!S.trip || S.location === "Whiterun" },
     { title: "On the road", text: () => `You're walking. Trips keep going even when the app is closed, and something may happen by the road${typeof TB !== "undefined" && TB.enabled() ? ": if it's a fight, you play it turn by turn (or press Auto)" : ""}. You can ride a horse later, or take a carriage between cities.`, done: () => !S.trip },
     { title: "You've arrived", text: () => `Open the <b>Town</b> tab. In towns and cities it has shops, the inn, trainers, the forge, jobs and more${S.location && TOWNS.isTown(S.location) ? "" : " (this spot is out in the wilds, so it shows what you can do here)"}.`, done: () => tab === "town" },
-    { title: "Quests", text: () => "Now open the <b>Journal</b>. Your quests are there, and the gold diamond on the map shows where to go next. Chat and other players are under 👥 Friends.", done: () => tab === "log" },
-    { title: "Fights", text: () => typeof TB !== "undefined" && TB.enabled() ? "One more: the <b>Tactics</b> tab. You play fights turn by turn; <b>Auto</b> plays for you with Smart AI, or with your own rules here (like “below 40% health, drink a potion”) if you pick Custom." : "One more: the <b>Tactics</b> tab. Fights play out by themselves, following your rules, like “below 40% health, drink a potion”.", done: () => tab === "tactics" },
+    { title: "Quests", text: () => "Now open the <b>Journal</b>. Your quests are there, and the gold diamond on the map shows where to go next. Chat and other players are under <b>Social</b>.", done: () => tab === "log" },
+    { title: "Fights", text: () => typeof TB !== "undefined" && TB.enabled() ? "One more: <b>Character → Tactics</b>. You play fights turn by turn; <b>Auto</b> plays for you with Smart AI, or with your own rules here (like “below 40% health, drink a potion”) if you pick Custom." : "One more: <b>Character → Tactics</b>. Fights play out by themselves, following your rules, like “below 40% health, drink a potion”.", done: () => tab === "tactics" },
   ];
   const TAB_TIPS = {
     map: "Start with the “What to do next” card. Press Go to travel; tap any place on the map to see how far it is.",
@@ -1696,7 +1716,7 @@
     S.festSeen = S.festSeen || {};
     if (S.festSeen[ev.key]) return;
     S.festSeen[ev.key] = 1; Store.save(S);
-    setTimeout(() => { SOUND.fx("quest"); toast(`${ev.icon} ${ev.name} has begun! See the Journal.`); }, 2500);
+    setTimeout(() => { SOUND.fx("quest"); toast(`${ev.icon} ${ev.name} has begun! See Map → World news.`); }, 2500);
   }
 
   // ------------------------------------------------------------ market stalls
@@ -1864,7 +1884,7 @@
   function bloodTick() {
     const m = CURSE.update(S);
     if (m) { persist(true); SOUND.fx("death"); showMessage("The Change", m); }
-    if (CURSE.offered(S) && !S.wolfOfferSeen) { S.wolfOfferSeen = true; persist(); toast("🐺 The Circle of the Companions wants a word with you in Whiterun. See the Hero tab."); }
+    if (CURSE.offered(S) && !S.wolfOfferSeen) { S.wolfOfferSeen = true; persist(); toast("🐺 The Circle of the Companions wants a word with you in Whiterun. See the Character tab."); }
   }
   function bloodPanel() {
     const t = G.now(), here = S.location;
@@ -2153,7 +2173,7 @@
       if (d.from === S.id && d.status !== "open") {           // my offer was answered: settle it
         const m = MP.settle(S, d); Store.remove("trades", d.id);
         if (m) { persist(true); toast(m); }
-      } else if (d.to === S.id && d.status === "open" && !seenTrades.has(d.id)) { seenTrades.add(d.id); toast(`🤝 ${d.fromName} offers you a trade. Open 👥 Friends → Trades.`); }
+      } else if (d.to === S.id && d.status === "open" && !seenTrades.has(d.id)) { seenTrades.add(d.id); toast(`🤝 ${d.fromName} offers you a trade. Open 👥 Social → Trades.`); }
     }
     if ((tab === "log" || tab === "social")) bump();
   }
@@ -2209,7 +2229,7 @@
   function panelSocial() {
     const nDm = SOCIAL.unread(S, dmDocs), nAdd = SOCIAL.addedMe(friendDocs, S).length, inc = myIncoming(), nParty = partyNews(), nChat = chatUnread();
     const chips = `<div class="seg socseg">${[["friends", `Friends${nAdd ? ` (${nAdd})` : ""}`], ["msgs", `Messages${nDm ? ` (${nDm})` : ""}`], ["trades", `Trades${inc.length ? ` (${inc.length})` : ""}`], ["party", `Party${nParty ? ` (${nParty})` : ""}`], ["chat", `Chat${nChat ? ` (${nChat})` : ""}`], ["realm", "Realm"]].map(([k, l]) => `<button class="${socTab === k ? "on" : ""}" data-act="soctab" data-id="${k}">${l}</button>`).join("")}</div>`;
-    const off = Store.online ? "" : `<p class="sub">You're playing offline. Go online (Travel tab) to see friends and messages.</p>`;
+    const off = Store.online ? "" : `<p class="sub">You're playing offline. Go online (Map tab) to see friends and messages.</p>`;
     let body = "";
     if (socTab === "friends") {
       const fr = Object.entries(SOCIAL.friends(S)).map(([id, f]) => ({ id, name: f.name, card: cardOf(id) })).map((f) => ({ ...f, st: SOCIAL.status(f.card) })).sort((a, b) => b.st.online - a.st.online || a.name.localeCompare(b.name));
@@ -2220,7 +2240,7 @@
         <h3 style="margin-top:8px">Your friends · ${fr.length}</h3>
         ${fr.length ? fr.map((f) => `<div class="item" style="flex-wrap:wrap">${HEROART.portrait(f.card || { race: "nord", id: f.id }, 38)}${f.card?.look ? `<span class="pgear">${HEROART.figure({ look: f.card.look }, 30, 42, { bare: true })}</span>` : ""}<div class="t"><i class="onl ${f.st.online ? "on" : ""}"></i>${esc(f.name)}<span>${esc(f.st.text)}</span></div>
           <div class="fbtns"><button class="btn sm" data-act="fmsg" data-id="${esc(f.id)}">💬 Message</button><button class="btn sm" data-act="ftrade" data-id="${esc(f.id)}">🤝 Trade</button>${fRemoveAsk === f.id ? `<button class="btn sm danger" data-act="fdel" data-id="${esc(f.id)}">Really remove?</button>` : `<button class="btn sm" data-act="fdelask" data-id="${esc(f.id)}" aria-label="Remove friend">✕</button>`}</div></div>`).join("")
-          : `<p class="sub">No friends yet. Add people from Friends → Party (travellers near you), or search below.</p>`}
+          : `<p class="sub">No friends yet. Add people from Social → Party (travellers near you), or search below.</p>`}
         <h3 style="margin-top:12px">Add a friend</h3>
         <input id="socsearch" placeholder="Type a name" value="${esc(socSearch)}" autocomplete="off" aria-label="Search players by name">
         ${q.length >= 2 ? (found.length ? found.map((o) => `<div class="item"><div class="t">${esc(o.name)}<span>${esc(SOCIAL.status(o).text)}</span></div><button class="btn sm pri" data-act="fadd" data-id="${esc(o.id)}">＋ Add</button></div>`).join("") : `<p class="sub">Nobody by that name has been seen in this world.</p>`) : ""}`;
@@ -2396,7 +2416,7 @@
     if (party && party.members.length + (party.invites || []).length >= cap) return toast(`A party holds up to ${cap} heroes.`);
     if (party) { await Store.change("parties", party.id, (p) => ({ ...p, invites: [...new Set([...(p.invites || []), card.id])] })); }
     else { const id = nid(); await Store.put("parties", id, { leader: S.id, leaderName: S.name, members: [{ id: S.id, name: S.name }], invites: [card.id], t: G.now() }); }
-    toast(`Invited ${card.name}. They'll see it under 👥 Friends → Party.`);
+    toast(`Invited ${card.name}. They'll see it under 👥 Social → Party.`);
   }
   async function acceptInvite(pid) {
     if (party) await leaveParty();
@@ -2458,13 +2478,13 @@
   // ------------------------------------------------------------ panels
   /* [ux] a small header on every tab: what this screen is, with an ⓘ that explains it in plain words */
   const SCREEN_HELP = {
-    map: ["Travel", "Pick where to go", "The card at the top says what to do next. Press Go to walk there: trips keep going while the app is closed. The gold ◆ on the map is your current quest; tap empty ground to roam off the road."],
-    hero: ["Hero", "Level, skills and perks", "Skills grow as you use them. When you level up, choose Health, Magicka or Stamina and spend perk points in a skill's tree. Below are your powers, shouts, standing stone and achievements."],
+    map: ["Map", "Pick where to go", "The card at the top says what to do next. Press Go to walk there: trips keep going while the app is closed. The gold ◆ on the map is your current quest; tap empty ground to roam off the road."],
+    hero: ["Character", "Level, skills and perks", "Skills grow as you use them. When you level up, choose Health, Magicka or Stamina and spend perk points in a skill's tree. Below are your powers, shouts, standing stone and achievements."],
     pack: ["Pack", "What you carry and wear", "Open your things to wear, use, compare or drop them. Use the search box to find an item by name. Heavy packs slow you down: sell things or store them at home."],
     tactics: ["Tactics", "How you fight", "Fights play out by themselves. Your rules are checked from the top every turn, like “health below 40% → drink a potion”. Test them against a dummy before a real fight."],
     town: ["Town", "Shops and services here", "Pick a place from the groups: Shops to buy and sell, Services for the inn, trainers and the forge, Guilds & jobs for paid work. Shops close at night (20:00–08:00)."],
     log: ["Journal", "Your quests", "Active quests sit on shelves: main story, Solstheim, Civil War, guilds, Daedric and side quests. Misc holds jobs, bounties, cures and treasure maps. ☆ Track a quest to steer the compass, the map and the What to do next card. Chat, party and the world moved to 👥 Friends; stats and the diary to Character."],
-    social: ["Friends", "Friends, messages and trades", "Add players as friends, send them messages, and trade by courier from anywhere."],
+    social: ["Social", "Friends, messages and trades", "Add players as friends, send them messages, and trade by courier from anywhere."],
   };
   function screenHead() {
     const h = SCREEN_HELP[tab]; if (!h) return "";
@@ -2478,8 +2498,10 @@
     side.dataset.tab = tab;
     const openD = [...side.querySelectorAll("details")].map((d) => d.open), y = scrollY;
     const twp = typeof TABMENU !== "undefined" ? { stars: () => TABMENU.stars(S), perks: () => TABMENU.perks(S) } : {};
-    side.innerHTML = tutTip() + screenHead() + ({ map: panelTravel, hero: panelHero, pack: panelPack, tactics: panelTactics, town: panelTown, log: panelLog, social: panelSocial, stats: panelStats, diary: panelDiary, places: panelPlaces, ...twp }[tab] || panelTravel)();
+    const mnp = typeof MENUS !== "undefined" ? MENUS.panels({ S, ach: achPanel, settings: settingsHTML, fest: festPanel, idPanel, update }) : {};   // menus.js: tab homes
+    side.innerHTML = tutTip() + (typeof MENUS !== "undefined" ? MENUS.subnav(tab) : "") + screenHead() + ({ ...mnp, map: panelTravel, hero: panelHero, pack: panelPack, tactics: panelTactics, town: panelTown, log: panelLog, social: panelSocial, stats: panelStats, diary: panelDiary, places: panelPlaces, ...twp }[tab] || panelTravel)();
     if (typeof TABMENU !== "undefined") TABMENU.afterPanel(tab);
+    if (typeof MENUS !== "undefined") MENUS.afterPanel(tab);
     if (!force) { side.querySelectorAll("details").forEach((d, i) => { if (openD[i] != null) d.open = openD[i]; }); scrollTo(0, y); }
     const cl = $("#chatlog"); if (cl) cl.scrollTop = cl.scrollHeight;
   }
@@ -2499,7 +2521,7 @@
         : n && !at && WORLD.places[n] && !(S.trip && S.trip.destName === n) ? `<button class="btn sm pri" data-act="go" data-place="${esc(n)}">Go</button>` : "";
       row("◆", `${esc(a.st.title)} <small class="nx-q">${esc(a.def.name)}</small>`, `${esc(a.st.text)}${n && !at && WORLD.places[n] ? ` · ${esc(n)} is ~${eta(n)} away` : ""}`, btn);
     }
-    if (S.pendingLevels > 0 || PERKS.pointsLeft(S) > 0) row("⬆", S.pendingLevels > 0 ? "You can level up" : `${PERKS.pointsLeft(S)} perk point${PERKS.pointsLeft(S) > 1 ? "s" : ""} to spend`, "Open Hero to choose what grows.", `<button class="btn sm" data-act="uxtab" data-id="hero">Hero</button>`);
+    if (S.pendingLevels > 0 || PERKS.pointsLeft(S) > 0) row("⬆", S.pendingLevels > 0 ? "You can level up" : `${PERKS.pointsLeft(S)} perk point${PERKS.pointsLeft(S) > 1 ? "s" : ""} to spend`, "Open Character to choose what grows.", `<button class="btn sm" data-act="uxtab" data-id="hero">Character</button>`);
     if (S.location && !S.trip && (TOWNS.isTown(S.location) || G.shopTypes(S.location).length)) row("🏘", `You're in ${esc(S.location)}`, "Shops, the inn, trainers and jobs are in the Town tab.", `<button class="btn sm" data-act="uxtab" data-id="town">Town</button>`);
     const ob = typeof ONBOARD !== "undefined" ? ONBOARD.rows(S, { here, eta, known, quest: a?.id, online: Store.online, party: !!party, max: 4 - rows.length }) : null;   // [onboard] 1-3 ideas from your state
     if (ob) rows.push(...ob);
@@ -2517,7 +2539,7 @@
     const places = Object.keys(WORLD.places).filter((n) => known(n) && n !== S.location && WORLD.same(here, WORLD.places[n]) && n.toLowerCase().includes(searchText.toLowerCase()))
       .map((n) => ({ n, d: G.pxDist(here, WORLD.places[n]) })).sort((a, b) => a.d - b.d);
     const bag = myBag();
-    return `${ppUI ? ppUI.panelHTML() : ""}${typeof WFX !== "undefined" ? WFX.coldHTML(S) : ""}${nextCard()}${placeHere()}${typeof EXPLORE !== "undefined" ? EXPLORE.placeCard(S) : ""}${typeof RUMOURS !== "undefined" ? RUMOURS.card(S) : ""}${typeof GATHER !== "undefined" ? GATHER.card(S) : ""}<div class="panel"><h2>Where to?</h2><p class="sub">Tap a place on the map, or press <b>Go</b> below. Tap empty ground on the map to roam off the road.</p>
+    return `${ppUI ? ppUI.panelHTML() : ""}${typeof WFX !== "undefined" ? WFX.coldHTML(S) : ""}${nextCard()}${typeof REMIND !== "undefined" ? REMIND.card(S) : ""}${placeHere()}${typeof EXPLORE !== "undefined" ? EXPLORE.placeCard(S) : ""}${typeof RUMOURS !== "undefined" ? RUMOURS.card(S) : ""}${typeof GATHER !== "undefined" ? GATHER.card(S) : ""}<div class="panel"><h2>Where to?</h2><p class="sub">Tap a place on the map, or press <b>Go</b> below. Tap empty ground on the map to roam off the road.</p>
       <input id="search" placeholder="Search places" value="${esc(searchText)}" autocomplete="off" aria-label="Search places">
       <div class="list">${bag ? `<div class="item on"><div class="t">🎒 Your lost bag<span>${bag.gold} gold · ${Math.max(0, Math.floor((bag.expires - G.now()) / 60))} min left before it's fair game</span></div><button class="btn pri sm" data-act="go" data-place="__bag">Go</button></div>` : ""}
       ${places.slice(0, searchText || uxAllPlaces ? 40 : 8).map(({ n, d }) => { const k = WORLD.places[n][2]; return `<div class="item"><div class="t">${esc(n)}<span>${KIND[k]} · ${esc(G.holdAt(WORLD.places[n]))}${S.discovered.includes(n) ? "" : " · unvisited"}${(() => { const lf = DUNGEONS.enterable(n) ? DUNGEONS.refillLeft(S, n) : 0; return lf ? ` · 🔒 opens in ${cdSpan(G.now() + lf)}` : ""; })()}</span></div><span class="num sub">${d * 1.1 / G.speed(S) < 1 ? "" : "~"}${fmtMin(d * 1.1 / G.speed(S))}</span><button class="btn sm" data-act="go" data-place="${esc(n)}">Go</button></div>`; }).join("") || `<p class="sub">No places match “${esc(searchText)}”. Try part of the name, like “riv”.</p>`}${!searchText && places.length > 8 ? `<button class="btn" data-act="uxall" style="width:100%;margin-top:8px">${uxAllPlaces ? "Show only the nearest" : `Show all ${places.length} places`}</button>` : ""}${(() => { const n = Object.keys(clearedLeft()).length; return `<button class="btn" data-act="tabgo" data-id="places" style="width:100%;margin-top:8px">📍 Locations: cleared places${n ? ` (${n})` : ""}</button>`; })()}</div>
@@ -2570,7 +2592,7 @@
       ${(S.words || []).length ? `<p class="sub">Words of Power: ${S.words.map(esc).join(", ")}</p>` : ""}
       ${groups}
       <p class="sub" style="margin-top:14px">Skills rise as you use them, with Skyrim's own rates.</p>
-      <details style="margin-top:8px"><summary class="sub" style="cursor:pointer;min-height:36px">Start over</summary><p class="sub">Deletes this character for good.</p><button class="btn danger" data-act="wipe">Delete ${esc(S.name)}</button></details></div>${perks}${bloodPanel()}${achPanel()}`;
+      <details style="margin-top:8px"><summary class="sub" style="cursor:pointer;min-height:36px">Start over</summary><p class="sub">Deletes this character for good.</p><button class="btn danger" data-act="wipe">Delete ${esc(S.name)}</button></details></div>${perks}${bloodPanel()}${typeof MENUS !== "undefined" ? "" : achPanel()}`;
   }
 
   function panelPack() {
@@ -2865,7 +2887,7 @@
         note = `Make weapons, armor and jewellery from ingots, leather and gems. Better metals need Smithing perks. Smithing ${G.skill(S, "Smithing")}.`;
         const g = forgeGroup, ids = SMITH.byGroup(g);
         body = ftabs + `<div class="chips" style="margin-bottom:6px;flex-wrap:wrap">${SMITH.GROUPS.map(([k, l2]) => `<button class="chip ${g === k ? "on" : ""}" data-act="fgroup" data-id="${k}">${l2}</button>`).join("")}</div>`
-          + (SMITH.PERK_FOR[g] && !G.P(S, SMITH.PERK_FOR[g]) ? `<p class="sub">🔒 Needs the ${esc(PERKS.BY_ID[SMITH.PERK_FOR[g]].name)} perk (Hero tab → Perks → Smithing).</p>` : "")
+          + (SMITH.PERK_FOR[g] && !G.P(S, SMITH.PERK_FOR[g]) ? `<p class="sub">🔒 Needs the ${esc(PERKS.BY_ID[SMITH.PERK_FOR[g]].name)} perk (Character → Perks → Smithing).</p>` : "")
           + (g === "found" && typeof CRAFTFAIR !== "undefined" ? CRAFTFAIR.foundNote(S, esc) : "")
           + ids.map((id) => { const i = SMITH.info(S, id), it = D.ITEMS[id];
             return `<div class="item">${ICONART.item(id, 34)}<div class="t">${esc(it.name)}${i.out > 1 ? ` ×${i.out}` : ""}<span>${esc(G.itemStats(id))}${it.slot === "valuable" ? ` · worth ${it.value}` : ""}${i.xpMult != null && i.xpMult < 0.99 ? ` · ${Math.round(i.xpMult * 100)}% XP (made recently)` : ""}${i.needs && typeof CRAFTFAIR !== "undefined" && !CRAFTFAIR.knows(S, i.needs) ? " · 🔒 recipe needed" : ""}</span><span>${i.mats.map(([m, n], k) => `<b class="${i.have[k] >= n ? "" : "miss"}">${n} ${esc(D.ITEMS[m].name)}</b> (${i.have[k]})`).join(" · ")}</span></div><button class="btn sm ${i.block ? "" : "pri"}" data-act="smake" data-id="${esc(id)}" ${i.block ? "disabled" : ""}>Make</button></div>`; }).join("");
@@ -3105,20 +3127,20 @@
   const idPanel = (id, h) => (h && /<div class="panel"/.test(h) ? h.replace(/<div class="panel"/, `<div id="j-${id}" class="panel"`) : `<div id="j-${id}">${h || ""}</div>`);
   /* where each section that used to be in the Journal lives now */
   const MOVED = { chat: ["social", "chat"], world: ["social", "chat"], news: ["social", "chat"], coop: ["social", "party"], party: ["social", "party"], people: ["social", "party"],
-    trades: ["social", "trades"], holds: ["social", "realm"], clan: ["social", "realm"], ladder: ["social", "realm"], stats: ["stats"], crimes: ["stats"], finds: ["stats"], log: ["diary"], cleared: ["places"],
-    event: ["log", "misc"], bounty: ["log", "misc"], caravan: ["log", "misc"], guide: ["log", "misc"], quests: ["log", "active"] };
+    trades: ["social", "trades"], holds: ["social", "realm"], clan: ["social", "realm"], ladder: ["social", "realm"], stats: ["stats"], crimes: ["stats"], finds: ["library"], log: ["diary"], cleared: ["places"],
+    event: ["world"], rumours: ["world"], wev: ["world"], bounty: ["log", "misc"], caravan: ["log", "misc"], guide: ["log", "misc"], quests: ["log", "active"] };
   /* [journal] Character → Stats: lifetime stats, crime, discoveries and the library (moved out of the Journal) */
-  const charNav = (cur) => `<div class="seg charnav">${[["hero", "Character"], ["stats", "Stats"], ["diary", "Diary"]].map(([k, l]) => `<button class="${cur === k ? "on" : ""}" data-act="tabgo" data-id="${k}">${l}</button>`).join("")}</div>`;
+  const charNav = (cur) => typeof MENUS !== "undefined" ? "" : `<div class="seg charnav">${[["hero", "Character"], ["stats", "Stats"], ["diary", "Diary"]].map(([k, l]) => `<button class="${cur === k ? "on" : ""}" data-act="tabgo" data-id="${k}">${l}</button>`).join("")}</div>`;
   function panelStats() {
     const crimes = socialBits().crimes;
-    return `${charNav("stats")}${idPanel("stats", typeof IMM !== "undefined" ? IMM.stats(S) : "")}${crimes ? idPanel("crimes", crimes) : ""}${typeof EXPLORE !== "undefined" ? idPanel("finds", EXPLORE.panel(S)) : ""}`;
+    return `${charNav("stats")}${idPanel("stats", typeof IMM !== "undefined" ? IMM.stats(S) : "")}${crimes ? idPanel("crimes", crimes) : ""}${typeof EXPLORE !== "undefined" && typeof MENUS === "undefined" ? idPanel("finds", EXPLORE.panel(S)) : ""}`;
   }
   function panelDiary() {
     return `${charNav("diary")}<div class="panel" id="j-log"><h2>📔 Diary</h2><p class="sub">Everything that happened to you, newest first.</p><div class="log">${S.journal.map((j) => `<div><time>${new Date(j.t * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time>${esc(j.text)}</div>`).join("") || '<p class="sub">Nothing yet.</p>'}</div></div>`;
   }
   /* [journal] Map → Locations: cleared places and when they fill up again */
   function panelPlaces() {
-    return `<div class="panel"><button class="btn sm" data-act="tabgo" data-id="map">‹ Back to the map</button></div>${idPanel("cleared", clearedPanel() || '<div class="panel"><h2>Cleared locations</h2><p class="sub">You haven\'t cleared any place yet. Cleared dungeons show here with the time until they fill up again.</p></div>')}`;
+    return `${typeof MENUS !== "undefined" ? "" : `<div class="panel"><button class="btn sm" data-act="tabgo" data-id="map">‹ Back to the map</button></div>`}${idPanel("cleared", clearedPanel() || '<div class="panel"><h2>Cleared locations</h2><p class="sub">You haven\'t cleared any place yet. Cleared dungeons show here with the time until they fill up again.</p></div>')}`;
   }
   function panelLog() {
     QUESTS.ensure(S);
@@ -3158,7 +3180,7 @@
       body += `<p class="sub" style="margin-top:8px">☆ Track a quest to show it on the compass, the map's gold diamond and the “What to do next” card.</p>`;
     } else if (jTab === "misc") {
       body = [miscQ.map((a) => questCard(a.id, a, false)).join(""), work ? `<div class="list">${work}</div>` : "", maps].join("");
-      const extra = [["rumours", typeof RUMOURS !== "undefined" ? RUMOURS.panel(S) : ""], ["wev", typeof WORLDEV !== "undefined" ? WORLDEV.journal() : ""], ["event", festPanel()], ["bounty", bountyPanel()], ["caravan", caravanJobPanel()], ["guide", guideCard()]].filter(([, h]) => h && h.trim()).map(([id, h]) => idPanel(id, h)).join("");
+      const extra = [...(typeof MENUS !== "undefined" ? [] : [["rumours", typeof RUMOURS !== "undefined" ? RUMOURS.panel(S) : ""], ["wev", typeof WORLDEV !== "undefined" ? WORLDEV.journal() : ""], ["event", festPanel()]]), ["bounty", bountyPanel()], ["caravan", caravanJobPanel()], ["guide", guideCard()]].filter(([, h]) => h && h.trim()).map(([id, h]) => idPanel(id, h)).join("");
       body = body || (extra ? "" : `<p class="sub">No miscellaneous tasks right now.</p>`); after = extra;
     } else {
       body = doneIds.length ? doneIds.map((id) => questCard(id, S.quests[id], true)).join("") : `<p class="sub">Nothing finished yet.</p>`;
@@ -3211,6 +3233,7 @@
     addEventListener("pointermove", move); addEventListener("pointerup", up); addEventListener("pointercancel", up);
   }
   function onPanelInput(e) {
+    if (/^snd_/.test(e.target.id || "")) return onSettingsInput(e);   // Character → Settings
     if (/^aiw?_/.test(e.target.id || "") && e.target.type === "range") { const o = $("#" + e.target.id + "_v"); if (o) o.textContent = e.target.id.startsWith("aiw_") ? (+e.target.value).toFixed(1) + "×" : e.target.value + "%"; return; }
     if (["cfAm", "cfBm", "cfName"].includes(e.target.id)) {
       if (e.target.id === "cfName") craftDraft.name = e.target.value; else { craftDraft[e.target.id === "cfAm" ? "am" : "bm"] = +e.target.value; const v = $("#" + e.target.id + "v"); if (v) v.textContent = e.target.value; }
@@ -3220,6 +3243,7 @@
     if (e.target.id === "socsearch") { socSearch = e.target.value; const pos = e.target.selectionStart; renderPanel(true); const q = $("#socsearch"); q.focus(); q.setSelectionRange(pos, pos); return; } if (e.target.id === "packsearch") { packSearch = e.target.value; const pos = e.target.selectionStart; renderPanel(true); const q = $("#packsearch"); if (q) { q.focus(); q.setSelectionRange(pos, pos); } return; } if (e.target.id === "search") { searchText = e.target.value; const pos = e.target.selectionStart; renderPanel(true); const s = $("#search"); s.focus(); s.setSelectionRange(pos, pos); } }
   function onPanelChange(e) {
     const id = e.target.id;
+    if (/^snd_/.test(id || "")) return onSettingsInput(e);
     if (id === "tc") { tacticsDraft.if = e.target.value; renderPanel(true); }
     if (e.target.classList?.contains("tcx")) { const c = tacticsDraft.extra?.[+e.target.dataset.ci - 1]; if (c) { c.if = e.target.value; delete c.pct; renderPanel(true); } }
     if (e.target.classList?.contains("tpx")) { const c = tacticsDraft.extra?.[+e.target.dataset.ci - 1]; if (c) c.pct = +e.target.value; }
@@ -3332,7 +3356,7 @@
       case "chatch": chatCh = b.dataset.id; renderPanel(true); break;
       case "chatmute": { const m = chatMuted(), id = b.dataset.id; if (m.includes(id)) return; setPref("muted", [...m, id]); toast(`Muted ${b.dataset.name}. Their messages are hidden.`); onChat(chatRaw); renderPanel(true); break; }
       case "chatunmute": setPref("muted", []); toast("Everyone is unmuted."); onChat(chatRaw); renderPanel(true); break;
-      case "pref": settingsAction("pref", b); openSound(); break;
+      case "pref": settingsAction("pref", b); if (b.closest("#side")) renderPanel(true); else openSound(); break;
       case "bk": bkClick(b); break;
       case "totitle": Store.save(S); try { sessionStorage.setItem("rotn_open", "menu"); } catch { /* ignore */ } location.reload(); break;
       case "toupdate": Store.save(S); try { sessionStorage.setItem("rotn_open", "update"); } catch { /* ignore */ } location.reload(); break;
@@ -3398,7 +3422,7 @@
       case "jtab": jTab = b.dataset.id; renderPanel(true); scrollTo(0, 0); break;
       case "qtrack": { const id = b.dataset.id; S.trackQ = QUESTS.tracked(S)?.id === id && S.trackQ === id ? null : id; persist(); renderPanel(true); bump(); toast(S.trackQ ? `★ Tracking ${QUESTS.L[id]?.name || "the quest"}.` : "No quest tracked: the first active quest shows."); break; }
       case "qmap": { const n = b.dataset.place, p = WORLD.places[n]; if (!p) break; closeMenu?.(); tab = "map"; selected = n; follow = false; center = [p[0], p[1]]; if (zoom < 2) zoom = 2.4; testResult = null; renderTabs(); renderPanel(true); renderPicked(); bump(); scrollTo(0, 0); break; }
-      case "tabgo": closeMenu?.(); tab = b.dataset.id; testResult = null; renderTabs(); renderPanel(true); bump(); scrollTo(0, 0); break;
+      case "tabgo": closeMenu?.(); tab = b.dataset.id; testResult = null; renderTabs(); renderPanel(true); bump(); if (b.closest(".mn-sub")) $("#side").scrollIntoView({ block: "start" }); else scrollTo(0, 0); break;
       case "jgo": { const id = b.dataset.id, to = MOVED[id] || ["log", "active"]; closeMenu?.(); tab = to[0]; if (to[0] === "social") { socTab = to[1]; socWith = null; } if (to[0] === "log") jTab = to[1]; renderTabs(); renderPanel(true); bump(); requestAnimationFrame(() => { const el = $("#j-" + id); if (el) { const y = el.getBoundingClientRect().top + scrollY - 64; scrollTo({ top: y, behavior: "auto" }); } else scrollTo(0, 0); }); break; }
       case "festclaim": { const m = FEST.claim(S); if (!m) break; SOUND.fx("levelup"); say(m); publishCard(); break; }
       case "festgift": { const m = FEST.innGift(S); if (m) { SOUND.fx("coin"); say(m); } break; }
@@ -3555,7 +3579,7 @@
       case "rjoin": tacticsDraft.join = tacticsDraft.join === "or" ? "and" : "or"; renderPanel(true); break;
       case "rnot": { const k = +b.dataset.i, c = k ? tacticsDraft.extra[k - 1] : tacticsDraft; c.not = !c.not; renderPanel(true); break; }
       case "sharecopy": { const code = AISET.encode(L); shareMsg = "";
-        const done = () => { shareMsg = "Share code copied. Send it to a friend: they paste it on their Tactics tab."; renderPanel(true); };
+        const done = () => { shareMsg = "Share code copied. Send it to a friend: they paste it in Character → Tactics."; renderPanel(true); };
         try { if (navigator.clipboard?.writeText) navigator.clipboard.writeText(code).then(done, () => { shareMsg = code; renderPanel(true); }); else { shareMsg = code; renderPanel(true); } } catch { shareMsg = code; renderPanel(true); }
         break; }
       case "shareopen": shareOpen = !shareOpen; shareMsg = ""; renderPanel(true); break;
