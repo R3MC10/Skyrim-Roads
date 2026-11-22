@@ -1374,6 +1374,19 @@ html.a11y-1h .mapwrap:has(.picked:not(.hide)) .mapbtns{bottom:72px}
 html.a11y-1h-left :is(.twbtn,.favbtn){right:auto;left:12px}
 html.a11y-1h-left .top :is(.soc,.snd){right:auto;left:66px}
 html.a11y-1h-left .mapbtns{right:auto;left:8px}
+/* inventory helpers (invqol.js): kept marks, better/worse arrows, junk and buy-back buttons */
+.iq-up,.iq-dn{font-weight:700;margin-left:5px;font-size:.92em;font-style:normal}
+.iq-up,.sky-row .nm i.iq-up{color:var(--buff,#6fd36a)}.iq-dn,.sky-row .nm i.iq-dn{color:var(--debuff,#e0584a)}
+html.a11y-hc i.iq-up{color:var(--buff,#6fd36a)!important}html.a11y-hc i.iq-dn{color:var(--debuff,#e0584a)!important}
+.iq-keep{margin-left:4px;font-size:.82em;font-style:normal}
+.sky-row .nm i.iq-up,.sky-row .nm i.iq-dn,.sky-row .nm i.iq-keep{margin:0 5px 0 0}
+.iq-shop{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.iq-shop:empty{display:none}
+.iq-shop .btn{flex:1 1 140px;min-width:0;white-space:normal;line-height:1.2}
+.iq-sort{flex-wrap:wrap;align-items:center;gap:4px;margin:6px 0 8px}.iq-sort .sub{margin:0 4px 0 0}
+.iq-junk{max-height:44vh;overflow:auto}
+.iq-total{text-align:right;margin:8px 0 0}
+.iq-btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.iq-btns .btn{flex:1 1 120px;min-width:0;white-space:normal}
+.iq-k.on{border-color:var(--gold);color:var(--gold)}
 /* ==== crafting shortcuts (craftqol.js) ==== */
 .cqbar{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;margin:0 0 8px}
 .cqbar .cqready,.cqalch .cqready{color:var(--mute);font-size:13px;line-height:1.25}
@@ -1611,6 +1624,7 @@ html.art-pixel .rmd-b,html.art-pixel .rmd-n{border-radius:0}
 <script src="skillinfo.js"></script>
 <script src="menus.js"></script>
 <script src="tabmenu.js"></script>
+<script src="invqol.js"></script>
 <script src="fastqol.js"></script>
 <script src="onboard.js"></script>
 <script src="search.js"></script>
