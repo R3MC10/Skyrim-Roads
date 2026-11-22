@@ -1,7 +1,7 @@
 /* Foe perks (foeperks.js): humanoid foes get real perks by level and archetype; beasts don't; the perks act in fights.
    W=/path/to/web/ node test_foeperks.js   — prints "foeperks ok" */
 const fs = require("fs"), vm = require("vm");
-const W = process.env.W || "/home/claude/web_foeperks/";
+const W = process.env.W || require("path").join(__dirname, "../game/");
 const c = { console, Math, Date, JSON, Object, Array, Set, Map, Number, String, Float64Array, Float32Array, Uint8Array, Int32Array, Uint16Array, Int16Array, Proxy, process: { env: process.env } };
 vm.createContext(c);
 for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "magic.js", "ammo.js", "perkfx.js", "foeperks.js", "combatai.js"])

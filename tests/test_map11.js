@@ -1,5 +1,5 @@
 // The world map matches Skyrim 1:1: city bearings, holds, coast/borders, rivers, roads, spacing, travel distances, old-save migration.
-const fs = require("fs"), vm = require("vm"); const W = process.env.W || "/home/claude/web/";
+const fs = require("fs"), vm = require("vm"); const W = process.env.W || require("path").join(__dirname, "../game/");
 const c = { console, Math, Date, JSON, Float64Array, Float32Array, Uint8Array, Int32Array, Uint16Array, Int16Array, Int8Array, Object, Array, Set, Map, Proxy, Number, String, Error };
 vm.createContext(c);
 for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "powers.js", "engine.js", "roam.js"])
