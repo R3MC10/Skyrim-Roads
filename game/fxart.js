@@ -346,15 +346,20 @@ const FXART = (() => {
     g.fillStyle = "rgba(185,169,141,0.9)"; g.fillRect(0, VH * 0.8, VW, 8); g.strokeStyle = PAL.ink; g.lineWidth = 0.8; g.beginPath(); g.moveTo(0, VH * 0.8); g.lineTo(VW, VH * 0.8); g.moveTo(0, VH * 0.8 + 8); g.lineTo(VW, VH * 0.8 + 8); g.stroke();
     g.fillStyle = "rgba(59,44,30,0.35)"; for (let x = -(vig.off % 22); x < VW; x += 22) g.fillRect(x, VH * 0.8 + 3.5, 8, 1.2);   // ruts in the road
     if (st && typeof SKY !== "undefined") g.drawImage(overLayer(st), 0, 0, VW, VH);
-    const p = Math.max(0, Math.min(1, info.progress || 0)), room = Math.min(3, (info.company || []).length) * 30, x = 40 + room + p * (VW - 110 - room);   // leave room behind you for your company
-    const co = (info.company || []).slice(0, 5), tags = [];
-    co.forEach((m, i) => {   // your party and followers walk (or ride) a step behind you
-      const cx = x - (info.riding || info.carriage ? 16 : 0) - (m.riding ? 34 : 24) * (i + 1) * 1.1, cy = VH * 0.8 + 6 - (i % 2) * 2;
-      if (cx < -20) return;
-      g.save(); g.translate(cx, cy); g.scale(1.2, 1.2);
+    // your party and followers walk (or ride) a step behind you: one line for a few, two staggered lines for a big party (up to 10)
+    const co = (info.company || []).slice(0, 15), big = co.length > 4, cols = big ? Math.ceil(co.length / 2) : co.length, tags = [];
+    const p = Math.max(0, Math.min(1, info.progress || 0)), room = Math.min(big ? 5 : 3, cols) * (big ? 26 : 30), x = 40 + room + p * (VW - 110 - room);   // leave room behind you for your company
+    const step = big ? Math.min(1, (x - 30) / (cols * 26 + 12)) : 1;   // up to 8 heroes and their followers: bunch up so everyone fits
+    const spots = co.map((m, i) => { const c = big ? Math.floor(i / 2) : i, row = big ? i % 2 : 0;
+      return { m, i, row, cx: x - (info.riding || info.carriage ? 16 : 0) - (big ? ((m.riding ? 30 : 22) * (c + 1) + row * 12) * step : (m.riding ? 34 : 24) * (i + 1) * 1.1), cy: VH * 0.8 + 6 - (big ? row * 7 : (i % 2) * 2) }; });
+    for (const sp of [...spots.filter((q) => q.row === 1), ...spots.filter((q) => q.row === 0)]) {   // back line first
+      const { m, i, row, cx, cy } = sp;
+      if (cx < -20) continue;
+      const sc = row ? 1.02 : 1.2;
+      g.save(); g.translate(cx, cy); g.scale(sc, sc);
       walker(g, H, 0, 0, vig.off * 0.35 + (i + 1) * 1.7, m.look, m.riding, false, m.horse); g.restore();
-      tags.push([m.name, cx, cy - (m.riding ? 60 : 50), m.follower, false]);
-    });
+      if (!big || row === 0) tags.push([m.name, cx, cy - (m.riding ? 60 : 50) * sc / 1.2 - (big && Math.floor(i / 2) % 2 ? 12 : 0), m.follower, false]);   // a big company: names on the front line, staggered
+    }
     g.save(); g.translate(x, VH * 0.8 + 6); g.scale(1.35, 1.35);
     walker(g, H, 0, 0, vig.off * 0.35, info.look, info.riding, info.carriage, info.horse); g.restore();
     if (co.length) tags.push(["You", x, VH * 0.8 + 6 - (info.riding ? 68 : 56), false, true]);

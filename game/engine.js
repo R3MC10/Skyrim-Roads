@@ -62,7 +62,7 @@ const G = (() => {
     });
     const [x, y] = loc(D.START_LOCATION);
     const s = {
-      v: 4, id, name, race: raceId, level: 1, charXp: 0, pendingLevels: 0, hpBonus: 0, mpBonus: 0, spBonus: 0,
+      v: 5, id, name, race: raceId, level: 1, charXp: 0, pendingLevels: 0, hpBonus: 0, mpBonus: 0, spBonus: 0,
       health: 100, healthTs: now(), gold: D.START_GOLD, x, y, location: D.START_LOCATION,
       discovered: [...D.START_DISCOVERED], explored: [[x, y]], skills, spells: [...D.START_SPELLS], horse: null,
       inv: [], nextInv: 1, loadouts: {}, loadout: "Main", trip: null, journal: [], created: now(),
@@ -78,38 +78,50 @@ const G = (() => {
   }
   const clone = (o) => JSON.parse(JSON.stringify(o));
   /* Older saves: the world map changed in v2, so put the player in the matching town and drop old places. */
+  /* moves a point from an older map onto this one: same offset from the nearest place that existed then */
+  const movedFrom = (old) => (p) => {
+    if (WORLD.isSol?.(p)) return p;   // Solstheim didn't move
+    let best = null, bd = Infinity;
+    for (const [n, q] of Object.entries(old)) { const d = pxDist(p, q); if (d < bd && PLACES[n]) { bd = d; best = n; } }
+    if (!best) return [...loc(D.START_LOCATION).slice(0, 2)];
+    const o = old[best], n = loc(best), k = bd < 25 ? 1 : 25 / bd;   // keep a small offset from the nearest place
+    let q = [n[0] + (p[0] - o[0]) * k, n[1] + (p[1] - o[1]) * k];
+    if (typeof ROAM !== "undefined") q = ROAM.snap(q) || [n[0], n[1]];
+    return [+q[0].toFixed(4), +q[1].toFixed(4)];
+  };
   function migrate(s) {
     if ((s.v || 1) < 2) {
       const at = PLACES[s.location] ? s.location : D.START_LOCATION;
       [s.x, s.y] = loc(at); s.location = at; s.trip = null;
       s.discovered = [...new Set([...s.discovered.filter((n) => PLACES[n]), ...D.START_DISCOVERED])];
       s.explored = s.discovered.map((n) => [...loc(n).slice(0, 2)]);
-      s.v = 4;   // already placed on the current map
+      s.v = 5;   // already placed on the current map
       note(s, "The world map was redrawn. You find yourself in " + at + ".");
     }
     if (s.v < 3 && WORLD.v2Places) {   // the map became 1:1 with Skyrim: move you (and the trail you've walked) to the same spot on it
-      const moveOld = (p) => {
-        if (WORLD.isSol?.(p)) return p;   // Solstheim didn't move
-        let best = null, bd = Infinity;
-        for (const [n, q] of Object.entries(WORLD.v2Places)) { const d = pxDist(p, q); if (d < bd && PLACES[n]) { bd = d; best = n; } }
-        if (!best) return [...loc(D.START_LOCATION).slice(0, 2)];
-        const o = WORLD.v2Places[best], n = loc(best), k = bd < 25 ? 1 : 25 / bd;   // keep a small offset from the nearest place
-        let q = [n[0] + (p[0] - o[0]) * k, n[1] + (p[1] - o[1]) * k];
-        if (typeof ROAM !== "undefined") q = ROAM.snap(q) || [n[0], n[1]];
-        return [+q[0].toFixed(4), +q[1].toFixed(4)];
-      };
+      const moveOld = movedFrom(WORLD.v2Places);
       if (PLACES[s.location]) [s.x, s.y] = loc(s.location).slice(0, 2);
       else [s.x, s.y] = moveOld([s.x, s.y]);
       if (s.trip && !s.trip.boat) { s.trip = null; note(s, "Your journey was interrupted: the world map was redrawn to match Skyrim's real layout."); }
       s.explored = (s.explored || []).map((p) => moveOld(p)).filter((p, i, a) => !i || pxDist(p, a[i - 1]) > 2).slice(-400);
       if (!s.explored.length) s.explored = [[s.x, s.y]];
-      s.v = 3;
+      s.v = 5;   // straight onto the current map
       note(s, "🗺 The world map now matches Skyrim 1:1 — coast, borders, holds, roads and every place where it really is.");
     }
     if (s.v < 4) {   // the coast was sharpened (Solitude's estuary, the Hjaalmarch inlets, Dawnstar's bay): step out of any new water
       if (PLACES[s.location]) [s.x, s.y] = loc(s.location).slice(0, 2);
       else if (!s.trip && typeof ROAM !== "undefined" && !WORLD.isSol?.([s.x, s.y])) { const q = ROAM.snap([s.x, s.y]); if (q) [s.x, s.y] = [+q[0].toFixed(4), +q[1].toFixed(4)]; }
       s.v = 4;
+    }
+    if (s.v < 5 && WORLD.v4Places) {   // the map was re-measured from the game's own markers, heights and roads: move to the same spot on it
+      const moveOld = movedFrom(WORLD.v4Places);
+      if (PLACES[s.location]) [s.x, s.y] = loc(s.location).slice(0, 2);
+      else [s.x, s.y] = moveOld([s.x, s.y]);
+      if (s.trip && !s.trip.boat) { s.trip = null; note(s, "Your journey was interrupted: the map was re-measured from the real game."); }
+      s.explored = (s.explored || []).map((p) => moveOld(p)).filter((p, i, a) => !i || pxDist(p, a[i - 1]) > 2).slice(-400);
+      if (!s.explored.length) s.explored = [[s.x, s.y]];
+      s.v = 5;
+      note(s, "🗺 The world map was re-measured from Skyrim itself: every place, road, river, lake and mountain now sits exactly where it is in the game.");
     }
     s.discovered = s.discovered.filter((n) => PLACES[n]);
     if (typeof AMMO !== "undefined") { const m = AMMO.migrate(s); if (m) note(s, m); }
@@ -361,10 +373,12 @@ const G = (() => {
     return a;
   }
   function describeRule(r) {
+    if (r && (r.conds?.length || r.not) && typeof AISET !== "undefined") return AISET.describe(r);   // AND / OR / NOT rules
     const [label, kind] = D.CONDITIONS[r.if] || [r.if, false];
     return { cond: kind === "turn" ? `${label} ${r.pct || 2}` : kind ? `${label} ${r.pct}%` : label, act: describeAction(r.do) };
   }
   function hiddenChance(s, e, t) {   // [OURS] Skyrim detection is real-time line of sight; this is our stand-in
+    if (typeof SNEAK2 !== "undefined") return SNEAK2.chance(s, e, t);   // sneak2.js: armor, daylight and the foe's awareness count
     const base = 0.25 + skill(s, "Sneak") / 150 - (e.danger === "high" ? 0.15 : 0) + (isNight(t) ? 0.1 : 0) + 0.15 * P(s, "detect_life") + fxSum(s, "hide", t || now()) / 100 + (typeof PFX !== "undefined" ? Math.min(25, PFX.num(s, "hide")) / 100 : 0)
       + (typeof WEVENTS !== "undefined" ? WEVENTS.weather([s.x, s.y], t || now()).sneak : 0) + (typeof WFX !== "undefined" ? WFX.sneakAdd(s, t || now()) : 0);   // rain, fog and snow hide you; clear nights too
     const seen = (1 - base) * (1 - 0.12 * P(s, "stealth"));   // [Skyrim] Stealth: 20% harder to detect per rank (our scale)
@@ -375,7 +389,7 @@ const G = (() => {
     constructor(s, enemy, rules, t = now()) {
       this.s = s; this.e = enemy; this.rules = rules || lo(s).rules; this.t = t;
       { const L = Object.values(s.loadouts || {}).find((l) => l && l.rules === this.rules) || (s.loadouts ? lo(s) : null);   // [OURS] Smart AI unless this loadout is set to Custom tactics
-        this.ai = typeof COMBATAI !== "undefined" && !!L && COMBATAI.isSmart(L); }
+        this.ai = typeof COMBATAI !== "undefined" && !!L && COMBATAI.isSmart(L); this.L = L; this.hybrid = !!L && L.mode === "hybrid"; }
       this.eq = equipment(s);
       this.hp = curHealth(s, t); this.mp = maxMagicka(s); this.sp = maxStamina(s);
       this.ehp = enemy.hp ?? enemy.health;
@@ -383,6 +397,8 @@ const G = (() => {
       if (this.wx && this.wx.stam < 1) this.sp = Math.round(this.sp * this.wx.stam);
       this.hp0 = this.hp; this.ehp0 = this.ehp;   // start health, for the fight scene's health bars
       this.tags = new Set(enemy.tags || []);
+      this.fp = typeof FOEPERKS !== "undefined" ? FOEPERKS.build(enemy) : null;   // [OURS] humanoid foes have perks too (foeperks.js)
+      this.fpLine = this.fp ? FOEPERKS.label(enemy) : "";
       this.armorSpell = 0; this.summonTurns = 0; this.summonDmg = 0; this.calmTurns = 0;
       this.slowed = 0; this.stagger = false; this.blocking = false; this.turn = 0; this.hidden = false;
       this.log = []; this.xp = {}; this.used = {}; this.charges = {};
@@ -405,7 +421,9 @@ const G = (() => {
       this.allies = allyProvider(s) || [];   // party members fighting beside you: [{name, dmg}]
       if (s.follower && typeof TOWNS !== "undefined") {   // your follower fights too, and can fall
         const fd = TOWNS.FOLLOWERS[s.follower.id];
-        this.allies.push({ name: fd[0], dmg: fd[4] * 0.55 * (1 + 0.05 * (s.level - 1)), hp: TOWNS.followerHp(s, t), follower: true, fid: s.follower.id, kind: fd[6] || "follower" });   // [OURS] 55% of their listed damage
+        const fa = typeof FOL2 !== "undefined" ? FOL2.ally(s, TOWNS.followerHp(s, t)) : null;   // their own gear, level and perks
+        if (fa && fd[6] && !fa.kind) fa.kind = fd[6];
+        this.allies.push(fa || { name: fd[0], dmg: fd[4] * 0.55 * (1 + 0.05 * (s.level - 1)), hp: TOWNS.followerHp(s, t), follower: true, fid: s.follower.id, kind: fd[6] || "follower" });   // [OURS] 55% of their listed damage
       }
       if (s.thrall && s.thrall.fights > 0) { this.allies.push({ name: s.thrall.name, dmg: s.thrall.dmg, thrall: true, kind: "zombie" }); this.thrallFought = true; }   // a raised corpse fights for you
       this.pw = typeof POWERS !== "undefined" ? POWERS.fightState() : null;
@@ -475,7 +493,14 @@ const G = (() => {
       return best;
     }
     findItem(item) { return this.s.inv.find((r) => r.item === item && this.left(r.id) > 0) || null; }
-    cond(r) {
+    cond(r) {   // a rule's IF: one condition, or several joined with AND / OR (each can be NOT)
+      if (r && Array.isArray(r.conds) && r.conds.length) {
+        const vals = r.conds.map((c) => !!this.cond1(c) !== !!c.not);
+        return r.join === "or" ? vals.some(Boolean) : vals.every(Boolean);
+      }
+      return !!this.cond1(r) !== !!(r && r.not);
+    }
+    cond1(r) {
       const s = this.s, p = r.pct || 0;
       switch (r.if) {
         case "always": return true;
@@ -507,10 +532,12 @@ const G = (() => {
         case "mounted": return !!this.mount?.up;
         case "ally_hp_below": case "ally_down": return typeof SPELLBOOK !== "undefined" ? !!SPELLBOOK.condAlly(this, r) : false;   // support spells (spellbook.js)
       }
+      if (typeof AISET !== "undefined" && AISET.NEWCOND[r.if]) return AISET.cond(this, r);   // the newer conditions (aiset.js)
       return false;
     }
     affordable(a) {
       if (a === "attack") return true;
+      if (a === "flee") return !!this.canFlee && !this.e.boss;   // only on the road, never from a boss
       if (a === "power_attack") return this.sp >= this.paCost;
       if (a === "block") return this.sp >= F.BLOCK_STAMINA && !(this.weapon && this.weapon.skill === "Archery");
       const [kind, arg] = a.split(":");
@@ -522,6 +549,13 @@ const G = (() => {
       return false;
     }
     choose() {
+      if (this.ai && this.hybrid) {   // Hybrid: your rules first (the plain "always → attack" filler doesn't count), Smart AI fills the gaps
+        for (let i = 0; i < this.rules.length; i++) {
+          const r = this.rules[i];
+          if (!r || r.off || catchAll(r) || (this.healSkip && this.healSkip[i + 1] >= this.turn)) continue;
+          if (this.cond(r) && this.affordable(r.do)) { this.aiWhy = ""; return [i + 1, r.do]; }
+        }
+      }
       if (this.ai) { const [a, why] = COMBATAI.choose(this); this.aiWhy = why; return [0, a]; }   // [OURS] combatai.js
       for (let i = 0; i < this.rules.length; i++) {
         const r = this.rules[i];
@@ -620,6 +654,15 @@ const G = (() => {
         if (--s.poison.hits <= 0) s.poison = null;
       }
       if (this.weapon?.dae && typeof DAEDRIC !== "undefined") { const dr = DAEDRIC.onHit(this, dmg); dmg = dr.dmg; label += dr.label; }   // Daedric artifacts
+      if (this.fp) {   // the foe's own perks: dodging, blocking, armor
+        const fp = this.fp;
+        if (fp.dodge && Math.random() < fp.dodge) return `${label}: ${this.e.name} dodges`;
+        if ((wt === "bow" || wt === "crossbow") && fp.arrows && fp.block) { dmg *= 1 - fp.arrows; label += " (deflected)"; }
+        else if (fp.block && Math.random() < fp.block) { dmg *= 0.5; label += " (blocked)"; }
+        dmg *= fp.taken;
+        if (fp.reflect && Math.random() < fp.reflect) { const rb = dmg * 0.5; this.hp -= rb; label += ` · ${this.e.name} turns it back on you (${Math.round(rb)})`; }
+      }
+      if (sneak && typeof SNEAK2 !== "undefined") { const c = SNEAK2.cap(this); if (c && dmg > c) { dmg = c; label += " (it reels, but stands)"; } }   // no one-shots on strong foes
       this.ehp -= dmg;
       if (typeof PFX !== "undefined") {
         label += PFX.onHit(this, px, dmg);
@@ -649,6 +692,7 @@ const G = (() => {
         let label = sp.name + (stormHit ? " ⚡ (the storm answers)" : "");
         if (this.turn === 1 && this.hidden && P(s, "quiet_casting")) { amt *= 2; label += " (sneak ×2)"; }
         if (sp.school === "Destruction" && P(s, "impact") && Math.random() < 0.3) { this.stagger = true; label += ", staggers"; }
+        if (this.fp && this.fp.ward) { amt *= 1 - this.fp.ward; label += ` (${this.e.name}'s ward soaks ${Math.round(this.fp.ward * 100)}%)`; }   // Ward Absorb, Magic Resistance, Atronach
         this.ehp -= amt;
         if (typeof PFX !== "undefined") label += PFX.hitFoe(this, sp.element, amt, "spell");   // fire burns, frost chills, shock jolts
         return `${label}: ${Math.round(amt)}`;
@@ -679,6 +723,12 @@ const G = (() => {
     }
     act(a) {
       if (a === "attack") return this.attack(false);
+      if (a === "flee") {   // break off and run (road fights only)
+        const ch = 0.45 + skill(this.s, "Athletics") / 200 - (this.e.danger === "high" ? 0.2 : 0) + (riding(this.s) ? 0.15 : 0);
+        this.addXp("Athletics", 10);
+        if (Math.random() < ch) { this.fled = true; return "You break away and run!"; }
+        return "You try to run, but it cuts you off";
+      }
       if (a === "power_attack") return this.attack(true);
       if (a === "block") {
         const px = typeof PFX !== "undefined";
@@ -731,13 +781,18 @@ const G = (() => {
       if (this.calmTurns > 0) { this.calmTurns--; return `${n} isn't fighting`; }
       if (this.eParalyzed > 0) { this.eParalyzed--; return `${n} is paralyzed`; }
       if (this.stagger) { this.stagger = false; return `${n} is staggered`; }
+      const fp = this.fp;
+      if (fp && this.ehp > 0) {
+        if (fp.avoid && !this.fpAvoided && this.ehp < 0.15 * this.ehp0) { this.fpAvoided = true; const h = Math.round(fp.avoid * this.ehp0); this.ehp += h; return `${n} refuses to fall (Avoid Death) and heals ${h}`; }
+        if (fp.heal && this.ehp < 0.45 * this.ehp0 && Math.random() < fp.heal) { const h = Math.round(fp.healAmt * this.ehp0); this.ehp = Math.min(this.ehp0, this.ehp + h); return `${n} casts a healing spell: +${h}`; }
+      }
       const cover = this.coverAl && this.allies.includes(this.coverAl) ? this.coverAl : null; this.coverAl = null;   // a smart follower stepped in front of you
       if (this.allies.length && (cover || Math.random() < this.allies.length / (this.allies.length + 1) * 0.7)) {   // [OURS] you're still the main target
         this.blocking = false;
         const al = cover || pick(this.allies);
         if (al.coop && typeof COOP !== "undefined") return COOP.hitAlly(this, al);   // co-op party members take their own blows
         if (al.follower && Math.random() < F.HIT_CHANCE) {
-          let d = this.e.damage * rnd(...F.DAMAGE_SPREAD) * 0.8;   // [OURS] followers wear armor
+          let d = this.e.damage * rnd(...F.DAMAGE_SPREAD) * (typeof FOL2 !== "undefined" && al.fid === s.follower?.id ? FOL2.taken(s) : 0.8);   // [OURS] followers wear armor (their real armor, with FOL2)
           if (typeof SPELLBOOK !== "undefined") d = SPELLBOOK.allyTakes(this, al, d);   // wards, stoneskin and veils you cast on them
           al.hp -= d;
           if (al.hp <= 0) { this.allies = this.allies.filter((x) => x !== al); this.followerDown = al.name; return `${n} knocks ${al.name} to their knees. ${al.name} is down!`; }   // [Skyrim] protected followers kneel instead of dying
@@ -747,7 +802,7 @@ const G = (() => {
       }
       if (this.mount && typeof HORSEBACK !== "undefined") { const hr = HORSEBACK.enemyTurn(this); if (hr) { this.blocking = false; return hr; } }   // [OURS] foes go for your horse
       const px = typeof PFX !== "undefined";
-      if (Math.random() > F.HIT_CHANCE * (this.wx && /archer|bow|hunter|marksman/i.test(this.e.name || "") ? this.wx.aim : 1) * (this.foeSt?.chill ? 0.85 : 1)) {   // chilled foes are clumsy
+      if (Math.random() > Math.min(0.97, F.HIT_CHANCE + (fp ? fp.hit : 0)) * (this.wx && /archer|bow|hunter|marksman/i.test(this.e.name || "") ? this.wx.aim : 1) * (this.foeSt?.chill ? 0.85 : 1)) {   // chilled foes are clumsy
         this.blocking = false;
         let back = "";
         if (px && this.ehp > 0 && Math.random() < PFX.sum(s, "counter", this, {})) { const d = this.weaponDamage() * 0.5; this.ehp -= d; back = ` · you punch back ${Math.round(d)}`; }   // Counterpunch
@@ -759,9 +814,17 @@ const G = (() => {
         if (px && PFX.has(s, "riposte", this, {})) this.riposte = true; this.blocking = false; return `${n} attacks, but you dodge`; }
       const absorb = [0, 0.1, 0.2][P(s, "spell_absorption")];
       if (absorb && Math.random() < absorb) { this.mp = Math.min(maxMagicka(s), this.mp + 15); this.blocking = false; return `${n}'s blow is absorbed into magicka`; }
-      const raw = this.e.damage * rnd(...F.DAMAGE_SPREAD) * (this.slowed ? 0.5 : 1) * (this.disarmed > 0 ? 0.6 : 1);
+      let raw = this.e.damage * rnd(...F.DAMAGE_SPREAD) * (this.slowed ? 0.5 : 1) * (this.disarmed > 0 ? 0.6 : 1);
       if (this.disarmed > 0) this.disarmed--;
-      let dmg = raw, extra = "";
+      let fpTag = "";
+      if (fp) {   // their perks: damage, power attacks, crits, dual casting, ambush openers
+        raw *= fp.caster ? fp.spell : fp.dmg;
+        if (fp.caster && fp.dual && Math.random() < fp.dual) { raw *= 2.2; fpTag = " (dual cast)"; }
+        else if (!fp.caster && fp.power && Math.random() < fp.power) { raw *= fp.powerX; fpTag = " (power attack)"; }
+        if (fp.crit && Math.random() < fp.crit) { raw *= 1.5; fpTag += " (critical)"; }
+        if (this.turn === 0 && fp.opener > 1) { raw *= fp.opener; fpTag += " (sneak attack)"; }
+      }
+      let dmg = raw, extra = fpTag;
       const wasBlocking = this.blocking, magicHit = this.tags.has("mage") || this.tags.has("dragon");
       if (this.blocking) {
         const shieldBase = this.shield ? this.shield.armor : (this.wt === "spear" && P(s, "phalanx") ? 20 : null);
@@ -785,10 +848,15 @@ const G = (() => {
       if (this.pw) { dmg = POWERS.dmgIn(this, dmg, this.tags.has("mage") || this.tags.has("dragon")); if (dmg === 0) return `${n}'s blow passes through you`; }
       if (Object.values(this.armor).some((a) => a.type === "heavy") && P(s, "reflect_blows") && Math.random() < 0.1) { this.ehp -= dmg; return `${n}'s blow is reflected back (${Math.round(dmg)})`; }
       if (typeof MAGIC !== "undefined" && this.ward) { const before = dmg; dmg = MAGIC.soak(this, dmg); if (dmg < before) extra += ` (ward soaks ${Math.round(before - dmg)})`; }
+      if (fp && dmg > 0) {
+        if (fp.bleed) { dmg += fp.bleed; extra += ` · you bleed ${fp.bleed}`; }
+        if (fp.stagger && Math.random() < fp.stagger) { this.sp = Math.max(0, this.sp - 15); this.blocking = false; extra += " · staggers you"; }
+        if (fp.paralyze && Math.random() < fp.paralyze) { this.sp = Math.max(0, this.sp - 30); extra += " · knocks the wind out of you"; }
+      }
       this.hp -= dmg;
       if (px) {
         const fe = PFX.foeElement(this.e);   // fire mages burn you, frost trolls chill you, storm atronachs jolt you
-        if (fe && dmg > 0 && Math.random() < fe.ch) extra += PFX.hitMe(this, fe.el, dmg);
+        if (fe && dmg > 0 && Math.random() < fe.ch + (fp ? fp.status : 0)) extra += PFX.hitMe(this, fe.el, dmg);
         const ad = PFX.sum(s, "avoiddeath", this, {});   // Avoid Death
         if (ad && !this.avoidUsed && this.hp < 0.1 * maxHealth(s)) { this.avoidUsed = true; this.hp = Math.min(maxHealth(s), Math.max(1, this.hp) + ad); extra += ` · Avoid Death heals you ${ad}`; }
       }
@@ -803,20 +871,25 @@ const G = (() => {
     }
     run({ enemyFirst = false, trySneak = true, maxTurns = 60, t, hidden = null } = {}) {
       this.dark = isNight(t || now()) || !!(this.wx && this.wx.aim < 1);   // night, fog, rain: Silent Roll
-      this.hidden = hidden != null && !enemyFirst ? hidden : trySneak && !enemyFirst && Math.random() < hiddenChance(this.s, this.e, t);
+      if (hidden != null && !enemyFirst) this.hidden = hidden;
+      else if (!trySneak || enemyFirst) this.hidden = false;
+      else if (typeof SNEAK2 !== "undefined") {   // sneak2.js: only try when it makes sense; a failed try hands the foe the first blow
+        const o = SNEAK2.opener(this, t); this.sneakTry = o; this.hidden = o.hidden;
+        if (o.spotted) this.log.push({ turn: 0, rule: null, me: `Spotted while sneaking up (${Math.round(o.chance * 100)}% chance)!`, them: this.enemyTurn() });
+      } else this.hidden = Math.random() < hiddenChance(this.s, this.e, t);
       if (enemyFirst) this.log.push({ turn: 0, rule: null, me: "", them: this.enemyTurn() });
-      while (this.hp > 0 && this.ehp > 0 && !this.endWon && this.turn < maxTurns) {
+      while (this.hp > 0 && this.ehp > 0 && !this.endWon && !this.fled && this.turn < maxTurns) {
         this.turn++;
         const [rule, a] = this.choose();
         const line = { turn: this.turn, rule, me: this.act(a), them: "", a, wt: this.wt };   // a / wt: what was done, for the fight scene only
-        if (this.ai) { line.ai = true; if (this.aiWhy && this.aiWhy !== this.aiLastWhy) line.why = this.aiWhy; this.aiLastWhy = this.aiWhy; }   // why the AI did it (shown when the reason changes)
+        if (this.ai && !rule) { line.ai = true; if (this.aiWhy && this.aiWhy !== this.aiLastWhy) line.why = this.aiWhy; this.aiLastWhy = this.aiWhy; }   // why the AI did it (shown when the reason changes)
         if (this.bleed.length && this.ehp > 0) { const b = this.bleed.reduce((x, y) => x + y.dmg, 0); this.ehp -= b; this.bleed = this.bleed.map((y) => ({ ...y, turns: y.turns - 1 })).filter((y) => y.turns > 0); line.me += ` · bleeds ${Math.round(b)}`; }
-        for (const al of [...this.allies]) if (this.ehp > 0) { if (al.coop && typeof COOP !== "undefined") { line.me += COOP.allyAct(this, al); continue; } if (al.follower && this.ai) { line.me += COMBATAI.followerAct(this, al); continue; } const d = al.dmg * rnd(...F.DAMAGE_SPREAD); this.ehp -= d; line.me += ` · ${al.name} ${Math.round(d)}`; }
+        for (const al of [...this.allies]) if (this.ehp > 0) { if (al.coop && typeof COOP !== "undefined") { line.me += COOP.allyAct(this, al); continue; } if (al.follower && typeof FOL2 !== "undefined") { const ft = FOL2.turn(this, al); if (ft) { line.me += ft; continue; } } if (al.follower && this.ai) { line.me += COMBATAI.followerAct(this, al); continue; } const d = al.dmg * rnd(...F.DAMAGE_SPREAD); this.ehp -= d; line.me += ` · ${al.name} ${Math.round(d)}`; }
         if (typeof PFX !== "undefined") PFX.tick(this, line);   // burning, chills and jolts
         if (this.summonTurns > 0 && this.ehp > 0) { this.summonTurns--; this.ehp -= this.summonDmg; line.me += ` · familiar ${this.summonDmg}`; }
         if (typeof MAGIC !== "undefined" && !this.endWon) MAGIC.tick(this, line);   // cloaks, burning walls, healing circles
         { const g = this.healGuard(rule); if (g) line.me += " · " + g; }
-        if (this.ehp > 0 && !this.endWon) line.them = this.enemyTurn();
+        if (this.ehp > 0 && !this.endWon && !this.fled) line.them = this.enemyTurn();
         if (this.pw) POWERS.tick(this, line);
         line.hp = Math.max(0, Math.round(this.hp)); line.ehp = Math.max(0, Math.round(this.ehp));
         this.log.push(line);
@@ -842,6 +915,7 @@ const G = (() => {
         if (this.followerDown) { this.s.follower.hp = Math.max(1, TOWNS.followerMax(this.s, this.s.follower.id) * 0.1); this.s.follower.ts = t; }   // gets back up after the fight, badly hurt
         else if (fa) { this.s.follower.hp = Math.max(1, fa.hp); this.s.follower.ts = t; }
       }
+      if (typeof FOL2 !== "undefined" && this.s.follower && !this.s._test && (this.followerDown || this.allies.some((a) => a.follower))) daeMsgs.push(...FOL2.gain(this.s, this));   // they learn from fights they were in
       const extraMsgs = this.won && this.tags.has("dragon") && typeof POWERS !== "undefined" && !this.s._test ? [POWERS.absorb(this.s)] : [];
       for (const [id, q] of Object.entries(this.used)) take(this.s, +id, q);
       for (const [id, c] of Object.entries(this.charges)) { const r = invRow(this.s, +id); if (r) r.charge = c; }
@@ -866,7 +940,8 @@ const G = (() => {
     const lv = questLevel(level, rec), sc = 1 + 0.02 * (lv - 1), curve = 1 + D.QUEST_HP_CURVE * Math.max(0, lv - 10) ** 2 / sc;
     e.health = Math.floor(e.health * sc * curve * D.ENEMY_HEALTH_MULT); e.hp = e.health;
     e.damage = Math.round(e.damage * sc * D.ENEMY_DAMAGE_MULT * 10) / 10;
-    return Object.assign(e, { level: lv, rec, qlevel: lv });
+    delete e.fp;
+    return Object.assign(e, { level: lv, rec, qlevel: lv, plevel: lv });
   }
   function scaleEnemy(e, level) {
     e = clone(e);
@@ -881,6 +956,8 @@ const G = (() => {
       e.health = Math.floor(e.health * sc * curve * hpC * D.ENEMY_HEALTH_MULT);
       e.damage = Math.round(e.damage * sc * dmgC * D.ENEMY_DAMAGE_MULT * 10) / 10;
       e.hp = e.health;
+      e.plevel = Math.min(Math.max(level, e.level ?? level), (e.level ?? level) + gap);   // the level its perks are picked at
+      delete e.fp;
     }
     return e;
   }
@@ -1034,7 +1111,7 @@ const G = (() => {
         if (ce) { const e = scaleEnemy(ce, fightLevel(s)); tr.status = "encounter"; tr.encounter = e; out.encounter = e; note(s, `⚠️ Caravan ambush: ${e.name}`); return out; }
         continue;
       }
-      const rate = tr.carriage ? 0 : ENCOUNTER_PER_MIN * (isNight(stepT) ? D.NIGHT_ENCOUNTER_MULT : 1) * (typeof WEVENTS !== "undefined" ? WEVENTS.weather([s.x, s.y], stepT).encounters : 1);   // nobody robs a carriage on a Jarl's road
+      const rate = tr.carriage || tr.follow ? 0 : ENCOUNTER_PER_MIN * (isNight(stepT) ? D.NIGHT_ENCOUNTER_MULT : 1) * (typeof WEVENTS !== "undefined" ? WEVENTS.weather([s.x, s.y], stepT).encounters : 1);   // nobody robs a carriage on a Jarl's road; party members following their leader leave the road to them (partyplay.js)
       if (Math.random() < 1 - (1 - rate) ** (dt / 60)) {
         const e = rollEncounter(s, stepT);
         if (e.danger === "low") {
@@ -1094,8 +1171,13 @@ const G = (() => {
     }
     const f = new Fight(s, e, null, t);
     if (typeof HORSEBACK !== "undefined") HORSEBACK.engage(f, t);   // [OURS] riding? you fight from the saddle
+    f.canFlee = true;   // a "flee" tactic can break off a road fight
     f.run({ enemyFirst, t, hidden: opts.hidden ?? null });
     const skillMsgs = f.apply(t);
+    if (f.fled && !f.won && f.hp > 0) {
+      tr.status = "travel"; tr.encounter = null; tr.lastTick = t; tripLog(s, `🏃 Broke off the fight with the ${e.name}`);
+      return { text: [...lines, `You break off the fight and leave the ${e.name} behind.`].join(" "), fight: f, fled: true, skills: skillMsgs };
+    }
     if (f.won) {
       const g = rint(...e.gold); s.gold += g; const loot = rollLoot(s, e);
       tr.status = "travel"; tr.encounter = null; tr.lastTick = t;
@@ -1161,7 +1243,8 @@ const G = (() => {
     const v = D.ITEMS[item].value * econ(town, item, "buy", extra);
     const base = econOn() && ECON.isTrade(item) ? Math.max(Math.round(v * 1.05), Math.round(v * cutOf(s, item))) : F.buyPrice(v, skill(s, "Mercantile"));
     return Math.max(1, Math.round(base / haggle(s) * (typeof FEST !== "undefined" ? FEST.shopDiscount() : 1)   // Midyear: 10% off
-      * (typeof WARS !== "undefined" && town && PLACES[town] ? WARS.discount(s, holdAt(PLACES[town])) : 1)));   // your clan rules this hold
+      * (typeof WARS !== "undefined" && town && PLACES[town] ? WARS.discount(s, holdAt(PLACES[town])) : 1)   // your clan rules this hold
+      * (typeof RUMOURS !== "undefined" && town ? RUMOURS.priceMult(s, town) : 1)));   // local hero discount; knocked-up shop at night (rumours.js)
   };
   function sellPrice(s, row, town = s.location, extra = 0) {
     const it = D.ITEMS[row.item];
@@ -1172,6 +1255,7 @@ const G = (() => {
     const guild = typeof GUILDS !== "undefined" ? GUILDS.fenceMult(s, row) : 1;   // Thieves Guild ranks: the fence pays more
     const fair = econOn() && ECON.isTrade(row.item) ? Math.min(Math.round(v), Math.round(v / cutOf(s, row.item))) : F.sellPrice(v, skill(s, "Mercantile"));
     let p = Math.max(1, Math.round(Math.min(Math.round(v), Math.round(fair * haggle(s) * (P(s, "master_trader") ? 1.1 : 1))) * guild * (row.stolen ? 1 + 0.2 * Math.min(100, skill(s, "Streetwise")) / 100 : 1)));   // Streetwise: fences pay up to 20% more
+    if (typeof RUMOURS !== "undefined" && town) p = Math.max(1, Math.round(p * RUMOURS.sellMult(s, town)));   // night prices after knocking (rumours.js)
     if (econOn() && town) p = Math.max(1, Math.min(p, Math.floor(0.9 * buyPrice(s, row.item, town, extra))));   // never more than 90% of their asking price
     return p;
   }
@@ -1183,10 +1267,11 @@ const G = (() => {
     for (let k = 0; k < qty; k++) tot += side === "buy" ? buyPrice(s, item, town, k) : sellPrice(s, row || { item }, town, -k);
     return tot;
   }
+  const knockOk = (s, t) => typeof RUMOURS !== "undefined" && RUMOURS.knocked(s, s.location, t);   // closed, but you knocked (rumours.js)
   function buy(s, item, qty = 1, t = now()) {
     if (!s.location || !shopTypes(s.location).length) return "There's no shop here.";
     if (typeof TOWNS !== "undefined" && TOWNS.wanted(s)) return "The merchant won't trade with a wanted criminal.";
-    if (!shopsOpen(t)) return `The shops are closed (${clockText(t)}). They open at 08:00.`;
+    if (!shopsOpen(t) && !knockOk(s, t)) return `The shops are closed (${clockText(t)}). They open at 08:00.`;
     if (typeof MAGIC !== "undefined") { const no = MAGIC.canBuy(s, item); if (no) return no; }
     if (item === "horse") {
       if (!shopTypes(s.location).includes("stables")) return "No stables here.";
@@ -1209,7 +1294,7 @@ const G = (() => {
     if (!s.location || !shopTypes(s.location).length) return "There's no shop here.";
     if (typeof TOWNS !== "undefined" && TOWNS.wanted(s)) return "The merchant won't trade with a wanted criminal.";
     if (invRow(s, id)?.stolen && !(typeof TOWNS !== "undefined" && TOWNS.canFence(s))) return "\"That's stolen. I don't want it.\" You need a fence: the Ragged Flagon in Riften, or the Fence perk.";
-    if (!shopsOpen(t)) return `The shops are closed (${clockText(t)}).`;
+    if (!shopsOpen(t) && !knockOk(s, t)) return `The shops are closed (${clockText(t)}).`;
     const r = invRow(s, id);
     if (!r || r.qty < qty) return "You don't have that.";
     if (D.ITEMS[r.item].noTrade) return `The ${D.ITEMS[r.item].name} is bound to you. No merchant will take it.`;

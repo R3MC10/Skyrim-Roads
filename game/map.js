@@ -104,7 +104,15 @@ const WorldMap = (() => {
       g.clip(bp); g.stroke(inner); g.restore();
     }
     // ---- lakes
-    for (const [lx, ly, rx, ry] of WORLD.lakes) {
+    for (const poly of WORLD.lakePolys || []) {   // the real lake outlines
+      g.fillStyle = "#5f8797"; smoothPath(g, poly, true); g.fill();
+      g.save(); smoothPath(g, poly, true); g.clip(); g.strokeStyle = "rgba(220,235,240,.3)"; g.lineWidth = 1.2; smoothPath(g, poly.map(([a, b]) => [a + 0.002, b + 0.003]), true); g.stroke(); g.restore();
+      g.strokeStyle = "#3b2c1e"; g.lineWidth = 1.4; smoothPath(g, poly, true); g.stroke();
+    }
+    for (const isle of WORLD.lakeIsles || []) {   // little islands in the lakes
+      g.fillStyle = "#8f8a6e"; smoothPath(g, isle, true); g.fill(); g.strokeStyle = "#3b2c1e"; g.lineWidth = 1; smoothPath(g, isle, true); g.stroke();
+    }
+    for (const [lx, ly, rx, ry] of WORLD.lakePolys ? [] : WORLD.lakes) {
       const x = lx * W, y = ly * H, ex = rx * W, ey = ry * H;
       g.fillStyle = "#5f8797"; g.beginPath(); g.ellipse(x, y, ex, ey, 0, 0, 7); g.fill();
       g.strokeStyle = "rgba(220,235,240,.35)"; g.lineWidth = 1; g.beginPath(); g.ellipse(x - ex * 0.15, y - ey * 0.2, ex * 0.6, ey * 0.45, 0, 3.6, 5.6); g.stroke();
@@ -470,6 +478,13 @@ const WorldMap = (() => {
       g.strokeStyle = "#c9392b"; g.lineWidth = 3 * s; g.stroke();
       smartLabel("🗺 " + m.label, x, y - r, 11, "#ffd6c8");
     }
+    for (const m of v.rumours || []) {   // rumours you heard (rumours.js): an ember ring with a "?"; it might be true
+      const [x, y] = P(m.pos), r = 8 * s, pulse = v.reduceMotion ? 0.5 : (Math.sin(v.t * 2 + x) + 1) / 2;
+      if (MA) { const R = (26 + 8 * pulse) * s; g.globalAlpha = 0.45 + 0.3 * pulse; g.drawImage(MA.glowSprite("rgba(232,145,58,.9)"), x - R / 2, y - R / 2, R, R); g.globalAlpha = 1; }
+      g.fillStyle = "#3a1d0c"; g.strokeStyle = "#e8913a"; g.lineWidth = 2.2 * s; g.beginPath(); g.arc(x, y - r * 1.2, r, 0, 7); g.fill(); g.stroke();
+      g.fillStyle = "#ffd27a"; g.font = `bold ${Math.round(11 * s)}px sans-serif`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("?", x, y - r * 1.2 + 0.5 * s);
+      if (v.zoom >= 1.6 || m.here) smartLabel(m.label, x, y - r * 2.3, 11, "#ffd9a8");
+    }
     for (const p of v.pins || []) {   // your own pins
       const drop = typeof MOTION !== "undefined" ? MOTION.pinDrop(`${p.pos}|${p.label}`) : { dy: 0, sc: 1 };   // new pins drop in with a bounce
       const [x, y0] = P(p.pos), r = (p.on ? 9 : 7) * s * drop.sc, y = y0 + drop.dy * r * 1.6;
@@ -530,6 +545,7 @@ const WorldMap = (() => {
       if (v.zoom >= 1.5) label(g, c.label, cx, cy + 12 * s, s, 11, c.mine ? "#ffe6a0" : "#f3e7c4", 700, true);
     }
     if (v.raid && typeof RAIDART !== "undefined") RAIDART.mapRaid(g, v.raid, P, s, v.t, v.reduceMotion);   // a dragon over a town (raidart.js)
+    if (typeof WORLDEV !== "undefined") WORLDEV.drawMap(g, P, s, v.t, v.reduceMotion);   // gates, dragon flights, the Khajiit market (worldevents.js)
     if (v.cart && typeof CARAVANS !== "undefined") { const sp = CARAVANS.sprite(false, false); if (sp) g.drawImage(sp, px - 50 * s, py - 16 * s, 34 * s, 24 * s); }
     if (v.fx && typeof FXART !== "undefined") FXART.mapUnder(g, v.fx, P, s, px, py, v.t, v.reduceMotion, v);   // spells and shouts around you (fxart.js)
     const pulse = v.reduceMotion ? 0.5 : (Math.sin(v.t * 3) + 1) / 2;

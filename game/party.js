@@ -3,7 +3,7 @@
    an ally's moves come from the profile their own game published (COOP.profile, built from their own tactics). */
 const PARTY = (() => {
   const SHARE_SECONDS = 3 * 3600;   // a share waits this long for a member to come online and take it
-  const MAX_ALLIES = 3;
+  const MAX_ALLIES = 7;   // [OURS] parties of up to 8: you and 7 beside you
   const hash = (str) => { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
   const rng = (seed) => () => { seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
   const isMember = (party, id) => !!party?.members?.some((m) => m.id === id);
@@ -13,9 +13,9 @@ const PARTY = (() => {
     try { return typeof COOP !== "undefined" ? COOP.profile(s) : null; } catch { return null; }
   }
   function cardBits(s, party) {
-    if (!party) return {};
+    if (!party) return s.follower && typeof FOL2 !== "undefined" ? { fol: s.follower.id, fold: FOL2.card(s) } : {};   // co-op runs see your follower too
     const riding = typeof HORSES !== "undefined" && HORSES.riding(s);
-    return { pp: prof(s), ride: riding ? HORSES.coat(s.horse.coat)[2] : null, fol: s.follower?.id || null };
+    return { pp: prof(s), ride: riding ? HORSES.coat(s.horse.coat)[2] : null, fol: s.follower?.id || null, fold: typeof FOL2 !== "undefined" ? FOL2.card(s) : null };   // followers aren't members, but they walk and fight with the party
   }
 
   /* members close enough to fight with you: same dungeon, or near you on the map and not inside anywhere */
@@ -35,7 +35,7 @@ const PARTY = (() => {
   function allies(s, party, cards, me, posOf, near) {
     const mates = nearMates(s, party, cards, me, posOf, near);
     lastFight = { t: G.now(), ids: mates.map((c) => c.id), names: mates.map((c) => c.name) };
-    return mates.map(allyFromCard);
+    return mates.flatMap((c) => [allyFromCard(c), ...(typeof FOL2 !== "undefined" ? FOL2.cardAllies(c) : [])]);   // their followers come too (not counted as members)
   }
   const fought = () => lastFight;
   const clear = () => { lastFight = { t: 0, ids: [], names: [] }; };
@@ -49,6 +49,7 @@ const PARTY = (() => {
   }
   /* a member's share, the same on every phone: some gold, skill XP for fighting, now and then a useful find */
   function roll(id, doc, uid) {
+    if (doc.kind === "gold") return { gold: Math.max(0, Math.floor(doc.each || 0)), xp: 0, items: [] };   // gold the leader found on the road, split evenly (partyplay.js)
     const r = rng(hash(id + "|" + uid)), lvl = doc.lvl || 1;
     const gold = Math.round((6 + lvl * 2.5) * (0.7 + r() * 0.6) * (doc.boss ? 3 : 1));
     const xp = Math.round(6 + lvl * 1.4);
@@ -72,6 +73,7 @@ const PARTY = (() => {
     for (const k of Object.keys(s.pshares)) if (G.now() - s.pshares[k] > SHARE_SECONDS * 2) delete s.pshares[k];
     s.gold += got.gold;
     for (const it of got.items) G.give(s, it, 1);
+    if (doc.kind === "gold") return { text: `⚑ Your share of what ${doc.byName} found on ${doc.what || "the road"}: +${got.gold} gold.`, ups: [] };
     const sk = bestCombat(s), ups = G.useSkill(s, sk, got.xp) || [];
     return { text: `⚑ You fought beside ${doc.byName} against ${doc.foe}: +${got.gold} gold${got.items.length ? ", " + got.items.map((x) => D.ITEMS[x].name).join(", ") : ""}, ${sk} practice.`, ups };
   }
@@ -98,10 +100,12 @@ const PARTY = (() => {
       if (c.id === s.id || !isMember(party, c.id) || c.dungeon || c.hiding) continue;
       if (G.pxDist(posOf(c), me) > near * 1.5) continue;
       out.push({ name: c.name, look: c.look || { r: c.race || "nord", id: c.name, eq: {}, gl: {} }, riding: !!c.ride, horse: c.ride || null, player: true });
-      if (c.fol && c.fol !== "meeko" && typeof TOWNS !== "undefined" && TOWNS.FOLLOWERS[c.fol]) out.push({ name: TOWNS.FOLLOWERS[c.fol][0], look: followerLook(c.fol), follower: true });
+      if (c.fol && c.fol !== "meeko" && typeof TOWNS !== "undefined" && TOWNS.FOLLOWERS[c.fol]) out.push({ name: c.fold?.n || TOWNS.FOLLOWERS[c.fol][0], look: (typeof FOL2 !== "undefined" && FOL2.lookFromCard(c)) || followerLook(c.fol), follower: true });
     }
-    if (s.follower && s.follower.id !== "meeko" && typeof TOWNS !== "undefined" && TOWNS.FOLLOWERS[s.follower.id]) out.unshift({ name: TOWNS.FOLLOWERS[s.follower.id][0], look: followerLook(s.follower.id), follower: true });
-    return out.slice(0, 5);
+    if (s.follower && s.follower.id !== "meeko" && typeof TOWNS !== "undefined" && TOWNS.FOLLOWERS[s.follower.id]) out.unshift({ name: TOWNS.FOLLOWERS[s.follower.id][0], look: typeof FOL2 !== "undefined" ? FOL2.look(s) : followerLook(s.follower.id), follower: true });
+    const mine = s.follower ? out.slice(0, 1) : [], rest = out.slice(mine.length);
+    const players = rest.filter((o) => o.player), fol = rest.filter((o) => !o.player);
+    return [...mine, ...players.slice(0, 7), ...fol].slice(0, 15);   // your follower, all 7 party members, then their followers: up to 15 walkers
   }
 
   return { SHARE_SECONDS, MAX_ALLIES, isMember, prof, cardBits, nearMates, allyFromCard, allies, fought, clear, shareDoc, roll, claim, give, mineToTake, companions, followerLook, FOLLOWER_LOOK };

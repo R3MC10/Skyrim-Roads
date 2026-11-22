@@ -5,6 +5,7 @@ Each round: build one batch, test it (Node sims in /home/claude/tests + headless
 our own marked [OURS]; plain-language UI; phone first.
 
 ## Done
+- Round 43: party play and followers. Exact map from the game data; parties of up to 8 with a leader, Ready checks, travelling together, the leader stops and decides, road gold split evenly; party dungeons (leader-only choices, shared loot pile, end-of-dungeon Want/Pass vote with d100 rolls, gold split evenly, longer dungeons for bigger parties); Lucky Draw perk. Followers with their own gear, levels and archetype perks (Leadership perk). Perks for humanoid enemies.
 - Round 42: immersion and dragon priests. Skyrim lockpicking mini-game (same odds as before, Quick roll option), QUEST STARTED / OBJECTIVE banners, guard barks on arrival, loading cards with 44 tips, Journal → Stats. Ambient sound beds (wind, rain/thunder, birds, crickets/owls/wolves, water, town, inn, forge, caves, Dwemer, dragon raids) and footsteps/hooves/cart, with an Ambience slider. The eight dragon priests in their ruins (from level 20) with wearable masks, Konahrik at Bromjunaar, a questline and an achievement.
 - Round 41: Skyrim + SkyUI interface. HUD: Skyrim compass on the map (quest marker, nearby places, players, raids), slim framed health/magicka/stamina bars that fade when full, status icons, top-left message log, line-icon tab bar, round icon buttons. SkyUI panels: smoked-glass menus with silver rules and corner flourishes, condensed small-caps type, SkyUI item lists, town options as Skyrim dialogue, Journal as a parchment quest book, perk constellations, Skyrim level-up, YOU DIED screen. Fonts bundled (work offline). Popups made solid so they read well over the map.
 - Round 40: Thieves Guild (10 stages to the Twilight Sepulcher, Nightingale gear, Delvin/Vex jobs, ranks with fence bonus) and Dark Brotherhood (8 stages to Hail Sithis!, Nazir's contracts, Shrouded gear, Blade of Woe, Shadowmere, ranks). Animated title (drifting aurora and mountains, a dragon), creation scene, 3-picture intro. Festival decorations in towns and inns, spell/shout effects on the map (Candlelight, Detect Life, Clairvoyance trail, Mark rune, Recall, Whirlwind Sprint, Transmute), and an animated travel strip.
@@ -62,18 +63,18 @@ our own marked [OURS]; plain-language UI; phone first.
 - Smart AI combat (default; custom tactics optional), crafting mini-games, motion design (63)
 
 ## In progress (write your name before you start)
-- Claude (Remigiusz): turn-based combat, AI settings/tactics editor, gear visuals, party+followers merge, art from ChatGPT, menu simplification.
+- Claude (homesteads branch): buildable homesteads (homestead.js): three plots, stages and wings, sawmill/quarry, steward, homestead perks.
+- Claude (Remigiusz): turn-based combat, AI settings/tactics editor, gear visuals, art from ChatGPT, menu simplification.
 - Kacper: (add here)
+- Claude: server-wide world events: Daedric invasions, dragon migrations, festival weeks, Khajiit caravan (claude/world-events).
 
 ## Standing rules
 - Perk trees grow with the game: every new system (gathering, magic, encounters, crafting, party play...) adds or adjusts perks with real effects in the matching trees (perkfx.js), keeping old perk ids and a clean star layout.
 - Party size up to 8 players.
 
 ## Next rounds (in order)
-1. Real 1:1 Skyrim map layout (being rebased onto Solstheim).
-2. Party members fight beside you and walk with you in their gear (in progress).
-3. Ideas offered: favourites wheel, Dragon Shouts from word walls, werewolf/vampire paths, weather that matters.
-4. ElevenLabs sounds/music (needs api.elevenlabs.io allowed + an API key).
+1. Ideas offered: favourites wheel, Dragon Shouts from word walls, werewolf/vampire paths, weather that matters.
+2. ElevenLabs sounds/music (needs api.elevenlabs.io allowed + an API key).
 
 ## Loop backlog (pick the next 3–6 each round, after merging finished work)
 - Drop in Remigiusz's generated art as it arrives (art prompts doc), compress to WebP, wire via ASSETS.

@@ -43,8 +43,26 @@ function makeTerrain(W, opts = {}) {
   const rivers = W.rivers.map((r) => r.pts.map(px));
   const roads = W.roads.map((chain) => chain.map((c) => px(typeof c === "string" ? W.places[c] : c)));
 
+  // real heights and snow (Skyrim's map carries them; other regions fall back to ranges and the snow line)
+  const RA = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-";
+  const relief = W.relief ? Float32Array.from(W.relief, (ch) => RA.indexOf(ch) / 63 * 1.4) : null;
+  const RW = W.reliefW || 0, RH = W.reliefH || 0;
+  const snowFrac = W.snowFrac ? Float32Array.from(W.snowFrac, (ch) => +ch / 9) : null;
+  function snowAt(p) {   // 0..1, bilinear over the 125×88 grid
+    const fx = Math.max(0, Math.min(123.999, p[0] / MW * 125 - 0.5)), fy = Math.max(0, Math.min(86.999, p[1] / MH * 88 - 0.5));
+    const x = Math.floor(fx), y = Math.floor(fy), tx = fx - x, ty = fy - y, i = y * 125 + x;
+    return (snowFrac[i] * (1 - tx) + snowFrac[i + 1] * tx) * (1 - ty) + (snowFrac[i + 125] * (1 - tx) + snowFrac[i + 126] * tx) * ty;
+  }
+  const lakePolys = (W.lakePolys || []).map((poly) => poly.map(px));
+  const lakeIsles = (W.lakeIsles || []).map((poly) => poly.map(px));
+  function reliefAt(p) {
+    const fx = Math.max(0, Math.min(RW - 1.001, p[0] / MW * RW - 0.5)), fy = Math.max(0, Math.min(RH - 1.001, p[1] / MH * RH - 0.5));
+    const x = Math.floor(fx), y = Math.floor(fy), tx = fx - x, ty = fy - y, i = y * RW + x;
+    return (relief[i] * (1 - tx) + relief[i + 1] * tx) * (1 - ty) + (relief[i + RW] * (1 - tx) + relief[i + RW + 1] * tx) * ty;
+  }
   /* height 0..1+ at a map-pixel point (mountains + gentle noise) */
   function heightAt(p) {
+    if (relief) return reliefAt(p) + 0.05 * (fbm(p[0] / 40 + 7, p[1] / 40 + 3, 3) - 0.5);
     let h = 0;
     for (const r of ranges) {
       const d = lineDist(p, r.pts) / r.w;
@@ -62,13 +80,15 @@ function makeTerrain(W, opts = {}) {
       const v = 1 - ((p[0] - cx * MW) / (rx * MW)) ** 2 - ((p[1] - cy * MH) / (ry * MH)) ** 2 + n * 1.1;
       if (v > 0) t = { tundra: T.TUNDRA, forest: T.FOREST, rocky: T.ROCKY, marsh: T.MARSH, volcanic: T.VOLCANIC, pine: T.PINE, autumn: T.AUTUMN, ash: T.ASH }[kind];
     }
-    if (p[1] < (W.snowLine + (W.snowSlope || 0) * (p[0] / MW - 0.5) + n * (opts.snowNoise || 0.06)) * MH && t !== T.MARSH && t !== T.FOREST && t !== T.ASH) t = T.SNOW;
+    if (snowFrac) { if (snowAt(p) + n * 0.5 > 0.45 && t !== T.MARSH) t = T.SNOW; }
+    else if (p[1] < (W.snowLine + (W.snowSlope || 0) * (p[0] / MW - 0.5) + n * (opts.snowNoise || 0.06)) * MH && t !== T.MARSH && t !== T.FOREST && t !== T.ASH) t = T.SNOW;
     return t;
   }
   function typeAt(p) {
     if (!inPoly(p, land)) return (W.islets || []).some(([cx, cy, rx, ry]) => ((p[0] / MW - cx) / rx) ** 2 + ((p[1] / MH - cy) / ry) ** 2 < 1) ? T.SNOW : T.SEA;   // little islands (the College of Winterhold)
     if (border.length && !inPoly(p, border)) return T.BEYOND;
-    for (const [cx, cy, rx, ry] of W.lakes) if (((p[0] - cx * MW) / (rx * MW)) ** 2 + ((p[1] - cy * MH) / (ry * MH)) ** 2 < 1) return T.LAKE;
+    if (lakePolys.length) { for (const poly of lakePolys) if (inPoly(p, poly) && !lakeIsles.some((isle) => inPoly(p, isle))) return T.LAKE; }
+    else for (const [cx, cy, rx, ry] of W.lakes) if (((p[0] - cx * MW) / (rx * MW)) ** 2 + ((p[1] - cy * MH) / (ry * MH)) ** 2 < 1) return T.LAKE;
     return baseType(p, heightAt(p));
   }
 
@@ -92,6 +112,8 @@ function makeTerrain(W, opts = {}) {
   }
   stamp(rivers, (i) => { if (grid[i] !== T.SEA && grid[i] !== T.LAKE && grid[i] !== T.BEYOND) grid[i] = T.RIVER; });
   stamp(roads, (i) => { grid[i] = grid[i] === T.RIVER || grid[i] === T.LAKE ? T.BRIDGE : T.ROAD; });
+  // islands (Yngvild, the Serpent Stone, the Lady Stone's isle) are reached by swimming: the water on the way counts as a ford
+  stamp((W.swims || []).map(([a, b]) => [px(a), px(b)]), (i) => { if (grid[i] === T.SEA || grid[i] === T.LAKE) grid[i] = T.RIVER; });
   // every place stands on walkable ground
   for (const [x, y] of Object.values(W.places)) {
     if (!(x >= 0 && x <= 1 && y >= 0 && y <= 1)) continue;   // another region's place (Solstheim lives below Skyrim)
