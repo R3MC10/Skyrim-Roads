@@ -2437,7 +2437,20 @@
   function doPickpocket(card) {
     const err = MP.canTarget(S, card, livePos(), otherPos(card));
     if (err) return toast(err);
-    const r = MP.pickpocket(S, card);
+    const go = (plan) => {
+      const r = MP.pickpocket(S, card, undefined, undefined, plan);
+      pickDone(r);
+    };
+    if (typeof PICKGAME !== "undefined" && PICKGAME.wants() && MP.pickPlan && !MP.pickWait?.(S, card.id)) {
+      const plan = MP.pickPlan(S, card);
+      if (plan.purse) return PICKGAME.open({ title: `${card.name}'s purse`, sub: `Pickpocket ${G.skill(S, "Pickpocket")} · about ${Math.round(plan.chance * 100)}% chance`, chance: plan.chance }, (res) => {
+        if (res.left) return;
+        go(res.auto ? plan : { ...plan, hit: res.hit });
+      });
+    }
+    go(null);
+  }
+  function pickDone(r) {
     if (r.doc) Store.put("attacks", r.id, r.doc);
     if (r.news) postNews(r.news);
     persist(true); renderPanel(true);
@@ -3582,7 +3595,15 @@
       case "takejob": say(TOWNS.takeJob(S, b.dataset.id)); break;
       case "dropjob": say(TOWNS.dropJob(S, b.dataset.id)); break;
       case "handin": say(TOWNS.handIn(S, b.dataset.id)); break;
-      case "pickpocket": { const r = TOWNS.pickTownsfolk(S); persist(true); renderPanel(true); showMessage("The streets", r.text + ((r.skills || []).length ? " 📈 " + r.skills.join(" · ") : "")); break; }
+      case "pickpocket": {
+        const streets = (plan) => { const r = TOWNS.pickTownsfolk(S, undefined, plan); persist(true); renderPanel(true); showMessage("The streets", r.text + ((r.skills || []).length ? " 📈 " + r.skills.join(" · ") : "")); };
+        if (typeof PICKGAME !== "undefined" && PICKGAME.wants() && TOWNS.townPickPlan && S.location && TOWNS.isTown(S.location)) {
+          const plan = TOWNS.townPickPlan(S);
+          PICKGAME.open({ title: `Pick ${plan.target}'s pocket`, sub: `Pickpocket ${G.skill(S, "Pickpocket")} · about ${Math.round(plan.chance * 100)}% chance`, chance: plan.chance }, (res) => { if (!res.left) streets(res.auto ? plan : { ...plan, hit: res.hit }); });
+          break;
+        }
+        streets(null); break;
+      }
       case "guardopen": openGuard(); break;
       case "guard": guardAction(b.dataset.c); break;
       case "invite": { const c = cardOf(b.dataset.id); if (c) invite(c); break; }

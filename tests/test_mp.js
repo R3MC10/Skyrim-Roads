@@ -12,6 +12,8 @@ let wins=0; for(let i=0;i<200;i++){ const a=G.clone(A); const r=MP.attack(a,card
 const r=MP.attack(A,card(B)); console.log(r.text, JSON.stringify(r.doc), JSON.stringify(A.bounty));
 const got=MP.receive(B,{...r.doc}); console.log(got.text, got.bag && got.bag.killerId);
 { const X=G.newSave("X","Xen","nord"), T={...card(B),gold:300}; const n0=1e12; const p1=MP.pickpocket(X,T,0,n0), p2=MP.pickpocket(X,T,0,n0+60000), p3=MP.pickpocket(X,{...T,id:"Z"},0,n0+60000), p4=MP.pickpocket(X,T,0,n0+601000); if(p1.wait||!p2.wait||p3.wait||p4.wait) throw new Error("pickpocket cooldown"); console.log("pickpocket cooldown ok", p2.text); }
+{ const X=G.newSave("X2","Xen","nord"), T={...card(B),gold:300}; const pl=MP.pickPlan(X,T); const g0=X.gold; const h=MP.pickpocket(X,T,0,1e12,{...pl,hit:true}); const m=MP.pickpocket(X,{...T,id:"Q"},0,1e12,{...pl,hit:false}); if(X.gold!==g0+pl.want||!/catches/.test(m.text)) throw new Error("pickpocket mini-game result"); console.log("pickpocket mini-game result ok"); }
+{ const X=G.newSave("X3","Xen","nord"); X.location="Whiterun"; const pl=TOWNS.townPickPlan(X); const g0=X.gold; TOWNS.pickTownsfolk(X,undefined,{...pl,hit:true}); if(X.gold!==g0+pl.gold) throw new Error("street mini-game result"); console.log("street mini-game ok"); }
 const p=MP.pickpocket(A,{...card(B),gold:300}); console.log(p.text, JSON.stringify(p.doc)); if(p.doc){ const g=MP.receive(B,p.doc); console.log(g&&g.text, B.gold); }
 // party speed and chest shares
 const pt={members:[{id:"A"},{id:"B"}]}; console.log(MP.partySpeed(A,pt,[{id:"B",speed:5}]));

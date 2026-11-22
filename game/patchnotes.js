@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b107", build: 107, date: "22 Nov 2026", title: "Pickpocketing mini-game, summons fixed", items: [
+      "Pickpocketing is now a mini-game: your hand sways over the mark's belt, tap Lift while it's over the purse, twice (in, then out). Miss, or take too long while they get suspicious, and you're caught.",
+      "Steady hands do better than the old dice roll; Quick roll is still there, and you can turn the mini-game off from its own window.",
+      "Works on townsfolk (Area → Streets) and on other players.",
+      "Summons show up in the fight scene for as long as they last, not just on the turn you cast them.",
+      "Summon spells now bring the right creature: Flaming Familiar, Spectral Archer, Seeker and Dremora Lord no longer all say \"spectral wolf\".",
+    ] },
     { id: "b106", build: 106, date: "22 Nov 2026", title: "Big screens", items: [
       "On a PC the game scales up on big monitors (1440p, 4K) and spreads out on wide and ultrawide screens: a bigger map, wider menus, the tab bar kept in the middle.",
     ] },

@@ -50,16 +50,22 @@ const MP = (() => {
   /* one try per player every 10 real minutes, caught or not */
   const PICK_CD = 10 * 60 * 1000;
   const pickWait = (s, id, now = Date.now()) => Math.max(0, Math.ceil((((s.ppCd || {})[id] || 0) + PICK_CD - now) / 1000));
-  function pickpocket(s, card, t = G.now(), now = Date.now()) {
-    const wait = pickWait(s, card.id, now);
-    if (wait > 0) return { text: `${card.name} is still watching their purse after the last time. Try again in ${Math.ceil(wait / 60)} min.`, wait };
-    s.ppCd = Object.fromEntries(Object.entries(s.ppCd || {}).filter(([, v]) => now - v < PICK_CD)); s.ppCd[card.id] = now;
+  /* what's in it and how hard it is, worked out before the try (the mini-game needs the chance up front) */
+  function pickPlan(s, card) {
     const purse = Math.max(0, card.gold || 0);
     const want = Math.min(purse, Math.max(5, Math.round(purse * (0.1 + Math.random() * 0.25))));
     const chance = TOWNS.pickChance(s, { gold: want, level: card.level }) * (1 - Math.min(0.4, (card.sneak || 15) / 250));   // [OURS] alert targets are harder
-    const id = `${s.id}-${Math.floor(t)}-${rint(100, 999)}`;
+    return { purse, want, chance };
+  }
+  /* plan (optional) = pickPlan(...) plus hit: true/false from the mini-game; without hit it's the old dice roll */
+  function pickpocket(s, card, t = G.now(), now = Date.now(), plan = null) {
+    const wait = pickWait(s, card.id, now);
+    if (wait > 0) return { text: `${card.name} is still watching their purse after the last time. Try again in ${Math.ceil(wait / 60)} min.`, wait };
+    const { purse, want, chance } = plan || pickPlan(s, card);
     if (!purse) return { text: `${card.name}'s purse is empty. Nothing to take.` };
-    if (Math.random() < chance) {
+    s.ppCd = Object.fromEntries(Object.entries(s.ppCd || {}).filter(([, v]) => now - v < PICK_CD)); s.ppCd[card.id] = now;
+    const id = `${s.id}-${Math.floor(t)}-${rint(100, 999)}`;
+    if (typeof plan?.hit === "boolean" ? plan.hit : Math.random() < chance) {
       s.gold += want; s.stats = { ...(s.stats || {}), pp: ((s.stats || {}).pp || 0) + 1 };
       const skills = G.useSkill(s, "Pickpocket", want);   // [Skyrim] XP = value stolen
       return { text: `Your fingers find ${card.name}'s purse. +${want} gold. They have no idea.`, skills, doc: { type: "pickpocket", from: s.id, fromName: s.name, to: card.id, amount: want, t }, id };
@@ -134,5 +140,5 @@ const MP = (() => {
   const ladder = (s) => ({ name: s.name, race: s.race, level: s.level, gold: s.gold, dragons: s.dragons || 0, cleared: Object.keys(s.cleared || {}).length, kills: s.pvpKills || 0,
     ...(typeof ARENA !== "undefined" && s.arena && s.arena.season === ARENA.season() ? { arena: s.arena, arenaRating: s.arena.rating } : {}), t: G.now() });
 
-  return { makeOffer, accept, settle, describe, ladder, NEAR_PX, AMBUSH_PX, stats, canTarget, attack, pickpocket, pickWait, PICK_CD, receive, partySpeed, allyFromCard, shareOf, witnessed };
+  return { makeOffer, accept, settle, describe, ladder, NEAR_PX, AMBUSH_PX, stats, canTarget, attack, pickpocket, pickPlan, pickWait, PICK_CD, receive, partySpeed, allyFromCard, shareOf, witnessed };
 })();
