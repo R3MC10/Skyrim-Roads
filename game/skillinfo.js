@@ -1,12 +1,11 @@
-/* What each skill does, what higher levels give (numbers worked out from the real game formulas), and how to raise it.
+/* What each skill does, what your level gives you right now (numbers worked out from the real game formulas), and how to raise it.
    Every number here comes from formulas.js / engine.js / towns.js / dungeons.js / enchanting.js / smithing.js;
    `code` lists the place in the game that hands out the XP, so a test can check the text stays true. */
 const SKILLINFO = (() => {
   const pc = (x) => `${Math.round(x * 100)}%`;
   const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
   const lv = (s, sk) => (s ? G.skill(s, sk) : 15);
-  const at = (L) => [L, Math.min(100, Math.max(L + 25, 50)), 100].filter((v, i, a) => a.indexOf(v) === i);   // now, a bit later, at 100
-  const row = (label, fn, L) => `${label}: ${at(L).map((x, i) => `${fn(x)}${i === 0 ? " now" : ` at ${x}`}`).join(" → ")}`;
+  const row = (label, fn, L) => `${label}: ${fn(L)}`;   // only what you have now, never a table of later levels
 
   // ---- weapon damage [Skyrim] base × (1 + skill/200)
   const weapon = (what, codeSk) => ({
@@ -47,7 +46,7 @@ const SKILLINFO = (() => {
     "Conjuration": school("Conjuration", "Summon a creature to fight beside you.", "Cast Conjuration spells in fights."),
     "Illusion": school("Illusion", "Calm and pacify spells that stop enemies fighting.", "Cast Illusion spells in fights."),
     "Mysticism": { what: "The magic of souls and the unseen: Soul Trap, Detect Life, Dispel, Mark and Recall, and Spell Absorption.",
-      now: (s) => [D.SPELLS.recall ? `Mysticism spells cost less as it grows (Recall: ${G.spellCost(s, "recall")} magicka now).` : "Mysticism spells cost less as it grows.", "Its perks absorb enemy spells, help you stay hidden and recharge your enchanted weapon on kills."],
+      now: (s) => [D.SPELLS.recall ? `Mysticism spells cost less as it grows (Recall: ${G.spellCost(s, D.SPELLS.recall)} magicka now).` : "Mysticism spells cost less as it grows.", "Its perks absorb enemy spells, help you stay hidden and recharge your enchanted weapon on kills."],
       raise: ["Cast Mysticism spells: Soul Trap in fights, Detect Life, Dispel, Mark and Recall from the Magic menu.", "Trap souls in empty soul gems (a greater soul teaches more).", "Pray at roadside shrines.", "Learn Mysticism tomes from court wizards and the College."],
       code: ['useSkill(s, "Mysticism", full === "soul_gem_greater" ? 25 : 12)', 'useSkill(s, "Mysticism", 12)', '"Mysticism", "Novice"'] },
     "Sneak": { what: "Staying unseen: avoid road fights, slip past dungeon foes and land sneak attacks.",
@@ -78,7 +77,7 @@ const SKILLINFO = (() => {
       now: (s, L) => [row("A rumour at the inn costs", (x) => `${Math.round(10 * (1 - 0.5 * x / 100))} gold`, L), row("Fences pay for stolen goods", (x) => `+${Math.round(20 * x / 100)}%`, L)],
       raise: ["Buy rumours at inns.", "Sell stolen goods to a fence."], code: ['useSkill(s, "Streetwise", 12)', 'useSkill(s, "Streetwise", 8 + price / 10)'] },
     "Smithing": { what: "Making and improving weapons and armor at a forge.",
-      now: (s, L) => [row("Best improvement you can make", (x) => (typeof TOWNS !== "undefined" ? TOWNS.QUALITY[Math.min(6, 1 + Math.floor(x / 20))] : ""), L), "At 50: one extra ore every time you mine."],
+      now: (s, L) => [row("Best improvement you can make", (x) => (typeof TOWNS !== "undefined" ? TOWNS.QUALITY[Math.min(6, 1 + Math.floor(x / 20))] : ""), L), ...(L >= 50 ? ["One extra ore every time you mine."] : [])],
       raise: ["Make things at a forge (more valuable things teach more).", "Improve gear, smelt ore and tan pelts."], code: ['useSkill(s, "Smithing"'] },
     "Enchanting": { what: "Putting magic on your gear, and recharging enchanted weapons more cheaply.",
       now: (s, L) => [row("Enchantment strength", (x) => pc(0.4 + 0.6 * Math.min(100, x) / 100), L), row("Weapon charge used per hit", (x) => pc(1 - Math.sqrt(Math.min(x, 199) / 200)), L)],
@@ -95,10 +94,16 @@ const SKILLINFO = (() => {
     return out;
   }
   function books(sk) { return typeof SKILL_BOOKS !== "undefined" ? SKILL_BOOKS.filter(([, k]) => k === sk).map(([t]) => t) : []; }
-  function perksLine(sk) {
+  /* your perks in this tree (current rank only), and the next one you could take */
+  function perksLine(sk, s) {
     const tree = typeof PERKS !== "undefined" ? PERKS.TREES[sk] : null;
     if (!tree?.length) return "";
-    return tree.map(([, name, , req]) => `${name} (${req[0]})`).join(", ");
+    if (!s) return `${tree.length} perks in this tree.`;
+    const have = tree.filter(([id]) => PERKS.rank(s, id)).map(([id, name, ranks]) => `${name}${ranks > 1 ? ` ${PERKS.rank(s, id)}/${ranks}` : ""}`);
+    const lvl = s.skills?.[sk]?.lvl ?? 15;
+    const open = tree.filter(([id, , ranks, req, needs]) => PERKS.rank(s, id) < ranks && (!needs.length || needs.some((n) => PERKS.rank(s, n))))
+      .map(([id, name, , req]) => [name, req[PERKS.rank(s, id)]]).sort((a, b) => a[1] - b[1])[0];
+    return `${have.length ? `Yours: ${have.join(", ")}.` : "No perks taken yet."}${open ? ` Next: ${open[0]}${open[1] > lvl ? ` (at ${sk} ${open[1]})` : " (ready)"}.` : ""}`;
   }
   /* everything for one skill, for this character */
   function get(s, sk) {
@@ -116,7 +121,7 @@ const SKILLINFO = (() => {
       if (k.lvl < 100) now.push(`Next level: ${Math.floor(k.xp)} of ${Math.ceil(F.skillXpNeeded(sk, k.lvl))} skill XP. Each level up also gives ${k.lvl + 1} toward your character level.`);
       else now.push(`At 100: you can make it Legendary (it starts again from 15, you keep your perks and get a permanent bonus).`);
     }
-    return { what: i.what, now, raise, perks: perksLine(sk), level: L };
+    return { what: i.what, now, raise, perks: perksLine(sk, s), level: L };
   }
   const summary = (sk) => INFO[sk]?.what || "";
   return { INFO, get, summary, trainers, books };

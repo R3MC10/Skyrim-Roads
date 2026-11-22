@@ -350,17 +350,20 @@
   }
 
   // ---- updates
+  let updateHow = "";
   function updateHTML() {
     if (!window.__app) return `<p>You're playing the web version, which is always up to date. The phone app downloads new versions by itself and switches over when you next open it.</p>`;
     if (!update) return `<p class="sub">${esc(updateMsg || "Checking for a new version…")}</p>`;
+    if (window.__app.how && !updateHow) window.__app.how().then((t) => { updateHow = t; if (titlePage === "update") renderTitle(); }).catch(() => {});
     const cur = update.current.build, lat = update.latest;
     const when = lat.date ? new Date(lat.date).toLocaleDateString() : "";
-    if (!update.newer) return `<p>You have the newest version: <b>build ${cur}</b>.</p>${updateMsg ? `<p class="sub">${esc(updateMsg)}</p>` : ""}<button class="btn" data-t="update">Check again</button>`;
+    const howLine = updateHow ? `<p class="sub">${esc(updateHow)}</p>` : "";
+    if (!update.newer) return `${howLine}<p>You have the newest version: <b>build ${cur}</b>.</p>${updateMsg ? `<p class="sub">${esc(updateMsg)}</p>` : ""}<button class="btn" data-t="update">Check again</button>`;
     return `<p>A new version is ready: <b>build ${lat.build}</b>${when ? ` (${esc(when)})` : ""}. You have build ${cur}.</p>
       ${lat.notes ? `<h3>What's new</h3><div class="notes">${esc(lat.notes)}</div>` : ""}
       <p class="sub">Your character and progress stay. ${((update.size || lat.size) / 1048576).toFixed(1)} MB download${update.quick ? ", no reinstall: the game just restarts" : ""}.</p>
       ${updateMsg ? `<p id="umsg">${esc(updateMsg)}</p><div class="uprog"><i id="ubar" style="width:${Math.max(0, updatePct)}%"></i></div>` : ""}
-      <button class="btn pri" data-t="doupdate" ${updateBusy ? "disabled" : ""}>${updateBusy ? "Updating…" : "Update now"}</button>`;
+      ${howLine}<button class="btn pri" data-t="doupdate" ${updateBusy ? "disabled" : ""}>${updateBusy ? "Updating…" : "Update now"}</button>`;
   }
   async function checkUpdate(force) {
     if (!window.__app) return;
@@ -1314,11 +1317,12 @@
   }
   function magicDetail(row) {
     const [kind, arg] = row.id.split(":");
-    let desc = "", acts = [];
+    let desc = "", acts = [], spellNums = "";
     if (kind === "spell") {
       const sp = D.SPELLS[arg];
       const fail = MAGIC.failChance(S, arg);
-      desc = `${MAGIC.describe(sp)} · ${sp.level || "Novice"} ${sp.school} · ${row.cost == null ? "no magicka: a short rest between casts" : `${row.cost} magicka`}${MAGIC.dualable(sp) ? ` (dual-cast: ${Math.round(row.cost * MAGIC.DUAL_COST)} for ×${MAGIC.DUAL_POWER} power)` : ""}${fail ? ` · ⚠ above your ${sp.school} (${G.skill(S, sp.school)} of ${MAGIC.REQ[sp.level]}): costs more and fizzles ${Math.round(fail * 100)}% of the time` : ""}`;
+      desc = `${sp.level || "Novice"} ${sp.school}${sp.kind === "utility" ? ` · ${MAGIC.describe(sp)} · no magicka: a short rest between casts` : ""}${fail ? ` · ⚠ above your ${sp.school} (${G.skill(S, sp.school)} of ${MAGIC.REQ[sp.level]}): costs more and fizzles ${Math.round(fail * 100)}% of the time` : ""}`;
+      spellNums = sp.kind === "utility" ? "" : MAGIC.infoHTML(S, arg);
       if (MAGIC.outOfFight(sp)) { const cd = MAGIC.cdLeft(S, arg); acts.push(`<button class="btn pri" data-act="castout" data-id="${esc(arg)}" ${cd ? "disabled" : ""}>${cd ? `Ready in ${Math.ceil(cd)} s` : "Cast now"}</button>`); }
     } else if (kind === "power") desc = arg === "race" ? POWERS.RACE[S.race][1] + " Once a day." : POWERS.STONES[S.stone][1];
     else if (kind === "shout") {
@@ -1330,7 +1334,7 @@
     } else return `<div class="sky-detail"><h3>${esc(row.name)}</h3><p class="sub">${esc(row.sub)}</p></div>`;
     const usable = (kind === "spell" && D.SPELLS[arg]?.kind !== "utility") || kind === "power" || (kind === "shout" && !POWERS.ROAD_SHOUTS.includes(arg) && POWERS.level(S, arg));
     if (usable) acts.unshift(inTactics(row.id) ? `<button class="btn" data-act="skytacx" data-id="${esc(row.id)}">Remove from tactics</button>` : `<button class="btn pri" data-act="skytac" data-id="${esc(row.id)}">Use first in every fight</button>`);
-    return `<div class="sky-detail">${magicIcon(row.id, 64) ? `<div class="sky-ico">${magicIcon(row.id, 64)}</div>` : ""}<h3>${esc(row.name)}</h3><p class="sub">${esc(desc)}</p>${usable && inTactics(row.id) ? '<p class="sub">In your tactics. Fine-tune when it fires in the Tactics tab.</p>' : ""}<div class="sky-acts">${acts.join("")}</div></div>`;
+    return `<div class="sky-detail">${magicIcon(row.id, 64) ? `<div class="sky-ico">${magicIcon(row.id, 64)}</div>` : ""}<h3>${esc(row.name)}</h3><p class="sub">${esc(desc)}</p>${spellNums}${usable && inTactics(row.id) ? '<p class="sub">In your tactics. Fine-tune when it fires in the Tactics tab.</p>' : ""}<div class="sky-acts">${acts.join("")}</div></div>`;
   }
   // ---- what your worn gear and potions add (shown next to skills)
   function gearFx() {
@@ -1350,8 +1354,8 @@
   // ---- what a skill does and how to raise it (skillinfo.js)
   function skillInfoHTML(sk) {
     const i = SKILLINFO.get(S, sk); if (!i) return "";
-    return `<div class="sinfo"><p class="sinfo-what">${UIART.skill(sk, 36)}<span>${esc(i.what)}</span></p>${i.now.length ? `<h4>What your level gives</h4><ul>${i.now.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>` : ""}
-      <h4>How to raise it</h4><ul>${i.raise.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>${i.perks ? `<p class="sub">Perks (level needed): ${esc(i.perks)}</p>` : ""}${legendHTML(sk)}</div>`;
+    return `<div class="sinfo"><p class="sinfo-what">${UIART.skill(sk, 36)}<span>${esc(i.what)}</span></p>${i.now.length ? `<h4>What you have now</h4><ul>${i.now.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>` : ""}
+      <h4>How to raise it</h4><ul>${i.raise.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>${i.perks ? `<p class="sub">Perks: ${esc(i.perks)}</p>` : ""}${legendHTML(sk)}</div>`;
   }
   /* Legendary skills (legendary.js): at 100, start the skill again for a permanent star */
   let legendArm = null;
@@ -1403,7 +1407,7 @@
     } else if (sky.page === "magic") {
       const rows = magicRows(); const sel = rows.find((r) => r.id === sky.sel) || null;
       head = `<div class="sky-head sky-cols2"><span>Name</span><span>Cost</span></div>`;
-      list = rows.map((r) => `<button class="sky-row sky-cols2 ${r.id === sky.sel ? "sel" : ""} ${inTactics(r.id) ? "eq" : ""}" data-act="skysel" data-id="${esc(r.id)}"><span class="nm sk-nm">${magicIcon(r.id, 26)}<span>${esc(r.name)}<small>${esc(r.sub)}</small></span></span><span class="num">${r.cost ?? ""}</span></button>`).join("") || '<p class="sub sky-empty">Nothing here.</p>';
+      list = rows.map((r) => `<button class="sky-row sky-cols2 ${r.id === sky.sel ? "sel" : ""} ${inTactics(r.id) ? "eq" : ""}" data-act="skysel" data-id="${esc(r.id)}"><span class="nm sk-nm">${magicIcon(r.id, 26)}<span>${esc(r.name)}<small>${esc(r.sub)}</small></span></span><span class="num${r.cost != null ? " nv-mana" : ""}">${r.cost ?? ""}</span></button>`).join("") || '<p class="sub sky-empty">Nothing here.</p>';
       detail = sel ? magicDetail(sel) : "";
     } else {
       const rows = skillRows(); const sel = rows.find((r) => r.id === sky.sel) || null;
@@ -2446,7 +2450,7 @@
       <p class="sub perk-sum">${UIART.skill(perkSkill, 32)} ${esc(SKILLINFO.summary(perkSkill))} <button class="linkbtn" data-act="skinfo" data-id="${esc(perkSkill)}">How to raise it</button></p>
       <div class="list" style="margin-top:8px">${PERKS.TREES[perkSkill].map(([id, name, ranks]) => {
         const r = PERKS.rank(S, id), p = PERKS.BY_ID[id], err = PERKS.canTake(S, id);
-        return `<div class="item ${r ? "on" : ""}" style="flex-wrap:wrap">${UIART.skill(perkSkill, 26)}<div class="t">${esc(name)}${ranks > 1 ? ` <span class="num">${r}/${ranks}</span>` : r ? " ✓" : ""}<span>${esc(p.desc)}${r < ranks ? ` · needs ${esc(perkSkill)} ${p.req[r]}${p.needs.length ? ` and ${p.needs.map((n) => esc(PERKS.BY_ID[n].name)).join(" or ")}` : ""}` : ""}</span></div>
+        return `<div class="item ${r ? "on" : ""}" style="flex-wrap:wrap">${UIART.skill(perkSkill, 26)}<div class="t">${esc(name)}${ranks > 1 ? ` <span class="num">${r}/${ranks}</span>` : r ? " ✓" : ""}<span>${esc(PERKS.nowText(S, id))}${r < ranks ? ` · needs ${esc(perkSkill)} ${p.req[r]}${p.needs.length ? ` and ${p.needs.map((n) => esc(PERKS.BY_ID[n].name)).join(" or ")}` : ""}` : ""}</span></div>
           ${r < ranks ? `<button class="btn sm ${err ? "" : "pri"}" data-act="perk" data-id="${id}" ${err ? "disabled" : ""}>Take</button>` : ""}</div>`; }).join("")}</div></div>`;
     const t = G.now(), fx = (S.fx || []).filter((f) => f.until > t);
     const gfx = gearFx();
@@ -2517,7 +2521,7 @@
   function tacticActions() {
     return [...Object.entries(D.BASIC_ACTIONS).map(([id, l]) => [id, l]),
       ...S.spells.filter((x) => D.SPELLS[x] && D.SPELLS[x].kind !== "utility").map((x) => [`spell:${x}`, `Cast ${D.SPELLS[x].name} (${G.spellCost(S, D.SPELLS[x])} magicka)`]),
-      ...S.spells.filter((x) => D.SPELLS[x] && MAGIC.dualable(D.SPELLS[x])).map((x) => [`dual:${x}`, `Dual-cast ${D.SPELLS[x].name} (×${MAGIC.DUAL_POWER}, ${Math.round(G.spellCost(S, D.SPELLS[x]) * MAGIC.DUAL_COST)} magicka)`]),
+      ...S.spells.filter((x) => D.SPELLS[x] && MAGIC.dualable(D.SPELLS[x])).map((x) => [`dual:${x}`, `Dual-cast ${D.SPELLS[x].name} (×${MAGIC.DUAL_POWER}, ${Math.round(G.dualCost(S, D.SPELLS[x]))} magicka)`]),
       ...["health", "magicka", "stamina"].map((r) => [`potion:${r}`, `Drink a ${r} potion (have ${G.countRestore(S, r)})`]),
       ...[...new Set(S.inv.filter((r) => D.ITEMS[r.item]?.slot === "scroll").map((r) => r.item))].map((i) => [`scroll:${i}`, `Read ${D.ITEMS[i].name}`]),
       ["power:race", `Use ${POWERS.RACE[S.race][0]} (racial power, once a day)`],

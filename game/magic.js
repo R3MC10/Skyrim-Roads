@@ -316,6 +316,64 @@ const MAGIC = (() => {
       utility: () => ({ candlelight: "Out of fights: better odds against dungeon traps for 6 in-game hours", detect_life: "Out of fights: +15% to stay hidden for 3 in-game hours", muffle: "Out of fights: +10% to stay hidden for 6 in-game hours", transmute: "Out of fights: up to 3 iron ore → silver, or silver ore → gold", clairvoyance: "Out of fights: shows the way to your quest", dispel: "Out of fights: cures diseases and removes harmful effects", mark: "Out of fights: remember this spot", recall: "Out of fights: return to your Mark from anywhere (every 6 in-game hours)" }[sp.use]),
     }[sp.kind] || (() => ""))();
   }
-  return { LEVELS, REQ, NEW, STAFFS, byId, KINDS, levelOf, canBuy, gap, costMult, failChance, DUAL_COST, DUAL_POWER, dualable, elem, isCaster, beforeEnemy, tick, soak, after,
+
+  /* ---- exact numbers for the Magic menu, for this character right now (same helpers the fight uses).
+     parts: [{ t: text, c: colour class }] — c is an element (fire/frost/shock/sun), heal, buff, debuff, mana or dur */
+  const PXS = (s, key, x) => (typeof PFX !== "undefined" ? PFX.sum(s, key, null, x || {}) : 0);
+  const R = (x) => Math.round(x);
+  function wornArmor(s) { const eq = G.equipment(s) || {}; return G.ARMOR_SLOTS.map((sl) => eq[sl] && D.ITEMS[eq[sl].item]).filter(Boolean); }
+  function nums(s, id, dual) {
+    let sp = D.SPELLS[id]; if (!sp) return [];
+    if (dual) sp = { ...sp, amount: (sp.amount || 0) * DUAL_POWER };
+    const el = sp.element || "", po = 1 + G.fxSum(s, "spell:" + sp.school) / 100, P = (k) => G.P(s, k);
+    const out = [], add = (t, c) => out.push({ t, c });
+    switch (sp.kind) {
+      case "damage": {
+        const d = G.spellDamage(s, sp);
+        add(`${R(d)} ${el === "sun" ? "sun damage (undead only)" : el + " damage"}`, el || "fire");
+        if (el === "fire" && typeof PFX !== "undefined") { const st = PXS(s, "burn"); add(`burns ${Math.max(1, R(d * 0.15 * (1 + st) * (1 + 0.1 * P("augmented_flames"))))}/turn for ${3 + (st ? 1 : 0)} turns`, "fire"); }
+        if (el === "frost") { add("slows 2 turns", "debuff"); const fz = PXS(s, "freeze"); if (fz) add(`${R(fz * 100)}% freeze solid`, "debuff"); }
+        if (el === "shock") add("jolts · 30% interrupts casters", "debuff");
+        if (sp.school === "Destruction" && P("impact")) add("30% stagger", "debuff");
+        add(`${R(F.SPELL_HIT_CHANCE * 100)}% to hit`, "dur");
+        break;
+      }
+      case "heal": { const h = G.spellHeal(s, sp); add(`+${R(h)} health`, "heal"); if (P("respite")) add(`+${R(h)} stamina`, "stam"); break; }
+      case "armor": add(`+${R(G.spellArmor(s, sp, wornArmor(s), null))} armor for the fight`, "buff"); break;
+      case "summon": { const m = G.spellSummon(s, sp, null); add(`${m.count > 1 ? "2 allies" : "an ally"}: ${R(m.dmg)} damage a turn`, "buff"); add(`${m.turns} turns`, "dur"); break; }
+      case "calm": { const m = G.spellCalm(s, sp, null, null); add(`foes up to level ${m.cap} stop fighting`, "debuff"); add(`${m.turns} turns`, "dur"); break; }
+      case "rune": add(`${R(sp.amount * po * (1 + PXS(s, "spell", { kind: "rune" })))} ${el} damage when the foe steps on it`, el); break;
+      case "cloak": add(`${R(sp.amount * po)} ${el} damage a turn`, el); add(`${sp.turns} turns`, "dur"); break;
+      case "dot": add(`${R(sp.amount * po)} ${el} damage a turn`, el); add(`${sp.turns} turns`, "dur"); if (el === "frost") add("slows", "debuff"); break;
+      case "ward": add(`ward soaks ${R(sp.amount * po)} spell damage`, "buff"); break;
+      case "regen": add(`+${R(sp.amount * po)} health a turn`, "heal"); add(`${sp.turns} turns`, "dur"); break;
+      case "turn": add(`undead up to level ${sp.max_level} flee`, "debuff"); break;
+      case "paralyze": add(`paralyzed ${R(sp.amount)} turns`, "debuff"); add("90% (60% vs tough foes) · not dragons", "dur"); break;
+      case "fear": { const fx = PXS(s, "fear"); add(`living foes up to level ${sp.max_level + (P("rage") && !fx ? 8 : fx)} flee`, "debuff"); add(`${R(sp.amount) + (P("aspect_of_terror") ? 1 : 0)} turns`, "dur"); break; }
+      case "courage": add(`allies +${sp.amount}% damage · you +${R(sp.amount / 2)} health`, "buff"); break;
+      case "invisibility": add("unseen 2 turns · next blow is a sneak attack", "buff"); break;
+      case "bound": add(`${R(sp.amount * (1 + PXS(s, "bound")))} base damage (${sp.skill})`, "buff"); break;
+      case "reanimate": add(`a slain foe up to level ${sp.amount} rises`, "buff"); add(`${sp.fights} fights`, "dur"); break;
+      case "soultrap": add("fills an empty soul gem if it dies", "buff"); break;
+      default: { const d = describe(sp); if (d) add(d, "dur"); }
+    }
+    return out;
+  }
+  /* the cost and numbers of a spell, single and dual cast: { cost, dualCost, single, dual } */
+  function info(s, id) {
+    const sp = D.SPELLS[id]; if (!sp) return null;
+    const utility = sp.kind === "utility";
+    return { cost: utility ? null : G.spellCost(s, sp), dualCost: dualable(sp) ? R(G.dualCost(s, sp, null)) : null,
+      single: nums(s, id, false), dual: dualable(sp) ? nums(s, id, true) : null, fail: failChance(s, id) };
+  }
+  const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const partsHTML = (ps) => ps.map((p) => `<span class="nv nv-${p.c}">${esc(p.t)}</span>`).join(" · ");
+  function infoHTML(s, id) {
+    const i = info(s, id); if (!i) return "";
+    const one = `<div class="spl-row"><b class="spl-k">Cast</b>${i.cost != null ? `<span class="nv nv-mana">${i.cost} magicka</span> · ` : ""}${partsHTML(i.single)}</div>`;
+    const two = i.dual ? `<div class="spl-row"><b class="spl-k">Dual cast</b><span class="nv nv-mana">${i.dualCost} magicka</span> · ${partsHTML(i.dual)}</div>` : "";
+    return `<div class="spl-info">${one}${two}</div>`;
+  }
+  return { nums, info, infoHTML, LEVELS, REQ, NEW, STAFFS, byId, KINDS, levelOf, canBuy, gap, costMult, failChance, DUAL_COST, DUAL_POWER, dualable, elem, isCaster, beforeEnemy, tick, soak, after,
     staffAttack, isStaff, staffCharge, outOfFight, cdLeft, castOut, describe };
 })();

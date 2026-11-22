@@ -1,6 +1,6 @@
 /* Favourites wheel: Skyrim's Q menu as a touch wheel.
    Mark weapons, armour, potions, spells, shouts and powers as favourites (★ in the Items and Magic menus),
-   then long-press the map or the compass (or tap the ★ button) and pick one:
+   then long-press the compass (or tap the ★ button) and pick one:
    - weapons and armour are equipped at once (in your current loadout)
    - a spell, shout or power becomes your "readied" move: Smart AI opens the next fights with it
    - a potion is "queued": Smart AI drinks that kind without saving it for later in the next fight */
@@ -142,12 +142,15 @@ const FAVWHEEL = (() => {
     if (b && r.ok) { b.classList.add("fw-hit"); setTimeout(() => { hide(); ctx.refresh?.(); }, 160); } else render();
   }
 
-  // ---- long-press the map or the compass; or tap the ★ button
+  // ---- long-press the compass; or tap the ★ button
   const HOLD_MS = 480;
+  const fingers = new Set();   // pointers currently down: two or more means a pinch, never a long-press
   function onDown(ev) {
+    fingers.add(ev.pointerId);
+    if (fingers.size > 1) { cancel(); return; }
     if (open || !ctx?.save()) return;
     const t = ev.target; if (!t.closest) return;
-    const zone = t.closest("#map, canvas#map, .map, #tw");
+    const zone = t.closest("#tw");   // only the compass: the map uses holds and pinches for zooming and panning
     if (!zone || t.closest("button, a, input, select, textarea, [data-act], [data-twgo], [data-twq]")) return;
     const p = ev.touches ? ev.touches[0] : ev;
     press = { x: p.clientX, y: p.clientY, timer: setTimeout(() => { press = null; swallowClick = true; setTimeout(() => { swallowClick = false; }, 600); show(); }, HOLD_MS) };
@@ -158,6 +161,7 @@ const FAVWHEEL = (() => {
     if (Math.hypot(p.clientX - press.x, p.clientY - press.y) > 10) cancel();
   }
   function cancel() { if (press) { clearTimeout(press.timer); press = null; } }
+  function lift(ev) { fingers.delete(ev.pointerId); cancel(); }
   function mount(c) {
     ctx = c; if (!live) return;
     if (!$("#favBtn")) {
@@ -166,8 +170,10 @@ const FAVWHEEL = (() => {
       document.body.appendChild(b);
       document.addEventListener("pointerdown", onDown, true);
       document.addEventListener("pointermove", onMove, true);
-      document.addEventListener("pointerup", cancel, true);
-      document.addEventListener("pointercancel", cancel, true);
+      document.addEventListener("pointerup", lift, true);
+      document.addEventListener("pointercancel", lift, true);
+      document.addEventListener("wheel", cancel, { capture: true, passive: true });
+      document.addEventListener("touchstart", (ev) => { if (ev.touches.length > 1) cancel(); }, { capture: true, passive: true });
       document.addEventListener("click", (ev) => { if (swallowClick && !ev.target.closest("#favwheel")) { ev.stopPropagation(); ev.preventDefault(); swallowClick = false; } }, true);
       document.addEventListener("contextmenu", (ev) => { if (ev.target.closest?.("#map, canvas#map, #tw")) ev.preventDefault(); });
     }

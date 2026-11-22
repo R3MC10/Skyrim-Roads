@@ -90,7 +90,7 @@ const TABMENU = (() => {
     const pk = starPick != null ? tree[starPick] : null;
     if (pk) {
       const [id, name, ranks] = pk, rk = PERKS.rank(S, id), p = PERKS.BY_ID[id], err = rk < ranks ? PERKS.canTake(S, id) : "";
-      detail = `<div class="tw-perk"><h3>${esc(name)} ${ranks > 1 ? `<span class="num">${rk}/${ranks}</span>` : rk ? "✓" : ""}</h3><p>${esc((p.desc || "").replace(/\s*\[[^\]]*\]\s*$/, ""))}</p>
+      detail = `<div class="tw-perk"><h3>${esc(name)} ${ranks > 1 ? `<span class="num">${rk}/${ranks}</span>` : rk ? "✓" : ""}</h3><p>${esc(PERKS.nowText ? PERKS.nowText(S, id) : (p.desc || "").replace(/\s*\[[^\]]*\]\s*$/, ""))}</p>
         ${rk < ranks ? `<p class="sub">Needs ${esc(sk)} ${p.req[rk]}${p.needs.length ? ` and ${p.needs.map((x) => esc(PERKS.BY_ID[x]?.name || x)).join(" or ")}` : ""}</p><button class="btn ${err ? "" : "pri"}" data-act="perk" data-id="${esc(id)}" ${err ? "disabled" : ""}>${err ? esc(err) : "Take this perk"}</button>` : `<p class="sub">You have this perk.</p>`}</div>`;
     } else detail = `<p class="sub tw-hint2">${tree.length ? "Tap a star to read its perk. Bright rings are perks you can take now." : "This skill has no perk stars. It still grows as you use it."}</p>`;
     const info = typeof SKILLINFO !== "undefined" ? SKILLINFO.summary?.(sk) : "";
@@ -121,7 +121,7 @@ const TABMENU = (() => {
       if (rk) (had[sk] = had[sk] || []).push([id, name, rk, ranks]);
       if (rk < ranks && !PERKS.canTake(S, id)) can.push([sk, id, name, rk, ranks]);
     }
-    const desc = (id) => esc((PERKS.BY_ID[id]?.desc || "").replace(/\s*\[[^\]]*\]\s*$/, ""));
+    const desc = (id) => esc(PERKS.nowText ? PERKS.nowText(S, id) : (PERKS.BY_ID[id]?.desc || "").replace(/\s*\[[^\]]*\]\s*$/, ""));
     const ic = (sk, n) => typeof UIART !== "undefined" ? UIART.skill(sk, n) : "";
     const canHtml = can.length ? can.map(([sk, id, name, rk, ranks]) => `<div class="item">${ic(sk, 26)}<div class="t">${esc(name)}${ranks > 1 ? ` <span class="num">${rk + 1}/${ranks}</span>` : ""}<span>${esc(sk)} · ${desc(id)}</span></div><button class="btn sm pri" data-act="perk" data-id="${esc(id)}">Take</button></div>`).join("")
       : `<p class="sub">${pts > 0 ? "No perk is open yet. Raise a skill to reach the next star." : "No perk points to spend. You get one each level."}</p>`;

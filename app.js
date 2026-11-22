@@ -33,11 +33,17 @@
   // ------------------------------------------------------------ updates (GitHub releases of this repo)
   const cleanNotes = (body) => String(body || "").split(/\n-{3,}\s*\n/)[0]
     .split("\n").filter((l) => !/^(Co-Authored-By|Claude-Session):/i.test(l.trim())).join("\n").trim();
-  let latestCache = null, waitingForPermission = false, staged = 0, stagedPath = "";
+  let latestCache = null, waitingForPermission = false, staged = 0, stagedPath = "", quickFailed = "";
   const updater = {
     native: true,
     async current() {
       try { return await Updater.info(); } catch (e) { return { build: 0, version: "?", canInstall: false }; }
+    },
+    /* plain words for the update screen: can this app update itself without the installer? */
+    async how() {
+      const c = await this.current();
+      if (!Updater?.downloadGame || !c.shell) return `App build ${c.apkBuild || c.build}: this older app still needs the installer. Install the newest app once; after that it updates itself.`;
+      return `App build ${c.apkBuild || c.build}, game build ${c.build}: updates download by themselves, no installer.${quickFailed ? ` Last quick update failed: ${quickFailed}` : ""}`;
     },
     async latest(force = false) {
       if (latestCache && !force && Date.now() - latestCache.t < 10 * 60000) return latestCache.r;
@@ -74,8 +80,9 @@
     async install(lat, onStep = () => {}) {
       if (!Updater) throw new Error("This build can't update itself. Install the newest one by hand once.");
       const cur = await this.current();
-      if (lat.game && Updater.downloadGame && cur.shell >= lat.game.shell) {
-        try { return await this.quickUpdate(lat, true, onStep); } catch (e) { onStep(`Quick update failed (${e.message}), using the full installer…`, 0); }
+      if (lat.game && Updater.downloadGame && cur.shell >= lat.game.shell && !quickFailed) {
+        try { return await this.quickUpdate(lat, true, onStep); }
+        catch (e) { quickFailed = String(e?.message || e); throw new Error(`quick update failed: ${quickFailed}. Tap Update now again to install the full app instead`); }
       }
       if (!cur.canInstall) {
         waitingForPermission = true;

@@ -324,6 +324,31 @@ const G = (() => {
     const half = tier && P(s, `${tier}_${sp.school.toLowerCase()}`) ? 0.5 : 1;   // [Skyrim] "<tier> <school>" perks: half cost
     return Math.floor(F.spellCost(sp.cost, skill(s, sp.school)) * half * (typeof MAGIC !== "undefined" && id ? MAGIC.costMult(s, id) : 1) * (1 - Math.min(0.5, fxSum(s, "cost:" + sp.school) / 100)) * (1 - (typeof PFX !== "undefined" ? Math.min(0.4, PFX.sum(s, "scost", null, { school: sp.school })) : 0)));   // Atromancy, Mystic Focus   // dragon priest masks   // spells above your level cost more
   }
+  /* ---- pure spell numbers: what one cast does for this character before the foe's own weaknesses and resistances.
+     Fight.cast uses these, and the Magic menu shows them, so the menu always matches the fight. */
+  const PX = (s, key, f, x) => (typeof PFX !== "undefined" ? PFX.sum(s, key, f, x || {}) : 0);
+  function spellDamage(s, sp) {
+    const aug = { fire: P(s, "augmented_flames"), frost: P(s, "augmented_frost"), shock: P(s, "augmented_shock") }[sp.element] || 0;
+    return sp.amount * (1 + 0.25 * aug) * (1 + fxSum(s, "spell:" + sp.school) / 100);
+  }
+  const spellHeal = (s, sp) => sp.amount * (P(s, "regeneration") ? 1.5 : 1) * (1 + fxSum(s, "spell:Restoration") / 100);
+  /* armor spells: Mage Armor needs no worn armor; armorWorn = the pieces you wear (item defs) */
+  function spellArmor(s, sp, armorWorn, f) {
+    const bare = !armorWorn.some((a) => a && ARMOR_SKILL[a.type]);
+    return sp.amount * (bare && P(s, "mage_armor") ? [1, 2, 2.5, 3][P(s, "mage_armor")] : 1) * (1 + PX(s, "armorspell", f));   // [Skyrim] Mage Armor, Stability
+  }
+  const spellSummon = (s, sp, f) => ({
+    turns: sp.turns + 2 * P(s, "summoner") + PX(s, "summonturns", f),
+    dmg: sp.amount * (P(s, "elemental_potency") ? 1.5 : 1) * (P(s, "twin_souls") ? 2 : 1) * (1 + PX(s, "summon", f)),   // Necromancy, Dark Souls
+    count: P(s, "twin_souls") ? 2 : 1,
+  });
+  /* calm: the highest foe level it works on (beasts and people get more with Animage / Kindred Mage) */
+  const spellCalm = (s, sp, tags, f) => ({
+    cap: sp.max_level + (tags?.has("beast") && P(s, "animage") ? 8 : 0) + (tags?.has("humanoid") && P(s, "kindred_mage") ? 8 : 0) + PX(s, "calm", f),
+    turns: sp.turns + PX(s, "calmturns", f),   // Hypnotic Gaze
+  });
+  /* dual casting: magicka for both hands (Dual Casting perks cut it) */
+  const dualCost = (s, sp, f) => spellCost(s, sp) * (typeof MAGIC !== "undefined" ? MAGIC.DUAL_COST : 2.8) * (1 - Math.min(0.5, PX(s, "dualcost", f, { school: sp.school })));
   const enchantCost = (e, s) => F.enchantCost(e.base_cost, e.magnitude, e.max_magnitude, skill(s, "Enchanting")) * (1 - 0.1 * P(s, "enchanter"));
   function describeAction(a) {
     if (D.BASIC_ACTIONS[a]) return D.BASIC_ACTIONS[a];
@@ -608,7 +633,7 @@ const G = (() => {
     cast(id, free, dual) {
       let sp = D.SPELLS[id];
       const mg = typeof MAGIC !== "undefined";
-      if (!free) this.mp -= spellCost(this.s, sp) * (dual && mg ? MAGIC.DUAL_COST * (1 - (typeof PFX !== "undefined" ? Math.min(0.5, PFX.sum(this.s, "dualcost", this, { school: sp.school })) : 0)) : 1);
+      if (!free) this.mp -= dual && mg ? dualCost(this.s, sp, this) : spellCost(this.s, sp);
       if (dual && mg) sp = { ...sp, amount: (sp.amount || 0) * MAGIC.DUAL_POWER, name: `${sp.name} (dual)` };   // [Skyrim] dual casting
       const s = this.s;
       if (!free && mg && Math.random() < MAGIC.failChance(s, id)) { this.addXp(sp.school, sp.xp * 0.25); return `${sp.name} fizzles (too advanced for you yet)`; }
@@ -618,8 +643,7 @@ const G = (() => {
         if (Math.random() > F.SPELL_HIT_CHANCE) return `${sp.name} misses`;
         if (sp.element === "sun" && !this.tags.has("undead")) return `${sp.name}: no effect (undead only)`;
         if (sp.element === "frost") this.slowed = 2;
-        const aug = { fire: P(s, "augmented_flames"), frost: P(s, "augmented_frost"), shock: P(s, "augmented_shock") }[sp.element] || 0;
-        let amt = sp.amount * (1 + 0.25 * aug) * (1 + fxSum(s, "spell:" + sp.school) / 100) * (this.tags.has("undead") && P(s, "necromage") ? 1.25 : 1) * (mg && sp.element !== "sun" ? MAGIC.elem(this, sp.element) : 1) * (this.wx ? this.wx.el[sp.element] || 1 : 1);   // weaknesses and resistances; rain dulls fire, storms feed shock
+        let amt = spellDamage(s, sp) * (this.tags.has("undead") && P(s, "necromage") ? 1.25 : 1) * (mg && sp.element !== "sun" ? MAGIC.elem(this, sp.element) : 1) * (this.wx ? this.wx.el[sp.element] || 1 : 1);   // weaknesses and resistances; rain dulls fire, storms feed shock
         const stormHit = typeof WFX !== "undefined" && WFX.stormStrike(this, sp.element); if (stormHit) amt *= 1.5;
         let label = sp.name + (stormHit ? " ⚡ (the storm answers)" : "");
         if (this.turn === 1 && this.hidden && P(s, "quiet_casting")) { amt *= 2; label += " (sneak ×2)"; }
@@ -630,7 +654,7 @@ const G = (() => {
       }
       if (sp.kind === "heal") {
         const before = this.hp;
-        const amt = sp.amount * (P(s, "regeneration") ? 1.5 : 1) * (1 + fxSum(s, "spell:Restoration") / 100);
+        const amt = spellHeal(s, sp);
         this.hp = Math.min(maxHealth(s), this.hp + amt);
         if (P(s, "respite")) this.sp = Math.min(maxStamina(s), this.sp + amt);
         this.addXp("Restoration", this.hp - before);
@@ -638,20 +662,17 @@ const G = (() => {
       }
       this.addXp(sp.school, sp.xp);
       if (sp.kind === "armor") {
-        const bare = !Object.values(this.armor).some((a) => ARMOR_SKILL[a.type]);
-        const m = (bare && P(s, "mage_armor") ? [1, 2, 2.5, 3][P(s, "mage_armor")] : 1) * (1 + (typeof PFX !== "undefined" ? PFX.sum(s, "armorspell", this, {}) : 0));   // [Skyrim] Mage Armor, Stability
-        this.armorSpell = sp.amount * m; return `${sp.name}: +${Math.round(this.armorSpell)} armor`;
+        this.armorSpell = spellArmor(s, sp, Object.values(this.armor), this); return `${sp.name}: +${Math.round(this.armorSpell)} armor`;
       }
       if (sp.kind === "summon") {
-        this.summonTurns = sp.turns + 2 * P(s, "summoner") + (typeof PFX !== "undefined" ? PFX.sum(s, "summonturns", this, {}) : 0);
-        this.summonDmg = sp.amount * (P(s, "elemental_potency") ? 1.5 : 1) * (P(s, "twin_souls") ? 2 : 1) * (1 + (typeof PFX !== "undefined" ? PFX.sum(s, "summon", this, {}) : 0));   // Necromancy, Dark Souls
+        const sm = spellSummon(s, sp, this); this.summonTurns = sm.turns; this.summonDmg = sm.dmg;
         return `${sp.name}: ${P(s, "twin_souls") ? "two spectral wolves appear" : "a spectral wolf appears"}`;
       }
       if (sp.kind === "calm") {
         if ((this.tags.has("undead") || this.tags.has("construct")) && !P(s, "master_of_the_mind")) return `${sp.name}: no effect on the ${this.tags.has("undead") ? "undead" : "machine"}`;
-        const cap = sp.max_level + (this.tags.has("beast") && P(s, "animage") ? 8 : 0) + (this.tags.has("humanoid") && P(s, "kindred_mage") ? 8 : 0) + (typeof PFX !== "undefined" ? PFX.sum(s, "calm", this, {}) : 0);
-        if ((this.e.level ?? 99) > cap) return `${sp.name}: no effect (level too high)`;
-        this.calmTurns = sp.turns + (typeof PFX !== "undefined" ? PFX.sum(s, "calmturns", this, {}) : 0);   // Hypnotic Gaze return `${sp.name}: it stops fighting`;
+        const cm = spellCalm(s, sp, this.tags, this);
+        if ((this.e.level ?? 99) > cm.cap) return `${sp.name}: no effect (level too high)`;
+        this.calmTurns = cm.turns; return `${sp.name}: it stops fighting`;
       }
       return sp.name;
     }
@@ -1224,7 +1245,7 @@ const G = (() => {
     riding, withHorse, give, take, invRow, carried, capacity, overweight, equipment, equip, unequip, countRestore, itemStats,
     loadout: lo, addRule, ruleSlot, deadRules, fixTactics, saveLoadoutAs, deleteLoadout, spellCost, describeRule, describeAction, Fight, scaleEnemy, scaleQuestFoe, questLevel, rollLoot,
     rollEncounter, die, speed, discoverRadius, startTrip, startEvent, eventChoices, eventChoice, buyFrom, minutesLeft, minutesTo, posAfter, advance, encounterAction, migrate, PLACES,
-    shopTypes, shopStock, buyPrice, sellPrice, lotPrice, buy, sell, readTome, drinkPotion, recharge, clone, note,
+    spellDamage, spellHeal, spellArmor, spellSummon, spellCalm, dualCost, shopTypes, shopStock, buyPrice, sellPrice, lotPrice, buy, sell, readTome, drinkPotion, recharge, clone, note,
   };
 })();
 if (typeof module !== "undefined") module.exports = G;
