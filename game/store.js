@@ -15,6 +15,12 @@ const Store = (() => {
      phone it meets. Each record carries a timestamp (_v); the newest version wins. Deletions leave a marker (_del)
      so they spread too. Only players who are online right now show up and can be interacted with. */
   let world = {}, worldCode = null, net = null, peerUid = {}, online = new Set(), p2pStatus = "offline", saveWorldT = null;
+  /* backup line (P2PNET.backup): players whose phones can't link directly still hear each other through the relays.
+     fbSeen: uid -> when we last heard them there; they count as online for FB_TTL. */
+  let fb = null, fbSeen = {}, fbTick = null, fbHereT = null;
+  const FB_TTL = 150e3, FB_BEAT = 50e3;
+  const isOn = (id) => online.has(id) || now() - (fbSeen[id] || 0) < FB_TTL;
+  const onlineCount = () => { const s = new Set(online); for (const id in fbSeen) if (isOn(id)) s.add(id); s.delete(uid); return s.size; };
   const wl = {};   // watchers per collection
   const COLS = ["players", "bags", "attacks", "parties", "chests", "news", "raids", "trades", "ladder", "chat", "hall", "hallchest", "bounty", "homes", "gifts", "duels", "clans", "clanmem", "war", "stalls", "friends", "dms", "guards", "verses", "verselikes", "runs", "econ", "halls", "pshare", "lvotes", "tbf", "wevents"];
   const now = () => Date.now();
@@ -49,6 +55,7 @@ const Store = (() => {
     if (/[?&]net=bc/.test(location.search) && window.BroadcastChannel) return {
       name: "bc",
       join(code, h) {
+        if (/[?&]nodirect/.test(location.search)) return { send() {}, leave() {}, direct: () => 0 };   // test: phones that can never link directly
         const ch = new BroadcastChannel("rotn-" + code), me = Math.random().toString(36).slice(2, 9), peers = new Set();
         const post = (m) => ch.postMessage({ ...m, from: me });
         ch.onmessage = ({ data: m }) => {
@@ -61,6 +68,11 @@ const Store = (() => {
         addEventListener("pagehide", () => post({ k: "bye" }));
         return { send: (data, peer) => post({ k: "m", data, to: peer }), leave: () => { post({ k: "bye" }); ch.close(); } };
       },
+      backup(code, onMessage) {   // stand-in for the relay backup line
+        const ch = new BroadcastChannel("rotn-fb-" + code);
+        ch.onmessage = ({ data }) => onMessage(data);
+        return { send: (x) => ch.postMessage(x), open: () => 1, leave: () => ch.close() };
+      },
     };
     return window.P2PNET || null;
   }
@@ -70,7 +82,7 @@ const Store = (() => {
   function emit(col) { const docs = list(col); (wl[col] || []).forEach((f) => f(docs)); }
   function list(col) {
     const out = Object.entries(world[col] || {}).filter(([, d]) => live(d)).map(([id, d]) => ({ ...d, id }));
-    return col === "players" ? out.filter((d) => d.id !== uid && online.has(d.id)) : out;
+    return col === "players" ? out.filter((d) => d.id !== uid && isOn(d.id)) : out;
   }
   function persistWorld() { clearTimeout(saveWorldT); saveWorldT = setTimeout(() => ls.set("sk.w." + worldCode, world), 800); }
   /* keep the newer version of each record */
@@ -103,16 +115,18 @@ const Store = (() => {
     delete rec.id;
     merge(col, id, rec); persistWorld(); emit(col);
     net?.send({ t: "put", col, id, doc: rec });
+    fb?.send({ t: "put", col, id, doc: rec, u: uid });
   }
   function joinWorld(code, T = transport()) {
     if (net) { try { net.leave(); } catch { /* ignore */ } }
+    if (fb) { try { fb.leave(); } catch { /* ignore */ } } fb = null; fbSeen = {}; clearInterval(fbTick);
     worldCode = code; ls.set("sk.world", code);
     world = ls.get("sk.w." + code) || {}; tidy();
     online = new Set(); peerUid = {}; p2pStatus = "searching";
     COLS.forEach(emit);
     net = T.join(code, {
       onJoin(peer) { net.send({ t: "hello", uid, world }, peer); },
-      onLeave(peer) { const u = peerUid[peer]; delete peerUid[peer]; if (u && !Object.values(peerUid).includes(u)) { online.delete(u); emit("players"); } p2pStatus = online.size ? "connected" : "searching"; statusChanged(); },
+      onLeave(peer) { const u = peerUid[peer]; delete peerUid[peer]; if (u && !Object.values(peerUid).includes(u)) { online.delete(u); emit("players"); } p2pStatus = onlineCount() ? "connected" : "searching"; statusChanged(); },
       onMessage(m, peer) {
         if (!m || typeof m !== "object") return;
         if (m.t === "hello") {
@@ -127,10 +141,38 @@ const Store = (() => {
       },
       onError() { /* trystero keeps retrying on its own */ },
     });
+    if (T.backup) {
+      try { fb = T.backup(code, onBackup); } catch (e) { console.warn("backup line unavailable", e); fb = null; }
+      if (fb) {
+        const beat = () => sayHere(false);
+        setTimeout(beat, 1500);
+        fbTick = setInterval(() => { beat(); expireBackup(); }, FB_BEAT);
+      }
+    }
     statusChanged();
   }
+  /* "I'm here" on the backup line: my public card rides along, so others can see me even with no direct link */
+  function sayHere(reply) { fb?.send({ t: "here", u: uid, card: (world.players || {})[uid] || null, reply: !!reply }); }
+  function onBackup(m) {
+    if (!m || typeof m !== "object" || !m.u || m.u === uid) return;
+    const fresh = !isOn(m.u);
+    fbSeen[m.u] = now();
+    let changed = false;
+    if (m.t === "here" && m.card) changed = merge("players", m.u, m.card);
+    else if (m.t === "put") changed = merge(m.col, m.id, m.doc);
+    if (changed) { persistWorld(); emit(m.t === "put" ? m.col : "players"); }
+    if (fresh) {
+      emit("players"); p2pStatus = "connected"; statusChanged();
+      if (!m.reply) { clearTimeout(fbHereT); fbHereT = setTimeout(() => sayHere(true), 800 + Math.random() * 1500); }   // say hi back so they see us at once
+    }
+  }
+  function expireBackup() {
+    let gone = false;
+    for (const id in fbSeen) if (!isOn(id)) { delete fbSeen[id]; gone = true; }
+    if (gone) { emit("players"); p2pStatus = onlineCount() ? "connected" : "searching"; statusChanged(); }
+  }
   const statusL = [];
-  function statusChanged() { statusL.forEach((f) => f({ status: p2pStatus, peers: online.size, code: worldCode })); }
+  function statusChanged() { statusL.forEach((f) => f({ status: p2pStatus, peers: onlineCount(), code: worldCode })); }
 
   async function loadSave() {
     if (mode === "p2p") return ls.get("sk.save");
@@ -261,6 +303,6 @@ const Store = (() => {
   }
   return { flush: () => saving || Promise.resolve(), init, loadSave, save, publish, watchPlayers, watchBags, addBag, takeBag, wipe, watch, put, remove, change,
     joinWorld: (code) => joinWorld(String(code).toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 12) || newCode()),
-    onStatus: (f) => { statusL.push(f); f({ status: p2pStatus, peers: online.size, code: worldCode }); },
-    get online() { return mode === "shared" || mode === "p2p"; }, get worldCode() { return worldCode; }, get peers() { return online.size; }, get direct() { return Math.min(online.size, net?.direct?.() ?? online.size); }, get mode() { return mode; }, get uid() { return uid; }, get writable() { return writable; } };
+    onStatus: (f) => { statusL.push(f); f({ status: p2pStatus, peers: onlineCount(), code: worldCode }); },
+    get online() { return mode === "shared" || mode === "p2p"; }, get worldCode() { return worldCode; }, get peers() { return onlineCount(); }, get direct() { return Math.min(online.size, net?.direct?.() ?? online.size); }, get relayed() { return fb?.open?.() || 0; }, get mode() { return mode; }, get uid() { return uid; }, get writable() { return writable; } };
 })();
