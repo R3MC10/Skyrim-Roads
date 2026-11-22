@@ -104,7 +104,15 @@ const WorldMap = (() => {
       g.clip(bp); g.stroke(inner); g.restore();
     }
     // ---- lakes
-    for (const [lx, ly, rx, ry] of WORLD.lakes) {
+    for (const poly of WORLD.lakePolys || []) {   // the real lake outlines
+      g.fillStyle = "#5f8797"; smoothPath(g, poly, true); g.fill();
+      g.save(); smoothPath(g, poly, true); g.clip(); g.strokeStyle = "rgba(220,235,240,.3)"; g.lineWidth = 1.2; smoothPath(g, poly.map(([a, b]) => [a + 0.002, b + 0.003]), true); g.stroke(); g.restore();
+      g.strokeStyle = "#3b2c1e"; g.lineWidth = 1.4; smoothPath(g, poly, true); g.stroke();
+    }
+    for (const isle of WORLD.lakeIsles || []) {   // little islands in the lakes
+      g.fillStyle = "#8f8a6e"; smoothPath(g, isle, true); g.fill(); g.strokeStyle = "#3b2c1e"; g.lineWidth = 1; smoothPath(g, isle, true); g.stroke();
+    }
+    for (const [lx, ly, rx, ry] of WORLD.lakePolys ? [] : WORLD.lakes) {
       const x = lx * W, y = ly * H, ex = rx * W, ey = ry * H;
       g.fillStyle = "#5f8797"; g.beginPath(); g.ellipse(x, y, ex, ey, 0, 0, 7); g.fill();
       g.strokeStyle = "rgba(220,235,240,.35)"; g.lineWidth = 1; g.beginPath(); g.ellipse(x - ex * 0.15, y - ey * 0.2, ex * 0.6, ey * 0.45, 0, 3.6, 5.6); g.stroke();

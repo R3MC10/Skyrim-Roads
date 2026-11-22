@@ -16,7 +16,7 @@ const Store = (() => {
      so they spread too. Only players who are online right now show up and can be interacted with. */
   let world = {}, worldCode = null, net = null, peerUid = {}, online = new Set(), p2pStatus = "offline", saveWorldT = null;
   const wl = {};   // watchers per collection
-  const COLS = ["players", "bags", "attacks", "parties", "chests", "news", "raids", "trades", "ladder", "chat", "hall", "hallchest", "bounty", "homes", "gifts", "duels", "clans", "clanmem", "war", "stalls", "friends", "dms", "guards", "verses", "verselikes", "runs", "econ", "halls", "pshare"];
+  const COLS = ["players", "bags", "attacks", "parties", "chests", "news", "raids", "trades", "ladder", "chat", "hall", "hallchest", "bounty", "homes", "gifts", "duels", "clans", "clanmem", "war", "stalls", "friends", "dms", "guards", "verses", "verselikes", "runs", "econ", "halls", "pshare", "lvotes", "tbf"];
   const now = () => Date.now();
   let lastSaveJson = null, lastPubJson = null, saving = null, pendingSave = null;
   const listeners = { players: [], bags: [] };
@@ -85,7 +85,7 @@ const Store = (() => {
     const t = now(), sec = t / 1000;
     for (const col of COLS) for (const [id, d] of Object.entries(world[col] || {})) {
       const age = t - d._v;
-      if ((d._del && age > 2 * 864e5) || (col === "bags" && live(d) && d.expires < sec) || (col === "attacks" && age > 36e5) || (col === "raids" && age > 864e5) || (col === "trades" && age > 7 * 864e5) || (col === "players" && age > 30 * 864e5) || (col === "chat" && age > 864e5) || (["bounty", "war"].includes(col) && age > 15 * 864e5) || (col === "gifts" && age > 30 * 864e5) || (col === "duels" && age > 864e5) || (col === "dms" && age > 14 * 864e5) || (["verses", "verselikes"].includes(col) && age > 14 * 864e5) || (col === "guards" && age > 2 * 864e5) || (col === "econ" && age > 3 * 864e5) || (col === "pshare" && age > 864e5) || (col === "runs" && age > 6 * 36e5)
+      if ((d._del && age > 2 * 864e5) || (col === "bags" && live(d) && d.expires < sec) || (col === "attacks" && age > 36e5) || (col === "raids" && age > 864e5) || (col === "trades" && age > 7 * 864e5) || (col === "players" && age > 30 * 864e5) || (col === "chat" && age > 864e5) || (["bounty", "war"].includes(col) && age > 15 * 864e5) || (col === "gifts" && age > 30 * 864e5) || (col === "duels" && age > 864e5) || (col === "dms" && age > 14 * 864e5) || (["verses", "verselikes"].includes(col) && age > 14 * 864e5) || (col === "guards" && age > 2 * 864e5) || (col === "econ" && age > 3 * 864e5) || (col === "pshare" && age > 864e5) || (col === "lvotes" && age > 864e5) || (col === "tbf" && age > 36e5) || (col === "runs" && age > 6 * 36e5)
         || (["ladder", "homes"].includes(col) && age > 60 * 864e5) || (col === "clanmem" && age > 90 * 864e5))   // players gone for months
         delete world[col][id];
     }
@@ -146,6 +146,7 @@ const Store = (() => {
 
   /* Save whenever state changed. One write in flight at a time; bursts collapse into one write. */
   function save(state) {
+    if (typeof TB !== "undefined" && TB.safeSave) state = TB.safeSave(state);   // mid turn-by-turn fight: save the game as it was before it
     const json = JSON.stringify(state);
     if (json === lastSaveJson) return;
     if (mode === "local" || mode === "p2p") { ls.set("sk.save", state); lastSaveJson = json; return; }

@@ -25,7 +25,7 @@ const D2=mk("D",5); CARAVANS.signOn(D2,cv.id,t); ok(/won't be coming/.test(CARAV
 ok(/rolls out/.test(CARAVANS.tick(A,cv.depart+1)),"A departs"); CARAVANS.tick(B,cv.depart+1);
 ok(A.trip && A.trip.caravan===cv.id && A.trip.speed===CARAVANS.SPEED,"trip follows caravan");
 // late player misses it
-const E=mk("E",5); CARAVANS.signOn(E,cv.id,t); E.location="Riften"; ok(/without you/.test(CARAVANS.tick(E,cv.depart+5)),"missed");
+const E=mk("E",5); CARAVANS.signOn(E,cv.id,t); E.location=["Riften","Markarth","Solitude"].find(x=>x!==cv.from); ok(/without you/.test(CARAVANS.tick(E,cv.depart+5)),"missed");
 // advance A to arrival, resolving ambushes by fighting
 const plan=CARAVANS.plan(cv); let amb=0, guard=0;
 G.setAllyProvider(()=>[{name:"Caravan guard",dmg:10},{name:"Caravan guard",dmg:10}]);

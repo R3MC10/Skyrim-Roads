@@ -57,7 +57,7 @@ const ARENA = (() => {
     for (const k of SNAP_KEYS) if (s[k] !== undefined && s[k] !== null) o[k] = cp(s[k]);
     o.skills = Object.fromEntries(Object.entries(s.skills).map(([k, v]) => [k, { lvl: v.lvl, xp: 0 }]));
     o.inv = s.inv.filter((r) => worn.has(r.id) || D.ITEMS[r.item]?.slot === "ammo").map(cp);
-    o.loadouts = { Arena: { rules: cp(L.rules || []), equipment: { ...L.equipment }, mode: L.mode === "custom" ? "custom" : "smart" } }; o.loadout = "Arena";   // Smart AI or your own tactics
+    o.loadouts = { Arena: { rules: cp(L.rules || []), equipment: { ...L.equipment }, mode: ["custom", "hybrid"].includes(L.mode) ? L.mode : "smart", ...(L.ai ? { ai: cp(L.ai) } : {}) } }; o.loadout = "Arena";   // Smart AI or your own tactics
     return o;
   }
   function fighter(snap, t) {   // a throwaway save: nothing that happens in the bout touches the real one

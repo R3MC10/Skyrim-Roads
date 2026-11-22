@@ -3,13 +3,52 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b82", build: 82, date: "22 Nov 2026", title: "A living world: rumours, your good name and town hours", items: [
+    { id: "b86", build: 86, date: "22 Nov 2026", title: "A living world: rumours, your good name and town hours", items: [
       "Rumours that come true: ask the innkeeper \"What's the word?\" for the price of a drink, or chat with the locals in the Streets for free. You'll hear about bandits with a named leader, a lost shipment, strange lights over a barrow, someone gone missing or a big beast taking sheep. Each puts a glowing ? on your map for about a day and a half of game time. Go there and see: most are real (a named foe, extra loot, a rescue with a reward), some are just tavern talk, and street gossip is wrong more often. Up to 3 leads at once.",
       "Towns know what you did: guards and shopkeepers mention the dragons you killed, places you cleared, quest lines you finished, your guild rank, rumours you saw through and your crimes.",
       "Your name in the holds: each hold rates you from Trouble to Stranger, Familiar face, Friend of the hold and Hero. Friends get 3% off in that hold's shops, heroes 6%. A bounty drags your name down and ends the discount. See it in the Journal under Misc (Word around Skyrim), with your current leads.",
       "Day and night in towns: a line tells you what the town is up to, and the inn has a little crowd picture that fills up in the evening (quiet in the morning, packed at night with the bard playing).",
       "Shops still close at night, but you can knock anyway: they'll let you in and serve you until 08:00 for about 15% more (and 10% less for what you sell). Heroes of the hold pay half that.",
       "Three new perks: Good Ear (Speechcraft: rumours are wrong half as often and last longer), Local Hero (Etiquette: your name spreads faster and hero discounts are doubled) and Night Owl (Streetwise: no extra charge when you knock at night)."] },
+    { id: "b85", build: 85, date: "22 Nov 2026", title: "Build your own homestead", items: [
+      "Three plots of land to buy and build on: Pinewatch Hollow by the lake near Falkreath, Fenhollow Rise in the marsh near Morthal and Frostcairn Rest on the coast near Dawnstar. Buy the deed (5000 gold) under Your home in that town.",
+      "Build in stages: a small house first, then a main hall, then three wings of your choice: armory, library, greenhouse, kitchen, trophy room, enchanter's tower, alchemy tower or storage room. Building uses up the materials, and a wing can't be torn down.",
+      "Get materials at the plot: saw logs at the sawmill, dig stone (and sometimes quartz) at the quarry with a pickaxe, and dig clay. Each can be worked once per in-game hour. At the workbench, turn iron ingots into nails, hinges, locks and fittings, and firewood plus quartz into glass.",
+      "Wings make something every in-game day: steel arrows, a study session for one of your skills, ingredients, meals, gold from your trophies, soul gems or potions. The storage room is a 30-slot chest you never lose, and it lets goods pile up longer.",
+      "Sleep in your own bed for full health and Well Rested. Each plot has its own steward to hire (500 gold): they look after the place so goods pile up longer, deliver logs, stone, clay and quartz for gold, or come along and fight with you.",
+      "Every plot gets its own picture that changes as you build, in both art styles.",
+      "New perks: Carpenter (Smithing, building takes fewer materials), Woodsman (Athletics, more logs, stone and clay), Landed Thane (Etiquette, cheaper deeds and stewards) and Estate Income (Mercantile, gold from each wing every day)."] },
+    { id: "b84f", build: 84, date: "22 Nov 2026", title: "Small fixes", items: [
+      "Trying to buy a spell tome that's too advanced for you now tells you which skill level you need, even when no shop here has it this week."] },
+    { id: "b84", build: 83, date: "22 Nov 2026", title: "Turn-by-turn fights", items: [
+      "Fights are now played turn by turn. Everyone rolls for who goes first each round: Acrobatics and Sneak make you quicker, heavy armor slows you down.",
+      "On your turn you spend action points (the gold dots): a dagger swing costs less than a greatsword, power attacks and stronger spells cost more. Athletics and Stamina give you more points; Alteration and Magicka give extra points just for spells. Points you don't use keep your guard up.",
+      "Attack, power attack, guard, cast from your Magic list, drink potions, read scrolls, shout or try to run. Tap Auto to let your Smart AI (with your AI settings) play one turn, or Auto ⏩ for the rest of the fight.",
+      "Followers and summons take their own turns. In a party, each player picks their own move on their own phone (60 seconds, then Auto), and foes get tougher the more of you there are. Someone who misses two turns in a row is played by Auto.",
+      "Fights last longer and no single blow can take more than 40% of a strong foe's health (or yours). Small fry like skeevers can still go down in one hit.",
+      "New perks: Battle Rhythm (Athletics, more action points), Quick Start (Acrobatics) and First Move (Sneak) to act sooner, Quickened Casting (Alteration, a spell point) and Drilled in Steel (Heavy Armor, heavy armor slows you half as much).",
+      "Works for road encounters, dungeon rooms, quests and guild jobs, dragon raids, resisting arrest and attacking other players. The live fight scene plays each turn in both art styles.",
+      "The world waits while you fight. If you close the game mid-fight, you come back just before the fight started.",
+      "The Athletics and Acrobatics skill pages now show your action points and initiative.",
+      "Prefer the old way? Menu → Settings → Fights → Instant (auto). There's also a Fast setting (or the ⏩ button in a fight) that shows foe turns quicker."] },
+    { id: "b82", build: 82, date: "22 Nov 2026", title: "Your AI, your way (and fairer sneak attacks)", items: [
+      "Sneak attacks make sense now: heavy armor clanks, daylight gives you away, nights, fog and rain help, and the undead and dragons are hard to fool. The odds show on the encounter card. A sneak blow can't drop a strong foe in one hit any more (weak ones still go down). New Sneak perk: Ambusher.",
+      "Smart AI settings on the Tactics tab: pick a style (Careful, Balanced, Aggressive), lean on melee, bow or magic, switch off schools or single spells, choose when to drink potions, shout, sneak up and heal, and how much magicka to keep back.",
+      "Spread practice: switch it on and in easy fights the AI rotates your weapon, blocking and every school you know, so all your skills level up, not just your best one. Dangerous fights it still plays to win.",
+      "Better tactics: rules can join conditions with AND / OR and NOT, 13 new conditions (enemy weak to fire, burning, staggered, a caster, bad weather and more), a Run away move for road fights (you skip the loot but keep going), and drag a rule's number to reorder.",
+      "Hybrid mode: your rules go first, Smart AI fills the gaps. New presets built from your own spells and gear (Warrior, Archer, Battlemage, Healer, Necromancer, Mage, Thief, Skill trainer), share codes to swap tactics with friends, and Run 20 fights to see your win rate before you head out."] },
+    { id: "b81", build: 81, date: "22 Nov 2026", title: "Gear you can see", items: [
+      "Every armour set and weapon material now looks like itself: hide and fur with shaggy trim, studded leather with rivets, elven gold, see-through glass and stalhrim, chitin plates, dragonscale and bone, Forsworn feathers, guild hoods and more. It shows on your character, in fights and on the road while you travel.",
+      "Other players see your real gear too, on the map and when you fight side by side.",
+      "Gear preview: tap any armour or weapon and see yourself now next to yourself wearing it.",
+      "Characters breathe and shift when standing still and walk properly on the road."] },
+    { id: "b79", build: 80, date: "22 Nov 2026", title: "Party play, loot rolls and grown-up followers", items: [
+      "The map now follows the real game's layout much more closely: towns, roads and landmarks sit where you remember them.",
+      "Parties of up to 8: the leader picks where to go, everyone gets a Ready check first, then the party travels together. If the leader stops for something on the road, the others wait and fight beside them. Gold found on the road is split evenly.",
+      "Dungeons with your party: only the leader picks rooms and actions, the rest follow along. Everything found goes into one loot pile, and at the end everyone taps Want or Pass on each item. If more than one of you wants something, you all roll a d100 and the highest wins (ties roll again). Gold is split evenly. Dungeons get longer and busier with a bigger party.",
+      "New Lockpicking perk, Lucky Draw: +5/+10 on your loot rolls.",
+      "Followers grew up: they carry their own gear (which decides how hard they hit and how much they shrug off), level up from fights, and pick their own perks based on their style (Lydia sword and shield, Jenassa bow, Marcurio fire...). They still never die and never count as party members. New Speech perk: Leadership.",
+      "Bandits, mages and other people you fight now have perks of their own, shown on the encounter card and in the fight log."] },
     { id: "b78", build: 78, date: "22 Nov 2026", title: "The whole world, painted", items: [
       "All the new realistic artwork is in: every wilderness and dungeon background (Reach, Rift, marsh, hot springs, coast, ash wastes, caves, Nordic tombs, Dwemer ruins, Falmer caves and more), all 32 enemies in fights, and new textures for panels, parchment, the compass, the night sky and window frames."] },
     { id: "b76", build: 76, date: "22 Nov 2026", title: "Real paintings arrive", items: [

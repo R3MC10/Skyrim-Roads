@@ -145,7 +145,10 @@ const SPELLBOOK = (() => {
       const id = spellOfTome(item); if (!id || !s || !s.location || !D.SHOPS[s.location]) return null;
       if (inStockAnywhere(s, item, s.location)) return null;
       const why = (D.SHOPS[s.location] || []).map((shop) => (legacy(s.location, shop).includes(item) || rotation(s.location, shop).includes(item)) && gateWhy(s, item, s.location, shop)).find(Boolean);
-      return why || `No one in ${s.location} has that tome right now. Stock changes every two in-game days.`;
+      if (why) return why;
+      const sp = D.SPELLS[id], lv = sp.level || "Novice", need = GATE[lv], have = G.skill(s, sp.school);
+      if (lv !== "Master" && have < need) return `${lv} ${sp.school} tomes appear in shops once your ${sp.school} reaches ${need} (you have ${have}).`;
+      return `No one in ${s.location} has that tome right now. Stock changes every two in-game days.`;
     };
   }
 

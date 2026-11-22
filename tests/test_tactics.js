@@ -1,6 +1,6 @@
 const __GAME = process.env.W || require("path").join(__dirname, "../game/");
 const fs=require("fs"),vm=require("vm");
-const dir="/home/claude/web_tac";
+const dir=__GAME.replace(/[/]$/,"");
 const c={console,Math,Date,JSON,Float64Array,Float32Array,Uint8Array,Int32Array,Uint16Array,Int16Array,Object,Array,Set,Map,Proxy,Number,String};vm.createContext(c);
 for(const f of ["data.js","world.js","terrain.js","formulas.js","perks.js","powers.js","engine.js","events.js","dungeons.js","towns.js","wevents.js","enchanting.js","quests.js","horses.js","hall.js","bounty.js","visits.js","cooking.js","arena.js","curses.js","smithing.js","market.js","mp.js"]) if(fs.existsSync(dir+"/"+f)) vm.runInContext(fs.readFileSync(dir+"/"+f,"utf8").replace(/^const (\w+) =/m,"var $1 ="),c);
 vm.runInContext(`
