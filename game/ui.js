@@ -269,7 +269,7 @@
     const seg = (key, opts, cur) => `<div class="seg" role="group">${opts.map(([v, l]) => `<button data-act="pref" data-k="${key}" data-v="${v}" class="${String(cur) === String(v) ? "on" : ""}" aria-pressed="${String(cur) === String(v)}">${l}</button>`).join("")}</div>`;
     return `<h3>Sound</h3>${sl("snd_music", "Music", c.music)}${sl("snd_sfx", "Effects", c.sfx)}${sl("snd_amb", "Ambience", c.amb ?? 0.5)}
       <div class="setrow"><span>All sound</span>${seg("mute", [[false, "On"], [true, "Off"]], c.mute)}</div>
-      ${S ? `<h3>Your character</h3><div class="grid2"><button class="btn" data-act="bk" data-bk="openbackup">Back up</button><button class="btn" data-act="bk" data-bk="openrestore">Restore</button></div>` : `<h3>Your character</h3><button class="btn" data-act="bk" data-bk="openrestore" style="width:100%">Restore from a backup</button>`}
+      ${S ? `<h3>Your character</h3><div class="chatrow" style="margin-bottom:8px"><input id="myname" maxlength="24" autocomplete="off" value="${esc(S.name)}" aria-label="Your name"><button class="btn" data-act="rename">Change name</button></div><div class="grid2"><button class="btn" data-act="bk" data-bk="openbackup">Back up</button><button class="btn" data-act="bk" data-bk="openrestore">Restore</button></div>` : `<h3>Your character</h3><button class="btn" data-act="bk" data-bk="openrestore" style="width:100%">Restore from a backup</button>`}
       ${typeof I18N !== "undefined" ? `<h3>Language</h3>${I18N.settingRow(seg)}` : ""}
       <h3>Look</h3><div class="setrow"><span>Art style</span>${seg("artStyle", [["ink", "Hand-drawn"], ["pixel", "Pixel art"]], ART.style())}</div>
       ${typeof MOTION !== "undefined" ? `<div class="setrow"><span>Motion</span>${seg("motion", [["full", "Full"], ["lite", "Lite"], ["off", "Off"]], MOTION.pref())}</div>` : ""}
@@ -438,7 +438,7 @@
   }
 
   // ------------------------------------------------------------ main screen
-  window.__dbg = { save: () => S, view: () => view, openEvent: (n) => openEvent(n), openEncounter: (n) => openEncounter(n), tally: (k, n) => tally(k, n), message: (t, x, b) => showMessage(t, x, b), toast: (t) => toast(t), publish: () => publishCard(), others: () => others, party: () => party, pp: () => ppUI, coopRuns: () => coopUI?.runs || [] };   // for testing in the browser console
+  window.__dbg = { save: () => S, fightResult: (r) => showFightResult(r), view: () => view, openEvent: (n) => openEvent(n), openEncounter: (n) => openEncounter(n), tally: (k, n) => tally(k, n), message: (t, x, b) => showMessage(t, x, b), toast: (t) => toast(t), publish: () => publishCard(), others: () => others, party: () => party, pp: () => ppUI, coopRuns: () => coopUI?.runs || [] };   // for testing in the browser console
   /* phone back button: close what's on top, step back to the map, and only then leave the app */
   window.__ui = {
     back() {
@@ -1056,6 +1056,16 @@
   }
   /* turn-based fights (tbfight.js): an action that starts a fight pauses while you play it out */
   function tbCall(fn, done) { if (typeof TB === "undefined") return done(fn()); closeModal(); TB.call(S, fn, done); }
+  /* the loot from a fight, as a SkyUI-style list: icon, name, weight, value */
+  function lootList(r) {
+    const idOf = (n) => (typeof FASTQOL !== "undefined" && FASTQOL.itemsNamed ? FASTQOL.itemsNamed(n)[0] : null);
+    const rows = (r.loot || []).map((line) => {
+      const m = String(line).match(/^(.*?)(?: ×(\d+))?$/), id = idOf(m[1]), it = id && D.ITEMS[id], q = +(m[2] || 1);
+      return `<div class="loot-row">${it ? ICONART.item(id, 28) : '<span class="lr-i">•</span>'}<span class="nm">${esc(m[1])}${q > 1 ? ` <small>×${q}</small>` : ""}</span><span class="num">${it ? +(it.weight * q).toFixed(1) : ""}</span><span class="num gold">${it ? it.value * q : ""}</span></div>`;
+    });
+    if (r.gold) rows.unshift(`<div class="loot-row"><span class="lr-i">🪙</span><span class="nm">Gold</span><span></span><span class="num gold">${r.gold}</span></div>`);
+    return rows.length ? `<div class="lootbox" role="list" aria-label="Loot"><div class="loot-h"><span></span><span>Loot</span><span>Wt</span><span>Value</span></div>${rows.join("")}</div>` : "";
+  }
   function showFightResult(r) {
     shareSpoils(r);
     if (r.fight) { const inf = CURSE.maybeInfect(S, r.fight.e); if (inf) { persist(); setTimeout(() => toast(inf), 1800); } }
@@ -1069,7 +1079,7 @@
     if (!r.fight && S.trip?.status === "encounter") return openEncounter(r.text);
     const loot = r.fight ? [r.gold ? `${r.gold} gold` : "", ...(r.loot || [])].filter(Boolean) : [];
     openModal(`<h2>${r.fled ? "Got away" : r.fight ? "Victory" : "Away"}</h2><p>${esc(r.text)}</p>${r.fight ? fightLog(r.fight) : ""}
-      ${loot.length ? `<p>Loot: <b>${loot.map(esc).join(", ")}</b></p>` : ""}${typeof FASTQOL !== "undefined" ? FASTQOL.lootHTML(S, r) : ""}${skills}
+      ${loot.length ? lootList(r) : ""}${typeof FASTQOL !== "undefined" ? FASTQOL.lootHTML(S, r) : ""}${skills}
       <button class="btn pri" data-act="close" style="width:100%">Continue to ${esc(S.trip?.destName || "the road")}</button>`);
   }
 
@@ -1102,7 +1112,15 @@
   }
 
   // ---- the trade window: Buy and Sell side by side, like Skyrim's barter menu
-  let shopMode = "buy";
+  let shopMode = "buy", shopCat = "all", tradeCat = "all";
+  /* SkyUI-style category strip for the shop and trade windows: All plus the kinds of things on offer */
+  function catStrip(cur, act, ids) {
+    const have = new Set(ids.filter((i) => D.ITEMS[i]).map((i) => catOf(D.ITEMS[i])));
+    const cat = have.has(cur) ? cur : "all";
+    const cats = ITEM_CATS.filter(([k]) => k === "all" || have.has(k));
+    const bar = cats.length > 2 ? `<div class="sky-cats trade-cats">${cats.map(([k, l]) => `<button class="sky-cat ${k === cat ? "on" : ""}" data-act="${act}" data-id="${k}" aria-label="${l}">${svgI(k)}<span>${l}</span></button>`).join("")}</div>` : "";
+    return { bar, ok: (i) => cat === "all" || (D.ITEMS[i] && catOf(D.ITEMS[i]) === cat) };
+  }
   const econB = (item) => (typeof ECON !== "undefined" ? ECON.badge(S.location, item) : "");   // ▲/▼ price arrows (economy.js)
   const iqB = (item, r) => (typeof INVQOL !== "undefined" ? INVQOL.badge(S, item, r) : "");   // 🔒 kept, ▲/▼ better or worse than worn (invqol.js)
   function barterHTML(shop, open, wanted, shopRow) {
@@ -1110,13 +1128,17 @@
     const head = `<div class="barter-head"><span>💰 <b class="gold num">${S.gold}</b> gold</span>${Number.isFinite(wt) && cap ? `<span>⚖ ${wt}/${cap}</span>` : ""}</div>
       <div class="seg"><button class="${shopMode === "buy" ? "on" : ""}" data-act="smode" data-id="buy">Buy</button><button class="${shopMode === "sell" ? "on" : ""}" data-act="smode" data-id="sell">Sell</button></div>${typeof INVQOL !== "undefined" ? INVQOL.shopHTML(S, shop, open && !wanted) : ""}`;
     const mk = typeof ECON !== "undefined" ? ECON.report(S, S.location) : "";
-    if (shopMode === "buy") return head + mk + (typeof SPELLBOOK !== "undefined" ? SPELLBOOK.shopNote(S, S.location, shop) + (shop === "wizard" ? SPELLBOOK.ritualHTML(S) : "") : "") + (typeof TOMES !== "undefined" ? TOMES.stockAt(S.location, shop, S) : D.SHOP_STOCK[shop] || []).map((i) => shopRow(i)).join("");
+    if (shopMode === "buy") {
+      const stock = typeof TOMES !== "undefined" ? TOMES.stockAt(S.location, shop, S) : D.SHOP_STOCK[shop] || [], cs = catStrip(shopCat, "shopcat", stock);
+      return head + cs.bar + mk + (typeof SPELLBOOK !== "undefined" ? SPELLBOOK.shopNote(S, S.location, shop) + (shop === "wizard" ? SPELLBOOK.ritualHTML(S) : "") : "") + stock.filter(cs.ok).map((i) => shopRow(i)).join("");
+    }
     const eq = new Set(Object.values(G.loadout(S).equipment || {}));
     const fence = shop === "fence" || (typeof TOWNS !== "undefined" && TOWNS.canFence(S));
-    const rows = S.inv.filter((r) => !eq.has(r.id) && D.ITEMS[r.item] && !["golden_claw", "dragonstone"].includes(r.item) && (!r.stolen || fence))
+    const sellable = S.inv.filter((r) => !eq.has(r.id) && D.ITEMS[r.item] && !["golden_claw", "dragonstone"].includes(r.item) && (!r.stolen || fence)), cs = catStrip(shopCat, "shopcat", sellable.map((r) => r.item));
+    const rows = sellable.filter((r) => cs.ok(r.item))
       .map((r) => ({ r, p: G.sellPrice(S, r) })).sort((a, b) => b.p * b.r.qty - a.p * a.r.qty);
     const ok = open && !wanted;
-    return head + mk + (rows.length ? rows.map(({ r, p }) => `<div class="item">${ICONART.item(r.item, 34, r)}<div class="t">${esc((r.tq ? TOWNS.QUALITY[r.tq] + " " : "") + D.ITEMS[r.item].name)}${r.qty > 1 ? ` ×${r.qty}` : ""}${r.stolen ? ' <span class="danger-high">stolen</span>' : ""}${iqB(r.item, r)}<span>${esc(G.itemStats(r.item))} · ${D.ITEMS[r.item].weight} wt</span></div>${econB(r.item)}<span class="num gold">${p}</span><button class="btn sm pri" data-act="sell" data-id="${r.id}" ${ok ? "" : "disabled"}>Sell</button>${r.qty > 1 ? `<button class="btn sm" data-act="sellall" data-id="${r.id}" ${ok ? "" : "disabled"}>All ${G.lotPrice ? G.lotPrice(S, r.item, r.qty, "sell", r) : p * r.qty}</button>` : ""}</div>`).join("")
+    return head + cs.bar + mk + (rows.length ? rows.map(({ r, p }) => `<div class="item">${ICONART.item(r.item, 34, r)}<div class="t">${esc((r.tq ? TOWNS.QUALITY[r.tq] + " " : "") + D.ITEMS[r.item].name)}${r.qty > 1 ? ` ×${r.qty}` : ""}${r.stolen ? ' <span class="danger-high">stolen</span>' : ""}${iqB(r.item, r)}<span>${esc(G.itemStats(r.item))} · ${D.ITEMS[r.item].weight} wt</span></div>${econB(r.item)}<span class="num gold">${p}</span><button class="btn sm pri" data-act="sell" data-id="${r.id}" ${ok ? "" : "disabled"}>Sell</button>${r.qty > 1 ? `<button class="btn sm" data-act="sellall" data-id="${r.id}" ${ok ? "" : "disabled"}>All ${G.lotPrice ? G.lotPrice(S, r.item, r.qty, "sell", r) : p * r.qty}</button>` : ""}</div>`).join("")
       : `<p class="sub">Nothing to sell${eq.size ? " (worn gear stays on you)" : ""}.</p>`) + (S.inv.some((r) => r.stolen) && !fence ? `<p class="sub">Stolen things only sell to a fence.</p>` : "");
   }
   // ------------------------------------------------------------ the bard's corner: verses, likes, the Song of the North
@@ -2189,11 +2211,12 @@
   }
   function openTrade(card, note) {
     const eq = new Set(Object.values(G.loadout(S).equipment));
-    const rows = S.inv.filter((r) => !eq.has(r.id) && D.ITEMS[r.item]);
+    const loose = S.inv.filter((r) => !eq.has(r.id) && D.ITEMS[r.item]), cs = catStrip(tradeCat, "tradecat", loose.map((r) => r.item));
+    const rows = loose.filter((r) => cs.ok(r.item) || tradeSel.includes(r.id));
     const gv = $("#tgive")?.value || "", av = $("#task")?.value || "";
     tradeTo = card.id;
     const far = card.x == null || !!MP.canTarget(S, card, livePos(), otherPos(card));
-    openModal(`<h2>Trade with ${esc(card.name)}</h2><p class="sub">${far && SOCIAL.isFriend(S, card.id) ? "📦 They're not here, so a courier will carry your offer (about an hour of game time). " : ""}What you offer leaves your pack now and comes back if they say no.</p>${note ? `<p class="sub">${esc(note)}</p>` : ""}
+    openModal(`<h2>Trade with ${esc(card.name)}</h2><p class="sub">${far && SOCIAL.isFriend(S, card.id) ? "📦 They're not here, so a courier will carry your offer (about an hour of game time). " : ""}What you offer leaves your pack now and comes back if they say no.</p>${note ? `<p class="sub">${esc(note)}</p>` : ""}${cs.bar}
       <div class="list" style="max-height:38vh;overflow:auto">${rows.map((r) => `<div class="item ${tradeSel.includes(r.id) ? "on" : ""}" data-act="tradepick" data-id="${r.id}" role="button" tabindex="0">${ICONART.item(r.item, 30, r)}<div class="t">${tradeSel.includes(r.id) ? "☑" : "☐"} ${esc((r.tq ? TOWNS.QUALITY[r.tq] + " " : "") + D.ITEMS[r.item].name)}${r.qty > 1 ? ` ×${r.qty}` : ""}<span>worth ${D.ITEMS[r.item].value}</span></div></div>`).join("") || '<p class="sub">Nothing loose in your pack.</p>'}</div>
       <div class="grid2" style="margin-top:10px"><label class="sub">Gold you give<input id="tgive" inputmode="numeric" value="${esc(gv)}" placeholder="0"></label><label class="sub">Gold you ask<input id="task" inputmode="numeric" value="${esc(av)}" placeholder="0 = gift"></label></div>
       <div class="evc"><button class="btn pri" data-act="tradesend">Send offer</button><button class="btn" data-act="close">Cancel</button></div>`);
@@ -3061,7 +3084,7 @@
           return `<div class="item" style="flex-wrap:wrap">${HEROART.portrait(o, 38)}${o.look ? `<span class="pgear" title="What ${esc(o.name)} is wearing">${HEROART.figure({ look: o.look }, 30, 42, { bare: true })}</span>` : ""}<div class="t">${esc(o.name)}${inParty(o.id) ? " ⚑" : ""}<span>Level ${o.level} ${esc(D.RACES[o.race]?.name || "")} · ${esc(o.loc || G.holdAt(o.pos))}${o.moving ? " · travelling" : ""}${o.dungeon ? " · in a dungeon" : ""}${o.bounty ? ` · wanted (${o.bounty})` : ""}</span></div>
           <span class="num sub">${near ? "here" : o.d < 60 ? "nearby" : "~" + fmtMin(o.d * 1.1 / G.speed(S)) + " away"}</span>
           <div style="display:flex;gap:6px;width:100%;flex-wrap:wrap">${SOCIAL.isFriend(S, o.id) ? "" : `<button class="btn sm" data-act="fadd" data-id="${esc(o.id)}">＋ Friend</button>`}${inParty(o.id) ? "" : `<button class="btn sm" data-act="invite" data-id="${esc(o.id)}">Invite</button>`}
-          ${near ? `<button class="btn sm" data-act="trade" data-id="${esc(o.id)}">Trade</button>` : ""}${near && !inParty(o.id) ? `<button class="btn sm" data-act="pick" data-id="${esc(o.id)}">Pickpocket</button><button class="btn sm danger" data-act="attack" data-id="${esc(o.id)}">Attack</button>` : ""}</div></div>`; }).join("")}</div>
+          ${near ? `<button class="btn sm" data-act="trade" data-id="${esc(o.id)}">Trade</button>` : ""}${near && !inParty(o.id) ? `<button class="btn sm" data-act="pick" data-id="${esc(o.id)}" ${MP.pickWait?.(S, o.id) ? `disabled title="Try again in ${Math.ceil(MP.pickWait(S, o.id) / 60)} min"` : ""}>Pickpocket</button><button class="btn sm danger" data-act="attack" data-id="${esc(o.id)}">Attack</button>` : ""}</div></div>`; }).join("")}</div>
           <p class="sub" style="margin-top:8px">To rob or attack someone you must be in the same place. Fights use their gear and stats. Killing someone in a town is always seen; out in the wilds, sometimes.</p>`
         : `<p class="sub">No one else ${Store.mode === "p2p" ? "online right now. Send friends the app and they" : "yet. Share this page and friends"} appear here and on the map.</p>`)
       : APP ? `<p class="sub">This is the offline game: just you. Other players live in the online world.</p>${onlineBtn()}` : '<p class="sub">Shared saving isn\'t available in this view, so you\'re playing alone in this browser.</p>'}
@@ -3303,7 +3326,7 @@
       case "gdo": guildWork(b.dataset.id); break;
       case "qjoin": { const m = QUESTS.join(S, b.dataset.id); persist(true); renderPanel(true); showMessage("A new path", m); break; }
       case "trade": { const c = cardOf(b.dataset.id); if (c) { tradeSel = []; openTrade(c); } break; }
-      case "tradepick": { const id = +b.dataset.id; tradeSel = tradeSel.includes(id) ? tradeSel.filter((x) => x !== id) : [...tradeSel, id]; const c = cardOf(tradeTo); if (c) openTrade(c); break; }
+      case "tradepick": { const id = +b.dataset.id; tradeSel = tradeSel.includes(id) ? tradeSel.filter((x) => x !== id) : [...tradeSel, id]; const c = cardOf(tradeTo) || (SOCIAL.isFriend(S, tradeTo) ? { id: tradeTo, name: SOCIAL.friends(S)[tradeTo].name } : null); if (c) openTrade(c); break; }
       case "tradesend": {
         const c = cardOf(tradeTo) || (SOCIAL.isFriend(S, tradeTo) ? { id: tradeTo, name: SOCIAL.friends(S)[tradeTo].name } : null); if (!c) { closeModal(); return toast("They're gone."); }
         const err = c.x == null ? "far away" : MP.canTarget(S, c, livePos(), otherPos(c));
@@ -3375,6 +3398,12 @@
       case "chatunmute": setPref("muted", []); toast("Everyone is unmuted."); onChat(chatRaw); renderPanel(true); break;
       case "pref": settingsAction("pref", b); if (b.closest("#side")) renderPanel(true); else openSound(); break;
       case "bk": bkClick(b); break;
+      case "rename": {
+        const n = ($("#myname")?.value || "").trim().slice(0, 24), bad = typeof NICK !== "undefined" ? NICK.problem(n) : n.length > 1 ? "" : "Pick a name.";
+        if (bad) { toast(bad); break; }
+        if (n !== S.name) { S.name = n; persist(true); renderTop(); toast(`You're now known as ${n}.`); }
+        break;
+      }
       case "totitle": Store.save(S); try { sessionStorage.setItem("rotn_open", "menu"); } catch { /* ignore */ } location.reload(); break;
       case "toupdate": Store.save(S); try { sessionStorage.setItem("rotn_open", "update"); } catch { /* ignore */ } location.reload(); break;
       case "lvl": say(G.levelUp(S, b.dataset.a)); publishCard(); break;
@@ -3393,6 +3422,8 @@
       case "sell": { packOpen = null; const m = G.sell(S, +b.dataset.id, 1); if (/^Sold/.test(m)) GUIDE.mark(S, "trade"); say(m); break; }
       case "sellall": { const r = G.invRow(S, +b.dataset.id); if (r) { const m = G.sell(S, r.id, r.qty); if (/^Sold/.test(m)) GUIDE.mark(S, "trade"); say(m); } break; }
       case "smode": shopMode = b.dataset.id; renderPanel(true); break;
+      case "shopcat": shopCat = b.dataset.id; SOUND.fx("click"); renderPanel(true); break;
+      case "tradecat": { tradeCat = b.dataset.id; SOUND.fx("click"); const c = cardOf(tradeTo) || (SOCIAL.isFriend(S, tradeTo) ? { id: tradeTo, name: SOCIAL.friends(S)[tradeTo].name } : null); if (c) openTrade(c); break; }
       case "sbritual": say(SPELLBOOK.startRitual(S, b.dataset.id)); renderPanel(true); break;
       case "skytier": sky.tier = b.dataset.id; sky.sel = null; renderMenu(); break;
       case "skymsort": sky.msort = b.dataset.id; renderMenu(); break;

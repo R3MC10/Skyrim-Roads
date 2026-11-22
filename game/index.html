@@ -1537,6 +1537,13 @@ body:has(#favBtn) .app,body:has(#twBtn) .app{padding-bottom:calc(190px + env(saf
 .tbw-wait{color:#8c877a;margin:8px 0 0}.tbw-end{display:flex;justify-content:space-between;align-items:center;margin-top:8px}.tbw-end.won b{color:#f3d98b}.tbw-end.lost b{color:#c96a5f}
 .tab .hk{display:none}
 @media (hover:hover) and (pointer:fine){.tab .hk{display:block;position:absolute;top:3px;right:calc(50% - 22px);min-width:14px;padding:0 3px;border:1px solid rgba(214,207,190,.35);border-bottom-width:2px;border-radius:3px;background:rgba(0,0,0,.45);color:rgba(236,226,200,.8);font:600 9px/12px system-ui,sans-serif;letter-spacing:0;text-transform:none;text-align:center}.tab.on .hk{color:#fff3cf;border-color:rgba(243,217,139,.6)}}
+.lootbox{margin:10px 0;border-top:1px solid rgba(228,220,200,.18);border-bottom:1px solid rgba(228,220,200,.18);background:rgba(0,0,0,.18)}
+.loot-h,.loot-row{display:grid;grid-template-columns:32px 1fr 44px 52px;gap:8px;align-items:center;padding:4px 8px}
+.loot-h{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#8c877a;border-bottom:1px solid rgba(228,220,200,.12)}.loot-h span:nth-child(n+3),.loot-row .num{text-align:right}
+.loot-row{min-height:36px;animation:lootIn .35s ease both}.loot-row+.loot-row{border-top:1px solid rgba(228,220,200,.06)}.loot-row .nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.loot-row .nm small{color:#8c877a}
+.loot-row .lr-i{display:grid;place-items:center;width:28px;font-size:18px}.loot-row:nth-child(3){animation-delay:.06s}.loot-row:nth-child(4){animation-delay:.12s}.loot-row:nth-child(n+5){animation-delay:.18s}
+@keyframes lootIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+.trade-cats{margin:6px 0 8px}
 </style>
 <script src="access.js"></script>
 </head>

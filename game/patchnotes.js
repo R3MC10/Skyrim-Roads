@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b105", build: 105, date: "22 Nov 2026", title: "Shop tabs, loot list, new names", items: [
+      "Shops and player trades have SkyUI-style tabs (Weapons, Apparel, Potions and so on) for both buying and selling.",
+      "Loot after a fight shows as a list with item pictures, weight and value.",
+      "Change your name any time in Settings → Your character.",
+      "You can only pickpocket the same player once every 10 minutes.",
+    ] },
     { id: "b104", build: 104, date: "22 Nov 2026", title: "Party fights together, no free healing, hotkeys", items: [
       "The Town tab is now called Area (shortcut A on a PC).",
       "Party fights: everyone in the fight now sees it live on their own screen (the foe's health, the team, what's happening) and picks their move there when their turn comes.",

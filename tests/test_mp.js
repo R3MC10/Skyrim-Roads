@@ -11,6 +11,7 @@ console.log(MP.canTarget(A,card(B),[A.x,A.y],[B.x,B.y]));
 let wins=0; for(let i=0;i<200;i++){ const a=G.clone(A); const r=MP.attack(a,card(B)); if(r.won) wins++; } console.log("A beats B", wins, "/200");
 const r=MP.attack(A,card(B)); console.log(r.text, JSON.stringify(r.doc), JSON.stringify(A.bounty));
 const got=MP.receive(B,{...r.doc}); console.log(got.text, got.bag && got.bag.killerId);
+{ const X=G.newSave("X","Xen","nord"), T={...card(B),gold:300}; const n0=1e12; const p1=MP.pickpocket(X,T,0,n0), p2=MP.pickpocket(X,T,0,n0+60000), p3=MP.pickpocket(X,{...T,id:"Z"},0,n0+60000), p4=MP.pickpocket(X,T,0,n0+601000); if(p1.wait||!p2.wait||p3.wait||p4.wait) throw new Error("pickpocket cooldown"); console.log("pickpocket cooldown ok", p2.text); }
 const p=MP.pickpocket(A,{...card(B),gold:300}); console.log(p.text, JSON.stringify(p.doc)); if(p.doc){ const g=MP.receive(B,p.doc); console.log(g&&g.text, B.gold); }
 // party speed and chest shares
 const pt={members:[{id:"A"},{id:"B"}]}; console.log(MP.partySpeed(A,pt,[{id:"B",speed:5}]));
