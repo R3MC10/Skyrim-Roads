@@ -215,6 +215,8 @@ const SPELLBOOK = (() => {
   const ratio = (al) => al.hp == null ? 1 : al.hp / maxOf(al);
   /* the best teammate for this kind of spell (null if no one fits) */
   function pickAlly(f, kind) {
+    const t = f.tbTarget;   // [OURS] the fight screen: you dragged the spell onto this teammate (tbfight.js)
+    if (t && (kind === "allyrescue" ? (f._downed || []).includes(t) : (f.allies || []).includes(t) && !t.down)) return t;
     if (kind === "allyrescue") return (f._downed || [])[0] || null;
     const live = (f.allies || []).filter((a) => !a.down);
     const hurt = (list) => list.filter((a) => a.hp != null).sort((a, b) => ratio(a) - ratio(b))[0] || null;

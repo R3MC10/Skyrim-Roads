@@ -7,7 +7,7 @@ const RUNS = +(process.env.RUNS || process.argv[2] || 40);
 const TUNE = process.env.TUNE ? JSON.parse(process.env.TUNE) : null;
 const c = { process: { env: process.env }, console, Math, Date, JSON, Float64Array, Float32Array, Uint8Array, Int32Array, Uint16Array, Int16Array, Object, Array, Set, Map, Proxy, Number, String, RUNS, structuredClone };
 vm.createContext(c);
-for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "legendary.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "weatherfx.js", "enchanting.js", "quests.js", "horses.js", "hall.js", "bounty.js", "visits.js", "cooking.js", "arena.js", "achievements.js", "clans.js", "festivals.js", "wars.js", "curses.js", "smithing.js", "social.js", "roam.js", "ammo.js", "tomes.js", "magic.js", "spellbook.js", "mp.js", "spellcraft.js", "shouts2.js", "coop.js", "party.js", "combatai.js", "tbfight.js"])
+for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "shieldfx.js", "legendary.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "weatherfx.js", "enchanting.js", "quests.js", "horses.js", "hall.js", "bounty.js", "visits.js", "cooking.js", "arena.js", "achievements.js", "clans.js", "festivals.js", "wars.js", "curses.js", "smithing.js", "social.js", "roam.js", "ammo.js", "tomes.js", "magic.js", "spellbook.js", "mp.js", "spellcraft.js", "shouts2.js", "coop.js", "party.js", "combatai.js", "tbfight.js"])
   if (fs.existsSync(W + f)) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
 vm.runInContext(`
 const LEVELS = [5, 10, 20, 30, 40];
@@ -116,6 +116,35 @@ if (!process.env.SIMONLY) {
 { const s = fresh("mage", 30); G.give(s, "potion_health", 2); const f = new G.Fight(s, enc("Frost troll", 30)), ss = new TB.Session(f, { trySneak: false }); ss.begin(); ss.ap = 99; ss.cur = { id: "me" };
   for (const a of ["attack", "power_attack", "block", "potion:health", ...s.spells.slice(0, 30).map((id) => "spell:" + id), ...s.spells.slice(0, 8).map((id) => "dual:" + id)]) { f.ehp = 9999; f.hp = G.maxHealth(s); f.mp = 9999; f.sp = 9999; ss.ap = 99; ss.cur = { id: "me" }; ss.idx = ss.order.findIndex((o) => o.id === "me");
     try { const r = ss.act(a); ok(r && !Number.isNaN(f.ehp) && !Number.isNaN(f.hp), a + " resolves"); } catch (e) { ok(false, a + " threw " + e.message); } } }
+// 4b. shields: a passive block chance, Shield bash stuns (the foe loses its turn), no stun-locking, stamina cost
+{ const s = fresh("warrior", 20), f = new G.Fight(s, enc("Bandit outlaw", 20)), ss = new TB.Session(f, { trySneak: false });
+  ok(!!f.shield, "the warrior carries a shield");
+  const pc = SHIELDFX.passive(f); ok(pc >= 0.12 && pc <= 0.45, "passive block chance in range: " + Math.round(pc * 100) + "%");
+  const s2 = fresh("twohand", 20), f2 = new G.Fight(s2, enc("Bandit outlaw", 20)); ok(SHIELDFX.passive(f2) === 0, "no shield, no passive block");
+  let caught = 0; for (let i = 0; i < 400; i++) { f.hp = 9999; f.blocking = false; f.allies = []; const t = f.enemyTurnInner(); if (/caught on your shield/.test(t)) caught++; }
+  ok(caught > 10 && caught < 400 * 0.5, "blows get caught on the shield sometimes: " + caught + "/400");
+  ss.begin(); let g = 0; while (ss.cur?.id !== "me" && !ss.done && g++ < 20) ss.advance();
+  f.sp = G.maxStamina(s); f.ehp = 9999; ss.ap = 99;
+  const sp0 = f.sp; ok(ss.canAfford("bash"), "can afford a bash with full stamina");
+  ss.act("bash"); ok(f.sp <= sp0 - 35, "a bash costs a lot of stamina: " + Math.round(sp0 - f.sp));
+  ok(f.tbStunLeft > 0, "the bash stuns a normal foe");
+  f.sp = 9999; ss.act("bash"); ok(ss.ev[ss.ev.length - 1].text.includes("no stun"), "no stun-locking right after a stun");
+  f.sp = 0; ok(!ss.canAfford("bash"), "no stamina, no bash");
+  const hp0 = f.hp; ss.act("end"); let foeLines = []; g = 0; while (!ss.done && g++ < 30) { const n = ss.ev.length; ss.advance(); foeLines.push(...ss.ev.slice(n).filter((e) => e.kind === "foe").map((e) => e.text)); if (ss.cur?.id === "me") break; }
+  ok(/stunned/.test(foeLines[0] || ""), "the stunned foe loses its turn: " + foeLines.join(" | "));
+}
+// 4c. party frames: healing spells, potions and support spells dragged onto a teammate go to that teammate
+{ const s = fresh("mage", 30); G.give(s, "potion_health", 2);
+  for (const id of ["healing", "healing_hands", "stoneskin_touch"]) if (D.SPELLS[id] && !s.spells.includes(id)) s.spells.push(id);
+  const f = new G.Fight(s, enc("Frost troll", 30)), ss = new TB.Session(f, { trySneak: false });
+  const A = COOP.allyFromCard({ id: "p2", name: "Alpha", coop: { prof: { dmg: 20, hp: 300, red: 0.2, role: "fighter" } } }); f.allies.push(A);
+  const B = COOP.allyFromCard({ id: "p3", name: "Bravo", coop: { prof: { dmg: 20, hp: 300, red: 0.2, role: "fighter" } } }); f.allies.push(B);
+  ss.begin(); const prep = () => { f.mp = 9999; f.sp = 9999; ss.ap = 99; ss.spAp = 9; ss.cur = { id: "me" }; ss.idx = ss.order.findIndex((o) => o.id === "me"); f.ehp = 9999; };
+  A.hp = 50; B.hp = 280; prep(); const me0 = f.hp = G.maxHealth(s) - 40;
+  ss.act("potion:health", "0"); ok(A.hp > 50 && Math.round(f.hp) === me0, "a health potion dragged onto Alpha heals Alpha, not you: " + Math.round(A.hp));
+  if (s.spells.includes("healing")) { const a0 = A.hp; prep(); ss.act("spell:healing", "0"); ok(A.hp > a0 && Math.round(f.hp) === me0, "Healing dragged onto Alpha heals Alpha"); }
+  if (s.spells.includes("stoneskin_touch")) { prep(); A.hp = 290; B.hp = 100; ss.act("spell:stoneskin_touch", "0"); ok(A.armorT > 0 && !(B.armorT > 0), "a support spell goes to the teammate you picked, not the most hurt one"); }
+  ok(TB.zoneOf("spell:healing_hands") === "ally" && TB.zoneOf("spell:healing") === "self" && TB.zoneOf("bash") === "foe", "drop zones: support spells on a teammate, heals on you or a teammate, bash on the foe"); }
 // 5. no one-shots on strong foes; sneak still matters on trash
 { let max = 0; for (let i = 0; i < 60; i++) { const s = fresh("sneakarcher", 30), f = new G.Fight(s, boss("deathlord", 30)), ss = new TB.Session(f, { hidden: true }); ss.begin(); if (ss.cur?.id !== "me") ss.advance(); if (ss.cur?.id === "me") { const b = f.ehp; ss.act("attack"); max = Math.max(max, (b - f.ehp) / ss.ehpMax); } }
   ok(max <= TB.HIT_CAP + 0.11, "a sneak shot takes at most ~40% (+flank) of a boss: " + Math.round(max * 100) + "%"); }

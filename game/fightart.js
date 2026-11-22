@@ -628,7 +628,7 @@ const FIGHTART = (() => {
 
   function mount(el) {
     const rec = REG.get(+el.dataset.fs); if (!rec || el.firstChild) return;
-    const W = Math.max(300, Math.min(520, Math.round(el.clientWidth || 330))), Hh = Math.round(W * 0.46);
+    const W = Math.max(300, Math.min(520, Math.round(el.clientWidth || 330))), Hh = Math.round(W * (rec.f.tbTall ? 0.66 : 0.46));   // the turn-by-turn screen gets a taller stage
     const style = ART.style(), pixel = style === "pixel", dpr = Math.min(2, devicePixelRatio || 1), rm = reduce();
     const cv = document.createElement("canvas"); cv.width = Math.round(W * dpr); cv.height = Math.round(Hh * dpr);   // CSS scales it to the box (width:100%)
     if (pixel) cv.style.imageRendering = "pixelated";

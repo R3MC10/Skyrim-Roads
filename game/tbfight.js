@@ -54,6 +54,7 @@ const TB = (() => {
     if (a === "attack") return WCOST[f.wt] || 3;
     if (a === "power_attack") return (WCOST[f.wt] || 3) + 2;
     if (a === "block") return 2;
+    if (a === "bash") return 3;
     if (a === "flee") return 99;
     const [k, arg] = a.split(":");
     if (k === "spell" || k === "dual") { const c = TIERC[tierOf(arg, D.SPELLS[arg])] || 3; return k === "dual" ? c + 2 : c; }
@@ -177,6 +178,7 @@ const TB = (() => {
     /* ---- your actions */
     canAfford(a) {
       const c = cost(this.f, a), pool = this.ap + (isSpell(a) ? this.spAp : 0);
+      if (a === "bash") return c <= pool && typeof SHIELDFX !== "undefined" && SHIELDFX.can(this.f);
       return c <= pool && (a === "flee" || this.f.affordable(a) || a === "attack");
     }
     pay(a) {
@@ -184,15 +186,18 @@ const TB = (() => {
       if (isSpell(a)) { const u = Math.min(this.spAp, c); this.spAp -= u; c -= u; }
       this.ap -= c;
     }
-    act(a) {
+    act(a, tgt) {
       if (this.cur?.id !== "me" || this.over) return null;
       const f = this.f;
+      const al = tgt != null && tgt !== "" ? (+tgt >= 1000 ? (f._downed || [])[+tgt - 1000] : f.allies[+tgt]) : null;
       if (a === "end") return this.endTurn();
       if (a === "flee") return this.flee();
       if (!this.canAfford(a)) return { err: "Not enough action points" };
       this.pay(a);
       const before = f.ehp, myBefore = f.hp;
-      let text = f.act(a);
+      let text = null;
+      if (al && zoneOf(a) === "self") text = onAlly(f, a, al);
+      if (text == null) { f.tbTarget = al || null; try { text = a === "bash" ? SHIELDFX.bash(f) : f.act(a); } finally { f.tbTarget = null; } }
       if (f.hidden) f.hidden = false;   // only your first strike can be a sneak attack
       text += this.capFoe(before);
       if (f.ehp < before) { text += this.flank(before); this.hitters++; }
@@ -274,6 +279,10 @@ const TB = (() => {
     foeAct(prefix) {
       const f = this.f;
       if (f.ehp <= 0 || f.endWon) return;
+      if (typeof SHIELDFX !== "undefined" && SHIELDFX.stunned(f, this.round)) {   // shield bash: the foe loses its whole turn
+        if (this.stunSaid !== this.round) { this.stunSaid = this.round; const t = `${prefix}${f.e.name} is stunned and can't act`; this.lines.them.push(t); this.emit("foe", t, "foe", { dmg: 0 }); }
+        return;
+      }
       const hpB = f.hp;
       // foes go after your healers and casters when they can (party fights)
       if (f.allies.length && !f.coverAl) { const h = f.allies.find((a) => !a.down && a.player && (a.role === "healer" || a.heals > 0)); if (h && Math.random() < 0.5) f.coverAl = h; }
@@ -303,6 +312,7 @@ const TB = (() => {
       return " +flank";
     }
     endRound() {
+      if (typeof SHIELDFX !== "undefined") SHIELDFX.endRound(this.f, this.round);
       const f = this.f, line = { turn: this.round, rule: null, me: this.lines.me.join(" · "), them: this.lines.them.join(" · "), a: this.lines.a || "attack", wt: f.wt, tb: true };
       if (f.ai) line.ai = true;
       if (f.bleed.length && f.ehp > 0) { const b = f.bleed.reduce((x, y) => x + y.dmg, 0); f.ehp -= b; f.bleed = f.bleed.map((y) => ({ ...y, turns: y.turns - 1 })).filter((y) => y.turns > 0); line.me += ` · bleeds ${Math.round(b)}`; }
@@ -436,28 +446,65 @@ const TB = (() => {
   }
   function pctBar(v, m, cls) { return `<div class="tbbar ${cls}"><i style="width:${Math.max(0, Math.min(100, 100 * v / Math.max(1, m))).toFixed(1)}%"></i></div>`; }
   function icon(o) { return o.id === "me" ? "🛡" : o.id.startsWith("foe") ? "☠" : o.id === "sum" ? "✦" : "⚑"; }
+  /* where an action is dragged: onto the foe, or onto yourself (tbui.js does the dragging; a tap still works) */
+  const SELF_KINDS = new Set(["heal", "armor", "ward", "summon", "cloak", "support", "invis", "bound", "light", "circle", "rune", "utility"]);
+  function zoneOf(a) {
+    if (a === "attack" || a === "power_attack" || a === "bash" || /^(shout|power):/.test(a)) return "foe";
+    if (a === "block" || /^potion:/.test(a)) return "self";
+    const sp = spellOf(a);
+    if (sp) return typeof SPELLBOOK !== "undefined" && SPELLBOOK.SUPPORT.has(sp.kind) ? "ally" : SELF_KINDS.has(sp.kind) ? "self" : "foe";
+    return "";
+  }
+  /* a healing spell, potion or scroll you dragged onto a teammate instead of yourself */
+  function onAlly(f, a, al) {
+    const [k, arg] = a.split(":");
+    const mx = al.maxHp || al.hpMax || al._max || Math.max(al.hp, 60), b = al.hp;
+    if (k === "potion") {
+      const r = f.findPotion(arg); if (!r) return null;
+      const it = D.ITEMS[r.item]; f.used[r.id] = (f.used[r.id] || 0) + 1;
+      if (arg !== "health") { f.used[r.id]--; return null; }   // only health potions can be given
+      al.hp = Math.min(mx, al.hp + it.restore[1]); return `You give ${al.name} a ${it.name}: +${Math.round(al.hp - b)}`;
+    }
+    const sp = spellOf(a); if (!sp || sp.kind !== "heal") return null;
+    const dual = k === "dual", free = k === "scroll";
+    if (free) { const r = f.findItem(arg); if (!r) return null; f.used[r.id] = (f.used[r.id] || 0) + 1; }
+    else f.mp -= (typeof G.spellCost === "function" ? G.spellCost(f.s, sp) : sp.cost) * (dual ? 2.2 : 1);
+    const amt = sp.amount * (1 + (G.fxSum ? G.fxSum(f.s, "spell:Restoration") : 0) / 100) * (dual ? 2.2 : 1) * (1 + (typeof PFX !== "undefined" ? PFX.sum(f.s, "healally", f, {}) : 0));
+    if (typeof f.addXp === "function") f.addXp("Restoration", sp.xp || 10);
+    al.hp = Math.min(mx, al.hp + amt); return `${sp.name} on ${al.name}: +${Math.round(al.hp - b)}`;
+  }
+  const ICON = { bash: "🛡", attack: "⚔", bow: "🏹", power_attack: "💥", block: "🛡", magic: "✦", items: "⚗", flee: "🏃", end: "⏭", shout: "🗣", power: "✴", potion: "🧪", scroll: "📜", heal: "✚" };
+  function iconOf(f, a) {
+    if (a === "attack") return f.wt === "bow" || f.wt === "crossbow" ? ICON.bow : ICON.attack;
+    const k = a.split(":")[0];
+    if (k === "spell" || k === "dual") { const sp = spellOf(a); return sp?.kind === "heal" ? ICON.heal : sp?.element === "fire" ? "🔥" : sp?.element === "frost" ? "❄" : sp?.element === "shock" ? "⚡" : ICON.magic; }
+    return ICON[a] || ICON[k] || "•";
+  }
+  const apPips = (c) => (c >= 99 ? "" : Array.from({ length: Math.min(c, 6) }, () => "<i></i>").join(""));
   function actionsHTML(sess) {
-    const f = sess.f, s = f.s, B = (a, label, extra = "") => { const c = cost(f, a), ok = sess.canAfford(a); return `<button class="tbact ${extra}" data-tba="${esc(a)}" ${ok ? "" : "disabled"}><b>${esc(label)}</b><small>${c >= 99 ? "all AP" : c + " AP"}</small></button>`; };
+    const f = sess.f, s = f.s, B = (a, label, extra = "") => { const c = cost(f, a), ok = sess.canAfford(a), z = zoneOf(a);
+      const tip = typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.action(f, a, c))}"` : "";
+      return `<button class="tbact ${extra}" data-tba="${esc(a)}"${z ? ` data-tz="${z}"` : ""}${tip} ${ok ? "" : "disabled"}><span class="ic" aria-hidden="true">${iconOf(f, a)}</span><b>${esc(label)}</b><small>${c >= 99 ? "all AP" : c + " AP"}</small><span class="cp" aria-hidden="true">${apPips(c)}</span></button>`; };
     if (ui.menu === "magic") {
       const rows = (s.spells || []).filter((id) => D.SPELLS[id] && D.SPELLS[id].kind !== "utility").map((id) => {
         const sp = D.SPELLS[id], mc = typeof G.spellCost === "function" ? Math.round(G.spellCost(s, sp)) : sp.cost;
         const dual = typeof MAGIC !== "undefined" && MAGIC.dualable && MAGIC.dualable(sp);
         return `<div class="tbsp"><span class="nm el-${esc(sp.element || "none")}">${esc(sp.name)}<small>${esc(tierOf(id, sp))} · ${mc} magicka</small></span>${B("spell:" + id, "Cast")}${dual ? B("dual:" + id, "Dual") : ""}</div>`;
       }).join("") || `<p class="sub">You don't know any fighting spells yet.</p>`;
-      return `<div class="tbmenu">${rows}<button class="tbact back" data-tbm="">‹ Back</button></div>`;
+      return `<div class="tbmenu"><div class="tbmh"><b>✦ Magic</b><small>Drag a spell onto its target, or tap Cast</small></div>${rows}<button class="tbact back" data-tbm="">‹ Back</button></div>`;
     }
     if (ui.menu === "items") {
       const pots = ["health", "magicka", "stamina"].map((r) => (f.findPotion(r) ? B("potion:" + r, `${r[0].toUpperCase() + r.slice(1)} potion`) : "")).join("");
       const scrolls = [...new Set(s.inv.filter((r) => D.ITEMS[r.item]?.spell && f.left(r.id) > 0).map((r) => r.item))].slice(0, 4).map((it) => B("scroll:" + it, D.ITEMS[it].name)).join("");
       const shouts = typeof POWERS !== "undefined" && f.pw ? (POWERS.known ? [] : []).join("") : "";
-      return `<div class="tbmenu">${pots || scrolls ? pots + scrolls : `<p class="sub">No potions or scrolls.</p>`}${shouts}<button class="tbact back" data-tbm="">‹ Back</button></div>`;
+      return `<div class="tbmenu"><div class="tbmh"><b>⚗ Items</b><small>Drag a potion onto yourself, or tap it</small></div><div class="tbgrid">${pots || scrolls ? pots + scrolls : `<p class="sub">No potions or scrolls.</p>`}${shouts}</div><button class="tbact back" data-tbm="">‹ Back</button></div>`;
     }
     const sh = shoutsFor(f).map(([a, n]) => B(a, n, "shout")).join("");
-    return `<div class="tbgrid">${B("attack", f.wt === "bow" || f.wt === "crossbow" ? "Shoot" : "Attack")}${B("power_attack", "Power attack")}${B("block", f.shield ? "Shield up" : "Guard")}
-      <button class="tbact" data-tbm="magic"><b>Magic ▸</b><small>${(s.spells || []).length} spells</small></button>
-      <button class="tbact" data-tbm="items"><b>Items ▸</b><small>potions</small></button>${sh}
-      ${B("flee", "Flee")}
-      <button class="tbact end" data-tba="end"><b>End turn</b><small>${sess.ap > 0 ? `+${Math.min(30, sess.ap * 10)}% guard` : ""}</small></button></div>`;
+    return `<div class="tbgrid">${B("attack", f.wt === "bow" || f.wt === "crossbow" ? "Shoot" : "Attack", "main")}${B("power_attack", "Power attack", "main")}${f.shield && typeof SHIELDFX !== "undefined" ? B("bash", "Shield bash", "main") : B("block", "Guard", "main")}
+      <button class="tbact menu" data-tbm="magic"><span class="ic" aria-hidden="true">${ICON.magic}</span><b>Magic ▸</b><small>${(s.spells || []).length} spells</small></button>
+      <button class="tbact menu" data-tbm="items"><span class="ic" aria-hidden="true">${ICON.items}</span><b>Items ▸</b><small>potions</small></button>${sh}
+      ${B("flee", "Flee", "flee")}
+      <button class="tbact end" data-tba="end"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.action(f, "end", 0))}"` : ""}><span class="ic" aria-hidden="true">${ICON.end}</span><b>End turn</b><small>${sess.ap > 0 ? `+${Math.min(30, sess.ap * 10)}% guard` : "ready"}</small></button></div>`;
   }
   function shoutsFor(f) {
     if (typeof POWERS === "undefined" || !f.pw) return [];
@@ -470,33 +517,106 @@ const TB = (() => {
     const el = document.getElementById("tbf"); if (!el || !ui) return;
     const sess = ui.sess, f = sess.f, s = f.s;
     const newEv = sess.ev.slice(ui.shown); ui.shown = sess.ev.length;
-    const order = sess.order.map((o, i) => `<span class="tbini ${o.id === sess.cur?.id && !sess.done ? "now" : ""} ${i < sess.idx ? "gone" : ""} ${o.id.startsWith("foe") ? "foe" : o.id === "me" ? "me" : "ally"}" title="Initiative ${o.init}">${icon(o)} ${esc(o.name.split(" ")[0])}<i>${o.init}</i></span>`).join("");
+    const order = sess.order.map((o, i) => `<span class="tbini ${o.id === sess.cur?.id && !sess.done ? "now" : ""} ${i < sess.idx ? "gone" : ""} ${o.id.startsWith("foe") ? "foe" : o.id === "me" ? "me" : "ally"}" data-tip="${esc(o.name)}: initiative ${o.init}. Higher initiative acts earlier in the round.">${icon(o)} ${esc(o.name.split(" ")[0])}<i>${o.init}</i></span>`).join("");
     const pips = (n, m, cls) => Array.from({ length: m }, (_, i) => `<i class="${i < n ? "on" : ""} ${cls}"></i>`).join("");
-    const allies = f.allies.filter((a) => a.hp != null).map((a) => `<div class="tbal"><small>${esc(a.name)}${a.down ? " · down" : ""}</small>${pctBar(Math.max(0, a.hp), a.maxHp || a.hpMax || Math.max(a.hp, 1), "hp")}</div>`).join("");
+    const allies = partyHTML(f);
     const mine = state.turn === "me";
     const wait = state.turn === "wait" ? `<p class="tbwait">⏳ ${esc(state.who)} is choosing their move… <b class="num" id="tbcd">${Math.max(0, Math.ceil((state.until - Date.now()) / 1000))}s</b>, then Auto</p>` : "";
     const scene = (newEv.length || !ui.lastScene) && typeof FIGHTART !== "undefined" ? sceneFor(newEv) : "";
-    const log = sess.ev.slice(-7).filter((e) => e.kind !== "round").map((e) => `<div class="tbl ${e.kind}">${e.kind === "foe" ? "☠" : e.kind === "me" || e.kind === "guard" ? "🛡" : e.kind === "tick" ? "✶" : e.kind === "end" ? "★" : "⚑"} ${esc(e.text)}</div>`).join("");
+    const fmt = typeof TBUI !== "undefined" ? TBUI.logLine : (e) => `<div class="tbl ${e.kind}">${esc(e.text)}</div>`;
+    const recent = sess.ev.filter((e) => e.kind !== "round"), lastE = recent[recent.length - 1];
+    const log = recent.slice(-10).map((e) => fmt(e, e === lastE && newEv.includes(e))).join("");
+    const hpMax = G.maxHealth(s), hpNow = Math.max(0, Math.round(f.hp)), ehpNow = Math.max(0, Math.round(f.ehp));
+    const mpNow = Math.max(0, Math.round(f.mp)), spNow = Math.max(0, Math.round(f.sp)), mpMax = G.maxMagicka(s), spMax = G.maxStamina(s);
+    const prev = ui.prevBars || { hp: hpNow, ehp: ehpNow, mp: mpNow, sp: spNow }; ui.prevBars = { hp: hpNow, ehp: ehpNow, mp: mpNow, sp: spNow };
+    const pops = popsFor(newEv, f, prev, { hp: hpNow, ehp: ehpNow, mp: mpNow, sp: spNow });
+    const pc = (v, m) => (100 * Math.max(0, v) / Math.max(1, m)).toFixed(1);
+    const uBar = (v, p, m, cls) => `<div class="tbbar big ${cls}"><b class="gh" style="width:${pc(Math.max(v, p), m)}%" data-to="${pc(v, m)}"></b><i style="width:${pc(v, m)}%"></i><span class="num">${v} / ${m}</span></div>`;
+    const rBar = (v, p, m, cls, lb) => `<div class="tbbar mid ${cls}"><b class="gh" style="width:${pc(Math.max(v, p), m)}%" data-to="${pc(v, m)}"></b><i style="width:${pc(v, m)}%"></i><span class="num"><em>${lb}</em> ${v} / ${Math.round(m)}</span></div>`;
+    let banner = "";
+    if (sess.done) banner = `<div class="tbban ${f.won ? "won" : "lost"}">${f.won ? (f.escaped ? "Escaped" : "Victory") : "Defeated"}</div>`;
+    else if (mine && ui.bannerFor !== sess.round) { ui.bannerFor = sess.round; banner = `<div class="tbban me">Your turn</div>`; }
     el.innerHTML = `<div class="tbin">
-      <div class="tbtop"><b>Round ${sess.round}</b><span class="tbord">${order}</span><button class="tbff ${fast() ? "on" : ""}" data-tbx="fast" aria-label="Fast foe turns">⏩</button></div>
-      <div class="tbscene" id="tbscene">${scene || (ui.lastScene || "")}</div>
-      <div class="tbvit"><div><small>${esc(s.name || "You")} <span class="num">${Math.max(0, Math.round(f.hp))}/${G.maxHealth(s)}</span></small>${pctBar(f.hp, G.maxHealth(s), "hp")}${pctBar(f.mp, G.maxMagicka(s), "mp")}${pctBar(f.sp, G.maxStamina(s), "sp")}</div>
-        <div><small>${esc(f.e.name)} <span class="num">${Math.max(0, Math.round(f.ehp))}/${sess.ehpMax}</span></small>${pctBar(f.ehp, sess.ehpMax, "hp foe")}${statusChips(f)}</div></div>
-      ${allies ? `<div class="tballies">${allies}</div>` : ""}
-      <div class="tbap">${mine ? `<span>AP</span>${pips(sess.ap, sess.st.ap, "ap")}${sess.st.spellAp ? `<span>✦</span>${pips(sess.spAp, sess.st.spellAp, "sap")}` : ""}<em>Your turn</em>` : sess.done ? "" : `<em>${esc(sess.cur?.name || "")}'s turn</em>`}</div>
+      <div class="tbtop"><b>Round ${sess.round}</b><span class="tbord">${order}</span><button class="tbff" data-tbx="log" aria-label="Full fight log">📜</button><button class="tbff ${fast() ? "on" : ""}" data-tbx="fast" aria-label="Fast foe turns">⏩</button></div>
+      <div class="tbstage" data-tbzone="foe"><div class="tbscene" id="tbscene">${scene || (ui.lastScene || "")}</div>${banner}<div class="tbhint" aria-hidden="true"></div></div>
+      <div class="tbvit"><div class="tbu me" data-tbzone="self"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.me(f, sess.st))}"` : ""}><small class="nm">🛡 ${esc(s.name || "You")}</small>${uBar(hpNow, prev.hp, hpMax, "hp")}<div class="tbsub">${rBar(mpNow, prev.mp, mpMax, "mp", "MP")}${rBar(spNow, prev.sp, spMax, "sp", "SP")}</div></div>
+        <div class="tbu foe" data-tbzone="foe"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.foe(f, sess.ehpMax))}"` : ""}><small class="nm">☠ ${esc(f.e.name)}</small>${uBar(ehpNow, prev.ehp, sess.ehpMax, "hp foe")}${statusChips(f)}</div></div>
+      ${allies}
+      <button class="tblog" aria-live="polite" data-tbx="log" aria-label="Fight log, tap for the full log"${log ? "" : " hidden"}>${log}</button>
       ${wait}
-      <div class="tblog" aria-live="polite"${log ? "" : " hidden"}>${log}</div>
-      ${sess.done ? `<button class="btn pri tbdone" data-tbx="done">${f.won ? (f.escaped ? "Continue" : "Victory — continue") : "Continue"}</button>` : mine ? actionsHTML(sess) : ""}
+      <div class="tbdock">
+        <div class="tbap">${mine ? `<span>AP</span>${pips(sess.ap, sess.st.ap, "ap")}${sess.st.spellAp ? `<span>✦</span>${pips(sess.spAp, sess.st.spellAp, "sap")}` : ""}<em>Your turn</em>` : sess.done ? "" : `<em class="them">${esc(sess.cur?.name || "")}'s turn…</em>`}</div>
+        ${sess.done ? `<button class="btn pri tbdone" data-tbx="done">${f.won ? (f.escaped ? "Continue" : "Victory — continue") : "Continue"}</button>` : mine ? actionsHTML(sess) : ""}
+      </div>
+      ${ui.logOpen ? fullLog(sess, fmt) : ""}
     </div>`;
     if (scene) ui.lastScene = scene;
+    if (typeof TBUI !== "undefined") TBUI.after(el, { hurt: hpNow < prev.hp, hit: ehpNow < prev.ehp, big: prev.hp - hpNow > hpMax * 0.15, mine, pops });
+  }
+  /* floating numbers for what just happened: damage coloured by element, heals, crits, and what you spent */
+  const ELEM = [["fire", /\b(fire|flame|burn|scorch|ember)/i], ["frost", /\b(frost|ice|cold|freez|chill)/i], ["shock", /\b(shock|lightning|spark|thunder)/i], ["poison", /\b(poison|venom|toxic)/i]];
+  function elemOf(e) {
+    const sp = e.a ? spellOf(e.a) : null;
+    if (sp?.element && sp.element !== "none") return sp.element;
+    if (/^shout:/.test(e.a || "")) return "shout";
+    for (const [k, re] of ELEM) if (re.test(e.text || "")) return k;
+    return "phys";
+  }
+  function popsFor(evs, f, was, now) {
+    const out = []; let toFoe = 0, toMe = 0, healMe = 0;
+    for (const e of evs) {
+      const crit = /\b(critical|sneak attack|finishing blow)\b/i.test(e.text || "");
+      if (e.kind === "foe" && e.dmg > 0) { out.push({ at: "me", n: -e.dmg, el: elemOf(e), crit }); toMe += e.dmg; }
+      else if ((e.kind === "me" || e.kind === "ally") && e.dmg > 0) { out.push({ at: "foe", n: -e.dmg, el: elemOf(e), crit }); toFoe += e.dmg; }
+      if (e.healed > 0) { out.push({ at: "me", n: e.healed, el: "heal" }); healMe += e.healed; }
+      if (e.kind === "ally" && e.dmg == null) {   // summons and followers: the line only says the number
+        const m = /\b(?:strikes|hits|deals|for)\s+(\d+)/i.exec(e.text || ""); if (m) { out.push({ at: "foe", n: -+m[1], el: elemOf(e) }); toFoe += +m[1]; }
+      }
+    }
+    // whatever the lines didn't name (burning, poison over time, the foe's own regen...) still shows
+    const restFoe = was.ehp - now.ehp - toFoe, restMe = was.hp - now.hp - toMe + healMe;
+    if (restFoe >= 1) out.push({ at: "foe", n: -Math.round(restFoe), el: f.foeSt?.burn ? "fire" : f.foeSt?.shock ? "shock" : f.foeSt?.chill ? "frost" : "phys" });
+    if (restMe >= 1) out.push({ at: "me", n: -Math.round(restMe), el: "phys" });
+    if (now.mp < was.mp - 0.5) out.push({ at: "me", n: now.mp - was.mp, el: "mp", tag: "MP" });
+    if (now.sp < was.sp - 0.5) out.push({ at: "me", n: now.sp - was.sp, el: "sp", tag: "SP" });
+    return out.slice(-8);
+  }
+  /* your party, readable at a glance: one frame per teammate (players and followers) with health numbers, what's on them,
+     and a drop target, so spells, scrolls and potions can be dragged onto a teammate */
+  function partyHTML(f) {
+    const pc = (v, m) => (100 * Math.max(0, v) / Math.max(1, m)).toFixed(1);
+    ui.prevAl = ui.prevAl || new Map();
+    const one = (a, i, down) => {
+      const mx = Math.round(a.maxHp || a.hpMax || a._max || Math.max(a.hp || 0, 1)), hp = Math.max(0, Math.round(a.hp || 0));
+      const was = ui.prevAl.get(a) ?? hp; ui.prevAl.set(a, hp);
+      const fx = [a.ward > 0 ? "🔰" : "", a.armorT > 0 ? "🪨" : "", a.imbue?.turns > 0 ? "✨" : "", a.heroT > 0 ? "⚑" : "", a.unseen > 0 ? "👁" : "", a.guard ? "🛡" : ""].join("");
+      const ic = a.player ? "🧑" : a.follower ? "⚔" : a.summon ? "✦" : "🐾";
+      const role = a.role ? ` · ${a.role}` : a.follower ? " · follower" : a.player ? " · player" : "";
+      const tip = `${a.name}${role}. ${down ? "Knocked down" : `${hp} / ${mx} health`}.${down ? " A Rescue spell can bring them back." : " Drag a healing spell, scroll or potion here to use it on them."}`;
+      return `<div class="tbu ally${down ? " down" : ""}" data-tbzone="${down ? "ally" : "self ally"}" data-ally="${down ? 1000 + i : i}" data-tip="${esc(tip)}"><small class="nm">${ic} ${esc(a.name)}${fx ? ` <span class="fx">${fx}</span>` : ""}</small>
+        <div class="tbbar mid hp"><b class="gh" style="width:${pc(Math.max(hp, was), mx)}%" data-to="${pc(hp, mx)}"></b><i style="width:${pc(hp, mx)}%"></i><span class="num">${down ? "down" : `${hp} / ${mx}`}</span></div></div>`;
+    };
+    const live = f.allies.filter((a) => a.hp != null).map((a) => one(a, f.allies.indexOf(a), false));
+    const downed = (f._downed || []).map((a, i) => one(a, i, true));
+    const all = [...live, ...downed];
+    if (!all.length) return "";
+    return `<div class="tbparty${all.length > 4 ? " many" : ""}" aria-label="Your party">${all.join("")}</div>`;
+  }
+  /* the whole fight so far, newest round first */
+  function fullLog(sess, fmt) {
+    const by = new Map();
+    for (const e of sess.ev) { if (e.kind === "round") continue; if (!by.has(e.round)) by.set(e.round, []); by.get(e.round).push(e); }
+    const rounds = [...by.entries()].reverse().map(([r, es]) => `<h4>Round ${r}</h4>${es.map((e) => fmt(e, false)).join("")}`).join("");
+    return `<div class="tbsheet" role="dialog" aria-label="Fight log"><div class="tbsh-in"><div class="tbsh-top"><b>📜 Fight log</b><button class="tbff" data-tbx="logx" aria-label="Close the log">✕</button></div><div class="tbsh-body">${rounds || `<p class="sub">Nothing yet.</p>`}</div></div></div>`;
   }
   function statusChips(f) {
     const st = f.foeSt || {}, out = [];
-    if (st.burn) out.push(`<i class="st burn">🔥${st.burn.turns ?? ""}</i>`);
-    if (st.chill) out.push(`<i class="st chill">❄${st.chill.turns ?? ""}</i>`);
-    if (st.shock) out.push(`<i class="st shock">⚡${st.shock.turns ?? ""}</i>`);
-    if (f.eParalyzed > 0) out.push(`<i class="st para">✋${f.eParalyzed}</i>`);
-    if (f.stagger) out.push(`<i class="st stag">💫</i>`);
+    if (st.burn) out.push(`<i class="st burn" data-tip="${typeof TBTIPS !== "undefined" ? TBTIPS.STATUS.burn : ""}">🔥${st.burn.turns ?? ""}</i>`);
+    if (st.chill) out.push(`<i class="st chill" data-tip="${typeof TBTIPS !== "undefined" ? TBTIPS.STATUS.chill : ""}">❄${st.chill.turns ?? ""}</i>`);
+    if (st.shock) out.push(`<i class="st shock" data-tip="${typeof TBTIPS !== "undefined" ? TBTIPS.STATUS.shock : ""}">⚡${st.shock.turns ?? ""}</i>`);
+    if (f.eParalyzed > 0) out.push(`<i class="st para" data-tip="${typeof TBTIPS !== "undefined" ? TBTIPS.STATUS.para : ""}">✋${f.eParalyzed}</i>`);
+    if (f.tbStunLeft > 0) out.push(`<i class="st stun" data-tip="${typeof TBTIPS !== "undefined" ? TBTIPS.STATUS.stun : ""}">💥</i>`);
+    if (f.stagger) out.push(`<i class="st stag" data-tip="${typeof TBTIPS !== "undefined" ? TBTIPS.STATUS.stag : ""}">💫</i>`);
     return out.length ? `<div class="tbst">${out.join("")}</div>` : "";
   }
   /* animate just what happened since the last screen: a view of the fight with only those lines (the full fight-scene
@@ -509,7 +629,7 @@ const TB = (() => {
     const keep = fast() && !sess.done ? lines.filter((l, i) => l.me || i === lines.map((x) => !!x.them).lastIndexOf(true)) : lines;   // Fast: your moves and the foe's last blow
     const v = Object.create(f);
     v.log = keep.length ? keep : lines; v.hp0 = ui.lastHp ?? f.hp0; v.ehp0 = ui.lastEhp ?? f.ehp0; v.won = sess.done ? f.won : undefined;
-    v.tbMid = !sess.done; v.tbHpMax = G.maxHealth(f.s); v.tbEhpMax = sess.ehpMax;   // fightart: stay standing between turns, bars against full health
+    v.tbTall = true; v.tbMid = !sess.done; v.tbHpMax = G.maxHealth(f.s); v.tbEhpMax = sess.ehpMax;   // fightart: stay standing between turns, bars against full health
     ui.lastHp = lines[lines.length - 1].hp; ui.lastEhp = lines[lines.length - 1].ehp;
     return FIGHTART.placeholder(v, f.s);
   }
@@ -524,9 +644,12 @@ const TB = (() => {
     if (b.dataset.tbx === "autoall") { ui.menu = null; sess.autoRest = true; sess.autoTurn(); return step(sess.advance()); }   // no button for players any more; screen tests use it to finish a fight
     if (b.dataset.tbx === "fast") { const p = prefs(); p.tbFast = !p.tbFast; try { localStorage.setItem("rotn_prefs", JSON.stringify(p)); } catch (e) { /* ignore */ } return step(); }
     if (b.dataset.tbx === "done") return close();
+    if (b.dataset.tbx === "log") { ui.logOpen = true; return step(); }
+    if (b.dataset.tbx === "logx") { ui.logOpen = false; return step(); }
     if (b.dataset.tba) {
       ui.menu = null;
-      let r = sess.act(b.dataset.tba);
+      const root = document.getElementById("tbf"), tgt = root?.dataset.tbt; if (root) delete root.dataset.tbt;
+      let r = sess.act(b.dataset.tba, tgt);
       if (r?.err) { if (hooks.toast) hooks.toast(r.err); return; }
       if (r?.turn === "next") r = sess.advance();
       if (typeof SOUND !== "undefined" && SOUND.fx) SOUND.fx(/spell|dual|scroll/.test(b.dataset.tba) ? "spell" : "hit");
@@ -635,5 +758,5 @@ const TB = (() => {
     });
   }
 
-  return { T, stats, cost, aiPick, targetOrder, Session, simulate, call, enabled, init, remoteFor, watchTurns, safeSave, get open() { return open; }, WCOST, TIERC, HIT_CAP, FOE_HP, PARTY_HP, TURN_SECONDS, syncInPlace, _origRun: origRun };
+  return { T, stats, cost, aiPick, targetOrder, Session, simulate, call, enabled, init, remoteFor, watchTurns, safeSave, zoneOf, get open() { return open; }, WCOST, TIERC, HIT_CAP, FOE_HP, PARTY_HP, TURN_SECONDS, syncInPlace, _origRun: origRun };
 })();
