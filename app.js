@@ -143,7 +143,28 @@
   });
   setTimeout(() => SplashScreen?.hide(), 400);
   setTimeout(askOnce, 2500);
-  setTimeout(autoCheck, 4000);
+  /* on launch: look for a new version straight away and, if there is one, install it before the player gets going.
+     A small "Updating…" card covers the title screen meanwhile; offline or slow, it gives up after a few seconds. */
+  async function launchUpdate() {
+    if (!Updater?.downloadGame) return autoCheck();
+    const card = document.createElement("div");
+    card.id = "launchupd";
+    card.style.cssText = "position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(8,8,8,.82);color:#f3d98b;font:600 16px/1.4 sans-serif;text-align:center;padding:24px";
+    card.textContent = "Checking for updates…";
+    let shown = false; const show = () => { if (!shown) { shown = true; document.body.appendChild(card); } };
+    const t = setTimeout(show, 600);   // a quick "no update" never flashes the card
+    try {
+      const r = await Promise.race([updater.check(true), new Promise((_, no) => setTimeout(() => no(new Error("slow")), 6000))]);
+      if (r.newer && r.quick) {
+        show();
+        await updater.quickUpdate(r.latest, true, (txt) => { card.textContent = `Updating to build ${r.latest.build}… ${txt}`; });
+        return;   // the game restarts on the new files
+      }
+      if (r.newer) window.__ui?.updateAvailable?.(r);
+    } catch (e) { /* offline or slow: the regular checks will catch it */ }
+    finally { clearTimeout(t); card.remove(); }
+  }
+  setTimeout(launchUpdate, 300);
   setTimeout(() => { try { Updater?.gameReady?.(); } catch (e) { /* older app */ } }, 5000);   // the game started fine on these files
   setInterval(autoCheck, 10 * 60000);
 })();

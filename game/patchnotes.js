@@ -3,6 +3,9 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b112", build: 112, date: "23 Nov 2026", title: "Updates on launch", items: [
+      "When you open the game it now looks for a new version straight away and installs it before you start playing (a short \"Updating…\" card). No more starting a session on an old version.",
+    ] },
     { id: "b110", build: 110, date: "22 Nov 2026", title: "Fix: players not seeing each other", items: [
       "Fixed friends and other players not showing up for some of you. Phones on mobile data or strict Wi-Fi often couldn't link up directly, so they never saw each other.",
       "Now there's a backup line: if your phone can't link straight to someone, your name, where you are, chat and messages still get through, encrypted, over the same servers used to find each other.",
