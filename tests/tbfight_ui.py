@@ -70,8 +70,9 @@ async def main():
             ok(rnd >= 2 or await pg.evaluate("!!document.querySelector('#tbf .tbdone')"), f"{style}: rounds go on (round {rnd})")
             ok(await pg.evaluate("!!document.querySelector('#tbf .tbscene .fscene canvas')"), f"{style}: the fight scene plays")
             # Auto for the rest of the fight
-            if await pg.evaluate("!!document.querySelector('#tbf [data-tbx=autoall]')"):
-                await pg.click("#tbf [data-tbx=autoall]")
+            ok(not await pg.evaluate("!!document.querySelector('#tbf .tbact.auto')"), f"{style}: no Auto buttons")
+            if await pg.evaluate("!!document.querySelector('#tbf .tbgrid')"):
+                await pg.evaluate("(()=>{const g=document.querySelector('#tbf .tbgrid')||document.querySelector('#tbf');const b=document.createElement('button');b.dataset.tbx='autoall';g.append(b);b.click()})()")
             for _ in range(60):
                 if await pg.evaluate("!!document.querySelector('#tbf .tbdone')"): break
                 await pg.wait_for_timeout(300)
@@ -82,11 +83,11 @@ async def main():
             ok(await pg.evaluate("!!document.querySelector('#modal') && /Victory|Defeated|log|fight|bandit|Quest/i.test(document.querySelector('#modal').innerText)"), f"{style}: the usual fight result (or a quest note that popped up) shows after")
             await pg.screenshot(path=OUT + f"{style}_result.png")
             ok(await pg.evaluate("window.__dbg.save().trip?.status !== 'event'"), f"{style}: the encounter is resolved")
-        # the setting: Instant (auto) fights skip the turn screen
+        # the old Instant (auto) setting is gone: a stored turnBased:false still gives the turn screen
         await pg.evaluate("localStorage.setItem('rotn_prefs', JSON.stringify({...JSON.parse(localStorage.getItem('rotn_prefs')||'{}'), turnBased:false}))")
         await pg.evaluate(START, "ink"); await pg.wait_for_timeout(400)
         await pg.click("#modal [data-act=ev][data-c=fight]"); await pg.wait_for_timeout(700)
-        ok(await pg.evaluate("!document.querySelector('#tbf') && !!document.querySelector('#modal')"), "Instant setting: old instant fights")
+        ok(await pg.evaluate("!!document.querySelector('#tbf')"), "old Instant setting is ignored: still turn by turn")
         ok(not errs, f"no page errors {errs[:3]}")
         await b.close()
     print("RESULT OK" if not fails else f"RESULT FAIL ({len(fails)})")

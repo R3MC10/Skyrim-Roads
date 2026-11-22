@@ -154,7 +154,7 @@ async def main():
                     await shot("tb_playing")
                     await pg.click("#tbf .tbvit"); await pg.wait_for_timeout(200)
                     ok(await pg.evaluate("!FIGHTART.playing()"), f"{tag}: tap on the fight screen finishes the scene")
-                if await pg.evaluate("!!document.querySelector('#tbf [data-tbx=autoall]')"): await pg.click("#tbf [data-tbx=autoall]")
+                if await pg.evaluate("!!document.querySelector('#tbf .tbgrid')"): await pg.evaluate("(()=>{const g=document.querySelector('#tbf .tbgrid')||document.querySelector('#tbf');const b=document.createElement('button');b.dataset.tbx='autoall';g.append(b);b.click()})()")
                 for _ in range(60):
                     if await pg.evaluate("!!document.querySelector('#tbf .tbdone')"): break
                     await pg.wait_for_timeout(250)

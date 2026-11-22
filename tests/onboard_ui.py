@@ -73,7 +73,7 @@ async def run(b, vw, vh, style, fails):
     check(not covered, f"fight tip covers buttons {covered}")
     await pg.click("#obtip [data-obt=ok]"); await pg.wait_for_timeout(300)
     check(await pg.evaluate("!document.querySelector('#obtip')"), "tip didn't close")
-    if await pg.query_selector("#tbf [data-tbx=autoall]"): await pg.click("#tbf [data-tbx=autoall]")
+    if await pg.query_selector("#tbf .tbgrid"): await pg.evaluate("(()=>{const g=document.querySelector('#tbf .tbgrid')||document.querySelector('#tbf');const b=document.createElement('button');b.dataset.tbx='autoall';g.append(b);b.click()})()")
     for _ in range(80):
         if await pg.query_selector("#tbf [data-tbx=done]"): break
         await pg.wait_for_timeout(250)

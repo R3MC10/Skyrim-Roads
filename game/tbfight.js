@@ -368,7 +368,6 @@ const TB = (() => {
   const prefs = () => { try { return JSON.parse(localStorage.getItem("rotn_prefs") || "{}"); } catch { return {}; } };
   /* turn-based is on unless switched off in Settings; under browser automation only with ?tb (keeps the old UI tests as they were) */
   function enabled() {
-    if (prefs().turnBased === false) return false;
     if (typeof navigator !== "undefined" && navigator.webdriver && !(typeof location !== "undefined" && /[?&]tb\b/.test(location.search))) return false;
     return typeof document !== "undefined";
   }
@@ -448,9 +447,7 @@ const TB = (() => {
       <button class="tbact" data-tbm="magic"><b>Magic ▸</b><small>${(s.spells || []).length} spells</small></button>
       <button class="tbact" data-tbm="items"><b>Items ▸</b><small>potions</small></button>${sh}
       ${B("flee", "Flee")}
-      <button class="tbact end" data-tba="end"><b>End turn</b><small>${sess.ap > 0 ? `+${Math.min(30, sess.ap * 10)}% guard` : ""}</small></button>
-      <button class="tbact auto" data-tbx="auto1"><b>Auto</b><small>this turn</small></button>
-      <button class="tbact auto" data-tbx="autoall"><b>Auto ⏩</b><small>whole fight</small></button></div>`;
+      <button class="tbact end" data-tba="end"><b>End turn</b><small>${sess.ap > 0 ? `+${Math.min(30, sess.ap * 10)}% guard` : ""}</small></button></div>`;
   }
   function shoutsFor(f) {
     if (typeof POWERS === "undefined" || !f.pw) return [];
@@ -513,10 +510,9 @@ const TB = (() => {
     const b = ev.target.closest("button"); if (!b || b.disabled) return;
     const sess = ui.sess;
     if (b.dataset.tbm !== undefined) { ui.menu = b.dataset.tbm || null; return step(); }
+    if (b.dataset.tbx === "autoall") { ui.menu = null; sess.autoRest = true; sess.autoTurn(); return step(sess.advance()); }   // no button for players any more; screen tests use it to finish a fight
     if (b.dataset.tbx === "fast") { const p = prefs(); p.tbFast = !p.tbFast; try { localStorage.setItem("rotn_prefs", JSON.stringify(p)); } catch (e) { /* ignore */ } return step(); }
     if (b.dataset.tbx === "done") return close();
-    if (b.dataset.tbx === "auto1") { ui.menu = null; sess.autoTurn(); return step(sess.advance()); }
-    if (b.dataset.tbx === "autoall") { ui.menu = null; sess.autoRest = true; sess.autoTurn(); return step(sess.advance()); }
     if (b.dataset.tba) {
       ui.menu = null;
       let r = sess.act(b.dataset.tba);
@@ -573,7 +569,7 @@ const TB = (() => {
       if (!d) { if (el) el.remove(); return; }
       if (el && el.dataset.k === `${d.id}:${d.round}`) return;
       const box = el || document.createElement("div"); box.id = "tbask"; box.className = "tbask"; box.dataset.k = `${d.id}:${d.round}`;
-      const opts = [["attack", "⚔ Attack"], ["power", "💥 Power attack"], ["guard", "🛡 Guard"], ...(d.turn.heals ? [["heal", "✚ Heal the leader"]] : []), ...(d.turn.pots ? [["potion", "🧪 Potion"]] : []), ["auto", "🧠 Auto"]];
+      const opts = [["attack", "⚔ Attack"], ["power", "💥 Power attack"], ["guard", "🛡 Guard"], ...(d.turn.heals ? [["heal", "✚ Heal the leader"]] : []), ...(d.turn.pots ? [["potion", "🧪 Potion"]] : [])];
       box.innerHTML = `<b>Your turn vs ${esc(d.foe)} (round ${d.round})</b><div class="sub">${esc((d.log || []).slice(-2).join(" · "))}</div><div class="tbaskb">${opts.map(([k, l]) => `<button class="btn" data-tbmove="${k}">${l}</button>`).join("")}</div>`;
       box.onclick = (ev) => { const b = ev.target.closest("[data-tbmove]"); if (!b) return; store.change("tbf", d.id, (x) => ({ ...x, reply: { pid: me, move: b.dataset.tbmove, round: d.round } })); box.remove(); };
       if (!el) document.body.appendChild(box);

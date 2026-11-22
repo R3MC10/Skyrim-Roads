@@ -168,7 +168,8 @@ input,select{border-radius:3px;border-color:rgba(228,220,200,.22);background:rgb
 .sky-row .nm i{font-style:normal;color:#8c877a}.sky-row .nm .ench{color:#9fd0f0}.sky-row .nm .stolen{color:var(--ember)}
 .sky-row .nm small{display:block;color:#8c877a;font-size:12px}
 .sky-row .nm .bar{display:block;height:3px;margin-top:4px;max-width:180px}
-.sky-row.eq .nm::before{content:"◆ ";color:#e8e1cf;font-size:12px}
+.sky-row .nm .eqm{flex:none;width:12px;margin-right:4px;color:#f3d98b;font-size:12px;text-shadow:0 0 6px rgba(255,210,120,.6)}
+.sky-row.eq{background:linear-gradient(90deg,rgba(243,217,139,.09),transparent 70%)}
 .sky-row.sel{background:linear-gradient(90deg,rgba(255,255,255,.14),rgba(255,255,255,.02));border-left-color:#e8e1cf;color:#fff}
 .sky-empty{padding:16px 10px}
 .sky-detail{border-top:1px solid rgba(228,220,200,.18);padding:10px 6px 4px;max-height:44vh;overflow:auto}
@@ -864,6 +865,9 @@ body.tw-char #side>*{max-width:720px;margin-left:auto;margin-right:auto}
 .tw-lvlup{border:1px solid var(--gold);padding:8px 10px;margin-bottom:10px;border-radius:3px}.tw-lvbtns{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}
 .tw-hint2{text-align:center;margin-top:8px}
 .tw.tw-px .tw-rosesvg{shape-rendering:crispEdges}
+.tw-rose{transform:translate(calc(var(--tx,0)*1px),calc(var(--ty,0)*1px)) perspective(800px) rotateY(calc(var(--tx,0)*.22deg)) rotateX(calc(var(--ty,0)*-.22deg));transition:transform .5s cubic-bezier(.3,1.6,.55,1),filter .3s;will-change:transform}
+.tw.drag .tw-rose{transition:filter .3s;filter:drop-shadow(0 calc(10px + var(--pull,0)*12px) 18px rgba(0,0,0,.55)) brightness(calc(1 + var(--pull,0)*.12))}
+.tw.drag .tw-hint{opacity:.35}
 @media (prefers-reduced-motion:reduce){.tw,.tw-ring,.tw-ring2,.tw-starsvg .tw{animation:none}}
 /* Smart AI (combatai.js): the Combat switch on the Tactics tab, dimmed rules, the reasons in the fight log */
 .aimode{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:2px 0 6px}

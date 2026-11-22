@@ -273,7 +273,7 @@
       ${typeof I18N !== "undefined" ? `<h3>Language</h3>${I18N.settingRow(seg)}` : ""}
       <h3>Look</h3><div class="setrow"><span>Art style</span>${seg("artStyle", [["ink", "Hand-drawn"], ["pixel", "Pixel art"]], ART.style())}</div>
       ${typeof MOTION !== "undefined" ? `<div class="setrow"><span>Motion</span>${seg("motion", [["full", "Full"], ["lite", "Lite"], ["off", "Off"]], MOTION.pref())}</div>` : ""}
-      ${typeof TB !== "undefined" ? `<h3>Fights</h3><div class="setrow"><span>Fights</span>${seg("turnBased", [[true, "Turn by turn"], [false, "Instant (auto)"]], getPref("turnBased", true))}</div><div class="setrow"><span>Foe turns</span>${seg("tbFast", [[false, "Normal speed"], [true, "Fast"]], getPref("tbFast", false))}</div>` : ""}${typeof FASTQOL !== "undefined" ? FASTQOL.settingsHTML(seg) : ""}
+      ${typeof TB !== "undefined" ? `<h3>Fights</h3><div class="setrow"><span>Foe turns</span>${seg("tbFast", [[false, "Normal speed"], [true, "Fast"]], getPref("tbFast", false))}</div>` : ""}${typeof FASTQOL !== "undefined" ? FASTQOL.settingsHTML(seg) : ""}
       ${typeof ACCESS !== "undefined" ? ACCESS.settingsHTML(seg) : ""}
       ${typeof ONBOARD !== "undefined" ? ONBOARD.settingsHTML(seg) : ""}
       <h3>Crafting</h3><div class="setrow"><span>When you craft</span>${seg("craftGame", [[true, "Mini-games"], [false, "Quick craft"]], getPref("craftGame", true))}</div>
@@ -992,7 +992,7 @@
         <button class="btn" data-act="enc" data-a="sneak">🥷 Sneak past${typeof SNEAK2 !== "undefined" ? ` (${Math.round(SNEAK2.chance(S, e) * 100)}%)` : ""}</button>
         <button class="btn" data-act="enc" data-a="potion" ${G.countRestore(S, "health") ? "" : "disabled"}>🧪 Potion (${G.countRestore(S, "health")})</button>
         ${e.bountyHold ? `<button class="btn pri" data-act="enc" data-a="pay" style="grid-column:1/-1">⚖️ Pay your ${esc(e.bountyHold)} bounty (${TOWNS.bounty(S, e.bountyHold)} gold)</button>` : ""}
-      </div><p class="sub" style="margin-bottom:0">${typeof TB !== "undefined" && TB.enabled() ? `You play the fight turn by turn; <b>Auto</b> plays it for you with ${aiOn() ? `<b>Smart AI</b>` : `your <b>${esc(S.loadout)}</b> tactics`}` : `Fighting uses ${aiOn() ? `<b>Smart AI</b> (${esc(S.loadout)} gear)` : `your <b>${esc(S.loadout)}</b> tactics`}`}.${typeof SNEAK2 !== "undefined" ? "" : " A hidden start gives a sneak attack."}</p>${typeof SNEAK2 !== "undefined" ? SNEAK2.noteHTML(S, e, typeof AISET !== "undefined" ? AISET.get(G.loadout(S)).sneak : "safe", esc) : ""}`, "enc");
+      </div><p class="sub" style="margin-bottom:0">${typeof TB !== "undefined" && TB.enabled() ? `You play the fight turn by turn` : `Fighting uses ${aiOn() ? `<b>Smart AI</b> (${esc(S.loadout)} gear)` : `your <b>${esc(S.loadout)}</b> tactics`}`}.${typeof SNEAK2 !== "undefined" ? "" : " A hidden start gives a sneak attack."}</p>${typeof SNEAK2 !== "undefined" ? SNEAK2.noteHTML(S, e, typeof AISET !== "undefined" ? AISET.get(G.loadout(S)).sneak : "safe", esc) : ""}`, "enc");
   }
   const skillLine = (r) => (r.skills || []).length ? `<p class="sub">📈 ${r.skills.map(esc).join(" · ")}</p>` : "";
   function openEvent(note) {
@@ -1220,7 +1220,7 @@
       main = `<div class="card ${e ? "foe" : ""} ${r.type === "rest" ? "rest" : ""}">${PLACEART.room(r.type)}<h3>${DUNGEONS.ICON[r.type]} ${e ? esc(e.name) : DUNGEONS.LABEL[r.type]}</h3><p>${esc(r.text)}</p>
         ${e ? `<div class="vital"><small><span>${esc(e.name)}</span><span class="num">${e.hp}/${e.health} · hits for ~${Math.round(e.damage)}</span></small><div class="bar"><i style="width:100%;background:var(--ember)"></i></div></div>` : ""}
         <div class="evc">${DUNGEONS.roomChoices(S).map(([c, label]) => `<button class="btn ${["fight", "pick", "rest", "read", "pray", "open", "loot", "burn", "dash"].includes(c) || c.startsWith("set:") ? (e ? "danger" : "pri") : ""}" data-act="dact" data-c="${esc(c)}">${esc(label)}</button>`).join("")}</div>
-        ${e ? `<p class="sub" style="margin-bottom:0">${typeof TB !== "undefined" && TB.enabled() ? `You play the fight turn by turn; <b>Auto</b> plays it for you with ${aiOn() ? `<b>Smart AI</b>` : `your <b>${esc(S.loadout)}</b> tactics`}` : `Fighting uses ${aiOn() ? `<b>Smart AI</b> (${esc(S.loadout)} gear)` : `your <b>${esc(S.loadout)}</b> tactics`}`}.</p>` : ""}</div>`;
+        ${e ? `<p class="sub" style="margin-bottom:0">${typeof TB !== "undefined" && TB.enabled() ? `You play the fight turn by turn` : `Fighting uses ${aiOn() ? `<b>Smart AI</b> (${esc(S.loadout)} gear)` : `your <b>${esc(S.loadout)}</b> tactics`}`}.</p>` : ""}</div>`;
     } else {
       const nx = DUNGEONS.nextChoices(S), row = d.rows[d.row + 1];
       main = `<div class="card">${d.row < 0 ? PLACEART.scene(d.place) : ""}<h3>${d.row < 0 ? "The entrance" : "Which way?"}</h3><p class="sub">${d.row < 0 ? `You light a torch and step into ${esc(d.place)}.` : "The passage splits."} Tap a glowing room on the map, or pick here:</p>
@@ -1511,7 +1511,7 @@
       const rows = itemRows(); const sel = rows.find((r) => r.id === sky.sel) || null;
       const arrow = (k) => sky.sort === k && !S.invSort ? (sky.dir > 0 ? " ▾" : " ▴") : "";
       head = `${typeof INVQOL !== "undefined" ? INVQOL.sortHTML(S) : ""}<div class="sky-head sky-cols"><button data-act="skysort" data-id="name">Name${arrow("name")}</button><button data-act="skysort" data-id="stat">${{ weapons: "Dmg", apparel: "Armor", potions: "Power" }[sky.cat] || "Stat"}${arrow("stat")}</button><button data-act="skysort" data-id="weight">Wt${arrow("weight")}</button><button data-act="skysort" data-id="value">Value${arrow("value")}</button></div>`;
-      list = rows.map((r) => `<button class="sky-row sky-cols ${r.id === sky.sel ? "sel" : ""} ${r.eq ? "eq" : ""}" data-act="skysel" data-id="${r.id}"><span class="nm q-${typeof CC !== "undefined" ? CC.tier(r.r.item, r.r) : "common"}${r.r.stolen ? " is-stolen" : ""}">${ICONART.item(r.r.item, 24, r.r)}${r.eq ? "" : iqB(r.r.item, r.r)}${esc(r.name)}${r.r.qty > 1 ? ` <i>(${r.r.qty})</i>` : ""}${r.it.enchant || r.it.aenchant ? ' <i class="ench">✦</i>' : ""}${r.r.stolen ? ' <i class="stolen">✋</i>' : ""}</span><span class="num">${r.stat ?? "–"}</span><span class="num">${r.weight}</span><span class="num">${r.value}</span></button>`).join("") || `<p class="sub sky-empty">${sky.q ? `Nothing called “${esc(sky.q)}” here. Try “All”, or part of the name.` : "Nothing here. Buy things in town or loot them on the road."}</p>`;
+      list = rows.map((r) => `<button class="sky-row sky-cols ${r.id === sky.sel ? "sel" : ""} ${r.eq ? "eq" : ""}" data-act="skysel" data-id="${r.id}"><span class="nm q-${typeof CC !== "undefined" ? CC.tier(r.r.item, r.r) : "common"}${r.r.stolen ? " is-stolen" : ""}">${r.eq ? '<b class="eqm" title="Equipped" aria-label="Equipped">◆</b>' : ""}${ICONART.item(r.r.item, 24, r.r)}${r.eq ? "" : iqB(r.r.item, r.r)}${esc(r.name)}${r.r.qty > 1 ? ` <i>(${r.r.qty})</i>` : ""}${r.it.enchant || r.it.aenchant ? ' <i class="ench">✦</i>' : ""}${r.r.stolen ? ' <i class="stolen">✋</i>' : ""}</span><span class="num">${r.stat ?? "–"}</span><span class="num">${r.weight}</span><span class="num">${r.value}</span></button>`).join("") || `<p class="sub sky-empty">${sky.q ? `Nothing called “${esc(sky.q)}” here. Try “All”, or part of the name.` : "Nothing here. Buy things in town or loot them on the road."}</p>`;
       detail = sel ? itemDetail(sel) : "";
     } else if (sky.page === "magic") {
       const rows = magicRows(); const sel = rows.find((r) => r.id === sky.sel) || null;
@@ -1651,13 +1651,13 @@
     { title: "On the road", text: () => `You're walking. Trips keep going even when the app is closed, and something may happen by the road${typeof TB !== "undefined" && TB.enabled() ? ": if it's a fight, you play it turn by turn (or press Auto)" : ""}. You can ride a horse later, or take a carriage between cities.`, done: () => !S.trip },
     { title: "You've arrived", text: () => `Open the <b>Town</b> tab. In towns and cities it has shops, the inn, trainers, the forge, jobs and more${S.location && TOWNS.isTown(S.location) ? "" : " (this spot is out in the wilds, so it shows what you can do here)"}.`, done: () => tab === "town" },
     { title: "Quests", text: () => "Now open the <b>Journal</b>. Your quests are there, and the gold diamond on the map shows where to go next. Chat and other players are under <b>Social</b>.", done: () => tab === "log" },
-    { title: "Fights", text: () => typeof TB !== "undefined" && TB.enabled() ? "One more: <b>Character → Tactics</b>. You play fights turn by turn; <b>Auto</b> plays for you with Smart AI, or with your own rules here (like “below 40% health, drink a potion”) if you pick Custom." : "One more: <b>Character → Tactics</b>. Fights play out by themselves, following your rules, like “below 40% health, drink a potion”.", done: () => tab === "tactics" },
+    { title: "Fights", text: () => typeof TB !== "undefined" && TB.enabled() ? "One more: <b>Character → Tactics</b>. You play fights turn by turn. In a party, if you take too long, your turn is played with Smart AI, or with your own rules here (like “below 40% health, drink a potion”) if you pick Custom." : "One more: <b>Character → Tactics</b>. Fights play out by themselves, following your rules, like “below 40% health, drink a potion”.", done: () => tab === "tactics" },
   ];
   const TAB_TIPS = {
     map: "Start with the “What to do next” card. Press Go to travel; tap any place on the map to see how far it is.",
     hero: "Your level, skills and perks. A dot on this tab means you can level up or spend a perk point.",
     pack: "Everything you carry. Tap an item to wear or use it; search by name at the top of the list.",
-    tactics: "Rules for Auto and instant fights. They're checked top to bottom every turn. Test them against a dummy before a real fight.",
+    tactics: "Rules used when your turn is played for you (in a party, if you take too long). They're checked top to bottom every turn. Test them against a dummy before a real fight.",
     town: "Places in town are grouped: Shops, Services, Guilds & jobs. Each town has different ones; shops close at night.",
     log: "Only your quests live here: Active, Misc and Completed. ☆ Track the one you're on and the compass and map follow it.",
   };
