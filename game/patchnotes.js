@@ -3,6 +3,8 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b78", build: 78, date: "22 Nov 2026", title: "The whole world, painted", items: [
+      "All the new realistic artwork is in: every wilderness and dungeon background (Reach, Rift, marsh, hot springs, coast, ash wastes, caves, Nordic tombs, Dwemer ruins, Falmer caves and more), all 32 enemies in fights, and new textures for panels, parchment, the compass, the night sky and window frames."] },
     { id: "b76", build: 76, date: "22 Nov 2026", title: "Real paintings arrive", items: [
       "New realistic artwork: the title screen, four loading screens, all eleven towns (Whiterun, Solitude, Windhelm, Riften, Markarth and more), and the tundra and pine forest. More backgrounds, enemies and textures are on the way."] },
     { id: "b74", build: 74, date: "22 Nov 2026", title: "Herbs, roads, a big spellbook and colours", items: [
