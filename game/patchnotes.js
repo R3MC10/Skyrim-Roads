@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b100", build: 100, date: "22 Nov 2026", title: "A real soundtrack", items: [
+      "New music! 16 full pieces replace the old beeping tunes: the main menu, the open road, towns, snowy weather, dungeons, fights and boss fights each have their own.",
+      "When one piece ends, another of the same kind starts, so it doesn't loop the same song forever. The music slider and mute in Settings work as before.",
+      "The app download is bigger now because the music is inside it, so it plays offline too.",
+    ] },
     { id: "b99", build: 99, date: "22 Nov 2026", title: "Stories in Polish too", items: [
       "Quests, road events, dungeons, rumours, town talk, guard chatter, books and tips are now in Polish when the game is set to Polski. About 1,800 lines translated.",
       "Names of places and people stay as they are. A few help boxes and item names are still in English; more coming.",
