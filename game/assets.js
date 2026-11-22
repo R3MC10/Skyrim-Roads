@@ -18,6 +18,11 @@
      ui-compass               1024×1024  transparent compass rose
      ui-nightsky              1080×1920  night sky for the skills (constellation) page
      ui-frame                 1024×1024  transparent 9-slice frame, 96px corners
+     icon-<item-id>           256×256    optional painted item icons, transparent PNG, item id with - instead of _
+       (e.g. icon-steel-sword, icon-iron-armor). Any missing icon keeps the drawn one. Worth painting first:
+       armour sets (helmet/armor/gauntlets/boots/shield) hide leather iron steel chainmail elven dwarven ancient-nord
+       stalhrim chitin bonemold forsworn guild nightingale shrouded; weapons iron/steel/elven/dwarven/ancient-nord/
+       stalhrim/skyforge-steel swords, war axes, greatswords, battleaxes, daggers, maces, bows, crossbows, staffs.
 
    API: ASSETS.img(key) → a loaded HTMLImageElement or null (asks for the file the first time).
         ASSETS.url(key) → its URL or "" · ASSETS.placeKey(name) · ASSETS.biomeKey(name) · ASSETS.foeKey(name, kind)

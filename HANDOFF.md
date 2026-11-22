@@ -14,7 +14,14 @@ Read `CLAUDE.md` first (project layout, rules, how to work). This file is the cu
 - If he reports the Android installer still popping up: ask what ⚙ → Main menu → Update says (it now shows whether quick updates are active and the last error).
 - A web copy of the game is published as a claude.ai artifact by the cloud session; on the PC you can just test with `python3 -m http.server` in `game/`.
 
-## Work in progress (in the cloud session — will be pushed to main when finished)
+## Branches waiting for you (pushed from the cloud session, 22 Nov ~12:40)
+- `claude/gear` — FINISHED: gear visuals for every armour set/weapon, visible to other players; gear preview; idle/walk animations. Tests: tests/test_gearlook.js, gearlook_ui.py. Ready to merge into main (check conflicts with the other branches in fightart.js, fxart.js, heroart.js, ui.js, index.html).
+- `claude/wip-party-merge` — UNFINISHED: exact map (map3) + party play (party2) + followers overhaul + enemy perks + end-of-dungeon loot vote (lootvote.js). The patches were applied and hand-merged but the loot vote and full test run were not finished. Next: run all node tests and partyplay_ui/followers2_ui/foeperks_ui/map11_ui, fix, then merge.
+- `claude/wip-ai-settings` — UNFINISHED: sneak-attack fix (sneak2.js), adjustable Smart AI settings (aiset.js), better tactics editor. Was in the middle of the full regression.
+- `claude/wip-turn-based` — UNFINISHED: turn-based combat (tbfight.js): initiative, action points, manual turns + Auto, live party turns. Stopped mid-work (ui/store/coop/fightart edits not done).
+All WIP branches were made from build 74 code, so merge main into them first (art + patch notes changed there).
+
+## Original plan for the work above (for reference)
 1. Merge of: exact map from game data (map3), party play (leader leads, ready check, 8 players, dungeon scaling), **end-of-dungeon loot vote with d100 rolls**, follower overhaul (inventory, auto-levelling, archetypes), perks for humanoid enemies.
 2. Turn-based combat: initiative order, action points (Athletics/Stamina, spell AP from Magicka/Alteration, initiative from Acrobatics/Sneak), manual turns + Auto button, live party turns with 60 s timer, long tactical fights, good animations.
 3. Sneak-attack fix (no more one-shots) + player-adjustable Smart AI (style, preferred attacks, allowed schools, "Spread practice" to level all skills, potions/shouts/sneak settings) + better tactics editor (AND/OR rules, presets, share codes, test-fight preview, hybrid mode).

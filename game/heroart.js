@@ -17,36 +17,13 @@ const HEROART = (() => {
     khajiit: { skin: ["#c9944e", "#b8a07a", "#8a6a48"], hair: ["#6b4a2e", "#3b2c1e"], beard: 0, ears: "cat", h: 0.99, w: 1, eyes: "#d6b25e", tail: true },
     argonian: { skin: ["#6f8a5a", "#5f7f6a", "#7a8a4a"], hair: [], beard: 0, ears: "lizard", h: 1, w: 1, eyes: "#e8c24a", tail: true },
   };
-  // ---- materials ([Skyrim] armour sets, as colours)
-  const MAT = {
-    hide: { c: "#8a6a48", d: "#5e4630", trim: "#c9b48f" }, leather: { c: "#7a5232", d: "#553823", trim: "#a87a50" },
-    iron: { c: "#6f6a64", d: "#4d4945", trim: "#8f8a84" }, steel: { c: "#a9b0b4", d: "#7d858a", trim: "#d0d5d8" },
-    chain: { c: "#8d949a", d: "#646a70", trim: "#b5bbc0" }, dwarven: { c: "#c08a3c", d: "#8f6328", trim: "#e0b060" },
-    elven: { c: "#c9a75e", d: "#8f7a3c", trim: "#e8d48a" }, nord: { c: "#5e6b5a", d: "#3f4a3d", trim: "#8a9480" },
-    forsworn: { c: "#6b4a2e", d: "#4a3220", trim: "#a8442e" }, guild: { c: "#3b3330", d: "#262120", trim: "#6b5640" },
-    robe: { c: "#5a4a7a", d: "#3d3256", trim: "#c9a75e" }, arch: { c: "#2f3a6a", d: "#1f274a", trim: "#d6b25e" },
-    cloth: { c: "#b9a07a", d: "#8f7a5a", trim: "#d8c6a0" }, wood: { c: "#7a5232", d: "#553823", trim: "#a87a50" },
-    ebony: { c: "#3a3138", d: "#221c22", trim: "#6a5a6a" },
-  };
+  // ---- materials: every armour set's colours come from GEARLOOK (gearlook.js), so new sets show up everywhere at once
+  const MAT = typeof GEARLOOK !== "undefined" ? GEARLOOK.SETS : {};
   const baseOf = (id) => (id && id.startsWith("ench|") ? id.split("|")[1] : id);
-  /* which material an item is made of */
-  function matOf(id) {
-    id = baseOf(id) || "";
-    if (/^archmage/.test(id)) return "arch"; if (/robe/.test(id)) return "robe"; if (/^guild/.test(id)) return "guild";
-    if (/^wuuthrad/.test(id)) return "ebony"; if (/^dwarven|crossbow_dwarven/.test(id)) return "dwarven"; if (/^elven/.test(id)) return "elven";
-    if (/^ancient_nord/.test(id)) return "nord"; if (/^forsworn/.test(id)) return "forsworn"; if (/^chainmail/.test(id)) return "chain";
-    if (/^steel/.test(id)) return "steel"; if (/^hide/.test(id)) return "hide"; if (/^leather/.test(id)) return "leather";
-    if (/^(hunting_bow|long_bow|staff_|crossbow)/.test(id)) return "wood"; if (/^iron/.test(id)) return "iron";
-    return "iron";
-  }
+  /* which material (armour set) an item is made of */
+  function matOf(id) { return typeof GEARLOOK !== "undefined" ? GEARLOOK.setOf(id) : "iron"; }
   /* what to draw for a weapon */
-  function weaponKind(id) {
-    id = baseOf(id) || "";
-    if (!id) return null;
-    if (/^staff_/.test(id)) return "staff"; if (/crossbow/.test(id)) return "crossbow";
-    if (/^wuuthrad/.test(id)) return "battleaxe";
-    return G.wtype(id);
-  }
+  function weaponKind(id) { return typeof GEARLOOK !== "undefined" ? GEARLOOK.wkOf(id) : null; }
   const ELEMENT = { fire: "#e8923a", flames: "#e8923a", frost: "#9fd0f0", shock: "#c9b6ff", sparks: "#c9b6ff", absorb: "#c4372e", sun: "#f3e7a4" };
   function staffColor(id) { const sp = D.SPELLS[D.ITEMS[id]?.staff?.spell]; return ELEMENT[sp?.element] || (sp?.kind === "reanimate" ? "#8fd08a" : sp?.kind === "turn" ? "#f3e7a4" : "#c9b6ff"); }
 
@@ -74,8 +51,8 @@ const HEROART = (() => {
     const beard = rnd() < race.beard, hairStyle = String(L.id).startsWith("preview") ? 0 : [0, 0, 1, 2, 2, 0, 1, 3][Math.floor(rnd() * 8)], paint = rnd() < 0.3 ? ["#1c2128", "#2f4f8a", "#8e2b25"][Math.floor(rnd() * 3)] : null;
     const eq = L.eq || {};
     const chest = eq.chest, head = eq.head, hands = eq.hands, feet = eq.feet, shield = eq.shield, weapon = eq.weapon;
-    const cm = chest ? MAT[matOf(chest)] : MAT.cloth, robe = chest && /robe/.test(chest);
-    const heavy = chest && D.ITEMS[chest]?.type === "heavy";
+    const cm = chest ? MAT[matOf(chest)] : MAT.cloth, robe = !!chest && cm.w === "robe", F = (chest && cm.f) || {};
+    const heavy = !!chest && (cm.w === "heavy" || D.ITEMS[chest]?.type === "heavy");
     const legC = robe ? cm : heavy ? cm : chest ? MAT[matOf(chest)] : { c: "#6b5640", d: "#4d3c2c", trim: "#8f7a66" };
     const ink = pal.ink;
 
@@ -84,6 +61,9 @@ const HEROART = (() => {
     // build: scale around the feet
     g.save(); g.translate(80, 206); g.scale(race.w, race.h); g.translate(-80, -206);
 
+    // a cape behind the body (heavy sets and cloaked sets)
+    const capeC = F.cape || (heavy && !robe ? "#7a2a22" : null);
+    if (capeC) { H.poly(g, [[58, 70], [102, 70], [112, 186], [96, 192], [80, 184], [64, 192], [48, 186]], capeC, ink, 1.4); g.strokeStyle = "rgba(0,0,0,0.18)"; g.lineWidth = 1.2; for (const x of [66, 80, 94]) { g.beginPath(); g.moveTo(x, 78); g.lineTo(x + (x - 80) * 0.25, 184); g.stroke(); } }
     // tail (behind)
     if (race.tail) {
       g.strokeStyle = ink; g.lineWidth = 9; g.lineCap = "round"; g.beginPath(); g.moveTo(90, 132); g.quadraticCurveTo(122, 150, 116, 186); g.stroke();
@@ -127,27 +107,12 @@ const HEROART = (() => {
       H.poly(g, [[61, 114], [99, 114], [98, 122], [62, 122]], "#6b5640", ink, 1);
     } else if (robe) {
       H.poly(g, [[74, 70], [86, 70], [82, 126], [78, 126]], cm.trim, null); g.strokeStyle = cm.trim; g.lineWidth = 3; g.beginPath(); g.moveTo(62, 110); g.lineTo(98, 110); g.stroke();
-    } else {
-      const m = matOf(chest);
-      if (m === "chain") { g.fillStyle = cm.d; for (let y = 76; y < 122; y += 5) for (let x = 60 + ((y / 5) % 2) * 2.5; x < 100; x += 5) { g.beginPath(); g.arc(x, y, 1.1, 0, 7); g.fill(); } }
-      if (m === "hide" || m === "forsworn") { H.poly(g, [[56, 70], [104, 70], [100, 80], [60, 80]], MAT.hide.trim, ink, 1.2); if (m === "forsworn") { g.strokeStyle = cm.trim; g.lineWidth = 2; for (const x of [64, 80, 96]) { g.beginPath(); g.moveTo(x, 80); g.lineTo(x - 3, 96); g.stroke(); } } }
-      if (["iron", "steel", "dwarven", "elven", "nord"].includes(m)) {
-        H.poly(g, [[62, 76], [98, 76], [94, 104], [66, 104]], cm.trim, ink, 1.2);   // breastplate
-        H.poly(g, [[50, 66], [66, 66], [64, 80], [50, 80]], cm.d, ink, 1.2); H.poly(g, [[94, 66], [110, 66], [110, 80], [96, 80]], cm.d, ink, 1.2);   // pauldrons
-        if (m === "iron") { g.fillStyle = "#3b2c1e"; for (const [x, y] of [[66, 80], [94, 80], [80, 100]]) { g.beginPath(); g.arc(x, y, 1.4, 0, 7); g.fill(); } }
-        if (m === "dwarven") { H.circle(g, 80, 90, 6, cm.c, ink, 1.2); g.strokeStyle = cm.d; g.beginPath(); g.moveTo(80, 84); g.lineTo(80, 96); g.moveTo(74, 90); g.lineTo(86, 90); g.stroke(); }
-        if (m === "elven") { H.poly(g, [[80, 78], [90, 92], [80, 102], [70, 92]], "#8fb070", ink, 1); }
-        if (m === "nord") { g.strokeStyle = cm.d; g.lineWidth = 1.4; for (const y of [84, 92, 100]) { g.beginPath(); g.moveTo(64, y); g.quadraticCurveTo(80, y + 4, 96, y); g.stroke(); } }
-      }
-      if (m === "leather" || m === "guild") { g.strokeStyle = cm.trim; g.lineWidth = 2; g.beginPath(); g.moveTo(58, 72); g.lineTo(98, 120); g.stroke(); H.circle(g, 72, 88, 2, cm.trim, null); H.circle(g, 86, 104, 2, cm.trim, null); }
-      H.poly(g, [[61, 112], [99, 112], [98, 120], [62, 120]], m === "guild" ? "#1c1714" : "#4d3c2c", ink, 1);   // belt
-      H.poly(g, [[76, 112], [84, 112], [84, 120], [76, 120]], P().gold, ink, 0.8);
-    }
+    } else armourChest(g, H, cm, F, heavy, matOf(chest), ink);
     if (L.gl.a) glow(g, 80, 98, 34, "#9fd0f0", 0.25);
 
     // neck and head
     H.poly(g, [[74, 58], [86, 58], [86, 71], [74, 71]], skin, ink, 1.3);
-    drawHead(g, H, L, race, skin, hairC, beard, hairStyle, paint, head, robe);
+    drawHead(g, H, L, race, skin, hairC, beard, hairStyle, paint, head, robe || (!!F.hood && !head), F.hood ? cm : null);
 
     g.restore();
     // weapon in the hand and the shield on the arm (unscaled offsets are fine)
@@ -156,7 +121,49 @@ const HEROART = (() => {
     if (L.ww) { g.fillStyle = "rgba(90,60,30,0.5)"; for (let i = 0; i < 6; i++) { g.beginPath(); g.arc(60 + i * 8, 70 + (i % 2) * 3, 3, 0, 7); g.fill(); } }
   }
 
-  function drawHead(g, H, L, race, skin, hairC, beard, hairStyle, paint, head, robe) {
+  /* an armoured or clothed chest, from the set's features (GEARLOOK) */
+  function sheen(g, x0, y0, x1, y1, a = 0.35) {   // a metal highlight band
+    const gr = g.createLinearGradient(x0, y0, x1, y1); gr.addColorStop(0, "rgba(255,255,255,0)"); gr.addColorStop(0.45, `rgba(255,255,255,${a})`); gr.addColorStop(0.55, "rgba(255,255,255,0)"); gr.addColorStop(1, "rgba(0,0,0,0.12)");
+    g.fillStyle = gr; return gr;
+  }
+  function armourChest(g, H, cm, F, heavy, m, ink) {
+    const P = (pts, c, w = 1.2) => H.poly(g, pts, c, ink, w);
+    if (F.translucent) { g.globalAlpha = 0.35; g.fillStyle = "#ffffff"; g.beginPath(); g.moveTo(60, 72); g.lineTo(72, 72); g.lineTo(64, 124); g.lineTo(62, 124); g.fill(); g.globalAlpha = 1; }
+    if (F.chain) { g.fillStyle = cm.d; for (let y = 76; y < 122; y += 5) for (let x = 60 + ((y / 5) % 2) * 2.5; x < 100; x += 5) { g.beginPath(); g.arc(x, y, 1.1, 0, 7); g.fill(); } }
+    if (F.scales) { g.strokeStyle = cm.d; g.lineWidth = 1; for (let y = 78; y < 120; y += 6) for (let x = 60 + ((y / 6) % 2) * 3; x < 100; x += 6) { g.beginPath(); g.arc(x, y, 3, 0, Math.PI); g.stroke(); } }
+    if (F.seg) { g.strokeStyle = cm.d; g.lineWidth = 1.6; for (const y of [82, 92, 102, 112]) { g.beginPath(); g.moveTo(60, y); g.quadraticCurveTo(80, y + 5, 100, y); g.stroke(); } }
+    if (heavy) {
+      P([[62, 76], [98, 76], [94, 106], [80, 110], [66, 106]], cm.trim, 1.2);   // breastplate
+      if (cm.metal) { sheen(g, 62, 76, 98, 106); g.beginPath(); g.moveTo(62, 76); g.lineTo(98, 76); g.lineTo(94, 106); g.lineTo(80, 110); g.lineTo(66, 106); g.closePath(); g.fill(); }
+      const plates = F.plates || 0;
+      for (let i = 0; i < plates; i++) { const y = 112 + i * 5; P([[62, y], [98, y], [97, y + 5], [63, y + 5]], cm.d, 1); }
+      // pauldrons by style
+      if (F.spikes) {
+        for (const sx of [1, -1]) { const x = sx > 0 ? 50 : 110, w = 16 * sx; P([[x, 66], [x + w, 66], [x + w, 82], [x, 80]], cm.d); for (let k = 0; k < (F.spikes > 1 ? 3 : 2); k++) P([[x + sx * (2 + k * 5), 66], [x + sx * (4 + k * 5), 54 - k * 2], [x + sx * (6 + k * 5), 66]], cm.trim, 1); }
+      } else if (F.bone) {
+        for (const sx of [1, -1]) { const x = sx > 0 ? 48 : 112; P([[x, 68], [x + sx * 18, 64], [x + sx * 18, 80], [x, 84]], cm.c); g.strokeStyle = cm.d; g.lineWidth = 1.2; for (const y of [70, 75, 80]) { g.beginPath(); g.moveTo(x + sx * 2, y); g.lineTo(x + sx * 16, y - 2); g.stroke(); } }
+      } else {
+        P([[50, 66], [66, 66], [64, 80], [50, 80]], cm.d); P([[94, 66], [110, 66], [110, 80], [96, 80]], cm.d);
+      }
+      if (F.ridges) { g.strokeStyle = cm.d; g.lineWidth = 1.4; for (let i = 0; i < (F.ridges > 1 ? 3 : 2); i++) { const y = 84 + i * 8; g.beginPath(); g.moveTo(64, y); g.quadraticCurveTo(80, y + 4, 96, y); g.stroke(); } }
+      if (F.rivets) { g.fillStyle = "#3b2c1e"; for (const [x, y] of [[66, 80], [94, 80], [80, 104], [56, 72], [104, 72]]) { g.beginPath(); g.arc(x, y, 1.4, 0, 7); g.fill(); } }
+      if (F.gears) { H.circle(g, 80, 90, 6, cm.c, ink, 1.2); g.strokeStyle = cm.d; g.beginPath(); g.moveTo(80, 84); g.lineTo(80, 96); g.moveTo(74, 90); g.lineTo(86, 90); g.stroke(); for (let a = 0; a < 8; a++) { g.fillStyle = cm.d; g.fillRect(80 + Math.cos(a * 0.785) * 7 - 1, 90 + Math.sin(a * 0.785) * 7 - 1, 2, 2); } }
+      if (F.tabard) P([[72, 78], [88, 78], [86, 128], [74, 128]], F.tabard, 1);
+    } else {
+      if (F.feathers) for (const x of [56, 104]) for (let k = 0; k < 3; k++) P([[x - 2 + k * 2, 70], [x - 6 + k * 4, 58], [x + 2 + k * 2, 70]], ["#8e2b25", "#e9dcc0", "#3d5d36"][k], 0.8);
+      if (F.ridges) { P([[66, 76], [94, 76], [90, 104], [70, 104]], cm.trim, 1.1); if (cm.metal) { sheen(g, 66, 76, 94, 104); g.beginPath(); g.moveTo(66, 76); g.lineTo(94, 76); g.lineTo(90, 104); g.lineTo(70, 104); g.closePath(); g.fill(); } P([[52, 68], [64, 68], [62, 78], [52, 78]], cm.d); P([[96, 68], [108, 68], [108, 78], [98, 78]], cm.d); }
+      if (F.sash) { g.strokeStyle = F.sash; g.lineWidth = 5; g.beginPath(); g.moveTo(58, 72); g.lineTo(98, 120); g.stroke(); g.strokeStyle = cm.trim; g.lineWidth = 1; g.stroke(); }
+      if (F.rivets) { g.fillStyle = cm.trim; for (let y = 80; y < 112; y += 8) for (let x = 66; x < 96; x += 8) { g.beginPath(); g.arc(x, y, 1.3, 0, 7); g.fill(); } }
+      if (F.spikes && F.translucent) for (const x of [52, 100]) P([[x, 70], [x + 4, 56], [x + 8, 70]], cm.trim, 1);
+    }
+    if (F.gem) P([[80, 82], [88, 92], [80, 100], [72, 92]], F.gem, 1);
+    if (F.fur) { const n = F.fur > 1 ? 9 : 6; for (let i = 0; i < n; i++) H.circle(g, 56 + i * (48 / (n - 1)), 70 + (i % 2) * 2, F.fur > 1 ? 5 : 4, i % 2 ? "#d8c8a8" : "#b8a080", ink, 0.8); }   // fur collar
+    H.poly(g, [[61, 112], [99, 112], [98, 120], [62, 120]], m === "guild" || m === "nightingale" ? "#1c1714" : cm.d, ink, 1);   // belt
+    H.poly(g, [[76, 112], [84, 112], [84, 120], [76, 120]], ART.PAL.gold, ink, 0.8);
+    if (F.glow) glow(g, 80, 96, 30, F.glow, 0.28);
+  }
+
+  function drawHead(g, H, L, race, skin, hairC, beard, hairStyle, paint, head, robe, hoodSet) {
     const ink = P().ink, cx = 80, cy = 44;
     // ears behind
     if (race.ears === "elf") { H.poly(g, [[66, 42], [56, 30], [67, 50]], skin, ink, 1.2); H.poly(g, [[94, 42], [104, 30], [93, 50]], skin, ink, 1.2); }
@@ -202,7 +209,7 @@ const HEROART = (() => {
     }
     // helmet / hood
     if (robe && !head) {
-      const rm = MAT[/^archmage/.test(L.eq.chest) ? "arch" : "robe"];
+      const rs = hoodSet || MAT[matOf(L.eq.chest)] || MAT.robe, rm = { c: rs.f?.hood || rs.c, trim: rs.trim };
       g.beginPath(); g.moveTo(62, 60); g.quadraticCurveTo(58, 24, 80, 22); g.quadraticCurveTo(102, 24, 98, 60); g.quadraticCurveTo(92, 40, 80, 38); g.quadraticCurveTo(68, 40, 62, 60); g.fillStyle = rm.c; g.fill(); g.strokeStyle = ink; g.lineWidth = 1.5; g.stroke();
       g.strokeStyle = rm.trim; g.lineWidth = 1.5; g.beginPath(); g.moveTo(64, 56); g.quadraticCurveTo(80, 34, 96, 56); g.stroke();
     }
@@ -215,10 +222,17 @@ const HEROART = (() => {
       g.beginPath(); g.ellipse(80, 38, 17, 15, 0, Math.PI, Math.PI * 2); g.lineTo(97, 56); g.lineTo(63, 56); g.closePath(); g.fillStyle = "#2c2420"; g.fill(); g.strokeStyle = ink; g.lineWidth = 1.4; g.stroke();
       PRIESTS.drawMask(g, 80, 45, 1.42, D.ITEMS[id].mask, ink); return;
     }
+    const hs = MAT[m] || MAT.iron, hf = hs.f || {};
+    if (hf.hood && !/helm/.test(id)) {   // cowls and hoods (Thieves Guild, Nightingale, Dark Brotherhood, Forsworn headdresses)
+      g.beginPath(); g.moveTo(62, 62); g.quadraticCurveTo(58, 22, 80, 20); g.quadraticCurveTo(102, 22, 98, 62); g.quadraticCurveTo(92, 40, 80, 38); g.quadraticCurveTo(68, 40, 62, 62); g.fillStyle = hf.hood; g.fill(); g.strokeStyle = ink; g.lineWidth = 1.5; g.stroke();
+      if (m === "nightingale" || m === "guild" || m === "shrouded") { g.fillStyle = hs.d; g.fillRect(68, 48, 24, 10); }   // face mask
+      if (hf.feathers) for (let k = -1; k <= 1; k++) H.poly(g, [[80 + k * 6 - 2, 24], [80 + k * 10, 8], [80 + k * 6 + 2, 24]], ["#8e2b25", "#e9dcc0", "#3d5d36"][k + 1], ink, 0.8);
+      return;
+    }
     if (/coif/.test(id)) { g.beginPath(); g.moveTo(63, 62); g.quadraticCurveTo(58, 24, 80, 24); g.quadraticCurveTo(102, 24, 97, 62); g.quadraticCurveTo(92, 42, 80, 40); g.quadraticCurveTo(68, 42, 63, 62); g.fillStyle = c.c; g.fill(); g.strokeStyle = ink; g.lineWidth = 1.4; g.stroke(); g.fillStyle = c.d; for (let y = 30; y < 60; y += 5) for (let x = 64; x < 97; x += 5) if (Math.abs(x - 80) > 10 || y < 38) { g.beginPath(); g.arc(x, y, 0.9, 0, 7); g.fill(); } return; }
-    if (m === "hide" || m === "leather") {   // fur cap / leather hood-cap
+    if (m === "hide" || m === "leather" || m === "fur" || m === "studded" || m === "stormcloak") {   // fur cap / leather hood-cap
       g.beginPath(); g.ellipse(80, 34, 16, 12, 0, Math.PI, Math.PI * 2); g.lineTo(96, 40); g.lineTo(64, 40); g.closePath(); g.fillStyle = c.c; g.fill(); g.strokeStyle = ink; g.lineWidth = 1.4; g.stroke();
-      g.fillStyle = m === "hide" ? MAT.hide.trim : c.trim; g.fillRect(63, 36, 34, 5); g.strokeRect(63, 36, 34, 5); return;
+      g.fillStyle = m === "hide" || m === "fur" || m === "stormcloak" ? MAT.hide.trim : c.trim; g.fillRect(63, 36, 34, 5); g.strokeRect(63, 36, 34, 5); return;
     }
     // metal helmets: dome + brim (+ extras)
     g.beginPath(); g.ellipse(80, 36, 16.5, 15, 0, Math.PI, Math.PI * 2); g.lineTo(96.5, 42); g.lineTo(63.5, 42); g.closePath(); g.fillStyle = c.c; g.fill(); g.strokeStyle = ink; g.lineWidth = 1.5; g.stroke();
@@ -228,6 +242,17 @@ const HEROART = (() => {
     if (m === "nord") { H.poly(g, [[64, 32], [50, 24], [60, 36]], c.trim, ink, 1); H.poly(g, [[96, 32], [110, 24], [100, 36]], c.trim, ink, 1); H.poly(g, [[63, 42], [69, 42], [70, 58], [63, 54]], c.c, ink, 1); H.poly(g, [[97, 42], [91, 42], [90, 58], [97, 54]], c.c, ink, 1); }
     if (m === "dwarven") { H.poly(g, [[76, 22], [84, 22], [82, 12], [78, 12]], c.trim, ink, 1); H.poly(g, [[62, 42], [98, 42], [96, 58], [88, 50], [72, 50], [64, 58]], c.c, ink, 1.2); }
     if (m === "elven") { H.poly(g, [[70, 26], [80, 8], [90, 26]], c.trim, ink, 1.2); H.poly(g, [[63, 42], [68, 42], [66, 56]], c.c, ink, 1); H.poly(g, [[97, 42], [92, 42], [94, 56]], c.c, ink, 1); }
+    if (hs.metal) { sheen(g, 64, 22, 96, 40, 0.3); g.beginPath(); g.ellipse(80, 36, 16.5, 15, 0, Math.PI, Math.PI * 2); g.fill(); }
+    if (hf.translucent) { g.globalAlpha = 0.3; g.fillStyle = "#fff"; g.beginPath(); g.ellipse(74, 30, 4, 7, -0.4, 0, 7); g.fill(); g.globalAlpha = 1; }
+    if (!["iron", "steel", "nord", "dwarven", "elven"].includes(m)) {   // the newer sets: horns, spikes, ridges, bone crests, face plates
+      if (hf.horns) { const big = hf.horns > 1 ? 1.4 : 1; H.poly(g, [[64, 32], [64 - 14 * big, 14], [58, 32], [62, 38]], hs.trim, ink, 1.2); H.poly(g, [[96, 32], [96 + 14 * big, 14], [102, 32], [98, 38]], hs.trim, ink, 1.2); }
+      if (hf.spikes) for (let k = -1; k <= 1; k++) H.poly(g, [[80 + k * 8 - 3, 24], [80 + k * 9, 10 - (k ? 0 : 4)], [80 + k * 8 + 3, 24]], hs.trim, ink, 1);
+      if (hf.bone) { H.poly(g, [[74, 24], [80, 6], [86, 24]], hs.trim, ink, 1.2); }
+      if (hf.ridges) { g.strokeStyle = hs.d; g.lineWidth = 1.4; g.beginPath(); g.moveTo(80, 22); g.lineTo(80, 40); g.stroke(); }
+      if (hs.w === "heavy" || hf.spikes) { H.poly(g, [[63, 42], [69, 42], [70, 58], [63, 54]], hs.c, ink, 1); H.poly(g, [[97, 42], [91, 42], [90, 58], [97, 54]], hs.c, ink, 1); }
+      if (hf.glow) { g.fillStyle = hf.glow; g.shadowColor = hf.glow; g.shadowBlur = 6; g.fillRect(71, 43, 6, 2); g.fillRect(83, 43, 6, 2); g.shadowBlur = 0; }
+      if (hf.fur) { for (let i = 0; i < 6; i++) H.circle(g, 64 + i * 6.4, 41, 3, "#d8c8a8", ink, 0.7); }
+    }
   }
 
   function glow(g, x, y, r, color, a = 0.45) {
@@ -238,6 +263,7 @@ const HEROART = (() => {
     const ink = P().ink, m = MAT[matOf(id)], hx = 50, hy = 128;
     const blade = [MAT.wood, MAT.forsworn, MAT.hide, MAT.leather].includes(m) ? { c: "#d8cdb0", d: "#a89a78", trim: "#e8dfc8" } : m;   // wood, bone and stone blades
     if (ench) glow(g, hx - 14, hy - 40, 30, ELEMENT[ench] || "#c9b6ff");
+    else if (m.f?.glow) glow(g, hx - 14, hy - 40, 26, m.f.glow, 0.3);
     g.save(); g.translate(hx, hy); g.rotate(-0.35);
     const grip = (len) => { H.poly(g, [[-2.5, 6], [2.5, 6], [2.5, -len], [-2.5, -len]], MAT.leather.c, ink, 1.1); };
     if (wk === "dagger") { grip(6); H.poly(g, [[-7, -6], [7, -6], [7, -9], [-7, -9]], blade.d, ink, 1); H.poly(g, [[-3.5, -9], [3.5, -9], [0, -30]], blade.trim, ink, 1.2); }
@@ -285,9 +311,13 @@ const HEROART = (() => {
   }
   function drawShield(g, H, id) {
     const ink = P().ink, m = matOf(id), c = MAT[m];
-    if (m === "steel" || m === "dwarven" || m === "elven") {   // kite shield
+    const sf = (c && c.f) || {};
+    if (c && c.w === "heavy" && !["iron", "hide", "banded", "chain"].includes(m) || m === "elven" || m === "glass") {   // kite shield
       H.poly(g, [[100, 96], [128, 96], [128, 126], [114, 148], [100, 126]], c.c, ink, 1.6);
       H.poly(g, [[104, 100], [124, 100], [124, 124], [114, 142], [104, 124]], c.trim, null); g.strokeStyle = c.d; g.lineWidth = 2; g.beginPath(); g.moveTo(114, 100); g.lineTo(114, 140); g.moveTo(104, 114); g.lineTo(124, 114); g.stroke();
+      if (c.metal) { sheen(g, 100, 96, 128, 140, 0.28); g.beginPath(); g.moveTo(100, 96); g.lineTo(128, 96); g.lineTo(128, 126); g.lineTo(114, 148); g.lineTo(100, 126); g.closePath(); g.fill(); }
+      if (sf.spikes) for (const [x, y] of [[100, 96], [128, 96]]) H.poly(g, [[x - 3, y + 2], [x + (x > 110 ? 6 : -6), y - 8], [x + 3, y + 2]], c.trim, ink, 1);
+      if (sf.glow) glow(g, 114, 118, 16, sf.glow, 0.35);
     } else {   // round shield
       H.circle(g, 114, 120, 18, m === "hide" ? MAT.wood.c : c.c, ink, 1.6);
       if (m === "hide") { g.strokeStyle = MAT.wood.d; g.lineWidth = 1; for (const x of [106, 114, 122]) { g.beginPath(); g.moveTo(x, 103); g.lineTo(x, 137); g.stroke(); } g.strokeStyle = MAT.hide.trim; g.lineWidth = 3; g.beginPath(); g.arc(114, 120, 17, 0, 7); g.stroke(); }
