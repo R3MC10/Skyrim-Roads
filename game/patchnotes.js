@@ -3,7 +3,7 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "bQ-fast", build: 0, date: "22 Nov 2026", title: "Quicker trips and fights", items: [
+    { id: "b93", build: 93, date: "22 Nov 2026", title: "Quicker trips and fights", items: [
       "Recent trips: the travel screen shows the places you went to lately as one-tap buttons, plus \"Again\" to repeat your last trip or \"Back to\" to head home where you came from.",
       "New setting (Settings → Fights → After road events): pick \"Carry on\" and the result card after a road event or road fight closes by itself after a few seconds, so you keep walking. Touch the card to stop it.",
       "Fight replays now have ×1, ×2 and ×4 speed (tap the speed button, or pick it in Settings) and a Skip to result button. Tap anywhere on the fight screen or the result card to finish the animation that's playing. With Reduce motion on, replays start at ×2.",
