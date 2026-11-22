@@ -236,8 +236,8 @@ const FXART = (() => {
   function walker(g, H, x, base, ph, look, riding, carriage, horseColor) {
     const race = look && typeof HEROART !== "undefined" && HEROART.RACE[look.r] ? HEROART.RACE[look.r] : null;
     const skin = race ? race.skin[0] : "#e2b894";
-    let body = "#6b5640";
-    try { const ch = look?.eq?.chest; if (ch && typeof HEROART !== "undefined") { const m = HEROART.MAT[HEROART.matOf(ch)]; if (m) body = m.c; } } catch { /* plain clothes */ }
+    let body = "#6b5640", wl = null;
+    try { if (typeof GEARLOOK !== "undefined") { wl = GEARLOOK.walker(look); body = wl.body; } else { const ch = look?.eq?.chest; if (ch && typeof HEROART !== "undefined") { const m = HEROART.MAT[HEROART.matOf(ch)]; if (m) body = m.c; } } } catch { /* plain clothes */ }
     if (carriage) {   // a wagon with you on the bench
       H.poly(g, [[x - 26, base - 18], [x + 18, base - 18], [x + 18, base - 8], [x - 26, base - 8]], PAL.wood, PAL.ink, 1.2);
       for (const wx of [x - 18, x + 10]) { H.circle(g, wx, base - 6, 6, "#5a4030", PAL.ink, 1.2); g.strokeStyle = PAL.ink; g.lineWidth = 1; g.beginPath(); g.moveTo(wx + Math.cos(ph) * 5, base - 6 + Math.sin(ph) * 5); g.lineTo(wx - Math.cos(ph) * 5, base - 6 - Math.sin(ph) * 5); g.stroke(); }
@@ -246,10 +246,24 @@ const FXART = (() => {
     }
     if (riding) { horse(g, H, x, base, ph, horseColor || "#6b4a2e"); base -= 9; g.strokeStyle = PAL.ink; g.lineWidth = 2.6; g.lineCap = "round"; g.beginPath(); g.moveTo(x, base - 12); g.lineTo(x + 3, base - 3); g.stroke(); g.lineCap = "butt"; }   // sitting in the saddle, a leg down the side
     const swing = riding ? 0 : Math.sin(ph) * 5, bob = riding ? Math.abs(Math.sin(ph)) * 1.2 : Math.abs(Math.sin(ph)) * 1.5;
-    if (!riding) { g.strokeStyle = PAL.ink; g.lineWidth = 2.6; g.lineCap = "round"; g.beginPath(); g.moveTo(x, base - 12 - bob); g.lineTo(x + swing, base); g.moveTo(x, base - 12 - bob); g.lineTo(x - swing, base); g.stroke(); g.lineCap = "butt"; }
+    const capeSway = Math.sin(ph * 0.5) * 1.6 + (riding ? 2 : 0);
+    H.poly(g, [[x - 5, base - 25 - bob], [x - 10 - capeSway, base - 12 - bob], [x - 5, base - 13 - bob]], wl?.cape || "#8e2b25", PAL.ink, 0.8);   // a cape that sways as they walk
+    if (!riding) {
+      const legC = wl ? (wl.heavy ? wl.dark : "#4d3c2c") : PAL.ink;
+      g.strokeStyle = PAL.ink; g.lineWidth = 3.2; g.lineCap = "round"; g.beginPath(); g.moveTo(x, base - 12 - bob); g.lineTo(x + swing, base); g.moveTo(x, base - 12 - bob); g.lineTo(x - swing, base); g.stroke();
+      g.strokeStyle = legC; g.lineWidth = 1.8; g.beginPath(); g.moveTo(x, base - 12 - bob); g.lineTo(x + swing, base); g.moveTo(x, base - 12 - bob); g.lineTo(x - swing, base); g.stroke(); g.lineCap = "butt";
+    }
+    if (wl?.robe) H.poly(g, [[x - 5, base - 14 - bob], [x + 5, base - 14 - bob], [x + 7, base - 2], [x - 7, base - 2]], body, PAL.ink, 0.9);
+    // the back arm swings opposite the legs
+    g.strokeStyle = PAL.ink; g.lineWidth = 2; g.beginPath(); g.moveTo(x - 4, base - 22 - bob); g.lineTo(x - 5 - (riding ? 0 : swing * 0.6), base - 14 - bob); g.stroke();
     H.poly(g, [[x - 5, base - 26 - bob], [x + 5, base - 26 - bob], [x + 5, base - 11 - bob], [x - 5, base - 11 - bob]], body, PAL.ink, 1);
-    H.poly(g, [[x - 5, base - 25 - bob], [x - 10, base - 12 - bob], [x - 5, base - 13 - bob]], "#8e2b25", PAL.ink, 0.8);   // a cape
+    if (wl) {
+      if (wl.heavy) { H.poly(g, [[x - 3.6, base - 24.5 - bob], [x + 3.6, base - 24.5 - bob], [x + 3, base - 17 - bob], [x - 3, base - 17 - bob]], wl.trim, null); H.poly(g, [[x - 7, base - 27 - bob], [x - 3, base - 27 - bob], [x - 3, base - 23 - bob], [x - 7, base - 23 - bob]], wl.dark, PAL.ink, 0.7); H.poly(g, [[x + 3, base - 27 - bob], [x + 7, base - 27 - bob], [x + 7, base - 23 - bob], [x + 3, base - 23 - bob]], wl.dark, PAL.ink, 0.7); }
+      if (wl.fur) for (let i = 0; i < 4; i++) H.circle(g, x - 4.5 + i * 3, base - 26 - bob, 1.6, i % 2 ? "#d8c8a8" : "#b8a080", null);
+      if (wl.glow) { g.globalAlpha = 0.35; g.fillStyle = wl.glowC; g.beginPath(); g.arc(x, base - 19 - bob, 6, 0, 7); g.fill(); g.globalAlpha = 1; }
+    }
     H.circle(g, x, base - 30 - bob, 4.4, skin, PAL.ink, 1);
+    if (wl?.hood) H.poly(g, [[x - 5.2, base - 27 - bob], [x - 4.6, base - 34 - bob], [x, base - 36 - bob], [x + 4.6, base - 34 - bob], [x + 3, base - 31 - bob], [x - 2, base - 31 - bob]], wl.cape, PAL.ink, 0.8);
     const hx = x + 6 + (riding ? 2 : -swing * 0.5), hy = base - 14 - bob;
     g.strokeStyle = PAL.ink; g.lineWidth = 2; g.beginPath(); g.moveTo(x + 4, base - 22 - bob); g.lineTo(hx, hy); g.stroke();
     gear(g, H, x, base - bob, hx, hy, look);
@@ -257,8 +271,13 @@ const FXART = (() => {
   /* what they carry: the helmet on their head, a shield on the far arm, the weapon in hand (bows and staffs on the shoulder) */
   function gear(g, H, x, base, hx, hy, look) {
     const eq = look?.eq; if (!eq || typeof HEROART === "undefined") return;
-    const matC = (id) => { try { return HEROART.MAT[HEROART.matOf(id)]?.c || "#8f8a84"; } catch { return "#8f8a84"; } };
-    if (eq.head) H.poly(g, [[x - 4.8, base - 30], [x - 4.2, base - 35.4], [x + 4.2, base - 35.4], [x + 4.8, base - 30]], matC(eq.head), PAL.ink, 0.9);
+    const matC = (id) => { try { const m = HEROART.MAT[HEROART.matOf(id)]; return (HEROART.weaponKind(id) && m?.trim) || m?.c || "#8f8a84"; } catch { return "#8f8a84"; } };
+    if (eq.head) {
+      H.poly(g, [[x - 4.8, base - 30], [x - 4.2, base - 35.4], [x + 4.2, base - 35.4], [x + 4.8, base - 30]], matC(eq.head), PAL.ink, 0.9);
+      let hf = null; try { hf = GEARLOOK.set(GEARLOOK.setOf(eq.head)).f; } catch { /* old build */ }
+      if (hf?.horns) { H.poly(g, [[x - 4, base - 34], [x - 8, base - 39], [x - 3, base - 35.5]], "#e6e0cc", PAL.ink, 0.6); H.poly(g, [[x + 4, base - 34], [x + 8, base - 39], [x + 3, base - 35.5]], "#e6e0cc", PAL.ink, 0.6); }
+      if (hf?.spikes) H.poly(g, [[x - 1.2, base - 35.4], [x, base - 39.5], [x + 1.2, base - 35.4]], matC(eq.head), PAL.ink, 0.6);
+    }
     if (eq.shield) { H.poly(g, [[x - 9, base - 24], [x - 3, base - 24], [x - 2.5, base - 17], [x - 6, base - 13], [x - 9.5, base - 17]], matC(eq.shield), PAL.ink, 0.9); }
     const wk = (() => { try { return HEROART.weaponKind(eq.weapon); } catch { return null; } })();
     if (!wk || wk === "fist") return;

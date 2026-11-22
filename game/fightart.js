@@ -34,7 +34,8 @@ const FIGHTART = (() => {
     const mates = (f?.allies || []).filter((a) => a.look).slice(0, 7).map((a) => ({ name: a.name, look: a.look }));   // party members: drawn in their own gear
     const list = (f?.allies || []).map((a) => ({ kind: allyKind(a), name: a.name, look: a.look || (a.follower && typeof PARTY !== "undefined" && a.fid ? PARTY.followerLook(a.fid) : null) }));
     if (s?.thrall && !(f?.allies || []).some((a) => a.thrall)) list.push({ kind: "zombie", name: s.thrall.name });
-    return { skin: SKIN[s?.race] || SKIN.nord, wt, shield: !!f?.shield, body, helm: !!f?.armor?.head, allies, mates, list, beast: !!s?.beastForm };
+    let gearO = null; try { if (typeof GEARLOOK !== "undefined" && typeof HEROART !== "undefined" && s?.loadouts) gearO = GEARLOOK.person(HEROART.lookOf(s)); } catch { /* bare save */ }
+    return { skin: SKIN[s?.race] || SKIN.nord, wt, shield: !!f?.shield, body: gearO?.body || body, helm: !!f?.armor?.head, allies, mates, list, beast: !!s?.beastForm, gearO };
   }
   function foeOf(e) {
     const n = (e?.name || "").toLowerCase(), tg = new Set(e?.tags || []);
@@ -98,10 +99,11 @@ const FIGHTART = (() => {
 
   // ---------------------------------------------------------------- figures (feet at 0,0, facing right, ~60u tall)
   const H = ART.H;
-  function weapon(g, wt, glow, draw = 0) {
+  function weapon(g, wt, glow, draw = 0, wmat = null) {
     g.save(); g.lineCap = "round";
-    if (glow) { g.shadowColor = "#7fb6ff"; g.shadowBlur = 10; }
-    const blade = glow ? "#bcd8ff" : P.steel;
+    const mg = wmat?.f?.glow;
+    if (glow) { g.shadowColor = "#7fb6ff"; g.shadowBlur = 10; } else if (mg) { g.shadowColor = mg; g.shadowBlur = 7; }
+    const blade = glow ? "#bcd8ff" : wmat && wmat.w !== "cloth" ? (wmat.d && /^#[0-3]/.test(wmat.c) ? wmat.c : wmat.trim) : P.steel;   // the blade shows its material: glass green, ebony black, dwarven bronze
     const line = (x1, y1, x2, y2, c, w) => { g.strokeStyle = P.ink; g.lineWidth = w + 2; g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke(); g.strokeStyle = c; g.lineWidth = w; g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke(); };
     switch (wt) {
       case "dagger": line(0, 0, 10, -8, blade, 2.4); break;
@@ -125,23 +127,59 @@ const FIGHTART = (() => {
     g.restore();
   }
   /* a person. o: {skin, body, head:'hair'|'helm'|'hood'|'horned'|'skull'|'mask'|'feathers'|'bird', wt, shield, cape, eyes, big, hunch, legs:'robe'|'legs', lunge(0..1)} */
+  /* armour detail on the small fight torso (x -10..10, y -48..-26), from the set's features (GEARLOOK) */
+  function gearTorso(g, gr, F) {
+    const ink = P.ink, heavy = gr.w === "heavy";
+    if (F.chain) { g.fillStyle = gr.d; for (let y = -45; y < -28; y += 3) for (let x = -8 + ((y / 3) % 2) * 1.5; x < 9; x += 3) g.fillRect(x, y, 1, 1); }
+    if (F.scales) { g.strokeStyle = gr.d; g.lineWidth = 0.7; for (let y = -45; y < -29; y += 3.5) for (let x = -8; x < 9; x += 3.5) { g.beginPath(); g.arc(x, y, 1.7, 0, Math.PI); g.stroke(); } }
+    if (F.seg) { g.strokeStyle = gr.d; g.lineWidth = 1; for (const y of [-42, -37, -32]) { g.beginPath(); g.moveTo(-9, y); g.quadraticCurveTo(0, y + 2.5, 9, y); g.stroke(); } }
+    if (heavy) {
+      H.poly(g, [[-7, -46], [7, -46], [6, -34], [0, -31], [-6, -34]], gr.trim, ink, 1);
+      if (gr.metal) { const lg = g.createLinearGradient(-7, -46, 7, -32); lg.addColorStop(0.35, "rgba(255,255,255,0)"); lg.addColorStop(0.5, "rgba(255,255,255,0.45)"); lg.addColorStop(0.65, "rgba(255,255,255,0)"); g.fillStyle = lg; g.fillRect(-7, -46, 14, 14); }
+      for (const sx of [-1, 1]) {   // pauldrons
+        const x = sx * 10;
+        H.poly(g, [[x - sx * 1, -50], [x + sx * 5, -49], [x + sx * 5, -42], [x - sx * 1, -42]], gr.d, ink, 1);
+        if (F.spikes) for (let k = 0; k < (F.spikes > 1 ? 2 : 1); k++) H.poly(g, [[x + sx * (0.5 + k * 2.5), -50], [x + sx * (1.5 + k * 2.5), -56 - k], [x + sx * (2.5 + k * 2.5), -50]], gr.trim, ink, 0.8);
+        if (F.bone) { g.strokeStyle = gr.trim; g.lineWidth = 0.9; g.beginPath(); g.moveTo(x, -47); g.lineTo(x + sx * 4, -47); g.moveTo(x, -45); g.lineTo(x + sx * 4, -45); g.stroke(); }
+      }
+      if (F.plates) { g.strokeStyle = gr.d; g.lineWidth = 1; for (let i = 0; i < F.plates; i++) { g.beginPath(); g.moveTo(-8, -30 - i * 2.4); g.lineTo(8, -30 - i * 2.4); g.stroke(); } }
+      if (F.tabard) H.poly(g, [[-3, -44], [3, -44], [3, -20], [-3, -20]], F.tabard, ink, 0.8);
+    } else {
+      if (F.sash) { g.strokeStyle = F.sash; g.lineWidth = 3; g.beginPath(); g.moveTo(-9, -47); g.lineTo(9, -28); g.stroke(); }
+      if (F.ridges) H.poly(g, [[-6, -45], [6, -45], [5, -34], [-5, -34]], gr.trim, ink, 0.8);
+      if (F.feathers) for (let k = 0; k < 3; k++) H.poly(g, [[-11 + k * 2, -48], [-13 + k * 3, -55], [-9 + k * 2, -48]], ["#8e2b25", "#e9dcc0", "#3d5d36"][k], ink, 0.6);
+      if (F.rivets) { g.fillStyle = gr.trim; for (let y = -44; y < -30; y += 4) for (let x = -6; x < 7; x += 4) g.fillRect(x, y, 1.2, 1.2); }
+    }
+    if (F.gem) H.poly(g, [[0, -44], [3, -40], [0, -36], [-3, -40]], F.gem, ink, 0.7);
+    if (F.translucent) { g.globalAlpha = 0.35; g.fillStyle = "#fff"; g.fillRect(-8, -47, 3, 18); g.globalAlpha = 1; }
+    if (F.fur) for (let i = 0; i < 6; i++) H.circle(g, -9 + i * 3.6, -48 + (i % 2), F.fur > 1 ? 2.6 : 2.1, i % 2 ? "#d8c8a8" : "#b8a080", ink, 0.6);
+    if (F.glow) { const rg = g.createRadialGradient(0, -38, 1, 0, -38, 14); rg.addColorStop(0, F.glow); rg.addColorStop(1, "rgba(0,0,0,0)"); g.globalAlpha = 0.35; g.fillStyle = rg; g.fillRect(-14, -52, 28, 28); g.globalAlpha = 1; }
+  }
   function person(g, o) {
-    const sk = o.skin || SKIN.nord, body = o.body || P.leather, lean = (o.hunch || 0) + (o.lunge || 0) * 0.25;
+    const sk = o.skin || SKIN.nord, body = o.body || P.leather, lean = (o.hunch || 0) + (o.lunge || 0) * 0.25, gr = o.gear, GF = (gr && gr.f) || {};
     g.save(); g.lineJoin = "round"; g.lineCap = "round";
+    const breath = o.t != null && !(o.lunge > 0.05) ? Math.sin(o.t * 2.2) : 0;   // idle breathing: the chest rises and falls
     // legs
     if (o.legs === "robe") H.poly(g, [[-11, 0], [-8, -28], [8, -28], [12, 0]], body, P.ink, 1.4);
     else { g.strokeStyle = P.ink; g.lineWidth = 7.5; g.beginPath(); g.moveTo(-1, -26); g.lineTo(-8, 0); g.moveTo(1, -26); g.lineTo(9, 0); g.stroke(); g.strokeStyle = o.pants || "#5a4836"; g.lineWidth = 5; g.beginPath(); g.moveTo(-1, -26); g.lineTo(-8, 0); g.moveTo(1, -26); g.lineTo(9, 0); g.stroke(); }
+    if (o.boots && o.legs !== "robe") for (const x of [-8, 9]) H.poly(g, [[x - 3.5, -7], [x + 3.5, -7], [x + 5, 0], [x - 4, 0]], o.boots, P.ink, 1);
     g.rotate(lean);
-    if (o.cape) H.poly(g, [[-8, -48], [-16, -10], [-4, -14]], o.cape, P.ink, 1.2);
+    if (o.cape) { const sw = o.t != null ? Math.sin(o.t * 1.6) * 1.5 : 0; H.poly(g, [[-8, -48], [-16 - sw - (o.lunge || 0) * 5, -10], [-4, -14]], o.cape, P.ink, 1.2); }
     // back arm + shield (in front of the body when raised to guard or cast)
     const backArm = () => { const bc = Math.cos(o.back || 0), bs = Math.sin(o.back || 0), ex = -6 + (-6 * bc - 14 * bs), ey = -46 + (-6 * bs + 14 * bc);   // the back arm swings forward to guard or to cast
       g.strokeStyle = P.ink; g.lineWidth = 6.5; g.beginPath(); g.moveTo(-6, -46); g.lineTo(ex, ey); g.stroke(); g.strokeStyle = o.armC || sk; g.lineWidth = 4.2; g.beginPath(); g.moveTo(-6, -46); g.lineTo(ex, ey); g.stroke();
-    if (o.shield) { g.save(); g.translate(-6, -46); g.rotate(o.back || 0); g.translate(-4, 12); H.poly(g, [[-2, -11], [8, -11], [9, 2], [3, 10], [-3, 2]], o.shieldColor || "#8a6a44", P.ink, 1.4); H.circle(g, 3, -2, 2, P.iron, null); g.restore(); } };
+    if (o.shield) { g.save(); g.translate(-6, -46); g.rotate(o.back || 0); g.translate(-4, 12);
+      if (o.shieldShape === "round") { H.circle(g, 3, -1, 9, o.shieldColor || "#8a6a44", P.ink, 1.4); g.strokeStyle = o.shieldTrim || P.iron; g.lineWidth = 1.6; g.beginPath(); g.arc(3, -1, 6.5, 0, 7); g.stroke(); H.circle(g, 3, -1, 2.2, o.shieldTrim || P.iron, P.ink, 0.8); }
+      else { H.poly(g, [[-2, -11], [8, -11], [9, 2], [3, 10], [-3, 2]], o.shieldColor || "#8a6a44", P.ink, 1.4); if (o.shieldTrim) { g.strokeStyle = o.shieldTrim; g.lineWidth = 1.2; g.beginPath(); g.moveTo(3, -10); g.lineTo(3, 8); g.moveTo(-1, -3); g.lineTo(8, -3); g.stroke(); } else H.circle(g, 3, -2, 2, P.iron, null); }
+      g.restore(); } };
     const front = (o.back || 0) < -0.8;
     if (!front) backArm();
     // torso
+    g.save(); g.translate(0, -26); g.scale(1 + breath * 0.012, 1 + breath * 0.02); g.translate(0, 26);
     H.poly(g, [[-9, -26], [-10, -48], [10, -48], [9, -26]], body, P.ink, 1.5);
+    if (gr) gearTorso(g, gr, GF);
     g.fillStyle = P.ink; g.fillRect(-9, -30, 18, 2.4);
+    g.restore();
     if (front) backArm();
     // head
     const hx = 1, hy = -56;
@@ -159,7 +197,7 @@ const FIGHTART = (() => {
     g.strokeStyle = P.ink; g.lineWidth = 6.5; g.beginPath(); g.moveTo(0, 0); g.lineTo(12, 8); g.stroke(); g.strokeStyle = o.armC || sk; g.lineWidth = 4.2; g.beginPath(); g.moveTo(0, 0); g.lineTo(12, 8); g.stroke();
     g.translate(13, 9);
     if (o.flask) { H.poly(g, [[-3, -2], [3, -2], [4, -9], [1, -11], [1, -14], [-1, -14], [-1, -11], [-4, -9]], o.flask, P.ink, 1); }   // a potion at your lips
-    else weapon(g, o.wt, o.glow, o.draw || 0);
+    else weapon(g, o.wt, o.glow, o.draw || 0, o.wmat);
     g.restore();
     g.restore();
   }
@@ -236,15 +274,16 @@ const FIGHTART = (() => {
     if (h.beast && typeof BEASTART !== "undefined") return BEASTART.wolf(g, { lunge, t: glowT });
     if (h.beast) return quad(g, { color: "#4a4038", len: 50, height: 40, head: 10, legW: 5, tail: "bushy", ears: 1, fangs: 1, lunge });
     const wt = pose?.wt || h.wt;
-    person(g, { skin: h.skin, body: h.body, head: h.helm ? "helm" : "hair", wt: wt === "fist" ? null : wt, shield: h.shield && !TWO_HANDED.has(wt), lunge, glow: pose ? pose.glow : h.bound, cape: "#7a2a22",
+    const go = h.gearO || {};
+    person(g, { skin: h.skin, body: h.body, head: go.head || (h.helm ? "helm" : "hair"), helmColor: go.helmColor, hoodColor: go.hoodColor, armC: go.armC, pants: go.pants, boots: go.boots, legs: go.legs, gear: go.gear, wmat: go.wmat,
+      shieldColor: go.shieldColor, shieldTrim: go.shieldTrim, shieldShape: go.shieldShape, t: glowT,
+      wt: wt === "fist" ? null : wt, shield: h.shield && !TWO_HANDED.has(wt), lunge, glow: pose ? pose.glow : h.bound, cape: go.cape === undefined ? "#7a2a22" : go.cape,
       aim: pose?.aim, back: pose?.back, hunch: pose?.lean || 0, draw: pose?.draw, flask: pose?.flask });
   }
   /* a party member from their published look: skin, armor colour, helmet, weapon and shield */
   function matePerson(L) {
-    const eq = L?.eq || {}, mc = (id) => { try { return typeof HEROART !== "undefined" ? HEROART.MAT[HEROART.matOf(id)]?.c : null; } catch { return null; } };
-    let wt = "fist"; try { if (eq.weapon && typeof HEROART !== "undefined") wt = HEROART.weaponKind(eq.weapon) || "fist"; } catch { /* bare hands */ }
-    const robe = /robe/.test(eq.chest || "");
-    return { skin: SKIN[L?.r] || SKIN.nord, body: eq.chest ? mc(eq.chest) || P.leather : "#8a7a62", head: eq.head ? "helm" : "hair", helmColor: eq.head ? mc(eq.head) : null, wt, shield: !!eq.shield, shieldColor: eq.shield ? mc(eq.shield) : null, legs: robe ? "robe" : "legs", glow: !!L?.gl?.w };
+    if (typeof GEARLOOK !== "undefined") { const o = GEARLOOK.person(L); return { ...o, skin: SKIN[L?.r] || SKIN.nord, glow: !!L?.gl?.w }; }
+    return { skin: SKIN[L?.r] || SKIN.nord, body: "#8a7a62", head: "hair", wt: "fist" };
   }
   function mate(g, m) {
     g.save(); g.scale(0.78, 0.78); person(g, matePerson(m.look)); g.restore();
@@ -702,6 +741,7 @@ const FIGHTART = (() => {
         if (mfx === "punch") burst(tx, ty, 8, 2, COL.dust, 80 * s, 0.4, 4, 0);
         burst(tx - dir * 6 * s, ty, (mfx === "stab" || mfx === "bite" ? 8 : 14) * n, 1, COL.spark, 240 * s, 0.35, 2, 260);
         if (b.enchant) burst(tx, ty, 12, 0, COL[b.enchant] || COL.glow, 120 * s, 0.5, 3, 0);
+        { const gr = !me ? rec.hero.gearO?.gear : null; if (gr && gr.w === "heavy" && gr.metal) burst(tx, ty, 10 * n, 3, [gr.trim, "#ffffff", "#ffe8a0"], 200 * s, 0.4, 2.2, 320); }   // armour clank: bright chips off plate
       } else if (fx === "fire" || b.el === "fire" && fx !== "breath" && fx !== "fus") {
         burst(tx, ty, 26 * n, 0, COL.fire, 200 * s, 0.6, 4, 120); burst(tx, ty, 8, 2, COL.smoke, 40 * s, 1.3, 9, -40, true); ringT = 0; ringX = tx; ringC = "#ffb347";
       } else if (fx === "frost" || b.el === "frost" && fx !== "breath") {
