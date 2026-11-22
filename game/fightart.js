@@ -584,7 +584,7 @@ const FIGHTART = (() => {
     if (IDS.has(f)) return IDS.get(f);
     const id = nextId++; IDS.set(f, id);
     const arena = !!f.arena || !f.e && f.log && f.log.length && /hits for/.test(f.log[0].them || "");
-    REG.set(id, { f, scene: arena ? "arena" : sceneOf(s), hero: { ...heroOf(s, f), bound: false }, foe: arena ? "bandit" : foeOf(f.e), wagon: f.e?.cart ? "cart" : f.e?.caravan ? (f.e.khajiit ? "khajiit" : "nord") : null, foeName: f.e?.name || f.foeName || (arena && (f.log[0].them.match(/^(.+?) hits for/) || [])[1]) || "Opponent", played: false });
+    REG.set(id, { f, scene: arena ? "arena" : sceneOf(s), hero: { ...heroOf(s, f), bound: false }, foe: arena ? "bandit" : foeOf(f.e), wagon: f.e?.cart ? "cart" : f.e?.caravan ? (f.e.khajiit ? "khajiit" : "nord") : null, foeName: f.e?.name || f.foeName || (arena && (f.log[0].them.match(/^(.+?) hits for/) || [])[1]) || "Opponent", played: !!f.tbPlayed });   // a turn-based fight was already watched live
     { const rec = REG.get(id), outdoor = !["cave", "dwemer"].includes(rec.scene) && !s?.dungeon; if (outdoor && typeof SKY !== "undefined" && s) rec.sky = SKY.state([s.x, s.y]); }   // the sky over this fight
     { const rec = REG.get(id); if (f.mount && !f.mount.foot && typeof HORSEBACK !== "undefined") rec.horse = typeof HORSES !== "undefined" && s?.horse ? HORSES.coat(s.horse.coat)[2] : "#6b4a2e"; }   // [OURS] fighting from the saddle
     if (REG.size > 40) REG.delete(REG.keys().next().value);
@@ -640,7 +640,7 @@ const FIGHTART = (() => {
     const f = rec.f, beats = beatsOf(f, rec.hero);
     const hp0 = f.hp0 ?? Math.max(1, ...((f.log || []).map((l) => l.hp).filter((v) => v != null)));
     const ehp0 = f.ehp0 ?? Math.max(1, ...((f.log || []).map((l) => l.ehp).filter((v) => v != null)));
-    const hpMax = Math.max(hp0, 1), ehpMax = Math.max(ehp0, 1);
+    const hpMax = Math.max(f.tbHpMax || hp0, 1), ehpMax = Math.max(f.tbEhpMax || ehp0, 1);   // a turn-by-turn fight shows one turn at a time against the full bars
     const last = (f.log || [])[f.log.length - 1] || {};
     const won = f.won ?? (last.ehp != null && last.hp != null ? last.hp >= last.ehp : true);
     const NOST = { me: {}, foe: {} };
@@ -777,7 +777,7 @@ const FIGHTART = (() => {
       for (let i = 0; i < rows.length; i++) rows[i].classList.toggle("fpend", i > li);
     }
     function finish() {
-      done = true; rec.played = true; phase = "end"; bi = beats.length; fall = 1;
+      done = true; rec.played = true; phase = f.tbMid ? "idle" : "end"; bi = beats.length; fall = f.tbMid ? 0 : 1;
       hpD = hpT = hpL = last.hp ?? hpT; ehpD = ehpT = ehpL = last.ehp ?? ehpT;
       for (let i = 0; i < NP; i++) pl[i] = 0; for (let i = 0; i < NF; i++) fl[i] = 0;
       label = null; slowT = 0; shake = 0; zoomT = 0; zoom = 1; hitstop = 0; flash = 0; boltOn = 0;
@@ -848,7 +848,7 @@ const FIGHTART = (() => {
           if (!m.hits.length) landNumbers(b);
           revealLog(b.li);
           bi++; lt = 0; hitIdx = 0; boltOn = 0; trN = 0;
-          if (bi >= beats.length) { phase = "fall"; phaseT = 0; }
+          if (bi >= beats.length) { phase = f.tbMid ? "idle" : "fall"; phaseT = 0; if (f.tbMid) { done = true; rec.played = true; revealLog(1e9); ctl?.remove(); } }
         }
       } else if (phase === "fall") {
         phaseT += dt; fall = Math.min(1, phaseT / 0.7);
@@ -945,7 +945,8 @@ const FIGHTART = (() => {
         const sp = SPARK[sk]; if (sp && Math.random() < 0.25 * pmul) spawn(sp[1], sp[0], sx + (Math.random() - 0.5) * 16 * s, groundY + (sp[2] - Math.random() * 30) * s, (Math.random() - 0.5) * 12 * s, -24 * s, 0.6, 2.2, 0);
       }
       // you
-      const meDown = (phase !== "play") && !won, foeDown = (phase !== "play") && won && !turned, fallE = EASE.out(fall);
+      const over = phase !== "play" && phase !== "idle";   // "idle": one turn of a turn-by-turn fight has played, both still stand
+      const meDown = over && !won, foeDown = over && won && !turned, fallE = EASE.out(fall);
       const hdg = heroDodge < 1 ? Math.sin(heroDodge * Math.PI) : 0, fdg = foeDodge < 1 ? Math.sin(foeDodge * Math.PI) : 0;
       wg.save(); wg.translate(hx0 + (heroP.dx - heroKnock - hdg * 18) * s, groundY + (heroP.dy - hdg * 3) * s); wg.scale(s, s);
       if (meDown) { wg.translate(-6 * fallE, 0); wg.rotate(-Math.PI / 2 * fallE); wg.translate(0, 6 * fallE); }
@@ -963,7 +964,7 @@ const FIGHTART = (() => {
       if (b && b.who === "me" && b.fx === "armor" && u > 0.4) { wg.save(); wg.globalAlpha = 0.5 * (1 - u); wg.strokeStyle = "#e0c890"; wg.lineWidth = 3; wg.beginPath(); wg.ellipse(hx0, groundY - 32 * s, 20 * s, 36 * s, 0, 0, 7); wg.stroke(); wg.restore(); }
       // the foe (faces left)
       wg.save();
-      const fleeing = phase !== "play" && won && turned ? fallE : 0;
+      const fleeing = over && won && turned ? fallE : 0;
       wg.translate(fx0 - (foeP.dx - foeKnock - fdg * 18) * s + fleeing * W * 0.4, groundY + (foeP.dy - fdg * 3) * s); wg.scale(-s, s);
       if (fleeing) wg.globalAlpha = 1 - fleeing;
       if (foeDown) {

@@ -6,3 +6,6 @@ www/
 # signing key: only the encrypted copy is committed
 android/app/roads.keystore
 android/keystore.properties
+
+# screen test screenshots
+tests/tbf/
