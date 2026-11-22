@@ -7,7 +7,7 @@ vm.createContext(c);
 const FILES = ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "legendary.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "weatherfx.js", "enchanting.js", "quests.js", "horses.js", "hall.js", "bounty.js", "visits.js", "cooking.js", "arena.js", "achievements.js", "clans.js", "festivals.js", "wars.js", "curses.js", "smithing.js", "social.js", "roam.js", "ammo.js", "tomes.js", "magic.js", "spellbook.js", "mp.js", "spellcraft.js", "shouts2.js", "coop.js", "combatai.js", "sneak2.js", "aiset.js", "skyui.js", "encounters.js", "gather.js"];
 for (const f of FILES) if (fs.existsSync(W + f)) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
 // every FX key must be read somewhere outside perkfx.js's own table
-const code = FILES.concat(["ui.js", "fightart.js", "tabmenu.js", "followers2.js", "tbfight.js", "lootvote.js"]).filter((f) => f !== "perkfx.js" && fs.existsSync(W + f)).map((f) => fs.readFileSync(W + f, "utf8")).join("\n");
+const code = fs.readdirSync(W).filter((f) => f.endsWith(".js") && f !== "perkfx.js").map((f) => fs.readFileSync(W + f, "utf8")).join(String.fromCharCode(10));
 const pfx = fs.readFileSync(W + "perkfx.js", "utf8"), pfxLogic = pfx.slice(pfx.indexOf("const FX = {}"));
 c.__code = code; c.__pfx = pfxLogic;
 vm.runInContext(`
