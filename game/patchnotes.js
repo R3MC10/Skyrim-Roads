@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b110", build: 110, date: "22 Nov 2026", title: "Fix: players not seeing each other", items: [
+      "Fixed friends and other players not showing up for some of you. Phones on mobile data or strict Wi-Fi often couldn't link up directly, so they never saw each other.",
+      "Now there's a backup line: if your phone can't link straight to someone, your name, where you are, chat and messages still get through, encrypted, over the same servers used to find each other.",
+      "Players show up within a few seconds of opening the game.",
+    ] },
     { id: "b108", build: 108, date: "22 Nov 2026", title: "Painted shops", items: [
       "The general store, blacksmith, inn and alchemist now have painted pictures at the top of their page. More shops get theirs soon.",
     ] },
