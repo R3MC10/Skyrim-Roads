@@ -3,6 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b82", build: 82, date: "22 Nov 2026", title: "World events for everyone", items: [
+      "World events: the same events run for every player at the same time, on a fixed schedule. A banner and a Journal line tell you when one starts, a strip under the map shows how the North is doing, and the Journal's Misc tab lists what's coming next.",
+      "Daedric invasion (about 3 times a day, 2 hours each): three Oblivion gates open in one hold. Travel to a gate and fight the Daedra (scamps, atronachs, dremora) to weaken it. Everyone's wins count, and more fighters means a sturdier gate. Each gate you helped close pays 150 gold. Close all three for a Sigil Stone (a huge reusable soul for enchanting) and the title Gatecloser.",
+      "Dragon migration (one day in every four): a flight of dragons circles a hold. Hunt them anywhere in that hold, once every 15 minutes, up to 5 each. Every dragon gives an extra soul and a dragon bone. Bring down enough together for 400 gold, dragon scales and the title Dragonwatcher. Under level 22 you meet the young ones.",
+      "Festival week (one week in four, starting Monday): Heart's Day, the Merchants' Festival, Harvest's End or Second Planting. Three skill contests a day in any town; win or lose you earn points. Reach the goal for 300 gold, a festival gift and the title Festival Favourite, plus 150 gold more if the whole North cheers enough.",
+      "The Khajiit grand caravan camps outside a different town every 6 hours with five rare wares you won't find in shops. One of each per visit. Buy five things over time to be called Friend of the Caravan.",
+      "On the map: burning gates with progress bars, dragons circling their hold, festival lanterns over the cities and the Khajiit wagon.",
+      "Three new perks: Gate Breaker (Conjuration 40: hit Daedra harder, take less from them, gate wins count more), Sky Hunter (Archery 50: arrows hit dragons harder, an extra dragon bone per migrating dragon) and Caravan Friend (Speech 40: cheaper caravan prices and one more ware). All your old perks stay."] },
     { id: "b78", build: 78, date: "22 Nov 2026", title: "The whole world, painted", items: [
       "All the new realistic artwork is in: every wilderness and dungeon background (Reach, Rift, marsh, hot springs, coast, ash wastes, caves, Nordic tombs, Dwemer ruins, Falmer caves and more), all 32 enemies in fights, and new textures for panels, parchment, the compass, the night sky and window frames."] },
     { id: "b76", build: 76, date: "22 Nov 2026", title: "Real paintings arrive", items: [
