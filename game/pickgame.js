@@ -2,17 +2,14 @@
    once to pull it out. Tap off the purse, or take too long while their attention grows, and you're caught.
    The purse's width is worked out from the old dice-roll chance so an "average player" (taps about 0.09 s off)
    wins as often as the roll did. Balance stays the same, and steady hands do a bit better. [OURS]
-   With this file missing, pickpocketing is the old instant roll. */
+   Always on: no quick roll, no off switch. */
 const PICKGAME = (() => {
   const DOM = typeof document !== "undefined";
   const params = () => (DOM ? new URLSearchParams(location.search) : new URLSearchParams(""));
   const automated = () => DOM && (navigator.webdriver || params().has("notut"));
   const reduce = () => DOM && matchMedia("(prefers-reduced-motion: reduce)").matches;
   const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-  const PREFS = "rotn_prefs";
-  const pref = (k, d) => { try { const v = JSON.parse(localStorage.getItem(PREFS) || "{}")[k]; return v === undefined ? d : v; } catch { return d; } };
-  const setPref = (k, v) => { try { const p = JSON.parse(localStorage.getItem(PREFS) || "{}"); p[k] = v; localStorage.setItem(PREFS, JSON.stringify(p)); } catch { /* ignore */ } };
-  const wants = () => DOM && (params().has("pickgame") || (!automated() && pref("pickGame", true)));
+  const wants = () => DOM && (params().has("pickgame") || !automated());   // always on for players (only automated tests skip it)
 
   // ------------------------------------------------------------------ the maths
   const SIGMA = 0.09;      // seconds: how far off an average player's tap lands
@@ -47,16 +44,13 @@ const PICKGAME = (() => {
       <canvas id="ppc" width="300" height="160" aria-hidden="true"></canvas>
       <p class="lphint" id="pphint">Tap <b>Lift</b> while your hand is over the purse. Twice: in, then out.</p>
       <div class="lprow"><span id="ppstage"></span><button class="btn pri" id="pplift">Lift</button></div>
-      <div class="lprow"><button class="btn" id="ppauto">Quick roll</button><button class="btn" id="ppleave">Walk away</button></div>
-      <label class="lppref"><input type="checkbox" id="pppref" ${pref("pickGame", true) ? "checked" : ""}> Always use the pickpocket mini-game</label></div>`;
+      <div class="lprow"><button class="btn" id="ppleave">Walk away</button></div></div>`;
     document.body.appendChild(el);
     const cv = el.querySelector("#ppc");
     const lift = (e) => { e?.preventDefault?.(); tap(); };
     el.querySelector("#pplift").addEventListener("pointerdown", lift);
     cv.addEventListener("pointerdown", lift);
-    el.querySelector("#ppauto").onclick = () => finish({ auto: true });
     el.querySelector("#ppleave").onclick = () => finish({ left: true });
-    el.querySelector("#pppref").onchange = (e) => setPref("pickGame", e.target.checked);
     pg.key = (e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); tap(); } else if (e.key === "Escape") finish({ left: true }); };
     addEventListener("keydown", pg.key, true);
     let last = performance.now();

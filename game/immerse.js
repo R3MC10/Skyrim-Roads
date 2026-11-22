@@ -64,7 +64,7 @@ const IMM = (() => {
 
   // ====================================================================== lockpicking: the game
   const TIERS = ["Novice", "Apprentice", "Adept", "Expert", "Master"];
-  const wantsGame = () => DOM && (params().has("lockgame") || (!automated() && pref("lockGame", true)));
+  const wantsGame = () => DOM && (params().has("lockgame") || !automated());   // always on for players (only automated tests skip it)
   /* run(choice) is dungeonAct or eventAction. kind: "dungeon" | "event" */
   function pick(kind, run, save) {
     const room = kind === "dungeon" ? save?.dungeon?.room : save?.trip?.event;
@@ -89,8 +89,7 @@ const IMM = (() => {
       <input id="lpang" type="range" min="0" max="180" step="1" value="90" aria-label="Pick angle">
       <p class="lphint">Move the pick, then hold <b>Turn</b>. If the lock stops turning, let go before the pick snaps.</p>
       <div class="lprow"><span id="lppicks"></span><button class="btn pri" id="lpturn">Hold to turn</button></div>
-      <div class="lprow"><button class="btn" id="lpauto">Quick roll</button><button class="btn" id="lpleave">Leave it</button></div>
-      <label class="lppref"><input type="checkbox" id="lppref" ${pref("lockGame", true) ? "checked" : ""}> Always use the lock mini-game</label></div>`;
+      <div class="lprow"><button class="btn" id="lpleave">Leave it</button></div></div>`;
     document.body.appendChild(el);
     const cv = el.querySelector("#lpc"), turn = el.querySelector("#lpturn"), ang = el.querySelector("#lpang");
     const hold = (v) => (e) => { e.preventDefault(); if (lp) lp.holding = v; };
@@ -100,9 +99,7 @@ const IMM = (() => {
     cv.addEventListener("pointerdown", (e) => { drag = e.clientX; cv.setPointerCapture?.(e.pointerId); });
     cv.addEventListener("pointermove", (e) => { if (drag == null || !lp) return; lp.angle = Math.max(0, Math.min(180, lp.angle + (e.clientX - drag) * 0.6)); drag = e.clientX; ang.value = Math.round(lp.angle); });
     cv.addEventListener("pointerup", () => { drag = null; });
-    el.querySelector("#lpauto").onclick = () => finish({ auto: true });
     el.querySelector("#lpleave").onclick = () => finish({ opened: false });
-    el.querySelector("#lppref").onchange = (e) => setPref("lockGame", e.target.checked);
     let last = performance.now();
     const loop = (now) => { if (!lp || lp.over) return; const dt = Math.min(0.05, (now - last) / 1000); last = now; step(dt); draw(cv); lp.raf = requestAnimationFrame(loop); };
     lp.raf = requestAnimationFrame(loop);
