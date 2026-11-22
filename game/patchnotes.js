@@ -3,7 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b79", build: 79, date: "22 Nov 2026", title: "Party play, loot rolls and grown-up followers", items: [
+    { id: "b81", build: 81, date: "22 Nov 2026", title: "Gear you can see", items: [
+      "Every armour set and weapon material now looks like itself: hide and fur with shaggy trim, studded leather with rivets, elven gold, see-through glass and stalhrim, chitin plates, dragonscale and bone, Forsworn feathers, guild hoods and more. It shows on your character, in fights and on the road while you travel.",
+      "Other players see your real gear too, on the map and when you fight side by side.",
+      "Gear preview: tap any armour or weapon and see yourself now next to yourself wearing it.",
+      "Characters breathe and shift when standing still and walk properly on the road."] },
+    { id: "b79", build: 80, date: "22 Nov 2026", title: "Party play, loot rolls and grown-up followers", items: [
       "The map now follows the real game's layout much more closely: towns, roads and landmarks sit where you remember them.",
       "Parties of up to 8: the leader picks where to go, everyone gets a Ready check first, then the party travels together. If the leader stops for something on the road, the others wait and fight beside them. Gold found on the road is split evenly.",
       "Dungeons with your party: only the leader picks rooms and actions, the rest follow along. Everything found goes into one loot pile, and at the end everyone taps Want or Pass on each item. If more than one of you wants something, you all roll a d100 and the highest wins (ties roll again). Gold is split evenly. Dungeons get longer and busier with a bigger party.",
