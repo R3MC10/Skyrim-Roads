@@ -1271,6 +1271,34 @@ html.px .lv-row,html.px .lv-dice .die{border-radius:0}
 .gearprev figcaption{font-size:11px;color:var(--muted,#b8ab90);margin-top:2px}
 .gearprev img{border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.35)}
 .pgear{flex:0 0 auto;margin-right:6px;border-radius:6px;overflow:hidden;line-height:0}
+/* [world events] worldevents.js: the strips under the map, the event sheet and the Journal panel */
+#wev:empty{display:none}
+.wev-card{display:flex;flex-direction:column;gap:6px;margin:8px 0}
+.wev-strip{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid rgba(214,178,94,.35);border-left:3px solid var(--gold-2);border-radius:8px;background:linear-gradient(90deg,rgba(20,16,12,.85),rgba(10,11,13,.6));cursor:pointer;min-width:0}
+.wev-strip.wev-inv{border-left-color:#e2533a;background:linear-gradient(90deg,rgba(60,14,8,.75),rgba(10,11,13,.6))}
+.wev-strip.wev-mig{border-left-color:#c4372a}
+.wev-strip.wev-fest{border-left-color:#f2c45a}
+.wev-strip.wev-kc{border-left-color:#c48cff}
+.wev-strip:hover{border-color:rgba(244,220,154,.6)}
+.wev-pic{flex:0 0 auto;border-radius:6px;overflow:hidden;line-height:0}
+.wev-t{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px}
+.wev-t b{font-size:var(--fs-sm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wev-t .sub{font-size:var(--fs-xs);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wev-strip>.btn{flex:0 0 auto}
+.wev-bar{height:6px;margin-top:3px}
+.wev-sheet{text-align:left}
+.wev-sheet .wev-pic{display:block;margin:0 auto 8px;max-width:100%}
+.wev-sheet .wev-pic canvas,.wev-sheet .wev-pic img{max-width:100%;height:auto}
+.wev-rules{font-size:var(--fs-sm);line-height:1.4;margin:6px 0 10px;padding:6px 8px;border-left:2px solid rgba(214,178,94,.6);background:rgba(214,178,94,.06)}
+.wev-wide{width:100%;margin-top:8px}
+.wev-gate .t{flex:1 1 auto;min-width:0}
+.wev-gate.on{opacity:.7}
+.wev-next{margin-top:4px;font-size:var(--fs-sm);display:flex;flex-direction:column;gap:2px;opacity:.85}
+.wev-j .wev-jrow .t{flex:1 1 auto;min-width:0}
+.wev-bic{font-size:28px;line-height:1}
+html.art-pixel .wev-strip,html.art-pixel .wev-pic,html.art-pixel .wev-rules{border-radius:0}
+html.art-pixel .wev-pic canvas{image-rendering:pixelated}
+@media (max-width:420px){.wev-strip{gap:8px;padding:6px 8px}.wev-strip .wev-pic{transform:scale(.85);margin:-3px -4px}}
 /* a living world (rumours.js): day line, your name here, knocking at night, the inn crowd, leads */
 .rw-day{margin:2px 0 6px;font-size:13px;color:var(--mute);font-style:italic}
 .rw-rep{margin:0 0 8px;font-size:13px;color:var(--mute)}.rw-rep b{color:var(--ink);font-weight:600}.rw-rep b.good{color:var(--gold)}.rw-rep b.bad{color:var(--ember)}
@@ -1404,6 +1432,7 @@ html.art-pixel .rw-knock,html.art-pixel .rw-crowd{border-radius:0}
 <script src="craftgames.js"></script>
 <script src="polish.js"></script>
 <script src="caravans.js"></script>
+<script src="worldevents.js"></script>
 <script src="economy.js"></script>
 <script src="bards.js"></script>
 <script src="skillinfo.js"></script>

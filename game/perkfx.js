@@ -206,6 +206,10 @@ const PFX = (() => {
     [ "Streetwise", "night_owl", "Night Owl", 1, [25], ["rumour_monger"], "Shopkeepers you knock up at night don't charge you extra. [OURS]", [["knock", 1, {}]]],
     [ "Streetwise", "road_wise", "Road Wise", 1, [30], ["rumour_monger"], "On the road, sneaking past trouble is 10% easier, tolls and bribes cost 20% less, and you read an ambush before it springs more often. [OURS]", [["road", 0.1, {}], ["roadbribe", 0.2, {}]]],
     [ "Athletics", "pathfinder", "Pathfinder", 1, [40], ["long_strider"], "On the road, outrunning trouble, dodging avalanches and taming wild horses is 15% easier. [OURS]", [["roadrun", 0.15, {}]]],
+    // ---------------------------------------------------------------- world events (worldevents.js)
+    [ "Conjuration", "gate_breaker", "Gate Breaker", 1, [40], ["summoner"], "You know how Oblivion works: Daedra take 15% more damage from you and hit you 10% softer, and your fights at an Oblivion gate count 25% more towards closing it. [OURS]", [["out", 0.15, { tag: ["daedra"] }], ["in", -0.1, { tag: ["daedra"] }], ["wevgate", 0.25, {}]]],
+    [ "Archery", "sky_hunter", "Sky Hunter", 1, [50], ["eagle_eye"], "Bows do 15% more to dragons, and every migrating dragon you bring down drops an extra dragon bone. [OURS]", [["out", 0.15, { sk: AR, tag: ["dragon"] }], ["wevbone", 1, {}]]],
+    [ "Speechcraft", "caravan_friend", "Caravan Friend", 1, [40], ["bribery"], "The Khajiit's grand caravan sells to you 15% cheaper and sets aside one more rare item for you. [OURS]", [["wevmarket", 0.15, {}], ["wevstock", 1, {}]]],
     // ---------------------------------------------------------------- homesteads (homestead.js)
     [ "Smithing", "carpenter", "Carpenter", 1, [30], ["steel_smithing"], "Building at your homestead takes 25% fewer materials. [OURS, from Hearthfire]", [["hsmats", 0.25, {}]]],
     [ "Athletics", "woodsman", "Woodsman", 1, [30], ["long_strider"], "The sawmill, quarry and clay pit at your homestead give 50% more. [OURS]", [["hsyield", 0.5, {}]]],

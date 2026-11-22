@@ -66,6 +66,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Claude (homesteads branch): buildable homesteads (homestead.js): three plots, stages and wings, sawmill/quarry, steward, homestead perks.
 - Claude (Remigiusz): turn-based combat, AI settings/tactics editor, gear visuals, art from ChatGPT, menu simplification.
 - Kacper: (add here)
+- Claude: server-wide world events: Daedric invasions, dragon migrations, festival weeks, Khajiit caravan (claude/world-events).
 
 ## Standing rules
 - Perk trees grow with the game: every new system (gathering, magic, encounters, crafting, party play...) adds or adjusts perks with real effects in the matching trees (perkfx.js), keeping old perk ids and a clean star layout.
