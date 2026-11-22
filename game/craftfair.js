@@ -154,12 +154,12 @@ const CRAFTFAIR = (() => {
     return i;
   };
   const rawEnchant = ENCH.enchant;
-  ENCH.enchant = (s, rowId, eff, gemRowId) => {
+  ENCH.enchant = (s, rowId, eff, gemRowId, opt) => {
     const r = G.invRow(s, rowId), g = G.invRow(s, gemRowId);
     const src = r && { cv: cvOf(r) ?? D.ITEMS[r.item].value, temper: r.temper, nm: r.nm }, gemV = g ? D.ITEMS[g.item]?.value || 0 : 0;
     const before = new Set(s.inv.map((x) => x.id));
     const mult = repeatMult(s, "ench:" + eff + ":" + (r?.item || ""), G.now(), false);
-    const out = scaledXp(mult, () => rawEnchant(s, rowId, eff, gemRowId));
+    const out = scaledXp(mult, () => rawEnchant(s, rowId, eff, gemRowId, opt));
     const made = newRows(s, before).filter((x) => String(x.item).startsWith("ench|"));
     if (made.length) {
       repeatMult(s, "ench:" + eff + ":" + r.item);
@@ -168,14 +168,14 @@ const CRAFTFAIR = (() => {
     return out + (made.length && mult < 0.99 ? ` (The same enchantment again teaches you less: ${Math.round(mult * 100)}% XP.)` : "");
   };
   const rawBrew = TOWNS.brew;
-  TOWNS.brew = (s, rowIds) => {
+  TOWNS.brew = (s, rowIds, opt) => {
     const rows = [...new Set(rowIds)].map((id) => G.invRow(s, id)).filter(Boolean);
     const ingV = rows.reduce((a, r) => a + (D.ITEMS[r.item]?.value || 0), 0);
     const key = "brew:" + rows.map((r) => r.item).sort().join("+");
     const qtyOf = () => Object.fromEntries(s.inv.filter((x) => isBrew(x.item)).map((x) => [x.id, x.qty]));
     const q0 = qtyOf(), cv0 = Object.fromEntries(s.inv.filter((x) => isBrew(x.item)).map((x) => [x.id, cvOf(x)]));
     const mult = repeatMult(s, key, G.now(), false);
-    const res = scaledXp(mult, () => rawBrew(s, rowIds));
+    const res = scaledXp(mult, () => rawBrew(s, rowIds, opt));
     const q1 = qtyOf();
     for (const [id, q] of Object.entries(q1)) {
       const added = q - (q0[id] || 0); if (added <= 0) continue;

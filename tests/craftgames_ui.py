@@ -69,7 +69,7 @@ async def main():
         res["ring"] = await pg.evaluate("SMITH.count(window.__dbg.save(),'gold_ruby_ring')")
         # ---- smelting: bellows, try to keep inside the band
         await clean(pg); await click(pg, "[data-act=ftab][data-id=refine]"); await pg.wait_for_timeout(200)
-        await click(pg, "[data-act=srefineall][data-id='0']"); res["smelt_game"] = await wait_game("bellows")
+        await click(pg, "[data-act=srefine][data-id='0']"); res["smelt_game"] = await wait_game("bellows")
         shot = False
         for _ in range(6000):
             s = await pg.evaluate("(()=>{const s=CG.state(); return s? [s.heat, (s.lo+s.hi)/2, s.dur, s.holding] : null})()")

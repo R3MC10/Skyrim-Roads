@@ -1374,6 +1374,26 @@ html.a11y-1h .mapwrap:has(.picked:not(.hide)) .mapbtns{bottom:72px}
 html.a11y-1h-left :is(.twbtn,.favbtn){right:auto;left:12px}
 html.a11y-1h-left .top :is(.soc,.snd){right:auto;left:66px}
 html.a11y-1h-left .mapbtns{right:auto;left:8px}
+/* ==== crafting shortcuts (craftqol.js) ==== */
+.cqbar{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;margin:0 0 8px}
+.cqbar .cqready,.cqalch .cqready{color:var(--mute);font-size:13px;line-height:1.25}
+.cqnone{margin:0 0 8px}
+.cqh{margin:10px 0 6px;font-size:15px}
+.item.cqrow{flex-wrap:wrap}
+.item.cqrow>.t{min-width:min(100%,170px)}
+.item .cqbtns,.cqbtns{display:flex;align-items:center;gap:4px;flex:none;margin-left:auto;flex-wrap:wrap;justify-content:flex-end}
+.cqalch{margin-top:8px;justify-content:flex-start;margin-left:0}
+.cqalch .cqready{flex:1;min-width:90px}
+.item .t span.cqst,.cqst{display:block;font-size:13px;margin-top:2px}
+.item .t span.cqst.ok,.cqst.ok{color:var(--buff,#8fd49a)}
+.item .t span.cqst.ok::before{content:"✔ "}
+.item .t span.cqst.no,.cqst.no{color:var(--debuff,#e39a86)}
+.cqstar{min-width:36px;min-height:36px;padding:0;border:0;background:transparent;color:var(--mute);font-size:20px;line-height:1;cursor:pointer}
+.cqstar.on{color:var(--gold)}
+.cqstar:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+.btn.sm.cqq{padding:0 8px;min-width:44px}
+.chip .cqn{display:inline-block;min-width:1.4em;margin-left:4px;padding:0 4px;border-radius:999px;background:rgba(226,187,100,.22);color:var(--gold);font-size:12px;font-weight:600;text-align:center}
+html.art-pixel .chip .cqn{border-radius:0}
 /* [OURS] quicker travel and fights (fastqol.js) */
 .fsbtn{white-space:nowrap}
 .fqrecent{margin:2px 0 8px}
@@ -1582,6 +1602,7 @@ html.art-pixel .rmd-b,html.art-pixel .rmd-n{border-radius:0}
 <script src="motion.js"></script>
 <script src="favwheel.js"></script>
 <script src="craftgames.js"></script>
+<script src="craftqol.js"></script>
 <script src="polish.js"></script>
 <script src="caravans.js"></script>
 <script src="worldevents.js"></script>
