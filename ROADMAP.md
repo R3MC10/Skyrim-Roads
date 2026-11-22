@@ -61,6 +61,10 @@ our own marked [OURS]; plain-language UI; phone first.
 - Solstheim, Skyrim compass home screen with swipes, constellation perks, clearer screens (62)
 - Smart AI combat (default; custom tactics optional), crafting mini-games, motion design (63)
 
+## Standing rules
+- Perk trees grow with the game: every new system (gathering, magic, encounters, crafting, party play...) adds or adjusts perks with real effects in the matching trees (perkfx.js), keeping old perk ids and a clean star layout.
+- Party size up to 8 players.
+
 ## Next rounds (in order)
 1. Real 1:1 Skyrim map layout (being rebased onto Solstheim).
 2. Party members fight beside you and walk with you in their gear (in progress).
