@@ -286,7 +286,13 @@ const DUNGEONS = (() => {
       }
       const res = fight(s, e, {}, t);
       if (!res.f.won) return lose({ text: "", fight: res.f, skills: res.skills }, e.name);
-      if (r.type !== "boss") return done({ text: `The ${e.name.toLowerCase()} falls.`, fight: res.f, skills: res.skills, gold: res.gold, loot: res.loot });
+      if (r.type !== "boss") {
+        if (r.waves > 1 && typeof PARTYPLAY !== "undefined") {   // [OURS] a big party meets more foes: the next one steps out (partyplay.js)
+          const msg = PARTYPLAY.nextWave(s, r, () => (typeof COOP !== "undefined" && r.wkey ? COOP.foe(s, r.wkey, d.tier, r.wn || 1, true) : foe(s, weighted(THEMES[d.theme].foes), d.tier)));
+          if (msg) return { text: `The ${e.name.toLowerCase()} falls. ${msg}`, fight: res.f, skills: res.skills, gold: res.gold, loot: res.loot, stay: true, wave: true };
+        }
+        return done({ text: `The ${e.name.toLowerCase()} falls.`, fight: res.f, skills: res.skills, gold: res.gold, loot: res.loot });
+      }
       // boss down: the big chest, maybe a word wall, the place is cleared
       const extra = [];
       const g = goldFound(s, rint(60, 160) * d.tier);

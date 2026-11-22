@@ -70,7 +70,11 @@ const NPCART = (() => {
     return { role: "runner" };
   }
   const FOLLOWER_LOOK = { lydia: ["nord", "f", "warrior", "steel"], jenassa: ["dunmer", "f", "ranger"], belrand: ["nord", "m", "warrior", "elven"], marcurio: ["imperial", "m", "wizard"],
-    vorstag: ["nord", "m", "warrior", "iron"], stenvar: ["nord", "m", "warrior", "steel"], erik: ["nord", "m", "farmer"] };
+    vorstag: ["nord", "m", "warrior", "iron"], stenvar: ["nord", "m", "warrior", "steel"], erik: ["nord", "m", "farmer"],
+    // more followers (followers2.js)
+    faendal: ["bosmer", "m", "ranger"], uthgerd: ["nord", "f", "warrior", "iron"], mjoll: ["nord", "f", "warrior", "steel"], aela: ["nord", "f", "ranger"], farkas: ["nord", "m", "warrior", "steel"],
+    vilkas: ["nord", "m", "warrior", "steel"], jzargo: ["khajiit", "m", "wizard"], brelyna: ["dunmer", "f", "wizard"], onmund: ["nord", "m", "wizard"], benor: ["nord", "m", "warrior", "iron"],
+    annekke: ["nord", "f", "ranger"], borgakh: ["orc", "f", "warrior", "iron"], teldryn: ["dunmer", "m", "warrior", "elven"] };
 
   // ---- small helpers
   const hash = (s) => { let a = 7; for (const ch of String(s)) a = (a * 31 + ch.charCodeAt(0)) | 0; return Math.abs(a); };
@@ -248,6 +252,7 @@ const NPCART = (() => {
     return portrait({ name, race, sex, ...trainerRole(skill) }, size);
   }
   FOLLOWER_LOOK.meeko = ["dog", "m", "dog", "fur"];   // the stray dog from the road (encounters.js)
+  Object.assign(FOLLOWER_LOOK, { hs_pinewatch: ["nord", "f", "ranger"], hs_fenhollow: ["breton", "m", "ranger"], hs_frostcairn: ["nord", "m", "warrior", "fur"] });   // homestead stewards (homestead.js)
   function dogPortrait(size) {
     return ART.html(size, size, (g, H, w) => {
       const k = w / 64; g.fillStyle = "#cdb98f"; g.fillRect(0, 0, w, w);
@@ -299,6 +304,7 @@ const NPCART = (() => {
       if (bounty && ["merchant", "smith", "innkeeper"].includes(role)) return "I've heard about you. Make it quick, and keep your hands where I can see them.";
       const night = hr >= 20 || hr < 6;
       if (night && NIGHT[role] && (role !== "innkeeper" || hr >= 23 || hr < 6)) return NIGHT[role];
+      const deed = typeof RUMOURS !== "undefined" ? RUMOURS.greet(s, n) : null; if (deed) return deed;   // your deeds get around (rumours.js)
       if (s && (s.dragons || 0) > 0 && hash(n.name + day) % 3 === 0) return role === "guard" ? "Dragonborn. The Greybeards called for you, didn't they?" : "You're the one who killed the dragon? By Ysmir, I'm honoured.";
       if (s && s.thaneWhiterun && n.hold === "Whiterun" && hash(n.name + day) % 4 === 0) return "My Thane. It's good to see you in Whiterun.";
       const L = LINES[role] || LINES.merchant;

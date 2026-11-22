@@ -118,13 +118,15 @@ const PFX = (() => {
     // ---------------------------------------------------------------- Sneak (6 → 12)
     [ "Sneak", "muffled_movement", "Muffled Movement", 1, [30], ["stealth"], "Armor makes no noise: another 8% harder to spot. [Skyrim]", [["hide", 8, {}]]],
     [ "Sneak", "silent_roll", "Silent Roll", 1, [50], ["light_foot"], "Rolling clear: 10% chance to dodge any blow while you're hard to see (night, fog, rain). [Skyrim]", [["dodge", 0.1, { dark: 1 }]]],
+    [ "Sneak", "ambusher", "Ambusher", 1, [40], ["muffled_movement"], "Ready for anything: if a foe spots you sneaking up, it gets no free first strike, and your sneak blows can take up to 70% of a strong foe's health (half of a boss's) instead of 50%. [OURS]", [["ambush", 1, {}]]],
     [ "Sneak", "silence", "Silence", 1, [70], ["silent_roll"], "Another 10% harder to spot. [Skyrim]", [["hide", 10, {}]]],
     [ "Sneak", "shadow_dancer", "Shadow Dancer", 1, [60], ["backstab"], "Sneak attacks with any weapon do 25% more. [OURS]", [["out", 0.25, { sneak: 1 }]]],
     [ "Sneak", "assassins_mark", "Assassin's Mark", 1, [80], ["assassins_blade"], "A sneak attack that leaves the foe below 20% health finishes it. [OURS]", [["sneakexec", 0.2, {}]]],
     [ "Sneak", "vanish", "Vanish", 1, [90], ["shadow_warrior"], "After a foe misses you, 15% chance to slip back into hiding: your next hit is a sneak attack. [OURS]", [["vanish", 0.15, {}]]],
-    // ---------------------------------------------------------------- Lockpicking (8 → 10)
+    // ---------------------------------------------------------------- Lockpicking (8 → 11)
     [ "Lockpicking", "quick_hands", "Quick Hands", 1, [40], ["apprentice_locks"], "Every lock is 10% easier. [Skyrim: picking isn't noticed]", [["lock", 0.1, {}]]],
     [ "Lockpicking", "wax_key", "Wax Key", 1, [50], ["quick_hands"], "Chests give 25% more gold. [Skyrim: copy keys]", [["gold", 0.25, {}]]],
+    [ "Lockpicking", "lucky_draw", "Lucky Draw", 2, [60, 90], ["golden_touch"], "In a party loot vote, add 5/10 to your d100 rolls for the things you want. [OURS]", [["lootroll", 5, {}]]],
     // ---------------------------------------------------------------- Pickpocket (5 → 9)
     [ "Pickpocket", "keymaster", "Keymaster", 1, [60], ["cutpurse"], "Pickpocketing is another 10% easier. [Skyrim: steal keys]", [["pick", 0.1, {}]]],
     [ "Pickpocket", "poisoned", "Poisoned", 1, [70], ["misdirection"], "Your weapon poisons hit 25% harder. [Skyrim: reverse-pickpocket poisons]", [["poison", 0.25, {}]]],
@@ -141,6 +143,7 @@ const PFX = (() => {
     [ "Speechcraft", "silver_tongue", "Silver Tongue", 1, [20], [], "Prices are 5% better. [OURS]", [["price", 0.05, {}]]],
     [ "Speechcraft", "commanding_voice", "Commanding Voice", 1, [60], ["intimidation"], "Shouts cool down 15% faster. [OURS]", [["shoutcd", 0.15, {}]]],
     [ "Speechcraft", "inspiring", "Inspiring", 1, [40], ["persuasion"], "Your follower and party allies fight 15% harder. [OURS]", [["allies", 0.15, {}]]],
+    [ "Speechcraft", "leadership", "Leadership", 2, [50, 80], ["inspiring"], "Your follower learns from fights 25/50% faster and shrugs off 10/20% of the blows they take. [OURS]", [["folxp", 0.25, {}], ["foltaken", 0.1, {}]]],
     [ "Speechcraft", "talk_down", "Talk Down", 1, [50], ["bribery"], "Bribes and fines cost 25% less. [OURS]", [["bribe", 0.25, {}]]],
     [ "Speechcraft", "rally", "Rally", 1, [80], ["inspiring"], "Your follower and party allies fight another 15% harder. [OURS]", [["allies", 0.15, {}]]],
     [ "Speechcraft", "orator", "Orator", 1, [100], ["commanding_voice", "rally"], "Jobs pay 10% more and prices are 5% better. [OURS]", [["job", 0.1, {}], ["price", 0.05, {}]]],
@@ -197,12 +200,27 @@ const PFX = (() => {
     [ "Alchemy", "master_alchemist", "Master Alchemist", 1, [100], ["purity", "green_thumb"], "Everything you brew is another 10% stronger. [OURS]", [["alch", 0.1, {}]]],
     // ---------------------------------------------------------------- road encounters (encounters.js)
     [ "Speechcraft", "smooth_talker", "Smooth Talker", 1, [30], ["persuasion"], "On the road, bluffs, threats and haggling are 10% more likely to work. [OURS]", [["enctalk", 0.1, {}]]],
+    // ---------------------------------------------------------------- a living world (rumours.js)
+    [ "Speechcraft", "good_ear", "Good Ear", 1, [25], [], "Rumours you hear are wrong half as often, and leads stay open 50% longer. [OURS]", [["rumtrue", 0.5, {}], ["rumtime", 0.5, {}]]],
+    [ "Etiquette", "local_hero", "Local Hero", 1, [35], ["courtly_manners"], "Word of your deeds spreads 25% faster, and the shop discount for friends and heroes of a hold is doubled. [OURS]", [["fame", 0.25, {}], ["heroprice", 1, {}]]],
+    [ "Streetwise", "night_owl", "Night Owl", 1, [25], ["rumour_monger"], "Shopkeepers you knock up at night don't charge you extra. [OURS]", [["knock", 1, {}]]],
     [ "Streetwise", "road_wise", "Road Wise", 1, [30], ["rumour_monger"], "On the road, sneaking past trouble is 10% easier, tolls and bribes cost 20% less, and you read an ambush before it springs more often. [OURS]", [["road", 0.1, {}], ["roadbribe", 0.2, {}]]],
     [ "Athletics", "pathfinder", "Pathfinder", 1, [40], ["long_strider"], "On the road, outrunning trouble, dodging avalanches and taming wild horses is 15% easier. [OURS]", [["roadrun", 0.15, {}]]],
     // ---------------------------------------------------------------- world events (worldevents.js)
     [ "Conjuration", "gate_breaker", "Gate Breaker", 1, [40], ["summoner"], "You know how Oblivion works: Daedra take 15% more damage from you and hit you 10% softer, and your fights at an Oblivion gate count 25% more towards closing it. [OURS]", [["out", 0.15, { tag: ["daedra"] }], ["in", -0.1, { tag: ["daedra"] }], ["wevgate", 0.25, {}]]],
     [ "Archery", "sky_hunter", "Sky Hunter", 1, [50], ["eagle_eye"], "Bows do 15% more to dragons, and every migrating dragon you bring down drops an extra dragon bone. [OURS]", [["out", 0.15, { sk: AR, tag: ["dragon"] }], ["wevbone", 1, {}]]],
     [ "Speechcraft", "caravan_friend", "Caravan Friend", 1, [40], ["bribery"], "The Khajiit's grand caravan sells to you 15% cheaper and sets aside one more rare item for you. [OURS]", [["wevmarket", 0.15, {}], ["wevstock", 1, {}]]],
+    // ---------------------------------------------------------------- homesteads (homestead.js)
+    [ "Smithing", "carpenter", "Carpenter", 1, [30], ["steel_smithing"], "Building at your homestead takes 25% fewer materials. [OURS, from Hearthfire]", [["hsmats", 0.25, {}]]],
+    [ "Athletics", "woodsman", "Woodsman", 1, [30], ["long_strider"], "The sawmill, quarry and clay pit at your homestead give 50% more. [OURS]", [["hsyield", 0.5, {}]]],
+    [ "Etiquette", "landed_thane", "Landed Thane", 1, [40], ["courtly_manners"], "Homestead deeds and stewards cost 25% less. [OURS]", [["hsdeed", 0.25, {}]]],
+    [ "Mercantile", "estate_income", "Estate Income", 1, [50], ["haggling"], "Every wing of your homesteads brings in 15 gold a day (collect it there). [OURS]", [["hsrent", 15, {}]]],
+    // ---------------------------------------------------------------- turn-by-turn fights (tbfight.js): action points and initiative
+    [ "Athletics", "battle_rhythm", "Battle Rhythm", 2, [30, 70], ["long_strider"], "In turn-by-turn fights you get 1/2 more action points every turn. [OURS]", [["tbap", 1, {}]]],
+    [ "Acrobatics", "quick_start", "Quick Start", 2, [25, 60], ["sure_footed"], "In turn-by-turn fights you act sooner: +3/+6 initiative. [OURS]", [["tbinit", 3, {}]]],
+    [ "Sneak", "first_move", "First Move", 1, [40], ["stealth"], "You read a fight before it starts: +4 initiative in turn-by-turn fights. [OURS]", [["tbinit", 4, {}]]],
+    [ "Alteration", "quickened_casting", "Quickened Casting", 1, [40], ["apprentice_alteration"], "In turn-by-turn fights you get 1 more spell point every turn (only for spells). [OURS]", [["tbspap", 1, {}]]],
+    [ "Heavy Armor", "drilled_in_steel", "Drilled in Steel", 1, [50], ["juggernaut"], "Heavy armor slows you only half as much in turn-by-turn fights (initiative). [OURS]", [["tbheavy", 0.5, {}]]],
   ];
   const FX = {};
   if (typeof PERKS !== "undefined") {
