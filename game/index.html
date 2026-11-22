@@ -1374,6 +1374,23 @@ html.a11y-1h .mapwrap:has(.picked:not(.hide)) .mapbtns{bottom:72px}
 html.a11y-1h-left :is(.twbtn,.favbtn){right:auto;left:12px}
 html.a11y-1h-left .top :is(.soc,.snd){right:auto;left:66px}
 html.a11y-1h-left .mapbtns{right:auto;left:8px}
+/* [onboard] a clearer first hour (onboard.js): ideas in "What to do next", first-time tips */
+.nextcard .obrow .obx{flex:none;margin-left:2px}
+.obx{background:none;border:0;color:var(--muted,#9aa3ad);font-size:15px;line-height:1;min-width:32px;min-height:32px;padding:4px;cursor:pointer;border-radius:4px}
+.obx:hover,.obx:focus-visible{color:#efe2bd;background:rgba(255,255,255,.06)}
+.obfoot{margin:8px 0 0;font-size:13px}
+.obtip{position:fixed;left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top));z-index:80;width:min(94vw,440px);box-sizing:border-box;padding:10px 12px 10px 14px;
+  background:linear-gradient(180deg,rgba(20,22,26,.97),rgba(10,11,13,.97));border:1px solid rgba(226,187,100,.6);border-radius:6px;box-shadow:0 10px 28px rgba(0,0,0,.6);color:#efe7d2;animation:obin .25s ease-out}
+.obtip.infight{top:auto;bottom:calc(8px + env(safe-area-inset-bottom));max-height:42vh;overflow:auto}
+.obtip p{margin:4px 0 8px;font-size:14px;line-height:1.4}
+.obtip-h{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.obtip-h b{font-family:var(--sk-ui,Cinzel,serif);letter-spacing:.06em;color:#f3e2b0;font-size:14px}
+.obtip-b{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.obtip-b .linkbtn{margin-left:auto;font-size:13px}
+.pixel .obtip,html.pixel .obtip{border-radius:0;border-width:2px}
+@keyframes obin{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
+@media (prefers-reduced-motion:reduce){.obtip{animation:none}}
+html.a11y-still .obtip{animation:none}
 /* [tabs] menu tabs (menus.js): seven bottom tabs, a SkyUI sub-tab strip on top of each screen */
 .tabs.mn-bar{grid-template-columns:repeat(7,minmax(0,1fr))}
 .mn-bar .tab{padding:8px 0 10px;min-width:0;letter-spacing:.04em;font-size:9.5px}
@@ -1565,6 +1582,7 @@ html.art-pixel .rmd-b,html.art-pixel .rmd-n{border-radius:0}
 <script src="skillinfo.js"></script>
 <script src="menus.js"></script>
 <script src="tabmenu.js"></script>
+<script src="onboard.js"></script>
 <script src="search.js"></script>
 <script src="remind.js"></script>
 <script src="ui.js"></script>
