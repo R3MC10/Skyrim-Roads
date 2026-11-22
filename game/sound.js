@@ -1,4 +1,5 @@
-/* Sound: all music and effects are made live with WebAudio (no sound files).
+/* Sound: music and effects are made live with WebAudio. Recorded files (listed in audio.json) take over any effect
+   or music track they cover, with the live sound as the fallback — see "recorded files" below.
    Music has five moods (day, night, dungeon, title, combat) that crossfade into each other. It starts only after
    the first tap, is quiet by default, and fades out while the app is in the background.
 
@@ -70,6 +71,7 @@ const SOUND = (() => {
     musicBus.gain.setTargetAtTime(Math.pow(cfg.music, 1.3) * 0.9, t, 0.25);
     sfxBus.gain.setTargetAtTime(Math.pow(cfg.sfx, 1.3) * 1.1, t, k);
     ambBus.gain.setTargetAtTime(Math.pow(cfg.amb ?? 0.5, 1.3) * AMB_LEVEL, t, 0.3);
+    for (const T of Object.values(tracks)) if (!T.routed && T === curTrack) T.el.volume = elVol();   // loops the WebView couldn't route
   }
 
   // ------------------------------------------------------------ voices (each one starts and ends at exactly zero)
@@ -353,13 +355,124 @@ const SOUND = (() => {
   // loudness trims, measured offline so effects sit together: interface ticks quiet, blows medium, big moments louder
   const TRIM = { click: 1.7, page: 0.7, chat: 1.7, hit: 0.55, clang: 2.2, swing: 3.9, spell: 1.45, coin: 1.95, potion: 1.5, levelup: 1, quest: 1.25, arrive: 2.05, victory: 1.9, death: 0.87, shout: 0.72, dragon: 1 };
   const lastAt = {};
+  /* "spell-fire" → ["spell-fire", "spell"]: a specific name falls back to its general one */
+  function chain(name) { const out = []; let n = name; while (n) { out.push(n); const i = n.lastIndexOf("-"); n = i > 0 ? n.slice(0, i) : ""; } return out; }
   function fire(name, t) {
-    if (lastAt[name] != null && Math.abs(t - lastAt[name]) < (GAP[name] || 0.05)) return false;
+    const ch = chain(name), base = ch.find((n) => FX[n]);
+    if (lastAt[name] != null && Math.abs(t - lastAt[name]) < (GAP[name] || GAP[base] || 0.05)) return false;
+    const rec = ch.find((n) => sfxBuf[n]?.length);
+    if (!rec && !base) return false;
     lastAt[name] = t;
-    fxScale = TRIM[name] || 1;
-    try { FX[name](t); } catch (e) { /* never break the game for a sound */ }
+    if (rec) { try { playFile(rec, t, base || rec); } catch (e) { /* never break the game for a sound */ } return true; }
+    fxScale = TRIM[base] || 1;
+    try { FX[base](t); } catch (e) { /* never break the game for a sound */ }
     fxScale = 1;
     return true;
+  }
+
+  // ------------------------------------------------------------ recorded files (optional; the code above is the fallback)
+  /* Files sit flat next to index.html and are listed in audio.json (a plain JSON array of file names), so a missing
+     file never costs a request. No audio.json → everything stays procedural, exactly as before.
+       sfx-<name>.mp3, sfx-<name>-2.mp3 …  an effect (numbered files are random variants). <name> is any SOUND.fx name;
+                                           a longer name like "hit-axe" or "spell-fire" falls back to "hit" / "spell".
+       amb-<event>.mp3                     replaces an ambience one-shot (wolf, owl, thunder, …); amb-step-<ground>.mp3
+                                           replaces footsteps (snow, grass, stone, marsh, hoof).
+       mus-<track>.mp3                     a music loop: title, town, inn, dungeon, combat, boss, night, explore, or a
+                                           region: tundra pineforest snowfield marsh reach rift hotsprings coast ashlands.
+     Effects are decoded once into memory (they're short); music streams from an <audio> element routed into the
+     music bus, so the volume sliders, mute and the background fade all still apply. Under browser automation nothing
+     is fetched unless the URL has ?audio (keeps screen tests quiet). */
+  const FILE_VOL = { click: 0.3, page: 0.35, chat: 0.35, coin: 0.4, potion: 0.45, swing: 0.45, hit: 0.55, clang: 0.5, equip: 0.45,
+    spell: 0.5, levelup: 0.5, quest: 0.5, arrive: 0.5, victory: 0.55, death: 0.55, shout: 0.65, dragon: 0.65 };
+  const FILE_SEND = { hit: "lo", clang: "lo", swing: "lo", spell: "lo", shout: "lo", dragon: "lo" };   // recordings carry their own room; UI stays dry
+  const MUS_FILE_VOL = 0.6;
+  const REGION = { Whiterun: "tundra", Falkreath: "pineforest", "The Pale": "snowfield", Winterhold: "snowfield", Hjaalmarch: "marsh",
+    "The Reach": "reach", "The Rift": "rift", Eastmarch: "hotsprings", Haafingar: "coast", Solstheim: "ashlands" };
+  const sfxBuf = {}, musFile = {}, tracks = {}, badTrack = {};
+  let filesAsked = false, filesReady = false, curTrack = null, lastSync = 0;
+  function decode(ab) {   // both the old callback form (older WebViews) and the promise form
+    return new Promise((res, rej) => { try { const p = ctx.decodeAudioData(ab, res, rej); if (p && p.then) p.then(res, rej); } catch (e) { rej(e); } });
+  }
+  function loadFiles() {
+    if (filesAsked) return;
+    filesAsked = true;
+    let auto = true;
+    try { auto = !(navigator.webdriver && !/[?&]audio\b/.test(location.search)); } catch (e) { /* no navigator */ }
+    if (!auto || typeof fetch === "undefined") { filesReady = true; return; }
+    const done = () => { if (!filesReady) { filesReady = true; syncMusic(); } };
+    setTimeout(done, 2500);   // never hold the music back for long
+    fetch("audio.json", { cache: "no-cache" }).then((r) => (r.ok ? r.json() : [])).then((list) => {
+      for (const f of Array.isArray(list) ? list : []) {
+        const m = typeof f === "string" && f.match(/^(sfx|amb|mus)-([a-z0-9-]+?)(?:-(\d+))?\.(mp3|ogg|m4a)$/);
+        if (!m) continue;
+        if (m[1] === "mus") { musFile[m[2] + (m[3] ? "-" + m[3] : "")] = f; continue; }
+        const key = (m[1] === "amb" ? "amb-" : "") + m[2];
+        fetch(f).then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(f)))).then(decode).then((b) => { (sfxBuf[key] ||= []).push(b); }).catch(() => { /* that file stays procedural */ });
+      }
+    }).catch(() => { /* no list: all procedural */ }).then(done);
+  }
+  /* play a decoded recording; base = the effect it stands in for (loudness, reverb) */
+  function playFile(name, t, base, dest) {
+    const list = sfxBuf[name], b = list[Math.floor(Math.random() * list.length)];
+    if (!room(dest ? "amb" : "sfx", t, t + b.duration)) return;
+    const s = ctx.createBufferSource(), g = ctx.createGain();
+    s.buffer = b;
+    if (/^(hit|clang|swing|click|coin|amb-step)/.test(name)) s.playbackRate.value = rnd(0.95, 1.05);   // a little life in repeated sounds
+    g.gain.value = dest ? 0.5 : FILE_VOL[base] ?? 0.5;
+    s.connect(g); g.connect(dest || sends[FILE_SEND[base] || "dry"]);
+    s.onended = () => { try { g.disconnect(); } catch (e) { /* ignore */ } };
+    s.start(t);
+  }
+  function saveNow() { try { return window.__dbg?.save?.() || null; } catch (e) { return null; } }
+  function region() {
+    const s = saveNow(); if (!s || typeof G === "undefined" || !G.holdAt) return null;
+    try { return REGION[G.holdAt([s.x, s.y])] || null; } catch (e) { return null; }
+  }
+  /* which loops suit the moment, best first */
+  function wantedTracks() {
+    const m = wantMood, sc = ambWant?.scene;
+    if (m === "title") return ["title"];
+    if (m === "combat") return [saveNow()?.dungeon?.room?.enemy?.boss ? "boss" : null, "combat"];
+    if (m === "dungeon") return ["dungeon"];
+    if (sc === "town" || sc === "forge") return ["town"];
+    if (sc === "inn") return ["inn", "town"];
+    const r = region();
+    return m === "night" ? ["night", r, "explore"] : [r, "explore"];
+  }
+  const elVol = () => (cfg.mute || hidden ? 0 : Math.pow(cfg.music, 1.3) * 0.9 * MUS_FILE_VOL);
+  function startTrack(key) {
+    let T = tracks[key];
+    if (!T) {
+      const el = new Audio(); el.loop = true; el.preload = "auto"; el.src = musFile[key];
+      T = { key, el, g: ctx.createGain(), routed: false, stopT: null };
+      T.g.gain.value = 0; T.g.connect(musicBus);
+      try { ctx.createMediaElementSource(el).connect(T.g); T.routed = true; } catch (e) { /* old WebView: plain element volume */ }
+      el.addEventListener("error", () => { badTrack[key] = true; if (curTrack === T) { curTrack = null; syncMusic(); } });
+      tracks[key] = T;
+    }
+    clearTimeout(T.stopT);
+    const t = ctx.currentTime;
+    T.g.gain.cancelScheduledValues(t); T.g.gain.setValueAtTime(T.g.gain.value, t); T.g.gain.setTargetAtTime(T.routed ? MUS_FILE_VOL : 1, t, 0.8);   // ~3 s crossfade
+    if (!T.routed) T.el.volume = elVol();
+    if (!hidden && T.el.paused) T.el.play()?.catch?.(() => { /* blocked until the next tap; unlock() retries */ });
+    return T;
+  }
+  function fadeTrack(T) {
+    const t = ctx.currentTime;
+    T.g.gain.cancelScheduledValues(t); T.g.gain.setValueAtTime(T.g.gain.value, t); T.g.gain.setTargetAtTime(0, t, 0.7);
+    if (!T.routed) T.el.volume = 0;
+    clearTimeout(T.stopT); T.stopT = setTimeout(() => { if (curTrack !== T) T.el.pause(); }, 4500);
+  }
+  /* decides between a recorded loop and the procedural composer, and crossfades */
+  function syncMusic() {
+    if (!ctx || !unlocked) return;
+    const on = !cfg.mute && cfg.music > 0;
+    const key = on ? wantedTracks().find((k) => k && musFile[k] && !badTrack[k]) || null : null;
+    if (key !== (curTrack ? curTrack.key : null)) {
+      if (curTrack) fadeTrack(curTrack);
+      curTrack = key ? startTrack(key) : null;
+    }
+    if (curTrack || !on) { if (playing) stopMusic(); } else if (!playing && filesReady) startMusic();
   }
 
 
@@ -483,7 +596,8 @@ const SOUND = (() => {
   };
   /* footsteps: soft, their pace follows your speed; crunch on snow, thud on grass, tap on stone; hooves when riding */
   function footstep(t, w) {
-    const g = w.ground;
+    const g = w.ground, fk = "amb-step-" + (w.riding ? "hoof" : ["snow", "stone", "marsh"].includes(g) ? g : "grass");
+    if (sfxBuf[fk]?.length) { playFile(fk, t, "step", ambBus); return; }
     if (w.riding) {   // a two-beat clop, two hooves close together
       [0, 0.09].forEach((d) => { N(t + d, { type: "bandpass", freq: g === "snow" ? 1400 : 900, q: 1.4, vol: 0.07, a: 0.001, r: 0.02 }); A(160, t + d, { vol: 0.05, a: 0.002, r: 0.03, glide: 0.6 }); });
     } else if (g === "snow") N(t, { type: "bandpass", freq: rnd(2200, 3200), q: 0.9, vol: 0.08, a: 0.01, h: 0.03, r: 0.03 });
@@ -496,11 +610,12 @@ const SOUND = (() => {
     if (!ctx || !ambWant || (!force && (ctx.state !== "running" || hidden))) return;
     const t = ctx.currentTime, w = ambWant;
     reapBeds();
+    if (t - lastSync > 3) { lastSync = t; try { syncMusic(); } catch (e) { /* never break the game */ } }   // region / boss changes
     if (!(cfg.amb > 0) || cfg.mute) return;
     for (const [name, ev] of Object.entries(EVENTS)) {
       if (!ev.when(w)) { nextAt[name] = 0; continue; }
       if (!nextAt[name]) { nextAt[name] = t + rnd(0.3, 1) * ev.every; continue; }
-      if (t >= nextAt[name]) { try { ev.play(t + 0.05, w); } catch (e) { /* never break the game */ } nextAt[name] = t + ev.every * rnd(0.6, 1.5); }
+      if (t >= nextAt[name]) { try { if (sfxBuf["amb-" + name]?.length) playFile("amb-" + name, t + 0.05, name, ambBus); else ev.play(t + 0.05, w); } catch (e) { /* never break the game */ } nextAt[name] = t + ev.every * rnd(0.6, 1.5); }
     }
     if (w.moving && w.scene === "wild") {
       const every = w.riding ? 0.62 : Math.max(0.42, 0.62 / Math.max(0.6, Math.min(1.6, w.speed || 1)));
@@ -534,9 +649,10 @@ const SOUND = (() => {
   // ------------------------------------------------------------ waking up, sleeping, and the phone's background
   let unlocked = false, hidden = typeof document !== "undefined" && document.hidden, sleepT = null;
   function unlock() {
-    if (!unlocked) { if (!init()) return; unlocked = true; }
+    if (!unlocked) { if (!init()) return; unlocked = true; loadFiles(); }
     if (ctx.state !== "running" && !hidden) ctx.resume?.().catch(() => {});
-    if (!cfg.mute && cfg.music > 0 && !playing) startMusic();
+    syncMusic();
+    if (curTrack && curTrack.el.paused && !hidden) curTrack.el.play()?.catch?.(() => {});   // a loop the phone blocked: this tap may free it
     startAmb(); applyAmb();
   }
   if (typeof document !== "undefined") {
@@ -544,6 +660,7 @@ const SOUND = (() => {
     const away = () => {
       hidden = true; if (!ctx) return;
       applyVolume();
+      if (curTrack) { const T = curTrack; setTimeout(() => { if (hidden) T.el.pause(); }, 250); }
       clearTimeout(sleepT); sleepT = setTimeout(() => { if (hidden) ctx.suspend?.().catch(() => {}); }, 250);   // fade out, then sleep
     };
     const back = () => {
@@ -553,6 +670,7 @@ const SOUND = (() => {
         if (playing) { queue = []; nextBeat = ctx.currentTime + 0.25; }
         nextStep = 0; for (const k of Object.keys(nextAt)) nextAt[k] = 0;
         applyVolume();
+        if (curTrack && curTrack.el.paused) curTrack.el.play()?.catch?.(() => {});
       });
     };
     document.addEventListener("visibilitychange", () => (document.hidden ? away() : back()));
@@ -562,7 +680,7 @@ const SOUND = (() => {
   const ready = () => ctx && unlocked && !cfg.mute && !hidden && ctx.state === "running";
   return {
     fx(name, delay = 0) {
-      if (!ready() || !cfg.sfx || !FX[name]) return;
+      if (!ready() || !cfg.sfx || !chain(name).some((n) => FX[n] || sfxBuf[n]?.length)) return;
       fire(name, ctx.currentTime + 0.02 + delay);
     },
     /* plays a short fight: a few blows, then a win or loss sting */
@@ -575,25 +693,28 @@ const SOUND = (() => {
     mood(m) {
       if (!MOODS[m] || m === wantMood) return;
       wantMood = m; switchMood(m);
+      try { syncMusic(); } catch (e) { /* never break the game */ }
     },
+    /* every effect name that will make a sound (procedural ones plus any recorded extras such as "equip") */
+    get FX() { const o = {}; for (const k of Object.keys(FX)) o[k] = true; for (const k of Object.keys(sfxBuf)) if (!k.startsWith("amb-")) o[k] = true; return o; },
     /* what's around you: { scene: wild|town|inn|forge|dungeon, weather, tod, ground, leafy, coldLand, wet, water, sea,
        dwemer, raid, moving, speed, riding, cart } — call it whenever any of that may have changed (cheap) */
     ambience(w) {
       if (!w) return;
       const key = JSON.stringify(w);
       if (key === ambKey) return;
-      ambKey = key; ambWant = { ...w };
-      if (ctx && unlocked) applyAmb();
+      const was = ambWant?.scene; ambKey = key; ambWant = { ...w };
+      if (ctx && unlocked) { applyAmb(); if (was !== w.scene) try { syncMusic(); } catch (e) { /* never break the game */ } }
     },
     get settings() { return { ...cfg }; },
     set(k, v) {
       cfg[k] = v; saveCfg();
       if (!ctx) return;
       applyVolume();
-      if (cfg.mute || cfg.music <= 0) { if (playing) stopMusic(); } else if (unlocked && !playing) startMusic();
+      syncMusic();
       if (k === "amb" || k === "mute") applyAmb();
     },
-    get state() { return { ctx: ctx?.state || "none", unlocked, mood, music: playing, voices: voices.music.length + voices.sfx.length + voices.amb.length, amb: ambWant?.scene || null, beds: Object.keys(beds), ambVoices: voices.amb.length }; },
+    get state() { return { ctx: ctx?.state || "none", unlocked, mood, music: playing, voices: voices.music.length + voices.sfx.length + voices.amb.length, amb: ambWant?.scene || null, beds: Object.keys(beds), ambVoices: voices.amb.length, track: curTrack ? curTrack.key : null, files: Object.keys(sfxBuf).length + Object.keys(musFile).length }; },
     /* for tests and the offline renderer: drive the same engine on any AudioContext */
     _test: {
       init: () => { const ok = init(); unlocked = true; if (ctx) { master.gain.value = 1; musicBus.gain.value = Math.pow(cfg.music, 1.3) * 0.9; sfxBus.gain.value = Math.pow(cfg.sfx, 1.3) * 1.1; ambBus.gain.value = Math.pow(cfg.amb ?? 0.5, 1.3) * AMB_LEVEL; } return ok; },
