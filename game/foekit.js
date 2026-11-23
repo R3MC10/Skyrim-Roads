@@ -29,6 +29,7 @@ const FOEKIT = (() => {
   function hit(f, enemyTurn, mul, o = {}) {
     const hpB = f.hp; f.eMagic = !!o.magic;
     let t; try { t = enemyTurn(); } finally { f.eMagic = false; }
+    if (!o.keepName) { const nm = String(f.e.name || ""); if (nm && t.startsWith(nm + " ")) t = t.slice(nm.length + 1); }   // "Bandit hits 24" → "hits 24" after the move's own name
     let loss = hpB - f.hp;
     const rage = f.kit?.rage > 0 ? 1.25 : 1;
     if (loss > 0) { f.hp = hpB - loss * mul * rage; loss = hpB - f.hp; }
@@ -148,9 +149,9 @@ const FOEKIT = (() => {
       const r = hit(f, enemyTurn, w.mul);
       return pre + w.text(n, r.t);
     }
-    if (!k.ids.length || rnd() >= USE) { const r = hit(f, enemyTurn, 1); return pre + r.t; }
+    if (!k.ids.length || rnd() >= USE) { const r = hit(f, enemyTurn, 1, { keepName: true }); return pre + r.t; }
     const id = pick(f, rnd);
-    if (!id) { const r = hit(f, enemyTurn, 1); return pre + r.t; }
+    if (!id) { const r = hit(f, enemyTurn, 1, { keepName: true }); return pre + r.t; }
     const m = MOVES[id]; k.cd[id] = m.cd; k.used[id] = (k.used[id] || 0) + 1; f.kitLast = id;
     return pre + m.run(f, enemyTurn, n);
   }
