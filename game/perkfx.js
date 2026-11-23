@@ -140,6 +140,7 @@ const PFX = (() => {
     [ "Mercantile", "allure", "Allure", 1, [70], ["merchant"], "Prices are another 5% better. [Skyrim: 10% better with the opposite sex]", [["price", 0.05, {}]]],
     [ "Mercantile", "bargain_hunter", "Bargain Hunter", 1, [40], ["haggling"], "Inns and trainers cost 10% less. [OURS]", [["inn", 0.1, {}]]],
     [ "Mercantile", "trade_routes", "Trade Routes", 1, [80], ["investor", "allure"], "Jobs from the notice boards pay 15% more. [OURS]", [["job", 0.15, {}]]],
+    [ "Mercantile", "horse_trader", "Horse Trader", 2, [30, 60], ["haggling"], "Horses and stable work cost 10%/20% less, and the horses you buy roll better. [OURS]", [["stable", [0.1, 0.2], {}]]],
     [ "Mercantile", "deep_pockets", "Deep Pockets", 1, [30], ["haggling"], "Carry 50 more. [OURS]", [["carry", 50, {}]]],
     // ---------------------------------------------------------------- Speechcraft (3 → 9)
     [ "Speechcraft", "silver_tongue", "Silver Tongue", 1, [20], [], "Prices are 5% better. [OURS]", [["price", 0.05, {}]]],

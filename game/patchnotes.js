@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b126", build: 126, date: "23 Nov 2026", title: "Horse breeds and stable upgrades", items: [
+      "Stables now sell four breeds: the all-round Cyrodilic bay, the big Nord draft (carries most, takes hits), the fast Hammerfell courser (carries little) and the cheap, sturdy Highland pony.",
+      "Every horse comes out a little different: its speed, carrying and health can be up to 5% better or worse than its breed's. The stables card shows your horse's numbers.",
+      "New stable upgrades: saddlebags (carry 50, 100 or 150 more) and horseshoes (iron, steel or elven, ride 5%, 10% or 15% faster). Horse armor is still there too.",
+      "New Speech perk, Horse Trader: horses and stable work cost 10%/20% less, and the horses you buy roll better.",
+      "Horses you already own keep going as Cyrodilic bays with their old numbers.",
+    ] },
     { id: "b125", build: 125, date: "23 Nov 2026", title: "Traders sell the basics", items: [
       "Town shops, caravans and roadside traders now only sell basic gear: iron, steel, hide, leather, chainmail and the like. Elven, dwarven, glass, ebony and better come from dungeons, bosses, quests and your own forge.",
       "Enchanted gear is still on sale, but only with weak enchantments. Staffs on sale cast novice and apprentice spells only.",

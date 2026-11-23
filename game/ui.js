@@ -2870,7 +2870,7 @@
       <div class="list"><input id="lon" maxlength="20" placeholder="New loadout name, e.g. Dragon" aria-label="New loadout name"><div class="grid2"><button class="btn" data-act="losave">Save current as</button>${pendingDel ? `<button class="btn danger" data-act="lodelyes">Really delete ${esc(S.loadout)}?</button>` : `<button class="btn danger" data-act="lodel">Delete ${esc(S.loadout)}</button>`}</div></div></div>`;
   }
 
-  let horseCoat = "bay";
+  let horseCoat = "bay", horseBreed = "bay";
   function cartHTML(open, wanted) {
     const c = S.cart, coat = S.horse ? HORSES.coat(S.horse.coat)[2] : undefined;
     if (!c) return `<div class="card cvcard"><div class="cvhead">${CARAVANS.wagonHTML(96, 64, { cover: false, coat })}<div><h3 style="margin:0">A cart · ${CARAVANS.CART_PRICE} gold</h3><p class="sub" style="margin:2px 0 0">Hitched to your horse it carries +${CARAVANS.CART_CARRY}. You go 10% slower, keep to the roads, and bandits sometimes come for the cargo.</p></div></div>
@@ -2912,18 +2912,26 @@
   function stablesHTML(open, wanted) {
     const h = HORSES.fix(S), l = S.location;
     const swatch = (c, on, act) => `<button class="coat ${on ? "on" : ""}" ${act ? `data-act="hcoat" data-id="${c[0]}"` : "disabled"} style="background:${c[2]}" aria-label="${esc(c[1])}" aria-pressed="${on}"></button>`;
-    if (!h) return `<div class="card"><h3>Buy a horse · ${D.HORSE_PRICE} gold</h3><p class="sub">Riding, you travel ${D.HORSE_SPEED}× faster and flee more easily. Your horse carries ${D.HORSE_CARRY} for you even when you walk beside it. Horses never die: if badly hurt, they limp back to the nearest stables to rest.</p>
+    const statRow = (st) => `<span class="hstats"><b>🏇 ${(+st.speed).toFixed(2)}×</b><b>🎒 ${Math.round(st.carry)}</b><b>❤ ${Math.round(st.hp)}</b></span>`;
+    if (!h) {
+      const br = HORSES.breed(horseBreed), bp = HORSES.price(S, horseBreed);
+      return `<div class="card"><h3>Buy a horse · ${bp} gold</h3><p class="sub">Riding, you travel faster and flee more easily. Your horse carries things for you even when you walk beside it. Horses never die: if badly hurt, they limp back to the nearest stables to rest.</p>
+      <div class="hbreeds">${Object.entries(HORSES.BREEDS).map(([id, b]) => `<button class="hbreed ${id === horseBreed ? "on" : ""}" data-act="hbreed" data-id="${id}" aria-pressed="${id === horseBreed}"><b>${esc(b.name)}</b><span class="num gold">${HORSES.price(S, id)}</span>${statRow(b)}<small>${esc(b.text)}</small></button>`).join("")}</div>
+      <p class="sub" style="margin:6px 0 2px">Every horse is a little different: its numbers can come out up to ${Math.round(HORSES.ROLL * 100)}% better or worse than its breed's.</p>
       <div class="coats">${HORSES.COATS.map((c) => swatch(c, c[0] === horseCoat, true)).join("")}</div><p class="sub" style="margin:4px 0 0">${esc(HORSES.coat(horseCoat)[1])}</p>
-      <div class="chatrow"><input id="hname" maxlength="16" placeholder="Name your horse" autocomplete="off" aria-label="Horse name"><button class="btn pri" data-act="hbuy" ${open && !wanted && S.gold >= D.HORSE_PRICE ? "" : "disabled"}>Buy</button></div>
-      ${!open ? `<p class="sub">The stables open at 08:00.</p>` : S.gold < D.HORSE_PRICE ? `<p class="sub">You have ${S.gold} gold.</p>` : ""}</div>`;
+      <div class="chatrow"><input id="hname" maxlength="16" placeholder="Name your horse" autocomplete="off" aria-label="Horse name"><button class="btn pri" data-act="hbuy" ${open && !wanted && S.gold >= bp ? "" : "disabled"}>Buy ${esc(br.name)}</button></div>
+      ${!open ? `<p class="sub">The stables open at 08:00.</p>` : S.gold < bp ? `<p class="sub">You have ${S.gold} gold.</p>` : ""}</div>`;
+    }
     const c = HORSES.coat(h.coat), mh = HORSES.maxHp(h), hp = HORSES.hp(S), aw = HORSES.away(S);
     const here = aw && h.away.town === l, mins = Math.ceil(HORSES.readyIn(S) / 60);
-    return `<div class="card"><div class="row" style="display:flex;gap:10px;align-items:center">${UIART.horse(h.coat, 44, h.armor && h.armor !== "none")}<div style="flex:1"><h3 style="margin:0">${esc(h.name)}</h3><span class="sub">${esc(c[1])} · ${esc(HORSES.ARMOR[h.armor].name)}</span></div></div>
+    return `<div class="card"><div class="row" style="display:flex;gap:10px;align-items:center">${UIART.horse(h.coat, 44, h.armor && h.armor !== "none")}<div style="flex:1"><h3 style="margin:0">${esc(h.name)}</h3><span class="sub">${esc(HORSES.breed(h.breed).name)} · ${esc(c[1])} · ${esc(HORSES.ARMOR[h.armor].name)}</span>${statRow({ speed: HORSES.speed(S), carry: HORSES.carry(S), hp: mh })}</div></div>
         ${aw ? `<p>${here ? (mins > 0 ? `${esc(h.name)} is resting here. Ready in about ${mins} min.` : `${esc(h.name)} is rested and waiting for you.`) : `${esc(h.name)} is resting at the stables in ${esc(h.away.town)}.`}</p>
           ${here ? `<div class="grid2"><button class="btn pri" data-act="hfetch" ${mins > 0 ? "disabled" : ""}>Take ${esc(h.name)}</button><button class="btn" data-act="hhurry" ${mins > 0 ? "" : "disabled"}>Patch up now (${HORSES.HURRY_PRICE} gold)</button></div>` : ""}`
         : `<div class="vital" style="margin-top:8px"><small><span>Health</span><span class="num">${Math.round(hp)}/${mh}</span></small><div class="bar"><i style="width:${pct(hp, mh)}%;background:var(--sp)"></i></div></div>`}
         <div class="chatrow" style="margin-top:8px"><input id="hname" maxlength="16" placeholder="New name" autocomplete="off" aria-label="New name"><button class="btn" data-act="hrename">Rename</button></div></div>
-      <h3 style="margin-top:12px">Horse armor</h3>${Object.entries(HORSES.ARMOR).filter(([id]) => id !== "none").map(([id, a]) => `<div class="item"><div class="t">${esc(a.name)}<span>+${a.hp} health · takes ${Math.round(a.guard * 100)}% less damage</span></div><span class="num gold">${a.price}</span><button class="btn sm" data-act="harmor" data-id="${id}" ${h.armor === id || !open || S.gold < a.price || wanted ? "disabled" : ""}>${h.armor === id ? "Worn" : "Buy"}</button></div>`).join("")}`;
+      <h3 style="margin-top:12px">Saddlebags</h3>${HORSES.BAGS.map((b, i) => (b ? `<div class="item"><div class="t">${esc(b.name)}<span>carries ${b.carry} more</span></div><span class="num gold">${HORSES.cost(S, b.price)}</span><button class="btn sm" data-act="hbags" ${i !== h.bags + 1 || !open || S.gold < HORSES.cost(S, b.price) || wanted ? "disabled" : ""}>${i <= h.bags ? "Owned" : "Buy"}</button></div>` : "")).join("")}
+      <h3 style="margin-top:12px">Horseshoes</h3>${Object.entries(HORSES.SHOES).filter(([id]) => id !== "none").map(([id, a]) => { const have = HORSES.SHOES[h.shoes].speed >= a.speed; return `<div class="item"><div class="t">${esc(a.name)}<span>ride ${Math.round(a.speed * 100)}% faster</span></div><span class="num gold">${HORSES.cost(S, a.price)}</span><button class="btn sm" data-act="hshoes" data-id="${id}" ${have || !open || S.gold < HORSES.cost(S, a.price) || wanted ? "disabled" : ""}>${h.shoes === id ? "Worn" : have ? "Have better" : "Buy"}</button></div>`; }).join("")}
+      <h3 style="margin-top:12px">Horse armor</h3>${Object.entries(HORSES.ARMOR).filter(([id]) => id !== "none").map(([id, a]) => `<div class="item"><div class="t">${esc(a.name)}<span>+${a.hp} health · takes ${Math.round(a.guard * 100)}% less damage</span></div><span class="num gold">${HORSES.cost(S, a.price)}</span><button class="btn sm" data-act="harmor" data-id="${id}" ${h.armor === id || !open || S.gold < HORSES.cost(S, a.price) || wanted ? "disabled" : ""}>${h.armor === id ? "Worn" : "Buy"}</button></div>`).join("")}`;
   }
   /* [ux] Town sections in a few labelled groups, with a line on what the open one is for */
   const TOWN_GROUPS = [["Shops", ["general", "blacksmith", "wizard", "fence", "market", "stables"]], ["Services", ["inn", "train", "forge", "alchemy", "enchanter", "cook", "craft", "carriage", "hire"]],
@@ -3588,7 +3596,10 @@
       case "cvsign": { const r = CARAVANS.signOn(S, b.dataset.id); if (r.err) return toast(r.err); Store.put("guards", r.id, r.doc); guardDocs.push({ ...r.doc, id: r.id }); lastJobId = S.caravanJob.id; persist(true); say(r.text); break; }
       case "cvleave": { const id = S.caravanJob?.id, m = CARAVANS.leave(S); if (id) Store.change("guards", `${id}-${S.id}`, (d) => (d ? { ...d, status: "left" } : d)); persist(true); say(m || "You're not with a caravan."); break; }
       case "cvbuy": say(CARAVANS.buy(S, b.dataset.id, b.dataset.item)); break;
-      case "hbuy": say(HORSES.buy(S, $("#hname")?.value, horseCoat)); publishCard(); break;
+      case "hbuy": say(HORSES.buy(S, $("#hname")?.value, horseCoat, horseBreed)); publishCard(); break;
+      case "hbreed": horseBreed = b.dataset.id; renderPanel(true); break;
+      case "hbags": say(HORSES.buyBags(S)); break;
+      case "hshoes": say(HORSES.buyShoes(S, b.dataset.id)); break;
       case "hrename": say(HORSES.rename(S, $("#hname")?.value)); break;
       case "harmor": say(HORSES.buyArmor(S, b.dataset.id)); break;
       case "hfetch": say(HORSES.fetch(S)); publishCard(); break;
