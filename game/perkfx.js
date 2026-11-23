@@ -223,6 +223,7 @@ const PFX = (() => {
     // ---------------------------------------------------------------- sneak mode on the road (sneakmode.js)
     [ "Sneak", "silent_roads", "Silent Roads", 1, [25], ["stealth"], "Sneaking on the road is 15% faster, and other heroes have to be 25% closer to spot you. [OURS]", [["sneakmove", 0.15, {}], ["sneakseen", 0.25, {}]]],
     [ "Sneak", "shadow_paths", "Shadow Paths", 1, [55], ["silent_roads"], "While sneaking on the road, half as many bandits and beasts find you. [OURS]", [["sneakenc", 0.5, {}]]],
+    [ "Blocking", "watch_drills", "Watch Drills", 1, [30], ["shield_wall"], "You know how hold guards fight: they hit you 15% softer and you hit them 10% harder. [OURS]", [["in", -0.15, { tag: ["guard"] }], ["out", 0.1, { tag: ["guard"] }]]],
     [ "Sneak", "first_move", "First Move", 1, [40], ["stealth"], "You read a fight before it starts: +4 initiative in turn-by-turn fights. [OURS]", [["tbinit", 4, {}]]],
     [ "Alteration", "quickened_casting", "Quickened Casting", 1, [40], ["apprentice_alteration"], "In turn-by-turn fights you get 1 more spell point every turn (only for spells). [OURS]", [["tbspap", 1, {}]]],
     [ "Heavy Armor", "drilled_in_steel", "Drilled in Steel", 1, [50], ["juggernaut"], "Heavy armor slows you only half as much in turn-by-turn fights (initiative). [OURS]", [["tbheavy", 0.5, {}]]],

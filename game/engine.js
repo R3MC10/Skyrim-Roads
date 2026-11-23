@@ -970,7 +970,7 @@ const G = (() => {
       for (const [id, c] of Object.entries(this.charges)) { const r = invRow(this.s, +id); if (r) r.charge = c; }
       const msgs = typeof MAGIC !== "undefined" ? MAGIC.after(this) : [];
       if (this.mount && typeof HORSEBACK !== "undefined") msgs.push(...HORSEBACK.after(this, t));
-      for (const [k, v] of Object.entries(this.xp)) msgs.push(...useSkill(this.s, k, v));
+      if (!this.e.guard) for (const [k, v] of Object.entries(this.xp)) msgs.push(...useSkill(this.s, k, v));   // [OURS] fighting guards teaches you nothing
       return [...(this.followerDown ? [`${this.followerDown} gets back up after the fight, badly hurt.`] : []), ...extraMsgs, ...daeMsgs, ...msgs];
     }
   }
@@ -1013,7 +1013,7 @@ const G = (() => {
   const ammoQty = (item) => { const it = D.ITEMS[item]; return it?.slot === "ammo" && typeof AMMO !== "undefined" ? rint(...AMMO.LOOT_QTY[it.ammo]) : 1; };
   function rollLoot(s, e) {
     const got = [], tags = new Set(e.tags || []);
-    if (e.fled) return got;
+    if (e.fled || e.guard) return got;   // [OURS] guards can't be farmed for gear
     for (const table of [...(tags.has("humanoid") ? ["humanoid"] : []), ...(tags.has("elite") ? ["elite"] : [])])
       for (const [item, ch] of D.LOOT[table]) if (Math.random() < ch) { const q = ammoQty(item); give(s, item, q); got.push(D.ITEMS[item].name + (q > 1 ? ` ×${q}` : "")); }
     if (tags.has("beast") && typeof SMITH !== "undefined") { const p = SMITH.peltFor(e.name); if (p && Math.random() < 0.7) { give(s, p); got.push(D.ITEMS[p].name); } }   // [Skyrim] pelts from animals
