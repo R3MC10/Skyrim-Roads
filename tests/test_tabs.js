@@ -11,7 +11,7 @@ const M=MENUS;
 ok(M.GROUPS.map(g=>g[1]).join()==="Character,Items,Magic,Map,Journal,Social,Area","seven tabs in order");
 ok(M.GROUPS.map(g=>g[0]).join()==="hero,pack,magic,map,log,social,town","tab ids kept (old screen tests click them)");
 // where things live
-for (const [s,g] of Object.entries({stars:"hero",hero:"hero",perks:"hero",tactics:"hero",stats:"hero",ach:"hero",library:"hero",diary:"hero",settings:"hero",
+for (const [s,g] of Object.entries({stars:"hero",hero:"hero",perks:"hero",stats:"hero",ach:"hero",library:"hero",diary:"hero",settings:"hero",
   pack:"pack",map:"map",places:"map",world:"map",log:"log",social:"social",town:"town",magic:"magic"})) ok(M.groupOf(s)===g,"home of "+s+" "+M.groupOf(s));
 ok(M.groupOf("nonsense")==="map","unknown screens fall back to the map");
 // tapping a bottom tab
@@ -20,15 +20,15 @@ ok(M.pick("hero")==="hero"&&M.pick("map")==="map"&&M.pick("log")==="log","first 
 M.subnav("diary"); ok(M.pick("hero")==="diary","remembers the last sub-tab");
 M.subnav("world"); ok(M.pick("map")==="world","remembers the map sub-tab");
 // sub-tab rows
-const sn=M.subnav("stats"); ok((sn.match(/data-act="tabgo"/g)||[]).length===9&&/class="on"[^>]*data-id="stats"/.test(sn),"character row "+sn.slice(0,80));
+const sn=M.subnav("stats"); ok((sn.match(/data-act="tabgo"/g)||[]).length===8&&/class="on"[^>]*data-id="stats"/.test(sn),"character row "+sn.slice(0,80));
 ok(M.subnav("log")===""&&M.subnav("town")===""&&M.subnav("social")==="","single screens have no row");
-ok(M.charTabs().map(t=>t[0]).join()==="stars,hero,perks,tactics,stats,ach,library,diary,settings","compass Skills page tabs");
+ok(M.charTabs().map(t=>t[0]).join()==="stars,hero,perks,stats,ach,library,diary,settings","compass Skills page tabs");
 // every screen the tabs lead to is one ui.js can draw
 const drawn=new Set(["stars","perks","ach","library","world","settings"]);
 const m=UI_SRC.match(/\\{ \\.\\.\\.mnp, ([^}]+)\\}\\[tab\\]/); ok(m,"renderPanel map found");
 for (const k of m[1].split(",")) { const id=k.split(":")[0].trim(); if (id && !id.startsWith("...")) drawn.add(id); }
 for (const s of M.screens()) ok(drawn.has(s),"ui.js draws "+s);
-for (const id of ["map","hero","pack","tactics","town","log","social","stats","diary","places"]) ok(M.screens().includes(id),"old screen still reachable: "+id);
+for (const id of ["map","hero","pack","town","log","social","stats","diary","places"]) ok(M.screens().includes(id),"old screen still reachable: "+id);
 // the built panels (with stand-ins for ui.js parts)
 const P=M.panels({S:{},ach:()=>"<div class='panel'>ACH</div>",settings:()=>"<h3>Accessibility</h3>",fest:()=>"",idPanel:(id,h)=>h});
 ok(/ACH/.test(P.ach())&&/Accessibility/.test(P.settings())&&/data-act="totitle"/.test(P.settings())&&/data-act="guide"/.test(P.settings()),"settings + achievements");

@@ -175,11 +175,12 @@ const TB = (() => {
           if (this.opts.auto || this.autoRest) { this.autoTurn(); continue; }
           return { turn: "me" };
         }
-        if (o.al && o.al.player && o.al.pid && this.remote && !o.al.down && (o.al.late || 0) < 2 && (!this.remote.live || this.remote.live())) {   // a real player: their own phone picks (Auto after missing two turns)
+        if (o.al && o.al.player && o.al.pid && this.remote && !o.al.down && (o.al.late || 0) >= 2 && (!this.remote.live || this.remote.live())) { this.allyMove(o.al, "guard", true); this.idx++; continue; }   // missed two turns: they just guard (no auto fighting)
+        if (o.al && o.al.player && o.al.pid && this.remote && !o.al.down && (!this.remote.live || this.remote.live())) {   // a real player: their own phone picks
           if (!this.waiting) { this.waiting = { pid: o.al.pid, name: o.al.name, until: Date.now() + TURN_SECONDS * 1000, al: o.al }; this.remote.ask(this, o.al); }
           if (this.waiting.move) { const m = this.waiting.move; this.waiting = null; o.al.late = 0; this.allyMove(o.al, m); this.idx++; continue; }
           if (Date.now() < this.waiting.until) return { turn: "wait", who: o.al.name, until: this.waiting.until };
-          this.waiting = null; o.al.late = (o.al.late || 0) + 1; this.allyMove(o.al, "auto", true); this.idx++; continue;
+          this.waiting = null; o.al.late = (o.al.late || 0) + 1; this.allyMove(o.al, "guard", true); this.idx++; continue;
         }
         this.autoActor(o); this.idx++;
       }
@@ -276,7 +277,7 @@ const TB = (() => {
       else { const d = al.dmg * (0.85 + Math.random() * 0.3); f.ehp -= d; t = ` · ${al.name} ${Math.round(d)}`; }
       t = String(t || "").replace(/^ · /, "");
       if (f.ehp < b) { t += this.capFoe(b) + this.flank(b); this.hitters++; }
-      if (timedOut) t = `${al.name} took too long: Auto. ` + t;
+      if (timedOut) t = `${al.name} took too long and keeps their guard up. ` + t;
       this.lines.me.push(t);
       this.emit(al.player ? "mate" : "ally", t, "ally", { name: al.name, healed: Math.max(0, Math.round(f.hp - hpB)) });
     }

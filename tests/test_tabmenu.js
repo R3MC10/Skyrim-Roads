@@ -18,7 +18,7 @@ ok(T.ring("char",1)==="items"&&T.ring("items",1)==="map"&&T.ring("map",1)==="mag
 ok(T.ring("char",-1)==="magic"&&T.ring("items",-1)==="char"&&T.ring("skills",1)==="items","ring -");
 // stepping tabs
 ok(T.step(["a","b","c"],"a",1).id==="b"&&T.step(["a","b","c"],"c",1).edge===1&&T.step(["a","b","c"],"a",-1).edge===-1,"step");
-ok(T.CHAR_TABS.map(t=>t[0]).join()==="stars,hero,perks,tactics,stats,diary","char tabs");
+ok(T.CHAR_TABS.map(t=>t[0]).join()==="stars,hero,perks,stats,diary","char tabs (no Tactics: you play every fight)");
 // bottom bar
 const S=G.newSave("A","Sigrid","nord"); S.gold=321; S.level=4; S.charXp=50.6; [S.x,S.y]=WORLD.places.Whiterun; S.location="Whiterun";
 const b=T.bar(S);

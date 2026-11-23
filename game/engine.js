@@ -1131,19 +1131,9 @@ const G = (() => {
       const rate = tr.carriage || tr.follow ? 0 : ENCOUNTER_PER_MIN * (isNight(stepT) ? D.NIGHT_ENCOUNTER_MULT : 1) * (typeof WEVENTS !== "undefined" ? WEVENTS.weather([s.x, s.y], stepT).encounters : 1) * (typeof SNEAKMODE !== "undefined" ? SNEAKMODE.encounterMult(s) : 1);   // nobody robs a carriage on a Jarl's road; party members following their leader leave the road to them (partyplay.js)
       if (Math.random() < 1 - (1 - rate) ** (dt / 60)) {
         const e = rollEncounter(s, stepT);
-        if (e.danger === "low") {
-          if (e.kind === "event") {
-            const g = rint(...e.gold); s.gold += g;
-            tripLog(s, e.text + (g ? ` (+${g} gold)` : ""));
-          } else {
-            const f = new Fight(s, e, null, stepT); if (typeof HORSEBACK !== "undefined") HORSEBACK.engage(f, stepT); f.run({ t: stepT });
-            f.apply(stepT).forEach((m) => tripLog(s, "📈 " + m));
-            if (f.won) {
-              const g = rint(...e.gold); s.gold += g; const loot = rollLoot(s, e);
-              tripLog(s, `${e.text} You deal with it.${g ? ` (+${g} gold)` : ""}${loot.length ? " Loot: " + loot.join(", ") : ""}`);
-              const hm = typeof HORSES !== "undefined" ? HORSES.hurt(s, e, stepT, 0.08) : null; if (hm) tripLog(s, hm);
-            } else { const d = die(s, e.name, stepT); out.died = d.msg; out.bag = d.bag; return out; }
-          }
+        if (e.danger === "low" && e.kind === "event") {   // every fight is yours to play: the trip stops for it (no auto fighting)
+          const g = rint(...e.gold); s.gold += g;
+          tripLog(s, e.text + (g ? ` (+${g} gold)` : ""));
         } else {
           const hm = typeof HORSES !== "undefined" ? HORSES.hurt(s, e, stepT, 0.25) : null;   // horses go down, they never die
           if (hm) tripLog(s, hm);

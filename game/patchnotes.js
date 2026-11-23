@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b120", build: 120, date: "23 Nov 2026", title: "Every fight is yours", items: [
+      "No more fights that play themselves. Even small scuffles on the road (a wolf, a skeever) now stop your trip so you fight them turn by turn.",
+      "Tactics is gone from the Character menu, since you play every fight yourself.",
+      "In a party, if someone takes too long on their turn, they keep their guard up instead of the game fighting for them.",
+    ] },
     { id: "b118", build: 118, date: "23 Nov 2026", title: "The combat wheel", items: [
       "Your moves in a fight now sit in a wheel around End turn. Each one shows what it costs: action points, and the stamina or magicka it takes.",
       "Strikes and attack spells now have a timing ring: a needle sweeps round, tap when it's in the bright zone. Right in the middle is Perfect (25% more damage), anywhere in the zone is Good, and a miss (or no tap) does 20% less.",
