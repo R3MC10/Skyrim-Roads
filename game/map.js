@@ -555,6 +555,7 @@ const WorldMap = (() => {
       g.drawImage(sp, cx - 21 * s, cy - 25 * s + bob2, 42 * s, 30 * s);
       if (v.zoom >= 1.5) label(g, c.label, cx, cy + 12 * s, s, 11, c.mine ? "#ffe6a0" : "#f3e7c4", 700, true);
     }
+    if (v.guards && typeof GUARDS !== "undefined") GUARDS.drawMap(g, v.guards, P, s, v.t, v.reduceMotion, v.zoom, label);   // hold guards on patrol (guards.js)
     if (v.raid && typeof RAIDART !== "undefined") RAIDART.mapRaid(g, v.raid, P, s, v.t, v.reduceMotion);   // a dragon over a town (raidart.js)
     if (typeof WORLDEV !== "undefined") WORLDEV.drawMap(g, P, s, v.t, v.reduceMotion);   // gates, dragon flights, the Khajiit market (worldevents.js)
     if (v.cart && typeof CARAVANS !== "undefined") { const sp = CARAVANS.sprite(false, false); if (sp) g.drawImage(sp, px - 50 * s, py - 16 * s, 34 * s, 24 * s); }

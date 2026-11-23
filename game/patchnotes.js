@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b124", build: 124, date: "23 Nov 2026", title: "Guards on patrol", items: [
+      "Hold guards now walk the roads: a patrol leaves every hold's capital for a nearby village or fort and comes back. You see them on the map near places you've found, in their hold's colours, and everyone sees them in the same spot.",
+      "Guards are always your level, so a fight with one is never a pushover.",
+      "Fighting guards teaches you nothing and they drop no gold or gear. All you get is a bigger bounty.",
+      "New Blocking perk Watch Drills: guards hit you softer and you hit them harder.",
+    ] },
     { id: "b123", build: 123, date: "23 Nov 2026", title: "Two blades", items: [
       "You can now fight with a one-handed weapon in each hand. Open a sword, axe, mace or dagger and tap \"Left hand\".",
       "Every attack follows up with a quick left-hand hit, and power attacks swing both blades. Power attacks cost more stamina though.",

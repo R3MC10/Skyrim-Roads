@@ -352,7 +352,7 @@ const TOWNS = (() => {
       return { text: `You serve ${days} day${days > 1 ? "s" : ""} in the ${g.hold} jail.${lost.length ? ` You lose your progress in ${lost.join(", ")}.` : ""}${n ? ` Stolen goods taken: ${n}.` : ""} You walk out a free ${s.race === "khajiit" ? "cat" : "person"}.` };
     }
     // resist
-    const guard = G.scaleEnemy({ name: "City guard", health: 140, damage: 19, tags: ["humanoid", "elite"], level: 20, danger: "high", gold: [5, 25], text: "" }, s.level);
+    const guard = typeof GUARDS !== "undefined" ? GUARDS.foe(s, g.hold) : G.scaleEnemy({ name: "City guard", health: 140, damage: 19, tags: ["humanoid", "elite", "guard"], level: s.level, danger: "high", gold: [0, 0], text: "", guard: true }, s.level);   // always your level; no XP, gold or loot
     const f = new G.Fight(s, guard, null, t); f.run({ t, enemyFirst: true }); const skills = f.apply(t);
     if (!f.won) { const d = G.die(s, "city guard", t); return { text: "\"Then pay with your blood.\"", fight: f, died: d.msg, bag: d.bag, skills }; }
     addBounty(s, g.hold, "assault"); s.resisted[g.hold] = true;
