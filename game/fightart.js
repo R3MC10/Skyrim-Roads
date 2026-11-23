@@ -35,7 +35,8 @@ const FIGHTART = (() => {
     const list = (f?.allies || []).map((a) => ({ kind: allyKind(a), name: a.name, look: a.look || (a.follower && typeof PARTY !== "undefined" && a.fid ? PARTY.followerLook(a.fid) : null) }));
     if (s?.thrall && !(f?.allies || []).some((a) => a.thrall)) list.push({ kind: "zombie", name: s.thrall.name });
     let gearO = null; try { if (typeof GEARLOOK !== "undefined" && typeof HEROART !== "undefined" && s?.loadouts) gearO = GEARLOOK.person(HEROART.lookOf(s)); } catch { /* bare save */ }
-    return { skin: SKIN[s?.race] || SKIN.nord, wt, shield: !!f?.shield, body: gearO?.body || body, helm: !!f?.armor?.head, allies, mates, list, beast: !!s?.beastForm, gearO };
+    const off = f?.off && f?.eq?.offhand ? (G.wtype ? G.wtype(f.eq.offhand.item) : "sword") : null;   // dual wielding
+    return { skin: SKIN[s?.race] || SKIN.nord, wt, shield: !!f?.shield, off, body: gearO?.body || body, helm: !!f?.armor?.head, allies, mates, list, beast: !!s?.beastForm, gearO };
   }
   function foeOf(e) {
     if (e?.look) return "player";   // another player: drawn in their own gear (matePerson)
@@ -172,7 +173,8 @@ const FIGHTART = (() => {
     if (o.shield) { g.save(); g.translate(-6, -46); g.rotate(o.back || 0); g.translate(-4, 12);
       if (o.shieldShape === "round") { H.circle(g, 3, -1, 9, o.shieldColor || "#8a6a44", P.ink, 1.4); g.strokeStyle = o.shieldTrim || P.iron; g.lineWidth = 1.6; g.beginPath(); g.arc(3, -1, 6.5, 0, 7); g.stroke(); H.circle(g, 3, -1, 2.2, o.shieldTrim || P.iron, P.ink, 0.8); }
       else { H.poly(g, [[-2, -11], [8, -11], [9, 2], [3, 10], [-3, 2]], o.shieldColor || "#8a6a44", P.ink, 1.4); if (o.shieldTrim) { g.strokeStyle = o.shieldTrim; g.lineWidth = 1.2; g.beginPath(); g.moveTo(3, -10); g.lineTo(3, 8); g.moveTo(-1, -3); g.lineTo(8, -3); g.stroke(); } else H.circle(g, 3, -2, 2, P.iron, null); }
-      g.restore(); } };
+      g.restore(); }
+      };
     const front = (o.back || 0) < -0.8;
     if (!front) backArm();
     // torso
@@ -182,6 +184,7 @@ const FIGHTART = (() => {
     g.fillStyle = P.ink; g.fillRect(-9, -30, 18, 2.4);
     g.restore();
     if (front) backArm();
+    if (o.off && !o.shield) { g.save(); g.translate(-3, -31); g.rotate(0.55 + (o.lunge || 0) * 0.7); weapon(g, o.off, o.glow, 0, o.wmat); H.circle(g, 0, 0, 2.6, sk, P.ink, 1); g.restore(); }   // dual wielding: the left-hand blade, held low in front
     // head
     const hx = 1, hy = -56;
     if (o.head === "skull") { H.circle(g, hx, hy, 7, "#e6e0cc", P.ink, 1.4); g.fillStyle = P.ink; g.fillRect(hx - 4, hy - 2, 3, 3); g.fillRect(hx + 2, hy - 2, 3, 3); }
@@ -282,7 +285,7 @@ const FIGHTART = (() => {
     const go = h.gearO || {};
     person(g, { skin: h.skin, body: h.body, head: go.head || (h.helm ? "helm" : "hair"), helmColor: go.helmColor, hoodColor: go.hoodColor, armC: go.armC, pants: go.pants, boots: go.boots, legs: go.legs, gear: go.gear, wmat: go.wmat,
       shieldColor: go.shieldColor, shieldTrim: go.shieldTrim, shieldShape: go.shieldShape, t: glowT,
-      wt: wt === "fist" ? null : wt, shield: h.shield && !TWO_HANDED.has(wt), lunge, glow: pose ? pose.glow : h.bound, cape: go.cape === undefined ? "#7a2a22" : go.cape,
+      wt: wt === "fist" ? null : wt, shield: h.shield && !TWO_HANDED.has(wt), off: !TWO_HANDED.has(wt) && wt !== "fist" ? h.off : null, lunge, glow: pose ? pose.glow : h.bound, cape: go.cape === undefined ? "#7a2a22" : go.cape,
       aim: pose?.aim, back: pose?.back, hunch: pose?.lean || 0, draw: pose?.draw, flask: pose?.flask });
   }
   /* a party member from their published look: skin, armor colour, helmet, weapon and shield */

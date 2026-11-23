@@ -266,10 +266,29 @@ const G = (() => {
     let extra = "";
     if (it.slot === "weapon" && it.hands === 2 && eq.shield) { delete eq.shield; extra = " Shield taken off (two-handed weapon)."; }
     if (it.slot === "shield" && cur.weapon && D.ITEMS[cur.weapon.item].hands === 2) return "You can't use a shield with a two-handed weapon.";
+    if (eq.offhand != null) {   // [OURS] dual wielding: a shield or a two-handed weapon frees the left hand; one sword can't be in both hands
+      const offR = invRow(s, eq.offhand);
+      if (it.slot === "shield" || (it.slot === "weapon" && it.hands === 2)) { delete eq.offhand; extra += " Left-hand weapon put away."; }
+      else if (it.slot === "weapon" && offR && offR.id === id && (offR.qty || 1) < 2) { delete eq.offhand; }
+    }
     eq[it.slot] = id;
     return `Equipped ${it.name}.${extra}`;
   }
   function unequip(s, slot) { delete lo(s).equipment[slot]; }
+  /* [OURS] dual wielding: a one-handed weapon in your left hand (no shield). Remigiusz: "Dual weilding should be possible." */
+  const canOffhand = (it) => !!it && it.slot === "weapon" && it.hands !== 2 && it.skill === "One-Handed" && !it.staff;
+  function equipOff(s, id) {
+    const r = invRow(s, id);
+    if (!r) return "You don't have that.";
+    const it = D.ITEMS[r.item], eq = lo(s).equipment, cur = equipment(s);
+    if (!canOffhand(it)) return "Only one-handed weapons fit in your left hand.";
+    if (cur.weapon && D.ITEMS[cur.weapon.item].hands === 2) return "Your two-handed weapon needs both hands.";
+    if (cur.weapon && cur.weapon.id === id && (r.qty || 1) < 2) return "You only have one of those. Hold another weapon in your right hand.";
+    let extra = "";
+    if (eq.shield != null) { delete eq.shield; extra = " Shield taken off."; }
+    eq.offhand = id;
+    return `Equipped ${it.name} in your left hand.${extra}`;
+  }
   function equippedAnywhere(s) {
     const ids = new Set();
     for (const l of Object.values(s.loadouts)) for (const id of Object.values(l.equipment)) ids.add(id);
@@ -420,6 +439,8 @@ const G = (() => {
       this.armor = {};
       for (const sl of ARMOR_SLOTS) if (this.eq[sl]) this.armor[sl] = D.ITEMS[this.eq[sl].item];
       this.shield = this.armor.shield || null;
+      const oh = this.eq.offhand;   // [OURS] dual wielding: the left-hand weapon (dualwield in the attack below)
+      this.off = oh && !this.shield && this.weapon && this.weapon.hands !== 2 && canOffhand(D.ITEMS[oh.item]) ? D.ITEMS[oh.item] : null; this.offTemper = oh?.temper || 0;
       const regen = Object.values(this.armor).reduce((a, x) => a + (x.magicka_regen || 0), 0);
       this.regenMp = maxMagicka(s) * F.REGEN_PER_SECOND.magicka * (1 + regen) * (1 + 0.25 * P(s, "recovery") + (typeof PFX !== "undefined" ? PFX.sum(s, "regenmp", this, {}) : 0)) * (1 + fxSum(s, "regen:magicka") / 100)
         * (s.stone === "atronach" ? 0.5 : s.stone === "apprentice" ? 2 : 1);
@@ -430,6 +451,7 @@ const G = (() => {
       this.paCost = F.powerAttackCost(this.weapon ? this.weapon.weight : 0)
         * ((sk0 === "One-Handed" && P(s, "fighting_stance")) || (sk0 === "Two-Handed" && P(s, "champions_stance")) ? 0.75 : 1)
         * Math.max(0.3, 1 + (typeof PFX !== "undefined" ? PFX.sum(s, "pa", this, { sk: sk0 || "Hand-to-Hand", wt: this.wt }) : 0));   // Ranger, Brawler, Endurance
+      if (this.off) this.paCost *= 1.5 * Math.max(0.4, 1 - (typeof PFX !== "undefined" ? PFX.num(s, "dualpa") : 0));   // [Skyrim] dual power attacks swing both blades and cost more
       this.temper = w?.temper || 0;
       this.allies = allyProvider(s) || [];   // party members fighting beside you: [{name, dmg}]
       if (s.follower && typeof TOWNS !== "undefined") {   // your follower fights too, and can fall
@@ -681,11 +703,20 @@ const G = (() => {
         label += PFX.onHit(this, px, dmg);
         if (this.pendingEl) { const [el, a, src] = this.pendingEl; this.pendingEl = null; label += PFX.hitFoe(this, el, a, src); }
       }
+      let offTxt = "";
+      if (this.off && this.ehp > 0 && !ammoK && !this.bound) {   // [OURS] dual wielding: your left hand follows up (half a blow, more on a power attack)
+        let d2 = F.weaponDamage(this.off.damage + this.offTemper, skill(s, "One-Handed"), false) * rnd(...F.DAMAGE_SPREAD) * (power ? 0.5 : 0.3)
+          * (1 + 0.2 * P(s, "armsman")) * (1 + (typeof PFX !== "undefined" ? PFX.num(s, "offhand") : 0)) * (1 + fxSum(s, "dmg:One-Handed") / 100);
+        if (this.e.red) d2 *= 1 - this.e.red;
+        if (this.fp) d2 *= this.fp.taken;
+        if (this.pw) d2 *= POWERS.dmgOut(this);
+        this.ehp -= d2; this.addXp("One-Handed", this.off.damage * 0.5); offTxt = ` · left hand ${Math.round(d2)}`;
+      }
       if (wt === "bow" && P(s, "quick_shot") && Math.random() < 0.3 && this.ehp > 0) {   // a second arrow
         if (this.ammoKind() && !this.shoot()) return `${label}: ${Math.round(dmg)}`;
         const d2 = this.weaponDamage() * rnd(...F.DAMAGE_SPREAD); this.ehp -= d2; return `${label}: ${Math.round(dmg)} · second arrow ${Math.round(d2)}`;
       }
-      return `${label}: ${Math.round(dmg)}`;
+      return `${label}: ${Math.round(dmg)}${offTxt}`;
     }
     cast(id, free, dual) {
       let sp = D.SPELLS[id];
@@ -1345,7 +1376,7 @@ const G = (() => {
   return {
     MAP_W, MAP_H, STEP_SECONDS, SLOTS, ARMOR_SLOTS, GAME_SPEED, now, pxDist, holdAt, clock, isNight, shopsOpen, clockText,
     P, wtype, fxSum, lockChance, lockRoll, setAllyProvider, hiddenChance, rested, haggle, SPELL_TIER, newSave, maxHealth, maxMagicka, maxStamina, curHealth, setHealth, skill, useSkill, levelUp, fightLevel,
-    riding, withHorse, give, take, invRow, carried, capacity, overweight, equipment, equip, unequip, countRestore, itemStats,
+    riding, withHorse, give, take, invRow, carried, capacity, overweight, equipment, equip, unequip, equipOff, canOffhand, countRestore, itemStats,
     loadout: lo, addRule, ruleSlot, deadRules, fixTactics, saveLoadoutAs, deleteLoadout, spellCost, describeRule, describeAction, Fight, scaleEnemy, scaleQuestFoe, questLevel, rollLoot,
     rollEncounter, die, speed, discoverRadius, startTrip, startEvent, eventChoices, eventChoice, buyFrom, minutesLeft, minutesTo, posAfter, advance, encounterAction, migrate, PLACES,
     spellDamage, spellHeal, spellArmor, spellSummon, spellCalm, dualCost, shopTypes, shopStock, buyPrice, sellPrice, lotPrice, buy, sell, readTome, drinkPotion, recharge, clone, note,

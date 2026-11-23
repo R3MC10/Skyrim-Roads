@@ -1379,6 +1379,14 @@
     if (it.slot === "soulgem") return it.charge;
     return null;
   }
+  /* [OURS] dual wielding: one-handed weapons can go in your left hand (instead of a shield) */
+  function offhandBtn(r, it, sm) {
+    if (!G.canOffhand || !G.canOffhand(it)) return "";
+    const eq = G.loadout(S).equipment;
+    if (eq.offhand === r.id) return `<button class="btn${sm}" data-act="uneq" data-slot="offhand">Out of left hand</button>`;
+    const main = eq.weapon != null && D.ITEMS[G.invRow(S, eq.weapon)?.item]?.hands === 2;
+    return main ? "" : `<button class="btn${sm}" data-act="eqoff" data-id="${r.id}" title="Hold it in your left hand: every attack follows up with a second blow. Takes the place of a shield.">⚔ Left hand</button>`;
+  }
   function itemRows() {
     const eqIds = new Set(Object.values(G.loadout(S).equipment));
     const q = (sky.q || "").toLowerCase();
@@ -1413,7 +1421,9 @@
     if (it.slot === "recipe" && typeof CRAFTFAIR !== "undefined") lines.push(CRAFTFAIR.knows(S, it.recipe) ? "You already know these forge recipes." : `Read it to learn new forge recipes: ${Object.keys(SMITH.RECIPES).filter((k) => SMITH.RECIPES[k].needs === it.recipe).map((k) => D.ITEMS[k].name).join(", ")}.`);
     if (r.cv != null && it.slot !== "potion") lines.push(`You made this. Shops pay no more than its materials were worth${r.nm ? "" : ", but you can give it a name"}.`);
     const acts = [];
-    if (G.SLOTS.includes(it.slot)) acts.push(eq ? `<button class="btn" data-act="uneq" data-slot="${it.slot}">Unequip</button>` : `<button class="btn pri" data-act="eq" data-id="${r.id}">Equip</button>`);
+    const onMain = eq && !(G.loadout(S).equipment.offhand === r.id && G.loadout(S).equipment[it.slot] !== r.id);
+    if (G.SLOTS.includes(it.slot)) acts.push(onMain ? `<button class="btn" data-act="uneq" data-slot="${it.slot}">Unequip</button>` : `<button class="btn pri" data-act="eq" data-id="${r.id}">Equip${G.canOffhand(it) ? " (right hand)" : ""}</button>`);
+    acts.push(offhandBtn(r, it, ""));
     if (it.slot === "tome") acts.push(`<button class="btn pri" data-act="read" data-id="${r.id}">Read</button>`);
     if (it.slot === "recipe") acts.push(`<button class="btn pri" data-act="cfread" data-id="${r.id}">Read</button>`);
     if (typeof CRAFTFAIR !== "undefined" && CRAFTFAIR.canName(r)) acts.push(`<span class="cf-name"><input id="cfname-${r.id}" maxlength="${CRAFTFAIR.NAME_MAX}" placeholder="Name it" value="${esc(r.nm || "")}" aria-label="Name for this item"><button class="btn" data-act="cfname" data-id="${r.id}">${r.nm ? "Rename" : "Name it"}</button></span>`);
@@ -2692,7 +2702,9 @@
       const it = D.ITEMS[r.item], open = packOpen === r.id, on = eqIds.has(r.id);
       const charge = it.enchant ? ` · ${Math.round(100 * (r.charge || 0) / it.enchant.capacity)}% charge` : it.staff ? ` · ${Math.round(100 * MAGIC.staffCharge(r) / it.staff.capacity)}% charge` : "";
       const acts = [];
-      if (G.SLOTS.includes(it.slot)) acts.push(on ? `<button class="btn sm" data-act="uneq" data-slot="${it.slot}">Take off</button>` : `<button class="btn sm pri" data-act="eq" data-id="${r.id}">Equip</button>`);
+      const onMain = on && !(G.loadout(S).equipment.offhand === r.id && G.loadout(S).equipment[it.slot] !== r.id);
+      if (G.SLOTS.includes(it.slot)) acts.push(onMain ? `<button class="btn sm" data-act="uneq" data-slot="${it.slot}">Take off</button>` : `<button class="btn sm pri" data-act="eq" data-id="${r.id}">Equip</button>`);
+      acts.push(offhandBtn(r, it, " sm"));
       if (it.slot === "tome") acts.push(`<button class="btn sm pri" data-act="read" data-id="${r.id}">Read</button>`);
       if (it.slot === "recipe") acts.push(`<button class="btn sm pri" data-act="cfread" data-id="${r.id}">Read</button>`);
       if (it.slot === "potion") acts.push(`<button class="btn sm pri" data-act="drinkrow" data-id="${r.id}">Drink</button>`);
@@ -3466,6 +3478,7 @@
       case "dolleq": { const m = G.equip(S, +b.dataset.id); SOUND.fx(/^Equipped/.test(m) ? "equip" in (SOUND.FX || {}) ? "equip" : "clang" : "click"); if (/^Equipped/.test(m)) { closeModal(); publishCard(); } say(m); break; }
       case "dolloff": G.unequip(S, b.dataset.slot); closeModal(); publishCard(); say("Taken off."); break;
       case "uneq": G.unequip(S, b.dataset.slot); say("Taken off."); break;
+      case "eqoff": { const m = G.equipOff(S, +b.dataset.id); if (/^Equipped/.test(m)) { SOUND.fx("clang"); publishCard(); } say(m); break; }   // dual wielding
       case "read": say(G.readTome(S, +b.dataset.id)); break;
       case "cfread": say(CRAFTFAIR.read(S, +b.dataset.id)); persist(true); renderPanel(true); break;
       case "cfname": { const inp = document.getElementById("cfname-" + b.dataset.id); say(CRAFTFAIR.rename(S, +b.dataset.id, inp ? inp.value : "")); persist(true); renderPanel(true); break; }
