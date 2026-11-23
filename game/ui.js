@@ -2576,7 +2576,7 @@
       ${uxHelpOpen === tab ? `<div class="uxpop" role="note"><p>${h[2]}</p>${typeof CC !== "undefined" ? CC.legend() : ""}<button class="btn sm" data-act="uxhelp" data-id="${tab}">Got it</button></div>` : ""}`;
   }
   function renderPanel(force) {
-    const side = $("#side");
+    const side = $("#side"); if (!side) return;   // the game screen isn't up yet (title or intro)
     if (!force && side.contains(document.activeElement) && document.activeElement.matches("input,select")) return;
     rendered = version; lastPanelRender = Date.now();
     side.dataset.tab = tab;
