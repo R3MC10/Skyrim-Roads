@@ -8,6 +8,10 @@ const PATCHNOTES = (() => {
       "The PC game now tells you when a newer build is out, with a Download button. The portable .exe can't update itself, so it shows this every time there's a new build.",
       "The setup version keeps updating itself in the background; it only shows the card if it falls 3 or more builds behind.",
     ] },
+    { id: "b131", build: 131, date: "23 Nov 2026", title: "The Dragonstone is back", items: [
+      "Fixed: the Dragonstone was missing from Bleak Falls Barrow if you picked up the Golden Claw at the door on the way in, so you couldn't finish Farengar's quest. The boss now always leaves it until you've handed it in.",
+      "If you already cleared the barrow without it, you'll find the Dragonstone in your pack next time you open the game. Bring it to Farengar in Dragonsreach.",
+    ] },
     { id: "b130", build: 130, date: "23 Nov 2026", title: "Smaller updates", items: [
       "Updates now download only the files that changed instead of the whole game: usually a megabyte or two instead of almost 100.",
       "To get this, install the newest app from the download page one more time. After that, every update is a small patch.",

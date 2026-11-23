@@ -85,6 +85,17 @@ function runTo(s, place, pickFn, pre){
   const n1=s.inv.filter(x=>x.item==="u_bleakfalls_helm").length;
   const r2=runTo(s,"Bleak Falls Barrow"); ok(r2.cleared && s.inv.filter(x=>x.item==="u_bleakfalls_helm").length===n1, "no second unique");
   ok(s.inv.filter(x=>x.item==="golden_claw").length===1, "only one claw");
+  // players couldn't finish the quest: the claw from the door made the boss skip the Dragonstone
+  ok(s.inv.filter(x=>x.item==="dragonstone").length===1, "the boss leaves the Dragonstone even though you already hold the claw (and only one)");
+  s.location="Whiterun"; const m=TOWNS.deliverDragonstone(s); ok(s.thaneWhiterun && !s.inv.some(x=>x.item==="dragonstone"), "Farengar takes it: "+m.slice(0,40));
+  runTo(s,"Bleak Falls Barrow"); ok(!s.inv.some(x=>x.item==="dragonstone"), "no more Dragonstones once delivered");
+}
+{ // saves stuck before the fix: cleared the barrow, no stone, not thane -> the stone turns up on load
+  const s=hero(5); s.cleared={"Bleak Falls Barrow":G.now()};
+  G.migrate(s); ok(s.inv.filter(x=>x.item==="dragonstone").length===1 && /Dragonstone/.test(s.journal[0].text), "stuck saves get the Dragonstone back");
+  G.migrate(s); ok(s.inv.filter(x=>x.item==="dragonstone").length===1, "only once");
+  const t=hero(5); t.cleared={"Bleak Falls Barrow":G.now()}; t.thaneWhiterun=true; G.migrate(t); ok(!t.inv.some(x=>x.item==="dragonstone"), "not after the quest is done");
+  const u=hero(5); u.cleared={"Bleak Falls Barrow":G.now()}; u.homes={Riverwood:{chest:[{item:"dragonstone",qty:1}]}}; G.migrate(u); ok(!u.inv.some(x=>x.item==="dragonstone"), "not when it's in a house chest");
 }
 { // wrong combination hurts, then the right one opens
   const s=hero(14); s.hpBonus=4000; G.setHealth(s,G.maxHealth(s));
