@@ -115,6 +115,7 @@ const TB = (() => {
       this.trash = f.e.danger === "low" && !f.e.boss;   // skeevers and mudcrabs can still be one-shot
       this.maxRounds = f.e.pool && opts.maxTurns ? opts.maxTurns : MAX_ROUNDS;   // a raid dragon climbs out of reach after a while
       if (typeof DRAGONS !== "undefined") DRAGONS.setup(f, this);   // dragons start in the air (dragons.js)
+      if (typeof FOEKIT !== "undefined") FOEKIT.setup(f);   // what the foe can do besides a plain blow (foekit.js)
     }
     /* rough damage a round from you and your allies (weapon swings in your AP, or your best damage spell) */
     estimate(f) {
@@ -136,6 +137,7 @@ const TB = (() => {
       const a = this.grp?.n > 1 && typeof FOEGROUPS !== "undefined" ? FOEGROUPS.next(f, this.wave - 1) : null;
       if (a) this.ehpMax = Math.round(this.ehpBase * (this.grp.hpMul[this.wave - 1] || 1));
       f.ehp = this.ehpMax; f.fpAvoided = false; f.tbStunLeft = 0; f.tbStunCd = 0;
+      if (typeof FOEKIT !== "undefined") { const dt = f.kitDot; FOEKIT.setup(f); f.kitDot = dt; }   // the next one has its own kit
       const left = this.waves - this.wave;
       const who = a ? `${String(f.e.name).toLowerCase()} ${a.label}` : String(f.e.name).toLowerCase();
       this.emit("foe", `${a ? "A" : "Another"} ${who} steps in! ${left ? `(${left} more behind it)` : "(the last one)"}`, "foe", { wave: this.wave });
@@ -171,7 +173,7 @@ const TB = (() => {
         const o = this.order[this.idx];
         this.cur = o;
         if (o.id === "me") {
-          if (!this.apSet) { this.ap = this.st.ap; this.spAp = this.st.spellAp; this.apSet = true; this.myActs = 0; }
+          if (!this.apSet) { this.ap = Math.max(1, this.st.ap - (typeof FOEKIT !== "undefined" ? FOEKIT.apLoss(this.f) : 0)); this.spAp = this.st.spellAp; this.apSet = true; this.myActs = 0; }
           if (this.opts.auto || this.autoRest) { this.autoTurn(); continue; }
           return { turn: "me" };
         }
@@ -212,6 +214,7 @@ const TB = (() => {
       if (f.hidden) f.hidden = false;   // only your first strike can be a sneak attack
       if (mult && mult !== 1 && f.ehp < before) { f.ehp = before - (before - f.ehp) * mult; text += mult > 1 ? " (perfect timing!)" : " (mistimed)"; }
       if (typeof DRAGONS !== "undefined") text += DRAGONS.graze(f, a, before);
+      if (typeof FOEKIT !== "undefined") text += FOEKIT.defend(f, a, before);   // its raised shield, ward or dodge
       text += this.capFoe(before);
       if (f.ehp < before) { text += this.flank(before); this.hitters++; }
       if (typeof DRAGONS !== "undefined") DRAGONS.check(f, this);
@@ -242,7 +245,7 @@ const TB = (() => {
     autoTurn() {
       const f = this.f;
       if (this.cur?.id !== "me" || this.over) return { turn: "next" };
-      if (!this.apSet) { this.ap = this.st.ap; this.spAp = this.st.spellAp; this.apSet = true; this.myActs = 0; }
+      if (!this.apSet) { this.ap = Math.max(1, this.st.ap - (typeof FOEKIT !== "undefined" ? FOEKIT.apLoss(this.f) : 0)); this.spAp = this.st.spellAp; this.apSet = true; this.myActs = 0; }
       const idx0 = this.idx;
       let guard = 0;
       while (!this.over && this.idx === idx0 && guard++ < 6) {
@@ -302,7 +305,7 @@ const TB = (() => {
       if (f.allies.length && !f.coverAl) { const h = f.allies.find((a) => !a.down && a.player && (a.role === "healer" || a.heals > 0)); if (h && Math.random() < 0.5) f.coverAl = h; }
       const guards = f.allies.filter((a) => a.guard); guards.forEach((a) => { a._red = a.red; a.red = Math.min(0.85, (a.red || 0) + 0.4); });
       if (typeof DRAGONS !== "undefined") DRAGONS.check(f, this);   // allies and bleeding may have brought it down
-      let t = typeof DRAGONS !== "undefined" && f.dStance ? DRAGONS.turn(f, () => f.enemyTurn()) : f.enemyTurn();
+      let t = typeof DRAGONS !== "undefined" && f.dStance ? DRAGONS.turn(f, () => f.enemyTurn()) : typeof FOEKIT !== "undefined" && f.kit ? FOEKIT.turn(f, () => f.enemyTurn()) : f.enemyTurn();
       guards.forEach((a) => { a.red = a._red; a.guard = 0; });
       const loss = hpB - f.hp;
       if (loss > 0 && f.tbGuard) { const back = loss * f.tbGuard; f.hp += back; t += ` (guard −${Math.round(back)})`; }
@@ -644,6 +647,7 @@ const TB = (() => {
     if (f.eParalyzed > 0) out.push(`<i class="st para" data-tip="${typeof TBTIPS !== "undefined" ? TBTIPS.STATUS.para : ""}">✋${f.eParalyzed}</i>`);
     if (f.tbStunLeft > 0) out.push(`<i class="st stun" data-tip="${typeof TBTIPS !== "undefined" ? TBTIPS.STATUS.stun : ""}">💥</i>`);
     if (f.stagger) out.push(`<i class="st stag" data-tip="${typeof TBTIPS !== "undefined" ? TBTIPS.STATUS.stag : ""}">💫</i>`);
+    if (typeof FOEKIT !== "undefined") for (const [c, ic, tip] of FOEKIT.chips(f)) out.push(`<i class="st kit ${c}" data-tip="${esc(tip)}">${ic}</i>`);
     return out.length ? `<div class="tbst">${out.join("")}</div>` : "";
   }
   /* animate just what happened since the last screen: a view of the fight with only those lines (the full fight-scene

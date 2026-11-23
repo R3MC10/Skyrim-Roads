@@ -56,7 +56,7 @@ const TBTIPS = (() => {
   function foe(f, ehpMax) {
     const e = f.e || {}, tags = [...(f.tags || [])].filter((t) => !/^(normal|tough|boss)$/.test(t));
     const kind = f.tags?.has?.("boss") ? "Boss" : f.tags?.has?.("tough") ? "Tough foe" : "Foe";
-    return `${kind}: ${e.name}. ${r0(Math.max(0, f.ehp))} / ${r0(ehpMax)} health, hits for about ${range(e.damage || 0)}.${e.red ? ` Armour blunts ${r0(e.red * 100)}% of your blows.` : ""}${tags.length ? ` (${tags.join(", ")})` : ""}`;
+    return `${kind}: ${e.name}. ${r0(Math.max(0, f.ehp))} / ${r0(ehpMax)} health, hits for about ${range(e.damage || 0)}.${e.red ? ` Armour blunts ${r0(e.red * 100)}% of your blows.` : ""}${tags.length ? ` (${tags.join(", ")})` : ""}${typeof FOEKIT !== "undefined" && FOEKIT.names(f).length ? ` Can use: ${FOEKIT.names(f).join(", ")}.` : ""}`;
   }
   const STATUS = { burn: "Burning: takes fire damage each turn", chill: "Chilled: slower and clumsier, misses more", shock: "Shocked: loses magicka and takes shock damage", para: "Paralyzed: can't act", stag: "Staggered: loses their next move", stun: "Stunned by your shield: loses their next turn" };
   return { action, me, foe, STATUS };
