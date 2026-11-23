@@ -3,6 +3,9 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b114", build: 114, date: "23 Nov 2026", title: "Respec", items: [
+      "New on the Character screen: Respec. For 10,000 gold every perk you took and every Health, Magicka or Stamina choice goes back to the pool, so you can build your hero again. Your skills and level stay. It asks once more before it takes the gold.",
+    ] },
     { id: "b113", build: 113, date: "23 Nov 2026", title: "New fight screen", items: [
       "Fights got a full makeover: a bigger battle scene, health bars that leave a fading trail when you get hit, the screen shakes and flashes red on big hits, and a banner when your turn starts or the fight ends.",
       "Drag to fight: drag an action card from the bottom onto the foe to attack, or onto yourself for Shield up, potions and healing. The target lights up, let go to use it. Tapping still works too.",
