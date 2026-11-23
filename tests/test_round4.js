@@ -11,7 +11,7 @@ let found=0; for(let x=0;x<86400;x+=300) if(WEVENTS.activeRaid(t+x)) found++; co
 // solo raid
 const s=G.newSave("me","Me","nord"); s.level=15; s.hpBonus=150; for(const sk of Object.values(s.skills)) sk.lvl+=30; G.give(s,"steel_sword"); G.equip(s,s.inv[s.inv.length-1].id); G.give(s,"potion_health",5);
 const r=nr; s.location=r.town; let rounds=0, docs=[{raid:r.id,uid:"other",name:"Bjorn",dmg:250}];
-while(rounds<20){ rounds++; G.setHealth(s,G.maxHealth(s)); const o=WEVENTS.fight(s,r,docs,r.start+60); if(!o.fight){console.log(o.text);break;} console.log("round",rounds,"dealt",o.dealt,o.slain?"SLAIN":"",o.died?"died":""); if(o.slain||o.died) break; }
+while(rounds<20){ rounds++; G.setHealth(s,G.maxHealth(s)); const o=WEVENTS.fight(s,r,docs,(r.fightAt||r.start)+60); if(!o.fight){console.log(o.text);break;} console.log("round",rounds,"dealt",o.dealt,o.slain?"SLAIN":"",o.died?"died":""); if(o.slain||o.died) break; }
 console.log(JSON.stringify(WEVENTS.tally(r,docs,s)), "souls", s.souls);
 const s2=G.newSave("o","O","nord"); s2.raid={id:r.id,dmg:100,claimed:false}; console.log(WEVENTS.claim(s2,r,[{raid:r.id,uid:"me",name:"Me",dmg:900}]));
 s.x=WORLD.places.Winterhold[0]; s.y=WORLD.places.Winterhold[1]; console.log("speed", G.speed(s).toFixed(1));

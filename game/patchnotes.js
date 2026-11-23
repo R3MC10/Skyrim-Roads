@@ -3,6 +3,15 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b117", build: 117, date: "23 Nov 2026", title: "Dragons take to the sky", items: [
+      "Dragons come in kinds now: Dragon, Frost Dragon, Blood Dragon, Elder, Ancient, Revered and Legendary. Each breathes fire or frost, has its own colour and gets tougher the higher up the list it is. The strongest only show up at high levels.",
+      "A dragon starts the fight in the air. Its fire or frost breath rains down, it dives at you with its claws, and sometimes it climbs out of reach for a moment. While it flies, sword and axe blows only graze it and some arrows miss their mark; spells and shouts hit fully.",
+      "Once it's badly hurt (or you hit it with Dragonrend) it crashes down and fights on the ground: bites, tail swipes that hit hard, wing buffets that knock the stamina out of you, and short blasts of breath. On the ground every blow lands.",
+      "Dragon attacks on towns: the dragon circles for 5 minutes first. Get to the town before the timer runs out and you fight it together with everyone who's there. It dives at you as soon as the timer ends.",
+      "The attacking dragon gets tougher for every hero who comes, and tougher for stronger heroes, so it's a fair fight alone, with a few friends or with a crowd. There's no limit on how many can join. If it goes badly, Flee works much better in a town: there's plenty of places to hide.",
+      "A dragon that only flew off no longer gives you its soul. You get it when it dies.",
+      "Perks: Eagle Eye keeps your arrows on a flying dragon (full damage). Critical Charge and Great Critical Charge let you leap at it, so your blows lose much less while it flies.",
+    ] },
     { id: "b116", build: 116, date: "23 Nov 2026", title: "Foes come in kinds and numbers", items: [
       "Bandits, Forsworn, draugr, skeletons, vampires and Falmer now come as warriors (sword and shield, harder to hurt), brutes (big two-handers, hit harder), archers, mages or rogues (quick daggers, easier to drop). You can see it on them in the fight: what they wear and carry, and how they attack.",
       "The foe's box in a fight shows what kind it is.",

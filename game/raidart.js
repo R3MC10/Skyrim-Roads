@@ -73,7 +73,7 @@ const RAIDART = (() => {
     const rows = [...docs.filter((d) => d.raid === raid.id && d.uid !== me.id).map((d) => ({ id: d.uid, name: d.name, dmg: Math.round(d.dmg || 0) })), ...(mine ? [{ id: me.id, name: me.name, dmg: mine, me: true }] : [])]
       .sort((a, b) => b.dmg - a.dmg).slice(0, 3);
     const medal = ["🥇", "🥈", "🥉"];
-    return `<div class="raidhp"><div class="raidhp-top"><span>🐉 Dragon</span><span class="num">${left > 0 ? `${left} / ${tl.need}` : "slain"}</span></div>
+    return `<div class="raidhp"><div class="raidhp-top"><span>🐉 ${typeof WEVENTS !== "undefined" && WEVENTS.kindOf ? WEVENTS.kindOf(raid).name : "Dragon"}</span><span class="num">${left > 0 ? `${left} / ${tl.need}` : "slain"}</span></div>
       <div class="raidhp-bar"><i style="width:${(frac * 100).toFixed(1)}%"></i></div>
       ${rows.length ? `<div class="raidtop">${rows.map((r, i) => `<div class="rt ${r.me ? "me" : ""}">${portraitOf ? portraitOf(r.id, 30) : ""}<span class="rn">${medal[i]} ${r.name.replace(/[<>&"]/g, "")}${r.me ? " (you)" : ""}</span><b class="num">${r.dmg}</b></div>`).join("")}</div>` : ""}</div>`;
   }

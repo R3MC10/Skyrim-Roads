@@ -931,7 +931,7 @@ const G = (() => {
         else if (fa) { this.s.follower.hp = Math.max(1, fa.hp); this.s.follower.ts = t; }
       }
       if (typeof FOL2 !== "undefined" && this.s.follower && !this.s._test && (this.followerDown || this.allies.some((a) => a.follower))) daeMsgs.push(...FOL2.gain(this.s, this));   // they learn from fights they were in
-      const extraMsgs = this.won && this.tags.has("dragon") && typeof POWERS !== "undefined" && !this.s._test ? [POWERS.absorb(this.s)] : [];
+      const extraMsgs = this.won && this.ehp <= 0 && this.tags.has("dragon") && typeof POWERS !== "undefined" && !this.s._test ? [POWERS.absorb(this.s)] : [];
       for (const [id, q] of Object.entries(this.used)) take(this.s, +id, q);
       for (const [id, c] of Object.entries(this.charges)) { const r = invRow(this.s, +id); if (r) r.charge = c; }
       const msgs = typeof MAGIC !== "undefined" ? MAGIC.after(this) : [];

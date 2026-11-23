@@ -100,8 +100,9 @@ const TB = (() => {
       const dpr = this.estimate(f);
       const base = Math.max(1, f.ehp), kk = dpr > 0 ? clamp(dpr * T.rounds[this.kind] / base, T.min[this.kind], T.max[this.kind]) : T.hp[this.kind];
       // a party faces more foes, not one sponge: the same total toughness, split over one foe per hero
-      this.waves = this.players > 0 && !f.e.boss ? Math.min(MAX_FOES, 1 + this.players) : grp.n; this.wave = 1;
-      const k = f.e.player ? 1 : this.players > 0 ? kk * (1 + PARTY_HP * this.players) / this.waves : kk;   // another player fights with their real health, no monster boost
+      this.waves = this.players > 0 && !f.e.boss && !f.e.pool ? Math.min(MAX_FOES, 1 + this.players) : grp.n; this.wave = 1;
+      // another player fights with their real health; a raid dragon's health is shared by everyone fighting it (wevents.js)
+      const k = f.e.player || f.e.pool ? 1 : this.players > 0 ? kk * (1 + PARTY_HP * this.players) / this.waves : kk;   // another player fights with their real health, no monster boost
       this.ehpBase = f.ehp * k;
       f.ehp = Math.round(this.ehpBase * (grp.hpMul[0] || 1)); f.ehp0 = f.ehp; this.ehpMax = f.ehp;
       f.e.tbHp = this.ehpMax;
@@ -112,6 +113,8 @@ const TB = (() => {
       f.hidden = opts.hidden != null && !opts.enemyFirst ? opts.hidden : opts.trySneak !== false && !opts.enemyFirst && Math.random() < G.hiddenChance(f.s, f.e, t);
       this.foeLevel = f.e.level ?? f.s.level;
       this.trash = f.e.danger === "low" && !f.e.boss;   // skeevers and mudcrabs can still be one-shot
+      this.maxRounds = f.e.pool && opts.maxTurns ? opts.maxTurns : MAX_ROUNDS;   // a raid dragon climbs out of reach after a while
+      if (typeof DRAGONS !== "undefined") DRAGONS.setup(f, this);   // dragons start in the air (dragons.js)
     }
     /* rough damage a round from you and your allies (weapon swings in your AP, or your best damage spell) */
     estimate(f) {
@@ -126,7 +129,7 @@ const TB = (() => {
       return Math.max(w, m) + al;
     }
     emit(who, text, kind, extra = {}) { const e = { who, text, kind, round: this.round, hp: Math.max(0, Math.round(this.f.hp)), ehp: Math.max(0, Math.round(this.f.ehp)), ...extra }; this.ev.push(e); return e; }
-    get over() { const f = this.f; if (f.ehp <= 0 && f.hp > 0 && !f.endWon && this.wave < this.waves) this.nextFoe(); return f.hp <= 0 || f.ehp <= 0 || !!f.endWon || this.round > MAX_ROUNDS; }
+    get over() { const f = this.f; if (f.ehp <= 0 && f.hp > 0 && !f.endWon && this.wave < this.waves) this.nextFoe(); return f.hp <= 0 || f.ehp <= 0 || !!f.endWon || this.round > this.maxRounds; }
     /* a party fight: the foe fell, the next one steps in */
     nextFoe() {
       const f = this.f; this.wave++;
@@ -206,8 +209,10 @@ const TB = (() => {
       if (al && zoneOf(a) === "self") text = onAlly(f, a, al);
       if (text == null) { f.tbTarget = al || null; try { text = a === "bash" ? SHIELDFX.bash(f) : f.act(a); } finally { f.tbTarget = null; } }
       if (f.hidden) f.hidden = false;   // only your first strike can be a sneak attack
+      if (typeof DRAGONS !== "undefined") text += DRAGONS.graze(f, a, before);
       text += this.capFoe(before);
       if (f.ehp < before) { text += this.flank(before); this.hitters++; }
+      if (typeof DRAGONS !== "undefined") DRAGONS.check(f, this);
       this.myActs++;
       this.lines.me.push(text); this.lines.a = a;
       this.emit("me", text, "me", { a, wt: f.wt, dmg: Math.max(0, Math.round(before - f.ehp)), healed: Math.max(0, Math.round(f.hp - myBefore)) });
@@ -226,8 +231,8 @@ const TB = (() => {
     }
     flee() {
       const f = this.f, s = f.s;
-      const ch = clamp(0.4 + G.skill(s, "Athletics") / 300 + G.skill(s, "Acrobatics") / 400 - (f.e.boss ? 0.3 : f.e.danger === "high" ? 0.15 : 0) - 0.05 * this.st.heavy, 0.05, 0.85);
-      if (Math.random() < ch) { f.endWon = true; f.escaped = true; this.lines.me.push("You break away and escape"); this.emit("me", "You break away and escape!", "flee"); this.apSet = false; this.idx++; return { turn: "next" }; }
+      const ch = clamp(0.4 + G.skill(s, "Athletics") / 300 + G.skill(s, "Acrobatics") / 400 - (f.e.boss ? 0.3 : f.e.danger === "high" ? 0.15 : 0) - 0.05 * this.st.heavy + (f.e.pool ? 0.45 : 0), 0.05, 0.9);   // a raid: the town has plenty of places to hide
+      if (Math.random() < ch) { f.endWon = true; f.escaped = true; f.ranAway = true; this.lines.me.push("You break away and escape"); this.emit("me", "You break away and escape!", "flee"); this.apSet = false; this.idx++; return { turn: "next" }; }
       this.ap = 0; this.spAp = 0; this.lines.me.push("You try to break away, but can't"); this.emit("me", `You try to break away, but the ${f.e.name} cuts you off (${Math.round(ch * 100)}%)`, "flee");
       return this.endTurn(true);
     }
@@ -294,7 +299,8 @@ const TB = (() => {
       // foes go after your healers and casters when they can (party fights)
       if (f.allies.length && !f.coverAl) { const h = f.allies.find((a) => !a.down && a.player && (a.role === "healer" || a.heals > 0)); if (h && Math.random() < 0.5) f.coverAl = h; }
       const guards = f.allies.filter((a) => a.guard); guards.forEach((a) => { a._red = a.red; a.red = Math.min(0.85, (a.red || 0) + 0.4); });
-      let t = f.enemyTurn();
+      if (typeof DRAGONS !== "undefined") DRAGONS.check(f, this);   // allies and bleeding may have brought it down
+      let t = typeof DRAGONS !== "undefined" && f.dStance ? DRAGONS.turn(f, () => f.enemyTurn()) : f.enemyTurn();
       guards.forEach((a) => { a.red = a._red; a.guard = 0; });
       const loss = hpB - f.hp;
       if (loss > 0 && f.tbGuard) { const back = loss * f.tbGuard; f.hp += back; t += ` (guard −${Math.round(back)})`; }
@@ -340,7 +346,7 @@ const TB = (() => {
       const f = this.f;
       if (this.done) return { turn: "done", won: f.won };
       if (this.lines.me.length || this.lines.them.length) { const line = { turn: this.round, rule: null, me: this.lines.me.join(" · "), them: this.lines.them.join(" · "), a: this.lines.a || "attack", wt: f.wt, tb: true, hp: Math.max(0, Math.round(f.hp)), ehp: Math.max(0, Math.round(f.ehp)) }; if (!f.log.length || f.log[f.log.length - 1].turn !== this.round) f.log.push(line); }
-      if (this.round > MAX_ROUNDS && f.hp > 0 && f.ehp > 0) { f.endWon = true; f.escaped = true; this.emit("foe", `The ${f.e.name} breaks off and withdraws`, "foe"); }
+      if (this.round > this.maxRounds && f.hp > 0 && f.ehp > 0) { f.endWon = true; f.escaped = true; this.emit("foe", f.e.pool ? `The ${f.e.name} climbs out of reach and circles the town` : `The ${f.e.name} breaks off and withdraws`, "foe"); }
       this.done = true;
       f.won = f.ehp <= 0 || !!f.endWon;
       if (f.endWon) { f.e.fled = true; f.e.gold = [0, 0]; }
@@ -765,5 +771,5 @@ const TB = (() => {
     });
   }
 
-  return { T, stats, cost, aiPick, targetOrder, Session, simulate, call, enabled, init, remoteFor, watchTurns, safeSave, zoneOf, get open() { return open; }, WCOST, TIERC, HIT_CAP, FOE_HP, PARTY_HP, TURN_SECONDS, syncInPlace, _origRun: origRun };
+  return { T, stats, cost, aiPick, targetOrder, Session, simulate, call, enabled, init, remoteFor, watchTurns, safeSave, zoneOf, get open() { return open; }, get session() { return open && ui ? ui.sess : null; }, WCOST, TIERC, HIT_CAP, FOE_HP, PARTY_HP, TURN_SECONDS, syncInPlace, _origRun: origRun };
 })();
