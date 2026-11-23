@@ -28,7 +28,7 @@ const MP = (() => {
 
   function attack(s, card, { ambush = false, t = G.now(), pos } = {}) {
     const life = Math.max(1, card.cur || card.hp) + (card.heal || 0);
-    const e = { name: card.name, health: life, hp: life, damage: card.dmg * 1.25, tags: ["humanoid"], red: card.red, level: card.level, danger: "high", gold: [0, 0], text: "" };   // [OURS] defenders get a 25% home advantage
+    const e = { name: card.name, health: life, hp: life, damage: card.dmg * 1.25, tags: ["humanoid"], red: card.red, level: card.level, danger: "high", gold: [0, 0], text: "", look: card.look || null, player: true };   // [OURS] defenders get a 25% home advantage
     const f = new G.Fight(s, e, null, t);
     f.allies = [];                                  // no help in a duel
     f.run({ t, hidden: ambush ? true : null, trySneak: true });
@@ -42,7 +42,7 @@ const MP = (() => {
       return { text: `${ambush ? "You burst out of hiding. " : ""}${card.name} falls. Their bag drops where they fell; for ten minutes only you and they can see it.${bountyText}`, fight: f, skills, won: true,
         doc: { type: "kill", from: s.id, fromName: s.name, to: card.id, toName: card.name, t, ambush, at: pos || [s.x, s.y] }, id, news: `🗡 ${s.name} killed ${card.name}${ambush ? " in an ambush" : ""} in ${s.location || "the wilds of " + hold}.` };
     }
-    const d = G.die(s, card.name, t, true);
+    const d = typeof PVPDEATH !== "undefined" ? PVPDEATH.die(s, card.name, t) : G.die(s, card.name, t, true);
     return { text: `${card.name} was stronger than you thought.${bountyText}`, fight: f, skills, won: false, died: d.msg, bag: d.bag,
       doc: { type: "failed", from: s.id, fromName: s.name, to: card.id, toName: card.name, t }, id, news: `🛡 ${card.name} fought off ${s.name}'s attack.` };
   }
@@ -80,7 +80,7 @@ const MP = (() => {
     if (doc.type === "kill") {
       if (s.dungeon) s.dungeon = null;
       if (doc.at && s.trip) [s.x, s.y] = doc.at;   // you fell where it happened, not where your trip would have taken you
-      const d = G.die(s, doc.fromName, t, true);
+      const d = typeof PVPDEATH !== "undefined" ? PVPDEATH.die(s, doc.fromName, t) : G.die(s, doc.fromName, t, true);
       if (d.bag) { d.bag.killerId = doc.from; d.bag.killerName = doc.fromName; d.bag.t = t; }
       s.safeUntil = t + PROTECT_SECONDS;
       return { text: `${doc.fromName} ${doc.ambush ? "ambushed and " : ""}killed you while you were ${doc.ambush ? "on the road" : "out"}. ${d.msg}`, bag: d.bag, bad: true };

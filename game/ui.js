@@ -2389,7 +2389,7 @@
     if (err) return toast(err);
     persist(true); renderPanel(true);
     if (!yes) return toast("You turn the challenge down.");
-    if (res) { festCount("duel"); if (res.doc.winner === S.id) warPoint("duel", "Eastmarch"); }
+    if (res) { festCount("duel"); if (res.doc.winner === S.id) warPoint("duel", "Eastmarch"); if (res.fight && !res.fight.foeLook) res.fight.foeLook = cardOf(res.doc.from)?.look || null; }
     if (res) { if (typeof RAIDART !== "undefined") RAIDART.cheer(4000); SOUND.fight({ fight: res.fight, died: res.doc.winner !== S.id }); postNews(`⚔ ${res.doc.winner === S.id ? S.name : res.doc.fromName} beat ${res.doc.winner === S.id ? res.doc.fromName : S.name} in the Windhelm Arena${res.doc.pot ? ` and won ${res.doc.pot} gold` : ""}.`);
       openModal(`<h2>${res.doc.winner === S.id ? "Victory in the Arena" : "Beaten, not broken"}</h2><p>${esc(res.text)}</p>${fightLog(res.fight)}${skillLine(res)}${typeof FASTQOL !== "undefined" ? FASTQOL.againHTML("duel", res.doc.from) : ""}<button class="btn pri" data-act="close" style="width:100%">Continue</button>`); }
   }
@@ -2407,6 +2407,7 @@
       if (!r) continue;
       if (r.bag) Store.addBag(r.bag);
       persist(true); closeDungeon(); renderPanel(true);
+      if (S.pickTemple && typeof PVPDEATH !== "undefined") { openModal(`<p>${esc(r.text)}</p>${PVPDEATH.pickHTML(S, esc)}`); continue; }
       showMessage(r.bad ? "On the road" : "Word reaches you", r.text, r.bad);
     }
   }
@@ -2458,7 +2459,7 @@
     if (r.news) postNews(r.news);
     if (r.bag) Store.addBag(r.bag);
     persist(true); renderPanel(true);
-    openModal(`<h2>${r.won ? "🗡 Victory" : r.died ? "💀 Defeated" : "Fight"}</h2><p>${esc(r.text)}</p>${r.fight ? fightLog(r.fight) : ""}${r.died ? `<p>${esc(r.died)}</p>` : ""}${skillLine(r)}<button class="btn ${r.died ? "danger" : "pri"}" data-act="close" style="width:100%">Continue</button>`, r.died ? "enc" : "");
+    openModal(`<h2>${r.won ? "🗡 Victory" : r.died ? "💀 Defeated" : "Fight"}</h2><p>${esc(r.text)}</p>${r.fight ? fightLog(r.fight) : ""}${r.died ? `<p>${esc(r.died)}</p>` : ""}${skillLine(r)}${r.died && S.pickTemple && typeof PVPDEATH !== "undefined" ? PVPDEATH.pickHTML(S, esc) : ""}<button class="btn ${r.died ? "danger" : "pri"}" data-act="close" style="width:100%">Continue</button>`, r.died ? "enc" : "");
   }
   function doPickpocket(card) {
     const err = MP.canTarget(S, card, livePos(), otherPos(card));
@@ -3429,7 +3430,8 @@
       case "ev": if (b.dataset.c === "pick" && typeof IMM !== "undefined" && IMM.wantsGame()) { IMM.pick("event", eventAction, S); break; } eventAction(b.dataset.c); break;
       case "evbuy": { const m = G.buyFrom(S, b.dataset.item); persist(); openEvent(m); break; }
       case "enc": encounterAction(b.dataset.a); break;
-      case "close": closeModal(); break;
+      case "close": if (S?.pickTemple && typeof PVPDEATH !== "undefined") PVPDEATH.stay(S); closeModal(); break;
+      case "pvptemple": toast(PVPDEATH.goTo(S, b.dataset.id)); persist(true); publishCard(); closeModal(); renderPanel(true); break;
       case "chatsend": chatSend($("#chatin")?.value); break;
       case "chatq": chatSend(b.dataset.id); break;
       case "chatch": chatCh = b.dataset.id; renderPanel(true); break;
