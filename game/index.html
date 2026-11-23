@@ -1718,6 +1718,39 @@ body:has(#favBtn) .app,body:has(#twBtn) .app{padding-bottom:calc(190px + env(saf
 .hbreed small{opacity:.75;font-size:11.5px;line-height:1.3}
 .hbreed.on{border-color:var(--gold);box-shadow:0 0 0 2px rgba(226,187,100,.3),inset 0 0 18px rgba(226,187,100,.08)}
 .hstats{display:flex;gap:10px;font-size:12px;margin-top:2px}.hstats b{font-weight:600;white-space:nowrap}
+/* ==== mining mini-game (minegame.js) ==== */
+.mgmeter{position:relative;height:22px;margin:6px 2px 10px;border-radius:11px;background:linear-gradient(180deg,#1b1a18,#2a2723);box-shadow:inset 0 1px 4px rgba(0,0,0,.8),0 0 0 1px rgba(228,220,200,.16);overflow:hidden}
+.mgz{position:absolute;top:0;bottom:0;background:linear-gradient(180deg,rgba(226,187,100,.45),rgba(226,187,100,.22));transition:left .18s ease-out}
+.mgp{position:absolute;top:0;bottom:0;background:linear-gradient(180deg,#ffe29a,#e2bb64);box-shadow:0 0 10px rgba(255,226,154,.7);transition:left .18s ease-out}
+.mgn{position:absolute;top:-2px;bottom:-2px;width:4px;margin-left:-2px;background:#f6f0e2;border-radius:2px;box-shadow:0 0 8px rgba(255,255,255,.8)}
+.mgwall{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:7px;border-radius:6px;background:radial-gradient(120% 90% at 50% 30%,#3b342d,#1a1714);box-shadow:inset 0 0 22px rgba(0,0,0,.85)}
+.mgc{position:relative;aspect-ratio:1;border:0;border-radius:9px 7px 10px 6px;padding:0;cursor:pointer;color:#f1ead8;font:inherit;
+  background:radial-gradient(70% 60% at 35% 30%,#7d7368,#5a5148 55%,#3f3831);box-shadow:inset -3px -4px 0 rgba(0,0,0,.35),inset 2px 2px 0 rgba(255,255,255,.08),0 2px 3px rgba(0,0,0,.6);touch-action:manipulation;overflow:hidden}
+.mgc:nth-child(3n){border-radius:6px 11px 7px 10px}.mgc:nth-child(4n+1){background:radial-gradient(70% 60% at 60% 30%,#776c62,#544b43 55%,#3a332d)}
+.mgc.glint::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 30% 35%,rgba(255,240,200,.9) 0 2px,transparent 3px),radial-gradient(circle at 68% 62%,rgba(255,240,200,.8) 0 1.5px,transparent 3px),radial-gradient(circle at 55% 25%,rgba(255,240,200,.7) 0 1px,transparent 2.5px);animation:mgglint 1.8s ease-in-out infinite}
+.mgc.glint.gem::after{background:radial-gradient(circle at 45% 45%,rgba(200,170,255,.95) 0 2px,transparent 4px),radial-gradient(circle at 70% 30%,rgba(255,200,220,.8) 0 1.5px,transparent 3px)}
+@keyframes mgglint{0%,100%{opacity:.25}50%{opacity:1}}
+.mgcr{position:absolute;inset:0;pointer-events:none}
+.mgc.cr1 .mgcr{background:linear-gradient(35deg,transparent 46%,rgba(0,0,0,.7) 47% 49%,transparent 50%)}
+.mgc.cr2 .mgcr,.mgc.cr3 .mgcr{background:linear-gradient(35deg,transparent 46%,rgba(0,0,0,.7) 47% 49%,transparent 50%),linear-gradient(-50deg,transparent 52%,rgba(0,0,0,.7) 53% 55%,transparent 56%)}
+.mgc.broken{cursor:default;background:radial-gradient(70% 60% at 50% 40%,#2a2520,#151210);box-shadow:inset 0 3px 8px rgba(0,0,0,.9)}
+.mgc.broken:disabled{opacity:1}
+.mgc .mgo{position:absolute;left:50%;top:42%;width:46%;height:38%;transform:translate(-50%,-50%) rotate(-12deg);border-radius:40% 55% 45% 50%;background:radial-gradient(circle at 35% 30%,#fff8,transparent 40%),var(--oc);box-shadow:0 0 12px var(--oc),inset -2px -3px 0 rgba(0,0,0,.35);animation:mgpop .35s cubic-bezier(.2,1.6,.5,1) both}
+.mgc.broken.gem .mgo{border-radius:20%;transform:translate(-50%,-50%) rotate(45deg);width:34%;height:34%}
+.mgc small{position:absolute;left:0;right:0;bottom:3px;font-size:10px;letter-spacing:.04em;opacity:.85}
+@keyframes mgpop{from{transform:translate(-50%,-50%) scale(.2)}}
+.mgc.shake{animation:mgshake .22s}
+@keyframes mgshake{25%{transform:translate(-2px,1px) rotate(-2deg)}50%{transform:translate(2px,-1px) rotate(2deg)}75%{transform:translate(-1px,0)}}
+.mgtag{position:absolute;transform:translate(-50%,-100%);font-family:"Barlow Condensed",Cinzel,serif;font-size:16px;letter-spacing:.08em;color:#f1ead8;text-shadow:0 0 6px #000;pointer-events:none;animation:mgtag .9s ease-out both;white-space:nowrap}
+.mgtag.p3{color:#ffe29a;font-size:19px}.mgtag.p1{color:#bdb3a3}
+@keyframes mgtag{to{transform:translate(-50%,-180%);opacity:0}}
+.mgchip{position:absolute;width:4px;height:4px;border-radius:1px;pointer-events:none;animation:mgchip .55s ease-out both}
+@keyframes mgchip{to{transform:translate(var(--dx),calc(var(--dy) + 24px)) rotate(200deg);opacity:0}}
+.mggot{display:flex;flex-wrap:wrap;gap:6px 10px;justify-content:center;min-height:22px;font-size:13px}
+.mggot span{display:inline-flex;align-items:center;gap:5px}.mggot i{width:10px;height:10px;border-radius:3px;background:var(--oc);box-shadow:0 0 6px var(--oc)}.mggot .mute{opacity:.6}
+html.art-pixel .mgc,html.art-pixel .mgmeter,html.art-pixel .mgwall{border-radius:0}
+html.art-pixel .mgc .mgo{border-radius:0;image-rendering:pixelated}
+@media (prefers-reduced-motion:reduce){.mgc.glint::after,.mgc.shake,.mgtag,.mgchip,.mgc .mgo{animation:none}}
 </style>
 <script src="access.js"></script>
 </head>
@@ -1835,6 +1868,7 @@ body:has(#favBtn) .app,body:has(#twBtn) .app{padding-bottom:calc(190px + env(saf
 <script src="motion.js"></script>
 <script src="favwheel.js"></script>
 <script src="craftgames.js"></script>
+<script src="minegame.js"></script>
 <script src="craftqol.js"></script>
 <script src="polish.js"></script>
 <script src="caravans.js"></script>

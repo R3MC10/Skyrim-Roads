@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b127", build: 127, date: "23 Nov 2026", title: "Mining game", items: [
+      "Mining is a mini-game now: a wall of rock with ore hidden in it. Tap a stone while the needle on the strike meter is in the bright band. Perfect blows hit hardest and can split ore into two pieces.",
+      "Glinting stones hold ore. The better your Smithing, the more veins you spot and the more swings you get. Blank rock breaks in one hit, but wastes the swing.",
+      "Stop any time with Done and keep what you dug. Quick dig skips the game and gives the same ore as before. You can turn the game off with the tick box.",
+      "New Smithing perk, Prospector: you spot every vein, gems turn up more often, and you get 2 more swings.",
+    ] },
     { id: "b126", build: 126, date: "23 Nov 2026", title: "Horse breeds and stable upgrades", items: [
       "Stables now sell four breeds: the all-round Cyrodilic bay, the big Nord draft (carries most, takes hits), the fast Hammerfell courser (carries little) and the cheap, sturdy Highland pony.",
       "Every horse comes out a little different: its speed, carrying and health can be up to 5% better or worse than its breed's. The stables card shows your horse's numbers.",
