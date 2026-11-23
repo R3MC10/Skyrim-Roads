@@ -1665,6 +1665,36 @@ body:has(#favBtn) .app,body:has(#twBtn) .app{padding-bottom:calc(190px + env(saf
 .tbf.dz-self .tbu.me .nm::after,.tbf.dz-ally .tbu.ally .nm::after{content:" ⬇";color:#f3d98b}
 /* [foe archetypes] foegroups.js: "Bandit outlaw  archer  2/3" */
 .tbu.foe .nm .arch{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:#e8b98a;border:1px solid rgba(232,185,138,.35);border-radius:6px;padding:0 4px;margin-left:4px;vertical-align:1px}
+/* combat wheel and timing ring (tbradial.js) */
+.tbwheel{position:relative;width:min(92vw,330px,39vh);aspect-ratio:1;margin:2px auto 0}
+.tbwheel::before{content:"";position:absolute;inset:9%;border-radius:50%;border:1px solid rgba(214,178,94,.28);background:radial-gradient(circle,rgba(30,27,22,.85) 30%,rgba(14,13,11,.4) 72%,transparent 73%);box-shadow:0 0 24px rgba(0,0,0,.5) inset}
+.tbwheel .tbsl{position:absolute;transform:translate(-50%,-50%)}
+.tbwheel .tbsl .tbact,.tbwheel .tbhub .tbact{width:100%;height:100%;min-height:0;border-radius:50%;padding:2px;gap:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.tbwheel .tbact .ic{font-size:clamp(15px,5.5vw,22px);line-height:1}.tbwheel .tbact b{font-size:clamp(10px,3.2vw,12.5px);line-height:1.1}.tbwheel .tbact small{font-size:clamp(8.5px,2.5vw,10px);line-height:1.1;white-space:nowrap}
+.tbwheel .tbhub{position:absolute;left:50%;top:50%;width:30%;height:30%;transform:translate(-50%,-50%)}
+.tbwheel .tbhub .tbact{border-width:2px;box-shadow:0 0 16px rgba(160,200,255,.18)}
+.tbwheel .tbact:not([disabled]):hover,.tbwheel .tbact:not([disabled]):focus-visible{border-color:var(--gold);box-shadow:0 0 14px rgba(226,187,100,.45)}
+.tbwheel .tbact .cp{display:none}
+.tbf .tbdock .tbwheel{margin-top:0}
+.tbtime{position:fixed;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle,rgba(6,7,9,.6),rgba(6,7,9,.86));touch-action:none;cursor:pointer;-webkit-tap-highlight-color:transparent;animation:tbtin .16s ease-out}
+.tbtime .tbt-in{display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:none}
+.tbtime svg{width:min(66vw,240px,40vh);height:auto;overflow:visible;filter:drop-shadow(0 0 10px rgba(0,0,0,.7))}
+.tbtime .tr{fill:rgba(20,18,15,.8);stroke:#3c372e;stroke-width:7}
+.tbtime .tg{fill:none;stroke:rgba(226,187,100,.75);stroke-width:7;stroke-linecap:butt}
+.tbtime .tp{fill:none;stroke:#fff3c4;stroke-width:9;filter:drop-shadow(0 0 3px #ffd36a)}
+.tbtime .tn line{stroke:#ebe5d6;stroke-width:2.2;stroke-linecap:round}.tbtime .tn circle{fill:#ebe5d6}.tbtime .th{fill:#2a2620;stroke:var(--gold);stroke-width:1.5}
+.tbtime .tl{font-family:var(--sk-ui,inherit);font-size:20px;letter-spacing:.04em;color:var(--ink)}.tbtime small{font-size:12px;color:var(--mute)}
+.tbtime.hit .tn{opacity:.9}.tbtime.perfect .tl{color:#fff3c4;text-shadow:0 0 10px #ffc94a}.tbtime.good .tl{color:var(--gold)}.tbtime.poor .tl{color:var(--ember)}
+.tbtime.perfect svg{animation:tbtpf .38s ease-out}.tbtime.poor svg{animation:tbnudge .25s}
+@keyframes tbtin{from{opacity:0;transform:scale(1.06)}to{opacity:1;transform:none}}
+@keyframes tbtpf{0%{transform:scale(1)}40%{transform:scale(1.12)}100%{transform:scale(1)}}
+.tbspend{position:fixed;z-index:9999;pointer-events:none;transform:translate(-50%,0);font-weight:700;font-size:14px;text-shadow:0 1px 2px #000,0 0 4px #000;white-space:nowrap;animation:tbspend 1.4s ease-out both}
+.tbspend.ap{color:#e8d9a8}.tbspend.sp{color:var(--sp)}.tbspend.mp{color:#7fb0ff}.tbspend.hp{color:var(--hp)}.tbspend.hp.up{color:#8fe08f}
+.tbspend.grade{font-size:22px;letter-spacing:.05em}.tbspend.grade.perfect{color:#fff3c4;text-shadow:0 0 12px #ffb52a,0 1px 2px #000}.tbspend.grade.good{color:var(--gold)}.tbspend.grade.poor{color:var(--ember)}
+@keyframes tbspend{0%{opacity:0;transform:translate(-50%,6px) scale(.8)}15%{opacity:1;transform:translate(-50%,0) scale(1.08)}100%{opacity:0;transform:translate(-50%,-38px) scale(1)}}
+.tbstage.perfect::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 70% 45%,rgba(255,230,150,.55),transparent 60%);animation:tbflash .6s ease-out both}
+@keyframes tbflash{from{opacity:1}to{opacity:0}}
+@media (prefers-reduced-motion:reduce){.tbspend,.tbtime,.tbtime svg,.tbstage.perfect::after{animation-duration:.01s}}
 </style>
 <script src="access.js"></script>
 </head>
@@ -1724,6 +1754,7 @@ body:has(#favBtn) .app,body:has(#twBtn) .app{padding-bottom:calc(190px + env(saf
 <script src="combatai.js"></script>
 <script src="sneak2.js"></script>
 <script src="aiset.js"></script>
+<script src="tbradial.js"></script>
 <script src="tbfight.js"></script>
 <script src="foegroups.js"></script>
 <script src="dragons.js"></script>

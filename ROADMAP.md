@@ -66,7 +66,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Smart AI combat (default; custom tactics optional), crafting mini-games, motion design (63)
 
 ## In progress (write your name before you start)
-- Claude: dragons (kinds, air/ground stances, raid gather timer) — branch claude/dragons. Next: radial combat action menu, then the visual overhaul.
+- Claude: combat wheel + timing ring — branch claude/wheel. Next: the visual overhaul (scaling on every screen).
 - Kacper: (add here) — audio: run scripts/gen_audio.mjs once ElevenLabs has credits (music needs a paid plan).
 
 ## Standing rules
