@@ -9,6 +9,7 @@ const PATCHNOTES = (() => {
       "New stable upgrades: saddlebags (carry 50, 100 or 150 more) and horseshoes (iron, steel or elven, ride 5%, 10% or 15% faster). Horse armor is still there too.",
       "New Speech perk, Horse Trader: horses and stable work cost 10%/20% less, and the horses you buy roll better.",
       "Horses you already own keep going as Cyrodilic bays with their old numbers.",
+      "Dual wielding was winning a bit too often: the left-hand follow-up now hits a little softer.",
     ] },
     { id: "b125", build: 125, date: "23 Nov 2026", title: "Traders sell the basics", items: [
       "Town shops, caravans and roadside traders now only sell basic gear: iron, steel, hide, leather, chainmail and the like. Elven, dwarven, glass, ebony and better come from dungeons, bosses, quests and your own forge.",
