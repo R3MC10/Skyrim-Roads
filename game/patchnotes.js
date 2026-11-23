@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b118", build: 118, date: "23 Nov 2026", title: "The combat wheel", items: [
+      "Your moves in a fight now sit in a wheel around End turn. Each one shows what it costs: action points, and the stamina or magicka it takes.",
+      "Strikes and attack spells now have a timing ring: a needle sweeps round, tap when it's in the bright zone. Right in the middle is Perfect (25% more damage), anywhere in the zone is Good, and a miss (or no tap) does 20% less.",
+      "The better your skill with that weapon or school of magic, the wider the zone. Duelist, Brute Force, Steady Hand and Disintegrate make it wider still.",
+      "What you spend floats up from your frame (−3 AP, −58 SP, −40 MP), and a Perfect hit lights up the fight.",
+      "Fast mode and Auto skip the timing ring. Prefer the old cards? Tap 🎯 at the top of the fight screen.",
+    ] },
     { id: "b117", build: 117, date: "23 Nov 2026", title: "Dragons take to the sky", items: [
       "Dragons come in kinds now: Dragon, Frost Dragon, Blood Dragon, Elder, Ancient, Revered and Legendary. Each breathes fire or frost, has its own colour and gets tougher the higher up the list it is. The strongest only show up at high levels.",
       "A dragon starts the fight in the air. Its fire or frost breath rains down, it dives at you with its claws, and sometimes it climbs out of reach for a moment. While it flies, sword and axe blows only graze it and some arrows miss their mark; spells and shouts hit fully.",

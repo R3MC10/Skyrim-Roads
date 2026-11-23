@@ -196,7 +196,7 @@ const TB = (() => {
       if (isSpell(a)) { const u = Math.min(this.spAp, c); this.spAp -= u; c -= u; }
       this.ap -= c;
     }
-    act(a, tgt) {
+    act(a, tgt, mult) {   // mult: how the timing ring went (tbradial.js), 1 = normal
       if (this.cur?.id !== "me" || this.over) return null;
       const f = this.f;
       const al = tgt != null && tgt !== "" ? (+tgt >= 1000 ? (f._downed || [])[+tgt - 1000] : f.allies[+tgt]) : null;
@@ -209,6 +209,7 @@ const TB = (() => {
       if (al && zoneOf(a) === "self") text = onAlly(f, a, al);
       if (text == null) { f.tbTarget = al || null; try { text = a === "bash" ? SHIELDFX.bash(f) : f.act(a); } finally { f.tbTarget = null; } }
       if (f.hidden) f.hidden = false;   // only your first strike can be a sneak attack
+      if (mult && mult !== 1 && f.ehp < before) { f.ehp = before - (before - f.ehp) * mult; text += mult > 1 ? " (perfect timing!)" : " (mistimed)"; }
       if (typeof DRAGONS !== "undefined") text += DRAGONS.graze(f, a, before);
       text += this.capFoe(before);
       if (f.ehp < before) { text += this.flank(before); this.hitters++; }
@@ -513,6 +514,18 @@ const TB = (() => {
       return `<div class="tbmenu"><div class="tbmh"><b>⚗ Items</b><small>Drag a potion onto yourself, or tap it</small></div><div class="tbgrid">${pots || scrolls ? pots + scrolls : `<p class="sub">No potions or scrolls.</p>`}${shouts}</div><button class="tbact back" data-tbm="">‹ Back</button></div>`;
     }
     const sh = shoutsFor(f).map(([a, n]) => B(a, n, "shout")).join("");
+    if (typeof TBRADIAL !== "undefined" && TBRADIAL.on()) {   // the combat wheel: moves in a ring round End turn
+      const W = (a, label, extra = "") => { const c = cost(f, a), ok = sess.canAfford(a), z = zoneOf(a);
+        const tip = typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.action(f, a, c))}"` : "";
+        return `<button class="tbact ${extra}" data-tba="${esc(a)}"${z ? ` data-tz="${z}"` : ""}${tip} ${ok ? "" : "disabled"}><span class="ic" aria-hidden="true">${iconOf(f, a)}</span><b>${esc(label)}</b><small>${esc(TBRADIAL.costLine(f, a, c))}</small></button>`; };
+      const sl = [W("attack", f.wt === "bow" || f.wt === "crossbow" ? "Shoot" : "Attack", "main"), W("power_attack", "Power", "main"),
+        f.shield && typeof SHIELDFX !== "undefined" ? W("bash", "Bash", "main") : W("block", "Guard", "main"),
+        `<button class="tbact menu" data-tbm="magic"><span class="ic" aria-hidden="true">${ICON.magic}</span><b>Magic ▸</b><small>${(s.spells || []).length} spells</small></button>`,
+        `<button class="tbact menu" data-tbm="items"><span class="ic" aria-hidden="true">${ICON.items}</span><b>Items ▸</b><small>potions</small></button>`,
+        ...shoutsFor(f).map(([a, n]) => W(a, n.replace("Shout ", ""), "shout")), W("flee", "Flee", "flee")];
+      const hub = `<button class="tbact end" data-tba="end"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.action(f, "end", 0))}"` : ""}><span class="ic" aria-hidden="true">${ICON.end}</span><b>End</b><small>${sess.ap > 0 ? `+${Math.min(30, sess.ap * 10)}%` : "ready"}</small></button>`;
+      return TBRADIAL.wheel(sl, hub);
+    }
     return `<div class="tbgrid">${B("attack", f.wt === "bow" || f.wt === "crossbow" ? "Shoot" : "Attack", "main")}${B("power_attack", "Power attack", "main")}${f.shield && typeof SHIELDFX !== "undefined" ? B("bash", "Shield bash", "main") : B("block", "Guard", "main")}
       <button class="tbact menu" data-tbm="magic"><span class="ic" aria-hidden="true">${ICON.magic}</span><b>Magic ▸</b><small>${(s.spells || []).length} spells</small></button>
       <button class="tbact menu" data-tbm="items"><span class="ic" aria-hidden="true">${ICON.items}</span><b>Items ▸</b><small>potions</small></button>${sh}
@@ -550,7 +563,7 @@ const TB = (() => {
     if (sess.done) banner = `<div class="tbban ${f.won ? "won" : "lost"}">${f.won ? (f.escaped ? "Escaped" : "Victory") : "Defeated"}</div>`;
     else if (mine && ui.bannerFor !== sess.round) { ui.bannerFor = sess.round; banner = `<div class="tbban me">Your turn</div>`; }
     el.innerHTML = `<div class="tbin">
-      <div class="tbtop"><b>Round ${sess.round}</b><span class="tbord">${order}</span><button class="tbff" data-tbx="log" aria-label="Full fight log">📜</button><button class="tbff ${fast() ? "on" : ""}" data-tbx="fast" aria-label="Fast foe turns">⏩</button></div>
+      <div class="tbtop"><b>Round ${sess.round}</b><span class="tbord">${order}</span><button class="tbff" data-tbx="log" aria-label="Full fight log">📜</button><button class="tbff ${fast() ? "on" : ""}" data-tbx="fast" aria-label="Fast foe turns">⏩</button>${typeof TBRADIAL !== "undefined" ? `<button class="tbff ${TBRADIAL.on() ? "on" : ""}" data-tbx="wheel" aria-label="Combat wheel and timing ring" data-tip="Combat wheel: your moves in a ring, and a timing ring for strikes and spells (Perfect +25%, a miss −20%). Tap to switch to cards.">🎯</button>` : ""}</div>
       <div class="tbstage" data-tbzone="foe"><div class="tbscene" id="tbscene">${scene || (ui.lastScene || "")}</div>${banner}<div class="tbhint" aria-hidden="true"></div></div>
       <div class="tbvit"><div class="tbu me" data-tbzone="self"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.me(f, sess.st))}"` : ""}><small class="nm">🛡 ${esc(s.name || "You")}</small>${uBar(hpNow, prev.hp, hpMax, "hp")}<div class="tbsub">${rBar(mpNow, prev.mp, mpMax, "mp", "MP")}${rBar(spNow, prev.sp, spMax, "sp", "SP")}</div></div>
         <div class="tbu foe" data-tbzone="foe"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.foe(f, sess.ehpMax))}"` : ""}><small class="nm">${f.e.player ? "⚔" : "☠"} ${esc(f.e.name)}${f.e.archLabel && !String(f.e.name).toLowerCase().includes(f.e.archLabel) ? ` <span class="arch">${esc(f.e.archLabel)}</span>` : ""}${sess.waves > 1 ? ` <span class="arch">${sess.wave}/${sess.waves}</span>` : ""}</small>${uBar(ehpNow, prev.ehp, sess.ehpMax, "hp foe")}${statusChips(f)}</div></div>
@@ -650,9 +663,10 @@ const TB = (() => {
     render(r || { turn: ui.sess.done ? "done" : ui.sess.cur?.id === "me" ? "me" : "auto" });
   }
   function onClick(ev) {
-    if (!ui) return;
+    if (!ui || ui.timing) return;   // the timing ring is up
     const b = ev.target.closest("button"); if (!b || b.disabled) return;
     const sess = ui.sess;
+    if (b.dataset.tbx === "wheel") { TBRADIAL.toggle(); return step(); }
     if (b.dataset.tbm !== undefined) { ui.menu = b.dataset.tbm || null; return step(); }
     if (b.dataset.tbx === "autoall") { ui.menu = null; sess.autoRest = true; sess.autoTurn(); return step(sess.advance()); }   // no button for players any more; screen tests use it to finish a fight
     if (b.dataset.tbx === "fast") { const p = prefs(); p.tbFast = !p.tbFast; try { localStorage.setItem("rotn_prefs", JSON.stringify(p)); } catch (e) { /* ignore */ } return step(); }
@@ -662,11 +676,26 @@ const TB = (() => {
     if (b.dataset.tba) {
       ui.menu = null;
       const root = document.getElementById("tbf"), tgt = root?.dataset.tbt; if (root) delete root.dataset.tbt;
-      let r = sess.act(b.dataset.tba, tgt);
-      if (r?.err) { if (hooks.toast) hooks.toast(r.err); return; }
-      if (r?.turn === "next") r = sess.advance();
-      if (typeof SOUND !== "undefined" && SOUND.fx) SOUND.fx(/spell|dual|scroll/.test(b.dataset.tba) ? "spell" : "hit");
-      return step(r);
+      const a = b.dataset.tba, f = sess.f;
+      const go = (g) => {
+        if (!ui || ui.sess !== sess) return;
+        const was = { ap: sess.ap + sess.spAp, sp: f.sp, mp: f.mp, hp: f.hp };
+        let r = sess.act(a, tgt, g ? g.mult : 1);
+        if (r?.err) { if (hooks.toast) hooks.toast(r.err); return; }
+        const d = { ap: was.ap - (sess.ap + sess.spAp), sp: was.sp - f.sp, mp: was.mp - f.mp, hp: f.hp - was.hp };
+        if (r?.turn === "next") r = sess.advance();
+        if (typeof SOUND !== "undefined" && SOUND.fx) SOUND.fx(/spell|dual|scroll/.test(a) ? "spell" : "hit");
+        step(r);
+        if (typeof TBRADIAL !== "undefined" && TBRADIAL.on()) TBRADIAL.spent(a === "end" || a === "flee" ? { ap: 0, sp: 0, mp: 0, hp: 0 } : d, g);
+      };
+      // the timing ring: strikes and damage spells (not in Fast mode)
+      if (typeof TBRADIAL !== "undefined" && TBRADIAL.on() && !fast() && TBRADIAL.timed(a, zoneOf(a)) && sess.canAfford(a)) {
+        const sp = spellOf(a), perk = typeof PFX !== "undefined" ? PFX.num(f.s, "timing") : 0;
+        ui.timing = true;
+        return TBRADIAL.ring(root, { z: TBRADIAL.zone(TBRADIAL.skillFor(f, a, sp), perk), icon: iconOf(f, a), label: sp ? sp.name : a === "power_attack" ? "Power attack" : a === "bash" ? "Shield bash" : f.wt === "bow" || f.wt === "crossbow" ? "Shoot" : "Attack" })
+          .then((g) => { if (ui) ui.timing = false; go(g); });
+      }
+      return go(null);
     }
   }
   let waitT = null;
