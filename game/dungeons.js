@@ -299,7 +299,10 @@ const DUNGEONS = (() => {
       for (const [item, c] of D.LOOT.elite) if (Math.random() < c * (0.6 + 0.3 * d.tier)) extra.push(giveFound(s, item));
       extra.push(...themeLoot(s, 0.9));
       if (typeof PRIESTS !== "undefined") extra.push(...PRIESTS.onBoss(s, d, e));   // the dragon priest's mask, once
-      if (d.place === "Bleak Falls Barrow" && !s.inv.some((x) => x.item === "golden_claw")) { extra.push(giveFound(s, "golden_claw")); extra.push(giveFound(s, "dragonstone")); }
+      if (d.place === "Bleak Falls Barrow") {   // the claw may already be yours (the claw door hands it over halfway); the Dragonstone always waits here until Farengar has it
+        if (!s.inv.some((x) => x.item === "golden_claw")) extra.push(giveFound(s, "golden_claw"));
+        if (!s.thaneWhiterun && !hasDragonstone(s)) extra.push(giveFound(s, "dragonstone"));
+      }
       let word = "";
       if (typeof SHOUTS2 !== "undefined") {   // [Skyrim] Word Walls stand at fixed places and each teaches its own shout (shouts2.js)
         const w = SHOUTS2.readWall(s, d.place);
@@ -431,5 +434,9 @@ const DUNGEONS = (() => {
     return `You climb back into daylight with ${got}.`;
   }
 
-  return { REFILL_SECONDS, enterable, info, describe, refillLeft, enter, nextChoices, enterRoom, roomChoices, act, leave, ICON, LABEL, THEMES, ENEMY, layout };
+  // the Dragonstone in your pack or in any of your house chests
+  function hasDragonstone(s) {
+    return (s.inv || []).some((x) => x.item === "dragonstone") || Object.values(s.homes || {}).some((h) => (h?.chest || []).some((x) => x.item === "dragonstone"));
+  }
+  return { REFILL_SECONDS, enterable, info, describe, refillLeft, enter, nextChoices, enterRoom, roomChoices, act, leave, ICON, LABEL, THEMES, ENEMY, layout, hasDragonstone };
 })();
