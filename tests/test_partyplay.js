@@ -267,6 +267,12 @@ for (const n2 of [1, 2, 3, 4, 8]) for (let rep = 0; rep < 6; rep++) {
   const rv = L.roadVote(rl, rb0, ["B", "C"], "a bandit camp", 500);
   OK(rv && rv.doc.members.join() === "A,B,C" && rv.doc.items.length === 1 && rl.gold === rb0.gold + 50 && !rl.inv.some((x) => x.item === "steel_sword"), "road finds go to a party vote, gold stays to be split");
   OK(L.roadVote(rl, L.snap(rl), [], "x") === null, "no party travelling: nothing to vote on");
+  // the Bleak Falls boss in a party: the Dragonstone and the claw stay with each finder, not in the pile
+  const q = mk("Q", "Quest"); const qb = L.snap(q); G.give(q, "dragonstone"); G.give(q, "golden_claw"); G.give(q, "potion_health");
+  const qg = L.strip(q, qb);
+  OK(qg.items.length === 1 && qg.items[0].item === "potion_health" && q.inv.some((x) => x.item === "dragonstone") && q.inv.some((x) => x.item === "golden_claw"), "quest items stay with the finder");
+  const qv = { items: { Q: [{ item: "dragonstone", qty: 1 }] }, gold: {} };
+  L.deliver(q, qv, "Q", "old-pile"); OK(q.inv.filter((x) => x.item === "dragonstone").length === 1, "an old pile doesn't hand out a second Dragonstone");
 }
 console.log("partyplay ok · " + n + " checks");
 `, c);

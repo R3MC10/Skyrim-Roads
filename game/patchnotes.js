@@ -3,7 +3,10 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b132", build: 132, date: "23 Nov 2026", title: "PC: no more missed updates", items: [
+    { id: "b132", build: 132, date: "23 Nov 2026", title: "The Dragonstone in parties, and PC updates", items: [
+      "Fixed: in a party, the Dragonstone and the Golden Claw went into the party's loot pile, so only one player got them and everyone else couldn't finish Farengar's quest. Now every player keeps their own.",
+      "If you cleared Bleak Falls Barrow in a party and don't have the Dragonstone, it's back in your pack next time you open the game. Bring it to Farengar in Dragonsreach.",
+      "Farengar now also takes the Dragonstone in Whiterun's Court wizard shop (Area tab), not only under Dragonsreach & hirelings.",
       "PC players on build 100 never got updates: that build came out just before the PC version learned to update itself. Download the setup version once from the download page and run it. Your saves stay.",
       "The PC game now tells you when a newer build is out, with a Download button. The portable .exe can't update itself, so it shows this every time there's a new build.",
       "The setup version keeps updating itself in the background; it only shows the card if it falls 3 or more builds behind.",
