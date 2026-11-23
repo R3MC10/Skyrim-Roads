@@ -3,6 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b122", build: 122, date: "23 Nov 2026", title: "Foes fight back properly", items: [
+      "Foes now use everything they come with, not just a plain swing.",
+      "Warriors bash you with their shields (you lose stamina and 1 action point) and raise them to block. Brutes wind up huge blows and roar war cries. Archers take aim for a big shot and fire poison arrows.",
+      "Mages throw fire, frost or lightning bolts (burning you, draining stamina or magicka), raise wards against your spells and heal themselves. Rogues use poisoned blades and slip into the shadows.",
+      "Wolves pounce and howl, bears and trolls maul (you bleed), trolls regenerate, spiders spit venom, draugr shout you back and breathe frost, necromancers drain your life. Many humanoids carry a healing potion or two.",
+      "You see slow moves coming: a ⚠ or 🎯 on the foe means a big blow lands next turn. Guard, or hit hard enough to break it.",
+      "Chips on the foe show a raised shield, a ward, shadows or rage. Hold a finger on the foe to see everything it can do.",
+    ] },
     { id: "b121", build: 121, date: "23 Nov 2026", title: "Wards hold", items: [
       "Ward spells are now a real magic shield. It stays up turn after turn, soaking spells, dragon breath and any magic a foe throws, until it breaks.",
       "Cast the ward again to fill it back up. A weaker ward never shrinks a stronger one.",
