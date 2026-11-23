@@ -8,6 +8,12 @@ const PATCHNOTES = (() => {
       "Tactics is gone from the Character menu, since you play every fight yourself.",
       "In a party, if someone takes too long on their turn, they keep their guard up instead of the game fighting for them.",
     ] },
+    { id: "b119", build: 119, date: "23 Nov 2026", title: "Fits every screen, part 1", items: [
+      "Phone held sideways: the compass spreads out so Magic and Items no longer sit on top of it.",
+      "Small phones: the Items / Magic / Skills names at the top of the menus no longer run into each other.",
+      "Slightly bigger small labels under the top buttons and bottom tabs, and bigger spell-level buttons in Magic, so they're easier to read and tap.",
+      "Fixed a rare hiccup when a menu opened before the game screen was ready.",
+    ] },
     { id: "b118", build: 118, date: "23 Nov 2026", title: "The combat wheel", items: [
       "Your moves in a fight now sit in a wheel around End turn. Each one shows what it costs: action points, and the stamina or magicka it takes.",
       "Strikes and attack spells now have a timing ring: a needle sweeps round, tap when it's in the bright zone. Right in the middle is Perfect (25% more damage), anywhere in the zone is Good, and a miss (or no tap) does 20% less.",

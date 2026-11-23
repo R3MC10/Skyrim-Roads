@@ -66,7 +66,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Smart AI combat (default; custom tactics optional), crafting mini-games, motion design (63)
 
 ## In progress (write your name before you start)
-- Claude: combat wheel + timing ring — branch claude/wheel. Next: the visual overhaul (scaling on every screen).
+- Claude: visual overhaul (fits every screen and resolution) — branches claude/fit-*, in passes.
 - Kacper: (add here) — audio: run scripts/gen_audio.mjs once ElevenLabs has credits (music needs a paid plan).
 
 ## Standing rules
