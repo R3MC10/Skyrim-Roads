@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b123", build: 123, date: "23 Nov 2026", title: "Two blades", items: [
+      "You can now fight with a one-handed weapon in each hand. Open a sword, axe, mace or dagger and tap \"Left hand\".",
+      "Every attack follows up with a quick left-hand hit, and power attacks swing both blades. Power attacks cost more stamina though.",
+      "A left-hand weapon replaces your shield, so you lose its armour and shield bash. Two-handed weapons, bows and staffs need both hands.",
+      "New One-Handed perk Twin Blades: harder left-hand hits and cheaper dual power attacks.",
+      "Your hero holds the second blade in the fight scene.",
+    ] },
     { id: "b122", build: 122, date: "23 Nov 2026", title: "Foes fight back properly", items: [
       "Foes now use everything they come with, not just a plain swing.",
       "Warriors bash you with their shields (you lose stamina and 1 action point) and raise them to block. Brutes wind up huge blows and roar war cries. Archers take aim for a big shot and fire poison arrows.",
