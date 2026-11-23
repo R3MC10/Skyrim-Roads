@@ -43,7 +43,7 @@
     async how() {
       const c = await this.current();
       if (!Updater?.downloadGame || !c.shell) return `App build ${c.apkBuild || c.build}: this older app still needs the installer. Install the newest app once; after that it updates itself.`;
-      return `App build ${c.apkBuild || c.build}, game build ${c.build}: updates download by themselves, no installer.${quickFailed ? ` Last quick update failed: ${quickFailed}` : ""}`;
+      return `App build ${c.apkBuild || c.build}, game build ${c.build}: updates download by themselves, no installer.${c.delta ? " Only the files that changed get downloaded." : " Install the newest app once more to get much smaller updates (only what changed)."}${quickFailed ? ` Last quick update failed: ${quickFailed}` : ""}`;
     },
     async latest(force = false) {
       if (latestCache && !force && Date.now() - latestCache.t < 10 * 60000) return latestCache.r;
@@ -52,9 +52,12 @@
       const j = await res.json(), asset = (j.assets || []).find((a) => /\.apk$/i.test(a.name));
       const zip = (j.assets || []).map((a) => ({ a, m: /^game-shell(\d+)\.zip$/i.exec(a.name) })).find((x) => x.m);
       const build = parseInt(String(j.tag_name).replace(/\D+/g, ""), 10) || 0;
+      // small patches: game-shellS-fromN.zip holds only what changed since build N
+      const deltas = {};
+      for (const a of j.assets || []) { const m = /^game-shell(\d+)-from(\d+)\.zip$/i.exec(a.name); if (m && zip && +m[1] === +zip.m[1]) deltas[+m[2]] = { url: a.browser_download_url, size: a.size }; }
       if (!asset) throw new Error("The newest release has no app file");
       const r = { build, notes: cleanNotes(j.body), url: asset.browser_download_url, size: asset.size, date: j.published_at,
-        game: zip ? { url: zip.a.browser_download_url, size: zip.a.size, shell: +zip.m[1] } : null };
+        game: zip ? { url: zip.a.browser_download_url, size: zip.a.size, shell: +zip.m[1], deltas } : null };
       latestCache = { t: Date.now(), r };
       return r;
     },
@@ -62,7 +65,12 @@
     async check(force = false) {
       const [cur, lat] = await Promise.all([this.current(), this.latest(force)]);
       const quick = !!(lat.game && Updater?.downloadGame && cur.shell >= lat.game.shell);
-      return { current: cur, latest: lat, newer: lat.build > (cur.build || 0), quick, size: quick ? lat.game.size : lat.size };
+      const patch = quick ? this.patchFor(cur, lat) : null;
+      return { current: cur, latest: lat, newer: lat.build > (cur.build || 0), quick, size: patch ? patch.size : quick ? lat.game.size : lat.size };
+    },
+    /* the small patch from the build this phone is on, if the release has one and the app can apply it */
+    patchFor(cur, lat) {
+      return (cur?.delta && Updater?.patchGame && lat.game?.deltas?.[cur.build]) || null;
     },
     /* game-only update: download the game files in the background, then switch to them (now, or on next start) */
     async quickUpdate(lat, now, onStep = () => {}) {
@@ -70,7 +78,14 @@
       onStep("Downloading…", 0);
       const sub = await Updater.addListener("progress", (p) => onStep(p.pct >= 0 ? `Downloading… ${p.pct}%` : "Downloading…", p.pct));
       let r;
-      try { r = await Updater.downloadGame({ url: lat.game.url, size: lat.game.size, build: lat.build }); } finally { sub?.remove?.(); }
+      try {
+        const cur = await this.current(), patch = this.patchFor(cur, lat);
+        if (patch) {   // only the files that changed; anything off and it downloads the whole game instead
+          try { r = await Updater.patchGame({ url: patch.url, size: patch.size, build: lat.build, from: cur.build }); }
+          catch (e) { r = null; onStep("Downloading the full game…", 0); }
+        }
+        if (!r) r = await Updater.downloadGame({ url: lat.game.url, size: lat.game.size, build: lat.build });
+      } finally { sub?.remove?.(); }
       staged = lat.build; stagedPath = r.path;
       if (now) { window.__ui?.save?.(); onStep("Restarting on the new version…", 100); }
       await Updater.applyGame({ path: r.path, build: lat.build, now });

@@ -1,6 +1,6 @@
 // Builds www/ (what goes inside the app) from game/ (the same files as the online game).
-import fs from "node:fs"; import path from "node:path";
-const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
+import fs from "node:fs"; import path from "node:path"; import { fileURLToPath } from "node:url";
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const www = path.join(root, "www"), game = path.join(root, "game");
 fs.rmSync(www, { recursive: true, force: true }); fs.mkdirSync(path.join(www, "fonts"), { recursive: true });
 for (const f of fs.readdirSync(game)) fs.copyFileSync(path.join(game, f), path.join(www, f));

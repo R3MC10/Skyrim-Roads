@@ -1,0 +1,27 @@
+name: Android code compiles
+# Pull requests that touch the Android shell: compile the Java (debug, no signing key needed) before it reaches main,
+# where the real signed build runs. Nobody on the team has Java installed locally.
+on:
+  pull_request:
+    paths: ["android/**", "app.js", "package.json", "capacitor.config.*"]
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+      - name: Use the Android SDK already on the runner
+        run: echo "sdk.dir=$ANDROID_HOME" > android/local.properties
+      - run: npm ci
+      - run: npm run sync
+      - name: Compile
+        working-directory: android
+        run: chmod +x gradlew && (./gradlew compileDebugJavaWithJavac --no-daemon || (sleep 60; ./gradlew compileDebugJavaWithJavac --no-daemon --refresh-dependencies))

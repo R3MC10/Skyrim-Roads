@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b130", build: 130, date: "23 Nov 2026", title: "Smaller updates", items: [
+      "Updates now download only the files that changed instead of the whole game: usually a megabyte or two instead of almost 100.",
+      "To get this, install the newest app from the download page one more time. After that, every update is a small patch.",
+      "If a patch ever doesn't fit your copy of the game, it quietly downloads the full game instead, like before.",
+    ] },
     { id: "b129", build: 129, date: "23 Nov 2026", title: "Blood, finishing blows and a fight camera", items: [
       "Fights bleed now. Blades and arrows draw blood, skeletons shed bone chips, dwarven machines leak oil and sparks, and the dead leave a pool behind.",
       "Finishing blows: kill someone with a blade and you might take their head clean off, always on a critical, power or sneak attack.",
