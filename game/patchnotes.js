@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b133", build: 133, date: "23 Nov 2026", title: "Painted battle scenes", items: [
+      "Fights now happen in front of hand-painted scenes instead of the plain drawn ones: Embershard Mine has its own, and every dungeon, camp and lair uses the one for its kind (burial barrows, Dwemer vaults, Forsworn redoubts, vampire lairs, temples, forts, Thalmor keeps, bandit and giant camps, dragon lairs).",
+      "Road fights show the land you're in: snowy passes, pine forest, autumn woods, marsh, the ashlands, rocky highlands or the open tundra. Duels in Windhelm get the arena.",
+      "Torches and braziers flicker and glow, lanterns sway, banners and reeds move in the wind and steam rises in Dwemer ruins, even while you're choosing your next move. The background shifts a little with the camera so the scene has depth. With Reduce motion on, it all stays still.",
+      "Night, dusk and bad weather still darken and tint the scenes outdoors, and caravans still stand behind the fight. Both art styles work: in pixel art the paintings turn into pixels too.",
+    ] },
     { id: "b132", build: 132, date: "23 Nov 2026", title: "See what's coming in a fight", items: [
       "Foes show their next move before they make it. Under the foe's health bar, Next lists what it will do with each of its turns this round, and the first one floats over it in the fight: ⚔ 18–26 for a normal hit, 💥 Huge blow or 🎯 Aimed shot in red when a big one is coming, ✚ when it's about to heal, 🛡 when it raises a shield. The numbers already count your armour and guard. Hold a finger on one to read it.",
       "Health bars show what's about to come off. Striped parts of your bar are the damage this round's blows plus your poison or burning will take, with the numbers under the bar (for example ⚔ −39 ☠ −18 ≈ −57). The foe's bar does the same for its burning, bleeding and your cloaks. Healing shows as a green edge.",

@@ -10,3 +10,4 @@ android/keystore.properties
 # screen test screenshots
 tests/tbf/
 tests/fread/
+tests/bscene/
