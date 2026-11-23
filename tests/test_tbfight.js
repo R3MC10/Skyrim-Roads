@@ -130,7 +130,11 @@ if (!process.env.SIMONLY) {
   ok(f.tbStunLeft > 0, "the bash stuns a normal foe");
   f.sp = 9999; ss.act("bash"); ok(ss.ev[ss.ev.length - 1].text.includes("no stun"), "no stun-locking right after a stun");
   f.sp = 0; ok(!ss.canAfford("bash"), "no stamina, no bash");
-  const hp0 = f.hp; ss.act("end"); let foeLines = []; g = 0; while (!ss.done && g++ < 30) { const n = ss.ev.length; ss.advance(); foeLines.push(...ss.ev.slice(n).filter((e) => e.kind === "foe").map((e) => e.text)); if (ss.cur?.id === "me") break; }
+  const hp0 = f.hp; let foeLines = []; g = 0;
+  while (!foeLines.length && !ss.done && g++ < 30) {   // end turns until the foe's turn comes (you may go first next round)
+    const n = ss.ev.length;
+    if (ss.cur?.id === "me") ss.act("end");
+    ss.advance(); foeLines.push(...ss.ev.slice(n).filter((e) => e.kind === "foe").map((e) => e.text)); }
   ok(/stunned/.test(foeLines[0] || ""), "the stunned foe loses its turn: " + foeLines.join(" | "));
 }
 // 4c. party frames: healing spells, potions and support spells dragged onto a teammate go to that teammate
