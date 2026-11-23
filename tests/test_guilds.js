@@ -44,7 +44,7 @@ const m=TOWNS.rentRoom(C); ok(/Astrid/.test(m) && C.quests.brotherhood.stage===1
 ok(!/Astrid/.test(TOWNS.rentRoom(C)),"only once");
 // checks: low skill fails sometimes, bounty, retry cooldown
 const D2=hero("D"); for(const k of Object.keys(D2.skills)) D2.skills[k].lvl=5; QUESTS.ensure(D2); D2.quests.thieves={stage:3,t:G.now(),base:{},v2:true}; at(D2,"Honningbrew Meadery");
-let fails=0, succ=0; for(let i=0;i<200;i++){ D2.quests.thieves={stage:3,t:G.now(),base:{},v2:true}; D2.bounty={}; const r=QUESTS.talk(D2,"thieves"); if(D2.quests.thieves.stage===4) succ++; else { fails++; ok(/spotted/.test(r.text) && D2.bounty.Whiterun===100,"bounty on fail"); ok(/Lie low/.test(QUESTS.talk(D2,"thieves").text),"cooldown"); } }
+let fails=0, succ=0; for(let i=0;i<200;i++){ for(const k of Object.keys(D2.skills)) D2.skills[k].lvl=5; D2.quests.thieves={stage:3,t:G.now(),base:{},v2:true}; D2.bounty={}; const r=QUESTS.talk(D2,"thieves"); if(D2.quests.thieves.stage===4) succ++; else { fails++; ok(/spotted/.test(r.text) && D2.bounty.Whiterun===100,"bounty on fail"); ok(/Lie low/.test(QUESTS.talk(D2,"thieves").text),"cooldown"); } }
 console.log("low-skill sneak check: ", succ, "passed,", fails, "failed");
 ok(fails>100 && succ>10,"chance ~15-20% (200 tries)");
 // old save: finished 4-stage thieves line reopens at stage 3 once
