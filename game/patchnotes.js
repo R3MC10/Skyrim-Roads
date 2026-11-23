@@ -3,6 +3,16 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b129", build: 129, date: "23 Nov 2026", title: "Blood, finishing blows and a fight camera", items: [
+      "Fights bleed now. Blades and arrows draw blood, skeletons shed bone chips, dwarven machines leak oil and sparks, and the dead leave a pool behind.",
+      "Finishing blows: kill someone with a blade and you might take their head clean off, always on a critical, power or sneak attack.",
+      "Every death is different: fire burns a foe to ash, frost freezes it solid until it shatters, lightning leaves it twitching and scorched, a hammer or a Shout sends it flying.",
+      "Enchanted weapons glow in their own colour (fire orange, frost blue, shock violet, drain red...) and leave a coloured trail when you swing.",
+      "The camera moves with the fight: it leans in as you swing, follows the blow, punches in on criticals and holds on the killing blow.",
+      "New sounds for wet hits, heavy criticals, fire, frost, lightning and shattering ice.",
+      "New Two-Handed perk, Headsman: more damage to a foe that's nearly finished.",
+      "Don't like the blood? Settings → Fights → Blood: Off.",
+    ] },
     { id: "b128", build: 128, date: "23 Nov 2026", title: "Hunting", items: [
       "New 🏹 button on the map: turn hunting on and you travel a little slower, but you run into deer, elk, mountain goats (and horkers by the sea) far more often. Every one is a fight you play.",
       "Sometimes something else is hunting too: wolves, bears and sabre cats turn up now and then.",

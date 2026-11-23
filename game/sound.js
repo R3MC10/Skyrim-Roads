@@ -305,6 +305,33 @@ const SOUND = (() => {
       noise(t, { type: "highpass", freq: 2500, vol: 0.12, a: 0.001, r: 0.012, dest: S().mid });
     },
     swing(t) { noise(t, { type: "bandpass", freq: 500, q: 2, vol: 0.2, a: 0.07, h: 0.02, r: 0.04, sweep: 5, dest: S().lo }); },
+    /* [OURS] combat effects (combatfx): a wet blow, a heavy crit, each element's own impact, ice shattering */
+    "hit-gore"(t) {
+      noise(t, { type: "lowpass", freq: rnd(500, 700), vol: 0.5, a: 0.002, h: 0.02, r: 0.05, sweep: 0.4, dest: S().lo });
+      noise(t + 0.03, { type: "bandpass", freq: rnd(1800, 2400), q: 4, vol: 0.12, a: 0.01, r: 0.04, sweep: 0.5, dest: S().lo });
+      osc(80, t, { vol: 0.5, a: 0.003, h: 0.03, r: 0.06, glide: 0.5, dest: S().lo });
+    },
+    "hit-crit"(t) {
+      noise(t, { type: "bandpass", freq: rnd(900, 1300), q: 1, vol: 0.55, a: 0.002, r: 0.04, dest: S().lo });
+      osc(70, t, { vol: 0.7, a: 0.003, h: 0.05, r: 0.09, glide: 0.4, dest: S().lo });
+      noise(t + 0.02, { type: "lowpass", freq: 3000, vol: 0.15, a: 0.05, h: 0.1, r: 0.12, sweep: 0.2, dest: S().mid });
+    },
+    "spell-fire"(t) {
+      noise(t, { type: "lowpass", freq: 1800, vol: 0.32, a: 0.03, h: 0.18, r: 0.12, sweep: 0.3, dest: S().mid });
+      osc(90, t, { type: "sawtooth", vol: 0.06, a: 0.02, h: 0.15, r: 0.1, cut: 400, glide: 0.6, dest: S().mid });
+    },
+    "spell-frost"(t) {
+      noise(t, { type: "highpass", freq: 4000, vol: 0.12, a: 0.01, h: 0.12, r: 0.1, dest: S().mid });
+      [2400, 3100, 4300].forEach((f, i) => osc(f * rnd(0.97, 1.03), t + i * 0.04, { vol: 0.03, a: 0.002, r: 0.1, dest: S().hi }));
+    },
+    "spell-shock"(t) {
+      for (let i = 0; i < 5; i++) noise(t + i * rnd(0.02, 0.05), { type: "highpass", freq: rnd(2000, 5000), vol: 0.16, a: 0.001, r: 0.012, dest: S().mid });
+      osc(60, t, { type: "square", vol: 0.04, a: 0.005, h: 0.15, r: 0.05, cut: 600, dest: S().mid });
+    },
+    "death-shatter"(t) {
+      for (let i = 0; i < 7; i++) osc(rnd(2200, 6000), t + i * rnd(0.01, 0.04), { vol: 0.035, a: 0.001, r: 0.08, dest: S().hi });
+      noise(t, { type: "highpass", freq: 3000, vol: 0.2, a: 0.001, h: 0.03, r: 0.08, dest: S().mid });
+    },
     spell(t) {
       noise(t, { type: "bandpass", freq: 400, q: 3, vol: 0.22, a: 0.08, h: 0.2, r: 0.08, sweep: 6, dest: S().mid });
       osc(330, t, { type: "triangle", vol: 0.07, a: 0.05, h: 0.25, r: 0.1, glide: 2, dest: S().mid });
@@ -364,8 +391,8 @@ const SOUND = (() => {
     const rec = ch.find((n) => sfxBuf[n]?.length);
     if (!rec && !base) return false;
     lastAt[name] = t;
-    if (rec) { try { playFile(rec, t, base || rec); } catch (e) { /* never break the game for a sound */ } return true; }
-    fxScale = TRIM[base] || 1;
+    if (rec && !(base && ch.indexOf(base) < ch.indexOf(rec))) { try { playFile(rec, t, base || rec); } catch (e) { /* never break the game for a sound */ } return true; }
+    fxScale = TRIM[base] || TRIM[ch[ch.length - 1]] || 1;   // a specific synth (hit-gore) is louder-matched to its general one
     try { FX[base](t); } catch (e) { /* never break the game for a sound */ }
     fxScale = 1;
     return true;

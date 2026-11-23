@@ -689,7 +689,7 @@ const TB = (() => {
         if (r?.err) { if (hooks.toast) hooks.toast(r.err); return; }
         const d = { ap: was.ap - (sess.ap + sess.spAp), sp: was.sp - f.sp, mp: was.mp - f.mp, hp: f.hp - was.hp };
         if (r?.turn === "next") r = sess.advance();
-        if (typeof SOUND !== "undefined" && SOUND.fx) SOUND.fx(/spell|dual|scroll/.test(a) ? "spell" : "hit");
+        if (typeof SOUND !== "undefined" && SOUND.fx && (/spell|dual|scroll/.test(a) || typeof COMBATFX === "undefined")) SOUND.fx(/spell|dual|scroll/.test(a) ? "spell" : "hit");   // blows sound on impact (combatfx)
         step(r);
         if (typeof TBRADIAL !== "undefined" && TBRADIAL.on()) TBRADIAL.spent(a === "end" || a === "flee" ? { ap: 0, sp: 0, mp: 0, hp: 0 } : d, g);
       };
