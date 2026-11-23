@@ -36,7 +36,8 @@ const FIGHTART = (() => {
     if (s?.thrall && !(f?.allies || []).some((a) => a.thrall)) list.push({ kind: "zombie", name: s.thrall.name });
     let gearO = null; try { if (typeof GEARLOOK !== "undefined" && typeof HEROART !== "undefined" && s?.loadouts) gearO = GEARLOOK.person(HEROART.lookOf(s)); } catch { /* bare save */ }
     const off = f?.off && f?.eq?.offhand ? (G.wtype ? G.wtype(f.eq.offhand.item) : "sword") : null;   // dual wielding
-    return { skin: SKIN[s?.race] || SKIN.nord, wt, shield: !!f?.shield, off, body: gearO?.body || body, helm: !!f?.armor?.head, allies, mates, list, beast: !!s?.beastForm, gearO };
+    const ench = typeof COMBATFX !== "undefined" ? COMBATFX.glowOf(COMBATFX.enchantOf(f)) : null;   // [OURS] colour-coded glow (combatfx.js)
+    return { skin: SKIN[s?.race] || SKIN.nord, wt, shield: !!f?.shield, off, ench, body: gearO?.body || body, helm: !!f?.armor?.head, allies, mates, list, beast: !!s?.beastForm, gearO };
   }
   function foeOf(e) {
     if (e?.look) return "player";   // another player: drawn in their own gear (matePerson)
@@ -694,7 +695,31 @@ const FIGHTART = (() => {
     function jag() { const n = 24; for (let i = 0; i < n; i++) { const t = i / (n - 1), off = i === 0 || i === n - 1 ? 0 : (Math.random() - 0.5) * 18 * s; BOLT[i * 2] = boltX0 + (boltX1 - boltX0) * t; BOLT[i * 2 + 1] = boltY0 + (boltY1 - boltY0) * t + off; }
       const at = 8 + Math.floor(Math.random() * 8); let x = BOLT[at * 2], y = BOLT[at * 2 + 1]; for (let i = 0; i < 10; i++) { FORK[i * 2] = x; FORK[i * 2 + 1] = y; x += (4 + Math.random() * 6) * s; y += (Math.random() * 7 + 1) * s; } }
     // weapon-tip trail
-    const TR = new Float32Array(24); let trN = 0, trOn = false;
+    const TR = new Float32Array(26); let trN = 0, trOn = false, trailC = "#f4f6ff";
+    // [OURS] combat effects (combatfx.js): blood, the way the foe dies, the camera
+    const CFX = typeof COMBATFX !== "undefined" ? COMBATFX : null, goreOn = !!CFX && CFX.gore(), bleed = CFX ? CFX.bleedOf(foeK) : [null, null, "none"];
+    const NECK = -52 * fSize;
+    let deathK = null, camF = 0.5;
+    const meleeOf = (b) => !!b && !MOVES[b.move]?.proj && !["self", "potion", "wait", "block", "cast", "shout"].includes(b.move);
+    function pickDeath() {
+      if (deathK || !CFX || !won || turned) return;
+      const fb = beats.find((x) => x.final) || beats[beats.length - 1];
+      deathK = CFX.deathOf(fb, foeK, { melee: fb?.who === "me" && meleeOf(fb), person: isPerson, gore: goreOn, wt: fb?.wt });
+      if (typeof SOUND !== "undefined" && SOUND.fx && !rm && !rec.played) SOUND.fx(deathK === "decap" ? "hit-gore" : deathK === "shatter" ? "death-shatter" : deathK === "ash" ? "spell-fire" : deathK === "fry" ? "spell-shock" : "hit", 0.05);
+    }
+    /* blood (or bone chips, oil, grave dust) from a blow; on you it's always red */
+    function bloodAt(x, y, dir, n, onMe) {
+      if (!goreOn) return;
+      const [c0, c1, kind] = onMe ? ["#a01010", "#5a0606", "blood"] : bleed;
+      if (kind === "none") return;
+      n = Math.max(1, Math.round(n * pmul));
+      for (let i = 0; i < n; i++) {
+        const a = -Math.PI / 2 + dir * (0.4 + Math.random() * 0.9), v = (90 + Math.random() * 170) * s;
+        spawn(kind === "ash" ? 2 : 3, i % 3 ? c0 : c1, x, y, Math.cos(a) * v * (kind === "ash" ? 0.4 : 1), Math.sin(a) * v * (kind === "ash" ? 0.4 : 1), 0.5 + Math.random() * 0.4, kind === "blood" ? 1.6 + Math.random() * 1.4 : 2.2, kind === "ash" ? -10 : 420);
+      }
+      if (kind === "blood" && !pixel) spawn(2, c1, x, y, dir * 30 * s, -10 * s, 0.6, 4, 0);   // a fine red mist
+      if (kind === "oil") burst(x, y, 6, 1, COL.spark, 200 * s, 0.3, 2, 260);
+    }
     const TIP = { dagger: [10, -8], sword: [20, -20], greatsword: [28, -28], axe: [19, -16], battleaxe: [28, -22], mace: [16, -16], warhammer: [18, -18], spear: [32, -30], club: [18, -24], staff: [10, -32], fist: [0, 0] };
     function tipOf(side, pose, wt, i) {   // where the weapon tip is on screen
       const t = TIP[wt] || TIP.sword, ca = Math.cos(pose.aim), sa = Math.sin(pose.aim), lx = 13 + t[0], ly = 9 + t[1];
@@ -712,6 +737,7 @@ const FIGHTART = (() => {
     function impact(b, last) {
       const me = b.who === "me", tx = me ? fx0 : (b.ally ? allyX() : hx0), ty = me ? foeChest : heroChest, dir = me ? 1 : -1;
       const fx = b.fx, cols = colOf(fx, b.el), big = b.power || b.final;
+      if (last && CFX && typeof SOUND !== "undefined" && SOUND.fx && !["potion", "self", "wait"].includes(b.move)) SOUND.fx(CFX.soundOf(b, me ? foeK : "person", meleeOf(b), goreOn));
       if (b.miss) {   // a whoosh, the other side steps aside
         if (me) foeDodge = 0; else heroDodge = 0;
         if (last) float(tx, ty - 34 * s, "Miss", "#e9dcc0", 14);
@@ -752,6 +778,7 @@ const FIGHTART = (() => {
         if (mfx === "punch") burst(tx, ty, 8, 2, COL.dust, 80 * s, 0.4, 4, 0);
         burst(tx - dir * 6 * s, ty, (mfx === "stab" || mfx === "bite" ? 8 : 14) * n, 1, COL.spark, 240 * s, 0.35, 2, 260);
         if (b.enchant) burst(tx, ty, 12, 0, COL[b.enchant] || COL.glow, 120 * s, 0.5, 3, 0);
+        if (hurt && !b.ally) bloodAt(tx - dir * 2 * s, ty - 4 * s, dir, (b.final ? 26 : b.crit || b.sneak ? 18 : b.power ? 14 : 8) * (mfx === "stab" || mfx === "bite" ? 0.7 : 1), !me);
         { const gr = !me ? rec.hero.gearO?.gear : null; if (gr && gr.w === "heavy" && gr.metal) burst(tx, ty, 10 * n, 3, [gr.trim, "#ffffff", "#ffe8a0"], 200 * s, 0.4, 2.2, 320); }   // armour clank: bright chips off plate
       } else if (fx === "fire" || b.el === "fire" && fx !== "breath" && fx !== "fus") {
         burst(tx, ty, 26 * n, 0, COL.fire, 200 * s, 0.6, 4, 120); burst(tx, ty, 8, 2, COL.smoke, 40 * s, 1.3, 9, -40, true); ringT = 0; ringX = tx; ringC = "#ffb347";
@@ -763,11 +790,11 @@ const FIGHTART = (() => {
       else if (fx === "fus") { burst(tx, groundY - 4 * s, 20, 2, COL.dust, 180 * s, 0.7, 6, -10, true); foeKnock = me ? 28 : foeKnock; if (!me) heroKnock = 24; shake = Math.max(shake, 6); }
       else if (fx === "breath") burst(tx, ty, 14, b.el === "frost" ? 3 : 0, COL[b.el] || COL.fire, 140 * s, 0.6, 3, 60);
       else if (b.move === "drain") burst(tx, ty, 10, 0, COL.drain, 80 * s, 0.5, 3, 0);
-      else burst(tx, ty, 14, 1, COL.spark, 220 * s, 0.35, 2, 260);
+      else { burst(tx, ty, 14, 1, COL.spark, 220 * s, 0.35, 2, 260); if (["arrow", "bolt"].includes(MOVES[b.move]?.proj?.[2]) && !b.ally) bloodAt(tx, ty, dir, b.final || b.crit ? 12 : 6, !me); }
       if (rm) { shake = 0; return; }
       if (b.power) { hitstop = 0.08; shake = Math.max(shake, 5); }
       if (b.crit || b.sneak) { slowT = 0.45; shake = Math.max(shake, 4); }
-      if (b.final) { slowT = 0.6; shake = Math.max(shake, 8); zoomT = 0.9; zcx = tx; zcy = ty; flash = Math.max(flash, 0.3); flashC = "#fff"; }
+      if (b.final) { slowT = 0.6; shake = Math.max(shake, 8); zoomT = 0.9; if (!CFX) { zcx = tx; zcy = ty; } flash = Math.max(flash, 0.3); flashC = "#fff"; }
     }
     let ringT = 1, ringX = 0, ringC = "#e9dcc0", beamT = 1, beamC = "#9affc0";
     function landNumbers(b) {   // the number and the health bars, once per beat (on the last hit)
@@ -791,7 +818,8 @@ const FIGHTART = (() => {
       done = true; rec.played = true; phase = f.tbMid ? "idle" : "end"; bi = beats.length; fall = f.tbMid ? 0 : 1;
       hpD = hpT = hpL = last.hp ?? hpT; ehpD = ehpT = ehpL = last.ehp ?? ehpT;
       for (let i = 0; i < NP; i++) pl[i] = 0; for (let i = 0; i < NF; i++) fl[i] = 0;
-      label = null; slowT = 0; shake = 0; zoomT = 0; zoom = 1; hitstop = 0; flash = 0; boltOn = 0;
+      label = null; slowT = 0; shake = 0; zoomT = 0; zoom = 1; camF = 0.5; hitstop = 0; flash = 0; boltOn = 0;
+      if (!f.tbMid) pickDeath();
       revealLog(1e9); ctl?.remove();
       draw(performance.now());
     }
@@ -823,7 +851,13 @@ const FIGHTART = (() => {
       if (hpLT > 0) hpLT -= dtr; else hpL += (hpD - hpL) * Math.min(1, dtr * 4);
       if (ehpLT > 0) ehpLT -= dtr; else ehpL += (ehpD - ehpL) * Math.min(1, dtr * 4);
       shake = Math.max(0, shake - dtr * 22); flash = Math.max(0, flash - dtr * 2.5); zoomT = Math.max(0, zoomT - dtr);
-      zoom += ((zoomT > 0 && !rm ? 1.12 : 1) - zoom) * Math.min(1, dtr * 8);
+      if (CFX && !rm) {   // the camera leans toward the swing, follows the blow, punches in on crits and holds on the killing blow
+        let tf = 0.5, tz = 1;
+        if (phase === "play" && beats[bi]) { const b2 = beats[bi], m2 = MOVES[b2.move] || MOVES.wait; [tf, tz] = CFX.camFor(b2, Math.min(1, lt / b2.dur), { hx: hx0 / W, fx: fx0 / W, hitU: m2.hits[0] ?? 0.55 }); }
+        else if (phase === "fall") { tf = (won && !turned ? fx0 : hx0) / W; tz = 1.15; }
+        if (zoomT > 0) tz = Math.max(tz, 1.2);
+        camF += (tf - camF) * Math.min(1, dtr * 4); zoom += (tz - zoom) * Math.min(1, dtr * (tz > zoom ? 7 : 3));
+      } else zoom += ((zoomT > 0 && !rm ? 1.12 : 1) - zoom) * Math.min(1, dtr * 8);
       heroKnock *= Math.exp(-dtr * 7); foeKnock *= Math.exp(-dtr * 7);
       heroDodge = Math.min(1, heroDodge + dtr * 2.6); foeDodge = Math.min(1, foeDodge + dtr * 2.6); wolfT = Math.min(1, wolfT + dtr * 1.4);
       claw *= Math.exp(-dtr * 5); if (labelT > 0) labelT -= dtr; ringT = Math.min(1, ringT + dtr * 2.2); beamT = Math.min(1, beamT + dtr * 1.8);
@@ -861,10 +895,19 @@ const FIGHTART = (() => {
           if (!m.hits.length) landNumbers(b);
           revealLog(b.li);
           bi++; lt = 0; hitIdx = 0; boltOn = 0; trN = 0;
-          if (bi >= beats.length) { phase = f.tbMid ? "idle" : "fall"; phaseT = 0; if (f.tbMid) { done = true; rec.played = true; revealLog(1e9); ctl?.remove(); } }
+          if (bi >= beats.length) { phase = f.tbMid ? (CFX && !rm ? "settle" : "idle") : "fall"; phaseT = 0; if (phase === "idle") { done = true; rec.played = true; revealLog(1e9); ctl?.remove(); } if (phase === "fall") pickDeath(); }
         }
+      } else if (phase === "settle") {   // a turn-by-turn fight: let the camera ease back before the scene rests
+        phaseT += dtr; if (phaseT > 0.5 || Math.abs(zoom - 1) < 0.004) { zoom = 1; camF = 0.5; phase = "idle"; done = true; rec.played = true; revealLog(1e9); ctl?.remove(); }
       } else if (phase === "fall") {
         phaseT += dt; fall = Math.min(1, phaseT / 0.7);
+        if (deathK === "decap" && phaseT < 0.9) {   // the neck sprays as the body goes down
+          const th = Math.PI / 2 * EASE.out(fall), nx = fx0 - s * NECK * Math.sin(th), ny = groundY + s * NECK * Math.cos(th);
+          if (Math.random() < 0.9 * pmul) bloodAt(nx, ny, 1, 2, false);
+        }
+        if (deathK === "ash" && phaseT > 0.35 && phaseT < 1.2 && Math.random() < 0.8 * pmul) { const c = Math.random() < 0.5 ? "#3a3430" : "#ff7a2a"; spawn(Math.random() < 0.3 ? 0 : 2, c, fx0 + (Math.random() - 0.5) * 24 * s * fSize, groundY - Math.random() * 60 * s * fSize, (Math.random() - 0.2) * 30 * s, -40 * s, 0.9, 3, -15); }
+        if (deathK === "shatter" && phaseT >= 0.45 && phaseT - dt < 0.45) { burst(fx0, foeChest, 34, 3, ["#e8f8ff", "#bfe8ff", "#7fb0d8"], 260 * s, 0.9, 3.4, 380); burst(fx0, foeChest, 10, 2, ["#e0f4ff"], 60 * s, 1, 8, -10); flash = rm ? 0 : 0.25; flashC = "#e8f8ff"; shake = rm ? 0 : Math.max(shake, 5); }
+        if (deathK === "fry" && phaseT < 0.7 && Math.random() < 0.6 * pmul) spawn(1, Math.random() < 0.5 ? "#c8b8ff" : "#ffffff", fx0 + (Math.random() - 0.5) * 26 * s, foeChest + (Math.random() - 0.5) * 30 * s, (Math.random() - 0.5) * 200 * s, (Math.random() - 0.5) * 200 * s, 0.2, 2, 0);
         const lb = beats[beats.length - 1];
         if (lb && lb.st && lb.st.soul && won && phaseT < 0.9 && Math.random() < pmul) spawn(0, "#b07aff", fx0, foeChest, (hx0 - fx0) * 1.3, -30 * s, 0.7, 3, 0);   // the soul streams into you
         if (phaseT > 0.7 && phaseT - dt <= 0.7 && !rm) { burst(won ? fx0 : hx0, groundY, 14, 2, COL.dust, 120 * s, 0.8, 6, -10, true); shake = Math.max(shake, 3); }
@@ -915,7 +958,7 @@ const FIGHTART = (() => {
       const tt = now / 1000;
       poses(b, m, u, st, tt);
       // camera
-      const sh = rm ? 0 : shake, ox = sh ? (Math.random() - 0.5) * sh * 2 : 0, oy = sh ? (Math.random() - 0.5) * sh * 2 : 0, z = zoom;
+      const sh = rm ? 0 : shake, z = zoom, ox = (sh ? (Math.random() - 0.5) * sh * 2 : 0) + (CFX && !rm ? CFX.pan(camF * W, z, W, zcx) : 0), oy = (sh ? (Math.random() - 0.5) * sh * 2 : 0) + (CFX && !rm ? CFX.pan(heroChest, z, Hh, zcy) : 0);
       wg.setTransform(1, 0, 0, 1, 0, 0); wg.imageSmoothingEnabled = !pixel;
       if (z !== 1 || sh) { wg.fillStyle = "#1c2128"; wg.fillRect(0, 0, work.width, work.height); }
       const sc = k * z, tx = (ox + zcx - zcx * z) * k, ty = (oy + zcy - zcy * z) * k;
@@ -959,7 +1002,7 @@ const FIGHTART = (() => {
         const sp = SPARK[sk]; if (sp && Math.random() < 0.25 * pmul) spawn(sp[1], sp[0], sx + (Math.random() - 0.5) * 16 * s, groundY + (sp[2] - Math.random() * 30) * s, (Math.random() - 0.5) * 12 * s, -24 * s, 0.6, 2.2, 0);
       }
       // you
-      const over = phase !== "play" && phase !== "idle";   // "idle": one turn of a turn-by-turn fight has played, both still stand
+      const over = phase !== "play" && phase !== "idle" && phase !== "settle";   // "idle": one turn of a turn-by-turn fight has played, both still stand
       const meDown = over && !won, foeDown = over && won && !turned, fallE = EASE.out(fall);
       const hdg = heroDodge < 1 ? Math.sin(heroDodge * Math.PI) : 0, fdg = foeDodge < 1 ? Math.sin(foeDodge * Math.PI) : 0;
       wg.save(); wg.translate(hx0 + (heroP.dx - heroKnock - hdg * 18) * s, groundY + (heroP.dy - hdg * 3) * s); wg.scale(s, s);
@@ -970,6 +1013,15 @@ const FIGHTART = (() => {
       { const fs = b ? b.st : st, form = fs && (fs.beast || fs.lord) && phase === "play"; heroFig(wg, form ? { ...rec.hero, beast: fs.beast, lord: fs.lord } : rec.hero, form ? Math.max(0, Math.min(1, (heroP.dx || 0) / 40)) : 0, tt, heroP); }   // werewolf or Vampire Lord while changed
       if (onHorse) { wg.translate(0, 30); HORSEBACK.drawHorse(wg, rec.horse, 0, tt, "front"); }
       wg.restore();
+      if (rec.hero.ench && !meDown && heroP.wt !== "fist" && !heroP.flask) {   // [OURS] an enchanted weapon glows in its colour and sheds motes
+        const c = rec.hero.ench; tipOf(1, heroP, heroP.wt, 24);
+        const hxH = handX(1, heroP) - (heroKnock + hdg * 18) * s, hyH = handY(1), tx2 = TR[24] - (heroKnock + hdg * 18) * s, ty2 = TR[25];
+        const pulse = 0.55 + 0.25 * Math.sin(tt * 4);
+        wg.save(); additive(); wg.globalAlpha = pulse;
+        for (let i = 1; i <= 4; i++) { const q = i / 4, x = hxH + (tx2 - hxH) * q, y = hyH + (ty2 - hyH) * q, r = (5 + q * 6) * s; wg.drawImage(glowSprite(c[i & 1]), x - r, y - r, r * 2, r * 2); }
+        wg.restore();
+        if (Math.random() < 0.45 * pmul) { const q = 0.3 + Math.random() * 0.7, x = hxH + (tx2 - hxH) * q, y = hyH + (ty2 - hyH) * q; spawn(c === COMBATFX.GLOW.shock ? 1 : 4, c[(Math.random() * c.length) | 0], x, y, (Math.random() - 0.5) * 20 * s, (c === COMBATFX.GLOW.frost ? 14 : -26) * s, 0.7, 1.7, 0); }
+      }
       if (b && b.drain && b.who === "me" && typeof BEASTART !== "undefined") BEASTART.drain(wg, hx0 + 24 * s, heroChest - 8 * s, fx0, foeChest, u, tt);   // a Vampire Lord's drain
       // auras on you: ward, cloak, armor, bound
       if (st.ward || (b && b.who === "me" && b.fx === "ward" && u > 0.4)) hexWard(hx0 + 26 * s, heroChest, b && b.who === "them" && b.absorbed && u > 0.4 ? 1 : 0.5, tt);
@@ -981,11 +1033,26 @@ const FIGHTART = (() => {
       const fleeing = over && won && turned ? fallE : 0;
       wg.translate(fx0 - (foeP.dx - foeKnock - fdg * 18) * s + fleeing * W * 0.4, groundY + (foeP.dy - fdg * 3) * s); wg.scale(-s, s);
       if (fleeing) wg.globalAlpha = 1 - fleeing;
-      if (foeDown) {
+      const dk = foeDown ? deathK : null, dT = phase === "fall" ? phaseT : 9;
+      if (dk && goreOn && (bleed[2] === "blood" || bleed[2] === "oil") && !["ash", "shatter", "fade"].includes(dk)) {   // a pool spreads under the body
+        wg.save(); wg.scale(-1 / s, 1 / s); wg.globalAlpha = 0.75; wg.fillStyle = bleed[1];
+        const pr = Math.min(1, dT / 1.3) * 16 * s * Math.min(1.6, fSize), pxo = (dk === "launch" ? 26 : isPerson ? 30 : 4) * s * fallE;
+        wg.beginPath(); wg.ellipse(pxo, 1 * s, pr * 1.4, pr * 0.32, 0, 0, 7); wg.fill(); wg.restore();
+      }
+      if (dk === "ash") {   // burned to a cinder: it blackens, then crumbles away into a pile of ash
+        const p = Math.min(1, dT / 0.5); wg.filter = `brightness(${1 - 0.8 * p}) sepia(${p * 0.6})`; wg.globalAlpha = dT < 0.55 ? 1 : Math.max(0, 1 - (dT - 0.55) / 0.6);
+        if (dT > 0.5) { wg.save(); wg.filter = "none"; wg.globalAlpha = Math.min(1, (dT - 0.5) * 2); wg.fillStyle = "#3a3430"; wg.beginPath(); wg.ellipse(0, -2, 14 * fSize, 5 * fSize, 0, Math.PI, 0); wg.fill(); wg.fillStyle = "#ff7a2a"; wg.globalAlpha *= 0.5 + 0.3 * Math.sin(tt * 5); wg.fillRect(-3, -4, 2, 1.5); wg.fillRect(4, -3, 1.5, 1.5); wg.restore(); }
+      } else if (dk === "shatter") {   // frozen solid, then it shatters into ice
+        const p = Math.min(1, dT / 0.35); wg.filter = `brightness(${1 + 0.35 * p}) saturate(${1 - 0.6 * p}) hue-rotate(${170 * p}deg) contrast(${1 - 0.15 * p})`; if (dT >= 0.45) wg.globalAlpha = 0;
+        if (dT >= 0.45) { wg.save(); wg.filter = "none"; wg.globalAlpha = 0.9; wg.fillStyle = "#cfeaff"; for (let i = 0; i < 6; i++) { const x = (i - 2.5) * 6 * fSize; wg.beginPath(); wg.moveTo(x - 3, 0); wg.lineTo(x + 1, -4 - (i % 3) * 2); wg.lineTo(x + 4, 0); wg.fill(); } wg.restore(); }
+      } else if (dk === "fry") wg.filter = `brightness(${dT < 0.7 ? 0.5 + Math.random() * 1.2 : 0.45})`;   // lightning: it jerks and flickers, then lies scorched
+      if (dk === "launch") { const l = EASE.out(Math.min(1, dT / 0.6)); wg.translate(-26 * l, -Math.sin(l * Math.PI) * 16); }   // hammered (or Shouted) off its feet
+      if (foeDown && dk !== "ash" && dk !== "shatter") {
         if (["wisp", "atronach"].includes(foeK)) wg.globalAlpha = 1 - 0.75 * fallE;   // spirits fade away
         else if (isPerson) { wg.translate(-4 * fallE, 0); wg.rotate(-Math.PI / 2 * fallE); wg.translate(0, ((SIZE[foeK] || 1) > 1.2 ? 18 : 6) * fallE); }
         else { const dr = foeK === "dragon"; wg.translate(0, (dr ? -10 : -6) * fallE); wg.scale(1, 1 - (1 - (dr ? 0.45 : -0.9)) * fallE); wg.translate(0, (dr ? 0 : 12) * fallE); }   // beasts roll over, dragons slump
       }
+      const drawFoe = () => {
       const lunge = !isPerson ? foeP.draw : ["skeleton", "sphere", "centurion"].includes(foeK) ? Math.max(0, Math.min(1, (foeP.aim + 0.5) / 1.4)) : 0;
       curFoeLook = rec.foeLook; curArchLook = typeof FOEGROUPS !== "undefined" ? FOEGROUPS.look(rec.f?.e) : null;
       curDragon = foeK === "dragon" && typeof DRAGONS !== "undefined" ? DRAGONS.art(rec.f) : null;
@@ -1002,8 +1069,19 @@ const FIGHTART = (() => {
         wg.drawImage(foePic, -wU / 2, -hU, wU, hU);
         wg.restore();
       } else foeFig(wg, foeK, lunge, tt, isPerson ? foeP : null);
+      };
+      if (dk === "decap") {   // the body (below the neck) goes down...
+        wg.save(); wg.beginPath(); wg.rect(-300, NECK, 600, 400); wg.clip(); drawFoe(); wg.restore();
+        if (!pixel || true) { wg.save(); wg.fillStyle = bleed[1]; wg.beginPath(); wg.ellipse(0, NECK + 1, 4 * fSize, 1.6, 0, 0, 7); wg.fill(); wg.restore(); }
+      } else drawFoe();
       wg.filter = "none";
       wg.restore();
+      if (dk === "decap") {   // ...and the head flies, tumbling, and rolls to a stop
+        const vy = -95, gr = 300, yMax = -6 - (NECK - 8), tl = (-vy + Math.sqrt(vy * vy + 2 * gr * yMax)) / gr, t = Math.min(dT, tl);
+        const hxo = -t * 70 - (dT > tl ? Math.min(dT - tl, 0.4) * 30 : 0), hyo = Math.min(yMax, vy * t + 0.5 * gr * t * t), rot = t * 8 + (dT > tl ? Math.min(dT - tl, 0.4) * 5 : 0);
+        wg.save(); wg.translate(fx0, groundY); wg.scale(-s, s); wg.translate(hxo, hyo); wg.translate(0, NECK - 8); wg.rotate(rot); wg.translate(0, -(NECK - 8));
+        wg.beginPath(); wg.rect(-300, NECK - 300, 600, 300); wg.clip(); drawFoe(); wg.filter = "none"; wg.restore();
+      }
       // states on the foe: paralysis crackle, fear swirls, soul trap glow
       if ((b && b.who === "them" && b.status === "para") || (b && b.who === "me" && (b.fx === "paralyze" || b.para) && u > 0.6 && !b.miss)) crackle(fx0, foeChest, "#9aff6a", tt);
       if (b && ((b.who === "them" && b.status === "fear") || (b.who === "me" && b.fx === "illusion" && u > 0.6 && !b.miss))) swirl(fx0, foeChest - 20 * s, "#c89aff", tt);
@@ -1019,6 +1097,7 @@ const FIGHTART = (() => {
       // weapon trail
       if (b && m && m.trail && phase === "play") {
         const hitU = m.hits[0];
+        trailC = b.who === "me" && rec.hero.ench ? rec.hero.ench[1] : "#f4f6ff";
         if (trN > 1 && u < hitU + 0.22) trail(m.trail, b.miss ? 0.35 : 0.75 * (u < hitU + 0.1 ? 1 : 1 - (u - hitU - 0.1) / 0.12), b.power);
       }
       // a projectile in flight
@@ -1072,7 +1151,7 @@ const FIGHTART = (() => {
       wg.restore();
     }
     function trail(kind, a, power) {
-      wg.save(); additive(); wg.globalAlpha = a; wg.strokeStyle = power ? "#ffe0a0" : "#f4f6ff"; wg.lineCap = "round"; wg.lineJoin = "round";
+      wg.save(); additive(); wg.globalAlpha = a; wg.strokeStyle = power ? "#ffe0a0" : trailC; wg.lineCap = "round"; wg.lineJoin = "round";
       for (let i = 1; i < trN; i++) { wg.lineWidth = Math.max(pixel ? 3 : 1, (kind === "wide" ? 7 : kind === "stab" ? 3 : 5) * s * (i / trN)); wg.beginPath(); wg.moveTo(TR[(i - 1) * 2], TR[(i - 1) * 2 + 1]); wg.lineTo(TR[i * 2], TR[i * 2 + 1]); wg.stroke(); }
       wg.restore();
     }
@@ -1181,7 +1260,7 @@ const FIGHTART = (() => {
     const runner = {
       step(ms) { for (let left = ms; left > 0; left -= 16) update(Math.min(16, left) / 1000); draw(performance.now()); },
       finish() { if (!done) finish(); },   // [OURS] tap anywhere on the fight screen (fastqol.js)
-      get done() { return done; }, get beat() { return bi; }, beats, el,
+      get done() { return done; }, get beat() { return bi; }, get cam() { return [zoom, camF, deathK]; }, beats, el,
     };
     function frame(now) {
       if (!cv.isConnected) { cancelAnimationFrame(raf); LIVE.delete(runner); return; }
@@ -1202,7 +1281,7 @@ const FIGHTART = (() => {
   }
   // for tests: step every playing scene by hand, and read frame times
   const manual = (on) => { MANUAL = !!on; };
-  const advance = (ms) => { for (const r of LIVE) { if (!r.el.isConnected) { LIVE.delete(r); continue; } r.step(ms); } return [...LIVE].map((r) => ({ beat: r.beat, beats: r.beats.length, done: r.done })); };
+  const advance = (ms) => { for (const r of LIVE) { if (!r.el.isConnected) { LIVE.delete(r); continue; } r.step(ms); } return [...LIVE].map((r) => ({ beat: r.beat, beats: r.beats.length, done: r.done, cam: r.cam })); };
   const perf = () => { const n = Math.min(perfN, PERF.length), a = Array.from(PERF.subarray(0, n)).sort((x, y) => x - y); return { frames: perfN, p50: a[Math.floor(n * 0.5)] || 0, p90: a[Math.floor(n * 0.9)] || 0, max: a[n - 1] || 0 }; };
   const resetPerf = () => { perfN = 0; };
   /* [OURS] finish every scene still playing (tap-anywhere on a fight screen, fastqol.js) -> how many were playing */

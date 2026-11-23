@@ -21,6 +21,7 @@ const PFX = (() => {
     [S2, "great_critical_charge", "Great Critical Charge", 1, [50], ["champions_stance"], "Your first two-handed strike in a fight does 50% more damage, and you leap at a flying dragon: your blows lose only 20% instead of 40%. [Skyrim]", [["out", 0.5, { sk: S2, first: 1 }], ["leap", 1, {}]]],
     [S2, "sweep", "Sweep", 1, [70], ["great_critical_charge"], "Two-handed power attacks swing wide: +15% damage and a 20% chance to stagger. [Skyrim: sideways power attacks hit everyone in front]", [["out", 0.15, { sk: S2, power: 1 }], ["stag", 0.2, { sk: S2, power: 1 }]]],
     [S2, "brute_force", "Brute Force", 1, [40], ["barbarian"], "Two-handed hits ignore 25% of armor and do 10% more to tough foes, bosses and dragons. [OURS] Your timing ring's bright zone is 30% wider.", [["pierce", 0.25, { sk: S2 }], ["out", 0.1, { sk: S2, tough: 1 }], ["timing", 0.3, {}]]],
+    [S2, "headsman", "Headsman", 2, [40, 70], ["brute_force"], "Two-handed blows do 15% more damage to a foe below a quarter of its health (30% at rank 2): finish them, and maybe take their head. [OURS]", [["out", [0.15, 0.3], { sk: S2, foeBelow: 0.25 }]]],
     [S2, "unstoppable", "Unstoppable", 1, [90], ["devastating_blow"], "With a two-hander, you take 15% less damage while above half health. [OURS]", [["in", -0.15, { sk: S2, hpAbove: 50 }]]],
     // ---------------------------------------------------------------- Archery (5 → 10)
     [AR, "eagle_eye", "Eagle Eye", 1, [30], ["overdraw"], "Arrows hit 8% more often, and a flying dragon can't weave away from your arrows (full damage). [Skyrim: zoom in]", [["hit", 0.08, { sk: AR }], ["skyshot", 1, {}]]],
@@ -293,7 +294,8 @@ const PFX = (() => {
       if (c.hpAbove && !(100 * f.hp / mh > c.hpAbove)) return false;
       if (c.bigHit && !((x.hit || 0) > c.bigHit * mh)) return false;
       if (c.dark && !(f.wx?.dark || f.dark)) return false;
-    } else if (c.tag || c.tough || c.big || c.magic || c.archerFoe || c.hpBelow || c.hpAbove || c.first || c.mounted || c.bigHit || c.dark) return false;
+      if (c.foeBelow && !(f.ehp > 0 && f.ehp < c.foeBelow * (f.e?.health || f.ehp0 || 1))) return false;   // the foe is nearly done
+    } else if (c.foeBelow || c.tag || c.tough || c.big || c.magic || c.archerFoe || c.hpBelow || c.hpAbove || c.first || c.mounted || c.bigHit || c.dark) return false;
     return true;
   }
   function each(s, key, f, x, fn) {
