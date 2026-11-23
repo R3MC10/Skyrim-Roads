@@ -220,8 +220,9 @@ const FIGHTART = (() => {
     g.restore();
   }
   let curFoeLook = null;   // the look of the player being fought, set just before drawing the foe
+  let curArchLook = null;  // a bandit archer, a draugr mage...: what this foe's archetype carries (foegroups.js)
   function foeFig(g, kind, lunge, glowT, pose) {
-    const humanoid = (o) => { o.lunge = lunge; if (pose) { o.aim = pose.aim; o.back = pose.back; o.hunch = (o.hunch || 0) + pose.lean; o.draw = pose.draw; if (pose.wt) o.wt = pose.wt; } return person(g, o); };
+    const humanoid = (o) => { if (curArchLook && kind !== "player") Object.assign(o, curArchLook); o.lunge = lunge; if (pose) { o.aim = pose.aim; o.back = pose.back; o.hunch = (o.hunch || 0) + pose.lean; o.draw = pose.draw; if (pose.wt) o.wt = pose.wt; } return person(g, o); };
     if (typeof SOLART !== "undefined" && SOLART.foeFig(g, kind, lunge, glowT, { humanoid, quad: (o) => quad(g, { lunge, ...o }), SKIN })) return;
     switch (kind) {
       case "player": return humanoid({ ...matePerson(curFoeLook) });
@@ -556,12 +557,13 @@ const FIGHTART = (() => {
         } else if (/(^| )(misses|attacks, but you dodge)/.test(them)) {
           Object.assign(b, { move: FOE_MOVE[kind] || "sword", miss: true });
         } else if (/hits|blow|breath|bites|claws|strikes|\d/.test(them)) {
-          b.move = archer ? "bow" : FOE_MOVE[kind] || "sword";
-          if (archer) b.wt = "bow";
+          const aw = typeof FOEGROUPS !== "undefined" ? FOEGROUPS.look(f.e)?.wt : null;   // the foe's archetype weapon
+          b.move = archer || aw === "bow" ? "bow" : aw === "staff" ? "cast" : aw && MOVES[aw] ? aw : FOE_MOVE[kind] || "sword";
+          if (archer || aw === "bow") b.wt = "bow"; else if (aw && aw !== "staff") b.wt = aw;
           foeAtk++;
           if (kind === "draugr" && foeAtk % 3 === 0) Object.assign(b, { move: "shout", fx: "fus" });
           if (kind === "vampire" && foeAtk % 2 === 0) Object.assign(b, { move: "drain", el: "drain" });
-          if (b.move === "cast" || b.move === "breath") b.el = elementOf(them) || (kind === "dragon" && /frost|ice|blood|revered|legendary/.test(nm) ? "frost" : FOE_EL[kind]) || "shock", b.fx = b.el;
+          if (b.move === "cast" || b.move === "breath") b.el = elementOf(them) || (kind === "dragon" && /frost|ice|blood|revered|legendary/.test(nm) ? "frost" : f.e?.element || FOE_EL[kind]) || "shock", b.fx = b.el;
           b.blocked = /block/.test(them) || (st.guard && /\(blocked/.test(them));
           b.absorbed = /absorbed|passes through|ward soaks/.test(them);
           b.reflect = /reflected/.test(them);
@@ -981,7 +983,7 @@ const FIGHTART = (() => {
         else { const dr = foeK === "dragon"; wg.translate(0, (dr ? -10 : -6) * fallE); wg.scale(1, 1 - (1 - (dr ? 0.45 : -0.9)) * fallE); wg.translate(0, (dr ? 0 : 12) * fallE); }   // beasts roll over, dragons slump
       }
       const lunge = !isPerson ? foeP.draw : ["skeleton", "sphere", "centurion"].includes(foeK) ? Math.max(0, Math.min(1, (foeP.aim + 0.5) / 1.4)) : 0;
-      curFoeLook = rec.foeLook;
+      curFoeLook = rec.foeLook; curArchLook = typeof FOEGROUPS !== "undefined" ? FOEGROUPS.look(rec.f?.e) : null;
       const foePic = foeK !== "player" && typeof ASSETS !== "undefined" ? ASSETS.img(ASSETS.foeKey(rec.foeName, foeK)) : null;
       if (foePic) {   // a painted foe: stands on the ground line, breathes, leans into its attacks
         const hU = (foeK === "dragon" ? 120 : 66) * Math.min(1.8, fSize), wU = hU * foePic.naturalWidth / foePic.naturalHeight;
