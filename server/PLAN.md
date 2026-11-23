@@ -19,7 +19,7 @@ I have characters on different devices and can't reach them from the others."
 | --- | --- | --- |
 | 1 | Server with accounts, sessions (one device), cloud characters; sign-in screen and character picker in the game; upload existing characters | **built, tested locally** · next: deploy on Railway, set `DEFAULT_SERVER`, patch note, test on phones |
 | 2 | Shared world on the server instead of phone-to-phone (parties, chat, trades, market, clans, events) as a new backend inside `store.js` | **built, tested locally** (`hub.js`, `game/servernet.js`) |
-| 3 | Party fights run on the server (host can leave, every player gets the full fight screen); optional economy checks | later, if wanted |
+| 3 | Party fights run on the server (host can leave, every player gets the full fight screen); optional economy checks | **parked** (see below) |
 
 ## Phase 1 design
 
@@ -112,3 +112,14 @@ python3 tests/account_ui.py 8901 8788
   those single steps on the server (claims, trades) is part of phase 3.
 - Tests: `tests/test_hub.js` (20 checks, memory and Postgres, in CI), `tests/world_ui.py` (two accounts in the
   browser: online, chat, cards, takeover, sign out).
+
+## Phase 3: parked (decided 23 Nov 2026)
+Kacper and Remigiusz test phases 1–2 on real phones first. Notes for whoever picks it up:
+- **Server-checked claims** (two players can't both take the same chest loot, stall item, gift or share): the hub would
+  accept a change only on top of the version the phone last saw. The catch: about 40 `Store.change` calls, and some
+  of them already change your character inside the claim (a market buy takes your gold in `MARKET.buy`), so a refused
+  claim needs a reliable undo of the save, or those calls must move their side effects after the claim succeeds.
+- **Server-run party fights** (the leader can leave, every member gets the full fight screen): fights are woven into
+  the action that started them (`TB.call` pauses the action, plays the fight, then replays the action with the same
+  dice), and that action only exists on the leader's phone. Moving fights to the server means running the fight
+  engine there (it already runs in Node in the tests) and giving the action a way to finish without the leader.
