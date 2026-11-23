@@ -5,7 +5,9 @@
    main.js adds ?pc=portable|setup&v=1.0.BUILD to the page address. */
 const PCUPDATE = (() => {
   const REPO = "R3MC10/Skyrim-Roads", PAGE = `https://github.com/${REPO}/releases/latest`;
-  const Q = typeof location !== "undefined" ? new URLSearchParams(location.search) : new URLSearchParams("");   // read at start: the game may tidy the address later
+  // ?pc= and ?v= from the address, read at start (the game may tidy the address later; plain parsing so it loads anywhere)
+  const SEARCH = (() => { try { return String(location.search || ""); } catch (e) { return ""; } })();
+  const param = (k) => { const m = new RegExp("[?&]" + k + "=([^&#]*)").exec(SEARCH); return m ? decodeURIComponent(m[1]) : null; };
   /* this PC build's number: ?v=1.0.129 from main.js, else the user agent ("Roads of the North/1.0.129 ... Electron/33"), else 0 */
   function buildOf(ua, v) {
     const q = /^\d+\.\d+\.(\d+)$/.exec(String(v || ""));
@@ -40,8 +42,8 @@ const PCUPDATE = (() => {
   }
   async function check() {
     if (typeof navigator === "undefined" || typeof fetch !== "function") return;
-    const q = Q, kind = q.get("pc") || "";
-    const cur = buildOf(navigator.userAgent, q.get("v")); if (!cur) return;   // not the PC app
+    const kind = param("pc") || "";
+    const cur = buildOf(navigator.userAgent, param("v")); if (!cur) return;   // not the PC app
     try {
       const r = await fetch(`https://api.github.com/repos/${REPO}/releases/latest`, { headers: { Accept: "application/vnd.github+json" }, cache: "no-store" });
       if (!r.ok) return;
