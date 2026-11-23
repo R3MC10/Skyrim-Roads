@@ -98,7 +98,7 @@ const TB = (() => {
       const base = Math.max(1, f.ehp), kk = dpr > 0 ? clamp(dpr * T.rounds[this.kind] / base, T.min[this.kind], T.max[this.kind]) : T.hp[this.kind];
       // a party faces more foes, not one sponge: the same total toughness, split over one foe per hero
       this.waves = this.players > 0 && !f.e.boss ? Math.min(MAX_FOES, 1 + this.players) : 1; this.wave = 1;
-      const k = kk * (1 + PARTY_HP * this.players) / this.waves;
+      const k = f.e.player ? 1 : kk * (1 + PARTY_HP * this.players) / this.waves;   // another player fights with their real health, no monster boost
       f.ehp = Math.round(f.ehp * k); f.ehp0 = f.ehp; this.ehpMax = f.ehp;
       f.e.tbHp = this.ehpMax;
       f.regenMp *= MP_REGEN; f.regenSp *= SP_REGEN;   // several actions a round need a bit more breath and magicka per round
@@ -445,7 +445,7 @@ const TB = (() => {
     tickWait();
   }
   function pctBar(v, m, cls) { return `<div class="tbbar ${cls}"><i style="width:${Math.max(0, Math.min(100, 100 * v / Math.max(1, m))).toFixed(1)}%"></i></div>`; }
-  function icon(o) { return o.id === "me" ? "🛡" : o.id.startsWith("foe") ? "☠" : o.id === "sum" ? "✦" : "⚑"; }
+  function icon(o, f) { return o.id === "me" ? "🛡" : o.id.startsWith("foe") ? (f?.e?.player ? "⚔" : "☠") : o.id === "sum" ? "✦" : "⚑"; }
   /* where an action is dragged: onto the foe, or onto yourself (tbui.js does the dragging; a tap still works) */
   const SELF_KINDS = new Set(["heal", "armor", "ward", "summon", "cloak", "support", "invis", "bound", "light", "circle", "rune", "utility"]);
   function zoneOf(a) {
@@ -517,7 +517,7 @@ const TB = (() => {
     const el = document.getElementById("tbf"); if (!el || !ui) return;
     const sess = ui.sess, f = sess.f, s = f.s;
     const newEv = sess.ev.slice(ui.shown); ui.shown = sess.ev.length;
-    const order = sess.order.map((o, i) => `<span class="tbini ${o.id === sess.cur?.id && !sess.done ? "now" : ""} ${i < sess.idx ? "gone" : ""} ${o.id.startsWith("foe") ? "foe" : o.id === "me" ? "me" : "ally"}" data-tip="${esc(o.name)}: initiative ${o.init}. Higher initiative acts earlier in the round.">${icon(o)} ${esc(o.name.split(" ")[0])}<i>${o.init}</i></span>`).join("");
+    const order = sess.order.map((o, i) => `<span class="tbini ${o.id === sess.cur?.id && !sess.done ? "now" : ""} ${i < sess.idx ? "gone" : ""} ${o.id.startsWith("foe") ? "foe" : o.id === "me" ? "me" : "ally"}" data-tip="${esc(o.name)}: initiative ${o.init}. Higher initiative acts earlier in the round.">${icon(o, f)} ${esc(o.name.split(" ")[0])}<i>${o.init}</i></span>`).join("");
     const pips = (n, m, cls) => Array.from({ length: m }, (_, i) => `<i class="${i < n ? "on" : ""} ${cls}"></i>`).join("");
     const allies = partyHTML(f);
     const mine = state.turn === "me";
@@ -540,7 +540,7 @@ const TB = (() => {
       <div class="tbtop"><b>Round ${sess.round}</b><span class="tbord">${order}</span><button class="tbff" data-tbx="log" aria-label="Full fight log">📜</button><button class="tbff ${fast() ? "on" : ""}" data-tbx="fast" aria-label="Fast foe turns">⏩</button></div>
       <div class="tbstage" data-tbzone="foe"><div class="tbscene" id="tbscene">${scene || (ui.lastScene || "")}</div>${banner}<div class="tbhint" aria-hidden="true"></div></div>
       <div class="tbvit"><div class="tbu me" data-tbzone="self"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.me(f, sess.st))}"` : ""}><small class="nm">🛡 ${esc(s.name || "You")}</small>${uBar(hpNow, prev.hp, hpMax, "hp")}<div class="tbsub">${rBar(mpNow, prev.mp, mpMax, "mp", "MP")}${rBar(spNow, prev.sp, spMax, "sp", "SP")}</div></div>
-        <div class="tbu foe" data-tbzone="foe"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.foe(f, sess.ehpMax))}"` : ""}><small class="nm">☠ ${esc(f.e.name)}</small>${uBar(ehpNow, prev.ehp, sess.ehpMax, "hp foe")}${statusChips(f)}</div></div>
+        <div class="tbu foe" data-tbzone="foe"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.foe(f, sess.ehpMax))}"` : ""}><small class="nm">${f.e.player ? "⚔" : "☠"} ${esc(f.e.name)}</small>${uBar(ehpNow, prev.ehp, sess.ehpMax, "hp foe")}${statusChips(f)}</div></div>
       ${allies}
       <button class="tblog" aria-live="polite" data-tbx="log" aria-label="Fight log, tap for the full log"${log ? "" : " hidden"}>${log}</button>
       ${wait}

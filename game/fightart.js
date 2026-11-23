@@ -38,6 +38,7 @@ const FIGHTART = (() => {
     return { skin: SKIN[s?.race] || SKIN.nord, wt, shield: !!f?.shield, body: gearO?.body || body, helm: !!f?.armor?.head, allies, mates, list, beast: !!s?.beastForm, gearO };
   }
   function foeOf(e) {
+    if (e?.look) return "player";   // another player: drawn in their own gear (matePerson)
     const n = (e?.name || "").toLowerCase(), tg = new Set(e?.tags || []);
     const sk = typeof SOLART !== "undefined" ? SOLART.foeKind(n) : null; if (sk) return sk;   // Solstheim's creatures (solart.js)
     if (tg.has("dragon") || /^dragon$|dragon\b(?! priest)/.test(n)) return "dragon";
@@ -218,10 +219,12 @@ const FIGHTART = (() => {
     g.fillStyle = o.eye || P.ink; g.fillRect(hx + o.head * 0.25, hy - o.head * 0.3, 2.4, 2.4);
     g.restore();
   }
+  let curFoeLook = null;   // the look of the player being fought, set just before drawing the foe
   function foeFig(g, kind, lunge, glowT, pose) {
     const humanoid = (o) => { o.lunge = lunge; if (pose) { o.aim = pose.aim; o.back = pose.back; o.hunch = (o.hunch || 0) + pose.lean; o.draw = pose.draw; if (pose.wt) o.wt = pose.wt; } return person(g, o); };
     if (typeof SOLART !== "undefined" && SOLART.foeFig(g, kind, lunge, glowT, { humanoid, quad: (o) => quad(g, { lunge, ...o }), SKIN })) return;
     switch (kind) {
+      case "player": return humanoid({ ...matePerson(curFoeLook) });
       case "bandit": return humanoid({ skin: SKIN.imperial, body: P.leather, head: "hood", hoodColor: "#5a4836", wt: "axe", shield: false });
       case "forsworn": return humanoid({ skin: SKIN.breton, body: "#7a5a3a", head: "feathers", wt: "sword", cape: "#5f6a48" });
       case "draugr": return humanoid({ skin: "#6a7f78", body: "#4a5550", head: "horned", helmColor: "#5a5a50", wt: "battleaxe", eyes: "#9fd0f0", armC: "#6a7f78" });
@@ -267,7 +270,7 @@ const FIGHTART = (() => {
       default: return humanoid({ skin: SKIN.imperial, body: P.leather, head: "hair", wt: "sword" });
     }
   }
-  const PERSON = new Set(["bandit", "forsworn", "draugr", "skeleton", "vampire", "mage", "hagraven", "falmer", "lich", "troll", "giant", "sphere", "centurion"]);
+  const PERSON = new Set(["player", "bandit", "forsworn", "draugr", "skeleton", "vampire", "mage", "hagraven", "falmer", "lich", "troll", "giant", "sphere", "centurion"]);
   const TWO_HANDED = new Set(["bow", "crossbow", "greatsword", "battleaxe", "warhammer", "staff"]);
   function heroFig(g, h, lunge, glowT, pose) {
     if (h.lord && typeof BEASTART !== "undefined") return BEASTART.lord(g, { lunge, t: glowT });
@@ -586,7 +589,7 @@ const FIGHTART = (() => {
     if (IDS.has(f)) return IDS.get(f);
     const id = nextId++; IDS.set(f, id);
     const arena = !!f.arena || !f.e && f.log && f.log.length && /hits for/.test(f.log[0].them || "");
-    REG.set(id, { f, scene: arena ? "arena" : sceneOf(s), hero: { ...heroOf(s, f), bound: false }, foe: arena ? "bandit" : foeOf(f.e), wagon: f.e?.cart ? "cart" : f.e?.caravan ? (f.e.khajiit ? "khajiit" : "nord") : null, foeName: f.e?.name || f.foeName || (arena && (f.log[0].them.match(/^(.+?) hits for/) || [])[1]) || "Opponent", played: !!f.tbPlayed });   // a turn-based fight was already watched live
+    REG.set(id, { f, scene: arena ? "arena" : sceneOf(s), hero: { ...heroOf(s, f), bound: false }, foe: f.e?.look || f.foeLook ? "player" : arena ? "bandit" : foeOf(f.e), foeLook: f.e?.look || f.foeLook || null, wagon: f.e?.cart ? "cart" : f.e?.caravan ? (f.e.khajiit ? "khajiit" : "nord") : null, foeName: f.e?.name || f.foeName || (arena && (f.log[0].them.match(/^(.+?) hits for/) || [])[1]) || "Opponent", played: !!f.tbPlayed });   // a turn-based fight was already watched live
     { const rec = REG.get(id), outdoor = !["cave", "dwemer"].includes(rec.scene) && !s?.dungeon; if (outdoor && typeof SKY !== "undefined" && s) rec.sky = SKY.state([s.x, s.y]); }   // the sky over this fight
     { const rec = REG.get(id); if (f.mount && !f.mount.foot && typeof HORSEBACK !== "undefined") rec.horse = typeof HORSES !== "undefined" && s?.horse ? HORSES.coat(s.horse.coat)[2] : "#6b4a2e"; }   // [OURS] fighting from the saddle
     if (REG.size > 40) REG.delete(REG.keys().next().value);
@@ -978,7 +981,8 @@ const FIGHTART = (() => {
         else { const dr = foeK === "dragon"; wg.translate(0, (dr ? -10 : -6) * fallE); wg.scale(1, 1 - (1 - (dr ? 0.45 : -0.9)) * fallE); wg.translate(0, (dr ? 0 : 12) * fallE); }   // beasts roll over, dragons slump
       }
       const lunge = !isPerson ? foeP.draw : ["skeleton", "sphere", "centurion"].includes(foeK) ? Math.max(0, Math.min(1, (foeP.aim + 0.5) / 1.4)) : 0;
-      const foePic = typeof ASSETS !== "undefined" ? ASSETS.img(ASSETS.foeKey(rec.foeName, foeK)) : null;
+      curFoeLook = rec.foeLook;
+      const foePic = foeK !== "player" && typeof ASSETS !== "undefined" ? ASSETS.img(ASSETS.foeKey(rec.foeName, foeK)) : null;
       if (foePic) {   // a painted foe: stands on the ground line, breathes, leans into its attacks
         const hU = (foeK === "dragon" ? 120 : 66) * Math.min(1.8, fSize), wU = hU * foePic.naturalWidth / foePic.naturalHeight;
         const breathe = 1 + Math.sin(tt * 2.2) * 0.012;

@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b115", build: 115, date: "23 Nov 2026", title: "Fighting other players", items: [
+      "When you fight another player, they now stand across from you as themselves: their race, armour, helmet, weapon and shield. Same in Arena duels.",
+      "Another player fights with their real health in the fight screen, not the extra health monsters get.",
+      "Dying to another player is different now: only what you were wearing and holding drops (plus 1% of your gold). You keep the rest of your gold and your backpack, and wake up without your gear.",
+      "After a player kills you, choose which temple you wake up in: any city or town you've found.",
+    ] },
     { id: "b114", build: 114, date: "23 Nov 2026", title: "Respec", items: [
       "New on the Character screen: Respec. For 10,000 gold every perk you took and every Health, Magicka or Stamina choice goes back to the pool, so you can build your hero again. Your skills and level stay. It asks once more before it takes the gold.",
     ] },
