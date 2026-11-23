@@ -1154,7 +1154,7 @@
       <div class="seg"><button class="${shopMode === "buy" ? "on" : ""}" data-act="smode" data-id="buy">Buy</button><button class="${shopMode === "sell" ? "on" : ""}" data-act="smode" data-id="sell">Sell</button></div>${typeof INVQOL !== "undefined" ? INVQOL.shopHTML(S, shop, open && !wanted) : ""}`;
     const mk = typeof ECON !== "undefined" ? ECON.report(S, S.location) : "";
     if (shopMode === "buy") {
-      const stock = typeof TOMES !== "undefined" ? TOMES.stockAt(S.location, shop, S) : D.SHOP_STOCK[shop] || [], cs = catStrip(shopCat, "shopcat", stock);
+      const stock0 = typeof TOMES !== "undefined" ? TOMES.stockAt(S.location, shop, S) : D.SHOP_STOCK[shop] || [], stock = typeof SHOPCAP !== "undefined" ? SHOPCAP.filter(stock0) : stock0, cs = catStrip(shopCat, "shopcat", stock);
       return head + cs.bar + mk + (typeof SPELLBOOK !== "undefined" ? SPELLBOOK.shopNote(S, S.location, shop) + (shop === "wizard" ? SPELLBOOK.ritualHTML(S) : "") : "") + stock.filter(cs.ok).map((i) => shopRow(i)).join("");
     }
     const eq = new Set(Object.values(G.loadout(S).equipment || {}));

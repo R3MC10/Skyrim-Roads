@@ -66,7 +66,7 @@ const ROAD_EVENTS = (() => {
       } },
 
     { id: "caravan", weight: 2,
-      make: () => ({ stock: [...new Set([pick(D.SHOP_STOCK.general), pick(D.SHOP_STOCK.general), pick(D.SHOP_STOCK.wizard), pick(D.SHOP_STOCK.wizard), "potion_health", "potion_health_minor", pick(["iron_sword_flames", "steel_sword_frost", "hunting_bow_shocks", "soul_gem_common"])])],
+      make: () => ({ stock: [...new Set([pick(D.SHOP_STOCK.general), pick(D.SHOP_STOCK.general), pick(D.SHOP_STOCK.wizard), pick(D.SHOP_STOCK.wizard), "potion_health", "potion_health_minor", pick(["iron_sword_flames", "steel_sword_frost", "hunting_bow_shocks", "soul_gem_common"])])].filter((i) => typeof SHOPCAP === "undefined" || SHOPCAP.ok(i)),
         text: "A Khajiit caravan rests by the road, pack guar snorting. \"Khajiit has wares, if you have coin.\"" }),
       choices: () => [["trade", "Trade"], ["leave", "Keep walking"]],
       trade: (s, e) => ({ text: "The caravan leader spreads out a rug of goods.", shop: e.stock, keep: true }) },
@@ -150,7 +150,7 @@ const ROAD_EVENTS = (() => {
       } },
 
     { id: "peddler", weight: 1,
-      make: () => { const item = pick(["tome_firebolt", "tome_fast_healing", "tome_oakflesh", "soul_gem_common", "steel_sword_frost", "scroll_fireball"]); return { item, price: Math.round(D.ITEMS[item].value * 0.9), text: `A hooded peddler steps out from behind a rock. "Psst. ${D.ITEMS[item].name}, cheap. ${Math.round(D.ITEMS[item].value * 0.9)} gold, no questions."` }; },
+      make: () => { const item = pick(["tome_firebolt", "tome_fast_healing", "tome_oakflesh", "soul_gem_common", "steel_sword_frost", "scroll_fireball"].filter((i) => typeof SHOPCAP === "undefined" || SHOPCAP.ok(i))); return { item, price: Math.round(D.ITEMS[item].value * 0.9), text: `A hooded peddler steps out from behind a rock. "Psst. ${D.ITEMS[item].name}, cheap. ${Math.round(D.ITEMS[item].value * 0.9)} gold, no questions."` }; },
       choices: (e) => [["buy", `Buy it (${e.price} gold)`], ["leave", "No thanks"]],
       buy: (s, e) => { if (s.gold < e.price) return { text: "You can't afford it.", keep: true }; s.gold -= e.price; G.give(s, e.item); return { text: `You hand over the coin and take the ${D.ITEMS[e.item].name}.`, skills: xp(s, "Mercantile", e.price) }; } },
   ];

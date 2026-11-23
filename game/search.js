@@ -400,7 +400,7 @@ const SEARCH = (() => {
   const goBtn = (label, how, val, pri) => `<button class="btn ${pri ? "pri" : ""}" data-sr="go" data-how="${how}" data-v="${esc(val)}">${label}</button>`;
   function whereItem(S, id) {
     const it = D.ITEMS[id], out = [];
-    const shops = Object.entries(D.SHOP_STOCK || {}).filter(([, l]) => l.includes(id)).map(([t]) => SHOP_NAME[t] || t);
+    const shops = Object.entries(D.SHOP_STOCK || {}).filter(([, l]) => l.includes(id) && (typeof SHOPCAP === "undefined" || SHOPCAP.ok(id))).map(([t]) => SHOP_NAME[t] || t);
     if (shops.length) out.push(`Sold by ${shops.join(" and ")}.`);
     if (has("SMITH") && SMITH.RECIPES[id]) out.push("You can make it at a forge (see the recipe below).");
     if (/^dish_/.test(id)) out.push("Cooked at an inn's pot or your own campfire.");

@@ -174,7 +174,7 @@ const CARAVANS = (() => {
   const KHAJIIT_GOODS = ["gem_amethyst", "gem_garnet", "gem_ruby", "gem_flawless_amethyst", "silver_ring", "gold_ring", "silver_necklace", "soul_gem_common", "potion_health", "potion_magicka", "mat_moonstone", "ore_moonstone", "pelt_sabre"];
   const NORD_GOODS = ["mat_iron", "mat_steel", "mat_leather", "mat_strips", "ore_iron", "ore_corundum", "pelt_bear", "pelt_wolf", "potion_health_minor", "potion_stamina", "food_cabbage", "mat_firewood"];
   function stock(c) {
-    const pool = (c.line.khajiit ? KHAJIIT_GOODS : NORD_GOODS).filter((i) => D.ITEMS[i]), r = seeded(c.id + "goods"), out = new Set();
+    const pool = (c.line.khajiit ? KHAJIIT_GOODS : NORD_GOODS).filter((i) => D.ITEMS[i] && (typeof SHOPCAP === "undefined" || SHOPCAP.ok(i))), r = seeded(c.id + "goods"), out = new Set();
     for (let i = 0; i < 12 && out.size < 5; i++) out.add(pool[Math.floor(r() * pool.length)]);
     return [...out];
   }
