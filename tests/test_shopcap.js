@@ -23,7 +23,7 @@ ok(SHOPCAP.ok("steel_sword_frost") && SHOPCAP.ok("potion_health") && SHOPCAP.ok(
 ok(!SHOPCAP.ok("ench|steel_helmet|health|40|0"), "a strong enchantment can't be bought");
 // buying something above the cap is refused, even if asked for directly
 { const s = c.make("warrior", 20); s.location = "Whiterun"; s.gold = 99999; const t = G.now ? G.now() : 0;
-  const day = (h) => { const base = 1795132800; for (let x = t; x < t + 86400; x += 300) { if (G.clock(x).hour === h) return x; } return t; };
+  const day = (h) => { const base = 1795132800; for (let x = t; x < t + 86400; x += 300) { if (Math.floor(G.clock(x).hour) === h) return x; } return t; };
   const r = G.buy(s, "elven_sword", 1, day(12)); ok(/basic gear/.test(r) && s.gold === 99999, "a shop won't sell an elven sword: " + r);
   const r2 = G.buy(s, "gold_diamond_ring", 1, day(12)); ok(/plain silver and gold/.test(r2), "or a diamond ring: " + r2);
   const r3 = G.buyFrom(s, "elven_bow"); ok(/basic gear/.test(r3), "roadside traders follow the same rule"); }

@@ -246,7 +246,7 @@ const G = (() => {
   const riding = (s) => (typeof HORSES !== "undefined" ? HORSES.riding(s) : !!s.horse);
   const withHorse = (s) => (typeof HORSES !== "undefined" ? HORSES.present(s) : !!s.horse);
   const capacity = (s) => F.BASE_CARRY + Math.floor(s.spBonus / F.ATTRIBUTE_PER_LEVEL) * F.CARRY_PER_STAMINA_LEVEL
-    + (withHorse(s) ? D.HORSE_CARRY : 0) + (P(s, "extra_pockets") ? 100 : 0) + fxSum(s, "carry") + (typeof PFX !== "undefined" ? PFX.num(s, "carry") : 0) + (s.stone === "steed" ? 100 : 0) + (s.follower ? 100 : 0)   // [OURS] a follower carries 100 for you
+    + (withHorse(s) ? (typeof HORSES !== "undefined" ? HORSES.carry(s) : D.HORSE_CARRY) : 0) + (P(s, "extra_pockets") ? 100 : 0) + fxSum(s, "carry") + (typeof PFX !== "undefined" ? PFX.num(s, "carry") : 0) + (s.stone === "steed" ? 100 : 0) + (s.follower ? 100 : 0)   // [OURS] a follower carries 100 for you
     + (typeof HALL !== "undefined" ? HALL.carryBonus() : 0)   // [OURS] Jarl's Keep tier of the shared hall
     + (typeof CARAVANS !== "undefined" ? CARAVANS.cartCarry(s) : 0);   // [OURS] a cart behind your horse
   const overweight = (s) => carried(s) > capacity(s);
@@ -704,8 +704,8 @@ const G = (() => {
         if (this.pendingEl) { const [el, a, src] = this.pendingEl; this.pendingEl = null; label += PFX.hitFoe(this, el, a, src); }
       }
       let offTxt = "";
-      if (this.off && this.ehp > 0 && !ammoK && !this.bound) {   // [OURS] dual wielding: your left hand follows up (half a blow, more on a power attack)
-        let d2 = F.weaponDamage(this.off.damage + this.offTemper, skill(s, "One-Handed"), false) * rnd(...F.DAMAGE_SPREAD) * (power ? 0.5 : 0.3)
+      if (this.off && this.ehp > 0 && !ammoK && !this.bound) {   // [OURS] dual wielding: your left hand follows up (about a fifth of a blow, more on a power attack; tuned with test_dual)
+        let d2 = F.weaponDamage(this.off.damage + this.offTemper, skill(s, "One-Handed"), false) * rnd(...F.DAMAGE_SPREAD) * (power ? 0.42 : 0.22)
           * (1 + 0.2 * P(s, "armsman")) * (1 + (typeof PFX !== "undefined" ? PFX.num(s, "offhand") : 0)) * (1 + fxSum(s, "dmg:One-Handed") / 100);
         if (this.e.red) d2 *= 1 - this.e.red;
         if (this.fp) d2 *= this.fp.taken;
@@ -1094,7 +1094,7 @@ const G = (() => {
     if (c > cap && P(s, "marathon")) v = (v + F.travelSpeed(BASE_WALK, skill(s, "Athletics"), cap, cap)) / 2;
     v *= 1 + 0.05 * P(s, "long_strider") + (typeof PFX !== "undefined" ? Math.min(0.15, PFX.num(s, "travel")) : 0);   // Fleet Foot, Trailblazer...
     if (typeof WEVENTS !== "undefined") { const wf = WEVENTS.weather([s.x, s.y]).speed; v *= wf < 1 && fxSum(s, "warmth") > 0 ? (1 + wf) / 2 : wf; if (typeof WFX !== "undefined") v *= WFX.speedMult(s); }   // [OURS] snow and storms slow you down; hot soup halves that
-    if (riding(s)) v *= D.HORSE_SPEED;
+    if (riding(s)) v *= typeof HORSES !== "undefined" ? HORSES.speed(s) : D.HORSE_SPEED;   // breed, roll and horseshoes
     if (typeof CARAVANS !== "undefined") v *= CARAVANS.cartSpeed(s);   // [OURS] a loaded cart is a little slower
     if (typeof SNEAKMODE !== "undefined") v *= SNEAKMODE.speedMult(s);   // sneaking on the road is slower (sneakmode.js)
     return v;
