@@ -150,10 +150,10 @@ const SOL = (() => {
   const STALHRIM_MINES = ["Kolbjorn Barrow", "Benkongerike"];
   const TECH_SKILL = 40;   // [OURS] Baldor's "Ancient Technique" needs Smithing 40
   const knowsTechnique = (s) => !!s.solStalhrim;
-  const mine0 = SMITH.mine;
-  SMITH.mine = (s, place = s.location, t) => {
+  const block0 = SMITH.mineBlock;
+  SMITH.mineBlock = (s, place = s.location, t) => {
     if (STALHRIM_MINES.includes(place) && !knowsTechnique(s)) return `The stalhrim won't even chip under an ordinary pick. Baldor Iron-Shaper in Skaal Village knows the Skaal's old way (Smithing ${TECH_SKILL}).`;
-    return mine0(s, place, t);
+    return block0(s, place, t);
   };
   function learnTechnique(s) {
     if (s.location !== "Skaal Village") return "Baldor works at the forge in Skaal Village.";

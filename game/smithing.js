@@ -138,19 +138,35 @@ const SMITH = (() => {
   };
   const VEIN_RENEW = 24 * 3600 / G.GAME_SPEED;     // the veins grow back after one in-game day (2 real hours)
   const mineLeft = (s, place, t = G.now()) => Math.max(0, ((s.mined || {})[place] || 0) + VEIN_RENEW - t);
-  function mine(s, place = s.location, t = G.now()) {
-    const m = MINES[place];
-    if (!m || s.trip) return "There are no ore veins here.";
+  /* why you can't mine here right now ("" = you can). Solstheim adds the stalhrim rule on top. */
+  function mineBlock(s, place = s.location, t = G.now()) {
+    if (!MINES[place] || s.trip) return "There are no ore veins here.";
     if (!count(s, "pickaxe")) return "You need a pickaxe. Blacksmiths and general stores sell them for a few coins.";
     if (mineLeft(s, place, t) > 0) return "You've mined the veins here bare. They grow back in a day.";
-    const bag = m[1].flatMap(([o, w]) => Array(w).fill(o)), got = {};
-    const n = 3 + Math.floor(Math.random() * 3) + (G.skill(s, "Smithing") >= 50 ? 1 : 0);
-    for (let i = 0; i < n; i++) { const o = bag[Math.floor(Math.random() * bag.length)]; got[o] = (got[o] || 0) + 1; }
-    if (Math.random() < 0.15) { const g = "gem_" + ["garnet", "garnet", "amethyst", "amethyst", "ruby", "sapphire"][Math.floor(Math.random() * 6)]; got[g] = (got[g] || 0) + 1; }
+    return "";
+  }
+  const GEM_BAG = ["garnet", "garnet", "amethyst", "amethyst", "ruby", "sapphire"];
+  const oreBag = (place) => (MINES[place]?.[1] || []).flatMap(([o, w]) => Array(w).fill(o));
+  /* how many ore pieces a mine trip finds: 3-5, one more at Smithing 50 */
+  const oreCount = (s, rnd = Math.random) => 3 + Math.floor(rnd() * 3) + (G.skill(s, "Smithing") >= 50 ? 1 : 0);
+  /* a quick dig: what the veins give without the mini-game */
+  function mineRoll(s, place, rnd = Math.random) {
+    const bag = oreBag(place), got = {}, n = oreCount(s, rnd);
+    for (let i = 0; i < n; i++) { const o = bag[Math.floor(rnd() * bag.length)]; got[o] = (got[o] || 0) + 1; }
+    if (rnd() < 0.15) { const g = "gem_" + GEM_BAG[Math.floor(rnd() * GEM_BAG.length)]; got[g] = (got[g] || 0) + 1; }
+    return got;
+  }
+  /* mine the veins: got = what the mini-game dug out (minegame.js), or a quick dig when left out */
+  function mine(s, place = s.location, t = G.now(), got = null) {
+    const no = api.mineBlock(s, place, t); if (no) return no;
+    const m = MINES[place];
+    got = got || mineRoll(s, place);
+    if (!Object.keys(got).length) { s.mined = { ...(s.mined || {}), [place]: t }; return `⛏ You chip at the rock in ${m[0]} but bring nothing out. The veins need a day to settle.`; }
     for (const [o, k] of Object.entries(got)) G.give(s, o, k);
     s.mined = { ...(s.mined || {}), [place]: t };
     return `⛏ You work the veins in ${m[0]}: ${Object.entries(got).map(([o, k]) => `${k} ${D.ITEMS[o].name}`).join(", ")}.`;
   }
   const byGroup = (g) => Object.keys(RECIPES).filter((id) => RECIPES[id].group === g).sort((a, b) => D.ITEMS[a].value - D.ITEMS[b].value);
-  return { use, MINES, VEIN_RENEW, mineLeft, mine, GROUPS, RECIPES, REFINE, GEMS, PERK_FOR, info, make, refineInfo, refine, byGroup, peltFor, atForge, count, matText, xpFor };
+  const api = { use, MINES, VEIN_RENEW, mineLeft, mine, mineBlock, mineRoll, oreBag, oreCount, GEM_BAG, GROUPS, RECIPES, REFINE, GEMS, PERK_FOR, info, make, refineInfo, refine, byGroup, peltFor, atForge, count, matText, xpFor };
+  return api;
 })();

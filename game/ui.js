@@ -3646,7 +3646,10 @@
       case "ftrade": { const c = friendCard(b.dataset.id); if (c) { tradeSel = []; openTrade(c); } break; }
       case "craftgo": { const r = SPELLCRAFT.craft(S, craftChoices(), craftDraft.name); if (r.err) return toast(r.err); craftDraft = { a: "", am: 0, b: "", bm: 0, name: "" }; SOUND.fx("coin"); persist(true); say(r.text); renderPanel(true); break; }
       case "craftdel": say(SPELLCRAFT.forget(S, b.dataset.id)); persist(true); renderPanel(true); break;
-      case "mine": { const m = SMITH.mine(S); if (m.startsWith("⛏")) { SOUND.fx("clang"); persist(true); } say(m); renderPanel(true); break; }
+      case "mine": {
+        const no = SMITH.mineBlock(S); if (no) { say(no); break; }
+        const at = S.location, go = (got) => { if (got === "cancel" || S.location !== at) return; const m = SMITH.mine(S, at, G.now(), got); if (m.startsWith("⛏")) { SOUND.fx("clang"); persist(true); } say(m); renderPanel(true); };
+        if (typeof MINEGAME !== "undefined") MINEGAME.play(S, at, go); else go(null); break; }
       case "ftab": forgeTab = b.dataset.id; renderPanel(true); break;
       case "fgroup": forgeGroup = b.dataset.id; renderPanel(true); break;
       case "smake": { const id = b.dataset.id, inf = SMITH.atForge(S) && SMITH.info(S, id);
