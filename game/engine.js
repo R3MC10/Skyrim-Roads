@@ -704,8 +704,8 @@ const G = (() => {
         if (this.pendingEl) { const [el, a, src] = this.pendingEl; this.pendingEl = null; label += PFX.hitFoe(this, el, a, src); }
       }
       let offTxt = "";
-      if (this.off && this.ehp > 0 && !ammoK && !this.bound) {   // [OURS] dual wielding: your left hand follows up (half a blow, more on a power attack)
-        let d2 = F.weaponDamage(this.off.damage + this.offTemper, skill(s, "One-Handed"), false) * rnd(...F.DAMAGE_SPREAD) * (power ? 0.5 : 0.3)
+      if (this.off && this.ehp > 0 && !ammoK && !this.bound) {   // [OURS] dual wielding: your left hand follows up (about a fifth of a blow, more on a power attack; tuned with test_dual)
+        let d2 = F.weaponDamage(this.off.damage + this.offTemper, skill(s, "One-Handed"), false) * rnd(...F.DAMAGE_SPREAD) * (power ? 0.42 : 0.22)
           * (1 + 0.2 * P(s, "armsman")) * (1 + (typeof PFX !== "undefined" ? PFX.num(s, "offhand") : 0)) * (1 + fxSum(s, "dmg:One-Handed") / 100);
         if (this.e.red) d2 *= 1 - this.e.red;
         if (this.fp) d2 *= this.fp.taken;
