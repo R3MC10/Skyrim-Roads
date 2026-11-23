@@ -778,7 +778,7 @@ html.art-pixel .top .lvlb,html.art-pixel .top .iconbtn,html.art-pixel .mapbtns .
 .sky-search{margin:4px 0 6px!important;background:rgba(0,0,0,.4);border:1px solid var(--sk-line,#555);color:#ece8de;min-height:40px;padding:0 10px}
 .top .iconbtn{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:2px 0 3px}
 .top .iconbtn>svg,.top .iconbtn>span:not(.dot){width:20px;height:20px;font-size:17px;line-height:1}
-.top .iconbtn .ibl{font-size:9px;line-height:1;letter-spacing:.04em;color:#bdb7a9;white-space:nowrap;pointer-events:none}
+.top .iconbtn .ibl{font-size:10px;line-height:1;letter-spacing:.04em;color:#bdb7a9;white-space:nowrap;pointer-events:none}
 /* ---- Tab compass menu (tabmenu.js) */
 .tw{position:fixed;inset:0;z-index:8;overflow:hidden;color:var(--sk-ink);touch-action:none;user-select:none;-webkit-user-select:none;animation:twin .22s ease-out;display:flex;flex-direction:column;align-items:center}
 @keyframes twin{from{opacity:0;transform:scale(1.03)}to{opacity:1;transform:none}}
@@ -1695,6 +1695,17 @@ body:has(#favBtn) .app,body:has(#twBtn) .app{padding-bottom:calc(190px + env(saf
 .tbstage.perfect::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 70% 45%,rgba(255,230,150,.55),transparent 60%);animation:tbflash .6s ease-out both}
 @keyframes tbflash{from{opacity:1}to{opacity:0}}
 @media (prefers-reduced-motion:reduce){.tbspend,.tbtime,.tbtime svg,.tbstage.perfect::after{animation-duration:.01s}}
+/* fit every screen (visual overhaul pass 1) */
+@media (max-width:380px){.sky-pages{gap:2px;min-width:0}.sky-page{font-size:13px;letter-spacing:.06em;padding:8px 4px;min-width:0}}
+@media (orientation:landscape) and (max-height:520px){
+  .tw-rose{width:min(92vw,140vh,620px);aspect-ratio:auto;height:min(62vh,300px);margin:auto 0 2px}
+  .tw-rosesvg{width:auto;height:100%}
+  .tw-left{left:4%}.tw-right{right:4%}
+  .tw-dir{min-width:110px}
+}
+.ibl{font-size:10px}
+.sb-tier{min-height:32px;padding:7px 10px}
+.mn-bar .tab .mn-l{font-size:max(10.5px,1em)}
 </style>
 <script src="access.js"></script>
 </head>
