@@ -1706,6 +1706,11 @@ body:has(#favBtn) .app,body:has(#twBtn) .app{padding-bottom:calc(190px + env(saf
 .ibl{font-size:10px}
 .sb-tier{min-height:32px;padding:7px 10px}
 .mn-bar .tab .mn-l{font-size:max(10.5px,1em)}
+/* ward shield bar on your fight frame */
+#tbf .tbward{position:relative;height:14px;margin-top:3px;border-radius:7px;background:rgba(80,160,220,.14);border:1px solid rgba(140,200,255,.45);overflow:hidden;box-shadow:0 0 8px rgba(120,190,255,.35)}
+#tbf .tbward i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,rgba(120,190,255,.55),rgba(190,230,255,.85));transition:width .45s ease;animation:tbwardpulse 2.4s ease-in-out infinite}
+#tbf .tbward span{position:relative;display:block;font-size:10.5px;line-height:13px;text-align:center;color:#eaf6ff;text-shadow:0 1px 2px #000}
+@keyframes tbwardpulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.25)}}
 </style>
 <script src="access.js"></script>
 </head>
