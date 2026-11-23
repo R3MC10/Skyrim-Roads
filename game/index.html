@@ -1751,6 +1751,38 @@ body:has(#favBtn) .app,body:has(#twBtn) .app{padding-bottom:calc(190px + env(saf
 html.art-pixel .mgc,html.art-pixel .mgmeter,html.art-pixel .mgwall{border-radius:0}
 html.art-pixel .mgc .mgo{border-radius:0;image-rendering:pixelated}
 @media (prefers-reduced-motion:reduce){.mgc.glint::after,.mgc.shake,.mgtag,.mgchip,.mgc .mgo{animation:none}}
+/* [fightread] fightread.js: foe intents, what's coming off each health bar, your own statuses, round banners, low health */
+.tbbar s.tbfc{position:absolute;top:0;bottom:0;text-decoration:none;pointer-events:none;background:repeating-linear-gradient(135deg,rgba(255,255,255,.55) 0 3px,rgba(255,255,255,.08) 3px 6px);box-shadow:inset 0 0 0 1px rgba(255,255,255,.35);animation:tbfc 1.4s ease-in-out infinite}
+.tbbar s.tbfc.dot{background:repeating-linear-gradient(135deg,var(--el-poison,#8fdc5a) 0 3px,rgba(0,0,0,.25) 3px 6px);opacity:.85}
+.tbbar s.tbfc.gain{background:repeating-linear-gradient(135deg,var(--el-heal,#7fe08a) 0 3px,transparent 3px 6px);animation:none;opacity:.75}
+@keyframes tbfc{50%{opacity:.55}}
+.tbfcl{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:4px;font-size:11px;line-height:1.2}
+.tbfcl .fp{padding:1px 6px;border-radius:7px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.12);color:#ffd2c8;font-variant-numeric:tabular-nums}
+.tbfcl .fp.poison{color:var(--el-poison,#a6ec7a);border-color:rgba(140,220,90,.4)}.tbfcl .fp.burn,.tbfcl .fp.cloak{color:var(--ember,#ffb070);border-color:rgba(255,150,70,.4)}
+.tbfcl .fp.bleed{color:#ff8a8a}.tbfcl .fp.heal{color:var(--el-heal,#8ff0a0);border-color:rgba(120,230,140,.4)}
+.tbfcl b{margin-left:auto;font-size:11px;color:#ffb4a4}
+.tbst.mine{flex-wrap:wrap}.tbst .st.me{display:inline-flex;align-items:center;gap:3px;border:1px solid rgba(255,255,255,.14)}
+.tbst .st.me small{opacity:.7;font-size:10px}
+.tbst .st.me.poison{color:var(--el-poison,#a6ec7a);border-color:rgba(140,220,90,.45)}.tbst .st.me.burn{color:var(--ember,#ffb070);border-color:rgba(255,150,70,.45)}
+.tbst .st.me.bleed{color:#ff8a8a}.tbst .st.me.chill{color:var(--el-frost,#bfe6ff)}.tbst .st.me.shock{color:#d4c4ff}.tbst .st.me.heal{color:var(--el-heal,#8ff0a0)}.tbst .st.me.guard{color:#dfe6f0}
+.tbints{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:5px}.tbints>small{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#a89c84;margin-right:2px}
+.tbint{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:8px;font-size:12px;background:rgba(0,0,0,.5);border:1px solid rgba(255,120,100,.35);color:#ffd8cc;white-space:nowrap}
+.tbint b{font-variant-numeric:tabular-nums}.tbint b.w{font-weight:600;font-size:11px}.tbint em{font-style:normal;font-size:10px;color:var(--el-poison,#a6ec7a)}
+.tbint.big{border-color:#ff5a3a;color:#fff;background:rgba(150,24,10,.7);box-shadow:0 0 10px rgba(255,80,40,.5);animation:tbintp 1s ease-in-out infinite}
+.tbint.tele{border-color:#ffb040;color:#ffe0a0}.tbint.heal{border-color:rgba(120,230,140,.5);color:var(--el-heal,#a8f0b0)}.tbint.buff{border-color:rgba(160,180,255,.45);color:#cfd8ff}.tbint.skip{opacity:.6;border-color:rgba(255,255,255,.2);color:#ccc}
+@keyframes tbintp{50%{box-shadow:0 0 18px rgba(255,80,40,.85)}}
+.tbbub{position:absolute;right:8%;top:10%;z-index:3;pointer-events:none;animation:tbbub 1.8s ease-in-out infinite}
+.tbbub .tbint{font-size:15px;padding:4px 10px;box-shadow:0 4px 12px rgba(0,0,0,.6)}
+.tbbub.big .tbint,.tbbub.tele .tbint{font-size:17px}
+@keyframes tbbub{50%{transform:translateY(-4px)}}
+.tbban.round,.tbban.foe{top:30%;font-size:24px;animation:tbban 1.5s ease forwards}.tbban.foe{color:#ff9a86}
+.tbban small{display:block;margin-top:6px;font-family:"Barlow Semi Condensed",sans-serif;font-size:14px;letter-spacing:.02em;color:#e9dcc0}
+.tbban small::before,.tbban small::after{display:none}.tbban small b.d{color:#ffd27a}.tbban small b.t{color:#ff8a78}.tbban small b.h{color:var(--el-heal,#8ff0a0)}
+.tbskip{margin-left:auto;padding:6px 12px;border-radius:8px;border:1px solid rgba(214,178,94,.45);background:rgba(0,0,0,.45);color:#f3d98b;font:600 13px "Barlow Semi Condensed",sans-serif;letter-spacing:.05em}
+#tbf.tblow::after{content:"";position:fixed;inset:0;z-index:40;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 50%,rgba(190,10,10,.42));box-shadow:inset 0 0 70px 12px rgba(200,10,10,.55);animation:tblow 1.3s ease-in-out infinite}
+@keyframes tblow{0%,100%{opacity:.6}15%{opacity:1}30%{opacity:.7}45%{opacity:.95}}
+html.art-pixel .tbint,html.art-pixel .tbfcl .fp,html.art-pixel .tbskip,html.art-pixel .tbst .st.me{border-radius:0}
+@media (prefers-reduced-motion:reduce){.tbbar s.tbfc,.tbint.big,.tbbub,.tbban.round,.tbban.foe{animation:none!important}#tbf.tblow::after{animation:none;opacity:.6}}
 </style>
 <script src="access.js"></script>
 </head>
@@ -1820,6 +1852,7 @@ html.art-pixel .mgc .mgo{border-radius:0;image-rendering:pixelated}
 <script src="shieldfx.js"></script>
 <script src="tbtips.js"></script>
 <script src="tbui.js"></script>
+<script src="fightread.js"></script>
 <script src="guide.js"></script>
 <script src="patchnotes.js"></script>
 <script src="market.js"></script>

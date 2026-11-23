@@ -143,17 +143,42 @@ const FOEKIT = (() => {
     }
     for (const id in k.cd) if (k.cd[id] > 0) k.cd[id]--;
     if (k.rage > 0) k.rage--;
+    const pl = k.plan && k.plan.length ? k.plan.shift() : null;   // what its intent said it would do (plan below)
     if (f.calmTurns > 0 || f.eParalyzed > 0 || f.stagger) { if (k.windup) { k.windup = null; return pre + enemyTurn() + " (the wind-up is lost)"; } return pre + enemyTurn(); }
     if (k.windup) {
       const w = WIND[k.windup]; k.windup = null;
       const r = hit(f, enemyTurn, w.mul);
       return pre + w.text(n, r.t);
     }
-    if (!k.ids.length || rnd() >= USE) { const r = hit(f, enemyTurn, 1, { keepName: true }); return pre + r.t; }
-    const id = pick(f, rnd);
+    if (pl && (pl.id === "blow" || pl.id === "land")) { const r = hit(f, enemyTurn, 1, { keepName: true }); return pre + r.t; }
+    if (!pl && (!k.ids.length || rnd() >= USE)) { const r = hit(f, enemyTurn, 1, { keepName: true }); return pre + r.t; }
+    const id = pl && ready(f).includes(pl.id) ? pl.id : pick(f, rnd);
     if (!id) { const r = hit(f, enemyTurn, 1, { keepName: true }); return pre + r.t; }
     const m = MOVES[id]; k.cd[id] = m.cd; k.used[id] = (k.used[id] || 0) + 1; f.kitLast = id;
     return pre + m.run(f, enemyTurn, n);
+  }
+  /* [OURS] intents (fightread.js shows them): decide now what its next `n` turns will be, so the screen can show it
+     before it happens. The same odds as rolling each turn; turn() follows the plan while the move is still possible
+     (a stun, a broken wind-up or a heal that's no longer needed falls back to a fresh roll). A new round re-plans. */
+  function plan(f, n, rnd = Math.random) {
+    if (!f || !f.kit) return [];
+    const k = f.kit, sim = { ...k, cd: { ...k.cd }, used: { ...k.used } }, out = [];
+    let wind = k.windup;
+    f.kit = sim;
+    try {
+      for (let i = 0; i < n; i++) {
+        for (const id in sim.cd) if (sim.cd[id] > 0) sim.cd[id]--;
+        if (wind) { out.push({ id: "land", wind }); wind = null; continue; }
+        if (!sim.ids.length || rnd() >= USE) { out.push({ id: "blow" }); continue; }
+        const id = pick(f, rnd);
+        if (!id) { out.push({ id: "blow" }); continue; }
+        sim.cd[id] = MOVES[id].cd; sim.used[id] = (sim.used[id] || 0) + 1;
+        if (id === "wind_up") wind = "smash"; else if (id === "take_aim") wind = "aimed";
+        out.push({ id });
+      }
+    } finally { f.kit = k; }
+    k.plan = out;
+    return out;
   }
   /* your blow just landed (f.ehp went down from `before`): its guard, ward or dodge softens it */
   function defend(f, a, before) {
@@ -176,11 +201,11 @@ const FOEKIT = (() => {
     if (k.ward > 0) out.push(["ward", "🔰" + k.ward, "Ward up: soaks damage from your spells."]);
     if (k.evade > 0) out.push(["evade", "👤", "In the shadows: your next blow may miss."]);
     if (k.rage > 0) out.push(["rage", "😡" + k.rage, "Enraged: hits 25% harder."]);
-    if (f.kitDot) out.push(["dot", "☠" + f.kitDot.turns, `You're ${f.kitDot.name === "burning" ? "burning" : f.kitDot.name === "bleeding" ? "bleeding" : "poisoned"}: ${Math.round(f.kitDot.dmg)} a turn.`]);
+    if (f.kitDot && typeof FIGHTREAD === "undefined") out.push(["dot", "☠" + f.kitDot.turns, `You're ${f.kitDot.name === "burning" ? "burning" : f.kitDot.name === "bleeding" ? "bleeding" : "poisoned"}: ${Math.round(f.kitDot.dmg)} a turn.`]);   // with fightread.js it sits on your own frame
     return out;
   }
   /* what it can do, for its tooltip */
   const names = (f) => (f.kit?.ids || []).map((id) => (id === "bolt" ? EL[elOf(f)].bolt : MOVES[id].label) + (id === "potion" ? ` ×${f.kit.pots}` : ""));
-  return { MOVES, WIND, USE, kitFor, potsFor, setup, pick, turn, defend, apLoss, chips, names, elOf };
+  return { MOVES, WIND, USE, kitFor, potsFor, setup, pick, plan, ready, turn, defend, apLoss, chips, names, elOf };
 })();
 if (typeof module !== "undefined") module.exports = FOEKIT;
