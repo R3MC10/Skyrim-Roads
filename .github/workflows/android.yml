@@ -48,6 +48,26 @@ jobs:
         run: |
           SHELL_V=$(grep -o 'int SHELL = [0-9]*' android/app/src/main/java/com/r3mc10/roadsofthenorth/UpdaterPlugin.java | grep -o '[0-9]*$')
           (cd www && zip -qr9 "../game-shell${SHELL_V}.zip" .)
+      - name: Pack small patches from the last few builds (only the files that changed)
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TO: ${{ github.run_number }}
+        run: |
+          SHELL_V=$(grep -o 'int SHELL = [0-9]*' android/app/src/main/java/com/r3mc10/roadsofthenorth/UpdaterPlugin.java | grep -o '[0-9]*$')
+          FULL=$(stat -c %s "game-shell${SHELL_V}.zip")
+          for tag in $(gh release list --limit 6 --json tagName -q '.[].tagName'); do
+            FROM=${tag#build-}
+            case "$FROM" in ''|*[!0-9]*) continue;; esac
+            [ "$FROM" -lt "$TO" ] || continue
+            gh release download "$tag" -p "game-shell${SHELL_V}.zip" -D "prev/$FROM" || continue
+            unzip -q "prev/$FROM/game-shell${SHELL_V}.zip" -d "prev/$FROM/game" || continue
+            node scripts/delta.mjs "prev/$FROM/game" www "$FROM" "$TO" "delta/$FROM" || continue
+            (cd "delta/$FROM" && zip -qr9 "../../game-shell${SHELL_V}-from${FROM}.zip" .)
+            SIZE=$(stat -c %s "game-shell${SHELL_V}-from${FROM}.zip")
+            # not worth it when most of the game changed
+            if [ $((SIZE * 10)) -ge $((FULL * 8)) ]; then rm "game-shell${SHELL_V}-from${FROM}.zip"; fi
+          done
           ls -la game-shell*.zip
       - name: Publish it as a download
         uses: softprops/action-gh-release@v2

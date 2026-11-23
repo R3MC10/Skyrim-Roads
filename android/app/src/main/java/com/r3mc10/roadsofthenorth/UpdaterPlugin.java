@@ -17,6 +17,10 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.AssetManager;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -25,6 +29,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
@@ -61,6 +66,7 @@ public class UpdaterPlugin extends Plugin {
         }
         ret.put("canInstall", canInstall());
         ret.put("shell", SHELL);
+        ret.put("delta", 1);   // this app can patch the game with only the files that changed (patchGame)
         call.resolve(ret);
     }
 
@@ -88,28 +94,8 @@ public class UpdaterPlugin extends Plugin {
                 fetch(url, expected, zip);
                 deleteTree(tmp);
                 tmp.mkdirs();
-                String base = tmp.getCanonicalPath() + File.separator;
-                try (ZipInputStream zin = new ZipInputStream(new FileInputStream(zip))) {
-                    ZipEntry e; byte[] buf = new byte[64 * 1024];
-                    while ((e = zin.getNextEntry()) != null) {
-                        File out = new File(tmp, e.getName());
-                        if (!out.getCanonicalPath().startsWith(base)) throw new Exception("Bad file in update");
-                        if (e.isDirectory()) { out.mkdirs(); continue; }
-                        out.getParentFile().mkdirs();
-                        try (OutputStream o = new FileOutputStream(out)) { int n; while ((n = zin.read(buf)) > 0) o.write(buf, 0, n); }
-                    }
-                }
-                if (!new File(tmp, "index.html").exists()) throw new Exception("Update is missing the game");
-                deleteTree(dest);
-                if (!tmp.renameTo(dest)) throw new Exception("Couldn't save the update");
-                zip.delete();
-                // tidy older unpacked builds, keeping the one in use
-                String inUse = getContext().getSharedPreferences(CAP_PREFS, Context.MODE_PRIVATE).getString(CAP_PATH, "");
-                File[] old = root.listFiles();
-                if (old != null) for (File f : old) if (!f.equals(dest) && !f.getAbsolutePath().equals(inUse)) deleteTree(f);
-                JSObject ret = new JSObject();
-                ret.put("path", dest.getAbsolutePath());
-                call.resolve(ret);
+                unzip(zip, tmp);
+                finishUnpack(zip, tmp, dest, root, call);
             } catch (Exception ex) {
                 deleteTree(tmp);
                 zip.delete();
@@ -118,6 +104,126 @@ public class UpdaterPlugin extends Plugin {
                 busy = false;
             }
         }).start();
+    }
+
+    /** a small update: game-delta-FROM.zip holds only the files that changed since build FROM, plus _delta.json
+        ({from, to, remove: [...]}). The game files in use (downloaded ones, or the ones inside the app) are copied,
+        the changed files are unpacked over them, removed ones deleted. Any mismatch fails, and the game then
+        downloads the whole thing instead. */
+    @PluginMethod
+    public void patchGame(PluginCall call) {
+        final String url = call.getString("url");
+        final long expected = call.getLong("size", 0L);
+        final long build = call.getLong("build", 0L), from = call.getLong("from", 0L);
+        if (url == null || !isAllowed(url) || build <= 0 || from <= 0) { call.reject("Not an update address"); return; }
+        if (busy) { call.reject("Already downloading"); return; }
+        busy = true;
+        new Thread(() -> {
+            File zip = new File(new File(getContext().getCacheDir(), "updates"), "delta.zip");
+            File root = new File(getContext().getFilesDir(), "ota");
+            File dest = new File(root, "build-" + build), tmp = new File(root, "build-" + build + ".part");
+            try {
+                // which game files are in use right now, and which build they are
+                PackageInfo pi = getContext().getPackageManager().getPackageInfo(getContext().getPackageName(), 0);
+                long code = Build.VERSION.SDK_INT >= 28 ? pi.getLongVersionCode() : pi.versionCode;
+                long game = getContext().getSharedPreferences(OTA_PREFS, Context.MODE_PRIVATE).getLong("gameBuild", 0L);
+                String path = getContext().getSharedPreferences(CAP_PREFS, Context.MODE_PRIVATE).getString(CAP_PATH, "");
+                File cur = path != null && !path.isEmpty() ? new File(path) : null;
+                boolean onGame = cur != null && new File(cur, "index.html").exists() && game > code;
+                long have = onGame ? game : code;
+                if (have != from) throw new Exception("This patch is for build " + from + ", the game is on " + have);
+                fetch(url, expected, zip);
+                deleteTree(tmp);
+                tmp.mkdirs();
+                if (onGame) copyTree(cur, tmp); else copyAssets(getContext().getAssets(), "public", tmp);
+                if (!new File(tmp, "index.html").exists()) throw new Exception("Couldn't copy the current game");
+                unzip(zip, tmp);
+                File meta = new File(tmp, "_delta.json");
+                if (!meta.exists()) throw new Exception("Patch is missing its list");
+                JSONObject j = new JSONObject(new String(readAll(meta), StandardCharsets.UTF_8));
+                if (j.optLong("from") != from || j.optLong("to") != build) throw new Exception("Patch doesn't match this build");
+                String base = tmp.getCanonicalPath() + File.separator;
+                JSONArray gone = j.optJSONArray("remove");
+                if (gone != null) for (int i = 0; i < gone.length(); i++) {
+                    File f = new File(tmp, gone.getString(i));
+                    if (!f.getCanonicalPath().startsWith(base)) throw new Exception("Bad file in update");
+                    f.delete();
+                }
+                meta.delete();
+                finishUnpack(zip, tmp, dest, root, call);
+            } catch (Exception ex) {
+                deleteTree(tmp);
+                zip.delete();
+                call.reject(ex.getMessage() == null ? "Patch failed" : ex.getMessage());
+            } finally {
+                busy = false;
+            }
+        }).start();
+    }
+
+    /** unpacks a zip into dir, refusing any file that would land outside it */
+    static void unzip(File zip, File dir) throws Exception {
+        String base = dir.getCanonicalPath() + File.separator;
+        try (ZipInputStream zin = new ZipInputStream(new FileInputStream(zip))) {
+            ZipEntry e; byte[] buf = new byte[64 * 1024];
+            while ((e = zin.getNextEntry()) != null) {
+                File out = new File(dir, e.getName());
+                if (!out.getCanonicalPath().startsWith(base)) throw new Exception("Bad file in update");
+                if (e.isDirectory()) { out.mkdirs(); continue; }
+                out.getParentFile().mkdirs();
+                try (OutputStream o = new FileOutputStream(out)) { int n; while ((n = zin.read(buf)) > 0) o.write(buf, 0, n); }
+            }
+        }
+    }
+
+    /** the unpacked game is complete: move it into place, tidy older builds, hand back its folder */
+    private void finishUnpack(File zip, File tmp, File dest, File root, PluginCall call) throws Exception {
+        if (!new File(tmp, "index.html").exists()) throw new Exception("Update is missing the game");
+        deleteTree(dest);
+        if (!tmp.renameTo(dest)) throw new Exception("Couldn't save the update");
+        zip.delete();
+        // tidy older unpacked builds, keeping the one in use
+        String inUse = getContext().getSharedPreferences(CAP_PREFS, Context.MODE_PRIVATE).getString(CAP_PATH, "");
+        File[] old = root.listFiles();
+        if (old != null) for (File f : old) if (!f.equals(dest) && !f.getAbsolutePath().equals(inUse)) deleteTree(f);
+        JSObject ret = new JSObject();
+        ret.put("path", dest.getAbsolutePath());
+        call.resolve(ret);
+    }
+
+    static void copyTree(File from, File to) throws Exception {
+        if (from.isDirectory()) {
+            to.mkdirs();
+            File[] kids = from.listFiles();
+            if (kids != null) for (File k : kids) copyTree(k, new File(to, k.getName()));
+            return;
+        }
+        try (InputStream in = new FileInputStream(from)) { copyStream(in, to); }
+    }
+
+    /** the game files packed inside the app (assets/public) */
+    static void copyAssets(AssetManager am, String path, File to) throws Exception {
+        String[] kids = am.list(path);
+        if (kids != null && kids.length > 0) {
+            to.mkdirs();
+            for (String k : kids) copyAssets(am, path + "/" + k, new File(to, k));
+            return;
+        }
+        try (InputStream in = am.open(path)) { copyStream(in, to); }
+        catch (java.io.FileNotFoundException e) { to.mkdirs(); }   // an empty folder
+    }
+
+    static void copyStream(InputStream in, File to) throws Exception {
+        to.getParentFile().mkdirs();
+        try (OutputStream o = new FileOutputStream(to)) { byte[] buf = new byte[64 * 1024]; int n; while ((n = in.read(buf)) > 0) o.write(buf, 0, n); }
+    }
+
+    static byte[] readAll(File f) throws Exception {
+        try (InputStream in = new FileInputStream(f)) {
+            java.io.ByteArrayOutputStream b = new java.io.ByteArrayOutputStream(); byte[] buf = new byte[16 * 1024]; int n;
+            while ((n = in.read(buf)) > 0) b.write(buf, 0, n);
+            return b.toByteArray();
+        }
     }
 
     /** switches the game to unpacked files; now=true reloads at once, otherwise next start */
