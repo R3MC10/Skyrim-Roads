@@ -29,7 +29,7 @@ function limiter(max, windowMs, clock) {
 class HttpError extends Error { constructor(status, code, message, extra = {}) { super(message); this.status = status; this.code = code; this.extra = extra; } }
 const fail = (status, code, message, extra) => { throw new HttpError(status, code, message, extra); };
 
-function createApp({ store, now = () => Date.now(), origins = null, trustProxy = true } = {}) {
+function createApp({ store, now = () => Date.now(), origins = null, trustProxy = true, events = null } = {}) {
   const loginByUser = limiter(10, 10 * 60e3, now), loginByIp = limiter(60, 10 * 60e3, now), registerByIp = limiter(20, 60 * 60e3, now);
   const allowed = origins && origins.length ? new Set(origins) : null;
 
@@ -66,7 +66,12 @@ function createApp({ store, now = () => Date.now(), origins = null, trustProxy =
   async function auth(req) {
     const m = /^Bearer\s+(\S+)$/i.exec(req.headers.authorization || "");
     if (!m) fail(401, "signed_out", "Please sign in.");
-    const s = await store.sessionByToken(A.tokenHash(m[1]));
+    return authToken(m[1]);
+  }
+  /* the same check for a bare token (the world connection, hub.js) */
+  async function authToken(token) {
+    if (!token) fail(401, "signed_out", "Please sign in.");
+    const s = await store.sessionByToken(A.tokenHash(token));
     if (!s) fail(401, "signed_out", "Please sign in.");
     if (s.revokedAt) {
       if (s.revokedBy) fail(401, "session_replaced", `You're now playing on ${s.revokedBy}.`, { by: s.revokedBy, at: s.revokedAt });
@@ -87,7 +92,8 @@ function createApp({ store, now = () => Date.now(), origins = null, trustProxy =
     if (elsewhere.length && !b.takeover) fail(409, "session_active", `You're playing on ${elsewhere[0].deviceName}.`, { device: elsewhere[0].deviceName, lastSeen: elsewhere[0].lastSeen });
     const token = A.newToken();
     const s = await store.createSession({ id: A.newId("ses"), accountId: a.id, tokenHash: A.tokenHash(token), ...d, now: t });
-    await store.revokeSessions(a.id, { exceptId: s.id, by: d.deviceName, now: t });   // same device's old session, or the one taken over
+    const gone = await store.revokeSessions(a.id, { exceptId: s.id, by: d.deviceName, now: t });   // same device's old session, or the one taken over
+    if (gone) events?.emit("revoked", { accountId: a.id, exceptSessionId: s.id, by: d.deviceName });   // its world connection closes too (hub.js)
     return { token, account: pubAccount(a), device: d.deviceName, took: elsewhere.length ? elsewhere[0].deviceName : null };
   }
   function checkCreds(b) {
@@ -116,7 +122,7 @@ function createApp({ store, now = () => Date.now(), origins = null, trustProxy =
       if (!(await A.checkPassword(password, a.passHash))) fail(401, "bad_login", "Wrong username or password.");
       return startSession(a, b);
     },
-    "POST /api/logout": async (req) => { const { session } = await auth(req); await store.revokeSession(session.id, { now: now() }); return { ok: true }; },
+    "POST /api/logout": async (req) => { const { session, account } = await auth(req); await store.revokeSession(session.id, { now: now() }); events?.emit("revoked", { accountId: account.id, exceptSessionId: null, by: null }); return { ok: true }; },
     "GET /api/session": async (req) => { const { session, account } = await auth(req); return { account: pubAccount(account), device: session.deviceName }; },
     "GET /api/characters": async (req) => { const { account } = await auth(req); return { characters: (await store.listCharacters(account.id)).map(({ accountId, deletedAt, ...c }) => c) }; },
   };
@@ -151,7 +157,7 @@ function createApp({ store, now = () => Date.now(), origins = null, trustProxy =
     fail(405, "bad_method", "Not allowed.");
   }
 
-  return async function handle(req, res) {
+  const handle = async function handle(req, res) {
     cors(req, res);
     if (req.method === "OPTIONS") { res.writeHead(204); return res.end(); }
     const path = (req.url || "/").split("?")[0].replace(/\/+$/, "") || "/";
@@ -168,5 +174,7 @@ function createApp({ store, now = () => Date.now(), origins = null, trustProxy =
       send(res, 500, { error: "server_error", message: "Something went wrong on the server." });
     }
   };
+  handle.authToken = authToken;
+  return handle;
 }
 module.exports = { createApp, LIMITS };

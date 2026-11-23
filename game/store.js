@@ -52,6 +52,7 @@ const Store = (() => {
 
   // a BroadcastChannel stand-in for tests (?net=bc): tabs of one browser act as phones
   function transport() {
+    if (typeof SERVERNET !== "undefined" && SERVERNET.on()) return SERVERNET;   // [OURS] signed in: the shared world comes through our server (servernet.js)
     if (/[?&]net=bc/.test(location.search) && window.BroadcastChannel) return {
       name: "bc",
       join(code, h) {
@@ -126,6 +127,11 @@ const Store = (() => {
     COLS.forEach(emit);
     net = T.join(code, {
       onJoin(peer) { net.send({ t: "hello", uid, world }, peer); },
+      onWorld(w) {   // [OURS] the server's copy of the whole world (servernet.js), merged like a hello from a peer that's always there
+        for (const col of COLS) for (const [id, d] of Object.entries(w?.[col] || {})) merge(col, id, d);
+        tidy(); persistWorld(); COLS.forEach(emit);
+        if (mode === "p2p" && (world.players || {})[uid]) net.send({ t: "put", col: "players", id: uid, doc: world.players[uid] });   // re-announce my card
+      },
       onLeave(peer) { const u = peerUid[peer]; delete peerUid[peer]; if (u && !Object.values(peerUid).includes(u)) { online.delete(u); emit("players"); } p2pStatus = onlineCount() ? "connected" : "searching"; statusChanged(); },
       onMessage(m, peer) {
         if (!m || typeof m !== "object") return;

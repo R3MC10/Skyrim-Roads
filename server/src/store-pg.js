@@ -34,6 +34,13 @@ CREATE TABLE IF NOT EXISTS characters (
   deleted_at bigint
 );
 CREATE INDEX IF NOT EXISTS characters_account ON characters (account_id) WHERE deleted_at IS NULL;
+CREATE TABLE IF NOT EXISTS world_records (
+  col text NOT NULL,
+  id text NOT NULL,
+  doc jsonb NOT NULL,
+  v bigint NOT NULL,
+  PRIMARY KEY (col, id)
+);
 `;
 
 function pgStore(url, opts = {}) {
@@ -89,6 +96,15 @@ function pgStore(url, opts = {}) {
         await c.query("COMMIT");
         return { ok: true, version };
       } catch (e) { try { await c.query("ROLLBACK"); } catch { /* already gone */ } throw e; } finally { c.release(); }
+    },
+    /* the shared world (hub.js): rows of {col, id, doc}; doc null deletes. One statement per batch. */
+    async loadWorld() { return (await q("SELECT col, id, doc FROM world_records")).rows; },
+    async putWorld(rows) {
+      const up = rows.filter((r) => r.doc != null), del = rows.filter((r) => r.doc == null);
+      if (up.length) await q(`INSERT INTO world_records (col, id, doc, v) SELECT * FROM unnest($1::text[], $2::text[], $3::jsonb[], $4::bigint[])
+                              ON CONFLICT (col, id) DO UPDATE SET doc=EXCLUDED.doc, v=EXCLUDED.v`,
+        [up.map((r) => r.col), up.map((r) => r.id), up.map((r) => JSON.stringify(r.doc)), up.map((r) => Math.round(r.doc._v || 0))]);
+      if (del.length) await q("DELETE FROM world_records w USING unnest($1::text[], $2::text[]) AS d(col, id) WHERE w.col=d.col AND w.id=d.id", [del.map((r) => r.col), del.map((r) => r.id)]);
     },
     async deleteCharacter(id, accountId, now) {
       const r = await q("UPDATE characters SET deleted_at=$3 WHERE id=$1 AND account_id=$2 AND deleted_at IS NULL", [id, accountId, now]);

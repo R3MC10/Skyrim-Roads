@@ -79,7 +79,7 @@ const ACCOUNT = (() => {
     if (!r.ok) { note = r.message || "That didn't work."; ctx.rerender(); return r; }
     set("token", r.token); set("user", { username: r.account.username, id: r.account.id }); set("kicked", null);
     note = r.took ? `Playing here now. ${r.took} has been signed out.` : mode === "up" ? `Welcome, ${r.account.username}! Your account is ready.` : "";
-    startBeat();
+    startBeat(); rejoin();
     await refresh();
     // this device's character was linked before: catch up with anything newer on the account
     const l = linked(); if (l) await checkNewer(l);
@@ -88,8 +88,10 @@ const ACCOUNT = (() => {
   async function signOut() {
     await flush();
     await api("POST", "/api/logout");
-    set("token", null); set("char", null); set("kicked", null); chars = null; note = "Signed out. The character on this device stays here."; stopBeat(); ctx.rerender();
+    set("token", null); set("char", null); set("kicked", null); chars = null; note = "Signed out. The character on this device stays here."; stopBeat(); rejoin(); ctx.rerender();
   }
+  /* switch the shared world between our server (signed in) and phone-to-phone (signed out), without a reload */
+  function rejoin() { try { if (typeof Store !== "undefined" && Store.mode === "p2p" && Store.joinWorld) Store.joinWorld(Store.worldCode || "NORTH"); } catch (e) { console.warn("world switch", e); } }
   async function refresh() {
     if (!signedIn()) { chars = null; return; }
     const r = await api("GET", "/api/characters");
@@ -299,7 +301,7 @@ const ACCOUNT = (() => {
       if (r.ok) { if (!conflict) closeOverlay(); } else wall(r.message || "That didn't work.");
       return;
     }
-    if (a === "offline") { set("kicked", null); set("char", null); closeOverlay(); ctx.rerender(); return; }
+    if (a === "offline") { set("kicked", null); set("char", null); closeOverlay(); rejoin(); ctx.rerender(); return; }
     if (a === "usecloud" && conflict) { const id = conflict.server.id || linked()?.id; conflict = null; closeOverlay(); if (signedIn() && id) { chars = null; await play(id); } return; }
     if (a === "usehere" && conflict) {
       const l = linked(), S = ctx.getSave(); conflict = null; closeOverlay();
@@ -325,7 +327,10 @@ const ACCOUNT = (() => {
     if (signedIn()) { startBeat(); refresh(); api("GET", "/api/session"); if (get("dirty")) flush(); }
     else if (get("kicked") && linked()) setTimeout(() => { if (!ctx.onTitle()) wall(); }, 0);
   }
-  return { on, init, holding, signedIn, user, linked, server, deviceName, menuSub, pageHTML, newCharText, newCharacter, onSave, flush, refresh,
+  /* servernet.js: the session token for the world connection, and what to do when the server closes it for good */
+  const token = () => get("token");
+  function lostSession(j) { if (get("token")) lost(j || { error: "signed_out" }); }
+  return { on, init, holding, token, lostSession, signedIn, user, linked, server, deviceName, menuSub, pageHTML, newCharText, newCharacter, onSave, flush, refresh,
     _state: () => ({ ask, note, chars, conflict, syncNote, lastSync, form }) };
 })();
 if (typeof module !== "undefined") module.exports = ACCOUNT;

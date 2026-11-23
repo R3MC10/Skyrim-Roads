@@ -18,7 +18,7 @@ I have characters on different devices and can't reach them from the others."
 | Phase | What | Status |
 | --- | --- | --- |
 | 1 | Server with accounts, sessions (one device), cloud characters; sign-in screen and character picker in the game; upload existing characters | **built, tested locally** · next: deploy on Railway, set `DEFAULT_SERVER`, patch note, test on phones |
-| 2 | Shared world on the server instead of phone-to-phone (parties, chat, trades, market, clans, events) as a new backend inside `store.js` | later |
+| 2 | Shared world on the server instead of phone-to-phone (parties, chat, trades, market, clans, events) as a new backend inside `store.js` | **built, tested locally** (`hub.js`, `game/servernet.js`) |
 | 3 | Party fights run on the server (host can leave, every player gets the full fight screen); optional economy checks | later, if wanted |
 
 ## Phase 1 design
@@ -96,3 +96,19 @@ python3 -m http.server 8901 --directory game &                    # the game
 # open http://localhost:8901/index.html?server=http://localhost:8788  (add &p=devA / &p=devB for two "devices")
 python3 tests/account_ui.py 8901 8788
 ```
+
+## Phase 2: the shared world on the server (built)
+- `server/src/hub.js`: a WebSocket at `/ws`. Signed-in players connect with their session and the character they
+  play. The hub keeps the whole shared world in Postgres (`world_records`), merges records like the phones do (newer
+  `_v` wins), passes messages between players, and forgets old records (chat after a day, deleted markers after two…).
+- Checks the phones couldn't do: a player can only write their own public card and only sign records as themselves,
+  can't play a character from another account, and one account has one connection: signing in on another device or
+  signing out closes the old connection at once (the game shows the notice straight away, no waiting for the heartbeat).
+- `game/servernet.js`: the same transport shape as the phone-to-phone network, so `store.js` and all the game code
+  above it are unchanged; signed in → the server world, signed out → phone-to-phone as before. Reconnects by itself.
+- Mixed groups: signed-in players and signed-out players are in two separate worlds (server vs phone-to-phone).
+  Once the server is live, everyone should sign in.
+- Still "newest wins" like before: two players grabbing the same thing in the same second can still clash. Making
+  those single steps on the server (claims, trades) is part of phase 3.
+- Tests: `tests/test_hub.js` (20 checks, memory and Postgres, in CI), `tests/world_ui.py` (two accounts in the
+  browser: online, chat, cards, takeover, sign out).
