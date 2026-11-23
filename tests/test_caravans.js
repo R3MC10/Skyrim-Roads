@@ -29,7 +29,7 @@ const E=mk("E",5); CARAVANS.signOn(E,cv.id,t); E.location=["Riften","Markarth","
 // advance A to arrival, resolving ambushes by fighting
 const plan=CARAVANS.plan(cv); let amb=0, guard=0;
 G.setAllyProvider(()=>[{name:"Caravan guard",dmg:10},{name:"Caravan guard",dmg:10}]);
-while(A.trip && guard++<200){ const out=G.advance(A, Math.min(cv.arrive+5, A.trip.lastTick+120)); if(out.encounter){ amb++; ok(out.encounter.caravan,"ambush flagged"); const r=G.encounterAction(A,"fight",A.trip.lastTick); if(!A.trip) break; } if(out.arrived) break; }
+while(A.trip && guard++<200){ const out=G.advance(A, Math.min(cv.arrive+5, A.trip.lastTick+120)); if(out.encounter){ amb++; ok(out.encounter.caravan,"ambush flagged"); G.setHealth(A,G.maxHealth(A),A.trip.lastTick); /* a lost fight ends the trip early: this test counts ambushes, not wins */ const r=G.encounterAction(A,"fight",A.trip.lastTick); if(!A.trip) break; } if(out.arrived) break; }
 ok(amb===plan.at.length,"ambush count "+amb+" vs "+plan.at.length);
 ok(A.location===cv.to,"arrived "+A.location+" alive="+!A.trip);
 console.log("ambushes", amb, "foes", plan.foes.join(","), "arrived at", A.location, "t vs caravan", Math.round((A.lastArr||0)));
