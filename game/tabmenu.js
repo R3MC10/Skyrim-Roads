@@ -50,7 +50,7 @@ const TABMENU = (() => {
     if (S.dungeon) return { k: "dun", icon: "🕯", text: `Inside ${S.dungeon.place}`, sub: "Tap to go back in", hot: !!S.dungeon.room?.enemy };
     const tr = S.trip;
     if (tr) {
-      if (tr.status === "encounter") return { k: "enc", icon: "⚔", text: `${tr.encounter?.name || "Trouble"} blocks the road`, sub: "Tap to face it", hot: true };
+      if (tr.status === "encounter") return { k: "enc", icon: "⚔", text: tr.encounter?.hunt ? `🏹 ${tr.encounter.name} spotted` : `${tr.encounter?.name || "Trouble"} blocks the road`, sub: "Tap to face it", hot: true };
       if (tr.status === "event") return { k: "ev", icon: "🛤", text: "Something by the road", sub: "Tap to take a look" };
       const left = Math.max(0, G.minutesLeft(S) - (tr.status === "travel" ? (G.now() - tr.lastTick) / 60 : 0)), total = Math.max(left, tr.total || left);
       const how = tr.carriage ? "by carriage" : typeof HORSES !== "undefined" && HORSES.riding(S) ? `riding ${S.horse?.name || "your horse"}` : "on foot";
