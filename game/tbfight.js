@@ -90,6 +90,9 @@ const TB = (() => {
       this.lines = { me: [], them: [], a: null };   // this round's log line for the fight log
       this.hitters = 0;
       this.players = Math.min(7, f.allies.filter((a) => a.player && !a.follower && a.kind !== "follower").length);   // real players with you (a party is up to 8; followers never count)
+      // foe archetypes and groups (foegroups.js): a bandit archer, a draugr mage... and on your own, sometimes 2 or 3 of them
+      const grp = typeof FOEGROUPS !== "undefined" ? FOEGROUPS.prep(f, this.players) : { n: 1, hpMul: [1] };
+      this.grp = grp;
       // turn-based foes are tougher (you act more than once a round); real players make it harder still
       const tg = f.tags; this.kind = f.e.boss ? "boss" : tg.has("elite") || f.e.danger === "high" ? "tough" : "normal";
       // the foe gets enough health for a fight of about T.rounds rounds against what you (and friends) deal a round,
@@ -97,9 +100,10 @@ const TB = (() => {
       const dpr = this.estimate(f);
       const base = Math.max(1, f.ehp), kk = dpr > 0 ? clamp(dpr * T.rounds[this.kind] / base, T.min[this.kind], T.max[this.kind]) : T.hp[this.kind];
       // a party faces more foes, not one sponge: the same total toughness, split over one foe per hero
-      this.waves = this.players > 0 && !f.e.boss ? Math.min(MAX_FOES, 1 + this.players) : 1; this.wave = 1;
-      const k = f.e.player ? 1 : kk * (1 + PARTY_HP * this.players) / this.waves;   // another player fights with their real health, no monster boost
-      f.ehp = Math.round(f.ehp * k); f.ehp0 = f.ehp; this.ehpMax = f.ehp;
+      this.waves = this.players > 0 && !f.e.boss ? Math.min(MAX_FOES, 1 + this.players) : grp.n; this.wave = 1;
+      const k = f.e.player ? 1 : this.players > 0 ? kk * (1 + PARTY_HP * this.players) / this.waves : kk;   // another player fights with their real health, no monster boost
+      this.ehpBase = f.ehp * k;
+      f.ehp = Math.round(this.ehpBase * (grp.hpMul[0] || 1)); f.ehp0 = f.ehp; this.ehpMax = f.ehp;
       f.e.tbHp = this.ehpMax;
       f.regenMp *= MP_REGEN; f.regenSp *= SP_REGEN;   // several actions a round need a bit more breath and magicka per round
       f.tb = true;
@@ -126,9 +130,12 @@ const TB = (() => {
     /* a party fight: the foe fell, the next one steps in */
     nextFoe() {
       const f = this.f; this.wave++;
-      f.ehp = this.ehpMax; f.fpAvoided = false;
+      const a = this.grp?.n > 1 && typeof FOEGROUPS !== "undefined" ? FOEGROUPS.next(f, this.wave - 1) : null;
+      if (a) this.ehpMax = Math.round(this.ehpBase * (this.grp.hpMul[this.wave - 1] || 1));
+      f.ehp = this.ehpMax; f.fpAvoided = false; f.tbStunLeft = 0; f.tbStunCd = 0;
       const left = this.waves - this.wave;
-      this.emit("foe", `Another ${String(f.e.name).toLowerCase()} steps in! ${left ? `(${left} more behind it)` : "(the last one)"}`, "foe", { wave: this.wave });
+      const who = a ? `${String(f.e.name).toLowerCase()} ${a.label}` : String(f.e.name).toLowerCase();
+      this.emit("foe", `${a ? "A" : "Another"} ${who} steps in! ${left ? `(${left} more behind it)` : "(the last one)"}`, "foe", { wave: this.wave });
     }
     /* initiative order for a new round */
     rollOrder() {
@@ -540,7 +547,7 @@ const TB = (() => {
       <div class="tbtop"><b>Round ${sess.round}</b><span class="tbord">${order}</span><button class="tbff" data-tbx="log" aria-label="Full fight log">📜</button><button class="tbff ${fast() ? "on" : ""}" data-tbx="fast" aria-label="Fast foe turns">⏩</button></div>
       <div class="tbstage" data-tbzone="foe"><div class="tbscene" id="tbscene">${scene || (ui.lastScene || "")}</div>${banner}<div class="tbhint" aria-hidden="true"></div></div>
       <div class="tbvit"><div class="tbu me" data-tbzone="self"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.me(f, sess.st))}"` : ""}><small class="nm">🛡 ${esc(s.name || "You")}</small>${uBar(hpNow, prev.hp, hpMax, "hp")}<div class="tbsub">${rBar(mpNow, prev.mp, mpMax, "mp", "MP")}${rBar(spNow, prev.sp, spMax, "sp", "SP")}</div></div>
-        <div class="tbu foe" data-tbzone="foe"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.foe(f, sess.ehpMax))}"` : ""}><small class="nm">${f.e.player ? "⚔" : "☠"} ${esc(f.e.name)}</small>${uBar(ehpNow, prev.ehp, sess.ehpMax, "hp foe")}${statusChips(f)}</div></div>
+        <div class="tbu foe" data-tbzone="foe"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.foe(f, sess.ehpMax))}"` : ""}><small class="nm">${f.e.player ? "⚔" : "☠"} ${esc(f.e.name)}${f.e.archLabel && !String(f.e.name).toLowerCase().includes(f.e.archLabel) ? ` <span class="arch">${esc(f.e.archLabel)}</span>` : ""}${sess.waves > 1 ? ` <span class="arch">${sess.wave}/${sess.waves}</span>` : ""}</small>${uBar(ehpNow, prev.ehp, sess.ehpMax, "hp foe")}${statusChips(f)}</div></div>
       ${allies}
       <button class="tblog" aria-live="polite" data-tbx="log" aria-label="Fight log, tap for the full log"${log ? "" : " hidden"}>${log}</button>
       ${wait}

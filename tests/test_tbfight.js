@@ -7,7 +7,7 @@ const RUNS = +(process.env.RUNS || process.argv[2] || 40);
 const TUNE = process.env.TUNE ? JSON.parse(process.env.TUNE) : null;
 const c = { process: { env: process.env }, console, Math, Date, JSON, Float64Array, Float32Array, Uint8Array, Int32Array, Uint16Array, Int16Array, Object, Array, Set, Map, Proxy, Number, String, RUNS, structuredClone };
 vm.createContext(c);
-for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "shieldfx.js", "legendary.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "weatherfx.js", "enchanting.js", "quests.js", "horses.js", "hall.js", "bounty.js", "visits.js", "cooking.js", "arena.js", "achievements.js", "clans.js", "festivals.js", "wars.js", "curses.js", "smithing.js", "social.js", "roam.js", "ammo.js", "tomes.js", "magic.js", "spellbook.js", "mp.js", "spellcraft.js", "shouts2.js", "coop.js", "party.js", "combatai.js", "tbfight.js"])
+for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "shieldfx.js", "foegroups.js", "legendary.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "weatherfx.js", "enchanting.js", "quests.js", "horses.js", "hall.js", "bounty.js", "visits.js", "cooking.js", "arena.js", "achievements.js", "clans.js", "festivals.js", "wars.js", "curses.js", "smithing.js", "social.js", "roam.js", "ammo.js", "tomes.js", "magic.js", "spellbook.js", "mp.js", "spellcraft.js", "shouts2.js", "coop.js", "party.js", "combatai.js", "tbfight.js"])
   if (fs.existsSync(W + f)) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
 vm.runInContext(`
 const LEVELS = [5, 10, 20, 30, 40];
@@ -130,7 +130,11 @@ if (!process.env.SIMONLY) {
   ok(f.tbStunLeft > 0, "the bash stuns a normal foe");
   f.sp = 9999; ss.act("bash"); ok(ss.ev[ss.ev.length - 1].text.includes("no stun"), "no stun-locking right after a stun");
   f.sp = 0; ok(!ss.canAfford("bash"), "no stamina, no bash");
-  const hp0 = f.hp; ss.act("end"); let foeLines = []; g = 0; while (!ss.done && g++ < 30) { const n = ss.ev.length; ss.advance(); foeLines.push(...ss.ev.slice(n).filter((e) => e.kind === "foe").map((e) => e.text)); if (ss.cur?.id === "me") break; }
+  const hp0 = f.hp; let foeLines = []; g = 0;
+  while (!foeLines.length && !ss.done && g++ < 30) {   // end turns until the foe's turn comes (you may go first next round)
+    const n = ss.ev.length;
+    if (ss.cur?.id === "me") ss.act("end");
+    ss.advance(); foeLines.push(...ss.ev.slice(n).filter((e) => e.kind === "foe").map((e) => e.text)); }
   ok(/stunned/.test(foeLines[0] || ""), "the stunned foe loses its turn: " + foeLines.join(" | "));
 }
 // 4c. party frames: healing spells, potions and support spells dragged onto a teammate go to that teammate
@@ -187,7 +191,8 @@ if (!process.env.SIMONLY) {
 { const s = fresh("warrior", 20), f = new G.Fight(s, enc("Bandit outlaw", 20));
   for (let i = 0; i < 7; i++) { const m = COOP.allyFromCard({ id: "p" + i, name: "M" + i, coop: { prof: { dmg: 20, hp: 300, red: 0.2, role: "fighter" } } }); m.pid = "p" + i; f.allies.push(m); }
   const ss = new TB.Session(f, { trySneak: false }); ok(ss.waves === 6, "8 heroes meet 6 foes"); }
-{ const s = fresh("warrior", 20), f = new G.Fight(s, enc("Bandit outlaw", 20)); const ss = new TB.Session(f, { trySneak: false }); ok(ss.waves === 1, "alone: one foe"); }
+{ const s = fresh("warrior", 20), f = new G.Fight(s, enc("Bandit outlaw", 20)); const ss = new TB.Session(f, { trySneak: false }); ok(ss.waves >= 1 && ss.waves <= 3, "alone: one bandit or a small group (foegroups.js)"); }
+{ const s = fresh("warrior", 20), f = new G.Fight(s, enc("Black bear", 20)); const ss = new TB.Session(f, { trySneak: false }); ok(ss.waves === 1, "alone vs a beast: one foe"); }
 }
 console.log(fails ? "FAILED " + fails : "ALL OK");
 globalThis.__fails = fails;

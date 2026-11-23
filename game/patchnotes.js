@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b116", build: 116, date: "23 Nov 2026", title: "Foes come in kinds and numbers", items: [
+      "Bandits, Forsworn, draugr, skeletons, vampires and Falmer now come as warriors (sword and shield, harder to hurt), brutes (big two-handers, hit harder), archers, mages or rogues (quick daggers, easier to drop). You can see it on them in the fight: what they wear and carry, and how they attack.",
+      "The foe's box in a fight shows what kind it is.",
+      "On your own you'll sometimes face two of them, and at higher levels now and then three, one after another. Each is a bit weaker than a lone foe, so the whole group is only a little tougher. Bosses and named foes still come alone.",
+    ] },
     { id: "b115", build: 115, date: "23 Nov 2026", title: "Fighting other players", items: [
       "When you fight another player, they now stand across from you as themselves: their race, armour, helmet, weapon and shield. Same in Arena duels.",
       "Another player fights with their real health in the fight screen, not the extra health monsters get.",
