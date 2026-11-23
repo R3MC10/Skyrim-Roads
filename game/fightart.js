@@ -568,7 +568,7 @@ const FIGHTART = (() => {
           b.blocked = /block/.test(them) || (st.guard && /\(blocked/.test(them));
           b.absorbed = /absorbed|passes through|ward soaks/.test(them);
           b.reflect = /reflected/.test(them);
-          if (/ward soaks/.test(them)) st.ward = false;
+          if (/ward soaks[^)]*breaks/.test(them)) st.ward = false;
         }
         b.guard = st.guard; st.guard = false;
         b.st = { ...st };

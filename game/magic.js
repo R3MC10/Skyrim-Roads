@@ -145,7 +145,15 @@ const MAGIC = (() => {
     rune(f, sp) { f.rune = { dmg: sp.amount * pot(f, sp) * (1 + (typeof PFX !== "undefined" ? PFX.sum(f.s, "spell", f, { kind: "rune" }) : 0)), el: sp.element, name: sp.name }; return `${sp.name}: a glowing rune waits on the ground`; },
     cloak(f, sp) { f.cloak = { dmg: sp.amount * pot(f, sp), el: sp.element, turns: sp.turns, name: sp.name }; return `${sp.name}: ${sp.element === "fire" ? "flames" : sp.element === "frost" ? "frost" : "lightning"} wrap around you`; },
     dot(f, sp) { f.dots = [...(f.dots || []), { dmg: sp.amount * pot(f, sp), el: sp.element, turns: sp.turns, name: sp.name }]; if (sp.element === "frost") f.slowed = Math.max(f.slowed, 2); return `${sp.name}: the ground ${sp.element === "fire" ? "bursts into flame" : sp.element === "frost" ? "freezes over" : "crackles"}`; },
-    ward(f, sp) { f.ward = sp.amount * pot(f, sp); return `${sp.name}: a shimmering ward (${Math.round(f.ward)})`; },
+    /* a ward is a shield against magic: it soaks spells, breath and enchanted blows until it breaks, turn after turn.
+       Casting a ward again refills it (to the stronger of the two). [OURS: Remigiusz "a magic damage spell shield that
+       persists every turn; players can recast a ward spell to regenerate that magic shield"] */
+    ward(f, sp) {
+      const amt = sp.amount * pot(f, sp) * (1 + (typeof PFX !== "undefined" ? PFX.num(f.s, "wardpow") : 0));
+      const had = f.ward > 0 ? f.ward : 0;
+      f.wardMax = Math.max(amt, had); f.ward = f.wardMax;
+      return had ? `${sp.name}: your ward flares back to full (${Math.round(had)} → ${Math.round(f.ward)})` : `${sp.name}: a shimmering ward rises (${Math.round(f.ward)}). It soaks magic until it breaks`;
+    },
     regen(f, sp) { f.regen = { amt: sp.amount * pot(f, sp), turns: sp.turns, name: sp.name }; return `${sp.name}: a ring of light heals you each turn`; },
     turn(f, sp) {
       if (!f.tags.has("undead")) return `${sp.name}: no effect (undead only)`;
@@ -183,14 +191,18 @@ const MAGIC = (() => {
   }
   /* each turn: cloaks, burning walls, healing circles */
   function tick(f, line) {
+    if (f.ward > 0 && f.wardMax && f.ward < f.wardMax && typeof PFX !== "undefined") {   // Ward Mender: the ward knits itself back
+      const r = PFX.num(f.s, "wardregen"); if (r) { const b = f.ward; f.ward = Math.min(f.wardMax, f.ward + f.wardMax * r); if (f.ward - b >= 1) line.me += ` · ward mends +${Math.round(f.ward - b)}`; }
+    }
     if (f.cloak && f.ehp > 0) { const d = f.cloak.dmg * elem(f, f.cloak.el); f.ehp -= d; line.me += ` · ${f.cloak.name} ${Math.round(d)}` + (typeof PFX !== "undefined" && f.cloak.el !== "fire" ? PFX.hitFoe(f, f.cloak.el, d, "spell") : ""); if (--f.cloak.turns <= 0) f.cloak = null; }
     if (f.dots?.length && f.ehp > 0) { for (const x of f.dots) { const d = x.dmg * elem(f, x.el); f.ehp -= d; line.me += ` · ${x.name} ${Math.round(d)}`; x.turns--; } f.dots = f.dots.filter((x) => x.turns > 0); }
     if (f.regen) { const before = f.hp; f.hp = Math.min(G.maxHealth(f.s), f.hp + f.regen.amt); if (f.hp > before) { line.me += ` · +${Math.round(f.hp - before)} health`; f.addXp("Restoration", (f.hp - before) * 0.5); } if (--f.regen.turns <= 0) f.regen = null; }
   }
   /* a hit on you: wards soak up spells and dragon breath */
-  function soak(f, dmg) {
-    if (!f.ward || !isCaster(f)) return dmg;
+  function soak(f, dmg, magic) {
+    if (!(f.ward > 0) || !(magic ?? isCaster(f))) return dmg;
     const used = Math.min(f.ward, dmg); f.ward -= used; f.addXp("Restoration", used * 0.3);
+    if (f.ward < 0.5) { f.ward = 0; f.wardBroke = true; }
     if (used > 0 && typeof PFX !== "undefined") { const mp = PFX.sum(f.s, "wardmp", f, {}); if (mp) f.mp = Math.min(G.maxMagicka(f.s), f.mp + mp); }   // Ward Absorb
     return dmg - used;
   }
@@ -303,7 +315,7 @@ const MAGIC = (() => {
       rune: () => `A trap rune: ${sp.amount} ${el} damage when the foe attacks you`,
       cloak: () => `${sp.amount} ${el} damage to the foe every turn for ${sp.turns} turns`,
       dot: () => `${sp.amount} ${el} damage every turn for ${sp.turns} turns${el === "frost" ? ", and slows" : ""}`,
-      ward: () => `Soaks up ${sp.amount} damage from spells and dragon breath`,
+      ward: () => `A magic shield that soaks ${sp.amount} damage from spells, breath and enchanted blows. It stays up turn after turn until it breaks; cast it again to refill it`,
       regen: () => `Heals ${sp.amount} health every turn for ${sp.turns} turns`,
       turn: () => `Undead up to level ${sp.max_level} flee: the fight ends, but they leave nothing behind`,
       paralyze: () => `The foe can't act for ${sp.amount} turns (dragons resist; tough foes sometimes)`,

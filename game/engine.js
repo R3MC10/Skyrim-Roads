@@ -862,7 +862,10 @@ const G = (() => {
       }
       if (this.pw) { dmg = POWERS.dmgIn(this, dmg, this.tags.has("mage") || this.tags.has("dragon")); if (dmg === 0) return `${n}'s blow passes through you`; }
       if (Object.values(this.armor).some((a) => a.type === "heavy") && P(s, "reflect_blows") && Math.random() < 0.1) { this.ehp -= dmg; return `${n}'s blow is reflected back (${Math.round(dmg)})`; }
-      if (typeof MAGIC !== "undefined" && this.ward) { const before = dmg; dmg = MAGIC.soak(this, dmg); if (dmg < before) extra += ` (ward soaks ${Math.round(before - dmg)})`; }
+      if (typeof MAGIC !== "undefined" && this.ward > 0) {   // wards only stop magic: casters, breath, spells a foe throws (eMagic)
+        const before = dmg; dmg = MAGIC.soak(this, dmg, magicHit || !!(fp && fp.caster) || !!this.eMagic || MAGIC.isCaster(this));
+        if (dmg < before) extra += ` (ward soaks ${Math.round(before - dmg)}${this.wardBroke ? ", and breaks" : `, ${Math.round(this.ward)} left`})`; this.wardBroke = false;
+      }
       if (fp && dmg > 0) {
         if (fp.bleed) { dmg += fp.bleed; extra += ` · you bleed ${fp.bleed}`; }
         if (fp.stagger && Math.random() < fp.stagger) { this.sp = Math.max(0, this.sp - 15); this.blocking = false; extra += " · staggers you"; }

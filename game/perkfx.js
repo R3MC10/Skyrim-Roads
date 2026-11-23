@@ -84,6 +84,7 @@ const PFX = (() => {
     [ "Restoration", "expert_restoration", "Expert Restoration", 1, [75], ["adept_restoration"], "Expert restoration spells cost half. [Skyrim]", [["tier", 1, {}]]],
     [ "Restoration", "master_restoration", "Master Restoration", 1, [100], ["expert_restoration"], "Master restoration spells cost half. [Skyrim]", [["tier", 1, {}]]],
     [ "Restoration", "ward_absorb", "Ward Absorb", 1, [60], ["respite"], "While a ward is up, blows that hit it give you 10 magicka. [Skyrim]", [["wardmp", 10, {}]]],
+    [ "Restoration", "ward_mender", "Ward Mender", 1, [45], ["respite"], "Your wards are 25% stronger, and a ward that's still up mends 10% of itself at the start of each turn. [OURS]", [["wardpow", 0.25, {}], ["wardregen", 0.1, {}]]],
     [ "Restoration", "avoid_death", "Avoid Death", 1, [90], ["recovery"], "Once a fight, when you'd drop below 10% health you heal 100 instead. [Skyrim: heals 250]", [["avoiddeath", 100, {}]]],
     [ "Restoration", "restoration_dual_casting", "Restoration Dual Casting", 1, [20], ["novice_restoration"], "Dual-cast healing costs 15% less. [Skyrim]", [["dualcost", 0.15, { school: "Restoration" }]]],
     // ---------------------------------------------------------------- Alteration (5 → 11)

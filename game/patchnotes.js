@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b121", build: 121, date: "23 Nov 2026", title: "Wards hold", items: [
+      "Ward spells are now a real magic shield. It stays up turn after turn, soaking spells, dragon breath and any magic a foe throws, until it breaks.",
+      "Cast the ward again to fill it back up. A weaker ward never shrinks a stronger one.",
+      "A blue shield bar under your health shows how much of the ward is left. Plain sword and arrow blows go past it.",
+      "New Restoration perk, Ward Mender: wards are 25% stronger and mend a little at the start of each turn.",
+    ] },
     { id: "b120", build: 120, date: "23 Nov 2026", title: "Every fight is yours", items: [
       "No more fights that play themselves. Even small scuffles on the road (a wolf, a skeever) now stop your trip so you fight them turn by turn.",
       "Tactics is gone from the Character menu, since you play every fight yourself.",

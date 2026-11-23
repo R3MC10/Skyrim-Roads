@@ -74,8 +74,8 @@ async def main():
         after = await pg.evaluate("PERKS.rank(__dbg.save(),'armsman')"); ok(after == before + 1, f"take perk from star {before}->{after}")
         await pg.evaluate(clear)
         await pg.screenshot(path=OUT + "stars_perk.png")
-        # swipe left on header -> character, perks, tactics
-        for want in ["hero", "perks", "tactics"]:
+        # swipe left on header -> character, perks, stats
+        for want in ["hero", "perks", "stats"]:
             await swipe(330, 30, 120, 30); s = await st(); ok(s["char"] and s["tab"] == want and s["sub"] == want, f"swipe to {want} {s}")
             await pg.evaluate(clear); await pg.screenshot(path=OUT + f"char_{want}.png")
         # swipe left inside the scrolling page body also flips tabs (horizontal only)
