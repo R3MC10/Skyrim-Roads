@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b132", build: 132, date: "23 Nov 2026", title: "PC: no more missed updates", items: [
+      "PC players on build 100 never got updates: that build came out just before the PC version learned to update itself. Download the setup version once from the download page and run it. Your saves stay.",
+      "The PC game now tells you when a newer build is out, with a Download button. The portable .exe can't update itself, so it shows this every time there's a new build.",
+      "The setup version keeps updating itself in the background; it only shows the card if it falls 3 or more builds behind.",
+    ] },
     { id: "b130", build: 130, date: "23 Nov 2026", title: "Smaller updates", items: [
       "Updates now download only the files that changed instead of the whole game: usually a megabyte or two instead of almost 100.",
       "To get this, install the newest app from the download page one more time. After that, every update is a small patch.",
