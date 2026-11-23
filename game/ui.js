@@ -24,7 +24,7 @@
   let S = null, net = {}, tab = "map", selected = null, others = [], bags = [];
   let zoom = innerWidth < 700 ? 2.4 : 1, follow = true, center = [0.5, 0.5], view = {}, version = 0, rendered = -1, lastPanelRender = 0;
   let tacticsDraft = { if: "hp_below", pct: 40, do: "potion:health", edit: null }, testResult = null, townShop = null, forgeTab = "make", forgeGroup = "iron", packOpen = null, searchText = "", uxAllPlaces = false, uxHelpOpen = null, packSearch = "";
-  let raidDocs = [], raidSeen = null, enchDraft = {};
+  let raidDocs = [], raidSeen = null, raidJoined = null, raidAuto = null, enchDraft = {};
   let chatDocs = [], chatRaw = [], chatCh = "world", chatDraft = "", chatSeen = 0, chatSeenIds = new Set(), lastChatSend = 0;
   const bootT = Date.now() / 1000;
   let trades = [], ladderDocs = [], ladderCat = "level", tradeSel = [], tradeTo = null, seenTrades = new Set(), lastLadderJson = "";
@@ -1609,18 +1609,29 @@
       if (S.raid && !S.raid.claimed) { /* the dragon might have died after the window: nothing to show */ }
       el.innerHTML = ""; return;
     }
+    const dk = WEVENTS.kindOf(r), dn = dk.name.toLowerCase(), ph = WEVENTS.phase(r);
     if (raidSeen !== r.id) {
-      raidSeen = r.id; SOUND.fx("dragon"); toast(`🐉 A dragon is attacking ${r.town}!`);
-      if (!news.some((n) => n.text.includes(r.id))) postNews(`🐉 A dragon is attacking ${r.town}! Every warrior is needed. (${r.id})`);
+      raidSeen = r.id; SOUND.fx("dragon"); toast(`🐉 A ${dn} is circling ${r.town}!`);
+      if (!news.some((n) => n.text.includes(r.id))) postNews(`🐉 A ${dn} is circling ${r.town}! It attacks in a few minutes. Every warrior is needed. (${r.id})`);
     }
-    const tl = WEVENTS.tally(r, raidDocs, S), left = Math.max(0, Math.ceil((r.end - G.now()) / 60)), done = tl.total >= tl.need;
+    const here = S.location === r.town;
+    // being in the town while it circles (or when it attacks) counts you in: the dragon gets tougher for everyone
+    if (here && raidJoined !== r.id && WEVENTS.join(S, r)) { raidJoined = r.id; Store.put("raids", `${r.id}-${S.id}`, { raid: r.id, uid: S.id, name: S.name, dmg: S.raid.dmg, lv: S.level, t: G.now() }); persist(true); }
+    const tl = WEVENTS.tally(r, raidDocs, S), done = tl.total >= tl.need;
+    const secs = Math.max(0, Math.ceil(((ph === "gather" ? r.fightAt : r.end) - G.now()))), clock = ph === "gather" ? `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}` : `${Math.ceil(secs / 60)} min`;
     const msg = WEVENTS.claim(S, r, raidDocs);
     if (msg) { persist(true); showMessage("The dragon falls", msg); }
-    const here = S.location === r.town;
-    el.innerHTML = `<div class="trip enc" style="margin-top:10px">${typeof EVENTART !== "undefined" ? EVENTART.raid(r.town, done) : ""}<div class="row"><b>🐉 ${done ? `The dragon over ${esc(r.town)} is dead` : `A dragon is attacking ${esc(r.town)}`}</b><span class="num sub">${done ? "" : `${left} min`}</span></div>
+    // the timer ran out: it attacks everyone who's in the town
+    if (ph === "fight" && here && !done && raidAuto !== r.id && raidJoined === r.id && !$("#modal") && !(typeof TB !== "undefined" && TB.open)) { raidAuto = r.id; toast(`🐉 The ${dn} dives at ${r.town}!`); setTimeout(raidFight, 50); }
+    const title = done ? `The ${esc(dn)} over ${esc(r.town)} is dead` : ph === "gather" ? `A ${esc(dn)} is circling ${esc(r.town)}` : `A ${esc(dn)} is attacking ${esc(r.town)}`;
+    const sub = done ? "Everyone who fought shares the soul and the spoils."
+      : ph === "gather" ? `It attacks in ${clock}. ${tl.people ? `${tl.people} ${tl.people === 1 ? "hero has" : "heroes have"} gathered` : "No one has gathered yet"}. Be in ${esc(r.town)} when the timer runs out to fight it together. The more people come, the tougher it gets.`
+      : `${tl.total}/${tl.need} damage dealt${tl.people ? ` by ${tl.people} ${tl.people === 1 ? "fighter" : "fighters"}` : ""}. Everyone who hurts it gets its soul, 300 gold, dragon bone and scales. It flies at first (melee only grazes it) and lands when badly hurt.`;
+    const btn = done ? "" : !here ? `<button class="btn" data-act="go" data-place="${esc(r.town)}" style="width:100%">Travel to ${esc(r.town)}</button>`
+      : ph === "gather" ? `<button class="btn" disabled style="width:100%">⏳ Waiting for the ${esc(dn)}... ${clock}</button>` : `<button class="btn danger" data-act="raidfight" style="width:100%">⚔️ Fight the ${esc(dn)}</button>`;
+    el.innerHTML = `<div class="trip enc" style="margin-top:10px">${typeof EVENTART !== "undefined" ? EVENTART.raid(r.town, done) : ""}<div class="row"><b>🐉 ${title}</b><span class="num sub">${done ? "" : clock}</span></div>
       ${typeof RAIDART !== "undefined" ? RAIDART.raidHealth(tl, raidDocs, r, S, raPortrait) : `<div class="bar"><i style="width:${pct(tl.total, tl.need)}%;background:var(--ember)"></i></div>`}
-      <div class="sub">${done ? "Everyone who fought shares the soul and the spoils." : `${tl.total}/${tl.need} damage dealt${tl.people ? ` by ${tl.people} ${tl.people === 1 ? "fighter" : "fighters"}` : ""}. Everyone who hurts it gets its soul, 300 gold, dragon bone and scales. The more people fight, the tougher it gets.`}</div>
-      ${done ? "" : here ? `<button class="btn danger" data-act="raidfight" style="width:100%">⚔️ Fight the dragon</button>` : `<button class="btn" data-act="go" data-place="${esc(r.town)}" style="width:100%">Travel to ${esc(r.town)}</button>`}</div>`;
+      <div class="sub">${sub}</div>${btn}</div>`;
   }
   function raidFight() {
     const r = WEVENTS.activeRaid(); if (!r) return toast("The dragon is gone.");
@@ -1628,7 +1639,7 @@
   }
   function raidDone(r, out) {
     if (!out.fight) return toast(out.text);
-    Store.put("raids", `${r.id}-${S.id}`, { raid: r.id, uid: S.id, name: S.name, dmg: S.raid.dmg, t: G.now() });
+    Store.put("raids", `${r.id}-${S.id}`, { raid: r.id, uid: S.id, name: S.name, dmg: S.raid.dmg, lv: S.level, t: G.now() });
     if (out.bag) Store.addBag(out.bag);
     if (out.slain) postNews(`🐉 ${S.name} struck the killing blow on the dragon over ${r.town}!`);
     warPoint("raid", G.holdAt(WORLD.places[r.town]));

@@ -12,17 +12,17 @@ const PFX = (() => {
   // fx: [key, value (number × rank, or array by rank), condition]
   const ADD = [
     // ---------------------------------------------------------------- One-Handed (7 → 11)
-    [S1, "critical_charge", "Critical Charge", 1, [50], ["fighting_stance"], "Your first one-handed strike in a fight does 50% more damage. [Skyrim: sprinting power attack]", [["out", 0.5, { sk: S1, first: 1 }]]],
+    [S1, "critical_charge", "Critical Charge", 1, [50], ["fighting_stance"], "Your first one-handed strike in a fight does 50% more damage, and you leap at a flying dragon: your blows lose only 20% instead of 40%. [Skyrim: sprinting power attack]", [["out", 0.5, { sk: S1, first: 1 }], ["leap", 1, {}]]],
     [S1, "dual_flurry", "Dual Flurry", 2, [30, 50], ["armsman"], "With no shield, one-handed attacks have a 10/20% chance of a quick second strike for half damage. [Skyrim: dual wielding is faster]", [["extra", [0.1, 0.2], { sk: S1, noShield: 1, normal: 1 }]]],
     [S1, "dual_savagery", "Dual Savagery", 1, [70], ["dual_flurry"], "With no shield, one-handed power attacks do 25% more damage. [Skyrim: dual-wield power attacks]", [["out", 0.25, { sk: S1, noShield: 1, power: 1 }]]],
     [S1, "duelist", "Duelist", 1, [80], ["bladesman", "bone_breaker", "hack_and_slash"], "One-handed hits do 15% more damage to people, and you parry: 10% less damage from their blows. [OURS]", [["out", 0.15, { sk: S1, tag: ["humanoid"] }], ["in", -0.1, { sk: S1, tag: ["humanoid"] }]]],
     // ---------------------------------------------------------------- Two-Handed (7 → 11)
-    [S2, "great_critical_charge", "Great Critical Charge", 1, [50], ["champions_stance"], "Your first two-handed strike in a fight does 50% more damage. [Skyrim]", [["out", 0.5, { sk: S2, first: 1 }]]],
+    [S2, "great_critical_charge", "Great Critical Charge", 1, [50], ["champions_stance"], "Your first two-handed strike in a fight does 50% more damage, and you leap at a flying dragon: your blows lose only 20% instead of 40%. [Skyrim]", [["out", 0.5, { sk: S2, first: 1 }], ["leap", 1, {}]]],
     [S2, "sweep", "Sweep", 1, [70], ["great_critical_charge"], "Two-handed power attacks swing wide: +15% damage and a 20% chance to stagger. [Skyrim: sideways power attacks hit everyone in front]", [["out", 0.15, { sk: S2, power: 1 }], ["stag", 0.2, { sk: S2, power: 1 }]]],
     [S2, "brute_force", "Brute Force", 1, [40], ["barbarian"], "Two-handed hits ignore 25% of armor and do 10% more to tough foes, bosses and dragons. [OURS]", [["pierce", 0.25, { sk: S2 }], ["out", 0.1, { sk: S2, tough: 1 }]]],
     [S2, "unstoppable", "Unstoppable", 1, [90], ["devastating_blow"], "With a two-hander, you take 15% less damage while above half health. [OURS]", [["in", -0.15, { sk: S2, hpAbove: 50 }]]],
     // ---------------------------------------------------------------- Archery (5 → 10)
-    [AR, "eagle_eye", "Eagle Eye", 1, [30], ["overdraw"], "Arrows hit 8% more often. [Skyrim: zoom in]", [["hit", 0.08, { sk: AR }]]],
+    [AR, "eagle_eye", "Eagle Eye", 1, [30], ["overdraw"], "Arrows hit 8% more often, and a flying dragon can't weave away from your arrows (full damage). [Skyrim: zoom in]", [["hit", 0.08, { sk: AR }], ["skyshot", 1, {}]]],
     [AR, "steady_hand", "Steady Hand", 2, [40, 60], ["eagle_eye"], "Bows do 5/10% more damage, and fog, storms and blizzards spoil your aim only half as much. [Skyrim: zoom slows time]", [["out", [0.05, 0.1], { sk: AR }], ["aimwx", 0.5, { sk: AR }]]],
     [AR, "hunters_discipline", "Hunter's Discipline", 1, [50], ["critical_shot"], "You find twice as many of your arrows and bolts after a fight. [Skyrim]", [["ammo", 1, {}]]],
     [AR, "ranger", "Ranger", 1, [60], ["hunters_discipline"], "Shooting power shots costs half the stamina, and bows do 15% more from the saddle. [Skyrim: move faster with a bow drawn]", [["pa", -0.5, { sk: AR }], ["out", 0.15, { sk: AR, mounted: 1 }]]],

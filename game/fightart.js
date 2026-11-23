@@ -220,6 +220,7 @@ const FIGHTART = (() => {
     g.restore();
   }
   let curFoeLook = null;   // the look of the player being fought, set just before drawing the foe
+  let curDragon = null;    // the dragon's kind colours and whether it's flying (dragons.js)
   let curArchLook = null;  // a bandit archer, a draugr mage...: what this foe's archetype carries (foegroups.js)
   function foeFig(g, kind, lunge, glowT, pose) {
     const humanoid = (o) => { if (curArchLook && kind !== "player") Object.assign(o, curArchLook); o.lunge = lunge; if (pose) { o.aim = pose.aim; o.back = pose.back; o.hunch = (o.hunch || 0) + pose.lean; o.draw = pose.draw; if (pose.wt) o.wt = pose.wt; } return person(g, o); };
@@ -259,8 +260,8 @@ const FIGHTART = (() => {
       case "atronach": { g.save(); const fl = (x, y, r) => { const gl = g.createRadialGradient(x, y, 1, x, y, r); gl.addColorStop(0, "#fff2c0"); gl.addColorStop(0.5, P.fire); gl.addColorStop(1, "rgba(196,87,46,0)"); g.fillStyle = gl; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); };
         fl(0, -40, 18); fl(0, -58, 10); fl(-10, -20, 9); fl(10, -20, 9); g.restore(); return; }
       case "dragon": {
-        g.save(); g.scale(1.25, 1.25); const c = "#5a6a5a", fl = Math.sin(glowT * 5) * 6;
-        H.poly(g, [[-10, -40], [-40, -78 - fl], [-6, -60], [10, -86 - fl], [16, -46]], "#7a6a5a", P.ink, 1.5);   // wing
+        g.save(); g.scale(1.25, 1.25); const c = curDragon?.body || "#5a6a5a", fl = Math.sin(glowT * (curDragon?.air ? 9 : 5)) * (curDragon?.air ? 12 : 6);
+        H.poly(g, [[-10, -40], [-40, -78 - fl], [-6, -60], [10, -86 - fl], [16, -46]], curDragon?.wing || "#7a6a5a", P.ink, 1.5);   // wing
         H.inkPath(g, [[-30, -22], [-60, -20], [-78, -8]], false, 7, c);
         g.beginPath(); g.ellipse(-6, -28, 34, 16, -0.1, 0, 7); g.fillStyle = c; g.fill(); g.strokeStyle = P.ink; g.lineWidth = 1.6; g.stroke();
         for (const x of [-26, -12, 6, 18]) H.inkPath(g, [[x, -18], [x + 2, 0]], false, 5, c);
@@ -984,14 +985,21 @@ const FIGHTART = (() => {
       }
       const lunge = !isPerson ? foeP.draw : ["skeleton", "sphere", "centurion"].includes(foeK) ? Math.max(0, Math.min(1, (foeP.aim + 0.5) / 1.4)) : 0;
       curFoeLook = rec.foeLook; curArchLook = typeof FOEGROUPS !== "undefined" ? FOEGROUPS.look(rec.f?.e) : null;
+      curDragon = foeK === "dragon" && typeof DRAGONS !== "undefined" ? DRAGONS.art(rec.f) : null;
+      if (curDragon?.air && !foeDown) {   // a flying dragon: its shadow on the ground, the dragon high above, bobbing on its wings
+        wg.save(); wg.globalAlpha = 0.25; wg.fillStyle = "#000"; wg.beginPath(); wg.ellipse(0, 0, 46, 7, 0, 0, 7); wg.fill(); wg.restore();
+        wg.translate(0, -(22 + Math.sin(tt * 1.7) * 5));
+      }
       const foePic = foeK !== "player" && typeof ASSETS !== "undefined" ? ASSETS.img(ASSETS.foeKey(rec.foeName, foeK)) : null;
       if (foePic) {   // a painted foe: stands on the ground line, breathes, leans into its attacks
         const hU = (foeK === "dragon" ? 120 : 66) * Math.min(1.8, fSize), wU = hU * foePic.naturalWidth / foePic.naturalHeight;
         const breathe = 1 + Math.sin(tt * 2.2) * 0.012;
         wg.save(); wg.translate(lunge * 10, 0); wg.scale(1, breathe);
+        if (curDragon?.filter) wg.filter = curDragon.filter;   // a frost dragon, a blood dragon...
         wg.drawImage(foePic, -wU / 2, -hU, wU, hU);
         wg.restore();
       } else foeFig(wg, foeK, lunge, tt, isPerson ? foeP : null);
+      wg.filter = "none";
       wg.restore();
       // states on the foe: paralysis crackle, fear swirls, soul trap glow
       if ((b && b.who === "them" && b.status === "para") || (b && b.who === "me" && (b.fx === "paralyze" || b.para) && u > 0.6 && !b.miss)) crackle(fx0, foeChest, "#9aff6a", tt);
