@@ -185,7 +185,7 @@ if (!process.env.SIMONLY) {
   ok(ss.waves === 2 && ss.ehpMax * ss.waves > Math.round(f.e.hp * TB.FOE_HP), "party fights: two heroes meet two foes, tougher in total");
   let r = ss.begin(), waited = false, g = 0;
   while (!ss.done && g++ < 300) { if (r.turn === "me") { r = ss.act("attack"); if (r.turn === "next") r = ss.advance(); continue; } if (r.turn === "wait") { waited = true; if (asked.length === 1) ss.waiting.move = "power"; else ss.waiting.until = 0; r = ss.advance(); continue; } r = ss.advance(); }
-  ok(waited && asked[0] === "p2", "the fight waited for Beta's phone"); ok(ss.ev.some((e) => /Beta power attack/.test(e.text)), "Beta's chosen move was played"); ok(ss.ev.some((e) => /took too long: Auto/.test(e.text)) || asked.length === 1, "a late player gets Auto");
+  ok(waited && asked[0] === "p2", "the fight waited for Beta's phone"); ok(ss.ev.some((e) => /Beta power attack/.test(e.text)), "Beta's chosen move was played"); ok(ss.ev.some((e) => /took too long and keeps their guard up/.test(e.text)) || asked.length === 1, "a late player just guards (no auto fighting)");
   ok(ss.wave === 2 || !f.won, "a won party fight went through every foe"); ok(!f.won || ss.ev.some((e) => /Another .* steps in/.test(e.text)), "the next foe steps in"); }
 // 9. bigger party, more foes (at most 6); a boss stays alone
 { const s = fresh("warrior", 20), f = new G.Fight(s, enc("Bandit outlaw", 20));

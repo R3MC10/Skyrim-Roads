@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b120", build: 120, date: "23 Nov 2026", title: "Every fight is yours", items: [
+      "No more fights that play themselves. Even small scuffles on the road (a wolf, a skeever) now stop your trip so you fight them turn by turn.",
+      "Tactics is gone from the Character menu, since you play every fight yourself.",
+      "In a party, if someone takes too long on their turn, they keep their guard up instead of the game fighting for them.",
+    ] },
     { id: "b119", build: 119, date: "23 Nov 2026", title: "Fits every screen, part 1", items: [
       "Phone held sideways: the compass spreads out so Magic and Items no longer sit on top of it.",
       "Small phones: the Items / Magic / Skills names at the top of the menus no longer run into each other.",

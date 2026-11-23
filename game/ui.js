@@ -17,7 +17,6 @@
     ["map", "Travel", '<path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15M15 6v15"/>'],
     ["hero", "Hero", '<circle cx="12" cy="7" r="4"/><path d="M4 21c1-5 5-7 8-7s7 2 8 7"/>'],
     ["pack", "Pack", '<path d="M6 8h12l-1 13H7z"/><path d="M9 8V6a3 3 0 016 0v2"/>'],
-    ["tactics", "Tactics", '<path d="M5 19L19 5M14 5h5v5"/><path d="M5 5l6 6M14 14l5 5"/>'],
     ["town", "Area", '<path d="M3 21V10l9-6 9 6v11"/><path d="M9 21v-6h6v6"/>'],
     ["log", "Journal", '<path d="M6 3h12v18H6z"/><path d="M9 8h6M9 12h6M9 16h4"/>'],
   ];
@@ -240,7 +239,7 @@
     if (titlePage === "restore") return `<h2>Restore</h2>${restoreHTML()}<button class="btn" data-t="settings">Back</button>`;
     if (titlePage === "howto") return `<h2>How to Play</h2>
       <h3>Travel</h3><p>Tap a place on the map and press Go. You walk in real time, even with the app closed: about ten minutes from Whiterun to Windhelm. Roads are fast; snow, marsh and mountains are slow. Carriages are safe and quick.</p>
-      <h3>Fights</h3><p>Bandits, wolves and worse block the road. Fight, flee, sneak past or drink a potion. Fights follow your tactics (Character → Tactics), rules like “below 40% health, drink a potion”.</p>
+      <h3>Fights</h3><p>Bandits, wolves and worse block the road. Fight, flee, sneak past or drink a potion. You play every fight yourself, turn by turn.</p>
       <h3>Towns</h3><p>The Area tab has shops, inns, trainers, the forge, alchemy, jobs, homes and followers. Rest at an inn or your own bed for a bonus.</p>
       <h3>Dungeons</h3><p>At a barrow or cave, press Go inside. Pick your way room by room down to the boss. Health doesn't come back on its own in there, so bring potions.</p>
       <h3>Quests</h3><p>The Journal tab shows your quests. The gold diamond on the map marks where to go next.</p>
@@ -1710,7 +1709,6 @@
     { title: "On the road", text: () => `You're walking. Trips keep going even when the app is closed, and something may happen by the road${typeof TB !== "undefined" && TB.enabled() ? ": if it's a fight, you play it turn by turn (or press Auto)" : ""}. You can ride a horse later, or take a carriage between cities.`, done: () => !S.trip },
     { title: "You've arrived", text: () => `Open the <b>Town</b> tab. In towns and cities it has shops, the inn, trainers, the forge, jobs and more${S.location && TOWNS.isTown(S.location) ? "" : " (this spot is out in the wilds, so it shows what you can do here)"}.`, done: () => tab === "town" },
     { title: "Quests", text: () => "Now open the <b>Journal</b>. Your quests are there, and the gold diamond on the map shows where to go next. Chat and other players are under <b>Social</b>.", done: () => tab === "log" },
-    { title: "Fights", text: () => typeof TB !== "undefined" && TB.enabled() ? "One more: <b>Character → Tactics</b>. You play fights turn by turn. In a party, if you take too long, your turn is played with Smart AI, or with your own rules here (like “below 40% health, drink a potion”) if you pick Custom." : "One more: <b>Character → Tactics</b>. Fights play out by themselves, following your rules, like “below 40% health, drink a potion”.", done: () => tab === "tactics" },
   ];
   const TAB_TIPS = {
     map: "Start with the “What to do next” card. Press Go to travel; tap any place on the map to see how far it is.",
@@ -1722,7 +1720,7 @@
   };
 
   const guideOffer = () => !S.guideOffered && S.level < 10 && (!S.tut || S.tut.off || S.tut.step === 0)
-    ? `<div class="tut"><div class="tut-h"><b>📖 New to the game?</b></div><p>The guide walks you through your first hour: trading, tactics, dungeons, smithing, friends and more.</p><div style="display:flex;gap:8px"><button class="btn sm pri" data-act="guide">Open the guide</button><button class="btn sm" data-act="guideno">Not now</button></div></div>` : "";
+    ? `<div class="tut"><div class="tut-h"><b>📖 New to the game?</b></div><p>The guide walks you through your first hour: trading, fighting, dungeons, smithing, friends and more.</p><div style="display:flex;gap:8px"><button class="btn sm pri" data-act="guide">Open the guide</button><button class="btn sm" data-act="guideno">Not now</button></div></div>` : "";
   function tutTip() {
     const t = S.tut; if (!t || t.off) return guideOffer();
     if (t.step > 0 && t.step < TUT.length) {

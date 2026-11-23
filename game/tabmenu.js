@@ -1,5 +1,5 @@
 /* The Tab menu, like Skyrim's: a four-way compass over a blurred view of where you are. Swipe or tap a direction:
-   left = Magic, right = Items, up = Skills (constellations, character sheet, perks, tactics), down = Map.
+   left = Magic, right = Items, up = Skills (constellations, character sheet, perks, stats), down = Map.
    Along the bottom: level progress, gold, carry weight and what you're doing right now.
    Inside a menu a sideways swipe flips through its tabs; past the last tab it moves on to the next menu round the
    compass, and a swipe down on the header goes back to the compass. Only reads the save and routes to the game's own
@@ -10,8 +10,8 @@ const TABMENU = (() => {
   const RING = ["char", "items", "map", "magic"];                 // clockwise from the top
   const DIR = { up: "char", right: "items", down: "map", left: "magic" };
   const NAME = { char: "Skills", items: "Items", map: "Map", magic: "Magic" };
-  const SUBT = { char: "Character · perks · tactics", items: "Weapons · apparel · potions", map: "Travel the world", magic: "Spells · powers · shouts" };
-  const CHAR_TABS = [["stars", "Skills"], ["hero", "Character"], ["perks", "Perks"], ["tactics", "Tactics"], ["stats", "Stats"], ["diary", "Diary"]];
+  const SUBT = { char: "Character · perks · stats", items: "Weapons · apparel · potions", map: "Travel the world", magic: "Spells · powers · shouts" };
+  const CHAR_TABS = [["stars", "Skills"], ["hero", "Character"], ["perks", "Perks"], ["stats", "Stats"], ["diary", "Diary"]];
   const charTabs = () => typeof MENUS !== "undefined" ? MENUS.charTabs() : CHAR_TABS;   // menus.js owns the Character sub-tabs
   const MIN = 40, RATIO = 1.4;
   let MAXMS = 1500;   // a slow drag isn't a swipe
@@ -218,7 +218,7 @@ const TABMENU = (() => {
   function hubHTML(S) {
     const b = bar(S), inTown = S.location && !S.trip && typeof TOWNS !== "undefined" && TOWNS.isTown?.(S.location);
     const dir = (d) => { const m = DIR[d]; return `<button class="tw-dir tw-${d}" data-twgo="${m}" aria-label="${NAME[m]}">${ico(m)}<b>${NAME[m]}</b><small>${SUBT[m]}</small>${m === "char" && b.perks ? '<span class="dot"></span>' : ""}</button>`; };
-    const quick = [inTown ? ["town", "Area", "town"] : null, ["log", "Journal", "log"], ["social", "Social", "people"], ["tactics", "Tactics", "tactics"], ["settings", "Settings", "gear"], typeof SEARCH !== "undefined" ? ["search", "Search", "search"] : null].filter(Boolean);
+    const quick = [inTown ? ["town", "Area", "town"] : null, ["log", "Journal", "log"], ["social", "Social", "people"], ["settings", "Settings", "gear"], typeof SEARCH !== "undefined" ? ["search", "Search", "search"] : null].filter(Boolean);
     return `<div class="tw-bg" aria-hidden="true"></div><div class="tw-veil" aria-hidden="true"></div>${starsBG()}
       <div class="tw-top"><b class="tw-where"></b><span class="tw-when"></span><small class="tw-fc"></small></div>
       <div class="tw-rose">${roseSVG()}${dir("up")}${dir("left")}${dir("right")}${dir("down")}</div>
