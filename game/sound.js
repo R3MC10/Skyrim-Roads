@@ -352,6 +352,17 @@ const SOUND = (() => {
       osc(hz(38), t, { type: "sawtooth", vol: 0.12, a: 0.3, h: 1.2, r: 0.5, cut: 500, glide: 0.7, dest: S().hi });
       osc(hz(45), t + 0.2, { type: "sawtooth", vol: 0.07, a: 0.4, h: 1.0, r: 0.5, cut: 400, glide: 0.7, dest: S().hi });
     },
+    /* [OURS] reading the fight (fightread.js): whose turn it is, a new round, a foe winding up, damage over time, a heal,
+       and your heartbeat when you're low. Recorded sfx-<name>.mp3 files take over when present. */
+    "turn-me"(t) { osc(hz(62), t, { type: "sawtooth", vol: 0.06, a: 0.06, h: 0.14, r: 0.18, cut: 1100, dest: S().mid }); osc(hz(69), t + 0.16, { type: "sawtooth", vol: 0.07, a: 0.05, h: 0.22, r: 0.25, cut: 1200, dest: S().hi }); },
+    "turn-foe"(t) { osc(72, t, { vol: 0.45, a: 0.004, h: 0.04, r: 0.22, glide: 0.6, dest: S().lo }); noise(t, { type: "lowpass", freq: 260, vol: 0.18, a: 0.004, r: 0.12, dest: S().lo }); osc(64, t + 0.2, { vol: 0.32, a: 0.004, h: 0.03, r: 0.2, glide: 0.6, dest: S().lo }); },
+    round(t) { osc(hz(50), t, { type: "triangle", vol: 0.14, a: 0.01, h: 0.1, r: 0.5, dest: S().mid }); osc(hz(57), t + 0.02, { vol: 0.06, a: 0.02, h: 0.1, r: 0.45, dest: S().hi }); },
+    windup(t) { noise(t, { type: "bandpass", freq: 300, q: 1.5, vol: 0.2, a: 0.25, h: 0.1, r: 0.06, sweep: 4, dest: S().mid }); osc(90, t, { type: "sawtooth", vol: 0.05, a: 0.3, h: 0.05, r: 0.08, cut: 500, glide: 1.6, dest: S().mid }); },
+    dot(t) { noise(t, { type: "bandpass", freq: 900, q: 2, vol: 0.12, a: 0.01, h: 0.04, r: 0.08, sweep: 0.5, dest: S().lo }); osc(180, t, { vol: 0.12, a: 0.005, r: 0.1, glide: 0.7, dest: S().lo }); },
+    "dot-poison"(t) { for (let i = 0; i < 3; i++) osc(rnd(700, 1100), t + i * 0.05, { vol: 0.035, a: 0.004, r: 0.05, glide: 0.6, dest: S().lo }); osc(150, t, { vol: 0.12, a: 0.005, r: 0.12, glide: 0.7, dest: S().lo }); },
+    "dot-burn"(t) { noise(t, { type: "lowpass", freq: 1400, vol: 0.2, a: 0.02, h: 0.08, r: 0.1, sweep: 0.4, dest: S().mid }); },
+    heal(t) { [74, 79, 83].forEach((n, i) => osc(hz(n), t + i * 0.06, { vol: 0.045, a: 0.02, h: 0.08, r: 0.3, dest: S().hi })); },
+    heartbeat(t) { osc(58, t, { vol: 0.5, a: 0.004, h: 0.03, r: 0.09, glide: 0.7, dest: S().dry }); osc(52, t + 0.24, { vol: 0.36, a: 0.004, h: 0.02, r: 0.08, glide: 0.7, dest: S().dry }); },
     chat(t) { osc(hz(81), t, { vol: 0.07, a: 0.004, r: 0.07, dest: S().lo }); osc(hz(86), t + 0.09, { vol: 0.06, a: 0.004, r: 0.1, dest: S().mid }); },
     potion(t) { for (let i = 0; i < 4; i++) osc(500 + i * 120 + rnd(0, 60), t + i * 0.07, { vol: 0.08, a: 0.004, h: 0.02, r: 0.025, glide: 1.8, dest: S().lo }); },
     shout(t) {   // the Voice: a deep, gritty blast and a rush of air
@@ -411,7 +422,8 @@ const SOUND = (() => {
      music bus, so the volume sliders, mute and the background fade all still apply. Under browser automation nothing
      is fetched unless the URL has ?audio (keeps screen tests quiet). */
   const FILE_VOL = { click: 0.3, page: 0.35, chat: 0.35, coin: 0.4, potion: 0.45, swing: 0.45, hit: 0.55, clang: 0.5, equip: 0.45,
-    spell: 0.5, levelup: 0.5, quest: 0.5, arrive: 0.5, victory: 0.55, death: 0.55, shout: 0.65, dragon: 0.65 };
+    spell: 0.5, levelup: 0.5, quest: 0.5, arrive: 0.5, victory: 0.55, death: 0.55, shout: 0.65, dragon: 0.65,
+    "turn-me": 0.45, "turn-foe": 0.5, round: 0.4, windup: 0.5, dot: 0.4, heal: 0.4, heartbeat: 0.55 };
   const FILE_SEND = { hit: "lo", clang: "lo", swing: "lo", spell: "lo", shout: "lo", dragon: "lo" };   // recordings carry their own room; UI stays dry
   const MUS_FILE_VOL = 0.6;
   const REGION = { Whiterun: "tundra", Falkreath: "pineforest", "The Pale": "snowfield", Winterhold: "snowfield", Hjaalmarch: "marsh",

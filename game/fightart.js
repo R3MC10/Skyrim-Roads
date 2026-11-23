@@ -7,6 +7,7 @@
 const FIGHTART = (() => {
   const P = ART.PAL;
   const REG = new Map(), IDS = new WeakMap(); let nextId = 1;
+  const IDLE = new Set();   // finished scenes still animating their painted backdrop (battlescene.js)
   const reduce = () => typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   // ---------------------------------------------------------------- who and where
@@ -598,6 +599,7 @@ const FIGHTART = (() => {
     const arena = !!f.arena || !f.e && f.log && f.log.length && /hits for/.test(f.log[0].them || "");
     REG.set(id, { f, scene: arena ? "arena" : sceneOf(s), hero: { ...heroOf(s, f), bound: false }, foe: f.e?.look || f.foeLook ? "player" : arena ? "bandit" : foeOf(f.e), foeLook: f.e?.look || f.foeLook || null, wagon: f.e?.cart ? "cart" : f.e?.caravan ? (f.e.khajiit ? "khajiit" : "nord") : null, foeName: f.e?.name || f.foeName || (arena && (f.log[0].them.match(/^(.+?) hits for/) || [])[1]) || "Opponent", played: !!f.tbPlayed });   // a turn-based fight was already watched live
     { const rec = REG.get(id), outdoor = !["cave", "dwemer"].includes(rec.scene) && !s?.dungeon; if (outdoor && typeof SKY !== "undefined" && s) rec.sky = SKY.state([s.x, s.y]); }   // the sky over this fight
+    if (typeof BSCENE !== "undefined") { const rec = REG.get(id); rec.art = BSCENE.artOf(s, { arena: rec.scene === "arena" }); if (rec.art) BSCENE.prefetch(rec.art); }   // [OURS] painted scene (battlescene.js); rec.scene stays the drawn fallback
     { const rec = REG.get(id); if (f.mount && !f.mount.foot && typeof HORSEBACK !== "undefined") rec.horse = typeof HORSES !== "undefined" && s?.horse ? HORSES.coat(s.horse.coat)[2] : "#6b4a2e"; }   // [OURS] fighting from the saddle
     if (REG.size > 40) REG.delete(REG.keys().next().value);
     return id;
@@ -822,6 +824,7 @@ const FIGHTART = (() => {
       if (!f.tbMid) pickDeath();
       revealLog(1e9); ctl?.remove();
       draw(performance.now());
+      idleArt();
     }
     // ---- controls: ⏩ ×2 and Skip
     let ctl = null;
@@ -963,7 +966,10 @@ const FIGHTART = (() => {
       if (z !== 1 || sh) { wg.fillStyle = "#1c2128"; wg.fillRect(0, 0, work.width, work.height); }
       const sc = k * z, tx = (ox + zcx - zcx * z) * k, ty = (oy + zcy - zcy * z) * k;
       wg.setTransform(sc, 0, 0, sc, tx, ty);
-      wg.drawImage(bg, 0, 0, W, Hh);
+      const art = rec.art && typeof BSCENE !== "undefined" ? BSCENE.ready(rec.art) : null;   // [OURS] the painted scene once its pictures are in, else the drawn one
+      const artO = art ? { W, Hh, t: rm ? 0 : tt, ox, sky: rec.sky, wagon: rec.wagon, style } : null;
+      if (art) BSCENE.back(wg, art, artO); else wg.drawImage(bg, 0, 0, W, Hh);
+      if (cv.dataset.bs !== (art ? rec.art : "")) cv.dataset.bs = art ? rec.art : "";   // which painted scene is on (screen tests)
       // a rune waiting on the ground, a portal
       if (st.rune) rune(fx0, groundY, COL[st.rune]?.[0] || "#ffb347", tt);
       if (b && b.fx === "rune" && b.who === "me" && u > 0.4) rune(fx0, groundY, COL[b.el]?.[0] || "#ffb347", tt);
@@ -1092,6 +1098,7 @@ const FIGHTART = (() => {
         if (b.fx === "wall" && b.el === "shock" && u > 0.5 && Math.random() < 0.3) { boltOn = 1; boltX0 = fx0 + (Math.random() - 0.5) * 30 * s; boltX1 = boltX0; boltY0 = groundY - 100 * s; boltY1 = groundY; boltC = "#c8b8ff"; jag(); }
         if (b.fx === "turn" && u > 0.4 && u < 0.9) rays(hx0, heroChest, (u - 0.4) / 0.5);
       }
+      if (art) BSCENE.front(wg, art, artO);   // the near-edge strip goes over the fighters' feet, under the weather and the HUD
       // weather in front of the fighters
       if (wxp) { const dt = Math.min(0.05, Math.max(0, (now - lastNow) / 1000)); lastNow = now; wxp.step(wg, done ? 0 : dt); }
       // weapon trail
@@ -1266,7 +1273,23 @@ const FIGHTART = (() => {
       if (!cv.isConnected) { cancelAnimationFrame(raf); LIVE.delete(runner); return; }
       if (!MANUAL) { const dt = Math.min(0.05, Math.max(0, (now - lastNow) / 1000)); update(dt); draw(now); }
       lastNow = now;
-      if (!done) raf = requestAnimationFrame(frame); else LIVE.delete(runner);
+      if (!done) raf = requestAnimationFrame(frame); else { LIVE.delete(runner); idleArt(); }
+    }
+    /* [OURS] a finished scene with a painted backdrop keeps its torches flickering and banners moving (12 frames a second,
+       only the newest two scenes, only while on screen); with reduced motion it just redraws once the pictures arrive */
+    let idleT = 0, idleDrawn = false;
+    function idleArt() {
+      if (idleT || !rec.art || typeof BSCENE === "undefined") return;
+      const tick = () => {
+        idleT = 0;
+        if (!cv.isConnected || !IDLE.has(tick)) { IDLE.delete(tick); return; }
+        const ok = !!BSCENE.ready(rec.art);
+        if (!MANUAL && !(typeof document !== "undefined" && document.hidden) && ok && (!rm || !idleDrawn)) { draw(performance.now()); idleDrawn = true; }
+        if ((ok && (rm || !BSCENE.animated(rec.art))) || (!ok && BSCENE.failed(rec.art))) { IDLE.delete(tick); return; }
+        idleT = setTimeout(tick, ok ? 83 : 300);
+      };
+      IDLE.add(tick); while (IDLE.size > 2) IDLE.delete(IDLE.values().next().value);
+      idleT = setTimeout(tick, 83);
     }
     cv.addEventListener("click", (e) => { e.stopPropagation(); if (!done) finish(); });
     if (rec.played || autoSkip() || !beats.length) { finish(); return; }

@@ -79,6 +79,7 @@ const COMBATFX = (() => {
     return Math.max(lo, Math.min(hi, want));
   }
   /* which sound goes with an impact (the names fall back: hit-gore → hit) */
+  const WSND = { axe: "hit-axe", battleaxe: "hit-axe", mace: "hit-mace", warhammer: "hit-mace", bow: "hit-bow", crossbow: "hit-bow" };
   function soundOf(b, foeK, melee = false, goreOn = gore()) {
     if (!b) return null;
     if (b.miss) return "swing";
@@ -86,6 +87,8 @@ const COMBATFX = (() => {
     const el = b.el || (["fire", "frost", "shock"].includes(b.fx) ? b.fx : null);
     if (el && !melee) return "spell-" + el;
     if (b.crit || b.sneak || b.final) return "hit-crit";
+    const ws = b.who === "me" ? WSND[b.wt] : null;   // [OURS] axes chop, maces thud, arrows thunk ("hit" when there's no recording)
+    if (ws) return ws;
     if (goreOn && bleedOf(foeK)[2] === "blood" && b.who === "me") return "hit-gore";
     if (bleedOf(foeK)[2] === "oil") return "clang";
     return "hit";
