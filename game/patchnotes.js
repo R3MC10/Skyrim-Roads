@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b128", build: 128, date: "23 Nov 2026", title: "Hunting", items: [
+      "New 🏹 button on the map: turn hunting on and you travel a little slower, but you run into deer, elk, mountain goats (and horkers by the sea) far more often. Every one is a fight you play.",
+      "Sometimes something else is hunting too: wolves, bears and sabre cats turn up now and then.",
+      "Game gives venison or horker meat and hides you can tan into leather. Predators still give their pelts.",
+      "New Archery perk, Hunter's Eye: you find game half again as often, hit animals harder, and get an extra piece of meat at rank 2.",
+    ] },
     { id: "b127", build: 127, date: "23 Nov 2026", title: "Mining game", items: [
       "Mining is a mini-game now: a wall of rock with ore hidden in it. Tap a stone while the needle on the strike meter is in the bright band. Perfect blows hit hardest and can split ore into two pieces.",
       "Glinting stones hold ore. The better your Smithing, the more veins you spot and the more swings you get. Blank rock breaks in one hit, but wastes the swing.",

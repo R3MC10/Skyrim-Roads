@@ -521,7 +521,7 @@
       <div class="layout">
         <div>
           <div class="mapwrap" id="mapwrap"><canvas id="map" aria-label="Map of Skyrim"></canvas>
-            <div class="mapbtns"><button class="iconbtn" id="zoomBtn" aria-label="Zoom map">${zoom === 1 ? "＋" : "－"}</button><button class="iconbtn" id="centerBtn" aria-label="Centre on me">◎</button>${typeof SNEAKMODE !== "undefined" ? `<button class="iconbtn sneakbtn${S?.sneak ? " on" : ""}" id="sneakBtn" aria-label="Sneak" aria-pressed="${!!S?.sneak}" title="Sneak: slower, fewer fights, harder to spot"><svg viewBox="0 0 24 24" aria-hidden="true" width="20" height="20"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg></button>` : ""}</div>
+            <div class="mapbtns"><button class="iconbtn" id="zoomBtn" aria-label="Zoom map">${zoom === 1 ? "＋" : "－"}</button><button class="iconbtn" id="centerBtn" aria-label="Centre on me">◎</button>${typeof HUNT !== "undefined" ? `<button class="iconbtn sneakbtn huntbtn${S?.hunting ? " on" : ""}" id="huntBtn" aria-label="Hunt" aria-pressed="${!!S?.hunting}" title="Hunt: slower, but you run into animals far more often"><svg viewBox="0 0 24 24" aria-hidden="true" width="20" height="20"><path d="M6 3c5 3 5 15 0 18" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M6 3v18" stroke="currentColor" stroke-width="1" opacity=".7"/><path d="M4 12h15m0 0-3-3m3 3-3 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>` : ""}${typeof SNEAKMODE !== "undefined" ? `<button class="iconbtn sneakbtn${S?.sneak ? " on" : ""}" id="sneakBtn" aria-label="Sneak" aria-pressed="${!!S?.sneak}" title="Sneak: slower, fewer fights, harder to spot"><svg viewBox="0 0 24 24" aria-hidden="true" width="20" height="20"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg></button>` : ""}</div>
             <div class="picked hide" id="picked"></div></div>
           <div class="vitals" id="vitals"></div>
           <div id="trip"></div>
@@ -538,6 +538,11 @@
       if (!S) return; const onNow = SNEAKMODE.toggle(S); SOUND.fx("click"); persist(true);
       const b = $("#sneakBtn"); b.classList.toggle("on", onNow); b.setAttribute("aria-pressed", String(onNow));
       toast(onNow ? `You crouch and move quietly. Slower, fewer fights, and others must come within ${SNEAKMODE.myRange(S)} paces to spot you.` : "You stand up and walk normally.");
+    };
+    if ($("#huntBtn")) $("#huntBtn").onclick = () => {
+      if (!S) return; const onNow = HUNT.toggle(S); SOUND.fx("click"); persist(true);
+      const b = $("#huntBtn"); b.classList.toggle("on", onNow); b.setAttribute("aria-pressed", String(onNow));
+      toast(onNow ? "🏹 You're hunting. You travel a little slower, but you'll run into deer, elk and worse far more often." : "You stop tracking game.");
     };
     $("#centerBtn").onclick = () => { mapTouchedAt = performance.now(); follow = true; if (zoom === 1) zoom = 2.4; $("#zoomBtn").textContent = "－"; };
     bindMap();
@@ -799,7 +804,7 @@
       return;
     }
     if (tr.status === "encounter") {
-      put(`<div class="trip enc"><div class="row"><b>⚠️ ${esc(tr.encounter.name)} blocks the road</b><button class="btn danger sm" data-act="openenc">Face it</button></div></div>`);
+      put(`<div class="trip enc"><div class="row"><b>${tr.encounter.hunt ? `🏹 ${tr.encounter.prey ? "Game spotted" : "Hunted"}: ${esc(tr.encounter.name)}` : `⚠️ ${esc(tr.encounter.name)} blocks the road`}</b><button class="btn danger sm" data-act="openenc">${tr.encounter.prey ? "Hunt it" : "Face it"}</button></div></div>`);
       return;
     }
     const mins = tripMinutesLeft(), total = Math.max(mins, tr.total || mins), p = pct(total - mins, total);

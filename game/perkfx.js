@@ -180,6 +180,7 @@ const PFX = (() => {
     [ "Acrobatics", "untouchable", "Untouchable", 1, [100], ["evasion", "leap_attack"], "Another 5% chance to dodge any blow. [OURS]", [["dodge", 0.05, {}]]],
     [ "Acrobatics", "feather_step", "Feather Step", 1, [60], ["sure_footed"], "Carry 25 more. [OURS]", [["carry", 25, {}]]],
     // ---------------------------------------------------------------- Smithing (5 → 11)
+    [ "Archery", "hunters_eye", "Hunter's Eye", 2, [20, 50], ["overdraw"], "Hunting: you find game half again as often, every kill gives an extra piece of meat (rank 2), and you hit animals 10%/20% harder. [OURS]", [["huntrate", [0.5, 0.5], {}], ["huntmeat", [0, 1], {}], ["out", [0.1, 0.2], { tag: ["animal"] }]]],
     [ "Smithing", "prospector", "Prospector", 1, [30], ["steel_smithing"], "Mining: you spot every vein in the rock, gems turn up more often, and you get 2 more swings. [OURS]", [["prospect", 1, {}], ["mineswing", 2, {}], ["gemfind", 0.1, {}]]],
     [ "Smithing", "orcish_smithing", "Orcish Smithing", 1, [50], ["dwarven_smithing"], "Improving weapons and armor adds 1 more. [Skyrim: Orcish gear, improve twice as much]", [["temper", 1, {}]]],
     [ "Smithing", "ebony_smithing", "Ebony Smithing", 1, [80], ["orcish_smithing"], "Improving adds another 1. [Skyrim]", [["temper", 1, {}]]],

@@ -1553,7 +1553,7 @@ body:has(#favBtn) .app,body:has(#twBtn) .app{padding-bottom:calc(190px + env(saf
 .pickgame.caught .lpcard{animation:lpsnap .35s;box-shadow:0 0 0 1px rgba(196,87,46,.7),0 20px 60px rgba(0,0,0,.6)}
 @media (prefers-reduced-motion:reduce){.pickgame .lpcard{animation:none!important}}
 /* ==== sneak mode (sneakmode.js) ==== */
-.mapbtns .sneakbtn{display:grid;place-items:center}.mapbtns .sneakbtn.on{color:#d8c8ff;box-shadow:0 0 0 1px rgba(190,165,255,.7),0 0 12px rgba(120,90,200,.5);background:rgba(40,28,70,.85)}
+.mapbtns .sneakbtn{display:grid;place-items:center}.mapbtns .sneakbtn.huntbtn.on{color:#ffd9a0;box-shadow:0 0 0 1px rgba(232,170,90,.75),0 0 12px rgba(200,120,40,.5);background:rgba(60,34,14,.85)}.mapbtns .sneakbtn.on{color:#d8c8ff;box-shadow:0 0 0 1px rgba(190,165,255,.7),0 0 12px rgba(120,90,200,.5);background:rgba(40,28,70,.85)}
 /* [combat overhaul] tbui.js: taller stage, unit frames with ghost bars, a readable log, a thumb dock of action cards you drag onto a target */
 .tbf .tbin{gap:7px;padding-top:calc(8px + env(safe-area-inset-top))}
 .tbtop>b{font-size:17px;letter-spacing:.04em;text-shadow:0 1px 0 #000}
@@ -1869,6 +1869,7 @@ html.art-pixel .mgc .mgo{border-radius:0;image-rendering:pixelated}
 <script src="favwheel.js"></script>
 <script src="craftgames.js"></script>
 <script src="minegame.js"></script>
+<script src="hunting.js"></script>
 <script src="craftqol.js"></script>
 <script src="polish.js"></script>
 <script src="caravans.js"></script>

@@ -1017,6 +1017,7 @@ const G = (() => {
     for (const table of [...(tags.has("humanoid") ? ["humanoid"] : []), ...(tags.has("elite") ? ["elite"] : [])])
       for (const [item, ch] of D.LOOT[table]) if (Math.random() < ch) { const q = ammoQty(item); give(s, item, q); got.push(D.ITEMS[item].name + (q > 1 ? ` ×${q}` : "")); }
     if (tags.has("beast") && typeof SMITH !== "undefined") { const p = SMITH.peltFor(e.name); if (p && Math.random() < 0.7) { give(s, p); got.push(D.ITEMS[p].name); } }   // [Skyrim] pelts from animals
+    if (e.hunt && typeof HUNT !== "undefined") got.push(...HUNT.loot(s, e));   // venison and hides from game (hunting.js)
     if (typeof GATHER !== "undefined") got.push(...GATHER.creatureParts(s, e));   // [Skyrim] claws, teeth, eggs, jelly (gather.js)
     return got;
   }
@@ -1094,6 +1095,7 @@ const G = (() => {
     if (c > cap && P(s, "marathon")) v = (v + F.travelSpeed(BASE_WALK, skill(s, "Athletics"), cap, cap)) / 2;
     v *= 1 + 0.05 * P(s, "long_strider") + (typeof PFX !== "undefined" ? Math.min(0.15, PFX.num(s, "travel")) : 0);   // Fleet Foot, Trailblazer...
     if (typeof WEVENTS !== "undefined") { const wf = WEVENTS.weather([s.x, s.y]).speed; v *= wf < 1 && fxSum(s, "warmth") > 0 ? (1 + wf) / 2 : wf; if (typeof WFX !== "undefined") v *= WFX.speedMult(s); }   // [OURS] snow and storms slow you down; hot soup halves that
+    if (typeof HUNT !== "undefined") v *= HUNT.speedMult(s);   // tracking game is slower (hunting.js)
     if (riding(s)) v *= typeof HORSES !== "undefined" ? HORSES.speed(s) : D.HORSE_SPEED;   // breed, roll and horseshoes
     if (typeof CARAVANS !== "undefined") v *= CARAVANS.cartSpeed(s);   // [OURS] a loaded cart is a little slower
     if (typeof SNEAKMODE !== "undefined") v *= SNEAKMODE.speedMult(s);   // sneaking on the road is slower (sneakmode.js)
@@ -1176,6 +1178,13 @@ const G = (() => {
           note(s, `⚠️ Encounter: ${e.name}`);
           return out;
         }
+      }
+      const hr = typeof HUNT !== "undefined" ? HUNT.rate(s, stepT) : 0;   // hunting: animals turn up far more often (hunting.js)
+      if (hr && Math.random() < 1 - (1 - hr) ** (dt / 60)) {
+        const e = scaleEnemy(HUNT.pick(s), fightLevel(s)); e.hold = holdAt([s.x, s.y]);
+        tr.status = "encounter"; tr.encounter = e; out.encounter = e;
+        note(s, `🏹 Hunting: ${e.name}`);
+        return out;
       }
     }
     return out;
