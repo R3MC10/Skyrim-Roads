@@ -17,7 +17,7 @@ I have characters on different devices and can't reach them from the others."
 ## Phases
 | Phase | What | Status |
 | --- | --- | --- |
-| 1 | Server with accounts, sessions (one device), cloud characters; sign-in screen and character picker in the game; upload existing characters | **building now** |
+| 1 | Server with accounts, sessions (one device), cloud characters; sign-in screen and character picker in the game; upload existing characters | **built, tested locally** · next: deploy on Railway, set `DEFAULT_SERVER`, patch note, test on phones |
 | 2 | Shared world on the server instead of phone-to-phone (parties, chat, trades, market, clans, events) as a new backend inside `store.js` | later |
 | 3 | Party fights run on the server (host can leave, every player gets the full fight screen); optional economy checks | later, if wanted |
 
@@ -79,3 +79,20 @@ Secrets live only in Railway, never in the repo.
 - The same tests against a real local Postgres before release (`PG_TEST_URL=… node tests/test_server.js`).
 - `tests/account_ui.py`: sign up, upload, second "device" takes over, first one is told, character picker,
   both art styles.
+
+## Status (phase 1)
+- Server: done. `tests/test_server.js` passes on memory (CI) and on a local Postgres 16, including two racing saves.
+- Game: done (`game/account.js`, small hooks in `store.js` and `ui.js`). `tests/account_ui.py` passes end to end with
+  two "devices" against both stores: sign up, upload, "Play here?", takeover, the signed-out notice mid-game,
+  saving to the account, taking it back with the "two copies" choice, sign out.
+- Hidden until a server address is set, so merging it changes nothing for players.
+- Before switching it on for everyone: deploy on Railway, put the address in `DEFAULT_SERVER`, add a patch note,
+  try it on two real phones (Android app and the web copy).
+
+### Local testing
+```
+cd server && npm install && PORT=8788 node src/index.js          # memory store
+python3 -m http.server 8901 --directory game &                    # the game
+# open http://localhost:8901/index.html?server=http://localhost:8788  (add &p=devA / &p=devB for two "devices")
+python3 tests/account_ui.py 8901 8788
+```

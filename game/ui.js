@@ -119,6 +119,7 @@
     try { await Promise.race([document.fonts?.ready, new Promise((r) => setTimeout(r, 2500))]); } catch { /* fonts optional */ }
     S = await Store.loadSave();
     if (S) S = G.migrate(S);
+    if (typeof ACCOUNT !== "undefined") ACCOUNT.init({ getSave: () => S, onTitle: () => !!$("#title"), rerender: () => { if ($("#title") && titlePage === "account") renderTitle(); } });   // [OURS] accounts (account.js)
     if (getPref("zoomFar", false)) zoom = 1;
     let open = null; try { open = sessionStorage.getItem("rotn_open"); sessionStorage.removeItem("rotn_open"); } catch { /* ignore */ }
     if (open === "update") { showTitle("update"); checkUpdate(true); } else showTitle(open === "menu" ? "menu" : "press");
@@ -217,6 +218,7 @@
       body = `<nav class="menu" aria-label="Main menu">
         ${S ? item("continue", "Continue", `${S.name} · Level ${S.level} ${D.RACES[S.race].name} · ${S.location || G.holdAt([S.x, S.y])}`) : ""}
         ${item("new", S ? "New Character" : "Begin")}
+        ${typeof ACCOUNT !== "undefined" && ACCOUNT.on() ? item("account", ACCOUNT.signedIn() ? "Account" : "Sign in", ACCOUNT.menuSub()) : ""}
         ${item("settings", "Settings")}
         ${item("update", "Updates", "", update?.newer ? "New" : "")}
         ${typeof PATCHNOTES !== "undefined" ? item("notes", "Patch Notes", "", PATCHNOTES.unseen() && S ? "New" : "") : ""}
@@ -232,7 +234,8 @@
   function titleSubpage() {
     if (titlePage === "settings") return `<h2>Settings</h2>${settingsHTML()}${typeof PATCHNOTES !== "undefined" ? `<button class="btn" data-t="notes" style="width:100%;margin-top:12px">📜 Patch notes</button>` : ""}${backBtn}`;
     if (titlePage === "notes") { PATCHNOTES.markSeen(); return `<h2>Patch Notes</h2>${PATCHNOTES.html()}${backBtn}`; }
-    if (titlePage === "confirmNew") return `<h2>Start over?</h2><p>${esc(S.name)} (level ${S.level}) and everything they carry will be gone for good. Other players' worlds aren't affected.</p>
+    if (titlePage === "account" && typeof ACCOUNT !== "undefined") return `${ACCOUNT.pageHTML()}${backBtn}`;
+    if (titlePage === "confirmNew") return `<h2>Start over?</h2><p>${(typeof ACCOUNT !== "undefined" && ACCOUNT.newCharText(S)) || `${esc(S.name)} (level ${S.level}) and everything they carry will be gone for good. Other players' worlds aren't affected.`}</p>
       <button class="btn danger" data-t="wipe">Yes, make a new character</button>${backBtn}`;
     if (titlePage === "update") return `<h2>Updates</h2>${updateHTML()}${backBtn}`;
     if (titlePage === "backup") return `<h2>Back up</h2>${backupHTML()}<button class="btn" data-t="settings">Back</button>`;
@@ -264,7 +267,8 @@
       case "continue": closeTitle(); startGame(); break;
       case "tutorial": S.tut = { step: 1, seen: {} }; Store.save(S); closeTitle(); startGame(); break;
       case "new": if (S) { titlePage = "confirmNew"; renderTitle(); } else { closeTitle(); showCreate(); } break;
-      case "wipe": Store.wipe().then(() => { S = null; closeTitle(); showCreate(); }); break;
+      case "wipe": if (typeof ACCOUNT !== "undefined" && ACCOUNT.signedIn() && ACCOUNT.linked()) { ACCOUNT.newCharacter(); break; }   // signed in: the old one stays on the account, the new one gets its own id
+        Store.wipe().then(() => { S = null; closeTitle(); showCreate(); }); break;
       case "update": titlePage = "update"; renderTitle(); checkUpdate(true); break;
       case "doupdate": runUpdate(); break;
       default: titlePage = t; renderTitle();
