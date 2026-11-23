@@ -1264,6 +1264,7 @@ const G = (() => {
     return r;
   }
   function buyFrom(s, item) {   // a travelling merchant: same barter formula as towns, no opening hours (and no town market)
+    if (typeof SHOPCAP !== "undefined" && !SHOPCAP.ok(item)) return SHOPCAP.why(item);
     const price = buyPrice(s, item, null);
     if (s.gold < price) return `That costs ${price} gold. You have ${s.gold}.`;
     s.gold -= price; give(s, item);
@@ -1273,7 +1274,7 @@ const G = (() => {
 
   // ---------------------------------------------------------------- towns
   const shopTypes = (l) => D.SHOPS[l] || [];
-  const shopStock = (l) => [...new Set(shopTypes(l).flatMap((k) => [...(D.SHOP_STOCK[k] || []), ...(((D.TOWN_STOCK || {})[l] || {})[k] || [])]))];
+  const shopStock = (l) => { const all = [...new Set(shopTypes(l).flatMap((k) => [...(D.SHOP_STOCK[k] || []), ...(((D.TOWN_STOCK || {})[l] || {})[k] || [])]))]; return typeof SHOPCAP !== "undefined" ? SHOPCAP.filter(all) : all; };   // [OURS] traders sell basic gear only (shopcap.js)
   const haggle = (s) => 1 + [0, 0.1, 0.15, 0.2, 0.25, 0.3][P(s, "haggling")] + fxSum(s, "barter") / 100 + (typeof PFX !== "undefined" ? Math.min(0.15, PFX.num(s, "price")) : 0);   // + Merchant, Investor, Silver Tongue...   // [Skyrim] Haggling; Fortify Barter
   /* [OURS] the town's market (economy.js): regional goods, today's shortage, caravans and what players trade move prices.
      Trade goods are dealt wholesale (a smaller merchant's cut). extra = units already in this lot, so bulk deals slide. */
@@ -1314,6 +1315,7 @@ const G = (() => {
     if (typeof TOWNS !== "undefined" && TOWNS.wanted(s)) return "The merchant won't trade with a wanted criminal.";
     if (!shopsOpen(t) && !knockOk(s, t)) return `The shops are closed (${clockText(t)}). They open at 08:00.`;
     if (typeof MAGIC !== "undefined") { const no = MAGIC.canBuy(s, item); if (no) return no; }
+    if (typeof SHOPCAP !== "undefined" && !SHOPCAP.ok(item)) return SHOPCAP.why(item);
     if (item === "horse") {
       if (!shopTypes(s.location).includes("stables")) return "No stables here.";
       if (typeof HORSES !== "undefined") return HORSES.buy(s);

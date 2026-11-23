@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b125", build: 125, date: "23 Nov 2026", title: "Traders sell the basics", items: [
+      "Town shops, caravans and roadside traders now only sell basic gear: iron, steel, hide, leather, chainmail and the like. Elven, dwarven, glass, ebony and better come from dungeons, bosses, quests and your own forge.",
+      "Enchanted gear is still on sale, but only with weak enchantments. Staffs on sale cast novice and apprentice spells only.",
+      "Jewellery traders sell plain silver and gold rings and necklaces. Gem-set pieces you make at a forge or find.",
+    ] },
     { id: "b124", build: 124, date: "23 Nov 2026", title: "Guards on patrol", items: [
       "Hold guards now walk the roads: a patrol leaves every hold's capital for a nearby village or fort and comes back. You see them on the map near places you've found, in their hold's colours, and everyone sees them in the same spot.",
       "Guards are always your level, so a fight with one is never a pushover.",

@@ -309,7 +309,7 @@ const WORLDEV = (() => {
   const KC_TITLE_AT = 5;
   function stock(ev, s) {
     const n = 5 + Math.round(pfx(s, "wevstock"));
-    return shuffle(KC_POOL.filter((i) => D.ITEMS[i]), "stock:" + ev.id).slice(0, n);
+    return shuffle(KC_POOL.filter((i) => D.ITEMS[i] && (typeof SHOPCAP === "undefined" || SHOPCAP.ok(i))), "stock:" + ev.id).slice(0, n);   // basic gear only (shopcap.js)
   }
   const price = (s, item) => Math.max(1, Math.round((D.ITEMS[item]?.value || 1) * 1.2 * (1 - Math.min(0.3, pfx(s, "wevmarket")))));
   function buy(s, item, t = nowS()) {
