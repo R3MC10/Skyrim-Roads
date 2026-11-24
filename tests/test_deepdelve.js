@@ -246,8 +246,8 @@ ok(PERKS.BY_ID.long_strider && PERKS.BY_ID.stealth && PERKS.BY_ID.apprentice_loc
   const pn = vm.runInContext("typeof PATCHNOTES", p) !== "undefined" ? null : null;
   const notes = src("patchnotes.js"); const ctx = {}; vm.createContext(ctx); vm.runInContext(notes.replace(/^const PATCHNOTES =/m, "var PATCHNOTES ="), ctx);
   const top = ctx.PATCHNOTES.LIST[0];
-  ok(top.id === "b170-deepdelve" || ctx.PATCHNOTES.LIST.some((x) => x.id === "b170-deepdelve"), "patch note is in");
-  const mine = ctx.PATCHNOTES.LIST.find((x) => x.id === "b170-deepdelve");
+  ok(top.id === "b172-deepdelve" || ctx.PATCHNOTES.LIST.some((x) => x.id === "b172-deepdelve"), "patch note is in");
+  const mine = ctx.PATCHNOTES.LIST.find((x) => x.id === "b172-deepdelve");
   for (const line of [mine.title, ...mine.items]) { const r = t(line); ok(r && r !== line, "Polish patch note: " + line.slice(0, 40)); }
 }
 

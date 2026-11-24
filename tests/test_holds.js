@@ -13,14 +13,14 @@ c.N = +(process.env.N || 40);
 vm.runInContext(SIM.slice(SIM.indexOf("const LEVELS"), SIM.indexOf("const BUILDS")) + `
 let n = 0; const OK = (x, m) => { if (!x) throw new Error("FAIL " + m); n++; };
 const at = (s, p) => { s.location = p; [s.x, s.y] = WORLD.places[p]; s.trip = null; s.dungeon = null; };
-const H = HOLDRULE, C = CLANS.COLORS, HOUR = 36e5, DAY = 864e5;
+const H = HOLDRULE, SC = "stormcloak", IL = "imperial", HOUR = 36e5, DAY = 864e5;
 OK(typeof H === "object" && H.TAX_MAX === 0.05 && H.TAX_DEFAULT <= H.TAX_MAX, "module loaded, tax capped at 5%");
 // ---- 0. offline / single player: nobody rules, prices untouched
 const solo = G.newSave("S0", "Solo", "nord"); at(solo, "Whiterun");
-CLANS.set([], []); WARS.setDocs([], null); H.setDocs([], null);
+CLANS.set([], []); SIDES.setDocs([], null); WARS.setDocs([], null); H.setDocs([], null);
 OK(Object.keys(H.seats(Date.now())).length === 0, "no records: nobody rules");
 OK(H.priceMult(solo, "Whiterun") === 1 && WARS.discount(solo, "Whiterun") === 1, "no records: prices unchanged");
-OK(/clan/.test(H.canFight(solo, "Whiterun").why), "no clan: can't challenge");
+OK(/side/.test(H.canFight(solo, "Whiterun").why), "no side: can't challenge");
 
 // ---- the calendar: Monday 00:00 UTC weeks, two terms, the Saturday-Sunday window
 const MON = BOUNTY.weekEnds(BOUNTY.week(Date.now()) + 1);   // next Monday 00:00 UTC
@@ -29,14 +29,14 @@ OK(H.termStart(MON + DAY) === MON && H.termStart(MON + 4 * DAY) === MON + 3.5 * 
 OK(!H.windowAt(MON + 5 * DAY).open && H.windowAt(MON + 5.5 * DAY + 1).open && H.windowAt(MON + 6.9 * DAY).open, "raid window: Saturday 12:00 to Monday 00:00");
 OK(!H.windowAt(MON + 7 * DAY).open, "window closes at the new week");
 
-// ---- clans: Sons [SONS] = a (founder), b, c; Ravens [RAVN] = x (founder), y
+// ---- sides (they replaced clans): Stormcloaks = a, b, c; Imperial Legion = x, y
 const a = make("warrior", 30), b = make("warrior", 30), cc = make("mage", 30), x = make("warrior", 30), y = make("archer", 30);
 [[a, "A", "Alfa"], [b, "B", "Beta"], [cc, "Cc", "Ceta"], [x, "X", "Xeno"], [y, "Y", "Ypsi"]].forEach(([s, id, nm]) => { s.id = id; s.name = nm; s._test = false; at(s, "Whiterun"); s.gold = 2000; });
-const sons = { ...CLANS.found(a, "Sons of the North", "SONS", [C[0], C[6]]).clan, id: "A", invites: ["B", "Cc"] };
-const ravens = { ...CLANS.found(x, "Ravens", "RAVN", [C[1], C[7]]).clan, id: "X", invites: ["Y"] };
-b.clan = "A"; cc.clan = "A"; y.clan = "X";
-CLANS.set([sons, ravens], [{ id: "A", clan: "A", name: "Alfa" }, { id: "B", clan: "A", name: "Beta" }, { id: "Cc", clan: "A", name: "Ceta" }, { id: "X", clan: "X", name: "Xeno" }, { id: "Y", clan: "X", name: "Ypsi" }]);
-OK(CLANS.of("B").id === "A" && CLANS.of("Y").id === "X", "two clans set up");
+[a, b, cc].forEach((s) => SIDES.pick(s, SC)); [x, y].forEach((s) => SIDES.pick(s, IL));
+SIDES.setDocs([a, b, cc, x, y].map((s) => SIDES.record(s)), null);
+OK(SIDES.of("B") === SC && SIDES.of("Y") === IL, "sides picked");
+OK(!CLANS.of("Q") && CLANS.byId("A") === null, "no side, no old clan ids");
+OK(CLANS.of("B").id === SC && CLANS.of("Y").id === IL, "two sides set up (CLANS answers with sides)");
 const docsAll = () => [a, b, cc, x, y].map((s) => H.record(s));
 const sync = () => H.setDocs(docsAll(), null);
 
@@ -54,7 +54,7 @@ OK(H.canFight(a, "Whiterun", T0).kind === "claim" && !H.canFight(a, "Whiterun", 
 at(a, "Riften"); OK(/be in Whiterun/.test(H.canFight(a, "Whiterun", T0).why), "must stand in the hold"); at(a, "Whiterun");
 OK(/party leader/.test(H.canFight(a, "Whiterun", T0, { role: "member" }).why), "party member can't start a challenge");
 OK(!H.canFight(a, "Whiterun", T0, { role: "leader" }).why, "party leader can");
-const low = make("warrior", 6); low.id = "A"; low.clan = "A"; at(low, "Whiterun"); OK(/level 10/.test(H.canFight(low, "Whiterun", T0).why), "level 10 needed");
+const low = make("warrior", 6); low.id = "A"; low.side = { id: SC, since: 0, pts: 0 }; at(low, "Whiterun"); OK(/level 10/.test(H.canFight(low, "Whiterun", T0).why), "level 10 needed");
 
 // ---- 2. the claim fight (played for real until it's won)
 let r, tries = 0, t = T0;
@@ -64,10 +64,10 @@ OK(/now rules Whiterun/.test(r.text) && r.gold === H.CLAIM_GOLD, "claim text and
 const TC = t - H.RETRY - 1000;   // when it was taken
 sync();
 let seat = H.seatOf("Whiterun", TC + 1000);
-OK(seat && seat.cid === "A" && seat.walls === H.WALLS && seat.by === "A", "seat: Sons, 2 walls, taken by Alfa");
+OK(seat && seat.cid === SC && seat.walls === H.WALLS && seat.by === "A", "seat: Sons, 2 walls, taken by Alfa");
 H.setClock(() => TC + 1000);
-OK(WARS.rulers(a).Whiterun?.id === "A", "the rulers map shows the seat");
-OK(H.canFight(b, "Whiterun", TC + 1000).why === "Your clan rules here.", "members don't fight their own hold");
+OK(WARS.rulers(a).Whiterun?.id === SC, "the rulers map shows the seat");
+OK(H.canFight(b, "Whiterun", TC + 1000).why === "Your side rules here.", "members don't fight their own hold");
 OK(/weekly window/.test(H.canFight(x, "Whiterun", TC + HOUR).why), "Ravens can't raid outside the window");
 
 // ---- 3. the Jarl: acting until a term starts with votes, then the vote winner
@@ -157,29 +157,29 @@ OK(!H.canFight(x, "Whiterun", RW2).why && H.canFight(x, "Whiterun", RW2).kind ==
 const raidAct = (s, tt) => { H.st(s).acts.push({ k: "raid", h: "Whiterun", c: CLANS.of(s.id).id, t: tt, win: true, seat: H.seatKey(H.seatOf("Whiterun", tt)) }); sync(); };
 const walls0 = H.seatOf("Whiterun", RW2).walls;
 for (let i = 0; i < walls0; i++) raidAct(i % 2 ? y : x, RW2 + i * 60e3 + 1);
-OK(H.seatOf("Whiterun", RW2 + HOUR).walls === 0 && H.seatOf("Whiterun", RW2 + HOUR).cid === "A", "walls down, Sons still rule");
+OK(H.seatOf("Whiterun", RW2 + HOUR).walls === 0 && H.seatOf("Whiterun", RW2 + HOUR).cid === SC, "walls down, Sons still rule");
 // a raid that lost doesn't count
-H.st(x).acts.push({ k: "raid", h: "Whiterun", c: "X", t: RW2 + HOUR, win: false, seat: H.seatKey(H.seatOf("Whiterun", RW2 + HOUR)) }); sync();
-OK(H.seatOf("Whiterun", RW2 + HOUR + 1).cid === "A", "lost raid changes nothing");
+H.st(x).acts.push({ k: "raid", h: "Whiterun", c: IL, t: RW2 + HOUR, win: false, seat: H.seatKey(H.seatOf("Whiterun", RW2 + HOUR)) }); sync();
+OK(H.seatOf("Whiterun", RW2 + HOUR + 1).cid === SC, "lost raid changes nothing");
 raidAct(x, RW2 + 2 * HOUR);
 const s2 = H.seatOf("Whiterun", RW2 + 2 * HOUR + 1);
-OK(s2.cid === "X" && s2.took === "A" && s2.walls === H.WALLS, "Ravens take Whiterun on the next won raid");
+OK(s2.cid === IL && s2.took === SC && s2.walls === H.WALLS, "Ravens take Whiterun on the next won raid");
 OK(H.jarlOf(s2, RW2 + 3 * HOUR).uid === "X", "the raider acts as Jarl");
 OK(H.taxOf(s2, RW2 + 3 * HOUR) === H.TAX_DEFAULT, "new seat: tax back to 2%, the old Jarl's decree doesn't carry over");
 OK(H.treasury(s2, RW2 + 3 * HOUR).income === 0, "new seat: fresh treasury");
 // the Sons strike back in the same window: locked
-H.st(a).acts.push({ k: "raid", h: "Whiterun", c: "A", t: RW2 + 4 * HOUR, win: true, seat: H.seatKey(s2) }); sync();
-OK(H.seatOf("Whiterun", RW2 + 5 * HOUR).cid === "X", "can't take it back in the same window");
+H.st(a).acts.push({ k: "raid", h: "Whiterun", c: SC, t: RW2 + 4 * HOUR, win: true, seat: H.seatKey(s2) }); sync();
+OK(H.seatOf("Whiterun", RW2 + 5 * HOUR).cid === IL, "can't take it back in the same window");
 OK(/changed hands this week/.test(H.canFight(a, "Whiterun", RW2 + 5 * HOUR).why), "...and the screen says so");
 // raids aimed at an old seat don't count against the new one; raids outside the window don't count
-H.st(a).acts.push({ k: "raid", h: "Whiterun", c: "A", t: RW2 + 2 * DAY, win: true, seat: H.seatKey(s2) }); sync();
+H.st(a).acts.push({ k: "raid", h: "Whiterun", c: SC, t: RW2 + 2 * DAY, win: true, seat: H.seatKey(s2) }); sync();
 OK(H.seatOf("Whiterun", RW2 + 3 * DAY).walls === H.WALLS, "raids outside the window are ignored");
-// a disbanded clan loses its hold
-CLANS.set([sons], null); H.setDocs(docsAll(), null);
-OK(!H.seatOf("Whiterun", RW2 + 3 * DAY) || H.seatOf("Whiterun", RW2 + 3 * DAY).cid !== "X", "a disbanded clan rules nothing");
-CLANS.set([sons, ravens], null); sync();
+// a record that still names an old clan rules nothing (clans are gone)
+H.setDocs([...docsAll(), { uid: "A", acts: [{ k: "claim", h: "The Pale", c: "A", t: T0, win: true }] }], null);
+OK(!H.seatOf("The Pale", T0 + HOUR), "an old clan id in a record rules nothing");
+sync();
 // fakes: an act by someone not in the clan is ignored
-H.setDocs([...docsAll(), { uid: "Q", acts: [{ k: "claim", h: "The Rift", c: "A", t: T0, win: true }] }], null);
+H.setDocs([...docsAll(), { uid: "Q", acts: [{ k: "claim", h: "The Rift", c: SC, t: T0, win: true }] }], null);
 OK(!H.seatOf("The Rift", T0 + HOUR), "a claim by a non-member is ignored");
 // every phone works it out the same way: order of records doesn't matter
 const fwd = H.setDocs(docsAll(), null) || JSON.stringify(Object.values(H.seats(RW2 + 9 * HOUR)).map((s) => [s.hold, s.cid, s.since, s.walls]));
@@ -192,7 +192,7 @@ const big = H.record(x); OK(JSON.stringify(big).length < 8000, "record is small:
 __lang = "pl";
 `, c);
 vm.runInContext(`
-for (const [en, needle] of [["Fair Dues", "Uczciwa danina"], ["Jarl's Favour", "Łaska jarla"], ["Hold Warden", "Strażnik twierdzy"], ["Raids are only allowed in the weekly window (Saturday 12:00 to Monday 00:00 UTC).", "sobot"], ["Your clan rules here.", "Twój klan"]])
+for (const [en, needle] of [["Fair Dues", "Uczciwa danina"], ["Jarl's Favour", "Łaska jarla"], ["Hold Warden", "Strażnik twierdzy"], ["Raids are only allowed in the weekly window (Saturday 12:00 to Monday 00:00 UTC).", "sobot"], ["Your side rules here.", "Twoja strona"], ["Pick a side first: only sides can rule a hold.", "wybierz stronę"]])
   OK((I18N.tr(en) || "").includes(needle), "Polish: " + en + " -> " + I18N.tr(en));
 OK(/Mistrz|Czempion/.test(I18N.t("Champion of {hold}", { hold: "Whiterun" }) + (I18N.tr("Champion of Whiterun") || "")), "Polish: champion name");
 
