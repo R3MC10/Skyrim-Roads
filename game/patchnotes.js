@@ -3,14 +3,32 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b171-gorefx", build: 171, date: "25 Nov 2026", title: "Realistic blood and splatter", items: [
+    { id: "b172-gorefx", build: 172, date: "25 Nov 2026", title: "Realistic blood and splatter", items: [
       "Blows now throw real-looking blood: a wet burst of drops and fine mist flies away from whoever struck, bigger the harder the hit.",
       "Critical hits and finishing blows add a jet of blood and a wide splash, splatter the ground and smear the foe. The stains slowly fade over the fight.",
       "Hammers and maces kick up dust and spill less blood. Draugr and skeletons burst into grave dust and bone chips, Dwemer machines spit oil and sparks, Falmer and chaurus bleed green and daedra dark ichor. A blade on armour throws sparks.",
       "Spells look better too: frost throws ice shards, fire throws embers and smoke, lightning crackles and other magic leaves glowing motes.",
       "Followers and horses bleed a little but are never splattered or cut up, and still only get knocked down.",
       "Blood and gore on Full shows all of it; Low keeps the dust, sparks and spell effects without the realistic blood; Off shows none.",
-      "Fixed: blood and gore were not showing in fights at all. They're back.",
+    ] },
+    { id: "b171-esckey", build: 171, date: "24 Nov 2026", title: "Esc menu and a card you can fold away", items: [
+      "On PC, Esc now steps back one thing at a time, just like the back button on a phone: a tooltip, then a window, then the menu you're in, then the compass.",
+      "When there's nothing left to close, Esc opens a pause menu like in Skyrim: Resume, Settings, Journal, Patch notes, How to play, Report a problem and Save and quit. The Windows app also has Quit game. Use the arrows and Enter, or the mouse.",
+      "In a fight Esc opens the pause menu on top of the fight and never makes you run away. The world doesn't stop for anyone else in your party.",
+      "The great world event card on the map can be folded into a small pill with the arrow in its corner (tap the pill to open it again). The game remembers it for your hero.",
+      "Notices under it (a town rebuilding, a reward waiting) have an × to hide them until there's new news. A new event never pops the card open: the pill glows for a moment instead.",
+      "Fixed: on phones a few newer screens (the house chest, blood in fights, party traps, fishing and hunting and more) had lost part of their look. They're back to normal.",
+    ] },
+    { id: "b171-charcreate", build: 171, date: "24 Nov 2026", title: "Character creation, rebuilt", items: [
+      "Making a character now works like Skyrim's race menu: a big live picture of your hero that breathes, walks and swings, which you can turn with a finger (or the arrow keys) and zoom in on the face.",
+      "Tabs for Race, Body, Head, Face, Hair, Scars & Paint and Start, with Back and Next, a dice button for a random look and Undo.",
+      "Pick your sex, build, height, skin, face shape, eyes, brows, nose, mouth, age, hair, beard, Khajiit manes and Argonian horns and frills, scars, warpaint and tattoos.",
+      "Every race now has a gift that really works: Nords shrug off frost, Dunmer fire, Bretons magic, Redguards and Bosmer poison, Imperials find more gold, Orcs are better at the forge, Khajiit see in the dark and Argonians and Bosmer resist curses.",
+      "New Etiquette perk Proud Heritage makes your race's gift 25% stronger.",
+      "On the Start tab you can pick the Warrior, Mage or Thief Stone straight away.",
+      "Everyone sees the face you made: in fights, on the map, in your party and as a Stranger on the road.",
+      "Already have a character? Nothing changes until you want it to: visit the barber at any inn (40 gold) or the mirror in your house (free).",
+      "Fixed: fights with Blood and gore on could stop with an error, and some menus looked wrong on phones.",
     ] },
     { id: "b170-sides", build: 170, date: "24 Nov 2026", title: "Pick a side: Stormcloaks, Legion or Thalmor", items: [
       "Player clans are gone. At level 20 a courier brings you three letters, and a new quest, Pick a Side, sends you to the recruiters in Windhelm, Solitude and the Thalmor Embassy. Hear them out and swear to one. Players already past level 20 get the quest the next time they play.",

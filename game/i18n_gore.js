@@ -20,7 +20,7 @@ Object.assign(I18N_EXTRA.words, {
     "Ustawienia → Walki → Krew i flaki: Wył., Niskie albo Pełne. We wspólnej walce wszyscy widzą te same bryzgi.",
 });
 
-/* gorefx2.js: realistic splatter patch note (b171-gorefx) */
+/* gorefx2.js: realistic splatter patch note (b172-gorefx) */
 Object.assign(I18N_EXTRA.words, {
   "Realistic blood and splatter":
     "Realistyczna krew i rozbryzgi",
@@ -36,6 +36,4 @@ Object.assign(I18N_EXTRA.words, {
     "Towarzysze i konie trochę krwawią, ale nigdy nie są zachlapani ani pocięci i dalej tylko padają powaleni.",
   "Blood and gore on Full shows all of it; Low keeps the dust, sparks and spell effects without the realistic blood; Off shows none.":
     "Krew i flaki na Pełne pokazuje wszystko; Niskie zostawia kurz, iskry i efekty czarów bez realistycznej krwi; Wył. nie pokazuje nic.",
-  "Fixed: blood and gore were not showing in fights at all. They're back.":
-    "Poprawka: krew i flaki w ogóle nie pokazywały się w walkach. Już wróciły.",
 });

@@ -142,30 +142,16 @@
   }
 
   function showCreate() {
-    let race = "nord";
-    const draw = () => {
-      app.innerHTML = `
-      <div class="panel" style="margin-top:16px">
-        <h1 style="font-size:clamp(28px,7vw,44px)">Roads of the North</h1>
-        <p class="sub">A shared Skyrim you travel in real time. Walking from Whiterun to Windhelm takes about ten minutes, and the road is rarely empty.</p>
-        <label class="sub" for="nm">Your name</label>
-        <input id="nm" maxlength="24" autocomplete="off" placeholder="e.g. Remigiusz" value="${esc($("#nm")?.value || "")}">
-        ${TITLEART.createScene(race)}
-        <h3 style="margin-top:14px">Choose your race</h3>
-        ${DOLL.racePicker(race)}
-        <div class="cshow">${DOLL.showcase(race)}</div>
-        <button class="btn pri" id="begin" style="width:100%;margin-top:8px">Begin in ${esc(D.START_LOCATION)}</button>
-        <button class="btn" id="toTitle" style="width:100%;margin-top:8px">Back to the main menu</button>
-        <p class="sub status ${net.mode === "shared" || net.mode === "p2p" ? "live" : ""}" style="margin-top:10px"><i></i>${net.mode === "shared" ? "Shared world: other players will see you on the map." : net.mode === "p2p" ? "One world for everyone with the app: your game is saved on this phone and syncs straight with everyone else's." : APP ? "Offline game: saved on this phone." : "Saved in this browser only (shared saving unavailable here)."}</p>${net.mode === "shared" || net.mode === "p2p" ? "" : onlineBtn().replace('data-act="online"', 'id="online"')}
-      </div>`;
-      app.querySelectorAll("[data-race]").forEach((b) => b.onclick = () => { race = b.dataset.race; const v = $("#nm").value; draw(); $("#nm").value = v; });
-      if ($("#online")) $("#online").onclick = openOnline;
-      $("#toTitle").onclick = () => { app.innerHTML = ""; showTitle("menu"); };
-      $("#begin").onclick = () => {
-        const name = ($("#nm").value || "").trim().slice(0, 24);
-        const bad = typeof NICK !== "undefined" ? NICK.problem(name) : name ? "" : "Pick a nickname.";
-        if (bad) { toast(bad); const f = $("#nm"); if (f) { f.classList.add("nm-bad"); f.focus(); } return; }
+    const status = () => `<p class="sub status ${net.mode === "shared" || net.mode === "p2p" ? "live" : ""}" style="margin-top:10px"><i></i>${net.mode === "shared" ? "Shared world: other players will see you on the map." : net.mode === "p2p" ? "One world for everyone with the app: your game is saved on this phone and syncs straight with everyone else's." : APP ? "Offline game: saved on this phone." : "Saved in this browser only (shared saving unavailable here)."}</p>${net.mode === "shared" || net.mode === "p2p" ? "" : onlineBtn().replace('data-act="online"', 'id="online"')}`;
+    // [OURS] character creation, Skyrim RaceMenu style (chargen.js)
+    CHARGEN.create(app, {
+      toast, startExtra: status,
+      afterRender: (root) => { const b = root.querySelector("#online"); if (b) b.onclick = openOnline; },
+      onBack: () => { app.innerHTML = ""; showTitle("menu"); },
+      onBegin: ({ name, race, app: look, stone }) => {
         S = G.newSave(Store.uid, name, race);
+        APPEAR.apply(S, look);   // the face you made (appear.js)
+        if (stone && POWERS.STONES[stone]) { S.stone = stone; S.stonePowerAt = 0; }   // the Guardian Stone you picked: its skills improve 20% faster
         if (typeof PATCHNOTES !== "undefined") PATCHNOTES.markSeen();   // a new character starts on the current version
         if (!/[?&]notut/.test(location.search)) S.tut = { step: 1, seen: {} };   // new characters get the guided first trip
         const wantIntro = !/[?&]notut/.test(location.search) && (!navigator.webdriver || /[?&]intro/.test(location.search));
@@ -173,9 +159,17 @@
         persist(true);
         startGame();
         if (wantIntro) try { TITLEART.intro(null, { reduce: reduceMotion }); } catch (e) { console.warn("intro", e); }
-      };
-    };
-    draw();
+      },
+    });
+  }
+  /* the barber at an inn (small fee) and the mirror in your house (free): the same screen without Race and Start (chargen.js) */
+  function openLookChange(mode) {
+    CHARGEN.open({ mode, save: S, cost: CHARGEN.BARBER_COST, toast,
+      onDone: (look) => {
+        if (mode === "barber") { const r = CHARGEN.pay(S, look); if (r.err) return toast(r.err); toast(r.text); }
+        else { APPEAR.apply(S, look); toast("🪞 You like what you see."); }
+        lookCache.k = ""; persist(true); renderPanel(true);
+      } });
   }
 
   // ------------------------------------------------------------ title screen (main menu)
@@ -499,12 +493,16 @@
   // ------------------------------------------------------------ main screen
   window.__dbg = { save: () => S, fightResult: (r) => showFightResult(r), view: () => view, openEvent: (n) => openEvent(n), openEncounter: (n) => openEncounter(n), tally: (k, n) => tally(k, n), message: (t, x, b) => showMessage(t, x, b), toast: (t) => toast(t), publish: () => publishCard(), others: () => others, party: () => party, pp: () => ppUI, coopRuns: () => coopUI?.runs || [] };   // for testing in the browser console
   /* phone back button: close what's on top, step back to the map, and only then leave the app */
+  /* opts.esc: the PC's Esc key (desktop.js). It walks the same steps, except that the compass isn't "home" on a PC and
+     a fight isn't left alone: false then means "nothing left to close", and Esc opens the pause menu (pausemenu.js) */
   window.__ui = {
-    back() {
+    back(opts) {
+      const escKey = !!(opts && opts.esc);
+      if (typeof PAUSEM !== "undefined" && PAUSEM.isOpen()) { PAUSEM.close(); return true; }   // the Esc menu is the very top
       if (typeof BUGREPORT !== "undefined" && BUGREPORT.isOpen()) { BUGREPORT.close(); return true; }   // the report window sits on top of everything
       if ($("#title")) { if (titlePage !== "menu" && titlePage !== "press") { titlePage = "menu"; renderTitle(); return true; } return false; }
       if (!S && $("#toTitle")) { app.innerHTML = ""; showTitle("menu"); return true; }
-      if (typeof TB !== "undefined" && TB.open) return true;   // a turn-based fight is on: finish it (or Flee)
+      if (typeof TB !== "undefined" && TB.open) { if ($("#modal.pm-top")) { closeModal(); return true; } return !escKey; }   // a turn-based fight is on: finish it (or Flee); Esc pauses
       if (typeof FAVWHEEL !== "undefined" && FAVWHEEL.open) { FAVWHEEL.hide(); return true; }
       if (typeof LEVELUP !== "undefined" && LEVELUP.isOpen) { LEVELUP.close(); return true; }   // the level-up pillars: decide later
       if ($("#sky") && !$("#modal")) { closeMenu(); if (typeof TABMENU !== "undefined") TABMENU.menuClosed(); return true; }
@@ -515,11 +513,17 @@
       if (selected) { selected = null; renderPicked(); return true; }
       if (S && (tab === "stats" || tab === "diary") && !document.body.classList.contains("tw-char")) { tab = "hero"; renderTabs(); renderPanel(true); return true; }   // [journal] Character sub-pages
       if (S && tab === "places") { tab = "map"; renderTabs(); renderPanel(true); return true; }
-      if (typeof TABMENU !== "undefined") { const r = TABMENU.back(); if (r !== null) return r; }   // the compass is home (tabmenu.js)
+      if (typeof TABMENU !== "undefined") { const r = TABMENU.back(opts); if (r !== null) return r; }   // the compass is home (tabmenu.js); on a PC the map is
       if (S && tab !== "map") { tab = "map"; bump(); renderTabs(); renderPanel(true); return true; }
       return false;
     },
     save() { if (S) Store.save(S); },
+    /* for the Esc menu (pausemenu.js) */
+    inGame: () => !!S && !$("#title"),
+    settings: () => { if (S) openSound(); },
+    notes: () => { if (typeof PATCHNOTES !== "undefined") openNotes(); },
+    guide: () => { if (S) { openGuide(); persist(); } },
+    toTitle() { if (S) Store.save(S); try { sessionStorage.setItem("rotn_open", "menu"); } catch { /* ignore */ } location.reload(); },
     /* is this a good moment to restart on a new version? not mid-fight, dungeon, trade, menu, mini-game or typing */
     safeToUpdate() {
       const el = document.activeElement, typing = /^(INPUT|TEXTAREA|SELECT)$/.test(el?.tagName || "") || el?.isContentEditable;
@@ -1005,7 +1009,7 @@
   }
   let lookCache = { k: "", v: null };
   function myLook() {
-    const k = JSON.stringify([S.race, S.loadout, G.loadout(S).equipment, S.vampire, S.werewolf]);
+    const k = JSON.stringify([S.race, S.loadout, G.loadout(S).equipment, S.vampire, S.werewolf, S.app || 0, S.sex || ""]);
     if (k !== lookCache.k) lookCache = { k, v: HEROART.lookOf(S) };
     return lookCache.v;
   }
@@ -3210,6 +3214,7 @@
       note = "Sleep to heal fully and become Rested (skills improve 5% faster for 40 minutes; your own bed gives 10%). Buy a round and the locals talk." + (FEST.freeInn() ? "  New Life Festival: rooms are free!" : "");
       body = (S.vampire ? `<div class="item"><div class="t"> Feed on a sleeping traveller<span>Resets your hunger. Someone might wake up (bounty).</span></div><button class="btn sm danger" data-act="vfeed">Feed</button></div>` : "") + (FEST.freeInn() ? `<div class="item on"><div class="t"> The innkeeper's New Life gift<span>Once a day: a hot meal and a little gold</span></div><button class="btn sm pri" data-act="festgift">Take it</button></div>` : "") + `<div class="item"><div class="t">Rent a room<span>${G.rested(S) ? "You're already rested" : "Full health and Rested"}</span></div><span class="num gold">${TOWNS.roomPrice(S)}</span><button class="btn sm pri" data-act="inn" data-c="room" ${wanted ? "disabled" : ""}>Sleep</button></div>
         <div class="item"><div class="t">Buy a round, listen for rumours<span>Reveals ${G.P(S, "rumour_monger") ? "two places" : "a place"} you haven't found yet</span></div><span class="num gold">${TOWNS.rumourPrice ? TOWNS.rumourPrice(S) : G.P(S, "rumour_monger") ? 0 : TOWNS.RUMOUR}</span><button class="btn sm" data-act="inn" data-c="rumour">Listen</button></div>`;
+      body += CHARGEN.barberRow(S);   // a new look for a few coins (chargen.js)
       body += bardHTML(l);
     } else if (townShop === "train") {
       const n = TOWNS.trainedThisLevel(S);
@@ -3316,6 +3321,7 @@
       } else {
         note = "Your home. Things in the chest are safe even if you die on the road.";
         body = `${typeof HOMEART !== "undefined" ? HOMEART.mine(S, l) : ""}<div class="item"><div class="t">Your bed<span>Full health and Well Rested (+10% skills for 40 min)</span></div><button class="btn sm pri" data-act="homebed">Sleep</button></div>
+          ${CHARGEN.mirrorRow(S)}
           <div class="item"><div class="t">Garden<span>${TOWNS.gardenReady(S) ? "Ripe: harvest ingredients" : `Growing. Ready in ${Math.ceil(((h.garden || 0) + 7200 - G.now()) / 60)} min`}</span></div><button class="btn sm" data-act="harvest" ${TOWNS.gardenReady(S) ? "" : "disabled"}>Harvest</button></div>${typeof GATHER !== "undefined" ? GATHER.gardenHTML(S) : ""}
           ${(() => { const gs = myGifts().filter((g) => g.town === l); return gs.length ? `<h3 style="margin-top:12px"> Gifts at your door (${gs.length})</h3><div class="list">${gs.map((g) => `<div class="item on"><div class="t">From ${esc(g.fromName)}<span>${[g.gold ? `${g.gold} gold` : "", g.row && D.ITEMS[g.row.item] ? VISITS.itemName(g.row) + (g.row.qty > 1 ? ` ×${g.row.qty}` : "") : "", g.note ? `“${esc(g.note)}”` : ""].filter(Boolean).join(" · ")}</span></div><button class="btn sm pri" data-act="giftopen" data-id="${esc(g.id)}">Take in</button></div>`).join("")}</div>` : ""; })()}
           ${(() => { const st = MARKET.mine(stalls, S.id).filter((d) => d.town === l); return `<h3 style="margin-top:12px"> Your stall</h3><div class="item"><div class="t">${st.length ? `${st.length} thing${st.length > 1 ? "s" : ""} for sale<span>${esc(st.map((d) => MARKET.itemName(d.row)).slice(0, 3).join(", "))}${st.length > 3 ? "…" : ""}</span>` : "Nothing for sale<span>Sell things here even while you're away</span>"}</div><button class="btn sm" data-act="shop" data-id="market">Open stall</button></div>`; })()}
@@ -3894,6 +3900,7 @@
         const v = verseDocs.find((x) => x.id === b.dataset.id), r = BARDS.like(S, v, likeDocs); if (r.err) return toast(r.err);
         Store.put("verselikes", r.id, r.doc); if (!likeDocs.some((x) => x.id === r.id)) likeDocs.push({ ...r.doc, id: r.id }); SOUND.fx("click"); toast(` You cheer for ${v.name}'s verse.`); renderPanel(true); break; }
       case "bardsing": singSong(); break;
+      case "barber": case "mirror": openLookChange(a); break;
       case "inn": say(b.dataset.c === "room" ? TOWNS.rentRoom(S) : TOWNS.rumour(S)); break;
       case "train": say(TOWNS.train(S, b.dataset.id)); publishCard(); break;
       case "alch": { const id = +b.dataset.id; alchSel = alchSel.includes(id) ? alchSel.filter((x) => x !== id) : [...alchSel, id].slice(-3); renderPanel(true); break; }
