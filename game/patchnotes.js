@@ -3,7 +3,7 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b160-netsync", build: 160, date: "24 Nov 2026", title: "Parties stay in step", items: [
+    { id: "b160-netsync", build: 144, date: "24 Nov 2026", title: "Parties stay in step", items: [
       "In a party everyone now sees the same thing. When two of you tap at the same moment (a vote, Ready, the next room, the boss chest), nobody's tap gets lost any more.",
       "Every few seconds the phones in a party quietly compare notes. If one missed something (weak signal, screen off, a reconnect), it catches up by itself.",
       "A dungeon room is the same for the whole party: the same puzzle, the same trap and the same chest lock as the leader's.",
