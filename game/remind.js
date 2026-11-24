@@ -209,6 +209,14 @@ const REMIND = (() => {
     const more = items.length > max ? `<button class="linkbtn rmd-more" data-rmd="more">${showAll ? "Show less" : `Show all ${items.length}`}</button>` : "";
     return `<div class="panel rmd-card" id="rmd-card"><h2>Today${ready ? ` <b class="rmd-n">${ready} ready</b>` : ""}</h2><div class="list">${rows}</div>${more}</div>`;
   }
+  /* the same rows, for a card drawn elsewhere (mappanel.js merges them into "What to do next"): each { x, html }.
+     Their Go buttons keep working through this file's click handler. */
+  function items(S, ctx) {
+    if (!S || S.dungeon) return [];
+    const t = nowS(); lastItems = shown(S, ctx, t);
+    return lastItems.map((x, i) => ({ x, html: `<div class="item nx rmd-row rmd-${x.state}"><span class="nx-i rmd-i" aria-hidden="true">${esc(x.icon)}</span>
+      <div class="t">${esc(x.title)}<span>${esc(x.sub)} · <b class="rmd-when">${esc(when(x, t))}</b></span></div>${x.go ? `<button class="btn sm ${x.state === "ready" ? "pri" : ""}" data-rmd="go" data-i="${i}" aria-label="Go: ${esc(x.title)}">Go</button>` : ""}</div>` }));
+  }
   function onClick(e) {
     const b = e.target.closest?.("[data-rmd]"); if (!b) return;
     e.preventDefault(); e.stopPropagation();
@@ -304,5 +312,5 @@ const REMIND = (() => {
     document.addEventListener("visibilitychange", () => { if (!document.hidden) { resumedAt = Date.now(); paint(); } });
     setInterval(() => { if (!document.hidden) paint(); }, 4000);
   }
-  return { KINDS, CAP, NOTE_IDS, list, shown, badge, counts, card, paint, attach, notes, resumed, settingsHTML, fmt, kindOn };
+  return { KINDS, CAP, NOTE_IDS, list, shown, badge, counts, card, items, paint, attach, notes, resumed, settingsHTML, fmt, kindOn };
 })();

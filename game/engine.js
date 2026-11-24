@@ -850,7 +850,11 @@ const G = (() => {
       const fp = this.fp;
       if (fp && this.ehp > 0) {
         if (fp.avoid && !this.fpAvoided && this.ehp < 0.15 * this.ehp0) { this.fpAvoided = true; const h = Math.round(fp.avoid * this.ehp0); this.ehp += h; return `${n} refuses to fall (Avoid Death) and heals ${h}`; }
-        if (fp.heal && this.ehp < 0.45 * this.ehp0 && Math.random() < fp.heal) { const h = Math.round(fp.healAmt * this.ehp0); this.ehp = Math.min(this.ehp0, this.ehp + h); return `${n} casts a healing spell: +${h}`; }
+        if (fp.heal && this.ehp < 0.45 * this.ehp0 && (typeof FOECAP === "undefined" || FOECAP.canHeal(this)) && Math.random() < fp.heal) {   // foecap.js: capped at 65%, 35% a fight, a rest between
+          let h = Math.round(fp.healAmt * this.ehp0);
+          if (typeof FOECAP !== "undefined") h = FOECAP.heal(this, h); else this.ehp = Math.min(this.ehp0, this.ehp + h);
+          return `${n} casts a healing spell: +${h}`;
+        }
       }
       const cover = this.coverAl && this.allies.includes(this.coverAl) ? this.coverAl : null; this.coverAl = null;   // a smart follower stepped in front of you
       const tg = this.tgtNow; this.tgtNow = undefined;   // foeintent.js: the target its intent showed (null = you), rolled with the same odds

@@ -8,6 +8,26 @@ const PATCHNOTES = (() => {
       "The fight log is in Polish now: who hits for how much, misses, staggers, paralysis, staves, potions and spells.",
       "Foe and spell names, lots of pop-up messages (party, clan, trades, tutorial), the Sea of Ghosts on the map, the Khajiit market and the dungeon minigames are translated as well.",
     ] },
+    { id: "b142-balfear", build: 142, date: "24 Nov 2026", title: "Bosses don't run forever, healers don't heal forever", items: [
+      "Battle Cry and every other fear or \"stops fighting\" effect now hold a boss for 2 turns and an elite foe for 3. A boss can lose at most 3 turns a fight to fear, an elite 5. For the turns they shake off they stay rattled and hit 20% softer, so the shout still helps. Normal foes still run for the full time.",
+      "Foe mages and healers can't patch themselves back to full any more: their own healing stops at about two thirds of their health, adds up to at most a third of it in a whole fight, and a healing spell needs a few turns to come back. Potions and life drain count too.",
+      "Aspect of Terror (Illusion) now also keeps bosses and elite foes afraid a turn longer.",
+    ] },
+    { id: "b141-areaui", build: 141, date: "24 Nov 2026", title: "Tidier towns and map", items: [
+      "The Area tab now opens on a board of small tiles, grouped like a real town: Inn, Market, Services & trainers, Work & jobs, Your home, and Events & fun. Each tile says what's going on there (open or closed, room price, lessons left, jobs taken, garden ripe, your bounty).",
+      "Things waiting for you in town (a job to hand in, a ripe garden) sit on top under Right now.",
+      "Tap a tile to go in. A back button and a row of the neighbouring places (say, all the shops) keep everything one tap away. Shops no longer dump their whole stock the moment you open the Area tab.",
+      "Long how-it-works notes fold up; tap More to read them. You can fold whole groups you never use, and they stay folded.",
+      "The Map side panel has one \"What to do next\" list instead of two: no more level-up or perk reminders shown twice. The most urgent things come first, nearest places before far ones; tap Show more for the rest.",
+      "The place list has filters: All, Towns, Dungeons, Not visited and Other, each with a count.",
+    ] },
+    { id: "b141-menus2", build: 141, date: "24 Nov 2026", title: "Tidier menus", items: [
+      "Items and Magic work like SkyUI: categories on the left, the list in the middle and the picked thing on the right. On a PC screen they sit side by side; on phones the list stays visible above the details.",
+      "One sort row: name, value, weight, damage, armour and more, plus a button that flips the order. Each category shows how many things are in it.",
+      "Search your spells by name, and find quests in the Journal with the new search box.",
+      "The Character page is much shorter: your hero card comes first, and Powers, Skills and Perks fold away until you open them.",
+      "Follower tabs fit on one row, and lots of menu words are now in Polish.",
+    ] },
     { id: "b139-beastpaths", build: 139, date: "24 Nov 2026", title: "Werewolves and vampires, for real", items: [
       "Beast Form is now a real change in turn-by-turn fights: you fight with the wolf's own moves. Claws (2 AP), Maul (4 AP, costs stamina), Pounce (can stagger, every 3 rounds), Howl (ordinary foes cower, tough ones are shaken and hit softer) and Feast on a beaten foe to heal.",
       "As a beast you can't drink potions, cast spells, shout or raise a guard. Silver weapons (the Vigilants, the Dawnguard, the Silver Hand) bite harder, and when you change back you're worn out for two rounds.",

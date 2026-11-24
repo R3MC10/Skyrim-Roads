@@ -37,7 +37,7 @@ const POWERS = (() => {
 
   // ---- racial powers ([Skyrim], once a day; 60 seconds = 10 turns [OURS])
   const RACE = {
-    nord: ["Battle Cry", "The foe flees in terror for 8 turns."],
+    nord: ["Battle Cry", "The foe flees in terror for 8 turns. Bosses shake it off after 2, elite foes after 3."],
     imperial: ["Voice of the Emperor", "People stop fighting for 8 turns."],
     breton: ["Dragonskin", "Half damage from mages and dragons for 10 turns."],
     redguard: ["Adrenaline Rush", "Stamina regenerates ten times faster for 10 turns."],
