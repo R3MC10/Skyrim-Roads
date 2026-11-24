@@ -23,6 +23,12 @@ const PATCHNOTES = (() => {
       "A new character level gets its own bigger Level up banner with your level bar.",
       "The fight result no longer lists skill-ups as one long line; your follower's words after a fight are a line of their own.",
     ] },
+    { id: "b143-pickaxe", build: 143, date: "24 Nov 2026", title: "Mining fixed: one pickaxe is enough", items: [
+      "A pickaxe never wears out or gets used up. Keep one in your pack and you can mine forever.",
+      "Mines that are also dungeons, like Embershard Mine, have a ⛏ Mine ore button on the map card next to Go inside. You can dig their veins before or after clearing the place.",
+      "If you can't mine, the game now tells you why: no pickaxe (the blacksmith in Riverwood sells one, cheap), your pickaxe is sitting in your house chest, or the veins need a day to grow back.",
+      "Old saves where a pickaxe looked worn out or empty get it working again.",
+    ] },
     { id: "b143-followeranim", build: 143, date: "24 Nov 2026", title: "Followers fight with their whole body", items: [
       "Followers and party members now really fight in the fight picture: they swing their weapon or draw their bow, cast their spells, raise their shield and flinch when they get hit.",
       "A follower who is knocked down drops to the ground and lies there until someone pulls them back up, and then you see them get back on their feet.",

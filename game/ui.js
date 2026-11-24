@@ -1046,7 +1046,7 @@
     const mins = here ? 0 : G.minutesTo(S, [x, y]);
     el.classList.remove("hide");
     el.innerHTML = `<div class="t"><b>${esc(selected)}</b><span>${KIND[kind]} · ${esc(G.holdAt([x, y]))}${S.discovered.includes(selected) ? "" : " · not yet visited"}${here ? " · you are here" : ` · ${fmtMin(mins)}`}</span></div>
-      ${here ? (DUNGEONS.enterable(selected) && !S.trip ? `<button class="btn danger" data-act="enter">Go inside</button>` : "") : `<button class="btn pri" data-act="go" data-place="${esc(selected)}">Travel</button>`}<button class="iconbtn" data-act="unpick" aria-label="Close">✕</button>`;
+      ${here ? (DUNGEONS.enterable(selected) && !S.trip ? `<button class="btn danger" data-act="enter">Go inside</button>` : "") + (SMITH.MINES[selected] && !S.trip ? `<button class="btn" data-act="mine">⛏ Mine ore</button>` : "") : `<button class="btn pri" data-act="go" data-place="${esc(selected)}">Travel</button>`}<button class="iconbtn" data-act="unpick" aria-label="Close">✕</button>`;
   }
 
   // ------------------------------------------------------------ travel
@@ -1318,11 +1318,11 @@
 
   function mineHTML(l) {
     const m = SMITH.MINES[l]; if (!m) return "";
-    const left = SMITH.mineLeft(S, l), pick = SMITH.count(S, "pickaxe") > 0;
+    const left = SMITH.mineLeft(S, l), why = left ? "" : SMITH.mineBlock(S, l);   // tapping still says why, so the button stays live
     const ores = [...new Set(m[1].map(([o]) => D.ITEMS[o].name))].join(", ");
     return `<div class="card"><h3>⛏ ${esc(m[0])}</h3><p class="sub" style="margin-top:0">Ore here: ${esc(ores)}. Sometimes a gem.</p>
       ${left ? `<div class="refill"><div class="t">The veins are bare. They grow back in ${cdSpan(G.now() + left)}</div></div>`
-        : `<button class="btn pri" data-act="mine" style="width:100%" ${pick ? "" : "disabled"}>${pick ? "Mine the veins" : "You need a pickaxe (blacksmiths and general stores)"}</button>`}</div>`;
+        : `<button class="btn ${why ? "" : "pri"}" data-act="mine" style="width:100%">⛏ Mine ore</button>${why ? `<p class="sub mine-why">${esc(why)}</p>` : ""}`}</div>`;
   }
   function placeHere() {
     const l = S.location;
