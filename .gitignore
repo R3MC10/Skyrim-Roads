@@ -36,3 +36,5 @@ tests/out_pcmap/
 
 # reference renders and raw paintings for ChatGPT (scripts/map_reference.py); finished art goes to game/ as WebP
 art_gpt/*.png
+tests/out_evbanner/
+tests/out_gather/
