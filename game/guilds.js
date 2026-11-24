@@ -62,8 +62,8 @@ const GUILDS = (() => {
     const finish = (pay, extra) => {
       s.gold += pay; st.jobs++; st.job = null; st.next = t + COOLDOWN;
       G.useSkill(s, j.skill, 25);
-      const r = rank(s, id); if (r && r.i > before) msgs.push(`${id === "thieves" ? "🗝" : "🖐"} You're now ${/^[AEIOU]/.test(r.name) ? "an" : "a"} ${r.name} of the ${id === "thieves" ? "Thieves Guild" : "Dark Brotherhood"}.`);
-      G.note(s, `${id === "thieves" ? "🗝 Guild job" : "🖐 Contract"} done in ${j.town}: +${pay} gold.`);
+      const r = rank(s, id); if (r && r.i > before) msgs.push(`${id === "thieves" ? "" : ""} You're now ${/^[AEIOU]/.test(r.name) ? "an" : "a"} ${r.name} of the ${id === "thieves" ? "Thieves Guild" : "Dark Brotherhood"}.`);
+      G.note(s, `${id === "thieves" ? " Guild job" : " Contract"} done in ${j.town}: +${pay} gold.`);
       return extra;
     };
     if (id === "thieves") {
@@ -90,7 +90,7 @@ const GUILDS = (() => {
   function innWake(s) {
     if ((s.quests || {}).brotherhood || !(s.murdered || (s.pvpKills || 0) > 0)) return "";
     s.quests = s.quests || {}; s.quests.brotherhood = { stage: 1, t: G.now(), base: { ...(s.stats || {}) } };
-    G.note(s, "🖐 A stranger waited by your bed: Astrid of the Dark Brotherhood.");
+    G.note(s, " A stranger waited by your bed: Astrid of the Dark Brotherhood.");
     return " You wake to a woman sitting by your bed. \"I'm Astrid. Someone's been killing,\" she smiles. \"The Family has noticed. Come to the Sanctuary near Falkreath.\" (Journal: The Dark Brotherhood)";
   }
   function giveHorse(s, which, msgs) {
@@ -98,7 +98,7 @@ const GUILDS = (() => {
     const old = s.horse?.name, armor = s.horse?.armor || "none";
     s.horse = { name: "Shadowmere", coat: "black", armor, hp: 0, hpT: Date.now() / 1000, mounted: true, shadowmere: true };
     s.horse.hp = HORSES.maxHp(s.horse);
-    msgs.push(`🐎 Shadowmere rises from the pool: a black horse with red eyes, and yours now.${old && old !== "Shadowmere" ? ` ${old} goes back to the stables in peace.` : ""}`);
+    msgs.push(` Shadowmere rises from the pool: a black horse with red eyes, and yours now.${old && old !== "Shadowmere" ? ` ${old} goes back to the stables in peace.` : ""}`);
   }
   return { RANKS, rank, fenceMult, offer, work, drop, chance, canTake, takeAt, innWake, giveHorse, state: g, COOLDOWN };
 })();

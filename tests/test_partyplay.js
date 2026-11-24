@@ -84,9 +84,9 @@ OK(!P.halted(P.halt(party3, "A", { kind: "event" }, 3000), 3000 + 1000), "a stop
 
 // ---- votes on the road: members vote, faces by the option, only the leader picks
 {
-  const opts = [["fight", "⚔️ Fight", "btn danger"], ["flee", "🏃 Flee", "btn"], ["potion", "🧪 Potion (0)", "btn", 1]];
+  const opts = [["fight", "\uE101 Fight", "btn danger"], ["flee", "\uE142 Flee", "btn"], ["potion", "\uE15B Potion (0)", "btn", 1]];
   let v = P.halt(party3, "A", { kind: "encounter", name: "Bandit outlaw", text: "A bandit steps out.", title: "Bandit outlaw", opts, who: ["B", "C", "Z", "A"] }, 4000);
-  OK(v.halt.opts.length === 3 && v.halt.opts[0].join() === "fight,⚔️ Fight,btn danger,0" && v.halt.opts[2][3] === 1, "the halt carries the leader's buttons");
+  OK(v.halt.opts.length === 3 && v.halt.opts[0].join() === "fight,\uE101 Fight,btn danger,0" && v.halt.opts[2][3] === 1, "the halt carries the leader's buttons");
   OK(v.halt.who.join() === "B,C" && v.halt.title === "Bandit outlaw" && v.halt.text === "A bandit steps out." && v.halt.round === 1, "who may vote: members with the leader, not outsiders or the leader");
   OK(JSON.stringify(v.halt.votes) === "{}" && JSON.stringify(P.tally(v.halt)) === "{}", "nobody has voted yet");
   v = P.vote(v, "B", "fight", 4001);
@@ -104,7 +104,7 @@ OK(!P.halted(P.halt(party3, "A", { kind: "event" }, 3000), 3000 + 1000), "a stop
   OK(P.vote(v, "B", "flee", 4000 + 2000).halt.votes.B === "fight", "no votes on a stale stop");
   // the leader picks: votes close, the pick is remembered with how many backed it
   let pk = P.pick(v, "A", "fight", 4010);
-  OK(pk.halt.picked.key === "fight" && pk.halt.picked.label === "⚔️ Fight" && pk.halt.picked.votes === 1, "the leader picks Fight (1 vote for it)");
+  OK(pk.halt.picked.key === "fight" && pk.halt.picked.label === "\uE101 Fight" && pk.halt.picked.votes === 1, "the leader picks Fight (1 vote for it)");
   OK(P.pick(v, "B", "flee", 4010) === v, "a member's tap never picks");
   OK(P.vote(pk, "C", "fight", 4011) === pk && !P.canVote(pk, "C", 4011), "after the pick nobody votes");
   // a second step (a potion, or an event with another choice): a new round

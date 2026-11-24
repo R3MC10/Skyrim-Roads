@@ -155,13 +155,13 @@ const HORSES = (() => {
     return `The stablehand fits ${s.horse.name} with ${a.name}. It can take more punishment now.`;
   }
   const HOURS = Math.round(REST_MIN / 5);   // one in-game hour = 5 real minutes
-  const downLine = (h) => `🐴 ${h.name} is downed! They limp along beside you but can't be ridden until they're back on their feet (about ${HOURS} hours, a night's sleep, or a stablehand's care).`;
+  const downLine = (h) => `\uE12D ${h.name} is downed! They limp along beside you but can't be ridden until they're back on their feet (about ${HOURS} hours, a night's sleep, or a stablehand's care).`;
   /* a fight on the road can hurt the horse. Returns a line for the trip log, or null. */
   function hurt(s, e, t = nowS(), chance = 0.25) {
     if (!present(s) || downed(s, t) || Math.random() >= chance) return null;
     const h = s.horse, cur = hp(s, t), dmg = Math.round((e.damage || 10) * (3 + Math.random() * 3) * (1 - (ARMOR[h.armor]?.guard || 0)));
     h.hp = cur - dmg; h.hpT = t;
-    if (h.hp > 0) return `🐴 The ${e.name} hurts ${h.name} (${Math.round(h.hp)}/${maxHp(h)}).`;
+    if (h.hp > 0) return `\uE12D The ${e.name} hurts ${h.name} (${Math.round(h.hp)}/${maxHp(h)}).`;
     knockDown(s, t);
     return downLine(h);
   }

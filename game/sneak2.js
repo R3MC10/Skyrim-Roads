@@ -69,7 +69,7 @@ const SNEAK2 = (() => {
   function noteHTML(s, e, mode, esc = (x) => x) {
     const c = chance(s, e), m = mode || "safe";
     const what = m === "never" ? "you walk in openly" : m === "always" ? "you'll always try to sneak up" : c >= SAFE ? "you'll try to sneak up" : "too risky: you won't try";
-    return `<p class="sub sneak2">🥷 Chance to stay hidden: <b>${Math.round(c * 100)}%</b> · ${esc(what)}. A sneak blow can't fell a strong foe outright.</p>`;
+    return `<p class="sub sneak2"> Chance to stay hidden: <b>${Math.round(c * 100)}%</b> · ${esc(what)}. A sneak blow can't fell a strong foe outright.</p>`;
   }
   return { chance, opener, capFrac, cap, heavyPieces, ambusher, noteHTML, SAFE };
 })();

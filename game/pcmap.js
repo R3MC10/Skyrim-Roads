@@ -125,7 +125,7 @@ const PCMAP = (() => {
     const out = `<div class="pcb-who"><span class="pcb-lv num" title="${esc(L("Level"))}">${b.level}</span><div class="pcb-nm"><b>${esc(S.name)}</b>
         <div class="pcb-xp" title="${esc(L("Experience"))} ${b.xp}/${b.need}"><i style="width:${b.pct}%"></i></div></div>${b.perks ? `<span class="pcb-perk" title="${esc(L("Perk points to spend"))}">+${b.perks}</span>` : ""}</div>
       <span class="pcb-stat num" title="${esc(L("Gold"))}">◉ ${b.gold}</span>
-      <span class="pcb-stat num${b.over ? " over" : ""}" title="${esc(L("Carry weight"))}">⚖ ${b.w}/${b.cap}</span>
+      <span class="pcb-stat num${b.over ? " over" : ""}" title="${esc(L("Carry weight"))}"> ${b.w}/${b.cap}</span>
       ${clock ? `<span class="pcb-stat pcb-clock">${esc(clock)}</span>` : ""}
       <span class="pcb-sp"></span>
       ${btn("log", "J", "Journal", I.log)}${btn("items", "I", "Items", I.items)}${btn("skills", "K", "Skills", I.skills)}${btn("magic", "M", "Magic", I.magic)}${btn("town", "", "Area", I.town)}${btn("social", "", "Friends", I.social)}${btn("hub", "Tab", "Compass", I.compass)}${btn("menu", "", "Menu", I.menu)}`;
@@ -182,7 +182,7 @@ const PCMAP = (() => {
         <span class="pcp-lv num">${lvl || "?"}</span><span class="pcp-t"><b>${lead ? "⚑ " : ""}${esc(name)}</b><small>${esc([race, where].filter(Boolean).join(" · "))}</small>
         ${max ? `<span class="pcp-hp"><i style="width:${clamp(Math.round(cur / max * 100), 0, 100)}%"></i></span>` : ""}</span></button>`;
       const race = (r) => (r ? r[0].toUpperCase() + r.slice(1) : "");
-      const whereOf = (loc, moving, dun) => (dun ? `🕯 ${dun}` : loc || (moving ? L("on the road") : L("in the wilds")));
+      const whereOf = (loc, moving, dun) => (dun ? ` ${dun}` : loc || (moving ? L("on the road") : L("in the wilds")));
       out = `<div class="pcp-h">${esc(L("Party"))} · ${party.members.length}</div>`;
       for (const m of party.members) {
         if (m.id === S.id) { out += card(S.id, S.name, S.level, race(S.race), typeof G !== "undefined" ? G.curHealth(S) : 0, typeof G !== "undefined" ? G.maxHealth(S) : 0, whereOf(S.location, S.trip?.status === "travel", S.dungeon?.place), party.leader === S.id, true); continue; }

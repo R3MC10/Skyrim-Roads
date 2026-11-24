@@ -16,7 +16,7 @@ async def main():
             await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", name); await pg.click("#begin"); await pg.wait_for_timeout(4000)
             await clear(pg); return pg
         async def log(pg):
-            await clear(pg); await pg.click("[data-tab=map]"); await clear(pg); await pg.evaluate("()=>window.__ui.go('social')"); await pg.wait_for_timeout(200); await pg.click("[data-act=soctab][data-id=realm]"); await pg.wait_for_timeout(300); await clear(pg)   # clans and holds: 👥 Friends → Realm
+            await clear(pg); await pg.click("[data-tab=map]"); await clear(pg); await pg.evaluate("()=>window.__ui.go('social')"); await pg.wait_for_timeout(200); await pg.click("[data-act=soctab][data-id=realm]"); await pg.wait_for_timeout(300); await clear(pg)   # clans and holds: \ue106 Friends → Realm
         A = await phone("wa", "Alfa"); B = await phone("wb", "Beta")
         for pg, nm, tg in ((A, "Red Hand", "RED"), (B, "Blue Wolves", "BLU")):
             await log(pg); await pg.fill("#clanname", nm); await pg.fill("#clantag", tg)

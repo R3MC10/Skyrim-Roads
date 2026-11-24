@@ -9,7 +9,7 @@
     "A–Z": "A–Z", "Z–A": "Z–A", "High first": "Najwyższe najpierw", "Low first": "Najniższe najpierw",
     "Damage": "Obrażenia", "Count": "Liczba", "How many": "Ile",
     "Store": "Schowaj", "Take": "Weź", "Store 1": "Schowaj 1", "Take 1": "Weź 1",
-    "Show to visitors": "Pokaż gościom", "Hide from visitors": "Ukryj przed gośćmi", "🖼 In your display case.": "🖼 W twojej gablocie.",
+    "Show to visitors": "Pokaż gościom", "Hide from visitors": "Ukryj przed gośćmi", "\uE18C In your display case.": "\uE18C W twojej gablocie.",
     "Pick something to move it.": "Wybierz coś, aby to przenieść.",
     "Nothing loose in your pack (worn gear stays on you).": "W plecaku nie ma nic luźnego (noszony ekwipunek zostaje na tobie).",
     "The chest is empty. Switch to Your pack to put things away.": "Skrzynia jest pusta. Przełącz na Twój plecak, aby coś schować.",

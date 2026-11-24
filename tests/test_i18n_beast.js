@@ -31,9 +31,9 @@ console.log("translator:", !!I18N);
 if (I18N) {
   const t = (s) => I18N.tr(s);
   ok(t("Claws") === "Pazury", "Claws");
-  ok(t("🌕 Howl") === "🌕 Wycie", "icon Howl");
+  ok(t("\uE13F Howl") === "\uE13F Wycie", "icon Howl");
   ok(t("Once per change") === "Raz na przemianę", "reason");
-  ok(t("🐺 Beast Form · 4 rounds left") === "🐺 Postać bestii · zostało: 4 rundy", "dock");
+  ok(t("\uE114 Beast Form · 4 rounds left") === "\uE114 Postać bestii · zostało: 4 rundy", "dock");
   ok((t("Maul: A savage double swipe. Costs stamina; can knock the foe off balance. 3 AP + 15 stamina.") || "").startsWith("Szarpanie: Dzikie"), "tip");
   ok((t("Seduction: the bandit lowers its guard") || "").startsWith("Uwiedzenie:"), "seduce pattern");
   ok(t("Howl: the foe cowers") === "Wycie: wróg kuli się ze strachu", "howl log");

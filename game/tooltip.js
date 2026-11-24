@@ -18,6 +18,7 @@ const TIP = (() => {
     WORLD: () => (typeof WORLD !== "undefined" ? WORLD : undefined), DUNGEONS: () => (typeof DUNGEONS !== "undefined" ? DUNGEONS : undefined), QUESTS: () => (typeof QUESTS !== "undefined" ? QUESTS : undefined),
     WorldMap: () => (typeof WorldMap !== "undefined" ? WorldMap : undefined), TBUI: () => (typeof TBUI !== "undefined" ? TBUI : undefined),
     TOMEINFO: () => (typeof TOMEINFO !== "undefined" ? TOMEINFO : undefined),   // tomeinfo.js: the shop's full spell-tome card
+    CHARGE: () => (typeof CHARGE !== "undefined" ? CHARGE : undefined),   // chargebar.js: the charge bar of enchanted weapons and staffs
     COOK: () => (typeof COOK !== "undefined" ? COOK : undefined),
   };
   const g = (n) => { try { return MODS[n] ? MODS[n]() : undefined; } catch { return undefined; } };
@@ -61,7 +62,7 @@ const TIP = (() => {
     const L = [];
     const enL = typeof ENCH !== "undefined" && ENCH.lines ? ENCH.lines(it) : null;   // plain words for what the enchantment does (enchanting.js)
     const wn = it.enchant && typeof ENCH !== "undefined" ? ENCH.WEAPON?.[it.enchant.effect]?.[0] : null;   // the enchantment's name first
-    if (it.enchant) L.push(`✦ ${wn && enL?.[0] ? `${wn} · ` : ""}${enL?.[0] || `${it.enchant.magnitude} ${it.enchant.effect} damage per hit`}${r ? ` · charge ${Math.round(100 * (r.charge || 0) / it.enchant.capacity)}%` : ""}`);
+    if (it.enchant) L.push(`✦ ${wn && enL?.[0] ? `${wn} · ` : ""}${enL?.[0] || `${it.enchant.magnitude} ${it.enchant.effect} damage per hit`}${r && !g("CHARGE") ? ` · charge ${Math.round(100 * (r.charge || 0) / it.enchant.capacity)}%` : ""}`);
     if (it.staff && D_.SPELLS[it.staff.spell]) L.push(`✦ Casts ${D_.SPELLS[it.staff.spell].name} instead of swinging`);
     if (it.aenchant && enL?.length) { const ae = [it.aenchant, ...(it.aenchant.more || [])]; L.push(...enL.map((x, i) => `✦ ${ae[i]?.name && !x.startsWith(ae[i].name) ? `${ae[i].name} · ` : ""}${x}`), "While worn."); }   // name · what it does
     else if (it.aenchant) L.push(`✦ ${[it.aenchant, ...(it.aenchant.more || [])].map((e) => (e.key.startsWith("dae:") ? e.name : `${e.name} ${e.mag}`)).join(" · ")} while worn`);
@@ -101,7 +102,7 @@ const TIP = (() => {
       else if (it.slot === "valuable") L.push(`Worth about ${it.value ?? 0} gold to any merchant.`);
       else L.push(`No use in a fight. A merchant pays about ${it.value ?? 0} gold for it.`);
     }
-    if (r?.stolen) L.push("✋ Stolen. Only a fence will buy it.");
+    if (r?.stolen) L.push("\uE15E Stolen. Only a fence will buy it.");
     // better or worse than what you wear (the same sums as the ▲/▼ marks in lists)
     let cmp = "";
     if (s && G_?.equipment && (G_.SLOTS || []).includes(it.slot)) {
@@ -111,7 +112,7 @@ const TIP = (() => {
       else if (wit && (it.slot !== "weapon" || wit.skill === it.skill)) { const a = stat(it, r), b = stat(wit, w), word = it.slot === "weapon" ? "damage" : "armor"; cmp = `<p class="${a > b ? "tt-up" : a < b ? "tt-dn" : "tt-hint"}">${a > b ? "▲" : a < b ? "▼" : "="} ${a} ${word} vs ${b} on your ${esc(wit.name)}</p>`; }
       else if (!w) cmp = `<p class="tt-up">Nothing worn there yet</p>`;
     }
-    return head(name, "q-" + tier) + sub(kind + (CC_ && tier !== "common" ? ` · ${CC_.TIER_NAME[tier]}` : "")) + stats(st) + L.map((x) => line(x)).join("") + (tomeCard ? `<div class="tt-tome">${tomeCard}</div>` : "") + cmp;
+    return head(name, "q-" + tier) + sub(kind + (CC_ && tier !== "common" ? ` · ${CC_.TIER_NAME[tier]}` : "")) + stats(st) + L.map((x) => line(x)).join("") + (g("CHARGE") ? g("CHARGE").detail(itemId, r, s) : "") + (tomeCard ? `<div class="tt-tome">${tomeCard}</div>` : "") + cmp;
   }
   register("item", (id, s) => itemHTML(id, s));
   register("inv", (id, s) => { const r = s?.inv?.find((x) => String(x.id) === String(id)); return r ? itemHTML(r.item, s, r) : null; });
@@ -130,13 +131,13 @@ const TIP = (() => {
     const cost = sp.kind === "utility" ? null : s && G_?.spellCost ? G_.spellCost(s, sp) : null;
     return head(sp.name, `sch-${String(sp.school).toLowerCase()}`) + sub(`${sp.level || "Novice"} ${sp.school}${sp.element ? ` · ${sp.element}` : ""}`)
       + line(M?.describe ? M.describe(sp) : "") + (s && M?.infoHTML && sp.kind !== "utility" ? M.infoHTML(s, id) : stats([["Magicka", cost]]))
-      + (fail ? `<p class="tt-dn">⚠ Above your ${esc(sp.school)} skill: costs more and fizzles ${Math.round(fail * 100)}% of the time</p>` : "")
+      + (fail ? `<p class="tt-dn"> Above your ${esc(sp.school)} skill: costs more and fizzles ${Math.round(fail * 100)}% of the time</p>` : "")
       + (s && !s.spells?.includes(id) ? hint("You don't know this spell yet.") : "");
   });
   register("shout", (id, s) => {
     const PW = g("POWERS"), sh = PW?.SHOUTS?.[id]; if (!sh) return null;
     const [name, words, cds, desc] = sh, lv = s ? PW.level(s, id) : 0;
-    return head(name, "sch-shout") + sub(`Shout · ${words.map((w) => (s && PW.known(s, w) ? (PW.unlocked(s, w) ? w : w + "🔒") : "···")).join(" ")}`) + line(desc)
+    return head(name, "sch-shout") + sub(`Shout · ${words.map((w) => (s && PW.known(s, w) ? (PW.unlocked(s, w) ? w : w + "") : "···")).join(" ")}`) + line(desc)
       + (lv ? stats([["Words", lv], ["Cooldown", `${cds[lv - 1]} s`]]) : hint("Learn its words at word walls; unlock each with a dragon soul."));
   });
   register("power", (id, s) => {

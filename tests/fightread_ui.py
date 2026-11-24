@@ -52,7 +52,7 @@ async def main():
             await pg.wait_for_timeout(300)
             ok(await pg.evaluate("/Poisoned −6/.test(document.querySelector('#tbf .tbu.me .tbst.mine')?.textContent||'')"), f"{style}: my poison chip says −6")
             me_fc = await pg.evaluate("document.querySelector('#tbf .tbu.me .tbfcl')?.textContent||''")
-            ok("☠" in me_fc, f"{style}: my bar's forecast shows the poison ({me_fc.strip()})")
+            ok("\ue12e" in me_fc, f"{style}: my bar's forecast shows the poison ({me_fc.strip()})")
             ok(await pg.evaluate("!!document.querySelector('#tbf .tbu.me .tbbar s.tbfc')"), f"{style}: stripes on my health bar")
             foe_fc = await pg.evaluate("document.querySelector('#tbf .tbu.foe .tbfcl')?.textContent||''")
             ok("−9" in foe_fc, f"{style}: the foe's bar shows its burning ({foe_fc.strip()})")

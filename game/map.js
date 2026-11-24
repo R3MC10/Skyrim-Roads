@@ -550,7 +550,7 @@ const WorldMap = (() => {
       if (rt < 1) g.globalAlpha = rt;
       const [bx, by] = P(v.route[v.route.length - 1]);
       g.strokeStyle = "#fff0cd"; g.lineWidth = 2.4 * s; g.beginPath(); g.arc(bx, by, 9 * s, 0, 7); g.stroke();
-      if (v.dest && !v.discovered.includes(v.dest.name)) label(g, v.dest.roam ? "🧭 " + v.dest.name : v.dest.name + " ?", bx + 13 * s, by, s, 15, "#ffeac0", 700, false, "left");
+      if (v.dest && !v.discovered.includes(v.dest.name)) label(g, v.dest.roam ? " " + v.dest.name : v.dest.name + " ?", bx + 13 * s, by, s, 15, "#ffeac0", 700, false, "left");
       g.globalAlpha = 1;
     }
     if (v.spot) {   // a tapped spot for free roam
@@ -600,7 +600,7 @@ const WorldMap = (() => {
     if (v.cleared) for (const [n, x, y, kind] of shown) {
       const left = v.cleared[n]; if (!left || !(v.zoom >= KIND_MIN_ZOOM[kind] || v.selected === n)) continue;
       const gs = left * G.GAME_SPEED, dd = Math.floor(gs / 86400), h = Math.floor(gs / 3600), mm = Math.ceil(gs / 60);
-      label(g, `⏳ ${dd ? dd + "d" : h ? h + "h" : mm + "m"}`, x * W + 9 * s, y * H - 10 * s, s, 11, "#e8c98a", 700, false, "left");
+      label(g, ` ${dd ? dd + "d" : h ? h + "h" : mm + "m"}`, x * W + 9 * s, y * H - 10 * s, s, 11, "#e8c98a", 700, false, "left");
     }
     if (v.selected && !v.discovered.includes(v.selected)) { const [x, y] = WORLD.places[v.selected]; g.strokeStyle = "#9fd0f0"; g.lineWidth = 2.6 * s; g.beginPath(); g.arc(x * W, y * H, 14 * s, 0, 7); g.stroke(); label(g, v.selected, x * W, y * H + 20 * s, s, 14); }
     // people and bags: try a few spots around each dot and take the first that doesn't cover another label
@@ -668,7 +668,7 @@ const WorldMap = (() => {
       const [x, y] = P(m.pos), r = 7 * s;
       g.strokeStyle = "#1b1408"; g.lineWidth = 5 * s; g.beginPath(); g.moveTo(x - r, y - r); g.lineTo(x + r, y + r); g.moveTo(x + r, y - r); g.lineTo(x - r, y + r); g.stroke();
       g.strokeStyle = "#c9392b"; g.lineWidth = 3 * s; g.stroke();
-      smartLabel("🗺 " + m.label, x, y - r, 11, "#ffd6c8");
+      smartLabel(" " + m.label, x, y - r, 11, "#ffd6c8");
     }
     for (const m of v.rumours || []) {   // rumours you heard (rumours.js): an ember ring with a "?"; it might be true
       const [x, y] = P(m.pos), r = 8 * s, pulse = v.reduceMotion ? 0.5 : (Math.sin(v.t * 2 + x) + 1) / 2;

@@ -11,7 +11,7 @@ const INVITES = (() => {
   const NOS_KEEP = 8;            // a party/run keeps the last few "declined" notes for its leader
   const NO_MEMORY = 86400;       // a declined clan invite stays hidden for a day (seconds)
   const SHOW = 3;                // cards on screen at once; the rest wait behind a "+N more" line
-  const ICON = { party: "👥", coop: "⚔", clan: "🏴", duel: "⚔", trade: "🤝" };
+  const ICON = { party: "\uE106", coop: "\uE101", clan: "\uE13E", duel: "\uE101", trade: "\uE198" };
   const nowS = () => (typeof G !== "undefined" && G.now ? G.now() : Date.now() / 1000);
 
   /* ---------------------------------------------------------------- pure part
@@ -130,10 +130,10 @@ const INVITES = (() => {
     const html = show.slice(0, SHOW).map((c) => {
       const b = busy.has(c.key) ? "disabled" : "";
       return `<div class="invcard" data-key="${esc(c.key)}" data-kind="${c.kind}">
-        <div class="invhead"><span class="invic" aria-hidden="true">${ICON[c.kind] || "✉"}</span><div class="invt"><b>${esc(c.text)}</b><span>${esc(c.why || c.sub)}</span></div>
+        <div class="invhead"><span class="invic" aria-hidden="true">${ICON[c.kind] || "\uE13A"}</span><div class="invt"><b>${esc(c.text)}</b><span>${esc(c.why || c.sub)}</span></div>
           <button class="invx" data-inv="hide" aria-label="Hide for now" title="Hide for now">✕</button></div>
         <div class="invbtns"><button class="btn sm pri" data-inv="yes" ${b || (c.can ? "" : "disabled")}>Accept</button><button class="btn sm" data-inv="no" ${b}>Decline</button></div></div>`;
-    }).join("") + (more > 0 ? `<button class="invmore" data-inv="more">+${more} more invite${more > 1 ? "s" : ""} in 👥 Social</button>` : "");
+    }).join("") + (more > 0 ? `<button class="invmore" data-inv="more">+${more} more invite${more > 1 ? "s" : ""} in \uE106 Social</button>` : "");
     if (e.innerHTML !== html) e.innerHTML = html;
   }
   async function onClick(ev) {
