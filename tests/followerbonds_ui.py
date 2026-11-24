@@ -57,6 +57,7 @@ async def main():
                 async def hero():
                     if not await tap("[data-tab=hero]"):
                         await pg.evaluate("() => { const b = document.querySelector('[data-tab=hero]'); if (b) b.click(); }"); await pg.wait_for_timeout(400)
+                    await pg.evaluate("() => window.__ui.go('follower')"); await pg.wait_for_timeout(400)   # followertab.js
                 await hero()
                 ok(await pg.query_selector(".fol2 .bondm") is not None, f"{name}: loyalty meter under her name")
                 ok(await tap(".fol2 [data-op=view][data-id=bond]"), f"{name}: open the Bond tab")

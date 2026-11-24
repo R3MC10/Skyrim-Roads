@@ -3,10 +3,18 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b143-nopixel", build: 143, date: "24 Nov 2026", title: "One art style: hand-drawn", items: [
+    { id: "b144-nopixel", build: 144, date: "24 Nov 2026", title: "One art style: hand-drawn", items: [
       "The pixel-art look is gone. The game now has one style, the hand-drawn one, so every picture, menu and fight gets the full care.",
       "If you had pixel art switched on, you'll just see the hand-drawn look next time you open the game. Nothing else changes, and your save is untouched.",
       "The Art style row is gone from Settings.",
+    ] },
+    { id: "b143-comingnext", build: 143, date: "24 Nov 2026", title: "Coming next is up to date again", items: [
+      "The Coming next box at the top of Patch notes now shows what's really being built, and it can't get stuck on an old list any more."] },
+    { id: "b143-followertab", build: 143, date: "24 Nov 2026", title: "Your follower gets their own tab", items: [
+      "Your follower now has their own Follower tab in the Character menu, next to Skills, Character and Perks. Everything about them lives there: overview, bond, gear, magic, tactics, perks, fighting style and Dismiss.",
+      "The Character page only keeps one short line about them; tap it to jump to the tab. With nobody following you, the tab tells you who you can hire and where.",
+      "Their gear works like your Items menu: their pack or yours, filters (All, Weapons, Armor, Potions, Other), a list you can sort by name, type, damage or armour, weight and value, and a ◆ on what they wear.",
+      "Tap an item to see its stats and how it compares with what they wear now, then Give, Give & equip, Equip, Take off or Take it back.",
     ] },
     { id: "b141-polishsweep", build: 141, date: "24 Nov 2026", title: "More of the game in Polish", items: [
       "Playing in Polish? The fight picture now speaks it too: Ty, Uciekają, Zwycięstwo, Pudło, Blok!, critical hits and sneak attacks.",
@@ -803,9 +811,14 @@ const PATCHNOTES = (() => {
       "The Hall of the North that everyone builds together, and the Jarl's weekly bounty board.",
       "A main menu and in-app updates."] },
   ];
+  // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
+  // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
+  const NEXT_AT = 144;
   const NEXT = [
-    "A sharper Solitude peninsula and map polish",
-    "More quests and characters",
+    "A new, livelier fight screen that fits on one screen",
+    "On PC, everything fits on one screen without scrolling",
+    "New painted dungeon rooms and a painted world map",
+    "More unique enchantments on gear",
   ];
   const KEY = "rotn_notes_seen";
   const latest = () => LIST[0];
@@ -835,6 +848,6 @@ const PATCHNOTES = (() => {
     const n = latest();
     return `<div class="pnotes pnwhat"><div class="pnkick">What's new</div><h2>${e(n.title)}</h2><ul>${n.items.map((i) => `<li>${e(i)}</li>`).join("")}</ul></div>`;
   }
-  return { LIST, NEXT, latest, seen, markSeen, unseen, html, barHTML, whatsNewHTML, KEY };
+  return { LIST, NEXT, NEXT_AT, latest, seen, markSeen, unseen, html, barHTML, whatsNewHTML, KEY };
 })();
 if (typeof module !== "undefined") module.exports = PATCHNOTES;

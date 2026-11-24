@@ -80,10 +80,11 @@ async def main():
         ok(h < 4200, f"Character page is shorter ({h}px)")
         await pg.click("#side details[data-m2f=perks] summary"); await pg.wait_for_timeout(250)
         ok(await pg.evaluate("document.querySelectorAll('#side [data-act=pskill]').length") > 0, "perks fold opens with skill buttons")
-        tabs = await pg.evaluate("""()=>{const t=[...document.querySelectorAll('#side .fol2tabs button')]; return {n:t.length, tops:[...new Set(t.map(b=>Math.round(b.getBoundingClientRect().top)))].length}}""")
-        ok(tabs["n"] == 6 and tabs["tops"] == 1, f"follower tabs on one row {tabs}")
         ok(await overflow(pg, "#side") == [], f"Character fits at 360 {await overflow(pg, '#side')}")
         await pg.screenshot(path=OUT + "hero_360.png", full_page=True)
+        await pg.evaluate("window.__ui.go('follower')"); await pg.wait_for_timeout(400)   # followertab.js: the follower has their own tab now
+        tabs = await pg.evaluate("""()=>{const t=[...document.querySelectorAll('#side .fol2tabs button')]; return {n:t.length, tops:[...new Set(t.map(b=>Math.round(b.getBoundingClientRect().top)))].length}}""")
+        ok(tabs["n"] == 6 and tabs["tops"] == 1, f"follower tabs on one row {tabs}")
         # journal search
         await pg.evaluate("window.__ui.go('log')"); await pg.wait_for_timeout(400)
         ok(await pg.evaluate("!!document.querySelector('#m2jq')"), "quest search box")

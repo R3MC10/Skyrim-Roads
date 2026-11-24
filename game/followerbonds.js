@@ -363,7 +363,7 @@ const BONDS = (() => {
     }
     if (q.stage === 1 && (s.cleared || {})[st.q[4]] >= q.t) {
       q.stage = 2;
-      if (typeof G !== "undefined") G.note(s, "📜 " + F("{0}: done. Talk to {1} (Hero tab → Follower → Bond) to finish it.", T(st.q[0]), first(id)));
+      if (typeof G !== "undefined") G.note(s, "📜 " + F("{0}: done. Talk to {1} (Character → Follower → Bond) to finish it.", T(st.q[0]), first(id)));
     }
     return "";
   }
