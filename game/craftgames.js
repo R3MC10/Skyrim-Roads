@@ -110,7 +110,6 @@ const CG = (() => {
 
   // ====================================================================== the games (DOM)
   const wantsGame = () => DOM && (params().has("craftgame") || (!automated() && pref("craftGame", true)));
-  const pixel = () => typeof ART !== "undefined" && ART.style && ART.style() === "pixel";
   const TITLE = { hammer: "At the anvil", bellows: "At the smelter", precise: "At the workbench", mix: "At the alchemy lab", rune: "At the arcane enchanter" };
   const HINT = {
     hammer: "Tap <b>Strike</b> (or the anvil) when the marker is in the glow. Three strikes.",
@@ -234,38 +233,35 @@ const CG = (() => {
     el.textContent = S.msg ? `${n} · ${S.msg}` : n;
   }
 
-  // ---- drawing: ink (soft light) or pixel (chunky, flat)
+  // ---- drawing: ink with soft light
   function draw(cv) {
     const S = st; if (!S) return;
-    const W = 300, H = 220, c = (typeof FITCANVAS !== "undefined" ? FITCANVAS.fixed(cv, W, H) : cv.getContext("2d")), px = pixel();   // sharp at any screen density (fitcanvas.js)
-    c.imageSmoothingEnabled = !px;
-    const q = (v) => (px ? Math.round(v / 4) * 4 : v);
-    const rect = (x, y, w, h, col) => { c.fillStyle = col; c.fillRect(q(x), q(y), Math.max(px ? 4 : 1, q(w)), Math.max(px ? 4 : 1, q(h))); };
-    const disc = (x, y, r, col, glow) => { if (px) { c.fillStyle = col; for (let yy = -r; yy <= r; yy += 4) { const w = Math.sqrt(Math.max(0, r * r - yy * yy)); c.fillRect(q(x - w), q(y + yy), q(w * 2) || 4, 4); } return; } c.save(); if (glow) { c.shadowColor = col; c.shadowBlur = glow; } c.fillStyle = col; c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fill(); c.restore(); };
-    const ring = (x, y, r, col, w = 3) => { if (px) { c.fillStyle = col; for (let a = 0; a < Math.PI * 2; a += 4 / Math.max(8, r)) c.fillRect(q(x + Math.cos(a) * r - 2), q(y + Math.sin(a) * r - 2), 4, 4); return; } c.save(); c.strokeStyle = col; c.lineWidth = w; c.shadowColor = col; c.shadowBlur = 8; c.beginPath(); c.arc(x, y, Math.max(1, r), 0, Math.PI * 2); c.stroke(); c.restore(); };
+    const W = 300, H = 220, c = (typeof FITCANVAS !== "undefined" ? FITCANVAS.fixed(cv, W, H) : cv.getContext("2d"));   // sharp at any screen density (fitcanvas.js)
+    const rect = (x, y, w, h, col) => { c.fillStyle = col; c.fillRect(x, y, Math.max(1, w), Math.max(1, h)); };
+    const disc = (x, y, r, col, glow) => { c.save(); if (glow) { c.shadowColor = col; c.shadowBlur = glow; } c.fillStyle = col; c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fill(); c.restore(); };
+    const ring = (x, y, r, col, w = 3) => { c.save(); c.strokeStyle = col; c.lineWidth = w; c.shadowColor = col; c.shadowBlur = 8; c.beginPath(); c.arc(x, y, Math.max(1, r), 0, Math.PI * 2); c.stroke(); c.restore(); };
     // backdrop: a dark workshop lit by the fire / lamp / arcane glow
     const tint = { hammer: "#ff8a3a", bellows: "#ff6a20", precise: "#d8b070", mix: "#7ac0a0", rune: "#7aa8ff" }[S.game];
-    if (px) { rect(0, 0, W, H, "#120f0c"); for (let y = 0; y < H; y += 8) rect(0, y, W, 4, y % 16 ? "#16120e" : "#1a1510"); }
-    else { const gr = c.createRadialGradient(150, 150, 10, 150, 120, 220); gr.addColorStop(0, tint + "55"); gr.addColorStop(0.5, "#1a1410"); gr.addColorStop(1, "#070605"); c.fillStyle = gr; c.fillRect(0, 0, W, H); }
+    { const gr = c.createRadialGradient(150, 150, 10, 150, 120, 220); gr.addColorStop(0, tint + "55"); gr.addColorStop(0.5, "#1a1410"); gr.addColorStop(1, "#070605"); c.fillStyle = gr; c.fillRect(0, 0, W, H); }
     if (S.game === "hammer") {
       // anvil with the glowing work on it, a bar above with the swinging marker
-      rect(90, 150, 120, 16, px ? "#4a4a50" : "#3c3d44"); rect(110, 166, 80, 24, px ? "#36363c" : "#2c2d33"); rect(70, 146, 40, 10, "#4a4a50");
+      rect(90, 150, 120, 16, "#3c3d44"); rect(110, 166, 80, 24, "#2c2d33"); rect(70, 146, 40, 10, "#4a4a50");
       const heat = 0.5 + 0.5 * Math.sin(S.t * 3); rect(118, 140, 70, 8, `rgb(255,${Math.round(120 + 80 * heat)},60)`);
-      if (!px) { c.save(); c.shadowColor = "#ff9a3c"; c.shadowBlur = 18; rect(118, 140, 70, 8, "rgba(255,180,90,.9)"); c.restore(); }
+      c.save(); c.shadowColor = "#ff9a3c"; c.shadowBlur = 18; rect(118, 140, 70, 8, "rgba(255,180,90,.9)"); c.restore();
       const bx = 24, bw = 252, by = 34;
-      rect(bx, by, bw, 18, "#2a2420"); rect(bx + (S.center - S.zone / 2) * bw, by, S.zone * bw, 18, px ? "#d6902a" : "rgba(255,170,60,.85)");
+      rect(bx, by, bw, 18, "#2a2420"); rect(bx + (S.center - S.zone / 2) * bw, by, S.zone * bw, 18, "rgba(255,170,60,.85)");
       rect(bx + (S.center - S.zone / 4) * bw, by + 4, S.zone / 2 * bw, 10, "#ffe2a0");
       rect(bx + S.pos * bw - 3, by - 8, 6, 34, "#f4ecd8");
       // the hammer: raised, then down when you strike
       const down = S.hit > 0, hx = 150, hy = down ? 112 : 70, ang = down ? 0.1 : -0.7;
-      c.save(); c.translate(q(hx + 34), q(hy + 30)); c.rotate(px ? 0 : ang); rect(-4, -48, 8, 52, "#6b4a2a"); rect(-18, -60, 36, 18, "#8a8c94"); c.restore();
+      c.save(); c.translate(hx + 34, hy + 30); c.rotate(ang); rect(-4, -48, 8, 52, "#6b4a2a"); rect(-18, -60, 36, 18, "#8a8c94"); c.restore();
     }
     if (S.game === "bellows") {
       // furnace mouth, a heat gauge with the gold band
-      rect(80, 100, 140, 90, px ? "#3a2c22" : "#2e231b"); const h = S.heat;
-      disc(150, 150, 22 + 20 * h, `rgb(255,${Math.round(90 + 140 * h)},${Math.round(30 + 60 * h)})`, px ? 0 : 30);
+      rect(80, 100, 140, 90, "#2e231b"); const h = S.heat;
+      disc(150, 150, 22 + 20 * h, `rgb(255,${Math.round(90 + 140 * h)},${Math.round(30 + 60 * h)})`, 30);
       const gx = 246, gy = 30, gh = 160; rect(gx, gy, 22, gh, "#231d18");
-      rect(gx, gy + (1 - S.hi) * gh, 22, (S.hi - S.lo) * gh, px ? "#c9a040" : "rgba(214,178,94,.8)");
+      rect(gx, gy + (1 - S.hi) * gh, 22, (S.hi - S.lo) * gh, "rgba(214,178,94,.8)");
       rect(gx - 6, gy + (1 - h) * gh - 3, 34, 6, h >= S.lo && h <= S.hi ? "#ffe9a8" : "#ff6a4a");
       // the bellows themselves squeeze while you pump
       const sq = S.holding ? 0.6 + 0.2 * Math.sin(S.t * 18) : 1;
@@ -275,14 +271,14 @@ const CG = (() => {
     }
     if (S.game === "precise") {
       // a hide on the rack / a gem on the bench, the mark and the closing ring
-      if (px) { rect(70, 50, 160, 130, "#6a4a30"); rect(78, 58, 144, 114, "#7a5838"); } else { c.save(); c.fillStyle = "#6e4c30"; c.beginPath(); c.ellipse(150, 115, 86, 66, 0.1, 0, Math.PI * 2); c.fill(); c.restore(); }
+      c.save(); c.fillStyle = "#6e4c30"; c.beginPath(); c.ellipse(150, 115, 86, 66, 0.1, 0, Math.PI * 2); c.fill(); c.restore();
       ring(150, 115, S.R, "#ffd27a", 4); ring(150, 115, S.rr, "#f4ecd8", 2);
     }
     if (S.game === "mix") {
       // mortar/flask with the mix colour; the target swatch on the right
       const col = mixColour(S.mixv);
       rect(70, 70, 120, 110, "#2a2622"); rect(78, 90 + (1 - Math.min(1, S.mixv * 0.6 + 0.4)) * 60, 104, 86 - (1 - Math.min(1, S.mixv * 0.6 + 0.4)) * 60, col);
-      if (!px) { c.save(); c.globalAlpha = 0.35; disc(130, 120, 50, col, 30); c.restore(); }
+      c.save(); c.globalAlpha = 0.35; disc(130, 120, 50, col, 30); c.restore();
       rect(214, 70, 60, 60, "#231d18"); rect(220, 76, 48, 48, mixColour(S.target));
       c.fillStyle = "#cfc6b0"; c.font = "12px sans-serif"; c.textAlign = "center"; c.fillText(LX("Aim"), 244, 146);
       rect(24, 200, 252, 8, "#231d18"); for (let i = 0; i < 25; i++) rect(24 + i * 10.08, 200, 10.1, 8, mixColour(i / 24));
@@ -290,14 +286,13 @@ const CG = (() => {
     }
     if (S.game === "rune") {
       ring(150, 112, 92, "rgba(122,168,255,.35)", 2);
-      if (!px) { c.save(); c.strokeStyle = "rgba(160,200,255,.9)"; c.lineWidth = 3; c.shadowColor = "#9fd3ff"; c.shadowBlur = 12; c.beginPath(); S.taps.forEach((i, k) => { const [x, y] = S.pts[i]; k ? c.lineTo(x, y) : c.moveTo(x, y); }); c.stroke(); c.restore(); }
-      else for (let k = 1; k < S.taps.length; k++) { const [x1, y1] = S.pts[S.taps[k - 1]], [x2, y2] = S.pts[S.taps[k]]; for (let f = 0; f <= 1; f += 0.06) rect(x1 + (x2 - x1) * f - 2, y1 + (y2 - y1) * f - 2, 4, 4, "#a8c8ff"); }
+      c.save(); c.strokeStyle = "rgba(160,200,255,.9)"; c.lineWidth = 3; c.shadowColor = "#9fd3ff"; c.shadowBlur = 12; c.beginPath(); S.taps.forEach((i, k) => { const [x, y] = S.pts[i]; k ? c.lineTo(x, y) : c.moveTo(x, y); }); c.stroke(); c.restore();
       S.pts.forEach(([x, y], i) => {
         const lit = S.phase === "watch" && S.order[S.show] === i, done = S.taps.includes(i);
         disc(x, y, lit ? 15 : 11, lit ? "#e8f4ff" : done ? "#9fd3ff" : "#3a4a70", lit ? 26 : done ? 12 : 0);
       });
     }
-    for (const p of S.fx) rect(p.x, p.y, px ? 4 : 3, px ? 4 : 3, p.c);
+    for (const p of S.fx) rect(p.x, p.y, 3, 3, p.c);
   }
   function finish(g, quick) {
     if (!st || st.over) return;

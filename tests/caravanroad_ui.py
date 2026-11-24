@@ -39,8 +39,8 @@ async def main():
         await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Hrodi"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
         await pg.add_style_tag(content=".pban{display:none!important}")   # celebration banners would cover the map
         await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
-        for style in ("ink", "pixel"):
-            await pg.wait_for_function("typeof G !== 'undefined' && !!window.__dbg && !!window.__dbg.save()"); await pg.evaluate(f"ART.setStyle('{style}')")
+        for style in ("ink",):
+            await pg.wait_for_function("typeof G !== 'undefined' && !!window.__dbg && !!window.__dbg.save()")
             await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
             info = await pg.evaluate(SETUP, 38)
             print(style, "caravan:", info); await pg.wait_for_timeout(7000); await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")

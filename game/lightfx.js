@@ -7,9 +7,8 @@
      Low  = grade, glows, shafts, vignette (still pictures, nothing moves)
      High = Low + fog banks, cloud-shadow parallax, shimmering water and aurora, flickering fires
    Cheap on phones: every layer is drawn once into a small offscreen canvas and only rebuilt when the light changes a
-   step (time of day, weather, places found, screen size, art style); each map frame just stamps a few of them.
-   Pixel art style: the layers are built at block size, posterised with a 4×4 dither and stamped without smoothing,
-   so they stay crisp. Reduce motion freezes the drifting; high contrast tones the grade down and drops vignette and fog.
+   step (time of day, weather, places found, screen size); each map frame just stamps a few of them.
+   Reduce motion freezes the drifting; high contrast tones the grade down and drops vignette and fog.
      LIGHTFX.map(g, canvas, v, o)       map.js, right after the painted map, fog of war and clan tints (under markers)
      LIGHTFX.picture(g, w, h, st, opts) placeart.js, a cached place picture (st = SKY state)
      LIGHTFX.key()                      add to picture cache keys */
@@ -24,7 +23,6 @@ const LIGHTFX = (() => {
   }
   const on = () => level() !== "off";
   const hc = () => typeof document !== "undefined" && !!document.documentElement && document.documentElement.classList.contains("a11y-hc");
-  const pixel = () => (typeof ART !== "undefined" ? ART.style() : "ink") === "pixel";
   const key = () => (on() ? level() + (hc() ? "h" : "") : "off");
   function setLevel(v) {
     if (!LEVELS.includes(v)) return;
@@ -41,18 +39,6 @@ const LIGHTFX = (() => {
   const q = (x, n = 10) => Math.round(x * n) / n;   // light steps: layers rebuild only when a step changes
   function mk(w, h) { const c = document.createElement("canvas"); c.width = Math.max(1, Math.round(w)); c.height = Math.max(1, Math.round(h)); return c; }
   const seeded = (s) => (typeof ART !== "undefined" ? ART.seeded(s) : (() => { let a = 7; return () => ((a = (a * 16807) % 2147483647) / 2147483647); })());
-  /* pixel mode: snap colours and alpha to a few steps (optionally with a light ordered dither), so soft light turns into crisp bands */
-  const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map((v) => (v + 0.5) / 16 - 0.5);
-  function posterize(c, steps = 6, dither = false) {
-    const g = c.getContext("2d"), img = g.getImageData(0, 0, c.width, c.height), d = img.data, W = c.width, st = 255 / steps;
-    for (let i = 0, p = 0; i < d.length; i += 4, p++) {
-      if (!d[i + 3]) continue;
-      const b = dither ? BAYER[(((p / W) | 0) & 3) * 4 + ((p % W) & 3)] * 0.6 : 0;
-      for (let k = 0; k < 4; k++) d[i + k] = clamp(Math.round(d[i + k] / st + b) * st, 0, 255);
-    }
-    g.putImageData(img, 0, 0);
-    return c;
-  }
 
   // ---------------------------------------------------------------- what the light is doing
   const GREY = { storm: 1, rain: 0.65, cloudy: 0.35, fog: 0.45, blizzard: 0.6, snow: 0.3, ashstorm: 0.85 };
@@ -151,8 +137,8 @@ const LIGHTFX = (() => {
   }
   /* the added light on the map, phase 0 or 1 (High crossfades the two so water shimmers and the aurora ripples) */
   const LW = 500, LH = 350;
-  function worldLight(L, shown, phase, px) {
-    const TR = terrain(), k = `${phase}|${q(L.lights)}|${q(L.shim)}|${q(L.aurora)}|${L.shimCol.map((c) => c >> 4).join(",")}|${shown.length}|${px}`;
+  function worldLight(L, shown, phase) {
+    const TR = terrain(), k = `${phase}|${q(L.lights)}|${q(L.shim)}|${q(L.aurora)}|${L.shimCol.map((c) => c >> 4).join(",")}|${shown.length}`;
     const slot = "wl" + phase; if (lay[slot] && lay[slot].k === k) return lay[slot].c;
     const { GW, GH } = TR, small = mk(GW, GH), sg = small.getContext("2d"), img = sg.createImageData(GW, GH), d = img.data;
     const ph = phase * 1.7;
@@ -177,7 +163,7 @@ const LIGHTFX = (() => {
     sg.putImageData(img, 0, 0);
     const c = (lay[slot] && lay[slot].c && lay[slot].c.width === LW) ? lay[slot].c : mk(LW, LH), g = c.getContext("2d");
     g.clearRect(0, 0, LW, LH); g.globalCompositeOperation = "source-over";
-    g.imageSmoothingEnabled = !px; g.drawImage(small, 0, 0, LW, LH);
+    g.imageSmoothingEnabled = true; g.drawImage(small, 0, 0, LW, LH);
     if (L.lights > 0.03) {
       g.globalCompositeOperation = "lighter";
       for (const [, x, y, kind] of shown) {
@@ -187,29 +173,26 @@ const LIGHTFX = (() => {
       }
       g.globalAlpha = 1; g.globalCompositeOperation = "source-over";
     }
-    if (px) posterize(c, 5);
     lay[slot] = { k, c };
     return c;
   }
-  function fogLayer(L, px) {
-    const TR = terrain(), k = `${q(L.fog, 20)}|${L.fogCol.map((c) => c >> 3).join(",")}|${px}`;
+  function fogLayer(L) {
+    const TR = terrain(), k = `${q(L.fog, 20)}|${L.fogCol.map((c) => c >> 3).join(",")}`;
     if (lay.fog && lay.fog.k === k) return lay.fog.c;
     const c = mk(TR.GW, TR.GH), g = c.getContext("2d");
     g.fillStyle = rgb(L.fogCol, 1); g.fillRect(0, 0, c.width, c.height);
     g.globalCompositeOperation = "destination-in"; g.globalAlpha = clamp(L.fog * 1.4); g.drawImage(TR.fogMask, 0, 0); g.globalAlpha = 1;
-    if (px) posterize(c, 5);
     lay.fog = { k, c };
     return c;
   }
-  /* screen-space layers, at a quarter of the screen (block size in pixel mode), rebuilt only when the light steps:
+  /* screen-space layers, at a quarter of the screen, rebuilt only when the light steps:
        mul: the colour grade with the vignette baked in (one multiply pass)
        add: the warm golden-hour lift with the dawn/dusk light shafts (one added-light pass) */
-  const bufScale = (px, dpr) => (px ? 1 / Math.max(3, Math.round(3 * dpr)) : 0.25);
-  function screenLayers(cw, ch, L, px, hcOn, dpr, sol) {
+  function screenLayers(cw, ch, L, hcOn, dpr, sol) {
     const gk = hcOn ? 0.5 : 1, m = sol ? [255, 255, 255] : mix([255, 255, 255], L.mul, gk);
-    const k = `${cw}x${ch}|${m.map((c) => c >> 2).join(",")}|${q(L.night, 5)}|${q(L.grey, 5)}|${q(L.gold, 20)}|${L.sunDir}|${px}|${hcOn}|${sol}`;
+    const k = `${cw}x${ch}|${m.map((c) => c >> 2).join(",")}|${q(L.night, 5)}|${q(L.grey, 5)}|${q(L.gold, 20)}|${L.sunDir}|${hcOn}|${sol}`;
     if (lay.scr && lay.scr.k === k) return lay.scr;
-    const f = bufScale(px, dpr), bw = Math.ceil(cw * f), bh = Math.ceil(ch * f);
+    const f = 0.25, bw = Math.ceil(cw * f), bh = Math.ceil(ch * f);
     let mul = null, add = null;
     if (!hcOn || m[0] + m[1] + m[2] < 762) {
       mul = mk(bw, bh); const g = mul.getContext("2d");
@@ -220,7 +203,6 @@ const LIGHTFX = (() => {
         gr.addColorStop(0, "rgba(10,8,14,0)"); gr.addColorStop(0.45, `rgba(10,8,14,${a * 0.45})`); gr.addColorStop(1, `rgba(10,8,14,${a})`);
         g.fillStyle = gr; g.fillRect(-1, -1, 2, 2);
       }
-      if (px) posterize(mul, 8, true);
     }
     const warm = sol ? 0 : L.warm * gk;
     if (warm > 0.01 || (L.gold > 0.06 && L.grey < 0.7)) {
@@ -239,7 +221,6 @@ const LIGHTFX = (() => {
           g.lineTo(sx + Math.cos(ang - wd) * len, sy + Math.sin(ang - wd) * len); g.lineTo(sx + Math.cos(ang + wd) * len, sy + Math.sin(ang + wd) * len); g.closePath(); g.fill();
         }
       }
-      if (px) posterize(add, 6);
     }
     lay.scr = { k, mul, add };
     return lay.scr;
@@ -257,11 +238,11 @@ const LIGHTFX = (() => {
      storms add one (colour wash-out). The moving layers are redrawn into small buffers ~3×/s and stretched up once. */
   function map(g, canvas, v, o) {
     const lv = level(); if (lv === "off") return false;
-    const L = nowLight(v.weather), px = pixel(), hcOn = hc(), high = lv === "high", still = !!v.reduceMotion, t = still ? 0 : v.t || 0;
-    const cw = canvas.width, ch = canvas.height, dpr = o.dpr || 1, f = bufScale(px, dpr), bw = Math.ceil(cw * f), bh = Math.ceil(ch * f);
+    const L = nowLight(v.weather), hcOn = hc(), high = lv === "high", still = !!v.reduceMotion, t = still ? 0 : v.t || 0;
+    const cw = canvas.width, ch = canvas.height, dpr = o.dpr || 1, f = 0.25, bw = Math.ceil(cw * f), bh = Math.ceil(ch * f);
     const T = g.getTransform(), toBuf = (bg) => bg.setTransform(T.a * f, T.b * f, T.c * f, T.d * f, T.e * f, T.f * f);
-    const sl = screenLayers(cw, ch, L, px, hcOn, dpr, !!o.sol);
-    g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = !px;
+    const sl = screenLayers(cw, ch, L, hcOn, dpr, !!o.sol);
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = true;
     // 1) the grade and vignette, over the painted ground (the markers and names come after, so they stay readable)
     if (sl.mul) { g.globalCompositeOperation = "multiply"; g.drawImage(sl.mul, 0, 0, cw, ch); }
     if (!o.sol && L.desat > 0.02) { g.globalCompositeOperation = "saturation"; g.globalAlpha = L.desat * (hcOn ? 0.5 : 1); g.fillStyle = "#808080"; g.fillRect(0, 0, cw, ch); g.globalAlpha = 1; }
@@ -275,10 +256,10 @@ const LIGHTFX = (() => {
       //    and fog banks drifting over the valleys and lakes, both into one small buffer
       const clouds = high && L.night < 0.6 && !["fog", "blizzard"].includes(L.wx), mist = high && !hcOn && L.fog > 0.04;
       if (clouds || mist) {
-        const b = buf("air", bw, bh), bg = b.c.getContext("2d"), fl = mist ? fogLayer(L, px) : null;
+        const b = buf("air", bw, bh), bg = b.c.getContext("2d"), fl = mist ? fogLayer(L) : null;
         const key = `${view}|${tick}|${clouds}|${q(L.night, 5)}|${L.wx}|${fl ? lay.fog.k : ""}`;
         if (b.k !== key) {
-          bg.setTransform(1, 0, 0, 1, 0, 0); bg.clearRect(0, 0, bw, bh); toBuf(bg); bg.imageSmoothingEnabled = !px;
+          bg.setTransform(1, 0, 0, 1, 0, 0); bg.clearRect(0, 0, bw, bh); toBuf(bg); bg.imageSmoothingEnabled = true;
           if (clouds) {
             const pat = bg.createPattern(terrain().cloud, "repeat");
             if (pat && pat.setTransform && typeof DOMMatrix !== "undefined") {
@@ -303,10 +284,10 @@ const LIGHTFX = (() => {
     const wl = world && (L.lights > 0.03 || L.shim > 0.02 || L.aurora > 0.02);
     if (wl || sl.add) {
       const b = buf("light", bw, bh), bg = b.c.getContext("2d");
-      const wa = wl ? worldLight(L, o.shown, 0, px) : null, wb = wl && high ? worldLight(L, o.shown, 1, px) : null;
+      const wa = wl ? worldLight(L, o.shown, 0) : null, wb = wl && high ? worldLight(L, o.shown, 1) : null;
       const key = `${view}|${tick}|${wa ? lay.wl0.k : ""}|${wb ? lay.wl1.k : ""}|${lay.scr.k}`;
       if (b.k !== key) {   // Low and reduce motion: only when the view or the light changes
-        bg.setTransform(1, 0, 0, 1, 0, 0); bg.clearRect(0, 0, bw, bh); bg.imageSmoothingEnabled = !px;
+        bg.setTransform(1, 0, 0, 1, 0, 0); bg.clearRect(0, 0, bw, bh); bg.imageSmoothingEnabled = true;
         bg.globalCompositeOperation = "lighter";
         if (sl.add) { bg.globalAlpha = high && !still ? 0.85 + 0.15 * Math.sin(t * 0.35) : 1; bg.drawImage(sl.add, 0, 0, bw, bh); }
         toBuf(bg);

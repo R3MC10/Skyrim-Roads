@@ -22,8 +22,7 @@ async def main():
           const L=G.loadout(S); L.rules=[{if:'hp_below',pct:40,do:'potion:health'},{if:'always',do:'spell:flame_cloak'},{if:'enemy_undead',do:'spell:turn_undead'},{if:'always',do:'power:stone'},{if:'always',do:'attack'}];
           S.follower={id:'lydia'}; S.ach={first_steps:1,explorer:1}; }""")
         await pg.wait_for_timeout(400)
-        for st in ["ink", "pixel"]:
-            await pg.evaluate(f"ART.setStyle('{st}')")
+        for st in ["ink"]:
             # Hero tab
             await click("[data-tab=map]"); await click("[data-tab=hero]"); await pg.wait_for_timeout(400)
             t0 = await pg.evaluate("()=>{ const t=performance.now(); document.querySelector('[data-tab=hero]').click(); return performance.now()-t; }")
@@ -48,8 +47,8 @@ async def main():
             await click("[data-tab=log]"); await pg.wait_for_timeout(400)
             await pg.screenshot(path=f"uia_journal_{st}.png", full_page=True)
         # an icon gallery of everything, both styles
-        for st in ["ink", "pixel"]:
-            u = await pg.evaluate(f"""()=>{{ ART.setStyle('{st}'); const d=document.createElement('div'); d.id='gal'; d.style.cssText='position:fixed;inset:0;z-index:99;background:#1c2128;overflow:auto;padding:6px;display:flex;flex-wrap:wrap;gap:3px;align-content:flex-start';
+        for st in ["ink"]:
+            u = await pg.evaluate(f"""()=>{{ const d=document.createElement('div'); d.id='gal'; d.style.cssText='position:fixed;inset:0;z-index:99;background:#1c2128;overflow:auto;padding:6px;display:flex;flex-wrap:wrap;gap:3px;align-content:flex-start';
               const h=[...Object.keys(D.SPELLS).map(id=>UIART.spell(id,40)), ...D.ALL_SKILLS.map(s=>UIART.skill(s,40)), ...Object.keys(POWERS.STONES).map(id=>UIART.stone(id,40)), ...Object.keys(POWERS.SHOUTS).map(id=>UIART.shout(id,40)),
                  ...QUESTS.list().map(id=>UIART.quest(id,40)), UIART.quest('bounty',40), ...ACH.LIST.map(a=>UIART.ach(a[0],40)), ...Object.keys(TOWNS.FOLLOWERS).map(id=>UIART.follower(id,40)), ...HORSES.COATS.map(c=>UIART.horse(c[0],40)),
                  ...GUIDE.STEPS.map(s=>UIART.guide(s[0],40)), ...['health','magicka','stamina'].map(a=>UIART.attr(a,40)), ...[800,1000,1200,1400].map(r=>UIART.rank(r,40)), ...['tome_flames','tome_fireball','tome_mark','staff_flames'].filter(i=>D.ITEMS[i]).map(i=>ICONART.item(i,40))].join('')

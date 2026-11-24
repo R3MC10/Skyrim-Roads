@@ -108,20 +108,18 @@ const VISION = (() => {
   }
 
   // ------------------------------------------------------------------ drawing
-  const style = () => (typeof ART !== "undefined" && ART.style ? ART.style() : "ink");
   const sprites = new Map();
   /* a soft white wedge pointing east (for punching through the fog), cached by rounded size */
-  function sprite(range, half, near, st) {
-    const R = Math.round(range / 4) * 4, hf = Math.round(half * 50) / 50, nr = Math.round(near / 2) * 2, key = R + "|" + hf + "|" + nr + "|" + st;
+  function sprite(range, half, near) {
+    const R = Math.round(range / 4) * 4, hf = Math.round(half * 50) / 50, nr = Math.round(near / 2) * 2, key = R + "|" + hf + "|" + nr;
     if (sprites.has(key)) return sprites.get(key);
     if (sprites.size > 16) sprites.clear();
     const c = document.createElement("canvas"); c.width = c.height = R * 2 + 4;
     const g = c.getContext("2d"), o = R + 2;
-    const layers = st === "pixel" ? [[1, 1]] : [[0.7, 0.6], [0.85, 0.5], [1, 0.5]];   // pixel: one hard-ish wedge; ink: feathered sides
+    const layers = [[0.7, 0.6], [0.85, 0.5], [1, 0.5]];   // feathered sides
     for (const [w, a] of layers) {
       const gr = g.createRadialGradient(o, o, 0, o, o, R);
-      if (st === "pixel") { gr.addColorStop(0, "rgba(0,0,0,1)"); gr.addColorStop(0.6, "rgba(0,0,0,1)"); gr.addColorStop(0.61, "rgba(0,0,0,.75)"); gr.addColorStop(0.85, "rgba(0,0,0,.75)"); gr.addColorStop(0.86, "rgba(0,0,0,.4)"); gr.addColorStop(1, "rgba(0,0,0,.4)"); }
-      else { gr.addColorStop(0, "rgba(0,0,0,1)"); gr.addColorStop(0.7, "rgba(0,0,0,1)"); gr.addColorStop(1, "rgba(0,0,0,0)"); }
+      gr.addColorStop(0, "rgba(0,0,0,1)"); gr.addColorStop(0.7, "rgba(0,0,0,1)"); gr.addColorStop(1, "rgba(0,0,0,0)");
       g.globalAlpha = a; g.fillStyle = gr;
       g.beginPath(); g.moveTo(o, o); g.arc(o, o, R, -hf * w, hf * w); g.closePath(); g.fill();
     }
@@ -129,14 +127,6 @@ const VISION = (() => {
     const ng = g.createRadialGradient(o, o, nr * 0.5, o, o, nr * 1.3);   // the little ring around you that you always see
     ng.addColorStop(0, "rgba(0,0,0,1)"); ng.addColorStop(1, "rgba(0,0,0,0)");
     g.fillStyle = ng; g.beginPath(); g.arc(o, o, nr * 1.3, 0, 7); g.fill();
-    if (st === "pixel") {   // hard steps: snap the alpha into 4 bands at a coarse block size
-      const b = 4, sw = Math.ceil(c.width / b), sm = document.createElement("canvas"); sm.width = sm.height = sw;
-      const sg = sm.getContext("2d"); sg.imageSmoothingEnabled = true; sg.drawImage(c, 0, 0, sw, sw);
-      const img = sg.getImageData(0, 0, sw, sw), d = img.data;
-      for (let i = 3; i < d.length; i += 4) d[i] = Math.round(d[i] / 64) * 64 > 255 ? 255 : Math.round(d[i] / 64) * 64;
-      sg.putImageData(img, 0, 0);
-      g.clearRect(0, 0, c.width, c.height); g.imageSmoothingEnabled = false; g.drawImage(sm, 0, 0, c.width, c.width);
-    }
     const out = { c, o };
     sprites.set(key, out);
     return out;
@@ -144,8 +134,7 @@ const VISION = (() => {
   /* the fog with the cones cut through it (and a light veil over the rest), rebuilt only when something changed */
   let veilC = null, veilKey = "";
   function veil(fog, fogKey, cones, W, H, oy = 0) {
-    const st = style();
-    const key = fogKey + "|" + st + "|" + oy + "|" + cones.map((k) => [Math.round(k.c.x), Math.round(k.c.y), k.c.a == null ? "n" : Math.round(k.c.a * 60), Math.round(k.c.range / 4), Math.round(k.c.half * 50), k.faint ? 1 : 0].join(",")).join(";");
+    const key = fogKey + "|" + oy + "|" + cones.map((k) => [Math.round(k.c.x), Math.round(k.c.y), k.c.a == null ? "n" : Math.round(k.c.a * 60), Math.round(k.c.range / 4), Math.round(k.c.half * 50), k.faint ? 1 : 0].join(",")).join(";");
     if (veilC && key === veilKey) return veilC;
     veilKey = key;
     veilC = veilC || document.createElement("canvas");
@@ -153,11 +142,11 @@ const VISION = (() => {
     const g = veilC.getContext("2d");
     g.globalCompositeOperation = "source-over"; g.globalAlpha = 1; g.setTransform(1, 0, 0, 1, 0, 0);
     g.clearRect(0, 0, W, H);
-    g.fillStyle = st === "pixel" ? "rgba(14,14,22,.16)" : "rgba(16,12,8,.14)"; g.fillRect(0, 0, W, H);   // what you can't see right now is a touch dimmer
+    g.fillStyle = "rgba(16,12,8,.14)"; g.fillRect(0, 0, W, H);   // what you can't see right now is a touch dimmer
     g.drawImage(fog, 0, 0, W, H);
     g.globalCompositeOperation = "destination-out";
     for (const k of cones) {
-      const c = k.c, sp = sprite(c.range, c.a == null ? 0.0001 : c.half, c.near, st);
+      const c = k.c, sp = sprite(c.range, c.a == null ? 0.0001 : c.half, c.near);
       g.globalAlpha = k.faint ? 0.55 : 0.95;
       g.setTransform(1, 0, 0, 1, c.x, c.y - oy); g.rotate(c.a ?? 0);
       g.drawImage(sp.c, -sp.o, -sp.o);
@@ -165,39 +154,27 @@ const VISION = (() => {
     g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = "source-over";
     return veilC;
   }
-  /* the cone's outline on the map (world units; s = one screen px): ink lines and a warm wash, or pixel dots */
+  /* the cone's outline on the map (world units; s = one screen px): ink lines and a warm wash */
   function edges(g, c, s, faint, t = 0) {
     if (c.a == null) return;
-    const st = style(), a0 = c.a - c.half * 0.94, a1 = c.a + c.half * 0.94, r0 = c.near * 1.05, r1 = c.range * 0.9;
+    const a0 = c.a - c.half * 0.94, a1 = c.a + c.half * 0.94, r0 = c.near * 1.05, r1 = c.range * 0.9;
     const al = faint ? 0.45 : 1;
     g.save();
-    if (st === "pixel") {
-      const b = 2.4 * s, snap = (v) => Math.round(v / b) * b;
-      for (let i = 0; i < 3; i++) {   // banded wash, three hard steps
-        g.fillStyle = faint ? `rgba(160,230,150,${0.035 * al})` : "rgba(255,236,170,.05)";
-        g.beginPath(); g.moveTo(c.x, c.y); g.arc(c.x, c.y, c.range * (0.45 + i * 0.25), c.a - c.half * 0.9, c.a + c.half * 0.9); g.closePath(); g.fill();
-      }
-      const dot = (x, y, k) => { g.fillStyle = k % 2 ? `rgba(30,22,14,${0.7 * al})` : (faint ? `rgba(170,235,160,${0.85 * al})` : `rgba(255,232,160,${0.9 * al})`); g.fillRect(snap(x) - b / 2, snap(y) - b / 2, b, b); };
-      for (const a of [a0, a1]) for (let r = r0, k = 0; r < r1; r += 3 * b, k++) { if ((r - r0) / (r1 - r0) > 0.85 && k % 2) continue; dot(c.x + Math.cos(a) * r, c.y + Math.sin(a) * r, k); }
-      const n = Math.max(4, Math.round((a1 - a0) * r1 / (4 * b)));
-      for (let i = 0; i <= n; i += 2) { const a = a0 + (a1 - a0) * i / n; dot(c.x + Math.cos(a) * r1, c.y + Math.sin(a) * r1, i / 2); }
-    } else {
-      const wash = g.createRadialGradient(c.x, c.y, c.near * 0.5, c.x, c.y, c.range);
-      wash.addColorStop(0, faint ? "rgba(190,240,180,.09)" : "rgba(255,238,196,.13)"); wash.addColorStop(1, "rgba(255,238,196,0)");
-      g.fillStyle = wash; g.beginPath(); g.moveTo(c.x, c.y); g.arc(c.x, c.y, c.range, c.a - c.half, c.a + c.half); g.closePath(); g.fill();
-      g.lineCap = "round";
-      for (const a of [a0, a1]) {   // an ink edge with a pale highlight, fading out towards the tip
-        const x0 = c.x + Math.cos(a) * r0, y0 = c.y + Math.sin(a) * r0, x1 = c.x + Math.cos(a) * r1, y1 = c.y + Math.sin(a) * r1;
-        const lg = g.createLinearGradient(x0, y0, x1, y1);
-        lg.addColorStop(0, `rgba(44,30,16,${0.55 * al})`); lg.addColorStop(1, "rgba(44,30,16,0)");
-        g.strokeStyle = lg; g.lineWidth = 1.6 * s; g.setLineDash([7 * s, 4 * s]); g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke();
-        const hg = g.createLinearGradient(x0, y0, x1, y1);
-        hg.addColorStop(0, faint ? `rgba(200,245,190,${0.5 * al})` : "rgba(255,240,205,.55)"); hg.addColorStop(1, "rgba(255,240,205,0)");
-        g.strokeStyle = hg; g.lineWidth = 0.8 * s; g.setLineDash([]); g.beginPath(); g.moveTo(x0 + s, y0 + s); g.lineTo(x1 + s, y1 + s); g.stroke();
-      }
-      g.setLineDash([1.5 * s, 5 * s]); g.strokeStyle = faint ? `rgba(200,245,190,${0.35 * al})` : "rgba(255,240,205,.4)"; g.lineWidth = 1.4 * s;
-      g.beginPath(); g.arc(c.x, c.y, r1, a0 + 0.05, a1 - 0.05); g.stroke();
+    const wash = g.createRadialGradient(c.x, c.y, c.near * 0.5, c.x, c.y, c.range);
+    wash.addColorStop(0, faint ? "rgba(190,240,180,.09)" : "rgba(255,238,196,.13)"); wash.addColorStop(1, "rgba(255,238,196,0)");
+    g.fillStyle = wash; g.beginPath(); g.moveTo(c.x, c.y); g.arc(c.x, c.y, c.range, c.a - c.half, c.a + c.half); g.closePath(); g.fill();
+    g.lineCap = "round";
+    for (const a of [a0, a1]) {   // an ink edge with a pale highlight, fading out towards the tip
+      const x0 = c.x + Math.cos(a) * r0, y0 = c.y + Math.sin(a) * r0, x1 = c.x + Math.cos(a) * r1, y1 = c.y + Math.sin(a) * r1;
+      const lg = g.createLinearGradient(x0, y0, x1, y1);
+      lg.addColorStop(0, `rgba(44,30,16,${0.55 * al})`); lg.addColorStop(1, "rgba(44,30,16,0)");
+      g.strokeStyle = lg; g.lineWidth = 1.6 * s; g.setLineDash([7 * s, 4 * s]); g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke();
+      const hg = g.createLinearGradient(x0, y0, x1, y1);
+      hg.addColorStop(0, faint ? `rgba(200,245,190,${0.5 * al})` : "rgba(255,240,205,.55)"); hg.addColorStop(1, "rgba(255,240,205,0)");
+      g.strokeStyle = hg; g.lineWidth = 0.8 * s; g.setLineDash([]); g.beginPath(); g.moveTo(x0 + s, y0 + s); g.lineTo(x1 + s, y1 + s); g.stroke();
     }
+    g.setLineDash([1.5 * s, 5 * s]); g.strokeStyle = faint ? `rgba(200,245,190,${0.35 * al})` : "rgba(255,240,205,.4)"; g.lineWidth = 1.4 * s;
+    g.beginPath(); g.arc(c.x, c.y, r1, a0 + 0.05, a1 - 0.05); g.stroke();
     g.restore();
   }
   /* the foe blocking your road, standing just ahead in your cone */
@@ -208,8 +185,7 @@ const VISION = (() => {
     g.save();
     g.fillStyle = `rgba(200,40,30,${0.18 + 0.15 * pulse})`; g.beginPath(); g.arc(x, y, r * (1.9 + 0.4 * pulse), 0, 7); g.fill();
     g.fillStyle = "#7a1410"; g.strokeStyle = "#1a0a06"; g.lineWidth = 2 * s;
-    if (style() === "pixel") { g.fillRect(x - r, y - r, r * 2, r * 2); g.strokeRect(x - r, y - r, r * 2, r * 2); }
-    else { g.beginPath(); g.moveTo(x, y - r * 1.2); g.lineTo(x + r, y); g.lineTo(x, y + r * 1.2); g.lineTo(x - r, y); g.closePath(); g.fill(); g.stroke(); }
+    { g.beginPath(); g.moveTo(x, y - r * 1.2); g.lineTo(x + r, y); g.lineTo(x, y + r * 1.2); g.lineTo(x - r, y); g.closePath(); g.fill(); g.stroke(); }
     g.fillStyle = "#ffd9c8"; g.font = `bold ${Math.round(11 * s * 10) / 10}px sans-serif`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("!", x, y + 0.5 * s);
     g.restore();
     if (label) label(name, x, y);

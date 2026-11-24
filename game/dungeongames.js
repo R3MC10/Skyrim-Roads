@@ -37,7 +37,9 @@ const DGAMES = (() => {
   };
 
   // ====================================================================== the rules (pure: no DOM, no Math.random)
-  /* o: { d: 0..1 difficulty (1 - the old odds), ease: 0..0.6 from perks, hl: 1 = a perk shows the answer (Light Foot) } */
+  /* o: { d: 0..1 difficulty (1 - the old odds), ease: 0..0.6 from perks, hl: 1 = a perk shows the answer (Light Foot),
+         tm: 1..2 Easy timing (Settings → Accessibility): longer time limits, wider sweet spots, longer warnings } */
+  const lim = (st) => LIMIT[st.kind] * (st.tm || 1);   // this game's time limit in seconds
   const R = {
     dash: {
       make(st, r) {
@@ -67,7 +69,7 @@ const DGAMES = (() => {
         st.gp = (1 + 1.4 * st.d) / (1 + st.ease); st.gph = r() * st.gp;
         st.sunk = st.hl ? 0.7 : 0.06 + 0.12 * (1 - st.d) + 0.2 * st.ease;
         const n = Math.round(2 + 7 * st.d), dec = [];
-        for (let i = 0; i < n; i++) { let k = Math.floor(r() * 19); if (k >= st.plate) k++; dec.push([k, r() * (LIMIT.trigger - 0.4)]); }
+        for (let i = 0; i < n; i++) { let k = Math.floor(r() * 19); if (k >= st.plate) k++; dec.push([k, r() * (lim(st) - 0.4)]); }
         st.decoys = dec; st.foundAt = -1;
       },
       glint(st, i, t) {   // 0..1: how bright a tile glints at time t
@@ -80,7 +82,7 @@ const DGAMES = (() => {
         if (ev[1] !== "tap") return;
         const i = ev[2] | 0;
         if (i < 0 || i >= 20 || st.marks.includes(i)) return;
-        if (i === st.plate) { st.foundAt = st.tick; const tf = st.tick / (LIMIT.trigger * HZ); return end(st, clamp(0.5 + 0.5 * (1 - 0.6 * tf - 0.3 * st.wrong), 0.5, 1)); }
+        if (i === st.plate) { st.foundAt = st.tick; const tf = st.tick / (lim(st) * HZ); return end(st, clamp(0.5 + 0.5 * (1 - 0.6 * tf - 0.3 * st.wrong), 0.5, 1)); }
         st.marks.push(i); st.wrong++;
         if (st.wrong > st.maxWrong) end(st, 0.15);
       },
@@ -89,7 +91,7 @@ const DGAMES = (() => {
       say: (st) => (st.q >= 0.5 ? "There it is!" : st.wrong > st.maxWrong ? "Wrong stones. Click." : "Out of time."),
     },
     smash: {
-      make(st, r) { st.c = 0.25 + r() * 0.5; st.w = (0.12 - 0.05 * st.d) * (1 + st.ease); st.P = 1.6 - 0.5 * st.d; st.ph = r() * 6.283; st.swings = 5; st.pts = 0; st.cd = 0; st.last = null; },
+      make(st, r) { st.c = 0.25 + r() * 0.5; st.w = (0.12 - 0.05 * st.d) * (1 + st.ease) * (1 + (st.tm - 1) * 0.8); st.P = 1.6 - 0.5 * st.d; st.ph = r() * 6.283; st.swings = 5; st.pts = 0; st.cd = 0; st.last = null; },
       needle: (st, t) => 0.5 + 0.48 * Math.sin((2 * Math.PI * t) / st.P + st.ph),
       input(st, ev, r) {
         if (ev[1] !== "tap" || st.cd > 0) return;
@@ -109,8 +111,8 @@ const DGAMES = (() => {
         const sw = 0.1 - 0.03 * st.d + 0.03 * st.ease;
         st.shade = [0.22, 0.5, 0.78].map((c) => { const m = c + (r() - 0.5) * 0.08; return [m - sw / 2, m + sw / 2]; });
         const ph = []; let t = 0.4 + r() * 0.6;
-        while (t < LIMIT.sneak + 2) {
-          const away = (1.6 + r() * 1.6) * (1.2 - 0.4 * st.d), warn = (0.55 - 0.25 * st.d) * (1 + st.ease), look = 1 + r() * 0.8;
+        while (t < lim(st) + 2) {
+          const away = (1.6 + r() * 1.6) * (1.2 - 0.4 * st.d), warn = (0.55 - 0.25 * st.d) * (1 + st.ease) * st.tm, look = 1 + r() * 0.8;
           ph.push(["away", t, t + away]); t += away; ph.push(["warn", t, t + warn]); t += warn; ph.push(["look", t, t + look]); t += look;
         }
         st.phases = ph;
@@ -136,7 +138,7 @@ const DGAMES = (() => {
         if (s === st.side) { st.stun = 0.3; st.prog = Math.max(0, st.prog - 1); st.trip = st.tick; }
         else st.prog++;
         st.side = s;
-        if (st.prog >= st.need) end(st, Math.max(0.5, 1 - (0.5 * st.tick) / (LIMIT.flee * HZ)));
+        if (st.prog >= st.need) end(st, Math.max(0.5, 1 - (0.5 * st.tick) / (lim(st) * HZ)));
       },
       step(st) { if (st.stun > 0) st.stun -= TICK; },
       timeout(st) { end(st, 0.45 * st.prog / st.need); },
@@ -171,7 +173,7 @@ const DGAMES = (() => {
   function end(st, q, fl = "") { if (st.over) return; st.over = true; st.q = Math.round(clamp(q, 0, 1) * 1000) / 1000; st.fl = fl; st.endTick = st.tick; }
   function make(kind, seed, o = {}) {
     const r = rng(seed);
-    const st = { kind, seed, d: clamp(+o.d || 0, 0, 1), ease: clamp(+o.ease || 0, 0, 0.6), hl: o.hl ? 1 : 0, tick: 0, over: false, q: 0, fl: "", ev: [] };
+    const st = { kind, seed, d: clamp(+o.d || 0, 0, 1), ease: clamp(+o.ease || 0, 0, 0.6), hl: o.hl ? 1 : 0, tm: clamp(+o.tm || 1, 1, 2), tick: 0, over: false, q: 0, fl: "", ev: [] };
     Object.defineProperty(st, "r", { value: r, enumerable: false });
     R[kind].make(st, r);
     return st;
@@ -183,7 +185,7 @@ const DGAMES = (() => {
     R[st.kind].step(st);
     if (st.over) return;
     st.tick++;
-    if (st.tick >= LIMIT[st.kind] * HZ) { R[st.kind].timeout(st); if (!st.over) end(st, 0); }
+    if (st.tick >= lim(st) * HZ) { R[st.kind].timeout(st); if (!st.over) end(st, 0); }
   }
   /* advance st to tick `to`, feeding events (sorted by tick) from list starting at index st._ei */
   function advance(st, events, to) {
@@ -202,7 +204,8 @@ const DGAMES = (() => {
   function optsFor(s, kind) {
     const ch = typeof DUNGEONS !== "undefined" && DUNGEONS.odds ? DUNGEONS.odds(s, kind) : 0.5;
     const ease = typeof PFX !== "undefined" ? Math.min(0.6, PFX.num(s, PERK[kind]) || 0) : 0;
-    return { d: Math.round(clamp(1 - ch, 0.05, 0.95) * 100) / 100, ease: Math.round(ease * 100) / 100, hl: kind === "trigger" && typeof G !== "undefined" && G.P(s, "light_foot") ? 1 : 0 };
+    const tm = typeof A11Y !== "undefined" && A11Y.timingEase ? Math.round(A11Y.timingEase() * 100) / 100 : 1;   // Easy timing
+    return { d: Math.round(clamp(1 - ch, 0.05, 0.95) * 100) / 100, ease: Math.round(ease * 100) / 100, hl: kind === "trigger" && typeof G !== "undefined" && G.P(s, "light_foot") ? 1 : 0, ...(tm > 1 ? { tm } : {}) };
   }
   function handles(s, c) {
     const r = s?.dungeon?.room;
@@ -213,37 +216,33 @@ const DGAMES = (() => {
     return !!r.enemy && r.type !== "boss";
   }
 
-  // ====================================================================== drawing (both art styles)
+  // ====================================================================== drawing
   const PAL = {
     ink: { bg: "#1d1a16", floor: "#3b3329", stone: "#4d4335", line: "#100c08", ink: "#e9dcc0", gold: "#d6b25e", red: "#c4572e", shade: "rgba(0,0,0,.55)", hero: "#d9c9a3", foe: "#8a3a2a" },
-    pixel: { bg: "#15171d", floor: "#2e3340", stone: "#454b5a", line: "#000000", ink: "#e8e2d0", gold: "#f0c040", red: "#e04838", shade: "rgba(0,0,10,.6)", hero: "#f0d8a0", foe: "#c04030" },
   };
-  const pixelStyle = () => typeof ART !== "undefined" && ART.style && ART.style() === "pixel";
-  /* canvas: 300×200 logical; pixel art draws at half size and is scaled up with hard edges */
+  /* canvas: 300×200 logical */
   function prep(cv) {
-    const px = pixelStyle(), w = px ? 150 : 300, h = px ? 100 : 200;
+    const w = 300, h = 200;
     if (cv.width !== w) { cv.width = w; cv.height = h; }
-    cv.style.imageRendering = px ? "pixelated" : "";
-    const g = cv.getContext("2d"); g.setTransform(px ? 0.5 : 1, 0, 0, px ? 0.5 : 1, 0, 0);
-    g.imageSmoothingEnabled = !px;
-    return { g, px, C: PAL[px ? "pixel" : "ink"] };
+    const g = cv.getContext("2d"); g.setTransform(1, 0, 0, 1, 0, 0);
+    g.imageSmoothingEnabled = true;
+    return { g, C: PAL.ink };
   }
-  function figure(g, C, x, y, s, col, px) {   // a little hooded figure (hero or foe)
-    g.fillStyle = col; g.strokeStyle = C.line; g.lineWidth = px ? 2 : 1.5;
-    if (px) { g.fillRect(x - 5 * s, y - 22 * s, 10 * s, 22 * s); g.fillRect(x - 4 * s, y - 30 * s, 8 * s, 8 * s); g.strokeRect(x - 5 * s, y - 22 * s, 10 * s, 22 * s); return; }
+  function figure(g, C, x, y, s, col) {   // a little hooded figure (hero or foe)
+    g.fillStyle = col; g.strokeStyle = C.line; g.lineWidth = 1.5;
     g.beginPath(); g.moveTo(x - 7 * s, y); g.quadraticCurveTo(x - 6 * s, y - 20 * s, x, y - 24 * s); g.quadraticCurveTo(x + 6 * s, y - 20 * s, x + 7 * s, y); g.closePath(); g.fill(); g.stroke();
     g.beginPath(); g.arc(x, y - 27 * s, 5 * s, 0, 7); g.fill(); g.stroke();
   }
-  function frame(g, C, px) {
+  function frame(g, C) {
     g.fillStyle = C.bg; g.fillRect(0, 0, 300, 200);
-    if (!px) { const v = g.createRadialGradient(150, 100, 40, 150, 100, 190); v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, "rgba(0,0,0,.55)"); g.fillStyle = v; g.fillRect(0, 0, 300, 200); }
+    { const v = g.createRadialGradient(150, 100, 40, 150, 100, 190); v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, "rgba(0,0,0,.55)"); g.fillStyle = v; g.fillRect(0, 0, 300, 200); }
   }
   function timebar(g, C, st) {
-    const left = 1 - st.tick / (LIMIT[st.kind] * HZ);
+    const left = 1 - st.tick / (lim(st) * HZ);
     g.fillStyle = "rgba(255,255,255,.12)"; g.fillRect(10, 192, 280, 4); g.fillStyle = left < 0.25 ? C.red : C.gold; g.fillRect(10, 192, 280 * clamp(left, 0, 1), 4);
   }
   const D = {
-    dash(g, st, C, px) {
+    dash(g, st, C) {
       const t = st.tick * TICK;
       g.fillStyle = C.floor; g.fillRect(0, 110, 300, 60);
       g.strokeStyle = C.line; g.lineWidth = 2; g.beginPath(); g.moveTo(0, 110); g.lineTo(300, 110); g.moveTo(0, 170); g.lineTo(300, 170); g.stroke();
@@ -259,27 +258,27 @@ const DGAMES = (() => {
         g.fillStyle = C.line; g.fillRect(bx - 4, 2, 8, 6);
       }
       const hx = 14 + st.x * 272, hit = st.tick - st.hitAt < 12;
-      figure(g, C, hx, 160, 1, hit && st.tick % 4 < 2 ? C.red : C.hero, px);
+      figure(g, C, hx, 160, 1, hit && st.tick % 4 < 2 ? C.red : C.hero);
       timebar(g, C, st);
       g.fillStyle = C.ink; g.font = "12px sans-serif"; g.fillText(LX(`Hits ${st.hits}`), 10, 18);
     },
-    trigger(g, st, C, px) {
+    trigger(g, st, C) {
       const t = st.tick * TICK, tw = 52, th = 40, ox = 20, oy = 22;
       for (let i = 0; i < 20; i++) {
         const cx = i % 5, cy = Math.floor(i / 5), x = ox + cx * (tw + 2), y = oy + cy * (th + 2);
         g.fillStyle = C.stone; g.fillRect(x, y, tw, th);
-        g.strokeStyle = C.line; g.lineWidth = px ? 2 : 1.2; g.strokeRect(x, y, tw, th);
-        if (!px) { g.strokeStyle = "rgba(0,0,0,.35)"; g.beginPath(); g.moveTo(x + 8 + (i * 7) % 20, y + 4); g.lineTo(x + 14 + (i * 11) % 24, y + th - 6); g.stroke(); }
+        g.strokeStyle = C.line; g.lineWidth = 1.2; g.strokeRect(x, y, tw, th);
+        { g.strokeStyle = "rgba(0,0,0,.35)"; g.beginPath(); g.moveTo(x + 8 + (i * 7) % 20, y + 4); g.lineTo(x + 14 + (i * 11) % 24, y + th - 6); g.stroke(); }
         if (i === st.plate) { g.fillStyle = `rgba(0,0,0,${st.sunk})`; g.fillRect(x + 2, y + 2, tw - 4, 4); g.fillRect(x + 2, y + 2, 4, th - 4); if (st.hl) { g.strokeStyle = C.gold; g.lineWidth = 2; g.strokeRect(x + 3, y + 3, tw - 6, th - 6); } }
         const gl = R.trigger.glint(st, i, t);
-        if (gl > 0) { g.fillStyle = `rgba(255,236,170,${0.55 * gl})`; if (px) g.fillRect(x + tw / 2 - 6, y + th / 2 - 6, 12, 12); else { g.beginPath(); g.arc(x + tw / 2, y + th / 2, 6 + 8 * gl, 0, 7); g.fill(); } }
+        if (gl > 0) { g.fillStyle = `rgba(255,236,170,${0.55 * gl})`; g.beginPath(); g.arc(x + tw / 2, y + th / 2, 6 + 8 * gl, 0, 7); g.fill(); }
         if (st.marks.includes(i)) { g.strokeStyle = C.red; g.lineWidth = 3; g.beginPath(); g.moveTo(x + 12, y + 8); g.lineTo(x + tw - 12, y + th - 8); g.moveTo(x + tw - 12, y + 8); g.lineTo(x + 12, y + th - 8); g.stroke(); }
         if (st.foundAt >= 0 && i === st.plate) { g.strokeStyle = C.gold; g.lineWidth = 3; g.strokeRect(x + 2, y + 2, tw - 4, th - 4); }
       }
       timebar(g, C, st);
       g.fillStyle = C.ink; g.font = "12px sans-serif"; g.fillText(LX(`Wrong guesses left: ${Math.max(0, st.maxWrong - st.wrong)}`), 20, 14);
     },
-    smash(g, st, C, px) {
+    smash(g, st, C) {
       const t = st.tick * TICK;
       // the chest
       g.fillStyle = "#5a3a22"; g.strokeStyle = C.line; g.lineWidth = 2; g.fillRect(100, 40, 100, 60); g.strokeRect(100, 40, 100, 60);
@@ -299,36 +298,36 @@ const DGAMES = (() => {
       g.fillStyle = C.ink; g.font = "12px sans-serif"; g.fillText(LX(`Swings left ${st.swings}`), 10, 18);
       timebar(g, C, st);
     },
-    sneak(g, st, C, px) {
+    sneak(g, st, C) {
       const t = st.tick * TICK, ph = R.sneak.phase(st, t);
       g.fillStyle = C.floor; g.fillRect(0, 120, 300, 50);
       g.fillStyle = "rgba(255,210,140,.10)"; g.fillRect(0, 120, 300, 50);
       for (const [a, b] of st.shade) { g.fillStyle = C.shade; g.fillRect(14 + a * 272, 112, (b - a) * 272, 62); }
       // the foe on a ledge, facing away or at you
       g.fillStyle = C.stone; g.fillRect(200, 60, 90, 10);
-      figure(g, C, 245, 60, 1.1, C.foe, px);
+      figure(g, C, 245, 60, 1.1, C.foe);
       if (ph === "look") { g.fillStyle = "rgba(255,230,160,.16)"; g.beginPath(); g.moveTo(240, 40); g.lineTo(0, 120); g.lineTo(0, 175); g.lineTo(240, 52); g.fill(); g.fillStyle = C.gold; g.fillRect(240, 30, 3, 3); g.fillRect(248, 30, 3, 3); }
       if (ph === "warn") { g.fillStyle = C.red; g.font = "bold 26px sans-serif"; g.fillText("!", 240, 22); }
-      const hx = 14 + st.x * 272; figure(g, C, hx, 162, st.hold ? 0.8 : 0.7, C.hero, px);
+      const hx = 14 + st.x * 272; figure(g, C, hx, 162, st.hold ? 0.8 : 0.7, C.hero);
       // detection meter
       g.fillStyle = "rgba(255,255,255,.12)"; g.fillRect(10, 8, 120, 8); g.fillStyle = st.det > 0.6 ? C.red : C.gold; g.fillRect(10, 8, 120 * st.det, 8);
       g.fillStyle = C.ink; g.font = "11px sans-serif"; g.fillText(LX("Noticed"), 136, 16);
       timebar(g, C, st);
     },
-    flee(g, st, C, px) {
+    flee(g, st, C) {
       const t = st.tick * TICK, p = st.prog / st.need;
       g.fillStyle = C.floor; g.fillRect(0, 120, 300, 50);
       const off = (p * 600) % 40;
       for (let i = -1; i < 9; i++) { g.fillStyle = C.stone; g.fillRect(i * 40 - off, 172, 30, 8); }
       g.fillStyle = C.gold; g.fillRect(280, 100, 14, 70);
-      const hx = 40 + p * 230, fx = Math.min(hx - 18, 10 + (t / LIMIT.flee) * 260 * 0.95);
-      figure(g, C, fx, 165, 1.15, C.foe, px);
-      figure(g, C, hx, 162, 1, st.tick - st.trip < 9 ? C.red : C.hero, px);
+      const hx = 40 + p * 230, fx = Math.min(hx - 18, 10 + (t / lim(st)) * 260 * 0.95);
+      figure(g, C, fx, 165, 1.15, C.foe);
+      figure(g, C, hx, 162, 1, st.tick - st.trip < 9 ? C.red : C.hero);
       g.fillStyle = "rgba(255,255,255,.12)"; g.fillRect(10, 8, 280, 8); g.fillStyle = C.gold; g.fillRect(10, 8, 280 * p, 8);
       g.fillStyle = C.ink; g.font = "bold 14px sans-serif"; g.textAlign = "center"; g.fillText(LX(st.side ? (st.side === "L" ? "Now: Right" : "Now: Left") : "Left or Right"), 150, 60); g.textAlign = "left";
       timebar(g, C, st);
     },
-    search(g, st, C, px) {
+    search(g, st, C) {
       const t = st.tick * TICK, cw = 280 / st.W, ch = 170 / st.H, ox = 10, oy = 14;
       g.fillStyle = C.floor; g.fillRect(ox, oy, 280, 170);
       for (const it of st.items) {
@@ -343,14 +342,14 @@ const DGAMES = (() => {
         const v = st.dust[y * st.W + x]; if (v <= 0) continue;
         let jx = 0, jy = 0;
         if (rustle && Math.abs(x - st.nest.x - 0.5) <= 1.5 && Math.abs(y - st.nest.y - 0.5) <= 1.5) { jx = ((st.tick * 7 + x * 13) % 5) - 2; jy = ((st.tick * 5 + y * 11) % 3) - 1; }
-        g.fillStyle = px ? `rgba(120,110,95,${0.35 + 0.65 * v})` : `rgba(128,116,98,${0.3 + 0.68 * v})`;
+        g.fillStyle = `rgba(128,116,98,${0.3 + 0.68 * v})`;
         g.fillRect(ox + x * cw + jx, oy + y * ch + jy, cw + 0.5, ch + 0.5);
       }
       g.fillStyle = C.ink; g.font = "12px sans-serif"; g.fillText(LX(`Found ${st.items.filter((i) => i.found).length}/${st.items.length}`), 10, 11);
       timebar(g, C, st);
     },
     // ---- mirrors of the other mini-games (watch-only)
-    lock(g, m, C, px) {
+    lock(g, m, C) {
       const cx = 150, cy = 100;
       g.fillStyle = "#6b5530"; g.beginPath(); g.arc(cx, cy, 70, 0, 7); g.fill(); g.strokeStyle = C.gold; g.lineWidth = 3; g.stroke();
       g.save(); g.translate(cx, cy); g.rotate((m.rot || 0) * Math.PI / 2); g.fillStyle = "#8a7448"; g.beginPath(); g.arc(0, 0, 42, 0, 7); g.fill(); g.fillStyle = "#120e09"; g.fillRect(-4, -12, 8, 24); g.restore();
@@ -359,18 +358,18 @@ const DGAMES = (() => {
       g.fillStyle = "rgba(255,255,255,.12)"; g.fillRect(20, 186, 260, 5); g.fillStyle = C.red; g.fillRect(20, 186, 260 * clamp((m.strain || 0) / 0.5, 0, 1), 5);
       g.fillStyle = C.ink; g.font = "12px sans-serif"; g.fillText(LX(m.unb ? "Unbreakable pick" : `Picks left: ${m.picks ?? "?"}`), 10, 18);
     },
-    ring(g, m, C, px) {
+    ring(g, m, C) {
       const rings = m.rings || [], n = rings.length || 3;
       rings.forEach((ring, i) => {
         const x = 300 / (n + 1) * (i + 1), y = 100, tok = ring[(m.idx || [])[i] || 0] || "?";
         g.fillStyle = C.stone; g.strokeStyle = C.gold; g.lineWidth = 3;
-        if (px) { g.fillRect(x - 36, y - 36, 72, 72); g.strokeRect(x - 36, y - 36, 72, 72); } else { g.beginPath(); g.arc(x, y, 38, 0, 7); g.fill(); g.stroke(); }
+        g.beginPath(); g.arc(x, y, 38, 0, 7); g.fill(); g.stroke();
         g.fillStyle = C.ink; g.font = "28px sans-serif"; g.textAlign = "center"; g.fillText((typeof EXPLORE !== "undefined" && EXPLORE.SYM?.[tok]) || "◆", x, y + 6); g.font = "12px sans-serif"; g.fillText(tok, x, y + 54); g.textAlign = "left";
       });
     },
   };
-  function draw(cv, st) { const { g, px, C } = prep(cv); frame(g, C, px); D[st.kind](g, st, C, px); }
-  function drawMirror(cv, kind, m) { const { g, px, C } = prep(cv); frame(g, C, px); D[kind](g, m || {}, C, px); }
+  function draw(cv, st) { const { g, C } = prep(cv); frame(g, C); D[st.kind](g, st, C); }
+  function drawMirror(cv, kind, m) { const { g, C } = prep(cv); frame(g, C); D[kind](g, m || {}, C); }
 
   // ====================================================================== streaming to the party ("dgame" collection)
   let ctx = null, out = null, mirrorT = null, mirrorCur = null;

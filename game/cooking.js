@@ -66,8 +66,9 @@ const COOK = (() => {
     const list = CATCH[water] || CATCH.river, total = list.reduce((a, [, w]) => a + w, 0);
     let r = Math.random() * total, item = list[0][0];
     for (const [id, w] of list) { if ((r -= w) <= 0) { item = id; break; } }
-    const width = RARE.has(item) ? 0.18 : 0.28, from = 0.1 + Math.random() * (0.8 - width);
-    return { item, zone: [from, from + width] };
+    const ez = typeof A11Y !== "undefined" && A11Y.zoneEase ? A11Y.zoneEase() : 1;   // Settings → Accessibility → Easy timing
+    const rare = RARE.has(item), width = Math.min(0.5, (rare ? 0.18 : 0.28) * ez), from = 0.1 + Math.random() * (0.8 - width);
+    return { item, rare, zone: [from, from + width] };
   }
   function reel(s, b, needle) {
     const hit = needle >= b.zone[0] && needle <= b.zone[1];

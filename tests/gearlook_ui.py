@@ -25,12 +25,11 @@ async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-sandbox"])
         errs = []
-        for style in ["ink", "pixel"]:
+        for style in ["ink"]:
             ctx = await b.new_context(viewport={"width": 412, "height": 915})
             pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
             await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=gear{style}"); await pg.wait_for_timeout(1500)
             await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Ves"); await pg.click("#begin"); await pg.wait_for_timeout(900)
-            if style == "pixel": await pg.evaluate("()=>{ART.setStyle('pixel')}")
             await pg.evaluate("()=>document.querySelectorAll('.modal').forEach(m=>m.remove())")
             # --- line-up sheet of every armour set
             await pg.set_viewport_size({"width": 920, "height": 1100})

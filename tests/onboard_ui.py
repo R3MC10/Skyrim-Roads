@@ -20,7 +20,6 @@ async def run(b, vw, vh, style, fails):
     pg = await ctx.new_page(); errs = []
     pg.on("pageerror", lambda e: errs.append(str(e)))
     await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&tb"); await pg.wait_for_timeout(1200)
-    await pg.evaluate(f"ART.setStyle('{style}')")
     n = [0]
 
     async def shot(name):
@@ -156,7 +155,7 @@ async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch(executable_path=CHROME, args=["--no-sandbox"])
         for vw, vh in [(360, 780), (412, 915)]:
-            for style in ["ink", "pixel"]:
+            for style in ["ink"]:
                 await run(b, vw, vh, style, fails)
         await b.close()
     print("screenshots in", OUT)

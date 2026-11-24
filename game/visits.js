@@ -39,10 +39,11 @@ const VISITS = (() => {
     const r = G.invRow(s, rowId);
     if (!r) return { err: "You don't have that." };
     if (D.ITEMS[r.item]?.noTrade) return { err: "That's bound to you." };
-    if (Object.values(G.loadout(s).equipment || {}).includes(rowId)) return { err: "Take it off first." };
+    const n = G.freeQty ? G.freeQty(s, rowId) : r.qty;   // worn gear is never given; a pair with one worn gives the spare
+    if (n <= 0) return { err: "Take it off first." };
     if (r.stolen) return { err: "You can't give stolen goods. The guards check deliveries." };
-    const copy = { item: r.item, qty: r.qty, charge: r.charge ?? null, temper: r.temper, tq: r.tq, ...(typeof CRAFTFAIR !== "undefined" ? CRAFTFAIR.pack(r) : {}) };
-    G.take(s, rowId, r.qty);
+    const copy = { item: r.item, qty: n, charge: r.charge ?? null, temper: r.temper, tq: r.tq, ...(typeof CRAFTFAIR !== "undefined" ? CRAFTFAIR.pack(r) : {}) };
+    G.take(s, rowId, n);
     return { gift: { to: owner.id, toName: owner.name, from: s.id, fromName: s.name, town, row: copy, note: clean(note, NOTE_MAX), t: G.now() },
       text: `You leave ${itemName(copy)}${copy.qty > 1 ? ` ×${copy.qty}` : ""} for ${owner.name}.` };
   }
