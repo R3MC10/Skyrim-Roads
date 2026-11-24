@@ -3,6 +3,15 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b177-festivals", build: 177, date: "24 Nov 2026", title: "Festivals and the Grand Arena", items: [
+      "Seven festivals now take turns around Skyrim, each for two days: the Jarl's Tourney in Windhelm, the Harvest Fair in Whiterun, the Lake Honrich Fishing Derby in Riften, the Great Hunt of Falkreath, Forgefire Days in Markarth, the Burning of King Olaf in Solitude and the Midwinter Feast in Dawnstar. Missed one? It comes back three weeks later.",
+      "Each festival has three contests out of duels, archery, ring-tilting on your horse, a smithing contest, the fishing derby, the hunt, a mining race and a drinking contest. Three tries each, your best one counts, and every contest has a live board everyone sees.",
+      "Festivals are peaceful ground: nothing you wear is lost, nobody dies, no bounty, and players can't attack each other in the festival town. Duel any player there as friends, whatever side of the war they're on.",
+      "Compete for yourself, your clan or a hold, and win glory for them. Winners get a title, a trophy and a little gold, plus a ceremonial prize the first time they win each festival.",
+      "The Grand Arena in Windhelm is always open: eight rounds of monsters, alone or with your party, with a new board every week.",
+      "Look for \"Festivals\" in any town, and for the festival banner on the map a day before it starts. New perks: Arena Champion (One-Handed), Sportsman (Athletics) and Crowd Favourite (Speechcraft).",
+      "Fixed: on phones the house chest and the follower Skills screen showed up without their proper look, and a fight on PC could stop drawing its blood.",
+    ] },
     { id: "b176-fightpc", build: 176, date: "25 Nov 2026", title: "The fight fills your PC, and ends in slow motion", items: [
       "On a PC or laptop the fight now fills the whole window, like the big map: the picture runs from edge to edge and the cards and the skill bar float over it.",
       "The blow that ends a fight plays in slow motion, then a card shows how it went: how many rounds, the damage you dealt and took, and your best hit. Continue is right on it.",
