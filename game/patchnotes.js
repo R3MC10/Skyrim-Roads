@@ -7,6 +7,13 @@ const PATCHNOTES = (() => {
       "The game has its own icon now: a horned Nord helm under the northern star, on a parchment shield. You'll see it on your phone's home screen, the PC game's window, taskbar and installer, and the browser tab.",
       "On Android 13 and newer it also follows your themed icons, and game notifications show a small helm instead of a plain square. The loading screen shows the new shield too.",
     ] },
+    { id: "b150-dunrooms", build: 150, date: "24 Nov 2026", title: "Painted dungeon rooms and a new dungeon map", items: [
+      "Dungeon rooms are painted now: caves, Nordic barrows and Dwemer ruins each have their own picture for fights, tough fights, traps, treasure, puzzles, rest spots and the boss. Bandit mines have a painted fight room so far; more dungeon kinds get theirs soon.",
+      "Where a room has no painting yet, it borrows the closest one (a mine uses the cave pictures, a temple the barrow ones), and only falls back to the old drawing if nothing fits.",
+      "The dungeon map is a parchment chart now: every room is an ink badge with its own symbol, corridors appear as your torchlight reaches them, rooms further ahead stay pencil question marks, and the way you came is a red-ink trail that draws itself as you walk.",
+      "The room you're in glows and the rooms you can go to next pulse, so it's easy to see where to tap.",
+      "On PC the dungeon fits on one screen: the room on the left, the map on the right, no scrolling the page.",
+    ] },
     { id: "b145-pcfit", build: 145, date: "24 Nov 2026", title: "The game fills the whole window on a PC", items: [
       "On a wide PC screen everything now fits on one screen: no more empty bands at the sides and no scrolling the page. The map and the side panel share the full width, and only long lists in the side panel scroll.",
       "The place card on the map (Travel, X) no longer hides behind the bottom bar.",
