@@ -215,6 +215,9 @@ const PFX = (() => {
     [ "Speechcraft", "good_ear", "Good Ear", 1, [25], [], "Rumours you hear are wrong half as often, and leads stay open 50% longer. [OURS]", [["rumtrue", 0.5, {}], ["rumtime", 0.5, {}]]],
     [ "Etiquette", "local_hero", "Local Hero", 1, [35], ["courtly_manners"], "Word of your deeds spreads 25% faster, and the shop discount for friends and heroes of a hold is doubled. [OURS]", [["fame", 0.25, {}], ["heroprice", 1, {}]]],
     [ "Streetwise", "night_owl", "Night Owl", 1, [25], ["rumour_monger"], "Shopkeepers you knock up at night don't charge you extra. [OURS]", [["knock", 1, {}]]],
+    [ "Speechcraft", "town_crier", "Town Crier", 1, [40], ["good_ear"], "Whispers of things to come you hear in inns come true 20% more often and sooner, and the Jarl's bounty for dealing with them pays 25% more. [OURS]", [["whisper", 0.2, {}], ["jarlpay", 0.25, {}]]],
+    [ "Streetwise", "low_profile", "Low Profile", 1, [35], ["alley_cat"], "Crimes and robbed caravans hurt your name 40% less, and people forget them twice as fast. [OURS]", [["infamy", 0.4, {}], ["forget", 1, {}]]],
+    [ "Etiquette", "well_met", "Well Met", 1, [45], ["local_hero"], "Doors open sooner: the inn's back room, the steward's storeroom and the Jarl's guest room need 25% less standing, and making amends costs 40% less. [OURS]", [["doors", 0.25, {}], ["amends", 0.4, {}]]],
     [ "Streetwise", "road_wise", "Road Wise", 1, [30], ["rumour_monger"], "On the road, sneaking past trouble is 10% easier, tolls and bribes cost 20% less, and you read an ambush before it springs more often. [OURS]", [["road", 0.1, {}], ["roadbribe", 0.2, {}]]],
     [ "Athletics", "pathfinder", "Pathfinder", 1, [40], ["long_strider"], "On the road, outrunning trouble, dodging avalanches and taming wild horses is 15% easier. [OURS]", [["roadrun", 0.15, {}]]],
     // ---------------------------------------------------------------- world events (worldevents.js)

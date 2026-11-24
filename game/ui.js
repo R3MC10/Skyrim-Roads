@@ -58,7 +58,7 @@
     const card = { name: S.name, race: S.race, level: S.level, x: S.x, y: S.y,
       t0: tr ? tr.lastTick : G.now(), moving: !!(tr && tr.status === "travel"), dest: tr ? tr.dest : null,
       path: tr && tr.status === "travel" ? [[S.x, S.y], ...tr.path.slice(tr.idx + 1)].slice(0, 120) : null,
-      speed: G.speed(S), loc: S.location || null, region: WORLD.regionOf([S.x, S.y]), look: HEROART.lookOf(S), party: party?.id || null, hiding: !!S.ambush, facing: S.facing ?? null, ...(typeof SNEAKMODE !== "undefined" ? SNEAKMODE.cardBits(S) : {}), clan: myClan()?.tag || null, ...MP.stats(S), coop: coopUI?.card() || null, ...(typeof PARTY !== "undefined" ? PARTY.cardBits(S, party) : {}) };
+      speed: G.speed(S), loc: S.location || null, region: WORLD.regionOf([S.x, S.y]), look: HEROART.lookOf(S), party: party?.id || null, hiding: !!S.ambush, facing: S.facing ?? null, ...(typeof SNEAKMODE !== "undefined" ? SNEAKMODE.cardBits(S) : {}), clan: myClan()?.tag || null, ...MP.stats(S), coop: coopUI?.card() || null, ...(typeof PARTY !== "undefined" ? PARTY.cardBits(S, party) : {}), ...(typeof LIVING !== "undefined" ? LIVING.cardBits(S, party) : {}) };
     const json = JSON.stringify({ ...card, t0: 0, cur: Math.round(card.cur / 10) });
     if (!force && json === lastCardJson) return;
     lastCardJson = json;
@@ -694,6 +694,7 @@
     const t = G.now();
     { const cm = CARAVANS.tick(S, t); if (cm) { persist(true); toast(cm); if (S.caravanJob === null) Store.change("guards", `${lastJobId}-${S.id}`, (d) => (d && d.status === "signed" ? { ...d, status: "left" } : d)); bump(); } lastJobId = S.caravanJob?.id || lastJobId; }
     tickTimers(t); hallTick(t); discoveryToast(); if (lvUI && Math.floor(t) % 3 === 0) lvUI.tick(); if (Math.floor(t) % 5 === 0) courierCheck();
+    if (typeof LIVING !== "undefined") { const lm = LIVING.tick(S, t); if (lm) { toast(lm); bump(); } }   // deeds remembered, whispers come true, the party leader's world (livingworld.js)
     if (typeof IMM !== "undefined") { IMM.tick(S); if (S.lastSeen && t - S.lastSeen > 3600 && !S.trip?.status) IMM.loading("Welcome back to Skyrim"); S.lastSeen = t; }
     if (S.trip?.status === "travel") {
       const out = G.advance(S, t, reachableBags());
@@ -806,6 +807,7 @@
       players: others.filter((o) => !o.hiding && sameMap(o) && seesHero(o)).map((o) => ({ name: o.name, pos: otherPos(o) })).filter((o) => G.pxDist(pos, o.pos) < 220).slice(0, 8),
       quest: qp ? { pos: qp, name: qa ? QUESTS.target(qa.st) : "" } : null,
       raid: raid && WORLD.places[raid.town] ? { town: raid.town, pos: WORLD.places[raid.town] } : null });
+    if (typeof HUD2 !== "undefined") { const tq = QUESTS.tracked(S); HUD2.objective(tq && tq.st ? { title: tq.st.title, where: QUESTS.target(tq.st) } : null); }   // hud2.js: the objective line under the compass
   }
   function renderVitals() {
     const hp = G.curHealth(S), mh = G.maxHealth(S);
