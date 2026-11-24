@@ -52,8 +52,9 @@ WATCH = r"""(() => {
         if (key && /shadow/.test(key)) key = null;
         const k = Math.max(bx, by);
         if (key) add(this.canvas, key, k, k, asp, [sw0, sh0]);
+        // a canvas marked __soft (the title's blurred side fill) is blurry on purpose too
         // a soft glow laid over the picture (light bloom: a small copy added with "lighter"/"screen") is blurry on purpose
-        else if (src.__art && !/^(lighter|screen)$/.test(this.globalCompositeOperation)) for (const [kk, o] of src.__art) add(this.canvas, kk, o.up * k, Math.max(o.ch * k, k), Math.max(o.asp, asp), o.nat);
+        else if (src.__art && !src.__soft && !/^(lighter|screen)$/.test(this.globalCompositeOperation)) for (const [kk, o] of src.__art) add(this.canvas, kk, o.up * k, Math.max(o.ch * k, k), Math.max(o.asp, asp), o.nat);
       }
     } catch (e) { /* never break the game */ }
     return di.call(this, src, ...a);
