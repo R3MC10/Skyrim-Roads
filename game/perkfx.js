@@ -266,6 +266,9 @@ const PFX = (() => {
     [ "Sneak", "patient_shadow", "Patient Shadow", 1, [50], ["muffled_movement"], "Sneaking past a foe in a dungeon: you're noticed a third slower, the shadows are wider and you hear it turn sooner. [OURS]", [["dgsneak", 0.3, {}]]],
     [ "Two-Handed", "lid_breaker", "Lid Breaker", 1, [25], ["barbarian"], "Smashing chests open: the bright zone on the swing is a third wider. [OURS]", [["dgsmash", 0.3, {}]]],
     [ "Athletics", "sprinter", "Sprinter", 1, [30], ["long_strider"], "Running from a dungeon fight: a quarter fewer steps to get away. [OURS]", [["dgflee", 0.25, {}]]],
+    // ---------------------------------------------------------------- party traps (partytraps.js)
+    [ "Lockpicking", "trap_tinkerer", "Trap Tinkerer", 1, [40], ["apprentice_locks"], "You know how traps are built: dashing past blades and finding the trigger are both easier, and a trap that catches you never spills your gold or dents your armour. [OURS]", [["dgdash", 0.15, {}], ["dgspot", 0.15, {}], ["trapsting", 1, {}]]],
+    [ "Sneak", "call_the_danger", "Call Out the Danger", 1, [40], ["trap_sense"], "In a party, when you get through a trap cleanly, you shout a warning: everyone the trap still catches takes a quarter less damage and one stack less poison or bleeding. [OURS]", [["ptwarn", 1, {}]]],
     // ---------------------------------------------------------------- werewolves and vampires (beastpaths.js)
     [ "Restoration", "bane_of_night", "Bane of the Night", 1, [35], ["novice_restoration"], "Vampires and werewolves take 20% more from your blows and hit you 10% softer. [OURS]", [["out", 0.2, { tag: ["nightkin"] }], ["in", -0.1, { tag: ["nightkin"] }]]],
     [ "Alchemy", "wolfsbane", "Wolfsbane", 1, [30], ["physician"], "You chew wolfsbane and garlic on the road: half as likely to catch a vampire's or a werewolf's curse. [OURS]", [["curseres", 0.5, {}]]],
@@ -283,6 +286,11 @@ const PFX = (() => {
     [ "Illusion", "volk_blood_of_harkon", "Blood of Harkon", 1, [30], [], "Volkihar only. Your Vampire Lord form lasts 3 turns longer, and changing heals a tenth of your health. [OURS]", [["lordturns", 3, {}], ["lordheal", 0.1, {}]]],
     [ "Illusion", "volk_night_lord", "Night Lord", 1, [45], ["volk_blood_of_harkon"], "Volkihar only. As a Vampire Lord your drain life is 30% stronger. [OURS]", [["lorddrain", 0.3, {}]]],
     [ "Illusion", "volk_court", "Court of Volkihar", 1, [60], ["volk_night_lord"], "Volkihar only. As a Vampire Lord you hit 20% harder and take 10% less damage. [OURS]", [["lordout", 0.2, {}], ["lordin", -0.1, {}]]],
+    // ---------------------------------------------------------------- the Dwemer ruins and Blackreach (dwemer.js, blackreach.js)
+    [ "Smithing", "dwemer_tinkerer", "Dwemer Tinkerer", 1, [35], ["dwarven_smithing"], "Each piece of Dwemer scrap smelts into one more Dwarven ingot, and you know where to hit a machine: 10% more damage to Dwarven constructs. [OURS]", [["dwscrap", 1, {}], ["out", 0.1, { tag: ["construct"] }]]],
+    [ "Lockpicking", "dwemer_lore", "Dwemer Lore", 1, [30], ["apprentice_locks"], "Dwemer puzzles show you the next valve or ring to turn, valves hold three more turns before they blow, and half the time a beaten foe in a Dwemer ruin leaves extra scrap. [OURS]", [["dwlore", 1, {}], ["dwloot", 0.5, {}]]],
+    [ "Sneak", "falmer_hunter", "Blind Hunter", 1, [40], ["stealth"], "The Falmer can't see you, so you learn to hunt them: they hit you 15% softer and take 10% more damage from you. [OURS]", [["in", -0.15, { tag: ["falmer"] }], ["out", 0.1, { tag: ["falmer"] }]]],
+    [ "Heavy Armor", "steam_proof", "Steam-Proof", 1, [40], ["juggernaut"], "In heavy armor, Dwarven machines hit you 15% softer. [OURS]", [["in", -0.15, { heavy: 1, tag: ["construct"] }]]],
     // ---------------------------------------------------------------- boss fights (bossfight.js)
     [ "One-Handed", "giant_slayer", "Giant Slayer", 1, [40], ["armsman"], "Bosses take 10% more damage from you, and 20% more once they reach their last phase. [OURS]", [["out", 0.1, { bossFoe: 1 }], ["out", 0.1, { bossLast: 1 }]]],
     [ "Blocking", "read_the_signs", "Read the Signs", 1, [30], ["shield_wall"], "A boss's big attacks (the ones it shows a turn ahead) hurt you 25% less. [OURS]", [["bftele", 0.25, {}]]],
