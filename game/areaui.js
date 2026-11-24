@@ -101,7 +101,7 @@ const AREAUI = (() => {
   function head(o) {
     const { l, sections, names, cur, desc } = o, sibs = siblings(sections, cur);
     const lab = GROUPS.find(([g]) => g === groupOf(cur))?.[1] || "";
-    return `<div class="au-head"><button class="btn sm au-back" data-act="areahub" aria-label="Back to all of ${esc(l)}">‹ ${esc(l)}</button><div class="au-ht"><small>${esc(lab)}</small><b>${ICON[cur] ? `<span aria-hidden="true">${ICON[cur]}</span> ` : ""}${esc(plain(names[cur]))}</b></div></div>
+    return `<div class="au-head"><button class="btn sm au-back" data-act="areahub" aria-label="Back to all of ${esc(l)}">‹ ${esc(l)}</button><div class="au-ht"><small>${esc(lab)}</small><b class="au-name" role="button" tabindex="0" data-act="shop" data-id="${esc(cur)}">${ICON[cur] ? `<span aria-hidden="true">${ICON[cur]}</span> ` : ""}${esc(plain(names[cur]))}</b></div></div>
       ${sibs.length > 1 ? `<div class="au-sibs" role="tablist">${sibs.map((id) => `<button class="${id === cur ? "on" : ""}" role="tab" aria-selected="${id === cur}" data-act="shop" data-id="${esc(id)}">${esc(label(id, names))}</button>`).join("")}</div>` : ""}
       ${desc ? `<p class="tg-desc">${esc(desc)}</p>` : ""}`;
   }
