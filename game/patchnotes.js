@@ -3,6 +3,15 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b137-livingworld", build: 137, date: "24 Nov 2026", title: "The world remembers you", items: [
+      "What you do is remembered in the hold where you did it: dragons you slay, caravans you guard all the way, caravans you rob, and every crime (even after you pay the bounty, though bad deeds fade over a couple of weeks). It all adds to your name in each hold.",
+      "Towns react. Guards and shopkeepers bring up what you did. Do enough good and doors open: the inn's back room (free whispers), the steward's storeroom (a few materials once a day) and a guest room in the Jarl's hall (a free bed once a day). Cause enough trouble and the shutters close: no knocking at night, no whispers, and shops charge you 15% more. Give to the temple in the streets to make amends.",
+      "Townsfolk keep their own hours. Area → Streets shows who's about and what they're doing. In the evening the trader, the smith and the stablemaster go for a drink at the inn: find them there and they'll open up for you without the night charge.",
+      "Whispers of things to come: listen in an inn (evenings are best) and hear about something that hasn't happened yet: a dragon looking for a roost, a warband gathering, a troll coming down, a vampire nest, a stranded merchant, a forgotten shrine. Most come true about half a day later and become a real place on your map, with a bounty for dealing with it. Some come to nothing.",
+      "News of the realm in Map → World news and on every inn's notice board: what you did, what came true, and the talk of each day across Skyrim.",
+      "In a party the leader's world is everyone's: you see the leader's whispers, marks and news, and the leader does the asking and deciding.",
+      "New perks: Town Crier (Speechcraft: whispers come true more often and sooner, bounties pay more), Low Profile (Streetwise: crimes hurt your name less and are forgotten faster), Well Met (Etiquette: doors open sooner, amends cost less).",
+    ] },
     { id: "b135-compass", build: 135, date: "24 Nov 2026", title: "A real 3D compass", items: [
       "The golden compass on the home screen is now a proper 3D piece: drag it and it tilts toward your finger, catching the light and showing its thick bronze edge, then springs back when you let go.",
       "Skills, Magic, Items and Map now sit around the compass instead of on top of it, on phones held upright or sideways.",
