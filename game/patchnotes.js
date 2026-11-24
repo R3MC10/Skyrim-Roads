@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b139-perf", build: 139, date: "24 Nov 2026", title: "Faster and smoother", items: [
+      "The game starts a lot faster: the title screen now shows up in about a second instead of several on older phones.",
+      "The world map, the title screen, the road pictures and the fight screen use much less of your phone's power when nothing is moving, so older phones stay smoother and cooler and the battery lasts longer.",
+      "Nothing looks or plays differently, it just runs lighter.",
+    ] },
     { id: "b137-kit", build: 137, date: "24 Nov 2026", title: "Fairer bandit tricks", items: [
       "Poison, burning, bleeding and venom now respect your armour: if your armour soaked most of the blow, it soaks most of the poison too. Heavy armour finally helps against poisoned blades and fire bolts.",
       "Foe healers (bandit mages, priests and the like) can only cast their healing spell twice a fight, and it heals a little less. No more endless self-healing against low-level warriors.",
