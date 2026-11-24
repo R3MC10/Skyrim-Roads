@@ -69,6 +69,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Smart AI combat (default; custom tactics optional), crafting mini-games, motion design (63)
 
 ## In progress (write your name before you start)
+- Claude: something at every place (placestuff.js): every map location offers trade, work, a job, a blessing, a stash, herbs or a search. Branch claude/fullmap.
 - Claude: shared party fights (sharedfight.js): everyone in a party plays the same fight on their own full fight screen, with their own moves. Branch claude/partysync.
 - Claude: character art upgrade (figart.js): one shared, bone-rigged character renderer (keyframed clips blended over time) with real proportions, shading, race, sex, hair and worn gear (idle, walk, attack, cast, block, hit, down, riding, sitting), used by the travel strip, fights, hero tab, paper doll and portraits; humanoid foes can borrow it via HEROART.figure(card, {gear}). Branch claude/heroart2.
 - Claude: caravans you can meet while travelling (caravanroad.js): tap or walk up to one, trade, news, guard the wagons, walk with them, rob them. Branch claude/caravans.
