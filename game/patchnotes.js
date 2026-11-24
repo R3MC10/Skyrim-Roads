@@ -3,13 +3,28 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b132", build: 132, date: "23 Nov 2026", title: "The Dragonstone in parties, and PC updates", items: [
+    { id: "b134", build: 134, date: "24 Nov 2026", title: "The Dragonstone in parties, and PC updates", items: [
       "Fixed: in a party, the Dragonstone and the Golden Claw went into the party's loot pile, so only one player got them and everyone else couldn't finish Farengar's quest. Now every player keeps their own.",
       "If you cleared Bleak Falls Barrow in a party and don't have the Dragonstone, it's back in your pack next time you open the game. Bring it to Farengar in Dragonsreach.",
       "Farengar now also takes the Dragonstone in Whiterun's Court wizard shop (Area tab), not only under Dragonsreach & hirelings.",
       "PC players on build 100 never got updates: that build came out just before the PC version learned to update itself. Download the setup version once from the download page and run it. Your saves stay.",
       "The PC game now tells you when a newer build is out, with a Download button. The portable .exe can't update itself, so it shows this every time there's a new build.",
       "The setup version keeps updating itself in the background; it only shows the card if it falls 3 or more builds behind.",
+    ] },
+    { id: "b133", build: 133, date: "23 Nov 2026", title: "Painted battle scenes", items: [
+      "Fights now happen in front of hand-painted scenes instead of the plain drawn ones: Embershard Mine has its own, and every dungeon, camp and lair uses the one for its kind (burial barrows, Dwemer vaults, Forsworn redoubts, vampire lairs, temples, forts, Thalmor keeps, bandit and giant camps, dragon lairs).",
+      "Road fights show the land you're in: snowy passes, pine forest, autumn woods, marsh, the ashlands, rocky highlands or the open tundra. Duels in Windhelm get the arena.",
+      "Torches and braziers flicker and glow, lanterns sway, banners and reeds move in the wind and steam rises in Dwemer ruins, even while you're choosing your next move. The background shifts a little with the camera so the scene has depth. With Reduce motion on, it all stays still.",
+      "Night, dusk and bad weather still darken and tint the scenes outdoors, and caravans still stand behind the fight. Both art styles work: in pixel art the paintings turn into pixels too.",
+    ] },
+    { id: "b132", build: 132, date: "23 Nov 2026", title: "See what's coming in a fight", items: [
+      "Foes show their next move before they make it. Under the foe's health bar, Next lists what it will do with each of its turns this round, and the first one floats over it in the fight: ⚔ 18–26 for a normal hit, 💥 Huge blow or 🎯 Aimed shot in red when a big one is coming, ✚ when it's about to heal, 🛡 when it raises a shield. The numbers already count your armour and guard. Hold a finger on one to read it.",
+      "Health bars show what's about to come off. Striped parts of your bar are the damage this round's blows plus your poison or burning will take, with the numbers under the bar (for example ⚔ −39 ☠ −18 ≈ −57). The foe's bar does the same for its burning, bleeding and your cloaks. Healing shows as a green edge.",
+      "Your own poison, burning, bleeding, chill, healing and guard now sit on your own frame as labelled chips (Poisoned −6 ×3 means 6 each time a foe acts, 3 more times).",
+      "The foe's turn plays out one step at a time instead of all at once: each blow, its number and the health bars, then the next. A Skip button jumps to the end, and ⏩ Fast keeps the old quick way.",
+      "Banners tell you whose turn it is (Bandit's turn, Your turn), and a new round shows what happened in the last one: how much you dealt and how much you took.",
+      "Under a quarter of your health, the edges of the screen pulse red and you hear your heartbeat.",
+      "New fight sounds: a horn for your turn, war drums for the foe's, a gong for a new round, a grunt when a foe winds up, poison and burning hissing, healing, the heartbeat, and real recorded sword, axe, mace and arrow hits, clangs, swings, victory and defeat.",
     ] },
     { id: "b131", build: 131, date: "23 Nov 2026", title: "The Dragonstone is back", items: [
       "Fixed: the Dragonstone was missing from Bleak Falls Barrow if you picked up the Golden Claw at the door on the way in, so you couldn't finish Farengar's quest. The boss now always leaves it until you've handed it in.",

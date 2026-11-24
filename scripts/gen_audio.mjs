@@ -1,12 +1,13 @@
 // Generates Roads of the North audio with ElevenLabs into game/ and rewrites game/audio.json.
-// Usage: node gen_audio.mjs <path to game/> [sfx|music|all]
-// Reads ELEVENLABS_API_KEY from the environment only; never prints it. Skips files that already exist.
+// Usage: node gen_audio.mjs <path to game/> [sfx|music|all|combat]   (combat = only the fight sounds, cheapest on credits)
+// Reads ELEVENLABS_API_KEY (or ELEVENLABS_API) from the environment only; never prints it. Skips files that already exist.
 // SFX: /v1/sound-generation (mp3_22050_32). Music: /v1/music (needs a paid plan; mp3_44100_64, 45 s loops).
 import fs from "node:fs"; import path from "node:path";
 const GAME = process.argv[2], WHAT = process.argv[3] || "all";
 if (!GAME || !fs.existsSync(path.join(GAME, "sound.js"))) { console.error("pass the game/ folder"); process.exit(1); }
-if (!process.env.ELEVENLABS_API_KEY) { console.error("ELEVENLABS_API_KEY is not set"); process.exit(1); }
-const H = { "xi-api-key": process.env.ELEVENLABS_API_KEY, "content-type": "application/json" };
+const KEY = process.env.ELEVENLABS_API_KEY || process.env.ELEVENLABS_API;
+if (!KEY) { console.error("ELEVENLABS_API_KEY is not set"); process.exit(1); }
+const H = { "xi-api-key": KEY, "content-type": "application/json" };
 
 const SFX = [   // [file base, prompt, seconds]
   ["click", "soft wooden UI click, medieval game menu, single short tick", 0.5],
@@ -36,6 +37,15 @@ const SFX = [   // [file base, prompt, seconds]
   ["death", "you died, low somber drone and dark drum hit", 2.5],
   ["shout", "powerful dragon shout, deep thunderous voice blast with wind", 1.8],
   ["dragon", "huge dragon roar, deep and rough, echoing over mountains", 2.5],
+  // [fightread] reading the fight: whose turn, a new round, a wind-up, damage over time, heals, low health
+  ["turn-me", "short heroic Nordic war horn call, your turn in battle, single note rising", 1.2],
+  ["turn-foe", "two heavy low war drum hits, ominous, enemy turn", 1.0],
+  ["round", "single deep gong and drum hit, new round of battle, short", 1.2],
+  ["windup", "warrior inhales and grunts lifting a heavy weapon, creaking leather, rising tension", 1.0],
+  ["dot-poison", "poison taking effect, wet sizzle and sickly bubbling, short", 0.8],
+  ["dot-burn", "flesh burning, small crackling fire flare and sizzle, short", 0.8],
+  ["heal", "healing magic, soft rising shimmer and warm chime", 1.0],
+  ["heartbeat", "single heavy heartbeat thump, lub dub, low and muffled", 0.8],
   ["amb-wolf", "distant lone wolf howl at night", 3.0],
   ["amb-owl", "owl hooting in a night forest", 2.0],
   ["amb-thunder", "distant rolling thunder", 4.0],
@@ -74,13 +84,15 @@ async function post(url, body, file) {
   return { ok: true };
 }
 const missing = [];
+const COMBAT = new Set(["swing", "swing-2", "hit", "hit-2", "hit-axe", "hit-mace", "hit-bow", "clang", "clang-2", "victory", "death", "turn-me", "turn-foe", "round", "windup", "dot-poison", "dot-burn", "heal", "heartbeat"]);
 if (WHAT !== "music") for (const [name, text, sec] of SFX) {
+  if (WHAT === "combat" && !COMBAT.has(name)) continue;
   const f = path.join(GAME, (name.startsWith("amb-") ? "" : "sfx-") + name + ".mp3");
   if (fs.existsSync(f)) continue;
   const r = await post("https://api.elevenlabs.io/v1/sound-generation?output_format=mp3_22050_32", { text, duration_seconds: Math.max(0.5, sec), prompt_influence: 0.5 }, f);
   console.log(path.basename(f), r.ok ? "ok" : `FAILED ${r.status} ${r.t}`); if (!r.ok) { missing.push(path.basename(f)); if (r.status === 401 || r.status === 402) break; }
 }
-if (WHAT !== "sfx") for (const [name, prompt] of MUSIC) {
+if (WHAT !== "sfx" && WHAT !== "combat") for (const [name, prompt] of MUSIC) {
   const f = path.join(GAME, `mus-${name}.mp3`);
   if (fs.existsSync(f)) continue;
   const r = await post("https://api.elevenlabs.io/v1/music?output_format=mp3_44100_64", { prompt, music_length_ms: 45000, force_instrumental: true }, f);

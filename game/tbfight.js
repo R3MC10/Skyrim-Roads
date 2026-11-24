@@ -138,6 +138,7 @@ const TB = (() => {
       if (a) this.ehpMax = Math.round(this.ehpBase * (this.grp.hpMul[this.wave - 1] || 1));
       f.ehp = this.ehpMax; f.fpAvoided = false; f.tbStunLeft = 0; f.tbStunCd = 0;
       if (typeof FOEKIT !== "undefined") { const dt = f.kitDot; FOEKIT.setup(f); f.kitDot = dt; }   // the next one has its own kit
+      if (typeof FIGHTREAD !== "undefined") FIGHTREAD.plan(this);
       const left = this.waves - this.wave;
       const who = a ? `${String(f.e.name).toLowerCase()} ${a.label}` : String(f.e.name).toLowerCase();
       this.emit("foe", `${a ? "A" : "Another"} ${who} steps in! ${left ? `(${left} more behind it)` : "(the last one)"}`, "foe", { wave: this.wave });
@@ -159,6 +160,7 @@ const TB = (() => {
       this.round++; f.turn = this.round; this.order = this.rollOrder(); this.idx = 0; this.hitters = 0;
       this.lines = { me: [], them: [], a: null };
       this.emit("round", `Round ${this.round}`, "round", { order: this.order.map((o) => ({ id: o.id, name: o.name, init: o.init })) });
+      if (typeof FIGHTREAD !== "undefined") FIGHTREAD.plan(this);   // the foe's intents for this round (fightread.js)
     }
     /* the foe gets a free action first (you were spotted, or fled and got caught) */
     begin() {
@@ -459,7 +461,7 @@ const TB = (() => {
     el.addEventListener("click", onClick);
     const r = sess.begin();
     render(r);
-    if (sess.done) render({ turn: "done" });
+    if (sess.done && !ui.paceT) render({ turn: "done" });
     tickWait();
   }
   function pctBar(v, m, cls) { return `<div class="tbbar ${cls}"><i style="width:${Math.max(0, Math.min(100, 100 * v / Math.max(1, m))).toFixed(1)}%"></i></div>`; }
@@ -546,42 +548,62 @@ const TB = (() => {
     try { ui?.sess?.remote?.sync?.(ui.sess); } catch (e) { /* the party view never breaks the fight */ }
     const el = document.getElementById("tbf"); if (!el || !ui) return;
     const sess = ui.sess, f = sess.f, s = f.s;
-    const newEv = sess.ev.slice(ui.shown); ui.shown = sess.ev.length;
-    const order = sess.order.map((o, i) => `<span class="tbini ${o.id === sess.cur?.id && !sess.done ? "now" : ""} ${i < sess.idx ? "gone" : ""} ${o.id.startsWith("foe") ? "foe" : o.id === "me" ? "me" : "ally"}" data-tip="${esc(o.name)}: initiative ${o.init}. Higher initiative acts earlier in the round.">${icon(o, f)} ${esc(o.name.split(" ")[0])}<i>${o.init}</i></span>`).join("");
+    /* [fightread] play what happened one event at a time (Fast ⏩ shows it all at once, Skip jumps to the end) */
+    const R = typeof FIGHTREAD !== "undefined" ? FIGHTREAD : null;
+    clearTimeout(ui.paceT); ui.paceT = null;
+    let cut = sess.ev.length;
+    if (R && R.paced() && !ui.skip && !sess.autoRest && cut - ui.shown > 1) { cut = ui.shown + 1; const wait = R.delay(sess.ev[ui.shown]); ui.pendState = state; ui.paceT = setTimeout(() => { if (ui && ui.sess === sess) render(ui.pendState); }, wait); }
+    const playing = cut < sess.ev.length;
+    if (!playing) { ui.skip = false; ui.pendState = null; }
+    const vis = playing ? sess.ev.slice(0, cut) : sess.ev;
+    const newEv = vis.slice(ui.shown); ui.shown = cut;
+    if (playing) state = { turn: "play" };
+    const order = sess.order.map((o, i) => `<span class="tbini ${o.id === sess.cur?.id && !sess.done && !playing ? "now" : ""} ${i < sess.idx && !playing ? "gone" : ""} ${o.id.startsWith("foe") ? "foe" : o.id === "me" ? "me" : "ally"}" data-tip="${esc(o.name)}: initiative ${o.init}. Higher initiative acts earlier in the round.">${icon(o, f)} ${esc(o.name.split(" ")[0])}<i>${o.init}</i></span>`).join("");
     const pips = (n, m, cls) => Array.from({ length: m }, (_, i) => `<i class="${i < n ? "on" : ""} ${cls}"></i>`).join("");
     const allies = partyHTML(f);
     const mine = state.turn === "me";
     const wait = state.turn === "wait" ? `<p class="tbwait">⏳ ${esc(state.who)} is choosing their move… <b class="num" id="tbcd">${Math.max(0, Math.ceil((state.until - Date.now()) / 1000))}s</b>, then Auto</p>` : "";
     const scene = (newEv.length || !ui.lastScene) && typeof FIGHTART !== "undefined" ? sceneFor(newEv) : "";
     const fmt = typeof TBUI !== "undefined" ? TBUI.logLine : (e) => `<div class="tbl ${e.kind}">${esc(e.text)}</div>`;
-    const recent = sess.ev.filter((e) => e.kind !== "round"), lastE = recent[recent.length - 1];
+    const recent = vis.filter((e) => e.kind !== "round"), lastE = recent[recent.length - 1];
     const log = recent.slice(-10).map((e) => fmt(e, e === lastE && newEv.includes(e))).join("");
-    const hpMax = G.maxHealth(s), hpNow = Math.max(0, Math.round(f.hp)), ehpNow = Math.max(0, Math.round(f.ehp));
-    const mpNow = Math.max(0, Math.round(f.mp)), spNow = Math.max(0, Math.round(f.sp)), mpMax = G.maxMagicka(s), spMax = G.maxStamina(s);
-    const prev = ui.prevBars || { hp: hpNow, ehp: ehpNow, mp: mpNow, sp: spNow }; ui.prevBars = { hp: hpNow, ehp: ehpNow, mp: mpNow, sp: spNow };
+    const atE = playing ? vis[vis.length - 1] : null;   // while playing, the bars show health as of the event on screen
+    const hpMax = G.maxHealth(s), hpNow = Math.max(0, Math.round(atE?.hp ?? f.hp)), ehpNow = Math.max(0, Math.round(atE?.ehp ?? f.ehp));
+    const prev = ui.prevBars || { hp: hpNow, ehp: ehpNow, mp: Math.max(0, Math.round(f.mp)), sp: Math.max(0, Math.round(f.sp)) };
+    const mpNow = playing ? prev.mp : Math.max(0, Math.round(f.mp)), spNow = playing ? prev.sp : Math.max(0, Math.round(f.sp)), mpMax = G.maxMagicka(s), spMax = G.maxStamina(s);
+    ui.prevBars = { hp: hpNow, ehp: ehpNow, mp: mpNow, sp: spNow };
     const pops = popsFor(newEv, f, prev, { hp: hpNow, ehp: ehpNow, mp: mpNow, sp: spNow });
     const pc = (v, m) => (100 * Math.max(0, v) / Math.max(1, m)).toFixed(1);
-    const uBar = (v, p, m, cls) => `<div class="tbbar big ${cls}"><b class="gh" style="width:${pc(Math.max(v, p), m)}%" data-to="${pc(v, m)}"></b><i style="width:${pc(v, m)}%"></i><span class="num">${v} / ${m}</span></div>`;
+    const uBar = (v, p, m, cls, marks = "") => `<div class="tbbar big ${cls}"><b class="gh" style="width:${pc(Math.max(v, p), m)}%" data-to="${pc(v, m)}"></b><i style="width:${pc(v, m)}%"></i>${marks}<span class="num">${v} / ${m}</span></div>`;
+    const rd = R && !playing && !sess.done ? R.panels(sess) : null;   // intents and what's coming off the bars
     const rBar = (v, p, m, cls, lb) => `<div class="tbbar mid ${cls}"><b class="gh" style="width:${pc(Math.max(v, p), m)}%" data-to="${pc(v, m)}"></b><i style="width:${pc(v, m)}%"></i><span class="num"><em>${lb}</em> ${v} / ${Math.round(m)}</span></div>`;
     let banner = "";
-    if (sess.done) banner = `<div class="tbban ${f.won ? "won" : "lost"}">${f.won ? (f.escaped ? "Escaped" : "Victory") : "Defeated"}</div>`;
-    else if (mine && ui.bannerFor !== sess.round) { ui.bannerFor = sess.round; banner = `<div class="tbban me">Your turn</div>`; }
+    if (playing) { if (R) { const e = newEv[newEv.length - 1], pv = vis[vis.length - 2]; banner = R.bannerHTML(R.banner(e, pv, sess)); } }
+    else if (sess.done) banner = `<div class="tbban ${f.won ? "won" : "lost"}">${f.won ? (f.escaped ? "Escaped" : "Victory") : "Defeated"}</div>`;
+    else if (mine && ui.bannerFor !== sess.round) {
+      ui.bannerFor = sess.round;
+      const rb = R ? R.banner(newEv.filter((e) => e.kind === "round").pop(), null, sess) : null;   // a new round that starts with you: its summary goes under "Your turn"
+      banner = rb ? R.bannerHTML({ cls: "round me", t: "Your turn", sub: `Round ${sess.round} · ${rb.sub}` }) : `<div class="tbban me">Your turn</div>`;
+      if (R) R.play("turn-me");
+    }
+    if (R && newEv.length) { const k = Math.max(0, newEv.length - 3); newEv.slice(k).forEach((e, i) => R.play(R.cue(e, vis[vis.indexOf(e) - 1]), i * 0.25)); }
     el.innerHTML = `<div class="tbin">
       <div class="tbtop"><b>Round ${sess.round}</b><span class="tbord">${order}</span><button class="tbff" data-tbx="log" aria-label="Full fight log">📜</button><button class="tbff ${fast() ? "on" : ""}" data-tbx="fast" aria-label="Fast foe turns">⏩</button>${typeof TBRADIAL !== "undefined" ? `<button class="tbff ${TBRADIAL.on() ? "on" : ""}" data-tbx="wheel" aria-label="Combat wheel and timing ring" data-tip="Combat wheel: your moves in a ring, and a timing ring for strikes and spells (Perfect +25%, a miss −20%). Tap to switch to cards.">🎯</button>` : ""}</div>
-      <div class="tbstage" data-tbzone="foe"><div class="tbscene" id="tbscene">${scene || (ui.lastScene || "")}</div>${banner}<div class="tbhint" aria-hidden="true"></div></div>
-      <div class="tbvit"><div class="tbu me" data-tbzone="self"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.me(f, sess.st))}"` : ""}><small class="nm">🛡 ${esc(s.name || "You")}</small>${uBar(hpNow, prev.hp, hpMax, "hp")}<div class="tbsub">${rBar(mpNow, prev.mp, mpMax, "mp", "MP")}${rBar(spNow, prev.sp, spMax, "sp", "SP")}</div>${f.ward > 0 ? `<div class="tbward" title="Ward: soaks magic until it breaks. Cast it again to refill it."><i style="width:${pc(f.ward, f.wardMax || f.ward)}%"></i><span>🔰 Ward ${Math.round(f.ward)} / ${Math.round(f.wardMax || f.ward)}</span></div>` : ""}</div>
-        <div class="tbu foe" data-tbzone="foe"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.foe(f, sess.ehpMax))}"` : ""}><small class="nm">${f.e.player ? "⚔" : "☠"} ${esc(f.e.name)}${f.e.archLabel && !String(f.e.name).toLowerCase().includes(f.e.archLabel) ? ` <span class="arch">${esc(f.e.archLabel)}</span>` : ""}${sess.waves > 1 ? ` <span class="arch">${sess.wave}/${sess.waves}</span>` : ""}</small>${uBar(ehpNow, prev.ehp, sess.ehpMax, "hp foe")}${statusChips(f)}</div></div>
+      <div class="tbstage" data-tbzone="foe"><div class="tbscene" id="tbscene">${scene || (ui.lastScene || "")}</div>${banner}${rd ? rd.bubble : ""}<div class="tbhint" aria-hidden="true"></div></div>
+      <div class="tbvit"><div class="tbu me" data-tbzone="self"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.me(f, sess.st))}"` : ""}><small class="nm">🛡 ${esc(s.name || "You")}</small>${uBar(hpNow, prev.hp, hpMax, "hp", rd ? rd.meMarks(hpNow, hpMax) : "")}${rd ? rd.meLine : ""}<div class="tbsub">${rBar(mpNow, prev.mp, mpMax, "mp", "MP")}${rBar(spNow, prev.sp, spMax, "sp", "SP")}</div>${f.ward > 0 ? `<div class="tbward" title="Ward: soaks magic until it breaks. Cast it again to refill it."><i style="width:${pc(f.ward, f.wardMax || f.ward)}%"></i><span>🔰 Ward ${Math.round(f.ward)} / ${Math.round(f.wardMax || f.ward)}</span></div>` : ""}${R ? R.myChips(f) : ""}</div>
+        <div class="tbu foe" data-tbzone="foe"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.foe(f, sess.ehpMax))}"` : ""}><small class="nm">${f.e.player ? "⚔" : "☠"} ${esc(f.e.name)}${f.e.archLabel && !String(f.e.name).toLowerCase().includes(f.e.archLabel) ? ` <span class="arch">${esc(f.e.archLabel)}</span>` : ""}${sess.waves > 1 ? ` <span class="arch">${sess.wave}/${sess.waves}</span>` : ""}</small>${uBar(ehpNow, prev.ehp, sess.ehpMax, "hp foe", rd ? rd.foeMarks(ehpNow, sess.ehpMax) : "")}${rd ? rd.foeLine : ""}${statusChips(f)}${rd ? rd.intents : ""}</div></div>
       ${allies}
       <button class="tblog" aria-live="polite" data-tbx="log" aria-label="Fight log, tap for the full log"${log ? "" : " hidden"}>${log}</button>
       ${wait}
       <div class="tbdock">
-        <div class="tbap">${mine ? `<span>AP</span>${pips(sess.ap, sess.st.ap, "ap")}${sess.st.spellAp ? `<span>✦</span>${pips(sess.spAp, sess.st.spellAp, "sap")}` : ""}<em>Your turn</em>` : sess.done ? "" : `<em class="them">${esc(sess.cur?.name || "")}'s turn…</em>`}</div>
-        ${sess.done ? `<button class="btn pri tbdone" data-tbx="done">${f.won ? (f.escaped ? "Continue" : "Victory — continue") : "Continue"}</button>` : mine ? actionsHTML(sess) : ""}
+        <div class="tbap">${playing ? `<em class="them">${esc(R ? R.who(vis[vis.length - 1], sess) : "")}</em><button class="tbskip" data-tbx="skip" aria-label="Skip to the end of this turn">Skip ▸▸</button>` : mine ? `<span>AP</span>${pips(sess.ap, sess.st.ap, "ap")}${sess.st.spellAp ? `<span>✦</span>${pips(sess.spAp, sess.st.spellAp, "sap")}` : ""}<em>Your turn</em>` : sess.done ? "" : `<em class="them">${esc(sess.cur?.name || "")}'s turn…</em>`}</div>
+        ${playing ? "" : sess.done ? `<button class="btn pri tbdone" data-tbx="done">${f.won ? (f.escaped ? "Continue" : "Victory — continue") : "Continue"}</button>` : mine ? actionsHTML(sess) : ""}
       </div>
       ${ui.logOpen ? fullLog(sess, fmt) : ""}
     </div>`;
     if (scene) ui.lastScene = scene;
     if (typeof TBUI !== "undefined") TBUI.after(el, { hurt: hpNow < prev.hp, hit: ehpNow < prev.ehp, big: prev.hp - hpNow > hpMax * 0.15, mine, pops });
+    if (R) { el.classList.toggle("tbplay", playing); R.low(el, hpNow / Math.max(1, hpMax), !sess.done); }
   }
   /* floating numbers for what just happened: damage coloured by element, heals, crits, and what you spent */
   const ELEM = [["fire", /\b(fire|flame|burn|scorch|ember)/i], ["frost", /\b(frost|ice|cold|freez|chill)/i], ["shock", /\b(shock|lightning|spark|thunder)/i], ["poison", /\b(poison|venom|toxic)/i]];
@@ -676,6 +698,7 @@ const TB = (() => {
     if (b.dataset.tbx === "autoall") { ui.menu = null; sess.autoRest = true; sess.autoTurn(); return step(sess.advance()); }   // no button for players any more; screen tests use it to finish a fight
     if (b.dataset.tbx === "fast") { const p = prefs(); p.tbFast = !p.tbFast; try { localStorage.setItem("rotn_prefs", JSON.stringify(p)); } catch (e) { /* ignore */ } return step(); }
     if (b.dataset.tbx === "done") return close();
+    if (b.dataset.tbx === "skip") { ui.skip = true; return render(ui.pendState || { turn: sess.done ? "done" : sess.cur?.id === "me" ? "me" : "auto" }); }
     if (b.dataset.tbx === "log") { ui.logOpen = true; return step(); }
     if (b.dataset.tbx === "logx") { ui.logOpen = false; return step(); }
     if (b.dataset.tba) {
@@ -716,6 +739,8 @@ const TB = (() => {
     const el = document.getElementById("tbf");
     if (el) { el.removeEventListener("click", onClick); el.remove(); }
     clearInterval(waitT);
+    if (ui) clearTimeout(ui.paceT);
+    if (typeof FIGHTREAD !== "undefined") FIGHTREAD.stop();
     const cb = ui?.onDone;
     if (ui?.sess?.remote) ui.sess.remote.end?.();
     ui = null; open = false;
