@@ -42,8 +42,9 @@ const MINEGAME = (() => {
     return { place, cells, swings, swings0: swings, got: {}, log: [], over: false, rnd };
   }
   /* the bright band on the meter: wider with skill */
+  const ez = (k) => (typeof A11Y !== "undefined" && A11Y[k] ? A11Y[k]() : 1);   // Settings → Accessibility → Easy timing
   function zone(skill, rnd = Math.random) {
-    const good = Math.min(0.4, 0.2 + Math.max(0, skill - 15) / 100 * 0.16), perfect = good * 0.36;
+    const good = Math.min(0.56, Math.min(0.4, 0.2 + Math.max(0, skill - 15) / 100 * 0.16) * ez("zoneEase")), perfect = good * 0.36;
     const mid = good / 2 + 0.05 + rnd() * (0.9 - good);
     return { mid, good, perfect };
   }
@@ -103,7 +104,7 @@ const MINEGAME = (() => {
     st.raf = requestAnimationFrame(loop);
   }
   /* needle: there and back */
-  const pos = () => { const p = ((performance.now() - st.t0) / 1000 * SPEED) % 2; return p < 1 ? p : 2 - p; };
+  const pos = () => { const p = ((performance.now() - st.t0) / 1000 * SPEED / ez("timingEase")) % 2; return p < 1 ? p : 2 - p; };
   function placeZone() {
     const el = document.querySelector("#minegame"); if (!el) return;
     const z = st.z;

@@ -166,6 +166,7 @@ const TB = (() => {
       const left = this.waves - this.wave;
       const who = a ? `${String(f.e.name).toLowerCase()} ${a.label}` : String(f.e.name).toLowerCase();
       this.emit("foe", `${a ? "A" : "Another"} ${who} steps in! ${left ? `(${left} more behind it)` : "(the last one)"}`, "foe", { wave: this.wave });
+      if (typeof SPELLFX !== "undefined") SPELLFX.nextFoe(this);   // area spells already reached it; single-target ones end here
     }
     /* initiative order for a new round */
     rollOrder() {
@@ -175,7 +176,8 @@ const TB = (() => {
       const tg = f.tags, base = 6 + Math.min(12, this.foeLevel / 4) + (tg.has("beast") ? 3 : 0) + (tg.has("big") || tg.has("construct") ? -2 : 0);
       // the foe acts 1–3 times a round (whole actions, the fraction is a chance), more with a big party
       let n = T.acts[this.kind] + Math.floor(this.players / 2); const whole = Math.floor(n); n = whole + (Math.random() < n - whole ? 1 : 0);
-      for (let i = 0; i < Math.max(1, n); i++) out.push({ id: i ? "foe" + (i + 1) : "foe", name: f.e.name, init: Math.round(base) - 4 * i + d10(), extra: i > 0 });
+      const nb = typeof ENCH2 !== "undefined" ? ENCH2.numb(f) : { init: 0, acts: 0 }; n -= nb.acts;   // Numbing Cold: later in the order, a move lost (enchants2.js)
+      for (let i = 0; i < Math.max(1, n); i++) out.push({ id: i ? "foe" + (i + 1) : "foe", name: f.e.name, init: Math.round(base - nb.init) - 4 * i + d10(), extra: i > 0 });
       out.sort((a, b) => b.init - a.init || (a.id === "me" ? -1 : 1));
       return out;
     }
@@ -234,7 +236,7 @@ const TB = (() => {
       const al = tgt != null && tgt !== "" ? (+tgt >= 1000 ? (f._downed || [])[+tgt - 1000] : f.allies[+tgt]) : null;
       if (a === "end") return this.endTurn();
       if (a === "flee") return this.flee();
-      if (!this.canAfford(a)) return { err: "Not enough action points" };
+      if (!this.canAfford(a)) return { err: /^(spell|dual):/.test(a) && cost(f, a) <= this.ap + this.spAp ? "Not enough magicka" : "Not enough action points" };
       this.pay(a);
       const before = f.ehp, myBefore = f.hp;
       let text = null;
@@ -299,7 +301,7 @@ const TB = (() => {
         if (f.summonTurns > 0 && f.ehp > 0) { const b = f.ehp; f.summonTurns--; f.ehp -= f.summonDmg; const t = `Your ${f.summonName || "summon"} strikes ${Math.round(f.summonDmg)}` + this.capFoe(b) + this.flank(b); this.hitters++; this.lines.me.push(t); this.emit("sum", t, "ally"); }
         return;
       }
-      if (o.al) return this.allyMove(o.al, "auto");
+      if (o.al) return o.al.player && o.al.pid && !this.opts.auto ? this.allyMove(o.al, "guard", true) : this.allyMove(o.al, "auto");   // a real player is never played by the AI: no word from their phone, they just guard (noautoplay.js)
     }
     allyMove(al, move, timedOut) {
       const f = this.f;
@@ -546,7 +548,7 @@ const TB = (() => {
     if (hooks.remote && !sess.mirror) sess.remote = hooks.remote;   // a teammate's view of the leader's fight never publishes a fight of its own
     let el = document.getElementById("tbf");
     if (!el) { el = document.createElement("div"); el.id = "tbf"; el.setAttribute("role", "dialog"); el.setAttribute("aria-label", "Turn-based fight"); document.body.appendChild(el); }
-    el.className = "tbf " + (typeof ART !== "undefined" && ART.style && ART.style() === "pixel" ? "pixel" : "ink");
+    el.className = "tbf ink";
     el.addEventListener("click", onClick);
     const r = sess.begin();
     render(r);
@@ -686,7 +688,7 @@ const TB = (() => {
     el.innerHTML = `<div class="tbin">
       <div class="tbtop"><b>Round ${sess.round}</b><span class="tbord">${order}</span><button class="tbff" data-tbx="log" aria-label="Full fight log">📜</button><button class="tbff ${fast() ? "on" : ""}" data-tbx="fast" aria-label="Fast foe turns">⏩</button>${typeof TBRADIAL !== "undefined" ? `<button class="tbff ${TBRADIAL.on() ? "on" : ""}" data-tbx="wheel" aria-label="Combat wheel and timing ring" data-tip="${typeof FIGHTCTL !== "undefined" && FIGHTCTL.on() ? "Timing ring: after a strike or a damage spell, tap when the needle is in the bright zone (Perfect +25%, a miss −20%). Tap to switch it on or off." : "Combat wheel: your moves in a ring, and a timing ring for strikes and spells (Perfect +25%, a miss −20%). Tap to switch to cards."}">🎯</button>` : ""}</div>
       <div class="tbstage" data-tbzone="foe"><div class="tbscene" id="tbscene">${scene || (ui.lastScene || "")}</div>${banner}${rd ? rd.bubble : ""}<div class="tbhint" aria-hidden="true"></div></div>
-      <div class="tbvit"><div class="tbu me" data-tbzone="self"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.me(f, sess.st))}"` : ""}><small class="nm">🛡 ${esc(s.name || "You")}</small>${uBar(hpNow, prev.hp, hpMax, "hp", rd ? rd.meMarks(hpNow, hpMax) : "")}${rd ? rd.meLine : ""}<div class="tbsub">${rBar(mpNow, prev.mp, mpMax, "mp", "MP")}${rBar(spNow, prev.sp, spMax, "sp", "SP")}</div>${f.ward > 0 ? `<div class="tbward" title="Ward: soaks magic until it breaks. Cast it again to refill it."><i style="width:${pc(f.ward, f.wardMax || f.ward)}%"></i><span>🔰 Ward ${Math.round(f.ward)} / ${Math.round(f.wardMax || f.ward)}</span></div>` : ""}${R ? R.myChips(f) : ""}</div>
+      <div class="tbvit"><div class="tbu me" data-tbzone="self"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.me(f, sess.st))}"` : ""}><small class="nm">🛡 ${esc(s.name || "You")}</small>${uBar(hpNow, prev.hp, hpMax, "hp", rd ? rd.meMarks(hpNow, hpMax) : "")}${rd ? rd.meLine : ""}<div class="tbsub">${rBar(mpNow, prev.mp, mpMax, "mp", "MP")}${rBar(spNow, prev.sp, spMax, "sp", "SP")}</div>${f.ward > 0 ? `<div class="tbward" title="Ward: soaks magic until it breaks. Cast it again to refill it."><i style="width:${pc(f.ward, f.wardMax || f.ward)}%"></i><span>🔰 Ward ${Math.round(f.ward)} / ${Math.round(f.wardMax || f.ward)}</span></div>` : ""}${R ? R.myChips(f) : ""}${typeof SPELLFX !== "undefined" ? SPELLFX.meHTML(f) : ""}</div>
         <div class="tbu foe" data-tbzone="foe"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.foe(f, sess.ehpMax))}"` : ""}><small class="nm">${f.e.player ? "⚔" : "☠"} ${esc(f.e.name)}${f.e.archLabel && !String(f.e.name).toLowerCase().includes(f.e.archLabel) ? ` <span class="arch">${esc(f.e.archLabel)}</span>` : ""}${sess.waves > 1 ? ` <span class="arch">${sess.wave}/${sess.waves}</span>` : ""}</small>${uBar(ehpNow, prev.ehp, sess.ehpMax, "hp foe", rd ? rd.foeMarks(ehpNow, sess.ehpMax) : "")}${rd ? rd.foeLine : ""}${statusChips(f)}${rd ? rd.intents : ""}</div></div>
       ${allies}
       <button class="tblog" aria-live="polite" data-tbx="log" aria-label="Fight log, tap for the full log"${log ? "" : " hidden"}>${log}</button>
@@ -700,6 +702,7 @@ const TB = (() => {
     if (scene) ui.lastScene = scene;
     if (typeof TBUI !== "undefined") TBUI.after(el, { hurt: hpNow < prev.hp, hit: ehpNow < prev.ehp, big: prev.hp - hpNow > hpMax * 0.15, mine, pops });
     if (typeof FOEINTENT !== "undefined") { el.classList.toggle("tbplay", playing); try { FOEINTENT.decorate(el, sess); } catch (e) { console.warn("foe targets", e); } }   // crosshairs and the arrow
+    if (typeof FIGHTTIPS !== "undefined") { try { FIGHTTIPS.decorate(el, sess); } catch (e) { console.warn("fight tips", e); } }   // tooltips on everything (fighttips.js)
     if (R) { el.classList.toggle("tbplay", playing); R.low(el, hpNow / Math.max(1, hpMax), !sess.done); }
     if (f.bf && typeof BOSSFIGHT !== "undefined") { try { BOSSFIGHT.decorate(el, sess, newEv, ehpNow, playing); } catch (e) { console.warn("boss", e); } }   // boss bar, phases, big attacks
   }
@@ -769,6 +772,7 @@ const TB = (() => {
     if (f.stagger) out.push(`<i class="st stag" data-tip="${typeof TBTIPS !== "undefined" ? TBTIPS.STATUS.stag : ""}">💫</i>`);
     if (typeof FOEKIT !== "undefined") for (const [c, ic, tip] of FOEKIT.chips(f)) out.push(`<i class="st kit ${c}" data-tip="${esc(tip)}">${ic}</i>`);
     if (typeof COMBO !== "undefined") for (const [c, ic, tip] of COMBO.chips(f)) out.push(`<i class="st ${c}" data-tip="${esc(tip)}">${ic}</i>`);   // followers2: weak/resists
+    if (typeof SPELLFX !== "undefined") { const h = SPELLFX.foeHTML(f); if (h) out.push(h); }   // calm, fear, walls, runes, soul trap (spellfx.js)
     return out.length ? `<div class="tbst">${out.join("")}</div>` : "";
   }
   /* animate just what happened since the last screen: a view of the fight with only those lines (the full fight-scene
@@ -875,7 +879,7 @@ const TB = (() => {
     const roster = [{ k: "host", host: true, player: true, name: f.s.name || "Leader", hp: Math.max(0, Math.round(f.hp)), hpMax: G.maxHealth(f.s), down: f.hp <= 0, look, ward: Math.round(f.ward || 0), form: typeof BEASTPATH !== "undefined" ? BEASTPATH.form(f) : null },
       ...all.map((a) => { a.tbk = a.tbk || (a.pid ? "p:" + a.pid : "a" + ++kseq);
         const o = { k: a.tbk, pid: a.pid || null, name: a.name, hp: Math.max(0, Math.round(a.hp || 0)), hpMax: Math.round(a.maxHp || a.hpMax || a._max || a.hp0 || Math.max(1, a.hp || 1)), down: !!a.down || !f.allies.includes(a),
-          player: !!a.player, follower: !!(a.follower || a.kind === "follower"), role: a.role || null, look: a.look || null };
+          player: !!a.player, follower: !!(a.follower || a.kind === "follower"), role: a.role || null, look: a.look || null, kind: a.kind || null, fid: a.fid || null };
         for (const k of BUFF_KEYS) if (a[k] != null) o[k] = a[k];
         return o; })];
     const evs = sess.ev.slice(-24).map((x, i, arr) => {

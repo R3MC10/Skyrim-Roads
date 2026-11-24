@@ -1,6 +1,6 @@
 """Boss fights (bossfight.js) on the real fight screen.
 python3 bossfight_ui.py 8765   (serve ../game on that port first; on Windows set PYTHONIOENCODING=utf-8)
-Phone 390x844, ink and pixel art (a bandit chief as a dungeon's end boss, and a dragon). Checks: the intro card with
+Phone 390x844, hand-drawn art (a bandit chief as a dungeon's end boss, and a dragon). Checks: the intro card with
 the letterbox bars and the boss's title, the boss bar with its phase marks, a big attack shown a turn ahead (warning
 strip + intent chip), the phase banner, the finishing card, the loot card, reduce motion keeps the cards still, nothing
 scrolls sideways, no page errors. Screenshots go to tests/out_boss/."""
@@ -15,7 +15,7 @@ def ok(x, m):
     print(("ok  " if x else "FAIL"), m)
     if not x: fails.append(m)
 
-START = """([st, kind])=>{ ART.setStyle(st); document.querySelectorAll('#modal').forEach(m=>m.remove());
+START = """([st, kind])=>{ document.querySelectorAll('#modal').forEach(m=>m.remove());
   try { const p=JSON.parse(localStorage.getItem('rotn_prefs')||'{}'); p.tbFast=true; localStorage.setItem('rotn_prefs', JSON.stringify(p)); } catch(e){}
   const S=window.__dbg.save(); S.level=25; S.hpBonus=220; S.gold=5000; for (const k of ['One-Handed','Blocking','Heavy Armor','Restoration','Athletics']) S.skills[k].lvl=50;
   G.setHealth(S,G.maxHealth(S)); S.dungeon=null; S.trip=null;
@@ -137,9 +137,8 @@ async def run(p, style, kind, reduce=False):
 
 async def main():
     async with async_playwright() as p:
-        for style in ["ink", "pixel"]:
+        for style in ["ink"]:
             await run(p, style, "chief")
-        await run(p, "pixel", "dragon")
         await run(p, "ink", "dragon")
         await run(p, "ink", "chief", reduce=True)
     print("FAILED " + str(len(fails)) if fails else "bossfight ui: all ok")

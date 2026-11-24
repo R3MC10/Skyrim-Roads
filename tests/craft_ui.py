@@ -31,7 +31,7 @@ async def main():
     fails = []
     async with async_playwright() as p:
         b = await p.chromium.launch(executable_path=os.environ.get("CHROME") or None, args=["--no-sandbox"])
-        for vw, vh, style, big in [(360, 780, "ink", True), (360, 780, "pixel", False), (412, 915, "ink", False), (412, 915, "pixel", True)]:
+        for vw, vh, style, big in [(360, 780, "ink", True), (360, 780, "ink", False), (412, 915, "ink", False), (412, 915, "ink", True)]:
             tag = f"{vw}_{style}{'_big' if big else ''}"
             ctx = await b.new_context(viewport={"width": vw, "height": vh}, device_scale_factor=1)
             pg = await ctx.new_page(); errs = []
@@ -39,7 +39,6 @@ async def main():
             await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=cq{vw}{style}"); await pg.wait_for_timeout(1200)
             await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Grelka"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
             await pg.evaluate(SETUP)
-            await pg.evaluate(f"ART.setStyle('{style}')")
             await pg.evaluate(f"ACCESS.pref('a11yText','{3 if big else 0}')")
             for _ in range(3): await pg.evaluate(CLEAR); await pg.wait_for_timeout(250)
 

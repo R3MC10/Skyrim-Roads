@@ -74,7 +74,7 @@ async def run(p, style):
 async def main():
     async with async_playwright() as p:
         ok = True
-        for st in ("ink", "pixel"):
+        for st in ("ink",):
             ok &= await run(p, st)
         print("RESULT", "OK" if ok else "FAIL")
 asyncio.run(main())

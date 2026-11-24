@@ -285,6 +285,15 @@ const EXPLORE = (() => {
           if (G.curHealth(s) <= 0) { const dd = G.die(s, "a claw door", t); s.dungeon = null; return { text: "The rings lock. Darts. Many darts.", died: dd.msg, bag: dd.bag }; }
           return { text: `The rings grind and stop. Darts hiss out of the walls (−${x} health).`, stay: true };
         }
+        // a party member replaying a choice the door doesn't take (the leader picked herbs, or is already past it):
+        // herbs and the like do nothing here; anything else means the leader got through, so the door opens and it happens beyond
+        if (choice !== "potion" && !choice.startsWith("game:")) {
+          if (choice === "gatherherb") return { text: "", stay: true };
+          d.clawOpen = true; d.row = r.from[0]; d.col = r.from[1]; d.room = null;
+          const col = d.rows[d.row + 1] ? d.rows[d.row + 1].findIndex((n) => n.type === "boss") : 0;
+          origEnterRoom(s, Math.max(0, col));
+          if (!d.room) return { text: "", stay: true };
+        }
       }
       if (choice === "game:claw" || choice === "game:pillars") return { text: "", stay: true };   // the UI opens the mini-game
       const kind = r?.type, mys = r?.m;

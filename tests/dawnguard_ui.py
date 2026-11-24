@@ -15,7 +15,7 @@ def ok(c, m):
     print(("ok   " if c else "FAIL ") + m)
     if not c: fails.append(m)
 
-SETUP = """(st) => { ART.setStyle(st); const S = window.__dbg.save(); S.gold = 5000; S.level = 18; S.trip = null; S.dungeon = null;
+SETUP = """(st) => { ART.setStyle && ART.setStyle(st); const S = window.__dbg.save(); S.gold = 5000; S.level = 18; S.trip = null; S.dungeon = null;
   S.quests = S.quests || {}; S.quests.dg_awakening = { stage: 3, t: G.now(), done: true };
   S.location = 'Castle Volkihar'; [S.x, S.y] = WORLD.places['Castle Volkihar']; S.discovered = [...new Set([...(S.discovered || []), 'Castle Volkihar', 'Fort Dawnguard', 'Dimhollow Crypt'])];
   G.setHealth(S, G.maxHealth(S)); window.__dbg.publish(); return QUESTS.canJoin(S, 'dg_dawnguard') + ':' + QUESTS.canJoin(S, 'dg_volkihar'); }"""
@@ -25,7 +25,7 @@ async def main():
         kw = {"executable_path": CHROME, "args": ["--no-sandbox"]} if os.path.exists(CHROME) else {}
         b = await p.chromium.launch(**kw)
         errs = []
-        for style in ["ink", "pixel"]:
+        for style in ["ink"]:
             name = f"phone_{style}" + ("" if LANG == "en" else "_" + LANG)
             ctx = await b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2, has_touch=True)
             await ctx.add_init_script(f"localStorage.setItem('rotn_prefs', JSON.stringify({{artStyle:'{style}',obTips:false,lang:'{LANG}'}}))")

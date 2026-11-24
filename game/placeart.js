@@ -1,7 +1,7 @@
 /* Place art: a painted-in-code scene for every place, town section and dungeon room, in the map's ink-on-parchment
-   style (or pixel art, through ART). Cities get their own landmarks; everything else is built from the hold's climate,
+   style. Cities get their own landmarks; everything else is built from the hold's climate,
    the place's kind or dungeon theme, and a seed from its name so no two look exactly alike. Time of day and weather
-   tint outdoor scenes. Pictures are cached per place|daytime|weather|style, so nothing redraws every frame. [OURS] */
+   tint outdoor scenes. Pictures are cached per place|daytime|weather, so nothing redraws every frame. [OURS] */
 const PLACEART = (() => {
   const W = 360, HH = 160, SW = 360, SH = 96;
   const P = ART.PAL;
@@ -355,7 +355,7 @@ const PLACEART = (() => {
           SKY.overlay(g, H, w, h, st, { seed: name, ground: h * 0.7, cover: false }); lit(g, w, h, st, name); frame(g, w, h);
         } finally { curSky = null; }
       };
-      return ART.html(W, HH, draw, { key: `place|${name}|${st.key}|${fest || ""}|${pic ? "pic" : ""}|${typeof LIGHTFX !== "undefined" ? LIGHTFX.key() : ""}`, cls: "scene", alt: name, style: opts.style, painted: !!pic });
+      return ART.html(W, HH, draw, { key: `place|${name}|${st.key}|${fest || ""}|${pic ? "pic" : ""}|${typeof LIGHTFX !== "undefined" ? LIGHTFX.key() : ""}`, cls: "scene", alt: name });
     }
     const md = opts.mood || mood(), wx = opts.weather || weatherId(name);
     const draw = (g, H, w, h) => {
@@ -363,7 +363,7 @@ const PLACEART = (() => {
       d.draw(g, H, w, h, clim); deco(g, H, w, h);
       overlay(g, H, w, h, md, wx, name); frame(g, w, h);
     };
-    return ART.html(W, HH, draw, { key: `place|${name}|${md}|${wx}|${fest || ""}`, cls: "scene", alt: name, style: opts.style });
+    return ART.html(W, HH, draw, { key: `place|${name}|${md}|${wx}|${fest || ""}`, cls: "scene", alt: name });
   }
   /* a slimmer banner for a town section (360×96); null when there's no picture for it */
   const SHOP_PIC = { blacksmith: "forge", enchanter: "wizard" };   // town sections that share a painted banner
@@ -373,11 +373,11 @@ const PLACEART = (() => {
     if (!d && !pic) return "";
     const fest = typeof FXART !== "undefined" ? FXART.festId() : null;
     return ART.html(SW, SH, (g, H, w, h) => { if (pic) ASSETS.cover(g, pic, w, h, 0.5, 0.5); else d(g, H, w, h); if (fest) FXART.festSection(g, H, w, h, fest, id); frame(g, w, h); },
-      { key: `sec|${id}|${fest || ""}|${pic ? "pic" : ""}`, cls: "scene sec", alt: id, style: opts.style, painted: !!pic });
+      { key: `sec|${id}|${fest || ""}|${pic ? "pic" : ""}`, cls: "scene sec", alt: id });
   }
   function room(type, opts = {}) {
     const d = ROOM[type] || ROOM.mystery;
-    return ART.html(SW, SH, (g, H, w, h) => { d(g, H, w, h); frame(g, w, h); }, { key: `room|${type}`, cls: "scene sec", alt: type, style: opts.style });
+    return ART.html(SW, SH, (g, H, w, h) => { d(g, H, w, h); frame(g, w, h); }, { key: `room|${type}`, cls: "scene sec", alt: type });
   }
   return { scene, section, room, drawerFor, climateOf, CITY, THEME, SECTION, ROOM, W, HH };
 })();

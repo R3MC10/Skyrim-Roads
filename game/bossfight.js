@@ -207,7 +207,7 @@ const BOSSFIGHT = (() => {
     }
     return out.length ? out.join(" · ") + " · " : "";
   }
-  const stuck = (f) => f.calmTurns > 0 || f.eParalyzed > 0 || f.stagger;
+  const stuck = (f) => f.calmTurns > 0 || f.eParalyzed > 0 || f.stagger || f.fearTurns > 0 || f.unseen > 0;   // afraid or can't find you: no big attack either
   function turn(sess, go) {
     const f = sess.f, b = f.bf;
     if (!b || !f.kit) return go();
@@ -296,11 +296,11 @@ const BOSSFIGHT = (() => {
 
   // ------------------------------------------------------------------ on screen
   const still = () => { try { if (typeof ACCESS !== "undefined" && ACCESS.reduceMotion) return ACCESS.reduceMotion(); } catch (e) { /* fall through */ } try { return matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return false; } };
-  const styleOf = (el) => (el && /\bpixel\b/.test(el.className || "") ? "pixel" : "ink");
   function overlay(cls, html, ms, el) {
     if (!DOM) return null;
     const o = document.createElement("div");
-    o.className = `bfov ${cls} ${styleOf(el)}${still() ? " still" : ""}`;
+    o.className = `bfov ${cls} ink${still()
+ ? " still" : ""}`;
     o.setAttribute("role", "status"); o.innerHTML = html;
     const kill = () => { if (o.parentNode) o.parentNode.removeChild(o); };
     o.addEventListener("click", kill);

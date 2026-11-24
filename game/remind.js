@@ -2,7 +2,7 @@
    - REMIND.list(S) gathers everything that is ready to collect or running out of time, from the systems the game
      already has: house gardens, homestead wings, the bounty board, a caravan you signed on with, market stall gold,
      courier trades, cleared places filling up again, rumour leads, world events, the seasonal festival, the hall
-     coffer, a resting horse, level-ups and perk points.
+     coffer, a downed horse, level-ups and perk points.
    - A "Today" card (Travel tab) lists them with Go buttons; small number badges sit on the tab buttons.
      Anyone can ask for a tab's count with REMIND.badge(tabId); REMIND.paint() puts the badges on whatever tab buttons
      exist right now (bottom tabs, the 👥 button, the compass), so it doesn't care how the menus are laid out.
@@ -20,7 +20,7 @@ const REMIND = (() => {
     home: ["Garden and homestead goods", true],
     caravan: ["Caravan leaving", true],
     courier: ["Courier trades arriving", true],
-    horse: ["Horse rested", true],
+    horse: ["Horse back on its feet", true],
     events: ["World events starting", true],
     rumours: ["Rumour leads running out", false],
     places: ["Cleared places full again", false],
@@ -93,11 +93,11 @@ const REMIND = (() => {
       }
     });
 
-    // horse resting at the stables (horses.js)
+    // horse downed (horses.js): it limps beside you until it gets back up, or a stablehand tends it
     safe(() => {
-      if (typeof HORSES === "undefined" || !HORSES.away(S)) return;
-      const a = S.horse.away, left = HORSES.readyIn(S, t), nm = S.horse.name || "Your horse";
-      add({ key: "horse", nk: `horse:${Math.round(a.until || 0)}`, kind: "horse", icon: "🐎", title: left > 0 ? `${nm} is resting` : `${nm} is ready to fetch`, sub: `Stables in ${a.town}${left > 0 ? "" : " · fetch your horse"}`, state: left > 0 ? "soon" : "ready", at: a.until, place: a.town, tab: tabAt(a.town, "town"), go: goAt(a.town, "town", { shop: "stables" }) });
+      if (typeof HORSES === "undefined" || !HORSES.downed(S, t)) return;
+      const d = S.horse.down, nm = S.horse.name || "Your horse", town = HORSES.nearestStables([S.x, S.y]);
+      add({ key: "horse", nk: `horse:${Math.round(d.until || 0)}`, kind: "horse", icon: "🐎", title: `${nm} is downed`, sub: `Back up in about ${Math.max(1, Math.ceil((d.until - t) / 60))} min · or a stablehand in ${town}`, state: "soon", at: d.until, place: town, tab: tabAt(town, "town"), go: goAt(town, "town", { shop: "stables" }) });
     });
 
     // caravan you signed on with (caravans.js)
@@ -270,7 +270,7 @@ const REMIND = (() => {
       if (x.state === "soon") {
         at = x.at * 1000;
         if (x.kind === "home") { title = `${x.icon} ${x.title.replace(/^Goods at/, "Goods ready at")}${/garden/.test(x.key) ? " is ripe" : ""}`; body = `${x.place} · tap to go and collect.`; }
-        else if (x.kind === "horse") { title = `🐎 ${(S.horse?.name) || "Your horse"} is rested`; body = `Fetch it from the stables in ${x.place}.`; }
+        else if (x.kind === "horse") { title = `🐎 ${(S.horse?.name) || "Your horse"} is back on their feet`; body = "Ready to ride again."; }
         else if (x.kind === "courier") { title = "📦 A courier is here"; body = x.title.replace(/^A courier is on the way from/, "A trade offer from") + "."; }
         else if (x.kind === "events") { if (/^wev:kc-/.test(x.key)) continue; title = `${x.icon} ${x.title}`; body = "Starting now. Every player can join in."; }
         else if (x.kind === "places") { title = `⚔ ${x.title} is full again`; body = "New foes and new loot."; }

@@ -31,7 +31,7 @@
   let chatDocs = [], chatRaw = [], chatCh = "world", chatDraft = "", chatSeen = 0, chatSeenIds = new Set(), lastChatSend = 0;
   const bootT = Date.now() / 1000;
   let trades = [], ladderDocs = [], ladderCat = "level", tradeSel = [], tradeTo = null, seenTrades = new Set(), lastLadderJson = "";
-  let coopUI = null, ppUI = null, lvUI = null, perkSkill = null, heroSkill = null, alchSel = [], party = null, invites = [], chests = [], news = [], seenAttacks = new Set(), lastCardJson = "", lastAmbushCheck = 0;
+  let coopUI = null, ppUI = null, lvUI = null, pvUI = null, perkSkill = null, heroSkill = null, alchSel = [], party = null, invites = [], chests = [], news = [], seenAttacks = new Set(), lastCardJson = "", lastAmbushCheck = 0;
   const app = $("#app"), tabsEl = $("#tabs");
   const bump = () => { version++; };
 
@@ -58,7 +58,7 @@
     const card = { name: S.name, race: S.race, level: S.level, x: S.x, y: S.y,
       t0: tr ? tr.lastTick : G.now(), moving: !!(tr && tr.status === "travel"), dest: tr ? tr.dest : null,
       path: tr && tr.status === "travel" ? [[S.x, S.y], ...tr.path.slice(tr.idx + 1)].slice(0, 120) : null,
-      speed: G.speed(S), loc: S.location || null, region: WORLD.regionOf([S.x, S.y]), look: HEROART.lookOf(S), party: party?.id || null, hiding: !!S.ambush, facing: S.facing ?? null, ...(typeof SNEAKMODE !== "undefined" ? SNEAKMODE.cardBits(S) : {}), clan: myClan()?.tag || null, ...MP.stats(S), coop: coopUI?.card() || null, ...(typeof PARTY !== "undefined" ? PARTY.cardBits(S, party) : {}), ...(typeof LIVING !== "undefined" ? LIVING.cardBits(S, party) : {}) };
+      speed: G.speed(S), loc: S.location || null, region: WORLD.regionOf([S.x, S.y]), look: HEROART.lookOf(S), ride: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, party: party?.id || null, hiding: !!S.ambush, facing: S.facing ?? null, ...(typeof SNEAKMODE !== "undefined" ? SNEAKMODE.cardBits(S) : {}), clan: myClan()?.tag || null, ...MP.stats(S), coop: coopUI?.card() || null, ...(typeof PARTY !== "undefined" ? PARTY.cardBits(S, party) : {}), ...(typeof LIVING !== "undefined" ? LIVING.cardBits(S, party) : {}) };
     const json = JSON.stringify({ ...card, t0: 0, cur: Math.round(card.cur / 10) });
     if (!force && json === lastCardJson) return;
     lastCardJson = json;
@@ -311,15 +311,17 @@
       <div class="setrow"><span>All sound</span>${seg("mute", [[false, "On"], [true, "Off"]], c.mute)}</div>
       ${S ? `<h3>Your character</h3><div class="chatrow" style="margin-bottom:8px"><input id="myname" maxlength="24" autocomplete="off" value="${esc(S.name)}" aria-label="Your name"><button class="btn" data-act="rename">Change name</button></div><div class="grid2"><button class="btn" data-act="bk" data-bk="openbackup">Back up</button><button class="btn" data-act="bk" data-bk="openrestore">Restore</button></div>` : `<h3>Your character</h3><button class="btn" data-act="bk" data-bk="openrestore" style="width:100%">Restore from a backup</button>`}
       ${typeof I18N !== "undefined" ? `<h3>Language</h3>${I18N.settingRow(seg)}` : ""}
-      <h3>Look</h3><div class="setrow"><span>Art style</span>${seg("artStyle", [["ink", "Hand-drawn"], ["pixel", "Pixel art"]], ART.style())}</div>
+      <h3>Look</h3>
       ${typeof LIGHTFX !== "undefined" ? LIGHTFX.settingsHTML(seg) : ""}
+      ${typeof PAINTEDMAP !== "undefined" ? PAINTEDMAP.settingsHTML(seg) : ""}
       ${typeof MOTION !== "undefined" ? `<div class="setrow"><span>Motion</span>${seg("motion", [["full", "Full"], ["lite", "Lite"], ["off", "Off"]], MOTION.pref())}</div>` : ""}
       ${typeof TB !== "undefined" ? `<h3>Fights</h3><div class="setrow"><span>Foe turns</span>${seg("tbFast", [[false, "Normal speed"], [true, "Fast"]], getPref("tbFast", false))}</div>${typeof COMBATFX !== "undefined" ? `<div class="setrow"><span>Blood</span>${seg("gore", [[true, "On"], [false, "Off"]], getPref("gore", true))}</div>` : ""}` : ""}${typeof FIGHTCTL !== "undefined" && typeof TB !== "undefined" ? FIGHTCTL.settingsHTML(seg) : ""}${typeof FASTQOL !== "undefined" ? FASTQOL.settingsHTML(seg) : ""}
       ${typeof ACCESS !== "undefined" ? ACCESS.settingsHTML(seg) : ""}
       ${typeof ONBOARD !== "undefined" ? ONBOARD.settingsHTML(seg) : ""}
+      ${typeof BUGREPORT !== "undefined" ? BUGREPORT.settingsHTML() : ""}
       <h3>Crafting</h3><div class="setrow"><span>When you craft</span>${seg("craftGame", [[true, "Mini-games"], [false, "Quick craft"]], getPref("craftGame", true))}</div>
       ${S && typeof WFX !== "undefined" ? `<h3>Survival</h3><div class="setrow"><span>Cold meter</span>${seg("survival", [[true, "On (gentle)"], [false, "Off"]], S.survival !== false)}</div>` : ""}
-      <h3>Map</h3><div class="setrow"><span>Map opens</span>${seg("zoomFar", [[false, "Close up"], [true, "All Skyrim"]], getPref("zoomFar", false))}</div>
+      <h3>Map</h3><div class="setrow"><span>Map opens</span>${seg("zoomFar", [[false, "Close up"], [true, "All Skyrim"]], getPref("zoomFar", false))}</div>${typeof PCMAP !== "undefined" ? PCMAP.settingsHTML(seg) : ""}
       ${APP ? `<h3>Phone</h3><div class="setrow"><span>Notifications</span>${seg("notify", [[true, "On"], [false, "Off"]], getPref("notify", true))}</div>${typeof REMIND !== "undefined" ? REMIND.settingsHTML(seg) : ""}
       <p class="mute" style="font-size:13px">Updates download and install by themselves, at a quiet moment (never mid-fight, in a dungeon or a trade).</p>` : ""}`;
   }
@@ -337,9 +339,10 @@
     if (typeof ONBOARD !== "undefined" && ONBOARD.pref(k, b.dataset.v)) { SOUND.fx("click"); if (S) { try { renderPanel(true); } catch { /* title */ } } return true; }
     if (typeof FASTQOL !== "undefined" && FASTQOL.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }   // replay speed, carry on after road events
     if (k === "survival") { if (S) { S.survival = v; if (!v) S.coldV = 0; persist(); try { renderPanel(true); } catch { /* title */ } } SOUND.fx("click"); return true; }
+    if (typeof PAINTEDMAP !== "undefined" && PAINTEDMAP.pref(k, b.dataset.v)) { SOUND.fx("click"); if (S) { try { renderPanel(true); } catch { /* title screen */ } } return true; }   // Graphics → Roads on the map (paintedmap.js)
+    if (typeof PCMAP !== "undefined" && PCMAP.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }   // Map → Map quality (pcmap.js, mapfx.js)
     if (typeof LIGHTFX !== "undefined" && LIGHTFX.pref(k, b.dataset.v)) { SOUND.fx("click"); if (S) { try { renderPanel(true); } catch { /* title screen */ } } return true; }   // Graphics → Lighting
     if (k === "motion") { MOTION.setPref(b.dataset.v); SOUND.fx("click"); return true; }
-    if (k === "artStyle") { ART.setStyle(b.dataset.v); SOUND.fx("click"); if (typeof POLISH !== "undefined") POLISH.texture(); if (S) { try { renderPanel(true); } catch { /* title screen */ } } return true; }
     if (k === "mute") { SOUND.set("mute", v); if ($("#sndBtn")) $("#sndBtn").innerHTML = hudIcon(v ? "mute" : "gear", v ? "🔇" : "⚙") + '<small class="ibl" aria-hidden="true">Menu</small>'; }
     else setPref(k, v);
     SOUND.fx("click");
@@ -487,6 +490,7 @@
   /* phone back button: close what's on top, step back to the map, and only then leave the app */
   window.__ui = {
     back() {
+      if (typeof BUGREPORT !== "undefined" && BUGREPORT.isOpen()) { BUGREPORT.close(); return true; }   // the report window sits on top of everything
       if ($("#title")) { if (titlePage !== "menu" && titlePage !== "press") { titlePage = "menu"; renderTitle(); return true; } return false; }
       if (!S && $("#toTitle")) { app.innerHTML = ""; showTitle("menu"); return true; }
       if (typeof TB !== "undefined" && TB.open) return true;   // a turn-based fight is on: finish it (or Flee)
@@ -510,12 +514,12 @@
       if (typing) return false;
       if ($("#title")) return true;
       if (!S || S.dungeon || S.trip?.event || S.encounter) return false;
-      if (["modal", "tbf", "tbwatch", "lockpick", "pickgame", "sky", "tw", "nickbox", "breach", "dwgame"].some((id) => document.getElementById(id))) return false;
+      if (["modal", "tbf", "tbwatch", "lockpick", "pickgame", "sky", "tw", "nickbox", "breach", "dwgame", "bugrep"].some((id) => document.getElementById(id))) return false;
       if ((coopUI?.runs || []).length) return false;
       return true;
     },
     /* for the Tab compass (tabmenu.js) */
-    openMenu: (p) => openMenu(p), closeMenu: () => closeMenu(), refresh: () => { bump(); renderPanel(true); }, fight: (r) => showFightResult(r),
+    openMenu: (p) => openMenu(p), closeMenu: () => closeMenu(), refresh: () => { bump(); renderPanel(true); }, fight: (r) => showFightResult(r), tbCall: (fn, done) => tbCall(fn, done),   // tbCall: event fights open the turn-by-turn screen (noautoplay.js)
     go(t) { closeMenu(); tab = t; testResult = null; bump(); renderTabs(); renderPanel(true); },
     get tab() { return tab; },
     /* [remind] Go buttons: open a screen ({ tab, shop, jtab, soc, anchor }) or pick a place on the map ({ place }) */
@@ -584,6 +588,11 @@
     };
     $("#centerBtn").onclick = () => { mapTouchedAt = performance.now(); kickMap(); follow = true; if (zoom === 1) zoom = 2.4; $("#zoomBtn").textContent = "－"; };
     bindMap();
+    if (typeof GREET !== "undefined") GREET.mount({ S: () => S, Store, toast, persist: () => persist(), others: () => others, party: () => party, otherPos: (o) => otherPos(o), livePos: () => livePos() });   // Strangers until you greet each other (greet.js)
+    if (typeof PCMAP !== "undefined") PCMAP.mount({ S: () => S, party: () => party, others: () => others, otherPos: (o) => otherPos(o), livePos: () => livePos(), tab: () => tab, skyPage: () => sky?.page,   // PC: the map is the home screen (pcmap.js)
+      view: () => ({ zoom, center, transform: view.transform }), setView: (z, cn) => { zoom = z; center = cn; follow = false; mapTouchedAt = performance.now(); kickMap(); const zb = $("#zoomBtn"); if (zb) zb.textContent = zoom > 1.01 ? "－" : "＋"; },
+      recentre: () => { follow = true; mapTouchedAt = performance.now(); kickMap(); }, kick: () => { mapResized = true; kickMap(); },
+      go: (t) => window.__ui.go(t), openMenu: (p) => openMenu(p), closeMenu: () => closeMenu(), jump: (o) => window.__ui.jump(o), toast });
     if (typeof HUD !== "undefined") HUD.mount($("#mapwrap"), (name) => { if (WORLD.places[name]) { SOUND.fx("click"); selected = name; roamSpot = null; renderPicked(); } });
     $("#sndBtn").onclick = openSound;
     $("#socBtn").onclick = () => { SOUND.fx("click"); closeMenu(); tab = "social"; bump(); renderTabs(); renderPanel(true); $("#side").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" }); };
@@ -600,6 +609,7 @@
     if (typeof DWEMER !== "undefined") DWEMER.mount({ S: () => S, persist, toast, showMessage, renderPanel });   // the lexicon and valve puzzles (dwemer.js)
     if (typeof BLACKREACH !== "undefined") BLACKREACH.mount({ S: () => S, persist, toast, showFightResult, showMessage, renderPanel, tb: tbCall });   // the cavern under Alftand (blackreach.js)
     if (typeof GREATEV !== "undefined") GREATEV.mount({ S: () => S, persist, toast, showFightResult, showMessage, openModal, closeModal, postNews, click: onPanelClick, party: () => party });   // great world events: banner + countdown (greatevents.js)
+    if (typeof HOLDUI !== "undefined") HOLDUI.mount({ S: () => S, persist, toast, showFightResult, postNews, refresh: () => { bump(); renderPanel(true); }, party: () => party });   // player-run holds: Jarl, tax, raids (holdui.js)
     Store.watch("trades", (docs) => onTrades(docs));
     Store.watch("duels", (docs) => onDuels(docs));
     Store.watch("stalls", (docs) => onStalls(docs));
@@ -617,8 +627,15 @@
     Store.watch("friends", (docs) => onFriends(docs));
     Store.watch("dms", (docs) => onDMs(docs));
     if (Store.online) Store.put("friends", S.id, SOCIAL.record(S));
-    Store.watch("clans", (docs) => { const before = CLANS.invitesFor(S.id).length; CLANS.set(docs, null); if (CLANS.invitesFor(S.id).length > before && !myClan()) toast(`🏴 You're invited to join a clan. Open 👥 Social → Realm.`); bump(); renderTabs(); });
-    Store.watch("clanmem", (docs) => { CLANS.set(null, docs); bump(); });
+    Store.watch("clans", (docs) => { const before = myClanInvites().length; CLANS.set(docs, null); if (myClanInvites().length > before && !myClan() && typeof INVITES === "undefined") toast(`🏴 You're invited to join a clan. Open 👥 Social → Realm.`); bump(); renderTabs(); invRefresh(); });
+    Store.watch("clanmem", (docs) => {
+      CLANS.set(null, docs); bump();
+      const c = myClan();   // the founder hears "Kacper declined your clan invite." and tidies the invite list
+      if (c && c.founder === S.id && typeof INVITES !== "undefined") for (const n of INVITES.clanNotes(docs, c.id, seenNos, bootT - 60)) {
+        if (n.fresh) toast("🏴 " + n.text);
+        const cur = CLANS.byId(c.id); if (cur && (cur.invites || []).includes(n.id)) Store.put("clans", S.id, (({ id, ...x }) => ({ ...x, invites: (x.invites || []).filter((i) => i !== n.id) }))(cur));
+      }
+    });
     Store.watch("chat", (docs) => onChat(docs));
     Store.watch("homes", (docs) => { homeDocs = docs; if (tab === "town") bump(); });
     if (typeof HSROOMS !== "undefined") HSROOMS.mount({ party: () => party, homes: () => homeDocs });   // party members visit their leader's homestead
@@ -635,6 +652,7 @@
     Store.watch("parties", (docs) => {
       party = docs.find((p) => p.members?.some((m) => m.id === S.id)) || null;
       invites = docs.filter((p) => p.invites?.includes(S.id) && !p.members.some((m) => m.id === S.id));
+      if (typeof INVITES !== "undefined") { for (const m of INVITES.notes(docs, S.id, seenNos, bootT - 60, "party")) toast("👥 " + m); invRefresh(); }   // "Kacper declined your party invite."
       if (ppUI) ppUI.onParty();
       if ((tab === "log" || tab === "social")) bump();
       if (tab === "map") renderPanel(false);
@@ -642,8 +660,10 @@
     if (typeof COOP !== "undefined") {   // co-op dungeons (coop.js)
       coopUI = COOP.ui({ S: () => S, toast, esc, Store, others: () => others, party: () => party, cardOf, persist, publishCard, renderDungeon, renderPanel, bump,
         sendDm: (id, name, text) => { const r = SOCIAL.dm(S, id, name, text); if (!r.err && Store.online) Store.put("dms", r.id, r.doc); } });
-      Store.watch("runs", (docs) => coopUI.onRuns(docs));
+      Store.watch("runs", (docs) => { coopUI.onRuns(docs); if (typeof INVITES !== "undefined") { for (const m of INVITES.notes(docs, S.id, seenNos, bootT - 60, "coop")) toast("⚔ " + m); invRefresh(); } });
     }
+    if (typeof INVITES !== "undefined") INVITES.mount({ list: inviteList, answer: answerInviteCard, toast, onNew: () => SOUND.fx("page"),   // Accept / Decline cards on top (invites.js)
+      openSocial: () => { closeMenu(); tab = "social"; socTab = "party"; bump(); renderTabs(); renderPanel(true); } });
     if (typeof PARTYPLAY !== "undefined") {   // party play: the leader leads, ready checks, shared spoils (partyplay.js)
       ppUI = PARTYPLAY.ui({ S: () => S, party: () => party, others: () => others, cardOf, otherPos: (c) => otherPos(c), livePos: () => livePos(), Store, toast, esc,
         persist, publishCard, renderPanel, bump, travelNow: (name, pos) => travelTo(name, true, pos), modalOpen: () => !!$("#modal"), openModal, closeModal,
@@ -654,6 +674,12 @@
         nameOf: (id) => cardOf(id)?.name || party?.members?.find((m) => m.id === id)?.name, dungeonAct: (c, replay) => dungeonAct(c, replay) });
       Store.watch("runs", () => { lvUI.onRuns(); if (S.dungeon && $("#dun")) renderDungeon(); });
       Store.watch("lvotes", (docs) => lvUI.onVotes(docs));
+    }
+    if (typeof PARTYVOTE !== "undefined" && coopUI) {   // dungeon choices are a party vote, faces by the picks (partyvote.js)
+      pvUI = PARTYVOTE.ui({ S: () => S, runs: () => coopUI.runs, Store, toast, esc, cardOf, persist, renderDungeon,
+        online: (id) => { const c = cardOf(id); return !!c && (typeof SOCIAL === "undefined" || SOCIAL.status(c).online); },
+        choose: (kind, key) => (kind === "way" ? dungeonRoom(key) : dunChoice(key)) });
+      Store.watch("runs", () => pvUI.onRuns());
     }
     if (typeof DGAMES !== "undefined") DGAMES.mount({ S: () => S, party: () => party, Store });   // watch the party leader's dungeon mini-games live
     Store.watch("chests", (docs) => { const had = chests.length; chests = docs.filter((c) => c.members?.some((m) => m.id === S.id)); if (chests.length > had) toast("💰 A party chest is waiting. Open 👥 Social → Party."); if (tab === "log") bump(); });
@@ -727,7 +753,7 @@
     if (typeof TB !== "undefined" && TB.open) return;   // the world waits while you play out a turn-by-turn fight
     const t = G.now();
     { const cm = CARAVANS.tick(S, t); if (cm) { persist(true); toast(cm); if (S.caravanJob === null) Store.change("guards", `${lastJobId}-${S.id}`, (d) => (d && d.status === "signed" ? { ...d, status: "left" } : d)); bump(); } lastJobId = S.caravanJob?.id || lastJobId; }
-    tickTimers(t); hallTick(t); discoveryToast(); if (lvUI && Math.floor(t) % 3 === 0) lvUI.tick(); if (Math.floor(t) % 5 === 0) courierCheck();
+    tickTimers(t); hallTick(t); discoveryToast(); if (lvUI && Math.floor(t) % 3 === 0) lvUI.tick(); if (pvUI) pvUI.tick(); if (Math.floor(t) % 5 === 0) courierCheck();
     if (typeof LIVING !== "undefined") { const lm = LIVING.tick(S, t); if (lm) { toast(lm); bump(); } }   // deeds remembered, whispers come true, the party leader's world (livingworld.js)
     if (typeof IMM !== "undefined") { IMM.tick(S); if (S.lastSeen && t - S.lastSeen > 3600 && !S.trip?.status) IMM.loading("Welcome back to Skyrim"); S.lastSeen = t; }
     if (S.trip?.status === "travel") {
@@ -838,7 +864,7 @@
     const qp = questPos(), qa = qp ? QUESTS.tracked(S) : null;
     const raid = WEVENTS.activeRaid();
     HUD.compass({ pos, target, W, H, places: [...near.slice(0, 8), ...unk.slice(0, 3)],
-      players: others.filter((o) => !o.hiding && sameMap(o) && seesHero(o)).map((o) => ({ name: o.name, pos: otherPos(o) })).filter((o) => G.pxDist(pos, o.pos) < 220).slice(0, 8),
+      players: others.filter((o) => !o.hiding && sameMap(o) && seesHero(o)).map((o) => ({ name: typeof GREET !== "undefined" ? GREET.label(S, o, party) : o.name, pos: otherPos(o) })).filter((o) => G.pxDist(pos, o.pos) < 220).slice(0, 8),
       quest: qp ? { pos: qp, name: qa ? QUESTS.target(qa.st) : "" } : null,
       raid: raid && WORLD.places[raid.town] ? { town: raid.town, pos: WORLD.places[raid.town] } : null });
     if (typeof HUD2 !== "undefined") { const tq = QUESTS.tracked(S); HUD2.objective(tq && tq.st ? { title: tq.st.title, where: QUESTS.target(tq.st) } : null); }   // hud2.js: the objective line under the compass
@@ -876,9 +902,9 @@
     const mins = tripMinutesLeft(), total = Math.max(mins, tr.total || mins), p = pct(total - mins, total);
     const here = livePos(), ground = Terrain.NAMES[Terrain.typeAtPos(here)], sp = Terrain.speedAt(here);
     const pace = sp >= 1.2 ? "fast going" : sp >= 0.95 ? "steady" : sp >= 0.6 ? "slow going" : "very slow going";
-    const html = `<div class="trip"><div class="row"><b>${esc(tr.origin)} → ${esc(tr.destName)}</b><span class="num sub">${fmtMin(mins)}</span>${!tr.carriage && !tr.boat && HORSES.present(S) ? `<button class="btn sm" data-act="hride">${HORSES.riding(S) ? "Walk" : "Ride"}</button>` : ""}${tr.follow ? `<span class="chip ppfollow">⚑ following</span>` : `<button class="btn sm" data-act="stop">Stop</button>`}</div>
+    const html = `<div class="trip"><div class="row"><b>${esc(tr.origin)} → ${esc(tr.destName)}</b><span class="num sub">${fmtMin(mins)}</span>${!tr.carriage && !tr.boat && HORSES.present(S) && HORSES.downed(S) ? `<span class="chip hdownchip">🐴 Downed</span>` : ""}${!tr.carriage && !tr.boat && HORSES.present(S) && !HORSES.downed(S) ? `<button class="btn sm" data-act="hride">${HORSES.riding(S) ? "Walk" : "Ride"}</button>` : ""}${tr.follow ? `<span class="chip ppfollow">⚑ following</span>` : `<button class="btn sm" data-act="stop">Stop</button>`}</div>
       <div class="bar"><i style="background:var(--frost)"></i></div>
-      <div class="sub">${tr.boat ? `⛵ aboard ${esc(tr.ship || "the ship")} · nothing attacks a ship at sea` : tr.carriage ? "🐎 by carriage · safe on the Jarl's roads" : `${esc(ground)} · ${pace} · ${HORSES.riding(S) ? `riding ${esc(S.horse.name)}` : HORSES.present(S) ? `walking beside ${esc(S.horse.name)}` : G.overweight(S) ? "too heavy to run" : "on foot"}`}${S.follower ? ` · ${esc(TOWNS.FOLLOWERS[S.follower.id][0])} with you` : ""}</div>
+      <div class="sub">${tr.boat ? `⛵ aboard ${esc(tr.ship || "the ship")} · nothing attacks a ship at sea` : tr.carriage ? "🐎 by carriage · safe on the Jarl's roads" : `${esc(ground)} · ${pace} · ${HORSES.riding(S) ? `riding ${esc(S.horse.name)}` : HORSES.present(S) && HORSES.downed(S) ? `on foot · ${esc(S.horse.name)} is downed and limps beside you` : HORSES.present(S) ? `walking beside ${esc(S.horse.name)}` : G.overweight(S) ? "too heavy to run" : "on foot"}`}${S.follower ? ` · ${esc(TOWNS.FOLLOWERS[S.follower.id][0])} with you` : ""}</div>
       ${tr.log.length ? `<div class="sub">${esc(tr.log[0])}</div>` : `<div class="sub">The trip keeps going while the page is closed.</div>`}</div>`;
     put(html.replace(/<\/div>$/, `<div class="tripvig"></div></div>`));
     const bar = el.querySelector(".bar i"); if (bar) bar.style.width = `${p}%`;
@@ -921,10 +947,11 @@
     if (!mapResized && (!mapOnScreen || mapCovered())) return 200;
     const moving = S?.trip?.status === "travel" || performance.now() - mapTouchedAt < 1500;
     const wx = WEVENTS.weather(livePos()).id, weatherAnim = !reduceMotion && !["clear", "cloudy", "fog"].includes(wx);
-    const mapAnim = (typeof MAPART !== "undefined" && MAPART.active()) || (typeof MOTION !== "undefined" && MOTION.mapBusy());   // a discovery burst playing
+    const mapAnim = (typeof MAPART !== "undefined" && MAPART.active()) || (typeof MOTION !== "undefined" && MOTION.mapBusy()) || (typeof MAPHERO !== "undefined" && MAPHERO.active());   // a discovery burst or an arrival puff playing   // a discovery burst playing
     const raidNow = typeof RAIDART !== "undefined" && WEVENTS.activeRaid();
     const fxNow = typeof FXART !== "undefined" && S ? FXART.state(S) : null;   // spell and shout effects on the map
-    const gap = moving || mapAnim ? 33 : weatherAnim || (raidNow && !reduceMotion) || (fxNow?.anim && !reduceMotion) ? 66 : 125;
+    const PC = typeof PCMAP !== "undefined" && PCMAP.on();   // PC map home screen (pcmap.js): smooth pan and zoom, living map (mapfx.js)
+    const gap = PC && performance.now() - mapTouchedAt < 400 ? 16 : moving || mapAnim ? 33 : PC && typeof MAPFX !== "undefined" && MAPFX.busy(reduceMotion) ? 50 : weatherAnim || (raidNow && !reduceMotion) || (fxNow?.anim && !reduceMotion) ? 66 : 125;
     if (!mapResized && ts - lastFrame < gap - 4) return gap - (ts - lastFrame);
     lastFrame = ts; mapResized = false;
     const pos = livePos();
@@ -937,11 +964,11 @@
       player: pos, name: S.name, look: myLook(), moving: S.trip?.status === "travel", trail: S.trip?.trail, dest: S.trip ? { pos: S.trip.dest, name: S.trip.destName, roam: !!S.trip.roam } : null, spot: selected === "__spot" ? roamSpot : null,
       route: S.trip && !S.trip.boat ? (S.trip.status === "travel" ? S.trip.path.slice(S.trip.idx + 1) : [S.trip.dest]) : null,
       sight: typeof SNEAKMODE !== "undefined" && !S.location && !S.dungeon ? SNEAKMODE.SIGHT_PX : 0, sneakRing: typeof SNEAKMODE !== "undefined" && S.sneak ? SNEAKMODE.myRange(S) : 0,
-      discovered: S.discovered, explored: [...S.explored, pos], others: others.filter((o) => sameMap(o) && seesHero(o)).map((o) => ({ name: (o.clan ? `[${o.clan}] ` : "") + o.name + (party?.members.some((m) => m.id === o.id) ? " ⚑" : ""), pos: otherPos(o), look: o.look, race: o.race, party: !!party?.members.some((m) => m.id === o.id) })),
+      discovered: S.discovered, explored: [...S.explored, pos], atPlace: !!S.location, others: others.filter((o) => sameMap(o) && seesHero(o)).map((o) => ({ name: typeof GREET !== "undefined" ? GREET.label(S, o, party) : (o.clan ? `[${o.clan}] ` : "") + o.name + (party?.members.some((m) => m.id === o.id) ? " ⚑" : ""), stranger: typeof GREET !== "undefined" && !GREET.knows(S, o.id, party), atPlace: !!o.loc, pos: otherPos(o), look: o.look, race: o.race, id: o.id, moving: !!o.moving, horse: typeof o.ride === "string" ? o.ride : null, party: !!party?.members.some((m) => m.id === o.id) })),
       rulers: Object.entries(WARS.rulers(S)).map(([hold, c]) => ({ hold, color: c.colors[0] })),
       banners: CLANS.banners(homeDocs, S, VISITS.record(S)).filter((b) => WORLD.places[b.town]).map((b) => ({ ...b, pos: WORLD.places[b.town].slice(0, 2) })),
       cleared: clearedLeft(), bags: visibleBags(), selected: selected && WORLD.places[selected] ? selected : null, t: ts / 1000, zoom, center, reduceMotion, weather: WEVENTS.weather(pos).id, quest: questPos(), mask: typeof PRIESTS !== "undefined" ? PRIESTS.marker(S)?.pos : null, tmaps: typeof EXPLORE !== "undefined" ? EXPLORE.marks(S) : [], rumours: typeof RUMOURS !== "undefined" ? RUMOURS.marks(S) : [], herbs: typeof GATHER !== "undefined" ? GATHER.marks(S) : [], pins: (S.pins || []).map((p) => ({ pos: [p.x, p.y], label: `${p.icon} ${p.label}`, on: selected === "__pin:" + p.id })),
-      routes: party ? others.filter((o) => o.moving && o.path?.length > 1 && party.members.some((m) => m.id === o.id)).map((o) => ({ path: o.path, from: otherPos(o), name: o.name })) : [], horse: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, cart: CARAVANS.hasCart(S), guards: typeof GUARDS !== "undefined" ? GUARDS.visible(S).map((p) => (p.visible || !myCone || !VISION.inCone(myCone, p.pos) ? p : { ...p, visible: true })) : null, caravans: CARAVANS.all().map((c) => { const cp = CARAVANS.pos(c); return { cp, c }; }).map(({ cp, c }) => ({ pos: cp, visible: G.pxDist(cp, pos) < 160 || (myCone && VISION.inCone(myCone, cp)) || S.discovered.some((n) => WORLD.places[n] && ["city", "town"].includes(WORLD.places[n][2]) && G.pxDist(cp, WORLD.places[n]) < 45), khajiit: c.line.khajiit, moving: c.phase === "road", mine: S.caravanJob?.id === c.id, id: c.id, near: typeof CVROAD !== "undefined" && c.phase === "road" && CVROAD.canMeet(S) && G.pxDist(cp, pos) <= CVROAD.TAP_RANGE, label: c.line.name.replace(/'s caravan$/, "") })).filter((c) => !(c.mine && S.trip?.caravan)), hall: S.discovered.includes(HALL.TOWN) || known(HALL.TOWN) ? { pos: HALL.POS, label: `Hall of the North · ${HALL.progress().name}` } : null,
+      routes: party ? others.filter((o) => o.moving && o.path?.length > 1 && party.members.some((m) => m.id === o.id)).map((o) => ({ path: o.path, from: otherPos(o), name: o.name })) : [], horse: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, gallop: HORSES.riding(S) && S.trip?.status === "travel" && Terrain.speedAt(pos) >= 1.2, cart: CARAVANS.hasCart(S), guards: typeof GUARDS !== "undefined" ? GUARDS.visible(S).map((p) => (p.visible || !myCone || !VISION.inCone(myCone, p.pos) ? p : { ...p, visible: true })) : null, caravans: CARAVANS.all().map((c) => { const cp = CARAVANS.pos(c); return { cp, c }; }).map(({ cp, c }) => ({ pos: cp, visible: G.pxDist(cp, pos) < 160 || (myCone && VISION.inCone(myCone, cp)) || S.discovered.some((n) => WORLD.places[n] && ["city", "town"].includes(WORLD.places[n][2]) && G.pxDist(cp, WORLD.places[n]) < 45), khajiit: c.line.khajiit, moving: c.phase === "road", mine: S.caravanJob?.id === c.id, id: c.id, near: typeof CVROAD !== "undefined" && c.phase === "road" && CVROAD.canMeet(S) && G.pxDist(cp, pos) <= CVROAD.TAP_RANGE, label: c.line.name.replace(/'s caravan$/, "") })).filter((c) => !(c.mine && S.trip?.caravan)), hall: S.discovered.includes(HALL.TOWN) || known(HALL.TOWN) ? { pos: HALL.POS, label: `Hall of the North · ${HALL.progress().name}` } : null,
     };
     WorldMap.draw($("#map"), view);
     return gap;
@@ -970,7 +997,8 @@
     const c = $("#map"), pts = new Map();
     let down = null, moved = false, pinch = null;
     const setZoom = (z, fx, fy) => {     // zoom keeping the point under the fingers still
-      z = Math.max(1, Math.min(6, z));
+      const PC = typeof PCMAP !== "undefined" && PCMAP.on();   // on a PC you can zoom out to all of Skyrim (pcmap.js)
+      z = Math.max(PC ? PCMAP.minZoomFor(c) : 1, Math.min(PC ? PCMAP.MAXZ : 6, z));
       if (view.transform && fx != null) {
         const { k, ox, oy } = view.transform, mx = (fx - ox) / k / WorldMap.W, my = (fy - oy) / k / WorldMap.H;
         const r = c.getBoundingClientRect(), nk = k * z / zoom;
@@ -1005,7 +1033,8 @@
       if (!down) return;
       const dx = e.clientX - down.x, dy = e.clientY - down.y;
       if (Math.hypot(dx, dy) > 8) { moved = true; clearTimeout(press); }
-      if (moved && zoom > 1 && view.transform) { follow = false; center = [down.c[0] - dx / (WorldMap.W * view.transform.k), down.c[1] - dy / (WorldMap.H * view.transform.k)]; }
+      if (moved && (zoom > 1 || (typeof PCMAP !== "undefined" && PCMAP.on())) && view.transform) { follow = false; center = [down.c[0] - dx / (WorldMap.W * view.transform.k), down.c[1] - dy / (WorldMap.H * view.transform.k)];
+        if (typeof PCMAP !== "undefined" && PCMAP.on()) center = PCMAP.clampCenter(center, zoom, c.clientWidth, c.clientHeight, center[1] >= 1.5 ? WORLD.SOL_OY : 0); }
     });
     const up = (e) => {
       pts.delete(e.pointerId);
@@ -1015,15 +1044,22 @@
       const wasMove = moved; down = null; clearTimeout(press);
       if (wasMove || pressed || !view.transform || e.type === "pointercancel") return;
       const r = c.getBoundingClientRect();
+      if (typeof GREET !== "undefined") { GREET.close(); if (GREET.tap(view, e.clientX - r.left, e.clientY - r.top)) return; }   // another hero: their card, Greet (greet.js)
       const cvTap = typeof CVROAD !== "undefined" && S.trip?.status === "travel" ? CVROAD.hit(view.caravans, screenToWorld(e.clientX - r.left, e.clientY - r.top), WorldMap.W, WorldMap.H, 24 / view.transform.k) : null;
       if (cvTap) return meetCaravan(cvTap.id);   // tapped a caravan's wagons while travelling: stop and meet them
       const pin = pinAt(e.clientX - r.left, e.clientY - r.top);
       selected = pin ? "__pin:" + pin.id : WorldMap.placeAt(view, e.clientX - r.left, e.clientY - r.top, known);
       if (!selected) { const w = screenToWorld(e.clientX - r.left, e.clientY - r.top); if (WORLD.onMap(w)) { roamSpot = w; selected = "__spot"; } }
+      if (selected && selected === S.location && typeof PCMAP !== "undefined" && PCMAP.on()) { selected = null; renderPicked(); tab = "town"; bump(); renderTabs(); renderPanel(true); PCMAP.refresh(); return; }   // PC: the town you're in opens its places beside the map
       renderPicked();
     };
     c.addEventListener("pointerup", up); c.addEventListener("pointercancel", up);
-    c.addEventListener("wheel", (e) => { e.preventDefault(); mapTouchedAt = performance.now(); kickMap(); const r = c.getBoundingClientRect(); setZoom(zoom * (e.deltaY < 0 ? 1.15 : 1 / 1.15), e.clientX - r.left, e.clientY - r.top); }, { passive: false });
+    c.addEventListener("dblclick", (e) => {   // PC: double-click a place to set off at once
+      if (typeof PCMAP === "undefined" || !PCMAP.on() || !view.transform) return;
+      const r = c.getBoundingClientRect(), n = WorldMap.placeAt(view, e.clientX - r.left, e.clientY - r.top, known);
+      if (n && n !== S.location && !S.trip && !S.dungeon) travelTo(n);
+    });
+    c.addEventListener("wheel", (e) => { if (typeof PCMAP !== "undefined" && PCMAP.wheel(e, c)) return; e.preventDefault(); mapTouchedAt = performance.now(); kickMap(); const r = c.getBoundingClientRect(); setZoom(zoom * (e.deltaY < 0 ? 1.15 : 1 / 1.15), e.clientX - r.left, e.clientY - r.top); }, { passive: false });
   }
   let roamSpot = null;
   function renderPicked() {
@@ -1050,7 +1086,7 @@
     const mins = here ? 0 : G.minutesTo(S, [x, y]);
     el.classList.remove("hide");
     el.innerHTML = `<div class="t"><b>${esc(selected)}</b><span>${KIND[kind]} · ${esc(G.holdAt([x, y]))}${S.discovered.includes(selected) ? "" : " · not yet visited"}${here ? " · you are here" : ` · ${fmtMin(mins)}`}</span></div>
-      ${here ? (DUNGEONS.enterable(selected) && !S.trip ? `<button class="btn danger" data-act="enter">Go inside</button>` : "") : `<button class="btn pri" data-act="go" data-place="${esc(selected)}">Travel</button>`}<button class="iconbtn" data-act="unpick" aria-label="Close">✕</button>`;
+      ${here ? (DUNGEONS.enterable(selected) && !S.trip ? `<button class="btn danger" data-act="enter">Go inside</button>` : "") + (SMITH.MINES[selected] && !S.trip ? `<button class="btn" data-act="mine">⛏ Mine ore</button>` : "") : `<button class="btn pri" data-act="go" data-place="${esc(selected)}">Travel</button>`}<button class="iconbtn" data-act="unpick" aria-label="Close">✕</button>`;
   }
 
   // ------------------------------------------------------------ travel
@@ -1124,7 +1160,12 @@
       </div><p class="sub" style="margin-bottom:0">${typeof TB !== "undefined" && TB.enabled() ? `You play the fight turn by turn` : `Fighting uses ${aiOn() ? `<b>Smart AI</b> (${esc(S.loadout)} gear)` : `your <b>${esc(S.loadout)}</b> tactics`}`}.${typeof SNEAK2 !== "undefined" ? "" : " A hidden start gives a sneak attack."}</p>${typeof SNEAK2 !== "undefined" ? SNEAK2.noteHTML(S, e, typeof AISET !== "undefined" ? AISET.get(G.loadout(S)).sneak : "safe", esc) : ""}`, "enc");
     ppUI?.onModal();   // a party is with you: they see this too and vote (partyplay.js)
   }
-  const skillLine = (r) => (r.skills || []).length ? `<p class="sub">📈 ${r.skills.map(esc).join(" · ")}</p>` : "";
+  /* the lines under a result: skill-ups and level-ups play as toasts (skillup.js); what's left (a follower's words) gets its own line */
+  const skillsHTML = (list) => {
+    if (typeof SKILLUP === "undefined") return (list || []).length ? `<p class="sub">📈 ${list.map(esc).join(" · ")}</p>` : "";
+    return SKILLUP.others(list).map((l) => `<p class="sub${/^💬/.test(l) ? " su-say" : ""}">${esc(l)}</p>`).join("");
+  };
+  const skillLine = (r) => skillsHTML(r.skills);
   function openEvent(note) {
     const ev = S.trip?.event;
     if (!ev) return;
@@ -1203,7 +1244,7 @@
     if (r.fight) { const inf = CURSE.maybeInfect(S, r.fight.e); if (inf) { persist(); setTimeout(() => toast(inf), 1800); } }
     if (r.fight && !r.died && !r.fled && !r.fight.nonlethal) { tally("foes"); warPoint("fight", G.holdAt(livePos())); if ((r.fight.e?.tags || []).includes("undead")) festCount("undead"); }
     if (r.fight || r.died) SOUND.fight(r); else if (/potion|drink/i.test(r.text || "")) SOUND.fx("potion");
-    const skills = (r.skills || []).length ? `<p class="sub">📈 ${r.skills.map(esc).join(" · ")}</p>` : "";
+    const skills = skillsHTML(r.skills);
     if (r.died) {
       openModal(`<h2>💀 Defeated</h2><p>${esc(r.text)}</p>${r.fight ? fightLog(r.fight) : ""}<p>${esc(r.died)}</p><button class="btn danger" data-act="close" style="width:100%">Continue</button>`, "enc");
       return;
@@ -1265,9 +1306,8 @@
       const stock0 = typeof TOMES !== "undefined" ? TOMES.stockAt(S.location, shop, S) : D.SHOP_STOCK[shop] || [], stock = typeof SHOPCAP !== "undefined" ? SHOPCAP.filter(stock0) : stock0, cs = catStrip(shopCat, "shopcat", stock);
       return head + cs.bar + mk + (typeof SPELLBOOK !== "undefined" ? SPELLBOOK.shopNote(S, S.location, shop) + (shop === "wizard" ? SPELLBOOK.ritualHTML(S) : "") : "") + stock.filter(cs.ok).map((i) => shopRow(i)).join("");
     }
-    const eq = new Set(Object.values(G.loadout(S).equipment || {}));
     const fence = shop === "fence" || (typeof TOWNS !== "undefined" && TOWNS.canFence(S));
-    const sellable = S.inv.filter((r) => !eq.has(r.id) && D.ITEMS[r.item] && !["golden_claw", "dragonstone"].includes(r.item) && (!r.stolen || fence)), cs = catStrip(shopCat, "shopcat", sellable.map((r) => r.item));
+    const sellable = G.handable(S).filter((r) => D.ITEMS[r.item] && !["golden_claw", "dragonstone"].includes(r.item) && (!r.stolen || fence)), cs = catStrip(shopCat, "shopcat", sellable.map((r) => r.item));
     const rows = sellable.filter((r) => cs.ok(r.item))
       .map((r) => ({ r, p: G.sellPrice(S, r) })).sort((a, b) => b.p * b.r.qty - a.p * a.r.qty);
     const ok = open && !wanted;
@@ -1317,11 +1357,11 @@
 
   function mineHTML(l) {
     const m = SMITH.MINES[l]; if (!m) return "";
-    const left = SMITH.mineLeft(S, l), pick = SMITH.count(S, "pickaxe") > 0;
+    const left = SMITH.mineLeft(S, l), why = left ? "" : SMITH.mineBlock(S, l);   // tapping still says why, so the button stays live
     const ores = [...new Set(m[1].map(([o]) => D.ITEMS[o].name))].join(", ");
     return `<div class="card"><h3>⛏ ${esc(m[0])}</h3><p class="sub" style="margin-top:0">Ore here: ${esc(ores)}. Sometimes a gem.</p>
       ${left ? `<div class="refill"><div class="t">The veins are bare. They grow back in ${cdSpan(G.now() + left)}</div></div>`
-        : `<button class="btn pri" data-act="mine" style="width:100%" ${pick ? "" : "disabled"}>${pick ? "Mine the veins" : "You need a pickaxe (blacksmiths and general stores)"}</button>`}</div>`;
+        : `<button class="btn ${why ? "" : "pri"}" data-act="mine" style="width:100%">⛏ Mine ore</button>${why ? `<p class="sub mine-why">${esc(why)}</p>` : ""}`}</div>`;
   }
   function placeHere() {
     const l = S.location;
@@ -1372,7 +1412,7 @@
     if (d.done) main = `<div class="card"><h3>🏆 ${esc(d.place)} is cleared</h3>${DUNART.lootStrip(d.gold, d.found)}<p class="sub">Found so far: ${d.gold} gold${d.found.length ? ", " + d.found.map(esc).join(", ") : ""}.</p><button class="btn pri" data-act="dleave" style="width:100%">Head back outside</button></div>`;
     else if (r) {
       const e = r.enemy;
-      main = `<div class="card ${e ? "foe" : ""} ${r.type === "rest" ? "rest" : ""}">${PLACEART.room(r.type)}<h3>${DUNGEONS.ICON[r.type]} ${e ? esc(e.name) : DUNGEONS.LABEL[r.type]}</h3><p>${esc(r.text)}</p>
+      main = `<div class="card ${e ? "foe" : ""} ${r.type === "rest" ? "rest" : ""}">${typeof DUNROOMS !== "undefined" ? DUNROOMS.room(r.type, d.theme) : PLACEART.room(r.type)}<h3>${DUNGEONS.ICON[r.type]} ${e ? esc(e.name) : DUNGEONS.LABEL[r.type]}</h3><p>${esc(r.text)}</p>
         ${e ? `<div class="vital"><small><span>${esc(e.name)}</span><span class="num">${e.hp}/${e.health} · hits for ~${Math.round(e.damage)}</span></small><div class="bar"><i style="width:100%;background:var(--ember)"></i></div></div>` : ""}
         <div class="evc">${DUNGEONS.roomChoices(S).map(([c, label]) => `<button class="btn ${["fight", "pick", "rest", "read", "pray", "open", "loot", "burn", "dash"].includes(c) || c.startsWith("set:") ? (e ? "danger" : "pri") : ""}" data-act="dact" data-c="${esc(c)}">${esc(label)}</button>`).join("")}</div>
         ${e ? `<p class="sub" style="margin-bottom:0">${typeof TB !== "undefined" && TB.enabled() ? `You play the fight turn by turn` : `Fighting uses ${aiOn() ? `<b>Smart AI</b> (${esc(S.loadout)} gear)` : `your <b>${esc(S.loadout)}</b> tactics`}`}.</p>` : ""}</div>`;
@@ -1382,17 +1422,20 @@
         <div class="evc">${nx.map((c) => `<button class="btn ${row[c].type === "boss" ? "danger" : ""}" data-act="droom" data-c="${c}">${DUNGEONS.ICON[row[c].type]} ${DUNGEONS.LABEL[row[c].type]}</button>`).join("")}</div></div>`;
     }
     const lvRun = lvUI && d.run && LOOTVOTE.partyRun(coopUI?.runs.find((x) => x.id === d.run));
-    if (coopUI && d.run) { if (!d.done && !r && coopUI.waiting()) main = coopUI.waitHTML(); else if (!d.done && !r) main = coopUI.behindHTML() + main; if (d.done) main += lvRun ? `<div class="card coop"><h3>🎲 Party loot</h3><p class="sub">Everything the party found is in one pile. The vote opens for everyone now: tap Want on what you'd like. Gold is split evenly.</p></div>` : coopUI.chestHTML(); }
-    if (lvRun && r && !d.done && lvUI.memberLocked()) main = lvUI.lockedHTML() + main.replace(/<div class="evc">[\s\S]*?<\/div>/, "");
-    el.innerHTML = `<div class="in">
+    const pvOn = !!(pvUI && d.run && pvUI.showing());   // a party vote is open: everyone sees the choices and votes
+    if (coopUI && d.run) { if (!d.done && !r && coopUI.waiting() && !pvOn) main = coopUI.waitHTML(); else if (!d.done && !r) main = coopUI.behindHTML() + main; if (d.done) main += lvRun ? `<div class="card coop"><h3>🎲 Party loot</h3><p class="sub">Everything the party found is in one pile. The vote opens for everyone now: tap Want on what you'd like. Gold is split evenly.</p></div>` : coopUI.chestHTML(); }
+    if (lvRun && r && !d.done && lvUI.memberLocked() && !pvOn) main = lvUI.lockedHTML() + main.replace(/<div class="evc">[\s\S]*?<\/div>/, "");
+    if (pvOn) main = pvUI.main(main);
+    el.innerHTML = `<div class="in dgrid"><div class="dcol">
       <div class="hd"><h2>🕯 ${esc(d.place)}</h2><button class="btn sm" data-act="dmin">🎒 Pack</button>${d.done || r?.type === "boss" ? "" : `<button class="btn sm" data-act="dleave">Leave</button>`}</div>
       <div class="vital"><small><span>Health${r ? "" : " · no natural healing in here"}</span><span class="num">${Math.round(hp)}/${mh}</span></small><div class="bar"><i style="width:${pct(hp, mh)}%;background:var(--hp)"></i></div></div>
       ${coopUI && d.run ? coopUI.bar() : ""}<p class="sub" style="margin:0">Room ${step} of ${total} · found ${d.gold} gold${d.found.length ? ` and ${d.found.length} item${d.found.length > 1 ? "s" : ""}` : ""} · ${G.countRestore(S, "health")} healing potions</p>
-      ${res}${main}
-      <div class="card dmapcard"><div class="legend">${["fight", "elite", "trap", "treasure", "puzzle", "rest", "mystery", "boss"].filter((k) => d.rows.some((row) => row.some((n) => n.type === k))).map((k) => `<span>${DUNGEONS.ICON[k]} ${DUNGEONS.LABEL[k]}</span>`).join("")}</div>${DUNART.mapHTML(d)}</div>
+      ${res}${main}</div>
+      <div class="card dmapcard">${DUNART.legendHTML(d)}<div class="dmapfit">${DUNART.mapHTML(d)}</div></div>
     </div>`;
     el.scrollTop = 0;
     DUNART.after(el, reduceMotion);
+    if (pvUI) pvUI.paint();
     if (dunNote?.hurt && !reduceMotion) { el.classList.remove("hurt"); void el.offsetWidth; el.classList.add("hurt"); }
   }
   function dungeonRoom(c) {
@@ -1403,6 +1446,14 @@
     d.path = d.path || []; d.path.push([d.row, d.col]);
     dunNote = null; persist(); renderDungeon();
     if (d.run && coopUI) coopUI.afterPick();
+  }
+  /* a room choice, with its mini-game when it has one (also how a settled party vote is carried out, partyvote.js) */
+  function dunChoice(dc) {
+    const dg = typeof DGAMES !== "undefined" && !(lvUI && lvUI.memberLocked());   // dungeon mini-games; the party watches the leader play (dungeongames.js)
+    if (dg && DGAMES.handles(S, dc)) return DGAMES.play(S, dc, dungeonAct);
+    if (dc.startsWith("game:") && typeof EXPLORE !== "undefined") { EXPLORE.openGame(S, dungeonAct); if (dg) DGAMES.mirror("ring"); return; }
+    if (dc === "pick" && typeof IMM !== "undefined" && IMM.wantsGame()) { IMM.pick("dungeon", dungeonAct, S); if (dg) DGAMES.mirror("lock"); return; }
+    dungeonAct(dc);
   }
   function gatherAct(what, id) {
     const r = GATHER.act(S, what, id);
@@ -1428,7 +1479,7 @@
       let r, err; const p = lvUI ? lvUI.aroundAct(c, () => { try { return (r = DUNGEONS.act(S, c)); } catch (x) { err = x; throw x; } }) : (r = DUNGEONS.act(S, c));
       p?.catch?.((x) => { if (x !== err) console.warn(x); }); if (err) throw err; return r;
     };
-    if (replay) return dungeonDone(act(), runId, roomType, hp0, found0, gold0);   // members follow the leader's choice: no fight screen
+    if (replay) return dungeonDone(typeof NOAUTO !== "undefined" ? NOAUTO.carried(act) : act(), runId, roomType, hp0, found0, gold0);   // members follow the leader's choice: its fight was played on the shared fight screen, the AI doesn't fight it again (noautoplay.js)
     tbCall(act, (r) => dungeonDone(r, runId, roomType, hp0, found0, gold0));
   }
   function dungeonDone(r, runId, roomType, hp0, found0, gold0) {
@@ -1548,7 +1599,7 @@
     if (it.slot === "food" && r.item !== "fishing_rod") acts.push(`<button class="btn pri" data-act="eatfood" data-id="${r.id}">Eat${it.dish ? "" : " (raw)"}</button>`);
     if (it.dish) lines.push(`${it.desc}. A new meal replaces the last one's effect.`);
     if (it.enchant || it.staff) acts.push(...gems.map((g) => `<button class="btn" data-act="recharge" data-id="${r.id}" data-gem="${g.id}">Recharge (${esc(D.ITEMS[g.item].name.split(" (")[0])})</button>`));
-    if (canShop) acts.push(`<button class="btn" data-act="sell" data-id="${r.id}">Sell · ${G.sellPrice(S, r)} gold</button>`);
+    if (canShop && G.freeQty(S, r.id) > 0) acts.push(`<button class="btn" data-act="sell" data-id="${r.id}">Sell · ${G.sellPrice(S, r)} gold</button>`);   // worn gear is never sold
     if (typeof INVQOL !== "undefined") acts.push(...INVQOL.acts(S, r, eq, false));   // Keep / Drop (invqol.js)
     if (typeof ECON !== "undefined" && !it.noTrade && !["golden_claw", "dragonstone"].includes(r.item)) { const bp = ECON.bestPlace(S, r); if (bp && bp.p > 1) lines.push(`Sells best in ${bp.to} right now (about ${bp.p} gold each).`); }
     return `<div class="sky-detail"><div class="sky-ico">${ICONART.item(r.item, 64, r)}</div><h3 class="q-${typeof CC !== "undefined" ? CC.tier(r.item, r) : "common"}">${esc(row.name)}</h3>${typeof CC !== "undefined" ? `<p class="tierline q-${CC.tier(r.item, r)}">${CC.TIER_NAME[CC.tier(r.item, r)]}${r.stolen ? ' · <span class="is-stolen">Stolen</span>' : ""}</p>` : ""}<div class="sky-stats">${stats.map(([k, v]) => `<div><span>${k}</span><b class="num">${esc(String(v))}</b></div>`).join("")}</div>
@@ -1611,9 +1662,9 @@
     else if (kind === "shout") {
       const sh = POWERS.SHOUTS[arg], lv = POWERS.level(S, arg);
       const findIt = typeof SHOUTS2 !== "undefined" && sh[1].some((w) => !POWERS.known(S, w)) ? ` Where to learn more: ${SHOUTS2.hint(S, arg)}` : "";
-      desc = `${sh[3]} ${lv ? `You can shout ${lv} word${lv > 1 ? "s" : ""}; cooldown ${sh[2][lv - 1]} s.` : sh[1].some((w) => POWERS.known(S, w)) ? "Unlock its first word with a dragon soul." : "You don't know any of its words yet."}${findIt}`;
+      desc = `${sh[3]} ${lv ? `You can shout ${lv} word${lv > 1 ? "s" : ""}; cooldown ${typeof SHOUTS !== "undefined" ? SHOUTS.cd(S, arg, lv) : sh[2][lv - 1]} s.` : sh[1].some((w) => POWERS.known(S, w)) ? "Unlock its first word with a dragon soul." : "You don't know any of its words yet."}${findIt}`;
       acts.push(...sh[1].filter((w) => POWERS.known(S, w) && !POWERS.unlocked(S, w)).map((w) => `<button class="btn" data-act="unlock" data-id="${w}" ${(S.souls || 0) > 0 ? "" : "disabled"}>Unlock ${w} (dragon soul: ${S.souls || 0})</button>`));
-      if (POWERS.ROAD_SHOUTS.includes(arg) && lv) acts.push(`<button class="btn pri" data-act="roadshout" data-id="${arg}" ${POWERS.voiceReady(S) ? "" : "disabled"}>Shout now</button>`);
+      if ((typeof SHOUTS !== "undefined" ? SHOUTS.outside(arg) : POWERS.ROAD_SHOUTS.includes(arg)) && lv) acts.push(`<button class="btn pri" data-act="roadshout" data-id="${arg}" ${POWERS.voiceReady(S) ? "" : "disabled"}>Shout now</button>`);
     } else return `<div class="sky-detail"><h3>${esc(row.name)}</h3><p class="sub">${esc(row.sub)}</p></div>`;
     return `<div class="sky-detail">${magicIcon(row.id, 64) ? `<div class="sky-ico">${magicIcon(row.id, 64)}</div>` : ""}<h3>${esc(row.name)}</h3><p class="sub">${esc(desc)}</p>${spellNums}<div class="sky-acts">${acts.join("")}</div></div>`;
   }
@@ -1882,10 +1933,11 @@
   }
   function holdsPanel() {
     if (!Store.online || !CLANS.all.length) return "";
+    const HU = typeof HOLDUI !== "undefined" ? HOLDUI.panel(S) : "";   // player-run holds (holdui.js): seats, Jarls and raids; this week's war points stay below
     const w = WARS.week(), st = WARS.standings(w, S), rul = WARS.rulers(S), mine = myClan();
     const left = BOUNTY.weekEnds(w) - Date.now(), days = Math.floor(left / 864e5), hrs = Math.floor((left % 864e5) / 36e5);
-    return `<div class="panel"><h2>Holds</h2><p class="sub">Clans fight for the nine holds each week. Win fights, clear dungeons and fight dragons inside a hold to earn it points (Arena wins count for Eastmarch). Whoever leads when the week ends rules it all next week, and their members shop 10% cheaper there. ${days}d ${hrs}h left.</p>
-      ${typeof RAIDART !== "undefined" ? RAIDART.holdsMap(rul) : ""}
+    return HU + `<div class="panel"><h2>${HU ? "War points this week" : "Holds"}</h2><p class="sub">Clans fight for the nine holds each week. Win fights, clear dungeons and fight dragons inside a hold to earn it points (Arena wins count for Eastmarch). Whoever leads when the week ends rules it all next week, and their members shop 10% cheaper there. ${days}d ${hrs}h left.</p>
+      ${!HU && typeof RAIDART !== "undefined" ? RAIDART.holdsMap(rul) : ""}
       <div class="list">${Object.keys(WORLD.holds).map((h) => { const r = rul[h], list = st[h], lead = list[0], me = mine && list.find((x) => x.clan.id === mine.id);
         return `<div class="item" style="flex-wrap:wrap">${r ? bannerHTML(r) : `<span class="banner" style="background:#2a2e33" aria-hidden="true"></span>`}<div class="t">${esc(h)}<span>${r ? `Ruled by ${esc(r.name)} [${esc(r.tag)}]` : "Nobody rules it"} · this week: ${lead ? `${esc(lead.clan.tag)} ${lead.pts}` : "no points yet"}${list[1] ? `, ${esc(list[1].clan.tag)} ${list[1].pts}` : ""}${me && me !== lead ? ` · you: ${me.pts}` : ""}</span></div></div>`; }).join("")}</div>
       ${mine ? "" : `<p class="sub">Join or found a clan (below) to take part.</p>`}</div>`;
@@ -1926,8 +1978,7 @@
     const row = (d, btn) => `<div class="item${btn === "buy" ? tiCls(d.row.item) : ""}">${ICONART.item(d.row.item, 34, d.row)}<div class="t">${esc(MARKET.itemName(d.row))}${d.row.qty > 1 ? ` ×${d.row.qty}` : ""}${btn === "buy" ? iqB(d.row.item, d.row) : ""}<span>${btn === "buy" ? `${d.hall ? `🏰 ${esc(d.hallName || d.sellerName + "'s hall")}` : `${esc(d.sellerName)}'s stall`} · ${esc(G.itemStats(d.row.item))}` : d.hall ? "on your hall counter" : "on your stall"}</span></div><span class="num gold">${d.price}</span>${btn === "buy" ? `<button class="btn sm pri" data-act="mbuy" data-id="${esc(d.id)}" ${S.gold >= d.price ? "" : "disabled"}>Buy</button>` : `<button class="btn sm" data-act="mpull" data-id="${esc(d.id)}">Take back</button>`}${btn === "buy" ? tiBox(d.row.item) : ""}</div>`;
     let h = `<h3>For sale here</h3>${forSale.length ? forSale.map((d) => row(d, "buy")).join("") : `<p class="sub">No player stalls in ${esc(l)} right now.</p>`}`;
     if (!house) return h + `<p class="sub" style="margin-top:10px">Own a house in ${esc(l)}, or a hall here with a shop counter, to run your own stall.</p>`;
-    const eq = new Set(Object.values(G.loadout(S).equipment || {}));
-    const pack = S.inv.filter((r) => !eq.has(r.id) && !r.stolen && D.ITEMS[r.item]).slice(0, 40);
+    const pack = G.handable(S).filter((r) => !r.stolen && D.ITEMS[r.item]).slice(0, 40);   // worn gear never shows here
     const pick = pack.find((r) => r.id === stallPick);
     h += `<h3 style="margin-top:12px">Your stall · ${own.length}/${MARKET.capFor(S)}</h3>${hereOwn.length ? hereOwn.map((d) => row(d, "pull")).join("") : `<p class="sub">Nothing on your stall here.</p>`}
       <p class="sub">Things on your stall sell even while you're away; your game collects the gold next time it's open. The market keeps ${Math.round(MARKET.FEE * 100)}%.</p>
@@ -2011,7 +2062,7 @@
         return `<div class="item ${has ? "on" : ""}">${typeof HOMEART !== "undefined" ? "" : ""}<div class="t">${has ? "✔ " : ""}${esc(nm)}<span>${esc(desc)} · ${wage} gold a day</span></div>${has ? (own ? `<button class="btn sm" data-act="hfire" data-id="${id}" data-c="${c}">Let go</button>` : "") : `<span class="num gold">${fee}</span><button class="btn sm" data-act="hhire" data-id="${id}" data-c="${c}" ${e || !here || !own ? "disabled" : ""} title="${esc(e || "")}">Hire</button>`}</div>`;
       }).join("");
     } else if (hallTab === "store") {
-      const eq = new Set(Object.values(G.loadout(S).equipment || {})), pack = S.inv.filter((r) => !eq.has(r.id) && D.ITEMS[r.item] && !(clan && (r.stolen || D.ITEMS[r.item].noTrade)));
+      const pack = G.handable(S).filter((r) => D.ITEMS[r.item] && !(clan && (r.stolen || D.ITEMS[r.item].noTrade)));
       const left = clan && h.founder !== S.id ? HALLS.CLAN_TAKES_PER_DAY - ((h.takes?.[S.id]?.day === Math.floor(G.now() / HALLS.DAY)) ? h.takes[S.id].n : 0) : null;
       b = HALLS.cap(h) ? `<h3 style="margin-top:0">Storage · ${(h.storage || []).length}/${HALLS.cap(h)}${h.staff?.guard ? " · guarded" : " · no guard"}</h3>${left != null ? `<p class="sub" style="margin-top:0">You can take ${left} more today.</p>` : ""}
         ${(h.storage || []).length ? h.storage.map((r, i) => `<div class="item">${ICONART.item(r.item, 30, r)}<div class="t">${esc(HALLS.name(r))}${r.qty > 1 ? ` ×${r.qty}` : ""}<span>${clan ? `from ${esc(r.by || "someone")}` : esc(G.itemStats(r.item))}</span></div><button class="btn sm" data-act="hunstash" data-id="${i}" data-c="${c}" ${here && left !== 0 ? "" : "disabled"}>Take</button></div>`).join("") : `<p class="sub">Empty.</p>`}
@@ -2180,12 +2231,12 @@
     const loop = (ts) => {
       if (!fishState || !$("#fishbar")) return;
       if (fishState.phase === "wait" && ts >= fishState.at) {
-        fishState.phase = "bite"; fishState.bite = COOK.bite(fishState.water); fishState.t0 = ts; fishState.until = ts + 5000;
+        fishState.phase = "bite"; fishState.bite = COOK.bite(fishState.water); fishState.t0 = ts; fishState.until = ts + 5000 * (typeof A11Y !== "undefined" ? A11Y.timingEase() : 1);
         SOUND.fx("click"); if (navigator.vibrate) try { navigator.vibrate(60); } catch { /* not allowed */ }
         drawFishing("A bite! Reel in when the needle is in the green.");
       }
       if (fishState.phase === "bite") {
-        const period = fishState.bite.zone[1] - fishState.bite.zone[0] < 0.22 ? 1900 : 2500;   // rarer fish: a narrower zone and a quicker needle
+        const period = ((fishState.bite.rare ?? fishState.bite.zone[1] - fishState.bite.zone[0] < 0.22) ? 1900 : 2500) * (typeof A11Y !== "undefined" ? A11Y.timingEase() : 1);   // rarer fish: a narrower zone and a quicker needle; Easy timing slows it
         const ph = ((ts - fishState.t0) % period) / period; fishState.needle = ph < 0.5 ? ph * 2 : 2 - ph * 2;
         const n = $("#fishneedle"); if (n) n.style.left = `${fishState.needle * 100}%`;
         if (ts > fishState.until) { fishState.phase = "done"; drawFishing("Too slow. It got away.", true); return; }
@@ -2233,7 +2284,7 @@
   function visitHTML(d) {
     const town = S.location, hn = TOWNS.HOMES[town]?.[0] || "their house";
     const skulls = Math.min(12, d.dragons || 0);
-    const pack = S.inv.filter((r) => !Object.values(G.loadout(S).equipment || {}).includes(r.id) && !r.stolen).slice(0, 30);
+    const pack = G.handable(S).filter((r) => !r.stolen).slice(0, 30);   // worn gear never shows in a gift list
     return `<p class="sub" style="margin:0">${esc(hn)} · ${esc(town)}</p><h2 style="margin:4px 0">${esc(d.name)}'s home</h2>
       ${typeof HOMEART !== "undefined" ? HOMEART.visit(d, town, visitGifted.has(d.id)) : ""}${d.motto ? `<p class="motto">“${esc(d.motto)}”</p>` : ""}
       <p class="sub">Level ${d.level} ${esc(D.RACES[d.race]?.name || "")}${d.titles?.length ? ` · ${d.titles.map(esc).join(" · ")}` : ""}</p>
@@ -2289,11 +2340,11 @@
   const bannerHTML = (c) => `<span class="banner" style="background:linear-gradient(180deg,${c.colors[0]} 0 58%,${c.colors[1]} 58% 100%)" aria-hidden="true"></span>`;
   function clanPanel() {
     if (!Store.online) return "";
-    const c = myClan(), inv = CLANS.invitesFor(S.id).filter((x) => x.id !== c?.id);
+    const c = myClan(), inv = myClanInvites().filter((x) => x.id !== c?.id);
     if (!c) {
       const sw = (i) => CLANS.COLORS.map((col) => `<button class="swatch ${clanDraft.colors[i] === col ? "on" : ""}" style="background:${col}" data-act="clancol" data-i="${i}" data-id="${col}" aria-label="Colour"></button>`).join("");
       return `<div class="panel"><h2>Clan</h2>
-        ${inv.length ? `<div class="list">${inv.map((x) => `<div class="item on">${bannerHTML(x)}<div class="t">${esc(x.name)} [${esc(x.tag)}]<span>${esc(x.founderName)} invites you</span></div><button class="btn sm pri" data-act="clanjoin" data-id="${esc(x.id)}">Join</button></div>`).join("")}</div>` : ""}
+        ${inv.length ? `<div class="list">${inv.map((x) => `<div class="item on">${bannerHTML(x)}<div class="t">${esc(x.name)} [${esc(x.tag)}]<span>${esc(x.founderName)} invites you</span></div><button class="btn sm pri" data-act="clanjoin" data-id="${esc(x.id)}">Accept</button><button class="btn sm" data-act="clanno" data-id="${esc(x.id)}">Decline</button></div>`).join("")}</div>` : ""}
         <p class="sub">Found your own clan: a name, a short tag shown next to your members' names, and a banner that flies over their houses on the map. Your clan gets its own chat.</p>
         <div class="grid2"><input id="clanname" maxlength="24" placeholder="Clan name" value="${esc(clanDraft.name || "")}" autocomplete="off" aria-label="Clan name"><input id="clantag" maxlength="4" placeholder="Tag (e.g. NORD)" value="${esc(clanDraft.tag || "")}" autocomplete="off" aria-label="Clan tag" style="text-transform:uppercase"></div>
         <p class="sub" style="margin-bottom:4px">Banner top</p><div class="coats">${sw(0)}</div><p class="sub" style="margin-bottom:4px">Banner bottom</p><div class="coats">${sw(1)}</div>
@@ -2368,13 +2419,13 @@
       if (d.from === S.id && d.status !== "open") {           // my offer was answered: settle it
         const m = MP.settle(S, d); Store.remove("trades", d.id);
         if (m) { persist(true); toast(m); }
-      } else if (d.to === S.id && d.status === "open" && !seenTrades.has(d.id)) { seenTrades.add(d.id); toast(`🤝 ${d.fromName} offers you a trade. Open 👥 Social → Trades.`); }
+      } else if (d.to === S.id && d.status === "open" && !seenTrades.has(d.id)) { seenTrades.add(d.id); if (typeof INVITES === "undefined") toast(`🤝 ${d.fromName} offers you a trade. Open 👥 Social → Trades.`); }
     }
     if ((tab === "log" || tab === "social")) bump();
+    invRefresh();
   }
   function openTrade(card, note) {
-    const eq = new Set(Object.values(G.loadout(S).equipment));
-    const loose = S.inv.filter((r) => !eq.has(r.id) && D.ITEMS[r.item]), cs = catStrip(tradeCat, "tradecat", loose.map((r) => r.item));
+    const loose = G.handable(S).filter((r) => D.ITEMS[r.item]), cs = catStrip(tradeCat, "tradecat", loose.map((r) => r.item));
     const rows = loose.filter((r) => cs.ok(r.item) || tradeSel.includes(r.id));
     const gv = $("#tgive")?.value || "", av = $("#task")?.value || "";
     tradeTo = card.id;
@@ -2385,14 +2436,15 @@
       <div class="evc"><button class="btn pri" data-act="tradesend">Send offer</button><button class="btn" data-act="close">Cancel</button></div>`);
   }
   async function answerTrade(id, yes) {
-    let ok = false, poor = false;
+    let ok = false, poor = false, bad = false;
     await Store.change("trades", id, (d) => {
       if (d.status !== "open" || !SOCIAL.arrived(d)) return d;
-      if (!yes) { ok = true; return { ...d, status: "declined" }; }
+      if (!yes || !MP.offerOk(d)) { ok = true; if (yes) bad = true; return { ...d, status: "declined" }; }   // worn gear in an offer: sent back
       const nx = MP.accept(S, { ...d }); if (!nx) { poor = true; return d; }
       ok = true; return nx;
     });
     if (poor) return toast("You can't afford that.");
+    if (bad) { persist(true); renderPanel(true); return toast("That offer held gear someone was wearing, so it went back to them."); }
     if (!ok) return toast("That offer is gone.");
     persist(true); renderPanel(true); toast(yes ? "Deal. The goods are in your pack." : "You turn the offer down.");
   }
@@ -2495,9 +2547,10 @@
     duels = docs;
     for (const d of docs) {
       if (d.from === S.id && d.status !== "open") { if (d.status === "done") { festCount("duel"); if (d.winner === S.id) warPoint("duel", "Eastmarch"); } const m = ARENA.settle(S, d); Store.remove("duels", d.id); if (m) { persist(true); SOUND.fx(d.winner === S.id ? "victory" : "click"); toast("⚔ " + m); } }
-      else if (d.to === S.id && d.status === "open" && !seenDuels.has(d.id)) { seenDuels.add(d.id); if (d.t > bootT) { SOUND.fx("shout"); toast(`⚔ ${d.fromName} challenges you in the Windhelm Arena${d.stake ? ` for ${d.stake} gold` : ""}!`); } }
+      else if (d.to === S.id && d.status === "open" && !seenDuels.has(d.id)) { seenDuels.add(d.id); if (d.t > bootT) { SOUND.fx("shout"); if (typeof INVITES === "undefined") toast(`⚔ ${d.fromName} challenges you in the Windhelm Arena${d.stake ? ` for ${d.stake} gold` : ""}!`); } }
     }
     if (tab === "town") bump();
+    invRefresh();
   }
   function arenaHTML() {
     const a = ARENA.me(S), t = G.now();
@@ -2507,7 +2560,7 @@
     const RA = typeof RAIDART !== "undefined" ? RAIDART : null;
     return `${RA ? RA.arenaHTML() + RA.seasonBanner(ARENA.seasonName()) + RA.podium(board.slice(0, 3), raPortrait, UIART.rank) : ""}<div class="card"><h3 class="ico-h">${UIART.rank(a.rating, 30)} ${RA ? "Your standing" : `Season of ${esc(ARENA.seasonName())}`}</h3><p class="sub" style="margin:0">Your rating ${a.rating} · ${a.w} won, ${a.l} lost. Nobody dies in the Arena: the loser kneels and the healers patch everyone up.</p></div>
       ${inc.length ? `<h3 style="margin-top:12px">Challenges for you</h3>${inc.map((d) => `<div class="item on" style="flex-wrap:wrap">${RA ? RA.versus({ id: d.from, name: d.fromName }, { id: S.id, name: S.name }, d.stake, raPortrait) : ""}<div class="t">${esc(d.fromName)}<span>${d.stake ? `Stake ${d.stake} gold each · winner takes ${d.stake * 2}` : "A friendly bout, no bet"} · rating ${d.aRating}</span></div>
-        <div style="display:flex;gap:6px"><button class="btn sm pri" data-act="duelyes" data-id="${esc(d.id)}" ${S.gold >= d.stake ? "" : "disabled"}>Fight</button><button class="btn sm" data-act="duelno" data-id="${esc(d.id)}">No</button></div></div>`).join("")}` : ""}
+        <div style="display:flex;gap:6px"><button class="btn sm pri" data-act="duelyes" data-id="${esc(d.id)}" ${S.gold >= d.stake ? "" : "disabled"}>Accept</button><button class="btn sm" data-act="duelno" data-id="${esc(d.id)}">Decline</button></div></div>`).join("")}` : ""}
       ${out.length ? `<h3 style="margin-top:12px">Waiting for an answer</h3>${out.map((d) => `<div class="item" style="flex-wrap:wrap">${RA ? RA.versus({ id: S.id, name: S.name }, { id: d.to, name: d.toName }, d.stake, raPortrait) : ""}<div class="t">${esc(d.toName)}<span>${d.stake ? `${d.stake} gold held` : "Friendly bout"}</span></div><button class="btn sm" data-act="duelcancel" data-id="${esc(d.id)}">Withdraw</button></div>`).join("")}` : ""}
       <h3 style="margin-top:12px">Challenge someone</h3>
       <div class="chips">${[0, 100, 500, 1000].map((n) => `<button class="chip ${arenaStake === n ? "on" : ""}" data-act="duelstake" data-id="${n}">${n ? n + " gold" : "No bet"}</button>`).join("")}</div>
@@ -2629,13 +2682,49 @@
     toast(`Invited ${card.name}. They'll see it under 👥 Social → Party.`);
   }
   async function acceptInvite(pid) {
-    if (party) await leaveParty();
     const cap = typeof PARTYPLAY !== "undefined" ? PARTYPLAY.MAX_PARTY : 8;
+    const p0 = invites.find((p) => p.id === pid);
+    if (!p0) { invRefresh(); return toast("That party is gone."); }
+    if (p0.members.filter((m) => m.id !== S.id).length >= cap) {   // full: say so, and don't leave your own party for nothing
+      await Store.change("parties", pid, (p) => ({ ...p, invites: (p.invites || []).filter((x) => x !== S.id) }));
+      return toast(`That party is full (${cap} heroes at most).`);
+    }
+    if (party) await leaveParty();
     const r = await Store.change("parties", pid, (p) => (p.members.filter((m) => m.id !== S.id).length >= cap ? { ...p, invites: (p.invites || []).filter((x) => x !== S.id) } : { ...p, invites: (p.invites || []).filter((x) => x !== S.id), members: [...p.members.filter((m) => m.id !== S.id), { id: S.id, name: S.name }] }));
-    toast(r?.after?.members?.some((m) => m.id === S.id) ? "You joined the party." : r ? "That party is full (8 heroes at most)." : "That party is gone.");
+    toast(r?.after?.members?.some((m) => m.id === S.id) ? `You joined ${p0.leaderName}'s party. The leader makes the choices.` : r ? `That party is full (${cap} heroes at most).` : "That party is gone.");
     publishCard();
   }
-  async function declineInvite(pid) { await Store.change("parties", pid, (p) => ({ ...p, invites: (p.invites || []).filter((x) => x !== S.id) })); }
+  async function declineInvite(pid) {
+    const r = await Store.change("parties", pid, (p) => ({ ...p, invites: (p.invites || []).filter((x) => x !== S.id), nos: typeof INVITES !== "undefined" ? INVITES.nos(p, S) : p.nos }));
+    toast(!r ? "That invite is gone." : r.before?.leaderName ? `You declined ${r.before.leaderName}'s party invite.` : "You declined the party invite.");
+    invRefresh();
+  }
+  // ------------------------------------------------------------ invite cards (invites.js): Accept / Decline right on top of the screen
+  const seenNos = new Set();
+  const invRefresh = () => { if (typeof INVITES !== "undefined") INVITES.refresh(); };
+  const myClanInvites = () => CLANS.invitesFor(S.id).filter((x) => !(S.invNo || {})["clan:" + x.id]);
+  function inviteList() {
+    if (!S || typeof INVITES === "undefined" || !Store.online) return [];
+    const t = G.now(), c = myClan();
+    return INVITES.list(S, { parties: invites, runs: coopUI?.myInvites ? coopUI.myInvites() : [], clans: myClanInvites().filter((x) => x.id !== c?.id), inClan: !!c,
+      duels: duels.filter((d) => d.to === S.id && d.status === "open" && t - d.t < ARENA.OPEN_MIN * 60), trades: myIncoming().map((d) => ({ ...d, what: MP.describe(d) })), gold: S.gold });
+  }
+  async function answerInviteCard(kind, id, yes) {
+    if (kind === "party") await (yes ? acceptInvite(id) : declineInvite(id));
+    else if (kind === "coop" && coopUI) await coopUI.act({ dataset: { act: yes ? "coopjoin" : "coopno", id } });
+    else if (kind === "clan") yes ? clanJoin(id) : clanDecline(id);
+    else if (kind === "duel") await answerDuel(id, yes);
+    else if (kind === "trade") await answerTrade(id, yes);
+    bump(); if (tab === "social" || tab === "town") renderPanel(true);
+  }
+  function clanJoin(id) { const r = CLANS.join(S, CLANS.byId(id)); if (r.err) return toast(r.err); persist(true); say(r.text); }
+  function clanDecline(id) {
+    const c = CLANS.byId(id), t = G.now();
+    INVITES.remember(S, "clan:" + id, t);   // the founder's record isn't ours to edit: hide it here, and leave them a note
+    if (Store.online) Store.put("clanmem", S.id, { clan: S.clan || null, name: S.name, t, no: { clan: id, t } });
+    persist(); invRefresh();
+    toast(c ? `You declined the invite to ${c.name}.` : "That invitation is gone.");
+  }
   async function leaveParty() {
     if (!party) return;
     if (party.leader === S.id) await Store.remove("parties", party.id);
@@ -2793,9 +2882,9 @@
     const cd = (at) => { const m = Math.ceil(((at || 0) + POWERS.DAY - tnow) / 60); return m > 0 ? `ready in ${m} min` : "ready"; };
     const shoutRows = Object.entries(POWERS.SHOUTS).filter(([, [, words]]) => words.some((w) => POWERS.known(S, w))).map(([id, [name, words, cds, desc]]) => {
       const lv = POWERS.level(S, id);
-      return `<div class="item" style="flex-wrap:wrap">${UIART.shout(id, 30)}<div class="t">${esc(name)} <span class="num">${words.map((w) => POWERS.known(S, w) ? (POWERS.unlocked(S, w) ? `<b>${w}</b>` : `${w}🔒`) : "···").join(" ")}</span><span>${esc(desc)}${lv ? ` · cooldown ${cds[lv - 1]} s` : ""}</span></div>
+      return `<div class="item" style="flex-wrap:wrap">${UIART.shout(id, 30)}<div class="t">${esc(name)} <span class="num">${words.map((w) => POWERS.known(S, w) ? (POWERS.unlocked(S, w) ? `<b>${w}</b>` : `${w}🔒`) : "···").join(" ")}</span><span>${esc(desc)}${lv ? ` · cooldown ${typeof SHOUTS !== "undefined" ? SHOUTS.cd(S, id, lv) : cds[lv - 1]} s` : ""}</span></div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;width:100%">${words.filter((w) => POWERS.known(S, w) && !POWERS.unlocked(S, w)).map((w) => `<button class="btn sm" data-act="unlock" data-id="${w}" ${(S.souls || 0) > 0 ? "" : "disabled"}>Unlock ${w} (1 soul)</button>`).join("")}
-        ${POWERS.ROAD_SHOUTS.includes(id) && lv ? `<button class="btn sm pri" data-act="roadshout" data-id="${id}" ${POWERS.voiceReady(S) ? "" : "disabled"}>Shout</button>` : ""}</div></div>`; }).join("");
+        ${(typeof SHOUTS !== "undefined" ? SHOUTS.outside(id) : POWERS.ROAD_SHOUTS.includes(id)) && lv ? `<button class="btn sm pri" data-act="roadshout" data-id="${id}" ${POWERS.voiceReady(S) ? "" : "disabled"}>Shout</button>` : ""}</div></div>`; }).join("");
     const fol = typeof FOLTAB !== "undefined" ? (S.follower ? `<div class="panel ft-sum">${FOLTAB.summary(S, esc)}</div>` : "") : typeof FOL2 !== "undefined" ? FOL2.panel(S, esc) : S.follower ? `<div class="panel"><h2>Follower</h2><div class="item">${NPCART.follower(S.follower.id, 36)}<div class="t">${esc(TOWNS.FOLLOWERS[S.follower.id][0])}<span>${Math.round(TOWNS.followerHp(S))}/${TOWNS.followerMax(S, S.follower.id)} health · fights beside you · carries 100 for you · goes down instead of dying</span></div><button class="btn sm" data-act="dismiss">Dismiss</button></div></div>` : "";
     const powersHtml = `<div class="list">
       <div class="item">${UIART.power(S.race, 30)}<div class="t">${esc(rp[0])} <span class="num">${cd(S.powerAt)}</span><span>${esc(rp[1])} Once a day: put "Use my racial power" in your tactics.</span></div></div>
@@ -2843,7 +2932,7 @@
       if (it.slot === "poison") acts.push(`<button class="btn sm pri" data-act="poison" data-id="${r.id}">Coat weapon</button>`);
       if (it.slot === "ingredient") acts.push(`<button class="btn sm" data-act="eat" data-id="${r.id}">Eat (learn an effect)</button>`);
       if ((it.enchant || it.staff) && gems.length) acts.push(...gems.map((g) => `<button class="btn sm" data-act="recharge" data-id="${r.id}" data-gem="${g.id}">Recharge (${esc(D.ITEMS[g.item].name.split(" (")[0])})</button>`));
-      if (canShop) acts.push(`<button class="btn sm" data-act="sell" data-id="${r.id}">Sell ${G.sellPrice(S, r)}g</button>`);
+      if (canShop && G.freeQty(S, r.id) > 0) acts.push(`<button class="btn sm" data-act="sell" data-id="${r.id}">Sell ${G.sellPrice(S, r)}g</button>`);   // worn gear is never sold
       if (typeof INVQOL !== "undefined") acts.push(...INVQOL.acts(S, r, on));   // Keep / Drop (invqol.js)
       const ingFx = it.slot === "ingredient" && TOWNS.INGREDIENT_FX[r.item] ? TOWNS.INGREDIENT_FX[r.item][1].map((e, i) => TOWNS.known(S, r.item)[i] ? e : "?").join(", ") : "";
       const qual = r.tq ? TOWNS.QUALITY[r.tq] + " " : "";
@@ -3047,19 +3136,19 @@
     const statRow = (st) => `<span class="hstats"><b>🏇 ${(+st.speed).toFixed(2)}×</b><b>🎒 ${Math.round(st.carry)}</b><b>❤ ${Math.round(st.hp)}</b></span>`;
     if (!h) {
       const br = HORSES.breed(horseBreed), bp = HORSES.price(S, horseBreed);
-      return `<div class="card"><h3>Buy a horse · ${bp} gold</h3><p class="sub">Riding, you travel faster and flee more easily. Your horse carries things for you even when you walk beside it. Horses never die: if badly hurt, they limp back to the nearest stables to rest.</p>
+      return `<div class="card"><h3>Buy a horse · ${bp} gold</h3><p class="sub">Riding, you travel faster and flee more easily. Your horse carries things for you even when you walk beside it. Horses never die: at 0 health they are downed. A downed horse stays with you and still carries your things, but you can't ride it until it gets back up (a few hours, a night's sleep, or a stablehand's care).</p>
       <div class="hbreeds">${Object.entries(HORSES.BREEDS).map(([id, b]) => `<button class="hbreed ${id === horseBreed ? "on" : ""}" data-act="hbreed" data-id="${id}" aria-pressed="${id === horseBreed}"><b>${esc(b.name)}</b><span class="num gold">${HORSES.price(S, id)}</span>${statRow(b)}<small>${esc(b.text)}</small></button>`).join("")}</div>
       <p class="sub" style="margin:6px 0 2px">Every horse is a little different: its numbers can come out up to ${Math.round(HORSES.ROLL * 100)}% better or worse than its breed's.</p>
       <div class="coats">${HORSES.COATS.map((c) => swatch(c, c[0] === horseCoat, true)).join("")}</div><p class="sub" style="margin:4px 0 0">${esc(HORSES.coat(horseCoat)[1])}</p>
       <div class="chatrow"><input id="hname" maxlength="16" placeholder="Name your horse" autocomplete="off" aria-label="Horse name"><button class="btn pri" data-act="hbuy" ${open && !wanted && S.gold >= bp ? "" : "disabled"}>Buy ${esc(br.name)}</button></div>
       ${!open ? `<p class="sub">The stables open at 08:00.</p>` : S.gold < bp ? `<p class="sub">You have ${S.gold} gold.</p>` : ""}</div>`;
     }
-    const c = HORSES.coat(h.coat), mh = HORSES.maxHp(h), hp = HORSES.hp(S), aw = HORSES.away(S);
-    const here = aw && h.away.town === l, mins = Math.ceil(HORSES.readyIn(S) / 60);
-    return `<div class="card"><div class="row" style="display:flex;gap:10px;align-items:center">${UIART.horse(h.coat, 44, h.armor && h.armor !== "none")}<div style="flex:1"><h3 style="margin:0">${esc(h.name)}</h3><span class="sub">${esc(HORSES.breed(h.breed).name)} · ${esc(c[1])} · ${esc(HORSES.ARMOR[h.armor].name)}</span>${statRow({ speed: HORSES.speed(S), carry: HORSES.carry(S), hp: mh })}</div></div>
-        ${aw ? `<p>${here ? (mins > 0 ? `${esc(h.name)} is resting here. Ready in about ${mins} min.` : `${esc(h.name)} is rested and waiting for you.`) : `${esc(h.name)} is resting at the stables in ${esc(h.away.town)}.`}</p>
-          ${here ? `<div class="grid2"><button class="btn pri" data-act="hfetch" ${mins > 0 ? "disabled" : ""}>Take ${esc(h.name)}</button><button class="btn" data-act="hhurry" ${mins > 0 ? "" : "disabled"}>Patch up now (${HORSES.HURRY_PRICE} gold)</button></div>` : ""}`
-        : `<div class="vital" style="margin-top:8px"><small><span>Health</span><span class="num">${Math.round(hp)}/${mh}</span></small><div class="bar"><i style="width:${pct(hp, mh)}%;background:var(--sp)"></i></div></div>`}
+    const c = HORSES.coat(h.coat), mh = HORSES.maxHp(h), hp = HORSES.hp(S), dn = HORSES.downed(S);
+    const mins = Math.ceil(HORSES.readyIn(S) / 60), hrs = Math.max(1, Math.round(mins / 5)), tp = HORSES.tendPrice(S);
+    return `<div class="card${dn ? " hdown" : ""}"><div class="row" style="display:flex;gap:10px;align-items:center">${UIART.horse(h.coat, 44, h.armor && h.armor !== "none", dn)}<div style="flex:1"><h3 style="margin:0">${esc(h.name)}${dn ? ` <span class="hdowntag">Downed</span>` : ""}</h3><span class="sub">${esc(HORSES.breed(h.breed).name)} · ${esc(c[1])} · ${esc(HORSES.ARMOR[h.armor].name)}</span>${statRow({ speed: HORSES.speed(S), carry: HORSES.carry(S), hp: mh })}</div></div>
+        ${dn ? `<p>${esc(h.name)} is downed: they limp along beside you but can't be ridden. Back on their feet in about ${hrs} ${hrs === 1 ? "hour" : "hours"} (${mins} min), or after you sleep.</p>
+          <button class="btn pri" data-act="htend" style="width:100%" ${open && S.gold >= tp ? "" : "disabled"}>Tend ${esc(h.name)} (${tp} gold)</button>`
+        : `${hp < mh ? `<button class="btn sm" data-act="htend" style="float:right;margin-top:6px" ${open && S.gold >= tp ? "" : "disabled"}>Tend (${tp} gold)</button>` : ""}<div class="vital" style="margin-top:8px"><small><span>Health</span><span class="num">${Math.round(hp)}/${mh}</span></small><div class="bar"><i style="width:${pct(hp, mh)}%;background:var(--sp)"></i></div></div>`}
         <div class="chatrow" style="margin-top:8px"><input id="hname" maxlength="16" placeholder="New name" autocomplete="off" aria-label="New name"><button class="btn" data-act="hrename">Rename</button></div></div>
       <h3 style="margin-top:12px">Saddlebags</h3>${HORSES.BAGS.map((b, i) => (b ? `<div class="item"><div class="t">${esc(b.name)}<span>carries ${b.carry} more</span></div><span class="num gold">${HORSES.cost(S, b.price)}</span><button class="btn sm" data-act="hbags" ${i !== h.bags + 1 || !open || S.gold < HORSES.cost(S, b.price) || wanted ? "disabled" : ""}>${i <= h.bags ? "Owned" : "Buy"}</button></div>` : "")).join("")}
       <h3 style="margin-top:12px">Horseshoes</h3>${Object.entries(HORSES.SHOES).filter(([id]) => id !== "none").map(([id, a]) => { const have = HORSES.SHOES[h.shoes].speed >= a.speed; return `<div class="item"><div class="t">${esc(a.name)}<span>ride ${Math.round(a.speed * 100)}% faster</span></div><span class="num gold">${HORSES.cost(S, a.price)}</span><button class="btn sm" data-act="hshoes" data-id="${id}" ${have || !open || S.gold < HORSES.cost(S, a.price) || wanted ? "disabled" : ""}>${h.shoes === id ? "Worn" : have ? "Have better" : "Buy"}</button></div>`; }).join("")}
@@ -3090,7 +3179,7 @@
     if (AU && townShopAt !== l) { if (townShopAt != null) townShop = ""; townShopAt = l; }   // a new town opens on its board
     townShop = sections.includes(townShop) ? townShop : AU ? "" : sections[0];
     const names = { general: "General goods", blacksmith: "Blacksmith", wizard: "Court wizard", stables: "Stables", fence: "Ragged Flagon (fence)", inn: TOWNS.INNS[l] || "Inn", train: "Trainers", alchemy: "Alchemy lab", forge: "Forge", jobs: "Jobs", streets: "Streets", hire: l === "Whiterun" ? "Dragonsreach & hirelings" : "Hirelings", hall: "⚑ Hall of the North", halls: "🏰 Halls & shops", notice: "📜 Jarl's bounty", homes: "🏘 Neighbours", market: "🛒 Market stalls", mine: "⛏ Mine", craft: "✨ Spell crafting", caravans: "🐫 Caravans", cook: "🍲 Cooking pot", arena: "⚔ The Arena", fish: "🎣 Fishing", carriage: "Carriage", enchanter: "Arcane enchanter", home: TOWNS.home(S, l) ? `🏠 ${TOWNS.HOMES[l]?.[0]}` : `Buy ${TOWNS.HOMES[l]?.[0]}`, ...(typeof SOL !== "undefined" ? SOL.NAMES : {}), ...(typeof HOMESTEAD !== "undefined" ? HOMESTEAD.names(S, l) : {}) };
-    const townTop = `${typeof CIVILWAR !== "undefined" ? CIVILWAR.townLine(S, l) : ""}${wanted ? `<p class="sub danger-high">You're wanted in ${esc(hold)}. Shops, inns and trainers turn you away.</p>` : ""}`;
+    const townTop = `${typeof CIVILWAR !== "undefined" ? CIVILWAR.townLine(S, l) : ""}${typeof HOLDUI !== "undefined" ? HOLDUI.townLine(S, l) : ""}${wanted ? `<p class="sub danger-high">You're wanted in ${esc(hold)}. Shops, inns and trainers turn you away.</p>` : ""}`;
     if (AU && !townShop) return `<div class="panel au-panel"><h2>${esc(l)}</h2>${PLACEART.scene(l)}${townTop}${typeof RUMOURS !== "undefined" ? RUMOURS.townHTML(S, l, "", open) : ""}${AU.hub({ S, l, sections, names, open, hold })}<p class="sub au-gold">You have <b class="gold">${S.gold} gold</b>.</p></div>`;
     const fac = F.priceFactor(G.skill(S, "Mercantile"));
     let body = "", note = "";
@@ -3186,7 +3275,7 @@
       note = "One hall for everyone in the world. Every gold coin and ingot anyone gives makes it bigger, and every size gives all players something.";
       const tiers = HALL.TIERS.map(([n, need, what], i) => `<div class="item ${i === pr.tier ? "on" : ""}"><div class="t">${i <= pr.tier ? "✔" : "○"} ${esc(n)}${need ? ` · ${need.toLocaleString()}` : ""}<span>${esc(what)}</span></div></div>`).join("");
       const chestOpen = pr.tier >= 2, left = HALL.CHEST_PER_DAY - HALL.takenToday(S);
-      const putRows = S.inv.filter((r) => HALL.canDeposit(r) && !Object.values(G.loadout(S).equipment || {}).includes(r.id)).slice(0, 15);
+      const putRows = G.handable(S).filter((r) => HALL.canDeposit(r)).slice(0, 15);
       body = `${typeof HOMEART !== "undefined" ? HOMEART.hall(pr.tier, HALL.top(6), HALL.chest.length, pr.pct) : ""}<div class="card"><h3>${esc(pr.name)}${pr.next ? ` → ${esc(pr.next)}` : " · fully built"}</h3>
           <div class="bar" style="margin:6px 0"><i style="width:${pr.pct}%;background:var(--gold)"></i></div>
           <p class="sub" style="margin:0">${pr.points.toLocaleString()}${pr.need ? ` of ${pr.need.toLocaleString()}` : ""} given by ${HALL.top(999).length} ${HALL.top(999).length === 1 ? "player" : "players"} · you gave ${mine.toLocaleString()}${mine < HALL.BUILDER_PTS ? ` (${HALL.BUILDER_PTS} earns the title Hall Builder)` : ""}</p></div>
@@ -3206,14 +3295,12 @@
         body = `<div class="item"><div class="t">${esc(hname)}<span>${l === "Whiterun" && !S.thaneWhiterun ? "Only for someone the Jarl trusts (bring Farengar the Dragonstone)" : "For sale"}</span></div><span class="num gold">${price}</span><button class="btn sm pri" data-act="buyhome" ${S.gold >= price && !wanted ? "" : "disabled"}>Buy</button></div>`;
       } else {
         note = "Your home. Things in the chest are safe even if you die on the road.";
-        const pack = S.inv.filter((r) => !Object.values(G.loadout(S).equipment).includes(r.id));
         body = `${typeof HOMEART !== "undefined" ? HOMEART.mine(S, l) : ""}<div class="item"><div class="t">Your bed<span>Full health and Well Rested (+10% skills for 40 min)</span></div><button class="btn sm pri" data-act="homebed">Sleep</button></div>
           <div class="item"><div class="t">Garden<span>${TOWNS.gardenReady(S) ? "Ripe: harvest ingredients" : `Growing. Ready in ${Math.ceil(((h.garden || 0) + 7200 - G.now()) / 60)} min`}</span></div><button class="btn sm" data-act="harvest" ${TOWNS.gardenReady(S) ? "" : "disabled"}>Harvest</button></div>${typeof GATHER !== "undefined" ? GATHER.gardenHTML(S) : ""}
           ${(() => { const gs = myGifts().filter((g) => g.town === l); return gs.length ? `<h3 style="margin-top:12px">🎁 Gifts at your door (${gs.length})</h3><div class="list">${gs.map((g) => `<div class="item on"><div class="t">From ${esc(g.fromName)}<span>${[g.gold ? `${g.gold} gold` : "", g.row && D.ITEMS[g.row.item] ? VISITS.itemName(g.row) + (g.row.qty > 1 ? ` ×${g.row.qty}` : "") : "", g.note ? `“${esc(g.note)}”` : ""].filter(Boolean).join(" · ")}</span></div><button class="btn sm pri" data-act="giftopen" data-id="${esc(g.id)}">Take in</button></div>`).join("")}</div>` : ""; })()}
           ${(() => { const st = MARKET.mine(stalls, S.id).filter((d) => d.town === l); return `<h3 style="margin-top:12px">🛒 Your stall</h3><div class="item"><div class="t">${st.length ? `${st.length} thing${st.length > 1 ? "s" : ""} for sale<span>${esc(st.map((d) => MARKET.itemName(d.row)).slice(0, 3).join(", "))}${st.length > 3 ? "…" : ""}</span>` : "Nothing for sale<span>Sell things here even while you're away</span>"}</div><button class="btn sm" data-act="shop" data-id="market">Open stall</button></div>`; })()}
           <h3 style="margin-top:12px">Over the door</h3><div class="chatrow"><input id="motto" maxlength="${VISITS.MOTTO_MAX}" placeholder="A motto visitors will see" value="${esc(S.motto || "")}" autocomplete="off" aria-label="Motto"><button class="btn" data-act="motto">Carve</button></div>
-          <h3 style="margin-top:12px" id="homechest">Chest (${h.chest.length})</h3><p class="sub" style="margin-top:0">Put up to ${VISITS.SHOW_MAX} things in the display case for visitors to see.</p>${h.chest.length ? h.chest.map((r, i) => `<div class="item"><div class="t">${r.shown ? "🖼 " : ""}${esc((r.tq ? TOWNS.QUALITY[r.tq] + " " : "") + D.ITEMS[r.item].name)}${r.qty > 1 ? ` ×${r.qty}` : ""}<span>${esc(G.itemStats(r.item))}</span></div><button class="btn sm" data-act="showcase" data-id="${i}">${r.shown ? "Hide" : "Show"}</button><button class="btn sm" data-act="unstash" data-id="${i}">Take</button></div>`).join("") : '<p class="sub">Empty.</p>'}
-          <h3 style="margin-top:12px">Put away from your pack</h3>${pack.length ? pack.map((r) => `<div class="item"><div class="t">${esc((r.tq ? TOWNS.QUALITY[r.tq] + " " : "") + D.ITEMS[r.item].name)}${r.qty > 1 ? ` ×${r.qty}` : ""}<span>${+(D.ITEMS[r.item].weight * r.qty).toFixed(2)} wt</span></div><button class="btn sm" data-act="stash" data-id="${r.id}">Store</button></div>`).join("") : '<p class="sub">Nothing loose in your pack (equipped gear stays on you).</p>'}`;
+          <h3 style="margin-top:12px">Chest</h3><p class="sub" style="margin-top:0">Put up to ${VISITS.SHOW_MAX} things in the display case for visitors to see.</p>${HSTASH.panel(S, esc, svgI)}`;
       }
     } else if (townShop === "enchanter") {
       const known = ENCH.known(S), gems = S.inv.filter((r) => D.ITEMS[r.item]?.slot === "soulgem");
@@ -3283,7 +3370,7 @@
     const partyHtml = !shared ? "" : `<div class="panel"><h2>Party${party ? ` · ${party.members.length}/${typeof PARTYPLAY !== "undefined" ? PARTYPLAY.MAX_PARTY : 8}` : ""}</h2>${party ? `<p class="sub">Led by ${esc(party.leaderName)}. The leader picks where to go and asks everyone "Ready?" before setting off; everyone with them follows at the slowest member's pace. The leader handles encounters on the road, members near them fight beside them, and the spoils are shared. Dungeons grow with the party.</p>
         <div class="list">${party.members.map((m) => `<div class="item" data-tip-k="player:${esc(m.id)}"><div class="t">${esc(m.name)}${m.id === party.leader ? " ⚑" : ""}${m.id === S.id ? " (you)" : ""}<span>${m.id === S.id ? "" : (() => { const c = cardOf(m.id); return c ? `${esc(G.holdAt(otherPos(c)))} · ${G.pxDist(otherPos(c), me) <= MP.NEAR_PX ? "with you" : "away"}` : "offline"; })()}</span></div></div>`).join("")}</div>
         <button class="btn" data-act="leaveparty" style="width:100%;margin-top:8px">${party.leader === S.id ? "Disband the party" : "Leave the party"}</button>` : '<p class="sub">You travel alone. Invite someone from the list below.</p>'}
-      ${invites.map((p) => `<div class="item on" style="margin-top:8px"><div class="t">${esc(p.leaderName)} invites you to their party</div><button class="btn sm pri" data-act="accept" data-id="${esc(p.id)}">Join</button><button class="btn sm" data-act="decline" data-id="${esc(p.id)}">No</button></div>`).join("")}
+      ${invites.map((p) => `<div class="item on" style="margin-top:8px"><div class="t">${esc(p.leaderName)} invites you to their party<span>${p.members.length}/${typeof PARTYPLAY !== "undefined" ? PARTYPLAY.MAX_PARTY : 8} heroes</span></div><button class="btn sm pri" data-act="accept" data-id="${esc(p.id)}">Accept</button><button class="btn sm" data-act="decline" data-id="${esc(p.id)}">Decline</button></div>`).join("")}
       ${chests.map((c) => { const sh = MP.shareOf(c, S.id); return `<div class="item on" style="margin-top:8px;flex-wrap:wrap"><div class="t">💰 Party chest from ${esc(c.place)}<span>${c.goldLeft} gold${c.itemsLeft.length ? ", " + c.itemsLeft.map((i) => esc(D.ITEMS[i].name)).join(", ") : ""} · your fair share: ${sh.gold} gold${sh.items.length ? " + " + sh.items.length + " item" + (sh.items.length > 1 ? "s" : "") : ""}</span></div>
         <div style="display:flex;gap:6px;width:100%;flex-wrap:wrap">${c.taken.includes(S.id) ? '<span class="sub">You took your share.</span>' : `<button class="btn sm pri" data-act="share" data-id="${esc(c.id)}">Take my share</button>`}<button class="btn sm danger" data-act="grab" data-id="${esc(c.id)}">Take everything</button></div></div>`; }).join("")}</div>`;
     const canAmbush = shared && !S.trip && !S.location && !S.dungeon;
@@ -3583,8 +3670,13 @@
       case "homebed": say(TOWNS.sleepHome(S)); break;
       case "homejump": { const el = $("#homechest"); if (el) { const y = el.getBoundingClientRect().top + scrollY - 70; scrollTo({ top: y, behavior: reduceMotion ? "auto" : "smooth" }); } break; }
       case "harvest": say(TOWNS.harvest(S)); break;
-      case "stash": say(TOWNS.stash(S, +b.dataset.id)); publishCard(); break;
-      case "unstash": say(TOWNS.unstash(S, +b.dataset.id)); publishCard(); publishHome(); break;
+      case "stash": case "unstash": {   // house chest (homestash.js): data-n = how many ("amt" = the amount box), none = the whole row
+        const id = +b.dataset.id, n = b.dataset.n === "amt" ? $("#hsAmt")?.value : b.dataset.n;
+        const len0 = TOWNS.home(S)?.chest?.length || 0, m = a === "stash" ? TOWNS.stash(S, id, n) : TOWNS.unstash(S, id, n);
+        if (typeof HSTASH !== "undefined") HSTASH.moved(S, a === "stash" ? "pack" : "chest", id, (TOWNS.home(S)?.chest?.length || 0) < len0 ? 0 : 1);
+        say(m); publishCard(); publishHome(); break;
+      }
+      case "hstash2": HSTASH.act(S, b.dataset); renderPanel(true); break;
       case "dismiss": say(TOWNS.dismiss(S)); publishCard(); break;
       case "fol2": { const m = FOL2.act(S, b.dataset); persist(true); publishCard(); renderPanel(true); if (m) toast(m); break; }
       case "dragonstone": { const m = [TOWNS.deliverDragonstone(S), ...QUESTS.check(S)].join(" "); persist(true); renderPanel(true); showMessage("Dragonsreach", m); break; }
@@ -3594,14 +3686,9 @@
         if (typeof FXART !== "undefined" && /^WULD/.test(m || "")) FXART.cast("whirlwind", { from }); break; }
       case "enter": { if (ppUI) { const pm = ppUI.beforeEnter(); if (pm === "check") { renderPanel(true); break; } if (pm) return toast(pm); } const err = DUNGEONS.enter(S); if (err) return toast(err); if (typeof IMM !== "undefined") IMM.loading(`Entering ${S.dungeon?.place || "the dungeon"}…`); selected = null; renderPicked(); dunNote = null; persist(true); renderDungeon(); break; }
       case "dun": renderDungeon(); break;
-      case "droom": dungeonRoom(b.dataset.c); break;
-      case "dact": {
-        const dc = b.dataset.c, dg = typeof DGAMES !== "undefined" && !(lvUI && lvUI.memberLocked());   // dungeon mini-games; the party watches the leader play (dungeongames.js)
-        if (dg && DGAMES.handles(S, dc)) { DGAMES.play(S, dc, dungeonAct); break; }
-        if (dc.startsWith("game:") && typeof EXPLORE !== "undefined") { EXPLORE.openGame(S, dungeonAct); if (dg) DGAMES.mirror("ring"); break; }
-        if (dc === "pick" && typeof IMM !== "undefined" && IMM.wantsGame()) { IMM.pick("dungeon", dungeonAct, S); if (dg) DGAMES.mirror("lock"); break; }
-        dungeonAct(dc); break;
-      }
+      case "droom": if (pvUI && pvUI.gate("way", b.dataset.c)) break; dungeonRoom(b.dataset.c); break;
+      case "pvv": case "pvnow": if (pvUI) pvUI.act(b); break;
+      case "dact": if (pvUI && pvUI.gate("act", b.dataset.c)) break; dunChoice(b.dataset.c); break;
       case "dmin": closeDungeon(); tab = "pack"; renderTabs(); renderPanel(true); break;
       case "dleave": { if (S.dungeon?.run && lvUI) { S.lastRun = S.dungeon.run; lvUI.leaderLeaving(); } if (S.dungeon?.run && coopUI) coopUI.left(); if (typeof IMM !== "undefined") IMM.loading("Back to the open road…"); const m = DUNGEONS.leave(S); dunNote = null; persist(true); closeDungeon(); renderPanel(true); showMessage("Back outside", m); break; }
       case "ev": if (b.dataset.c === "pick" && typeof IMM !== "undefined" && IMM.wantsGame()) { IMM.pick("event", eventAction, S); break; } eventAction(b.dataset.c); break;
@@ -3641,7 +3728,7 @@
       case "drink": say(G.drinkPotion(S)); break;
       case "recharge": say(G.recharge(S, +b.dataset.id, +b.dataset.gem)); break;
       case "sell": { packOpen = null; const m = G.sell(S, +b.dataset.id, 1); if (/^Sold/.test(m)) GUIDE.mark(S, "trade"); say(m); break; }
-      case "sellall": { const r = G.invRow(S, +b.dataset.id); if (r) { const m = G.sell(S, r.id, r.qty); if (/^Sold/.test(m)) GUIDE.mark(S, "trade"); say(m); } break; }
+      case "sellall": { const r = G.invRow(S, +b.dataset.id); if (r) { const m = G.sell(S, r.id, G.freeQty(S, r.id) || r.qty); if (/^Sold/.test(m)) GUIDE.mark(S, "trade"); say(m); } break; }
       case "smode": shopMode = b.dataset.id; renderPanel(true); break;
       case "shopcat": shopCat = b.dataset.id; SOUND.fx("click"); renderPanel(true); break;
       case "tradecat": { tradeCat = b.dataset.id; SOUND.fx("click"); const c = cardOf(tradeTo) || (SOCIAL.isFriend(S, tradeTo) ? { id: tradeTo, name: SOCIAL.friends(S)[tradeTo].name } : null); if (c) openTrade(c); break; }
@@ -3702,7 +3789,8 @@
       case "clanfound": { const r = CLANS.found(S, $("#clanname")?.value, $("#clantag")?.value, clanDraft.colors); if (r.err) return toast(r.err); Store.put("clans", S.id, r.clan); CLANS.set([...CLANS.all.filter((x) => x.id !== S.id), { ...r.clan, id: S.id }], null); persist(true); postNews(`🏴 ${S.name} raised the banner of ${r.clan.name} [${r.clan.tag}].`); say(r.text); break; }
       case "claninv": { const c = myClan(); if (!c || c.founder !== S.id) break; const r = CLANS.invite(c, b.dataset.id); if (r.err) return toast(r.err); Store.put("clans", S.id, (({ id, ...x }) => x)(r.clan)); toast("Invitation sent."); break; }
       case "clankick": { const c = myClan(); if (!c || c.founder !== S.id) break; Store.put("clans", S.id, (({ id, ...x }) => x)(CLANS.kick(c, b.dataset.id).clan)); toast("They're no longer in the clan."); break; }
-      case "clanjoin": { const r = CLANS.join(S, CLANS.byId(b.dataset.id)); if (r.err) return toast(r.err); persist(true); say(r.text); break; }
+      case "clanjoin": clanJoin(b.dataset.id); invRefresh(); break;
+      case "clanno": clanDecline(b.dataset.id); renderPanel(true); break;
       case "clanleave": { const c = myClan(); if (c && c.founder === S.id) { Store.remove("clans", S.id); postNews(`🏴 The banner of ${c.name} was lowered.`); } say(CLANS.leave(S)); persist(true); break; }
       case "achmore": achOpen = !achOpen; renderPanel(true); break;
       case "guide": openGuide(); persist(); break;
@@ -3753,8 +3841,7 @@
       case "hshoes": say(HORSES.buyShoes(S, b.dataset.id)); break;
       case "hrename": say(HORSES.rename(S, $("#hname")?.value)); break;
       case "harmor": say(HORSES.buyArmor(S, b.dataset.id)); break;
-      case "hfetch": say(HORSES.fetch(S)); publishCard(); break;
-      case "hhurry": say(HORSES.hurry(S)); publishCard(); break;
+      case "htend": say(HORSES.tend(S)); publishCard(); break;
       case "hride": { const m = HORSES.toggle(S); liveCache.key = ""; S.trip && (S.trip.total = G.minutesLeft(S)); say(m); renderTrip(); publishCard(); break; }
       case "bclaim": { const m = BOUNTY.claim(S, +b.dataset.w, b.dataset.id); if (!m) return toast("Nothing to claim there."); SOUND.fx("quest"); say(m); publishCard(); break; }
       case "hallgold": case "hallmat": {

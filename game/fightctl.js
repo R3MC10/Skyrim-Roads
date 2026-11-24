@@ -1,7 +1,7 @@
 /* Fight controls: the action bar at the bottom of the turn-based fight screen. [OURS]
    Remigiusz: "Combat controls should be AAA."
    tbfight.js still runs the fight; this module only draws the controls and makes them feel good:
-   - Big thumb-sized buttons with drawn icons (both art styles): Attack / Power attack / Guard (or Shield bash).
+   - Big thumb-sized buttons with drawn icons: Attack / Power attack / Guard (or Shield bash).
    - Every move shows what it costs as gold AP pips; hovering or pressing a move lights up the pips it would spend.
    - A greyed-out move says why ("Need 2 more AP", "Not enough stamina", "None left"...).
    - Quick slots above the big buttons: your shouts and favourite spells, potions and scrolls (★ in the Magic and Items
@@ -97,7 +97,7 @@ const FIGHTCTL = (() => {
     return "";
   }
 
-  // ------------------------------------------------------------------ icons (drawn, in the current art style; emoji fallback)
+  // ------------------------------------------------------------------ icons (drawn; emoji fallback)
   function iconFor(f, a, api, size = 34) {
     if (typeof UIART === "undefined") return `<span class="em">${api.iconOf(f, a)}</span>`;
     try {
