@@ -64,7 +64,7 @@ const POLISH = (() => {
   function fromText(text) {
     if (!text || typeof text !== "string") return;
     const skills = typeof D !== "undefined" ? D.ALL_SKILLS || [] : [];
-    for (const m of text.matchAll(/([A-Z][A-Za-z'\- ]+?) increased to (\d+)/g)) {
+    if (!(typeof LEVELUP !== "undefined" && LEVELUP.live)) for (const m of text.matchAll(/([A-Z][A-Za-z'\- ]+?) increased to (\d+)/g)) {   // levelup.js shows skill rises itself
       const sk = skills.find((s) => m[1].endsWith(s)) || m[1].trim();
       banner("skill", "Skill increased", `${sk} ${m[2]}`, skillIcon(sk));
     }

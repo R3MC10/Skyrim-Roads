@@ -3,6 +3,15 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b145-levelup", build: 145, date: "24 Nov 2026", title: "Levelling up feels like Skyrim", items: [
+      "When a skill goes up you now see it near the top of the screen: \"One-Handed increased to 36\" with a thin bar for the skill, and your level bar under it filling up, so you always know how close the next level is.",
+      "Reaching a new level is a proper moment: a big LEVEL UP with your new level number, the bar fills to the end and starts again.",
+      "Open Skills (from the compass or the Character screen) with a level-up waiting and it asks first, like Skyrim: three pillars, Health, Magicka or Stamina, each +10. Stamina also adds +5 carry weight. Every level still gives a perk point too.",
+      "You can choose later. Level-ups wait for you and stack up, and the compass shows a glowing \"Level up\" on Skills and on your level bar until you spend them.",
+      "Skill books and trainers count the same way as using a skill, so every skill point moves your level bar.",
+      "Other players see your Health, Magicka and Stamina next to your level in the list of travellers.",
+      "Nothing changes for your hero: you keep your level, your perks and every choice you already made.",
+    ] },
     { id: "hotfix-dunloop", build: 144, date: "24 Nov 2026", title: "Dungeons don't trap you in the same room any more", items: [
       "Fixed: dungeons could trap you in the same room. In a party, the leader was sometimes sent back into a room they had just cleared, and the others got stuck waiting or stood in a room that never ended.",
       "Fixed: when the shared world was busy, the leader's way through a dungeon sometimes didn't reach the rest of the party, so they couldn't follow to the boss. It's now sent again until it gets through, and anything missing is filled in.",

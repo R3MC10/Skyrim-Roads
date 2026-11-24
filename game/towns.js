@@ -253,11 +253,9 @@ const TOWNS = (() => {
     if (sk.lvl >= CAP[lvl]) return `${who} can't teach you more than ${CAP[lvl]} ${skill}.`;
     const c = trainCost(s, skill);
     if (s.gold < c) return `Training costs ${c} gold.`;
-    s.gold -= c; sk.lvl += 1; sk.xp = 0;
+    s.gold -= c; sk.xp = 0;
     s.trained = { level: s.level, n: trainedThisLevel(s) + 1 };
-    s.charXp += sk.lvl;                                                                       // [Skyrim] training counts toward your level
-    const msgs = [];
-    while (s.charXp >= F.charXpNeeded(s.level)) { s.charXp -= F.charXpNeeded(s.level); s.level++; s.pendingLevels++; msgs.push(`You reached level ${s.level}!`); }
+    const msgs = G.raiseSkill(s, skill);                                                      // [Skyrim] training counts toward your level
     return `${who} trains you. ${skill} is now ${sk.lvl}. (${5 - s.trained.n} sessions left this level)` + (msgs.length ? " " + msgs.join(" ") : "");
   }
 
