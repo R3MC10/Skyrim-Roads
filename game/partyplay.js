@@ -8,15 +8,16 @@
      their own; they stop where they are, see what the leader is dealing with, and fight beside them (party.js allies).
    - Shared spoils: a won fight leaves a share for everyone who stood in it (party.js), gold found on the road is split
      evenly, and dungeons are cleared as a co-op run with one fair chest roll each (coop.js).
-   - Bigger party, bigger dungeon (parties hold up to 8): the way through grows by half its rooms for every extra hero,
-     length × (1 + 0.5·(n−1)) capped at 4×, and every fight room sends one foe per hero, one after another, at most 6.
+   - Bigger party, bigger dungeon (parties hold up to 8): +2 rooms on the way to the boss for each of the first 3 extra
+     heroes, +1 for each after that (at most +10, so 8 heroes walk 10 more rooms), and every fight room sends one foe per
+     hero, one after another, at most 6. The leader rolls the map once and stores it on the run; everyone walks that copy.
    Pure logic up top (node-testable); PARTYPLAY.ui(ctx) wires it into the screens. Party records live in "parties". */
 const PARTYPLAY = (() => {
   const READY_FORCE_SECONDS = 60;     // after this the leader may depart without the stragglers
   const READY_LIVE_SECONDS = 600;     // an unanswered check expires
   const HALT_SECONDS = 900;           // a stop the leader never resolved is dropped
   const MAX_PARTY = 8;                // [OURS] a party (and a co-op run) holds up to 8 heroes
-  const MAX_LENGTH = 4;               // dungeons grow with the party: × (1 + 0.5 per extra hero), up to 4× as long
+  const MAX_EXTRA_ROWS = 10;          // dungeons grow with the party: +2 rooms per extra hero for the first 3, then +1 each, at most +10
   const MAX_FOES = 6;                 // fight rooms: one foe per hero, one after another, at most 6
   const NEAR = 40;                    // "with the leader": within this many map px (the same as following)
   const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
@@ -94,7 +95,13 @@ const PARTYPLAY = (() => {
   }
 
   // ---- dungeons: longer and busier with more of you
-  const lengthFactor = (n) => clamp(1 + 0.5 * (Math.round(n || 1) - 1), 1, MAX_LENGTH);
+  /* how many rooms the way to the boss grows by for a party of n heroes (followers don't count) */
+  function extraRows(n) {
+    const extra = clamp(Math.round(n || 1), 1, MAX_PARTY) - 1;
+    return Math.min(MAX_EXTRA_ROWS, 2 * Math.min(3, extra) + Math.max(0, extra - 3));
+  }
+  /* roughly how many times as long the way is, for a dungeon with base rooms before the boss */
+  const lengthFactor = (n, base = 6) => Math.round((base + extraRows(n)) / Math.max(1, base) * 10) / 10;
   const waves = (n) => clamp(Math.round(n || 1), 1, MAX_FOES);
   /* link row a to row b the way dungeons.js does: spread evenly, nobody unreachable */
   function relink(a, b) {
@@ -104,19 +111,29 @@ const PARTYPLAY = (() => {
     });
     b.forEach((_, j) => { if (!a.some((n) => n.links.includes(j))) { const k = Math.min(a.length - 1, Math.round(j / Math.max(1, b.length - 1) * (a.length - 1))); a[k].links = [...new Set([...a[k].links, j])].sort((x, y) => x - y); } });
   }
-  /* the dungeon map for a party of n: freshly rolled stretches of the normal map until it is lengthFactor(n)× as long, then the boss */
+  /* the dungeon map for a party of n: the normal map, with extraRows(n) more rows taken from the middle of freshly rolled
+     maps (the usual mix of fights, tough fights, traps, treasure, odd finds and rest spots) slipped in before the last
+     breather row, then the boss. Rolled once on the leader's phone; the run record carries it to everyone. */
   function longLayout(theme, tier, n, layoutFn = (th, ti) => DUNGEONS.layout(th, ti)) {
-    const first = layoutFn(theme, tier), base = first.length - 1;
-    const want = Math.round(base * lengthFactor(n));
-    const rows = [];
-    for (let L = first, i = 0; rows.length < want; L = layoutFn(theme, tier), i++) {
-      const body = L.slice(0, -1).map((row) => row.map((node) => ({ ...node, links: [...node.links] })));
-      if (i > 0 && body.length) body[0] = body[0].map((node) => ({ ...node, type: node.type === "trap" ? "fight" : node.type }));
-      rows.push(...body.slice(0, want - rows.length));
+    const copy = (row) => row.map((node) => ({ ...node, links: [...node.links] }));
+    const first = layoutFn(theme, tier), body = first.slice(0, -1).map(copy);
+    const want = extraRows(n);
+    if (!want || body.length < 2) return first;
+    const extra = [];
+    for (let guard = 0; extra.length < want && guard < 50; guard++) {
+      const mid = layoutFn(theme, tier).slice(1, -2);   // skip the opening row (a gentle start) and the breather + boss
+      for (const row of mid) if (extra.length < want) extra.push(copy(row));
     }
-    rows.push([{ type: "boss", links: [] }]);
+    const rows = [...body.slice(0, -1), ...extra, body[body.length - 1], [{ type: "boss", links: [] }]];
     for (let r = 0; r < rows.length - 1; r++) relink(rows[r], rows[r + 1]);
     return rows;
+  }
+  /* the leader sizes a run for whoever is going in, once: the shared map grows with the party */
+  function sizeRun(doc, n, layoutFn) {
+    if (!doc || doc.sized || doc.theme === "giantcamp" || doc.theme === "lair") return doc;
+    n = clamp(Math.round(n || 1), 1, MAX_PARTY);
+    if (n < 2) return { ...doc, size: 1, sized: true };
+    return { ...doc, size: n, factor: lengthFactor(n, (doc.rows?.length || 7) - 1), sized: true, rows: longLayout(doc.theme, doc.tier, n, layoutFn) };
   }
   /* a fight room in a party run: after a foe falls, the next one steps out of the dark */
   function nextWave(s, r, makeFoe) {
@@ -193,13 +210,12 @@ const PARTYPLAY = (() => {
       const members = [{ id: s.id, name: s.name, level: s.level }, ...ids.filter((id) => id !== s.id).map((id) => ({ id, name: nameOf(p, id), level: ctx.cardOf(id)?.level || 1 }))].slice(0, COOP.MAX_MEMBERS);
       const n = members.length;
       const lone = r.doc.theme === "giantcamp" || r.doc.theme === "lair";
-      const doc = { ...r.doc, members, status: "in", party: p.id, size: n, factor: lengthFactor(n),
-        rows: lone ? r.doc.rows : longLayout(r.doc.theme, r.doc.tier, n) };
+      const doc = { ...sizeRun(r.doc, n), members, status: "in", party: p.id };
       await Store.put("runs", r.id, doc);
       const err = COOP.join(s, { ...doc, id: r.id });
       if (err) return toast(err);
       if (typeof IMM !== "undefined") IMM.loading(`Entering ${place} together…`);
-      toast(n > 1 ? `🕯 Into ${place} with ${n - 1} other${n > 2 ? "s" : ""}. ${lone ? "" : `The way is ${lengthFactor(n)}× as long, and up to ${waves(n)} foes wait in each fight room.`}` : `🕯 Into ${place}.`);
+      toast(n > 1 ? `🕯 Into ${place} with ${n - 1} other${n > 2 ? "s" : ""}. ${lone ? "" : `The way is ${extraRows(n)} rooms longer, and up to ${waves(n)} foes wait in each fight room.`}` : `🕯 Into ${place}.`);
       ctx.persist(true); ctx.publishCard(); ctx.enterNow();
     }
 
@@ -336,6 +352,6 @@ const PARTYPLAY = (() => {
     return { beforeTravel, beforeEnter, onParty, panelHTML, act, leaderHalt, leaderResolved, splitGold, tick, canDecide: () => canDecide(me(), party()), mates: () => (role(me(), party()) === "leader" ? withMe(party()) : []) };
   }
 
-  return { READY_FORCE_SECONDS, READY_LIVE_SECONDS, MAX_PARTY, MAX_LENGTH, MAX_FOES, NEAR, role, canDecide, canLead, startCheck, setReady, waitingOn, allReady, canForce, checkLive,
-    clearCheck, kick, goers, halt, resolve, halted, split, goldShareDoc, lengthFactor, waves, relink, longLayout, nextWave, ui };
+  return { READY_FORCE_SECONDS, READY_LIVE_SECONDS, MAX_PARTY, MAX_FOES, NEAR, role, canDecide, canLead, startCheck, setReady, waitingOn, allReady, canForce, checkLive,
+    clearCheck, kick, goers, halt, resolve, halted, split, goldShareDoc, lengthFactor, extraRows, MAX_EXTRA_ROWS, sizeRun, waves, relink, longLayout, nextWave, ui };
 })();
