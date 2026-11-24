@@ -3,6 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b167-deepdelve", build: 167, date: "24 Nov 2026", title: "Deep expeditions and harder dungeons", items: [
+      "Deadly dungeons go deeper. When the master falls, stairs lead down to five more levels: entrance guardians, traps and elites, the ancient vault, the cursed sanctuary and the legendary lair.",
+      "After each level's big fight you make camp and choose: Extract (climb out with everything), Rest (costs a ration) or Descend. In a party it's a vote, with everyone's face by their pick.",
+      "There's no free healing down there: health, potions, injuries and curses come with you to the next level. The gold and loot get much better the deeper you go.",
+      "What you find below is only yours once you climb out. Get knocked out down there and the expedition's finds are lost, but never your gear or anything you brought in. Followers just get knocked down, as always.",
+      "From level 30 every dungeon has Veteran, Legendary and Mythic difficulty: tougher foes, more gold, and 1 to 3 modifiers you can read on the map before you go in (Frozen Depths, Restless Dead, Dwemer Overcharge, Blood Moon, Arcane Instability, Ancient Darkness, Cursed Sanctuary, Relentless Hunt). They change every week.",
+      "New perks: Dungeon Veteran (Athletics) and Deep Delver (Lockpicking). Pathfinder (Athletics) now also finds the way out of the depths.",
+    ] },
     { id: "b166-widetitle", build: 166, date: "24 Nov 2026", title: "The title picture on wide screens", items: [
       "On a wide or ultra-wide PC window the main menu picture is no longer cut off: the warrior, the dragon and the city always fit, and the sides carry on the same painting softly blurred instead of black bars.",
       "The menu words, the line under each one and the version line at the bottom are brighter and easier to read over the sky.",

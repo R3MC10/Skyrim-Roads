@@ -15,23 +15,24 @@
       see before you go in (picked per dungeon per week, the same for everyone): Frozen Depths, Restless Dead, Dwemer
       Overcharge, Blood Moon, Arcane Instability, Ancient Darkness, Cursed Sanctuary, Relentless Hunt.
    Fights: DEEPDELVE.fight(f) wraps one Fight (engine.js) with the modifiers, injuries and curses; DEEPDELVE.tick(f, line)
-   runs once a turn. Perks (real effects): Dungeon Veteran (Athletics), Pathfinder (Sneak), Deep Delver (Lockpicking).
+   runs once a turn. Perks (real effects): Dungeon Veteran (Athletics), Deep Delver (Lockpicking), and the old Pathfinder (Athletics) now also
+   finds the way out of the depths.
    Party: the leader's tier goes on the run record (coop.js); the camp choice is a normal party vote (partyvote.js);
    every phone builds the same deeper level from a seeded roll. Pure logic up top (node-testable), screens at the end. */
 const DEEPDELVE = (() => {
   const MAX_DEPTH = 5, TIER_LEVEL = 30, MAX_INJ = 3;
   const DEPTH_NAME = ["", "Entrance guardians", "Traps and elites", "The ancient vault", "The cursed sanctuary", "The legendary lair"];
   const ROMAN = ["", "I", "II", "III", "IV", "V"];
-  // [OURS] balanced with tests/test_deepdelve_sim.js: foes grow +20% health / +7% damage per depth level
-  const DEPTH_HP = 0.2, DEPTH_DMG = 0.07;
+  // [OURS] balanced with tests/test_deepdelve_bal_sim.js: foes grow +15% health / +6% damage per depth level
+  const DEPTH_HP = 0.15, DEPTH_DMG = 0.06;
   const DEPTH_GOLD = [1, 1.6, 2.6, 4, 6, 10];          // gold you find, by depth (rewards rise steeply)
-  const MAJOR_HP = [1, 1.15, 1.1, 1.15, 1.2, 1.55];     // the major fight that ends each level
+  const MAJOR_HP = [1, 1.1, 1.05, 1.1, 1.15, 1.35];     // the major fight that ends each level
   const HIT_CAP = 0.4;                                   // no deep or tiered foe takes more than 40% of your health in one blow
   const TIERS = {
     normal: { name: "Normal", n: 0, hp: 1, dmg: 1, gold: 1 },
-    veteran: { name: "Veteran", n: 1, hp: 1.3, dmg: 1.1, gold: 1.5 },
-    legendary: { name: "Legendary", n: 2, hp: 1.65, dmg: 1.2, gold: 2.25 },
-    mythic: { name: "Mythic", n: 3, hp: 2.1, dmg: 1.32, gold: 3.5 },
+    veteran: { name: "Veteran", n: 1, hp: 1.2, dmg: 1.08, gold: 1.5 },
+    legendary: { name: "Legendary", n: 2, hp: 1.45, dmg: 1.16, gold: 2.25 },
+    mythic: { name: "Mythic", n: 3, hp: 1.75, dmg: 1.25, gold: 3.5 },
   };
   const TIER_KEYS = ["normal", "veteran", "legendary", "mythic"];
   const MODS = {
@@ -66,12 +67,19 @@ const DEEPDELVE = (() => {
   // ---------------------------------------------------------------- perks (appended to existing trees; ids never change)
   const PERK_ADD = [
     ["Athletics", "dungeon_veteran", "Dungeon Veteran", 2, [40, 70], ["long_strider"], "On a deep expedition, injuries and curses hurt 30/60% less, and you bring one more ration per rank. [OURS]", [["deepvet", 0.3, {}], ["deepration", 1, {}]]],
-    ["Sneak", "pathfinder", "Pathfinder", 1, [50], ["stealth"], "You always know the way out: leave a deep expedition from any level and keep what you found, and Ancient Darkness can't hide foes from you. [OURS]", [["deeppath", 1, {}]]],
     ["Lockpicking", "deep_delver", "Deep Delver", 2, [50, 80], ["apprentice_locks"], "Better finds deeper down: +10/20% gold per depth level, and better odds for gear and gems in the camp chest. [OURS]", [["deepfind", 0.1, {}]]],
   ];
   if (typeof PERKS !== "undefined" && typeof PFX !== "undefined") for (const [sk, id, name, ranks, req, needs, desc, fx] of PERK_ADD) {
     const tree = PERKS.TREES[sk]; if (!tree || PERKS.BY_ID[id] || !needs.every((n) => PERKS.BY_ID[n])) continue;
     tree.push([id, name, ranks, req, needs, desc]); PERKS.BY_ID[id] = { id, name, ranks, req, needs, desc, skill: sk }; PFX.FX[id] = fx;
+  }
+  /* perks that already exist and grow with this system (same id, an extra real effect) */
+  const PERK_ADJ = [["pathfinder", " Deep down you always know the way out: leave a deep expedition from any level and keep what you found, and Ancient Darkness can't hide foes from you.", [["deeppath", 1, {}]]]];
+  if (typeof PERKS !== "undefined" && typeof PFX !== "undefined") for (const [id, more, fx] of PERK_ADJ) {
+    const p = PERKS.BY_ID[id]; if (!p || (PFX.FX[id] || []).some(([k]) => k === fx[0][0])) continue;
+    const desc = p.desc.includes(" [OURS]") ? p.desc.replace(" [OURS]", more + " [OURS]") : p.desc + more;
+    const row = PERKS.TREES[p.skill]?.find((x) => x[0] === id); if (row) row[5] = desc;
+    p.desc = desc; PFX.FX[id] = [...(PFX.FX[id] || []), ...fx];
   }
   const vetFactor = (s) => Math.max(0.3, 1 - Math.min(0.6, pfx(s, "deepvet")));   // how much injuries and curses still bite
   const hasPath = (s) => pfx(s, "deeppath") > 0;
@@ -425,7 +433,7 @@ const DEEPDELVE = (() => {
   // labels for the dungeon screens
   if (typeof DUNGEONS !== "undefined") { DUNGEONS.ICON.camp = "⛺"; DUNGEONS.LABEL.camp = "Camp"; }
 
-  return { MAX_DEPTH, TIER_LEVEL, MAX_INJ, TIERS, TIER_KEYS, MODS, MOD_KEYS, CURSES, DEPTH_NAME, ROMAN, DEPTH_HP, DEPTH_DMG, DEPTH_GOLD, MAJOR_HP, HIT_CAP, PERK_ADD,
+  return { MAX_DEPTH, TIER_LEVEL, MAX_INJ, TIERS, TIER_KEYS, MODS, MOD_KEYS, CURSES, DEPTH_NAME, ROMAN, DEPTH_HP, DEPTH_DMG, DEPTH_GOLD, MAJOR_HP, HIT_CAP, PERK_ADD, PERK_ADJ,
     deepable, tiersOpen, modsFor, modsAt, picked, pick, runFields, onEnter, scaleFoe, trapMult, goldMult, healMult, layout, seedKey, bossRoom, campRoom, offer,
     campChoices, campAct, majorDown, knockout, onLeave, unsecured, strip, gains, fight, tick, vetFactor, hasPath, placeCard, bannerHTML, campHTML, depth };
 })();
