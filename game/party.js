@@ -15,7 +15,7 @@ const PARTY = (() => {
   function cardBits(s, party) {
     if (!party) return s.follower && typeof FOL2 !== "undefined" ? { fol: s.follower.id, fold: FOL2.card(s) } : {};   // co-op runs see your follower too
     const riding = typeof HORSES !== "undefined" && HORSES.riding(s);
-    return { pp: prof(s), ride: riding ? HORSES.coat(s.horse.coat)[2] : null, fol: s.follower?.id || null, fold: typeof FOL2 !== "undefined" ? FOL2.card(s) : null };   // followers aren't members, but they walk and fight with the party
+    return { pp: prof(s), ride: riding ? HORSES.coat(s.horse.coat)[2] : null, rideHp: riding ? [Math.round(HORSES.hp(s)), HORSES.maxHp(s.horse), s.horse.name] : null, fol: s.follower?.id || null, fold: typeof FOL2 !== "undefined" ? FOL2.card(s) : null };   // followers aren't members, but they walk and fight with the party
   }
 
   /* members close enough to fight with you: same dungeon, or near you on the map and not inside anywhere */
@@ -29,7 +29,7 @@ const PARTY = (() => {
     let a;
     if (typeof COOP !== "undefined") a = COOP.allyFromCard({ ...c, coop: { prof: c.pp || c.coop?.prof || { dmg: c.dmg || 5, hp: c.hp || 100, red: c.red || 0, role: "fighter" } } });
     else a = { name: c.name, dmg: Math.max(2, (c.dmg || 5) * 0.7), player: true };
-    return { ...a, uid: c.id, look: c.look || null, party: true };
+    return { ...a, uid: c.id, look: c.look || null, party: true, ride: c.ride || null, rideHp: c.rideHp || null };   // ride: they're on their horse (mountfight.js)
   }
   let lastFight = { t: 0, ids: [], names: [] };   // who stood with you when the last fight began
   function allies(s, party, cards, me, posOf, near) {

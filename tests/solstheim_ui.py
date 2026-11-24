@@ -80,7 +80,7 @@ async def main():
         print("fight figures:", fig)
         await pg.evaluate("""()=>{const S=window.__dbg.save(); const base=D.ENCOUNTERS.find(e=>e.name==='Riekling hunters'); const f=new G.Fight(S,G.scaleEnemy(base,S.level),null,G.now()); f.run({t:G.now()}); window.__solfight=f;}""")
         # ash storm over the map
-        await pg.evaluate("()=>{ WEVENTS.__w0=WEVENTS.weather; WEVENTS.weather=(p,t)=>WORLD.isSol(p)?{id:'ashstorm',name:'Ash storm',icon:'🌋',speed:0.65,sneak:0.15,encounters:0.8}:WEVENTS.__w0(p,t); }")
+        await pg.evaluate("()=>{ WEVENTS.__w0=WEVENTS.weather; WEVENTS.weather=(p,t)=>WORLD.isSol(p)?{id:'ashstorm',name:'Ash storm',icon:'\ue193',speed:0.65,sneak:0.15,encounters:0.8}:WEVENTS.__w0(p,t); }")
         await pg.click("[data-tab=map]"); await pg.evaluate("scrollTo(0,0)"); await pg.wait_for_timeout(1500)
         print("weather:", await pg.evaluate("window.__dbg.view().weather"), "| clock:", await pg.inner_text("#clock") if await pg.query_selector("#clock") else "")
         await pg.screenshot(path=OUT + "sol_ashstorm.png")

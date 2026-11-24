@@ -91,6 +91,7 @@ const G = (() => {
     return [+q[0].toFixed(4), +q[1].toFixed(4)];
   };
   function migrate(s) {
+    if (Array.isArray(s.pins) && typeof GI !== "undefined") for (const p of s.pins) if (p) p.icon = GI.swap(p.icon);   // map pins saved with emoji get the matching game icon
     // a won turn-by-turn road fight used to leave the road blocked by a dead foe: clear it
     if (s.trip?.status === "encounter" && (!s.trip.encounter || s.trip.encounter.hp <= 0)) { s.trip.status = "travel"; s.trip.encounter = null; s.trip.lastTick = now(); }
     if (typeof DUNGEONS !== "undefined" && DUNGEONS.repair) DUNGEONS.repair(s);   // a run saved where it can't go on: dead foe, empty boss room, dead end (dungeons.js)
@@ -111,7 +112,7 @@ const G = (() => {
       s.explored = (s.explored || []).map((p) => moveOld(p)).filter((p, i, a) => !i || pxDist(p, a[i - 1]) > 2).slice(-400);
       if (!s.explored.length) s.explored = [[s.x, s.y]];
       s.v = 5;   // straight onto the current map
-      note(s, "🗺 The world map now matches Skyrim 1:1 — coast, borders, holds, roads and every place where it really is.");
+      note(s, " The world map now matches Skyrim 1:1 — coast, borders, holds, roads and every place where it really is.");
     }
     if (s.v < 4) {   // the coast was sharpened (Solitude's estuary, the Hjaalmarch inlets, Dawnstar's bay): step out of any new water
       if (PLACES[s.location]) [s.x, s.y] = loc(s.location).slice(0, 2);
@@ -126,7 +127,7 @@ const G = (() => {
       s.explored = (s.explored || []).map((p) => moveOld(p)).filter((p, i, a) => !i || pxDist(p, a[i - 1]) > 2).slice(-400);
       if (!s.explored.length) s.explored = [[s.x, s.y]];
       s.v = 5;
-      note(s, "🗺 The world map was re-measured from Skyrim itself: every place, road, river, lake and mountain now sits exactly where it is in the game.");
+      note(s, " The world map was re-measured from Skyrim itself: every place, road, river, lake and mountain now sits exactly where it is in the game.");
     }
     s.discovered = s.discovered.filter((n) => PLACES[n]);
     for (const r of [...(s.inv || [])]) {   // rings and amulets used to stack as valuables: now each one is its own piece of gear
@@ -134,12 +135,14 @@ const G = (() => {
       if (it && (it.slot === "ring" || it.slot === "amulet") && r.qty > 1) { const n = r.qty - 1; r.qty = 1; for (let i = 0; i < n; i++) s.inv.push({ id: s.nextInv++, item: r.item, qty: 1, charge: null }); }
     }
     if (typeof AMMO !== "undefined") { const m = AMMO.migrate(s); if (m) note(s, m); }
+    if (typeof CHARGE !== "undefined") CHARGE.migrate(s);   // enchanted weapons with no charge number start full (chargebar.js)
     if (s.horse && typeof HORSES !== "undefined") HORSES.fix(s);   // a horse once sent off to a stables (or marked dead or lost) is yours again, downed
-    if (fixTactics(s)) note(s, "⚔ Your tactics were fixed: rules you added under \"Always → Attack\" never fired. They now come first.");
+    if (fixTactics(s)) note(s, "\uE101 Your tactics were fixed: rules you added under \"Always → Attack\" never fired. They now come first.");
     if (typeof SPELLCRAFT !== "undefined") SPELLCRAFT.register(s);   // crafted spells back into the spellbook
     // quests stuck on an old save move on: Bleak Falls Barrow already cleared moves the main quest to Farengar's hand-in
     // (no Dragonstone needed), and a missing quest item a stage needs comes back (questitems.js)
     if (typeof QUESTS !== "undefined") { QUESTS.ensure(s); QUESTS.check(s); }
+    if (typeof LEVELUP !== "undefined") { const m = LEVELUP.migrate(s); if (m) note(s, m); }   // levelup.js: keeps your level, tidies odd numbers
     return s;
   }
   function note(s, text) { s.journal.unshift({ t: now(), text }); s.journal = s.journal.slice(0, 60); }
@@ -181,22 +184,43 @@ const G = (() => {
       sk.xp -= F.skillXpNeeded(name, sk.lvl);
       sk.lvl += 1;
       msgs.push(`${name} increased to ${sk.lvl}`);
-      s.charXp += sk.lvl;
-      while (s.charXp >= F.charXpNeeded(s.level)) {
-        s.charXp -= F.charXpNeeded(s.level);
-        s.level += 1;
-        s.pendingLevels += 1;
-        msgs.push(`You reached level ${s.level}! Choose health, magicka or stamina.`);
-      }
+      msgs.push(...skillRose(s, name));
     }
     return msgs;
+  }
+  /* [Skyrim] a skill just went up by one: character XP = the skill's new level; enough XP is a level-up to spend
+     (+10 Health/Magicka/Stamina and a perk point). Every way a skill rises comes through here, so levelup.js
+     (LEVELUP.on) hears about every skill increase and every new level. */
+  function skillRose(s, name, quiet = false) {
+    const lvl = s.skills[name].lvl, msgs = [], from = s.level, fromXp = +s.charXp || 0;
+    s.charXp = fromXp + lvl;
+    while (s.charXp >= F.charXpNeeded(s.level)) {
+      s.charXp -= F.charXpNeeded(s.level);
+      s.level += 1;
+      s.pendingLevels = (s.pendingLevels || 0) + 1;
+      msgs.push(quiet ? `You reached level ${s.level}!` : `You reached level ${s.level}! Choose health, magicka or stamina.`);
+    }
+    if (typeof LEVELUP !== "undefined") {
+      LEVELUP.emit("skill", { s, skill: name, lvl, from, fromXp });
+      for (let l = from + 1; l <= s.level; l++) LEVELUP.emit("level", { s, level: l });
+    }
+    return msgs;
+  }
+  /* skill books and trainers: +1 to a skill straight away (no XP), with the character XP it gives */
+  function raiseSkill(s, name) {
+    const sk = s.skills[name];
+    if (!sk || sk.lvl >= 100) return [];
+    sk.lvl += 1;
+    return skillRose(s, name, true);
   }
   function levelUp(s, attr) {
     if (s.pendingLevels <= 0) return "No level-up to spend.";
     const f = { health: "hpBonus", magicka: "mpBonus", stamina: "spBonus" }[attr];
+    if (!f) return "Choose Health, Magicka or Stamina.";
     s[f] += F.ATTRIBUTE_PER_LEVEL;
     s.pendingLevels -= 1;
     if (attr === "health") s.health = Math.min(maxHealth(s), s.health + F.ATTRIBUTE_PER_LEVEL);
+    if (typeof LEVELUP !== "undefined") LEVELUP.emit("choice", { s, attr });
     return `+${F.ATTRIBUTE_PER_LEVEL} ${attr}` + (attr === "stamina" ? ` and +${F.CARRY_PER_STAMINA_LEVEL} carry weight` : "");
   }
 
@@ -419,7 +443,7 @@ const G = (() => {
   });
   /* dual casting: magicka for both hands (Dual Casting perks cut it) */
   const dualCost = (s, sp, f) => spellCost(s, sp) * (typeof MAGIC !== "undefined" ? MAGIC.DUAL_COST : 2.8) * (1 - Math.min(0.5, PX(s, "dualcost", f, { school: sp.school })));
-  const enchantCost = (e, s) => F.enchantCost(e.base_cost, e.magnitude, e.max_magnitude, skill(s, "Enchanting")) * (1 - 0.1 * P(s, "enchanter"));
+  const enchantCost = (e, s) => F.enchantCost(e.base_cost, e.magnitude, e.max_magnitude, skill(s, "Enchanting")) * (1 - 0.1 * P(s, "enchanter")) * (typeof CHARGE !== "undefined" ? CHARGE.costMult(s) : 1);   // Thrifty Runes
   function describeAction(a) {
     if (D.BASIC_ACTIONS[a]) return D.BASIC_ACTIONS[a];
     const [kind, arg] = a.split(":");
@@ -599,6 +623,7 @@ const G = (() => {
       return false;
     }
     affordable(a) {
+      if (typeof MOUNTFIGHT !== "undefined") { const mf = MOUNTFIGHT.allow(this, a); if (mf != null) return mf; }   // [OURS] Mount / Dismount, and what the saddle rules out (mountfight.js)
       if (a === "attack") return true;
       if (a === "flee") return !!this.canFlee && !this.e.boss;   // only on the road, never from a boss
       if (a === "power_attack") return this.sp >= this.paCost;
@@ -649,12 +674,13 @@ const G = (() => {
       const sk = this.weaponSkill();
       if (power) this.sp -= this.paCost;
       const ammoK = this.bound ? null : this.ammoKind(), shot = ammoK ? this.shoot() : null;
-      const sneak = (this.turn === 1 && this.hidden) || this.sneakNext;
+      const sneak = (this.turn === 1 && this.hidden && !this.mount?.up) || this.sneakNext;   // [OURS] nobody sneaks up on horseback: riders open with a charge (mountfight.js)
       this.sneakNext = false;
       const mt = this.mount && typeof HORSEBACK !== "undefined" ? HORSEBACK.strike(this, power, sneak) : null;   // [OURS] fighting from the saddle (horseback.js)
       const px = { power, sneak, sk, wt: this.wt };   // [OURS] for the bigger perk trees (perkfx.js)
       const aimW = ammoK && this.wx ? 1 - (1 - this.wx.aim) * (typeof PFX !== "undefined" && PFX.has(this.s, "aimwx", this, px) ? 0.5 : 1) : 1;
       const sure = typeof PFX !== "undefined" && PFX.has(this.s, "sure", this, px);
+      if (mt?.miss) return mt.miss;   // [OURS] an arrow from a moving horse
       if (!sneak && !mt?.sure && !sure && Math.random() > Math.min(0.98, (F.HIT_CHANCE + (typeof PFX !== "undefined" ? PFX.sum(this.s, "hit", this, px) : 0)) * aimW)) return power ? "Power attack misses" : "Attack misses";
       const s = this.s, wt = this.wt;
       let dmg = this.weaponDamage() * rnd(...F.DAMAGE_SPREAD) * (power ? F.POWER_ATTACK_DAMAGE : 1);
@@ -761,7 +787,7 @@ const G = (() => {
         if (sp.element === "frost") this.slowed = 2;
         let amt = spellDamage(s, sp) * (this.tags.has("undead") && P(s, "necromage") ? 1.25 : 1) * (mg && sp.element !== "sun" ? MAGIC.elem(this, sp.element) : 1) * (this.wx ? this.wx.el[sp.element] || 1 : 1);   // weaknesses and resistances; rain dulls fire, storms feed shock
         const stormHit = typeof WFX !== "undefined" && WFX.stormStrike(this, sp.element); if (stormHit) amt *= 1.5;
-        let label = sp.name + (stormHit ? " ⚡ (the storm answers)" : "");
+        let label = sp.name + (stormHit ? "  (the storm answers)" : "");
         if (this.turn === 1 && this.hidden && P(s, "quiet_casting")) { amt *= 2; label += " (sneak ×2)"; }
         if (sp.school === "Destruction" && P(s, "impact") && Math.random() < 0.3) { this.stagger = true; label += ", staggers"; }
         if (this.fp && this.fp.ward) { amt *= 1 - this.fp.ward; label += ` (${this.e.name}'s ward soaks ${Math.round(this.fp.ward * 100)}%)`; }   // Ward Absorb, Magic Resistance, Atronach
@@ -796,6 +822,7 @@ const G = (() => {
       return sp.name;
     }
     act(a) {
+      if (typeof MOUNTFIGHT !== "undefined" && MOUNTFIGHT.owns(a)) return MOUNTFIGHT.act(this, a);   // [OURS] getting on / off your horse mid-fight
       if (a === "attack") return this.attack(false);
       if (a === "flee") {   // break off and run (road fights only)
         const ch = 0.45 + skill(this.s, "Athletics") / 200 - (this.e.danger === "high" ? 0.2 : 0) + (riding(this.s) ? 0.15 : 0);
@@ -879,6 +906,7 @@ const G = (() => {
         const al = cover || (fixed ? tg : typeof FAI !== "undefined" ? FAI.pickAlly(this) : pick(this.allies));
         this.tgtHit = al;
         if (al.fsum && typeof FAI !== "undefined") return FAI.hitSummon(this, al);   // a follower's summon takes the blow
+        if (al.mt?.up && typeof MOUNTFIGHT !== "undefined") { const mr = MOUNTFIGHT.allyTurn(this, al); if (mr) return mr; }   // [OURS] a teammate on horseback
         if (al.coop && typeof COOP !== "undefined") return COOP.hitAlly(this, al);   // co-op party members take their own blows
         if (al.follower && Math.random() < F.HIT_CHANCE) {
           let d = this.e.damage * rnd(...F.DAMAGE_SPREAD) * (typeof FOL2 !== "undefined" && al.fid === s.follower?.id ? FOL2.taken(s) : 0.8);   // [OURS] followers wear armor (their real armor, with FOL2)
@@ -1118,7 +1146,7 @@ const G = (() => {
     setHealth(s, maxHealth(s) * 0.5, t);
     s.trip = null; s.dungeon = null; s.ambush = false;
     const msg = `Killed by ${byPlayer ? "" : "the "}${cause}. You wake up in ${town}'s temple. Your bag (${lost}) lies where you fell for ${BAG_MINUTES} minutes — get it before someone else does.`;
-    note(s, "💀 " + msg);
+    note(s, " " + msg);
     return { msg, bag };
   }
   function pickUpBags(s, bags, t = now()) {
@@ -1184,24 +1212,24 @@ const G = (() => {
       if (!tr.path) { tr.path = Terrain.route([s.x, s.y], tr.dest); tr.idx = 0; }
       const mv = Terrain.moveAlong(tr.path, tr.idx, [s.x, s.y], dt, speed(s) / 60), was = [s.x, s.y];
       [s.x, s.y] = mv.done ? tr.dest : mv.pos; tr.idx = mv.idx;
-      if (typeof SNEAKMODE !== "undefined" && s.sneak && !tr.carriage && !tr.follow) SNEAKMODE.train(s, dt).forEach((m) => tripLog(s, "📈 " + m));
+      if (typeof SNEAKMODE !== "undefined" && s.sneak && !tr.carriage && !tr.follow) SNEAKMODE.train(s, dt).forEach((m) => tripLog(s, " " + m));
       const last = s.explored[s.explored.length - 1];
       if (!last || pxDist(last, [s.x, s.y]) >= TRAIL_STEP_PX) s.explored.push([+s.x.toFixed(4), +s.y.toFixed(4)]);
       tr.trail.push([+s.x.toFixed(4), +s.y.toFixed(4)]);
       if (tr.trail.length > 120) tr.trail.splice(1, 1);
-      if (!riding(s) && !overweight(s)) for (const m of useSkill(s, "Athletics", dt * F.ATHLETICS_XP_PER_SECOND)) tripLog(s, "📈 " + m);
+      if (!riding(s) && !overweight(s)) for (const m of useSkill(s, "Athletics", dt * F.ATHLETICS_XP_PER_SECOND)) tripLog(s, " " + m);
       const known = new Set(s.discovered);
       for (const [n, [lx, ly, kind]] of Object.entries(PLACES))
-        if (!known.has(n) && pxDist([s.x, s.y], [lx, ly]) <= discoverRadius(kind)) { s.discovered.push(n); tripLog(s, `📍 Discovered ${n}`); if (typeof EXPLORE !== "undefined") EXPLORE.onDiscover(s, n, tripLog); }
+        if (!known.has(n) && pxDist([s.x, s.y], [lx, ly]) <= discoverRadius(kind)) { s.discovered.push(n); tripLog(s, ` Discovered ${n}`); if (typeof EXPLORE !== "undefined") EXPLORE.onDiscover(s, n, tripLog); }
       if (typeof VISION !== "undefined") VISION.step(s, was, stepT, tripLog);   // look ahead: spot places inside your cone of sight (vision.js)
       if (typeof GATHER !== "undefined") GATHER.onStep(s, (m) => tripLog(s, m), stepT);   // plant patches you pass (gather.js)
       const pk = pickUpBags(s, bags.filter((b) => !out.taken.includes(b.id)), stepT);
       out.taken.push(...pk.taken);
-      pk.msgs.forEach((m) => tripLog(s, "🎒 " + m));
+      pk.msgs.forEach((m) => tripLog(s, " " + m));
 
       if (s.x === tr.dest[0] && s.y === tr.dest[1]) {
         if (PLACES[tr.destName]) { s.location = tr.destName; if (!s.discovered.includes(tr.destName)) s.discovered.push(tr.destName); }
-        tripLog(s, `🏁 Arrived at ${tr.destName}`);
+        tripLog(s, ` Arrived at ${tr.destName}`);
         s.trip = null;
         out.arrived = tr.destName;
         if (typeof SOL !== "undefined") SOL.arrived(s, tr.destName, out);
@@ -1209,7 +1237,7 @@ const G = (() => {
       }
       if (tr.caravan && typeof CARAVANS !== "undefined") {   // guarding a caravan: its ambushes come on its own schedule
         const ce = CARAVANS.ambushDue(s, tr, stepT);
-        if (ce) { const e = scaleEnemy(ce, fightLevel(s)); tr.status = "encounter"; tr.encounter = e; out.encounter = e; note(s, `⚠️ Caravan ambush: ${e.name}`); return out; }
+        if (ce) { const e = scaleEnemy(ce, fightLevel(s)); tr.status = "encounter"; tr.encounter = e; out.encounter = e; note(s, ` Caravan ambush: ${e.name}`); return out; }
         continue;
       }
       const rate = tr.carriage || tr.follow ? 0 : ENCOUNTER_PER_MIN * (isNight(stepT) ? D.NIGHT_ENCOUNTER_MULT : 1) * (typeof WEVENTS !== "undefined" ? WEVENTS.weather([s.x, s.y], stepT).encounters : 1) * (typeof SNEAKMODE !== "undefined" ? SNEAKMODE.encounterMult(s) : 1) * (typeof CVROAD !== "undefined" ? CVROAD.ambushMult(s, stepT) : 1);   // nobody robs a carriage on a Jarl's road; party members following their leader leave the road to them (partyplay.js)
@@ -1223,7 +1251,7 @@ const G = (() => {
           if (hm) tripLog(s, hm);
           tr.status = "encounter"; tr.encounter = e;
           out.encounter = e;
-          note(s, `⚠️ Encounter: ${e.name}`);
+          note(s, ` Encounter: ${e.name}`);
           return out;
         }
       }
@@ -1231,7 +1259,7 @@ const G = (() => {
       if (hr && Math.random() < 1 - (1 - hr) ** (dt / 60)) {
         const e = scaleEnemy(HUNT.pick(s), fightLevel(s)); e.hold = holdAt([s.x, s.y]);
         tr.status = "encounter"; tr.encounter = e; out.encounter = e;
-        note(s, `🏹 Hunting: ${e.name}`);
+        note(s, ` Hunting: ${e.name}`);
         return out;
       }
     }
@@ -1246,7 +1274,7 @@ const G = (() => {
       const owed = (s.bounty || {})[e.bountyHold] || 0;
       if (s.gold < owed) return { text: `You only have ${s.gold} gold. The hunter laughs.` };
       s.gold -= owed; delete s.bounty[e.bountyHold];
-      tr.status = "travel"; tr.encounter = null; tr.lastTick = t; tripLog(s, `⚖️ Paid off your ${e.bountyHold} bounty (${owed} gold)`);
+      tr.status = "travel"; tr.encounter = null; tr.lastTick = t; tripLog(s, ` Paid off your ${e.bountyHold} bounty (${owed} gold)`);
       return { text: `You count out ${owed} gold. "Pleasure doing business." Your bounty in ${e.bountyHold} is cleared.` };
     }
     if (action === "potion") {
@@ -1261,11 +1289,11 @@ const G = (() => {
     if (action === "flee") {
       const ch = 0.55 + skill(s, "Athletics") / 250 - (e.danger === "high" ? 0.2 : 0) + (riding(s) ? 0.15 : 0);   // [OURS]
       lines.push(...useSkill(s, "Athletics", 10 * F.ATHLETICS_XP_PER_SECOND));
-      if (Math.random() < ch) { tr.status = "travel"; tr.encounter = null; tr.lastTick = t; tripLog(s, `🏃 Escaped the ${e.name}`); const ds = e.caravan && typeof CARAVANS !== "undefined" ? CARAVANS.deserted(s) : null; return { text: `You ${riding(s) ? "ride" : "run"} and lose the ${e.name}.${ds ? " " + ds : ""}`, skills: lines }; }
+      if (Math.random() < ch) { tr.status = "travel"; tr.encounter = null; tr.lastTick = t; tripLog(s, ` Escaped the ${e.name}`); const ds = e.caravan && typeof CARAVANS !== "undefined" ? CARAVANS.deserted(s) : null; return { text: `You ${riding(s) ? "ride" : "run"} and lose the ${e.name}.${ds ? " " + ds : ""}`, skills: lines }; }
       enemyFirst = true; lines.unshift(`You try to escape, but the ${e.name} catches you!`);
     } else if (action === "sneak") {
       lines.push(...useSkill(s, "Sneak", 2.5 + 0.625 * 10));   // [Skyrim] 2.5 for hiding + 0.625/s hidden
-      if (Math.random() < hiddenChance(s, e, t)) { tr.status = "travel"; tr.encounter = null; tr.lastTick = t; tripLog(s, `🥷 Slipped past the ${e.name}`); return { text: `You slip past the ${e.name} unseen.`, skills: lines }; }
+      if (Math.random() < hiddenChance(s, e, t)) { tr.status = "travel"; tr.encounter = null; tr.lastTick = t; tripLog(s, ` Slipped past the ${e.name}`); return { text: `You slip past the ${e.name} unseen.`, skills: lines }; }
       enemyFirst = true; lines.unshift(`A twig snaps. The ${e.name} spots you!`);
     }
     const f = new Fight(s, e, null, t);
@@ -1274,13 +1302,13 @@ const G = (() => {
     f.run({ enemyFirst, t, hidden: opts.hidden ?? null });
     const skillMsgs = f.apply(t);
     if (f.fled && !f.won && f.hp > 0) {
-      tr.status = "travel"; tr.encounter = null; tr.lastTick = t; tripLog(s, `🏃 Broke off the fight with the ${e.name}`);
+      tr.status = "travel"; tr.encounter = null; tr.lastTick = t; tripLog(s, ` Broke off the fight with the ${e.name}`);
       return { text: [...lines, `You break off the fight and leave the ${e.name} behind.`].join(" "), fight: f, fled: true, skills: skillMsgs };
     }
     if (f.won) {
       const g = rint(...e.gold); s.gold += g; const loot = rollLoot(s, e);
       tr.status = "travel"; tr.encounter = null; tr.lastTick = t;
-      tripLog(s, `⚔️ Defeated the ${e.name}${g ? ` (+${g} gold)` : ""}`);
+      tripLog(s, ` Defeated the ${e.name}${g ? ` (+${g} gold)` : ""}`);
       return { text: lines.join(" ") || `You defeat the ${e.name}.`, fight: f, gold: g, loot, skills: skillMsgs };
     }
     const d = die(s, e.name, t);
@@ -1311,14 +1339,14 @@ const G = (() => {
       if (fr.fight && fr.fight.won && r.afterFn) { try { after = r.afterFn(s) || ""; } catch (err) { after = ""; } }
       fr.text = [r.text, fr.text, after].filter(Boolean).join(" ").trim();
       if (r.skills?.length) fr.skills = [...r.skills, ...(fr.skills || [])];
-      if (after) tripLog(s, "🛤 " + after);
+      if (after) tripLog(s, " " + after);
       return fr;
     }
     if (r.rob) { const lost = Math.min(s.gold, rint(20, 60)); s.gold -= lost; r.text += ` (−${lost} gold)`; }
     if (r.keep) return r;
     tr.status = "travel"; tr.event = null; tr.lastTick = t + (r.delay || 0);
     if (r.skip) { const mv = Terrain.moveAlong(tr.path, tr.idx, [s.x, s.y], r.skip, speed(s) / 60); if (!mv.done) { [s.x, s.y] = mv.pos; tr.idx = mv.idx; } }
-    if (choice !== "leave") tripLog(s, "🛤 " + r.text);
+    if (choice !== "leave") tripLog(s, " " + r.text);
     return r;
   }
   function buyFrom(s, item) {   // a travelling merchant: same barter formula as towns, no opening hours (and no town market)
@@ -1440,7 +1468,7 @@ const G = (() => {
 
   return {
     MAP_W, MAP_H, STEP_SECONDS, SLOTS, ARMOR_SLOTS, JEWEL_SLOTS, wornSlot, GAME_SPEED, now, pxDist, holdAt, clock, isNight, shopsOpen, clockText,
-    P, wtype, fxSum, lockChance, lockRoll, setAllyProvider, hiddenChance, rested, haggle, SPELL_TIER, newSave, maxHealth, maxMagicka, maxStamina, curHealth, setHealth, skill, useSkill, levelUp, fightLevel,
+    P, wtype, fxSum, lockChance, lockRoll, setAllyProvider, hiddenChance, rested, haggle, SPELL_TIER, newSave, maxHealth, maxMagicka, maxStamina, curHealth, setHealth, skill, useSkill, skillRose, raiseSkill, levelUp, fightLevel,
     riding, withHorse, STACKABLE, give, take, invRow, wornCount, freeQty, handable, carried, capacity, overweight, equipment, equip, unequip, equipOff, canOffhand, countRestore, itemStats,
     loadout: lo, addRule, ruleSlot, deadRules, fixTactics, saveLoadoutAs, deleteLoadout, spellCost, describeRule, describeAction, Fight, scaleEnemy, scaleQuestFoe, questLevel, rollLoot,
     rollEncounter, die, speed, discoverRadius, startTrip, startEvent, eventChoices, eventChoice, buyFrom, minutesLeft, minutesTo, posAfter, advance, encounterAction, migrate, PLACES,

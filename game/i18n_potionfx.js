@@ -38,7 +38,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     [/^Drinks ([^·]+?): \+(\d+) (health|magicka|stamina) over (\d+) rounds?$/, (m) => `Pijesz: ${W(m[1])}: +${m[2]} ${RES[m[3]]} przez ${TUR(m[4])}`],
     [/^Drinks ([^·]+?), but the last one is still working$/, (m) => `Pijesz: ${W(m[1])}, ale poprzednia jeszcze działa`],
     // each round's share
-    [/^🧪 \+(\d+) (health|magicka|stamina)$/, (m) => `🧪 +${m[1]} ${RES[m[2]]}`],
+    [/^ \+(\d+) (health|magicka|stamina)$/, (m) => ` +${m[1]} ${RES[m[2]]}`],
     // followers, party members, coop allies
     [/^([^·]+?) drinks an? ([^·]+?): \+(\d+) over (\d+) rounds?$/, (m) => `${W(m[1])} pije: ${W(m[2])}: +${m[3]} przez ${TUR(m[4])}`],
     [/^([^·]+?) drinks an? ([^·]+?): the last one is still working$/, (m) => `${W(m[1])} pije: ${W(m[2])}, ale poprzednia jeszcze działa`],

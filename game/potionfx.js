@@ -84,7 +84,7 @@ const POTFX = (() => {
     if (f.potOT) {
       const got = tickOne(f, f.s);
       for (const [res, n] of Object.entries(got)) {
-        line.me += ` · 🧪 +${r0(n)} ${res}`;
+        line.me += ` ·  +${r0(n)} ${res}`;
         const g = f._potGain || (f._potGain = {}); g[res] = (g[res] || 0) + n;
       }
     }
@@ -92,7 +92,7 @@ const POTFX = (() => {
       if (!al || !al.potOT) continue;
       if (al.down || (al.hp != null && al.hp <= 0)) { delete al.potOT; continue; }
       const got = tickOne(al, null);
-      if (got.health) line.me += ` · ${al.name} 🧪 +${r0(got.health)}`;
+      if (got.health) line.me += ` · ${al.name}  +${r0(got.health)}`;
     }
   }
 
@@ -157,7 +157,7 @@ const POTFX = (() => {
   const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
   function icon(res, px = 16) {
     try { if (typeof ICONART !== "undefined") { const h = ICONART.item(ITEM[res], px); if (h) return h; } } catch (e) { /* plain glyph */ }
-    return "🧪";
+    return "";
   }
   /* small chips (fight screen, under your bars) */
   function chipsHTML(h, t) {
@@ -166,7 +166,7 @@ const POTFX = (() => {
     return `<div class="tbst mine spl potfx">${xs.map((x) => `<i class="st spl me potot pk-${x.res}" data-tip="${esc(tr(tipOf(x)))}">${icon(x.res)}<small>${x.road ? `${x.n}s` : `×${x.n}`}</small></i>`).join("")}</div>`;
   }
   /* a teammate's frame (tbfight.js partyHTML): just the glyph */
-  function allyIcons(a) { return a?.potOT && Object.keys(a.potOT).length ? "🧪" : ""; }
+  function allyIcons(a) { return a?.potOT && Object.keys(a.potOT).length ? "" : ""; }
 
   // ------------------------------------------------------------------ hooks into the fight code
   if (typeof G !== "undefined" && G.Fight) {
@@ -227,7 +227,7 @@ const POTFX = (() => {
   function hookFx() {
     if (fxHooked || typeof FXICONS === "undefined" || typeof FXICONS.me !== "function") return;
     fxHooked = true;
-    const items = (h) => list(h).map((x) => ({ k: "potion", ic: "🧪", nm: x.name || "Potion", lbl: tr(x.name || "Potion"), buff: true, n: x.n, left: null, tip: tr(tipOf(x)), id: "pot:" + x.res }));
+    const items = (h) => list(h).map((x) => ({ k: "potion", ic: "", nm: x.name || "Potion", lbl: tr(x.name || "Potion"), buff: true, n: x.n, left: null, tip: tr(tipOf(x)), id: "pot:" + x.res }));
     const me1 = FXICONS.me; FXICONS.me = function (f) { return [...(me1.apply(this, arguments) || []), ...items(f)]; };
     if (typeof FXICONS.ally === "function") { const a1 = FXICONS.ally; FXICONS.ally = function (f, a) { return [...(a1.apply(this, arguments) || []), ...items(a)]; }; }
   }

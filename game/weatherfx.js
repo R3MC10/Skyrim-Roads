@@ -26,7 +26,7 @@ const WFX = (() => {
   const of = (id) => FX[id] || FX.clear;
   const pnum = (s, k) => (typeof PFX !== "undefined" && s ? PFX.num(s, k) : 0);
   const on = (s) => s && s.survival !== false;
-  const wxAt = (s, t) => (typeof WEVENTS !== "undefined" && s && s.x != null ? WEVENTS.weather([s.x, s.y], t) : { id: "clear", name: "Clear", icon: "☀️" });
+  const wxAt = (s, t) => (typeof WEVENTS !== "undefined" && s && s.x != null ? WEVENTS.weather([s.x, s.y], t) : { id: "clear", name: "Clear", icon: "" });
 
   // ---- warm clothes: hide and fur keep the cold out; a fur cloak in your pack counts as one more piece
   const WARM = /hide|fur|pelt|stalhrim|nordic|ancient_nord|skaal|stormcloak|bear|wolf_armor|forsworn|guard/;
@@ -69,12 +69,12 @@ const WFX = (() => {
   function warmUp(s, amt = 100, t = now()) { cold(s, t); s.coldV = Math.max(0, (s.coldV || 0) - amt); }
   function coldState(s, t = now()) {
     const v = cold(s, t), tier = v >= 70 ? 2 : v >= 40 ? 1 : 0;
-    return { v, tier, label: ["Warm", "Chilly", "Freezing"][tier], icon: ["", "🥶", "❄️"][tier] };
+    return { v, tier, label: ["Warm", "Chilly", "Freezing"][tier], icon: ["", "", ""][tier] };
   }
 
   // ---- what the weather does to a fight starting now
   function fight(s, t = now()) {
-    const w = s && s.dungeon ? { id: "clear", name: "Indoors", icon: "🏛" } : wxAt(s, t), e = of(w.id), warm = warmth(s) >= 0.5 || souped(s, t);
+    const w = s && s.dungeon ? { id: "clear", name: "Indoors", icon: "" } : wxAt(s, t), e = of(w.id), warm = warmth(s) >= 0.5 || souped(s, t);
     const cs = on(s) ? coldState(s, t) : { tier: 0 };
     let stam = warm ? 1 : e.stam;
     stam *= [1, 0.95, 0.9][cs.tier];
@@ -123,7 +123,7 @@ const WFX = (() => {
     if (!on(s)) return "";
     const c = coldState(s, t);
     if (!c.tier && c.v < 15) return "";
-    return `<div class="wxcold t${c.tier}" title="Cold: ${Math.round(c.v)}/100"><span>${c.icon || "🌡"} ${c.label}</span><i style="width:${Math.round(c.v)}%"></i></div>`;
+    return `<div class="wxcold t${c.tier}" title="Cold: ${Math.round(c.v)}/100"><span>${c.icon || ""} ${c.label}</span><i style="width:${Math.round(c.v)}%"></i></div>`;
   }
   // a fur cloak at general stores
   if (typeof D !== "undefined") {

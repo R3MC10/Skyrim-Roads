@@ -37,7 +37,7 @@ const ENEMY = () => G.scaleEnemy({ ...D.ENCOUNTERS.find((e) => e.health && e.kin
   OK(f.potOT && f.potOT.health && f.potOT.health.n === 4, "a potion is working on you");
   const line = { me: "" }; MAGIC.tick(f, line);
   OK(Math.abs(f.hp - (20 + amt / 2)) < 0.01, "half in the first round: " + f.hp);
-  OK(/🧪 \\+\\d+ health/.test(line.me), "the round line shows the share: " + line.me);
+  OK(/\\uE15B \\+\\d+ health/.test(line.me), "the round line shows the share: " + line.me);
   for (let i = 0; i < 3; i++) MAGIC.tick(f, { me: "" });
   OK(Math.abs(f.hp - Math.min(mx, 20 + amt)) < 0.01 && !f.potOT, "the full amount after 4 rounds, then gone: " + f.hp);
   MAGIC.tick(f, { me: "" }); OK(Math.abs(f.hp - (20 + amt)) < 0.01, "nothing more after it ran out"); }
@@ -107,7 +107,7 @@ const ENEMY = () => G.scaleEnemy({ ...D.ENCOUNTERS.find((e) => e.health && e.kin
   const t = POTFX.ally(al, "health", 50, "Potion of Healing");
   OK(/over 4 rounds/.test(t) && al.hp === 20, "an ally's potion doesn't land at once: " + t);
   const f = { s: fresh(), hp: 50, allies: [al] }; const line = { me: "" };
-  POTFX.tick(f, line); OK(al.hp === 45 && /Lydia 🧪 \\+25/.test(line.me), "the ally gets the first half at round end: " + al.hp + " " + line.me);
+  POTFX.tick(f, line); OK(al.hp === 45 && /Lydia \\uE15B \\+25/.test(line.me), "the ally gets the first half at round end: " + al.hp + " " + line.me);
   OK(POTFX.busy(al, "health"), "the ally's potion counts as working (followers won't drink another)");
   OK(POTFX.allyIcons(al).length > 0, "a glyph for the party list");
   al.down = true; POTFX.tick(f, { me: "" }); OK(!al.potOT, "a knocked-down ally's potion stops"); }

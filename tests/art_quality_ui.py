@@ -28,6 +28,8 @@ ONLY = set(FLAGS["only"].split(",")) if FLAGS.get("only") else None
 VPS = [(f"{w}x{h}@{d}", w, h, d) for (w, h) in [(2000, 837), (2560, 1440), (1366, 768)] for d in (1, 2)]
 if FLAGS.get("vp"): VPS = [v for v in VPS if v[0] in FLAGS["vp"].split(",")]
 MAX_UP, MAX_ASPECT = 1.15, 0.02
+# the wide title painting (titleart.js WUP) fills a 32:9 or 5K window even past its 2x file: allowed up to 1.8x there
+MAX_UP_KEY = {"title-wide": 1.8, "title-wide-2x": 1.8}
 
 # test-only: follow painted files through every canvas they are drawn into
 WATCH = r"""(() => {
@@ -52,8 +54,9 @@ WATCH = r"""(() => {
         if (key && /shadow/.test(key)) key = null;
         const k = Math.max(bx, by);
         if (key) add(this.canvas, key, k, k, asp, [sw0, sh0]);
+        // a canvas marked __soft (the title's blurred side fill) is blurry on purpose too
         // a soft glow laid over the picture (light bloom: a small copy added with "lighter"/"screen") is blurry on purpose
-        else if (src.__art && !/^(lighter|screen)$/.test(this.globalCompositeOperation)) for (const [kk, o] of src.__art) add(this.canvas, kk, o.up * k, Math.max(o.ch * k, k), Math.max(o.asp, asp), o.nat);
+        else if (src.__art && !src.__soft && !/^(lighter|screen)$/.test(this.globalCompositeOperation)) for (const [kk, o] of src.__art) add(this.canvas, kk, o.up * k, Math.max(o.ch * k, k), Math.max(o.asp, asp), o.nat);
       }
     } catch (e) { /* never break the game */ }
     return di.call(this, src, ...a);
@@ -76,7 +79,7 @@ CHECK = r"""async (lim) => {
   // up: screen px per file px (what the file itself needs); ch: the worst blow-up of the file or of a canvas it went through
   const judge = (where, key, up, asp, nat, ch = up) => {
     seen.push(key); note(key, up, nat);
-    if (ch > lim.up) bad.push(`${where} ${key}: blown up ${ch.toFixed(2)}x${ch > up * 1.01 ? ` (drawn too small on the way: file ${up.toFixed(2)}x)` : ''}`);
+    if (ch > ((lim.per || {})[key] || lim.up)) bad.push(`${where} ${key}: blown up ${ch.toFixed(2)}x${ch > up * 1.01 ? ` (drawn too small on the way: file ${up.toFixed(2)}x)` : ''}`);
     if (asp > lim.asp) bad.push(`${where} ${key}: squashed ${(asp * 100).toFixed(1)}%`);
   };
   // the shape of the picture inside an <img> box (object-fit cover/contain keep the shape)
@@ -203,7 +206,7 @@ async def run_vp(b, vp, fails, need):
 
     async def check(sname):
         await pg.screenshot(path=os.path.join(OUT, f"{name.replace('@', '_x')}_{sname}.png"))
-        r = await pg.evaluate(CHECK, {"up": MAX_UP, "asp": MAX_ASPECT})
+        r = await pg.evaluate(CHECK, {"up": MAX_UP, "asp": MAX_ASPECT, "per": MAX_UP_KEY})
         for k, v in r["need"].items():
             o = need.get(k)
             if not o or v[0] > o[0]: need[k] = v + [f"{name} {sname}"]

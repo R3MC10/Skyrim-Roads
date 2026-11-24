@@ -3,7 +3,7 @@ const __GAME = process.env.W || require("path").join(__dirname, "../game/");
 const fs=require("fs"),vm=require("vm");
 const W=process.env.W||__GAME + "";
 const c={console,Math,Date,JSON,Float64Array,Float32Array,Uint8Array,Int32Array,Uint16Array,Int16Array,Object,Array,Set,Map,Proxy,Number,String};vm.createContext(c);
-for(const f of ["data.js","world.js","terrain.js","formulas.js","perks.js","powers.js","engine.js","events.js","dungeons.js","towns.js","wevents.js","enchanting.js","quests.js","horses.js","horseback.js","hall.js","bounty.js","mp.js","ammo.js"])
+for(const f of ["data.js","world.js","terrain.js","formulas.js","perks.js","powers.js","engine.js","events.js","dungeons.js","towns.js","wevents.js","enchanting.js","quests.js","horses.js","horseback.js","mountfight.js","hall.js","bounty.js","mp.js","ammo.js"])
   if(fs.existsSync(W+f)) vm.runInContext(fs.readFileSync(W+f,"utf8").replace(/^const (\w+) =/m,"var $1 ="),c);
 vm.runInContext(`
 const ok=(c,m)=>{ if(!c) throw new Error("FAIL "+m); };

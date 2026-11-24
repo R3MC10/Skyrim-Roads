@@ -4,6 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Skyrim: Roads of the North</title>
+<link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#121417">
 <style>/* fonts bundled with the game (work offline) */
 @font-face{font-family:"Cinzel";font-style:normal;font-weight:600;font-display:swap;src:url(font-cinzel-600.woff2) format("woff2")}
 @font-face{font-family:"Cinzel";font-style:normal;font-weight:700;font-display:swap;src:url(font-cinzel-700.woff2) format("woff2")}
@@ -15,6 +20,20 @@
 @font-face{font-family:"Cormorant Garamond";font-style:normal;font-weight:600;font-display:swap;src:url(font-cormorant-garamond-600.woff2) format("woff2")}
 @font-face{font-family:"Cormorant Garamond";font-style:normal;font-weight:700;font-display:swap;src:url(font-cormorant-garamond-700.woff2) format("woff2")}
 @font-face{font-family:"Cormorant Garamond";font-style:italic;font-weight:600;font-display:swap;src:url(font-cormorant-garamond-600-italic.woff2) format("woff2")}
+/* game icons (gameicons.js): line icons on U+E100-E1FF. Each UI font face above has an icon twin (same family, style and
+   weight) so an icon is just a character in any text. GameIcons is the font alone (for canvas text in other fonts). */
+@font-face{font-family:"GameIcons";font-weight:100 900;font-display:block;unicode-range:U+E100-E1FF;src:url(font-gameicons.woff2) format("woff2")}
+@font-face{font-family:"Cinzel";font-style:normal;font-weight:600;font-display:block;unicode-range:U+E100-E1FF;src:url(font-gameicons.woff2) format("woff2")}
+@font-face{font-family:"Cinzel";font-style:normal;font-weight:700;font-display:block;unicode-range:U+E100-E1FF;src:url(font-gameicons.woff2) format("woff2")}
+@font-face{font-family:"Barlow Semi Condensed";font-style:normal;font-weight:400;font-display:block;unicode-range:U+E100-E1FF;src:url(font-gameicons.woff2) format("woff2")}
+@font-face{font-family:"Barlow Semi Condensed";font-style:normal;font-weight:500;font-display:block;unicode-range:U+E100-E1FF;src:url(font-gameicons.woff2) format("woff2")}
+@font-face{font-family:"Barlow Semi Condensed";font-style:normal;font-weight:600;font-display:block;unicode-range:U+E100-E1FF;src:url(font-gameicons.woff2) format("woff2")}
+@font-face{font-family:"Barlow Condensed";font-style:normal;font-weight:500;font-display:block;unicode-range:U+E100-E1FF;src:url(font-gameicons.woff2) format("woff2")}
+@font-face{font-family:"Barlow Condensed";font-style:normal;font-weight:600;font-display:block;unicode-range:U+E100-E1FF;src:url(font-gameicons.woff2) format("woff2")}
+@font-face{font-family:"Cormorant Garamond";font-style:normal;font-weight:600;font-display:block;unicode-range:U+E100-E1FF;src:url(font-gameicons.woff2) format("woff2")}
+@font-face{font-family:"Cormorant Garamond";font-style:normal;font-weight:700;font-display:block;unicode-range:U+E100-E1FF;src:url(font-gameicons.woff2) format("woff2")}
+@font-face{font-family:"Cormorant Garamond";font-style:italic;font-weight:600;font-display:block;unicode-range:U+E100-E1FF;src:url(font-gameicons.woff2) format("woff2")}
+
 </style>
 <style>
 /* VOICE: a Nord's field kit at night — iron, frost, candle-lit parchment.
@@ -224,7 +243,7 @@ input,select{border-radius:3px;border-color:rgba(228,220,200,.22);background:rgb
 .chips.quick{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}.chips.quick .chip{white-space:nowrap;flex:none}
 .chatrow{display:flex;gap:8px;margin-top:6px}.chatrow input{flex:1;margin:0}.chatrow .btn{flex:none}
 .linkbtn{background:none;border:0;padding:0;color:var(--frost);text-decoration:underline;min-height:0}
-textarea.code{width:100%;margin:8px 0;padding:10px;border-radius:6px;border:1px solid var(--line);background:#0f1114;color:var(--ink);font:13px/1.35 ui-monospace,Menlo,monospace;word-break:break-all;resize:vertical}
+textarea.code{width:100%;margin:8px 0;padding:10px;border-radius:6px;border:1px solid var(--line);background:#0f1114;color:var(--ink);font:13px/1.35 GameIcons,ui-monospace,Menlo,monospace;word-break:break-all;resize:vertical}
 .coats{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
 .coat{width:40px;height:40px;border-radius:50%;border:2px solid #4a4237;padding:0;box-shadow:inset 0 0 0 3px #121417}
 .coat.on{border-color:var(--gold);box-shadow:inset 0 0 0 3px #121417,0 0 0 2px rgba(226,187,100,.35)}.coat:disabled{opacity:1;cursor:default}
@@ -547,7 +566,7 @@ input:focus,select:focus{outline:none;border-bottom-color:#fff;background:rgba(2
 .top .iconbtn.snd,.top .iconbtn.soc{width:38px;height:38px;border-radius:50%;background:rgba(10,11,13,.55);border:1px solid rgba(226,187,100,.38);color:#e9e2d0;box-shadow:inset 0 0 8px rgba(0,0,0,.6)}
 .top .iconbtn.soc.on{border-color:#e2bb64;color:#ffe9b0;box-shadow:0 0 10px rgba(226,187,100,.35),inset 0 0 8px rgba(0,0,0,.6)}
 /* map buttons */
-.mapbtns .iconbtn{width:40px;height:40px;border-radius:50%;background:rgba(8,9,11,.62);border:1px solid rgba(226,187,100,.38);color:#efe8d6;font:600 20px/1 Georgia,serif;text-shadow:0 1px 2px #000;box-shadow:0 2px 8px rgba(0,0,0,.45)}
+.mapbtns .iconbtn{width:40px;height:40px;border-radius:50%;background:rgba(8,9,11,.62);border:1px solid rgba(226,187,100,.38);color:#efe8d6;font:600 20px/1 GameIcons,Georgia,serif;text-shadow:0 1px 2px #000;box-shadow:0 2px 8px rgba(0,0,0,.45)}
 /* compass */
 .compass{position:absolute;top:8px;left:10px;right:58px;height:30px;pointer-events:none;z-index:3;overflow:hidden;
   background:linear-gradient(90deg,transparent,rgba(6,7,9,.62) 14%,rgba(6,7,9,.62) 86%,transparent)}
@@ -561,7 +580,7 @@ input:focus,select:focus{outline:none;border-bottom-color:#fff;background:rgba(2
 .compass .cm{position:absolute;top:50%;transform:translate(-50%,-50%);line-height:0;color:#efe8d6}.compass .cm .hico{paint-order:stroke}
 .compass .cm .hico{width:15px;height:15px;stroke-width:1.7}
 .compass .cm[data-place]{pointer-events:auto;cursor:pointer;padding:6px}
-.compass .cm.unk em{font:italic 700 13px/1 Georgia,serif;color:rgba(233,226,208,.55)}
+.compass .cm.unk em{font:italic 700 13px/1 GameIcons,Georgia,serif;color:rgba(233,226,208,.55)}
 .compass .cm.pp i{display:block;width:6px;height:6px;border-radius:50%;background:#8fd3ff;box-shadow:0 0 0 1px #0b2333}
 .compass .cm.quest{color:#f1cd72;z-index:2}.compass .cm.quest .hico{width:16px;height:16px;fill:#f1cd72;stroke:#3b2c1e;stroke-width:1.2}
 .compass .cm.raid{color:#ff8a6a;animation:hudpulse 1.4s ease-in-out infinite}
@@ -700,7 +719,7 @@ input:focus,select:focus{outline:none;border-bottom-color:#fff;background:rgba(2
 .xstats b{color:var(--gold,#e2bb64);float:right}
 .xh{margin:12px 0 6px;font-size:.85em;letter-spacing:.1em;text-transform:uppercase;color:#cdbb8e}
 .item.dim{opacity:.5}.xbook{font-size:22px;width:28px;text-align:center}
-.xread p{font-family:var(--serif,Georgia,serif);font-size:1.05em;line-height:1.6;color:#e9e1cc;background:linear-gradient(180deg,rgba(64,52,34,.35),rgba(30,24,16,.35));border:1px solid rgba(214,178,94,.25);padding:12px;border-radius:4px}
+.xread p{font-family:var(--serif,GameIcons,Georgia,serif);font-size:1.05em;line-height:1.6;color:#e9e1cc;background:linear-gradient(180deg,rgba(64,52,34,.35),rgba(30,24,16,.35));border:1px solid rgba(214,178,94,.25);padding:12px;border-radius:4px}
 .panel.xcard{border-color:var(--gold,#e2bb64)}
 /* ---- fair levelling: progress view and Legendary skills (legendary.js) */
 .leg-stars{color:#e8c66a;text-shadow:0 0 6px rgba(232,198,106,.55);font-weight:700;letter-spacing:1px}
@@ -1177,7 +1196,7 @@ h3[class*="cat-"]{color:var(--cat)}
 .aispells{max-height:150px;overflow:auto}.chip.sm{min-height:34px;padding:0 10px;font-size:13px}
 .tcrow{display:flex;gap:6px;align-items:center}.tcrow select{flex:1;min-width:0}.tcrow .chip{flex:0 0 auto}.tjoin{align-self:center;margin:2px 0}
 .rcard .rdrag{cursor:grab;touch-action:none}.rcard.dragging{opacity:.6;outline:1px dashed var(--gold,#c9a45a)}.rcard.dropat{box-shadow:0 -3px 0 var(--gold,#c9a45a)}
-#sharein{width:100%;font-family:monospace;font-size:12px;min-height:64px;background:#11100c;color:inherit;border:1px solid #3a3226;border-radius:6px;padding:6px}
+#sharein{width:100%;font-family:GameIcons,monospace;font-size:12px;min-height:64px;background:#11100c;color:inherit;border:1px solid #3a3226;border-radius:6px;padding:6px}
 .aiprev{margin-top:8px}.aiprev b{color:var(--gold,#c9a45a)}.sneak2{margin:6px 0 0}
 /* party play (partyplay.js): ready check chips, the leader / following card */
 .ppcard{border-color:rgba(214,178,94,.45)!important;background:linear-gradient(180deg,rgba(40,34,22,.55),rgba(16,15,12,.6))}
@@ -1388,7 +1407,7 @@ html.a11y-hc i.iq-up{color:var(--buff,#6fd36a)!important}html.a11y-hc i.iq-dn{co
 .cqalch .cqready{flex:1;min-width:90px}
 .item .t span.cqst,.cqst{display:block;font-size:13px;margin-top:2px}
 .item .t span.cqst.ok,.cqst.ok{color:var(--buff,#8fd49a)}
-.item .t span.cqst.ok::before{content:"✔ "}
+.item .t span.cqst.ok::before{content:"\E120  "}
 .item .t span.cqst.no,.cqst.no{color:var(--debuff,#e39a86)}
 .cqstar{min-width:36px;min-height:36px;padding:0;border:0;background:transparent;color:var(--mute);font-size:20px;line-height:1;cursor:pointer}
 .cqstar.on{color:var(--gold)}
@@ -1488,7 +1507,7 @@ html.a11y-still .srch-flash{animation:none;outline:2px solid #e2bb64}
 .rmd-soon .rmd-when{color:var(--mute)}
 .rmd-n{font:600 .62em/1 var(--sans,inherit);color:#15120c;background:var(--gold);border-radius:10px;padding:3px 7px;vertical-align:middle;margin-left:6px;letter-spacing:.02em}
 .rmd-more{display:block;margin:8px auto 0;min-height:36px}
-.rmd-b{position:absolute;top:3px;right:calc(50% - 24px);min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--gold);color:#15120c;font:700 11px/18px system-ui,sans-serif;text-align:center;box-shadow:0 0 0 2px rgba(10,11,13,.85);pointer-events:none;z-index:2}
+.rmd-b{position:absolute;top:3px;right:calc(50% - 24px);min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--gold);color:#15120c;font:700 11px/18px GameIcons,system-ui,sans-serif;text-align:center;box-shadow:0 0 0 2px rgba(10,11,13,.85);pointer-events:none;z-index:2}
 .iconbtn > .rmd-b{top:-5px;right:-5px}
 .tw-dir > .rmd-b{top:0;right:auto;left:calc(50% + 14px)}
 .tab:has(> .rmd-b) > .dot,.iconbtn:has(> .rmd-b) > .dot,.tw-dir:has(> .rmd-b) > .dot{display:none}
@@ -1515,7 +1534,7 @@ body:has(#favBtn) .app,body:has(#twBtn) .app{padding-bottom:calc(190px + env(saf
 .tbw-turn{margin-top:8px}.tbw-turn.sent .tbaskb{opacity:.4;pointer-events:none}.tbw-turn .tbaskb{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}
 .tbw-wait{color:#8c877a;margin:8px 0 0}.tbw-end{display:flex;justify-content:space-between;align-items:center;margin-top:8px}.tbw-end.won b{color:#f3d98b}.tbw-end.lost b{color:#c96a5f}
 .tab .hk{display:none}
-@media (hover:hover) and (pointer:fine){.tab .hk{display:block;position:absolute;top:3px;right:calc(50% - 22px);min-width:14px;padding:0 3px;border:1px solid rgba(214,207,190,.35);border-bottom-width:2px;border-radius:3px;background:rgba(0,0,0,.45);color:rgba(236,226,200,.8);font:600 9px/12px system-ui,sans-serif;letter-spacing:0;text-transform:none;text-align:center}.tab.on .hk{color:#fff3cf;border-color:rgba(243,217,139,.6)}}
+@media (hover:hover) and (pointer:fine){.tab .hk{display:block;position:absolute;top:3px;right:calc(50% - 22px);min-width:14px;padding:0 3px;border:1px solid rgba(214,207,190,.35);border-bottom-width:2px;border-radius:3px;background:rgba(0,0,0,.45);color:rgba(236,226,200,.8);font:600 9px/12px GameIcons,system-ui,sans-serif;letter-spacing:0;text-transform:none;text-align:center}.tab.on .hk{color:#fff3cf;border-color:rgba(243,217,139,.6)}}
 .lootbox{margin:10px 0;border-top:1px solid rgba(228,220,200,.18);border-bottom:1px solid rgba(228,220,200,.18);background:rgba(0,0,0,.18)}
 .loot-h,.loot-row{display:grid;grid-template-columns:32px 1fr 44px 52px;gap:8px;align-items:center;padding:4px 8px}
 .loot-h{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#8c877a;border-bottom:1px solid rgba(228,220,200,.12)}.loot-h span:nth-child(n+3),.loot-row .num{text-align:right}
@@ -1565,7 +1584,7 @@ body:has(#favBtn) .app,body:has(#twBtn) .app{padding-bottom:calc(190px + env(saf
 .drop-hot{border-color:#f3d98b!important;box-shadow:0 0 0 3px #f3d98b,0 0 26px rgba(243,217,139,.55)!important}
 .tbu.drop-hot{transform:scale(1.03)}
 .tblog{display:block;width:100%;text-align:left;color:inherit;font:inherit;font-size:13px;border:1px solid rgba(255,255,255,.06);flex:1 1 72px;min-height:72px;max-height:none;cursor:pointer;position:relative}.tblog[hidden]{display:none}
-.tblog::after{content:"📜 tap for the full log";position:sticky;bottom:0;float:right;font-size:10px;opacity:.45}
+.tblog::after{content:"\E103  tap for the full log";position:sticky;bottom:0;float:right;font-size:10px;opacity:.45}
 .tbl{display:flex;gap:6px;align-items:baseline;padding:2px 0}.tbl .li{flex:none;width:16px;text-align:center;opacity:.85}
 .tbl .nd{color:#ffd27a;font-weight:700}.tbl.foe .nd{color:#ff8a78}.tbl .nh{color:#8fe08a;font-weight:700}.tbl .cr{font-style:normal;color:#ffcf5a;font-weight:700;text-transform:uppercase;font-size:.85em;letter-spacing:.04em}
 .tbl.fresh{animation:tbfresh 1.2s ease}
@@ -1637,7 +1656,7 @@ body:has(#favBtn) .app,body:has(#twBtn) .app{padding-bottom:calc(190px + env(saf
 .tbu.ally{padding:5px 7px 6px}.tbu.ally .nm{font-size:11.5px;color:#cfe8c4}.tbu.ally .fx{font-size:10px;letter-spacing:1px}
 .tbu.ally .tbbar.mid{margin-top:3px}
 .tbu.ally.down{opacity:.5;filter:grayscale(.7)}.tbu.ally.down.drop-ok{opacity:1}
-.tbf.dz-self .tbu.me .nm::after,.tbf.dz-ally .tbu.ally .nm::after{content:" ⬇";color:#f3d98b}
+.tbf.dz-self .tbu.me .nm::after,.tbf.dz-ally .tbu.ally .nm::after{content:" \E138 ";color:#f3d98b}
 /* [foe archetypes] foegroups.js: "Bandit outlaw  archer  2/3" */
 .tbu.foe .nm .arch{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:#e8b98a;border:1px solid rgba(232,185,138,.35);border-radius:6px;padding:0 4px;margin-left:4px;vertical-align:1px}
 /* combat wheel and timing ring (tbradial.js) */
@@ -2170,7 +2189,7 @@ html.a11y-hc .ti-box,html.a11y-hc .ti-box i,html.a11y-hc .ti-what{color:#ece6d8}
 .au-ht b.au-name{cursor:pointer}
 .au-sibs,.mp-f{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--sk-line,#3a3a3a);margin:0 0 6px}
 .au-sibs::-webkit-scrollbar,.mp-f::-webkit-scrollbar{display:none}
-#side .au-sibs button,#side .mp-f button{flex:none;white-space:nowrap;background:none;border:0;border-bottom:2px solid transparent;color:var(--sk-mute,#9d978a);font-family:var(--sk-ui,system-ui);font-weight:600;font-size:13px;letter-spacing:.05em;text-transform:uppercase;padding:6px 8px;min-height:40px;cursor:pointer}
+#side .au-sibs button,#side .mp-f button{flex:none;white-space:nowrap;background:none;border:0;border-bottom:2px solid transparent;color:var(--sk-mute,#9d978a);font-family:var(--sk-ui,GameIcons,system-ui);font-weight:600;font-size:13px;letter-spacing:.05em;text-transform:uppercase;padding:6px 8px;min-height:40px;cursor:pointer}
 #side .au-sibs button.on,#side .mp-f button.on{color:var(--sk-ink,#ece8de);border-bottom-color:var(--gold);background:linear-gradient(0deg,rgba(226,187,100,.12),transparent)}
 .mp-f{margin-top:8px}.mp-f small{font-size:11px;color:var(--sk-mute,#9d978a);letter-spacing:0}
 .au-in .tg-desc{margin:0 2px 6px}
@@ -2426,6 +2445,98 @@ html.a11y-still #skillup.on{animation:none}
   .sky-row.ft-cols .nm img.art.ico{width:22px;height:22px;margin-right:5px}
   .ft-cats .sky-cat{min-width:54px;padding:4px 3px}
 }
+/* ==== levelling like Skyrim (levelup.js): skill notice + level bar, the LEVEL UP moment, the three pillars, the prompt ==== */
+#lvln{position:fixed;top:calc(64px + env(safe-area-inset-top));left:0;right:0;display:flex;flex-direction:column;align-items:center;pointer-events:none;z-index:88}
+.lvn{display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 30px 10px;min-width:min(86vw,320px);max-width:92vw;background:radial-gradient(ellipse at center,rgba(6,7,8,.82) 0,rgba(6,7,8,.6) 55%,transparent 75%);animation:lvnin .35s var(--ease) both}
+.lvn.out{animation:lvnout .38s ease-in forwards}
+@keyframes lvnin{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@keyframes lvnout{to{opacity:0;transform:translateY(-4px)}}
+.lvn-t{margin:0;display:flex;align-items:center;gap:7px;font:600 15px/1.2 Cinzel,Georgia,serif;letter-spacing:.06em;color:#f2ead6;text-shadow:0 1px 0 #000,0 0 10px rgba(0,0,0,.9);text-align:center}
+.lvn-t b{color:#fff;font-size:17px}.lvn-t img{flex:none}
+.lvn-sb{display:block;width:min(56vw,190px);height:3px;background:rgba(255,255,255,.14);border-radius:2px;overflow:hidden;box-shadow:0 0 0 1px rgba(0,0,0,.55)}
+.lvn-sb>i{display:block;height:100%;background:var(--frost);transition:width 1.1s var(--ease)}
+.lvn-lv{display:flex;align-items:center;gap:8px;font:600 12px/1 Cinzel,Georgia,serif;color:#cfc6b0;text-shadow:0 1px 0 #000;margin-top:2px}
+.lvn-xb{display:block;width:min(62vw,230px);height:6px;border:1px solid rgba(226,187,100,.6);background:rgba(0,0,0,.55);border-radius:1px;overflow:hidden}
+.lvn-xb>i{display:block;height:100%;background:linear-gradient(90deg,#9b7a35,#e2bb64 70%,#f4dc9a);box-shadow:0 0 8px rgba(226,187,100,.55);transition:width 1.2s var(--ease)}
+.lvn-level{padding:14px 44px 14px;background:radial-gradient(ellipse at center,rgba(6,7,8,.96) 0,rgba(6,7,8,.88) 58%,transparent 80%)}
+.lvn-big{display:flex;align-items:center;justify-content:center;white-space:nowrap;margin:0;font:700 26px/1 Cinzel,Georgia,serif;letter-spacing:.3em;text-transform:uppercase;color:#ffe9b0;text-shadow:0 1px 0 #000,0 0 18px rgba(226,187,100,.55);padding-left:.3em}
+.lvn-n{margin:2px 0 4px;font:700 40px/1 Cinzel,Georgia,serif;color:#fff6de;text-shadow:0 2px 0 #000,0 0 22px rgba(226,187,100,.6);animation:lvnpop .6s var(--ease) both .15s}
+@keyframes lvnpop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
+.lvn-level .lvn-big::before,.lvn-level .lvn-big::after{content:"";display:inline-block;width:5px;height:5px;background:#e2bb64;transform:rotate(45deg);margin:0 .9em;vertical-align:middle;opacity:.9}
+.lvlprompt{display:flex;align-items:center;gap:12px;width:100%;margin:0 0 12px;padding:11px 14px;background:linear-gradient(90deg,rgba(226,187,100,.2),rgba(226,187,100,.06));border:1px solid var(--gold);border-radius:6px;color:var(--ink);text-align:left;cursor:pointer;animation:lvpglow 2.4s ease-in-out infinite}
+.lvlprompt .lvp-ar{flex:none;display:grid;place-items:center;width:34px;height:34px;border:1px solid var(--gold);border-radius:50%;color:var(--gold);font-size:15px}
+.lvlprompt .lvp-tx{display:flex;flex-direction:column;gap:2px;min-width:0}
+.lvlprompt b{font:700 17px/1.1 Cinzel,Georgia,serif;letter-spacing:.12em;text-transform:uppercase;color:#ffe9b0}
+.lvlprompt small{font-size:13px;color:var(--mute)}
+@keyframes lvpglow{0%,100%{box-shadow:0 0 0 rgba(226,187,100,0)}50%{box-shadow:0 0 16px rgba(226,187,100,.45)}}
+.lvk{position:fixed;inset:0;z-index:95;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(4,5,6,.82);animation:lvnin .3s var(--ease) both}
+.lvk-in{width:min(560px,100%);max-height:100%;overflow:auto;text-align:center;padding:18px 12px 14px;background:var(--tex,#16181b);border-top:1px solid rgba(226,187,100,.55);border-bottom:1px solid rgba(226,187,100,.55)}
+.lvk-k{margin:0;font:600 12px/1 Cinzel,Georgia,serif;letter-spacing:.3em;text-transform:uppercase;color:#cfc6b0}
+.lvk-h{margin:6px 0 4px;font:700 24px/1.15 Cinzel,Georgia,serif;letter-spacing:.06em;color:#ffe9b0}
+.lvk-s{margin:0 0 14px;font-size:13px;color:var(--mute)}
+.lvk-cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-items:end}
+.lvk-p{--c:var(--hp);position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;min-height:208px;padding:18px 6px 14px;justify-content:flex-end;background:linear-gradient(180deg,rgba(0,0,0,.15),color-mix(in srgb,var(--c) 26%,transparent));border:1px solid color-mix(in srgb,var(--c) 70%,#000);border-radius:3px 3px 0 0;color:var(--ink);cursor:pointer;transition:transform .18s var(--ease),box-shadow .18s}
+.lvk-magicka{--c:var(--mp)}.lvk-stamina{--c:var(--sp)}
+.lvk-p .lvk-cap{position:absolute;top:-7px;left:-5px;right:-5px;height:7px;background:color-mix(in srgb,var(--c) 55%,#1b1e22);border:1px solid color-mix(in srgb,var(--c) 70%,#000);border-radius:2px}
+.lvk-p .lvk-base{position:absolute;bottom:-6px;left:-6px;right:-6px;height:6px;background:#2a2d31;border:1px solid #000}
+.lvk-p b{font:700 17px/1 Cinzel,Georgia,serif;letter-spacing:.08em;text-transform:uppercase;color:#fff3d8}
+.lvk-v{font-size:15px;color:#d8d0bd}.lvk-v i{font-style:normal;color:var(--mute)}.lvk-v em{font-style:normal;font-weight:700;color:#fff}
+.lvk-p small{font-size:11.5px;color:var(--mute);line-height:1.2}
+.lvk-p:hover,.lvk-p:focus-visible{transform:translateY(-4px);box-shadow:0 0 18px color-mix(in srgb,var(--c) 60%,transparent);outline:none}
+.lvk-p.lvk-took{animation:lvktook .6s var(--ease)}
+@keyframes lvktook{40%{box-shadow:0 0 26px var(--c);transform:translateY(-6px)}}
+.lvk-later{margin-top:18px}
+.tw-dir .tw-lvlready{position:absolute;left:50%;top:-34px;transform:translateX(-50%);white-space:nowrap;padding:2px 9px;font:700 11px/1.4 Cinzel,Georgia,serif;letter-spacing:.14em;text-transform:uppercase;color:#1b1407;background:linear-gradient(180deg,#f4dc9a,#e2bb64);border-radius:9px;box-shadow:0 0 12px rgba(226,187,100,.8);animation:lvpglow 2s ease-in-out infinite}
+.tw-lv.tw-lvgo .tw-lvn{box-shadow:0 0 14px rgba(226,187,100,.85)}
+.tw-xp em.tw-lvup{font-style:normal;color:#ffe9b0;text-shadow:0 0 8px rgba(226,187,100,.7)}
+html.art-pixel .lvn-t,html.art-pixel .lvn-big,html.art-pixel .lvn-n,html.art-pixel .lvk-h,html.art-pixel .lvk-p b{text-shadow:2px 2px 0 #000}
+html.art-pixel .lvk-p,html.art-pixel .lvlprompt,html.art-pixel .lvn-xb{border-radius:0}
+@media (min-width:900px){#lvln{top:calc(16vh + env(safe-area-inset-top))}.lvn{min-width:440px;padding:12px 60px 14px}.lvk-p{min-height:250px}.lvn-t{font-size:19px}.lvn-big{font-size:36px}.lvn-level{padding:22px 90px}}
+@media (max-width:380px){.lvk-p{min-height:176px;padding:14px 3px 12px}.lvk-p b{font-size:14px}.lvk-v{font-size:13px}.lvn-big{font-size:21px}}
+@media (prefers-reduced-motion:reduce){.lvn,.lvk,.lvn-n,.lvlprompt,.tw-dir .tw-lvlready{animation:none}.lvn-xb>i,.lvn-sb>i{transition:none}}
+/* [mountfight] your horse's health bar in a fight (mountfight.js) */
+#tbf .mfhorse{position:relative;height:14px;margin-top:3px;border-radius:7px;background:rgba(120,80,40,.18);border:1px solid rgba(200,160,110,.45);overflow:hidden}
+#tbf .mfhorse i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,rgba(150,100,50,.6),rgba(210,170,110,.85));transition:width .45s ease}
+#tbf .mfhorse span{position:relative;display:block;font-size:10.5px;line-height:13px;text-align:center;color:#fff4e2;text-shadow:0 1px 2px #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#tbf .mfhorse.by{opacity:.75}
+#tbf .mfhorse.down{border-color:rgba(200,90,70,.6)}
+#tbf .mfhorse.down i{background:rgba(160,60,50,.5)}
+#tbf .mfst{margin-top:2px;font-size:10.5px}
+#tbf .mfst .st{font-style:normal;padding:0 5px;border-radius:6px;background:rgba(230,200,90,.18);border:1px solid rgba(230,200,90,.45);color:#f3e2a8}
+#tbf .tbact.mount{border-color:rgba(200,160,110,.6)}
+/* [OURS] gore.js: a red flash round the screen edges when you take a big hit */
+.gorevig{position:fixed;inset:0;pointer-events:none;z-index:9000;opacity:0;background:radial-gradient(ellipse at center,rgba(90,0,0,0) 52%,rgba(110,6,6,.55) 82%,rgba(70,0,0,.85) 100%)}
+.gorevig.on{animation:gorevig .75s ease-out forwards}
+@keyframes gorevig{0%{opacity:0}12%{opacity:var(--gv,.7)}100%{opacity:0}}
+.a11y-still .gorevig,.a11y-hc .gorevig{display:none}
+@media (prefers-reduced-motion:reduce){.gorevig{display:none}}
+/* painted dungeon rooms (dunrooms.js) and the parchment dungeon map (dunart.js) */
+.dun .dcol{display:grid;gap:10px;min-width:0;align-content:start}
+.droomart{position:relative;margin:-2px 0 10px}
+.droomart.painted,.droomart.waiting{aspect-ratio:16/9;overflow:hidden;border-radius:4px;background:#0c0b0a;box-shadow:0 0 0 1px rgba(214,178,94,.28),0 6px 18px rgba(0,0,0,.55)}
+.droomart.painted img{display:block;width:100%;height:100%;object-fit:cover;animation:droomin .6s ease-out}
+.droomart.painted::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 90% at 50% 45%,rgba(0,0,0,0) 55%,rgba(0,0,0,.5)),linear-gradient(180deg,rgba(0,0,0,0) 70%,rgba(0,0,0,.45))}
+.droomart .droomwait{width:100%;height:100%;background:radial-gradient(60% 60% at 50% 55%,rgba(255,170,80,.10),rgba(0,0,0,0)),#0c0b0a}
+.droomart.drawn img.art.scene{margin:0}
+@keyframes droomin{from{opacity:0;transform:scale(1.03)}to{opacity:1;transform:none}}
+.dun .dmapcard .dlegend{display:flex;flex-wrap:wrap;gap:4px 12px;margin-bottom:6px}
+.dlegend span{display:inline-flex;align-items:center;gap:5px}.dlegend img.art{width:22px;height:22px;display:block}
+.dun .dmap{border:1px solid #6a4a2a;border-radius:3px;box-shadow:0 4px 16px rgba(0,0,0,.55),inset 0 0 0 1px rgba(0,0,0,.2);background:#e9dcc0}
+.dun .dmap .dflick{mix-blend-mode:normal}
+.dun .dmap .dnode{width:46px;height:46px;margin:-23px 0 0 -23px}
+.dun .dmap .dnode:hover{background:radial-gradient(closest-side,rgba(255,200,120,.22),rgba(255,200,120,0))}
+@media (prefers-reduced-motion:reduce){.droomart.painted img{animation:none}}
+/* PC: one screen. The room on the left (scrolls inside itself if it must), the map on the right sized to fit the height */
+@media (min-width:900px) and (min-height:520px){
+  .dun{overflow:hidden}
+  .dun .in.dgrid{width:min(1280px,100%);height:100%;grid-template-columns:minmax(0,1.25fr) minmax(300px,1fr);grid-template-rows:minmax(0,1fr);gap:16px}
+  .dun .dcol{overflow:auto;min-height:0;padding-right:4px;overscroll-behavior:contain}
+  .dun .dmapcard{display:flex;flex-direction:column;min-height:0}
+  .dun .dmapfit{flex:1;min-height:0;container-type:size;display:flex;justify-content:center;align-items:center}
+  .dun .dmapfit .dmap{width:min(100cqw,calc(100cqh * 340 / var(--dh)));margin-top:0;flex:none}
+  .droomart.painted,.droomart.waiting{aspect-ratio:auto;height:clamp(170px,36vh,430px)}
+  .dun .dcol .evc{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:8px}
+  .dun .dcol .evc .btn{min-height:42px}
 /* [homestash] the house chest as a SkyUI container menu (homestash.js): Chest / Your pack, categories, sort, icons, amounts */
 .hs-box{margin-top:4px}
 .hs-side{margin:0}
@@ -2692,6 +2803,33 @@ html.pcmap.pc-home:has(.pcparty.on) .vitals{left:14px}
 .potfx-float{position:fixed;z-index:7;pointer-events:none;transform:translate(-50%,0);font:700 14px "Barlow Semi Condensed",sans-serif;color:#8fe08a;text-shadow:0 1px 2px #000,0 0 4px rgba(0,0,0,.8);animation:potfxup 1.1s ease-out forwards}
 @keyframes potfxup{0%{opacity:0;transform:translate(-50%,4px)}20%{opacity:1}100%{opacity:0;transform:translate(-50%,-22px)}}
 @media (prefers-reduced-motion:reduce){.potfx-float{animation-duration:.01s}}
+/* [chargebar] chargebar.js: the thin purple charge bar of enchanted weapons and staffs, everywhere */
+.cbar{--cb-a:#6b4fc8;--cb-b:#b49cff;position:relative;display:inline-block;vertical-align:middle;width:46px;height:5px;border-radius:3px;background:rgba(10,8,20,.65);box-shadow:inset 0 0 0 1px rgba(180,156,255,.38),0 0 0 1px rgba(0,0,0,.35);overflow:hidden;line-height:0}
+.cbar i{display:block;height:100%;background:linear-gradient(90deg,var(--cb-a),var(--cb-b));box-shadow:0 0 4px rgba(180,156,255,.6);border-radius:inherit}
+.cbar.cb-empty{background:rgba(120,20,20,.55);box-shadow:inset 0 0 0 1px rgba(255,110,90,.65),0 0 0 1px rgba(0,0,0,.35)}
+.cbar.cb-empty i{background:#d4483a}
+.cb-ico{position:relative;display:inline-block;flex:none;vertical-align:middle;line-height:0}
+.cb-ico>img.art.ico{margin:0!important}
+.sky-row .nm .cb-ico{margin-right:8px}
+.cbar.cb-on{position:absolute;width:auto;border-radius:2px;pointer-events:none}
+.cb-inl{display:inline-flex;align-items:center;gap:5px;vertical-align:middle;white-space:nowrap}
+.cb-inl .cbar{width:40px;height:5px}
+.cb-pct{font-style:normal;color:#c9b8ff;font-size:12px}
+.cb-none{font-style:normal;font-weight:600;color:#ff8a78;font-size:.85em;white-space:nowrap}
+.cb-detail{margin:8px 0 4px;clear:both}
+.cb-detail .cb-head{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
+.cb-detail .cb-head b{color:#c9b8ff;font-size:13px;letter-spacing:0;text-transform:none}
+.cb-detail.cb-empty .cb-head b{color:#ff8a78}
+.cbar.cb-wide{display:block;width:100%;height:7px;margin:3px 0}
+.cb-detail small{color:var(--mute);font-size:12px}
+.tbsub .tbbar.ch{grid-column:1/-1}
+.tbbar.ch i{background:linear-gradient(90deg,#5a3fb8,#b49cff)}
+.tbbar.ch.cb-empty{background:rgba(140,24,24,.45)}
+.tbbar.ch.cb-empty i{background:#d4483a}
+.tbbar.ch.cb-empty .num{color:#ffd0c8}
+/* [gameicons] line icons in place of emoji (gameicons.js): inline svg variant, raid medals */
+.gisvg{width:1.1em;height:1.1em;vertical-align:-.18em}
+.raidtop .rmed{font-style:normal}.raidtop .rmed.m0{color:#f1cd72}.raidtop .rmed.m1{color:#d4d8dc}.raidtop .rmed.m2{color:#c98a52}
 /* ==== PC fit (tests/pcfit_ui.py): on a wide landscape screen the game fills the window, the page never scrolls; only side lists do ==== */
 @media (min-width:1100px) and (orientation:landscape){
   html,body{height:100%;overflow:hidden}
@@ -2715,12 +2853,6 @@ html.pcmap.pc-home:has(.pcparty.on) .vitals{left:14px}
   .tbf .tbin>.tbstage{grid-column:1;grid-row:1/4;align-self:center;justify-self:center;width:min(100%,calc((100vh - 40px) * 1.45))}
   .tbf .tbin>.tbdock{align-self:end}
   .tbf .tbin .tbord{flex-wrap:wrap;overflow:visible}
-  /* a dungeon: the room on the left, its map on the right, sized to the window */
-  .dun .in{width:min(1500px,100%);grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto repeat(9,min-content) 1fr;column-gap:22px;align-content:start}
-  .dun .in>*{grid-column:1}
-  .dun .in>.hd{grid-column:1/-1}
-  .dun .in>.dmapcard{grid-column:2;grid-row:2/-1;align-self:start}
-  .dun .dmap{width:min(100%,calc((100vh - 150px) * var(--dar,.84)));margin-left:auto;margin-right:auto}
   #side:has(>.tw-starp .tw-bigw){display:flex;flex-direction:column}
   #side:has(>.tw-starp .tw-bigw)>*{flex:none}
   #side:has(>.tw-starp .tw-bigw)>.tw-starp{flex:1 1 auto;min-height:min(460px,100%)}
@@ -2747,7 +2879,110 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 @media (min-width:1100px) and (orientation:landscape){
   .loadcard.haspic{background-size:auto,min(100%,calc(1080px / var(--art-k,1))) auto;background-color:#07090c}
 }
+/* Dwemer puzzles (dwemer.js): valves and the lexicon's rings, on the xgame overlay */
+.dwgame .dw-in{width:min(440px,100%)}
+.dwgame .xg-clue{margin:0 0 8px;color:#d8cdb2;font-size:.95em;line-height:1.4}
+.dwgame .dw-row{display:flex;gap:6px;justify-content:center;margin:8px 0 10px;flex-wrap:wrap}
+.dwgame .dw-valve{width:64px;height:64px;padding:0;border-radius:50%;border:1px solid rgba(214,178,94,.45);background:#14120e;cursor:pointer}
+.dwgame .dw-valve:active{transform:rotate(25deg)}
+.dwgame .dw-valve-svg{width:100%;height:100%;display:block}
+.dwgame .hint{box-shadow:0 0 0 2px #7ad0a0,0 0 14px rgba(122,208,160,.7)}
+.dwgame .dw-row.lex .dw-ring{display:flex;flex-direction:column;align-items:center;gap:6px;border-radius:10px;padding:4px}
+.dwgame .dw-face{width:84px;height:84px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(circle at 40% 35%,#8a6a32,#4a3a1c 60%,#1d1810);border:3px solid #c9a24a;color:#7ad0c0}
+.dwgame .dw-face small{color:#e8d6a8;font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.dwgame .dw-glyph{width:40px;height:40px}.dwgame .dw-glyph.sm{width:18px;height:18px;vertical-align:-4px}
+.dwgame .dw-goal{color:#e8d6a8;white-space:nowrap}
+.dwgame .dw-gauge{height:8px;border-radius:4px;background:#2a2620;border:1px solid #4a4237;overflow:hidden;margin:0 0 6px}
+.dwgame .dw-gauge i{display:block;height:100%;background:linear-gradient(90deg,#7ad0a0,#e8a040,#d65a4a)}
+.dwgame .dw-msg{margin:4px 0 10px;color:#e8d6a8;font-weight:600}
+/* Blackreach (blackreach.js): the cavern map with its spots */
+.breach{z-index:9}
+.breach .br-map{position:relative;border:1px solid #4a4237;border-radius:12px;overflow:hidden;background:#14141c}
+.breach .br-map img.br-art{width:100%;height:auto;display:block}
+.breach .br-pin{position:absolute;transform:translate(-50%,-50%);background:none;border:0;padding:0;display:flex;flex-direction:column;align-items:center;cursor:pointer;color:#e8d6a8}
+.breach .br-pin i{width:16px;height:16px;border-radius:50%;background:#3a4048;border:2px solid #8a8f94;display:block}
+.breach .br-pin span{font-size:11px;line-height:1.1;margin-top:2px;padding:1px 4px;border-radius:4px;background:rgba(10,10,14,.75);white-space:nowrap;max-width:110px;overflow:hidden;text-overflow:ellipsis}
+.breach .br-pin.go i{background:#4ad0c8;border-color:#c8fff8;box-shadow:0 0 10px rgba(74,208,200,.8)}
+.breach .br-pin.foe i{background:var(--ember);border-color:#ffb0a0}
+.breach .br-pin.go.foe i{box-shadow:0 0 10px rgba(214,90,74,.9)}
+.breach .br-pin.here i{background:var(--gold);border-color:#fff3c8;box-shadow:0 0 12px rgba(226,187,100,.9);width:20px;height:20px}
+.breach .br-pin.sealed{opacity:.5}
+.breach .br-pin:disabled{cursor:default}
+.breach .br-acts{display:grid;gap:8px;margin-top:8px}
+@media (max-width:420px){.breach .br-pin span{font-size:10px;max-width:84px}}
+/* party traps (partytraps.js) and the live cursor (livecursor.js) */
+.dgparty{color:#e8b86a}
+.ptlist{display:flex;flex-direction:column;gap:4px;margin:10px 0 4px;text-align:left}
+.ptrow{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:6px 9px;background:rgba(255,255,255,.04);box-shadow:inset 0 0 0 1px rgba(228,220,200,.1);font-size:14px}
+.ptrow b{font-weight:600;color:#e9dcc0}.ptrow span{font-size:13px;color:#cfc6b0;text-align:right}
+.ptrow.ok span,.ptrow.in span{color:#9fd28a}.ptrow.bad span{color:#e58a6f}.ptrow.me{box-shadow:inset 0 0 0 1px rgba(214,178,94,.55)}
+.ptrow.fol{margin-left:16px;padding:4px 9px;font-size:13px;opacity:.9}.ptrow.fol b::before{content:"↳ ";color:#a9a395}
+.ptwarned{color:#d6b25e}.ptres .lpcard,.ptwait .lpcard{box-shadow:0 0 0 1px rgba(214,178,94,.45),0 20px 60px rgba(0,0,0,.6)}
+.lcur{position:fixed;left:0;top:0;z-index:140;pointer-events:none;will-change:transform;display:flex;align-items:flex-start}
+.lcur svg{display:block;filter:drop-shadow(0 1px 2px rgba(0,0,0,.8));transition:transform .12s}
+.lcur svg path{fill:#f3d27a;stroke:#140c06;stroke-width:1.4;stroke-linejoin:round}
+.lcur .lcname{margin:14px 0 0 -2px;padding:1px 6px;font-size:11px;font-weight:600;letter-spacing:.04em;white-space:nowrap;color:#140c06;background:#f3d27a;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.6)}
+.lcur.down svg{transform:scale(.82)}.lcur.down::before{content:"";position:absolute;left:-9px;top:-9px;width:18px;height:18px;border-radius:50%;border:2px solid #f3d27a;opacity:.8}
+.lcur.wait{opacity:.55}
+@media (prefers-reduced-motion:reduce){.lcur svg{transition:none}}
+/* fishing.js + huntgame.js: the fishing and hunting mini-games (one screen on PC, phone friendly) */
+.fhgame .fhcard{width:min(600px,100%);max-height:100%;overflow:auto;padding:12px 12px 10px}
+.fhgame .fhcard canvas{max-width:min(100%,560px,calc((100vh - 300px) * 1.867))!important;max-width:min(100%,560px,calc((100dvh - 300px) * 1.867))!important;box-shadow:0 0 0 1px rgba(228,220,200,.22)}
+.fhmeter{position:relative;height:22px;margin:8px 2px 4px;background:linear-gradient(90deg,rgba(228,220,200,.06),rgba(228,220,200,.14));box-shadow:inset 0 0 0 1px rgba(228,220,200,.25);visibility:hidden}
+.fhmeter.on{visibility:visible}
+.fhmeter .fhband{position:absolute;top:2px;bottom:2px;background:rgba(150,190,140,.42);box-shadow:inset 0 0 0 1px rgba(190,220,170,.6)}
+.fhmeter.aim .fhband{background:rgba(232,196,106,.35);box-shadow:inset 0 0 0 1px rgba(232,196,106,.7)}
+.fhmeter .fhdanger{position:absolute;top:2px;bottom:2px;right:2px;width:7%;background:repeating-linear-gradient(135deg,rgba(182,55,42,.75) 0 4px,rgba(182,55,42,.35) 4px 8px)}
+.fhmeter .fhneedle{position:absolute;top:-4px;bottom:-4px;width:4px;margin-left:-2px;background:#efe6cf;box-shadow:0 0 6px rgba(239,230,207,.7);transition:background .15s}
+.fhmeter.hot .fhneedle{background:#e0543f;box-shadow:0 0 10px rgba(224,84,63,.9)}
+.fhmeter.slack .fhneedle{background:#8fb2d8}
+.fhdist{height:6px;margin:0 2px;background:rgba(228,220,200,.08);visibility:hidden}
+.fhdist.on{visibility:visible}
+.fhdist i{display:block;height:100%;width:0;background:linear-gradient(90deg,#6a8fb0,#a8c8e0)}
+.fhmsg{min-height:2.6em;margin:6px 0 2px;font-size:15px;line-height:1.3;color:#e8dcc0}
+.fhgame .btn.fhbig{min-height:56px;font-size:18px;letter-spacing:.06em;touch-action:none;user-select:none;-webkit-user-select:none}
+.fhgame .cghint{min-height:2.4em}
+.hgbars{display:flex;align-items:center;gap:8px;margin:8px 2px 2px}
+.hglab{font-size:15px;line-height:1}
+.hgalert{flex:1;height:12px;background:rgba(228,220,200,.08);box-shadow:inset 0 0 0 1px rgba(228,220,200,.22)}
+.hgalert i{display:block;height:100%;width:0;background:linear-gradient(90deg,#c9a24a,#e0a03f)}
+.hgalert.hot i{background:linear-gradient(90deg,#d0603e,#e0331f)}
+.hgdist{min-width:3.4em;text-align:right;font-variant-numeric:tabular-nums;color:#b8b09c;font-size:14px}
+#hgrow .btn{flex:1 1 0}
+#hgrow .btn.fhbig{flex:2 1 0}
+@media (max-width:440px){
+  .fhgame .fhcard{padding:10px 8px 8px}
+  .fhgame .fhcard canvas{max-width:100%!important}
+  .fhmsg{font-size:14px}
+  #hgrow{flex-wrap:wrap}
+  #hgrow .btn.fhbig{flex:1 1 100%}
+}
+/* [OURS] title on wide screens: a dark scrim behind the menu column + stronger shadows, so the words read over a bright sky */
+.title .vign{background:radial-gradient(clamp(240px,34vw,620px) 62vh at 50% 58%,rgba(5,7,10,.58) 0%,rgba(5,7,10,.32) 55%,transparent 100%),linear-gradient(to top,rgba(4,5,7,.7) 0%,rgba(4,5,7,0) 16%),radial-gradient(120% 90% at 50% 45%,transparent 50%,rgba(0,0,0,.75) 100%)}
+.title .mi{color:#d8d1bf}
+.title .mi small{font-size:15px;color:#c9c1ad}
+.title .tag{color:#cfc7b3}
+.title .foot{font-size:14px;color:#b5ad9a}
+.title .press,.title .mi,.title .foot,.title .tag,.title .mi small{text-shadow:0 1px 2px rgba(0,0,0,1),0 0 10px rgba(0,0,0,.95),0 0 26px rgba(0,0,0,.7)}
+.title h1{filter:drop-shadow(0 2px 3px rgba(0,0,0,.9)) drop-shadow(0 0 18px rgba(0,0,0,.6))}
+/* [folbuild] followers learn like you: their build, level, skills with bars and perks (folbuild.js), SkyUI style */
+.fb-build{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;margin:6px 0 10px;border:1px solid rgba(214,178,94,.35);border-radius:4px;background:linear-gradient(180deg,rgba(40,34,22,.45),rgba(14,13,11,.55))}
+.fb-build .t{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.fb-build .t b{font:600 17px "Barlow Semi Condensed",sans-serif;color:#f0dca8;letter-spacing:.04em}
+.fb-badge{flex:none;min-width:84px;padding:8px 10px;text-align:center;border:1px solid rgba(226,187,100,.6);border-radius:3px;font:600 14px "Barlow Semi Condensed",sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#f1cd72;background:rgba(226,187,100,.08)}
+.fb-cxp{height:5px;margin:2px 0}.fb-cxp i{background:linear-gradient(90deg,#b98a3a,#e8c46a)}
+.fb-skills{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:4px 14px;margin:6px 0 12px}
+.fb-sk{display:grid;grid-template-columns:1fr auto;align-items:baseline;padding:3px 2px;border-bottom:1px solid rgba(200,190,170,.12);color:#a9a294;font-size:13px}
+.fb-sk.main{color:#e8dcc0}.fb-sk.main .fb-n{font-weight:600}
+.fb-sk .num{color:#f0dca8}
+.fb-sk .bar{grid-column:1/-1;height:4px;margin-top:3px}.fb-sk .bar i{background:linear-gradient(90deg,#6f8fb8,#bcd6ff)}
+.fb-sk .fb-prog{grid-column:1/-1;height:2px;background:rgba(255,255,255,.06)}.fb-sk .fb-prog i{display:block;height:100%;background:#e8c46a}
+.fb-perks{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px 14px;margin:6px 0 12px}
+.fb-tree h4{margin:0 0 3px;font:600 13px "Barlow Semi Condensed",sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#d6b25e}
+.fb-tree ul{margin:0;padding:0 0 0 14px;color:#e8dcc0;font-size:13px}.fb-tree li{margin:1px 0}
+@media (max-width:420px){.fb-build{flex-direction:column}.fb-skills{grid-template-columns:1fr 1fr}}
 </style>
+<script src="gameicons.js"></script>
 <script src="bugreport.js"></script>
 <script src="access.js"></script>
 </head>
@@ -2766,6 +3001,7 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 <script src="perkfx.js"></script>
 <script src="foeperks.js"></script>
 <script src="legendary.js"></script>
+<script src="levelup.js"></script>
 <script src="powers.js"></script>
 <script src="engine.js"></script>
 <script src="foecap.js"></script>
@@ -2782,6 +3018,7 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 <script src="daedric.js"></script>
 <script src="horses.js"></script>
 <script src="horseback.js"></script>
+<script src="mountfight.js"></script>
 <script src="hall.js"></script>
 <script src="bounty.js"></script>
 <script src="visits.js"></script>
@@ -2842,11 +3079,14 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 <script src="party.js"></script>
 <script src="followers2.js"></script>
 <script src="followerai.js"></script>
+<script src="folbuild.js"></script>
 <script src="combo.js"></script>
 <script src="partyplay.js"></script>
 <script src="lootvote.js"></script>
 <script src="partyvote.js"></script>
 <script src="dawnguard.js"></script>
+<script src="dwemer.js"></script>
+<script src="blackreach.js"></script>
 <script src="account.js"></script>
 <script src="servernet.js"></script>
 <script src="store.js"></script>
@@ -2858,6 +3098,7 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 <script src="colorcode.js"></script>
 <script src="skyart.js"></script>
 <script src="combatfx.js"></script>
+<script src="gore.js"></script>
 <script src="enchants2.js"></script>
 <script src="bscdata.js"></script>
 <script src="battlescene.js"></script>
@@ -2883,6 +3124,7 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 <script src="shouts2.js"></script>
 <script src="npcart.js"></script>
 <script src="dunart.js"></script>
+<script src="dunrooms.js"></script>
 <script src="dollart.js"></script>
 <script src="raidart.js"></script>
 <script src="homeart.js"></script>
@@ -2891,6 +3133,7 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 <script src="travelart.js"></script>
 <script src="solart.js"></script>
 <script src="dgart.js"></script>
+<script src="dwart.js"></script>
 <script src="skyui.js"></script>
 <script src="hud.js"></script>
 <script src="immerse.js"></script>
@@ -2909,7 +3152,11 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 <script src="craftgames.js"></script>
 <script src="minegame.js"></script>
 <script src="dungeongames.js"></script>
+<script src="livecursor.js"></script>
+<script src="partytraps.js"></script>
 <script src="hunting.js"></script>
+<script src="fishing.js"></script>
+<script src="huntgame.js"></script>
 <script src="craftqol.js"></script>
 <script src="polish.js"></script>
 <script src="caravans.js"></script>
@@ -2926,15 +3173,18 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 <script src="nickname.js"></script>
 <script src="desktop.js"></script>
 <script src="pcupdate.js"></script>
+<script src="chargebar.js"></script>
 <script src="i18n_story.js"></script>
 <script src="i18n_beast.js"></script>
 <script src="i18n_hsrooms.js"></script>
 <script src="i18n_living.js"></script>
 <script src="i18n_bonds.js"></script>
 <script src="i18n_dawnguard.js"></script>
+<script src="i18n_dwemer.js"></script>
 <script src="i18n_areaui.js"></script>
 <script src="i18n_menus2.js"></script>
 <script src="i18n_followertab.js"></script>
+<script src="i18n_folbuild.js"></script>
 <script src="i18n_homestash.js"></script>
 <script src="i18n_noequip.js"></script>
 <script src="i18n_boss.js"></script>
@@ -2946,9 +3196,12 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 <script src="i18n_fighttips.js"></script>
 <script src="i18n_pickaxe.js"></script>
 <script src="i18n_pcfit.js"></script>
+<script src="i18n_widetitle.js"></script>
 <script src="i18n_followeranim.js"></script>
 <script src="i18n_shouts.js"></script>
 <script src="i18n_bleakfalls.js"></script>
+<script src="i18n_levelup.js"></script>
+<script src="i18n_mountfight.js"></script>
 <script src="i18n_bugreport.js"></script>
 <script src="i18n_paintedmap.js"></script>
 <script src="i18n_horsedown.js"></script>
@@ -2960,6 +3213,10 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 <script src="i18n_netsync.js"></script>
 <script src="i18n_pcmap.js"></script>
 <script src="i18n_eventart.js"></script>
+<script src="i18n_gore.js"></script>
+<script src="i18n_appicon.js"></script>
+<script src="i18n_partytraps.js"></script>
+<script src="i18n_fishhunt.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>

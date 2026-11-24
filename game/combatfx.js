@@ -8,7 +8,7 @@
    - Things without blood don't bleed: skeletons drop bone chips, dwarven machines leak oil and sparks, spirits fade. */
 const COMBATFX = (() => {
   const prefs = () => { try { return JSON.parse(localStorage.getItem("rotn_prefs") || "{}"); } catch { return {}; } };
-  const gore = () => prefs().gore !== false;
+  const gore = () => (typeof GORE !== "undefined" ? GORE.full() : prefs().gore !== false && prefs().gore !== "low");   // [OURS] gore.js: beheadings and wet hits only on Full
   // what comes out when something is hit: [main colour, dark colour, kind]   kind: blood · bone · oil · ash · none
   const BLEED = {
     skeleton: ["#e8e0c8", "#b8ae94", "bone"], draugr: ["#6a5a3a", "#3a3020", "ash"], lich: ["#6a5a3a", "#3a3020", "ash"],

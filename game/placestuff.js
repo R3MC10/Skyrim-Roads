@@ -5,7 +5,7 @@
    - Local job: the farmer/innkeeper wants a nearby dungeon cleared or a bag carried (the town job list, s.jobs).
    - Shrine blessing: heals you and gives one blessing at a time (daily).      - Hidden stash: a strongbox to pick (lockpicking mini-game; every 3 days).
    - Search the ruins: a few coins, often a lore book or a scroll (every 3 days). - Herb spot: rare ingredients (every 2 days, like plant patches).
-   - Ore: Raven Rock Mine joins the ⛏ mines.
+   - Ore: Raven Rock Mine joins the  mines.
    Every place without anything else falls back to an offer by its kind, so new places are never empty (tests/test_fullmap.js).
    Perks: Wayfarer's Nose (Lockpicking) and Pilgrim (Restoration) in perkfx.js. */
 const PLACESTUFF = (() => {
@@ -93,7 +93,7 @@ const PLACESTUFF = (() => {
     if (hasOther(n)) return [];
     return BY_KIND[kindOf(n)] || ["search"];
   }
-  const LABEL = { stall: "🛒 Stall", chores: "🪓 Chores", job: "📜 Job", bless: "🕯 Blessing", stash: "🔒 Stash", search: "🔍 Search", grove: "🌿 Herbs" };
+  const LABEL = { stall: " Stall", chores: " Chores", job: " Job", bless: " Blessing", stash: " Stash", search: " Search", grove: " Herbs" };
   const tag = (n) => { const o = offers(n); return o.length ? ` · ${[...new Set(o.map((x) => LABEL[x.split(":")[0]]))].join(", ")}` : ""; };
 
   // ------------------------------------------------------------------ state
@@ -273,21 +273,21 @@ const PLACESTUFF = (() => {
     const row = (ico, title, sub, b) => rows.push(`<div class="item pstuff-row"><span class="ps-i" aria-hidden="true">${ico}</span><div class="t">${title}<span>${sub}</span></div>${b}</div>`);
     for (const o of [...list].sort((a, b) => a.startsWith("stall:") - b.startsWith("stall:"))) {   // the stall's long list goes last
       const [type] = o.split(":");
-      if (type === "chores") row("🪓", "Lend a hand", "An hour's work for a few coins and something from the larder. Once a day.", btn("chores", "Work", left(s, n, "chores", t)));
-      if (type === "bless") { const b = blessOf(n); row("🕯", esc(b.title), `${esc(b.what)}${G.P(s, "pilgrim") ? " for two days" : " for a day"}, and your wounds close. One blessing at a time.`, btn("bless", "Pray", left(s, n, "bless", t))); }
-      if (type === "stash") { const i = stashInfo(s, n), names = ["Novice", "Apprentice", "Adept", "Expert", "Master"]; row("🔒", "A hidden strongbox", `${names[i.tier]} lock · Lockpicking ${G.skill(s, "Lockpicking")}. Refilled every few days.`, btn("stash", "Pick it", left(s, n, "stash", t))); }
-      if (type === "search") row("🔍", "Search the area", "Loose stones and old hiding places: coins, scrolls, sometimes a book. Every few days.", btn("search", "Search", left(s, n, "search", t), false));
-      if (type === "grove") row("🌿", "Herbs grow here", "Pick what's ripe. It grows back in two days.", btn("grove", "Gather", left(s, n, "grove", t)));
+      if (type === "chores") row("", "Lend a hand", "An hour's work for a few coins and something from the larder. Once a day.", btn("chores", "Work", left(s, n, "chores", t)));
+      if (type === "bless") { const b = blessOf(n); row("", esc(b.title), `${esc(b.what)}${G.P(s, "pilgrim") ? " for two days" : " for a day"}, and your wounds close. One blessing at a time.`, btn("bless", "Pray", left(s, n, "bless", t))); }
+      if (type === "stash") { const i = stashInfo(s, n), names = ["Novice", "Apprentice", "Adept", "Expert", "Master"]; row("", "A hidden strongbox", `${names[i.tier]} lock · Lockpicking ${G.skill(s, "Lockpicking")}. Refilled every few days.`, btn("stash", "Pick it", left(s, n, "stash", t))); }
+      if (type === "search") row("", "Search the area", "Loose stones and old hiding places: coins, scrolls, sometimes a book. Every few days.", btn("search", "Search", left(s, n, "search", t), false));
+      if (type === "grove") row("", "Herbs grow here", "Pick what's ripe. It grows back in two days.", btn("grove", "Gather", left(s, n, "grove", t)));
       if (type === "job") {
         const mine = (s.jobs || []).find((j) => j.town === n);
         const j = jobOffer(s, n, t);
-        if (mine) row("📜", `Job: ${mine.type === "clear" ? `clear ${esc(mine.target)}` : `parcel to ${esc(mine.target)}`}`, `${mine.reward} gold when it's done. It's in your jobs list.`, "");
-        else if (j) row("📜", "Someone needs help", `${esc(j.text)} · ${j.reward} gold`, btn("job", "Take the job", 0, false));
-        else row("📜", "No work today", "Come back tomorrow, there's usually something.", "");
+        if (mine) row("", `Job: ${mine.type === "clear" ? `clear ${esc(mine.target)}` : `parcel to ${esc(mine.target)}`}`, `${mine.reward} gold when it's done. It's in your jobs list.`, "");
+        else if (j) row("", "Someone needs help", `${esc(j.text)} · ${j.reward} gold`, btn("job", "Take the job", 0, false));
+        else row("", "No work today", "Come back tomorrow, there's usually something.", "");
       }
       if (type === "stall") {
         const items = stock(s, n, t);
-        rows.push(`<div class="item pstuff-row"><span class="ps-i" aria-hidden="true">🛒</span><div class="t">A small stall<span>Fresh stock every day · you have ${s.gold} gold</span></div></div>`
+        rows.push(`<div class="item pstuff-row"><span class="ps-i" aria-hidden="true"></span><div class="t">A small stall<span>Fresh stock every day · you have ${s.gold} gold</span></div></div>`
           + items.map((x) => `<div class="item pstuff-buy">${typeof ICONART !== "undefined" ? ICONART.item(x.id, 30) : ""}<div class="t">${esc(D.ITEMS[x.id].name)}<span>${x.left ? `${x.left} left today` : "sold out"}</span></div><span class="num gold">${x.price}</span>${x.left && s.gold >= x.price ? `<button class="btn sm" data-act="pstuff" data-id="buy" data-item="${esc(x.id)}">Buy</button>` : `<button class="btn sm" disabled>Buy</button>`}</div>`).join(""));
       }
     }
@@ -304,22 +304,22 @@ const PLACESTUFF = (() => {
       for (const m of r.skills || []) ui.toast(m);
       ui.persist(true); ui.renderPanel(true);
       if (r.bought) return ui.toast(r.text);
-      ui.openModal(`<h2>${esc(title)}</h2><p>${esc(r.text)}</p>${r.book ? `<button class="btn" data-act="xread" data-id="${esc(r.book.id)}" style="width:100%;margin-bottom:6px">📖 Read "${esc(r.book.title)}"</button>` : ""}<button class="btn pri" data-act="close" style="width:100%">Close</button>`);
+      ui.openModal(`<h2>${esc(title)}</h2><p>${esc(r.text)}</p>${r.book ? `<button class="btn" data-act="xread" data-id="${esc(r.book.id)}" style="width:100%;margin-bottom:6px"> Read "${esc(r.book.title)}"</button>` : ""}<button class="btn pri" data-act="close" style="width:100%">Close</button>`);
     };
-    if (id === "chores") return done(chores(s, n), `🪓 ${n}`);
-    if (id === "bless") return done(bless(s, n), `🕯 ${n}`);
-    if (id === "search") return done(search(s, n), `🔍 ${n}`);
-    if (id === "grove") return done(grove(s, n), `🌿 ${n}`);
+    if (id === "chores") return done(chores(s, n), ` ${n}`);
+    if (id === "bless") return done(bless(s, n), ` ${n}`);
+    if (id === "search") return done(search(s, n), ` ${n}`);
+    if (id === "grove") return done(grove(s, n), ` ${n}`);
     if (id === "buy") return done(buy(s, b.dataset.item, n), n);
-    if (id === "job") return done(takeJob(s, n), `📜 ${n}`);
+    if (id === "job") return done(takeJob(s, n), ` ${n}`);
     if (id === "stash") {
       if (left(s, n, "stash")) return ui.toast("The strongbox is empty for now.");
       if (typeof IMM !== "undefined" && IMM.wantsGame && IMM.wantsGame() && IMM.open) {
         const i = stashInfo(s, n);
         return IMM.open({ tier: i.tier, picks: i.tries, chance: i.chance, unbreakable: G.P(s, "unbreakable"), skill: G.skill(s, "Lockpicking"), title: `A strongbox at ${n}` },
-          (res) => { if (!res.opened && !res.broken && !res.auto) return; done(stash(s, n, res.opened ? true : res.auto ? undefined : false), `🔒 ${n}`); });
+          (res) => { if (!res.opened && !res.broken && !res.auto) return; done(stash(s, n, res.opened ? true : res.auto ? undefined : false), ` ${n}`); });
       }
-      return done(stash(s, n), `🔒 ${n}`);
+      return done(stash(s, n), ` ${n}`);
     }
   }
 
