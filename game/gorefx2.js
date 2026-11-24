@@ -35,8 +35,8 @@ const GOREFX2 = (() => {
   /* what a blow shows: a list of [sheet, size (world units × s), angle jitter] — pure, tested in node */
   function planOf(type, mat, o = {}) {
     const lv = o.level || "full", full = lv === "full", out = [], side = o.side || "foe", ally = side !== "foe" && side !== "hero";
-    const frac = Math.max(0, Math.min(1, o.frac ?? 0.1)), big = (o.crit ? 1.35 : 1) * (o.final ? 1.5 : 1) * (o.power ? 1.15 : 1);
-    const k = Math.min(2.4, (0.55 + frac * 2.4) * big) * (mat === "dragon" ? 1.35 : 1) * (ally ? 0.6 : 1);
+    const frac = Math.max(0, Math.min(1, o.frac ?? 0.1)), big = (o.crit ? 1.25 : 1) * (o.final ? 1.35 : 1) * (o.power ? 1.1 : 1);
+    const k = Math.min(2.1, (0.55 + frac * 2.2) * big) * (mat === "dragon" ? 1.35 : 1) * (ally ? 0.6 : 1);
     const bleeds = !!BLEED[mat], strong = !!(o.crit || o.final);
     if (type === "fire") out.push(["embers", 62 * k]);
     else if (type === "frost") out.push(["frost", 62 * k]);

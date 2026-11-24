@@ -262,11 +262,11 @@ def dust(name, seed, size=192, frames=10, cols=("#8a7a62", "#b3a588", "#6e604c")
         t = (fi + 0.7) / frames
         cv = Canvas(W, H)
         for i in range(n):
-            dr = 1 - math.exp(-t * 3.2)
+            dr = 0.3 + 0.7 * (1 - math.exp(-t * 3.2))
             x = W / 2 + math.cos(ang[i]) * sp[i] * dr
             y = H * 0.72 + math.sin(ang[i]) * sp[i] * dr * 0.6 - t * W * 0.05
             r = r0[i] * (1 + t * 2.4)
-            cv.blob(x, y, r, r * 0.85, 0, cs[i % 3], 0.28 * (1 - t) ** 1.3, soft=1.0)
+            cv.blob(x, y, r, r * 0.85, 0, cs[i % 3], 0.13 * min(1, 0.4 + t * 3) * (1 - t) ** 1.3, soft=1.2)
         for i in range(chips):
             tt = t * 0.55
             x = W / 2 + math.cos(ch_ang[i]) * ch_sp[i] * tt

@@ -19,3 +19,23 @@ Object.assign(I18N_EXTRA.words, {
   "Settings → Fights → Blood and gore: Off, Low or Full. Everyone in a shared fight sees the same spray.":
     "Ustawienia → Walki → Krew i flaki: Wył., Niskie albo Pełne. We wspólnej walce wszyscy widzą te same bryzgi.",
 });
+
+/* gorefx2.js: realistic splatter patch note (b171-gorefx) */
+Object.assign(I18N_EXTRA.words, {
+  "Realistic blood and splatter":
+    "Realistyczna krew i rozbryzgi",
+  "Blows now throw real-looking blood: a wet burst of drops and fine mist flies away from whoever struck, bigger the harder the hit.":
+    "Ciosy wyrzucają teraz krew, która wygląda prawdziwie: mokry bryzg kropel i drobnej mgiełki leci w stronę przeciwną do atakującego, tym większy, im mocniej uderzysz.",
+  "Critical hits and finishing blows add a jet of blood and a wide splash, splatter the ground and smear the foe. The stains slowly fade over the fight.":
+    "Trafienia krytyczne i dobicia dodają strumień krwi i szeroki rozbryzg, plamią ziemię i brudzą wroga. Plamy powoli bledną w trakcie walki.",
+  "Hammers and maces kick up dust and spill less blood. Draugr and skeletons burst into grave dust and bone chips, Dwemer machines spit oil and sparks, Falmer and chaurus bleed green and daedra dark ichor. A blade on armour throws sparks.":
+    "Młoty i buzdygany wzbijają kurz i leją mniej krwi. Draugry i szkielety rozsypują się w grobowy pył i odpryski kości, krasnoludzkie maszyny plują olejem i iskrami, Falmerowie i chaurusy krwawią na zielono, a daedra ciemną posoką. Ostrze na zbroi krzesze iskry.",
+  "Spells look better too: frost throws ice shards, fire throws embers and smoke, lightning crackles and other magic leaves glowing motes.":
+    "Czary też wyglądają lepiej: mróz sypie odłamkami lodu, ogień sypie żarem i dymem, błyskawice trzaskają, a inna magia zostawia świecące drobinki.",
+  "Followers and horses bleed a little but are never splattered or cut up, and still only get knocked down.":
+    "Towarzysze i konie trochę krwawią, ale nigdy nie są zachlapani ani pocięci i dalej tylko padają powaleni.",
+  "Blood and gore on Full shows all of it; Low keeps the dust, sparks and spell effects without the realistic blood; Off shows none.":
+    "Krew i flaki na Pełne pokazuje wszystko; Niskie zostawia kurz, iskry i efekty czarów bez realistycznej krwi; Wył. nie pokazuje nic.",
+  "Fixed: blood and gore were not showing in fights at all. They're back.":
+    "Poprawka: krew i flaki w ogóle nie pokazywały się w walkach. Już wróciły.",
+});
