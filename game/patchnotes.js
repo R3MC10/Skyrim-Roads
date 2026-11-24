@@ -3,12 +3,88 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b175-potionbal", build: 175, date: "25 Nov 2026", title: "Potions hit harder again", items: [
+    { id: "b178-potionbal", build: 178, date: "25 Nov 2026", title: "Potions hit harder again", items: [
       "In a fight 60% of a potion now lands the moment you drink it, and the rest comes in over the next two rounds (small and big brewed ones: the next round). A potion saves you in a pinch again.",
       "Still one potion of a kind at a time: another of the same kind only helps once the last one has mostly done its work.",
       "Your tactics presets, followers and the Smart AI's party plans now drink a little earlier, at about half health, since potions take a moment to work.",
       "Quick Draught is easier to reach (Alchemy 25 and 50) and each rank also makes 5% more of a potion land at once.",
-      "The barber, the mirror, relics, the dig vote and the character screen arrows use proper game icons instead of phone emoji.",
+      "Relics, treasure hunts and the dig vote use proper game icons instead of phone emoji.",
+    ] },
+    { id: "b176-deepdelve", build: 176, date: "25 Nov 2026", title: "Deep expeditions and harder dungeons", items: [
+      "Deadly dungeons go deeper. When the master falls, stairs lead down to five more levels: entrance guardians, traps and elites, the ancient vault, the cursed sanctuary and the legendary lair.",
+      "After each level's big fight you make camp and choose: Extract (climb out with everything), Rest (costs a ration) or Descend. In a party it's a vote, with everyone's face by their pick.",
+      "There's no free healing down there: health, potions, injuries and curses come with you to the next level. The gold and loot get much better the deeper you go.",
+      "What you find below is only yours once you climb out. Get knocked out down there and the expedition's finds are lost, but never your gear or anything you brought in. Followers just get knocked down, as always.",
+      "From level 30 every dungeon has Veteran, Legendary and Mythic difficulty: tougher foes, more gold, and 1 to 3 modifiers you can read on the map before you go in (Frozen Depths, Restless Dead, Dwemer Overcharge, Blood Moon, Arcane Instability, Ancient Darkness, Cursed Sanctuary, Relentless Hunt). They change every week.",
+      "New perks: Dungeon Veteran (Athletics) and Deep Delver (Lockpicking). Pathfinder (Athletics) now also finds the way out of the depths.",
+    ] },
+    { id: "b177-festivals", build: 177, date: "24 Nov 2026", title: "Festivals and the Grand Arena", items: [
+      "Seven festivals now take turns around Skyrim, each for two days: the Jarl's Tourney in Windhelm, the Harvest Fair in Whiterun, the Lake Honrich Fishing Derby in Riften, the Great Hunt of Falkreath, Forgefire Days in Markarth, the Burning of King Olaf in Solitude and the Midwinter Feast in Dawnstar. Missed one? It comes back three weeks later.",
+      "Each festival has three contests out of duels, archery, ring-tilting on your horse, a smithing contest, the fishing derby, the hunt, a mining race and a drinking contest. Three tries each, your best one counts, and every contest has a live board everyone sees.",
+      "Festivals are peaceful ground: nothing you wear is lost, nobody dies, no bounty, and players can't attack each other in the festival town. Duel any player there as friends, whatever side of the war they're on.",
+      "Compete for yourself, your clan or a hold, and win glory for them. Winners get a title, a trophy and a little gold, plus a ceremonial prize the first time they win each festival.",
+      "The Grand Arena in Windhelm is always open: eight rounds of monsters, alone or with your party, with a new board every week.",
+      "Look for \"Festivals\" in any town, and for the festival banner on the map a day before it starts. New perks: Arena Champion (One-Handed), Sportsman (Athletics) and Crowd Favourite (Speechcraft).",
+      "Fixed: on phones the house chest and the follower Skills screen showed up without their proper look, and a fight on PC could stop drawing its blood.",
+    ] },
+    { id: "b176-fightpc", build: 176, date: "25 Nov 2026", title: "The fight fills your PC, and ends in slow motion", items: [
+      "On a PC or laptop the fight now fills the whole window, like the big map: the picture runs from edge to edge and the cards and the skill bar float over it.",
+      "The blow that ends a fight plays in slow motion, then a card shows how it went: how many rounds, the damage you dealt and took, and your best hit. Continue is right on it.",
+      "New in Settings → Fights: Fight quality (Low, Medium, High), Frame rate (30, 60 or no cap), and sliders for Camera shake and Fight UI size. Low quality and 30 frames save battery on phones.",
+      "While a foe's turn plays, tap anywhere on the fight to hurry it along (Space on a PC). The F key doesn't flee any more, so you can't run off by accident.",
+      "Tooltips in fights now say what a move costs in stamina or magicka instead of action points.",
+      "Fixed on phones: a few screens (the house chest, parts of dungeons and fights) were missing some of their styling.",
+    ] },
+    { id: "b176-turns", build: 176, date: "25 Nov 2026", title: "No more action points: you choose your turn", items: [
+      "Action points are gone. On your turn make up to 4 moves in any order, then press End turn. Blows, power attacks, bashes and guards cost stamina, spells cost magicka, dark magic costs a little health. Doing the same move again in a turn costs more, and a power attack is once a turn.",
+      "Moves you don't make turn into guard: end early and you take up to 30% less damage until your next turn.",
+      "You see every foe's next move by name with its icon, numbers, who it's aimed at and what it leaves behind (like Venom Spit → Lydia, Poison 3). When it acts, the banner and the log name the move too.",
+      "The turn order ribbon at the top lights up whoever is acting right now, foes included, so you always know whose go it is.",
+      "Out of breath? You can always make one plain swing a turn. Frost and shock bite your stamina and magicka a bit less than before, and trolls and hagravens regenerate at most four times a fight.",
+      "The fight speed button and the Skip buttons are gone. Tap the fight scene if you want to finish an animation right away.",
+    ] },
+    { id: "b176-stacks", build: 176, date: "25 Nov 2026", title: "Statuses stack, and every move is a minigame", items: [
+      "Burn, chill, poison, bleed, vulnerable, ward and more now stack. The number on the icon is how many stacks; each one makes it stronger and it drops by 1 every turn. Hold or hover the icon to see what it does.",
+      "Bosses can't be stun-locked: every stun, calm or fear gives them Resolve, so the next one is shorter.",
+      "Every attack, guard and spell is a quick minigame: tap in the bright zone, time your block, draw your bow or trace a rune. Perfect adds a stack of something nasty, a miss is weaker. Turn it off in Settings → Minigames if you'd rather not.",
+      "New perk effects for stacks: enchanted weapons add an extra stack, and resist perks take a stack off what's put on you.",
+    ] },
+    { id: "b176-strategy", build: 176, date: "25 Nov 2026", title: "Fights that reward thinking", items: [
+      "New move: Breathe (Catch your breath). It's free but ends your turn, and gets back a good chunk of stamina and some magicka. Power attacks, bashes and guards burn stamina, so pace yourself: hit hard now, or breathe and hit hard next turn.",
+      "Openings: hit a foe that's staggered, stunned or paralyzed and the blow does 30% more (a power attack 45%). A power attack on a frozen foe shatters the frost for extra. Bash or stagger first, then cash in. Still no one-shots.",
+      "Frost slows: a chilled or slowed foe acts later in the round, so you and your followers get in first.",
+      "Give your follower orders mid-fight with the little buttons on their card: Attack, Defend me (steps in front of you sooner) or Hold back (back row, only guards and heals). Tap again to let them fight their own way.",
+      "Perks: Second Wind makes Breathe give 50% more; Savage Strike and Devastating Blow make power attacks into an opening hit even harder. Auto uses all of this too.",
+    ] },
+    { id: "b176-combat2", build: 176, date: "25 Nov 2026", title: "A fight screen that feels like a game", items: [
+      "The fight is now one big scene that fills the screen. Everything you need sits right in it, so nothing scrolls, on phones and on PC.",
+      "Your health is a glowing orb in the corner with magicka and stamina curving round it; a striped band shows how much the foe is about to take. Slim bars float over your hero's head.",
+      "The foe's name, health, statuses and what it plans next hang over its head. Stunned foes wobble with stars, big hits flash and shake the picture.",
+      "Moves are round drawn buttons with what they cost in stamina or magicka on them. Magic and Items open as a drawer of cards over the fight. End Turn shows the guard you keep.",
+      "Turn order is a ribbon of little portraits at the top, followers sit in small cards at the side, and the fight log is a short fading feed (tap it for the whole log).",
+      "Every buff and debuff now shows as a little icon on whoever has it: you, followers, party members and foes. Armour spells, wards, healing over time, potions, shouts and powers, poison, burning, frost, bleeding, fear, paralysis and the rest. Each shows the turns left, and tapping or hovering tells you what it does.",
+      "When one lands or wears off, a short word floats up over that fighter: \"+Oakflesh\", \"Poisoned\", \"Burning fades\".",
+      "Prefer the old look? Settings → Fight screen → Classic.",
+    ] },
+    { id: "b175-legendhunts", build: 175, date: "25 Nov 2026", title: "Legendary beasts: Jarl contracts and monster hunts", items: [
+      "Ten named monsters now roam Skyrim, from the Mudcrab King on the Solitude shore to the White Ghost sabre cat, Whitefang the frost troll near Dawnstar and Bloodmoon, the werewolf of Hircine, in the Falkreath woods. Each one lives in its own hold and wanders between nearby places over time.",
+      "Open Legendary hunts in a town to see the Jarl's posters. Take a contract and the map shows a rough area where the beast was last seen, not an exact spot.",
+      "On the road you find clues: tracks (your hunting skill decides how much you read from them), a victim, a witness, a wrecked caravan. Every clue shrinks the area, and some tell you what the beast fears and what barely hurts it. You can also search the place you're standing in.",
+      "Close in and choose how to start the fight: set an ambush, track it to its lair (harder start, better loot) or lay bait and drink your potions first. In a party the leader chooses.",
+      "Each beast is a real boss with its own big move to dodge, block or ward against. Hitting it with what it fears really helps: a known weakness means more damage and a shorter fight, and the frost troll stops healing once you know to bring fire.",
+      "Rewards: the Jarl's gold, a trophy, rare hides and parts you can turn into ten unique pieces of gear at the forge (the forge uses them up), sometimes a unique item from the body, and a new bestiary entry. Party members each get their own trophy and share.",
+      "New perks: Experienced Tracker (Archery) finds an extra clue each time, Monster Scholar (Speech) tells you what a beast resists and hits legends harder, Trophy Hunter (Smithing) gets more rare parts and unique items.",
+    ] },
+    { id: "b172-assetquality", build: 172, date: "24 Nov 2026", title: "Sharper pictures on every screen", items: [
+      "Foes in fights are painted at full size now, so they stay sharp on big monitors and 3x phone screens instead of going soft.",
+      "The dragon is no longer squashed into a square: it shows with its proper wide wingspan.",
+      "Paintings (towns, shop banners, fight scenes, event pictures) keep their shape and are never blown up into a blur. On a very big screen a painting shows at its own size instead.",
+      "Fight scenes are drawn at your screen's full sharpness, on phones and on 4K monitors, even when the window grows or the phone turns.",
+      "The painted compass is a bit sharper too.",
+      "Everything the game draws itself (your hero, the new-character picture, the dungeon map, icons) is redrawn at the size it really has on your screen, so it stays crisp from phones to ultrawide monitors.",
+      "On the new-character screen your hero's picture next to the race keeps its shape instead of being stretched tall, and the big live picture is drawn at full sharpness on 3x phones.",
+      "Fixed: on phones a lot of newer screens (the house chest, invites, the problem report, the Dwemer puzzles and more) were missing their proper look. They look right again.",
+      "Fixed: with blood and gore on, the fight picture could stop drawing. It plays again.",
     ] },
     { id: "b174-potionregen", build: 174, date: "25 Nov 2026", title: "Potions work over time", items: [
       "Health, magicka and stamina potions no longer refill you all at once. They pour in over a few rounds in a fight, or a few seconds on the map: small potions over 5, ordinary ones over 4, the big brewed ones over 3. Half comes in right after you drink, so one still pulls you out of trouble.",
@@ -107,10 +183,10 @@ const PATCHNOTES = (() => {
     ] },
     { id: "b145-mountfight", build: 145, date: "24 Nov 2026", title: "Fight from the saddle", items: [
       "Riding when a fight on the road starts? You now play the whole fight on horseback. Your horse has its own health bar under yours.",
-      "New Mount and Dismount moves in the fight. Getting on costs 4 AP and some stamina, and your next blow is a charge: a sure hit that does more and can knock the foe back.",
+      "New Mount and Dismount moves in the fight. Getting on takes one of your moves and 20 stamina, and your next blow is a charge: a sure hit that does more and can knock the foe back.",
       "Up on a horse, bandits with swords and axes have a hard time reaching you, and your horse tramples wolves, skeevers and other small beasts. But archers, mages, spearmen and big beasts go for your horse and can pull you out of the saddle.",
       "No two-handed power attacks, no dual casting and no Master spells while riding, and arrows sometimes go wide from a moving horse. You also can't sneak up on anyone on horseback: your opening blow is the charge.",
-      "If your horse runs out of health it's knocked down, never killed: you're thrown off, take a little damage, lose 2 AP on your next turn and fight on foot. Afterwards it stays downed beside you until it gets back up.",
+      "If your horse runs out of health it's knocked down, never killed: you're thrown off, take a little damage, get one move fewer on your next turn and fight on foot. Afterwards it stays downed beside you until it gets back up.",
       "Four new perks: Cavalry Charge (One-Handed), Horse Archer (Archery), Steady Steed and Trample (Athletics).",
       "In a party, everyone who rides is on horseback in the fight picture, and every phone sees the same horses go down.",
     ] },
@@ -1176,9 +1252,8 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 175;
+  const NEXT_AT = 176;
   const NEXT = [
-    "A new, livelier fight screen that fits on one screen",
     "Dragon Shouts learned from word walls",
     "Werewolf and vampire paths",
     "Followers with their own quests, opinions and banter",

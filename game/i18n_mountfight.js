@@ -22,22 +22,22 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
       "Szarża z siodła bije o 30% mocniej i zawsze odrzuca wroga (traci swój następny ruch). [OURS]",
     "Shooting from the saddle: your arrows never go wide from the moving horse, and they do 10% more. [OURS]":
       "Strzelanie z siodła: twoje strzały nigdy nie idą bokiem z pędzącego konia i zadają o 10% więcej. [OURS]",
-    "Your horse takes 20/40% less damage in fights, foes pull you out of the saddle half as often, foot soldiers miss you 5/10% more, and getting on costs 1 AP less. [OURS]":
-      "Twój koń dostaje w walce o 20/40% mniej obrażeń, wrogowie o połowę rzadziej ściągają cię z siodła, piesi żołnierze pudłują o 5/10% częściej, a dosiadanie kosztuje 1 PA mniej. [OURS]",
+    "Your horse takes 20/40% less damage in fights, foes pull you out of the saddle half as often, foot soldiers miss you 5/10% more, and getting on costs 5 stamina less. [OURS]":
+      "Twój koń dostaje w walce o 20/40% mniej obrażeń, wrogowie o połowę rzadziej ściągają cię z siodła, piesi żołnierze pudłują o 5/10% częściej, a dosiadanie kosztuje 5 wytrzymałości mniej. [OURS]",
     "From the saddle your horse tramples small foes (wolves, skeevers, mudcrabs...): +20% more damage and a 25% chance to knock them down. [OURS]":
       "Z siodła twój koń tratuje małych wrogów (wilki, skeevery, błotne kraby...): +20% obrażeń i 25% szansy, że ich przewróci. [OURS]",
     // patch note
     "Fight from the saddle": "Walka z siodła",
     "Riding when a fight on the road starts? You now play the whole fight on horseback. Your horse has its own health bar under yours.":
       "Jedziesz konno, gdy na drodze zaczyna się walka? Teraz rozgrywasz całą walkę w siodle. Twój koń ma własny pasek zdrowia pod twoim.",
-    "New Mount and Dismount moves in the fight. Getting on costs 4 AP and some stamina, and your next blow is a charge: a sure hit that does more and can knock the foe back.":
-      "Nowe ruchy w walce: Dosiądź i Zsiądź. Wsiadanie kosztuje 4 PA i trochę wytrzymałości, a twój następny cios to szarża: pewne trafienie, które bije mocniej i może odrzucić wroga.",
+    "New Mount and Dismount moves in the fight. Getting on takes one of your moves and 20 stamina, and your next blow is a charge: a sure hit that does more and can knock the foe back.":
+      "Nowe ruchy w walce: Dosiądź i Zsiądź. Wsiadanie zajmuje jeden z twoich ruchów i 20 wytrzymałości, a twój następny cios to szarża: pewne trafienie, które bije mocniej i może odrzucić wroga.",
     "Up on a horse, bandits with swords and axes have a hard time reaching you, and your horse tramples wolves, skeevers and other small beasts. But archers, mages, spearmen and big beasts go for your horse and can pull you out of the saddle.":
       "Na koniu bandyci z mieczami i toporami ledwo cię sięgają, a koń tratuje wilki, skeevery i inne małe bestie. Za to łucznicy, magowie, włócznicy i wielkie bestie celują w konia i mogą ściągnąć cię z siodła.",
     "No two-handed power attacks, no dual casting and no Master spells while riding, and arrows sometimes go wide from a moving horse. You also can't sneak up on anyone on horseback: your opening blow is the charge.":
       "W siodle nie ma potężnych ataków bronią dwuręczną, podwójnego rzucania ani zaklęć mistrzowskich, a strzały z pędzącego konia czasem idą bokiem. Na koniu nie da się też nikogo zajść po cichu: pierwszy cios to szarża.",
-    "If your horse runs out of health it's knocked down, never killed: you're thrown off, take a little damage, lose 2 AP on your next turn and fight on foot. Afterwards it stays downed beside you until it gets back up.":
-      "Gdy koniowi skończy się zdrowie, zostaje powalony, nigdy zabity: spadasz, dostajesz trochę obrażeń, tracisz 2 PA w następnej turze i walczysz pieszo. Po walce koń zostaje przy tobie powalony, aż sam wstanie.",
+    "If your horse runs out of health it's knocked down, never killed: you're thrown off, take a little damage, get one move fewer on your next turn and fight on foot. Afterwards it stays downed beside you until it gets back up.":
+      "Gdy koniowi skończy się zdrowie, zostaje powalony, nigdy zabity: spadasz, dostajesz trochę obrażeń, masz o jeden ruch mniej w następnej turze i walczysz pieszo. Po walce koń zostaje przy tobie powalony, aż sam wstanie.",
     "Four new perks: Cavalry Charge (One-Handed), Horse Archer (Archery), Steady Steed and Trample (Athletics).":
       "Cztery nowe atuty: Szarża Kawalerii (Broń jednoręczna), Konny Łucznik (Łucznictwo), Pewny Wierzchowiec i Stratowanie (Atletyka).",
     "In a party, everyone who rides is on horseback in the fight picture, and every phone sees the same horses go down.":

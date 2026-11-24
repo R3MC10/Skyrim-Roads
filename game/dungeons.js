@@ -165,6 +165,7 @@ const DUNGEONS = (() => {
     const def = ENEMY[key], e = def.priest && typeof PRIESTS !== "undefined" ? G.scaleQuestFoe({ ...def }, G.fightLevel ? G.fightLevel(s) : s.level, PRIESTS.rec(s)) : G.scaleEnemy({ ...def }, G.fightLevel ? G.fightLevel(s) : s.level);   // fair levelling: foes follow your fighting skills   // [OURS] priests are story foes
     const m = boss ? 0.8 : [0, 0.8, 0.95, 1.1][tier];   // [OURS] bosses already pick a tougher foe per tier
     e.health = Math.round(e.health * m); e.hp = e.health; e.damage = Math.round(e.damage * m * 10) / 10;
+    if (typeof DEEPDELVE !== "undefined") DEEPDELVE.scaleFoe(s, e, boss);   // difficulty tiers and deeper levels (deepdelve.js)
     return e;
   }
   function weighted(list) { let r = Math.random() * list.reduce((a, [, w]) => a + w, 0); return list.find(([, w]) => (r -= w) < 0)[0]; }
@@ -183,18 +184,20 @@ const DUNGEONS = (() => {
     if (typeof PRIESTS !== "undefined") PRIESTS.onEnter(s);   // [Skyrim] a dragon priest sleeps at the end
     G.setHealth(s, G.curHealth(s, t), t);
     G.note(s, ` Entered ${name}`);
+    if (typeof DEEPDELVE !== "undefined") DEEPDELVE.onEnter(s, null, t);   // Veteran / Legendary / Mythic and their modifiers
     return null;
   }
   const nextChoices = (s) => { const d = s.dungeon; if (!d || d.room) return []; return d.row < 0 ? d.rows[0].map((_, i) => i) : d.rows[d.row][d.col].links; };
 
   function found(s, text) { s.dungeon.found.push(text); }
   function giveFound(s, item, n = 1) { if (n === 1 && D.ITEMS[item]?.slot === "ammo" && typeof AMMO !== "undefined") n = rint(...AMMO.LOOT_QTY[D.ITEMS[item].ammo]); G.give(s, item, n); found(s, D.ITEMS[item].name + (n > 1 ? ` ×${n}` : "")); return D.ITEMS[item].name; }
-  function goldFound(s, g) { s.gold += g; s.dungeon.gold += g; return g; }
+  function goldFound(s, g) { if (typeof DEEPDELVE !== "undefined") g = Math.round(g * DEEPDELVE.goldMult(s)); s.gold += g; s.dungeon.gold += g; return g; }
 
   function buildRoom(s, type) {
     const d = s.dungeon, T = THEMES[d.theme];
     if (type === "fight") { const e = foe(s, weighted(T.foes), d.tier); return { type, enemy: e, text: e.text }; }
     if (type === "elite") { const e = foe(s, pick(T.elite), d.tier); return { type, enemy: e, text: e.text }; }
+    if (type === "boss" && d.deep?.level && typeof DEEPDELVE !== "undefined") return DEEPDELVE.bossRoom(s, (k, b) => foe(s, k, d.tier, b));   // the major fight of a deeper level
     if (type === "boss") {
       const key = d.boss || T.boss[d.tier - 1], e = foe(s, key, d.tier, true);
       e.boss = true;
@@ -236,6 +239,7 @@ const DUNGEONS = (() => {
   function roomChoices(s) {
     const d = s.dungeon, r = d?.room;
     if (!r) return [];
+    if (r.type === "camp" && typeof DEEPDELVE !== "undefined") return DEEPDELVE.campChoices(s);   // Extract / Rest / Descend
     const pot = G.countRestore(s, "health") ? [["potion", `Drink a healing potion (${G.countRestore(s, "health")})`]] : [];
     if (r.type === "fight" || r.type === "elite") return [["fight", "Fight"], ["sneak", "Sneak past"], ["flee", "Run for it (Athletics)"], ...pot];
     if (r.type === "boss") return [["fight", "Fight"], ...pot];
@@ -249,7 +253,7 @@ const DUNGEONS = (() => {
     if (r.m === "coffin") return [["open", "Push the lid open"], ["skip", "Leave it be"]];
     return [["loot", "Search it"], ["skip", "Leave it"]];
   }
-  const dmg = (s, lo, hi, k) => { const d = s.dungeon, x = Math.round(G.maxHealth(s) * (k != null ? lo + (hi - lo) * k : rnd(lo, hi)) * [0, 0.8, 1, 1.2][d.tier] * (1 - (typeof PFX !== "undefined" ? Math.min(0.7, PFX.num(s, "trapdmg")) : 0))); G.setHealth(s, G.curHealth(s) - x); return x; };
+  const dmg = (s, lo, hi, k) => { const d = s.dungeon, x = Math.round(G.maxHealth(s) * (k != null ? lo + (hi - lo) * k : rnd(lo, hi)) * [0, 0.8, 1, 1.2][d.tier] * (1 - (typeof PFX !== "undefined" ? Math.min(0.7, PFX.num(s, "trapdmg")) : 0)) * (typeof DEEPDELVE !== "undefined" ? DEEPDELVE.trapMult(s) : 1)); G.setHealth(s, G.curHealth(s) - x); return x; };
   function themeLoot(s, chance) { const T = THEMES[s.dungeon.theme]; return T?.loot?.length && Math.random() < chance ? [giveFound(s, pick(T.loot))] : []; }
 
   function fight(s, e, opts, t) {
@@ -288,8 +292,10 @@ const DUNGEONS = (() => {
     const pc = parseChoice(choice), q = pc.q, flags = pc.fl;
     choice = pc.c;
     const done = (o) => { d.room = null; return o; };
-    const lose = (res, cause) => { const dd = G.die(s, cause, t); s.dungeon = null; return { ...res, died: dd.msg, bag: dd.bag }; };
+    // knocked out deep down: only the expedition's finds are lost (deepdelve.js)
+    const lose = (res, cause) => { if (d.deep?.level && typeof DEEPDELVE !== "undefined") return DEEPDELVE.knockout(s, res, cause, t); const dd = G.die(s, cause, t); s.dungeon = null; return { ...res, died: dd.msg, bag: dd.bag }; };
     if (choice === "potion") { const m = G.drinkPotion(s, t); return { text: m, stay: true }; }
+    if (r.type === "camp" && typeof DEEPDELVE !== "undefined") { const o = DEEPDELVE.campAct(s, choice, t, { fight: (e, op) => fight(s, e, op || {}, t), foe: (k) => foe(s, k, d.tier), lose }); return o; }   // the camp of a deep expedition (deepdelve.js)
 
     if (r.enemy) {
       const e = r.enemy;
@@ -321,6 +327,7 @@ const DUNGEONS = (() => {
         }
         return done({ text: `The ${e.name.toLowerCase()} falls.`, fight: res.f, skills: res.skills, gold: res.gold, loot: res.loot });
       }
+      if (d.deep?.level && typeof DEEPDELVE !== "undefined") return DEEPDELVE.majorDown(s, e, res, t);   // a deeper level's major fight: the hoard, then the camp
       // boss down: the big chest, maybe a word wall, the place is cleared
       const extra = [];
       const g = goldFound(s, rint(60, 160) * d.tier);
@@ -352,6 +359,7 @@ const DUNGEONS = (() => {
       s.cleared = s.cleared || {}; s.cleared[d.place] = t;
       d.room = null; d.done = true;
       G.note(s, ` Cleared ${d.place}`);
+      if (typeof DEEPDELVE !== "undefined" && DEEPDELVE.offer(s)) { d.done = false; d.room = DEEPDELVE.campRoom(s); word += " Behind the throne, worn stairs lead further down."; }   // deep expedition: Extract / Descend
       const falls = e.priest ? `${e.name.split(",")[0]} falls, and the mask clatters to the floor.` : `The ${e.name.toLowerCase()} falls.`;   // dragon priests have names
       if (partyChest) return { text: `${falls} Behind it stands a chest full of treasure: ${g} gold${partyChest.items.length ? ", " + partyChest.items.map((i) => D.ITEMS[i].name).join(", ") : ""}. It belongs to the whole party... for now.${word}`, fight: res.f, skills: res.skills, gold: res.gold, loot: res.loot, cleared: true, partyChest };
       return { text: `${falls} In the chest behind it: ${g} gold${extra.length ? ", " + extra.join(", ") : ""}.${word}`, fight: res.f, skills: res.skills, gold: res.gold, loot: res.loot, cleared: true };
@@ -411,7 +419,12 @@ const DUNGEONS = (() => {
     }
 
     if (r.type === "rest") {
-      if (choice === "rest") { const before = G.curHealth(s); G.setHealth(s, before + G.maxHealth(s) * 0.45); return done({ text: `You catch your breath and bind your wounds (${Math.round(before)} → ${Math.round(G.curHealth(s))} health).` }); }  // [OURS] 45%
+      let amb = null;
+      if (choice === "rest" && typeof DEEPDELVE !== "undefined" && d.mods?.includes("hunt") && Math.random() < 1 / 3) {   // Relentless Hunt: something finds you first
+        amb = fight(s, foe(s, weighted(THEMES[d.theme].foes), d.tier), { enemyFirst: true }, t);
+        if (!amb.f.won) return lose({ text: "Something found you while you rested.", fight: amb.f, skills: amb.skills }, amb.f.e.name);
+      }
+      if (choice === "rest") { const before = G.curHealth(s); G.setHealth(s, before + G.maxHealth(s) * 0.45 * (typeof DEEPDELVE !== "undefined" ? DEEPDELVE.healMult(s) : 1)); if (amb) return done({ text: `A ${amb.f.e.name.toLowerCase()} found you before you could sit down. Once it's dead, you bind your wounds (${Math.round(before)} → ${Math.round(G.curHealth(s))} health).`, fight: amb.f, skills: amb.skills }); return done({ text: `You catch your breath and bind your wounds (${Math.round(before)} → ${Math.round(G.curHealth(s))} health).` }); }  // [OURS] 45%
       if (q != null ? flags.includes("n") : Math.random() < 0.2) { const res = fight(s, foe(s, "skeever", s.dungeon.tier), { enemyFirst: true }, t); if (!res.f.won) return lose({ text: "", fight: res.f }, "Skeever"); return done({ text: "Something in the urns bites back. A skeever!", fight: res.f, skills: res.skills }); }
       const g = goldFound(s, q == null ? rint(5, 30) : Math.max(2, Math.round(rint(5, 30) * (0.4 + 0.9 * q)))), loot = (q == null ? Math.random() < 0.4 : q >= 0.66) ? [giveFound(s, "potion_health_minor")] : [];
       return done({ text: `You find ${g} gold${loot.length ? " and a " + loot[0] : ""}.` });
@@ -439,7 +452,7 @@ const DUNGEONS = (() => {
       const msgs = G.raiseSkill(s, r.skill);
       return done({ text: `You read "${r.title}". ${r.skill} increased to ${sk.lvl}.`, skills: msgs });   // [Skyrim] skill books +1
     }
-    if (r.m === "shrine") { G.setHealth(s, G.maxHealth(s)); return done({ text: "You kneel. Your wounds close." }); }
+    if (r.m === "shrine") { G.setHealth(s, Math.max(G.curHealth(s), G.maxHealth(s) * (typeof DEEPDELVE !== "undefined" ? DEEPDELVE.healMult(s) : 1))); return done({ text: "You kneel. Your wounds close." }); }
     if (r.m === "egg") {
       if (Math.random() < 0.35) { const res = fight(s, foe(s, "spider", d.tier), { enemyFirst: true }, t); if (!res.f.won) return lose({ text: "", fight: res.f }, "Frostbite spider"); const n = giveFound(s, "ing_spider_egg", 3); return done({ text: `Mother was home. Afterwards you gather ${n} ×3.`, fight: res.f, skills: res.skills }); }
       const n = rint(2, 4) * (G.P(s, "green_thumb") ? 2 : 1); giveFound(s, "ing_spider_egg", n); return done({ text: `You hack through the webs and gather ${n} spider eggs.` });
@@ -463,11 +476,12 @@ const DUNGEONS = (() => {
   function leave(s, t = G.now()) {
     const d = s.dungeon;
     if (!d) return "";
+    const deepMsg = typeof DEEPDELVE !== "undefined" ? DEEPDELVE.onLeave(s) : "";   // mid-expedition: the finds stay below unless you have Pathfinder
     s.dungeon = null;
     G.setHealth(s, G.curHealth(s), t);   // regeneration starts again outside
     const got = `${d.gold} gold${d.found.length ? ", " + d.found.join(", ") : ""}`;
     G.note(s, ` Left ${d.place}${d.done ? " (cleared)" : ""}. Found: ${got}.`);
-    return `You climb back into daylight with ${got}.`;
+    return `You climb back into daylight with ${got}.${deepMsg}`;
   }
 
   /* a run saved in a state it can't go on from gets put right (called on load): a dead foe holding a room shut,

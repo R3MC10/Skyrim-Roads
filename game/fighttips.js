@@ -1,8 +1,8 @@
 /* Fight-screen tooltips through tooltip.js. [OURS]
    A player: "missing tooltips in combat" (hovering a spell in the fight's Magic list showed nothing).
    - Every part of the fight screen gets the same rich tooltip as the rest of the game: spell rows and their Cast / Dual
-     buttons (what it does, numbers with your perks, single and dual cast, magicka and AP, how long, and why a greyed
-     button can't be used), potions and scrolls, the big buttons and quick slots, the AP pips, your bars, you, the foe,
+     buttons (what it does, numbers with your perks, single and dual cast, magicka, stamina, how long, and why a greyed
+     button can't be used), potions and scrolls, the big buttons and quick slots, the moves row, your bars, you, the foe,
      its status chips (afraid, calmed, rattled added here), filters and tabs.
    - decorate() runs after every redraw of the fight (tbfight.js) and only adds data-tip-k="fa:..." attributes; the
      "fa" provider below turns a key into the tooltip for the fight that's open (TB.session).
@@ -27,7 +27,7 @@ const FIGHTTIPS = (() => {
   const safe = (fn, d) => { try { const v = fn(); return v === undefined ? d : v; } catch { return d; } };
   const cap = (t) => String(t || "").charAt(0).toUpperCase() + String(t || "").slice(1);
 
-  const apOf = (f, a) => safe(() => mod("TB").cost(f, a), 3);
+  const apOf = (f, a, sess) => safe(() => mod("TB").cost(f, a, sess), null);   // build 146: { sp, mp, hp, n }, no AP any more
   const zoneOf = (a) => safe(() => mod("TB").zoneOf(a), "");
   const ZONE = { foe: "Tap it, or drag it onto the foe.", self: "Tap it, or drag it onto yourself or a teammate.", ally: "Tap it, or drag it onto a teammate." };
   /* the magicka a spell needs to be castable right now (the same sum as the greyed-out check) and what it really costs */
@@ -43,19 +43,18 @@ const FIGHTTIPS = (() => {
     if (safe(() => sess.canAfford(a), true)) return "";
     const f = sess.f, [k, arg] = a.split(":");
     let w = safe(() => mod("FIGHTCTL").reason(sess, a, c), "") || "You can't use this right now";
-    const pool = sess.ap + (/^(spell|dual|scroll):/.test(a) ? sess.spAp || 0 : 0);
-    if (/more AP$/.test(w)) w += `: you have ${pool} left, it costs ${c}`;
+    if (/stamina$/i.test(w) && c && c.sp > 0 && a !== "power_attack") w += `: you have ${r0(f.sp)}, it needs ${c.sp}`;
     else if (/more magicka$/.test(w) && D.SPELLS[arg]) w += `: you have ${r0(f.mp)}, it needs ${mana(f, D.SPELLS[arg], k === "dual").need}`;
     else if (a === "power_attack" && /stamina/.test(w)) w += `: you have ${r0(f.sp)}, it needs ${r0(f.paCost || 0)}`;
     return `<p class="tt-dn">\uE123 ${esc(w)}</p>`;
   }
-  const apStat = (sess, a, c) => ["AP", c >= 99 ? "all" : /^(spell|dual|scroll):/.test(a) && sess.st?.spellAp ? `${c} (✦ spell AP first)` : c];
+  const apStat = (sess, a, c) => ["Costs", (safe(() => mod("TB").costTxt(c), "free") || "free") + (c && c.n ? ` (×${c.n + 1} this turn)` : "")];
   const stripAp = (t) => String(t || "").replace(/\s*(?:\d+ AP\.|Uses all your AP\.)\s*$/, "");
 
   // ---------------------------------------------------------------- spells, items, moves
   function spellHTML(sess, id, dual) {
     const f = sess.f, s = f.s, sp = D.SPELLS[id]; if (!sp) return null;
-    const M = mod("MAGIC"), a = (dual ? "dual:" : "spell:") + id, c = apOf(f, a), m = mana(f, sp, dual);
+    const M = mod("MAGIC"), a = (dual ? "dual:" : "spell:") + id, c = apOf(f, a, sess), m = mana(f, sp, dual);
     const tier = sp.level || safe(() => mod("TOMES").level(id), "Novice");
     const fail = safe(() => M.failChance(s, id), 0);
     return head(dual ? `${sp.name} (dual cast)` : sp.name, `sch-${String(sp.school).toLowerCase()}`)
@@ -68,21 +67,21 @@ const FIGHTTIPS = (() => {
       + whyHTML(sess, a, c) + hint(ZONE[zoneOf(a)] || "");
   }
   function potionHTML(sess, kind) {
-    const f = sess.f, a = "potion:" + kind, c = apOf(f, a), T = mod("TIP");
+    const f = sess.f, a = "potion:" + kind, c = apOf(f, a, sess), T = mod("TIP");
     const r = safe(() => f.findPotion(kind), null);
     let n = 0; safe(() => { for (const x of f.s.inv) if (D.ITEMS[x.item]?.slot === "potion" && D.ITEMS[x.item].restore?.[0] === kind) n += Math.max(0, f.left ? f.left(x.id) : x.qty); });
     const body = r && T?.itemHTML ? T.itemHTML(r.item, f.s, r) : head(`${cap(kind)} potion`) + line(`Drinks your best ${kind} potion.`);
     return body + stats([["Left", n], apStat(sess, a, c)]) + (r ? line("The best one you carry is used first.", "tt-hint") : "") + whyHTML(sess, a, c) + hint(ZONE[zoneOf(a)] || "");
   }
   function scrollHTML(sess, item) {
-    const f = sess.f, a = "scroll:" + item, c = apOf(f, a), T = mod("TIP"), it = D.ITEMS[item]; if (!it) return null;
+    const f = sess.f, a = "scroll:" + item, c = apOf(f, a, sess), T = mod("TIP"), it = D.ITEMS[item]; if (!it) return null;
     const sp = D.SPELLS[it.spell];
     return (T?.itemHTML ? T.itemHTML(item, f.s) : head(it.name)) + (sp ? safe(() => mod("MAGIC").infoHTML(f.s, it.spell), "") : "")
       + stats([["Magicka", "none"], apStat(sess, a, c)]) + line("Reading it uses the scroll up.", "tt-hint") + whyHTML(sess, a, c) + hint(ZONE[zoneOf(a)] || "");
   }
   const NAMES = { attack: "Attack", power_attack: "Power attack", block: "Guard", bash: "Shield bash", flee: "Flee", end: "End turn" };
   function moveHTML(sess, a) {
-    const f = sess.f, c = apOf(f, a), [k, arg] = a.split(":"), TT = mod("TBTIPS"), T = mod("TIP");
+    const f = sess.f, c = apOf(f, a, sess), [k, arg] = a.split(":"), TT = mod("TBTIPS"), T = mod("TIP");
     if (k === "spell" || k === "dual") return spellHTML(sess, arg, k === "dual");
     if (k === "potion") return potionHTML(sess, arg);
     if (k === "scroll") return scrollHTML(sess, arg);
@@ -97,16 +96,16 @@ const FIGHTTIPS = (() => {
     if (a === "power_attack") st.push(["Stamina", r0(f.paCost || 0)], ["You have", r0(f.sp)]);
     if (a === "block" || a === "bash") st.push(["You have", `${r0(f.sp)} stamina`]);
     if (a !== "end") st.push(apStat(sess, a, c));
-    else st.push(["AP left", sess.ap], ["Guard", `+${Math.min(30, (sess.ap || 0) * 10)}%`]);
+    else st.push(["Moves made", `${sess.myActs || 0}/${sess.st?.acts ?? 4}`], ["Guard", `+${Math.round(100 * safe(() => sess.guardLeft(), 0))}%`]);
     return body + stats(st) + whyHTML(sess, a, c) + (a === "end" || a === "flee" ? "" : hint(ZONE[zoneOf(a)] || ""));
   }
 
   // ---------------------------------------------------------------- you, the foe, the bars, the AP row
   function apHTML(sess) {
     const st = sess.st || {};
-    return head("Action points") + stats([["Left", `${sess.ap}/${st.ap ?? sess.ap}`], st.spellAp ? ["Spell AP ✦", `${sess.spAp}/${st.spellAp}`] : null])
-      + line("Every move costs AP: the gold pips on its button.") + (st.spellAp ? line("Blue ✦ spell AP pays for spells and scrolls first.") : "")
-      + line("AP you don't use becomes guard when you end your turn (up to 30% less damage).") + hint("You get them all back next round.");
+    return head("Moves") + stats([["Made", `${sess.myActs || 0}/${st.acts ?? 4}`], ["Stamina", r0(sess.f.sp)], ["Magicka", r0(sess.f.mp)]])
+      + line("Make up to 4 moves a turn. Blows and guards cost stamina, spells magicka: the coloured numbers on each button.")
+      + line("The same move again in one turn costs 50% more. Moves you don't make become guard when you end your turn (up to 30% less damage).") + hint("Stamina and magicka come back a bit every round.");
   }
   const sp0 = (x) => x.cost || 0;
   function barHTML(sess, k) {
@@ -123,7 +122,7 @@ const FIGHTTIPS = (() => {
     const f = sess.f, st = sess.st || {};
     let arm = 0, red = 0; safe(() => { const { rating, pieces } = f.armorRating(); arm = r0(rating); red = r0(100 * mod("F").damageReduction(rating, pieces)); });
     const blk = safe(() => r0(100 * mod("SHIELDFX").passive(f)), 0);
-    return head(f.s.name || "You") + sub("You") + stats([["Armour", arm], ["Blows weaker", `${red}%`], blk ? ["Shield block", `${blk}%`] : null, ["AP a turn", st.ap], st.spellAp ? ["Spell AP", st.spellAp] : null, ["Initiative", st.init]])
+    return head(f.s.name || "You") + sub("You") + stats([["Armour", arm], ["Blows weaker", `${red}%`], blk ? ["Shield block", `${blk}%`] : null, ["Moves a turn", st.acts ?? 4], ["Initiative", st.init]])
       + hint("Drop healing spells and potions here to use them on yourself.");
   }
   function foeHTML(sess) {

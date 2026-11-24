@@ -891,7 +891,7 @@ const FIGART = (() => {
   }
   function sprite(src, o = {}) {
     const sp = specOf(lookFor(src, o)), pose = POSES[o.pose] ? o.pose : "idle", frame = frameOf(pose, o);
-    const dpr = o.dpr || Math.min(2, (typeof devicePixelRatio !== "undefined" && devicePixelRatio) || 1);
+    const dpr = o.dpr || Math.min(3, (typeof devicePixelRatio !== "undefined" && devicePixelRatio) || 1);
     let k = o.k || ((o.h || 64) / 61) * (o.scale || 1) * dpr; k = Math.max(0.12, Math.round(k * 16) / 16);
     if (o.from && POSES[o.from.pose] && o.w != null && o.w < 1) {   // fading from another clip: drawn fresh, not cached
       const fp = o.from.pose, a = posed(sp, fp, frameOf(fp, o.from), o), b = posed(sp, pose, frame, o);

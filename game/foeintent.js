@@ -147,7 +147,7 @@ const FOEINTENT = (() => {
       it.tgt = { ...d, label: label(d, sess), me: d.k === myKey(sess) };
       const al = d.k !== myKey(sess) && d.k !== HOST ? findAlly(f, d.k) : null;
       if (al && (it.lo || it.hi)) { const [lo, hi, mid] = allyBlow(f, al); it.lo = lo; it.hi = hi; it.mid = mid; }   // their own armour, not yours
-      if (d.k !== HOST) { it.dot = null; if (it.id !== "force") it.note = ""; }   // poison, lost stamina and AP only land on the leader's own hero (a shout knocks them back anyway)
+      if (d.k !== HOST) { it.dot = null; if (it.id !== "force") it.note = ""; }   // poison, lost stamina and winding only land on the leader's own hero (a shout knocks them back anyway)
     });
     return its;
   }
@@ -207,7 +207,7 @@ const FOEINTENT = (() => {
      width, the foe at 72%, your allies in a line behind you) */
   let arrowTok = 0;
   function arrow(el, sess, nx, tries = 0, tok = ++arrowTok) {
-    const stage = el.querySelector(".tbstage"), cv = stage?.querySelector("canvas");
+    const stage = el.querySelector(".tbstage"), cv = stage?.querySelector(".tbscene canvas") || stage?.querySelector("canvas");   // .tbscene: combat2.js puts a blurred copy behind it
     const r = cv?.getBoundingClientRect();
     if (!stage || !cv || r.width < 40 || r.height < 30) {   // the scene draws its canvas a moment after the screen: try again shortly
       if (tries < 8 && typeof setTimeout !== "undefined") setTimeout(() => { if (tok === arrowTok && el.isConnected && !el.classList.contains("tbplay") && !sess.done) arrow(el, sess, nx, tries + 1, tok); }, 90);

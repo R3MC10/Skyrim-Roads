@@ -29,8 +29,8 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
       "Gotowe taktyki, towarzysze i plany Sprytnej SI dla drużyny piją teraz trochę wcześniej, przy mniej więcej połowie zdrowia, bo mikstury potrzebują chwili, żeby zadziałać.",
     "Quick Draught is easier to reach (Alchemy 25 and 50) and each rank also makes 5% more of a potion land at once.":
       "Szybki łyk jest łatwiej dostępny (Alchemia 25 i 50), a każdy poziom sprawia też, że od razu wchodzi o 5% więcej mikstury.",
-    "The barber, the mirror, relics, the dig vote and the character screen arrows use proper game icons instead of phone emoji.":
-      "Fryzjer, lustro, relikwie, głosowanie o kopaniu i strzałki na ekranie postaci mają teraz porządne ikony z gry zamiast emotek z telefonu.",
+    "Relics, treasure hunts and the dig vote use proper game icons instead of phone emoji.":
+      "Relikwie, poszukiwanie skarbów i głosowanie o kopaniu mają teraz porządne ikony z gry zamiast emotek z telefonu.",
     // the patch note (patchnotes.js)
     "Potions work over time": "Mikstury działają z czasem",
     "Health, magicka and stamina potions no longer refill you all at once. They pour in over a few rounds in a fight, or a few seconds on the map: small potions over 5, ordinary ones over 4, the big brewed ones over 3. Half comes in right after you drink, so one still pulls you out of trouble.":
