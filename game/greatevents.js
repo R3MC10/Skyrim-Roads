@@ -20,6 +20,8 @@ const GREATEV = (() => {
   const seeded = (seed) => { let a = Math.floor(hash(seed) * 4294967296) | 0; return () => { a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
   const shuffle = (list, seed) => { const r = seeded(seed), a = [...list]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const pfx = (s, key) => (typeof PFX !== "undefined" && s ? PFX.num(s, key) : 0);
+  /* player text goes through T (i18n.js turns it Polish for Polish players; English otherwise, and in node tests) */
+  const T = (en, v) => (typeof I18N !== "undefined" && I18N.t ? I18N.t(en, v) : v ? en.replace(/\{(\w+)(:lc)?\}/g, (m, k, lc) => (k in v ? (lc ? String(v[k]).toLowerCase() : String(v[k] ?? "")) : m)) : en);
   const capN = (v, max) => (Number.isFinite(+v) ? Math.max(0, Math.min(max, +v)) : 0);
 
   const HOLDS = ["Haafingar", "Hjaalmarch", "The Pale", "Winterhold", "Eastmarch", "Whiterun", "The Reach", "Falkreath", "The Rift"];
@@ -60,18 +62,18 @@ const GREATEV = (() => {
       const kinds = typeof DRAGONS !== "undefined" ? DRAGONS.KINDS.slice(0, 4) : [{ id: "dragon", name: "Dragon", hp: 1, dmg: 1 }];
       const k = kinds[Math.floor(r("kind") * kinds.length)];
       ev.dKind = k.id; ev.foe = k.name;
-      ev.name = `${k.name} attacks ${ev.place}`;
+      ev.name = T("{foe} attacks {place}", { foe: k.name, place: ev.place });
     } else if (kind === "rift") {
       ev.hold = HOLDS[Math.floor(r("hold") * HOLDS.length)];
       const list = riftSites(ev.hold); ev.place = list[Math.floor(r("site") * list.length)];
-      ev.name = `Daedric rift at ${ev.place}`;
+      ev.name = T("Daedric rift at {place}", { place: ev.place });
     } else if (kind === "siege") {
       ev.hold = HOLDS[Math.floor(r("hold") * HOLDS.length)]; ev.place = CAPITAL[ev.hold];
       ev.foe = WARLORDS[Math.floor(r("lord") * WARLORDS.length)];
-      ev.name = `Siege of ${ev.place}`;
+      ev.name = T("Siege of {place}", { place: ev.place });
     } else {
       ev.place = FAIR_TOWNS[Math.floor(r("town") * FAIR_TOWNS.length)];
-      ev.name = `The great fair in ${ev.place}`;
+      ev.name = T("The great fair in {place}", { place: ev.place });
     }
     if (!ev.hold && typeof WORLD !== "undefined" && WORLD.places[ev.place]) ev.hold = G.holdAt(WORLD.places[ev.place]);
     return ev;
@@ -101,19 +103,19 @@ const GREATEV = (() => {
   /* base numbers at your own level (scaled by G.scaleEnemy); balance sim in tests/test_greatevents.js */
   const PHASES = {
     dragon: [
-      { id: "sky", title: "It circles and burns", name: (ev) => `${ev.foe} over ${ev.place}`, health: 150, damage: 13, tags: ["big", "dragon", "elite"], text: (ev) => `The ${ev.foe.toLowerCase()} sweeps low over the roofs, breathing ${ev.dKind === "frost" || ev.dKind === "blood" ? "frost" : "fire"}.` },
-      { id: "ground", title: "It lands in the streets", name: (ev) => `${ev.foe} in the streets`, health: 160, damage: 15, tags: ["big", "dragon", "elite"], text: (ev) => `It crashes down in the market of ${ev.place}, tail smashing stalls.` },
-      { id: "fury", title: "Wounded and furious", name: (ev) => `Wounded ${ev.foe.toLowerCase()}`, health: 140, damage: 17, tags: ["big", "dragon", "elite"], text: () => "Bleeding and furious, it fights for its life." },
+      { id: "sky", title: "It circles and burns", name: (ev) => T("{foe} over {place}", { foe: ev.foe, place: ev.place }), health: 150, damage: 13, tags: ["big", "dragon", "elite"], text: (ev) => T(ev.dKind === "frost" || ev.dKind === "blood" ? "The {foe:lc} sweeps low over the roofs, breathing frost." : "The {foe:lc} sweeps low over the roofs, breathing fire.", { foe: ev.foe }) },
+      { id: "ground", title: "It lands in the streets", name: (ev) => T("{foe} in the streets", { foe: ev.foe }), health: 160, damage: 15, tags: ["big", "dragon", "elite"], text: (ev) => T("It crashes down in the market of {place}, tail smashing stalls.", { place: ev.place }) },
+      { id: "fury", title: "Wounded and furious", name: (ev) => T("Wounded {foe:lc}", { foe: ev.foe }), health: 140, damage: 17, tags: ["big", "dragon", "elite"], text: () => T("Bleeding and furious, it fights for its life.") },
     ],
     rift: [
-      { id: "spill", title: "Daedra pour out", name: () => "Scamps and atronachs", health: 140, damage: 12, tags: ["daedra", "rift"], text: () => "Scamps and flame atronachs spill from the crackling rift." },
-      { id: "guard", title: "The Dremora guard", name: () => "Dremora Kynreeve", health: 150, damage: 14, tags: ["daedra", "humanoid", "rift"], text: () => "A Dremora officer steps through and raises a burning blade." },
-      { id: "lord", title: "The Rift Lord", name: () => "Dremora Markynaz, Rift Lord", health: 170, damage: 17, tags: ["daedra", "humanoid", "elite", "rift"], text: () => "The Rift Lord himself comes to hold the tear open." },
+      { id: "spill", title: "Daedra pour out", name: () => T("Scamps and atronachs"), health: 140, damage: 12, tags: ["daedra", "rift"], text: () => T("Scamps and flame atronachs spill from the crackling rift.") },
+      { id: "guard", title: "The Dremora guard", name: () => "Dremora Kynreeve", health: 150, damage: 14, tags: ["daedra", "humanoid", "rift"], text: () => T("A Dremora officer steps through and raises a burning blade.") },
+      { id: "lord", title: "The Rift Lord", name: () => T("Dremora Markynaz, Rift Lord"), health: 170, damage: 17, tags: ["daedra", "humanoid", "elite", "rift"], text: () => T("The Rift Lord himself comes to hold the tear open.") },
     ],
     siege: [
-      { id: "walls", title: "Raiders at the walls", name: () => "Bandit raiders", health: 130, damage: 11, tags: ["humanoid", "bandit", "siege"], text: (ev) => `Bandits with ladders swarm the walls of ${ev.place}.` },
-      { id: "ram", title: "The battering ram", name: () => "Ram crew and their guards", health: 150, damage: 14, tags: ["humanoid", "bandit", "siege"], text: () => "A battering ram thunders against the gate. Its guards won't let you near." },
-      { id: "lord", title: "The warlord", name: (ev) => `${ev.foe}, bandit warlord`, health: 170, damage: 17, tags: ["humanoid", "bandit", "elite", "siege"], text: (ev) => `${ev.foe} rides in to finish the job.` },
+      { id: "walls", title: "Raiders at the walls", name: () => T("Bandit raiders"), health: 130, damage: 11, tags: ["humanoid", "bandit", "siege"], text: (ev) => T("Bandits with ladders swarm the walls of {place}.", { place: ev.place }) },
+      { id: "ram", title: "The battering ram", name: () => T("Ram crew and their guards"), health: 150, damage: 14, tags: ["humanoid", "bandit", "siege"], text: () => T("A battering ram thunders against the gate. Its guards won't let you near.") },
+      { id: "lord", title: "The warlord", name: (ev) => T("{foe}, bandit warlord", { foe: ev.foe }), health: 170, damage: 17, tags: ["humanoid", "bandit", "elite", "siege"], text: (ev) => T("{foe} rides in to finish the job.", { foe: ev.foe }) },
     ],
   };
   const SPLIT = [0, 0.35, 0.7, 1];                       // phase boundaries, as a share of the whole fight
@@ -183,16 +185,16 @@ const GREATEV = (() => {
   /* opts.party: your party (only its leader starts a charge). Returns {text, fight?, skills, pts, phase, slain, died?, bag?} */
   function round(s, t = nowS(), opts = {}) {
     const ev = current(t);
-    if (!ev || ev.kind === "fair") return { text: "There's nothing to fight right now." };
+    if (!ev || ev.kind === "fair") return { text: T("There's nothing to fight right now.") };
     const st = stage(ev, t);
-    if (st === "warn") return { text: `${KIND_NAME[ev.kind]} at ${ev.place} starts in ${clock(ev.start - t)}. Get ready.` };
-    if (s.location !== ev.place || s.trip?.status) return { text: `The fight is at ${ev.place}. Get there first.` };
+    if (st === "warn") return { text: T("{kind} at {place} starts in {time}. Get ready.", { kind: KIND_NAME[ev.kind], place: ev.place, time: clock(ev.start - t) }) };
+    if (s.location !== ev.place || s.trip?.status) return { text: T("The fight is at {place}. Get there first.", { place: ev.place }) };
     const tl0 = tally(ev, s);
-    if (tl0.done) return { text: ev.kind === "dragon" ? `The ${ev.foe.toLowerCase()} is already dead. Claim your share.` : ev.kind === "rift" ? "The rift is already sealed. Claim your share." : "The siege is already broken. Claim your share." };
-    if (leaderOnly(opts.party, s)) return { text: "In a party only your leader starts each charge. Stay close to them and you fight beside them." };
+    if (tl0.done) return { text: ev.kind === "dragon" ? T("The {foe:lc} is already dead. Claim your share.", { foe: ev.foe }) : T(ev.kind === "rift" ? "The rift is already sealed. Claim your share." : "The siege is already broken. Claim your share.") };
+    if (leaderOnly(opts.party, s)) return { text: T("In a party only your leader starts each charge. Stay close to them and you fight beside them.") };
     const m = mine(s, ev);
-    if (m.last && t - m.last < ROUND_CD) return { text: `Catch your breath: you can charge again in ${Math.ceil(ROUND_CD - (t - m.last))} s.` };
-    if (hurt(s, t)) return { text: "You're too badly hurt to charge in. Heal up first (rest, a potion or a spell)." };
+    if (m.last && t - m.last < ROUND_CD) return { text: T("Catch your breath: you can charge again in {n} s.", { n: Math.ceil(ROUND_CD - (t - m.last)) }) };
+    if (hurt(s, t)) return { text: T("You're too badly hurt to charge in. Heal up first (rest, a potion or a spell).") };
     m.last = t;
     const phase = tl0.phase, P = PHASES[ev.kind][phase];
     const e = phaseFoe(ev, s, phase);
@@ -219,11 +221,12 @@ const GREATEV = (() => {
     if (f.hp <= 0) { const d = G.die(s, ev.kind === "dragon" ? "dragon" : ev.kind === "rift" ? "daedra" : "bandits", t); out.died = d.msg; out.bag = d.bag; }
     const tl1 = tally(ev, s);
     out.newPhase = !slain && tl1.phase > phase ? PHASES[ev.kind][tl1.phase] : null;
-    const who = mates.length ? ` (${mates.length} of your party beside you)` : "";
+    const who = mates.length ? " " + T("({n} of your party beside you)", { n: mates.length }) : "";
     out.text = `${P.text(ev)} `
-      + (slain ? (ev.kind === "dragon" ? `You land the killing blow! The ${ev.foe.toLowerCase()} crashes down in ${ev.place}.` : ev.kind === "rift" ? "The Rift Lord falls and the rift snaps shut with a thunderclap!" : `${ev.foe} falls and the bandit army breaks and runs!`)
-        : out.died ? "You're dragged down. Others will have to carry on."
-        : `+${pts} to the fight${who}.` + (out.newPhase ? ` ${out.newPhase.title}!` : ""));
+      + (slain ? (ev.kind === "dragon" ? T("You land the killing blow! The {foe:lc} crashes down in {place}.", { foe: ev.foe, place: ev.place }) : ev.kind === "rift" ? T("The Rift Lord falls and the rift snaps shut with a thunderclap!") : T("{foe} falls and the bandit army breaks and runs!", { foe: ev.foe }))
+        : out.died ? T("You're dragged down. Others will have to carry on.")
+        : T("+{pts} to the fight{who}.", { pts, who }) + (out.newPhase ? ` ${T(out.newPhase.title)}!` : ""));
+    out.title = slain ? T("Victory") : T("Charge landed");   // the result window's heading (ui.js showFightResult)
     return out;
   }
 
@@ -243,46 +246,47 @@ const GREATEV = (() => {
   const FAIR_OFF = 0.25;
   function play(s, game, t = nowS(), rnd = Math.random) {
     const ev = current(t);
-    if (!ev || ev.kind !== "fair" || stage(ev, t) !== "on") return { text: ev && ev.kind === "fair" ? `The fair opens in ${clock(ev.start - t)}.` : "There's no fair on right now." };
-    const g = GAMES.find((x) => x.id === game); if (!g) return { text: "No such game." };
-    if (s.location !== ev.place || s.trip?.status) return { text: `The fair is in ${ev.place}.` };
+    if (!ev || ev.kind !== "fair" || stage(ev, t) !== "on") return { text: ev && ev.kind === "fair" ? T("The fair opens in {time}.", { time: clock(ev.start - t) }) : T("There's no fair on right now.") };
+    const g = GAMES.find((x) => x.id === game); if (!g) return { text: T("No such game.") };
+    if (s.location !== ev.place || s.trip?.status) return { text: T("The fair is in {place}.", { place: ev.place }) };
     const m = mine(s, ev); m.n = m.n || {};
-    if ((m.n[game] || 0) >= TRIES) return { text: `You've had your ${TRIES} goes at the ${g.name.toLowerCase()}. Try another game.` };
+    if ((m.n[game] || 0) >= TRIES) return { text: T("You've had your {n} goes at the {game:lc}. Try another game.", { n: TRIES, game: g.name }) };
     let pts = 0, gold = 0, text = "";
     if (game === "archery") {
       const p = Math.max(0.25, Math.min(0.85, 0.3 + G.skill(s, "Archery") / 180)); let hits = 0;
       for (let i = 0; i < 3; i++) if (rnd() < p) hits++;
-      pts = hits; text = hits === 3 ? "Three in the gold! The crowd roars." : hits ? `${hits} of 3 on the target.` : "All three wide. The children laugh.";
+      pts = hits; text = hits === 3 ? T("Three in the gold! The crowd roars.") : hits ? T("{hits} of 3 on the target.", { hits }) : T("All three wide. The children laugh.");
     } else if (game === "arm") {
       const p = Math.max(0.25, Math.min(0.85, 0.25 + G.skill(s, "Two-Handed") / 200 + Math.min(0.2, G.maxStamina(s) / 1500)));
-      const win = rnd() < p; pts = win ? 3 : 1; text = win ? "You slam their arm to the table!" : "They pin you, but buy you a drink for trying.";
+      const win = rnd() < p; pts = win ? 3 : 1; text = T(win ? "You slam their arm to the table!" : "They pin you, but buy you a drink for trying.");
     } else if (game === "drink") {
       const p = Math.max(0.25, Math.min(0.85, 0.3 + Math.min(0.45, G.maxHealth(s) / 900) + (s.race === "nord" ? 0.1 : 0)));
-      const win = rnd() < p; pts = win ? 2 : 1; text = win ? "Your rival slides under the table. You're still standing!" : "The room spins. You wake up under a bench.";
+      const win = rnd() < p; pts = win ? 2 : 1; text = T(win ? "Your rival slides under the table. You're still standing!" : "The room spins. You wake up under a bench.");
     } else {
-      if (s.gold < 10) return { text: "A spin costs 10 gold." };
+      if (s.gold < 10) return { text: T("A spin costs 10 gold.") };
       s.gold -= 10; const r = rnd();
-      if (r < 0.1) { gold = 60; pts = 2; text = "Jackpot! 60 gold!"; } else if (r < 0.45) { gold = 15; pts = 1; text = "A small win: 15 gold."; } else { pts = 1; text = "Nothing this time. Still, the wheel is fun."; }
+      if (r < 0.1) { gold = 60; pts = 2; text = T("Jackpot! 60 gold!"); } else if (r < 0.45) { gold = 15; pts = 1; text = T("A small win: 15 gold."); } else { pts = 1; text = T("Nothing this time. Still, the wheel is fun."); }
     }
     pts += Math.round(pfx(s, "gevgame"));
     m.n[game] = (m.n[game] || 0) + 1; m.f = (m.f || 0) + pts; s.gold += gold;
     const skills = g.skill ? G.useSkill(s, g.skill, 1 + pts) : [];
     const ready = PRIZES.filter((p) => m.f >= p.at && !(m.got || []).includes(p.at)).length;
-    return { text: `${g.name}: ${text} (+${pts} point${pts === 1 ? "" : "s"}, ${m.f} in all)` + (ready ? " A prize is waiting at the prize stall." : ""), pts, gold, skills, ev };
+    return { text: T("{game}: {text} (+{pts} {pt}, {all} in all)", { game: g.name, text, pts, pt: T(pts === 1 ? "point" : "points"), all: m.f }) + (ready ? " " + T("A prize is waiting at the prize stall.") : ""), pts, gold, skills, ev };
   }
   function prize(s, at, t = nowS()) {
     const ev = [current(t), ...recent(t, 1)].find((e) => e && e.kind === "fair");
-    if (!ev || t > ev.end + DAY) return { text: "The prize stall has packed up." };
+    if (!ev || t > ev.end + DAY) return { text: T("The prize stall has packed up.") };
     const p = PRIZES.find((x) => x.at === +at), m = s.gev?.[ev.id];
-    if (!p || !m) return { text: "Nothing to collect." };
-    if ((m.f || 0) < p.at) return { text: `You need ${p.at} points for that prize.` };
-    m.got = m.got || []; if (m.got.includes(p.at)) return { text: "You've already collected that prize." };
+    if (!p || !m) return { text: T("Nothing to collect.") };
+    if ((m.f || 0) < p.at) return { text: T("You need {n} points for that prize.", { n: p.at }) };
+    m.got = m.got || []; if (m.got.includes(p.at)) return { text: T("You've already collected that prize.") };
     m.got.push(p.at);
     const gold = Math.round(p.gold * (1 + pfx(s, "gevgold"))); s.gold += gold;
     if (D.ITEMS[p.item]) G.give(s, p.item, p.q);
     const ti = p.title && addTitle(s, p.title);
     stat(s, "fair");
-    return { text: `🎪 Prize: ${gold} gold${D.ITEMS[p.item] ? `, ${D.ITEMS[p.item].name}${p.q > 1 ? ` ×${p.q}` : ""}` : ""}${ti ? " and the title Fair Champion" : ""}.`, got: true };
+    const list = [T("{n} gold", { n: gold }), ...(D.ITEMS[p.item] ? [`${D.ITEMS[p.item].name}${p.q > 1 ? ` ×${p.q}` : ""}`] : []), ...(ti ? [T("the title {title}", { title: p.title })] : [])];
+    return { text: "🎪 " + T("Prize: {list}.", { list: list.join(", ") }), got: true };
   }
 
   // ---------------------------------------------------------------- rewards
@@ -308,17 +312,18 @@ const GREATEV = (() => {
     let gold = R.gold * (0.35 + 0.65 * Math.min(1, sh)) + (sh >= 1.5 ? 100 : 0);
     if (!won) gold *= 0.25;
     gold = Math.round(gold * (1 + pfx(s, "gevgold")));
-    s.gold += gold; parts.push(`${gold} gold`);
+    s.gold += gold; parts.push(T("{n} gold", { n: gold }));
     if (won) {
       for (const [it, q] of R.items) { const n = sh >= 0.5 ? q : 1; if (D.ITEMS[it]) { G.give(s, it, n); parts.push(`${D.ITEMS[it].name}${n > 1 ? ` ×${n}` : ""}`); } }
       if (ev.kind === "dragon" && typeof POWERS !== "undefined" && !s._test && !m.soul) { m.soul = true; parts.push(POWERS.absorb(s)); }
-      if (sh >= 0.5 && addTitle(s, R.title)) parts.push(`the title ${R.title}`);
+      if (sh >= 0.5 && addTitle(s, R.title)) parts.push(T("the title {title}", { title: R.title }));
       stat(s, ev.kind);
     }
     const pct = Math.round(Math.min(2, sh) * 100);
-    const head = won ? (ev.kind === "dragon" ? `🐉 ${ev.place} is saved.` : ev.kind === "rift" ? `🌀 The rift at ${ev.place} is sealed.` : `⚔️ The siege of ${ev.place} is broken.`)
-      : (ev.kind === "dragon" ? `🐉 The ${ev.foe.toLowerCase()} burned ${ev.place} and flew off.` : ev.kind === "rift" ? `🌀 The rift at ${ev.place} stayed open.` : `⚔️ The bandits plundered ${ev.place}.`);
-    return `${head} You did ${pct}% of a fair share. Your reward: ${parts.join(", ")}.`;
+    const v = { place: ev.place, foe: ev.foe };
+    const head = ev.icon + " " + (won ? T(ev.kind === "dragon" ? "{place} is saved." : ev.kind === "rift" ? "The rift at {place} is sealed." : "The siege of {place} is broken.", v)
+      : T(ev.kind === "dragon" ? "The {foe:lc} burned {place} and flew off." : ev.kind === "rift" ? "The rift at {place} stayed open." : "The bandits plundered {place}.", v));
+    return T("{head} You did {pct}% of a fair share. Your reward: {list}.", { head, pct, list: parts.join(", ") });
   }
 
   // ---------------------------------------------------------------- what events leave behind
@@ -336,9 +341,10 @@ const GREATEV = (() => {
   }
   function aftermathLine(a) {
     const pct = Math.round(a.rebuilt * 100);
-    if (a.kind === "dragon") return a.out === "won" ? `${a.place} is clearing the rubble after the dragon (${pct}% rebuilt). Timber is dear: shops 5% dearer.` : `${a.place} was burned by a dragon and is rebuilding (${pct}%). Shops there are up to 20% dearer until it's done.`;
-    if (a.kind === "rift") return a.out === "won" ? `The rift scar at ${a.place} is fading.` : `Daedra still lurk around ${a.place}. Traders in ${a.hold} charge 10% more.`;
-    return a.out === "won" ? `The Jarl of ${a.hold} thanks the siege breakers: shops in the hold are 5% cheaper (10% if you fought).` : `${a.place} was plundered by bandits. Shops in ${a.hold} are 15% dearer.`;
+    const v = { place: a.place, hold: a.hold, pct };
+    if (a.kind === "dragon") return T(a.out === "won" ? "{place} is clearing the rubble after the dragon ({pct}% rebuilt). Timber is dear: shops 5% dearer." : "{place} was burned by a dragon and is rebuilding ({pct}%). Shops there are up to 20% dearer until it's done.", v);
+    if (a.kind === "rift") return T(a.out === "won" ? "The rift scar at {place} is fading." : "Daedra still lurk around {place}. Traders in {hold} charge 10% more.", v);
+    return T(a.out === "won" ? "The Jarl of {hold} thanks the siege breakers: shops in the hold are 5% cheaper (10% if you fought)." : "{place} was plundered by bandits. Shops in {hold} are 15% dearer.", v);
   }
   /* shop prices in a town (engine.js buyPrice): the fair, a burned town, a plundered or grateful hold */
   function priceMult(s, town, t = nowS()) {
@@ -359,11 +365,11 @@ const GREATEV = (() => {
 
   // ---------------------------------------------------------------- times
   const clock = (sec) => { sec = Math.max(0, Math.round(sec)); const h = Math.floor(sec / HOUR), mm = Math.floor((sec % HOUR) / 60), ss = sec % 60; return h ? `${h}:${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}` : `${mm}:${String(ss).padStart(2, "0")}`; };
-  const until = (sec) => { const h = Math.floor(sec / HOUR); return h >= 24 ? `${Math.floor(h / 24)}d ${h % 24}h` : h ? `${h}h ${Math.floor((sec % HOUR) / 60)}m` : `${Math.max(1, Math.ceil(sec / 60))} min`; };
+  const until = (sec) => { const h = Math.floor(sec / HOUR); return h >= 24 ? T("{d}d {h}h", { d: Math.floor(h / 24), h: h % 24 }) : h ? T("{h}h {m}m", { h, m: Math.floor((sec % HOUR) / 60) }) : T("{n} min", { n: Math.max(1, Math.ceil(sec / 60)) }); };
   function countdown(ev, t = nowS()) {
     const st = stage(ev, t);
-    if (st === "warn") return { label: ev.kind === "fair" ? "Opens in" : "Starts in", sec: ev.start - t, txt: clock(ev.start - t) };
-    if (st === "on") return { label: ev.kind === "fair" ? "Closes in" : "Time left", sec: ev.end - t, txt: clock(ev.end - t) };
+    if (st === "warn") return { label: T(ev.kind === "fair" ? "Opens in" : "Starts in"), sec: ev.start - t, txt: clock(ev.start - t) };
+    if (st === "on") return { label: T(ev.kind === "fair" ? "Closes in" : "Time left"), sec: ev.end - t, txt: clock(ev.end - t) };
     return { label: "", sec: 0, txt: "" };
   }
 
@@ -448,7 +454,7 @@ const GREATEV = (() => {
         g.fillStyle = `rgba(30,22,18,${0.25 + 0.35 * a.left})`; g.beginPath(); g.arc(x, y, 18 * s, 0, 7); g.fill();
         if (!rm) for (let i = 0; i < 4; i++) { const k = (tt * 0.6 + i * 0.25) % 1; g.fillStyle = `rgba(90,85,80,${0.45 * (1 - k)})`; g.beginPath(); g.arc(x + (i - 1.5) * 6 * s, y - 10 * s - k * 22 * s, (3 + k * 5) * s, 0, 7); g.fill(); }
         const sp = scaffold(); if (sp) g.drawImage(sp, x - 26 * s, y - 14 * s, 20 * s, 16 * s);
-        label(g, `Rebuilding ${Math.round(a.rebuilt * 100)}%`, x, y + 26 * s, s, "#e8c48a");
+        label(g, T("Rebuilding {pct}%", { pct: Math.round(a.rebuilt * 100) }), x, y + 26 * s, s, "#e8c48a");
       } else if (a.kind === "rift") {
         g.strokeStyle = `rgba(150,40,90,${0.3 + 0.5 * a.left})`; g.lineWidth = 2 * s; g.beginPath(); g.moveTo(x - 10 * s, y + 6 * s); g.lineTo(x - 2 * s, y - 2 * s); g.lineTo(x + 3 * s, y + 4 * s); g.lineTo(x + 11 * s, y - 6 * s); g.stroke();
       } else if (a.kind === "siege" && a.out === "lost") {
@@ -471,29 +477,29 @@ const GREATEV = (() => {
       const sp = fairTent(); if (sp) g.drawImage(sp, x + 10 * s, y - 22 * s, 22 * s, 20 * s);
     }
     if (tl && st === "on") { const bw = 34 * s, by = y - 44 * s; g.fillStyle = "rgba(20,14,8,.85)"; g.fillRect(x - bw / 2 - s, by - s, bw + 2 * s, 6 * s); g.fillStyle = tl.done ? "#8fbf6a" : "#e8642a"; g.fillRect(x - bw / 2, by, bw * tl.frac, 4 * s); for (const q of [0.35, 0.7]) { g.fillStyle = "#140b07"; g.fillRect(x - bw / 2 + bw * q, by, s, 4 * s); } }
-    label(g, tl && tl.done ? `${ICON[ev.kind]} Victory!` : `${ICON[ev.kind]} ${cd.label} ${cd.txt}`, x, y - 50 * s, s, st === "warn" ? "#ffe6a0" : "#ffb38a");
+    label(g, tl && tl.done ? `${ICON[ev.kind]} ${T("Victory!")}` : `${ICON[ev.kind]} ${cd.label} ${cd.txt}`, x, y - 50 * s, s, st === "warn" ? "#ffe6a0" : "#ffb38a");
   }
 
   // ---- the banner on the map screen, the detail sheet
   function bar(pct, color) { return `<div class="bar gev-bar"><i style="width:${Math.round(100 * Math.max(0, Math.min(1, pct)))}%;background:${color}"></i></div>`; }
   function phaseBar(ev, tl) {
-    return `<div class="gev-phases">${PHASES[ev.kind].map((P, i) => { const a = SPLIT[i], b = SPLIT[i + 1], fill = Math.max(0, Math.min(1, (tl.frac - a) / (b - a))); return `<div class="gev-ph${tl.phase === i ? " on" : fill >= 1 ? " done" : ""}" style="flex:${b - a}"><i style="width:${Math.round(fill * 100)}%"></i><span>${esc(P.title)}</span></div>`; }).join("")}</div>`;
+    return `<div class="gev-phases">${PHASES[ev.kind].map((P, i) => { const a = SPLIT[i], b = SPLIT[i + 1], fill = Math.max(0, Math.min(1, (tl.frac - a) / (b - a))); return `<div class="gev-ph${tl.phase === i ? " on" : fill >= 1 ? " done" : ""}" style="flex:${b - a}"><i style="width:${Math.round(fill * 100)}%"></i><span>${esc(T(P.title))}</span></div>`; }).join("")}</div>`;
   }
   function mainButton(ev, S, t) {
     const st = stage(ev, t);
-    if (claimable(S, ev, t)) return `<button class="btn sm pri" data-gev="claim" data-id="${ev.id}">Claim</button>`;
-    if (S.location !== ev.place) return `<button class="btn sm" data-act="go" data-place="${esc(ev.place)}">Go</button>`;
-    if (st === "warn") return `<button class="btn sm" data-gev="open" data-id="${ev.id}">Ready</button>`;
-    if (ev.kind === "fair") return `<button class="btn sm pri" data-gev="open" data-id="${ev.id}">Play</button>`;
-    if (tallyCached(ev, S).done) return `<button class="btn sm" data-gev="open" data-id="${ev.id}">Open</button>`;
-    return leaderOnly(partyOf(), S) ? `<button class="btn sm" data-gev="open" data-id="${ev.id}">With leader</button>` : `<button class="btn sm danger" data-gev="fight">⚔️ Fight</button>`;
+    if (claimable(S, ev, t)) return `<button class="btn sm pri" data-gev="claim" data-id="${ev.id}">${T("Claim")}</button>`;
+    if (S.location !== ev.place) return `<button class="btn sm" data-act="go" data-place="${esc(ev.place)}">${T("Go")}</button>`;
+    if (st === "warn") return `<button class="btn sm" data-gev="open" data-id="${ev.id}">${T("Ready")}</button>`;
+    if (ev.kind === "fair") return `<button class="btn sm pri" data-gev="open" data-id="${ev.id}">${T("Play")}</button>`;
+    if (tallyCached(ev, S).done) return `<button class="btn sm" data-gev="open" data-id="${ev.id}">${T("Open")}</button>`;
+    return leaderOnly(partyOf(), S) ? `<button class="btn sm" data-gev="open" data-id="${ev.id}">${T("With leader")}</button>` : `<button class="btn sm danger" data-gev="fight">${T("⚔️ Fight")}</button>`;
   }
   function statusLine(ev, S, t) {
-    if (ev.kind === "fair") { const m = S.gev?.[ev.id]; return `Games, prizes, shops 25% off${m?.f ? ` · your points ${m.f}` : ""}`; }
+    if (ev.kind === "fair") { const m = S.gev?.[ev.id]; return T("Games, prizes, shops 25% off") + (m?.f ? " · " + T("your points {n}", { n: m.f }) : ""); }
     const tl = tallyCached(ev, S);
-    if (tl.done) return `Beaten!${tl.people ? ` · ${tl.people} fought` : ""}`;
-    if (stage(ev, t) === "warn") return `At ${ev.place}${ev.hold && ev.hold !== ev.place ? `, ${ev.hold}` : ""} · gather there`;
-    return `${PHASES[ev.kind][tl.phase].title} · ${tl.people || 0} fighting`;
+    if (tl.done) return T("Beaten!") + (tl.people ? " · " + T("{n} fought", { n: tl.people }) : "");
+    if (stage(ev, t) === "warn") return T("At {where} · gather there", { where: ev.place + (ev.hold && ev.hold !== ev.place ? `, ${ev.hold}` : "") });
+    return T("{phase} · {n} fighting", { phase: PHASES[ev.kind][tl.phase].title, n: tl.people || 0 });
   }
   function bannerHTML(S, t = nowS()) {
     const ev = current(t), rc = recent(t, 1).filter((e) => claimable(S, e, t)), af = aftermath(S, t);
@@ -502,44 +508,44 @@ const GREATEV = (() => {
     if (ev) {
       const cd = countdown(ev, t), st = stage(ev, t), tl = ev.kind === "fair" ? null : tallyCached(ev, S);
       h += `<div class="gev-banner gev-${ev.kind} gev-${st}" data-gev="open" data-id="${ev.id}">
-        <div class="gev-head">${pic(ev.kind, 64, 46, ev.dKind || "", tl ? Math.min(2, tl.phase) : 0)}<div class="gev-t"><span class="gev-kind">${ICON[ev.kind]} ${st === "warn" ? "Coming soon" : "Great world event"}</span><b>${esc(ev.name)}</b><span class="sub">${esc(statusLine(ev, S, t))}</span></div>
+        <div class="gev-head">${pic(ev.kind, 64, 46, ev.dKind || "", tl ? Math.min(2, tl.phase) : 0)}<div class="gev-t"><span class="gev-kind">${ICON[ev.kind]} ${T(st === "warn" ? "Coming soon" : "Great world event")}</span><b>${esc(ev.name)}</b><span class="sub">${esc(statusLine(ev, S, t))}</span></div>
         <div class="gev-clock"><span>${cd.label}</span><b data-gev-end="${st === "warn" ? ev.start : ev.end}">${cd.txt}</b></div></div>
         ${tl && st === "on" ? phaseBar(ev, tl) : ""}<div class="gev-row">${mainButton(ev, S, t)}</div></div>`;
     }
-    for (const e of rc) h += `<div class="gev-strip" data-gev="open" data-id="${e.id}"><span>${e.icon} ${esc(e.name)}: over, your reward is waiting</span><button class="btn sm pri" data-gev="claim" data-id="${e.id}">Claim</button></div>`;
+    for (const e of rc) h += `<div class="gev-strip" data-gev="open" data-id="${e.id}"><span>${e.icon} ${esc(T("{name}: over, your reward is waiting", { name: e.name }))}</span><button class="btn sm pri" data-gev="claim" data-id="${e.id}">${T("Claim")}</button></div>`;
     for (const a of af) h += `<div class="gev-strip gev-after"><span>${a.kind === "dragon" ? "🔥" : a.kind === "rift" ? "🌀" : a.out === "won" ? "🛡️" : "💰"} ${esc(aftermathLine(a))}</span></div>`;
     return `<div class="gev-card">${h}</div>`;
   }
   const RULES = {
-    dragon: `The dragon attacks in three phases: it circles and burns, lands in the streets, then fights on wounded. Go to the town and charge in: each charge is a short fight, and everything you do wears it down for everyone. The more heroes join, the tougher it gets. In a party, the leader starts each charge and members close by fight beside them. Kill it before time runs out or the town burns and has to rebuild for 3 days. Your reward depends on your share: gold, dragon bones and scales, its soul, and the title Firebreaker if you did at least half a fair share.`,
-    rift: `A rift to Oblivion has torn open. First Daedra spill out, then a Dremora guard holds the tear, then the Rift Lord himself. Each charge is a short fight that counts for everyone. Seal it in time and those who fought share sigil stones, daedra hearts and gold (title Riftsealer). Left open, Daedra scare off traders in the hold for a day.`,
-    siege: `A bandit army is besieging the town: raiders at the walls, then the battering ram, then the warlord. Each charge is a short fight that counts for everyone. Break the siege and the Jarl lowers prices in the hold for a day (more for those who fought) and pays out gems and gold (title Siegebreaker). Fail and the hold is plundered: shops are dearer for two days.`,
-    fair: `A great fair: four games (each ${TRIES} goes), points add up to prizes at the prize stall, and every shop in town is 25% off while the fair lasts.`,
+    dragon: "The dragon attacks in three phases: it circles and burns, lands in the streets, then fights on wounded. Go to the town and charge in: each charge is a short fight, and everything you do wears it down for everyone. The more heroes join, the tougher it gets. In a party, the leader starts each charge and members close by fight beside them. Kill it before time runs out or the town burns and has to rebuild for 3 days. Your reward depends on your share: gold, dragon bones and scales, its soul, and the title Firebreaker if you did at least half a fair share.",
+    rift: "A rift to Oblivion has torn open. First Daedra spill out, then a Dremora guard holds the tear, then the Rift Lord himself. Each charge is a short fight that counts for everyone. Seal it in time and those who fought share sigil stones, daedra hearts and gold (title Riftsealer). Left open, Daedra scare off traders in the hold for a day.",
+    siege: "A bandit army is besieging the town: raiders at the walls, then the battering ram, then the warlord. Each charge is a short fight that counts for everyone. Break the siege and the Jarl lowers prices in the hold for a day (more for those who fought) and pays out gems and gold (title Siegebreaker). Fail and the hold is plundered: shops are dearer for two days.",
+    fair: "A great fair: four games (each {tries} goes), points add up to prizes at the prize stall, and every shop in town is 25% off while the fair lasts.",
   };
   function detailHTML(ev, S, t = nowS()) {
     const st = stage(ev, t), cd = countdown(ev, t), here = S.location === ev.place && !S.trip?.status;
     let body = "";
     if (ev.kind === "fair") {
       const m = S.gev?.[ev.id] || {}, n = m.n || {}, on = st === "on";
-      body = `<p class="sub">Your points: <b>${m.f || 0}</b>. Shops in ${esc(ev.place)} are ${Math.round((FAIR_OFF + Math.min(0.15, pfx(S, "gevshop"))) * 100)}% off while the fair lasts.</p>
-        <div class="list">${GAMES.map((g) => { const used = n[g.id] || 0, left = TRIES - used; return `<div class="item"><div class="t">${esc(g.name)}<span>${esc(g.text)} · ${left} of ${TRIES} left</span></div><button class="btn sm ${left > 0 ? "pri" : ""}" data-gev="play" data-game="${g.id}" ${left > 0 && here && on ? "" : "disabled"}>${left > 0 ? "Play" : "Done"}</button></div>`; }).join("")}</div>
-        <h3 class="gev-h3">Prize stall</h3><div class="list">${PRIZES.map((p) => { const got = (m.got || []).includes(p.at), can = (m.f || 0) >= p.at && !got; return `<div class="item${got ? " on" : ""}"><div class="t">${p.at} points<span>${esc(p.label)}</span></div><button class="btn sm ${can ? "pri" : ""}" data-gev="prize" data-at="${p.at}" ${can ? "" : "disabled"}>${got ? "Taken" : "Collect"}</button></div>`; }).join("")}</div>
-        ${here ? "" : `<button class="btn wev-wide" data-act="go" data-place="${esc(ev.place)}">Travel to ${esc(ev.place)}</button>`}`;
+      body = `<p class="sub">${T("Your points: <b>{n}</b>. Shops in {place} are {pct}% off while the fair lasts.", { n: m.f || 0, place: esc(ev.place), pct: Math.round((FAIR_OFF + Math.min(0.15, pfx(S, "gevshop"))) * 100) })}</p>
+        <div class="list">${GAMES.map((g) => { const used = n[g.id] || 0, left = TRIES - used; return `<div class="item"><div class="t">${esc(T(g.name))}<span>${esc(T(g.text))} · ${esc(T("{left} of {tries} left", { left, tries: TRIES }))}</span></div><button class="btn sm ${left > 0 ? "pri" : ""}" data-gev="play" data-game="${g.id}" ${left > 0 && here && on ? "" : "disabled"}>${T(left > 0 ? "Play" : "Done")}</button></div>`; }).join("")}</div>
+        <h3 class="gev-h3">${T("Prize stall")}</h3><div class="list">${PRIZES.map((p) => { const got = (m.got || []).includes(p.at), can = (m.f || 0) >= p.at && !got; return `<div class="item${got ? " on" : ""}"><div class="t">${T("{n} points", { n: p.at })}<span>${esc(T(p.label))}</span></div><button class="btn sm ${can ? "pri" : ""}" data-gev="prize" data-at="${p.at}" ${can ? "" : "disabled"}>${T(got ? "Taken" : "Collect")}</button></div>`; }).join("")}</div>
+        ${here ? "" : `<button class="btn wev-wide" data-act="go" data-place="${esc(ev.place)}">${esc(T("Travel to {place}", { place: ev.place }))}</button>`}`;
     } else {
       const tl = tally(ev, S), m = S.gev?.[ev.id] || {}, cdn = m.last ? Math.max(0, ROUND_CD - (t - m.last)) : 0, lead = leaderOnly(partyOf(), S);
       const myC = credit(ev, S), fair = tl.need / Math.max(1, tl.people);
-      body = `${phaseBar(ev, tl)}<p class="sub">${tl.total}/${tl.need} · ${tl.people || 0} ${tl.people === 1 ? "hero" : "heroes"}${myC ? ` · your share ${Math.round((myC / fair) * 100)}% of a fair share` : ""}</p>
-        ${tl.done ? `<p class="gev-win">Victory! Everyone who fought can claim a share.</p>` : st === "warn" ? `<p class="sub">It begins in ${cd.txt}. Gather at ${esc(ev.place)}.</p>` : ""}
-        ${!tl.done && st === "on" && here ? (lead ? `<p class="sub">In a party, your leader starts each charge. Stay close to them and you fight beside them.</p>` : `<button class="btn danger wev-wide" data-gev="fight" ${cdn > 0 ? "disabled" : ""}>${cdn > 0 ? `Catch your breath (${Math.ceil(cdn)} s)` : `⚔️ Charge: ${esc(PHASES[ev.kind][tl.phase].title.toLowerCase())}`}</button>`) : ""}
-        ${here ? "" : `<button class="btn wev-wide" data-act="go" data-place="${esc(ev.place)}">Travel to ${esc(ev.place)}</button>`}
-        ${tl.names.length ? `<p class="sub">Fighting with you: ${tl.names.slice(0, 8).map(esc).join(", ")}${tl.names.length > 8 ? "…" : ""}</p>` : ""}`;
+      body = `${phaseBar(ev, tl)}<p class="sub">${tl.total}/${tl.need} · ${T(tl.people === 1 ? "{n} hero" : "{n} heroes", { n: tl.people || 0 })}${myC ? " · " + T("your share {pct}% of a fair share", { pct: Math.round((myC / fair) * 100) }) : ""}</p>
+        ${tl.done ? `<p class="gev-win">${T("Victory! Everyone who fought can claim a share.")}</p>` : st === "warn" ? `<p class="sub">${esc(T("It begins in {time}. Gather at {place}.", { time: cd.txt, place: ev.place }))}</p>` : ""}
+        ${!tl.done && st === "on" && here ? (lead ? `<p class="sub">${T("In a party, your leader starts each charge. Stay close to them and you fight beside them.")}</p>` : `<button class="btn danger wev-wide" data-gev="fight" ${cdn > 0 ? "disabled" : ""}>${cdn > 0 ? T("Catch your breath ({n} s)", { n: Math.ceil(cdn) }) : esc(T("⚔️ Charge: {phase}", { phase: T(PHASES[ev.kind][tl.phase].title).toLowerCase() }))}</button>`) : ""}
+        ${here ? "" : `<button class="btn wev-wide" data-act="go" data-place="${esc(ev.place)}">${esc(T("Travel to {place}", { place: ev.place }))}</button>`}
+        ${tl.names.length ? `<p class="sub">${T("Fighting with you: {names}", { names: tl.names.slice(0, 8).map(esc).join(", ") + (tl.names.length > 8 ? "…" : "") })}</p>` : ""}`;
     }
-    const cl = claimable(S, ev, t) ? `<button class="btn pri wev-wide" data-gev="claim" data-id="${ev.id}">Claim your reward</button>` : "";
+    const cl = claimable(S, ev, t) ? `<button class="btn pri wev-wide" data-gev="claim" data-id="${ev.id}">${T("Claim your reward")}</button>` : "";
     const ph = ev.kind === "fair" ? 0 : Math.min(2, tally(ev, S).phase);
     return `<div class="gev-sheet">${pic(ev.kind, 320, 120, ev.dKind || "", ph)}<h2>${ev.icon} ${esc(ev.name)}</h2>
-      <p class="sub">${st === "warn" || st === "on" ? `${cd.label} <b class="gev-cd" data-gev-end="${st === "warn" ? ev.start : ev.end}">${cd.txt}</b> · ` : "Over · "}everyone in the North sees this</p>
-      ${body}${cl}<details class="wev-rules"><summary class="sub">How it works</summary><p class="sub">${RULES[ev.kind]}</p></details>
-      <button class="btn wev-wide" data-act="close">Close</button></div>`;
+      <p class="sub">${st === "warn" || st === "on" ? `${cd.label} <b class="gev-cd" data-gev-end="${st === "warn" ? ev.start : ev.end}">${cd.txt}</b> · ` : T("Over") + " · "}${T("everyone in the North sees this")}</p>
+      ${body}${cl}<details class="wev-rules"><summary class="sub">${T("How it works")}</summary><p class="sub">${T(RULES[ev.kind], { tries: TRIES })}</p></details>
+      <button class="btn wev-wide" data-act="close">${T("Close")}</button></div>`;
   }
 
   // ---- actions
@@ -553,16 +559,16 @@ const GREATEV = (() => {
     const act = b.dataset.gev, t = nowS();
     if (typeof SOUND !== "undefined") try { SOUND.fx("click"); } catch (er) { /* ignore */ }
     if (act === "open") { const ev = byId(b.dataset.id); if (!ev) return; api.closeModal(); return void api.openModal(detailHTML(ev, S, t), "gevsheet"); }
-    if (act === "claim") { const msg = claim(S, b.dataset.id, t); if (!msg) return api.toast("Nothing to claim yet."); api.closeModal(); api.persist(true); render(true); if (typeof SOUND !== "undefined") try { SOUND.fx("levelup"); } catch (er) { /* ignore */ } return api.showMessage("Great world event", msg); }
+    if (act === "claim") { const msg = claim(S, b.dataset.id, t); if (!msg) return api.toast(T("Nothing to claim yet.")); api.closeModal(); api.persist(true); render(true); if (typeof SOUND !== "undefined") try { SOUND.fx("levelup"); } catch (er) { /* ignore */ } return api.showMessage(T("Great world event"), msg); }
     if (act === "fight") {
       const out = round(S, t, { party: partyOf() });
       if (!out.fight) return api.toast(out.text);
       publish(S, out.ev);
       if (out.bag && typeof Store !== "undefined") Store.addBag(out.bag);
-      if (out.slain && api.postNews) api.postNews(`${out.ev.icon} ${S.name} struck the final blow: ${out.ev.kind === "dragon" ? `the ${out.ev.foe.toLowerCase()} over ${out.ev.place} is dead` : out.ev.kind === "rift" ? `the rift at ${out.ev.place} is sealed` : `the siege of ${out.ev.place} is broken`}!`);
-      if (out.newPhase && typeof POLISH !== "undefined") POLISH.banner("quest", out.ev.name, out.newPhase.title, `<span class="wev-bic">${out.ev.icon}</span>`);
+      if (out.slain && api.postNews) api.postNews(T("{icon} {name} struck the final blow: {what}!", { icon: out.ev.icon, name: S.name, what: T(out.ev.kind === "dragon" ? "the {foe:lc} over {place} is dead" : out.ev.kind === "rift" ? "the rift at {place} is sealed" : "the siege of {place} is broken", { foe: out.ev.foe, place: out.ev.place }) }));
+      if (out.newPhase && typeof POLISH !== "undefined") POLISH.banner("quest", out.ev.name, T(out.newPhase.title), `<span class="wev-bic">${out.ev.icon}</span>`);
       api.closeModal(); api.persist(true); render(true);
-      return api.showFightResult({ ...out, text: out.text });
+      return api.showFightResult({ ...out, text: out.text, title: out.died ? null : out.title });
     }
     if (act === "play") { const r = play(S, b.dataset.game, t); api.toast(r.text); if (r.pts) { if (r.ev) publish(S, r.ev); api.persist(true); if (r.ev) reopen(r.ev, S); render(true); } return; }
     if (act === "prize") { const r = prize(S, b.dataset.at, t); api.toast(r.text); if (r.got) { api.persist(true); const ev = [current(t), ...recent(t, 1)].find((x) => x && x.kind === "fair"); if (ev) reopen(ev, S); render(true); } }
@@ -577,12 +583,14 @@ const GREATEV = (() => {
     for (const [k, end] of Object.entries(S.gevSeen)) if (!(end > t - 2 * DAY)) delete S.gevSeen[k];
     if (S.gev) for (const [k, v] of Object.entries(S.gev)) if (!v || !(v.end > t - 5 * DAY)) delete S.gev[k];
     if (S.gevOut) for (const k of Object.keys(S.gevOut)) { const e = byId(k); if (!e || e.end < t - 5 * DAY) delete S.gevOut[k]; }
-    const line = st === "warn" ? `${ev.name}: it starts in ${until(ev.start - t)}.` : ev.kind === "fair" ? `${ev.name} has opened: games, prizes and cheap shops!` : `${ev.name}! Everyone to ${ev.place}!`;
+    const line = st === "warn" ? T("{name}: it starts in {time}.", { name: ev.name, time: until(ev.start - t) }) : ev.kind === "fair" ? T("{name} has opened: games, prizes and cheap shops!", { name: ev.name }) : T("{name}! Everyone to {place}!", { name: ev.name, place: ev.place });
     G.note(S, `${ev.icon} ${line}`);
     api.persist();
     if (quiet) return;
-    if (typeof POLISH !== "undefined") POLISH.banner("quest", st === "warn" ? "Coming soon" : "Great world event", ev.name, `<span class="wev-bic">${ev.icon}</span>`);
-    api.toast(`${ev.icon} ${line}`);
+    /* one pop-up only: the banner goes through POLISH's queue, so it waits its turn and never sits on top of an
+       Objective or quest banner; the corner toast is only the fallback when there's no banner system */
+    if (typeof POLISH !== "undefined") POLISH.banner("quest", T(st === "warn" ? "Coming soon" : "Great world event"), ev.name, `<span class="wev-bic">${ev.icon}</span>`);
+    else api.toast(`${ev.icon} ${line}`);
   }
   function tick() {
     const t = nowS();

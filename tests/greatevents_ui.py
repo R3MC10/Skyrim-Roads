@@ -27,6 +27,17 @@ JUMP = """([kind, at]) => {
     G.setHealth(S, G.maxHealth(S)); return ev.id + " " + ev.name; }
   return null; }"""
 
+HEAD_EN = ("Charge landed", "Victory")      # Victory only if this very charge killed it
+HEAD_PL = ("Szarża udana", "Zwycięstwo")
+# visible pop-up banners vs each other, the event banner on the page and the corner messages
+OVERLAP = """() => { const vis = (el) => { const r = el.getBoundingClientRect(), cs = getComputedStyle(el); return r.width && r.height && cs.visibility !== 'hidden' && +cs.opacity > 0.05 ? r : null; };
+  const x = (a, b) => a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+  const pb = [...document.querySelectorAll('#pbanners .pban:not(.out)')].map((e) => [e.querySelector('small')?.textContent || '', vis(e)]).filter((p) => p[1]);
+  const others = [['event banner', document.querySelector('#gev .gev-banner')], ...[...document.querySelectorAll('#hudlog .toast')].map((e) => ['toast', e])].map(([n, e]) => [n, e && vis(e)]).filter((p) => p[1]);
+  const hits = []; for (let i = 0; i < pb.length; i++) { for (let j = i + 1; j < pb.length; j++) if (x(pb[i][1], pb[j][1])) hits.push(pb[i][0] + '/' + pb[j][0]);
+    for (const [n, r] of others) if (x(pb[i][1], r)) hits.push(pb[i][0] + '/' + n); }
+  return { shown: pb.map((p) => p[0]), hits }; }"""
+
 async def main():
     srv = subprocess.Popen([sys.executable, "-m", "http.server", str(PORT), "--directory", os.path.join(ROOT, "game")], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     time.sleep(1.0)
@@ -38,7 +49,7 @@ async def main():
         async with async_playwright() as p:
             try: b = await p.chromium.launch()
             except Exception: b = await p.chromium.launch(channel="chrome")
-            for vw, vh, tag in [(390, 844, "phone"), (1920, 1080, "desktop")]:
+            for vw, vh, tag, pl in [(390, 844, "phone", False), (1920, 1080, "desktop", False), (390, 844, "phonePL", True)]:
                 ctx = await b.new_context(viewport={"width": vw, "height": vh}, device_scale_factor=2 if vw < 800 else 1)
                 await ctx.add_init_script(SHIFT)
                 pg = await ctx.new_page()
@@ -58,9 +69,14 @@ async def main():
                         if await pg.query_selector(".gevsheet"): return
                 async def to_map():
                     await clear(); await pg.click("[data-tab=map]"); await pg.wait_for_timeout(900); await clear()
-                await pg.goto(f"http://localhost:{PORT}/index.html?notut&p=gev{tag}"); await pg.wait_for_timeout(1500)
+                if pl: await ctx.add_init_script("localStorage.setItem('rotn_prefs', JSON.stringify({ lang: 'pl' }))")
+                for _ in range(3):   # python's little test server sometimes drops a script under a burst of requests: reload
+                    await pg.goto(f"http://localhost:{PORT}/index.html?notut&p=gev{tag}")
+                    try: await pg.wait_for_selector(".press", timeout=10000); break
+                    except Exception: print(tag, "title screen didn't come up, reloading")
+                await pg.wait_for_timeout(800)
                 await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Hrodny"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
-                for st in ["ink", "pixel"]:
+                for st in (["ink"] if pl else ["ink", "pixel"]):
                     await pg.evaluate(f"() => {{ ART.setStyle('{st}'); document.documentElement.classList.toggle('art-pixel', '{st}' === 'pixel'); }}")
                     # 1. warning: banner with a countdown that ticks
                     ev = await pg.evaluate(JUMP, ["dragon", "warn"]); print(tag, st, "warn:", ev)
@@ -72,6 +88,9 @@ async def main():
                         c2 = await pg.evaluate("document.querySelector('#gev .gev-clock b')?.textContent")
                         check(bool(c1) and c1 != c2, f"{tag}/{st}: the countdown ticks ({c1} -> {c2})")
                         await ban.scroll_into_view_if_needed(); await shot(f"{st}_warn_banner", ban)
+                        if pl:
+                            bt = (await ban.text_content()).lower()
+                            check("wkrótce" in bt and "zbierzcie się" in bt and "coming soon" not in bt, f"{tag}: the banner is in Polish ({bt[:80]!r})")
                     # 2. the dragon attacks: banner with phases, map marker, sheet, a charge
                     ev = await pg.evaluate(JUMP, ["dragon", "on"]); print(tag, st, "on:", ev)
                     await pg.wait_for_timeout(1600); await to_map(); await pg.evaluate("scrollTo(0, 0)"); await pg.wait_for_timeout(1500)
@@ -80,6 +99,9 @@ async def main():
                     await open_sheet()
                     check(await pg.query_selector(".gevsheet") is not None, f"{tag}/{st}: the dragon sheet opens")
                     await shot(f"{st}_dragon_sheet");
+                    if pl:
+                        sh = await pg.evaluate("document.querySelector('.gevsheet')?.textContent || ''")
+                        check(all(w in sh for w in ["Smok atakuje", "Pozostało", "Krąży i pali", "Jak to działa"]) and "Time left" not in sh and "How it works" not in sh, f"{tag}: the dragon sheet is in Polish")
                     if st == "ink":
                         fb = await pg.query_selector(".gevsheet [data-gev=fight]")
                         check(fb is not None, f"{tag}: a Charge button at the town")
@@ -87,9 +109,23 @@ async def main():
                             await fb.click(); await pg.wait_for_timeout(1800)
                             txt = await pg.evaluate("document.querySelector('#modal')?.innerText || ''")
                             check(len(txt) > 20, f"{tag}: a charge plays out")
+                            h2 = await pg.evaluate("document.querySelector('#modal h2')?.textContent || ''")
+                            check(h2 in (HEAD_PL if pl else HEAD_EN), f"{tag}: the result window says how the charge went, not plain Victory ({h2})")
                             await shot("fight_result")
                             check(await pg.evaluate("(() => { const S = window.__dbg.save(), ev = GREATEV.current(Date.now()/1000); return (S.gev?.[ev.id]?.p || 0) > 0; })()"), f"{tag}: the charge counts for everyone")
                     await clear()
+                    if st == "ink" and tag == "phone":
+                        # the Objective overlay and our own pop-up never sit on top of each other or on the event banner
+                        await to_map(); await pg.evaluate("scrollTo(0, 0)"); await pg.wait_for_timeout(300)
+                        await pg.evaluate("() => { const S = window.__dbg.save(); S.gevSeen = {}; POLISH.banner('objective', 'Objective', 'Reach the top of High Hrothgar'); }")
+                        hits, seen = [], set()
+                        for i in range(40):
+                            r = await pg.evaluate(OVERLAP)
+                            seen.update(r["shown"]); hits += r["hits"]
+                            if i == 3: await shot("objective_overlay")
+                            await pg.wait_for_timeout(200)
+                        check(len(seen) >= 2, f"{tag}: both the Objective and the event pop-up showed ({sorted(seen)})")
+                        check(not hits, f"{tag}: nothing overlaps the Objective overlay {hits[:3]}")
                     # 3. a rift and a siege: their sheets
                     for k in ["rift", "siege"]:
                         ev = await pg.evaluate(JUMP, [k, "on"]); print(tag, st, k + ":", ev)
@@ -109,6 +145,9 @@ async def main():
                     # other events' aftermath (a plundered hold...) also moves prices, so compare with the hour before the fair opened
                     pm = await pg.evaluate("(() => { const S = window.__dbg.save(), t = Date.now() / 1000, ev = GREATEV.current(t); return GREATEV.priceMult(S, S.location, t) / GREATEV.priceMult(S, S.location, ev.warn + 60); })()")
                     check(pm < 0.8, f"{tag}/{st}: shops are a quarter cheaper at the fair (x{pm:.2f})")
+                    if pl:
+                        fs = await pg.evaluate("document.querySelector('.gevsheet')?.textContent || ''")
+                        check("Stoisko z nagrodami" in fs and "Prize stall" not in fs, f"{tag}: the fair sheet is in Polish")
                     await shot(f"{st}_fair_sheet"); await clear()
                     # 5. what's left behind: a burned town rebuilding
                     ev = await pg.evaluate("""() => { const t0 = (Date.now() - window.__off) / 1000, b0 = Math.floor(t0 / GREATEV.BLOCK);

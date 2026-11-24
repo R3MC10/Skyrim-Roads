@@ -180,6 +180,125 @@ const I18N = (() => {
     location.reload();
     return true;
   }
+  /* text built in code, translated at the source: t("Siege of {place}", { place }). Needed where the on-screen swap can't
+     reach (canvas labels, journal lines) or where names sit inside a sentence. {x:lc} lowercases the value. String values
+     under the keys foe, kind, title, phase and game (dragon kinds, titles…) are translated too. Unknown text stays English. */
+  const TPL = {};
+  const TKEYS = new Set(["foe", "kind", "title", "phase", "game"]);
+  let LANG = null;
+  const cur = () => LANG || (LANG = lang());
+  function t(en, v) {
+    const pl = cur() === "pl", src = (pl && TPL[en]) || en;
+    if (!v) return src;
+    return src.replace(/\{(\w+)(:lc)?\}/g, (m, k, lc) => {
+      if (!(k in v)) return m;
+      let x = v[k];
+      if (pl && typeof x === "string" && TKEYS.has(k)) x = TPL[x] ?? PL[x] ?? x;   // names of things, never player or place names
+      x = String(x ?? "");
+      return lc ? x.toLowerCase() : x;
+    });
+  }
+  /* other modules' lists: tpl for t(), exact for text that shows up on screen as it is (perk names, titles) */
+  function add(tpl, exact) { Object.assign(TPL, tpl || {}); Object.assign(PL, exact || {}); cache.clear(); }
+
+  // ---------------------------------------------------------------- great world events (greatevents.js)
+  add({
+    // names and kinds
+    "{foe} attacks {place}": "{foe} atakuje {place}", "Daedric rift at {place}": "Daedryczna wyrwa: {place}", "Siege of {place}": "Oblężenie: {place}",
+    "The great fair in {place}": "Wielki jarmark: {place}", "Dragon assault": "Atak smoka", "Daedric rift": "Daedryczna wyrwa", Siege: "Oblężenie", "Town fair": "Jarmark",
+    Dragon: "Smok", "Frost Dragon": "Mroźny smok", "Blood Dragon": "Krwawy smok", "Elder Dragon": "Starszy smok",
+    // phases
+    "It circles and burns": "Krąży i pali", "It lands in the streets": "Ląduje na ulicach", "Wounded and furious": "Ranny i wściekły",
+    "Daedra pour out": "Wylewają się daedry", "The Dremora guard": "Strażnik dremora", "The Rift Lord": "Władca Wyrwy",
+    "Raiders at the walls": "Bandyci pod murami", "The battering ram": "Taran", "The warlord": "Herszt",
+    "{foe} over {place}": "{foe} nad {place}", "{foe} in the streets": "{foe} na ulicach", "Wounded {foe:lc}": "Ranny {foe:lc}",
+    "Scamps and atronachs": "Skampy i atronachy", "Dremora Markynaz, Rift Lord": "Dremora Markynaz, Władca Wyrwy", "Bandit raiders": "Bandyci szturmowi",
+    "Ram crew and their guards": "Obsługa tarana i straż", "{foe}, bandit warlord": "{foe}, herszt bandytów",
+    "The {foe:lc} sweeps low over the roofs, breathing fire.": "{foe} przelatuje nisko nad dachami, ziejąc ogniem.",
+    "The {foe:lc} sweeps low over the roofs, breathing frost.": "{foe} przelatuje nisko nad dachami, ziejąc mrozem.",
+    "It crashes down in the market of {place}, tail smashing stalls.": "Spada na targ w {place}, ogonem miażdżąc stragany.",
+    "Bleeding and furious, it fights for its life.": "Krwawiący i wściekły, walczy o życie.",
+    "Scamps and flame atronachs spill from the crackling rift.": "Z trzeszczącej wyrwy wysypują się skampy i ogniste atronachy.",
+    "A Dremora officer steps through and raises a burning blade.": "Oficer dremora przechodzi przez wyrwę i unosi płonące ostrze.",
+    "The Rift Lord himself comes to hold the tear open.": "Sam Władca Wyrwy przybywa, by utrzymać ją otwartą.",
+    "Bandits with ladders swarm the walls of {place}.": "Bandyci z drabinami obsiadają mury miasta {place}.",
+    "A battering ram thunders against the gate. Its guards won't let you near.": "Taran grzmi o bramę. Jego straż nie daje ci podejść.",
+    "{foe} rides in to finish the job.": "{foe} nadjeżdża, by dokończyć dzieła.",
+    // charges
+    "There's nothing to fight right now.": "Teraz nie ma z czym walczyć.", "{kind} at {place} starts in {time}. Get ready.": "{kind} ({place}) zaczyna się za {time}. Przygotuj się.",
+    "The fight is at {place}. Get there first.": "Walka toczy się w: {place}. Najpierw tam dotrzyj.",
+    "The {foe:lc} is already dead. Claim your share.": "{foe} już nie żyje. Odbierz swoją część.", "The rift is already sealed. Claim your share.": "Wyrwa jest już zamknięta. Odbierz swoją część.",
+    "The siege is already broken. Claim your share.": "Oblężenie jest już przełamane. Odbierz swoją część.",
+    "In a party only your leader starts each charge. Stay close to them and you fight beside them.": "W drużynie tylko przywódca zaczyna każdą szarżę. Trzymaj się blisko, a walczysz u jego boku.",
+    "Catch your breath: you can charge again in {n} s.": "Złap oddech: możesz znów szarżować za {n} s.",
+    "You're too badly hurt to charge in. Heal up first (rest, a potion or a spell).": "Jesteś zbyt ciężko ranny, by szarżować. Najpierw się wylecz (odpoczynek, mikstura albo zaklęcie).",
+    "({n} of your party beside you)": "({n} z twojej drużyny obok ciebie)", "You land the killing blow! The {foe:lc} crashes down in {place}.": "Zadajesz śmiertelny cios! {foe} pada martwy w {place}.",
+    "The Rift Lord falls and the rift snaps shut with a thunderclap!": "Władca Wyrwy pada, a wyrwa zatrzaskuje się z hukiem!",
+    "{foe} falls and the bandit army breaks and runs!": "{foe} pada, a armia bandytów rozpierzcha się!", "You're dragged down. Others will have to carry on.": "Powalają cię. Inni muszą walczyć dalej.",
+    "+{pts} to the fight{who}.": "+{pts} do walki{who}.", "Charge landed": "Szarża udana", Victory: "Zwycięstwo", "Victory!": "Zwycięstwo!",
+    // the fair
+    "Archery butts": "Strzelanie do tarczy", "Three arrows at the straw target.": "Trzy strzały do słomianej tarczy.", "Arm wrestling": "Siłowanie na rękę",
+    "Best of three against the town's strongest.": "Do dwóch wygranych z najsilniejszym w mieście.", "Drinking contest": "Konkurs picia",
+    "Mead, then more mead. Last one standing wins.": "Miód, potem jeszcze więcej miodu. Wygrywa ten, kto ustoi.", "The lucky wheel": "Koło fortuny", "10 gold a spin. Pure luck.": "10 złota za obrót. Czyste szczęście.",
+    "The fair opens in {time}.": "Jarmark otwiera się za {time}.", "There's no fair on right now.": "Teraz nie ma jarmarku.", "No such game.": "Nie ma takiej gry.", "The fair is in {place}.": "Jarmark jest w: {place}.",
+    "You've had your {n} goes at the {game:lc}. Try another game.": "Wykorzystałeś już {n} podejścia w grze „{game}”. Spróbuj innej.",
+    "Three in the gold! The crowd roars.": "Trzy w dziesiątkę! Tłum ryczy.", "{hits} of 3 on the target.": "{hits} z 3 w tarczy.", "All three wide. The children laugh.": "Wszystkie trzy obok. Dzieci się śmieją.",
+    "You slam their arm to the table!": "Przygniatasz jego rękę do stołu!", "They pin you, but buy you a drink for trying.": "Przegrywasz, ale stawiają ci kufel za odwagę.",
+    "Your rival slides under the table. You're still standing!": "Rywal ląduje pod stołem. Ty wciąż stoisz!", "The room spins. You wake up under a bench.": "Sala wiruje. Budzisz się pod ławą.",
+    "A spin costs 10 gold.": "Obrót kosztuje 10 złota.", "Jackpot! 60 gold!": "Główna wygrana! 60 złota!", "A small win: 15 gold.": "Mała wygrana: 15 złota.", "Nothing this time. Still, the wheel is fun.": "Tym razem nic. Ale koło i tak bawi.",
+    "{game}: {text} (+{pts} {pt}, {all} in all)": "{game}: {text} (+{pts} {pt}, razem {all})", point: "pkt", points: "pkt",
+    "A prize is waiting at the prize stall.": "Na stoisku z nagrodami czeka nagroda.", "The prize stall has packed up.": "Stoisko z nagrodami jest już zwinięte.", "Nothing to collect.": "Nie ma czego odebrać.",
+    "You need {n} points for that prize.": "Na tę nagrodę potrzebujesz {n} pkt.", "You've already collected that prize.": "Tę nagrodę już odebrałeś.", "Prize: {list}.": "Nagroda: {list}.",
+    "Two healing potions and 60 gold": "Dwie mikstury leczenia i 60 złota", "A sapphire and 120 gold": "Szafir i 120 złota", "A flawless ruby, 250 gold and the title Fair Champion": "Doskonały rubin, 250 złota i tytuł Mistrz Jarmarku",
+    // rewards and what's left behind
+    "{n} gold": "{n} złota", "the title {title}": "tytuł {title}", "{place} is saved.": "{place} ocalone.", "The rift at {place} is sealed.": "Wyrwa ({place}) zamknięta.",
+    "The siege of {place} is broken.": "Oblężenie ({place}) przełamane.", "The {foe:lc} burned {place} and flew off.": "{foe} spalił {place} i odleciał.",
+    "The rift at {place} stayed open.": "Wyrwa ({place}) pozostała otwarta.", "The bandits plundered {place}.": "Bandyci splądrowali {place}.",
+    "{head} You did {pct}% of a fair share. Your reward: {list}.": "{head} Zrobiłeś {pct}% uczciwej części. Twoja nagroda: {list}.",
+    "{place} is clearing the rubble after the dragon ({pct}% rebuilt). Timber is dear: shops 5% dearer.": "{place} uprząta gruzy po smoku (odbudowa {pct}%). Drewno jest drogie: sklepy o 5% droższe.",
+    "{place} was burned by a dragon and is rebuilding ({pct}%). Shops there are up to 20% dearer until it's done.": "{place} spalone przez smoka, trwa odbudowa ({pct}%). Sklepy są tam do 20% droższe, dopóki nie skończą.",
+    "The rift scar at {place} is fading.": "Blizna po wyrwie ({place}) blednie.", "Daedra still lurk around {place}. Traders in {hold} charge 10% more.": "Wokół {place} wciąż czają się daedry. Kupcy w krainie {hold} biorą 10% więcej.",
+    "The Jarl of {hold} thanks the siege breakers: shops in the hold are 5% cheaper (10% if you fought).": "Jarl krainy {hold} dziękuje obrońcom: sklepy w krainie są o 5% tańsze (10%, jeśli walczyłeś).",
+    "{place} was plundered by bandits. Shops in {hold} are 15% dearer.": "{place} splądrowane przez bandytów. Sklepy w krainie {hold} są o 15% droższe.",
+    "Rebuilding {pct}%": "Odbudowa {pct}%",
+    // times
+    "Opens in": "Otwarcie za", "Starts in": "Start za", "Closes in": "Zamknięcie za", "Time left": "Pozostało", "{d}d {h}h": "{d} d {h} godz.", "{h}h {m}m": "{h} godz. {m} min", "{n} min": "{n} min",
+    // banner and sheet
+    Claim: "Odbierz", Go: "Idź", Ready: "Gotowe", Play: "Graj", Open: "Otwórz", "With leader": "Z przywódcą", "⚔️ Fight": "⚔️ Walcz",
+    "Games, prizes, shops 25% off": "Gry, nagrody, sklepy 25% taniej", "your points {n}": "twoje punkty: {n}", "Beaten!": "Wygrana!", "{n} fought": "walczyło: {n}",
+    "At {where} · gather there": "Miejsce: {where} · zbierzcie się tam", "{phase} · {n} fighting": "{phase} · walczy: {n}",
+    "Coming soon": "Wkrótce", "Great world event": "Wielkie wydarzenie", "{name}: over, your reward is waiting": "{name}: koniec, czeka twoja nagroda",
+    "Your points: <b>{n}</b>. Shops in {place} are {pct}% off while the fair lasts.": "Twoje punkty: <b>{n}</b>. Sklepy w {place} są o {pct}% tańsze, dopóki trwa jarmark.",
+    "{left} of {tries} left": "zostało {left} z {tries}", Done: "Zrobione", "Prize stall": "Stoisko z nagrodami", "{n} points": "{n} pkt", Taken: "Odebrane", Collect: "Odbierz",
+    "Travel to {place}": "Idź do: {place}", "{n} hero": "bohaterów: {n}", "{n} heroes": "bohaterów: {n}", "your share {pct}% of a fair share": "twój udział: {pct}% uczciwej części",
+    "Victory! Everyone who fought can claim a share.": "Zwycięstwo! Każdy, kto walczył, może odebrać swoją część.", "It begins in {time}. Gather at {place}.": "Zaczyna się za {time}. Zbierzcie się w: {place}.",
+    "In a party, your leader starts each charge. Stay close to them and you fight beside them.": "W drużynie każdą szarżę zaczyna przywódca. Trzymaj się blisko, a walczysz u jego boku.",
+    "Catch your breath ({n} s)": "Złap oddech ({n} s)", "⚔️ Charge: {phase}": "⚔️ Szarża: {phase}", "Fighting with you: {names}": "Walczą z tobą: {names}",
+    "Claim your reward": "Odbierz nagrodę", Over: "Koniec", "everyone in the North sees this": "widzi to cała Północ", "How it works": "Jak to działa", Close: "Zamknij",
+    "Nothing to claim yet.": "Na razie nie ma czego odebrać.", "{icon} {name} struck the final blow: {what}!": "{icon} {name} zadał ostatni cios: {what}!",
+    "the {foe:lc} over {place} is dead": "{foe} nad {place} nie żyje", "the rift at {place} is sealed": "wyrwa ({place}) zamknięta", "the siege of {place} is broken": "oblężenie ({place}) przełamane",
+    "{name}: it starts in {time}.": "{name}: zaczyna się za {time}.", "{name} has opened: games, prizes and cheap shops!": "{name}: otwarte! Gry, nagrody i tanie sklepy!", "{name}! Everyone to {place}!": "{name}! Wszyscy do: {place}!",
+    // how it works
+    "The dragon attacks in three phases: it circles and burns, lands in the streets, then fights on wounded. Go to the town and charge in: each charge is a short fight, and everything you do wears it down for everyone. The more heroes join, the tougher it gets. In a party, the leader starts each charge and members close by fight beside them. Kill it before time runs out or the town burns and has to rebuild for 3 days. Your reward depends on your share: gold, dragon bones and scales, its soul, and the title Firebreaker if you did at least half a fair share.":
+      "Smok atakuje w trzech fazach: krąży i pali, ląduje na ulicach, a potem walczy ranny. Idź do miasta i szarżuj: każda szarża to krótka walka, a wszystko, co zrobisz, osłabia go dla wszystkich. Im więcej bohaterów, tym jest silniejszy. W drużynie każdą szarżę zaczyna przywódca, a członkowie w pobliżu walczą u jego boku. Zabij go, zanim minie czas, inaczej miasto spłonie i będzie się odbudowywać 3 dni. Nagroda zależy od twojego udziału: złoto, smocze kości i łuski, jego dusza oraz tytuł Pogromca Ognia, jeśli zrobiłeś co najmniej połowę uczciwej części.",
+    "A rift to Oblivion has torn open. First Daedra spill out, then a Dremora guard holds the tear, then the Rift Lord himself. Each charge is a short fight that counts for everyone. Seal it in time and those who fought share sigil stones, daedra hearts and gold (title Riftsealer). Left open, Daedra scare off traders in the hold for a day.":
+      "Otworzyła się wyrwa do Otchłani. Najpierw wysypują się daedry, potem wyrwy pilnuje strażnik dremora, a na końcu sam Władca Wyrwy. Każda szarża to krótka walka, która liczy się dla wszystkich. Zamknij ją na czas, a walczący podzielą się kamieniami pieczęci, sercami daedry i złotem (tytuł Pieczętujący Wyrwy). Jeśli zostanie otwarta, daedry na dzień odstraszą kupców w krainie.",
+    "A bandit army is besieging the town: raiders at the walls, then the battering ram, then the warlord. Each charge is a short fight that counts for everyone. Break the siege and the Jarl lowers prices in the hold for a day (more for those who fought) and pays out gems and gold (title Siegebreaker). Fail and the hold is plundered: shops are dearer for two days.":
+      "Armia bandytów oblega miasto: najpierw szturm na mury, potem taran, a na końcu herszt. Każda szarża to krótka walka, która liczy się dla wszystkich. Przełam oblężenie, a jarl na dzień obniży ceny w krainie (bardziej dla walczących) i wypłaci klejnoty i złoto (tytuł Pogromca Oblężeń). Jeśli się nie uda, kraina zostanie splądrowana: sklepy będą droższe przez dwa dni.",
+    "A great fair: four games (each {tries} goes), points add up to prizes at the prize stall, and every shop in town is 25% off while the fair lasts.":
+      "Wielki jarmark: cztery gry (w każdej {tries} podejścia), punkty zamieniasz na nagrody na stoisku, a każdy sklep w mieście jest 25% tańszy, dopóki trwa jarmark.",
+  }, {
+    // titles (saved in English, shown as they are)
+    Firebreaker: "Pogromca Ognia", Riftsealer: "Pieczętujący Wyrwy", Siegebreaker: "Pogromca Oblężeń", "Fair Champion": "Mistrz Jarmarku",
+    // perks
+    Dragonward: "Smocza Osłona", "Rift Warden": "Strażnik Wyrw", "Siege Breaker": "Łamacz Oblężeń", Fairgoer: "Bywalec Jarmarków", "Hero of the Hour": "Bohater Chwili",
+    "You've learned to take a dragon's charge: dragons hit you 10% softer, and your charges against a dragon attacking a town count 20% more.": "Umiesz przyjąć szarżę smoka: smoki biją cię o 10% słabiej, a twoje szarże na smoka atakującego miasto liczą się o 20% bardziej.",
+    "After every charge in a great world event you catch your breath and heal 20% of your health, and your charges at a Daedric rift count 20% more.": "Po każdej szarży w wielkim wydarzeniu łapiesz oddech i leczysz 20% zdrowia, a twoje szarże przy daedrycznej wyrwie liczą się o 20% bardziej.",
+    "Bandit raiders, ram crews and warlords take 15% more damage from you, and your charges against a siege count 20% more.": "Bandyci szturmowi, obsługa taranów i hersztowie dostają od ciebie o 15% więcej obrażeń, a twoje szarże przeciw oblężeniu liczą się o 20% bardziej.",
+    "At a town fair the shops sell to you another 10% cheaper, and every fair game gives you 1 more point.": "Na jarmarku sklepy sprzedają ci o kolejne 10% taniej, a każda gra daje ci 1 punkt więcej.",
+    "Rewards from great world events and fair prizes pay you 20% more gold.": "Nagrody z wielkich wydarzeń i jarmarków dają ci o 20% więcej złota.",
+  });
+
   if (typeof window !== "undefined" && typeof document !== "undefined") start();
-  return { lang, tr, settingRow, pref: setPref, PL, SKILLS, story };
+  return { lang, tr, t, add, settingRow, pref: setPref, PL, SKILLS, story };
 })();

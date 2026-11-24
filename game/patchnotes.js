@@ -11,6 +11,8 @@ const PATCHNOTES = (() => {
       "Events leave their mark: a burned town is dearer while it rebuilds over a few days, an open rift or a lost siege pushes prices up in that hold, and a saved hold thanks you with cheaper shops.",
       "Fairs have archery, arm wrestling, a drinking contest and a lucky wheel, a prize stall (top prize: the Fair Champion title), and every shop in town is 25% off.",
       "New perks: Dragonward (Blocking), Rift Warden (Restoration), Siege Breaker (One-Handed), Fairgoer (Mercantile) and Hero of the Hour (Etiquette).",
+      "Everything about great events is in Polish too: banners, countdowns, fights, fair games, prizes, titles and perks.",
+      "A charge that doesn't finish the boss now says \"Charge landed\" instead of \"Victory\", and the event pop-up waits its turn so it never covers the Objective banner.",
     ] },
     { id: "b137-ctl", build: 137, date: "24 Nov 2026", title: "New fight controls", items: [
       "Your moves in a fight now sit in a proper action bar at the bottom: three big buttons for Attack, Power attack and Guard (or Shield bash), with Magic, Items, Flee and End turn right under them. Easy to hit with a thumb, even on small phones.",
