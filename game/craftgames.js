@@ -236,7 +236,7 @@ const CG = (() => {
   // ---- drawing: ink (soft light) or pixel (chunky, flat)
   function draw(cv) {
     const S = st; if (!S) return;
-    const c = cv.getContext("2d"), px = pixel(), W = 300, H = 220;
+    const W = 300, H = 220, c = (typeof FITCANVAS !== "undefined" ? FITCANVAS.fixed(cv, W, H) : cv.getContext("2d")), px = pixel();   // sharp at any screen density (fitcanvas.js)
     c.imageSmoothingEnabled = !px;
     const q = (v) => (px ? Math.round(v / 4) * 4 : v);
     const rect = (x, y, w, h, col) => { c.fillStyle = col; c.fillRect(q(x), q(y), Math.max(px ? 4 : 1, q(w)), Math.max(px ? 4 : 1, q(h))); };
