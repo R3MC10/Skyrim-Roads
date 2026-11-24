@@ -596,6 +596,7 @@
     if (typeof ONBOARD !== "undefined") ONBOARD.mount({ S: () => S, persist, toast, renderPanel, click: onPanelClick, party: () => party, invites: () => invites });   // first-time tips (onboard.js)
     if (typeof WORLDEV !== "undefined") WORLDEV.mount({ S: () => S, persist, toast, showFightResult, showMessage, openModal, closeModal, postNews, click: onPanelClick });   // world events (worldevents.js)
     if (typeof GREATEV !== "undefined") GREATEV.mount({ S: () => S, persist, toast, showFightResult, showMessage, openModal, closeModal, postNews, click: onPanelClick, party: () => party });   // great world events: banner + countdown (greatevents.js)
+    if (typeof HOLDUI !== "undefined") HOLDUI.mount({ S: () => S, persist, toast, showFightResult, postNews, refresh: () => { bump(); renderPanel(true); }, party: () => party });   // player-run holds: Jarl, tax, raids (holdui.js)
     Store.watch("trades", (docs) => onTrades(docs));
     Store.watch("duels", (docs) => onDuels(docs));
     Store.watch("stalls", (docs) => onStalls(docs));
@@ -1880,10 +1881,11 @@
   }
   function holdsPanel() {
     if (!Store.online || !CLANS.all.length) return "";
+    const HU = typeof HOLDUI !== "undefined" ? HOLDUI.panel(S) : "";   // player-run holds (holdui.js): seats, Jarls and raids; this week's war points stay below
     const w = WARS.week(), st = WARS.standings(w, S), rul = WARS.rulers(S), mine = myClan();
     const left = BOUNTY.weekEnds(w) - Date.now(), days = Math.floor(left / 864e5), hrs = Math.floor((left % 864e5) / 36e5);
-    return `<div class="panel"><h2>Holds</h2><p class="sub">Clans fight for the nine holds each week. Win fights, clear dungeons and fight dragons inside a hold to earn it points (Arena wins count for Eastmarch). Whoever leads when the week ends rules it all next week, and their members shop 10% cheaper there. ${days}d ${hrs}h left.</p>
-      ${typeof RAIDART !== "undefined" ? RAIDART.holdsMap(rul) : ""}
+    return HU + `<div class="panel"><h2>${HU ? "War points this week" : "Holds"}</h2><p class="sub">Clans fight for the nine holds each week. Win fights, clear dungeons and fight dragons inside a hold to earn it points (Arena wins count for Eastmarch). Whoever leads when the week ends rules it all next week, and their members shop 10% cheaper there. ${days}d ${hrs}h left.</p>
+      ${!HU && typeof RAIDART !== "undefined" ? RAIDART.holdsMap(rul) : ""}
       <div class="list">${Object.keys(WORLD.holds).map((h) => { const r = rul[h], list = st[h], lead = list[0], me = mine && list.find((x) => x.clan.id === mine.id);
         return `<div class="item" style="flex-wrap:wrap">${r ? bannerHTML(r) : `<span class="banner" style="background:#2a2e33" aria-hidden="true"></span>`}<div class="t">${esc(h)}<span>${r ? `Ruled by ${esc(r.name)} [${esc(r.tag)}]` : "Nobody rules it"} · this week: ${lead ? `${esc(lead.clan.tag)} ${lead.pts}` : "no points yet"}${list[1] ? `, ${esc(list[1].clan.tag)} ${list[1].pts}` : ""}${me && me !== lead ? ` · you: ${me.pts}` : ""}</span></div></div>`; }).join("")}</div>
       ${mine ? "" : `<p class="sub">Join or found a clan (below) to take part.</p>`}</div>`;
@@ -3088,7 +3090,7 @@
     if (AU && townShopAt !== l) { if (townShopAt != null) townShop = ""; townShopAt = l; }   // a new town opens on its board
     townShop = sections.includes(townShop) ? townShop : AU ? "" : sections[0];
     const names = { general: "General goods", blacksmith: "Blacksmith", wizard: "Court wizard", stables: "Stables", fence: "Ragged Flagon (fence)", inn: TOWNS.INNS[l] || "Inn", train: "Trainers", alchemy: "Alchemy lab", forge: "Forge", jobs: "Jobs", streets: "Streets", hire: l === "Whiterun" ? "Dragonsreach & hirelings" : "Hirelings", hall: "⚑ Hall of the North", halls: "🏰 Halls & shops", notice: "📜 Jarl's bounty", homes: "🏘 Neighbours", market: "🛒 Market stalls", mine: "⛏ Mine", craft: "✨ Spell crafting", caravans: "🐫 Caravans", cook: "🍲 Cooking pot", arena: "⚔ The Arena", fish: "🎣 Fishing", carriage: "Carriage", enchanter: "Arcane enchanter", home: TOWNS.home(S, l) ? `🏠 ${TOWNS.HOMES[l]?.[0]}` : `Buy ${TOWNS.HOMES[l]?.[0]}`, ...(typeof SOL !== "undefined" ? SOL.NAMES : {}), ...(typeof HOMESTEAD !== "undefined" ? HOMESTEAD.names(S, l) : {}) };
-    const townTop = `${typeof CIVILWAR !== "undefined" ? CIVILWAR.townLine(S, l) : ""}${wanted ? `<p class="sub danger-high">You're wanted in ${esc(hold)}. Shops, inns and trainers turn you away.</p>` : ""}`;
+    const townTop = `${typeof CIVILWAR !== "undefined" ? CIVILWAR.townLine(S, l) : ""}${typeof HOLDUI !== "undefined" ? HOLDUI.townLine(S, l) : ""}${wanted ? `<p class="sub danger-high">You're wanted in ${esc(hold)}. Shops, inns and trainers turn you away.</p>` : ""}`;
     if (AU && !townShop) return `<div class="panel au-panel"><h2>${esc(l)}</h2>${PLACEART.scene(l)}${townTop}${typeof RUMOURS !== "undefined" ? RUMOURS.townHTML(S, l, "", open) : ""}${AU.hub({ S, l, sections, names, open, hold })}<p class="sub au-gold">You have <b class="gold">${S.gold} gold</b>.</p></div>`;
     const fac = F.priceFactor(G.skill(S, "Mercantile"));
     let body = "", note = "";
