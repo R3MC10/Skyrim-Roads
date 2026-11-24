@@ -51,12 +51,12 @@ const LIVING = (() => {
 
   // ====================================================================== deeds
   const DEED = {
-    dragon: { icon: "🐉", pts: 5, say: "slew a dragon" },
-    guard: { icon: "🛡", pts: 4, say: "guarded a caravan all the way" },
-    rob: { icon: "💰", pts: -15, say: "robbed a caravan" },
-    crime: { icon: "⚖", pts: -5, say: "broke the law" },
-    event: { icon: "📜", pts: 6, say: "saw a whisper through" },
-    amends: { icon: "🙏", pts: 0, say: "made amends" },
+    dragon: { icon: "", pts: 5, say: "slew a dragon" },
+    guard: { icon: "", pts: 4, say: "guarded a caravan all the way" },
+    rob: { icon: "", pts: -15, say: "robbed a caravan" },
+    crime: { icon: "", pts: -5, say: "broke the law" },
+    event: { icon: "", pts: 6, say: "saw a whisper through" },
+    amends: { icon: "", pts: 0, say: "made amends" },
   };
   function news(s, icon, text, hold = "", t = now()) {
     const w = st(s);
@@ -135,8 +135,8 @@ const LIVING = (() => {
       const h = holdOf(was.job.to); deed(s, "guard", h, DEED.guard.pts, `${was.job.name} rolled safely into ${was.job.to}, guarded by ${s.name}.`, t);
       msgs.push(`Word gets around ${h}: you brought the caravan in safe.`);
     }
-    for (const id of cur.q) if (!was.q.includes(id)) { const L = (typeof QUESTS !== "undefined") ? QUESTS.L?.[id] : null; if (L) news(s, "📜", `${s.name} finished ${L.name}. The tale is told in every inn.`, L.start ? holdOf(L.start) : "", t); }
-    for (const n of cur.cl) if (!was.cl.includes(n) && place(n)) news(s, "⚔", `${n} has been cleared out by ${s.name}.`, holdOf(n), t);
+    for (const id of cur.q) if (!was.q.includes(id)) { const L = (typeof QUESTS !== "undefined") ? QUESTS.L?.[id] : null; if (L) news(s, "", `${s.name} finished ${L.name}. The tale is told in every inn.`, L.start ? holdOf(L.start) : "", t); }
+    for (const n of cur.cl) if (!was.cl.includes(n) && place(n)) news(s, "", `${n} has been cleared out by ${s.name}.`, holdOf(n), t);
     return msgs.join(" ");
   }
   /* the ui calls this every second: deeds, whispers, the party leader's world */
@@ -153,27 +153,27 @@ const LIVING = (() => {
 
   // ====================================================================== whispers of things to come
   const WH = {
-    dragon: { icon: "🐉", title: "A dragon's roost", where: ["lair"], tpl: "Dragon", hours: [8, 14], pts: 8, gold: 160,
+    dragon: { icon: "", title: "A dragon's roost", where: ["lair"], tpl: "Dragon", hours: [8, 14], pts: 8, gold: 160,
       say: ["Shepherds saw a dragon circling over {p}. Round and round, like it's looking for somewhere to land.", "There's scorch marks on the rocks near {p}, and something big has been taking goats.", "My cousin swears the mountain near {p} roared at him last night."],
       came: "The whispers were true: a dragon has made its roost at {p}.", none: "The dragon over {p} flew on north. Nobody's seen it since.",
       win: "The dragon at {p} crashes down for the last time. The Jarl's steward sends {g} gold, with thanks." },
-    warband: { icon: "⚔", title: "A warband gathers", where: ["camp", "fort"], tpl: "Forsworn ambush", hours: [6, 12], pts: 6, gold: 110,
+    warband: { icon: "", title: "A warband gathers", where: ["camp", "fort"], tpl: "Forsworn ambush", hours: [6, 12], pts: 6, gold: 110,
       say: ["Hunters saw campfires near {p}. Lots of them. Somebody's gathering a warband.", "Weapons have been going missing from the forge. Folk say they end up at {p}.", "Forsworn, or bandits, nobody's sure. But they're massing near {p}."],
       came: "Campfires burn at {p}: the warband everyone whispered about is real.", none: "The fires near {p} turned out to be charcoal burners. Just tavern talk.",
       win: "The warband at {p} scatters to the winds. The Jarl pays {g} gold for the heads of its leaders." },
-    troll: { icon: "🦍", title: "A troll comes down", where: ["landmark", "farm", "camp"], tpl: "Frost troll", hours: [6, 12], pts: 5, gold: 90,
+    troll: { icon: "", title: "A troll comes down", where: ["landmark", "farm", "camp"], tpl: "Frost troll", hours: [6, 12], pts: 5, gold: 90,
       say: ["The snows came early up high. A troll will be down by {p} before long, mark my words.", "Something's been knocking over fences near {p}. Big hand prints.", "Old Hilde says the trolls always come down past {p} when the weather turns."],
       came: "A troll has come down from the heights and is prowling near {p}.", none: "No troll came down by {p}. The fences were knocked over by a very drunk farmhand.",
       win: "The troll near {p} won't be bothering anyone again. The farmers put together {g} gold." },
-    vampire: { icon: "🦇", title: "A nest in the dark", where: ["dungeon"], match: /cave|crypt|barrow|ruin|tomb|grotto|hall|den|hollow/i, tpl: "Vampire", hours: [10, 16], pts: 7, gold: 140,
+    vampire: { icon: "", title: "A nest in the dark", where: ["dungeon"], match: /cave|crypt|barrow|ruin|tomb|grotto|hall|den|hollow/i, tpl: "Vampire", hours: [10, 16], pts: 7, gold: 140,
       say: ["Two people gone from their beds this month. Both last seen walking toward {p}, at night.", "Pale folk have been buying candles and nothing else. They came from the direction of {p}.", "Don't go near {p} after dark. Nobody who has came back the same."],
       came: "Vampires have made a nest at {p}. The whispers were true.", none: "The disappearances near {p} stopped. A pair of runaway lovers sent a letter from Cyrodiil.",
       win: "Sunlight floods the nest at {p}. The Jarl's court wizard sends {g} gold and a nervous letter of thanks." },
-    stranded: { icon: "🛞", title: "A stranded merchant", where: ["landmark", "farm", "fort", "camp"], hours: [4, 10], pts: 4, gold: 70, fight: false,
+    stranded: { icon: "", title: "A stranded merchant", where: ["landmark", "farm", "fort", "camp"], hours: [4, 10], pts: 4, gold: 70, fight: false,
       say: ["A merchant from Cyrodiil is due through {p}. That road eats wagon wheels.", "Mark me, the spice wagon will lose a wheel by {p} again, same as every year.", "Some fool's taking a full wagon past {p} with no guards. Won't end well."],
       came: "A merchant's wagon has broken down near {p}, goods and all.", none: "The wagon got past {p} without a scratch. Lucky fool.",
       win: "You help the merchant near {p} get the wheel back on. He pays {g} gold and pushes some goods into your arms: {loot}." },
-    shrine: { icon: "🕯", title: "A forgotten shrine", where: ["landmark", "dungeon"], hours: [6, 14], pts: 3, gold: 40, fight: false,
+    shrine: { icon: "", title: "A forgotten shrine", where: ["landmark", "dungeon"], hours: [6, 14], pts: 3, gold: 40, fight: false,
       say: ["A shepherd found old stones near {p}. Carvings, he says, and a warm light at dusk.", "The priests are excited about something near {p}. A shrine nobody remembered.", "There's a holy place near {p}, buried under the snow for a hundred years. The thaw's uncovering it."],
       came: "An old shrine has come out of the snow near {p}. Pilgrims are already on their way.", none: "The stones near {p} were just stones. The priests are very disappointed.",
       win: "You kneel at the old shrine near {p}. A warmth fills you: healed and well rested. Pilgrims leave {g} gold at your feet for finding it." },
@@ -228,8 +228,8 @@ const LIVING = (() => {
       if (x.st === "w" && t >= x.due) {
         const K = WH[x.k];
         if (x.real && place(x.place)) { x.st = "live"; x.until = x.due + gameH(LIVE_H); w.came++; news(s, K.icon, fill(K.came, x), x.hold, x.due); out.push(`${K.icon} ${fill(K.came, x)}`); G.note?.(s, `${K.icon} ${fill(K.came, x)}`); }
-        else { x.st = "gone"; news(s, "💨", fill(K.none, x), x.hold, x.due); }
-      } else if (x.st === "live" && t >= x.until) { x.st = "gone"; news(s, "💨", `Whatever was at ${x.place} has moved on.`, x.hold, t); }
+        else { x.st = "gone"; news(s, "", fill(K.none, x), x.hold, x.due); }
+      } else if (x.st === "live" && t >= x.until) { x.st = "gone"; news(s, "", `Whatever was at ${x.place} has moved on.`, x.hold, t); }
     }
     w.wh = w.wh.filter((x) => x.st === "w" || x.st === "live" || t - (x.until || x.due) < gameH(24));
     return out.join(" ");
@@ -280,9 +280,9 @@ const LIVING = (() => {
 
   // ====================================================================== towns react: doors, scorn, amends
   const DOORS = [
-    { id: "backroom", icon: "🚪", name: "The back room at the inn", min: 10, what: "Whispers of things to come cost you nothing." },
-    { id: "store", icon: "📦", name: "The steward's storeroom", min: 25, what: "Once a day the steward lets you take a few materials.", daily: true },
-    { id: "guest", icon: "🛏", name: "A guest room in the Jarl's hall", min: 50, what: "Once a day: a free bed. Healed and Well Rested.", daily: true },
+    { id: "backroom", icon: "", name: "The back room at the inn", min: 10, what: "Whispers of things to come cost you nothing." },
+    { id: "store", icon: "", name: "The steward's storeroom", min: 25, what: "Once a day the steward lets you take a few materials.", daily: true },
+    { id: "guest", icon: "", name: "A guest room in the Jarl's hall", min: 50, what: "Once a day: a free bed. Healed and Well Rested.", daily: true },
   ];
   const doorMin = (s, d) => Math.round(d.min * (1 - Math.min(0.4, pfx(s, "doors"))));
   const ptsIn = (s, hold) => ((typeof RUMOURS !== "undefined") ? RUMOURS.standing(s, hold).pts : 0);
@@ -376,7 +376,7 @@ const LIVING = (() => {
   /* the talk of a given game day: the same on every phone */
   function realm(day) {
     const H = HOLDS(), a = hash("realm" + day), b = hash("talk" + day * 7);
-    return [{ t: (day * 86400 + 9 * 3600) / GS(), i: "📯", x: REALM[a % REALM.length].replace("{h}", H[(a >> 4) % H.length]), h: "" }, { t: (day * 86400 + 18 * 3600) / GS(), i: "📯", x: REALM[(b + 5) % REALM.length].replace("{h}", H[(b >> 3) % H.length]), h: "" }];
+    return [{ t: (day * 86400 + 9 * 3600) / GS(), i: "", x: REALM[a % REALM.length].replace("{h}", H[(a >> 4) % H.length]), h: "" }, { t: (day * 86400 + 18 * 3600) / GS(), i: "", x: REALM[(b + 5) % REALM.length].replace("{h}", H[(b >> 3) % H.length]), h: "" }];
   }
   /* the whole feed: yours (or your party leader's) and the realm's last three days */
   function feed(s, t = now(), n = 12) {
@@ -399,7 +399,7 @@ const LIVING = (() => {
     const w = st(s);
     if (!lw || typeof lw !== "object") { w.shared = null; return; }
     const ok = (x) => x && WH[x.k] && typeof x.place === "string" && place(x.place);
-    w.shared = { from: String(from || "your leader").slice(0, 40), w: (Array.isArray(lw.w) ? lw.w : []).filter(ok).slice(0, 4), n: (Array.isArray(lw.n) ? lw.n : []).filter((x) => x && typeof x.x === "string").slice(0, 8).map((x) => ({ t: +x.t || 0, i: String(x.i || "📯").slice(0, 4), x: x.x.slice(0, 200), h: String(x.h || "") })) };
+    w.shared = { from: String(from || "your leader").slice(0, 40), w: (Array.isArray(lw.w) ? lw.w : []).filter(ok).slice(0, 4), n: (Array.isArray(lw.n) ? lw.n : []).filter((x) => x && typeof x.x === "string").slice(0, 8).map((x) => ({ t: +x.t || 0, i: String(x.i || "").slice(0, 4), x: x.x.slice(0, 200), h: String(x.h || "") })) };
     for (const x of w.shared.w) if (!s.discovered.includes(x.place)) s.discovered.push(x.place);
   }
   function follow(s, party, cards) {
@@ -429,7 +429,7 @@ const LIVING = (() => {
   }
 
   // ====================================================================== HTML pieces
-  const roleIcon = { merchant: "🛒", smith: "⚒", alchemist: "⚗", wizard: "✨", innkeeper: "🍺", stable: "🐎", fence: "🗝", bard: "🎶" };
+  const roleIcon = { merchant: "", smith: "", alchemist: "", wizard: "", innkeeper: "", stable: "", fence: "", bard: "" };
   function peopleHTML(list) {
     return `<div class="lw-folk">${list.map((p) => `<div class="lw-who at-${p.at}"><span aria-hidden="true">${roleIcon[p.role] || "•"}</span><b>${esc(p.name)}</b><small>${esc(p.doing)}</small></div>`).join("")}</div>`;
   }
@@ -482,7 +482,7 @@ const LIVING = (() => {
     try {
       const x = liveHere(s); if (!x) return "";
       const K = WH[x.k], member = isMember(s);
-      return `<div class="panel xcard lw-card"><h2>${K.icon} ${esc(K.title)}</h2><p class="sub">${esc(fill(K.came, x))} ${K.fight === false ? `There's about ${bountyPay(s, x)} gold in it for you.` : `The Jarl of ${esc(x.hold)} pays a bounty: about ${bountyPay(s, x)} gold.`}</p>${member ? `<p class="sub">Your leader decides.</p>` : `<button class="btn pri" data-lw="act" data-id="${esc(x.id)}" style="width:100%">${K.fight === false ? "Go and see" : "⚔ Deal with it"}</button>`}</div>`;
+      return `<div class="panel xcard lw-card"><h2>${K.icon} ${esc(K.title)}</h2><p class="sub">${esc(fill(K.came, x))} ${K.fight === false ? `There's about ${bountyPay(s, x)} gold in it for you.` : `The Jarl of ${esc(x.hold)} pays a bounty: about ${bountyPay(s, x)} gold.`}</p>${member ? `<p class="sub">Your leader decides.</p>` : `<button class="btn pri" data-lw="act" data-id="${esc(x.id)}" style="width:100%">${K.fight === false ? "Go and see" : " Deal with it"}</button>`}</div>`;
     } catch { return ""; }
   }
   /* map marks (RUMOURS.marks adds them): whispers get a question mark until they come true */
@@ -494,7 +494,7 @@ const LIVING = (() => {
     try {
       const t = now(), sh = sharedFor(s), list = whispersFor(s, t);
       const my = HOLDS().map((h) => ({ h, d: deedWords(s, h) })).filter((x) => x.d.length);
-      return `<div class="panel lw-panel"><h2>📯 News of the realm</h2>${sh ? `<p class="sub">You're in ${esc(sh.from)}'s party: you share their world. They hear the whispers and make the choices.</p>` : `<p class="sub">What's happened lately, and what people say is coming.</p>`}
+      return `<div class="panel lw-panel"><h2> News of the realm</h2>${sh ? `<p class="sub">You're in ${esc(sh.from)}'s party: you share their world. They hear the whispers and make the choices.</p>` : `<p class="sub">What's happened lately, and what people say is coming.</p>`}
         ${feedHTML(s, 10)}
         <h3 class="xh">Whispers of things to come</h3>${list.length ? `<div class="list">${list.map((x) => whisperRow(x, t, !!sh)).join("")}</div>` : `<p class="sub">Listen in an inn (evenings are best). Most whispers come true half a day later.</p>`}
         ${my.length ? `<h3 class="xh">What they remember</h3><div class="list">${my.map((x) => `<div class="item"><div class="t">${esc(x.h)}<span>${esc(x.d.join(" · "))}</span></div></div>`).join("")}</div>` : ""}</div>`;
@@ -518,7 +518,7 @@ const LIVING = (() => {
         const id = b.dataset.id, go = typeof NOAUTO !== "undefined" ? NOAUTO.call : (fn, done) => done(fn());   // a fight opens on the turn-by-turn screen (noautoplay.js)
         return void go(() => act(S, id), (r) => {
           if (r.err) return toast(r.err);
-          G.note?.(S, `📜 ${r.text}`); ui.save(); ui.refresh();
+          G.note?.(S, `\uE103 ${r.text}`); ui.save(); ui.refresh();
           if ((r.fight || r.died) && ui.fight) return ui.fight(r);
           sfx("coin"); return msg("The whispers were true", r.text);
         });
@@ -527,7 +527,7 @@ const LIVING = (() => {
       if (r.err) return toast(r.err);
       sfx(what === "door" || what === "amends" ? "coin" : "click");
       ui.save(); ui.refresh();
-      if (what === "whisper") { G.note?.(S, `🍺 ${r.text}`); msg("Whispers of things to come", r.text); } else toast(r.text);
+      if (what === "whisper") { G.note?.(S, ` ${r.text}`); msg("Whispers of things to come", r.text); } else toast(r.text);
     });
   }
 

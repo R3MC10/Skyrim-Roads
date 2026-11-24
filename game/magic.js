@@ -212,7 +212,7 @@ const MAGIC = (() => {
     if (s._test) return msgs;
     if (f.won && f.reanimate && !f.endWon && !f.tags.has("undead") && !f.tags.has("construct") && !f.tags.has("dragon") && (f.e.level ?? 1) <= f.reanimate.max) {
       s.thrall = { name: `Risen ${f.e.name.toLowerCase()}`, dmg: Math.round(Math.max(3, f.e.damage * 0.6) * 10) / 10, fights: f.reanimate.fights };
-      msgs.push(`🧟 The ${f.e.name.toLowerCase()} rises again to serve you (${f.reanimate.fights} fights).`);
+      msgs.push(` The ${f.e.name.toLowerCase()} rises again to serve you (${f.reanimate.fights} fights).`);
     }
     if (f.won && f.soulTrap && !f.endWon && !f.tags.has("construct")) {
       const big = (f.e.level ?? 1) >= 12 || f.tags.has("elite") || f.tags.has("dragon");
@@ -222,8 +222,8 @@ const MAGIC = (() => {
         const full = row.item === "soul_gem_greater_empty" ? "soul_gem_greater" : "soul_gem_common";
         G.take(s, row.id); G.give(s, full);
         const my = G.useSkill(s, "Mysticism", full === "soul_gem_greater" ? 25 : 12);   // [OURS] catching a soul trains Mysticism
-        msgs.push(`💜 You trap its soul: ${D.ITEMS[full].name}.`, ...my);
-      } else msgs.push("💜 The soul slips away: you had no empty soul gem.");
+        msgs.push(` You trap its soul: ${D.ITEMS[full].name}.`, ...my);
+      } else msgs.push(" The soul slips away: you had no empty soul gem.");
     }
     if (s.thrall && f.thrallFought) { s.thrall.fights--; if (s.thrall.fights <= 0) { msgs.push(`${s.thrall.name} crumbles to dust.`); s.thrall = null; } }
     return msgs;
@@ -232,7 +232,7 @@ const MAGIC = (() => {
   function staffAttack(f) {
     const row = G.invRow(f.s, f.weaponInv), st = f.weapon.staff;
     const charge = f.charges[f.weaponInv] ?? staffCharge(row);
-    const cost = st.perCast * (1 - 0.1 * G.P(f.s, "enchanter"));
+    const cost = st.perCast * (1 - 0.1 * G.P(f.s, "enchanter")) * (typeof CHARGE !== "undefined" ? CHARGE.costMult(f.s) : 1);   // Thrifty Runes
     if (charge < cost) { const d = 3 * (0.8 + Math.random() * 0.4); f.ehp -= d; return `The staff is spent. You swing it (${Math.round(d)})`; }
     f.charges[f.weaponInv] = charge - cost;
     return `${f.weapon.name}: ` + f.cast(st.spell, true);

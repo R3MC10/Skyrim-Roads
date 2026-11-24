@@ -7,7 +7,7 @@
      zone: Perfect does 25% more, Good does normal damage, a miss does 20% less. Higher skill (and some perks) widen
      the zone. Fast mode, Auto and party members' turns skip it (normal damage).
    - Numbers: what you spent floats up from your frame (−3 AP, −25 SP, −40 MP) and the timing result over the scene.
-   The wheel can be switched off with the 🎯 button (back to cards). Screen tests get cards unless the page has ?wheel. */
+   The wheel can be switched off with the  button (back to cards). Screen tests get cards unless the page has ?wheel. */
 const TBRADIAL = (() => {
   const DOM = typeof document !== "undefined";
   const PERFECT = 1.25, GOOD = 1, POOR = 0.8;
@@ -68,7 +68,7 @@ const TBRADIAL = (() => {
           <path class="tp" d="${arc(40, z.mid - z.perfect / 2, z.mid + z.perfect / 2)}"/>
           <g class="tn"><line x1="50" y1="50" x2="50" y2="6"/><circle cx="50" cy="8" r="3.2"/></g>
           <circle class="th" cx="50" cy="50" r="5"/></svg>
-        <b class="tl">${o.icon || "⚔"} ${o.label || "Strike"}</b><small>Tap in the bright zone</small></div>`;
+        <b class="tl">${o.icon || ""} ${o.label || "Strike"}</b><small>Tap in the bright zone</small></div>`;
       host.appendChild(el);
       const needle = el.querySelector(".tn"), t0 = performance.now();
       let raf = 0, fin = false;

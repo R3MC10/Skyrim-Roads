@@ -87,7 +87,7 @@ const MINEGAME = (() => {
     const el = document.createElement("div");
     el.id = "minegame"; el.className = "craftgame minegame";
     el.innerHTML = `<div class="cgcard" role="dialog" aria-label="Mining">
-      <h3>⛏ ${esc(mine ? mine[0] : place)}</h3><p class="cgsub">Smithing ${skill} · <span id="mgsw"></span></p>
+      <h3> ${esc(mine ? mine[0] : place)}</h3><p class="cgsub">Smithing ${skill} · <span id="mgsw"></span></p>
       <div class="mgmeter" aria-hidden="true"><i class="mgz"></i><i class="mgp"></i><b class="mgn"></b></div>
       <div class="mgwall">${g.cells.map((c, i) => `<button class="mgc" data-i="${i}" aria-label="Rock ${i + 1}"><span class="mgcr"></span></button>`).join("")}</div>
       <p class="cghint">Tap a stone when the needle is in the bright band. Glinting stones hold ore.</p>

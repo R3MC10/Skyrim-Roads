@@ -63,22 +63,22 @@ const POLISH = (() => {
   function fromText(text) {
     if (!text || typeof text !== "string") return;
     const skills = typeof D !== "undefined" ? D.ALL_SKILLS || [] : [];
-    for (const m of text.matchAll(/([A-Z][A-Za-z'\- ]+?) increased to (\d+)/g)) {
+    if (!(typeof LEVELUP !== "undefined" && LEVELUP.live)) for (const m of text.matchAll(/([A-Z][A-Za-z'\- ]+?) increased to (\d+)/g)) {   // levelup.js shows skill rises itself
       const sk = skills.find((s) => m[1].endsWith(s)) || m[1].trim();
       banner("skill", "Skill increased", `${sk} ${m[2]}`, skillIcon(sk));
     }
-    const q = text.match(/📜 ([^:]+): “([^”]+)” done/);
+    const q = text.match(/ ([^:]+): “([^”]+)” done/);
     if (q) banner("quest", "Quest completed", q[2], has("UIART") ? UIART.quest(LINE[q[1]] || "jobs", 36) : "");
     // Skyrim: the next quest in the line starts, with its first objective
     const no = text.match(/New objective: ([^.]+)\. ([^]*)$/);
     if (no) { banner("quest", "Quest started", no[1].trim(), q && has("UIART") ? UIART.quest(LINE[q[1]] || "jobs", 36) : ""); const first = no[2].split(/(?<=[.!?])\s/)[0]; if (first) banner("objective", "Objective", first.length > 80 ? first.slice(0, 77) + "…" : first, ""); }
-    const lineDone = text.match(/🏆 ([^!]+) complete!/);
+    const lineDone = text.match(/ ([^!]+) complete!/);
     if (lineDone) banner("quest", "Questline completed", lineDone[1], "");
-    const job = !q && text.match(/📜 Job done: ([^.]+)\./);
+    const job = !q && text.match(/ Job done: ([^.]+)\./);
     if (job) banner("quest", "Job done", job[1], has("UIART") ? UIART.quest("jobs", 36) : "");
-    const a = text.match(/🏆 Achievement: (\S+) (.+)$/);
+    const a = text.match(/ Achievement: (\S+) (.+)$/);
     if (a) banner("ach", "Achievement", a[2], achIcon(a[2]));
-    const d = text.match(/📍 Discovered: ([^·]+?)(?: and \d+ more)? ·/);
+    const d = text.match(/ Discovered: ([^·]+?)(?: and \d+ more)? ·/);
     if (d) {
       const first = d[1].split(",")[0].trim();
       const pic = has("PLACEART") && typeof WORLD !== "undefined" && WORLD.places[first] ? miniPlace(first) : "";
@@ -126,7 +126,7 @@ const POLISH = (() => {
   function toastIcon(text) {
     if (!has("UIART")) return "";
     if (/increased to \d+/.test(text)) { const m = text.match(/([A-Z][A-Za-z'\- ]+?) increased to/); const sk = (D.ALL_SKILLS || []).find((s) => m && m[1].endsWith(s)); if (sk) return UIART.skill(sk, 22); }
-    if (/^🛒|gold|Sold /.test(text) && has("ICONART")) return coin();
+    if (/^|gold|Sold /.test(text) && has("ICONART")) return coin();
     return "";
   }
   function coin() {

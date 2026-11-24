@@ -28,7 +28,7 @@ for (const god of DIV) EVENTART.ROAD.shrine(g, ART.H, 360, 150, {id:"shrine", go
 for (const k of Object.keys(EVENTART.STORY)) { EVENTART.STORY[k](g, ART.H, 360, 150, {town:"Whiterun"}); n++; }
 const seen={}; let nq=0;
 for (const [line, q] of Object.entries(QUESTS.L)) for (const st of q.stages) {
-  const k = EVENTART.storyKind("Quest", "📜 "+q.name+": “"+st.title+"” done (50 gold).");   // the real popup wording (quests.js advance)
+  const k = EVENTART.storyKind("Quest", "\uE103 "+q.name+": “"+st.title+"” done (50 gold).");   // the real popup wording (quests.js advance)
   ok(k && EVENTART.STORY[k] && k!=="road", "quest vignette for "+line+"/"+st.title+" got "+k); seen[st.title]=k; nq++;
 }
 ok(nq>=15, "quest stages checked "+nq);

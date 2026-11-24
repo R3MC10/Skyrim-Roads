@@ -106,7 +106,7 @@ const DUNGEONS = (() => {
   const WORDS = [["FUS", "Unrelenting Force"], ["RO", "Unrelenting Force"], ["YOL", "Fire Breath"], ["FO", "Frost Breath"], ["WULD", "Whirlwind Sprint"],
     ["IIZ", "Ice Form"], ["FEIM", "Become Ethereal"], ["LAAS", "Aura Whisper"], ["KAAN", "Kyne's Peace"], ["ZUN", "Disarm"], ["MUL", "Dragon Aspect"]];
   const ANIMALS = ["Eagle", "Snake", "Whale", "Bear", "Moth", "Owl", "Wolf", "Dragon", "Hawk", "Fox"];
-  const ICON = { fight: "⚔️", elite: "💀", trap: "⚠️", treasure: "💰", puzzle: "🧩", rest: "🔥", mystery: "❓", boss: "👑" };
+  const ICON = { fight: "", elite: "", trap: "", treasure: "", puzzle: "", rest: "", mystery: "", boss: "" };
   const LABEL = { fight: "Fight", elite: "Tough fight", trap: "Trap", treasure: "Treasure", puzzle: "Puzzle", rest: "Rest", mystery: "Unknown", boss: "Boss" };
 
   const kindOf = (name) => WORLD.places[name]?.[2];
@@ -183,7 +183,7 @@ const DUNGEONS = (() => {
     } else s.dungeon = { place: name, theme: i.theme, tier: i.tier, rows: layout(i.theme, i.tier), row: -1, col: 0, room: null, found: [], gold: 0, t };
     if (typeof PRIESTS !== "undefined") PRIESTS.onEnter(s);   // [Skyrim] a dragon priest sleeps at the end
     G.setHealth(s, G.curHealth(s, t), t);
-    G.note(s, `🕯 Entered ${name}`);
+    G.note(s, ` Entered ${name}`);
     if (typeof DEEPDELVE !== "undefined") DEEPDELVE.onEnter(s, null, t);   // Veteran / Legendary / Mythic and their modifiers
     return null;
   }
@@ -358,7 +358,7 @@ const DUNGEONS = (() => {
       }
       s.cleared = s.cleared || {}; s.cleared[d.place] = t;
       d.room = null; d.done = true;
-      G.note(s, `🏆 Cleared ${d.place}`);
+      G.note(s, ` Cleared ${d.place}`);
       if (typeof DEEPDELVE !== "undefined" && DEEPDELVE.offer(s)) { d.done = false; d.room = DEEPDELVE.campRoom(s); word += " Behind the throne, worn stairs lead further down."; }   // deep expedition: Extract / Descend
       const falls = e.priest ? `${e.name.split(",")[0]} falls, and the mask clatters to the floor.` : `The ${e.name.toLowerCase()} falls.`;   // dragon priests have names
       if (partyChest) return { text: `${falls} Behind it stands a chest full of treasure: ${g} gold${partyChest.items.length ? ", " + partyChest.items.map((i) => D.ITEMS[i].name).join(", ") : ""}. It belongs to the whole party... for now.${word}`, fight: res.f, skills: res.skills, gold: res.gold, loot: res.loot, cleared: true, partyChest };
@@ -449,8 +449,7 @@ const DUNGEONS = (() => {
     if (r.m === "book") {
       const sk = s.skills[r.skill];
       if (sk.lvl >= 100) return done({ text: "There's nothing in it you don't already know." });
-      sk.lvl += 1; s.charXp += sk.lvl; const msgs = [];
-      while (s.charXp >= F.charXpNeeded(s.level)) { s.charXp -= F.charXpNeeded(s.level); s.level++; s.pendingLevels++; msgs.push(`You reached level ${s.level}!`); }
+      const msgs = G.raiseSkill(s, r.skill);
       return done({ text: `You read "${r.title}". ${r.skill} increased to ${sk.lvl}.`, skills: msgs });   // [Skyrim] skill books +1
     }
     if (r.m === "shrine") { G.setHealth(s, Math.max(G.curHealth(s), G.maxHealth(s) * (typeof DEEPDELVE !== "undefined" ? DEEPDELVE.healMult(s) : 1))); return done({ text: "You kneel. Your wounds close." }); }
@@ -481,7 +480,7 @@ const DUNGEONS = (() => {
     s.dungeon = null;
     G.setHealth(s, G.curHealth(s), t);   // regeneration starts again outside
     const got = `${d.gold} gold${d.found.length ? ", " + d.found.join(", ") : ""}`;
-    G.note(s, `🕯 Left ${d.place}${d.done ? " (cleared)" : ""}. Found: ${got}.`);
+    G.note(s, ` Left ${d.place}${d.done ? " (cleared)" : ""}. Found: ${got}.`);
     return `You climb back into daylight with ${got}.${deepMsg}`;
   }
 

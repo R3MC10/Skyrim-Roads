@@ -14,7 +14,7 @@ const SOL = (() => {
   const isSol = (p) => WORLD.isSol(p);
   const inSol = (s) => isSol([s.x, s.y]);
   const sections = (l) => (DOCKS[l] ? ["docks"] : []);
-  const NAMES = { docks: "⛵ Docks" };
+  const NAMES = { docks: " Docks" };
 
   // ---------------------------------------------------------------- the boat
   function canSail(s) {
@@ -32,7 +32,7 @@ const SOL = (() => {
     s.trip = { destName: d.to, dest, origin: s.location, start: here, path: [here, here], idx: 0, trail: [here], lastTick: t, status: "travel",
       encounter: null, log: [], boat: true, sail: SAIL_SECONDS, total: SAIL_SECONDS / 60, ship: d.ship };
     s.location = null;
-    G.note(s, `⛵ You pay ${d.captain} ${FARE} gold and board ${d.ship} for ${d.to}.`);
+    G.note(s, ` You pay ${d.captain} ${FARE} gold and board ${d.ship} for ${d.to}.`);
     return null;
   }
   /* engine hook: at sea time just passes; then you step off at the other dock */
@@ -43,7 +43,7 @@ const SOL = (() => {
     [s.x, s.y] = tr.dest; s.location = tr.destName; s.trip = null;
     if (!s.discovered.includes(tr.destName)) s.discovered.push(tr.destName);
     s.explored.push([+s.x.toFixed(4), +s.y.toFixed(4)]);
-    G.note(s, `⛵ ${tr.ship[0].toUpperCase() + tr.ship.slice(1)} docks at ${tr.destName}.`);
+    G.note(s, ` ${tr.ship[0].toUpperCase() + tr.ship.slice(1)} docks at ${tr.destName}.`);
     out.arrived = tr.destName; out.boat = true;
     arrived(s, tr.destName, out);
     return out;
@@ -59,7 +59,7 @@ const SOL = (() => {
     if (!qs.dragonborn) {
       qs.dragonborn = { stage: 0, t: now(), base: { ...(s.stats || {}) } };
       out.solIntro = "As you step off the boat at Raven Rock, Miraak's cultists in their masks and robes come up the docks. \"The false Dragonborn! You will never take what is Miraak's!\" New quest: Dragonborn (Journal).";
-      G.note(s, "📜 New quest: Dragonborn. Miraak's cultists were waiting for you at Raven Rock.");
+      G.note(s, " New quest: Dragonborn. Miraak's cultists were waiting for you at Raven Rock.");
     }
     return out;
   }
@@ -90,11 +90,11 @@ const SOL = (() => {
     for (const [flag, w] of WORD_FLAGS) if (s[flag] && !(POWERS.known(s, w) && POWERS.unlocked(s, w))) {
       POWERS.learnWord(s, w); s.unlocked = [...new Set([...(s.unlocked || []), w])]; got.push(w);
     }
-    if (got.length) G.note(s, `🗣 You understand ${got.join(" and ")} (Bend Will). Add it to your tactics.`);
+    if (got.length) G.note(s, ` You understand ${got.join(" and ")} (Bend Will). Add it to your tactics.`);
     return got;
   }
   const check0 = QUESTS.check;
-  QUESTS.check = (s) => { const m = check0(s); const w = sync(s); if (w.length) m.push(`🗣 You understand ${w.join(" and ")}: Bend Will grows stronger.`); return m; };
+  QUESTS.check = (s) => { const m = check0(s); const w = sync(s); if (w.length) m.push(` You understand ${w.join(" and ")}: Bend Will grows stronger.`); return m; };
   const needBW = (n) => (s) => { sync(s); return POWERS.level(s, "bend_will") >= n ? null : `You need ${n === 1 ? "the first word" : `${n} words`} of Bend Will for this.`; };
 
   // ---------------------------------------------------------------- the questline
@@ -159,7 +159,7 @@ const SOL = (() => {
     if (s.location !== "Skaal Village") return "Baldor works at the forge in Skaal Village.";
     if (knowsTechnique(s)) return "Baldor nods. \"You know the way. Strike with the All-Maker's patience.\"";
     if (G.skill(s, "Smithing") < TECH_SKILL) return `Baldor shakes his head. "Come back when you know your way around a forge" (Smithing ${TECH_SKILL}).`;
-    s.solStalhrim = true; G.note(s, "⛏ Baldor Iron-Shaper taught you the Skaal's ancient technique: you can mine stalhrim at Kolbjorn Barrow and Benkongerike.");
+    s.solStalhrim = true; G.note(s, " Baldor Iron-Shaper taught you the Skaal's ancient technique: you can mine stalhrim at Kolbjorn Barrow and Benkongerike.");
     return "Baldor shows you the old Skaal way: you can now mine stalhrim at Kolbjorn Barrow and Benkongerike, and Glover Mallory in Raven Rock can show you how to forge it.";
   }
   SMITH.GROUPS.push(["chitin", "Chitin & bonemold"], ["stalhrim", "Stalhrim"]);
@@ -215,14 +215,14 @@ const SOL = (() => {
     const ok = s.gold >= FARE && !opts.wanted;
     return {
       note: `${d.text} The crossing takes about 10 hours (${fmtMins(SAIL_SECONDS / 60)} real time) and nothing attacks a ship at sea. Your horse comes with you.`,
-      body: `<div class="item">${portrait}<div class="t">⛵ Sail to ${esc(d.to)}<span>${esc(d.captain)} · ${esc(d.ship)} · about ${fmtMins(SAIL_SECONDS / 60)}</span></div><span class="num gold">${FARE}</span><button class="btn sm pri" data-act="sail" ${ok ? "" : "disabled"}>Sail</button></div>`,
+      body: `<div class="item">${portrait}<div class="t"> Sail to ${esc(d.to)}<span>${esc(d.captain)} · ${esc(d.ship)} · about ${fmtMins(SAIL_SECONDS / 60)}</span></div><span class="num gold">${FARE}</span><button class="btn sm pri" data-act="sail" ${ok ? "" : "disabled"}>Sail</button></div>`,
     };
   }
   /* extras inside a town section (the Skaal smith's technique, the Stalhrim note at Raven Rock's forge) */
   function extraHTML(s, l, section, esc) {
     if (l === "Skaal Village" && (section === "blacksmith" || section === "forge")) {
       const k = knowsTechnique(s);
-      return `<div class="item ${k ? "on" : ""}"><div class="t">⛏ Baldor Iron-Shaper's ancient technique<span>${k ? "You know how to mine stalhrim (Kolbjorn Barrow, Benkongerike)." : `How the Skaal mine stalhrim. Needs Smithing ${TECH_SKILL}.`}</span></div><button class="btn sm" data-act="solact" data-id="technique" ${k ? "disabled" : ""}>${k ? "Learned" : "Ask"}</button></div>`;
+      return `<div class="item ${k ? "on" : ""}"><div class="t"> Baldor Iron-Shaper's ancient technique<span>${k ? "You know how to mine stalhrim (Kolbjorn Barrow, Benkongerike)." : `How the Skaal mine stalhrim. Needs Smithing ${TECH_SKILL}.`}</span></div><button class="btn sm" data-act="solact" data-id="technique" ${k ? "disabled" : ""}>${k ? "Learned" : "Ask"}</button></div>`;
     }
     if (l === RR && section === "forge") return `<p class="sub" style="margin-top:8px">Glover Mallory shows you Chitin, Bonemold and Stalhrim at this forge only. Stalhrim needs the Advanced Armors perk and ore from the Skaal's deposits.</p>`;
     return "";

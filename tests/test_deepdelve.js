@@ -195,7 +195,7 @@ ok(/you bleed/.test(x.text), "Blood Moon: blows make you bleed");
 x = fightWith(["cursed"], draugr); ok(Math.abs(DD.healMult(x.s) - 0.6) < 1e-9, "Cursed Sanctuary: healing 40% weaker");
 const lit = fightWith(["darkness"], draugr, { maxTurns: 1 }), lit2 = fightWith(["darkness"], draugr, { maxTurns: 1, perks: { pathfinder: 1 } });
 ok(lit.f.dd.dark > 0 && lit2.f.dd.dark === 0, "Ancient Darkness hides foes, Pathfinder sees them");
-let surges = 0; for (let i = 0; i < 10; i++) { x = fightWith(["arcane"], draugr, { maxTurns: 12, prep: (s) => { s.spells = ["firebolt"]; s.mpBonus = 500; G.loadout(s).rules = [{ if: "always", do: "spell:firebolt" }]; } }); if (/✨/.test(x.text)) surges++; }
+let surges = 0; for (let i = 0; i < 10; i++) { x = fightWith(["arcane"], draugr, { maxTurns: 12, prep: (s) => { s.spells = ["firebolt"]; s.mpBonus = 500; G.loadout(s).rules = [{ if: "always", do: "spell:firebolt" }]; } }); if (//.test(x.text)) surges++; }
 ok(surges >= 5, "Arcane Instability: spells have side effects (" + surges + "/10)");
 // injuries and curses make you take more
 const plain = fightWith([], draugr, { deep: { level: 2, inj: 0, curses: [] } }), hurt = fightWith([], draugr, { deep: { level: 2, inj: 3, curses: ["wither"] } });
@@ -229,14 +229,14 @@ ok(PERKS.BY_ID.long_strider && PERKS.BY_ID.stealth && PERKS.BY_ID.apprentice_loc
   vm.runInContext(order.map(src).join("\n;") + "\n;globalThis.I18N = I18N;", p);
   const t = (x) => p.I18N.tr(x);
   const want = [
-    "⚔ Difficulty", "Veteran", "Mythic", "❄️ Frozen Depths", "🐺 Relentless Hunt", "Extract: climb out with everything", "Rest (1 ration, 2 left)",
-    "Descend to level III: The ancient vault", "⛺ Camp on level II", "⛏ Level IV", "🩹 2 injuries", "Unsecured: 340 gold, 3 things", "🦴 Withering curse",
+    " Difficulty", "Veteran", "Mythic", " Frozen Depths", " Relentless Hunt", "Extract: climb out with everything", "Rest (1 ration, 2 left)",
+    "Descend to level III: The ancient vault", " Camp on level II", " Level IV", " 2 injuries", "Unsecured: 340 gold, 3 things", " Withering curse",
     "Legendary: foes have 65% more health and hit 20% harder; ×2.25 gold. This week's modifiers:",
     "You climb all the way back up and out. Everything you found down there is yours now (340 gold, 3 things).",
-    "You go down to level IV: the cursed sanctuary. 👁 Sanctuary's mark: Healing is 30% weaker.",
+    "You go down to level IV: the cursed sanctuary.  Sanctuary's mark: Healing is 30% weaker.",
     "You eat a ration and rest a while (120 → 260 health, 1 injury left). Curses stay until you climb out.",
     "Knocked out by the draugr deathlord on level II. You come to at the door of Bleak Falls Barrow, dragged out by luck or by friends. The expedition's finds (340 gold and 3 things) are lost in the dark. Your gear and everything you brought in are safe.",
-    "❄ the cold bites −12", "💀 it rises again!", "Dungeon Veteran", "Pathfinder", "Deep Delver", "Deep expeditions and harder dungeons",
+    " the cold bites −12", " it rises again!", "Dungeon Veteran", "Pathfinder", "Deep Delver", "Deep expeditions and harder dungeons",
     "Health, potions and injuries carry down with you. Down there, loot is unsecured until you extract.",
   ];
   for (const w of want) { const r = t(w); ok(r != null && r !== w, "Polish: " + w + " → " + r); }
@@ -246,8 +246,8 @@ ok(PERKS.BY_ID.long_strider && PERKS.BY_ID.stealth && PERKS.BY_ID.apprentice_loc
   const pn = vm.runInContext("typeof PATCHNOTES", p) !== "undefined" ? null : null;
   const notes = src("patchnotes.js"); const ctx = {}; vm.createContext(ctx); vm.runInContext(notes.replace(/^const PATCHNOTES =/m, "var PATCHNOTES ="), ctx);
   const top = ctx.PATCHNOTES.LIST[0];
-  ok(top.id === "b167-deepdelve" || ctx.PATCHNOTES.LIST.some((x) => x.id === "b167-deepdelve"), "patch note is in");
-  const mine = ctx.PATCHNOTES.LIST.find((x) => x.id === "b167-deepdelve");
+  ok(top.id === "b170-deepdelve" || ctx.PATCHNOTES.LIST.some((x) => x.id === "b170-deepdelve"), "patch note is in");
+  const mine = ctx.PATCHNOTES.LIST.find((x) => x.id === "b170-deepdelve");
   for (const line of [mine.title, ...mine.items]) { const r = t(line); ok(r && r !== line, "Polish patch note: " + line.slice(0, 40)); }
 }
 

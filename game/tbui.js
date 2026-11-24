@@ -13,7 +13,7 @@ const TBUI = (() => {
   const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const reduce = () => DOM && matchMedia("(prefers-reduced-motion: reduce)").matches;
   const buzz = (ms) => { try { navigator.vibrate?.(ms); } catch { /* no vibration */ } };
-  const ICON = { foe: "☠", me: "🛡", guard: "🛡", ally: "⚑", tick: "✶", end: "★" };
+  const ICON = { foe: "", me: "", guard: "", ally: "⚑", tick: "✶", end: "★" };
 
   /* one log line: an icon by who acted, numbers picked out, crits/kills/heals coloured */
   function logLine(e, fresh) {

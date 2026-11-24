@@ -23,19 +23,19 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "Relentless Hunt": ["Nieustępliwe łowy", "Odpoczynek może ściągnąć zasadzkę (1 na 3): najpierw walczysz, potem odpoczywasz."],
   };
   const CURSE = { "Withering curse": ["Klątwa uwiądu", "Otrzymujesz o 10% więcej obrażeń."], "Sanctuary's mark": ["Piętno sanktuarium", "Leczenie jest o 30% słabsze."] };
-  const ICONS = { "Frozen Depths": "❄️", "Restless Dead": "💀", "Dwemer Overcharge": "⚡", "Blood Moon": "🩸", "Arcane Instability": "✨", "Ancient Darkness": "🌑", "Cursed Sanctuary": "🕯", "Relentless Hunt": "🐺" };
+  const ICONS = { "Frozen Depths": "", "Restless Dead": "", "Dwemer Overcharge": "", "Blood Moon": "", "Arcane Instability": "", "Ancient Darkness": "", "Cursed Sanctuary": "", "Relentless Hunt": "" };
   const modName = (x) => MOD[x]?.[0] || x;
   const things = (n) => (+n === 1 ? "rzecz" : [2, 3, 4].includes(+n % 10) && ![12, 13, 14].includes(+n % 100) ? "rzeczy" : "rzeczy");
   const inj = (n) => (+n === 1 ? "rana" : [2, 3, 4].includes(+n) ? "rany" : "ran");
   const W = {
-    "⚔ Difficulty": "⚔ Trudność", "Camp": "Obóz", "Deep expedition:": "Głęboka wyprawa:",
+    " Difficulty": " Trudność", "Camp": "Obóz", "Deep expedition:": "Głęboka wyprawa:",
     "Veteran, Legendary and Mythic make foes tougher and add modifiers you can see here first. Better gold the harder you go.":
       "Weteran, Legendarny i Mityczny wzmacniają wrogów i dodają modyfikatory, które widzisz tu zawczasu. Im trudniej, tym więcej złota.",
     "Veteran, Legendary and Mythic open at level 30.": "Weteran, Legendarny i Mityczny otwierają się na 30. poziomie.",
     "after its master falls, stairs lead down to five deeper levels. Extract, rest or descend after each big fight. What you find below is yours only once you climb out.":
       "gdy padnie jego pan, schody prowadzą w dół na pięć głębszych poziomów. Po każdej dużej walce: wyjdź, odpocznij albo zejdź niżej. To, co znajdziesz na dole, jest twoje dopiero, gdy wyjdziesz.",
     "That isn't a difficulty.": "To nie jest poziom trudności.",
-    "⛺ The stairs down": "⛺ Schody w dół",
+    " The stairs down": " Schody w dół",
     "Behind the master's throne, worn stairs lead further down. Cold air rises from below.": "Za tronem pana wytarte schody prowadzą dalej w dół. Z dołu ciągnie zimne powietrze.",
     "Unsecured:": "Niezabezpieczone:", "gold,": "złota,", "things": "rzeczy", "Rations:": "Racje:", "Injuries:": "Rany:", "Next:": "Dalej:",
     "You stand at the very bottom. Nothing lies deeper.": "Stoisz na samym dnie. Głębiej nic nie ma.",
@@ -56,7 +56,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "Behind the throne, worn stairs lead further down.": "Za tronem wytarte schody prowadzą dalej w dół.",
     "Something found you while you rested.": "Coś cię znalazło podczas odpoczynku.",
     "Pathfinder: you know the way out and bring everything with you.": "Tropiciel: znasz drogę na zewnątrz i wynosisz wszystko.",
-    "💀 it rises again!": "💀 wstaje znowu!", "✨ your magicka drains away": "✨ twoja magia ucieka",
+    " it rises again!": " wstaje znowu!", " your magicka drains away": " twoja magia ucieka",
     // perks
     "Dungeon Veteran": "Weteran podziemi", "Pathfinder": "Tropiciel", "Deep Delver": "Głębinowy poszukiwacz",
     "On a deep expedition, injuries and curses hurt 30/60% less, and you bring one more ration per rank.":
@@ -82,7 +82,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
   };
   for (const [k, v] of Object.entries(TIER)) W[k] = W[k] || v;
   for (const [k, [n, d]] of Object.entries(MOD)) { W[k] = n; W[`${ICONS[k]} ${k}`] = `${ICONS[k]} ${n}`; W[I18N_DESC_EN(k)] = d; W[`${k}: ${I18N_DESC_EN(k)}`] = `${n}: ${d}`; }
-  for (const [k, [n, d]] of Object.entries(CURSE)) { W[k] = n; W[`${k === "Withering curse" ? "🦴" : "👁"} ${k}`] = `${k === "Withering curse" ? "🦴" : "👁"} ${n}`; W[{ "Withering curse": "You take 10% more damage.", "Sanctuary's mark": "Healing is 30% weaker." }[k]] = d; }
+  for (const [k, [n, d]] of Object.entries(CURSE)) { W[k] = n; W[`${k === "Withering curse" ? "" : ""} ${k}`] = `${k === "Withering curse" ? "" : ""} ${n}`; W[{ "Withering curse": "You take 10% more damage.", "Sanctuary's mark": "Healing is 30% weaker." }[k]] = d; }
   for (const [k, v] of Object.entries(LVL)) { W[k] = v; }
   for (const [k, v] of Object.entries(W)) { W[k + " [OURS]"] = v; }
   Object.assign(I18N_EXTRA.words, W);
@@ -93,28 +93,28 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
   I18N_EXTRA.pat.push(
     [/^(Veteran|Legendary|Mythic): foes have (\d+)% more health and hit (\d+)% harder; ×([\d.]+) gold\. This week's modifiers:$/,
       (m) => `${TIER[m[1]]}: wrogowie mają o ${m[2]}% więcej zdrowia i biją o ${m[3]}% mocniej; ×${m[4]} złota. Modyfikatory w tym tygodniu:`],
-    [new RegExp(`^⛏ Level ${R}$`), (m) => `⛏ Poziom ${m[1]}`],
-    [/^🩹 (\d+) injur(?:y|ies)$/, (m) => `🩹 ${m[1]} ${inj(m[1])}`],
+    [new RegExp(`^ Level ${R}$`), (m) => ` Poziom ${m[1]}`],
+    [/^ (\d+) injur(?:y|ies)$/, (m) => ` ${m[1]} ${inj(m[1])}`],
     [/^Unsecured: (\d+) gold, (\d+) things$/, (m) => `Niezabezpieczone: ${m[1]} złota, ${m[2]} ${things(m[2])}`],
-    [new RegExp(`^⛺ Camp on level ${R}$`), (m) => `⛺ Obóz na poziomie ${m[1]}`],
+    [new RegExp(`^ Camp on level ${R}$`), (m) => ` Obóz na poziomie ${m[1]}`],
     [new RegExp(`^You make camp in a quiet corner of level ${R}\\. Stairs lead down into the dark\\.$`), (m) => `Rozbijasz obóz w cichym kącie poziomu ${m[1]}. Schody prowadzą w dół, w ciemność.`],
     [new RegExp(`^level ${R}, (.+)$`), (m) => `poziom ${m[1]}, ${lvl(m[2])}`],
     [/^\. Foes \+(\d+)% health, \+(\d+)% damage; gold ×([\d.]+)\.$/, (m) => `. Wrogowie +${m[1]}% zdrowia, +${m[2]}% obrażeń; złoto ×${m[3]}.`],
     [/^Rest \(1 ration, (\d+) left\)$/, (m) => `Odpocznij (1 racja, zostało ${m[1]})`],
     [new RegExp(`^Descend to level ${R}: (.+)$`), (m) => `Zejdź na poziom ${m[1]}: ${lvl(m[2])}`],
-    [/^⚔ (Veteran|Legendary|Mythic): (.+)$/, (m) => `⚔ ${TIER[m[1]]}: ${m[2].split(", ").map(modName).join(", ")}`],
-    [new RegExp(`^⛏ Extracted from level ${R} of (.+)$`), (m) => `⛏ Wyjście z poziomu ${m[1]}: ${NM(m[2])}`],
-    [new RegExp(`^⛏ Level ${R} of (.+): (.+)$`), (m) => `⛏ Poziom ${m[1]} w ${NM(m[2])}: ${lvl(m[3])}`],
-    [new RegExp(`^⛏ Beat the (.+) on level ${R} of (.+)$`), (m) => `⛏ Pokonano: ${NM(m[1])}, poziom ${m[2]} w ${NM(m[3])}`],
+    [/^ (Veteran|Legendary|Mythic): (.+)$/, (m) => ` ${TIER[m[1]]}: ${m[2].split(", ").map(modName).join(", ")}`],
+    [new RegExp(`^ Extracted from level ${R} of (.+)$`), (m) => ` Wyjście z poziomu ${m[1]}: ${NM(m[2])}`],
+    [new RegExp(`^ Level ${R} of (.+): (.+)$`), (m) => ` Poziom ${m[1]} w ${NM(m[2])}: ${lvl(m[3])}`],
+    [new RegExp(`^ Beat the (.+) on level ${R} of (.+)$`), (m) => ` Pokonano: ${NM(m[1])}, poziom ${m[2]} w ${NM(m[3])}`],
     [/^You climb all the way back up and out\. Everything you found down there is yours now(?: \((.+)\))?\.$/,
       (m) => `Wspinasz się aż na samą górę i wychodzisz. Wszystko, co tam znalazłeś, jest teraz twoje${m[1] ? ` (${m[1].replace(/(\d+) gold/, "$1 złota").replace(/(\d+) things/, (x, n) => `${n} ${things(n)}`)})` : ""}.`],
-    [new RegExp(`^You go down to level ${R}: (.+?)\\.(?: (🦴|👁) (Withering curse|Sanctuary's mark): (.+))?$`),
+    [new RegExp(`^You go down to level ${R}: (.+?)\\.(?: (|) (Withering curse|Sanctuary's mark): (.+))?$`),
       (m) => `Schodzisz na poziom ${m[1]}: ${lvl(m[2])}.${m[3] ? ` ${m[3]} ${CURSE[m[4]][0]}: ${CURSE[m[4]][1]}` : ""}`],
     [/^(?:They found your camp: a (.+) came out of the dark\. It's dead now\. )?You eat (.+) and rest(?: a while)? \((\d+) → (\d+) health, (\d+) injur(?:y|ies) left\)\.( Curses stay until you climb out\.)?$/,
       (m) => `${m[1] ? `Znaleźli twój obóz: z ciemności wyszedł ${NM(m[1])}. Już nie żyje. ` : ""}Zjadasz ${m[2] === "a ration" ? "rację" : NM(m[2])} i odpoczywasz (${m[3]} → ${m[4]} zdrowia, zostało ran: ${m[5]}).${m[6] ? " Klątwy zostają, dopóki nie wyjdziesz." : ""}`],
     [/^The (.+) falls\. In its hoard: (.+)\. Unsecured until you climb out\.(?: You took an injury in that fight \((\d) of (\d)\): you hit a little softer and take a little more, until you rest or climb out\.)?$/,
       (m) => `${cap(NM(m[1]))} pada. W jego skarbie: ${list(m[2]).replace(/^(\d+) gold/, "$1 złota")}. Niezabezpieczone, dopóki nie wyjdziesz.${m[3] ? ` W tej walce odniosłeś ranę (${m[3]} z ${m[4]}): bijesz trochę słabiej i obrywasz trochę mocniej, dopóki nie odpoczniesz albo nie wyjdziesz.` : ""}`],
-    [new RegExp(`^(💫 )?Knocked out by the (.+) on level ${R}\\. You come to at the door of (.+?), dragged out by luck or by friends\\. (?:The expedition's finds \\((.+)\\) are lost in the dark\\.|You had found nothing down there yet\\.) Your gear and everything you brought in are safe\\.$`),
+    [new RegExp(`^( )?Knocked out by the (.+) on level ${R}\\. You come to at the door of (.+?), dragged out by luck or by friends\\. (?:The expedition's finds \\((.+)\\) are lost in the dark\\.|You had found nothing down there yet\\.) Your gear and everything you brought in are safe\\.$`),
       (m) => `${m[1] || ""}Powalił cię ${NM(m[2])} na poziomie ${m[3]}. Budzisz się przy wejściu do ${NM(m[4])}, wyciągnięty przez szczęście albo przyjaciół. ${m[5] ? `Znaleziska wyprawy (${m[5].replace(/(\d+) gold/, "$1 złota").replace(/(\d+) things?/, (x, n) => `${n} ${things(n)}`).replace(" and ", " i ")}) przepadły w ciemności.` : "Nie znalazłeś tam jeszcze niczego."} Twój ekwipunek i wszystko, co przyniosłeś, są bezpieczne.`],
     [/^You climb back into daylight with (.+?)\.( Pathfinder: you know the way out and bring everything with you\.| You ran for it and dropped the expedition's finds \((.+)\) on the way up\.)$/,
       (m) => `${T(`You climb back into daylight with ${m[1]}.`)}${m[3] ? ` Uciekłeś i po drodze na górę zgubiłeś znaleziska wyprawy (${m[3].replace(/(\d+) gold/, "$1 złota").replace(/(\d+) things/, (x, n) => `${n} ${things(n)}`)}).` : " Tropiciel: znasz drogę na zewnątrz i wynosisz wszystko."}`],
@@ -131,12 +131,12 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     [/^Black candles gutter\. Something that was once a (.+) turns its hollow face to you\.$/, (m) => `Czarne świece migoczą. Coś, co kiedyś było ${NM(m[1])}, zwraca ku tobie pustą twarz.`],
     [/^The deepest hall\. The legendary (.+) has waited a thousand years for someone foolish enough to come this far\.$/, (m) => `Najgłębsza sala. Legendarny ${NM(m[1])} czekał tysiąc lat na kogoś dość szalonego, by tu dotrzeć.`],
     // fight lines (one piece of a " · " line each)
-    [/^❄ the cold bites −(\d+)$/, (m) => `❄ mróz kąsa −${m[1]}`],
-    [/^🩸 blood moon \+(\d+)$/, (m) => `🩸 krwawy księżyc +${m[1]}`],
-    [/^🩸 you bleed (\d+)$/, (m) => `🩸 krwawisz ${m[1]}`],
-    [/^⚡ overcharge −(\d+)$/, (m) => `⚡ przeciążenie −${m[1]}`],
-    [/^✨ surge \+(\d+)$/, (m) => `✨ wzmocnienie +${m[1]}`],
-    [/^✨ backlash −(\d+)$/, (m) => `✨ odrzut −${m[1]}`],
-    [/^✨ a warm pulse \+(\d+)$/, (m) => `✨ ciepły impuls +${m[1]}`],
+    [/^ the cold bites −(\d+)$/, (m) => ` mróz kąsa −${m[1]}`],
+    [/^ blood moon \+(\d+)$/, (m) => ` krwawy księżyc +${m[1]}`],
+    [/^ you bleed (\d+)$/, (m) => ` krwawisz ${m[1]}`],
+    [/^ overcharge −(\d+)$/, (m) => ` przeciążenie −${m[1]}`],
+    [/^ surge \+(\d+)$/, (m) => ` wzmocnienie +${m[1]}`],
+    [/^ backlash −(\d+)$/, (m) => ` odrzut −${m[1]}`],
+    [/^ a warm pulse \+(\d+)$/, (m) => ` ciepły impuls +${m[1]}`],
   );
 })();

@@ -50,7 +50,7 @@ const I18N_SWEEP = (() => {
     // minigames and pictures drawn on canvas
     CLEARED: "OCZYSZCZONE", "CRACK!": "TRZASK!", thud: "łup", clang: "brzdęk", Noticed: "Wykrycie", "Now: Right": "Teraz: w prawo",
     "Now: Left": "Teraz: w lewo", "Left or Right": "W lewo czy w prawo?", "Unbreakable pick": "Niezniszczalny wytrych", Aim: "Celuj",
-    "Sea of Ghosts": "Morze Duchów", "TO WINDHELM ⛵": "DO WINDHELMU ⛵", "Khajiit market": "Targ Khajiitów",
+    "Sea of Ghosts": "Morze Duchów", "TO WINDHELM ": "DO WINDHELMU ", "Khajiit market": "Targ Khajiitów",
     // toasts
     "Someone else moved first.": "Ktoś inny był szybszy.",
     "Run open. Invite your friends, then go in together.": "Wyprawa otwarta. Zaproś znajomych i wejdźcie razem.",
@@ -58,8 +58,8 @@ const I18N_SWEEP = (() => {
     "Nothing left for you in there.": "Nic tam już dla ciebie nie zostało.", "You've moved on from the door.": "Odchodzisz od drzwi.",
     "Give them a moment.": "Daj im chwilę.", "Ready check cancelled.": "Sprawdzanie gotowości odwołane.",
     "The strongbox is empty for now.": "Skrzynia jest na razie pusta.",
-    "💰 A party chest is waiting. Open 👥 Social → Party.": "💰 Czeka skrzynia drużyny. Otwórz 👥 Społeczność → Drużyna.",
-    "🏴 You're invited to join a clan. Open 👥 Social → Realm.": "🏴 Masz zaproszenie do klanu. Otwórz 👥 Społeczność → Królestwo.",
+    " A party chest is waiting. Open  Social → Party.": " Czeka skrzynia drużyny. Otwórz  Społeczność → Drużyna.",
+    " You're invited to join a clan. Open  Social → Realm.": " Masz zaproszenie do klanu. Otwórz  Społeczność → Królestwo.",
     "Only your party's leader can stop for a caravan.": "Przy karawanie może się zatrzymać tylko przywódca drużyny.",
     "Your bag is gone.": "Twojej torby już nie ma.", "That pin is gone.": "Tego znacznika już nie ma.",
     "In a party only the leader decides. Their choice happens to you too.": "W drużynie decyduje tylko przywódca. Jego wybór dotyczy też ciebie.",
@@ -75,12 +75,12 @@ const I18N_SWEEP = (() => {
     "You're at sea. The Northern Maiden won't turn back now.": "Jesteś na morzu. Northern Maiden już nie zawróci.",
     "You stop and look around.": "Zatrzymujesz się i rozglądasz.", "They're gone.": "Tej osoby już nie ma.", "Everyone is unmuted.": "Wszyscy znów mogą mówić.",
     "Invitation sent.": "Zaproszenie wysłane.", "They're no longer in the clan.": "Ta osoba nie jest już w klanie.",
-    "You can open the guide any time from ⚙ or the Journal.": "Poradnik otworzysz w każdej chwili z ⚙ albo z Dziennika.",
+    "You can open the guide any time from  or the Journal.": "Poradnik otworzysz w każdej chwili z  albo z Dziennika.",
     "Tutorial skipped. You can replay it from How to Play in the main menu.": "Samouczek pominięty. Możesz go powtórzyć z „Jak grać” w menu głównym.",
     "Shared with your party in the chat.": "Udostępnione drużynie na czacie.", "That gift is gone.": "Tego prezentu już nie ma.",
     "Nothing to claim there.": "Nie ma tu nic do odebrania.", "Too late. Someone took it.": "Za późno. Ktoś to zabrał.",
     "They're not around.": "Tej osoby nie ma w pobliżu.", "Rule saved.": "Zasada zapisana.", "AI settings reset.": "Ustawienia SI przywrócone.",
-    "📥 Tactics loaded into this loadout.": "📥 Taktyka wczytana do tego zestawu.", "Not in the middle of a fight!": "Nie w środku walki!",
+    " Tactics loaded into this loadout.": " Taktyka wczytana do tego zestawu.", "Not in the middle of a fight!": "Nie w środku walki!",
     "Give it a name first.": "Najpierw nadaj nazwę.",
   };
 

@@ -36,19 +36,19 @@ const DEEPDELVE = (() => {
   };
   const TIER_KEYS = ["normal", "veteran", "legendary", "mythic"];
   const MODS = {
-    frost: { icon: "❄️", name: "Frozen Depths", desc: "Frost builds up on you every turn and drains stamina; at 5 stacks it bites for 5% of your health. Fire spells thaw you." },
-    restless: { icon: "💀", name: "Restless Dead", desc: "Undead get up once more at a third of their health, unless you finish them with fire or Restoration magic.", themes: ["barrow", "temple", "vampire"] },
-    overcharge: { icon: "⚡", name: "Dwemer Overcharge", desc: "Dwarven machines discharge every third turn: a shock that ignores armor and drains magicka.", themes: ["dwemer"] },
-    bloodmoon: { icon: "🩸", name: "Blood Moon", desc: "Bleeding is stronger for both sides: your bleeds hit 50% harder, and blows that land make you bleed too." },
-    arcane: { icon: "✨", name: "Arcane Instability", desc: "One spell in four has a side effect: a surge, a backlash, a magicka drain or a little healing." },
-    darkness: { icon: "🌑", name: "Ancient Darkness", desc: "Foes are hidden until revealed: they strike first and your first two turns hit 30% softer. Candlelight, Detect Life or Pathfinder reveal them." },
-    cursed: { icon: "🕯", name: "Cursed Sanctuary", desc: "All healing is 40% weaker: potions, spells, rest spots and shrines." },
-    hunt: { icon: "🐺", name: "Relentless Hunt", desc: "Resting can bring an ambush (1 in 3): you fight first, then rest." },
+    frost: { icon: "", name: "Frozen Depths", desc: "Frost builds up on you every turn and drains stamina; at 5 stacks it bites for 5% of your health. Fire spells thaw you." },
+    restless: { icon: "", name: "Restless Dead", desc: "Undead get up once more at a third of their health, unless you finish them with fire or Restoration magic.", themes: ["barrow", "temple", "vampire"] },
+    overcharge: { icon: "", name: "Dwemer Overcharge", desc: "Dwarven machines discharge every third turn: a shock that ignores armor and drains magicka.", themes: ["dwemer"] },
+    bloodmoon: { icon: "", name: "Blood Moon", desc: "Bleeding is stronger for both sides: your bleeds hit 50% harder, and blows that land make you bleed too." },
+    arcane: { icon: "", name: "Arcane Instability", desc: "One spell in four has a side effect: a surge, a backlash, a magicka drain or a little healing." },
+    darkness: { icon: "", name: "Ancient Darkness", desc: "Foes are hidden until revealed: they strike first and your first two turns hit 30% softer. Candlelight, Detect Life or Pathfinder reveal them." },
+    cursed: { icon: "", name: "Cursed Sanctuary", desc: "All healing is 40% weaker: potions, spells, rest spots and shrines." },
+    hunt: { icon: "", name: "Relentless Hunt", desc: "Resting can bring an ambush (1 in 3): you fight first, then rest." },
   };
   const MOD_KEYS = Object.keys(MODS);
   const CURSES = {
-    wither: { icon: "🦴", name: "Withering curse", desc: "You take 10% more damage." },
-    mark: { icon: "👁", name: "Sanctuary's mark", desc: "Healing is 30% weaker." },
+    wither: { icon: "", name: "Withering curse", desc: "You take 10% more damage." },
+    mark: { icon: "", name: "Sanctuary's mark", desc: "Healing is 30% weaker." },
   };
   const GEMS = ["gem_garnet", "gem_amethyst", "gem_ruby", "gem_sapphire", "gem_emerald", "gem_diamond", "gem_flawless_ruby", "gem_flawless_sapphire"];
 
@@ -116,7 +116,7 @@ const DEEPDELVE = (() => {
     const tier = run ? (run.dtier && TIERS[run.dtier] ? run.dtier : "normal") : picked(s, d.place);
     if (tier === "normal") { delete d.dtier; delete d.mods; return; }
     d.dtier = tier; d.mods = run?.mods ? [...run.mods].filter((k) => MODS[k]).slice(0, 3) : modsAt(d.place, tier, t);
-    G.note(s, `⚔ ${TIERS[tier].name}: ${d.mods.map((k) => MODS[k].name).join(", ")}`);
+    G.note(s, ` ${TIERS[tier].name}: ${d.mods.map((k) => MODS[k].name).join(", ")}`);
   }
   const mods = (s) => new Set(dun(s)?.mods || []);
   const tierOf = (d) => TIERS[d?.dtier] || TIERS.normal;
@@ -243,7 +243,7 @@ const DEEPDELVE = (() => {
       d.room = null; d.done = true;
       if (d.deep) { d.deep.extracted = true; d.deep.snap = null; }
       if (d.run) markRun(d.run, (x) => ({ ...x, deepMark: null }));
-      G.note(s, L ? `⛏ Extracted from level ${ROMAN[L]} of ${d.place}` : `🏆 Cleared ${d.place}`);
+      G.note(s, L ? ` Extracted from level ${ROMAN[L]} of ${d.place}` : ` Cleared ${d.place}`);
       return { text: L ? `You climb all the way back up and out. Everything you found down there is yours now${u.gold || u.items ? ` (${[u.gold ? u.gold + " gold" : "", u.items ? u.items + " things" : ""].filter(Boolean).join(", ")})` : ""}.` : "You leave the stairs for another day.", extracted: true };
     }
     if (choice === "camprest") {
@@ -274,7 +274,7 @@ const DEEPDELVE = (() => {
       let extra = "";
       const curse = L === 4 ? "mark" : L === 3 && Math.random() < 0.5 ? "wither" : null;   // the vault and the sanctuary leave their mark
       if (curse && !d.deep.curses.includes(curse)) { d.deep.curses.push(curse); extra = ` ${CURSES[curse].icon} ${CURSES[curse].name}: ${CURSES[curse].desc}`; }
-      G.note(s, `⛏ Level ${ROMAN[L]} of ${d.place}: ${DEPTH_NAME[L]}`);
+      G.note(s, ` Level ${ROMAN[L]} of ${d.place}: ${DEPTH_NAME[L]}`);
       return { text: `You go down to level ${ROMAN[L]}: ${DEPTH_NAME[L].toLowerCase()}.${extra}`, descended: L };
     }
     return { text: "", stay: true };
@@ -295,7 +295,7 @@ const DEEPDELVE = (() => {
     let inj = "";
     if (G.curHealth(s) < G.maxHealth(s) * 0.5 && d.deep.inj < MAX_INJ) { d.deep.inj++; inj = ` You took an injury in that fight (${d.deep.inj} of ${MAX_INJ}): you hit a little softer and take a little more, until you rest or climb out.`; }
     d.room = campRoom(s);
-    G.note(s, `⛏ Beat the ${e.name} on level ${ROMAN[L]} of ${d.place}`);
+    G.note(s, ` Beat the ${e.name} on level ${ROMAN[L]} of ${d.place}`);
     return { text: `The ${e.name.toLowerCase()} falls. In its hoard: ${[g + " gold", ...got].join(", ")}. Unsecured until you climb out.${inj}`, fight: res.f, skills: res.skills, gold: res.gold, loot: res.loot, major: L };
   }
 
@@ -308,7 +308,7 @@ const DEEPDELVE = (() => {
       return up.length || !x.deepMark ? { ...x, deepKO: ko } : { ...x, deepKO: ko, pool: x.deepMark, deepMark: null, deepLost: (x.deepLost || 0) + 1 }; });
     const what = [lost.gold ? `${lost.gold} gold` : "", lost.n ? `${lost.n} thing${lost.n > 1 ? "s" : ""}` : ""].filter(Boolean).join(" and ");
     const msg = `Knocked out by the ${String(cause).toLowerCase()} on level ${ROMAN[L]}. You come to at the door of ${d.place}, dragged out by luck or by friends. ${what ? `The expedition's finds (${what}) are lost in the dark.` : "You had found nothing down there yet."} Your gear and everything you brought in are safe.`;
-    G.note(s, "💫 " + msg);
+    G.note(s, " " + msg);
     return { ...res, died: msg, knockedOut: true };
   }
   /* walking out mid-level: with Pathfinder you keep everything, otherwise the expedition's finds stay below */
@@ -356,10 +356,10 @@ const DEEPDELVE = (() => {
       let r = cast(id, free, dual);
       if (st.M.has("arcane") && Math.random() < 0.25) {
         const x = Math.random();
-        if (x < 0.3 && this.ehp < e0) { const b = (e0 - this.ehp) * 0.4; this.ehp -= b; r += ` · ✨ surge +${Math.round(b)}`; }
-        else if (x < 0.55) { const b = Math.round(mh * 0.04); this.hp -= b; r += ` · ✨ backlash −${b}`; }
-        else if (x < 0.8) { this.mp = Math.max(0, this.mp - 20); r += " · ✨ your magicka drains away"; }
-        else { const b = mh * 0.05 * st.heal; this.hp = Math.min(mh, this.hp + b); r += ` · ✨ a warm pulse +${Math.round(b)}`; }
+        if (x < 0.3 && this.ehp < e0) { const b = (e0 - this.ehp) * 0.4; this.ehp -= b; r += ` ·  surge +${Math.round(b)}`; }
+        else if (x < 0.55) { const b = Math.round(mh * 0.04); this.hp -= b; r += ` ·  backlash −${b}`; }
+        else if (x < 0.8) { this.mp = Math.max(0, this.mp - 20); r += " ·  your magicka drains away"; }
+        else { const b = mh * 0.05 * st.heal; this.hp = Math.min(mh, this.hp + b); r += ` ·  a warm pulse +${Math.round(b)}`; }
       }
       return r;
     };
@@ -370,17 +370,17 @@ const DEEPDELVE = (() => {
     const mh = G.maxHealth(f.s), add = (t) => { line.me = (line.me || "") + t; };
     if (st.M.has("frost")) {
       st.frost = Math.min(5, st.frost + 1); f.sp = Math.max(0, f.sp - 3 * st.frost);
-      if (st.frost >= 5) { const b = Math.round(mh * 0.05); f.hp -= b; st.frost = 1; add(` · ❄ the cold bites −${b}`); }
+      if (st.frost >= 5) { const b = Math.round(mh * 0.05); f.hp -= b; st.frost = 1; add(` ·  the cold bites −${b}`); }
     }
     if (st.M.has("bloodmoon")) {
-      if (f.bleed?.length && f.ehp > 0) { const b = f.bleed.reduce((a, y) => a + y.dmg, 0) * 0.5; f.ehp -= b; add(` · 🩸 blood moon +${Math.round(b)}`); }
-      if (st.bleedMe.length) { const b = st.bleedMe.reduce((a, y) => a + y.dmg, 0); f.hp -= b; st.bleedMe = st.bleedMe.map((y) => ({ ...y, turns: y.turns - 1 })).filter((y) => y.turns > 0); add(` · 🩸 you bleed ${Math.round(b)}`); }
+      if (f.bleed?.length && f.ehp > 0) { const b = f.bleed.reduce((a, y) => a + y.dmg, 0) * 0.5; f.ehp -= b; add(` ·  blood moon +${Math.round(b)}`); }
+      if (st.bleedMe.length) { const b = st.bleedMe.reduce((a, y) => a + y.dmg, 0); f.hp -= b; st.bleedMe = st.bleedMe.map((y) => ({ ...y, turns: y.turns - 1 })).filter((y) => y.turns > 0); add(` ·  you bleed ${Math.round(b)}`); }
     }
     if (st.M.has("overcharge") && f.tags?.has("construct") && f.ehp > 0 && f.turn % 3 === 0) {
-      const b = Math.round(f.e.damage * 0.55); f.hp -= b; f.mp = Math.max(0, f.mp - 15); add(` · ⚡ overcharge −${b}`);
+      const b = Math.round(f.e.damage * 0.55); f.hp -= b; f.mp = Math.max(0, f.mp - 15); add(` ·  overcharge −${b}`);
     }
     if (st.M.has("restless") && f.ehp <= 0 && !st.risen && f.tags?.has("undead") && !f.endWon && st.lastEl !== "fire" && !(f.foeSt?.burn > 0)) {
-      st.risen = true; f.ehp = Math.round((f.ehp0 || f.e.health) / 3); add(" · 💀 it rises again!");
+      st.risen = true; f.ehp = Math.round((f.ehp0 || f.e.health) / 3); add(" ·  it rises again!");
     }
     if (st.dark > 0) st.dark--;
   }
@@ -397,12 +397,12 @@ const DEEPDELVE = (() => {
     const open = tiersOpen(s), cur = picked(s, place), deep = deepable(place);
     const chips = TIER_KEYS.map((k) => `<button class="chip dd-tier ${k === cur ? "on" : ""}" data-act="ddtier" data-place="${E(place)}" data-t="${k}" ${!open && k !== "normal" ? "disabled" : ""}>${E(TIERS[k].name)}${TIERS[k].n ? ` <small>${TIERS[k].n}</small>` : ""}</button>`).join("");
     const T = TIERS[cur], ms = modsAt(place, cur);
-    return `<div class="dd-card" data-tier="${cur}"><h4>⚔ Difficulty</h4>
+    return `<div class="dd-card" data-tier="${cur}"><h4> Difficulty</h4>
       <div class="chips dd-tiers">${chips}</div>
       ${open ? (cur === "normal" ? `<p class="sub">Veteran, Legendary and Mythic make foes tougher and add modifiers you can see here first. Better gold the harder you go.</p>`
         : `<p class="sub">${E(T.name)}: foes have ${Math.round((T.hp - 1) * 100)}% more health and hit ${Math.round((T.dmg - 1) * 100)}% harder; ×${T.gold} gold. This week's modifiers:</p><div class="dd-mods">${modChips(ms)}</div>`)
         : `<p class="sub">Veteran, Legendary and Mythic open at level ${TIER_LEVEL}.</p>`}
-      ${deep ? `<p class="sub dd-deepnote">⛏ <b>Deep expedition:</b> after its master falls, stairs lead down to five deeper levels. Extract, rest or descend after each big fight. What you find below is yours only once you climb out.</p>` : ""}</div>`;
+      ${deep ? `<p class="sub dd-deepnote"> <b>Deep expedition:</b> after its master falls, stairs lead down to five deeper levels. Extract, rest or descend after each big fight. What you find below is yours only once you climb out.</p>` : ""}</div>`;
   }
   /* a line under the health bar inside: tier, modifiers, depth, injuries, curses */
   function bannerHTML(s) {
@@ -411,8 +411,8 @@ const DEEPDELVE = (() => {
     if (d.dtier) bits.push(`<b class="dd-t">${E(TIERS[d.dtier].name)}</b>`);
     for (const k of ms) bits.push(`<span class="dd-ic" title="${E(MODS[k].name)}: ${E(MODS[k].desc)}">${MODS[k].icon} ${E(MODS[k].name)}</span>`);
     if (dd?.level) {
-      bits.push(`<b class="dd-depth">⛏ Level ${ROMAN[dd.level]}</b>`);
-      if (dd.inj) bits.push(`<span class="dd-inj">🩹 ${dd.inj} injur${dd.inj === 1 ? "y" : "ies"}</span>`);
+      bits.push(`<b class="dd-depth"> Level ${ROMAN[dd.level]}</b>`);
+      if (dd.inj) bits.push(`<span class="dd-inj"> ${dd.inj} injur${dd.inj === 1 ? "y" : "ies"}</span>`);
       for (const c of dd.curses) bits.push(`<span class="dd-curse" title="${E(CURSES[c].desc)}">${CURSES[c].icon} ${E(CURSES[c].name)}</span>`);
       const u = unsecured(s); if (u.gold || u.items) bits.push(`<span class="dd-uns">Unsecured: ${u.gold} gold, ${u.items} things</span>`);
     }
@@ -424,14 +424,14 @@ const DEEPDELVE = (() => {
     const art = typeof DUNROOMS !== "undefined" ? DUNROOMS.room("rest", d.theme) : "";
     const btn = ([c, label]) => `<button class="btn ${c === "descend" ? "danger" : c === "extract" ? "pri" : ""}" data-act="dact" data-c="${E(c)}">${E(label)}</button>`;
     const nxTxt = L < MAX_DEPTH ? `<p class="sub dd-next">Next: <b>level ${ROMAN[nx]}, ${E(DEPTH_NAME[nx].toLowerCase())}</b>. Foes +${Math.round(DEPTH_HP * nx * 100)}% health, +${Math.round(DEPTH_DMG * nx * 100)}% damage; gold ×${DEPTH_GOLD[nx]}.</p>` : `<p class="sub dd-next">You stand at the very bottom. Nothing lies deeper.</p>`;
-    return `<div class="card rest dd-camp">${art}<h3>⛺ ${L ? `Camp on level ${ROMAN[L]}` : "The stairs down"}</h3><p>${E(campText(s))}</p>
+    return `<div class="card rest dd-camp">${art}<h3> ${L ? `Camp on level ${ROMAN[L]}` : "The stairs down"}</h3><p>${E(campText(s))}</p>
       ${L ? `<div class="dd-stats"><span>Unsecured: <b class="num">${u.gold}</b> gold, <b class="num">${u.items}</b> things</span><span>Rations: <b class="num">${dd.rations}</b></span><span>Injuries: <b class="num">${dd.inj}/${MAX_INJ}</b></span>${dd.curses.map((c) => `<span class="dd-curse">${CURSES[c].icon} ${E(CURSES[c].name)}</span>`).join("")}</div>` : ""}
       ${nxTxt}<div class="evc">${campChoices(s).map(btn).join("")}</div>
       <p class="sub" style="margin-bottom:0">${L ? `Knocked out below, you lose what you found down here, never your gear or what you brought in.${hasPath(s) ? " Pathfinder: you can also walk out from any room and keep it all." : ""}` : "Health, potions and injuries carry down with you. Down there, loot is unsecured until you extract."}</p></div>`;
   }
 
   // labels for the dungeon screens
-  if (typeof DUNGEONS !== "undefined") { DUNGEONS.ICON.camp = "⛺"; DUNGEONS.LABEL.camp = "Camp"; }
+  if (typeof DUNGEONS !== "undefined") { DUNGEONS.ICON.camp = ""; DUNGEONS.LABEL.camp = "Camp"; }
 
   return { MAX_DEPTH, TIER_LEVEL, MAX_INJ, TIERS, TIER_KEYS, MODS, MOD_KEYS, CURSES, DEPTH_NAME, ROMAN, DEPTH_HP, DEPTH_DMG, DEPTH_GOLD, MAJOR_HP, HIT_CAP, PERK_ADD, PERK_ADJ,
     deepable, tiersOpen, modsFor, modsAt, picked, pick, runFields, onEnter, scaleFoe, trapMult, goldMult, healMult, layout, seedKey, bossRoom, campRoom, offer,
