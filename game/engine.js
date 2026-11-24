@@ -135,11 +135,9 @@ const G = (() => {
     if (typeof AMMO !== "undefined") { const m = AMMO.migrate(s); if (m) note(s, m); }
     if (fixTactics(s)) note(s, "⚔ Your tactics were fixed: rules you added under \"Always → Attack\" never fired. They now come first.");
     if (typeof SPELLCRAFT !== "undefined") SPELLCRAFT.register(s);   // crafted spells back into the spellbook
-    // Bleak Falls Barrow cleared but no Dragonstone (the claw door used to make the boss skip it): hand it over so the quest can finish
-    if (s.cleared?.["Bleak Falls Barrow"] && !s.thaneWhiterun && typeof DUNGEONS !== "undefined" && D.ITEMS.dragonstone && !DUNGEONS.hasDragonstone(s)) {
-      give(s, "dragonstone");
-      note(s, "📜 You find the Dragonstone from Bleak Falls Barrow in your pack after all. Bring it to Farengar in Dragonsreach (Whiterun).");
-    }
+    // quests stuck on an old save move on: Bleak Falls Barrow already cleared moves the main quest to Farengar's hand-in
+    // (no Dragonstone needed), and a missing quest item a stage needs comes back (questitems.js)
+    if (typeof QUESTS !== "undefined") { QUESTS.ensure(s); QUESTS.check(s); }
     return s;
   }
   function note(s, text) { s.journal.unshift({ t: now(), text }); s.journal = s.journal.slice(0, 60); }
