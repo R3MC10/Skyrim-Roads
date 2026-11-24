@@ -3,6 +3,15 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b136", build: 136, date: "24 Nov 2026", title: "A cone of sight on the map", items: [
+      "Your marker on the map now looks the way you're walking, with a soft cone of sight in front of it. When you stop, it keeps looking that way.",
+      "Inside the cone the fog thins out and you see clearly: other travellers further off than before, caravans, guard patrols, and the foe that blocks your road, standing right ahead of you.",
+      "Places inside your cone get spotted from afar and go on your map, so you find them before you walk past them. Big cities show up from far away, a small shrine only when you're close.",
+      "How far you see depends on the world: night, fog, storms and blizzards cut it short, hills and mountain passes let you see much further, and riding a horse helps a little. Practised archers have sharper eyes too.",
+      "Party members each have their own fainter cone, so you can see where everyone is looking.",
+      "New perks: Far Sight (Archery) lets you see further and wider on the map; Owl Eyes (Sneak) makes darkness and bad weather hurt your sight only half as much.",
+      "Works in both art styles: soft ink edges in the drawn style, chunky dotted edges in pixel art.",
+    ] },
     { id: "b135", build: 135, date: "24 Nov 2026", title: "No more flickering popups", items: [
       "Fixed: popups (like tapping an equipment slot) flickered for a split second just after they opened. They now open smoothly and stay put.",
     ] },
