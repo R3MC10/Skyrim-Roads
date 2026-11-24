@@ -128,7 +128,7 @@ const STRAT = (() => {
     sess.emit && sess.emit("me", o ? `${al.name}: ${ORDERS[o].name.toLowerCase()}!` : `${al.name} fights their own way`, "order");
     TB.redraw(sess, { turn: "me" });
   }
-  if (typeof document !== "undefined") document.addEventListener("click", onClick, true);
+  if (typeof document !== "undefined" && document.addEventListener) document.addEventListener("click", onClick, true);
 
   return { REC, OPEN, ORDERS, INIT_CUT, owns, cost, ends, can, why, act, tip, setup, after, foeInitCut, ai, order, allowed, ordersHTML };
 })();

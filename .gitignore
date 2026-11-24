@@ -18,6 +18,7 @@ tests/out_noscretch/
 tests/out_followers2/
 tests/out_partysync/
 tests/out_heroart2/
+tests/out_followeranim/
 tests/out_caravans/
 tests/out_travelscene/
 tests/out_tooltips/
@@ -31,3 +32,5 @@ tests/out_foeintent/
 tests/out_boss/
 tests/pnotes/
 tests/out_combat2/
+tests/out_evbanner/
+tests/out_gather/

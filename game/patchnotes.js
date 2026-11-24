@@ -34,6 +34,35 @@ const PATCHNOTES = (() => {
       "When one lands or wears off, a short word floats up over that fighter: \"+Oakflesh\", \"Poisoned\", \"Burning fades\".",
       "Prefer the old look? Settings → Fight screen → Classic.",
     ] },
+    { id: "b145-eventart", build: 145, date: "24 Nov 2026", title: "Painted events and shops", items: [
+      "World events now have painted pictures: the Khajiit's grand caravan, Daedric invasions, dragon migrations and all four festival weeks each get their own.",
+      "Great world events do too: dragon assaults, Daedric rifts, sieges and town fairs.",
+      "You see a small picture on the event's card under the map and a wide one when you open it.",
+      "Nine town places have new painted banners: the court wizard and enchanter, the market, stables, your home, the hall, the fence, the arena, the mine and the docks.",
+    ] },
+    { id: "b144-gatherfix", build: 144, date: "24 Nov 2026", title: "Tidier Gathering card", items: [
+      "On the Map panel, plants you already picked no longer pile up on top of each other in the Gathering card. Every plant gets its own line, and Auto-pick sits on its own row below the buttons.",
+    ] },
+    { id: "hotfix-dunloop", build: 144, date: "24 Nov 2026", title: "Dungeons don't trap you in the same room any more", items: [
+      "Fixed: dungeons could trap you in the same room. In a party, the leader was sometimes sent back into a room they had just cleared, and the others got stuck waiting or stood in a room that never ended.",
+      "Fixed: when the shared world was busy, the leader's way through a dungeon sometimes didn't reach the rest of the party, so they couldn't follow to the boss. It's now sent again until it gets through, and anything missing is filled in.",
+      "Fixed: picking herbs at a claw door in a party no longer breaks the door for the others.",
+      "Stuck right now? Just open the game again: runs that were caught in a loop, a boss room with no boss in it, or a room with no way on are put right when you load.",
+    ] },
+    { id: "b143-followeranim", build: 143, date: "24 Nov 2026", title: "Followers fight with their whole body", items: [
+      "Followers and party members now really fight in the fight picture: they swing their weapon or draw their bow, cast their spells, raise their shield and flinch when they get hit.",
+      "A follower who is knocked down drops to the ground and lies there until someone pulls them back up, and then you see them get back on their feet.",
+      "Summons and other helpers lunge, flinch and fall the same way. Works in both art styles and in the painted battle scenes.",
+    ] },
+    { id: "b143-spelltactics", build: 143, date: "24 Nov 2026", title: "Cleaner spell cards", items: [
+      "Spell, power and shout cards in the Magic menu no longer have the \"Use first in every fight\" button. Set up what you cast in a fight in the Tactics tab instead; your current tactics stay as they are.",
+    ] },
+    { id: "b143-bleakfalls", build: 143, date: "24 Nov 2026", title: "Farengar's quest can't get stuck any more", items: [
+      "Bleak Falls Barrow (main quest): clearing the barrow now moves the quest on by itself. The next step, \"The Dragonstone\", sends you to Farengar in Whiterun.",
+      "Farengar doesn't need the Dragonstone in your pack any more. If it got lost, ended up in a chest or went to someone else in a party, just tell him: clearing the barrow is enough. Hand it in under Area tab → Court wizard, or with the button in the Journal.",
+      "If your quest was stuck on \"bring him the Dragonstone\", it fixes itself next time you open the game. Clearing the barrow before you got the quest counts too.",
+      "Quest items (the Dragonstone, a Glenmoril witch's head, the filled black soul gem) are now bound to you: you keep them when you die. If a quest needs one you don't carry any more, it comes back from your house chest or turns up in your pack.",
+    ] },
     { id: "b144-dawnguard", build: 144, date: "24 Nov 2026", title: "The vampire war", items: [
       "New quest line from level 12: Isran at Fort Dawnguard (near Riften) sends you into Dimhollow Crypt, where something sleeps in a sealed coffin. It ends at Castle Volkihar, a black keep on an islet off the coast past Solitude.",
       "Then pick a side. Hunt the night with the Dawnguard (heavy crossbow, hunter's armour, troll armour for your follower) or drink Lord Harkon's blood and become a stronger Vampire Lord. Seven more stages either way, with a big boss fight at the end.",
