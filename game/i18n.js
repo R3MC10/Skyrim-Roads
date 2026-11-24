@@ -106,6 +106,8 @@ const I18N = (() => {
     [/^(\d+)\/(\d+) toward level (\d+)$/, (m) => `${m[1]}/${m[2]} do poziomu ${m[3]}`], [/^~(\d+) min$/, (m) => `~${m[1]} min`],
     [/^(\d+) days? (\d+) h$/, (m) => `${m[1]} ${m[1] === "1" ? "dzień" : "dni"} ${m[2]} h`], [/^(\d.*) ago$/, (m) => `${tr(m[1]) ?? m[1]} temu`],
   ];
+  /* lines added by feature modules (i18n_hsrooms.js and others): exact lines and number patterns; the lists above win */
+  if (typeof I18N_EXTRA !== "undefined") { for (const [k, v] of Object.entries(I18N_EXTRA.words || {})) if (!(k in PL)) PL[k] = v; PAT.push(...(I18N_EXTRA.pat || [])); }
   /* story text: split into sentences, translate each one (exact, or a template whose {markers} are filled from the English) */
   const ST0 = typeof I18N_STORY !== "undefined" ? I18N_STORY : { ex: {}, pats: [] };
   const ST = { ex: ST0.ex || {}, pats: (ST0.pats || []).concat(typeof I18N_BEAST !== "undefined" ? I18N_BEAST.pats : []) };

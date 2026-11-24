@@ -2041,6 +2041,25 @@ html.a11y-still #tbf .fc *,html.a11y-still #tbf.fc-aiming .tbu.fc-tgt{animation:
 html.art-pixel .ti-box,html.art-pixel .ti-card,html.art-pixel .ti-stats{border-radius:0}html.art-pixel .ti-box{border-left-width:3px}
 #side[data-tab=log] .ti-box{color:#3b2e1e}
 html.a11y-hc .ti-box,html.a11y-hc .ti-box i,html.a11y-hc .ti-what{color:#ece6d8}
+/* homestead rooms (hsrooms.js): raid alert, party guest card, cut-open inside view */
+.hs .card.hsraid{border:1px solid rgba(228,110,90,.55);background:linear-gradient(180deg,rgba(120,30,20,.35),rgba(20,10,8,.55));box-shadow:0 0 14px rgba(228,110,90,.18) inset;margin:0 0 8px}
+.hs .card.hsraid h3{color:#ffb39a;margin:0 0 4px;letter-spacing:.06em;text-transform:uppercase;font-size:14px}
+.hs .card.hsraid .hsbtns{margin-top:6px}.hs .card.hsraid .btn{flex:1;min-height:44px}
+.hs .card.hsguest{border:1px solid rgba(214,178,94,.4);background:rgba(214,178,94,.07);margin:0 0 8px}
+.hs .card.hsguest h3{color:#f1cd72;margin:0 0 4px;font-size:14px;letter-spacing:.06em;text-transform:uppercase}
+.hs img.art.scene.hsin{margin:2px 0 8px;border-radius:4px;box-shadow:0 1px 6px rgba(0,0,0,.45)}
+.hs .sub.hslast{font-style:italic;color:#d9c69c}
+@media (min-width:900px){.hs img.art.scene.hsin,.hs img.art.scene.hsart{max-width:720px;display:block;margin-left:auto;margin-right:auto}}
+html.art-pixel .hs .card.hsraid,html.art-pixel .hs .card.hsguest,html.art-pixel .hs img.art.scene.hsin{border-radius:0}
+/* phones: messages and banners sit low, above the bottom bar, and never stack more than two deep, so they don't cover screen tabs and pictures */
+@media (max-width:700px){
+  #hudlog{top:auto;bottom:calc(84px + env(safe-area-inset-bottom));flex-direction:column-reverse;max-width:min(86vw,440px)}
+  #hudlog .hlog~.hlog{display:none}
+  #hudlog .toast{font-size:13px;padding:5px 22px 5px 9px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  #hudlog .toast.withic{display:flex}
+  #pbanners{top:auto;bottom:calc(150px + env(safe-area-inset-bottom))}
+  #pbanners>*~*{display:none}
+}
 /* the world remembers you (livingworld.js): who's about, doors, whispers, news of the realm */
 .lw-folk{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;margin:0 0 8px}
 .lw-who{display:grid;grid-template-columns:auto 1fr;column-gap:6px;align-items:center;padding:5px 8px;border:1px solid rgba(214,178,94,.25);border-radius:8px;background:rgba(20,16,12,.35);min-width:0}
@@ -2295,6 +2314,7 @@ body:has(#twBtn) .app{padding-bottom:calc(140px + env(safe-area-inset-bottom))}
 <script src="market.js"></script>
 <script src="halls.js"></script>
 <script src="homestead.js"></script>
+<script src="hsrooms.js"></script>
 <script src="mp.js"></script>
 <script src="pvpdeath.js"></script>
 <script src="coop.js"></script>
@@ -2369,6 +2389,7 @@ body:has(#twBtn) .app{padding-bottom:calc(140px + env(safe-area-inset-bottom))}
 <script src="pcupdate.js"></script>
 <script src="i18n_story.js"></script>
 <script src="i18n_beast.js"></script>
+<script src="i18n_hsrooms.js"></script>
 <script src="i18n_living.js"></script>
 <script src="i18n_bonds.js"></script>
 <script src="i18n.js"></script>

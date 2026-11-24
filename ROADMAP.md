@@ -69,6 +69,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Smart AI combat (default; custom tactics optional), crafting mini-games, motion design (63)
 
 ## In progress (write your name before you start)
+- Claude: homestead rooms (hsrooms.js): garden and cellar, wings as real stations, display cases, followers living there, raids, party visits to the leader's home, 4 Smithing/Speech perks. Branch claude/homestead.
 - Claude: HUD tidy (hud2.js): one message lane with a queue under the compass, objective line under the compass, bars fade when full, ★ in the top bar, one floating compass button that steps out of the way, map buttons in one strip, bottom-bar names fit. Branch claude/hud2.
 - Claude: the world remembers you (livingworld.js): deeds per hold (dragons, crimes, caravans robbed or guarded), towns react (prices, guard lines, doors that open or close, making amends), townsfolk keep daily hours, whispers in inns that come true later as places on the map, a News of the realm feed, party members share the leader's world. Branch claude/livingworld.
 - Claude: foe kit balance (foekit.js): poison/burning/bleeding respect armour, foe heals capped at two a fight (fixes flaky test_foekit Bandit check). Branch claude/foekitflake.
