@@ -13,6 +13,9 @@ const PATCHNOTES = (() => {
       "New perks: Dwemer Tinkerer (Smithing), Dwemer Lore (Lockpicking), Blind Hunter (Sneak) and Steam-Proof (Heavy Armor).",
       "In a party only the leader turns the lexicon, picks the way through Blackreach and works the vault. Everyone else follows with \"Join your leader\".",
     ] },
+    { id: "b143-spelltactics", build: 143, date: "24 Nov 2026", title: "Cleaner spell cards", items: [
+      "Spell, power and shout cards in the Magic menu no longer have the \"Use first in every fight\" button. Set up what you cast in a fight in the Tactics tab instead; your current tactics stay as they are.",
+    ] },
     { id: "b143-bleakfalls", build: 143, date: "24 Nov 2026", title: "Farengar's quest can't get stuck any more", items: [
       "Bleak Falls Barrow (main quest): clearing the barrow now moves the quest on by itself. The next step, \"The Dragonstone\", sends you to Farengar in Whiterun.",
       "Farengar doesn't need the Dragonstone in your pack any more. If it got lost, ended up in a chest or went to someone else in a party, just tell him: clearing the barrow is enough. Hand it in under Area tab → Court wizard, or with the button in the Journal.",
