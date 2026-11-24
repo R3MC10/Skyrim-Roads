@@ -69,6 +69,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Smart AI combat (default; custom tactics optional), crafting mini-games, motion design (63)
 
 ## In progress (write your name before you start)
+- Claude: mining fix (smithing.js): one pickaxe is enough forever (old saves with stale wear fixed), clear "need a pickaxe" reasons (incl. left in your house chest), ⛏ Mine ore on the map card of mines that are dungeons (Embershard Mine etc.); tests/test_mining.js. Branch claude/pickaxe.
 - Claude: Polish sweep (i18n_sweep.js): canvas words in the fight picture, minigames and map labels go through the translator; fight log lines, foe and spell names, leftover toasts in Polish; tests/test_polishsweep.js. Branch claude/polish-sweep.
 - Claude: fear and foe-heal limits (foecap.js): Battle Cry / Dismay / fear / calm hold bosses 2 turns (3 a fight) and elites 3 (5 a fight), then they stay rattled (softer blows); foe healing capped at 65% health, 35% a fight, 3-turn rest; Aspect of Terror +1 turn on big foes; tests/test_balfear.js sim. Branch claude/balance-fear.
 - Claude: Area tab as a place + tidy Map panel (areaui.js, mappanel.js): town places grouped into tiles (Inn, Market, Services & trainers, Work & jobs, Your home, Events & fun) with live status and a Right now strip, back button + neighbour tabs inside a place; one merged and sorted "What to do next" card on the Map; place filters. Branch claude/areaui.

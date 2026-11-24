@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b143-pickaxe", build: 143, date: "24 Nov 2026", title: "Mining fixed: one pickaxe is enough", items: [
+      "A pickaxe never wears out or gets used up. Keep one in your pack and you can mine forever.",
+      "Mines that are also dungeons, like Embershard Mine, have a ⛏ Mine ore button on the map card next to Go inside. You can dig their veins before or after clearing the place.",
+      "If you can't mine, the game now tells you why: no pickaxe (the blacksmith in Riverwood sells one, cheap), your pickaxe is sitting in your house chest, or the veins need a day to grow back.",
+      "Old saves where a pickaxe looked worn out or empty get it working again.",
+    ] },
     { id: "b141-polishsweep", build: 141, date: "24 Nov 2026", title: "More of the game in Polish", items: [
       "Playing in Polish? The fight picture now speaks it too: Ty, Uciekają, Zwycięstwo, Pudło, Blok!, critical hits and sneak attacks.",
       "The fight log is in Polish now: who hits for how much, misses, staggers, paralysis, staves, potions and spells.",
