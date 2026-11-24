@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b174-potionregen", build: 174, date: "25 Nov 2026", title: "Potions work over time", items: [
+      "Health, magicka and stamina potions no longer refill you all at once. They pour in over a few rounds in a fight, or a few seconds on the map: small potions over 5, ordinary ones over 4, the big brewed ones over 3. Half comes in right after you drink, so one still pulls you out of trouble.",
+      "Drinking another of the same kind while one is still working doesn't stack: you keep whichever has more left to give. A health and a magicka potion work side by side just fine.",
+      "A small potion chip under your bars shows how many rounds are left, and green numbers rise as it works. On the map a chip sits next to your health bar with the seconds left.",
+      "Followers, party members and the Smart AI won't waste a second potion of a kind that is still working. In a party everyone sees each other's potions working.",
+      "New Alchemy perk, Quick Draught (2 ranks): your potions work one round faster per rank.",
+    ] },
     { id: "b172-mapvisuals", build: 172, date: "24 Nov 2026", title: "A sharper, prettier world map", items: [
       "On a PC the map now fills the whole window, even zoomed all the way out. No more small map in the middle with grey clouds and empty dark space around it.",
       "Places you haven't found yet hide under dark, inked parchment mist instead of grey photo clouds.",
@@ -1162,7 +1169,7 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 173;
+  const NEXT_AT = 174;
   const NEXT = [
     "A new, livelier fight screen that fits on one screen",
     "Dragon Shouts learned from word walls",

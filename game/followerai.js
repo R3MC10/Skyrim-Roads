@@ -150,9 +150,10 @@ const FAI = (() => {
     if (tac !== "ranged" && !al.bow && (tac === "defensive" || (al.shield && tac === "auto")) && pp < 0.45 && me > 0.45 && fight.coverAl !== al) out.push({ k: "cover", c: 2, v: unit(al) * 8 * (0.45 - pp) / 0.45 + unit(al) * 3 });
     // potions from their own pack
     const potAt = al.savePots ? 0.2 : tac === "aggressive" ? 0.3 : 0.38;
-    if (me < potAt && potionRows(f, "health").length) out.push({ k: "potion", res: "health", c: 1, v: unit(al) * 20 * (potAt - me + 0.1) });
-    if (!al.savePots && al.spells.length && al.mp < 0.2 * al.mpMax && potionRows(f, "magicka").length) out.push({ k: "potion", res: "magicka", c: 1, v: unit(al) * 4 });
-    if (!al.savePots && al.sp < 25 && (tac === "aggressive" || al.arch === "twohand") && potionRows(f, "stamina").length) out.push({ k: "potion", res: "stamina", c: 1, v: unit(al) * 2 });
+    const potOn = (res) => typeof POTFX !== "undefined" && POTFX.busy(al, res);   // one of that kind still working: not again
+    if (me < potAt && potionRows(f, "health").length && !potOn("health")) out.push({ k: "potion", res: "health", c: 1, v: unit(al) * 20 * (potAt - me + 0.1) });
+    if (!al.savePots && al.spells.length && al.mp < 0.2 * al.mpMax && potionRows(f, "magicka").length && !potOn("magicka")) out.push({ k: "potion", res: "magicka", c: 1, v: unit(al) * 4 });
+    if (!al.savePots && al.sp < 25 && (tac === "aggressive" || al.arch === "twohand") && potionRows(f, "stamina").length && !potOn("stamina")) out.push({ k: "potion", res: "stamina", c: 1, v: unit(al) * 2 });
     // spells
     for (const id of al.spells) {
       const sp = D.SPELLS[id]; if (!sp || !f) continue;
@@ -225,6 +226,7 @@ const FAI = (() => {
   function doPotion(fight, al, res) {
     const f = folOf(fight, al), p = potionRows(f, res)[0]; if (!p) return null;
     const it = itemOf(p), amt = it.restore[1];
+    if (typeof POTFX !== "undefined") { p.qty--; if (p.qty <= 0) f.inv = f.inv.filter((x) => x !== p); return { text: `${name(al)} drinks a ${it.name}: ${POTFX.ally(al, res, amt, it.name)}`, self: 0 }; }   // over a few rounds (potionfx.js)
     if (res === "health") al.hp = Math.min(al.maxHp || al.hp + amt, al.hp + amt);
     else if (res === "magicka") al.mp = Math.min(al.mpMax, al.mp + amt);
     else al.sp = Math.min(al.spMax, al.sp + amt);
