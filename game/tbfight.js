@@ -65,7 +65,7 @@ const TB = (() => {
   }
   const isSpell = (a) => /^(spell|dual|scroll):/.test(a);
   /* [OURS] shared party fights: the foe's state handed over to a player's phone for their turn and back (sharedfight.js) */
-  const FOE_KEYS = ["foeSt", "eParalyzed", "tbStunLeft", "tbStunCd", "tbStunRound", "stagger", "calmTurns", "bleed", "kit", "kitDot", "kitApLoss", "kitLast", "dStance", "fearTurns", "disarmed", "soulTrap", "eMagic", "fpAvoided", "ehp0", "foeTgts"];
+  const FOE_KEYS = ["foeSt", "eParalyzed", "tbStunLeft", "tbStunCd", "tbStunRound", "stagger", "calmTurns", "bleed", "kit", "kitDot", "kitApLoss", "kitLast", "dStance", "fearTurns", "disarmed", "soulTrap", "eMagic", "fpAvoided", "ehp0", "foeTgts", "fcap"];
   /* what a teammate's spell can leave on someone (spellbook.js): handed back with the turn */
   const BUFF_KEYS = ["ward", "reflect", "armorRed", "armorT", "imbue", "thorns", "heroT", "unseen", "dmg", "_baseDmg"];
   /* "You hit the bandit" from one phone reads "Beta hits the bandit" on the others */
