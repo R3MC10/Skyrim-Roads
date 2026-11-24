@@ -221,7 +221,7 @@ const TABMENU = (() => {
     const quick = [inTown ? ["town", "Area", "town"] : null, ["log", "Journal", "log"], ["social", "Social", "people"], ["settings", "Settings", "gear"], typeof SEARCH !== "undefined" ? ["search", "Search", "search"] : null].filter(Boolean);
     return `<div class="tw-bg" aria-hidden="true"></div><div class="tw-veil" aria-hidden="true"></div>${starsBG()}
       <div class="tw-top"><b class="tw-where"></b><span class="tw-when"></span><small class="tw-fc"></small></div>
-      <div class="tw-rose">${roseSVG()}${dir("up")}${dir("left")}${dir("right")}${dir("down")}</div>
+      <div class="tw-rose"><div class="tw-disc" aria-hidden="true"><i class="tw-depth"></i><div class="tw-face">${roseSVG()}</div><i class="tw-shine"></i></div>${dir("up")}${dir("left")}${dir("right")}${dir("down")}</div>
       <p class="tw-hint">Swipe or tap a direction</p>
       <div class="tw-quick">${quick.map(([id, l, k]) => `<button class="tw-q" data-twq="${id}" aria-label="${l}">${ico(k)}<span>${l}</span></button>`).join("")}</div>
       <div class="tw-bar"></div>`;
@@ -343,7 +343,7 @@ const TABMENU = (() => {
     if (target.closest?.("input,select,textarea,[contenteditable],canvas#map,.tw-noswipe")) return;
     const ax = scrollerAxis(target, document.body);
     sw = { x, y, t: Date.now(), ctx, target, noX: ax.x, noY: ax.y || (ctx === "char" && !target.closest("#twbar")) };
-    if (ctx === "hub") $("#tw").classList.add("drag");
+    if (ctx === "hub") { cancelAnimationFrame(springT); $("#tw").classList.add("drag"); }
   }
   function move(x, y) {
     if (!sw) return;
@@ -356,12 +356,30 @@ const TABMENU = (() => {
     const k = Math.min(1, Math.max(ax, ay) / 90); el.style.setProperty("--pull", k.toFixed(2));
     // the compass follows the finger, with a rubber-band give so it never leaves the screen
     const band = (v) => Math.sign(v) * 70 * (1 - Math.exp(-Math.abs(v) / 110));
-    el.style.setProperty("--tx", band(dx).toFixed(1)); el.style.setProperty("--ty", band(dy).toFixed(1));
+    tilt(el, band(dx), band(dy));
+  }
+  /* the 3D compass is a sheet of 7x7 Blender renders (scripts/compass3d.py): pick the one matching the tilt */
+  let tiltNow = [0, 0], springT = 0;
+  function tilt(el, tx, ty) {
+    tiltNow = [tx, ty];
+    const f = (v) => Math.max(0, Math.min(6, Math.round(3 + v / 70 * 3)));
+    el.style.setProperty("--tx", tx.toFixed(1)); el.style.setProperty("--ty", ty.toFixed(1));
+    el.style.setProperty("--cc", f(tx)); el.style.setProperty("--cr", f(ty));
   }
   function letGo() {
     const el = $("#tw"); if (!el) return;
     el.classList.remove("drag"); el.dataset.glow = "";
-    for (const v of ["--pull", "--tx", "--ty"]) el.style.removeProperty(v);
+    el.style.removeProperty("--pull");
+    // springs back to flat with a little wobble past the middle
+    cancelAnimationFrame(springT);
+    const [x0, y0] = tiltNow, t0 = performance.now();
+    if (!x0 && !y0) return;
+    const step = (now) => {
+      const t = (now - t0) / 1000, k = Math.exp(-t * 6) * Math.cos(t * 14);
+      if (t > 0.9 || !el.isConnected) { tiltNow = [0, 0]; for (const v of ["--tx", "--ty", "--cc", "--cr"]) el.style.removeProperty(v); return; }
+      tilt(el, x0 * k, y0 * k); springT = requestAnimationFrame(step);
+    };
+    springT = requestAnimationFrame(step);
   }
   function end(x, y) {
     const s = sw; sw = null; if (!s) return false;

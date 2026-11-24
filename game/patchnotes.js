@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b135-compass", build: 135, date: "24 Nov 2026", title: "A real 3D compass", items: [
+      "The golden compass on the home screen is now a proper 3D piece: drag it and it tilts toward your finger, catching the light and showing its thick bronze edge, then springs back when you let go.",
+      "Skills, Magic, Items and Map now sit around the compass instead of on top of it, on phones held upright or sideways.",
+    ] },
+    { id: "b136", build: 136, date: "24 Nov 2026", title: "A proper road picture while you travel", items: [
+    ] },
     { id: "b136places", build: 136, date: "24 Nov 2026", title: "Something at every place", items: [
       "Every place on the map now has something to do. 52 spots that used to be just a picture (farms, mills, shrines, cabins, groves, old ruins, the All-Maker Stones) now offer a stall, work, a job, a blessing, a hidden strongbox, herbs or a spot worth searching. Look under \"What's here\" when you arrive.",
       "Farms and mills: buy fresh food from a small stall, lend a hand once a day for a few coins, or take the farmer's job to clear a nearby cave.",
@@ -18,7 +24,7 @@ const PATCHNOTES = (() => {
       "Members tap a choice to vote for it. Your little portrait pops up next to the option you picked, on everyone's phone, the leader's too, and moves as people change their minds. Tap it again to take your vote back, or Just watch to close the window.",
       "Only the leader's tap actually happens. When they choose, everyone's window closes and you see what they picked and how it went.",
     ] },
-    { id: "b136", build: 136, date: "24 Nov 2026", title: "Meet caravans on the road", items: [
+    { id: "b136-3", build: 136, date: "24 Nov 2026", title: "Meet caravans on the road", items: [
     ] },
     { id: "b137-tomeinfo", build: 137, date: "24 Nov 2026", title: "Know the spell before you buy the tome", items: [
       "Spell tomes for sale now tell you what you'd learn: the school, the level (Novice to Master), how much magicka and how many AP it costs, and what it does, with your own numbers.",
