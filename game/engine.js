@@ -318,7 +318,7 @@ const G = (() => {
   }
   function itemStats(item) {
     const it = D.ITEMS[item];
-    if (it.slot === "weapon") return `${it.damage} dmg · ${it.skill}${it.hands === 2 ? " · 2 hands" : ""}${it.enchant ? ` · +${it.enchant.magnitude} ${it.enchant.effect}` : ""}`;
+    if (it.slot === "weapon") return `${it.damage} dmg · ${it.skill}${it.hands === 2 ? " · 2 hands" : ""}${it.enchant ? ` · +${it.enchant.magnitude} ${typeof ENCH !== "undefined" && ENCH.short ? ENCH.short(it.enchant.effect) : it.enchant.effect}` : ""}`;
     if (ARMOR_SLOTS.includes(it.slot)) return `${it.armor} armor · ${it.type}${it.aenchant ? ` · ${it.aenchant.name}${it.aenchant.mag > 1 ? " " + it.aenchant.mag : ""}${it.aenchant.more?.length ? ` +${it.aenchant.more.length} more` : ""}` : ""}`;
     if (it.effects) return it.effects.map(([e, m, d]) => `${e} ${m}${d * 5 >= 60 ? ` · ${Math.round(d * 5 / 60)} min` : ""}`).join(", ");
     if (it.slot === "potion") return it.restore ? `+${it.restore[1]} ${it.restore[0]}` : it.cures ? "Cures diseases" : "";
@@ -684,7 +684,7 @@ const G = (() => {
           this.charges[this.weaponInv] = charge - cost;
           if (en.effect === "frost") this.slowed = 2;
           const em = en.magnitude * (1 + (typeof PFX !== "undefined" ? PFX.sum(s, "enchhit", this, px) : 0));   // Deep Charge
-          const oh = typeof ENCH !== "undefined" && ENCH.onHit ? ENCH.onHit(this, en, em) : { dmg: em, label: ` +${en.effect}` };   // absorb, paralyze, fear, bleed... (enchanting.js)
+          const oh = typeof ENCH !== "undefined" && ENCH.onHit ? ENCH.onHit(this, en, em, { label, dmg }) : { dmg: em, label: ` +${en.effect}` };   // absorb, paralyze, fear, bleed... (enchanting.js)
           dmg += oh.dmg;
           label += oh.label;
           if (typeof PFX !== "undefined" && ["fire", "frost", "shock"].includes(en.effect)) this.pendingEl = [en.effect, em, "weapon"];   // burning / chill / jolt after the hit lands

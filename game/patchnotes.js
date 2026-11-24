@@ -70,6 +70,13 @@ const PATCHNOTES = (() => {
       "The \"quest stage done\" lines in quest pop-ups and the \"find them at...\" hints in the Journal now show in Polish too.",
       "Two new achievements, one for each ending. New pictures for the fort, the castle and the story, in both art styles. All of it is in Polish too.",
     ] },
+    { id: "b144-enchants2", build: 144, date: "24 Nov 2026", title: "22 new enchantments", items: [
+      "Weapons can now carry Chain Lightning, Bloodthirst (crits heal you), Numbing Cold (the foe acts later and loses a move), Wildfire (a burn that keeps getting hotter), Dragonbane, Banishing (sends weak daedra home), Thunderclap, Reaping, Sundering, Spellbreaker, Echo Strike and Venom.",
+      "Armor, rings and amulets can carry Thorns, Last Ward (a shield that pops up when you're nearly down), Fortune (more gold), Mana Shield, Swiftness, Dragonward, Gravewarden, Executioner, Huntsman and Ambusher.",
+      "Find them on bandits, elite foes and in court wizards' shops (the strong ones only on elite foes), break them down at an arcane enchanter to learn them, then put them on your own gear. Item tooltips now say in plain words what every enchantment does.",
+      "Six one-of-a-kind pieces carry them too, like Stormcaller's Fang and the Ring of the Lucky Fox. Very rare drops from elite foes.",
+      "Three new Enchanting perks: Runic Enchanter and Talisman Maker make the new effects 25% stronger, and Overcharge makes your weapon's enchantment surge now and then.",
+    ] },
     { id: "b143-comingnext", build: 143, date: "24 Nov 2026", title: "Coming next is up to date again", items: [
       "The Coming next box at the top of Patch notes now shows what's really being built, and it can't get stuck on an old list any more."] },
     { id: "b144-bugreport", build: 144, date: "24 Nov 2026", title: "Report a problem from inside the game", items: [

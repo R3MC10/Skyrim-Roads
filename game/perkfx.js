@@ -203,6 +203,10 @@ const PFX = (() => {
     [ "Enchanting", "warding_enchanter", "Warding Enchanter", 1, [40], ["insightful_enchanter"], "Resist Magic, Fire, Frost, Shock and Poison enchantments are 25% stronger. [OURS]", [["ench", 0.25, { el: "ward" }]]],
     [ "Enchanting", "hex_enchanter", "Hex Enchanter", 1, [50], ["fire_enchanter"], "Weapon enchantments that aren't fire, frost or shock (absorb, paralyze, fear, calm, bleeding, turn undead) are 25% stronger. [OURS]", [["ench", 0.25, { el: "other" }]]],
     [ "Enchanting", "rune_smith", "Rune Smith", 1, [80], ["deep_charge"], "Elemental statuses from your enchanted weapons last a turn longer. [OURS]", [["enchstatus", 1, {}]]],
+    // the newer enchantments (enchants2.js)
+    [ "Enchanting", "runic_enchanter", "Runic Enchanter", 1, [60], ["hex_enchanter"], "Bloodthirst, Thunderclap, Reaping, Sundering, Spellbreaker, Echo Strike, Venom, Dragonbane and Banishing enchantments are 25% stronger. [OURS]", [["ench", 0.25, { el: "rune" }]]],
+    [ "Enchanting", "talisman_maker", "Talisman Maker", 1, [45], ["jeweller"], "Thorns, Last Ward, Fortune, Mana Shield, Swiftness, Executioner, Huntsman and Ambusher enchantments are 25% stronger. [OURS]", [["ench", 0.25, { el: "relic" }]]],
+    [ "Enchanting", "overcharge", "Overcharge", 1, [90], ["runic_enchanter"], "Your weapon's enchantment surges on 15% of its hits: that hit, its damage, healing and chances count half again as much. [OURS]", [["enchsurge", 0.15, {}]]],
     // ---------------------------------------------------------------- Alchemy (8 → 13)
     [ "Alchemy", "snakeblood", "Snakeblood", 1, [80], ["concentrated_poison"], "You resist burning, chills and shocks: they hurt 25% less. [Skyrim: 50% poison resistance]", [["statusres", 0.25, {}]]],
     [ "Alchemy", "field_medic", "Field Medic", 1, [40], ["physician"], "Healing potions you drink in a fight heal 20% more. [OURS]", [["potion", 0.2, {}]]],

@@ -176,7 +176,8 @@ const TB = (() => {
       const tg = f.tags, base = 6 + Math.min(12, this.foeLevel / 4) + (tg.has("beast") ? 3 : 0) + (tg.has("big") || tg.has("construct") ? -2 : 0);
       // the foe acts 1–3 times a round (whole actions, the fraction is a chance), more with a big party
       let n = T.acts[this.kind] + Math.floor(this.players / 2); const whole = Math.floor(n); n = whole + (Math.random() < n - whole ? 1 : 0);
-      for (let i = 0; i < Math.max(1, n); i++) out.push({ id: i ? "foe" + (i + 1) : "foe", name: f.e.name, init: Math.round(base) - 4 * i + d10(), extra: i > 0 });
+      const nb = typeof ENCH2 !== "undefined" ? ENCH2.numb(f) : { init: 0, acts: 0 }; n -= nb.acts;   // Numbing Cold: later in the order, a move lost (enchants2.js)
+      for (let i = 0; i < Math.max(1, n); i++) out.push({ id: i ? "foe" + (i + 1) : "foe", name: f.e.name, init: Math.round(base - nb.init) - 4 * i + d10(), extra: i > 0 });
       out.sort((a, b) => b.init - a.init || (a.id === "me" ? -1 : 1));
       return out;
     }
