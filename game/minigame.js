@@ -1,0 +1,235 @@
+/* minigame.js: a quick skill game on every move you make yourself in a turn-by-turn fight. [OURS]
+   Owner (build 145): "where are the spell minigames? and attack minigames for combat?"
+   - Weapon blows: a marker sweeps along a bar, tap when it's in the bright zone (Perfect / Good / Miss).
+   - Power attacks: the same, faster and with a narrower zone, but a Perfect hits much harder.
+   - Bows: hold to draw, the circle closes on the target; let go when it sits on the gold ring (wait too long and your
+     arm shakes it wide again).
+   - Guard / shield bash: the foe's blow closes in as a ring; press as it meets your shield.
+   - Spells: glowing points of the school's rune light up; tap them in order (or trace across them) before the cast
+     fizzles. Destruction is a quick three-point strike, Restoration a calm circle, Alteration a square, Illusion's
+     points drift about, Conjuration is a five-point star.
+   Good = the normal hit. Perfect = 25% more (40% for a power attack) and +1 stack of the move's effect (stacks.js).
+   Miss = 20% less (25% for a power attack). Higher skill and some perks ("timing") widen the zone and slow the clock.
+   Auto and the AI never play it (normal damage). Settings → Fights → Minigames turns it off.
+   In a party fight each player plays it on their own phone in their own turn (sharedfight.js uses the same screen). */
+const MINIGAME = (() => {
+  const DOM = typeof document !== "undefined";
+  const prefs = () => { try { return JSON.parse(localStorage.getItem("rotn_prefs") || "{}"); } catch { return {}; } };
+  const GRADES = {
+    normal: { perfect: 1.25, good: 1, miss: 0.8 },
+    power: { perfect: 1.4, good: 1, miss: 0.75 },
+  };
+  const SCHOOLS = {
+    Destruction: { pts: [[50, 18], [80, 74], [20, 74]], time: 2300, col: "#ff8a3d", drift: 0 },
+    Restoration: { pts: [[50, 15], [83, 39], [71, 79], [29, 79], [17, 39]], time: 3400, col: "#ffe58a", drift: 0, circle: true },
+    Alteration: { pts: [[22, 22], [78, 22], [78, 78], [22, 78]], time: 3000, col: "#8ad1ff", drift: 0 },
+    Illusion: { pts: [[30, 25], [72, 35], [60, 75], [25, 68]], time: 3200, col: "#c99bff", drift: 1 },
+    Conjuration: { pts: [[50, 12], [72, 82], [14, 38], [86, 38], [28, 82]], time: 3600, col: "#9dffb5", drift: 0 },
+  };
+  function on() {
+    const p = prefs();
+    if (p.tbGames === false) return false;
+    if (DOM && typeof location !== "undefined" && /[?&]games\b/.test(location.search)) return true;
+    if (p.tbGames === true) return true;
+    return !(typeof navigator !== "undefined" && navigator.webdriver);   // older screen tests click straight through
+  }
+  const isBow = (f) => f.wt === "bow" || f.wt === "crossbow";
+  const spellOf = (a) => {
+    const [k, arg] = String(a).split(":");
+    if ((k === "spell" || k === "dual") && typeof D !== "undefined") return D.SPELLS[arg] || null;
+    if (k === "scroll" && typeof D !== "undefined") return D.SPELLS[D.ITEMS[arg]?.spell] || null;
+    return null;
+  };
+  /* which game a move gets (null: none, e.g. potions, shouts, Breathe, End turn) */
+  function kindFor(f, a) {
+    if (!f || !a) return null;
+    if (a === "attack" || a === "beast:claw" || a === "lord:claw") return isBow(f) && a === "attack" ? { kind: "aim" } : { kind: "strike" };
+    if (a === "power_attack" || a === "beast:maul") return isBow(f) && a === "power_attack" ? { kind: "aim", hard: true } : { kind: "power" };
+    if (a === "block" || a === "bash") return { kind: "parry" };
+    const sp = spellOf(a);
+    if (sp && sp.kind !== "utility") return { kind: "rune", school: SCHOOLS[sp.school] ? sp.school : "Destruction", spell: sp };
+    return null;
+  }
+  /* how wide the sweet spot is: skill and "timing" perks (perkfx.js) widen it */
+  function width(f, a, g) {
+    const s = f.s, sk = (n) => (typeof G !== "undefined" && G.skill && s ? G.skill(s, n) : 15);
+    const skill = g.kind === "rune" ? sk(g.school) : a === "block" || a === "bash" ? sk("Block") : sk(f.weapon?.skill || (isBow(f) ? "Archery" : "One-Handed"));
+    const perk = typeof PFX !== "undefined" && s ? PFX.num(s, "timing") : 0;
+    return Math.min(1.9, (1 + Math.max(0, skill - 15) / 100) * (1 + (perk || 0)));
+  }
+  /* turn a score (0..1, 1 = dead centre) into a grade */
+  function grade(score, g) {
+    const t = GRADES[g.kind === "power" || g.hard ? "power" : "normal"];
+    if (score >= 0.75) return { mult: t.perfect, label: "Perfect!", cls: "perfect", kind: g.kind };
+    if (score >= 0.35) return { mult: t.good, label: "Good", cls: "good", kind: g.kind };
+    return { mult: t.miss, label: g.kind === "rune" ? "Fizzled" : g.kind === "parry" ? "Late" : "Miss", cls: "poor", kind: g.kind };
+  }
+  /* balance sims: what an average player rolls (a quarter Perfect, a fifth Miss) */
+  function simGrade(g, rnd = Math.random) { const r = rnd(); return grade(r < 0.25 ? 0.9 : r < 0.8 ? 0.5 : 0.1, g || { kind: "strike" }); }
+
+  // ------------------------------------------------------------------ what a Perfect adds (+1 stack, stacks.js)
+  const BLADE = new Set(["dagger", "sword", "axe", "greatsword", "battleaxe", "spear", "claw"]);
+  function perfect(f, a, before) {
+    if (typeof STACKS === "undefined" || !f) return "";
+    const g = kindFor(f, a); if (!g) return "";
+    const tr = (t) => (typeof I18N !== "undefined" && I18N.tr && I18N.lang?.() === "pl" ? I18N.tr(t) ?? t : t);
+    const say = (n, what) => ` · ${tr("Perfect")}: +${n} ${tr(what)}`;
+    if (g.kind === "parry") { STACKS.add(f, "me", "might", 1); STACKS.add(f, "me", "haste", 1); return say(1, "Might, +1 Haste"); }
+    if (g.kind === "rune") {
+      const sp = g.spell, el = sp.element;
+      if (sp.school === "Destruction" && (el === "fire" || el === "frost" || el === "shock") && f.ehp > 0) { const k = { fire: "burn", frost: "chill", shock: "shock" }[el]; STACKS.add(f, "foe", k, 1, { src: "me" }); return say(1, { burn: "Burn", chill: "Chill", shock: "Shock" }[k]); }
+      if (sp.school === "Restoration") { STACKS.add(f, "me", "regen", 1); return say(1, "Regen"); }
+      if (sp.school === "Alteration") { STACKS.add(f, "me", "ward", 1); return say(1, "Ward"); }
+      if (sp.school === "Illusion" && f.ehp > 0) { STACKS.add(f, "foe", "weak", 1, { src: "me" }); return say(1, "Weak"); }
+      if (sp.school === "Conjuration") { if (f.summonTurns > 0) f.summonTurns++; STACKS.add(f, "me", "might", 1); return say(1, "Might"); }
+      STACKS.add(f, "me", "might", 1); return say(1, "Might");
+    }
+    if (!(f.ehp > 0) || !(f.ehp < before)) return "";
+    const n = g.kind === "power" || g.hard ? 2 : 1;
+    if (isBow(f)) { STACKS.add(f, "foe", "vuln", n, { src: "me" }); return say(n, "Vulnerable"); }
+    if (BLADE.has(f.wt) || a.startsWith("beast:") || a.startsWith("lord:")) { STACKS.add(f, "foe", "bleed", n, { src: "me" }); return say(n, "Bleed"); }
+    STACKS.add(f, "foe", "sunder", n, { src: "me" }); return say(n, "Sunder");
+  }
+
+  // ------------------------------------------------------------------ the games (each returns a Promise of a grade)
+  const tr = (t) => (typeof I18N !== "undefined" && I18N.tr && I18N.lang?.() === "pl" ? I18N.tr(t) ?? t : t);
+  const now = () => (typeof performance !== "undefined" ? performance.now() : Date.now());
+  function shell(host, g, o, inner, hint) {
+    const el = document.createElement("div");
+    el.className = `tbtime mg mg-${g.kind}${g.hard ? " hard" : ""}`; el.setAttribute("role", "button"); el.tabIndex = 0;
+    el.setAttribute("aria-label", tr(hint));
+    if (g.school) el.style.setProperty("--mgc", SCHOOLS[g.school].col);
+    el.innerHTML = `<div class="tbt-in mg-in">${inner}<b class="tl">${o.icon || ""} ${o.label || ""}</b><small class="mg-hint">${tr(hint)}</small></div>`;
+    host.appendChild(el);
+    return el;
+  }
+  function finish(el, gr, done, cleanup) {
+    if (el._fin) return; el._fin = true; cleanup();
+    el.classList.add("hit", gr.cls); const tl = el.querySelector(".tl"); if (tl) tl.textContent = tr(gr.label);
+    if (typeof navigator !== "undefined" && navigator.vibrate) try { navigator.vibrate(gr.cls === "perfect" ? [12, 30, 12] : 10); } catch (e) { /* ignore */ }
+    setTimeout(() => { el.remove(); done(gr); }, gr.cls === "perfect" ? 420 : 260);
+  }
+  const keys = (fn, up) => {
+    const d = (ev) => { if (ev.key === " " || ev.key === "Enter") { ev.preventDefault(); ev.stopPropagation(); if (!ev.repeat) fn(ev); } };
+    const u = (ev) => { if (up && (ev.key === " " || ev.key === "Enter")) { ev.preventDefault(); ev.stopPropagation(); up(ev); } };
+    addEventListener("keydown", d, true); if (up) addEventListener("keyup", u, true);
+    return () => { removeEventListener("keydown", d, true); if (up) removeEventListener("keyup", u, true); };
+  };
+  /* strike / power / parry: a marker moves, press in the zone */
+  function bar(host, g, o, w) {
+    return new Promise((done) => {
+      const power = g.kind === "power", parry = g.kind === "parry";
+      const zone = Math.min(0.4, (power ? 0.13 : parry ? 0.2 : 0.18) * w), centre = 0.3 + Math.random() * 0.4;
+      const period = (power ? 900 : parry ? 1400 : 1200) / Math.min(1.4, 0.8 + w * 0.2), limit = period * 2.4;
+      const inner = parry
+        ? `<svg class="mg-parry" viewBox="0 0 100 100" aria-hidden="true"><circle class="mg-shield" cx="50" cy="50" r="${(14 + zone * 30).toFixed(1)}"/><circle class="mg-blow" cx="50" cy="50" r="46"/></svg>`
+        : `<div class="mg-bar" aria-hidden="true"><i class="mg-zone" style="left:${((centre - zone / 2) * 100).toFixed(1)}%;width:${(zone * 100).toFixed(1)}%"></i><i class="mg-pz" style="left:${((centre - zone / 6) * 100).toFixed(1)}%;width:${(zone / 3 * 100).toFixed(1)}%"></i><i class="mg-mark"></i></div>`;
+      const el = shell(host, g, o, inner, parry ? "Press as the blow meets your shield" : "Tap in the bright zone");
+      const mark = el.querySelector(".mg-mark"), blow = el.querySelector(".mg-blow"), shieldR = 14 + zone * 30;
+      const t0 = now(); let raf = 0;
+      const pos = () => { const p = ((now() - t0) % (2 * period)) / period; return p <= 1 ? p : 2 - p; };   // back and forth
+      const r = () => Math.max(4, 46 - ((now() - t0) / period) * 40);   // parry: the blow closes in once
+      const score = () => {
+        if (parry) { const d = Math.abs(r() - shieldR) / (zone * 30 + 4); return Math.max(0, 1 - d); }
+        const d = Math.abs(pos() - centre) / (zone / 2); return d <= 1 ? 1 - d * 0.62 : Math.max(0, 0.3 - (d - 1) * 0.3);
+      };
+      let unkey = () => {};
+      const stop = () => { cancelAnimationFrame(raf); unkey(); };
+      const press = () => finish(el, grade(score(), g), done, stop);
+      const frame = () => {
+        if (now() - t0 > (parry ? period * 1.15 : limit)) return finish(el, grade(0, g), done, stop);
+        if (mark) mark.style.left = (pos() * 100).toFixed(2) + "%";
+        if (blow) blow.setAttribute("r", r().toFixed(2));
+        raf = requestAnimationFrame(frame);
+      };
+      raf = requestAnimationFrame(frame);
+      el.addEventListener("pointerdown", (ev) => { ev.preventDefault(); ev.stopPropagation(); press(); });
+      el.addEventListener("click", (ev) => { ev.preventDefault(); ev.stopPropagation(); });
+      unkey = keys(press);
+    });
+  }
+  /* bows: hold to draw, the circle closes on the target ring; let go on it */
+  function aim(host, g, o, w) {
+    return new Promise((done) => {
+      const target = 16, tol = Math.min(9, 4 * w * (g.hard ? 0.75 : 1)), draw = g.hard ? 900 : 1100;
+      const el = shell(host, g, o, `<svg class="mg-aim" viewBox="0 0 100 100" aria-hidden="true"><circle class="mg-tg" cx="50" cy="50" r="${target}"/><circle class="mg-tgw" cx="50" cy="50" r="${target}" style="stroke-width:${(tol * 2).toFixed(1)}"/><circle class="mg-ret" cx="50" cy="50" r="46"/><path class="mg-x" d="M50 44v12M44 50h12"/></svg>`, "Hold to draw, let go on the gold ring");
+      const ret = el.querySelector(".mg-ret");
+      let t0 = 0, raf = 0, held = false, unkey = () => {};
+      const start0 = now();
+      const radius = () => { if (!held) return 46; const t = (now() - t0) / draw; return t <= 1 ? 46 - (46 - 8) * t : 8 + Math.min(38, (t - 1) * 60 + Math.sin(t * 20) * 3); };   // holding too long: your arm shakes
+      const stop = () => { cancelAnimationFrame(raf); unkey(); };
+      const release = () => { if (!held) return; const d = Math.abs(radius() - target); finish(el, grade(d <= tol ? 1 - (d / tol) * 0.25 : Math.max(0, 0.6 - (d - tol) / 20), g), done, stop); };
+      const grab = () => { if (held || el._fin) return; held = true; t0 = now(); el.classList.add("drawing"); };
+      const frame = () => {
+        if (!held && now() - start0 > 3500) return finish(el, grade(0, g), done, stop);
+        if (held && now() - t0 > draw * 2.4) return finish(el, grade(0, g), done, stop);
+        ret.setAttribute("r", radius().toFixed(2));
+        raf = requestAnimationFrame(frame);
+      };
+      raf = requestAnimationFrame(frame);
+      el.addEventListener("pointerdown", (ev) => { ev.preventDefault(); ev.stopPropagation(); try { el.setPointerCapture(ev.pointerId); } catch (e) { /* ignore */ } grab(); });
+      el.addEventListener("pointerup", (ev) => { ev.preventDefault(); ev.stopPropagation(); release(); });
+      el.addEventListener("pointercancel", () => release());
+      el.addEventListener("click", (ev) => { ev.preventDefault(); ev.stopPropagation(); });
+      unkey = keys(grab, release);
+    });
+  }
+  /* spells: tap (or trace across) the rune's points in order before it fizzles */
+  function rune(host, g, o, w) {
+    return new Promise((done) => {
+      const S = SCHOOLS[g.school], n = S.pts.length, limit = S.time * Math.min(1.6, w);
+      const pts = S.pts.map(([x, y]) => [x, y]);
+      const lines = S.circle ? `<circle class="mg-path" cx="50" cy="50" r="35"/>` : `<path class="mg-path" d="M${pts.map((p) => p.join(" ")).join(" L")}${n > 3 ? "" : " Z"}"/>`;
+      const el = shell(host, g, o, `<svg class="mg-rune" viewBox="0 0 100 100" aria-hidden="true">${lines}<circle class="mg-clock" cx="50" cy="50" r="47"/>${pts.map(([x, y], i) => `<g class="mg-pt" data-i="${i}"><circle cx="${x}" cy="${y}" r="8"/><text x="${x}" y="${y + 3}">${i + 1}</text></g>`).join("")}</svg>`, "Tap the glowing points in order");
+      const svg = el.querySelector("svg"), dots = [...el.querySelectorAll(".mg-pt")], clock = el.querySelector(".mg-clock");
+      let next = 0, errs = 0, raf = 0, down = false, unkey = () => {};
+      const t0 = now();
+      const mark = () => dots.forEach((d, i) => { d.classList.toggle("on", i === next); d.classList.toggle("done", i < next); });
+      mark();
+      const stop = () => { cancelAnimationFrame(raf); unkey(); };
+      const end = () => {
+        const left = Math.max(0, 1 - (now() - t0) / limit), done0 = next / n;
+        const score = next < n ? done0 * 0.3 : Math.max(0.36, Math.min(1, 0.45 + left * 0.9 - errs * 0.2));
+        finish(el, grade(score, g), done, stop);
+      };
+      const at = (ev) => { const r = svg.getBoundingClientRect(); return [((ev.clientX - r.left) / r.width) * 100, ((ev.clientY - r.top) / r.height) * 100]; };
+      const hitAt = (x, y, strict) => {
+        if (el._fin) return;
+        let best = -1, bd = 1e9; pts.forEach(([px, py], i) => { const d = Math.hypot(px - x, py - y); if (d < bd) { bd = d; best = i; } });
+        if (bd > 13) { if (strict) errs++; return; }
+        if (best === next) { next++; dots[best].classList.add("pop"); mark(); if (next >= n) end(); }
+        else if (best > next && strict) errs++;
+      };
+      const frame = () => {
+        const t = (now() - t0) / limit;
+        if (t >= 1) return end();
+        clock.style.strokeDashoffset = (t * 295).toFixed(1);
+        if (S.drift) pts.forEach((p, i) => { const [bx, by] = S.pts[i]; p[0] = bx + Math.sin(now() / 500 + i * 1.7) * 6; p[1] = by + Math.cos(now() / 600 + i) * 5; const d = dots[i]; d.firstChild.setAttribute("cx", p[0].toFixed(1)); d.firstChild.setAttribute("cy", p[1].toFixed(1)); d.lastChild.setAttribute("x", p[0].toFixed(1)); d.lastChild.setAttribute("y", (p[1] + 3).toFixed(1)); });
+        raf = requestAnimationFrame(frame);
+      };
+      raf = requestAnimationFrame(frame);
+      el.addEventListener("pointerdown", (ev) => { ev.preventDefault(); ev.stopPropagation(); down = true; try { el.setPointerCapture(ev.pointerId); } catch (e) { /* ignore */ } const [x, y] = at(ev); hitAt(x, y, true); });
+      el.addEventListener("pointermove", (ev) => { if (!down) return; const [x, y] = at(ev); hitAt(x, y, false); });   // trace the rune
+      el.addEventListener("pointerup", () => { down = false; });
+      el.addEventListener("click", (ev) => { ev.preventDefault(); ev.stopPropagation(); });
+      unkey = keys(() => { if (next < n) { const [x, y] = pts[next]; hitAt(x, y, true); } });   // PC: Space taps the next point in time
+    });
+  }
+  /* play the game for move a. Resolves to { mult, label, cls, kind } (Good with no screen) */
+  function play(host, f, a, o = {}) {
+    const g = kindFor(f, a);
+    if (!g) return Promise.resolve(null);
+    if (!DOM || !host) return Promise.resolve(grade(0.5, g));
+    const w = width(f, a, g);
+    if (g.kind === "aim") return aim(host, g, o, w);
+    if (g.kind === "rune") return rune(host, g, o, w);
+    return bar(host, g, o, w);
+  }
+  /* Settings → Fights */
+  function settingsHTML(seg) {
+    if (typeof seg !== "function") return "";
+    return `<div class="setrow"><span>${tr("Minigames")}</span>${seg("tbGames", [[true, tr("On")], [false, tr("Off")]], prefs().tbGames !== false)}</div>`;
+  }
+  return { on, kindFor, width, grade, simGrade, perfect, play, settingsHTML, GRADES, SCHOOLS };
+})();
+if (typeof module !== "undefined") module.exports = MINIGAME;
