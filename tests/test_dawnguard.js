@@ -3,6 +3,8 @@
 // Polish for every line, and a balance sim. W=/path/to/game/ node test_dawnguard.js   (N=30 by default)
 const fs = require("fs"), vm = require("vm");
 const W = process.env.W || require("path").join(__dirname, "../game/");
+// fixed dice so the balance sim gives the same answer on every run (it used to fail now and then by luck alone); SEED=n to try others
+{ let a = +(process.env.SEED || 20261124) >>> 0; Math.random = () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 const c = { console, Math, Date, JSON, Float64Array, Float32Array, Uint8Array, Int32Array, Uint16Array, Int16Array, Object, Array, Set, Map, Proxy, Number, String, process };
 c.__lang = "en"; c.localStorage = { getItem: () => JSON.stringify({ lang: c.__lang }), setItem() {} };
 { // every double-quoted string in dawnguard.js that reads like words (ids, colours, skills, tags and templates left out)

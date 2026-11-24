@@ -51,11 +51,11 @@ ok(/full/.test(item("hs:pinewatch").sub), "homestead full warning");
 S.homestead.pinewatch.col.kitchen = t - 100;
 h = item("hs:pinewatch"); ok(h.state === "soon" && Math.abs(h.at - (t - 100 + HOMESTEAD.DAY)) < 1, "homestead next goods time");
 
-// horse resting at the stables
-S.horse = { name: "Frost", coat: "grey", hp: 10, away: { town: "Whiterun", until: t + 300 } };
-let ho = item("horse"); ok(ho && ho.state === "soon", "horse resting");
-ho = item("horse", t + 400); ok(ho.state === "ready" && ho.go.shop === "stables" && ho.tab === "town", "horse ready to fetch");
-S.horse.away = null; ok(!item("horse"), "horse with you: nothing");
+// horse downed (it stays with you, gets back up later)
+S.horse = { name: "Frost", coat: "grey", hp: 0, hpT: t, down: { at: t, until: t + 300, r: S.rested || 0 } };
+let ho = item("horse"); ok(ho && ho.state === "soon" && /downed/.test(ho.title) && ho.go.shop === "stables", "horse downed");
+ok(!item("horse", t + 400), "back on its feet: nothing");
+S.horse = { name: "Frost", coat: "grey", hp: 100, hpT: t }; ok(!item("horse"), "horse with you: nothing");
 
 // caravan you signed on with
 S.caravanJob = { id: "cv-1", line: "x", name: "Nord wagons", from: "Solitude", to: "Whiterun", depart: t + 900, arrive: t + 3000, status: "signed" };
@@ -110,7 +110,7 @@ ok(REMIND.card(Object.assign({}, S, { dungeon: { place: "x" } }), ctx) === "", "
 
 // notifications: kinds, switches, daily cap, nothing twice
 S.homes = { Whiterun: { garden: t - 7000 }, Riften: { garden: t - 6000 }, Markarth: { garden: t - 5000 }, Windhelm: { garden: t - 4000 }, Solitude: { garden: t - 3000 } };
-S.horse = { name: "Frost", away: { town: "Whiterun", until: t + 900 } };
+S.horse = { name: "Frost", hp: 0, hpT: t, down: { at: t, until: t + 900, r: S.rested || 0 } };
 S.caravanJob = { id: "cv-2", name: "Nord wagons", from: "Whiterun", to: "Solitude", depart: t + 3600, status: "signed" };
 const nowMs = t * 1000;
 let N = REMIND.notes(S, nowMs, ctx);

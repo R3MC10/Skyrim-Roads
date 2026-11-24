@@ -3,7 +3,7 @@
 "use strict";
 
 function memoryStore() {
-  const accounts = new Map(), byName = new Map(), sessions = new Map(), byToken = new Map(), chars = new Map(), worldRecs = new Map();
+  const accounts = new Map(), byName = new Map(), sessions = new Map(), byToken = new Map(), chars = new Map(), worldRecs = new Map(), reports = [];
   const copy = (o) => (o ? JSON.parse(JSON.stringify(o)) : null);
   const summary = (c) => ({ id: c.id, accountId: c.accountId, name: c.name, level: c.level, race: c.race, version: c.version, updatedAt: c.updatedAt, deletedAt: c.deletedAt || null });
   return {
@@ -47,6 +47,8 @@ function memoryStore() {
     /* the shared world (hub.js): rows of {col, id, doc}; doc null deletes */
     async loadWorld() { return [...worldRecs.entries()].map(([k, doc]) => { const [col, id] = k.split("\u0000"); return { col, id, doc: JSON.parse(doc) }; }); },
     async putWorld(rows) { for (const { col, id, doc } of rows) { const k = col + "\u0000" + id; if (doc == null) worldRecs.delete(k); else worldRecs.set(k, JSON.stringify(doc)); } },
+    async saveReport({ id, at, report }) { reports.push({ id, at, report: copy(report) }); if (reports.length > 500) reports.shift(); },   // player reports kept when GitHub can't take them
+    async listReports(limit = 50) { return reports.slice(-limit).reverse().map(copy); },
     async deleteCharacter(id, accountId, now) { const c = chars.get(id); if (!c || c.accountId !== accountId || c.deletedAt) return false; c.deletedAt = now; return true; },
   };
 }

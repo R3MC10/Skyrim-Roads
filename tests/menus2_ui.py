@@ -1,5 +1,5 @@
 """Tidier tab menus (menus2.js): one sort row with direction, Damage/Armour sorts, counts, search, list stays visible on
-phones, 3 columns on wide screens, folding Character sections, one follower tab row, quest search, pixel style.
+phones, 3 columns on wide screens, folding Character sections, one follower tab row, quest search.
 Usage: python3 menus2_ui.py PORT   (screenshots go to $OUT or /home/claude/tests/menus2/)"""
 import asyncio, sys, os
 from playwright.async_api import async_playwright
@@ -94,10 +94,10 @@ async def main():
         await pg.fill("#m2jq", "zzqq"); await pg.wait_for_timeout(300)
         ok(await pg.evaluate("!!document.querySelector('#j-quests .m2-none')"), "no-match note")
         ok(not errs, f"no page errors {errs[:3]}")
-        # ---------------- desktop 1920x1080, pixel style too
+        # ---------------- desktop 1920x1080
         pg, errs = await start(b, 1920, 1080, "dt")
-        for style in ["ink", "pixel"]:
-            await pg.evaluate(f"ART.setStyle('{style}')"); await pg.wait_for_timeout(300)
+        for style in ["ink"]:
+            await pg.wait_for_timeout(300)
             await pg.evaluate("window.__ui.openMenu('items')"); await pg.wait_for_timeout(400)
             await pg.click("#sky .sky-cat[data-id=all]"); await pg.wait_for_timeout(300)
             await pg.click("#sky .sky-list .sky-row"); await pg.wait_for_timeout(300)

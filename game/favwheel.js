@@ -96,7 +96,7 @@ const FAVWHEEL = (() => {
     const L = list(s), n = Math.max(L.length, 4), R = 118;
     const slots = L.map((e, i) => {
       const a = -Math.PI / 2 + i * 2 * Math.PI / n, x = Math.cos(a) * R, y = Math.sin(a) * R, nf = info(s, e);
-      return `<button class="fw-slot ${nf.on ? "on" : ""} ${nf.have ? "" : "off"}" data-fw="${i}" style="--x:${x.toFixed(1)}px;--y:${y.toFixed(1)}px;--i:${i}" aria-label="${esc(nf.name)}${nf.sub ? ", " + esc(nf.sub) : ""}">
+      return `<button class="fw-slot ${nf.on ? "on" : ""} ${nf.have ? "" : "off"}" data-fw="${i}"${["item", "spell", "shout"].includes(e.k) ? ` data-tip-k="${e.k}:${esc(e.id)}"` : ""} style="--x:${x.toFixed(1)}px;--y:${y.toFixed(1)}px;--i:${i}" aria-label="${esc(nf.name)}${nf.sub ? ", " + esc(nf.sub) : ""}">
         <span class="fw-ico">${slotIcon(s, e, 34)}</span><span class="fw-nm">${esc(nf.name)}</span>${nf.sub ? `<span class="fw-sub">${esc(nf.sub)}</span>` : ""}</button>`;
     }).join("");
     const empty = !L.length ? `<p class="fw-empty">No favourites yet.<br>Open Items or Magic, pick something and tap <b>★ Favourite</b>.</p>` : "";
@@ -123,8 +123,6 @@ const FAVWHEEL = (() => {
       document.body.appendChild(el);
     }
     open = true; render();
-    const pixel = typeof ART !== "undefined" && ART.style && ART.style() === "pixel";
-    el.classList.toggle("fw-pixel", !!pixel);
     el.classList.remove("fw-out"); void el.offsetWidth; el.classList.add("fw-on");
     try { ctx.sound?.("click"); } catch { /* fine */ }
   }

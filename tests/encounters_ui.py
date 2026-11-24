@@ -20,8 +20,7 @@ async def main():
         await pg.evaluate(clear)
         ok(await pg.evaluate("typeof ENC !== 'undefined' && ROAD_EVENTS.__enc && ENC.L.length >= 28"), "encounters loaded and wired")
         ids = await pg.evaluate("ENC.L.map(e=>e.id)")
-        for style in ["ink", "pixel"]:
-            await pg.evaluate(f"ART.setStyle('{style}')")
+        for style in ["ink"]:
             for eid in ["thalmor", "giant", "khajiit", "escort", "wizard", "dog"]:
                 await pg.evaluate(clear)
                 await pg.evaluate(f"""()=>{{ const S=window.__dbg.save(); S.level=20; S.gold=3000; S.location='Whiterun'; [S.x,S.y]=WORLD.places.Whiterun; S.location=null; G.startTrip(S,'Riverwood',WORLD.places.Riverwood.slice(0,2));

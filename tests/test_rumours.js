@@ -129,7 +129,7 @@ atHour(19);
   // the inn through the day
   const n = [3, 9, 13, 18, 22].map((h) => RUMOURS.crowd(h).n); ok(n[4] > n[3] && n[3] > n[2] && n[2] > n[0], "the inn fills up in the evening: " + n);
   ok([2, 6, 12, 18, 23].every((h) => RUMOURS.dayLine(h)[1].length > 10), "a line for every time of day");
-  for (const st of ["ink", "pixel"]) { globalThis.ART = { style: () => st }; const svg = RUMOURS.crowdArt(7, true); ok(/<svg/.test(svg) && !/NaN|undefined/.test(svg) && (st === "pixel") === /crispEdges/.test(svg), st + " crowd picture"); }
+  for (const st of ["ink"]) { globalThis.ART = { style: () => st }; const svg = RUMOURS.crowdArt(7, true); ok(/<svg/.test(svg) && !/NaN|undefined/.test(svg), st + " crowd picture"); }
 }
 
 // 6. the pages

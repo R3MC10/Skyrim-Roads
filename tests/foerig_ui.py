@@ -66,7 +66,7 @@ async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch(args=["--no-sandbox"])
         errs = []
-        for style in ["ink", "pixel"]:
+        for style in ["ink"]:
             for assets in [False, True]:
                 ctx = await b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2)
                 await ctx.add_init_script(f"localStorage.setItem('rotn_prefs', JSON.stringify({{artStyle:'{style}'}}))")

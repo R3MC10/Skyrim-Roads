@@ -47,7 +47,7 @@ const DUNART = (() => {
     }
   }
 
-  // ---- room-type symbols, drawn in ink so they read in both styles
+  // ---- room-type symbols, drawn in ink
   function symbol(g, H, type, x, y, s, theme, col = "#1c1612") {
     g.save(); g.translate(x, y); g.strokeStyle = col; g.fillStyle = col; g.lineCap = "round"; g.lineJoin = "round";
     const line = (pts, w = 2.2) => { g.lineWidth = w; g.beginPath(); pts.forEach(([a, b], i) => (i ? g.lineTo(a * s, b * s) : g.moveTo(a * s, b * s))); g.stroke(); };
@@ -206,7 +206,7 @@ const DUNART = (() => {
       return `<button class="dnode" data-act="droom" data-c="${c}" style="left:${(x / W * 100).toFixed(2)}%;top:${(y / h * 100).toFixed(2)}%" aria-label="Go to: ${DUNGEONS.LABEL[n.type]}"></button>`; }).join("");
     const here = d.row >= 0 && !d.done ? [...xy(rows, d.row, d.col), rows[d.row][d.col].type === "boss" ? 22 : 17] : null;
     const seg = fresh ? curve(d, ...fresh).map((v) => v.toFixed(1)).join(",") : "", segKey = fresh ? `${d.place}|${(d.path || []).length}|${d.t || ""}` : "";
-    return `<div class="dmap" data-w="${W}" data-h="${h}" data-here="${here ? here.map(Math.round).join(",") : ""}" data-seg="${seg}" data-segkey="${segKey}" data-theme="${d.theme}" style="--dh:${h}">
+    return `<div class="dmap" data-w="${W}" data-h="${h}" data-here="${here ? here.map(Math.round).join(",") : ""}" data-seg="${seg}" data-segkey="${segKey}" data-theme="${d.theme}" style="--dh:${h};--dar:${(W / h).toFixed(4)}">
       <img src="${url}" width="${W}" height="${h}" alt="Map of ${String(d.place).replace(/"/g, "")}">
       <canvas class="dflick" aria-hidden="true"></canvas>${nodes}</div>`;
   }
@@ -278,8 +278,8 @@ const DUNART = (() => {
   function chestHTML(open) { return `<canvas class="dchest" width="120" height="84" data-open="${open ? 1 : 0}" aria-hidden="true"></canvas>`; }
   function animateChest(root, reduce) {
     const cv = root?.querySelector(".dchest"); if (!cv) return;
-    const dpr = Math.min(2, devicePixelRatio || 1), w = 120, h = 84, pixel = ART.style() === "pixel", k = pixel ? 0.5 : dpr;
-    cv.width = w * k; cv.height = h * k; cv.style.width = w + "px"; cv.style.height = h + "px"; if (pixel) cv.style.imageRendering = "pixelated";
+    const dpr = Math.min(2, devicePixelRatio || 1), w = 120, h = 84, k = dpr;
+    cv.width = w * k; cv.height = h * k; cv.style.width = w + "px"; cv.style.height = h + "px";
     const g = cv.getContext("2d"); g.setTransform(k, 0, 0, k, 0, 0);
     const open = cv.dataset.open === "1", t0 = performance.now(), dur = reduce ? 0 : 900;
     const draw = (p) => {
