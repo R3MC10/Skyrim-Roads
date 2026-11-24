@@ -27,7 +27,8 @@ const ACCOUNT = (() => {
   // ---------------------------------------------------------------- where, who, which device
   function server() {
     if (DOM) { const q = (location.search.match(/[?&]server=([^&]+)/) || [])[1]; if (q) set("server", decodeURIComponent(q)); }
-    return String(get("server") || DEFAULT_SERVER || "").replace(/\/+$/, "");
+    const auto = !(DOM && navigator.webdriver);   // like pictures and audio: under browser automation only with ?server=… (keeps screen tests offline)
+    return String(get("server") || (auto ? DEFAULT_SERVER : "") || "").replace(/\/+$/, "");
   }
   const on = () => !!server();
   function deviceId() { let d = get("device"); if (!d) { d = "dev-" + rand(12); set("device", d); } return d; }

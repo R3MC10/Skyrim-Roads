@@ -12,7 +12,7 @@ const SEARCH = (() => {
   const esc = (x) => String(x ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   /* which other modules are loaded (top-level consts aren't on window, so each needs its own typeof) */
   const LOADED = { QUESTS: () => typeof QUESTS, WORLD: () => typeof WORLD, PERKS: () => typeof PERKS, POWERS: () => typeof POWERS, TOWNS: () => typeof TOWNS, SMITH: () => typeof SMITH,
-    COOK: () => typeof COOK, EFFECTS: () => typeof EFFECTS, INGREDIENT_FX: () => typeof INGREDIENT_FX, SKILLINFO: () => typeof SKILLINFO, SPELLBOOK: () => typeof SPELLBOOK, MAGIC: () => typeof MAGIC, GATHER: () => typeof GATHER };
+    COOK: () => typeof COOK, EFFECTS: () => typeof EFFECTS, INGREDIENT_FX: () => typeof INGREDIENT_FX, SKILLINFO: () => typeof SKILLINFO, SPELLBOOK: () => typeof SPELLBOOK, MAGIC: () => typeof MAGIC, GATHER: () => typeof GATHER, TOMEINFO: () => typeof TOMEINFO };
   const has = (n) => { try { return LOADED[n]() !== "undefined"; } catch { return false; } };
   const PER_GROUP = 5, MORE_GROUP = 30, MAX_Q = 60;
 
@@ -87,6 +87,7 @@ const SEARCH = (() => {
     ["Back up your character", "Your character", "a:bk", "save backup export copy"], ["Restore from a backup", "Your character", "a:bk", "load import"],
     ["Art style: hand-drawn or pixel art", "Look", "k:artStyle", "graphics ink pixel retro"], ["Motion and animations", "Look", "k:motion", "animation lite"],
     ["Foe turn speed", "Fights", "k:tbFast", "fast combat speed"],
+    ["Fight controls", "Fights", "k:tbDock", "action bar combat wheel cards buttons"],
     ["Text size", "Accessibility", "k:a11yText", "font bigger zoom large"], ["Colour-blind help", "Accessibility", "k:a11yColour", "color blind protan deutan tritan"],
     ["High-contrast text", "Accessibility", "k:a11yContrast", "contrast"], ["Reduce motion", "Accessibility", "k:a11yMotion", "shake flash"],
     ["One-hand mode", "Accessibility", "k:a11yHand", "thumb left right hand"],
@@ -427,7 +428,7 @@ const SEARCH = (() => {
         : `Court wizards sell ${lv} tomes; their shelves change every two in-game days.`;
       const now = safe(() => has("SPELLBOOK") ? Object.keys(D.SHOPS || {}).filter((t) => knownPlace(S, t) && SPELLBOOK.inStockAnywhere(S, tome, t)) : [], []);
       h = `<div class="srch-dh">${icon(S, e, 56)}<div><h2>${esc(sp.name)}</h2><p class="sub">${esc(sp.school)} · ${esc(lv)} · not learned yet</p></div></div>
-        ${has("MAGIC") && MAGIC.infoHTML ? `<div class="srch-spl">${safe(() => MAGIC.infoHTML(S, e.id))}</div>` : ""}
+        ${has("TOMEINFO") ? `<div class="srch-spl">${safe(() => TOMEINFO.html(S, e.id, { head: false }), "")}</div>` : has("MAGIC") && MAGIC.infoHTML ? `<div class="srch-spl">${safe(() => MAGIC.infoHTML(S, e.id))}</div>` : ""}
         <h3>How to learn it</h3>
         ${own ? `<p class="srch-ok">You have its tome in your pack. Read it to learn the spell.</p>` : ""}
         <p class="sub">${esc(where)}${gate && lv !== "Master" ? ` ${lv} tomes show up once your ${esc(sp.school)} reaches ${gate} (you have ${skl}).` : ""}</p>

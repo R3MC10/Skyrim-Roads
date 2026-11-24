@@ -111,6 +111,9 @@ jobs:
           npm install --no-audit --no-fund
           npx electron-builder --win portable nsis --publish never
           dir dist
+          # without this file the installed PC game can't update itself (build 100 shipped without one)
+          if (-not (Test-Path dist/win-unpacked/resources/app-update.yml)) { Write-Error "app-update.yml missing: the PC app couldn't update itself"; exit 1 }
+          Get-Content dist/win-unpacked/resources/app-update.yml
       - name: Add it to the same download page
         uses: softprops/action-gh-release@v2
         with:

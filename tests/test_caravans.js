@@ -1,7 +1,14 @@
 const __GAME = process.env.W || require("path").join(__dirname, "../game/");
 const fs=require("fs"),vm=require("vm");
 const W=process.env.W||__GAME + "";
-const c={console,Math,Date,JSON,Float64Array,Float32Array,Uint8Array,Int32Array,Uint16Array,Int16Array,Object,Array,Set,Map,Proxy,Number,String};vm.createContext(c);
+// Deterministic run: a fixed clock (which caravan is in town, its road and ambush plan) and a seeded
+// Math.random (fight rolls). With the real clock + random, a guard could now and then lose an ambush fight,
+// wake up in the nearest temple (sometimes the destination town) and fail the ambush count at random in CI.
+const FIXED_NOW=Date.UTC(2026,0,15,12,0,0);
+class FixedDate extends Date{ constructor(...a){ if(a.length) super(...a); else super(FIXED_NOW); } static now(){ return FIXED_NOW; } }
+let seed=+process.env.SEED||20260115; const SeededMath=Object.create(Math);
+SeededMath.random=()=>{ seed=(seed+0x6D2B79F5)|0; let x=Math.imul(seed^(seed>>>15),1|seed); x=(x+Math.imul(x^(x>>>7),61|x))^x; return ((x^(x>>>14))>>>0)/4294967296; };   // mulberry32
+const c={console,Math:SeededMath,Date:FixedDate,JSON,Float64Array,Float32Array,Uint8Array,Int32Array,Uint16Array,Int16Array,Object,Array,Set,Map,Proxy,Number,String};vm.createContext(c);
 for(const f of ["data.js","world.js","terrain.js","formulas.js","perks.js","powers.js","engine.js","events.js","dungeons.js","towns.js","wevents.js","enchanting.js","quests.js","horses.js","hall.js","bounty.js","visits.js","cooking.js","arena.js","market.js","smithing.js","social.js","caravans.js","mp.js"]) if(fs.existsSync(W+f)) vm.runInContext(fs.readFileSync(W+f,"utf8").replace(/^const (\w+) =/m,"var $1 ="),c);
 vm.runInContext(`
 const ok=(c,m)=>{ if(!c) throw new Error("FAIL "+m); };
@@ -29,9 +36,9 @@ const E=mk("E",5); CARAVANS.signOn(E,cv.id,t); E.location=["Riften","Markarth","
 // advance A to arrival, resolving ambushes by fighting
 const plan=CARAVANS.plan(cv); let amb=0, guard=0;
 G.setAllyProvider(()=>[{name:"Caravan guard",dmg:10},{name:"Caravan guard",dmg:10}]);
-while(A.trip && guard++<200){ const out=G.advance(A, Math.min(cv.arrive+5, A.trip.lastTick+120)); if(out.encounter){ amb++; ok(out.encounter.caravan,"ambush flagged"); G.setHealth(A,G.maxHealth(A),A.trip.lastTick); /* a lost fight ends the trip early: this test counts ambushes, not wins */ const r=G.encounterAction(A,"fight",A.trip.lastTick); if(!A.trip) break; } if(out.arrived) break; }
+while(A.trip && guard++<200){ const out=G.advance(A, Math.min(cv.arrive+5, A.trip.lastTick+120)); if(out.encounter){ amb++; ok(out.encounter.caravan,"ambush flagged"); G.setHealth(A,G.maxHealth(A),A.trip.lastTick); const r=G.encounterAction(A,"fight",A.trip.lastTick); ok(!r.died && A.trip,"guard won ambush "+amb+" vs "+out.encounter.name+(r.died?" ("+r.died+")":"")); } if(out.arrived) break; }
 ok(amb===plan.at.length,"ambush count "+amb+" vs "+plan.at.length);
-ok(A.location===cv.to,"arrived "+A.location+" alive="+!A.trip);
+ok(A.location===cv.to && !A.trip,"arrived "+A.location+" alive="+!A.trip);
 console.log("ambushes", amb, "foes", plan.foes.join(","), "arrived at", A.location, "t vs caravan", Math.round((A.lastArr||0)));
 // pay: two guards signed → pool split, claim once
 const guards=[{caravanId:cv.id,uid:"A"},{caravanId:cv.id,uid:"B"},{caravanId:cv.id,uid:"D",status:"left"}];

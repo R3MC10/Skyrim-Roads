@@ -6,7 +6,7 @@ const I18N_STORY = {
 "Riverwood's smith says Whiterun must be warned about the dragon.": "Kowal z Riverwood mówi, że trzeba ostrzec Whiterun przed smokiem.",
 "Go to Whiterun.": "Idź do Whiterun.",
 "The court wizard Farengar wants a Dragonstone from Bleak Falls Barrow.": "Nadworny mag Farengar chce Smoczego Kamienia z Bleak Falls Barrow.",
-"Bring it to him in Whiterun (Area tab, Dragonsreach).": "Zanieś mu go do Whiterun (zakładka Okolica, Dragonsreach).",
+"Bring it to him in Whiterun (Area tab, Court wizard).": "Zanieś mu go do Whiterun (zakładka Okolica, Nadworny mag).",
 "A dragon is attacking the Western Watchtower.": "Smok atakuje Zachodnią Wieżę Strażniczą.",
 "Go there and kill it.": "Idź tam i go zabij.",
 "The Way of the Voice": "Droga Głosu",

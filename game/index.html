@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Skyrim: Roads of the North</title>
 <style>/* fonts bundled with the game (work offline) */
 @font-face{font-family:"Cinzel";font-style:normal;font-weight:600;font-display:swap;src:url(font-cinzel-600.woff2) format("woff2")}
@@ -1751,6 +1751,13 @@ body:has(#favBtn) .app,body:has(#twBtn) .app{padding-bottom:calc(190px + env(saf
 html.art-pixel .mgc,html.art-pixel .mgmeter,html.art-pixel .mgwall{border-radius:0}
 html.art-pixel .mgc .mgo{border-radius:0;image-rendering:pixelated}
 @media (prefers-reduced-motion:reduce){.mgc.glint::after,.mgc.shake,.mgtag,.mgchip,.mgc .mgo{animation:none}}
+/* PC: "new version" card (pcupdate.js) */
+#pcupd{position:fixed;right:16px;bottom:16px;z-index:9000;max-width:min(360px,calc(100vw - 32px));background:var(--panel);border:1px solid var(--gold);border-radius:10px;padding:12px 14px;box-shadow:0 8px 28px rgba(0,0,0,.55);display:grid;gap:8px;animation:pcupdIn .35s ease-out}
+#pcupd .t{color:var(--gold);font-weight:600;letter-spacing:.04em;text-transform:uppercase;font-size:13px}
+#pcupd .d{color:var(--ink);font-size:14px;line-height:1.4}
+#pcupd .b{display:flex;gap:8px;justify-content:flex-end}
+html.art-pixel #pcupd{border-radius:0;box-shadow:4px 4px 0 #000}
+@keyframes pcupdIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 /* [fightread] fightread.js: foe intents, what's coming off each health bar, your own statuses, round banners, low health */
 .tbbar s.tbfc{position:absolute;top:0;bottom:0;text-decoration:none;pointer-events:none;background:repeating-linear-gradient(135deg,rgba(255,255,255,.55) 0 3px,rgba(255,255,255,.08) 3px 6px);box-shadow:inset 0 0 0 1px rgba(255,255,255,.35);animation:tbfc 1.4s ease-in-out infinite}
 .tbbar s.tbfc.dot{background:repeating-linear-gradient(135deg,var(--el-poison,#8fdc5a) 0 3px,rgba(0,0,0,.25) 3px 6px);opacity:.85}
@@ -1782,6 +1789,10 @@ html.art-pixel .mgc .mgo{border-radius:0;image-rendering:pixelated}
 #tbf.tblow::after{content:"";position:fixed;inset:0;z-index:40;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 50%,rgba(190,10,10,.42));box-shadow:inset 0 0 70px 12px rgba(200,10,10,.55);animation:tblow 1.3s ease-in-out infinite}
 @keyframes tblow{0%,100%{opacity:.6}15%{opacity:1}30%{opacity:.7}45%{opacity:.95}}
 html.art-pixel .tbint,html.art-pixel .tbfcl .fp,html.art-pixel .tbskip,html.art-pixel .tbst .st.me{border-radius:0}
+/* popups with motion on: the open animation comes from .mo-pop/.mo-swap (motion.js). Without this, dropping that class after 0.5 s
+   restarted the plain pfade/psheet fade (sheet back to 30% opacity) and dropped the blur: a flicker on every popup */
+.mo-on .modal,.mo-on .modal .sheet{animation:none}
+.mo-on:not(.mo-lite) .modal{-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
 @media (prefers-reduced-motion:reduce){.tbbar s.tbfc,.tbint.big,.tbbub,.tbban.round,.tbban.foe{animation:none!important}#tbf.tblow::after{animation:none;opacity:.6}}
 /* accounts (account.js): sign-in form, character list, the "playing on another device" and "two copies" dialogs */
 .acfield{display:block;margin:10px 0;text-align:left}.acfield span{display:block;font-size:13px;letter-spacing:.06em;color:#bdb39d;margin-bottom:4px}
@@ -1798,6 +1809,275 @@ html.art-pixel .tbint,html.art-pixel .tbfcl .fp,html.art-pixel .tbskip,html.art-
 .acwall-in h2{text-align:center;font-size:18px;letter-spacing:.1em;text-transform:uppercase;margin:0 0 10px}.acwall-in .btn{width:100%;margin-top:10px}
 .accmp{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}.accmp>div{padding:8px;border:1px solid rgba(214,178,94,.3);border-radius:6px;background:rgba(0,0,0,.35)}.accmp b{display:block;font-size:13px}.accmp span{font-size:12px;color:#a89f8b}
 html.art-pixel .acfield input,html.art-pixel .acchar,html.art-pixel .acnote,html.art-pixel .acwall-in,html.art-pixel .accmp>div{border-radius:0}
+/* jewellery row under the paper doll: one amulet, two rings (jewelry.js) */
+.djewel{display:flex;justify-content:center;gap:10px;margin:0 0 6px}.djewel .dslot{width:54px;min-height:56px}.djewel .dslot .dst.dench{color:#c9b6ff;border-color:#7a6aa8}
+/* [noscretch] fits every screen: pictures keep their shape (fitcanvas.js), phones keep clear of notches and the status bar
+   (viewport-fit=cover lets the safe areas through), landscape phones keep clear of side cut-outs */
+.app{padding-top:env(safe-area-inset-top,0px);padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px))}
+.sky-in{padding-top:max(8px,env(safe-area-inset-top,0px));padding-left:max(10px,env(safe-area-inset-left,0px));padding-right:max(10px,env(safe-area-inset-right,0px))}
+.modal,.lockpick,.craftgame{padding-top:max(12px,env(safe-area-inset-top,0px));padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px));padding-bottom:max(12px,env(safe-area-inset-bottom,0px))}
+.dun{padding-top:max(12px,env(safe-area-inset-top,0px));padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px))}
+@media (max-width:1499px){.tabs{padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}}
+/* every picture keeps its own shape: never wider than its box, and its height follows its width (zero specificity:
+   any rule that sizes a picture on purpose still wins; this only replaces the fixed height="" of the tag) */
+:where(img.art,canvas[data-fit]){max-width:100%}
+:where(img.art[width][height]){height:auto}
+/* compass: a real 3D disc that tilts toward your finger; the four labels sit round it, never on it */
+.tw-rose{container-type:size;transform:none!important;perspective:900px;--R:max(70px,min(36cqw,calc(50cqw - 66px),calc(50cqh - 84px)))}
+:root.has-ui-compass .tw-rose{background:none}
+.tw-disc{position:absolute;left:50%;top:50%;width:calc(var(--R)*2);height:calc(var(--R)*2);margin:calc(var(--R)*-1) 0 0 calc(var(--R)*-1);transform-style:preserve-3d;
+  transform:translate3d(calc(var(--tx,0)*.35px),calc(var(--ty,0)*.35px),0) rotateY(calc(var(--tx,0)*.42deg)) rotateX(calc(var(--ty,0)*-.42deg));
+  transition:transform .65s cubic-bezier(.25,1.7,.5,1);will-change:transform;animation:twbob 6s ease-in-out infinite}
+.tw.drag .tw-disc{transition:transform .06s linear;animation:none}
+@keyframes twbob{0%,100%{transform:rotateX(4deg) rotateY(-3deg)}50%{transform:rotateX(-3deg) rotateY(4deg)}}
+.tw-face,.tw-depth{position:absolute;inset:0;border-radius:50%}
+.tw-face{transform:translateZ(14px);display:grid;place-items:center}
+.tw-face>.tw-rosesvg{position:static;width:100%;height:auto;transform:none!important}
+:root.has-ui-compass .tw-face{background:var(--asset-compass) center/100% no-repeat;filter:drop-shadow(0 2px 2px rgba(0,0,0,.6))}
+:root.has-ui-compass .tw-face>svg.tw-rosesvg{opacity:0}
+.tw-depth{transform:translateZ(0);inset:3%;background:radial-gradient(circle,#2a2116 0 60%,#120e09 72%,transparent 73%);box-shadow:0 calc(14px + var(--pull,0)*16px) 30px rgba(0,0,0,.7)}
+.tw-shine{position:absolute;inset:4%;border-radius:50%;transform:translateZ(16px);pointer-events:none;mix-blend-mode:screen;opacity:calc(.25 + var(--pull,0)*.55);
+  background:radial-gradient(circle at calc(50% - var(--tx,0)*.7%) calc(38% - var(--ty,0)*.7%),rgba(255,236,190,.5),rgba(255,236,190,0) 45%)}
+.tw[data-glow] .tw-face{filter:drop-shadow(0 0 calc(var(--pull,0)*14px) rgba(255,214,130,.55))}
+.tw-dir{min-width:0;width:auto;max-width:150px;padding:4px 6px}
+.tw-up{top:auto;bottom:calc(50% + var(--R) + 2px);left:50%;transform:translateX(-50%)}
+.tw-down{bottom:auto;top:calc(50% + var(--R) + 2px);left:50%;transform:translateX(-50%)}
+.tw-left{left:auto;right:calc(50% + var(--R) + 2px);top:50%;transform:translateY(-50%)}
+.tw-right{right:auto;left:calc(50% + var(--R) + 2px);top:50%;transform:translateY(-50%)}
+.tw-left,.tw-right{max-width:min(130px,calc(50cqw - var(--R) - 2px))}
+.tw-left small,.tw-right small{max-width:100%}
+.tw-dir:active,.tw[data-glow] .tw-dir{transform-origin:center}
+.tw-up:active,.tw[data-glow=up] .tw-up,.tw-down:active,.tw[data-glow=down] .tw-down{transform:translateX(-50%) scale(1.08)}
+.tw-left:active,.tw[data-glow=left] .tw-left,.tw-right:active,.tw[data-glow=right] .tw-right{transform:translateY(-50%) scale(1.08)}
+@media (max-width:420px){.tw-left b,.tw-right b{font-size:15px;letter-spacing:.08em}.tw-left small,.tw-right small{font-size:10.5px}}
+@media (orientation:landscape) and (max-height:520px){.tw-rose{height:min(72vh,340px);--R:max(70px,min(36cqw,calc(50cqw - 150px),calc(50cqh - 56px)))}.tw-left{left:auto}.tw-right{right:auto}.tw-up small,.tw-down small{display:none}.tw-up .ic,.tw-down .ic{display:none}}
+@media (prefers-reduced-motion:reduce){.tw-disc{animation:none;transition:none}}
+/* painted compass: it's a cut-out, so no dark disc behind it; with the Blender sheet the 3D comes from the renders */
+:root.has-ui-compass .tw-depth{display:none}
+:root.has-ui-compass3d .tw-face{inset:-8%;background:var(--asset-compass3d) 0 0/700% 700% no-repeat;background-position:calc(var(--cc,3)*100%/6) calc(var(--cr,3)*100%/6);filter:drop-shadow(0 calc(8px + var(--pull,0)*12px) calc(10px + var(--pull,0)*10px) rgba(0,0,0,.75))}
+:root.has-ui-compass3d .tw-face>svg.tw-rosesvg{opacity:0}
+:root.has-ui-compass3d .tw-disc{transform:translate3d(calc(var(--tx,0)*.3px),calc(var(--ty,0)*.3px),0);transition:none;animation:none}
+:root.has-ui-compass3d .tw-shine{inset:12%;opacity:calc(var(--pull,0)*.5)}
+:root.has-ui-compass3d .tw[data-glow] .tw-face{filter:drop-shadow(0 0 calc(var(--pull,0)*14px) rgba(255,214,130,.5)) drop-shadow(0 14px 14px rgba(0,0,0,.7))}
+/* party votes on the road (partyplay.js): voters' faces pop in by the option they picked */
+.pvhas,[data-act=ppvote]{position:relative}
+.pvchips{position:absolute;top:-11px;right:-4px;display:flex;flex-direction:row-reverse;pointer-events:none;z-index:2}
+.pvchip{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;margin-left:-9px;border-radius:50%;background:#2a241c;border:2px solid #e8c66a;box-shadow:0 2px 6px rgba(0,0,0,.55);overflow:hidden;animation:pvpop .38s cubic-bezier(.3,1.6,.5,1) both}
+.pvchip img,.pvchip canvas{width:100%;height:100%;display:block;border-radius:50%}
+.pvchip b{font-size:13px;color:#f1e3c0}
+@keyframes pvpop{0%{opacity:0;transform:translateY(8px) scale(.2)}70%{opacity:1;transform:translateY(-2px) scale(1.12)}100%{transform:none}}
+[data-act=ppvote].pvmine{outline:2px solid #e8c66a;outline-offset:1px}
+.pvnote{margin:8px 0 4px;color:#e8c66a}
+.pvopts{margin-top:14px}.ppvote .evc,.ppvote .pvopts{padding-top:6px}
+html.art-pixel .pvchip{border-radius:2px;border-width:3px;box-shadow:2px 2px 0 rgba(0,0,0,.6)}html.art-pixel .pvchip img{border-radius:0;image-rendering:pixelated}
+@media (prefers-reduced-motion:reduce){.pvchip{animation:none}}
+/* followers as full characters (followerai.js): magicka/stamina under their health, row + tactic; Tactics tab; foe weak/resist chips (combo.js) */
+.tbu .faibars{display:flex;gap:3px;margin-top:2px}.tbu .faibars .tbbar{flex:1;height:4px;min-height:4px}.tbu .faibars .tbbar i{height:100%}
+.tbu .fairow{display:block;font-size:10px;opacity:.75;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fol2 .fol2tac{display:flex;flex-direction:column;gap:6px;margin:6px 0 10px}
+.fol2 .fol2tac .item.tac{width:100%;text-align:left;cursor:pointer;font:inherit;color:inherit}
+.fol2 .fol2tac .item.tac.on{box-shadow:inset 3px 0 0 #e8c46a;background:rgba(232,196,106,.12)}
+.tbst .st.weak{color:#ffd27a;background:rgba(110,70,10,.75)}.tbst .st.resist{color:#a9c4e8;background:rgba(20,40,70,.75)}
+html.art-pixel .tbu .faibars .tbbar,html.art-pixel .tbu .faibars .tbbar i,html.art-pixel .fol2 .fol2tac .item.tac,html.art-pixel .tbst .st.weak,html.art-pixel .tbst .st.resist{border-radius:0}
+/* dungeon mini-games (dungeongames.js) */
+.lockpick.dgame{z-index:96}.dgame .lpcard{width:min(380px,100%)}.dgame canvas{border:1px solid rgba(214,178,94,.3);user-select:none;-webkit-user-select:none}
+.dgrow .dgk{min-height:58px;font-size:17px;user-select:none;-webkit-user-select:none;touch-action:none}
+.dgok{color:#9fd28a}.dgbad{color:#e58a6f}.dgwait{color:var(--mute,#a9a395);font-style:italic}
+.dglive{margin:8px 0 0;font-size:12px;letter-spacing:.06em;color:#d6b25e}
+.dgwatch .lpcard{box-shadow:0 0 0 1px rgba(214,178,94,.45),0 20px 60px rgba(0,0,0,.6)}.dgwatch #dgwtxt{min-height:38px}
+.dgame .lpcard.dgwin{animation:dgwin .5s ease-out}.dgame .lpcard.dglose{animation:lpsnap .35s}
+@keyframes dgwin{50%{transform:scale(1.03)}}
+@media (prefers-reduced-motion:reduce){.dgame .lpcard.dgwin,.dgame .lpcard.dglose{animation:none}}
+/* [tooltips] tooltip.js: hover with a mouse, hold a finger, or tab onto almost anything */
+.tt-probe{position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
+.tip{position:fixed;z-index:400;left:0;top:0;box-sizing:border-box;min-width:140px;padding:9px 12px 10px;color:#ece6d6;font:400 clamp(13px,.35vw + 11.5px,16px)/1.38 "Barlow Semi Condensed",system-ui,sans-serif;background:linear-gradient(180deg,rgba(14,14,13,.96),rgba(8,8,8,.96));border:1px solid rgba(236,230,214,.18);border-top-color:rgba(226,187,100,.7);border-bottom-color:rgba(226,187,100,.7);border-radius:3px;box-shadow:0 10px 28px rgba(0,0,0,.65);pointer-events:none;opacity:0;transform:translateY(3px);transition:opacity .12s,transform .12s;overflow-wrap:anywhere}
+.tip.on{opacity:1;transform:none}
+.tip.tt-below{transform:translateY(-3px)}.tip.tt-below.on{transform:none}
+.tip::after{content:"";position:absolute;left:var(--ax,50%);width:9px;height:9px;margin-left:-5px;background:#0b0b0b;border:1px solid rgba(226,187,100,.7);transform:rotate(45deg)}
+.tip.tt-above::after{bottom:-6px;border-top:0;border-left:0}
+.tip.tt-below::after{top:-6px;border-bottom:0;border-right:0}
+.tip p{margin:4px 0 0}
+.tip .tt-plain{margin:0}
+.tip .tt-h{display:block;font:700 1.08em/1.2 "Cinzel",Georgia,serif;letter-spacing:.03em;color:#f4ecd8}
+.tip .tt-h[class*="sch-"]{color:var(--sch,#f4ecd8)}
+.tip .tt-h.tt-hp{color:#ef7d73}.tip .tt-h.tt-mp{color:#8fb8f2}.tip .tt-h.tt-sp{color:#8fd49a}.tip .tt-h.tt-gold{color:var(--gold)}
+.tip .tt-sub{margin-top:1px;font-size:.86em;letter-spacing:.06em;text-transform:uppercase;color:#a49d8c}
+.tip .tt-stats{display:flex;flex-wrap:wrap;gap:2px 12px;margin:6px 0 2px;padding:5px 0 4px;border-top:1px solid rgba(236,230,214,.12);border-bottom:1px solid rgba(236,230,214,.12);font-size:.9em;color:#a49d8c}
+.tip .tt-stats b{color:#f4ecd8;font-weight:600;font-variant-numeric:tabular-nums}
+.tip .tt-hint{color:#a49d8c;font-size:.88em;font-style:italic}
+.tip .tt-up{color:#8fdc8a}.tip .tt-dn{color:#ff8b7e}.tip .tt-eq{color:var(--gold)}
+.tip .spl-info{margin:6px 0 2px;font-size:.9em}
+.tip .tt-note{margin:0 0 6px;padding-bottom:5px;border-bottom:1px solid rgba(236,230,214,.12);color:var(--gold);font-size:.92em}
+.tip .tt-tome{margin-top:6px;font-size:.92em}
+html.art-pixel .tip,.tip.tt-px{border-radius:0;border:2px solid #d6b25e;background:#0d0d0c;box-shadow:4px 4px 0 #000;transition:opacity .1s steps(2)}
+html.art-pixel .tip::after,.tip.tt-px::after{border-width:2px;background:#0d0d0c;border-color:#d6b25e}
+html.art-pixel .tip .tt-h,.tip.tt-px .tt-h{font-family:inherit;text-shadow:2px 2px 0 #000}
+@media (prefers-reduced-motion:reduce){.tip,.tip.tt-below{transition:none;transform:none}}
+/* holding a finger on these shows a tooltip: no phone menu or text selection */
+[data-tip],[data-tip-k],[data-tipt],.sky-row,.item,.hb,.dslot,.qhead,.tw-card,.skill,[data-sk-perk],#lvlb,#goldv{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+/* fight controls (fightctl.js): the action bar, quick slots, AP pips, pickers, targeting, keys */
+#tbf .fc{display:flex;flex-direction:column;gap:7px}
+#tbf .fc .ic,#tbf .fc img,#tbf .fc canvas,#tbf .fc .fc-sic,#tbf .fc .cp,#tbf .fc .fc-k,#tbf .fc .fc-n{pointer-events:none;-webkit-user-drag:none;user-select:none;-webkit-user-select:none}   /* a press on an icon is a press on its button, never an image drag */
+#tbf .fc .tbact{min-height:52px;border-radius:10px;border:1px solid rgba(214,178,94,.34);background:linear-gradient(180deg,rgba(44,41,36,.97),rgba(15,14,12,.98));box-shadow:inset 0 1px 0 rgba(255,255,255,.07),inset 0 -10px 18px rgba(0,0,0,.35),0 2px 0 rgba(0,0,0,.65);color:#efe6cf;overflow:hidden;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .12s cubic-bezier(.3,.7,.4,1.4),box-shadow .15s,border-color .15s,filter .15s,opacity .15s}
+#tbf .fc .tbact b{font:600 13px/1.1 "Barlow Semi Condensed",sans-serif;letter-spacing:.07em;text-transform:uppercase;text-shadow:0 1px 2px #000}
+#tbf .fc .tbact small{font-size:10.5px;opacity:.78;line-height:1.15}
+#tbf .fc .tbact .ic{display:flex;align-items:center;justify-content:center;font-size:20px;line-height:1}
+#tbf .fc .tbact .ic img,#tbf .fc .tbact .ic canvas{display:block;width:30px;height:30px;filter:drop-shadow(0 2px 2px rgba(0,0,0,.8))}
+#tbf .fc .tbact .cp{bottom:4px;gap:3px}
+#tbf .fc .tbact .cp i{width:6px;height:6px;background:linear-gradient(135deg,#ffe7a6,#c59a3b);box-shadow:0 0 4px rgba(255,210,120,.55);opacity:1}
+#tbf .fc .tbact .fc-all{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#f3d98b;opacity:.8}
+#tbf .fc .tbact:not([disabled]):hover,#tbf .fc .tbact:not([disabled]):focus-visible{border-color:#e2bb64;box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 0 0 1px rgba(226,187,100,.35),0 0 18px rgba(226,187,100,.28);outline:none}
+#tbf .fc .tbact:not([disabled]):active,#tbf .fc .tbact.fc-press{transform:scale(.94);filter:brightness(1.25)}
+#tbf .fc .tbact.fc-press::after{content:"";position:absolute;left:var(--px,50%);top:var(--py,50%);width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:radial-gradient(circle,rgba(255,231,166,.8),rgba(255,231,166,0) 70%);pointer-events:none;animation:fcrip .45s ease-out forwards}
+@keyframes fcrip{to{transform:scale(16);opacity:0}}
+#tbf .fc .tbact[disabled]{opacity:.62;filter:saturate(.25);cursor:not-allowed;box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
+#tbf .fc .tbact[disabled] .ic{opacity:.55}
+#tbf .fc .tbact[disabled] .cp i{background:#6d6658;box-shadow:none}
+#tbf .fc .tbact .fc-why{color:#ff9f8a;opacity:1;font-weight:600;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;padding:0 3px}
+#tbf .fc .tbact[data-tz="foe"]{border-color:rgba(230,120,90,.45)}#tbf .fc .tbact[data-tz="self"],#tbf .fc .tbact[data-tz="ally"]{border-color:rgba(130,180,255,.45)}
+#tbf .fc .fc-k{display:none;position:absolute;top:3px;right:4px;min-width:14px;padding:0 3px;border-radius:3px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.55);font:600 9.5px/13px "Barlow Semi Condensed",sans-serif;color:#d9d2c0;text-align:center;letter-spacing:.03em}
+@media (hover:hover) and (pointer:fine){#tbf .fc .fc-k{display:block}}
+#tbf .fc .fc-n{position:absolute;top:3px;left:4px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#7a1f1a;border:1px solid rgba(255,200,180,.5);font:700 10px/14px "Barlow Semi Condensed",sans-serif;color:#fff}
+/* quick slots */
+#tbf .fc-tray{display:grid;grid-template-columns:repeat(var(--n,3),minmax(0,1fr));gap:6px}
+#tbf .fc-tray .tbact{min-height:54px;padding:5px 2px 10px;gap:1px}
+#tbf .fc-tray .tbact .ic img,#tbf .fc-tray .tbact .ic canvas{width:24px;height:24px}
+#tbf .fc-tray .tbact b{font-size:10.5px;letter-spacing:.03em;max-width:100%;padding:0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#tbf .fc-tray .tbact .fc-why{font-size:9px}
+#tbf .fc-tray .tbact.sugg{border-style:dashed}
+#tbf .fc-tray .tbact.shout{border-color:rgba(200,160,255,.55);background:linear-gradient(180deg,rgba(48,38,60,.97),rgba(16,13,20,.98))}
+#tbf .fc-empty{margin:0;padding:8px;border:1px dashed rgba(214,178,94,.3);border-radius:10px;font-size:11.5px;text-align:center;color:var(--mute,#a49d8c)}
+/* the three big moves */
+#tbf .fc-main{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+#tbf .fc .tbact.big{min-height:clamp(70px,10.5vh,92px);padding:6px 4px 12px;gap:3px;background:linear-gradient(180deg,rgba(62,52,40,.98),rgba(20,17,13,.99))}
+#tbf .fc .tbact.big::before{content:"";position:absolute;left:14%;right:14%;top:0;height:1px;background:linear-gradient(90deg,transparent,rgba(243,217,139,.75),transparent)}
+#tbf .fc .tbact.big .ic img,#tbf .fc .tbact.big .ic canvas{width:clamp(32px,9vw,42px);height:clamp(32px,9vw,42px)}
+#tbf .fc .tbact.big b{font-size:clamp(12px,3.6vw,14.5px)}
+#tbf .fc .tbact.big.pw{background:linear-gradient(180deg,rgba(78,44,30,.98),rgba(24,14,10,.99))}
+#tbf .fc .tbact.big.gd{background:linear-gradient(180deg,rgba(36,46,58,.98),rgba(12,15,20,.99))}
+/* magic / items / flee / end turn */
+#tbf .fc-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) minmax(0,2.3fr);gap:6px}
+#tbf .fc .tbact.fc-m{min-height:54px;padding:4px 2px 10px;gap:1px}
+#tbf .fc .tbact.fc-m .ic img,#tbf .fc .tbact.fc-m .ic canvas{width:24px;height:24px}
+#tbf .fc .tbact.fc-m b{font-size:11px}#tbf .fc .tbact.fc-m small{font-size:9.5px;white-space:nowrap}
+#tbf .fc .tbact.menu{border-color:rgba(200,160,255,.38)}
+#tbf .fc .tbact.end{grid-column:auto;min-height:54px;flex-direction:row;flex-wrap:wrap;align-content:center;justify-content:center;column-gap:8px;row-gap:0;padding:4px 8px;background:linear-gradient(180deg,rgba(40,52,66,.98),rgba(13,17,23,.99));border-color:rgba(160,200,255,.5)}
+#tbf .fc .tbact.end .ic{color:#cfe1ff}
+#tbf .fc .tbact.end b{font-size:14px}
+#tbf .fc .tbact.end small{flex-basis:100%;text-align:center;font-size:10px}
+#tbf .fc .tbact.end.ready{border-color:#e2bb64;animation:fcready 1.6s ease-in-out infinite}
+@keyframes fcready{50%{box-shadow:0 0 0 1px rgba(226,187,100,.5),0 0 22px rgba(226,187,100,.45)}}
+/* AP */
+#tbf .tbap .fc-apl{font:700 11px "Barlow Semi Condensed",sans-serif;letter-spacing:.12em;color:#f3d98b}
+#tbf .tbap .fc-apl.sap{color:#a9c6ff;margin-left:6px}
+#tbf .tbap .fc-pips{display:flex;gap:5px;padding:0 3px}
+#tbf .tbap .fc-pips i{width:14px;height:14px;transition:transform .15s,background .15s}
+#tbf .tbap .fc-pips i.pv{background:radial-gradient(circle at 35% 35%,#fff,#f3d98b);animation:fcpv .7s ease-in-out infinite;box-shadow:0 0 9px rgba(255,240,200,.9)}
+@keyframes fcpv{50%{transform:rotate(45deg) scale(.72);opacity:.55}}
+#tbf .tbap .fc-pips i.lost{animation:fclost .5s ease-out forwards}
+@keyframes fclost{0%{background:#fff3c8;transform:rotate(45deg) scale(1.5);box-shadow:0 0 14px #ffd27a}100%{transform:rotate(45deg) scale(1);background:transparent;box-shadow:none}}
+#tbf .tbap .fc-apn{font:700 15px "Barlow Semi Condensed",sans-serif;color:#fff1cc;margin-left:2px}#tbf .tbap .fc-apn small{font-size:11px;opacity:.6}
+#tbf .tbap.short .fc-apn{color:#ff8a78}
+/* the bar rises in at the start of your turn */
+#tbf .fc.enter>*{animation:fcrise .34s cubic-bezier(.2,.8,.3,1.1) backwards}
+#tbf .fc.enter>*:nth-child(2){animation-delay:.05s}#tbf .fc.enter>*:nth-child(3){animation-delay:.1s}
+@keyframes fcrise{from{opacity:0;transform:translateY(18px)}}
+/* magic / items picker */
+#tbf .fc-sheet{display:flex;flex-direction:column;gap:7px;max-height:none}
+#tbf .fc-head{flex-wrap:wrap;align-items:center}
+#tbf .fc-head small{flex-basis:100%;font-size:10.5px}
+#tbf .fc-tabs{display:flex;gap:4px;flex:1}
+#tbf .fc-tab{flex:1;min-height:40px;border-radius:8px 8px 2px 2px;border:1px solid rgba(214,178,94,.25);border-bottom-width:2px;background:rgba(0,0,0,.35);color:#cfc6b0;font:600 13px "Barlow Semi Condensed",sans-serif;letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
+#tbf .fc-tab{display:flex;align-items:center;justify-content:center;gap:7px}#tbf .fc-tab .ic img,#tbf .fc-tab .ic canvas{display:block;width:20px;height:20px}#tbf.pixel .fc-tab .ic img{image-rendering:pixelated}
+#tbf .fc-tab.on{color:#f3d98b;border-color:rgba(226,187,100,.7);border-bottom-color:#e2bb64;background:linear-gradient(180deg,rgba(226,187,100,.16),rgba(0,0,0,.3))}
+#tbf .fc-chips{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;padding-bottom:1px}#tbf .fc-chips::-webkit-scrollbar{display:none}
+#tbf .fc-chip{flex:none;min-height:32px;padding:0 11px;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.35);color:#d9d2c0;font:600 12px "Barlow Semi Condensed",sans-serif;letter-spacing:.05em;cursor:pointer}
+#tbf .fc-chip.on{border-color:#e2bb64;color:#1a150c;background:linear-gradient(180deg,#f3d98b,#c59a3b)}
+#tbf .fc-list{display:flex;flex-direction:column;gap:5px;max-height:min(44vh,420px);overflow:auto;overscroll-behavior:contain;padding-right:2px}
+#tbf .fc .tbsp{display:grid;grid-template-columns:minmax(0,1fr) 38px 66px 66px;gap:5px;align-items:center;padding:3px 3px 3px 5px;border-radius:9px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05)}
+#tbf .fc .tbsp .nm{display:flex;align-items:center;gap:7px;min-width:0;font-size:13.5px}
+#tbf .fc .tbsp .fc-nm{min-width:0;overflow:hidden;text-overflow:ellipsis}#tbf .fc .tbsp .fc-nm small{display:block;font-size:10.5px;opacity:.7;color:#d9d2c0}
+#tbf .fc .fc-sic img,#tbf .fc .fc-sic canvas{display:block;width:30px;height:30px}
+#tbf .fc .tbsp .tbact{min-height:48px;padding:3px 2px 10px}
+#tbf .fc .tbact.fc-cast .ic{display:none}
+#tbf .fc-star{width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.35);color:rgba(255,255,255,.35);font-size:17px;line-height:1;cursor:pointer;transition:transform .15s,color .15s}
+#tbf .fc-star.on{color:#ffd24a;border-color:rgba(255,210,74,.6);text-shadow:0 0 8px rgba(255,210,74,.7)}
+#tbf .fc-star.fc-press{transform:scale(1.25)}
+#tbf .fc .tbact.fc-back{min-height:46px;flex-direction:row;gap:8px;font:600 13px "Barlow Semi Condensed",sans-serif;letter-spacing:.1em;text-transform:uppercase}
+#tbf .fc .tbact.fc-back .fc-k{position:static}
+#tbf .fc-pick.enter .fc-sheet{animation:fcrise .28s cubic-bezier(.2,.8,.3,1.1)}
+/* choosing who gets a heal */
+#tbf.fc-aiming .tbu.fc-tgt{cursor:pointer;outline:2px solid #e2bb64;outline-offset:1px;animation:fctgt 1s ease-in-out infinite}
+@keyframes fctgt{50%{box-shadow:0 0 0 3px rgba(226,187,100,.25),0 0 20px rgba(226,187,100,.45)}}
+#tbf.fc-aiming .tbu:not(.fc-tgt),#tbf.fc-aiming .tbstage{opacity:.55;transition:opacity .2s}
+#tbf .tbact.fc-armed{border-color:#e2bb64!important;box-shadow:0 0 0 2px rgba(226,187,100,.55),0 0 18px rgba(226,187,100,.4)!important}
+#tbf .fc-aimbar{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 52px);transform:translateX(-50%);z-index:76;width:min(94vw,480px);display:flex;align-items:center;gap:10px;padding:9px 10px 9px 14px;border-radius:10px;background:rgba(14,13,11,.96);border:1px solid rgba(226,187,100,.65);box-shadow:0 10px 30px rgba(0,0,0,.6);font-size:13px;color:#f2ead6;animation:fcrise .2s ease-out}
+#tbf .fc-aimbar b{color:#f3d98b}#tbf .fc-aimbar span{flex:1}
+#tbf .fc-cancel{flex:none;width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.06);color:#eee;font-size:15px;cursor:pointer}
+#tbf .tbu.fc-hitme{animation:fchit .4s ease-out}@keyframes fchit{40%{transform:scale(1.04);box-shadow:0 0 24px rgba(120,240,150,.6)}}
+/* a strike being aimed: the foe lights up */
+#tbf.fc-aimfoe .tbu.foe{border-color:rgba(255,120,90,.75);box-shadow:0 0 0 1px rgba(255,120,90,.35),0 0 18px rgba(255,90,60,.3)}
+#tbf.fc-aimfoe .tbstage{box-shadow:inset 0 0 0 2px rgba(255,120,90,.35)}
+/* continue / skip */
+#tbf .tbdock .tbdone{min-height:56px;font:700 15px "Barlow Semi Condensed",sans-serif;letter-spacing:.12em;text-transform:uppercase}
+#tbf .tbskip{min-height:36px}
+/* small phones, short screens, big screens */
+@media (max-width:380px){#tbf .fc .tbact.fc-m small{display:none}#tbf .fc .tbact.end small{font-size:9px}#tbf .fc .tbsp{grid-template-columns:minmax(0,1fr) 34px 58px 58px}#tbf .fc .tbsp .nm{font-size:12.5px}}
+@media (max-height:700px){#tbf .fc .tbact.big{min-height:64px}#tbf .fc-tray .tbact,#tbf .fc .tbact.fc-m,#tbf .fc .tbact.end{min-height:48px}}
+@media (min-width:900px) and (min-height:700px){#tbf .fc .tbact.big{min-height:92px}#tbf .fc-tray .tbact{min-height:60px}}
+/* pixel art */
+#tbf.pixel .fc .tbact,#tbf.pixel .fc-tab,#tbf.pixel .fc-chip,#tbf.pixel .fc-star,#tbf.pixel .fc .tbsp,#tbf.pixel .fc-aimbar,#tbf.pixel .fc-empty,#tbf.pixel .fc .fc-k,#tbf.pixel .fc .fc-n,#tbf.pixel .fc-cancel{border-radius:0}
+#tbf.pixel .fc .tbact{border-width:2px;box-shadow:inset -3px -3px 0 rgba(0,0,0,.55),inset 3px 3px 0 rgba(255,255,255,.09);transition:none}
+#tbf.pixel .fc .tbact:not([disabled]):active,#tbf.pixel .fc .tbact.fc-press{transform:translateY(2px);box-shadow:inset 3px 3px 0 rgba(0,0,0,.55)}
+#tbf.pixel .fc .tbact.fc-press::after{display:none}
+#tbf.pixel .fc .tbact .ic img,#tbf.pixel .fc .tbact .ic canvas,#tbf.pixel .fc .fc-sic img{image-rendering:pixelated}
+#tbf.pixel .fc .tbact.big::before{display:none}
+#tbf.pixel .fc .tbact b,#tbf.pixel .fc-tab,#tbf.pixel .fc-chip{text-shadow:2px 2px 0 #000}
+#tbf.pixel .fc .tbact .cp i{background:#f3d98b;box-shadow:none;transform:none}
+/* reduce motion */
+@media (prefers-reduced-motion:reduce){#tbf .fc.enter>*,#tbf .fc-pick.enter .fc-sheet,#tbf .fc .tbact.end.ready,#tbf .tbap .fc-pips i.pv,#tbf .tbap .fc-pips i.lost,#tbf.fc-aiming .tbu.fc-tgt,#tbf .fc-aimbar,#tbf .tbu.fc-hitme{animation:none}#tbf .fc .tbact.fc-press::after{display:none}}
+html.a11y-still #tbf .fc *,html.a11y-still #tbf.fc-aiming .tbu.fc-tgt{animation:none!important}
+/* spell tome info before you buy or read it (tomeinfo.js), SkyUI item info */
+.item.ti-row{flex-wrap:wrap}
+.ti-box{flex:0 0 auto;box-sizing:border-box;width:calc(100% - 44px);min-width:0;margin:2px 0 0 44px;overflow-wrap:anywhere;padding:5px 8px;font-size:13px;line-height:1.4;border-left:2px solid rgba(214,178,94,.35);background:rgba(0,0,0,.18);color:#d9d2c2}
+.ti-box i,.ti-what{font-style:normal;color:#c9c2b3}
+.ti-box .nv{white-space:normal}
+.ti-v{font-size:12.5px;margin-top:3px;font-weight:600}.ti-v.ok{color:#8fd49a}.ti-v.low{color:#e8a25c}
+.ti-card{margin:8px 0 4px;padding:8px 10px;border:1px solid rgba(214,178,94,.22);border-radius:6px;background:rgba(0,0,0,.25)}
+.ti-h{font-family:var(--title,Cinzel),serif;font-size:16px;letter-spacing:.06em;color:#f4ecd8;text-align:center;margin-bottom:6px}
+.ti-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:rgba(214,178,94,.18);border-block:1px solid rgba(214,178,94,.3);margin-bottom:6px}
+.ti-stat{background:rgba(14,15,18,.92);padding:5px 2px;text-align:center;min-width:0}
+.ti-stat b{display:block;font-size:14px;color:#f4ecd8;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.ti-stat.mana b{color:#6fa8ff}
+.ti-stat small{display:block;font-family:var(--title,Cinzel),serif;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#d6b25e}
+.ti-what{margin:4px 0;font-size:13.5px;line-height:1.45}
+.ti-card .spl-info{margin:4px 0}
+.lv-row .ti-line,.loot-row .ti-line{display:block;white-space:normal;font-size:11.5px;line-height:1.3;color:var(--mute,#a9a395)}
+html.art-pixel .ti-box,html.art-pixel .ti-card,html.art-pixel .ti-stats{border-radius:0}html.art-pixel .ti-box{border-left-width:3px}
+#side[data-tab=log] .ti-box{color:#3b2e1e}
+html.a11y-hc .ti-box,html.a11y-hc .ti-box i,html.a11y-hc .ti-what{color:#ece6d8}
+/* foe targets (foeintent.js): "→ Lydia" on each intent, a crosshair on the targeted card, an arrow in the scene */
+.tbint .fitg{margin-left:2px;padding-left:5px;border-left:1px solid rgba(255,140,120,.35);font-size:11px;font-weight:700;color:#ffc2b4;letter-spacing:.01em}
+.tbint .fitg.me{color:#ff8f7a}.tbint .fitg.re::after{content:" ↻";font-size:10px;opacity:.85}
+.tbu.fit-on{position:relative}
+.tbu.fit-next{border-color:rgba(232,70,48,.9);box-shadow:0 0 0 1px rgba(232,70,48,.85),0 0 14px rgba(232,60,40,.4);animation:fitpulse 1.6s ease-in-out infinite}
+@keyframes fitpulse{50%{box-shadow:0 0 0 1px rgba(255,96,64,1),0 0 22px rgba(255,70,40,.65)}}
+.fitm{position:absolute;top:4px;right:5px;z-index:4;display:inline-flex;align-items:center;gap:2px;height:16px;box-sizing:border-box;padding:0 5px 0 2px;border-radius:9px;background:rgba(40,8,5,.92);border:1px solid #c8402c;color:#ffd8cc;font-size:12px;line-height:1;font-size:11px;box-shadow:0 2px 6px rgba(0,0,0,.6)}
+.fitm .xh{position:relative;display:inline-block;width:14px;height:14px;border:2px solid #ff5a3a;border-radius:50%;box-sizing:border-box;flex:none}
+.fitm .xh::before,.fitm .xh::after{content:"";position:absolute;left:50%;top:50%;background:#ff5a3a;transform:translate(-50%,-50%)}
+.fitm .xh::before{width:18px;height:2px}.fitm .xh::after{width:2px;height:18px}
+.fitm b{font-weight:400;letter-spacing:1px}.fitm small{font-size:10px;color:#ffb4a4}
+.fitm.next{background:rgba(118,16,8,.95);border-color:#ff5a3a}
+.tbu.ally .fitm{top:3px;right:3px;font-size:10px;height:14px}.tbu.ally .fitm .xh{width:12px;height:12px}
+.fitarrow{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2;overflow:visible}
+.fitarrow .ln{fill:none;stroke:#ff4a30;stroke-dasharray:7 5;stroke-linecap:round;opacity:.92;filter:drop-shadow(0 0 2px rgba(0,0,0,.9));animation:fitdash .9s linear infinite}
+.fitarrow .ah{fill:#ff4a30}.fitarrow.big .ln{stroke:#ff2a10;stroke-dasharray:11 4}.fitarrow.big .ah{fill:#ff2a10}
+.fitarrow .tgt circle{fill:rgba(255,60,40,.08);stroke:#ff4a30;stroke-width:2}.fitarrow .tgt path{stroke:#ff4a30;stroke-width:2}
+@keyframes fitdash{to{stroke-dashoffset:-12}}
+html.art-pixel .fitm,html.art-pixel .fitm .xh{border-radius:0}html.art-pixel .fitm{border-width:2px;box-shadow:2px 2px 0 rgba(0,0,0,.6)}
+html.art-pixel .fitarrow .ln{stroke-linecap:butt;stroke-dasharray:6 6;filter:none}html.art-pixel .tbu.fit-next{box-shadow:0 0 0 2px #c8321e}
+@media (max-width:380px){.tbint .fitg{font-size:10px;padding-left:4px}}
+@media (prefers-reduced-motion:reduce){.tbu.fit-next,.fitarrow .ln{animation:none!important}}
 </style>
 <script src="access.js"></script>
 </head>
@@ -1842,6 +2122,7 @@ html.art-pixel .acfield input,html.art-pixel .acchar,html.art-pixel .acnote,html
 <script src="wars.js"></script>
 <script src="curses.js"></script>
 <script src="smithing.js"></script>
+<script src="jewelry.js"></script>
 <script src="craftfair.js"></script>
 <script src="social.js"></script>
 <script src="roam.js"></script>
@@ -1849,16 +2130,19 @@ html.art-pixel .acfield input,html.art-pixel .acchar,html.art-pixel .acnote,html
 <script src="solstheim.js"></script>
 <script src="explore.js"></script>
 <script src="gather.js"></script>
+<script src="placestuff.js"></script>
 <script src="ammo.js"></script>
 <script src="tomes.js"></script>
 <script src="magic.js"></script>
 <script src="spellbook.js"></script>
+<script src="tomeinfo.js"></script>
 <script src="spellcraft.js"></script>
 <script src="combatai.js"></script>
 <script src="sneak2.js"></script>
 <script src="aiset.js"></script>
 <script src="tbradial.js"></script>
 <script src="tbfight.js"></script>
+<script src="sharedfight.js"></script>
 <script src="foegroups.js"></script>
 <script src="dragons.js"></script>
 <script src="foekit.js"></script>
@@ -1867,7 +2151,9 @@ html.art-pixel .acfield input,html.art-pixel .acchar,html.art-pixel .acnote,html
 <script src="shieldfx.js"></script>
 <script src="tbtips.js"></script>
 <script src="tbui.js"></script>
+<script src="fightctl.js"></script>
 <script src="fightread.js"></script>
+<script src="foeintent.js"></script>
 <script src="guide.js"></script>
 <script src="patchnotes.js"></script>
 <script src="market.js"></script>
@@ -1878,6 +2164,8 @@ html.art-pixel .acfield input,html.art-pixel .acchar,html.art-pixel .acnote,html
 <script src="coop.js"></script>
 <script src="party.js"></script>
 <script src="followers2.js"></script>
+<script src="followerai.js"></script>
+<script src="combo.js"></script>
 <script src="partyplay.js"></script>
 <script src="lootvote.js"></script>
 <script src="account.js"></script>
@@ -1886,17 +2174,19 @@ html.art-pixel .acfield input,html.art-pixel .acchar,html.art-pixel .acnote,html
 <script src="map.js"></script>
 <script src="backup.js"></script>
 <script src="sound.js"></script>
-<script src="art.js"></script>
+<script src="fitcanvas.js"></script><script src="art.js"></script>
 <script src="assets.js"></script>
 <script src="colorcode.js"></script>
 <script src="skyart.js"></script>
 <script src="combatfx.js"></script>
 <script src="bscdata.js"></script>
 <script src="battlescene.js"></script>
+<script src="foerig.js"></script>
 <script src="fightart.js"></script>
 <script src="beastart.js"></script>
 <script src="gearlook.js"></script>
 <script src="heroart.js"></script>
+<script src="figart.js"></script>
 <script src="mapart.js"></script>
 <script src="placeart.js"></script>
 <script src="eventart.js"></script>
@@ -1911,21 +2201,25 @@ html.art-pixel .acfield input,html.art-pixel .acchar,html.art-pixel .acnote,html
 <script src="homeart.js"></script>
 <script src="titleart.js"></script>
 <script src="fxart.js"></script>
+<script src="travelart.js"></script>
 <script src="solart.js"></script>
 <script src="skyui.js"></script>
 <script src="hud.js"></script>
 <script src="immerse.js"></script>
 <script src="pickgame.js"></script>
 <script src="sneakmode.js"></script>
+<script src="vision.js"></script>
 <script src="rumours.js"></script>
 <script src="motion.js"></script>
 <script src="favwheel.js"></script>
 <script src="craftgames.js"></script>
 <script src="minegame.js"></script>
+<script src="dungeongames.js"></script>
 <script src="hunting.js"></script>
 <script src="craftqol.js"></script>
 <script src="polish.js"></script>
 <script src="caravans.js"></script>
+<script src="caravanroad.js"></script>
 <script src="worldevents.js"></script>
 <script src="economy.js"></script>
 <script src="bards.js"></script>
@@ -1935,6 +2229,7 @@ html.art-pixel .acfield input,html.art-pixel .acchar,html.art-pixel .acnote,html
 <script src="fabdodge.js"></script>
 <script src="nickname.js"></script>
 <script src="desktop.js"></script>
+<script src="pcupdate.js"></script>
 <script src="i18n_story.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
@@ -1942,6 +2237,7 @@ html.art-pixel .acfield input,html.art-pixel .acchar,html.art-pixel .acnote,html
 <script src="onboard.js"></script>
 <script src="search.js"></script>
 <script src="remind.js"></script>
+<script src="tooltip.js"></script>
 <script src="ui.js"></script>
 </body>
 </html>

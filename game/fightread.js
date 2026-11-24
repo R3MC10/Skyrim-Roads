@@ -95,7 +95,7 @@ const FIGHTREAD = (() => {
       if (it.dot && f.e) o.dotDmg = Math.max(1, r0((f.e.damage || 5) * (it.dot === "bleeding" ? 0.2 : 0.35)));
       out.push(o);
     }
-    return out;
+    return typeof FOEINTENT !== "undefined" ? FOEINTENT.tag(sess, out) : out;   // foeintent.js: who each one goes for
   }
 
   /* how much health goes this round, before your next turn: blows on you, your poison/burning, and the foe's own burning */
@@ -104,8 +104,10 @@ const FIGHTREAD = (() => {
     const allies = (f.allies || []).filter((a) => !a.down && a.hp > 0).length;
     const pMe = allies ? 1 - (allies / (allies + 1)) * 0.7 : 1;   // the engine's odds that a blow comes at you, not a teammate
     const me = { hit: 0, dot: 0, heal: 0, parts: [] }, foe = { dot: 0, heal: 0, parts: [] };
-    const hitSum = its.reduce((a, it) => a + (it.mid || 0), 0) * pMe;
-    if (hitSum >= 1) { me.hit = r0(hitSum); me.parts.push({ k: "hit", ic: "⚔", n: me.hit, t: `${n} foe ${n === 1 ? "action" : "actions"} left this round${allies ? " (some may go at your teammates)" : ""}` }); }
+    const known = its.some((it) => it.tgt);   // foeintent.js: the targets are rolled already, so only the blows aimed at you count
+    const hitSum = known ? its.reduce((a, it) => a + (it.tgt && it.tgt.me ? it.mid || 0 : 0), 0) : its.reduce((a, it) => a + (it.mid || 0), 0) * pMe;
+    const atMe = known ? its.filter((it) => it.tgt && it.tgt.me && it.mid).length : n;
+    if (hitSum >= 1) { me.hit = r0(hitSum); me.parts.push({ k: "hit", ic: "⚔", n: me.hit, t: known ? `${atMe} foe ${atMe === 1 ? "blow" : "blows"} aimed at you this round` : `${n} foe ${n === 1 ? "action" : "actions"} left this round${allies ? " (some may go at your teammates)" : ""}` }); }
     if (f.kitDot && n) {   // ticks at the start of each foe action
       const d = Math.min(f.hp - 1, f.kitDot.dmg * Math.min(f.kitDot.turns, n));
       if (d >= 1) { me.dot += d; me.parts.push({ k: f.kitDot.name === "burning" ? "burn" : f.kitDot.name === "bleeding" ? "bleed" : "poison", ic: f.kitDot.name === "burning" ? "🔥" : f.kitDot.name === "bleeding" ? "🩸" : "☠", n: r0(d), t: `${f.kitDot.name}: ${r0(f.kitDot.dmg)} each foe turn, ${f.kitDot.turns} more` }); }
@@ -161,12 +163,13 @@ const FIGHTREAD = (() => {
     if (it.unknown) return `${name} attacks: about ${rng(it)} damage (dragons fly, land and breathe as they please).`;
     if (it.heal) return `${name} will heal itself about ${it.heal}.`;
     if (it.buff || it.tele) return `${name}: ${it.label.toLowerCase()} (${it.note}). No damage this turn.${it.tele ? " Guard, or hit it hard to break it." : ""}`;
-    return `${name}: ${it.label.toLowerCase()} for about ${rng(it)} damage${it.dot ? ` and ${it.dot} (${it.dotDmg} a turn)` : ""}${it.note ? ` ${it.note}` : ""}. Your armour and guard are counted.`;
+    return `${name}: ${it.label.toLowerCase()} for about ${rng(it)} damage${it.dot ? ` and ${it.dot} (${it.dotDmg} a turn)` : ""}${it.note ? ` ${it.note}` : ""}. ${it.tgt && !it.tgt.me ? "Their" : "Your"} armour and guard are counted.`;
   }
   function intentHTML(it, name) {
     const cls = it.skip ? "skip" : it.big ? "big" : it.tele ? "tele" : it.heal ? "heal" : it.buff ? "buff" : "hit";
     const n = it.heal ? `+${it.heal}` : rng(it);
-    return `<span class="tbint ${cls}" data-tip="${esc(intentTip(it, name))}">${it.ic}${n ? ` <b>${n}</b>` : ` <b class="w">${esc(it.label)}</b>`}${it.dot ? "<em>☠</em>" : ""}</span>`;
+    const FI = typeof FOEINTENT !== "undefined" ? FOEINTENT : null;   // foeintent.js: "→ Lydia"
+    return `<span class="tbint ${cls}${it.tgt ? " tgt" : ""}" data-tip="${esc(intentTip(it, name) + (FI ? FI.tipText(it, name) : ""))}">${it.ic}${n ? ` <b>${n}</b>` : ` <b class="w">${esc(it.label)}</b>`}${it.dot ? "<em>☠</em>" : ""}${FI ? FI.chipHTML(it) : ""}</span>`;
   }
   /* the foe frame: "Next:" and its intents; plus the forecast lines under both bars */
   function panels(sess) {

@@ -45,6 +45,11 @@ async function boot(store) {
   const k = await H.api("POST", "/api/register", { username: "Kacper", password: "whiterun42", deviceId: "kp", deviceName: "Kacper's phone" });
   await H.api("PUT", "/api/characters/remi-char", { data: { name: "Hrolf", level: 5 } }, a.token);
 
+  // ---- the hub knows every shared collection the game uses (a new one in store.js must be added to hub.js too)
+  { const fs = require("fs"); const game = JSON.parse(fs.readFileSync(path.join(__dirname, "../game/store.js"), "utf8").match(/const COLS = (\[[^\]]*\])/)[1]);
+    const missing = game.filter((c) => !require(S + "hub").COLS.includes(c));
+    ok(!missing.length, "the server keeps every collection the game shares" + (missing.length ? ": missing " + missing.join(", ") : "")); }
+
   // ---- signing in to the world
   const bad = await H.client("nonsense", "x-char");
   ok(bad.closed && bad.closed.code === 4401, "a bad session can't join the world");

@@ -95,7 +95,7 @@ const ONBOARD = (() => {
   /* id, applies(s, ctx), title, text (may depend on ctx) */
   const TIPS = [
     ["welcome", (s, c) => !c.fightOpen && s.tut && !s.tut.off && s.tut.step === 1 && !s.trip, "Welcome to Skyrim", (s) => `The gold card under the map (<b>Your first trip</b>) shows you what to do, one step at a time. Tips like this one pop up the first time something new happens.`, { btn: ["@tut", "Show me"] }],
-    ["tbfight", (s, c) => c.fightOpen, "Turn-by-turn fights", (s, c) => `The row at the top is the turn order: highest initiative (the number) goes first, and a foe can get more than one turn a round. On your turn, spend your action points (AP, the gold pips) on attacks, spells or potions; AP you don't use turns into guard. Under the foe, Next shows what it will do and how hard it will hit; the stripes on the health bars show what's about to come off.${c.party ? " In a party each player picks their own moves; after 60 seconds Auto takes over." : ""}`, { any: true }],
+    ["tbfight", (s, c) => c.fightOpen, "Turn-by-turn fights", (s, c) => `The row at the top is the turn order: highest initiative (the number) goes first, and a foe can get more than one turn a round. On your turn, spend your action points (AP, the gold pips) on attacks, spells or potions; AP you don't use turns into guard. Under the foe, Next shows what it will do and how hard it will hit; the stripes on the health bars show what's about to come off.${c.party ? " In a party everyone plays their own turn on their own phone; after 90 seconds that turn ends on guard." : ""}`, { any: true }],
     ["level", (s) => s.pendingLevels > 0 && (s.level || 1) <= 4, "Level up!", () => "Open <b>Hero</b>: pick Health, Magicka or Stamina, then spend your perk point on a skill you use. Skills rise by using them.", { btn: ["hero", "Open Hero"] }],
     ["heavy", (s) => typeof G.overweight === "function" && G.overweight(s), "Too heavy", () => "You're carrying more than you can, so you walk slowly. Sell loot in a town, keep things in a house chest, or let a horse or follower carry them."],
     ["dungeon", (s) => !!s.dungeon && !cleared(s), "Your first dungeon", () => "Go room by room. Each room may hold foes, a trap or loot; you can leave between rooms and come back later. The boss and the best chest wait at the end."],
@@ -133,18 +133,19 @@ const ONBOARD = (() => {
   function place() {
     const el = document.getElementById("obtip"); if (!el) return;
     if (!el.classList.contains("infight")) {   // elsewhere: just under the top bar, so Menu and Friends stay tappable
-      const bar = document.querySelector("#dun .hd") || document.querySelector("#app .top"), b = bar ? bar.getBoundingClientRect().bottom : 0;
+      const bar = document.querySelector("#dun .hd") || document.querySelector("#app .top"), b = bar ? bar.getBoundingClientRect().bottom / (typeof FITCANVAS !== "undefined" ? FITCANVAS.zoom() : 1) : 0;
       el.style.top = Math.max(10, Math.min(b + 6, innerHeight * 0.3)) + "px"; el.style.bottom = "auto";
       return;
     }
+    const z = typeof FITCANVAS !== "undefined" ? FITCANVAS.zoom() : 1;   // zoomed page (PC, bigger text): screen px → page px
     const grid = document.querySelector("#tbf .tbgrid, #tbf .tbmenu, #tbf .tbdone");
-    const above = [...document.querySelectorAll("#tbf .tbap, #tbf .tblog:not([hidden]), #tbf .tbwait, #tbf .tballies")].reduce((m, x) => Math.max(m, x.getBoundingClientRect().bottom), 0);
+    const above = [...document.querySelectorAll("#tbf .tbap, #tbf .tblog:not([hidden]), #tbf .tbwait, #tbf .tballies")].reduce((m, x) => Math.max(m, x.getBoundingClientRect().bottom / z), 0);
     const scene = document.querySelector("#tbf .tbscene");
-    const gTop = grid ? grid.getBoundingClientRect().top : innerHeight;
+    const gTop = (grid ? grid.getBoundingClientRect().top : innerHeight) / z;
     const room = gTop - above - 12;
     el.style.maxHeight = ""; el.style.top = ""; el.style.bottom = "";
-    if (room >= Math.min(el.scrollHeight, 150)) { el.style.bottom = Math.max(4, innerHeight - gTop + 6) + "px"; el.style.top = "auto"; el.style.maxHeight = room + "px"; }
-    else { const t = scene ? Math.max(4, scene.getBoundingClientRect().top) : 8; el.style.top = t + "px"; el.style.bottom = "auto"; el.style.maxHeight = Math.max(120, gTop - t - 8) + "px"; }
+    if (room >= Math.min(el.scrollHeight, 150)) { el.style.bottom = Math.max(4, innerHeight / z - gTop + 6) + "px"; el.style.top = "auto"; el.style.maxHeight = room + "px"; }
+    else { const t = scene ? Math.max(4, scene.getBoundingClientRect().top / z) : 8; el.style.top = t + "px"; el.style.bottom = "auto"; el.style.maxHeight = Math.max(120, gTop - t - 8) + "px"; }
   }
   function onTipClick(e) {
     const b = e.target.closest("[data-obt]"); if (!b || !bound) return;
