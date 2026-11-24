@@ -92,6 +92,7 @@ const FIGHTCTL = (() => {
       if (k === "potion") return typeof CURSE !== "undefined" && CURSE.noPotions && CURSE.noPotions(f) ? "Not in Beast Form" : potCount(f, arg) ? "" : "None left";
       if (k === "scroll") return "None left";
       if (k === "shout" || k === "power") return "Not ready yet";
+      if (typeof BEASTPATH !== "undefined" && BEASTPATH.why) { const w = BEASTPATH.why(f, a); if (w) return w; }
     } catch { /* fall through */ }
     return "";
   }
@@ -101,6 +102,7 @@ const FIGHTCTL = (() => {
     if (typeof UIART === "undefined") return `<span class="em">${api.iconOf(f, a)}</span>`;
     try {
       const sk = f.weapon?.skill || (f.wt === "bow" || f.wt === "crossbow" ? "Archery" : "Hand-to-Hand");
+      if (/^(beast|lord|vamp):|^power:(beast|lord)$/.test(a)) return `<span class="em">${api.iconOf(f, a)}</span>`;   // a werewolf's / vampire's own moves (beastpaths.js)
       if (a === "attack") return UIART.skill(sk, size);
       if (a === "power_attack") return UIART.skill(sk === "Archery" ? "Archery" : "Two-Handed", size);
       if (a === "magic") return UIART.skill("Destruction", size);
@@ -139,12 +141,15 @@ const FIGHTCTL = (() => {
     if (enter && dockKey !== null) buzz(18);
     dockKey = key;
     if (api.menu === "magic" || api.menu === "items") return picker(sess, api, enter);
+    const bx = typeof BEASTPATH !== "undefined" ? BEASTPATH.moves(f) : { form: null, list: [] };   // Beast Form / Vampire Lord / vampire powers (beastpaths.js)
+    if (bx.form) return beastDock(sess, api, bx, enter);
     const bow = f.wt === "bow" || f.wt === "crossbow";
     const guard = f.shield && typeof SHIELDFX !== "undefined" ? ["bash", "Shield bash"] : ["block", "Guard"];
     const main = [btn(sess, api, "attack", { label: bow ? "Shoot" : "Attack", extra: "main big", key: "1" }),
       btn(sess, api, "power_attack", { label: "Power attack", extra: "main big pw", key: "2" }),
       btn(sess, api, guard[0], { label: guard[1], extra: "main big gd", key: "3" })].join("");
     const q = quick(f);
+    for (const [a] of bx.list) if (q.length < MAXQ + 2 && !q.some((x) => x.a === a)) q.unshift({ a });
     const tray = q.map((x, i) => btn(sess, api, x.a, { label: shortName(f, x.a), extra: "fc-q" + (x.sugg ? " sugg" : "") + (/^(shout|power):/.test(x.a) ? " shout" : ""), key: String(4 + i), badge: x.a.startsWith("potion:") ? potCount(f, x.a.split(":")[1]) : null })).join("");
     const nSp = (s.spells || []).filter((id) => D.SPELLS[id] && D.SPELLS[id].kind !== "utility").length;
     const nPot = ["health", "magicka", "stamina"].reduce((t, k) => t + potCount(f, k), 0);
@@ -157,6 +162,20 @@ const FIGHTCTL = (() => {
       <div class="fc-tray" role="group" aria-label="Quick slots" style="--n:${Math.max(3, q.length)}">${tray || `<p class="fc-empty">Quick slots: tap ★ next to a spell or potion to pin it here</p>`}</div>
       <div class="tbgrid fc-main">${main}</div>
       <div class="fc-row">${menuB("magic", "Magic", `${nSp} spell${nSp === 1 ? "" : "s"}`, "M", iconFor(f, "magic", api, 26))}${menuB("items", "Items", `${nPot} potion${nPot === 1 ? "" : "s"}`, "I", iconFor(f, "items", api, 26))}${btn(sess, api, "flee", { label: "Flee", extra: "flee fc-m", key: "F" })}${end}</div>
+    </div>`;
+  }
+  /* changed into a beast or a Vampire Lord: the form's own moves, big; no magic or items (beastpaths.js) */
+  function beastDock(sess, api, bx, enter) {
+    const f = sess.f, left = sess.ap;
+    const big = bx.list.slice(0, 3), rest = bx.list.slice(3);
+    const main = big.map(([a, n], i) => btn(sess, api, a, { label: n, extra: "main big beast", key: String(i + 1) })).join("");
+    const tray = rest.map(([a, n], i) => btn(sess, api, a, { label: n, extra: "fc-q beast", key: String(4 + i) })).join("");
+    const endTip = typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.action(f, "end", 0))}"` : "";
+    const end = `<button class="tbact end fc-end${left > 0 ? "" : " ready"}" data-tba="end" data-fk=" "${endTip} aria-label="End turn"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M5 5l8 7-8 7z M13 5l8 7-8 7z" fill="currentColor"/></svg></span><b>End turn</b><small>${left > 0 ? `${left} AP left → +${Math.min(30, left * 10)}% guard` : "all AP used"}</small>${keyLbl(" ")}</button>`;
+    return `<div class="fc fc-beast ${bx.form}${enter ? " enter" : ""}" data-fcmode="${bx.form}">
+      <div class="fc-tray" role="group" aria-label="${bx.form === "wolf" ? "Beast Form" : "Vampire Lord"} moves" style="--n:${Math.max(3, rest.length)}">${tray}</div>
+      <div class="tbgrid fc-main">${main}</div>
+      <div class="fc-row"><span class="fc-form">${bx.form === "wolf" ? "🐺 Beast Form" : "🦇 Vampire Lord"} · ${bx.left} round${bx.left === 1 ? "" : "s"} left</span>${btn(sess, api, "flee", { label: "Flee", extra: "flee fc-m", key: "F" })}${end}</div>
     </div>`;
   }
   /* the magic / items list: tabs, filters by school, ★ to pin, numbered Cast buttons */
