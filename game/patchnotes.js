@@ -3,6 +3,15 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b146-gore", build: 146, date: "24 Nov 2026", title: "Blood on the snow", items: [
+      "Fights get bloody: a blow throws a spray of blood away from whoever struck it, and the drops land and stay on the ground for the whole fight. Big hits and criticals spray more.",
+      "Every blow looks different: swords and axes throw arcs of blood, arrows stick in, hammers splat and kick up dust, fire scorches and chars, frost throws ice shards, lightning throws sparks and poison drips green.",
+      "Not everything bleeds: skeletons and draugr chip bone and dust, dwarven machines leak oil and lose gears, ghosts lose wisps, daedra bleed black, dragons splash big and dark, and Falmer and chaurus bleed green.",
+      "Wounds show: red streaks build up on a fighter as their health drops, a bleeding foe keeps dripping, and you get a red flash at the edges of the screen when you take a heavy hit.",
+      "A killing blow leaves the body in a pool, and a strong finisher now and then knocks a helmet or weapon flying, or takes a limb off a beast or a skeleton.",
+      "Followers, party members and horses get hit and bleed too, but they still only get knocked down.",
+      "Settings → Fights → Blood and gore: Off, Low or Full. Everyone in a shared fight sees the same spray.",
+    ] },
     { id: "b145-eventart", build: 145, date: "24 Nov 2026", title: "Painted events and shops", items: [
       "World events now have painted pictures: the Khajiit's grand caravan, Daedric invasions, dragon migrations and all four festival weeks each get their own.",
       "Great world events do too: dragon assaults, Daedric rifts, sieges and town fairs.",
