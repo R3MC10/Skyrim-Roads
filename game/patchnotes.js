@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b143-skillup", build: 143, date: "24 Nov 2026", title: "Skill-ups like in Skyrim", items: [
+      "When a skill rises, a notice at the top of the screen says so (\"One-Handed increased to 31\") over a thin bar that fills up. When it crosses a level, the bar fills to the end, flashes, chimes softly and starts again from zero.",
+      "Several skills play one after another, quickly. Tap the notice to skip ahead.",
+      "After a fight, skills that grew a little without levelling show their bar creeping up for a moment.",
+      "A new character level gets its own bigger Level up banner with your level bar.",
+      "The fight result no longer lists skill-ups as one long line; your follower's words after a fight are a line of their own.",
+    ] },
     { id: "b141-polishsweep", build: 141, date: "24 Nov 2026", title: "More of the game in Polish", items: [
       "Playing in Polish? The fight picture now speaks it too: Ty, Uciekają, Zwycięstwo, Pudło, Blok!, critical hits and sneak attacks.",
       "The fight log is in Polish now: who hits for how much, misses, staggers, paralysis, staves, potions and spells.",
