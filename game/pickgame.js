@@ -91,9 +91,8 @@ const PICKGAME = (() => {
   const sfx = (n) => { try { if (typeof SOUND !== "undefined") SOUND.fx(n); } catch { /* sound is optional */ } };
   function draw(cv) {
     const P = pg; if (!P) return;
-    const g = cv.getContext("2d"), W = cv.width, H = cv.height, L = 22, R = W - 22, bw = R - L;
+    const W = 300, H = 160, g = (typeof FITCANVAS !== "undefined" ? FITCANVAS.fixed(cv, W, H) : cv.getContext("2d")), L = 22, R = W - 22, bw = R - L;   // sharp at any screen density (fitcanvas.js)
     const pixel = typeof ART !== "undefined" && ART.style?.() === "pixel";
-    g.setTransform(1, 0, 0, 1, 0, 0);
     const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, "#2a2420"); bg.addColorStop(1, "#0c0b0a"); g.fillStyle = bg; g.fillRect(0, 0, W, H);
     // their attention: an eye that opens as time runs out
     const att = Math.min(1, P.t / TIME);

@@ -13,11 +13,33 @@ const PATCHNOTES = (() => {
       "New perk stars. Werewolf: Rending Claws, Howl of the Pack, Silver Hide, Endless Hunt. Vampire Lord: Blood Magic, Grave Servants, Sun Ward. New skill perks: Bane of the Night (Restoration, hurts vampires) and Wolfsbane (Alchemy, half the chance to catch either curse).",
       "In a party your form shows on everyone's phone, and theirs on yours. Only the leader answers the Ashen Court.",
     ] },
+    { id: "b137-ctl", build: 137, date: "24 Nov 2026", title: "New fight controls", items: [
+      "Your moves in a fight now sit in a proper action bar at the bottom: three big buttons for Attack, Power attack and Guard (or Shield bash), with Magic, Items, Flee and End turn right under them. Easy to hit with a thumb, even on small phones.",
+      "Every move shows its cost as gold pips, and the AP row at the top lights up which pips a move would use before you tap it. The pips you spend burst away.",
+      "Moves you can't use right now are greyed out and say why: \"Need 2 more AP\", \"Not enough stamina\", \"Need 12 more magicka\", \"None left\".",
+      "Quick slots above the big buttons hold your shouts and your favourite spells, potions and scrolls. Tap the star next to anything in Magic or Items to pin it there. Until you pin something, it suggests your best healing spell, your best attack spell and a health potion.",
+      "Magic and Items open as tabs with filters by school, and your spells and potions have their pictures in both art styles.",
+      "Healing with a follower or friend beside you? Tap the spell or potion and then tap who gets it (or tap it again for yourself). Dragging onto someone still works.",
+      "Buttons react when you press them, and phones give a little buzz.",
+      "On a PC: keys 1 to 9 use the numbered moves, Space ends your turn (and skips the foe's turn or presses Continue), M opens Magic, I opens Items, F flees, Esc goes back.",
+      "Prefer the old cards or the combat wheel? Settings, Fights, Controls. The target button at the top still switches the timing ring on or off.",
+    ] },
+    { id: "b137", build: 137, date: "24 Nov 2026", title: "Sharp, never stretched, on every screen", items: [
+      "Pictures keep their shape on every phone, tablet and PC: nothing gets squashed or stretched any more, even when you turn your phone sideways or resize the window.",
+      "The map redraws straight away when you turn your phone or resize the window, instead of looking stretched until you touched it.",
+      "The lockpicking, pickpocketing, forge, alchemy, enchanting and ring mini-games are now sharp on high-resolution phones and tablets (they were blurry before).",
+      "The title screen, the travel scene, the dungeon map's torchlight and the fight scene are sharper on big tablets and PC monitors.",
+      "Pixel art title screen: every pixel is now the same size, so the picture no longer has uneven rows.",
+      "On a big PC monitor, the +gold number, flying loot and fight tips now show up where they should instead of off to the side (they used to push the page sideways).",
+      "Phones with a notch or camera cut-out: menus and popups now stay clear of it, also in landscape.",
+    ] },
+    { id: "b136", build: 136, date: "24 Nov 2026", title: "A proper road picture while you travel", items: [
+    ] },
     { id: "b135-compass", build: 135, date: "24 Nov 2026", title: "A real 3D compass", items: [
       "The golden compass on the home screen is now a proper 3D piece: drag it and it tilts toward your finger, catching the light and showing its thick bronze edge, then springs back when you let go.",
       "Skills, Magic, Items and Map now sit around the compass instead of on top of it, on phones held upright or sideways.",
     ] },
-    { id: "b136", build: 136, date: "24 Nov 2026", title: "A proper road picture while you travel", items: [
+    { id: "b136-4", build: 136, date: "24 Nov 2026", title: "A proper road picture while you travel", items: [
     ] },
     { id: "b136places", build: 136, date: "24 Nov 2026", title: "Something at every place", items: [
       "Every place on the map now has something to do. 52 spots that used to be just a picture (farms, mills, shrines, cabins, groves, old ruins, the All-Maker Stones) now offer a stall, work, a job, a blessing, a hidden strongbox, herbs or a spot worth searching. Look under \"What's here\" when you arrive.",
@@ -70,6 +92,8 @@ const PATCHNOTES = (() => {
       "Everything you wear shows up: helmet, armour and its colours, cloak, shield, weapon, even an amulet or ring.",
       "Your hero now actually walks on the road, rides the horse properly, sits on the wagon bench, and swings, blocks, casts and gets knocked down in fights. Moves flow smoothly from one into the next.",
       "Party members, followers and other players use the same new look, on the road, in fights, in portraits and on the hero tab. Works in both the hand-drawn and the pixel style.",
+    ] },
+    { id: "b136-2-2-2-4", build: 136, date: "24 Nov 2026", title: "Meet caravans on the road", items: [
     ] },
     { id: "b136-2-2-2-3", build: 136, date: "24 Nov 2026", title: "Meet caravans on the road", items: [
       "Caravans on the map are now something you can meet while you travel. When you're close, their wagons get a gold ring and say \"tap to meet\": tap them, or just walk up beside them and you'll be asked to stop.",
