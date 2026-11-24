@@ -5,7 +5,8 @@
    the title breathes with mist and embers, and arriving in a town fades its name in.
    Rules: only transform and opacity move (so phones stay at 60 fps), everything is decoration that never blocks
    taps, and it all switches off with the system's reduced-motion setting or Settings → Look → Motion.
-   Pixel art style uses stepped easing so motion snaps like a sprite. Under browser automation it stays off unless
+   Under browser automation it stays off unless
+
    the URL has ?motion, so UI tests stay stable. [OURS] */
 const MOTION = (() => {
   const DOM = typeof document !== "undefined" && typeof window !== "undefined";
@@ -27,8 +28,6 @@ const MOTION = (() => {
   };
   /* a damped spring from 0 to 1 (overshoots a little, settles by t = 1) */
   const spring = (t, k = 7, z = 0.42) => (t >= 1 ? 1 : 1 - Math.exp(-z * k * t * 2.2) * Math.cos(k * t * 2.2 * Math.sqrt(1 - z * z)));
-  const pixel = () => DOM && document.documentElement.classList.contains("art-pixel");
-  const stepT = (t) => (pixel() ? Math.min(1, Math.round(t * 6) / 6) : t);
 
   const on = () => DOM && !sysReduce() && !automated() && pref !== "off";
   const lite = () => pref === "lite";
@@ -51,7 +50,7 @@ const MOTION = (() => {
     const step = (now) => {
       if (dead) return;
       const t = Math.min(1, (now - t0) / ms);
-      fn(e(stepT(t)));
+      fn(e(t));
       if (t < 1) id = requestAnimationFrame(step); else done?.();
     };
     id = requestAnimationFrame(step);
@@ -223,7 +222,7 @@ const MOTION = (() => {
     if (!routeSeen.has(key)) { if (routeSeen.size > 30) routeSeen.clear(); routeSeen.set(key, performance.now()); }
     if (!on()) return 1;
     const t = (performance.now() - routeSeen.get(key)) / (lite() ? 450 : 800);
-    return t >= 1 ? 1 : ease.inOut(stepT(t));
+    return t >= 1 ? 1 : ease.inOut(t);
   }
   /* cut a polyline down to the first fraction t of its length */
   function cutPath(pts, t) {
@@ -245,7 +244,7 @@ const MOTION = (() => {
     if (!on()) return { dy: 0, sc: 1 };
     const t = (now - pinSeen.get(key)) / 650;
     if (t >= 1) return { dy: 0, sc: 1 };
-    const s = spring(stepT(t));
+    const s = spring(t);
     return { dy: -(1 - s) * 2.4, sc: 0.6 + 0.4 * Math.min(1, s) };
   }
   function trackDiscoveries(list) {
@@ -261,7 +260,7 @@ const MOTION = (() => {
     for (let i = lifts.length - 1; i >= 0; i--) {
       const L = lifts[i], age = (now - L.at) / 1400, p = WORLD.places[L.name];
       if (age >= 1 || !p || !on()) { lifts.splice(i, 1); continue; }
-      const x = p[0] * W, y = p[1] * H, R = 70 * s, hole = R * ease.out(stepT(age));
+      const x = p[0] * W, y = p[1] * H, R = 70 * s, hole = R * ease.out(age);
       const gr = g.createRadialGradient(x, y, Math.max(0.1, hole), x, y, R);
       gr.addColorStop(0, `rgba(18,20,24,${0.85 * (1 - age)})`); gr.addColorStop(1, "rgba(18,20,24,0)");
       g.fillStyle = gr; g.beginPath(); g.arc(x, y, R, 0, 7); g.fill();

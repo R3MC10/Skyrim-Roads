@@ -38,7 +38,7 @@ async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-sandbox"])
         errs = []
-        for style in ["ink", "pixel"]:
+        for style in ["ink"]:
             ctx = await b.new_context(viewport={"width": 412, "height": 915}, device_scale_factor=2)
             await ctx.add_init_script(f"localStorage.setItem('rotn_prefs', JSON.stringify({{artStyle:'{style}'}}))")
             pg = await ctx.new_page(); pg.on("pageerror", lambda e, st=style: errs.append(st + " " + str(e)))

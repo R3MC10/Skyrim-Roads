@@ -20,7 +20,7 @@ async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch(**({"executable_path": CHROME} if CHROME else {}), args=["--no-sandbox"])
         for (w, h) in [(360, 740), (430, 932), (1920, 1080)]:
-            for style in (["ink", "pixel"] if w < 1000 else ["ink"]):
+            for style in ["ink"]:
                 for lang in (["en", "pl"] if (w, style) == (360, "ink") else ["en"]):
                     tag = f"{w}_{style}_{lang}"
                     ctx = await b.new_context(viewport={"width": w, "height": h})

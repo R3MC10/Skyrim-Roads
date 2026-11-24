@@ -1,4 +1,4 @@
-"""The follower's own Character tab (followertab.js) at phone size (360x780), ink and pixel styles:
+"""The follower's own Character tab (followertab.js) at phone size (360x780):
 empty state, top tab row fits and scrolls, one-line summary on Character, SkyUI-style gear list (categories, sort,
 ◆ worn, details with comparison), Give & equip / Take between the two packs.
 Usage: python3 followertab_ui.py PORT   (screenshots go to $OUT or tests/out_followertab/)"""
@@ -95,7 +95,7 @@ async def main():
     async with async_playwright() as p:
         exe = os.environ.get("CHROME") or ("/usr/bin/google-chrome" if os.path.exists("/usr/bin/google-chrome") else None)
         b = await (p.chromium.launch(executable_path=exe, args=["--no-sandbox"]) if exe else p.chromium.launch(args=["--no-sandbox"]))
-        for style in ["ink", "pixel"]: await run(b, style)
+        for style in ["ink"]: await run(b, style)
         await b.close()
     print("RESULT", "OK" if not fails else f"FAIL {len(fails)}")
     sys.exit(1 if fails else 0)

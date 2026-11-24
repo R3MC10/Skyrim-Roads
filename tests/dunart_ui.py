@@ -6,11 +6,11 @@ async def main():
         b = await p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-sandbox"])
         ctx = await b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2)
         errs = []
-        for style in ["ink", "pixel"]:
+        for style in ["ink"]:
             pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
             await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=dun{style}"); await pg.wait_for_timeout(1500)
             await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Delver"); await pg.click("#begin"); await pg.wait_for_timeout(900)
-            await pg.evaluate("(st)=>{ ART.setStyle(st); const S=window.__dbg.save(); const n='Bleak Falls Barrow'; S.location=n; [S.x,S.y]=WORLD.places[n]; S.discovered.push(n); S.cleared={}; S.level=30; S.hpBonus=3000; G.setHealth(S,G.maxHealth(S)); for(const k of Object.keys(S.skills)) S.skills[k].lvl=80; G.give(S,'potion_health',5); }", style)
+            await pg.evaluate("(st)=>{ const S=window.__dbg.save(); const n='Bleak Falls Barrow'; S.location=n; [S.x,S.y]=WORLD.places[n]; S.discovered.push(n); S.cleared={}; S.level=30; S.hpBonus=3000; G.setHealth(S,G.maxHealth(S)); for(const k of Object.keys(S.skills)) S.skills[k].lvl=80; G.give(S,'potion_health',5); }", style)
             await pg.wait_for_timeout(400)
             async def clear():
                 await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")

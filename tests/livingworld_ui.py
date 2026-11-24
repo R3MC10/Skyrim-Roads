@@ -1,4 +1,4 @@
-"""The world remembers you (livingworld.js) on a phone (390x844) and a PC (1920x1080), ink and pixel:
+"""The world remembers you (livingworld.js) on a phone (390x844) and a PC (1920x1080):
 the inn in the evening (who's in, ask a shopkeeper to open up, whispers of things to come, the notice board),
 the streets (who's about, doors that open as your name grows), a whisper that came true (map mark, card, the fight),
 News of the realm in World news, and a scorned hold (shutters closed, make amends).
@@ -52,13 +52,13 @@ async def main():
         for vname, vp, mobile in VIEWS:
             ctx = await b.new_context(viewport=vp, device_scale_factor=2 if mobile else 1, is_mobile=mobile, has_touch=mobile)
             await ctx.add_init_script("try{const p=JSON.parse(localStorage.getItem('rotn_prefs')||'{}');p.lang='%s';localStorage.setItem('rotn_prefs',JSON.stringify(p))}catch(e){}" % ("pl" if PL else "en"))
-            for style in ["ink", "pixel"]:
+            for style in ["ink"]:
                 tag = f"{vname}_{style}"
                 pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
                 await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=lw{tag}"); await pg.wait_for_timeout(1800)
                 await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Hrodi"); await pg.click("#begin"); await pg.wait_for_timeout(1000)
                 await close_modals(pg)
-                await pg.evaluate("""(st)=>{ ART.setStyle(st); const S=window.__dbg.save(); S.location="Whiterun"; [S.x,S.y]=WORLD.places.Whiterun; S.trip=null; S.gold=3000; S.level=30; S.hpBonus=4000; G.setHealth(S,G.maxHealth(S), G.now());
+                await pg.evaluate("""(st)=>{ const S=window.__dbg.save(); S.location="Whiterun"; [S.x,S.y]=WORLD.places.Whiterun; S.trip=null; S.gold=3000; S.level=30; S.hpBonus=4000; G.setHealth(S,G.maxHealth(S), G.now());
                     S.skills["One-Handed"].lvl=70; RUMOURS.st(S).fame.Whiterun=55;
                     LIVING.tick(S); LIVING.deed(S,"guard","Whiterun",4,`Ri'saad's caravan rolled safely into Whiterun, guarded by ${S.name}.`);
                     LIVING.deed(S,"dragon","Whiterun",5,`${S.name} slew a dragon in Whiterun. The skalds are already arguing over the song.`); window.__ui.save&&window.__ui.save(); }""", style)

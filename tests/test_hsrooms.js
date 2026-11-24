@@ -247,7 +247,7 @@ ok(["carpenter", "woodsman", "landed_thane", "estate_income"].every((id) => PERK
   let style = "ink"; const Hh = { seeded: (x) => { let a = String(x).length; return () => ((a = (a * 9301 + 49297) % 233280) / 233280); }, sky() {}, mountains() {}, pines() {}, poly(gg, pts, f, st) { chk(pts.flat()); }, circle(gg, ...a) { chk(a.slice(0, 3)); } };
   var ART = { html: (w, h, draw, o) => { draw(g, Hh, w, h); return "<img class='art " + (o.cls || "") + "' alt='" + (o.alt || "") + "'>"; }, drawingStyle: () => style, H: Hh };
   this.ART = ART; globalThis.ART = ART;
-  vm_ok: for (style of ["ink", "pixel"]) {
+  vm_ok: for (style of ["ink"]) {
     const [s, pid, h] = owner("Dawnstar", ["armory", "trophy", "enchanter"]); H.build(s, pid, "garden", t); H.build(s, pid, "cellar", t);
     h.beds[0] = { item: "food_cabbage" }; h.res = [{ id: "lydia" }, { id: "erik" }]; h.cases = [{ item: "steel_sword", qty: 1 }, { item: "gem_ruby", qty: 1 }, { item: "steel_armor", qty: 1 }]; h.cellar = [{ item: "ing_salt", qty: 3 }];
     for (const raid of [null, { kind: "bandits", t }, { kind: "trolls", t }, { kind: "vampires", t }]) { h.raid = raid; ok(/<img/.test(H.scene(pid, h, { ready: true })), style + " outside " + (raid?.kind || "calm")); }

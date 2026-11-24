@@ -19,8 +19,7 @@ async def main():
         await pg.evaluate("""()=>{const S=window.__dbg.save(); S.location='Winterhold'; [S.x,S.y]=WORLD.places.Winterhold; S.discovered.push('Winterhold'); S.gold=20000;
           for(const k of ['Destruction','Restoration','Alteration','Illusion']) S.skills[k].lvl=60;
           for(const x of ['firebolt','ice_spike','healing','lesser_ward','flame_cloak','paralyze']) if(D.SPELLS[x] && !S.spells.includes(x)) S.spells.push(x);}""")
-        for style in ["ink", "pixel"]:
-            await pg.evaluate(f"ART.setStyle('{style}')")
+        for style in ["ink"]:
             await click("[data-tab=map]"); await click("[data-tab=town]"); await pg.wait_for_timeout(300)
             await click("[data-act=shop][data-id=craft]"); await pg.wait_for_timeout(300)
             await pg.select_option("#cfA", "damage:fire"); await pg.wait_for_timeout(300)

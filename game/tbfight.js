@@ -548,7 +548,7 @@ const TB = (() => {
     if (hooks.remote && !sess.mirror) sess.remote = hooks.remote;   // a teammate's view of the leader's fight never publishes a fight of its own
     let el = document.getElementById("tbf");
     if (!el) { el = document.createElement("div"); el.id = "tbf"; el.setAttribute("role", "dialog"); el.setAttribute("aria-label", "Turn-based fight"); document.body.appendChild(el); }
-    el.className = "tbf " + (typeof ART !== "undefined" && ART.style && ART.style() === "pixel" ? "pixel" : "ink");
+    el.className = "tbf ink";
     el.addEventListener("click", onClick);
     const r = sess.begin();
     render(r);

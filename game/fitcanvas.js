@@ -12,9 +12,8 @@
                                        returns { g, w, h, k } with w×h the box in CSS pixels and the transform set to k
      FITCANVAS.watch(el, fn)         → calls fn() when el's box changes size (turning the phone, resizing the window,
                                        the text-size zoom); stops by itself once el leaves the page
-     FITCANVAS.pixelStep(cssW, artW) → the whole-number blow-up for pixel art (so every art pixel is the same size)
      FITCANVAS.zoom()                → the page zoom (big text / big monitors): divide screen positions by it for left/top
-   Pixel art keeps hard edges (image-rendering:pixelated) and is never stretched: CSS keeps the canvas's own shape. */
+   A picture is never stretched: CSS keeps the canvas's own shape. */
 const FITCANVAS = (() => {
   const DOM = typeof document !== "undefined";
   const CAP = 2.5;
@@ -75,7 +74,6 @@ const FITCANVAS = (() => {
   }
   /* the page's own zoom (access.js zooms the page for bigger text and big PC monitors): screen px = page px × zoom */
   const zoom = () => { try { return parseFloat(getComputedStyle(document.documentElement).zoom) || 1; } catch { return 1; } };
-  const pixelStep = (cssW, artW) => Math.max(1, Math.floor((cssW * dpr(99)) / Math.max(1, artW) + 1e-6));
   /* turning the phone or dragging a window to another monitor changes the density: tell the watchers */
   if (DOM && typeof matchMedia === "function") {
     let mq = null;
@@ -87,6 +85,6 @@ const FITCANVAS = (() => {
     };
     listen();
   }
-  return { CAP, dpr, box, ratio, fixed, fill, watch, pixelStep, zoom };
+  return { CAP, dpr, box, ratio, fixed, fill, watch, zoom };
 })();
 if (typeof module !== "undefined") module.exports = FITCANVAS;

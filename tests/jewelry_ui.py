@@ -19,14 +19,13 @@ async def main():
     fails = []
     async with async_playwright() as p:
         b = await p.chromium.launch(executable_path=os.environ.get("CHROME") or None, args=["--no-sandbox"])
-        for style in ["ink", "pixel"]:
+        for style in ["ink"]:
             ctx = await b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2)
             await ctx.add_init_script(f"try{{localStorage.setItem('artStyle','{style}')}}catch(e){{}}")
             pg = await ctx.new_page(); errs = []
             pg.on("pageerror", lambda e: errs.append(str(e)))
             await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&hub=0&p=jw{style}"); await pg.wait_for_timeout(1500)
             await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Jorunn"); await pg.click("#begin"); await pg.wait_for_timeout(1300)
-            await pg.evaluate("try{ART.setStyle('%s')}catch(e){}" % style)
             await pg.evaluate("document.querySelectorAll('#modal,#sky').forEach(m=>m.remove())")
             await pg.evaluate(SETUP)
             await pg.wait_for_timeout(2500); await pg.evaluate(NOMODAL)   # let start-up popups (quest done, news) come and go
