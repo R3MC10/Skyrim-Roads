@@ -2,6 +2,7 @@
    fog over the deep rows, the boss chamber at the end), a flickering torch overlay, a loot strip with item icons,
    and small animations for chests, traps and campfires. Uses the shared ART toolkit, so both art styles work. [OURS] */
 const DUNART = (() => {
+  const LX = (x) => (typeof I18N_SWEEP !== "undefined" ? I18N_SWEEP.c(x) : x);   // words drawn on canvas, in the player's language
   // ---- colours per dungeon theme: background, corridor, chamber fill, chamber edge, accent
   const TH = {
     cave: { bg: "#231e19", rock: "#3a3128", corr: "#4a3e31", node: "#6b5a48", edge: "#2a221b", acc: "#c9a75e" },
@@ -146,7 +147,7 @@ const DUNART = (() => {
       const cx = w / 2, cy = h / 2;
       g.fillStyle = "#8e2b25"; g.beginPath(); for (let i = 0; i < 22; i++) { const a = (i / 22) * Math.PI * 2, rr = i % 2 ? 46 : 52; g.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); } g.closePath(); g.fill();
       g.strokeStyle = "#5a1814"; g.lineWidth = 2; g.stroke(); H.circle(g, cx, cy, 36, null, "#c95a4a", 1.6);
-      g.fillStyle = "#f4dcc0"; g.font = "bold 15px Georgia, serif"; g.textAlign = "center"; g.fillText("CLEARED", cx, cy + 5);
+      g.fillStyle = "#f4dcc0"; g.font = "bold 15px Georgia, serif"; g.textAlign = "center"; g.fillText(LX("CLEARED"), cx, cy + 5);
     }
     return torches;
   }

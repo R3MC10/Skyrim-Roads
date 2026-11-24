@@ -6,6 +6,7 @@
    It only reads the finished Fight (its log, what was done each turn, start/end health); it never changes a result. [OURS] */
 const FIGHTART = (() => {
   const P = ART.PAL;
+  const L = (x) => (typeof I18N_SWEEP !== "undefined" ? I18N_SWEEP.c(x) : x);   // words drawn on the picture, in the player's language
   const REG = new Map(), IDS = new WeakMap(); let nextId = 1;
   const IDLE = new Set();   // finished scenes still animating their painted backdrop (battlescene.js)
   const reduce = () => typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -726,7 +727,7 @@ const FIGHTART = (() => {
     // floating numbers
     const NF = 10, fxs = new Float32Array(NF), fys = new Float32Array(NF), fvx = new Float32Array(NF), fvy = new Float32Array(NF), fl = new Float32Array(NF), fsz = new Float32Array(NF), ftx = new Array(NF).fill(""), fcl = new Array(NF).fill("#fff");
     let fcur = 0;
-    const float = (x, y, txt, col, size) => { const i = fcur; fcur = (fcur + 1) % NF; fxs[i] = x; fys[i] = y; fvx[i] = (Math.random() - 0.5) * 60; fvy[i] = -85; fl[i] = 1; fsz[i] = size; ftx[i] = txt; fcl[i] = col; };
+    const float = (x, y, txt, col, size) => { const i = fcur; fcur = (fcur + 1) % NF; fxs[i] = x; fys[i] = y; fvx[i] = (Math.random() - 0.5) * 60; fvy[i] = -85; fl[i] = 1; fsz[i] = size; ftx[i] = L(txt); fcl[i] = col; };
     // a lightning bolt (re-jagged every few frames)
     const BOLT = new Float32Array(48), FORK = new Float32Array(20); let boltOn = 0, boltX0 = 0, boltY0 = 0, boltX1 = 0, boltY1 = 0, boltC = "#c8b8ff", boltJag = 0;
     function jag() { const n = 24; for (let i = 0; i < n; i++) { const t = i / (n - 1), off = i === 0 || i === n - 1 ? 0 : (Math.random() - 0.5) * 18 * s; BOLT[i * 2] = boltX0 + (boltX1 - boltX0) * t; BOLT[i * 2 + 1] = boltY0 + (boltY1 - boltY0) * t + off; }
@@ -842,8 +843,8 @@ const FIGHTART = (() => {
       const ELC = { fire: "#ff9a4a", frost: "#a8e0ff", shock: "#dcc4ff", poison: "#a6e870" };   // colour-coded damage numbers by element
       if (b.dmg && !b.miss) float(tx, ty, b.num, ELC[b.el] || (me ? (b.crit || b.sneak ? "#ffd060" : "#fff2c0") : "#ff8a7a"), b.crit || b.sneak || b.final ? 22 : b.power ? 18 : 15);
       if (b.heal) float(hx0, groundY - 70 * s, "+" + b.heal, "#a8f08a", 16);
-      if (b.crit) { label = "CRITICAL"; labelT = 1.1; labelC = "#ffd060"; }
-      if (b.sneak) { label = b.sneak; labelT = 1.2; labelC = "#c8b8ff"; }
+      if (b.crit) { label = L("CRITICAL"); labelT = 1.1; labelC = "#ffd060"; }
+      if (b.sneak) { label = L(b.sneak); labelT = 1.2; labelC = "#c8b8ff"; }
       if (b.rune) { burst(fx0, groundY - 4 * s, 26, 0, COL[b.rune] || COL.fire, 190 * s, 0.7, 4, 60, true); ringT = 0; ringX = fx0; ringC = COL[b.rune]?.[0] || "#ffb347"; shake = rm ? 0 : Math.max(shake, 4); }
     }
     function revealLog(li) {
@@ -1030,7 +1031,7 @@ const FIGHTART = (() => {
           const sp = SPARK[a.kind]; if (sp && Math.random() < (two ? 0.09 : 0.18) * pmul) spawn(sp[1], sp[0], ax + (Math.random() - 0.5) * 18 * s, ay + (sp[2] - Math.random() * 30) * s, (Math.random() - 0.5) * 14 * s, -20 * s, 0.7, 2.2, 0);
         });
       });
-      if (two) { const named = slots.filter((a) => a.kind === "mate").length; mateTags.push([`⚑ ${named ? `${named} of your party` : `${slots.length} allies`} with you`, (hx0 - 50 * s) * z + ox + zcx - zcx * z, (groundY - 78 * s) * z + oy + zcy - zcy * z]); }   // a big party: one label instead of a pile of names
+      if (two) { const named = slots.filter((a) => a.kind === "mate").length; mateTags.push([L(`⚑ ${named ? `${named} of your party` : `${slots.length} allies`} with you`), (hx0 - 50 * s) * z + ox + zcx - zcx * z, (groundY - 78 * s) * z + oy + zcy - zcy * z]); }   // a big party: one label instead of a pile of names
       for (const a of flyers) {   // a dragon circles above and dives in with fire when it strikes
         const cx = hx0 - 10 * s + Math.sin(tt * 0.5) * 30 * s + allyLunge * (fx0 - hx0) * 0.35, cy = groundY - (44 - allyLunge * 10) * s + Math.sin(tt * 1.3) * 4 * s;
         wg.save(); wg.translate(cx, cy); wg.scale(s, s); allyFig(wg, a.kind, { lunge: allyLunge, t: tt }); wg.restore();
@@ -1184,7 +1185,7 @@ const FIGHTART = (() => {
       if (label && labelT > 0) { const a = Math.min(1, labelT * 3), sz = pixel ? 16 : 20; g.globalAlpha = a; g.font = pixel ? `bold ${sz}px monospace` : `700 ${sz}px Cinzel, Georgia, serif`; const y = Hh * 0.25 - (1 - a) * 8; g.fillStyle = "rgba(28,33,40,0.7)"; const w = g.measureText(label).width + 18; g.fillRect(W / 2 - w / 2, y - sz + 2, w, sz + 8); g.fillStyle = labelC; g.fillText(label, W / 2, y); }
       g.restore();
       // end banner
-      if (phase === "end" || (phase === "fall" && phaseT > 0.6)) { const a = phase === "end" ? 1 : Math.min(1, (phaseT - 0.6) * 2.5); g.save(); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.globalAlpha = a; g.font = pixel ? "bold 16px monospace" : "700 18px Cinzel, Georgia, serif"; g.textAlign = "center"; const txt = won ? (turned ? "They flee" : "Victory") : "Defeated"; const by = Hh * 0.93; g.fillStyle = "rgba(28,33,40,0.6)"; g.fillRect(W / 2 - 60, by - 15, 120, 21); g.fillStyle = won ? P.gold : "#ff8a7a"; g.fillText(txt, W / 2, by + 1); g.restore(); }
+      if (phase === "end" || (phase === "fall" && phaseT > 0.6)) { const a = phase === "end" ? 1 : Math.min(1, (phaseT - 0.6) * 2.5); g.save(); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.globalAlpha = a; g.font = pixel ? "bold 16px monospace" : "700 18px Cinzel, Georgia, serif"; g.textAlign = "center"; const txt = L(won ? (turned ? "They flee" : "Victory") : "Defeated"), bw2 = Math.max(120, g.measureText(txt).width + 24); const by = Hh * 0.93; g.fillStyle = "rgba(28,33,40,0.6)"; g.fillRect(W / 2 - bw2 / 2, by - 15, bw2, 21); g.fillStyle = won ? P.gold : "#ff8a7a"; g.fillText(txt, W / 2, by + 1); g.restore(); }
       if (!done) { PERF[perfN % PERF.length] = performance.now() - t0; perfN++; }
     }
     const additive = () => { if (!pixel) wg.globalCompositeOperation = "lighter"; };
@@ -1295,8 +1296,8 @@ const FIGHTART = (() => {
         g.font = pixel ? "bold 11px monospace" : "600 12px Cinzel, Georgia, serif"; g.textAlign = right ? "right" : "left"; g.textBaseline = "top";
         g.fillStyle = "#1c2128"; g.fillText(name, (right ? x + bw : x) + 1, y + bh + 4); g.fillStyle = "#fbf3dc"; g.fillText(name, right ? x + bw : x, y + bh + 3);
       };
-      bar(8, hpD, Math.max(hpL, hpD), hpMax, "#c0392b", "You", false);
-      bar(W - 8 - bw, ehpD, Math.max(ehpL, ehpD), ehpMax, "#8e6b2b", rec.foeName.length > 22 ? rec.foeName.slice(0, 21) + "…" : rec.foeName, true);
+      bar(8, hpD, Math.max(hpL, hpD), hpMax, "#c0392b", L("You"), false);
+      bar(W - 8 - bw, ehpD, Math.max(ehpL, ehpD), ehpMax, "#8e6b2b", ((n) => (n.length > 22 ? n.slice(0, 21) + "…" : n))(L(rec.foeName)), true);
       // status icons with turns left, under each name: 🔥 burning · ❄ chilled · ⚡ jolted
       const cs = curSt(), ICO = { burn: ["🔥", "#ff9a3c"], chill: ["❄", "#bfe6ff"], shock: ["⚡", "#ffe37a"] };
       const chips = (st, x, right) => {

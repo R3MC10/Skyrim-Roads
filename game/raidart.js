@@ -3,6 +3,7 @@
    Drawn with the shared ART toolkit, so it follows ⚙ Settings → Art style (hand-drawn / pixel). Everything static is
    cached; only the dragon on the map and the Arena crowd animate, and only while they're on screen. [OURS] */
 const RAIDART = (() => {
+  const LX = (x) => (typeof I18N_SWEEP !== "undefined" ? I18N_SWEEP.c(x) : x);   // words drawn on canvas, in the player's language
   const P = ART.PAL, H = ART.H;
   const reduce = () => (typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches);
   const cache = new Map();
@@ -149,7 +150,7 @@ const RAIDART = (() => {
   const seasonBanner = (name, w = 340, h = 44) => ART.html(w, h, (g) => {
     H.poly(g, [[8, 6], [w - 8, 6], [w - 22, h / 2], [w - 8, h - 6], [8, h - 6], [22, h / 2]], "#6a2a22", P.ink, 1.4);
     g.strokeStyle = P.gold; g.lineWidth = 1.2; g.strokeRect(26, 10, w - 52, h - 20);
-    g.fillStyle = "#f3e7c4"; g.font = "700 15px Cinzel, Georgia, serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(`Season of ${name}`, w / 2, h / 2 + 1);
+    g.fillStyle = "#f3e7c4"; g.font = "700 15px Cinzel, Georgia, serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(LX(`Season of ${name}`), w / 2, h / 2 + 1);
   }, { key: "season|" + name, cls: "season-banner", alt: `Season of ${name}` });
 
   /* the top three of the ladder, on a podium */
