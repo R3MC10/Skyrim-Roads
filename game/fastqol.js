@@ -1,6 +1,6 @@
 /* Quicker travel and fights. [OURS]
    - Recent trips: the places you set off for lately, as one-tap chips on the travel screen, plus "↻ Again" (the
-     last trip once more, when you're back where it started) or "↩ Back to …" (when you're where it ended).
+     last trip once more, when you're back where it started) or " Back to …" (when you're where it ended).
    - Optional "carry on by itself" after road events and road fights: the result card counts down and closes on its
      own (waits for a fight replay to finish; any tap on the card stops the countdown). Off unless switched on.
    - Fight replays (fightart.js): ×1/×2/×4 speed and Skip to result; tap anywhere on a fight screen or result card to
@@ -46,7 +46,7 @@ const FASTQOL = (() => {
     let again = null; const L = r.last;
     if (L && !s.trip && L.from) {
       if (s.location === L.from && ok(L.to)) again = { to: L.to, label: `↻ Again: ${L.from} → ${L.to}` };
-      else if (s.location === L.to && ok(L.from)) again = { to: L.from, label: `↩ Back to ${L.from}` };
+      else if (s.location === L.to && ok(L.from)) again = { to: L.from, label: ` Back to ${L.from}` };
     }
     const recent = (Array.isArray(r.recent) ? r.recent : []).filter((n) => ok(n) && n !== again?.to).slice(0, 4);
     return { again, recent };
@@ -104,7 +104,7 @@ const FASTQOL = (() => {
     if (!s || !r?.fight || r.died || r.fled || !(r.loot || []).length || typeof G === "undefined" || !G.overweight || !G.overweight(s)) return "";
     const rows = newRows(s, r.loot); if (!rows.length) return "";
     pendingLoot = { s, loot: r.loot.slice() };
-    return `<div class="card fqloot" role="group" aria-label="Too heavy"><p style="margin:0 0 6px">🎒 <b>Too heavy now</b> · carrying <span class="num">${G.carried(s).toFixed(1)}/${G.capacity(s)}</span>. Keep it all and go slowly, or leave the heaviest new loot here?</p>
+    return `<div class="card fqloot" role="group" aria-label="Too heavy"><p style="margin:0 0 6px"> <b>Too heavy now</b> · carrying <span class="num">${G.carried(s).toFixed(1)}/${G.capacity(s)}</span>. Keep it all and go slowly, or leave the heaviest new loot here?</p>
       <div class="grid2"><button class="btn" data-fq="lootkeep">Keep it all</button><button class="btn pri" data-fq="lootdrop">Leave the heavy stuff</button></div></div>`;
   }
   /* drop new loot, heaviest first, until you can move freely again -> the names left behind */
@@ -124,7 +124,7 @@ const FASTQOL = (() => {
   /* kind "test": the practice dummy in Tactics; kind "duel": challenge the same player again */
   function againHTML(kind, id) {
     if (kind === "test") return `<button class="btn fqagain" data-act="test">⟳ Fight again</button>`;
-    if (kind === "duel" && id) return `<button class="btn fqagain" data-act="duelgo" data-id="${esc(id)}" data-fqclose>⚔ Challenge again</button>`;
+    if (kind === "duel" && id) return `<button class="btn fqagain" data-act="duelgo" data-id="${esc(id)}" data-fqclose> Challenge again</button>`;
     return "";
   }
 

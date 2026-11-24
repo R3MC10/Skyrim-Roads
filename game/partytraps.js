@@ -37,11 +37,11 @@ const PTRAPS = (() => {
 
   // ---- what a trap does to you
   const KIND = {
-    poison: { label: "poisoned", icon: "🟢" },
-    bleed: { label: "cut and bleeding", icon: "🩸" },
-    burn: { label: "burned", icon: "🔥" },
-    gold: { label: "hurt, and their purse spilled", icon: "🪙" },
-    dent: { label: "hurt, and their armour dented", icon: "🛡" },
+    poison: { label: "poisoned", icon: "\uE15B" },
+    bleed: { label: "cut and bleeding", icon: "\uE11F" },
+    burn: { label: "burned", icon: "\uE104" },
+    gold: { label: "hurt, and their purse spilled", icon: "\uE111" },
+    dent: { label: "hurt, and their armour dented", icon: "\uE102" },
   };
   function kindOf(trap) {
     const t = String(trap || "").toLowerCase();
@@ -232,7 +232,7 @@ const PTRAPS = (() => {
     waitFor = main;
     const el = document.createElement("div");
     el.id = "ptwait"; el.className = "lockpick dgame ptwait";
-    el.innerHTML = `<div class="lpcard" role="dialog" aria-label="Waiting for the party"><h3>⚠ ${esc(r.q >= 0.5 ? "You got through" : "It caught you")}</h3>
+    el.innerHTML = `<div class="lpcard" role="dialog" aria-label="Waiting for the party"><h3>\uE123 ${esc(r.q >= 0.5 ? "You got through" : "It caught you")}</h3>
       <p class="lpsub">Waiting for the rest of the party…</p><div class="ptlist" id="ptwl"></div><p class="lphint" id="ptwt"></p></div>`;
     document.body.appendChild(el);
     refreshWait();
@@ -242,7 +242,7 @@ const PTRAPS = (() => {
     const main = docs.find((x) => x.type === "main" && x.gid === waitFor.gid) || waitFor;
     if (main.done) return closeWait();
     const res = resultsOf(docs, main.gid), me = S()?.id;
-    const html = main.members.map((m) => { const r = res.find((x) => x.by === m.id); return `<div class="ptrow ${r ? "in" : ""}"><b>${esc(m.name)}${m.id === me ? " (you)" : ""}${m.id === main.by ? " ⚑" : ""}</b><span>${r ? "✔ done" : "… still playing"}</span></div>`; }).join("");
+    const html = main.members.map((m) => { const r = res.find((x) => x.by === m.id); return `<div class="ptrow ${r ? "in" : ""}"><b>${esc(m.name)}${m.id === me ? " (you)" : ""}${m.id === main.by ? " ⚑" : ""}</b><span>${r ? "\uE120 done" : "… still playing"}</span></div>`; }).join("");
     const l = el.querySelector("#ptwl"); if (l.innerHTML !== html) l.innerHTML = html;
     const left = Math.max(0, Math.ceil((main.deadline - Date.now()) / 1000));
     el.querySelector("#ptwt").textContent = left ? `Anyone not done in ${left}s counts as caught.` : `Time's up. ${main.byName || "The leader"} moves the party on…`;
@@ -254,15 +254,15 @@ const PTRAPS = (() => {
     const k = kindOf(doc.trap), warnBy = (doc.warners || []).map((id) => doc.members.find((m) => m.id === id)?.name).filter(Boolean);
     const rows = doc.members.map((m) => {
       const o = doc.out?.[m.id] || { q: 0, late: 1 }, pass = o.q >= 0.5, f = doc.fol?.[m.id];
-      return `<div class="ptrow ${pass ? "ok" : "bad"}${m.id === me ? " me" : ""}"><b>${esc(m.name)}${m.id === me ? " (you)" : ""}</b><span>${pass ? "✔ Got through" : `${k.icon} Caught: ${esc(k.label)}`}${o.late ? " · ran out of time" : ""}${o.w ? " · warned, softer" : ""}</span></div>`
-        + (f ? `<div class="ptrow fol ${f.pass ? "ok" : "bad"}"><b>${esc(f.name)}</b><span>${f.pass ? "✔ Got through" : "Knocked down, gets back up"}</span></div>` : "");
+      return `<div class="ptrow ${pass ? "ok" : "bad"}${m.id === me ? " me" : ""}"><b>${esc(m.name)}${m.id === me ? " (you)" : ""}</b><span>${pass ? "\uE120 Got through" : `${k.icon} Caught: ${esc(k.label)}`}${o.late ? " · ran out of time" : ""}${o.w ? " · warned, softer" : ""}</span></div>`
+        + (f ? `<div class="ptrow fol ${f.pass ? "ok" : "bad"}"><b>${esc(f.name)}</b><span>${f.pass ? "\uE120 Got through" : "Knocked down, gets back up"}</span></div>` : "");
     }).join("");
     const o = doc.out?.[me];
     const line = !o ? "" : o.q >= 0.5 ? "You're through untouched." : `It caught you: ${k.label.replace("their", "your")}. You take the hit yourself.`;
-    return `<div class="lpcard ptcard" role="dialog" aria-label="Trap results"><h3>⚠ Trap results</h3>
+    return `<div class="lpcard ptcard" role="dialog" aria-label="Trap results"><h3>\uE123 Trap results</h3>
       <p class="lpsub">${esc(doc.trap[0]?.toUpperCase() + doc.trap.slice(1))} · ${esc(typeof DGAMES !== "undefined" ? DGAMES.INFO[doc.kind]?.title || "" : "")}</p>
       <div class="ptlist">${rows}</div>
-      ${warnBy.length ? `<p class="lpsub ptwarned">📣 ${esc(warnBy.join(", "))} called out the danger: the others' hits were softer.</p>` : ""}
+      ${warnBy.length ? `<p class="lpsub ptwarned">\uE156 ${esc(warnBy.join(", "))} called out the danger: the others' hits were softer.</p>` : ""}
       <p class="lphint" id="ptline">${esc(line)}</p><div class="lprow"><button class="btn pri" id="ptok">Continue</button></div></div>`;
   }
   function showResults(doc) {

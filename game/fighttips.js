@@ -47,7 +47,7 @@ const FIGHTTIPS = (() => {
     if (/more AP$/.test(w)) w += `: you have ${pool} left, it costs ${c}`;
     else if (/more magicka$/.test(w) && D.SPELLS[arg]) w += `: you have ${r0(f.mp)}, it needs ${mana(f, D.SPELLS[arg], k === "dual").need}`;
     else if (a === "power_attack" && /stamina/.test(w)) w += `: you have ${r0(f.sp)}, it needs ${r0(f.paCost || 0)}`;
-    return `<p class="tt-dn">⚠ ${esc(w)}</p>`;
+    return `<p class="tt-dn">\uE123 ${esc(w)}</p>`;
   }
   const apStat = (sess, a, c) => ["AP", c >= 99 ? "all" : /^(spell|dual|scroll):/.test(a) && sess.st?.spellAp ? `${c} (✦ spell AP first)` : c];
   const stripAp = (t) => String(t || "").replace(/\s*(?:\d+ AP\.|Uses all your AP\.)\s*$/, "");
@@ -64,7 +64,7 @@ const FIGHTTIPS = (() => {
       + (dual ? line(`Both hands: ${M ? M.DUAL_POWER : 2.2}× the effect for more magicka.`) : "")
       + safe(() => M.infoHTML(s, id), "")
       + stats([["Magicka", m.pay], ["You have", r0(f.mp)], apStat(sess, a, c)])
-      + (fail ? `<p class="tt-dn">⚠ Above your ${esc(sp.school)} skill: it fizzles ${r0(fail * 100)}% of the time</p>` : "")
+      + (fail ? `<p class="tt-dn">\uE123 Above your ${esc(sp.school)} skill: it fizzles ${r0(fail * 100)}% of the time</p>` : "")
       + whyHTML(sess, a, c) + hint(ZONE[zoneOf(a)] || "");
   }
   function potionHTML(sess, kind) {
@@ -157,9 +157,9 @@ const FIGHTTIPS = (() => {
   function chip(cls, ic, tip) { return `<i class="st ${cls}" data-tip="${esc(tip)}">${ic}</i>`; }
   function foeChips(f) {
     const out = [], rat = f.fcap?.rattled || 0;
-    if (f.fearTurns > 0) out.push(chip("fear", `😨${f.fearTurns}`, `Afraid: it cowers and won't fight for ${f.fearTurns} more turn${f.fearTurns === 1 ? "" : "s"}.`));
-    if (f.calmTurns > 0) out.push(chip("calm", `🕊${f.calmTurns}`, `Calmed: it stops fighting for ${f.calmTurns} more turn${f.calmTurns === 1 ? "" : "s"}.`));
-    if (rat > 0) out.push(chip("rattled", `💢${rat}`, `Rattled: still shaken, its blows land 20% softer for ${rat} more turn${rat === 1 ? "" : "s"}.`));
+    if (f.fearTurns > 0) out.push(chip("fear", `\uE142${f.fearTurns}`, `Afraid: it cowers and won't fight for ${f.fearTurns} more turn${f.fearTurns === 1 ? "" : "s"}.`));
+    if (f.calmTurns > 0) out.push(chip("calm", `\uE160${f.calmTurns}`, `Calmed: it stops fighting for ${f.calmTurns} more turn${f.calmTurns === 1 ? "" : "s"}.`));
+    if (rat > 0) out.push(chip("rattled", `\uE135${rat}`, `Rattled: still shaken, its blows land 20% softer for ${rat} more turn${rat === 1 ? "" : "s"}.`));
     return out.join("");
   }
   function decorate(el, sess) {

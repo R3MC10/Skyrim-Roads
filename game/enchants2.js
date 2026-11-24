@@ -121,7 +121,7 @@ const ENCH2 = (() => {
   function hit(f, en, em, ctx = {}) {
     const kind = WEAPON[en.effect][3], s = f.s;
     if (kind === "chain") {
-      let d = em * 1.5, label = " ⚡ chain lightning";
+      let d = em * 1.5, label = " \uE129 chain lightning";
       if (rnd() < 0.3) { d += em * 0.25; label += ", jumps twice"; }
       f.pendingEl = ["shock", em, "weapon"];
       return { dmg: d, label };
@@ -132,17 +132,17 @@ const ENCH2 = (() => {
       const heal = Math.max(0, Math.round(((ctx.dmg || 0) + extra) * em / 100 * (crit ? 1 : 0.25)));
       const mh = typeof G !== "undefined" ? G.maxHealth(s) : f.hp;
       const got = Math.max(0, Math.min(mh - f.hp, heal));
-      if (got > 0) { f.hp += got; label += ` 🩸 drinks ${got}`; }
+      if (got > 0) { f.hp += got; label += ` \uE11F drinks ${got}`; }
       return { dmg: extra, label };
     }
     if (kind === "numb") {
       if (chillProof(f)) return { dmg: em, label: " +frost" };
-      if (stack(f, "foe", "chill", 2)) return { dmg: em, label: " ❄ numbed" };   // chill 2
+      if (stack(f, "foe", "chill", 2)) return { dmg: em, label: " \uE125 numbed" };   // chill 2
       f._numb = Math.max(f._numb || 0, (f.turn || 0) + 2);
       if (!f.tb) f.slowed = Math.max(f.slowed || 0, 1);   // quick fights (no turn order): its next blow lands softer instead
-      return { dmg: em, label: " ❄ numbed" };
+      return { dmg: em, label: " \uE125 numbed" };
     }
-    if (kind === "wild") { if (stack(f, "foe", "burn", em / 3)) return { dmg: em, label: " 🔥 wildfire" }; f._wild = true; f.pendingEl = ["fire", em, "weapon"]; return { dmg: em, label: " 🔥 wildfire" }; }
+    if (kind === "wild") { if (stack(f, "foe", "burn", em / 3)) return { dmg: em, label: " \uE104 wildfire" }; f._wild = true; f.pendingEl = ["fire", em, "weapon"]; return { dmg: em, label: " \uE104 wildfire" }; }
     if (kind === "bane") {
       const k = f.tags.has("dragon") ? 1 : giantish(f) ? 0.5 : 0;
       return k ? { dmg: em * k, label: " +dragonbane" } : { dmg: 0, label: "" };
@@ -157,7 +157,7 @@ const ENCH2 = (() => {
       const ch = Math.min(0.3, em / 100) * (BIG(f) ? 0.5 : 1);
       if ((f._thunderCd || 0) > (f.turn || 0) || f.stagger || rnd() >= ch) return { dmg: 0, label: "" };
       f.stagger = true; f._thunderCd = (f.turn || 0) + 2;
-      return { dmg: 0, label: ", ⚡ thunderclap staggers" };
+      return { dmg: 0, label: ", \uE129 thunderclap staggers" };
     }
     if (kind === "reap") { const low = f.ehp < 0.25 * maxE(f); return { dmg: em * (low ? 3 : 1), label: low ? " +reaping (finishing)" : " +reaping" }; }
     if (kind === "sunder" && stack(f, "foe", "vulnerable", 1)) return { dmg: em, label: " +sunder" };
@@ -171,15 +171,15 @@ const ENCH2 = (() => {
     if (kind === "echo") {
       if (rnd() >= Math.min(0.25, em / 100) || !(ctx.dmg > 0)) return { dmg: 0, label: "" };
       const d = ctx.dmg * 0.5;
-      return { dmg: d, label: ` 🔁 echoes ${Math.round(d)}` };
+      return { dmg: d, label: ` \uE15C echoes ${Math.round(d)}` };
     }
     if (kind === "venom") {
       if (!living(f)) return { dmg: 0, label: "" };
-      if (stack(f, "foe", "poison", em)) return { dmg: 0, label: " ☠ venom" };   // poison N
+      if (stack(f, "foe", "poison", em)) return { dmg: 0, label: " \uE12E venom" };   // poison N
       const v = f._venom = f._venom || [];
       if (v.length >= 3) v.shift();
       v.push({ dmg: Math.max(1, Math.round(em)), turns: 3 });
-      return { dmg: 0, label: ` ☠ venom ×${v.length}` };
+      return { dmg: 0, label: ` \uE12E venom ×${v.length}` };
     }
     return { dmg: 0, label: "" };
   }
@@ -205,7 +205,7 @@ const ENCH2 = (() => {
     PFX.tick = function (f, line) {
       const extra = [];
       if (f._venom?.length && f.ehp > 0) {
-        const d = f._venom.reduce((a, v) => a + v.dmg, 0); f.ehp -= d; extra.push(`☠ venom ${d}`);
+        const d = f._venom.reduce((a, v) => a + v.dmg, 0); f.ehp -= d; extra.push(`\uE12E venom ${d}`);
         f._venom = f._venom.map((v) => ({ ...v, turns: v.turns - 1 })).filter((v) => v.turns > 0);
       }
       const b = f._wild && f.foeSt?.burn;
@@ -220,13 +220,13 @@ const ENCH2 = (() => {
     const s = f.s; let txt = "", back = 0;
     const blow = loss;
     if (f._venom?.length) { const r = loss * 0.1; back += r; loss -= r; }
-    if (f._lward > 0) { const soak = Math.min(f._lward, loss); f._lward -= soak; back += soak; loss -= soak; txt += ` · 🛡 Last Ward soaks ${Math.round(soak)}`; }
+    if (f._lward > 0) { const soak = Math.min(f._lward, loss); f._lward -= soak; back += soak; loss -= soak; txt += ` · \uE102 Last Ward soaks ${Math.round(soak)}`; }
     const ms = Math.min(0.4, worn(s, "e2:manashield") / 100);
     if (ms > 0 && f.mp > 0 && loss > 0) { const take = Math.min(f.mp, loss * ms); f.mp -= take; back += take; loss -= take; if (take >= 1) txt += ` · ${Math.round(take)} taken from your magicka`; }
     f.hp += back;
     const mh = typeof G !== "undefined" ? G.maxHealth(s) : 100;
     const lw = worn(s, "e2:lastward");
-    if (lw > 0 && !f._lwardUsed && f.hp > 0 && f.hp < mh / 3) { f._lwardUsed = true; if (!stack(f, "me", "ward", lw)) f._lward = lw; txt += ` · 🛡 a Last Ward rises (${Math.round(lw)})`; }
+    if (lw > 0 && !f._lwardUsed && f.hp > 0 && f.hp < mh / 3) { f._lwardUsed = true; if (!stack(f, "me", "ward", lw)) f._lward = lw; txt += ` · \uE102 a Last Ward rises (${Math.round(lw)})`; }
     const th = Math.min(0.3, worn(s, "e2:thorns") / 100);
     const ranged = f.tags.has("mage") || /archer|bow|hunter|marksman|ranger|sniper|mage|wizard|conjurer|necromancer|sorcer|witch|warlock/i.test(name(f)) || !!f.fp?.caster;
     if (th > 0 && f.ehp > 0 && !ranged && blow > 0) { const d = Math.max(1, Math.round(blow * th)); f.ehp -= d; txt += ` · thorns ${d}`; }

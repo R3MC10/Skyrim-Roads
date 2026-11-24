@@ -252,7 +252,7 @@ const PARTYPLAY = (() => {
       const err = COOP.join(s, { ...doc, id: r.id });
       if (err) return toast(err);
       if (typeof IMM !== "undefined") IMM.loading(`Entering ${place} together…`);
-      toast(n > 1 ? `🕯 Into ${place} with ${n - 1} other${n > 2 ? "s" : ""}. ${lone ? "" : `The way is ${extraRows(n)} rooms longer, and up to ${waves(n)} foes wait in each fight room.`}` : `🕯 Into ${place}.`);
+      toast(n > 1 ? ` Into ${place} with ${n - 1} other${n > 2 ? "s" : ""}. ${lone ? "" : `The way is ${extraRows(n)} rooms longer, and up to ${waves(n)} foes wait in each fight room.`}` : ` Into ${place}.`);
       ctx.persist(true); ctx.publishCard(); ctx.enterNow();
     }
 
@@ -308,12 +308,12 @@ const PARTYPLAY = (() => {
     function readyModal(p) {
       const rc = p.ready, where = rc.kind === "dungeon" ? `into <b>${esc(rc.place)}</b>` : `to <b>${esc(rc.destName)}</b>`;
       return `<h2>⚑ Ready check</h2><p>${esc(p.leaderName)} is leading the party ${where}.</p>${statusHTML(p)}
-        <div class="grid2" style="margin-top:10px"><button class="btn pri" data-act="ppready" data-id="1">✔ Ready</button><button class="btn" data-act="ppready" data-id="0">Not yet</button></div>
+        <div class="grid2" style="margin-top:10px"><button class="btn pri" data-act="ppready" data-id="1"> Ready</button><button class="btn" data-act="ppready" data-id="0">Not yet</button></div>
         <p class="sub" style="margin-bottom:0">${rc.kind === "dungeon" ? "Everyone who is ready goes in together. The dungeon grows with the party." : "The party travels together; the leader handles whatever you meet on the road."}</p>`;
     }
     function statusHTML(p) {
       const rc = p.ready;
-      return `<div class="pprc">${rc.who.map((id) => `<span class="ppchip ${rc.ok[id] ? "ok" : rc.no?.[id] ? "no" : ""}">${rc.ok[id] ? "✔" : rc.no?.[id] ? "✖" : "…"} ${esc(nameOf(p, id))}${id === p.leader ? " ⚑" : ""}</span>`).join("")}</div>`;
+      return `<div class="pprc">${rc.who.map((id) => `<span class="ppchip ${rc.ok[id] ? "ok" : rc.no?.[id] ? "no" : ""}">${rc.ok[id] ? "" : rc.no?.[id] ? "" : "…"} ${esc(nameOf(p, id))}${id === p.leader ? " ⚑" : ""}</span>`).join("")}</div>`;
     }
 
     /* a card on the Travel tab: the check, or "following the leader" */
@@ -328,7 +328,7 @@ const PARTYPLAY = (() => {
         if (r === "leader") h += `<p class="sub">${wait.length ? `Waiting for ${wait.map((id) => esc(nameOf(p, id))).join(", ")}.${left ? ` You can go without them in ${left}s.` : ""}` : "Everyone is ready."}</p>
           <div class="grid2"><button class="btn pri" data-act="ppgo" ${wait.length && left ? "disabled" : ""}>Depart${wait.length ? " now" : ""}</button><button class="btn" data-act="ppcancel">Cancel</button></div>
           ${wait.length && !left ? `<div class="chips" style="margin-top:6px">${wait.map((id) => `<button class="chip" data-act="ppkick" data-id="${esc(id)}">Send ${esc(nameOf(p, id))} home</button>`).join("")}</div>` : ""}`;
-        else if (rc.who.includes(s.id)) h += rc.ok[s.id] ? `<p class="sub">You're ready. Waiting for the others.</p><button class="btn" data-act="ppready" data-id="0" style="width:100%">Not ready after all</button>` : `<button class="btn pri" data-act="ppready" data-id="1" style="width:100%">✔ I'm ready</button>`;
+        else if (rc.who.includes(s.id)) h += rc.ok[s.id] ? `<p class="sub">You're ready. Waiting for the others.</p><button class="btn" data-act="ppready" data-id="0" style="width:100%">Not ready after all</button>` : `<button class="btn pri" data-act="ppready" data-id="1" style="width:100%"> I'm ready</button>`;
         h += `</div>`;
       }
       if (r === "member") {
@@ -348,7 +348,7 @@ const PARTYPLAY = (() => {
     async function act(b) {
       const a = b.dataset.act, s = me(), p = party();
       if (!p) return;
-      if (a === "ppready") { const yes = b.dataset.id === "1"; await change((x) => setReady(x, s.id, yes)); toast(yes ? "✔ You're ready." : "You asked them to wait."); ctx.closeModal(); }
+      if (a === "ppready") { const yes = b.dataset.id === "1"; await change((x) => setReady(x, s.id, yes)); toast(yes ? " You're ready." : "You asked them to wait."); ctx.closeModal(); }
       else if (a === "ppgo") { const q = party(); if (q?.ready && (allReady(q) || canForce(q))) depart(q); else toast("Give them a moment."); }
       else if (a === "ppcancel") { await change((x) => clearCheck(x)); toast("Ready check cancelled."); }
       else if (a === "ppkick") { const id = b.dataset.id; await change((x) => kick(x, s.id, id)); toast(`${nameOf(p, id)} is no longer in your party.`); }
@@ -371,7 +371,7 @@ const PARTYPLAY = (() => {
       return { opts: bs.map((b) => [b.dataset.a || b.dataset.c, labelOf(b), b.className.replace(/\bpv\w+/g, "").trim() || "btn", b.disabled ? 1 : 0]),
         title: m.querySelector("h2")?.textContent || "", sub: m.querySelector("p.sub")?.textContent?.replace(/\s+/g, " ").trim() || "" };
     }
-    const FALLBACK_OPTS = [["fight", "⚔️ Fight", "btn danger"], ["flee", "🏃 Flee", "btn"], ["sneak", "🥷 Sneak past", "btn"]];
+    const FALLBACK_OPTS = [["fight", " Fight", "btn danger"], ["flee", " Flee", "btn"], ["sneak", " Sneak past", "btn"]];
     function face(p, uid, size = 26) {
       const c = uid === me().id ? me() : ctx.cardOf(uid);
       let h = "";

@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b167-gameicons", build: 167, date: "24 Nov 2026", title: "Proper game icons", items: [
+      "The little phone emotes on buttons, cards and messages are gone. In their place: simple line icons drawn for the game, like the ones on the compass and in the menus.",
+      "Trap, fight, sneak, lockpick, rest, pray, chests, gold, potions, the weather and more: over 150 icons, sharp at any size and in the colour of the text around them.",
+      "Map pins you dropped before switch to the new icons by themselves.",
+    ] },
     { id: "b166-chargebar", build: 166, date: "24 Nov 2026", title: "Charge bars", items: [
       "Enchanted weapons and staffs now show a thin purple charge bar everywhere they appear: your pack, the Items menu and its details, tooltips, the paper doll, shops, chests and stash, follower gear, loot and loot votes, markets and trades.",
       "When the charge runs out the bar turns red and the item says \"no charge\": the enchantment stops working until you recharge it with a filled soul gem (Items → the weapon → Recharge).",

@@ -5,7 +5,7 @@
 var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, pat: [] };
 (() => {
   const WORDS = {
-    Downed: "Powalony", "🐴 Downed": "🐴 Koń powalony", "Horse downed": "Koń powalony", Hurt: "Ranny",
+    Downed: "Powalony", "\uE12D Downed": "\uE12D Koń powalony", "Horse downed": "Koń powalony", Hurt: "Ranny",
     "Horse back on its feet": "Koń znów na nogach", "Ready to ride again.": "Znów gotowy do jazdy.", "You fight on foot.": "Walczysz pieszo.",
     "Only a stablehand can tend your horse. Find a stables.": "Tylko stajenny może opatrzyć konia. Znajdź stajnię.",
     "Sleep, wait a few hours, or have a stablehand tend them.": "Prześpij się, odczekaj kilka godzin albo poproś stajennego, by go opatrzył.",
@@ -31,15 +31,15 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     [/^on foot · (.+) is downed and limps beside you$/, (m) => `pieszo · koń (${m[1]}) jest powalony i kuleje obok ciebie`],
     [/^Back up in about (\d+) min · or a stablehand in (.+)$/, (m) => `Wstanie za ok. ${m[1]} min · albo stajenny w: ${m[2]}`],
     [/^(.+) is downed$/, (m) => `Koń powalony: ${m[1]}`],
-    [/^🐎 (.+) is back on their feet$/, (m) => `🐎 Koń znów na nogach: ${m[1]}`],
+    [/^\uE12D (.+) is back on their feet$/, (m) => `\uE12D Koń znów na nogach: ${m[1]}`],
   );
   if (typeof I18N_STORY !== "undefined") {
     const PATS = [
-      ["🐴 {0} is downed!", "🐴 Koń pada ({0})!"],
+      ["\uE12D {0} is downed!", "\uE12D Koń pada ({0})!"],
       ["They limp along beside you but can't be ridden until they're back on their feet (about {0} hours, a night's sleep, or a stablehand's care).",
         "Kuleje obok ciebie, ale nie pojedziesz na nim, dopóki nie wstanie (około {0} godzin, noc snu albo opieka stajennego)."],
       ["{0} is downed and can't carry a rider yet.", "Koń ({0}) jest powalony i nie uniesie jeszcze jeźdźca."],
-      ["🐴 {0} is downed and limps behind you.", "🐴 Koń ({0}) jest powalony i kuleje za tobą."],
+      ["\uE12D {0} is downed and limps behind you.", "\uE12D Koń ({0}) jest powalony i kuleje za tobą."],
       ["{0} is downed: they limp along beside you but can't be ridden.", "Koń ({0}) jest powalony: kuleje obok ciebie, ale nie da się na nim jechać."],
       ["Back on their feet in about {0} hours ({1} min), or after you sleep.", "Wstanie za około {0} godz. ({1} min) albo gdy się prześpisz."],
       ["Back on their feet in about {0} hour ({1} min), or after you sleep.", "Wstanie za około {0} godz. ({1} min) albo gdy się prześpisz."],
@@ -48,7 +48,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
       ["The stablehand patches {0} up.", "Stajenny opatruje konia ({0})."], ["Good as new.", "Jak nowy."],
       ["{0} is fit and well.", "Koń ({0}) jest zdrowy i w formie."],
       ["The stablehand wants {0} gold for the poultices.", "Stajenny chce {0} sztuk złota za okłady."],
-      ["🐴 The {0} hurts {1} ({2}).", "🐴 {0} rani konia ({1}) ({2})."],
+      ["\uE12D The {0} hurts {1} ({2}).", "\uE12D {0} rani konia ({1}) ({2})."],
     ];
     for (const p of PATS) if (!I18N_STORY.pats.some(([en]) => en === p[0])) I18N_STORY.pats.push(p);
   }

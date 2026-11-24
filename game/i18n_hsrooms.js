@@ -10,9 +10,9 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     Wings: "Skrzydła", Stations: "Stanowiska", "Display cases": "Gabloty", Raids: "Napady", Plant: "Sadzenie", Empty: "Puste", "Dig up": "Wykop", Show: "Wystaw",
     "Take out": "Wyjmij", Store: "Odłóż", "Take along": "Zabierz ze sobą", "Small house": "Mały dom", "Main hall": "Główna sala", Armory: "Zbrojownia", Kitchen: "Kuchnia",
     "Trophy room": "Sala trofeów", "Storage room": "Magazyn", "Enchanter's tower": "Wieża zaklinacza", "Household help": "Pomoc domowników",
-    "Collect everything": "Zbierz wszystko", "Next in under a day": "Następne za niecały dzień", "⚔ Raid on the house": "⚔ Napad na dom",
+    "Collect everything": "Zbierz wszystko", "Next in under a day": "Następne za niecały dzień", " Raid on the house": " Napad na dom",
     "Defend the house": "Broń domu", "Talk them down": "Przegadaj ich", "Rest in the guest bed": "Odpocznij w łóżku dla gości", "Eat at the table": "Zjedz przy stole",
-    "Put something on show": "Wystaw coś", "Take something down": "Znieś coś do piwnicy", "All beds used": "Wszystkie grządki zajęte", "🛏 Your bed": "🛏 Twoje łóżko",
+    "Put something on show": "Wystaw coś", "Take something down": "Znieś coś do piwnicy", "All beds used": "Wszystkie grządki zajęte", " Your bed": " Twoje łóżko",
     Sleep: "Śpij", nobody: "nikt", "The house holds": "Dom się trzyma", Raided: "Napadnięty", "Talked down": "Przegadani",
     "Inside the house": "Wnętrze domu", "Guest of the house": "Gość domu", "From the wings": "Ze skrzydeł", "Homestead rooms, raids and guests": "Pokoje w zagrodzie, napady i goście",
     // raiders
@@ -79,7 +79,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "You stand in the doorway and talk.": "Stajesz w drzwiach i przemawiasz.", "They laugh at you.": "Śmieją ci się w twarz.",
     "Nothing for it now but to fight.": "Nie pozostaje nic innego, jak walczyć.", "Your storage room and cellar are untouched.": "Twój magazyn i piwnica są nietknięte.",
     // guests
-    "Come in.": "Wejdź.", "⚔ Raiders are at the gate.": "⚔ Napastnicy są u bram.", "Your party leader doesn't have a house here.": "Przywódca twojej drużyny nie ma tu domu.",
+    "Come in.": "Wejdź.", " Raiders are at the gate.": " Napastnicy są u bram.", "Your party leader doesn't have a house here.": "Przywódca twojej drużyny nie ma tu domu.",
     // perks
     "Master Builder": "Mistrz budowniczy", "Hearth Forge": "Domowa kuźnia", "Gracious Host": "Gościnny gospodarz", "Call to Arms": "Do broni",
     "Your homesteads have room for a fourth wing.": "Twoje zagrody mają miejsce na czwarte skrzydło.",
@@ -108,7 +108,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     [/^(\d+) gold a day$/, (m) => `${m[1]} złota dziennie`],
     [/^(\d+) days? ready$/, (m) => `gotowe: ${m[1]} dn.`],
     [/^⚑ (.+)'s homestead$/, (m) => `⚑ Zagroda: ${m[1]}`],
-    [/^✔ (.+)$/, (m) => (I18N_EXTRA.words[m[1]] ? `✔ ${I18N_EXTRA.words[m[1]]}` : null)],
+    [/^ (.+)$/, (m) => (I18N_EXTRA.words[m[1]] ? ` ${I18N_EXTRA.words[m[1]]}` : null)],
   );
   // sentences with names or numbers
   if (typeof I18N_STORY !== "undefined") I18N_STORY.pats.push(
@@ -134,7 +134,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     ["{0} came while you were away and got past your household.", "{0} przyszli pod twoją nieobecność i przedarli się przez domowników."],
     ["{0} came while you were away and nobody was home.", "{0} przyszli pod twoją nieobecność, a w domu nikogo nie było."],
     ["They carried off {0} and the goods waiting in the wings.", "Wynieśli: {0} oraz towary czekające w skrzydłach."],
-    ["🏡 Drove {0} off {1}.", "🏡 Przegnano {0} z {1}."],
+    [" Drove {0} off {1}.", " Przegnano {0} z {1}."],
     ["{0} break and run, chased by {1}.", "{0} pierzchają, a goni ich {1}."], ["{0} break and run.", "{0} pierzchają."],
     ["You take {0} gold, {1} off them.", "Zabierasz im {0} złota, {1}."], ["You take {0} gold off them.", "Zabierasz im {0} złota."],
     ["{0} knock you down in your own yard and carry off {1}.", "{0} powalają cię na twoim własnym podwórzu i wynoszą: {1}."],

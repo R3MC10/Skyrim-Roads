@@ -160,7 +160,7 @@ setTimeout(() => {
   // 7. results card text
   const html = PT.resultsHTML(done, "B");
   ok(/Alfa/.test(html) && /Beta \(you\)/.test(html) && /Ceta/.test(html), "results card lists everyone");
-  ok(/✔ Got through/.test(html) && /Caught: poisoned/.test(html) && /ran out of time/.test(html), "card: who got through, who got hit with what, who timed out");
+  ok(/Got through/.test(html) && /Caught: poisoned/.test(html) && /ran out of time/.test(html), "card: who got through, who got hit with what, who timed out");
   ok(/It caught you: poisoned/.test(html), "card tells B it caught them");
 
   // 8. chests: only the leader opens, members see the same lock result

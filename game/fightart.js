@@ -1,7 +1,7 @@
 /* Fight scenes: a little animated stage above every fight log — where you are, you on the left, the foe on the
    right — that replays the whole fight turn by turn at a natural pace (about a second an action: wind-up, strike,
    impact, recovery). Every weapon swings its own way, every spell has its own effect, with particles, screen shake,
-   hit-stop and a slow finishing blow. ⏩ ×1/×2/×4 and Skip to result buttons; tap the scene to skip. Drawn with the shared ART
+   hit-stop and a slow finishing blow. \uE13C ×1/×2/×4 and Skip to result buttons; tap the scene to skip. Drawn with the shared ART
    toolkit (hand-drawn ink).
    It only reads the finished Fight (its log, what was done each turn, start/end health); it never changes a result. [OURS] */
 const FIGHTART = (() => {
@@ -885,11 +885,11 @@ const FIGHTART = (() => {
       draw(performance.now());
       idleArt();
     }
-    // ---- controls: ⏩ ×2 and Skip
+    // ---- controls:  ×2 and Skip
     let ctl = null;
     if (!(rec.played || autoSkip() || !beats.length)) {
       ctl = document.createElement("div"); ctl.className = "fsctl";
-      const spLbl = () => `⏩ ×${speed}`;   // tap to cycle ×1 → ×2 → ×4
+      const spLbl = () => ` ×${speed}`;   // tap to cycle ×1 → ×2 → ×4
       ctl.innerHTML = `<button type="button" class="fsbtn" data-fsx aria-label="Replay speed, now times ${speed}">${spLbl()}</button><button type="button" class="fsbtn" data-fss>Skip to result</button>`;
       ctl.addEventListener("click", (e) => {
         e.stopPropagation();
@@ -1324,15 +1324,15 @@ x - 0.5, y - 0.5, bw + 1, bh + 1);
       };
       bar(8, hpD, Math.max(hpL, hpD), hpMax, "#c0392b", L("You"), false);
       bar(W - 8 - bw, ehpD, Math.max(ehpL, ehpD), ehpMax, "#8e6b2b", ((n) => (n.length > 22 ? n.slice(0, 21) + "…" : n))(L(rec.foeName)), true);
-      // status icons with turns left, under each name: 🔥 burning · ❄ chilled · ⚡ jolted
-      const cs = curSt(), ICO = { burn: ["🔥", "#ff9a3c"], chill: ["❄", "#bfe6ff"], shock: ["⚡", "#ffe37a"] };
+      // status icons with turns left, under each name:  burning ·  chilled ·  jolted
+      const cs = curSt(), ICO = { burn: ["", "#ff9a3c"], chill: ["", "#bfe6ff"], shock: ["", "#ffe37a"] };
       const chips = (st, x, right) => {
         let off = 0;
         for (const k of ["burn", "chill", "shock"]) if (st[k]) {
           const txt = `${ICO[k][0]}${st[k]}`, w = 26, cx = right ? x - off - w : x + off;
           g.fillStyle = "rgba(20,22,26,0.78)"; g.fillRect(cx, y + bh + 20, w, 15);
           g.strokeStyle = ICO[k][1]; g.lineWidth = 1; g.strokeRect(cx + 0.5, y + bh + 20.5, w - 1, 14);
-          g.font = "600 10px sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillStyle = ICO[k][1];
+          g.font = "600 10px GameIcons, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillStyle = ICO[k][1];
           g.fillText(txt, cx + w / 2, y + bh + 28);
           off += w + 3;
         }

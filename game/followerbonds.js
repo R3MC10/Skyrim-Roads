@@ -31,10 +31,10 @@ const BONDS = (() => {
 
   // ---- what kinds of deeds there are (plain words for the "what they think" list)
   const TAGS = {
-    kind: ["🤝", "Helping people"], cruel: ["🗡", "Cruelty"], theft: ["👛", "Stealing"], brave: ["⚔", "Picking big fights"],
-    careful: ["🛡", "Playing it safe"], pious: ["🕯", "Praying and the gods"], magic: ["✨", "Magic and books"], daedra: ["🌀", "Deals with Daedra"],
-    law: ["⚖", "Paying what's owed"], crime: ["🚨", "Breaking the law"], killer: ["🩸", "Murder for hire"], empire: ["🦅", "Helping the Empire"],
-    storm: ["🐻", "Helping the Stormcloaks"], beast: ["🐺", "Vampires and werewolves"], greed: ["💰", "Grabbing loot"], nature: ["🌿", "Hunting and the wild"],
+    kind: ["", "Helping people"], cruel: ["", "Cruelty"], theft: ["", "Stealing"], brave: ["", "Picking big fights"],
+    careful: ["", "Playing it safe"], pious: ["", "Praying and the gods"], magic: ["", "Magic and books"], daedra: ["", "Deals with Daedra"],
+    law: ["", "Paying what's owed"], crime: ["", "Breaking the law"], killer: ["", "Murder for hire"], empire: ["", "Helping the Empire"],
+    storm: ["", "Helping the Stormcloaks"], beast: ["", "Vampires and werewolves"], greed: ["", "Grabbing loot"], nature: ["", "Hunting and the wild"],
   };
 
   /* ---- who they are. likes/hates: tag -> weight (1-2). yes/no: what they say when they approve/disapprove.
@@ -261,7 +261,7 @@ const BONDS = (() => {
     const id = s.follower?.id; if (!id || !line) return "";
     const f = bond(s, id), who = first(id), dog = isDog(id), en = dog ? line.replace(/^\*|\*$/g, "") : line, text = show(who, en, dog);
     f.bond.log.unshift({ t: now(), text: dog ? `${who} ${en}` : `${who}: "${en}"`, w: who, l: en, dog, k: opts.k || "say" }); f.bond.log = f.bond.log.slice(0, 12);
-    if (opts.note !== false && typeof G !== "undefined") { if (s.trip?.log && opts.trip) { s.trip.log.unshift("💬 " + text); s.trip.log = s.trip.log.slice(0, 8); } G.note(s, "💬 " + text); }
+    if (opts.note !== false && typeof G !== "undefined") { if (s.trip?.log && opts.trip) { s.trip.log.unshift(" " + text); s.trip.log = s.trip.log.slice(0, 8); } G.note(s, " " + text); }
     if (opts.bubble !== false) bubble(id, text, opts.mood);
     return text;
   }
@@ -308,7 +308,7 @@ const BONDS = (() => {
     if (f.bond.q && !f.bond.q.done) f.bond.q = null;   // the quest is dropped; it can be picked up again later
     s.follower = null;
     const msg = isDog(id) ? F("{0} slinks off into the trees and doesn't come back.", n) : F("{0} has had enough of you and walks off. (\"Find someone else to drag around.\")", n);
-    if (typeof G !== "undefined") G.note(s, "💔 " + msg);
+    if (typeof G !== "undefined") G.note(s, " " + msg);
     if (typeof document !== "undefined" && document.body) bubble(id, msg, "force");
     return msg;
   }
@@ -349,21 +349,21 @@ const BONDS = (() => {
     if (st.k !== "open") return "";
     st.b.q = { stage: 0, t: now() };
     say(s, st.q[1], { k: "quest", bubble: false });
-    if (typeof G !== "undefined") G.note(s, "📜 " + F("New quest: {0} ({1}). Go to {2}.", T(st.q[0]), nameOf(id), st.q[2]));
+    if (typeof G !== "undefined") G.note(s, " " + F("New quest: {0} ({1}). Go to {2}.", T(st.q[0]), nameOf(id), st.q[2]));
     questTick(s);
-    return "📜 " + F("{0}: go to {1} — {2}.", T(st.q[0]), st.q[2], T(st.q[3]));
+    return " " + F("{0}: go to {1} — {2}.", T(st.q[0]), st.q[2], T(st.q[3]));
   }
   function questTick(s) {
     const id = s.follower?.id, st = questState(s); if (!["go", "clear"].includes(st.k)) return "";
     const q = st.b.q;
     if (q.stage === 0 && s.location === st.q[2]) {
       q.stage = 1; q.t = now();
-      if (typeof G !== "undefined") G.note(s, "📜 " + F("{0}: now clear {1} ({2}).", T(st.q[0]), st.q[4], T(st.q[5])));
+      if (typeof G !== "undefined") G.note(s, " " + F("{0}: now clear {1} ({2}).", T(st.q[0]), st.q[4], T(st.q[5])));
       say(s, isDog(id) ? "*sniffs the air and tugs toward the hills*" : F("Right. {0} next. Let's go.", st.q[4]), { k: "quest" });
     }
     if (q.stage === 1 && (s.cleared || {})[st.q[4]] >= q.t) {
       q.stage = 2;
-      if (typeof G !== "undefined") G.note(s, "📜 " + F("{0}: done. Talk to {1} (Character → Follower → Bond) to finish it.", T(st.q[0]), first(id)));
+      if (typeof G !== "undefined") G.note(s, " " + F("{0}: done. Talk to {1} (Character → Follower → Bond) to finish it.", T(st.q[0]), first(id)));
     }
     return "";
   }
@@ -377,7 +377,7 @@ const BONDS = (() => {
     const kid = st.q[9]; let got = "";
     if (kid && typeof D !== "undefined" && D.ITEMS[kid] && typeof G !== "undefined") { G.give(s, kid); got = " " + F("You get {0}.", T(D.ITEMS[kid].name)); }
     say(s, c[2], { k: "quest", mood: "up" });
-    if (typeof G !== "undefined") G.note(s, "📜 " + F("{0} done. New move for {1}: {2}.", T(st.q[0]), first(id), T(st.q[8].name)) + got);
+    if (typeof G !== "undefined") G.note(s, " " + F("{0} done. New move for {1}: {2}.", T(st.q[0]), first(id), T(st.q[8].name)) + got);
     return `${T(st.q[6])} ${T(c[2])} ` + F("New signature move for {0}: {1} ({2}, once per fight).", first(id), T(st.q[8].name), T(st.q[8].desc)) + got;
   }
 
@@ -517,10 +517,10 @@ const BONDS = (() => {
     const st = questState(s), q = st.q;
     let quest = "";
     if (st.k === "none") quest = `<p class="sub">${esc(T("No personal quest."))}</p>`;
-    else if (st.k === "locked") quest = `<div class="item bondq lock"><div class="t">🔒 ${esc(T(q[0]))}<span>${esc(F("{0} will open up at loyalty {1} (now {2}).", first(id), st.need, v))}</span></div></div>`;
-    else if (st.k === "open") quest = `<div class="item bondq"><div class="t">📜 ${esc(T(q[0]))}<span>${esc(F("{0} wants to ask you something.", first(id)))}</span></div><button class="btn sm pri" data-act="fol2" data-op="bond" data-b="qstart">${esc(T("Listen"))}</button></div>`;
-    else if (st.k === "go" || st.k === "clear") quest = `<div class="item bondq on"><div class="t">📜 ${esc(T(q[0]))}<span>${esc(T(q[1]))}</span><span class="bondobj">${st.k === "go" ? `▸ ${esc(T("Go to"))} <b>${esc(q[2])}</b> (${esc(T(q[3]))})` : `✓ ${esc(q[2])} · ▸ ${esc(T("Clear"))} <b>${esc(q[4])}</b> (${esc(T(q[5]))})`}</span></div></div>`;
-    else if (st.k === "choose") quest = `<div class="item bondq on"><div class="t">📜 ${esc(T(q[0]))}<span>${esc(T(q[6]))}</span>${canChoose(s) ? "" : `<span class="bondobj">${esc(T("In a party only the leader makes choices."))}</span>`}</div></div>
+    else if (st.k === "locked") quest = `<div class="item bondq lock"><div class="t"> ${esc(T(q[0]))}<span>${esc(F("{0} will open up at loyalty {1} (now {2}).", first(id), st.need, v))}</span></div></div>`;
+    else if (st.k === "open") quest = `<div class="item bondq"><div class="t"> ${esc(T(q[0]))}<span>${esc(F("{0} wants to ask you something.", first(id)))}</span></div><button class="btn sm pri" data-act="fol2" data-op="bond" data-b="qstart">${esc(T("Listen"))}</button></div>`;
+    else if (st.k === "go" || st.k === "clear") quest = `<div class="item bondq on"><div class="t"> ${esc(T(q[0]))}<span>${esc(T(q[1]))}</span><span class="bondobj">${st.k === "go" ? `▸ ${esc(T("Go to"))} <b>${esc(q[2])}</b> (${esc(T(q[3]))})` : `✓ ${esc(q[2])} · ▸ ${esc(T("Clear"))} <b>${esc(q[4])}</b> (${esc(T(q[5]))})`}</span></div></div>`;
+    else if (st.k === "choose") quest = `<div class="item bondq on"><div class="t"> ${esc(T(q[0]))}<span>${esc(T(q[6]))}</span>${canChoose(s) ? "" : `<span class="bondobj">${esc(T("In a party only the leader makes choices."))}</span>`}</div></div>
       <div class="bondch">${q[7].map((c, i) => `<button class="btn sm ${i ? "" : "pri"}" data-act="fol2" data-op="bond" data-b="qchoose" data-i="${i}" ${canChoose(s) ? "" : "disabled"}>${esc(T(c[0]))}</button>`).join("")}</div>`;
     else quest = `<div class="item bondq done"><div class="t">✓ ${esc(T(q[0]))}<span>${esc(T("Signature move:"))} <b>${esc(T(q[8].name))}</b> — ${esc(T(q[8].desc))}, ${esc(T("once per fight"))}${q[8].type === "heal" || q[8].type === "guard" ? " " + esc(T("(when you're below half health)")) : ""}.</span></div></div>`;
     const talkLeft = Math.max(0, TALK_EVERY - (t - (f.bond.talkAt || 0))), giftLeft = Math.max(0, GIFT_EVERY - (t - (f.bond.giftAt || 0)));
@@ -529,8 +529,8 @@ const BONDS = (() => {
     return `<div class="bond">
       ${meter(s, esc)}
       <p class="sub bondmood"><b>${esc(T(mname))}:</b> ${esc(T(mwhat))}</p>
-      <div class="chips bondbtns"><button class="btn sm" data-act="fol2" data-op="bond" data-b="talk" ${talkLeft ? "disabled" : ""}>💬 ${esc(T("Talk"))}${talkLeft ? ` (${mins(talkLeft)})` : ""}</button>
-        <button class="btn sm" data-act="fol2" data-op="bond" data-b="gift" ${giftLeft || s.gold < GIFT_COST ? "disabled" : ""}>🎁 ${esc(F("Gift {0} gold", GIFT_COST))}${giftLeft ? ` (${mins(giftLeft)})` : ""}</button></div>
+      <div class="chips bondbtns"><button class="btn sm" data-act="fol2" data-op="bond" data-b="talk" ${talkLeft ? "disabled" : ""}> ${esc(T("Talk"))}${talkLeft ? ` (${mins(talkLeft)})` : ""}</button>
+        <button class="btn sm" data-act="fol2" data-op="bond" data-b="gift" ${giftLeft || s.gold < GIFT_COST ? "disabled" : ""}> ${esc(F("Gift {0} gold", GIFT_COST))}${giftLeft ? ` (${mins(giftLeft)})` : ""}</button></div>
       <h3>${esc(T("What they think"))}</h3>
       <div class="bondtags"><span class="sub">${esc(T("Likes:"))}</span> ${tagRow(p.likes, "yes")}</div>
       <div class="bondtags"><span class="sub">${esc(T("Dislikes:"))}</span> ${tagRow(p.hates, "no")}</div>
@@ -601,8 +601,8 @@ const BONDS = (() => {
         try {
           if (s?.follower && fight) {
             const l = fightLine(s, fight);
-            if (l) msgs.push("💬 " + say(s, l, { k: "fight" }));
-            const ob = observe(s); if (ob) msgs.push("💬 " + ob);
+            if (l) msgs.push(" " + say(s, l, { k: "fight" }));
+            const ob = observe(s); if (ob) msgs.push(" " + ob);
           }
         } catch (e) { /* never break the fight result */ }
         return msgs;

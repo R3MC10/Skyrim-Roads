@@ -101,7 +101,7 @@ const HOLDUI = (() => {
     if (c) stats.push(statRow("Your clan's war points here", `${pts} / ${WARS.MIN_TO_RULE}`, pts >= WARS.MIN_TO_RULE ? "good" : ""));
     const can = H.canFight(s, hold, t, { role: role(s) });
     if (can.kind) {
-      const label = can.kind === "claim" ? "⚔ Challenge the champion" : "⚔ Raid the hold";
+      const label = can.kind === "claim" ? "\uE101 Challenge the champion" : "\uE101 Raid the hold";
       acts = `<div class="hr-act"><button class="btn ${can.why ? "" : "danger"}" data-hact="fight" data-h="${esc(hold)}" ${can.why ? "disabled" : ""}>${label}</button><p class="sub">${esc(can.why || (can.kind === "claim" ? `A hard fight. Win and ${c ? `${c.name} rules ${hold}` : "your clan rules it"}. ${H.CLAIM_GOLD} gold.` : `Each win knocks down a wall (${seat.walls} left). Win with no walls left to take the hold. ${H.RAID_GOLD} gold a win.`))}</p></div>` + acts;
     }
     return `${head}${keepArt(seat, fx)}<div class="hr-stats">${stats.join("")}</div>${acts}`;
@@ -123,7 +123,7 @@ const HOLDUI = (() => {
   }
   function windowLine(t) {
     const w = H.windowAt(t);
-    return w.open ? `⚔ The raid window is open: ${span(w.closes - t)} left.` : `The raid window opens on Saturday at 12:00 UTC (in ${span(w.opens - t)}).`;
+    return w.open ? `\uE101 The raid window is open: ${span(w.closes - t)} left.` : `The raid window opens on Saturday at 12:00 UTC (in ${span(w.opens - t)}).`;
   }
   /* Social → Realm: the whole Holds panel */
   function panel(s) {
