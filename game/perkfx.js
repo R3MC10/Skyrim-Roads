@@ -212,6 +212,7 @@ const PFX = (() => {
     [ "Alchemy", "field_medic", "Field Medic", 1, [40], ["physician"], "Healing potions you drink in a fight heal 20% more. [OURS]", [["potion", 0.2, {}]]],
     [ "Alchemy", "forager", "Forager", 1, [20], ["alchemist"], "You spot plant patches from twice as far away, and foraging turns up one more ingredient. [OURS, gathering]", [["gspot", 1, {}], ["forage", 1, {}]]],
     [ "Alchemy", "wildcrafter", "Wildcrafter", 1, [50], ["forager"], "Picked patches grow back twice as fast, and rare finds (Nirnroot, pearls, glowing fungi) turn up when you forage. [OURS, gathering]", [["regrow", 0.5, {}], ["grare", 1, {}]]],
+    [ "Alchemy", "quick_draught", "Quick Draught", 2, [30, 60], ["physician"], "Restore Health, Magicka and Stamina potions work faster: everything comes in one round sooner per rank (a second sooner on the road), never in under two. [OURS]", [["potfast", 1, {}]]],
     [ "Alchemy", "master_alchemist", "Master Alchemist", 1, [100], ["purity", "green_thumb"], "Everything you brew is another 10% stronger. [OURS]", [["alch", 0.1, {}]]],
     // ---------------------------------------------------------------- road encounters (encounters.js)
     [ "Speechcraft", "smooth_talker", "Smooth Talker", 1, [30], ["persuasion"], "On the road, bluffs, threats and haggling are 10% more likely to work. [OURS]", [["enctalk", 0.1, {}]]],

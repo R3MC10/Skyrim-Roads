@@ -69,6 +69,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Smart AI combat (default; custom tactics optional), crafting mini-games, motion design (63)
 
 ## In progress (write your name before you start)
+- Claude: potions over time (potionfx.js): Restore Health/Magicka/Stamina potions give their total over a few rounds (seconds on the map) instead of all at once; same kind does not stack (keeps the bigger remainder); buff chip + rising numbers; party sync; Alchemy perk Quick Draught. Branch claude/potionregen.
 - Claude: HOTFIX dungeon room loop (coop.js, lootvote.js, dungeons.js repair, explore.js claw door): the party leader was sent back into a room after a turn-by-turn fight undid the late room count, dropped store writes left the party unable to follow; stuck saves repaired on load; tests/test_dunloop.js. Branch claude/hotfix-dunloop.
 - Claude: tooltips in fights (fighttips.js): tooltip.js over every part of the fight screen (spell rows, Cast/Dual with perk numbers and why greyed, potions, scrolls, quick slots, AP, bars, you, foe, status chips incl. afraid/calmed/rattled); holding a finger shows the tip and never casts; drag still works. Branch claude/fighttips.
 - Claude: Skyrim skill-up toasts (skillup.js): "X increased to N" over a filling bar at the top of the HUD lane, flash + chime on a crossed level, queued (tap to skip), XP creep after fights, bigger Level up banner with the level bar; fight result keeps follower lines separate; tests/test_skillup.js + skillup_ui.py. Branch claude/skillup.
