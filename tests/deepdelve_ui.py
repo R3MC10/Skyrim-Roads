@@ -37,7 +37,10 @@ async def main():
             async def phone(tag, name):
                 pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(style + " " + tag + " " + str(e)))
                 await pg.goto(f"http://localhost:{PORT}/index.html?assets&net=bc&notut&p=dd{style}{tag}"); await pg.wait_for_timeout(1800)
-                await pg.wait_for_selector(".press", timeout=90000); await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.wait_for_selector("#nm", timeout=60000); await pg.fill("#nm", name); await pg.click("#begin"); await pg.wait_for_timeout(1200)
+                await pg.wait_for_selector(".press", state="attached", timeout=90000); await pg.evaluate("document.querySelector('.press').click()"); await pg.wait_for_timeout(500)
+                await pg.wait_for_selector(".mi[data-t=new]", state="attached", timeout=30000); await pg.evaluate("document.querySelector('.mi[data-t=new]').click()"); await pg.wait_for_timeout(800)
+                await pg.evaluate("() => document.querySelector('.cgtab[data-tab=start]')?.click()"); await pg.wait_for_timeout(300)   # the new character screen keeps the name on its Start tab
+                await pg.wait_for_selector("#nm", timeout=60000); await pg.fill("#nm", name); await pg.evaluate("document.querySelector('#begin').click()"); await pg.wait_for_timeout(1500)
                 await clean(pg)
                 return pg
             async def clean(pg): await pg.evaluate("() => document.querySelectorAll('#modal,.modal,.intro,#wwall,#obtip').forEach(m => m.remove())")
@@ -122,14 +125,14 @@ async def main():
             keys = [await pg.evaluate("() => [...document.querySelectorAll('#dun .pvote [data-act=pvv]')].map(b => b.dataset.k).join()") for pg in pages]
             check(f"[{style}] both phones get the camp vote", all(got) and len(set(keys)) == 1 and "descend" in keys[0] and "extract" in keys[0], str(keys))
             if all(got):
-                await M.bring_to_front(); await M.click("#dun .pvote [data-act=pvv][data-k='descend']")
+                await M.bring_to_front(); await clean(M); await M.click("#dun .pvote [data-act=pvv][data-k='descend']")
                 await L.bring_to_front()
                 face = await wait_for(L, f"() => !!document.querySelector('#dun .pvote [data-k=\"descend\"] .pvchip[data-uid=\"{idm}\"]')")
                 check(f"[{style}] Mate's face shows by Descend on the leader's phone", face)
                 await L.wait_for_timeout(400); await clean(L)
                 await L.screenshot(path=os.path.join(OUT, f"{style}_vote_phone.png"))
                 await L.locator("#dun .pvote").screenshot(path=os.path.join(OUT, f"{style}_vote_card.png"))
-                await L.click("#dun .pvote [data-act=pvv][data-k='descend']")
+                await clean(L); await L.click("#dun .pvote [data-act=pvv][data-k='descend']")
                 down = [await wait_for(pg, "() => window.__dbg.save().dungeon?.deep?.level === 1", tries=30) for pg in pages]
                 check(f"[{style}] the party goes down together", all(down), str(down))
                 maps = [await pg.evaluate("() => JSON.stringify(window.__dbg.save().dungeon?.rows?.map(r => r.map(n => n.type)))") for pg in pages]
