@@ -69,6 +69,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Smart AI combat (default; custom tactics optional), crafting mini-games, motion design (63)
 
 ## In progress (write your name before you start)
+- Claude: tooltips over almost anything (tooltip.js): hover with a mouse, hold a finger on phones; items, spells, perks, skills, places, quests, followers, party, HUD bars, gold. Branch claude/tooltips.
 - Claude: dungeon mini-games (dungeongames.js): trap dash, find the trigger, smash a chest, sneak past, run for it, search; replayable from a seed + taps; party members watch the leader play live (also lockpicking and the pillar/claw rings). Branch claude/dungeongames.
 - Claude: dungeons get longer per player in a party (partyplay.js longLayout/sizeRun, coop.js lobby start). Branch claude/partydungeons.
 - Claude: travel strip overhaul (travelart.js): deep parallax scenery by region, sky/time of day, live weather, lighting, passing landmarks and travellers, the destination growing on the horizon. Branch claude/travelscene.

@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b137tt", build: 137, date: "24 Nov 2026", title: "Tooltips on almost everything", items: [
+      "Rest the mouse on almost anything to read what it is: items, spells, tomes, perks, skills, places, quests, followers, party members, your health, magicka and stamina bars, carry weight, level and gold.",
+      "On a phone, hold your finger on it for a moment instead. Holding doesn't press the button underneath, and a normal tap works just like before.",
+      "Item tooltips show damage or armor, weight, value, enchantments and how it compares with what you're wearing. Places you haven't found yet stay secret.",
+    ] },
     { id: "b136dg", build: 136, date: "24 Nov 2026", title: "Dungeon mini-games, and watching your leader", items: [
       "Dungeon rooms are played now, not rolled. Dash through a trap by running between the swinging blades, find the trigger by spotting the stone that sits low and glints, smash a chest with well-timed swings, sneak past a foe by stopping when it turns (and waiting in the shadows), and search a quiet room by rubbing the dust away. Each takes 5 to 15 seconds.",
       "New choice in fight rooms: Run for it. Tap Left and Right in turn as fast as you can to get past the foe. Get caught and it hits first.",
