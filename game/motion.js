@@ -168,7 +168,8 @@ const MOTION = (() => {
     const el = document.createElement(src ? "img" : "i");
     el.className = "mo-fly"; el.setAttribute("aria-hidden", "true");
     if (src) el.src = src;
-    const x0 = fromRect.left + fromRect.width / 2, y0 = fromRect.top + fromRect.height / 2, to = packTarget();
+    const z = typeof FITCANVAS !== "undefined" ? FITCANVAS.zoom() : 1;   // zoomed page (PC, bigger text): screen px → page px
+    const t0 = packTarget(), x0 = (fromRect.left + fromRect.width / 2) / z, y0 = (fromRect.top + fromRect.height / 2) / z, to = { x: t0.x / z, y: t0.y / z };
     el.style.left = `${x0 - 14}px`; el.style.top = `${y0 - 14}px`;
     document.body.appendChild(el);
     const dx = to.x - x0, dy = to.y - y0, lift = Math.min(160, Math.abs(dx) * 0.4 + 60);

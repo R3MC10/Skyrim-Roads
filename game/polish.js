@@ -116,7 +116,8 @@ const POLISH = (() => {
     const el = document.createElement("div");
     el.className = `pgold ${delta > 0 ? "up" : "down"}`;
     el.textContent = `${delta > 0 ? "+" : "−"}${Math.abs(delta)}`;
-    el.style.left = `${Math.round(r.left - 4)}px`; el.style.top = `${Math.round(r.top + window.scrollY - 4)}px`;
+    const z = typeof FITCANVAS !== "undefined" ? FITCANVAS.zoom() : 1;   // the page may be zoomed (PC monitors, bigger text): screen px → page px
+    el.style.left = `${Math.round((r.left - 4) / z)}px`; el.style.top = `${Math.round((r.top - 4) / z + window.scrollY / z)}px`;
     document.body.appendChild(el);
     setTimeout(() => el.remove(), reduce ? 900 : 1300);
   }
