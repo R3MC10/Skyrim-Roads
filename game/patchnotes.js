@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b155-shouts", build: 155, date: "24 Nov 2026", title: "Shouts and weather that matter", items: [
+      "Thu'um Mastery (Speechcraft) makes every shout cool down faster, and Commanding Voice now works on all shouts, not just the first ten. The Shouts list shows your real cooldown.",
+      "Fire Breath, Frost Breath and Storm Call follow the sky: rain dulls fire, snow and blizzards feed frost, storms feed lightning. Outside a fight, Fire Breath lights a fire to warm you up.",
+      "A weather chip sits next to your status icons. Tap it (or the clock) to see what the weather does right now: slower travel, hiding, spells, arrows, sight, cold, ships.",
+      "Storms on the coast keep the Northern Maiden in harbour at Windhelm and Raven Rock until they pass. Shouting Clear Skies at the docks clears it.",
+      "Clear nights: your magicka comes back 50% faster in fights. New perks: Weathered Traveller (Acrobatics) for bad weather and the cold, Starlit Mind (Alteration) for clear nights."] },
     { id: "b143-bleakfalls", build: 143, date: "24 Nov 2026", title: "Farengar's quest can't get stuck any more", items: [
       "Bleak Falls Barrow (main quest): clearing the barrow now moves the quest on by itself. The next step, \"The Dragonstone\", sends you to Farengar in Whiterun.",
       "Farengar doesn't need the Dragonstone in your pack any more. If it got lost, ended up in a chest or went to someone else in a party, just tell him: clearing the barrow is enough. Hand it in under Area tab → Court wizard, or with the button in the Journal.",

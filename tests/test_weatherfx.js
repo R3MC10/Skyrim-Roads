@@ -17,7 +17,7 @@ const foe = (name = "Bandit") => ({ name, hp: 400, health: 400, damage: 5, armor
 force("rain"); let s = mk(), f = new G.Fight(s, foe());
 OK(f.wx && f.wx.el.fire === 0.85 && f.wx.el.shock === 1.15, "rain: fire weaker, shock stronger");
 OK(WFX.elem(f, "fire") < 1 && WFX.elem(f, "shock") > 1 && WFX.elem(f, "frost") === 1, "elem() reads the fight's weather");
-force("clear"); f = new G.Fight(mk(), foe()); OK(WFX.elem(f, "fire") === 1 && f.wx.aim === 1 && !f.wx.lines.length, "clear: nothing changes");
+force("clear"); f = new G.Fight(mk(), foe()); OK(WFX.elem(f, "fire") === 1 && f.wx.aim === 1 && !f.wx.lines.filter((l) => !/^Clear night/.test(l)).length, "clear: nothing changes");
 force("fog"); f = new G.Fight(mk(), foe()); OK(f.wx.aim < 0.9, "fog spoils aim");
 force("storm"); f = new G.Fight(mk(), foe()); OK(f.wx.storm && f.wx.el.shock === 1.25, "storm: shock strongest, lightning can strike");
 
