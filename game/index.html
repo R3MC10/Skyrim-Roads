@@ -2726,11 +2726,33 @@ html.pcmap.pcq-off:not(.pc-side) .pcqtab{transform:none}
 .pcqtab svg{width:20px;height:20px}
 html.pcmap.pc-reduce .pcquest,html.pcmap.pc-reduce .pcqtab,html.pcmap.pc-reduce #side{transition:none!important;animation:none!important}
 html.pcmap.pc-home:has(.pcparty.on) .vitals{left:14px}
+/* [chargebar] chargebar.js: the thin purple charge bar of enchanted weapons and staffs, everywhere */
+.cbar{--cb-a:#6b4fc8;--cb-b:#b49cff;position:relative;display:inline-block;vertical-align:middle;width:46px;height:5px;border-radius:3px;background:rgba(10,8,20,.65);box-shadow:inset 0 0 0 1px rgba(180,156,255,.38),0 0 0 1px rgba(0,0,0,.35);overflow:hidden;line-height:0}
+.cbar i{display:block;height:100%;background:linear-gradient(90deg,var(--cb-a),var(--cb-b));box-shadow:0 0 4px rgba(180,156,255,.6);border-radius:inherit}
+.cbar.cb-empty{background:rgba(120,20,20,.55);box-shadow:inset 0 0 0 1px rgba(255,110,90,.65),0 0 0 1px rgba(0,0,0,.35)}
+.cbar.cb-empty i{background:#d4483a}
+.cb-ico{position:relative;display:inline-block;flex:none;vertical-align:middle;line-height:0}
+.cb-ico>img.art.ico{margin:0!important}
+.sky-row .nm .cb-ico{margin-right:8px}
+.cbar.cb-on{position:absolute;width:auto;border-radius:2px;pointer-events:none}
+.cb-inl{display:inline-flex;align-items:center;gap:5px;vertical-align:middle;white-space:nowrap}
+.cb-inl .cbar{width:40px;height:5px}
+.cb-pct{font-style:normal;color:#c9b8ff;font-size:12px}
+.cb-none{font-style:normal;font-weight:600;color:#ff8a78;font-size:.85em;white-space:nowrap}
+.cb-detail{margin:8px 0 4px;clear:both}
+.cb-detail .cb-head{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
+.cb-detail .cb-head b{color:#c9b8ff;font-size:13px;letter-spacing:0;text-transform:none}
+.cb-detail.cb-empty .cb-head b{color:#ff8a78}
+.cbar.cb-wide{display:block;width:100%;height:7px;margin:3px 0}
+.cb-detail small{color:var(--mute);font-size:12px}
+.tbsub .tbbar.ch{grid-column:1/-1}
+.tbbar.ch i{background:linear-gradient(90deg,#5a3fb8,#b49cff)}
+.tbbar.ch.cb-empty{background:rgba(140,24,24,.45)}
+.tbbar.ch.cb-empty i{background:#d4483a}
+.tbbar.ch.cb-empty .num{color:#ffd0c8}
 /* [gameicons] line icons in place of emoji (gameicons.js): inline svg variant, raid medals */
 .gisvg{width:1.1em;height:1.1em;vertical-align:-.18em}
 .raidtop .rmed{font-style:normal}.raidtop .rmed.m0{color:#f1cd72}.raidtop .rmed.m1{color:#d4d8dc}.raidtop .rmed.m2{color:#c98a52}
-</style>
-<script src="gameicons.js"></script>
 /* ==== PC fit (tests/pcfit_ui.py): on a wide landscape screen the game fills the window, the page never scrolls; only side lists do ==== */
 @media (min-width:1100px) and (orientation:landscape){
   html,body{height:100%;overflow:hidden}
@@ -2858,7 +2880,16 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
   #hgrow{flex-wrap:wrap}
   #hgrow .btn.fhbig{flex:1 1 100%}
 }
+/* [OURS] title on wide screens: a dark scrim behind the menu column + stronger shadows, so the words read over a bright sky */
+.title .vign{background:radial-gradient(clamp(240px,34vw,620px) 62vh at 50% 58%,rgba(5,7,10,.58) 0%,rgba(5,7,10,.32) 55%,transparent 100%),linear-gradient(to top,rgba(4,5,7,.7) 0%,rgba(4,5,7,0) 16%),radial-gradient(120% 90% at 50% 45%,transparent 50%,rgba(0,0,0,.75) 100%)}
+.title .mi{color:#d8d1bf}
+.title .mi small{font-size:15px;color:#c9c1ad}
+.title .tag{color:#cfc7b3}
+.title .foot{font-size:14px;color:#b5ad9a}
+.title .press,.title .mi,.title .foot,.title .tag,.title .mi small{text-shadow:0 1px 2px rgba(0,0,0,1),0 0 10px rgba(0,0,0,.95),0 0 26px rgba(0,0,0,.7)}
+.title h1{filter:drop-shadow(0 2px 3px rgba(0,0,0,.9)) drop-shadow(0 0 18px rgba(0,0,0,.6))}
 </style>
+<script src="gameicons.js"></script>
 <script src="bugreport.js"></script>
 <script src="access.js"></script>
 </head>
@@ -3044,6 +3075,7 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 <script src="nickname.js"></script>
 <script src="desktop.js"></script>
 <script src="pcupdate.js"></script>
+<script src="chargebar.js"></script>
 <script src="i18n_story.js"></script>
 <script src="i18n_beast.js"></script>
 <script src="i18n_hsrooms.js"></script>
@@ -3064,6 +3096,7 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 <script src="i18n_fighttips.js"></script>
 <script src="i18n_pickaxe.js"></script>
 <script src="i18n_pcfit.js"></script>
+<script src="i18n_widetitle.js"></script>
 <script src="i18n_followeranim.js"></script>
 <script src="i18n_shouts.js"></script>
 <script src="i18n_bleakfalls.js"></script>

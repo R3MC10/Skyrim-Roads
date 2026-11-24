@@ -8,6 +8,17 @@ const PATCHNOTES = (() => {
       "Trap, fight, sneak, lockpick, rest, pray, chests, gold, potions, the weather and more: over 150 icons, sharp at any size and in the colour of the text around them.",
       "Map pins you dropped before switch to the new icons by themselves.",
     ] },
+    { id: "b166-chargebar", build: 166, date: "24 Nov 2026", title: "Charge bars", items: [
+      "Enchanted weapons and staffs now show a thin purple charge bar everywhere they appear: your pack, the Items menu and its details, tooltips, the paper doll, shops, chests and stash, follower gear, loot and loot votes, markets and trades.",
+      "When the charge runs out the bar turns red and the item says \"no charge\": the enchantment stops working until you recharge it with a filled soul gem (Items → the weapon → Recharge).",
+      "In a turn-by-turn fight a charge meter sits under your health while an enchanted weapon or staff is in your hand.",
+      "New Enchanting perk, Thrifty Runes: enchanted weapons and staffs use 20% less charge, and every kill puts 3% back.",
+      "Old saves: enchanted weapons that had lost their charge number start full again.",
+    ] },
+    { id: "b166-widetitle", build: 166, date: "24 Nov 2026", title: "The title picture on wide screens", items: [
+      "On a wide or ultra-wide PC window the main menu picture is no longer cut off: the warrior, the dragon and the city always fit, and the sides carry on the same painting softly blurred instead of black bars.",
+      "The menu words, the line under each one and the version line at the bottom are brighter and easier to read over the sky.",
+    ] },
     { id: "b152-fishhunt", build: 152, date: "24 Nov 2026", title: "Gone fishing, gone hunting", items: [
       "Fishing is a proper little game now: cast (time the power bar for a long cast), wait for the float to go right under, then hold to reel and let go to ease off. Keep the needle in the safe band: too tight and the line snaps, too slack and the fish gets away. Works with a finger or the Space bar.",
       "Twelve new fish, and what bites depends on the water, the hold, the time of day and the weather. Arctic char and grayling in the cold north, glass catfish and vampire fish only at night, pogfish love the rain, and a rare goldfish only bites in a storm or a downpour.",

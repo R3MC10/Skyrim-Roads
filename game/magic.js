@@ -232,7 +232,7 @@ const MAGIC = (() => {
   function staffAttack(f) {
     const row = G.invRow(f.s, f.weaponInv), st = f.weapon.staff;
     const charge = f.charges[f.weaponInv] ?? staffCharge(row);
-    const cost = st.perCast * (1 - 0.1 * G.P(f.s, "enchanter"));
+    const cost = st.perCast * (1 - 0.1 * G.P(f.s, "enchanter")) * (typeof CHARGE !== "undefined" ? CHARGE.costMult(f.s) : 1);   // Thrifty Runes
     if (charge < cost) { const d = 3 * (0.8 + Math.random() * 0.4); f.ehp -= d; return `The staff is spent. You swing it (${Math.round(d)})`; }
     f.charges[f.weaponInv] = charge - cost;
     return `${f.weapon.name}: ` + f.cast(st.spell, true);

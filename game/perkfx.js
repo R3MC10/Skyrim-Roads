@@ -210,6 +210,7 @@ const PFX = (() => {
     [ "Enchanting", "jeweller", "Jeweller", 1, [30], ["enchanter"], "Enchantments you put on rings and amulets are 15% stronger, and foes drop rings and amulets 50% more often. [OURS]", [["ench", 0.15, { kind: "jewel" }], ["jewelfind", 0.5, {}]]],
     [ "Enchanting", "warding_enchanter", "Warding Enchanter", 1, [40], ["insightful_enchanter"], "Resist Magic, Fire, Frost, Shock and Poison enchantments are 25% stronger. [OURS]", [["ench", 0.25, { el: "ward" }]]],
     [ "Enchanting", "hex_enchanter", "Hex Enchanter", 1, [50], ["fire_enchanter"], "Weapon enchantments that aren't fire, frost or shock (absorb, paralyze, fear, calm, bleeding, turn undead) are 25% stronger. [OURS]", [["ench", 0.25, { el: "other" }]]],
+    [ "Enchanting", "thrifty_runes", "Thrifty Runes", 1, [30], ["soul_squeezer"], "Your enchanted weapons and staffs use 20% less charge per hit or cast, and every kill puts 3% back into your enchanted weapon. [OURS]", [["enchcost", 0.2, {}], ["siphon", 0.03, {}]]],
     [ "Enchanting", "rune_smith", "Rune Smith", 1, [80], ["deep_charge"], "Elemental statuses from your enchanted weapons last a turn longer. [OURS]", [["enchstatus", 1, {}]]],
     // the newer enchantments (enchants2.js)
     [ "Enchanting", "runic_enchanter", "Runic Enchanter", 1, [60], ["hex_enchanter"], "Bloodthirst, Thunderclap, Reaping, Sundering, Spellbreaker, Echo Strike, Venom, Dragonbane and Banishing enchantments are 25% stronger. [OURS]", [["ench", 0.25, { el: "rune" }]]],
