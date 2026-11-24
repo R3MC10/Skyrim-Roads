@@ -72,7 +72,7 @@ const AREAUI = (() => {
           return ready ? { text: `${ready} to hand in`, hot: true } : { text: `${mine.length} of 3 taken` }; }
         case "home": { const h = TOWNS.home(S, l); if (!h) return { text: `For sale · ${TOWNS.HOMES[l][1]} gold` };
           return TOWNS.gardenReady(S) ? { text: "Garden ripe", hot: true } : { text: "Your house" }; }
-        case "stables": return S.horse ? { text: S.horse.name || "Your horse" } : null;
+        case "stables": return S.horse ? (typeof HORSES !== "undefined" && HORSES.downed(S) ? { text: "Horse downed", warn: true } : { text: S.horse.name || "Your horse" }) : null;
         case "streets": { const b = TOWNS.bounty(S, o.hold); return b ? { text: `Bounty ${b} gold`, warn: true } : null; }
         default: return null;
       }

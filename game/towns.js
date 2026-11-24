@@ -492,13 +492,17 @@ const TOWNS = (() => {
   }
   function dismiss(s) { if (!s.follower) return "No one is following you."; const n = FOLLOWERS[s.follower.id][0]; s.follower = null; return `${n} heads home.`; }
   function deliverDragonstone(s) {   // [Skyrim] Bleak Falls Barrow quest: bring the Dragonstone to Farengar
+    if (s.thaneWhiterun) return "Farengar already has the Dragonstone.";
     if (s.location !== "Whiterun") return "Farengar works in Dragonsreach, in Whiterun.";
-    const r = s.inv.find((x) => x.item === "dragonstone");
-    if (!r) return "You don't have the Dragonstone. It waits at the end of Bleak Falls Barrow.";
-    G.take(s, r.id); s.gold += 300; s.thaneWhiterun = true;
+    if (!canDeliverDragonstone(s)) return "Farengar wants the Dragonstone from the end of Bleak Falls Barrow. Clear the barrow first.";
+    const r = s.inv.find((x) => x.item === "dragonstone");   // the stone is only flavour: clearing the barrow is what counts (it may be lost, stashed or in a party's pile)
+    if (r) G.take(s, r.id);
+    s.gold += 300; s.thaneWhiterun = true;
     G.note(s, "📜 Gave Farengar the Dragonstone. The Jarl names Lydia your housecarl.");
-    return "Farengar snatches the Dragonstone. The Jarl pays you 300 gold and assigns Lydia as your housecarl. Hire her (free) in Whiterun.";
+    return `${r ? "Farengar snatches the Dragonstone." : "You tell Farengar where the Dragonstone lay and draw its map from memory. He's delighted."} The Jarl pays you 300 gold and assigns Lydia as your housecarl. Hire her (free) in Whiterun.`;
   }
+  /* may Farengar's quest be handed in? Clearing Bleak Falls Barrow is enough; the stone itself never blocks it */
+  const canDeliverDragonstone = (s) => !s.thaneWhiterun && (!!(s.cleared || {})["Bleak Falls Barrow"] || (s.inv || []).some((x) => x.item === "dragonstone"));
 
   // ---- homes ([Skyrim] prices; Breezehome needs the Jarl's favour). A chest that's safe from death, your own bed, a garden.
   const HOMES = {
@@ -554,7 +558,7 @@ const TOWNS = (() => {
     return `You harvest the garden: ${Object.entries(got).map(([it, n]) => `${D.ITEMS[it].name} ×${n}`).join(", ")}.`;
   }
 
-  return { HOMES, home, buyHome, sleepHome, stash, unstash, gardenReady, harvest, BIG, SMALL, carriageFrom, carriageDests, rideCarriage, CARRIAGE_SPEED, FOLLOWERS, followerMax, followerHp, followersHere, hire, dismiss, deliverDragonstone,
+  return { HOMES, home, buyHome, sleepHome, stash, unstash, gardenReady, harvest, BIG, SMALL, carriageFrom, carriageDests, rideCarriage, CARRIAGE_SPEED, FOLLOWERS, followerMax, followerHp, followersHere, hire, dismiss, deliverDragonstone, canDeliverDragonstone,
     EFFECTS, INGREDIENT_FX, INNS, TRAINERS, CAP, QUALITY, known, brewPreview, brew, eat, drink, applyPoison, roomPrice, rentRoom, rumour, trainCost, trainedThisLevel, train,
     temperInfo, temper, ingotFor, bounty, totalBounty, addBounty, wanted, guardCheck, guardChoice, pickChance, townPickPlan, pickTownsfolk, canFence, jobsAt, takeJob, dropJob, checkJobs, handIn, countItem, isTown, RUMOUR, rumourPrice,
     POTION_MINUTES: (d) => Math.round(d * SECONDS_PER_REAL_SECOND_OF_SKYRIM / 60) };

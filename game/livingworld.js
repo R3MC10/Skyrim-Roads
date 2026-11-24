@@ -521,11 +521,13 @@ const LIVING = (() => {
       else if (what === "door") r = useDoor(S, b.dataset.id);
       else if (what === "amends") r = amends(S);
       else if (what === "act") {
-        r = act(S, b.dataset.id);
-        if (r.err) return toast(r.err);
-        G.note?.(S, `📜 ${r.text}`); ui.save(); ui.refresh();
-        if ((r.fight || r.died) && ui.fight) return ui.fight(r);
-        sfx("coin"); return msg("The whispers were true", r.text);
+        const id = b.dataset.id, go = typeof NOAUTO !== "undefined" ? NOAUTO.call : (fn, done) => done(fn());   // a fight opens on the turn-by-turn screen (noautoplay.js)
+        return void go(() => act(S, id), (r) => {
+          if (r.err) return toast(r.err);
+          G.note?.(S, `📜 ${r.text}`); ui.save(); ui.refresh();
+          if ((r.fight || r.died) && ui.fight) return ui.fight(r);
+          sfx("coin"); return msg("The whispers were true", r.text);
+        });
       }
       if (!r) return;
       if (r.err) return toast(r.err);

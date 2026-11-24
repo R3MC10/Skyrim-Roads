@@ -50,5 +50,7 @@ vm.runInContext(`
   ok(kinds.includes("follower") && kinds.includes("zombie"), "engine allies: " + kinds.join(","));
   const h = FIGHTART.heroOf ? FIGHTART.heroOf(s, f) : null;
   ok(h && h.list.some((a) => a.kind === "follower" && a.look && a.look.eq && a.look.eq.weapon === "steel_sword"), "Lydia carries her own gear into the scene");
+  for (const a of [{ name: "Dragon Slayer", player: true }, { name: "Dragon Fang", pid: "x1" }, { name: "Dragonborn", host: true }]) ok(FIGHTART.allyKind(a) !== "dragon", "a player named " + a.name + " is not drawn as a dragon");
+  ok(FIGHTART.allyKind({ name: "Odahviing" }) === "odah", "real summoned dragons still are");
   console.log("allyart ok · " + FIGHTART.ALLY_KINDS.length + " kinds · " + distinct + " distinct figures");
 `, c);

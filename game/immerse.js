@@ -79,7 +79,7 @@ const IMM = (() => {
   let lp = null;
   function open(o, done) {
     close();
-    const w = sweetWidth(o.chance, o.picks, o.unbreakable);
+    const w = sweetWidth(o.chance, o.picks, o.unbreakable) * (typeof A11Y !== "undefined" && A11Y.zoneEase ? A11Y.zoneEase() : 1);   // Easy timing: a wider sweet spot
     lp = { ...o, w, spot: 10 + Math.random() * 160, angle: 90, rot: 0, strain: 0, holding: false, broken: 0, done, t: 0, shake: 0, over: false };
     const el = document.createElement("div");
     el.id = "lockpick"; el.className = "lockpick";
