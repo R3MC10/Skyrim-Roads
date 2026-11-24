@@ -148,7 +148,7 @@ const I18N = (() => {
   const cache = new Map(), done = new WeakMap();
   function tr(t) {
     if (cache.has(t)) return cache.get(t);
-    let out = PL[t] ?? null;
+    let out = PL[t] ?? ST.ex[t] ?? null;
     if (out == null) out = pat(t);
     if (out == null && t.includes(" · ")) { const parts = t.split(" · "), tp = parts.map((p) => tr(p) ?? p); if (tp.some((p, i) => p !== parts[i])) out = tp.join(" · "); }
     if (out == null && /[a-z]{2} [a-z\d]/i.test(t)) out = story(t);

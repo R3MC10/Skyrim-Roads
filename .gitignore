@@ -11,12 +11,17 @@ android/keystore.properties
 tests/tbf/
 tests/fread/
 tests/bscene/
+tests/out_jewelry/
+tests/out_visioncone/
 tests/out_noscretch/
 tests/out_followers2/
 tests/out_partysync/
 tests/out_heroart2/
 tests/out_caravans/
 tests/out_travelscene/
+tests/out_tooltips/
 tests/out_combatui/
 tests/out_tomeinfo/
 tests/out_livingworld*/
+tests/out_followerbonds/
+tests/out_foeintent/

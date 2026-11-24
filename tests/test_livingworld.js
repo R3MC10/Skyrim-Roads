@@ -8,7 +8,7 @@ let FAKE = Date.now();
 class FakeDate extends Date { static now() { return FAKE; } }
 const c = { console, Math, Date: FakeDate, JSON, Float64Array, Float32Array, Uint8Array, Int32Array, Uint16Array, Int16Array, Object, Array, Set, Map, Proxy, Number, String, URLSearchParams, setNow: (ms) => { FAKE = ms; } };
 vm.createContext(c);
-for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "enchanting.js", "quests.js", "guilds.js", "immerse.js", "rumours.js", "livingworld.js", "i18n_story.js", "i18n_living.js", "i18n.js"])
+for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "enchanting.js", "quests.js", "guilds.js", "immerse.js", "rumours.js", "livingworld.js", "i18n_story.js", "i18n_living.js", "i18n_bonds.js", "i18n.js"])
   vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
 vm.runInContext(`
 let n = 0; const ok = (cnd, m) => { n++; if (!cnd) throw new Error("FAIL " + m); };

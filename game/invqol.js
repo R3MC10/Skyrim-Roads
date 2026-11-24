@@ -79,7 +79,7 @@ const INVQOL = (() => {
     const it = item(r); if (!it || worn.has(r.id) || isProtected(s, r) || isEnchanted(r)) return "";
     if (r.stolen && !fence) return "";
     if (r.nm || r.cv != null) return "";   // things you made or named stay
-    if (it.slot === "valuable" && !r.item.startsWith("gem_") && (it.value || 0) < VALUABLE) return "trinket";
+    if ((it.slot === "valuable" && !r.item.startsWith("gem_") || ((it.slot === "ring" || it.slot === "amulet") && !it.unique)) && (it.value || 0) < VALUABLE) return "trinket";   // plain rings and amulets (enchanted ones never count)
     if ((G.SLOTS || []).includes(it.slot) && (it.value || 0) < VALUABLE && compare(s, r.item, r) === -1) return "worse than worn";
     return "";
   }

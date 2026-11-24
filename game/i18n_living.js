@@ -5,7 +5,7 @@
 const I18N_LIVING = (() => {
   /* buttons, headings, labels: things too short to be a sentence */
   const pl = {
-    Listen: "Słuchaj", Ask: "Zapytaj", free: "za darmo", Tomorrow: "Jutro", "Go in": "Wejdź", "Make amends": "Zadośćuczyń",
+    Ask: "Zapytaj", free: "za darmo", Tomorrow: "Jutro", "Go in": "Wejdź", "Make amends": "Zadośćuczyń",
     Whispered: "Szepty", "Go and see": "Idź zobaczyć", "⚔ Deal with it": "⚔ Zajmij się tym", "Notice board": "Tablica ogłoszeń",
     "In the inn right now": "Teraz w karczmie", "Who's about": "Kto jest na ulicach", "What they remember": "Co pamiętają",
     "Whispers of things to come": "Szepty o tym, co nadejdzie", "📯 News of the realm": "📯 Wieści z królestwa", "News of the realm": "Wieści z królestwa",
