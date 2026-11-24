@@ -412,26 +412,20 @@ const LIVING = (() => {
   const sharedFor = (s) => (isMember(s) && s.lw?.shared ? s.lw.shared : null);
   const whispersFor = (s, t = now()) => { const sh = sharedFor(s); return sh ? sh.w.filter((x) => x.st === "w" || (x.st === "live" && x.until > t)) : waiting(s, t); };
 
-  // ====================================================================== pictures (both art styles)
-  const pixel = () => (typeof ART !== "undefined") && ART.style && ART.style() === "pixel";
+  // ====================================================================== pictures
   /* a little notice board with pinned papers */
   function boardArt(n = 3) {
-    const px = pixel(), W = 120, H = 56;
-    let g = px ? `<rect x="6" y="4" width="108" height="44" fill="#5a3e22"/><rect x="10" y="8" width="100" height="36" fill="#7a5a34"/><rect x="18" y="48" width="6" height="8" fill="#4a3320"/><rect x="96" y="48" width="6" height="8" fill="#4a3320"/>`
-      : `<rect x="6" y="4" width="108" height="44" rx="3" fill="#5a3e22" stroke="#1a120a"/><rect x="10" y="8" width="100" height="36" rx="2" fill="#7a5a34"/><path d="M21 48 v8 M99 48 v8" stroke="#4a3320" stroke-width="5"/>`;
+    const W = 120, H = 56;
+    let g = `<rect x="6" y="4" width="108" height="44" rx="3" fill="#5a3e22" stroke="#1a120a"/><rect x="10" y="8" width="100" height="36" rx="2" fill="#7a5a34"/><path d="M21 48 v8 M99 48 v8" stroke="#4a3320" stroke-width="5"/>`;
     for (let i = 0; i < Math.min(5, n); i++) {
       const x = 16 + i * 19, y = 11 + (i % 2) * 4, rot = ((hash("b" + i) % 9) - 4);
-      g += px ? `<rect x="${x}" y="${y}" width="14" height="18" fill="#e9dcb8"/><rect x="${x + 2}" y="${y + 5}" width="10" height="1" fill="#6b5a3a"/><rect x="${x + 2}" y="${y + 9}" width="8" height="1" fill="#6b5a3a"/><rect x="${x + 6}" y="${y}" width="2" height="2" fill="#a8321e"/>`
-        : `<g transform="rotate(${rot} ${x + 7} ${y + 9})"><rect x="${x}" y="${y}" width="14" height="18" fill="#efe3c0" stroke="#3a2a1a" stroke-width=".6"/><path d="M${x + 2} ${y + 6} h10 M${x + 2} ${y + 9} h8 M${x + 2} ${y + 12} h9" stroke="#6b5a3a" stroke-width=".8"/><circle cx="${x + 7}" cy="${y + 1.5}" r="1.6" fill="#a8321e"/></g>`;
+      g += `<g transform="rotate(${rot} ${x + 7} ${y + 9})"><rect x="${x}" y="${y}" width="14" height="18" fill="#efe3c0" stroke="#3a2a1a" stroke-width=".6"/><path d="M${x + 2} ${y + 6} h10 M${x + 2} ${y + 9} h8 M${x + 2} ${y + 12} h9" stroke="#6b5a3a" stroke-width=".8"/><circle cx="${x + 7}" cy="${y + 1.5}" r="1.6" fill="#a8321e"/></g>`;
     }
-    return `<svg class="lw-board${px ? " px" : ""}" viewBox="0 0 ${W} ${H}" aria-hidden="true" ${px ? 'shape-rendering="crispEdges"' : ""}>${g}</svg>`;
+    return `<svg class="lw-board" viewBox="0 0 ${W} ${H}" aria-hidden="true">${g}</svg>`;
   }
   /* a door, open (warm light) or shut (bolted) */
   function doorArt(open) {
-    const px = pixel();
-    return `<svg class="lw-door${px ? " px" : ""}" viewBox="0 0 30 40" aria-hidden="true" ${px ? 'shape-rendering="crispEdges"' : ""}>${px
-      ? `<rect x="3" y="2" width="24" height="36" fill="#3a2a1a"/>${open ? `<rect x="6" y="5" width="18" height="33" fill="#ffcf73"/><rect x="6" y="5" width="7" height="33" fill="#6b4a2a"/>` : `<rect x="6" y="5" width="18" height="33" fill="#6b4a2a"/><rect x="6" y="18" width="18" height="3" fill="#2a2a2a"/>`}`
-      : `<path d="M3 38 V10 q12 -10 24 0 V38z" fill="#3a2a1a" stroke="#1a120a"/>${open ? `<path d="M6 38 V11 q9 -8 18 0 V38z" fill="#ffcf73"/><path d="M6 38 V11 q3 -3 7 -4 V38z" fill="#6b4a2a" stroke="#1a120a" stroke-width=".6"/>` : `<path d="M6 38 V11 q9 -8 18 0 V38z" fill="#6b4a2a" stroke="#1a120a" stroke-width=".6"/><rect x="5" y="19" width="20" height="3" rx="1" fill="#2a2a2a"/>`}`}</svg>`;
+    return `<svg class="lw-door" viewBox="0 0 30 40" aria-hidden="true"><path d="M3 38 V10 q12 -10 24 0 V38z" fill="#3a2a1a" stroke="#1a120a"/>${open ? `<path d="M6 38 V11 q9 -8 18 0 V38z" fill="#ffcf73"/><path d="M6 38 V11 q3 -3 7 -4 V38z" fill="#6b4a2a" stroke="#1a120a" stroke-width=".6"/>` : `<path d="M6 38 V11 q9 -8 18 0 V38z" fill="#6b4a2a" stroke="#1a120a" stroke-width=".6"/><rect x="5" y="19" width="20" height="3" rx="1" fill="#2a2a2a"/>`}</svg>`;
   }
 
   // ====================================================================== HTML pieces
@@ -521,11 +515,13 @@ const LIVING = (() => {
       else if (what === "door") r = useDoor(S, b.dataset.id);
       else if (what === "amends") r = amends(S);
       else if (what === "act") {
-        r = act(S, b.dataset.id);
-        if (r.err) return toast(r.err);
-        G.note?.(S, ` ${r.text}`); ui.save(); ui.refresh();
-        if ((r.fight || r.died) && ui.fight) return ui.fight(r);
-        sfx("coin"); return msg("The whispers were true", r.text);
+        const id = b.dataset.id, go = typeof NOAUTO !== "undefined" ? NOAUTO.call : (fn, done) => done(fn());   // a fight opens on the turn-by-turn screen (noautoplay.js)
+        return void go(() => act(S, id), (r) => {
+          if (r.err) return toast(r.err);
+          G.note?.(S, `\uE103 ${r.text}`); ui.save(); ui.refresh();
+          if ((r.fight || r.died) && ui.fight) return ui.fight(r);
+          sfx("coin"); return msg("The whispers were true", r.text);
+        });
       }
       if (!r) return;
       if (r.err) return toast(r.err);

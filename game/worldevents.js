@@ -365,8 +365,9 @@ const WORLDEV = (() => {
   const esc = (x) => String(x ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   let api = null, loopT = null, lastSig = "";
   const me = () => (api ? api.S() : null);
+  const fightCall = (fn, done) => (typeof NOAUTO !== "undefined" ? NOAUTO.call(fn, done) : done(fn()));   // the fight opens on the turn-by-turn screen (noautoplay.js)
 
-  // ---- pictures (drawn through ART, so they follow the ink / pixel art style)
+  // ---- pictures (drawn through ART)
   function drawPic(kind, g, w, h, seed = "") {
     const r = seeded("pic:" + kind + seed);
     if (kind === "inv") {
@@ -419,8 +420,8 @@ const WORLDEV = (() => {
   // ---- map markers
   const spriteCache = {};
   function sprite(key, w, h, draw) {
-    const st = (typeof ART !== "undefined") ? ART.style() : "ink", k = `${key}|${st}`;
-    if (!spriteCache[k]) spriteCache[k] = (typeof ART !== "undefined") ? ART.canvas(w, h, draw, { style: st }) : null;
+    const k = key;
+    if (!spriteCache[k]) spriteCache[k] = (typeof ART !== "undefined") ? ART.canvas(w, h, draw) : null;
     return spriteCache[k];
   }
   const gateSprite = (closed) => sprite(closed ? "gate0" : "gate1", 40, 40, (g) => {
@@ -541,15 +542,14 @@ const WORLDEV = (() => {
     if ((typeof SOUND !== "undefined")) try { SOUND.fx("click"); } catch (er) { /* ignore */ }
     if (act === "open") { const ev = byId(b.dataset.id); if (!ev) return; api.closeModal(); return void api.openModal(detailHTML(ev, S, t), "wevsheet"); }
     if (act === "claim") { const msg = claim(S, b.dataset.id, t); if (!msg) return api.toast("Nothing to claim yet."); api.closeModal(); api.persist(true); if ((typeof SOUND !== "undefined")) try { SOUND.fx("levelup"); } catch (er) { /* ignore */ } return api.showMessage("World event", msg); }
-    if (act === "gate" || act === "hunt") {
-      const out = act === "gate" ? fightGate(S, t) : hunt(S, t);
+    if (act === "gate" || act === "hunt") return void fightCall(() => (act === "gate" ? fightGate(S, t) : hunt(S, t)), (out) => {   // you play it turn by turn
       if (!out.fight) return api.toast(out.text);
       publish(S, out.ev);
       if (out.bag && (typeof Store !== "undefined")) Store.addBag(out.bag);
       if (out.closedNow && api.postNews) api.postNews(` ${S.name} helped close the Oblivion gate at ${out.ev.sites[out.i]}!`);
       api.closeModal(); api.persist(true); render(true);
       return api.showFightResult({ ...out, text: out.text });
-    }
+    });
     if (act === "play") { const r = play(S, b.dataset.game, t); if (r.pts) { const ev = active(t).find((x) => x.kind === "fest"); if (ev) publish(S, ev); api.persist(true); } api.toast(r.text); const ev = active(t).find((x) => x.kind === "fest"); if (ev && document.querySelector(".wevsheet")) { api.closeModal(); api.openModal(detailHTML(ev, S, t), "wevsheet"); } return; }
     if (act === "buy") { const r = buy(S, b.dataset.item, t); api.toast(r.text); if (r.bought) { const ev = active(t).find((x) => x.kind === "kc"); if (ev) publish(S, ev); api.persist(true); if (ev) { api.closeModal(); api.openModal(detailHTML(ev, S, t), "wevsheet"); } } }
   }
@@ -573,7 +573,7 @@ const WORLDEV = (() => {
   function render(force) {
     const S = me(), el = document.getElementById("wev"); if (!S || !el) return;
     const t = nowS(), evs = active(t);
-    const sig = evs.map((ev) => `${ev.id}|${progress(ev, S, t).line}|${left(ev, t)}|${claimable(S, ev, t)}|${S.location}|${S.trip?.status || ""}`).join(";") + ((typeof ART !== "undefined") ? ART.style() : "");
+    const sig = evs.map((ev) => `${ev.id}|${progress(ev, S, t).line}|${left(ev, t)}|${claimable(S, ev, t)}|${S.location}|${S.trip?.status || ""}`).join(";");
     if (!force && sig === lastSig) return;
     lastSig = sig; el.innerHTML = cardHTML(S, t);
   }

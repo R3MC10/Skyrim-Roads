@@ -241,13 +241,13 @@ atHour(19);
   LIVING.bindParty(null);
 }
 
-// 9. both art styles; nothing breaks
+// 9. the pictures; nothing breaks
 {
   const s = mk();
-  for (const style of ["ink", "pixel"]) {
+  for (const style of ["ink"]) {
     globalThis.ART = { style: () => style };
     const b = LIVING.boardArt(3), d1 = LIVING.doorArt(true), d0 = LIVING.doorArt(false);
-    ok(/<svg/.test(b) && /<svg/.test(d1) && d1 !== d0 && (style === "pixel") === / px/.test(b), style + " pictures");
+    ok(/<svg/.test(b) && /<svg/.test(d1) && d1 !== d0, style + " pictures");
     for (const sec of ["inn", "streets", "general", "blacksmith"]) for (const h of [3, 12, 21]) { atHour(h); const html = LIVING.townHTML(s, "Whiterun", sec, G.shopsOpen()); ok(clean(html), style + " " + sec + " at " + h); }
   }
   delete globalThis.ART;

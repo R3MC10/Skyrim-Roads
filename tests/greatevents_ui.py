@@ -1,6 +1,6 @@
 """Great world events on screen (greatevents.js): the banner with its countdown, the map markers, the event sheets,
 a charge at the dragon, the fair games and a burned town rebuilding. Phone (390x844) and desktop (1920x1080),
-ink and pixel art styles.
+the hand-drawn art style.
 Run from the repo root:  PYTHONIOENCODING=utf-8 python tests/greatevents_ui.py   (screenshots land in tests/out_gev/)"""
 import asyncio, os, socket, subprocess, sys, time
 from playwright.async_api import async_playwright
@@ -76,8 +76,7 @@ async def main():
                     except Exception: print(tag, "title screen didn't come up, reloading")
                 await pg.wait_for_timeout(800)
                 await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Hrodny"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
-                for st in (["ink"] if pl else ["ink", "pixel"]):
-                    await pg.evaluate(f"() => {{ ART.setStyle('{st}'); document.documentElement.classList.toggle('art-pixel', '{st}' === 'pixel'); }}")
+                for st in ["ink"]:
                     # 1. warning: banner with a countdown that ticks
                     ev = await pg.evaluate(JUMP, ["dragon", "warn"]); print(tag, st, "warn:", ev)
                     await pg.wait_for_timeout(1600); await to_map(); await pg.wait_for_timeout(1200)

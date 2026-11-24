@@ -1,5 +1,6 @@
 /* Android glue for Roads of the North: back button, saving when the app goes to the background, splash screen,
-   phone notifications (arrival, dragon attacks) while the app is closed, and the in-app updater. */
+   phone notifications (arrival, dragon attacks) while the app is closed, invite notifications with Accept / Decline,
+   and the in-app updater. */
 (() => {
   const C = window.Capacitor;
   if (!C?.isNativePlatform?.()) return;
@@ -30,6 +31,50 @@
       if (list.length) await LN.schedule({ notifications: list });
     } catch (e) { /* never block going to the background */ }
   }
+
+  // ------------------------------------------------------------ invites: Accept / Decline right on the notification
+  /* invites.js calls window.ROTN_NATIVE.invite() when an invite arrives while the app is in the background (the game
+     keeps its connection for a while there). The buttons open the game and answer it through INVITES.answer(). */
+  const inviteShown = new Set();
+  let pendingAnswer = null;
+  const IV = () => (typeof INVITES !== "undefined" ? INVITES : null);
+  const pl = () => typeof I18N !== "undefined" && I18N.lang() === "pl";
+  const trPl = (t) => (pl() ? I18N.tr(t) ?? t : t);
+  async function setupInvites() {
+    if (!LN) return;
+    try {
+      await LN.createChannel?.({ id: "invites", name: pl() ? "Zaproszenia" : "Invites", description: pl() ? "Drużyna, wyprawy, klan, Arena i wymiany" : "Party, dungeon, clan, Arena and trade invites", importance: 4, visibility: 1 });
+      await LN.registerActionTypes?.({ types: [{ id: "invite", actions: [{ id: "accept", title: pl() ? "Przyjmij" : "Accept", foreground: true }, { id: "decline", title: pl() ? "Odrzuć" : "Decline", foreground: true }] }] });
+      await LN.addListener?.("localNotificationActionPerformed", (a) => {
+        const key = a?.notification?.extra?.inviteKey;
+        if (!key) return;
+        const yes = a.actionId === "accept", no = a.actionId === "decline";
+        pendingAnswer = { key, yes, open: !yes && !no, tries: 0 };
+        answerPending();
+      });
+    } catch (e) { /* older plugin: plain notifications only */ }
+  }
+  /* the game may still be starting (cold start from the notification): wait until it knows the invite */
+  function answerPending() {
+    const p = pendingAnswer, I = IV();
+    if (!p) return;
+    if (I && I.has(p.key)) { pendingAnswer = null; if (p.open) I.open(); else I.answer(p.key, p.yes); return; }
+    if (++p.tries > 25) { pendingAnswer = null; if (I) I.open(); return; }   // gone (or never synced): show the invites list
+    setTimeout(answerPending, 1200);
+  }
+  window.ROTN_NATIVE = {
+    bg: false,   // the app is in the background (set on pause / resume below)
+    async invite(n) {
+      if (!LN || !pref("notify", true) || !n) return;
+      try {
+        if ((await LN.checkPermissions()).display !== "granted") return;
+        inviteShown.add(n.id);
+        await LN.schedule({ notifications: [{ id: n.id, title: trPl(n.title), body: trPl(n.body), channelId: "invites", actionTypeId: "invite", extra: { inviteKey: n.key }, autoCancel: true }] });
+      } catch (e) { /* notifications are optional */ }
+    },
+    cancelInvite(id) { if (!LN || !inviteShown.has(id)) return; inviteShown.delete(id); LN.cancel({ notifications: [{ id }] }).catch(() => {}); },
+    clearInvites() { for (const id of [...inviteShown]) this.cancelInvite(id); },
+  };
 
   // ------------------------------------------------------------ updates (GitHub releases of this repo)
   const cleanNotes = (body) => String(body || "").split(/\n-{3,}\s*\n/)[0]
@@ -150,8 +195,9 @@
   }
 
   App?.addListener("backButton", () => { if (!window.__ui?.back()) App.minimizeApp(); });
-  App?.addListener("pause", () => { window.__ui?.save(); scheduleAway(); });
+  App?.addListener("pause", () => { window.ROTN_NATIVE.bg = true; window.__ui?.save(); scheduleAway(); });
   App?.addListener("resume", () => {
+    window.ROTN_NATIVE.bg = false;
     clearAll();
     document.dispatchEvent(new Event("visibilitychange"));
     if (waitingForPermission) { waitingForPermission = false; window.__ui?.permissionBack?.(); }
@@ -159,6 +205,7 @@
   });
   setTimeout(() => SplashScreen?.hide(), 400);
   setTimeout(askOnce, 2500);
+  setupInvites();
   /* on launch: look for a new version straight away and, if there is one, install it before the player gets going.
      A small "Updating…" card covers the title screen meanwhile; offline or slow, it gives up after a few seconds. */
   async function launchUpdate() {

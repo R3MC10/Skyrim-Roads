@@ -35,8 +35,8 @@ async def main():
         await pg.evaluate("setInterval(()=>document.querySelectorAll('#modal').forEach(m=>m.remove()),200)")
         await pg.evaluate(JS)
         # ---- the forms in the fight scene, both styles
-        for style in ["ink", "pixel"]:
-            await pg.evaluate(f"ART.setStyle('{style}')"); await pg.evaluate("FIGHTART.manual(true)")
+        for style in ["ink"]:
+            await pg.evaluate("FIGHTART.manual(true)")
             for kind in ["wolf", "lord"]:
                 log = await pg.evaluate(f"()=>{{ const f=__bx.fight('{kind}'); window.__cf=f; __bx.mount(f); return f.log.map(l=>l.me); }}")
                 ok(("Beast Form" if kind == "wolf" else "Vampire Lord") in log[0], f"{kind} changes on turn 1: {log[0][:70]}")
@@ -50,7 +50,6 @@ async def main():
                 for i, im in enumerate(shots): sheet.paste(im, (i * w, 0))
                 sheet.save(OUT + f"beast_fight_{kind}_{style}.png")
             await pg.evaluate("FIGHTART.manual(false); document.getElementById('bxbox')?.remove()")
-        await pg.evaluate("ART.setStyle('ink')")
         # ---- the Hero tab: werewolf sky, tap a star, take a perk
         await pg.evaluate("()=>{const S=window.__dbg.save(); S.vampire=null; S.werewolf={since:0}; S.beastPerks={wolf:{},lord:{},feeds:5,kills:0}; S.location='Whiterun'; [S.x,S.y]=WORLD.places.Whiterun;}")
         await pg.click("[data-tab=hero]"); await pg.wait_for_timeout(500)
@@ -69,12 +68,11 @@ async def main():
         await pg.click("[data-tab=map]"); await pg.wait_for_timeout(200); await pg.click("[data-tab=hero]"); await pg.wait_for_timeout(500)
         txt = await pg.inner_text("#side")
         ok("stage 3 of 4" in txt and "Rising at Dawn" in txt, "vampire panel: hunger stage and the cure quest")
-        for style in ["ink", "pixel"]:
-            await pg.evaluate(f"ART.setStyle('{style}')"); await pg.wait_for_timeout(200)
+        for style in ["ink"]:
+            await pg.wait_for_timeout(200)
             await pg.click("[data-tab=map]"); await pg.wait_for_timeout(200); await pg.click("[data-tab=hero]"); await pg.wait_for_timeout(400)
             panel = await pg.query_selector("#side .bstars")
             if panel: await panel.screenshot(path=OUT + f"beast_sky_lord_{style}.png")
-        await pg.evaluate("ART.setStyle('ink')")
         has_tab = await pg.evaluate("typeof TABMENU !== 'undefined'")
         if has_tab:
             await pg.evaluate("()=>{ TABMENU.starSkill='Vampire Lord'; window.__ui.go?.('stars'); }"); await pg.wait_for_timeout(600)

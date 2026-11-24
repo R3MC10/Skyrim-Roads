@@ -15,7 +15,7 @@ async def main():
         b = await p.chromium.launch(**({"executable_path": exe} if exe else {}), args=["--no-sandbox"])
         bad = []
         for size, (vw, vh) in SIZES.items():
-            for style in ("ink", "pixel"):
+            for style in ("ink",):
                 tag = f"{size}_{style}" + ("_pl" if LANG == "pl" else "")
                 ctx = await b.new_context(viewport={"width": vw, "height": vh}, device_scale_factor=2 if size == "phone" else 1)
                 errs = []
@@ -28,7 +28,6 @@ async def main():
                         if await pg.query_selector(sel): await pg.evaluate(f"document.querySelector({sel!r})?.click()"); break
                     await pg.wait_for_timeout(700)
                 await pg.fill("#nm", "Builder"); await pg.click("#begin"); await pg.wait_for_selector("[data-tab=town]", timeout=60000); await pg.wait_for_timeout(1000)
-                await pg.evaluate(f"ART.setStyle('{style}')")
                 ok = lambda c, m: (print(("ok   " if c else "FAIL ") + f"[{tag}] " + m), None if c else bad.append(f"{tag}: {m}"))
                 async def clean(): await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
                 async def click(sel):

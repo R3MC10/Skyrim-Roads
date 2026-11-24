@@ -256,7 +256,7 @@ const INVQOL = (() => {
       case "buy": case "buyn": case "unstash": case "mbuy": {
         let itemId = null, qty = 1, what = "";
         if (a === "buy" || a === "buyn") { itemId = b.dataset.item; qty = a === "buyn" ? +b.dataset.n || 1 : 1; if (itemId === "horse") return false; }
-        else if (a === "unstash") { const h = typeof TOWNS !== "undefined" ? TOWNS.home(s) : null, x = h?.chest?.[id]; if (x) { itemId = x.item; qty = x.qty; } }
+        else if (a === "unstash") { const h = typeof TOWNS !== "undefined" ? TOWNS.home(s) : null, x = h?.chest?.[id]; if (x) { itemId = x.item; const n = b.dataset.n === "amt" ? +(typeof document !== "undefined" && document.getElementById("hsAmt")?.value) : +b.dataset.n; qty = Math.min(x.qty, n > 0 ? Math.floor(n) : x.qty); } }   // only what you take (homestash.js)
         else { const d = ctx.stall?.(b.dataset.id); if (d?.row) { itemId = d.row.item; qty = d.row.qty; } }
         if (!itemId || !D.ITEMS[itemId]) return false;
         const w = overAfter(s, itemId, qty); if (!w) return false;

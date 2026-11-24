@@ -29,13 +29,12 @@ async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch(executable_path=os.environ.get("CHROME") or None, args=["--no-sandbox"])
         for vw, vh in [(360, 780), (412, 915)]:
-            for style in ["ink", "pixel"]:
+            for style in ["ink"]:
                 ctx = await b.new_context(viewport={"width": vw, "height": vh}, device_scale_factor=1, has_touch=True)
                 pg = await ctx.new_page(); errs = []
                 pg.on("pageerror", lambda e: errs.append(str(e)))
                 await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&hub=0"); await pg.wait_for_timeout(1200)
                 await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Sigrid"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
-                await pg.evaluate(f"()=>{{ ART.setStyle('{style}'); document.documentElement.classList.toggle('art-pixel', '{style}'==='pixel'); }}")
                 await pg.evaluate(CLEAR)
                 tag = f"{vw}_{style}"
 

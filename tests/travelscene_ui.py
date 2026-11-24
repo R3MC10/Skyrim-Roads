@@ -29,8 +29,7 @@ async def main():
         await pg.evaluate("""()=>{ const S=window.__dbg.save(); S.location='Whiterun'; [S.x,S.y]=WORLD.places.Whiterun;
             S.equipped = Object.assign(S.equipped||{}, {chest:'iron_armor', head:'iron_helmet', shield:'iron_shield', weapon:'iron_sword'});
             G.startTrip(S, 'Riverwood', WORLD.places.Riverwood); S.trip.total = S.trip.total || 60; }""")
-        for style in ("ink", "pixel"):
-            await pg.evaluate("(s)=>{ ART.setStyle(s); }", style)
+        for style in ("ink",):
             for name, sky in SKIES.items():
                 await pg.evaluate("(sky)=>{ window.__skyOrig = window.__skyOrig || SKY.state; const fixed = SKY.make(eval('('+sky+')')); SKY.state = () => fixed; }", sky)
                 await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")

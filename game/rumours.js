@@ -6,8 +6,8 @@
    - Your name in the holds: deeds you actually did (dragons, cleared places, quest lines, guild ranks, homes, being
      Thane, rumours you saw through) and your crimes add up to a standing per hold. Guards and shopkeepers mention
      them, and friends and heroes of a hold get a small discount in its shops. Shown in the Journal (Misc).
-   - Day and night: a line on what the town is doing, the inn fills up in the evening (a little crowd picture, both
-     art styles), and closed shops can be knocked up at night for a small extra charge, so shopping never breaks.
+   - Day and night: a line on what the town is doing, the inn fills up in the evening (a little crowd
+     picture), and closed shops can be knocked up at night for a small extra charge, so shopping never breaks.
    Perks (perkfx.js): Good Ear (Speechcraft), Local Hero (Etiquette), Night Owl (Streetwise).
    Everything is per player (s.rw) and optional: with this file missing the game plays as before. */
 const RUMOURS = (() => {
@@ -297,35 +297,27 @@ const RUMOURS = (() => {
     } catch { return null; }
   }
 
-  // ====================================================================== pictures (both art styles)
-  const pixel = () => has("ART") && ART.style && ART.style() === "pixel";
+  // ====================================================================== pictures
   function crowdArt(n, night) {
-    const W = 300, H = 74, px = pixel(), r = (k) => ((hash("crowd" + k) % 1000) / 1000);
+    const W = 300, H = 74, r = (k) => ((hash("crowd" + k) % 1000) / 1000);
     const wall = night ? "#2a1c12" : "#3a2a1a", floor = night ? "#1b120b" : "#2a1d12", fire = "#e8913a";
     let g = `<rect width="${W}" height="${H}" fill="${wall}"/><rect y="${H - 16}" width="${W}" height="16" fill="${floor}"/>`;
     // hearth with a glow
-    g += px ? `<rect x="134" y="${H - 40}" width="32" height="24" fill="#4a3b2c"/><rect x="142" y="${H - 30}" width="16" height="12" fill="${fire}"/><rect x="146" y="${H - 34}" width="8" height="6" fill="#ffd27a"/>`
-      : `<radialGradient id="rwg"><stop offset="0" stop-color="#ffb35a" stop-opacity=".55"/><stop offset="1" stop-color="#ffb35a" stop-opacity="0"/></radialGradient><circle cx="150" cy="${H - 22}" r="60" fill="url(#rwg)"/><path d="M132 ${H - 16} v-22 q18 -10 36 0 v22z" fill="#4a3b2c" stroke="#1a120a"/><path d="M143 ${H - 16} q7 -20 14 0z" fill="${fire}"/><path d="M147 ${H - 17} q3 -10 6 0z" fill="#ffd27a"/>`;
+    g += `<radialGradient id="rwg"><stop offset="0" stop-color="#ffb35a" stop-opacity=".55"/><stop offset="1" stop-color="#ffb35a" stop-opacity="0"/></radialGradient><circle cx="150" cy="${H - 22}" r="60" fill="url(#rwg)"/><path d="M132 ${H - 16} v-22 q18 -10 36 0 v22z" fill="#4a3b2c" stroke="#1a120a"/><path d="M143 ${H - 16} q7 -20 14 0z" fill="${fire}"/><path d="M147 ${H - 17} q3 -10 6 0z" fill="#ffd27a"/>`;
     // tables
-    for (const x of [40, 240]) g += px ? `<rect x="${x - 22}" y="${H - 26}" width="44" height="5" fill="#6b4a2a"/><rect x="${x - 18}" y="${H - 21}" width="4" height="6" fill="#4a3320"/><rect x="${x + 14}" y="${H - 21}" width="4" height="6" fill="#4a3320"/>`
-      : `<rect x="${x - 22}" y="${H - 26}" width="44" height="5" rx="2" fill="#6b4a2a" stroke="#2a1a0c"/><path d="M${x - 16} ${H - 21} v6 M${x + 16} ${H - 21} v6" stroke="#4a3320" stroke-width="3"/>`;
+    for (const x of [40, 240]) g += `<rect x="${x - 22}" y="${H - 26}" width="44" height="5" rx="2" fill="#6b4a2a" stroke="#2a1a0c"/><path d="M${x - 16} ${H - 21} v6 M${x + 16} ${H - 21} v6" stroke="#4a3320" stroke-width="3"/>`;
     // folk: positions fixed so the picture doesn't jump about
     const spots = [22, 58, 222, 258, 96, 196, 118];
     const cloth = ["#7a3b2e", "#3e5a3a", "#4a4f6e", "#6e5a3a", "#5a3a5e", "#7a6a4a", "#3a5a62"];
     for (let i = 0; i < n; i++) {
       const x = spots[i], c = cloth[i], tall = 14 + Math.round(r(i) * 5), y = H - 16;
-      g += px ? `<rect x="${x - 5}" y="${y - tall}" width="10" height="${tall}" fill="${c}"/><rect x="${x - 4}" y="${y - tall - 8}" width="8" height="8" fill="#d9b38c"/><rect x="${x - 4}" y="${y - tall - 9}" width="8" height="3" fill="#4a3020"/>${i % 2 ? `<rect x="${x + 5}" y="${y - tall + 3}" width="4" height="5" fill="#c9a560"/>` : ""}`
-        : `<path d="M${x - 7} ${y} q1 -${tall} 7 -${tall} q6 0 7 ${tall}z" fill="${c}" stroke="#1a120a"/><circle cx="${x}" cy="${y - tall - 4}" r="4.5" fill="#d9b38c" stroke="#1a120a"/>${i % 2 ? `<rect x="${x + 5}" y="${y - tall + 2}" width="4" height="6" rx="1" fill="#c9a560" stroke="#1a120a" stroke-width=".6"/>` : ""}`;
+      g += `<path d="M${x - 7} ${y} q1 -${tall} 7 -${tall} q6 0 7 ${tall}z" fill="${c}" stroke="#1a120a"/><circle cx="${x}" cy="${y - tall - 4}" r="4.5" fill="#d9b38c" stroke="#1a120a"/>${i % 2 ? `<rect x="${x + 5}" y="${y - tall + 2}" width="4" height="6" rx="1" fill="#c9a560" stroke="#1a120a" stroke-width=".6"/>` : ""}`;
     }
-    if (n >= 7) g += px ? `<rect x="168" y="${H - 34}" width="8" height="18" fill="#2e4e6e"/><rect x="168" y="${H - 42}" width="8" height="8" fill="#d9b38c"/><rect x="176" y="${H - 30}" width="8" height="4" fill="#a8743a"/>`
-      : `<path d="M166 ${H - 16} q2 -18 6 -18 q4 0 6 18z" fill="#2e4e6e" stroke="#1a120a"/><circle cx="172" cy="${H - 38}" r="4" fill="#d9b38c" stroke="#1a120a"/><ellipse cx="181" cy="${H - 28}" rx="5" ry="3" fill="#a8743a" stroke="#1a120a"/><text x="186" y="${H - 40}" font-size="10" fill="#f0d79a">♪</text>`;
-    return `<svg class="rw-crowd${px ? " px" : ""}" viewBox="0 0 ${W} ${H}" role="img" aria-label="The inn, ${n} people inside" ${px ? 'shape-rendering="crispEdges"' : ""}>${g}</svg>`;
+    if (n >= 7) g += `<path d="M166 ${H - 16} q2 -18 6 -18 q4 0 6 18z" fill="#2e4e6e" stroke="#1a120a"/><circle cx="172" cy="${H - 38}" r="4" fill="#d9b38c" stroke="#1a120a"/><ellipse cx="181" cy="${H - 28}" rx="5" ry="3" fill="#a8743a" stroke="#1a120a"/><text x="186" y="${H - 40}" font-size="10" fill="#f0d79a">♪</text>`;
+    return `<svg class="rw-crowd" viewBox="0 0 ${W} ${H}" role="img" aria-label="The inn, ${n} people inside">${g}</svg>`;
   }
   function closedArt() {
-    const px = pixel();
-    return `<svg class="rw-shut${px ? " px" : ""}" viewBox="0 0 64 44" aria-hidden="true" ${px ? 'shape-rendering="crispEdges"' : ""}>${px
-      ? `<rect width="64" height="44" fill="#3a2a1a"/>${[0, 1, 2, 3, 4].map((i) => `<rect x="4" y="${4 + i * 8}" width="56" height="6" fill="${i % 2 ? "#5a4028" : "#654a2e"}"/>`).join("")}<rect x="22" y="16" width="20" height="12" fill="#c9a560"/><rect x="25" y="20" width="14" height="4" fill="#3a2a1a"/>`
-      : `<rect x="1" y="1" width="62" height="42" rx="4" fill="#3a2a1a" stroke="#1a120a"/>${[0, 1, 2, 3, 4].map((i) => `<path d="M5 ${7 + i * 8} h54" stroke="#6b4e30" stroke-width="5" stroke-linecap="round"/>`).join("")}<path d="M24 16 h16 l3 6 l-3 6 h-16 l-3 -6z" fill="#c9a560" stroke="#1a120a"/><path d="M27 22 h10" stroke="#3a2a1a" stroke-width="2"/>`}</svg>`;
+    return `<svg class="rw-shut" viewBox="0 0 64 44" aria-hidden="true"><rect x="1" y="1" width="62" height="42" rx="4" fill="#3a2a1a" stroke="#1a120a"/>${[0, 1, 2, 3, 4].map((i) => `<path d="M5 ${7 + i * 8} h54" stroke="#6b4e30" stroke-width="5" stroke-linecap="round"/>`).join("")}<path d="M24 16 h16 l3 6 l-3 6 h-16 l-3 -6z" fill="#c9a560" stroke="#1a120a"/><path d="M27 22 h10" stroke="#3a2a1a" stroke-width="2"/></svg>`;
   }
 
   // ====================================================================== HTML pieces
@@ -398,13 +390,15 @@ const RUMOURS = (() => {
         const r = knock(S); if (r.err) return toast(r.err);
         sfx("click"); ui.save(); ui.refresh(); toast(r.text);
       } else if (what === "act") {
-        const r = act(S, b.dataset.id);
-        if (r.err) return toast(r.err);
-        if (!r.dud) G.note?.(S, ` ${r.text}`);
-        ui.save(); ui.refresh();
-        if ((r.fight || r.died) && ui.fight) return ui.fight(r);
-        sfx(r.dud ? "click" : "coin");
-        msg(r.dud ? "Just talk" : "The rumour was true", r.text + (r.loot?.length && !r.found ? ` Loot: ${r.loot.join(", ")}.` : ""));
+        const id = b.dataset.id, go = typeof NOAUTO !== "undefined" ? NOAUTO.call : (fn, done) => done(fn());   // a fight opens on the turn-by-turn screen (noautoplay.js)
+        go(() => act(S, id), (r) => {
+          if (r.err) return toast(r.err);
+          if (!r.dud) G.note?.(S, `\uE103 ${r.text}`);
+          ui.save(); ui.refresh();
+          if ((r.fight || r.died) && ui.fight) return ui.fight(r);
+          sfx(r.dud ? "click" : "coin");
+          msg(r.dud ? "Just talk" : "The rumour was true", r.text + (r.loot?.length && !r.found ? ` Loot: ${r.loot.join(", ")}.` : ""));
+        });
       }
     });
   }

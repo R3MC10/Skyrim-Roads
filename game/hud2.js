@@ -153,6 +153,7 @@ const HUD2 = (() => {
       if (anchor && anchor.bottom > st + 4 && m.bottom > anchor.bottom + 120) { left = m.left + 8; top = anchor.bottom + 6; width = Math.max(180, Math.min(440, m.width - 64)); onMap = true; }
       else if (m.right > 0) { left = Math.max(8, m.left + 8); width = Math.max(180, Math.min(440, m.width - 16)); }
     }
+    if (typeof SKILLUP !== "undefined") top += SKILLUP.dock({ top, m: onMap || (m && m.right > 0) ? m : null, st, tw }) || 0;   // skillup.js: the skill-up toast takes the top of the lane
     L.style.left = Math.round(left) + "px"; L.style.top = Math.round(top) + "px"; L.style.width = Math.round(width) + "px";
     L.classList.toggle("onmap", onMap);
     // big banners: centred on the map, below the lane, above the bars

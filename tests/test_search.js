@@ -99,7 +99,7 @@ r = X.query(S, "vegetable soup"); ok(grp(r, "recipe")?.list.some((e) => e.rk ===
 r = X.query(S, "restor helth"); ok(grp(r, "recipe")?.list.some((e) => e.rk === "alch" && e.eff === "Restore Health"), "alchemy with typos");
 ok(/Alchemy/.test(X.sub(S, grp(r, "recipe").list.find((e) => e.rk === "alch"))), "alchemy sub");
 r = X.query(S, "text size"); ok(grp(r, "setting")?.list[0].name === "Text size", "setting text size");
-r = X.query(S, "pixel"); ok(names(r, "setting").some((n) => /Art style/.test(n)), "setting by keyword");
+r = X.query(S, "thumb"); ok(names(r, "setting").some((n) => /One-hand/.test(n)), "setting by keyword");
 r = X.query(S, "mute"); ok(names(r, "setting").some((n) => /sound/i.test(n)), "mute");
 
 // ---- every visible entry has a clean sub-line

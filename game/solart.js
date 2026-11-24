@@ -2,7 +2,7 @@
    its place pictures (Raven Rock and the Bulwark, Tel Mithryn's mushroom tower, the Skaal village, the ash wastes,
    the All-Maker Stones, Miraak's temple), story scenes (the cultists at the docks, Miraak in Apocrypha, a freed stone),
    the ship at sea, and the island's creatures for fight scenes and enemy icons. Everything is drawn in code with the
-   shared ART toolkit, so it works in both art styles (ink and pixel). Hooks: map.js, placeart.js, eventart.js,
+   shared ART toolkit. Hooks: map.js, placeart.js, eventart.js,
    fightart.js and iconart.js ask SOLART when they meet Solstheim. [OURS] drawings of [Skyrim] places. */
 const SOLART = (() => {
   const LX = (x) => (typeof I18N_SWEEP !== "undefined" ? I18N_SWEEP.c(x) : x);   // words drawn on canvas, in the player's language

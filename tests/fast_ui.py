@@ -35,7 +35,7 @@ async def main():
         kw = {"executable_path": CHROME, "args": ["--no-sandbox"]} if os.path.exists(CHROME) else {}
         b = await p.chromium.launch(**kw)
         for vw, vh, big in [(360, 780, True), (412, 915, False)]:
-            for style in ["ink", "pixel"]:
+            for style in ["ink"]:
                 tag = f"{vw}_{style}"
                 ctx = await b.new_context(viewport={"width": vw, "height": vh}, device_scale_factor=1, has_touch=True)
                 pg = await ctx.new_page(); errs = []
@@ -46,7 +46,6 @@ async def main():
                 try: await pg.wait_for_selector("#side", timeout=10000)
                 except Exception: await pg.screenshot(path=os.path.join(OUT, f"{tag}_nostart.png")); print(await pg.evaluate("document.body.innerText.slice(0,300)"))
                 await pg.evaluate(CLEAR)
-                await pg.evaluate(f"ART.setStyle('{style}')")
                 if big: await pg.evaluate("ACCESS.pref('a11yText','3')")
                 await pg.evaluate("localStorage.setItem('rotn_prefs', JSON.stringify({...JSON.parse(localStorage.getItem('rotn_prefs')||'{}'), fightSpeed:1, fqAutoRoad:false}))")
 

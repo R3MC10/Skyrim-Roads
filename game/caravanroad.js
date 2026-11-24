@@ -166,7 +166,7 @@ const CVROAD = (() => {
     return best;
   }
 
-  // picture for the meeting (both art styles: drawn with the shared toolkit)
+  // picture for the meeting (drawn with the shared toolkit)
   function art() {
     if (!(typeof EVENTART !== "undefined") || !EVENTART.ROAD || EVENTART.ROAD.cvmeet_k) return;
     const draw = (khajiit) => (g, H, w, h) => {

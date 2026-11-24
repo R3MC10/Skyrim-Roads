@@ -12,8 +12,7 @@ async def main():
         await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Ewa"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
         async def clear(): await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
         await clear()
-        for style in ["ink", "pixel"]:
-            await pg.evaluate(f"ART.setStyle('{style}')")
+        for style in ["ink"]:
             # a real road event, through the game's own modal: start a trip and put an event on it
             for ev in ["{id:'shrine', god:'Talos', text:'A weathered roadside shrine to Talos stands among the stones.'}",
                        "{id:'caravan', stock:['potion_health','soul_gem_common'], text:'A Khajiit caravan rests by the road.'}",

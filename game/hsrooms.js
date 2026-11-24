@@ -323,7 +323,7 @@ const HSROOMS = (() => {
     return { text: `${L.d.name}'s kitchen sends you off with ${itemName(dish)}.`, fx: "coin" };
   }
 
-  // ---------------------------------------------------------------- pictures (art.js; the pixel style applies too)
+  // ---------------------------------------------------------------- pictures (art.js)
   function person(g, H, x, y, coat = "#30505e", torch = false) {
     H.circle(g, x, y - 26, 4.5, "#d9b48c", "#3b2c1e", 1);
     H.poly(g, [[x - 6, y - 21], [x + 6, y - 21], [x + 8, y], [x - 8, y]], coat, "#3b2c1e", 1);
@@ -418,7 +418,7 @@ const HSROOMS = (() => {
         g.strokeStyle = "#6f4f33"; g.lineWidth = 1.4; for (let i = 0; i < 5; i++) { g.beginPath(); g.moveTo(cx + cw - 20 + i * 3, ground + 10 + i * 7); g.lineTo(cx + cw - 8 + i * 3, ground + 10 + i * 7); g.stroke(); }
       }
       if (rooms.includes("garden")) gardenArt(g, H, 4, ground - 14, h.beds, false);
-      if (ART.drawingStyle() !== "pixel") { g.fillStyle = "rgba(43,32,22,.8)"; g.fillRect(6, 6, 104, 16); g.fillStyle = "#e9d7a8"; g.font = "bold 11px Georgia, serif"; g.fillText(tl(opts.guest ? "Guest of the house" : "Inside the house"), 12, 18); }
+      g.fillStyle = "rgba(43,32,22,.8)"; g.fillRect(6, 6, 104, 16); g.fillStyle = "#e9d7a8"; g.font = "bold 11px Georgia, serif"; g.fillText(tl(opts.guest ? "Guest of the house" : "Inside the house"), 12, 18);
       g.strokeStyle = "#3b2c1e"; g.lineWidth = 3; g.strokeRect(1.5, 1.5, W - 3, HT - 3);
     }, { key, cls: "scene hsin", alt: `Inside: ${["nothing built", "small house", "main hall"][HS().stage(h)]}${wings.length ? ", " + wings.join(", ") : ""}${rooms.length ? ", " + rooms.join(", ") : ""}` });
   }

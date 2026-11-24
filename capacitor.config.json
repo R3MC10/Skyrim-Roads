@@ -6,6 +6,7 @@
   "android": { "backgroundColor": "#121417" },
   "plugins": {
     "SplashScreen": { "launchShowDuration": 1500, "launchAutoHide": true, "backgroundColor": "#121417", "showSpinner": false },
+    "LocalNotifications": { "smallIcon": "ic_stat_roads", "iconColor": "#D6A23E" },
     "SystemBars": { "insetsHandling": "native", "style": "DARK" }
   }
 }

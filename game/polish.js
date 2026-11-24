@@ -10,22 +10,20 @@ const POLISH = (() => {
   const MODS = { UIART: () => typeof UIART !== "undefined", PLACEART: () => typeof PLACEART !== "undefined", ICONART: () => typeof ICONART !== "undefined" };
   const has = (n) => { try { return MODS[n] ? MODS[n]() : false; } catch { return false; } };
 
-  // ---- the panel texture: a dark, faintly grained "leather and smoke" tile, made once per art style
-  let texStyle = null;
+  // ---- the panel texture: a dark, faintly grained "leather and smoke" tile, made once
+  let texDone = false;
   function texture() {
     if (typeof ART === "undefined" || typeof document === "undefined") return;
-    const st = ART.style();
-    if (st === texStyle) return; texStyle = st;
+    if (texDone) return; texDone = true;
     try {
       const u = ART.url(160, 160, (g, H, w, h) => {
         g.fillStyle = "#16181b"; g.fillRect(0, 0, w, h);
         const r = ART.seeded("tex");
         for (let i = 0; i < 900; i++) { g.fillStyle = r() < 0.5 ? "rgba(255,240,210,0.035)" : "rgba(0,0,0,0.25)"; g.fillRect(r() * w, r() * h, 1 + r() * 2, 1); }
         for (let i = 0; i < 6; i++) { const y = r() * h; g.strokeStyle = "rgba(255,240,210,0.025)"; g.lineWidth = 1; g.beginPath(); g.moveTo(0, y); g.bezierCurveTo(w * 0.3, y + 8 * (r() - 0.5), w * 0.7, y + 8 * (r() - 0.5), w, y); g.stroke(); }
-      }, { key: "ui-texture", style: st === "pixel" ? "ink" : st });   // grain stays fine-grained in both looks
+      }, { key: "ui-texture" });
       if (u) document.documentElement.style.setProperty("--tex", `url(${u})`);
     } catch { /* decoration only */ }
-    document.documentElement.classList.toggle("art-pixel", st === "pixel");
   }
 
   // ---- banners (one at a time, queued; never more than a few waiting)
@@ -37,7 +35,8 @@ const POLISH = (() => {
   }
   function banner(kind, title, big, icon = "") {
     if (typeof document === "undefined") return;
-    if (kind === "objective" && typeof HUD2 !== "undefined" && HUD2.objFlash(big)) return;   // hud2.js: a new objective flashes on the line under the compass
+    if (kind === "objective" && typeof HUD2 !== "undefined" && HUD2.objFlash(big)) return;
+    if (typeof SKILLUP !== "undefined" && SKILLUP.claim(kind, big)) return;   // skillup.js: skill-ups and level-ups get the Skyrim toast with a bar   // hud2.js: a new objective flashes on the line under the compass
     // a burst of skill rises merges into one banner
     const last = queue[queue.length - 1];
     if (last && last.kind === kind && kind === "skill" && queue.length) { last.big += ` · ${big}`; return; }
