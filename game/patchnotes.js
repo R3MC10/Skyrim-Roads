@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b145-eventart", build: 145, date: "24 Nov 2026", title: "Painted events and shops", items: [
+      "World events now have painted pictures: the Khajiit's grand caravan, Daedric invasions, dragon migrations and all four festival weeks each get their own.",
+      "Great world events do too: dragon assaults, Daedric rifts, sieges and town fairs.",
+      "You see a small picture on the event's card under the map and a wide one when you open it.",
+      "Nine town places have new painted banners: the court wizard and enchanter, the market, stables, your home, the hall, the fence, the arena, the mine and the docks.",
+    ] },
     { id: "b144-gatherfix", build: 144, date: "24 Nov 2026", title: "Tidier Gathering card", items: [
       "On the Map panel, plants you already picked no longer pile up on top of each other in the Gathering card. Every plant gets its own line, and Auto-pick sits on its own row below the buttons.",
     ] },

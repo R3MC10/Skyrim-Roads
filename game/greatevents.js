@@ -427,7 +427,13 @@ const GREATEV = (() => {
       g.fillStyle = "#e9dcc0"; g.beginPath(); g.arc(w * 0.08, h * 0.6, h * 0.12, 0, 7); g.fill(); g.strokeStyle = "#8e2b25"; g.lineWidth = 2; for (let k = 0; k < 6; k++) { const a = (k / 6) * Math.PI * 2; g.beginPath(); g.moveTo(w * 0.08, h * 0.6); g.lineTo(w * 0.08 + Math.cos(a) * h * 0.12, h * 0.6 + Math.sin(a) * h * 0.12); g.stroke(); }
     }
   }
-  const pic = (kind, w, h, seed = "", ph = 0) => ((typeof ART !== "undefined") ? ART.html(w, h, (g) => drawPic(kind, g, w, h, seed, ph), { key: `gev-${kind}-${seed}-${ph}`, cls: "gev-pic", alt: "" }) : "");
+  function pic(kind, w, h, seed = "", ph = 0) {
+    if (typeof ART === "undefined") return "";
+    const asset = `gev-${kind}`;
+    const image = typeof ASSETS === "undefined" ? null : ASSETS.img(w < 100 ? asset + "-thumb" : asset);
+    const draw = image ? (g) => ASSETS.cover(g, image, w, h) : (g) => drawPic(kind, g, w, h, seed, ph);
+    return ART.html(w, h, draw, { key: image ? asset + "-painted" : `gev-${kind}-${seed}-${ph}`, cls: "gev-pic", alt: "", painted: !!image });
+  }
 
   // ---- map markers (map.js calls drawMap every frame)
   const spriteCache = {};

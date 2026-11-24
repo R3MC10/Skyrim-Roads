@@ -409,7 +409,13 @@ const WORLDEV = (() => {
       g.strokeStyle = "#3b2c1e"; g.lineWidth = 1.5; g.beginPath(); g.moveTo(w * 0.3, h * 0.25); g.lineTo(w * 0.3, h * 0.08); g.stroke(); g.fillStyle = "#c4572e"; g.beginPath(); g.moveTo(w * 0.3, h * 0.08); g.lineTo(w * 0.3 + 14, h * 0.12); g.lineTo(w * 0.3, h * 0.16); g.fill();
     }
   }
-  const pic = (kind, w, h, seed = "") => ((typeof ART !== "undefined") ? ART.html(w, h, (g) => drawPic(kind, g, w, h, seed), { key: `wev-${kind}-${seed}`, cls: "wev-pic", alt: "" }) : "");
+  function pic(kind, w, h, seed = "") {
+    if (typeof ART === "undefined") return "";
+    const asset = `wev-${kind}${kind === "fest" && seed ? "-" + seed : ""}`;
+    const image = typeof ASSETS === "undefined" ? null : ASSETS.img(w < 100 ? asset + "-thumb" : asset);
+    const draw = image ? (g) => ASSETS.cover(g, image, w, h) : (g) => drawPic(kind, g, w, h, seed);
+    return ART.html(w, h, draw, { key: image ? asset + "-painted" : `wev-${kind}-${seed}`, cls: "wev-pic", alt: "", painted: !!image });
+  }
 
   // ---- map markers
   const spriteCache = {};
