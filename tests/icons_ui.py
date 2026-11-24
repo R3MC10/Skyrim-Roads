@@ -8,16 +8,15 @@ async def main():
         errs = []
         pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
         await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=ic"); await pg.wait_for_timeout(1500)
-        # gallery of every item icon and enemy portrait, both styles
-        for st in ["ink", "pixel"]:
+        # gallery of every item icon and enemy portrait
+        for st in ["ink"]:
             u = await pg.evaluate("""async (st)=>{ const ids=Object.keys(D.ITEMS).concat(["ench|iron_helmet|health|20|0","ench|steel_sword|fire|20|800","brew|Restore Health:23:0","brew|Damage Health:10:0"]);
               const en=[...new Set([...D.ENCOUNTERS, ...Object.values(DUNGEONS.ENEMY)].map(e=>e.name+"|"+(e.tags||[]).join(",")))];
               const all=ids.map(id=>ICONART.item(id,40,{tq:/sword|armor/.test(id)?2:0})).concat(en.map(x=>{const [n,t]=x.split("|"); return ICONART.enemy(n,t?t.split(","):[],40);}));
               const S2=44, cols=16, rows=Math.ceil(all.length/cols); const c=document.createElement("canvas"); c.width=cols*S2; c.height=rows*S2; const g=c.getContext("2d"); g.fillStyle="#1c1a17"; g.fillRect(0,0,c.width,c.height);
-              ART.setStyle(st);
               const imgs=ids.map(id=>ICONART.item(id,40,{tq:/sword|armor/.test(id)?2:0})).concat(en.map(x=>{const [n,t]=x.split("|"); return ICONART.enemy(n,t?t.split(","):[],40);}));
               await Promise.all(imgs.map((h,i)=>new Promise(res=>{ const m=/src="([^"]+)"/.exec(h); if(!m) return res(); const im=new Image(); im.onload=()=>{ g.drawImage(im,(i%cols)*S2+2,Math.floor(i/cols)*S2+2,40,40); res(); }; im.onerror=res; im.src=m[1]; })));
-              ART.setStyle("ink"); return c.toDataURL(); }""", st)
+              return c.toDataURL(); }""", st)
             open(f"icons_gallery_{st}.png", "wb").write(base64.b64decode(u.split(",")[1]))
         # a character with a big pack
         await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Hoarder"); await pg.click("#begin"); await pg.wait_for_timeout(1000)
@@ -25,17 +24,13 @@ async def main():
         await pg.wait_for_timeout(400)
         for _ in range(4): await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())"); await pg.wait_for_timeout(250)
         n = await pg.evaluate("window.__dbg.save().inv.length"); print("pack rows:", n)
-        t = await pg.evaluate("""()=>{ ART.setStyle('ink'); const t0=performance.now(); document.querySelector('[data-tab=pack]').click(); return performance.now()-t0; }""")
+        t = await pg.evaluate("""()=>{ const t0=performance.now(); document.querySelector('[data-tab=pack]').click(); return performance.now()-t0; }""")
         await pg.wait_for_timeout(400)
         t2 = await pg.evaluate("""()=>{ document.querySelector('#sky')?.remove(); const t0=performance.now(); document.querySelector('[data-tab=pack]').click(); return performance.now()-t0; }""")
         print(f"sky menu with {n} items: first open {t:.0f} ms (draws icons), again {t2:.0f} ms (cached)")
         await pg.screenshot(path="icons_menu.png")
         sel = await pg.query_selector(".sky-row"); 
         if sel: await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())"); await sel.click(); await pg.wait_for_timeout(300); await pg.screenshot(path="icons_detail.png")
-        # pixel style: cold first open
-        tp = await pg.evaluate("""()=>{ ART.setStyle('pixel'); document.querySelector('#sky')?.remove(); const t0=performance.now(); document.querySelector('[data-tab=pack]').click(); return performance.now()-t0; }""")
-        print(f"pixel style first open {tp:.0f} ms"); await pg.wait_for_timeout(300); await pg.screenshot(path="icons_menu_pixel.png")
-        await pg.evaluate("ART.setStyle('ink')")
         await pg.evaluate("document.querySelector('#sky')?.remove()")
         async def jsclick(sel):
             await pg.evaluate("document.querySelectorAll('#modal,#sky').forEach(m=>m.remove())")

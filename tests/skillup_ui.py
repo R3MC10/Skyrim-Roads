@@ -12,7 +12,7 @@ def ok(c, m):
     print(("ok   " if c else "FAIL ") + m)
     if not c: fails.append(m)
 
-FIGHT = """(style) => { ART.setStyle(style); document.querySelectorAll('#modal').forEach(m=>m.remove());
+FIGHT = """(style) => { ART.setStyle && ART.setStyle(style); document.querySelectorAll('#modal').forEach(m=>m.remove());
   const S = window.__dbg.save(), t = G.now();
   for (const k of Object.keys(S.skills)) if (S.skills[k].lvl < 100) S.skills[k].xp = F.skillXpNeeded(k, S.skills[k].lvl) - 0.01;
   S.charXp = F.charXpNeeded(S.level) - 1;
@@ -38,7 +38,7 @@ async def main():
         await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Ewa"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
         await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
         ok(await pg.evaluate("typeof SKILLUP !== 'undefined'"), "skillup.js loaded")
-        for style, (w, h) in [("ink", (390, 844)), ("pixel", (1920, 1080))]:
+        for style, (w, h) in [("ink", (390, 844)), ("ink", (1920, 1080))]:
             await pg.set_viewport_size({"width": w, "height": h})
             r = await pg.evaluate(FIGHT, style)
             ok(r["won"], f"{style}: fight won")

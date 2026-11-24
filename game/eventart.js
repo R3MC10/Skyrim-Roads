@@ -1,8 +1,8 @@
 /* Event art: a painted-in-code picture for every road event and story moment, in the same ink-on-parchment style as
-   the map (or pixel art, through ART). Road events stand on a backdrop that matches the ground you're on (forest,
+   the map. Road events stand on a backdrop that matches the ground you're on (forest,
    snow, tundra, marsh, ash, rocky hills…), lit for the time of day and the weather. Story moments (quests, the
    dragon falling, the Change, Word Walls…) get a small vignette above the popup text. Everything is cached by
-   event|variant|ground|daytime|weather|style, so nothing redraws every frame. [OURS] */
+   event|variant|ground|daytime|weather, so nothing redraws every frame. [OURS] */
 const EVENTART = (() => {
   const W = 360, H0 = 150;
   const P = ART.PAL;
@@ -471,24 +471,24 @@ const EVENTART = (() => {
           SKY.overlay(g, H, w, h, st, { seed: ev.id, ground: h * 0.62, cover: false }); frame(g, w, h);
         } finally { curSky = null; }
       };
-      return ART.html(W, H0, draw, { key: `evt|${ev.id}|${variant}|${ground}|${st.key}`, cls: "scene evt", alt: "", style: opts.style });
+      return ART.html(W, H0, draw, { key: `evt|${ev.id}|${variant}|${ground}|${st.key}`, cls: "scene evt", alt: "" });
     }
     const draw = (g, H, w, h) => {
       backdrop(g, H, w, h, ground, md, ev.id + ground);
       g.save(); g.translate(w / 2, h * 0.9); g.scale(k, k); g.translate(-w / 2, -h * 0.9); ROAD[ev.id](g, H, w, h, ev); g.restore();
       overlay(g, H, w, h, md, wx, ev.id); frame(g, w, h);
     };
-    return ART.html(W, H0, draw, { key: `evt|${ev.id}|${variant}|${ground}|${md}|${wx}`, cls: "scene evt", alt: "", style: opts.style });
+    return ART.html(W, H0, draw, { key: `evt|${ev.id}|${variant}|${ground}|${md}|${wx}`, cls: "scene evt", alt: "" });
   }
   function story(title, text, opts = {}) {
     const k = opts.kind || storyKind(title, text); if (!k || !STORY[k]) return "";
     const o = { town: opts.town || "" };
-    return ART.html(W, H0, (g, H, w, h) => { STORY[k](g, H, w, h, o); frame(g, w, h); }, { key: `story|${k}|${o.town}`, cls: "scene evt", alt: "", style: opts.style });
+    return ART.html(W, H0, (g, H, w, h) => { STORY[k](g, H, w, h, o); frame(g, w, h); }, { key: `story|${k}|${o.town}`, cls: "scene evt", alt: "" });
   }
   /* the dragon over a town, for the raid banner in the Journal */
   function raid(town, done, opts = {}) {
     const k = done ? "dragonFalls" : "dragonAttack";
-    return ART.html(W, 110, (g, H, w, h) => { STORY[k](g, H, w, h, { town }); frame(g, w, h); }, { key: `raid|${k}|${town}`, cls: "scene evt", alt: "", style: opts.style });
+    return ART.html(W, 110, (g, H, w, h) => { STORY[k](g, H, w, h, { town }); frame(g, w, h); }, { key: `raid|${k}|${town}`, cls: "scene evt", alt: "" });
   }
   const kit = { P, rnd, poly, rect, line, glow, fire, smoke, shadow, person, sleeper, tree, godSign, dragon, ZOOM };   // for encart.js
   return { road, story, raid, storyKind, ROAD, STORY, GROUND, W, H: H0, kit };

@@ -20,7 +20,7 @@ async def main():
         exe = os.environ.get("CHROME") or ("/usr/bin/google-chrome" if os.path.exists("/usr/bin/google-chrome") else None)
         b = await p.chromium.launch(executable_path=exe, args=["--no-sandbox"])
         errs = []
-        for style in ["ink", "pixel"]:
+        for style in ["ink"]:
             ctx = await b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2)
             await ctx.add_init_script(f"localStorage.setItem('rotn_prefs', JSON.stringify({{artStyle:'{style}'}}))")
             async def phone(tag, name, extra):
@@ -28,7 +28,6 @@ async def main():
                 await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut{extra}&p=dg{RUN}{style}{tag}"); await pg.wait_for_timeout(1500)
                 await pg.click(".press"); await pg.wait_for_timeout(300); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", name); await pg.click("#begin"); await pg.wait_for_timeout(1000)
                 await pg.evaluate("() => document.querySelectorAll('#modal,.modal,.intro').forEach(m => m.remove())")
-                await pg.evaluate("(st) => { if (typeof ART !== 'undefined' && ART.setStyle) ART.setStyle(st); }", style)
                 return pg
             A = await phone("a", "Alfa", "&dgame"); B = await phone("b", "Beta", "")
             here = "() => { const S = window.__dbg.save(), n = 'Embershard Mine'; S.location = n; [S.x, S.y] = WORLD.places[n].slice(0, 2); S.trip = null; S.cleared = {}; S.level = 12; S.hpBonus = 3000; G.setHealth(S, G.maxHealth(S)); window.__dbg.publish(); }"

@@ -108,8 +108,8 @@ async def main():
         ok(await B.query_selector("#acctwall") is not None, "and now B is told it was signed out")
 
         # ---- both art styles: the account page
-        for style in ["ink", "pixel"]:
-            await A.evaluate(f"ART.setStyle('{style}')"); await A.click(".mi[data-t=account]"); await A.wait_for_selector(".acchar", timeout=8000)
+        for style in ["ink"]:
+            await A.click(".mi[data-t=account]"); await A.wait_for_selector(".acchar", timeout=8000)
             vw = await A.evaluate("document.querySelector('#tinner').scrollWidth <= innerWidth")
             ok(vw, f"{style}: account page fits the phone width")
             await A.screenshot(path=OUT + f"{style}_account_page.png")

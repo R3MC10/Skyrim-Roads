@@ -74,7 +74,7 @@ const GUARDS = (() => {
     }
   }
   function sprite(hold) {
-    const st = typeof ART !== "undefined" ? ART.style() : "ink", k = hold + "|" + st;
+    const k = hold;
     if (!sprites.has(k) && typeof ART !== "undefined") sprites.set(k, ART.canvas(22, 20, (g, H) => drawPatrol(g, H, 22, 20, tint(hold)), { block: 2 }));
     return sprites.get(k) || null;
   }

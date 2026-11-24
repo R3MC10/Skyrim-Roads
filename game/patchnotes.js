@@ -7,6 +7,31 @@ const PATCHNOTES = (() => {
       "The game has its own icon now: a horned Nord helm under the northern star, on a parchment shield. You'll see it on your phone's home screen, the PC game's window, taskbar and installer, and the browser tab.",
       "On Android 13 and newer it also follows your themed icons, and game notifications show a small helm instead of a plain square. The loading screen shows the new shield too.",
     ] },
+    { id: "b145-pcfit", build: 145, date: "24 Nov 2026", title: "The game fills the whole window on a PC", items: [
+      "On a wide PC screen everything now fits on one screen: no more empty bands at the sides and no scrolling the page. The map and the side panel share the full width, and only long lists in the side panel scroll.",
+      "The place card on the map (Travel, X) no longer hides behind the bottom bar.",
+      "Skills: the skill list and its perk stars sit side by side, and the stars grow to fill the space. The side panel gets wider while they're open.",
+      "Fights on a PC show a big battle picture on the left, with the fighters and your moves on the right, all without scrolling. Dungeons put the room on the left and the dungeon map on the right.",
+      "Text and buttons are a little bigger on large monitors. Phones look the same as before.",
+      "Paintings stay sharp: shop banners, town pictures, fight scenes, foes and the title picture are never stretched or blown up into a blur any more. On a very big or sharp screen a painting shows at its own size instead.",
+    ] },
+    { id: "b144-nopixel", build: 144, date: "24 Nov 2026", title: "One art style: hand-drawn", items: [
+      "The pixel-art look is gone. The game now has one style, the hand-drawn one, so every picture, menu and fight gets the full care.",
+      "If you had pixel art switched on, you'll just see the hand-drawn look next time you open the game. Nothing else changes, and your save is untouched.",
+      "The Art style row is gone from Settings.",
+    ] },
+    { id: "b144-homechest", build: 144, date: "24 Nov 2026", title: "A proper chest in your house", items: [
+      "Your house chest now works like a Skyrim chest: switch between the Chest and Your pack, filter by Weapons, Apparel, Potions, Scrolls, Food, Ingredients, Books and Misc, and sort by name, stat, weight or value.",
+      "Every item in the chest and in your pack has its picture again.",
+      "Tap something to move just 1, an amount you pick, or the whole stack, either way. Potions, ingredients, materials and arrows pile up into one stack in the chest.",
+      "Your load and the chest's total weight are shown on top. Gear you wear (in any loadout) stays on you and can't be put away by mistake.",
+      "Improved, named and stolen things keep all that when they go in and come back out.",
+    ] },
+    { id: "b144-noequipsell", build: 144, date: "24 Nov 2026", title: "What you wear stays on you", items: [
+      "Shops no longer list the gear you're wearing when you sell: weapons in either hand, armour, rings and amulets stay off the Sell list, and Sell all junk never touches them.",
+      "The same goes for handing things over: your follower's Your pack list, trades and gifts to other players, market stalls and chests leave out what you wear.",
+      "Got two of the same thing and wear one? Only the spare one shows up. Take something off first if you really want to part with it.",
+    ] },
     { id: "b165-pcmap", build: 165, date: "24 Nov 2026", title: "The big map on PC", items: [
       "On a PC or laptop the world map is now your home screen: it fills the whole window, and Items, Skills, Magic and the Journal open on top of it over a blurred map. On phones nothing changes.",
       "Drag to look around, scroll to zoom smoothly from all of Skyrim down to a single village, and press Space to jump back to your hero. WASD and the arrows move the map too (while the compass is closed).",

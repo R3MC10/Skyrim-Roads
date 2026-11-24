@@ -1,5 +1,5 @@
 const __GAME = process.env.W || require("path").join(__dirname, "../game/");
-// TRAVELART: the travel strip paints every region, sky, weather, both art styles, a big party and every destination kind
+// TRAVELART: the travel strip paints every region, sky, weather, a big party and every destination kind
 // without NaN draw calls (fake 2D context + fake canvases)
 const fs=require("fs"),vm=require("vm");
 const W=__GAME;
@@ -33,7 +33,7 @@ const skies=[SKY.make({tod:"day"}),SKY.make({tod:"night",north:true,season:"wint
 const dests=["Whiterun","Riverwood","Markarth","Fort Greymoor","Bleak Falls Barrow","Loreius Farm","The Lover Stone","Nowhere"];
 const co=[]; for(let i=0;i<14;i++) co.push({name:"P"+i,look,riding:i%3===0,horse:"#6b4a2e",follower:i%2===1});
 let n=0;
-for (const st of ["ink","pixel"]) { setStyle(st);
+for (const st of ["ink"]) { setStyle(st);
   grounds.forEach((gr,i)=>{ const sky=skies[i%skies.length], dest=dests[i%dests.length];
     for (const [riding,carriage,comp] of [[false,false,[]],[true,false,co.slice(0,3)],[false,true,co]]) {
       TRAVELART.frame({ground:gr,progress:(i%5)/4,riding,carriage,horse:"#6b4a2e",look,company:comp,sky,dest,origin:"Whiterun"}, 37*i+n*13, {warm:3}); n++; }

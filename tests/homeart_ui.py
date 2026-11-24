@@ -68,10 +68,6 @@ async def main():
             await A.evaluate("(p)=>HALL.setDonors(p?[{id:'z1',name:'Zed',pts:p*0.6},{id:'z2',name:'Remigiusz',pts:p*0.3},{id:'z3',name:'Ann',pts:p*0.1}]:[], null)", pts)
             await town(A, "hall"); hall.append(await A.evaluate("document.querySelector('#side img.homeart')?.src || ''"))
         open("home_hall.html", "w").write("".join(f"<img src='{x}' width=360>" for x in hall))
-        # pixel style
-        await A.evaluate("()=>ART.setStyle('pixel')"); await town(A, "home"); await shot(A, ".hscene", "home_pixel.png")
-        await town(A, "hall"); await shot(A, "#side img.homeart", "hall_pixel.png")
-        await A.evaluate("()=>ART.setStyle('ink')")
         print("errors:", errs)
         await b.close()
 asyncio.run(main())
