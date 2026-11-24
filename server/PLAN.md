@@ -17,7 +17,7 @@ I have characters on different devices and can't reach them from the others."
 ## Phases
 | Phase | What | Status |
 | --- | --- | --- |
-| 1 | Server with accounts, sessions (one device), cloud characters; sign-in screen and character picker in the game; upload existing characters | **built, tested locally** · next: deploy on Railway, set `DEFAULT_SERVER`, patch note, test on phones |
+| 1 | Server with accounts, sessions (one device), cloud characters; sign-in screen and character picker in the game; upload existing characters | **live on Railway** (`https://skyrim-roads-production.up.railway.app`, Postgres) · next: test on phones, merge |
 | 2 | Shared world on the server instead of phone-to-phone (parties, chat, trades, market, clans, events) as a new backend inside `store.js` | **built, tested locally** (`hub.js`, `game/servernet.js`) |
 | 3 | Party fights run on the server (host can leave, every player gets the full fight screen); optional economy checks | **parked** (see below) |
 

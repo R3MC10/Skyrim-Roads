@@ -3,6 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b135", build: 135, date: "24 Nov 2026", title: "Accounts: your characters on every device", items: [
+      "New on the title screen: Sign in. Make an account with just a name and a password (no email needed) and your characters are kept safe on our server.",
+      "Play the same character on your phone, another phone or the PC: under Account, tap Play here. Upload the character you already have with one tap; nothing is lost.",
+      "One device at a time: if you sign in somewhere else, the game asks whether to play there instead. The other device is told right away and stops saving, so your two devices never fight over your progress.",
+      "Your progress saves to your account a few seconds after you play, and catches up by itself when you're back online. If a character was played somewhere else in the meantime, you choose which copy to keep.",
+      "Signed in, the shared world (other players, parties, chat, trades, the market) comes through our server too, so friends see each other more reliably. Not signed in? Everything works exactly as before.",
+      "There's no email on accounts yet, so keep your password safe: it can't be reset for now.",
+    ] },
     { id: "b133", build: 133, date: "23 Nov 2026", title: "Painted battle scenes", items: [
       "Fights now happen in front of hand-painted scenes instead of the plain drawn ones: Embershard Mine has its own, and every dungeon, camp and lair uses the one for its kind (burial barrows, Dwemer vaults, Forsworn redoubts, vampire lairs, temples, forts, Thalmor keeps, bandit and giant camps, dragon lairs).",
       "Road fights show the land you're in: snowy passes, pine forest, autumn woods, marsh, the ashlands, rocky highlands or the open tundra. Duels in Windhelm get the arena.",

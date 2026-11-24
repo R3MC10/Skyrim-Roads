@@ -14,7 +14,7 @@
      in the shared world on every device.
    Nothing here touches the game rules; it only moves saves. Passwords are never stored on the device. */
 const ACCOUNT = (() => {
-  const DEFAULT_SERVER = "";   // the Railway address, e.g. "https://rotn-server.up.railway.app", once it's live
+  const DEFAULT_SERVER = "https://skyrim-roads-production.up.railway.app";   // our server on Railway (server/); ?server=… overrides it for testing
   const DOM = typeof document !== "undefined" && typeof location !== "undefined" && typeof addEventListener !== "undefined";   // node tests load every file without a page
   const NS = DOM ? (location.search.match(/[?&]p=(\w+)/) || [])[1] || "" : "";   // tests: several "devices" in one browser
   const K = (k) => NS + "acct." + k;
