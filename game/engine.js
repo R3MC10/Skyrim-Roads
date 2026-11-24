@@ -91,6 +91,7 @@ const G = (() => {
     return [+q[0].toFixed(4), +q[1].toFixed(4)];
   };
   function migrate(s) {
+    if (typeof APPEAR !== "undefined") APPEAR.migrate(s);   // an old save keeps its face as a chosen look (appear.js)
     // a won turn-by-turn road fight used to leave the road blocked by a dead foe: clear it
     if (s.trip?.status === "encounter" && (!s.trip.encounter || s.trip.encounter.hp <= 0)) { s.trip.status = "travel"; s.trip.encounter = null; s.trip.lastTick = now(); }
     if (typeof DUNGEONS !== "undefined" && DUNGEONS.repair) DUNGEONS.repair(s);   // a run saved where it can't go on: dead foe, empty boss room, dead end (dungeons.js)

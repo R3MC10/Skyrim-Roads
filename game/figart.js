@@ -91,9 +91,11 @@ const FIGART = (() => {
     if (src.look) return src.look;
     if (src.eq && (src.r || src.gl)) return src;
     if (src.loadouts && typeof HEROART !== "undefined") return HEROART.lookOf(src);
-    return { r: src.race || "nord", id: src.id || src.name || "x", eq: {}, gl: {}, sx: src.sex === "f" ? "f" : undefined };
+    const L0 = { r: src.race || "nord", id: src.id || src.name || "x", eq: {}, gl: {}, sx: src.sex === "f" ? "f" : undefined };
+    if (src.app) L0.a = src.app;
+    return L0;
   }
-  const keyOf = (L) => JSON.stringify([L.r, L.id, L.eq, L.gl, L.v, L.ww, L.sx || ""]);
+  const keyOf = (L) => JSON.stringify([L.r, L.id, L.eq, L.gl, L.v, L.ww, L.sx || "", L.a || 0]);
   const RACE0 = { skin: ["#e2b894"], hair: ["#8a5a34"], beard: 0.5, ears: "round", h: 1, w: 1 };
   const SPECS = new Map();
   function specOf(L) {
@@ -142,8 +144,65 @@ const FIGART = (() => {
       shield, wk, wset, wkey, staffC, ench: gl.w ? ELEMENT[gl.w] || "#c9b6ff" : null, aglow: !!gl.a,
       amulet: jewel(amulet), ring: jewel(ring),
     };
+    if (L.a && typeof APPEAR !== "undefined") appearOn(sp, L, race);   // a look chosen in character creation (appear.js)
     if (SPECS.size > 200) SPECS.delete(SPECS.keys().next().value);
     SPECS.set(key, sp); return sp;
+  }
+
+  /* [OURS] character creation (appear.js): the chosen face, hair, build... on top of the seeded defaults */
+  const mixC = (a, b, t) => { const x = rgbOf(a), y = rgbOf(b); return x && y ? hexOf(x.map((v, i) => v + (y[i] - v) * t)) : a; };
+  function appearOn(sp, L, race) {
+    const A = APPEAR.norm(L.a, L.r), r = L.r;
+    sp.A = A; sp.fem = A.sx === "f";
+    if (!L.v) { sp.skin = APPEAR.skinOf(r, A.skin); sp.eyes = APPEAR.eyeOf(r, A.eyes); }
+    sp.skinD = tone(sp.skin, -0.22);
+    let hc = (race.hair || []).length ? APPEAR.hairColOf(r, A.hairC) : null;
+    if (hc && A.age >= 2) hc = mixC(hc, A.age === 3 ? "#dcd8d0" : "#a8a49c", A.age === 3 ? 0.72 : 0.28);   // greying with age
+    sp.hairC = hc; sp.hairStyle = A.hair;
+    if (r === "argonian") { sp.horns = A.horns; sp.hornI = A.hairC; sp.hornC = APPEAR.hairColOf(r, A.hairC); }
+    sp.beardStyle = A.beard; sp.beard = A.beard !== "none" && A.beard !== "stubble" && !!hc; sp.beardLen = APPEAR.beardLen(A);
+    sp.face = A.face; sp.nose = A.nose; sp.mouth = A.mouth; sp.brows = A.brows; sp.age = A.age; sp.scar = A.scar; sp.tattoo = A.tattoo;
+    sp.paint = A.paint !== "none" ? APPEAR.paintOf(A.paintC) : null; sp.paintS = A.paint;
+    sp.bw = (race.w || 1) * (sp.fem ? 0.93 : 1) * APPEAR.bw(A); sp.bh = (race.h || 1) * (sp.fem ? 0.97 : 1) * APPEAR.bh(A);
+  }
+  /* the extra face marks: age lines, scars, warpaint styles, tattoos */
+  function faceMarks(g, sp, st, eyeX, eyeY, covered) {
+    if (sp.age >= 2) {
+      const c = "rgba(60,40,30,0.38)";
+      line(g, [[eyeX - 1.3, eyeY + 0.1], [eyeX - 2, eyeY + 0.5]], c, st.fine * 0.8); line(g, [[eyeX - 1.3, eyeY - 0.3], [eyeX - 2.1, eyeY - 0.5]], c, st.fine * 0.8);
+      line(g, [[0.4, -3.6], [2.8, -3.8]], c, st.fine * 0.7);
+      if (sp.age >= 3) { line(g, [[0.6, -2.8], [2.6, -2.9]], c, st.fine * 0.7); if (sp.ears !== "lizard") line(g, [[4.2, 2.1], [3.5, 3.7]], c, st.fine * 0.8); }
+    }
+    if (sp.tattoo && sp.tattoo !== "none" && !covered) {
+      g.globalAlpha = 0.6; const c = "#2f4f8a";
+      if (sp.tattoo === "rune") { line(g, [[1.6, -4.6], [1.6, -2.8]], c, st.fine * 1.1); line(g, [[0.9, -4.2], [2.3, -3.2]], c, st.fine * 1.1); line(g, [[2.3, -4.2], [0.9, -3.2]], c, st.fine * 1.1); }
+      else if (sp.tattoo === "dots") for (const [x, y] of [[1.4, 1.2], [2.2, 1.6], [1.2, 2.2], [2, 2.6]]) dot(g, x, y, 0.28, c, st);
+      else if (sp.tattoo === "lines") for (const x of [2.4, 3.1, 3.8]) line(g, [[x, 4.1], [x - 0.1, 5.2]], c, st.fine * 1.1);
+      else if (sp.tattoo === "spiral") { g.strokeStyle = c; g.lineWidth = st.fine * 1.1; g.beginPath(); for (let i = 0; i <= 24; i++) { const a = i * 0.45, rr = 0.15 + i * 0.045; const x = 1.6 + Math.cos(a) * rr, y = 1.5 + Math.sin(a) * rr; i ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke(); }
+      g.globalAlpha = 1;
+    }
+    if (sp.paintS && sp.paintS !== "band" && sp.paint && !covered) {
+      g.globalAlpha = 0.6; g.fillStyle = sp.paint;
+      if (sp.paintS === "stripes") for (let i = 0; i < 3; i++) g.fillRect(0.6 + i * 0.15, 0.7 + i * 0.85, 2.8, 0.38);
+      else if (sp.paintS === "jaw") { g.beginPath(); g.moveTo(0.2, 2.6); g.quadraticCurveTo(1.8, 3.4, 4.3, 3.9); g.quadraticCurveTo(4, 5.4, 2.6, 5.5); g.quadraticCurveTo(0.6, 5.5, -0.6, 3.4); g.closePath(); g.fill(); }
+      else if (sp.paintS === "eye") { g.strokeStyle = sp.paint; g.lineWidth = 0.75; g.beginPath(); g.ellipse(eyeX, eyeY, 1.5, 1.15, 0, 0, TAU); g.stroke(); line(g, [[eyeX - 0.2, eyeY + 1.1], [eyeX - 0.5, eyeY + 2.6]], sp.paint, 0.5); }
+      g.globalAlpha = 1;
+    }
+    if (sp.scar && sp.scar !== "none" && !(sp.helm && sp.helm.visor)) {
+      const c = sp.ears === "lizard" || sp.ears === "cat" ? "rgba(232,214,190,0.8)" : "rgba(150,64,52,0.8)", w = st.fine * 1.2;
+      if (sp.scar === "eye") { line(g, [[eyeX - 0.7, eyeY - 2.2], [eyeX + 0.1, eyeY - 0.4]], c, w); line(g, [[eyeX + 0.2, eyeY + 0.5], [eyeX + 0.6, eyeY + 1.6]], c, w); }
+      else if (sp.scar === "cheek") line(g, [[1.3, 0.8], [3.3, 2.4]], c, w);
+      else if (sp.scar === "lip") line(g, [[4.0, 2.8], [3.8, 4.1]], c, w);
+      else if (sp.scar === "brow") line(g, [[eyeX - 0.3, eyeY - 2], [eyeX + 0.5, eyeY - 0.9]], c, w);
+      else if (sp.scar === "claw") for (let i = 0; i < 3; i++) line(g, [[0.6 + i * 0.75, -0.2 + i * 0.1], [1.6 + i * 0.75, 2.6 + i * 0.1]], c, w);
+    }
+  }
+  /* Argonian head-dress other than the old frills */
+  function lizardCrest(g, sp, st) {
+    const c = sp.hornC || "#4d6a44", c2 = tone(c, 0.15);
+    if (sp.horns === "horns") for (const [dx, k] of [[0, 1], [1.4, 0.8]]) { g.beginPath(); g.moveTo(-1.6 + dx, -5); g.quadraticCurveTo(-6 + dx, -8.4 * k, -9 + dx, -4.6 * k); g.quadraticCurveTo(-6 + dx, -6 * k, -2.6 + dx, -3.4); g.closePath(); fillPath(g, dx ? c2 : "#e8dcc0", st, null, st.lw * 0.7); }
+    else if (sp.horns === "crest") { for (let i = 0; i < 6; i++) { poly(g, [[2.2 - i * 1.3, -5.6 + i * 0.3], [1.6 - i * 1.3, -8.6 + i * 0.5], [0.8 - i * 1.3, -5.4 + i * 0.4]]); fillPath(g, i % 2 ? c : c2, st, null, st.lw * 0.6); } }
+    else if (sp.horns === "spikes") for (let i = 0; i < 5; i++) { const a = -1.9 + i * 0.42, x = -1 + Math.cos(a) * 5, y = -0.4 + Math.sin(a) * 5.4; poly(g, [[x, y], [x + Math.cos(a) * 2.4 - 0.6, y + Math.sin(a) * 2.4], [x - 0.6 * Math.sin(a) + 0.4, y + 0.6 * Math.cos(a)]]); fillPath(g, i % 2 ? c : c2, st, null, st.lw * 0.6); }
   }
 
   // ---------------------------------------------------------------- animation clips
@@ -319,10 +378,11 @@ const FIGART = (() => {
       g.quadraticCurveTo(6.6, 2.6, 5.4, 2.8); g.quadraticCurveTo(5.4, 3.8, 4.5, 4.2); g.quadraticCurveTo(4, 5.4, 2.4, 5.4); g.quadraticCurveTo(0.2, 5.4, -0.8, 3.4);
       g.quadraticCurveTo(-4.8, 2.6, -4.6, -1.2); g.quadraticCurveTo(-4.4, -5.8, -1, -6);
     } else {
-      const orc = sp.ears === "orc", jaw = orc ? 0.6 : sp.fem ? -0.3 : 0;
+      const orc = sp.ears === "orc", jaw = (orc ? 0.6 : sp.fem ? -0.3 : 0) + [0, 0.55, -0.4, 0.35][sp.face || 0];
+      const nx = (orc ? 5.3 : sp.fem ? 5.3 : 5.7) + [0, 0.35, 0.15, -0.45][sp.nose || 0], ny = 1.7 + [0, 0.35, 0.1, -0.1][sp.nose || 0];
       g.moveTo(-1, -6.1); g.quadraticCurveTo(3.2, -6.2, 4, -3); g.quadraticCurveTo(orc ? 5 : 4.5, -1.6, 4.2, -0.8);
-      g.lineTo(orc ? 5.3 : sp.fem ? 5.3 : 5.7, 1.7); g.lineTo(4.5, 2.3); g.quadraticCurveTo(4.8, 2.8, 4.4, 3.3); g.quadraticCurveTo(4.7, 3.9, 4.1 + jaw * 0.4, 4.4);
-      g.quadraticCurveTo(4 + jaw, 5.4 + jaw * 0.3, 2.6, 5.5 + jaw * 0.2); g.quadraticCurveTo(0.6, 5.5, -0.6, 3.4); g.quadraticCurveTo(-4.6, 2.6, -4.4, -1.2); g.quadraticCurveTo(-4.2, -5.8, -1, -6.1);
+      if (sp.nose === 1) g.quadraticCurveTo(nx - 0.2, 0.2, nx, ny); else g.lineTo(nx, ny); g.lineTo(4.5, 2.3); g.quadraticCurveTo(4.8, 2.8, 4.4, 3.3); g.quadraticCurveTo(4.7, 3.9, 4.1 + jaw * 0.4, 4.4);
+      if (sp.face === 3) { g.lineTo(4 + jaw, 5.3 + jaw * 0.3); g.lineTo(2.6, 5.6 + jaw * 0.2); } else g.quadraticCurveTo(4 + jaw, 5.4 + jaw * 0.3, 2.6, 5.5 + jaw * 0.2); g.quadraticCurveTo(0.6, 5.5, -0.6, 3.4); g.quadraticCurveTo(-4.6, 2.6, -4.4, -1.2); g.quadraticCurveTo(-4.2, -5.8, -1, -6.1);
     }
     g.closePath();
   }
@@ -339,9 +399,12 @@ const FIGART = (() => {
       if (sp.hairStyle === "long") { smooth(g, [[-1.6, -6.4], [-5.4, -4], [-5.8, 2], [-6, 8.4], [-3.2, 9.6], [-2.4, 4], [-1.4, 0]]); fillPath(g, hc, st, [-1, -6, -6, 8]); }
       if (sp.hairStyle === "braid") { for (let i = 0; i < 5; i++) { g.beginPath(); g.ellipse(-4.4 - i * 0.25, 2.6 + i * 1.6, 1.25, 1, 0.3, 0, TAU); fillPath(g, hc, st, null, st.lw * 0.7); } }
       if (sp.hairStyle === "bun") { dot(g, -4.4, -4.4, 2.2, hc, st, st.lw * 0.8); }
+      if (sp.hairStyle === "ponytail") { smooth(g, [[-3.6, -4.8], [-6.6, -3.4], [-7.8, 1.4], [-7, 6.4], [-5.6, 4.4], [-5.4, 0], [-3.8, -2.2]]); fillPath(g, hc, st, [-3, -5, -7, 5]); dot(g, -5.4, -3.6, 0.7, tone(hc, -0.35), st); }
+      if (sp.hairStyle === "wild") { for (let i = 0; i < 6; i++) { const a = -2.6 + i * 0.42, x = -1 + Math.cos(a) * 4.6, y = -0.6 + Math.sin(a) * 5.4; poly(g, [[x + 1.1 * Math.sin(a), y - 1.1 * Math.cos(a)], [x + Math.cos(a) * 3.2, y + Math.sin(a) * 3.2], [x - 1.1 * Math.sin(a), y + 1.1 * Math.cos(a)]]); fillPath(g, hc, st, null, st.lw * 0.7); } }
     }
     if (hood) { smooth(g, [[4.6, -3.6], [3.6, -8.4], [-1.6, -8.2], [-6.4, -6.4], [-6.6, 0], [-6.4, 5], [-4.8, 8.2], [-0.6, 7.4], [2.2, 5.6], [1.4, 1], [2.6, -2.4]]); fillPath(g, tone(hood, -0.25), st, [3, -8, -6, 6], 0); }
-    if (sp.ears === "lizard" && !covered) for (let i = 0; i < 4; i++) { poly(g, [[-2.6 + i * 0.6, -5 + i * 1.6], [-8.4 - i * 0.4, -6.4 + i * 3], [-3.4 + i * 0.6, -3.4 + i * 1.6]]); fillPath(g, i % 2 ? "#4d6a44" : "#5e7a50", st, null, st.lw * 0.7); }
+    if (sp.ears === "lizard" && !covered && sp.horns && sp.horns !== "frills") lizardCrest(g, sp, st);
+    else if (sp.ears === "lizard" && !covered) for (let i = 0; i < 4; i++) { poly(g, [[-2.6 + i * 0.6, -5 + i * 1.6], [-8.4 - i * 0.4, -6.4 + i * 3], [-3.4 + i * 0.6, -3.4 + i * 1.6]]); fillPath(g, sp.hornI ? (i % 2 ? sp.hornC : tone(sp.hornC, 0.15)) : i % 2 ? "#4d6a44" : "#5e7a50", st, null, st.lw * 0.7); }
     // the head
     headShape(g, sp); fillPath(g, skin, st, [4, -5, -4, 4]);
     // ears
@@ -360,7 +423,7 @@ const FIGART = (() => {
     if (sp.vamp) glowAt(g, eyeX, eyeY, 2, "#e0302a", 0.5, st);
     g.strokeStyle = ink; g.lineWidth = st.fine;
     g.beginPath(); g.moveTo(eyeX - 0.9, eyeY - 0.5); g.quadraticCurveTo(eyeX, eyeY - 0.95, eyeX + 0.9, eyeY - 0.35); g.stroke();   // lid
-    if (sp.ears !== "lizard") { g.lineWidth = sp.ears === "orc" ? st.fine * 2 : st.fine * 1.4; g.beginPath(); g.moveTo(eyeX - 1, eyeY - 1.3); g.lineTo(eyeX + 1.2, eyeY - 1.1); g.stroke(); }   // brow
+    if (sp.ears !== "lizard") { g.lineWidth = (sp.ears === "orc" ? st.fine * 2 : st.fine * 1.4) * [1, 1.7, 0.7, 1][sp.brows || 0]; g.beginPath(); g.moveTo(eyeX - 1, eyeY - 1.3 + (sp.brows === 1 ? 0.15 : 0)); if (sp.brows === 3) g.quadraticCurveTo(eyeX, eyeY - 2.1, eyeX + 1.2, eyeY - 1.2); else g.lineTo(eyeX + 1.2, eyeY - 1.1); g.stroke(); }   // brow
     g.lineWidth = st.fine;
     if (sp.ears === "lizard") { g.beginPath(); g.moveTo(4.6, 3.2); g.lineTo(8.6, 1.8); g.stroke(); dot(g, 8.6, 0.6, 0.3, ink, st); for (const [x, y] of [[0, -3], [2, -4], [-2, -1], [1, 1], [5, -1.6]]) dot(g, x, y, 0.55, "rgba(0,0,0,0.14)", st); }
     else if (sp.ears === "cat") {
@@ -368,21 +431,28 @@ const FIGART = (() => {
       g.strokeStyle = "rgba(244,240,230,0.85)"; g.lineWidth = st.fine * 0.8; for (const dy of [1.2, 2.1]) { g.beginPath(); g.moveTo(5.4, dy); g.lineTo(9, dy - 0.6 + (dy - 1.5)); g.stroke(); }
       g.strokeStyle = "rgba(59,44,30,0.45)"; g.lineWidth = st.fine * 1.4; for (const x of [0.4, 2]) { g.beginPath(); g.moveTo(x, -6); g.lineTo(x + 0.5, -4); g.stroke(); }
     } else {
-      line(g, [[3.7, 3.4], [4.4, 3.3]], ink, st.fine); line(g, [[4.6, 1.9], [4.9, 2.2]], ink, st.fine);   // mouth and nostril
+      if (!sp.mouth) line(g, [[3.7, 3.4], [4.4, 3.3]], ink, st.fine);   // mouth
+      else { g.strokeStyle = ink; g.lineWidth = st.fine * (sp.mouth === 2 ? 1.3 : 1); g.beginPath(); g.moveTo(sp.mouth === 2 ? 3.4 : 3.6, sp.mouth === 3 ? 3.6 : 3.35); g.quadraticCurveTo(4, sp.mouth === 1 ? 3.85 : sp.mouth === 3 ? 3.05 : 3.4, 4.45, sp.mouth === 1 ? 3.05 : sp.mouth === 3 ? 3.65 : 3.3); g.stroke(); }
+      if (sp.nose === 2) line(g, [[4.4, 1.9], [5, 2.4]], ink, st.fine * 1.3); else line(g, [[4.6, 1.9], [4.9, 2.2]], ink, st.fine);   // nostril
       if (sp.ears === "orc") { poly(g, [[3.7, 4.2], [4.2, 2.4], [4.6, 4.3]]); fillPath(g, "#f4f0e6", st, null, st.fine); }
       if (sp.fem) dot(g, 2.4, 1.6, 1, "rgba(200,90,80,0.22)", st);
     }
-    if (sp.paint && !covered) { g.globalAlpha = 0.55; g.fillStyle = sp.paint; g.fillRect(1.2, -1.4, 3.2, 1.3); g.globalAlpha = 1; }
+    if (sp.paint && !covered && (!sp.paintS || sp.paintS === "band")) { g.globalAlpha = 0.55; g.fillStyle = sp.paint; g.fillRect(1.2, -1.4, 3.2, 1.3); g.globalAlpha = 1; }
+    if (sp.A) faceMarks(g, sp, st, eyeX, eyeY, covered);
     // beard and moustache
     if (sp.beard && hc && !(helm && helm.visor)) {
       const L = sp.beardLen;
       g.beginPath(); g.moveTo(0.2, 0.8); g.quadraticCurveTo(0.6, 4.6, 2.4, 5.6 + L * 0.4); g.lineTo(3.6, 5.8 + L); g.quadraticCurveTo(4.9, 5.6 + L * 0.5, 4.7, 3.9); g.lineTo(3.8, 3.8); g.quadraticCurveTo(2.6, 4.1, 1.8, 2.4); g.closePath();
       fillPath(g, hc, st, [4, 2, 1, 6 + L]); line(g, [[3.9, 2.5], [5, 2.8], [5.1, 3.4]], hc, 0.9);
       g.strokeStyle = tone(hc, -0.3); g.lineWidth = st.fine * 0.8; for (const x of [1.6, 2.6, 3.5]) { g.beginPath(); g.moveTo(x, 3.6); g.lineTo(x + 0.4, 5 + L * 0.7); g.stroke(); }
-    } else if (!sp.fem && sp.ears === "round" && !covered) dot(g, 2.6, 3.8, 1.6, "rgba(60,40,30,0.08)", st);   // stubble
+      if (sp.beardStyle === "braided") for (const y of [5.6 + L * 0.45, 5.6 + L * 0.8]) line(g, [[2.4, y], [4, y - 0.3]], "#8f8a84", st.fine * 1.6);   // braid rings
+    } else if (sp.beardStyle === "stubble" && !(helm && helm.visor)) { g.beginPath(); g.moveTo(0.4, 1.2); g.quadraticCurveTo(0.8, 4.6, 2.6, 5.3); g.quadraticCurveTo(4.2, 5.2, 4.4, 3.8); g.quadraticCurveTo(2.6, 4, 1.8, 2.2); g.closePath(); g.fillStyle = "rgba(50,36,26,0.22)"; g.fill(); }
+    else if (!sp.fem && sp.ears === "round" && !covered) dot(g, 2.6, 3.8, 1.6, "rgba(60,40,30,0.08)", st);   // stubble
     // hair on top
     if (hc && !covered) {
-      if (sp.hairStyle === "shaved") { hairCap(g, sp); g.globalAlpha = 0.45; g.fillStyle = hc; g.fill(); g.globalAlpha = 1; }
+      if (sp.hairStyle === "bald") { /* nothing on top */ }
+      else if (sp.hairStyle === "mohawk") { smooth(g, [[3, -5.2], [1.6, -7.8], [-1.6, -8.2], [-4.6, -6.4], [-5.4, -3.2], [-4.2, -4.8], [-1.4, -6.4], [1.4, -6.2]]); fillPath(g, hc, st, [2, -8, -4, -4]); }
+      else if (sp.hairStyle === "shaved") { hairCap(g, sp); g.globalAlpha = 0.45; g.fillStyle = hc; g.fill(); g.globalAlpha = 1; }
       else if (sp.ears !== "cat" || sp.hairStyle !== "short") {
         hairCap(g, sp); fillPath(g, hc, st, [3, -7, -4, 2]);
         g.strokeStyle = tone(hc, -0.32); g.lineWidth = st.fine * 0.9; for (const [a, b] of [[[2.6, -5.4], [-2, -4.6]], [[1.2, -6], [-3.6, -2.4]], [[3.2, -4.2], [-1.4, -2.6]]]) { g.beginPath(); g.moveTo(...a); g.quadraticCurveTo((a[0] + b[0]) / 2, Math.min(a[1], b[1]) - 0.8, ...b); g.stroke(); }
@@ -838,7 +908,9 @@ const FIGART = (() => {
     drawPose(g, sp, P, st, { back: () => put(layer(sp, "back", k, P)), front: () => put(layer(sp, "front", k, P)) });
   }
 
-  return { POSES, LOOP, RIG, sprite, draw, fight, animator, specOf, lookOf, lookFor, poseOf, poseAt, blend, solve, clipsFor, tone, clear: () => { SPRITES.clear(); LAYERS.clear(); SPECS.clear(); CLIPS.clear(); } };
+  return { POSES, LOOP, RIG, sprite, draw, fight, animator, specOf, lookOf, lookFor, poseOf, poseAt, blend, solve, clipsFor, tone, clear: () => { SPRITES.clear(); LAYERS.clear(); SPECS.clear(); CLIPS.clear(); },
+    /* [OURS] forget the cached frames of one look (character creation makes a new look on every click; chargen.js) */
+    drop: (src) => { const k = specOf(lookFor(src)).key + "|"; for (const m of [SPRITES, LAYERS]) for (const key of [...m.keys()]) if (key.startsWith(k)) m.delete(key); } };
 })();
 if (typeof HEROART !== "undefined") {   // the shared hero art API lives on HEROART too (see the notes at the top of heroart.js)
   HEROART.sprite = FIGART.sprite; HEROART.drawFigure = FIGART.draw; HEROART.fightFigure = FIGART.fight; HEROART.animator = FIGART.animator; HEROART.POSES = FIGART.POSES;
