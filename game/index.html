@@ -2458,6 +2458,7 @@ html.a11y-still #skillup.on{animation:none}
   .droomart.painted,.droomart.waiting{aspect-ratio:auto;height:clamp(170px,36vh,430px)}
   .dun .dcol .evc{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:8px}
   .dun .dcol .evc .btn{min-height:42px}
+}
 /* [homestash] the house chest as a SkyUI container menu (homestash.js): Chest / Your pack, categories, sort, icons, amounts */
 .hs-box{margin-top:4px}
 .hs-side{margin:0}
@@ -2792,6 +2793,9 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 .breach .br-pin:disabled{cursor:default}
 .breach .br-acts{display:grid;gap:8px;margin-top:8px}
 @media (max-width:420px){.breach .br-pin span{font-size:10px;max-width:84px}}
+/* [assetquality] the snowy road on the new-character screen stays a picture, not a wall: on a wide PC window it keeps
+   a sensible size (and fits under the name box) instead of filling the whole width */
+.cscene{max-width:min(100%,max(340px,min(760px,calc((100vh - 300px) * 360 / 170))));margin-left:auto;margin-right:auto}
 </style>
 <script src="bugreport.js"></script>
 <script src="access.js"></script>

@@ -100,6 +100,7 @@ const ART = (() => {
       u = pu ? c.toDataURL("image/webp", 0.92) : "";
       if (!u.startsWith("data:image/webp")) u = c.toDataURL("image/png");
       if (pu) { meta.set(u, { maxw: Math.round(w * Math.min(sc, pu)) }); if (meta.size > 500) meta.delete(meta.keys().next().value); }
+      else if (u) { recipe.set(u, { w, h, draw, opts, sc, k }); if (recipe.size > 300) recipe.delete(recipe.keys().next().value); watchImgs(); }
     } catch (e) { console.warn("art failed", opts.key, e); }
     if (k) { if (cache.size > 400) cache.delete(cache.keys().next().value); cache.set(k, u); }
     return u;
@@ -112,7 +113,50 @@ const ART = (() => {
     const st = m ? ` style="max-width:min(100%,calc(${m.maxw}px / var(--art-k,1)))" data-maxw="${m.maxw}"` : "";
     return `<img class="art ${opts.cls || ""}" src="${u}" width="${w}" height="${h}" alt="${(opts.alt || "").replace(/"/g, "&quot;")}"${st}>`;
   };
+  /* [assetquality] a picture drawn by code is made of lines, not pixels: when one is shown bigger than it was drawn (a
+     wide PC panel, a big popup, a sharp phone), it is drawn again at the size it really has on screen, so it never goes
+     soft. Every <img> showing it is swapped and the cache keeps the sharp copy for the next time the screen is built. */
+  const recipe = new Map();   // data URL -> { w, h, draw, opts, sc, k }: how to draw it again
+  const SHARP_PX = 16e6, SHARP_SIDE = 8192;
+  function sharpen(img) {
+    const old = img.getAttribute("src") || "", rc = old.startsWith("data:") ? recipe.get(old) : null; if (!rc) return;
+    const r = img.getBoundingClientRect(); if (r.width < 8 || r.height < 8) return;
+    // an <img> with no size of its own shows its file at its pixel size: drawing it bigger would only make it bigger
+    if (!img.hasAttribute("width") && !img.style.width && Math.abs(r.width - img.naturalWidth) < 2) return;
+    const kk = typeof ARTFIT !== "undefined" ? ARTFIT.k() : DPR();
+    const want = Math.max(r.width / rc.w, r.height / rc.h) * kk;
+    if (want <= rc.sc * 1.1) return;
+    const sc = Math.min(Math.ceil(want * 4) / 4, Math.sqrt(SHARP_PX / (rc.w * rc.h)), SHARP_SIDE / Math.max(rc.w, rc.h));
+    if (sc <= rc.sc * 1.05) return;
+    let u = "";
+    try {
+      srcPU = 0;
+      const c = canvas(rc.w, rc.h, rc.draw, { ...rc.opts, scale: sc });
+      if (srcPU) { recipe.delete(old); return; }   // a painted file turned up inside: ART.url's own rules handle those
+      u = c.width * c.height > 400000 ? c.toDataURL("image/webp", 0.95) : "";
+      if (!u.startsWith("data:image/webp")) u = c.toDataURL("image/png");
+    } catch { return; }
+    recipe.set(u, { ...rc, sc }); recipe.delete(old);
+    if (rc.k) cache.set(rc.k, u);
+    for (const im of document.querySelectorAll("img")) if (im.getAttribute("src") === old) im.src = u;
+  }
+  let ro = null, mo = null, due = new Set(), tick = 0;
+  const flush = () => { tick = 0; const list = [...due]; due = new Set(); for (const im of list) if (im.isConnected) sharpen(im); };
+  const queue = (im) => { due.add(im); if (!tick) tick = setTimeout(flush, 60); };
+  const look = (n) => {
+    if (!n || n.nodeType !== 1) return;
+    const all = n.tagName === "IMG" ? [n] : n.getElementsByTagName("img");
+    for (const im of all) { const s = im.getAttribute("src"); if (s && s.startsWith("data:") && recipe.has(s)) { ro.observe(im); queue(im); } }
+  };
+  function watchImgs() {
+    if (mo || typeof document === "undefined" || typeof ResizeObserver === "undefined" || typeof MutationObserver === "undefined") return;
+    ro = new ResizeObserver((es) => { for (const e of es) queue(e.target); });
+    mo = new MutationObserver((ms) => { for (const m of ms) { if (m.type === "attributes") look(m.target); else for (const n of m.addedNodes) look(n); } });
+    const start = () => { mo.observe(document.body || document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ["src"] }); look(document.body); };
+    if (document.body) start(); else addEventListener("DOMContentLoaded", start, { once: true });
+    addEventListener("resize", () => { for (const im of document.querySelectorAll("img")) { const s = im.getAttribute("src"); if (s && s.startsWith("data:") && recipe.has(s)) queue(im); } });
+  }
   const drawingStyle = style;   // kept so older callers still work: always "ink"
   const clear = () => cache.clear();
-  return { PAL, H, style, drawingStyle, canvas, url, html, seeded, clear, noteSrc, budget };
+  return { PAL, H, style, drawingStyle, canvas, url, html, seeded, clear, noteSrc, budget, sharpen };
 })();

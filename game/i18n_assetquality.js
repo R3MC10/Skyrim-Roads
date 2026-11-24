@@ -13,5 +13,11 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "Fight scenes are drawn at your screen's full sharpness, on phones and on 4K monitors, even when the window grows or the phone turns.":
       "Sceny walk są rysowane w pełnej ostrości twojego ekranu, na telefonach i na monitorach 4K, nawet gdy okno się powiększy albo obrócisz telefon.",
     "The painted compass is a bit sharper too.": "Malowany kompas też jest trochę ostrzejszy.",
+    "Everything the game draws itself (your hero, the new-character picture, the dungeon map, icons) is redrawn at the size it really has on your screen, so it stays crisp from phones to ultrawide monitors.":
+      "Wszystko, co gra rysuje sama (twój bohater, obrazek tworzenia postaci, mapa lochu, ikony), jest rysowane na nowo w rozmiarze, jaki naprawdę ma na ekranie, więc zostaje ostre od telefonów po ultrapanoramiczne monitory.",
+    "The snowy road on the new-character screen no longer fills a whole PC monitor: it keeps a sensible size above the race list.":
+      "Zaśnieżona droga na ekranie tworzenia postaci nie zajmuje już całego monitora: ma rozsądny rozmiar nad listą ras.",
+    "Fixed: on phones a lot of newer screens (the house chest, invites, the problem report, the Dwemer puzzles and more) were missing their proper look. They look right again.":
+      "Naprawione: na telefonach sporo nowszych ekranów (skrzynia w domu, zaproszenia, zgłaszanie problemu, zagadki Dwemerów i inne) traciło swój wygląd. Znowu wyglądają jak trzeba.",
   });
 })();

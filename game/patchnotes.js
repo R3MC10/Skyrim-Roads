@@ -9,6 +9,9 @@ const PATCHNOTES = (() => {
       "Paintings (towns, shop banners, fight scenes, event pictures) keep their shape and are never blown up into a blur. On a very big screen a painting shows at its own size instead.",
       "Fight scenes are drawn at your screen's full sharpness, on phones and on 4K monitors, even when the window grows or the phone turns.",
       "The painted compass is a bit sharper too.",
+      "Everything the game draws itself (your hero, the new-character picture, the dungeon map, icons) is redrawn at the size it really has on your screen, so it stays crisp from phones to ultrawide monitors.",
+      "The snowy road on the new-character screen no longer fills a whole PC monitor: it keeps a sensible size above the race list.",
+      "Fixed: on phones a lot of newer screens (the house chest, invites, the problem report, the Dwemer puzzles and more) were missing their proper look. They look right again.",
     ] },
     { id: "b166-appicon", build: 166, date: "24 Nov 2026", title: "A proper icon", items: [
       "The game has its own icon now: a horned Nord helm under the northern star, on a parchment shield. You'll see it on your phone's home screen, the PC game's window, taskbar and installer, and the browser tab.",

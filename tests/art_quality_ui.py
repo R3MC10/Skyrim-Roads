@@ -44,7 +44,8 @@ SKIP = ["map-world", "map-world-2x", "title"]
 WATCH = r"""(() => {
   const ASSET = /\/((?:title|bg-loading|place|biome|foe|shop|bs|bsf|bsp|icon|ui|gev|wev|map|room)-?[^\/?#]*)\.(?:webp|png|jpe?g)(?:[?#].*)?$/;
   const keyOf = (im) => { try { const m = ASSET.exec(im.currentSrc || im.src || ''); return m ? m[1] : null; } catch (e) { return null; } };
-  const rec = (cv) => (cv.__art || (cv.__art = new Map()));
+  // a canvas given a new size (the fight stage growing with its box) starts over: what it drew before is gone
+  const rec = (cv) => { const wh = cv.width + 'x' + cv.height; if (cv.__artWH !== wh) { cv.__artWH = wh; cv.__art = new Map(); } return cv.__art; };
   // up: canvas px per file px; ch: the worst blow-up along the way (canvas px per px of the file or of any canvas in between)
   const add = (cv, key, up, ch, asp, nat) => { const m = rec(cv), o = m.get(key);
     if (!o) m.set(key, { up, ch, asp, nat }); else { o.up = Math.max(o.up, up); o.ch = Math.max(o.ch, ch); o.asp = Math.max(o.asp, asp); } };
@@ -81,7 +82,11 @@ CHECK = r"""async (lim) => {
     if (r.right < 0 || r.bottom < 0 || r.left > innerWidth || r.top > innerHeight) return null;
     for (let a = e; a; a = a.parentElement) { const cs = getComputedStyle(a); if (cs.display === 'none' || cs.visibility === 'hidden' || +cs.opacity === 0) return null;
       const bl = /blur\(([\d.]+)px\)/.exec(cs.filter); if (bl && +bl[1] >= 2) return null; }   // blurred on purpose (a backdrop behind a menu)
-    return r; };
+    if (e.tagName !== 'IMG' && e.tagName !== 'CANVAS') return r;
+    // a picture's own border/padding (a thin frame round a mini scene) isn't part of the picture: measure the content box
+    const c = getComputedStyle(e), px = (p) => parseFloat(c[p]) || 0, kx = e.offsetWidth ? r.width / e.offsetWidth : 1, ky = e.offsetHeight ? r.height / e.offsetHeight : 1;
+    const ix = (px('borderLeftWidth') + px('borderRightWidth') + px('paddingLeft') + px('paddingRight')) * kx, iy = (px('borderTopWidth') + px('borderBottomWidth') + px('paddingTop') + px('paddingBottom')) * ky;
+    return { left: r.left, top: r.top, right: r.right, bottom: r.bottom, width: Math.max(1, r.width - ix), height: Math.max(1, r.height - iy) }; };
   const nm = (e) => e.tagName.toLowerCase() + (e.id ? '#' + e.id : '') + (typeof e.className === 'string' && e.className.trim() ? '.' + e.className.trim().split(/\s+/).slice(0, 2).join('.') : '');
   const note = (key, up, nat) => { if (up > 1.02 && nat) { const w = Math.ceil(nat[0] * up), h = Math.ceil(nat[1] * up), o = need[key]; if (!o || w > o[0]) need[key] = [w, h, nat[0], nat[1]]; } };
   // up: screen px per file px (what the file itself needs); ch: the worst blow-up of the file or of a canvas it went through

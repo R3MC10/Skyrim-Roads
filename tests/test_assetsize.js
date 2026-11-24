@@ -64,5 +64,18 @@ if (fs.existsSync(rl)) {
   console.log(`  REGEN_LIST: ${a} allowed files`);
 } else if (!process.env.W) bad("art_gpt/REGEN_LIST.md is missing");
 
+// index.html CSS: every { has its }. One missing brace once left a phone-hiding @media block open, so every rule after
+// it (the art-fit caps among them) only worked on big screens.
+{
+  const html = fs.readFileSync(path.join(W, "index.html"), "utf8");
+  const blocks = [...html.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)];
+  blocks.forEach((m, i) => {
+    const css = m[1].replace(/\/\*[\s\S]*?\*\//g, "").replace(/"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'/g, '""');
+    let d = 0, line = 1, openAt = 0;
+    for (const ch of css) { if (ch === "\n") line++; else if (ch === "{") { if (!d) openAt = line; d++; } else if (ch === "}") d--; if (d < 0) break; }
+    if (d !== 0) bad(`index.html <style> block ${i + 1}: braces don't match (${d > 0 ? "a block opened near its line " + openAt + " is never closed" : "an extra }"})`);
+  });
+}
+
 console.log(fails ? `test_assetsize: ${fails} problems` : `test_assetsize: all ${n} painted files ok`);
 process.exit(fails ? 1 : 0);
