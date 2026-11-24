@@ -3,6 +3,16 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b136", build: 136, date: "24 Nov 2026", title: "Something at every place", items: [
+      "Every place on the map now has something to do. 52 spots that used to be just a picture (farms, mills, shrines, cabins, groves, old ruins, the All-Maker Stones) now offer a stall, work, a job, a blessing, a hidden strongbox, herbs or a spot worth searching. Look under \"What's here\" when you arrive.",
+      "Farms and mills: buy fresh food from a small stall, lend a hand once a day for a few coins, or take the farmer's job to clear a nearby cave.",
+      "Shrines and stones: pray for a blessing that heals you and lasts a day (Talos, Azura, Meridia, Boethiah, Mehrunes Dagon, Stendarr, the All-Maker Stones). One blessing at a time.",
+      "Cabins, shacks and lodges hide a strongbox to pick. Ruins and monuments are worth a search every few days: coins, scrolls, sometimes a book. Groves grow rare herbs.",
+      "Everything comes back on a timer (a day for work and blessings, two for herbs, three for strongboxes and searches), so it's worth coming back.",
+      "Raven Rock Mine on Solstheim now has ore veins to mine.",
+      "New perks: Wayfarer's Nose (Lockpicking): strongboxes hold 30% more and refill a day sooner. Pilgrim (Restoration): blessings last two days.",
+      "The places list shows what you can do at each spot.",
+    ] },
     { id: "b135", build: 135, date: "24 Nov 2026", title: "No more flickering popups", items: [
       "Fixed: popups (like tapping an equipment slot) flickered for a split second just after they opened. They now open smoothly and stay put.",
     ] },

@@ -231,6 +231,9 @@ const PFX = (() => {
     [ "Sneak", "first_move", "First Move", 1, [40], ["stealth"], "You read a fight before it starts: +4 initiative in turn-by-turn fights. [OURS]", [["tbinit", 4, {}]]],
     [ "Alteration", "quickened_casting", "Quickened Casting", 1, [40], ["apprentice_alteration"], "In turn-by-turn fights you get 1 more spell point every turn (only for spells). [OURS]", [["tbspap", 1, {}]]],
     [ "Heavy Armor", "drilled_in_steel", "Drilled in Steel", 1, [50], ["juggernaut"], "Heavy armor slows you only half as much in turn-by-turn fights (initiative). [OURS]", [["tbheavy", 0.5, {}]]],
+    // ---------------------------------------------------------------- something at every place (placestuff.js)
+    [ "Lockpicking", "wayfarers_nose", "Wayfarer's Nose", 1, [35], ["apprentice_locks"], "Hidden strongboxes at cabins, shacks and lodges hold 30% more gold and fill up again a day sooner. [OURS]", [["stash", 0.3, {}]]],
+    [ "Restoration", "pilgrim", "Pilgrim", 1, [30], ["novice_restoration"], "Blessings from shrines and stones last two days instead of one. [OURS]", [["bless", 1, {}]]],
   ];
   const FX = {};
   if (typeof PERKS !== "undefined") {
