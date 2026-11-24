@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b180-deepdelve-bal", build: 180, date: "25 Nov 2026", title: "Fairer deep expeditions and difficulty tiers", items: [
+      "Veteran, Legendary and Mythic are fairer when you go alone: a careful hero with a follower now beats the legendary lair about 1 time in 3 on Legendary and now and then even on Mythic.",
+      "A full party has it tougher on Legendary and Mythic: the foes grow more for every extra player, so four friends still need to work for the deepest hoard.",
+      "Going higher in level no longer makes the depths harder. A level 40 hero now does better down there than a level 30 one.",
+      "The master of the legendary lair at the very bottom has a little less health, so that fight is long but winnable.",
+    ] },
     { id: "b179-leghuntpolish", build: 179, date: "25 Nov 2026", title: "Legendary hunts: painted beasts and fairer fights", items: [
       "The Jarl's posters, your hunt card and the bestiary now show each legendary beast as a proper painting in a gold frame, in its own colours: the White Ghost is snow white, Grimfang and Ashtusk are black as soot, Bloodmoon has a blood-red tint.",
       "In the fight the beast is that same painting too, a little bigger than its ordinary kin and in its legendary colours.",
@@ -1258,7 +1264,7 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 176;
+  const NEXT_AT = 180;
   const NEXT = [
     "Dragon Shouts learned from word walls",
     "Werewolf and vampire paths",

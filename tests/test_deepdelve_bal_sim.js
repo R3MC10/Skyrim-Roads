@@ -1,7 +1,8 @@
 /* Balance sim for deep expeditions and difficulty tiers (deepdelve.js). Long: skip in quick runs.
    W=/path/to/game/ node test_deepdelve_bal_sim.js [runs]   (named *bal_sim* so CI skips it, like test_bal_sim.js)
    1) The major fight that ends each depth level, by tier, fresh (full health): solo + follower, and a 4-player party
-      (foe +35% health per extra member, three party members fighting beside you, as coop.js does it).
+      (foe +35% health per extra member plus the tier's DEEPDELVE.partyFoe growth, three party members fighting beside you,
+      as coop.js does it).
       win% / health left% / turns / the worst single turn as % of your health.
    2) Whole expeditions, solo + follower, health and potions carried down, a careful player (rests when hurt, climbs
       out when low): how deep they get, how often they extract or get knocked out, gold brought home.
@@ -41,7 +42,7 @@ function major(build, L, tier, depth, party) {
   else { const k = DUNGEONS.THEMES[d.theme].boss[2]; e = G.scaleEnemy({ ...DUNGEONS.ENEMY[k] }, s.level); const m = [0, 0.8, 0.95, 1.1][d.tier]; e.health = Math.round(e.health * m); e.damage = Math.round(e.damage * m * 10) / 10; e.hp = e.health; DD.scaleFoe(s, e, true); }
   let allies = [];
   if (party) {
-    e.health = Math.round(e.health * (1 + COOP.FOE_BONUS * 3)); e.hp = e.health;
+    e.health = Math.round(e.health * (1 + COOP.FOE_BONUS * 3)); e.hp = e.health; if (DD.partyFoe) DD.partyFoe(s, e, 4);
     allies = BUILDS.filter((x) => x !== build).slice(0, 3).map((bb, i) => { const o = make(bb, L); return COOP.allyFromCard({ name: "P" + i, id: "p" + i, cur: G.maxHealth(o), coop: { prof: COOP.profile(o) } }); });
   }
   G.setAllyProvider(() => allies);

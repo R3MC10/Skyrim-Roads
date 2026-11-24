@@ -158,7 +158,12 @@ DUNGEONS.enter(high);
 ok(high.dungeon.dtier === "legendary" && high.dungeon.mods.length === 2, "entering uses the picked tier: " + high.dungeon.dtier + " " + high.dungeon.mods);
 const base = { name: "Draugr", health: 100, hp: 100, damage: 10, tags: ["undead"] };
 const e1 = DD.scaleFoe(high, { ...base });
-ok(e1.health === Math.round(100 * DD.TIERS.legendary.hp) && Math.abs(e1.damage - 10 * DD.TIERS.legendary.dmg) < 0.11 && e1.hitCap === DD.HIT_CAP, "Legendary foes: tougher, harder hitting, capped blows: " + JSON.stringify(e1));
+ok(e1.health === Math.round(100 * DD.TIERS.legendary.hp * DD.lvEase(high)) && Math.abs(e1.damage - 10 * DD.TIERS.legendary.dmg * DD.lvEase(high, DD.LV_EASE_DMG)) < 0.11 && e1.hitCap === DD.HIT_CAP, "Legendary foes: tougher, harder hitting, capped blows: " + JSON.stringify(e1));
+{ const lo = hero(30); lo.ddPick = { place: high.dungeon.place, tier: "legendary" }; lo.location = high.location; lo.x = high.x; lo.y = high.y; DUNGEONS.enter(lo);
+  const el = DD.scaleFoe(lo, { ...base });
+  ok(el.health === Math.round(100 * DD.TIERS.legendary.hp) && DD.lvEase(lo) === 1 && DD.lvEase(high) < 1, "level 30 gets the full tier; past 30 the extra level curve is eased: " + el.health + " vs " + e1.health);
+  const pf = DD.partyFoe(lo, { ...el }, 4), p1 = DD.partyFoe(lo, { ...el }, 1);
+  ok(pf.health > el.health && pf.damage > el.damage && p1.health === el.health, "a Legendary party meets a tougher foe: " + pf.health + "/" + pf.damage); }
 ok(Math.abs(DD.goldMult(high) - DD.TIERS.legendary.gold) < 1e-9, "Legendary pays more gold");
 high.dungeon.deep = { level: 3, inj: 0, curses: [], rations: 2 };
 const e3 = DD.scaleFoe(high, { ...base }), e3m = DD.scaleFoe(high, { ...base }, true);
