@@ -22,7 +22,7 @@ const Store = (() => {
   const isOn = (id) => online.has(id) || now() - (fbSeen[id] || 0) < FB_TTL;
   const onlineCount = () => { const s = new Set(online); for (const id in fbSeen) if (isOn(id)) s.add(id); s.delete(uid); return s.size; };
   const wl = {};   // watchers per collection
-  const COLS = ["players", "bags", "attacks", "parties", "chests", "news", "raids", "trades", "ladder", "chat", "hall", "hallchest", "bounty", "homes", "gifts", "duels", "clans", "clanmem", "war", "stalls", "friends", "dms", "guards", "verses", "verselikes", "runs", "econ", "halls", "pshare", "lvotes", "tbf", "wevents", "dgame", "holds"];
+  const COLS = ["players", "bags", "attacks", "parties", "chests", "news", "raids", "trades", "ladder", "chat", "hall", "hallchest", "bounty", "homes", "gifts", "duels", "clans", "clanmem", "war", "stalls", "friends", "dms", "guards", "verses", "verselikes", "runs", "econ", "halls", "pshare", "lvotes", "tbf", "wevents", "dgame", "holds", "greets"];
   const now = () => Date.now();
   let lastSaveJson = null, lastPubJson = null, saving = null, pendingSave = null;
   const listeners = { players: [], bags: [] };

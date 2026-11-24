@@ -382,7 +382,9 @@ const WorldMap = (() => {
     g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, canvas.width, canvas.height);
     const k = Math.max(canvas.width / W, canvas.height / H) * v.zoom;
     let ox = canvas.width / 2 - v.center[0] * W * k, oy = canvas.height / 2 - (v.center[1] - OY) * H * k;
-    ox = Math.min(0, Math.max(canvas.width - W * k, ox)); oy = Math.min(0, Math.max(canvas.height - H * k, oy));
+    // zoomed out past the edges (PC map, pcmap.js: all of Skyrim in a wide window): the map sits in the middle
+    ox = W * k <= canvas.width ? (canvas.width - W * k) / 2 : Math.min(0, Math.max(canvas.width - W * k, ox));
+    oy = H * k <= canvas.height ? (canvas.height - H * k) / 2 : Math.min(0, Math.max(canvas.height - H * k, oy));
     v.transform = { k: k / dpr, ox: ox / dpr, oy: (oy - OYH * k) / dpr };   // screen ↔ world (Solstheim's y included)
     g.setTransform(k, 0, 0, k, ox, oy);
     g.imageSmoothingEnabled = true; g.imageSmoothingQuality = "high";
@@ -399,6 +401,8 @@ const WorldMap = (() => {
     const fogImg = fogFor(OY ? seen.map((p) => [p[0], p[1] - OY]) : seen, SV ? "sol" : "");
     g.drawImage(VI ? VI.veil(fogImg, fogKey, v.cones, W, H, OYH) : fogImg, 0, 0, W, H);   // your cone of sight cuts through the fog (vision.js)
     if (v.rulers?.length && !SV) { g.globalAlpha = 0.26; for (const r of v.rulers) g.drawImage(tintFor(r.hold, r.color), 0, 0, W, H); g.globalAlpha = 1; }   // holds ruled by a clan
+    const FX = !SV && typeof MAPFX !== "undefined" && MAPFX.on() ? MAPFX : null;
+    if (FX) FX.draw(g, v, dpr / k, W, H, [-ox / k, -oy / k, (canvas.width - ox) / k, (canvas.height - oy) / k]);   // PC map: each hold's weather, chimney smoke (mapfx.js)
     if (OY) g.setTransform(k, 0, 0, k, ox, oy - OYH * k);   // from here on: world coordinates
     const [px, py] = P(v.player);
     if (v.sight || v.sneakRing) {   // fog of war: how far you see other heroes; sneaking: how close they must come to see you (sneakmode.js)
@@ -490,10 +494,14 @@ const WorldMap = (() => {
     // your own name goes first so nothing covers it
     const HF = typeof MAPHERO !== "undefined" && MAPHERO.ok() ? MAPHERO : null;   // heroes as little figures (maphero.js)
     const myTop = py - (v.horse ? 46 : 39) * s - 7 * s;
-    g.font = FONT(14 * s, 700, ""); { const w = g.measureText(v.name).width; boxes.push(HF ? [px - w / 2, myTop - 9 * s, w, 18 * s] : [px + 12 * s, py - 13 * s - 9 * s, w, 18 * s]); }
+    // standing in a town, heroes step aside so the town's own icon stays in sight: you to its right, others to its left
+    const hx = HF && v.atPlace && !v.moving ? px + 18 * s : px, townSlot = {};
+    g.font = FONT(14 * s, 700, ""); { const w = g.measureText(v.name).width; boxes.push(HF ? [hx - w / 2, myTop - 9 * s, w, 18 * s] : [px + 12 * s, py - 13 * s - 9 * s, w, 18 * s]); if (HF) boxes.push([hx - 12 * s, myTop + 9 * s, 24 * s, py - myTop - 9 * s]); }   // and your figure, so names never sit on it
     const otherHeads = [];
     for (const o of v.others) {
-      const [x, y] = P(o.pos);
+      let [x, y] = P(o.pos);
+      if (HF && o.atPlace && !o.moving) { const key = Math.round(x) + "," + Math.round(y), n = (townSlot[key] = (townSlot[key] || 0) + 1) - 1; x -= (18 + n * 14) * s; }
+      o.drawX = x / W;   // where the figure really stands (greet.js finds clicks on it)
       if (HF) { const r = HF.draw(g, x, y, s, { id: "o:" + (o.id || o.name), look: o.look || { r: o.race || "nord", id: o.name, eq: {}, gl: {} }, horse: o.horse || null, moving: !!o.moving, gallop: !!o.horse && !!o.moving, t: v.t, reduce: v.reduceMotion, scale: 0.82, ring: o.party ? "#8fe08a" : "#6f9fe8" }); otherHeads.push(r.head); continue; }
       if (MA) MA.token(g, x, y, s, o.look || { r: o.race || "nord", id: o.name, eq: {}, gl: {} }, o.party ? "#8fe08a" : "#6f9fe8", 10);
       else { g.fillStyle = "#2f62a8"; g.strokeStyle = "#e6f0ff"; g.lineWidth = 2 * s; g.beginPath(); g.arc(x, y, 6.5 * s, 0, 7); g.fill(); g.stroke(); }
@@ -503,7 +511,8 @@ const WorldMap = (() => {
       g.fillStyle = "#7a1414"; g.strokeStyle = "#ffdcc8"; g.lineWidth = 2 * s; g.beginPath(); g.arc(x, y, R, 0, 7); g.fill(); g.stroke();
       g.fillStyle = "#ffe6d2"; g.fillRect(x - 1.5 * s, y - 5 * s, 3 * s, 10 * s); g.fillRect(x - 5 * s, y - 1.5 * s, 10 * s, 3 * s);
     }
-    v.others.forEach((o, i) => { const [x, y] = P(o.pos); smartLabel(o.name, x, otherHeads[i] ?? y, 13, o.party && HF ? "#c8f0c0" : "#cde0ff"); });
+    // other heroes' names are drawn last (below), over town flags, banners and caravans
+    const otherLabels = () => v.others.forEach((o, i) => { const y = P(o.pos)[1]; smartLabel(o.name, (o.drawX ?? o.pos[0]) * W, otherHeads[i] ?? y, 13, o.stranger ? "#e8dcc0" : o.party && HF ? "#c8f0c0" : "#cde0ff"); });
     for (const b of v.bags) { const [x, y] = P(b.pos); smartLabel(b.label, x, y, 13, "#ffc8b4"); }
     if (v.foe && VI && !v.cones[0].faint) VI.foe(g, v.cones[0].c, s, v.foe, v.t, v.reduceMotion, (n, x, y) => smartLabel(n, x, y - 9 * s, 12, "#ffc0b0"));   // what blocks your road, ahead in your cone
     const perTown = {};
@@ -569,7 +578,7 @@ const WorldMap = (() => {
       PRIESTS.drawMask(g, mx, my - 2 * s, 0.75 * s, "morokei");
     }
     // weather over everything, in screen space
-    if (v.weather && v.weather !== "clear") {
+    if (v.weather && v.weather !== "clear" && !(FX && FX.regional())) {   // (the PC map draws each hold's own weather instead)
       g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
       const cw2 = canvas.width, ch2 = canvas.height, tt = v.reduceMotion ? 0 : v.t;
       if (v.weather === "ashstorm") {   // Solstheim: ash blowing across the map
@@ -618,11 +627,12 @@ const WorldMap = (() => {
       g.beginPath(); g.moveTo(z, 0); g.lineTo(-z * 0.75, -z * 0.85); g.lineTo(-z * 0.3, 0); g.lineTo(-z * 0.75, z * 0.85); g.closePath(); g.stroke(); g.fill();
       g.restore();
     };
+    otherLabels();
     if (HF) {   // you: walking, standing, or in the saddle, facing the way you travel
-      const r = HF.draw(g, px, py, s, { id: "me", look: v.look, horse: v.horse, moving: v.moving, gallop: !!v.gallop, t: v.t, reduce: v.reduceMotion, heading: v.moving ? heading.a : null, ring: "#6ec8ff" });
-      if (v.fx && typeof FXART !== "undefined") FXART.mapOver(g, v.fx, P, s, px, r.head, v.t, v.reduceMotion);
-      label(g, v.name, px, Math.min(myTop, r.top - 7 * s), s, 14, "#d8f0ff", 700, false, "center");
-      arrow(px, py - 2 * s, (v.horse ? 30 : 20) * s);
+      const r = HF.draw(g, hx, py, s, { id: "me", look: v.look, horse: v.horse, moving: v.moving, gallop: !!v.gallop, t: v.t, reduce: v.reduceMotion, heading: v.moving ? heading.a : null, ring: "#6ec8ff" });
+      if (v.fx && typeof FXART !== "undefined") FXART.mapOver(g, v.fx, P, s, hx, r.head, v.t, v.reduceMotion);
+      label(g, v.name, hx, Math.min(myTop, r.top - 7 * s), s, 14, "#d8f0ff", 700, false, "center");
+      arrow(hx, py - 2 * s, (v.horse ? 30 : 20) * s);
       return;
     }
     if (MA) {

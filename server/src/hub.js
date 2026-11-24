@@ -14,7 +14,7 @@
 const { WebSocketServer } = require("ws");
 const NETSYNC = require("./netsync.js");   // party records merge field by field, by the same rules as the phones (a copy of game/netsync.js)
 
-const COLS = ["players", "bags", "attacks", "parties", "chests", "news", "raids", "trades", "ladder", "chat", "hall", "hallchest", "bounty", "homes", "gifts", "duels", "clans", "clanmem", "war", "stalls", "friends", "dms", "guards", "verses", "verselikes", "runs", "econ", "halls", "pshare", "lvotes", "tbf", "wevents", "dgame", "holds"];   // = store.js COLS (test_hub.js checks they match)
+const COLS = ["players", "bags", "attacks", "parties", "chests", "news", "raids", "trades", "ladder", "chat", "hall", "hallchest", "bounty", "homes", "gifts", "duels", "clans", "clanmem", "war", "stalls", "friends", "dms", "guards", "verses", "verselikes", "runs", "econ", "halls", "pshare", "lvotes", "tbf", "wevents", "dgame", "holds", "greets"];   // = store.js COLS (test_hub.js checks they match)
 const KEEP = { chat: 864e5, attacks: 36e5, dgame: 36e5, raids: 864e5, duels: 864e5, tbf: 36e5, runs: 6 * 36e5, pshare: 864e5, lvotes: 864e5, guards: 2 * 864e5, econ: 3 * 864e5,
   trades: 7 * 864e5, dms: 14 * 864e5, verses: 14 * 864e5, verselikes: 14 * 864e5, bounty: 15 * 864e5, war: 15 * 864e5, gifts: 30 * 864e5, wevents: 9 * 864e5, players: 90 * 864e5 };
 const MAX_MSG = 4 * 1024 * 1024;
