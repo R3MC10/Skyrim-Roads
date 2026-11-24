@@ -3,6 +3,16 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b166-treasure", build: 166, date: "24 Nov 2026", title: "Treasure maps and old relics", items: [
+      "Loot can now hold a hand-drawn treasure map, an old journal with a riddle, or a torn piece of a map (find 2-4 pieces and put them together). They show only the land: hills, woods, water, a landmark or two and an X. No names, no marker on your map.",
+      "Compare the sketch with the world map (pin it next to the map with one tap), travel there and press Dig here on the Travel tab. A wrong guess only tires you out for a little while.",
+      "Stuck? Every two wrong digs you work out a bit more (the hold, then a town and a direction, then the landmark), and innkeepers sell a rumour for 60 gold.",
+      "Buried caches hold gold, gems and rare ore. Now and then you dig up a lost one-of-a-kind item, or a slab over a sealed tomb you can go down into once.",
+      "Relic fragments turn up in Nordic barrows and Dwemer ruins. Three make a restored relic: keep it, or sell it to Urag in Winterhold or Calcelmo in Markarth.",
+      "Maps and pieces can be traded and given away, and point to the same spot for your friend. In a party the leader can ask everyone where to dig, and the gold is split evenly.",
+      "New perks: Cartographer (Streetwise), Antiquarian (Mercantile) and Excavator (Athletics).",
+      "Fix: on phones, the house chest and the Blackreach map were missing some of their layout. They look right again.",
+    ] },
     { id: "b153-blackreach", build: 153, date: "24 Nov 2026", title: "Dwemer ruins and Blackreach", items: [
       "New quest line from level 14: \"The Dwemer Lexicon\". Calcelmo, the Dwemer scholar in Markarth, sends you through Mzinchaleft, Raldbthar and Alftand. Find the lexicon, turn its rings to match his notes, then ride the great lift down.",
       "Blackreach: a huge glowing cavern under Alftand with its own map. Walk from spot to spot past Falmer, Dwarven machines and giant mushrooms, pick glowing mushrooms and crimson nirnroot, crack the Silent City vault, and beat the Centurion master at the Great Dynamo.",
