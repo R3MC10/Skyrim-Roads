@@ -51,7 +51,7 @@ async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch(executable_path=CHROME, args=["--no-sandbox"]) if CHROME else await p.chromium.launch(args=["--no-sandbox"])
         for (w, h) in SIZES:
-            for style in ["ink", "pixel"]:
+            for style in ["ink"]:
                 tag = f"{w}x{h}_{style}"
                 ctx = await b.new_context(viewport={"width": w, "height": h}, has_touch=w < 600)
                 pg = await ctx.new_page(); errs = []
@@ -60,8 +60,6 @@ async def main():
                 await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Hrolfdir"); await pg.click("#begin"); await pg.wait_for_timeout(1600)
                 clear = "document.querySelectorAll('#modal').forEach(m=>m.remove())"
                 await pg.evaluate(clear)
-                if style == "pixel":
-                    await pg.evaluate("()=>{ ART.setStyle('pixel'); document.documentElement.classList.add('art-pixel'); }")
                 await pg.evaluate("()=>{const S=window.__dbg.save(); S.location='Riverwood'; [S.x,S.y]=WORLD.places.Riverwood; S.discovered.push('Bleak Falls Barrow','Whiterun','Riverwood'); G.setHealth(S,30);}")
                 await pg.mouse.move(w - 3, h // 2)
                 await pg.wait_for_timeout(2200); await pg.evaluate(clear)

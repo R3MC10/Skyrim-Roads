@@ -26,6 +26,8 @@ const ACH = (() => {
     ["rich", "💰", "Coin Hoarder", "Carry 10,000 gold", (s) => [n(s.gold), 10000]],
     ["dg_dawnguard", "🏹", "Dawn Breaks", "End the vampire war with the Dawnguard", (s) => [s.dgDawnguard ? 1 : 0, 1]],   // dawnguard.js
     ["dg_volkihar", "🦇", "Lord of the Night", "End the vampire war at Harkon's side", (s) => [s.dgVolkihar ? 1 : 0, 1]],
+    ["dw_lexicon", "⚙", "Delver of the Deep", "Finish Calcelmo's lexicon quest in Blackreach", (s) => [s.dwLexiconDone ? 1 : 0, 1]],   // dwemer.js
+    ["dw_dragon", "🐉", "What Sleeps Below", "Call the dragon from under the Tower of Mzark", (s) => [s.dwDragon ? 1 : 0, 1]],   // blackreach.js
   ];
   const BY = Object.fromEntries(LIST.map((a) => [a[0], a]));
   function progress(s) { return LIST.map(([id, icon, name, what, f]) => { const [cur, goal] = f(s); return { id, icon, name, what, cur: Math.min(cur, goal), goal, done: !!(s.ach || {})[id] }; }); }

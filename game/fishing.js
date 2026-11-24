@@ -145,14 +145,15 @@ const FISHGAME = (() => {
     return { at, nib: nib.sort((a, b) => a - b) };
   }
   const BITE = 0.9;   // seconds the float stays under
-  const biteWindow = (s) => BITE * (1 + perk(s, "fishbite"));
+  const ease = () => (typeof A11Y !== "undefined" ? A11Y : { timingEase: () => 1, zoneEase: () => 1 });   // Settings: Easy timing (access.js)
+  const biteWindow = (s) => BITE * (1 + perk(s, "fishbite")) * ease().timingEase();
   /* a fresh fight on the line */
   function hook(s, id, rnd = Math.random) {
     const f = FISH[id] || { str: 2 }, rod = rodOf(s) || RODS.fishing_rod, str = f.str || 2;
-    const hw = Math.max(0.08, (0.17 - str * 0.012) * (1 + rod.band + perk(s, "fishband")));
+    const hw = Math.max(0.08, (0.17 - str * 0.012) * (1 + rod.band + perk(s, "fishband"))) * ease().zoneEase();   // Easy timing: a wider safe band
     const c = 0.56;
     return { id, str, line: rod.line, band: [Math.max(0.12, c - hw), Math.min(0.94, c + hw)], tension: 0.3, dist: 1, stam: 1, slack: 0,
-      slackMax: 1.6 * (1 + perk(s, "fishslack")), tire: 1 + perk(s, "fishtire"), run: 0, runIn: 1 + rnd() * 1.5, t: 0, over: null, rnd };
+      slackMax: 1.6 * (1 + perk(s, "fishslack")) * ease().timingEase(), tire: 1 + perk(s, "fishtire"), run: 0, runIn: 1 + rnd() * 1.5, t: 0, over: null, rnd };
   }
   /* one step of the fight: holding = reeling in. Sets g.over to "landed" | "snap" | "slip" */
   function step(g, holding, dt) {

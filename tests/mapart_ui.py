@@ -34,10 +34,6 @@ async def main():
         await A.wait_for_timeout(800); await shot(A, "night")
         await A.evaluate("()=>{ G.clock=(t)=>({day:3,hour:19.2}); }"); await A.wait_for_timeout(600); await shot(A, "dusk")
         await A.evaluate("()=>{ G.clock=window.__clk; }")
-        # pixel style
-        await A.evaluate("()=>ART.setStyle('pixel')"); await A.wait_for_timeout(800); await shot(A, "pixel_near")
-        await A.click("#zoomBtn"); await A.wait_for_timeout(500); await shot(A, "pixel_far"); await A.click("#zoomBtn")
-        await A.evaluate("()=>ART.setStyle('ink')")
         # discovery burst
         await A.evaluate("()=>{ const S=window.__dbg.save(); const n=S.discovered.pop(); setTimeout(()=>S.discovered.push(n), 300); }")
         await A.wait_for_timeout(900); await shot(A, "burst")

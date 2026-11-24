@@ -249,7 +249,7 @@ const DUNGEONS = (() => {
     if (r.m === "coffin") return [["open", "Push the lid open"], ["skip", "Leave it be"]];
     return [["loot", "Search it"], ["skip", "Leave it"]];
   }
-  const dmg = (s, lo, hi) => { const d = s.dungeon, x = Math.round(G.maxHealth(s) * rnd(lo, hi) * [0, 0.8, 1, 1.2][d.tier] * (1 - (typeof PFX !== "undefined" ? Math.min(0.7, PFX.num(s, "trapdmg")) : 0))); G.setHealth(s, G.curHealth(s) - x); return x; };
+  const dmg = (s, lo, hi, k) => { const d = s.dungeon, x = Math.round(G.maxHealth(s) * (k != null ? lo + (hi - lo) * k : rnd(lo, hi)) * [0, 0.8, 1, 1.2][d.tier] * (1 - (typeof PFX !== "undefined" ? Math.min(0.7, PFX.num(s, "trapdmg")) : 0))); G.setHealth(s, G.curHealth(s) - x); return x; };
   function themeLoot(s, chance) { const T = THEMES[s.dungeon.theme]; return T?.loot?.length && Math.random() < chance ? [giveFound(s, pick(T.loot))] : []; }
 
   function fight(s, e, opts, t) {
@@ -358,12 +358,17 @@ const DUNGEONS = (() => {
     }
 
     if (r.type === "trap") {
+      // [OURS] partytraps.js: each trap also stings in its own way (poison, bleeding, burns, a spilled purse, dented armour);
+      // "w" on the choice: a friend in the party shouted a warning, so the hit is a quarter softer
+      const soft = flags.includes("w") ? 0.75 : 1;
+      const k = q != null && d.run && typeof PTRAPS !== "undefined" ? PTRAPS.roll(`${d.run}|${d.cstep}|${s.id}|${choice}`) : undefined;   // a party trap: the hit's size is a shared roll, not this phone's dice
+      const sting = () => (typeof PTRAPS !== "undefined" && G.curHealth(s) > 0 ? PTRAPS.sting(s, r.trap, q, flags, t) : "");
       if (choice === "dash") {
         const ch = odds(s, "dash", t), skills = G.useSkill(s, "Acrobatics", 3);
         if (passed(q, ch)) return done({ text: q != null && q < 0.8 ? `You time it and dive past ${r.trap}. Close: it nicks your cloak.` : `You time it and dive past ${r.trap}.`, skills });
-        const x = dmg(s, 0.15 * missMult(q), 0.3 * missMult(q));
+        const x = dmg(s, 0.15 * missMult(q) * soft, 0.3 * missMult(q) * soft, k);
         if (G.curHealth(s) <= 0) return lose({ text: `${r.trap} catches you.` }, r.trap);
-        return done({ text: `Too slow. ${r.trap[0].toUpperCase() + r.trap.slice(1)} catches you (−${x} health).`, skills });
+        return done({ text: `Too slow. ${r.trap[0].toUpperCase() + r.trap.slice(1)} catches you (−${x} health).${sting()}`, skills, trap: true });
       }
       if (choice === "trigger") {
         const ch = odds(s, "trigger", t), skills = G.useSkill(s, "Sneak", 5);
@@ -371,13 +376,13 @@ const DUNGEONS = (() => {
           const g = goldFound(s, rint(3, 20));
           return done({ text: `You spot the trigger and step around it. Whoever didn't left ${g} gold behind.`, skills });
         }
-        const x = dmg(s, 0.2 * missMult(q), 0.35 * missMult(q));
+        const x = dmg(s, 0.2 * missMult(q) * soft, 0.35 * missMult(q) * soft, k);
         if (G.curHealth(s) <= 0) return lose({ text: "You found the trigger. With your foot." }, r.trap);
-        return done({ text: `You find the trigger by stepping on it (−${x} health).`, skills });
+        return done({ text: `You find the trigger by stepping on it (−${x} health).${sting()}`, skills, trap: true });
       }
       const x = dmg(s, 0.1, 0.2);
       if (G.curHealth(s) <= 0) return lose({ text: "That was the wrong way to do it." }, r.trap);
-      return done({ text: `You grit your teeth and push through (−${x} health).` });
+      return done({ text: `You grit your teeth and push through (−${x} health).${sting()}`, trap: true });
     }
 
     if (r.type === "treasure") {
@@ -390,6 +395,7 @@ const DUNGEONS = (() => {
         return done({ text: "The chest wins. You move on with sore arms." });
       }
       if (choice === "tower") s.stonePowerAt = t;
+      if (choice === "pick" && q != null) s._lockForce = q >= 0.5;   // a party member replays the leader's pick ("pick@1" opened, "pick@0" snapped)
       const ch = choice === "tower" ? 1 : G.lockChance(s, r.tier);
       if (choice === "tower" || G.lockRoll(s, ch)) {
         const skills = G.useSkill(s, "Lockpicking", LOCK_TIERS[r.tier][1]);                            // [Skyrim] XP per lock tier
@@ -465,9 +471,32 @@ const DUNGEONS = (() => {
     return `You climb back into daylight with ${got}.`;
   }
 
+  /* a run saved in a state it can't go on from gets put right (called on load): a dead foe holding a room shut,
+     a boss room with no boss in it (the boss waits again), a room that leads nowhere. Returns what was fixed, or null. */
+  function repair(s) {
+    const d = s.dungeon;
+    if (!d || !Array.isArray(d.rows) || !d.rows.length || d.done) return null;
+    const fixed = [], last = d.rows.length - 1;
+    const backFromBoss = () => {
+      if (last < 1) { d.row = -1; d.col = 0; return; }
+      d.row = last - 1; d.col = Math.max(0, d.rows[last - 1].findIndex((n) => n.links.includes(d.col)));
+    };
+    if (d.room?.enemy && d.room.enemy.hp <= 0) {   // a won fight that never finished (old turn-by-turn fights)
+      if (d.room.type === "boss") { d.room = null; backFromBoss(); fixed.push("boss waits again"); }
+      else { d.room = null; fixed.push("dead foe cleared"); }
+    }
+    if (d.row >= 0 && !d.rows[d.row]?.[d.col]) { d.row = Math.min(d.row, last - 1); d.col = 0; d.room = null; fixed.push("lost place"); }
+    if (!d.room) {
+      if (d.row >= last) { backFromBoss(); fixed.push("boss room was empty"); }
+      else if (d.row >= 0 && !nextChoices(s).length) { d.rows[d.row][d.col].links = d.rows[d.row + 1].map((_, i) => i); fixed.push("dead end opened"); }
+    }
+    if (fixed.length && typeof console !== "undefined") console.warn(`dungeon repaired (${d.place}): ${fixed.join(", ")}`);
+    return fixed.length ? fixed : null;
+  }
+
   // the Dragonstone in your pack or in any of your house chests
   function hasDragonstone(s) {
     return (s.inv || []).some((x) => x.item === "dragonstone") || Object.values(s.homes || {}).some((h) => (h?.chest || []).some((x) => x.item === "dragonstone"));
   }
-  return { odds, parseChoice, REFILL_SECONDS, enterable, info, describe, refillLeft, enter, nextChoices, enterRoom, roomChoices, act, leave, ICON, LABEL, THEMES, ENEMY, layout, hasDragonstone };
+  return { odds, parseChoice, REFILL_SECONDS, enterable, info, describe, refillLeft, enter, nextChoices, enterRoom, roomChoices, act, leave, repair, ICON, LABEL, THEMES, ENEMY, layout, hasDragonstone };
 })();

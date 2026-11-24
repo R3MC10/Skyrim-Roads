@@ -22,7 +22,7 @@ const Store = (() => {
   const isOn = (id) => online.has(id) || now() - (fbSeen[id] || 0) < FB_TTL;
   const onlineCount = () => { const s = new Set(online); for (const id in fbSeen) if (isOn(id)) s.add(id); s.delete(uid); return s.size; };
   const wl = {};   // watchers per collection
-  const COLS = ["players", "bags", "attacks", "parties", "chests", "news", "raids", "trades", "ladder", "chat", "hall", "hallchest", "bounty", "homes", "gifts", "duels", "clans", "clanmem", "war", "stalls", "friends", "dms", "guards", "verses", "verselikes", "runs", "econ", "halls", "pshare", "lvotes", "tbf", "wevents", "dgame"];
+  const COLS = ["players", "bags", "attacks", "parties", "chests", "news", "raids", "trades", "ladder", "chat", "hall", "hallchest", "bounty", "homes", "gifts", "duels", "clans", "clanmem", "war", "stalls", "friends", "dms", "guards", "verses", "verselikes", "runs", "econ", "halls", "pshare", "lvotes", "tbf", "wevents", "dgame", "ptrap", "lcur", "holds", "greets"];
   const now = () => Date.now();
   let lastSaveJson = null, lastPubJson = null, saving = null, pendingSave = null;
   const listeners = { players: [], bags: [] };
@@ -82,14 +82,18 @@ const Store = (() => {
   const live = (d) => d && !d._del;
   function emit(col) { const docs = list(col); (wl[col] || []).forEach((f) => f(docs)); }
   function list(col) {
-    const out = Object.entries(world[col] || {}).filter(([, d]) => live(d)).map(([id, d]) => ({ ...d, id }));
+    const out = Object.entries(world[col] || {}).filter(([, d]) => live(d)).map(([id, d]) => { const o = { ...d, id }; delete o._f; return o; });
     return col === "players" ? out.filter((d) => d.id !== uid && isOn(d.id)) : out;
   }
   function persistWorld() { clearTimeout(saveWorldT); saveWorldT = setTimeout(() => ls.set("sk.w." + worldCode, world), 800); }
-  /* keep the newer version of each record */
+  /* keep the newer version of each record. Party records (parties, runs, votes, shares) merge field by field instead, so
+     two phones changing one record at once both keep their change (netsync.js) */
+  let NSX = null; const ns = () => NSX || (NSX = typeof NETSYNC !== "undefined" ? NETSYNC : null);   // netsync.js loads later
   function merge(col, id, doc) {
     if (!COLS.includes(col) || !doc || typeof doc._v !== "number") return false;
     const cur = (world[col] = world[col] || {})[id];
+    const m = cur && ns() ? ns().mergeDoc(col, cur, doc) : null;
+    if (m) { if (ns().same(m, cur)) return false; world[col][id] = m; return true; }
     if (cur && (cur._v > doc._v || (cur._v === doc._v && String(cur._by) >= String(doc._by)))) return false;
     world[col][id] = doc;
     return true;
@@ -98,7 +102,7 @@ const Store = (() => {
     const t = now(), sec = t / 1000;
     for (const col of COLS) for (const [id, d] of Object.entries(world[col] || {})) {
       const age = t - d._v;
-      if ((d._del && age > 2 * 864e5) || (col === "bags" && live(d) && d.expires < sec) || (col === "attacks" && age > 36e5) || (col === "raids" && age > 864e5) || (col === "trades" && age > 7 * 864e5) || (col === "players" && age > 30 * 864e5) || (col === "chat" && age > 864e5) || (["bounty", "war"].includes(col) && age > 15 * 864e5) || (col === "gifts" && age > 30 * 864e5) || (col === "duels" && age > 864e5) || (col === "dms" && age > 14 * 864e5) || (["verses", "verselikes"].includes(col) && age > 14 * 864e5) || (col === "guards" && age > 2 * 864e5) || (col === "econ" && age > 3 * 864e5) || (col === "pshare" && age > 864e5) || (col === "lvotes" && age > 864e5) || (col === "tbf" && age > 36e5) || (col === "dgame" && age > 36e5) || (col === "runs" && age > 6 * 36e5) || (col === "wevents" && age > 9 * 864e5)
+      if ((d._del && age > 2 * 864e5) || (col === "bags" && live(d) && d.expires < sec) || (col === "attacks" && age > 36e5) || (col === "raids" && age > 864e5) || (col === "trades" && age > 7 * 864e5) || (col === "players" && age > 30 * 864e5) || (col === "chat" && age > 864e5) || (["bounty", "war"].includes(col) && age > 15 * 864e5) || (col === "gifts" && age > 30 * 864e5) || (col === "duels" && age > 864e5) || (col === "dms" && age > 14 * 864e5) || (["verses", "verselikes"].includes(col) && age > 14 * 864e5) || (col === "guards" && age > 2 * 864e5) || (col === "econ" && age > 3 * 864e5) || (col === "pshare" && age > 864e5) || (col === "lvotes" && age > 864e5) || (col === "tbf" && age > 36e5) || (col === "dgame" && age > 36e5) || (col === "ptrap" && age > 36e5) || (col === "lcur" && age > 6e5) || (col === "runs" && age > 6 * 36e5) || (col === "wevents" && age > 9 * 864e5)
         || (["ladder", "homes"].includes(col) && age > 60 * 864e5) || (col === "clanmem" && age > 90 * 864e5))   // players gone for months
         delete world[col][id];
     }
@@ -112,12 +116,29 @@ const Store = (() => {
     dms.slice(400).forEach(([id]) => delete world.dms[id]);
   }
   function localPut(col, id, doc) {
-    const rec = { ...doc, _v: Math.max(now(), ((world[col] || {})[id]?._v || 0) + 1), _by: uid };
-    delete rec.id;
+    const prev = (world[col] || {})[id];
+    const rec = { ...doc, _v: Math.max(now(), (prev?._v || 0) + 1), _by: uid };
+    delete rec.id; delete rec._f;
+    const f = ns() ? ns().stamp(col, prev, rec, rec._v) : undefined;   // which fields this write really changed
+    if (f) rec._f = f;
     merge(col, id, rec); persistWorld(); emit(col);
     net?.send({ t: "put", col, id, doc: rec });
     fb?.send({ t: "put", col, id, doc: rec, u: uid });
   }
+  /* after the server's copy arrived: records where mine is newer or holds more (written while offline), for the last day */
+  function unsent(w) {
+    const out = {}, t = now(); let n = 0;
+    for (const col of COLS) for (const [id, d] of Object.entries(world[col] || {})) {
+      if (!d || t - (d._v || 0) > 864e5 || (col === "players" && id !== uid)) continue;
+      const theirs = w?.[col]?.[id];
+      if (theirs ? (ns() ? ns().same(theirs, d) : theirs._v >= d._v) : d._by !== uid) continue;
+      (out[col] = out[col] || {})[id] = d; n++;
+    }
+    return n ? out : null;
+  }
+  /* every 20 s: fingerprints of the party records I hold, so a phone that missed something gets it back (netsync.js) */
+  let desyncs = 0, sumT = null;
+  function sumTick() { if (!net || !ns() || !uid) return; const sums = ns().digest(world, uid); if (sums.length) net.send({ t: "sum", uid, sums }); }
   function joinWorld(code, T = transport()) {
     if (net) { try { net.leave(); } catch { /* ignore */ } }
     if (fb) { try { fb.leave(); } catch { /* ignore */ } } fb = null; fbSeen = {}; clearInterval(fbTick);
@@ -131,6 +152,8 @@ const Store = (() => {
         for (const col of COLS) for (const [id, d] of Object.entries(w?.[col] || {})) merge(col, id, d);
         tidy(); persistWorld(); COLS.forEach(emit);
         if (mode === "p2p" && (world.players || {})[uid]) net.send({ t: "put", col: "players", id: uid, doc: world.players[uid] });   // re-announce my card
+        const back = unsent(w);   // what I wrote while the line was down (or hold more of) goes up now
+        if (back) net.send({ t: "hello", uid, world: back });
       },
       onLeave(peer) { const u = peerUid[peer]; delete peerUid[peer]; if (u && !Object.values(peerUid).includes(u)) { online.delete(u); emit("players"); } p2pStatus = onlineCount() ? "connected" : "searching"; statusChanged(); },
       onMessage(m, peer) {
@@ -140,6 +163,9 @@ const Store = (() => {
           for (const col of COLS) for (const [id, d] of Object.entries(m.world?.[col] || {})) merge(col, id, d);
           tidy(); persistWorld(); COLS.forEach(emit);
           p2pStatus = "connected"; statusChanged();
+          if (m.heal === 1 && ns()) { const back = ns().richer(world, m.world); if (back) net.send({ t: "hello", uid, world: back, heal: 2 }, peer); }   // desync check: send back what they were missing
+        } else if (m.t === "sum") {   // desync check: their fingerprints of our party records; where mine differs, send mine
+          if (m.uid && m.uid !== uid && ns()) { const diff = ns().differ(world, m.sums); if (diff) { desyncs++; net.send({ t: "hello", uid, world: diff, heal: 1 }, peer); } }
         } else if (m.t === "put") {
           if (m.col === "players" && peerUid[peer] && m.id === peerUid[peer]) online.add(m.id);
           if (merge(m.col, m.id, m.doc)) { persistWorld(); emit(m.col); }
@@ -155,6 +181,7 @@ const Store = (() => {
         fbTick = setInterval(() => { beat(); expireBackup(); }, FB_BEAT);
       }
     }
+    clearInterval(sumT); sumT = setInterval(sumTick, 20e3);
     statusChanged();
   }
   /* "I'm here" on the backup line: my public card rides along, so others can see me even with no direct link */
@@ -291,7 +318,7 @@ const Store = (() => {
     if (mode === "p2p") {
       const cur = (world[col] || {})[id];
       if (!live(cur)) return null;
-      const before = { ...cur }; delete before._v; delete before._by;
+      const before = { ...cur }; delete before._v; delete before._by; delete before._f;
       const nx = fn({ ...before });
       localPut(col, id, nx ? nx : { _del: true });
       return { before, after: nx };
@@ -311,5 +338,5 @@ const Store = (() => {
   return { flush: () => saving || Promise.resolve(), init, loadSave, save, publish, watchPlayers, watchBags, addBag, takeBag, wipe, watch, put, remove, change,
     joinWorld: (code) => joinWorld(String(code).toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 12) || newCode()),
     onStatus: (f) => { statusL.push(f); f({ status: p2pStatus, peers: onlineCount(), code: worldCode }); },
-    get online() { return mode === "shared" || mode === "p2p"; }, get worldCode() { return worldCode; }, get peers() { return onlineCount(); }, get direct() { return Math.min(online.size, net?.direct?.() ?? online.size); }, get relayed() { return fb?.open?.() || 0; }, get mode() { return mode; }, get uid() { return uid; }, get writable() { return writable; } };
+    get online() { return mode === "shared" || mode === "p2p"; }, get worldCode() { return worldCode; }, get peers() { return onlineCount(); }, get direct() { return Math.min(online.size, net?.direct?.() ?? online.size); }, get relayed() { return fb?.open?.() || 0; }, get desyncs() { return desyncs; }, syncNow: sumTick, get mode() { return mode; }, get uid() { return uid; }, get writable() { return writable; } };
 })();

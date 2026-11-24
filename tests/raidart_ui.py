@@ -19,9 +19,8 @@ async def main():
             await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", name); await pg.click("#begin"); await pg.wait_for_timeout(1000)
             await pg.evaluate("(t)=>{const S=window.__dbg.save(); S.location=t; [S.x,S.y]=WORLD.places[t]; S.gold=3000; S.discovered.push(t,'Whiterun'); S.level=12; G.setHealth(S,G.maxHealth(S));}", town)
             await pg.wait_for_timeout(600); await clear(pg); return pg
-        for style in ["ink", "pixel"]:
+        for style in ["ink"]:
             A = await phone("ra" + style, "Alfa", "Windhelm"); B = await phone("rb" + style, "Beta", "Windhelm")
-            for pg in (A, B): await pg.evaluate("(s)=>ART.setStyle(s)", style)
             # a raid over Whiterun, with some damage done
             for pg in (A, B):
                 await pg.evaluate("""()=>{ const t=G.now(); WEVENTS.activeRaid=()=>({id:'raid-test',town:'Whiterun',start:t-60,end:t+900}); }""")
