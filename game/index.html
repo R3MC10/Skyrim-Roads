@@ -2569,6 +2569,15 @@ html.art-pixel .hstat .wxchip{border-radius:0}
 .wxpop ul{margin:0;padding-left:16px}.wxpop li{margin:2px 0}
 html.art-pixel .wxpop{border-radius:0;border-width:2px}
 #clock{cursor:pointer}
+/* [tabkeys] tabmenu.js: key hints on the compass, PC only (W A S D on the four directions, 1-5 on the buttons below) */
+.tw .tw-k,.tw-hint .tw-keys{display:none}
+@media (hover:hover) and (pointer:fine){
+  .tw-hint .tw-touch{display:none}.tw-hint .tw-keys{display:inline}
+  .tw .tw-k{display:inline-block;min-width:15px;padding:0 3px;border:1px solid rgba(214,207,190,.4);border-bottom-width:2px;border-radius:3px;background:rgba(0,0,0,.5);color:rgba(236,226,200,.85);font:600 10px/13px system-ui,sans-serif;letter-spacing:0;text-transform:none;text-align:center}
+  .tw-dir .tw-k{position:absolute;top:2px;right:calc(50% + 16px)}
+  .tw-q .tw-k{margin-left:2px;opacity:.75}
+  .tw[data-glow=up] .tw-up .tw-k,.tw[data-glow=down] .tw-down .tw-k,.tw[data-glow=left] .tw-left .tw-k,.tw[data-glow=right] .tw-right .tw-k{color:#fff3cf;border-color:rgba(243,217,139,.7)}
+}
 </style>
 <script src="bugreport.js"></script>
 <script src="access.js"></script>
@@ -2764,6 +2773,7 @@ html.art-pixel .wxpop{border-radius:0;border-width:2px}
 <script src="i18n_horsedown.js"></script>
 <script src="i18n_enchants2.js"></script>
 <script src="i18n_invites.js"></script>
+<script src="i18n_tabkeys.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>

@@ -152,6 +152,7 @@ const TABMENU = (() => {
     search: '<circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5.5 5.5"/>',
     back: '<path d="M15 5l-7 7 7 7"/>', close: '<path d="M6 6l12 12M18 6L6 18"/>',
   };
+  const KEYCAP = { up: "W", left: "A", right: "D", down: "S" };   // shown on a PC only (index.html hides them on touch screens)
   const ico = (k) => `<svg class="tw-i" viewBox="0 0 24 24" aria-hidden="true">${ICO[k] || ""}</svg>`;
   function roseSVG() {
     let ticks = "";
@@ -217,13 +218,13 @@ const TABMENU = (() => {
   }
   function hubHTML(S) {
     const b = bar(S), inTown = S.location && !S.trip && typeof TOWNS !== "undefined" && TOWNS.isTown?.(S.location);
-    const dir = (d) => { const m = DIR[d]; return `<button class="tw-dir tw-${d}" data-twgo="${m}" aria-label="${NAME[m]}">${ico(m)}<b>${NAME[m]}</b><small>${SUBT[m]}</small>${m === "char" && b.perks ? '<span class="dot"></span>' : ""}</button>`; };
+    const dir = (d) => { const m = DIR[d]; return `<button class="tw-dir tw-${d}" data-twgo="${m}" aria-label="${NAME[m]}"><kbd class="tw-k" aria-hidden="true">${KEYCAP[d]}</kbd>${ico(m)}<b>${NAME[m]}</b><small>${SUBT[m]}</small>${m === "char" && b.perks ? '<span class="dot"></span>' : ""}</button>`; };
     const quick = [inTown ? ["town", "Area", "town"] : null, ["log", "Journal", "log"], ["social", "Social", "people"], ["settings", "Settings", "gear"], typeof SEARCH !== "undefined" ? ["search", "Search", "search"] : null].filter(Boolean);
     return `<div class="tw-bg" aria-hidden="true"></div><div class="tw-veil" aria-hidden="true"></div>${starsBG()}
       <div class="tw-top"><b class="tw-where"></b><span class="tw-when"></span><small class="tw-fc"></small></div>
       <div class="tw-rose"><div class="tw-disc" aria-hidden="true"><i class="tw-depth"></i><div class="tw-face">${roseSVG()}</div><i class="tw-shine"></i></div>${dir("up")}${dir("left")}${dir("right")}${dir("down")}</div>
-      <p class="tw-hint">Swipe or tap a direction</p>
-      <div class="tw-quick">${quick.map(([id, l, k]) => `<button class="tw-q" data-twq="${id}" aria-label="${l}">${ico(k)}<span>${l}</span></button>`).join("")}</div>
+      <p class="tw-hint"><span class="tw-touch">Swipe or tap a direction</span><span class="tw-keys">Press WASD or click a direction · Tab closes the menu</span></p>
+      <div class="tw-quick">${quick.map(([id, l, k], i) => `<button class="tw-q" data-twq="${id}" aria-label="${l}">${ico(k)}<span>${l}</span><kbd class="tw-k" aria-hidden="true">${i + 1}</kbd></button>`).join("")}</div>
       <div class="tw-bar"></div>`;
   }
   function refreshHub() {
@@ -252,7 +253,7 @@ const TABMENU = (() => {
     try { SOUND.fx("page"); } catch { /* sound never breaks the game */ }
     return true;
   }
-  function closeHub() { $("#tw")?.remove(); hubOpen = false; document.body.classList.remove("tw-on"); }
+  function closeHub() { kb = null; $("#tw")?.remove(); hubOpen = false; document.body.classList.remove("tw-on"); }
   /* go to one of the four menus (from the compass, or swiping round the ring) */
   function go(m, viaHub = true) {
     closeHub(); fromHub = viaHub;
@@ -431,6 +432,51 @@ const TABMENU = (() => {
       const st = e.target.closest?.(".tw-big [data-sk-perk]");
       if (st) { starPick = +st.dataset.skPerk; ui().refresh?.(); requestAnimationFrame(() => document.querySelector(".tw-perk")?.scrollIntoView({ block: "nearest" })); }
     });
+  }
+  // ---- keys on a PC: W A S D (or the arrows) lean the compass that way while held and open that menu when let go,
+  // so a quick tap feels instant but you still see it tilt; Enter or Space opens the one leaning; 1-5 the row of
+  // buttons below; Esc closes. Tab itself (open / close) lives in desktop.js.
+  const KEYDIR = { w: "up", arrowup: "up", s: "down", arrowdown: "down", a: "left", arrowleft: "left", d: "right", arrowright: "right" };
+  let kb = null;   // { d, key, t } while a direction key is held
+  const MINLEAN = 140;   // ms the compass leans before the menu opens, even on the quickest tap
+  function lean(d) {
+    const el = $("#tw"); if (!el) return;
+    cancelAnimationFrame(springT);
+    el.dataset.glow = d || ""; el.style.setProperty("--pull", d ? "1" : "0");
+    const v = { up: [0, -60], down: [0, 60], left: [-60, 0], right: [60, 0] }[d] || [0, 0];
+    tilt(el, v[0], v[1]);
+    if (d) try { SOUND.fx("click"); } catch { /* sound never breaks the game */ }
+  }
+  function keyGo(d) {
+    if (!d || !hubOpen) return;
+    const wait = kb ? Math.max(0, MINLEAN - (Date.now() - kb.t)) : 0;
+    kb = null;
+    setTimeout(() => { if (hubOpen && $("#tw")) go(DIR[d]); }, wait);
+  }
+  function hubKey(e) {
+    if (context() !== "hub" || e.ctrlKey || e.metaKey || e.altKey || e.defaultPrevented) return;
+    const t = e.target, tag = (t && t.tagName) || "";
+    if (/^(INPUT|TEXTAREA|SELECT)$/.test(tag) || t?.isContentEditable) return;
+    const k = String(e.key || "").toLowerCase(), d = KEYDIR[k];
+    if (d) { e.preventDefault(); if (e.repeat && kb) return; if (!kb || kb.d !== d) { kb = { d, key: k, t: Date.now() }; lean(d); } return; }
+    if (k === "enter" || k === " " || k === "spacebar") {
+      const g = kb?.d || $("#tw")?.dataset.glow;
+      if (g) { e.preventDefault(); keyGo(g); }
+      return;   // nothing leaning: let Enter press whatever button has focus
+    }
+    if (k === "escape") { e.preventDefault(); closeHub(); return; }
+    if (/^[1-9]$/.test(k)) { const b = document.querySelectorAll("#tw .tw-q")[+k - 1]; if (b) { e.preventDefault(); b.click(); } }
+  }
+  function hubKeyUp(e) {
+    if (!kb) return;
+    const k = String(e.key || "").toLowerCase();
+    if (k !== kb.key && KEYDIR[k] !== kb.d) return;   // let go of some other key
+    e.preventDefault(); keyGo(kb.d);
+  }
+  if (live) {
+    document.addEventListener("keydown", hubKey, true);
+    document.addEventListener("keyup", hubKeyUp, true);
+    addEventListener("blur", () => { if (kb) { kb = null; letGo(); } });   // the window lost focus mid-press: just spring back
   }
   /* after a swipe, the finger's release shouldn't also tap the button under it */
   function swallowClick() {
