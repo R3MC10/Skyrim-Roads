@@ -95,14 +95,14 @@ const TABMENU = (() => {
         ${rk < ranks ? `<p class="sub">Needs ${esc(sk)} ${p.req[rk]}${p.needs.length ? ` and ${p.needs.map((x) => esc(PERKS.BY_ID[x]?.name || x)).join(" or ")}` : ""}</p><button class="btn ${err ? "" : "pri"}" data-act="perk" data-id="${esc(id)}" ${err ? "disabled" : ""}>${err ? esc(err) : "Take this perk"}</button>` : `<p class="sub">You have this perk.</p>`}</div>`;
     } else detail = `<p class="sub tw-hint2">${tree.length ? "Tap a star to read its perk. Bright rings are perks you can take now." : "This skill has no perk stars. It still grows as you use it."}</p>`;
     const info = typeof SKILLINFO !== "undefined" ? SKILLINFO.summary?.(sk) : "";
-    return `<div class="panel tw-starp">${lvl}
+    return `<div class="panel tw-starp"><div class="tw-sleft">${lvl}
       <div class="tw-shead"><div><b>Level ${b.level}</b> <span class="sub num">${b.xp}/${b.need}</span></div><div class="${pts > 0 ? "gold" : "sub"}">${pts} perk point${pts === 1 ? "" : "s"}</div></div>
       <div class="tw-car" role="list">${cards}${beastT.map((k) => BEASTART.card(S, k, false)).join("")}</div>
       <div class="tw-skt"><span class="tw-skn">${typeof UIART !== "undefined" ? UIART.skill(sk, 30) : ""}<b>${esc(sk)}</b> <span class="num">${s.lvl}</span></span><span class="sub num">${Math.round(s.xp)}/${Math.round(need)}</span></div>
       <div class="bar"><i style="width:${Math.round(Math.min(1, s.xp / need) * 100)}%;background:var(--frost)"></i></div>
-      ${info ? `<p class="sub">${esc(info)}</p>` : ""}
+      ${info ? `<p class="sub">${esc(info)}</p>` : ""}</div>
       ${tree.length && typeof SKYUI !== "undefined" ? `<div class="tw-bigw"><div class="skc tw-big">${SKYUI.svg(sk, S)}</div></div>` : ""}
-      ${detail}</div>`;
+      <div class="tw-sdet">${detail}</div></div>`;   // tw-sleft / tw-sdet: plain blocks on a phone, the left column beside the stars on a PC (pcfit)
   }
   /* the werewolf's or the Vampire Lord's own sky, chosen from the same row of cards */
   function beastStars(S, list, beastT) {
@@ -247,8 +247,20 @@ const TABMENU = (() => {
     hubOpen = true; fromHub = false;
     document.body.classList.add("tw-on");
     refreshHub();
+    faceFit(el);
     try { SOUND.fx("page"); } catch { /* sound never breaks the game */ }
     return true;
+  }
+  /* [artfit] each 3D compass render is 320 px: on a big or sharp screen where the face is drawn bigger than that, show the
+     flat painted compass (1024 px) instead of a blurry blow-up */
+  function faceFit(el) {
+    const f = el.querySelector(".tw-face"); if (!f || f.dataset.fit) return;
+    f.dataset.fit = "1";
+    const fit = () => { const r = f.getBoundingClientRect(), d = (typeof devicePixelRatio !== "undefined" && devicePixelRatio) || 1;
+      const px3d = r.width * d * (f.classList.contains("art-flat") ? 1.16 : 1);
+      f.classList.toggle("art-flat", px3d > 320 * 1.12); };
+    fit();
+    if (typeof FITCANVAS !== "undefined") FITCANVAS.watch(f, fit);
   }
   function closeHub() { kb = null; $("#tw")?.remove(); hubOpen = false; document.body.classList.remove("tw-on"); }
   /* go to one of the four menus (from the compass, or swiping round the ring) */

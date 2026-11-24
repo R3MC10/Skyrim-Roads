@@ -163,7 +163,7 @@ const DUNART = (() => {
     const nodes = [...next].map((k) => { const [r, c] = k.split(":").map(Number), [x, y] = xy(rows, r, c), n = rows[r][c];
       return `<button class="dnode" data-act="droom" data-c="${c}" style="left:${(x / W * 100).toFixed(2)}%;top:${(y / h * 100).toFixed(2)}%" aria-label="Go to: ${DUNGEONS.LABEL[n.type]}"></button>`; }).join("");
     const here = d.row >= 0 && !d.done ? xy(rows, d.row, d.col) : null;
-    return `<div class="dmap" data-w="${W}" data-h="${h}" data-torch="${torches.map((p) => p.map(Math.round).join(",")).join(";")}" data-here="${here ? here.map(Math.round).join(",") : ""}" data-theme="${d.theme}">
+    return `<div class="dmap" style="--dar:${(W / h).toFixed(4)}" data-w="${W}" data-h="${h}" data-torch="${torches.map((p) => p.map(Math.round).join(",")).join(";")}" data-here="${here ? here.map(Math.round).join(",") : ""}" data-theme="${d.theme}">
       <img src="${url}" width="${W}" height="${h}" alt="Map of ${String(d.place).replace(/"/g, "")}">
       <canvas class="dflick" aria-hidden="true"></canvas>${nodes}</div>`;
   }

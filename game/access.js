@@ -159,7 +159,7 @@ const ACCESS = (() => {
   /* big PC monitors: scale the whole game up so it isn't tiny on a 1440p or 4K screen (mouse screens only, never phones) */
   function screenScale() {
     if (!DOM || typeof matchMedia !== "function" || !matchMedia("(hover:hover) and (pointer:fine)").matches) return 1;
-    const f = Math.min(innerWidth / 1600, innerHeight / 1000);
+    const f = Math.min(innerWidth / 1500, innerHeight / 940);   // the height decides (the game fits the window, pcfit), a bit bigger than before on 1080p
     return Math.max(1, Math.min(2, Math.round(f * 20) / 20));
   }
   let lastScale = 1;

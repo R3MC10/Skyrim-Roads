@@ -58,27 +58,61 @@ const ART = (() => {
   };
 
   const cache = new Map();
-  /* draw(g, H, w, h) into a canvas of w×h CSS pixels */
-  function canvas(w, h, draw) {
-    const dpr = DPR(), c = document.createElement("canvas");
+  /* draw(g, H, w, h) into a canvas of w×h CSS pixels. opts.scale: backing pixels per CSS pixel (default the screen's density, at most 2) */
+  let srcPU = 0;        // a painted file drawn into the picture: its pixels per drawing unit (ASSETS.cover tells us)
+  const noteSrc = (pu) => { if (pu > 0) srcPU = srcPU ? Math.min(srcPU, pu) : pu; };
+  function canvas(w, h, draw, opts = {}) {
+    const dpr = opts.scale || DPR(), c = document.createElement("canvas");
     c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); c.style.width = w + "px"; c.style.height = h + "px";
     const g = c.getContext("2d");
+    g.imageSmoothingEnabled = true; g.imageSmoothingQuality = "high";
     g.scale(dpr, dpr); draw(g, H, w, h);
     c.dataset.art = "ink";
     return c;
   }
-  /* a cached data URL, for <img> tags inside HTML templates */
+  /* How sharp to draw a picture for an <img> tag. A picture in a wide PC panel needs many more pixels than its drawing
+     size: aim for the biggest box it can get on this screen (side panel or popup). Backing pixels per drawing unit. */
+  const SCENE_CAP = 6;
+  function budget(w) {
+    let px = 0;
+    try {
+      const z = parseFloat(getComputedStyle(document.documentElement).zoom) || 1, d = (typeof devicePixelRatio !== "undefined" && devicePixelRatio) || 1;
+      const side = document.getElementById("side"), sw = side ? side.getBoundingClientRect().width : 0;
+      const box = innerWidth >= 1100 ? Math.max(sw, Math.min(innerWidth * 0.5, 980) * z) : Math.min(innerWidth, 640) * z;   // screen px the picture may fill
+      px = box * Math.min(3, d);
+    } catch { /* no window: tests */ }
+    return Math.max(DPR(), Math.min(SCENE_CAP, px / w));
+  }
+  /* a cached data URL, for <img> tags inside HTML templates. A picture with a painted file inside is redrawn as sharp as
+     that file allows (up to what this screen can show); drawn-by-code pictures keep the screen's density. */
+  const meta = new Map();   // data URL -> { maxw }: the widest it can be shown (screen px) without blowing anything up
   function url(w, h, draw, opts = {}) {
-    const k = opts.key ? `${opts.key}|${w}x${h}` : null;
+    let sc = opts.scale || DPR();
+    const want = opts.scale ? sc : budget(w);
+    const k = opts.key ? `${opts.key}|${w}x${h}|${Math.round(want * 4)}` : null;
     if (k && cache.has(k)) return cache.get(k);
     let u = "";
-    try { u = canvas(w, h, draw).toDataURL("image/png"); } catch (e) { console.warn("art failed", opts.key, e); }
+    try {
+      srcPU = 0;
+      let c = canvas(w, h, draw, { ...opts, scale: sc });
+      const pu = srcPU;
+      if (pu) { const best = Math.max(sc, Math.min(want, pu)); if (best > sc * 1.05) { sc = best; c = canvas(w, h, draw, { ...opts, scale: sc }); } }
+      u = pu ? c.toDataURL("image/webp", 0.92) : "";
+      if (!u.startsWith("data:image/webp")) u = c.toDataURL("image/png");
+      if (pu) { meta.set(u, { maxw: Math.round(w * Math.min(sc, pu)) }); if (meta.size > 500) meta.delete(meta.keys().next().value); }
+    } catch (e) { console.warn("art failed", opts.key, e); }
     if (k) { if (cache.size > 400) cache.delete(cache.keys().next().value); cache.set(k, u); }
     return u;
   }
-  const html = (w, h, draw, opts = {}) => { const u = url(w, h, draw, opts); return u ? `<img class="art ${opts.cls || ""}" src="${u}" width="${w}" height="${h}" alt="${(opts.alt || "").replace(/"/g, "&quot;")}">` : ""; };
+  /* an <img> keeps its shape (height follows width); one with a painted file inside is never shown wider than its own
+     sharp pixels (--art-k = screen pixels per CSS pixel, kept by artfit.js) and sits centred when it stops short */
+  const html = (w, h, draw, opts = {}) => {
+    const u = url(w, h, draw, opts); if (!u) return "";
+    const m = meta.get(u);
+    const st = m ? ` style="max-width:min(100%,calc(${m.maxw}px / var(--art-k,1)))" data-maxw="${m.maxw}"` : "";
+    return `<img class="art ${opts.cls || ""}" src="${u}" width="${w}" height="${h}" alt="${(opts.alt || "").replace(/"/g, "&quot;")}"${st}>`;
+  };
   const drawingStyle = style;   // kept so older callers still work: always "ink"
   const clear = () => cache.clear();
-  return { PAL, H, style, drawingStyle, canvas, url, html, seeded, clear };
-
+  return { PAL, H, style, drawingStyle, canvas, url, html, seeded, clear, noteSrc, budget };
 })();
