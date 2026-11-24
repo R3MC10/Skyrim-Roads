@@ -329,6 +329,7 @@ const FIGHTART = (() => {
     if (a.valor) return "valor";
     if (a.odah) return "odah";
     if (a.beast) return "beast";
+    if (a.player || a.pid || a.host) return "soldier";   // a real player is never guessed from their name ("Dragon..." is not a dragon)
     const n = (a.name || "").toLowerCase();
     if (/ice wolf/.test(n)) return "icewolf";
     if (/werewolf/.test(n)) return "werewolf";

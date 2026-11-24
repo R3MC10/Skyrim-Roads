@@ -878,7 +878,7 @@ const TB = (() => {
     const roster = [{ k: "host", host: true, player: true, name: f.s.name || "Leader", hp: Math.max(0, Math.round(f.hp)), hpMax: G.maxHealth(f.s), down: f.hp <= 0, look, ward: Math.round(f.ward || 0), form: typeof BEASTPATH !== "undefined" ? BEASTPATH.form(f) : null },
       ...all.map((a) => { a.tbk = a.tbk || (a.pid ? "p:" + a.pid : "a" + ++kseq);
         const o = { k: a.tbk, pid: a.pid || null, name: a.name, hp: Math.max(0, Math.round(a.hp || 0)), hpMax: Math.round(a.maxHp || a.hpMax || a._max || a.hp0 || Math.max(1, a.hp || 1)), down: !!a.down || !f.allies.includes(a),
-          player: !!a.player, follower: !!(a.follower || a.kind === "follower"), role: a.role || null, look: a.look || null };
+          player: !!a.player, follower: !!(a.follower || a.kind === "follower"), role: a.role || null, look: a.look || null, kind: a.kind || null, fid: a.fid || null };
         for (const k of BUFF_KEYS) if (a[k] != null) o[k] = a[k];
         return o; })];
     const evs = sess.ev.slice(-24).map((x, i, arr) => {
