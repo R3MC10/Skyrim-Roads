@@ -9,6 +9,13 @@ const PATCHNOTES = (() => {
       "Fixed: picking herbs at a claw door in a party no longer breaks the door for the others.",
       "Stuck right now? Just open the game again: runs that were caught in a loop, a boss room with no boss in it, or a room with no way on are put right when you load.",
     ] },
+    { id: "b143-fighttips", build: 143, date: "24 Nov 2026", title: "Tooltips in fights", items: [
+      "Everything on the fight screen now has a tooltip, the same kind as in the menus: rest the mouse on it, or hold a finger on it. Spells show what they do with your perks, single and dual cast, magicka, AP and how long they last; potions, scrolls, the big buttons, quick slots, the AP pips, your bars, you, the foe and every status chip explain themselves too.",
+      "A greyed-out button says why with the numbers, like \"Need 37 more magicka: you have 98, it needs 135\".",
+      "Holding a finger on a button only shows its tooltip: nothing gets cast. Dragging a card onto a target works as before.",
+      "Foes that are afraid, calmed or still rattled show it with a chip under their health.",
+      "Every item's tooltip now says what it does, in fights and out of them: what a scroll or potion really does for you, how hard a weapon hits with your skill and perks, its AP cost in a fight, what food cooks into, and its value and weight. Favourite slots show the full tooltip, not just the name.",
+    ] },
     { id: "b143-followeranim", build: 143, date: "24 Nov 2026", title: "Followers fight with their whole body", items: [
       "Followers and party members now really fight in the fight picture: they swing their weapon or draw their bow, cast their spells, raise their shield and flinch when they get hit.",
       "A follower who is knocked down drops to the ground and lies there until someone pulls them back up, and then you see them get back on their feet.",
