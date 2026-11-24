@@ -13,6 +13,7 @@ async def main():
         await clear()
         await pg.click("[data-tab=hero]"); await pg.wait_for_timeout(400); await clear()
         if await pg.query_selector("[data-act=guideno]"): await pg.click("[data-act=guideno]"); await pg.wait_for_timeout(200)
+        await pg.evaluate("document.querySelectorAll('#side details[data-m2f]').forEach(d=>d.open=true)")   # Skills and Perks fold away now (menus2.js)
         await pg.click("button.skill[data-id=Sneak]"); await pg.wait_for_timeout(400)
         card = await pg.inner_text(".skcard"); print("hero card:", card[:260].replace("\n", " | "))
         el = await pg.query_selector(".skcard"); await el.scroll_into_view_if_needed()

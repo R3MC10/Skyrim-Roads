@@ -70,6 +70,8 @@ our own marked [OURS]; plain-language UI; phone first.
 
 ## In progress (write your name before you start)
 - Claude: fear and foe-heal limits (foecap.js): Battle Cry / Dismay / fear / calm hold bosses 2 turns (3 a fight) and elites 3 (5 a fight), then they stay rattled (softer blows); foe healing capped at 65% health, 35% a fight, 3-turn rest; Aspect of Terror +1 turn on big foes; tests/test_balfear.js sim. Branch claude/balance-fear.
+- Claude: Area tab as a place + tidy Map panel (areaui.js, mappanel.js): town places grouped into tiles (Inn, Market, Services & trainers, Work & jobs, Your home, Events & fun) with live status and a Right now strip, back button + neighbour tabs inside a place; one merged and sorted "What to do next" card on the Map; place filters. Branch claude/areaui.
+- Claude: tidier tab menus (menus2.js): SkyUI-style categories | list | details (3 columns on PC), one sort row with direction (damage/armour too), counts, search in Items/Magic/Journal, Character page folds its long sections, follower tabs on one row, Polish for menu words. Branch claude/menus2.
 - Claude: boss fights that feel like events (bossfight.js): intro card, boss bar with phases, telegraphed big attacks you can answer, slow-mo finisher, bigger loot reveal, Giant Slayer / Read the Signs / Break Their Focus perks. Branch claude/bossfights.
 - Claude: performance pass: faster start (map terrain built row by row), map/title/road pictures sleep between frames and stop when hidden or covered, cheaper fight-screen glow, tests/perf_ui.py measures it. Branch claude/perf.
 - Claude: lighting and atmosphere (lightfx.js): time-of-day colour grade, glowing towns and camps at night, dawn/dusk light shafts, fog banks over valleys and lakes, cloud-shadow parallax, water shimmer, aurora on the northern snow, vignette; on the map and in place pictures. Settings → Graphics → Lighting Off/Low/High. Branch claude/lightfx.
@@ -100,6 +102,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Claude: foe rigs (foerig.js): every enemy is a little skeleton with its own animations (breathing, attacks, flinch, stagger, dodge, fall, gloat); painted foes bend and lunge too. Branch claude/foerigs.
 - Kacper: audio: the rest of scripts/gen_audio.mjs (free ElevenLabs plan has ~4k credits a month; music needs a paid plan).
 - Claude: party votes on the road (partyplay.js): everyone with the leader sees the same encounter/event window, members vote, their faces pop up by the option they picked, only the leader acts. Branch claude/partyvote.
+- Claude: werewolf and vampire paths, part 2 (beastpaths.js): Moonblood bites from werewolves, the Ashen Court's offer, Beast Form and Vampire Lord moves with their own AP costs and drawbacks, vampire powers by hunger stage and the sun in fights, townsfolk reacting, new perk stars, forms shown on every phone in shared party fights. Branch claude/beastpaths.
 - Claude: great world events (greatevents.js): timed, date-seeded events with a map banner and countdown: a dragon assault on a town (3-phase boss, parties of up to 8), a Daedric rift, a bandit army besieging a hold, and town fairs (games, prizes, cheap shops). Rewards by share, world after-effects (burned town rebuilds, plundered hold, Jarl's thanks), 4 perks. Branch claude/worldevents.
 
 ## Standing rules

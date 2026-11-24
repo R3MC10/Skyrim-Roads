@@ -1330,6 +1330,7 @@ const G = (() => {
     return Math.max(1, Math.round(base / haggle(s) * (typeof FEST !== "undefined" ? FEST.shopDiscount() : 1)   // Midyear: 10% off
       * (typeof WARS !== "undefined" && town && PLACES[town] ? WARS.discount(s, holdAt(PLACES[town])) : 1)   // your clan rules this hold
       * (typeof RUMOURS !== "undefined" && town ? RUMOURS.priceMult(s, town) : 1)   // local hero discount; knocked-up shop at night (rumours.js)
+      * (typeof BEASTPATH !== "undefined" && town ? BEASTPATH.priceMult(s, town) : 1)   // a hungry vampire, a werewolf seen in town (beastpaths.js)
       * (typeof GREATEV !== "undefined" && town ? GREATEV.priceMult(s, town) : 1)));   // a fair in town, a burned town, a plundered or grateful hold (greatevents.js)
   };
   function sellPrice(s, row, town = s.location, extra = 0) {
@@ -1357,6 +1358,7 @@ const G = (() => {
   function buy(s, item, qty = 1, t = now()) {
     if (!s.location || !shopTypes(s.location).length) return "There's no shop here.";
     if (typeof TOWNS !== "undefined" && TOWNS.wanted(s)) return "The merchant won't trade with a wanted criminal.";
+    if (typeof BEASTPATH !== "undefined") { const no = BEASTPATH.refuse(s); if (no) return no; }   // a starving vampire
     if (!shopsOpen(t) && !knockOk(s, t)) return `The shops are closed (${clockText(t)}). They open at 08:00.`;
     if (typeof MAGIC !== "undefined") { const no = MAGIC.canBuy(s, item); if (no) return no; }
     if (typeof SHOPCAP !== "undefined" && !SHOPCAP.ok(item)) return SHOPCAP.why(item);

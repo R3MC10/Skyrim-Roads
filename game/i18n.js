@@ -90,6 +90,7 @@ const I18N = (() => {
     "Potion of Healing": "Mikstura zdrowia", "Potion of Magicka": "Mikstura magii", "Potion of Stamina": "Mikstura wytrzymałości", "Potion of Minor Healing": "Słaba mikstura zdrowia",
     "Potion of Cure Disease": "Mikstura leczenia chorób",
   }, typeof I18N_LIVING !== "undefined" ? I18N_LIVING.pl : {});   // labels from i18n_living.js (the world remembers you)
+  if (typeof I18N_BEAST !== "undefined") Object.assign(PL, I18N_BEAST.pl);
 
   /* patterns for text with numbers in it */
   const PAT = [
@@ -109,7 +110,8 @@ const I18N = (() => {
   /* lines added by feature modules (i18n_hsrooms.js and others): exact lines and number patterns; the lists above win */
   if (typeof I18N_EXTRA !== "undefined") { for (const [k, v] of Object.entries(I18N_EXTRA.words || {})) if (!(k in PL)) PL[k] = v; PAT.push(...(I18N_EXTRA.pat || [])); }
   /* story text: split into sentences, translate each one (exact, or a template whose {markers} are filled from the English) */
-  const ST = typeof I18N_STORY !== "undefined" ? I18N_STORY : { ex: {}, pats: [] };
+  const ST0 = typeof I18N_STORY !== "undefined" ? I18N_STORY : { ex: {}, pats: [] };
+  const ST = { ex: ST0.ex || {}, pats: (ST0.pats || []).concat(typeof I18N_BEAST !== "undefined" ? I18N_BEAST.pats : []) };
   const SPLIT = /(?<=[.!?…])(\s+)|(?<=[.!?]["”])(\s+)/;
   let STP = null;
   function storyPats() {

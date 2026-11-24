@@ -6,7 +6,7 @@ const fs = require("fs"), vm = require("vm");
 const W = process.env.W || __GAME + "";
 const c = { console, Math, Date, JSON, Float64Array, Float32Array, Uint8Array, Int32Array, Uint16Array, Int16Array, Object, Array, Set, Map, Proxy, Number, String };
 vm.createContext(c);
-const files = ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "enchanting.js", "quests.js", "cooking.js", "smithing.js", "ammo.js", "tomes.js", "magic.js", "gather.js", "halls.js", "visits.js", "homestead.js", "hsrooms.js", "mp.js", "patchnotes.js", "i18n_story.js", "i18n_hsrooms.js", "i18n_living.js", "i18n_bonds.js", "i18n_accounts.js", "i18n.js"];
+const files = ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "enchanting.js", "quests.js", "cooking.js", "smithing.js", "ammo.js", "tomes.js", "magic.js", "gather.js", "halls.js", "visits.js", "homestead.js", "hsrooms.js", "mp.js", "patchnotes.js", "i18n_story.js", "i18n_hsrooms.js", "i18n_living.js", "i18n_bonds.js", "i18n_menus2.js", "i18n_accounts.js", "i18n.js"];
 for (const f of files) if (fs.existsSync(W + f)) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
 let fails = 0, n = 0;
 c.ok = (cond, msg) => { n++; if (!cond) { fails++; console.log("FAIL", msg); } else console.log("ok  ", msg); };

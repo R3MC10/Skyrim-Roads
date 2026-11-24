@@ -26,7 +26,7 @@
   const tiBox = (item) => (TI ? TI.box(S, item) : "");
   const tiCls = (item) => (TI && TI.isTome(item) ? " ti-row" : "");
   let zoom = innerWidth < 700 ? 2.4 : 1, follow = true, center = [0.5, 0.5], view = {}, version = 0, rendered = -1, lastPanelRender = 0;
-  let tacticsDraft = { if: "hp_below", pct: 40, do: "potion:health", edit: null }, testResult = null, townShop = null, forgeTab = "make", forgeGroup = "iron", packOpen = null, searchText = "", uxAllPlaces = false, uxHelpOpen = null, packSearch = "";
+  let tacticsDraft = { if: "hp_below", pct: 40, do: "potion:health", edit: null }, testResult = null, townShop = null, townShopAt = null, forgeTab = "make", forgeGroup = "iron", packOpen = null, searchText = "", uxAllPlaces = false, uxHelpOpen = null, packSearch = "";
   let raidDocs = [], raidSeen = null, raidJoined = null, raidAuto = null, enchDraft = {};
   let chatDocs = [], chatRaw = [], chatCh = "world", chatDraft = "", chatSeen = 0, chatSeenIds = new Set(), lastChatSend = 0;
   const bootT = Date.now() / 1000;
@@ -526,7 +526,7 @@
         $("#mapwrap")?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" }); return true;
       }
       tab = o.tab || "map"; testResult = null;
-      if (o.shop) townShop = o.shop; if (o.jtab) jTab = o.jtab; if (o.soc) socTab = o.soc;
+      if (o.shop) { townShop = o.shop; townShopAt = S && S.location; } if (o.jtab) jTab = o.jtab; if (o.soc) socTab = o.soc;
       bump(); renderTabs(); renderPanel(true);
       const el = (o.anchor && document.getElementById(o.anchor)) || $("#side");
       el?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
@@ -1468,13 +1468,13 @@
     combat: '<path d="M5 19L19 5M14 5h5v5"/>', magic: '<circle cx="12" cy="12" r="8"/><path d="M12 4l2 8-2 8-2-8z"/>', stealth: '<path d="M3 12s4-6 9-6 9 6 9 6-4 6-9 6-9-6-9-6z"/>', other: '<circle cx="12" cy="12" r="2"/><circle cx="5" cy="12" r="2"/><circle cx="19" cy="12" r="2"/>',
   };
   const svgI = (k) => `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[k] || ICONS.misc}</svg>`;
-  const ITEM_CATS = [["gear", "Worn"], ["all", "All"], ["weapons", "Weapons"], ["apparel", "Apparel"], ["potions", "Potions"], ["scrolls", "Scrolls"], ["books", "Books"], ["ingredients", "Ingredients"], ["food", "Food"], ["misc", "Misc"]];
+  const ITEM_CATS = [["gear", "Worn"], ["all", "All"], ["weapons", "Weapons"], ["apparel", "Apparel"], ["potions", "Potions"], ["scrolls", "Scrolls"], ["food", "Food"], ["ingredients", "Ingredients"], ["books", "Books"], ["misc", "Misc"]];
   const catOf = (it) => it.slot === "food" ? "food" : it.slot === "weapon" || it.slot === "ammo" ? "weapons" : G.ARMOR_SLOTS.includes(it.slot) || it.slot === "ring" || it.slot === "amulet" ? "apparel" : ["potion", "poison"].includes(it.slot) ? "potions"
     : it.slot === "scroll" ? "scrolls" : it.slot === "tome" || it.slot === "recipe" ? "books" : it.slot === "ingredient" ? "ingredients" : "misc";
   const MAGIC_CATS = [["all", "All"], ["destruction", "Destruction"], ["restoration", "Restoration"], ["alteration", "Alteration"], ["conjuration", "Conjuration"], ["illusion", "Illusion"], ["mysticism", "Mysticism"], ["support", "Support"], ["powers", "Powers"], ["shouts", "Shouts"], ["effects", "Active effects"]];
   const SKILL_CATS = [["all", "All"], ["combat", "Warrior"], ["magic", "Mage"], ["stealth", "Thief"], ["other", "Other"]];
   const SKILL_GROUP = { combat: "Warrior", magic: "Mage", stealth: "Thief" };
-  function openMenu(page = "items") { SOUND.fx("page"); sky = { ...sky, page, cat: page === "items" ? "gear" : "all", sel: null }; renderMenu(); }
+  function openMenu(page = "items") { SOUND.fx("page"); sky = { ...sky, page, cat: page === "items" ? "gear" : "all", sel: null, q: page === sky.page ? sky.q : "" }; renderMenu(); }
   function closeMenu() { if ($("#sky")) { $("#sky").remove(); if (typeof MENUS !== "undefined") MENUS.skyOn(null); } }
   function itemStat(r) {
     const it = D.ITEMS[r.item];
@@ -1498,8 +1498,11 @@
     const q = (sky.q || "").toLowerCase();
     let rows = S.inv.filter((r) => D.ITEMS[r.item] && (sky.cat === "all" || catOf(D.ITEMS[r.item]) === sky.cat) && (!q || ((r.tq ? TOWNS.QUALITY[r.tq] + " " : "") + D.ITEMS[r.item].name).toLowerCase().includes(q))).map((r) => {
       const it = D.ITEMS[r.item];
-      return { id: r.id, r, it, name: (r.tq ? TOWNS.QUALITY[r.tq] + " " : "") + it.name + (r.nm ? ` “${r.nm}”` : ""), stat: itemStat(r), weight: +(it.weight * r.qty).toFixed(2), value: it.value, eq: eqIds.has(r.id) };
+      const weight = +(it.weight * r.qty).toFixed(2), arm = G.ARMOR_SLOTS.includes(it.slot) ? (it.armor || 0) + (r.temper || 0) : null;
+      return { id: r.id, r, it, name: (r.tq ? TOWNS.QUALITY[r.tq] + " " : "") + it.name + (r.nm ? ` “${r.nm}”` : ""), stat: itemStat(r), weight, value: it.value, eq: eqIds.has(r.id),
+        dmg: it.slot === "weapon" ? it.damage + (r.temper || 0) : null, arm, ratio: +(it.value * r.qty / Math.max(0.1, weight)).toFixed(1), new: r.id };
     });
+    if (typeof MENUS2 !== "undefined") return MENUS2.sortItems(rows, sky.sort, sky.dir || 1);   // menus2.js: one sort row
     const k = sky.sort, d = sky.dir;
     rows.sort((a, b) => (b.eq - a.eq) || (k === "name" ? a.name.localeCompare(b.name) * d : (((a[k] ?? -1) - (b[k] ?? -1)) * -d) || a.name.localeCompare(b.name)));
     return typeof INVQOL !== "undefined" && S.invSort ? INVQOL.sorted(S, rows, (x) => x.r).sort((a, b) => b.eq - a.eq) : rows;   // pack sort chips (invqol.js)
@@ -1586,8 +1589,10 @@
     if (S.stone) out.push({ id: "fx:stone", cat: "effects", name: POWERS.STONES[S.stone][0], cost: null, sub: "Standing stone" });
     const tierOk = (r) => !sky.tier || sky.tier === "all" || r.tier === sky.tier;
     const res = out.filter((r) => (sky.cat === "all" ? !r.id.startsWith("fx:") : sky.cat === "support" ? r.support : r.cat === sky.cat) && tierOk(r));
-    if (sky.msort === "cost") res.sort((a, b) => (a.cost ?? 1e9) - (b.cost ?? 1e9) || a.name.localeCompare(b.name));
-    return res;
+    const q = (sky.q || "").trim().toLowerCase(), res2 = q ? res.filter((r) => r.name.toLowerCase().includes(q)) : res;
+    if (typeof MENUS2 !== "undefined") { const o = MENUS2.sortMagic(res2, sky.msort || "name", sky.mdir || 1); return [...o.filter((r) => r.id === "fx:souls"), ...o.filter((r) => r.id !== "fx:souls")]; }   // menus2.js: Name / Cost / School, ▲▼ (dragon souls stay on top)
+    if (sky.msort === "cost") res2.sort((a, b) => (a.cost ?? 1e9) - (b.cost ?? 1e9) || a.name.localeCompare(b.name));
+    return res2;
   }
   function magicDetail(row) {
     const [kind, arg] = row.id.split(":");
@@ -1642,17 +1647,17 @@
       <button class="btn ${armed ? "danger" : "pri"}" data-act="legend" data-id="${esc(sk)}">${armed ? `Yes, reset ${esc(sk)} to ${LEGEND.START}` : "⭐ Make Legendary"}</button>${armed ? ` <button class="btn" data-act="legendno">Not now</button>` : ""}</div>`;
   }
   /* a clear view of where your levels stand (top of the Character screen) */
-  function progressPanel() {
+  function progressPanel(inner = false) {
     if (typeof LEGEND === "undefined") return "";
     const p = LEGEND.progress(S);
     const near = p.closest.map((r) => `<button class="item prog-row" data-act="skinfo" data-id="${esc(r.sk)}">${UIART.skill(r.sk, 24)}<div class="t">${esc(r.sk)} ${r.lvl} → ${r.lvl + 1}<span><span class="bar"><i style="width:${r.pct}%;background:var(--frost)"></i></span>${r.pct}% there</span></div></button>`).join("");
     const ready = p.ready.length ? `<p class="sub leg-ready">⭐ Ready to make Legendary: ${p.ready.map((r) => `<button class="linkbtn" data-act="skinfo" data-id="${esc(r.sk)}">${esc(r.sk)}</button>`).join(", ")}</p>` : "";
-    return `<div class="panel prog-panel"><h2>Progress</h2>
-      <p class="sub">Level ${p.level} · ${p.charPct}% to level ${p.level + 1}. Every skill point you gain moves this bar (higher skills move it more), so every skill counts.</p>
+    const body = `<p class="sub">Level ${p.level} · ${p.charPct}% to level ${p.level + 1}. Every skill point you gain moves this bar (higher skills move it more), so every skill counts.</p>
       <div class="bar"><i style="width:${p.charPct}%;background:var(--gold)"></i></div>
       <p class="sub" style="margin-top:8px">Perk points to spend: <b>${PERKS.pointsLeft(S)}</b>${p.stars ? ` · Legendary stars: <b class="leg-stars">${p.stars}★</b>` : ""}</p>
       <p class="sub">Foes match your <b>fighting level ${p.fightLevel}</b>${p.fightLevel < p.level ? ` (lower than your level ${p.level}: crafting, trading and sneaking don't make the road harder)` : ""}. It follows your best weapon or spell skill and your best armor or defence skill, so better gear and skills always win you fights.</p>
-      ${near ? `<h4 style="margin:10px 0 4px">Closest to going up</h4><div class="list">${near}</div>` : ""}${ready}</div>`;
+      ${near ? `<h4 style="margin:10px 0 4px">Closest to going up</h4><div class="list">${near}</div>` : ""}${ready}`;
+    return inner ? body : `<div class="panel prog-panel"><h2>Progress</h2>${body}</div>`;
   }
   // ---- skills
   function skillRows() {
@@ -1674,14 +1679,15 @@
       list = `<div class="sky-doll">${dollScreen()}${typeof AMMO !== "undefined" && AMMO.status(S) && !AMMO.status(S).best ? ammoNote() : ""}<p class="sub" style="text-align:center;margin:8px 0 0">Tap a slot to change what you wear. Loadout: <b>${esc(S.loadout)}</b></p></div>`;
     } else if (sky.page === "items") {
       const rows = itemRows(); const sel = rows.find((r) => r.id === sky.sel) || null;
-      const arrow = (k) => sky.sort === k && !S.invSort ? (sky.dir > 0 ? " ▾" : " ▴") : "";
-      head = `${typeof INVQOL !== "undefined" ? INVQOL.sortHTML(S) : ""}<div class="sky-head sky-cols"><button data-act="skysort" data-id="name">Name${arrow("name")}</button><button data-act="skysort" data-id="stat">${{ weapons: "Dmg", apparel: "Armor", potions: "Power" }[sky.cat] || "Stat"}${arrow("stat")}</button><button data-act="skysort" data-id="weight">Wt${arrow("weight")}</button><button data-act="skysort" data-id="value">Value${arrow("value")}</button></div>`;
+      const M2 = typeof MENUS2 !== "undefined", sk2 = sky.sort === "dmg" || sky.sort === "arm" ? "stat" : sky.sort;
+      const arrow = (k) => sk2 === k && (M2 || !S.invSort) ? ((sky.dir || 1) > 0 ? " ▾" : " ▴") : "";
+      head = `${M2 ? MENUS2.itemSortBar(sky) : typeof INVQOL !== "undefined" ? INVQOL.sortHTML(S) : ""}<div class="sky-head sky-cols"><button data-act="skysort" data-id="name">Name${arrow("name")}</button><button data-act="skysort" data-id="${sky.cat === "apparel" ? "arm" : sky.cat === "weapons" ? "dmg" : "stat"}">${{ weapons: "Dmg", apparel: "Armor", potions: "Power" }[sky.cat] || "Stat"}${arrow("stat")}</button><button data-act="skysort" data-id="weight">Wt${arrow("weight")}</button><button data-act="skysort" data-id="value">Value${arrow("value")}</button></div>`;
       list = rows.map((r) => `<button class="sky-row sky-cols ${r.id === sky.sel ? "sel" : ""} ${r.eq ? "eq" : ""}" data-act="skysel" data-id="${r.id}"><span class="nm q-${typeof CC !== "undefined" ? CC.tier(r.r.item, r.r) : "common"}${r.r.stolen ? " is-stolen" : ""}">${r.eq ? '<b class="eqm" title="Equipped" aria-label="Equipped">◆</b>' : ""}${ICONART.item(r.r.item, 24, r.r)}${r.eq ? "" : iqB(r.r.item, r.r)}${esc(r.name)}${r.r.qty > 1 ? ` <i>(${r.r.qty})</i>` : ""}${r.it.enchant || r.it.aenchant ? ' <i class="ench">✦</i>' : ""}${r.r.stolen ? ' <i class="stolen">✋</i>' : ""}</span><span class="num">${r.stat ?? "–"}</span><span class="num">${r.weight}</span><span class="num">${r.value}</span></button>`).join("") || `<p class="sub sky-empty">${sky.q ? `Nothing called “${esc(sky.q)}” here. Try “All”, or part of the name.` : "Nothing here. Buy things in town or loot them on the road."}</p>`;
       detail = sel ? itemDetail(sel) : "";
     } else if (sky.page === "magic") {
       const rows = magicRows(); const sel = rows.find((r) => r.id === sky.sel) || null;
       const tiers = ["all", "Novice", "Apprentice", "Adept", "Expert", "Master"];
-      head = `<div class="sb-tiers">${tiers.map((t) => `<button class="sb-tier ${(sky.tier || "all") === t ? "on" : ""} tier-${t.toLowerCase()}" data-act="skytier" data-id="${t}">${t === "all" ? "All tiers" : t}</button>`).join("")}</div><div class="sky-head sky-cols2"><button data-act="skymsort" data-id="name">Name${sky.msort !== "cost" ? " ▾" : ""}</button><button data-act="skymsort" data-id="cost">Cost${sky.msort === "cost" ? " ▾" : ""}</button></div>`;
+      head = `<div class="sb-tiers">${tiers.map((t) => `<button class="sb-tier ${(sky.tier || "all") === t ? "on" : ""} tier-${t.toLowerCase()}" data-act="skytier" data-id="${t}">${t === "all" ? "All tiers" : t}</button>`).join("")}</div>${typeof MENUS2 !== "undefined" ? MENUS2.magicSortBar(sky) : `<div class="sky-head sky-cols2"><button data-act="skymsort" data-id="name">Name${sky.msort !== "cost" ? " ▾" : ""}</button><button data-act="skymsort" data-id="cost">Cost${sky.msort === "cost" ? " ▾" : ""}</button></div>`}`;
       list = rows.map((r) => `<button class="sky-row sky-cols2 ${r.id === sky.sel ? "sel" : ""} ${inTactics(r.id) ? "eq" : ""}${r.school ? ` sch-${r.school.toLowerCase()}` : ""}${r.el ? ` el-${r.el}` : ""}${r.support ? " sb-sup" : ""}" data-act="skysel" data-id="${esc(r.id)}"><span class="nm sk-nm ${typeof CC !== "undefined" ? `sch-${CC.school(r.id)} el-${CC.element(r.id) || "none"}` : ""}">${magicIcon(r.id, 26)}<span>${esc(r.name)}<small>${esc(r.sub)}</small></span></span><span class="num cost-mag">${r.cost ?? ""}</span></button>`).join("") || '<p class="sub sky-empty">Nothing here.</p>';
       detail = sel ? magicDetail(sel) : "";
     } else {
@@ -1692,6 +1698,7 @@
         <div class="sky-acts">${PERKS.TREES[sel.id] ? `<button class="btn pri" data-act="skyperks" data-id="${esc(sel.id)}">Perk tree</button>` : ""}</div></div>` : "";
       if (S.pendingLevels > 0) detail = `<div class="sky-detail"><h3>Level up</h3><p class="sub">Choose what grows (+10), like Skyrim.</p><div class="sky-acts"><button class="btn" data-act="lvl" data-a="health">Health</button><button class="btn" data-act="lvl" data-a="magicka">Magicka</button><button class="btn" data-act="lvl" data-a="stamina">Stamina</button></div></div>` + detail;
     }
+    const M2c = typeof MENUS2 !== "undefined", cnt = M2c && sky.page === "items" ? MENUS2.counts(S.inv, D.ITEMS, catOf) : null;   // menus2.js: counts on the category column
     const f = new G.Fight(S, { name: "-", health: 1, damage: 0, tags: [] });
     const armor = Math.round(f.armorRating().rating);
     let dmg = 0; for (let i = 0; i < 8; i++) dmg += f.weaponDamage(); dmg = Math.round(dmg / 8);
@@ -1700,10 +1707,9 @@
       <div class="sky-top"><button class="iconbtn" data-act="skyclose" aria-label="Close menu">✕</button>
         <div class="sky-pages">${[["items", "Items"], ["magic", "Magic"], ["skills", "Skills"]].map(([p, l]) => `<button class="sky-page ${p === sky.page ? "on" : ""}" data-act="skytab" data-id="${p}">${l}</button>`).join("")}</div><button class="uxi sky-i" data-act="uxhelp" data-id="pack" aria-label="What is this screen?" aria-expanded="${uxHelpOpen === "pack"}">ⓘ</button></div>
       ${uxHelpOpen === "pack" ? `<div class="uxpop" role="note"><p>${sky.page === "items" ? SCREEN_HELP.pack[2] : sky.page === "magic" ? "Your spells, powers and shouts. Tap one to read it and to add it to your fight tactics." : "Your skills. They grow as you use them; tap one to see its perk tree and how to raise it."}</p>${typeof CC !== "undefined" ? CC.legend() : ""}<button class="btn sm" data-act="uxhelp" data-id="pack">Got it</button></div>` : ""}
-      <div class="sky-cats">${cats.map(([k, l]) => `<button class="sky-cat ${k === sky.cat ? "on" : ""}" data-act="skycat" data-id="${k}" aria-label="${l}">${svgI(k)}<span>${l}</span></button>`).join("")}</div>
-      <div class="sky-title">${esc((cats.find(([k]) => k === sky.cat) || cats[0])[1])}</div>
-      ${sky.page === "items" ? `<input id="skysearch" class="uxsearch sky-search" type="search" placeholder="🔍 Find an item by name" value="${esc(sky.q || "")}" autocomplete="off" aria-label="Find an item">` : ""}
-      ${head}<div class="sky-list">${list}</div>${detail}
+      <div class="sky-cats" role="tablist">${cats.map(([k, l]) => `<button class="sky-cat ${k === sky.cat ? "on" : ""}" data-act="skycat" data-id="${k}" role="tab" aria-selected="${k === sky.cat}" aria-label="${l}">${svgI(k)}<span>${l}</span>${M2c && cnt ? MENUS2.badge(k === "gear" ? 0 : cnt[k]) : ""}</button>`).join("")}</div>
+      <div class="sky-mid">${sky.page !== "skills" && !(sky.page === "items" && sky.cat === "gear") ? `<input id="skysearch" class="uxsearch sky-search" type="search" placeholder="${sky.page === "magic" ? "🔍 Find a spell by name" : "🔍 Find an item by name"}" value="${esc(sky.q || "")}" autocomplete="off" aria-label="${sky.page === "magic" ? "Find a spell" : "Find an item"}">` : ""}
+      ${head}<div class="sky-list">${list}</div></div>${detail || (M2c && !(sky.page === "items" && sky.cat === "gear") ? MENUS2.pickHint(sky.page) : "")}
       <div class="sky-foot"><span>Armor <b class="num">${armor}</b></span><span>Damage <b class="num">${dmg}</b></span><span>Weight <b class="num">${G.carried(S).toFixed(0)}/${G.capacity(S)}</b></span><span class="gold">${S.gold} gold</span></div>
       <div class="sky-vitals"><div class="bar"><i style="width:${pct(hp, mh)}%;background:var(--hp)"></i></div><div class="bar"><i style="width:100%;background:var(--mp)"></i></div><div class="bar"><i style="width:100%;background:var(--sp)"></i></div></div>
     </div>`;
@@ -2072,6 +2078,7 @@
   }
   function bloodPanel() {
     const t = G.now(), here = S.location;
+    const bpx = (k) => (typeof BEASTPATH !== "undefined" ? BEASTPATH.panelExtra(S, k) : "");   // forms, moves, hunger and townsfolk (beastpaths.js)
     const tree = (k) => typeof BEASTART !== "undefined" ? BEASTART.panel(S, k) : "";
     const cureQ = (id) => { const v = (S.quests || {})[id], d = QUESTS.L[id]; if (!d || !v || v.done) return ""; const st = d.stages[v.stage];
       return `<div class="item on"><div class="t">📜 ${esc(d.name)}: ${esc(st.title)}<span>${esc(st.text)}</span></div></div>`; };
@@ -2079,14 +2086,15 @@
       const st = CURSE.stage(S), dd = CURSE.daysUnfed ? CURSE.daysUnfed(S) : CURSE.hoursUnfed(S) / 2, dtxt = dd < 1 ? `${Math.round(dd * 24)} in-game hours` : `${dd.toFixed(1)} in-game days`;
       return `<div class="panel" style="border-color:#7a1414"><h2>🩸 Vampire</h2><p class="sub">Hunger: stage ${st} of 4 (${dtxt} since you fed; one stage per day). The hungrier you are, the stronger your Destruction and Illusion and your night-time blows, the less frost hurts you, and the more fire burns. Poison barely touches you. By day the sun slows your healing outside. Feed at an inn (Area tab), or win a fight as a Vampire Lord.</p>
         <div class="item"><div class="t">🦇 Vampire Lord<span>Once a day, in your Tactics: for ${CURSE.LORD_TURNS || 12} turns you drain the foe's life every turn and take less damage. No potions while changed.</span></div><span class="num sub">${CURSE.lordReady(S) ? "Ready" : "Used today"}</span></div>
-        ${cureQ("cure_vamp")}${tree("lord")}</div>`;
+        ${bpx("lord")}${cureQ("cure_vamp")}${tree("lord")}</div>`;
     }
+    if (S.moonblood && typeof BEASTPATH !== "undefined") return BEASTPATH.moonPanel(S);
     if (S.sanguinare) {
       const left = Math.max(0, CURSE.TURN_AFTER - (t - S.sanguinare.at)), h = Math.floor(left / 3600), m = Math.ceil((left % 3600) / 60);
       return `<div class="panel" style="border-color:#7a1414"><h2>🩸 Sanguinare Vampiris</h2><p class="sub">A vampire's disease. In about ${h ? `${h} h ` : ""}${m} min (${(left / CURSE.DAY).toFixed(1)} in-game days) you'll turn into a vampire. Drink a Potion of Cure Disease (general stores, court wizards) or pray at a roadside shrine to stop it, or let it happen.</p></div>`;
     }
     if (S.werewolf) return `<div class="panel" style="border-color:var(--gold)"><h2>🐺 Werewolf</h2><p class="sub">Beast Form, once a day, is in your Tactics: for ${CURSE.BEAST_TURNS} turns you hit much harder, take less damage and heal a bit, but can't drink potions. Win a fight in Beast Form against a person and you feed: it heals you and grows your werewolf perks. Beds no longer make you Rested, and you can't catch diseases.</p>
-      ${cureQ("cure_wolf")}${tree("wolf")}</div>`;
+      ${bpx("wolf")}${cureQ("cure_wolf")}${tree("wolf")}</div>`;
     if (CURSE.offered(S)) return `<div class="panel" style="border-color:var(--gold)"><h2>🐺 The Circle's offer</h2><p class="sub">The Companions' inner circle offers you their secret: the blood of the beast. Once a day you can turn into a werewolf in a fight, and feeding grows its own perk stars. Beds won't make you Rested any more. If you ever want it gone, Aela knows how: the Glenmoril witches' heads.</p>
       <div class="grid2"><button class="btn pri" data-act="wolfyes" ${here === "Whiterun" ? "" : "disabled"}>Accept${here === "Whiterun" ? "" : " (in Whiterun)"}</button><button class="btn" data-act="wolfno">No, thank you</button></div></div>`;
     return "";
@@ -2682,7 +2690,7 @@
     hero: ["Character", "Level, skills and perks", "Skills grow as you use them. When you level up, choose Health, Magicka or Stamina and spend perk points in a skill's tree. Below are your powers, shouts, standing stone and achievements."],
     pack: ["Pack", "What you carry and wear", "Open your things to wear, use, compare or drop them. Use the search box to find an item by name. Heavy packs slow you down: sell things or store them at home."],
     tactics: ["Tactics", "How you fight", "Fights play out by themselves. Your rules are checked from the top every turn, like “health below 40% → drink a potion”. Test them against a dummy before a real fight."],
-    town: ["Town", "Shops and services here", "Pick a place from the groups: Shops to buy and sell, Services for the inn, trainers and the forge, Guilds & jobs for paid work. Shops close at night (20:00–08:00)."],
+    town: ["Area", "Places in this town", "Places are grouped like a town: Inn, Market, Services & trainers, Work & jobs, Your home, and Events & fun. Tap one to open it; the ‹ button brings you back. Things ready for you show on top under Right now. Shops close at night (20:00–08:00)."],
     log: ["Journal", "Your quests", "Active quests sit on shelves: main story, Solstheim, Civil War, guilds, Daedric and side quests. Misc holds jobs, bounties, cures and treasure maps. ☆ Track a quest to steer the compass, the map and the What to do next card. Chat, party and the world moved to 👥 Friends; stats and the diary to Character."],
     social: ["Social", "Friends, messages and trades", "Add players as friends, send them messages, and trade by courier from anywhere."],
   };
@@ -2702,6 +2710,7 @@
     side.innerHTML = tutTip() + (typeof MENUS !== "undefined" ? MENUS.subnav(tab) : "") + screenHead() + ({ ...mnp, map: panelTravel, hero: panelHero, pack: panelPack, tactics: panelTactics, town: panelTown, log: panelLog, social: panelSocial, stats: panelStats, diary: panelDiary, places: panelPlaces, ...twp }[tab] || panelTravel)();
     if (typeof TABMENU !== "undefined") TABMENU.afterPanel(tab);
     if (typeof MENUS !== "undefined") MENUS.afterPanel(tab);
+    if (typeof MENUS2 !== "undefined") MENUS2.afterPanel(tab, side);   // menus2.js: Find a quest
     if (!force) { side.querySelectorAll("details").forEach((d, i) => { if (openD[i] != null) d.open = openD[i]; }); scrollTo(0, y); }
     const cl = $("#chatlog"); if (cl) cl.scrollTop = cl.scrollHeight;
   }
@@ -2710,39 +2719,47 @@
   function nextCard() {
     if (S.dungeon) return "";
     const here = livePos(), eta = (n) => fmtMin(G.pxDist(here, WORLD.places[n]) * 1.1 / G.speed(S));
-    const rows = [];
-    const row = (ico, title, sub, btn) => rows.push(`<div class="item nx"><span class="nx-i" aria-hidden="true">${ico}</span><div class="t">${title}<span>${sub}</span></div>${btn || ""}</div>`);
-    if (S.trip && S.trip.destName) row("🧭", `On the way to ${esc(S.trip.destName)}`, "You keep travelling even with the app closed.", "");
+    const rows = [], MP = typeof MAPPANEL !== "undefined" ? MAPPANEL : null, R = [];   // mappanel.js: one merged, sorted card (with remind.js's Today rows)
+    const dist = (n) => (n && WORLD.places[n] ? G.pxDist(here, WORLD.places[n]) : 0);
+    const row = (ico, title, sub, btn, m = {}) => { const html = `<div class="item nx"><span class="nx-i" aria-hidden="true">${ico}</span><div class="t">${title}<span>${sub}</span></div>${btn || ""}</div>`; rows.push(html); R.push({ ...m, dist: dist(m.place), html }); };
+    if (S.trip && S.trip.destName) row("🧭", `On the way to ${esc(S.trip.destName)}`, "You keep travelling even with the app closed.", "", { kind: "trip", key: "trip" });
     QUESTS.ensure(S);
     const a = QUESTS.tracked(S);
     if (a) {
       const n = QUESTS.target(a.st), at = n && S.location === n, o = a.st.obj;
       const btn = o.talk && at ? `<button class="btn sm pri" data-act="qtalk" data-id="${a.id}">${esc(o.label)}</button>`
         : n && !at && WORLD.places[n] && !(S.trip && S.trip.destName === n) ? `<button class="btn sm pri" data-act="go" data-place="${esc(n)}">Go</button>` : "";
-      row("◆", `${esc(a.st.title)} <small class="nx-q">${esc(a.def.name)}</small>`, `${esc(a.st.text)}${n && !at && WORLD.places[n] ? ` · ${esc(n)} is ~${eta(n)} away` : ""}`, btn);
+      row("◆", `${esc(a.st.title)} <small class="nx-q">${esc(a.def.name)}</small>`, `${esc(a.st.text)}${n && !at && WORLD.places[n] ? ` · ${esc(n)} is ~${eta(n)} away` : ""}`, btn, { kind: "quest", key: "quest", place: n && !at ? n : null });
     }
-    if (S.pendingLevels > 0 || PERKS.pointsLeft(S) > 0) row("⬆", S.pendingLevels > 0 ? "You can level up" : `${PERKS.pointsLeft(S)} perk point${PERKS.pointsLeft(S) > 1 ? "s" : ""} to spend`, "Open Character to choose what grows.", `<button class="btn sm" data-act="uxtab" data-id="hero">Character</button>`);
-    if (S.location && !S.trip && (TOWNS.isTown(S.location) || G.shopTypes(S.location).length)) row("🏘", `You're in ${esc(S.location)}`, "Shops, the inn, trainers and jobs are in the Area tab.", `<button class="btn sm" data-act="uxtab" data-id="town">Town</button>`);
+    if ((S.pendingLevels > 0 || PERKS.pointsLeft(S) > 0) && !(MP && typeof REMIND !== "undefined")) row("⬆", S.pendingLevels > 0 ? "You can level up" : `${PERKS.pointsLeft(S)} perk point${PERKS.pointsLeft(S) > 1 ? "s" : ""} to spend`, "Open Character to choose what grows.", `<button class="btn sm" data-act="uxtab" data-id="hero">Character</button>`);
+    if (S.location && !S.trip && (TOWNS.isTown(S.location) || G.shopTypes(S.location).length)) row("🏘", `You're in ${esc(S.location)}`, "Shops, the inn, trainers and jobs are in the Area tab.", `<button class="btn sm" data-act="uxtab" data-id="town">Area</button>`, { kind: "town", key: "town" });
     const ob = typeof ONBOARD !== "undefined" ? ONBOARD.rows(S, { here, eta, known, quest: a?.id, online: Store.online, party: !!party, max: 4 - rows.length }) : null;   // [onboard] 1-3 ideas from your state
-    if (ob) rows.push(...ob);
+    if (ob) { rows.push(...ob); ob.forEach((html, i) => { const place = MP ? MP.placeOf(html) : null; R.push({ kind: "idea", key: `idea${i}`, place, dist: dist(place), html }); }); }
     const g = !ob && typeof GUIDE !== "undefined" && S.level < 15 ? GUIDE.STEPS.find((st) => !st[3](S)) : null;
-    if (g) row("📖", `Next step: ${esc(g[1])}`, esc(g[2]), `<button class="btn sm" data-act="guidego" data-id="${g[0]}">Show me</button>`);
+    if (g) row("📖", `Next step: ${esc(g[1])}`, esc(g[2]), `<button class="btn sm" data-act="guidego" data-id="${g[0]}">Show me</button>`, { kind: "guide", key: "guide" });
     if (!S.trip) {
       const near = Object.keys(WORLD.places).filter((n) => known(n) && n !== S.location && !S.discovered.includes(n)).map((n) => [n, G.pxDist(here, WORLD.places[n])]).sort((x, y) => x[1] - y[1])[0];
-      if (near && rows.length < 4) row("✦", `Explore ${esc(near[0])}`, `${KIND[WORLD.places[near[0]][2]]} you haven't visited · ~${eta(near[0])}`, `<button class="btn sm" data-act="go" data-place="${esc(near[0])}">Go</button>`);
+      if (near && (MP || rows.length < 4)) row("✦", `Explore ${esc(near[0])}`, `${KIND[WORLD.places[near[0]][2]]} you haven't visited · ~${eta(near[0])}`, `<button class="btn sm" data-act="go" data-place="${esc(near[0])}">Go</button>`, { kind: "explore", key: "explore", place: near[0] });
+    }
+    if (MP) {
+      const rm = typeof REMIND !== "undefined" ? REMIND.items(S) : [];
+      for (const { x, html } of rm) R.push({ kind: x.state === "ready" ? (x.kind === "hero" ? "hero" : "ready") : x.state, key: x.key, place: x.place && x.place !== S.location ? x.place : null, at: x.at, dist: x.place ? dist(x.place) : 0, html });
+      return MP.card(R, ob && ob.length ? ONBOARD.foot() : "");
     }
     if (!rows.length) return "";
     return `<div class="panel nextcard"><h2>What to do next</h2><div class="list">${rows.join("")}</div>${ob && ob.length ? ONBOARD.foot() : ""}</div>`;
   }
   function panelTravel() {
     const here = livePos();
-    const places = Object.keys(WORLD.places).filter((n) => known(n) && n !== S.location && WORLD.same(here, WORLD.places[n]) && n.toLowerCase().includes(searchText.toLowerCase()))
-      .map((n) => ({ n, d: G.pxDist(here, WORLD.places[n]) })).sort((a, b) => a.d - b.d);
+    const MP = typeof MAPPANEL !== "undefined" ? MAPPANEL : null;   // mappanel.js: All / Towns / Dungeons / Not visited / Other
+    const all = Object.keys(WORLD.places).filter((n) => known(n) && n !== S.location && WORLD.same(here, WORLD.places[n]) && n.toLowerCase().includes(searchText.toLowerCase()))
+      .map((n) => ({ n, d: G.pxDist(here, WORLD.places[n]), kind: WORLD.places[n][2], visited: S.discovered.includes(n) })).sort((a, b) => a.d - b.d);
+    const places = MP ? all.filter((p) => MP.match(p.kind, p.visited)) : all;
     const bag = myBag();
-    return `${ppUI ? ppUI.panelHTML() : ""}${typeof WFX !== "undefined" ? WFX.coldHTML(S) : ""}${nextCard()}${typeof REMIND !== "undefined" ? REMIND.card(S) : ""}${placeHere()}${typeof EXPLORE !== "undefined" ? EXPLORE.placeCard(S) : ""}${typeof RUMOURS !== "undefined" ? RUMOURS.card(S) : ""}${typeof GATHER !== "undefined" ? GATHER.card(S) : ""}<div class="panel"><h2>Where to?</h2><p class="sub">Tap a place on the map, or press <b>Go</b> below. Tap empty ground on the map to roam off the road.</p>${typeof FASTQOL !== "undefined" ? FASTQOL.recentHTML(S) : ""}
-      <input id="search" placeholder="Search places" value="${esc(searchText)}" autocomplete="off" aria-label="Search places">
+    return `${ppUI ? ppUI.panelHTML() : ""}${typeof WFX !== "undefined" ? WFX.coldHTML(S) : ""}${nextCard()}${typeof REMIND !== "undefined" && typeof MAPPANEL === "undefined" ? REMIND.card(S) : ""}${placeHere()}${typeof EXPLORE !== "undefined" ? EXPLORE.placeCard(S) : ""}${typeof RUMOURS !== "undefined" ? RUMOURS.card(S) : ""}${typeof GATHER !== "undefined" ? GATHER.card(S) : ""}<div class="panel"><h2>Where to?</h2><p class="sub">Tap a place on the map, or press <b>Go</b> below. Tap empty ground on the map to roam off the road.</p>${typeof FASTQOL !== "undefined" ? FASTQOL.recentHTML(S) : ""}
+      <input id="search" placeholder="Search places" value="${esc(searchText)}" autocomplete="off" aria-label="Search places">${MP ? MP.chips(MP.countAll(all)) : ""}
       <div class="list">${bag ? `<div class="item on"><div class="t">🎒 Your lost bag<span>${bag.gold} gold · ${Math.max(0, Math.floor((bag.expires - G.now()) / 60))} min left before it's fair game</span></div><button class="btn pri sm" data-act="go" data-place="__bag">Go</button></div>` : ""}
-      ${places.slice(0, searchText || uxAllPlaces ? 40 : 8).map(({ n, d }) => { const k = WORLD.places[n][2]; return `<div class="item"><div class="t">${esc(n)}<span>${KIND[k]} · ${esc(G.holdAt(WORLD.places[n]))}${typeof PLACESTUFF !== "undefined" ? PLACESTUFF.tag(n) : ""}${S.discovered.includes(n) ? "" : " · unvisited"}${(() => { const lf = DUNGEONS.enterable(n) ? DUNGEONS.refillLeft(S, n) : 0; return lf ? ` · 🔒 opens in ${cdSpan(G.now() + lf)}` : ""; })()}</span></div><span class="num sub">${d * 1.1 / G.speed(S) < 1 ? "" : "~"}${fmtMin(d * 1.1 / G.speed(S))}</span><button class="btn sm" data-act="go" data-place="${esc(n)}">Go</button></div>`; }).join("") || `<p class="sub">No places match “${esc(searchText)}”. Try part of the name, like “riv”.</p>`}${!searchText && places.length > 8 ? `<button class="btn" data-act="uxall" style="width:100%;margin-top:8px">${uxAllPlaces ? "Show only the nearest" : `Show all ${places.length} places`}</button>` : ""}${(() => { const n = Object.keys(clearedLeft()).length; return `<button class="btn" data-act="tabgo" data-id="places" style="width:100%;margin-top:8px">📍 Locations: cleared places${n ? ` (${n})` : ""}</button>`; })()}</div>
+      ${places.slice(0, searchText || uxAllPlaces ? 40 : 8).map(({ n, d }) => { const k = WORLD.places[n][2]; return `<div class="item"><div class="t">${esc(n)}<span>${KIND[k]} · ${esc(G.holdAt(WORLD.places[n]))}${typeof PLACESTUFF !== "undefined" ? PLACESTUFF.tag(n) : ""}${S.discovered.includes(n) ? "" : " · unvisited"}${(() => { const lf = DUNGEONS.enterable(n) ? DUNGEONS.refillLeft(S, n) : 0; return lf ? ` · 🔒 opens in ${cdSpan(G.now() + lf)}` : ""; })()}</span></div><span class="num sub">${d * 1.1 / G.speed(S) < 1 ? "" : "~"}${fmtMin(d * 1.1 / G.speed(S))}</span><button class="btn sm" data-act="go" data-place="${esc(n)}">Go</button></div>`; }).join("") || (searchText ? `<p class="sub">No places match “${esc(searchText)}”. Try part of the name, like “riv”.</p>` : `<p class="sub">No places of this kind yet. Tap All to see every place.</p>`)}${!searchText && places.length > 8 ? `<button class="btn" data-act="uxall" style="width:100%;margin-top:8px">${uxAllPlaces ? "Show only the nearest" : `Show all ${places.length} places`}</button>` : ""}${(() => { const n = Object.keys(clearedLeft()).length; return `<button class="btn" data-act="tabgo" data-id="places" style="width:100%;margin-top:8px">📍 Locations: cleared places${n ? ` (${n})` : ""}</button>`; })()}</div>
       <p class="sub status ${Store.online ? "live" : ""}" style="margin-top:12px"><i></i>${Store.mode === "p2p" ? `The world · ${Store.peers ? `${Store.peers} other ${Store.peers === 1 ? "phone" : "phones"} online` : "looking for friends…"}` : Store.online ? `Shared world · ${others.length} other ${others.length === 1 ? "traveller" : "travellers"}` : APP ? "Offline game · saved on this phone" : "Saved in this browser only"}</p>${Store.online ? "" : onlineBtn()}</div>`;
   }
 
@@ -2758,18 +2775,18 @@
     const pts = PERKS.pointsLeft(S);
     const skillsWithPerks = Object.keys(PERKS.TREES);
     perkSkill = perkSkill && skillsWithPerks.includes(perkSkill) ? perkSkill : skillsWithPerks.slice().sort((a, b) => S.skills[b].lvl - S.skills[a].lvl)[0];
-    const perks = `<div class="panel"><h2>Perks ${pts > 0 ? `<span class="gold">· ${pts} to spend</span>` : ""}</h2><p class="sub">One perk point per level, like Skyrim. Pick a skill:</p>
+    const perks = `<p class="sub">One perk point per level, like Skyrim. Pick a skill:</p>
       <div class="chips" style="flex-wrap:wrap">${skillsWithPerks.map((k) => { const n = PERKS.TREES[k].filter(([id]) => PERKS.rank(S, id)).length; return `<button class="chip ${k === perkSkill ? "on" : ""}" data-act="pskill" data-id="${esc(k)}">${esc(k)} ${S.skills[k].lvl}${n ? ` · ${n}` : ""}</button>`; }).join("")}</div>
       <p class="sub perk-sum">${UIART.skill(perkSkill, 32)} ${esc(SKILLINFO.summary(perkSkill))} <button class="linkbtn" data-act="skinfo" data-id="${esc(perkSkill)}">How to raise it</button></p>
       <div class="list" style="margin-top:8px">${PERKS.TREES[perkSkill].map(([id, name, ranks]) => {
         const r = PERKS.rank(S, id), p = PERKS.BY_ID[id], err = PERKS.canTake(S, id);
         return `<div class="item ${r ? "on" : ""}" style="flex-wrap:wrap">${UIART.skill(perkSkill, 26)}<div class="t">${esc(name)}${ranks > 1 ? ` <span class="num">${r}/${ranks}</span>` : r ? " ✓" : ""}<span>${esc(PERKS.nowText(S, id))}${r < ranks ? ` · needs ${esc(perkSkill)} ${p.req[r]}${p.needs.length ? ` and ${p.needs.map((n) => esc(PERKS.BY_ID[n].name)).join(" or ")}` : ""}` : ""}</span></div>
-          ${r < ranks ? `<button class="btn sm ${err ? "" : "pri"}" data-act="perk" data-id="${id}" ${err ? "disabled" : ""}>Take</button>` : ""}</div>`; }).join("")}</div></div>`;
+          ${r < ranks ? `<button class="btn sm ${err ? "" : "pri"}" data-act="perk" data-id="${id}" ${err ? "disabled" : ""}>Take</button>` : ""}</div>`; }).join("")}</div>`;
     const t = G.now(), fx = (S.fx || []).filter((f) => f.until > t);
     const gfx = gearFx();
-    const effects = fx.length || gfx.length || G.rested(S) || S.poison ? `<div class="panel"><h2>Active effects</h2><div class="list">${gfx.map((g) => `<div class="item"><div class="t">${esc(fxLabel(g))}<span>from ${esc(g.from)} (while worn)</span></div></div>`).join("")}${G.rested(S) ? `<div class="item"><div class="t">${(S.restBonus || 0.05) >= 0.1 ? "Well Rested" : "Rested"}<span>Skills improve ${Math.round((S.restBonus || 0.05) * 100)}% faster · ${Math.ceil((S.rested - t) / 60)} min left</span></div></div>` : ""}
+    const effects = fx.length || gfx.length || G.rested(S) || S.poison ? `<div class="list">${gfx.map((g) => `<div class="item"><div class="t">${esc(fxLabel(g))}<span>from ${esc(g.from)} (while worn)</span></div></div>`).join("")}${G.rested(S) ? `<div class="item"><div class="t">${(S.restBonus || 0.05) >= 0.1 ? "Well Rested" : "Rested"}<span>Skills improve ${Math.round((S.restBonus || 0.05) * 100)}% faster · ${Math.ceil((S.rested - t) / 60)} min left</span></div></div>` : ""}
       ${S.poison ? `<div class="item"><div class="t">${esc(S.poison.name)} on your weapon<span>${S.poison.hits} hit${S.poison.hits > 1 ? "s" : ""} left</span></div></div>` : ""}
-      ${fx.map((f) => `<div class="item"><div class="t">${esc(f.name)} ${f.mag}<span>${Math.ceil((f.until - t) / 60)} min left</span></div></div>`).join("")}</div></div>` : "";
+      ${fx.map((f) => `<div class="item"><div class="t">${esc(f.name)} ${f.mag}<span>${Math.ceil((f.until - t) / 60)} min left</span></div></div>`).join("")}</div>` : "";
     const tnow = G.now(), rp = POWERS.RACE[S.race];
     const cd = (at) => { const m = Math.ceil(((at || 0) + POWERS.DAY - tnow) / 60); return m > 0 ? `ready in ${m} min` : "ready"; };
     const shoutRows = Object.entries(POWERS.SHOUTS).filter(([, [, words]]) => words.some((w) => POWERS.known(S, w))).map(([id, [name, words, cds, desc]]) => {
@@ -2778,21 +2795,26 @@
         <div style="display:flex;gap:6px;flex-wrap:wrap;width:100%">${words.filter((w) => POWERS.known(S, w) && !POWERS.unlocked(S, w)).map((w) => `<button class="btn sm" data-act="unlock" data-id="${w}" ${(S.souls || 0) > 0 ? "" : "disabled"}>Unlock ${w} (1 soul)</button>`).join("")}
         ${POWERS.ROAD_SHOUTS.includes(id) && lv ? `<button class="btn sm pri" data-act="roadshout" data-id="${id}" ${POWERS.voiceReady(S) ? "" : "disabled"}>Shout</button>` : ""}</div></div>`; }).join("");
     const fol = typeof FOL2 !== "undefined" ? FOL2.panel(S, esc) : S.follower ? `<div class="panel"><h2>Follower</h2><div class="item">${NPCART.follower(S.follower.id, 36)}<div class="t">${esc(TOWNS.FOLLOWERS[S.follower.id][0])}<span>${Math.round(TOWNS.followerHp(S))}/${TOWNS.followerMax(S, S.follower.id)} health · fights beside you · carries 100 for you · goes down instead of dying</span></div><button class="btn sm" data-act="dismiss">Dismiss</button></div></div>` : "";
-    const powersHtml = fol + `<div class="panel"><h2>Powers & shouts</h2><div class="list">
+    const powersHtml = `<div class="list">
       <div class="item">${UIART.power(S.race, 30)}<div class="t">${esc(rp[0])} <span class="num">${cd(S.powerAt)}</span><span>${esc(rp[1])} Once a day: put "Use my racial power" in your tactics.</span></div></div>
       <div class="item">${S.stone ? UIART.stone(S.stone, 30) : ""}<div class="t">${S.stone ? esc(POWERS.STONES[S.stone][0]) : "No standing stone"}${S.stone && POWERS.stoneHasPower(S) ? ` <span class="num">${cd(S.stonePowerAt)}</span>` : ""}<span>${S.stone ? esc(POWERS.STONES[S.stone][1]) : "Visit one of the 13 standing stones (Guardian Stones are near Riverwood) to take its blessing."}</span></div></div>
       ${shoutRows || `<p class="sub">No Words of Power yet. Word Walls wait at the end of Nordic barrows (Bleak Falls Barrow has one), and the Greybeards at High Hrothgar teach Unrelenting Force.</p>`}</div>
-      <p class="sub" style="margin-top:8px">Dragon souls: <b>${S.souls || 0}</b>${S.dragons ? ` · dragons slain: ${S.dragons}` : ""}. Kill a dragon to absorb its soul; each soul unlocks one word.${!POWERS.voiceReady(S) ? ` Your voice recovers in ${Math.ceil(S.voiceAt - tnow)} s.` : ""}</p></div>`;
+      <p class="sub" style="margin-top:8px">Dragon souls: <b>${S.souls || 0}</b>${S.dragons ? ` · dragons slain: ${S.dragons}` : ""}. Kill a dragon to absorb its soul; each soul unlocks one word.${!POWERS.voiceReady(S) ? ` Your voice recovers in ${Math.ceil(S.voiceAt - tnow)} s.` : ""}</p>`;
     const amN = typeof AMMO !== "undefined" ? AMMO.status(S) : null;
-    return `${charNav("hero")}${lvl}${progressPanel()}${amN && !amN.best ? `<div class="panel" style="border-color:var(--ember)">${ammoNote()}</div>` : ""}${effects}${powersHtml}${typeof RESPEC !== "undefined" ? RESPEC.panel(S) : ""}<div class="panel"><h2>${esc(S.name)}</h2><div class="herobox">${HEROART.figure(S, 160, 220)}</div>${amN?.best ? ammoNote() : ""}${(S.titles || []).length ? `<p class="sub" style="text-align:center;color:var(--gold)">${S.titles.map(esc).join(" · ")}</p>` : ""}<p class="sub">Level ${S.level} ${esc(D.RACES[S.race].name)} · ${esc(D.RACES[S.race].desc)}</p><p class="sub">📍 Places discovered: <b>${placesFound().got}</b> of ${placesFound().all}</p>
+    /* [menus2] one hero card on top, then sections that fold away (Skills and Perks have their own tabs too) */
+    const fold = typeof MENUS2 !== "undefined" ? MENUS2.fold : (id, title, html) => `<div class="panel"><h2>${title}</h2>${html}</div>`;
+    const fp = placesFound();
+    const card = `<div class="panel m2-hero"><h2>${esc(S.name)}</h2><div class="m2-herogrid"><div class="herobox">${HEROART.figure(S, 160, 220)}</div><div class="m2-herotxt">
+      ${(S.titles || []).length ? `<p class="sub m2-titles">${S.titles.map(esc).join(" · ")}</p>` : ""}<p class="sub">Level ${S.level} ${esc(D.RACES[S.race].name)} · ${esc(D.RACES[S.race].desc)}</p><p class="sub">📍 Places discovered: <b>${fp.got}</b> of ${fp.all}${S.horse ? ` · Horse: ${esc(S.horse.name)}` : ""}</p>
       <div class="bar" style="margin-top:8px"><i style="width:${pct(S.charXp, need)}%;background:var(--gold)"></i></div><p class="sub num">${Math.round(S.charXp)}/${need} toward level ${S.level + 1}</p>
-      <div class="grid2" style="grid-template-columns:repeat(3,minmax(0,1fr));margin-top:8px">
-        <div class="slot">Health<b class="num" style="display:block">${G.maxHealth(S)}</b></div><div class="slot">Magicka<b class="num" style="display:block">${G.maxMagicka(S)}</b></div><div class="slot">Stamina<b class="num" style="display:block">${G.maxStamina(S)}</b></div></div>
-      <p class="sub" style="margin-top:10px">Spells: ${S.spells.map((s) => esc(D.SPELLS[s].name)).join(", ")} · Power: ${esc(D.RACES[S.race].power)}${S.horse ? ` · Horse: ${esc(S.horse.name)}` : ""}</p>
-      ${(S.words || []).length ? `<p class="sub">Words of Power: ${S.words.map(esc).join(", ")}</p>` : ""}
-      ${groups}
-      <p class="sub" style="margin-top:14px">Skills rise as you use them, with Skyrim's own rates.</p>
-      <details style="margin-top:8px"><summary class="sub" style="cursor:pointer;min-height:36px">Start over</summary><p class="sub">Deletes this character for good.</p><button class="btn danger" data-act="wipe">Delete ${esc(S.name)}</button></details></div>${perks}${bloodPanel()}${typeof MENUS !== "undefined" ? "" : achPanel()}`;
+      <div class="grid2 m2-attrs"><div class="slot">Health<b class="num">${G.maxHealth(S)}</b></div><div class="slot">Magicka<b class="num">${G.maxMagicka(S)}</b></div><div class="slot">Stamina<b class="num">${G.maxStamina(S)}</b></div></div>
+      <div class="m2-links"><button class="btn sm" data-act="tabgo" data-id="stars">Skills</button><button class="btn sm" data-act="tabgo" data-id="perks">Perks${pts > 0 ? ` · ${pts}` : ""}</button><button class="btn sm" data-act="tabgo" data-id="stats">Stats</button></div></div></div>${amN?.best ? ammoNote() : ""}</div>`;
+    const start = `<details class="panel m2-wipe"><summary class="sub">Start over</summary><p class="sub">Deletes this character for good.</p><button class="btn danger" data-act="wipe">Delete ${esc(S.name)}</button></details>`;
+    return `${charNav("hero")}${lvl}${card}${amN && !amN.best ? `<div class="panel" style="border-color:var(--ember)">${ammoNote()}</div>` : ""}${typeof LEGEND !== "undefined" ? fold("progress", "Progress", progressPanel(true)) : ""}${effects ? fold("effects", "Active effects", effects) : ""}${fol}`
+      + fold("powers", "Powers & shouts", powersHtml, S.souls ? `<span>Dragon souls</span> <b class="num">${S.souls}</b>` : "")
+      + fold("skills", "Skills", `${groups}<p class="sub" style="margin-top:14px">Skills rise as you use them, with Skyrim's own rates.</p>`)
+      + fold("perks", `Perks${pts > 0 ? ` <span class="gold">· ${pts} to spend</span>` : ""}`, perks)
+      + `${typeof RESPEC !== "undefined" ? RESPEC.panel(S) : ""}${bloodPanel()}${typeof MENUS !== "undefined" ? "" : achPanel()}${start}`;
   }
 
   function panelPack() {
@@ -2876,7 +2898,7 @@
     const st = GUIDE.STEPS.find((x) => x[0] === id); if (!st) return;
     const to = st[4]; closeModal(); closeMenu?.();
     tab = to.tab;
-    if (to.shop) { if (S.location && G.shopTypes) townShop = to.shop; }
+    if (to.shop) { if (S.location && G.shopTypes) { townShop = to.shop; townShopAt = S.location; } }
     if (to.tab === "social") socTab = "friends";
     renderTabs(); renderPanel(true);
     $("#side").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
@@ -3062,8 +3084,12 @@
     }
     const open = G.shopsOpen() || (typeof RUMOURS !== "undefined" && RUMOURS.knocked(S, l)), wanted = TOWNS.wanted(S), hold = G.holdAt(WORLD.places[l]);   // knocked at night (rumours.js)
     const sections = [...types.filter((x) => x !== "stables"), ...(TOWNS.INNS[l] ? ["inn"] : []), ...(TOWNS.TRAINERS[l] ? ["train"] : []), "alchemy", ...(types.includes("blacksmith") || HALLS.hasForge(S, l) || (typeof HSROOMS !== "undefined" && HSROOMS.station(S, "forge")) ? ["forge"] : []), "jobs", "streets", ...(TOWNS.followersHere(S).length || l === "Whiterun" ? ["hire"] : []), ...(TOWNS.carriageFrom(l) ? ["carriage"] : []), ...(TOWNS.HOMES[l] ? ["home", "homes", "market"] : []), ...(SMITH.MINES[l] ? ["mine"] : []), ...(l === SPELLCRAFT.TOWN ? ["craft"] : []), ...(CARAVANS.stopsAt(l) ? ["caravans"] : []), ...(l === HALL.TOWN ? ["hall"] : []), ...(HALLS.plotHere(l) || hallDocs.some((d) => d.town === l) || S.hall?.town === l ? ["halls"] : []), "notice", ...(TOWNS.INNS[l] ? ["cook"] : []), ...(l === ARENA.TOWN ? ["arena"] : []), ...(COOK.waterNear(WORLD.places[l]) ? ["fish"] : []), ...(ENCH.hasEnchanter(l) || (typeof HSROOMS !== "undefined" && HSROOMS.station(S, "enchanter")) ? ["enchanter"] : []), ...(types.includes("stables") ? ["stables"] : []), ...(typeof SOL !== "undefined" ? SOL.sections(l) : []), ...(typeof HOMESTEAD !== "undefined" ? HOMESTEAD.sections(l) : [])];
-    townShop = sections.includes(townShop) ? townShop : sections[0];
+    const AU = typeof AREAUI !== "undefined" ? AREAUI : null;   // areaui.js: the Area tab opens on a board of grouped places
+    if (AU && townShopAt !== l) { if (townShopAt != null) townShop = ""; townShopAt = l; }   // a new town opens on its board
+    townShop = sections.includes(townShop) ? townShop : AU ? "" : sections[0];
     const names = { general: "General goods", blacksmith: "Blacksmith", wizard: "Court wizard", stables: "Stables", fence: "Ragged Flagon (fence)", inn: TOWNS.INNS[l] || "Inn", train: "Trainers", alchemy: "Alchemy lab", forge: "Forge", jobs: "Jobs", streets: "Streets", hire: l === "Whiterun" ? "Dragonsreach & hirelings" : "Hirelings", hall: "⚑ Hall of the North", halls: "🏰 Halls & shops", notice: "📜 Jarl's bounty", homes: "🏘 Neighbours", market: "🛒 Market stalls", mine: "⛏ Mine", craft: "✨ Spell crafting", caravans: "🐫 Caravans", cook: "🍲 Cooking pot", arena: "⚔ The Arena", fish: "🎣 Fishing", carriage: "Carriage", enchanter: "Arcane enchanter", home: TOWNS.home(S, l) ? `🏠 ${TOWNS.HOMES[l]?.[0]}` : `Buy ${TOWNS.HOMES[l]?.[0]}`, ...(typeof SOL !== "undefined" ? SOL.NAMES : {}), ...(typeof HOMESTEAD !== "undefined" ? HOMESTEAD.names(S, l) : {}) };
+    const townTop = `${typeof CIVILWAR !== "undefined" ? CIVILWAR.townLine(S, l) : ""}${wanted ? `<p class="sub danger-high">You're wanted in ${esc(hold)}. Shops, inns and trainers turn you away.</p>` : ""}`;
+    if (AU && !townShop) return `<div class="panel au-panel"><h2>${esc(l)}</h2>${PLACEART.scene(l)}${townTop}${typeof RUMOURS !== "undefined" ? RUMOURS.townHTML(S, l, "", open) : ""}${AU.hub({ S, l, sections, names, open, hold })}<p class="sub au-gold">You have <b class="gold">${S.gold} gold</b>.</p></div>`;
     const fac = F.priceFactor(G.skill(S, "Mercantile"));
     let body = "", note = "";
     const shopRow = (i, sell = true) => { const p = G.buyPrice(S, i), it = D.ITEMS[i], tome = it.slot === "tome" && !TI && typeof TOMES !== "undefined" ? ` · ${TOMES.level(it.spell)}${S.spells.includes(it.spell) ? " · you know it" : ""}` : ""; return `<div class="item${tiCls(i)}">${ICONART.item(i, 34)}<div class="t">${esc(it.name)}${iqB(i)}<span>${esc(G.itemStats(i))}${tome} · ${it.weight} wt</span></div>${econB(i)}<span class="num gold">${p}</span><button class="btn sm" data-act="buy" data-item="${esc(i)}" ${open && !wanted && S.gold >= p ? "" : "disabled"}>Buy</button>${it.slot === "ammo" ? (() => { const p20 = G.lotPrice ? G.lotPrice(S, i, 20, "buy") : p * 20; return `<button class="btn sm" data-act="buyn" data-item="${esc(i)}" data-n="20" title="${p20} gold" ${open && !wanted && S.gold >= p20 ? "" : "disabled"}>×20</button>`; })() : ""}${tiBox(i)}</div>`; };
@@ -3229,7 +3255,9 @@
     }
     if (typeof RUMOURS !== "undefined") body = RUMOURS.townHTML(S, l, townShop, open) + body;   // day and night, rumours, your name here
     if (typeof SOL !== "undefined") body += SOL.extraHTML(S, l, townShop, esc);   // Skaal smith's technique, Raven Rock's forge
-    return `<div class="panel"><h2>${esc(l)}</h2>${PLACEART.scene(l)}${typeof CIVILWAR !== "undefined" ? CIVILWAR.townLine(S, l) : ""}${wanted ? `<p class="sub danger-high">You're wanted in ${esc(hold)}. Shops, inns and trainers turn you away.</p>` : ""}
+    if (AU) return `<div class="panel au-panel au-in">${AU.head({ l, sections, names, cur: townShop, desc: TOWN_DESC[townShop] })}${townTop}
+      ${(townShop === "home" && TOWNS.home(S, l)) || (townShop === "hall" && typeof HOMEART !== "undefined") || townShop === "halls" ? "" : PLACEART.section(townShop === "hire" ? "hall" : townShop === "cook" ? "inn" : townShop === "home" && TOWNS.home(S, l) ? "home" : townShop)}${typeof NPCART !== "undefined" ? NPCART.talk(l, townShop, S) : ""}${AU.note(note)}<div class="list">${body}</div><p class="sub" style="margin-top:10px">You have <b class="gold">${S.gold} gold</b>.</p></div>`;
+    return `<div class="panel"><h2>${esc(l)}</h2>${PLACEART.scene(l)}${townTop}
       ${townGroups(sections, names)}
       ${(townShop === "home" && TOWNS.home(S, l)) || (townShop === "hall" && typeof HOMEART !== "undefined") || townShop === "halls" ? "" : PLACEART.section(townShop === "hire" ? "hall" : townShop === "cook" ? "inn" : townShop === "home" && TOWNS.home(S, l) ? "home" : townShop)}${typeof NPCART !== "undefined" ? NPCART.talk(l, townShop, S) : ""}${note ? `<p class="sub" style="margin-top:8px">${note}</p>` : ""}<div class="list">${body}</div><p class="sub" style="margin-top:10px">You have <b class="gold">${S.gold} gold</b>.</p></div>`;
   }
@@ -3399,7 +3427,7 @@
     } else {
       body = doneIds.length ? doneIds.map((id) => questCard(id, S.quests[id], true)).join("") : `<p class="sub">Nothing finished yet.</p>`;
     }
-    return `<div class="panel journal" id="j-quests"><h2>📜 Journal</h2>${seg}${body}</div>${after}`;
+    return `<div class="panel journal" id="j-quests">${seg}${body}</div>${after}`;
   }
   // ------------------------------------------------------------ panel events
   // ---- spell crafting at the College
@@ -3528,7 +3556,7 @@
         }
         break;
       }
-      case "skytab": sky.page = b.dataset.id; sky.cat = "all"; sky.sel = null; sky.sort = sky.page === "skills" ? "lvl" : "name"; sky.dir = 1; renderMenu(); break;
+      case "skytab": if (sky.page !== b.dataset.id) sky.q = ""; sky.page = b.dataset.id; sky.cat = "all"; sky.sel = null; sky.sort = sky.page === "skills" ? "lvl" : "name"; sky.dir = 1; renderMenu(); break;
       case "skycat": sky.cat = b.dataset.id; sky.sel = null; renderMenu(); break;
       case "skysort": { const k = b.dataset.id; delete S.invSort; sky.dir = sky.sort === k ? -sky.dir : 1; sky.sort = k; renderMenu(); break; }
       case "favtoggle": { if (typeof FAVWHEEL === "undefined") break; const id = isNaN(+b.dataset.id) ? b.dataset.id : +b.dataset.id; const r = FAVWHEEL.toggle(S, id); toast(r.text); if (r.ok) persist(); renderMenu(); break; }
@@ -3617,10 +3645,13 @@
       case "tradecat": { tradeCat = b.dataset.id; SOUND.fx("click"); const c = cardOf(tradeTo) || (SOCIAL.isFriend(S, tradeTo) ? { id: tradeTo, name: SOCIAL.friends(S)[tradeTo].name } : null); if (c) openTrade(c); break; }
       case "sbritual": say(SPELLBOOK.startRitual(S, b.dataset.id)); renderPanel(true); break;
       case "skytier": sky.tier = b.dataset.id; sky.sel = null; renderMenu(); break;
-      case "skymsort": sky.msort = b.dataset.id; renderMenu(); break;
+      case "skymsort": { const k = b.dataset.id; sky.mdir = (sky.msort || "name") === k ? -(sky.mdir || 1) : 1; sky.msort = k; renderMenu(); break; }
+      case "m2dir": delete S.invSort; sky.dir = -(sky.dir || 1); renderMenu(); break;   // menus2.js: the ▲▼ sort toggle
+      case "m2mdir": sky.mdir = -(sky.mdir || 1); renderMenu(); break;
       case "buy": { const m = G.buy(S, b.dataset.item, 1); if (/^Bought/.test(m)) GUIDE.mark(S, "trade"); say(m); break; }
       case "buyn": { const m = G.buy(S, b.dataset.item, +b.dataset.n || 1); if (/^Bought/.test(m)) GUIDE.mark(S, "trade"); say(m); break; }
-      case "shop": townShop = b.dataset.id; if (townShop === "halls") hallView = null; renderPanel(true); break;
+      case "shop": { const fromHub = tab === "town" && !townShop && typeof AREAUI !== "undefined"; townShop = b.dataset.id; if (townShop === "halls") hallView = null; renderPanel(true); if (fromHub) $("#side .au-head")?.scrollIntoView({ block: "nearest" }); break; }
+      case "areahub": townShop = ""; renderPanel(true); $("#side")?.scrollIntoView({ block: "start" }); break;   // areaui.js: back to the board
       case "pskill": perkSkill = b.dataset.id; renderPanel(true); break;
       case "skinfo": heroSkill = heroSkill === b.dataset.id ? null : b.dataset.id; renderPanel(true); if (heroSkill) setTimeout(() => $(".skcard")?.scrollIntoView({ block: "nearest", behavior: reduceMotion ? "auto" : "smooth" }), 30); break;
       case "perk": say(PERKS.take(S, b.dataset.id)); publishCard(); break;

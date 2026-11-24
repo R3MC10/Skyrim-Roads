@@ -40,13 +40,14 @@ async def main():
         # arrive, then Town groups and a shop
         await pg.evaluate("()=>{const S=window.__dbg.save(); S.trip=null; S.location='Whiterun'; [S.x,S.y]=WORLD.places.Whiterun; S.gold=500;}")
         await pg.wait_for_timeout(300); await tab(pg, "map"); await tab(pg, "town")
-        heads = await pg.evaluate("[...document.querySelectorAll('.towngroups .tg-h')].map(e=>e.textContent)")
-        check({"Shops", "Services", "Guilds & jobs"} <= set(heads), f"town groups {heads}")
+        heads = await pg.evaluate("[...document.querySelectorAll('.au-g .au-gh')].map(e=>e.textContent)")
+        check({"Inn", "Market", "Services & trainers"} <= set(heads), f"town groups {heads}")
+        await js(pg, "document.querySelector('.au-tile[data-act=shop][data-id=general]').click()")
         check(await pg.evaluate("!!document.querySelector('.tg-desc')"), "open section has a description")
-        await js(pg, "document.querySelector('.towngroups [data-act=shop][data-id=general]').click()")
-        check(await pg.evaluate("document.querySelector('[data-act=shop][data-id=general]').classList.contains('on')"), "General goods opens")
+        check(await pg.evaluate("document.querySelector('.au-sibs [data-act=shop][data-id=general]').classList.contains('on')"), "General goods opens")
         # help popovers on each tab
         for t in ["map", "hero", "tactics", "town", "log"]:
+            if not await pg.query_selector(f"[data-tab={t}]"): continue   # tabs that moved into other screens
             await tab(pg, t)
             await js(pg, "document.querySelector('.uxhead .uxi').click()")
             txt = await pg.evaluate("document.querySelector('.uxpop')?.innerText || ''")
