@@ -1,6 +1,6 @@
 """Quicker travel and fights (fastqol.js) at phone size, both art styles. Usage: python fast_ui.py PORT [outdir] — prints RESULT OK.
-Recent-trip chips on the travel screen (and that they start the trip), the too-heavy loot question, replay speed ×1/×2/×4
-and Skip to result, tap-anywhere to finish a replay (result card and the turn-by-turn screen), "Carry on" after road
+Recent-trip chips on the travel screen (and that they start the trip), the too-heavy loot question, no speed or Skip
+buttons (gone in build 146), tap-anywhere to finish a replay (result card and the turn-by-turn screen), "Carry on" after road
 fights, the new settings rows, and Fight again on the test dummy. 360x780 runs at the Biggest text size.
 Screenshots in outdir (default: fast_shots in the temp folder)."""
 import asyncio, os, sys, tempfile
@@ -75,13 +75,7 @@ async def main():
                 ok(won, f"{tag}: test fight won")
                 ok(await pg.evaluate("!!document.querySelector('#modal .fqloot')"), f"{tag}: too heavy asks what to do")
                 ok(await pg.evaluate("FIGHTART.playing()"), f"{tag}: the replay plays")
-                sp = []
-                for _ in range(3):
-                    sp.append(await pg.evaluate("document.querySelector('#modal [data-fsx]')?.textContent"))
-                    await pg.click("#modal [data-fsx]"); await pg.wait_for_timeout(120)
-                ok(sp == ["⏩ ×1", "⏩ ×2", "⏩ ×4"], f"{tag}: speed cycles {sp}")
-                ok(await pg.evaluate("JSON.parse(localStorage.getItem('rotn_prefs')).fightSpeed === 1"), f"{tag}: speed back at ×1 and saved")
-                ok(await pg.evaluate("document.querySelector('#modal [data-fss]')?.textContent === 'Skip to result'"), f"{tag}: Skip to result button")
+                ok(await pg.evaluate("!document.querySelector('#modal [data-fsx], #modal [data-fss], #modal .fsctl')"), f"{tag}: no speed or Skip to result buttons (gone in build 146)")
                 bad = await pg.evaluate(OVERFLOW, "#modal .fsbtn, #modal .fqloot, #modal .fqloot .btn")
                 ok(not bad, f"{tag}: result card fits {bad[:3]}")
                 await shot("heavy")
@@ -116,11 +110,8 @@ async def main():
 
                 # ---- settings rows
                 await pg.click("#sndBtn"); await pg.wait_for_timeout(400)
-                await pg.evaluate("[...document.querySelectorAll('#modal .setrow')].find(r=>/Replay speed/.test(r.textContent))?.scrollIntoView({block:'center'})")
-                ok(await pg.evaluate("[...document.querySelectorAll('#modal .setrow')].some(r=>/Replay speed/.test(r.textContent)) && [...document.querySelectorAll('#modal .setrow')].some(r=>/After road events/.test(r.textContent))"), f"{tag}: settings rows")
-                await pg.click("#modal [data-k=fightSpeed][data-v='4']"); await pg.wait_for_timeout(300)
-                ok(await pg.evaluate("JSON.parse(localStorage.getItem('rotn_prefs')).fightSpeed === 4"), f"{tag}: speed set in Settings")
-                await pg.evaluate("[...document.querySelectorAll('#modal .setrow')].find(r=>/Replay speed/.test(r.textContent))?.scrollIntoView({block:'center'})")
+                await pg.evaluate("[...document.querySelectorAll('#modal .setrow')].find(r=>/After road events/.test(r.textContent))?.scrollIntoView({block:'center'})")
+                ok(await pg.evaluate("![...document.querySelectorAll('#modal .setrow')].some(r=>/Replay speed|Foe turns/.test(r.textContent)) && [...document.querySelectorAll('#modal .setrow')].some(r=>/After road events/.test(r.textContent))"), f"{tag}: settings rows (no speed rows)")
                 bad = await pg.evaluate(OVERFLOW, "#modal .setrow, #modal .seg, #modal .seg button")
                 ok(not bad, f"{tag}: settings fit {bad[:3]}")
                 await shot("settings")

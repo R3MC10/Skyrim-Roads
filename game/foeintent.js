@@ -147,7 +147,7 @@ const FOEINTENT = (() => {
       it.tgt = { ...d, label: label(d, sess), me: d.k === myKey(sess) };
       const al = d.k !== myKey(sess) && d.k !== HOST ? findAlly(f, d.k) : null;
       if (al && (it.lo || it.hi)) { const [lo, hi, mid] = allyBlow(f, al); it.lo = lo; it.hi = hi; it.mid = mid; }   // their own armour, not yours
-      if (d.k !== HOST) { it.dot = null; if (it.id !== "force") it.note = ""; }   // poison, lost stamina and AP only land on the leader's own hero (a shout knocks them back anyway)
+      if (d.k !== HOST) { it.dot = null; if (it.id !== "force") it.note = ""; }   // poison, lost stamina and winding only land on the leader's own hero (a shout knocks them back anyway)
     });
     return its;
   }

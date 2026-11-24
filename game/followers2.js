@@ -258,7 +258,7 @@ const FOL2 = (() => {
   function ally(s, hp) {
     const f = st(s); if (!f) return null;
     const rec = { name: nameOf(s.follower.id), dmg: dmg(s), hp, follower: true, fid: s.follower.id, kind: "follower", look: look(s), heals: healer(f) && skillOf(f, "Restoration") >= 25 ? 2 : 0 };
-    return typeof FAI !== "undefined" ? FAI.equipAlly(s, f, rec) : rec;   // spells, magicka, stamina, AP, tactics
+    return typeof FAI !== "undefined" ? FAI.equipAlly(s, f, rec) : rec;   // spells, magicka, stamina, pace, tactics
   }
   /* their own turn's extras: drink a potion when badly hurt, heal you when you're in trouble. null = just attack */
   function turn(fight, al) {

@@ -135,14 +135,12 @@ async def main():
             await pg.evaluate("""()=>{ const box=__f2.wipe(); const f=window.__long; const det=`<details open><summary>log</summary><div class="flog">${f.log.map(l=>`<div><span>${l.me}</span></div>`).join('')}</div></details>`; box.innerHTML=FIGHTART.placeholder({...f}, window.__dbg.save())+det; }""")
             await pg.wait_for_timeout(1200)
             pend0 = await pg.evaluate("document.querySelectorAll('#f2box .flog > div.fpend').length")
-            await pg.click("#f2box [data-fsx]"); await pg.wait_for_timeout(200)
-            sp = await pg.evaluate("[document.querySelector('#f2box [data-fsx]')?.textContent, JSON.parse(localStorage.getItem('rotn_prefs')).fightSpeed]")
+            sp = await pg.evaluate("document.querySelectorAll('#f2box [data-fsx], #f2box [data-fss], #f2box .fsctl').length")   # no speed/Skip buttons since build 146
             await (await pg.query_selector("#f2box .fscene")).screenshot(path=f"{OUT}f2_controls_{style}.png")
-            await pg.click("#f2box [data-fss]"); await pg.wait_for_timeout(200)
+            await pg.evaluate("FIGHTART.finishAll()"); await pg.wait_for_timeout(200)
             after = await pg.evaluate("[document.querySelectorAll('#f2box .fsctl').length, document.querySelectorAll('#f2box .flog > div.fpend').length, document.querySelectorAll('#f2box .flog > div').length]")
             await (await pg.query_selector("#f2box .fscene")).screenshot(path=f"{OUT}f2_skipped_{style}.png")
-            await pg.click("#f2box [data-fsx]") if await pg.query_selector("#f2box [data-fsx]") else None
-            report.setdefault("controls", {})[style] = {"pending_while_playing": pend0, "x2": sp, "after_skip_controls_pending_rows": after}
+            report.setdefault("controls", {})[style] = {"pending_while_playing": pend0, "speed_buttons": sp, "after_skip_controls_pending_rows": after}
             # tap the scene skips too
             await pg.evaluate("()=>{ const f=__f2.weaponFight('mace').f; __f2.mount(f); }"); await pg.wait_for_timeout(300)
             await pg.click("#f2box .fscene canvas"); await pg.wait_for_timeout(150)

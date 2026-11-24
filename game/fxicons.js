@@ -48,12 +48,21 @@ const FXICONS = (() => {
     fx_resist: ["🧱", "Resist", true, (v) => `${v.name}: ${r0(v.amt)}% less damage of that kind, ${v.left} left.`],
     fx_other: ["⭐", "Blessing", true, (v) => `${v.name}: +${r0(v.amt)} ${v.what}, ${v.left} left.`],
     // --- on you: what the foe (or the world) does to you
-    poisoned: ["☠", "Poisoned", false, (v) => `Poisoned: you lose ${r0(v.amt)} health each time a foe acts, ${v.n} more times. A Cure Poison potion or winning the fight ends it.`],
+    poisoned: ["☠", "Poisoned", false, (v) => (v.foe ? `Poisoned: −${r0(v.amt)} health every turn.` : `Poisoned: you lose ${r0(v.amt)} health each time a foe acts. A Cure Poison potion or winning the fight ends it.`)],
     burning: ["🔥", "Burning", false, (v) => `Burning: −${r0(v.amt)} health ${v.foe ? "each turn" : "at the end of the round"}, ${v.n} more.`],
     bleeding: ["🩸", "Bleeding", false, (v) => `Bleeding: −${r0(v.amt)} health ${v.foe ? "each turn" : "each time a foe acts"}, ${v.n} more.`],
     chilled: ["❄", "Chilled", false, (v) => (v.foe ? `Chilled: slower and clumsier, it misses more. ${v.n} more turn${v.n === 1 ? "" : "s"}.` : `Chilled: your stamina doesn't come back, ${v.n} more round${v.n === 1 ? "" : "s"}.`)],
     jolted: ["⚡", "Jolted", false, (v) => (v.foe ? `Shocked: loses magicka and takes shock damage, ${v.n} more turn${v.n === 1 ? "" : "s"}.` : `Jolted: the shock drained some magicka, ${v.n} more round${v.n === 1 ? "" : "s"}.`)],
-    dazed: ["💫", "Dazed", false, (v) => `Knocked off balance: you start your next turn with ${r0(v.amt)} AP less.`],
+    dazed: ["💫", "Winded", false, (v) => `Winded: you start your turn with ${r0(4 * (v.n || 1))}% less stamina.`],
+    winded: ["💫", "Winded", false, (v) => `Winded: you start each turn with less stamina.`],
+    drained: ["🫗", "Drained", false, (v) => `Drained: you start each turn with less magicka.`],
+    might: ["💪", "Might", true, (v) => `Might: your blows and spells land harder.`],
+    haste: ["⚡", "Haste", true, (v) => `Haste: you act earlier in the round.`],
+    vuln: ["🎯", "Vulnerable", false, (v) => `Vulnerable: it takes more damage from everything.`],
+    sunder: ["🔨", "Sundered", false, (v) => `Sundered armour: weapons hurt it more.`],
+    weakened: ["🔻", "Weakened", false, (v) => `Weakened: its blows land softer.`],
+    resolve: ["🧱", "Resolve", true, (v) => `Resolve: it has shaken off stuns, calm and fear before, so the next one is shorter.`],
+    regen_stk: ["✚", "Regen", true, (v) => `Regen: +${r0(v.amt)} health at the end of each round.`],
     spent: ["😮‍💨", "Worn out", false, (v) => `Worn out after changing back: you hit 25% softer, ${v.n} more round${v.n === 1 ? "" : "s"}.`],
     sunlight: ["☀", "Sunlight", false, (v) => `The sun burns you: −${r0(v.amt)} health every round you fight outdoors by day. Feed to make it gentler.`],
     vampire: ["🧛", "Vampirism", false, (v) => `Vampire (hunger ${v.n}/4): fire hurts you ${r0(25 * v.n)}% more, frost ${r0(Math.min(75, 25 * v.n))}% less, poison half.`],
@@ -107,7 +116,8 @@ const FXICONS = (() => {
   const item = (k, v = {}, extra = {}) => {
     const T = TYPES[k]; if (!T) return null;
     const nm = extra.nm || T[1];
-    return { k, ic: extra.ic || T[0], nm, lbl: t(nm), buff: extra.buff ?? T[2], n: v.n > 0 && v.n < 99 ? r0(v.n) : null, left: v.left || null, tip: t(T[3](v)), id: extra.id || k };
+    const sk = extra.stk && typeof STACKS !== "undefined" ? t(STACKS.tipFor(extra.stk, v.n)) : "";   // stacks.js: how many, what each does, drops by 1
+    return { k, ic: extra.ic || T[0], nm, lbl: t(nm), buff: extra.buff ?? T[2], n: v.n > 0 && v.n < 99 ? r0(v.n) : null, left: v.left || null, tip: t(T[3](v)) + sk, id: extra.id || k, stk: !!extra.stk };
   };
   const push = (out, x) => { if (x) out.push(x); };
   const now = (f) => (f && f.t != null ? f.t : typeof G !== "undefined" && G.now ? G.now() : 0);
@@ -138,16 +148,17 @@ const FXICONS = (() => {
     const out = []; if (!f) return out;
     const s = f.s || {}, p = f.pw || {};
     const k = f.kitDot;
-    if (k && k.turns > 0) push(out, item(k.name === "burning" ? "burning" : k.name === "bleeding" ? "bleeding" : "poisoned", { n: k.turns, amt: k.dmg }, { id: "kit:" + k.name }));
+    if (k && k.turns > 0) push(out, item(k.name === "burning" ? "burning" : k.name === "bleeding" ? "bleeding" : "poisoned", { n: k.turns, amt: k.dmg }, { id: "kit:" + k.name, stk: k.name === "bleeding" ? "bleed" : "poison" }));
     const ms = f.meSt || {};
-    if (ms.burn?.turns > 0) push(out, item("burning", { n: ms.burn.turns, amt: ms.burn.dmg }));
-    if (ms.chill?.turns > 0) push(out, item("chilled", { n: ms.chill.turns }));
-    if (ms.shock?.turns > 0) push(out, item("jolted", { n: ms.shock.turns }));
-    if (f.kitApLoss > 0) push(out, item("dazed", { amt: f.kitApLoss }));
+    if (ms.burn?.turns > 0) push(out, item("burning", { n: ms.burn.turns, amt: ms.burn.dmg }, { stk: "burn" }));
+    if (ms.chill?.turns > 0) push(out, item("chilled", { n: ms.chill.turns }, { stk: "chill" }));
+    if (ms.shock?.turns > 0) push(out, item("jolted", { n: ms.shock.turns }, { stk: "shock" }));
+    const gm = (f.stk && f.stk.me) || {};
+    for (const g of ["winded", "drained", "might", "haste"]) if (gm[g] > 0) push(out, item(g, { n: gm[g] }, { stk: g }));
     if (f.bpTired > 0) push(out, item("spent", { n: f.bpTired }));
     if (f.armorSpell > 0) push(out, item("armour", { amt: f.armorSpell, name: armourName(f, sess) }, { nm: armourName(f, sess) || undefined }));
     if (f.ward > 0) push(out, item("ward", { amt: f.ward, max: f.wardMax }));
-    if (f.regen?.turns > 0) push(out, item("healing", { n: f.regen.turns, amt: f.regen.amt, name: f.regen.name }, { nm: f.regen.name }));
+    if (f.regen?.turns > 0) push(out, item("healing", { n: f.regen.turns, amt: f.regen.amt, name: f.regen.name }, { nm: f.regen.name, stk: "regen" }));
     if (f.cloak?.turns > 0) push(out, item("cloak", { n: f.cloak.turns, amt: f.cloak.dmg, el: f.cloak.el, name: f.cloak.name }, { nm: f.cloak.name }));
     if (f.rune) push(out, item("rune", { amt: f.rune.dmg, el: f.rune.el, name: f.rune.name }, { nm: f.rune.name }));
     if (f.bound) push(out, item("bound", { amt: f.bound.dmg, name: f.bound.name }, { nm: f.bound.name ? f.bound.name[0].toUpperCase() + f.bound.name.slice(1) : undefined }));
@@ -188,11 +199,14 @@ const FXICONS = (() => {
   function foe(f) {
     const out = []; if (!f) return out;
     const st = f.foeSt || {}, p = f.pw || {};
-    if (st.burn?.turns > 0) push(out, item("burning", { n: st.burn.turns, amt: st.burn.dmg, foe: true }, { id: "f:burn" }));
-    if (st.chill?.turns > 0) push(out, item("chilled", { n: st.chill.turns, foe: true }, { id: "f:chill" }));
-    if (st.shock?.turns > 0) push(out, item("jolted", { n: st.shock.turns, foe: true }, { id: "f:shock", nm: "Shocked" }));
+    if (st.burn?.turns > 0) push(out, item("burning", { n: st.burn.turns, amt: st.burn.dmg, foe: true }, { id: "f:burn", stk: "burn" }));
+    if (st.chill?.turns > 0) push(out, item("chilled", { n: st.chill.turns, foe: true }, { id: "f:chill", stk: "chill" }));
+    if (st.shock?.turns > 0) push(out, item("jolted", { n: st.shock.turns, foe: true }, { id: "f:shock", nm: "Shocked", stk: "shock" }));
+    if (st.poison?.turns > 0) push(out, item("poisoned", { n: st.poison.turns, amt: st.poison.dmg, foe: true }, { id: "f:poison", stk: "poison", nm: "Poisoned" }));
     const bl = (f.bleed || []).filter((b) => b.turns > 0);
-    if (bl.length) push(out, item("bleeding", { n: Math.max(...bl.map((b) => b.turns)), amt: bl.reduce((a, b) => a + b.dmg, 0), foe: true }, { id: "f:bleed" }));
+    if (bl.length) push(out, item("bleeding", { n: bl.reduce((a, b) => a + b.turns, 0), amt: bl.reduce((a, b) => a + b.dmg, 0), foe: true }, { id: "f:bleed", stk: "bleed" }));
+    const gf = (f.stk && f.stk.foe) || {};
+    for (const [g, ty] of [["vuln", "vuln"], ["sunder", "sunder"], ["weak", "weakened"], ["resolve", "resolve"]]) if (gf[g] > 0) push(out, item(ty, { n: gf[g] }, { id: "f:" + g, stk: g }));
     if (f.eParalyzed > 0) push(out, item("paralyzed", { n: f.eParalyzed }));
     if (f.tbStunLeft > 0) push(out, item("stunned"));
     if (f.stagger) push(out, item("staggered"));

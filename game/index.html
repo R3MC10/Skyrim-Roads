@@ -2765,6 +2765,37 @@ html.art-pixel .ft-detail .sky-ico img{image-rendering:pixelated}
 #tbf .c2ord .c2o.on{border-color:#f3d98b;background:linear-gradient(180deg,#5a4524,#2a1f10);box-shadow:0 0 8px rgba(243,217,139,.45)}
 #tbf .c2ord .c2o:disabled{opacity:.45;cursor:default}
 #tbf.c2.c2wide .c2ord .c2o{height:26px;font-size:14px}
+/* build 145: move costs in stamina / magicka / health (tbfight.js), stack numbers (stacks.js), minigames (minigame.js) */
+.rc{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:16px;padding:0 4px;border-radius:8px;font-style:normal;font-size:11px;font-weight:700;line-height:1;color:#10100c;font-variant-numeric:tabular-nums}
+.rc.sp{background:linear-gradient(180deg,#9fe39a,#4fa34b)}.rc.mp{background:linear-gradient(180deg,#9cc4ff,#3f72d1);color:#fff}.rc.hp{background:linear-gradient(180deg,#ff9a8a,#c23a2c);color:#fff}.rc.free{background:rgba(214,178,94,.25);color:var(--gold)}
+.tbact .cp .rc{transform:none;width:auto;height:15px;opacity:1}
+#tbf .fc .tbact .cp{gap:2px}#tbf .fc .tbact .cp .rc{width:auto;height:15px;background-clip:padding-box;box-shadow:0 1px 2px rgba(0,0,0,.5)}
+#tbf .fc .tbact .cp .rc.sp{background:linear-gradient(180deg,#9fe39a,#4fa34b)}#tbf .fc .tbact .cp .rc.mp{background:linear-gradient(180deg,#9cc4ff,#3f72d1)}#tbf .fc .tbact .cp .rc.hp{background:linear-gradient(180deg,#ff9a8a,#c23a2c)}#tbf .fc .tbact .cp .rc.free{background:rgba(214,178,94,.25)}
+#tbf .fc .tbact[disabled] .cp .rc{filter:grayscale(1) brightness(.7)}
+#tbf .tbap .fc-res{display:inline-flex;gap:4px;margin:0 6px}
+#tbf .fc-end{min-width:96px}#tbf .fc-end b{font-size:15px;letter-spacing:.04em}
+.c2e b,.c2fx .c2e b{font-variant-numeric:tabular-nums}
+.tbtime.mg .mg-in{gap:8px}
+.mg-bar{position:relative;width:min(78vw,320px);height:26px;border-radius:13px;background:rgba(20,18,15,.85);border:2px solid #3c372e;overflow:hidden}
+.mg-bar .mg-zone{position:absolute;top:0;bottom:0;background:rgba(226,187,100,.55)}.mg-bar .mg-pz{position:absolute;top:0;bottom:0;background:#fff3c4;box-shadow:0 0 8px #ffd36a}
+.mg-bar .mg-mark{position:absolute;top:-3px;bottom:-3px;width:4px;margin-left:-2px;background:#ebe5d6;box-shadow:0 0 6px #fff}
+.mg-power .mg-bar{border-color:#8a3b22}.mg-power .mg-bar .mg-zone{background:rgba(255,120,70,.55)}
+.mg svg{width:min(66vw,240px,40vh);height:auto}
+.mg-parry .mg-shield{fill:rgba(226,187,100,.25);stroke:#e2bb64;stroke-width:4}.mg-parry .mg-blow{fill:none;stroke:#ff6a4a;stroke-width:4;filter:drop-shadow(0 0 4px #ff6a4a)}
+.mg-aim .mg-tg{fill:none;stroke:#fff3c4;stroke-width:1.5}.mg-aim .mg-tgw{fill:none;stroke:rgba(226,187,100,.35)}.mg-aim .mg-ret{fill:none;stroke:#ebe5d6;stroke-width:2.5;stroke-dasharray:6 4}.mg-aim .mg-x{stroke:#ebe5d6;stroke-width:1.5}
+.mg-aim.drawing .mg-ret,.mg.drawing .mg-ret{stroke:#fff3c4}
+.mg-rune .mg-path{fill:none;stroke:var(--mgc,#e2bb64);stroke-width:1.5;opacity:.45;stroke-dasharray:3 3}
+.mg-rune .mg-clock{fill:none;stroke:var(--mgc,#e2bb64);stroke-width:2.5;stroke-dasharray:295;opacity:.7;transform:rotate(-90deg);transform-origin:50% 50%}
+.mg-rune .mg-pt circle{fill:rgba(20,18,15,.85);stroke:var(--mgc,#e2bb64);stroke-width:2}.mg-rune .mg-pt text{font-size:8px;text-anchor:middle;fill:var(--mgc,#e2bb64);font-weight:700}
+.mg-rune .mg-pt.on circle{fill:var(--mgc,#e2bb64);filter:drop-shadow(0 0 6px var(--mgc,#e2bb64));animation:mgpulse .7s ease-in-out infinite}.mg-rune .mg-pt.on text{fill:#10100c}
+.mg-rune .mg-pt.done circle{fill:var(--mgc,#e2bb64);opacity:.45}.mg-rune .mg-pt.done text{fill:#10100c}
+@keyframes mgpulse{50%{opacity:.6}}
+@media (prefers-reduced-motion:reduce){.mg-rune .mg-pt.on circle{animation:none}}
+/* build 145: named foe intents (fightread.js) and the lit turn order while turns play out (tbfight.js) */
+.tbint i.ic{font-style:normal;font-size:14px}.tbint b.w{font-size:12px;letter-spacing:.01em}.tbint b.n{opacity:.9}
+.tbint em.sk{margin-left:2px;padding:0 4px;border-radius:6px;background:rgba(0,0,0,.35);font-size:10px;color:var(--el-poison,#a6ec7a)}
+.tbban.foe.act{font-size:20px;letter-spacing:.02em}.tbban.foe.act small{opacity:.85}.tbban.foe.act.big{color:#ffd0c0;text-shadow:0 0 12px rgba(255,80,40,.7)}
+.tbini.now{box-shadow:0 0 0 2px rgba(214,178,94,.35),0 0 10px rgba(214,178,94,.45)}.tbini.foe.now{background:rgba(200,60,40,.35);border-color:#ff7a5a}
 </style>
 <script src="access.js"></script>
 </head>
@@ -2786,6 +2817,7 @@ html.art-pixel .ft-detail .sky-ico img{image-rendering:pixelated}
 <script src="powers.js"></script>
 <script src="engine.js"></script>
 <script src="foecap.js"></script>
+<script src="stacks.js"></script>
 <script src="events.js"></script>
 <script src="dungeons.js"></script>
 <script src="towns.js"></script>
@@ -2828,6 +2860,7 @@ html.art-pixel .ft-detail .sky-ico img{image-rendering:pixelated}
 <script src="combatai.js"></script>
 <script src="sneak2.js"></script>
 <script src="aiset.js"></script>
+<script src="minigame.js"></script>
 <script src="tbradial.js"></script>
 <script src="tbfight.js"></script>
 <script src="sharedfight.js"></script>
@@ -2944,6 +2977,7 @@ html.art-pixel .ft-detail .sky-ico img{image-rendering:pixelated}
 <script src="i18n_sweep.js"></script>
 <script src="i18n_balfear.js"></script>
 <script src="i18n_combat2.js"></script>
+<script src="i18n_stacks.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>

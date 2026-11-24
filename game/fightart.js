@@ -1,7 +1,7 @@
 /* Fight scenes: a little animated stage above every fight log — where you are, you on the left, the foe on the
    right — that replays the whole fight turn by turn at a natural pace (about a second an action: wind-up, strike,
    impact, recovery). Every weapon swings its own way, every spell has its own effect, with particles, screen shake,
-   hit-stop and a slow finishing blow. ⏩ ×1/×2/×4 and Skip to result buttons; tap the scene to skip. Drawn with the shared ART
+   hit-stop and a slow finishing blow. Tap the scene to skip (no speed buttons since build 146). Drawn with the shared ART
    toolkit in the player's art style (hand-drawn ink or pixel art).
    It only reads the finished Fight (its log, what was done each turn, start/end health); it never changes a result. [OURS] */
 const FIGHTART = (() => {
@@ -706,7 +706,7 @@ const FIGHTART = (() => {
     const pmul = rm ? 0.4 : 1;
     // ---- state (all allocated once)
     let bi = 0, lt = 0, hitIdx = 0, phase = beats.length ? "play" : "end", phaseT = 0, real = 0, hitstop = 0, slowT = 0, shake = 0, zoom = 1, zoomT = 0, zcx = W / 2, zcy = Hh / 2, flash = 0, flashC = "#fff";
-    let done = false, speed = [1, 2, 4].includes(prefs().fightSpeed) ? prefs().fightSpeed : rm ? 2 : 1, lastNow = performance.now(), raf = 0, revealed = -2;
+    let done = false, speed = rm ? 2 : 1, lastNow = performance.now(), raf = 0, revealed = -2;
     let hpD = hp0, hpT = hp0, hpL = hp0, hpLT = 0, ehpD = ehp0, ehpT = ehp0, ehpL = ehp0, ehpLT = 0;
     const heroP = idlePose({}, rec.hero.wt), foeP = idlePose({}, null), tmpP = {};
     let heroKnock = 0, foeKnock = 0, heroDodge = 1, foeDodge = 1, claw = 0, label = null, labelT = 0, labelC = P.gold, fall = 0, wolfT = 1;
@@ -863,21 +863,9 @@ const FIGHTART = (() => {
       draw(performance.now());
       idleArt();
     }
-    // ---- controls: ⏩ ×2 and Skip
+    // ---- no speed or skip buttons any more (build 146: players didn't want them); tapping the scene still finishes it
     let ctl = null;
-    if (!(rec.played || autoSkip() || !beats.length)) {
-      ctl = document.createElement("div"); ctl.className = "fsctl";
-      const spLbl = () => `⏩ ×${speed}`;   // tap to cycle ×1 → ×2 → ×4
-      ctl.innerHTML = `<button type="button" class="fsbtn" data-fsx aria-label="Replay speed, now times ${speed}">${spLbl()}</button><button type="button" class="fsbtn" data-fss>Skip to result</button>`;
-      ctl.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const sx = e.target.closest("[data-fsx]");
-        if (sx) { speed = speed === 1 ? 2 : speed === 2 ? 4 : 1; setPref("fightSpeed", speed); sx.textContent = spLbl(); sx.setAttribute("aria-label", `Replay speed, now times ${speed}`); }
-        if (e.target.closest("[data-fss]")) finish();
-      });
-      el.appendChild(ctl);
-      revealLog(-1);
-    }
+    if (!(rec.played || autoSkip() || !beats.length)) revealLog(-1);
 
     // ---- one step of time
     function update(dtr) {

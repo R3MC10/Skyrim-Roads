@@ -3,7 +3,7 @@
      last trip once more, when you're back where it started) or "↩ Back to …" (when you're where it ended).
    - Optional "carry on by itself" after road events and road fights: the result card counts down and closes on its
      own (waits for a fight replay to finish; any tap on the card stops the countdown). Off unless switched on.
-   - Fight replays (fightart.js): ×1/×2/×4 speed and Skip to result; tap anywhere on a fight screen or result card to
+   - Fight replays (fightart.js): tap anywhere on a fight screen or result card to (the speed and Skip buttons went in build 146)
      finish the animation that's playing. Reduce motion starts replays at ×2 and adds no new motion.
    - After a won road fight: if the loot made you too heavy, ask whether to keep it all or leave the heaviest new
      pieces behind (loot is picked up automatically, so "Loot all" is what already happens).
@@ -60,16 +60,15 @@ const FASTQOL = (() => {
 
   // ---------------------------------------------------------------- settings (ui.js settings screen)
   const SPEEDS = [1, 2, 4];
-  const speed = () => { const v = prefs().fightSpeed; return SPEEDS.includes(v) ? v : reduce() ? 2 : 1; };
+  const speed = () => (reduce() ? 2 : 1);   // build 146: the speed button and setting are gone; an old saved speed is ignored
   const autoRoad = () => prefs().fqAutoRoad === true;
   function settingsHTML(seg) {
     if (typeof seg !== "function") return "";
-    return `<div class="setrow"><span>Replay speed</span>${seg("fightSpeed", SPEEDS.map((v) => [v, "×" + v]), speed())}</div>
-      <div class="setrow"><span>After road events</span>${seg("fqAutoRoad", [[false, "Wait for me"], [true, "Carry on"]], autoRoad())}</div>`;
+    return `<div class="setrow"><span>After road events</span>${seg("fqAutoRoad", [[false, "Wait for me"], [true, "Carry on"]], autoRoad())}</div>`;
   }
   /* a settings button was pressed: true when it was ours */
   function pref(k, v) {
-    if (k === "fightSpeed") { const n = +v; if (SPEEDS.includes(n)) setPref("fightSpeed", n); return true; }
+    if (k === "fightSpeed") return true;   // old buttons: nothing to change any more
     if (k === "fqAutoRoad") { setPref("fqAutoRoad", v === true || v === "true"); return true; }
     return false;
   }

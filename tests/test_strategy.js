@@ -10,7 +10,7 @@ const RUNS = +(process.env.RUNS || process.argv[2] || 16);
 const TUNE = process.env.TUNE ? JSON.parse(process.env.TUNE) : null;
 const c = { process: { env: process.env }, console, Math, Date, JSON, Float64Array, Float32Array, Uint8Array, Int32Array, Uint16Array, Int16Array, Object, Array, Set, Map, Proxy, Number, String, RUNS, structuredClone };
 vm.createContext(c);
-for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "shieldfx.js", "foegroups.js", "legendary.js", "powers.js", "engine.js", "foecap.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "weatherfx.js", "enchanting.js", "quests.js", "horses.js", "hall.js", "bounty.js", "visits.js", "cooking.js", "arena.js", "achievements.js", "clans.js", "festivals.js", "wars.js", "curses.js", "smithing.js", "social.js", "roam.js", "ammo.js", "tomes.js", "magic.js", "spellbook.js", "mp.js", "spellcraft.js", "shouts2.js", "coop.js", "party.js", "combatai.js", "foeintent.js", "tbfight.js", "followers2.js", "followerai.js", "strategy.js"])
+for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "shieldfx.js", "foegroups.js", "legendary.js", "powers.js", "engine.js", "foecap.js", "stacks.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "weatherfx.js", "enchanting.js", "quests.js", "horses.js", "hall.js", "bounty.js", "visits.js", "cooking.js", "arena.js", "achievements.js", "clans.js", "festivals.js", "wars.js", "curses.js", "smithing.js", "social.js", "roam.js", "ammo.js", "tomes.js", "magic.js", "spellbook.js", "mp.js", "spellcraft.js", "shouts2.js", "coop.js", "party.js", "combatai.js", "foeintent.js", "tbfight.js", "followers2.js", "followerai.js", "strategy.js"])
   if (fs.existsSync(W + f)) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
 vm.runInContext(`
 const LEVELS = [5, 10, 20, 30, 40];
@@ -149,8 +149,8 @@ ok(T.smart.open > 0, "Auto cashes in openings");
 
 // --- the pieces
 { const s = fresh("twohand", 20), f = new G.Fight(s, enc("Bandit outlaw", 20)), ss = new TB.Session(f, { trySneak: false });
-  ok(TB.cost(f, "recover") === STRAT.REC.ap, "Catch your breath costs " + STRAT.REC.ap + " AP");
-  ss.begin(); f.sp = 5; f.mp = 5; ss.cur = { id: "me" }; ss.ap = 6; ss.apSet = true; ss.over = false;
+  { const c0 = TB.cost(f, "recover"); ok(!c0.sp && !c0.mp && !c0.hp && STRAT.ends("recover"), "Catch your breath is free but ends your turn"); }
+  ss.begin(); f.sp = 5; f.mp = 5; ss.cur = { id: "me" }; ss.myActs = 0; ss.used = {}; ss.over = false;
   ok(ss.canAfford("recover"), "you can catch your breath when tired");
   const r = ss.act("recover"); ok(r && !r.err && f.sp > 5 + G.maxStamina(s) * 0.3 && f.mp > 5, "Catch your breath gives stamina and magicka back");
   ok(ss.ev.some((e) => /catch your breath/.test(e.text)), "it says so in the log");

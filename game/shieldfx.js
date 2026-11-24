@@ -3,7 +3,7 @@
    so the enemy gets stunned. High stamina cost."
    - Passive block: with a shield on your arm, any blow has a chance to be caught on it (blocked like a raised guard).
      12% base, +1% per 5 Blocking (up to +20%), +2% per Shield Wall rank, plus the block perks; at most 45%.
-   - Shield bash (turn-based fights, replaces Shield up): 3 AP and 40% of your max stamina (at least 35). Small damage;
+   - Shield bash (turn-based fights, replaces Shield up): 40% of your max stamina (at least 35). Small damage;
      the foe loses its next turn. Tough foes shake it off 15% of the time, bosses and dragons 40%. Once stunned, a foe
      can't be stunned again for 2 rounds (no stun-locking).
    Perks: Power Bash (+15% to stun tough foes and bosses), Deadly Bash (bash damage grows with Blocking),

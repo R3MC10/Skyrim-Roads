@@ -12,7 +12,7 @@
    - Followers and party members are small plates in the scene (still drop targets for heals).
    - The fight log is a short fading feed in a scene corner; tap it for the full log.
    - The turn order is a slim ribbon of portraits.
-   - The action bar is a skill bar: round drawn-icon moves with AP pips, quick slots, Magic and Items open as a drawer
+   - The action bar is a skill bar: round drawn-icon moves with their stamina / magicka / health cost, quick slots, Magic and Items open as a drawer
      over the scene, and a big End turn seal that shows the guard you'd get.
    - Hits flash, crits shake, a stunned foe gets circling stars.
    Settings → Fights → Fight screen: Immersive / Classic. */

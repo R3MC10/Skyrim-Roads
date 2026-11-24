@@ -128,12 +128,12 @@ for (const [build, L] of [["warrior", 20], ["mage", 20], ["archer", 30]]) {
   ok(s1.took === Math.round(Math.max(0, st.hp - en.hp)), "round 1 summary: took matches your health lost (" + s1.took + ")");
   if (missed) { const m1 = R.summary(missed, 1); ok(m1 && m1.dealt === 0, "a round of only misses says dealt 0 (" + m1?.dealt + ")"); }
   const b = R.banner(r2, null, ss); ok(b && b.t === "Round 2" && /dealt/.test(b.sub), "round banner with last round's numbers");
-  const fe = ss.ev.find((e) => e.kind === "foe"); ok(R.banner(fe, { kind: "me" }, ss)?.cls === "foe" && !R.banner(fe, fe, ss), "foe banner once at the start of its turn");
+  const fe = ss.ev.find((e) => e.kind === "foe"); ok(fe.act ? /^foe act/.test(R.banner(fe, fe, ss)?.cls || "") : R.banner(fe, { kind: "me" }, ss)?.cls === "foe" && !R.banner(fe, fe, ss), "each foe move gets its own banner with its name (one at a time)");
   ok(R.delay({ kind: "foe" }) >= 900 && R.delay({ kind: "round", round: 2 }) > R.delay({ kind: "me" }), "foe turns and new rounds stay on screen longer");
   ok(R.cue({ kind: "foe", text: "Bandit lifts the weapon high, winding up a huge blow. Guard or hit them hard!" }) === "windup", "wind-up has its own sound");
   ok(R.cue({ kind: "foe", text: "Bandit hits 20" }, { kind: "me" }) === "turn-foe" && R.cue({ kind: "foe", text: "Bandit hits 20" }, { kind: "foe" }) === null, "a drum when the foe's turn starts");
   ok(R.cue({ kind: "tick", text: "🔥 the bandit burns for 9" }) === "dot-burn" && R.cue({ kind: "round", round: 3 }) === "round", "burning and new rounds sound");
-  ok(/turn/.test(R.who(fe, ss)), "the dock says whose turn it is");
+  ok(fe.act ? R.who(fe, ss).includes(fe.act.name) && R.who(fe, ss).includes(ss.f.e.name) : /turn/.test(R.who(fe, ss)), "the dock says who acts and with what: " + R.who(fe, ss));
 }
 
 // ---- balance: planning ahead doesn't change how fights go
@@ -148,6 +148,19 @@ for (const base of FOES.slice(0, 4)) {
   const line = `${base.name}: win ${(w0 / N * 100).toFixed(0)}% → ${(w1 / N * 100).toFixed(0)}%, rounds ${(r0 / N).toFixed(1)} → ${(r1 / N).toFixed(1)}`;
   console.log(line);
   ok(Math.abs(w1 - w0) / N <= 0.12 && Math.abs(r1 - r0) / N <= 1.5, "same balance with intents: " + line);
+}
+// ---- named intents: every foe move has a name and an icon, the chip shows them, and the foe's turn says it by name
+{
+  for (const [k, it] of Object.entries(R.INTENT)) ok(it.ic && it.label && it.label.length >= 3 && it.label !== "Attack", `intent ${k}: icon and a real name (${it.ic} ${it.label})`);
+  ok(R.blowOf(mk("warrior", 10, FOES[1]))[1] === "Bite" && R.blowOf(mk("warrior", 10, FOES[2]))[1] === "Claw Swipe" && R.blowOf(mk("warrior", 10, FOES[5]))[1] === "Spell", "a plain blow fits the foe: wolves bite, trolls swipe, necromancers cast");
+  const f = mk("warrior", 20, FOES[3]), ss = new TB.Session(f, { trySneak: false }); ss.begin();
+  let g = 0; while (!ss.done && g++ < 40 && !ss.ev.some((e) => e.kind === "foe" && e.act)) { const r = ss.advance(); if (r.turn === "me") ss.act("end"); }
+  const its = R.intents(ss), it0 = its.find((x) => !x.skip);
+  if (it0) { const h = R.panels(ss).intents; ok(h.includes(`class="w"`) && h.includes(it0.ic) && /tbint/.test(h), "intent chips show the icon and the move's name: " + h.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").slice(0, 80)); }
+  const fe = ss.ev.find((e) => e.kind === "foe" && e.act);
+  ok(fe && fe.act.name && fe.act.ic && fe.text.includes(fe.act.name), "the foe's turn is logged by name: " + (fe && fe.text));
+  const b = fe && R.banner(fe, null, ss); ok(b && b.t.includes(fe.act.name), "and its banner shows the move: " + (b && b.t));
+  const pz = ss.ev.find((e) => e.act && e.act.stk); if (pz) ok(/^(Poison|Bleed|Burn|Winded) \d$/.test(pz.act.stk), "stacks it puts on: " + pz.act.stk);
 }
 console.log(fails ? `failed: ${fails}` : `fightread: all ok · ${n} checks`);
 process.exit(fails ? 1 : 0);

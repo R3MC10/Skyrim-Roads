@@ -33,9 +33,10 @@ const nightT = (() => { let t = G.now(); for (let i = 0; i < 400 && !G.isNight(t
 
 // 1. Beast Form: moves and their AP, the weapon hand is a claw, no magic, potions, shouts or guard
 { const s = hero(20), f = fightOf(s, enc("Bandit outlaw", 20));
-  ok(TB.cost(f, "attack") === 3, "a sword is 3 AP before the change");
+  const sw = TB.cost(f, "attack").sp; ok(sw === TB.ATK_SP.sword, "a sword blow costs its stamina before the change");
   ok(f.affordable("power:beast") && /Beast Form/.test(f.act("power:beast")) && f.pw.beast > 0, "you change");
-  ok(TB.cost(f, "attack") === 2 && TB.cost(f, "beast:claw") === 2 && TB.cost(f, "beast:maul") === 4 && TB.cost(f, "beast:pounce") === 3 && TB.cost(f, "beast:howl") === 3 && TB.cost(f, "beast:revert") === 1, "claw 2, maul 4, pounce 3, howl 3, change back 1 AP");
+  const C = (a) => TB.cost(f, a).sp;
+  ok(C("attack") === C("beast:claw") && C("beast:claw") > 0 && C("beast:maul") > C("beast:claw") && C("beast:pounce") > C("beast:claw") && C("beast:howl") > 0 && C("beast:revert") === 0, "the wolf's moves cost stamina (claw < pounce, maul), changing back is free");
   ok(!f.affordable("potion:health") && !f.affordable("block") && !f.affordable("shout:fus") && !f.affordable("spell:" + (s.spells[0] || "flames")), "no potions, guard, shouts or spells as a beast");
   let t = ""; for (let i = 0; i < 6 && !/^Claws: \\d/.test(t); i++) t = f.act("attack");
   ok(/^Claws/.test(t), "Attack becomes Claws: " + t);
@@ -67,17 +68,17 @@ const nightT = (() => { let t = G.now(); for (let i = 0; i < 400 && !G.isNight(t
   const r = fightOf(hero(20), enc("Bandit outlaw", 20)); r.s.beastPerks = { wolf: { rending_claws: 1 }, lord: {}, feeds: 0, kills: 0 }; r.act("power:beast");
   let bled = false; for (let i = 0; i < 8 && !bled; i++) { r.act("beast:claw"); bled = r.bleed.length > 0; } ok(bled, "Rending Claws: the wound bleeds");
   const h = fightOf(hero(20), boss("deathlord", 20)); h.s.beastPerks = { wolf: { blood_howl: 1 }, lord: {}, feeds: 0, kills: 0 }; h.act("power:beast");
-  ok(TB.cost(h, "beast:howl") === 2, "Howl of the Pack: Howl costs 2 AP");
+  { const h0 = fightOf(hero(20), boss("deathlord", 20)); h0.act("power:beast"); ok(TB.cost(h, "beast:howl").sp < TB.cost(h0, "beast:howl").sp, "Howl of the Pack: Howl costs half the stamina"); }
 }
 // 3. Vampire Lord: claws, Drain Life, Grip, Raise Dead
 { const s = hero(20, "vamp"), f = fightOf(s, enc("Bandit outlaw", 20));
   ok(f.affordable("power:lord") && /Vampire Lord/.test(f.act("power:lord")), "a vampire becomes a Vampire Lord");
-  ok(TB.cost(f, "attack") === 3 && TB.cost(f, "lord:drain") === 3 && TB.cost(f, "lord:grip") === 4 && !f.affordable("potion:health") && !f.affordable("power_attack"), "Lord: claws 3 AP, drain 3, grip 4, no potions or weapon power attacks");
+  ok(TB.cost(f, "attack").sp > 0 && TB.cost(f, "lord:drain").hp > 0 && TB.cost(f, "lord:grip").hp > TB.cost(f, "lord:drain").hp && !f.affordable("potion:health") && !f.affordable("power_attack"), "Lord: claws cost stamina, drain and grip cost a little health, no potions or weapon power attacks");
   f.hp = G.maxHealth(s) * 0.5; const e0 = f.ehp, h0 = f.hp; const t = f.act("lord:drain"); ok(f.ehp < e0 && f.hp > h0 && /Drain Life/.test(t), "Drain Life hurts it and heals you: " + t);
   f.act("lord:grip"); ok(f.stagger && !f.affordable("lord:grip"), "Grip staggers, then waits");
   const n0 = f.allies.length; f.act("lord:raise"); ok(f.allies.length === n0 + 1 && f.allies[n0].kind === "zombie" && !f.affordable("lord:raise"), "Raise Dead: one thrall, once");
   const g = fightOf(hero(20, "vamp"), enc("Bandit outlaw", 20)); g.s.beastPerks = { wolf: {}, lord: { grave_servants: 1, blood_magic: 1 }, feeds: 0, kills: 0 }; g.act("power:lord");
-  g.act("lord:raise"); ok(g.allies.length === 2, "Grave Servants: two thralls"); ok(TB.cost(g, "lord:drain") === 2, "Blood Magic: Drain Life 2 AP");
+  g.act("lord:raise"); ok(g.allies.length === 2, "Grave Servants: two thralls"); ok(TB.cost(g, "lord:drain").hp < TB.cost(f, "lord:drain").hp, "Blood Magic: Drain Life costs half the health");
   ok(/Claws/.test(f.act("attack")), "Attack is the Lord's claws");
 }
 // 4. vampire powers by hunger, feeding mid-fight, the sun

@@ -25,13 +25,13 @@ async def main():
     for vw, vh, tag in [(412, 915, "phone"), (360, 640, "small"), (1280, 800, "wide")]:
       ctx = await b.new_context(viewport={"width": vw, "height": vh}, device_scale_factor=2, has_touch=True)
       pg = await ctx.new_page(); errs = []; pg.on("pageerror", lambda e: errs.append(str(e)))
-      await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=rad{tag}&tb&wheel"); await pg.wait_for_timeout(1500)
+      await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=rad{tag}&tb&wheel&games"); await pg.wait_for_timeout(1500)
       await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Wheeler"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
       await pg.evaluate("localStorage.setItem('rotn_prefs', JSON.stringify({...JSON.parse(localStorage.getItem('rotn_prefs')||'{}'), tips:false}))")
       await fight(pg)
       ok(await pg.evaluate("!!document.querySelector('#tbf .tbwheel .tbhub [data-tba=end]')"), f"{tag}: the wheel is up with End turn in the middle")
       n = await pg.evaluate("document.querySelectorAll('#tbf .tbwheel .tbsl').length"); ok(n >= 6, f"{tag}: {n} slices")
-      ok(await pg.evaluate("/AP · \\d+ SP/.test(document.querySelector('#tbf [data-tba=power_attack] small').textContent)"), f"{tag}: power attack shows AP and stamina")
+      ok(await pg.evaluate("/\\d+ SP/.test(document.querySelector('#tbf [data-tba=power_attack] small').textContent)"), f"{tag}: power attack shows its stamina cost")
       # slices don't overlap and stay on screen
       bad = await pg.evaluate("""(()=>{const r=[...document.querySelectorAll('#tbf .tbwheel .tbsl, #tbf .tbwheel .tbhub')].map(e=>e.getBoundingClientRect());let o=0;
         for(let i=0;i<r.length;i++){ if(r[i].left<0||r[i].right>innerWidth+1) o+=10; for(let j=i+1;j<r.length;j++){const a=r[i],c=r[j];const w=Math.min(a.right,c.right)-Math.max(a.left,c.left),h=Math.min(a.bottom,c.bottom)-Math.max(a.top,c.top);if(w>4&&h>4)o++;}} return o;})()""")
@@ -47,7 +47,7 @@ async def main():
       await pg.wait_for_timeout(200)
       await pg.locator(".tbtime").click(); await pg.wait_for_timeout(500)
       ok(await pg.evaluate("!document.querySelector('.tbtime')"), f"{tag}: the ring closes after the tap")
-      ok(await pg.evaluate("[...document.querySelectorAll('.tbspend')].some(e=>/AP/.test(e.textContent))"), f"{tag}: the AP spent floats up")
+      ok(await pg.evaluate("[...document.querySelectorAll('.tbspend')].some(e=>/SP|MP/.test(e.textContent))"), f"{tag}: the stamina spent floats up")
       ok(await pg.evaluate("[...document.querySelectorAll('.tbspend.grade')].length>=1"), f"{tag}: the timing result shows")
       ok(await pg.evaluate("TB.session.ev.some(e=>e.a==='attack')"), f"{tag}: the strike happened")
       await pg.screenshot(path=SP + f"after_{tag}.png")

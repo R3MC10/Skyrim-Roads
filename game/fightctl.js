@@ -2,14 +2,15 @@
    Remigiusz: "Combat controls should be AAA."
    tbfight.js still runs the fight; this module only draws the controls and makes them feel good:
    - Big thumb-sized buttons with drawn icons (both art styles): Attack / Power attack / Guard (or Shield bash).
-   - Every move shows what it costs as gold AP pips; hovering or pressing a move lights up the pips it would spend.
-   - A greyed-out move says why ("Need 2 more AP", "Not enough stamina", "None left"...).
+   - Every move shows what it costs in stamina (green), magicka (blue) or health (red); hovering or pressing a move
+     lights up the move pip it would use (up to 4 moves a turn, the same move again costs more).
+   - A greyed-out move says why ("Need 12 more stamina", "4 moves a turn", "None left"...).
    - Quick slots above the big buttons: your shouts and favourite spells, potions and scrolls (★ in the Magic and Items
      lists pins them; until you pin any, the bar suggests your best heal, best attack spell and a health potion).
    - Healing and support moves ask who gets them when you have teammates: tap a portrait (or the button again for
      yourself). Dragging still works as before (tbui.js).
    - Press feedback (glow, a small squash, a short buzz on phones), the bar rises in at the start of your turn and the
-     AP you just spent burst away.
+     move pip you just used bursts away.
    - PC keys: 1-9 the numbered moves, Space ends the turn (or skips / continues), M magic, I items, Esc back or cancel.
    The old cards and the combat wheel are still there: Settings → Fights → Controls. */
 const FIGHTCTL = (() => {
@@ -76,12 +77,12 @@ const FIGHTCTL = (() => {
 
   // ------------------------------------------------------------------ why a move is greyed out
   function reason(sess, a, c) {
-    const f = sess.f, pool = sess.ap + (/^(spell|dual|scroll):/.test(a) ? sess.spAp : 0);
+    const f = sess.f;
     const [k, arg] = a.split(":");
     try {
-      if (typeof STRAT !== "undefined" && STRAT.owns(a)) return c > pool ? `Need ${c - pool} more AP` : STRAT.why(f, a);
+      const w = sess.why ? sess.why(a) : ""; if (w) return w;
+      if (typeof STRAT !== "undefined" && STRAT.owns(a)) return STRAT.why(f, a);
       if (a === "flee") return f.e.boss ? "Not from a boss" : !f.canFlee ? "No way out here" : "";
-      if (c > pool) return `Need ${c - pool} more AP`;
       if (a === "power_attack") return "Not enough stamina";
       if (a === "block") return f.weapon && f.weapon.skill === "Archery" ? "Not with a bow" : "Not enough stamina";
       if (a === "bash") return "Not enough stamina";
@@ -115,16 +116,18 @@ const FIGHTCTL = (() => {
   }
 
   // ------------------------------------------------------------------ the bar
-  let last = { key: null, ap: 0, spAp: 0 }, dockKey = null, filter = "all";
-  const pipsHTML = (c) => (c >= 99 ? `<span class="fc-all">all AP</span>` : Array.from({ length: Math.min(c, 8) }, () => "<i></i>").join(""));
+  let last = { key: null, left: 0 }, dockKey = null, filter = "all";
+  const pipsHTML = (c) => (typeof TB !== "undefined" && TB.costHTML ? TB.costHTML(c) : "");
+  const cTxt = (c) => (typeof TB !== "undefined" && TB.costTxt ? TB.costTxt(c) : "");
+  const guardOf = (sess) => Math.round((sess.guardLeft ? sess.guardLeft() : 0) * 100);
   const keyLbl = (k) => (k ? `<kbd class="fc-k" aria-hidden="true">${k === " " ? "Space" : esc(k)}</kbd>` : "");
   /* one button. o: {label, extra, key, sub, icon, badge} */
   function btn(sess, api, a, o = {}) {
-    const f = sess.f, c = api.cost(f, a), ok = sess.canAfford(a), z = api.zoneOf(a), why = ok ? "" : reason(sess, a, c);
+    const f = sess.f, c = api.cost(f, a, sess), ok = sess.canAfford(a), z = api.zoneOf(a), why = ok ? "" : reason(sess, a, c);
     const tipT = typeof TBTIPS !== "undefined" ? TBTIPS.action(f, a, c) : "";
     const tip = (why ? why + ". " : "") + tipT;
     const sp = /^(spell|dual|scroll):/.test(a) ? 1 : 0;
-    return `<button class="tbact fc-b ${o.extra || ""}${ok ? "" : " off"}" data-tba="${esc(a)}"${z ? ` data-tz="${z}"` : ""} data-c="${c}" data-sp="${sp}"${o.key ? ` data-fk="${esc(o.key)}"` : ""}${tip ? ` data-tip="${esc(tip)}"` : ""} aria-label="${esc(o.label)}${c < 99 ? `, ${c} AP` : ""}${why ? `, ${esc(why)}` : ""}" ${ok ? "" : "disabled"}>
+    return `<button class="tbact fc-b ${o.extra || ""}${ok ? "" : " off"}" data-tba="${esc(a)}"${z ? ` data-tz="${z}"` : ""} data-c="1" data-sp="${sp}"${o.key ? ` data-fk="${esc(o.key)}"` : ""}${tip ? ` data-tip="${esc(tip)}"` : ""} aria-label="${esc(o.label)}, ${esc(cTxt(c))}${why ? `, ${esc(why)}` : ""}" ${ok ? "" : "disabled"}>
       <span class="ic" aria-hidden="true">${o.icon || iconFor(f, a, api)}</span><b>${esc(o.label)}</b>${why ? `<small class="fc-why">${esc(why)}</small>` : o.sub ? `<small>${esc(o.sub)}</small>` : ""}<span class="cp" aria-hidden="true">${pipsHTML(c)}</span>${o.badge != null ? `<span class="fc-n">${esc(o.badge)}</span>` : ""}${keyLbl(o.key)}</button>`;
   }
   function shortName(f, a) {
@@ -155,10 +158,7 @@ const FIGHTCTL = (() => {
     const nSp = (s.spells || []).filter((id) => D.SPELLS[id] && D.SPELLS[id].kind !== "utility").length;
     const nPot = ["health", "magicka", "stamina"].reduce((t, k) => t + potCount(f, k), 0);
     const menuB = (m, label, sub, k, ic) => `<button class="tbact menu fc-m" data-tbm="${m}" data-fk="${k}" aria-label="${label}, ${sub}"><span class="ic" aria-hidden="true">${ic}</span><b>${label}</b><small>${sub}</small>${keyLbl(k)}</button>`;
-    const left = sess.ap;
-    const endTip = typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.action(f, "end", 0))}"` : "";
-    const end = `<button class="tbact end fc-end${left > 0 ? "" : " ready"}" data-tba="end" data-fk=" "${endTip} aria-label="End turn${left > 0 ? `, ${left} AP left becomes ${Math.min(30, left * 10)}% guard` : ""}">
-      <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M5 5l8 7-8 7z M13 5l8 7-8 7z" fill="currentColor"/></svg></span><b>End turn</b><small>${left > 0 ? `${left} AP left → +${Math.min(30, left * 10)}% guard` : "all AP used"}</small>${keyLbl(" ")}</button>`;
+    const end = endBtn(sess, f);
     return `<div class="fc${enter ? " enter" : ""}" data-fcmode="main">
       <div class="fc-tray" role="group" aria-label="Quick slots" style="--n:${Math.max(3, q.length)}">${tray || `<p class="fc-empty">Quick slots: tap ★ next to a spell or potion to pin it here</p>`}</div>
       <div class="tbgrid fc-main">${main}</div>
@@ -167,12 +167,11 @@ const FIGHTCTL = (() => {
   }
   /* changed into a beast or a Vampire Lord: the form's own moves, big; no magic or items (beastpaths.js) */
   function beastDock(sess, api, bx, enter) {
-    const f = sess.f, left = sess.ap;
+    const f = sess.f;
     const big = bx.list.slice(0, 3), rest = bx.list.slice(3);
     const main = big.map(([a, n], i) => btn(sess, api, a, { label: n, extra: "main big beast", key: String(i + 1) })).join("");
     const tray = rest.map(([a, n], i) => btn(sess, api, a, { label: n, extra: "fc-q beast", key: String(4 + i) })).join("");
-    const endTip = typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.action(f, "end", 0))}"` : "";
-    const end = `<button class="tbact end fc-end${left > 0 ? "" : " ready"}" data-tba="end" data-fk=" "${endTip} aria-label="End turn"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M5 5l8 7-8 7z M13 5l8 7-8 7z" fill="currentColor"/></svg></span><b>End turn</b><small>${left > 0 ? `${left} AP left → +${Math.min(30, left * 10)}% guard` : "all AP used"}</small>${keyLbl(" ")}</button>`;
+    const end = endBtn(sess, f);
     return `<div class="fc fc-beast ${bx.form}${enter ? " enter" : ""}" data-fcmode="${bx.form}">
       <div class="fc-tray" role="group" aria-label="${bx.form === "wolf" ? "Beast Form" : "Vampire Lord"} moves" style="--n:${Math.max(3, rest.length)}">${tray}</div>
       <div class="tbgrid fc-main">${main}</div>
@@ -217,19 +216,27 @@ const FIGHTCTL = (() => {
     </div>`;
   }
 
-  /* the AP row: gold pips (spent ones burst away), spell AP in blue, the count, and a hint which pips a move costs */
+  /* End turn: a big clear button that says what holding back is worth */
+  function endBtn(sess, f) {
+    const g = guardOf(sess);
+    const endTip = typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.action(f, "end", 0))}"` : "";
+    return `<button class="tbact end fc-end${g > 0 ? "" : " ready"}" data-tba="end" data-fk=" "${endTip} aria-label="End turn${g > 0 ? `, +${g}% guard` : ""}">
+      <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M5 5l8 7-8 7z M13 5l8 7-8 7z" fill="currentColor"/></svg></span><b>End turn</b><small>${g > 0 ? `+${g}% guard` : "ready"}</small>${keyLbl(" ")}</button>`;
+  }
+  /* the top row of your turn: moves left (used ones burst away), then stamina / magicka / health as numbers */
   function apHTML(sess) {
-    const key = sess.round + ":" + sess.idx, same = key === last.key;
-    const lostAp = same ? Math.max(0, last.ap - sess.ap) : 0, lostSp = same ? Math.max(0, last.spAp - sess.spAp) : 0;
-    last = { key, ap: sess.ap, spAp: sess.spAp };
-    const row = (n, m, cls, lost) => Array.from({ length: m }, (_, i) => `<i class="${i < n ? "on " : i < n + lost ? "lost " : ""}${cls}"></i>`).join("");
-    return `<span class="fc-apl">AP</span><span class="fc-pips" data-k="ap">${row(sess.ap, sess.st.ap, "ap", lostAp)}</span><b class="fc-apn num">${sess.ap}<small>/${sess.st.ap}</small></b>${sess.st.spellAp ? `<span class="fc-apl sap">✦</span><span class="fc-pips" data-k="sap">${row(sess.spAp, sess.st.spellAp, "sap", lostSp)}</span>` : ""}<em>Your turn${sess.until ? ` <b class="num" id="tbcd">${Math.max(0, Math.ceil((sess.until - Date.now()) / 1000))}s</b>` : ""}</em>`;
+    const key = sess.round + ":" + sess.idx, same = key === last.key, acts = sess.st.acts || 4, left = Math.max(0, acts - (sess.myActs || 0));
+    const lost = same ? Math.max(0, last.left - left) : 0;
+    last = { key, left };
+    const f = sess.f, row = Array.from({ length: acts }, (_, i) => `<i class="${i < left ? "on " : i < left + lost ? "lost " : ""}ap"></i>`).join("");
+    const res = f && f.s && typeof G !== "undefined" ? `<span class="fc-res"><em class="rc sp">${Math.round(f.sp)}</em><em class="rc mp">${Math.round(f.mp)}</em><em class="rc hp">${Math.round(f.hp)}</em></span>` : "";
+    return `<span class="fc-apl">Moves</span><span class="fc-pips" data-k="ap">${row}</span><b class="fc-apn num">${left}<small>/${acts}</small></b>${res}<em>Your turn${sess.until ? ` <b class="num" id="tbcd">${Math.max(0, Math.ceil((sess.until - Date.now()) / 1000))}s</b>` : ""}</em>`;
   }
 
   // ------------------------------------------------------------------ settings row (Settings → Fights)
   function settingsHTML(seg) {
     if (typeof seg !== "function") return "";
-    return `<div class="setrow"><span>Controls</span>${seg("tbDock", [[true, "Action bar"], [false, "Cards / wheel"]], prefs().tbDock !== false)}</div>`;
+    return `<div class="setrow"><span>Controls</span>${seg("tbDock", [[true, "Action bar"], [false, "Cards / wheel"]], prefs().tbDock !== false)}</div>${typeof MINIGAME !== "undefined" ? MINIGAME.settingsHTML(seg) : ""}`;
   }
 
   // ------------------------------------------------------------------ clicks that are ours (stars, filters); tbfight.js redraws after
@@ -305,7 +312,7 @@ const FIGHTCTL = (() => {
     startAim(b, z);
   }
 
-  // ------------------------------------------------------------------ press feedback, AP preview, foe highlight
+  // ------------------------------------------------------------------ press feedback, move preview, foe highlight
   function preview(b) {
     const r = root(); if (!r) return;
     r.querySelectorAll(".tbap .pv").forEach((i) => i.classList.remove("pv"));
@@ -313,10 +320,8 @@ const FIGHTCTL = (() => {
     r.classList.remove("fc-aimfoe");
     if (!b || b.disabled || !b.dataset.c) return;
     if (b.dataset.tz === "foe") r.classList.add("fc-aimfoe");
-    let c = +b.dataset.c; if (c >= 99) return;
-    const take = (k) => { const on = [...r.querySelectorAll(`.tbap .fc-pips[data-k="${k}"] i.on`)].reverse(); for (const i of on) { if (c <= 0) break; i.classList.add("pv"); c--; } };
-    if (b.dataset.sp === "1") take("sap");
-    take("ap");
+    let c = +b.dataset.c || 0;
+    const on = [...r.querySelectorAll(`.tbap .fc-pips[data-k="ap"] i.on`)].reverse(); for (const i of on) { if (c <= 0) break; i.classList.add("pv"); c--; }
     if (c > 0) r.querySelector(".tbap")?.classList.add("short");
   }
   function down(ev) {

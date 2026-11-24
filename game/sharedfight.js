@@ -8,7 +8,7 @@
    raised shield...), everyone's health and buffs, the turn order, whose turn it is, and the last events.
    On a teammate's phone this module opens the normal fight screen with a Mirror session: the same foe, the same health
    bars and log, the leader and the others shown as teammates. When the leader's phone says it's your turn, you play it
-   with your own moves, spells, potions, shouts, action points, magicka and stamina, exactly like your own fights.
+   with your own moves, spells, potions, shouts, magicka, stamina and health, exactly like your own fights.
    When your turn ends, the foe's new state, your health, guard, buffs you cast on others, your summon and your lines
    go back in one reply record (tbf/<id>~<you>); the leader's phone takes it over (Session.applyRemote) and carries on.
    Followers and summons are played by the AI on the leader's phone; they're only ever knocked down.
@@ -109,7 +109,7 @@ const SHAREDFIGHT = (() => {
       const f = this.f;
       this.myTurn = { tid: t.tid, until: t.until }; this.until = t.until - EARLY; this.waitOn = null;
       this.cur = { id: "me", name: f.s.name || "You" };
-      this.ap = Math.max(1, this.st.ap - (typeof FOEKIT !== "undefined" ? FOEKIT.apLoss(f) : 0)); this.spAp = this.st.spellAp; this.apSet = true; this.myActs = 0;
+      this.beginTurn();   // no action points any more: moves cost stamina, magicka or health (tbfight.js)
       f.summonTurns = 0; f.tbGuard = 0;
       const snap = new Map(); for (const [k, a] of this.byKey) snap.set(k, { hp: a.hp, down: !!a.down || !f.allies.includes(a), b: TB.BUFF_KEYS.map((x) => a[x] ?? null) });
       this.t0 = { ehp: f.ehp, hp: f.hp, ev: this.ev.length, hitters: this.hitters, ward: f.ward || 0, armor: f.armorSpell || 0, snap };

@@ -5,7 +5,7 @@ const fs = require("fs"), vm = require("vm");
 const W = process.env.W || require("path").join(__dirname, "../game/");
 const c = { process: { env: process.env }, console, Math, Date, JSON, Float64Array, Float32Array, Uint8Array, Int32Array, Uint16Array, Int16Array, Object, Array, Set, Map, WeakMap, Proxy, Number, String, structuredClone };
 vm.createContext(c);
-for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "shieldfx.js", "foegroups.js", "legendary.js", "powers.js", "engine.js", "foecap.js", "events.js", "dungeons.js", "towns.js", "curses.js", "magic.js", "spellbook.js", "spellcraft.js", "shouts2.js", "foekit.js", "combo.js", "fxicons.js"])
+for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "shieldfx.js", "foegroups.js", "legendary.js", "powers.js", "engine.js", "foecap.js", "stacks.js", "events.js", "dungeons.js", "towns.js", "curses.js", "magic.js", "spellbook.js", "spellcraft.js", "shouts2.js", "foekit.js", "combo.js", "fxicons.js"])
   if (fs.existsSync(W + f)) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c, { filename: f });
 let fails = 0;
 const ok = (cond, msg) => { if (!cond) { fails++; console.log("FAIL " + msg); } };
@@ -52,7 +52,7 @@ const ME = {
   summon: { summonTurns: 5, summonDmg: 9, summonName: "Flame Atronach" }, reanimate: { reanimate: { max: 10, fights: 2, name: "Raise Zombie" } },
   guard: { tbGuard: 0.3 }, poisoned: { kitDot: { name: "poison", dmg: 4, turns: 3 } }, bleeding: { kitDot: { name: "bleeding", dmg: 4, turns: 3 } },
   burning: { meSt: { burn: { dmg: 5, turns: 2 } } }, chilled: { meSt: { chill: { turns: 2 } } }, jolted: { meSt: { shock: { turns: 1 } } },
-  dazed: { kitApLoss: 2 }, spent: { bpTired: 2 },
+  winded: { stk: { me: { winded: 2 } } }, drained: { stk: { me: { drained: 1 } } }, might: { stk: { me: { might: 2 } } }, haste: { stk: { me: { haste: 1 } } }, spent: { bpTired: 2 },
   pw_rage: { pw: { rage: 5 } }, pw_adren: { pw: { adren: 5 } }, pw_high: { pw: { high: 5 } }, pw_cloak: { pw: { cloak: 5 } }, pw_hist: { pw: { hist: 5 } }, pw_skin: { pw: { skin: 5 } },
   pw_ether: { pw: { ether: 3 } }, pw_aspect: { pw: { aspect: 0.2, aspectRed: 0.15 } }, pw_fury: { pw: { fury: 4, furyMult: 0.2 } }, pw_storm: { pw: { storm: 4, stormDmg: 15 } },
   beast: { pw: { beast: 6 } }, lord: { pw: { lord: 6 } },
@@ -73,6 +73,7 @@ const FOE = {
   paralyzed: { eParalyzed: 2 }, stunned: { tbStunLeft: 1 }, staggered: { stagger: true }, slowed: { slowed: 2 }, calm: { calmTurns: 4 }, fear: { fearTurns: 3 },
   rattled: { fcap: { rattled: 2 } }, shaken: { shaken: 3 }, disarmed: { disarmed: 2 }, disarm_shout: { pw: { disarm: 0.3 } }, marked: { pw: { mark: 0.25, markDot: 6 } },
   rend: { pw: { rend: 0.25 }, tags: new Set(["dragon"]) }, ground: { dots: [{ dmg: 8, el: "fire", turns: 3, name: "Wall of Flames" }] }, soultrap: { soulTrap: true }, flying: { dStance: "air" },
+  vuln: { stk: { foe: { vuln: 2 } } }, sunder: { stk: { foe: { sunder: 1 } } }, weakened: { stk: { foe: { weak: 2 } } }, resolve: { stk: { foe: { resolve: 1 } } },
   kit_windup: { kit: { windup: "big" } }, kit_guard: { kit: { guard: 1 } }, kit_ward: { kit: { ward: 2 } }, kit_evade: { kit: { evade: 1 } }, kit_rage: { kit: { rage: 2 } },
 };
 for (const [k, set] of Object.entries(FOE)) { const f = Object.assign(base(), set); ok(has(X.foe(f), k), `foe: ${k} shows`); }
@@ -81,7 +82,7 @@ const AL = { ward: { ward: 30, reflect: 0.2 }, stoneskin: { armorT: 4, armorRed:
 for (const [k, set] of Object.entries(AL)) ok(has(X.ally(base(), { name: "Lydia", hp: 50, ...set }), k), `ally: ${k} shows`);
 ok(has(X.ally(base(), { name: "Lydia", hp: 0 }, true), "down"), "ally: knocked down shows (never dead)");
 // every type in the list is reachable from at least one of the checks above
-const seen = new Set([...Object.keys(ME), ...Object.keys(FOE), ...Object.keys(AL), "poisoned_blade", "vampire", "sanguinare", "down", "sunlight", "weak", "resist",
+const seen = new Set([...Object.keys(ME), ...Object.keys(FOE), ...Object.keys(AL), "dazed", "regen_stk", "poisoned_blade", "vampire", "sanguinare", "down", "sunlight", "weak", "resist",
   ...R.potions.map(([, key]) => X.me(Object.assign(base(), { s: { fx: [{ key, mag: 1, until: 2000, name: "x" }] } }))[0]?.k)]);
 for (const k of R.types) ok(seen.has(k), `${k}: covered by a test fighter`);
 // the icons row is safe HTML with the tooltip on it

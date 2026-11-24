@@ -1,7 +1,7 @@
-"""Spell tome info at a merchant (tomeinfo.js): the court wizard's tome rows show school, level, magicka, AP, what the
+"""Spell tome info at a merchant (tomeinfo.js): the court wizard's tome rows show school, level, magicka, what the
 spell does and whether your skill is enough; the pack's tome card too. Ink and pixel, 390x844.
 Usage: python3 tomeinfo_ui.py PORT   (screenshots in tests/out_tomeinfo/)"""
-import asyncio, sys, os
+import asyncio, sys, os, re
 from playwright.async_api import async_playwright
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out_tomeinfo") + os.sep
@@ -28,7 +28,7 @@ async def run(b, style):
     rows = await pg.evaluate("[...document.querySelectorAll('.item.ti-row')].map(r=>r.innerText)")
     ok(len(rows) >= 5, f"[{style}] court wizard shows tome rows with info ({len(rows)})")
     ok(all("magicka" in r or "no magicka" in r for r in rows), f"[{style}] every tome row names its magicka cost")
-    ok(all(("AP" in r) or ("out of fights" in r) for r in rows), f"[{style}] every tome row names its AP cost")
+    ok(not any(re.search(r"\bAP\b", r) for r in rows), f"[{style}] no tome row mentions action points")
     ok(all(("✓" in r) or ("⚠" in r) for r in rows), f"[{style}] every tome row says if your skill is enough")
     await pg.evaluate("document.querySelector('.item.ti-row')?.scrollIntoView({block:'start'}); window.scrollBy(0,-90); document.querySelector('#side')?.scrollBy?.(0,-90)")
     await pg.wait_for_timeout(300)
@@ -40,7 +40,7 @@ async def run(b, style):
     await pg.evaluate("document.querySelector('[data-act=skycat][data-id=all]')?.click()"); await pg.wait_for_timeout(300)
     await pg.evaluate(f"document.querySelector(\"[data-act=skysel][data-id='{rid}']\")?.click()"); await pg.wait_for_timeout(400)
     card = await pg.evaluate("document.querySelector('.sky-detail .ti-card')?.innerText || ''")
-    ok("MAGICKA" in card.upper() and "AP" in card and "Restoration" in card, f"[{style}] pack card shows the tome info: {card[:80]!r}")
+    ok("MAGICKA" in card.upper() and "DUAL" in card.upper() and "Restoration" in card, f"[{style}] pack card shows the tome info: {card[:80]!r}")
     await pg.evaluate("document.querySelector('.sky-detail')?.scrollIntoView({block:'end'})"); await pg.wait_for_timeout(200)
     await pg.screenshot(path=OUT + f"pack_{style}.png")
     ok(not errs, f"[{style}] no page errors {errs}")

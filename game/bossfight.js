@@ -7,8 +7,8 @@
    - Phases: 2 or 3 at health marks. Each one changes what the boss does: it gets angry (hits harder), calls helpers
      (they take some of your blows until you cut them down), switches to a new element, or covers the ground in
      something nasty that hurts every round. One blow can only push it one phase on, and it can't fall before its last.
-   - Big attacks are shown a turn ahead (the intent chips show them too) and you can answer: block, a ward, keep AP back
-     to dodge, or break it with a shout or a shield bash (a very heavy hit can break it too).
+   - Big attacks are shown a turn ahead (the intent chips show them too) and you can answer: block, a ward, hold back
+     (end your turn after two moves or fewer) to dodge, or break it with a shout or a shield bash (a very heavy hit can break it too).
    - A slow-motion finishing blow, and a bigger loot reveal at the end.
    - Perks (perkfx.js): Giant Slayer, Read the Signs, Break Their Focus.
    Balance (tests/test_bossfight.js): bosses last longer than before but stay winnable at levels 10, 25 and 40.
@@ -32,15 +32,15 @@ const BOSSFIGHT = (() => {
     storm: { ic: "⚡", name: "Spell Storm", mul: 2.0, ans: ["ward", "block"], cut: 0.5, magic: true },
     breath: { ic: "🔥", name: "Great Breath", mul: 2.1, ans: ["ward", "dodge"], cut: 0.45, magic: true },
     tail: { ic: "🐉", name: "Tail Sweep", mul: 1.8, ans: ["dodge"], cut: 0.3 },
-    thuum: { ic: "🗣", name: "Unrelenting Force", mul: 1.7, ans: ["block"], cut: 0.5, magic: true, ap: 2 },
+    thuum: { ic: "🗣", name: "Unrelenting Force", mul: 1.7, ans: ["block"], cut: 0.5, magic: true, wind: 2 },
     soul: { ic: "💀", name: "Soul Rend", mul: 2.3, ans: [], cut: 1, magic: true },
     steam: { ic: "♨", name: "Steam Blast", mul: 1.9, ans: ["dodge"], cut: 0.3 },
     pounce: { ic: "🐾", name: "Savage Leap", mul: 1.9, ans: ["dodge"], cut: 0.3 },
   };
   const HINT = {
-    block: "Block (or keep 1+ AP back) to halve it",
+    block: "Block (or end your turn after 2 moves or fewer) to halve it",
     ward: "A ward soaks most of it",
-    dodge: "End your turn with 2+ AP left to dodge most of it",
+    dodge: "End your turn after 2 moves or fewer to dodge most of it",
   };
   const BREAK = "A shout or a shield bash breaks it";
   const hintOf = (d) => [...d.ans.map((a) => T(HINT[a])), T(BREAK)].join(" · ");
@@ -241,7 +241,7 @@ const BOSSFIGHT = (() => {
     const f = sess.f, b = f.bf, d = TELE[b.tele.key];
     b.tele = null; b.teleCd = b.phase >= b.th.length ? 0 : 1;
     if (stuck(f)) return f.enemyTurn() + " " + T("(the big attack is lost)");
-    const blocked = !!f.blocking || (f.tbGuard || 0) >= 0.1, warded = (f.ward || 0) > 0, dodged = (f.tbGuard || 0) >= 0.2;
+    const blocked = !!f.blocking || (f.tbGuard || 0) >= 0.1, warded = (f.ward || 0) > 0, dodged = (f.tbGuard || 0) >= 0.1;   // 2 moves or fewer
     const how = d.ans.find((a) => (a === "block" && blocked) || (a === "ward" && warded) || (a === "dodge" && dodged));
     const hpB = f.hp;
     f.tgtNow = null; f.eMagic = !!d.magic;
@@ -252,7 +252,7 @@ const BOSSFIGHT = (() => {
       const sign = typeof PFX !== "undefined" ? clamp(PFX.sum(f.s, "bftele", f, {}), 0, 0.6) : 0;   // Read the Signs
       const m = d.mul * b.rage * (how ? d.cut : 1) * (1 - sign);
       f.hp = hpB - loss * m;
-      if (d.ap && !how) { f.kitApLoss = (f.kitApLoss || 0) + d.ap; note += " " + fmt("(−{0} AP next turn)", d.ap); }
+      if (d.wind && !how) { if (typeof STACKS !== "undefined") STACKS.add(f, "me", "winded", d.wind + 1); else f.sp = Math.max(0, f.sp - G.maxStamina(f.s) * 0.08 * d.wind); note += " " + fmt("(winded ×{0})", d.wind + 1); }
     }
     b.landed++;
     if (how) { b.answered++; note = " " + fmt("(you saw it coming: {0})", T({ block: "blocked", ward: "warded", dodge: "dodged" }[how])) + note; }
@@ -290,7 +290,7 @@ const BOSSFIGHT = (() => {
     if (sh) return sh;
     const d = TELE[b.tele.key];
     if (d.ans.includes("block") && !sess.myActs && can("block")) return "block";
-    if ((d.ans.includes("dodge") || d.ans.includes("block")) && sess.myActs > 0 && sess.ap >= 2 && sess.ap <= 3) return "end";
+    if ((d.ans.includes("dodge") || d.ans.includes("block")) && sess.myActs >= 2) return "end";
     return a;
   }
 

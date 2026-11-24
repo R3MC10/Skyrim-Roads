@@ -3,8 +3,22 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b146-turns", build: 146, date: "24 Nov 2026", title: "No more action points: you choose your turn", items: [
+      "Action points are gone. On your turn make up to 4 moves in any order, then press End turn. Blows, power attacks, bashes and guards cost stamina, spells cost magicka, dark magic costs a little health. Doing the same move again in a turn costs more, and a power attack is once a turn.",
+      "Moves you don't make turn into guard: end early and you take up to 30% less damage until your next turn.",
+      "You see every foe's next move by name with its icon, numbers, who it's aimed at and what it leaves behind (like Venom Spit → Lydia, Poison 3). When it acts, the banner and the log name the move too.",
+      "The turn order ribbon at the top lights up whoever is acting right now, foes included, so you always know whose go it is.",
+      "Out of breath? You can always make one plain swing a turn. Frost and shock bite your stamina and magicka a bit less than before, and trolls and hagravens regenerate at most four times a fight.",
+      "The fight speed button and the Skip to result button are gone. Tap the fight scene if you want to finish an animation right away.",
+    ] },
+    { id: "b146-stacks", build: 146, date: "24 Nov 2026", title: "Statuses stack, and every move is a minigame", items: [
+      "Burn, chill, poison, bleed, vulnerable, ward and more now stack. The number on the icon is how many stacks; each one makes it stronger and it drops by 1 every turn. Hold or hover the icon to see what it does.",
+      "Bosses can't be stun-locked: every stun, calm or fear gives them Resolve, so the next one is shorter.",
+      "Every attack, guard and spell is a quick minigame: tap in the bright zone, time your block, draw your bow or trace a rune. Perfect adds a stack of something nasty, a miss is weaker. Turn it off in Settings → Minigames if you'd rather not.",
+      "New perk effects for stacks: enchanted weapons add an extra stack, and resist perks take a stack off what's put on you.",
+    ] },
     { id: "b145-strategy", build: 145, date: "24 Nov 2026", title: "Fights that reward thinking", items: [
-      "New move: Breathe (Catch your breath). 3 AP to get back a good chunk of stamina and some magicka. Power attacks, bashes and guards burn stamina, so pace yourself: hit hard now, or breathe and hit hard next turn.",
+      "New move: Breathe (Catch your breath). It's free but ends your turn, and gets back a good chunk of stamina and some magicka. Power attacks, bashes and guards burn stamina, so pace yourself: hit hard now, or breathe and hit hard next turn.",
       "Openings: hit a foe that's staggered, stunned or paralyzed and the blow does 30% more (a power attack 45%). A power attack on a frozen foe shatters the frost for extra. Bash or stagger first, then cash in. Still no one-shots.",
       "Frost slows: a chilled or slowed foe acts later in the round, so you and your followers get in first.",
       "Give your follower orders mid-fight with the little buttons on their card: Attack, Defend me (steps in front of you sooner) or Hold back (back row, only guards and heals). Tap again to let them fight their own way.",

@@ -1,9 +1,10 @@
 /* strategy.js: real choices every turn in a turn-based fight. [OURS]
    Owner: "redesign turn-based combat so players can play strategically".
    What was already there and stays: foe intents with their target (foeintent.js), the turn-order ribbon (combat2.js),
-   rows (back-row followers draw fewer blows, followerai.js), guard from leftover AP, combos between teammates (combo.js),
+   rows (back-row followers draw fewer blows, followerai.js), guard from moves you don't make, combos between teammates (combo.js),
    foe weak spots and resists (foekit.js / combo.js chips). This module adds:
-   - Catch your breath: 3 AP to get back 35% of your stamina and 25% of your magicka. Power attacks, bashes and guards
+   - Catch your breath: free, but it ends your turn: get back 35% of your stamina and 25% of your magicka. Every blow,
+     power attack, bash and guard
      burn stamina, so a heavy hitter has to pace themselves: hit hard now, or breathe and hit hard next turn.
    - Openings: hit a foe that is staggered, stunned or paralyzed and the blow does 30% more (a power attack 45%);
      a chilled foe takes 15% more from a power attack. Bash or stagger first, then cash in. At most 7% of the foe's
@@ -17,7 +18,7 @@
    - Auto (and the sim in tests/test_strategy.js) uses all of this: it cashes in openings and catches its breath
      when it can't afford its best moves. */
 const STRAT = (() => {
-  const REC = { ap: 3, sp: 0.35, mp: 0.25 };
+  const REC = { sp: 0.35, mp: 0.25 };
   const OPEN = { hit: 0.3, power: 0.45, chill: 0.15, cap: 0.07 };
   const INIT_CUT = 4;
   const ORDERS = {
@@ -34,7 +35,8 @@ const STRAT = (() => {
   const owns = (a) => a === "recover";
   const perk = (f, id) => (typeof G !== "undefined" && G.P && f?.s ? G.P(f.s, id) : 0);
   const recMult = (f) => (perk(f, "second_wind") ? 1.5 : 1);   // Athletics: Second Wind
-  const cost = (f, a) => (a === "recover" ? REC.ap : null);
+  const cost = (f, a) => (a === "recover" ? { sp: 0, mp: 0, hp: 0 } : null);
+  const ends = (a) => a === "recover";   // Breathe is your whole turn
   function can(f, a) {
     if (a !== "recover") return true;
     if (typeof CURSE !== "undefined" && CURSE.noPotions && f.pw && (f.pw.beast || f.pw.lord)) return false;   // a beast doesn't stop to breathe
@@ -51,7 +53,7 @@ const STRAT = (() => {
   function tip(f, a) {
     if (a !== "recover") return "";
     const k = recMult(f);
-    return `Catch your breath: get back ${Math.round(maxSp(f) * REC.sp * k)} stamina and ${Math.round(maxMp(f) * REC.mp * k)} magicka. Power attacks, bashes and guards need stamina, spells need magicka.`;
+    return `Catch your breath: get back ${Math.round(maxSp(f) * REC.sp * k)} stamina and ${Math.round(maxMp(f) * REC.mp * k)} magicka. Free, but it ends your turn. Blows, power attacks, bashes and guards need stamina, spells need magicka.`;
   }
 
   // ------------------------------------------------------------------ Openings
@@ -76,18 +78,19 @@ const STRAT = (() => {
     f.ehp -= extra;
     return was === "open" ? ` · opening! +${Math.round(extra)}` : ` · shatters the frost! +${Math.round(extra)}`;
   }
-  const foeInitCut = (f) => (f && (f.foeSt?.chill || f.slowed > 0) ? INIT_CUT : 0);
+  /* chill stacks slow it more (stacks.js: +1 lower per stack, half past 4) */
+  const foeInitCut = (f) => (f && (f.foeSt?.chill || f.slowed > 0) ? INIT_CUT + (typeof STACKS !== "undefined" && f.foeSt?.chill ? Math.max(0, STACKS.foeInit(f) - 1) : 0) : 0);
 
   // ------------------------------------------------------------------ Smart play for Auto
   /* sess: the tbfight Session, a: what the Smart AI picked. Returns the move to make instead (or a). */
   function ai(sess, a) {
-    const f = sess.f; if (!a || !f) return a;
+    const f = sess.f; if (!f) return a;
     const pa = "power_attack", was = setup(f);
     if (was === "open" && (a === "attack" || a === "block") && sess.canAfford(pa)) return pa;   // cash in the opening
     const hpPct = f.hp / Math.max(1, G.maxHealth(f.s));
     const wantsSp = !f.weapon || f.weapon.skill !== "Archery";
     const low = (wantsSp && f.sp < (f.paCost || 30)) || (f.mp < maxMp(f) * 0.15 && (f.s.spells || []).length > 2 && !f.weapon);
-    if (low && hpPct > 0.45 && sess.myActs === 0 && sess.ap >= REC.ap + 2 && (a === "attack" || a === "block") && can(f, "recover")) return "recover";
+    if (low && hpPct > 0.45 && sess.myActs === 0 && (!a || a === "attack" || a === "block") && can(f, "recover")) return "recover";
     return a;
   }
 
@@ -127,5 +130,5 @@ const STRAT = (() => {
   }
   if (typeof document !== "undefined") document.addEventListener("click", onClick, true);
 
-  return { REC, OPEN, ORDERS, INIT_CUT, owns, cost, can, why, act, tip, setup, after, foeInitCut, ai, order, allowed, ordersHTML };
+  return { REC, OPEN, ORDERS, INIT_CUT, owns, cost, ends, can, why, act, tip, setup, after, foeInitCut, ai, order, allowed, ordersHTML };
 })();

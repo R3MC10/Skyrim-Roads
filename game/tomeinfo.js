@@ -1,10 +1,10 @@
 /* Spell tome info: what a tome teaches before you buy, loot or read it. One place for the words, so merchant rows,
    the pack, loot votes, caravans, market stalls and search (and the hover/long-press tooltips) all say the same thing:
-   the spell's name, school, level, magicka cost, AP cost in turn-by-turn fights, what it does (with your numbers),
+   the spell's name, school, level, magicka cost (and the dual-cast cost), what it does (with your numbers),
    whether you already know it, and whether your skill is high enough.
 
    TOMEINFO.facts(s, itemOrSpellId) -> plain object (null if it isn't a tome/spell)
-   TOMEINFO.line(s, item)           -> one short line of text ("Adept Destruction · 54 magicka · 4 AP · you know it")
+   TOMEINFO.line(s, item)           -> one short line of text ("Adept Destruction · 54 magicka · you know it")
    TOMEINFO.box(s, item)            -> compact HTML block for list rows ("" for anything that isn't a tome)
    TOMEINFO.html(s, item, {head})   -> SkyUI-style item card for detail panels / tooltips
    s may be null: then base numbers are used and nothing is said about knowing it. G.itemStats(tome) is wrapped to
@@ -17,7 +17,7 @@ const TOMEINFO = (() => {
   const safe = (f, d) => { try { const v = f(); return v == null ? d : v; } catch (e) { return d; } };
   const M = () => (typeof MAGIC !== "undefined" ? MAGIC : null);
   const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
-  const AP = { Novice: 2, Apprentice: 3, Adept: 4, Expert: 5, Master: 6 };      // same as tbfight.js TIERC (fallback)
+
   const REQ = { Novice: 0, Apprentice: 25, Adept: 50, Expert: 75, Master: 100 };   // same as magic.js REQ (fallback)
   const NUMERIC = new Set(["damage", "heal", "armor", "summon", "calm", "regen", "cloak", "dot", "rune"]);   // the numbers say it all; other kinds also get plain words
 
@@ -36,8 +36,7 @@ const TOMEINFO = (() => {
     const utility = sp.kind === "utility";
     const support = typeof SPELLBOOK !== "undefined" && SPELLBOOK.SUPPORT ? SPELLBOOK.SUPPORT.has(sp.kind) : false;
     const cost = utility ? null : Math.round(s ? safe(() => G.spellCost(s, sp), sp.cost || 0) : (sp.cost || 0));
-    const tierc = typeof TB !== "undefined" && TB.TIERC ? TB.TIERC : AP;
-    const ap = utility ? null : (tierc[level] || 3);
+
     const what = String(safe(() => mg.describe(sp), "") || "");
     const parts = s && !utility ? safe(() => mg.nums(s, id, false), []) : [];
     const known = !!(s && (s.spells || []).includes(id));
@@ -46,7 +45,7 @@ const TOMEINFO = (() => {
     const buyNeed = level === "Master" ? 90 : null;   // magic.js canBuy: the College only teaches Master spells at 90
     const fail = s ? safe(() => mg.failChance(s, id), 0) : 0;
     const dual = !!safe(() => mg.dualable(sp), false);
-    return { id, name: sp.name, school: sp.school, level, kind: sp.kind, element: sp.element || "", cost, ap, dualAp: dual && ap ? ap + 2 : null,
+    return { id, name: sp.name, school: sp.school, level, kind: sp.kind, element: sp.element || "", cost, dualCost: dual && cost ? Math.round(cost * ((mg && mg.DUAL_COST) || 2.2)) : null,
       utility, support, dual, what, parts, known, need, have, enough: have == null ? null : have >= need, buyNeed, fail };
   }
 
@@ -64,7 +63,7 @@ const TOMEINFO = (() => {
     const f = facts(s, item); if (!f) return "";
     const bits = [`${f.level} ${f.school}`];
     if (f.utility) bits.push("no magicka", "out of fights");
-    else bits.push(`${f.cost} magicka`, `${f.ap} AP`);
+    else bits.push(`${f.cost} magicka`);
     if (f.support) bits.push("on allies");
     if (f.known) bits.push("you know it");
     else if (f.have != null && f.buyNeed && f.have < f.buyNeed) bits.push(`needs ${f.school} ${f.buyNeed}`);
@@ -91,7 +90,7 @@ const TOMEINFO = (() => {
     const stat = (val, lab, cls = "") => `<div class="ti-stat ${cls}"><b>${esc(val)}</b><small>${esc(lab)}</small></div>`;
     const stats = [stat(f.school, "School"), stat(f.level, "Level"),
       f.utility ? stat("—", "Magicka") : stat(f.cost, "Magicka", "mana"),
-      f.utility ? stat("—", "AP") : stat(f.ap + (f.dualAp ? ` / ${f.dualAp}` : ""), f.dualAp ? "AP · dual" : "AP")].join("");
+      f.dualCost ? stat(f.dualCost, "Dual", "mana") : stat("—", "Dual")].join("");
     const nums = s && !f.utility ? safe(() => mg.infoHTML(s, f.id), "") : "";
     const desc = !nums || !NUMERIC.has(f.kind) ? `<p class="ti-what">${esc(whatText(f) || "A spell.")}${f.utility ? " No magicka: a short rest between casts." : ""}${f.support ? " Cast it on a teammate in fights." : ""}</p>` : "";
     return `<div class="ti-card" data-tome="${esc(f.id)}">${opts.head === false ? "" : `<div class="ti-h">${esc(f.name)}</div>`}

@@ -1,4 +1,4 @@
-/* Spell tome info before you buy/read (tomeinfo.js): every tome says its school, level, magicka and AP cost, what it
+/* Spell tome info before you buy/read (tomeinfo.js): every tome says its school, level, magicka cost, what it
    does, whether you know it and whether your skill is enough; shop rows, the pack, loot and search use it.
    W=/path/to/game/ node test_tomeinfo.js */
 const fs = require("fs"), vm = require("vm");
@@ -24,16 +24,16 @@ for (const t of tomes) {
   ok(f && f.name === sp.name && f.school === sp.school && MAGIC.LEVELS.includes(lv), t + " facts " + JSON.stringify(f && [f.name, f.school, lv]));
   const line = T.line(s, t);
   ok(line.startsWith(lv + " " + sp.school), t + " line starts with level + school: " + line);
-  if (sp.kind === "utility") ok(/no magicka/.test(line) && f.ap == null, t + " utility has no magicka/AP: " + line);
+  if (sp.kind === "utility") ok(/no magicka/.test(line) && f.dualCost == null, t + " utility has no magicka: " + line);
   else {
     ok(Number.isFinite(f.cost) && f.cost >= 0 && new RegExp("\\\\b" + f.cost + " magicka").test(line), t + " magicka in line: " + line);
-    ok(f.ap === TB.TIERC[lv] && line.includes(f.ap + " AP"), t + " AP matches the fight: " + line);
+    ok(!/\bAP\b/.test(line), t + " no action points any more: " + line);
   }
   const box = T.box(s, t), bt = strip(box);
   ok(box.includes('class="ti-box"') && bt.length > 8, t + " row box has a description: " + bt);
   ok(!/undefined|NaN|null/.test(box + line), t + " no undefined/NaN: " + bt + " | " + line);
   const card = T.html(s, t), ct = strip(card);
-  ok(ct.includes(sp.school) && ct.includes(lv) && /Magicka/i.test(ct) && /AP/.test(ct), t + " card has school/level/magicka/AP: " + ct);
+  ok(ct.includes(sp.school) && ct.includes(lv) && /Magicka/i.test(ct) && !/\bAP\b/.test(ct), t + " card has school/level/magicka, no AP: " + ct);
   ok(card.includes(sp.name.replace(/'/g, "&#39;")), t + " card names the spell");
   ok(!/undefined|NaN/.test(card), t + " card clean: " + ct);
   ok(T.box(null, t) && T.line(null, t).startsWith(lv), t + " works without a character");
