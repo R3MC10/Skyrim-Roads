@@ -52,7 +52,8 @@ const TBUI = (() => {
     const host = el.querySelector(".tbin"); if (!host) return;
     const hb = host.getBoundingClientRect();
     const spot = { me: el.querySelector(".tbu.me"), foe: el.querySelector(".tbu.foe") };
-    const stage = el.querySelector(".tbstage");
+    const stage0 = el.querySelector(".tbstage"), cvs = stage0?.querySelector(".tbscene canvas");
+    const stage = cvs && cvs.getBoundingClientRect().width > 40 ? cvs : stage0;   // numbers rise from the fighters in the picture
     const used = { me: 0, foe: 0 };
     pops.forEach((p, i) => {
       const t = spot[p.at]; if (!t) return;

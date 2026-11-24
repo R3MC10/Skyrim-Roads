@@ -1172,7 +1172,7 @@ const FIGHTART = (() => {
       if (flash > 0.01 && !rm) { wg.save(); wg.setTransform(1, 0, 0, 1, 0, 0); wg.globalAlpha = flash; wg.fillStyle = flashC; wg.fillRect(0, 0, work.width, work.height); wg.restore(); }
       // copy pixel work to the screen
       if (pixel) { g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = false; g.drawImage(work, 0, 0, cv.width, cv.height); }
-      bars();
+      if (!f.tbHud) bars();   // combat2.js draws the bars over the fighters itself
       // floating numbers and labels (crisp, on the screen canvas)
       g.save(); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.textAlign = "center";
       for (let i = 0; i < NF; i++) if (fl[i] > 0) {

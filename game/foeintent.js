@@ -207,7 +207,7 @@ const FOEINTENT = (() => {
      width, the foe at 72%, your allies in a line behind you) */
   let arrowTok = 0;
   function arrow(el, sess, nx, tries = 0, tok = ++arrowTok) {
-    const stage = el.querySelector(".tbstage"), cv = stage?.querySelector("canvas");
+    const stage = el.querySelector(".tbstage"), cv = stage?.querySelector(".tbscene canvas") || stage?.querySelector("canvas");   // .tbscene: combat2.js puts a blurred copy behind it
     const r = cv?.getBoundingClientRect();
     if (!stage || !cv || r.width < 40 || r.height < 30) {   // the scene draws its canvas a moment after the screen: try again shortly
       if (tries < 8 && typeof setTimeout !== "undefined") setTimeout(() => { if (tok === arrowTok && el.isConnected && !el.classList.contains("tbplay") && !sess.done) arrow(el, sess, nx, tries + 1, tok); }, 90);
