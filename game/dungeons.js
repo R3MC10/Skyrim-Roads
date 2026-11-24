@@ -436,8 +436,7 @@ const DUNGEONS = (() => {
     if (r.m === "book") {
       const sk = s.skills[r.skill];
       if (sk.lvl >= 100) return done({ text: "There's nothing in it you don't already know." });
-      sk.lvl += 1; s.charXp += sk.lvl; const msgs = [];
-      while (s.charXp >= F.charXpNeeded(s.level)) { s.charXp -= F.charXpNeeded(s.level); s.level++; s.pendingLevels++; msgs.push(`You reached level ${s.level}!`); }
+      const msgs = G.raiseSkill(s, r.skill);
       return done({ text: `You read "${r.title}". ${r.skill} increased to ${sk.lvl}.`, skills: msgs });   // [Skyrim] skill books +1
     }
     if (r.m === "shrine") { G.setHealth(s, G.maxHealth(s)); return done({ text: "You kneel. Your wounds close." }); }

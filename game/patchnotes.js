@@ -11,6 +11,15 @@ const PATCHNOTES = (() => {
       "Carriage trips show the carriage again: you on the bench, a horse in front and the wheels turning. Caravans coming the other way get a real horse too.",
       "Horses on the map step more cleanly as well. With Reduce motion on, everyone stands still.",
     ] },
+    { id: "b145-levelup", build: 145, date: "24 Nov 2026", title: "Levelling up feels like Skyrim", items: [
+      "When a skill goes up you now see it near the top of the screen: \"One-Handed increased to 36\" with a thin bar for the skill, and your level bar under it filling up, so you always know how close the next level is.",
+      "Reaching a new level is a proper moment: a big LEVEL UP with your new level number, the bar fills to the end and starts again.",
+      "Open Skills (from the compass or the Character screen) with a level-up waiting and it asks first, like Skyrim: three pillars, Health, Magicka or Stamina, each +10. Stamina also adds +5 carry weight. Every level still gives a perk point too.",
+      "You can choose later. Level-ups wait for you and stack up, and the compass shows a glowing \"Level up\" on Skills and on your level bar until you spend them.",
+      "Skill books and trainers count the same way as using a skill, so every skill point moves your level bar.",
+      "Other players see your Health, Magicka and Stamina next to your level in the list of travellers.",
+      "Nothing changes for your hero: you keep your level, your perks and every choice you already made.",
+    ] },
     { id: "b168-folbuild", build: 168, date: "24 Nov 2026", title: "Followers learn like you do", items: [
       "Your follower now has their own skills, the same list as yours, and they rise with use exactly like yours: swinging a sword raises One-Handed, shooting raises Archery, spells raise their school, blocking raises Block, and blows on their armour raise their armour skill.",
       "Their skill increases add up to level-ups, like yours. At each level they pick +10 Health, Magicka or Stamina to suit how they fight, and get a perk point. They still never go past your level.",
