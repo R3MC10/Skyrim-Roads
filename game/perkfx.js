@@ -148,6 +148,8 @@ const PFX = (() => {
     [ "Speechcraft", "commanding_voice", "Commanding Voice", 1, [60], ["intimidation"], "Shouts cool down 15% faster. [OURS]", [["shoutcd", 0.15, {}]]],
     [ "Speechcraft", "inspiring", "Inspiring", 1, [40], ["persuasion"], "Your follower and party allies fight 15% harder. [OURS]", [["allies", 0.15, {}]]],
     [ "Speechcraft", "leadership", "Leadership", 2, [50, 80], ["inspiring"], "Your follower learns from fights 25/50% faster and shrugs off 10/20% of the blows they take. [OURS]", [["folxp", 0.25, {}], ["foltaken", 0.1, {}]]],
+    [ "Speechcraft", "battle_tutor", "Battle Tutor", 1, [40], ["inspiring"], "Your follower can learn spell tomes 10 skill points early, and their spells cost 20% less magicka. [OURS]", [["folteach", 10, {}], ["folmp", 0.2, {}]]],
+    [ "Speechcraft", "shield_brother", "Shield-Brother", 1, [60], ["leadership"], "Combos with your follower, summons and party hit 25% harder (Shatter, Overload, Steam, Thermal shock, Opening). [OURS]", [["combo", 0.25, {}]]],
     [ "Speechcraft", "talk_down", "Talk Down", 1, [50], ["bribery"], "Bribes and fines cost 25% less. [OURS]", [["bribe", 0.25, {}]]],
     [ "Speechcraft", "rally", "Rally", 1, [80], ["inspiring"], "Your follower and party allies fight another 15% harder. [OURS]", [["allies", 0.15, {}]]],
     [ "Speechcraft", "orator", "Orator", 1, [100], ["commanding_voice", "rally"], "Jobs pay 10% more and prices are 5% better. [OURS]", [["job", 0.1, {}], ["price", 0.05, {}]]],
@@ -215,7 +217,7 @@ const PFX = (() => {
     // ---------------------------------------------------------------- world events (worldevents.js)
     [ "Conjuration", "gate_breaker", "Gate Breaker", 1, [40], ["summoner"], "You know how Oblivion works: Daedra take 15% more damage from you and hit you 10% softer, and your fights at an Oblivion gate count 25% more towards closing it. [OURS]", [["out", 0.15, { tag: ["daedra"] }], ["in", -0.1, { tag: ["daedra"] }], ["wevgate", 0.25, {}]]],
     [ "Archery", "sky_hunter", "Sky Hunter", 1, [50], ["eagle_eye"], "Bows do 15% more to dragons, and every migrating dragon you bring down drops an extra dragon bone. [OURS]", [["out", 0.15, { sk: AR, tag: ["dragon"] }], ["wevbone", 1, {}]]],
-    [ "Speechcraft", "caravan_friend", "Caravan Friend", 1, [40], ["bribery"], "The Khajiit's grand caravan sells to you 15% cheaper and sets aside one more rare item for you. [OURS]", [["wevmarket", 0.15, {}], ["wevstock", 1, {}]]],
+    [ "Speechcraft", "caravan_friend", "Caravan Friend", 1, [40], ["bribery"], "The Khajiit's grand caravan sells to you 15% cheaper and sets aside one more rare item for you. Caravans you meet on the road pay you 25% more to guard their wagons. [OURS]", [["wevmarket", 0.15, {}], ["wevstock", 1, {}], ["cvpay", 0.25, {}]]],
     // ---------------------------------------------------------------- homesteads (homestead.js)
     [ "Smithing", "carpenter", "Carpenter", 1, [30], ["steel_smithing"], "Building at your homestead takes 25% fewer materials. [OURS, from Hearthfire]", [["hsmats", 0.25, {}]]],
     [ "Athletics", "woodsman", "Woodsman", 1, [30], ["long_strider"], "The sawmill, quarry and clay pit at your homestead give 50% more. [OURS]", [["hsyield", 0.5, {}]]],
@@ -234,6 +236,9 @@ const PFX = (() => {
     [ "Sneak", "first_move", "First Move", 1, [40], ["stealth"], "You read a fight before it starts: +4 initiative in turn-by-turn fights. [OURS]", [["tbinit", 4, {}]]],
     [ "Alteration", "quickened_casting", "Quickened Casting", 1, [40], ["apprentice_alteration"], "In turn-by-turn fights you get 1 more spell point every turn (only for spells). [OURS]", [["tbspap", 1, {}]]],
     [ "Heavy Armor", "drilled_in_steel", "Drilled in Steel", 1, [50], ["juggernaut"], "Heavy armor slows you only half as much in turn-by-turn fights (initiative). [OURS]", [["tbheavy", 0.5, {}]]],
+    // ---------------------------------------------------------------- something at every place (placestuff.js)
+    [ "Lockpicking", "wayfarers_nose", "Wayfarer's Nose", 1, [35], ["apprentice_locks"], "Hidden strongboxes at cabins, shacks and lodges hold 30% more gold and fill up again a day sooner. [OURS]", [["stash", 0.3, {}]]],
+    [ "Restoration", "pilgrim", "Pilgrim", 1, [30], ["novice_restoration"], "Blessings from shrines and stones last two days instead of one. [OURS]", [["bless", 1, {}]]],
     // ---------------------------------------------------------------- dungeon mini-games (dungeongames.js): each game reads its key as "ease"
     [ "Acrobatics", "blade_dancer", "Blade Dancer", 1, [45], ["tumbler"], "Dashing past traps: the blades swing slower and block the way for less of each swing. [OURS]", [["dgdash", 0.3, {}]]],
     [ "Sneak", "trap_sense", "Trap Sense", 1, [35], ["stealth"], "Finding the trigger: the pressure plate glints more often, sits lower, and you get one more wrong guess. [OURS]", [["dgspot", 0.3, {}]]],

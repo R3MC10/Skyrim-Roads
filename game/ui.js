@@ -21,6 +21,10 @@
     ["log", "Journal", '<path d="M6 3h12v18H6z"/><path d="M9 8h6M9 12h6M9 16h4"/>'],
   ];
   let S = null, net = {}, tab = "map", selected = null, others = [], bags = [];
+  const TI = typeof TOMEINFO !== "undefined" ? TOMEINFO : null;   // spell tome info before you buy or read it (tomeinfo.js)
+  if (TI) TI.bind(() => S);
+  const tiBox = (item) => (TI ? TI.box(S, item) : "");
+  const tiCls = (item) => (TI && TI.isTome(item) ? " ti-row" : "");
   let zoom = innerWidth < 700 ? 2.4 : 1, follow = true, center = [0.5, 0.5], view = {}, version = 0, rendered = -1, lastPanelRender = 0;
   let tacticsDraft = { if: "hp_below", pct: 40, do: "potion:health", edit: null }, testResult = null, townShop = null, forgeTab = "make", forgeGroup = "iron", packOpen = null, searchText = "", uxAllPlaces = false, uxHelpOpen = null, packSearch = "";
   let raidDocs = [], raidSeen = null, raidJoined = null, raidAuto = null, enchDraft = {};
@@ -566,6 +570,7 @@
     Store.watch("stalls", (docs) => onStalls(docs));
     if (typeof TB !== "undefined") {   // turn-based fights: toasts, and live turns for real players in your party
       TB.init({ toast: (t) => toast(t), remote: TB.remoteFor(Store, S.id) });   // only used while you're online with party members
+      if (typeof SHAREDFIGHT !== "undefined") SHAREDFIGHT.mount({ store: Store, S: () => S, persist, toast: (t) => t && toast(t), after: () => renderPanel(true) });   // the leader's fight on your own full fight screen (sharedfight.js)
       TB.watchTurns(Store, () => S?.id);
     }
     Store.watch("halls", (docs) => onHalls(docs));
@@ -659,7 +664,26 @@
     if (typeof PARTYPLAY !== "undefined" && !PARTYPLAY.canDecide(S)) return;   // following the party leader: road events happen to them
     lastEventAt = Date.now();
     [S.x, S.y] = livePos();
-    if (G.startEvent(S)) { persist(); ppUI?.leaderHalt("event", "something by the road", S.trip?.event?.text || ""); openEvent(); }
+    if (G.startEvent(S)) { persist(); openEvent(); ppUI?.leaderHalt("event", "something by the road", S.trip?.event?.text || ""); }
+  }
+  /* caravans on the road (caravanroad.js): your road brings you alongside one, or you tap its wagon on the map */
+  function meetCaravan(cid, auto) {
+    if (typeof CVROAD === "undefined") return;
+    if (typeof PARTYPLAY !== "undefined" && !PARTYPLAY.canDecide(S)) { if (!auto) toast("Only your party's leader can stop for a caravan."); return; }
+    const ev = CVROAD.meet(S, cid, livePos());
+    if (!ev || ev.err) { if (!auto) toast(ev?.err || "That caravan has moved on."); return; }
+    lastEventAt = Date.now(); SOUND.fx?.("arrive");
+    persist(); ppUI?.leaderHalt("event", ev.name, ev.text); openEvent();
+  }
+  function maybeCaravan() {
+    if (typeof CVROAD === "undefined" || document.hidden || $("#modal") || S.trip?.status !== "travel" || Date.now() - lastEventAt < 8000) return;
+    if (typeof PARTYPLAY !== "undefined" && !PARTYPLAY.canDecide(S)) return;
+    const c = CVROAD.autoMeet(S, livePos()); if (c) meetCaravan(c.id, true);
+  }
+  function caravanEscortPay() {
+    if (typeof CVROAD === "undefined" || S.trip || !S.caravanJob?.escort) return;
+    const m = CVROAD.arrived(S); if (!m) return;
+    persist(true); SOUND.fx("coin"); showMessage("Caravan", "🐫 " + m);
   }
 
   function tick() {
@@ -676,7 +700,7 @@
         if (out.bag) Store.addBag(out.bag);
         persist(true);
         if (out.died) { SOUND.fx("death"); showMessage("You died", out.died, true); }
-        else if (out.encounter) { ppUI?.leaderHalt("encounter", out.encounter.name, out.encounter.text); openEncounter(); }
+        else if (out.encounter) { openEncounter(); ppUI?.leaderHalt("encounter", out.encounter.name, out.encounter.text); }
         else if (out.arrived) {
           SOUND.fx("arrive"); tally("arrivals"); festCount("arrive");
           if (typeof IMM !== "undefined") IMM.bark(S, out.arrived);
@@ -693,8 +717,9 @@
           if (qa) setTimeout(() => toast(`📜 ${qa.st.title}: "${qa.st.obj.label}" is waiting in the Journal.`), 2500);
           if (out.solIntro) { persist(true); setTimeout(() => showMessage("Quest", out.solIntro), 700); }
         }
-      } else { Store.save(S); maybeRoadEvent(); }
+      } else { Store.save(S); maybeRoadEvent(); maybeCaravan(); }
     }
+    caravanEscortPay();
     followParty(); ppUI?.tick(); checkAmbush(); renderRaid(); soundTick();
     if (S.tut?.step > 0 && TUT[S.tut.step]?.done()) bump();
     if (Math.floor(t) % 5 === 0) { checkAch(); bloodTick(); }
@@ -864,7 +889,7 @@
       rulers: Object.entries(WARS.rulers(S)).map(([hold, c]) => ({ hold, color: c.colors[0] })),
       banners: CLANS.banners(homeDocs, S, VISITS.record(S)).filter((b) => WORLD.places[b.town]).map((b) => ({ ...b, pos: WORLD.places[b.town].slice(0, 2) })),
       cleared: clearedLeft(), bags: visibleBags(), selected: selected && WORLD.places[selected] ? selected : null, t: ts / 1000, zoom, center, reduceMotion, weather: WEVENTS.weather(pos).id, quest: questPos(), mask: typeof PRIESTS !== "undefined" ? PRIESTS.marker(S)?.pos : null, tmaps: typeof EXPLORE !== "undefined" ? EXPLORE.marks(S) : [], rumours: typeof RUMOURS !== "undefined" ? RUMOURS.marks(S) : [], herbs: typeof GATHER !== "undefined" ? GATHER.marks(S) : [], pins: (S.pins || []).map((p) => ({ pos: [p.x, p.y], label: `${p.icon} ${p.label}`, on: selected === "__pin:" + p.id })),
-      routes: party ? others.filter((o) => o.moving && o.path?.length > 1 && party.members.some((m) => m.id === o.id)).map((o) => ({ path: o.path, from: otherPos(o), name: o.name })) : [], horse: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, cart: CARAVANS.hasCart(S), guards: typeof GUARDS !== "undefined" ? GUARDS.visible(S).map((p) => (p.visible || !myCone || !VISION.inCone(myCone, p.pos) ? p : { ...p, visible: true })) : null, caravans: CARAVANS.all().map((c) => { const cp = CARAVANS.pos(c); return { cp, c }; }).map(({ cp, c }) => ({ pos: cp, visible: G.pxDist(cp, pos) < 160 || (myCone && VISION.inCone(myCone, cp)) || S.discovered.some((n) => WORLD.places[n] && ["city", "town"].includes(WORLD.places[n][2]) && G.pxDist(cp, WORLD.places[n]) < 45), khajiit: c.line.khajiit, moving: c.phase === "road", mine: S.caravanJob?.id === c.id, label: c.line.name.replace(/'s caravan$/, "") })).filter((c) => !(c.mine && S.trip?.caravan)), hall: S.discovered.includes(HALL.TOWN) || known(HALL.TOWN) ? { pos: HALL.POS, label: `Hall of the North · ${HALL.progress().name}` } : null,
+      routes: party ? others.filter((o) => o.moving && o.path?.length > 1 && party.members.some((m) => m.id === o.id)).map((o) => ({ path: o.path, from: otherPos(o), name: o.name })) : [], horse: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, cart: CARAVANS.hasCart(S), guards: typeof GUARDS !== "undefined" ? GUARDS.visible(S).map((p) => (p.visible || !myCone || !VISION.inCone(myCone, p.pos) ? p : { ...p, visible: true })) : null, caravans: CARAVANS.all().map((c) => { const cp = CARAVANS.pos(c); return { cp, c }; }).map(({ cp, c }) => ({ pos: cp, visible: G.pxDist(cp, pos) < 160 || (myCone && VISION.inCone(myCone, cp)) || S.discovered.some((n) => WORLD.places[n] && ["city", "town"].includes(WORLD.places[n][2]) && G.pxDist(cp, WORLD.places[n]) < 45), khajiit: c.line.khajiit, moving: c.phase === "road", mine: S.caravanJob?.id === c.id, id: c.id, near: typeof CVROAD !== "undefined" && c.phase === "road" && CVROAD.canMeet(S) && G.pxDist(cp, pos) <= CVROAD.TAP_RANGE, label: c.line.name.replace(/'s caravan$/, "") })).filter((c) => !(c.mine && S.trip?.caravan)), hall: S.discovered.includes(HALL.TOWN) || known(HALL.TOWN) ? { pos: HALL.POS, label: `Hall of the North · ${HALL.progress().name}` } : null,
     };
     WorldMap.draw($("#map"), view);
   }
@@ -937,6 +962,8 @@
       const wasMove = moved; down = null; clearTimeout(press);
       if (wasMove || pressed || !view.transform || e.type === "pointercancel") return;
       const r = c.getBoundingClientRect();
+      const cvTap = typeof CVROAD !== "undefined" && S.trip?.status === "travel" ? CVROAD.hit(view.caravans, screenToWorld(e.clientX - r.left, e.clientY - r.top), WorldMap.W, WorldMap.H, 24 / view.transform.k) : null;
+      if (cvTap) return meetCaravan(cvTap.id);   // tapped a caravan's wagons while travelling: stop and meet them
       const pin = pinAt(e.clientX - r.left, e.clientY - r.top);
       selected = pin ? "__pin:" + pin.id : WorldMap.placeAt(view, e.clientX - r.left, e.clientY - r.top, known);
       if (!selected) { const w = screenToWorld(e.clientX - r.left, e.clientY - r.top); if (WORLD.onMap(w)) { roamSpot = w; selected = "__spot"; } }
@@ -1042,19 +1069,22 @@
         <button class="btn" data-act="enc" data-a="potion" ${G.countRestore(S, "health") ? "" : "disabled"}>🧪 Potion (${G.countRestore(S, "health")})</button>
         ${e.bountyHold ? `<button class="btn pri" data-act="enc" data-a="pay" style="grid-column:1/-1">⚖️ Pay your ${esc(e.bountyHold)} bounty (${TOWNS.bounty(S, e.bountyHold)} gold)</button>` : ""}
       </div><p class="sub" style="margin-bottom:0">${typeof TB !== "undefined" && TB.enabled() ? `You play the fight turn by turn` : `Fighting uses ${aiOn() ? `<b>Smart AI</b> (${esc(S.loadout)} gear)` : `your <b>${esc(S.loadout)}</b> tactics`}`}.${typeof SNEAK2 !== "undefined" ? "" : " A hidden start gives a sneak attack."}</p>${typeof SNEAK2 !== "undefined" ? SNEAK2.noteHTML(S, e, typeof AISET !== "undefined" ? AISET.get(G.loadout(S)).sneak : "safe", esc) : ""}`, "enc");
+    ppUI?.onModal();   // a party is with you: they see this too and vote (partyplay.js)
   }
   const skillLine = (r) => (r.skills || []).length ? `<p class="sub">📈 ${r.skills.map(esc).join(" · ")}</p>` : "";
   function openEvent(note) {
     const ev = S.trip?.event;
     if (!ev) return;
-    const shop = ev.shop ? `<div class="list" style="margin:8px 0">${ev.shop.map((i) => { const p = G.buyPrice(S, i, null); return `<div class="item"><div class="t">${esc(D.ITEMS[i].name)}<span>${esc(G.itemStats(i))} · ${D.ITEMS[i].weight} wt</span></div><span class="num gold">${p}</span><button class="btn sm" data-act="evbuy" data-item="${i}" ${S.gold >= p ? "" : "disabled"}>Buy</button></div>`; }).join("")}</div><p class="sub">You have ${S.gold} gold.</p>` : "";
+    const shop = ev.shop ? `<div class="list" style="margin:8px 0">${ev.shop.map((i) => { const p = G.buyPrice(S, i, null); return `<div class="item${tiCls(i)}"><div class="t">${esc(D.ITEMS[i].name)}<span>${esc(G.itemStats(i))} · ${D.ITEMS[i].weight} wt</span></div><span class="num gold">${p}</span><button class="btn sm" data-act="evbuy" data-item="${i}" ${S.gold >= p ? "" : "disabled"}>Buy</button>${tiBox(i)}</div>`; }).join("")}</div><p class="sub">You have ${S.gold} gold.</p>` : "";
     const choices = ev.shop ? [["leave", "Say goodbye and move on"]] : G.eventChoices(S);
     openModal(`${typeof EVENTART !== "undefined" ? EVENTART.road(ev) : ""}<p class="sub" style="margin:0">On the road · ${esc(G.holdAt([S.x, S.y]))} · ${esc(Terrain.NAMES[Terrain.typeAtPos([S.x, S.y])])}</p>
       <h2 style="margin:4px 0 8px">${esc(ev.title || "Something by the road")}</h2><p>${esc(ev.text)}</p>
       ${note ? `<p class="sub">${esc(note)}</p>` : ""}${shop}
       <div class="evc${ev.enc ? " encc" : ""}">${choices.map(([c, label]) => `<button class="btn ${c === "leave" ? "" : /^(fight|free|hunt|help)$/.test(c) && /⚔️/.test(label) ? "danger" : "pri"}" data-act="ev" data-c="${c}">${esc(label)}</button>`).join("")}</div>`);
+    ppUI?.onModal();
   }
   function eventAction(c) {
+    ppUI?.leaderPicked(c);   // in a party: everyone hears what the leader chose
     const evBefore = S.trip?.event, gold0 = S.gold, lvBefore = lvUI && ppUI ? LOOTVOTE.snap(S) : null;
     tbCall(() => (typeof ENC !== "undefined" ? ENC.decide(S, c) : G.eventChoice(S, c)), (r) => eventDone(c, r, evBefore, gold0, lvBefore));
   }
@@ -1071,7 +1101,7 @@
     openModal(`${typeof EVENTART !== "undefined" && evBefore ? EVENTART.road(evBefore) : ""}<h2>${esc(evBefore?.title || "On the road")}</h2><p>${esc(r.text)}</p>${skillLine(r)}
       <button class="btn pri" data-act="close" style="width:100%">Continue to ${esc(S.trip?.destName || "the road")}</button>`);
   }
-  function encounterAction(a) { tbCall(() => G.encounterAction(S, a), (r) => encounterDone(a, r)); }
+  function encounterAction(a) { ppUI?.leaderPicked(a); tbCall(() => G.encounterAction(S, a), (r) => encounterDone(a, r)); }
   function encounterDone(a, r) {
     if (ppUI && S.trip?.status !== "encounter") ppUI.leaderResolved(r.died ? "fell on the road" : r.fight ? (r.fight.won ? `won the fight with ${r.fight.e?.name || "the foe"}` : "lost the fight") : (r.text || "").slice(0, 120));
     if (r.bag) Store.addBag(r.bag);
@@ -1110,7 +1140,7 @@
     const idOf = (n) => (typeof FASTQOL !== "undefined" && FASTQOL.itemsNamed ? FASTQOL.itemsNamed(n)[0] : null);
     const rows = (r.loot || []).map((line) => {
       const m = String(line).match(/^(.*?)(?: ×(\d+))?$/), id = idOf(m[1]), it = id && D.ITEMS[id], q = +(m[2] || 1);
-      return `<div class="loot-row">${it ? ICONART.item(id, 28) : '<span class="lr-i">•</span>'}<span class="nm">${esc(m[1])}${q > 1 ? ` <small>×${q}</small>` : ""}</span><span class="num">${it ? +(it.weight * q).toFixed(1) : ""}</span><span class="num gold">${it ? it.value * q : ""}</span></div>`;
+      return `<div class="loot-row">${it ? ICONART.item(id, 28) : '<span class="lr-i">•</span>'}<span class="nm">${esc(m[1])}${q > 1 ? ` <small>×${q}</small>` : ""}${TI && TI.isTome(id) ? `<small class="ti-line">${esc(TI.line(S, id))}</small>` : ""}</span><span class="num">${it ? +(it.weight * q).toFixed(1) : ""}</span><span class="num gold">${it ? it.value * q : ""}</span></div>`;
     });
     if (r.gold) rows.unshift(`<div class="loot-row"><span class="lr-i">🪙</span><span class="nm">Gold</span><span></span><span class="num gold">${r.gold}</span></div>`);
     return rows.length ? `<div class="lootbox" role="list" aria-label="Loot"><div class="loot-h"><span></span><span>Loot</span><span>Wt</span><span>Value</span></div>${rows.join("")}</div>` : "";
@@ -1249,7 +1279,7 @@
       <button class="btn pri" data-act="greybeards" style="width:100%" ${S.greybeards ? "disabled" : ""}>${S.greybeards ? "They have taught you all they will, for now" : "Speak with the Greybeards"}</button></div>`;
     if (l && !S.trip && SMITH.MINES[l] && !TOWNS.isTown?.(l) && !DUNGEONS.enterable(l)) return `<div class="panel"><h2>${esc(l)}</h2>${PLACEART.scene(l)}${mineHTML(l)}</div>`;
     const solLine = typeof SOL !== "undefined" && l ? SOL.placeLine(S, l) : "";
-    if (l && !S.trip && WORLD.places[l] && !DUNGEONS.enterable(l)) return `<div class="panel"><h2>${esc(l)}</h2>${PLACEART.scene(l)}<p class="sub" style="margin:0">${esc(G.holdAt(WORLD.places[l]))}${G.shopTypes(l).length || TOWNS.isTown(l) ? " · shops, inn and more in the Area tab" : ""}</p>${solLine ? `<p class="sub">${esc(solLine)}</p>` : ""}</div>`;
+    if (l && !S.trip && WORLD.places[l] && !DUNGEONS.enterable(l)) return `<div class="panel"><h2>${esc(l)}</h2>${PLACEART.scene(l)}<p class="sub" style="margin:0">${esc(G.holdAt(WORLD.places[l]))}${G.shopTypes(l).length || TOWNS.isTown(l) ? " · shops, inn and more in the Area tab" : ""}</p>${solLine ? `<p class="sub">${esc(solLine)}</p>` : ""}</div>${typeof PLACESTUFF !== "undefined" ? PLACESTUFF.card(S) : ""}`;
     if (!l || !DUNGEONS.enterable(l) || S.trip) return "";
     const left = DUNGEONS.refillLeft(S, l), lvl = { 1: 1, 2: 6, 3: 12 }[DUNGEONS.info(l).tier];
     const th = DUNGEONS.info(l).theme, rec = th === "lair" ? 20 : th === "giantcamp" ? 10 : lvl;
@@ -1439,7 +1469,7 @@
     if (it.desc) lines.push(it.desc);   // Daedric artifacts and other named items
     if (it.effects) lines.push(it.effects.map(([e, m, dd]) => `${e} ${m}${dd * 5 >= 60 ? ` for ${Math.round(dd * 5 / 60)} min` : ""}`).join(" · "));
     else if (it.restore) lines.push(`Restores ${it.restore[1]} ${it.restore[0]}`);
-    if (it.slot === "scroll" || it.slot === "tome") lines.push(`${it.slot === "tome" ? "Teaches" : "Casts"} ${D.SPELLS[it.spell].name}${it.slot === "tome" && S.spells.includes(it.spell) ? " (you know it)" : ""}`);
+    if (it.slot === "scroll" || (it.slot === "tome" && !TI)) lines.push(`${it.slot === "tome" ? "Teaches" : "Casts"} ${D.SPELLS[it.spell].name}${it.slot === "tome" && S.spells.includes(it.spell) ? " (you know it)" : ""}`);
     if (it.slot === "ingredient" && TOWNS.INGREDIENT_FX[r.item]) lines.push("Effects: " + TOWNS.INGREDIENT_FX[r.item][1].map((e, i) => TOWNS.known(S, r.item)[i] ? e : "?").join(", ") + (typeof GATHER !== "undefined" && GATHER.WHERE[r.item] ? ` · Found: ${GATHER.WHERE[r.item]}` : ""));
     if (it.slot === "material") lines.push("Used at the forge to improve gear.");
     if (r.stolen) lines.push("Stolen. Only a fence will buy it.");
@@ -1462,7 +1492,7 @@
     if (typeof INVQOL !== "undefined") acts.push(...INVQOL.acts(S, r, eq, false));   // Keep / Drop (invqol.js)
     if (typeof ECON !== "undefined" && !it.noTrade && !["golden_claw", "dragonstone"].includes(r.item)) { const bp = ECON.bestPlace(S, r); if (bp && bp.p > 1) lines.push(`Sells best in ${bp.to} right now (about ${bp.p} gold each).`); }
     return `<div class="sky-detail"><div class="sky-ico">${ICONART.item(r.item, 64, r)}</div><h3 class="q-${typeof CC !== "undefined" ? CC.tier(r.item, r) : "common"}">${esc(row.name)}</h3>${typeof CC !== "undefined" ? `<p class="tierline q-${CC.tier(r.item, r)}">${CC.TIER_NAME[CC.tier(r.item, r)]}${r.stolen ? ' · <span class="is-stolen">Stolen</span>' : ""}</p>` : ""}<div class="sky-stats">${stats.map(([k, v]) => `<div><span>${k}</span><b class="num">${esc(String(v))}</b></div>`).join("")}</div>
-      ${lines.map((l) => `<p class="sub">${esc(l)}</p>`).join("")}${gearPreview(r, it, eq)}<div class="sky-acts">${acts.join("")}</div></div>`;
+      ${lines.map((l) => `<p class="sub">${esc(l)}</p>`).join("")}${it.slot === "tome" && TI ? TI.html(S, r.item, { head: false }) : ""}${gearPreview(r, it, eq)}<div class="sky-acts">${acts.join("")}</div></div>`;
   }
   /* [gear] a paper doll of you wearing this piece, next to you as you are now — what others will see */
   function gearPreview(r, it, eq) {
@@ -1832,7 +1862,7 @@
   }
   function marketHTML(l) {
     const forSale = MARKET.inTown(stalls, l, S.id), own = MARKET.mine(stalls, S.id), hereOwn = own.filter((d) => d.town === l), house = (S.homes || {})[l] || MARKET.hallShop(S, l);
-    const row = (d, btn) => `<div class="item">${ICONART.item(d.row.item, 34, d.row)}<div class="t">${esc(MARKET.itemName(d.row))}${d.row.qty > 1 ? ` ×${d.row.qty}` : ""}${btn === "buy" ? iqB(d.row.item, d.row) : ""}<span>${btn === "buy" ? `${d.hall ? `🏰 ${esc(d.hallName || d.sellerName + "'s hall")}` : `${esc(d.sellerName)}'s stall`} · ${esc(G.itemStats(d.row.item))}` : d.hall ? "on your hall counter" : "on your stall"}</span></div><span class="num gold">${d.price}</span>${btn === "buy" ? `<button class="btn sm pri" data-act="mbuy" data-id="${esc(d.id)}" ${S.gold >= d.price ? "" : "disabled"}>Buy</button>` : `<button class="btn sm" data-act="mpull" data-id="${esc(d.id)}">Take back</button>`}</div>`;
+    const row = (d, btn) => `<div class="item${btn === "buy" ? tiCls(d.row.item) : ""}">${ICONART.item(d.row.item, 34, d.row)}<div class="t">${esc(MARKET.itemName(d.row))}${d.row.qty > 1 ? ` ×${d.row.qty}` : ""}${btn === "buy" ? iqB(d.row.item, d.row) : ""}<span>${btn === "buy" ? `${d.hall ? `🏰 ${esc(d.hallName || d.sellerName + "'s hall")}` : `${esc(d.sellerName)}'s stall`} · ${esc(G.itemStats(d.row.item))}` : d.hall ? "on your hall counter" : "on your stall"}</span></div><span class="num gold">${d.price}</span>${btn === "buy" ? `<button class="btn sm pri" data-act="mbuy" data-id="${esc(d.id)}" ${S.gold >= d.price ? "" : "disabled"}>Buy</button>` : `<button class="btn sm" data-act="mpull" data-id="${esc(d.id)}">Take back</button>`}${btn === "buy" ? tiBox(d.row.item) : ""}</div>`;
     let h = `<h3>For sale here</h3>${forSale.length ? forSale.map((d) => row(d, "buy")).join("") : `<p class="sub">No player stalls in ${esc(l)} right now.</p>`}`;
     if (!house) return h + `<p class="sub" style="margin-top:10px">Own a house in ${esc(l)}, or a hall here with a shop counter, to run your own stall.</p>`;
     const eq = new Set(Object.values(G.loadout(S).equipment || {}));
@@ -2659,7 +2689,7 @@
     return `${ppUI ? ppUI.panelHTML() : ""}${typeof WFX !== "undefined" ? WFX.coldHTML(S) : ""}${nextCard()}${typeof REMIND !== "undefined" ? REMIND.card(S) : ""}${placeHere()}${typeof EXPLORE !== "undefined" ? EXPLORE.placeCard(S) : ""}${typeof RUMOURS !== "undefined" ? RUMOURS.card(S) : ""}${typeof GATHER !== "undefined" ? GATHER.card(S) : ""}<div class="panel"><h2>Where to?</h2><p class="sub">Tap a place on the map, or press <b>Go</b> below. Tap empty ground on the map to roam off the road.</p>${typeof FASTQOL !== "undefined" ? FASTQOL.recentHTML(S) : ""}
       <input id="search" placeholder="Search places" value="${esc(searchText)}" autocomplete="off" aria-label="Search places">
       <div class="list">${bag ? `<div class="item on"><div class="t">🎒 Your lost bag<span>${bag.gold} gold · ${Math.max(0, Math.floor((bag.expires - G.now()) / 60))} min left before it's fair game</span></div><button class="btn pri sm" data-act="go" data-place="__bag">Go</button></div>` : ""}
-      ${places.slice(0, searchText || uxAllPlaces ? 40 : 8).map(({ n, d }) => { const k = WORLD.places[n][2]; return `<div class="item"><div class="t">${esc(n)}<span>${KIND[k]} · ${esc(G.holdAt(WORLD.places[n]))}${S.discovered.includes(n) ? "" : " · unvisited"}${(() => { const lf = DUNGEONS.enterable(n) ? DUNGEONS.refillLeft(S, n) : 0; return lf ? ` · 🔒 opens in ${cdSpan(G.now() + lf)}` : ""; })()}</span></div><span class="num sub">${d * 1.1 / G.speed(S) < 1 ? "" : "~"}${fmtMin(d * 1.1 / G.speed(S))}</span><button class="btn sm" data-act="go" data-place="${esc(n)}">Go</button></div>`; }).join("") || `<p class="sub">No places match “${esc(searchText)}”. Try part of the name, like “riv”.</p>`}${!searchText && places.length > 8 ? `<button class="btn" data-act="uxall" style="width:100%;margin-top:8px">${uxAllPlaces ? "Show only the nearest" : `Show all ${places.length} places`}</button>` : ""}${(() => { const n = Object.keys(clearedLeft()).length; return `<button class="btn" data-act="tabgo" data-id="places" style="width:100%;margin-top:8px">📍 Locations: cleared places${n ? ` (${n})` : ""}</button>`; })()}</div>
+      ${places.slice(0, searchText || uxAllPlaces ? 40 : 8).map(({ n, d }) => { const k = WORLD.places[n][2]; return `<div class="item"><div class="t">${esc(n)}<span>${KIND[k]} · ${esc(G.holdAt(WORLD.places[n]))}${typeof PLACESTUFF !== "undefined" ? PLACESTUFF.tag(n) : ""}${S.discovered.includes(n) ? "" : " · unvisited"}${(() => { const lf = DUNGEONS.enterable(n) ? DUNGEONS.refillLeft(S, n) : 0; return lf ? ` · 🔒 opens in ${cdSpan(G.now() + lf)}` : ""; })()}</span></div><span class="num sub">${d * 1.1 / G.speed(S) < 1 ? "" : "~"}${fmtMin(d * 1.1 / G.speed(S))}</span><button class="btn sm" data-act="go" data-place="${esc(n)}">Go</button></div>`; }).join("") || `<p class="sub">No places match “${esc(searchText)}”. Try part of the name, like “riv”.</p>`}${!searchText && places.length > 8 ? `<button class="btn" data-act="uxall" style="width:100%;margin-top:8px">${uxAllPlaces ? "Show only the nearest" : `Show all ${places.length} places`}</button>` : ""}${(() => { const n = Object.keys(clearedLeft()).length; return `<button class="btn" data-act="tabgo" data-id="places" style="width:100%;margin-top:8px">📍 Locations: cleared places${n ? ` (${n})` : ""}</button>`; })()}</div>
       <p class="sub status ${Store.online ? "live" : ""}" style="margin-top:12px"><i></i>${Store.mode === "p2p" ? `The world · ${Store.peers ? `${Store.peers} other ${Store.peers === 1 ? "phone" : "phones"} online` : "looking for friends…"}` : Store.online ? `Shared world · ${others.length} other ${others.length === 1 ? "traveller" : "travellers"}` : APP ? "Offline game · saved on this phone" : "Saved in this browser only"}</p>${Store.online ? "" : onlineBtn()}</div>`;
   }
 
@@ -2913,7 +2943,7 @@
     return list.map((c) => {
       const g = guardDocs.filter((d) => d.caravanId === c.id && d.status !== "left"), mine = j?.id === c.id, sh = CARAVANS.share(c.id, mine ? g : [...g, { caravanId: c.id }], c.from, c.to), p = CARAVANS.plan(c);
       const guards = g.length ? `<div class="cvguards">${g.map((d) => `<span>${typeof HEROART !== "undefined" ? HEROART.portrait(cardOf(d.uid) || { race: d.race || "nord", id: d.uid, name: d.name }, 26) : ""}${esc(d.name)} · ${d.level || 1}</span>`).join("")}</div>` : `<p class="sub" style="margin:4px 0">No guards yet.</p>`;
-      const goods = c.here ? CARAVANS.stock(c).map((i) => `<div class="item">${typeof ICONART !== "undefined" ? ICONART.item(i, 32) : ""}<div class="t">${esc(D.ITEMS[i].name)}<span>${esc(G.itemStats(i))}</span></div><span class="num gold">${CARAVANS.price(S, i)}</span><button class="btn sm" data-act="cvbuy" data-id="${esc(c.id)}" data-item="${esc(i)}" ${S.gold >= CARAVANS.price(S, i) ? "" : "disabled"}>Buy</button></div>`).join("") : "";
+      const goods = c.here ? CARAVANS.stock(c).map((i) => `<div class="item${tiCls(i)}">${typeof ICONART !== "undefined" ? ICONART.item(i, 32) : ""}<div class="t">${esc(D.ITEMS[i].name)}<span>${esc(G.itemStats(i))}</span></div><span class="num gold">${CARAVANS.price(S, i)}</span><button class="btn sm" data-act="cvbuy" data-id="${esc(c.id)}" data-item="${esc(i)}" ${S.gold >= CARAVANS.price(S, i) ? "" : "disabled"}>Buy</button>${tiBox(i)}</div>`).join("") : "";
       return `<div class="card cvcard"><div class="cvhead">${CARAVANS.wagonHTML(110, 72, { khajiit: c.line.khajiit })}<div><h3 style="margin:0">${esc(c.line.name)}</h3><p class="sub" style="margin:2px 0 0">${c.here ? `To ${esc(c.to)} · leaves in ${cdSpan(c.depart)}` : `Arriving from ${esc(c.from)} in ${cdSpan(c.arrive)}`}</p></div></div>
         ${c.here ? `<p class="sub" style="margin:6px 0 0">Expect ${p.at.length === 2 ? "two ambushes" : "an ambush"} on the road. Pay: about <b class="gold">${sh.each}</b> gold each with ${sh.n} guard${sh.n > 1 ? "s" : ""} (more guards, bigger contract).</p>${guards}
           ${mine ? `<button class="btn" data-act="cvleave" style="width:100%">Leave the caravan</button>` : `<button class="btn pri" data-act="cvsign" data-id="${esc(c.id)}" style="width:100%" ${j || S.trip ? "disabled" : ""}>${j ? "You're guarding another caravan" : "Sign on as a guard"}</button>`}
@@ -2974,7 +3004,7 @@
   function panelTown() {
     const l = S.location, types = l ? G.shopTypes(l) : [];
     if (!l || (!types.length && !TOWNS.isTown(l))) {
-      if (l && (DUNGEONS.enterable(l) || POWERS.STONE_AT[l] || l === "High Hrothgar")) return placeHere();
+      if (l && (DUNGEONS.enterable(l) || POWERS.STONE_AT[l] || l === "High Hrothgar" || (typeof PLACESTUFF !== "undefined" && PLACESTUFF.offers(l).length))) return placeHere();
       return wildsFood() + `<div class="panel"><h2>${l ? esc(l) : "The wilds"}</h2><p class="sub">${l ? "There's nothing to buy here." : "You're out on the road."} Cities and towns have shops, inns, trainers, alchemy labs, forges and jobs.</p></div>`;
     }
     const open = G.shopsOpen() || (typeof RUMOURS !== "undefined" && RUMOURS.knocked(S, l)), wanted = TOWNS.wanted(S), hold = G.holdAt(WORLD.places[l]);   // knocked at night (rumours.js)
@@ -2983,7 +3013,7 @@
     const names = { general: "General goods", blacksmith: "Blacksmith", wizard: "Court wizard", stables: "Stables", fence: "Ragged Flagon (fence)", inn: TOWNS.INNS[l] || "Inn", train: "Trainers", alchemy: "Alchemy lab", forge: "Forge", jobs: "Jobs", streets: "Streets", hire: l === "Whiterun" ? "Dragonsreach & hirelings" : "Hirelings", hall: "⚑ Hall of the North", halls: "🏰 Halls & shops", notice: "📜 Jarl's bounty", homes: "🏘 Neighbours", market: "🛒 Market stalls", mine: "⛏ Mine", craft: "✨ Spell crafting", caravans: "🐫 Caravans", cook: "🍲 Cooking pot", arena: "⚔ The Arena", fish: "🎣 Fishing", carriage: "Carriage", enchanter: "Arcane enchanter", home: TOWNS.home(S, l) ? `🏠 ${TOWNS.HOMES[l]?.[0]}` : `Buy ${TOWNS.HOMES[l]?.[0]}`, ...(typeof SOL !== "undefined" ? SOL.NAMES : {}), ...(typeof HOMESTEAD !== "undefined" ? HOMESTEAD.names(S, l) : {}) };
     const fac = F.priceFactor(G.skill(S, "Mercantile"));
     let body = "", note = "";
-    const shopRow = (i, sell = true) => { const p = G.buyPrice(S, i), it = D.ITEMS[i], tome = it.slot === "tome" && typeof TOMES !== "undefined" ? ` · ${TOMES.level(it.spell)}${S.spells.includes(it.spell) ? " · you know it" : ""}` : ""; return `<div class="item">${ICONART.item(i, 34)}<div class="t">${esc(it.name)}${iqB(i)}<span>${esc(G.itemStats(i))}${tome} · ${it.weight} wt</span></div>${econB(i)}<span class="num gold">${p}</span><button class="btn sm" data-act="buy" data-item="${esc(i)}" ${open && !wanted && S.gold >= p ? "" : "disabled"}>Buy</button>${it.slot === "ammo" ? (() => { const p20 = G.lotPrice ? G.lotPrice(S, i, 20, "buy") : p * 20; return `<button class="btn sm" data-act="buyn" data-item="${esc(i)}" data-n="20" title="${p20} gold" ${open && !wanted && S.gold >= p20 ? "" : "disabled"}>×20</button>`; })() : ""}</div>`; };
+    const shopRow = (i, sell = true) => { const p = G.buyPrice(S, i), it = D.ITEMS[i], tome = it.slot === "tome" && !TI && typeof TOMES !== "undefined" ? ` · ${TOMES.level(it.spell)}${S.spells.includes(it.spell) ? " · you know it" : ""}` : ""; return `<div class="item${tiCls(i)}">${ICONART.item(i, 34)}<div class="t">${esc(it.name)}${iqB(i)}<span>${esc(G.itemStats(i))}${tome} · ${it.weight} wt</span></div>${econB(i)}<span class="num gold">${p}</span><button class="btn sm" data-act="buy" data-item="${esc(i)}" ${open && !wanted && S.gold >= p ? "" : "disabled"}>Buy</button>${it.slot === "ammo" ? (() => { const p20 = G.lotPrice ? G.lotPrice(S, i, 20, "buy") : p * 20; return `<button class="btn sm" data-act="buyn" data-item="${esc(i)}" data-n="20" title="${p20} gold" ${open && !wanted && S.gold >= p20 ? "" : "disabled"}>×20</button>`; })() : ""}${tiBox(i)}</div>`; };
     if (townShop === "stables") body = stablesHTML(open, wanted) + cartHTML(open, wanted);
     else if (["general", "blacksmith", "wizard", "fence"].includes(townShop)) {
       note = `${G.shopsOpen() ? "Shops are open." : open ? "Night prices." : `Shops are closed for the night. They open at 08:00 (${esc(G.clockText())}).`} At Mercantile ${G.skill(S, "Mercantile")} you buy at about ${(fac / G.haggle(S)).toFixed(2)}× value.${townShop === "fence" ? " The fence buys stolen goods." : ""}`;
@@ -3393,7 +3423,7 @@
     const a = b.dataset.act, L = G.loadout(S);
     if (a.startsWith("coop") && coopUI) return void coopUI.act(b);
     if ((a === "lvpick" || a === "lvsend") && lvUI) return void lvUI.act(b);
-    if (/^pp(ready|go|cancel|kick|catch)$/.test(a) && ppUI) return void ppUI.act(b);
+    if (/^pp(ready|go|cancel|kick|catch|vote|vhide)$/.test(a) && ppUI) return void ppUI.act(b);
     if (a.startsWith("cq") && CQ) return void CQ.act(S, b, { toast, openModal, closeModal, persist, renderPanel, tally, sound: (n) => SOUND.fx(n), guide: (k) => GUIDE.mark(S, k), selectMix: (ids) => { alchSel = ids; renderPanel(true); }, alchSel: () => alchSel });   // crafting shortcuts (craftqol.js)
     const say = (m) => { toast(m); persist(); renderPanel(true); if ($("#sky")) renderMenu(); };
     if (typeof INVQOL !== "undefined" && INVQOL.onClick(b, S, { say, openModal, closeModal, stall: (id) => stalls.find((d) => d.id === id),   // inventory helpers: Keep, junk, undo sale, confirms (invqol.js)
@@ -3407,6 +3437,7 @@
       case "jfold": { const f = jFolds(); f[b.dataset.id] = !f[b.dataset.id]; try { localStorage.setItem("ux_jfold", JSON.stringify(f)); } catch { /* fine */ } renderPanel(true); break; }
       case "unpick": selected = null; roamSpot = null; renderPicked(); break;
       case "xsearch": case "xdig": case "xread": exploreAct(b.dataset.act, b.dataset.id); break;
+      case "pstuff": if (typeof PLACESTUFF !== "undefined") PLACESTUFF.onClick(b, S, { toast, openModal, persist, renderPanel }); break;   // placestuff.js: something at every place
       case "gpick": case "gpickall": case "gforage": case "gauto": case "gplant": case "gunplant": case "gnotes": gatherAct(b.dataset.act, b.dataset.id); break;
       case "spotpin": if (roamSpot) { const [x, y] = roamSpot; selected = null; renderPicked(); openPinDialog(x, y); } break;
       case "stop": if (S.trip?.carriage) { toast("The driver won't stop until you get there."); break; } if (S.trip?.boat) { toast("You're at sea. The Northern Maiden won't turn back now."); break; } if (S.trip?.status === "travel" || S.trip?.status === "event") { [S.x, S.y] = livePos(); S.trip = null; S.location = Object.keys(WORLD.places).find((n) => G.pxDist([S.x, S.y], WORLD.places[n]) < 12) || null; persist(true); toast("You stop and look around."); } break;
