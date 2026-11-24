@@ -69,6 +69,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Smart AI combat (default; custom tactics optional), crafting mini-games, motion design (63)
 
 ## In progress (write your name before you start)
+- Claude: PC fit: on a wide landscape window (1100px+) the game fills the window and the page never scrolls; map + side panel share the width (wider for the Skills stars), Skills stars beside the list, fight scene left / moves right, dungeon room left / map right, slightly bigger text on big monitors; only side lists scroll. tests/pcfit_ui.py. Branch claude/pcfit.
 - Claude: fear and foe-heal limits (foecap.js): Battle Cry / Dismay / fear / calm hold bosses 2 turns (3 a fight) and elites 3 (5 a fight), then they stay rattled (softer blows); foe healing capped at 65% health, 35% a fight, 3-turn rest; Aspect of Terror +1 turn on big foes; tests/test_balfear.js sim. Branch claude/balance-fear.
 - Claude: Area tab as a place + tidy Map panel (areaui.js, mappanel.js): town places grouped into tiles (Inn, Market, Services & trainers, Work & jobs, Your home, Events & fun) with live status and a Right now strip, back button + neighbour tabs inside a place; one merged and sorted "What to do next" card on the Map; place filters. Branch claude/areaui.
 - Claude: tidier tab menus (menus2.js): SkyUI-style categories | list | details (3 columns on PC), one sort row with direction (damage/armour too), counts, search in Items/Magic/Journal, Character page folds its long sections, follower tabs on one row, Polish for menu words. Branch claude/menus2.

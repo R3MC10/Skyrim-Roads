@@ -2426,6 +2426,52 @@ body:has(#twBtn) .app{padding-bottom:calc(140px + env(safe-area-inset-bottom))}
 .title .page .pnbar{top:-7vh;margin:-18px -18px 10px;padding:4px 10px;border-radius:4px 4px 0 0}
 .sheet.pnsheet .pnbar{top:-20px;margin:-20px -18px 10px;padding:4px 10px}
 html.art-pixel .pnbar,html.art-pixel .pnbar .pnback{border-radius:0}
+/* ==== PC fit (tests/pcfit_ui.py): on a wide landscape screen the game fills the window, the page never scrolls; only side lists do ==== */
+@media (min-width:1100px) and (orientation:landscape){
+  html,body{height:100%;overflow:hidden}
+  html body #app.app{max-width:none;width:100%;margin:0;height:100vh;display:flex;flex-direction:column;padding:0 16px calc(var(--mn-h,56px) + 8px)}
+  .app>.top{flex:none}
+  .app>.layout{flex:1 1 0;min-height:0;grid-template-columns:minmax(0,1fr) clamp(440px,33vw,860px);grid-template-rows:minmax(0,1fr);align-items:stretch}
+  .app>.layout>div:first-child{display:flex;flex-direction:column;min-height:0}
+  .app>.layout .mapwrap{aspect-ratio:auto;flex:1 1 0;min-height:160px}
+  .app>.layout>.side{position:static;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+  .sky-in{width:min(1800px,100%)}
+  #side{container-type:inline-size;container-name:pcside}
+  /* the compass's Skills page: wider on a big screen, the skill stars beside the list instead of under it */
+  body.tw-char #side{padding-bottom:16px}
+  body.tw-char #side>*{max-width:min(1180px,100%)}
+  body.tw-char #side>.tw-starp{max-width:min(1640px,100%);width:100%}
+  /* the Skills stars want room: the side panel takes the bigger share while they're open */
+  .app>.layout:has(>#side>.tw-starp .tw-bigw){grid-template-columns:minmax(0,1fr) minmax(0,1.2fr)}
+  /* the fight: the scene big on the left, who's who and your actions on the right; nothing scrolls */
+  .tbf .tbin{max-width:min(1560px,100%);padding-left:16px;padding-right:16px;display:grid;grid-template-columns:minmax(0,1fr) clamp(400px,30vw,560px);grid-template-rows:auto auto minmax(0,1fr);column-gap:18px;align-content:center;align-items:start}
+  .tbf .tbin>*{grid-column:2;min-width:0}
+  .tbf .tbin>.tbstage{grid-column:1;grid-row:1/4;align-self:center;justify-self:center;width:min(100%,calc((100vh - 40px) * 1.45))}
+  .tbf .tbin>.tbdock{align-self:end}
+  .tbf .tbin .tbord{flex-wrap:wrap;overflow:visible}
+  /* a dungeon: the room on the left, its map on the right, sized to the window */
+  .dun .in{width:min(1500px,100%);grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto repeat(9,min-content) 1fr;column-gap:22px;align-content:start}
+  .dun .in>*{grid-column:1}
+  .dun .in>.hd{grid-column:1/-1}
+  .dun .in>.dmapcard{grid-column:2;grid-row:2/-1;align-self:start}
+  .dun .dmap{width:min(100%,calc((100vh - 150px) * var(--dar,.84)));margin-left:auto;margin-right:auto}
+  #side:has(>.tw-starp .tw-bigw){display:flex;flex-direction:column}
+  #side:has(>.tw-starp .tw-bigw)>*{flex:none}
+  #side:has(>.tw-starp .tw-bigw)>.tw-starp{flex:1 1 auto;min-height:min(460px,100%)}
+  @container pcside (min-width:620px){
+    .tw-starp:has(>.tw-bigw){display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);grid-template-rows:auto minmax(0,1fr);column-gap:20px}
+    .tw-starp>.tw-sleft{grid-column:1;grid-row:1;min-width:0}
+    .tw-starp>.tw-sdet{grid-column:1;grid-row:2;min-width:0}
+    .tw-starp>.tw-bigw{grid-column:2;grid-row:1/3;position:relative;min-height:300px}
+    .tw-starp>.tw-bigw .tw-big{position:absolute;inset:0;margin:0}
+    .tw-starp>.tw-bigw .tw-big svg{width:100%;height:100%}
+    .tw-starp .tw-car{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:4px;overflow:visible;padding:6px 0 8px}
+    .tw-starp .tw-card{width:auto;flex-direction:row;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:2px 6px;padding:5px 8px 6px}
+    .tw-starp .tw-card>svg{display:none}
+    .tw-starp .tw-card b{flex:1;max-width:none;text-align:left}
+    .tw-starp .tw-card .tw-cbar{width:100%}
+  }
+}
 </style>
 <script src="access.js"></script>
 </head>
@@ -2595,6 +2641,7 @@ html.art-pixel .pnbar,html.art-pixel .pnbar .pnback{border-radius:0}
 <script src="i18n_boss.js"></script>
 <script src="i18n_accounts.js"></script>
 <script src="i18n_balfear.js"></script>
+<script src="i18n_pcfit.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>

@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b143-pcfit", build: 143, date: "24 Nov 2026", title: "The game fills the whole window on a PC", items: [
+      "On a wide PC screen everything now fits on one screen: no more empty bands at the sides and no scrolling the page. The map and the side panel share the full width, and only long lists in the side panel scroll.",
+      "The place card on the map (Travel, X) no longer hides behind the bottom bar.",
+      "Skills: the skill list and its perk stars sit side by side, and the stars grow to fill the space. The side panel gets wider while they're open.",
+      "Fights on a PC show a big battle picture on the left, with the fighters and your moves on the right, all without scrolling. Dungeons put the room on the left and the dungeon map on the right.",
+      "Text and buttons are a little bigger on large monitors. Phones look the same as before.",
+    ] },
     { id: "b142-balfear", build: 142, date: "24 Nov 2026", title: "Bosses don't run forever, healers don't heal forever", items: [
       "Battle Cry and every other fear or \"stops fighting\" effect now hold a boss for 2 turns and an elite foe for 3. A boss can lose at most 3 turns a fight to fear, an elite 5. For the turns they shake off they stay rattled and hit 20% softer, so the shout still helps. Normal foes still run for the full time.",
       "Foe mages and healers can't patch themselves back to full any more: their own healing stops at about two thirds of their health, adds up to at most a third of it in a whole fight, and a healing spell needs a few turns to come back. Potions and life drain count too.",
