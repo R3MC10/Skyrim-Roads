@@ -2178,12 +2178,12 @@
     const loop = (ts) => {
       if (!fishState || !$("#fishbar")) return;
       if (fishState.phase === "wait" && ts >= fishState.at) {
-        fishState.phase = "bite"; fishState.bite = COOK.bite(fishState.water); fishState.t0 = ts; fishState.until = ts + 5000;
+        fishState.phase = "bite"; fishState.bite = COOK.bite(fishState.water); fishState.t0 = ts; fishState.until = ts + 5000 * (typeof A11Y !== "undefined" ? A11Y.timingEase() : 1);
         SOUND.fx("click"); if (navigator.vibrate) try { navigator.vibrate(60); } catch { /* not allowed */ }
         drawFishing("A bite! Reel in when the needle is in the green.");
       }
       if (fishState.phase === "bite") {
-        const period = fishState.bite.zone[1] - fishState.bite.zone[0] < 0.22 ? 1900 : 2500;   // rarer fish: a narrower zone and a quicker needle
+        const period = ((fishState.bite.rare ?? fishState.bite.zone[1] - fishState.bite.zone[0] < 0.22) ? 1900 : 2500) * (typeof A11Y !== "undefined" ? A11Y.timingEase() : 1);   // rarer fish: a narrower zone and a quicker needle; Easy timing slows it
         const ph = ((ts - fishState.t0) % period) / period; fishState.needle = ph < 0.5 ? ph * 2 : 2 - ph * 2;
         const n = $("#fishneedle"); if (n) n.style.left = `${fishState.needle * 100}%`;
         if (ts > fishState.until) { fishState.phase = "done"; drawFishing("Too slow. It got away.", true); return; }

@@ -1378,6 +1378,14 @@ html.a11y-1h .mapwrap:has(.picked:not(.hide)) .mapbtns{bottom:72px}
 html.a11y-1h-left :is(.twbtn,.favbtn){right:auto;left:12px}
 html.a11y-1h-left .top :is(.soc,.snd){right:auto;left:66px}
 html.a11y-1h-left .mapbtns{right:auto;left:8px}
+/* [access] colour is never the only signal: with a colour-blind mode on, bars get a pattern and a symbol, danger words a shape, effects an arrow */
+html[data-cb] .hb.mp .track i{background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.38) 0 2px,transparent 2px 6px),linear-gradient(color-mix(in srgb,var(--mp) 62%,#fff),var(--mp) 60%,color-mix(in srgb,var(--mp) 62%,#000))}
+html[data-cb] .hb.sp .track i{background-image:repeating-linear-gradient(90deg,rgba(0,0,0,.45) 0 1px,transparent 1px 5px),linear-gradient(color-mix(in srgb,var(--sp) 62%,#fff),var(--sp) 60%,color-mix(in srgb,var(--sp) 62%,#000))}
+html[data-cb] .hb small.num::before{font-size:.9em;margin-right:2px}
+html[data-cb] .hb.hp small.num::before{content:"\2665\FE0E"}html[data-cb] .hb.mp small.num::before{content:"\25C6"}html[data-cb] .hb.sp small.num::before{content:"\00BB"}
+html[data-cb] .danger-low::before{content:"\25CB\00A0"}html[data-cb] .danger-medium::before{content:"\25C6\00A0"}html[data-cb] .danger-high::before{content:"\26A0\FE0E\00A0"}
+html[data-cb] :is(span,small,li,em,i).buff:not(.ccsw)::before{content:"\25B2\00A0";font-size:.8em}html[data-cb] :is(span,small,li,em,i).debuff:not(.ccsw)::before{content:"\25BC\00A0";font-size:.8em}
+html[data-cb] :is(.cqst.ok)::before{content:"\2713\00A0"}
 /* inventory helpers (invqol.js): kept marks, better/worse arrows, junk and buy-back buttons */
 .iq-up,.iq-dn{font-weight:700;margin-left:5px;font-size:.92em;font-style:normal}
 .iq-up,.sky-row .nm i.iq-up{color:var(--buff,#6fd36a)}.iq-dn,.sky-row .nm i.iq-dn{color:var(--debuff,#e0584a)}
