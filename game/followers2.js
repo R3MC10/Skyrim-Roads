@@ -349,7 +349,8 @@ const FOL2 = (() => {
         <h3>Fighting style</h3><p class="sub">${esc(a.desc)} Main skills: ${a.main.map(esc).join(", ")}. They pick perks from these trees by themselves.</p>
         <div class="chips m2-row">${Object.entries(ARCH).map(([k, v]) => `<button class="chip ${k === f.arch ? "on" : ""}" data-act="fol2" data-op="arch" data-id="${k}">${esc(v.name)}${k === archOf(id) ? " ★" : ""}</button>`).join("")}</div>
         <p class="sub">★ = their natural style. Changing it resets and re-picks their perks.</p>`;
-    } else if (view === "inv") {
+    } else if (view === "inv" && typeof FOLTAB !== "undefined") body = FOLTAB.gear(s, f, esc);   // SkyUI-style list (followertab.js)
+    else if (view === "inv") {
       const mine = s.inv.filter((r) => { const it = itemOf(r); return it && !it.quest && (wearable(it) || it.slot === "ammo" || it.restore); });
       const rows = invTab === "theirs"
         ? f.inv.map((r) => { const it = itemOf(r), on = Object.values(f.eq).includes(r.id), eqable = wearable(it), slotOn = on ? Object.keys(f.eq).find((k) => f.eq[k] === r.id) : null;
@@ -394,12 +395,12 @@ const FOL2 = (() => {
       case "give": return give(s, +id, +(d.q || 1));
       case "take": return takeBack(s, +id, +(d.q || 1));
     }
-    return "";
+    return typeof FOLTAB !== "undefined" ? FOLTAB.act(s, d) : "";   // the Follower tab's own list taps (followertab.js)
   }
   const reset = () => { view = "card"; invTab = "theirs"; perkTree = null; };
 
   install();
   return { ARCH, INFO, MORE, NEEDS, st, pseudo, skillOf, spend, setArch, equip, unequip, bestEquip, give, takeBack, weight, carry, rawHit, dmg, armorRating, taken, maxHp,
-    ally, turn, gain, need, look, card, lookFromCard, cardAllies, install, panel, act, reset, capOf, archOf };
+    ally, turn, gain, need, look, card, lookFromCard, cardAllies, install, panel, act, reset, capOf, archOf, slotName, wearable, canOff, eqSlots, worn, nameOf, get view() { return view; } };
 })();
 if (typeof module !== "undefined") module.exports = FOL2;
