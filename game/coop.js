@@ -34,7 +34,8 @@ const COOP = (() => {
     const rows = lone ? [[{ type: "boss", links: [] }]] : DUNGEONS.layout(i.theme, i.tier);
     const id = `run-${s.id}-${Math.floor(t)}`;
     return { id, doc: { place, theme: i.theme, tier: i.tier, rows, boss: lone ? (i.theme === "lair" ? "dragon" : "giant") : null,
-      leader: s.id, leaderName: s.name, members: [{ id: s.id, name: s.name, level: s.level }], invites: [], status: "lobby", path: [], rooms: [], claims: {}, chest: null, at: {}, t } };
+      leader: s.id, leaderName: s.name, members: [{ id: s.id, name: s.name, level: s.level }], invites: [], status: "lobby", path: [], rooms: [], claims: {}, chest: null, at: {}, t,
+      ...(typeof DEEPDELVE !== "undefined" ? DEEPDELVE.runFields(s, place, t) : {}) } };   // the leader's difficulty tier, the same for everyone
   }
   function invite(run, uid, name) {
     if (!live(run)) return { err: "That run is over." };
@@ -75,6 +76,7 @@ const COOP = (() => {
     s.dungeon = { place: run.place, theme: run.theme, tier: run.tier, rows: clone(run.rows), row: -1, col: 0, room: null, found: [], gold: 0, t, run: run.id, cstep: 0, path: [] };
     if (run.boss) s.dungeon.boss = run.boss;
     if (typeof PRIESTS !== "undefined") PRIESTS.onEnter(s);   // a dragon priest sleeps there for you, unless you already have its mask
+    if (typeof DEEPDELVE !== "undefined") DEEPDELVE.onEnter(s, run, t);   // the run's difficulty tier and modifiers
     G.setHealth(s, G.curHealth(s, t), t);
     G.note(s, `🕯 Entered ${run.place} with ${activeMembers(run).filter((m) => m.id !== s.id).map((m) => m.name).join(", ") || "your party"}`);
     return null;
@@ -88,6 +90,7 @@ const COOP = (() => {
     const bonus = waves ? Math.min(0.5, WAVE_BONUS * (members - 1)) : FOE_BONUS * clamp(members - 1, 0, MAX_MEMBERS - 1);
     const e = G.scaleEnemy({ ...def }, s.level), m = [0, 0.8, 0.95, 1.1][tier] * (1 + bonus);
     e.health = Math.round(e.health * m); e.hp = e.health; e.damage = Math.round(e.damage * [0, 0.8, 0.95, 1.1][tier] * 10) / 10;
+    if (typeof DEEPDELVE !== "undefined") DEEPDELVE.scaleFoe(s, e, false);   // the run's difficulty tier and depth
     return e;
   }
   const canPick = (s, run) => !!run && run.leader === s.id && !s.dungeon?.room && (s.dungeon?.cstep || 0) >= run.path.length;   // ahead of the record = a pick the store dropped: the next pick is still written

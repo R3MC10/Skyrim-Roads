@@ -491,6 +491,7 @@ const G = (() => {
       if (typeof PFX !== "undefined") { const ab = Math.min(0.5, PFX.sum(s, "allies", null, {})); if (ab) for (const al of this.allies) if (al.dmg) al.dmg *= 1 + ab; }   // Inspiring, Rally, Thane's Guard
       this.foeSt = {}; this.meSt = {}; this.bashed = false; this.avoidUsed = false; this.riposte = false;
       this.bleed = []; this.eParalyzed = 0; this.flurry = 0; this.firstHit = true; this.shadowUsed = false; this.sneakNext = false;
+      this.dd = typeof DEEPDELVE !== "undefined" ? DEEPDELVE.fight(this) : null;   // dungeon tier modifiers, deep-expedition injuries and curses (deepdelve.js)
     }
     addXp(k, v) { this.xp[k] = (this.xp[k] || 0) + v; }
     weaponSkill() { return this.bound ? this.bound.skill : this.weapon ? this.weapon.skill : "Hand-to-Hand"; }
@@ -979,6 +980,7 @@ const G = (() => {
         if (this.bleed.length && this.ehp > 0) { const b = this.bleed.reduce((x, y) => x + y.dmg, 0); this.ehp -= b; this.bleed = this.bleed.map((y) => ({ ...y, turns: y.turns - 1 })).filter((y) => y.turns > 0); line.me += ` · bleeds ${Math.round(b)}`; }
         for (const al of [...this.allies]) if (this.ehp > 0) { if (al.coop && typeof COOP !== "undefined") { line.me += COOP.allyAct(this, al); continue; } if (al.follower && typeof FOL2 !== "undefined") { const ft = FOL2.turn(this, al); if (ft) { line.me += ft; continue; } } if (al.follower && this.ai) { line.me += COMBATAI.followerAct(this, al); continue; } const d = al.dmg * rnd(...F.DAMAGE_SPREAD); this.ehp -= d; line.me += ` · ${al.name} ${Math.round(d)}`; }
         if (typeof PFX !== "undefined") PFX.tick(this, line);   // burning, chills and jolts
+        if (this.dd) DEEPDELVE.tick(this, line);   // frost stacks, blood moon, overcharge, the restless dead
         if (this.summonTurns > 0 && this.ehp > 0) { this.summonTurns--; this.ehp -= this.summonDmg; line.me += ` · familiar ${this.summonDmg}`; }
         if (typeof MAGIC !== "undefined" && !this.endWon) MAGIC.tick(this, line);   // cloaks, burning walls, healing circles
         { const g = this.healGuard(rule); if (g) line.me += " · " + g; }

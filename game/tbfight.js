@@ -429,6 +429,7 @@ const TB = (() => {
       if (f.bleed.length && f.ehp > 0) { const b = f.bleed.reduce((x, y) => x + y.dmg, 0); f.ehp -= b; f.bleed = f.bleed.map((y) => ({ ...y, turns: y.turns - 1 })).filter((y) => y.turns > 0); line.me += ` · bleeds ${Math.round(b)}`; }
       const n0 = line.me.length, t0 = line.them.length;
       if (typeof PFX !== "undefined") PFX.tick(f, line);
+      if (f.dd && typeof DEEPDELVE !== "undefined") DEEPDELVE.tick(f, line);   // deepdelve.js
       if (typeof MAGIC !== "undefined" && !f.endWon) MAGIC.tick(f, line);
       if (f.pw && typeof POWERS !== "undefined") POWERS.tick(f, line);
       const extra = (line.me.slice(n0) + line.them.slice(t0)).replace(/^ · /, "");
