@@ -2,7 +2,7 @@
    Each stage has one objective; most complete by themselves (go somewhere, clear a dungeon, carry an item),
    "talk" objectives need a tap when you're at the right place, and some of those start a fight. */
 const QUESTS = (() => {
-  const E = (name, health, damage, tags, extra = {}) => ({ name, health, damage, tags, level: 10, danger: "high", gold: [0, 0], text: "", ...extra });
+  const E = (name, health, damage, tags, extra = {}) => ({ name, health, damage, tags, level: 10, danger: "high", gold: [0, 0], text: "", qboss: tags.includes("elite"), ...extra })   // qboss: a boss fight (bossfight.js);
   Object.assign(D.ITEMS, {                                                           // [Skyrim] quest rewards (stats close to Skyrim's)
     wuuthrad: { name: "Wuuthrad", slot: "weapon", hands: 2, skill: "Two-Handed", damage: 25, weight: 25, value: 2000 },
     horn_jurgen: { name: "Horn of Jurgen Windcaller", slot: "trophy", weight: 2, value: 100 },

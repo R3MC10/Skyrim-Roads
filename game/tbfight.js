@@ -133,6 +133,7 @@ const TB = (() => {
       this.maxRounds = f.e.pool && opts.maxTurns ? opts.maxTurns : MAX_ROUNDS;   // a raid dragon climbs out of reach after a while
       if (typeof DRAGONS !== "undefined") DRAGONS.setup(f, this);   // dragons start in the air (dragons.js)
       if (typeof FOEKIT !== "undefined") FOEKIT.setup(f);   // what the foe can do besides a plain blow (foekit.js)
+      if (typeof BOSSFIGHT !== "undefined") BOSSFIGHT.setup(f, this);   // bosses: phases, big attacks you see coming (bossfight.js)
     }
     /* rough damage a round from you and your allies (weapon swings in your AP, or your best damage spell) */
     estimate(f) {
@@ -151,7 +152,7 @@ const TB = (() => {
       if (this.remote && this.players && !this.mirror) { const ph = {}; for (const a of this.everyone) if (a.pid) ph[a.pid] = Math.max(0, Math.round(a.hp || 0)); e.ph = ph; }   // every player's health at this moment, for their own screens
       this.ev.push(e); return e;
     }
-    get over() { const f = this.f; if (f.ehp <= 0 && f.hp > 0 && !f.endWon && this.wave < this.waves) this.nextFoe(); return f.hp <= 0 || f.ehp <= 0 || !!f.endWon || this.round > this.maxRounds; }
+    get over() { const f = this.f; if (f.bf && typeof BOSSFIGHT !== "undefined") BOSSFIGHT.check(this); if (f.ehp <= 0 && f.hp > 0 && !f.endWon && this.wave < this.waves) this.nextFoe(); return f.hp <= 0 || f.ehp <= 0 || !!f.endWon || this.round > this.maxRounds; }
     /* a party fight: the foe fell, the next one steps in */
     nextFoe() {
       const f = this.f; this.wave++;
@@ -184,6 +185,7 @@ const TB = (() => {
       this.emit("round", `Round ${this.round}`, "round", { order: this.order.map((o) => ({ id: o.id, name: o.name, init: o.init })) });
       if (typeof FIGHTREAD !== "undefined") FIGHTREAD.plan(this);   // the foe's intents for this round (fightread.js)
       if (typeof FOEINTENT !== "undefined") FOEINTENT.plan(this);   // and who each one goes for (foeintent.js)
+      if (this.f.bf && typeof BOSSFIGHT !== "undefined") BOSSFIGHT.plan(this);   // a boss shows its big attacks a turn ahead
     }
     /* the foe gets a free action first (you were spotted, or fled and got caught) */
     begin() {
@@ -241,6 +243,7 @@ const TB = (() => {
       if (mult && mult !== 1 && f.ehp < before) { f.ehp = before - (before - f.ehp) * mult; text += mult > 1 ? " (perfect timing!)" : " (mistimed)"; }
       if (typeof DRAGONS !== "undefined") text += DRAGONS.graze(f, a, before);
       if (typeof FOEKIT !== "undefined") text += FOEKIT.defend(f, a, before);   // its raised shield, ward or dodge
+      if (f.bf && typeof BOSSFIGHT !== "undefined") text += BOSSFIGHT.answer(this, a, before);   // its helpers, and breaking a big attack
       if (typeof COMBO !== "undefined" && f.ehp < before) text += COMBO.after(f, a, before);   // followers2: combos
       text += this.capFoe(before);
       if (f.ehp < before) { text += this.flank(before); this.hitters++; }
@@ -278,6 +281,7 @@ const TB = (() => {
       while (!this.over && this.idx === idx0 && guard++ < 6) {
         let a = aiPick(f, "me");
         if (!this.canAfford(a)) a = this.canAfford("attack") ? "attack" : null;
+        if (f.bf && typeof BOSSFIGHT !== "undefined") a = BOSSFIGHT.ai(this, a);   // answer a big attack that's coming
         if (!a) break;
         if (a === "block" && this.myActs > 0) break;   // guard with leftover points instead of a second raise
         const r = this.act(a);
@@ -388,7 +392,8 @@ const TB = (() => {
       const guards = f.allies.filter((a) => a.guard || a.tbGuard); guards.forEach((a) => { a._red = a.red; a.red = Math.min(0.85, (a.red || 0) + (a.guard ? 0.4 : 0) + (a.tbGuard || 0)); });   // tbGuard: AP a teammate kept back on their own phone
       const pa = this.everyone.filter((a) => a.pid), pb = pa.map((a) => a.hp || 0);
       if (typeof DRAGONS !== "undefined") DRAGONS.check(f, this);   // allies and bleeding may have brought it down
-      let t = typeof DRAGONS !== "undefined" && f.dStance ? DRAGONS.turn(f, () => f.enemyTurn()) : typeof FOEKIT !== "undefined" && f.kit ? FOEKIT.turn(f, () => f.enemyTurn()) : f.enemyTurn();
+      const go = () => (typeof DRAGONS !== "undefined" && f.dStance ? DRAGONS.turn(f, () => f.enemyTurn()) : typeof FOEKIT !== "undefined" && f.kit ? FOEKIT.turn(f, () => f.enemyTurn()) : f.enemyTurn());
+      let t = f.bf && typeof BOSSFIGHT !== "undefined" ? BOSSFIGHT.turn(this, go) : go();   // bosses: phases and big attacks (bossfight.js)
       guards.forEach((a) => { a.red = a._red; a.guard = 0; a.tbGuard = 0; });
       if (FI) { FI.done(this); t = FI.say(this, t); }   // "takes aim at Lydia"
       const loss = hpB - f.hp;
@@ -690,6 +695,7 @@ const TB = (() => {
     if (typeof TBUI !== "undefined") TBUI.after(el, { hurt: hpNow < prev.hp, hit: ehpNow < prev.ehp, big: prev.hp - hpNow > hpMax * 0.15, mine, pops });
     if (typeof FOEINTENT !== "undefined") { el.classList.toggle("tbplay", playing); try { FOEINTENT.decorate(el, sess); } catch (e) { console.warn("foe targets", e); } }   // crosshairs and the arrow
     if (R) { el.classList.toggle("tbplay", playing); R.low(el, hpNow / Math.max(1, hpMax), !sess.done); }
+    if (f.bf && typeof BOSSFIGHT !== "undefined") { try { BOSSFIGHT.decorate(el, sess, newEv, ehpNow, playing); } catch (e) { console.warn("boss", e); } }   // boss bar, phases, big attacks
   }
   /* floating numbers for what just happened: damage coloured by element, heals, crits, and what you spent */
   const ELEM = [["fire", /\b(fire|flame|burn|scorch|ember)/i], ["frost", /\b(frost|ice|cold|freez|chill)/i], ["shock", /\b(shock|lightning|spark|thunder)/i], ["poison", /\b(poison|venom|toxic)/i]];

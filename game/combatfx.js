@@ -67,7 +67,7 @@ const COMBATFX = (() => {
     if (!b) return [0.5, 1];
     const me = b.who === "me", from = me ? hx : fx, to = me ? fx : hx, hitU = o.hitU ?? 0.55;
     if (b.move === "potion" || b.move === "self" || b.move === "wait" || b.move === "block") return [mid + (from - mid) * 0.35, 1.04];
-    const before = u < hitU, big = b.final ? 1.22 : b.crit || b.sneak ? 1.16 : b.power ? 1.1 : 1.05;
+    const before = u < hitU, big = b.final ? (o.boss ? 1.32 : 1.22) : b.crit || b.sneak ? 1.16 : b.power ? 1.1 : 1.05;
     if (before) return [mid + (from - mid) * 0.3, 1.03 + (big - 1) * 0.3 * (u / Math.max(0.01, hitU))];
     const after = Math.min(1, (u - hitU) / 0.25);
     return [mid + (to - mid) * (0.25 + 0.35 * after), big];

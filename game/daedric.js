@@ -4,7 +4,7 @@
    weapons through DAEDRIC.onHit, armor through worn enchantments (plus DAEDRIC.onEnemy for the Ebony Mail's cloak),
    and the carried ones (Azura's Star, the Sanguine Rose, the Wabbajack) work from your pack. */
 const DAEDRIC = (() => {
-  const E = (name, health, damage, tags, extra = {}) => ({ name, health, damage, tags, level: 10, danger: "high", gold: [0, 0], text: "", ...extra });
+  const E = (name, health, damage, tags, extra = {}) => ({ name, health, damage, tags, level: 10, danger: "high", gold: [0, 0], text: "", qboss: tags.includes("elite"), ...extra })   // qboss: a boss fight (bossfight.js);
   // ---- the artifacts ([Skyrim] names and close-to-Skyrim stats; ids keep the weapon type the engine reads from them)
   Object.assign(D.ITEMS, {
     azuras_star: { name: "Azura's Star", slot: "trophy", weight: 1, value: 1500, dae: "star", noTrade: true, desc: "Carried: after a fight you win, it catches the soul and refills a fifth of your weapon's enchantment." },
