@@ -4,7 +4,7 @@
 (() => {
   if (typeof I18N_STORY === "undefined") return;
   const PL = {
-    // ---- the patch note (patchnotes.js b172-legendhunts)
+    // ---- the patch note (patchnotes.js b175-legendhunts)
     "Legendary beasts: Jarl contracts and monster hunts": "Legendarne bestie: zlecenia Jarlów i łowy na potwory",
     "Ten named monsters now roam Skyrim, from the Mudcrab King on the Solitude shore to the White Ghost sabre cat, Whitefang the frost troll near Dawnstar and Bloodmoon, the werewolf of Hircine, in the Falkreath woods. Each one lives in its own hold and wanders between nearby places over time.": "Po Skyrim krąży teraz dziesięć potworów z imienia, od Króla Błotnych Krabów na wybrzeżu Solitude po Białego Ducha, kota szablozębnego, Białokła, mroźnego trolla koło Dawnstar, i Krwawego Księżyca, wilkołaka Hircyna, w lasach Falkreath. Każdy ma swoją włość i z czasem przenosi się między pobliskimi miejscami.",
     "Open Legendary hunts in a town to see the Jarl's posters. Take a contract and the map shows a rough area where the beast was last seen, not an exact spot.": "Otwórz Legendarne łowy w mieście, żeby zobaczyć listy gończe Jarla. Weź zlecenie, a mapa pokaże przybliżony obszar, gdzie ostatnio widziano bestię, a nie dokładne miejsce.",
