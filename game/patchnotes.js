@@ -8,11 +8,52 @@ const PATCHNOTES = (() => {
       "On a phone, hold your finger on it for a moment instead. Holding doesn't press the button underneath, and a normal tap works just like before.",
       "Item tooltips show damage or armor, weight, value, enchantments and how it compares with what you're wearing. Places you haven't found yet stay secret.",
     ] },
+    { id: "b136", build: 136, date: "24 Nov 2026", title: "Rings, amulets and lots more enchantments", items: [
+      "You can now wear one amulet and two rings. They have their own slots under your character in the Pack tab: tap one to put something on.",
+      "Rings and amulets are real gear now. Iron, silver, gold, moonstone and dwarven pieces, plain or set with a gem. Foes and bosses drop them (often enchanted), general stores sell plain ones, court wizards sell a few weak enchanted ones, and the forge makes them from an ingot and a gem.",
+      "Enchant rings and amulets at an arcane enchanter like any other gear. Gem-set and finer pieces hold stronger magic. Break enchanted ones down to learn their effect.",
+      "27 new enchantments (44 in all): Paralyze, Fear, Calm, Soul Trap, Turn Undead, Bleeding, Absorb Stamina and Magicka on weapons; Resist Fire, Frost, Shock and Poison, Regenerate Health, Magicka and Stamina, Fortify Block, Critical, Evasion, Heavy and Light Armor, cheaper Alteration, Conjuration and Illusion, and Fortify Smithing, Alchemy, Pickpocket and Speech on worn gear.",
+      "Wearing several pieces with the same enchantment adds up, but only to a limit, so stacking can't make fights a walkover. Extra weapon and Destruction damage pieces count for less each (the best one in full, the next half), up to +25%.",
+      "Four famous pieces can turn up on the strongest foes: the Gauldur Amulet, the Amulet of Articulation, the Ring of the Erudite and the Ring of the Hunt.",
+      "New Enchanting perks: Jeweller (stronger magic on rings and amulets, and you find more of them), Warding Enchanter (stronger resistances) and Hex Enchanter (stronger paralyze, fear, absorb and the like).",
+      "Item details now say in plain words what each enchantment does.",
+    ] },
+    { id: "b136vision", build: 136, date: "24 Nov 2026", title: "A cone of sight on the map", items: [
+      "Your marker on the map now looks the way you're walking, with a soft cone of sight in front of it. When you stop, it keeps looking that way.",
+      "Inside the cone the fog thins out and you see clearly: other travellers further off than before, caravans, guard patrols, and the foe that blocks your road, standing right ahead of you.",
+      "Places inside your cone get spotted from afar and go on your map, so you find them before you walk past them. Big cities show up from far away, a small shrine only when you're close.",
+      "How far you see depends on the world: night, fog, storms and blizzards cut it short, hills and mountain passes let you see much further, and riding a horse helps a little. Practised archers have sharper eyes too.",
+      "Party members each have their own fainter cone, so you can see where everyone is looking.",
+      "New perks: Far Sight (Archery) lets you see further and wider on the map; Owl Eyes (Sneak) makes darkness and bad weather hurt your sight only half as much.",
+      "Works in both art styles: soft ink edges in the drawn style, chunky dotted edges in pixel art.",
+    ] },
+    { id: "b137-ctl", build: 137, date: "24 Nov 2026", title: "New fight controls", items: [
+      "Your moves in a fight now sit in a proper action bar at the bottom: three big buttons for Attack, Power attack and Guard (or Shield bash), with Magic, Items, Flee and End turn right under them. Easy to hit with a thumb, even on small phones.",
+      "Every move shows its cost as gold pips, and the AP row at the top lights up which pips a move would use before you tap it. The pips you spend burst away.",
+      "Moves you can't use right now are greyed out and say why: \"Need 2 more AP\", \"Not enough stamina\", \"Need 12 more magicka\", \"None left\".",
+      "Quick slots above the big buttons hold your shouts and your favourite spells, potions and scrolls. Tap the star next to anything in Magic or Items to pin it there. Until you pin something, it suggests your best healing spell, your best attack spell and a health potion.",
+      "Magic and Items open as tabs with filters by school, and your spells and potions have their pictures in both art styles.",
+      "Healing with a follower or friend beside you? Tap the spell or potion and then tap who gets it (or tap it again for yourself). Dragging onto someone still works.",
+      "Buttons react when you press them, and phones give a little buzz.",
+      "On a PC: keys 1 to 9 use the numbered moves, Space ends your turn (and skips the foe's turn or presses Continue), M opens Magic, I opens Items, F flees, Esc goes back.",
+      "Prefer the old cards or the combat wheel? Settings, Fights, Controls. The target button at the top still switches the timing ring on or off.",
+    ] },
+    { id: "b137", build: 137, date: "24 Nov 2026", title: "Sharp, never stretched, on every screen", items: [
+      "Pictures keep their shape on every phone, tablet and PC: nothing gets squashed or stretched any more, even when you turn your phone sideways or resize the window.",
+      "The map redraws straight away when you turn your phone or resize the window, instead of looking stretched until you touched it.",
+      "The lockpicking, pickpocketing, forge, alchemy, enchanting and ring mini-games are now sharp on high-resolution phones and tablets (they were blurry before).",
+      "The title screen, the travel scene, the dungeon map's torchlight and the fight scene are sharper on big tablets and PC monitors.",
+      "Pixel art title screen: every pixel is now the same size, so the picture no longer has uneven rows.",
+      "On a big PC monitor, the +gold number, flying loot and fight tips now show up where they should instead of off to the side (they used to push the page sideways).",
+      "Phones with a notch or camera cut-out: menus and popups now stay clear of it, also in landscape.",
+    ] },
+    { id: "b136-5", build: 136, date: "24 Nov 2026", title: "A proper road picture while you travel", items: [
+    ] },
     { id: "b135-compass", build: 135, date: "24 Nov 2026", title: "A real 3D compass", items: [
       "The golden compass on the home screen is now a proper 3D piece: drag it and it tilts toward your finger, catching the light and showing its thick bronze edge, then springs back when you let go.",
       "Skills, Magic, Items and Map now sit around the compass instead of on top of it, on phones held upright or sideways.",
     ] },
-    { id: "b136", build: 136, date: "24 Nov 2026", title: "A proper road picture while you travel", items: [
+    { id: "b136-4", build: 136, date: "24 Nov 2026", title: "A proper road picture while you travel", items: [
     ] },
     { id: "b136places", build: 136, date: "24 Nov 2026", title: "Something at every place", items: [
       "Every place on the map now has something to do. 52 spots that used to be just a picture (farms, mills, shrines, cabins, groves, old ruins, the All-Maker Stones) now offer a stall, work, a job, a blessing, a hidden strongbox, herbs or a spot worth searching. Look under \"What's here\" when you arrive.",
@@ -65,6 +106,8 @@ const PATCHNOTES = (() => {
       "Everything you wear shows up: helmet, armour and its colours, cloak, shield, weapon, even an amulet or ring.",
       "Your hero now actually walks on the road, rides the horse properly, sits on the wagon bench, and swings, blocks, casts and gets knocked down in fights. Moves flow smoothly from one into the next.",
       "Party members, followers and other players use the same new look, on the road, in fights, in portraits and on the hero tab. Works in both the hand-drawn and the pixel style.",
+    ] },
+    { id: "b136-2-2-2-4", build: 136, date: "24 Nov 2026", title: "Meet caravans on the road", items: [
     ] },
     { id: "b136-2-2-2-3", build: 136, date: "24 Nov 2026", title: "Meet caravans on the road", items: [
       "Caravans on the map are now something you can meet while you travel. When you're close, their wagons get a gold ring and say \"tap to meet\": tap them, or just walk up beside them and you'll be asked to stop.",

@@ -192,7 +192,7 @@ const DUNART = (() => {
     const torches = (box.dataset.torch || "").split(";").filter(Boolean).map((s) => s.split(",").map(Number));
     const here = box.dataset.here ? box.dataset.here.split(",").map(Number) : null;
     const next = [...box.querySelectorAll(".dnode")].map((b) => [parseFloat(b.style.left) / 100 * w, parseFloat(b.style.top) / 100 * h]);
-    const dpr = Math.min(2, devicePixelRatio || 1), pixel = ART.style() === "pixel", k = pixel ? 0.34 : dpr;
+    const pixel = ART.style() === "pixel", k = pixel ? 0.34 : typeof FITCANVAS !== "undefined" ? FITCANVAS.ratio(cv, w) : Math.min(2, devicePixelRatio || 1);   // the map is shown up to 560 wide: size from the box
     cv.width = Math.round(w * k); cv.height = Math.round(h * k);
     if (pixel) cv.style.imageRendering = "pixelated";
     const g = cv.getContext("2d"); g.setTransform(k, 0, 0, k, 0, 0);

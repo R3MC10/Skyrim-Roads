@@ -133,18 +133,19 @@ const ONBOARD = (() => {
   function place() {
     const el = document.getElementById("obtip"); if (!el) return;
     if (!el.classList.contains("infight")) {   // elsewhere: just under the top bar, so Menu and Friends stay tappable
-      const bar = document.querySelector("#dun .hd") || document.querySelector("#app .top"), b = bar ? bar.getBoundingClientRect().bottom : 0;
+      const bar = document.querySelector("#dun .hd") || document.querySelector("#app .top"), b = bar ? bar.getBoundingClientRect().bottom / (typeof FITCANVAS !== "undefined" ? FITCANVAS.zoom() : 1) : 0;
       el.style.top = Math.max(10, Math.min(b + 6, innerHeight * 0.3)) + "px"; el.style.bottom = "auto";
       return;
     }
+    const z = typeof FITCANVAS !== "undefined" ? FITCANVAS.zoom() : 1;   // zoomed page (PC, bigger text): screen px → page px
     const grid = document.querySelector("#tbf .tbgrid, #tbf .tbmenu, #tbf .tbdone");
-    const above = [...document.querySelectorAll("#tbf .tbap, #tbf .tblog:not([hidden]), #tbf .tbwait, #tbf .tballies")].reduce((m, x) => Math.max(m, x.getBoundingClientRect().bottom), 0);
+    const above = [...document.querySelectorAll("#tbf .tbap, #tbf .tblog:not([hidden]), #tbf .tbwait, #tbf .tballies")].reduce((m, x) => Math.max(m, x.getBoundingClientRect().bottom / z), 0);
     const scene = document.querySelector("#tbf .tbscene");
-    const gTop = grid ? grid.getBoundingClientRect().top : innerHeight;
+    const gTop = (grid ? grid.getBoundingClientRect().top : innerHeight) / z;
     const room = gTop - above - 12;
     el.style.maxHeight = ""; el.style.top = ""; el.style.bottom = "";
-    if (room >= Math.min(el.scrollHeight, 150)) { el.style.bottom = Math.max(4, innerHeight - gTop + 6) + "px"; el.style.top = "auto"; el.style.maxHeight = room + "px"; }
-    else { const t = scene ? Math.max(4, scene.getBoundingClientRect().top) : 8; el.style.top = t + "px"; el.style.bottom = "auto"; el.style.maxHeight = Math.max(120, gTop - t - 8) + "px"; }
+    if (room >= Math.min(el.scrollHeight, 150)) { el.style.bottom = Math.max(4, innerHeight / z - gTop + 6) + "px"; el.style.top = "auto"; el.style.maxHeight = room + "px"; }
+    else { const t = scene ? Math.max(4, scene.getBoundingClientRect().top / z) : 8; el.style.top = t + "px"; el.style.bottom = "auto"; el.style.maxHeight = Math.max(120, gTop - t - 8) + "px"; }
   }
   function onTipClick(e) {
     const b = e.target.closest("[data-obt]"); if (!b || !bound) return;
