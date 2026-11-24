@@ -51,6 +51,7 @@ async def main():
                     except Exception: pass
                 return False
             await tap("[data-tab=hero]")
+            await pg.evaluate("() => window.__ui.go('follower')"); await pg.wait_for_timeout(400)   # followertab.js
             ok(await snap(".fol2", f"{style}_overview.png"), f"{style}: follower screen")
             txt = await pg.evaluate("document.querySelector('.fol2')?.textContent || ''")
             ok("Magic" in txt and "Tactics" in txt and "Left hand" not in txt or True, f"{style}: Magic and Tactics tabs")

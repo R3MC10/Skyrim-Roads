@@ -38,7 +38,7 @@ const I18N = (() => {
     "📜 Journal": "📜 Dziennik", "📔 Diary": "📔 Pamiętnik", "📖 Books": "📖 Książki", "🔍 Secrets": "🔍 Sekrety", "✨ Uniques": "✨ Unikaty", "🎣 Fishing": "🎣 Wędkarstwo",
     "🌿 Gathering": "🌿 Zbieractwo", "🗺 Treasure": "🗺 Skarby", "📜 Patch notes": "📜 Zmiany w grze", "Patch Notes": "Zmiany w grze", "How to Play": "Jak grać",
     Updates: "Aktualizacje", Credits: "Twórcy", "Your quests": "Twoje zadania", "Main quest": "Główny wątek", "Quest givers": "Zleceniodawcy", "World events": "Wydarzenia świata",
-    "Coming up:": "Wkrótce:", "Coming next": "Już wkrótce", "Being built now": "W budowie", "Market today": "Targ dzisiaj", "Market stalls": "Stragany",
+    "Coming up:": "Wkrótce:", "Coming next": "Już wkrótce", "Coming next is up to date again": "Już wkrótce znów jest aktualne", "The Coming next box at the top of Patch notes now shows what's really being built, and it can't get stuck on an old list any more.": "Okienko Już wkrótce na górze Nowości pokazuje teraz to, co naprawdę powstaje, i nie utknie już na starej liście.", "A new, livelier fight screen that fits on one screen": "Nowy, żywszy ekran walki, który mieści się na jednym ekranie", "On PC, everything fits on one screen without scrolling": "Na PC wszystko mieści się na jednym ekranie, bez przewijania", "New painted dungeon rooms and a painted world map": "Nowe malowane komnaty lochów i malowana mapa świata", "More unique enchantments on gear": "Więcej wyjątkowych zaklęć na sprzęcie", "Being built now": "W budowie", "Market today": "Targ dzisiaj", "Market stalls": "Stragany",
     "General goods": "Towary ogólne", "General goods:": "Towary ogólne:", "Blacksmith": "Kowal", "Merchant": "Kupiec", "Alchemy lab": "Pracownia alchemiczna",
     "🍲 Cooking pot": "🍲 Kociołek", "Skill trainer": "Trener umiejętności", "Hirelings": "Najemnicy", "Show on map": "Pokaż na mapie", "Centre on me": "Wyśrodkuj na mnie",
     "Zoom map": "Przybliż mapę", "Map of Skyrim": "Mapa Skyrim", "Where to?": "Dokąd?", "Pick where to go": "Wybierz, dokąd iść", "Travel": "Podróż", "Gather": "Zbieraj",
@@ -105,6 +105,7 @@ const I18N = (() => {
     [/^You're in (.+)$/, (m) => `Jesteś w: ${m[1]}`], [/^Go to (.+)$/, (m) => `Idź do: ${m[1]}`], [/^Begin in (.+)$/, (m) => `Zacznij w: ${m[1]}`],
     [/^Continue to (.+)$/, (m) => `Dalej do: ${m[1]}`], [/^(\d+) of (\d+)$/, (m) => `${m[1]} z ${m[2]}`], [/^Level (\d+): (\d+)% to the next level$/, (m) => `Poziom ${m[1]}: ${m[2]}% do następnego`],
     [/^(\d+)\/(\d+) toward level (\d+)$/, (m) => `${m[1]}/${m[2]} do poziomu ${m[3]}`], [/^~(\d+) min$/, (m) => `~${m[1]} min`],
+    [/^the title (.+)$/, (m) => `tytuł ${PL[m[1]] ?? m[1]}`],
     [/^(\d+) days? (\d+) h$/, (m) => `${m[1]} ${m[1] === "1" ? "dzień" : "dni"} ${m[2]} h`], [/^(\d.*) ago$/, (m) => `${tr(m[1]) ?? m[1]} temu`],
   ];
   /* lines added by feature modules (i18n_hsrooms.js and others): exact lines and number patterns; the lists above win */
@@ -126,6 +127,8 @@ const I18N = (() => {
   }
   /* a filled-in {marker}: a known word, a number pattern, or (if shorter) a sentence of its own */
   const fillWord = (v, s, d) => PL[v] ?? ST.ex[v] ?? pat(v) ?? (d < 3 && v.length < s.length && /[a-z]{2} [a-z]/i.test(v) ? sentence(v, d + 1) : null) ?? v;
+  /* a list of them ("200 gold, Dawnguard Rune Axe"): each piece on its own */
+  const fillList = (v, s, d) => (PL[v] == null && ST.ex[v] == null && v.includes(", ")) ? v.split(", ").map((x) => fillWord(x, s, d)).join(", ") : fillWord(v, s, d);
   const QUOTE = /^([“"„«]?)([\s\S]*?)([”"»]?)$/;
   function sentence(s, d = 0) {
     const ex = ST.ex[s] ?? PL[s];
@@ -134,7 +137,7 @@ const I18N = (() => {
       if (p.lead && !s.startsWith(p.lead)) continue;
       const m = s.match(p.re); if (!m) continue;
       let out = p.pl;
-      p.names.forEach((n, i) => { const v = m[i + 1]; out = out.split(n).join(fillWord(v, s, d)); });
+      p.names.forEach((n, i) => { const v = m[i + 1]; out = out.split(n).join(fillList(v, s, d)); });
       return out;
     }
     const ic = s.match(/^([^\p{L}\p{N}\s"“„«(]{1,4}\s+)(.+)$/su);   // an icon in front: translate the rest
