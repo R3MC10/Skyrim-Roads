@@ -369,8 +369,8 @@ const SEARCH = (() => {
     }, 1);
   }
   function toTown(section) { ui().go?.("town"); if (section) fire("shop", { id: section }); window.scrollTo(0, 0); }
-  function toHero(text) {
-    ui().go?.("hero");
+  function toHero(text, t = "hero") {
+    ui().go?.(t);
     later(() => { const el = [...document.querySelectorAll("#side .panel")].find((p) => p.textContent.includes(text)); flash(el); });
   }
   function pick(e) {
@@ -387,7 +387,7 @@ const SEARCH = (() => {
       case "skill": leave(); return toSkill(e.id);
       case "place": leave(); return toPlace(e.id);
       case "quest": leave(); return toQuest(e.id);
-      case "follower": if (S.follower?.id === e.id) { leave(); return toHero(TOWNS.FOLLOWERS[e.id][0]); } break;
+      case "follower": if (S.follower?.id === e.id) { leave(); return toHero(TOWNS.FOLLOWERS[e.id][0], typeof FOLTAB !== "undefined" ? "follower" : "hero"); } break;
       case "setting": leave(); return toSetting(e.find);
     }
     if (q.trim()) remember(q);
