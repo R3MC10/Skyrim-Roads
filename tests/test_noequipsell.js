@@ -121,7 +121,7 @@ if (hubFns.holdsWorn({ items: [{ item: "potion_health", qty: 1 }] }) || hubFns.h
 
 // 7. patch note + Polish
 vm.runInContext(`
-var top = PATCHNOTES.LIST ? PATCHNOTES.LIST[0] : null;
+var top = PATCHNOTES.LIST ? (PATCHNOTES.LIST.find((n) => n.id === "b144-noequipsell") || PATCHNOTES.LIST[0]) : null;
 OK(!top || /wear/i.test(JSON.stringify(top)), "patch note on top mentions worn gear");
 OK(I18N_STORY.ex["You're wearing that. Take it off first."], "Polish for the new line");
 var pn = PATCHNOTES.LIST.find((x) => x.id === "b144-noequipsell");

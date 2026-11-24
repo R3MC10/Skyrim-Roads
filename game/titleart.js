@@ -89,14 +89,38 @@ const TITLEART = (() => {
     const y = Math.min(H - SUBJ.y1 * h, Math.max(H - h, H - H / ZM - SUBJ.y0 * h));
     return { x: (W - w) / 2, y, w, h, s };
   }
-  let comp = null, compKey = null, compW = 0, compH = 0, compCap = 0, lastFit = null, lastZ = 1, lastCss = 1;
+  /* [OURS] wide windows (wider than WIDE_AT) get their own 2:1 painting (title-wide, 1774x887, and title-wide-2x, 3548x1774):
+     cover-fit, so it fills the window edge to edge. WSUBJ is the part that must always show: the warrior on the left rock
+     (head ~34% down, boots ~84%) through the city on the right, with the dragon above it. Too wide a window crops the top
+     and bottom, too narrow a one the sides, both centred on WSUBJ. If even the 2x file would be blown up past WUP, the
+     painting is held back and the margins get the same blurred fill as the tall painting. */
+  // WUP: the wide painting fills the window even on a 32:9 or 5K screen that needs more than its 2x file has (up to 1.8 screen
+  // pixels per file pixel there; art_quality_ui.py allows that for title-wide only); past that it is held back too
+  const WSUBJ = { x0: 0.2, x1: 0.81, y0: 0.325, y1: 0.86 }, WIDE_AT = 1.25, WUP = 1.8;
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  function wideFit(iw, ih, W, H, cap = Infinity) {
+    const s = Math.min(Math.max(W / iw, H / ih), cap * WUP / ZM), w = iw * s, h = ih * s;
+    const cx = (WSUBJ.x0 + WSUBJ.x1) / 2 * w, cy = (WSUBJ.y0 + WSUBJ.y1) / 2 * h;
+    const x = w >= W ? clamp(W / 2 - cx, W - w, 0) : (W - w) / 2;
+    const y = h >= H ? clamp(H / 2 - cy, H - h, 0) : H - h;   // held back: sits on the bottom, the blurred sky above
+    // the push-in grows from the middle of the subject (kept on screen), and only as far as the subject still fits
+    const sx0 = x + WSUBJ.x0 * w, sx1 = x + WSUBJ.x1 * w, sy0 = y + WSUBJ.y0 * h, sy1 = y + WSUBJ.y1 * h;
+    const ax = clamp((sx0 + sx1) / 2, 0, W), ay = clamp((sy0 + sy1) / 2, 0, H);
+    // largest z with a + z·(lo − a) ≥ 0 and a + z·(hi − a) ≤ max
+    const lim = (a, lo, hi, max) => Math.min(lo < a ? a / (a - lo) : Infinity, hi > a ? (max - a) / (hi - a) : Infinity);
+    const zmax = Math.max(1, Math.min(ZM, lim(ax, Math.max(0, sx0), Math.min(W, sx1), W), lim(ay, Math.max(0, sy0), Math.min(H, sy1), H)));
+    return { x, y, w, h, s, ax, ay, zmax, wide: true };
+  }
+  let comp = null, compKey = null, compW = 0, compH = 0, compCap = 0, lastFit = null, lastZ = 1, lastCss = 1, lastFile = "title";
   function skyTone(im) {
     try { const c = document.createElement("canvas"); c.width = c.height = 1; const g = c.getContext("2d"); g.drawImage(im, 0, 0, im.naturalWidth, Math.max(1, im.naturalHeight * 0.04), 0, 0, 1, 1); const d = g.getImageData(0, 0, 1, 1).data; return `rgb(${d[0]},${d[1]},${d[2]})`; } catch { return "#1b2636"; }
   }
-  function buildComp(im, W, H, cap = Infinity) {
-    const nw = im.naturalWidth, nh = im.naturalHeight, f = keyFit(nw, nh, W, H, cap), f0 = keyFit(nw, nh, W, H);
+  function buildComp(im, W, H, cap = Infinity, file = "title") {
+    const wide = file !== "title", fit = wide ? wideFit : keyFit;
+    const nw = im.naturalWidth, nh = im.naturalHeight, f = fit(nw, nh, W, H, cap), f0 = fit(nw, nh, W, H);
     // [artfit] held back to the file's own pixels: remember how big a file this screen would need (for repainting)
-    if (f.s < f0.s * 0.995 && typeof ARTFIT !== "undefined") ARTFIT.short("title", nw * f0.s * ZM / cap, nh * f0.s * ZM / cap);
+    if (f.s < f0.s * 0.995 && typeof ARTFIT !== "undefined") ARTFIT.short(file, nw * f0.s * ZM / cap, nh * f0.s * ZM / cap);
+    else if (wide && f.s * ZM / cap > UPMAX * 1.01 && typeof ARTFIT !== "undefined") ARTFIT.short(file, nw * f.s * ZM / cap, nh * f.s * ZM / cap);   // filled, but past its pixels
     const c = document.createElement("canvas"); c.width = W; c.height = H;
     const g = c.getContext("2d");
     g.fillStyle = skyTone(im); g.fillRect(0, 0, W, H);
@@ -118,7 +142,7 @@ const TITLEART = (() => {
       const a = document.createElement("canvas"); a.width = W; a.height = H;
       const ag = a.getContext("2d"); ag.drawImage(im, f.x, f.y, f.w, f.h);
       ag.globalCompositeOperation = "destination-out";
-      const fe = f.w * 0.16;
+      const fe = wide ? Math.min(f.w * 0.16, Math.max(f.x * 1.2, f.w * 0.03)) : f.w * 0.16;   // the wide one: a thin seam, the warrior stands at 20%
       if (f.x > 0.5) {
         for (const [x0, x1] of [[f.x, f.x + fe], [f.x + f.w, f.x + f.w - fe]]) {
           const gr = ag.createLinearGradient(x0, 0, x1, 0); gr.addColorStop(0, "rgba(0,0,0,1)"); gr.addColorStop(1, "rgba(0,0,0,0)");
@@ -128,7 +152,24 @@ const TITLEART = (() => {
       if (f.y > 0.5) { const fy = Math.min(f.h * 0.08, f.y + H * 0.05), gr = ag.createLinearGradient(0, f.y, 0, f.y + fy); gr.addColorStop(0, "rgba(0,0,0,1)"); gr.addColorStop(1, "rgba(0,0,0,0)"); ag.fillStyle = gr; ag.fillRect(0, f.y - 1, W, fy + 1); }
       g.drawImage(a, 0, 0);
     } else g.drawImage(im, f.x, f.y, f.w, f.h);
-    comp = c; compKey = im; compW = W; compH = H; compCap = cap; lastFit = f;
+    comp = c; compKey = im; compW = W; compH = H; compCap = cap; lastFit = f; lastFile = file;
+  }
+  /* the push-in for zoom z (1.01 … ZM): [anchor x, anchor y, actual zoom] */
+  const zoomOf = (f, z, W, H) => (f && f.wide ? [f.ax, f.ay, 1 + (z - 1) * (f.zmax - 1) / (ZM - 1)] : [W / 2, H, z]);
+  /* which painting this window shows: the wide one on a landscape window (its 2x copy once the screen needs more than
+     1.1x the small file's pixels), else the tall one. While the right wide file is still on its way the tall one shows. */
+  function pickKey(W, H, unitPx) {
+    if (typeof ASSETS === "undefined") return null;
+    if (W / H > WIDE_AT) {
+      const s0 = Math.max(W / 1774, H / 887), need = 1774 * s0 * ZM * unitPx;   // screen pixels across the wide painting
+      const want = need > 1774 * 1.1 ? "title-wide-2x" : "title-wide";
+      const im = ASSETS.img(want);
+      if (im) return [im, want];
+      if (want === "title-wide-2x" && ASSETS.stateOf(want) === "none") { const im1 = ASSETS.img("title-wide"); if (im1) return [im1, "title-wide"]; }
+      else if (want === "title-wide" && ASSETS.stateOf(want) === "none") { const im2 = ASSETS.img("title-wide-2x"); if (im2) return [im2, "title-wide-2x"]; }
+    }
+    const im = ASSETS.img("title");
+    return im ? [im, "title"] : null;
   }
 
   /* animate the title panorama on `cv` (full screen); returns stop() */
@@ -156,13 +197,15 @@ const TITLEART = (() => {
     function draw(ts) {
       const a = performance.now(), t = (ts - t0) / 1000;
       g.imageSmoothingEnabled = true;
-      const key = typeof ASSETS !== "undefined" ? ASSETS.img("title") : null;
+      const pk = pickKey(W, Hh, unitPx || 1), key = pk && pk[0];
       if (key) {   // hand-painted key art: a slow push-in, with the live aurora on top
         const z = 1.04 + (reduce ? 0 : Math.sin(t * 0.05) * 0.03);
-        if (compKey !== key || compW !== W || compH !== Hh || compCap !== 1 / (unitPx || 1)) buildComp(key, W, Hh, 1 / (unitPx || 1));
+        if (compKey !== key || compW !== W || compH !== Hh || compCap !== 1 / (unitPx || 1)) buildComp(key, W, Hh, 1 / (unitPx || 1), pk[1]);
         lastZ = z; lastCss = (cv.getBoundingClientRect().width || innerWidth) / W;
-        // the push-in grows from the bottom middle, so the hero's feet stay put and his head never leaves the top
-        g.save(); g.translate(W / 2, Hh); g.scale(z, z); g.translate(-W / 2, -Hh); g.drawImage(comp, 0, 0); g.restore();
+        // the tall painting's push-in grows from the bottom middle, so the hero's feet stay put and his head never leaves the
+        // top; the wide one's from the middle of its subject, only as deep as the subject still fits
+        const [ax, ay, zz] = zoomOf(lastFit, z, W, Hh);
+        g.save(); g.translate(ax, ay); g.scale(zz, zz); g.translate(-ax, -ay); g.drawImage(comp, 0, 0); g.restore();
         g.save(); g.globalAlpha = 0.45; aurora(g, W, Hh, reduce ? 2 : t); g.restore();
         stat.frames++; stat.ms += performance.now() - a;
         return;
@@ -187,11 +230,11 @@ const TITLEART = (() => {
   /* where the key art sits on screen in CSS pixels (for tests): the picture, its subject box, and both at the shallowest/deepest zoom */
   function keyRect() {
     if (!lastFit) return null;
-    const f = lastFit, c = lastCss, H = compH, W = compW;
-    const at = (z) => { const X = (x) => (W / 2 + (x - W / 2) * z) * c, Y = (y) => (H - (H - y) * z) * c;
+    const f = lastFit, c = lastCss, H = compH, W = compW, S = f.wide ? WSUBJ : SUBJ;
+    const at = (z0) => { const [ax, ay, z] = zoomOf(f, z0, W, H), X = (x) => (ax + (x - ax) * z) * c, Y = (y) => (ay + (y - ay) * z) * c;
       return { x: X(f.x), y: Y(f.y), w: f.w * z * c, h: f.h * z * c,
-        subj: { x0: X(f.x + SUBJ.x0 * f.w), x1: X(f.x + SUBJ.x1 * f.w), y0: Y(f.y + SUBJ.y0 * f.h), y1: Y(f.y + SUBJ.y1 * f.h) } }; };
-    return { vw: W * c, vh: H * c, now: at(lastZ), deepest: at(ZM), shallowest: at(1.01), SUBJ };
+        subj: { x0: X(f.x + S.x0 * f.w), x1: X(f.x + S.x1 * f.w), y0: Y(f.y + S.y0 * f.h), y1: Y(f.y + S.y1 * f.h) } }; };
+    return { vw: W * c, vh: H * c, now: at(lastZ), deepest: at(ZM), shallowest: at(1.01), SUBJ: S, file: lastFile, wide: !!f.wide, held: f.x > 0.5 || f.y > 0.5 };
   }
   const stats = () => ({ frames: stat.frames, avgMs: stat.frames ? +(stat.ms / stat.frames).toFixed(2) : 0 });
 
