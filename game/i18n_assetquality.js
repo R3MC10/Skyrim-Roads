@@ -12,6 +12,8 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
       "Obrazy (miasta, szyldy sklepów, sceny walk, obrazki wydarzeń) trzymają swój kształt i nigdy nie są rozdmuchiwane do rozmycia. Na bardzo dużym ekranie obraz pokazuje się w swoim własnym rozmiarze.",
     "Fight scenes are drawn at your screen's full sharpness, on phones and on 4K monitors, even when the window grows or the phone turns.":
       "Sceny walk są rysowane w pełnej ostrości twojego ekranu, na telefonach i na monitorach 4K, nawet gdy okno się powiększy albo obrócisz telefon.",
+    "Fixed: with blood and gore on, the fight picture could stop drawing. It plays again.":
+      "Naprawione: przy włączonej krwi obraz walki potrafił przestać się rysować. Znowu działa.",
     "The painted compass is a bit sharper too.": "Malowany kompas też jest trochę ostrzejszy.",
     "Everything the game draws itself (your hero, the new-character picture, the dungeon map, icons) is redrawn at the size it really has on your screen, so it stays crisp from phones to ultrawide monitors.":
       "Wszystko, co gra rysuje sama (twój bohater, obrazek tworzenia postaci, mapa lochu, ikony), jest rysowane na nowo w rozmiarze, jaki naprawdę ma na ekranie, więc zostaje ostre od telefonów po ultrapanoramiczne monitory.",

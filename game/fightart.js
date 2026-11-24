@@ -783,7 +783,7 @@ const FIGHTART = (() => {
     const NECK = -52 * fSize;
     // [OURS] blood and gore (gore.js): sprays, splats that stay for the fight, streaks on the hurt, pools, flourishes. Seeded, so every phone sees the same.
     const fightOf = f.tbTall && Object.getPrototypeOf(f) !== Object.prototype ? Object.getPrototypeOf(f) : f;   // a turn-by-turn screen is a view of the whole fight: its splats stay turn to turn
-    const GS = typeof GORE !== "undefined" && GORE.on() ? GORE.scene({ fight: fightOf, W, H: Hh, groundY, s, pixel, reduce: rm, foeK, foeName: rec.foeName, tags: f.e?.tags, ehpMax }) : null;
+    const GS = typeof GORE !== "undefined" && GORE.on() ? GORE.scene({ fight: fightOf, W, H: Hh, groundY, s, pixel: false, reduce: rm, foeK, foeName: rec.foeName, tags: f.e?.tags, ehpMax }) : null;
     const goreKey = (b, i) => `${(f.log || [])[b.li]?.turn ?? b.li}|${b.li}|${b.who}|${b.dmg ?? 0}|${i}`;
     let deathK = null, camF = 0.5;
     const meleeOf = (b) => !!b && !MOVES[b.move]?.proj && !["self", "potion", "wait", "block", "cast", "shout"].includes(b.move);

@@ -12,6 +12,7 @@ const PATCHNOTES = (() => {
       "Everything the game draws itself (your hero, the new-character picture, the dungeon map, icons) is redrawn at the size it really has on your screen, so it stays crisp from phones to ultrawide monitors.",
       "The snowy road on the new-character screen no longer fills a whole PC monitor: it keeps a sensible size above the race list.",
       "Fixed: on phones a lot of newer screens (the house chest, invites, the problem report, the Dwemer puzzles and more) were missing their proper look. They look right again.",
+      "Fixed: with blood and gore on, the fight picture could stop drawing. It plays again.",
     ] },
     { id: "b169-travelanim", build: 169, date: "24 Nov 2026", title: "Smoother riding on the road", items: [
       "The picture under your trip got its walking and riding fixed: horses really walk and gallop now, every hoof lands on the road and stays put instead of sliding, and the body, mane and tail move with the stride.",
