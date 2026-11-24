@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b143-fighttips", build: 143, date: "24 Nov 2026", title: "Tooltips in fights", items: [
+      "Everything on the fight screen now has a tooltip, the same kind as in the menus: rest the mouse on it, or hold a finger on it. Spells show what they do with your perks, single and dual cast, magicka, AP and how long they last; potions, scrolls, the big buttons, quick slots, the AP pips, your bars, you, the foe and every status chip explain themselves too.",
+      "A greyed-out button says why with the numbers, like \"Need 37 more magicka: you have 98, it needs 135\".",
+      "Holding a finger on a button only shows its tooltip: nothing gets cast. Dragging a card onto a target works as before.",
+      "Foes that are afraid, calmed or still rattled show it with a chip under their health.",
+      "Every item's tooltip now says what it does, in fights and out of them: what a scroll or potion really does for you, how hard a weapon hits with your skill and perks, its AP cost in a fight, what food cooks into, and its value and weight. Favourite slots show the full tooltip, not just the name.",
+    ] },
     { id: "b142-balfear", build: 142, date: "24 Nov 2026", title: "Bosses don't run forever, healers don't heal forever", items: [
       "Battle Cry and every other fear or \"stops fighting\" effect now hold a boss for 2 turns and an elite foe for 3. A boss can lose at most 3 turns a fight to fear, an elite 5. For the turns they shake off they stay rattled and hit 20% softer, so the shout still helps. Normal foes still run for the full time.",
       "Foe mages and healers can't patch themselves back to full any more: their own healing stops at about two thirds of their health, adds up to at most a third of it in a whole fight, and a healing spell needs a few turns to come back. Potions and life drain count too.",

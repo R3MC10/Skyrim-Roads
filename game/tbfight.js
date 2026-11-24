@@ -700,6 +700,7 @@ const TB = (() => {
     if (scene) ui.lastScene = scene;
     if (typeof TBUI !== "undefined") TBUI.after(el, { hurt: hpNow < prev.hp, hit: ehpNow < prev.ehp, big: prev.hp - hpNow > hpMax * 0.15, mine, pops });
     if (typeof FOEINTENT !== "undefined") { el.classList.toggle("tbplay", playing); try { FOEINTENT.decorate(el, sess); } catch (e) { console.warn("foe targets", e); } }   // crosshairs and the arrow
+    if (typeof FIGHTTIPS !== "undefined") { try { FIGHTTIPS.decorate(el, sess); } catch (e) { console.warn("fight tips", e); } }   // tooltips on everything (fighttips.js)
     if (R) { el.classList.toggle("tbplay", playing); R.low(el, hpNow / Math.max(1, hpMax), !sess.done); }
     if (f.bf && typeof BOSSFIGHT !== "undefined") { try { BOSSFIGHT.decorate(el, sess, newEv, ehpNow, playing); } catch (e) { console.warn("boss", e); } }   // boss bar, phases, big attacks
   }
