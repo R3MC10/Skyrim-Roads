@@ -108,7 +108,8 @@ OK(P.split(5, 8).each === 0, "tiny finds aren't split into nothing");
 
 // ---- dungeons: longer and busier with the party
 const layoutFn = (th, ti) => DUNGEONS.layout(th, ti);
-OK(P.lengthFactor(1) === 1 && P.lengthFactor(2) === 1.5 && P.lengthFactor(3) === 2 && P.lengthFactor(5) === 3 && P.lengthFactor(7) === 4 && P.lengthFactor(8) === 4, "length × (1 + 0.5 per extra), capped at 4×");
+OK(P.extraRows(1) === 0 && P.extraRows(2) === 2 && P.extraRows(3) === 4 && P.extraRows(4) === 6 && P.extraRows(5) === 7 && P.extraRows(8) === 10 && P.extraRows(20) === 10, "+2 rooms per extra hero for the first 3, then +1, at most +10");
+OK(P.lengthFactor(1) === 1 && P.lengthFactor(8, 6) > 2.5 && P.lengthFactor(8, 6) < 2.8, "8 heroes: a bit under 3× as long");
 OK(P.waves(1) === 1 && P.waves(3) === 3 && P.waves(6) === 6 && P.waves(8) === 6, "one foe per hero, at most 6");
 for (const n2 of [1, 2, 3, 4, 8]) for (let rep = 0; rep < 6; rep++) {
   const base = DUNGEONS.layout("barrow", 2).length - 1;
@@ -122,8 +123,36 @@ for (const n2 of [1, 2, 3, 4, 8]) for (let rep = 0; rep < 6; rep++) {
   }
   if (n2 === 1) OK(L.length - 1 >= 3, "a solo map is a normal map");
 }
-{ let s1 = 0, s8 = 0; for (let k = 0; k < 40; k++) { s1 += P.longLayout("cave", 2, 1, layoutFn).length - 1; s8 += P.longLayout("cave", 2, 8, layoutFn).length - 1; }
-  OK(Math.abs(s8 / s1 - 4) < 0.6, "8 heroes: about 4× as many rows (" + (s8 / s1).toFixed(2) + ")"); }
+// solo vs 2/4/8 heroes: exact room counts on the way to the boss, for every tier
+for (const [th, tier] of [["cave", 1], ["barrow", 2], ["dwemer", 3]]) {
+  const base = 4 + tier;   // dungeons.js: 4 + tier rows before the boss
+  for (const [n2, more] of [[1, 0], [2, 2], [4, 6], [8, 10]]) for (let k = 0; k < 5; k++) {
+    const L = P.longLayout(th, tier, n2, layoutFn);
+    OK(L.length - 1 === base + more, th + " " + n2 + " heroes: " + (base + more) + " rooms before the boss, got " + (L.length - 1));
+    if (n2 > 1) OK(L[L.length - 2].every((nd) => ["rest", "treasure", "mystery"].includes(nd.type)), "still a breather right before the boss");
+  }
+}
+// the extra rooms are a real mix: fights, tough fights, traps and treasure all turn up
+{ const seen = {}; for (let k = 0; k < 30; k++) { const L = P.longLayout("barrow", 2, 8, layoutFn); for (const row of L.slice(5, -2)) for (const nd of row) seen[nd.type] = (seen[nd.type] || 0) + 1; }
+  for (const ty of ["fight", "elite", "trap", "treasure"]) OK(seen[ty] > 0, "extra rooms include " + ty);
+  OK(seen.fight > seen.rest, "more fights than rest spots"); }
+// sizing a run: once, by the leader, and everyone walks the same map
+{
+  const lead = mk("L2", "Lead"); lead.location = "Bleak Falls Barrow"; [lead.x, lead.y] = WORLD.places["Bleak Falls Barrow"]; lead.level = 20;
+  const r0 = COOP.newRun(lead, 6000);
+  OK(P.sizeRun(r0.doc, 1).rows === r0.doc.rows, "solo: the normal map, untouched");
+  for (const n2 of [2, 4, 8]) {
+    const doc = P.sizeRun(r0.doc, n2);
+    OK(doc.sized && doc.size === n2 && doc.rows.length - 1 === r0.doc.rows.length - 1 + P.extraRows(n2), n2 + " heroes: the map grew by " + P.extraRows(n2));
+    OK(P.sizeRun(doc, 8) === doc, "sized once: a second call changes nothing");
+    const run = { ...doc, id: r0.id + "-" + n2, members: heroes.slice(0, n2).map((h) => ({ id: h.id, name: h.name, level: h.level })), status: "in" };
+    const maps = heroes.slice(0, n2).map((h) => { h.dungeon = null; h.trip = null; h.cleared = {}; h.location = run.place; [h.x, h.y] = WORLD.places[run.place]; const err = COOP.join(h, run, 6000); OK(!err, "join: " + err); return JSON.stringify(h.dungeon.rows); });
+    OK(maps.every((m) => m === JSON.stringify(run.rows)), n2 + " heroes: everyone gets the same layout");
+    heroes.slice(0, n2).forEach((h) => { h.dungeon = null; });
+  }
+  const camp = { ...r0.doc, theme: "giantcamp", rows: [[{ type: "boss", links: [] }]] };
+  OK(P.sizeRun(camp, 8) === camp, "a giant camp stays one fight");
+}
 
 // ---- a party run: waves of foes, and they come one after another
 {
