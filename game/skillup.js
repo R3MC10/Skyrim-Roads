@@ -125,8 +125,7 @@ const SKILLUP = (() => {
     const big = it.kind === "level";
     const title = big ? L("Level up") : it.minor ? `${skName(it.name)} ${it.lvl}` : L("{0} increased to {1}", skName(it.name), it.lvl);
     const sub = big ? `<small class="su-s">${esc(L("Level {0}", it.lvl))} · ${esc(L("Choose health, magicka or stamina"))}</small>` : "";
-    const px = typeof ART !== "undefined" && ART.style && ART.style() === "pixel";
-    el.className = `on su-${it.kind}${it.minor ? " su-minor" : ""}${px ? " su-px" : ""}`;
+    el.className = `on su-${it.kind}${it.minor ? " su-minor" : ""}`;
     el.title = L("Tap to skip");
     el.innerHTML = `<div class="su-in"><b class="su-t">${esc(title)}</b>${sub}<div class="su-bar"><i class="su-cap"></i><span class="su-tr"><i class="su-fill"></i></span><i class="su-cap"></i></div></div>`;
     place();

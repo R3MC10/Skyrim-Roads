@@ -25,8 +25,8 @@ async def main():
             pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(str(e) + " @ " + (e.stack or "").replace(chr(10), " ")[:300]))
             await pg.goto(f"http://localhost:{PORT}/index.html?notut&p=br{tag}"); await pg.wait_for_timeout(1500)
             await pg.click(".press"); await pg.wait_for_timeout(400)
-            for style in ["ink", "pixel"]:
-                await pg.evaluate(f"ART.setStyle('{style}')")
+            for style in ["ink"]:
+                await pg.evaluate(f"ART.setStyle && ART.setStyle('{style}')")
                 # F12 from anywhere
                 await pg.keyboard.press("F12"); await pg.wait_for_timeout(300)
                 ok(await pg.locator("#bugrep").count() == 1, f"{tag}/{style}: F12 opens the report window")

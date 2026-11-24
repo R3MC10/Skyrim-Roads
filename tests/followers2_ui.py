@@ -13,7 +13,7 @@ async def main():
         def check(cond, msg):
             nonlocal ok
             print(("ok  " if cond else "FAIL") + " " + msg); ok = ok and bool(cond)
-        for style in ["ink", "pixel"]:
+        for style in ["ink"]:
             ctx = await b.new_context(viewport={"width": 412, "height": 915}, device_scale_factor=2)
             await ctx.add_init_script(f"localStorage.setItem('rotn_prefs', JSON.stringify({{artStyle:'{style}'}}))")
             async def phone(tag, name):

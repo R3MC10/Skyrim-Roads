@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Roads of the North app icon (source for every icon size: run python scripts/make_icons.py).
+       A horned Nord helm under the northern star, ink on a parchment shield, on a night-blue field.
+       #bg = the backdrop (full square). #emblem = the round badge (fits a circle of r=445 around the centre).
+       class="ring" = the shield, left out of the one-colour notification icon. -->
+  <defs>
+    <radialGradient id="sky" cx="50%" cy="35%" r="75%"><stop offset="0" stop-color="#22344f"/><stop offset="1" stop-color="#0c131d"/></radialGradient>
+  </defs>
+  <g id="bg"><rect width="1024" height="1024" fill="url(#sky)"/></g>
+  <g id="emblem">
+    <circle class="ring" cx="512" cy="512" r="426" fill="#e9d6a3" stroke="#d6a23e" stroke-width="34"/>
+    <circle class="ring" cx="512" cy="512" r="386" fill="none" stroke="#1d1915" stroke-width="10"/>
+    <path d="M512 150 L527 222 L599 237 L527 252 L512 324 L497 252 L425 237 L497 222 Z" fill="#d6a23e" stroke="#1d1915" stroke-width="8" stroke-linejoin="round"/>
+    <g fill="#1d1915">
+      <path d="M356 530 C240 536 166 446 176 282 C214 380 268 432 368 426 Z"/>
+      <path d="M668 530 C784 536 858 446 848 282 C810 380 756 432 656 426 Z"/>
+      <path d="M332 600 C332 424 412 322 512 322 C612 322 692 424 692 600 L692 716 Q692 786 632 802 L590 812 C590 740 574 690 540 680 L540 800 L484 800 L484 680 C450 690 434 740 434 812 L392 802 Q332 786 332 716 Z"/>
+    </g>
+    <g fill="#e9d6a3">
+      <path d="M394 600 Q452 564 494 590 L494 646 Q446 660 400 634 Z"/>
+      <path d="M630 600 Q572 564 530 590 L530 646 Q578 660 624 634 Z"/>
+    </g>
+    <path d="M342 548 Q512 506 682 548" fill="none" stroke="#e9d6a3" stroke-width="14"/>
+    <path d="M512 334 L512 524" fill="none" stroke="#e9d6a3" stroke-width="12"/>
+  </g>
+</svg>

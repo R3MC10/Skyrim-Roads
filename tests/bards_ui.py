@@ -34,8 +34,8 @@ async def main():
         print("B like again possible:", await B.evaluate("document.querySelectorAll('[data-act=verselike]:not([disabled])').length"))
         await A.wait_for_timeout(500); await inn(A)
         txt = await A.inner_text("#side"); i = txt.find("SONG OF THE NORTH"); print("A song:", txt[i:i+220].replace("\n"," | "))
-        for st in ["ink", "pixel"]:
-            await A.evaluate(f"()=>{{ART.setStyle('{st}');}}"); await inn(A)
+        for st in ["ink"]:
+            await inn(A)
             el = await A.query_selector(".bardsong"); await el.scroll_into_view_if_needed(); await A.wait_for_timeout(200)
             await A.screenshot(path=f"bard_{st}.png")
         await click(A, "[data-act=bardsing]"); await A.wait_for_timeout(2500)

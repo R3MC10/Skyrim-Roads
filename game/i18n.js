@@ -25,6 +25,10 @@ const I18N = (() => {
     "Close up": "Zbliż", "Move up": "W górę", "Move down": "W dół", "Sort:": "Sortuj:", "Name ▾": "Nazwa ▾", "Main": "Główny", "Main menu": "Menu główne",
     "Back to the main menu": "Wróć do menu głównego", "Close menu": "Zamknij menu", "Tap to begin": "Dotknij, aby zacząć", "Unrolling the map…": "Rozwijanie mapy…",
     "Roads of the North": "Drogi Północy", "Skyrim: Roads of the North": "Skyrim: Drogi Północy", "Continue": "Dalej", "CONTINUE": "DALEJ", "Save and play": "Zapisz i graj",
+    // dungeon map legend and room buttons (dunart.js)
+    "Tough fight": "Trudna walka", Trap: "Pułapka", Treasure: "Skarb", Puzzle: "Zagadka", Rest: "Odpoczynek", Unknown: "Nieznane",
+    "Go to: Fight": "Idź do: Walka", "Go to: Tough fight": "Idź do: Trudna walka", "Go to: Trap": "Idź do: Pułapka", "Go to: Treasure": "Idź do: Skarb",
+    "Go to: Puzzle": "Idź do: Zagadka", "Go to: Rest": "Idź do: Odpoczynek", "Go to: Unknown": "Idź do: Nieznane", "Go to: Boss": "Idź do: Boss",
     // bottom bar and screens
     Character: "Postać", Items: "Przedmioty", Magic: "Magia", Map: "Mapa", Journal: "Dziennik", Social: "Społeczność", Town: "Miasto", Area: "Okolica", Skills: "Umiejętności",
     Perks: "Atuty", Tactics: "Taktyka", Stats: "Statystyki", Diary: "Pamiętnik", Library: "Biblioteka", Achievements: "Osiągnięcia", Settings: "Ustawienia",
@@ -69,8 +73,8 @@ const I18N = (() => {
     "Pockets picked": "Okradzione kieszenie", "Potions brewed": "Uwarzone mikstury", "Dungeons cleared": "Oczyszczone lochy", "Quests completed": "Ukończone zadania",
     "Players defeated": "Pokonani gracze", "Questlines completed": "Ukończone wątki", "Arena wins": "Wygrane na arenie", "Jobs done": "Wykonane zlecenia",
     // settings
-    Sound: "Dźwięk", Music: "Muzyka", Effects: "Efekty", Ambience: "Otoczenie", "All sound": "Cały dźwięk", "Art style": "Styl grafiki", Graphics: "Grafika", Lighting: "Oświetlenie", Low: "Niskie", High: "Wysokie",
-    "Light and weather on the map and in place pictures: golden hours, lit towns at night, mist and moving clouds. Low is lighter on old phones.": "Światło i pogoda na mapie i na obrazkach miejsc: złota godzina, oświetlone miasta nocą, mgły i płynące chmury. Niskie mniej obciąża starsze telefony.", "Hand-drawn": "Rysowany", "Pixel art": "Pikselowy",
+    Sound: "Dźwięk", Music: "Muzyka", Effects: "Efekty", Ambience: "Otoczenie", "All sound": "Cały dźwięk", Graphics: "Grafika", Lighting: "Oświetlenie", Low: "Niskie", High: "Wysokie",
+    "Light and weather on the map and in place pictures: golden hours, lit towns at night, mist and moving clouds. Low is lighter on old phones.": "Światło i pogoda na mapie i na obrazkach miejsc: złota godzina, oświetlone miasta nocą, mgły i płynące chmury. Niskie mniej obciąża starsze telefony.", "One art style: hand-drawn": "Jeden styl grafiki: rysowany", "The pixel-art look is gone. The game now has one style, the hand-drawn one, so every picture, menu and fight gets the full care.": "Wygląd pikselowy zniknął. Gra ma teraz jeden styl, rysowany, więc każdy obrazek, menu i walka dostają pełną uwagę.", "If you had pixel art switched on, you'll just see the hand-drawn look next time you open the game. Nothing else changes, and your save is untouched.": "Jeśli grałeś z pikselową grafiką, przy następnym uruchomieniu zobaczysz po prostu wygląd rysowany. Nic więcej się nie zmienia, a twój zapis jest nietknięty.", "The Art style row is gone from Settings.": "Z Ustawień zniknął wiersz Styl grafiki.",
     Motion: "Ruch", Fights: "Walki", "Turn by turn": "Turowo", "Instant (auto)": "Od razu (auto)", "Foe turns": "Tury wroga", "Normal speed": "Normalna prędkość",
     "Replay speed": "Prędkość powtórki", Crafting: "Rzemiosło", "When you craft": "Przy wytwarzaniu", "Mini-games": "Minigry", "Quick craft": "Szybkie wytwarzanie",
     Survival: "Przetrwanie", "Cold meter": "Licznik zimna", "On (gentle)": "Wł. (łagodny)", Accessibility: "Dostępność", "Accessibility options": "Opcje dostępności",

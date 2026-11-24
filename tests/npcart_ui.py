@@ -12,8 +12,7 @@ async def main():
         await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=npc"); await pg.wait_for_timeout(1500)
         await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Nadia"); await pg.click("#begin"); await pg.wait_for_timeout(1000)
         async def clear(): await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
-        for style in ["ink", "pixel"]:
-            await pg.evaluate(f"ART.setStyle('{style}')")
+        for style in ["ink"]:
             for town, sec in SHOTS:
                 await pg.evaluate("(t)=>{const S=window.__dbg.save(); S.location=t; [S.x,S.y]=WORLD.places[t]; if(!S.discovered.includes(t)) S.discovered.push(t); S.gold=5000;}", town)
                 await clear(); await pg.click("[data-tab=map]"); await pg.click("[data-tab=town]"); await pg.wait_for_timeout(200)

@@ -1,15 +1,15 @@
 /* FIGART: the one shared character renderer (side view) for you, party members, followers and other players. [OURS]
-   Real proportions (about 7½ heads tall), shaded volumes, an ink outline with a soft wash (hand-drawn style) or crisp
-   low-res pixels with a dark outline (pixel style), race (skin, ears, snouts, horns, tails), sex, hair and beard, and the
+   Real proportions (about 7½ heads tall), shaded volumes, an ink outline with a soft wash (hand-drawn style),
+   race (skin, ears, snouts, horns, tails), sex, hair and beard, and the
    actual worn gear (helmet, armour set colours and features, cloak, shield, weapon, amulet/ring when those slots exist).
    Every look comes from the same "look" object players share (HEROART.lookOf), so everyone sees the same character.
 
    API (also attached to HEROART, see heroart.js):
-     FIGART.sprite(src, { pose, frame, h, k, style, horse, armed }) → a cached offscreen canvas of one frame.
+     FIGART.sprite(src, { pose, frame, h, k, horse, armed }) → a cached offscreen canvas of one frame.
         src: a save, a player card ({look}) or a look. h: CSS height of the standing figure (default 64), or k: canvas px per unit.
         canvas.ax / canvas.ay = where the feet are (canvas px); canvas.k = px per unit (the figure is 61 units tall).
-     FIGART.draw(g, src, x, y, { pose, frame, h, style, horse, armed, flip }) → draws the cached frame with its feet at (x, y),
-        h tall in g's units, at the right resolution for g's current transform (sharp on phones, crisp in pixel style).
+     FIGART.draw(g, src, x, y, { pose, frame, h, horse, armed, flip }) → draws the cached frame with its feet at (x, y),
+        h tall in g's units, at the right resolution for g's current transform (sharp on phones).
      FIGART.fight(g, src, o) → a fight-scene figure (feet at 0,0, facing right, ~60 units tall) posed live from the fight
         replay's numbers (o.aim, o.back, o.hunch, o.lunge, o.draw, o.t, o.wt, o.shield, o.off, o.glow, o.flask); the
         torso/head and cloak are cached layers, only the limbs are drawn each frame.
@@ -33,12 +33,8 @@ const FIGART = (() => {
   function wash(g, x0, y0, x1, y1, st, k = 1) {
     if (!isFinite(x0 + y0 + x1 + y1)) return;
     const gr = g.createLinearGradient(x0, y0, x1, y1);
-    if (st.px) {   // pixel art: hard two-tone bands
-      gr.addColorStop(0, `rgba(255,244,220,${0.24 * k})`); gr.addColorStop(0.27, `rgba(255,244,220,${0.24 * k})`); gr.addColorStop(0.28, "rgba(0,0,0,0)");
-      gr.addColorStop(0.6, "rgba(0,0,0,0)"); gr.addColorStop(0.61, `rgba(28,18,10,${0.34 * k})`); gr.addColorStop(1, `rgba(28,18,10,${0.34 * k})`);
-    } else {       // ink: a soft watercolour wash
-      gr.addColorStop(0, `rgba(255,246,226,${0.34 * k})`); gr.addColorStop(0.32, "rgba(255,246,226,0)"); gr.addColorStop(0.58, "rgba(40,26,14,0.04)"); gr.addColorStop(1, `rgba(40,26,14,${0.42 * k})`);
-    }
+    // a soft watercolour wash
+    gr.addColorStop(0, `rgba(255,246,226,${0.34 * k})`); gr.addColorStop(0.32, "rgba(255,246,226,0)"); gr.addColorStop(0.58, "rgba(40,26,14,0.04)"); gr.addColorStop(1, `rgba(40,26,14,${0.42 * k})`);
     g.fillStyle = gr; g.fill();
   }
   function fillPath(g, col, st, lit, lw) {
@@ -71,7 +67,6 @@ const FIGART = (() => {
   function dot(g, x, y, r, col, st, lw = 0) { g.beginPath(); g.arc(x, y, r, 0, TAU); g.fillStyle = col; g.fill(); if (lw) { g.strokeStyle = st.ink; g.lineWidth = lw; g.stroke(); } }
   function line(g, pts, col, w) { g.strokeStyle = col; g.lineWidth = w; g.beginPath(); pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.stroke(); }
   function glowAt(g, x, y, r, col, a, st) {
-    if (st.px) { g.globalAlpha = a * 0.55; dot(g, x, y, r * 0.75, col, st); g.globalAlpha = 1; return; }
     const gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, "rgba(255,255,255,0.9)"); gr.addColorStop(0.25, col); gr.addColorStop(1, "rgba(0,0,0,0)");
     g.globalAlpha = a; g.fillStyle = gr; g.beginPath(); g.arc(x, y, r, 0, TAU); g.fill(); g.globalAlpha = 1;
   }
@@ -279,7 +274,7 @@ const FIGART = (() => {
     if (F.seg) { g.strokeStyle = cm.d; g.lineWidth = 0.6; for (const y of [-44, -40.5, -37, -33.5]) { g.beginPath(); g.moveTo(-6, y - 1); g.quadraticCurveTo(1, y + 1.4, 8, y); g.stroke(); } }
     if (sp.heavy) {   // the breastplate catches the light
       poly(g, [[-0.4, -48.6], [5.4, -46], [6.8, -40], [5.2, -33.6], [-0.6, -32.4]]); fillPath(g, cm.trim, st, [7, -47, 0, -33], 0.4);
-      if (cm.metal) { const gr = g.createLinearGradient(1, -48, 6, -36); gr.addColorStop(0.3, "rgba(255,255,255,0)"); gr.addColorStop(0.48, `rgba(255,255,255,${st.px ? 0.5 : 0.45})`); gr.addColorStop(0.62, "rgba(255,255,255,0)"); g.fillStyle = gr; g.fill(); }
+      if (cm.metal) { const gr = g.createLinearGradient(1, -48, 6, -36); gr.addColorStop(0.3, "rgba(255,255,255,0)"); gr.addColorStop(0.48, `rgba(255,255,255,${0.45})`); gr.addColorStop(0.62, "rgba(255,255,255,0)"); g.fillStyle = gr; g.fill(); }
       for (let i = 0; i < (F.plates || 0); i++) { const y = -33.2 + i * 1.7; poly(g, [[-6, y], [6.5, y - 0.4], [6.2, y + 1.6], [-6, y + 1.8]]); fillPath(g, cm.d, st, null, 0.35); }
       if (F.ridges) { g.strokeStyle = cm.d; g.lineWidth = 0.55; for (let i = 0; i < (F.ridges > 1 ? 3 : 2); i++) { g.beginPath(); g.moveTo(0.4, -46 + i * 3.4); g.quadraticCurveTo(4.6, -45 + i * 3.4, 6.2, -42 + i * 3.4); g.stroke(); } }
       if (F.rivets) { g.fillStyle = "#3b2c1e"; for (const [x, y] of [[0.6, -47.4], [5, -45.4], [6, -39], [4.8, -34.4], [-3.8, -45], [-4.2, -38]]) g.fillRect(x - 0.4, y - 0.4, 0.8, 0.8); }
@@ -441,7 +436,7 @@ const FIGART = (() => {
     }
     g.beginPath(); g.moveTo(4.8, -1.2); g.quadraticCurveTo(5, -7.6, -0.8, -7.6); g.quadraticCurveTo(-6, -7.2, -5.6, -1); g.lineTo(-5.8, 3.4); g.lineTo(-2.6, 3.6); g.lineTo(-1.6, -0.2); g.quadraticCurveTo(1.6, -1.4, 4.8, -1.2); g.closePath();
     fillPath(g, c, st, [3, -8, -5, 2]);
-    if (s.metal) { g.save(); g.clip(); const gr = g.createLinearGradient(0, -8, 3, -3); gr.addColorStop(0.2, "rgba(255,255,255,0)"); gr.addColorStop(0.42, `rgba(255,255,255,${st.px ? 0.55 : 0.5})`); gr.addColorStop(0.6, "rgba(255,255,255,0)"); g.fillStyle = gr; g.fillRect(-7, -9, 13, 8); g.restore(); }
+    if (s.metal) { g.save(); g.clip(); const gr = g.createLinearGradient(0, -8, 3, -3); gr.addColorStop(0.2, "rgba(255,255,255,0)"); gr.addColorStop(0.42, `rgba(255,255,255,${0.5})`); gr.addColorStop(0.6, "rgba(255,255,255,0)"); g.fillStyle = gr; g.fillRect(-7, -9, 13, 8); g.restore(); }
     g.beginPath(); g.moveTo(5.1, -2.2); g.quadraticCurveTo(0, -3, -5.9, -0.6); g.lineTo(-5.9, 0.8); g.quadraticCurveTo(0, -1.6, 5.1, -0.8); g.closePath(); fillPath(g, dk, st, null, st.fine);   // the brim band
     if (h.visor) {
       g.beginPath(); g.moveTo(4.8, -1.4); g.lineTo(6.2, 1.6); g.lineTo(5.2, 3); g.quadraticCurveTo(5.2, 5.6, 2.4, 6); g.lineTo(-0.6, 5.6); g.lineTo(-1.6, -0.2); g.closePath();
@@ -507,10 +502,9 @@ const FIGART = (() => {
     const bc = o.plain ? { c: "#cfd3d6", d: "#8f969b", t: "#eef1f2" } : bladeCol(sp), wood = "#7a5232", grip = "#4a3424", gc = sp.wset ? sp.wset.d || "#6f6a64" : "#6f6a64";
     const glow = o.glow || sp.ench, ink = st.ink;
     g.save();
-    if (glow && !st.px) { g.shadowColor = glow; g.shadowBlur = 4 * (st.k || 1); }
+    if (glow) { g.shadowColor = glow; g.shadowBlur = 4 * (st.k || 1); }
     if (wk === "bow") {
       const dr = o.draw || 0, bowC = /elven/.test(sp.wkey || "") ? "#c9a75e" : sp.wkey === "dwarven" ? "#c08a3c" : "#7a5232";
-      if (glow && st.px) { g.globalAlpha = 0.5; line(g, [[-6 + 20 * Math.cos(-1.1), 20 * Math.sin(-1.1)], [0, 0], [-6 + 20 * Math.cos(1.1), 20 * Math.sin(1.1)]], glow, 4); g.globalAlpha = 1; }
       g.lineCap = "round"; g.strokeStyle = ink; g.lineWidth = 2.6; g.beginPath(); g.arc(-6, 0, 20, -1.1, 1.1); g.stroke(); g.strokeStyle = bowC; g.lineWidth = 1.6; g.stroke();
       g.strokeStyle = tone(bowC, 0.35); g.lineWidth = 0.4; g.beginPath(); g.arc(-6.4, 0, 20, -0.9, 0.9); g.stroke();
       limb(g, 0, -2, 0, 2, 2, 2, "#3b2c1e", st, st.fine);
@@ -528,7 +522,6 @@ const FIGART = (() => {
     }
     const t = TIP[wk] || TIP.sword, L = Math.hypot(t[0], t[1]);
     g.rotate(Math.atan2(t[1], t[0]));
-    if (glow && st.px) { g.globalAlpha = 0.45; line(g, [[2, 0], [L, 0]], glow, 4.2); g.globalAlpha = 1; }
     if (wk === "dagger" || wk === "sword" || wk === "greatsword") {
       const big = wk === "greatsword", w = big ? 3 : wk === "dagger" ? 1.8 : 2.4, gs = big ? 5 : 3, ge = big ? 4.6 : wk === "dagger" ? 2.4 : 3.4;
       limb(g, -gs + 0.5, 0, gs - 0.5, 0, 1.5, 1.5, grip, st, st.fine);
@@ -738,27 +731,13 @@ const FIGART = (() => {
     head(g, sp, P, st);
   }
   // ---------------------------------------------------------------- styles, sprites, the cache
-  function styleOf(name, k) {
-    const px = name === "pixel";
-    return { px, k, ink: ART.PAL.ink, lw: px ? Math.max(0.5, 0.7 / k) : Math.max(0.6, 0.85 / k), fine: px ? Math.max(0.3, 0.5 / k) : Math.max(0.28, 0.55 / k) };
-  }
-  /* pixel style: snap colours to bands, hard alpha, and a one-pixel dark outline round the figure */
-  function pixelPass(c) {
-    let g, img; try { g = c.getContext("2d"); img = g.getImageData(0, 0, c.width, c.height); } catch { return; }
-    if (!img || !img.data || !img.data.length) return;
-    const d = img.data, w = c.width, h = c.height, q = (v) => Math.min(255, Math.round(v / 24) * 24), on = new Uint8Array(w * h);
-    for (let i = 0, p = 0; i < d.length; i += 4, p++) { if (d[i + 3] < 110) { d[i + 3] = 0; continue; } on[p] = 1; d[i] = q(d[i]); d[i + 1] = q(d[i + 1]); d[i + 2] = q(d[i + 2]); d[i + 3] = 255; }
-    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-      const p = y * w + x; if (on[p]) continue;
-      if ((x > 0 && on[p - 1]) || (x < w - 1 && on[p + 1]) || (y > 0 && on[p - w]) || (y < h - 1 && on[p + w])) { const i = p * 4; d[i] = 46; d[i + 1] = 33; d[i + 2] = 22; d[i + 3] = 255; }
-    }
-    g.putImageData(img, 0, 0);
+  function styleOf(k) {
+    return { k, ink: ART.PAL.ink, lw: Math.max(0.6, 0.85 / k), fine: Math.max(0.28, 0.55 / k) };
   }
   const BOX = { walk: [-30, -84, 74, 90], ride: [-38, -96, 84, 99], sit: [-24, -66, 48, 70], down: [-74, -26, 108, 30], idle: [-46, -112, 100, 118] };
   const boxOf = (pose) => BOX[pose] || BOX.idle;
   const SPRITES = new Map(), MAX_SPRITES = 220;
   const mk = (w, h) => { const c = document.createElement("canvas"); c.width = Math.max(1, Math.ceil(w)); c.height = Math.max(1, Math.ceil(h)); return c; };
-  const curStyle = () => (ART.drawingStyle ? ART.drawingStyle() : ART.style());
   /* seconds per loop of each clip (for o.t in seconds) */
   const LOOP = { idle: 2.4, walk: 0.9, attack: 0.8, cast: 0.9, block: 1.2, hit: 0.5, down: 1, ride: 0.6, sit: 1 };
   const frameOf = (pose, o) => { const n = POSES[pose]; const f = o.t != null ? Math.floor((o.t / LOOP[pose]) * n) : o.frame | 0; return ((f % n) + n) % n; };
@@ -768,14 +747,13 @@ const FIGART = (() => {
     if (o.gear || o.race || o.sex) L = { ...L, eq: { ...(L.eq || {}), ...(o.gear || {}) }, r: o.race || L.r, sx: o.sex === "f" ? "f" : o.sex === "m" ? undefined : L.sx };
     return L;
   }
-  function render(sp, P, pose, k, style) {
+  function render(sp, P, pose, k) {
     const [bx, by, bw, bh] = boxOf(pose), sx = Math.max(1, sp.bw), sy = Math.max(1, sp.bh);
-    const c = mk(bw * k * sx, bh * k * sy), g = c.getContext("2d"), st = styleOf(style, k);
+    const c = mk(bw * k * sx, bh * k * sy), g = c.getContext("2d"), st = styleOf(k);
     g.save(); g.scale(k, k); g.translate(-bx * sx, -by * sy);
     if (pose !== "down" && pose !== "ride") { g.fillStyle = "rgba(30,20,12,0.22)"; g.beginPath(); g.ellipse(1, 0.4, 12, 2, 0, 0, TAU); g.fill(); }
     try { drawPose(g, sp, P, st); } catch (e) { if (typeof console !== "undefined") console.warn("figart", e); }
     g.restore();
-    if (style === "pixel") pixelPass(c);
     c.ax = -bx * sx * k; c.ay = -by * sy * k; c.k = k;
     return c;
   }
@@ -787,30 +765,28 @@ const FIGART = (() => {
   }
   function sprite(src, o = {}) {
     const sp = specOf(lookFor(src, o)), pose = POSES[o.pose] ? o.pose : "idle", frame = frameOf(pose, o);
-    const style = o.style || curStyle(), dpr = o.dpr || Math.min(3, (typeof devicePixelRatio !== "undefined" && devicePixelRatio) || 1);
+    const dpr = o.dpr || Math.min(3, (typeof devicePixelRatio !== "undefined" && devicePixelRatio) || 1);
     let k = o.k || ((o.h || 64) / 61) * (o.scale || 1) * dpr; k = Math.max(0.12, Math.round(k * 16) / 16);
     if (o.from && POSES[o.from.pose] && o.w != null && o.w < 1) {   // fading from another clip: drawn fresh, not cached
       const fp = o.from.pose, a = posed(sp, fp, frameOf(fp, o.from), o), b = posed(sp, pose, frame, o);
-      return render(sp, blend(a, b, o.w), o.w < 0.5 ? fp : pose, k, style);
+      return render(sp, blend(a, b, o.w), o.w < 0.5 ? fp : pose, k);
     }
-    const key = `${sp.key}|${pose}|${frame}|${k}|${style}|${o.horse || ""}${o.gait ? ":" + o.gait : ""}|${o.armed === undefined ? "" : +o.armed}`;
+    const key = `${sp.key}|${pose}|${frame}|${k}|${o.horse || ""}${o.gait ? ":" + o.gait : ""}|${o.armed === undefined ? "" : +o.armed}`;
     let c = SPRITES.get(key);
     if (c) { SPRITES.delete(key); SPRITES.set(key, c); return c; }
-    c = render(sp, posed(sp, pose, frame, o), pose, k, style);
+    c = render(sp, posed(sp, pose, frame, o), pose, k);
     SPRITES.set(key, c); if (SPRITES.size > MAX_SPRITES) SPRITES.delete(SPRITES.keys().next().value);
     return c;
   }
   /* how many device pixels one unit of g is right now */
   function devScale(g) { try { const t = g.getTransform(); const s = Math.hypot(t.a, t.b); return isFinite(s) && s > 0 ? s : 1; } catch { return 1; } }
   function draw(g, src, x, y, o = {}) {
-    const h = o.h || 64, dev = devScale(g), style = o.style || curStyle(), c = sprite(src, { ...o, style, k: h / 61 * dev });
+    const h = o.h || 64, dev = devScale(g), c = sprite(src, { ...o, k: h / 61 * dev });
     const s = 1 / dev, w = c.width * s, hh = c.height * s;
-    g.save(); const sm = g.imageSmoothingEnabled; if (style === "pixel") g.imageSmoothingEnabled = false;
+    g.save();
     g.translate(x, y); if (o.flip) g.scale(-1, 1);
-    let dx = -c.ax * s, dy = -c.ay * s;
-    if (style === "pixel") { dx = Math.round(dx * dev) / dev; dy = Math.round(dy * dev) / dev; }
-    g.drawImage(c, dx, dy, w, hh);
-    g.imageSmoothingEnabled = sm; g.restore();
+    g.drawImage(c, -c.ax * s, -c.ay * s, w, hh);
+    g.restore();
     return c;
   }
   /* an animation player for one character: play(pose, now) switches clips, fading over `fade` seconds; draw() draws the current frame */
@@ -831,22 +807,21 @@ const FIGART = (() => {
   // ---------------------------------------------------------------- fight scenes: cached body, live limbs
   const LAYERS = new Map();
   const UPPER_BOX = [-18, -78, 34, 64], BACK_BOX = [-24, -62, 34, 64];
-  function layer(sp, which, k, style, P) {
-    const key = `${sp.key}|${which}|${k}|${style}`; let c = LAYERS.get(key); if (c) return c;
-    const [bx, by, bw, bh] = which === "front" ? UPPER_BOX : BACK_BOX, st = styleOf(style, k);
+  function layer(sp, which, k, P) {
+    const key = `${sp.key}|${which}|${k}`; let c = LAYERS.get(key); if (c) return c;
+    const [bx, by, bw, bh] = which === "front" ? UPPER_BOX : BACK_BOX, st = styleOf(k);
     c = mk(bw * k, bh * k); const g = c.getContext("2d");
     g.save(); g.scale(k, k); g.translate(-bx, -by); g.lineJoin = "round"; g.lineCap = "round";
     try { if (which === "front") { torso(g, sp, P, st); neckAndHead(g, sp, { ...P, tilt: 0 }, st); } else { cape(g, sp, { ...P, cape: 0.25 }, st); tail(g, sp, P, st); quiver(g, sp, st); } } catch (e) { if (typeof console !== "undefined") console.warn("figart layer", e); }
     g.restore();
-    if (style === "pixel") pixelPass(c);
     c.box = which === "front" ? UPPER_BOX : BACK_BOX;
     LAYERS.set(key, c); if (LAYERS.size > 64) LAYERS.delete(LAYERS.keys().next().value);
     return c;
   }
   /* the fight replay drives the same rig: its numbers become the controls, the rig solves the bones */
   function fight(g, src, o = {}) {
-    const sp = specOf(lookFor(src, o)), style = curStyle(), dev = devScale(g) * Math.max(sp.bw, sp.bh);
-    const k = Math.max(0.25, Math.round(dev * 4) / 4), st = styleOf(style, k);
+    const sp = specOf(lookFor(src, o)), dev = devScale(g) * Math.max(sp.bw, sp.bh);
+    const k = Math.max(0.25, Math.round(dev * 4) / 4), st = styleOf(k);
     const lunge = o.lunge || 0, wk = o.wt === undefined ? sp.wk : o.wt || null;
     const P = { aim: o.aim != null ? o.aim : wk === "bow" || wk === "crossbow" ? 0 : -0.5 + lunge * 1.1, back: o.back || 0, lean: (o.hunch || 0) + lunge * 0.25, dy: 0, ox: 0, tilt: 0,
       fn: [5 + lunge * 4, 0], ff: [-5, 0], armed: true, wk, draw: o.draw || 0, glow: o.glow ? sp.ench || "#7fb6ff" : null, flask: o.flask, off: o.off || null, front: (o.back || 0) < -0.8,
@@ -859,9 +834,8 @@ const FIGART = (() => {
       P.armed = C.armed !== false; P.front = !!C.front; P.breath = 0; P.lunge = 0;
       if (P.cast) P.castC = wk === "staff" ? sp.staffC : sp.ench || "#9fd0f0";
     }
-    const sm = g.imageSmoothingEnabled;
-    const put = (c) => { const [bx, by, bw, bh] = c.box; if (style === "pixel") g.imageSmoothingEnabled = false; g.drawImage(c, bx, by, bw, bh); g.imageSmoothingEnabled = sm; };
-    drawPose(g, sp, P, st, { back: () => put(layer(sp, "back", k, style, P)), front: () => put(layer(sp, "front", k, style, P)) });
+    const put = (c) => { const [bx, by, bw, bh] = c.box; g.drawImage(c, bx, by, bw, bh); };
+    drawPose(g, sp, P, st, { back: () => put(layer(sp, "back", k, P)), front: () => put(layer(sp, "front", k, P)) });
   }
 
   return { POSES, LOOP, RIG, sprite, draw, fight, animator, specOf, lookOf, lookFor, poseOf, poseAt, blend, solve, clipsFor, tone, clear: () => { SPRITES.clear(); LAYERS.clear(); SPECS.clear(); CLIPS.clear(); } };

@@ -10,8 +10,8 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
       "Smok nie jest już ściśnięty do kwadratu: widać go z prawdziwą, szeroką rozpiętością skrzydeł.",
     "Paintings (towns, shop banners, fight scenes, event pictures) keep their shape and are never blown up into a blur. On a very big screen a painting shows at its own size instead.":
       "Obrazy (miasta, szyldy sklepów, sceny walk, obrazki wydarzeń) trzymają swój kształt i nigdy nie są rozdmuchiwane do rozmycia. Na bardzo dużym ekranie obraz pokazuje się w swoim własnym rozmiarze.",
-    "Fight scenes and the world map are drawn at your screen's full sharpness, on phones and on 4K monitors.":
-      "Sceny walk i mapa świata są rysowane w pełnej ostrości twojego ekranu, na telefonach i na monitorach 4K.",
+    "Fight scenes are drawn at your screen's full sharpness, on phones and on 4K monitors, even when the window grows or the phone turns.":
+      "Sceny walk są rysowane w pełnej ostrości twojego ekranu, na telefonach i na monitorach 4K, nawet gdy okno się powiększy albo obrócisz telefon.",
     "The painted compass is a bit sharper too.": "Malowany kompas też jest trochę ostrzejszy.",
   });
 })();

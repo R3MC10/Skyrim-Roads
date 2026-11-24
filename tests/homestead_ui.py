@@ -12,14 +12,13 @@ async def main():
         exe = shutil.which("google-chrome") or ("/usr/bin/google-chrome" if os.path.exists("/usr/bin/google-chrome") else None)
         b = await p.chromium.launch(**({"executable_path": exe} if exe else {}), args=["--no-sandbox"])
         bad = []
-        for style in ("ink", "pixel"):
+        for style in ("ink",):
             ctx = await b.new_context(viewport={"width": 412, "height": 915}, device_scale_factor=2)
             errs = []
             if LANG == "pl": await ctx.add_init_script("try{const p=JSON.parse(localStorage.getItem('rotn_prefs')||'{}');p.lang='pl';localStorage.setItem('rotn_prefs',JSON.stringify(p))}catch(e){}")
             pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
             await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=hs{style}"); await pg.wait_for_timeout(1800)
             await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Builder"); await pg.click("#begin"); await pg.wait_for_timeout(1000)
-            await pg.evaluate(f"ART.setStyle('{style}')")
             ok = lambda c, m: (print(("ok   " if c else "FAIL ") + f"[{style}] " + m), None if c else bad.append(f"{style}: {m}"))
             async def clean(): await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
             async def tab(t):

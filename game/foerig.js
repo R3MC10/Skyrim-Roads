@@ -31,9 +31,7 @@
    it knows (other players, plain bandits) and this rig moves them; otherwise this file's own humanoid parts are used.
    Painted pictures: tall ones are cut into bands that bend from the feet (spine), tilt at the neck (head) and breathe;
    long ones (beasts, spiders, crabs, dragons) are cut into slices whose front half lifts and lunges (neck/head) — all
-   from the same pose as the drawn rig, with shear between slices so there are no seams.
-   Pixel style: fightart draws the stage into a canvas a third the size and scales it up nearest-neighbour, so the
-   rigs (and painted pictures) come out as pixels in both styles. */
+   from the same pose as the drawn rig, with shear between slices so there are no seams. */
 const FOERIG = (() => {
   const P = () => ART.PAL, H = () => ART.H;
   const ease = (x) => (x < 0.5 ? 2 * x * x : 1 - (-2 * x + 2) * (-2 * x + 2) / 2);

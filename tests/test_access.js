@@ -49,7 +49,7 @@ function page(prefs, sysReduce = false) {
 }
 // ---- saved choices load before first paint, bad values are cleaned up
 {
-  const p = page({ a11yText: 3, a11yColour: "tritan", a11yContrast: true, a11yMotion: "on", a11yHand: "left", artStyle: "pixel" });
+  const p = page({ a11yText: 3, a11yColour: "tritan", a11yContrast: true, a11yMotion: "on", a11yHand: "left", lang: "pl" });
   ok(p.props["--tz"] === "1.38" && p.classes.has("a11y-zoom") && p.dataset.a11yText === "3", "text size applied");
   ok(p.dataset.cb === "tritan" && p.classes.has("a11y-hc") && p.classes.has("a11y-still"), "colour, contrast, motion applied");
   ok(p.classes.has("a11y-1h") && p.classes.has("a11y-1h-left"), "left-hand mode applied");
@@ -59,7 +59,7 @@ function page(prefs, sysReduce = false) {
 }
 // ---- changing a setting: saved in rotn_prefs next to the others, page updates at once
 {
-  const p = page({ artStyle: "pixel", zoomFar: true });
+  const p = page({ lang: "pl", zoomFar: true });
   let heard = null;
   const mq = p.win.matchMedia("(prefers-reduced-motion: reduce)"); mq.addEventListener("change", (e) => (heard = e.matches));
   ok(p.A.pref("a11yText", "2") === true && p.props["--tz"] === "1.25", "text size by tap");
@@ -67,9 +67,9 @@ function page(prefs, sysReduce = false) {
   ok(p.A.pref("a11yContrast", "true") && p.classes.has("a11y-hc"), "contrast by tap");
   ok(p.A.pref("a11yMotion", "on") && heard === true && mq.matches === true, "motion listeners told");
   ok(p.A.pref("a11yHand", "right") && p.classes.has("a11y-1h") && !p.classes.has("a11y-1h-left"), "right hand");
-  ok(p.A.pref("zoomFar", "true") === false && p.A.pref("artStyle", "ink") === false, "other settings are not ours");
+  ok(p.A.pref("zoomFar", "true") === false && p.A.pref("lang", "en") === false, "other settings are not ours");
   const saved = JSON.parse(p.store.rotn_prefs);
-  ok(saved.artStyle === "pixel" && saved.zoomFar === true, "other settings kept");
+  ok(saved.lang === "pl" && saved.zoomFar === true, "other settings kept");
   ok(saved.a11yText === 2 && saved.a11yColour === "deutan" && saved.a11yContrast === true && saved.a11yMotion === "on" && saved.a11yHand === "right", "saved " + p.store.rotn_prefs);
   p.A.pref("a11yColour", "none"); ok(!p.dataset.cb, "colour off again");
 }
