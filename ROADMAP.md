@@ -69,6 +69,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Smart AI combat (default; custom tactics optional), crafting mini-games, motion design (63)
 
 ## In progress (write your name before you start)
+- Claude: Area tab as a place + tidy Map panel (areaui.js, mappanel.js): town places grouped into tiles (Inn, Market, Services & trainers, Work & jobs, Your home, Events & fun) with live status and a Right now strip, back button + neighbour tabs inside a place; one merged and sorted "What to do next" card on the Map; place filters. Branch claude/areaui.
 - Claude: followers become people (followerbonds.js): opinions and a loyalty meter, banter on the road and in towns, comments on places and fights, a personal quest per follower (signature move + keepsake), low-loyalty trouble (grumbling, refusing orders, leaving), Kindred Spirit / Heart to Heart / Sworn Companion perks. Branch claude/followerbonds.
 - Claude: foe intents show their target (foeintent.js): "→ you / → Lydia" on every intent chip, a crosshair on the targeted card and an arrow in the scene; the shown target is the one hit. Branch claude/foeintent.
 - Claude: tooltips over almost anything (tooltip.js): hover with a mouse, hold a finger on phones; items, spells, perks, skills, places, quests, followers, party, HUD bars, gold. Branch claude/tooltips.

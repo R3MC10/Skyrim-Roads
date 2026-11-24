@@ -3,6 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b139-areaui", build: 139, date: "24 Nov 2026", title: "Tidier towns and map", items: [
+      "The Area tab now opens on a board of small tiles, grouped like a real town: Inn, Market, Services & trainers, Work & jobs, Your home, and Events & fun. Each tile says what's going on there (open or closed, room price, lessons left, jobs taken, garden ripe, your bounty).",
+      "Things waiting for you in town (a job to hand in, a ripe garden) sit on top under Right now.",
+      "Tap a tile to go in. A back button and a row of the neighbouring places (say, all the shops) keep everything one tap away. Shops no longer dump their whole stock the moment you open the Area tab.",
+      "Long how-it-works notes fold up; tap More to read them. You can fold whole groups you never use, and they stay folded.",
+      "The Map side panel has one \"What to do next\" list instead of two: no more level-up or perk reminders shown twice. The most urgent things come first, nearest places before far ones; tap Show more for the rest.",
+      "The place list has filters: All, Towns, Dungeons, Not visited and Other, each with a count.",
+    ] },
     { id: "b138-followerbonds", build: 138, date: "24 Nov 2026", title: "Followers have opinions now", items: [
       "Your follower notices what you do. Help a stranger, rob a sleeping bandit, run from a giant, pray at a shrine, join the Thieves Guild: each follower likes some things and hates others, and says so.",
       "Their loyalty shows as a meter under their name (Hero tab → Follower). Devoted followers hit 10% harder. Unhappy ones grumble, fight 15% softer, sometimes refuse to change gear, style or tactics, and at 0 they walk out (they're fine, just angry, and won't come back for a few days).",
