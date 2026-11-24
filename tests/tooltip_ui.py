@@ -16,8 +16,20 @@ SETUP = """() => { const S = window.__dbg.save(); S.level = 20; S.gold = 777;
   for (const i of ['steel_sword', 'iron_war_axe', 'steel_helmet', 'potion_health']) G.give(S, i);
   if (!S.spells.includes('flames')) S.spells.push('flames'); S.skills.Destruction.lvl = 40; S.skills['One-Handed'].lvl = 35; }"""
 # where the tooltip box is, and whether it's fully on screen
-BOX = """() => { const t = document.getElementById('tip'); if (!t || !t.classList.contains('on')) return null; const r = t.getBoundingClientRect();
-  return { text: t.innerText, l: r.left, t: r.top, r: r.right, b: r.bottom, vw: innerWidth, vh: innerHeight }; }"""
+BOX = """() => { const t = document.getElementById('tip'); if (!t || !t.classList.contains('on')) return null; const r = t.getBoundingClientRect(), cs = getComputedStyle(t);
+  return { text: t.innerText, l: r.left, t: r.top, r: r.right, b: r.bottom, vw: innerWidth, vh: innerHeight, w: r.width, h: r.height,
+    op: +cs.opacity, vis: cs.visibility === 'visible' && cs.display !== 'none' }; }"""
+
+def shown(bx):
+    """really visible: faded fully in, has a size, not hidden"""
+    return bx is not None and bx["op"] >= 0.99 and bx["vis"] and bx["w"] > 20 and bx["h"] > 10
+
+async def take(pg, path, label):
+    """screenshot only with the tooltip fully visible, and check it's still visible right after"""
+    before = await pg.evaluate(BOX)
+    await pg.screenshot(path=path)
+    after = await pg.evaluate(BOX)
+    ok(shown(before) and shown(after), f"{label}: tooltip fully visible in the screenshot" + ("" if shown(before) else f" (before: {before and before['op']})") + ("" if shown(after) else f" (after: {after and after['op']})"))
 
 async def start(b, style, vp, touch, tag, errs):
     ctx = await b.new_context(viewport=vp, device_scale_factor=1 if not touch else 2, has_touch=touch, is_mobile=touch)
@@ -31,10 +43,10 @@ async def start(b, style, vp, touch, tag, errs):
     return ctx, pg
 
 async def wait_box(pg, ms):
-    """the box, once it's up (polls, so a slow page doesn't fail the check)"""
+    """the box, once it's up and faded fully in (polls, so a slow page doesn't fail the check)"""
     for _ in range(max(1, ms // 100)):
         bx = await pg.evaluate(BOX)
-        if bx: return bx
+        if shown(bx): return bx
         await pg.wait_for_timeout(100)
     return await pg.evaluate(BOX)
 
@@ -50,7 +62,7 @@ async def hover(pg, sel, name, style, expect, shot=True):
     bx = await wait_box(pg, 1500)
     ok(bx is not None and expect.lower() in bx["text"].lower(), f"{style} desktop hover {name}: shows '{expect}'" + ("" if bx else " (nothing shown)") + (f" got: {bx['text'][:70]!r}" if bx else ""))
     ok(on_screen(bx), f"{style} desktop hover {name}: fully on screen")
-    if shot: await pg.screenshot(path=f"{OUT}{style}_desktop_{name}.png")
+    if shot: await take(pg, f"{OUT}{style}_desktop_{name}.png", f"{style} desktop {name}")
 
 async def hold(pg, cdp, sel, name, style, expect, ms=750, shot=True):
     """hold a finger still on the element (real touch events), then lift; returns whether a click reached the page"""
@@ -70,7 +82,7 @@ async def hold(pg, cdp, sel, name, style, expect, ms=750, shot=True):
     await cdp.send("Input.dispatchTouchEvent", {"type": "touchStart", "touchPoints": pt})
     await pg.wait_for_timeout(ms - 250)
     bx = await wait_box(pg, 1200)
-    if shot: await pg.screenshot(path=f"{OUT}{style}_phone_{name}.png")
+    if shot: await take(pg, f"{OUT}{style}_phone_{name}.png", f"{style} phone {name}")
     await cdp.send("Input.dispatchTouchEvent", {"type": "touchEnd", "touchPoints": []})
     await pg.wait_for_timeout(350)
     clicks = await pg.evaluate("window.__clicks")
@@ -122,7 +134,7 @@ async def desktop(b, style, errs):
         bx = await wait_box(pg, 1200)
         at = "" if bx else await pg.evaluate("([x, y]) => (document.elementFromPoint(x, y)?.outerHTML || '').slice(0, 80)", pt[:2])
         ok(bx is not None and on_screen(bx), f"{style} desktop: hovering a town on the map names it" + (f" ({bx['text'][:40]!r})" if bx else f" under the mouse: {at}"))
-        await pg.screenshot(path=f"{OUT}{style}_desktop_map_place.png")
+        await take(pg, f"{OUT}{style}_desktop_map_place.png", f"{style} desktop map_place")
     else: print(f"skip {style} map hover (map not on screen)")
     await ctx.close()
 
@@ -184,4 +196,5 @@ async def main():
     print("RESULT", "OK" if not fails else f"{len(fails)} FAILED")
     sys.exit(1 if fails else 0)
 
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())
