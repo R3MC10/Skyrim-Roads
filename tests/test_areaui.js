@@ -23,7 +23,7 @@ ok(g.find(([id]) => id === "events")[2].includes("somethingnew"), "unknown secti
 ok(g.find(([id]) => id === "inn")[2][0] === "inn", "the inn comes first in its group");
 ok(!AREAUI.group(["general"]).some(([id]) => id === "inn"), "empty groups are left out");
 ok(AREAUI.siblings(secs, "blacksmith").includes("general") && !AREAUI.siblings(secs, "blacksmith").includes("inn"), "siblings are the same group");
-ok(AREAUI.plain("🛒 Market stalls") === "Market stalls" && AREAUI.plain("⚑ Hall of the North") === "Hall of the North", "emoji stripped from tile names");
+ok(AREAUI.plain("\uE133 Market stalls") === "Market stalls" && AREAUI.plain("⚑ Hall of the North") === "Hall of the North", "emoji stripped from tile names");
 ok(AREAUI.label("hire", { hire: "Dragonsreach & hirelings" }) === "Hirelings", "long names get the short tile name");
 ok(/au-more/.test(AREAUI.note("One sentence here that is long enough to fold. And then a second sentence with many more words in it, to pass the fold limit easily.")), "long notes fold");
 ok(!/au-more/.test(AREAUI.note("Short note.")), "short notes stay open");

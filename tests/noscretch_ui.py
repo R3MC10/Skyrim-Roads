@@ -30,7 +30,7 @@ if "quick" in FLAGS:
     VIEWPORTS = [v for v in VIEWPORTS if v[0] in ("360x740", "844x390", "1024x768", "2560x1440")]
 if FLAGS.get("vp"):
     VIEWPORTS = [v for v in VIEWPORTS if v[0] in FLAGS["vp"].split(",")]
-STYLES = FLAGS["style"].split(",") if FLAGS.get("style") else ["ink", "pixel"]
+STYLES = FLAGS["style"].split(",") if FLAGS.get("style") else ["ink"]
 ONLY = set(FLAGS["only"].split(",")) if FLAGS.get("only") else None
 
 # ---------------------------------------------------------------- the checks, run inside the page
@@ -58,12 +58,9 @@ DETECT = r"""async () => {
     const tol = Math.max(0.04, 2.5 / Math.min(w, h));
     if ((fit === 'fill' || !fit) && bad(w / h, nw / nh, tol)) out.stretch.push(`${name(e)} drawn ${Math.round(w)}x${Math.round(h)} but is ${nw}x${nh} (${(w / h).toFixed(2)} vs ${(nw / nh).toFixed(2)})`);
     if (e.tagName === 'CANVAS') {
-      const pixel = cs.imageRendering === 'pixelated' || cs.imageRendering === 'crisp-edges' || e.dataset.art === 'pixel' || e.dataset.fit === 'pixel';
-      // ink pictures: at least ~70% of the screen's pixels (capped at 2.5x, the game's limit); pixel art may be low-res on purpose
+      // ink pictures: at least ~70% of the screen's pixels (capped at 2.5x, the game's limit)
       const want = Math.min(dpr, 2.5) * 0.7, have = nw / w;
-      if (!pixel && w * h > 2500 && have < want) out.blurry.push(`${name(e)} ${nw}x${nh} backing for ${Math.round(w)}x${Math.round(h)} on screen (${have.toFixed(2)} px per css px, screen ${dpr})`);
-      // pixel art should be blown up by whole steps (else rows/columns of the art come out uneven)
-      if (pixel && e.dataset.fit === 'pixel' && Math.abs(w * dpr / nw - Math.round(w * dpr / nw)) > 0.08 && w * dpr / nw > 1.5) out.stretch.push(`${name(e)} pixel art scaled by ${(w * dpr / nw).toFixed(2)} (not a whole step)`);
+      if (w * h > 2500 && have < want) out.blurry.push(`${name(e)} ${nw}x${nh} backing for ${Math.round(w)}x${Math.round(h)} on screen (${have.toFixed(2)} px per css px, screen ${dpr})`);
     }
   }
   // 2) background pictures squashed by background-size:100% 100%

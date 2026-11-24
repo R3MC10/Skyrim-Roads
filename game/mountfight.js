@@ -15,8 +15,8 @@
    - No two-handed power attacks, no dual casting and no Master spells in the saddle; a two-hander swings clumsily
      (−15%); arrows go wide 15% of the time unless you have Horse Archer.
    - The horse has its own health bar. At 0 it's knocked down (it never dies): you're thrown clear (5% of your health,
-     never the last of it) and staggered (−2 AP on your next turn), you fight on on foot, and it gets back up after
-     the fight with a quarter of its health.
+     never the last of it) and staggered (−2 AP on your next turn), you fight on on foot, and afterwards
+     it stays with you, downed, until it gets back up (horses.js: a few hours, a night's sleep or a stablehand).
    - Party fights: everyone's mount state and horse health travel in the leader's fight record (roster[].mt). Blows on a
      teammate's horse are rolled once, on the leader's phone; a teammate's own phone plays their charges and
      Mount / Dismount and sends the result back with their turn (reply.mt). Every phone draws the same riders.
@@ -242,6 +242,7 @@ const MOUNTFIGHT = (() => {
     if (m.walk && !m.rode) return [];   // it stood by and nothing happened to it
     if (m.foot && !m.rode) return origAfter ? origAfter(f, t) : [];   // two-hander: you never got on, you climb back on now
     const wasDown = !!(m.down || m.downTurn || m.hp <= 0), dt = m.downTurn || (wasDown ? 1 : 0);
+    if (wasDown && typeof HORSES.knockDown === "function") { m.foot = false; return origAfter ? origAfter(f, t) : []; }   // downed horse (horses.js): it stays with you, downed, until it gets back up
     t = t ?? Date.now() / 1000;
     if (wasDown) { m.hp = Math.max(1, Math.round(m.max * N.getUp)); m.downTurn = 0; m.down = false; }   // horseback.js would send it off to the stables
     m.foot = false;
@@ -251,14 +252,14 @@ const MOUNTFIGHT = (() => {
     if (h.down) h.down = false;
     if (wasDown) { h.hp = m.hp; h.hpT = t ?? Date.now() / 1000; }
     h.mounted = true;
-    if (wasDown) msgs.push(`🐴 ${h.name} gets back up after the fight, shaken (${Math.round(m.hp)}/${m.max}). You climb back into the saddle.`);
+    if (wasDown) msgs.push(`\uE12D ${h.name} gets back up after the fight, shaken (${Math.round(m.hp)}/${m.max}). You climb back into the saddle.`);
     return msgs.filter((x) => !/limps off|is downed|Downed/i.test(x));
   }
   const origNote = HB?.note;
   function note(s) {
     const n = origNote ? origNote(s) : "";
     if (!n || typeof HORSES === "undefined" || HORSES.riding(s) || !HORSES.present(s) || horseDowned(s)) return n;
-    return `<p class="sub mountnote">🐴 ${s.horse.name} is with you, but you're on foot. You can get on in the fight (Mount), or ride to open fights with a charge.</p>`;
+    return `<p class="sub mountnote">\uE12D ${s.horse.name} is with you, but you're on foot. You can get on in the fight (Mount), or ride to open fights with a charge.</p>`;
   }
 
   // ------------------------------------------------------------------ party fights: the same riders on every phone
@@ -390,11 +391,11 @@ const MOUNTFIGHT = (() => {
   // ------------------------------------------------------------------ your frame: the horse's health bar
   const esc = (t) => String(t ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   function barHTML(f) {
-    const m = f?.mount; if (!m?.ok || (m.foot && !m.rode)) return staggered(f) ? `<div class="mfst"><i class="st stag">💫 Staggered</i></div>` : "";
+    const m = f?.mount; if (!m?.ok || (m.foot && !m.rode)) return staggered(f) ? `<div class="mfst"><i class="st stag">\uE10A Staggered</i></div>` : "";
     const st = m.up ? "In the saddle" : m.down || m.hp <= 0 ? "Knocked down" : "Waiting nearby";
     const pc = (100 * Math.max(0, m.hp) / Math.max(1, m.max)).toFixed(1);
-    const tipT = m.up ? `${hn(m)}: foes can go for your horse. At 0 it's knocked down (it never dies) and you're thrown.` : m.down || m.hp <= 0 ? `${hn(m)} is knocked down. It gets back up after the fight.` : `${hn(m)} waits nearby. Mount to ride again.`;
-    return `<div class="mfhorse ${m.up ? "up" : m.down || m.hp <= 0 ? "down" : "by"}" data-tip="${esc(tipT)}"><i style="width:${pc}%"></i><span>🐎 ${esc(hn(m))} ${Math.round(Math.max(0, m.hp))} / ${m.max} · ${st}</span></div>${staggered(f) ? `<div class="mfst"><i class="st stag">💫 Staggered</i></div>` : ""}`;
+    const tipT = m.up ? `${hn(m)}: foes can go for your horse. At 0 it's knocked down (it never dies) and you're thrown.` : m.down || m.hp <= 0 ? `${hn(m)} is knocked down. After the fight it stays downed beside you until it gets back up.` : `${hn(m)} waits nearby. Mount to ride again.`;
+    return `<div class="mfhorse ${m.up ? "up" : m.down || m.hp <= 0 ? "down" : "by"}" data-tip="${esc(tipT)}"><i style="width:${pc}%"></i><span>\uE12D ${esc(hn(m))} ${Math.round(Math.max(0, m.hp))} / ${m.max} · ${st}</span></div>${staggered(f) ? `<div class="mfst"><i class="st stag">\uE10A Staggered</i></div>` : ""}`;
   }
 
   // ------------------------------------------------------------------ take over from horseback.js

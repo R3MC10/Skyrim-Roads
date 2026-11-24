@@ -40,7 +40,7 @@ async def main():
         kw = {"executable_path": CHROME, "args": ["--no-sandbox"]} if os.path.exists(CHROME) else {}
         br = await p.chromium.launch(**kw)
         errs = []
-        for style in ["ink", "pixel"]:
+        for style in ["ink"]:
             ctx = await br.new_context(viewport={"width": 412, "height": 915}, device_scale_factor=2, reduced_motion="reduce")   # a still camera, so only the figures move (and the scene plays at x2)
             await ctx.add_init_script(f"localStorage.setItem('rotn_prefs', JSON.stringify({{artStyle:'{style}'}}))")
             pg = await ctx.new_page(); pg.on("pageerror", lambda e, st=style: errs.append(st + " " + str(e)))

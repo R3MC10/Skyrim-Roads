@@ -145,7 +145,7 @@ console.log("5: foes against a rider: the horse, knock-offs, dodges");
   ok(MOUNTFIGHT.foeKind({ e: { name: "Bandit archer", arch: "archer" }, tags: new Set(["humanoid"]) }) === "ranged" && MOUNTFIGHT.foeKind({ e: { name: "Imperial soldier" }, tags: new Set(["humanoid"]) }) === "reach", "archers ranged, soldiers with spears reach");
 }
 
-console.log("6: thrown off: damage, stagger, on foot, the horse gets back up");
+console.log("6: thrown off: damage, stagger, on foot, the horse stays with you, downed");
 { const s = make("warrior", 20), f = road(s, enc("Giant", 20)); f.mount.hp = 1; f.turn = 2; const hp0 = f.hp;
   queue = [0.01, 0.5, 0.5]; const t = HORSEBACK.enemyTurn(f); queue = [];
   ok(/brings Frost down/.test(t) && /thrown clear/.test(t) && /knocked down/.test(t), "the horse goes down: " + t);
@@ -161,11 +161,11 @@ console.log("6: thrown off: damage, stagger, on foot, the horse gets back up");
   ok(ss.done || ss.ap <= full - 2, "staggered: " + ss.ap + " AP instead of " + full);
   // after the fight: never dead, never sent off, back up with a quarter of its health
   f.won = true; f.ehp = 0; const msgs = f.apply(T);
-  ok(s.horse && !HORSES.away(s) && HORSES.riding(s) && s.horse.hp > 0 && msgs.some((m) => /gets back up/.test(m)), "the horse gets back up after the fight: " + msgs.filter((m) => /🐴/.test(m)).join(" | "));
-  ok(Math.abs(s.horse.hp - HORSES.maxHp(s.horse) * MOUNTFIGHT.N.getUp) <= 1, "with a quarter of its health");
+  ok(s.horse && !s.horse.away && HORSES.downed(s) && !HORSES.riding(s) && msgs.some((m) => /is downed/.test(m)), "the horse stays with you, downed (horses.js): " + msgs.filter((m) => /🐴/.test(m)).join(" | "));
+  ok(HORSES.present(s), "still with you, carrying your things");
   // 300 fights against giants: never a dead horse
-  let downs = 0; for (let i = 0; i < 300; i++) { const x = make("warrior", 15), y = road(x, enc("Giant", 15)); y.run({ t: T, trySneak: false, maxTurns: 25 }); y.apply(T); if (y.mount.gotUp) downs++; ok(x.horse && !x.horse.away && HORSES.hp(x) > 0, "horse alive after fight " + i); }
-  ok(downs > 2, "giants do bring horses down (" + downs + "/300), and every one got back up");
+  let downs = 0; for (let i = 0; i < 300; i++) { const x = make("warrior", 15), y = road(x, enc("Giant", 15)); y.run({ t: T, trySneak: false, maxTurns: 25 }); y.apply(T); if (y.mount.downTurn) downs++; ok(x.horse && !x.horse.away && (HORSES.hp(x) > 0 || HORSES.downed(x)), "horse never lost after fight " + i); }
+  ok(downs > 2, "giants do bring horses down (" + downs + "/300), and every one stayed with its rider");
 }
 
 console.log("7: perks: real effects, old ids kept");
@@ -235,7 +235,7 @@ console.log("8: party fights: a leader and two teammates' phones see the same ho
   // a teammate can't remount a knocked-down horse by sending up:true
   MOUNTFIGHT.fromMate(b, { up: true, hp: 180, max: 200 }); ok(!b.mt.up, "the leader's phone keeps the knocked-down horse down");
   // after the fight Beta's own horse gets back up on her phone
-  m2.f.won = true; m2.f.ehp = 0; const mm = m2.f.apply(T); ok(s2.horse && !s2.horse.away && s2.horse.hp > 0 && mm.some((x) => /gets back up/.test(x)), "Beta's horse gets back up after the fight on her phone");
+  m2.f.won = true; m2.f.ehp = 0; const mm = m2.f.apply(T); ok(s2.horse && !s2.horse.away && HORSES.downed(s2) && mm.some((x) => /is downed/.test(x)), "Beta's horse stays with her, downed, on her phone");
   // determinism: no Math.random on the teammates' phones decides horses
   const rn = Math.random; let calls = 0; Math.random = () => { calls++; return rn(); }; m3.sync(d3); MOUNTFIGHT.mirror(m3, d3); Math.random = rn;
   ok(calls === 0, "syncing horses rolls no dice on a teammate's phone");

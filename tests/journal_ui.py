@@ -11,12 +11,11 @@ async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-sandbox"])
         errs = []
-        for style in ["ink", "pixel"]:
+        for style in ["ink"]:
             ctx = await b.new_context(viewport={"width": 412, "height": 915}, device_scale_factor=2)
             pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
             await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=jr{style}"); await pg.wait_for_timeout(1800)
             await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Jora"); await pg.click("#begin"); await pg.wait_for_timeout(1000)
-            if style == "pixel": await pg.evaluate("()=>{ART.setStyle('pixel')}")
             await pg.evaluate("""()=>{const S=window.__dbg.save(); S.level=20; S.location='Whiterun'; [S.x,S.y]=WORLD.places.Whiterun; QUESTS.ensure(S);
               S.quests.companions={stage:1,t:G.now()}; S.quests.college={stage:0,t:G.now()}; S.quests.main.stage=2;
               S.quests.cw_imperial={stage:0,t:G.now()}; S.quests.companions_done=null; delete S.quests.companions_done; S.quests.thieves={done:true,v2:true,stage:9,t:G.now()};

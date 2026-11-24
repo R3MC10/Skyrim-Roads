@@ -26,8 +26,7 @@ async def main():
         pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
         await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=pn1"); await pg.wait_for_timeout(1500)
         await pg.click(".press"); await pg.wait_for_timeout(400)
-        for style in ["ink", "pixel"]:
-            await pg.evaluate(f"ART.setStyle('{style}')")
+        for style in ["ink"]:
             # ---- title menu page
             await pg.click(".mi[data-t=notes]"); await pg.wait_for_timeout(500)
             ok(await pg.evaluate("!!document.querySelector('#tinner .pnbar .pnback')"), f"{style} title: Back sits in a header bar")
@@ -42,8 +41,7 @@ async def main():
             ok(await pg.evaluate("!!document.querySelector('.mi[data-t=notes]') && !document.querySelector('#tinner .pnbar')"), f"{style} title: ‹ Back returns to the menu")
         # ---- in-game popup
         await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Reader"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
-        for style in ["ink", "pixel"]:
-            await pg.evaluate(f"ART.setStyle('{style}')")
+        for style in ["ink"]:
             # the same path as the in-game "📜 Patch notes" buttons: a data-act="notes" button inside a panel
             await pg.evaluate("(()=>{ __dbg.message('Notes','x'); const m=document.querySelector('#modal'); const b=document.createElement('button'); b.dataset.act='notes'; m.querySelector('.sheet').appendChild(b); b.click(); })()")
             await pg.wait_for_timeout(500)

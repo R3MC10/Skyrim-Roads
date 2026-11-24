@@ -12,8 +12,7 @@ async def main():
         await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Ewa"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
         async def clear(): await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
         await clear()
-        for style in ["ink", "pixel"]:
-            await pg.evaluate(f"ART.setStyle('{style}')")
+        for style in ["ink"]:
             # a real road event, through the game's own modal: start a trip and put an event on it
             for ev in ["{id:'shrine', god:'Talos', text:'A weathered roadside shrine to Talos stands among the stones.'}",
                        "{id:'caravan', stock:['potion_health','soul_gem_common'], text:'A Khajiit caravan rests by the road.'}",
@@ -30,7 +29,7 @@ async def main():
             await pg.evaluate("()=>{ const b=[...document.querySelectorAll('#modal [data-act=ev]')].find(x=>x.dataset.c==='pay'); b&&b.click(); }"); await pg.wait_for_timeout(400)
             print(style, "after choice picture:", await pg.evaluate("!!document.querySelector('#modal img.art.scene.evt')"))
             # story popups through showMessage
-            for t, x in [("Quest", "📜 The Dragonborn: “Bleak Falls Barrow” done (100 gold)."), ("Quest", "📜 The Companions: “Proving Honor” done (200 gold)."), ("The dragon falls", "Mirmulnir crashes down. You absorb its soul."), ("The Change", "Your blood burns. You are a vampire now.")]:
+            for t, x in [("Quest", "\ue103 The Dragonborn: “Bleak Falls Barrow” done (100 gold)."), ("Quest", "\ue103 The Companions: “Proving Honor” done (200 gold)."), ("The dragon falls", "Mirmulnir crashes down. You absorb its soul."), ("The Change", "Your blood burns. You are a vampire now.")]:
                 await clear(); await pg.evaluate(f"window.__dbg.message({t!r}, {x!r})"); await pg.wait_for_timeout(300)
                 ok = await pg.evaluate("!!document.querySelector('#modal img.art.scene.evt')"); print(style, t, "picture:", ok)
                 m = await pg.query_selector("#modal")

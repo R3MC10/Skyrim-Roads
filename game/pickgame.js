@@ -92,7 +92,6 @@ const PICKGAME = (() => {
   function draw(cv) {
     const P = pg; if (!P) return;
     const W = 300, H = 160, g = (typeof FITCANVAS !== "undefined" ? FITCANVAS.fixed(cv, W, H) : cv.getContext("2d")), L = 22, R = W - 22, bw = R - L;   // sharp at any screen density (fitcanvas.js)
-    const pixel = typeof ART !== "undefined" && ART.style?.() === "pixel";
     const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, "#2a2420"); bg.addColorStop(1, "#0c0b0a"); g.fillStyle = bg; g.fillRect(0, 0, W, H);
     // their attention: an eye that opens as time runs out
     const att = Math.min(1, P.t / TIME);
@@ -121,7 +120,6 @@ const PICKGAME = (() => {
     for (let i = 0; i < 3; i++) { g.beginPath(); g.roundRect ? g.roundRect(-8 + i * 6, 4, 4.5, 16 - Math.abs(i - 1) * 3, 2) : g.rect(-8 + i * 6, 4, 4.5, 14); g.fill(); g.stroke(); }
     g.restore();
     g.strokeStyle = on ? "rgba(243,217,139,.8)" : "rgba(255,255,255,.15)"; g.setLineDash([3, 4]); g.beginPath(); g.moveTo(hx, 88); g.lineTo(hx, 102); g.stroke(); g.setLineDash([]);
-    cv.style.imageRendering = pixel ? "pixelated" : "";
   }
 
   return { wants, open, close, purseWidth, avgOdds, speed, hitOdds, TIME, STAGES, get game() { return pg; } };

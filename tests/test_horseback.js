@@ -50,7 +50,7 @@ ok(D.CONDITIONS?.mounted || (D.RULE_IFS||D.IFS||{}).mounted || /mounted/.test(JS
     f.run({t:T,trySneak:false,maxTurns:20});
     const msgs=f.apply(T);
     ok(s.horse, "horse never deleted");
-    if(f.mount.downTurn){ downs++; ok(f.log.some(l=>/thrown clear/.test(l.them)), "thrown line"); ok(!HORSES.away(s) && msgs.some(m=>/gets back up/.test(m)), "gets back up after the fight (mountfight.js)"); ok(HORSES.riding(s) && s.horse.hp>0, "back in the saddle, hurt");
+    if(f.mount.downTurn){ downs++; ok(f.log.some(l=>/thrown clear/.test(l.them)), "thrown line"); ok(HORSES.downed(s) && s.horse.hp===0 && msgs.some(m=>/is downed/.test(m)), "downed, stays with you"); ok(!HORSES.riding(s), "not riding after");
       const after=f.log.filter(l=>l.turn>f.mount.downTurn); ok(after.every(l=>!/saddle|charge/.test(l.me)), "on foot after the fall"); }
     else if(f.mount.hits){ hurt++; ok(s.horse.hp<HORSES.maxHp(s.horse), "horse hp written back"); }
   }

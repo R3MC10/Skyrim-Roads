@@ -12,7 +12,7 @@ def ok(c, m):
     print(("ok   " if c else "FAIL ") + m)
     if not c: fails.append(m)
 
-START = """(st)=>{ ART.setStyle(st); document.querySelectorAll('#modal').forEach(m=>m.remove());
+START = """(st)=>{ document.querySelectorAll('#modal').forEach(m=>m.remove());
   const S=window.__dbg.save(); S.level=20; for (const k of ['One-Handed','Destruction','Restoration','Athletics','Acrobatics']) S.skills[k].lvl=45;
   S.mpBonus=60; for (const id of ['flames','sparks','healing']) if (D.SPELLS[id] && !S.spells.includes(id)) S.spells.push(id);
   G.give(S,'potion_health',2); G.setHealth(S,G.maxHealth(S)); S.dungeon=null; S.trip=null;
@@ -29,7 +29,7 @@ async def main():
         await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=tbf1&tb&fightanim"); await pg.wait_for_timeout(1800)
         await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Turnie"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
         ok(await pg.evaluate("typeof TB !== 'undefined' && TB.enabled()"), "turn-by-turn fights on (default, ?tb under automation)")
-        for style in ["ink", "pixel"]:
+        for style in ["ink"]:
             await pg.evaluate(START, style); await pg.wait_for_timeout(400)
             await pg.click("#modal [data-act=ev][data-c=fight]"); await pg.wait_for_timeout(700)
             ok(await pg.evaluate("!!document.querySelector('#tbf') && TB.open"), f"{style}: the fight screen opens")

@@ -73,6 +73,7 @@ const HALL = (() => {
     if (tier() < 2) return { err: "The shared chest opens when the hall becomes a Mead Hall." };
     const r = G.invRow(s, rowId);
     if (!canDeposit(r)) return { err: "That can't go in the chest (stolen or improved things stay with you)." };
+    if (G.freeQty && G.freeQty(s, rowId) <= 0) return { err: "Take it off first." };   // worn gear never goes in the shared chest
     const item = r.item; G.take(s, rowId, 1);
     return { item, text: `You put ${D.ITEMS[item].name} in the shared chest.` };
   }

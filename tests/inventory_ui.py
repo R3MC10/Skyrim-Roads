@@ -30,7 +30,7 @@ async def main():
     fails = []
     async with async_playwright() as p:
         b = await p.chromium.launch(executable_path=os.environ.get("CHROME") or None, args=["--no-sandbox"])
-        for style in ["ink", "pixel"]:
+        for style in ["ink"]:
             for vw, vh in [(360, 780), (412, 915)]:
                 tag = f"{style}_{vw}"
                 ctx = await b.new_context(viewport={"width": vw, "height": vh}, device_scale_factor=1)
@@ -39,7 +39,6 @@ async def main():
                 pg.on("pageerror", lambda e: errs.append(str(e)))
                 await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&hub=0&p=iq{style}{vw}"); await pg.wait_for_timeout(1500)
                 await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Ysolda"); await pg.click("#begin"); await pg.wait_for_timeout(1300)
-                await pg.evaluate("try{ART.setStyle('%s')}catch(e){}" % style)
                 await pg.evaluate("document.querySelectorAll('#modal,#sky').forEach(m=>m.remove())")
                 if not await pg.evaluate(NOON): fails.append(f"{tag}: could not make it noon")
                 await pg.evaluate(SETUP)

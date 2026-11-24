@@ -24,8 +24,9 @@ const WFX = (() => {
     ashstorm: { el: { fire: 1.1 }, aim: 0.85, stam: 0.9, text: "Ash storm: fire burns 10% hotter, arrows miss more, and the ash saps stamina unless you're covered up." },
   };
   const of = (id) => FX[id] || FX.clear;
+  const pnum = (s, k) => (typeof PFX !== "undefined" && s ? PFX.num(s, k) : 0);
   const on = (s) => s && s.survival !== false;
-  const wxAt = (s, t) => (typeof WEVENTS !== "undefined" && s && s.x != null ? WEVENTS.weather([s.x, s.y], t) : { id: "clear", name: "Clear", icon: "☀️" });
+  const wxAt = (s, t) => (typeof WEVENTS !== "undefined" && s && s.x != null ? WEVENTS.weather([s.x, s.y], t) : { id: "clear", name: "Clear", icon: "" });
 
   // ---- warm clothes: hide and fur keep the cold out; a fur cloak in your pack counts as one more piece
   const WARM = /hide|fur|pelt|stalhrim|nordic|ancient_nord|skaal|stormcloak|bear|wolf_armor|forsworn|guard/;
@@ -50,7 +51,7 @@ const WFX = (() => {
     try { const ty = Terrain.typeAtPos(pos); if (ty === Terrain.T.SNOW || ty === Terrain.T.MOUNTAIN || ty === Terrain.T.PEAK) r += 0.6; } catch { /* no terrain in tests */ }
     if (!r) return 0;
     if (souped(s, t)) return 0;
-    return r * (1 - 0.7 * warmth(s));   // points per real minute
+    return r * (1 - 0.7 * warmth(s)) * (1 - Math.min(0.75, pnum(s, "coldslow")));   // points per real minute (Weathered Traveller: slower)
   }
   const sheltered = (s) => !!(s.location && !s.trip && (G.shopTypes(s.location).length || (typeof TOWNS !== "undefined" && TOWNS.INNS && TOWNS.INNS[s.location])));
   function cold(s, t = now()) {
@@ -68,12 +69,12 @@ const WFX = (() => {
   function warmUp(s, amt = 100, t = now()) { cold(s, t); s.coldV = Math.max(0, (s.coldV || 0) - amt); }
   function coldState(s, t = now()) {
     const v = cold(s, t), tier = v >= 70 ? 2 : v >= 40 ? 1 : 0;
-    return { v, tier, label: ["Warm", "Chilly", "Freezing"][tier], icon: ["", "🥶", "❄️"][tier] };
+    return { v, tier, label: ["Warm", "Chilly", "Freezing"][tier], icon: ["", "", ""][tier] };
   }
 
   // ---- what the weather does to a fight starting now
   function fight(s, t = now()) {
-    const w = s && s.dungeon ? { id: "clear", name: "Indoors", icon: "🏛" } : wxAt(s, t), e = of(w.id), warm = warmth(s) >= 0.5 || souped(s, t);
+    const w = s && s.dungeon ? { id: "clear", name: "Indoors", icon: "" } : wxAt(s, t), e = of(w.id), warm = warmth(s) >= 0.5 || souped(s, t);
     const cs = on(s) ? coldState(s, t) : { tier: 0 };
     let stam = warm ? 1 : e.stam;
     stam *= [1, 0.95, 0.9][cs.tier];
@@ -82,7 +83,9 @@ const WFX = (() => {
     if (e.text) lines.push(e.text);
     if (!warm && e.stam < 1) lines.push("Warm clothes (hide, fur, a fur cloak) or hot soup would keep your stamina up.");
     if (cs.tier) lines.push(cs.tier === 2 ? "You're freezing: 10% less stamina and shakier aim. Warm up at an inn or in town." : "You're chilly: 5% less stamina. Warm up at an inn or in town.");
-    return { id: w.id, name: w.name, icon: w.icon, el: { ...e.el }, aim, stam, storm: !!e.storm, lines };
+    const clearNight = !(s && s.dungeon) && w.id === "clear" && G.isNight(t), mpNight = clearNight ? 0.5 + pnum(s, "starmp") : 0;   // stars out: magicka flows (wxmatters.js adds it each turn)
+    if (clearNight) lines.push(`Clear night: magicka comes back ${Math.round(mpNight * 100)}% faster.`);
+    return { id: w.id, name: w.name, icon: w.icon, el: { ...e.el }, aim, stam, storm: !!e.storm, clearNight, mpNight, lines };
   }
   const elem = (f, el) => (f && f.wx && el ? f.wx.el[el] || 1 : 1);
   // storms: a shock spell may call down lightning for half again its damage
@@ -93,6 +96,11 @@ const WFX = (() => {
     let m = 1;
     if ((w === "blizzard" || w === "ashstorm") && warm) m *= 1.12;   // warm clothes: you push on (WEVENTS already slows everyone)
     if (on(s) && coldState(s, t).tier === 2) m *= 0.95;
+    const k = Math.min(0.75, pnum(s, "wxslow"));   // Weathered Traveller: bad weather slows you less
+    if (k > 0 && typeof WEVENTS !== "undefined" && s.x != null) {
+      const wf = WEVENTS.weather([s.x, s.y], t).speed;
+      if (wf < 1) { const eff = souped(s, t) ? (1 + wf) / 2 : wf; m *= (1 - (1 - eff) * (1 - k)) / eff; }
+    }
     return m;
   }
   function sneakAdd(s, t = now()) {
@@ -115,7 +123,7 @@ const WFX = (() => {
     if (!on(s)) return "";
     const c = coldState(s, t);
     if (!c.tier && c.v < 15) return "";
-    return `<div class="wxcold t${c.tier}" title="Cold: ${Math.round(c.v)}/100"><span>${c.icon || "🌡"} ${c.label}</span><i style="width:${Math.round(c.v)}%"></i></div>`;
+    return `<div class="wxcold t${c.tier}" title="Cold: ${Math.round(c.v)}/100"><span>${c.icon || ""} ${c.label}</span><i style="width:${Math.round(c.v)}%"></i></div>`;
   }
   // a fur cloak at general stores
   if (typeof D !== "undefined") {

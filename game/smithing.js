@@ -139,9 +139,27 @@ const SMITH = (() => {
   const VEIN_RENEW = 24 * 3600 / G.GAME_SPEED;     // the veins grow back after one in-game day (2 real hours)
   const mineLeft = (s, place, t = G.now()) => Math.max(0, ((s.mined || {})[place] || 0) + VEIN_RENEW - t);
   /* why you can't mine here right now ("" = you can). Solstheim adds the stalhrim rule on top. */
+  /* A pickaxe is a tool, never used up: one in your pack is enough forever. Old saves may hold a pickaxe row with
+     leftover wear (qty 0, charge, durability, uses): mend it in place so it counts again. */
+  const isPick = (r) => !!r && /^pickaxe/.test(r.item) && !!D.ITEMS[r.item];
+  function fixPickaxe(s) {
+    for (const r of s.inv || []) if (isPick(r)) {
+      if (!(r.qty >= 1)) r.qty = 1;
+      for (const k of ["charge", "dur", "durability", "uses", "wear", "broken"]) delete r[k];
+    }
+  }
+  const hasPickaxe = (s) => { fixPickaxe(s); return (s.inv || []).some(isPick); };
+  /* the town whose house chest holds your pickaxe ("" if none) */
+  const pickaxeAtHome = (s) => Object.keys(s.homes || {}).find((town) => (s.homes[town]?.chest || []).some(isPick)) || "";
+  const NO_PICK = "You need a pickaxe — the blacksmith in Riverwood sells one (so does any blacksmith or general store, for a few coins).";
+  function noPickWhy(s) {
+    const home = pickaxeAtHome(s);
+    return home ? `Your pickaxe is in your house chest in ${home}. Take it with you to mine.` : NO_PICK;
+  }
   function mineBlock(s, place = s.location, t = G.now()) {
     if (!MINES[place] || s.trip) return "There are no ore veins here.";
-    if (!count(s, "pickaxe")) return "You need a pickaxe. Blacksmiths and general stores sell them for a few coins.";
+    if (s.dungeon && s.dungeon.place === place) return "Leave the rooms first, then mine the veins from the place card.";
+    if (!hasPickaxe(s)) return noPickWhy(s);
     if (mineLeft(s, place, t) > 0) return "You've mined the veins here bare. They grow back in a day.";
     return "";
   }
@@ -161,12 +179,12 @@ const SMITH = (() => {
     const no = api.mineBlock(s, place, t); if (no) return no;
     const m = MINES[place];
     got = got || mineRoll(s, place);
-    if (!Object.keys(got).length) { s.mined = { ...(s.mined || {}), [place]: t }; return `⛏ You chip at the rock in ${m[0]} but bring nothing out. The veins need a day to settle.`; }
+    if (!Object.keys(got).length) { s.mined = { ...(s.mined || {}), [place]: t }; return ` You chip at the rock in ${m[0]} but bring nothing out. The veins need a day to settle.`; }
     for (const [o, k] of Object.entries(got)) G.give(s, o, k);
     s.mined = { ...(s.mined || {}), [place]: t };
-    return `⛏ You work the veins in ${m[0]}: ${Object.entries(got).map(([o, k]) => `${k} ${D.ITEMS[o].name}`).join(", ")}.`;
+    return ` You work the veins in ${m[0]}: ${Object.entries(got).map(([o, k]) => `${k} ${D.ITEMS[o].name}`).join(", ")}.`;
   }
   const byGroup = (g) => Object.keys(RECIPES).filter((id) => RECIPES[id].group === g).sort((a, b) => D.ITEMS[a].value - D.ITEMS[b].value);
-  const api = { use, MINES, VEIN_RENEW, mineLeft, mine, mineBlock, mineRoll, oreBag, oreCount, GEM_BAG, GROUPS, RECIPES, REFINE, GEMS, PERK_FOR, info, make, refineInfo, refine, byGroup, peltFor, atForge, count, matText, xpFor };
+  const api = { use, MINES, hasPickaxe, fixPickaxe, pickaxeAtHome, NO_PICK, VEIN_RENEW, mineLeft, mine, mineBlock, mineRoll, oreBag, oreCount, GEM_BAG, GROUPS, RECIPES, REFINE, GEMS, PERK_FOR, info, make, refineInfo, refine, byGroup, peltFor, atForge, count, matText, xpFor };
   return api;
 })();

@@ -98,8 +98,8 @@ const I18N_STORY = {
 "Find answers in the Dwemer ruin of Mzulft.": "Szukaj odpowiedzi w dwemerskich ruinach Mzulft.",
 "Return to the College and stand against what you woke.": "Wróć do Kolegium i stań przeciw temu, co obudziłeś.",
 "Arch-Mage of the College": "Arcymag Kolegium",
-"🎭 New quest: Masks of the Dragon Priests (Journal).": "🎭 Nowe zadanie: Maski Smoczych Kapłanów (Dziennik).",
-"📜 Brynjolf has more work for you: the Thieves Guild story goes on (Journal).": "📜 Brynjolf ma dla ciebie więcej roboty: historia Gildii Złodziei toczy się dalej (Dziennik).",
+" New quest: Masks of the Dragon Priests (Journal).": " Nowe zadanie: Maski Smoczych Kapłanów (Dziennik).",
+" Brynjolf has more work for you: the Thieves Guild story goes on (Journal).": " Brynjolf ma dla ciebie więcej roboty: historia Gildii Złodziei toczy się dalej (Dziennik).",
 "You can only join where they are.": "Możesz dołączyć tylko tam, gdzie są.",
 "You need a destruction spell to show her.": "Potrzebujesz zaklęcia zniszczenia, żeby jej pokazać.",
 "\"Again, when you're ready.\"": "„Jeszcze raz, jak będziesz gotów.”",
@@ -108,7 +108,7 @@ const I18N_STORY = {
 "Two Thalmor Justiciars in gilded robes march a bound Nord down the road.": "Dwóch Justycjariuszy Thalmoru w złoconych szatach prowadzi drogą związanego Norda.",
 "\"Talos worship is heresy,\" one sneers.": "„Kult Talosa to herezja” – szydzi jeden.",
 "The prisoner catches your eye.": "Więzień łapie twoje spojrzenie.",
-"⚔️ Free the prisoner (fight)": "⚔️ Uwolnij więźnia (walka)",
+" Free the prisoner (fight)": " Uwolnij więźnia (walka)",
 "Keep your head down": "Nie wychylaj się",
 "You draw steel.": "Dobywasz broni.",
 "The Justiciars turn, magic crackling.": "Justycjariusze odwracają się, magia trzeszczy.",
@@ -137,11 +137,11 @@ const I18N_STORY = {
 "A courier jogs up, out of breath.": "Podbiega zdyszany kurier.",
 "\"Letter for you.": "„List do ciebie.",
 "Heard you were on this road.\"": "Słyszałem, że idziesz tą drogą.”",
-"✉️ Open the letter": "✉️ Otwórz list",
+" Open the letter": " Otwórz list",
 "The letter names you heir to a small estate.": "List czyni cię spadkobiercą małego majątku.",
 "Go before the others do.\"": "Idź, zanim zrobią to inni.”",
 "A bard sits on a milestone, lute in hand.": "Bard siedzi na kamieniu milowym z lutnią w dłoni.",
-"🎶 Ask for a song (10 gold)": "🎶 Poproś o piosenkę (10 złota)",
+" Ask for a song (10 gold)": " Poproś o piosenkę (10 złota)",
 "You don't have 10 gold.": "Nie masz 10 złota.",
 "The song carries you.": "Piosenka cię niesie.",
 "Your aches fade and you walk on lighter.": "Bóle mijają i idziesz dalej lżejszym krokiem.",
@@ -156,7 +156,7 @@ const I18N_STORY = {
 "Two Vigilants of Stendarr in grey hoods bless travellers on the road.": "Dwóch Czuwających Stendarra w szarych kapturach błogosławi podróżnych na drodze.",
 "\"Daedra and the walking dead are about.": "„Wokół grasują daedry i chodzące trupy.",
 "Will you help us hunt?\"": "Pomożesz nam polować?”",
-"🙏 Ask for a blessing": "🙏 Poproś o błogosławieństwo",
+" Ask for a blessing": " Poproś o błogosławieństwo",
 "They frown, then let you pass.": "Marszczą brwi, ale cię przepuszczają.",
 "\"Stendarr watches.\"": "„Stendarr czuwa.”",
 "\"Liar!\"": "„Kłamca!”",
@@ -171,9 +171,9 @@ const I18N_STORY = {
 "\"Stendarr's mercy upon you.\"": "„Niech łaska Stendarra będzie z tobą.”",
 "Two hunters are dressing a deer beside the road.": "Dwóch myśliwych sprawia jelenia przy drodze.",
 "\"Good hunting this season, if you know where to look.\"": "„Dobry sezon na polowanie, jeśli wiesz, gdzie szukać.”",
-"🍖 Buy venison (15 gold)": "🍖 Kup dziczyznę (15 złota)",
-"🔥 Share their fire": "🔥 Ogrzej się przy ich ognisku",
-"🏹 Ask about tracking": "🏹 Zapytaj o tropienie",
+" Buy venison (15 gold)": " Kup dziczyznę (15 złota)",
+" Share their fire": " Ogrzej się przy ich ognisku",
+" Ask about tracking": " Zapytaj o tropienie",
 "You can't afford it.": "Nie stać cię.",
 "They're out of meat.": "Skończyło im się mięso.",
 "You warm your hands and trade stories until the fire burns low.": "Grzejesz dłonie i wymieniacie się opowieściami, aż ogień przygasa.",
@@ -182,7 +182,7 @@ const I18N_STORY = {
 "He hasn't noticed you.": "Jeszcze cię nie zauważył.",
 "Yet.": "Jeszcze.",
 "Give them a wide berth": "Omiń ich szerokim łukiem",
-"⚔️ Challenge the giant": "⚔️ Wyzwij olbrzyma",
+" Challenge the giant": " Wyzwij olbrzyma",
 "The mammoths only stare.": "Mamuty tylko się gapią.",
 "A mammoth trumpets.": "Mamut trąbi.",
 "The giant turns, roaring.": "Olbrzym odwraca się z rykiem.",
@@ -190,8 +190,8 @@ const I18N_STORY = {
 "The giant lumbers to meet you.": "Olbrzym rusza ciężko w twoją stronę.",
 "A roar shakes the sky.": "Ryk wstrząsa niebem.",
 "A dragon wheels low over the road, scanning the ground.": "Smok krąży nisko nad drogą, przeczesując wzrokiem ziemię.",
-"👀 Stay still and watch": "👀 Nie ruszaj się i patrz",
-"⚔️ Call it down and fight": "⚔️ Sprowadź go na ziemię i walcz",
+" Stay still and watch": " Nie ruszaj się i patrz",
+" Call it down and fight": " Sprowadź go na ziemię i walcz",
 "You press flat under an overhang.": "Przywierasz płasko pod skalnym nawisem.",
 "The dragon passes, its shadow sweeping over you.": "Smok przelatuje, jego cień przesuwa się po tobie.",
 "It sees you.": "Widzi cię.",
@@ -217,8 +217,8 @@ const I18N_STORY = {
 "\"Oi!": "„Ej!",
 "Where d'you think you're going?\"": "A ty dokąd?”",
 "You kick the log aside.": "Odkopujesz kłodę na bok.",
-"🛡 Walk with them as escort": "🛡 Idź z nimi jako eskorta",
-"⚔️ Free the prisoner": "⚔️ Uwolnij jeńca",
+" Walk with them as escort": " Idź z nimi jako eskorta",
+" Free the prisoner": " Uwolnij jeńca",
 "Not your war, keep going": "To nie twoja wojna, idź dalej",
 "You see them safely to the next fort.": "Odprowadzasz ich bezpiecznie do następnego fortu.",
 "\"For the cause.\"": "„Za sprawę.”",
@@ -232,8 +232,8 @@ const I18N_STORY = {
 "Behind him, a flame atronach drifts down the road, burning everything it touches.": "Za nim drogą sunie ogniste atronach, paląc wszystko, czego dotknie.",
 "\"Stop it!": "„Zatrzymaj to!",
 "It won't listen!\"": "Nie słucha mnie!”",
-"⚔️ Fight the atronach": "⚔️ Walcz z atronachem",
-"✨ Banish it (Conjuration)": "✨ Odeślij go (Przywołanie)",
+" Fight the atronach": " Walcz z atronachem",
+" Banish it (Conjuration)": " Odeślij go (Przywołanie)",
 "Let him deal with his mess": "Niech sam sprząta swój bałagan",
 "You step between them.": "Stajesz między nimi.",
 "You seize the binding and snap it.": "Chwytasz więź i ją zrywasz.",
@@ -249,14 +249,14 @@ const I18N_STORY = {
 "You rush the circle.": "Wpadasz do kręgu.",
 "Pilgrims bound for High Hrothgar huddle by the road.": "Pielgrzymi idący do High Hrothgar kulą się przy drodze.",
 "\"Seven thousand steps, and we've run out of bread.\"": "„Siedem tysięcy schodów, a nam skończył się chleb.”",
-"🛡 Walk with them a while": "🛡 Idź z nimi kawałek",
+" Walk with them a while": " Idź z nimi kawałek",
 "You have no food to share.": "Nie masz jedzenia, którym możesz się podzielić.",
 "They bless you by the Nine.": "Błogosławią cię na Dziewięciu.",
 "A strange calm settles on you.": "Ogarnia cię dziwny spokój.",
 "You walk them to the next crossroads.": "Odprowadzasz ich do następnego rozstaju.",
 "A scruffy dog sits by a dead campfire, tail thumping.": "Zaniedbany pies siedzi przy wygasłym ognisku i macha ogonem.",
 "It follows a few steps when you move.": "Idzie za tobą kilka kroków, gdy ruszasz.",
-"🐕 \"Come on, then.\"": "🐕 „No chodź.”",
+" \"Come on, then.\"": " „No chodź.”",
 "(take him along)": "(weź go ze sobą)",
 "You already have someone with you.": "Masz już kogoś ze sobą.",
 "The dog barks once and falls in beside you.": "Pies szczeka raz i staje u twojego boku.",
@@ -274,7 +274,7 @@ const I18N_STORY = {
 "A figure in red and black leather drops from a ledge, blade already drawn.": "Postać w czerwono-czarnej skórze zeskakuje z półki skalnej z dobytym ostrzem.",
 "\"Someone wants you dead.": "„Ktoś chce twojej śmierci.",
 "And the Brotherhood always delivers.\"": "A Bractwo zawsze dowozi.”",
-"⚔️ Defend yourself": "⚔️ Broń się",
+" Defend yourself": " Broń się",
 "Dark Brotherhood assassin": "Zabójca Mrocznego Bractwa",
 "You run until your lungs burn.": "Biegniesz, aż płuca palą.",
 "When you look back, the road is empty.": "Gdy się oglądasz, droga jest pusta.",
@@ -294,9 +294,9 @@ const I18N_STORY = {
 "Wildmane is yours.": "Dzika Grzywa jest twoja.",
 "(Ride it from the Travel tab.)": "(Jeździsz na nim z zakładki Podróż.)",
 "It rears and kicks, then bolts.": "Staje dęba i kopie, a potem ucieka.",
-"A cart lies on its side, a dead horse still in harness.": "Wóz leży na boku, martwy koń wciąż w uprzęży.",
+"A cart lies on its side, its horse long gone.": "Wóz leży na boku, po koniu ani śladu.",
 "Crates spill across the road.": "Skrzynie rozsypane po drodze.",
-"📦 Search the crates": "📦 Przeszukaj skrzynie",
+" Search the crates": " Przeszukaj skrzynie",
 "Fresh boot prints lead into the trees: an ambush, waiting.": "Świeże odciski butów prowadzą między drzewa: zasadzka, czeka.",
 "You circle round and catch them unawares.": "Okrążasz ich i zaskakujesz.",
 "You can't make sense of the tracks.": "Nie możesz się połapać w śladach.",
@@ -325,7 +325,7 @@ const I18N_STORY = {
 "\"The Dwemer didn't vanish.": "„Dwemerowie nie zniknęli.",
 "They were edited out.\"": "Zostali wycięci.”",
 "A hooded stranger walks beside you for a while, though you never saw them arrive.": "Zakapturzony nieznajomy idzie obok ciebie przez chwilę, choć nie widziałeś, jak się pojawił.",
-"❓ \"Who are you?\"": "❓ „Kim jesteś?”",
+" \"Who are you?\"": " „Kim jesteś?”",
 "The wall's there still, they say.": "Mówią, że mur wciąż tam stoi.",
 "The All-Maker sent you.": "Przysłał cię Stwórca Wszystkiego.",
 "A mudcrab clicks at you from a rock.": "Błotny krab klika do ciebie ze skały.",
@@ -333,7 +333,7 @@ const I18N_STORY = {
 "Care to see my wares?": "Chcesz zobaczyć moje towary?",
 "Very reasonable prices.\"": "Bardzo rozsądne ceny.”",
 "You're quite sure mudcrabs can't talk.": "Jesteś całkiem pewien, że błotne kraby nie mówią.",
-"🦀 Browse the mudcrab's wares": "🦀 Przejrzyj towary kraba",
+" Browse the mudcrab's wares": " Przejrzyj towary kraba",
 "\"A fine selection, yes?\"": "„Piękny wybór, prawda?”",
 "You carry on down the road.": "Idziesz dalej drogą.",
 "A loyal stray dog you met on the road.": "Wierny bezpański pies spotkany na drodze.",
@@ -608,8 +608,8 @@ const I18N_STORY = {
 "Walk closer to the X.": "Podejdź bliżej do X.",
 "You dig where the X says.": "Kopiesz tam, gdzie wskazuje X.",
 "You take it.": "Bierzesz to.",
-"🔘 Turn the rings yourself": "🔘 Obróć pierścienie samodzielnie",
-"🧩 Turn the pillars yourself": "🧩 Obróć filary samodzielnie",
+" Turn the rings yourself": " Obróć pierścienie samodzielnie",
+" Turn the pillars yourself": " Obróć filary samodzielnie",
 "The rings click into place.": "Pierścienie wskakują na miejsce.",
 "With a groan of stone the great door sinks into the floor.": "Z jękiem kamienia wielkie drzwi zapadają się w podłogę.",
 "Something stirs beyond it.": "Coś się za nimi porusza.",
@@ -738,8 +738,8 @@ const I18N_STORY = {
 "Don't tell the others.": "Nie mów innym.",
 "A friend of the hold.": "Przyjaciel włości.",
 "I'll knock a little off for you.": "Trochę ci opuszczę.",
-"📦 Search for the cart": "📦 Poszukaj wozu",
-"✨ Wait for the lights": "✨ Zaczekaj na światła",
+" Search for the cart": " Poszukaj wozu",
+" Wait for the lights": " Zaczekaj na światła",
 "Word on the street": "Wieści z ulicy",
 "The rumour was true": "Plotka była prawdziwa",
 "Carried: after a fight you win, it catches the soul and refills a fifth of your weapon's enchantment.": "Noszona: po wygranej walce chwyta duszę i uzupełnia piątą część zaklęcia twojej broni.",
@@ -915,7 +915,7 @@ const I18N_STORY = {
 "\"The false Dragonborn!": "„Fałszywy Smocze Dziecię!",
 "You will never take what is Miraak's!\"": "Nigdy nie weźmiesz tego, co należy do Miraaka!”",
 "New quest: Dragonborn (Journal).": "Nowe zadanie: Smocze Dziecię (Dziennik).",
-"📜 New quest: Dragonborn.": "📜 Nowe zadanie: Smocze Dziecię.",
+" New quest: Dragonborn.": " Nowe zadanie: Smocze Dziecię.",
 "Miraak's cultists were waiting for you at Raven Rock.": "Kultyści Miraaka czekali na ciebie w Raven Rock.",
 "Staggers the foe / turns a beast or person to your side for a while / bends even a dragon to your will.": "Ogłusza wroga / na jakiś czas przeciąga bestię lub człowieka na twoją stronę / nagina nawet smoka do twojej woli.",
 "Add it to your tactics.": "Dodaj je do swojej taktyki.",
@@ -982,7 +982,7 @@ const I18N_STORY = {
 "\"You know the way.": "„Znasz drogę.",
 "Strike with the All-Maker's patience.\"": "Uderzaj z cierpliwością Stwórcy Wszystkiego.”",
 "Baldor shakes his head.": "Baldor kręci głową.",
-"⛏ Baldor Iron-Shaper taught you the Skaal's ancient technique: you can mine stalhrim at Kolbjorn Barrow and Benkongerike.": "⛏ Baldor Kształtujący Żelazo nauczył cię dawnej techniki Skaalów: możesz wydobywać stalhrim w Kurhanie Kolbjorn i Benkongerike.",
+" Baldor Iron-Shaper taught you the Skaal's ancient technique: you can mine stalhrim at Kolbjorn Barrow and Benkongerike.": " Baldor Kształtujący Żelazo nauczył cię dawnej techniki Skaalów: możesz wydobywać stalhrim w Kurhanie Kolbjorn i Benkongerike.",
 "Baldor shows you the old Skaal way: you can now mine stalhrim at Kolbjorn Barrow and Benkongerike, and Glover Mallory in Raven Rock can show you how to forge it.": "Baldor pokazuje ci dawny sposób Skaalów: możesz teraz wydobywać stalhrim w Kurhanie Kolbjorn i Benkongerike, a Glover Mallory w Raven Rock pokaże ci, jak go wykuwać.",
 "That's Skyrim, across the sea.": "To Skyrim, za morzem.",
 "Take the boat from the Raven Rock docks.": "Popłyń łodzią z doków Raven Rock.",
@@ -1022,7 +1022,7 @@ const I18N_STORY = {
 "You're only yourself again.": "Znowu jesteś tylko sobą.",
 "You feel a strange chill where the vampire's claws caught you.": "Czujesz dziwny chłód tam, gdzie dosięgły cię szpony wampira.",
 "(Sanguinare Vampiris: cure it within 3 in-game days with a Cure Disease potion or at a shrine, or you'll turn.)": "(Sanguinare Vampiris: wylecz to w ciągu 3 dni w grze miksturą leczenia chorób albo w kapliczce, inaczej się przemienisz.)",
-"🩸 You wake up hungry for something that isn't food.": "🩸 Budzisz się głodny czegoś, co nie jest jedzeniem.",
+" You wake up hungry for something that isn't food.": " Budzisz się głodny czegoś, co nie jest jedzeniem.",
 "You are a vampire now.": "Jesteś teraz wampirem.",
 "See the Character tab.": "Zobacz zakładkę Postać.",
 "The chill fades.": "Chłód mija.",
@@ -1063,7 +1063,7 @@ const I18N_STORY = {
 "yanked off its feet": "zwalony z nóg",
 "· you burst into mist": "· rozpływasz się w mgłę",
 "· you fold your wings and change back": "· składasz skrzydła i wracasz do swojej postaci",
-"⚫ The black soul gem drinks a human soul.": "⚫ Czarny klejnot duszy pochłania ludzką duszę.",
+" The black soul gem drinks a human soul.": " Czarny klejnot duszy pochłania ludzką duszę.",
 "turns of your damage": "tur twoich obrażeń",
 "Falion, the wizard of Morthal": "Falion, czarodziej z Morthal",
 "Falion, Morthal's court wizard, has studied vampires for years.": "Falion, nadworny mag Morthal, od lat bada wampiry.",
@@ -1167,7 +1167,7 @@ const I18N_STORY = {
 "Farengar works in Dragonsreach, in Whiterun.": "Farengar pracuje w Dragonsreach, w Whiterun.",
 "You don't have the Dragonstone.": "Nie masz Smoczego Kamienia.",
 "It waits at the end of Bleak Falls Barrow.": "Czeka na końcu Bleak Falls Barrow.",
-"📜 Gave Farengar the Dragonstone.": "📜 Oddano Farengarowi Smoczy Kamień.",
+" Gave Farengar the Dragonstone.": " Oddano Farengarowi Smoczy Kamień.",
 "The Jarl names Lydia your housecarl.": "Jarl mianuje Lydię twoją huskarlą.",
 "Farengar snatches the Dragonstone.": "Farengar wyrywa ci Smoczy Kamień.",
 "The Jarl pays you 300 gold and assigns Lydia as your housecarl.": "Jarl płaci ci 300 złota i przydziela Lydię jako twoją huskarlę.",
@@ -1212,7 +1212,7 @@ const I18N_STORY = {
 "Heal up first (rest, a potion or a spell).": "Najpierw się wylecz (odpoczynek, mikstura albo czar).",
 "The gate still burns.": "Brama wciąż płonie.",
 "the title Gatecloser": "tytuł Zamykacz Bram",
-"🔥 The gates you fought at weren't closed in time.": "🔥 Bramy, przy których walczyłeś, nie zostały zamknięte na czas.",
+" The gates you fought at weren't closed in time.": " Bramy, przy których walczyłeś, nie zostały zamknięte na czas.",
 "Better luck next invasion.": "Więcej szczęścia przy następnej inwazji.",
 "The dragons have flown on.": "Smoki poleciały dalej.",
 "Get there first.": "Dotrzyj tam pierwszy.",
@@ -1346,7 +1346,7 @@ const I18N_STORY = {
 "Nobody saw a thing.": "Nikt niczego nie widział.",
 "The mark's bodyguards": "Ochroniarze celu",
 "The contract went wrong.": "Kontrakt poszedł źle.",
-"🖐 A stranger waited by your bed: Astrid of the Dark Brotherhood.": "🖐 Przy twoim łóżku czekała nieznajoma: Astrid z Mrocznego Bractwa.",
+" A stranger waited by your bed: Astrid of the Dark Brotherhood.": " Przy twoim łóżku czekała nieznajoma: Astrid z Mrocznego Bractwa.",
 "You wake to a woman sitting by your bed.": "Budzisz się, a przy twoim łóżku siedzi kobieta.",
 "\"I'm Astrid.": "„Jestem Astrid.",
 "Someone's been killing,\" she smiles.": "Ktoś tu zabija” – uśmiecha się.",
@@ -1486,12 +1486,12 @@ const I18N_STORY = {
 },
   pats: [
 [
-"📜 You'll need the {0} for your quest, so you took it from your house chest in {1}.",
-"📜 {0} będzie ci potrzebny do zadania, więc wziąłeś go ze skrzyni w domu w {1}."
+" You'll need the {0} for your quest, so you took it from your house chest in {1}.",
+" {0} będzie ci potrzebny do zadania, więc wziąłeś go ze skrzyni w domu w {1}."
 ],
 [
-"📜 The {0} you need for your quest turns up in your pack after all.",
-"📜 {0}, potrzebny ci do zadania, jednak znajduje się w twoim plecaku."
+" The {0} you need for your quest turns up in your pack after all.",
+" {0}, potrzebny ci do zadania, jednak znajduje się w twoim plecaku."
 ],
 [
 "New objective: {0}.",
@@ -1514,12 +1514,12 @@ const I18N_STORY = {
 "{0} okazał się dla ciebie za mocny."
 ],
 [
-"🗣 Bluff: \"He's wanted in Whiterun, I'll take him\" ({0})",
-"🗣 Blef: „Jest poszukiwany w Whiterun, zabiorę go” ({0})"
+" Bluff: \"He's wanted in Whiterun, I'll take him\" ({0})",
+" Blef: „Jest poszukiwany w Whiterun, zabiorę go” ({0})"
 ],
 [
-"💰 Pay them to forget him ({0} gold)",
-"💰 Zapłać, żeby o nim zapomnieli ({0} złota)"
+" Pay them to forget him ({0} gold)",
+" Zapłać, żeby o nim zapomnieli ({0} złota)"
 ],
 [
 "Out of sight, the Nord thanks you and presses {0} gold on you.",
@@ -1554,16 +1554,16 @@ const I18N_STORY = {
 "Liścik z podziękowaniem od kogoś, komu pomogłeś, a w nim {0} złota."
 ],
 [
-"🎤 Sing along ({0})",
-"🎤 Śpiewaj razem z nim ({0})"
+" Sing along ({0})",
+" Śpiewaj razem z nim ({0})"
 ],
 [
 "A passing farmer tosses coins at your duet: {0} gold.",
 "Przechodzący rolnik rzuca monety za wasz duet: {0} złota."
 ],
 [
-"🥷 Slip away ({0})",
-"🥷 Wymknij się ({0})"
+" Slip away ({0})",
+" Wymknij się ({0})"
 ],
 [
 "They give you {0} gold{1}.",
@@ -1578,8 +1578,8 @@ const I18N_STORY = {
 "Pokazują ci, jak czytać trop.{0}"
 ],
 [
-"🥷 Sneak to his camp for loot ({0})",
-"🥷 Zakradnij się do jego obozu po łupy ({0})"
+" Sneak to his camp for loot ({0})",
+" Zakradnij się do jego obozu po łupy ({0})"
 ],
 [
 "You rifle the giant's camp: {0} gold{1}.",
@@ -1590,12 +1590,12 @@ const I18N_STORY = {
 "Zabierasz {0} jako trofeum."
 ],
 [
-"🗣 Intimidate them ({0})",
-"🗣 Zastrasz ich ({0})"
+" Intimidate them ({0})",
+" Zastrasz ich ({0})"
 ],
 [
-"🥷 Go around through the trees ({0})",
-"🥷 Obejdź ich przez las ({0})"
+" Go around through the trees ({0})",
+" Obejdź ich przez las ({0})"
 ],
 [
 "{0} soldiers march a captured {1} down the road in chains.",
@@ -1622,8 +1622,8 @@ const I18N_STORY = {
 "I nikomu w Kolegium ani słowa.”{0}"
 ],
 [
-"🥷 Sneak up and strike first ({0})",
-"🥷 Zakradnij się i uderz pierwszy ({0})"
+" Sneak up and strike first ({0})",
+" Zakradnij się i uderz pierwszy ({0})"
 ],
 [
 "On the altar: {0}.",
@@ -1642,36 +1642,36 @@ const I18N_STORY = {
 "„{0}” Wieść o twoich zbrodniach się niesie."
 ],
 [
-"💰 Pay them off ({0} gold)",
-"💰 Spłać ich ({0} złota)"
+" Pay them off ({0} gold)",
+" Spłać ich ({0} złota)"
 ],
 [
-"🗣 Talk them down ({0})",
-"🗣 Wyperswaduj im to ({0})"
+" Talk them down ({0})",
+" Wyperswaduj im to ({0})"
 ],
 [
 "Someone hates you.{0}",
 "Ktoś cię nienawidzi.{0}"
 ],
 [
-"🥷 Strike from the shadows ({0})",
-"🥷 Uderz z cienia ({0})"
+" Strike from the shadows ({0})",
+" Uderz z cienia ({0})"
 ],
 [
 "Among the bones: {0}.",
 "Wśród kości: {0}."
 ],
 [
-"🐎 Approach slowly and calm it ({0})",
-"🐎 Podejdź powoli i go uspokój ({0})"
+" Approach slowly and calm it ({0})",
+" Podejdź powoli i go uspokój ({0})"
 ],
 [
 "(−{0} health)",
 "(−{0} zdrowia)"
 ],
 [
-"🔎 Check for tracks first ({0})",
-"🔎 Najpierw sprawdź ślady ({0})"
+" Check for tracks first ({0})",
+" Najpierw sprawdź ślady ({0})"
 ],
 [
 "In the crates: {0} gold{1}.",
@@ -1682,8 +1682,8 @@ const I18N_STORY = {
 "Na wpół zakopana w żwirze: kapitańska szkatuła z zamkiem{0}."
 ],
 [
-"🗝 Pick the lock ({0} picks, {1})",
-"🗝 Otwórz zamek ({0} wytrychów, {1})"
+" Pick the lock ({0} picks, {1})",
+" Otwórz zamek ({0} wytrychów, {1})"
 ],
 [
 "The lid creaks open: {0} gold{1}.",
@@ -1898,8 +1898,8 @@ const I18N_STORY = {
 "Wychodzisz z powrotem na światło dnia z: {0}."
 ],
 [
-"🔍 Something about {0} catches your eye.",
-"🔍 Coś w miejscu {0} przykuwa twoją uwagę."
+" Something about {0} catches your eye.",
+" Coś w miejscu {0} przykuwa twoją uwagę."
 ],
 [
 "({0} {1} needed, you have {2}.)",
@@ -1922,20 +1922,20 @@ const I18N_STORY = {
 "W pyle znajdujesz: {0}."
 ],
 [
-"📖 You pocket a book: \"{0}\".",
-"📖 Chowasz książkę: „{0}”."
+" You pocket a book: \"{0}\".",
+" Chowasz książkę: „{0}”."
 ],
 [
-"🗺 Tucked in the lid: {0}.",
-"🗺 Wsunięte w wieko: {0}."
+" Tucked in the lid: {0}.",
+" Wsunięte w wieko: {0}."
 ],
 [
-"✨ On the boss lies something unique: {0}.",
-"✨ Przy bossie leży coś wyjątkowego: {0}."
+" On the boss lies something unique: {0}.",
+" Przy bossie leży coś wyjątkowego: {0}."
 ],
 [
-"🗺 And a scrap of parchment: {0}.",
-"🗺 I skrawek pergaminu: {0}."
+" And a scrap of parchment: {0}.",
+" I skrawek pergaminu: {0}."
 ],
 [
 "Turn ring {0} down",
@@ -2146,8 +2146,8 @@ const I18N_STORY = {
 "Wróć na poziomie {0}."
 ],
 [
-"📖 You read the Oghma Infinium and walk the {0}.",
-"📖 Czytasz Oghma Infinium i kroczysz ścieżką: {0}."
+" You read the Oghma Infinium and walk the {0}.",
+" Czytasz Oghma Infinium i kroczysz ścieżką: {0}."
 ],
 [
 "· the Ebony Blade drinks (+{0})",
@@ -2190,8 +2190,8 @@ const I18N_STORY = {
 "Masz {0}."
 ],
 [
-"🏰 Bought a hall plot in {0}.",
-"🏰 Kupiono działkę pod siedzibę w {0}."
+" Bought a hall plot in {0}.",
+" Kupiono działkę pod siedzibę w {0}."
 ],
 [
 "The steward hands you the deed to a plot in {0}.",
@@ -2274,20 +2274,20 @@ const I18N_STORY = {
 "Bierzesz {0} złota ze skarbca."
 ],
 [
-"💸 Your {0} wasn't paid and left the hall.",
-"💸 {0} nie dostał zapłaty i opuścił siedzibę."
+" Your {0} wasn't paid and left the hall.",
+" {0} nie dostał zapłaty i opuścił siedzibę."
 ],
 [
-"🏰 {0}: paid {1} gold in wages for {2} day{3}.",
-"🏰 {0}: wypłacono {1} złota pensji za dni: {2}{3}."
+" {0}: paid {1} gold in wages for {2} day{3}.",
+" {0}: wypłacono {1} złota pensji za dni: {2}{3}."
 ],
 [
-"🏰 The steward brought in {0} gold.",
-"🏰 Zarządca przyniósł {0} złota."
+" The steward brought in {0} gold.",
+" Zarządca przyniósł {0} złota."
 ],
 [
-"🗝 A thief got into {0} and took {1}.",
-"🗝 Złodziej dostał się do {0} i zabrał: {1}."
+" A thief got into {0} and took {1}.",
+" Złodziej dostał się do {0} i zabrał: {1}."
 ],
 [
 "A thief took {0}.",
@@ -2314,8 +2314,8 @@ const I18N_STORY = {
 "Opłata za przejazd to {0} złota."
 ],
 [
-"⛵ You pay {0} {1} gold and board {2} for {3}.",
-"⛵ Płacisz {0} {1} złota i wsiadasz na {2}, kurs: {3}."
+" You pay {0} {1} gold and board {2} for {3}.",
+" Płacisz {0} {1} złota i wsiadasz na {2}, kurs: {3}."
 ],
 [
 "{0} Bend Will: the dragon bows its head and turns on its own kind",
@@ -2330,12 +2330,12 @@ const I18N_STORY = {
 "{0} Nagięcie Woli ogłusza go (15)"
 ],
 [
-"🗣 You understand {0} (Bend Will).",
-"🗣 Rozumiesz {0} (Nagięcie Woli)."
+" You understand {0} (Bend Will).",
+" Rozumiesz {0} (Nagięcie Woli)."
 ],
 [
-"🗣 You understand {0}: Bend Will grows stronger.",
-"🗣 Rozumiesz {0}: Nagięcie Woli staje się silniejsze."
+" You understand {0}: Bend Will grows stronger.",
+" Rozumiesz {0}: Nagięcie Woli staje się silniejsze."
 ],
 [
 "Baldor Iron-Shaper in Skaal Village knows the Skaal's old way (Smithing {0}).",
@@ -2350,20 +2350,20 @@ const I18N_STORY = {
 "{0} Przeprawa trwa około 10 godzin ({1} w rzeczywistości) i nic nie atakuje statku na morzu."
 ],
 [
-"🐺 You feed on the {0} (+{1} health){2}",
-"🐺 Pożywiasz się: {0} (+{1} zdrowia){2}"
+" You feed on the {0} (+{1} health){2}",
+" Pożywiasz się: {0} (+{1} zdrowia){2}"
 ],
 [
-"🦇 The Vampire Lord drinks its fill{0}",
-"🦇 Wampirzy Lord pije do syta{0}"
+" The Vampire Lord drinks its fill{0}",
+" Wampirzy Lord pije do syta{0}"
 ],
 [
 "It's {0}; the ritual needs 5:00 to 9:00.",
 "Jest {0}; rytuał wymaga godzin od 5:00 do 9:00."
 ],
 [
-"📜 New quest: {0} (Journal).",
-"📜 Nowe zadanie: {0} (Dziennik)."
+" New quest: {0} (Journal).",
+" Nowe zadanie: {0} (Dziennik)."
 ],
 [
 "You save the {0}.",
@@ -2446,8 +2446,8 @@ const I18N_STORY = {
 "{0} ma teraz {1} (+{2} {3})."
 ],
 [
-"⚖️ Bounty in {0}: {1} gold ({2}).",
-"⚖️ Nagroda za głowę w {0}: {1} złota ({2})."
+" Bounty in {0}: {1} gold ({2}).",
+" Nagroda za głowę w {0}: {1} złota ({2})."
 ],
 [
 "The fine is {0} gold.",
@@ -2498,8 +2498,8 @@ const I18N_STORY = {
 "Masz {0} z {1} {2}."
 ],
 [
-"📜 Job done: {0} {1} delivered.",
-"📜 Zlecenie wykonane: dostarczono {0} {1}."
+" Job done: {0} {1} delivered.",
+" Zlecenie wykonane: dostarczono {0} {1}."
 ],
 [
 "The alchemist counts them twice and pays {0} gold.",
@@ -2574,8 +2574,8 @@ const I18N_STORY = {
 "Odpierasz: {0}, ale wymyka się z powrotem przez bramę (+{1})."
 ],
 [
-"🔥 {0} is free of the Daedra.",
-"🔥 {0} jest wolne od daedr."
+" {0} is free of the Daedra.",
+" {0} jest wolne od daedr."
 ],
 [
 "Your share: {0}.",
@@ -2602,8 +2602,8 @@ const I18N_STORY = {
 "{0} wzbija się poza zasięg i dołącza do stada."
 ],
 [
-"🐉 The hunters of the North brought down {0} dragons over {1}.",
-"🐉 Łowcy Północy powalili {0} smoków nad {1}."
+" The hunters of the North brought down {0} dragons over {1}.",
+" Łowcy Północy powalili {0} smoków nad {1}."
 ],
 [
 "Your share: 400 gold, dragon scales{0}.",
@@ -2654,8 +2654,8 @@ const I18N_STORY = {
 "Następny smok za {0} min"
 ],
 [
-"🔥 {0} helped close the Oblivion gate at {1}!",
-"🔥 {0} pomógł zamknąć bramę Otchłani w {1}!"
+" {0} helped close the Oblivion gate at {1}!",
+" {0} pomógł zamknąć bramę Otchłani w {1}!"
 ],
 [
 "Oblivion gates have opened in {0}!",

@@ -189,8 +189,8 @@ const GATHER = (() => {
   function onStep(s, log, t = G.now()) {
     const g = st(s), here = [s.x, s.y];
     for (const n of around(here, spotPx(s))) {
-      if (!g.seen[n.id]) { g.seen[n.id] = 1; if (!g.auto) log?.(`🌿 Spotted ${name(n.ing)} growing by the way`); }
-      if (g.auto && ripe(s, n, t)) { const r = pick(s, n.id, t, true); if (r.ok) log?.(`🌿 ${r.text}`); }
+      if (!g.seen[n.id]) { g.seen[n.id] = 1; if (!g.auto) log?.(` Spotted ${name(n.ing)} growing by the way`); }
+      if (g.auto && ripe(s, n, t)) { const r = pick(s, n.id, t, true); if (r.ok) log?.(` ${r.text}`); }
     }
   }
   function nearby(s, t = G.now()) {
@@ -316,7 +316,7 @@ const GATHER = (() => {
     const b = beds(s), can = plantable(s);
     return `<div class="gbeds"><div class="sub">Garden beds (${b.length}/${BED_MAX}): each harvest gives 2 of every planted ingredient.</div>
       ${b.map((id, i) => `<span class="gbed">${ICONART.item(id, 22)} ${esc(name(id))} <button class="btn sm" data-act="gunplant" data-id="${i}" aria-label="Clear bed">✕</button></span>`).join("")}
-      ${b.length < BED_MAX && can.length ? `<div class="gplant">${can.slice(0, 12).map((id) => `<button class="btn sm" data-act="gplant" data-id="${id}">🌱 ${esc(name(id))}</button>`).join("")}</div>` : b.length < BED_MAX ? '<div class="sub">Carry a wild ingredient (flowers, berries, mushrooms) to plant it.</div>' : ""}</div>`;
+      ${b.length < BED_MAX && can.length ? `<div class="gplant">${can.slice(0, 12).map((id) => `<button class="btn sm" data-act="gplant" data-id="${id}"> ${esc(name(id))}</button>`).join("")}</div>` : b.length < BED_MAX ? '<div class="sub">Carry a wild ingredient (flowers, berries, mushrooms) to plant it.</div>' : ""}</div>`;
   }
 
   // ------------------------------------------------------------------ colour-coded effects
@@ -331,14 +331,14 @@ const GATHER = (() => {
     if (!Number.isFinite(s.x) || s.dungeon) return "";
     const list = nearby(s, t), f = canForage(s, t);
     if (!list.length && !f.ok && !f.left) return "";
-    const rows = list.map((n) => `<div class="item gnode ${n.ripe ? "" : "picked"}">${ICONART.item(n.ing, 30)}<div class="t">${esc(name(n.ing))}<span>${n.ripe ? `${Math.round(n.d)} paces away · ${D.ITEMS[n.ing].weight} wt each` : `Picked · grows back in ~${Math.ceil(growsIn(s, n, t) / 300)} in-game h`}</span></div>${n.ripe ? `<button class="btn sm" data-act="gpick" data-id="${n.id}">Gather</button>` : ""}</div>`).join("");
+    const rows = list.map((n) => `<div class="item gnode ${n.ripe ? "" : "gdone"}">${ICONART.item(n.ing, 30)}<div class="t">${esc(name(n.ing))}<span>${n.ripe ? `${Math.round(n.d)} paces away · ${D.ITEMS[n.ing].weight} wt each` : `Picked · grows back in ~${Math.ceil(growsIn(s, n, t) / 300)} in-game h`}</span></div>${n.ripe ? `<button class="btn sm" data-act="gpick" data-id="${n.id}">Gather</button>` : ""}</div>`).join("");
     const ripeN = list.filter((n) => n.ripe).length;
-    return `<div class="panel gcard"><h2>🌿 Gathering</h2>
+    return `<div class="panel gcard"><h2> Gathering</h2>
       ${rows || '<p class="sub">No plants spotted right here. Patches you pass on the road show on the map as leaves.</p>'}
       <div class="gbtns">${ripeN > 1 ? `<button class="btn" data-act="gpickall">Gather all (${ripeN})</button>` : ""}
-      <button class="btn" data-act="gforage" ${f.ok ? "" : "disabled"} title="${esc(f.why || "Search the ground for whatever grows here")}">🔍 Forage here</button>
-      <button class="btn" data-act="gnotes">📖 Herbalist's notes</button>
-      <button class="btn ${st(s).auto ? "pri" : ""}" data-act="gauto" aria-pressed="${st(s).auto}">${st(s).auto ? "Auto-pick: On" : "Auto-pick: Off"}</button></div>
+      <button class="btn" data-act="gforage" ${f.ok ? "" : "disabled"} title="${esc(f.why || "Search the ground for whatever grows here")}"> Forage here</button>
+      <button class="btn" data-act="gnotes"> Herbalist's notes</button></div>
+      <div class="gauto"><button class="btn ${st(s).auto ? "pri" : ""}" data-act="gauto" aria-pressed="${st(s).auto}">${st(s).auto ? "Auto-pick: On" : "Auto-pick: Off"}</button></div>
       ${!f.ok && f.why ? `<p class="sub">${esc(f.why)}</p>` : ""}</div>`;
   }
 
@@ -347,7 +347,7 @@ const GATHER = (() => {
     const all = Object.keys(TOWNS.INGREDIENT_FX).sort((a, b) => name(a).localeCompare(name(b)));
     const have = (id) => s.inv.filter((r) => r.item === id).reduce((a, r) => a + r.qty, 0);
     const knownN = all.filter((id) => TOWNS.known(s, id).some(Boolean)).length;
-    return `<h2>📖 Herbalist's notes</h2>
+    return `<h2> Herbalist's notes</h2>
       <p class="sub">${knownN} of ${all.length} ingredients studied. Eat one to learn its first effect (Experimenter: more); brewing reveals the rest. <em class="fx-good">Green</em> helps you, <em class="fx-bad">red</em> makes poisons.</p>
       <div class="gnotes">${all.map((id) => `<div class="item">${ICONART.item(id, 30)}<div class="t">${esc(name(id))}${have(id) ? ` <b class="gcount">×${have(id)}</b>` : ""}<span>${fxHTML(s, id)}</span><span class="gwhere">${esc(WHERE[id] || "sold by alchemists")} · ${D.ITEMS[id]?.weight ?? "?"} wt · ${D.ITEMS[id]?.value ?? 0}g</span></div></div>`).join("")}</div>
       <button class="btn" data-act="close" style="width:100%;margin-top:8px">Close</button>`;

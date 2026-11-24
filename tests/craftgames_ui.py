@@ -49,11 +49,10 @@ async def main():
         # quick craft button: plain result
         await clean(pg); await click(pg, "[data-act=smake][data-id=iron_dagger]"); await wait_game("hammer"); await pg.click("#cgquick"); await pg.wait_for_selector("#craftgame", state="detached", timeout=3000)
         res["dagger_quick"] = await pg.evaluate("(()=>{const r=window.__dbg.save().inv.filter(r=>r.item==='iron_dagger').pop(); return [r?.mw||null, r?.temper||0]})()")
-        # pixel style screenshot of the hammer
-        await pg.evaluate("ART.setStyle('pixel')"); await clean(pg)
-        await click(pg, "[data-act=smake][data-id=iron_war_axe]"); await wait_game("hammer"); await play_hammer(False, "cg_hammer_pixel.png")
+        # a second, badly played hammer
+        await clean(pg)
+        await click(pg, "[data-act=smake][data-id=iron_war_axe]"); await wait_game("hammer"); await play_hammer(False, "cg_hammer_bad.png")
         res["axe_bad"] = await pg.evaluate("(()=>{const r=window.__dbg.save().inv.filter(r=>r.item==='iron_war_axe').pop(); return [r?.mw||null, r?.temper||0, SMITH.count(window.__dbg.save(),'iron_war_axe')]})()")
-        await pg.evaluate("ART.setStyle('ink')")
         # ---- jewellery: precision ring
         await clean(pg); await click(pg, "[data-act=fgroup][data-id=jewel]"); await pg.wait_for_timeout(200)
         await click(pg, "[data-act=smake][data-id=gold_ruby_ring]"); res["ring_game"] = await wait_game("precise")
@@ -90,7 +89,6 @@ async def main():
             ids = await pg.evaluate("[...document.querySelectorAll('[data-act=alch]')].map(e=>e.dataset.id).slice(0,2)")
             for i in ids: await click(pg, f"[data-act=alch][data-id='{i}']"); await pg.wait_for_timeout(150)
             await click(pg, "[data-act=brew]"); res["mix_game"] = await wait_game("mix")
-            await pg.evaluate("ART.setStyle('pixel')")
             for i in range(2):
                 await pg.wait_for_timeout(450)
                 await tap("pointerdown")
@@ -98,10 +96,9 @@ async def main():
                     d = await pg.evaluate("(()=>{const s=CG.state(); return s? s.target-s.mixv : -9})()")
                     if d <= 0.005: break
                     await pg.wait_for_timeout(6)
-                if i == 0: await (await pg.query_selector(".cgcard")).screenshot(path="cg_mix_pixel.png")
+                if i == 0: await (await pg.query_selector(".cgcard")).screenshot(path="cg_mix.png")
                 await tap("pointerup")
             await pg.wait_for_selector("#craftgame", state="detached", timeout=20000)
-            await pg.evaluate("ART.setStyle('ink')")
             res["potion"] = await pg.evaluate("window.__dbg.save().inv.filter(r=>String(r.item).startsWith('brew|')).map(r=>r.item)")
         else:
             res["mix_game"] = "no lab button"
@@ -115,16 +112,15 @@ async def main():
         for (x, y) in pts:
             await pg.mouse.click(box["x"] + x * box["width"] / 300, box["y"] + y * box["height"] / 220); await pg.wait_for_timeout(80)
         await pg.wait_for_function("window.__rg", timeout=4000); res["rune"] = await pg.evaluate("window.__rg")
-        # pixel rune shot
-        await pg.evaluate("ART.setStyle('pixel'); window.__rg=null; CG.run('rune',{skill:30,skillName:'Enchanting',what:'Fire on Iron Sword'},(g)=>window.__rg=g)")
+        # a second rune, part-traced
+        await pg.evaluate("window.__rg=null; CG.run('rune',{skill:30,skillName:'Enchanting',what:'Fire on Iron Sword'},(g)=>window.__rg=g)")
         await pg.wait_for_function("CG.state()?.phase==='trace'", timeout=8000)
         pts = await pg.evaluate("CG.state().order.map(i=>CG.state().pts[i])")
         box = await (await pg.query_selector("#cgc")).bounding_box()
         for (x, y) in pts[:3]:
             await pg.mouse.click(box["x"] + x * box["width"] / 300, box["y"] + y * box["height"] / 220); await pg.wait_for_timeout(60)
-        await (await pg.query_selector(".cgcard")).screenshot(path="cg_rune_pixel.png")
+        await (await pg.query_selector(".cgcard")).screenshot(path="cg_rune_part.png")
         await pg.click("#cgquick"); await pg.wait_for_function("window.__rg", timeout=4000); res["rune_quick"] = await pg.evaluate("window.__rg")
-        await pg.evaluate("ART.setStyle('ink')")
         # ---- "always play" checkbox is remembered in settings
         await pg.evaluate("window.__rg=null; CG.run('hammer',{skill:20},(g)=>window.__rg=g)")
         await pg.click("#cgpref"); await pg.click("#cgquick"); await pg.wait_for_function("window.__rg", timeout=5000)

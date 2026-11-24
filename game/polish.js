@@ -10,22 +10,20 @@ const POLISH = (() => {
   const MODS = { UIART: () => typeof UIART !== "undefined", PLACEART: () => typeof PLACEART !== "undefined", ICONART: () => typeof ICONART !== "undefined" };
   const has = (n) => { try { return MODS[n] ? MODS[n]() : false; } catch { return false; } };
 
-  // ---- the panel texture: a dark, faintly grained "leather and smoke" tile, made once per art style
-  let texStyle = null;
+  // ---- the panel texture: a dark, faintly grained "leather and smoke" tile, made once
+  let texDone = false;
   function texture() {
     if (typeof ART === "undefined" || typeof document === "undefined") return;
-    const st = ART.style();
-    if (st === texStyle) return; texStyle = st;
+    if (texDone) return; texDone = true;
     try {
       const u = ART.url(160, 160, (g, H, w, h) => {
         g.fillStyle = "#16181b"; g.fillRect(0, 0, w, h);
         const r = ART.seeded("tex");
         for (let i = 0; i < 900; i++) { g.fillStyle = r() < 0.5 ? "rgba(255,240,210,0.035)" : "rgba(0,0,0,0.25)"; g.fillRect(r() * w, r() * h, 1 + r() * 2, 1); }
         for (let i = 0; i < 6; i++) { const y = r() * h; g.strokeStyle = "rgba(255,240,210,0.025)"; g.lineWidth = 1; g.beginPath(); g.moveTo(0, y); g.bezierCurveTo(w * 0.3, y + 8 * (r() - 0.5), w * 0.7, y + 8 * (r() - 0.5), w, y); g.stroke(); }
-      }, { key: "ui-texture", style: st === "pixel" ? "ink" : st });   // grain stays fine-grained in both looks
+      }, { key: "ui-texture" });
       if (u) document.documentElement.style.setProperty("--tex", `url(${u})`);
     } catch { /* decoration only */ }
-    document.documentElement.classList.toggle("art-pixel", st === "pixel");
   }
 
   // ---- banners (one at a time, queued; never more than a few waiting)
@@ -37,7 +35,8 @@ const POLISH = (() => {
   }
   function banner(kind, title, big, icon = "") {
     if (typeof document === "undefined") return;
-    if (kind === "objective" && typeof HUD2 !== "undefined" && HUD2.objFlash(big)) return;   // hud2.js: a new objective flashes on the line under the compass
+    if (kind === "objective" && typeof HUD2 !== "undefined" && HUD2.objFlash(big)) return;
+    if (typeof SKILLUP !== "undefined" && SKILLUP.claim(kind, big)) return;   // skillup.js: skill-ups and level-ups get the Skyrim toast with a bar   // hud2.js: a new objective flashes on the line under the compass
     // a burst of skill rises merges into one banner
     const last = queue[queue.length - 1];
     if (last && last.kind === kind && kind === "skill" && queue.length) { last.big += ` · ${big}`; return; }
@@ -68,18 +67,18 @@ const POLISH = (() => {
       const sk = skills.find((s) => m[1].endsWith(s)) || m[1].trim();
       banner("skill", "Skill increased", `${sk} ${m[2]}`, skillIcon(sk));
     }
-    const q = text.match(/📜 ([^:]+): “([^”]+)” done/);
+    const q = text.match(/ ([^:]+): “([^”]+)” done/);
     if (q) banner("quest", "Quest completed", q[2], has("UIART") ? UIART.quest(LINE[q[1]] || "jobs", 36) : "");
     // Skyrim: the next quest in the line starts, with its first objective
     const no = text.match(/New objective: ([^.]+)\. ([^]*)$/);
     if (no) { banner("quest", "Quest started", no[1].trim(), q && has("UIART") ? UIART.quest(LINE[q[1]] || "jobs", 36) : ""); const first = no[2].split(/(?<=[.!?])\s/)[0]; if (first) banner("objective", "Objective", first.length > 80 ? first.slice(0, 77) + "…" : first, ""); }
-    const lineDone = text.match(/🏆 ([^!]+) complete!/);
+    const lineDone = text.match(/ ([^!]+) complete!/);
     if (lineDone) banner("quest", "Questline completed", lineDone[1], "");
-    const job = !q && text.match(/📜 Job done: ([^.]+)\./);
+    const job = !q && text.match(/ Job done: ([^.]+)\./);
     if (job) banner("quest", "Job done", job[1], has("UIART") ? UIART.quest("jobs", 36) : "");
-    const a = text.match(/🏆 Achievement: (\S+) (.+)$/);
+    const a = text.match(/ Achievement: (\S+) (.+)$/);
     if (a) banner("ach", "Achievement", a[2], achIcon(a[2]));
-    const d = text.match(/📍 Discovered: ([^·]+?)(?: and \d+ more)? ·/);
+    const d = text.match(/ Discovered: ([^·]+?)(?: and \d+ more)? ·/);
     if (d) {
       const first = d[1].split(",")[0].trim();
       const pic = has("PLACEART") && typeof WORLD !== "undefined" && WORLD.places[first] ? miniPlace(first) : "";
@@ -127,7 +126,7 @@ const POLISH = (() => {
   function toastIcon(text) {
     if (!has("UIART")) return "";
     if (/increased to \d+/.test(text)) { const m = text.match(/([A-Z][A-Za-z'\- ]+?) increased to/); const sk = (D.ALL_SKILLS || []).find((s) => m && m[1].endsWith(s)); if (sk) return UIART.skill(sk, 22); }
-    if (/^🛒|gold|Sold /.test(text) && has("ICONART")) return coin();
+    if (/^|gold|Sold /.test(text) && has("ICONART")) return coin();
     return "";
   }
   function coin() {

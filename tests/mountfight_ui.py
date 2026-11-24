@@ -1,10 +1,10 @@
 """Mounted combat (mountfight.js) on the turn-by-turn fight screen. Usage: py mountfight_ui.py PORT -> RESULT OK
 Serve game/ first:  py -m http.server PORT --directory ../game
-At 390x844 (phone, touch) and 1920x1080 (PC), in both art styles (ink and pixel):
+At 390x844 (phone, touch) and 1920x1080 (PC), in the ink art style:
 - riding into a road fight: you start in the saddle, the rider sits on the horse in the fight picture, your horse's
   health bar is under yours, Dismount is offered with its AP
 - the opening blow is a mounted charge; Dismount puts you on foot (the horse waits beside you), Mount puts you back up
-- a horse that's brought down: the bar says Knocked down, Mount is gone, and after the fight it gets back up
+- a horse that's brought down: the bar says Knocked down, Mount is gone, and after the fight it stays with you, downed
 - walking beside your horse: it waits, Mount is offered
 - in Polish (phone): the moves and the horse bar are in Polish
 Fails on page errors or sideways scrolling. Screenshots in tests/out_mountfight/ (gitignored)."""
@@ -69,7 +69,7 @@ async def run(p, w, h, touch, lang=None):
     await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Rider"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
     await pg.evaluate("localStorage.setItem('rotn_prefs', JSON.stringify({...JSON.parse(localStorage.getItem('rotn_prefs')||'{}'), tips:false}))")
     tag0 = f"{w}x{h}" + ("_pl" if PL else "")
-    for style in (["ink"] if PL else ["ink", "pixel"]):
+    for style in ["ink"]:
         tag = f"{tag0}_{style}"
         # ---------------- riding into the fight
         await pg.evaluate(START, [style, True]); await pg.wait_for_timeout(600)
@@ -102,8 +102,8 @@ async def run(p, w, h, touch, lang=None):
         await pg.screenshot(path=OUT + f"{tag}_downed.png")
         await finish(pg)
         res = await pg.evaluate("document.querySelector('#modal')?.innerText||''")
-        horse = await pg.evaluate("(()=>{const S=__dbg.save(); return {hp:S.horse&&S.horse.hp, away:!!(S.horse&&S.horse.away), up:HORSES.riding(S)}})()")
-        ok(horse["hp"] and horse["hp"] > 0 and not horse["away"] and horse["up"], f"{tag}: after the fight the horse is back up {horse} {res[:120]!r}")
+        horse = await pg.evaluate("(()=>{const S=__dbg.save(); return {hp:S.horse&&S.horse.hp, away:!!(S.horse&&S.horse.away), up:HORSES.riding(S), down:HORSES.downed(S)}})()")
+        ok(horse["down"] and not horse["away"] and not horse["up"], f"{tag}: after the fight the horse stays with you, downed {horse} {res[:120]!r}")
         await pg.screenshot(path=OUT + f"{tag}_after.png")
         await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
         # ---------------- walking beside your horse
