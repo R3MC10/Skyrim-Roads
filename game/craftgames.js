@@ -9,6 +9,7 @@
    item itself, and it also makes the games easier (wider zones). Bonuses never add XP, and they fade after the first few
    bonus crafts of each kind in an in-game day. Only very bad play (Botched) can fail, and it gives part of the materials back. */
 const CG = (() => {
+  const LX = (x) => (typeof I18N_SWEEP !== "undefined" ? I18N_SWEEP.c(x) : x);   // words drawn on canvas, in the player's language
   const DOM = typeof document !== "undefined";
   const params = () => (DOM ? new URLSearchParams(location.search) : new URLSearchParams(""));
   const automated = () => DOM && (navigator.webdriver || params().has("notut"));
@@ -283,7 +284,7 @@ const CG = (() => {
       rect(70, 70, 120, 110, "#2a2622"); rect(78, 90 + (1 - Math.min(1, S.mixv * 0.6 + 0.4)) * 60, 104, 86 - (1 - Math.min(1, S.mixv * 0.6 + 0.4)) * 60, col);
       if (!px) { c.save(); c.globalAlpha = 0.35; disc(130, 120, 50, col, 30); c.restore(); }
       rect(214, 70, 60, 60, "#231d18"); rect(220, 76, 48, 48, mixColour(S.target));
-      c.fillStyle = "#cfc6b0"; c.font = "12px sans-serif"; c.textAlign = "center"; c.fillText("Aim", 244, 146);
+      c.fillStyle = "#cfc6b0"; c.font = "12px sans-serif"; c.textAlign = "center"; c.fillText(LX("Aim"), 244, 146);
       rect(24, 200, 252, 8, "#231d18"); for (let i = 0; i < 25; i++) rect(24 + i * 10.08, 200, 10.1, 8, mixColour(i / 24));
       rect(24 + clamp(S.mixv, 0, 1) * 252 - 2, 194, 4, 20, "#f4ecd8");
     }
