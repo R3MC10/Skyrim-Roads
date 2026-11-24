@@ -69,6 +69,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Smart AI combat (default; custom tactics optional), crafting mini-games, motion design (63)
 
 ## In progress (write your name before you start)
+- Claude: character art upgrade (figart.js): one shared, bone-rigged character renderer (keyframed clips blended over time) with real proportions, shading, race, sex, hair and worn gear (idle, walk, attack, cast, block, hit, down, riding, sitting), used by the travel strip, fights, hero tab, paper doll and portraits; humanoid foes can borrow it via HEROART.figure(card, {gear}). Branch claude/heroart2.
 - Claude: visual overhaul (fits every screen and resolution) — branches claude/fit-*, in passes.
 - Kacper: reading the fight (fightread.js): foe intents, health forecasts for poison/burning/blows on both sides, turn-by-turn playback with banners and round summaries, low-health warning, combat sounds (ElevenLabs, `node scripts/gen_audio.mjs game/ combat`). Branch ccr-23a36e7d-impjqi.
 - Kacper: painted battle scenes (battlescene.js + bscdata.js, pictures bs-/bsf-/bsp-*.webp from the scene pack via scripts/import_battlescenes.py). Branch ccr-23a36e7d-impjqi.
