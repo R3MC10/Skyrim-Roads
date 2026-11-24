@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b136", build: 136, date: "24 Nov 2026", title: "Enemies come alive", items: [
+      "Every enemy now moves like your hero does: they breathe while they wait, wind up and swing, bite, claw, stomp, breathe fire or cast, flinch when you hit them, reel from big blows, duck aside when you miss, and crumple to the ground when beaten. Beat you, and they gloat.",
+      "Wolves lunge and snap, bears rear up and swipe, spiders rear back and bite, mudcrabs pinch, dragons rear up and spread their wings before they breathe, mammoths stomp, ice wraiths coil and strike.",
+      "The painted enemy pictures move too: they bend, lunge into their attacks, recoil when hit and fall over. Works in both the hand-drawn and the pixel art style.",
+    ] },
     { id: "b135", build: 135, date: "24 Nov 2026", title: "No more flickering popups", items: [
       "Fixed: popups (like tapping an equipment slot) flickered for a split second just after they opened. They now open smoothly and stay put.",
     ] },
