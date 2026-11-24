@@ -43,6 +43,13 @@ const PATCHNOTES = (() => {
       "On your horse you sit in the saddle, and the horse has your horse's coat colour. Standing, it swishes its tail and nods its head; on the road it walks, and on good roads it gallops.",
       "Other players and your party show up the same way, a bit smaller, with a green ring under party members. Works in both art styles; with Reduce motion on, everyone stands still.",
     ] },
+    { id: "b161-dungeonvote", build: 161, date: "24 Nov 2026", title: "The whole party votes in dungeons", items: [
+      "In a party dungeon everyone gets a say now: which way to go at a fork, and what to do in each room (fight, sneak past, run, pick the lock, rest, read the book...). Tap a choice to vote.",
+      "Your face pops up next to the choice you picked, on everyone's phone, as soon as you tap. Changed your mind? Tap another choice before the vote closes.",
+      "Most votes wins. On a tie the leader's vote decides. The vote closes when everyone has voted, or after 20 seconds (watch the ring); anyone who didn't vote just doesn't count, and someone who dropped out never holds the party up.",
+      "The leader also has a Decide now button. Drinking a healing potion is still your own call, no vote needed. Playing alone works just like before.",
+      "New Speech perk, Voice of Reason (needs Persuasion): in a party dungeon vote, your vote counts twice.",
+    ] },
     { id: "b143-followeranim", build: 143, date: "24 Nov 2026", title: "Followers fight with their whole body", items: [
       "Followers and party members now really fight in the fight picture: they swing their weapon or draw their bow, cast their spells, raise their shield and flinch when they get hit.",
       "A follower who is knocked down drops to the ground and lies there until someone pulls them back up, and then you see them get back on their feet.",
