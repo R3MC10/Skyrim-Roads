@@ -69,6 +69,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Smart AI combat (default; custom tactics optional), crafting mini-games, motion design (63)
 
 ## In progress (write your name before you start)
+- Claude: cone of sight on the map (vision.js): heading cone through the fog, spotting places/travellers, range by time/weather/hills/perks, party cones. Branch claude/visioncone.
 - Claude: fight controls overhaul (fightctl.js): big action bar with drawn icons and AP cost pips, reasons on greyed-out moves, quick slots for favourite spells/potions/shouts, tap-to-choose targets for healing, press feedback and buzz, keyboard keys on PC (1-9, Space, M, I, Esc). Branch claude/combatui.
 - Claude: something at every place (placestuff.js): every map location offers trade, work, a job, a blessing, a stash, herbs or a search. Branch claude/fullmap.
 - Claude: shared party fights (sharedfight.js): everyone in a party plays the same fight on their own full fight screen, with their own moves. Branch claude/partysync.
