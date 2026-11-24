@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b144-bugreport", build: 144, date: "24 Nov 2026", title: "Report a problem from inside the game", items: [
+      "Found a bug, a wrong number or a typo? Press F12 on a PC, or open Settings and tap Report a problem on your phone.",
+      "Write a short title and what happened, pick a kind (bug, balance, art, text or idea) and send. It goes straight to the people fixing the game.",
+      "The report brings along what helps find the problem: the game build, your device type, screen size, art style, where you are, your level and the game's recent errors. Nothing personal beyond your hero's name.",
+      "No connection? The report waits on your device and sends itself later.",
+    ] },
     { id: "b143-followertab", build: 143, date: "24 Nov 2026", title: "Your follower gets their own tab", items: [
       "Your follower now has their own Follower tab in the Character menu, next to Skills, Character and Perks. Everything about them lives there: overview, bond, gear, magic, tactics, perks, fighting style and Dismiss.",
       "The Character page only keeps one short line about them; tap it to jump to the tab. With nobody following you, the tab tells you who you can hire and where.",

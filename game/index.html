@@ -2470,7 +2470,20 @@ html.art-pixel .ft-detail .sky-ico img{image-rendering:pixelated}
   .sky-row.ft-cols .nm img.art.ico{width:22px;height:22px;margin-right:5px}
   .ft-cats .sky-cat{min-width:54px;padding:4px 3px}
 }
+/* bugreport.js: Report a problem (F12 / Settings) */
+.modal.bugrep{z-index:60}
+.brsheet{max-width:520px;width:100%}
+.brsheet .brsub{font-size:14px;margin:0 0 10px}
+.brsheet .brl{display:block;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin:10px 0 4px}
+.brsheet input,.brsheet textarea{width:100%;box-sizing:border-box;background:rgba(0,0,0,.35);color:var(--ink);border:1px solid #4a4237;border-radius:6px;padding:9px 10px;font:inherit;font-size:16px}
+.brsheet textarea{resize:vertical;min-height:96px}
+.brsheet .brcats{flex-wrap:wrap}
+.brsheet .brnote{font-size:12px;margin:8px 0 4px}
+.brsheet .brmsg{min-height:1.3em;margin:6px 0;font-weight:600}
+.brsheet .brmsg.good{color:var(--gold,#d8b65e)}.brsheet .brmsg.bad{color:#e07a5f}
+.brsheet .grid2{margin-top:6px}
 </style>
+<script src="bugreport.js"></script>
 <script src="access.js"></script>
 </head>
 <body>
@@ -2642,6 +2655,7 @@ html.art-pixel .ft-detail .sky-ico img{image-rendering:pixelated}
 <script src="i18n_accounts.js"></script>
 <script src="i18n_sweep.js"></script>
 <script src="i18n_balfear.js"></script>
+<script src="i18n_bugreport.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>

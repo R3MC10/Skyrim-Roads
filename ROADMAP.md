@@ -69,6 +69,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Smart AI combat (default; custom tactics optional), crafting mini-games, motion design (63)
 
 ## In progress (write your name before you start)
+- Claude: Report a problem (bugreport.js + server/src/reports.js): F12 on PC / Settings button on phones, title + what happened + kind, auto-attached build, platform, screen, art style, view, level, last 40 error-log lines and a state snapshot; offline queue; server POST /api/report → GitHub issue. Branch claude/bugreport.
 - Claude: follower gets their own Character tab (followertab.js): Skills · Character · Follower · Perks…, all follower management moved there, one-line summary on Character, empty state with where to hire, SkyUI-style gear list (their pack / yours, categories, sortable columns, ◆ worn, details with comparison, Give / Give & equip / Equip / Take). Branch claude/followertab.
 - Claude: Polish sweep (i18n_sweep.js): canvas words in the fight picture, minigames and map labels go through the translator; fight log lines, foe and spell names, leftover toasts in Polish; tests/test_polishsweep.js. Branch claude/polish-sweep.
 - Claude: fear and foe-heal limits (foecap.js): Battle Cry / Dismay / fear / calm hold bosses 2 turns (3 a fight) and elites 3 (5 a fight), then they stay rattled (softer blows); foe healing capped at 65% health, 35% a fight, 3-turn rest; Aspect of Terror +1 turn on big foes; tests/test_balfear.js sim. Branch claude/balance-fear.
@@ -106,6 +107,12 @@ our own marked [OURS]; plain-language UI; phone first.
 - Claude: party votes on the road (partyplay.js): everyone with the leader sees the same encounter/event window, members vote, their faces pop up by the option they picked, only the leader acts. Branch claude/partyvote.
 - Claude: werewolf and vampire paths, part 2 (beastpaths.js): Moonblood bites from werewolves, the Ashen Court's offer, Beast Form and Vampire Lord moves with their own AP costs and drawbacks, vampire powers by hunger stage and the sun in fights, townsfolk reacting, new perk stars, forms shown on every phone in shared party fights. Branch claude/beastpaths.
 - Claude: great world events (greatevents.js): timed, date-seeded events with a map banner and countdown: a dragon assault on a town (3-phase boss, parties of up to 8), a Daedric rift, a bandit army besieging a hold, and town fairs (games, prizes, cheap shops). Rewards by share, world after-effects (burned town rebuilds, plundered hold, Jarl's thanks), 4 perks. Branch claude/worldevents.
+
+## Player reports
+Player reports: GitHub issues labelled player-report; Claude picks them up and fixes them.
+- In the game: F12 on a PC, or Settings → Report a problem on a phone. The kind (bug, balance, art, text, idea) is a second label.
+- The server (server/src/reports.js) needs the env var GITHUB_REPORT_TOKEN on Railway: a fine-grained token for R3MC10/Skyrim-Roads with Issues: read and write. Without it reports are kept in the server's database (reports table) and the log says "report stored (no token)".
+- Limits: 5 reports an hour per IP, 20 KB description, 300 KB whole report. Offline reports wait on the device and send themselves later.
 
 ## Standing rules
 - Perk trees grow with the game: every new system (gathering, magic, encounters, crafting, party play...) adds or adjusts perks with real effects in the matching trees (perkfx.js), keeping old perk ids and a clean star layout.
