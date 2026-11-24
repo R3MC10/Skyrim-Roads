@@ -14,16 +14,16 @@ ok(typeof FIGART!=="undefined" && HEROART.sprite===FIGART.sprite && HEROART.draw
 const poses=Object.keys(FIGART.POSES);
 const items=Object.keys(D.ITEMS).filter(k=>{const v=D.ITEMS[k];return v.slot==="weapon"||G.ARMOR_SLOTS.includes(v.slot)});
 let n=0;
-// every item on every race in a few clips, both styles
+// every item on every race in a few clips
 for(const r of Object.keys(D.RACES)) for(const id of items){
   const it=D.ITEMS[id], slot=it.slot, look={r, id:"f"+n, eq:{[slot]:id}, gl:{w:it.enchant?it.enchant.effect:undefined}, sx:n%2?"f":undefined, v:n%9===0?1:0};
-  const pose=poses[n%poses.length], cv=FIGART.sprite({look},{pose, frame:n, h:40, style:n%3?"ink":"pixel", horse:"#6b4a2e"});
+  const pose=poses[n%poses.length], cv=FIGART.sprite({look},{pose, frame:n, h:40, horse:"#6b4a2e"});
   ok(cv && cv.width>0 && isFinite(cv.ax) && isFinite(cv.ay), "sprite "+id+" "+pose); n++;
 }
 // a fully geared hero through every clip and frame, with a jewelry slot the save may not have yet
 const s=G.newSave("A","Ann","nord"); for(const id of ["steel_armor","steel_helmet","steel_gauntlets","steel_boots","steel_shield","steel_sword"]) { const rid=G.give(s,id); G.equip(s,rid); }
 const L=HEROART.lookOf(s), L2={...L, eq:{...L.eq, amulet:"amulet_gold", ring:"ring_silver"}};
-for(const p of poses) for(let f=0; f<FIGART.POSES[p]; f++) { FIGART.sprite(s,{pose:p,frame:f,style:"ink"}); FIGART.sprite({look:L2},{pose:p,frame:f,style:"pixel"}); }
+for(const p of poses) for(let f=0; f<FIGART.POSES[p]; f++) { FIGART.sprite(s,{pose:p,frame:f}); FIGART.sprite({look:L2},{pose:p,frame:f}); }
 // the rig: bones keep their lengths whatever the clip
 const sp=FIGART.specOf(L);
 for(const p of poses) for(let t=0;t<1;t+=0.1){

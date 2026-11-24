@@ -93,7 +93,8 @@ for (const L of [10, 25, 40]) {
   const m = k, f = (o) => `rounds ${(o.r / m).toFixed(1)}, win ${(100 * o.win / m).toFixed(0)}%, healed ${(100 * o.heal / m).toFixed(0)}% of its health a fight (most ${(100 * o.most).toFixed(0)}%), best heal-back after dropping below half ${(100 * o.peak).toFixed(0)}%, fights healed past 70% ${o.over}`;
   console.log(`mages level ${L}: before ${f(acc.z)}\n                after  ${f(acc.a)} (${m} fights each)`);
   ok(acc.a.over === 0, `level ${L}: no foe heals back past 70% after dropping below half`);
-  ok(acc.a.capped <= 0.36 && acc.a.most <= 0.9, `level ${L}: healing spells, potions and drain give at most 35% of its health a fight (${(100 * acc.a.capped).toFixed(0)}%; regeneration and Avoid Death come on top)`);
+  // "most" adds regeneration on top of the 35% cap; with paralysis now capped on elites too (foecap.js) the longest fights run a bit longer
+  ok(acc.a.capped <= 0.36 && acc.a.most <= 0.95,`level ${L}: healing spells, potions and drain give at most 35% of its health a fight (${(100 * acc.a.capped).toFixed(0)}%; regeneration and Avoid Death come on top)`);
   ok(acc.a.r >= acc.z.r * 0.8, `level ${L}: mage fights don't suddenly end too quickly`);
   ok(acc.a.win >= acc.z.win - 0.1 * m && acc.a.win / m <= 0.98 || L >= 40, `level ${L}: mage fights stay fair`);
 }

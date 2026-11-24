@@ -55,7 +55,7 @@ async def main():
                 await pg.evaluate("[...document.querySelectorAll('#modal h3')].find(h=>/Accessibility/.test(h.textContent))?.scrollIntoView({block:'start'})")
 
             # text sizes: the map screen, the settings sheet, the hero page
-            for i in range(4):
+            for i in [-1, 0, 2, 3]:
                 await pg.evaluate(f"ACCESS.pref('a11yText','{i}')")
                 z = await pg.evaluate("getComputedStyle(document.documentElement).zoom")
                 await pg.evaluate(CLEAR); await pg.evaluate("scrollTo(0,0)"); await shot(f"text{i}_map")
@@ -66,7 +66,7 @@ async def main():
             # the settings buttons themselves change the size (taps, not code)
             await settings()
             await pg.click("#modal [data-k=a11yText][data-v='2']"); await pg.wait_for_timeout(300)
-            if await pg.evaluate("ACCESS.settings().a11yText") != 2: fails.append("tapping Bigger did not stick")
+            if await pg.evaluate("ACCESS.settings().a11yText") != 2: fails.append("tapping Large did not stick")
             if not await pg.evaluate("JSON.parse(localStorage.getItem('rotn_prefs')).a11yText===2"): fails.append("text size not saved")
             # map taps still land where you tap when zoomed: tap the player's town marker
             await pg.evaluate(CLEAR)
@@ -88,13 +88,12 @@ async def main():
                 if (mode == "none") != (cv == ["#d65a4a", "#c0392b"]): fails.append(f"canvas colour map {mode}: {cv}")
                 print(tag, "colour", mode, "--hp", hp, "canvas", cv)
             await pg.evaluate("ACCESS.pref('a11yColour','deutan')")
-            await pg.evaluate("()=>{ ART.setStyle('pixel'); document.documentElement.classList.add('art-pixel'); }")
             await pg.evaluate("location.reload()"); await pg.wait_for_timeout(1800)
             await pg.evaluate("document.querySelector('.press')?.click()"); await pg.wait_for_timeout(200)
             await pg.evaluate("document.querySelector('.mi[data-t=continue]')?.click()"); await pg.wait_for_timeout(1500)
-            await pg.evaluate(CLEAR); await shot("cb_deutan_pixel_map")
+            await pg.evaluate(CLEAR); await shot("cb_deutan_reload_map")
             if await pg.evaluate("document.documentElement.dataset.cb") != "deutan": fails.append("colour mode not restored after reload")
-            await pg.evaluate("()=>{ ART.setStyle('ink'); document.documentElement.classList.remove('art-pixel'); ACCESS.pref('a11yColour','none'); }")
+            await pg.evaluate("()=>{ ACCESS.pref('a11yColour','none'); }")
 
             # high contrast, reduce motion, one hand (right and left), and everything at once at the biggest size
             await pg.evaluate("ACCESS.pref('a11yContrast','true')"); await pg.evaluate(CLEAR); await shot("contrast_map")

@@ -6,21 +6,29 @@
      Colour help   protanopia / deuteranopia / tritanopia: CSS variables for health / magicka / stamina, danger,
                    buffs, loot rarity and enemy colours, plus a small colour map that canvas drawing goes through
                    (map markers, fight bars) — swapped at the canvas fillStyle / strokeStyle level, so the art files
-                   need no changes and both art styles keep working.
+                   need no changes.
      High contrast brighter grey text, solid dark panels, firmer outlines.
      Reduce motion "auto" follows the phone's setting; "on" / "off" override it. Every module that asks
                    matchMedia("(prefers-reduced-motion: reduce)") gets this answer, so screen shake, hit flashes,
                    parallax and drifting effects all switch off together; CSS animations are cut to nothing.
      One hand      main buttons (menu, friends, map zoom, favourites, compass) gather at the bottom, left or right.
+     Easy timing   timed mini-games give more time and wider sweet spots. Any mini-game can ask:
+                     A11Y.timingEase()  → 1, or 1.5 with Easy timing: multiply time limits by it (or divide sweep speeds)
+                     A11Y.zoneEase()    → 1, or 1.4 with Easy timing: multiply sweet-spot / safe-zone widths by it
+     Colour is never the only signal: with a colour-blind mode on, bars get patterns (magicka striped, stamina ticked),
+                   danger words get a shape (○ minor, ◆ dangerous, ⚠ deadly) and good/bad effects an arrow (CSS).
    Saved in the same "rotn_prefs" store as the other settings.
    ACCESS.settingsHTML(seg) / ACCESS.pref(key, value) are the two hooks Settings uses. */
 const ACCESS = (() => {
   const DOM = typeof document !== "undefined" && typeof window !== "undefined";
   const KEY = "rotn_prefs";
-  const SIZES = [1, 1.12, 1.25, 1.38];
+  const SIZES = [1, 1.12, 1.25, 1.38], SMALL = 0.88;   // index -1 is Small; 1 ("Big" in old saves) now shows as Large
   const SIZE_NAMES = ["Normal", "Big", "Bigger", "Biggest"];
+  const TEXT_OPTS = [[-1, "Small"], [0, "Normal"], [2, "Large"], [3, "Huge"]];
+  const sizeOf = (i) => (i < 0 ? SMALL : SIZES[i] || 1);
+  const TIME_EASE = 1.5, ZONE_EASE = 1.4;
   const MODES = ["none", "protan", "deutan", "tritan"];
-  const DEF = { a11yText: 0, a11yColour: "none", a11yContrast: false, a11yMotion: "auto", a11yHand: "off" };
+  const DEF = { a11yText: 0, a11yColour: "none", a11yContrast: false, a11yMotion: "auto", a11yHand: "off", a11yTiming: false };
 
   // ---- colours. One rarity set works for all three types (checked with colour-blind simulation in the tests).
   const RARITY = { "q-common": "#ece8de", "q-fine": "#20c0a0", "q-superior": "#5b8cff", "q-exquisite": "#f0a8ff", "q-legendary": "#ffd84a", "q-unique": "#ff5a3a" };
@@ -56,11 +64,13 @@ const ACCESS = (() => {
     try { p = JSON.parse((DOM && localStorage.getItem(KEY)) || "{}") || {}; } catch { p = {}; }
     const o = { ...DEF };
     for (const k of Object.keys(DEF)) if (p[k] !== undefined) o[k] = p[k];
-    o.a11yText = Math.max(0, Math.min(3, Math.round(Number(o.a11yText) || 0)));
+    o.a11yText = Math.max(-1, Math.min(3, Math.round(Number(o.a11yText) || 0)));
+    if (o.a11yText === 1) o.a11yText = 2;   // the old "Big" step folds into Large
     if (!MODES.includes(o.a11yColour)) o.a11yColour = "none";
     o.a11yContrast = o.a11yContrast === true || o.a11yContrast === "true";
     if (!["auto", "on", "off"].includes(o.a11yMotion)) o.a11yMotion = "auto";
     if (!["off", "left", "right"].includes(o.a11yHand)) o.a11yHand = "off";
+    o.a11yTiming = o.a11yTiming === true || o.a11yTiming === "true";
     return o;
   }
   let cur = read();
@@ -156,7 +166,7 @@ const ACCESS = (() => {
   // ---- put it all on the page
   function apply() {
     if (!DOM) return;
-    const h = document.documentElement, sc = screenScale(), z = +(SIZES[cur.a11yText] * sc).toFixed(3);
+    const h = document.documentElement, sc = screenScale(), z = +(sizeOf(cur.a11yText) * sc).toFixed(3);
     lastScale = sc;
     if (z !== 1) fixViewportUnits();
     h.style.setProperty("--tz", String(z));
@@ -168,7 +178,11 @@ const ACCESS = (() => {
     h.classList.toggle("a11y-still", reduceMotion());
     h.classList.toggle("a11y-1h", cur.a11yHand !== "off");
     h.classList.toggle("a11y-1h-left", cur.a11yHand === "left");
+    h.classList.toggle("a11y-easy", cur.a11yTiming);
   }
+  /* timed mini-games ask these (see the top of the file) */
+  const timingEase = () => (cur.a11yTiming ? TIME_EASE : 1);
+  const zoneEase = () => (cur.a11yTiming ? ZONE_EASE : 1);
 
   // ---- settings
   function settingsHTML(seg) {
@@ -176,18 +190,19 @@ const ACCESS = (() => {
     const row = (label, html, hint) => `<div class="setrow a11y-col"><span>${label}</span>${html}${hint ? `<small class="a11y-hint">${hint}</small>` : ""}</div>`;
     const cbHint = { none: "", protan: "For red-blindness (protanopia): health is orange, stamina yellow, safe things blue.", deutan: "For green-blindness (deuteranopia): health is orange, stamina yellow, safe things blue.", tritan: "For blue-blindness (tritanopia): magicka is cyan, stamina pale, safe things teal." }[c.a11yColour];
     return `<h3>Accessibility</h3>
-      ${row("Text size", seg("a11yText", SIZE_NAMES.map((n, i) => [i, n]), c.a11yText))}
+      ${row("Text size", seg("a11yText", TEXT_OPTS, c.a11yText))}
       ${row("Colour-blind help", seg("a11yColour", [["none", "Off"], ["protan", "Red"], ["deutan", "Green"], ["tritan", "Blue"]], c.a11yColour), cbHint || "Pick the colour that's hard for you to see.")}
       ${row("High-contrast text", seg("a11yContrast", [[false, "Off"], [true, "On"]], c.a11yContrast))}
       ${row("Reduce motion", seg("a11yMotion", [["auto", "Auto"], ["on", "On"], ["off", "Off"]], c.a11yMotion), "No screen shake, flashes or drifting. Auto follows your phone's setting. A few effects change the next time you open the game.")}
-      ${row("One-hand mode", seg("a11yHand", [["off", "Off"], ["left", "Left hand"], ["right", "Right hand"]], c.a11yHand), "Moves the main buttons to the bottom, where your thumb is.")}`;
+      ${row("One-hand mode", seg("a11yHand", [["off", "Off"], ["left", "Left hand"], ["right", "Right hand"]], c.a11yHand), "Moves the main buttons to the bottom, where your thumb is.")}
+      ${row("Easy timing", seg("a11yTiming", [[false, "Off"], [true, "On"]], c.a11yTiming), "Timed mini-games (mining, fishing, locks, dungeon rooms) give you more time and a wider sweet spot.")}`;
   }
   /* returns true when the key was ours (the caller re-renders the settings) */
   function pref(k, v) {
     if (!(k in DEF)) return false;
     let val = v;
-    if (k === "a11yText") val = Math.max(0, Math.min(3, parseInt(v, 10) || 0));
-    if (k === "a11yContrast") val = v === true || v === "true";
+    if (k === "a11yText") { val = Math.max(-1, Math.min(3, parseInt(v, 10) || 0)); if (val === 1) val = 2; }
+    if (k === "a11yContrast" || k === "a11yTiming") val = v === true || v === "true";
     save(k, val);
     const was = cur; cur = read();
     apply();
@@ -202,5 +217,6 @@ const ACCESS = (() => {
     let rt = null;
     addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { if (screenScale() !== lastScale) { apply(); try { window.dispatchEvent(new Event("resize")); } catch { /* fine */ } } }, 200); });
   }
-  return { SIZES, SIZE_NAMES, MODES, PAL, RARITY, CANVAS, read, settings: () => ({ ...cur }), pref, settingsHTML, apply, col, remap, reduceMotion, zoom: () => SIZES[cur.a11yText] };
+  return { SIZES, SIZE_NAMES, MODES, PAL, RARITY, CANVAS, read, settings: () => ({ ...cur }), pref, settingsHTML, apply, col, remap, reduceMotion, timingEase, zoneEase, TIME_EASE, ZONE_EASE, TEXT_OPTS, zoom: () => sizeOf(cur.a11yText) };
 })();
+var A11Y = ACCESS;   // the short name other modules use: A11Y.timingEase(), A11Y.zoneEase(), A11Y.reduceMotion()

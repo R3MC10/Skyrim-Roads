@@ -33,7 +33,7 @@ const CARAVANS = (() => {
     if (!s.cart) return "You don't have a cart.";
     if (s.cart.parked) {
       if (s.cart.parked !== s.location) return `Your cart is waiting at the stables in ${s.cart.parked}.`;
-      if (!s.horse || (typeof HORSES !== "undefined" && HORSES.away(s))) return "You need your horse here to pull it.";
+      if (!s.horse) return "You need your horse here to pull it.";   // a downed horse still limps along with you
       s.cart.parked = null; return "You hitch the cart up again.";
     }
     if (!s.location || !G.shopTypes(s.location).includes("stables")) return "You can leave the cart at any stables.";
@@ -223,7 +223,7 @@ const CARAVANS = (() => {
   const sprites = new Map();
   /* a small canvas for the map (cached per style) */
   function sprite(khajiit, cover = true) {
-    const st = typeof ART !== "undefined" ? ART.style() : "ink", k = `${khajiit}|${cover}|${st}`;
+    const k = `${khajiit}|${cover}`;
     if (!sprites.has(k) && typeof ART !== "undefined") sprites.set(k, ART.canvas(34, 24, (g, H) => drawWagon(g, H, 34, 24, { khajiit, cover, animal: cover }), { block: 2 }));
     return sprites.get(k) || null;
   }

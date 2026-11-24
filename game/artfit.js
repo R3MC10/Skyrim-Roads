@@ -28,7 +28,7 @@ const ARTFIT = (() => {
   const shortList = () => [...need].map(([key, [w, h]]) => [key, w, h]);
   if (DOM) {
     apply();
-    addEventListener("resize", apply);
+    if (typeof addEventListener === "function") addEventListener("resize", apply);
     // the page zoom (text size, big monitors) changes on the <html> style; density changes when the window moves screens
     try { new MutationObserver(apply).observe(document.documentElement, { attributes: true, attributeFilter: ["style", "class"] }); } catch { /* old browsers */ }
     try {
