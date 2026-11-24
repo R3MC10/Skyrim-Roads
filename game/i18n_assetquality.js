@@ -17,8 +17,8 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "The painted compass is a bit sharper too.": "Malowany kompas też jest trochę ostrzejszy.",
     "Everything the game draws itself (your hero, the new-character picture, the dungeon map, icons) is redrawn at the size it really has on your screen, so it stays crisp from phones to ultrawide monitors.":
       "Wszystko, co gra rysuje sama (twój bohater, obrazek tworzenia postaci, mapa lochu, ikony), jest rysowane na nowo w rozmiarze, jaki naprawdę ma na ekranie, więc zostaje ostre od telefonów po ultrapanoramiczne monitory.",
-    "The snowy road on the new-character screen no longer fills a whole PC monitor: it keeps a sensible size above the race list.":
-      "Zaśnieżona droga na ekranie tworzenia postaci nie zajmuje już całego monitora: ma rozsądny rozmiar nad listą ras.",
+    "On the new-character screen your hero's picture next to the race keeps its shape instead of being stretched tall, and the big live picture is drawn at full sharpness on 3x phones.":
+      "Na ekranie tworzenia postaci obrazek bohatera obok rasy trzyma swój kształt zamiast być rozciągnięty w górę, a podgląd postaci jest rysowany w pełnej ostrości na telefonach 3x.",
     "Fixed: on phones a lot of newer screens (the house chest, invites, the problem report, the Dwemer puzzles and more) were missing their proper look. They look right again.":
       "Naprawione: na telefonach sporo nowszych ekranów (skrzynia w domu, zaproszenia, zgłaszanie problemu, zagadki Dwemerów i inne) traciło swój wygląd. Znowu wyglądają jak trzeba.",
   });

@@ -4,6 +4,21 @@
 (() => {
   if (typeof I18N_STORY === "undefined") return;
   const PL = {
+    // ---- sides rule the holds now (sides.js replaced clans): the same lines with "side"
+    "Side": "Strona", "* looked after by last week's top side, no Jarl yet.": "* pod opieką najlepszej strony zeszłego tygodnia, jeszcze bez jarla.",
+    "Sides claim a hold by beating its champion.": "Strony zdobywają twierdzę, pokonując jej czempiona.",
+    "Other sides can raid once a week.": "Inne strony mogą najeżdżać raz w tygodniu.",
+    "Sides rule the holds.": "Twierdzami rządzą strony.",
+    "You only notice it in the shops: outsiders pay the ruling side's small tax.": "Zauważysz to tylko w sklepach: obcy płacą mały podatek rządzącej strony.",
+    "Pick a side (Social → Faction) to take part.": "Wybierz stronę (Społeczność → Frakcja), żeby wziąć udział.",
+    "Your side's war points here": "Punkty wojny twojej strony tutaj",
+    "Set the tax shoppers who aren't on your side pay here, and spend the treasury.": "Ustal podatek, który płacą tu kupujący spoza twojej strony, i wydawaj skarbiec.",
+    "your side pays no tax": "twoja strona nie płaci podatku",
+    "Pick a side first: only sides can rule a hold.": "Najpierw wybierz stronę: tylko strony mogą rządzić twierdzą.",
+    "Your side rules here.": "Twoja strona tu rządzi.",
+    "Only members of the ruling side vote for its Jarl.": "Na jarla głosują tylko członkowie rządzącej strony.", "They're not on that side.": "Ta osoba nie należy do tej strony.",
+    "Your side's members can now vote for a Jarl.": "Członkowie twojej strony mogą teraz głosować na jarla.",
+    "In a hold your side rules, shops sell to you another 5% cheaper, and while you're its Jarl, taxes fill the treasury 20% faster.": "W twierdzy rządzonej przez twoją stronę sklepy sprzedają ci o kolejne 5% taniej, a gdy jesteś jej jarlem, podatki napełniają skarbiec o 20% szybciej.",
     // ---- the Holds screen
     "Holds": "Twierdze", "War points this week": "Punkty wojny w tym tygodniu", "Hold": "Twierdza", "Clan": "Klan", "Tax": "Podatek",
     "· you're here": "· tu jesteś", "* looked after by last week's top clan, no Jarl yet.": "* pod opieką najlepszego klanu zeszłego tygodnia, jeszcze bez jarla.",
@@ -70,6 +85,9 @@
   };
   for (const [k, v] of Object.entries(PL)) if (!(k in I18N_STORY.ex)) I18N_STORY.ex[k] = v;
   I18N_STORY.pats.push(
+    ["Looked after by {0} [{1}] (top side last week).", "Pod opieką {0} [{1}] (najlepsza strona zeszłego tygodnia)."],
+    ["Win and your side rules it.", "Wygraj, a twoja strona nią rządzi."], ["your side pays no tax.", "twoja strona nie płaci podatku."],
+    ["Your side needs {0} war points in {1} this week (has {2}).", "Twoja strona potrzebuje w tym tygodniu {0} punktów wojny w {1} (ma {2})."],
     ["Champion of {0}", "Czempion twierdzy {0}"],
     ["Ruled by {0} [{1}]", "Rządzi tu {0} [{1}]"],
     ["Looked after by {0} [{1}] (top clan last week).", "Pod opieką {0} [{1}] (najlepszy klan zeszłego tygodnia)."],
@@ -93,7 +111,7 @@
     ["Guards hired in {0} for a week.", "Straże w {0} najęte na tydzień."], ["Shops in {0} sell 5% cheaper for 3 days.", "Sklepy w {0} sprzedają o 5% taniej przez 3 dni."],
     ["The walls of {0} are repaired (+1).", "Mury twierdzy {0} naprawione (+1)."],
     ["{0} is yours", "{0} jest twoja"], ["{0} cuts you down.", "{0} powala cię."], ["{0} holds you off.", "{0} cię odpiera."],
-    ["{0} [{1}] now rules {2}.", "{0} [{1}] rządzi teraz twierdzą {2}."], ["{0} [{1}] takes {2} from {3}.", "{0} [{1}] odbiera twierdzę {2} klanowi {3}."],
+    ["{0} [{1}] now rules {2}.", "{0} [{1}] rządzi teraz twierdzą {2}."], ["{0} [{1}] takes {2} from {3}.", "{0} [{1}] odbiera twierdzę {2} (wcześniej: {3})."],
     ["A wall of {0} falls ({1} left).", "Pada mur twierdzy {0} (zostało: {1})."],
     ["⚑ {0} won {1} for {2}.", "⚑ {0} zdobywa {1} dla {2}."],
     ["⚑ Shops in {0} sell 5% cheaper for 3 days, by order of Jarl {1}.", "⚑ Sklepy w {0} sprzedają o 5% taniej przez 3 dni, z rozkazu jarla {1}."],

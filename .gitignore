@@ -55,5 +55,6 @@ tests/out_evbanner/
 tests/out_gather/
 tests/out_pcfit/
 tests/out_artq/
+tests/out_sides/
 tests/out_chargebar/
 tests/out_partytraps/
