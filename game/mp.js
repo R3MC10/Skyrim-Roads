@@ -38,13 +38,13 @@ const MP = (() => {
     if (seen) { TOWNS.addBounty(s, hold, f.won ? "murder" : "assault"); bountyText = ` Someone saw it: your bounty in ${hold} is now ${TOWNS.bounty(s, hold)} gold.`; }
     const id = `${s.id}-${Math.floor(t)}-${rint(100, 999)}`;
     if (f.won) {
-      G.note(s, `🗡 You killed ${card.name}.`); s.pvpKills = (s.pvpKills || 0) + 1;
+      G.note(s, ` You killed ${card.name}.`); s.pvpKills = (s.pvpKills || 0) + 1;
       return { text: `${ambush ? "You burst out of hiding. " : ""}${card.name} falls. Their bag drops where they fell; for ten minutes only you and they can see it.${bountyText}`, fight: f, skills, won: true,
-        doc: { type: "kill", from: s.id, fromName: s.name, to: card.id, toName: card.name, t, ambush, at: pos || [s.x, s.y] }, id, news: `🗡 ${s.name} killed ${card.name}${ambush ? " in an ambush" : ""} in ${s.location || "the wilds of " + hold}.` };
+        doc: { type: "kill", from: s.id, fromName: s.name, to: card.id, toName: card.name, t, ambush, at: pos || [s.x, s.y] }, id, news: ` ${s.name} killed ${card.name}${ambush ? " in an ambush" : ""} in ${s.location || "the wilds of " + hold}.` };
     }
     const d = typeof PVPDEATH !== "undefined" ? PVPDEATH.die(s, card.name, t) : G.die(s, card.name, t, true);
     return { text: `${card.name} was stronger than you thought.${bountyText}`, fight: f, skills, won: false, died: d.msg, bag: d.bag,
-      doc: { type: "failed", from: s.id, fromName: s.name, to: card.id, toName: card.name, t }, id, news: `🛡 ${card.name} fought off ${s.name}'s attack.` };
+      doc: { type: "failed", from: s.id, fromName: s.name, to: card.id, toName: card.name, t }, id, news: ` ${card.name} fought off ${s.name}'s attack.` };
   }
 
   /* one try per player every 10 real minutes, caught or not */
@@ -72,7 +72,7 @@ const MP = (() => {
     }
     let bountyText = "";
     if (!G.P(s, "misdirection") && witnessed(s)) { const hold = G.holdAt([s.x, s.y]); TOWNS.addBounty(s, hold, "pickpocket"); bountyText = ` Bounty in ${hold}: ${TOWNS.bounty(s, hold)} gold.`; }
-    return { text: `${card.name} catches your hand in their purse.${bountyText}`, doc: { type: "caught", from: s.id, fromName: s.name, to: card.id, t }, id, news: `👀 ${card.name} caught ${s.name} with a hand in their purse.` };
+    return { text: `${card.name} catches your hand in their purse.${bountyText}`, doc: { type: "caught", from: s.id, fromName: s.name, to: card.id, t }, id, news: ` ${card.name} caught ${s.name} with a hand in their purse.` };
   }
 
   /* apply something another player did to you. Returns {text, bag?} */
@@ -110,12 +110,13 @@ const MP = (() => {
   function giveRow(s, x) { const id = G.give(s, x.item, x.qty, x.charge); const r = G.invRow(s, id); if (r && (x.temper || x.stolen)) Object.assign(r, { temper: x.temper, tq: x.tq, stolen: x.stolen }); if (typeof CRAFTFAIR !== "undefined") CRAFTFAIR.carry(s, id, x, x.qty); }
   function makeOffer(s, card, rowIds, giveGold, askGold, t = G.now()) {
     giveGold = Math.max(0, Math.floor(+giveGold || 0)); askGold = Math.max(0, Math.floor(+askGold || 0));
-    const eq = new Set(Object.values(G.loadout(s).equipment));
-    const rows = rowIds.map((id) => G.invRow(s, id)).filter((r) => r && !eq.has(r.id) && !D.ITEMS[r.item]?.noTrade);   // dragon priest masks are bound to you
+    // worn gear never goes in an offer: the whole offer is refused (a pair with one worn offers the spare one)
+    if (rowIds.some((id) => G.invRow(s, id) && G.freeQty(s, id) <= 0)) return { text: "You're wearing that. Take it off first." };
+    const rows = rowIds.map((id) => G.invRow(s, id)).filter((r) => r && !D.ITEMS[r.item]?.noTrade).map((r) => ({ r, n: G.freeQty(s, r.id) }));   // dragon priest masks are bound to you
     if (!rows.length && !giveGold) return { text: "Put something in the offer: items or gold." };
     if (giveGold > s.gold) return { text: `You only have ${s.gold} gold.` };
-    const items = rows.map(rowCopy);
-    rows.forEach((r) => G.take(s, r.id, r.qty));
+    const items = rows.map(({ r, n }) => ({ ...rowCopy(r), qty: n }));
+    rows.forEach(({ r, n }) => G.take(s, r.id, n));
     s.gold -= giveGold;
     const id = `${s.id}-${Math.floor(t)}-${rint(100, 999)}`;
     return { id, doc: { from: s.id, fromName: s.name, to: card.id, toName: card.name, items, gold: giveGold, ask: askGold, status: "open", t },
@@ -123,8 +124,10 @@ const MP = (() => {
   }
   const describe = (o) => [o.gold ? `${o.gold} gold` : "", ...o.items.map((x) => `${D.ITEMS[x.item]?.name || x.item}${x.qty > 1 ? ` ×${x.qty}` : ""}`)].filter(Boolean).join(", ") || "nothing";
   /* the receiver says yes: pay what was asked, take the goods. Returns null if they can't afford it */
+  /* the receiving game's safety net: an offer that says it holds worn gear (or broken rows) is never taken */
+  const offerOk = (doc) => Array.isArray(doc?.items) && doc.items.every((x) => x && D.ITEMS[x.item] && !x.worn && !x.eq && x.qty >= 1);
   function accept(s, doc) {
-    if (doc.status !== "open" || doc.to !== s.id) return null;
+    if (doc.status !== "open" || doc.to !== s.id || !offerOk(doc)) return null;
     if (s.gold < doc.ask) return null;
     s.gold -= doc.ask; s.gold += doc.gold; doc.items.forEach((x) => giveRow(s, x));
     return { ...doc, status: "accepted", paid: doc.ask };
@@ -140,5 +143,5 @@ const MP = (() => {
   const ladder = (s) => ({ name: s.name, race: s.race, level: s.level, gold: s.gold, dragons: s.dragons || 0, cleared: Object.keys(s.cleared || {}).length, kills: s.pvpKills || 0,
     ...(typeof ARENA !== "undefined" && s.arena && s.arena.season === ARENA.season() ? { arena: s.arena, arenaRating: s.arena.rating } : {}), t: G.now() });
 
-  return { makeOffer, accept, settle, describe, ladder, NEAR_PX, AMBUSH_PX, stats, canTarget, attack, pickpocket, pickPlan, pickWait, PICK_CD, receive, partySpeed, allyFromCard, shareOf, witnessed };
+  return { makeOffer, offerOk, accept, settle, describe, ladder, NEAR_PX, AMBUSH_PX, stats, canTarget, attack, pickpocket, pickPlan, pickWait, PICK_CD, receive, partySpeed, allyFromCard, shareOf, witnessed };
 })();

@@ -77,20 +77,16 @@ const SKY = (() => {
     if (lit > 0.05) { g.fillStyle = "rgba(14,21,33,0.85)"; g.beginPath(); g.arc(x + (phase < 4 ? -1 : 1) * r * (1.1 - lit * 0.9), y, r * 1.02, 0, 7); g.fill(); }
     g.restore();
   }
-  // pixel art: smooth gradients and soft glows band into rainbow rings, so draw solid steps and hard discs instead
-  const pixelMode = (opts) => opts.pixel ?? (typeof ART !== "undefined" && ART.drawingStyle && ART.drawingStyle() === "pixel");
   function backdrop(g, H, w, h, st, opts = {}) {
-    const hz = (opts.horizon ?? 0.62) * h, seed = opts.seed || "sky", r = seeded(seed + st.key), px = pixelMode(opts);
+    const hz = (opts.horizon ?? 0.62) * h, seed = opts.seed || "sky", r = seeded(seed + st.key);
     const [top, bot] = skyColors(st);
-    if (px) { const n = 6; for (let i = 0; i < n; i++) { g.fillStyle = mix(top, bot, i / (n - 1)); g.fillRect(0, Math.floor(hz * i / n), w, Math.ceil(hz / n) + 1); } g.fillStyle = bot; g.fillRect(0, hz, w, h - hz); }
-    else { const gr = g.createLinearGradient(0, 0, 0, hz); gr.addColorStop(0, top); gr.addColorStop(1, bot); g.fillStyle = gr; g.fillRect(0, 0, w, h); }
+    const gr = g.createLinearGradient(0, 0, 0, hz); gr.addColorStop(0, top); gr.addColorStop(1, bot); g.fillStyle = gr; g.fillRect(0, 0, w, h);
     const overcast = ["cloudy", "rain", "storm", "snow", "blizzard", "fog"].includes(st.weather);
     // the sun, low at dawn and dusk
     if (st.tod !== "night" && !["storm", "blizzard", "fog"].includes(st.weather)) {
       const p = Math.min(1, Math.max(0, (st.hour - 5) / 16)), sx = w * (0.1 + p * 0.8), sy = hz * (0.95 - Math.sin(p * Math.PI) * 0.75);
       const col = st.tod === "day" ? "255,244,206" : "255,190,120";
-      if (px) { g.fillStyle = `rgba(${col},${overcast ? 0.18 : 0.32})`; g.beginPath(); g.arc(sx, sy, h * 0.12, 0, 7); g.fill(); }
-      else { const gl = g.createRadialGradient(sx, sy, 2, sx, sy, h * 0.4); gl.addColorStop(0, `rgba(${col},${overcast ? 0.25 : 0.55})`); gl.addColorStop(1, `rgba(${col},0)`); g.fillStyle = gl; g.fillRect(0, 0, w, hz); }
+      const gl = g.createRadialGradient(sx, sy, 2, sx, sy, h * 0.4); gl.addColorStop(0, `rgba(${col},${overcast ? 0.25 : 0.55})`); gl.addColorStop(1, `rgba(${col},0)`); g.fillStyle = gl; g.fillRect(0, 0, w, hz);
       if (!overcast) { g.fillStyle = st.tod === "day" ? "#fff6d8" : "#ffcf8f"; g.beginPath(); g.arc(sx, sy, Math.max(5, h * 0.045), 0, 7); g.fill(); }
     }
     if (st.tod === "night" || st.tod === "dusk") {
@@ -108,7 +104,6 @@ const SKY = (() => {
           const y0 = hz * (0.18 + b * 0.12), amp = h * 0.05, ph = r() * 6;
           for (let x = 0; x < w; x += 3) {
             const y = y0 + Math.sin(x / w * 6 + ph) * amp + Math.sin(x / w * 17 + ph) * amp * 0.25, len = h * (0.12 + 0.06 * Math.sin(x / w * 9 + b));
-            if (px) { g.fillStyle = b === 1 ? "rgba(150,110,255,0.22)" : "rgba(90,240,170,0.28)"; g.fillRect(x, y - len * 0.45, 3, len * 0.45); continue; }
             const ag = g.createLinearGradient(0, y - len, 0, y);
             ag.addColorStop(0, "rgba(80,255,180,0)"); ag.addColorStop(1, b === 1 ? "rgba(150,110,255,0.16)" : "rgba(90,240,170,0.2)");
             g.fillStyle = ag; g.fillRect(x, y - len, 3, len);
@@ -119,7 +114,7 @@ const SKY = (() => {
       // Masser and Secunda
       if (!["storm", "blizzard", "fog"].includes(st.weather)) {
         const mx = w * 0.78, my = hz * 0.28, mr = Math.max(7, h * 0.07);
-        if (!px) { const gl = g.createRadialGradient(mx, my, mr * 0.5, mx, my, mr * 3.5); gl.addColorStop(0, "rgba(240,220,210,0.22)"); gl.addColorStop(1, "rgba(240,220,210,0)"); g.fillStyle = gl; g.fillRect(mx - mr * 4, my - mr * 4, mr * 8, mr * 8); }
+        { const gl = g.createRadialGradient(mx, my, mr * 0.5, mx, my, mr * 3.5); gl.addColorStop(0, "rgba(240,220,210,0.22)"); gl.addColorStop(1, "rgba(240,220,210,0)"); g.fillStyle = gl; g.fillRect(mx - mr * 4, my - mr * 4, mr * 8, mr * 8); }
         moon(g, mx, my, mr, st.moon, "#efd6cf");
         moon(g, mx - mr * 2.4, my + mr * 0.9, mr * 0.45, (st.moon + 3) % 8, "#e8eef4");
       }
@@ -167,8 +162,7 @@ const SKY = (() => {
       }
     }
     if (st.weather === "fog") {
-      if (pixelMode(opts)) { for (let i = 0; i < 4; i++) { g.fillStyle = `rgba(226,228,228,${0.14 + i * 0.13})`; g.fillRect(0, h * (0.3 + i * 0.175), w, h * 0.175 + 1); } }
-      else { const gr = g.createLinearGradient(0, h * 0.25, 0, h); gr.addColorStop(0, "rgba(226,228,228,0.12)"); gr.addColorStop(1, "rgba(226,228,228,0.7)"); g.fillStyle = gr; g.fillRect(0, 0, w, h); }
+      const gr = g.createLinearGradient(0, h * 0.25, 0, h); gr.addColorStop(0, "rgba(226,228,228,0.12)"); gr.addColorStop(1, "rgba(226,228,228,0.7)"); g.fillStyle = gr; g.fillRect(0, 0, w, h);
     }
     if (st.weather === "cloudy") { g.fillStyle = "rgba(120,128,136,0.12)"; g.fillRect(0, 0, w, h); }
     if (st.weather === "ashstorm") {   // Solstheim: grey ash driven sideways, the light gone brown
@@ -180,7 +174,7 @@ const SKY = (() => {
       if (st.season === "autumn" && !st.cold) for (let i = 0; i < 16; i++) leaf(g, r() * w, gy * 0.3 + r() * (h - gy * 0.3), r() * 6, ["#c4572e", "#e8923a", "#d6b25e", "#a8622e"][i % 4], 1 + r() * 0.5);
       if (st.season === "spring" && st.tod !== "night") for (let i = 0; i < 14; i++) { g.fillStyle = i % 3 ? "rgba(248,214,226,0.9)" : "rgba(255,255,255,0.9)"; g.beginPath(); g.arc(r() * w, gy * 0.4 + r() * (h - gy * 0.4), 1.3 + r(), 0, 7); g.fill(); }
       if (st.season === "summer" && st.tod === "day") { g.fillStyle = "rgba(255,246,196,0.7)"; for (let i = 0; i < 10; i++) g.fillRect(r() * w, gy * 0.5 + r() * (h - gy * 0.5), 1.4, 1.4); }
-      if ((st.season === "summer" || st.season === "spring") && (st.tod === "night" || st.tod === "dusk")) for (let i = 0; i < 12; i++) { const x = r() * w, y = gy * 0.7 + r() * (h - gy * 0.7); if (pixelMode(opts)) { g.fillStyle = "#eaff9a"; g.fillRect(x - 1, y - 1, 2.4, 2.4); continue; } const gl = g.createRadialGradient(x, y, 0, x, y, 5); gl.addColorStop(0, "rgba(230,255,140,0.9)"); gl.addColorStop(1, "rgba(230,255,140,0)"); g.fillStyle = gl; g.fillRect(x - 5, y - 5, 10, 10); }
+      if ((st.season === "summer" || st.season === "spring") && (st.tod === "night" || st.tod === "dusk")) for (let i = 0; i < 12; i++) { const x = r() * w, y = gy * 0.7 + r() * (h - gy * 0.7); const gl = g.createRadialGradient(x, y, 0, x, y, 5); gl.addColorStop(0, "rgba(230,255,140,0.9)"); gl.addColorStop(1, "rgba(230,255,140,0)"); g.fillStyle = gl; g.fillRect(x - 5, y - 5, 10, 10); }
       if (st.season === "winter" && st.tod === "night") { g.fillStyle = "rgba(235,240,246,0.16)"; for (let i = 0; i < 5; i++) { g.beginPath(); g.ellipse(r() * w, h * (0.82 + r() * 0.15), 30 + r() * 40, 5 + r() * 4, 0, 0, 7); g.fill(); } }
     }
   }

@@ -74,18 +74,18 @@ const SEARCH = (() => {
 
   // ------------------------------------------------------------ the index (built once, lazily)
   const GROUPS = [
-    ["mine", "Your items", "🎒"], ["spell", "Spells & shouts", "✨"], ["perk", "Perks", "★"], ["skill", "Skills", "📈"], ["place", "Places", "📍"],
-    ["quest", "Quests", "📜"], ["follower", "Followers", "🛡"], ["item", "Items in the game", "📦"], ["recipe", "Recipes", "⚒"], ["setting", "Settings", "⚙"],
+    ["mine", "Your items", ""], ["spell", "Spells & shouts", ""], ["perk", "Perks", "★"], ["skill", "Skills", ""], ["place", "Places", ""],
+    ["quest", "Quests", ""], ["follower", "Followers", ""], ["item", "Items in the game", ""], ["recipe", "Recipes", ""], ["setting", "Settings", ""],
   ];
   const KIND = { city: "City", town: "Town", farm: "Farm", dungeon: "Dungeon", fort: "Fort", camp: "Camp", lair: "Dragon lair", stone: "Standing stone", shrine: "Shrine", landmark: "Landmark" };
-  const PLACE_ICO = { city: "🏰", town: "🏘", farm: "🌾", dungeon: "🕳", fort: "🏯", camp: "⛺", lair: "🐉", stone: "🗿", shrine: "⛩", landmark: "📍" };
+  const PLACE_ICO = { city: "", town: "", farm: "", dungeon: "", fort: "", camp: "", lair: "", stone: "", shrine: "", landmark: "" };
   const SHOP_NAME = { general: "general stores", blacksmith: "blacksmiths", wizard: "court wizards" };
   /* [label, section, how to find the row ("k:" a pref key, "#" an element id, "a:" a button's data-act), extra words] */
   const SETTINGS = [
     ["Music volume", "Sound", "#snd_music", "sound volume"], ["Sound effects volume", "Sound", "#snd_sfx", "sfx volume"], ["Ambience volume", "Sound", "#snd_amb", "ambient sound volume"],
     ["All sound on or off", "Sound", "k:mute", "mute silence quiet"],
     ["Back up your character", "Your character", "a:bk", "save backup export copy"], ["Restore from a backup", "Your character", "a:bk", "load import"],
-    ["Art style: hand-drawn or pixel art", "Look", "k:artStyle", "graphics ink pixel retro"], ["Motion and animations", "Look", "k:motion", "animation lite"],
+    ["Motion and animations", "Look", "k:motion", "animation lite"],
     ["Foe turn speed", "Fights", "k:tbFast", "fast combat speed"],
     ["Fight controls", "Fights", "k:tbDock", "action bar combat wheel cards buttons"],
     ["Text size", "Accessibility", "k:a11yText", "font bigger zoom large"], ["Colour-blind help", "Accessibility", "k:a11yColour", "color blind protan deutan tritan"],
@@ -225,7 +225,7 @@ const SEARCH = (() => {
       return "";
     });
     if (ic) return ic;
-    const emo = e.k === "place" ? PLACE_ICO[e.kind] || "📍" : (GROUPS.find(([k]) => k === e.k) || [])[2] || "•";
+    const emo = e.k === "place" ? PLACE_ICO[e.kind] || "" : (GROUPS.find(([k]) => k === e.k) || [])[2] || "•";
     return `<span class="srch-emo" aria-hidden="true">${emo}</span>`;
   }
   const alchIcon = (eff) => { const r = has("EFFECTS") ? EFFECTS[eff] : null; return r && !r[4] ? (D.ITEMS.poison_weak ? "poison_weak" : "potion_health") : /Magicka/.test(eff) ? "potion_magicka" : /Stamina/.test(eff) ? "potion_stamina" : "potion_health"; };
@@ -270,7 +270,7 @@ const SEARCH = (() => {
       for (const e of g.list.slice(0, cap)) { flat.push(e); h += `<button class="srch-r" data-sr="pick" data-i="${flat.length - 1}">${icon(S, e)}<span class="t"><b>${hilite(e.name)}</b><small>${esc(sub(S, e))}</small></span><span class="srch-go" aria-hidden="true">›</span></button>`; }
       h += `</div>${g.n > cap ? `<button class="linkbtn srch-more" data-sr="more" data-k="${g.k}">Show ${Math.min(g.n, MORE_GROUP) - cap} more</button>` : ""}`;
     }
-    if (res.hint) h += `<h3 class="srch-g"><span aria-hidden="true">📍</span> Places</h3><div class="srch-list"><div class="srch-r srch-hint"><span class="srch-emo" aria-hidden="true">❔</span><span class="t"><b>??? (not found yet)</b><small>${res.hint.n > 1 ? "Some places" : `A ${(KIND[res.hint.kind] || "place").toLowerCase()}`} by that name ${res.hint.n > 1 ? "are" : "is"} still out there. Explore to find ${res.hint.n > 1 ? "them" : "it"}.</small></span></div></div>`;
+    if (res.hint) h += `<h3 class="srch-g"><span aria-hidden="true"></span> Places</h3><div class="srch-list"><div class="srch-r srch-hint"><span class="srch-emo" aria-hidden="true"></span><span class="t"><b>??? (not found yet)</b><small>${res.hint.n > 1 ? "Some places" : `A ${(KIND[res.hint.kind] || "place").toLowerCase()}`} by that name ${res.hint.n > 1 ? "are" : "is"} still out there. Explore to find ${res.hint.n > 1 ? "them" : "it"}.</small></span></div></div>`;
     return h;
   }
   function render() {
@@ -292,7 +292,7 @@ const SEARCH = (() => {
     const m = document.createElement("div");
     m.className = "modal srch-m"; m.id = "modal";
     m.innerHTML = `<div class="sheet srch" id="srch" role="dialog" aria-modal="true" aria-label="Search">
-      <div class="srch-q"><input id="srchq" type="search" placeholder="🔍 Search everything" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" aria-label="Search everything" maxlength="${MAX_Q}"><button class="iconbtn" data-sr="close" aria-label="Close search">✕</button></div>
+      <div class="srch-q"><input id="srchq" type="search" placeholder=" Search everything" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" aria-label="Search everything" maxlength="${MAX_Q}"><button class="iconbtn" data-sr="close" aria-label="Close search">✕</button></div>
       <div class="srch-body" aria-live="polite"></div></div>`;
     document.body.appendChild(m);
     m.addEventListener("click", onClick);
@@ -418,7 +418,7 @@ const SEARCH = (() => {
       h = `<div class="srch-dh">${icon(S, e, 56)}<div><h2>${esc(it.name)}</h2><p class="sub">${esc(safe(() => G.itemStats(e.id)))}</p></div></div>
         <div class="srch-kvs">${row("Value", `${it.value ?? 0} gold`)}${row("Weight", it.weight ?? 0)}${it.skill ? row("Skill", esc(it.skill)) : ""}</div>
         <p class="sub">${esc(whereItem(S, e.id))}</p>
-        <div class="srch-acts">${has("SMITH") && SMITH.RECIPES[e.id] ? goBtn("⚒ How to forge it", "recipe", "smith:" + e.id) : ""}${/^dish_/.test(e.id) ? goBtn("🍲 The recipe", "recipe", "cook:" + e.id.slice(5)) : ""}</div>`;
+        <div class="srch-acts">${has("SMITH") && SMITH.RECIPES[e.id] ? goBtn(" How to forge it", "recipe", "smith:" + e.id) : ""}${/^dish_/.test(e.id) ? goBtn(" The recipe", "recipe", "cook:" + e.id.slice(5)) : ""}</div>`;
     } else if (e.k === "spell") {
       const sp = D.SPELLS[e.id], lv = sp.level || "Novice", tome = "tome_" + e.id, own = countOf(S, tome);
       const gate = has("SPELLBOOK") ? SPELLBOOK.GATE[lv] : 0, skl = safe(() => G.skill(S, sp.school), 0);
@@ -433,25 +433,25 @@ const SEARCH = (() => {
         ${own ? `<p class="srch-ok">You have its tome in your pack. Read it to learn the spell.</p>` : ""}
         <p class="sub">${esc(where)}${gate && lv !== "Master" ? ` ${lv} tomes show up once your ${esc(sp.school)} reaches ${gate} (you have ${skl}).` : ""}</p>
         ${lv !== "Master" ? `<p class="sub">${now.length ? `On a shelf for you right now in: <b>${now.map(esc).join(", ")}</b>.` : "No shop you know has it for you right now."}</p>` : ""}
-        <div class="srch-acts">${own ? goBtn("Open it in your pack", "mine", (S.inv.find((r) => r.item === tome) || {}).id, true) : ""}${now.slice(0, 3).map((t) => goBtn(`📍 ${esc(t)}`, "place", t)).join("")}</div>`;
+        <div class="srch-acts">${own ? goBtn("Open it in your pack", "mine", (S.inv.find((r) => r.item === tome) || {}).id, true) : ""}${now.slice(0, 3).map((t) => goBtn(` ${esc(t)}`, "place", t)).join("")}</div>`;
     } else if (e.k === "follower") {
       const f = TOWNS.FOLLOWERS[e.id], town = f[1] && knownPlace(S, f[1]) ? f[1] : null;
       h = `<div class="srch-dh">${icon(S, e, 56)}<div><h2>${esc(f[0])}</h2><p class="sub">${esc(f[5] || "")}</p></div></div>
         <div class="srch-kvs">${row("Hire", f[2] ? `${f[2]} gold` : "free (once they trust you)")}${row("Where", town ? esc(town) : "somewhere in Skyrim")}</div>
         <p class="sub">Followers fight beside you, carry things for you and get knocked down instead of dying. Hire them in town (Area tab).</p>
-        <div class="srch-acts">${town && S.location === town ? goBtn("Hirelings in town", "town", "hire", true) : town ? goBtn(`📍 Show ${esc(town)} on the map`, "place", town, true) : ""}</div>`;
+        <div class="srch-acts">${town && S.location === town ? goBtn("Hirelings in town", "town", "hire", true) : town ? goBtn(` Show ${esc(town)} on the map`, "place", town, true) : ""}</div>`;
     } else if (e.k === "recipe" && e.rk === "smith") {
       const r = SMITH.RECIPES[e.item], it = D.ITEMS[e.item], pk = r.perk ? PERKS.BY_ID[r.perk] : null, okPerk = !r.perk || PERKS.rank(S, r.perk) > 0;
       h = `<div class="srch-dh">${icon(S, e, 56)}<div><h2>${esc(it.name)}</h2><p class="sub">${esc(safe(() => G.itemStats(e.item)))}</p></div></div>
         <h3>What it takes</h3><div class="srch-kvs">${r.mats.map(([m, n]) => row(esc(itemName(m)), have(S, m, n))).join("")}${pk ? row(`Perk: ${esc(pk.name)}`, okPerk ? '<span class="srch-ok">✓ taken</span>' : '<span class="srch-no">not yet</span>') : ""}</div>
         <p class="sub">Made at any blacksmith's forge (Area tab → Forge). Ore is smelted into ingots there, pelts tanned into leather.</p>
-        <div class="srch-acts">${safe(() => SMITH.atForge(S)) ? goBtn("⚒ Open the forge", "town", "forge", true) : ""}${pk ? goBtn(`★ ${esc(pk.name)}`, "perk", r.perk) : ""}</div>`;
+        <div class="srch-acts">${safe(() => SMITH.atForge(S)) ? goBtn(" Open the forge", "town", "forge", true) : ""}${pk ? goBtn(`★ ${esc(pk.name)}`, "perk", r.perk) : ""}</div>`;
     } else if (e.k === "recipe" && e.rk === "cook") {
       const r = COOK.RECIPES[e.rid];
       h = `<div class="srch-dh">${icon(S, e, 56)}<div><h2>${esc(r[0])}</h2><p class="sub">${esc(r[3])}</p></div></div>
         <h3>What it takes</h3><div class="srch-kvs">${r[1].map(([m, n]) => row(esc(itemName(m)), have(S, m, n))).join("")}</div>
         <p class="sub">Cook at an inn's cooking pot or your own campfire. General stores sell the vegetables and salt; fish with a rod near water.</p>
-        <div class="srch-acts">${safe(() => COOK.atInn(S)) ? goBtn("🍲 Cooking pot", "town", "cook", true) : ""}</div>`;
+        <div class="srch-acts">${safe(() => COOK.atInn(S)) ? goBtn(" Cooking pot", "town", "cook", true) : ""}</div>`;
     } else if (e.k === "recipe" && e.rk === "alch") {
       const n = alchIngredients(S, e.eff), poison = !EFFECTS[e.eff][4];
       h = `<div class="srch-dh">${icon(S, e, 56)}<div><h2>${esc(e.name)}</h2><p class="sub">${poison ? "A poison for your weapon" : "A potion"}</p></div></div>
@@ -459,7 +459,7 @@ const SEARCH = (() => {
         ${n.known.length ? `<div class="srch-kvs">${n.known.map((id) => row(esc(itemName(id)), `${countOf(S, id)} in pack`)).join("")}</div>` : `<p class="sub">None yet. Eat an ingredient or mix it to learn its effects.</p>`}
         ${n.unknown.length ? `<p class="sub">${n.unknown.length} more ingredient${n.unknown.length === 1 ? "" : "s"} you haven't found out yet also ${n.unknown.length === 1 ? "has" : "have"} it.</p>` : ""}
         <p class="sub">Mix two ingredients that share ${esc(e.eff)} at an alchemy lab (Area tab → Alchemy lab).</p>
-        <div class="srch-acts">${S.location && !S.trip ? goBtn("⚗ Alchemy lab", "town", "alchemy", true) : ""}</div>`;
+        <div class="srch-acts">${S.location && !S.trip ? goBtn(" Alchemy lab", "town", "alchemy", true) : ""}</div>`;
     } else return back;
     return `${back}<div class="srch-d">${h}</div>`;
   }

@@ -41,6 +41,11 @@ CREATE TABLE IF NOT EXISTS world_records (
   v bigint NOT NULL,
   PRIMARY KEY (col, id)
 );
+CREATE TABLE IF NOT EXISTS reports (
+  id text PRIMARY KEY,
+  at bigint NOT NULL,
+  doc jsonb NOT NULL
+);
 `;
 
 function pgStore(url, opts = {}) {
@@ -56,6 +61,8 @@ function pgStore(url, opts = {}) {
     kind: "postgres",
     async init() { await q(SCHEMA); },
     async close() { await pool.end(); },
+    async saveReport({ id, at, report }) { await q(`INSERT INTO reports (id, at, doc) VALUES ($1,$2,$3) ON CONFLICT (id) DO NOTHING`, [id, at, JSON.stringify(report)]); },   // player reports kept when GitHub can't take them
+    async listReports(limit = 50) { const r = await q(`SELECT id, at, doc FROM reports ORDER BY at DESC LIMIT $1`, [limit]); return r.rows.map((x) => ({ id: x.id, at: n(x.at), report: x.doc })); },
     async createAccount({ id, username, usernameLc, passHash, now }) {
       const r = await q(`INSERT INTO accounts (id, username, username_lc, pass_hash, created_at) VALUES ($1,$2,$3,$4,$5)
                          ON CONFLICT (username_lc) DO NOTHING RETURNING *`, [id, username, usernameLc, passHash, now]);

@@ -201,10 +201,10 @@ const ECON = (() => {
     const cv = caravanGoods(town, t), rt = routes(s, town);
     const hrs = Math.max(1, Math.round((day.ends - t) * 12 / 3600));
     const esc = (x) => String(x).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
-    return `<details class="econ-card"><summary>📈 <b>Market today</b> · <span class="econ-up">▲ ${LABEL[day.short]}</span> · <span class="econ-down">▼ ${LABEL[day.glut]}</span></summary>
+    return `<details class="econ-card"><summary> <b>Market today</b> · <span class="econ-up">▲ ${LABEL[day.short]}</span> · <span class="econ-down">▼ ${LABEL[day.glut]}</span></summary>
       <p class="sub">Short of <b>${LABEL[day.short]}</b> (dearer), plenty of <b>${LABEL[day.glut]}</b> (cheaper) for about ${hrs} more hours.</p>
       ${cheap.length || dear.length ? `<p class="sub">${cheap.length ? `Cheap here: ${cheap.map((c) => LABEL[c]).join(", ")}. ` : ""}${dear.length ? `Dear here: ${dear.map((c) => LABEL[c]).join(", ")}.` : ""}</p>` : ""}
-      ${cv.map((c) => `<p class="sub">🐫 ${esc(c.name)} ${c.here ? "is in town" : "just left"}: ${c.goods.map((g) => esc(D.ITEMS[g]?.name || g)).join(", ")} are cheaper.</p>`).join("")}
+      ${cv.map((c) => `<p class="sub"> ${esc(c.name)} ${c.here ? "is in town" : "just left"}: ${c.goods.map((g) => esc(D.ITEMS[g]?.name || g)).join(", ")} are cheaper.</p>`).join("")}
       ${rt.length ? `<p class="sub"><b>Trade runs from here:</b></p><div class="econ-routes">${rt.map((x) => `<div>${esc(D.ITEMS[x.item].name)}: buy ${x.buy}, sell in ${esc(x.to)} for ${x.sell} <b class="gold">+${x.profit}</b></div>`).join("")}</div>`
         : `<p class="sub">No trade runs pay from here yet. Ore, ingots, pelts, food and ingredients can be run between towns once your Mercantile is high enough.</p>`}
       <p class="sub">Everything players buy pushes a price up here, everything sold pushes it down; it fades over a day or two.</p></details>`;

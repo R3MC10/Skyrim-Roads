@@ -1,5 +1,5 @@
 /* Home art: drawn interiors for the five player houses, neighbours' homes and the Hall of the North.
-   Same ink-on-parchment toolkit as everything else (art.js), so the pixel-art setting applies too. Each picture is
+   Same ink-on-parchment toolkit as everything else (art.js). Each picture is
    drawn once per content (house, garden, rested, items on show, motto, hall tier…) and cached. [OURS] */
 const HOMEART = (() => {
   const W = 360, HT = 190;
@@ -164,7 +164,7 @@ const HOMEART = (() => {
       nightTint(g);
       g.strokeStyle = "#3b2c1e"; g.lineWidth = 3; g.strokeRect(1.5, 1.5, W - 3, HT - 3);
     };
-    return ART.html(W, HT, draw, { key, cls: "scene homeart", alt: `${L.name} inside`, style: opts.style });
+    return ART.html(W, HT, draw, { key, cls: "scene homeart", alt: `${L.name} inside` });
   }
 
   // ---- the Hall of the North, growing with every tier
@@ -213,7 +213,7 @@ const HOMEART = (() => {
       }
       g.strokeStyle = "#3b2c1e"; g.lineWidth = 3; g.strokeRect(1.5, 1.5, W - 3, HT - 3);
     };
-    return ART.html(W, HT, draw, { key, cls: "scene homeart", alt: "Hall of the North", style: opts.style });
+    return ART.html(W, HT, draw, { key, cls: "scene homeart", alt: "Hall of the North" });
   }
 
   /* the drawing plus invisible tap targets over the bed, garden, chest and display */
@@ -296,7 +296,7 @@ const HOMEART = (() => {
       nightTint(g);
       g.strokeStyle = "#3b2c1e"; g.lineWidth = 3; g.strokeRect(1.5, 1.5, W - 3, HT - 3);
     };
-    return ART.html(W, HT, draw, { key, cls: "scene homeart", alt: `${h.name} inside`, style: opts.style });
+    return ART.html(W, HT, draw, { key, cls: "scene homeart", alt: `${h.name} inside` });
   }
   return { interior, hall, guild, mine, visit, withSpots, SPOTS, LOOK };
 })();

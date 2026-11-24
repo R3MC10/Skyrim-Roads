@@ -62,7 +62,7 @@ const FAVWHEEL = (() => {
         const res = it.restore?.[0];
         if (!res) return { ok: false, text: `${it.name} can't be queued for a fight.` };
         if (s.favPot === res) { delete s.favPot; return { ok: true, text: `${it.name} unqueued.` }; }
-        s.favPot = res; return { ok: true, text: `🧪 ${it.name} queued: in your next fights you'll drink ${res} potions without saving them.` };
+        s.favPot = res; return { ok: true, text: ` ${it.name} queued: in your next fights you'll drink ${res} potions without saving them.` };
       }
       const r = rowFor(s, e.id);
       if (Object.values(G.equipment(s)).some((x) => x && x.id === r.id)) return { ok: true, text: `${it.name} is already worn.` };
@@ -72,7 +72,7 @@ const FAVWHEEL = (() => {
     const a = actionOf(e);
     if (s.favReady === a) { delete s.favReady; return { ok: true, text: `${nfo.name} no longer readied.` }; }
     s.favReady = a;
-    return { ok: true, text: `✋ ${nfo.name} readied: Smart AI opens your fights with it when it can.` };
+    return { ok: true, text: ` ${nfo.name} readied: Smart AI opens your fights with it when it can.` };
   }
 
   // ---- fight hooks (Smart AI): the readied opener on the first turn, the queued potion kind not saved
@@ -96,7 +96,7 @@ const FAVWHEEL = (() => {
     const L = list(s), n = Math.max(L.length, 4), R = 118;
     const slots = L.map((e, i) => {
       const a = -Math.PI / 2 + i * 2 * Math.PI / n, x = Math.cos(a) * R, y = Math.sin(a) * R, nf = info(s, e);
-      return `<button class="fw-slot ${nf.on ? "on" : ""} ${nf.have ? "" : "off"}" data-fw="${i}" style="--x:${x.toFixed(1)}px;--y:${y.toFixed(1)}px;--i:${i}" aria-label="${esc(nf.name)}${nf.sub ? ", " + esc(nf.sub) : ""}">
+      return `<button class="fw-slot ${nf.on ? "on" : ""} ${nf.have ? "" : "off"}" data-fw="${i}"${["item", "spell", "shout"].includes(e.k) ? ` data-tip-k="${e.k}:${esc(e.id)}"` : ""} style="--x:${x.toFixed(1)}px;--y:${y.toFixed(1)}px;--i:${i}" aria-label="${esc(nf.name)}${nf.sub ? ", " + esc(nf.sub) : ""}">
         <span class="fw-ico">${slotIcon(s, e, 34)}</span><span class="fw-nm">${esc(nf.name)}</span>${nf.sub ? `<span class="fw-sub">${esc(nf.sub)}</span>` : ""}</button>`;
     }).join("");
     const empty = !L.length ? `<p class="fw-empty">No favourites yet.<br>Open Items or Magic, pick something and tap <b>★ Favourite</b>.</p>` : "";
@@ -123,8 +123,6 @@ const FAVWHEEL = (() => {
       document.body.appendChild(el);
     }
     open = true; render();
-    const pixel = typeof ART !== "undefined" && ART.style && ART.style() === "pixel";
-    el.classList.toggle("fw-pixel", !!pixel);
     el.classList.remove("fw-out"); void el.offsetWidth; el.classList.add("fw-on");
     try { ctx.sound?.("click"); } catch { /* fine */ }
   }

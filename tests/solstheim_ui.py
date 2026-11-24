@@ -45,7 +45,6 @@ async def main():
         print("map region:", await pg.evaluate("window.__dbg.view().region"), "| transform", await pg.evaluate("JSON.stringify(window.__dbg.view().transform)"))
         await pg.screenshot(path=OUT + "sol_map.png")
         # zoomed out: the whole island
-        await pg.evaluate("()=>{}")
         zb = await pg.query_selector("#zoomBtn")
         if zb: await zb.click(); await pg.wait_for_timeout(900)
         await pg.screenshot(path=OUT + "sol_map_far.png")
@@ -61,8 +60,7 @@ async def main():
             await close_modals(pg)
         print("quest stage after:", await pg.evaluate("window.__dbg.save().quests.dragonborn.stage"))
         # Raven Rock in the Town tab, both art styles
-        for style in ["ink", "pixel"]:
-            await pg.evaluate(f"()=>ART.setStyle('{style}')")
+        for style in ["ink"]:
             await pg.click("[data-tab=town]"); await pg.wait_for_timeout(700)
             await pg.screenshot(path=OUT + f"sol_ravenrock_{style}.png")
             await pg.click("#side [data-act=shop][data-id=forge]"); await pg.wait_for_timeout(400)
@@ -77,13 +75,12 @@ async def main():
             await pg.screenshot(path=OUT + f"sol_gallery_{style}.png", full_page=False)
             await pg.set_viewport_size({"width": 390, "height": 844})
             await pg.evaluate("document.getElementById('solgal').remove()")
-        await pg.evaluate("()=>ART.setStyle('ink')")
         # fight scenes with the island's creatures
         fig = await pg.evaluate("""()=>{ const out=[]; for (const n of ['Ash hopper','Bull netch','Riekling hunters','Lurker','Ash spawn','Burnt spriggan','Miraak','Seeker']) out.push(FIGHTART.foeOf({name:n,tags:[]})); return out.join(',');}""")
         print("fight figures:", fig)
         await pg.evaluate("""()=>{const S=window.__dbg.save(); const base=D.ENCOUNTERS.find(e=>e.name==='Riekling hunters'); const f=new G.Fight(S,G.scaleEnemy(base,S.level),null,G.now()); f.run({t:G.now()}); window.__solfight=f;}""")
         # ash storm over the map
-        await pg.evaluate("()=>{ WEVENTS.__w0=WEVENTS.weather; WEVENTS.weather=(p,t)=>WORLD.isSol(p)?{id:'ashstorm',name:'Ash storm',icon:'🌋',speed:0.65,sneak:0.15,encounters:0.8}:WEVENTS.__w0(p,t); }")
+        await pg.evaluate("()=>{ WEVENTS.__w0=WEVENTS.weather; WEVENTS.weather=(p,t)=>WORLD.isSol(p)?{id:'ashstorm',name:'Ash storm',icon:'\ue193',speed:0.65,sneak:0.15,encounters:0.8}:WEVENTS.__w0(p,t); }")
         await pg.click("[data-tab=map]"); await pg.evaluate("scrollTo(0,0)"); await pg.wait_for_timeout(1500)
         print("weather:", await pg.evaluate("window.__dbg.view().weather"), "| clock:", await pg.inner_text("#clock") if await pg.query_selector("#clock") else "")
         await pg.screenshot(path=OUT + "sol_ashstorm.png")

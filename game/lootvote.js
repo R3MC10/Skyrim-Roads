@@ -57,11 +57,25 @@ const LOOTVOTE = (() => {
   const rollBonus = (s) => (typeof PFX !== "undefined" && s ? Math.max(0, Math.min(MAX_BONUS, Math.round(PFX.num(s, "lootroll")))) : 0);
   /* inside Store.change: a member's wants (indices of items), and their roll bonus */
   function castVote(vote, uid, wants, t = now(), bonus = 0) {
-    if (!vote || !vote.members.includes(uid) || closed(vote, t)) return vote;
+    if (!vote || !vote.members.includes(uid) || vote.sealed || closed(vote, t)) return vote;
     const b = Math.max(0, Math.min(MAX_BONUS, Math.round(+bonus || 0)));
     return { ...vote, votes: { ...vote.votes, [uid]: [...new Set((wants || []).filter((i) => Number.isInteger(i) && i >= 0 && i < vote.items.length))] }, bonus: { ...(vote.bonus || {}), [uid]: b } };
   }
-  const closed = (vote, t = now()) => !!vote && (t >= vote.ends || vote.members.every((m) => vote.votes[m]));
+  const closed = (vote, t = now()) => !!vote && (!!vote.sealed || t >= vote.ends || vote.members.every((m) => vote.votes[m]));
+  /* [netsync] the leader seals the vote when it's over on their phone: the votes at that moment are what every phone
+     shares out, so a vote landing late, or a phone whose clock runs fast, can't give someone a different result */
+  const SEAL_GRACE = 45;
+  function seal(vote, uid, t = now()) {
+    if (!vote || vote.sealed || uid !== vote.leader || !closed(vote, t)) return vote;
+    return { ...vote, sealed: { votes: { ...(vote.votes || {}) }, bonus: { ...(vote.bonus || {}) }, t } };
+  }
+  /* the vote to share out, or null while it's still open (or waiting for the leader's seal) */
+  function final(vote, t = now()) {
+    if (!vote) return null;
+    if (vote.sealed) return { ...vote, votes: vote.sealed.votes || {}, bonus: vote.sealed.bonus || {} };
+    if (vote.members.every((m) => vote.votes?.[m])) return vote;   // everyone voted: the same on every phone
+    return t >= vote.ends + SEAL_GRACE ? vote : null;              // the leader never sealed it (gone): the clock decides
+  }
   /* who gets what: the same answer on every phone */
   function resolve(vote, seed) {
     const out = { items: {}, rolls: [], gold: {} };
@@ -145,7 +159,7 @@ const LOOTVOTE = (() => {
 
     // -- room actions: only the leader chooses
     function memberLocked() { return inPartyRun() && !leader(); }
-    function lockedHTML() { const r = run(); return `<div class="card lv-wait"><h3>⏳ ${esc(r?.leaderName || "The leader")} is choosing…</h3><p class="sub">In a party only the leader decides. What they pick happens to you too, and everything found goes into the party's loot pile.</p></div>`; }
+    function lockedHTML() { const r = run(); return `<div class="card lv-wait"><h3> ${esc(r?.leaderName || "The leader")} is choosing…</h3><p class="sub">In a party only the leader decides. What they pick happens to you too, and everything found goes into the party's loot pile.</p></div>`; }
     /* wrap the leader's room action: shared pile + record the choice for the others */
     async function aroundAct(c, doAct) {
       const s = S(), r = run();
@@ -156,10 +170,11 @@ const LOOTVOTE = (() => {
       const got = strip(s, before);
       if (leader()) {
         if ((got.items.length || got.gold) && res) res.text = `${res.text || ""} Into the party's loot pile: ${[got.gold ? got.gold + " gold" : "", ...got.items.map((x) => (x.qty > 1 ? `${x.qty}× ` : "") + (D.ITEMS[x.item]?.name || x.item))].filter(Boolean).join(", ")}.`.trim();
+        const rec = c === "pick" && res ? (/^Click/.test(res.text || "") ? "pick@1" : "pick@0") : c;   // the lock: members replay whether it opened, not a roll of their own
         const tok = Math.random().toString(36).slice(2);   // a busy store answers null: try again, but never write the same choice twice (members would replay it twice)
         for (let k = 0; k < 4; k++) {
           if (k) await new Promise((ok) => setTimeout(ok, 250 * k));
-          if (await Store.change("runs", r.id, (x) => ((x.actIds || []).includes(tok) ? x : { ...poolAdd(recordAct(x, step, c), got.items, got.gold), actIds: [...(x.actIds || []).slice(-40), tok] }))) break;
+          if (await Store.change("runs", r.id, (x) => ((x.actIds || []).includes(tok) ? x : { ...poolAdd(recordAct(x, step, rec), got.items, got.gold), actIds: [...(x.actIds || []).slice(-40), tok] }))) break;
         }
       } else if (res && (got.items.length || got.gold)) res.text = `${res.text || ""} (Finds go to the party's loot pile.)`.trim();
       ctx.persist(true);
@@ -211,11 +226,11 @@ const LOOTVOTE = (() => {
         const nm = D.ITEMS[it.item]?.name || it.item, tier = typeof CC !== "undefined" ? CC.tier(it.item, it) : "common";
         const want = p.has(it.i), others = v.members.filter((m) => m !== s.id && (v.votes?.[m] || []).includes(it.i)).length;
         return `<div class="lv-row q-${tier}">${typeof ICONART !== "undefined" ? ICONART.item(it.item, 28, it) : ""}<span class="nm">${it.qty > 1 ? `${it.qty}× ` : ""}${esc(nm)}${typeof TOMEINFO !== "undefined" && TOMEINFO.isTome(it.item) ? `<small class="ti-line">${esc(TOMEINFO.line(s, it.item))}</small>` : ""}${others ? `<small>${others} other${others > 1 ? "s" : ""} want it</small>` : ""}</span>
-          ${mine ? `<b class="lv-tag">${want ? "Want" : "Pass"}</b>` : `<button class="btn sm ${want ? "pri" : ""}" data-act="lvpick" data-k="${esc(key)}" data-i="${it.i}">${want ? "✔ Want" : "Want"}</button>`}</div>`;
+          ${mine ? `<b class="lv-tag">${want ? "Want" : "Pass"}</b>` : `<button class="btn sm ${want ? "pri" : ""}" data-act="lvpick" data-k="${esc(key)}" data-i="${it.i}">${want ? " Want" : "Want"}</button>`}</div>`;
       }).join("") || '<p class="sub">No items this time.</p>';
       const n = v.members.length, each = Math.floor((v.gold || 0) / n);
-      return `<h2>🎲 Party loot</h2><p class="sub">${v.what ? `From ${esc(v.what)}. ` : ""}Tap <b>Want</b> on what you'd like. One person wanting it takes it; if several want it, everyone rolls a d100 and the highest wins. Nobody wants it: it goes to the leader.${rollBonus(s) ? ` <b>Lucky Draw:</b> +${rollBonus(s)} on your rolls.` : ""}</p>
-        ${v.gold ? `<p class="lv-gold">💰 ${v.gold} gold, split evenly: ${each} each${v.gold - each * n ? ` (+${v.gold - each * n} to the leader)` : ""}.</p>` : ""}
+      return `<h2> Party loot</h2><p class="sub">${v.what ? `From ${esc(v.what)}. ` : ""}Tap <b>Want</b> on what you'd like. One person wanting it takes it; if several want it, everyone rolls a d100 and the highest wins. Nobody wants it: it goes to the leader.${rollBonus(s) ? ` <b>Lucky Draw:</b> +${rollBonus(s)} on your rolls.` : ""}</p>
+        ${v.gold ? `<p class="lv-gold"> ${v.gold} gold, split evenly: ${each} each${v.gold - each * n ? ` (+${v.gold - each * n} to the leader)` : ""}.</p>` : ""}
         <div class="lv-list">${rows}</div>
         <p class="sub lv-timer">${mine ? `Your vote is in. Waiting for ${v.members.filter((m) => !v.votes?.[m]).length} more…` : `${left}s left · no vote counts as Pass`}</p>
         ${mine ? '<button class="btn" data-act="close" style="width:100%">Close</button>' : `<button class="btn pri" data-act="lvsend" data-k="${esc(key)}" style="width:100%">Send my vote</button>`}`;
@@ -228,15 +243,21 @@ const LOOTVOTE = (() => {
         const dice = roll ? `<span class="lv-dice">${roll.rounds.map((rs) => rs.map((r) => `<i class="die" style="--n:${r.roll}">${r.roll}</i>${r.plus ? `<b class="plus">+${r.plus}</b>` : ""}<small>${esc(name(r.m))}</small>`).join(" ")).join(' <em>tie, again:</em> ')}</span>` : "";
         return `<div class="lv-row ${winner === s.id ? "won" : ""}"><span class="nm">${it.qty > 1 ? `${it.qty}× ` : ""}${esc(nm)} → <b>${esc(name(winner))}</b></span>${dice}</div>`;
       }).join("");
-      return `<h2>🎲 Loot shared out</h2>${v.gold ? `<p class="lv-gold">💰 Your gold: ${res.gold[s.id] || 0}</p>` : ""}<div class="lv-list">${lines || '<p class="sub">No items.</p>'}</div><button class="btn pri" data-act="close" style="width:100%">Continue</button>`;
+      return `<h2> Loot shared out</h2>${v.gold ? `<p class="lv-gold"> Your gold: ${res.gold[s.id] || 0}</p>` : ""}<div class="lv-list">${lines || '<p class="sub">No items.</p>'}</div><button class="btn pri" data-act="close" style="width:100%">Continue</button>`;
     }
     async function showVote(v, key, runId, voteId) {
       const s = S();
       if (!v.members.includes(s.id)) return;
+      if (closed(v) && !v.sealed && v.leader === s.id) {   // the leader seals it for everyone
+        const sc = runId ? await Store.change("runs", runId, (x) => (x.vote ? { ...x, vote: seal(x.vote, s.id) } : x)) : await Store.change("lvotes", voteId, (x) => seal(x, s.id));
+        const sv = runId ? sc?.after?.vote : sc?.after;
+        if (sv?.sealed) v = sv;
+      }
       if (closed(v)) {
-        if (v.done?.[s.id] || (s.lootTaken || {})[key] || resultShown[key]) return;
+        const fv = final(v);
+        if (!fv || v.done?.[s.id] || (s.lootTaken || {})[key] || resultShown[key]) return;
         resultShown[key] = true;
-        const res = resolve(v, key.replace(/^(run|lv):/, ""));
+        const res = resolve(fv, key.replace(/^(run|lv):/, ""));
         const ch = runId ? await Store.change("runs", runId, (x) => (x.vote ? { ...x, vote: markDone(x.vote, s.id) } : x))
           : await Store.change("lvotes", voteId, (x) => markDone(x, s.id));
         const after = runId ? ch?.after?.vote : ch?.after, before = runId ? ch?.before?.vote : ch?.before;
@@ -282,5 +303,5 @@ const LOOTVOTE = (() => {
     return { memberLocked, lockedHTML, aroundAct, follow, onRuns, leaderLeaving, onVotes, act, tick, snap: () => snap(S()) };
   }
 
-  return { VOTE_SECONDS, MAX_HEROES, partyRun, rollBonus, roadVote, snap, strip, addTo, pileSize, openVote, castVote, closed, resolve, markDone, deliver, poolAdd, recordAct, startRunVote, chestToPool, d100, ui };
+  return { VOTE_SECONDS, MAX_HEROES, partyRun, rollBonus, roadVote, snap, strip, addTo, pileSize, openVote, castVote, closed, seal, final, resolve, markDone, deliver, poolAdd, recordAct, startRunVote, chestToPool, d100, ui };
 })();

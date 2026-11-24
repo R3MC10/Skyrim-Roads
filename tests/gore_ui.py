@@ -40,7 +40,7 @@ async def main():
         b = await p.chromium.launch(args=["--no-sandbox"])
         errs = []
         for dev, vp, dpr, w in DEVICES:
-            for style in ["ink", "pixel"]:
+            for style in ["ink"]:
                 ctx = await b.new_context(viewport=vp, device_scale_factor=dpr)
                 await ctx.add_init_script(f"localStorage.setItem('rotn_prefs', JSON.stringify({{artStyle:'{style}'}}))")
                 pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(style + " " + str(e)))

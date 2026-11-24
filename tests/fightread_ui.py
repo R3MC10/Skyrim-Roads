@@ -13,7 +13,7 @@ def ok(c, m):
     print(("ok   " if c else "FAIL ") + m)
     if not c: fails.append(m)
 
-START = """(st)=>{ ART.setStyle(st); document.querySelectorAll('#modal').forEach(m=>m.remove());
+START = """(st)=>{ document.querySelectorAll('#modal').forEach(m=>m.remove());
   try { const p=JSON.parse(localStorage.getItem('rotn_prefs')||'{}'); p.tbFast=false; localStorage.setItem('rotn_prefs', JSON.stringify(p)); } catch(e){}
   const S=window.__dbg.save(); S.level=20; for (const k of ['One-Handed','Destruction','Restoration','Athletics','Acrobatics']) S.skills[k].lvl=45;
   S.mpBonus=60; for (const id of ['flames','sparks','healing']) if (D.SPELLS[id] && !S.spells.includes(id)) S.spells.push(id);
@@ -37,7 +37,7 @@ async def main():
         pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
         await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=fread1&tb&fightanim"); await pg.wait_for_timeout(1800)
         await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Reader"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
-        for style in ["ink", "pixel"]:
+        for style in ["ink"]:
             await pg.evaluate(START, style); await pg.wait_for_timeout(400)
             await pg.click("#modal [data-act=ev][data-c=fight]"); await pg.wait_for_timeout(500)
             ok(await wait_mine(pg), f"{style}: my turn comes")
@@ -52,7 +52,7 @@ async def main():
             await pg.wait_for_timeout(300)
             ok(await pg.evaluate("/Poisoned −6/.test(document.querySelector('#tbf .tbu.me .tbst.mine')?.textContent||'')"), f"{style}: my poison chip says −6")
             me_fc = await pg.evaluate("document.querySelector('#tbf .tbu.me .tbfcl')?.textContent||''")
-            ok("☠" in me_fc, f"{style}: my bar's forecast shows the poison ({me_fc.strip()})")
+            ok("\ue12e" in me_fc, f"{style}: my bar's forecast shows the poison ({me_fc.strip()})")
             ok(await pg.evaluate("!!document.querySelector('#tbf .tbu.me .tbbar s.tbfc')"), f"{style}: stripes on my health bar")
             foe_fc = await pg.evaluate("document.querySelector('#tbf .tbu.foe .tbfcl')?.textContent||''")
             ok("−9" in foe_fc, f"{style}: the foe's bar shows its burning ({foe_fc.strip()})")

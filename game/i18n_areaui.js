@@ -33,7 +33,7 @@
     "ready now": "gotowe teraz", "On now": "Trwa teraz", "Starting soon": "Zaraz się zacznie", "You can level up": "Możesz awansować",
     "Pick Health, Magicka or Stamina.": "Wybierz Zdrowie, Magię lub Wytrzymałość.", "Open your perk trees.": "Otwórz drzewka perków.",
     "Claim it in the Journal.": "Odbierz w Dzienniku.", "Fills up again": "Znów się zapełnia", "New foes and new loot.": "Nowi wrogowie i nowe łupy.",
-    "Have a look in 👥 Friends.": "Zajrzyj do 👥 Znajomi.", "The gold comes in on its own.": "Złoto wpływa samo.", "With a trade offer for you": "Z ofertą wymiany dla ciebie",
+    "Have a look in  Friends.": "Zajrzyj do  Znajomi.", "The gold comes in on its own.": "Złoto wpływa samo.", "With a trade offer for you": "Z ofertą wymiany dla ciebie",
     "Horse rested": "Koń wypoczęty", "Caravan leaving": "Karawana odjeżdża", "Be in town or it goes without you.": "Bądź w mieście, bo odjedzie bez ciebie.",
     "Starting now. Every player can join in.": "Zaczyna się teraz. Każdy gracz może dołączyć.", "This lead goes cold in half an hour.": "Ten trop wystygnie za pół godziny.",
     "Cleared places full again": "Oczyszczone miejsca znów pełne", "Courier trades arriving": "Nadchodzą wymiany kurierem", "Garden and homestead goods": "Ogród i dobra z zagrody",

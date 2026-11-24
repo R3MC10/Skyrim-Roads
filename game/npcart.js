@@ -3,7 +3,7 @@
    "who you're talking to" card with a one-line greeting at the top of each town section.
    Names are [Skyrim] (the real shopkeepers of each town); a few roles the game invented (the Arena master, the
    Hall-warden) are [OURS]. Looks: race palettes from heroart.js, clothing by role, small seeded differences.
-   Both art styles via ART.html (ink / pixel), cached by person + size + style.
+   Drawn via ART.html, cached by person + size.
    NPCART.portrait(npc, size) · NPCART.who(town, section) · NPCART.talk(town, section, save)
    NPCART.trainer(name, skill, size) · NPCART.follower(id, size) · NPCART.giver(questId, size) · NPCART.steward(hold, size) */
 const NPCART = (() => {
@@ -160,8 +160,7 @@ const NPCART = (() => {
     const skin = n.role === "greybeard" ? "#e6cfb4" : R.skin[h % R.skin.length], hair = n.role === "greybeard" ? "#e8e6e0" : (R.hair.length ? R.hair[(h >> 2) % R.hair.length] : null);
     const female = n.sex === "f", cx = 48, hy = 42;
     // background
-    if (ART.style() === "pixel") { g.fillStyle = "#ccaa88"; g.fillRect(0, 0, S, S); }
-    else { H.parchment(g, S, S, h % 97); }
+    H.parchment(g, S, S, h % 97);
     g.save(); const k = S / 96; g.scale(k, k);
     // a soft backdrop tinted by role/hold
     g.fillStyle = (o.tabard || o.sash || (o.rich ? o.body : null)) ? "rgba(59,44,30,0.10)" : "rgba(59,44,30,0.06)"; g.fillRect(0, 0, 96, 96);

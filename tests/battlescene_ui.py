@@ -75,13 +75,11 @@ async def main():
         await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=bsc1&tb&fightanim&assets"); await pg.wait_for_timeout(1800)
         await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Painter"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
         ok(await pg.evaluate("typeof BSCENE!=='undefined' && BSCENE.list().length===20"), "battle scenes loaded")
-        for style in ["ink", "pixel"]:
-            await pg.evaluate(f"ART.setStyle('{style}')")
+        for style in ["ink"]:
             for o in CASES:
                 for tall in [False, True]:
                     await scene(pg, o, tall, style)
         # flames keep moving after the replay has ended (the stage is idle between turns)
-        await pg.evaluate("ART.setStyle('ink')")
         await scene(pg, CASES[0], True, "ink", shot=False)
         a = await pg.evaluate("document.querySelector('.bsx canvas').toDataURL()")
         await pg.wait_for_timeout(400)
