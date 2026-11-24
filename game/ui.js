@@ -493,7 +493,7 @@
   }
 
   // ------------------------------------------------------------ main screen
-  window.__dbg = { save: () => S, fightResult: (r) => showFightResult(r), view: () => view, openEvent: (n) => openEvent(n), openEncounter: (n) => openEncounter(n), tally: (k, n) => tally(k, n), message: (t, x, b) => showMessage(t, x, b), toast: (t) => toast(t), publish: () => publishCard(), others: () => others, party: () => party, pp: () => ppUI, coopRuns: () => coopUI?.runs || [] };   // for testing in the browser console
+  window.__dbg = { save: () => S, fightResult: (r) => showFightResult(r), view: () => view, openEvent: (n) => openEvent(n), openEncounter: (n) => openEncounter(n), tally: (k, n) => tally(k, n), message: (t, x, b) => showMessage(t, x, b), toast: (t) => toast(t), publish: () => publishCard(), others: () => others, party: () => party, pp: () => ppUI, coopRuns: () => coopUI?.runs || [], setView: (z, cn) => { zoom = z; if (cn) center = cn; follow = false; kickMap(); } };   // for testing in the browser console
   /* phone back button: close what's on top, step back to the map, and only then leave the app */
   /* opts.esc: the PC's Esc key (desktop.js). It walks the same steps, except that the compass isn't "home" on a PC and
      a fight isn't left alone: false then means "nothing left to close", and Esc opens the pause menu (pausemenu.js) */
@@ -969,7 +969,7 @@
     if (!mapResized && (!mapOnScreen || mapCovered())) return 200;
     const moving = S?.trip?.status === "travel" || performance.now() - mapTouchedAt < 1500;
     const wx = WEVENTS.weather(livePos()).id, weatherAnim = !reduceMotion && !["clear", "cloudy", "fog"].includes(wx);
-    const mapAnim = (typeof MAPART !== "undefined" && MAPART.active()) || (typeof MOTION !== "undefined" && MOTION.mapBusy()) || (typeof MAPHERO !== "undefined" && MAPHERO.active());   // a discovery burst or an arrival puff playing   // a discovery burst playing
+    const mapAnim = (typeof INKMAP !== "undefined" && INKMAP.pending()) || (typeof MAPART !== "undefined" && MAPART.active()) || (typeof MOTION !== "undefined" && MOTION.mapBusy()) || (typeof MAPHERO !== "undefined" && MAPHERO.active());   // a discovery burst or an arrival puff playing   // a discovery burst playing
     const raidNow = typeof RAIDART !== "undefined" && WEVENTS.activeRaid();
     const fxNow = typeof FXART !== "undefined" && S ? FXART.state(S) : null;   // spell and shout effects on the map
     const PC = typeof PCMAP !== "undefined" && PCMAP.on();   // PC map home screen (pcmap.js): smooth pan and zoom, living map (mapfx.js)
@@ -1020,7 +1020,7 @@
     let down = null, moved = false, pinch = null;
     const setZoom = (z, fx, fy) => {     // zoom keeping the point under the fingers still
       const PC = typeof PCMAP !== "undefined" && PCMAP.on();   // on a PC you can zoom out to all of Skyrim (pcmap.js)
-      z = Math.max(PC ? PCMAP.minZoomFor(c) : 1, Math.min(PC ? PCMAP.MAXZ : 6, z));
+      z = Math.max(PC ? PCMAP.minZoomFor(c) : 1, Math.min(PC ? (PCMAP.maxZoomFor ? PCMAP.maxZoomFor(c) : PCMAP.MAXZ) : 6, z));
       if (view.transform && fx != null) {
         const { k, ox, oy } = view.transform, mx = (fx - ox) / k / WorldMap.W, my = (fy - oy) / k / WorldMap.H;
         const r = c.getBoundingClientRect(), nk = k * z / zoom;

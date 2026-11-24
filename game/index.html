@@ -3119,6 +3119,18 @@ html.pcmap.pcq-off:not(.pc-side) .pcqtab{transform:none}
 .pcqtab svg{width:20px;height:20px}
 html.pcmap.pc-reduce .pcquest,html.pcmap.pc-reduce .pcqtab,html.pcmap.pc-reduce #side{transition:none!important;animation:none!important}
 html.pcmap.pc-home:has(.pcparty.on) .vitals{left:14px}
+/* [potionfx] potionfx.js: a potion working over a few rounds / seconds */
+.tbst.potfx{flex-wrap:wrap}
+.st.potot{display:inline-flex;align-items:center;gap:3px;border:1px solid rgba(226,187,100,.35)}
+.st.potot img,.potfx-map img{width:14px;height:14px;image-rendering:auto}
+.st.potot small,.potfx-map small{font:600 11px "Barlow Semi Condensed",sans-serif;color:#f3ead2}
+.st.potot.pk-health{border-color:rgba(214,84,70,.75);box-shadow:inset 0 0 6px rgba(190,50,40,.35)}
+.st.potot.pk-magicka{border-color:rgba(90,140,230,.75);box-shadow:inset 0 0 6px rgba(60,100,210,.35)}
+.st.potot.pk-stamina{border-color:rgba(100,190,110,.75);box-shadow:inset 0 0 6px rgba(60,160,80,.35)}
+.potfx-map{position:fixed;z-index:6;transform:translateY(-50%);display:inline-flex;align-items:center;gap:3px;padding:1px 6px;border-radius:6px;background:rgba(14,15,18,.85);border:1px solid rgba(214,84,70,.75);box-shadow:0 2px 6px rgba(0,0,0,.45);pointer-events:auto;cursor:help}
+.potfx-float{position:fixed;z-index:7;pointer-events:none;transform:translate(-50%,0);font:700 14px "Barlow Semi Condensed",sans-serif;color:#8fe08a;text-shadow:0 1px 2px #000,0 0 4px rgba(0,0,0,.8);animation:potfxup 1.1s ease-out forwards}
+@keyframes potfxup{0%{opacity:0;transform:translate(-50%,4px)}20%{opacity:1}100%{opacity:0;transform:translate(-50%,-22px)}}
+@media (prefers-reduced-motion:reduce){.potfx-float{animation-duration:.01s}}
 /* [sides] sideui.js: the Faction tab, the courier's letters, the recruiters, side emblems on travellers */
 .sidep h3,.srec h3{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);margin:14px 0 6px;font-weight:600;display:flex;align-items:center;gap:8px}
 .shead{display:flex;align-items:center;gap:12px;margin:4px 0 10px}.shead b{display:block;font-size:18px;color:var(--ink)}.shead .sub{display:block}
@@ -3458,6 +3470,16 @@ html.a11y-still #tbf .c2res,html.a11y-still #tbf .c2rescard{transition:none}
 .fb-tree h4{margin:0 0 3px;font:600 13px "Barlow Semi Condensed",sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#d6b25e}
 .fb-tree ul{margin:0;padding:0 0 0 14px;color:#e8dcc0;font-size:13px}.fb-tree li{margin:1px 0}
 @media (max-width:420px){.fb-build{flex-direction:column}.fb-skills{grid-template-columns:1fr 1fr}}
+/* [mapvisuals] PC map: the cards floating over the map (world events, news) sit above the fixed map canvas, so a
+   card can never hide under the map and leave only its progress bar showing as a stray gold line */
+html.pcmap div:has(> #mapwrap) > :not(#mapwrap,#vitals){position:relative;z-index:1}
+/* [mapvisuals] PC map: the compass is one centred Skyrim bar (not a strip stretched across a wide window): dark ink band,
+   gold rules top and bottom fading at the ends, end caps */
+html.pcmap .compass{left:50%;right:auto;width:min(980px,52vw);transform:translateX(-50%);top:10px;height:32px;overflow:hidden;
+  background:linear-gradient(90deg,rgba(8,8,10,0),rgba(8,8,10,.78) 9%,rgba(8,8,10,.78) 91%,rgba(8,8,10,0));
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)}
+html.pcmap .compass::before,html.pcmap .compass::after{left:3%;right:3%;background:linear-gradient(90deg,transparent,rgba(214,182,110,.7) 18%,rgba(214,182,110,.7) 82%,transparent)}
+html.pcmap .compass i.cl{left:5%}html.pcmap .compass i.cr{right:5%}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -3547,6 +3569,7 @@ html.a11y-still #tbf .c2res,html.a11y-still #tbf .c2rescard{transition:none}
 <script src="fightctl.js"></script>
 <script src="fightread.js"></script>
 <script src="spellfx.js"></script>
+<script src="potionfx.js"></script>
 <script src="foeintent.js"></script>
 <script src="fxicons.js"></script>
 <script src="strategy.js"></script>
@@ -3578,6 +3601,7 @@ html.a11y-still #tbf .c2res,html.a11y-still #tbf .c2rescard{transition:none}
 <script src="account.js"></script>
 <script src="servernet.js"></script>
 <script src="store.js"></script>
+<script src="inkmap.js"></script>
 <script src="map.js"></script>
 <script src="backup.js"></script>
 <script src="sound.js"></script>
@@ -3588,6 +3612,7 @@ html.a11y-still #tbf .c2res,html.a11y-still #tbf .c2rescard{transition:none}
 <script src="skyart.js"></script>
 <script src="combatfx.js"></script>
 <script src="gore.js"></script>
+<script src="gorefx2.js"></script>
 <script src="enchants2.js"></script>
 <script src="bscdata.js"></script>
 <script src="battlescene.js"></script>
@@ -3682,6 +3707,7 @@ html.a11y-still #tbf .c2res,html.a11y-still #tbf .c2rescard{transition:none}
 <script src="i18n_boss.js"></script>
 <script src="i18n_accounts.js"></script>
 <script src="i18n_spells.js"></script>
+<script src="i18n_potionfx.js"></script>
 <script src="i18n_sweep.js"></script>
 <script src="i18n_balfear.js"></script>
 <script src="i18n_combat2.js"></script>

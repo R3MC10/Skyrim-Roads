@@ -3,7 +3,7 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b172-fightpc", build: 172, date: "25 Nov 2026", title: "The fight fills your PC, and ends in slow motion", items: [
+    { id: "b175-fightpc", build: 175, date: "25 Nov 2026", title: "The fight fills your PC, and ends in slow motion", items: [
       "On a PC or laptop the fight now fills the whole window, like the big map: the picture runs from edge to edge and the cards and the skill bar float over it.",
       "The blow that ends a fight plays in slow motion, then a card shows how it went: how many rounds, the damage you dealt and took, and your best hit. Continue is right on it.",
       "New in Settings → Fights: Fight quality (Low, Medium, High), Frame rate (30, 60 or no cap), and sliders for Camera shake and Fight UI size. Low quality and 30 frames save battery on phones.",
@@ -11,7 +11,7 @@ const PATCHNOTES = (() => {
       "Tooltips in fights now say what a move costs in stamina or magicka instead of action points.",
       "Fixed on phones: a few screens (the house chest, parts of dungeons and fights) were missing some of their styling.",
     ] },
-    { id: "b172-turns", build: 172, date: "25 Nov 2026", title: "No more action points: you choose your turn", items: [
+    { id: "b175-turns", build: 175, date: "25 Nov 2026", title: "No more action points: you choose your turn", items: [
       "Action points are gone. On your turn make up to 4 moves in any order, then press End turn. Blows, power attacks, bashes and guards cost stamina, spells cost magicka, dark magic costs a little health. Doing the same move again in a turn costs more, and a power attack is once a turn.",
       "Moves you don't make turn into guard: end early and you take up to 30% less damage until your next turn.",
       "You see every foe's next move by name with its icon, numbers, who it's aimed at and what it leaves behind (like Venom Spit → Lydia, Poison 3). When it acts, the banner and the log name the move too.",
@@ -19,20 +19,20 @@ const PATCHNOTES = (() => {
       "Out of breath? You can always make one plain swing a turn. Frost and shock bite your stamina and magicka a bit less than before, and trolls and hagravens regenerate at most four times a fight.",
       "The fight speed button and the Skip buttons are gone. Tap the fight scene if you want to finish an animation right away.",
     ] },
-    { id: "b172-stacks", build: 172, date: "25 Nov 2026", title: "Statuses stack, and every move is a minigame", items: [
+    { id: "b175-stacks", build: 175, date: "25 Nov 2026", title: "Statuses stack, and every move is a minigame", items: [
       "Burn, chill, poison, bleed, vulnerable, ward and more now stack. The number on the icon is how many stacks; each one makes it stronger and it drops by 1 every turn. Hold or hover the icon to see what it does.",
       "Bosses can't be stun-locked: every stun, calm or fear gives them Resolve, so the next one is shorter.",
       "Every attack, guard and spell is a quick minigame: tap in the bright zone, time your block, draw your bow or trace a rune. Perfect adds a stack of something nasty, a miss is weaker. Turn it off in Settings → Minigames if you'd rather not.",
       "New perk effects for stacks: enchanted weapons add an extra stack, and resist perks take a stack off what's put on you.",
     ] },
-    { id: "b172-strategy", build: 172, date: "25 Nov 2026", title: "Fights that reward thinking", items: [
+    { id: "b175-strategy", build: 175, date: "25 Nov 2026", title: "Fights that reward thinking", items: [
       "New move: Breathe (Catch your breath). It's free but ends your turn, and gets back a good chunk of stamina and some magicka. Power attacks, bashes and guards burn stamina, so pace yourself: hit hard now, or breathe and hit hard next turn.",
       "Openings: hit a foe that's staggered, stunned or paralyzed and the blow does 30% more (a power attack 45%). A power attack on a frozen foe shatters the frost for extra. Bash or stagger first, then cash in. Still no one-shots.",
       "Frost slows: a chilled or slowed foe acts later in the round, so you and your followers get in first.",
       "Give your follower orders mid-fight with the little buttons on their card: Attack, Defend me (steps in front of you sooner) or Hold back (back row, only guards and heals). Tap again to let them fight their own way.",
       "Perks: Second Wind makes Breathe give 50% more; Savage Strike and Devastating Blow make power attacks into an opening hit even harder. Auto uses all of this too.",
     ] },
-    { id: "b172-combat2", build: 172, date: "25 Nov 2026", title: "A fight screen that feels like a game", items: [
+    { id: "b175-combat2", build: 175, date: "25 Nov 2026", title: "A fight screen that feels like a game", items: [
       "The fight is now one big scene that fills the screen. Everything you need sits right in it, so nothing scrolls, on phones and on PC.",
       "Your health is a glowing orb in the corner with magicka and stamina curving round it; a striped band shows how much the foe is about to take. Slim bars float over your hero's head.",
       "The foe's name, health, statuses and what it plans next hang over its head. Stunned foes wobble with stars, big hits flash and shake the picture.",
@@ -41,6 +41,30 @@ const PATCHNOTES = (() => {
       "Every buff and debuff now shows as a little icon on whoever has it: you, followers, party members and foes. Armour spells, wards, healing over time, potions, shouts and powers, poison, burning, frost, bleeding, fear, paralysis and the rest. Each shows the turns left, and tapping or hovering tells you what it does.",
       "When one lands or wears off, a short word floats up over that fighter: \"+Oakflesh\", \"Poisoned\", \"Burning fades\".",
       "Prefer the old look? Settings → Fight screen → Classic.",
+    ] },
+    { id: "b174-potionregen", build: 174, date: "25 Nov 2026", title: "Potions work over time", items: [
+      "Health, magicka and stamina potions no longer refill you all at once. They pour in over a few rounds in a fight, or a few seconds on the map: small potions over 5, ordinary ones over 4, the big brewed ones over 3. Half comes in right after you drink, so one still pulls you out of trouble.",
+      "Drinking another of the same kind while one is still working doesn't stack: you keep whichever has more left to give. A health and a magicka potion work side by side just fine.",
+      "A small potion chip under your bars shows how many rounds are left, and green numbers rise as it works. On the map a chip sits next to your health bar with the seconds left.",
+      "Followers, party members and the Smart AI won't waste a second potion of a kind that is still working. In a party everyone sees each other's potions working.",
+      "New Alchemy perk, Quick Draught (2 ranks): your potions work one round faster per rank.",
+    ] },
+    { id: "b172-mapvisuals", build: 172, date: "24 Nov 2026", title: "A sharper, prettier world map", items: [
+      "On a PC the map now fills the whole window, even zoomed all the way out. No more small map in the middle with grey clouds and empty dark space around it.",
+      "Places you haven't found yet hide under dark, inked parchment mist instead of grey photo clouds.",
+      "Zoom in close and the blurry painting turns into a crisp hand-inked chart: hills, pines, autumn trees, reeds, rocks and snowy peaks drawn sharp at any zoom, on any screen.",
+      "Roads are thin, slightly wobbly ink lines now, and small paths to farms and landmarks are dotted. The Roads on the map switch in Settings still works.",
+      "Hold names are small, quiet capitals that fade as you zoom in and never cover a town's name.",
+      "Fixed a stray gold line under the world event cards: it was the caravan's progress bar showing through while its card was hidden under the map.",
+      "The compass at the top of the PC map is one centred bar, like in Skyrim.",
+    ] },
+    { id: "b173-gorefx", build: 173, date: "25 Nov 2026", title: "Realistic blood and splatter", items: [
+      "Blows now throw real-looking blood: a wet burst of drops and fine mist flies away from whoever struck, bigger the harder the hit.",
+      "Critical hits and finishing blows add a jet of blood and a wide splash, splatter the ground and smear the foe. The stains slowly fade over the fight.",
+      "Hammers and maces kick up dust and spill less blood. Draugr and skeletons burst into grave dust and bone chips, Dwemer machines spit oil and sparks, Falmer and chaurus bleed green and daedra dark ichor. A blade on armour throws sparks.",
+      "Spells look better too: frost throws ice shards, fire throws embers and smoke, lightning crackles and other magic leaves glowing motes.",
+      "Followers and horses bleed a little but are never splattered or cut up, and still only get knocked down.",
+      "Blood and gore on Full shows all of it; Low keeps the dust, sparks and spell effects without the realistic blood; Off shows none.",
     ] },
     { id: "b172-horseart", build: 172, date: "25 Nov 2026", title: "Painted horses", items: [
       "Horses get painted: in fights, on the road and on the map your horse is now a proper painted horse with saddle and tack, not a little drawing.",
@@ -1175,7 +1199,7 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 172;
+  const NEXT_AT = 175;
   const NEXT = [
     "Dragon Shouts learned from word walls",
     "Werewolf and vampire paths",
