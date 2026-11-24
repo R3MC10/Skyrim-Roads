@@ -65,7 +65,7 @@ const TB = (() => {
   }
   const isSpell = (a) => /^(spell|dual|scroll):/.test(a);
   /* [OURS] shared party fights: the foe's state handed over to a player's phone for their turn and back (sharedfight.js) */
-  const FOE_KEYS = ["foeSt", "eParalyzed", "tbStunLeft", "tbStunCd", "tbStunRound", "stagger", "calmTurns", "bleed", "kit", "kitDot", "kitApLoss", "kitLast", "dStance", "fearTurns", "disarmed", "soulTrap", "eMagic", "fpAvoided", "ehp0"];
+  const FOE_KEYS = ["foeSt", "eParalyzed", "tbStunLeft", "tbStunCd", "tbStunRound", "stagger", "calmTurns", "bleed", "kit", "kitDot", "kitApLoss", "kitLast", "dStance", "fearTurns", "disarmed", "soulTrap", "eMagic", "fpAvoided", "ehp0", "foeTgts"];
   /* what a teammate's spell can leave on someone (spellbook.js): handed back with the turn */
   const BUFF_KEYS = ["ward", "reflect", "armorRed", "armorT", "imbue", "thorns", "heroT", "unseen", "dmg", "_baseDmg"];
   /* "You hit the bandit" from one phone reads "Beta hits the bandit" on the others */
@@ -160,6 +160,7 @@ const TB = (() => {
       f.ehp = this.ehpMax; f.fpAvoided = false; f.tbStunLeft = 0; f.tbStunCd = 0;
       if (typeof FOEKIT !== "undefined") { const dt = f.kitDot; FOEKIT.setup(f); f.kitDot = dt; }   // the next one has its own kit
       if (typeof FIGHTREAD !== "undefined") FIGHTREAD.plan(this);
+      if (typeof FOEINTENT !== "undefined") FOEINTENT.plan(this);   // and who each move goes for
       const left = this.waves - this.wave;
       const who = a ? `${String(f.e.name).toLowerCase()} ${a.label}` : String(f.e.name).toLowerCase();
       this.emit("foe", `${a ? "A" : "Another"} ${who} steps in! ${left ? `(${left} more behind it)` : "(the last one)"}`, "foe", { wave: this.wave });
@@ -182,6 +183,7 @@ const TB = (() => {
       this.lines = { me: [], them: [], a: null };
       this.emit("round", `Round ${this.round}`, "round", { order: this.order.map((o) => ({ id: o.id, name: o.name, init: o.init })) });
       if (typeof FIGHTREAD !== "undefined") FIGHTREAD.plan(this);   // the foe's intents for this round (fightread.js)
+      if (typeof FOEINTENT !== "undefined") FOEINTENT.plan(this);   // and who each one goes for (foeintent.js)
     }
     /* the foe gets a free action first (you were spotted, or fled and got caught) */
     begin() {
@@ -380,12 +382,15 @@ const TB = (() => {
       }
       const hpB = f.hp;
       // foes go after your healers and casters when they can (party fights)
-      if (f.allies.length && !f.coverAl) { const h = f.allies.find((a) => !a.down && a.player && (a.role === "healer" || a.heals > 0)); if (h && Math.random() < 0.5) f.coverAl = h; }
+      const FI = typeof FOEINTENT !== "undefined" ? FOEINTENT : null;
+      if (FI) FI.next(this);   // foeintent.js: the target its intent showed (healers first is part of that roll)
+      else if (f.allies.length && !f.coverAl) { const h = f.allies.find((a) => !a.down && a.player && (a.role === "healer" || a.heals > 0)); if (h && Math.random() < 0.5) f.coverAl = h; }
       const guards = f.allies.filter((a) => a.guard || a.tbGuard); guards.forEach((a) => { a._red = a.red; a.red = Math.min(0.85, (a.red || 0) + (a.guard ? 0.4 : 0) + (a.tbGuard || 0)); });   // tbGuard: AP a teammate kept back on their own phone
       const pa = this.everyone.filter((a) => a.pid), pb = pa.map((a) => a.hp || 0);
       if (typeof DRAGONS !== "undefined") DRAGONS.check(f, this);   // allies and bleeding may have brought it down
       let t = typeof DRAGONS !== "undefined" && f.dStance ? DRAGONS.turn(f, () => f.enemyTurn()) : typeof FOEKIT !== "undefined" && f.kit ? FOEKIT.turn(f, () => f.enemyTurn()) : f.enemyTurn();
       guards.forEach((a) => { a.red = a._red; a.guard = 0; a.tbGuard = 0; });
+      if (FI) { FI.done(this); t = FI.say(this, t); }   // "takes aim at Lydia"
       const loss = hpB - f.hp;
       if (loss > 0 && f.tbGuard) { const back = loss * f.tbGuard; f.hp += back; t += ` (guard −${Math.round(back)})`; }
       const mh = G.maxHealth(f.s), cap = HIT_CAP * mh, loss2 = hpB - f.hp;
@@ -624,6 +629,7 @@ const TB = (() => {
     return out.slice(0, 2);
   }
   function render(state) {
+    try { if (typeof FOEINTENT !== "undefined" && ui?.sess) FOEINTENT.refresh(ui.sess); } catch (e) { /* never break a fight for a marker */ }
     try { ui?.sess?.remote?.sync?.(ui.sess); } catch (e) { /* the party view never breaks the fight */ }
     const el = document.getElementById("tbf"); if (!el || !ui) return;
     const sess = ui.sess, f = sess.f, s = f.s;
@@ -682,6 +688,7 @@ const TB = (() => {
     </div>`;
     if (scene) ui.lastScene = scene;
     if (typeof TBUI !== "undefined") TBUI.after(el, { hurt: hpNow < prev.hp, hit: ehpNow < prev.ehp, big: prev.hp - hpNow > hpMax * 0.15, mine, pops });
+    if (typeof FOEINTENT !== "undefined") { el.classList.toggle("tbplay", playing); try { FOEINTENT.decorate(el, sess); } catch (e) { console.warn("foe targets", e); } }   // crosshairs and the arrow
     if (R) { el.classList.toggle("tbplay", playing); R.low(el, hpNow / Math.max(1, hpMax), !sess.done); }
   }
   /* floating numbers for what just happened: damage coloured by element, heals, crits, and what you spent */

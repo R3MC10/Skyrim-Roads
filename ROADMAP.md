@@ -70,6 +70,12 @@ our own marked [OURS]; plain-language UI; phone first.
 
 ## In progress (write your name before you start)
 - Claude: homestead rooms (hsrooms.js): garden and cellar, wings as real stations, display cases, followers living there, raids, party visits to the leader's home, 4 Smithing/Speech perks. Branch claude/homestead.
+- Claude: foe kit balance (foekit.js): poison/burning/bleeding respect armour, foe heals capped at two a fight (fixes flaky test_foekit Bandit check). Branch claude/foekitflake.
+- Claude: followers become people (followerbonds.js): opinions and a loyalty meter, banter on the road and in towns, comments on places and fights, a personal quest per follower (signature move + keepsake), low-loyalty trouble (grumbling, refusing orders, leaving), Kindred Spirit / Heart to Heart / Sworn Companion perks. Branch claude/followerbonds.
+- Claude: foe intents show their target (foeintent.js): "→ you / → Lydia" on every intent chip, a crosshair on the targeted card and an arrow in the scene; the shown target is the one hit. Branch claude/foeintent.
+- Claude: tooltips over almost anything (tooltip.js): hover with a mouse, hold a finger on phones; items, spells, perks, skills, places, quests, followers, party, HUD bars, gold. Branch claude/tooltips.
+- Claude: jewellery and enchantments (jewelry.js, enchanting.js): one amulet + two ring slots, rings and amulets as real gear (loot, shops, forge, icons), ~40 enchantments with real effects, new Enchanting perks. Branch claude/jewelry.
+- Claude: cone of sight on the map (vision.js): heading cone through the fog, spotting places/travellers, range by time/weather/hills/perks, party cones. Branch claude/visioncone.
 - Claude: fight controls overhaul (fightctl.js): big action bar with drawn icons and AP cost pips, reasons on greyed-out moves, quick slots for favourite spells/potions/shouts, tap-to-choose targets for healing, press feedback and buzz, keyboard keys on PC (1-9, Space, M, I, Esc). Branch claude/combatui.
 - Claude: something at every place (placestuff.js): every map location offers trade, work, a job, a blessing, a stash, herbs or a search. Branch claude/fullmap.
 - Claude: shared party fights (sharedfight.js): everyone in a party plays the same fight on their own full fight screen, with their own moves. Branch claude/partysync.
@@ -87,6 +93,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Claude: foe rigs (foerig.js): every enemy is a little skeleton with its own animations (breathing, attacks, flinch, stagger, dodge, fall, gloat); painted foes bend and lunge too. Branch claude/foerigs.
 - Kacper: audio: the rest of scripts/gen_audio.mjs (free ElevenLabs plan has ~4k credits a month; music needs a paid plan).
 - Claude: party votes on the road (partyplay.js): everyone with the leader sees the same encounter/event window, members vote, their faces pop up by the option they picked, only the leader acts. Branch claude/partyvote.
+- Claude: great world events (greatevents.js): timed, date-seeded events with a map banner and countdown: a dragon assault on a town (3-phase boss, parties of up to 8), a Daedric rift, a bandit army besieging a hold, and town fairs (games, prizes, cheap shops). Rewards by share, world after-effects (burned town rebuilds, plundered hold, Jarl's thanks), 4 perks. Branch claude/worldevents.
 
 ## Standing rules
 - Perk trees grow with the game: every new system (gathering, magic, encounters, crafting, party play...) adds or adjusts perks with real effects in the matching trees (perkfx.js), keeping old perk ids and a clean star layout.
