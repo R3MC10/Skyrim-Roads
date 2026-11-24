@@ -3,6 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b173-gorefx", build: 173, date: "25 Nov 2026", title: "Realistic blood and splatter", items: [
+      "Blows now throw real-looking blood: a wet burst of drops and fine mist flies away from whoever struck, bigger the harder the hit.",
+      "Critical hits and finishing blows add a jet of blood and a wide splash, splatter the ground and smear the foe. The stains slowly fade over the fight.",
+      "Hammers and maces kick up dust and spill less blood. Draugr and skeletons burst into grave dust and bone chips, Dwemer machines spit oil and sparks, Falmer and chaurus bleed green and daedra dark ichor. A blade on armour throws sparks.",
+      "Spells look better too: frost throws ice shards, fire throws embers and smoke, lightning crackles and other magic leaves glowing motes.",
+      "Followers and horses bleed a little but are never splattered or cut up, and still only get knocked down.",
+      "Blood and gore on Full shows all of it; Low keeps the dust, sparks and spell effects without the realistic blood; Off shows none.",
+    ] },
     { id: "b172-treasure", build: 172, date: "24 Nov 2026", title: "Treasure maps and old relics", items: [
       "Loot can now hold a hand-drawn treasure map, an old journal with a riddle, or a torn piece of a map (find 2-4 pieces and put them together). They show only the land: hills, woods, water, a landmark or two and an X. No names, no marker on your map.",
       "Compare the sketch with the world map (pin it next to the map with one tap), travel there and press Dig here on the Travel tab. A wrong guess only tires you out for a little while.",
@@ -1145,7 +1153,7 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 169;
+  const NEXT_AT = 173;
   const NEXT = [
     "A new, livelier fight screen that fits on one screen",
     "Dragon Shouts learned from word walls",
