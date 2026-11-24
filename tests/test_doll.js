@@ -5,7 +5,7 @@ const c={console,Math,Date,JSON,Float64Array,Float32Array,Uint8Array,Int32Array,
 for(const f of ["data.js","world.js","terrain.js","formulas.js","perks.js","powers.js","engine.js","events.js","dungeons.js","towns.js","wevents.js","enchanting.js","quests.js","smithing.js","ammo.js","dollart.js"])vm.runInContext(fs.readFileSync(W+f,"utf8").replace(/^const (\w+) =/m,"var $1 ="),c);
 vm.runInContext(`
 const ok=(c,m)=>{ if(!c) throw new Error("FAIL "+m); };
-ok([...DOLL.SLOTS_LEFT,...DOLL.SLOTS_RIGHT].sort().join()===[...G.SLOTS].sort().join(),"doll slots = game slots");
+ok([...DOLL.SLOTS_LEFT,...DOLL.SLOTS_RIGHT,...(DOLL.SLOTS_JEWEL||[]).filter((x)=>x!=="ring2")].sort().join()===[...G.SLOTS].sort().join(),"doll slots = game slots");
 const s=G.newSave("A","Doll","nord"); s.inv=[];
 const a=G.give(s,"iron_sword"), b=G.give(s,"steel_sword"), h=G.give(s,"iron_helmet"), sh=G.give(s,"iron_shield"), g2=G.give(s,"iron_greatsword");
 G.equip(s,a);

@@ -191,7 +191,7 @@ const PFX = (() => {
     [ "Smithing", "glass_smithing", "Glass Smithing", 1, [70], ["advanced_armors", "elven_smithing"], "Improving adds another 1. [Skyrim]", [["temper", 1, {}]]],
     [ "Smithing", "dragon_armor", "Dragon Armor", 1, [100], ["daedric_smithing", "glass_smithing"], "Weapons you wear hit 5% harder and armor you wear protects 5% more. [Skyrim]", [["out", 0.05, { weapon: 1 }], ["armorpct", 0.05, {}]]],
     [ "Smithing", "whetstone", "Whetstone Master", 1, [40], ["steel_smithing"], "Improved weapons hit 5% harder. [OURS]", [["out", 0.05, { tempered: 1 }]]],
-    // ---------------------------------------------------------------- Enchanting (3 → 11)
+    // ---------------------------------------------------------------- Enchanting (3 → 14)
     [ "Enchanting", "fire_enchanter", "Fire Enchanter", 1, [30], ["soul_squeezer"], "Fire enchantments are 25% stronger. [Skyrim]", [["ench", 0.25, { el: "fire" }]]],
     [ "Enchanting", "frost_enchanter", "Frost Enchanter", 1, [40], ["fire_enchanter"], "Frost enchantments are 25% stronger. [Skyrim]", [["ench", 0.25, { el: "frost" }]]],
     [ "Enchanting", "storm_enchanter", "Storm Enchanter", 1, [50], ["frost_enchanter"], "Shock enchantments are 25% stronger. [Skyrim]", [["ench", 0.25, { el: "shock" }]]],
@@ -199,6 +199,9 @@ const PFX = (() => {
     [ "Enchanting", "corpus_enchanter", "Corpus Enchanter", 1, [70], ["insightful_enchanter"], "Health, magicka and stamina enchantments are 25% stronger. [Skyrim]", [["ench", 0.25, { el: "corpus" }]]],
     [ "Enchanting", "extra_effect", "Extra Effect", 1, [100], ["corpus_enchanter", "storm_enchanter"], "Every new enchantment is another 10% stronger. [Skyrim: two effects on one item]", [["ench", 0.1, {}]]],
     [ "Enchanting", "deep_charge", "Deep Charge", 1, [60], ["soul_siphon"], "Enchanted weapons hit 10% harder with their enchantment. [OURS]", [["enchhit", 0.1, {}]]],
+    [ "Enchanting", "jeweller", "Jeweller", 1, [30], ["enchanter"], "Enchantments you put on rings and amulets are 15% stronger, and foes drop rings and amulets 50% more often. [OURS]", [["ench", 0.15, { kind: "jewel" }], ["jewelfind", 0.5, {}]]],
+    [ "Enchanting", "warding_enchanter", "Warding Enchanter", 1, [40], ["insightful_enchanter"], "Resist Magic, Fire, Frost, Shock and Poison enchantments are 25% stronger. [OURS]", [["ench", 0.25, { el: "ward" }]]],
+    [ "Enchanting", "hex_enchanter", "Hex Enchanter", 1, [50], ["fire_enchanter"], "Weapon enchantments that aren't fire, frost or shock (absorb, paralyze, fear, calm, bleeding, turn undead) are 25% stronger. [OURS]", [["ench", 0.25, { el: "other" }]]],
     [ "Enchanting", "rune_smith", "Rune Smith", 1, [80], ["deep_charge"], "Elemental statuses from your enchanted weapons last a turn longer. [OURS]", [["enchstatus", 1, {}]]],
     // ---------------------------------------------------------------- Alchemy (8 → 13)
     [ "Alchemy", "snakeblood", "Snakeblood", 1, [80], ["concentrated_poison"], "You resist burning, chills and shocks: they hurt 25% less. [Skyrim: 50% poison resistance]", [["statusres", 0.25, {}]]],
@@ -229,6 +232,9 @@ const PFX = (() => {
     // ---------------------------------------------------------------- sneak mode on the road (sneakmode.js)
     [ "Sneak", "silent_roads", "Silent Roads", 1, [25], ["stealth"], "Sneaking on the road is 15% faster, and other heroes have to be 25% closer to spot you. [OURS]", [["sneakmove", 0.15, {}], ["sneakseen", 0.25, {}]]],
     [ "Sneak", "shadow_paths", "Shadow Paths", 1, [55], ["silent_roads"], "While sneaking on the road, half as many bandits and beasts find you. [OURS]", [["sneakenc", 0.5, {}]]],
+    // ---------------------------------------------------------------- cone of sight on the map (vision.js)
+    [AR, "far_sight", "Far Sight", 2, [30, 60], ["eagle_eye"], "A hunter's eyes: on the map you see 15/30% further ahead, and your cone of sight is 10/20% wider. You spot places, travellers and caravans sooner. [OURS]", [["sightrange", [0.15, 0.3], {}], ["sightwide", [0.1, 0.2], {}]]],
+    [ "Sneak", "owl_eyes", "Owl Eyes", 1, [35], ["stealth"], "Night, fog, storms and blizzards shorten your sight on the map only half as much. [OURS]", [["sightdark", 0.5, {}]]],
     [ "Blocking", "watch_drills", "Watch Drills", 1, [30], ["shield_wall"], "You know how hold guards fight: they hit you 15% softer and you hit them 10% harder. [OURS]", [["in", -0.15, { tag: ["guard"] }], ["out", 0.1, { tag: ["guard"] }]]],
     [ "Sneak", "first_move", "First Move", 1, [40], ["stealth"], "You read a fight before it starts: +4 initiative in turn-by-turn fights. [OURS]", [["tbinit", 4, {}]]],
     [ "Alteration", "quickened_casting", "Quickened Casting", 1, [40], ["apprentice_alteration"], "In turn-by-turn fights you get 1 more spell point every turn (only for spells). [OURS]", [["tbspap", 1, {}]]],
@@ -311,16 +317,19 @@ const PFX = (() => {
       if (c.bigHit && !((x.hit || 0) > c.bigHit * mh)) return false;
       if (c.dark && !(f.wx?.dark || f.dark)) return false;
       if (c.foeBelow && !(f.ehp > 0 && f.ehp < c.foeBelow * (f.e?.health || f.ehp0 || 1))) return false;   // the foe is nearly done
-    } else if (c.foeBelow || c.tag || c.tough || c.big || c.magic || c.archerFoe || c.hpBelow || c.hpAbove || c.first || c.mounted || c.bigHit || c.dark) return false;
+      if (c.foeEl && (f._foeEl === undefined ? (f._foeEl = (f.e && foeElement(f.e)?.el) || null) : f._foeEl) !== c.foeEl) return false;   // Resist Fire/Frost/Shock: their blows carry that element
+      if (c.venom && !(f.e?.poison || tags.has("venom") || (VENOM.test(n) && !/dwarven|brass/i.test(n)))) return false;   // Resist Poison
+    } else if (c.foeBelow || c.tag || c.tough || c.big || c.magic || c.archerFoe || c.hpBelow || c.hpAbove || c.first || c.mounted || c.bigHit || c.dark || c.foeEl || c.venom) return false;
     return true;
   }
   function each(s, key, f, x, fn) {
-    if (!s.perks) return;
-    for (const id in s.perks) {
+    if (s.perks) for (const id in s.perks) {
       const r = s.perks[id], fx = FX[id];
       if (!r || !fx) continue;
       for (const [k, v, c] of fx) if (k === key && ok(s, c, f, x)) fn(val(v, r), id);
     }
+    // worn enchantments that work like perks (Resist Fire, Fortify Block, Fortify Critical, Evasion... see enchanting.js PFXMAP)
+    if (typeof ENCH !== "undefined" && ENCH.pfxWorn && s.loadouts && s.inv) for (const [k, v, c] of ENCH.pfxWorn(s, f)) if (k === key && ok(s, c, f, x)) fn(v, "ench");
   }
   const sum = (s, key, f, x) => { let t = 0; each(s, key, f, x, (v) => (t += v)); return t; };
   const has = (s, key, f, x) => sum(s, key, f, x) > 0;
@@ -344,6 +353,7 @@ const PFX = (() => {
   }
 
   // ---------------------------------------------------------------- elemental statuses
+  const VENOM = /spider|chaurus|spriggan|snake|viper|skeever|hagraven|assassin|poison/i;
   const ICON = { burn: "🔥", chill: "❄️", shock: "⚡" };
   const VERB = { burn: "burns", chill: "is chilled", shock: "is jolted" };
   /* which element a foe's blows carry, if any (name based: fire mages, dragons, atronachs, witches...) */
@@ -425,6 +435,8 @@ const PFX = (() => {
       if (f.hp <= 0 && P(f.s, "shadow_warrior") && !f.shadowUsed) { f.shadowUsed = true; f.hp = 1; }
     }
     if (ms.chill) f.regenSpHold = true;
+    const rh = f.hp > 0 && typeof G !== "undefined" ? sum(f.s, "regenhp", f, {}) : 0;   // Regenerate Health gear: a little back every turn
+    if (rh > 0) { const mh = G.maxHealth(f.s), h = Math.min(mh - f.hp, Math.max(1, Math.round(mh * rh))); if (h > 0) { f.hp += h; parts.push(`you recover ${h}`); } }
     for (const set of [fs, ms]) for (const k of Object.keys(set)) { set[k].turns--; if (set[k].turns <= 0) delete set[k]; }
     if (parts.length) line.me += " · " + parts.join(" · ");
     line.st = { me: Object.fromEntries(Object.entries(ms).map(([k, v]) => [k, v.turns])), foe: Object.fromEntries(Object.entries(fs).map(([k, v]) => [k, v.turns])) };
