@@ -10,6 +10,7 @@
    to the shared "dgame" collection, and party members in the same dungeon watch the same game live, then read the result.
    Automated tests and simulations keep the old roll unless the URL has ?dgame. */
 const DGAMES = (() => {
+  const LX = (x) => (typeof I18N_SWEEP !== "undefined" ? I18N_SWEEP.c(x) : x);   // words drawn on canvas, in the player's language
   const DOM = typeof document !== "undefined";
   const params = () => (DOM ? new URLSearchParams(location.search) : new URLSearchParams(""));
   const automated = () => DOM && (navigator.webdriver || params().has("notut"));
@@ -258,7 +259,7 @@ const DGAMES = (() => {
       const hx = 14 + st.x * 272, hit = st.tick - st.hitAt < 12;
       figure(g, C, hx, 160, 1, hit && st.tick % 4 < 2 ? C.red : C.hero, px);
       timebar(g, C, st);
-      g.fillStyle = C.ink; g.font = "12px sans-serif"; g.fillText(`Hits ${st.hits}`, 10, 18);
+      g.fillStyle = C.ink; g.font = "12px sans-serif"; g.fillText(LX(`Hits ${st.hits}`), 10, 18);
     },
     trigger(g, st, C, px) {
       const t = st.tick * TICK, tw = 52, th = 40, ox = 20, oy = 22;
@@ -274,7 +275,7 @@ const DGAMES = (() => {
         if (st.foundAt >= 0 && i === st.plate) { g.strokeStyle = C.gold; g.lineWidth = 3; g.strokeRect(x + 2, y + 2, tw - 4, th - 4); }
       }
       timebar(g, C, st);
-      g.fillStyle = C.ink; g.font = "12px sans-serif"; g.fillText(`Wrong guesses left: ${Math.max(0, st.maxWrong - st.wrong)}`, 20, 14);
+      g.fillStyle = C.ink; g.font = "12px sans-serif"; g.fillText(LX(`Wrong guesses left: ${Math.max(0, st.maxWrong - st.wrong)}`), 20, 14);
     },
     smash(g, st, C, px) {
       const t = st.tick * TICK;
@@ -292,8 +293,8 @@ const DGAMES = (() => {
       g.strokeStyle = C.line; g.lineWidth = 2; g.strokeRect(mx, my, mw, 22);
       const n = R.smash.needle(st, t);
       g.fillStyle = C.ink; g.fillRect(mx + n * mw - 2, my - 6, 4, 34);
-      if (st.last && st.tick - st.last.tick < 15) { g.fillStyle = st.last.k === 2 ? C.gold : st.last.k ? C.ink : C.red; g.font = "bold 16px sans-serif"; g.textAlign = "center"; g.fillText(st.last.k === 2 ? "CRACK!" : st.last.k ? "thud" : "clang", 150, 120); g.textAlign = "left"; }
-      g.fillStyle = C.ink; g.font = "12px sans-serif"; g.fillText(`Swings left ${st.swings}`, 10, 18);
+      if (st.last && st.tick - st.last.tick < 15) { g.fillStyle = st.last.k === 2 ? C.gold : st.last.k ? C.ink : C.red; g.font = "bold 16px sans-serif"; g.textAlign = "center"; g.fillText(LX(st.last.k === 2 ? "CRACK!" : st.last.k ? "thud" : "clang"), 150, 120); g.textAlign = "left"; }
+      g.fillStyle = C.ink; g.font = "12px sans-serif"; g.fillText(LX(`Swings left ${st.swings}`), 10, 18);
       timebar(g, C, st);
     },
     sneak(g, st, C, px) {
@@ -309,7 +310,7 @@ const DGAMES = (() => {
       const hx = 14 + st.x * 272; figure(g, C, hx, 162, st.hold ? 0.8 : 0.7, C.hero, px);
       // detection meter
       g.fillStyle = "rgba(255,255,255,.12)"; g.fillRect(10, 8, 120, 8); g.fillStyle = st.det > 0.6 ? C.red : C.gold; g.fillRect(10, 8, 120 * st.det, 8);
-      g.fillStyle = C.ink; g.font = "11px sans-serif"; g.fillText("Noticed", 136, 16);
+      g.fillStyle = C.ink; g.font = "11px sans-serif"; g.fillText(LX("Noticed"), 136, 16);
       timebar(g, C, st);
     },
     flee(g, st, C, px) {
@@ -322,7 +323,7 @@ const DGAMES = (() => {
       figure(g, C, fx, 165, 1.15, C.foe, px);
       figure(g, C, hx, 162, 1, st.tick - st.trip < 9 ? C.red : C.hero, px);
       g.fillStyle = "rgba(255,255,255,.12)"; g.fillRect(10, 8, 280, 8); g.fillStyle = C.gold; g.fillRect(10, 8, 280 * p, 8);
-      g.fillStyle = C.ink; g.font = "bold 14px sans-serif"; g.textAlign = "center"; g.fillText(st.side ? (st.side === "L" ? "Now: Right" : "Now: Left") : "Left or Right", 150, 60); g.textAlign = "left";
+      g.fillStyle = C.ink; g.font = "bold 14px sans-serif"; g.textAlign = "center"; g.fillText(LX(st.side ? (st.side === "L" ? "Now: Right" : "Now: Left") : "Left or Right"), 150, 60); g.textAlign = "left";
       timebar(g, C, st);
     },
     search(g, st, C, px) {
@@ -343,7 +344,7 @@ const DGAMES = (() => {
         g.fillStyle = px ? `rgba(120,110,95,${0.35 + 0.65 * v})` : `rgba(128,116,98,${0.3 + 0.68 * v})`;
         g.fillRect(ox + x * cw + jx, oy + y * ch + jy, cw + 0.5, ch + 0.5);
       }
-      g.fillStyle = C.ink; g.font = "12px sans-serif"; g.fillText(`Found ${st.items.filter((i) => i.found).length}/${st.items.length}`, 10, 11);
+      g.fillStyle = C.ink; g.font = "12px sans-serif"; g.fillText(LX(`Found ${st.items.filter((i) => i.found).length}/${st.items.length}`), 10, 11);
       timebar(g, C, st);
     },
     // ---- mirrors of the other mini-games (watch-only)
@@ -354,7 +355,7 @@ const DGAMES = (() => {
       const phi = Math.PI + ((m.angle || 90) / 180) * Math.PI;
       g.strokeStyle = "#d9dde0"; g.lineWidth = 3; g.beginPath(); g.moveTo(cx, cy - 6); g.lineTo(cx + Math.cos(phi) * 100, cy + Math.sin(phi) * 100); g.stroke();
       g.fillStyle = "rgba(255,255,255,.12)"; g.fillRect(20, 186, 260, 5); g.fillStyle = C.red; g.fillRect(20, 186, 260 * clamp((m.strain || 0) / 0.5, 0, 1), 5);
-      g.fillStyle = C.ink; g.font = "12px sans-serif"; g.fillText(m.unb ? "Unbreakable pick" : `Picks left: ${m.picks ?? "?"}`, 10, 18);
+      g.fillStyle = C.ink; g.font = "12px sans-serif"; g.fillText(LX(m.unb ? "Unbreakable pick" : `Picks left: ${m.picks ?? "?"}`), 10, 18);
     },
     ring(g, m, C, px) {
       const rings = m.rings || [], n = rings.length || 3;
