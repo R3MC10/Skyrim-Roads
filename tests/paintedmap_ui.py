@@ -41,7 +41,7 @@ PROBE = """() => {
     const sx = (p[0] * WorldMap.W * t.k + t.ox) * dpr, sy = (p[1] * WorldMap.H * t.k + t.oy) * dpr;
     if (sx < 4 || sy < 4 || sx > c.width - 4 || sy > c.height - 4) continue;
     const d = g.getImageData(Math.round(sx) - 1, Math.round(sy) - 1, 3, 3).data; let hit = 0;
-    for (let i = 0; i < d.length; i += 4) if (d[i] > 90 && d[i + 2] > 80 && d[i + 1] < Math.min(d[i], d[i + 2]) * 0.45) hit++;   // magenta, even under a little fog
+    for (let i = 0; i < d.length; i += 4) if (d[i] > 60 && d[i + 2] > 55 && d[i + 1] < Math.min(d[i], d[i + 2]) * 0.45) hit++;   // magenta, even under a little fog
     res.push([n, hit, [d[16], d[17], d[18]]]);
   }
   const same = JSON.stringify(t) === JSON.stringify(live.transform);
