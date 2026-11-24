@@ -2041,6 +2041,28 @@ html.a11y-still #tbf .fc *,html.a11y-still #tbf.fc-aiming .tbu.fc-tgt{animation:
 html.art-pixel .ti-box,html.art-pixel .ti-card,html.art-pixel .ti-stats{border-radius:0}html.art-pixel .ti-box{border-left-width:3px}
 #side[data-tab=log] .ti-box{color:#3b2e1e}
 html.a11y-hc .ti-box,html.a11y-hc .ti-box i,html.a11y-hc .ti-what{color:#ece6d8}
+/* foe targets (foeintent.js): "→ Lydia" on each intent, a crosshair on the targeted card, an arrow in the scene */
+.tbint .fitg{margin-left:2px;padding-left:5px;border-left:1px solid rgba(255,140,120,.35);font-size:11px;font-weight:700;color:#ffc2b4;letter-spacing:.01em}
+.tbint .fitg.me{color:#ff8f7a}.tbint .fitg.re::after{content:" ↻";font-size:10px;opacity:.85}
+.tbu.fit-on{position:relative}
+.tbu.fit-next{border-color:rgba(232,70,48,.9);box-shadow:0 0 0 1px rgba(232,70,48,.85),0 0 14px rgba(232,60,40,.4);animation:fitpulse 1.6s ease-in-out infinite}
+@keyframes fitpulse{50%{box-shadow:0 0 0 1px rgba(255,96,64,1),0 0 22px rgba(255,70,40,.65)}}
+.fitm{position:absolute;top:4px;right:5px;z-index:4;display:inline-flex;align-items:center;gap:2px;height:16px;box-sizing:border-box;padding:0 5px 0 2px;border-radius:9px;background:rgba(40,8,5,.92);border:1px solid #c8402c;color:#ffd8cc;font-size:12px;line-height:1;font-size:11px;box-shadow:0 2px 6px rgba(0,0,0,.6)}
+.fitm .xh{position:relative;display:inline-block;width:14px;height:14px;border:2px solid #ff5a3a;border-radius:50%;box-sizing:border-box;flex:none}
+.fitm .xh::before,.fitm .xh::after{content:"";position:absolute;left:50%;top:50%;background:#ff5a3a;transform:translate(-50%,-50%)}
+.fitm .xh::before{width:18px;height:2px}.fitm .xh::after{width:2px;height:18px}
+.fitm b{font-weight:400;letter-spacing:1px}.fitm small{font-size:10px;color:#ffb4a4}
+.fitm.next{background:rgba(118,16,8,.95);border-color:#ff5a3a}
+.tbu.ally .fitm{top:3px;right:3px;font-size:10px;height:14px}.tbu.ally .fitm .xh{width:12px;height:12px}
+.fitarrow{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2;overflow:visible}
+.fitarrow .ln{fill:none;stroke:#ff4a30;stroke-dasharray:7 5;stroke-linecap:round;opacity:.92;filter:drop-shadow(0 0 2px rgba(0,0,0,.9));animation:fitdash .9s linear infinite}
+.fitarrow .ah{fill:#ff4a30}.fitarrow.big .ln{stroke:#ff2a10;stroke-dasharray:11 4}.fitarrow.big .ah{fill:#ff2a10}
+.fitarrow .tgt circle{fill:rgba(255,60,40,.08);stroke:#ff4a30;stroke-width:2}.fitarrow .tgt path{stroke:#ff4a30;stroke-width:2}
+@keyframes fitdash{to{stroke-dashoffset:-12}}
+html.art-pixel .fitm,html.art-pixel .fitm .xh{border-radius:0}html.art-pixel .fitm{border-width:2px;box-shadow:2px 2px 0 rgba(0,0,0,.6)}
+html.art-pixel .fitarrow .ln{stroke-linecap:butt;stroke-dasharray:6 6;filter:none}html.art-pixel .tbu.fit-next{box-shadow:0 0 0 2px #c8321e}
+@media (max-width:380px){.tbint .fitg{font-size:10px;padding-left:4px}}
+@media (prefers-reduced-motion:reduce){.tbu.fit-next,.fitarrow .ln{animation:none!important}}
 </style>
 <script src="access.js"></script>
 </head>
@@ -2116,6 +2138,7 @@ html.a11y-hc .ti-box,html.a11y-hc .ti-box i,html.a11y-hc .ti-what{color:#ece6d8}
 <script src="tbui.js"></script>
 <script src="fightctl.js"></script>
 <script src="fightread.js"></script>
+<script src="foeintent.js"></script>
 <script src="guide.js"></script>
 <script src="patchnotes.js"></script>
 <script src="market.js"></script>

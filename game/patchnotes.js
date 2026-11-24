@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b138foetarget", build: 138, date: "24 Nov 2026", title: "See who the enemy goes for", items: [
+      "Every move a foe plans this round now says who it's aimed at: \"→ you\", \"→ Lydia\", a summon or a party member. Bosses with several moves and groups of foes show a target for each one.",
+      "A red crosshair sits on the card of whoever is about to be hit, the next target gets a red outline, and a dashed arrow in the battle picture points from the foe to them.",
+      "What it shows is what happens: the blow lands on that target. It only changes for a real reason, and the screen tells you why: the target went down, or a follower or a guard stepped in front.",
+      "Wind-ups and aimed shots keep their target for the blow that follows. In shared party fights everyone sees the same targets, and the one aimed at you reads \"you\" on your phone.",
+      "How often foes go for you or your companions hasn't changed, they just tell you earlier.",
+    ] },
     { id: "b137tt", build: 137, date: "24 Nov 2026", title: "Tooltips on almost everything", items: [
       "Rest the mouse on almost anything to read what it is: items, spells, tomes, perks, skills, places, quests, followers, party members, your health, magicka and stamina bars, carry weight, level and gold.",
       "On a phone, hold your finger on it for a moment instead. Holding doesn't press the button underneath, and a normal tap works just like before.",
