@@ -2445,6 +2445,12 @@ html.a11y-still #skillup.on{animation:none}
   .sky-row.ft-cols .nm img.art.ico{width:22px;height:22px;margin-right:5px}
   .ft-cats .sky-cat{min-width:54px;padding:4px 3px}
 }
+/* [OURS] gore.js: a red flash round the screen edges when you take a big hit */
+.gorevig{position:fixed;inset:0;pointer-events:none;z-index:9000;opacity:0;background:radial-gradient(ellipse at center,rgba(90,0,0,0) 52%,rgba(110,6,6,.55) 82%,rgba(70,0,0,.85) 100%)}
+.gorevig.on{animation:gorevig .75s ease-out forwards}
+@keyframes gorevig{0%{opacity:0}12%{opacity:var(--gv,.7)}100%{opacity:0}}
+.a11y-still .gorevig,.a11y-hc .gorevig{display:none}
+@media (prefers-reduced-motion:reduce){.gorevig{display:none}}
 /* painted dungeon rooms (dunrooms.js) and the parchment dungeon map (dunart.js) */
 .dun .dcol{display:grid;gap:10px;min-width:0;align-content:start}
 .droomart{position:relative;margin:-2px 0 10px}
@@ -3001,6 +3007,7 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 <script src="colorcode.js"></script>
 <script src="skyart.js"></script>
 <script src="combatfx.js"></script>
+<script src="gore.js"></script>
 <script src="enchants2.js"></script>
 <script src="bscdata.js"></script>
 <script src="battlescene.js"></script>
@@ -3111,6 +3118,7 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 <script src="i18n_netsync.js"></script>
 <script src="i18n_pcmap.js"></script>
 <script src="i18n_eventart.js"></script>
+<script src="i18n_gore.js"></script>
 <script src="i18n_appicon.js"></script>
 <script src="i18n_partytraps.js"></script>
 <script src="i18n_fishhunt.js"></script>
