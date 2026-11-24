@@ -3,6 +3,15 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b136", build: 136, date: "24 Nov 2026", title: "Meet caravans on the road", items: [
+      "Caravans on the map are now something you can meet while you travel. When you're close, their wagons get a gold ring and say \"tap to meet\": tap them, or just walk up beside them and you'll be asked to stop.",
+      "Meeting a caravan pauses your trip. Trade with their merchant (every caravan run carries different goods), ask for news from the road (a rumour or a new place goes on your map), or just wave and carry on.",
+      "Guard the wagons: walk the rest of their road with them, at their pace, and get paid when you roll into their stop. Ambushes can still hit the caravan on the way.",
+      "Walk with them a while: stay close to the wagons and bandits leave you alone far more often.",
+      "Or rob them. You'll fight their guards and get a bounty in that hold, but the gold and goods are yours if you win. They'll remember your face for a day.",
+      "In a party, only the leader stops for a caravan; everyone else sees what happens.",
+      "Caravan Friend (Speechcraft) now also pays 25% more for guarding caravans you meet on the road.",
+    ] },
     { id: "b136dg", build: 136, date: "24 Nov 2026", title: "Dungeon mini-games, and watching your leader", items: [
       "Dungeon rooms are played now, not rolled. Dash through a trap by running between the swinging blades, find the trigger by spotting the stone that sits low and glints, smash a chest with well-timed swings, sneak past a foe by stopping when it turns (and waiting in the shadows), and search a quiet room by rubbing the dust away. Each takes 5 to 15 seconds.",
       "New choice in fight rooms: Run for it. Tap Left and Right in turn as fast as you can to get past the foe. Get caught and it hits first.",
@@ -19,7 +28,7 @@ const PATCHNOTES = (() => {
     { id: "b135-fix", build: 135, date: "24 Nov 2026", title: "Small fix", items: [
       "Fixed: with the Prospector perk, now really every ore vein glints in the mining game (one could stay hidden before).",
     ] },
-    { id: "b136", build: 136, date: "24 Nov 2026", title: "A proper road picture while you travel", items: [
+    { id: "b136-2", build: 136, date: "24 Nov 2026", title: "A proper road picture while you travel", items: [
       "The little picture under your trip is now a real moving landscape: snowy mountains far off, hills and forests that match where you are (pines, the Rift's golden birches, marsh, snowfields, ash wastes, rocky hills), and a road with ruts or old flagstones.",
       "The sky and light follow the real time of day: sun, moons, stars and northern lights at night, warm light at dusk. Snow, rain with lightning, fog, ash and autumn leaves blow through when that's the weather.",
       "Things pass by on the way: signposts, wayshrines, standing stones, ruins, camps and lanterns, and other travellers, guard patrols and Khajiit caravans come the other way. At night you carry a torch and windows light up.",

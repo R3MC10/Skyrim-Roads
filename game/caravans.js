@@ -163,7 +163,7 @@ const CARAVANS = (() => {
   }
   /* after arriving: the pay to claim (the claim itself flips your guard record to "paid" once, via Store.change) */
   function arrived(s, guards) {
-    const j = job(s); if (!j || s.location !== j.to) return null;
+    const j = job(s); if (!j || j.escort || s.location !== j.to) return null;   // an escort picked up on the road is paid by caravanroad.js
     const sh = share(j.id, guards, j.from, j.to);
     return { recId: `${j.id}-${s.id}`, pay: sh.each, n: sh.n, name: j.name, to: j.to };
   }
