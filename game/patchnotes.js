@@ -3,7 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b136", build: 136, date: "24 Nov 2026", title: "Meet caravans on the road", items: [
+    { id: "b136", build: 136, date: "24 Nov 2026", title: "Your hero, properly drawn", items: [
+      "Characters got a big art upgrade: real proportions, shading, faces that match your race (snouts, whiskers, tusks, pointy ears, tails), hair and beards.",
+      "Everything you wear shows up: helmet, armour and its colours, cloak, shield, weapon, even an amulet or ring.",
+      "Your hero now actually walks on the road, rides the horse properly, sits on the wagon bench, and swings, blocks, casts and gets knocked down in fights. Moves flow smoothly from one into the next.",
+      "Party members, followers and other players use the same new look, on the road, in fights, in portraits and on the hero tab. Works in both the hand-drawn and the pixel style.",
+    ] },
+    { id: "b136-2", build: 136, date: "24 Nov 2026", title: "Meet caravans on the road", items: [
       "Caravans on the map are now something you can meet while you travel. When you're close, their wagons get a gold ring and say \"tap to meet\": tap them, or just walk up beside them and you'll be asked to stop.",
       "Meeting a caravan pauses your trip. Trade with their merchant (every caravan run carries different goods), ask for news from the road (a rumour or a new place goes on your map), or just wave and carry on.",
       "Guard the wagons: walk the rest of their road with them, at their pace, and get paid when you roll into their stop. Ambushes can still hit the caravan on the way.",
