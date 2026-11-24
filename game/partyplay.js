@@ -6,6 +6,8 @@
      someone home from the party.
    - The leader decides: encounters and road events on the way happen to the leader. Members following them never roll
      their own; they stop where they are, see what the leader is dealing with, and fight beside them (party.js allies).
+     Everyone with the leader gets the same window; members' taps are votes, shown as little portraits by the option
+     they picked on every phone, live. Only the leader's tap acts; then the members' windows close and they hear the pick.
    - Shared spoils: a won fight leaves a share for everyone who stood in it (party.js), gold found on the road is split
      evenly, and dungeons are cleared as a co-op run with one fair chest roll each (coop.js).
    - Bigger party, bigger dungeon (parties hold up to 8): the way through grows by half its rooms for every extra hero,
@@ -73,15 +75,50 @@ const PARTYPLAY = (() => {
   const goers = (p) => (p?.ready ? p.ready.who.filter((id) => p.ready.ok[id]) : []);
 
   // ---- the leader stops on the road: everyone following stops too
+  /* the halt carries the leader's screen (title, text, the buttons as [key, label, class, disabled]) so everyone with them
+     sees the same thing and can vote. votes: { uid: key }. round goes up each time the leader faces a new set of choices. */
+  const cleanOpts = (opts) => (Array.isArray(opts) ? opts : []).filter((o) => o && o[0] != null).map((o) => [String(o[0]), String(o[1] ?? o[0]), o[2] || "btn", o[3] ? 1 : 0]).slice(0, 12);
   function halt(p, leaderId, info, t = now()) {
     if (!p || p.leader !== leaderId) return p;
-    return { ...p, halt: { id: `h-${Math.floor(t * 1000)}`, kind: info.kind, name: info.name || "", text: info.text || "", t, done: null } };
+    return { ...p, halt: { id: `h-${Math.floor(t * 1000)}`, kind: info.kind, name: info.name || "", text: info.text || "", title: info.title || info.name || "", sub: info.sub || "",
+      opts: cleanOpts(info.opts), who: (info.who || []).filter((id) => isMember(p, id) && id !== leaderId), votes: {}, round: 1, picked: null, art: info.art || null, pos: info.pos || null, t, done: null } };
   }
   function resolve(p, leaderId, outcome, t = now()) {
     if (!p?.halt || p.leader !== leaderId) return p;
     return { ...p, halt: { ...p.halt, done: { text: outcome || "", t } } };
   }
   const halted = (p, t = now()) => !!p?.halt && !p.halt.done && t - p.halt.t < HALT_SECONDS;
+  const optKeys = (h) => (h?.opts || []).map((o) => o[0]);
+  const canVote = (p, uid, t = now()) => halted(p, t) && !p.halt.picked && uid !== p.leader && isMember(p, uid) && (!p.halt.who?.length || p.halt.who.includes(uid));
+  /* a member taps an option: that's their vote (tap it again to take it back). Only the leader's tap acts. */
+  function vote(p, uid, key, t = now()) {
+    if (!canVote(p, uid, t)) return p;
+    const votes = { ...(p.halt.votes || {}) };
+    if (key == null || votes[uid] === key) delete votes[uid];
+    else { if (!optKeys(p.halt).includes(key) || p.halt.opts.find((o) => o[0] === key)[3]) return p; votes[uid] = key; }
+    return { ...p, halt: { ...p.halt, votes } };
+  }
+  /* who voted for what: { key: [uid, …] } (only live options, only people who may vote) */
+  function tally(h) {
+    const out = {}, keys = optKeys(h);
+    for (const [uid, k] of Object.entries(h?.votes || {})) if (keys.includes(k) && (!h.who?.length || h.who.includes(uid))) (out[k] = out[k] || []).push(uid);
+    return out;
+  }
+  /* the leader's screen changed (a road event with a second step, or a potion and back to the foe): a new round.
+     The same choices keep their votes; different choices start the vote over. */
+  function setOptions(p, leaderId, info, t = now()) {
+    if (!halted(p, t) || p.leader !== leaderId) return p;
+    const opts = cleanOpts(info.opts);
+    const same = opts.map((o) => o[0]).join() === optKeys(p.halt).join();
+    return { ...p, halt: { ...p.halt, opts, title: info.title ?? p.halt.title, text: info.text ?? p.halt.text, sub: info.sub ?? p.halt.sub,
+      votes: same ? { ...(p.halt.votes || {}) } : {}, round: (p.halt.round || 1) + 1, picked: null } };
+  }
+  /* the leader taps an option: that's what the party does */
+  function pick(p, leaderId, key, t = now()) {
+    if (!halted(p, t) || p.leader !== leaderId) return p;
+    const o = p.halt.opts?.find((x) => x[0] === key);
+    return { ...p, halt: { ...p.halt, picked: { key, label: o ? o[1] : key, round: p.halt.round || 1, votes: tally(p.halt)[key]?.length || 0 } } };
+  }
 
   // ---- road gold split evenly between the leader and everyone travelling with them
   function split(total, n) {
@@ -229,6 +266,9 @@ const PARTYPLAY = (() => {
           resumeFollowing(p);
         }
       }
+      // voting on what the leader faces
+      if (r === "member") syncVote(p);
+      else if (r === "leader" && halted(p, t)) paintVotes(p);
       ctx.bump();
     }
     /* the Ready prompt, as soon as no other window is in the way. It only has Ready / Not yet, so if another popup
@@ -297,14 +337,113 @@ const PARTYPLAY = (() => {
       else if (a === "ppcancel") { await change((x) => clearCheck(x)); toast("Ready check cancelled."); }
       else if (a === "ppkick") { const id = b.dataset.id; await change((x) => kick(x, s.id, id)); toast(`${nameOf(p, id)} is no longer in your party.`); }
       else if (a === "ppcatch") { const lp = leaderPos(p); if (lp) ctx.travelNow(`${p.leaderName}'s party`, lp); }
+      else if (a === "ppvote") { const k = b.dataset.k, was = p.halt?.votes?.[s.id]; await change((x) => vote(x, s.id, k)); syncVote(party()); toast(was === k ? "Vote taken back." : `You vote: ${labelOf(b)}.`); return; }
+      else if (a === "ppvhide") { const h = p.halt; if (h) hidVote = roundKey(h); ctx.closeModal(); toast(`${p.leaderName} decides. You'll hear what they chose.`); return; }
       ctx.bump(); ctx.renderPanel?.(true);
+    }
+
+    /* ---- voting on the road: everyone with the leader sees the leader's screen; members' taps are votes, shown as
+       little portraits by the option they picked, on every phone. Only the leader's tap acts. */
+    const VOTE_BTNS = "[data-act=enc][data-a],[data-act=ev][data-c],[data-act=ppvote][data-k]";
+    const labelOf = (b) => [...b.childNodes].filter((n) => !(n.classList && n.classList.contains("pvchips"))).map((n) => n.textContent).join("").replace(/\s+/g, " ").trim();
+    /* what the leader's open encounter / event window shows */
+    function screenInfo() {
+      const m = document.querySelector("#modal");
+      if (!m) return null;
+      const bs = [...m.querySelectorAll("[data-act=enc][data-a],[data-act=ev][data-c]")];
+      if (!bs.length) return null;
+      return { opts: bs.map((b) => [b.dataset.a || b.dataset.c, labelOf(b), b.className.replace(/\bpv\w+/g, "").trim() || "btn", b.disabled ? 1 : 0]),
+        title: m.querySelector("h2")?.textContent || "", sub: m.querySelector("p.sub")?.textContent?.replace(/\s+/g, " ").trim() || "" };
+    }
+    const FALLBACK_OPTS = [["fight", "⚔️ Fight", "btn danger"], ["flee", "🏃 Flee", "btn"], ["sneak", "🥷 Sneak past", "btn"]];
+    function face(p, uid, size = 26) {
+      const c = uid === me().id ? me() : ctx.cardOf(uid);
+      let h = "";
+      try { h = c && typeof HEROART !== "undefined" ? HEROART.portrait(c, size) : ""; } catch { h = ""; }
+      return h || `<b>${esc((nameOf(p, uid) || "?").slice(0, 1).toUpperCase())}</b>`;
+    }
+    /* put voters' faces next to the options in whatever vote window is open (only new faces pop in) */
+    function paintVotes(p) {
+      const m = document.querySelector("#modal");
+      if (!m || !p?.halt || !m.querySelector(VOTE_BTNS)) return;
+      const t = tally(p.halt), mine = p.halt.votes?.[me().id];
+      m.querySelectorAll(VOTE_BTNS).forEach((b) => {
+        const k = b.dataset.a || b.dataset.c || b.dataset.k, want = t[k] || [];
+        b.classList.toggle("pvmine", b.dataset.act === "ppvote" && mine === k);
+        let box = b.querySelector(".pvchips");
+        if (!want.length && !box) return;
+        if (!box) { box = document.createElement("span"); box.className = "pvchips"; b.appendChild(box); b.classList.add("pvhas"); }
+        box.querySelectorAll(".pvchip").forEach((ch) => { if (!want.includes(ch.dataset.uid)) ch.remove(); });
+        for (const uid of want) {
+          if ([...box.children].some((ch) => ch.dataset.uid === uid)) continue;
+          const ch = document.createElement("span");
+          ch.className = "pvchip"; ch.dataset.uid = uid; ch.title = nameOf(p, uid); ch.innerHTML = face(p, uid);
+          box.appendChild(ch);
+        }
+      });
+      let note = m.querySelector(".pvnote");
+      const n = Object.keys(p.halt.votes || {}).length, of = p.halt.who?.length || 0;
+      const txt = role(me(), p) === "leader" ? `⚑ Your party is voting (${n}/${of}). You decide: their faces show what they'd pick.` : `⚑ ${p.leaderName} decides. Tap to vote (${n}/${of} voted); everyone sees your face by your pick.`;
+      if (!note) { note = document.createElement("p"); note.className = "sub pvnote"; const at = m.querySelector(VOTE_BTNS).parentNode; at.parentNode.insertBefore(note, at); }
+      note.textContent = txt;
+    }
+    function voteModal(p) {
+      const h = p.halt, ev = h.kind === "event";
+      const art = ev && h.art && typeof EVENTART !== "undefined" ? (() => { try { return EVENTART.road(h.art, { pos: h.pos || undefined }); } catch { return ""; } })() : "";
+      return `<div class="ppvote" data-round="${h.round || 1}" data-hid="${esc(h.id)}">${art}${h.sub ? `<p class="sub" style="margin:0">${esc(h.sub)}</p>` : ""}<h2 style="margin:4px 0 8px">${esc(h.title || h.name || "On the road")}</h2>${h.text ? `<p>${esc(h.text)}</p>` : ""}
+        <div class="${ev ? "evc" : "grid2"} pvopts" style="margin-top:10px">${(h.opts.length ? h.opts : FALLBACK_OPTS).map(([k, l, c, d]) => `<button class="${esc(c || "btn")}" data-act="ppvote" data-k="${esc(k)}" ${d ? "disabled" : ""}>${esc(l)}</button>`).join("")}</div>
+        <button class="btn sm" data-act="ppvhide" style="width:100%;margin-top:8px">Just watch</button></div>`;
+    }
+    let hidVote = null, seenPick = null, seenDone = null;
+    const roundKey = (h) => `${h.id}#${h.round || 1}`;
+    const voteOpen = () => document.querySelector("#modal .ppvote");
+    /* a member: open, refresh or close the vote window to match the party record */
+    function syncVote(p) {
+      const s = me(), h = p?.halt;
+      const open = voteOpen();
+      if (!h || !(h.who || []).includes(s.id)) { if (open) ctx.closeModal(); return; }
+      if (h.done) {
+        if (open) ctx.closeModal();
+        if (seenDone !== h.id) { seenDone = h.id; if (now() - (h.done.t || 0) < 120 &&!(s.trip && s.trip.follow === p.leader && s.trip.status === "hold") && h.done.text) toast(`⚑ ${p.leaderName}: ${h.done.text.slice(0, 120)}`); }
+        return;
+      }
+      if (!halted(p)) { if (open) ctx.closeModal(); return; }
+      if (h.picked) {
+        if (open) ctx.closeModal();
+        const pk = `${roundKey(h)}`;
+        if (seenPick !== pk) { seenPick = pk; toast(`⚑ ${p.leaderName} chose ${h.picked.label}.${h.picked.votes ? ` (${h.picked.votes} vote${h.picked.votes > 1 ? "s" : ""} for it)` : ""}`); }
+        return;
+      }
+      if (open && open.dataset.hid === h.id && +open.dataset.round === (h.round || 1)) return void paintVotes(p);
+      if (hidVote === roundKey(h)) return;
+      if (open || !ctx.modalOpen()) { ctx.openModal(voteModal(p), h.kind === "event" ? "" : "enc"); paintVotes(p); }
+    }
+    /* the leader's own window opened (an encounter or event): keep the party's copy in step and show the votes */
+    function onModal() {
+      const s = me(), p = party();
+      if (role(s, p) !== "leader" || !halted(p)) return;
+      const info = screenInfo();
+      if (!info) return;
+      const h = p.halt;
+      const changed = info.opts.map((o) => o.join("|")).join() !== (h.opts || []).map((o) => o.join("|")).join() || info.title !== h.title || h.picked;
+      if (changed) change((x) => setOptions(x, s.id, { ...info, text: s.trip?.encounter?.text || s.trip?.event?.text || undefined }));
+      else paintVotes(p);
+    }
+    function leaderPicked(key) {
+      const s = me(), p = party();
+      if (role(s, p) !== "leader" || !halted(p)) return;
+      change((x) => pick(x, s.id, key));
     }
 
     /* the leader runs into something: tell the party, then tell them how it went */
     function leaderHalt(kind, name, text) {
-      const s = me(), p = party();
-      if (role(s, p) !== "leader" || !withMe(p).length) return;
-      change((x) => halt(x, s.id, { kind, name, text }));
+      const s = me(), p = party(), who = withMe(p);
+      if (role(s, p) !== "leader" || !who.length) return;
+      const info = screenInfo() || {};
+      const ev = kind === "event" ? s.trip?.event : null;
+      const opts = info.opts || (kind === "event" && typeof G !== "undefined" && G.eventChoices ? (() => { try { return G.eventChoices(s).map(([k, l]) => [k, l, "btn pri"]); } catch { return []; } })() : FALLBACK_OPTS);
+      change((x) => halt(x, s.id, { kind, name, text, title: info.title || (ev?.title) || name, sub: info.sub || "", opts, who,
+        art: ev ? { id: ev.id, god: ev.god, item: ev.item, tier: ev.tier } : null, pos: [s.x, s.y] }));
     }
     function leaderResolved(outcome) {
       const s = me(), p = party();
@@ -329,13 +468,14 @@ const PARTYPLAY = (() => {
       if (!p) return;
       if (role(s, p) === "member" && s.trip?.status === "hold" && !halted(p)) resumeFollowing(p);
       if (role(s, p) === "member" && p.ready && checkLive(p)) promptReady(p);
+      if (role(s, p) === "member" && (p.halt || voteOpen())) syncVote(p);
       if (role(s, p) === "leader" && p.ready && !checkLive(p)) change((x) => clearCheck(x));
       if (p.ready && checkLive(p) && Math.floor(now()) % 5 === 0) ctx.bump();   // keep the countdown on the card fresh
     }
 
-    return { beforeTravel, beforeEnter, onParty, panelHTML, act, leaderHalt, leaderResolved, splitGold, tick, canDecide: () => canDecide(me(), party()), mates: () => (role(me(), party()) === "leader" ? withMe(party()) : []) };
+    return { beforeTravel, beforeEnter, onParty, panelHTML, act, leaderHalt, leaderResolved, leaderPicked, onModal, splitGold, tick, canDecide: () => canDecide(me(), party()), mates: () => (role(me(), party()) === "leader" ? withMe(party()) : []) };
   }
 
   return { READY_FORCE_SECONDS, READY_LIVE_SECONDS, MAX_PARTY, MAX_LENGTH, MAX_FOES, NEAR, role, canDecide, canLead, startCheck, setReady, waitingOn, allReady, canForce, checkLive,
-    clearCheck, kick, goers, halt, resolve, halted, split, goldShareDoc, lengthFactor, waves, relink, longLayout, nextWave, ui };
+    clearCheck, kick, goers, halt, resolve, halted, vote, tally, setOptions, pick, canVote, split, goldShareDoc, lengthFactor, waves, relink, longLayout, nextWave, ui };
 })();

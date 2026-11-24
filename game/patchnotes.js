@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b136", build: 136, date: "24 Nov 2026", title: "Vote on the road with your party", items: [
+      "Travelling together: when the party leader runs into a foe or something by the road, everyone with them now gets the same window with the same choices, not just a \"wait\" note.",
+      "Members tap a choice to vote for it. Your little portrait pops up next to the option you picked, on everyone's phone, the leader's too, and moves as people change their minds. Tap it again to take your vote back, or Just watch to close the window.",
+      "Only the leader's tap actually happens. When they choose, everyone's window closes and you see what they picked and how it went.",
+    ] },
     { id: "b135", build: 135, date: "24 Nov 2026", title: "No more flickering popups", items: [
       "Fixed: popups (like tapping an equipment slot) flickered for a split second just after they opened. They now open smoothly and stay put.",
     ] },

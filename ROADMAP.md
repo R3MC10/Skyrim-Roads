@@ -73,6 +73,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Kacper: reading the fight (fightread.js): foe intents, health forecasts for poison/burning/blows on both sides, turn-by-turn playback with banners and round summaries, low-health warning, combat sounds (ElevenLabs, `node scripts/gen_audio.mjs game/ combat`). Branch ccr-23a36e7d-impjqi.
 - Kacper: painted battle scenes (battlescene.js + bscdata.js, pictures bs-/bsf-/bsp-*.webp from the scene pack via scripts/import_battlescenes.py). Branch ccr-23a36e7d-impjqi.
 - Kacper: audio: the rest of scripts/gen_audio.mjs (free ElevenLabs plan has ~4k credits a month; music needs a paid plan).
+- Claude: party votes on the road (partyplay.js): everyone with the leader sees the same encounter/event window, members vote, their faces pop up by the option they picked, only the leader acts. Branch claude/partyvote.
 
 ## Standing rules
 - Perk trees grow with the game: every new system (gathering, magic, encounters, crafting, party play...) adds or adjusts perks with real effects in the matching trees (perkfx.js), keeping old perk ids and a clean star layout.
