@@ -3,6 +3,15 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b139-lightfx", build: 139, date: "24 Nov 2026", title: "Light and weather you can feel", items: [
+      "The map now changes with the light: warm gold at sunrise and sunset, a cool blue night, and a flat grey wash when a storm rolls in.",
+      "At night towns, farms, camps and forts glow with firelight, and the glow flickers a little.",
+      "Beams of sunlight fall across the map at dawn and dusk.",
+      "Mist gathers over valleys, lakes and marshes, thickest in the early morning, and drifts slowly.",
+      "Big cloud shadows slide across the land, and lakes and rivers sparkle in the sun or the moons. On clear nights the northern lights tint the snow up north green and violet.",
+      "Place pictures get the same light: lit windows and fires glow at night, sunbeams at dawn and dusk.",
+      "New Settings → Graphics → Lighting: Off, Low or High. Low keeps the colours and glows but nothing moves, for older phones. Works in both art styles; Reduce motion stops the drifting and High contrast keeps the map brighter and clearer.",
+    ] },
     { id: "b137-kit", build: 137, date: "24 Nov 2026", title: "Fairer bandit tricks", items: [
       "Poison, burning, bleeding and venom now respect your armour: if your armour soaked most of the blow, it soaks most of the poison too. Heavy armour finally helps against poisoned blades and fire bolts.",
       "Foe healers (bandit mages, priests and the like) can only cast their healing spell twice a fight, and it heals a little less. No more endless self-healing against low-level warriors.",

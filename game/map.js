@@ -405,9 +405,11 @@ const WorldMap = (() => {
     const shown = v.discovered.filter((n) => WORLD.places[n] && WORLD.isSol(WORLD.places[n]) === !!SV).map((n) => [n, ...WORLD.places[n]]).sort((a, b) => (a[0] === v.selected ? -1 : b[0] === v.selected ? 1 : (RANK[a[3]] ?? 3) - (RANK[b[3]] ?? 3)));
     // zoomed out, the many small spots shrink so cities and towns stay easy to see
     const small = v.zoom < 1.5 && shown.length > 60 ? 0.72 : 1;
+    // light and atmosphere over the painted ground, under the markers (lightfx.js; Settings → Graphics → Lighting)
+    const lit = typeof LIGHTFX !== "undefined" && LIGHTFX.on() && LIGHTFX.map(g, canvas, v, { s, W, H, shown, view: viewBox, dpr, sol: !!SV });
     if (MA) {
       if (OY) { g.save(); g.translate(0, OYH); MA.night(g, v, s, W, H, dark, shown.map(([n, x, y, kd]) => [n, x, y - OY, kd])); g.restore(); }
-      else MA.night(g, v, s, W, H, dark, shown);
+      else if (!lit) MA.night(g, v, s, W, H, dark, shown);
       const pulseSel = v.reduceMotion ? 0.5 : (Math.sin(v.t * 4) + 1) / 2;
       for (const [n, x, y, kind] of shown) {
         const f = kind === "city" || kind === "town" || v.selected === n ? 1 : small, m = MA.marker(n, kind), w = m.w * s * f, h = m.h * s * f;
