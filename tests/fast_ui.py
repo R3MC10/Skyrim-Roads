@@ -152,7 +152,7 @@ async def main():
                 ok(played, f"{tag}: a turn scene is playing")
                 if played:
                     await shot("tb_playing")
-                    await pg.click("#tbf .tbvit"); await pg.wait_for_timeout(200)
+                    await pg.click("#tbf .tbu.me"); await pg.wait_for_timeout(200)
                     ok(await pg.evaluate("!FIGHTART.playing()"), f"{tag}: tap on the fight screen finishes the scene")
                 if await pg.evaluate("!!document.querySelector('#tbf .tbgrid')"): await pg.evaluate("(()=>{const g=document.querySelector('#tbf .tbgrid')||document.querySelector('#tbf');const b=document.createElement('button');b.dataset.tbx='autoall';g.append(b);b.click()})()")
                 for _ in range(60):

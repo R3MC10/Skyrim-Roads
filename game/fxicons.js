@@ -9,7 +9,7 @@ const FXICONS = (() => {
   const r0 = (n) => Math.round(+n || 0);
   const pc = (x) => `${Math.round((+x || 0) * 100)}%`;
   const elName = (e) => ({ fire: "fire", frost: "frost", shock: "shock", poison: "poison" }[e] || "magic");
-  const t = (s) => s;   // the tooltip texts go through i18n.js on the page like every other data-tip
+  const t = (s) => (typeof I18N !== "undefined" && I18N.tr && I18N.lang?.() === "pl" ? I18N.tr(s) ?? s : s);   // Polish via i18n_combat2.js (data-tip isn't translated on the page)
   /* [icon, name, buff?, tip(v)]  v: {n (turns), amt, name, ...} */
   const TYPES = {
     // --- on you: spells and shouts you put on yourself
@@ -107,7 +107,7 @@ const FXICONS = (() => {
   const item = (k, v = {}, extra = {}) => {
     const T = TYPES[k]; if (!T) return null;
     const nm = extra.nm || T[1];
-    return { k, ic: extra.ic || T[0], nm, buff: extra.buff ?? T[2], n: v.n > 0 && v.n < 99 ? r0(v.n) : null, left: v.left || null, tip: t(T[3](v)), id: extra.id || k };
+    return { k, ic: extra.ic || T[0], nm, lbl: t(nm), buff: extra.buff ?? T[2], n: v.n > 0 && v.n < 99 ? r0(v.n) : null, left: v.left || null, tip: t(T[3](v)), id: extra.id || k };
   };
   const push = (out, x) => { if (x) out.push(x); };
   const now = (f) => (f && f.t != null ? f.t : typeof G !== "undefined" && G.now ? G.now() : 0);
@@ -230,8 +230,8 @@ const FXICONS = (() => {
   /* the icons as a row */
   function html(list, cls = "") {
     if (!list.length) return "";
-    return `<div class="c2fx ${cls}">${list.map((x) => `<i class="c2e ${x.buff ? "buff" : "debuff"} fx-${x.k}" data-tip="${esc(x.tip)}" aria-label="${esc(x.nm)}: ${esc(x.tip)}" role="img"><span aria-hidden="true">${x.ic}</span>${x.n != null ? `<small aria-hidden="true">${x.n}</small>` : x.left ? `<small aria-hidden="true">${esc(x.left)}</small>` : ""}</i>`).join("")}</div>`;
+    return `<div class="c2fx ${cls}">${list.map((x) => `<i class="c2e ${x.buff ? "buff" : "debuff"} fx-${x.k}" data-tip="${esc(x.tip)}" aria-label="${esc(x.lbl || x.nm)}: ${esc(x.tip)}" role="img"><span aria-hidden="true">${x.ic}</span>${x.n != null ? `<small aria-hidden="true">${x.n}</small>` : x.left ? `<small aria-hidden="true">${esc(x.left)}</small>` : ""}</i>`).join("")}</div>`;
   }
-  return { TYPES, SPELL_KIND, POWER_FX, me, foe, ally, html, item };
+  return { TYPES, SPELL_KIND, POWER_FX, me, foe, ally, html, item, tr: t };
 })();
 if (typeof module !== "undefined") module.exports = FXICONS;

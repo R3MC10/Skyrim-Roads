@@ -173,8 +173,8 @@ const COMBAT2 = (() => {
       fxSeen.set(key, is);
       if (first || done || reduce()) continue;
       const pops = [];
-      for (const [id, x] of is) if (!was.has(id)) pops.push([x.buff ? `+${x.nm}` : x.nm, x.buff ? "buff" : "debuff", x.ic]);
-      for (const [id, x] of was) if (!is.has(id) && x.k !== "guard" && x.k !== "sneak" && x.k !== "staggered" && x.k !== "stunned") pops.push([`${x.nm} fades`, "gone", x.ic]);
+      for (const [id, x] of is) if (!was.has(id)) pops.push([x.buff ? `+${x.lbl || x.nm}` : x.lbl || x.nm, x.buff ? "buff" : "debuff", x.ic]);
+      for (const [id, x] of was) if (!is.has(id) && x.k !== "guard" && x.k !== "sneak" && x.k !== "staggered" && x.k !== "stunned") pops.push([FXICONS.tr ? FXICONS.tr(`${x.nm} fades`) : `${x.nm} fades`, "gone", x.ic]);
       if (!pops.length) continue;
       // the screen redraws often, so the pop-ups live in their own layer over it, at the fighter's spot
       const tin = ov.closest(".tbin"), r = tin?.getBoundingClientRect(); if (!r) continue;

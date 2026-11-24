@@ -3,13 +3,21 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b143-combat2", build: 143, date: "24 Nov 2026", title: "A fight screen that feels like a game", items: [
+    { id: "b144-combat2", build: 144, date: "24 Nov 2026", title: "A fight screen that feels like a game", items: [
       "The fight is now one big scene that fills the screen. Everything you need sits right in it, so nothing scrolls, on phones and on PC.",
       "Your health is a glowing orb in the corner with magicka and stamina curving round it; a striped band shows how much the foe is about to take. Slim bars float over your hero's head.",
       "The foe's name, health, statuses and what it plans next hang over its head. Stunned foes wobble with stars, big hits flash and shake the picture.",
       "Moves are round drawn buttons with their AP cost on the rim. Magic and Items open as a drawer of cards over the fight. End Turn glows when you're out of AP and still shows the guard you keep.",
       "Turn order is a ribbon of little portraits at the top, followers sit in small cards at the side, and the fight log is a short fading feed (tap it for the whole log).",
+      "Every buff and debuff now shows as a little icon on whoever has it: you, followers, party members and foes. Armour spells, wards, healing over time, potions, shouts and powers, poison, burning, frost, bleeding, fear, paralysis and the rest. Each shows the turns left, and tapping or hovering tells you what it does.",
+      "When one lands or wears off, a short word floats up over that fighter: \"+Oakflesh\", \"Poisoned\", \"Burning fades\".",
       "Prefer the old look? Settings → Fight screen → Classic.",
+    ] },
+    { id: "b143-followertab", build: 143, date: "24 Nov 2026", title: "Your follower gets their own tab", items: [
+      "Your follower now has their own Follower tab in the Character menu, next to Skills, Character and Perks. Everything about them lives there: overview, bond, gear, magic, tactics, perks, fighting style and Dismiss.",
+      "The Character page only keeps one short line about them; tap it to jump to the tab. With nobody following you, the tab tells you who you can hire and where.",
+      "Their gear works like your Items menu: their pack or yours, filters (All, Weapons, Armor, Potions, Other), a list you can sort by name, type, damage or armour, weight and value, and a ◆ on what they wear.",
+      "Tap an item to see its stats and how it compares with what they wear now, then Give, Give & equip, Equip, Take off or Take it back.",
     ] },
     { id: "b141-polishsweep", build: 141, date: "24 Nov 2026", title: "More of the game in Polish", items: [
       "Playing in Polish? The fight picture now speaks it too: Ty, Uciekają, Zwycięstwo, Pudło, Blok!, critical hits and sneak attacks.",
