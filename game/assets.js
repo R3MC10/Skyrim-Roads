@@ -19,6 +19,9 @@
      bs-<scene>               1480×680   painted battle-scene backdrops (floor at 80%), with bsf-<strip> foreground strips and
      bsf-… bsp-…                         bsp-<prop> transparent props/lights; placed by bscdata.js, drawn by battlescene.js.
                                          Import a new scene pack with scripts/import_battlescenes.py <pack folder>
+     map-world                2000×1400  hand-painted world map, exact 10:7, covering the world bounds edge to edge (x·width,
+                                         y·height); replaces the procedural map ground (paintedmap.js). Reference to paint over:
+                                         scripts/map_reference.py. Optional map-world-2x (3000×2100) for close zoom.
      ui-panel                 1024×1024  tileable dark panel texture
      ui-parchment             1024×1024  tileable parchment texture
      ui-compass               1024×1024  transparent compass rose
@@ -32,7 +35,7 @@
        stalhrim/skyforge-steel swords, war axes, greatswords, battleaxes, daggers, maces, bows, crossbows, staffs.
 
    API: ASSETS.img(key) → a loaded HTMLImageElement or null (asks for the file the first time).
-        ASSETS.url(key) → its URL or "" · ASSETS.placeKey(name) · ASSETS.biomeKey(name) · ASSETS.foeKey(name, kind)
+        ASSETS.url(key) → its URL or "" · ASSETS.stateOf(key) → "loading" / "ok" / "none" · ASSETS.placeKey(name) · ASSETS.biomeKey(name) · ASSETS.foeKey(name, kind)
         ASSETS.cover(g, img, w, h) draws an image to fill w×h. ASSETS.on(fn) runs fn when any picture arrives.
    Under browser automation nothing is fetched unless the URL has ?assets (keeps tests quiet). */
 const ASSETS = (() => {
@@ -78,6 +81,7 @@ const ASSETS = (() => {
   }
   const img = (key) => { if (!key) return null; const r = load(key); return r.st === "ok" ? r.img : null; };
   const url = (key) => { const r = load(key); return r.st === "ok" ? r.url : ""; };
+  const stateOf = (key) => load(key).st;   // "loading" | "ok" | "none" (asks for the file the first time)
   /* tests and the coordinator can hand pictures in directly */
   function provide(key, src) {
     const rec = { st: "loading", img: null, url: "" }; state.set(key, rec);
@@ -166,5 +170,5 @@ const ASSETS = (() => {
 
   const loading = (i) => img(`bg-loading-${1 + (Math.abs(i | 0) % 4)}`);
   const status = () => [...state].map(([k, r]) => [k, r.st]);
-  return { img, url, provide, on, enable, placeKey, biomeKey, foeKey, cover, loading, status, slug, CSS_KEYS, get pending() { return pending; } };
+  return { img, url, stateOf, provide, on, enable, placeKey, biomeKey, foeKey, cover, loading, status, slug, CSS_KEYS, get pending() { return pending; } };
 })();

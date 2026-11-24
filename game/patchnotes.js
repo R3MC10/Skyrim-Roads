@@ -3,6 +3,22 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b165-pcmap", build: 165, date: "24 Nov 2026", title: "The big map on PC", items: [
+      "On a PC or laptop the world map is now your home screen: it fills the whole window, and Items, Skills, Magic and the Journal open on top of it over a blurred map. On phones nothing changes.",
+      "Drag to look around, scroll to zoom smoothly from all of Skyrim down to a single village, and press Space to jump back to your hero. WASD and the arrows move the map too (while the compass is closed).",
+      "Double-click a place to travel there. Click the town you're in to open its places in a panel on the side. Road events pop up as a card in the middle of the map.",
+      "A slim bar along the bottom shows your level, experience, gold and weight, with buttons and keys for the menus: J Journal, I Items, K Skills, M Magic, Tab the compass. Your party sits in cards on the left.",
+      "The quest you follow sits in the top right corner. Press Q (or the little arrow) and it slides away, leaving a small tab on the edge to bring it back.",
+      "The map lives: each hold has its own weather, smoke rises from the chimneys of towns you've found, and clouds and birds drift over the land. Settings → Map quality (Low, Medium, High) sets how much of it you get.",
+      "Your hero no longer stands on top of the town picture, and other players' names are never hidden behind town flags.",
+      "Everywhere, phones too: players outside your party are Strangers until you greet each other. Be in the same town or the same spot on the road, click their hero and press Greet. Once they accept, you both know each other's names for good.",
+    ] },
+    { id: "b163-maphero", build: 163, date: "24 Nov 2026", title: "Your hero walks the map", items: [
+      "On the world map you're no longer a blue dot: it's a little figure of your own character, with your race, armour, helmet and weapon.",
+      "Standing still they breathe and their cloak moves a bit. On the road they walk and turn to face the way they're going, and there's a small puff of dust when you arrive.",
+      "On your horse you sit in the saddle, and the horse has your horse's coat colour. Standing, it swishes its tail and nods its head; on the road it walks, and on good roads it gallops.",
+      "Other players and your party show up the same way, a bit smaller, with a green ring under party members. Works in both art styles; with Reduce motion on, everyone stands still.",
+    ] },
     { id: "b145-eventart", build: 145, date: "24 Nov 2026", title: "Painted events and shops", items: [
       "World events now have painted pictures: the Khajiit's grand caravan, Daedric invasions, dragon migrations and all four festival weeks each get their own.",
       "Great world events do too: dragon assaults, Daedric rifts, sieges and town fairs.",
@@ -48,6 +64,11 @@ const PATCHNOTES = (() => {
       "The Character page only keeps one short line about them; tap it to jump to the tab. With nobody following you, the tab tells you who you can hire and where.",
       "Their gear works like your Items menu: their pack or yours, filters (All, Weapons, Armor, Potions, Other), a list you can sort by name, type, damage or armour, weight and value, and a ◆ on what they wear.",
       "Tap an item to see its stats and how it compares with what they wear now, then Give, Give & equip, Equip, Take off or Take it back.",
+    ] },
+    { id: "b143-paintedmap", build: 143, date: "24 Nov 2026", title: "Ready for a painted world map", items: [
+      "The world map can now show a hand-painted picture of Skyrim instead of the drawn one. Towns, roads, fog, your cone of sight, light, weather and markers all sit on top of it, exactly where they were.",
+      "Once the painting is in, Settings → Graphics gets a Roads on the map switch, in case the painted roads are enough for you.",
+      "Until the painting arrives, the map looks and works just like before.",
     ] },
     { id: "b141-polishsweep", build: 141, date: "24 Nov 2026", title: "More of the game in Polish", items: [
       "Playing in Polish? The fight picture now speaks it too: Ty, Uciekają, Zwycięstwo, Pudło, Blok!, critical hits and sneak attacks.",
@@ -846,10 +867,9 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 144;
+  const NEXT_AT = 165;
   const NEXT = [
     "A new, livelier fight screen that fits on one screen",
-    "On PC, everything fits on one screen without scrolling",
     "New painted dungeon rooms and a painted world map",
     "More unique enchantments on gear",
   ];
