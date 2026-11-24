@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b163-maphero", build: 163, date: "24 Nov 2026", title: "Your hero walks the map", items: [
+      "On the world map you're no longer a blue dot: it's a little figure of your own character, with your race, armour, helmet and weapon.",
+      "Standing still they breathe and their cloak moves a bit. On the road they walk and turn to face the way they're going, and there's a small puff of dust when you arrive.",
+      "On your horse you sit in the saddle, and the horse has your horse's coat colour. Standing, it swishes its tail and nods its head; on the road it walks, and on good roads it gallops.",
+      "Other players and your party show up the same way, a bit smaller, with a green ring under party members. Works in both art styles; with Reduce motion on, everyone stands still.",
+    ] },
     { id: "b143-followeranim", build: 143, date: "24 Nov 2026", title: "Followers fight with their whole body", items: [
       "Followers and party members now really fight in the fight picture: they swing their weapon or draw their bow, cast their spells, raise their shield and flinch when they get hit.",
       "A follower who is knocked down drops to the ground and lies there until someone pulls them back up, and then you see them get back on their feet.",
