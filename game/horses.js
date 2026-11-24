@@ -4,8 +4,10 @@
    - Breeds: a Cyrodilic bay is the all-rounder, a Nord draft carries most and takes hits, a Hammerfell courser is the
      fastest but carries little, a Highland pony is cheap and sturdy. Each horse rolls a little up or down from its breed.
    - Stable upgrades: saddlebags (carry more), horseshoes (ride faster), armor (more health, takes less damage).
-   A horse never dies: when it's badly hurt it goes down and limps back to the nearest stables,
-   where you can fetch it once it has rested. [OURS] numbers unless marked. */
+   A horse never dies (Remigiusz: "when a horse's health depletes it is downed"): at 0 health it is DOWNED. It stays
+   yours and limps along beside you (it still carries your things), but you can't ride it until it's back on its feet:
+   after about 6 in-game hours (30 real minutes), after you sleep, or straight away if a stablehand tends it (cheap).
+   Old saves where it had limped off to a stables (or was ever marked dead/lost) come back as downed. [OURS] numbers unless marked. */
 const HORSES = (() => {
   const COATS = [["bay", "Bay", "#8a5a3b"], ["black", "Black", "#2b2724"], ["grey", "Dapple grey", "#9b9b97"], ["white", "White", "#ebe6da"], ["palomino", "Palomino", "#d6aa5b"], ["paint", "Paint", "#b77d52"]];
   const ARMOR = {
@@ -27,8 +29,9 @@ const HORSES = (() => {
     elven: { name: "Elven horseshoes", price: 1500, speed: 0.15 },
   };
   const ROLL = 0.05;   // a horse rolls up to 5% either way on each stat
-  const BASE_HP = 200, REST_MIN = 30, HURRY_PRICE = 100, REGEN_PER_SEC = 0.2;
+  const BASE_HP = 200, REST_MIN = 30, TEND_PRICE = 50, REGEN_PER_SEC = 0.2, UP_HP = 0.5;   // downed for 30 real min = 6 in-game hours; gets up at half health
   const NAMES = ["Frost", "Arvak", "Old Bessie", "Lucky", "Thunder", "Mead", "Ember", "Ash", "Juniper", "Snowmane", "Biscuit", "Storm"];
+  const MIGRATE = ["away", "dead", "lost", "fled", "gone", "ranAway"];   // old flags that once took a horse from you
   const nowS = () => Date.now() / 1000;
   const coat = (id) => COATS.find((c) => c[0] === id) || COATS[0];
   const breed = (id) => BREEDS[id] || BREEDS.bay;
@@ -58,13 +61,35 @@ const HORSES = (() => {
     if (!(h.bags >= 0 && h.bags < BAGS.length)) h.bags = 0;
     if (h.hp == null) { h.hp = maxHp(h); h.hpT = nowS(); }
     if (h.mounted == null) h.mounted = true;
+    // old saves: a horse that limped off to a stables, or was ever marked dead, lost or run off, is yours again, downed
+    if (MIGRATE.some((k) => h[k])) {
+      const t = nowS(), until = Math.min(t + REST_MIN * 60, Math.max(t, +(h.away && h.away.until) || t + REST_MIN * 60));
+      for (const k of MIGRATE) delete h[k];
+      if (!h.down) h.down = { at: t, until, r: s.rested || 0 };
+      h.hp = 0; h.hpT = t;
+    }
+    if (!h.down && !(h.hp > 0)) knockDown(s, nowS());   // 0 health always means downed
     return h;
   }
-  const away = (s) => !!fix(s)?.away;
-  const present = (s) => !!s.horse && !away(s);
-  const riding = (s) => present(s) && s.horse.mounted !== false;
-  function hp(s, t = nowS()) {   // health comes back slowly while the horse is with you
-    const h = fix(s); if (!h || h.away) return 0;
+  /* 0 health: the horse is downed. It stays with you, you can't ride it, and it gets back up later */
+  function knockDown(s, t = nowS()) {
+    const h = s.horse; if (!h) return null;
+    h.hp = 0; h.hpT = t; h.down = { at: t, until: t + REST_MIN * 60, r: s.rested || 0 };
+    return h;
+  }
+  /* back on its feet once the time is up, or once you've slept since it went down */
+  function check(s, t = nowS()) {
+    const h = s.horse; if (!h?.down) return false;
+    const r = s.rested || 0, slept = r !== (h.down.r || 0) && r > h.down.at;
+    if (t < h.down.until && !slept) return false;
+    h.down = null; h.hp = Math.max(1, Math.round(maxHp(h) * UP_HP)); h.hpT = t;
+    return true;
+  }
+  const downed = (s, t = nowS()) => { const h = fix(s); if (!h) return false; check(s, t); return !!h.down; };
+  const present = (s) => !!s.horse;   // a downed horse still limps along beside you and carries your things
+  const riding = (s, t) => !!s.horse && !downed(s, t) && s.horse.mounted !== false;
+  function hp(s, t = nowS()) {   // health comes back slowly while the horse is on its feet
+    const h = fix(s); if (!h || downed(s, t)) return 0;
     const v = Math.min(maxHp(h), h.hp + Math.max(0, t - (h.hpT || t)) * REGEN_PER_SEC);
     h.hp = v; h.hpT = t; return v;
   }
@@ -113,6 +138,7 @@ const HORSES = (() => {
   }
   function toggle(s) {
     if (!present(s)) return "Your horse isn't with you.";
+    if (downed(s)) return `${s.horse.name} is downed and can't carry a rider yet. Sleep, wait a few hours, or have a stablehand tend them.`;
     s.horse.mounted = !riding(s);
     return riding(s) ? `You swing up onto ${s.horse.name}.` : `You get down and walk beside ${s.horse.name}. It still carries your things.`;
   }
@@ -128,30 +154,30 @@ const HORSES = (() => {
     s.gold -= p; hp(s); s.horse.armor = id; s.horse.hp = Math.min(maxHp(s.horse), s.horse.hp + a.hp);
     return `The stablehand fits ${s.horse.name} with ${a.name}. It can take more punishment now.`;
   }
+  const HOURS = Math.round(REST_MIN / 5);   // one in-game hour = 5 real minutes
+  const downLine = (h) => `🐴 ${h.name} is downed! They limp along beside you but can't be ridden until they're back on their feet (about ${HOURS} hours, a night's sleep, or a stablehand's care).`;
   /* a fight on the road can hurt the horse. Returns a line for the trip log, or null. */
   function hurt(s, e, t = nowS(), chance = 0.25) {
-    if (!present(s) || Math.random() >= chance) return null;
-    const h = s.horse, cur = hp(s, t), dmg = Math.round((e.damage || 10) * (3 + Math.random() * 3) * (1 - ARMOR[h.armor].guard));
+    if (!present(s) || downed(s, t) || Math.random() >= chance) return null;
+    const h = s.horse, cur = hp(s, t), dmg = Math.round((e.damage || 10) * (3 + Math.random() * 3) * (1 - (ARMOR[h.armor]?.guard || 0)));
     h.hp = cur - dmg; h.hpT = t;
     if (h.hp > 0) return `🐴 The ${e.name} hurts ${h.name} (${Math.round(h.hp)}/${maxHp(h)}).`;
-    const town = nearestStables([s.x, s.y]);
-    h.hp = 0; h.away = { until: t + REST_MIN * 60, town }; h.mounted = true;
-    return `🐴 ${h.name} goes down, then limps off toward the stables at ${town}. Fetch them there in about ${REST_MIN} minutes.`;
+    knockDown(s, t);
+    return downLine(h);
   }
-  const readyIn = (s, t = nowS()) => (away(s) ? Math.max(0, s.horse.away.until - t) : 0);
-  function fetch(s, t = nowS()) {
-    if (!away(s)) return "Your horse is with you.";
-    if (s.location !== s.horse.away.town) return `${s.horse.name} is resting at the stables in ${s.horse.away.town}.`;
-    if (readyIn(s, t) > 0) return `${s.horse.name} is still resting. Ready in about ${Math.ceil(readyIn(s, t) / 60)} minutes.`;
-    s.horse.away = null; s.horse.hp = maxHp(s.horse); s.horse.hpT = t;
-    return `${s.horse.name} nickers when they see you. Rested and ready to ride.`;
+  const readyIn = (s, t = nowS()) => (downed(s, t) ? Math.max(0, s.horse.down.until - t) : 0);
+  const tendPrice = (s) => cost(s, TEND_PRICE);
+  /* a stablehand at any stables gets a downed (or hurt) horse back to full health, cheap */
+  function tend(s, t = nowS()) {
+    if (!s.horse) return "You don't have a horse.";
+    if (!atStables(s)) return "Only a stablehand can tend your horse. Find a stables.";
+    const h = fix(s), was = downed(s, t);
+    if (!was && hp(s, t) >= maxHp(h)) return `${h.name} is fit and well.`;
+    const p = tendPrice(s); if (s.gold < p) return `The stablehand wants ${p} gold for the poultices.`;
+    s.gold -= p; h.down = null; h.hp = maxHp(h); h.hpT = t;
+    return was ? `The stablehand gets ${h.name} back on their feet with poultices and a warm mash. Ready to ride.` : `The stablehand patches ${h.name} up. Good as new.`;
   }
-  function hurry(s, t = nowS()) {
-    if (!away(s) || s.location !== s.horse.away.town) return "Your horse isn't here.";
-    if (readyIn(s, t) <= 0) return fetch(s, t);
-    if (s.gold < HURRY_PRICE) return `The stablehand wants ${HURRY_PRICE} gold for the poultices.`;
-    s.gold -= HURRY_PRICE; s.horse.away.until = t;
-    return fetch(s, t);
-  }
-  return { COATS, ARMOR, BREEDS, BAGS, SHOES, ROLL, breed, stats, speed, carry, roll, grade, price, cost, buyShoes, buyBags, BASE_HP, HURRY_PRICE, REST_MIN, coat, maxHp, fix, away, present, riding, hp, buy, rename, toggle, buyArmor, hurt, readyIn, fetch, hurry, nearestStables };
+  /* a status word for screens: "Downed", "Hurt" or "" */
+  function state(s, t = nowS()) { if (!s.horse) return ""; if (downed(s, t)) return "Downed"; return hp(s, t) < maxHp(s.horse) * 0.5 ? "Hurt" : ""; }
+  return { COATS, ARMOR, BREEDS, BAGS, SHOES, ROLL, breed, stats, speed, carry, roll, grade, price, cost, buyShoes, buyBags, BASE_HP, TEND_PRICE, REST_MIN, HOURS, UP_HP, coat, maxHp, fix, knockDown, check, downed, downLine, present, riding, hp, buy, rename, toggle, buyArmor, hurt, readyIn, tendPrice, tend, state, nearestStables };
 })();

@@ -133,6 +133,7 @@ const G = (() => {
       if (it && (it.slot === "ring" || it.slot === "amulet") && r.qty > 1) { const n = r.qty - 1; r.qty = 1; for (let i = 0; i < n; i++) s.inv.push({ id: s.nextInv++, item: r.item, qty: 1, charge: null }); }
     }
     if (typeof AMMO !== "undefined") { const m = AMMO.migrate(s); if (m) note(s, m); }
+    if (s.horse && typeof HORSES !== "undefined") HORSES.fix(s);   // a horse once sent off to a stables (or marked dead or lost) is yours again, downed
     if (fixTactics(s)) note(s, "⚔ Your tactics were fixed: rules you added under \"Always → Attack\" never fired. They now come first.");
     if (typeof SPELLCRAFT !== "undefined") SPELLCRAFT.register(s);   // crafted spells back into the spellbook
     // Bleak Falls Barrow cleared but no Dragonstone (the claw door used to make the boss skip it): hand it over so the quest can finish

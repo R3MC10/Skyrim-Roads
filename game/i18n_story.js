@@ -283,7 +283,7 @@ const I18N_STORY = {
 "Wildmane is yours.": "Dzika Grzywa jest twoja.",
 "(Ride it from the Travel tab.)": "(Jeździsz na nim z zakładki Podróż.)",
 "It rears and kicks, then bolts.": "Staje dęba i kopie, a potem ucieka.",
-"A cart lies on its side, a dead horse still in harness.": "Wóz leży na boku, martwy koń wciąż w uprzęży.",
+"A cart lies on its side, its horse long gone.": "Wóz leży na boku, po koniu ani śladu.",
 "Crates spill across the road.": "Skrzynie rozsypane po drodze.",
 "📦 Search the crates": "📦 Przeszukaj skrzynie",
 "Fresh boot prints lead into the trees: an ambush, waiting.": "Świeże odciski butów prowadzą między drzewa: zasadzka, czeka.",

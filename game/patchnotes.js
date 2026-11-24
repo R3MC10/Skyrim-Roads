@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b144-horsedown", build: 144, date: "24 Nov 2026", title: "Horses get downed, never lost", items: [
+      "When your horse runs out of health it is now downed instead of limping off to some far-away stables. It stays with you, still carries your things, and shows as Downed on the stables card, on your trip and in the fight picture.",
+      "You can't ride a downed horse, so you travel on foot. It gets back up by itself after about 6 hours (30 real minutes), as soon as you sleep, or straight away if any stablehand tends it for 50 gold.",
+      "If your horse goes down in a mounted fight, you're thrown clear and the fight goes on with you on foot. The fall alone never finishes you.",
+      "A horse that was resting at a stables in an old save comes back to you, downed. Every player in a party has their own horse and their own downed state.",
+    ] },
     { id: "b143-followertab", build: 143, date: "24 Nov 2026", title: "Your follower gets their own tab", items: [
       "Your follower now has their own Follower tab in the Character menu, next to Skills, Character and Perks. Everything about them lives there: overview, bond, gear, magic, tactics, perks, fighting style and Dismiss.",
       "The Character page only keeps one short line about them; tap it to jump to the tab. With nobody following you, the tab tells you who you can hire and where.",
