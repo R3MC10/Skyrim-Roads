@@ -3,6 +3,9 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b141-pnback", build: 141, date: "24 Nov 2026", title: "Easier way out of the patch notes", items: [
+      "The patch notes now have a bar at the top that stays put while you scroll: ‹ Back on the title screen, ✕ in the game. No more scrolling all the way down to leave.",
+    ] },
     { id: "b139-perf", build: 139, date: "24 Nov 2026", title: "Faster and smoother", items: [
       "The game starts a lot faster: the title screen now shows up in about a second instead of several on older phones.",
       "The world map, the title screen, the road pictures and the fight screen use much less of your phone's power when nothing is moving, so older phones stay smoother and cooler and the battery lasts longer.",
@@ -768,11 +771,19 @@ const PATCHNOTES = (() => {
     return `<div class="pnotes"><details class="pn pnnext" open><summary><span class="pnt">Coming next</span><span class="pnm">Being built now</span></summary><ul>${NEXT.map((i) => `<li>${e(i)}</li>`).join("")}</ul></details>
       ${LIST.map((n, i) => entryHTML(n, i === 0)).join("")}</div>`;
   }
+  /* a header that stays at the top while the list scrolls, so going back never needs a scroll to the end.
+     where: "page" (title menu: ‹ Back on the left, like an app bar) or "sheet" (in-game popup: ✕ on the right) */
+  function barHTML(where, attr) {
+    const btn = where === "sheet"
+      ? `<button class="pnback pnx" ${attr} aria-label="Close patch notes">✕</button>`
+      : `<button class="pnback" ${attr} aria-label="Back to the menu">‹ Back</button>`;
+    return `<div class="pnbar pn-${where}">${where === "sheet" ? "" : btn}<h2>Patch Notes</h2>${where === "sheet" ? btn : ""}</div>`;
+  }
   /* the one-time popup after an update: just the newest entry */
   function whatsNewHTML() {
     const n = latest();
     return `<div class="pnotes pnwhat"><div class="pnkick">What's new</div><h2>${e(n.title)}</h2><ul>${n.items.map((i) => `<li>${e(i)}</li>`).join("")}</ul></div>`;
   }
-  return { LIST, NEXT, latest, seen, markSeen, unseen, html, whatsNewHTML, KEY };
+  return { LIST, NEXT, latest, seen, markSeen, unseen, html, barHTML, whatsNewHTML, KEY };
 })();
 if (typeof module !== "undefined") module.exports = PATCHNOTES;

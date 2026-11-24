@@ -2247,6 +2247,17 @@ body:has(#twBtn) .app{padding-bottom:calc(140px + env(safe-area-inset-bottom))}
 @media (max-width:600px){.tab .hk{display:none!important}}
 @media (max-width:440px){.mn-bar .tab{letter-spacing:0}.mn-bar .tab .mn-l{text-transform:none;font-size:10.5px;letter-spacing:.01em}}
 @media (prefers-reduced-motion:reduce){#hudlane,.twbtn,.hb.full{transition:none}.hudobj.flash .ho-d{animation:none}}
+/* patch notes: a header that stays put while the list scrolls (‹ Back on the title page, ✕ in the popup) */
+.pnbar{position:sticky;z-index:5;display:flex;align-items:center;gap:8px;min-height:52px;background:linear-gradient(180deg,#0e0f12,#0a0b0d);border-bottom:1px solid rgba(214,178,94,.3);box-shadow:0 6px 14px rgba(0,0,0,.45)}
+.pnbar h2{flex:1;margin:0!important;text-align:center;letter-spacing:.12em;text-transform:uppercase;font-size:17px}
+.pnbar .pnback{flex:none;min-width:72px;min-height:44px;padding:0 12px;border:1px solid rgba(214,178,94,.4);border-radius:4px;background:rgba(0,0,0,.35);color:#f0e2b6;font:600 15px "Barlow Semi Condensed",sans-serif;letter-spacing:.04em;cursor:pointer}
+.pnbar .pnback:active{background:rgba(214,178,94,.18)}
+.pnbar .pnback.pnx{min-width:44px;font-size:18px}
+.pnbar.pn-page::after{content:"";flex:none;width:72px}
+.pnbar.pn-sheet::before{content:"";flex:none;width:44px}
+.title .page .pnbar{top:-7vh;margin:-18px -18px 10px;padding:4px 10px;border-radius:4px 4px 0 0}
+.sheet.pnsheet .pnbar{top:-20px;margin:-20px -18px 10px;padding:4px 10px}
+html.art-pixel .pnbar,html.art-pixel .pnbar .pnback{border-radius:0}
 </style>
 <script src="access.js"></script>
 </head>
