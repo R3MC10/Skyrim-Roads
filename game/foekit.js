@@ -61,7 +61,7 @@ const FOEKIT = (() => {
       return `${n} casts ${EL[el].bolt}: ${r.t}${x}`;
     } },
     foe_ward: { label: "Ward", cd: 5, w: 2, buff: true, run(f, et, n) { f.kit.ward = Math.round(base(f) * 2.5); return `${n} raises a ward against your spells (${f.kit.ward})`; } },
-    mend: { label: "Healing spell", cd: 5, w: 3, when: (f) => f.ehp < (f.ehp0 || f.ehp) * 0.55 && (f.kit.used.mend || 0) < 2, run(f, et, n) { const h = Math.round((f.ehp0 || f.ehp) * 0.1);   /* a foe's magicka runs dry: two heals a fight */ f.ehp = Math.min(f.ehp0 || f.ehp + h, f.ehp + h); return `${n} casts a healing spell: +${h}`; } },
+    mend: { label: "Healing spell", cd: 5, w: 3, when: (f) => f.ehp < (f.ehp0 || f.ehp) * 0.55 && (f.kit.used.mend || 0) < 2 && (typeof FOECAP === "undefined" || FOECAP.canHeal(f)), run(f, et, n) { let h = Math.round((f.ehp0 || f.ehp) * 0.1);   /* a foe's magicka runs dry: two heals a fight (and foecap.js's limits) */ if (typeof FOECAP !== "undefined") h = FOECAP.heal(f, h); else f.ehp = Math.min(f.ehp0 || f.ehp + h, f.ehp + h); return `${n} casts a healing spell: +${h}`; } },
     // rogues
     poison_blade: { label: "Poisoned blade", cd: 3, w: 3, run(f, et, n) { const r = hit(f, et, 0.9); if (r.loss > 0) { dot(f, "poison", base(f) * 0.4 * thru(f, r, 0.9), 3); return `${n} cuts you with a poisoned blade: ${r.t} (you're poisoned)`; } return `${n} slashes with a poisoned blade: ${r.t}`; } },
     shadowstep: { label: "Shadowstep", cd: 4, w: 2, buff: true, run(f, et, n) { f.kit.evade = 0.6; return `${n} slips into the shadows (your next blow may miss)`; } },
@@ -74,9 +74,9 @@ const FOEKIT = (() => {
     // undead
     force: { label: "Unrelenting Force", cd: 5, w: 2, run(f, et, n) { const r = hit(f, et, 0.6, { magic: true }); f.kitApLoss = 2; const b = f.sp; f.sp = Math.max(0, f.sp - G.maxStamina(f.s) * 0.2); return `${n} shouts FUS RO DAH! ${r.t} (you're knocked back: −2 AP next turn, −${Math.round(b - f.sp)} stamina)`; } },
     frost_breath: { label: "Frost breath", cd: 4, w: 2, run(f, et, n) { const r = hit(f, et, 1.1, { magic: true }); const b = f.sp; f.sp = Math.max(0, f.sp - G.maxStamina(f.s) * 0.15); return `${n} breathes frost: ${r.t} (−${Math.round(b - f.sp)} stamina)`; } },
-    life_drain: { label: "Drain life", cd: 3, w: 3, run(f, et, n) { const r = hit(f, et, 0.9, { magic: true }); if (r.loss > 0) { const h = Math.round(r.loss * 0.4); f.ehp = Math.min(f.ehp0 || f.ehp + h, f.ehp + h); return `${n} drains your life: ${r.t} (heals ${h})`; } return `${n} reaches for your life: ${r.t}`; } },
+    life_drain: { label: "Drain life", cd: 3, w: 3, run(f, et, n) { const r = hit(f, et, 0.9, { magic: true }); if (r.loss > 0) { let h = Math.round(r.loss * 0.4); if (typeof FOECAP !== "undefined") h = FOECAP.heal(f, h, { noCd: true }); else f.ehp = Math.min(f.ehp0 || f.ehp + h, f.ehp + h); return h > 0 ? `${n} drains your life: ${r.t} (heals ${h})` : `${n} drains your life: ${r.t}`; } return `${n} reaches for your life: ${r.t}`; } },
     // anyone who carries them
-    potion: { label: "Healing potion", cd: 99, w: 5, when: (f) => f.kit.pots > 0 && f.ehp < (f.ehp0 || f.ehp) * 0.4, run(f, et, n) { f.kit.pots--; const h = Math.round((f.ehp0 || f.ehp) * 0.18); f.ehp = Math.min(f.ehp0 || f.ehp + h, f.ehp + h); return `${n} gulps down a healing potion: +${h}`; } },
+    potion: { label: "Healing potion", cd: 99, w: 5, when: (f) => f.kit.pots > 0 && f.ehp < (f.ehp0 || f.ehp) * 0.4 && (typeof FOECAP === "undefined" || FOECAP.canHeal(f, { noCd: true })), run(f, et, n) { f.kit.pots--; let h = Math.round((f.ehp0 || f.ehp) * 0.18); if (typeof FOECAP !== "undefined") h = FOECAP.heal(f, h, { noCd: true }); else f.ehp = Math.min(f.ehp0 || f.ehp + h, f.ehp + h); return `${n} gulps down a healing potion: +${h}`; } },
   };
   /* the slow ones land next turn */
   const WIND = {

@@ -21,7 +21,7 @@ const SHOUTS2 = (() => {
     animal_allegiance: ["Animal Allegiance", ["RAAN", "MIR", "TAH"], [50, 60, 70], "Beasts fight for you: a beast foe stops fighting for 6/10/14 turns, and a wild animal joins you (6/9/12 damage a turn)."],
     call_of_valor: ["Call of Valor", ["HUN", "KAAL", "ZOOR"], [180, 180, 180], "A hero of Sovngarde fights at your side for the rest of the fight (14/20/28 damage a turn)."],
     call_dragon: ["Call Dragon", ["OD", "AH", "VIING"], [300, 300, 300], "Odahviing answers: under open sky he fights for you (35 damage a turn) for the rest of the fight."],
-    dismay: ["Dismay", ["FAAS", "RU", "MAAR"], [40, 45, 50], "Terror grips the foe: it stops fighting for 3/5/8 turns. Dragons and the undead don't feel fear."],
+    dismay: ["Dismay", ["FAAS", "RU", "MAAR"], [40, 45, 50], "Terror grips the foe: it stops fighting for 3/5/8 turns (bosses 2, elite foes 3). Dragons and the undead don't feel fear."],
   };
   for (const [id, v] of Object.entries(NEW)) if (!S[id]) S[id] = v;
   P.ROAD_SHOUTS.push("clear_skies");

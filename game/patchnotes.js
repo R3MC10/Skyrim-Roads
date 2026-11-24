@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b142-balfear", build: 142, date: "24 Nov 2026", title: "Bosses don't run forever, healers don't heal forever", items: [
+      "Battle Cry and every other fear or \"stops fighting\" effect now hold a boss for 2 turns and an elite foe for 3. A boss can lose at most 3 turns a fight to fear, an elite 5. For the turns they shake off they stay rattled and hit 20% softer, so the shout still helps. Normal foes still run for the full time.",
+      "Foe mages and healers can't patch themselves back to full any more: their own healing stops at about two thirds of their health, adds up to at most a third of it in a whole fight, and a healing spell needs a few turns to come back. Potions and life drain count too.",
+      "Aspect of Terror (Illusion) now also keeps bosses and elite foes afraid a turn longer.",
+    ] },
     { id: "b141-areaui", build: 141, date: "24 Nov 2026", title: "Tidier towns and map", items: [
       "The Area tab now opens on a board of small tiles, grouped like a real town: Inn, Market, Services & trainers, Work & jobs, Your home, and Events & fun. Each tile says what's going on there (open or closed, room price, lessons left, jobs taken, garden ripe, your bounty).",
       "Things waiting for you in town (a job to hand in, a ripe garden) sit on top under Right now.",
