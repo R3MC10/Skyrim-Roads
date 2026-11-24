@@ -9,6 +9,7 @@ const c = { process: { env: process.env }, console, Math, Date, JSON, Float64Arr
 vm.createContext(c);
 for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "shieldfx.js", "foegroups.js", "legendary.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "weatherfx.js", "enchanting.js", "quests.js", "horses.js", "hall.js", "bounty.js", "visits.js", "cooking.js", "arena.js", "achievements.js", "clans.js", "festivals.js", "wars.js", "curses.js", "smithing.js", "social.js", "roam.js", "ammo.js", "tomes.js", "magic.js", "spellbook.js", "mp.js", "spellcraft.js", "shouts2.js", "coop.js", "party.js", "combatai.js", "tbfight.js"])
   if (fs.existsSync(W + f)) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
+if (fs.existsSync(W + "sharedfight.js")) vm.runInContext(fs.readFileSync(W + "sharedfight.js", "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);   // shared party fights (section 8b; kept out of the list other tests copy)
 vm.runInContext(`
 const LEVELS = [5, 10, 20, 30, 40];
 const tierOf = (L) => L < 8 ? 0 : L < 15 ? 1 : L < 25 ? 2 : L < 35 ? 3 : 4;
@@ -187,6 +188,68 @@ if (!process.env.SIMONLY) {
   while (!ss.done && g++ < 300) { if (r.turn === "me") { r = ss.act("attack"); if (r.turn === "next") r = ss.advance(); continue; } if (r.turn === "wait") { waited = true; if (asked.length === 1) ss.waiting.move = "power"; else ss.waiting.until = 0; r = ss.advance(); continue; } r = ss.advance(); }
   ok(waited && asked[0] === "p2", "the fight waited for Beta's phone"); ok(ss.ev.some((e) => /Beta power attack/.test(e.text)), "Beta's chosen move was played"); ok(ss.ev.some((e) => /took too long and keeps their guard up/.test(e.text)) || asked.length === 1, "a late player just guards (no auto fighting)");
   ok(ss.wave === 2 || !f.won, "a won party fight went through every foe"); ok(!f.won || ss.ev.some((e) => /Another .* steps in/.test(e.text)), "the next foe steps in"); }
+// 8b. shared party fights (sharedfight.js): Beta plays a real turn on her own full fight screen, the leader's phone takes it over
+ok(typeof SHAREDFIGHT !== "undefined", "sharedfight.js loaded");
+if (typeof SHAREDFIGHT !== "undefined") { console.log("8b: shared party fights");
+  ok(TB.voice("You hit the bandit for 12 and your blade bites", "Beta") === "Beta hits the bandit for 12 and their blade bites", "'You hit' reads 'Beta hits' on the other phones: " + TB.voice("You hit the bandit for 12 and your blade bites", "Beta"));
+  ok(TB.voice("You hold back and keep your guard up", "Beta") === "Beta holds back and keeps their guard up", "both verbs read right: " + TB.voice("You hold back and keep your guard up", "Beta"));
+  ok(TB.voice("Your flames burn for 8", "Beta") === "Beta's flames burn for 8", "'Your' at the start is Beta's");
+  ok(TB.voice("Bandit hits 25 (you're poisoned)", "Beta") === "Bandit hits 25 (Beta is poisoned)", "you-are mid-line reads right: " + TB.voice("Bandit hits 25 (you're poisoned)", "Beta"));
+  ok(TB.voice("You try to break away, but can't", "Beta") === "Beta tries to break away, but can't", "verbs follow the name");
+  const s = fresh("warrior", 20); s.id = "p1"; s.name = "Alfa";
+  const f = new G.Fight(s, enc("Bandit outlaw", 20));
+  const mate = COOP.allyFromCard({ id: "p2", name: "Beta", cur: 250, coop: { prof: { dmg: 20, hp: 300, red: 0.2, role: "fighter" } } }); mate.pid = "p2"; f.allies.push(mate);
+  const ss = new TB.Session(f, { trySneak: false }); ss.remote = { ask() {}, end() {} };
+  f.hp = G.maxHealth(s) - 60;
+  let r = ss.begin(), g = 0;
+  while (r.turn !== "wait" && !ss.done && g++ < 60) { r = r.turn === "me" ? ss.act("end") : ss.advance(); if (r.turn === "next") r = ss.advance(); }
+  ok(r.turn === "wait" && ss.waiting?.tid, "the leader's phone waits for Beta's turn");
+  const d = { id: "fid1", owner: "p1", ...TB.fightState(ss) };
+  ok(d.v === 2 && d.turn.tid === ss.waiting.tid && d.roster.some((x) => x.host && x.name === "Alfa") && d.roster.some((x) => x.pid === "p2") && d.foeE.name && d.order.length && d.evs.length, "v2 record: foe, roster, turn order, events");
+  ok(TB.TURN_SECONDS === 90, "90 s for a player's turn");
+  const s2 = fresh("mage", 20); s2.id = "p2"; s2.name = "Beta";
+  let sent = null; const m = SHAREDFIGHT.build(s2, d, (x) => { sent = x; });
+  ok(m.advance().turn === "me", "Beta's phone: it's her turn, with her own moves");
+  ok(Math.round(m.f.ehp) === Math.round(f.ehp) && m.ehpMax === ss.ehpMax && m.f.e.name === f.e.name, "both phones show the same foe and health");
+  ok(m.f.allies.some((a) => a.host && a.name === "Alfa") && !m.f.allies.some((a) => a.pid === "p2"), "the leader shows as Beta's teammate, Beta is herself");
+  ok(Math.round(m.f.hp) === Math.round(mate.hp), "Beta's health is the one the leader's phone keeps");
+  ok(m.st.ap >= 4 && m.ap === Math.max(1, m.st.ap), "Beta gets her own action points");
+  const sp = s2.spells.find((id) => D.SPELLS[id]?.kind === "damage" && m.canAfford("spell:" + id));
+  const e0 = m.f.ehp, mp0 = m.f.mp;
+  ok(sp && m.act("spell:" + sp) && m.f.mp < mp0, "Beta casts a real spell with her own magicka (" + sp + ")");
+  const dealt = e0 - m.f.ehp;
+  m.f.eParalyzed = 2;   // and a paralysis landed on the foe
+  const lead = m.f.allies.find((a) => a.host); lead.hp += 15;   // and she mended the leader
+  if (!sent) m.act("end");
+  ok(sent && sent.tid === d.turn.tid && sent.pid === "p2" && sent.ev.length >= 1, "her turn goes back to the leader's phone in one reply");
+  ok(sent.allies.some((x) => x.k === "host" && x.hp - x.hp0 === 15), "the heal on the leader is in the reply");
+  ok(m.advance().turn !== "me", "after her turn Beta waits for the others");
+  let got = null; const orig = ss.applyRemote.bind(ss);
+  ss.applyRemote = (al, rp) => { const b = f.ehp, hb = f.hp; orig(al, rp); got = { d: b - f.ehp, h: f.hp - hb, para: f.eParalyzed }; };
+  ss.waiting.reply = sent; r = ss.advance();
+  ok(got && Math.abs(got.d - dealt) < 1 && got.para === 2 && got.h === 15, "the leader's phone took her damage, the paralysis and the heal: " + JSON.stringify(got) + " dealt " + Math.round(dealt));
+  ok(ss.ev.some((e) => e.by === "p2" && /^Beta /.test(e.text)), "her lines show with her name on the leader's screen");
+  // the leader's phone sends news: Beta's phone follows (health, log, round), and her own lines aren't doubled
+  let g2 = 0; while (!ss.done && r.turn !== "wait" && g2++ < 80) { r = r.turn === "me" ? ss.act("attack") : ss.advance(); if (r.turn === "next") r = ss.advance(); }
+  const d2 = { id: "fid1", owner: "p1", ...TB.fightState(ss) }; m.sync(d2);
+  ok(Math.round(m.f.ehp) === Math.round(f.ehp), "after more turns both phones still show the same foe health");
+  ok(Math.round(m.f.hp) === Math.max(0, Math.round(mate.down ? 0 : mate.hp)), "Beta's health follows the blows she took on the leader's phone");
+  ok(m.ev.filter((e) => /^Beta /.test(e.text)).length === 0, "her own moves aren't shown twice");
+  ok(m.ev.some((e) => e.kind === "ally" && e.name === "Alfa"), "the leader's moves show as a teammate's on her screen");
+  // summons fight on the leader's phone and fade; a player who breaks away leaves the fight
+  { const f3 = new G.Fight(fresh("warrior", 20), enc("Bandit outlaw", 20)); const m3 = COOP.allyFromCard({ id: "p3", name: "Ceta", coop: { prof: { dmg: 20, hp: 300, red: 0.2, role: "fighter" } } }); m3.pid = "p3"; f3.allies.push(m3);
+    const s3 = new TB.Session(f3, { trySneak: false }); s3.remote = { ask() {}, end() {} };
+    s3.applyRemote(m3, { ev: [{ text: "You call a Flame Atronach", dmg: 0 }], summon: { turns: 2, dmg: 9, name: "Flame Atronach" } });
+    const sm = f3.allies.find((a) => a.summonOf === "p3");
+    ok(sm && sm.dmg === 9 && /Ceta's Flame Atronach/.test(sm.name), "a player's summon joins the fight as its own fighter");
+    s3.allyMove(sm, "auto"); s3.allyMove(sm, "auto");
+    ok(!f3.allies.includes(sm), "and fades when its time is up");
+    s3.applyRemote(m3, { fled: true, ev: [] });
+    ok(!f3.allies.includes(m3) && m3.gone, "a player who breaks away leaves the fight"); }
+  // the end: the same result for everyone; a knocked-down player gets back up at 10%
+  m.meDown = true; m.sync({ ...d2, done: true, won: true, escaped: false });
+  ok(m.done && m.f.won && Math.round(m.f.hp) === Math.max(1, Math.round(G.maxHealth(s2) * 0.1)), "Beta wins with the party and, knocked down, gets back up at 10%");
+}
 // 9. bigger party, more foes (at most 6); a boss stays alone
 { const s = fresh("warrior", 20), f = new G.Fight(s, enc("Bandit outlaw", 20));
   for (let i = 0; i < 7; i++) { const m = COOP.allyFromCard({ id: "p" + i, name: "M" + i, coop: { prof: { dmg: 20, hp: 300, red: 0.2, role: "fighter" } } }); m.pid = "p" + i; f.allies.push(m); }

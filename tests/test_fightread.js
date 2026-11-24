@@ -111,10 +111,22 @@ for (const [build, L] of [["warrior", 20], ["mage", 20], ["archer", 30]]) {
 }
 
 // ---- summary, banners, delays, sounds
-{ const f = mk("warrior", 20, { name: "Bandit", health: 260, damage: 14, tags: ["humanoid"] });
-  const ss = TB.simulate(f, { trySneak: false });
-  const r2 = ss.ev.find((e) => e.kind === "round" && e.round === 2);
-  const s1 = R.summary(ss, 1); ok(s1 && s1.dealt > 0 && s1.took >= 0, "round 1 summary: dealt " + s1?.dealt + ", took " + s1?.took);
+{ // round 1 can honestly be all misses (~20% of fights: one power attack that misses), so pick a fight where you landed a hit,
+  // and separately check that an all-miss round 1 says "dealt 0"
+  const hits1 = (ss) => ss.ev.filter((e) => e.round === 1 && (e.kind === "me" || e.kind === "ally") && e.dmg > 0);
+  let ss = null, missed = null;
+  for (let i = 0; i < 200 && (!ss || !missed); i++) {
+    const t = TB.simulate(mk("warrior", 20, { name: "Bandit", health: 260, damage: 14, tags: ["humanoid"] }), { trySneak: false });
+    if (!t.ev.some((e) => e.kind === "round" && e.round === 2)) continue;
+    const e1 = t.ev.filter((e) => e.round === 1), foeHurt = e1[0].ehp !== e1[e1.length - 1].ehp;
+    if (hits1(t).length) ss = ss || t; else if (!foeHurt) missed = missed || t;
+  }
+  const f = ss.f, r2 = ss.ev.find((e) => e.kind === "round" && e.round === 2);
+  const landed = hits1(ss).reduce((a, e) => a + e.dmg, 0);
+  const s1 = R.summary(ss, 1); ok(s1 && s1.dealt > 0 && s1.dealt >= Math.round(landed) - 1 && s1.took >= 0, "round 1 summary: dealt " + s1?.dealt + " (hits " + landed + "), took " + s1?.took);
+  const ev1 = ss.ev.filter((e) => e.round === 1), st = ev1.find((e) => e.kind === "round"), en = ev1[ev1.length - 1];
+  ok(s1.took === Math.round(Math.max(0, st.hp - en.hp)), "round 1 summary: took matches your health lost (" + s1.took + ")");
+  if (missed) { const m1 = R.summary(missed, 1); ok(m1 && m1.dealt === 0, "a round of only misses says dealt 0 (" + m1?.dealt + ")"); }
   const b = R.banner(r2, null, ss); ok(b && b.t === "Round 2" && /dealt/.test(b.sub), "round banner with last round's numbers");
   const fe = ss.ev.find((e) => e.kind === "foe"); ok(R.banner(fe, { kind: "me" }, ss)?.cls === "foe" && !R.banner(fe, fe, ss), "foe banner once at the start of its turn");
   ok(R.delay({ kind: "foe" }) >= 900 && R.delay({ kind: "round", round: 2 }) > R.delay({ kind: "me" }), "foe turns and new rounds stay on screen longer");

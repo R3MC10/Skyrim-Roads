@@ -38,7 +38,8 @@ const FIGHTART = (() => {
     let gearO = null; try { if (typeof GEARLOOK !== "undefined" && typeof HEROART !== "undefined" && s?.loadouts) gearO = GEARLOOK.person(HEROART.lookOf(s)); } catch { /* bare save */ }
     const off = f?.off && f?.eq?.offhand ? (G.wtype ? G.wtype(f.eq.offhand.item) : "sword") : null;   // dual wielding
     const ench = typeof COMBATFX !== "undefined" ? COMBATFX.glowOf(COMBATFX.enchantOf(f)) : null;   // [OURS] colour-coded glow (combatfx.js)
-    return { skin: SKIN[s?.race] || SKIN.nord, wt, shield: !!f?.shield, off, ench, body: gearO?.body || body, helm: !!f?.armor?.head, allies, mates, list, beast: !!s?.beastForm, gearO };
+    let look = null; try { if (typeof HEROART !== "undefined" && s?.loadouts) look = HEROART.lookOf(s); } catch { /* bare save */ }
+    return { skin: SKIN[s?.race] || SKIN.nord, wt, shield: !!f?.shield, off, ench, body: gearO?.body || body, helm: !!f?.armor?.head, allies, mates, list, beast: !!s?.beastForm, gearO, look };
   }
   function foeOf(e) {
     if (e?.look) return "player";   // another player: drawn in their own gear (matePerson)
@@ -231,7 +232,8 @@ const FIGHTART = (() => {
     const humanoid = (o) => { if (curArchLook && kind !== "player") Object.assign(o, curArchLook); o.lunge = lunge; if (pose) { o.aim = pose.aim; o.back = pose.back; o.hunch = (o.hunch || 0) + pose.lean; o.draw = pose.draw; if (pose.wt) o.wt = pose.wt; } return person(g, o); };
     if (typeof SOLART !== "undefined" && SOLART.foeFig(g, kind, lunge, glowT, { humanoid, quad: (o) => quad(g, { lunge, ...o }), SKIN })) return;
     switch (kind) {
-      case "player": return humanoid({ ...matePerson(curFoeLook) });
+      case "player": if (curFoeLook && rigged()) return HEROART.fightFigure(g, { look: curFoeLook }, { lunge, t: glowT, aim: pose?.aim, back: pose?.back, hunch: pose?.lean || 0, draw: pose?.draw, wt: pose?.wt || undefined, glow: !!curFoeLook.gl?.w });
+        return humanoid({ ...matePerson(curFoeLook) });
       case "bandit": return humanoid({ skin: SKIN.imperial, body: P.leather, head: "hood", hoodColor: "#5a4836", wt: "axe", shield: false });
       case "forsworn": return humanoid({ skin: SKIN.breton, body: "#7a5a3a", head: "feathers", wt: "sword", cape: "#5f6a48" });
       case "draugr": return humanoid({ skin: "#6a7f78", body: "#4a5550", head: "horned", helmColor: "#5a5a50", wt: "battleaxe", eyes: "#9fd0f0", armC: "#6a7f78" });
@@ -284,6 +286,11 @@ const FIGHTART = (() => {
     if (h.beast && typeof BEASTART !== "undefined") return BEASTART.wolf(g, { lunge, t: glowT });
     if (h.beast) return quad(g, { color: "#4a4038", len: 50, height: 40, head: 10, legW: 5, tail: "bushy", ears: 1, fangs: 1, lunge });
     const wt = pose?.wt || h.wt;
+    if (h.look && rigged()) {   // the shared rigged character (figart.js), posed by the replay
+      const w2 = wt === "fist" ? null : wt;
+      return HEROART.fightFigure(g, { look: h.look }, { t: glowT, wt: w2, shield: h.shield && !TWO_HANDED.has(wt), off: !TWO_HANDED.has(wt) && wt !== "fist" ? h.off : null, lunge,
+        glow: pose ? pose.glow : h.bound, aim: pose?.aim, back: pose?.back, hunch: pose?.lean || 0, draw: pose?.draw, flask: pose?.flask });
+    }
     const go = h.gearO || {};
     person(g, { skin: h.skin, body: h.body, head: go.head || (h.helm ? "helm" : "hair"), helmColor: go.helmColor, hoodColor: go.hoodColor, armC: go.armC, pants: go.pants, boots: go.boots, legs: go.legs, gear: go.gear, wmat: go.wmat,
       shieldColor: go.shieldColor, shieldTrim: go.shieldTrim, shieldShape: go.shieldShape, t: glowT,
@@ -295,8 +302,9 @@ const FIGHTART = (() => {
     if (typeof GEARLOOK !== "undefined") { const o = GEARLOOK.person(L); return { ...o, skin: SKIN[L?.r] || SKIN.nord, glow: !!L?.gl?.w }; }
     return { skin: SKIN[L?.r] || SKIN.nord, body: "#8a7a62", head: "hair", wt: "fist" };
   }
+  const rigged = () => typeof HEROART !== "undefined" && !!HEROART.fightFigure;
   function mate(g, m) {
-    g.save(); g.scale(0.78, 0.78); person(g, matePerson(m.look)); g.restore();
+    g.save(); g.scale(0.78, 0.78); if (m.look && rigged()) HEROART.fightFigure(g, { look: m.look }, {}); else person(g, matePerson(m.look)); g.restore();
   }
   function ally(g, i) { g.save(); g.scale(0.62, 0.62); g.globalAlpha = 0.9; person(g, { skin: [SKIN.nord, SKIN.redguard, SKIN.dunmer][i % 3], body: ["#6a5a40", P.steel, "#4a5a3a"][i % 3], head: i % 2 ? "helm" : "hair", wt: ["sword", "axe", "bow"][i % 3], shield: i % 3 === 0 }); g.restore(); }
 
@@ -342,7 +350,8 @@ const FIGHTART = (() => {
     switch (kind) {
       case "mate": case "follower": {
         g.scale(0.78, 0.78);
-        if (o.look) person(g, { ...matePerson(o.look), lunge });
+        if (o.look && rigged()) HEROART.fightFigure(g, { look: o.look }, { lunge, t });
+        else if (o.look) person(g, { ...matePerson(o.look), lunge });
         else person(g, { skin: SKIN.nord, body: P.steel, head: "helm", wt: "sword", shield: true, lunge });
         break; }
       case "dog": {   // Meeko, the stray from the road
@@ -668,6 +677,9 @@ const FIGHTART = (() => {
     const groundY = Hh * 0.8, s = Hh / 150, hx0 = W * 0.27, fx0 = W * 0.72;
     const foeK = rec.foe, fSize = SIZE[foeK] || 1, reach = REACH[foeK] || 1, isPerson = PERSON.has(foeK);
     const foeChest = groundY - 34 * s * fSize, heroChest = groundY - 36 * s;
+    // [OURS] foe rigs (foerig.js): the foe is a little skeleton that breathes, winds up, flinches, staggers and falls
+    const RIG = typeof FOERIG !== "undefined" && FOERIG.on() ? FOERIG.ctl(foeK, rec.foeName, { look: foeK === "player" ? matePerson(rec.foeLook) : null, foeLook: rec.foeLook, arch: typeof FOEGROUPS !== "undefined" ? FOEGROUPS.look(rec.f?.e) : null }) : null;
+    const RIGKIT = { weapon, gearTorso, foeFig, person, H: ART.H }, RIGST = { t: 0, clip: null, u: 0, hitU: null, pose: null, pic: null, picH: 0, filter: null, dragon: null, kit: RIGKIT, jitter: false, still: false };
     const pmul = rm ? 0.4 : 1;
     // ---- state (all allocated once)
     let bi = 0, lt = 0, hitIdx = 0, phase = beats.length ? "play" : "end", phaseT = 0, real = 0, hitstop = 0, slowT = 0, shake = 0, zoom = 1, zoomT = 0, zcx = W / 2, zcy = Hh / 2, flash = 0, flashC = "#fff";
@@ -741,6 +753,7 @@ const FIGHTART = (() => {
       const me = b.who === "me", tx = me ? fx0 : (b.ally ? allyX() : hx0), ty = me ? foeChest : heroChest, dir = me ? 1 : -1;
       const fx = b.fx, cols = colOf(fx, b.el), big = b.power || b.final;
       if (last && CFX && typeof SOUND !== "undefined" && SOUND.fx && !["potion", "self", "wait"].includes(b.move)) SOUND.fx(CFX.soundOf(b, me ? foeK : "person", meleeOf(b), goreOn));
+      if (RIG && me && !["potion", "self", "wait"].includes(b.move) && (last || !b.miss)) RIG.event(b.miss ? "dodge" : b.blocked ? "block" : b.power || b.crit || b.final ? "stagger" : "hit");   // the foe flinches, reels or ducks aside
       if (b.miss) {   // a whoosh, the other side steps aside
         if (me) foeDodge = 0; else heroDodge = 0;
         if (last) float(tx, ty - 34 * s, "Miss", "#e9dcc0", 14);
@@ -850,6 +863,7 @@ const FIGHTART = (() => {
       if (hitstop > 0) { hitstop -= dtr; dtr = 0; }
       let dt = dtr;
       if (slowT > 0) { slowT -= dtr; dt *= 0.3; }
+      if (RIG) RIG.update(dt);
       // bars drain smoothly, the white lag bar follows a moment later
       hpD += (hpT - hpD) * Math.min(1, dtr * 10); ehpD += (ehpT - ehpD) * Math.min(1, dtr * 10);
       if (hpLT > 0) hpLT -= dtr; else hpL += (hpD - hpL) * Math.min(1, dtr * 4);
@@ -1056,6 +1070,7 @@ const FIGHTART = (() => {
       if (dk === "launch") { const l = EASE.out(Math.min(1, dT / 0.6)); wg.translate(-26 * l, -Math.sin(l * Math.PI) * 16); }   // hammered (or Shouted) off its feet
       if (foeDown && dk !== "ash" && dk !== "shatter") {
         if (["wisp", "atronach"].includes(foeK)) wg.globalAlpha = 1 - 0.75 * fallE;   // spirits fade away
+        else if (RIG && dk !== "decap") { /* the rig plays its own fall (foerig.js) */ }
         else if (isPerson) { wg.translate(-4 * fallE, 0); wg.rotate(-Math.PI / 2 * fallE); wg.translate(0, ((SIZE[foeK] || 1) > 1.2 ? 18 : 6) * fallE); }
         else { const dr = foeK === "dragon"; wg.translate(0, (dr ? -10 : -6) * fallE); wg.scale(1, 1 - (1 - (dr ? 0.45 : -0.9)) * fallE); wg.translate(0, (dr ? 0 : 12) * fallE); }   // beasts roll over, dragons slump
       }
@@ -1068,7 +1083,18 @@ const FIGHTART = (() => {
         wg.translate(0, -(22 + Math.sin(tt * 1.7) * 5));
       }
       const foePic = foeK !== "player" && typeof ASSETS !== "undefined" ? ASSETS.img(ASSETS.foeKey(rec.foeName, foeK)) : null;
-      if (foePic) {   // a painted foe: stands on the ground line, breathes, leans into its attacks
+      if (RIG) {   // [OURS] the rig picks its clip from the beat: an attack locked to the move's timing, the fall, a gloat, a stagger...
+        const R = RIGST, them = b && b.who === "them";
+        R.t = rm ? 0 : tt; R.clip = null; R.u = 0; R.hitU = null; R.jitter = false; R.still = !!rm;
+        R.pose = isPerson || foeK === "player" ? foeP : null; R.dragon = curDragon;
+        if (foeDown) { if (dk === "decap") R.clip = "hit", R.u = 0.3; else if (dk === "ash" || dk === "shatter") R.clip = "stagger", R.u = Math.min(0.35, dT); else R.clip = "death", R.u = fallE; }
+        else if (meDown) R.clip = "taunt";
+        else if (them && b.status) { if (b.status === "stagger") R.clip = "stagger", R.u = u; else if (b.status === "para") R.clip = "para", R.u = 0.3, R.jitter = true; else if (b.status === "fear") R.clip = "cower"; }
+        else if (them && m && b.move !== "wait") { R.clip = RIG.clipFor(b.move); R.u = u; R.hitU = m.hits?.[0] ?? null; }
+        R.pic = foePic; R.picH = foePic ? (foeK === "dragon" ? 120 : 66) * Math.min(1.8, fSize) : 0; R.filter = curDragon?.filter || null;
+        RIG.draw(wg, R);
+        if (cv.dataset.rig !== RIG.state) cv.dataset.rig = RIG.state;   // which clip is on (screen tests)
+      } else if (foePic) {   // a painted foe: stands on the ground line, breathes, leans into its attacks
         const hU = (foeK === "dragon" ? 120 : 66) * Math.min(1.8, fSize), wU = hU * foePic.naturalWidth / foePic.naturalHeight;
         const breathe = 1 + Math.sin(tt * 2.2) * 0.012;
         wg.save(); wg.translate(lunge * 10, 0); wg.scale(1, breathe);
@@ -1280,14 +1306,15 @@ const FIGHTART = (() => {
        only the newest two scenes, only while on screen); with reduced motion it just redraws once the pictures arrive */
     let idleT = 0, idleDrawn = false;
     function idleArt() {
-      if (idleT || !rec.art || typeof BSCENE === "undefined") return;
+      const bs = !!rec.art && typeof BSCENE !== "undefined", rigLive = !!RIG && !rm && (phase === "idle" || !won);   // [OURS] a standing foe keeps breathing (or gloating) between turns
+      if (idleT || (!bs && !rigLive)) return;
       const tick = () => {
         idleT = 0;
         if (!cv.isConnected || !IDLE.has(tick)) { IDLE.delete(tick); return; }
-        const ok = !!BSCENE.ready(rec.art);
+        const ok = bs ? !!BSCENE.ready(rec.art) : true;
         if (!MANUAL && !(typeof document !== "undefined" && document.hidden) && ok && (!rm || !idleDrawn)) { draw(performance.now()); idleDrawn = true; }
-        if ((ok && (rm || !BSCENE.animated(rec.art))) || (!ok && BSCENE.failed(rec.art))) { IDLE.delete(tick); return; }
-        idleT = setTimeout(tick, ok ? 83 : 300);
+        if ((!bs || (ok && (rm || !BSCENE.animated(rec.art))) || (!ok && BSCENE.failed(rec.art))) && !rigLive) { IDLE.delete(tick); return; }
+        idleT = setTimeout(tick, ok ? (rigLive ? 50 : 83) : 300);
       };
       IDLE.add(tick); while (IDLE.size > 2) IDLE.delete(IDLE.values().next().value);
       idleT = setTimeout(tick, 83);
