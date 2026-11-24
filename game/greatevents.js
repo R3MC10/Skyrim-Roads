@@ -202,6 +202,7 @@ const GREATEV = (() => {
     const mates = [...new Set(f.allies.filter((a) => a && a.party && typeof a.uid === "string").map((a) => a.uid))].slice(0, 7);
     const grow = 1 + ALLY_ADD * mates.length;
     if (grow > 1) { f.ehp = f.ehp0 = Math.round(f.ehp * grow); e.health = e.hp = f.ehp; }
+    e.pool = f.ehp; e.noGroup = true;   // on the turn-by-turn screen: a charge against shared health, ROUND_TURNS rounds, no extra health boost or foe split (noautoplay.js)
     f.run({ t, maxTurns: ROUND_TURNS, trySneak: false });
     const dealt = Math.max(0, Math.min(1, (f.ehp0 - Math.max(0, f.ehp)) / f.ehp0));
     const bonus = pfx(s, ev.kind === "dragon" ? "gevdragon" : ev.kind === "rift" ? "gevrift" : "gevsiege");
@@ -382,6 +383,7 @@ const GREATEV = (() => {
   let api = null, loopT = null, lastSig = "";
   const me = () => (api ? api.S() : null);
   const partyOf = () => (api && api.party ? api.party() : null);
+  const fightCall = (fn, done) => (typeof NOAUTO !== "undefined" ? NOAUTO.call(fn, done) : done(fn()));   // the fight opens on the turn-by-turn screen
 
   // ---- pictures (through ART)
   function drawPic(kind, g, w, h, seed = "", ph = 0) {
@@ -424,7 +426,13 @@ const GREATEV = (() => {
       g.fillStyle = "#e9dcc0"; g.beginPath(); g.arc(w * 0.08, h * 0.6, h * 0.12, 0, 7); g.fill(); g.strokeStyle = "#8e2b25"; g.lineWidth = 2; for (let k = 0; k < 6; k++) { const a = (k / 6) * Math.PI * 2; g.beginPath(); g.moveTo(w * 0.08, h * 0.6); g.lineTo(w * 0.08 + Math.cos(a) * h * 0.12, h * 0.6 + Math.sin(a) * h * 0.12); g.stroke(); }
     }
   }
-  const pic = (kind, w, h, seed = "", ph = 0) => ((typeof ART !== "undefined") ? ART.html(w, h, (g) => drawPic(kind, g, w, h, seed, ph), { key: `gev-${kind}-${seed}-${ph}`, cls: "gev-pic", alt: "" }) : "");
+  function pic(kind, w, h, seed = "", ph = 0) {
+    if (typeof ART === "undefined") return "";
+    const asset = `gev-${kind}`;
+    const image = typeof ASSETS === "undefined" ? null : ASSETS.img(w < 100 ? asset + "-thumb" : asset);
+    const draw = image ? (g) => ASSETS.cover(g, image, w, h) : (g) => drawPic(kind, g, w, h, seed, ph);
+    return ART.html(w, h, draw, { key: image ? asset + "-painted" : `gev-${kind}-${seed}-${ph}`, cls: "gev-pic", alt: "", painted: !!image });
+  }
 
   // ---- map markers (map.js calls drawMap every frame)
   const spriteCache = {};
@@ -559,8 +567,7 @@ const GREATEV = (() => {
     if (typeof SOUND !== "undefined") try { SOUND.fx("click"); } catch (er) { /* ignore */ }
     if (act === "open") { const ev = byId(b.dataset.id); if (!ev) return; api.closeModal(); return void api.openModal(detailHTML(ev, S, t), "gevsheet"); }
     if (act === "claim") { const msg = claim(S, b.dataset.id, t); if (!msg) return api.toast(T("Nothing to claim yet.")); api.closeModal(); api.persist(true); render(true); if (typeof SOUND !== "undefined") try { SOUND.fx("levelup"); } catch (er) { /* ignore */ } return api.showMessage(T("Great world event"), msg); }
-    if (act === "fight") {
-      const out = round(S, t, { party: partyOf() });
+    if (act === "fight") return void fightCall(() => round(S, t, { party: partyOf() }), (out) => {   // you play the charge turn by turn (noautoplay.js)
       if (!out.fight) return api.toast(out.text);
       publish(S, out.ev);
       if (out.bag && typeof Store !== "undefined") Store.addBag(out.bag);
@@ -568,7 +575,7 @@ const GREATEV = (() => {
       if (out.newPhase && typeof POLISH !== "undefined") POLISH.banner("quest", out.ev.name, T(out.newPhase.title), `<span class="wev-bic">${out.ev.icon}</span>`);
       api.closeModal(); api.persist(true); render(true);
       return api.showFightResult({ ...out, text: out.text, title: out.died ? null : out.title });
-    }
+    });
     if (act === "play") { const r = play(S, b.dataset.game, t); api.toast(r.text); if (r.pts) { if (r.ev) publish(S, r.ev); api.persist(true); if (r.ev) reopen(r.ev, S); render(true); } return; }
     if (act === "prize") { const r = prize(S, b.dataset.at, t); api.toast(r.text); if (r.got) { api.persist(true); const ev = [current(t), ...recent(t, 1)].find((x) => x && x.kind === "fair"); if (ev) reopen(ev, S); render(true); } }
   }

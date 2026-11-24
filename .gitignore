@@ -18,9 +18,11 @@ tests/out_noscretch/
 tests/out_followers2/
 tests/out_partysync/
 tests/out_heroart2/
+tests/out_followeranim/
 tests/out_caravans/
 tests/out_travelscene/
 tests/out_tooltips/
+tests/out_tabkeys/
 tests/out_combatui/
 tests/out_tomeinfo/
 tests/out_beastpaths/
@@ -28,5 +30,19 @@ tests/out_livingworld*/
 tests/out_gev/
 tests/out_followerbonds/
 tests/out_foeintent/
+tests/out_skillup/
 tests/out_boss/
 tests/pnotes/
+tests/out_stash/
+tests/out_evbanner/
+tests/out_gather/
+tests/bugrep/
+tests/out_paintedmap/
+tests/out_pcmap/
+
+# reference renders and raw paintings for ChatGPT (scripts/map_reference.py); finished art goes to game/ as WebP
+art_gpt/*.png
+tests/out_invites/
+tests/out_holds/
+tests/out_evbanner/
+tests/out_gather/

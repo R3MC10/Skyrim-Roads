@@ -35,7 +35,9 @@ const DGAMES = (() => {
   };
 
   // ====================================================================== the rules (pure: no DOM, no Math.random)
-  /* o: { d: 0..1 difficulty (1 - the old odds), ease: 0..0.6 from perks, hl: 1 = a perk shows the answer (Light Foot) } */
+  /* o: { d: 0..1 difficulty (1 - the old odds), ease: 0..0.6 from perks, hl: 1 = a perk shows the answer (Light Foot),
+         tm: 1..2 Easy timing (Settings → Accessibility): longer time limits, wider sweet spots, longer warnings } */
+  const lim = (st) => LIMIT[st.kind] * (st.tm || 1);   // this game's time limit in seconds
   const R = {
     dash: {
       make(st, r) {
@@ -65,7 +67,7 @@ const DGAMES = (() => {
         st.gp = (1 + 1.4 * st.d) / (1 + st.ease); st.gph = r() * st.gp;
         st.sunk = st.hl ? 0.7 : 0.06 + 0.12 * (1 - st.d) + 0.2 * st.ease;
         const n = Math.round(2 + 7 * st.d), dec = [];
-        for (let i = 0; i < n; i++) { let k = Math.floor(r() * 19); if (k >= st.plate) k++; dec.push([k, r() * (LIMIT.trigger - 0.4)]); }
+        for (let i = 0; i < n; i++) { let k = Math.floor(r() * 19); if (k >= st.plate) k++; dec.push([k, r() * (lim(st) - 0.4)]); }
         st.decoys = dec; st.foundAt = -1;
       },
       glint(st, i, t) {   // 0..1: how bright a tile glints at time t
@@ -78,7 +80,7 @@ const DGAMES = (() => {
         if (ev[1] !== "tap") return;
         const i = ev[2] | 0;
         if (i < 0 || i >= 20 || st.marks.includes(i)) return;
-        if (i === st.plate) { st.foundAt = st.tick; const tf = st.tick / (LIMIT.trigger * HZ); return end(st, clamp(0.5 + 0.5 * (1 - 0.6 * tf - 0.3 * st.wrong), 0.5, 1)); }
+        if (i === st.plate) { st.foundAt = st.tick; const tf = st.tick / (lim(st) * HZ); return end(st, clamp(0.5 + 0.5 * (1 - 0.6 * tf - 0.3 * st.wrong), 0.5, 1)); }
         st.marks.push(i); st.wrong++;
         if (st.wrong > st.maxWrong) end(st, 0.15);
       },
@@ -87,7 +89,7 @@ const DGAMES = (() => {
       say: (st) => (st.q >= 0.5 ? "There it is!" : st.wrong > st.maxWrong ? "Wrong stones. Click." : "Out of time."),
     },
     smash: {
-      make(st, r) { st.c = 0.25 + r() * 0.5; st.w = (0.12 - 0.05 * st.d) * (1 + st.ease); st.P = 1.6 - 0.5 * st.d; st.ph = r() * 6.283; st.swings = 5; st.pts = 0; st.cd = 0; st.last = null; },
+      make(st, r) { st.c = 0.25 + r() * 0.5; st.w = (0.12 - 0.05 * st.d) * (1 + st.ease) * (1 + (st.tm - 1) * 0.8); st.P = 1.6 - 0.5 * st.d; st.ph = r() * 6.283; st.swings = 5; st.pts = 0; st.cd = 0; st.last = null; },
       needle: (st, t) => 0.5 + 0.48 * Math.sin((2 * Math.PI * t) / st.P + st.ph),
       input(st, ev, r) {
         if (ev[1] !== "tap" || st.cd > 0) return;
@@ -107,8 +109,8 @@ const DGAMES = (() => {
         const sw = 0.1 - 0.03 * st.d + 0.03 * st.ease;
         st.shade = [0.22, 0.5, 0.78].map((c) => { const m = c + (r() - 0.5) * 0.08; return [m - sw / 2, m + sw / 2]; });
         const ph = []; let t = 0.4 + r() * 0.6;
-        while (t < LIMIT.sneak + 2) {
-          const away = (1.6 + r() * 1.6) * (1.2 - 0.4 * st.d), warn = (0.55 - 0.25 * st.d) * (1 + st.ease), look = 1 + r() * 0.8;
+        while (t < lim(st) + 2) {
+          const away = (1.6 + r() * 1.6) * (1.2 - 0.4 * st.d), warn = (0.55 - 0.25 * st.d) * (1 + st.ease) * st.tm, look = 1 + r() * 0.8;
           ph.push(["away", t, t + away]); t += away; ph.push(["warn", t, t + warn]); t += warn; ph.push(["look", t, t + look]); t += look;
         }
         st.phases = ph;
@@ -134,7 +136,7 @@ const DGAMES = (() => {
         if (s === st.side) { st.stun = 0.3; st.prog = Math.max(0, st.prog - 1); st.trip = st.tick; }
         else st.prog++;
         st.side = s;
-        if (st.prog >= st.need) end(st, Math.max(0.5, 1 - (0.5 * st.tick) / (LIMIT.flee * HZ)));
+        if (st.prog >= st.need) end(st, Math.max(0.5, 1 - (0.5 * st.tick) / (lim(st) * HZ)));
       },
       step(st) { if (st.stun > 0) st.stun -= TICK; },
       timeout(st) { end(st, 0.45 * st.prog / st.need); },
@@ -169,7 +171,7 @@ const DGAMES = (() => {
   function end(st, q, fl = "") { if (st.over) return; st.over = true; st.q = Math.round(clamp(q, 0, 1) * 1000) / 1000; st.fl = fl; st.endTick = st.tick; }
   function make(kind, seed, o = {}) {
     const r = rng(seed);
-    const st = { kind, seed, d: clamp(+o.d || 0, 0, 1), ease: clamp(+o.ease || 0, 0, 0.6), hl: o.hl ? 1 : 0, tick: 0, over: false, q: 0, fl: "", ev: [] };
+    const st = { kind, seed, d: clamp(+o.d || 0, 0, 1), ease: clamp(+o.ease || 0, 0, 0.6), hl: o.hl ? 1 : 0, tm: clamp(+o.tm || 1, 1, 2), tick: 0, over: false, q: 0, fl: "", ev: [] };
     Object.defineProperty(st, "r", { value: r, enumerable: false });
     R[kind].make(st, r);
     return st;
@@ -181,7 +183,7 @@ const DGAMES = (() => {
     R[st.kind].step(st);
     if (st.over) return;
     st.tick++;
-    if (st.tick >= LIMIT[st.kind] * HZ) { R[st.kind].timeout(st); if (!st.over) end(st, 0); }
+    if (st.tick >= lim(st) * HZ) { R[st.kind].timeout(st); if (!st.over) end(st, 0); }
   }
   /* advance st to tick `to`, feeding events (sorted by tick) from list starting at index st._ei */
   function advance(st, events, to) {
@@ -200,7 +202,8 @@ const DGAMES = (() => {
   function optsFor(s, kind) {
     const ch = typeof DUNGEONS !== "undefined" && DUNGEONS.odds ? DUNGEONS.odds(s, kind) : 0.5;
     const ease = typeof PFX !== "undefined" ? Math.min(0.6, PFX.num(s, PERK[kind]) || 0) : 0;
-    return { d: Math.round(clamp(1 - ch, 0.05, 0.95) * 100) / 100, ease: Math.round(ease * 100) / 100, hl: kind === "trigger" && typeof G !== "undefined" && G.P(s, "light_foot") ? 1 : 0 };
+    const tm = typeof A11Y !== "undefined" && A11Y.timingEase ? Math.round(A11Y.timingEase() * 100) / 100 : 1;   // Easy timing
+    return { d: Math.round(clamp(1 - ch, 0.05, 0.95) * 100) / 100, ease: Math.round(ease * 100) / 100, hl: kind === "trigger" && typeof G !== "undefined" && G.P(s, "light_foot") ? 1 : 0, ...(tm > 1 ? { tm } : {}) };
   }
   function handles(s, c) {
     const r = s?.dungeon?.room;
@@ -233,7 +236,7 @@ const DGAMES = (() => {
     { const v = g.createRadialGradient(150, 100, 40, 150, 100, 190); v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, "rgba(0,0,0,.55)"); g.fillStyle = v; g.fillRect(0, 0, 300, 200); }
   }
   function timebar(g, C, st) {
-    const left = 1 - st.tick / (LIMIT[st.kind] * HZ);
+    const left = 1 - st.tick / (lim(st) * HZ);
     g.fillStyle = "rgba(255,255,255,.12)"; g.fillRect(10, 192, 280, 4); g.fillStyle = left < 0.25 ? C.red : C.gold; g.fillRect(10, 192, 280 * clamp(left, 0, 1), 4);
   }
   const D = {
@@ -315,7 +318,7 @@ const DGAMES = (() => {
       const off = (p * 600) % 40;
       for (let i = -1; i < 9; i++) { g.fillStyle = C.stone; g.fillRect(i * 40 - off, 172, 30, 8); }
       g.fillStyle = C.gold; g.fillRect(280, 100, 14, 70);
-      const hx = 40 + p * 230, fx = Math.min(hx - 18, 10 + (t / LIMIT.flee) * 260 * 0.95);
+      const hx = 40 + p * 230, fx = Math.min(hx - 18, 10 + (t / lim(st)) * 260 * 0.95);
       figure(g, C, fx, 165, 1.15, C.foe);
       figure(g, C, hx, 162, 1, st.tick - st.trip < 9 ? C.red : C.hero);
       g.fillStyle = "rgba(255,255,255,.12)"; g.fillRect(10, 8, 280, 8); g.fillStyle = C.gold; g.fillRect(10, 8, 280 * p, 8);

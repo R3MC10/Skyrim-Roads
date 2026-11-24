@@ -43,6 +43,9 @@ const I18N = (() => {
     "🍲 Cooking pot": "🍲 Kociołek", "Skill trainer": "Trener umiejętności", "Hirelings": "Najemnicy", "Show on map": "Pokaż na mapie", "Centre on me": "Wyśrodkuj na mnie",
     "Zoom map": "Przybliż mapę", "Map of Skyrim": "Mapa Skyrim", "Where to?": "Dokąd?", "Pick where to go": "Wybierz, dokąd iść", "Travel": "Podróż", "Gather": "Zbieraj",
     "🔍 Forage here": "🔍 Szukaj tu ziół", "Something nearby": "Coś w pobliżu", "Discoveries": "Odkrycia", "Cleared locations": "Oczyszczone miejsca",
+    "Tidier Gathering card": "Porządniejsza karta Zbierania",
+    "On the Map panel, plants you already picked no longer pile up on top of each other in the Gathering card. Every plant gets its own line, and Auto-pick sits on its own row below the buttons.":
+      "Na panelu Mapy zebrane już rośliny nie nachodzą na siebie w karcie Zbierania. Każda roślina ma własny wiersz, a Auto-zbieranie ma osobny rząd pod przyciskami.",
     "📍 Locations: cleared places": "📍 Lokacje: oczyszczone miejsca", "Places discovered": "Odkryte miejsca", "📍 Places discovered:": "📍 Odkryte miejsca:",
     "No leads right now.": "Na razie brak tropów.", "Nobody here knows you yet.": "Nikt tu cię jeszcze nie zna.", "Your name in the holds": "Twoja sława w krainach",
     "What is this screen?": "Co to za ekran?", "Open the guide": "Otwórz poradnik", "📖 Guide for new players": "📖 Poradnik dla nowych graczy", "📖 New to the game?": "📖 Nowy w grze?",
@@ -72,7 +75,16 @@ const I18N = (() => {
     "Replay speed": "Prędkość powtórki", Crafting: "Rzemiosło", "When you craft": "Przy wytwarzaniu", "Mini-games": "Minigry", "Quick craft": "Szybkie wytwarzanie",
     Survival: "Przetrwanie", "Cold meter": "Licznik zimna", "On (gentle)": "Wł. (łagodny)", Accessibility: "Dostępność", "Accessibility options": "Opcje dostępności",
     "Text size": "Rozmiar tekstu", "Reduce motion": "Mniej ruchu", "One-hand mode": "Tryb jednej ręki", "High-contrast text": "Tekst o wysokim kontraście",
-    "Colour-blind help": "Pomoc dla daltonistów", "First-time tips": "Porady na start", "Back up": "Kopia zapasowa", Restore: "Przywróć", "Restore from a backup": "Przywróć z kopii",
+    "Colour-blind help": "Pomoc dla daltonistów", Small: "Mały", Large: "Duży", Huge: "Ogromny", Red: "Czerwony", Green: "Zielony", Blue: "Niebieski",
+    "Easy timing": "Łatwiejsze wyczucie czasu",
+    "Pick the colour that's hard for you to see.": "Wybierz kolor, który trudno ci rozróżnić.",
+    "For red-blindness (protanopia): health is orange, stamina yellow, safe things blue.": "Dla protanopii (słabe widzenie czerwieni): zdrowie jest pomarańczowe, wytrzymałość żółta, bezpieczne rzeczy niebieskie.",
+    "For green-blindness (deuteranopia): health is orange, stamina yellow, safe things blue.": "Dla deuteranopii (słabe widzenie zieleni): zdrowie jest pomarańczowe, wytrzymałość żółta, bezpieczne rzeczy niebieskie.",
+    "For blue-blindness (tritanopia): magicka is cyan, stamina pale, safe things teal.": "Dla tritanopii (słabe widzenie niebieskiego): magia jest turkusowa, wytrzymałość blada, bezpieczne rzeczy morskie.",
+    "No screen shake, flashes or drifting. Auto follows your phone's setting. A few effects change the next time you open the game.": "Bez trzęsienia ekranu, błysków i dryfowania. Auto słucha ustawień telefonu. Niektóre efekty zmienią się przy następnym uruchomieniu gry.",
+    "Moves the main buttons to the bottom, where your thumb is.": "Przenosi główne przyciski na dół, pod kciuk.",
+    "Timed mini-games (mining, fishing, locks, dungeon rooms) give you more time and a wider sweet spot.": "Minigry na czas (kopanie, łowienie, zamki, komnaty lochów) dają więcej czasu i szersze pole trafienia.",
+"First-time tips": "Porady na start", "Back up": "Kopia zapasowa", Restore: "Przywróć", "Restore from a backup": "Przywróć z kopii",
     "Start over": "Zacznij od nowa", "Deletes this character for good.": "Usuwa tę postać na zawsze.", "Map opens": "Mapa otwiera się", "Switch off": "Wyłącz",
     "After road events": "Po zdarzeniach na drodze", "Wait for me": "Czekaj na mnie", Language: "Język", "Automatic": "Automatycznie",
     // fights and tactics
@@ -105,6 +117,7 @@ const I18N = (() => {
     [/^You're in (.+)$/, (m) => `Jesteś w: ${m[1]}`], [/^Go to (.+)$/, (m) => `Idź do: ${m[1]}`], [/^Begin in (.+)$/, (m) => `Zacznij w: ${m[1]}`],
     [/^Continue to (.+)$/, (m) => `Dalej do: ${m[1]}`], [/^(\d+) of (\d+)$/, (m) => `${m[1]} z ${m[2]}`], [/^Level (\d+): (\d+)% to the next level$/, (m) => `Poziom ${m[1]}: ${m[2]}% do następnego`],
     [/^(\d+)\/(\d+) toward level (\d+)$/, (m) => `${m[1]}/${m[2]} do poziomu ${m[3]}`], [/^~(\d+) min$/, (m) => `~${m[1]} min`],
+    [/^the title (.+)$/, (m) => `tytuł ${PL[m[1]] ?? m[1]}`],
     [/^(\d+) days? (\d+) h$/, (m) => `${m[1]} ${m[1] === "1" ? "dzień" : "dni"} ${m[2]} h`], [/^(\d.*) ago$/, (m) => `${tr(m[1]) ?? m[1]} temu`],
   ];
   /* lines added by feature modules (i18n_hsrooms.js and others): exact lines and number patterns; the lists above win */
@@ -126,6 +139,8 @@ const I18N = (() => {
   }
   /* a filled-in {marker}: a known word, a number pattern, or (if shorter) a sentence of its own */
   const fillWord = (v, s, d) => PL[v] ?? ST.ex[v] ?? pat(v) ?? (d < 3 && v.length < s.length && /[a-z]{2} [a-z]/i.test(v) ? sentence(v, d + 1) : null) ?? v;
+  /* a list of them ("200 gold, Dawnguard Rune Axe"): each piece on its own */
+  const fillList = (v, s, d) => (PL[v] == null && ST.ex[v] == null && v.includes(", ")) ? v.split(", ").map((x) => fillWord(x, s, d)).join(", ") : fillWord(v, s, d);
   const QUOTE = /^([“"„«]?)([\s\S]*?)([”"»]?)$/;
   function sentence(s, d = 0) {
     const ex = ST.ex[s] ?? PL[s];
@@ -134,7 +149,7 @@ const I18N = (() => {
       if (p.lead && !s.startsWith(p.lead)) continue;
       const m = s.match(p.re); if (!m) continue;
       let out = p.pl;
-      p.names.forEach((n, i) => { const v = m[i + 1]; out = out.split(n).join(fillWord(v, s, d)); });
+      p.names.forEach((n, i) => { const v = m[i + 1]; out = out.split(n).join(fillList(v, s, d)); });
       return out;
     }
     const ic = s.match(/^([^\p{L}\p{N}\s"“„«(]{1,4}\s+)(.+)$/su);   // an icon in front: translate the rest

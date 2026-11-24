@@ -1,10 +1,48 @@
-import asyncio, sys
+import asyncio, sys, os
 from playwright.async_api import async_playwright
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8847"
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out_gather")
+CHROME = "/usr/bin/google-chrome"
+
+async def rows_layout(b, bad):
+    """the Gathering card on the Map side panel: each herb row (and the Auto-pick row) gets its own line, at phone and PC width"""
+    os.makedirs(OUT, exist_ok=True)
+    for w, h in ((360, 800), (1600, 900)):
+        ctx = await b.new_context(viewport={"width": w, "height": h})
+        pg = await ctx.new_page()
+        await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=garows{w}"); await pg.wait_for_timeout(1800)
+        await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Herba"); await pg.click("#begin"); await pg.wait_for_timeout(1000)
+        # stand in the thickest patch cluster; half the patches already picked
+        await pg.evaluate("""()=>{const S=window.__dbg.save(); let n=GATHER.nodes()[0],best=0;
+           for (const m of GATHER.nodes()){const k=GATHER.around(m.pos,60).length; if(k>best){best=k;n=m;}}
+           S.location=null; S.x=n.pos[0]; S.y=n.pos[1]; GATHER.st(S).auto=true;
+           let i=0; for (const m of GATHER.around([S.x,S.y],120)){GATHER.st(S).seen[m.id]=1; if(i++%2) GATHER.st(S).picked[m.id]=G.now();}}""")
+        for t in ("log", "map"):
+            await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
+            await pg.evaluate(f"document.querySelector('[data-tab={t}]')?.click()"); await pg.wait_for_timeout(500)
+        r = await pg.evaluate("""()=>{const c=document.querySelector('.gcard'); if(!c) return null; c.scrollIntoView();
+           const els=[...c.querySelectorAll('.gnode'), c.querySelector('.gbtns'), c.querySelector('.gauto')].filter(Boolean);
+           const bx=els.map(e=>e.getBoundingClientRect()), cb=c.getBoundingClientRect(); let hits=0;
+           for (let i=0;i<bx.length;i++) for (let j=i+1;j<bx.length;j++){const a=bx[i],b=bx[j];
+             if (a.left<b.right-1&&b.left<a.right-1&&a.top<b.bottom-1&&b.top<a.bottom-1) hits++;}
+           const out=bx.filter(a=>a.top<cb.top-1||a.bottom>cb.bottom+1).length;
+           return {rows:c.querySelectorAll('.gnode').length, picked:c.querySelectorAll('.gnode.gdone').length, hits, out}}""")
+        tag = f"[{w}px]"
+        if not r: print(f"FAIL {tag} no Gathering card"); bad.append(f"{tag} no card")
+        else:
+            c = await pg.query_selector(".gcard"); await c.screenshot(path=os.path.join(OUT, f"gather_{w}.png"))
+            good = r["rows"] >= 3 and r["picked"] >= 1 and r["hits"] == 0 and r["out"] == 0
+            print(("ok   " if good else "FAIL ") + f"{tag} gathering rows don't overlap {r}")
+            if not good: bad.append(f"{tag} rows overlap {r}")
+        await ctx.close()
+
 async def main():
     async with async_playwright() as p:
-        b = await p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-sandbox"])
+        b = await (p.chromium.launch(executable_path=CHROME, args=["--no-sandbox"]) if os.path.exists(CHROME) else p.chromium.launch())
         bad = []
+        await rows_layout(b, bad)
+        if "--rows" in sys.argv:
+            print("RESULT OK" if not bad else "RESULT FAIL " + "; ".join(bad)); await b.close(); return
         for style in ("ink",):
             ctx = await b.new_context(viewport={"width": 412, "height": 915}, device_scale_factor=2)
             errs = []
@@ -29,7 +67,7 @@ async def main():
             await click("[data-act=gpick]")
             n1 = await pg.evaluate("()=>window.__dbg.save().inv.filter(r=>D.ITEMS[r.item].slot==='ingredient').reduce((a,r)=>a+r.qty,0)")
             ok(n1 > n0, f"Gather picks ingredients ({n0} -> {n1})")
-            picked = await pg.evaluate("document.querySelectorAll('.gcard .gnode.picked').length")
+            picked = await pg.evaluate("document.querySelectorAll('.gcard .gnode.gdone').length")
             ok(picked >= 1, "picked patch shows as picked")
             await click("[data-act=gforage]")
             n2 = await pg.evaluate("()=>window.__dbg.save().gather.forage>0")

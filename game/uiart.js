@@ -227,6 +227,17 @@ const UIART = (() => {
     poly(g, [[12, 8], [9, 20], [11, 30], [14, 24], [13, 12]], "#2b2724", null);
     if (armored) poly(g, [[15, 9], [24, 9], [30, 17], [26, 19], [18, 14]], "#8a8580", INK, 1);
   }
+  /* a downed horse: lying on its side, head on the ground, eye shut, a red bandage-cross above */
+  function horseDown(g, coat, armored) {
+    for (const [a, b] of [[[8, 31], [15, 33]], [[12, 30], [20, 34]], [[24, 31], [31, 34]], [[27, 30], [35, 33]]]) line(g, [a, b], INK, 2);
+    ell(g, 22, 26, 11, 5.5, coat, INK, 1.1);
+    poly(g, [[13, 24], [6, 28], [2, 30], [3, 33], [9, 32], [14, 28]], coat, INK, 1);
+    poly(g, [[13, 23], [6, 27], [12, 26]], "#2b2724", null);
+    line(g, [[3.6, 30.6], [5.6, 30.4]], INK, 0.9);
+    line(g, [[33, 24], [37, 25], [36, 31]], INK, 1.4);
+    if (armored) poly(g, [[16, 21], [28, 21], [30, 25], [16, 25]], "#8a8580", INK, 1);
+    rect(g, 18.5, 6, 3, 10, "#b8322a"); rect(g, 15, 9.5, 10, 3, "#b8322a");
+  }
   const ATTR = {
     health: (g) => { medal(g, "#8e2b25"); G_.heart(g, "#c43a3a"); },
     magicka: (g) => { medal(g, "#2f5f9a"); glow(g, 20, 20, 13, "#9fc0f0", 0.8); circ(g, 20, 20, 8, "#4f8fe0", INK, 1.1); circ(g, 17, 17, 2.4, "#e8f4fb", null); },
@@ -298,7 +309,7 @@ const UIART = (() => {
     quest: (line, size = 32) => box(size, "q:" + line, (g) => { tile(g); (QUEST[line] || QUEST.bounty)(g); }, "", "qico"),
     ach: (id, size = 32, done = true) => box(size, "a:" + id + (done ? "" : ":x"), (g) => { medal(g, done ? "#d6b25e" : "#8a7a6a", "#f1e6cc"); g.save(); g.beginPath(); g.arc(20, 20, 15, 0, 7); g.clip(); (ACH[id] || ACH.legend)(g); g.restore(); if (!done) { g.globalAlpha = 0.55; circ(g, 20, 20, 16.4, "#cdb98f", null); g.globalAlpha = 1; } }, "", "aico"),
     follower: (id, size = 34) => { const f = TOWNS.FOLLOWERS?.[id]; const race = { jenassa: "dunmer", marcurio: "imperial" }[id] || "nord"; return typeof HEROART !== "undefined" ? HEROART.portrait({ race, id: "fol-" + id, name: f?.[0] }, size) : ""; },
-    horse: (coat, size = 34, armored = false) => { const c = (HORSES.COATS.find((x) => x[0] === coat) || HORSES.COATS[0])[2]; return box(size, "h:" + coat + (armored ? ":a" : ""), (g) => { tile(g); horseHead(g, c, armored); }, "", "hico"); },
+    horse: (coat, size = 34, armored = false, down = false) => { const c = (HORSES.COATS.find((x) => x[0] === coat) || HORSES.COATS[0])[2]; return box(size, "h:" + coat + (armored ? ":a" : "") + (down ? ":d" : ""), (g) => { tile(g); if (down) horseDown(g, c, armored); else horseHead(g, c, armored); }, down ? "Downed" : "", "hico" + (down ? " hdownico" : "")); },
     rank: (rating = 1000, size = 30) => { const t = rating >= 1300 ? ["#d6b25e", 3] : rating >= 1150 ? ["#c8ccce", 2] : rating >= 1000 ? ["#b07a3c", 1] : ["#8a8580", 0]; return box(size, "r:" + t[1], (g) => { shield(g, t[0]); line(g, [[13, 11], [27, 25]], INK, 2); line(g, [[27, 11], [13, 25]], INK, 2); for (let i = 0; i < t[1]; i++) star(g, 15 + i * 5, 29, 2, 5, "#fff6d8", INK); }, "", "rico"); },
     banner: (colors = [], size = 30) => { const a = colors[0] || "#8e2b25", b = colors[1] || "#d6b25e"; return box(size, "b:" + a + b, (g) => { line(g, [[10, 3], [10, 37]], "#7a5232", 2.4); poly(g, [[11, 4], [32, 4], [32, 30], [21.5, 25], [11, 30]], a, INK, 1.2); poly(g, [[11, 12], [32, 12], [32, 17], [11, 17]], b, null); star(g, 21.5, 21, 3.4, 5, b, INK); }, "", "bico"); },
     hold: (color = "#8e2b25", size = 26) => box(size, "hd:" + color, (g) => { shield(g, color); poly(g, [[14, 12], [26, 12], [20, 26]], "rgba(255,255,255,.35)", null); }, "", "hdico"),

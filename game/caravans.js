@@ -33,7 +33,7 @@ const CARAVANS = (() => {
     if (!s.cart) return "You don't have a cart.";
     if (s.cart.parked) {
       if (s.cart.parked !== s.location) return `Your cart is waiting at the stables in ${s.cart.parked}.`;
-      if (!s.horse || (typeof HORSES !== "undefined" && HORSES.away(s))) return "You need your horse here to pull it.";
+      if (!s.horse) return "You need your horse here to pull it.";   // a downed horse still limps along with you
       s.cart.parked = null; return "You hitch the cart up again.";
     }
     if (!s.location || !G.shopTypes(s.location).includes("stables")) return "You can leave the cart at any stables.";

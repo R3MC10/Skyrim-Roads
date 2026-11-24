@@ -55,7 +55,7 @@ async def main():
                 await pg.evaluate("[...document.querySelectorAll('#modal h3')].find(h=>/Accessibility/.test(h.textContent))?.scrollIntoView({block:'start'})")
 
             # text sizes: the map screen, the settings sheet, the hero page
-            for i in range(4):
+            for i in [-1, 0, 2, 3]:
                 await pg.evaluate(f"ACCESS.pref('a11yText','{i}')")
                 z = await pg.evaluate("getComputedStyle(document.documentElement).zoom")
                 await pg.evaluate(CLEAR); await pg.evaluate("scrollTo(0,0)"); await shot(f"text{i}_map")
@@ -66,7 +66,7 @@ async def main():
             # the settings buttons themselves change the size (taps, not code)
             await settings()
             await pg.click("#modal [data-k=a11yText][data-v='2']"); await pg.wait_for_timeout(300)
-            if await pg.evaluate("ACCESS.settings().a11yText") != 2: fails.append("tapping Bigger did not stick")
+            if await pg.evaluate("ACCESS.settings().a11yText") != 2: fails.append("tapping Large did not stick")
             if not await pg.evaluate("JSON.parse(localStorage.getItem('rotn_prefs')).a11yText===2"): fails.append("text size not saved")
             # map taps still land where you tap when zoomed: tap the player's town marker
             await pg.evaluate(CLEAR)

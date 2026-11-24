@@ -35,7 +35,8 @@ const POLISH = (() => {
   }
   function banner(kind, title, big, icon = "") {
     if (typeof document === "undefined") return;
-    if (kind === "objective" && typeof HUD2 !== "undefined" && HUD2.objFlash(big)) return;   // hud2.js: a new objective flashes on the line under the compass
+    if (kind === "objective" && typeof HUD2 !== "undefined" && HUD2.objFlash(big)) return;
+    if (typeof SKILLUP !== "undefined" && SKILLUP.claim(kind, big)) return;   // skillup.js: skill-ups and level-ups get the Skyrim toast with a bar   // hud2.js: a new objective flashes on the line under the compass
     // a burst of skill rises merges into one banner
     const last = queue[queue.length - 1];
     if (last && last.kind === kind && kind === "skill" && queue.length) { last.big += ` · ${big}`; return; }
