@@ -2470,6 +2470,35 @@ html.art-pixel .ft-detail .sky-ico img{image-rendering:pixelated}
   .sky-row.ft-cols .nm img.art.ico{width:22px;height:22px;margin-right:5px}
   .ft-cats .sky-cat{min-width:54px;padding:4px 3px}
 }
+/* [homestash] the house chest as a SkyUI container menu (homestash.js): Chest / Your pack, categories, sort, icons, amounts */
+.hs-box{margin-top:4px}
+.hs-side{margin:0}
+.hs-side button{flex:1 1 0;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hs-side button b{font-weight:600;opacity:.75;letter-spacing:0}
+.hs-wt{margin:6px 0 0}
+.hs-cols{display:grid;grid-template-columns:minmax(0,1fr) 3.2em 3.4em 3.6em;gap:6px;align-items:center}
+.sky-head.hs-cols{padding:4px 10px}
+.sky-head.hs-cols button{background:none;border:0;color:inherit;font:inherit;letter-spacing:inherit;text-align:right;padding:6px 0;min-height:32px}
+.sky-head.hs-cols>:first-child{text-align:left}
+.sky-row.hs-cols{width:100%;font-size:15px}
+.sky-row.hs-cols .nm{display:flex;align-items:center;gap:6px;min-width:0;text-align:left}
+.sky-row.hs-cols .nm img.art.ico,.hs-noico{flex:none;width:24px;height:24px;display:inline-block}
+.hs-nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hs-list{max-height:52vh;min-height:120px;overflow:auto}
+.hs-detail{max-height:none}
+.hs-detail h3{margin:0 0 4px}
+.hs-acts{align-items:center}
+.hs-amt{display:flex;gap:4px;flex:1 1 auto}
+.hs-amt input{width:4.2em;min-height:40px;text-align:center;background:rgba(0,0,0,.3);border:1px solid rgba(228,220,200,.25);color:inherit;font:inherit}
+.hs-amt .btn{flex:1 1 auto}
+.hs-pick{display:block;padding:12px 4px;text-align:center;color:#8c877a;font-style:italic}
+.hs-cats .sky-cat{min-width:58px}
+@media (max-width:440px){
+  .hs-cols{grid-template-columns:minmax(0,1fr) 2.6em 2.8em 3.2em;gap:4px}
+  .sky-row.hs-cols{padding:7px 6px;font-size:14px}
+  .sky-row.hs-cols .nm img.art.ico,.hs-noico{width:22px;height:22px}
+  .hs-cats .sky-cat{min-width:52px;padding:4px 3px}
+}
 </style>
 <script src="access.js"></script>
 </head>
@@ -2603,6 +2632,7 @@ html.art-pixel .ft-detail .sky-ico img{image-rendering:pixelated}
 <script src="immerse.js"></script>
 <script src="followerbonds.js"></script>
 <script src="followertab.js"></script>
+<script src="homestash.js"></script>
 <script src="pickgame.js"></script>
 <script src="sneakmode.js"></script>
 <script src="vision.js"></script>
@@ -2638,6 +2668,7 @@ html.art-pixel .ft-detail .sky-ico img{image-rendering:pixelated}
 <script src="i18n_areaui.js"></script>
 <script src="i18n_menus2.js"></script>
 <script src="i18n_followertab.js"></script>
+<script src="i18n_homestash.js"></script>
 <script src="i18n_boss.js"></script>
 <script src="i18n_accounts.js"></script>
 <script src="i18n_sweep.js"></script>
