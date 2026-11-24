@@ -12,8 +12,10 @@ const TBTIPS = (() => {
   function safeDmg(f) { try { return f.weaponDamage(); } catch (e) { return 0; } }
 
   /* text for one action card */
-  function action(f, a, ap) {
-    const apTxt = ap >= 99 ? "Uses all your AP." : `${ap} AP.`;
+  function action(f, a, c) {
+    const ct = c && typeof c === "object" && typeof TB !== "undefined" && TB.costTxt ? TB.costTxt(c) : "";
+    const apTxt = !ct ? "" : ct === "free" ? "Free." : `Costs ${ct}${c.n ? ` (done ${c.n}× this turn, so it costs more)` : ""}.`;
+    if (typeof STRAT !== "undefined" && STRAT.owns(a)) return `${STRAT.tip(f, a)} ${apTxt}`;
     if (typeof MOUNTFIGHT !== "undefined" && MOUNTFIGHT.owns(a)) return `${MOUNTFIGHT.tip(f, a)} ${apTxt}`;   // mountfight.js
     if (a === "attack") {
       const d = foeCut(f, safeDmg(f));
@@ -21,14 +23,14 @@ const TBTIPS = (() => {
     }
     if (a === "power_attack") {
       const d = foeCut(f, safeDmg(f) * (typeof F !== "undefined" ? F.POWER_ATTACK_DAMAGE : 2));
-      return `A heavy swing: about ${range(d)} damage and it can stagger the foe. Costs ${r0(f.paCost || 0)} stamina. ${apTxt}`;
+      return `A heavy swing: about ${range(d)} damage and it can stagger the foe. ${apTxt}`;
     }
     if (a === "block") return f.shield
       ? `Slam your shield into the foe: small damage and they're stunned and lose their next turn. Costs a lot of stamina. ${apTxt}`
       : `Raise your guard: the next blow is partly blocked. ${apTxt}`;
     if (a === "bash") return `Slam your shield into the foe: small damage and they're stunned and lose their next turn. Costs a lot of stamina. ${apTxt}`;
-    if (a === "flee") return "Try to break away from the fight. Uses all your AP; the foe may cut you off.";
-    if (a === "end") return "End your turn. Leftover AP becomes guard (up to 30% less damage until your next turn).";
+    if (a === "flee") return "Try to break away from the fight. Ends your turn; the foe may cut you off.";
+    if (a === "end") return "End your turn. Moves you didn't make become guard (up to 30% less damage until your next turn).";
     const [k, arg] = a.split(":");
     if (k === "spell" || k === "dual" || k === "scroll") {
       const id = k === "scroll" ? D.ITEMS[arg]?.spell : arg, sp = D.SPELLS[id];
@@ -38,7 +40,7 @@ const TBTIPS = (() => {
       const amt = sp.amount ? r0(sp.amount * (k === "dual" ? 2.2 : 1)) : 0;
       const what = sp.kind === "damage" ? `about ${amt}${el} damage` : sp.kind === "heal" ? `heals about ${amt}` : sp.kind === "armor" ? `+${amt} armour for the fight` : sp.kind;
       const src = k === "scroll" ? "Read the scroll (it's used up)" : k === "dual" ? "Cast it with both hands: stronger, costs more" : `${sp.school || "Magic"} spell`;
-      return `${sp.name}: ${what}. ${src}.${mc ? ` ${mc} magicka.` : ""} ${apTxt}`;
+      return `${sp.name}: ${what}. ${src}.${k === "scroll" ? "" : ` ${apTxt || `${mc} magicka.`}`}`;
     }
     if (k === "potion") return `Drink your best ${arg} potion. ${apTxt}`;
     if (k === "shout") return `Shout ${String(arg).toUpperCase()}: a dragon shout, needs time to recharge afterwards. ${apTxt}`;
@@ -51,7 +53,7 @@ const TBTIPS = (() => {
     let arm = 0, red = 0;
     try { const { rating, pieces } = f.armorRating(); arm = r0(rating); red = r0(100 * F.damageReduction(rating, pieces)); } catch (e) { /* no armour info */ }
     const blk = typeof SHIELDFX !== "undefined" ? r0(100 * SHIELDFX.passive(f)) : 0;
-    return `You. Armour ${arm} (blows ${red}% weaker)${blk ? `, ${blk}% chance to block with your shield` : ""}. ${st.ap} AP a turn${st.spellAp ? ` + ${st.spellAp} for spells` : ""}, initiative ${st.init}.`;
+    return `You. Armour ${arm} (blows ${red}% weaker)${blk ? `, ${blk}% chance to block with your shield` : ""}. Up to ${st.acts || 4} moves a turn, initiative ${st.init}.`;
   }
   /* text for the foe's frame */
   function foe(f, ehpMax) {

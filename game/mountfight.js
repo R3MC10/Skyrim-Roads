@@ -4,7 +4,7 @@
    wraps engage / after / tick, so horseback.js itself stays as it was):
    - Outdoors only: a road fight (the only place HORSEBACK.engage is called) with your horse beside you. Riding when it
      starts: you start in the saddle. Walking beside it: it stands by and you can get on.
-   - Mount / Dismount are moves in the fight: Mount costs 4 AP and 20 stamina (Steady Steed: 3 AP), Dismount 1 AP.
+   - Mount / Dismount are moves in the fight: Mount costs 20 stamina (Steady Steed: 15) and takes one of your moves, Dismount is free.
      Getting back on gives you a fresh charge.
    - Charge: your first blow from the saddle is a sure hit, ×1.4 (spear ×1.7), and can knock the foe back (it loses
      its next move). Cavalry Charge: +30% and it always knocks them back.
@@ -15,7 +15,7 @@
    - No two-handed power attacks, no dual casting and no Master spells in the saddle; a two-hander swings clumsily
      (−15%); arrows go wide 15% of the time unless you have Horse Archer.
    - The horse has its own health bar. At 0 it's knocked down (it never dies): you're thrown clear (5% of your health,
-     never the last of it) and staggered (−2 AP on your next turn), you fight on on foot, and afterwards
+     never the last of it) and staggered (one move fewer on your next turn), you fight on on foot, and afterwards
      it stays with you, downed, until it gets back up (horses.js: a few hours, a night's sleep or a stablehand).
    - Party fights: everyone's mount state and horse health travel in the leader's fight record (roster[].mt). Blows on a
      teammate's horse are rolled once, on the leader's phone; a teammate's own phone plays their charges and
@@ -25,12 +25,12 @@
 const MOUNTFIGHT = (() => {
   const HB = typeof HORSEBACK !== "undefined" ? HORSEBACK : null;
   const N = {
-    mountAp: 4, mountSp: 20, dismountAp: 1,
+    mountSp: 20, steadySp: 5,
     horseP: { base: 0.1, foot: 0.05, reach: 0.18, big: 0.22 },   // a foe goes for your horse instead of you
     shy: 0.2,                                         // ...and the horse shies away
     knock: { reach: 0.06, big: 0.08 },                // a spear, an arrow, a spell or a giant drags you out of the saddle
     dodge: 0.1,                                       // swords and axes on foot can't reach you well
-    fall: 0.05, stagAp: 2,
+    fall: 0.05, stagAp: 1,   // stagAp: moves lost on your next turn
     bowMiss: 0.15, twoH: 0.85, trample: 0.12, trampleStag: 0.25, chargeStag: 0.25,
     getUp: 0.25,                                      // a knocked-down horse gets back up after the fight with this much health
     allyHp: 200,
@@ -54,7 +54,7 @@ const MOUNTFIGHT = (() => {
   const PERKS_ADD = [
     ["One-Handed", "cavalry_charge", "Cavalry Charge", 1, [30], ["armsman"], "A charge from the saddle hits 30% harder and always knocks the foe back (it loses its next move). [OURS]", [["mcharge", 0.3, {}]]],
     ["Archery", "horse_archer", "Horse Archer", 1, [35], ["overdraw"], "Shooting from the saddle: your arrows never go wide from the moving horse, and they do 10% more. [OURS]", [["mbow", 1, {}], ["out", 0.1, { sk: "Archery", mounted: 1 }]]],
-    ["Athletics", "steady_steed", "Steady Steed", 2, [25, 55], ["long_strider"], "Your horse takes 20/40% less damage in fights, foes pull you out of the saddle half as often, foot soldiers miss you 5/10% more, and getting on costs 1 AP less. [OURS]", [["msteady", [0.2, 0.4], {}]]],
+    ["Athletics", "steady_steed", "Steady Steed", 2, [25, 55], ["long_strider"], "Your horse takes 20/40% less damage in fights, foes pull you out of the saddle half as often, foot soldiers miss you 5/10% more, and getting on costs 5 stamina less. [OURS]", [["msteady", [0.2, 0.4], {}]]],
     ["Athletics", "trample", "Trample", 1, [50], ["steady_steed"], "From the saddle your horse tramples small foes (wolves, skeevers, mudcrabs...): +20% more damage and a 25% chance to knock them down. [OURS]", [["mtrample", 0.2, {}]]],
   ];
   if (typeof PERKS !== "undefined") {
@@ -173,7 +173,7 @@ const MOUNTFIGHT = (() => {
       hurt: (d) => { const b = al.hp || 0; al.hp = Math.max(1, b - Math.round(d)); return Math.round(b - al.hp); },
       stag: () => { al.mfStag = (f.turn || 0) + 1; } });   // shown on their frame
   }
-  /* thrown: −2 AP at the start of your next turn (turn-by-turn), and a chip on your frame */
+  /* thrown: one move fewer on your next turn (turn-by-turn), and a chip on your frame */
   function stagger(f) {
     f.kitApLoss = (f.kitApLoss || 0) + N.stagAp;
     f.mfStag = (f.turn || 0) + 1;
@@ -182,6 +182,7 @@ const MOUNTFIGHT = (() => {
   const staggered = (f) => !!f.mfStag && (f.turn || 0) <= f.mfStag;
 
   // ------------------------------------------------------------------ Mount / Dismount (tbfight.js cost, engine.js affordable / act)
+  const mSp = (f) => N.mountSp - (pfx(f?.s, "msteady") > 0 ? N.steadySp : 0);
   const why = (f, a) => {
     const m = f?.mount;
     if (owns(a)) {
@@ -189,7 +190,7 @@ const MOUNTFIGHT = (() => {
       if (a === "dismount") return m.up ? "" : "You're on foot";
       if (m.up) return "Already in the saddle";
       if (m.down || m.hp <= 0) return `${hn(m)} is knocked down`;
-      if ((f.sp || 0) < N.mountSp) return "Not enough stamina";
+      if ((f.sp || 0) < mSp(f)) return "Not enough stamina";
       return "";
     }
     if (!m?.up) return "";
@@ -206,12 +207,13 @@ const MOUNTFIGHT = (() => {
     if (owns(a)) return can(f, a);
     return f.mount?.up && blocked(f, a) ? false : null;
   }
-  function cost(f, a) { return a === "mount" ? Math.max(2, N.mountAp - (pfx(f.s, "msteady") > 0 ? 1 : 0)) : N.dismountAp; }
+  /* what getting on takes, in tbfight.js terms (stamina, paid here in act); getting off is free */
+  function cost(f, a) { return a === "mount" ? { sp: mSp(f), eng: { sp: mSp(f) } } : {}; }
   function act(f, a) {
     const m = f.mount;
     if (!can(f, a)) return a === "mount" ? `You can't get on ${hn(m)} now` : "You're already on foot";
     if (a === "mount") {
-      f.sp -= N.mountSp; m.up = true; m.foot = false; m.rode = true; m.recharge = true; m.charged = false; m.mounts = (m.mounts || 0) + 1;
+      f.sp -= mSp(f); m.up = true; m.foot = false; m.rode = true; m.recharge = true; m.charged = false; m.mounts = (m.mounts || 0) + 1;
       if (typeof f.addXp === "function") f.addXp("Athletics", 5);
       return `You swing up onto ${hn(m)}${TWO.has(f.wt) ? " (a two-hander is clumsy up here: no power attacks)" : ""}`;
     }
@@ -228,7 +230,7 @@ const MOUNTFIGHT = (() => {
   function tip(f, a) {
     const m = f?.mount;
     if (a === "dismount") return `Get down from ${hn(m)}. On foot you can power attack with a two-hander and dual cast, and foes stop going for your horse.`;
-    return `Swing up onto ${hn(m)} (${N.mountSp} stamina). Your next blow is a charge: a sure hit that does more and can knock the foe back. In the saddle swords and axes on foot miss you more, but archers, mages and spears can pull you down.`;
+    return `Swing up onto ${hn(m)} (${mSp(f)} stamina). Your next blow is a charge: a sure hit that does more and can knock the foe back. In the saddle swords and axes on foot miss you more, but archers, mages and spears can pull you down.`;
   }
 
   // ------------------------------------------------------------------ every round, and after the fight
@@ -355,17 +357,17 @@ const MOUNTFIGHT = (() => {
     g.translate(0, -30);
   }
   /* the horse under the rider, with a gallop for a charge and a rear when you're thrown */
-  function drawMount(g, color, p, tt, part) {
+  function drawMount(g, color, p, tt, part, coat = null) {
     if (!HB?.drawHorse) return;
     const rear = p?.ev === "thrown" ? Math.sin(Math.PI * Math.min(1, p.u)) : 0, lunge = p?.lunge || 0;
     g.save();
     if (rear) { g.translate(-22, 0); g.rotate(-0.4 * rear); g.translate(22, 0); }
     if (lunge) g.translate(10 * lunge, 0);
-    HB.drawHorse(g, color, lunge, tt, part);
+    HB.drawHorse(g, color, lunge, tt, part, coat);
     g.restore();
   }
   /* the horse beside you when you're on foot: waiting (by), or knocked down (down) */
-  function drawStand(g, color, p, tt) {
+  function drawStand(g, color, p, tt, coat = null) {
     if (!p?.stand || !HB?.drawHorse) return;
     g.save(); g.translate(-58, 0);
     if (p.stand === "down") {
@@ -378,7 +380,7 @@ const MOUNTFIGHT = (() => {
       g.lineWidth = 2; g.beginPath(); g.moveTo(35, -14); g.quadraticCurveTo(44, -12, 42, -2); g.stroke();
     } else {
       g.scale(0.8, 0.8); g.globalAlpha *= 0.92;
-      HB.drawHorse(g, color, 0, tt * 0.5, "back"); HB.drawHorse(g, color, 0, tt * 0.5, "front");
+      HB.drawHorse(g, color, 0, tt * 0.5, "back", coat); HB.drawHorse(g, color, 0, tt * 0.5, "front", coat);
     }
     g.restore();
   }

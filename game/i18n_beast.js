@@ -24,10 +24,10 @@ const I18N_BEAST = (() => {
   // ---- perks: [English name, Polish name, English desc, Polish desc]
   const PERKS = [
     ["Rending Claws", "Rozdzierające pazury", "Your claws, mauls and pounces leave wounds that bleed for 3 turns.", "Twoje pazury, szarpnięcia i skoki zostawiają rany, które krwawią przez 3 tury."],
-    ["Howl of the Pack", "Wycie watahy", "Howl costs 1 AP less, and even tough foes cower for a turn.", "Wycie kosztuje 1 AP mniej, a nawet twardzi wrogowie kulą się na turę."],
+    ["Howl of the Pack", "Wycie watahy", "Howl costs half the stamina, and even tough foes cower for a turn.", "Wycie kosztuje połowę wytrzymałości, a nawet twardzi wrogowie kulą się na turę."],
     ["Silver Hide", "Srebrna skóra", "Silver weapons no longer hurt you more in Beast Form.", "Srebrna broń nie rani cię już mocniej w postaci bestii."],
     ["Endless Hunt", "Niekończące się łowy", "Beast Form lasts 3 rounds longer, and changing back no longer leaves you spent.", "Postać bestii trwa 3 rundy dłużej, a powrót do siebie już cię nie wyczerpuje."],
-    ["Blood Magic", "Magia krwi", "Drain Life costs 1 AP less and drains 20% more.", "Wyssanie życia kosztuje 1 AP mniej i wysysa o 20% więcej."],
+    ["Blood Magic", "Magia krwi", "Drain Life costs half the health and drains 20% more.", "Wyssanie życia kosztuje połowę zdrowia i wysysa o 20% więcej."],
     ["Grave Servants", "Słudzy z grobu", "Raise Dead brings up two thralls instead of one.", "Wskrzeszenie podnosi dwóch sług zamiast jednego."],
     ["Sun Ward", "Osłona przed słońcem", "The sun no longer burns you in fights, and slows your healing only half as much.", "Słońce nie pali cię już w walce, a leczenie spowalnia tylko o połowę."],
     ["Bane of the Night", "Zmora nocy", "Vampires and werewolves take 20% more from your blows and hit you 10% softer.", "Wampiry i wilkołaki dostają od ciebie o 20% więcej i biją cię o 10% słabiej."],
@@ -127,8 +127,7 @@ const I18N_BEAST = (() => {
     ["In the carriage: {0} gold.", "W powozie: {0} złota."],
     ["In about {0} min ({1} in-game days) you'll change for the first time and be a werewolf for good.", "Za około {0} min ({1} dni w grze) przemienisz się po raz pierwszy i zostaniesz wilkołakiem na dobre."],
     [" People saw you change in {0}.", " Ludzie widzieli twoją przemianę w: {0}."],
-    ["{0} AP + {1} stamina.", "{0} AP + {1} wytrzymałości."],
-    ["Need {0} more AP", "Brakuje {0} AP"], ["Need {0} more magicka", "Brakuje {0} magii"],
+    ["Need {0} more stamina", "Brakuje {0} wytrzymałości"], ["Need {0} more magicka", "Brakuje {0} magii"],
   ];
   // the moves and perks: name, icon + name, every sentence, and the fight screen tip's first sentence ("Claws: Rake the foe...")
   for (const [ic, en, p, sents] of MOVES) {

@@ -167,7 +167,7 @@
     CHARGEN.open({ mode, save: S, cost: CHARGEN.BARBER_COST, toast,
       onDone: (look) => {
         if (mode === "barber") { const r = CHARGEN.pay(S, look); if (r.err) return toast(r.err); toast(r.text); }
-        else { APPEAR.apply(S, look); toast("🪞 You like what you see."); }
+        else { APPEAR.apply(S, look); toast("You like what you see."); }
         lookCache.k = ""; persist(true); renderPanel(true);
       } });
   }
@@ -319,7 +319,7 @@
       ${typeof LIGHTFX !== "undefined" ? LIGHTFX.settingsHTML(seg) : ""}
       ${typeof PAINTEDMAP !== "undefined" ? PAINTEDMAP.settingsHTML(seg) : ""}
       ${typeof MOTION !== "undefined" ? `<div class="setrow"><span>Motion</span>${seg("motion", [["full", "Full"], ["lite", "Lite"], ["off", "Off"]], MOTION.pref())}</div>` : ""}
-      ${typeof TB !== "undefined" ? `<h3>Fights</h3><div class="setrow"><span>Foe turns</span>${seg("tbFast", [[false, "Normal speed"], [true, "Fast"]], getPref("tbFast", false))}</div>${typeof GORE !== "undefined" ? GORE.settingsHTML(seg) : typeof COMBATFX !== "undefined" ? `<div class="setrow"><span>Blood</span>${seg("gore", [[true, "On"], [false, "Off"]], getPref("gore", true))}</div>` : ""}` : ""}${typeof FIGHTCTL !== "undefined" && typeof TB !== "undefined" ? FIGHTCTL.settingsHTML(seg) : ""}${typeof FASTQOL !== "undefined" ? FASTQOL.settingsHTML(seg) : ""}
+      ${typeof TB !== "undefined" ? `<h3>Fights</h3>${typeof GORE !== "undefined" ? GORE.settingsHTML(seg) : typeof COMBATFX !== "undefined" ? `<div class="setrow"><span>Blood</span>${seg("gore", [[true, "On"], [false, "Off"]], getPref("gore", true))}</div>` : ""}` : ""}${typeof FIGHTCTL !== "undefined" && typeof TB !== "undefined" ? FIGHTCTL.settingsHTML(seg) : ""}${typeof COMBAT2 !== "undefined" && typeof TB !== "undefined" ? COMBAT2.settingsHTML(seg) : ""}${typeof FIGHTSET !== "undefined" && typeof TB !== "undefined" ? FIGHTSET.settingsHTML(seg) : ""}${typeof FASTQOL !== "undefined" ? FASTQOL.settingsHTML(seg) : ""}
       ${typeof ACCESS !== "undefined" ? ACCESS.settingsHTML(seg) : ""}
       ${typeof ONBOARD !== "undefined" ? ONBOARD.settingsHTML(seg) : ""}
       ${typeof BUGREPORT !== "undefined" ? BUGREPORT.settingsHTML() : ""}
@@ -330,6 +330,7 @@
       <p class="mute" style="font-size:13px">Updates download and install by themselves, at a quiet moment (never mid-fight, in a dungeon or a trade).</p>` : ""}`;
   }
   function onSettingsInput(e) {
+    if (typeof FIGHTSET !== "undefined" && FIGHTSET.input(e.target)) return;   // Fights → Camera shake, Fight UI size (fightset.js)
     if (e.target.id === "snd_music") SOUND.set("music", e.target.value / 100);
     if (e.target.id === "snd_amb") SOUND.set("amb", e.target.value / 100);
     if (e.target.id === "snd_sfx") { SOUND.set("sfx", e.target.value / 100); if (e.type === "change") SOUND.fx("coin"); }
@@ -341,6 +342,7 @@
     if (typeof I18N !== "undefined" && I18N.pref(k, b.dataset.v)) return true;
     if (typeof ACCESS !== "undefined" && ACCESS.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }
     if (typeof ONBOARD !== "undefined" && ONBOARD.pref(k, b.dataset.v)) { SOUND.fx("click"); if (S) { try { renderPanel(true); } catch { /* title */ } } return true; }
+    if (typeof FIGHTSET !== "undefined" && FIGHTSET.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }   // Fights → Fight quality, Frame rate (fightset.js)
     if (typeof GORE !== "undefined" && GORE.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }   // Fights → Blood and gore: Off / Low / Full (gore.js)
     if (typeof FASTQOL !== "undefined" && FASTQOL.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }   // replay speed, carry on after road events
     if (k === "survival") { if (S) { S.survival = v; if (!v) S.coldV = 0; persist(); try { renderPanel(true); } catch { /* title */ } } SOUND.fx("click"); return true; }
@@ -630,6 +632,7 @@
     if (typeof BLACKREACH !== "undefined") BLACKREACH.mount({ S: () => S, persist, toast, showFightResult, showMessage, renderPanel, tb: tbCall });   // the cavern under Alftand (blackreach.js)
     if (typeof GREATEV !== "undefined") GREATEV.mount({ S: () => S, persist, toast, showFightResult, showMessage, openModal, closeModal, postNews, click: onPanelClick, party: () => party });   // great world events: banner + countdown (greatevents.js)
     if (typeof HOLDUI !== "undefined") HOLDUI.mount({ S: () => S, persist, toast, showFightResult, postNews, refresh: () => { bump(); renderPanel(true); }, party: () => party });   // player-run holds: Jarl, tax, raids (holdui.js)
+    if (typeof TOURNEYUI !== "undefined") TOURNEYUI.mount({ S: () => S, persist, toast, showFightResult, postNews, tbCall, refresh: () => { bump(); renderPanel(true); }, party: () => party, allies: () => allies() });   // festivals, contests and the Grand Arena (tourneyui.js)
     Store.watch("trades", (docs) => onTrades(docs));
     Store.watch("duels", (docs) => onDuels(docs));
     Store.watch("stalls", (docs) => onStalls(docs));
@@ -1401,7 +1404,7 @@
     const left = DUNGEONS.refillLeft(S, l), lvl = { 1: 1, 2: 6, 3: 12 }[DUNGEONS.info(l).tier];
     const th = DUNGEONS.info(l).theme, rec = th === "lair" ? 20 : th === "giantcamp" ? 10 : lvl;
     return `<div class="panel" style="border-color:var(--ember)"><h2>${esc(l)}</h2>${PLACEART.scene(l)}<p class="sub">${esc(DUNGEONS.describe(l))} · good from about level ${rec}. Inside, you pick your own way room by room down to the boss. Health doesn't come back on its own in there, and you can leave between rooms whenever you like.</p>
-      ${left ? refillCard(l, left) : `<button class="btn danger" data-act="enter" style="width:100%">\uE10E Go inside</button>${coopUI ? coopUI.lobbyHTML(l) : ""}`}${SMITH.MINES[l] ? `<div style="margin-top:10px">${mineHTML(l)}</div>` : ""}${typeof BLACKREACH !== "undefined" ? BLACKREACH.placeCard(S, l) : ""}</div>`;
+      ${left ? refillCard(l, left) : `<button class="btn danger" data-act="enter" style="width:100%">\uE10E Go inside</button>${coopUI ? coopUI.lobbyHTML(l) : ""}`}${SMITH.MINES[l] ? `<div style="margin-top:10px">${mineHTML(l)}</div>` : ""}${typeof BLACKREACH !== "undefined" ? BLACKREACH.placeCard(S, l) : ""}${!left && typeof DEEPDELVE !== "undefined" ? DEEPDELVE.placeCard(S, l) : ""}</div>`;
   }
   function closeDungeon() { $("#dun")?.remove(); }
   function dunMap(d) {
@@ -1433,6 +1436,7 @@
       ${dunNote.stripLoot?.length || dunNote.stripGold ? DUNART.lootStrip(dunNote.stripGold, dunNote.stripLoot) : ""}${dunNote.loot?.length || dunNote.gold ? `<p class="sub" style="margin:2px 0 0">Loot: ${[dunNote.gold ? dunNote.gold + " gold" : "", ...(dunNote.loot || [])].filter(Boolean).map(esc).join(", ")}</p>` : ""}${skillLine(dunNote)}</div>` : "";
     let main;
     if (d.done) main = `<div class="card"><h3> ${esc(d.place)} is cleared</h3>${DUNART.lootStrip(d.gold, d.found)}<p class="sub">Found so far: ${d.gold} gold${d.found.length ? ", " + d.found.map(esc).join(", ") : ""}.</p><button class="btn pri" data-act="dleave" style="width:100%">Head back outside</button></div>`;
+    else if (r && r.type === "camp" && typeof DEEPDELVE !== "undefined") main = DEEPDELVE.campHTML(S);   // deep expedition: Extract / Rest / Descend
     else if (r) {
       const e = r.enemy;
       main = `<div class="card ${e ? "foe" : ""} ${r.type === "rest" ? "rest" : ""}">${typeof DUNROOMS !== "undefined" ? DUNROOMS.room(r.type, d.theme) : PLACEART.room(r.type)}<h3>${DUNGEONS.ICON[r.type]} ${e ? esc(e.name) : DUNGEONS.LABEL[r.type]}</h3><p>${esc(r.text)}</p>
@@ -1452,7 +1456,7 @@
     el.innerHTML = `<div class="in dgrid"><div class="dcol">
       <div class="hd"><h2>\uE10E ${esc(d.place)}</h2><button class="btn sm" data-act="dmin">\uE152 Pack</button>${d.done || r?.type === "boss" ? "" : `<button class="btn sm" data-act="dleave">Leave</button>`}</div>
       <div class="vital"><small><span>Health${r ? "" : " · no natural healing in here"}</span><span class="num">${Math.round(hp)}/${mh}</span></small><div class="bar"><i style="width:${pct(hp, mh)}%;background:var(--hp)"></i></div></div>
-      ${coopUI && d.run ? coopUI.bar() : ""}<p class="sub" style="margin:0">Room ${step} of ${total} · found ${d.gold} gold${d.found.length ? ` and ${d.found.length} item${d.found.length > 1 ? "s" : ""}` : ""} · ${G.countRestore(S, "health")} healing potions</p>
+      ${typeof DEEPDELVE !== "undefined" ? DEEPDELVE.bannerHTML(S) : ""}${coopUI && d.run ? coopUI.bar() : ""}<p class="sub" style="margin:0">Room ${step} of ${total} · found ${d.gold} gold${d.found.length ? ` and ${d.found.length} item${d.found.length > 1 ? "s" : ""}` : ""} · ${G.countRestore(S, "health")} healing potions</p>
       ${res}${main}</div>
       <div class="card dmapcard">${DUNART.legendHTML(d)}<div class="dmapfit">${DUNART.mapHTML(d)}</div></div>
     </div>`;
@@ -3199,12 +3203,12 @@
       return (typeof LEGHUNT !== "undefined" ? LEGHUNT.wildHTML(S, esc) : "") + wildsFood() + `<div class="panel"><h2>${l ? esc(l) : "The wilds"}</h2><p class="sub">${l ? "There's nothing to buy here." : "You're out on the road."} Cities and towns have shops, inns, trainers, alchemy labs, forges and jobs.</p></div>`;
     }
     const open = G.shopsOpen() || (typeof RUMOURS !== "undefined" && RUMOURS.knocked(S, l)), wanted = TOWNS.wanted(S), hold = G.holdAt(WORLD.places[l]);   // knocked at night (rumours.js)
-    const sections = [...types.filter((x) => x !== "stables"), ...(TOWNS.INNS[l] ? ["inn"] : []), ...(TOWNS.TRAINERS[l] ? ["train"] : []), "alchemy", ...(types.includes("blacksmith") || HALLS.hasForge(S, l) || (typeof HSROOMS !== "undefined" && HSROOMS.station(S, "forge")) ? ["forge"] : []), "jobs", "streets", ...(TOWNS.followersHere(S).length || l === "Whiterun" ? ["hire"] : []), ...(TOWNS.carriageFrom(l) ? ["carriage"] : []), ...(TOWNS.HOMES[l] ? ["home", "homes", "market"] : []), ...(SMITH.MINES[l] ? ["mine"] : []), ...(l === SPELLCRAFT.TOWN ? ["craft"] : []), ...(CARAVANS.stopsAt(l) ? ["caravans"] : []), ...(l === HALL.TOWN ? ["hall"] : []), ...(HALLS.plotHere(l) || hallDocs.some((d) => d.town === l) || S.hall?.town === l ? ["halls"] : []), "notice", ...(TOWNS.INNS[l] ? ["cook"] : []), ...(l === ARENA.TOWN ? ["arena"] : []), ...(COOK.waterNear(WORLD.places[l]) ? ["fish"] : []), ...(ENCH.hasEnchanter(l) || (typeof HSROOMS !== "undefined" && HSROOMS.station(S, "enchanter")) ? ["enchanter"] : []), ...(types.includes("stables") ? ["stables"] : []), ...(typeof SOL !== "undefined" ? SOL.sections(l) : []), ...(typeof HOMESTEAD !== "undefined" ? HOMESTEAD.sections(l) : []), ...(typeof LEGHUNT !== "undefined" ? LEGHUNT.sections(l) : []), ...(typeof HUNTGAME !== "undefined" ? HUNTGAME.sections(l) : [])];
+    const sections = [...types.filter((x) => x !== "stables"), ...(TOWNS.INNS[l] ? ["inn"] : []), ...(TOWNS.TRAINERS[l] ? ["train"] : []), "alchemy", ...(types.includes("blacksmith") || HALLS.hasForge(S, l) || (typeof HSROOMS !== "undefined" && HSROOMS.station(S, "forge")) ? ["forge"] : []), "jobs", "streets", ...(TOWNS.followersHere(S).length || l === "Whiterun" ? ["hire"] : []), ...(TOWNS.carriageFrom(l) ? ["carriage"] : []), ...(TOWNS.HOMES[l] ? ["home", "homes", "market"] : []), ...(SMITH.MINES[l] ? ["mine"] : []), ...(l === SPELLCRAFT.TOWN ? ["craft"] : []), ...(CARAVANS.stopsAt(l) ? ["caravans"] : []), ...(l === HALL.TOWN ? ["hall"] : []), ...(HALLS.plotHere(l) || hallDocs.some((d) => d.town === l) || S.hall?.town === l ? ["halls"] : []), "notice", ...(TOWNS.INNS[l] ? ["cook"] : []), ...(l === ARENA.TOWN ? ["arena"] : []), ...(COOK.waterNear(WORLD.places[l]) ? ["fish"] : []), ...(ENCH.hasEnchanter(l) || (typeof HSROOMS !== "undefined" && HSROOMS.station(S, "enchanter")) ? ["enchanter"] : []), ...(types.includes("stables") ? ["stables"] : []), ...(typeof SOL !== "undefined" ? SOL.sections(l) : []), ...(typeof HOMESTEAD !== "undefined" ? HOMESTEAD.sections(l) : []), ...(typeof LEGHUNT !== "undefined" ? LEGHUNT.sections(l) : []), ...(typeof HUNTGAME !== "undefined" ? HUNTGAME.sections(l) : []), ...(typeof TOURNEYUI !== "undefined" ? TOURNEYUI.sections(l) : [])];
     const AU = typeof AREAUI !== "undefined" ? AREAUI : null;   // areaui.js: the Area tab opens on a board of grouped places
     if (AU && townShopAt !== l) { if (townShopAt != null) townShop = ""; townShopAt = l; }   // a new town opens on its board
     townShop = sections.includes(townShop) ? townShop : AU ? "" : sections[0];
-    const names = { general: "General goods", blacksmith: "Blacksmith", wizard: "Court wizard", stables: "Stables", fence: "Ragged Flagon (fence)", inn: TOWNS.INNS[l] || "Inn", train: "Trainers", alchemy: "Alchemy lab", forge: "Forge", jobs: "Jobs", streets: "Streets", hire: l === "Whiterun" ? "Dragonsreach & hirelings" : "Hirelings", hall: "⚑ Hall of the North", halls: "\uE119 Halls & shops", notice: "\uE103 Jarl's bounty", homes: "\uE11C Neighbours", market: "\uE133 Market stalls", mine: "\uE12A Mine", craft: "\uE10A Spell crafting", caravans: "\uE13B Caravans", cook: "\uE148 Cooking pot", arena: "\uE101 The Arena", fish: "\uE146 Fishing", hunt: "\uE10C Hunting grounds", carriage: "Carriage", enchanter: "Arcane enchanter", home: TOWNS.home(S, l) ? `\uE11D ${TOWNS.HOMES[l]?.[0]}` : `Buy ${TOWNS.HOMES[l]?.[0]}`, ...(typeof SOL !== "undefined" ? SOL.NAMES : {}), ...(typeof HOMESTEAD !== "undefined" ? HOMESTEAD.names(S, l) : {}), ...(typeof LEGHUNT !== "undefined" ? LEGHUNT.names() : {}) };
-    const townTop = `${typeof CIVILWAR !== "undefined" ? CIVILWAR.townLine(S, l) : ""}${typeof HOLDUI !== "undefined" ? HOLDUI.townLine(S, l) : ""}${wanted ? `<p class="sub danger-high">You're wanted in ${esc(hold)}. Shops, inns and trainers turn you away.</p>` : ""}`;
+    const names = { general: "General goods", blacksmith: "Blacksmith", wizard: "Court wizard", stables: "Stables", fence: "Ragged Flagon (fence)", inn: TOWNS.INNS[l] || "Inn", train: "Trainers", alchemy: "Alchemy lab", forge: "Forge", jobs: "Jobs", streets: "Streets", hire: l === "Whiterun" ? "Dragonsreach & hirelings" : "Hirelings", hall: "⚑ Hall of the North", halls: "\uE119 Halls & shops", notice: "\uE103 Jarl's bounty", homes: "\uE11C Neighbours", market: "\uE133 Market stalls", mine: "\uE12A Mine", craft: "\uE10A Spell crafting", caravans: "\uE13B Caravans", cook: "\uE148 Cooking pot", arena: "\uE101 The Arena", fish: "\uE146 Fishing", hunt: "\uE10C Hunting grounds", carriage: "Carriage", enchanter: "Arcane enchanter", home: TOWNS.home(S, l) ? `\uE11D ${TOWNS.HOMES[l]?.[0]}` : `Buy ${TOWNS.HOMES[l]?.[0]}`, ...(typeof SOL !== "undefined" ? SOL.NAMES : {}), ...(typeof HOMESTEAD !== "undefined" ? HOMESTEAD.names(S, l) : {}), ...(typeof TOURNEYUI !== "undefined" ? TOURNEYUI.names(S, l) : {}), ...(typeof LEGHUNT !== "undefined" ? LEGHUNT.names() : {}) };
+    const townTop = `${typeof CIVILWAR !== "undefined" ? CIVILWAR.townLine(S, l) : ""}${typeof HOLDUI !== "undefined" ? HOLDUI.townLine(S, l) : ""}${typeof TOURNEYUI !== "undefined" ? TOURNEYUI.townLine(S, l) : ""}${wanted ? `<p class="sub danger-high">You're wanted in ${esc(hold)}. Shops, inns and trainers turn you away.</p>` : ""}`;
     if (AU && !townShop) return `<div class="panel au-panel"><h2>${esc(l)}</h2>${PLACEART.scene(l)}${townTop}${typeof RUMOURS !== "undefined" ? RUMOURS.townHTML(S, l, "", open) : ""}${AU.hub({ S, l, sections, names, open, hold })}<p class="sub au-gold">You have <b class="gold">${S.gold} gold</b>.</p></div>`;
     const fac = F.priceFactor(G.skill(S, "Mercantile"));
     let body = "", note = "";
@@ -3359,6 +3363,8 @@
           <p class="sub" style="margin-top:6px">${pv ? `Result: ${esc(effName(enchDraft.eff))}. ${esc(ENCH.describe ? ENCH.describe(enchDraft.eff, pv.mag) : String(pv.mag))}${ENCH.WEAPON[enchDraft.eff] ? ` ${pv.cap} charge.` : ""}` : ""}</p>
           <button class="btn pri" data-act="enchant" style="width:100%" ${pv ? "" : "disabled"}>Enchant</button>`
           : CQ ? CQ.enchMissing(blanks.length, known.length, gems.length) : `<p class="sub">You need an unenchanted weapon, armor, ring or amulet, a known effect, and a filled soul gem (court wizards sell them).</p>`}`;
+    } else if ((townShop === "festival" || townShop === "pit") && typeof TOURNEYUI !== "undefined") {
+      ({ note, body } = TOURNEYUI.townHTML(S, townShop, l));
     } else if (townShop === "hunts" && typeof LEGHUNT !== "undefined") {
       ({ note, body } = LEGHUNT.townHTML(S, esc));
     } else if (townShop === "homestead" && typeof HOMESTEAD !== "undefined") {
@@ -3729,6 +3735,7 @@
         if (typeof FXART !== "undefined" && /^WULD/.test(m || "")) FXART.cast("whirlwind", { from }); break; }
       case "enter": { if (ppUI) { const pm = ppUI.beforeEnter(); if (pm === "check") { renderPanel(true); break; } if (pm) return toast(pm); } const err = DUNGEONS.enter(S); if (err) return toast(err); if (typeof IMM !== "undefined") IMM.loading(`Entering ${S.dungeon?.place || "the dungeon"}…`); selected = null; renderPicked(); dunNote = null; persist(true); renderDungeon(); break; }
       case "dun": renderDungeon(); break;
+      case "ddtier": { const m = DEEPDELVE.pick(S, b.dataset.place, b.dataset.t); if (m) return toast(m); persist(); renderPanel(true); break; }   // deepdelve.js: Veteran / Legendary / Mythic
       case "droom": if (pvUI && pvUI.gate("way", b.dataset.c)) break; dungeonRoom(b.dataset.c); break;
       case "pvv": case "pvnow": if (pvUI) pvUI.act(b); break;
       case "dact": if (pvUI && pvUI.gate("act", b.dataset.c)) break; dunChoice(b.dataset.c); break;

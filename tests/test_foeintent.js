@@ -29,7 +29,7 @@ function play(ss, opts = {}) {
     let r = ss.begin(), g = 0;
     while (!ss.done && g++ < 600) {
       if (opts.onRound && r.turn === "me" && ss._seenRound !== ss.round) { ss._seenRound = ss.round; opts.onRound(ss); }
-      if (r.turn === "me") { r = ss.act(opts.move || "attack"); if (r.turn === "next") r = ss.advance(); continue; }
+      if (r.turn === "me") { const mv = opts.move || "attack"; r = ss.why(mv) ? ss.act("end") : ss.act(mv); if (r.err) r = ss.act("end"); if (r.turn === "next") r = ss.advance(); continue; }   // out of breath: end the turn
       if (r.turn === "wait") { ss.waiting.until = 0; r = ss.advance(); continue; }
       r = ss.advance();
     }

@@ -81,7 +81,7 @@ var I18N_CHARGEN = {
 };
 (() => {
   Object.assign(I18N_EXTRA.words, {
-    "🪞 You like what you see.": "🪞 Podoba ci się to, co widzisz.",
+    "You like what you see.": "Podoba ci się to, co widzisz.",
     // Proud Heritage (perkfx.js)
     "Proud Heritage": "Dumne dziedzictwo", "Your race's gifts (resistances, Imperial luck, Orc forge-blood...) are 25% stronger. [OURS]": "Dary twojej rasy (odporności, cesarskie szczęście, orkowa krew kuźni...) są o 25% silniejsze. [OURS]",
     "Your race's gifts (resistances, Imperial luck, Orc forge-blood...) are 25% stronger.": "Dary twojej rasy (odporności, cesarskie szczęście, orkowa krew kuźni...) są o 25% silniejsze.",
