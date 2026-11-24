@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b144-noequipsell", build: 144, date: "24 Nov 2026", title: "What you wear stays on you", items: [
+      "Shops no longer list the gear you're wearing when you sell: weapons in either hand, armour, rings and amulets stay off the Sell list, and Sell all junk never touches them.",
+      "The same goes for handing things over: your follower's Your pack list, trades and gifts to other players, market stalls and chests leave out what you wear.",
+      "Got two of the same thing and wear one? Only the spare one shows up. Take something off first if you really want to part with it.",
+    ] },
     { id: "b143-followertab", build: 143, date: "24 Nov 2026", title: "Your follower gets their own tab", items: [
       "Your follower now has their own Follower tab in the Character menu, next to Skills, Character and Perks. Everything about them lives there: overview, bond, gear, magic, tactics, perks, fighting style and Dismiss.",
       "The Character page only keeps one short line about them; tap it to jump to the tab. With nobody following you, the tab tells you who you can hire and where.",
