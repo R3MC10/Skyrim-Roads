@@ -3,11 +3,20 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b144-eventart", build: 144, date: "24 Nov 2026", title: "Painted events and shops", items: [
+    { id: "b145-eventart", build: 145, date: "24 Nov 2026", title: "Painted events and shops", items: [
       "World events now have painted pictures: the Khajiit's grand caravan, Daedric invasions, dragon migrations and all four festival weeks each get their own.",
       "Great world events do too: dragon assaults, Daedric rifts, sieges and town fairs.",
       "You see a small picture on the event's card under the map and a wide one when you open it.",
       "Nine town places have new painted banners: the court wizard and enchanter, the market, stables, your home, the hall, the fence, the arena, the mine and the docks.",
+    ] },
+    { id: "b144-gatherfix", build: 144, date: "24 Nov 2026", title: "Tidier Gathering card", items: [
+      "On the Map panel, plants you already picked no longer pile up on top of each other in the Gathering card. Every plant gets its own line, and Auto-pick sits on its own row below the buttons.",
+    ] },
+    { id: "hotfix-dunloop", build: 144, date: "24 Nov 2026", title: "Dungeons don't trap you in the same room any more", items: [
+      "Fixed: dungeons could trap you in the same room. In a party, the leader was sometimes sent back into a room they had just cleared, and the others got stuck waiting or stood in a room that never ended.",
+      "Fixed: when the shared world was busy, the leader's way through a dungeon sometimes didn't reach the rest of the party, so they couldn't follow to the boss. It's now sent again until it gets through, and anything missing is filled in.",
+      "Fixed: picking herbs at a claw door in a party no longer breaks the door for the others.",
+      "Stuck right now? Just open the game again: runs that were caught in a loop, a boss room with no boss in it, or a room with no way on are put right when you load.",
     ] },
     { id: "b143-followeranim", build: 143, date: "24 Nov 2026", title: "Followers fight with their whole body", items: [
       "Followers and party members now really fight in the fight picture: they swing their weapon or draw their bow, cast their spells, raise their shield and flinch when they get hit.",
