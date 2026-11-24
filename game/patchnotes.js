@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b150-dunrooms", build: 150, date: "24 Nov 2026", title: "Painted dungeon rooms and a new dungeon map", items: [
+      "Dungeon rooms are painted now: caves, Nordic barrows and Dwemer ruins each have their own picture for fights, tough fights, traps, treasure, puzzles, rest spots and the boss. Bandit mines have a painted fight room so far; more dungeon kinds get theirs soon.",
+      "Where a room has no painting yet, it borrows the closest one (a mine uses the cave pictures, a temple the barrow ones), and only falls back to the old drawing if nothing fits.",
+      "The dungeon map is a parchment chart now: every room is an ink badge with its own symbol, corridors appear as your torchlight reaches them, rooms further ahead stay pencil question marks, and the way you came is a red-ink trail that draws itself as you walk.",
+      "The room you're in glows and the rooms you can go to next pulse, so it's easy to see where to tap.",
+      "On PC the dungeon fits on one screen: the room on the left, the map on the right, no scrolling the page.",
+    ] },
     { id: "b143-bleakfalls", build: 143, date: "24 Nov 2026", title: "Farengar's quest can't get stuck any more", items: [
       "Bleak Falls Barrow (main quest): clearing the barrow now moves the quest on by itself. The next step, \"The Dragonstone\", sends you to Farengar in Whiterun.",
       "Farengar doesn't need the Dragonstone in your pack any more. If it got lost, ended up in a chest or went to someone else in a party, just tell him: clearing the barrow is enough. Hand it in under Area tab → Court wizard, or with the button in the Journal.",

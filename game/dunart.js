@@ -1,6 +1,7 @@
-/* Dungeon art: a drawn map of the dungeon you're in (rooms as themed chambers joined by torch-lit corridors,
-   fog over the deep rows, the boss chamber at the end), a flickering torch overlay, a loot strip with item icons,
-   and small animations for chests, traps and campfires. Uses the shared ART toolkit, so both art styles work. [OURS] */
+/* Dungeon art: a painted parchment chart of the dungeon you're in (ink medallions per room type, corridors that show up
+   as your torchlight reaches them, a red-ink trail of the way you walked, the boss chamber marked at the end), a living
+   layer on top (the newest step inks itself in, the room you're in glows, the rooms you can reach pulse), a loot strip
+   with item icons, and small animations for chests. The map is always drawn in the ink style. [OURS] */
 const DUNART = (() => {
   const LX = (x) => (typeof I18N_SWEEP !== "undefined" ? I18N_SWEEP.c(x) : x);   // words drawn on canvas, in the player's language
   // ---- colours per dungeon theme: background, corridor, chamber fill, chamber edge, accent
@@ -20,9 +21,9 @@ const DUNART = (() => {
   };
   const themeOf = (t) => TH[t] || TH.cave;
   const TYPES = ["fight", "elite", "trap", "treasure", "puzzle", "rest", "mystery", "boss"];
-  const W = 340, GAP = 66, TOP = 36;
+  const W = 340, GAP = 66, TOP = 48;
   const xy = (rows, r, c) => [W / (rows[r].length + 1) * (c + 1), TOP + r * GAP];
-  const heightOf = (rows) => TOP + (rows.length - 1) * GAP + 40;
+  const heightOf = (rows) => TOP + (rows.length - 1) * GAP + 42;
 
   // ---- chamber shapes by theme
   function chamber(g, H, theme, x, y, rad, fill, edge, seed) {
@@ -92,121 +93,161 @@ const DUNART = (() => {
     g.restore();
   }
 
-  // ---- the whole map, drawn once per room change
-  function drawMap(g, H, w, h, d, next) {
-    const T = themeOf(d.theme), rows = d.rows, rnd = H.seeded(d.place + d.theme);
-    g.fillStyle = T.bg; g.fillRect(0, 0, w, h);
-    // rock texture: blobs and cracks
-    for (let i = 0; i < 70; i++) { g.fillStyle = i % 3 ? T.rock : T.edge; g.globalAlpha = 0.5; g.beginPath(); g.ellipse(rnd() * w, rnd() * h, 6 + rnd() * 22, 4 + rnd() * 14, rnd() * 3, 0, 7); g.fill(); }
-    g.globalAlpha = 1;
-    g.strokeStyle = "rgba(0,0,0,0.35)"; g.lineWidth = 1;
-    for (let i = 0; i < 18; i++) { let x = rnd() * w, y = rnd() * h; g.beginPath(); g.moveTo(x, y); for (let k = 0; k < 4; k++) { x += (rnd() - 0.5) * 24; y += (rnd() - 0.5) * 18; g.lineTo(x, y); } g.stroke(); }
-    const path = d.path || [], walked = (r, c, j) => path.some((p, i) => p[0] === r && p[1] === c && path[i + 1]?.[0] === r + 1 && path[i + 1]?.[1] === j)
-      || (d.row === r + 1 && d.col === j && path.length && path[path.length - 1][0] === r && path[path.length - 1][1] === c);
-    const fogFrom = Math.max(1, d.row + 3);   // you can see two rows ahead; deeper is dark
-    // corridors: a dark trench with a lit floor when you've walked it
-    const torches = [];
+  // ---- the whole map, drawn once per room change: a painted parchment chart of the depths.
+  // Corridors you can't see yet stay blank, rooms beyond your torchlight are pencil smudges, the way you walked is a
+  // red-ink trail, and every room is an ink medallion with its type drawn inside. Ink style only.
+  const INK = "#2b1d12", RED = "#8e2b25", GOLD = "#b8862e";
+  const RING = { fight: "#5a4030", elite: "#7a2420", trap: "#9a5a1e", treasure: "#a07a22", puzzle: "#3e5a6a", rest: "#b0561e", mystery: "#6a5a7a", boss: "#8e2b25" };
+  /* a corridor as a slightly bent ink stroke; the same bend every time for the same rooms */
+  function curve(d, r, c, j) {
+    const rows = d.rows, [x1, y1] = xy(rows, r, c), [x2, y2] = xy(rows, r + 1, j), q = ART.seeded(`${d.place}|${r}|${c}|${j}`);
+    const mx = (x1 + x2) / 2, my = (y1 + y2) / 2, len = Math.hypot(x2 - x1, y2 - y1) || 1, nx = -(y2 - y1) / len, ny = (x2 - x1) / len, b = (q() - 0.5) * 16;
+    return [x1, y1, mx + nx * b, my + ny * b, x2, y2];
+  }
+  const stroke = (g, cv, col, w, dash = [], alpha = 1) => { g.save(); g.globalAlpha = alpha; g.strokeStyle = col; g.lineWidth = w; g.lineCap = "round"; g.setLineDash(dash);
+    g.beginPath(); g.moveTo(cv[0], cv[1]); g.quadraticCurveTo(cv[2], cv[3], cv[4], cv[5]); g.stroke(); g.restore(); };
+  /* where you've been: [[r, c], …] including the room you're in */
+  const walkedPairs = (d) => { const p = d.path || [], out = []; for (let i = 0; i + 1 < p.length; i++) if (p[i + 1][0] === p[i][0] + 1) out.push([p[i][0], p[i][1], p[i + 1][1]]); return out; };
+  /* the newest step (the corridor into the room you're in), drawn by the overlay so it can ink itself in */
+  function newestStep(d) { const w = walkedPairs(d), last = w[w.length - 1], p = d.path || []; return last && p.length && d.row === p[p.length - 1][0] && d.col === p[p.length - 1][1] && last[0] === d.row - 1 ? last : null; }
+  function drawMap(g, H, w, h, d, next, opts = {}) {
+    const T = themeOf(d.theme), rows = d.rows, rnd = H.seeded(d.place + d.theme), path = d.path || [];
+    const sight = d.done ? rows.length : Math.max(1, d.row + 3);   // you can see two rows ahead; deeper is still unexplored
+    const seen = (r) => r < sight || rows[r][0].type === "boss";
+    // paper: parchment, a wash of the dungeon's colour, stains, grain, darker burnt edges
+    H.parchment(g, w, h, d.place);
+    g.globalAlpha = 0.07; g.fillStyle = T.acc; g.fillRect(0, 0, w, h); g.globalAlpha = 1;
+    for (let i = 0; i < 7; i++) { const x = rnd() * w, y = rnd() * h, r0 = 14 + rnd() * 40, gr = g.createRadialGradient(x, y, 0, x, y, r0);
+      gr.addColorStop(0, "rgba(120,86,46,0.10)"); gr.addColorStop(1, "rgba(120,86,46,0)"); g.fillStyle = gr; g.fillRect(x - r0, y - r0, r0 * 2, r0 * 2); }
+    // the rock the halls are cut into: soft brown washes along every corridor you can see
     rows.forEach((row, r) => row.forEach((n, c) => n.links.forEach((j) => {
-      if (r + 1 >= rows.length) return;
-      const [x1, y1] = xy(rows, r, c), [x2, y2] = xy(rows, r + 1, j), lit = walked(r, c, j);
-      const fog = r + 1 >= fogFrom && rows[r + 1][0].type !== "boss";
-      g.lineCap = "round";
-      g.strokeStyle = T.edge; g.lineWidth = 13; g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke();
-      g.strokeStyle = lit ? "#8a6a3e" : T.corr; g.lineWidth = 8; g.globalAlpha = fog ? 0.45 : 1; g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke();
-      g.globalAlpha = 1;
-      if (lit) { g.strokeStyle = "rgba(232,192,112,0.55)"; g.lineWidth = 2; g.setLineDash([3, 5]); g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke(); g.setLineDash([]);
-        const mx = (x1 + x2) / 2 + 7, my = (y1 + y2) / 2; torches.push([mx, my]);
-        g.fillStyle = "#3b2c1e"; g.fillRect(mx - 1, my - 2, 2, 7); H.circle(g, mx, my - 4, 2.6, "#e8923a", null); }
+      if (r + 1 >= rows.length || !seen(r) || !seen(r + 1)) return;
+      stroke(g, curve(d, r, c, j), "rgba(92,64,36,0.13)", 26);
     })));
-    // chambers
-    rows.forEach((row, r) => row.forEach((n, c) => {
-      const [x, y] = xy(rows, r, c), boss = n.type === "boss", rad = boss ? 24 : 19;
-      const here = d.row === r && d.col === c, done = path.some((p) => p[0] === r && p[1] === c) && !here, isNext = next.has(`${r}:${c}`);
-      const fog = r >= fogFrom && !boss;
-      if (boss) { g.fillStyle = "rgba(196,87,46,0.18)"; g.beginPath(); g.arc(x, y, rad + 9, 0, 7); g.fill(); }
-      chamber(g, H, d.theme, x, y, rad, fog ? T.rock : done ? T.corr : n.type === "boss" ? "#6a3b2a" : T.node, isNext ? T.acc : T.edge, d.place + r + c);
-      if (fog) { g.fillStyle = "rgba(10,10,12,0.55)"; g.beginPath(); g.arc(x, y, rad, 0, 7); g.fill(); symbol(g, H, "mystery", x, y, 9, d.theme, "#5a5650"); }
-      else symbol(g, H, n.type, x, y, boss ? 17 : 13, d.theme, done ? "#2a241e" : "#1c1612");
-      if (done) { g.strokeStyle = "rgba(214,178,94,0.8)"; g.lineWidth = 2; g.beginPath(); g.moveTo(x + rad * 0.35, y + rad * 0.55); g.lineTo(x + rad * 0.6, y + rad * 0.8); g.lineTo(x + rad * 1.0, y + rad * 0.25); g.stroke(); }
-      if (here) { g.strokeStyle = "#f0d080"; g.lineWidth = 2.4; g.beginPath(); g.arc(x, y, rad + 5, 0, 7); g.stroke(); }
-      if (isNext) { g.strokeStyle = T.acc; g.lineWidth = 2; g.setLineDash([4, 3]); g.beginPath(); g.arc(x, y, rad + 6, 0, 7); g.stroke(); g.setLineDash([]); }
-    }));
-    // the way in, at the top
-    const [ex] = [w / 2]; g.fillStyle = "#0e0f11"; g.beginPath(); g.ellipse(ex, 8, 26, 10, 0, 0, Math.PI); g.fill();
-    // fog bank over the deep rows
-    if (fogFrom < rows.length - 1) {
-      const y0 = TOP + fogFrom * GAP - GAP * 0.5, y1 = TOP + (rows.length - 1) * GAP - GAP * 0.45;
-      const gr = g.createLinearGradient(0, y0, 0, y0 + 40); gr.addColorStop(0, "rgba(8,8,10,0)"); gr.addColorStop(1, "rgba(8,8,10,0.55)");
-      g.fillStyle = gr; g.fillRect(0, y0, w, Math.max(40, y1 - y0));
+    rows.forEach((row, r) => row.forEach((n, c) => { if (!seen(r)) return; const [x, y] = xy(rows, r, c), gr = g.createRadialGradient(x, y, 0, x, y, 34);
+      gr.addColorStop(0, "rgba(92,64,36,0.16)"); gr.addColorStop(1, "rgba(92,64,36,0)"); g.fillStyle = gr; g.fillRect(x - 34, y - 34, 68, 68); }));
+    // corridors: ink where you can see, a pencil hint into the dark, red trail where you walked
+    const walked = walkedPairs(d), fresh = opts.skipNewest ? newestStep(d) : null;
+    const isWalked = (r, c, j) => walked.some((p) => p[0] === r && p[1] === c && p[2] === j);
+    rows.forEach((row, r) => row.forEach((n, c) => n.links.forEach((j) => {
+      if (r + 1 >= rows.length || !seen(r)) return;
+      const cv = curve(d, r, c, j);
+      if (isWalked(r, c, j)) return;
+      if (r + 1 < sight) stroke(g, cv, INK, 1.5, [5, 4], 0.75);
+      else stroke(g, cv, INK, 1.1, [1.5, 4], 0.35);   // fades out into the unknown
+    })));
+    for (const [r, c, j] of walked) {
+      if (fresh && fresh[0] === r && fresh[1] === c && fresh[2] === j) continue;
+      const cv = curve(d, r, c, j); stroke(g, cv, "rgba(142,43,37,0.25)", 6); stroke(g, cv, RED, 2.4, [7, 4]);
     }
-    // vignette
-    const v = g.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.3, w / 2, h / 2, Math.max(w, h) * 0.75);
-    v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, "rgba(0,0,0,0.4)"); g.fillStyle = v; g.fillRect(0, 0, w, h);
+    // the way in, at the top: a doorway in the rock with a few steps
+    const ex = w / 2;
+    g.fillStyle = "rgba(92,64,36,0.25)"; g.beginPath(); g.ellipse(ex, 10, 30, 12, 0, 0, Math.PI * 2); g.fill();
+    g.fillStyle = INK; g.beginPath(); g.moveTo(ex - 10, 18); g.lineTo(ex - 10, 8); g.arc(ex, 8, 10, Math.PI, 0); g.lineTo(ex + 10, 18); g.closePath(); g.fill();
+    g.strokeStyle = INK; g.lineWidth = 1; for (let i = 0; i < 3; i++) { g.beginPath(); g.moveTo(ex - 13 + i * 2, 21 + i * 3); g.lineTo(ex + 13 - i * 2, 21 + i * 3); g.stroke(); }
+    if (path.length) { const [x2, y2] = xy(rows, path[0][0], path[0][1]); stroke(g, [ex, 30, (ex + x2) / 2, (30 + y2) / 2 - 4, x2, y2], RED, 2.4, [7, 4]); }
+    else rows[0].forEach((_, c) => { const [x2, y2] = xy(rows, 0, c); stroke(g, [ex, 30, (ex + x2) / 2, (30 + y2) / 2 - 4, x2, y2], INK, 1.5, [5, 4], 0.75); });
+    // rooms
+    rows.forEach((row, r) => row.forEach((n, c) => {
+      const [x, y] = xy(rows, r, c), boss = n.type === "boss", rad = boss ? 22 : 17;
+      const here = d.row === r && d.col === c && !d.done, done = path.some((p) => p[0] === r && p[1] === c) && !here, isNext = next.has(`${r}:${c}`);
+      if (!seen(r)) {   // beyond your torchlight: a pencil circle and a question mark
+        g.save(); g.globalAlpha = 0.32; g.strokeStyle = INK; g.lineWidth = 1; g.setLineDash([2, 3]); g.beginPath(); g.arc(x, y, rad - 3, 0, Math.PI * 2); g.stroke(); g.setLineDash([]);
+        symbol(g, H, "mystery", x, y, 9, d.theme, INK); g.restore(); return;
+      }
+      g.fillStyle = "rgba(43,29,18,0.28)"; g.beginPath(); g.ellipse(x + 1.5, y + 3, rad, rad * 0.95, 0, 0, Math.PI * 2); g.fill();   // a soft shadow
+      if (boss) { g.fillStyle = "rgba(142,43,37,0.14)"; g.beginPath(); g.arc(x, y, rad + 11, 0, Math.PI * 2); g.fill();
+        g.strokeStyle = RED; g.lineWidth = 1; for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; g.beginPath(); g.moveTo(x + Math.cos(a) * (rad + 4), y + Math.sin(a) * (rad + 4)); g.lineTo(x + Math.cos(a) * (rad + 9), y + Math.sin(a) * (rad + 9)); g.stroke(); } }
+      const gr = g.createRadialGradient(x - rad * 0.3, y - rad * 0.35, 1, x, y, rad);
+      gr.addColorStop(0, here ? "#fff2c8" : done ? "#e2d2a8" : "#f6ead0"); gr.addColorStop(1, here ? "#e8c878" : done ? "#c9b48a" : "#dcc89c");
+      g.fillStyle = gr; g.beginPath(); g.arc(x, y, rad, 0, Math.PI * 2); g.fill();
+      g.strokeStyle = here ? GOLD : RING[n.type] || INK; g.lineWidth = here ? 3 : 2.2; g.stroke();
+      g.strokeStyle = "rgba(43,29,18,0.45)"; g.lineWidth = 0.8; g.beginPath(); g.arc(x, y, rad - 3.2, 0, Math.PI * 2); g.stroke();
+      g.save(); if (done) g.globalAlpha = 0.45; symbol(g, H, n.type, x, y, boss ? 15 : 11.5, d.theme, INK); g.restore();
+      if (done) {   // a red-ink tick: been there
+        g.strokeStyle = RED; g.lineWidth = 2.4; g.lineCap = "round"; g.beginPath(); g.moveTo(x + rad * 0.3, y + rad * 0.55); g.lineTo(x + rad * 0.58, y + rad * 0.85); g.lineTo(x + rad * 1.05, y + rad * 0.2); g.stroke();
+      }
+      if (isNext) { g.strokeStyle = "#c4572e"; g.lineWidth = 1.6; g.setLineDash([4, 3]); g.beginPath(); g.arc(x, y, rad + 5, 0, Math.PI * 2); g.stroke(); g.setLineDash([]); }
+    }));
+    // a small compass rose in the corner
+    const cx = w - 26, cy = 24; g.save(); g.globalAlpha = 0.55; g.strokeStyle = INK; g.fillStyle = INK; g.lineWidth = 0.8;
+    g.beginPath(); g.arc(cx, cy, 11, 0, Math.PI * 2); g.stroke();
+    for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 - Math.PI / 2; H.poly(g, [[cx + Math.cos(a) * 15, cy + Math.sin(a) * 15], [cx + Math.cos(a + 0.5) * 4, cy + Math.sin(a + 0.5) * 4], [cx, cy], [cx + Math.cos(a - 0.5) * 4, cy + Math.sin(a - 0.5) * 4]], i ? "rgba(43,29,18,0.5)" : RED, null); }
+    g.restore();
+    // burnt edges
+    const v = g.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.38, w / 2, h / 2, Math.max(w, h) * 0.72);
+    v.addColorStop(0, "rgba(60,36,16,0)"); v.addColorStop(1, "rgba(60,36,16,0.45)"); g.fillStyle = v; g.fillRect(0, 0, w, h);
+    g.strokeStyle = "rgba(43,29,18,0.7)"; g.lineWidth = 1.5; g.strokeRect(4, 4, w - 8, h - 8); g.lineWidth = 0.6; g.strokeRect(7, 7, w - 14, h - 14);
     // the cleared seal
     if (d.done) {
-      const cx = w / 2, cy = h / 2;
-      g.fillStyle = "#8e2b25"; g.beginPath(); for (let i = 0; i < 22; i++) { const a = (i / 22) * Math.PI * 2, rr = i % 2 ? 46 : 52; g.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); } g.closePath(); g.fill();
-      g.strokeStyle = "#5a1814"; g.lineWidth = 2; g.stroke(); H.circle(g, cx, cy, 36, null, "#c95a4a", 1.6);
-      g.fillStyle = "#f4dcc0"; g.font = "bold 15px Georgia, serif"; g.textAlign = "center"; g.fillText(LX("CLEARED"), cx, cy + 5);
+      const sx = w / 2, sy = h / 2;
+      g.fillStyle = RED; g.beginPath(); for (let i = 0; i < 22; i++) { const a = (i / 22) * Math.PI * 2, rr = i % 2 ? 46 : 52; g.lineTo(sx + Math.cos(a) * rr, sy + Math.sin(a) * rr); } g.closePath(); g.fill();
+      g.strokeStyle = "#5a1814"; g.lineWidth = 2; g.stroke(); H.circle(g, sx, sy, 36, null, "#c95a4a", 1.6);
+      g.fillStyle = "#f4dcc0"; g.font = "bold 15px Georgia, serif"; g.textAlign = "center"; g.fillText(LX("CLEARED"), sx, sy + 5);
     }
-    return torches;
+    return [];
   }
 
   const nextSet = (d) => { const nx = typeof DUNGEONS !== "undefined" ? DUNGEONS.nextChoices({ dungeon: d }) : []; return new Set(nx.map((c) => `${d.row + 1}:${c}`)); };
-  /* HTML for the map: the drawing, a flicker canvas on top, and tap targets for the rooms you can go to next */
+  /* the ink icons of the room types in this dungeon, as a legend */
+  function legendHTML(d) {
+    const L = typeof DUNGEONS !== "undefined" ? DUNGEONS.LABEL : {};
+    return `<div class="legend dlegend">${TYPES.filter((k) => d.rows.some((row) => row.some((n) => n.type === k))).map((k) => `<span>${ART.html(22, 22, (g, H, w, h) => {
+      H.circle(g, w / 2, h / 2, 10, "#ecdcb6", RING[k], 1.4); symbol(g, H, k, w / 2, h / 2, 6.5, d.theme, INK); }, { key: `dleg|${k}|${d.theme}`, style: "ink", cls: "dlg", alt: "" })}${L[k] || k}</span>`).join("")}</div>`;
+  }
+  let inked = "";   // the last step already inked in, so a redraw of the same room doesn't replay it
+  /* HTML for the map: the drawing, a glow canvas on top, and tap targets for the rooms you can go to next */
   function mapHTML(d) {
-    const rows = d.rows, h = heightOf(rows), next = nextSet(d);
-    const key = `dun|${d.place}|${d.theme}|${JSON.stringify(rows.map((r) => r.map((n) => n.type[0] + n.links.join(""))))}|${d.row}|${d.col}|${(d.path || []).join(";")}|${d.done ? 1 : 0}|${d.room ? 1 : 0}`;
-    let torches = [];
-    const url = ART.style() === "pixel" ? pixelURL(key, h, (g, H) => { torches = drawMap(g, H, W, h, d, next); })
-      : ART.url(W, h, (g, H, w, hh) => { torches = drawMap(g, H, w, hh, d, next); }, { key });
-    if (!torches.length) torches = torchSpots(d);
+    const rows = d.rows, h = heightOf(rows), next = nextSet(d), fresh = newestStep(d);
+    if (typeof DUNROOMS !== "undefined") DUNROOMS.warm(d);   // fetch the paintings of the rooms ahead
+    const key = `dun2|${d.place}|${d.theme}|${JSON.stringify(rows.map((r) => r.map((n) => n.type[0] + n.links.join(""))))}|${d.row}|${d.col}|${(d.path || []).join(";")}|${d.done ? 1 : 0}`;
+    const url = ART.url(W, h, (g, H, w, hh) => { drawMap(g, H, w, hh, d, next, { skipNewest: true }); }, { key, style: "ink" });
     const nodes = [...next].map((k) => { const [r, c] = k.split(":").map(Number), [x, y] = xy(rows, r, c), n = rows[r][c];
       return `<button class="dnode" data-act="droom" data-c="${c}" style="left:${(x / W * 100).toFixed(2)}%;top:${(y / h * 100).toFixed(2)}%" aria-label="Go to: ${DUNGEONS.LABEL[n.type]}"></button>`; }).join("");
-    const here = d.row >= 0 && !d.done ? xy(rows, d.row, d.col) : null;
-    return `<div class="dmap" data-w="${W}" data-h="${h}" data-torch="${torches.map((p) => p.map(Math.round).join(",")).join(";")}" data-here="${here ? here.map(Math.round).join(",") : ""}" data-theme="${d.theme}">
-      <img src="${url}" width="${W}" height="${h}" alt="Map of ${String(d.place).replace(/"/g, "")}" ${ART.style() === "pixel" ? 'style="image-rendering:pixelated"' : ""}>
+    const here = d.row >= 0 && !d.done ? [...xy(rows, d.row, d.col), rows[d.row][d.col].type === "boss" ? 22 : 17] : null;
+    const seg = fresh ? curve(d, ...fresh).map((v) => v.toFixed(1)).join(",") : "", segKey = fresh ? `${d.place}|${(d.path || []).length}|${d.t || ""}` : "";
+    return `<div class="dmap" data-w="${W}" data-h="${h}" data-here="${here ? here.map(Math.round).join(",") : ""}" data-seg="${seg}" data-segkey="${segKey}" data-theme="${d.theme}" style="--dh:${h}">
+      <img src="${url}" width="${W}" height="${h}" alt="Map of ${String(d.place).replace(/"/g, "")}">
       <canvas class="dflick" aria-hidden="true"></canvas>${nodes}</div>`;
   }
-  /* pixel look for the map: draw it at half size and let the browser blow it up with hard edges. The shared
-     palette filter would turn the grey stone green here, so the dungeon keeps its own colours. */
-  const pxCache = new Map();
-  function pixelURL(key, h, draw) {
-    if (pxCache.has(key)) return pxCache.get(key);
-    const k = 0.5, c = document.createElement("canvas"); c.width = Math.round(W * k); c.height = Math.round(h * k);
-    const g = c.getContext("2d"); g.imageSmoothingEnabled = false; g.scale(k, k); draw(g, ART.H);
-    const u = c.toDataURL("image/png"); if (pxCache.size > 40) pxCache.delete(pxCache.keys().next().value); pxCache.set(key, u); return u;
-  }
-  function torchSpots(d) {   // the same spots drawMap uses, when the drawing came from the cache
-    const rows = d.rows, path = d.path || [], out = [];
-    for (let i = 0; i + 1 < path.length; i++) { const [a, b] = path[i], [c2, e] = path[i + 1]; const [x1, y1] = xy(rows, a, b), [x2, y2] = xy(rows, c2, e); out.push([(x1 + x2) / 2 + 7, (y1 + y2) / 2]); }
-    if (path.length && d.row >= 0) { const [a, b] = path[path.length - 1]; if (a === d.row - 1) { const [x1, y1] = xy(rows, a, b), [x2, y2] = xy(rows, d.row, d.col); out.push([(x1 + x2) / 2 + 7, (y1 + y2) / 2]); } }
-    return out;
-  }
 
-  /* torch flicker: a small overlay redrawn ~12 times a second while the map is on screen */
+  /* the living layer: the newest step inks itself in, the room you're in glows, the rooms you can reach pulse */
   let raf = 0;
   function start(root, reduce) {
     cancelAnimationFrame(raf);
     const box = root?.querySelector(".dmap"); if (!box) return;
     const cv = box.querySelector(".dflick"), w = +box.dataset.w, h = +box.dataset.h;
-    const torches = (box.dataset.torch || "").split(";").filter(Boolean).map((s) => s.split(",").map(Number));
     const here = box.dataset.here ? box.dataset.here.split(",").map(Number) : null;
+    const seg = box.dataset.seg ? box.dataset.seg.split(",").map(Number) : null, segKey = box.dataset.segkey || "";
     const next = [...box.querySelectorAll(".dnode")].map((b) => [parseFloat(b.style.left) / 100 * w, parseFloat(b.style.top) / 100 * h]);
-    const pixel = ART.style() === "pixel", k = pixel ? 0.34 : typeof FITCANVAS !== "undefined" ? FITCANVAS.ratio(cv, w) : Math.min(2, devicePixelRatio || 1);   // the map is shown up to 560 wide: size from the box
+    const k = typeof FITCANVAS !== "undefined" ? FITCANVAS.ratio(cv, w) : Math.min(2, devicePixelRatio || 1);
     cv.width = Math.round(w * k); cv.height = Math.round(h * k);
-    if (pixel) cv.style.imageRendering = "pixelated";
     const g = cv.getContext("2d"); g.setTransform(k, 0, 0, k, 0, 0);
+    const t0 = performance.now(), animate = !reduce && seg && segKey !== inked; if (seg) inked = segKey;
     const glow = (x, y, r, a, col) => { const gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, `rgba(${col},${a})`); gr.addColorStop(1, `rgba(${col},0)`); g.fillStyle = gr; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); };
+    const partial = (p) => {   // the quadratic curve up to p, as a polyline
+      const [x1, y1, cx, cy, x2, y2] = seg, n = Math.max(2, Math.round(24 * p)); g.beginPath();
+      for (let i = 0; i <= n; i++) { const t = (i / n) * p, u = 1 - t; const x = u * u * x1 + 2 * u * t * cx + t * t * x2, y = u * u * y1 + 2 * u * t * cy + t * t * y2; i ? g.lineTo(x, y) : g.moveTo(x, y); }
+    };
     let last = 0;
     const frame = (ts) => {
       if (!cv.isConnected) return;
-      if (ts - last > 80 || reduce) {
+      if (ts - last > 60 || reduce) {
         last = ts; g.clearRect(0, 0, w, h);
-        for (const [x, y] of torches) glow(x, y - 4, 16 + Math.random() * 5, 0.32 + Math.random() * 0.12, "255,170,80");
-        if (here) glow(here[0], here[1], 34 + Math.random() * 3, 0.22 + Math.random() * 0.06, "255,214,140");
-        const p = 0.5 + 0.5 * Math.sin(ts / 260);
-        for (const [x, y] of next) glow(x, y, 30, 0.12 + p * 0.16, "240,208,128");
+        const p = animate ? Math.min(1, (ts - t0) / 750) : 1, s = 0.5 + 0.5 * Math.sin(ts / 320);
+        if (seg) { g.lineCap = "round"; g.setLineDash([]); g.strokeStyle = "rgba(142,43,37,0.25)"; g.lineWidth = 6; partial(p); g.stroke();
+          g.setLineDash([7, 4]); g.strokeStyle = "#8e2b25"; g.lineWidth = 2.4; partial(p); g.stroke(); g.setLineDash([]);
+          if (p < 1) { const [x1, y1, cx, cy, x2, y2] = seg, u = 1 - p; glow(u * u * x1 + 2 * u * p * cx + p * p * x2, u * u * y1 + 2 * u * p * cy + p * p * y2, 9, 0.8, "255,200,110"); } }
+        if (here && p >= 1) {
+          const [x, y, r] = here;
+          glow(x, y, r + 20 + s * 4, reduce ? 0.45 : 0.32 + s * 0.18, "255,196,92");
+          g.strokeStyle = `rgba(184,134,46,${reduce ? 0.9 : 0.55 + s * 0.4})`; g.lineWidth = 2; g.beginPath(); g.arc(x, y, r + 4 + (reduce ? 0 : s * 2), 0, 7); g.stroke();
+        }
+        for (const [x, y] of next) {
+          glow(x, y, 28, reduce ? 0.22 : 0.1 + s * 0.2, "232,120,50");
+          g.strokeStyle = `rgba(196,87,46,${reduce ? 0.8 : 0.45 + s * 0.45})`; g.lineWidth = 2; g.setLineDash([5, 4]); g.lineDashOffset = reduce ? 0 : -ts / 60;
+          g.beginPath(); g.arc(x, y, 23, 0, 7); g.stroke(); g.setLineDash([]); g.lineDashOffset = 0;
+        }
       }
       if (!reduce) raf = requestAnimationFrame(frame);
     };
@@ -268,6 +309,6 @@ const DUNART = (() => {
   }
 
   /* everything that should start after the dungeon screen is drawn */
-  function after(root, reduce) { start(root, reduce); animateChest(root, reduce); }
-  return { TH, TYPES, W, GAP, mapHTML, drawMap, symbol, chamber, lootStrip, chestHTML, after, themeOf, xy, heightOf };
+  function after(root, reduce) { start(root, reduce); animateChest(root, reduce); if (typeof DUNROOMS !== "undefined") DUNROOMS.after(root); }
+  return { TH, TYPES, W, GAP, mapHTML, legendHTML, drawMap, symbol, chamber, lootStrip, chestHTML, after, themeOf, xy, heightOf, curve, newestStep };
 })();

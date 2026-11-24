@@ -16,6 +16,11 @@
      shop-<id>                1200×375   painted banners for town sections (shown above each shop's list)
        ids: general forge (also blacksmith) inn (also cook) alchemy wizard (also enchanter) market stables home hall
             fence arena mine — raw 3:2 paintings go through art/conv: crop the middle band, WebP q80
+     room-<type>-<theme>      1600×900   painted dungeon rooms (dunrooms.js), shown above the room text. WebP q80.
+       types: fight elite trap treasure puzzle rest boss (mystery optional). themes: cave barrow dwemer mine forsworn
+       vampire temple fort banditcamp thalmor giantcamp lair. Just drop a file in: a missing one borrows the closest
+       theme's picture of that type (mine → cave, temple → barrow, fort → banditcamp …), then a related type
+       (elite → fight, boss → elite), then the old drawing. Painted so far: cave, barrow, dwemer (all 7), mine (fight).
      bs-<scene>               1480×680   painted battle-scene backdrops (floor at 80%), with bsf-<strip> foreground strips and
      bsf-… bsp-…                         bsp-<prop> transparent props/lights; placed by bscdata.js, drawn by battlescene.js.
                                          Import a new scene pack with scripts/import_battlescenes.py <pack folder>
@@ -32,6 +37,7 @@
        stalhrim/skyforge-steel swords, war axes, greatswords, battleaxes, daggers, maces, bows, crossbows, staffs.
 
    API: ASSETS.img(key) → a loaded HTMLImageElement or null (asks for the file the first time).
+        ASSETS.state(key) → "ok" | "loading" | "none" (asks for the file the first time).
         ASSETS.url(key) → its URL or "" · ASSETS.placeKey(name) · ASSETS.biomeKey(name) · ASSETS.foeKey(name, kind)
         ASSETS.cover(g, img, w, h) draws an image to fill w×h. ASSETS.on(fn) runs fn when any picture arrives.
    Under browser automation nothing is fetched unless the URL has ?assets (keeps tests quiet). */
@@ -78,6 +84,7 @@ const ASSETS = (() => {
   }
   const img = (key) => { if (!key) return null; const r = load(key); return r.st === "ok" ? r.img : null; };
   const url = (key) => { const r = load(key); return r.st === "ok" ? r.url : ""; };
+  const stateOf = (key) => (key ? load(key).st : "none");
   /* tests and the coordinator can hand pictures in directly */
   function provide(key, src) {
     const rec = { st: "loading", img: null, url: "" }; state.set(key, rec);
@@ -166,5 +173,5 @@ const ASSETS = (() => {
 
   const loading = (i) => img(`bg-loading-${1 + (Math.abs(i | 0) % 4)}`);
   const status = () => [...state].map(([k, r]) => [k, r.st]);
-  return { img, url, provide, on, enable, placeKey, biomeKey, foeKey, cover, loading, status, slug, CSS_KEYS, get pending() { return pending; } };
+  return { img, url, state: stateOf, provide, on, enable, placeKey, biomeKey, foeKey, cover, loading, status, slug, CSS_KEYS, get pending() { return pending; } };
 })();
