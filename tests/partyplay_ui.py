@@ -16,7 +16,7 @@ async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch(executable_path=__import__("os").environ.get("CHROME") or ("/usr/bin/google-chrome" if __import__("os").path.exists("/usr/bin/google-chrome") else None), args=["--no-sandbox"])
         errs = []
-        for style in ["ink", "pixel"]:
+        for style in ["ink"]:
             ctx = await b.new_context(viewport={"width": 412, "height": 915}, device_scale_factor=2)
             await ctx.add_init_script(f"localStorage.setItem('rotn_prefs', JSON.stringify({{artStyle:'{style}'}}))")
             async def phone(tag, name):

@@ -69,6 +69,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Smart AI combat (default; custom tactics optional), crafting mini-games, motion design (63)
 
 ## In progress (write your name before you start)
+- Claude: pixel art removed (one hand-drawn style): Settings row gone (old pixel saves load as hand-drawn), pixel branches in art.js and every *art.js, pixel CSS and pixel test variants deleted. Branch claude/nopixel.
 - Claude: Polish sweep (i18n_sweep.js): canvas words in the fight picture, minigames and map labels go through the translator; fight log lines, foe and spell names, leftover toasts in Polish; tests/test_polishsweep.js. Branch claude/polish-sweep.
 - Claude: fear and foe-heal limits (foecap.js): Battle Cry / Dismay / fear / calm hold bosses 2 turns (3 a fight) and elites 3 (5 a fight), then they stay rattled (softer blows); foe healing capped at 65% health, 35% a fight, 3-turn rest; Aspect of Terror +1 turn on big foes; tests/test_balfear.js sim. Branch claude/balance-fear.
 - Claude: Area tab as a place + tidy Map panel (areaui.js, mappanel.js): town places grouped into tiles (Inn, Market, Services & trainers, Work & jobs, Your home, Events & fun) with live status and a Right now strip, back button + neighbour tabs inside a place; one merged and sorted "What to do next" card on the Map; place filters. Branch claude/areaui.
@@ -109,6 +110,7 @@ our own marked [OURS]; plain-language UI; phone first.
 ## Standing rules
 - Perk trees grow with the game: every new system (gathering, magic, encounters, crafting, party play...) adds or adjusts perks with real effects in the matching trees (perkfx.js), keeping old perk ids and a clean star layout.
 - Party size up to 8 players.
+- One art style: hand-drawn (pixel art was removed on 24 Nov 2026).
 
 ## Next rounds (in order)
 1. Ideas offered: favourites wheel, Dragon Shouts from word walls, werewolf/vampire paths, weather that matters.

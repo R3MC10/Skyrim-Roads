@@ -93,11 +93,10 @@ async def main():
         t = await pg.evaluate("TABMENU.task(__dbg.save())"); print("task", t); ok(t["k"] == "trip" and "Riverwood" in t["text"], "task shows the trip")
         bt = await pg.evaluate("document.querySelector('#tw .tw-task').innerText"); ok("Riverwood" in bt, "bar shows the trip")
         await pg.screenshot(path=OUT + "hub_trip.png")
-        # pixel style
-        await pg.evaluate("TABMENU.closeHub(); ART.setStyle('pixel'); TABMENU.openHub()"); await pg.wait_for_timeout(900); await pg.evaluate(clear)
-        await pg.screenshot(path=OUT + "hub_pixel.png")
+        # the star charts from the hub
+        await pg.evaluate("TABMENU.closeHub(); TABMENU.openHub()"); await pg.wait_for_timeout(900); await pg.evaluate(clear)
         await pg.evaluate("TABMENU.go('char')"); await pg.wait_for_timeout(500); await pg.evaluate(clear)
-        await pg.screenshot(path=OUT + "stars_pixel.png")
+        await pg.screenshot(path=OUT + "stars.png")
         # glow while dragging
         await pg.evaluate("TABMENU.openHub()"); await pg.wait_for_timeout(300)
         await pg.mouse.move(206, 500); await pg.mouse.down(); await pg.mouse.move(206, 440); await pg.mouse.move(206, 420)

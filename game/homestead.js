@@ -265,7 +265,7 @@ const HOMESTEAD = (() => {
     return { text: `Your steward has ${d[1]} ${MATS[d[0]][0].toLowerCase()} delivered for ${d[2]} gold.`, fx: "coin" };
   }
 
-  // ---------------------------------------------------------------- pictures (art.js toolkit; pixel style applies too)
+  // ---------------------------------------------------------------- pictures (art.js toolkit)
   const W = 360, HT = 190;
   const LOOKS = {
     lake: { ground: "#8c9a5a", ground2: "#6f7f44", sky: "day", water: "#5f8797", trees: "pine" },
@@ -367,7 +367,7 @@ const HOMESTEAD = (() => {
       if (L.fog) { g.fillStyle = "rgba(220,225,215,.22)"; g.fillRect(0, HT * 0.62, W, 16); g.fillRect(0, HT * 0.8, W, 10); }
       if (L.snow) { g.fillStyle = "#f4f6f8"; const r = H.seeded(pid + "s"); for (let i = 0; i < 40; i++) g.fillRect(r() * W, r() * HT, 1.6, 1.6); }
       if (night) { g.fillStyle = "rgba(20,26,45,.3)"; g.fillRect(0, 0, W, HT); }
-      if (ART.drawingStyle() !== "pixel") { g.fillStyle = "rgba(43,32,22,.85)"; g.fillRect(W / 2 - 85, 7, 170, 18); g.fillStyle = "#e9d7a8"; g.font = "bold 12px Georgia, serif"; g.textAlign = "center"; g.fillText(p.name, W / 2, 20); g.textAlign = "left"; }
+      g.fillStyle = "rgba(43,32,22,.85)"; g.fillRect(W / 2 - 85, 7, 170, 18); g.fillStyle = "#e9d7a8"; g.font = "bold 12px Georgia, serif"; g.textAlign = "center"; g.fillText(p.name, W / 2, 20); g.textAlign = "left";
       g.strokeStyle = "#3b2c1e"; g.lineWidth = 3; g.strokeRect(1.5, 1.5, W - 3, HT - 3);
     };
     const extra = (h?.rooms || []).map((r) => XR()?.ROOMS[r]?.[0]).filter(Boolean);

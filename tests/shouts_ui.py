@@ -8,13 +8,13 @@ async def main():
         def ok(v, m):
             print(("ok   " if v else "FAIL ") + m)
             if not v: bad.append(m)
-        for style in ["ink", "pixel"]:
+        for style in ["ink"]:
             ctx = await b.new_context(viewport={"width": 412, "height": 915}, device_scale_factor=2)
             pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
             await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=sh{style}"); await pg.wait_for_timeout(1800)
             await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Dovah"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
             clr = "document.querySelectorAll('#modal').forEach(m=>m.remove())"
-            await pg.evaluate(f"()=>{{ART.setStyle('{style}'); if (typeof POLISH!=='undefined') POLISH.texture();}}")
+            await pg.evaluate(f"()=>{{if (typeof POLISH!=='undefined') POLISH.texture();}}")
             await pg.evaluate("""()=>{const S=window.__dbg.save(); S.souls=2; S.location='High Hrothgar'; POWERS.greybeards(S);
                 for (const n of ['Folgunthur','Skyborn Altar']) SHOUTS2.readWall(S, n); SHOUTS2.takeWall(); SHOUTS2.readWall(S, 'Labyrinthian'); }""")
             # the Word Wall scene

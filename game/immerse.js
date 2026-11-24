@@ -134,7 +134,6 @@ const IMM = (() => {
   function draw(cv) {
     const L = lp; if (!L) return;
     const W = 300, H = 220, g = (typeof FITCANVAS !== "undefined" ? FITCANVAS.fixed(cv, W, H) : cv.getContext("2d")), cx = W / 2, cy = 122;   // sharp at any screen density (fitcanvas.js)
-    const pixel = has("ART") && ART.style() === "pixel";
     g.clearRect(0, 0, W, H);
     const bg = g.createRadialGradient(cx, cy, 10, cx, cy, 160); bg.addColorStop(0, "#2b2722"); bg.addColorStop(1, "#0b0b0c"); g.fillStyle = bg; g.fillRect(0, 0, W, H);
     const sx = L.shake && !reduce() ? (Math.random() - 0.5) * 3 : 0;
@@ -161,7 +160,6 @@ const IMM = (() => {
     g.strokeStyle = "#7a7f84"; g.lineWidth = 6; g.beginPath(); g.moveTo(ex - Math.cos(phi) * 24, ey - Math.sin(phi) * 24); g.lineTo(ex, ey); g.stroke();
     // strain meter
     if (!L.unbreakable) { g.fillStyle = "rgba(255,255,255,.12)"; g.fillRect(20, H - 14, W - 40, 4); g.fillStyle = "#c4572e"; g.fillRect(20, H - 14, (W - 40) * Math.min(1, L.strain / STRAIN), 4); }
-    cv.style.imageRendering = pixel ? "pixelated" : "";
   }
 
   // ====================================================================== quest banners (QUEST STARTED / OBJECTIVE)

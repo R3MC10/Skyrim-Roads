@@ -58,7 +58,7 @@ async def run(p, style, errs):
 async def main():
     errs = []
     async with async_playwright() as p:
-        for style in ["ink", "pixel"]:
+        for style in ["ink"]:
             await run(p, style, errs)
     print("page errors:", errs or "none")
     print("screenshots in", OUT)

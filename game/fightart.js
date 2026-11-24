@@ -2,7 +2,7 @@
    right — that replays the whole fight turn by turn at a natural pace (about a second an action: wind-up, strike,
    impact, recovery). Every weapon swings its own way, every spell has its own effect, with particles, screen shake,
    hit-stop and a slow finishing blow. ⏩ ×1/×2/×4 and Skip to result buttons; tap the scene to skip. Drawn with the shared ART
-   toolkit in the player's art style (hand-drawn ink or pixel art).
+   toolkit (hand-drawn ink).
    It only reads the finished Fight (its log, what was done each turn, start/end health); it never changes a result. [OURS] */
 const FIGHTART = (() => {
   const P = ART.PAL;
@@ -59,7 +59,7 @@ const FIGHTART = (() => {
     return "bandit";
   }
 
-  // ---------------------------------------------------------------- backgrounds (cached per kind, size, style)
+  // ---------------------------------------------------------------- backgrounds (cached per kind and size)
   function drawBg(g, H, w, h, kind, sky) {
     const ground = h * 0.8;
     if (kind === "cave" || kind === "dwemer") {
@@ -96,10 +96,10 @@ const FIGHTART = (() => {
     if (sky) { if (kind !== "snow") SKY.snowCover(g, w, h, ground, sky.snow, kind); SKY.overlay(g, H, w, h, sky, { seed: kind, ground, cover: false, weather: false }); }   // seasons and the light of the hour
   }
   const bgCache = new Map();
-  function bgFor(kind, w, h, style, wagon, sky) {
-    const k = `${kind}|${w}|${h}|${style}|${wagon || ""}|${sky ? sky.key : ""}`;
+  function bgFor(kind, w, h, wagon, sky) {
+    const k = `${kind}|${w}|${h}|${wagon || ""}|${sky ? sky.key : ""}`;
     const draw = (g, H) => { drawBg(g, H, w, h, kind, sky); if (wagon && typeof CARAVANS !== "undefined") { g.save(); g.translate(w * 0.36, h * 0.38); g.globalAlpha = 0.9; CARAVANS.drawWagon(g, H, w * 0.3, h * 0.42, { khajiit: wagon === "khajiit", cover: wagon !== "cart", animal: true }); g.restore(); } };   // a caravan or your cart behind the fight
-    if (!bgCache.has(k)) { if (bgCache.size > 12) bgCache.delete(bgCache.keys().next().value); bgCache.set(k, ART.canvas(w, h, draw, { style, block: 3 })); }
+    if (!bgCache.has(k)) { if (bgCache.size > 12) bgCache.delete(bgCache.keys().next().value); bgCache.set(k, ART.canvas(w, h, draw)); }
     return bgCache.get(k);
   }
 
@@ -673,16 +673,15 @@ const FIGHTART = (() => {
   function mount(el) {
     const rec = REG.get(+el.dataset.fs); if (!rec || el.firstChild) return;
     const W = Math.max(300, Math.min(520, Math.round(el.clientWidth || 330))), Hh = Math.round(W * (rec.f.tbTall ? 0.66 : 0.46));   // the turn-by-turn screen gets a taller stage
-    const style = ART.style(), pixel = style === "pixel", rm = reduce();
+    const rm = reduce();
     const dpr = typeof FITCANVAS !== "undefined" ? Math.min(3, FITCANVAS.ratio(el, W)) : Math.min(2, devicePixelRatio || 1);   // backing pixels per drawing unit: the box on screen × density (sharp on tablets and PCs too)
     const cv = document.createElement("canvas"); cv.width = Math.round(W * dpr); cv.height = Math.round(Hh * dpr);   // CSS scales it to the box (width:100%)
-    if (pixel) cv.style.imageRendering = "pixelated";
     el.appendChild(cv);
     const g = cv.getContext("2d");
-    const k = pixel ? 1 / 3 : dpr;
-    const work = pixel ? Object.assign(document.createElement("canvas"), { width: Math.round(W * k), height: Math.round(Hh * k) }) : cv;
-    const wg = work.getContext("2d");
-    const bg = bgFor(rec.scene, W, Hh, style, rec.wagon, rec.sky);
+    const k = dpr;
+    const work = cv, wg = g;   // one canvas: the stage is drawn straight to the screen
+
+    const bg = bgFor(rec.scene, W, Hh, rec.wagon, rec.sky);
     const wxp = rec.sky ? SKY.particles(rec.sky, W, Hh, { reduce: rm }) : null;   // snow, rain, leaves or fireflies during the replay
     const f = rec.f, beats = beatsOf(f, rec.hero);
     const hp0 = f.hp0 ?? Math.max(1, ...((f.log || []).map((l) => l.hp).filter((v) => v != null)));
@@ -755,7 +754,7 @@ const FIGHTART = (() => {
         const a = -Math.PI / 2 + dir * (0.4 + Math.random() * 0.9), v = (90 + Math.random() * 170) * s;
         spawn(kind === "ash" ? 2 : 3, i % 3 ? c0 : c1, x, y, Math.cos(a) * v * (kind === "ash" ? 0.4 : 1), Math.sin(a) * v * (kind === "ash" ? 0.4 : 1), 0.5 + Math.random() * 0.4, kind === "blood" ? 1.6 + Math.random() * 1.4 : 2.2, kind === "ash" ? -10 : 420);
       }
-      if (kind === "blood" && !pixel) spawn(2, c1, x, y, dir * 30 * s, -10 * s, 0.6, 4, 0);   // a fine red mist
+      if (kind === "blood") spawn(2, c1, x, y, dir * 30 * s, -10 * s, 0.6, 4, 0);   // a fine red mist
       if (kind === "oil") burst(x, y, 6, 1, COL.spark, 200 * s, 0.3, 2, 260);
     }
     const TIP = { dagger: [10, -8], sword: [20, -20], greatsword: [28, -28], axe: [19, -16], battleaxe: [28, -22], mace: [16, -16], warhammer: [18, -18], spear: [32, -30], club: [18, -24], staff: [10, -32], fist: [0, 0] };
@@ -1000,12 +999,12 @@ const FIGHTART = (() => {
       poses(b, m, u, st, tt);
       // camera
       const sh = rm ? 0 : shake, z = zoom, ox = (sh ? (Math.random() - 0.5) * sh * 2 : 0) + (CFX && !rm ? CFX.pan(camF * W, z, W, zcx) : 0), oy = (sh ? (Math.random() - 0.5) * sh * 2 : 0) + (CFX && !rm ? CFX.pan(heroChest, z, Hh, zcy) : 0);
-      wg.setTransform(1, 0, 0, 1, 0, 0); wg.imageSmoothingEnabled = !pixel;
+      wg.setTransform(1, 0, 0, 1, 0, 0); wg.imageSmoothingEnabled = true;
       if (z !== 1 || sh) { wg.fillStyle = "#1c2128"; wg.fillRect(0, 0, work.width, work.height); }
       const sc = k * z, tx = (ox + zcx - zcx * z) * k, ty = (oy + zcy - zcy * z) * k;
       wg.setTransform(sc, 0, 0, sc, tx, ty);
       const art = rec.art && typeof BSCENE !== "undefined" ? BSCENE.ready(rec.art) : null;   // [OURS] the painted scene once its pictures are in, else the drawn one
-      const artO = art ? { W, Hh, t: rm ? 0 : tt, ox, sky: rec.sky, wagon: rec.wagon, style } : null;
+      const artO = art ? { W, Hh, t: rm ? 0 : tt, ox, sky: rec.sky, wagon: rec.wagon } : null;
       if (art) BSCENE.back(wg, art, artO); else wg.drawImage(bg, 0, 0, W, Hh);
       if (cv.dataset.bs !== (art ? rec.art : "")) cv.dataset.bs = art ? rec.art : "";   // which painted scene is on (screen tests)
       // a rune waiting on the ground, a portal
@@ -1128,7 +1127,7 @@ const FIGHTART = (() => {
       };
       if (dk === "decap") {   // the body (below the neck) goes down...
         wg.save(); wg.beginPath(); wg.rect(-300, NECK, 600, 400); wg.clip(); drawFoe(); wg.restore();
-        if (!pixel || true) { wg.save(); wg.fillStyle = bleed[1]; wg.beginPath(); wg.ellipse(0, NECK + 1, 4 * fSize, 1.6, 0, 0, 7); wg.fill(); wg.restore(); }
+        wg.save(); wg.fillStyle = bleed[1]; wg.beginPath(); wg.ellipse(0, NECK + 1, 4 * fSize, 1.6, 0, 0, 7); wg.fill(); wg.restore();
       } else drawFoe();
       wg.filter = "none";
       wg.restore();
@@ -1162,33 +1161,31 @@ const FIGHTART = (() => {
       projX = -1;
       if (boltOn) bolt();
       // shockwave ring
-      if (beamT < 1) { wg.save(); additive(); wg.globalAlpha = (1 - beamT) * 0.85; wg.strokeStyle = beamC; wg.lineWidth = Math.max(pixel ? 3 : 2, 5 * (1 - beamT)) * s; wg.beginPath(); wg.moveTo(hx0 + 8 * s, groundY - 44 * s); wg.quadraticCurveTo((hx0 + allyX()) / 2, groundY - 70 * s, allyX(), groundY - 36 * s); wg.stroke(); wg.restore(); }   // [spellbook] support beam, colour by element
-      if (ringT < 1) { wg.save(); additive(); wg.globalAlpha = (1 - ringT) * 0.8; wg.strokeStyle = ringC; wg.lineWidth = Math.max(pixel ? 3 : 2, 6 * (1 - ringT)) * s; wg.beginPath(); wg.ellipse(ringX, groundY, 70 * s * EASE.out(ringT), 14 * s * EASE.out(ringT), 0, 0, 7); wg.stroke(); wg.restore(); }
+      if (beamT < 1) { wg.save(); additive(); wg.globalAlpha = (1 - beamT) * 0.85; wg.strokeStyle = beamC; wg.lineWidth = Math.max(2, 5 * (1 - beamT)) * s; wg.beginPath(); wg.moveTo(hx0 + 8 * s, groundY - 44 * s); wg.quadraticCurveTo((hx0 + allyX()) / 2, groundY - 70 * s, allyX(), groundY - 36 * s); wg.stroke(); wg.restore(); }   // [spellbook] support beam, colour by element
+      if (ringT < 1) { wg.save(); additive(); wg.globalAlpha = (1 - ringT) * 0.8; wg.strokeStyle = ringC; wg.lineWidth = Math.max(2, 6 * (1 - ringT)) * s; wg.beginPath(); wg.ellipse(ringX, groundY, 70 * s * EASE.out(ringT), 14 * s * EASE.out(ringT), 0, 0, 7); wg.stroke(); wg.restore(); }
       // claw marks
-      if (Math.abs(claw) > 0.05) { const cx = claw < 0 ? fx0 : hx0, a = Math.abs(claw); wg.save(); wg.globalAlpha = a; wg.strokeStyle = "#fff6e0"; wg.lineWidth = Math.max(pixel ? 3 : 1.6, 2.4 * s); for (let i = -1; i <= 1; i++) { wg.beginPath(); wg.moveTo(cx - 12 * s + i * 7 * s, heroChest - 18 * s); wg.lineTo(cx + 8 * s + i * 7 * s, heroChest + 12 * s); wg.stroke(); } wg.restore(); }
+      if (Math.abs(claw) > 0.05) { const cx = claw < 0 ? fx0 : hx0, a = Math.abs(claw); wg.save(); wg.globalAlpha = a; wg.strokeStyle = "#fff6e0"; wg.lineWidth = Math.max(1.6, 2.4 * s); for (let i = -1; i <= 1; i++) { wg.beginPath(); wg.moveTo(cx - 12 * s + i * 7 * s, heroChest - 18 * s); wg.lineTo(cx + 8 * s + i * 7 * s, heroChest + 12 * s); wg.stroke(); } wg.restore(); }
       // particles: dust and chunks first, then the glowing ones added on top
       drawParticles();
       // screen flash
       if (flash > 0.01 && !rm) { wg.save(); wg.setTransform(1, 0, 0, 1, 0, 0); wg.globalAlpha = flash; wg.fillStyle = flashC; wg.fillRect(0, 0, work.width, work.height); wg.restore(); }
-      // copy pixel work to the screen
-      if (pixel) { g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = false; g.drawImage(work, 0, 0, cv.width, cv.height); }
       bars();
       // floating numbers and labels (crisp, on the screen canvas)
       g.save(); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.textAlign = "center";
       for (let i = 0; i < NF; i++) if (fl[i] > 0) {
         const pop = Math.min(1, (1 - fl[i]) * 8), sz = Math.round(fsz[i] * (1 + (1 - pop) * 0.5));
-        g.font = pixel ? `bold ${sz}px monospace` : `700 ${sz}px Cinzel, Georgia, serif`; g.globalAlpha = Math.max(0, Math.min(1, fl[i] * 2.5));
+        g.font = `700 ${sz}px Cinzel, Georgia, serif`; g.globalAlpha = Math.max(0, Math.min(1, fl[i] * 2.5));
         g.fillStyle = "#1c2128"; g.fillText(ftx[i], fxs[i] + 1.5, fys[i] + 1.5); g.fillStyle = fcl[i]; g.fillText(ftx[i], fxs[i], fys[i]);
       }
       g.globalAlpha = 1;
-      for (const [nm, tx2, ty2] of mateTags) { g.font = pixel ? "bold 10px monospace" : '600 11px "Barlow Semi Condensed", sans-serif'; const w = g.measureText(nm).width + 10, tx3 = Math.max(w / 2 + 2, Math.min(W - w / 2 - 2, tx2)), ty3 = Math.max(26, ty2); g.fillStyle = "rgba(14,15,18,0.72)"; g.fillRect(tx3 - w / 2, ty3 - 11, w, 15); g.fillStyle = "#c8f0c0"; g.fillText(nm, tx3, ty3 + 0.5); }   // party members' names, crisp in both styles
-      if (label && labelT > 0) { const a = Math.min(1, labelT * 3), sz = pixel ? 16 : 20; g.globalAlpha = a; g.font = pixel ? `bold ${sz}px monospace` : `700 ${sz}px Cinzel, Georgia, serif`; const y = Hh * 0.25 - (1 - a) * 8; g.fillStyle = "rgba(28,33,40,0.7)"; const w = g.measureText(label).width + 18; g.fillRect(W / 2 - w / 2, y - sz + 2, w, sz + 8); g.fillStyle = labelC; g.fillText(label, W / 2, y); }
+      for (const [nm, tx2, ty2] of mateTags) { g.font = '600 11px "Barlow Semi Condensed", sans-serif'; const w = g.measureText(nm).width + 10, tx3 = Math.max(w / 2 + 2, Math.min(W - w / 2 - 2, tx2)), ty3 = Math.max(26, ty2); g.fillStyle = "rgba(14,15,18,0.72)"; g.fillRect(tx3 - w / 2, ty3 - 11, w, 15); g.fillStyle = "#c8f0c0"; g.fillText(nm, tx3, ty3 + 0.5); }   // party members' names, crisp in both styles
+      if (label && labelT > 0) { const a = Math.min(1, labelT * 3), sz = 20; g.globalAlpha = a; g.font = `700 ${sz}px Cinzel, Georgia, serif`; const y = Hh * 0.25 - (1 - a) * 8; g.fillStyle = "rgba(28,33,40,0.7)"; const w = g.measureText(label).width + 18; g.fillRect(W / 2 - w / 2, y - sz + 2, w, sz + 8); g.fillStyle = labelC; g.fillText(label, W / 2, y); }
       g.restore();
       // end banner
-      if (phase === "end" || (phase === "fall" && phaseT > 0.6)) { const a = phase === "end" ? 1 : Math.min(1, (phaseT - 0.6) * 2.5); g.save(); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.globalAlpha = a; g.font = pixel ? "bold 16px monospace" : "700 18px Cinzel, Georgia, serif"; g.textAlign = "center"; const txt = L(won ? (turned ? "They flee" : "Victory") : "Defeated"), bw2 = Math.max(120, g.measureText(txt).width + 24); const by = Hh * 0.93; g.fillStyle = "rgba(28,33,40,0.6)"; g.fillRect(W / 2 - bw2 / 2, by - 15, bw2, 21); g.fillStyle = won ? P.gold : "#ff8a7a"; g.fillText(txt, W / 2, by + 1); g.restore(); }
+      if (phase === "end" || (phase === "fall" && phaseT > 0.6)) { const a = phase === "end" ? 1 : Math.min(1, (phaseT - 0.6) * 2.5); g.save(); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.globalAlpha = a; g.font = "700 18px Cinzel, Georgia, serif"; g.textAlign = "center"; const txt = L(won ? (turned ? "They flee" : "Victory") : "Defeated"), bw2 = Math.max(120, g.measureText(txt).width + 24); const by = Hh * 0.93; g.fillStyle = "rgba(28,33,40,0.6)"; g.fillRect(W / 2 - bw2 / 2, by - 15, bw2, 21); g.fillStyle = won ? P.gold : "#ff8a7a"; g.fillText(txt, W / 2, by + 1); g.restore(); }
       if (!done) { PERF[perfN % PERF.length] = performance.now() - t0; perfN++; }
     }
-    const additive = () => { if (!pixel) wg.globalCompositeOperation = "lighter"; };
+    const additive = () => { wg.globalCompositeOperation = "lighter"; };
     let sunG = null; const sunGrad = () => { if (!sunG) { sunG = wg.createLinearGradient(0, 0, 0, groundY); sunG.addColorStop(0, "rgba(255,242,160,0)"); sunG.addColorStop(0.5, "rgba(255,242,160,0.8)"); sunG.addColorStop(1, "rgba(255,255,255,1)"); } return sunG; };
     function drawParticles() {
       if (!alive) return;
@@ -1199,7 +1196,6 @@ const FIGHTART = (() => {
           if (pl[i] <= 0) continue; const ty = pt[i], glow = ty === 0 || ty === 1 || ty === 4; if (glow !== (pass === 1)) continue;
           const a = pl[i] / pm[i], sz = ps[i] * s;
           wg.globalAlpha = ty === 2 ? a * 0.45 : Math.min(1, a * 1.3);
-          if (pixel) { const q = Math.max(3, Math.round(sz * (ty === 2 ? 1 : 1.2) / 3) * 3); wg.fillStyle = pc[i]; wg.fillRect(Math.round(px[i] / 3) * 3, Math.round(py[i] / 3) * 3, q, q); continue; }
           if (ty === 1) { wg.strokeStyle = pc[i]; wg.lineWidth = Math.max(1, sz * 0.6); wg.beginPath(); wg.moveTo(px[i], py[i]); wg.lineTo(px[i] - pvx[i] * 0.04, py[i] - pvy[i] * 0.04); wg.stroke(); }
           else if (ty === 0 || ty === 4) { const r = sz * 3; wg.drawImage(glowSprite(pc[i]), px[i] - r, py[i] - r, r * 2, r * 2); }
           else { wg.fillStyle = pc[i]; if (ty === 3) wg.fillRect(px[i] - sz / 2, py[i] - sz / 2, sz, sz); else { wg.beginPath(); wg.arc(px[i], py[i], sz, 0, 6.283); wg.fill(); } }
@@ -1209,14 +1205,14 @@ const FIGHTART = (() => {
     }
     function trail(kind, a, power) {
       wg.save(); additive(); wg.globalAlpha = a; wg.strokeStyle = power ? "#ffe0a0" : trailC; wg.lineCap = "round"; wg.lineJoin = "round";
-      for (let i = 1; i < trN; i++) { wg.lineWidth = Math.max(pixel ? 3 : 1, (kind === "wide" ? 7 : kind === "stab" ? 3 : 5) * s * (i / trN)); wg.beginPath(); wg.moveTo(TR[(i - 1) * 2], TR[(i - 1) * 2 + 1]); wg.lineTo(TR[i * 2], TR[i * 2 + 1]); wg.stroke(); }
+      for (let i = 1; i < trN; i++) { wg.lineWidth = Math.max(1, (kind === "wide" ? 7 : kind === "stab" ? 3 : 5) * s * (i / trN)); wg.beginPath(); wg.moveTo(TR[(i - 1) * 2], TR[(i - 1) * 2 + 1]); wg.lineTo(TR[i * 2], TR[i * 2 + 1]); wg.stroke(); }
       wg.restore();
     }
     function projectile() {
       wg.save();
       if (projType === "arrow" || projType === "bolt") {
         const len = (projType === "bolt" ? 12 : 18) * s, d = -projSide;
-        wg.strokeStyle = P.ink; wg.lineWidth = Math.max(pixel ? 3 : 1, 2.4 * s * 0.7); wg.beginPath(); wg.moveTo(projX + d * len, projY + (projType === "arrow" ? (projP - 0.5) * 4 * s : 0)); wg.lineTo(projX, projY); wg.stroke();
+        wg.strokeStyle = P.ink; wg.lineWidth = Math.max(1, 2.4 * s * 0.7); wg.beginPath(); wg.moveTo(projX + d * len, projY + (projType === "arrow" ? (projP - 0.5) * 4 * s : 0)); wg.lineTo(projX, projY); wg.stroke();
         wg.fillStyle = P.steel; wg.beginPath(); wg.moveTo(projX - d * 4 * s, projY); wg.lineTo(projX + d * 1, projY - 3 * s); wg.lineTo(projX + d * 1, projY + 3 * s); wg.fill();
         wg.fillStyle = "#e9dcc0"; wg.fillRect(projX + d * len - 2 * s, projY - 2 * s, 3 * s, 4 * s);
       } else if (projType === "spell") {
@@ -1224,9 +1220,8 @@ const FIGHTART = (() => {
         additive();
         if (projEl === "frost") { wg.fillStyle = "#e8f8ff"; for (let i = 0; i < 3; i++) { const ox = -projSide * i * 9 * s, oy = (i - 1) * 4 * s; wg.beginPath(); wg.moveTo(projX + ox + projSide * 7 * s, projY + oy); wg.lineTo(projX + ox, projY + oy - 2.5 * s); wg.lineTo(projX + ox - projSide * 5 * s, projY + oy); wg.lineTo(projX + ox, projY + oy + 2.5 * s); wg.fill(); } }
         const r = (projEl === "fire" ? 11 : 8) * s; wg.drawImage(glowSprite(c[0]), projX - r * 1.6, projY - r * 1.6, r * 3.2, r * 3.2);
-        if (pixel) { wg.fillStyle = c[0]; wg.fillRect(Math.round((projX - 4) / 3) * 3, Math.round((projY - 4) / 3) * 3, 9, 9); wg.fillStyle = "#fff"; wg.fillRect(Math.round((projX - 1) / 3) * 3, Math.round((projY - 1) / 3) * 3, 3, 3); }
       } else if (projType === "wave") {   // Fus Ro Dah: rings rolling forward
-        wg.strokeStyle = "#5f8797"; wg.lineWidth = Math.max(pixel ? 3 : 1.5, 3.4 * s);
+        wg.strokeStyle = "#5f8797"; wg.lineWidth = Math.max(1.5, 3.4 * s);
         for (let i = 0; i < 3; i++) { const q = projP - i * 0.18; if (q < 0) continue; wg.globalAlpha = 0.8 * (1 - q); const x = projX - projSide * i * 22 * s; wg.beginPath(); wg.arc(x - projSide * 20 * s, projY, (14 + q * 26) * s, -0.9, 0.9); if (projSide < 0) { wg.beginPath(); wg.arc(x + 20 * s, projY, (14 + q * 26) * s, Math.PI - 0.9, Math.PI + 0.9); } wg.stroke(); }
       }
       wg.restore();
@@ -1234,14 +1229,14 @@ const FIGHTART = (() => {
     function bolt() {
       wg.save(); additive(); wg.lineJoin = "round";
       for (let pass = 0; pass < 2; pass++) {
-        wg.strokeStyle = pass ? "#ffffff" : boltC; wg.lineWidth = Math.max(pixel ? 3 : 1, (pass ? 1.2 : 4) * s); wg.globalAlpha = pass ? 1 : 0.7;
+        wg.strokeStyle = pass ? "#ffffff" : boltC; wg.lineWidth = Math.max(1, (pass ? 1.2 : 4) * s); wg.globalAlpha = pass ? 1 : 0.7;
         wg.beginPath(); wg.moveTo(BOLT[0], BOLT[1]); for (let i = 1; i < 24; i++) wg.lineTo(BOLT[i * 2], BOLT[i * 2 + 1]); wg.stroke();
         wg.beginPath(); wg.moveTo(FORK[0], FORK[1]); for (let i = 1; i < 10; i++) wg.lineTo(FORK[i * 2], FORK[i * 2 + 1]); wg.stroke();   // the chain branching off
       }
       wg.restore();
     }
     function hexWard(x, y, a, tt) {
-      wg.save(); additive(); wg.strokeStyle = "#9fd0f0"; wg.lineWidth = Math.max(pixel ? 3 : 1, 1.4 * s);
+      wg.save(); additive(); wg.strokeStyle = "#9fd0f0"; wg.lineWidth = Math.max(1, 1.4 * s);
       for (let r = -2; r <= 2; r++) for (let c = 0; c < 2; c++) {
         const hy = y + r * 11 * s, hx = x + c * 9 * s - Math.abs(r) * 3 * s, R6 = 6 * s; wg.globalAlpha = a * (0.45 + 0.35 * Math.sin(tt * 5 + r + c * 2));
         wg.beginPath(); for (let i = 0; i < 6; i++) { const an = i * 1.047; i ? wg.lineTo(hx + Math.cos(an) * R6, hy + Math.sin(an) * R6) : wg.moveTo(hx + R6, hy); } wg.closePath(); wg.stroke();
@@ -1251,22 +1246,21 @@ const FIGHTART = (() => {
     function orbit(x, y, cols, tt) {
       wg.save(); additive();
       for (let i = 0; i < 8; i++) { const an = tt * 3 + i * 0.785, ox = Math.cos(an) * 22 * s, oy = Math.sin(an) * 34 * s * 0.6 + Math.sin(tt * 2 + i) * 6 * s, r = (Math.sin(an) > 0 ? 5 : 3.5) * s;
-        if (pixel) { wg.fillStyle = cols[i % cols.length]; wg.fillRect(Math.round((x + ox) / 3) * 3, Math.round((y + oy) / 3) * 3, 6, 6); }
-        else wg.drawImage(glowSprite(cols[i % cols.length]), x + ox - r * 2, y + oy - r * 2, r * 4, r * 4); }
+        wg.drawImage(glowSprite(cols[i % cols.length]), x + ox - r * 2, y + oy - r * 2, r * 4, r * 4); }
       wg.restore();
     }
     function crackle(x, y, c, tt) {
-      wg.save(); additive(); wg.strokeStyle = c; wg.lineWidth = Math.max(pixel ? 3 : 1, 1.4 * s); wg.globalAlpha = 0.8;
+      wg.save(); additive(); wg.strokeStyle = c; wg.lineWidth = Math.max(1, 1.4 * s); wg.globalAlpha = 0.8;
       for (let i = 0; i < 4; i++) { const an = tt * 7 + i * 1.6, r = 18 * s; let ax = x + Math.cos(an) * r, ay = y + Math.sin(an) * r * 1.4; wg.beginPath(); wg.moveTo(ax, ay); for (let j = 0; j < 3; j++) { ax += (Math.random() - 0.5) * 10 * s; ay += (Math.random() - 0.5) * 10 * s; wg.lineTo(ax, ay); } wg.stroke(); }
       wg.restore();
     }
     function swirl(x, y, c, tt) {
-      wg.save(); additive(); wg.strokeStyle = c; wg.lineWidth = Math.max(pixel ? 3 : 1, 1.6 * s); wg.globalAlpha = 0.75;
+      wg.save(); additive(); wg.strokeStyle = c; wg.lineWidth = Math.max(1, 1.6 * s); wg.globalAlpha = 0.75;
       for (let i = 0; i < 2; i++) { wg.beginPath(); for (let j = 0; j < 14; j++) { const an = tt * 4 + i * Math.PI + j * 0.45, r = j * 1.2 * s; const X = x + Math.cos(an) * r, Y = y + Math.sin(an) * r * 0.5; j ? wg.lineTo(X, Y) : wg.moveTo(X, Y); } wg.stroke(); }
       wg.restore();
     }
     function rune(x, y, c, tt) {
-      wg.save(); additive(); wg.strokeStyle = c; wg.lineWidth = Math.max(pixel ? 3 : 1, 1.6 * s); wg.globalAlpha = 0.55 + 0.25 * Math.sin(tt * 4);
+      wg.save(); additive(); wg.strokeStyle = c; wg.lineWidth = Math.max(1, 1.6 * s); wg.globalAlpha = 0.55 + 0.25 * Math.sin(tt * 4);
       wg.beginPath(); wg.ellipse(x, y - 1, 22 * s, 5 * s, 0, 0, 7); wg.stroke();
       wg.beginPath(); for (let i = 0; i < 5; i++) { const an = i * 2.513 - 1.57; const X = x + Math.cos(an) * 18 * s, Y = y - 1 + Math.sin(an) * 4 * s; i ? wg.lineTo(X, Y) : wg.moveTo(X, Y); } wg.closePath(); wg.stroke();
       wg.restore();
@@ -1274,26 +1268,27 @@ const FIGHTART = (() => {
     function portal(x, y, a, tt) {
       if (a <= 0) return;
       wg.save(); additive(); wg.globalAlpha = a;
-      for (let i = 0; i < 3; i++) { wg.strokeStyle = COL.summon[i % 2]; wg.lineWidth = Math.max(pixel ? 3 : 1, (3 - i) * s); wg.beginPath(); wg.ellipse(x, y - 30 * s, (14 - i * 3) * s, (30 - i * 6) * s, Math.sin(tt * 2 + i) * 0.1, 0, 7); wg.stroke(); }
+      for (let i = 0; i < 3; i++) { wg.strokeStyle = COL.summon[i % 2]; wg.lineWidth = Math.max(1, (3 - i) * s); wg.beginPath(); wg.ellipse(x, y - 30 * s, (14 - i * 3) * s, (30 - i * 6) * s, Math.sin(tt * 2 + i) * 0.1, 0, 7); wg.stroke(); }
       wg.drawImage(glowSprite("#a07aff"), x - 26 * s, y - 56 * s, 52 * s, 52 * s);
       wg.restore();
     }
     function rays(x, y, p) {
-      wg.save(); additive(); wg.strokeStyle = "#fff2a0"; wg.globalAlpha = 0.7 * (1 - p); wg.lineWidth = Math.max(pixel ? 3 : 1, 2 * s);
+      wg.save(); additive(); wg.strokeStyle = "#fff2a0"; wg.globalAlpha = 0.7 * (1 - p); wg.lineWidth = Math.max(1, 2 * s);
       for (let i = 0; i < 10; i++) { const an = i * 0.628, r0 = (10 + p * 30) * s, r1 = (24 + p * 70) * s; wg.beginPath(); wg.moveTo(x + Math.cos(an) * r0, y + Math.sin(an) * r0); wg.lineTo(x + Math.cos(an) * r1, y + Math.sin(an) * r1); wg.stroke(); }
       wg.restore();
     }
     function bars() {
       g.save(); g.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const bw = W * 0.38, bh = pixel ? 8 : 7, y = 10;
+      const bw = W * 0.38, bh = 7, y = 10;
       const bar = (x, v, lag, max, col, name, right) => {
         g.fillStyle = "rgba(28,33,40,0.75)"; g.fillRect(x - 1, y - 1, bw + 2, bh + 2);
         const fr = (q) => Math.max(0, Math.min(1, q / max)) * bw;
         const wl = fr(lag), ww = fr(v);
         g.fillStyle = "#f4efe0"; g.fillRect(right ? x + bw - wl : x, y, wl, bh);   // what you just lost, draining a moment later
         g.fillStyle = col; g.fillRect(right ? x + bw - ww : x, y, ww, bh);
-        g.strokeStyle = P.gold; g.lineWidth = 1; if (!pixel) g.strokeRect(x - 0.5, y - 0.5, bw + 1, bh + 1);
-        g.font = pixel ? "bold 11px monospace" : "600 12px Cinzel, Georgia, serif"; g.textAlign = right ? "right" : "left"; g.textBaseline = "top";
+        g.strokeStyle = P.gold; g.lineWidth = 1; g.strokeRect(
+x - 0.5, y - 0.5, bw + 1, bh + 1);
+        g.font = "600 12px Cinzel, Georgia, serif"; g.textAlign = right ? "right" : "left"; g.textBaseline = "top";
         g.fillStyle = "#1c2128"; g.fillText(name, (right ? x + bw : x) + 1, y + bh + 4); g.fillStyle = "#fbf3dc"; g.fillText(name, right ? x + bw : x, y + bh + 3);
       };
       bar(8, hpD, Math.max(hpL, hpD), hpMax, "#c0392b", L("You"), false);
@@ -1306,7 +1301,7 @@ const FIGHTART = (() => {
           const txt = `${ICO[k][0]}${st[k]}`, w = 26, cx = right ? x - off - w : x + off;
           g.fillStyle = "rgba(20,22,26,0.78)"; g.fillRect(cx, y + bh + 20, w, 15);
           g.strokeStyle = ICO[k][1]; g.lineWidth = 1; g.strokeRect(cx + 0.5, y + bh + 20.5, w - 1, 14);
-          g.font = pixel ? "bold 10px monospace" : "600 10px sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillStyle = ICO[k][1];
+          g.font = "600 10px sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillStyle = ICO[k][1];
           g.fillText(txt, cx + w / 2, y + bh + 28);
           off += w + 3;
         }

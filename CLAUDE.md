@@ -25,7 +25,7 @@ Every merge to `main` builds a new APK release; phones that already have build 6
 ## Standing rules (from Remigiusz)
 - Plain, informal language for players. No mention of Fallout.
 - Followers and horses get knocked down, never die. The forge consumes materials.
-- Menus look like Skyrim + SkyUI. Both art styles (hand-drawn ink and pixel) must work.
+- Menus look like Skyrim + SkyUI. One art style: hand-drawn (pixel art was removed on 24 Nov 2026).
 - **Perk trees grow with the game:** every new system adds or adjusts perks with *real* effects (`perkfx.js`), keeping old perk ids.
 - Parties hold up to **8 players**; followers don't count. In a party only the leader makes choices; loot is voted at the end of a dungeon, gold split evenly.
 - Balance with sims; fights shouldn't end too quickly; no one-shots on strong foes.

@@ -21,8 +21,7 @@ async def main():
         await pg.evaluate("""()=>{const S=window.__dbg.save(); S.level=30; for (const k in S.skills) S.skills[k].lvl=60;
           S.spells=["flames","firebolt","ice_spike","lightning_bolt","healing","oakflesh","fear","conjure_familiar","flame_cloak","calm"];
           S.perks={armsman:2,bladesman:1,augmented_flames:1,novice_destruction:1}; }""")
-        for style in ["ink", "pixel"]:
-            if style == "pixel": await pg.evaluate("ART.setStyle('pixel')")
+        for style in ["ink"]:
             for sp, name, cls in [("firebolt", "Firebolt", "nv-fire"), ("ice_spike", "Ice Spike", "nv-frost"), ("lightning_bolt", "Lightning Bolt", "nv-shock"), ("healing", "Healing", "nv-heal"), ("oakflesh", "Oakflesh", "nv-buff"), ("fear", "Fear", "nv-debuff")]:
                 await pg.evaluate(clear)
                 await pg.evaluate("__ui.openMenu('magic')"); await pg.wait_for_timeout(300)

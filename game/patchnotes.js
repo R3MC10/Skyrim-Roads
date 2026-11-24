@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b143-nopixel", build: 143, date: "24 Nov 2026", title: "One art style: hand-drawn", items: [
+      "The pixel-art look is gone. The game now has one style, the hand-drawn one, so every picture, menu and fight gets the full care.",
+      "If you had pixel art switched on, you'll just see the hand-drawn look next time you open the game. Nothing else changes, and your save is untouched.",
+      "The Art style row is gone from Settings.",
+    ] },
     { id: "b141-polishsweep", build: 141, date: "24 Nov 2026", title: "More of the game in Polish", items: [
       "Playing in Polish? The fight picture now speaks it too: Ty, Uciekają, Zwycięstwo, Pudło, Blok!, critical hits and sneak attacks.",
       "The fight log is in Polish now: who hits for how much, misses, staggers, paralysis, staves, potions and spells.",

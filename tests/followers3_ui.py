@@ -11,7 +11,7 @@ def ok(c, m):
     print(("ok   " if c else "FAIL ") + m)
     if not c: fails.append(m)
 
-HIRE = """(st) => { ART.setStyle(st); const S = window.__dbg.save(); S.gold = 5000; S.level = 24; S.hpBonus = 80; for (const k of ['One-Handed','Heavy Armor','Speechcraft']) S.skills[k].lvl = 50;
+HIRE = """(st) => { const S = window.__dbg.save(); S.gold = 5000; S.level = 24; S.hpBonus = 80; for (const k of ['One-Handed','Heavy Armor','Speechcraft']) S.skills[k].lvl = 50;
   S.trip = null; S.dungeon = null; S.location = 'Riften'; [S.x, S.y] = WORLD.places.Riften; if (!S.follower) TOWNS.hire(S, 'marcurio');
   S.location = 'Whiterun'; [S.x, S.y] = WORLD.places.Whiterun; const f = FOL2.st(S); f.lvl = 26;
   const tome = Object.entries(D.ITEMS).find(([, it]) => it.slot === 'tome' && it.spell === 'fast_healing') || Object.entries(D.ITEMS).find(([, it]) => it.slot === 'tome' && D.SPELLS[it.spell] && D.SPELLS[it.spell].school === 'Restoration');
@@ -26,7 +26,7 @@ async def main():
         kw = {"executable_path": CHROME, "args": ["--no-sandbox"]} if os.path.exists(CHROME) else {}
         b = await p.chromium.launch(**kw)
         errs = []
-        for style in ["ink", "pixel"]:
+        for style in ["ink"]:
             ctx = await b.new_context(viewport={"width": 412, "height": 915}, device_scale_factor=2, has_touch=True)
             await ctx.add_init_script(f"localStorage.setItem('rotn_prefs', JSON.stringify({{artStyle:'{style}',obTips:false}}))")
             pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(style + " " + str(e)))
