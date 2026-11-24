@@ -16,7 +16,6 @@ async def main():
         await pg.screenshot(path="/home/claude/tests/ui_weapons.png")
         await pg.click("[data-act=skytab][data-id=magic]"); await pg.click(".sky-row >> nth=1"); await pg.wait_for_timeout(200)
         await pg.screenshot(path="/home/claude/tests/ui_magic.png")
-        await pg.click("[data-act=skytac]"); await pg.wait_for_timeout(200)
         await pg.click("[data-act=skytab][data-id=skills]"); await pg.click(".sky-row >> nth=0"); await pg.wait_for_timeout(200)
         await pg.screenshot(path="/home/claude/tests/ui_skills.png")
         await pg.click("[data-act=skyclose]"); await pg.click("[data-tab=town]"); await pg.wait_for_timeout(300)

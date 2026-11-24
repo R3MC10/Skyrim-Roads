@@ -214,7 +214,6 @@ const TIP = (() => {
     ["[data-act=perk][data-id]", (el) => "perk:" + el.dataset.id],
     ["[data-act=skinfo][data-id],[data-twa=skill][data-id],[data-twa=starsof][data-id],[data-act=pskill][data-id]", (el) => "skill:" + el.dataset.id],
     ["[data-act=go][data-place],[data-act=qmap][data-place],.cm[data-place]", (el) => (el.dataset.place && !el.dataset.place.startsWith("__") ? "place:" + el.dataset.place : null)],
-    ["[data-act=skytac][data-id],[data-act=skytacx][data-id]", (el) => el.dataset.id],
     [".qhead", (el) => { const c = el.closest(".qcard[id^='q-']"); return c ? "quest:" + c.id.slice(2) : null; }],
     [".fol2head", () => { const s = state(); return s?.follower ? "follower:" + s.follower.id : null; }],
     [".hb.hp", () => "stat:health"], [".hb.mp", () => "stat:magicka"], [".hb.sp", () => "stat:stamina"], [".carry", () => "stat:carry"],
