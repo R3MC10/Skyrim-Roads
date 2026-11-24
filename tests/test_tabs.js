@@ -20,9 +20,9 @@ ok(M.pick("hero")==="hero"&&M.pick("map")==="map"&&M.pick("log")==="log","first 
 M.subnav("diary"); ok(M.pick("hero")==="diary","remembers the last sub-tab");
 M.subnav("world"); ok(M.pick("map")==="world","remembers the map sub-tab");
 // sub-tab rows
-const sn=M.subnav("stats"); ok((sn.match(/data-act="tabgo"/g)||[]).length===8&&/class="on"[^>]*data-id="stats"/.test(sn),"character row "+sn.slice(0,80));
+const sn=M.subnav("stats"); ok((sn.match(/data-act="tabgo"/g)||[]).length===9&&/class="on"[^>]*data-id="stats"/.test(sn),"character row "+sn.slice(0,80));
 ok(M.subnav("log")===""&&M.subnav("town")===""&&M.subnav("social")==="","single screens have no row");
-ok(M.charTabs().map(t=>t[0]).join()==="stars,hero,perks,stats,ach,library,diary,settings","compass Skills page tabs");
+ok(M.charTabs().map(t=>t[0]).join()==="stars,hero,follower,perks,stats,ach,library,diary,settings","compass Skills page tabs");
 // every screen the tabs lead to is one ui.js can draw
 const drawn=new Set(["stars","perks","ach","library","world","settings"]);
 const m=UI_SRC.match(/\\{ \\.\\.\\.mnp, ([^}]+)\\}\\[tab\\]/); ok(m,"renderPanel map found");
