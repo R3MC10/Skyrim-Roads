@@ -1,12 +1,13 @@
 # Homestead rooms (hsrooms.js): build every room, plant the garden, display cases, cellar, a follower moving in,
 # a raid (talked down and fought), and a party member visiting the leader's house. Phone and desktop, both art styles.
-# python -m http.server 9041 --directory game ; PYTHONIOENCODING=utf-8 python tests/hsrooms_ui.py 9041 [screenshot dir]
+# python -m http.server 9041 --directory game ; PYTHONIOENCODING=utf-8 python tests/hsrooms_ui.py 9041 [screenshot dir] [en|pl]
 import asyncio, sys, os, shutil
 from playwright.async_api import async_playwright
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8847"
 OUT = sys.argv[2] if len(sys.argv) > 2 else "."
 os.makedirs(OUT, exist_ok=True)
 SIZES = {"phone": (390, 844), "desktop": (1920, 1080)}
+LANG = sys.argv[3] if len(sys.argv) > 3 else "en"   # "pl": play in Polish (i18n.js + i18n_hsrooms.js)
 
 async def main():
     async with async_playwright() as p:
@@ -15,12 +16,18 @@ async def main():
         bad = []
         for size, (vw, vh) in SIZES.items():
             for style in ("ink", "pixel"):
-                tag = f"{size}_{style}"
+                tag = f"{size}_{style}" + ("_pl" if LANG == "pl" else "")
                 ctx = await b.new_context(viewport={"width": vw, "height": vh}, device_scale_factor=2 if size == "phone" else 1)
                 errs = []
+                if LANG == "pl": await ctx.add_init_script("try{const p=JSON.parse(localStorage.getItem('rotn_prefs')||'{}');p.lang='pl';localStorage.setItem('rotn_prefs',JSON.stringify(p))}catch(e){}")
                 pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
                 await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=hsr{size}{style}"); await pg.wait_for_timeout(1800)
-                await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Builder"); await pg.click("#begin"); await pg.wait_for_timeout(1000)
+                for _ in range(120):   # a busy machine can be slow to show the title and the new-character card
+                    if await pg.query_selector("#nm"): break
+                    for sel in (".mi[data-t=new]", ".press"):   # only the furthest step that's showing
+                        if await pg.query_selector(sel): await pg.evaluate(f"document.querySelector({sel!r})?.click()"); break
+                    await pg.wait_for_timeout(700)
+                await pg.fill("#nm", "Builder"); await pg.click("#begin"); await pg.wait_for_selector("[data-tab=town]", timeout=60000); await pg.wait_for_timeout(1000)
                 await pg.evaluate(f"ART.setStyle('{style}')")
                 ok = lambda c, m: (print(("ok   " if c else "FAIL ") + f"[{tag}] " + m), None if c else bad.append(f"{tag}: {m}"))
                 async def clean(): await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
@@ -52,6 +59,17 @@ async def main():
                 ok(h["small"] and h["hall"] and h["wings"] == ["armory", "kitchen", "trophy"] and sorted(h["rooms"]) == ["cellar", "garden"], f"built hall, 3 wings, garden and cellar {h['wings']} {h['rooms']}")
                 ok(await pg.evaluate("!!document.querySelector('.hs img.art.scene.hsin')"), "cut-open inside picture drawn")
                 await shot("build")
+                # messages and banners stay clear of the screen tabs and the picture on phones
+                for i in range(4):   # the same steps as ui.js toast(): newest line on top of the message log, older ones below
+                    await pg.evaluate(f"""()=>{{let el=document.getElementById('toast'); if(!el){{el=document.createElement('div'); el.id='toast'; el.className='toast'; document.body.appendChild(el);}}
+                       HUD.log(el,'The workers finish a long day number {i} at the homestead.'); el.textContent='The workers finish a long day number {i} at the homestead.'; el.classList.remove('hide');}}""")
+                    await pg.wait_for_timeout(120)
+                cover = await pg.evaluate("""()=>{const l=document.getElementById('hudlog'), t=document.querySelector('.hs .hstabs'); if(!l||!t) return false; const a=l.getBoundingClientRect(), b=t.getBoundingClientRect(); return a.height>0 && a.bottom>b.top && a.top<b.bottom;}""")
+                shown = await pg.evaluate("document.querySelectorAll('#hudlog .hlog').length && [...document.querySelectorAll('#hudlog .hlog')].filter(e=>getComputedStyle(e).display!=='none').length")
+                if size == "phone": ok(not cover and (shown or 0) <= 1, f"messages don't cover the homestead tabs (older lines shown: {shown})")
+                if LANG == "pl":
+                    txt = await pg.evaluate("document.querySelector('div.hs').textContent")
+                    ok("Ogród" in txt and "Piwnica" in txt and "Pomieszczenia" in txt and "These don't use a wing space" not in txt, "build list in Polish")
                 # garden
                 await view("garden")
                 await click("[data-act=hsact][data-id=plant]")
@@ -80,6 +98,9 @@ async def main():
                 await view("home")
                 ok(await pg.evaluate("!!document.querySelector('.hs .card.hsraid [data-id=defend]')"), "raid card with a Defend button")
                 await shot("raid")
+                if LANG == "pl":
+                    txt = await pg.evaluate("document.querySelector('.hs .card.hsraid').textContent")
+                    ok("Napad na dom" in txt and "Broń domu" in txt and "Raid on the house" not in txt, "raid card in Polish")
                 await pg.evaluate("Math.random=()=>0.01")
                 await click("[data-act=hsact][data-id=parley]")
                 ok(await pg.evaluate(f"!{H}.raid"), "talked the bandits down")
@@ -104,6 +125,9 @@ async def main():
                 await click("[data-act=shop][data-id=homestead]")
                 ok(await pg.evaluate("!!document.querySelector('.hs .card.hsguest')"), "party member sees the leader's homestead")
                 await shot("guest")
+                if LANG == "pl":
+                    txt = await pg.evaluate("document.querySelector('.hs .card.hsguest').textContent")
+                    ok("Zagroda: Kacper" in txt and "Odpocznij w łóżku dla gości" in txt, "guest card in Polish")
                 await click("[data-act=hsact][data-id=guestrest]")
                 ok(await pg.evaluate("window.__dbg.save().restBonus>=0.1"), "rested in the guest bed")
                 ok(not await overflow(), "no sideways scrolling")

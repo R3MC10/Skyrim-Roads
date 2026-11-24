@@ -6,7 +6,7 @@ const fs = require("fs"), vm = require("vm");
 const W = process.env.W || __GAME + "";
 const c = { console, Math, Date, JSON, Float64Array, Float32Array, Uint8Array, Int32Array, Uint16Array, Int16Array, Object, Array, Set, Map, Proxy, Number, String };
 vm.createContext(c);
-const files = ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "enchanting.js", "quests.js", "cooking.js", "smithing.js", "ammo.js", "tomes.js", "magic.js", "gather.js", "halls.js", "visits.js", "homestead.js", "hsrooms.js", "mp.js"];
+const files = ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "enchanting.js", "quests.js", "cooking.js", "smithing.js", "ammo.js", "tomes.js", "magic.js", "gather.js", "halls.js", "visits.js", "homestead.js", "hsrooms.js", "mp.js", "patchnotes.js", "i18n_story.js", "i18n_hsrooms.js", "i18n.js"];
 for (const f of files) if (fs.existsSync(W + f)) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
 let fails = 0, n = 0;
 c.ok = (cond, msg) => { n++; if (!cond) { fails++; console.log("FAIL", msg); } else console.log("ok  ", msg); };
@@ -193,6 +193,48 @@ function owner(town = "Falkreath", wings = []) { const s = hero(town), pid = H.B
   X.mount({ party: () => null });
 }
 
+var Rnd2 = (() => { let k = 3; return () => (k = (k * 16807) % 2147483647) / 2147483647; })();
+// ---- Polish: every line on the new screens, raid and guest cards, messages, perks and the patch note has a translation
+{ const tr = (x) => I18N.tr(x);
+  const names = new Set([...Object.values(D.ITEMS).map((i) => i.name), ...Object.values(TOWNS.FOLLOWERS).map((f) => f[0]), ...Object.values(H.PLOTS).flatMap((p) => [p.name, p.town])]);
+  const skip = (x) => !/[a-z]{3}/i.test(x) || names.has(x) || names.has(x.replace(/ ×\\d+$/, "")) || /^[\\d×\\s·/:.,()+%-]+$/.test(x) || /^(Pinewatch|Kacper|Builder)/.test(x);
+  const missing = new Set();
+  const scan = (html, only) => { for (const m of String(html).replace(/<(script|style)[^>]*>[\\s\\S]*?<\\/\\1>/g, "").matchAll(/>([^<>]+)</g)) { const x = m[1].replace(/&#?\\w+;/g, "'").trim(); if (!x || skip(x)) continue; if (only && !only(x)) continue; if (tr(x) == null) missing.add(x); } };
+  const [s, pid, h] = owner("Falkreath", ["armory", "kitchen", "trophy"]); H.build(s, pid, "garden", t); H.build(s, pid, "cellar", t);
+  G.give(s, "ing_lavender", 2); G.give(s, "steel_sword", 1); X.plant(s, pid, 0, s.inv.find((r) => r.item === "ing_lavender").id); X.show(s, pid, s.inv.find((r) => r.item === "steel_sword").id);
+  s.follower = { id: "jenassa", hp: 99, ts: t };
+  for (const v of ["garden", "household"]) scan(X.viewHTML(s, pid, v, String));
+  scan(X.homeHTML(s, pid, String));
+  h.cases = []; h.cellar = []; h.beds = h.beds.map(() => null); scan(X.homeHTML(s, pid, String)); scan(X.viewHTML(s, pid, "garden", String));
+  for (const kind of ["bandits", "vampires", "trolls"]) { h.raid = { kind, t }; scan(X.raidHTML(s, pid, String)); }
+  h.raid = null; h.res = [{ id: "lydia" }]; scan(X.householdHTML(s, pid, String));
+  H.act(s, "view", "build"); scan(H.townHTML(s, String).body, (x) => /garden|cellar|room|wing|forge|alchemy|enchant|breakfast|display/i.test(x));
+  H.act(s, "view", "home"); scan(H.townHTML(s, String).body, (x) => /bed|Well Rested|Household|Display|Garden/i.test(x));
+  // guest card
+  const doc = { id: "L1", name: "Kacper", ...VISITS.record(s) }, mem = hero(); mem.id = "M1"; doc.hs.pinewatch.raided = true;
+  X.mount({ party: () => ({ id: "p", leader: "L1", members: [{ id: "L1" }, { id: "M1" }] }), homes: () => [doc] }); scan(X.guestHTML(mem, String)); X.mount({ party: () => null });
+  // messages (toasts and fight results), sentence by sentence as the screen shows them
+  const msgs = [];
+  const say = (r) => { if (!r) return; for (const k of ["text", "err", "title"]) if (r[k]) msgs.push(r[k]); if (typeof r === "string") msgs.push(r); };
+  const [m, mp, mh] = owner("Falkreath", ["kitchen"]); say(H.build(m, mp, "garden", t)); say(H.build(m, mp, "cellar", t)); say(H.build(m, mp, "garden", t)); say(H.sleep(m, mp, t));
+  G.give(m, "ing_lavender", 3); G.give(m, "iron_dagger", 1); const lv = () => m.inv.find((r) => r.item === "ing_lavender").id;
+  say(X.plant(m, mp, 0, lv())); say(X.plant(m, mp, 0, lv())); say(X.uproot(m, mp, 0)); say(X.uproot(m, mp, 0));
+  say(X.cellarPut(m, mp, m.inv.find((r) => r.item === "iron_dagger").id)); say(X.cellarTake(m, mp, 0)); say(X.show(m, mp, 999999)); say(X.unshow(m, mp, 0));
+  m.follower = { id: "jenassa", hp: 99, ts: t }; say(X.moveIn(m, mp, t)); m.follower = { id: "erik", hp: 50, ts: t }; say(X.callOut(m, mp, 0, t)); m.follower = null; say(X.callOut(m, mp, 0, t));
+  mh.raid = { kind: "bandits", t }; Math.random = () => 0.99; say(X.parley(m, mp, t)); say(X.parley(m, mp, t)); Math.random = () => 0.01; mh.raid = { kind: "vampires", t }; say(X.parley(m, mp, t));
+  mh.raid = { kind: "trolls", t }; say(X.parley(m, mp, t)); X.BAND.hp = 0.05; say(X.defend(m, mp, t)); X.BAND.hp = 50; mh.raid = { kind: "trolls", t }; say(X.defend(m, mp, t)); X.BAND.hp = 1.8;
+  mh.raid = { kind: "bandits", t }; H.hire(m, mp, t); Math.random = () => 0.01; msgs.push(X.tick(m, mp, t + DAY + 2) || mh.last); mh.raid = { kind: "bandits", t: t + 3 * DAY }; Math.random = () => 0.99; X.tick(m, mp, t + 4 * DAY + 2); msgs.push(mh.last);
+  Math.random = Rnd2;
+  const lead = { ...doc }; const g = hero(); g.id = "M2"; X.mount({ party: () => ({ id: "p", leader: "L1", members: [{ id: "L1" }, { id: "M2" }] }), homes: () => [lead] });
+  say(H.act(g, "guestrest", "L1", t)); say(H.act(g, "guestmeal", "L1", t)); say(H.act(g, "guestmeal", "L1", t + 5)); X.mount({ party: () => null });
+  msgs.push(...(m.journal || []).map((n) => n.text).filter((x) => /Drove/.test(x)));
+  for (const x of [PATCHNOTES.LIST[0].title, ...PATCHNOTES.LIST[0].items]) msgs.push(x);
+  for (const msg of msgs) for (const part of String(msg).split(/(?<=[.!?])\\s+/)) { const x = part.trim(); if (x && !skip(x) && tr(x) == null && I18N.story(x) == null && !/increased to|Skill|skill/.test(x)) missing.add(x); }
+  for (const id of ["master_builder", "hearth_forge", "gracious_host", "call_to_arms"]) { const p = PERKS.BY_ID[id]; for (const x of [p.name, ...String(p.desc || "").replace(/\\s*\\[OURS\\]/, "").split(/(?<=[.!?])\\s+/)]) if (x && tr(x) == null && I18N.story(x) == null) missing.add(x); }
+  ok(msgs.length > 30 && msgs.some((x) => /came while you were away/.test(x)) && msgs.some((x) => /guest bed/.test(x)), "checked " + msgs.length + " messages");
+  ok(missing.size === 0, "Polish for every new line ("+ (missing.size ? [...missing].slice(0, 12).join(" | ") : "all covered") + ")");
+  ok(tr("Bed 3") === "Grządka 3" && tr("12 gold a day") === "12 złota dziennie" && /Wypoczęty \\(\\+15%/.test(I18N.story("Full health and Well Rested (+15% skills for 60 minutes)") || ""), "Polish numbers and the bed line");
+}
 // ---- perks are in the trees with real effects
 ok(["master_builder", "hearth_forge", "gracious_host", "call_to_arms"].every((id) => PERKS.BY_ID[id] && PFX.FX[id] && PFX.FX[id].length), "four new perks with effects");
 ok(PERKS.BY_ID.master_builder.skill === "Smithing" && PERKS.BY_ID.hearth_forge.skill === "Smithing" && PERKS.BY_ID.gracious_host.skill === "Speechcraft" && PERKS.BY_ID.call_to_arms.skill === "Speechcraft", "two Smithing, two Speechcraft");

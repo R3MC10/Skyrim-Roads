@@ -397,7 +397,8 @@ const HSROOMS = (() => {
     if (typeof ART === "undefined") return "";
     h = norm(h); const W = 360, HT = 150, ground = 96;
     const wings = h.wings || [], rooms = h.rooms || [];
-    const key = `hsin|${pid}|${HS().stage(h)}|${wings.join(",")}|${rooms.join(",")}|${h.cases.map((r) => r.item).join(",")}|${h.res.length}|${h.cellar.length > 0 ? 1 : 0}|${opts.guest ? 1 : 0}`;
+    const tl = (x) => (typeof I18N !== "undefined" && I18N.lang() === "pl" ? I18N.tr(x) || x : x);   // the label is drawn, so translate it here
+    const key = `hsin|${tl("Inside the house")}|${pid}|${HS().stage(h)}|${wings.join(",")}|${rooms.join(",")}|${h.cases.map((r) => r.item).join(",")}|${h.res.length}|${h.cellar.length > 0 ? 1 : 0}|${opts.guest ? 1 : 0}`;
     return ART.html(W, HT, (g, H) => {
       g.fillStyle = "#c9d6d8"; g.fillRect(0, 0, W, ground); g.fillStyle = "#6f5741"; g.fillRect(0, ground, W, HT - ground);
       g.fillStyle = "rgba(0,0,0,.15)"; for (let i = 0; i < 40; i++) g.fillRect((i * 37) % W, ground + 6 + (i * 13) % (HT - ground - 8), 3, 2);
@@ -417,7 +418,7 @@ const HSROOMS = (() => {
         g.strokeStyle = "#6f4f33"; g.lineWidth = 1.4; for (let i = 0; i < 5; i++) { g.beginPath(); g.moveTo(cx + cw - 20 + i * 3, ground + 10 + i * 7); g.lineTo(cx + cw - 8 + i * 3, ground + 10 + i * 7); g.stroke(); }
       }
       if (rooms.includes("garden")) gardenArt(g, H, 4, ground - 14, h.beds, false);
-      if (ART.drawingStyle() !== "pixel") { g.fillStyle = "rgba(43,32,22,.8)"; g.fillRect(6, 6, 104, 16); g.fillStyle = "#e9d7a8"; g.font = "bold 11px Georgia, serif"; g.fillText(opts.guest ? "Guest of the house" : "Inside the house", 12, 18); }
+      if (ART.drawingStyle() !== "pixel") { g.fillStyle = "rgba(43,32,22,.8)"; g.fillRect(6, 6, 104, 16); g.fillStyle = "#e9d7a8"; g.font = "bold 11px Georgia, serif"; g.fillText(tl(opts.guest ? "Guest of the house" : "Inside the house"), 12, 18); }
       g.strokeStyle = "#3b2c1e"; g.lineWidth = 3; g.strokeRect(1.5, 1.5, W - 3, HT - 3);
     }, { key, cls: "scene hsin", alt: `Inside: ${["nothing built", "small house", "main hall"][HS().stage(h)]}${wings.length ? ", " + wings.join(", ") : ""}${rooms.length ? ", " + rooms.join(", ") : ""}` });
   }

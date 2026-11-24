@@ -2022,6 +2022,15 @@ html.a11y-hc .ti-box,html.a11y-hc .ti-box i,html.a11y-hc .ti-what{color:#ece6d8}
 .hs .sub.hslast{font-style:italic;color:#d9c69c}
 @media (min-width:900px){.hs img.art.scene.hsin,.hs img.art.scene.hsart{max-width:720px;display:block;margin-left:auto;margin-right:auto}}
 html.art-pixel .hs .card.hsraid,html.art-pixel .hs .card.hsguest,html.art-pixel .hs img.art.scene.hsin{border-radius:0}
+/* phones: messages and banners sit low, above the bottom bar, and never stack more than two deep, so they don't cover screen tabs and pictures */
+@media (max-width:700px){
+  #hudlog{top:auto;bottom:calc(84px + env(safe-area-inset-bottom));flex-direction:column-reverse;max-width:min(86vw,440px)}
+  #hudlog .hlog~.hlog{display:none}
+  #hudlog .toast{font-size:13px;padding:5px 22px 5px 9px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  #hudlog .toast.withic{display:flex}
+  #pbanners{top:auto;bottom:calc(150px + env(safe-area-inset-bottom))}
+  #pbanners>*~*{display:none}
+}
 </style>
 <script src="access.js"></script>
 </head>
@@ -2171,6 +2180,7 @@ html.art-pixel .hs .card.hsraid,html.art-pixel .hs .card.hsguest,html.art-pixel 
 <script src="desktop.js"></script>
 <script src="pcupdate.js"></script>
 <script src="i18n_story.js"></script>
+<script src="i18n_hsrooms.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>

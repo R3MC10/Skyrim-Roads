@@ -104,6 +104,8 @@ const I18N = (() => {
     [/^Continue to (.+)$/, (m) => `Dalej do: ${m[1]}`], [/^(\d+) of (\d+)$/, (m) => `${m[1]} z ${m[2]}`], [/^Level (\d+): (\d+)% to the next level$/, (m) => `Poziom ${m[1]}: ${m[2]}% do następnego`],
     [/^(\d+)\/(\d+) toward level (\d+)$/, (m) => `${m[1]}/${m[2]} do poziomu ${m[3]}`], [/^~(\d+) min$/, (m) => `~${m[1]} min`],
   ];
+  /* lines added by feature modules (i18n_hsrooms.js and others): exact lines and number patterns; the lists above win */
+  if (typeof I18N_EXTRA !== "undefined") { for (const [k, v] of Object.entries(I18N_EXTRA.words || {})) if (!(k in PL)) PL[k] = v; PAT.push(...(I18N_EXTRA.pat || [])); }
   /* story text: split into sentences, translate each one (exact, or a template whose {markers} are filled from the English) */
   const ST = typeof I18N_STORY !== "undefined" ? I18N_STORY : { ex: {}, pats: [] };
   const SPLIT = /(?<=[.!?…])(\s+)|(?<=[.!?]["”])(\s+)/;

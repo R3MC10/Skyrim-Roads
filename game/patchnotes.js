@@ -12,6 +12,8 @@ const PATCHNOTES = (() => {
       "Every few days raiders come for the house: bandits, vampires or frost trolls. Fight them at the door, try to talk them down, or leave it to your steward and followers. Lose and they carry off some building materials, but never what's in storage or the cellar.",
       "Party members in the leader's town can visit the leader's homestead: look around inside, sleep in the guest bed and eat at the kitchen table.",
       "New perks: Master Builder (a fourth wing) and Hearth Forge (better improving at home, more arrows) in Smithing; Gracious Host (display cases earn double, guests always sleep well) and Call to Arms (better at talking raiders down, defenders hit harder) in Speech.",
+      "Everything about the homestead rooms, raids and guests is in Polish too.",
+      "On phones, messages and achievement pop-ups now sit near the bottom and show one at a time, so they no longer cover the homestead tabs and the picture of your house.",
     ] },
     { id: "b137-ctl", build: 137, date: "24 Nov 2026", title: "New fight controls", items: [
       "Your moves in a fight now sit in a proper action bar at the bottom: three big buttons for Attack, Power attack and Guard (or Shield bash), with Magic, Items, Flee and End turn right under them. Easy to hit with a thumb, even on small phones.",

@@ -4,6 +4,7 @@ import asyncio, sys, os, shutil
 from playwright.async_api import async_playwright
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8847"
 OUT = sys.argv[2] if len(sys.argv) > 2 else "."
+LANG = sys.argv[3] if len(sys.argv) > 3 else "en"   # "pl": play in Polish
 os.makedirs(OUT, exist_ok=True)
 
 async def main():
@@ -14,6 +15,7 @@ async def main():
         for style in ("ink", "pixel"):
             ctx = await b.new_context(viewport={"width": 412, "height": 915}, device_scale_factor=2)
             errs = []
+            if LANG == "pl": await ctx.add_init_script("try{const p=JSON.parse(localStorage.getItem('rotn_prefs')||'{}');p.lang='pl';localStorage.setItem('rotn_prefs',JSON.stringify(p))}catch(e){}")
             pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
             await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=hs{style}"); await pg.wait_for_timeout(1800)
             await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Builder"); await pg.click("#begin"); await pg.wait_for_timeout(1000)
@@ -28,7 +30,7 @@ async def main():
                 for _ in range(3):  # the panel can re-render mid-shot; try again
                     try:
                         await pg.wait_for_timeout(200); el = await pg.query_selector("div.hs")
-                        if el: await el.screenshot(path=os.path.join(OUT, f"hs_{name}_{style}.png"), timeout=5000)
+                        if el: await el.screenshot(path=os.path.join(OUT, f"hs_{name}_{style}{'_pl' if LANG == 'pl' else ''}.png"), timeout=5000)
                         return
                     except Exception: pass
             async def overflow(): return await pg.evaluate("document.documentElement.scrollWidth > innerWidth + 1")

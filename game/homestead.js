@@ -446,7 +446,8 @@ const HOMESTEAD = (() => {
     } else if (view === "home") {
       if (!h.small) b += `<p class="sub">Nothing to live in yet. Build the small house first.</p>`;
       else {
-        b += `<div class="item"><div class="t">🛏 Your bed<span>Full health and Well Rested (+10% skills for 40 minutes)</span></div>${btn("sleep", pid, "Sleep", true, "pri")}</div>`;
+        { const r = XR() ? XR().restOf(h) : { bonus: 0.1, mult: 1 };   // the real bonus: hearth +15%, kitchen 1.5x as long
+          b += `<div class="item"><div class="t">🛏 Your bed<span>Full health and Well Rested (+${Math.round(r.bonus * 100)}% skills for ${Math.round(RESTED * r.mult / 60)} minutes)</span></div>${btn("sleep", pid, "Sleep", true, "pri")}</div>`; }
         const rd = ready(s, pid, t), made = wings.filter((w) => w !== "storage" || fx(s, "hsrent")), xrd = XR() ? XR().extraReady(s, pid, t) : {};
         if (made.length || Object.keys(xrd).length) {
           b += `<h3 class="hsh">From the wings</h3><p class="sub" style="margin-top:0">Goods pile up for ${keepDays(s, pid)} in-game day${keepDays(s, pid) > 1 ? "s" : ""}${stewardHome(s, pid) ? " (your steward keeps them)" : ""}.</p>`
