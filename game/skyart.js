@@ -204,8 +204,11 @@ const SKY = (() => {
           if (p.y > h) { p.y -= h; p.x = Math.random() * w; } if (p.x < -10) p.x += w + 20; if (p.x > w + 10) p.x -= w + 20;
         }
         g.save();
-        if (kind === "snow") { g.fillStyle = "rgba(255,255,255,0.9)"; for (const p of parts) g.fillRect(p.x, p.y, p.s * 1.4, p.s * 1.4); }
-        else if (kind === "rain") { g.strokeStyle = "rgba(205,218,230,0.6)"; g.lineWidth = 1; g.beginPath(); for (const p of parts) { g.moveTo(p.x, p.y); g.lineTo(p.x - 2 - wind * 5, p.y + 8); } g.stroke(); }
+        // opts.scale(): screen pixels per drawing unit. A small stage blown up to a wide PC window keeps flakes and
+        // raindrops their phone size (round, not big squares)
+        const zk = opts.scale ? Math.max(1, opts.scale() || 1) : 1, big = zk > 1.4;
+        if (kind === "snow") { g.fillStyle = "rgba(255,255,255,0.9)"; if (big) { g.beginPath(); for (const p of parts) { const rr = (p.s * 1.05) / zk; g.moveTo(p.x + rr, p.y); g.arc(p.x, p.y, rr, 0, 7); } g.fill(); } else for (const p of parts) g.fillRect(p.x, p.y, p.s * 1.4, p.s * 1.4); }
+        else if (kind === "rain") { g.strokeStyle = "rgba(205,218,230,0.6)"; g.lineWidth = big ? 1.5 / zk : 1; g.beginPath(); for (const p of parts) { g.moveTo(p.x, p.y); g.lineTo(p.x - 2 - wind * 5, p.y + 8); } g.stroke(); }
         else if (kind === "ash") { for (const p of parts) { g.fillStyle = p.s > 1.6 ? "rgba(60,52,46,0.75)" : "rgba(120,110,100,0.6)"; g.fillRect(p.x, p.y, p.s * 2.2, p.s * 1.4); } }
         else if (kind === "mist") { for (const p of parts) { const rr = (40 + p.s * 40) * (w / 400); const gr = g.createRadialGradient(p.x, p.y * 0.6 + h * 0.35, 0, p.x, p.y * 0.6 + h * 0.35, rr); gr.addColorStop(0, "rgba(222,228,232,0.32)"); gr.addColorStop(1, "rgba(220,226,230,0)"); g.fillStyle = gr; g.fillRect(p.x - rr, p.y * 0.6 + h * 0.35 - rr, rr * 2, rr * 2); } }
         else if (kind === "leaf") for (const p of parts) leaf(g, p.x, p.y, p.a, p.c, p.s);

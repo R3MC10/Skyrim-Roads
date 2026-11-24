@@ -711,6 +711,10 @@ const FIGHTART = (() => {
     el.appendChild(cv);
     const g = cv.getContext("2d");
     let k = dpr;
+    // [c2polish] screen pixels per drawing unit: on a wide PC window the small stage is shown up to ~4x, so name tags,
+    // banners and snow are drawn smaller in drawing units to stay their normal size on screen
+    let vs = Math.max(1, (cv.clientWidth || el.clientWidth || W) / W);
+    const lbl = (n) => n * Math.min(1, 1.8 / vs), tagSz = () => (11 * Math.min(vs, 1.25)) / vs;
     // [assetquality] the stage often grows after it's mounted (wide PC column, turning the phone): keep the backing
     // pixels = the box on screen x density, so the painted scene and foe are never blown up by CSS
     // (it can also be measured while its sheet is still being laid out, and be full size by the first resize report,
@@ -718,6 +722,7 @@ const FIGHTART = (() => {
     if (typeof FITCANVAS !== "undefined") {
       const refit = () => {
         if (!cv.isConnected || !cv.offsetWidth) return;
+        vs = Math.max(1, cv.offsetWidth / W);
         const nk = kOf(cv);
         if (Math.abs(nk - k) / k > 0.04) { k = nk; cv.width = Math.round(W * k); cv.height = Math.round(Hh * k);
           try { if (!MANUAL) draw(performance.now()); } catch { /* the next frame draws it */ } }
@@ -729,7 +734,7 @@ const FIGHTART = (() => {
     const work = cv, wg = g;   // one canvas: the stage is drawn straight to the screen
 
     const bg = bgFor(rec.scene, W, Hh, rec.wagon, rec.sky);
-    const wxp = rec.sky && (!FS || FS.weather()) ? SKY.particles(rec.sky, W, Hh, { reduce: rm }) : null;   // snow, rain, leaves or fireflies during the replay
+    const wxp = rec.sky && (!FS || FS.weather()) ? SKY.particles(rec.sky, W, Hh, { reduce: rm, scale: () => vs }) : null;   // snow, rain, leaves or fireflies during the replay
     const f = rec.f, beats = beatsOf(f, rec.hero);
     const hp0 = f.hp0 ?? Math.max(1, ...((f.log || []).map((l) => l.hp).filter((v) => v != null)));
     const ehp0 = f.ehp0 ?? Math.max(1, ...((f.log || []).map((l) => l.ehp).filter((v) => v != null)));
@@ -1237,18 +1242,18 @@ const FIGHTART = (() => {
       if (flash > 0.01 && !rm) { wg.save(); wg.setTransform(1, 0, 0, 1, 0, 0); wg.globalAlpha = flash; wg.fillStyle = flashC; wg.fillRect(0, 0, work.width, work.height); wg.restore(); }
       if (!f.tbHud) bars();   // combat2.js draws the bars over the fighters itself
       // floating numbers and labels (crisp, on the screen canvas)
-      g.save(); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.textAlign = "center";
+      g.save(); g.setTransform(k, 0, 0, k, 0, 0); g.textAlign = "center";
       for (let i = 0; i < NF; i++) if (fl[i] > 0) {
         const pop = Math.min(1, (1 - fl[i]) * 8), sz = Math.round(fsz[i] * (1 + (1 - pop) * 0.5));
         g.font = `700 ${sz}px Cinzel, Georgia, serif`; g.globalAlpha = Math.max(0, Math.min(1, fl[i] * 2.5));
         g.fillStyle = "#1c2128"; g.fillText(ftx[i], fxs[i] + 1.5, fys[i] + 1.5); g.fillStyle = fcl[i]; g.fillText(ftx[i], fxs[i], fys[i]);
       }
       g.globalAlpha = 1;
-      for (const [nm, tx2, ty2] of mateTags) { g.font = '600 11px "Barlow Semi Condensed", sans-serif'; const w = g.measureText(nm).width + 10, tx3 = Math.max(w / 2 + 2, Math.min(W - w / 2 - 2, tx2)), ty3 = Math.max(26, ty2); g.fillStyle = "rgba(14,15,18,0.72)"; g.fillRect(tx3 - w / 2, ty3 - 11, w, 15); g.fillStyle = "#c8f0c0"; g.fillText(nm, tx3, ty3 + 0.5); }   // party members' names, crisp in both styles
-      if (label && labelT > 0) { const a = Math.min(1, labelT * 3), sz = 20; g.globalAlpha = a; g.font = `700 ${sz}px Cinzel, Georgia, serif`; const y = Hh * 0.25 - (1 - a) * 8; g.fillStyle = "rgba(28,33,40,0.7)"; const w = g.measureText(label).width + 18; g.fillRect(W / 2 - w / 2, y - sz + 2, w, sz + 8); g.fillStyle = labelC; g.fillText(label, W / 2, y); }
+      for (const [nm, tx2, ty2] of mateTags) { const ts = tagSz(), tu = ts / 11; g.font = `600 ${ts.toFixed(2)}px "Barlow Semi Condensed", sans-serif`; const w = g.measureText(nm).width + 10 * tu, tx3 = Math.max(w / 2 + 2, Math.min(W - w / 2 - 2, tx2)), ty3 = Math.max(26 * tu, ty2); g.fillStyle = "rgba(14,15,18,0.72)"; g.fillRect(tx3 - w / 2, ty3 - 11 * tu, w, 15 * tu); g.fillStyle = "#c8f0c0"; g.fillText(nm, tx3, ty3 + 0.5); }   // party members' names, crisp in both styles
+      if (label && labelT > 0) { const a = Math.min(1, labelT * 3), sz = lbl(20); g.globalAlpha = a; g.font = `700 ${sz}px Cinzel, Georgia, serif`; const y = Hh * 0.25 - (1 - a) * 8; g.fillStyle = "rgba(28,33,40,0.7)"; const pu = sz / 20, w = g.measureText(label).width + 18 * pu; g.fillRect(W / 2 - w / 2, y - sz + 2 * pu, w, sz + 8 * pu); g.fillStyle = labelC; g.fillText(label, W / 2, y); }
       g.restore();
       // end banner
-      if (phase === "end" || (phase === "fall" && phaseT > 0.6)) { const a = phase === "end" ? 1 : Math.min(1, (phaseT - 0.6) * 2.5); g.save(); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.globalAlpha = a; g.font = "700 18px Cinzel, Georgia, serif"; g.textAlign = "center"; const txt = L(won ? (turned ? "They flee" : "Victory") : "Defeated"), bw2 = Math.max(120, g.measureText(txt).width + 24); const by = Hh * 0.93; g.fillStyle = "rgba(28,33,40,0.6)"; g.fillRect(W / 2 - bw2 / 2, by - 15, bw2, 21); g.fillStyle = won ? P.gold : "#ff8a7a"; g.fillText(txt, W / 2, by + 1); g.restore(); }
+      if (phase === "end" || (phase === "fall" && phaseT > 0.6)) { const a = phase === "end" ? 1 : Math.min(1, (phaseT - 0.6) * 2.5); g.save(); g.setTransform(k, 0, 0, k, 0, 0); g.globalAlpha = a; g.font = `700 ${lbl(18).toFixed(2)}px Cinzel, Georgia, serif`; g.textAlign = "center"; const txt = L(won ? (turned ? "They flee" : "Victory") : "Defeated"), eu = lbl(18) / 18, bw2 = Math.max(120 * eu, g.measureText(txt).width + 24 * eu); const by = Hh * 0.93; g.fillStyle = "rgba(28,33,40,0.6)"; g.fillRect(W / 2 - bw2 / 2, by - 15 * eu, bw2, 21 * eu); g.fillStyle = won ? P.gold : "#ff8a7a"; g.fillText(txt, W / 2, by + 1); g.restore(); }
       if (!done) { PERF[perfN % PERF.length] = performance.now() - t0; perfN++; }
     }
     const additive = () => { wg.globalCompositeOperation = "lighter"; };
@@ -1344,7 +1349,7 @@ const FIGHTART = (() => {
       wg.restore();
     }
     function bars() {
-      g.save(); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+      g.save(); g.setTransform(k, 0, 0, k, 0, 0);
       const bw = W * 0.38, bh = 7, y = 10;
       const bar = (x, v, lag, max, col, name, right) => {
         g.fillStyle = "rgba(28,33,40,0.75)"; g.fillRect(x - 1, y - 1, bw + 2, bh + 2);
