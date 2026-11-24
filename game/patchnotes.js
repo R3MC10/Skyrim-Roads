@@ -3,6 +3,16 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b137-hsrooms", build: 137, date: "24 Nov 2026", title: "Homestead rooms, raids and guests", items: [
+      "Two new rooms that don't use a wing space: a Garden with six beds (plant herbs or vegetables from your pack, each bed gives 2 a day) and a Cellar under the main hall that keeps 40 things safe and keeps goods waiting a day longer.",
+      "Your wings are real stations now: the Armory is a forge (make, smelt and improve gear at home), the Alchemy lab makes potions 10% stronger, the Enchanter's tower is an enchanter that enchants 10% stronger.",
+      "Sleeping by the main hall's hearth gives Well Rested +15%, and breakfast from the kitchen makes it last half again as long.",
+      "Display cases in the main hall (2) and trophy room (4 more): put weapons, armor and gems on show and visitors pay gold every day.",
+      "Followers can move into your homestead (up to 3, once the main hall stands). They chop wood and haul stone every day and fight beside you. Fetch them back any time for free.",
+      "Every few days raiders come for the house: bandits, vampires or frost trolls. Fight them at the door, try to talk them down, or leave it to your steward and followers. Lose and they carry off some building materials, but never what's in storage or the cellar.",
+      "Party members in the leader's town can visit the leader's homestead: look around inside, sleep in the guest bed and eat at the kitchen table.",
+      "New perks: Master Builder (a fourth wing) and Hearth Forge (better improving at home, more arrows) in Smithing; Gracious Host (display cases earn double, guests always sleep well) and Call to Arms (better at talking raiders down, defenders hit harder) in Speech.",
+    ] },
     { id: "b135-compass", build: 135, date: "24 Nov 2026", title: "A real 3D compass", items: [
       "The golden compass on the home screen is now a proper 3D piece: drag it and it tilts toward your finger, catching the light and showing its thick bronze edge, then springs back when you let go.",
       "Skills, Magic, Items and Map now sit around the compass instead of on top of it, on phones held upright or sideways.",

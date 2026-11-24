@@ -108,6 +108,7 @@ const TOWNS = (() => {
     if (!isPoison && EFFECTS[effect][4] && P(s, "benefactor")) m *= 1.25;                   // [Skyrim] Benefactor
     if (isPoison && !EFFECTS[effect][4] && P(s, "poisoner")) m *= 1.25;                     // [Skyrim] Poisoner
     if (typeof PFX !== "undefined") m *= 1 + Math.min(0.25, PFX.num(s, "alch"));                         // Master Alchemist
+    if (typeof HSROOMS !== "undefined") m *= 1 + HSROOMS.bonus(s, "alch");                                                 // your homestead's alchemy lab: +10%
     return Math.round(m);
   }
   function brew(s, rowIds, opt = {}) {   // opt.boost: crafting mini-game multiplier on strength; opt.botch: the mix spoils (craftgames.js)
@@ -288,7 +289,7 @@ const TOWNS = (() => {
     const it = D.ITEMS[row.item];
     if (!(it.slot === "weapon" || G.ARMOR_SLOTS.includes(it.slot)) || it.type === "cloth") return null;
     const mat = material(row.item);
-    const per = (it.slot === "weapon" ? 1 : 2) * (mat && P(s, mat) ? 2 : 1) + (typeof PFX !== "undefined" ? Math.min(3, PFX.num(s, "temper")) : 0);   // Orcish, Ebony, Daedric, Glass Smithing
+    const per = (it.slot === "weapon" ? 1 : 2) * (mat && P(s, mat) ? 2 : 1) + (typeof PFX !== "undefined" ? Math.min(3, PFX.num(s, "temper")) : 0) + (typeof HSROOMS !== "undefined" ? HSROOMS.temperBonus(s) : 0);   // Orcish, Ebony, Daedric, Glass Smithing; Hearth Forge at home
     const maxQ = Math.min(6, 1 + Math.floor(G.skill(s, "Smithing") / 20));
     const q = row.tq || 0, ingot = ingotFor(row.item), have = countItem(s, ingot);
     let block = null;
@@ -298,7 +299,7 @@ const TOWNS = (() => {
     return { q, maxQ, per, ingot, have, block };
   }
   function temper(s, rowId) {
-    if (!s.location || !G.shopTypes(s.location).includes("blacksmith")) return "You need a forge. Blacksmiths have one.";
+    if (!s.location || !(G.shopTypes(s.location).includes("blacksmith") || (typeof HSROOMS !== "undefined" && HSROOMS.station(s, "forge")))) return "You need a forge. Blacksmiths have one.";
     const r = G.invRow(s, rowId), info = r && temperInfo(s, r);
     if (!info) return "That can't be improved.";
     if (info.block) return info.block;
@@ -481,6 +482,7 @@ const TOWNS = (() => {
     const f = FOLLOWERS[id];
     if (!f || f[1] !== s.location) return "They aren't here.";
     if (s.follower) return `${FOLLOWERS[s.follower.id][0]} is already with you. Dismiss them first.`;
+    if (typeof HSROOMS !== "undefined" && HSROOMS.livesAt(s, id)) return `${f[0]} lives at your homestead now. Fetch them there.`;
     if (id === "lydia" && !s.thaneWhiterun) return "Lydia serves the Jarl. Bring Farengar the Dragonstone from Bleak Falls Barrow first.";
     if (wanted(s)) return `${f[0]} won't follow a wanted criminal.`;
     if (s.gold < f[2]) return `${f[0]} wants ${f[2]} gold.`;

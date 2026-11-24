@@ -1879,6 +1879,16 @@ html.art-pixel .tbu .faibars .tbbar,html.art-pixel .tbu .faibars .tbbar i,html.a
 html.art-pixel .ti-box,html.art-pixel .ti-card,html.art-pixel .ti-stats{border-radius:0}html.art-pixel .ti-box{border-left-width:3px}
 #side[data-tab=log] .ti-box{color:#3b2e1e}
 html.a11y-hc .ti-box,html.a11y-hc .ti-box i,html.a11y-hc .ti-what{color:#ece6d8}
+/* homestead rooms (hsrooms.js): raid alert, party guest card, cut-open inside view */
+.hs .card.hsraid{border:1px solid rgba(228,110,90,.55);background:linear-gradient(180deg,rgba(120,30,20,.35),rgba(20,10,8,.55));box-shadow:0 0 14px rgba(228,110,90,.18) inset;margin:0 0 8px}
+.hs .card.hsraid h3{color:#ffb39a;margin:0 0 4px;letter-spacing:.06em;text-transform:uppercase;font-size:14px}
+.hs .card.hsraid .hsbtns{margin-top:6px}.hs .card.hsraid .btn{flex:1;min-height:44px}
+.hs .card.hsguest{border:1px solid rgba(214,178,94,.4);background:rgba(214,178,94,.07);margin:0 0 8px}
+.hs .card.hsguest h3{color:#f1cd72;margin:0 0 4px;font-size:14px;letter-spacing:.06em;text-transform:uppercase}
+.hs img.art.scene.hsin{margin:2px 0 8px;border-radius:4px;box-shadow:0 1px 6px rgba(0,0,0,.45)}
+.hs .sub.hslast{font-style:italic;color:#d9c69c}
+@media (min-width:900px){.hs img.art.scene.hsin,.hs img.art.scene.hsart{max-width:720px;display:block;margin-left:auto;margin-right:auto}}
+html.art-pixel .hs .card.hsraid,html.art-pixel .hs .card.hsguest,html.art-pixel .hs img.art.scene.hsin{border-radius:0}
 </style>
 <script src="access.js"></script>
 </head>
@@ -1957,6 +1967,7 @@ html.a11y-hc .ti-box,html.a11y-hc .ti-box i,html.a11y-hc .ti-what{color:#ece6d8}
 <script src="market.js"></script>
 <script src="halls.js"></script>
 <script src="homestead.js"></script>
+<script src="hsrooms.js"></script>
 <script src="mp.js"></script>
 <script src="pvpdeath.js"></script>
 <script src="coop.js"></script>

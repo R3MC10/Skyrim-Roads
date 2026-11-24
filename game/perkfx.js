@@ -223,6 +223,11 @@ const PFX = (() => {
     [ "Athletics", "woodsman", "Woodsman", 1, [30], ["long_strider"], "The sawmill, quarry and clay pit at your homestead give 50% more. [OURS]", [["hsyield", 0.5, {}]]],
     [ "Etiquette", "landed_thane", "Landed Thane", 1, [40], ["courtly_manners"], "Homestead deeds and stewards cost 25% less. [OURS]", [["hsdeed", 0.25, {}]]],
     [ "Mercantile", "estate_income", "Estate Income", 1, [50], ["haggling"], "Every wing of your homesteads brings in 15 gold a day (collect it there). [OURS]", [["hsrent", 15, {}]]],
+    // ---------------------------------------------------------------- homestead rooms (hsrooms.js)
+    [ "Smithing", "master_builder", "Master Builder", 1, [60], ["carpenter"], "Your homesteads have room for a fourth wing. [OURS]", [["hsslot", 1, {}]]],
+    [ "Smithing", "hearth_forge", "Hearth Forge", 1, [40], ["carpenter"], "At your homestead's armory, improving gear adds 1 more, and the armory makes 6 more arrows a day. [OURS]", [["hsforge", 1, {}]]],
+    [ "Speechcraft", "gracious_host", "Gracious Host", 1, [30], [], "Your display cases earn twice as much from visitors, and party members who stay over at your homestead always wake Well Rested. [OURS]", [["hshost", 1, {}]]],
+    [ "Speechcraft", "call_to_arms", "Call to Arms", 1, [45], ["bribery"], "When raiders come for your homestead, talking them down works 25% more often, and your steward and the followers living there hit 25% harder and hold the house better while you're away. [OURS]", [["hsparley", 0.25, {}], ["hsdefend", 0.25, {}]]],
     // ---------------------------------------------------------------- turn-by-turn fights (tbfight.js): action points and initiative
     [ "Athletics", "battle_rhythm", "Battle Rhythm", 2, [30, 70], ["long_strider"], "In turn-by-turn fights you get 1/2 more action points every turn. [OURS]", [["tbap", 1, {}]]],
     [ "Acrobatics", "quick_start", "Quick Start", 2, [25, 60], ["sure_footed"], "In turn-by-turn fights you act sooner: +3/+6 initiative. [OURS]", [["tbinit", 3, {}]]],
