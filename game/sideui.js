@@ -192,7 +192,7 @@ const SIDEUI = (() => {
       if (r.up) POLISH.banner("level", `Promoted: ${L(id).name}`, r.rank.name, SIDES.emblem(id, 34));
     });
     const lv = () => { const s2 = S(); if (!s2) return; if (typeof QUESTS !== "undefined") QUESTS.ensure(s2); setTimeout(letter, 1500); };
-    if (typeof LEVELUP !== "undefined" && LEVELUP.on) LEVELUP.on(lv);
+    if (typeof LEVELUP !== "undefined" && typeof LEVELUP.on === "function") { try { LEVELUP.on("level", (e) => { if (!e || (e.level || 0) >= SIDES.MIN_LEVEL) lv(); }); } catch (e) { /* older levelup.js */ } }   // levelup.js (PR #140): LEVELUP.on("level", ({ s, level }) => ...)
     document.addEventListener("levelup", lv);
     setTimeout(letter, 2500);
     setInterval(letter, 8000);   // older saves at 20+ and level-ups from code that fires no event

@@ -91,7 +91,7 @@ const SIDEQ = (() => {
   }
   /* a level-up module, if there is one, starts the quest at once (the ui tick catches it within seconds otherwise) */
   const onLevel = (s) => { try { if (s && typeof QUESTS !== "undefined") QUESTS.ensure(s); } catch (e) { /* ignore */ } };
-  if (typeof LEVELUP !== "undefined" && LEVELUP && typeof LEVELUP.on === "function") { try { LEVELUP.on((e) => onLevel(e && e.s ? e.s : e && e.state ? e.state : e)); } catch (e) { /* ignore */ } }
+  if (typeof LEVELUP !== "undefined" && LEVELUP && typeof LEVELUP.on === "function") { try { LEVELUP.on("level", (e) => onLevel(e && e.s ? e.s : e)); } catch (e) { /* ignore */ } }   // levelup.js: LEVELUP.on("level", ({ s, level }) => ...)
   return { ID, GOLD, REC, SIDE_IDS, LETTER, L, next, heard, stageFor, sync, talk, recAt, onLevel, active: (s) => { const x = v(s); return !!x && !x.done; } };
 })();
 if (typeof module !== "undefined") module.exports = SIDEQ;

@@ -20,7 +20,7 @@ c.N = N; vm.createContext(c);
 for (const f of fs.readFileSync(W + "index.html", "utf8").match(/<script src="[^"]+"/g).map((m) => m.slice(13, -1)))
   if (fs.existsSync(W + f)) { try { vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c); } catch (er) { if (!/^(store|ui|sideui)\.js$/.test(f)) console.log("skipped " + f + ": " + er.message); } }
 c.__hubSrc = fs.readFileSync(path.join(__dirname, "../server/src/hub.js"), "utf8");
-c.__storeSrc = fs.readFileSync(W + "store.js", "utf8");
+c.__storeSrc = fs.readFileSync(W + "store.js", "utf8"); c.__sqSrc = fs.readFileSync(W + "sidequest.js", "utf8"); c.__suiSrc = fs.readFileSync(W + "sideui.js", "utf8");
 const SIM = fs.readFileSync(__dirname + "/test_bal_sim.js", "utf8");
 vm.runInContext(SIM.slice(SIM.indexOf("const LEVELS"), SIM.indexOf("const BUILDS")) + `
 let n = 0; const OK = (x, m) => { if (!x) throw new Error("FAIL " + m); n++; };
@@ -128,6 +128,15 @@ const ITEMS = D.ITEMS;
   const r = WARS.rulers(a); OK(r.Whiterun && r.Whiterun.id === "stormcloak" && r["The Rift"].id === "imperial", "holds ruled by sides: " + JSON.stringify(Object.fromEntries(Object.entries(r).map(([h, v]) => [h, v && v.id]))));
   OK(CLANS.of(a.id, a) && CLANS.of(a.id, a).id === "stormcloak", "CLANS.of is the side");
   const st = SIDES.standings(a); OK(st.length === 3 && st.find((x) => x.id === "stormcloak").holds >= 1, "standings");
+  if (typeof HOLDRULE !== "undefined") {   // player-run holds (holdrule.js): only soldiers of a side can challenge, and the screen says "side"
+    const lone = hero("warrior", 30); at(lone, "Whiterun"); OK(/Pick a side/.test(HOLDRULE.canFight(lone, "Whiterun").why), "holds: no side, no challenge");
+    OK(!/clan/i.test(HOLDUI.panel(a)), "holds panel talks about sides, not clans");
+  }
+}
+// 7b. the level-up hook (levelup.js, PR #140): LEVELUP.on("level", ({ s, level }) => ...) starts the quest at once
+{
+  OK(__sqSrc.includes('LEVELUP.on("level"') && __suiSrc.includes('LEVELUP.on("level"'), 'both hook the level event of levelup.js');
+  const s = hero("warrior", 19); s.level = 20; s.quests = {}; SIDEQ.onLevel(s); OK(s.quests[SIDEQ.ID], "level hook starts the quest");
 }
 // 8. two phones through the hub: the side, rank and XP sync
 {

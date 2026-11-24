@@ -203,6 +203,10 @@ const PFX = (() => {
     [ "Enchanting", "warding_enchanter", "Warding Enchanter", 1, [40], ["insightful_enchanter"], "Resist Magic, Fire, Frost, Shock and Poison enchantments are 25% stronger. [OURS]", [["ench", 0.25, { el: "ward" }]]],
     [ "Enchanting", "hex_enchanter", "Hex Enchanter", 1, [50], ["fire_enchanter"], "Weapon enchantments that aren't fire, frost or shock (absorb, paralyze, fear, calm, bleeding, turn undead) are 25% stronger. [OURS]", [["ench", 0.25, { el: "other" }]]],
     [ "Enchanting", "rune_smith", "Rune Smith", 1, [80], ["deep_charge"], "Elemental statuses from your enchanted weapons last a turn longer. [OURS]", [["enchstatus", 1, {}]]],
+    // the newer enchantments (enchants2.js)
+    [ "Enchanting", "runic_enchanter", "Runic Enchanter", 1, [60], ["hex_enchanter"], "Bloodthirst, Thunderclap, Reaping, Sundering, Spellbreaker, Echo Strike, Venom, Dragonbane and Banishing enchantments are 25% stronger. [OURS]", [["ench", 0.25, { el: "rune" }]]],
+    [ "Enchanting", "talisman_maker", "Talisman Maker", 1, [45], ["jeweller"], "Thorns, Last Ward, Fortune, Mana Shield, Swiftness, Executioner, Huntsman and Ambusher enchantments are 25% stronger. [OURS]", [["ench", 0.25, { el: "relic" }]]],
+    [ "Enchanting", "overcharge", "Overcharge", 1, [90], ["runic_enchanter"], "Your weapon's enchantment surges on 15% of its hits: that hit, its damage, healing and chances count half again as much. [OURS]", [["enchsurge", 0.15, {}]]],
     // ---------------------------------------------------------------- Alchemy (8 → 13)
     [ "Alchemy", "snakeblood", "Snakeblood", 1, [80], ["concentrated_poison"], "You resist burning, chills and shocks: they hurt 25% less. [Skyrim: 50% poison resistance]", [["statusres", 0.25, {}]]],
     [ "Alchemy", "field_medic", "Field Medic", 1, [40], ["physician"], "Healing potions you drink in a fight heal 20% more. [OURS]", [["potion", 0.2, {}]]],
@@ -269,6 +273,8 @@ const PFX = (() => {
     // ---------------------------------------------------------------- followers become people (followerbonds.js)
     [ "Speechcraft", "kindred_spirit", "Kindred Spirit", 1, [25], [], "Your follower warms to you 50% faster when you do things they like, and cools 25% slower when you don't. [OURS]", [["folbond", 0.5, {}], ["folgrudge", 0.25, {}]]],
     [ "Speechcraft", "heart_to_heart", "Heart to Heart", 1, [45], ["kindred_spirit"], "Talking with your follower does twice as much for their loyalty, and they never refuse your orders, however unhappy. [OURS]", [["foltalk", 1, {}], ["folobey", 1, {}]]],
+    // ---------------------------------------------------------------- party votes in dungeons (partyvote.js)
+    [ "Speechcraft", "voice_of_reason", "Voice of Reason", 1, [35], ["persuasion"], "In a party dungeon vote, your vote counts twice. [OURS]", [["pvweight", 1, {}]]],
     [ "Etiquette", "sworn_companion", "Sworn Companion", 1, [50], ["courtly_manners"], "Followers ask you for their personal quest at loyalty 65 instead of 80, and their signature move is 25% stronger. [OURS]", [["folquest", 15, {}], ["folsig", 0.25, {}]]],
     // ---------------------------------------------------------------- the vampire war (dawnguard.js): one side's perks each, the other side can't take them
     [ "Archery", "dg_bolt_hunter", "Vampire Hunter", 1, [30], [], "Dawnguard only. Bows and crossbows do 25% more damage to vampires and the undead. [Skyrim: Dawnguard]", [["out", 0.25, { sk: AR, tag: ["undead"] }]]],
@@ -290,7 +296,15 @@ const PFX = (() => {
     // ---------------------------------------------------------------- boss fights (bossfight.js)
     [ "One-Handed", "giant_slayer", "Giant Slayer", 1, [40], ["armsman"], "Bosses take 10% more damage from you, and 20% more once they reach their last phase. [OURS]", [["out", 0.1, { bossFoe: 1 }], ["out", 0.1, { bossLast: 1 }]]],
     [ "Blocking", "read_the_signs", "Read the Signs", 1, [30], ["shield_wall"], "A boss's big attacks (the ones it shows a turn ahead) hurt you 25% less. [OURS]", [["bftele", 0.25, {}]]],
+    // ---------------------------------------------------------------- player-run holds (holdrule.js)
+    [ "Speechcraft", "fair_dues", "Fair Dues", 2, [20, 45], [], "A hold's tax costs you half as much when you shop there (rank 2: you pay none). [OURS]", [["holdtax", 0.5, {}]]],
+    [ "Speechcraft", "jarls_favour", "Jarl's Favour", 1, [50], ["fair_dues"], "In a hold your side rules, shops sell to you another 5% cheaper, and while you're its Jarl, taxes fill the treasury 20% faster. [OURS]", [["jarlfav", 0.05, {}], ["jarlpurse", 0.2, {}]]],
+    [ "Etiquette", "hold_warden", "Hold Warden", 1, [35], ["courtly_manners"], "In hold challenges and raids, the champion and the defenders have 10% less health and hit 10% softer. [OURS]", [["holdfight", 0.1, {}]]],
     [ "Two-Handed", "break_their_focus", "Break Their Focus", 1, [35], ["barbarian"], "Any blow that takes a tenth of a boss's health breaks the big attack it's getting ready, and it reels and loses its next move. [OURS]", [["bfbreak", 1, {}]]],
+    // ---------------------------------------------------------------- shouts and weather (thuum.js, wxmatters.js, weatherfx.js)
+    [ "Speechcraft", "thuum_mastery", "Thu'um Mastery", 2, [75, 95], ["commanding_voice"], "Your voice comes back sooner: every shout cools down another 10/20% (all cooldown cuts together stop at half). [OURS]", [["shoutcd", [0.1, 0.2], {}]]],
+    [ "Acrobatics", "weathered_traveller", "Weathered Traveller", 2, [30, 60], ["sure_footed"], "Snow, rain, fog and storms slow your travel 25/50% less, and the cold creeps in 25/50% slower. [OURS]", [["wxslow", [0.25, 0.5], {}], ["coldslow", [0.25, 0.5], {}]]],
+    [ "Alteration", "starlit_mind", "Starlit Mind", 1, [35], ["apprentice_alteration"], "Under a clear night sky your magicka comes back twice as fast in fights (instead of 50% faster). [OURS]", [["starmp", 0.5, {}]]],
   ];
   const FX = {};
   if (typeof PERKS !== "undefined") {

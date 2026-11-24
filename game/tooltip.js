@@ -5,7 +5,8 @@
      the tooltip (TIP.register(kind, (id, s, el) => html)). Many things need no markup at all: AUTO below recognises inventory
      rows, shop rows, perk buttons, places, skills, HUD bars and gold by the attributes they already carry, and anything with
      a title="" or an icon-only button's aria-label gets its words shown the same way (so phones see them too).
-   - The fight screen keeps its own tooltips (tbui.js reads data-tip inside #tbf); this one stays out of their way. */
+   - The fight screen uses this too (fighttips.js marks it with data-tip-k="fa:..."; its plain data-tip words show as well).
+     Holding a finger on a fight button shows its tooltip and drops the drag that the press started; the lift doesn't cast. */
 const TIP = (() => {
   const DOM = typeof document !== "undefined" && typeof window !== "undefined";
   const esc = (x) => String(x ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -17,6 +18,7 @@ const TIP = (() => {
     WORLD: () => (typeof WORLD !== "undefined" ? WORLD : undefined), DUNGEONS: () => (typeof DUNGEONS !== "undefined" ? DUNGEONS : undefined), QUESTS: () => (typeof QUESTS !== "undefined" ? QUESTS : undefined),
     WorldMap: () => (typeof WorldMap !== "undefined" ? WorldMap : undefined), TBUI: () => (typeof TBUI !== "undefined" ? TBUI : undefined),
     TOMEINFO: () => (typeof TOMEINFO !== "undefined" ? TOMEINFO : undefined),   // tomeinfo.js: the shop's full spell-tome card
+    COOK: () => (typeof COOK !== "undefined" ? COOK : undefined),
   };
   const g = (n) => { try { return MODS[n] ? MODS[n]() : undefined; } catch { return undefined; } };
   const has = (n) => g(n) !== undefined;
@@ -57,9 +59,12 @@ const TIP = (() => {
     st.push(["Weight", +((it.weight || 0) * q).toFixed(2)], ["Value", it.value ?? 0]);
     if (q > 1) st.push(["Count", q]);
     const L = [];
-    if (it.enchant) L.push(`✦ ${it.enchant.magnitude} ${it.enchant.effect} damage per hit${r ? ` · charge ${Math.round(100 * (r.charge || 0) / it.enchant.capacity)}%` : ""}`);
+    const enL = typeof ENCH !== "undefined" && ENCH.lines ? ENCH.lines(it) : null;   // plain words for what the enchantment does (enchanting.js)
+    const wn = it.enchant && typeof ENCH !== "undefined" ? ENCH.WEAPON?.[it.enchant.effect]?.[0] : null;   // the enchantment's name first
+    if (it.enchant) L.push(`✦ ${wn && enL?.[0] ? `${wn} · ` : ""}${enL?.[0] || `${it.enchant.magnitude} ${it.enchant.effect} damage per hit`}${r ? ` · charge ${Math.round(100 * (r.charge || 0) / it.enchant.capacity)}%` : ""}`);
     if (it.staff && D_.SPELLS[it.staff.spell]) L.push(`✦ Casts ${D_.SPELLS[it.staff.spell].name} instead of swinging`);
-    if (it.aenchant) L.push(`✦ ${[it.aenchant, ...(it.aenchant.more || [])].map((e) => (e.key.startsWith("dae:") ? e.name : `${e.name} ${e.mag}`)).join(" · ")} while worn`);
+    if (it.aenchant && enL?.length) { const ae = [it.aenchant, ...(it.aenchant.more || [])]; L.push(...enL.map((x, i) => `✦ ${ae[i]?.name && !x.startsWith(ae[i].name) ? `${ae[i].name} · ` : ""}${x}`), "While worn."); }   // name · what it does
+    else if (it.aenchant) L.push(`✦ ${[it.aenchant, ...(it.aenchant.more || [])].map((e) => (e.key.startsWith("dae:") ? e.name : `${e.name} ${e.mag}`)).join(" · ")} while worn`);
     if (it.desc) L.push(it.desc);
     if (it.effects) L.push(it.effects.map(([e, m, d]) => `${e} ${m}${d * 5 >= 60 ? ` for ${Math.round(d * 5 / 60)} min` : ""}`).join(" · "));
     else if (it.restore) L.push(`Restores ${it.restore[1]} ${it.restore[0]}`);
@@ -72,10 +77,30 @@ const TIP = (() => {
       const sp = D_.SPELLS[it.spell], M = g("MAGIC");
       L.push(`${it.slot === "tome" ? "Teaches" : "Casts"} ${sp.name}: ${sp.level || "Novice"} ${sp.school}${M?.describe ? ` · ${M.describe(sp)}` : ""}${s && it.slot === "tome" && s.spells?.includes(it.spell) ? " (you know it)" : ""}`);
     }
+    if (it.slot === "scroll" && s && D_.SPELLS[it.spell]) { try { const ps = g("MAGIC").nums(s, it.spell, false); if (ps.length) L.push("For you: " + ps.map((p) => p.t).join(" · ") + " · no magicka"); } catch { /* old magic.js */ } }
+    if (it.slot === "weapon" && !it.staff && it.damage) {   // what it really hits for in your hands (skill and perks)
+      const F_ = g("F"), dmg = (() => { try {
+        const sk = it.skill, lv = G_.skill(s, sk), P = (k) => (G_.P ? G_.P(s, k) : 0);
+        const perk = { "One-Handed": 0.2 * P("armsman"), "Two-Handed": 0.2 * P("barbarian"), "Archery": 0.2 * P("overdraw"), "Spear": 0.15 * P("long_reach") }[sk] || 0;
+        return Math.round(F_.weaponDamage(it.damage + (r?.temper || 0), lv, sk === "Archery") * (1 + perk));
+      } catch { return 0; } })();
+      L.push(dmg && s ? `Hits for about ${dmg} with your ${it.skill} skill and perks` : `${it.damage} base damage, more as your ${it.skill} skill grows`);
+    }
+    if (it.slot === "ammo") L.push(`Shot from a ${/bolt/.test(itemId) ? "crossbow" : "bow"}: ${it.damage} damage added to each shot`);
+    if (["potion", "scroll"].includes(it.slot) && (it.restore || D_.SPELLS[it.spell])) st.push(["In a fight", `${it.slot === "scroll" ? 2 : 1} AP`]);
     if (it.slot === "soulgem") L.push(`Holds ${it.charge} charge for recharging enchanted weapons`);
     if (it.slot === "ingredient" && s && g("TOWNS")?.INGREDIENT_FX?.[itemId]) { const T = g("TOWNS"); L.push("Effects: " + T.INGREDIENT_FX[itemId][1].map((e, i) => (T.known(s, itemId)[i] ? e : "?")).join(", ")); }
     if (it.slot === "material") L.push("Used at the forge to improve gear.");
     if (it.dish) L.push("A new meal replaces the last one's effect.");
+    if (!L.length && !tomeCard) {   // nothing said yet: at least what it's for
+      const CK = g("COOK"), uses = CK?.RECIPES ? Object.values(CK.RECIPES).filter((x) => x[1].some(([i]) => i === itemId || (i === "fish" && itemId.startsWith("fish_")))) : [];
+      if (uses.length) L.push(`Cook it into: ${uses.slice(0, 3).map((x) => `${x[0]} (${x[3]})`).join(", ")}`);
+      else if (it.slot === "food") L.push("A cooking ingredient: cook it at an inn's pot or your campfire.");
+      else if (itemId === "fishing_rod") L.push("Lets you fish where there's water nearby.");
+      else if (it.slot === "trophy") L.push(it.quest ? "Someone wants this back: it stays with you until you hand it in." : "Proof of a great deed: keep it, or sell it to a merchant.");
+      else if (it.slot === "valuable") L.push(`Worth about ${it.value ?? 0} gold to any merchant.`);
+      else L.push(`No use in a fight. A merchant pays about ${it.value ?? 0} gold for it.`);
+    }
     if (r?.stolen) L.push("✋ Stolen. Only a fence will buy it.");
     // better or worse than what you wear (the same sums as the ▲/▼ marks in lists)
     let cmp = "";
@@ -231,14 +256,29 @@ const TIP = (() => {
   ];
   const AUTO_SEL = AUTO.map(([sel]) => sel).join(",");
   const SKIP = "input,textarea,select,option,#tip,.tip";
+  /* a plain label that is just an item's or a spell's name ("Scroll of Fast Healing", "Potion of Healing, 3 left"):
+     the full tooltip for that thing, so icon-only buttons (the favourites wheel...) say what it does, not only its name */
+  let byName = null;
+  function keyForText(t) {
+    const D_ = g("D"); if (!D_?.ITEMS || !t) return null;
+    if (!byName) {
+      byName = new Map();
+      for (const [id, sp] of Object.entries(D_.SPELLS || {})) if (sp?.name && !byName.has(sp.name.toLowerCase())) byName.set(sp.name.toLowerCase(), "spell:" + id);
+      for (const [id, it] of Object.entries(D_.ITEMS)) if (it?.name) byName.set(it.name.toLowerCase(), "item:" + id);   // an item wins over a spell of the same name
+    }
+    const s0 = String(t).trim(), cut = s0.replace(/\s*(?:[,·(].*|×\s*\d+.*|x\d+)$/, "").trim().toLowerCase();
+    return byName.get(s0.toLowerCase()) || byName.get(cut) || null;
+  }
+  const plain = (t) => { const k = keyForText(t); return k && html(k) ? { k } : { t }; };
   /* what to show for this element (or null) */
   function keyOf(el) {
     if (el.dataset?.tipK) return { k: el.dataset.tipK };
-    if (el.dataset?.tip != null && el.dataset.tip !== "") return el.closest("#tbf") && has("TBUI") ? null : { t: el.dataset.tip };
-    if (el.dataset?.tipt) return { t: el.dataset.tipt };
+    if (el.dataset?.tip != null && el.dataset.tip !== "") return plain(el.dataset.tip);
+    if (el.dataset?.tipt) return plain(el.dataset.tipt);
     if (el.matches?.(AUTO_SEL)) for (const [sel, fn] of AUTO) if (el.matches(sel)) { const k = fn(el); if (k && html(k)) return { k }; }
-    const ti = el.getAttribute?.("title"); if (ti) { el.dataset.tipt = ti; el.removeAttribute("title"); return { t: ti }; }   // the browser's own title box would cover ours
+    const ti = el.getAttribute?.("title"); if (ti) { el.dataset.tipt = ti; el.removeAttribute("title"); return plain(ti); }   // the browser's own title box would cover ours
     const al = el.getAttribute?.("aria-label");
+    if (al && el.matches?.("button,[role=button],a,.iconbtn,[role=img]")) { const k = keyForText(al); if (k && html(k)) return { k }; }   // a slot labelled with an item or spell name
     const vis = (el.textContent || "").trim();
     if (al && el.matches?.("button,[role=button],a,.iconbtn") && vis.length <= 3 && vis.toLowerCase() !== al.trim().toLowerCase()) return { t: al };   // icon-only buttons
     return null;
@@ -248,7 +288,6 @@ const TIP = (() => {
     for (let el = target, d = 0; el && el.nodeType === 1 && d < 14; el = el.parentElement, d++) {
       if (el === document.body || el === document.documentElement) break;
       if (el.matches?.(SKIP)) return null;
-      if (el.matches?.("#tbf [data-tip]") && has("TBUI")) return null;   // the fight's own tooltips
       const k = keyOf(el); if (!k) continue;
       if (k.k) return small ? { el, k: k.k, note: small.t } : { el, ...k };
       if (small) return small;
@@ -360,6 +399,7 @@ const TIP = (() => {
       if (!hh.el.isConnected) { const t2 = document.elementFromPoint(press.x, press.y); hh = t2 && find(t2); }   // the screen redrew under the finger (HUD bars do): use the new copy
       if (!hh) { press = null; return; }
       press.shown = true; show(hh);
+      if (hh.el?.closest?.("#tbf")) { try { g("TBUI")?.look?.(); } catch { /* older tbui */ } }   // a hold is a look, not a drag
       if (cur) { try { navigator.vibrate?.(8); } catch { /* not allowed */ } }
     }, HOLD);
   }
@@ -374,7 +414,8 @@ const TIP = (() => {
     press = null;
   }
   function eatClick(e) {
-    if (Date.now() < swallowUntil) { e.stopImmediatePropagation(); e.preventDefault(); swallowUntil = 0; }
+    if (Date.now() < swallowUntil) { e.stopImmediatePropagation(); e.preventDefault(); swallowUntil = 0; return true; }
+    return false;
   }
   function noMenu(e) { if (press || Date.now() < swallowUntil) e.preventDefault(); }   // Android's long-press menu / text selection
   // keyboard
@@ -412,6 +453,6 @@ const TIP = (() => {
   }
   if (DOM) { if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mount); else mount(); }
 
-  return { register, html, show, hide, find, area, itemHTML, AUTO, get providers() { return Object.keys(P); }, set state(fn) { stateFn = fn; }, get open() { return !!cur; }, get HOLD() { return HOLD; } };
+  return { register, html, show, hide, find, area, itemHTML, AUTO, eatClick, keyForText, get providers() { return Object.keys(P); }, set state(fn) { stateFn = fn; }, get open() { return !!cur; }, get HOLD() { return HOLD; } };
 })();
 if (typeof module !== "undefined") module.exports = TIP;

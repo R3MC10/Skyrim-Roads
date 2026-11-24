@@ -134,6 +134,7 @@ const G = (() => {
       if (it && (it.slot === "ring" || it.slot === "amulet") && r.qty > 1) { const n = r.qty - 1; r.qty = 1; for (let i = 0; i < n; i++) s.inv.push({ id: s.nextInv++, item: r.item, qty: 1, charge: null }); }
     }
     if (typeof AMMO !== "undefined") { const m = AMMO.migrate(s); if (m) note(s, m); }
+    if (s.horse && typeof HORSES !== "undefined") HORSES.fix(s);   // a horse once sent off to a stables (or marked dead or lost) is yours again, downed
     if (fixTactics(s)) note(s, "⚔ Your tactics were fixed: rules you added under \"Always → Attack\" never fired. They now come first.");
     if (typeof SPELLCRAFT !== "undefined") SPELLCRAFT.register(s);   // crafted spells back into the spellbook
     // quests stuck on an old save move on: Bleak Falls Barrow already cleared moves the main quest to Farengar's hand-in
@@ -317,7 +318,7 @@ const G = (() => {
   }
   function itemStats(item) {
     const it = D.ITEMS[item];
-    if (it.slot === "weapon") return `${it.damage} dmg · ${it.skill}${it.hands === 2 ? " · 2 hands" : ""}${it.enchant ? ` · +${it.enchant.magnitude} ${it.enchant.effect}` : ""}`;
+    if (it.slot === "weapon") return `${it.damage} dmg · ${it.skill}${it.hands === 2 ? " · 2 hands" : ""}${it.enchant ? ` · +${it.enchant.magnitude} ${typeof ENCH !== "undefined" && ENCH.short ? ENCH.short(it.enchant.effect) : it.enchant.effect}` : ""}`;
     if (ARMOR_SLOTS.includes(it.slot)) return `${it.armor} armor · ${it.type}${it.aenchant ? ` · ${it.aenchant.name}${it.aenchant.mag > 1 ? " " + it.aenchant.mag : ""}${it.aenchant.more?.length ? ` +${it.aenchant.more.length} more` : ""}` : ""}`;
     if (it.effects) return it.effects.map(([e, m, d]) => `${e} ${m}${d * 5 >= 60 ? ` · ${Math.round(d * 5 / 60)} min` : ""}`).join(", ");
     if (it.slot === "potion") return it.restore ? `+${it.restore[1]} ${it.restore[0]}` : it.cures ? "Cures diseases" : "";
@@ -683,7 +684,7 @@ const G = (() => {
           this.charges[this.weaponInv] = charge - cost;
           if (en.effect === "frost") this.slowed = 2;
           const em = en.magnitude * (1 + (typeof PFX !== "undefined" ? PFX.sum(s, "enchhit", this, px) : 0));   // Deep Charge
-          const oh = typeof ENCH !== "undefined" && ENCH.onHit ? ENCH.onHit(this, en, em) : { dmg: em, label: ` +${en.effect}` };   // absorb, paralyze, fear, bleed... (enchanting.js)
+          const oh = typeof ENCH !== "undefined" && ENCH.onHit ? ENCH.onHit(this, en, em, { label, dmg }) : { dmg: em, label: ` +${en.effect}` };   // absorb, paralyze, fear, bleed... (enchanting.js)
           dmg += oh.dmg;
           label += oh.label;
           if (typeof PFX !== "undefined" && ["fire", "frost", "shock"].includes(en.effect)) this.pendingEl = [en.effect, em, "weapon"];   // burning / chill / jolt after the hit lands
@@ -782,7 +783,8 @@ const G = (() => {
         if ((this.tags.has("undead") || this.tags.has("construct")) && !P(s, "master_of_the_mind")) return `${sp.name}: no effect on the ${this.tags.has("undead") ? "undead" : "machine"}`;
         const cm = spellCalm(s, sp, this.tags, this);
         if ((this.e.level ?? 99) > cm.cap) return `${sp.name}: no effect (level too high)`;
-        this.calmTurns = cm.turns; return `${sp.name}: it stops fighting`;
+        this.calmTurns = cm.turns; this.calmFrenzy = !!sp.frenzy;   // Frenzy, Mayhem: it turns its weapon on itself instead
+        return sp.frenzy ? `${sp.name}: it goes mad and turns on itself` : `${sp.name}: it stops fighting`;
       }
       return sp.name;
     }
@@ -843,7 +845,11 @@ const G = (() => {
     }
     enemyTurnInner() {
       const n = this.e.name, s = this.s;
-      if (this.calmTurns > 0) { this.calmTurns--; return `${n} isn't fighting`; }
+      if (this.calmTurns > 0) {
+        this.calmTurns--; const mad = this.calmFrenzy; if (!this.calmTurns) this.calmFrenzy = false;
+        if (mad) { const d = Math.max(1, (this.e.damage || 5) * 0.8 * (0.85 + Math.random() * 0.3)); this.ehp -= d; return `${n} lashes out at itself in a frenzy (${Math.round(d)})`; }
+        return `${n} isn't fighting`;
+      }
       if (this.eParalyzed > 0) { this.eParalyzed--; return `${n} is paralyzed`; }
       if (this.stagger) { this.stagger = false; return `${n} is staggered`; }
       const fp = this.fp;

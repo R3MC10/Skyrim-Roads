@@ -32,10 +32,10 @@ async def main():
             await ctx.add_init_script(f"localStorage.setItem('rotn_prefs', JSON.stringify({{artStyle:'{style}',obTips:false,lang:'{LANG}'}}))")
             pg = await ctx.new_page(); boot = []
             pg.on("pageerror", lambda e: boot.append(str(e)))
-            for attempt in range(3):   # a local test server now and then drops a script while the page loads: start again
+            for attempt in range(6):   # a local test server now and then drops a script while the page loads: start again
                 boot.clear()
                 await pg.goto(f"http://localhost:{PORT}/index.html?assets&net=bc&notut&p=sd{name}{attempt}"); await pg.wait_for_timeout(2000)
-                if await pg.evaluate("() => typeof G !== 'undefined' && typeof SIDES !== 'undefined' && typeof SIDEUI !== 'undefined' && typeof CLANS !== 'undefined'"): break
+                if not boot and await pg.evaluate("() => { try { return [G, SIDES, SIDEUI, CLANS, QUESTS, TOWNS, DUNGEONS, SMITH].every(Boolean); } catch (e) { return false; } }"): break
                 print(f"{name}: page didn't load fully, retrying ({boot[:2]})")
             await pg.wait_for_selector(".press", timeout=60000); await pg.click(".press")
             await pg.wait_for_selector(".mi[data-t=new]", timeout=30000); await pg.click(".mi[data-t=new]")

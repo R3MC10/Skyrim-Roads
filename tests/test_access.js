@@ -34,7 +34,7 @@ function page(prefs, sysReduce = false) {
 // ---- defaults: nothing changes for players who never open the section
 {
   const p = page({});
-  ok(JSON.stringify(p.A.settings()) === JSON.stringify({ a11yText: 0, a11yColour: "none", a11yContrast: false, a11yMotion: "auto", a11yHand: "off" }), "defaults " + JSON.stringify(p.A.settings()));
+  ok(JSON.stringify(p.A.settings()) === JSON.stringify({ a11yText: 0, a11yColour: "none", a11yContrast: false, a11yMotion: "auto", a11yHand: "off", a11yTiming: false }), "defaults " + JSON.stringify(p.A.settings()));
   ok(p.props["--tz"] === "1" && !p.classes.has("a11y-zoom") && !p.dataset.cb && !p.classes.has("a11y-hc") && !p.classes.has("a11y-1h"), "default page untouched");
   ok(p.win.matchMedia("(prefers-reduced-motion: reduce)").matches === false, "auto follows the phone (off)");
   ok(p.A.remap("#d65a4a") === "#d65a4a", "no colour mode, no remap");
@@ -126,7 +126,7 @@ const minGap = (cols, m) => { let w = 1e9; for (let i = 0; i < cols.length; i++)
   const A = page({ a11yColour: "protan" }).A;
   const seg = (k, opts, cur) => `<div class="seg">${opts.map(([v, l]) => `<button data-k="${k}" data-v="${v}" class="${String(cur) === String(v) ? "on" : ""}">${l}</button>`).join("")}</div>`;
   const h = A.settingsHTML(seg);
-  for (const s of ["Accessibility", "Text size", "Colour-blind help", "High-contrast text", "Reduce motion", "One-hand mode", "Biggest", "Left hand", "Right hand", "protanopia"]) ok(h.includes(s), "settings mention " + s);
+  for (const s of ["Accessibility", "Text size", "Colour-blind help", "High-contrast text", "Reduce motion", "One-hand mode", "Easy timing", "Small", "Large", "Huge", "Left hand", "Right hand", "protanopia"]) ok(h.includes(s), "settings mention " + s);
   ok((h.match(/data-k="a11yText"/g) || []).length === 4 && (h.match(/data-k="a11yColour"/g) || []).length === 4, "4 text sizes, 4 colour modes");
   ok(/data-k="a11yColour" data-v="protan" class="on"/.test(h), "current mode marked");
 }
@@ -139,5 +139,76 @@ const minGap = (cols, m) => { let w = 1e9; for (let i = 0; i < cols.length; i++)
   ok(html.indexOf("[access]") > html.lastIndexOf("@font-face") && html.indexOf("[access]") < html.indexOf("</head>"), "CSS in the second style block");
   ok(/ACCESS\.settingsHTML\(seg\)/.test(ui) && /ACCESS\.pref\(k, b\.dataset\.v\)/.test(ui), "settings hooks in ui.js");
   ok((ui.match(/ACCESS\./g) || []).length === 2, "ui.js stays a tiny hook");
+}
+
+// ---- text size: Small / Normal / Large / Huge; old saves keep working
+{
+  const p = page({ a11yText: -1 });
+  ok(p.props["--tz"] === "0.88" && p.classes.has("a11y-zoom") && p.A.zoom() === 0.88, "small text " + p.props["--tz"]);
+  ok(page({ a11yText: 1 }).A.settings().a11yText === 2, "old Big step shows as Large");
+  ok(page({ a11yText: -7 }).A.settings().a11yText === -1, "too small clamps to Small");
+  p.A.pref("a11yText", "1"); ok(JSON.parse(p.store.rotn_prefs).a11yText === 2, "Big saved as Large");
+  p.A.pref("a11yText", "3"); ok(p.props["--tz"] === "1.38", "huge");
+  ok(JSON.stringify(p.A.TEXT_OPTS.map((o) => o[1])) === JSON.stringify(["Small", "Normal", "Large", "Huge"]), "four plain names");
+}
+// ---- Easy timing: a saved toggle, a page class, and the two numbers mini-games ask for
+{
+  const p = page({});
+  ok(p.A.timingEase() === 1 && p.A.zoneEase() === 1 && !p.classes.has("a11y-easy"), "timing normal by default");
+  ok(p.A.pref("a11yTiming", "true") === true && p.A.timingEase() === 1.5 && p.A.zoneEase() === 1.4 && p.classes.has("a11y-easy"), "easy timing on");
+  ok(JSON.parse(p.store.rotn_prefs).a11yTiming === true, "easy timing saved");
+  ok(page({ a11yTiming: true }).A.timingEase() === 1.5, "easy timing loads");
+  ok(page({ a11yTiming: "yes" }).A.timingEase() === 1, "bad value cleaned");
+  const c = { console, Math, JSON, Object, Array, Set, Map, Number, String, localStorage: { getItem: () => null, setItem() {} } };
+  vm.createContext(c); vm.runInContext(fs.readFileSync(W + "access.js", "utf8"), c);
+  ok(vm.runInContext("typeof A11Y !== 'undefined' && A11Y === ACCESS && A11Y.timingEase() === 1", c), "A11Y is a global alias (works without a page too)");
+}
+// ---- the mini-games really use it: mining band wider + needle slower, dungeon games longer + wider, fishing zone wider
+{
+  const ctx = (ease) => {
+    const c = { console, Math, JSON, Object, Array, Set, Map, Number, String, performance: { now: () => 0 }, A11Y: { timingEase: () => (ease ? 1.5 : 1), zoneEase: () => (ease ? 1.4 : 1) } };
+    vm.createContext(c);
+    for (const f of ["minegame.js", "dungeongames.js"]) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
+    return c;
+  };
+  const off = ctx(false), on = ctx(true), r = () => 0.5;
+  const z0 = off.MINEGAME.zone(30, r), z1 = on.MINEGAME.zone(30, r);
+  ok(z1.good > z0.good * 1.35 && z1.good <= 0.56, `mining band wider (${z0.good.toFixed(3)} → ${z1.good.toFixed(3)})`);
+  ok(on.MINEGAME.zone(100, r).good <= 0.56, "mining band capped");
+  const DG0 = off.DGAMES, DG1 = on.DGAMES;
+  ok(DG0 && DG1, "dungeon games load");
+  for (const kind of DG0.KINDS) {
+    const a = DG0.replay(kind, 42, { d: 0.5 }, []), b = DG1.replay(kind, 42, { d: 0.5, tm: 1.5 }, []);
+    ok(b.endTick >= a.endTick, `${kind}: no less time with Easy timing (${a.endTick} vs ${b.endTick})`);
+  }
+  ok(DG1.replay("smash", 1, { d: 0.5, tm: 1.5 }, []).tick > DG0.replay("smash", 1, { d: 0.5 }, []).tick, "smash: idle timeout is later");
+  ok(DG1.make("smash", 3, { d: 0.5, tm: 1.5 }).w > DG0.make("smash", 3, { d: 0.5 }).w * 1.35, "smash: wider weak spot");
+  ok(DG0.make("smash", 3, { d: 0.5, tm: 9 }).tm === 2, "tm clamped");
+  ok(DG0.make("smash", 3, { d: 0.5 }).tm === 1, "no tm = normal");
+}
+{
+  const src = fs.readFileSync(W + "cooking.js", "utf8"), ui = fs.readFileSync(W + "ui.js", "utf8"), imm = fs.readFileSync(W + "immerse.js", "utf8");
+  ok(/A11Y\.zoneEase\(\)/.test(src) && /rare, zone/.test(src), "fishing zone widens with Easy timing");
+  ok(/5000 \* \(typeof A11Y/.test(ui) && /A11Y\.timingEase\(\) : 1\);   \/\/ rarer fish/.test(ui), "fishing bite lasts longer and the needle slows");
+  ok(/sweetWidth\(o\.chance, o\.picks, o\.unbreakable\) \* \(typeof A11Y/.test(imm), "lock sweet spot widens");
+}
+// ---- colour is never the only signal: shapes and patterns in the colour-blind CSS
+{
+  const html = fs.readFileSync(W + "index.html", "utf8");
+  for (const sel of ["html[data-cb] .hb.mp .track i{background-image:repeating-linear-gradient", "html[data-cb] .hb.sp .track i{background-image:repeating-linear-gradient", "html[data-cb] .hb.hp small.num::before", "html[data-cb] .danger-low::before", "html[data-cb] .danger-medium::before", "html[data-cb] .danger-high::before", ".buff:not(.ccsw)::before", ".debuff:not(.ccsw)::before"])
+    ok(html.includes(sel), "symbol/pattern rule: " + sel);
+  const at = html.indexOf("colour is never the only signal");
+  ok(at > html.lastIndexOf("@font-face") && at < html.indexOf("</head>"), "in the second style block");
+}
+// ---- Polish for every word in the section
+{
+  const pl = fs.readFileSync(W + "i18n.js", "utf8") + fs.readFileSync(W + "i18n_followertab.js", "utf8");
+  const A = page({}).A, seg = (k, opts) => opts.map(([, l]) => `<b>${l}</b>`).join("");
+  for (const m of ["none", "protan", "deutan", "tritan"]) {
+    const h = page({ a11yColour: m }).A.settingsHTML(seg);
+    const words = [...h.matchAll(/<(?:span|b|small class="a11y-hint"|h3)>([^<]+)</g)].map((x) => x[1]);
+    for (const w of words) ok(pl.includes(`"${w}":`) || pl.includes(` ${w}:`) || pl.includes(`{${w}:`), `Polish for "${w}"`);
+  }
+  ok(A, "page");
 }
 console.log("test_access: all good");
