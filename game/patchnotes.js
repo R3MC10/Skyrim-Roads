@@ -3,6 +3,15 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b139-hud2", build: 139, date: "24 Nov 2026", title: "A cleaner screen", items: [
+      "Messages, guard chatter and follower lines now share one spot at the top left, under the compass. Only one person talks at a time; the next one waits their turn instead of piling on top.",
+      "Your quest goal is a thin line under the compass. A new goal flashes there instead of a big banner in the middle of the map.",
+      "Big banners (skill up, level up, new quest) sit in the middle of the map, under the messages, never on top of them.",
+      "Health, magicka and stamina fade away when they're full, like in Skyrim. Carry weight only shows when you're getting heavy. Tap the bars to see everything for a moment.",
+      "The ★ favourites button moved to the top bar, next to Search and Menu. The round compass button is the only floating button left: it moves up when there's a button under it, and on big screens it sits in the empty corner of the bottom bar.",
+      "The map buttons (zoom, centre, hunt, sneak) are one slim strip now, so the compass has more room.",
+      "Bottom bar names fit on small phones (no more cut-off \"Społeczność\").",
+    ] },
     { id: "b138-followerbonds", build: 138, date: "24 Nov 2026", title: "Followers have opinions now", items: [
       "Your follower notices what you do. Help a stranger, rob a sleeping bandit, run from a giant, pray at a shrine, join the Thieves Guild: each follower likes some things and hates others, and says so.",
       "Their loyalty shows as a meter under their name (Hero tab → Follower). Devoted followers hit 10% harder. Unhappy ones grumble, fight 15% softer, sometimes refuse to change gear, style or tactics, and at 0 they walk out (they're fine, just angry, and won't come back for a few days).",
