@@ -69,6 +69,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Smart AI combat (default; custom tactics optional), crafting mini-games, motion design (63)
 
 ## In progress (write your name before you start)
+- Claude: tidier tab menus (menus2.js): SkyUI-style categories | list | details (3 columns on PC), one sort row with direction (damage/armour too), counts, search in Items/Magic/Journal, Character page folds its long sections, follower tabs on one row, Polish for menu words. Branch claude/menus2.
 - Claude: boss fights that feel like events (bossfight.js): intro card, boss bar with phases, telegraphed big attacks you can answer, slow-mo finisher, bigger loot reveal, Giant Slayer / Read the Signs / Break Their Focus perks. Branch claude/bossfights.
 - Claude: performance pass: faster start (map terrain built row by row), map/title/road pictures sleep between frames and stop when hidden or covered, cheaper fight-screen glow, tests/perf_ui.py measures it. Branch claude/perf.
 - Claude: lighting and atmosphere (lightfx.js): time-of-day colour grade, glowing towns and camps at night, dawn/dusk light shafts, fog banks over valleys and lakes, cloud-shadow parallax, water shimmer, aurora on the northern snow, vignette; on the map and in place pictures. Settings → Graphics → Lighting Off/Low/High. Branch claude/lightfx.

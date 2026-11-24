@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b141-menus2", build: 141, date: "24 Nov 2026", title: "Tidier menus", items: [
+      "Items and Magic work like SkyUI: categories on the left, the list in the middle and the picked thing on the right. On a PC screen they sit side by side; on phones the list stays visible above the details.",
+      "One sort row: name, value, weight, damage, armour and more, plus a button that flips the order. Each category shows how many things are in it.",
+      "Search your spells by name, and find quests in the Journal with the new search box.",
+      "The Character page is much shorter: your hero card comes first, and Powers, Skills and Perks fold away until you open them.",
+      "Follower tabs fit on one row, and lots of menu words are now in Polish.",
+    ] },
     { id: "b139-beastpaths", build: 139, date: "24 Nov 2026", title: "Werewolves and vampires, for real", items: [
       "Beast Form is now a real change in turn-by-turn fights: you fight with the wolf's own moves. Claws (2 AP), Maul (4 AP, costs stamina), Pounce (can stagger, every 3 rounds), Howl (ordinary foes cower, tough ones are shaken and hit softer) and Feast on a beaten foe to heal.",
       "As a beast you can't drink potions, cast spells, shout or raise a guard. Silver weapons (the Vigilants, the Dawnguard, the Silver Hand) bite harder, and when you change back you're worn out for two rounds.",
