@@ -3,6 +3,9 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b135-fix", build: 135, date: "24 Nov 2026", title: "Small fix", items: [
+      "Fixed: with the Prospector perk, now really every ore vein glints in the mining game (one could stay hidden before).",
+    ] },
     { id: "b135", build: 135, date: "24 Nov 2026", title: "No more flickering popups", items: [
       "Fixed: popups (like tapping an equipment slot) flickered for a split second just after they opened. They now open smoothly and stay put.",
     ] },
