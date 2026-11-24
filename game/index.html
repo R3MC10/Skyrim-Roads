@@ -2743,6 +2743,14 @@ html.pcmap.pcq-off:not(.pc-side) .pcqtab{transform:none}
 .pcqtab svg{width:20px;height:20px}
 html.pcmap.pc-reduce .pcquest,html.pcmap.pc-reduce .pcqtab,html.pcmap.pc-reduce #side{transition:none!important;animation:none!important}
 html.pcmap.pc-home:has(.pcparty.on) .vitals{left:14px}
+/* [OURS] title on wide screens: a dark scrim behind the menu column + stronger shadows, so the words read over a bright sky */
+.title .vign{background:radial-gradient(clamp(240px,34vw,620px) 62vh at 50% 58%,rgba(5,7,10,.58) 0%,rgba(5,7,10,.32) 55%,transparent 100%),linear-gradient(to top,rgba(4,5,7,.7) 0%,rgba(4,5,7,0) 16%),radial-gradient(120% 90% at 50% 45%,transparent 50%,rgba(0,0,0,.75) 100%)}
+.title .mi{color:#d8d1bf}
+.title .mi small{font-size:15px;color:#c9c1ad}
+.title .tag{color:#cfc7b3}
+.title .foot{font-size:14px;color:#b5ad9a}
+.title .press,.title .mi,.title .foot,.title .tag,.title .mi small{text-shadow:0 1px 2px rgba(0,0,0,1),0 0 10px rgba(0,0,0,.95),0 0 26px rgba(0,0,0,.7)}
+.title h1{filter:drop-shadow(0 2px 3px rgba(0,0,0,.9)) drop-shadow(0 0 18px rgba(0,0,0,.6))}
 </style>
 <script src="bugreport.js"></script>
 <script src="access.js"></script>
