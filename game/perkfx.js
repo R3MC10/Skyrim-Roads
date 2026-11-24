@@ -300,6 +300,10 @@ const PFX = (() => {
     [ "Speechcraft", "thuum_mastery", "Thu'um Mastery", 2, [75, 95], ["commanding_voice"], "Your voice comes back sooner: every shout cools down another 10/20% (all cooldown cuts together stop at half). [OURS]", [["shoutcd", [0.1, 0.2], {}]]],
     [ "Acrobatics", "weathered_traveller", "Weathered Traveller", 2, [30, 60], ["sure_footed"], "Snow, rain, fog and storms slow your travel 25/50% less, and the cold creeps in 25/50% slower. [OURS]", [["wxslow", [0.25, 0.5], {}], ["coldslow", [0.25, 0.5], {}]]],
     [ "Alteration", "starlit_mind", "Starlit Mind", 1, [35], ["apprentice_alteration"], "Under a clear night sky your magicka comes back twice as fast in fights (instead of 50% faster). [OURS]", [["starmp", 0.5, {}]]],
+    // ---------------------------------------------------------------- festivals and the Grand Arena (tourney.js)
+    [S1, "arena_champion", "Arena Champion", 1, [40], ["armsman"], "In festival duels and the Grand Arena, your foes have 10% less health and hit 10% softer, and your Grand Arena score is 10% higher. [OURS]", [["arenafight", 0.1, {}]]],
+    [ "Athletics", "sportsman", "Sportsman", 2, [20, 50], ["long_strider"], "Festival contests score 8/16% more, and you hold your mead better in the drinking contest. [OURS]", [["sport", [0.08, 0.16], {}]]],
+    [ "Speechcraft", "crowd_favourite", "Crowd Favourite", 1, [30], [], "The crowd loves you: festival and Grand Arena prize gold is 50% higher, and 4th and 5th place also win a ribbon. [OURS]", [["crowdfav", 0.5, {}]]],
   ];
   const FX = {};
   if (typeof PERKS !== "undefined") {

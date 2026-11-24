@@ -2792,6 +2792,53 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 .breach .br-pin:disabled{cursor:default}
 .breach .br-acts{display:grid;gap:8px;margin-top:8px}
 @media (max-width:420px){.breach .br-pin span{font-size:10px;max-width:84px}}
+/* festivals, contests and the Grand Arena (tourneyui.js) */
+.tn{display:grid;gap:10px}
+.tn h3{margin:0 0 2px;font-size:19px;letter-spacing:.04em}
+.tn h4{margin:6px 0 4px;font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:var(--gold)}
+.tn-hero{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;align-items:start}
+.tn-hero .sub{margin:2px 0}
+img.tn-art{display:block;width:100%;max-width:440px;height:auto;border-radius:8px;border:1px solid #4a4237}
+.tn-chip{display:inline-block;width:12px;height:16px;border-radius:2px;border:1px solid rgba(0,0,0,.55);vertical-align:middle;margin-right:7px}
+.tn-town{display:flex;align-items:center;flex-wrap:wrap}
+.tn-rep{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.tn-rep .sub{margin-right:2px}
+.tn-hold{min-height:36px;max-width:12em;background:var(--panel2,#1f1c18);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:4px 6px}
+.tn-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
+.tn-card{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:rgba(255,255,255,.025);display:grid;gap:6px;align-content:start}
+.tn-card .sub{margin:0}
+.tn-ch{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tn-ch b{font-size:16px}
+.tn-ch .sub{margin-left:auto;font-size:12px}
+.tn-ic{font-size:20px;width:26px;text-align:center}
+.tn-board{list-style:none;margin:0;padding:0;border-top:1px solid rgba(226,187,100,.3)}
+.tn-board li{display:grid;grid-template-columns:2em minmax(0,1fr) auto;gap:6px;align-items:center;padding:3px 4px;font-size:14px;border-bottom:1px solid var(--line)}
+.tn-board li:nth-child(odd){background:rgba(255,255,255,.02)}
+.tn-board li.me{background:linear-gradient(90deg,rgba(226,187,100,.22),rgba(226,187,100,0));color:var(--gold)}
+.tn-board li.npc{color:var(--mute)}
+.tn-board li.tn-gap{display:block;text-align:center;color:var(--mute);padding:0}
+.tn-board small{color:var(--mute);font-size:11px}
+.tn-board .tn-rp{color:var(--frost)}
+.tn-n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tn-go{width:100%;min-height:40px}
+.tn-why{color:var(--mute);font-size:12px}
+.tn-glory{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.tn-cal{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.tn-cal li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:6px;align-items:center;padding:4px;border-bottom:1px solid var(--line)}
+.tn-cal .tn-n{display:grid;white-space:normal}
+.tn-cal small{color:var(--mute)}
+.tn-cal .sub{text-align:right;font-size:12px;margin:0}
+.tn-rules{font-size:12px}
+.tn-away{border-left:3px solid var(--gold);padding-left:8px}
+.tn-bar{height:8px;border-radius:4px;background:#3a2b22;overflow:hidden}
+.tn-bar i{display:block;height:100%;background:linear-gradient(90deg,#b84a3a,#e0a060)}
+.tn-mugs{min-height:30px;font-size:22px;text-align:center;letter-spacing:2px}
+.tn-mugs span{font-size:13px;margin:0 4px;color:var(--gold)}
+.tn-reel{position:relative;height:26px;border-radius:13px;background:#2a2622;border:1px solid #5a4c3a;margin:10px 0;overflow:hidden}
+.tn-reel .tn-z{position:absolute;top:0;bottom:0;background:rgba(110,190,110,.55)}
+.tn-reel .tn-nd{position:absolute;top:-2px;bottom:-2px;width:4px;margin-left:-2px;background:#ffe6a0;box-shadow:0 0 6px #ffe6a0}
+@media (min-width:760px){.tn-hero{grid-template-columns:minmax(0,1fr) minmax(0,1.1fr)}.tn-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (min-width:1100px){.tn-fest .tn-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 </style>
 <script src="bugreport.js"></script>
 <script src="access.js"></script>
@@ -3009,6 +3056,7 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 <script src="i18n_pcmap.js"></script>
 <script src="i18n_eventart.js"></script>
 <script src="i18n_appicon.js"></script>
+<script src="i18n_tourney.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>
@@ -3024,7 +3072,9 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 <script src="hud2.js"></script>
 <script src="skillup.js"></script>
 <script src="invites.js"></script>
+<script src="tourney.js"></script>
 <script src="holdui.js"></script>
+<script src="tourneyui.js"></script>
 <script src="netsync.js"></script>
 <script src="ui.js"></script>
 </body>

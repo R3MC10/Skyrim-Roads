@@ -135,6 +135,9 @@ const REMIND = (() => {
       else add({ key: `fest:${st.ev.key}`, kind: "board", icon: st.ev.icon, title: `${st.ev.name}: ${st.ev.goal.what}`, sub: `${st.n} of ${st.ev.goal.n} so far`, state: "ending", go: { tab: "log", jtab: "misc", anchor: "j-event" } });
     });
 
+    // festivals and the Grand Arena (tourney.js): one on now, prizes to collect
+    safe(() => { if (typeof TOURNEYUI !== "undefined") TOURNEYUI.reminders(S, add, goAt); });
+
     // world events (worldevents.js): running now, rewards waiting, starting soon
     safe(() => {
       if (typeof WORLDEV === "undefined") return;
