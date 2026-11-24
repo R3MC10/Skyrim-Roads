@@ -3,10 +3,33 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b136", build: 136, date: "24 Nov 2026", title: "Vote on the road with your party", items: [
+    { id: "b136vote", build: 136, date: "24 Nov 2026", title: "Vote on the road with your party", items: [
       "Travelling together: when the party leader runs into a foe or something by the road, everyone with them now gets the same window with the same choices, not just a \"wait\" note.",
       "Members tap a choice to vote for it. Your little portrait pops up next to the option you picked, on everyone's phone, the leader's too, and moves as people change their minds. Tap it again to take your vote back, or Just watch to close the window.",
       "Only the leader's tap actually happens. When they choose, everyone's window closes and you see what they picked and how it went.",
+    ] },
+    { id: "b136dg", build: 136, date: "24 Nov 2026", title: "Dungeon mini-games, and watching your leader", items: [
+      "Dungeon rooms are played now, not rolled. Dash through a trap by running between the swinging blades, find the trigger by spotting the stone that sits low and glints, smash a chest with well-timed swings, sneak past a foe by stopping when it turns (and waiting in the shadows), and search a quiet room by rubbing the dust away. Each takes 5 to 15 seconds.",
+      "New choice in fight rooms: Run for it. Tap Left and Right in turn as fast as you can to get past the foe. Get caught and it hits first.",
+      "Your skills still matter: better Acrobatics, Sneak, Athletics and weapon skills make the games easier, and a near miss hurts less than a bad one. Light Foot shows you the trigger stone.",
+      "New perks: Blade Dancer (Acrobatics), Trap Sense and Patient Shadow (Sneak), Lid Breaker (Two-Handed), Sprinter (Athletics) and Keen Searcher (Lockpicking) each make one of these games easier.",
+      "In a party, everyone in the dungeon watches the leader play live: the blades, the chest, the lock and the pillar rings, tap by tap, and then sees what happened. The leader's play decides it for the whole party.",
+    ] },
+    { id: "b136-dungeons", build: 136, date: "24 Nov 2026", title: "Bigger party, longer dungeon", items: [
+      "Dungeons now get longer for every friend in your party who goes in: 2 more rooms each for the first three friends, then 1 more each. A full party of 8 walks 10 extra rooms before the boss.",
+      "The extra rooms are the usual mix: fights, tough fights, traps, treasure chests, odd finds and the odd spot to rest. There's still a breather room right before the boss.",
+      "The party leader rolls the map once when you go in, so everyone in the party walks exactly the same rooms. This now also works for co-op runs started from the dungeon door (not just the party ready check).",
+      "Going in alone? Nothing changes.",
+    ] },
+    { id: "b135-fix", build: 135, date: "24 Nov 2026", title: "Small fix", items: [
+      "Fixed: with the Prospector perk, now really every ore vein glints in the mining game (one could stay hidden before).",
+    ] },
+    { id: "b136", build: 136, date: "24 Nov 2026", title: "A proper road picture while you travel", items: [
+      "The little picture under your trip is now a real moving landscape: snowy mountains far off, hills and forests that match where you are (pines, the Rift's golden birches, marsh, snowfields, ash wastes, rocky hills), and a road with ruts or old flagstones.",
+      "The sky and light follow the real time of day: sun, moons, stars and northern lights at night, warm light at dusk. Snow, rain with lightning, fog, ash and autumn leaves blow through when that's the weather.",
+      "Things pass by on the way: signposts, wayshrines, standing stones, ruins, camps and lanterns, and other travellers, guard patrols and Khajiit caravans come the other way. At night you carry a torch and windows light up.",
+      "The place you're heading to rises on the horizon and grows as you get closer, and a gold thread along the bottom shows how far you've come.",
+      "Runs smoothly on phones and stops when you can't see it, so it doesn't drain the battery. Works in both art styles (pixel art stays crisp).",
     ] },
     { id: "b135", build: 135, date: "24 Nov 2026", title: "No more flickering popups", items: [
       "Fixed: popups (like tapping an equipment slot) flickered for a split second just after they opened. They now open smoothly and stay put.",

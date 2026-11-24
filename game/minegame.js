@@ -29,7 +29,7 @@ const MINEGAME = (() => {
     const skill = G.skill(s, "Smithing"), bag = SMITH.oreBag(place), n = SMITH.oreCount(s, rnd);
     const cells = Array.from({ length: COLS * ROWS }, () => ({ kind: "stone", item: null, hp: HP.stone, max: HP.stone, glint: false, broken: false }));
     const free = [...cells.keys()].sort(() => rnd() - 0.5);
-    const spot = Math.min(0.95, 0.55 + skill / 200 + (perk(s, "prospect") > 0 ? 1 : 0));
+    const spot = perk(s, "prospect") > 0 ? 1 : Math.min(0.95, 0.55 + skill / 200);   // Prospector: every vein glints
     for (let k = 0; k < n && free.length; k++) {
       const c = cells[free.pop()];
       Object.assign(c, { kind: "ore", item: bag[Math.floor(rnd() * bag.length)], hp: HP.ore, max: HP.ore, glint: rnd() < spot });
