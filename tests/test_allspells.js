@@ -406,8 +406,8 @@ for (const [id, name, spell] of MAGIC.STAFFS) {
   for (const id of ["calm", "frenzy", "fear", "wall_of_flames", "fire_rune", "soul_trap"]) { const x = castTB(mage(), { ...FOES.bandit(), level: 3 }, "spell:" + id); ok(/st spl/.test(TB.statusChips ? TB.statusChips(x.f) : SPELLFX.foeHTML(x.f)), id + ": a chip under the foe"); tips.push(...SPELLFX.foe(x.f).filter((c) => !c.shown).map((c) => c.tip)); }
   for (const t of new Set(tips)) ok(pl(t), "chip tip in Polish: " + t);
   for (const t of ["Bandit lashes out at itself in a frenzy (12)", "It already took 40 from your spells", "Frenzy: it goes mad and turns on itself", "Not enough magicka"]) ok(pl(t), "fight line in Polish: " + t);
-  const pn = PATCHNOTES.LIST ? PATCHNOTES.LIST[0] : null;
-  if (pn) { ok(pn.id === "b145-spelltest" || pn.build >= 145, "patch note on top"); if (pn.id === "b145-spelltest") for (const t of [pn.title, ...pn.items]) ok(pl(t), "patch note in Polish: " + t.slice(0, 40)); }
+  const pn = PATCHNOTES.LIST ? PATCHNOTES.LIST.slice(0, 40).find((x) => x.id === "b145-spelltest") : null;   // near the top: several features ship in one build, only one note can be first
+  if (PATCHNOTES.LIST) { ok(!!pn, "patch note near the top"); if (pn) for (const t of [pn.title, ...pn.items]) ok(pl(t), "patch note in Polish: " + t.slice(0, 40)); }
 }
 
 // ---------------------------------------------------------------- 23. every spell was really checked

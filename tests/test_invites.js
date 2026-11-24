@@ -76,8 +76,8 @@ c.__p.then(() => {
   c.ok(tr("👥 Kacper declined your party invite.") === "👥 Kacper odrzuca twoje zaproszenie do drużyny.", "Polish decline note: " + tr("👥 Kacper declined your party invite."));
   // patch note on top
   const pn = fs.readFileSync(__GAME + "patchnotes.js", "utf8");
-  c.ok(/const LIST = \[\s*\{ id: "b\d+-invitebuttons"/.test(pn), "patch note at the top");
-  c.ok(/<script src="invites.js"><\/script>\s*<script src="ui.js">/.test(fs.readFileSync(__GAME + "index.html", "utf8")), "invites.js loads before ui.js");
+  { const ids = [...pn.slice(pn.indexOf("const LIST = [")).matchAll(/\{ id: "([^"]+)"/g)].slice(0, 40).map((m) => m[1]); c.ok(ids.some((x) => /^b\d+-invitebuttons$/.test(x)), "patch note near the top"); }
+  { const ix = fs.readFileSync(__GAME + "index.html", "utf8"), a = ix.indexOf('<script src="invites.js">'), b = ix.indexOf('<script src="ui.js">'); c.ok(a > 0 && a < b, "invites.js loads before ui.js"); }
   c.ok(/<script src="i18n_invites.js"><\/script>[\s\S]*<script src="i18n.js">/.test(fs.readFileSync(__GAME + "index.html", "utf8")), "i18n_invites.js loads before i18n.js");
   if (fails) { console.log(fails + " failed"); process.exit(1); }
   console.log("invites ok");

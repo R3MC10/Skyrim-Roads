@@ -47,7 +47,7 @@ let fails = 0, n = 0; const ok = (cnd, m) => { n++; if (!cnd) { fails++; console
     "greatevents.js": "NOAUTO.call", "worldevents.js": "NOAUTO.call", "rumours.js": "NOAUTO.call", "livingworld.js": "NOAUTO.call",
     "guilds.js": "ui.js tbCall", "hsrooms.js": "homestead defend (ui.js tbCall)", "mp.js": "PvP attack (ui.js tbCall)", "quests.js": "quest talk (ui.js tbCall; Dawnguard, Daedric, curses ride on it)",
     "towns.js": "guards (ui.js tbCall)", "wevents.js": "dragon raids (ui.js tbCall)",
-    "aiset.js": "tactics preview sim on a copy of your save", "ui.js": "tactics test fight on a copy of your save", "arena.js": "Arena duel between two saved builds (both players agreed to it)" };
+    "aiset.js": "tactics preview sim on a copy of your save", "ui.js": "tactics test fight on a copy of your save", "arena.js": "Arena duel between two saved builds (both players agreed to it)", "holdrule.js": "hold claim / raid (holdui.js TB.call)" };
   const files = __fs.readdirSync(__W).filter((f) => f.endsWith(".js"));
   const runs = files.filter((f) => /\\bf[ab]?\\.run\\(\\s*\\{|new G\\.Fight\\([^)]*\\)\\s*;\\s*f\\.run\\(|\\bf\\.run\\(\\)/.test(__fs.readFileSync(__W + f, "utf8")));
   for (const f of runs) ok(REVIEWED[f], f + " runs a fight that nobody checked opens on the turn-by-turn screen (add it to REVIEWED once it does)");

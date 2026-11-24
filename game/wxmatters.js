@@ -130,7 +130,7 @@ const WXM = (() => {
       const clk = document.getElementById("clock"); if (clk) { const tp = tip(s); if (clk.dataset.tip !== tp) clk.dataset.tip = tp; }
     };
   }
-  if (typeof document !== "undefined") document.addEventListener("click", (ev) => {
+  if (typeof document !== "undefined" && typeof document.addEventListener === "function") document.addEventListener("click", (ev) => {
     const a = ev.target.closest?.(".wxchip,#clock"); if (!a) return;
     const s = save(); if (!s) return;
     popover(a, s);

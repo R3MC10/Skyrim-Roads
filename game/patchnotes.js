@@ -957,12 +957,13 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 144;
+  const NEXT_AT = 163;
   const NEXT = [
     "A new, livelier fight screen that fits on one screen",
     "On PC, everything fits on one screen without scrolling",
-    "New painted dungeon rooms and a painted world map",
-    "More unique enchantments on gear",
+    "New painted dungeon rooms and a parchment dungeon map",
+    "Dwemer ruins and the deep caverns of Blackreach",
+    "Fishing and hunting",
   ];
   const KEY = "rotn_notes_seen";
   const latest = () => LIST[0];
