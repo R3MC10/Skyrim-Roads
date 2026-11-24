@@ -3,6 +3,15 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b144-dawnguard", build: 144, date: "24 Nov 2026", title: "The vampire war", items: [
+      "New quest line from level 12: Isran at Fort Dawnguard (near Riften) sends you into Dimhollow Crypt, where something sleeps in a sealed coffin. It ends at Castle Volkihar, a black keep on an islet off the coast past Solitude.",
+      "Then pick a side. Hunt the night with the Dawnguard (heavy crossbow, hunter's armour, troll armour for your follower) or drink Lord Harkon's blood and become a stronger Vampire Lord. Seven more stages either way, with a big boss fight at the end.",
+      "Six new perks, three per side: Vampire Hunter, Sun-Blessed Plate and Troll Tamer for the Dawnguard; Blood of Harkon, Night Lord and Court of Volkihar for Harkon's court. You can only take your own side's perks.",
+      "In a party only the leader picks the side, and everyone else follows that choice.",
+      "The vampire war fights are long and they hurt: expect to finish them bruised and short on potions, and to lose the odd one. No foe in it can take more than about a third of your health in one blow, though.",
+      "The \"quest stage done\" lines in quest pop-ups and the \"find them at...\" hints in the Journal now show in Polish too.",
+      "Two new achievements, one for each ending. New pictures for the fort, the castle and the story, in both art styles. All of it is in Polish too.",
+    ] },
     { id: "b143-comingnext", build: 143, date: "24 Nov 2026", title: "Coming next is up to date again", items: [
       "The Coming next box at the top of Patch notes now shows what's really being built, and it can't get stuck on an old list any more."] },
     { id: "b143-followertab", build: 143, date: "24 Nov 2026", title: "Your follower gets their own tab", items: [

@@ -425,6 +425,7 @@ const EVENTART = (() => {
     const t = String(title), x = String(text);
     if (/^You died/i.test(t)) return null;
     const sk = typeof SOLART !== "undefined" ? SOLART.storyKind(t, x) : null; if (sk) return sk;   // Solstheim's scenes (solart.js)                              // UIART.death already draws this
+    const dk = typeof DGART !== "undefined" ? DGART.storyKind(t, x) : null; if (dk) return dk;   // the vampire war's scenes (dgart.js)
     if (/Word Wall/i.test(x)) return "wordWall";
     if (/dragon falls/i.test(t)) return "dragonFalls";
     if (/The Change/i.test(t)) return /cure|cleans|human again|free of/i.test(x) ? "dawn" : /wolf|beast|howl|Hircine/i.test(x) ? "wolf" : "blood";
