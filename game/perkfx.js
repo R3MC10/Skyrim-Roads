@@ -300,6 +300,10 @@ const PFX = (() => {
     [ "Speechcraft", "thuum_mastery", "Thu'um Mastery", 2, [75, 95], ["commanding_voice"], "Your voice comes back sooner: every shout cools down another 10/20% (all cooldown cuts together stop at half). [OURS]", [["shoutcd", [0.1, 0.2], {}]]],
     [ "Acrobatics", "weathered_traveller", "Weathered Traveller", 2, [30, 60], ["sure_footed"], "Snow, rain, fog and storms slow your travel 25/50% less, and the cold creeps in 25/50% slower. [OURS]", [["wxslow", [0.25, 0.5], {}], ["coldslow", [0.25, 0.5], {}]]],
     [ "Alteration", "starlit_mind", "Starlit Mind", 1, [35], ["apprentice_alteration"], "Under a clear night sky your magicka comes back twice as fast in fights (instead of 50% faster). [OURS]", [["starmp", 0.5, {}]]],
+    // Legendary hunts (leghunt.js) [OURS]
+    [AR, "lh_tracker", "Experienced Tracker", 1, [40], ["hunters_eye"], "On a legendary hunt every clue counts twice, you read one extra secret from every sign, and tracks and ambushes are easier. [OURS]", [["lhclue", 1, {}]]],
+    [ "Speechcraft", "lh_scholar", "Monster Scholar", 1, [30], ["persuasion"], "You have read every bestiary in the College: you know what a legendary beast resists before you meet it, and you hit legendary beasts 10% harder. [OURS]", [["lhscholar", 1, {}], ["out", 0.1, { tag: ["legend"] }]]],
+    [ "Smithing", "lh_trophy", "Trophy Hunter", 2, [30, 60], ["steel_smithing"], "When you skin a legendary beast you take 1/2 more pieces of its rare hide, and you are 10/20% more likely to find its unique piece. [OURS]", [["lhharvest", [1, 2], {}], ["lhuniq", [0.1, 0.2], {}]]],
   ];
   const FX = {};
   if (typeof PERKS !== "undefined") {
