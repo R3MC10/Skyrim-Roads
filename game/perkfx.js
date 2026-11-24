@@ -328,6 +328,10 @@ const PFX = (() => {
     [ "Streetwise", "cartographer", "Cartographer", 1, [25], ["rumour_monger"], "Treasure maps come clearer: one more landmark, firm roads and a full compass, and you know the hold at once. [OURS]", [["tmapx", 1, {}]]],
     [ "Mercantile", "antiquarian", "Antiquarian", 1, [30], ["haggling"], "You restore relics yourself, anywhere, from one fragment fewer, and collectors pay half again as much for them. [OURS]", [["relicfix", 1, {}], ["relicpay", 0.5, {}]]],
     [ "Athletics", "excavator", "Excavator", 2, [30, 60], ["long_strider"], "Buried treasure holds 25%/50% more gold and an extra gem or relic fragment, and a wrong dig tires you half as long. [OURS]", [["digloot", [0.25, 0.5], {}], ["diggem", 1, {}], ["digrest", 0.5, {}]]],
+    // Legendary hunts (leghunt.js) [OURS]
+    [AR, "lh_tracker", "Experienced Tracker", 1, [40], ["hunters_eye"], "On a legendary hunt every clue counts twice, you read one extra secret from every sign, and tracks and ambushes are easier. [OURS]", [["lhclue", 1, {}]]],
+    [ "Speechcraft", "lh_scholar", "Monster Scholar", 1, [30], ["persuasion"], "You have read every bestiary in the College: you know what a legendary beast resists before you meet it, and you hit legendary beasts 10% harder. [OURS]", [["lhscholar", 1, {}], ["out", 0.1, { tag: ["legend"] }]]],
+    [ "Smithing", "lh_trophy", "Trophy Hunter", 2, [30, 60], ["steel_smithing"], "When you skin a legendary beast you take 1/2 more pieces of its rare hide, and you are 10/20% more likely to find its unique piece. [OURS]", [["lhharvest", [1, 2], {}], ["lhuniq", [0.1, 0.2], {}]]],
   ];
   const FX = {};
   if (typeof PERKS !== "undefined") {

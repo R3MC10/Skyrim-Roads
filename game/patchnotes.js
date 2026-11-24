@@ -3,6 +3,15 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b175-legendhunts", build: 175, date: "25 Nov 2026", title: "Legendary beasts: Jarl contracts and monster hunts", items: [
+      "Ten named monsters now roam Skyrim, from the Mudcrab King on the Solitude shore to the White Ghost sabre cat, Whitefang the frost troll near Dawnstar and Bloodmoon, the werewolf of Hircine, in the Falkreath woods. Each one lives in its own hold and wanders between nearby places over time.",
+      "Open Legendary hunts in a town to see the Jarl's posters. Take a contract and the map shows a rough area where the beast was last seen, not an exact spot.",
+      "On the road you find clues: tracks (your hunting skill decides how much you read from them), a victim, a witness, a wrecked caravan. Every clue shrinks the area, and some tell you what the beast fears and what barely hurts it. You can also search the place you're standing in.",
+      "Close in and choose how to start the fight: set an ambush, track it to its lair (harder start, better loot) or lay bait and drink your potions first. In a party the leader chooses.",
+      "Each beast is a real boss with its own big move to dodge, block or ward against. Hitting it with what it fears really helps: a known weakness means more damage and a shorter fight, and the frost troll stops healing once you know to bring fire.",
+      "Rewards: the Jarl's gold, a trophy, rare hides and parts you can turn into ten unique pieces of gear at the forge (the forge uses them up), sometimes a unique item from the body, and a new bestiary entry. Party members each get their own trophy and share.",
+      "New perks: Experienced Tracker (Archery) finds an extra clue each time, Monster Scholar (Speech) tells you what a beast resists and hits legends harder, Trophy Hunter (Smithing) gets more rare parts and unique items.",
+    ] },
     { id: "b172-assetquality", build: 172, date: "24 Nov 2026", title: "Sharper pictures on every screen", items: [
       "Foes in fights are painted at full size now, so they stay sharp on big monitors and 3x phone screens instead of going soft.",
       "The dragon is no longer squashed into a square: it shows with its proper wide wingspan.",
@@ -1180,7 +1189,7 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 174;
+  const NEXT_AT = 175;
   const NEXT = [
     "A new, livelier fight screen that fits on one screen",
     "Dragon Shouts learned from word walls",
