@@ -1811,6 +1811,25 @@ html.art-pixel .tbu .faibars .tbbar,html.art-pixel .tbu .faibars .tbbar i,html.a
 .dgame .lpcard.dgwin{animation:dgwin .5s ease-out}.dgame .lpcard.dglose{animation:lpsnap .35s}
 @keyframes dgwin{50%{transform:scale(1.03)}}
 @media (prefers-reduced-motion:reduce){.dgame .lpcard.dgwin,.dgame .lpcard.dglose{animation:none}}
+/* spell tome info before you buy or read it (tomeinfo.js), SkyUI item info */
+.item.ti-row{flex-wrap:wrap}
+.ti-box{flex:0 0 auto;box-sizing:border-box;width:calc(100% - 44px);min-width:0;margin:2px 0 0 44px;overflow-wrap:anywhere;padding:5px 8px;font-size:13px;line-height:1.4;border-left:2px solid rgba(214,178,94,.35);background:rgba(0,0,0,.18);color:#d9d2c2}
+.ti-box i,.ti-what{font-style:normal;color:#c9c2b3}
+.ti-box .nv{white-space:normal}
+.ti-v{font-size:12.5px;margin-top:3px;font-weight:600}.ti-v.ok{color:#8fd49a}.ti-v.low{color:#e8a25c}
+.ti-card{margin:8px 0 4px;padding:8px 10px;border:1px solid rgba(214,178,94,.22);border-radius:6px;background:rgba(0,0,0,.25)}
+.ti-h{font-family:var(--title,Cinzel),serif;font-size:16px;letter-spacing:.06em;color:#f4ecd8;text-align:center;margin-bottom:6px}
+.ti-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:rgba(214,178,94,.18);border-block:1px solid rgba(214,178,94,.3);margin-bottom:6px}
+.ti-stat{background:rgba(14,15,18,.92);padding:5px 2px;text-align:center;min-width:0}
+.ti-stat b{display:block;font-size:14px;color:#f4ecd8;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.ti-stat.mana b{color:#6fa8ff}
+.ti-stat small{display:block;font-family:var(--title,Cinzel),serif;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#d6b25e}
+.ti-what{margin:4px 0;font-size:13.5px;line-height:1.45}
+.ti-card .spl-info{margin:4px 0}
+.lv-row .ti-line,.loot-row .ti-line{display:block;white-space:normal;font-size:11.5px;line-height:1.3;color:var(--mute,#a9a395)}
+html.art-pixel .ti-box,html.art-pixel .ti-card,html.art-pixel .ti-stats{border-radius:0}html.art-pixel .ti-box{border-left-width:3px}
+#side[data-tab=log] .ti-box{color:#3b2e1e}
+html.a11y-hc .ti-box,html.a11y-hc .ti-box i,html.a11y-hc .ti-what{color:#ece6d8}
 </style>
 <script src="access.js"></script>
 </head>
@@ -1866,6 +1885,7 @@ html.art-pixel .tbu .faibars .tbbar,html.art-pixel .tbu .faibars .tbbar i,html.a
 <script src="tomes.js"></script>
 <script src="magic.js"></script>
 <script src="spellbook.js"></script>
+<script src="tomeinfo.js"></script>
 <script src="spellcraft.js"></script>
 <script src="combatai.js"></script>
 <script src="sneak2.js"></script>

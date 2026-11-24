@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b137-tomeinfo", build: 137, date: "24 Nov 2026", title: "Know the spell before you buy the tome", items: [
+      "Spell tomes for sale now tell you what you'd learn: the school, the level (Novice to Master), how much magicka and how many AP it costs, and what it does, with your own numbers.",
+      "Each tome also says if you already know the spell and if your skill is high enough. Too low, and it warns you the spell will cost more and sometimes fizzle.",
+      "You see this at court wizards, the College, general stores, travelling traders, caravans, the Khajiit caravan, other players' market stalls, in your pack, in fight loot, in the party loot vote and in search.",
+    ] },
     { id: "b136", build: 136, date: "24 Nov 2026", title: "Followers fight like you do", items: [
       "Your follower is now a full character. They have their own magicka and stamina, take their own turn with action points like yours, and pick from the same moves: attacks, power attacks, guarding, stepping in front of you, spells and potions.",
       "Teach them spells: open the follower screen, go to Magic and hand them a spell tome from your pack. They can learn it if they're good enough in that school (Apprentice 25, Adept 50, Expert 75, Master 90). You can tell them not to use a spell.",
@@ -22,7 +27,7 @@ const PATCHNOTES = (() => {
       "Each turn has 90 seconds; if time runs out, that player holds back and guards. If you get knocked down, you get back up after the fight, badly hurt.",
       "If the leader's phone goes quiet for two minutes, the fight breaks off.",
     ] },
-    { id: "b136-2", build: 136, date: "24 Nov 2026", title: "Enemies come alive", items: [
+    { id: "b136-2-2", build: 136, date: "24 Nov 2026", title: "Enemies come alive", items: [
       "Every enemy now moves like your hero does: they breathe while they wait, wind up and swing, bite, claw, stomp, breathe fire or cast, flinch when you hit them, reel from big blows, duck aside when you miss, and crumple to the ground when beaten. Beat you, and they gloat.",
       "Wolves lunge and snap, bears rear up and swipe, spiders rear back and bite, mudcrabs pinch, dragons rear up and spread their wings before they breathe, mammoths stomp, ice wraiths coil and strike.",
       "The painted enemy pictures move too: they bend, lunge into their attacks, recoil when hit and fall over. Works in both the hand-drawn and the pixel art style.",
@@ -33,7 +38,7 @@ const PATCHNOTES = (() => {
       "Your hero now actually walks on the road, rides the horse properly, sits on the wagon bench, and swings, blocks, casts and gets knocked down in fights. Moves flow smoothly from one into the next.",
       "Party members, followers and other players use the same new look, on the road, in fights, in portraits and on the hero tab. Works in both the hand-drawn and the pixel style.",
     ] },
-    { id: "b136-2-2", build: 136, date: "24 Nov 2026", title: "Meet caravans on the road", items: [
+    { id: "b136-2-2-2", build: 136, date: "24 Nov 2026", title: "Meet caravans on the road", items: [
       "Caravans on the map are now something you can meet while you travel. When you're close, their wagons get a gold ring and say \"tap to meet\": tap them, or just walk up beside them and you'll be asked to stop.",
       "Meeting a caravan pauses your trip. Trade with their merchant (every caravan run carries different goods), ask for news from the road (a rumour or a new place goes on your map), or just wave and carry on.",
       "Guard the wagons: walk the rest of their road with them, at their pace, and get paid when you roll into their stop. Ambushes can still hit the caravan on the way.",

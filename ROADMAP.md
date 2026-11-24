@@ -76,6 +76,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Claude: dungeons get longer per player in a party (partyplay.js longLayout/sizeRun, coop.js lobby start). Branch claude/partydungeons.
 - Claude: travel strip overhaul (travelart.js): deep parallax scenery by region, sky/time of day, live weather, lighting, passing landmarks and travellers, the destination growing on the horizon. Branch claude/travelscene.
 - Claude: visual overhaul (fits every screen and resolution) — branches claude/fit-*, in passes.
+- Claude: spell tome info before buying/reading (tomeinfo.js: school, level, magicka, AP, what it does, known?, skill enough?) in shops, pack, loot, search; TOMEINFO.box/html/line for the tooltip work. Branch claude/tomeinfo.
 - Kacper: reading the fight (fightread.js): foe intents, health forecasts for poison/burning/blows on both sides, turn-by-turn playback with banners and round summaries, low-health warning, combat sounds (ElevenLabs, `node scripts/gen_audio.mjs game/ combat`). Branch ccr-23a36e7d-impjqi.
 - Kacper: painted battle scenes (battlescene.js + bscdata.js, pictures bs-/bsf-/bsp-*.webp from the scene pack via scripts/import_battlescenes.py). Branch ccr-23a36e7d-impjqi.
 - Claude: followers as full characters (followerai.js: spells from tomes, magicka/stamina/AP, every gear slot, own potions, tactics, rows) and party combos + foe weak/resist chips (combo.js). Branch claude/followers2.
