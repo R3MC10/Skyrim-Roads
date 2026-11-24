@@ -40,7 +40,9 @@ async def main():
                     await pg.evaluate(CLEAN)
                     if await pg.evaluate(MYTURN): return True
                     if await pg.evaluate("!!TB.session?.done"): return False
-                    if await pg.evaluate("!!document.querySelector('#tbf [data-tbx=skip]')"): await pg.click("#tbf [data-tbx=skip]", timeout=3000)
+                    if await pg.evaluate("!!document.querySelector('#tbf [data-tbx=skip]')"):
+                        try: await pg.click("#tbf [data-tbx=skip]", timeout=3000)   # a real tap on the scene hurries the turn
+                        except Exception: pass   # the turn ended (and the layer went) while we tapped
                     await pg.wait_for_timeout(250)
                 return False
             async def noscroll(what):
