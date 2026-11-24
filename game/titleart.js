@@ -77,11 +77,16 @@ const TITLEART = (() => {
 
   /* animate the title panorama on `cv` (full screen); returns stop() */
   function start(cv, opts = {}) {
-    const reduce = !!opts.reduce, px = pixel(), k = px ? 1 / 3 : Math.min(1.5, (typeof devicePixelRatio !== "undefined" && devicePixelRatio) || 1);
+    const reduce = !!opts.reduce, px = pixel(), k = px ? 1 / 3 : Math.min(2, (typeof devicePixelRatio !== "undefined" && devicePixelRatio) || 1);   // 2: sharp on phones (1.5 looked soft at 3x), still cheap enough to animate
     let W = 0, Hh = 0, L = null, stopped = false, raf = 0, last = 0, t0 = performance.now();
     const g = cv.getContext("2d");
     function build() {
-      W = Math.max(1, Math.round(innerWidth * k)); Hh = Math.max(1, Math.round(innerHeight * k)); cv.width = W; cv.height = Hh;
+      if (px) {   // pixel art: every art pixel the same whole number of screen pixels (no uneven rows), a hair past the edges
+        const d = (typeof devicePixelRatio !== "undefined" && devicePixelRatio) || 1, step = Math.max(1, Math.round(3 * d));
+        W = Math.max(1, Math.ceil(innerWidth * d / step)); Hh = Math.max(1, Math.ceil(innerHeight * d / step));
+        cv.style.width = (W * step / d) + "px"; cv.style.height = (Hh * step / d) + "px"; cv.dataset.fit = "pixel";
+      } else { W = Math.max(1, Math.round(innerWidth * k)); Hh = Math.max(1, Math.round(innerHeight * k)); cv.style.width = cv.style.height = ""; delete cv.dataset.fit; }
+      cv.width = W; cv.height = Hh;
       cv.style.imageRendering = px ? "pixelated" : "";
       const lw = W * 1.12;
       L = { sky: layer(W, Hh, paintSky, true), far: layer(lw, Hh, paintFar), mid: layer(lw, Hh, paintMid), fore: layer(lw, Hh, paintFore) };

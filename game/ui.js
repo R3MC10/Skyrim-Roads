@@ -861,18 +861,19 @@
   // ------------------------------------------------------------ map
   let lastFrame = 0;
   /* battery: draw the map only while it's on screen, at 30 fps while something moves and 8 fps when all is still */
-  let mapOnScreen = true, mapTouchedAt = 0, mapObserved = null;
+  let mapOnScreen = true, mapTouchedAt = 0, mapObserved = null, mapResized = false;
   function frame(ts) {
     requestAnimationFrame(frame);
     const m = $("#map");
-    if (m && mapObserved !== m && window.IntersectionObserver) { mapObserved = m; new IntersectionObserver((es) => { mapOnScreen = es[0].isIntersecting; }).observe(m); }
+    if (m && mapObserved !== m && window.IntersectionObserver) { mapObserved = m; new IntersectionObserver((es) => { mapOnScreen = es[0].isIntersecting; }).observe(m);
+      if (typeof FITCANVAS !== "undefined") FITCANVAS.watch(m, () => { mapResized = true; }); }   // phone turned / window resized: redraw at once (no stretched map)
     const moving = S?.trip?.status === "travel" || performance.now() - mapTouchedAt < 1500;
     const wx = WEVENTS.weather(livePos()).id, weatherAnim = !reduceMotion && !["clear", "cloudy", "fog"].includes(wx);
     const mapAnim = (typeof MAPART !== "undefined" && MAPART.active()) || (typeof MOTION !== "undefined" && MOTION.mapBusy());   // a discovery burst playing
     const raidNow = typeof RAIDART !== "undefined" && WEVENTS.activeRaid();
     const fxNow = typeof FXART !== "undefined" && S ? FXART.state(S) : null;   // spell and shout effects on the map
-    if (document.hidden || !m || !mapOnScreen || ts - lastFrame < (moving || mapAnim ? 33 : weatherAnim || (raidNow && !reduceMotion) || (fxNow?.anim && !reduceMotion) ? 66 : 125)) return;
-    lastFrame = ts;
+    if (document.hidden || !m || (!mapResized && (!mapOnScreen || ts - lastFrame < (moving || mapAnim ? 33 : weatherAnim || (raidNow && !reduceMotion) || (fxNow?.anim && !reduceMotion) ? 66 : 125)))) return;
+    lastFrame = ts; mapResized = false;
     const pos = livePos();
     if (follow) center = pos;
     view = {
