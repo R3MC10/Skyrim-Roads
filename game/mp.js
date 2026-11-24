@@ -110,12 +110,13 @@ const MP = (() => {
   function giveRow(s, x) { const id = G.give(s, x.item, x.qty, x.charge); const r = G.invRow(s, id); if (r && (x.temper || x.stolen)) Object.assign(r, { temper: x.temper, tq: x.tq, stolen: x.stolen }); if (typeof CRAFTFAIR !== "undefined") CRAFTFAIR.carry(s, id, x, x.qty); }
   function makeOffer(s, card, rowIds, giveGold, askGold, t = G.now()) {
     giveGold = Math.max(0, Math.floor(+giveGold || 0)); askGold = Math.max(0, Math.floor(+askGold || 0));
-    const eq = new Set(Object.values(G.loadout(s).equipment));
-    const rows = rowIds.map((id) => G.invRow(s, id)).filter((r) => r && !eq.has(r.id) && !D.ITEMS[r.item]?.noTrade);   // dragon priest masks are bound to you
+    // worn gear never goes in an offer: the whole offer is refused (a pair with one worn offers the spare one)
+    if (rowIds.some((id) => G.invRow(s, id) && G.freeQty(s, id) <= 0)) return { text: "You're wearing that. Take it off first." };
+    const rows = rowIds.map((id) => G.invRow(s, id)).filter((r) => r && !D.ITEMS[r.item]?.noTrade).map((r) => ({ r, n: G.freeQty(s, r.id) }));   // dragon priest masks are bound to you
     if (!rows.length && !giveGold) return { text: "Put something in the offer: items or gold." };
     if (giveGold > s.gold) return { text: `You only have ${s.gold} gold.` };
-    const items = rows.map(rowCopy);
-    rows.forEach((r) => G.take(s, r.id, r.qty));
+    const items = rows.map(({ r, n }) => ({ ...rowCopy(r), qty: n }));
+    rows.forEach(({ r, n }) => G.take(s, r.id, n));
     s.gold -= giveGold;
     const id = `${s.id}-${Math.floor(t)}-${rint(100, 999)}`;
     return { id, doc: { from: s.id, fromName: s.name, to: card.id, toName: card.name, items, gold: giveGold, ask: askGold, status: "open", t },
@@ -123,8 +124,10 @@ const MP = (() => {
   }
   const describe = (o) => [o.gold ? `${o.gold} gold` : "", ...o.items.map((x) => `${D.ITEMS[x.item]?.name || x.item}${x.qty > 1 ? ` ×${x.qty}` : ""}`)].filter(Boolean).join(", ") || "nothing";
   /* the receiver says yes: pay what was asked, take the goods. Returns null if they can't afford it */
+  /* the receiving game's safety net: an offer that says it holds worn gear (or broken rows) is never taken */
+  const offerOk = (doc) => Array.isArray(doc?.items) && doc.items.every((x) => x && D.ITEMS[x.item] && !x.worn && !x.eq && x.qty >= 1);
   function accept(s, doc) {
-    if (doc.status !== "open" || doc.to !== s.id) return null;
+    if (doc.status !== "open" || doc.to !== s.id || !offerOk(doc)) return null;
     if (s.gold < doc.ask) return null;
     s.gold -= doc.ask; s.gold += doc.gold; doc.items.forEach((x) => giveRow(s, x));
     return { ...doc, status: "accepted", paid: doc.ask };
@@ -140,5 +143,5 @@ const MP = (() => {
   const ladder = (s) => ({ name: s.name, race: s.race, level: s.level, gold: s.gold, dragons: s.dragons || 0, cleared: Object.keys(s.cleared || {}).length, kills: s.pvpKills || 0,
     ...(typeof ARENA !== "undefined" && s.arena && s.arena.season === ARENA.season() ? { arena: s.arena, arenaRating: s.arena.rating } : {}), t: G.now() });
 
-  return { makeOffer, accept, settle, describe, ladder, NEAR_PX, AMBUSH_PX, stats, canTarget, attack, pickpocket, pickPlan, pickWait, PICK_CD, receive, partySpeed, allyFromCard, shareOf, witnessed };
+  return { makeOffer, offerOk, accept, settle, describe, ladder, NEAR_PX, AMBUSH_PX, stats, canTarget, attack, pickpocket, pickPlan, pickWait, PICK_CD, receive, partySpeed, allyFromCard, shareOf, witnessed };
 })();

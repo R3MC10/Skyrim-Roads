@@ -12,8 +12,8 @@ async def main():
             await pg.add_init_script(f"localStorage.setItem('rotn_prefs', JSON.stringify({{artStyle:'{style}'}}))")
             await pg.goto(f"http://localhost:{PORT}/index.html{q}&p={tag}"); await pg.wait_for_timeout(1800)
             return pg
-        # 1) title animates (two frames differ), ink + pixel
-        for st in ["ink", "pixel"]:
+        # 1) title animates (two frames differ), ink
+        for st in ["ink"]:
             pg = await page("ta" + st, st)
             a = await pg.evaluate("document.querySelector('#tanim').toDataURL()")
             await pg.screenshot(path=f"{OUT}ta_title_{st}_1.png"); await pg.wait_for_timeout(2500)

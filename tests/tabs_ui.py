@@ -66,13 +66,13 @@ async def main():
         exe = os.environ.get("CHROME")
         b = await (p.chromium.launch(executable_path=exe) if exe else p.chromium.launch())
         for vw, vh in [(360, 780), (412, 915)]:
-            for art in ["ink", "pixel"]:
+            for art in ["ink"]:
                 ctx = await b.new_context(viewport={"width": vw, "height": vh}, device_scale_factor=1)
                 pg = await ctx.new_page(); errs = []; pg.set_default_timeout(5000)
                 pg.on("pageerror", lambda e: errs.append(str(e)))
                 await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&hub=0"); await pg.wait_for_timeout(1200)
                 await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Hrolfdir"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
-                await pg.evaluate(f"ART.setStyle('{art}'); {CLEAR}")
+                await pg.evaluate(f"{CLEAR}")
                 # a homestead town, so the deed screen shows
                 await pg.evaluate("(()=>{ const S=__dbg.save(); S.location='Falkreath'; [S.x,S.y]=WORLD.places.Falkreath; S.trip=null; __ui.refresh(); })()")
                 for size in ["0", "3"]:

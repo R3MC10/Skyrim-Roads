@@ -1,4 +1,4 @@
-/* Icons for every item and enemy, drawn in code with the shared ART toolkit (ink on parchment, or pixel art).
+/* Icons for every item and enemy, drawn in code with the shared ART toolkit (ink on parchment).
    ICONART.item(id, size, row?)  → <img> HTML (row gives quality pips; enchanted items glow)
    ICONART.enemy(name, tags, size) → <img> HTML portrait
    Every drawer works in a 40×40 box; ART scales and caches it per style. [OURS] */

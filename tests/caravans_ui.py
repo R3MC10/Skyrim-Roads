@@ -53,7 +53,7 @@ async def main():
             await pg.evaluate("()=>{const S=window.__dbg.save(), j=S.caravanJob; const d=j.depart-G.now()+2; j.depart-=d; j.arrive-=d;}")
         await A.wait_for_timeout(2500)
         print("trips:", await A.evaluate("JSON.stringify({c:window.__dbg.save().trip?.caravan,s:window.__dbg.save().trip?.speed})"), await B.evaluate("!!window.__dbg.save().trip?.caravan"))
-        await A.evaluate("()=>{}"); await click(A, "[data-tab=map]"); await A.wait_for_timeout(600); await A.screenshot(path="cv_map.png")
+        await click(A, "[data-tab=map]"); await A.wait_for_timeout(600); await A.screenshot(path="cv_map.png")
         # fast-forward A along the road, fighting ambushes
         fights = 0
         for i in range(40):
@@ -73,9 +73,6 @@ async def main():
         print("fights", fights, "| loc", await A.evaluate("window.__dbg.save().location"), "| job", await A.evaluate("JSON.stringify(window.__dbg.save().caravanJob)"), "| msg", msg[:160].replace("\n"," "))
         print("gold A:", await A.evaluate("window.__dbg.save().gold"), "guards:", await A.evaluate("new Promise(r=>Store.watch('guards', d=>r(JSON.stringify(d.map(x=>[x.uid.slice(0,4),x.status,x.pay||0])))))"))
         await clear(A); await click(A, "[data-tab=log]"); await A.wait_for_timeout(300)
-        # pixel style
-        await B.evaluate("()=>{ART.setStyle('pixel')}"); await click(B, "[data-tab=map]"); await click(B, "[data-tab=log]"); await B.wait_for_timeout(400)
-        el = await B.query_selector("#side"); await el.screenshot(path="cv_journal_pixel.png")
         print("errors:", errs)
         await b.close()
 asyncio.run(main())

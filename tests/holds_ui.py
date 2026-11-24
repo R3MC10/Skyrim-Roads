@@ -17,7 +17,7 @@ def ok(c, m):
     print(("ok   " if c else "FAIL ") + m)
     if not c: fails.append(m)
 
-SETUP = """() => { ART.setStyle('ink'); const S = window.__dbg.save(); S.gold = 5000; S.level = 24; S.trip = null; S.dungeon = null;
+SETUP = """() => { ART.setStyle && ART.setStyle('ink'); const S = window.__dbg.save(); S.gold = 5000; S.level = 24; S.trip = null; S.dungeon = null;
   S.location = 'Whiterun'; [S.x, S.y] = WORLD.places['Whiterun']; G.setHealth(S, G.maxHealth(S));
   const C = CLANS.COLORS, mine = { ...CLANS.found(S, 'Sons of the North', 'SONS', [C[0], C[6]]).clan, id: S.id, invites: ['M2'] };
   const rav = { ...CLANS.found({ id: 'RV1', name: 'Xeno' }, 'Ravens', 'RAVN', [C[1], C[7]]).clan, id: 'RV1', invites: [] };

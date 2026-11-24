@@ -43,13 +43,12 @@ async def main():
         await rows_layout(b, bad)
         if "--rows" in sys.argv:
             print("RESULT OK" if not bad else "RESULT FAIL " + "; ".join(bad)); await b.close(); return
-        for style in ("ink", "pixel"):
+        for style in ("ink",):
             ctx = await b.new_context(viewport={"width": 412, "height": 915}, device_scale_factor=2)
             errs = []
             pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
             await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=ga{style}"); await pg.wait_for_timeout(1800)
             await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Herba"); await pg.click("#begin"); await pg.wait_for_timeout(1000)
-            await pg.evaluate(f"ART.setStyle('{style}')")
             async def clean(): await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
             async def tab(t):
                 await clean(); await pg.evaluate(f"document.querySelector('[data-tab={t}]').click()"); await pg.wait_for_timeout(500)

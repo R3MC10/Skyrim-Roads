@@ -37,7 +37,6 @@ async def start(b, style, vp, touch, tag, errs):
     pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(f"{style} {tag} {e}"))
     await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&hub=0&p=tt{RUN}{style}{tag}"); await pg.wait_for_timeout(1500)
     await pg.click(".press"); await pg.wait_for_timeout(300); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Tippa"); await pg.click("#begin"); await pg.wait_for_timeout(1200)
-    await pg.evaluate("(st) => { try { ART.setStyle(st); } catch (e) {} }", style)
     await pg.evaluate("setInterval(() => document.querySelectorAll('#modal').forEach((m) => { if (!m.querySelector('.dpick,.doll')) m.remove(); }), 300)")
     await pg.evaluate(SETUP)
     return ctx, pg
@@ -187,7 +186,7 @@ async def main():
         exe = os.environ.get("CHROME") or ("/usr/bin/google-chrome" if os.path.exists("/usr/bin/google-chrome") else None)
         b = await p.chromium.launch(executable_path=exe, args=["--no-sandbox"])
         errs = []
-        for style in ("ink", "pixel"):
+        for style in ("ink",):
             await desktop(b, style, errs)
             await phone(b, style, errs)
         await b.close()

@@ -16,6 +16,11 @@
      shop-<id>                1200×375   painted banners for town sections (shown above each shop's list)
        ids: general forge (also blacksmith) inn (also cook) alchemy wizard (also enchanter) market stables home hall
             fence arena mine — raw 3:2 paintings go through art/conv: crop the middle band, WebP q80
+     room-<type>-<theme>      1600×900   painted dungeon rooms (dunrooms.js), shown above the room text. WebP q80.
+       types: fight elite trap treasure puzzle rest boss (mystery optional). themes: cave barrow dwemer mine forsworn
+       vampire temple fort banditcamp thalmor giantcamp lair. Just drop a file in: a missing one borrows the closest
+       theme's picture of that type (mine → cave, temple → barrow, fort → banditcamp …), then a related type
+       (elite → fight, boss → elite), then the old drawing. Painted so far: cave, barrow, dwemer (all 7), mine (fight).
      bs-<scene>               1480×680   painted battle-scene backdrops (floor at 80%), with bsf-<strip> foreground strips and
      bsf-… bsp-…                         bsp-<prop> transparent props/lights; placed by bscdata.js, drawn by battlescene.js.
                                          Import a new scene pack with scripts/import_battlescenes.py <pack folder>
@@ -35,11 +40,19 @@
        stalhrim/skyforge-steel swords, war axes, greatswords, battleaxes, daggers, maces, bows, crossbows, staffs.
 
    API: ASSETS.img(key) → a loaded HTMLImageElement or null (asks for the file the first time).
+        ASSETS.state(key) → "ok" | "loading" | "none" (asks for the file the first time).
         ASSETS.url(key) → its URL or "" · ASSETS.stateOf(key) → "loading" / "ok" / "none" · ASSETS.placeKey(name) · ASSETS.biomeKey(name) · ASSETS.foeKey(name, kind)
         ASSETS.cover(g, img, w, h) draws an image to fill w×h. ASSETS.on(fn) runs fn when any picture arrives.
-   Under browser automation nothing is fetched unless the URL has ?assets (keeps tests quiet). */
+   Under browser automation nothing is fetched unless the URL has ?assets (keeps tests quiet).
+   Quality (artfit.js, tests/art_quality_ui.py): pictures are cropped, never squashed, and never shown bigger than the
+   file. A box bigger than the file shows the file at its own size; art_quality_ui.py lists those files with the size
+   they need. A bigger copy can sit next to a file as <name>@2x.webp: add the name to HI below. */
 const ASSETS = (() => {
   const EXT = ["webp", "png", "jpg"];
+  /* [artfit] pictures that also come as a bigger <name>@2x.webp (twice the size above): PCs and sharp screens load it.
+     Add a name here when its @2x file is dropped in the game folder. */
+  const HI = new Set([]);
+  const wantHi = () => { try { return innerWidth >= 1100 || (devicePixelRatio || 1) > 1.5; } catch { return false; } };
   const state = new Map();   // key -> { st: "loading"|"ok"|"none", img, url }
   const subs = [];
   let auto = true;
@@ -64,7 +77,15 @@ const ASSETS = (() => {
     state.set(key, rec);
     if (!auto || missing[key]) return rec;
     rec.st = "loading"; pending++;
+    const hi = HI.has(key) && wantHi();
     const tryExt = (i) => {
+      if (hi && i === -1) {   // a bigger copy for PCs and sharp screens: <name>@2x.webp (listed in HI)
+        const im = new Image(), u = `${key}@2x.webp`;
+        im.decoding = "async";
+        im.onload = () => { rec.st = "ok"; rec.img = im; rec.url = u; pending--; arrived(); };
+        im.onerror = () => tryExt(0);
+        im.src = u; return;
+      }
       if (i >= EXT.length) {
         rec.st = "none"; pending--;
         missing[key] = 1; try { sessionStorage.setItem("rotn_assets_missing", JSON.stringify(missing)); } catch { /* ignore */ }
@@ -76,12 +97,12 @@ const ASSETS = (() => {
       im.onerror = () => tryExt(i + 1);
       im.src = u;
     };
-    tryExt(0);
+    tryExt(hi ? -1 : 0);
     return rec;
   }
   const img = (key) => { if (!key) return null; const r = load(key); return r.st === "ok" ? r.img : null; };
   const url = (key) => { const r = load(key); return r.st === "ok" ? r.url : ""; };
-  const stateOf = (key) => load(key).st;   // "loading" | "ok" | "none" (asks for the file the first time)
+  const stateOf = (key) => (key ? load(key).st : "none");
   /* tests and the coordinator can hand pictures in directly */
   function provide(key, src) {
     const rec = { st: "loading", img: null, url: "" }; state.set(key, rec);
@@ -152,7 +173,9 @@ const ASSETS = (() => {
   // ---- drawing helpers
   function cover(g, im, w, h, fx = 0.5, fy = 0.5) {
     const r = Math.max(w / im.naturalWidth, h / im.naturalHeight), dw = im.naturalWidth * r, dh = im.naturalHeight * r;
+    g.imageSmoothingEnabled = true; g.imageSmoothingQuality = "high";
     g.drawImage(im, (w - dw) * fx, (h - dh) * fy, dw, dh);
+    if (typeof ART !== "undefined" && ART.noteSrc) ART.noteSrc(1 / r);   // the file's pixels per drawing unit: ART.url draws it no blurrier
   }
   /* UI textures go to CSS variables so the stylesheet picks them up */
   const CSS_KEYS = { "ui-panel": "--asset-panel", "ui-parchment": "--asset-parchment", "ui-compass": "--asset-compass", "ui-compass3d": "--asset-compass3d", "ui-nightsky": "--asset-nightsky", "ui-frame": "--asset-frame", title: "--asset-title" };
@@ -170,5 +193,5 @@ const ASSETS = (() => {
 
   const loading = (i) => img(`bg-loading-${1 + (Math.abs(i | 0) % 4)}`);
   const status = () => [...state].map(([k, r]) => [k, r.st]);
-  return { img, url, stateOf, provide, on, enable, placeKey, biomeKey, foeKey, cover, loading, status, slug, CSS_KEYS, get pending() { return pending; } };
+  return { HI, img, url, state: stateOf, stateOf, provide, on, enable, placeKey, biomeKey, foeKey, cover, loading, status, slug, CSS_KEYS, get pending() { return pending; } };
 })();

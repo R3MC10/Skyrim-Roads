@@ -123,8 +123,6 @@ const FAVWHEEL = (() => {
       document.body.appendChild(el);
     }
     open = true; render();
-    const pixel = typeof ART !== "undefined" && ART.style && ART.style() === "pixel";
-    el.classList.toggle("fw-pixel", !!pixel);
     el.classList.remove("fw-out"); void el.offsetWidth; el.classList.add("fw-on");
     try { ctx.sound?.("click"); } catch { /* fine */ }
   }

@@ -15,7 +15,7 @@ async def main():
         def ok(v, m):
             print(("ok   " if v else "FAIL ") + m)
             if not v: bad.append(m)
-        runs = [("ink", 412, 915, "en"), ("pixel", 412, 915, "en"), ("ink", 1366, 800, "en"), ("ink", 412, 915, "pl")]
+        runs = [("ink", 412, 915, "en"), ("ink", 1366, 800, "en"), ("ink", 412, 915, "pl")]
         for style, w, h, lang in runs:
             tag = f"{style}_{'phone' if w < 800 else 'pc'}{'_pl' if lang == 'pl' else ''}"
             ctx = await b.new_context(viewport={"width": w, "height": h}, device_scale_factor=2 if w < 800 else 1)
@@ -25,7 +25,7 @@ async def main():
                 await pg.evaluate("localStorage.setItem('rotn_prefs', JSON.stringify({lang:'pl'}))"); await pg.reload()
             await pg.wait_for_timeout(1800)
             await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Dovah"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
-            await pg.evaluate(f"()=>{{ART.setStyle('{style}'); if (typeof POLISH!=='undefined') POLISH.texture();}}")
+            await pg.evaluate(f"()=>{{ART.setStyle && ART.setStyle('{style}'); if (typeof POLISH!=='undefined') POLISH.texture();}}")
             clean = "document.querySelectorAll('#modal,#wxpop').forEach(m=>m.remove())"
             async def tab(t):
                 await pg.evaluate(clean); await pg.evaluate(f"document.querySelector('[data-tab={t}]')?.click()"); await pg.wait_for_timeout(500)

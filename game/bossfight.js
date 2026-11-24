@@ -296,11 +296,11 @@ const BOSSFIGHT = (() => {
 
   // ------------------------------------------------------------------ on screen
   const still = () => { try { if (typeof ACCESS !== "undefined" && ACCESS.reduceMotion) return ACCESS.reduceMotion(); } catch (e) { /* fall through */ } try { return matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return false; } };
-  const styleOf = (el) => (el && /\bpixel\b/.test(el.className || "") ? "pixel" : "ink");
   function overlay(cls, html, ms, el) {
     if (!DOM) return null;
     const o = document.createElement("div");
-    o.className = `bfov ${cls} ${styleOf(el)}${still() ? " still" : ""}`;
+    o.className = `bfov ${cls} ink${still()
+ ? " still" : ""}`;
     o.setAttribute("role", "status"); o.innerHTML = html;
     const kill = () => { if (o.parentNode) o.parentNode.removeChild(o); };
     o.addEventListener("click", kill);

@@ -293,6 +293,11 @@ const PFX = (() => {
     [ "Destruction", "ad_focus", "Aldmeri Focus", 1, [30], [], "Aldmeri Dominion only. Destruction spells cost 10% less. [OURS]", [["scost", 0.1, { school: "Destruction" }]]],
     [ "Alteration", "ad_wellspring", "Wellspring of Aldmeris", 1, [30], [], "Aldmeri Dominion only. Magicka comes back 25% faster in fights. [OURS]", [["regenmp", 0.25, {}]]],
     [ "Destruction", "ad_justiciar", "Justiciar's Rebuke", 1, [50], ["ad_focus"], "Aldmeri Dominion only. You soak up 10% of the magic that soldiers of the other sides throw at you. [OURS]", [["absorb", 0.1, { warFoe: 1 }]]],
+    // ---------------------------------------------------------------- the Dwemer ruins and Blackreach (dwemer.js, blackreach.js)
+    [ "Smithing", "dwemer_tinkerer", "Dwemer Tinkerer", 1, [35], ["dwarven_smithing"], "Each piece of Dwemer scrap smelts into one more Dwarven ingot, and you know where to hit a machine: 10% more damage to Dwarven constructs. [OURS]", [["dwscrap", 1, {}], ["out", 0.1, { tag: ["construct"] }]]],
+    [ "Lockpicking", "dwemer_lore", "Dwemer Lore", 1, [30], ["apprentice_locks"], "Dwemer puzzles show you the next valve or ring to turn, valves hold three more turns before they blow, and half the time a beaten foe in a Dwemer ruin leaves extra scrap. [OURS]", [["dwlore", 1, {}], ["dwloot", 0.5, {}]]],
+    [ "Sneak", "falmer_hunter", "Blind Hunter", 1, [40], ["stealth"], "The Falmer can't see you, so you learn to hunt them: they hit you 15% softer and take 10% more damage from you. [OURS]", [["in", -0.15, { tag: ["falmer"] }], ["out", 0.1, { tag: ["falmer"] }]]],
+    [ "Heavy Armor", "steam_proof", "Steam-Proof", 1, [40], ["juggernaut"], "In heavy armor, Dwarven machines hit you 15% softer. [OURS]", [["in", -0.15, { heavy: 1, tag: ["construct"] }]]],
     // ---------------------------------------------------------------- boss fights (bossfight.js)
     [ "One-Handed", "giant_slayer", "Giant Slayer", 1, [40], ["armsman"], "Bosses take 10% more damage from you, and 20% more once they reach their last phase. [OURS]", [["out", 0.1, { bossFoe: 1 }], ["out", 0.1, { bossLast: 1 }]]],
     [ "Blocking", "read_the_signs", "Read the Signs", 1, [30], ["shield_wall"], "A boss's big attacks (the ones it shows a turn ahead) hurt you 25% less. [OURS]", [["bftele", 0.25, {}]]],

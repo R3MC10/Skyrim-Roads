@@ -384,9 +384,8 @@ const GREATEV = (() => {
   const me = () => (api ? api.S() : null);
   const partyOf = () => (api && api.party ? api.party() : null);
   const fightCall = (fn, done) => (typeof NOAUTO !== "undefined" ? NOAUTO.call(fn, done) : done(fn()));   // the fight opens on the turn-by-turn screen
-  const artStyle = () => (typeof ART !== "undefined" ? ART.style() : "ink");
 
-  // ---- pictures (through ART, so they follow the ink / pixel art style)
+  // ---- pictures (through ART)
   function drawPic(kind, g, w, h, seed = "", ph = 0) {
     const r = seeded("gpic:" + kind + seed);
     const town = (base, col, lit) => { g.fillStyle = col; for (let i = 0; i < 7; i++) { const x = (i / 7) * w, bw = w / 7 - 3, bh = h * (0.18 + r() * 0.16); g.fillRect(x + 1, base - bh, bw, bh); g.beginPath(); g.moveTo(x, base - bh); g.lineTo(x + bw / 2 + 1, base - bh - h * 0.1); g.lineTo(x + bw + 2, base - bh); g.fill(); if (lit) { g.fillStyle = "#e8b04a"; g.fillRect(x + bw / 2 - 2, base - bh * 0.6, 4, 5); g.fillStyle = col; } } };
@@ -438,8 +437,8 @@ const GREATEV = (() => {
   // ---- map markers (map.js calls drawMap every frame)
   const spriteCache = {};
   function sprite(key, w, h, draw) {
-    const k = `${key}|${artStyle()}`;
-    if (!(k in spriteCache)) { try { spriteCache[k] = (typeof ART !== "undefined") ? ART.canvas(w, h, draw, { style: artStyle() }) : null; } catch (e) { spriteCache[k] = null; } }
+    const k = key;
+    if (!(k in spriteCache)) { try { spriteCache[k] = (typeof ART !== "undefined") ? ART.canvas(w, h, draw) : null; } catch (e) { spriteCache[k] = null; } }
     return spriteCache[k];
   }
   const riftSprite = () => sprite("rift", 40, 48, (g) => { const gr = g.createRadialGradient(20, 24, 2, 20, 24, 20); gr.addColorStop(0, "rgba(255,230,160,1)"); gr.addColorStop(0.45, "rgba(230,70,110,.9)"); gr.addColorStop(1, "rgba(90,10,60,0)"); g.fillStyle = gr; g.beginPath(); g.ellipse(20, 24, 13, 21, 0, 0, 7); g.fill(); g.strokeStyle = "#2a0d18"; g.lineWidth = 1.4; g.beginPath(); g.moveTo(20, 4); g.lineTo(17, 16); g.lineTo(23, 26); g.lineTo(18, 36); g.lineTo(21, 44); g.stroke(); });
@@ -606,7 +605,7 @@ const GREATEV = (() => {
   function render(force) {
     const S = me(), el = document.getElementById("gev"); if (!S || !el) return;
     const t = nowS(), ev = current(t);
-    const sig = (ev ? `${ev.id}|${stage(ev, t)}|${statusLine(ev, S, t)}|${ev.kind === "fair" ? "" : tallyCached(ev, S).total}|${claimable(S, ev, t)}` : "") + `|${S.location}|${S.trip?.status || ""}|${recent(t, 1).filter((e) => claimable(S, e, t)).length}|${aftermath(S, t).map((a) => a.ev.id + Math.round(a.rebuilt * 100)).join()}|${artStyle()}|${partyOf()?.leader || ""}`;
+    const sig = (ev ? `${ev.id}|${stage(ev, t)}|${statusLine(ev, S, t)}|${ev.kind === "fair" ? "" : tallyCached(ev, S).total}|${claimable(S, ev, t)}` : "") + `|${S.location}|${S.trip?.status || ""}|${recent(t, 1).filter((e) => claimable(S, e, t)).length}|${aftermath(S, t).map((a) => a.ev.id + Math.round(a.rebuilt * 100)).join()}|${partyOf()?.leader || ""}`;
     if (!force && sig === lastSig) return;
     lastSig = sig; el.innerHTML = bannerHTML(S, t);
   }

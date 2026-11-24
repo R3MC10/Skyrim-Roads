@@ -1,4 +1,4 @@
-"""Pick a side (sides.js, sidequest.js, cloaks.js, sideui.js) in the browser: phone (390x844, ink and pixel) and PC (1366x900).
+"""Pick a side (sides.js, sidequest.js, cloaks.js, sideui.js) in the browser: phone (390x844) and PC (1366x900).
 Usage: python sides_ui.py PORT -> RESULT OK      (LANG_UI=pl for Polish)
 A level-21 hero gets the courier's letter, hears Galmar out in Windhelm from the Journal, swears to the Stormcloaks
 (cloak put on), then opens Social -> Faction (rank XP bar, cloak ladder, standings) and the hero's look with the cloak.
@@ -14,12 +14,12 @@ def ok(c, m):
     print(("ok   " if c else "FAIL ") + m)
     if not c: fails.append(m)
 
-SETUP = """(st) => { ART.setStyle(st); const S = window.__dbg.save(); S.gold = 2000; S.level = 21; S.trip = null; S.dungeon = null; S.side = null; S.sideAsked = false;
+SETUP = """(st) => { if (typeof ART !== "undefined" && ART.setStyle) ART.setStyle(st); const S = window.__dbg.save(); S.gold = 2000; S.level = 21; S.trip = null; S.dungeon = null; S.side = null; S.sideAsked = false;
   S.quests = S.quests || {}; delete S.quests.cw_choice;
   S.location = 'Windhelm'; [S.x, S.y] = WORLD.places['Windhelm']; S.discovered = [...new Set([...(S.discovered || []), 'Windhelm', 'Solitude', 'Thalmor Embassy'])];
   G.setHealth(S, G.maxHealth(S)); QUESTS.ensure(S); window.__dbg.publish(); return !!S.quests.cw_choice && SIDES.shouldPrompt(S); }"""
 
-CASES = [("phone_ink", 390, 844, "ink"), ("phone_pixel", 390, 844, "pixel"), ("pc_ink", 1366, 900, "ink")]
+CASES = [("phone_ink", 390, 844, "ink"), ("pc_ink", 1366, 900, "ink")]
 
 async def main():
     async with async_playwright() as p:

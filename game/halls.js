@@ -278,10 +278,11 @@ const HALLS = (() => {
     h[list] = h[list] || [];
     if (h[list].length >= max) return { err: `It's full (${max}).` };
     const r = G.invRow(s, rowId); if (!r) return { err: "You don't have that." };
-    if (Object.values(G.loadout(s).equipment || {}).includes(rowId)) return { err: "Take it off first." };
+    const free = G.freeQty ? G.freeQty(s, rowId) : r.qty;   // worn gear stays on you; a pair with one worn puts the spare away
+    if (free <= 0) return { err: "Take it off first." };
     if (wall && !trophyOk(r)) return { err: "Only trophies and treasures go on the wall." };
     if (isClan(h) && (r.stolen || D.ITEMS[r.item].noTrade)) return { err: "Stolen and bound things stay with you." };
-    const qty = wall ? 1 : r.qty, copy = { ...r, qty, by: s.name }; delete copy.id;
+    const qty = wall ? 1 : free, copy = { ...r, qty, by: s.name }; delete copy.id;
     G.take(s, rowId, qty);
     h[list].push(copy);
     return { text: `${name(copy)}${copy.qty > 1 ? ` ×${copy.qty}` : ""} ${wall ? "goes up on the trophy wall" : "goes into storage"}.` };

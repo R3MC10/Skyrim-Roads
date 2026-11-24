@@ -1,4 +1,4 @@
-/* Pictures for the road encounters in encounters.js, painted with EVENTART's own kit (ink or pixel through ART).
+/* Pictures for the road encounters in encounters.js, painted with EVENTART's own kit (ink, through ART).
    Each scene stands on EVENTART's backdrop (ground, time of day, weather). [OURS] */
 (() => {
   if (typeof EVENTART === "undefined" || !EVENTART.kit) return;

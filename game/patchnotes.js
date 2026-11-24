@@ -3,13 +3,60 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b166-sides", build: 166, date: "24 Nov 2026", title: "Pick a side: Stormcloaks, Legion or Thalmor", items: [
+    { id: "b167-sides", build: 167, date: "24 Nov 2026", title: "Pick a side: Stormcloaks, Legion or Thalmor", items: [
       "Player clans are gone. At level 20 a courier brings you three letters, and a new quest, Pick a Side, sends you to the recruiters in Windhelm, Solitude and the Thalmor Embassy. Hear them out and swear to one. Players already past level 20 get the quest the next time they play.",
       "Old clans are disbanded with a note. Your old guild hall stays open to its members, and holds now belong to sides: war points, Jarls and hold seats work by side instead of by clan. Friends and parties work as before.",
       "Joining gives you 300 gold and your side's cloak, worn in a new cloak slot and drawn on your hero, in the side's colours with its emblem. Each of the 5 ranks sends a better cloak: small boosts at first, then a power you can use once a fight. Every side's cloaks do different things (frost and war cries, shield walls and soldiers, magicka and illusions).",
       "You earn rank XP only while you wear your side's cloak: from fights, dungeons, world events and above all beating soldiers of the other sides. A bar on Social → Faction shows how close the next rank is.",
       "Soldiers of different sides (level 20+) can attack each other anywhere in the same hold, always after a question first. The loser is knocked down and keeps their gear; the winner gets gold, a trophy, war points and rank XP. Guards still add a bounty if they see it. Nobody in a dungeon, nobody just knocked down, and never your own party.",
       "Each side has its own perks in the skill trees. Changing sides later costs gold, takes you back to the lowest rank and takes away the old cloaks and side perks (the perk points come back).",
+      "Fixed: on phones and small windows a lot of newer screens (the house chest, hold rule, sides and more) had lost their proper look. They're back.",
+    ] },
+    { id: "b166-appicon", build: 166, date: "24 Nov 2026", title: "A proper icon", items: [
+      "The game has its own icon now: a horned Nord helm under the northern star, on a parchment shield. You'll see it on your phone's home screen, the PC game's window, taskbar and installer, and the browser tab.",
+      "On Android 13 and newer it also follows your themed icons, and game notifications show a small helm instead of a plain square. The loading screen shows the new shield too.",
+    ] },
+    { id: "b153-blackreach", build: 153, date: "24 Nov 2026", title: "Dwemer ruins and Blackreach", items: [
+      "New quest line from level 14: \"The Dwemer Lexicon\". Calcelmo, the Dwemer scholar in Markarth, sends you through Mzinchaleft, Raldbthar and Alftand. Find the lexicon, turn its rings to match his notes, then ride the great lift down.",
+      "Blackreach: a huge glowing cavern under Alftand with its own map. Walk from spot to spot past Falmer, Dwarven machines and giant mushrooms, pick glowing mushrooms and crimson nirnroot, crack the Silent City vault, and beat the Centurion master at the Great Dynamo.",
+      "A secret waits at the Tower of Mzark if you know the first word of Unrelenting Force.",
+      "Puzzle rooms in Dwemer ruins are now steam valve puzzles: turn a valve and its neighbours turn too. Get every needle up before the pressure blows.",
+      "Dwemer scrap (Solid Dwemer Metal, Dwemer Gears, Large Struts) drops from Dwarven machines. Smelt it into Dwarven ingots at any forge once you have the Dwarven Smithing perk.",
+      "The whole Dwarven set is in: dagger, mace, greatsword, battleaxe, warhammer, gauntlets, boots and shield. Find them in Dwemer ruins or make them at the forge (it uses up the materials).",
+      "New perks: Dwemer Tinkerer (Smithing), Dwemer Lore (Lockpicking), Blind Hunter (Sneak) and Steam-Proof (Heavy Armor).",
+      "In a party only the leader turns the lexicon, picks the way through Blackreach and works the vault. Everyone else follows with \"Join your leader\".",
+    ] },
+    { id: "b150-dunrooms", build: 150, date: "24 Nov 2026", title: "Painted dungeon rooms and a new dungeon map", items: [
+      "Dungeon rooms are painted now: caves, Nordic barrows and Dwemer ruins each have their own picture for fights, tough fights, traps, treasure, puzzles, rest spots and the boss. Bandit mines have a painted fight room so far; more dungeon kinds get theirs soon.",
+      "Where a room has no painting yet, it borrows the closest one (a mine uses the cave pictures, a temple the barrow ones), and only falls back to the old drawing if nothing fits.",
+      "The dungeon map is a parchment chart now: every room is an ink badge with its own symbol, corridors appear as your torchlight reaches them, rooms further ahead stay pencil question marks, and the way you came is a red-ink trail that draws itself as you walk.",
+      "The room you're in glows and the rooms you can go to next pulse, so it's easy to see where to tap.",
+      "On PC the dungeon fits on one screen: the room on the left, the map on the right, no scrolling the page.",
+    ] },
+    { id: "b145-pcfit", build: 145, date: "24 Nov 2026", title: "The game fills the whole window on a PC", items: [
+      "On a wide PC screen everything now fits on one screen: no more empty bands at the sides and no scrolling the page. The map and the side panel share the full width, and only long lists in the side panel scroll.",
+      "The place card on the map (Travel, X) no longer hides behind the bottom bar.",
+      "Skills: the skill list and its perk stars sit side by side, and the stars grow to fill the space. The side panel gets wider while they're open.",
+      "Fights on a PC show a big battle picture on the left, with the fighters and your moves on the right, all without scrolling. Dungeons put the room on the left and the dungeon map on the right.",
+      "Text and buttons are a little bigger on large monitors. Phones look the same as before.",
+      "Paintings stay sharp: shop banners, town pictures, fight scenes, foes and the title picture are never stretched or blown up into a blur any more. On a very big or sharp screen a painting shows at its own size instead.",
+    ] },
+    { id: "b144-nopixel", build: 144, date: "24 Nov 2026", title: "One art style: hand-drawn", items: [
+      "The pixel-art look is gone. The game now has one style, the hand-drawn one, so every picture, menu and fight gets the full care.",
+      "If you had pixel art switched on, you'll just see the hand-drawn look next time you open the game. Nothing else changes, and your save is untouched.",
+      "The Art style row is gone from Settings.",
+    ] },
+    { id: "b144-homechest", build: 144, date: "24 Nov 2026", title: "A proper chest in your house", items: [
+      "Your house chest now works like a Skyrim chest: switch between the Chest and Your pack, filter by Weapons, Apparel, Potions, Scrolls, Food, Ingredients, Books and Misc, and sort by name, stat, weight or value.",
+      "Every item in the chest and in your pack has its picture again.",
+      "Tap something to move just 1, an amount you pick, or the whole stack, either way. Potions, ingredients, materials and arrows pile up into one stack in the chest.",
+      "Your load and the chest's total weight are shown on top. Gear you wear (in any loadout) stays on you and can't be put away by mistake.",
+      "Improved, named and stolen things keep all that when they go in and come back out.",
+    ] },
+    { id: "b144-noequipsell", build: 144, date: "24 Nov 2026", title: "What you wear stays on you", items: [
+      "Shops no longer list the gear you're wearing when you sell: weapons in either hand, armour, rings and amulets stay off the Sell list, and Sell all junk never touches them.",
+      "The same goes for handing things over: your follower's Your pack list, trades and gifts to other players, market stalls and chests leave out what you wear.",
+      "Got two of the same thing and wear one? Only the spare one shows up. Take something off first if you really want to part with it.",
     ] },
     { id: "b165-pcmap", build: 165, date: "24 Nov 2026", title: "The big map on PC", items: [
       "On a PC or laptop the world map is now your home screen: it fills the whole window, and Items, Skills, Magic and the Journal open on top of it over a blurred map. On phones nothing changes.",

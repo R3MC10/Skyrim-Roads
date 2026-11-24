@@ -50,12 +50,6 @@ async def main():
         el = await pg.query_selector("#modal")
         if el: await el.screenshot(path="gu_db_ink.png")
         await clear(); print("db:", await pg.evaluate("JSON.stringify(window.__dbg.save().quests.brotherhood)"))
-        # pixel style
-        await pg.evaluate("()=>{ART.setStyle('pixel')}"); await journal()
-        el = await pg.query_selector("#j-quests"); await el.screenshot(path="gu_journal_pixel.png")
-        await pg.evaluate("()=>window.__dbg.message && window.__dbg.message('Quest','The Dark Brotherhood: Hail Sithis! The Night Mother speaks.')")
-        await pg.wait_for_timeout(300); el = await pg.query_selector("#modal")
-        if el: await el.screenshot(path="gu_db_pixel.png")
         print("errors:", errs)
         await b.close()
 asyncio.run(main())
