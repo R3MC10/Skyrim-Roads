@@ -3,6 +3,15 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b170-sides", build: 170, date: "24 Nov 2026", title: "Pick a side: Stormcloaks, Legion or Thalmor", items: [
+      "Player clans are gone. At level 20 a courier brings you three letters, and a new quest, Pick a Side, sends you to the recruiters in Windhelm, Solitude and the Thalmor Embassy. Hear them out and swear to one. Players already past level 20 get the quest the next time they play.",
+      "Old clans are disbanded with a note. Your old guild hall stays open to its members, and holds now belong to sides: war points, Jarls and hold seats work by side instead of by clan. Friends and parties work as before.",
+      "Joining gives you 300 gold and your side's cloak, worn in a new cloak slot and drawn on your hero, in the side's colours with its emblem. Each of the 5 ranks sends a better cloak: small boosts at first, then a power you can use once a fight. Every side's cloaks do different things (frost and war cries, shield walls and soldiers, magicka and illusions).",
+      "You earn rank XP only while you wear your side's cloak: from fights, dungeons, world events and above all beating soldiers of the other sides. A bar on Social → Faction shows how close the next rank is.",
+      "Soldiers of different sides (level 20+) can attack each other anywhere in the same hold, always after a question first. The loser is knocked down and keeps their gear; the winner gets gold, a trophy, war points and rank XP. Guards still add a bounty if they see it. Nobody in a dungeon, nobody just knocked down, and never your own party.",
+      "Each side has its own perks in the skill trees. Changing sides later costs gold, takes you back to the lowest rank and takes away the old cloaks and side perks (the perk points come back).",
+      "Fixed: on phones and small windows a lot of newer screens (the house chest, hold rule, sides and more) had lost their proper look. They're back.",
+    ] },
     { id: "b169-travelanim", build: 169, date: "24 Nov 2026", title: "Smoother riding on the road", items: [
       "The picture under your trip got its walking and riding fixed: horses really walk and gallop now, every hoof lands on the road and stays put instead of sliding, and the body, mane and tail move with the stride.",
       "If anyone in your company is on foot, the horses slow to a walk beside them, so your follower keeps up without shuffling on the spot. Ride alone (or with everyone mounted) and you gallop.",
