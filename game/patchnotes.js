@@ -12,6 +12,10 @@ const PATCHNOTES = (() => {
       "Each side has its own perks in the skill trees. Changing sides later costs gold, takes you back to the lowest rank and takes away the old cloaks and side perks (the perk points come back).",
       "Fixed: on phones and small windows a lot of newer screens (the house chest, hold rule, sides and more) had lost their proper look. They're back.",
     ] },
+    { id: "b167-titlewide", build: 167, date: "24 Nov 2026", title: "A wide painting for wide screens", items: [
+      "On a PC or laptop the main menu now has its own wide painting: the warrior on his rock, the castle city in the valley, the dragon and the northern lights fill the whole window, from an old 4:3 screen to a 32:9 ultra-wide. No more tall picture with blurry sides.",
+      "Big and sharp screens get an extra-large copy of the painting so it stays crisp. Phones keep the tall picture they had.",
+    ] },
     { id: "b145-mountfight", build: 145, date: "24 Nov 2026", title: "Fight from the saddle", items: [
       "Riding when a fight on the road starts? You now play the whole fight on horseback. Your horse has its own health bar under yours.",
       "New Mount and Dismount moves in the fight. Getting on costs 4 AP and some stamina, and your next blow is a charge: a sure hit that does more and can knock the foe back.",
