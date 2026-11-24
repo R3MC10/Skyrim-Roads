@@ -88,7 +88,7 @@ const I18N = (() => {
     // potions
     "Potion of Healing": "Mikstura zdrowia", "Potion of Magicka": "Mikstura magii", "Potion of Stamina": "Mikstura wytrzymałości", "Potion of Minor Healing": "Słaba mikstura zdrowia",
     "Potion of Cure Disease": "Mikstura leczenia chorób",
-  });
+  }, typeof I18N_LIVING !== "undefined" ? I18N_LIVING.pl : {});   // labels from i18n_living.js (the world remembers you)
   if (typeof I18N_BEAST !== "undefined") Object.assign(PL, I18N_BEAST.pl);
 
   /* patterns for text with numbers in it */
@@ -104,6 +104,7 @@ const I18N = (() => {
     [/^You're in (.+)$/, (m) => `Jesteś w: ${m[1]}`], [/^Go to (.+)$/, (m) => `Idź do: ${m[1]}`], [/^Begin in (.+)$/, (m) => `Zacznij w: ${m[1]}`],
     [/^Continue to (.+)$/, (m) => `Dalej do: ${m[1]}`], [/^(\d+) of (\d+)$/, (m) => `${m[1]} z ${m[2]}`], [/^Level (\d+): (\d+)% to the next level$/, (m) => `Poziom ${m[1]}: ${m[2]}% do następnego`],
     [/^(\d+)\/(\d+) toward level (\d+)$/, (m) => `${m[1]}/${m[2]} do poziomu ${m[3]}`], [/^~(\d+) min$/, (m) => `~${m[1]} min`],
+    [/^(\d+) days? (\d+) h$/, (m) => `${m[1]} ${m[1] === "1" ? "dzień" : "dni"} ${m[2]} h`], [/^(\d.*) ago$/, (m) => `${tr(m[1]) ?? m[1]} temu`],
   ];
   /* story text: split into sentences, translate each one (exact, or a template whose {markers} are filled from the English) */
   const ST0 = typeof I18N_STORY !== "undefined" ? I18N_STORY : { ex: {}, pats: [] };
@@ -120,16 +121,23 @@ const I18N = (() => {
     }).sort((a, b) => b.lead.length - a.lead.length);
     return STP;
   }
-  function sentence(s) {
+  /* a filled-in {marker}: a known word, a number pattern, or (if shorter) a sentence of its own */
+  const fillWord = (v, s, d) => PL[v] ?? ST.ex[v] ?? pat(v) ?? (d < 3 && v.length < s.length && /[a-z]{2} [a-z]/i.test(v) ? sentence(v, d + 1) : null) ?? v;
+  const QUOTE = /^([“"„«]?)([\s\S]*?)([”"»]?)$/;
+  function sentence(s, d = 0) {
     const ex = ST.ex[s] ?? PL[s];
     if (ex != null) return ex;
     for (const p of storyPats()) {
       if (p.lead && !s.startsWith(p.lead)) continue;
       const m = s.match(p.re); if (!m) continue;
       let out = p.pl;
-      p.names.forEach((n, i) => { const v = m[i + 1]; out = out.split(n).join(PL[v] ?? ST.ex[v] ?? v); });
+      p.names.forEach((n, i) => { const v = m[i + 1]; out = out.split(n).join(fillWord(v, s, d)); });
       return out;
     }
+    const ic = s.match(/^([^\p{L}\p{N}\s"“„«(]{1,4}\s+)(.+)$/su);   // an icon in front: translate the rest
+    if (ic && d < 3) { const r = sentence(ic[2], d + 1); if (r != null) return ic[1] + r; }
+    const q = s.match(QUOTE);   // a sentence that opens or closes a quote: translate what's inside
+    if (q && (q[1] || q[3]) && q[2] && d < 3) { const r = sentence(q[2], d + 1); if (r != null) return (q[1] ? "„" : "") + r + (q[3] ? "”" : ""); }
     return null;
   }
   function story(t) {
@@ -138,13 +146,14 @@ const I18N = (() => {
     const out = parts.map((p) => { if (!p.trim()) return p; const r = sentence(p); if (r != null) { hit = true; return r; } return p; });
     return hit ? out.join("") : null;
   }
+  const pat = (t) => { for (const [re, f] of PAT) { const m = t.match(re); if (m) { const r = f(m); if (r) return r; } } return null; };
   const cache = new Map(), done = new WeakMap();
   function tr(t) {
     if (cache.has(t)) return cache.get(t);
     let out = PL[t] ?? ST.ex[t] ?? null;
-    if (out == null) for (const [re, f] of PAT) { const m = t.match(re); if (m) { const r = f(m); if (r) { out = r; break; } } }
-    if (out == null && t.includes(" · ")) { const parts = t.split(" · "), tp = parts.map((p) => PL[p] ?? p); if (tp.some((p, i) => p !== parts[i])) out = tp.join(" · "); }
-    if (out == null && /[a-z]{2} [a-z]/i.test(t)) out = story(t);
+    if (out == null) out = pat(t);
+    if (out == null && t.includes(" · ")) { const parts = t.split(" · "), tp = parts.map((p) => tr(p) ?? p); if (tp.some((p, i) => p !== parts[i])) out = tp.join(" · "); }
+    if (out == null && /[a-z]{2} [a-z\d]/i.test(t)) out = story(t);
     if (cache.size < 5000) cache.set(t, out);
     return out;
   }
