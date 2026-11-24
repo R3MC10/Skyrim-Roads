@@ -3,6 +3,10 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b181-comingnext", build: 181, date: "25 Nov 2026", title: "A fresh Coming next list", items: [
+      "The Coming next list in Patch notes is up to date: werewolf paths, follower quests, legendary hunts, festivals, deep expeditions, treasure maps and the big fight screen are all in the game now, so they're off the list.",
+      "New on the list: painted fighters and blood, makeovers for the fishing, hunting, mining and lockpicking mini-games, afflictions, a longhouse for your adventuring company, Daedric bargains and more.",
+    ] },
     { id: "b180-deepdelve-bal", build: 180, date: "25 Nov 2026", title: "Fairer deep expeditions and difficulty tiers", items: [
       "Veteran, Legendary and Mythic are fairer when you go alone: a careful hero with a follower now beats the legendary lair about 1 time in 3 on Legendary and now and then even on Mythic.",
       "A full party has it tougher on Legendary and Mythic: the foes grow more for every extra player, so four friends still need to work for the deepest hoard.",
@@ -1264,12 +1268,14 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 180;
+  const NEXT_AT = 181;
   const NEXT = [
-    "Dragon Shouts learned from word walls",
-    "Werewolf and vampire paths",
-    "Followers with their own quests, opinions and banter",
-    "Weather that changes how the road and fights go",
+    "Painted fighters with realistic fight animations, and realistic blood and splatter",
+    "Makeovers for fishing, hunting, mining and lockpicking, plus painted festival and arena pictures",
+    "Afflictions with an upside and a downside: lycanthropy, the Draugr curse and the Daedric mark",
+    "An adventuring company longhouse: a shared base with a treasury, a trophy hall and stables",
+    "Daedric bargains and artifacts that awaken, plus regional crises and heists",
+    "Combat combos (frost + heavy = Shatter, oil + fire), follower and horse bonds, and spell crafting",
   ];
   const KEY = "rotn_notes_seen";
   const latest = () => LIST[0];
