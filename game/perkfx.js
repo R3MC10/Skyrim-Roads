@@ -109,7 +109,7 @@ const PFX = (() => {
     [ "Illusion", "expert_illusion", "Expert Illusion", 1, [75], ["adept_illusion"], "Expert illusion spells cost half. [Skyrim]", [["tier", 1, {}]]],
     [ "Illusion", "master_illusion", "Master Illusion", 1, [100], ["expert_illusion"], "Master illusion spells cost half. [Skyrim]", [["tier", 1, {}]]],
     [ "Illusion", "hypnotic_gaze", "Hypnotic Gaze", 1, [30], ["animage"], "Calm spells hold the foe one turn longer and work on foes 4 levels higher. [Skyrim]", [["calm", 4, {}], ["calmturns", 1, {}]]],
-    [ "Illusion", "aspect_of_terror", "Aspect of Terror", 1, [50], ["novice_illusion"], "Fear spells work on foes 6 levels higher and last a turn longer. [Skyrim]", [["fear", 6, {}]]],
+    [ "Illusion", "aspect_of_terror", "Aspect of Terror", 1, [50], ["novice_illusion"], "Fear spells work on foes 6 levels higher and last a turn longer. Bosses and elite foes stay afraid of any fear or Battle Cry a turn longer too. [Skyrim]", [["fear", 6, {}]]],
     [ "Illusion", "rage", "Rage", 1, [70], ["aspect_of_terror"], "Frenzy and fear spells work on foes 8 levels higher. [Skyrim]", [["fear", 8, {}]]],
     // ---------------------------------------------------------------- Mysticism (3 → 9)
     [ "Mysticism", "telekinetic_ward", "Telekinetic Ward", 1, [20], ["spell_absorption"], "Arrows aimed at you are 15% weaker. [OURS, from Telekinesis]", [["in", -0.15, { archerFoe: 1 }]]],
