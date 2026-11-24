@@ -759,17 +759,22 @@ const FIGHTART = (() => {
     // [OURS] combat effects (combatfx.js): blood, the way the foe dies, the camera
     const CFX = typeof COMBATFX !== "undefined" ? COMBATFX : null, goreOn = !!CFX && CFX.gore(), bleed = CFX ? CFX.bleedOf(foeK) : [null, null, "none"];
     const NECK = -52 * fSize;
+    // [OURS] blood and gore (gore.js): sprays, splats that stay for the fight, streaks on the hurt, pools, flourishes. Seeded, so every phone sees the same.
+    const fightOf = f.tbTall && Object.getPrototypeOf(f) !== Object.prototype ? Object.getPrototypeOf(f) : f;   // a turn-by-turn screen is a view of the whole fight: its splats stay turn to turn
+    const GS = typeof GORE !== "undefined" && GORE.on() ? GORE.scene({ fight: fightOf, W, H: Hh, groundY, s, pixel, reduce: rm, foeK, foeName: rec.foeName, tags: f.e?.tags, ehpMax }) : null;
+    const goreKey = (b, i) => `${(f.log || [])[b.li]?.turn ?? b.li}|${b.li}|${b.who}|${b.dmg ?? 0}|${i}`;
     let deathK = null, camF = 0.5;
     const meleeOf = (b) => !!b && !MOVES[b.move]?.proj && !["self", "potion", "wait", "block", "cast", "shout"].includes(b.move);
     function pickDeath() {
       if (deathK || !CFX || !won || turned) return;
       const fb = beats.find((x) => x.final) || beats[beats.length - 1];
       deathK = CFX.deathOf(fb, foeK, { melee: fb?.who === "me" && meleeOf(fb), person: isPerson, gore: goreOn, wt: fb?.wt });
+      if (GS) GS.kill({ side: "foe", x: fx0, y: foeChest, size: fSize, person: isPerson, bodyX: fx0 + (isPerson ? 30 : 4) * s * Math.min(1.4, fSize) * (deathK === "launch" ? 1.6 : 1) }, { death: deathK, crit: !!(fb?.crit || fb?.sneak), power: !!fb?.power, boss: !!f.bf, slowmo: !!f.bf, type: GORE.typeOf(fb, MOVES[fb?.move] || {}), from: 1, key: fb ? goreKey(fb, 9) : 0, instant: done });
       if (typeof SOUND !== "undefined" && SOUND.fx && !rm && !rec.played) SOUND.fx(deathK === "decap" ? "hit-gore" : deathK === "shatter" ? "death-shatter" : deathK === "ash" ? "spell-fire" : deathK === "fry" ? "spell-shock" : "hit", 0.05);
     }
     /* blood (or bone chips, oil, grave dust) from a blow; on you it's always red */
     function bloodAt(x, y, dir, n, onMe) {
-      if (!goreOn) return;
+      if (!goreOn || GS) return;   // gore.js draws it when it's loaded
       const [c0, c1, kind] = onMe ? ["#a01010", "#5a0606", "blood"] : bleed;
       if (kind === "none") return;
       n = Math.max(1, Math.round(n * pmul));
@@ -825,6 +830,10 @@ const FIGHTART = (() => {
       }
       // a hit lands
       const n = big ? 1.6 : 1, hurt = melee || b.dmg > 0 || !me;
+      if (GS && hurt && (b.dmg > 0 || melee || !me)) {   // [OURS] gore.js: the spray, the splats, the streaks (a horse takes some of the blows you take in the saddle)
+        const horse = !me && !b.ally && rec.horse && b.li % 3 === 0, side = me ? "foe" : b.ally ? "ally" : horse ? "horse" : "hero";
+        GS.hit({ side, x: tx - dir * 2 * s, y: horse ? groundY - 20 * s : ty - 4 * s, live: !done }, { dmg: b.dmg, frac: (b.dmg || 0) / (me ? ehpMax : hpMax), type: GORE.typeOf(b, MOVES[b.move] || {}), crit: !!(b.crit || b.sneak), power: !!b.power, final: !!b.final && me, from: dir, arrow: ["arrow", "bolt"].includes(MOVES[b.move]?.proj?.[2]), key: goreKey(b, hitIdx) });
+      }
       if (hurt) { if (me) foeKnock = b.final ? 20 : b.power ? 14 : 7; else if (!b.ally) heroKnock = b.final ? 20 : b.power ? 12 : 7; }
       if (AT_FOE.has(fx) && me) {   // spells that happen where the foe stands
         if (fx === "sun") burst(tx, ty, 22, 4, COL.sun, 80 * s, 0.9, 3, -50, true);
@@ -881,6 +890,7 @@ const FIGHTART = (() => {
       for (let i = 0; i < NP; i++) pl[i] = 0; for (let i = 0; i < NF; i++) fl[i] = 0;
       label = null; slowT = 0; shake = 0; zoomT = 0; zoom = 1; camF = 0.5; hitstop = 0; flash = 0; boltOn = 0;
       if (!f.tbMid) pickDeath();
+      GS?.settle();   // what's in the air drops; what has landed stays
       revealLog(1e9); ctl?.remove();
       draw(performance.now());
       idleArt();
@@ -933,6 +943,7 @@ const FIGHTART = (() => {
           if (st.chill && Math.random() < (rm ? 0.08 : 0.25)) spawn(2, "#e0f4ff", X0 + (Math.random() - 0.5) * 24 * s, Y0 + 10 * s, 0, -12 * s, 0.9, 5, 0);
           if (st.shock && Math.random() < (rm ? 0.08 : 0.25)) spawn(1, "#cfe7ff", X0 + (Math.random() - 0.5) * 20 * s, Y0 + (Math.random() - 0.5) * 20 * s, (Math.random() - 0.5) * 120 * s, (Math.random() - 0.5) * 120 * s, 0.25, 2, 0);
         } }
+      if (GS) { if (phase === "play" && beats[bi]) GS.statusOf((f.log || [])[beats[bi].li]); GS.update(dt); }   // [OURS] gore.js
       // particles
       alive = 0;
       for (let i = 0; i < NP; i++) { if (pl[i] <= 0) continue; alive++; pl[i] -= dt; pvy[i] += pg[i] * s * dt; const dr = pt[i] === 2 ? 0.96 : 0.985; pvx[i] *= dr; pvy[i] *= dr; px[i] += pvx[i] * dt; py[i] += pvy[i] * dt; if (pt[i] === 2) ps[i] += dt * 6; if (pt[i] === 4) px[i] += Math.sin(py[i] * 0.1) * 0.4; }
@@ -966,7 +977,7 @@ const FIGHTART = (() => {
         phaseT += dt; fall = Math.min(1, phaseT / 0.7);
         if (deathK === "decap" && phaseT < 0.9) {   // the neck sprays as the body goes down
           const th = Math.PI / 2 * EASE.out(fall), nx = fx0 - s * NECK * Math.sin(th), ny = groundY + s * NECK * Math.cos(th);
-          if (Math.random() < 0.9 * pmul) bloodAt(nx, ny, 1, 2, false);
+          if (GS) { if ((phaseT * 30 | 0) !== ((phaseT - dt) * 30 | 0)) GS.spurt(nx, ny, phaseT * 30 | 0); } else if (Math.random() < 0.9 * pmul) bloodAt(nx, ny, 1, 2, false);
         }
         if (deathK === "ash" && phaseT > 0.35 && phaseT < 1.2 && Math.random() < 0.8 * pmul) { const c = Math.random() < 0.5 ? "#3a3430" : "#ff7a2a"; spawn(Math.random() < 0.3 ? 0 : 2, c, fx0 + (Math.random() - 0.5) * 24 * s * fSize, groundY - Math.random() * 60 * s * fSize, (Math.random() - 0.2) * 30 * s, -40 * s, 0.9, 3, -15); }
         if (deathK === "shatter" && phaseT >= 0.45 && phaseT - dt < 0.45) { burst(fx0, foeChest, 34, 3, ["#e8f8ff", "#bfe8ff", "#7fb0d8"], 260 * s, 0.9, 3.4, 380); burst(fx0, foeChest, 10, 2, ["#e0f4ff"], 60 * s, 1, 8, -10); flash = rm ? 0 : 0.25; flashC = "#e8f8ff"; shake = rm ? 0 : Math.max(shake, 5); }
@@ -1030,6 +1041,7 @@ const FIGHTART = (() => {
       const artO = art ? { W, Hh, t: rm ? 0 : tt, ox, sky: rec.sky, wagon: rec.wagon } : null;
       if (art) BSCENE.back(wg, art, artO); else wg.drawImage(bg, 0, 0, W, Hh);
       if (cv.dataset.bs !== (art ? rec.art : "")) cv.dataset.bs = art ? rec.art : "";   // which painted scene is on (screen tests)
+      GS?.drawGround(wg);   // [OURS] gore.js: splats, pools and scorch marks on the ground (they stay for the fight)
       // a rune waiting on the ground, a portal
       if (st.rune) rune(fx0, groundY, COL[st.rune]?.[0] || "#ffb347", tt);
       if (b && b.fx === "rune" && b.who === "me" && u > 0.4) rune(fx0, groundY, COL[b.el]?.[0] || "#ffb347", tt);
@@ -1054,7 +1066,12 @@ const FIGHTART = (() => {
           const ax = hx0 - (backs[i] * squeeze - allyLunge * 14) * s, ay = groundY + 2 - i * 2 - lift * s, sc2 = s * rs;
           if (a.name && !two && (a.kind === "mate" || a.kind === "follower" || a.kind === "valor" || a.kind === "dog")) mateTags.push([a.name, ax * z + ox + zcx - zcx * z, (ay - 66 * sc2) * z + oy + zcy - zcy * z]);
           const an = animOf(a), al2 = an && an.clip === "attack" && !an.shoot ? Math.sin(Math.PI * Math.min(1, an.u / 0.8)) * (an.w ?? 1) : 0;
-          wg.save(); wg.translate(ax + al2 * 4 * s, ay); wg.scale(sc2, sc2); if (back) wg.globalAlpha = 0.92; allyFig(wg, a.kind, { lunge: allyLunge, t: tt, i, look: a.look, anim: an }); wg.restore();
+          const ahc = a.kind === "mate" && typeof MOUNTFIGHT !== "undefined" && typeof HORSEBACK !== "undefined" && !(an && an.clip === "down") ? MOUNTFIGHT.allyHorse(f, a.name) : null;   // a teammate in the saddle (mountfight.js)
+          wg.save(); wg.translate(ax + al2 * 4 * s, ay); wg.scale(sc2, sc2); if (back) wg.globalAlpha = 0.92;
+          if (ahc) { HORSEBACK.drawHorse(wg, ahc, 0, tt + i, "back"); wg.translate(0, -30); }
+          allyFig(wg, a.kind, { lunge: allyLunge, t: tt, i, look: a.look, anim: an });
+          if (ahc) { wg.translate(0, 30); HORSEBACK.drawHorse(wg, ahc, 0, tt + i, "front"); }
+          wg.restore();
           const sp = SPARK[a.kind]; if (sp && Math.random() < (two ? 0.09 : 0.18) * pmul) spawn(sp[1], sp[0], ax + (Math.random() - 0.5) * 18 * s, ay + (sp[2] - Math.random() * 30) * s, (Math.random() - 0.5) * 14 * s, -20 * s, 0.7, 2.2, 0);
         });
       });
@@ -1082,11 +1099,15 @@ const FIGHTART = (() => {
       wg.save(); wg.translate(hx0 + (heroP.dx - heroKnock - hdg * 18) * s, groundY + (heroP.dy - hdg * 3) * s); wg.scale(s, s);
       if (meDown) { wg.translate(-6 * fallE, 0); wg.rotate(-Math.PI / 2 * fallE); wg.translate(0, 6 * fallE); }
       if (st.invis && !(b && b.who === "me" && b.move !== "self" && b.move !== "shout")) wg.globalAlpha = 0.28 + Math.sin(tt * 3) * 0.05;
-      const onHorse = rec.horse && !meDown && typeof HORSEBACK !== "undefined" && HORSEBACK.upAt(f, phase === "play" ? bi / Math.max(1, beats.length) : 1);   // the rider sits up on the horse
-      if (onHorse) { HORSEBACK.drawHorse(wg, rec.horse, 0, tt, "back"); wg.translate(0, -30); }
+      const MFx = typeof MOUNTFIGHT !== "undefined" ? MOUNTFIGHT : null, rfrac = phase === "play" && b ? (b.li != null ? b.li + u : (bi + u) / Math.max(1, beats.length) * (f.log || []).length) / Math.max(1, (f.log || []).length) : 1;
+      const mp = rec.horse && !meDown && MFx ? MFx.pose(f, rfrac, b ? b.who : null) : null;   // mountfight.js: charge, getting on / off, thrown, the horse waiting or knocked down
+      const onHorse = rec.horse && !meDown && typeof HORSEBACK !== "undefined" && (mp ? mp.ride : HORSEBACK.upAt(f, phase === "play" ? bi / Math.max(1, beats.length) : 1));   // the rider sits up on the horse
+      if (mp && !mp.ride && mp.stand) MFx.drawStand(wg, rec.horse, mp, tt);
+      if (onHorse) { if (mp) MFx.drawMount(wg, rec.horse, mp, tt, "back"); else HORSEBACK.drawHorse(wg, rec.horse, 0, tt, "back"); wg.save(); if (mp) MFx.seat(wg, mp); else wg.translate(0, -30); }
       { const fs = b ? b.st : st, form = fs && (fs.beast || fs.lord) && (phase === "play" || phase === "settle" || phase === "idle"); heroFig(wg, form ? { ...rec.hero, beast: fs.beast, lord: fs.lord } : rec.hero, form ? Math.max(0, Math.min(1, (heroP.dx || 0) / 40)) : 0, tt, heroP); }   // werewolf or Vampire Lord while changed
-      if (onHorse) { wg.translate(0, 30); HORSEBACK.drawHorse(wg, rec.horse, 0, tt, "front"); }
+      if (onHorse) { wg.restore(); if (mp) MFx.drawMount(wg, rec.horse, mp, tt, "front"); else HORSEBACK.drawHorse(wg, rec.horse, 0, tt, "front"); }
       wg.restore();
+      if (GS) GS.drawMarks(wg, "hero", hx0 + (heroP.dx - heroKnock - hdg * 18) * s, heroChest - (onHorse ? 30 * s : 0), s, hpD / hpMax, meDown || !!st.invis);
       if (rec.hero.ench && !meDown && heroP.wt !== "fist" && !heroP.flask) {   // [OURS] an enchanted weapon glows in its colour and sheds motes
         const c = rec.hero.ench; tipOf(1, heroP, heroP.wt, 24);
         const hxH = handX(1, heroP) - (heroKnock + hdg * 18) * s, hyH = handY(1), tx2 = TR[24] - (heroKnock + hdg * 18) * s, ty2 = TR[25];
@@ -1108,7 +1129,7 @@ const FIGHTART = (() => {
       wg.translate(fx0 - (foeP.dx - foeKnock - fdg * 18) * s + fleeing * W * 0.4, groundY + (foeP.dy - fdg * 3) * s); wg.scale(-s, s);
       if (fleeing) wg.globalAlpha = 1 - fleeing;
       const dk = foeDown ? deathK : null, dT = phase === "fall" ? phaseT : 9;
-      if (dk && goreOn && (bleed[2] === "blood" || bleed[2] === "oil") && !["ash", "shatter", "fade"].includes(dk)) {   // a pool spreads under the body
+      if (dk && goreOn && !GS && (bleed[2] === "blood" || bleed[2] === "oil") && !["ash", "shatter", "fade"].includes(dk)) {   // a pool spreads under the body
         wg.save(); wg.scale(-1 / s, 1 / s); wg.globalAlpha = 0.75; wg.fillStyle = bleed[1];
         const pr = Math.min(1, dT / 1.3) * 16 * s * Math.min(1.6, fSize), pxo = (dk === "launch" ? 26 : isPerson ? 30 : 4) * s * fallE;
         wg.beginPath(); wg.ellipse(pxo, 1 * s, pr * 1.4, pr * 0.32, 0, 0, 7); wg.fill(); wg.restore();
@@ -1162,6 +1183,7 @@ const FIGHTART = (() => {
       } else drawFoe();
       wg.filter = "none";
       wg.restore();
+      if (GS) GS.drawMarks(wg, "foe", fx0 - (foeP.dx - foeKnock - fdg * 18) * s, foeChest, s * Math.min(1.6, fSize), ehpD / ehpMax, foeDown || fleeing > 0 || (curDragon?.air && !foeDown));   // streaks, stuck arrows, char
       if (dk === "decap") {   // ...and the head flies, tumbling, and rolls to a stop
         const vy = -95, gr = 300, yMax = -6 - (NECK - 8), tl = (-vy + Math.sqrt(vy * vy + 2 * gr * yMax)) / gr, t = Math.min(dT, tl);
         const hxo = -t * 70 - (dT > tl ? Math.min(dT - tl, 0.4) * 30 : 0), hyo = Math.min(yMax, vy * t + 0.5 * gr * t * t), rot = t * 8 + (dT > tl ? Math.min(dT - tl, 0.4) * 5 : 0);
@@ -1198,6 +1220,7 @@ const FIGHTART = (() => {
       if (Math.abs(claw) > 0.05) { const cx = claw < 0 ? fx0 : hx0, a = Math.abs(claw); wg.save(); wg.globalAlpha = a; wg.strokeStyle = "#fff6e0"; wg.lineWidth = Math.max(1.6, 2.4 * s); for (let i = -1; i <= 1; i++) { wg.beginPath(); wg.moveTo(cx - 12 * s + i * 7 * s, heroChest - 18 * s); wg.lineTo(cx + 8 * s + i * 7 * s, heroChest + 12 * s); wg.stroke(); } wg.restore(); }
       // particles: dust and chunks first, then the glowing ones added on top
       drawParticles();
+      if (GS) { if (done && !GS.settled) { GS.settle(); GS.settled = true; } GS.drawFront(wg); }   // [OURS] gore.js: drops, chips, sparks and flourishes in the air
       // screen flash
       if (flash > 0.01 && !rm) { wg.save(); wg.setTransform(1, 0, 0, 1, 0, 0); wg.globalAlpha = flash; wg.fillStyle = flashC; wg.fillRect(0, 0, work.width, work.height); wg.restore(); }
       bars();
