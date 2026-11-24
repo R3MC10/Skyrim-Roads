@@ -1,12 +1,12 @@
 /* The combat wheel and the timing ring. [OURS]
    Remigiusz: "Interactive radial menu for combat actions as a minigame (not click-spam), with FX/VFX and numbers for
-               resource use (AP, magicka, stamina, health)."
-   - Wheel: your moves sit in a ring around End turn. Each slice shows what it costs (AP, and stamina or magicka).
+               resource use (magicka, stamina, health)."
+   - Wheel: your moves sit in a ring around End turn. Each slice shows what it costs (stamina, magicka or health).
      Magic and Items still open their lists. Tap a slice, or drag it onto a target like before.
    - Timing ring: after picking a strike or a damage spell, a needle sweeps round a ring. Tap when it's in the bright
      zone: Perfect does 25% more, Good does normal damage, a miss does 20% less. Higher skill (and some perks) widen
      the zone. Fast mode, Auto and party members' turns skip it (normal damage).
-   - Numbers: what you spent floats up from your frame (−3 AP, −25 SP, −40 MP) and the timing result over the scene.
+   - Numbers: what you spent floats up from your frame (−25 SP, −40 MP) and the timing result over the scene.
    The wheel can be switched off with the  button (back to cards). Screen tests get cards unless the page has ?wheel. */
 const TBRADIAL = (() => {
   const DOM = typeof document !== "undefined";
@@ -109,7 +109,7 @@ const TBRADIAL = (() => {
     if (me) {
       const r = me.getBoundingClientRect(); let i = 0;
       const put = (n, tag, cls) => { if (Math.abs(n) >= 1) chip(r.left + r.width * (0.2 + 0.2 * (i % 4)), r.top - 4, `${n > 0 ? "+" : "−"}${Math.abs(Math.round(n))} ${tag}`, cls, 120 * i++); };
-      put(-d.ap, "AP", "ap"); put(-d.sp, "SP", "sp"); put(-d.mp, "MP", "mp"); put(d.hp, "HP", d.hp > 0 ? "hp up" : "hp");
+      put(-d.sp, "SP", "sp"); put(-d.mp, "MP", "mp"); put(d.hp, "HP", d.hp > 0 ? "hp up" : "hp");
     }
     if (g && stage) {
       const r = stage.getBoundingClientRect();
@@ -126,16 +126,12 @@ const TBRADIAL = (() => {
     const at = (i) => { const t = (2 * Math.PI * i) / n; return `left:${(50 + R * Math.sin(t)).toFixed(2)}%;top:${(50 - R * Math.cos(t)).toFixed(2)}%;width:${size.toFixed(1)}%;height:${size.toFixed(1)}%`; };
     return `<div class="tbwheel" style="--n:${n}">${slices.map((b, i) => `<div class="tbsl" style="${at(i)}">${b}</div>`).join("")}<div class="tbhub">${centre}</div></div>`;
   }
-  /* the cost line under a slice: AP, then stamina or magicka */
-  function costLine(f, a, ap) {
-    const bits = [ap >= 99 ? "all AP" : ap + " AP"];
-    try {
-      if (a === "power_attack" && f.paCost) bits.push(Math.round(f.paCost) + " SP");
-      if (a === "bash" && typeof SHIELDFX !== "undefined" && SHIELDFX.cost) bits.push(Math.round(SHIELDFX.cost(f)) + " SP");
-      const [k, arg] = a.split(":");
-      if ((k === "spell" || k === "dual") && typeof D !== "undefined" && D.SPELLS[arg] && typeof G.spellCost === "function") bits.push(Math.round(G.spellCost(f.s, D.SPELLS[arg]) * (k === "dual" ? 2.8 : 1)) + " MP");
-    } catch (e) { /* only a label */ }
-    return bits.join(" · ");
+  /* the cost line under a slice: c = { sp, mp, hp } from tbfight.js cost() */
+  function costLine(f, a, c) {
+    if (!c || typeof c !== "object") return "";
+    const bits = [];
+    if (c.sp > 0) bits.push(Math.round(c.sp) + " SP"); if (c.mp > 0) bits.push(Math.round(c.mp) + " MP"); if (c.hp > 0) bits.push(Math.round(c.hp) + " HP");
+    return bits.length ? bits.join(" · ") : "free";
   }
   return { on, toggle, skillFor, zone, grade, timed, ring, spent, wheel, costLine, PERFECT, GOOD, POOR, SPIN, TURNS };
 })();

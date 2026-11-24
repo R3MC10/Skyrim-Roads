@@ -154,7 +154,11 @@ const MAGIC = (() => {
       f.wardMax = Math.max(amt, had); f.ward = f.wardMax;
       return had ? `${sp.name}: your ward flares back to full (${Math.round(had)} → ${Math.round(f.ward)})` : `${sp.name}: a shimmering ward rises (${Math.round(f.ward)}). It soaks magic until it breaks`;
     },
-    regen(f, sp) { f.regen = { amt: sp.amount * pot(f, sp), turns: sp.turns, name: sp.name }; return `${sp.name}: a ring of light heals you each turn`; },
+    regen(f, sp) {
+      const amt = sp.amount * pot(f, sp);
+      if (typeof STACKS !== "undefined") { const n = STACKS.add(f, "me", "regen", sp.turns, { per: STACKS.perFor(amt, sp.turns), name: sp.name }); return `${sp.name}: a ring of light heals you each turn (Regen ×${n})`; }
+      f.regen = { amt, turns: sp.turns, name: sp.name }; return `${sp.name}: a ring of light heals you each turn`;
+    },
     turn(f, sp) {
       if (!f.tags.has("undead")) return `${sp.name}: no effect (undead only)`;
       if (!flees(f) || (f.e.level ?? 1) > sp.max_level) return `${sp.name}: the ${f.e.name.toLowerCase()} is too strong to turn`;

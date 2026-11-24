@@ -18,33 +18,52 @@ const FIGHTREAD = (() => {
   const prefs = () => { try { return JSON.parse(localStorage.getItem("rotn_prefs") || "{}"); } catch { return {}; } };
   const spread = () => (typeof F !== "undefined" && F.DAMAGE_SPREAD ? F.DAMAGE_SPREAD : [0.8, 1.2]);
   const LOW = 0.25;
+  const tr = (t) => (typeof I18N !== "undefined" && I18N.tr && I18N.lang?.() === "pl" ? I18N.tr(t) ?? t : t);
 
   /* what each foe move looks like as an intent. mul: how hard it hits compared to a plain blow */
   const INTENT = {
-    blow: { ic: "", label: "Attack", mul: 1 },
-    smash: { ic: "", label: "Huge blow", mul: 1.9, big: true },
-    aimed: { ic: "", label: "Aimed shot", mul: 1.7, big: true },
-    shield_bash: { ic: "", label: "Shield bash", mul: 0.7, note: "and −1 AP" },
-    raise_shield: { ic: "", label: "Raises shield", buff: true, note: "your next melee blow does half" },
-    wind_up: { ic: "", label: "Winds up", tele: true, note: "a huge blow comes after" },
-    war_cry: { ic: "", label: "War cry", buff: true, note: "hits 25% harder for 3 turns" },
-    take_aim: { ic: "", label: "Takes aim", tele: true, note: "an aimed shot comes after" },
-    poison_arrow: { ic: "", label: "Poison arrow", mul: 0.8, dot: "poison" },
-    bolt: { ic: "✦", label: "Spell", mul: 1.15 },
+    blow: { ic: "", label: "Strike", mul: 1 },
+    smash: { ic: "", label: "Crushing Blow", mul: 1.9, big: true },
+    aimed: { ic: "", label: "Aimed Shot", mul: 1.7, big: true },
+    shield_bash: { ic: "", label: "Shield Bash", mul: 0.7, note: "and winds you", stk: 1, dot: null, st: "Winded" },
+    raise_shield: { ic: "", label: "Brace", buff: true, note: "your next melee blow does half" },
+    wind_up: { ic: "", label: "Winds up", tele: true, note: "a Crushing Blow comes after" },
+    war_cry: { ic: "", label: "War Cry", buff: true, note: "hits 25% harder for 3 turns" },
+    take_aim: { ic: "", label: "Takes aim", tele: true, note: "an Aimed Shot comes after" },
+    poison_arrow: { ic: "", label: "Poison Arrow", mul: 0.8, dot: "poison", stk: 3 },
+    bolt: { ic: "✦", label: "Magic Bolt", mul: 1.15 },
     foe_ward: { ic: "", label: "Ward", buff: true, note: "soaks your spells" },
-    mend: { ic: "✚", label: "Heals", heal: 0.12 },
-    poison_blade: { ic: "", label: "Poisoned blade", mul: 0.9, dot: "poison" },
+    mend: { ic: "", label: "Heal self", heal: 0.12 },
+    poison_blade: { ic: "", label: "Poisoned Blade", mul: 0.9, dot: "poison", stk: 3 },
     shadowstep: { ic: "", label: "Shadowstep", buff: true, note: "your next blow may miss" },
     pounce: { ic: "", label: "Pounce", mul: 1.1, note: "and −stamina" },
-    maul: { ic: "", label: "Maul", mul: 0.9, dot: "bleeding" },
+    maul: { ic: "", label: "Maul", mul: 0.9, dot: "bleeding", stk: 3 },
     howl: { ic: "", label: "Howl", buff: true, note: "hits 25% harder for 2 turns" },
-    venom: { ic: "", label: "Venom", mul: 0.7, dot: "poison" },
-    regen: { ic: "✚", label: "Regenerates", heal: 0.05 },
-    force: { ic: "", label: "Shout", mul: 0.6, note: "and −2 AP" },
-    frost_breath: { ic: "", label: "Frost breath", mul: 1.1 },
-    life_drain: { ic: "", label: "Drain life", mul: 0.9, note: "and heals itself" },
-    potion: { ic: "", label: "Drinks a potion", heal: 0.18 },
+    venom: { ic: "", label: "Venom Spit", mul: 0.7, dot: "poison", stk: 3 },
+    regen: { ic: "", label: "Regenerate", heal: 0.05 },
+    force: { ic: "", label: "Unrelenting Force", mul: 0.6, note: "and winds you", stk: 2, st: "Winded" },
+    frost_breath: { ic: "", label: "Frost Breath", mul: 1.1 },
+    life_drain: { ic: "", label: "Drain Life", mul: 0.9, note: "and heals itself" },
+    potion: { ic: "", label: "Drink potion", heal: 0.18 },
   };
+
+  /* a plain blow gets a name that fits the foe: a wolf bites, a bear swipes, an archer shoots, a mage casts */
+  const BLOWS = [
+    [/wolf|hound|dog|skeever|fox|horker|slaughterfish|spider|chaurus|frostbite/i, "", "Bite"],
+    [/bear|sabre|cat|troll|werewolf|hagraven|spriggan|lurker|gargoyle/i, "", "Claw Swipe"],
+    [/dragon/i, "", "Bite"],
+    [/mammoth|giant/i, "", "Stomp"],
+    [/atronach|wisp|ghost|wraith|lich|mage|necromancer|conjurer|wizard|witch|warlock|sorcer/i, "✦", "Spell"],
+    [/archer|hunter|ranger|scout|marksman|bowman/i, "", "Shoot"],
+  ];
+  function blowOf(f) {
+    const e = f?.e || {}, nm = String(e.name || ""), arch = e.arch;
+    if (arch === "archer") return ["", "Shoot"];
+    if (arch === "mage") return ["✦", "Spell"];
+    for (const [re, ic, l] of BLOWS) if (re.test(nm)) return [ic, l];
+    if (f?.tags?.has?.("beast") || f?.tags?.has?.("animal")) return ["", "Claw Swipe"];
+    return ["", arch === "brute" ? "Heavy Swing" : "Strike"];
+  }
 
   /* decide the foe's actions for the rest of this round (call at the start of a round, or when a new foe steps in) */
   function foeLeft(sess) {
@@ -88,7 +107,8 @@ const FIGHTREAD = (() => {
       const p = pl[i];
       const key = !p ? "blow" : p.id === "land" ? p.wind : p.id;
       const it = INTENT[key] || INTENT.blow;
-      const o = { ic: it.ic, label: it.label, big: !!it.big, tele: !!it.tele, buff: !!it.buff, note: it.note || "", dot: it.dot || null, id: key };
+      const o = { ic: it.ic, label: it.label, big: !!it.big, tele: !!it.tele, buff: !!it.buff, note: it.note || "", dot: it.dot || null, id: key, stk: it.stk || 0, st: it.st || "" };
+      if (key === "blow") { const [bi, bl] = blowOf(f); o.ic = bi; o.label = bl; }
       if (it.heal) { o.heal = r0((f.ehp0 || sess.ehpMax || f.ehp) * it.heal); o.lo = o.hi = o.mid = 0; }
       else if (it.mul) { o.lo = capd(lo * it.mul); o.hi = capd(hi * it.mul); o.mid = capd(mid * it.mul); }
       else { o.lo = o.hi = o.mid = 0; }
@@ -162,14 +182,24 @@ const FIGHTREAD = (() => {
     if (it.skip) return `${name}: ${it.label.toLowerCase()} this turn.`;
     if (it.unknown) return `${name} attacks: about ${rng(it)} damage (dragons fly, land and breathe as they please).`;
     if (it.heal) return `${name} will heal itself about ${it.heal}.`;
-    if (it.buff || it.tele) return `${name}: ${it.label.toLowerCase()} (${it.note}). No damage this turn.${it.tele ? " Guard, or hit it hard to break it." : ""}`;
-    return `${name}: ${it.label.toLowerCase()} for about ${rng(it)} damage${it.dot ? ` and ${it.dot} (${it.dotDmg} a turn)` : ""}${it.note ? ` ${it.note}` : ""}. ${it.tgt && !it.tgt.me ? "Their" : "Your"} armour and guard are counted.`;
+    if (it.buff || it.tele) return `${name}: ${it.label} (${it.note}). No damage this turn.${it.tele ? " Guard, or hit it hard to break it." : ""}`;
+    return `${name}: ${it.label} for about ${rng(it)} damage${it.dot ? ` and ${it.stk || ""} ${it.stk ? "stacks of " : ""}${it.dot} (${it.dotDmg} a turn)` : it.stk ? ` and ${it.stk} ${stkName(it)} stacks` : ""}${it.note ? ` ${it.note}` : ""}. ${it.tgt && !it.tgt.me ? "Their" : "Your"} armour and guard are counted.`;
   }
+  /* "Poison 3", "Winded 2": the stacks a move puts on its target (stacks.js) */
+  const stkName = (it) => (it.st ? it.st : it.dot === "bleeding" ? "Bleed" : it.dot === "burning" ? "Burn" : it.dot ? "Poison" : "");
+  const stkTxt = (it) => (it.stk && stkName(it) ? `${tr(stkName(it))} ${it.stk}` : "");
+  /* an intent chip: icon, the move's NAME, its numbers, the stacks it puts on and who it goes for */
   function intentHTML(it, name) {
     const cls = it.skip ? "skip" : it.big ? "big" : it.tele ? "tele" : it.heal ? "heal" : it.buff ? "buff" : "hit";
-    const n = it.heal ? `+${it.heal}` : rng(it);
+    const n = it.heal ? `+${it.heal}` : rng(it), sk = stkTxt(it);
     const FI = typeof FOEINTENT !== "undefined" ? FOEINTENT : null;   // foeintent.js: "→ Lydia"
-    return `<span class="tbint ${cls}${it.tgt ? " tgt" : ""}" data-tip="${esc(intentTip(it, name) + (FI ? FI.tipText(it, name) : ""))}">${it.ic}${n ? ` <b>${n}</b>` : ` <b class="w">${esc(it.label)}</b>`}${it.dot ? "<em></em>" : ""}${FI ? FI.chipHTML(it) : ""}</span>`;
+    return `<span class="tbint ${cls}${it.tgt ? " tgt" : ""}" data-tip="${esc(intentTip(it, name) + (FI ? FI.tipText(it, name) : ""))}"><i class="ic" aria-hidden="true">${it.ic}</i> <b class="w">${esc(tr(it.label))}</b>${n ? ` <b class="n">${n}</b>` : ""}${sk ? `<em class="sk">${it.dot === "bleeding" ? "" : it.st ? "" : ""} ${esc(sk)}</em>` : ""}${FI ? FI.chipHTML(it) : ""}</span>`;
+  }
+  /* " Venom Spit → Meeko" for the log and the banner while the foe acts */
+  function actName(it, sess) {
+    if (!it || it.skip) return null;
+    const t = it.tgt ? (it.tgt.me ? "you" : it.tgt.n) : "";
+    return { ic: it.ic, name: it.label, tgt: t, stk: stkTxt(it), big: !!it.big };
   }
   /* the foe frame: "Next:" and its intents; plus the forecast lines under both bars */
   function panels(sess) {
@@ -187,7 +217,7 @@ const FIGHTREAD = (() => {
   }
 
   /* ------------------------------------------------------------------ playing the turn out */
-  const paced = () => !prefs().tbFast;
+  const paced = () => true;   // build 146: no Fast mode any more
   /* how long one event stays on screen before the next one (ms) */
   function delay(e) {
     if (!e) return 0;
@@ -218,13 +248,14 @@ const FIGHTREAD = (() => {
       const s = summary(sess, e.round - 1);
       return { cls: "round", t: `Round ${e.round}`, sub: s ? `Last round: you dealt <b class="d">${s.dealt}</b> · took <b class="t">${s.took}</b>${s.healed ? ` · healed <b class="h">${s.healed}</b>` : ""}` : "" };
     }
+    if (e.kind === "foe" && e.act && !e.wave) return { cls: "foe act" + (e.act.big ? " big" : ""), t: `${e.act.ic} ${tr(e.act.name)}${e.act.tgt ? ` → ${e.act.tgt === "you" ? tr("you") : e.act.tgt}` : ""}`, sub: `${esc(sess.f.e?.name || "Foe")}${e.act.stk ? ` · ${esc(e.act.stk)}` : ""}` };
     if (e.kind === "foe" && !(prev && prev.kind === "foe") && !e.wave) return { cls: "foe", t: `${sess.f.e?.name || "Foe"}'s turn` };
     return null;
   }
   /* the dock's line while a turn plays out */
   function who(e, sess) {
     if (!e) return "";
-    if (e.kind === "foe") return `${sess.f.e?.name || "The foe"}'s turn…`;
+    if (e.kind === "foe") return e.act ? `${sess.f.e?.name || "The foe"}: ${e.act.ic} ${tr(e.act.name)}` : `${sess.f.e?.name || "The foe"}'s turn…`;
     if (e.kind === "round") return `Round ${e.round}`;
     if (e.kind === "tick") return "End of the round…";
     if (e.kind === "ally") return `${e.name || "Your ally"} acts…`;
@@ -263,6 +294,6 @@ const FIGHTREAD = (() => {
   }
   function stop() { clearInterval(beatT); beatT = null; }
 
-  return { INTENT, LOW, plan, foeLeft, blow, intents, forecast, panels, myChips, barMarks, paced, delay, summary, banner, bannerHTML, who, cue, play, low, stop };
+  return { INTENT, BLOWS, blowOf, actName, stkTxt, LOW, plan, foeLeft, blow, intents, forecast, panels, myChips, barMarks, paced, delay, summary, banner, bannerHTML, who, cue, play, low, stop };
 })();
 if (typeof module !== "undefined") module.exports = FIGHTREAD;

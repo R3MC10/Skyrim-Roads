@@ -77,9 +77,9 @@ const PFX = (() => {
     [ "Unarmored", "perfect_form", "Perfect Form", 1, [90], ["flowing_water", "deflection"], "With no armor on, another 10% chance to avoid a hit. [OURS]", [["dodge", 0.1, { bare: 1 }]]],
     // ---------------------------------------------------------------- Destruction (8 → 14)
     [ "Destruction", "master_destruction", "Master Destruction", 1, [100], ["expert_destruction"], "Master destruction spells cost half. [Skyrim]", [["tier", 1, {}]]],
-    [ "Destruction", "intense_flames", "Intense Flames", 1, [50], ["augmented_flames"], "Fire spells set foes burning one turn longer, and burns hurt 50% more. [Skyrim: fire makes foes flee]", [["burn", 0.5, {}]]],
-    [ "Destruction", "deep_freeze", "Deep Freeze", 1, [60], ["augmented_frost"], "Frost spells freeze the foe solid 20% of the time (paralyzed 1 turn). [Skyrim]", [["freeze", 0.2, {}]]],
-    [ "Destruction", "disintegrate", "Disintegrate", 1, [70], ["augmented_shock"], "Shock spells destroy a foe below 15% health. [Skyrim] Your timing ring's bright zone is 30% wider.", [["exec", 0.15, { el: "shock" }], ["timing", 0.3, {}]]],
+    [ "Destruction", "intense_flames", "Intense Flames", 1, [50], ["augmented_flames"], "Fire spells set foes burning one turn longer, and burns hurt 50% more. Every burn you start adds 1 more stack. [Skyrim: fire makes foes flee]", [["burn", 0.5, {}], ["stk", 1, { el: "burn" }]]],
+    [ "Destruction", "deep_freeze", "Deep Freeze", 1, [60], ["augmented_frost"], "Frost spells freeze the foe solid 20% of the time (paralyzed 1 turn), and every chill you put on adds 1 more stack. [Skyrim]", [["freeze", 0.2, {}], ["stk", 1, { el: "chill" }]]],
+    [ "Destruction", "disintegrate", "Disintegrate", 1, [70], ["augmented_shock"], "Shock spells destroy a foe below 15% health, and every shock you land adds 1 more stack. [Skyrim] Your timing sweet spot is 30% wider.", [["exec", 0.15, { el: "shock" }], ["timing", 0.3, {}], ["stk", 1, { el: "shock" }]]],
     [ "Destruction", "rune_master", "Rune Master", 1, [40], ["apprentice_destruction"], "Runes do 50% more damage. [Skyrim: runes placed further away]", [["spell", 0.5, { kind: "rune" }]]],
     [ "Destruction", "destruction_dual_casting", "Destruction Dual Casting", 1, [20], ["novice_destruction"], "Dual-cast destruction spells cost 15% less. [Skyrim: dual casting overcharges]", [["dualcost", 0.15, { school: "Destruction" }]]],
     // ---------------------------------------------------------------- Restoration (7 → 12)
@@ -95,7 +95,7 @@ const PFX = (() => {
     [ "Alteration", "stability", "Stability", 1, [70], ["adept_alteration"], "Alteration spells last longer: armor spells are 25% stronger. [Skyrim]", [["armorspell", 0.25, {}]]],
     [ "Alteration", "atronach", "Atronach", 1, [100], ["magic_resistance"], "15% of spell damage against you is absorbed as magicka. [Skyrim: absorb 30% of spells]", [["absorb", 0.15, { magic: 1 }]]],
     [ "Alteration", "alteration_dual_casting", "Alteration Dual Casting", 1, [20], ["novice_alteration"], "Dual-cast alteration spells cost 15% less. [Skyrim]", [["dualcost", 0.15, { school: "Alteration" }]]],
-    [ "Alteration", "elemental_skin", "Elemental Skin", 1, [60], ["magic_resistance"], "Burning, chills and shocks on you last one turn less. [OURS]", [["statusshort", 1, {}]]],
+    [ "Alteration", "elemental_skin", "Elemental Skin", 1, [60], ["magic_resistance"], "Burning, chills and shocks put on you have one stack less. [OURS]", [["statusshort", 1, {}]]],
     // ---------------------------------------------------------------- Conjuration (5 → 12)
     [ "Conjuration", "adept_conjuration", "Adept Conjuration", 1, [50], ["apprentice_conjuration"], "Adept conjuration spells cost half. [Skyrim]", [["tier", 1, {}]]],
     [ "Conjuration", "expert_conjuration", "Expert Conjuration", 1, [75], ["adept_conjuration"], "Expert conjuration spells cost half. [Skyrim]", [["tier", 1, {}]]],
@@ -114,7 +114,7 @@ const PFX = (() => {
     // ---------------------------------------------------------------- Mysticism (3 → 9)
     [ "Mysticism", "telekinetic_ward", "Telekinetic Ward", 1, [20], ["spell_absorption"], "Arrows aimed at you are 15% weaker. [OURS, from Telekinesis]", [["in", -0.15, { archerFoe: 1 }]]],
     [ "Mysticism", "spell_reflection", "Spell Reflection", 2, [40, 70], ["spell_absorption"], "5/10% chance to throw a mage's or dragon's blow back at them. [OURS, from Morrowind's Reflect]", [["reflect", [0.05, 0.1], { magic: 1 }]]],
-    [ "Mysticism", "dispel_aura", "Dispel Aura", 1, [50], ["detect_life"], "Burning, chills and shocks on you last one turn less. [OURS, from Dispel]", [["statusshort", 1, {}]]],
+    [ "Mysticism", "dispel_aura", "Dispel Aura", 1, [50], ["detect_life"], "Burning, chills and shocks put on you have one stack less. [OURS, from Dispel]", [["statusshort", 1, {}]]],
     [ "Mysticism", "mystic_focus", "Mystic Focus", 1, [60], ["soul_trap"], "Every spell costs 10% less. [OURS]", [["scost", 0.1, {}]]],
     [ "Mysticism", "soul_harvest", "Soul Harvest", 1, [80], ["soul_trap"], "Kills recharge your enchanted weapon another 10%. [OURS, from Soul Trap]", [["siphon", 0.1, {}]]],
     [ "Mysticism", "astral_sight", "Astral Sight", 1, [100], ["mystic_focus", "spell_reflection"], "Magicka comes back 50% faster. [OURS]", [["regenmp", 0.5, {}]]],
@@ -212,7 +212,7 @@ const PFX = (() => {
     [ "Enchanting", "warding_enchanter", "Warding Enchanter", 1, [40], ["insightful_enchanter"], "Resist Magic, Fire, Frost, Shock and Poison enchantments are 25% stronger. [OURS]", [["ench", 0.25, { el: "ward" }]]],
     [ "Enchanting", "hex_enchanter", "Hex Enchanter", 1, [50], ["fire_enchanter"], "Weapon enchantments that aren't fire, frost or shock (absorb, paralyze, fear, calm, bleeding, turn undead) are 25% stronger. [OURS]", [["ench", 0.25, { el: "other" }]]],
     [ "Enchanting", "thrifty_runes", "Thrifty Runes", 1, [30], ["soul_squeezer"], "Your enchanted weapons and staffs use 20% less charge per hit or cast, and every kill puts 3% back into your enchanted weapon. [OURS]", [["enchcost", 0.2, {}], ["siphon", 0.03, {}]]],
-    [ "Enchanting", "rune_smith", "Rune Smith", 1, [80], ["deep_charge"], "Elemental statuses from your enchanted weapons last a turn longer. [OURS]", [["enchstatus", 1, {}]]],
+    [ "Enchanting", "rune_smith", "Rune Smith", 1, [80], ["deep_charge"], "Elemental statuses from your enchanted weapons put on 1 more stack. [OURS]", [["enchstatus", 1, {}]]],
     // the newer enchantments (enchants2.js)
     [ "Enchanting", "runic_enchanter", "Runic Enchanter", 1, [60], ["hex_enchanter"], "Bloodthirst, Thunderclap, Reaping, Sundering, Spellbreaker, Echo Strike, Venom, Dragonbane and Banishing enchantments are 25% stronger. [OURS]", [["ench", 0.25, { el: "rune" }]]],
     [ "Enchanting", "talisman_maker", "Talisman Maker", 1, [45], ["jeweller"], "Thorns, Last Ward, Fortune, Mana Shield, Swiftness, Executioner, Huntsman and Ambusher enchantments are 25% stronger. [OURS]", [["ench", 0.25, { el: "relic" }]]],
@@ -255,8 +255,8 @@ const PFX = (() => {
     [ "Smithing", "hearth_forge", "Hearth Forge", 1, [40], ["carpenter"], "At your homestead's armory, improving gear adds 1 more, and the armory makes 6 more arrows a day. [OURS]", [["hsforge", 1, {}]]],
     [ "Speechcraft", "gracious_host", "Gracious Host", 1, [30], [], "Your display cases earn twice as much from visitors, and party members who stay over at your homestead always wake Well Rested. [OURS]", [["hshost", 1, {}]]],
     [ "Speechcraft", "call_to_arms", "Call to Arms", 1, [45], ["bribery"], "When raiders come for your homestead, talking them down works 25% more often, and your steward and the followers living there hit 25% harder and hold the house better while you're away. [OURS]", [["hsparley", 0.25, {}], ["hsdefend", 0.25, {}]]],
-    // ---------------------------------------------------------------- turn-by-turn fights (tbfight.js): action points and initiative
-    [ "Athletics", "battle_rhythm", "Battle Rhythm", 2, [30, 70], ["long_strider"], "In turn-by-turn fights you get 1/2 more action points every turn. [OURS]", [["tbap", 1, {}]]],
+    // ---------------------------------------------------------------- turn-by-turn fights (tbfight.js): move costs and initiative
+    [ "Athletics", "battle_rhythm", "Battle Rhythm", 2, [30, 70], ["long_strider"], "In turn-by-turn fights your weapon blows, power attacks and guards cost 10/20% less stamina. [OURS]", [["tbap", 1, {}]]],
     [ "Acrobatics", "quick_start", "Quick Start", 2, [25, 60], ["sure_footed"], "In turn-by-turn fights you act sooner: +3/+6 initiative. [OURS]", [["tbinit", 3, {}]]],
     // ---------------------------------------------------------------- sneak mode on the road (sneakmode.js)
     [ "Sneak", "silent_roads", "Silent Roads", 1, [25], ["stealth"], "Sneaking on the road is 15% faster, and other heroes have to be 25% closer to spot you. [OURS]", [["sneakmove", 0.15, {}], ["sneakseen", 0.25, {}]]],
@@ -266,7 +266,7 @@ const PFX = (() => {
     [ "Sneak", "owl_eyes", "Owl Eyes", 1, [35], ["stealth"], "Night, fog, storms and blizzards shorten your sight on the map only half as much. [OURS]", [["sightdark", 0.5, {}]]],
     [ "Blocking", "watch_drills", "Watch Drills", 1, [30], ["shield_wall"], "You know how hold guards fight: they hit you 15% softer and you hit them 10% harder. [OURS]", [["in", -0.15, { tag: ["guard"] }], ["out", 0.1, { tag: ["guard"] }]]],
     [ "Sneak", "first_move", "First Move", 1, [40], ["stealth"], "You read a fight before it starts: +4 initiative in turn-by-turn fights. [OURS]", [["tbinit", 4, {}]]],
-    [ "Alteration", "quickened_casting", "Quickened Casting", 1, [40], ["apprentice_alteration"], "In turn-by-turn fights you get 1 more spell point every turn (only for spells). [OURS]", [["tbspap", 1, {}]]],
+    [ "Alteration", "quickened_casting", "Quickened Casting", 1, [40], ["apprentice_alteration"], "In turn-by-turn fights your spells cost 10% less magicka. [OURS]", [["tbspap", 1, {}]]],
     [ "Heavy Armor", "drilled_in_steel", "Drilled in Steel", 1, [50], ["juggernaut"], "Heavy armor slows you only half as much in turn-by-turn fights (initiative). [OURS]", [["tbheavy", 0.5, {}]]],
     // ---------------------------------------------------------------- something at every place (placestuff.js)
     [ "Lockpicking", "wayfarers_nose", "Wayfarer's Nose", 1, [35], ["apprentice_locks"], "Hidden strongboxes at cabins, shacks and lodges hold 30% more gold and fill up again a day sooner. [OURS]", [["stash", 0.3, {}]]],
@@ -332,6 +332,10 @@ const PFX = (() => {
     [ "Streetwise", "cartographer", "Cartographer", 1, [25], ["rumour_monger"], "Treasure maps come clearer: one more landmark, firm roads and a full compass, and you know the hold at once. [OURS]", [["tmapx", 1, {}]]],
     [ "Mercantile", "antiquarian", "Antiquarian", 1, [30], ["haggling"], "You restore relics yourself, anywhere, from one fragment fewer, and collectors pay half again as much for them. [OURS]", [["relicfix", 1, {}], ["relicpay", 0.5, {}]]],
     [ "Athletics", "excavator", "Excavator", 2, [30, 60], ["long_strider"], "Buried treasure holds 25%/50% more gold and an extra gem or relic fragment, and a wrong dig tires you half as long. [OURS]", [["digloot", [0.25, 0.5], {}], ["diggem", 1, {}], ["digrest", 0.5, {}]]],
+    // Legendary hunts (leghunt.js) [OURS]
+    [AR, "lh_tracker", "Experienced Tracker", 1, [40], ["hunters_eye"], "On a legendary hunt every clue counts twice, you read one extra secret from every sign, and tracks and ambushes are easier. [OURS]", [["lhclue", 1, {}]]],
+    [ "Speechcraft", "lh_scholar", "Monster Scholar", 1, [30], ["persuasion"], "You have read every bestiary in the College: you know what a legendary beast resists before you meet it, and you hit legendary beasts 10% harder. [OURS]", [["lhscholar", 1, {}], ["out", 0.1, { tag: ["legend"] }]]],
+    [ "Smithing", "lh_trophy", "Trophy Hunter", 2, [30, 60], ["steel_smithing"], "When you skin a legendary beast you take 1/2 more pieces of its rare hide, and you are 10/20% more likely to find its unique piece. [OURS]", [["lhharvest", [1, 2], {}], ["lhuniq", [0.1, 0.2], {}]]],
   ];
   const FX = {};
   if (typeof PERKS !== "undefined") {
@@ -474,15 +478,17 @@ const PFX = (() => {
       const turns = 3 + (strong ? 1 : 0) + (foeWeak(f, st) ? 1 : 0) + plus;
       const dmg = Math.max(1, Math.round(amt * 0.15 * (1 + strong) * (1 + 0.1 * P(s, "augmented_flames"))));
       const cur = f.foeSt.burn;
-      f.foeSt.burn = { dmg: Math.max(dmg, cur ? cur.dmg : 0), turns: Math.max(turns, cur ? cur.turns : 0) };   // a fresh burn refreshes, never stacks
+      if (typeof STACKS !== "undefined") STACKS.add(f, "foe", "burn", turns, { per: STACKS.perFor(dmg, turns), src: "me" });   // stacks.js: a fresh burn adds stacks
+      else f.foeSt.burn = { dmg: Math.max(dmg, cur ? cur.dmg : 0), turns: Math.max(turns, cur ? cur.turns : 0) };
       label = ` · ${ICON.burn} sets it burning`;
     } else if (st === "chill") {
-      f.foeSt.chill = { turns: 2 + plus };
-      f.slowed = Math.max(f.slowed || 0, 2);
+      if (typeof STACKS !== "undefined") STACKS.add(f, "foe", "chill", 2 + plus, { src: "me" });   // each stack: its blows 5% softer, and it acts later
+      else { f.foeSt.chill = { turns: 2 + plus }; f.slowed = Math.max(f.slowed || 0, 2); }
       if (Math.random() < sum(s, "freeze", f, {})) { f.eParalyzed = Math.max(f.eParalyzed || 0, 1); label = ` · ${ICON.chill} frozen solid`; }
       else label = ` · ${ICON.chill} chilled`;
     } else if (st === "shock") {
-      f.foeSt.shock = { turns: 2 + plus };
+      if (typeof STACKS !== "undefined") STACKS.add(f, "foe", "shock", 2 + plus, { src: "me" });   // each stack: +3% damage taken
+      else f.foeSt.shock = { turns: 2 + plus };
       const caster = typeof MAGIC !== "undefined" ? MAGIC.isCaster(f) : f.tags.has("mage");
       if (caster && !f.stagger && Math.random() < 0.3) { f.stagger = true; label = ` · ${ICON.shock} spell interrupted`; }
       else label = ` · ${ICON.shock} jolted`;
@@ -498,16 +504,18 @@ const PFX = (() => {
     const short = Math.min(2, sum(s, "statusshort", f, {})), res = Math.min(0.75, sum(s, "statusres", f, {}) + Math.min(0.5, (G.fxSum(s, "resist") || 0) / 100));
     if (st === "burn") {
       const turns = Math.max(1, 2 - short), d = Math.max(1, Math.round(dmg * 0.1 * (1 - res)));   // gentler on you than on foes: 10% for 2 turns
-      const cur = f.meSt.burn; f.meSt.burn = { dmg: Math.max(d, cur ? cur.dmg : 0), turns: Math.max(turns, cur ? cur.turns : 0) };
+      const cur = f.meSt.burn;
+      if (typeof STACKS !== "undefined") STACKS.add(f, "me", "burn", turns, { per: STACKS.perFor(d, turns) });
+      else f.meSt.burn = { dmg: Math.max(d, cur ? cur.dmg : 0), turns: Math.max(turns, cur ? cur.turns : 0) };
       return ` · ${ICON.burn} you're burning`;
     }
     if (st === "chill") {
-      f.meSt.chill = { turns: Math.max(1, 2 - short) };
-      const drain = Math.round(dmg * 0.4 * (1 - res)); f.sp = Math.max(0, f.sp - drain);
+      if (typeof STACKS !== "undefined") STACKS.add(f, "me", "chill", Math.max(1, 2 - short)); else f.meSt.chill = { turns: Math.max(1, 2 - short) };
+      const drain = Math.round(dmg * 0.2 * (1 - res)); f.sp = Math.max(0, f.sp - drain);   // stamina is what your moves cost now: frost bites it, gently
       return ` · ${ICON.chill} chilled (−${drain} stamina)`;
     }
-    f.meSt.shock = { turns: Math.max(1, 2 - short) };
-    const drain = Math.round(dmg * 0.35 * (1 - res)); f.mp = Math.max(0, f.mp - drain);
+    if (typeof STACKS !== "undefined") STACKS.add(f, "me", "shock", Math.max(1, 2 - short)); else f.meSt.shock = { turns: Math.max(1, 2 - short) };
+    const drain = Math.round(dmg * 0.2 * (1 - res)); f.mp = Math.max(0, f.mp - drain);   // and magicka is what spells cost
     return ` · ${ICON.shock} jolted (−${drain} magicka)`;
   }
   /* once a turn: burns hurt, statuses wear off. Adds to the turn's log line. */

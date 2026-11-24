@@ -1,9 +1,14 @@
-/* Turn-based fights with initiative and action points. [OURS module]
-   Remigiusz: "Let's make fights really turn based; turn order should be initiative based. Within combat there should be
-   action points that grow with skills we already have; same for initiative. Followers and summons do their turns
-   automatically." Survey: you play your own turns (with an Auto button), AP from Athletics + Stamina, extra spell AP from
-   Magicka + Alteration, initiative from Acrobatics + Sneak (heavy armour slows you), perks that add AP/initiative;
-   balanced so fights don't end quickly; party fights harder; in a party each player plays their own turns live.
+/* Turn-based fights with initiative; every move costs stamina, magicka or health. [OURS module]
+   [Owner, build 145: "AP points should be gone from the game. now everything costs stamina or mana or health" and
+   "now player chooses its turn really"] There are no action points any more. On your turn you pick any mix of moves
+   (attack, power attack, guard, bash, spells, shouts, potions, dark moves...) and pay for each one in stamina, magicka or
+   health, then press End turn. The same move again in one turn costs 50% more each time, a turn holds at most 4 moves
+   and 2 potions, and the fewer moves you make, the more guard you keep (up to 30%). Stamina and magicka come back
+   every round. The notes below are the original design, kept for history.
+   Remigiusz: "Let's make fights really turn based; turn order should be initiative based. Followers and summons do their
+   turns automatically." You play your own turns (with an Auto button); Athletics and Alteration make your moves cheaper,
+   initiative comes from Acrobatics + Sneak (heavy armour slows you); balanced so fights don't end quickly; party fights
+   harder; in a party each player plays their own turns live.
 
    How it fits the engine: every fight in the game is still a G.Fight. The old instant `run()` is kept for sims, the arena
    and tests. In the app, TB.call(S, fn, done) runs a game action (road encounter, dungeon room, quest, raid...). When the
@@ -11,16 +16,17 @@
    re-run from a snapshot with the same dice up to the fight, which now "finishes" instantly with the played result.
    So loot, death, quests and XP all go through the exact same code as before.
 
-   Each round: everyone rolls initiative (base + d10); you spend AP on actions (weapon by type, power attacks, guard,
-   spells by tier, shouts, potions, flee); leftover AP becomes guard. Followers, summons, thralls and party members act on
+   Each round: everyone rolls initiative (base + d10); you pay stamina, magicka or health for moves (weapon blows, power
+   attacks, guard, spells, shouts, potions, flee); moves you don't make become guard. Followers, summons, thralls and party members act on
    their own initiative; real players in your party play their own turn on their own phone (sharedfight.js; 90 s, then guard).
    No one-shots: a single blow can't take more than 40% of a strong target's health, except a finishing blow.
    The AI is reached through one adapter, TB.aiPick(fight, actor), which uses COMBATAI.decide(fight, actor, settings)
    when another module provides it, otherwise the fight's own choice (Smart AI or your custom tactics). */
 const TB = (() => {
   // ------------------------------------------------------------------ numbers (tuned with tests/sim_tbfight.js)
-  const WCOST = { dagger: 2, fist: 2, sword: 3, axe: 3, mace: 3, spear: 3, staff: 3, greatsword: 4, battleaxe: 4, warhammer: 4, bow: 4, crossbow: 5 };
-  const TIERC = { Novice: 2, Apprentice: 3, Adept: 4, Expert: 5, Master: 6 };
+  const ATK_SP = { dagger: 12, fist: 10, claw: 16, sword: 18, axe: 20, mace: 20, spear: 18, staff: 16, greatsword: 26, battleaxe: 28, warhammer: 28, bow: 36, crossbow: 42 };   // stamina a plain blow takes (a full four-blow turn leaves you winded; about two a round keeps going)
+  const SWINGS = { dagger: 3, fist: 3, claw: 2, sword: 2, axe: 2, mace: 2, spear: 2, staff: 2, greatsword: 1.5, battleaxe: 1.5, warhammer: 1.5, bow: 1.5, crossbow: 1.2 };   // a typical turn of plain blows (foe health is sized from it)
+  const MAX_ACTS = 4, MAX_POTS = 2, REPEAT = 0.5, SHOUT_SP = 10, DARK_HP = 0.03;
   const HIT_CAP = 0.4;          // max share of a strong target's health one blow can take
   /* foe toughness and actions per round, by kind of foe (tuned with the sim in tests/test_tbfight.js) */
   const T = { hp: { normal: 2.0, tough: 2.6, boss: 3.0 }, acts: { normal: 2.4, tough: 2.5, boss: 2.5 },
@@ -30,44 +36,62 @@ const TB = (() => {
   const PARTY_HP = 0.45;        // +45% foe health per extra real player in the fight (shared out over the extra foes below)
   const MAX_FOES = 6;           // [OURS] a party meets one foe per hero, one after another (like dungeon rooms), at most 6; bosses stay alone
   const MAX_ROUNDS = 40;
-  const MP_REGEN = 1.6, SP_REGEN = 1.4;
+  const MP_REGEN = 3.2, SP_REGEN = 4.4;   // per round about 22% of your stamina and 10% of your magicka come back (moves cost them now)
   const TURN_SECONDS = 90;      // a real player's turn in a party fight (on their own full fight screen, sharedfight.js), then they just guard
   const pfx = (s, k) => (typeof PFX !== "undefined" ? PFX.num(s, k) : 0);
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const tr0 = (t) => (typeof I18N !== "undefined" && I18N.tr && I18N.lang?.() === "pl" ? I18N.tr(t) ?? t : t);
   const d10 = () => 1 + Math.floor(Math.random() * 10);
 
-  /* your action points, spell action points and initiative (what the screen shows; the skill info texts quote these) */
+  /* your initiative and how cheap your moves are (what the screen shows; the skill info texts quote these).
+     Athletics and Battle Rhythm make weapon moves cheaper; Alteration and Quickened Casting make spells cheaper. */
   function stats(s, f) {
     const ath = G.skill(s, "Athletics"), acro = G.skill(s, "Acrobatics"), snk = G.skill(s, "Sneak"), alt = G.skill(s, "Alteration");
-    const st = G.maxStamina(s), mg = G.maxMagicka(s);
-    const ap = clamp(6 + Math.floor(ath / 40) + Math.floor(Math.max(0, st - 150) / 150) + pfx(s, "tbap"), 4, 11);
-    const spellAp = clamp(Math.floor(alt / 50) + Math.floor(Math.max(0, mg - 100) / 150) + pfx(s, "tbspap"), 0, 3);
+    const spCut = clamp(ath / 1000 + 0.1 * pfx(s, "tbap"), 0, 0.35), mpCut = clamp(alt / 1000 + 0.1 * pfx(s, "tbspap"), 0, 0.35);
     let heavy = 0, medium = 0;
     for (const a of Object.values(f?.armor || {})) { if (a.type === "heavy") heavy++; else if (a.type === "medium") medium++; }
     const init = Math.round(10 + acro / 8 + snk / 16 - (2 * heavy + 0.5 * medium) * (1 - Math.min(1, pfx(s, "tbheavy"))) + pfx(s, "tbinit"));
-    return { ap, spellAp, init, heavy };
+    return { acts: MAX_ACTS, pots: MAX_POTS, spCut, mpCut, init, heavy };
   }
   const spellOf = (a) => { const [k, arg] = a.split(":"); return k === "spell" || k === "dual" ? D.SPELLS[arg] : k === "scroll" ? D.SPELLS[D.ITEMS[arg]?.spell] : null; };
   const tierOf = (id, sp) => sp?.level || (typeof TOMES !== "undefined" && TOMES.level ? TOMES.level(id) : "Novice");
-  /* AP cost of an action */
-  function cost(f, a) {
-    if (typeof BEASTPATH !== "undefined") { const c = BEASTPATH.cost(f, a); if (c != null) return c; }   // claws and a changed form's own moves (beastpaths.js)
-    if (a === "attack") return WCOST[f.wt] || 3;
-    if (a === "power_attack") return (WCOST[f.wt] || 3) + 2;
-    if (a === "block") return 2;
-    if (a === "bash") return 3;
-    if (a === "flee") return 99;
+  /* what a move takes before repeats: { sp, mp, hp, eng } (stamina, magicka, health; eng = the part the engine itself
+     takes when the move runs: power attacks, guards, bashes, spells). Potions, scrolls, powers and fleeing are free. */
+  function base(f, a) {
+    if (typeof BEASTPATH !== "undefined") { const c = BEASTPATH.cost(f, a); if (c) return c; }   // claws and a changed form's own moves (beastpaths.js)
+    if (typeof STRAT !== "undefined" && STRAT.owns(a)) return STRAT.cost(f, a);   // Catch your breath (strategy.js)
     if (typeof MOUNTFIGHT !== "undefined" && MOUNTFIGHT.owns(a)) return MOUNTFIGHT.cost(f, a);   // getting on / off your horse (mountfight.js)
-    const [k, arg] = a.split(":");
-    if (k === "spell" || k === "dual") { const c = TIERC[tierOf(arg, D.SPELLS[arg])] || 3; return k === "dual" ? c + 2 : c; }
-    if (k === "scroll") return 2;
-    if (k === "shout" || k === "power") return 2;
-    if (k === "potion") return 1;
-    return 3;
+    const s = f.s, [k, arg] = a.split(":");
+    if (a === "attack") return { sp: ATK_SP[f.wt] || 9 };
+    if (a === "power_attack") return { sp: f.paCost || 0, eng: { sp: f.paCost || 0 } };
+    if (a === "block") { const c = F.BLOCK_STAMINA * Math.max(0, 1 - (typeof PFX !== "undefined" ? Math.min(1, PFX.sum(s, "blockcost", f, {})) : 0)); return { sp: c, eng: { sp: c } }; }
+    if (a === "bash") { const c = typeof SHIELDFX !== "undefined" ? SHIELDFX.cost(f) : 35; return { sp: c, eng: { sp: c } }; }
+    if (k === "spell" || k === "dual") {
+      const sp = D.SPELLS[arg]; if (!sp) return {};
+      const c = G.spellCost(s, sp) * (k === "dual" ? (typeof MAGIC !== "undefined" && MAGIC.DUAL_COST) || 2 : 1);
+      const dark = sp.kind === "absorb" || sp.kind === "reanimate";   // dark magic takes a little blood too
+      return { mp: c, hp: dark ? DARK_HP * G.maxHealth(s) : 0, eng: { mp: c } };
+    }
+    if (k === "shout") return { sp: SHOUT_SP };
+    return {};
   }
+  /* what a move costs you right now: { sp, mp, hp, n } (n: times you already did it this turn, +50% each) */
+  function cost(f, a, sess) {
+    if (a === "end" || a === "flee") return { sp: 0, mp: 0, hp: 0, n: 0 };
+    const b = base(f, a), n = (sess && sess.used && sess.used[a]) || 0, m = 1 + REPEAT * n, st = (sess && sess.st) || {};
+    return { sp: Math.round((b.sp || 0) * m * (1 - (st.spCut || 0))), mp: Math.round((b.mp || 0) * m * (1 - (st.mpCut || 0))), hp: Math.round((b.hp || 0) * m), n, eng: b.eng || null };
+  }
+  /* "9 stamina", "24 magicka · 4 health", "free" */
+  function costTxt(c) {
+    const out = []; if (!c) return "free";
+    if (c.sp > 0) out.push(`${c.sp} stamina`); if (c.mp > 0) out.push(`${c.mp} magicka`); if (c.hp > 0) out.push(`${c.hp} health`);
+    return out.length ? out.join(" · ") : "free";
+  }
+  /* the coloured numbers on a move's button: green stamina, blue magicka, red health */
+  const costHTML = (c) => (c && (c.sp > 0 || c.mp > 0 || c.hp > 0) ? [["sp", c.sp], ["mp", c.mp], ["hp", c.hp]].filter(([, v]) => v > 0).map(([k, v]) => `<em class="rc ${k}">${v}</em>`).join("") : `<em class="rc free">✓</em>`);
   const isSpell = (a) => /^(spell|dual|scroll):/.test(a);
   /* [OURS] shared party fights: the foe's state handed over to a player's phone for their turn and back (sharedfight.js) */
-  const FOE_KEYS = ["foeSt", "eParalyzed", "tbStunLeft", "tbStunCd", "tbStunRound", "stagger", "calmTurns", "bleed", "kit", "kitDot", "kitApLoss", "kitLast", "dStance", "fearTurns", "disarmed", "soulTrap", "eMagic", "fpAvoided", "ehp0", "foeTgts", "fcap"];
+  const FOE_KEYS = ["foeSt", "eParalyzed", "tbStunLeft", "tbStunCd", "tbStunRound", "stagger", "calmTurns", "bleed", "kit", "kitDot", "kitLast", "stk", "dStance", "fearTurns", "disarmed", "soulTrap", "eMagic", "fpAvoided", "ehp0", "foeTgts", "fcap"];
   /* what a teammate's spell can leave on someone (spellbook.js): handed back with the turn */
   const BUFF_KEYS = ["ward", "reflect", "armorRed", "armorT", "imbue", "thorns", "heroT", "unseen", "dmg", "_baseDmg"];
   /* "You hit the bandit" from one phone reads "Beta hits the bandit" on the others */
@@ -104,7 +128,7 @@ const TB = (() => {
       this.f = f; this.s = f.s; this.opts = opts; this.round = 0; this.order = []; this.idx = 0;
       this.ev = [];             // what happened, for the screen: {who, text, line, kind}
       this.st = stats(f.s, f);
-      this.ap = 0; this.spAp = 0; this.cur = null; this.done = false; this.waiting = null;
+      this.used = {}; this.myActs = 0; this.pots = 0; this.cur = null; this.done = false; this.waiting = null;
       this.lines = { me: [], them: [], a: null };   // this round's log line for the fight log
       this.hitters = 0;
       this.everyone = f.allies.slice();   // who started the fight beside you (party view: knocked-down teammates stay listed)
@@ -137,14 +161,14 @@ const TB = (() => {
       if (typeof FOEKIT !== "undefined") FOEKIT.setup(f);   // what the foe can do besides a plain blow (foekit.js)
       if (typeof BOSSFIGHT !== "undefined") BOSSFIGHT.setup(f, this);   // bosses: phases, big attacks you see coming (bossfight.js)
     }
-    /* rough damage a round from you and your allies (weapon swings in your AP, or your best damage spell) */
+    /* rough damage a round from you and your allies (a typical turn of weapon swings, or your best damage spell) */
     estimate(f) {
       const s = f.s, st = this.st;
       let w = 0, m = 0;
-      try { const sw = typeof COMBATAI !== "undefined" && COMBATAI.swing ? COMBATAI.swing(f, false) : f.weaponDamage(); w = sw * Math.max(1, Math.floor(st.ap / (WCOST[f.wt] || 3))) * 0.8; } catch (e) { w = 0; }
+      try { const sw = typeof COMBATAI !== "undefined" && COMBATAI.swing ? COMBATAI.swing(f, false) : f.weaponDamage(); w = sw * (SWINGS[f.wt] || 2) * 0.8; } catch (e) { w = 0; }
       for (const id of s.spells || []) {
         const sp = D.SPELLS[id]; if (!sp || sp.kind !== "damage") continue;
-        try { const d = G.spellDamage(s, sp), c = Math.max(1, G.spellCost(s, sp)), ap = TIERC[tierOf(id, sp)] || 3; const casts = Math.min(Math.max(1, Math.floor((st.ap + st.spellAp) / ap)), Math.max(1, (f.mp / c) / 4)); m = Math.max(m, d * casts * 0.85); } catch (e) { /* skip */ }
+        try { const d = G.spellDamage(s, sp), c = Math.max(1, G.spellCost(s, sp)), casts = Math.min(2.5, Math.max(1, (f.mp / c) / 4)); m = Math.max(m, d * casts * 0.85); } catch (e) { /* skip */ }
       }
       const al = f.allies.reduce((a, x) => a + (x.dmg || 0), 0);
       return Math.max(w, m) + al;
@@ -171,14 +195,14 @@ const TB = (() => {
     }
     /* initiative order for a new round */
     rollOrder() {
-      const f = this.f, out = [{ id: "me", name: this.s.name || "You", init: this.st.init + d10() }];
+      const f = this.f, out = [{ id: "me", name: this.s.name || "You", init: this.st.init + d10() + (typeof STACKS !== "undefined" ? STACKS.myInit(f) : 0) }];
       f.allies.forEach((al, i) => { if (!al.down) out.push({ id: "al" + i, al, name: al.name, init: (al.init || (al.player ? 9 : al.follower ? 8 : 6)) + d10() }); });
       if (f.summonTurns > 0) out.push({ id: "sum", name: "Summon", init: 6 + d10() });
       const tg = f.tags, base = 6 + Math.min(12, this.foeLevel / 4) + (tg.has("beast") ? 3 : 0) + (tg.has("big") || tg.has("construct") ? -2 : 0);
       // the foe acts 1–3 times a round (whole actions, the fraction is a chance), more with a big party
       let n = T.acts[this.kind] + Math.floor(this.players / 2); const whole = Math.floor(n); n = whole + (Math.random() < n - whole ? 1 : 0);
       const nb = typeof ENCH2 !== "undefined" ? ENCH2.numb(f) : { init: 0, acts: 0 }; n -= nb.acts;   // Numbing Cold: later in the order, a move lost (enchants2.js)
-      for (let i = 0; i < Math.max(1, n); i++) out.push({ id: i ? "foe" + (i + 1) : "foe", name: f.e.name, init: Math.round(base - nb.init) - 4 * i + d10(), extra: i > 0 });
+      for (let i = 0; i < Math.max(1, n); i++) out.push({ id: i ? "foe" + (i + 1) : "foe", name: f.e.name, init: Math.round(base - nb.init) - 4 * i + d10() - (typeof STRAT !== "undefined" ? STRAT.foeInitCut(f) : 0), extra: i > 0 });   // frost slows it (strategy.js)
       out.sort((a, b) => b.init - a.init || (a.id === "me" ? -1 : 1));
       return out;
     }
@@ -204,7 +228,7 @@ const TB = (() => {
         const o = this.order[this.idx];
         this.cur = o;
         if (o.id === "me") {
-          if (!this.apSet) { this.ap = Math.max(1, this.st.ap - (typeof FOEKIT !== "undefined" ? FOEKIT.apLoss(this.f) : 0)); this.spAp = this.st.spellAp; this.apSet = true; this.myActs = 0; }
+          if (!this.apSet) this.beginTurn();
           if (this.opts.auto || this.autoRest) { this.autoTurn(); continue; }
           return { turn: "me" };
         }
@@ -221,50 +245,84 @@ const TB = (() => {
       return this.finish();
     }
     /* ---- your actions */
+    /* a new turn of yours: nothing used yet (apSet keeps its old name for the modules that check it) */
+    beginTurn() {
+      this.used = {}; this.myActs = Math.min(1, this.f.kitApLoss || 0); this.pots = 0; this.apSet = true; this.f.kitApLoss = 0;   // kitApLoss: thrown from the saddle (mountfight.js) = one move fewer this turn
+      const w = typeof STACKS !== "undefined" ? STACKS.beginTurn(this.f) : "";   // Winded / Drained stacks bite (stacks.js)
+      if (w) this.emit("tick", w.replace(/^ · /, ""), "tick");
+    }
+    /* why you can't do a move now ("" = you can) */
+    why(a) {
+      const f = this.f;
+      if (a === "end" || a === "flee") return "";
+      if (this.myActs >= this.st.acts) return `${this.st.acts} moves a turn`;
+      if (/^potion:/.test(a) && this.pots >= this.st.pots) return `${this.st.pots} potions a turn`;
+      if (a === "power_attack" && (this.used.power_attack || 0) >= 1) return "Once a turn";   // a power attack puts everything into one blow
+      const c = cost(f, a, this);
+      if (c.sp > f.sp + 0.01 && !(a === "attack" && this.myActs === 0)) return `Need ${Math.ceil(c.sp - f.sp)} more stamina`;   // out of breath you can still swing once a turn (as in Skyrim)
+      if (c.mp > f.mp + 0.01) return `Need ${Math.ceil(c.mp - f.mp)} more magicka`;
+      if (c.hp > 0 && c.hp >= f.hp) return "Too hurt";
+      return "";
+    }
     canAfford(a) {
-      const c = cost(this.f, a), pool = this.ap + (isSpell(a) ? this.spAp : 0);
-      if (a === "bash") return c <= pool && typeof SHIELDFX !== "undefined" && SHIELDFX.can(this.f);
-      return c <= pool && (a === "flee" || this.f.affordable(a) || a === "attack");
+      if (a === "end" || a === "flee") return true;
+      if (this.why(a)) return false;
+      if (a === "bash") return typeof SHIELDFX !== "undefined" && SHIELDFX.can(this.f);
+      if (typeof STRAT !== "undefined" && STRAT.owns(a)) return STRAT.can(this.f, a);
+      return this.f.affordable(a) || a === "attack";
     }
-    pay(a) {
-      let c = cost(this.f, a);
-      if (isSpell(a)) { const u = Math.min(this.spAp, c); this.spAp -= u; c -= u; }
-      this.ap -= c;
+    /* after a move ran: take what the engine didn't (a plain blow, a shout, the repeat surcharge, blood for dark magic)
+       and give back what your cheaper-move perks save */
+    pay(a, c) {
+      const f = this.f, e = c.eng || {};
+      f.sp = clamp(f.sp - (c.sp - (e.sp || 0)), 0, G.maxStamina(f.s));
+      f.mp = clamp(f.mp - (c.mp - (e.mp || 0)), 0, G.maxMagicka(f.s));
+      if (c.hp > 0) f.hp = Math.max(1, f.hp - c.hp);
+      this.used[a] = (this.used[a] || 0) + 1; this.myActs++;
+      if (/^potion:/.test(a)) this.pots++;
     }
-    act(a, tgt, mult) {   // mult: how the timing ring went (tbradial.js), 1 = normal
+    act(a, tgt, mult, grade) {   // mult: how the minigame went (minigame.js), 1 = normal; grade.cls "perfect" adds a stack
       if (this.cur?.id !== "me" || this.over) return null;
       const f = this.f;
       const al = tgt != null && tgt !== "" ? (+tgt >= 1000 ? (f._downed || [])[+tgt - 1000] : f.allies[+tgt]) : null;
       if (a === "end") return this.endTurn();
       if (a === "flee") return this.flee();
-      if (!this.canAfford(a)) return { err: /^(spell|dual):/.test(a) && cost(f, a) <= this.ap + this.spAp ? "Not enough magicka" : "Not enough action points" };
-      this.pay(a);
+      if (!this.canAfford(a)) return { err: this.why(a) || "You can't do that now" };
+      const price = cost(f, a, this);
       const before = f.ehp, myBefore = f.hp;
       let text = null;
-      if (al && zoneOf(a) === "self") text = onAlly(f, a, al);
+      const setup = typeof STRAT !== "undefined" ? STRAT.setup(f) : "";   // staggered, stunned, chilled: an opening (strategy.js)
+      if (typeof STRAT !== "undefined" && STRAT.owns(a)) text = STRAT.act(f, a);
+      if (text == null && al && zoneOf(a) === "self") text = onAlly(f, a, al);
       if (text == null) { f.tbTarget = al || null; try { text = a === "bash" ? SHIELDFX.bash(f) : f.act(a); } finally { f.tbTarget = null; } }
       if (f.hidden) f.hidden = false;   // only your first strike can be a sneak attack
       if (mult && mult !== 1 && f.ehp < before) { f.ehp = before - (before - f.ehp) * mult; text += mult > 1 ? " (perfect timing!)" : " (mistimed)"; }
+      else if (mult && mult !== 1 && f.hp > myBefore) { f.hp = Math.min(G.maxHealth(f.s), myBefore + (f.hp - myBefore) * mult); text += mult > 1 ? " (perfect!)" : " (shaky)"; }
+      if (grade && grade.cls === "perfect" && typeof MINIGAME !== "undefined") text += MINIGAME.perfect(f, a, before);   // a Perfect adds a stack
       if (typeof DRAGONS !== "undefined") text += DRAGONS.graze(f, a, before);
       if (typeof FOEKIT !== "undefined") text += FOEKIT.defend(f, a, before);   // its raised shield, ward or dodge
       if (f.bf && typeof BOSSFIGHT !== "undefined") text += BOSSFIGHT.answer(this, a, before);   // its helpers, and breaking a big attack
       if (typeof COMBO !== "undefined" && f.ehp < before) text += COMBO.after(f, a, before);   // followers2: combos
+      if (typeof STRAT !== "undefined" && f.ehp < before) text += STRAT.after(f, a, before, setup);
+      if (typeof STACKS !== "undefined" && f.ehp < before) text += STACKS.after(f, a, before);   // Vulnerable, Sunder, Might
       text += this.capFoe(before);
       if (f.ehp < before) { text += this.flank(before); this.hitters++; }
       if (typeof DRAGONS !== "undefined") DRAGONS.check(f, this);
-      this.myActs++;
+      this.pay(a, price);
+      if (typeof STACKS !== "undefined") STACKS.sync(f);
       this.lines.me.push(text); this.lines.a = a;
       this.emit("me", text, "me", { a, wt: f.wt, dmg: Math.max(0, Math.round(before - f.ehp)), healed: Math.max(0, Math.round(f.hp - myBefore)) });
       if (this.over) { this.apSet = false; this.idx++; return { turn: "next" }; }
-      if ((this.ap <= 0 && this.spAp <= 0) || !this.anyAffordable()) return this.endTurn(true);
+      if (typeof STRAT !== "undefined" && STRAT.ends && STRAT.ends(a)) return this.endTurn(true);   // Breathe is your whole turn
+      if (this.myActs >= this.st.acts || !this.anyAffordable()) return this.endTurn(true);
       return { turn: "me" };
     }
     anyAffordable() { return ["attack", "block", "potion:health"].some((a) => this.canAfford(a)) || (this.f.s.spells || []).some((id) => this.canAfford("spell:" + id)); }
-    /* leftover AP become guard against the next blows (10% per point, at most 30%) */
+    /* moves you didn't make become guard against the next blows: 30% after none, 20% after one, 10% after two */
+    guardLeft() { return clamp(0.1 * (3 - this.myActs), 0, 0.3); }
     endTurn(auto) {
-      const left = this.ap;
-      this.f.tbGuard = clamp(0.1 * left, 0, 0.3);
-      if (left > 0 && !auto) this.emit("me", `You hold back and keep your guard up (−${Math.round(this.f.tbGuard * 100)}% damage)`, "guard");
+      this.f.tbGuard = this.guardLeft();
+      if (this.f.tbGuard > 0 && !auto) this.emit("me", `You hold back and keep your guard up (−${Math.round(this.f.tbGuard * 100)}% damage)`, "guard");
       this.apSet = false; this.idx++;
       return { turn: "next" };
     }
@@ -272,22 +330,24 @@ const TB = (() => {
       const f = this.f, s = f.s;
       const ch = clamp(0.4 + G.skill(s, "Athletics") / 300 + G.skill(s, "Acrobatics") / 400 - (f.e.boss ? 0.3 : f.e.danger === "high" ? 0.15 : 0) - 0.05 * this.st.heavy + (f.e.pool ? 0.45 : 0), 0.05, 0.9);   // a raid: the town has plenty of places to hide
       if (Math.random() < ch) { f.endWon = true; f.escaped = true; f.ranAway = true; this.lines.me.push("You break away and escape"); this.emit("me", "You break away and escape!", "flee"); this.apSet = false; this.idx++; return { turn: "next" }; }
-      this.ap = 0; this.spAp = 0; this.lines.me.push("You try to break away, but can't"); this.emit("me", `You try to break away, but the ${f.e.name} cuts you off (${Math.round(ch * 100)}%)`, "flee");
+      this.myActs = this.st.acts; this.lines.me.push("You try to break away, but can't"); this.emit("me", `You try to break away, but the ${f.e.name} cuts you off (${Math.round(ch * 100)}%)`, "flee");
       return this.endTurn(true);
     }
     /* Auto: the AI plays your turn */
     autoTurn() {
       const f = this.f;
       if (this.cur?.id !== "me" || this.over) return { turn: "next" };
-      if (!this.apSet) { this.ap = Math.max(1, this.st.ap - (typeof FOEKIT !== "undefined" ? FOEKIT.apLoss(this.f) : 0)); this.spAp = this.st.spellAp; this.apSet = true; this.myActs = 0; }
+      if (!this.apSet) this.beginTurn();
       const idx0 = this.idx;
       let guard = 0;
-      while (!this.over && this.idx === idx0 && guard++ < 6) {
+      while (!this.over && this.idx === idx0 && guard++ < MAX_ACTS + 2) {
         let a = aiPick(f, "me");
         if (!this.canAfford(a)) a = this.canAfford("attack") ? "attack" : null;
+        if (typeof STRAT !== "undefined") a = STRAT.ai(this, a);   // cash in openings, catch your breath
         if (f.bf && typeof BOSSFIGHT !== "undefined") a = BOSSFIGHT.ai(this, a);   // answer a big attack that's coming
         if (!a) break;
-        if (a === "block" && this.myActs > 0) break;   // guard with leftover points instead of a second raise
+        if (a === "block" && this.myActs > 0) break;   // keep the guard from moves you don't make instead of a second raise
+        if (this.used[a] >= 2 && this.myActs >= 2) break;   // a third of the same move costs double: save the breath, keep some guard
         const r = this.act(a);
         if (!r || r.turn !== "me" || r.err) break;
       }
@@ -307,7 +367,7 @@ const TB = (() => {
     allyMove(al, move, timedOut) {
       const f = this.f;
       if (al.down || f.ehp <= 0) return;
-      if (al.fai && typeof FAI !== "undefined" && !(al.player && move && move !== "auto")) return FAI.turn(this, f, al);   // followers2: their own AP turn
+      if (al.fai && typeof FAI !== "undefined" && !(al.player && move && move !== "auto")) return FAI.turn(this, f, al);   // followers2: their own turn
       const b = f.ehp, hpB = f.hp;
       let t;
       if (al.player && move && move !== "auto") t = this.playerMove(al, move);
@@ -395,21 +455,32 @@ const TB = (() => {
       const FI = typeof FOEINTENT !== "undefined" ? FOEINTENT : null;
       if (FI) FI.next(this);   // foeintent.js: the target its intent showed (healers first is part of that roll)
       else if (f.allies.length && !f.coverAl) { const h = f.allies.find((a) => !a.down && a.player && (a.role === "healer" || a.heals > 0)); if (h && Math.random() < 0.5) f.coverAl = h; }
-      const guards = f.allies.filter((a) => a.guard || a.tbGuard); guards.forEach((a) => { a._red = a.red; a.red = Math.min(0.85, (a.red || 0) + (a.guard ? 0.4 : 0) + (a.tbGuard || 0)); });   // tbGuard: AP a teammate kept back on their own phone
+      let act = null;   // the move it shows, by name (" Venom Spit → Meeko"): the log, the banner and the scene say it as it happens
+      try { if (typeof FIGHTREAD !== "undefined" && !this.mirror) act = FIGHTREAD.actName(FIGHTREAD.intents(this)[0], this); } catch (x) { act = null; }
+      const guards = f.allies.filter((a) => a.guard || a.tbGuard); guards.forEach((a) => { a._red = a.red; a.red = Math.min(0.85, (a.red || 0) + (a.guard ? 0.4 : 0) + (a.tbGuard || 0)); });   // tbGuard: guard a teammate kept on their own phone
       const pa = this.everyone.filter((a) => a.pid), pb = pa.map((a) => a.hp || 0);
       if (typeof DRAGONS !== "undefined") DRAGONS.check(f, this);   // allies and bleeding may have brought it down
       const go = () => (typeof DRAGONS !== "undefined" && f.dStance ? DRAGONS.turn(f, () => f.enemyTurn()) : typeof FOEKIT !== "undefined" && f.kit ? FOEKIT.turn(f, () => f.enemyTurn()) : f.enemyTurn());
       let t = f.bf && typeof BOSSFIGHT !== "undefined" ? BOSSFIGHT.turn(this, go) : go();   // bosses: phases and big attacks (bossfight.js)
       guards.forEach((a) => { a.red = a._red; a.guard = 0; a.tbGuard = 0; });
       if (FI) { FI.done(this); t = FI.say(this, t); }   // "takes aim at Lydia"
+      if (typeof STACKS !== "undefined") {   // Chill and Weak stacks soften its blows (stacks.js)
+        const so = STACKS.foeSoften(f), l0 = hpB - f.hp;
+        if (so > 0 && l0 > 0) { f.hp += l0 * so; t += ` (−${Math.round(l0 * so)} chilled/weak)`; }
+        STACKS.sync(f);
+      }
       const loss = hpB - f.hp;
       if (loss > 0 && f.tbGuard) { const back = loss * f.tbGuard; f.hp += back; t += ` (guard −${Math.round(back)})`; }
       const mh = G.maxHealth(f.s), cap = HIT_CAP * mh, loss2 = hpB - f.hp;
       if (loss2 > cap && hpB > cap) { f.hp = hpB - cap; t += " (you stay on your feet)"; }
       f.tbGuard = 0;
-      this.lines.them.push(prefix + t);
+      // the plan said a blow but the foe healed or drank instead (its own call in the engine): name what it really did
+      if (act && /casts a healing spell|heals itself/i.test(t) && !/heal/i.test(act.name)) act = { ic: "", name: tr0("Heal self"), tgt: "", stk: "", big: false };
+      else if (act && /drinks a potion|drinks a/i.test(t) && !/potion/i.test(act.name)) act = { ic: "", name: tr0("Drink potion"), tgt: "", stk: "", big: false };
+      const named = act ?`${act.ic} ${act.name}${act.tgt ? ` → ${act.tgt}` : ""}: ` : "";
+      this.lines.them.push(prefix + named + t);
       const hits = {}; pa.forEach((a, i) => { const d = Math.round(pb[i] - (a.hp || 0)); if (d > 0) hits[a.pid] = d; });
-      this.emit("foe", prefix + t, "foe", { dmg: Math.max(0, Math.round(hpB - f.hp)), ...(pa.length ? { hits } : {}) });
+      this.emit("foe", prefix + named + t, "foe", { dmg: Math.max(0, Math.round(hpB - f.hp)), ...(pa.length ? { hits } : {}), ...(act ? { act } : {}) });
     }
     /* no one-shots on strong foes: one blow takes at most 40% of their health, unless it finishes them */
     capFoe(before) {
@@ -434,6 +505,7 @@ const TB = (() => {
       if (typeof PFX !== "undefined") PFX.tick(f, line);
       if (typeof MAGIC !== "undefined" && !f.endWon) MAGIC.tick(f, line);
       if (f.pw && typeof POWERS !== "undefined") POWERS.tick(f, line);
+      if (typeof STACKS !== "undefined") STACKS.tick(f, line);   // every stack drops by 1
       const extra = (line.me.slice(n0) + line.them.slice(t0)).replace(/^ · /, "");
       if (extra) this.emit("tick", extra, "tick");
       line.hp = Math.max(0, Math.round(f.hp)); line.ehp = Math.max(0, Math.round(f.ehp));
@@ -543,7 +615,7 @@ const TB = (() => {
   // ------------------------------------------------------------------ the fight screen
   let open = false, ui = null, hooks = {};
   const esc = (t) => String(t ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-  const fast = () => !!prefs().tbFast;
+  const fast = () => false;   // build 146: the Fast button is gone; an old saved tbFast is ignored
   function init(h) { hooks = h || {}; }
   function play(sess, ctx, onDone) {
     open = true;
@@ -589,7 +661,7 @@ const TB = (() => {
     if (typeof f.addXp === "function") f.addXp("Restoration", sp.xp || 10);
     al.hp = Math.min(mx, al.hp + amt); return `${sp.name} on ${al.name}: +${Math.round(al.hp - b)}`;
   }
-  const ICON = { bash: "", attack: "", bow: "", power_attack: "", block: "", magic: "✦", items: "", flee: "", end: "", shout: "", power: "", potion: "", scroll: "", heal: "✚" };
+  const ICON = { recover: "", bash: "", attack: "", bow: "", power_attack: "", block: "", magic: "✦", items: "", flee: "", end: "", shout: "", power: "", potion: "", scroll: "", heal: "✚" };
   function iconOf(f, a) {
     if (typeof BEASTPATH !== "undefined") { const ic = BEASTPATH.icon(f, a); if (ic) return ic; }
     if (a === "mount" || a === "dismount") return "\uE12D";
@@ -598,12 +670,12 @@ const TB = (() => {
     if (k === "spell" || k === "dual") { const sp = spellOf(a); return sp?.kind === "heal" ? ICON.heal : sp?.element === "fire" ? "" : sp?.element === "frost" ? "" : sp?.element === "shock" ? "" : ICON.magic; }
     return ICON[a] || ICON[k] || "•";
   }
-  const apPips = (c) => (c >= 99 ? "" : Array.from({ length: Math.min(c, 6) }, () => "<i></i>").join(""));
+  const guardTxt = (sess) => { const g = Math.round(sess.guardLeft() * 100); return g > 0 ? `+${g}% guard` : "ready"; };
   function actionsHTML(sess) {
     if (typeof FIGHTCTL !== "undefined" && FIGHTCTL.on()) return FIGHTCTL.dock(sess, { menu: ui.menu, cost, zoneOf, iconOf, tierOf });   // fightctl.js: the action bar
-    const f = sess.f, s = f.s, B = (a, label, extra = "") => { const c = cost(f, a), ok = sess.canAfford(a), z = zoneOf(a);
+    const f = sess.f, s = f.s, B = (a, label, extra = "") => { const c = cost(f, a, sess), ok = sess.canAfford(a), z = zoneOf(a);
       const tip = typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.action(f, a, c))}"` : "";
-      return `<button class="tbact ${extra}" data-tba="${esc(a)}"${z ? ` data-tz="${z}"` : ""}${tip} ${ok ? "" : "disabled"}><span class="ic" aria-hidden="true">${iconOf(f, a)}</span><b>${esc(label)}</b><small>${c >= 99 ? "all AP" : c + " AP"}</small><span class="cp" aria-hidden="true">${apPips(c)}</span></button>`; };
+      return `<button class="tbact ${extra}" data-tba="${esc(a)}"${z ? ` data-tz="${z}"` : ""}${tip} ${ok ? "" : "disabled"}><span class="ic" aria-hidden="true">${iconOf(f, a)}</span><b>${esc(label)}</b><small>${esc(costTxt(c))}</small><span class="cp" aria-hidden="true">${costHTML(c)}</span></button>`; };
     if (ui.menu === "magic") {
       const rows = (s.spells || []).filter((id) => D.SPELLS[id] && D.SPELLS[id].kind !== "utility").map((id) => {
         const sp = D.SPELLS[id], mc = typeof G.spellCost === "function" ? Math.round(G.spellCost(s, sp)) : sp.cost;
@@ -622,7 +694,7 @@ const TB = (() => {
     const mv = typeof MOUNTFIGHT !== "undefined" && !bx.form ? MOUNTFIGHT.moves(f) : [];   // Mount / Dismount (mountfight.js)
     const sh = bx.form ? "" : shoutsFor(f).map(([a, n]) => B(a, n, "shout")).join("") + bx.list.map(([a, n]) => B(a, n, "shout beast")).join("") + mv.map(([a, n]) => B(a, n, "mount")).join("");
     if (typeof TBRADIAL !== "undefined" && TBRADIAL.on()) {   // the combat wheel: moves in a ring round End turn
-      const W = (a, label, extra = "") => { const c = cost(f, a), ok = sess.canAfford(a), z = zoneOf(a);
+      const W = (a, label, extra = "") => { const c = cost(f, a, sess), ok = sess.canAfford(a), z = zoneOf(a);
         const tip = typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.action(f, a, c))}"` : "";
         return `<button class="tbact ${extra}" data-tba="${esc(a)}"${z ? ` data-tz="${z}"` : ""}${tip} ${ok ? "" : "disabled"}><span class="ic" aria-hidden="true">${iconOf(f, a)}</span><b>${esc(label)}</b><small>${esc(TBRADIAL.costLine(f, a, c))}</small></button>`; };
       const sl = bx.form ? [...bx.list.map(([a, n]) => W(a, n, "main beast")), W("flee", "Flee", "flee")] : [W("attack", f.wt === "bow" || f.wt === "crossbow" ? "Shoot" : "Attack", "main"), W("power_attack", "Power", "main"),
@@ -630,16 +702,16 @@ const TB = (() => {
         `<button class="tbact menu" data-tbm="magic"><span class="ic" aria-hidden="true">${ICON.magic}</span><b>Magic ▸</b><small>${(s.spells || []).length} spells</small></button>`,
         `<button class="tbact menu" data-tbm="items"><span class="ic" aria-hidden="true">${ICON.items}</span><b>Items ▸</b><small>potions</small></button>`,
         ...shoutsFor(f).map(([a, n]) => W(a, n.replace("Shout ", ""), "shout")), ...bx.list.map(([a, n]) => W(a, n, "shout beast")), ...mv.map(([a, n]) => W(a, n, "mount")), W("flee", "Flee", "flee")];
-      const hub = `<button class="tbact end" data-tba="end"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.action(f, "end", 0))}"` : ""}><span class="ic" aria-hidden="true">${ICON.end}</span><b>End</b><small>${sess.ap > 0 ? `+${Math.min(30, sess.ap * 10)}%` : "ready"}</small></button>`;
+      const hub = `<button class="tbact end" data-tba="end"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.action(f, "end", 0))}"` : ""}><span class="ic" aria-hidden="true">${ICON.end}</span><b>End</b><small>${guardTxt(sess)}</small></button>`;
       return TBRADIAL.wheel(sl, hub);
     }
-    const endB = `<button class="tbact end" data-tba="end"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.action(f, "end", 0))}"` : ""}><span class="ic" aria-hidden="true">${ICON.end}</span><b>End turn</b><small>${sess.ap > 0 ? `+${Math.min(30, sess.ap * 10)}% guard` : "ready"}</small></button>`;
+    const endB = `<button class="tbact end" data-tba="end"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.action(f, "end", 0))}"` : ""}><span class="ic" aria-hidden="true">${ICON.end}</span><b>End turn</b><small>${guardTxt(sess)}</small></button>`;
     if (bx.form) return `<div class="tbgrid beastgrid ${bx.form}">${bx.list.map(([a, n]) => B(a, n, "main beast")).join("")}${B("flee", "Flee", "flee")}${endB}</div>`;
     return `<div class="tbgrid">${B("attack", f.wt === "bow" || f.wt === "crossbow" ? "Shoot" : "Attack", "main")}${B("power_attack", "Power attack", "main")}${f.shield && typeof SHIELDFX !== "undefined" ? B("bash", "Shield bash", "main") : B("block", "Guard", "main")}
       <button class="tbact menu" data-tbm="magic"><span class="ic" aria-hidden="true">${ICON.magic}</span><b>Magic ▸</b><small>${(s.spells || []).length} spells</small></button>
       <button class="tbact menu" data-tbm="items"><span class="ic" aria-hidden="true">${ICON.items}</span><b>Items ▸</b><small>potions</small></button>${sh}
       ${B("flee", "Flee", "flee")}
-      <button class="tbact end" data-tba="end"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.action(f, "end", 0))}"` : ""}><span class="ic" aria-hidden="true">${ICON.end}</span><b>End turn</b><small>${sess.ap > 0 ? `+${Math.min(30, sess.ap * 10)}% guard` : "ready"}</small></button></div>`;
+      <button class="tbact end" data-tba="end"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.action(f, "end", 0))}"` : ""}><span class="ic" aria-hidden="true">${ICON.end}</span><b>End turn</b><small>${guardTxt(sess)}</small></button></div>`;
   }
   function shoutsFor(f) {
     if (typeof POWERS === "undefined" || !f.pw) return [];
@@ -662,7 +734,11 @@ const TB = (() => {
     const vis = playing ? sess.ev.slice(0, cut) : sess.ev;
     const newEv = vis.slice(ui.shown); ui.shown = cut;
     if (playing) state = { turn: "play" };
-    const order = sess.order.map((o, i) => `<span class="tbini ${o.id === sess.cur?.id && !sess.done && !playing ? "now" : ""} ${i < sess.idx && !playing ? "gone" : ""} ${o.id.startsWith("foe") ? "foe" : o.id === "me" ? "me" : "ally"}" data-tip="${esc(o.name)}: initiative ${o.init}. Higher initiative acts earlier in the round.">${icon(o, f)} ${esc(o.name.split(" ")[0])}<i>${o.init}</i></span>`).join("");
+    // the turn order: whoever is acting right now is lit, while you choose AND while the others' turns play out one by one
+    const pe = playing ? vis[vis.length - 1] : null;
+    const acting = (o) => (pe ? (pe.kind === "foe" ? o.id.startsWith("foe") : pe.kind === "me" ? o.id === "me" : pe.kind === "ally" ? o.name === pe.name || (pe.pid && o.pid === pe.pid) : pe.kind === "sum" ? o.id === "sum" : false) : o.id === sess.cur?.id && !sess.done);
+    const actIdx = sess.order.findIndex(acting);
+    const order = sess.order.map((o, i) => `<span class="tbini ${acting(o) ? "now" : ""} ${(playing ? actIdx >= 0 && i < actIdx : i < sess.idx) ? "gone" : ""} ${o.id.startsWith("foe") ? "foe" : o.id === "me" ? "me" : "ally"}" data-tip="${esc(o.name)}: initiative ${o.init}. Higher initiative acts earlier in the round.">${icon(o, f)} ${esc(o.name.split(" ")[0])}<i>${o.init}</i></span>`).join("");
     const pips = (n, m, cls) => Array.from({ length: m }, (_, i) => `<i class="${i < n ? "on" : ""} ${cls}"></i>`).join("");
     const allies = partyHTML(f);
     const mine = state.turn === "me";
@@ -692,20 +768,22 @@ const TB = (() => {
     }
     if (R && newEv.length) { const k = Math.max(0, newEv.length - 3); newEv.slice(k).forEach((e, i) => R.play(R.cue(e, vis[vis.indexOf(e) - 1]), i * 0.25)); }
     el.innerHTML = `<div class="tbin">
-      <div class="tbtop"><b>Round ${sess.round}</b><span class="tbord">${order}</span><button class="tbff" data-tbx="log" aria-label="Full fight log"></button><button class="tbff ${fast() ? "on" : ""}" data-tbx="fast" aria-label="Fast foe turns"></button>${typeof TBRADIAL !== "undefined" ? `<button class="tbff ${TBRADIAL.on() ? "on" : ""}" data-tbx="wheel" aria-label="Combat wheel and timing ring" data-tip="${typeof FIGHTCTL !== "undefined" && FIGHTCTL.on() ? "Timing ring: after a strike or a damage spell, tap when the needle is in the bright zone (Perfect +25%, a miss −20%). Tap to switch it on or off." : "Combat wheel: your moves in a ring, and a timing ring for strikes and spells (Perfect +25%, a miss −20%). Tap to switch to cards."}"></button>` : ""}</div>
+      <div class="tbtop"><b>Round ${sess.round}</b><span class="tbord">${order}</span><button class="tbff" data-tbx="log" aria-label="Full fight log"></button>${typeof TBRADIAL !== "undefined" ? `<button class="tbff ${TBRADIAL.on() ? "on" : ""}" data-tbx="wheel" aria-label="Combat wheel and timing ring" data-tip="${typeof FIGHTCTL !== "undefined" && FIGHTCTL.on() ? "Timing ring: after a strike or a damage spell, tap when the needle is in the bright zone (Perfect +25%, a miss −20%). Tap to switch it on or off." : "Combat wheel: your moves in a ring, and a timing ring for strikes and spells (Perfect +25%, a miss −20%). Tap to switch to cards."}"></button>` : ""}</div>
       <div class="tbstage" data-tbzone="foe"><div class="tbscene" id="tbscene">${scene || (ui.lastScene || "")}</div>${banner}${rd ? rd.bubble : ""}<div class="tbhint" aria-hidden="true"></div></div>
       <div class="tbvit"><div class="tbu me" data-tbzone="self"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.me(f, sess.st))}"` : ""}><small class="nm">\uE102 ${esc(s.name || "You")}</small>${uBar(hpNow, prev.hp, hpMax, "hp", rd ? rd.meMarks(hpNow, hpMax) : "")}${rd ? rd.meLine : ""}<div class="tbsub">${rBar(mpNow, prev.mp, mpMax, "mp", "MP")}${rBar(spNow, prev.sp, spMax, "sp", "SP")}${typeof CHARGE !== "undefined" ? CHARGE.fightBar(f) : ""}</div>${f.ward > 0 ? `<div class="tbward" title="Ward: soaks magic until it breaks. Cast it again to refill it."><i style="width:${pc(f.ward, f.wardMax || f.ward)}%"></i><span>\uE102 Ward ${Math.round(f.ward)} / ${Math.round(f.wardMax || f.ward)}</span></div>` : ""}${R ? R.myChips(f) : ""}${typeof SPELLFX !== "undefined" ? SPELLFX.meHTML(f) : ""}</div>
         <div class="tbu foe" data-tbzone="foe"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.foe(f, sess.ehpMax))}"` : ""}><small class="nm">${f.e.player ? "\uE101" : "\uE12E"} ${esc(f.e.name)}${f.e.archLabel && !String(f.e.name).toLowerCase().includes(f.e.archLabel) ? ` <span class="arch">${esc(f.e.archLabel)}</span>` : ""}${sess.waves > 1 ? ` <span class="arch">${sess.wave}/${sess.waves}</span>` : ""}</small>${uBar(ehpNow, prev.ehp, sess.ehpMax, "hp foe", rd ? rd.foeMarks(ehpNow, sess.ehpMax) : "")}${rd ? rd.foeLine : ""}${statusChips(f)}${rd ? rd.intents : ""}</div></div>
       ${allies}
       <button class="tblog" aria-live="polite" data-tbx="log" aria-label="Fight log, tap for the full log"${log ? "" : " hidden"}>${log}</button>
       ${wait}
+      ${playing ? `<button class="tbskip tbhurry" data-tbx="skip" aria-label="Tap the fight to hurry this turn along"></button>` : ""}
       <div class="tbdock">
-        <div class="tbap">${playing ? `<em class="them">${esc(R ? R.who(vis[vis.length - 1], sess) : "")}</em><button class="tbskip" data-tbx="skip" aria-label="Skip to the end of this turn">Skip ▸▸</button>` : mine && typeof FIGHTCTL !== "undefined" && FIGHTCTL.on() ? FIGHTCTL.apHTML(sess) : mine ? `<span>AP</span>${pips(sess.ap, sess.st.ap, "ap")}${sess.st.spellAp ? `<span>✦</span>${pips(sess.spAp, sess.st.spellAp, "sap")}` : ""}<em>Your turn${sess.until ? ` <b class="num" id="tbcd">${Math.max(0, Math.ceil((sess.until - Date.now()) / 1000))}s</b>` : ""}</em>` : sess.done ? "" : `<em class="them">${esc(sess.cur?.name || "")}'s turn…</em>`}</div>
+        <div class="tbap">${playing ? `<em class="them">${esc(R ? R.who(vis[vis.length - 1], sess) : "")}</em>` : mine && typeof FIGHTCTL !== "undefined" && FIGHTCTL.on() ? FIGHTCTL.apHTML(sess) : mine ? `<span>Moves</span>${pips(sess.st.acts - sess.myActs, sess.st.acts, "ap")}<em>Your turn${sess.until ? ` <b class="num" id="tbcd">${Math.max(0, Math.ceil((sess.until - Date.now()) / 1000))}s</b>` : ""}</em>` : sess.done ? "" : `<em class="them">${esc(sess.cur?.name || "")}'s turn…</em>`}</div>
         ${playing ? "" : sess.done ? `<button class="btn pri tbdone" data-tbx="done">${f.won ? (f.escaped ? "Continue" : "Victory — continue") : "Continue"}</button>` : mine ? actionsHTML(sess) : ""}
       </div>
       ${ui.logOpen ? fullLog(sess, fmt) : ""}
     </div>`;
     if (scene) ui.lastScene = scene;
+    if (typeof COMBAT2 !== "undefined") { try { COMBAT2.layout(el, sess, { playing, mine, pops, big: prev.hp - hpNow > hpMax * 0.15 }); } catch (e) { console.warn("combat2", e); } }   // combat2.js: the cards go into the scene
     if (typeof TBUI !== "undefined") TBUI.after(el, { hurt: hpNow < prev.hp, hit: ehpNow < prev.ehp, big: prev.hp - hpNow > hpMax * 0.15, mine, pops });
     if (typeof FOEINTENT !== "undefined") { el.classList.toggle("tbplay", playing); try { FOEINTENT.decorate(el, sess); } catch (e) { console.warn("foe targets", e); } }   // crosshairs and the arrow
     if (typeof FIGHTTIPS !== "undefined") { try { FIGHTTIPS.decorate(el, sess); } catch (e) { console.warn("fight tips", e); } }   // tooltips on everything (fighttips.js)
@@ -792,7 +870,7 @@ const TB = (() => {
     const keep = fast() && !sess.done ? lines.filter((l, i) => l.me || i === lines.map((x) => !!x.them).lastIndexOf(true)) : lines;   // Fast: your moves and the foe's last blow
     const v = Object.create(f);
     v.log = keep.length ? keep : lines; v.hp0 = ui.lastHp ?? f.hp0; v.ehp0 = ui.lastEhp ?? f.ehp0; v.won = sess.done ? f.won : undefined;
-    v.tbTall = true; v.tbMid = !sess.done; v.tbHpMax = G.maxHealth(f.s); v.tbEhpMax = sess.ehpMax;   // fightart: stay standing between turns, bars against full health
+    v.tbTall = true; v.tbAspect = typeof COMBAT2 !== "undefined" && COMBAT2.aspect ? COMBAT2.aspect() : null; v.tbMid = !sess.done; v.tbHud = typeof COMBAT2 !== "undefined" && COMBAT2.on(); v.tbHpMax = G.maxHealth(f.s); v.tbEhpMax = sess.ehpMax;   // fightart: stay standing between turns, bars against full health
     ui.lastHp = lines[lines.length - 1].hp; ui.lastEhp = lines[lines.length - 1].ehp;
     return FIGHTART.placeholder(v, f.s);
   }
@@ -807,9 +885,8 @@ const TB = (() => {
     if (b.dataset.fc && typeof FIGHTCTL !== "undefined") { FIGHTCTL.click(b); return step(); }   // fightctl.js: ★ pins, spell filters
     if (b.dataset.tbm !== undefined) { ui.menu = b.dataset.tbm || null; return step(); }
     if (b.dataset.tbx === "autoall") { ui.menu = null; sess.autoRest = true; sess.autoTurn(); return step(sess.advance()); }   // no button for players any more; screen tests use it to finish a fight
-    if (b.dataset.tbx === "fast") { const p = prefs(); p.tbFast = !p.tbFast; try { localStorage.setItem("rotn_prefs", JSON.stringify(p)); } catch (e) { /* ignore */ } return step(); }
     if (b.dataset.tbx === "done") return close();
-    if (b.dataset.tbx === "skip") { ui.skip = true; return render(ui.pendState || { turn: sess.done ? "done" : sess.cur?.id === "me" ? "me" : "auto" }); }
+    if (b.dataset.tbx === "skip") { ui.skip = true; try { FIGHTART.finishAll(); } catch (e) { /* nothing playing */ } return render(ui.pendState || { turn: sess.done ? "done" : sess.cur?.id === "me" ? "me" : "auto" }); }
     if (b.dataset.tbx === "log") { ui.logOpen = true; return step(); }
     if (b.dataset.tbx === "logx") { ui.logOpen = false; return step(); }
     if (b.dataset.tba) {
@@ -818,17 +895,24 @@ const TB = (() => {
       const a = b.dataset.tba, f = sess.f;
       const go = (g) => {
         if (!ui || ui.sess !== sess) return;
-        const was = { ap: sess.ap + sess.spAp, sp: f.sp, mp: f.mp, hp: f.hp };
-        let r = sess.act(a, tgt, g ? g.mult : 1);
+        const was = { sp: f.sp, mp: f.mp, hp: f.hp };
+        let r = sess.act(a, tgt, g ? g.mult : 1, g);
         if (r?.err) { if (hooks.toast) hooks.toast(r.err); return; }
-        const d = { ap: was.ap - (sess.ap + sess.spAp), sp: was.sp - f.sp, mp: was.mp - f.mp, hp: f.hp - was.hp };
+        const d = { sp: was.sp - f.sp, mp: was.mp - f.mp, hp: f.hp - was.hp };
         if (r?.turn === "next") r = sess.advance();
         if (typeof SOUND !== "undefined" && SOUND.fx && (/spell|dual|scroll/.test(a) || typeof COMBATFX === "undefined")) SOUND.fx(/spell|dual|scroll/.test(a) ? "spell" : "hit");   // blows sound on impact (combatfx)
         step(r);
-        if (typeof TBRADIAL !== "undefined" && TBRADIAL.on()) TBRADIAL.spent(a === "end" || a === "flee" ? { ap: 0, sp: 0, mp: 0, hp: 0 } : d, g);
+        if (typeof TBRADIAL !== "undefined" && TBRADIAL.on()) TBRADIAL.spent(a === "end" || a === "flee" ? { sp: 0, mp: 0, hp: 0 } : d, g);
       };
-      // the timing ring: strikes and damage spells (not in Fast mode)
-      if (typeof TBRADIAL !== "undefined" && TBRADIAL.on() && !fast() && TBRADIAL.timed(a, zoneOf(a)) && sess.canAfford(a)) {
+      // the minigames (minigame.js): every blow, guard and spell you make yourself; Auto never plays them
+      if (typeof MINIGAME !== "undefined" && MINIGAME.on() && MINIGAME.kindFor(f, a) && sess.canAfford(a)) {
+        const sp = spellOf(a);
+        ui.timing = true;
+        return MINIGAME.play(root, f, a, { icon: iconOf(f, a), label: sp ? sp.name : a === "power_attack" ? "Power attack" : a === "bash" ? "Shield bash" : a === "block" ? "Guard" : f.wt === "bow" || f.wt === "crossbow" ? "Shoot" : "Attack" })
+          .then((g) => { if (ui) ui.timing = false; go(g); }, () => { if (ui) ui.timing = false; go(null); });
+      }
+      // the old timing ring (wheel only, when the minigames are off)
+      if (typeof TBRADIAL !== "undefined" && TBRADIAL.on() && !fast() && TBRADIAL.timed(a, zoneOf(a)) && sess.canAfford(a) && typeof MINIGAME === "undefined") {
         const sp = spellOf(a), perk = typeof PFX !== "undefined" ? PFX.num(f.s, "timing") : 0;
         ui.timing = true;
         return TBRADIAL.ring(root, { z: TBRADIAL.zone(TBRADIAL.skillFor(f, a, sp), perk), icon: iconOf(f, a), label: sp ? sp.name : a === "power_attack" ? "Power attack" : a === "bash" ? "Shield bash" : f.wt === "bow" || f.wt === "crossbow" ? "Shoot" : "Attack" })
@@ -978,5 +1062,5 @@ const TB = (() => {
 
   /* sharedfight.js: open a teammate's view of a fight, and redraw it when the leader's phone sends news */
   function redraw(sess, state) { if (ui && ui.sess === sess && open) render(state || sess.advance()); }
-  return { T, stats, cost, aiPick, targetOrder, Session, simulate, call, enabled, init, remoteFor, watchTurns, safeSave, zoneOf, play, redraw, fightState, voice, FOE_KEYS, BUFF_KEYS, close: () => { if (open) close(); }, get open() { return open; }, get session() { return open && ui ? ui.sess : null; }, WCOST, TIERC, HIT_CAP, FOE_HP, PARTY_HP, TURN_SECONDS, syncInPlace, _origRun: origRun };
+  return { T, stats, cost, aiPick, targetOrder, Session, simulate, call, enabled, init, remoteFor, watchTurns, safeSave, zoneOf, play, redraw, fightState, voice, FOE_KEYS, BUFF_KEYS, costTxt, costHTML, base, close: () => { if (open) close(); }, get open() { return open; }, get session() { return open && ui ? ui.sess : null; }, ATK_SP, MAX_ACTS, MAX_POTS, REPEAT, HIT_CAP, FOE_HP, PARTY_HP, TURN_SECONDS, syncInPlace, _origRun: origRun };
 })();
