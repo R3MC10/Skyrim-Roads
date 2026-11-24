@@ -7,14 +7,14 @@ from playwright.async_api import async_playwright
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out_combat2")
 os.makedirs(OUT, exist_ok=True)
-SIZES = [(360, 780), (2000, 837)]
+SIZES = [(360, 780), (2000, 837), (1366, 768)]
 fails = 0
 def ok(c, msg):
     global fails
     if not c: fails += 1
     print(("ok   " if c else "FAIL ") + msg)
 
-START = """()=>{ ART.setStyle('ink'); document.querySelectorAll('#modal').forEach(m=>m.remove());
+START = """()=>{ document.querySelectorAll('#modal').forEach(m=>m.remove());
   const S=window.__dbg.save(); S.level=20; for (const k of ['One-Handed','Destruction','Restoration']) S.skills[k].lvl=45;
   S.mpBonus=60; for (const id of ['flames','oakflesh','healing']) if (D.SPELLS[id] && !S.spells.includes(id)) S.spells.push(id);
   S.follower={id:'lydia',hp:TOWNS.followerMax(S,'lydia'),ts:G.now()}; G.give(S,'potion_health',2); G.setHealth(S,Math.round(G.maxHealth(S)*0.6)); S.dungeon=null; S.trip=null;
@@ -40,7 +40,7 @@ async def main():
                     await pg.evaluate(CLEAN)
                     if await pg.evaluate(MYTURN): return True
                     if await pg.evaluate("!!TB.session?.done"): return False
-                    if await pg.evaluate("!!document.querySelector('#tbf [data-tbx=skip]')"): await pg.click("#tbf [data-tbx=skip]")
+                    if await pg.evaluate("!!document.querySelector('#tbf [data-tbx=skip]')"): await pg.click("#tbf [data-tbx=skip]", timeout=3000)
                     await pg.wait_for_timeout(250)
                 return False
             async def noscroll(what):

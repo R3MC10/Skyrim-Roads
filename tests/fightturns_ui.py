@@ -16,7 +16,7 @@ def ok(c, msg):
     if not c: fails += 1
     print(("ok   " if c else "FAIL ") + msg)
 
-START = """()=>{ ART.setStyle('ink'); document.querySelectorAll('#modal').forEach(m=>m.remove());
+START = """()=>{ document.querySelectorAll('#modal').forEach(m=>m.remove());
   const S=window.__dbg.save(); S.level=20; for (const k of ['One-Handed','Destruction','Restoration']) S.skills[k].lvl=45;
   S.mpBonus=80; for (const id of ['flames','healing']) if (D.SPELLS[id] && !S.spells.includes(id)) S.spells.push(id);
   S.follower={id:'lydia',hp:TOWNS.followerMax(S,'lydia'),ts:G.now()}; G.give(S,'potion_health',2); G.setHealth(S,G.maxHealth(S)); S.dungeon=null; S.trip=null;

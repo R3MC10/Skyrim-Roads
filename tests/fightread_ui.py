@@ -50,7 +50,7 @@ async def main():
             # poison on me, burning on the foe: both bars show what's coming
             await pg.evaluate("""()=>{ const s=TB.session, f=s.f; f.kitDot={name:'poison',dmg:6,turns:3}; f.foeSt={burn:{dmg:9,turns:2}}; document.querySelector('#tbf [data-tbm=magic]').click(); document.querySelector('#tbf [data-tbm=""]').click(); }""")
             await pg.wait_for_timeout(300)
-            ok(await pg.evaluate("/Poisoned −6/.test(document.querySelector('#tbf .tbu.me .tbst.mine')?.textContent||'')"), f"{style}: my poison chip says −6")
+            ok(await pg.evaluate("/Poisoned −6/.test(document.querySelector('#tbf .tbu.me .tbst.mine')?.textContent||'') || /Poisoned: you lose 6 health/.test(document.querySelector('#tbf .tbu.me .c2e.fx-poisoned')?.dataset.tip||'')"), f"{style}: my poison chip (or icon on the immersive screen) says 6")
             me_fc = await pg.evaluate("document.querySelector('#tbf .tbu.me .tbfcl')?.textContent||''")
             ok("☠" in me_fc, f"{style}: my bar's forecast shows the poison ({me_fc.strip()})")
             ok(await pg.evaluate("!!document.querySelector('#tbf .tbu.me .tbbar s.tbfc')"), f"{style}: stripes on my health bar")

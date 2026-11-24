@@ -9,6 +9,7 @@ const PATCHNOTES = (() => {
       "New in Settings → Fights: Fight quality (Low, Medium, High), Frame rate (30, 60 or no cap), and sliders for Camera shake and Fight UI size. Low quality and 30 frames save battery on phones.",
       "While a foe's turn plays, tap anywhere on the fight to hurry it along (Space on a PC). The F key doesn't flee any more, so you can't run off by accident.",
       "Tooltips in fights now say what a move costs in stamina or magicka instead of action points.",
+      "Fixed on phones: a few screens (the house chest, parts of dungeons and fights) were missing some of their styling.",
     ] },
     { id: "b167-turns", build: 167, date: "24 Nov 2026", title: "No more action points: you choose your turn", items: [
       "Action points are gone. On your turn make up to 4 moves in any order, then press End turn. Blows, power attacks, bashes and guards cost stamina, spells cost magicka, dark magic costs a little health. Doing the same move again in a turn costs more, and a power attack is once a turn.",
