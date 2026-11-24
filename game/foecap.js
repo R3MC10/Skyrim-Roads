@@ -1,5 +1,5 @@
 /* foecap.js: limits that keep big fights from being won by stalling or lost to heal loops. [OURS]
-   1. Fear and "stops fighting" effects (Battle Cry, Voice of the Emperor, Dismay, Kyne's Peace, Fear spells, Command...)
+   1. Fear, paralysis and "stops fighting" effects (Battle Cry, Voice of the Emperor, Dismay, Kyne's Peace, Fear spells, Command...)
       hold a boss for at most 2 turns at a time and 3 turns a fight, an elite foe for 3 at a time and 5 a fight.
       Normal foes keep the full effect. Aspect of Terror adds a turn to both. The turns it shook off aren't wasted: it
       stays rattled for that many turns (up to 6) and its blows land 20% softer.
@@ -10,7 +10,7 @@
 const FOECAP = (() => {
   const HOLD = [0, 3, 2], BUDGET = [0, 5, 3];   // by tier: 0 normal, 1 elite, 2 boss
   const HEAL_CEIL = 0.65, HEAL_BUDGET = 0.35, HEAL_CD = 3;
-  const KEYS = ["calmTurns", "fearTurns"];
+  const KEYS = ["calmTurns", "fearTurns", "eParalyzed"];   // paralysis too: Mass Paralysis held a boss for 11 turns
 
   function tier(f) {
     const e = f.e || {}, tags = f.tags || new Set();

@@ -783,7 +783,8 @@ const G = (() => {
         if ((this.tags.has("undead") || this.tags.has("construct")) && !P(s, "master_of_the_mind")) return `${sp.name}: no effect on the ${this.tags.has("undead") ? "undead" : "machine"}`;
         const cm = spellCalm(s, sp, this.tags, this);
         if ((this.e.level ?? 99) > cm.cap) return `${sp.name}: no effect (level too high)`;
-        this.calmTurns = cm.turns; return `${sp.name}: it stops fighting`;
+        this.calmTurns = cm.turns; this.calmFrenzy = !!sp.frenzy;   // Frenzy, Mayhem: it turns its weapon on itself instead
+        return sp.frenzy ? `${sp.name}: it goes mad and turns on itself` : `${sp.name}: it stops fighting`;
       }
       return sp.name;
     }
@@ -844,7 +845,11 @@ const G = (() => {
     }
     enemyTurnInner() {
       const n = this.e.name, s = this.s;
-      if (this.calmTurns > 0) { this.calmTurns--; return `${n} isn't fighting`; }
+      if (this.calmTurns > 0) {
+        this.calmTurns--; const mad = this.calmFrenzy; if (!this.calmTurns) this.calmFrenzy = false;
+        if (mad) { const d = Math.max(1, (this.e.damage || 5) * 0.8 * (0.85 + Math.random() * 0.3)); this.ehp -= d; return `${n} lashes out at itself in a frenzy (${Math.round(d)})`; }
+        return `${n} isn't fighting`;
+      }
       if (this.eParalyzed > 0) { this.eParalyzed--; return `${n} is paralyzed`; }
       if (this.stagger) { this.stagger = false; return `${n} is staggered`; }
       const fp = this.fp;

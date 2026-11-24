@@ -46,6 +46,17 @@ const PATCHNOTES = (() => {
       "If your quest was stuck on \"bring him the Dragonstone\", it fixes itself next time you open the game. Clearing the barrow before you got the quest counts too.",
       "Quest items (the Dragonstone, a Glenmoril witch's head, the filled black soul gem) are now bound to you: you keep them when you die. If a quest needs one you don't carry any more, it comes back from your house chest or turns up in your pack.",
     ] },
+    { id: "b145-spelltest", build: 145, date: "24 Nov 2026", title: "Every spell checked and fixed", items: [
+      "We cast every spell in the game (all 125, plus scrolls, staves and your follower's spells) in real fights to make sure each one does what it says.",
+      "Fireball, Chain Lightning, Ice Storm, the storms and walls, Mass Paralysis, Hysteria, Harmony and Mayhem now reach the whole group: when foes come two or three at a time, the ones waiting behind take half the damage and stay paralyzed, afraid or calm. A one-target spell like Paralyze ends with the foe you cast it on.",
+      "Frenzy and Mayhem really drive foes mad now: instead of just standing there, they hurt themselves each turn.",
+      "Fear and Invisibility work against every foe: foes with special moves (wind-ups, heals) and bosses no longer ignore them.",
+      "Paralysis holds a boss for 2 turns and an elite foe for 3, like fear and calm. Normal foes still freeze for the full time.",
+      "Your flesh spell, cloak, summon, bound weapon and Invisibility now show as small chips under your bars, and calm, frenzy, fear, burning walls, runes and Soul Trap show under the foe. Hold a chip to see turns left.",
+      "Support spells (Heal Other, Flame Blade, Shelter, Banish Daedra, Equilibrium...) show their numbers in the Magic menu again.",
+      "Casting without enough magicka now says so, instead of talking about action points.",
+      "Playing in Polish? Every spell name and every number line in the Magic menu is translated now.",
+    ] },
     { id: "b144-dawnguard", build: 144, date: "24 Nov 2026", title: "The vampire war", items: [
       "New quest line from level 12: Isran at Fort Dawnguard (near Riften) sends you into Dimhollow Crypt, where something sleeps in a sealed coffin. It ends at Castle Volkihar, a black keep on an islet off the coast past Solitude.",
       "Then pick a side. Hunt the night with the Dawnguard (heavy crossbow, hunter's armour, troll armour for your follower) or drink Lord Harkon's blood and become a stronger Vampire Lord. Seven more stages either way, with a big boss fight at the end.",
