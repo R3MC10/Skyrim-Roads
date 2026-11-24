@@ -3,12 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b167-esckey", build: 167, date: "24 Nov 2026", title: "Esc menu and a card you can fold away", items: [
+    { id: "b168-esckey", build: 168, date: "24 Nov 2026", title: "Esc menu and a card you can fold away", items: [
       "On PC, Esc now steps back one thing at a time, just like the back button on a phone: a tooltip, then a window, then the menu you're in, then the compass.",
       "When there's nothing left to close, Esc opens a pause menu like in Skyrim: Resume, Settings, Journal, Patch notes, How to play, Report a problem and Save and quit. The Windows app also has Quit game. Use the arrows and Enter, or the mouse.",
       "In a fight Esc opens the pause menu on top of the fight and never makes you run away. The world doesn't stop for anyone else in your party.",
       "The great world event card on the map can be folded into a small pill with the arrow in its corner (tap the pill to open it again). The game remembers it for your hero.",
       "Notices under it (a town rebuilding, a reward waiting) have an × to hide them until there's new news. A new event never pops the card open: the pill glows for a moment instead.",
+      "Fixed: on phones a few newer screens (the house chest, blood in fights, party traps, fishing and hunting and more) had lost part of their look. They're back to normal.",
     ] },
     { id: "b168-folbuild", build: 168, date: "24 Nov 2026", title: "Followers learn like you do", items: [
       "Your follower now has their own skills, the same list as yours, and they rise with use exactly like yours: swinging a sword raises One-Handed, shooting raises Archery, spells raise their school, blocking raises Block, and blows on their armour raise their armour skill.",

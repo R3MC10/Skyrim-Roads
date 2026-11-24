@@ -34,5 +34,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
       "Kartę wielkiego wydarzenia świata na mapie można zwinąć strzałką w rogu do małej plakietki (dotknij jej, żeby znów ją otworzyć). Gra pamięta to dla twojej postaci.",
     "Notices under it (a town rebuilding, a reward waiting) have an × to hide them until there's new news. A new event never pops the card open: the pill glows for a moment instead.":
       "Wiadomości pod nią (miasto się odbudowuje, nagroda czeka) mają ×, które chowa je do czasu nowych wieści. Nowe wydarzenie nigdy samo nie otwiera karty: zamiast tego plakietka na chwilę się rozświetla.",
+    "Fixed: on phones a few newer screens (the house chest, blood in fights, party traps, fishing and hunting and more) had lost part of their look. They're back to normal.":
+      "Poprawka: na telefonach kilka nowszych ekranów (skrzynia w domu, krew w walkach, pułapki w drużynie, łowienie i polowanie i inne) straciło część wyglądu. Już wszystko wróciło do normy.",
   });
 })();
