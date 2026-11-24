@@ -123,3 +123,8 @@ const DGART = (() => {
   }
   return { storyKind, castle, fort, lord, troll };
 })();
+/* achievement icons for the two endings: the Journal emblems (a sun shield, a red moon and bat) */
+if (typeof UIART !== "undefined" && UIART.ACH && typeof DAWNGUARD !== "undefined") {
+  UIART.ACH.dg_dawnguard = (g) => DAWNGUARD.emblem(g, "dg_dawnguard");
+  UIART.ACH.dg_volkihar = (g) => DAWNGUARD.emblem(g, "dg_volkihar");
+}
