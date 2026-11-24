@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "hotfix-dunloop", build: 144, date: "24 Nov 2026", title: "Dungeons don't trap you in the same room any more", items: [
+      "Fixed: dungeons could trap you in the same room. In a party, the leader was sometimes sent back into a room they had just cleared, and the others got stuck waiting or stood in a room that never ended.",
+      "Fixed: when the shared world was busy, the leader's way through a dungeon sometimes didn't reach the rest of the party, so they couldn't follow to the boss. It's now sent again until it gets through, and anything missing is filled in.",
+      "Fixed: picking herbs at a claw door in a party no longer breaks the door for the others.",
+      "Stuck right now? Just open the game again: runs that were caught in a loop, a boss room with no boss in it, or a room with no way on are put right when you load.",
+    ] },
     { id: "b143-bleakfalls", build: 143, date: "24 Nov 2026", title: "Farengar's quest can't get stuck any more", items: [
       "Bleak Falls Barrow (main quest): clearing the barrow now moves the quest on by itself. The next step, \"The Dragonstone\", sends you to Farengar in Whiterun.",
       "Farengar doesn't need the Dragonstone in your pack any more. If it got lost, ended up in a chest or went to someone else in a party, just tell him: clearing the barrow is enough. Hand it in under Area tab → Court wizard, or with the button in the Journal.",
