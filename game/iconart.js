@@ -12,6 +12,7 @@ const ICONART = (() => {
     ancient_nord: ["#6e7f86", "#9fb0b6", "#46545a"], forsworn: ["#9a7a58", "#cbb08c", "#5e4630"], orcish: ["#6b7650", "#9aa576", "#424b30"],
     hide: ["#9a7650", "#c49c70", "#5e4630"], leather: ["#7a4e2c", "#a87450", "#4a2e18"], chainmail: ["#9aa0a4", "#c8ccce", "#62686c"],
     guild: ["#3e3a36", "#6a645e", "#22201d"], wuuthrad: ["#3a3440", "#7d7488", "#1d1a21"], silver: ["#c7ccd0", "#f1f3f4", "#8b9196"], gold: ["#d6b25e", "#f4dc96", "#94742c"],
+    moonstone: ["#dcd6f0", "#ffffff", "#9a94b8"],
   };
   function matOf(id) {
     for (const k of ["ancient_nord", "dwarven", "elven", "ebony", "glass", "forsworn", "orcish", "chainmail", "steel", "iron", "hide", "leather", "guild", "wuuthrad", "silver", "gold"]) if (id.includes(k)) return MAT[k];
@@ -309,6 +310,12 @@ const ICONART = (() => {
         if (/^gem_/.test(bid)) gem(g, gk, /flawless/.test(bid));
         else if (/ring/.test(bid)) ring(g, /^gold/.test(bid) ? "gold" : "silver", gk);
         else necklace(g, /^gold/.test(bid) ? "gold" : "silver", gk);
+      }
+      else if (slot === "ring" || slot === "amulet") {   // jewellery worn as gear (jewelry.js): its own metal and gem
+        const mt = MAT[it.metal] ? it.metal : /^gold/.test(bid) ? "gold" : /^iron/.test(bid) ? "iron" : "silver";
+        const gk = it.gem || Object.keys(GEM).find((k) => bid.includes(k));
+        if (slot === "ring") ring(g, mt, gk); else necklace(g, mt, gk);
+        if (it.unique) { circ(g, 8, 8, 2.2, "#f4dc96", INK, 0.7); }
       }
       else if (slot === "trophy") trophy(g, bid);
       else misc(g, bid, it);
