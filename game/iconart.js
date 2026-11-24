@@ -291,6 +291,14 @@ const ICONART = (() => {
       else if (slot === "hands") gloves(g, bid, m, it.type);
       else if (slot === "feet") boots(g, bid, m, it.type);
       else if (slot === "ammo") ammo(g, bid, m);
+      else if (slot === "cloak" && it.cloakLook) {   // side cloaks (cloaks.js): the side's colours, a trim, the emblem
+        const k = it.cloakLook;
+        poly(g, [[12, 8], [28, 8], [33, 33], [26, 30], [20, 34], [14, 30], [7, 33]], k.c);
+        poly(g, [[12, 8], [28, 8], [26, 13], [14, 13]], k.fur || k.d);
+        line(g, [[7, 33], [14, 30], [20, 34], [26, 30], [33, 33]], k.trim, 1.6);
+        line(g, [[16, 14], [14, 30]], k.d, 1); line(g, [[24, 14], [26, 30]], k.d, 1);
+        if (typeof SIDES !== "undefined" && SIDES.drawEmblem) SIDES.drawEmblem(g, k.side, 20, 21, 5 + (k.rank || 1) * 0.4);
+      }
       else if (slot === "potion" || slot === "poison") bottle(g, slot === "poison" ? "#4a7a3a" : potionColor(it), slot === "poison");
       else if (slot === "scroll") { scroll(g, SCHOOL[D.SPELLS?.[it.spell]?.school]); spellBadge(g, it.spell, 30, 10, 0.3); }
       else if (slot === "tome") { tome(g, SCHOOL[D.SPELLS?.[it.spell]?.school] || "#7a4f9a"); spellBadge(g, it.spell, 21, 19, 0.36); }

@@ -277,6 +277,16 @@ const PFX = (() => {
     [ "Illusion", "volk_blood_of_harkon", "Blood of Harkon", 1, [30], [], "Volkihar only. Your Vampire Lord form lasts 3 turns longer, and changing heals a tenth of your health. [OURS]", [["lordturns", 3, {}], ["lordheal", 0.1, {}]]],
     [ "Illusion", "volk_night_lord", "Night Lord", 1, [45], ["volk_blood_of_harkon"], "Volkihar only. As a Vampire Lord your drain life is 30% stronger. [OURS]", [["lorddrain", 0.3, {}]]],
     [ "Illusion", "volk_court", "Court of Volkihar", 1, [60], ["volk_night_lord"], "Volkihar only. As a Vampire Lord you hit 20% harder and take 10% less damage. [OURS]", [["lordout", 0.2, {}], ["lordin", -0.1, {}]]],
+    // ---------------------------------------------------------------- the three sides (sides.js): one side's perks each; changing sides takes them back
+    [ "One-Handed", "sc_nord_steel", "Nord Steel", 1, [30], [], "Stormcloaks only. One-handed blows hit 10% harder in the northern holds (Haafingar, Hjaalmarch, the Pale, Winterhold, Eastmarch). [OURS]", [["out", 0.1, { sk: "One-Handed", north: 1 }]]],
+    [ "Light Armor", "sc_winter_born", "Winter-Born", 1, [25], [], "Stormcloaks only. Frost hurts you 15% less. [OURS]", [["in", -0.15, { foeEl: "frost" }]]],
+    [ "One-Handed", "sc_sons_of_skyrim", "Sons of Skyrim", 1, [50], ["sc_nord_steel"], "Stormcloaks only. You hit soldiers of the other sides 10% harder. [OURS]", [["out", 0.1, { warFoe: 1 }]]],
+    [ "Blocking", "im_shield_drill", "Legion Shield Drill", 1, [30], [], "Imperial Legion only. With a shield up, blocking stops 8% more. [OURS]", [["block", 0.08, { shield: 1 }]]],
+    [ "Speechcraft", "im_writ", "Imperial Writ", 1, [25], [], "Imperial Legion only. Fines and bribes cost 25% less. [OURS]", [["bribe", 0.25, {}]]],
+    [ "Heavy Armor", "im_legion_drill", "Legion Drill", 1, [40], [], "Imperial Legion only. Soldiers of the other sides hit you 10% softer. [OURS]", [["in", -0.1, { warFoe: 1 }]]],
+    [ "Destruction", "ad_focus", "Aldmeri Focus", 1, [30], [], "Aldmeri Dominion only. Destruction spells cost 10% less. [OURS]", [["scost", 0.1, { school: "Destruction" }]]],
+    [ "Alteration", "ad_wellspring", "Wellspring of Aldmeris", 1, [30], [], "Aldmeri Dominion only. Magicka comes back 25% faster in fights. [OURS]", [["regenmp", 0.25, {}]]],
+    [ "Destruction", "ad_justiciar", "Justiciar's Rebuke", 1, [50], ["ad_focus"], "Aldmeri Dominion only. You soak up 10% of the magic that soldiers of the other sides throw at you. [OURS]", [["absorb", 0.1, { warFoe: 1 }]]],
     // ---------------------------------------------------------------- boss fights (bossfight.js)
     [ "One-Handed", "giant_slayer", "Giant Slayer", 1, [40], ["armsman"], "Bosses take 10% more damage from you, and 20% more once they reach their last phase. [OURS]", [["out", 0.1, { bossFoe: 1 }], ["out", 0.1, { bossLast: 1 }]]],
     [ "Blocking", "read_the_signs", "Read the Signs", 1, [30], ["shield_wall"], "A boss's big attacks (the ones it shows a turn ahead) hurt you 25% less. [OURS]", [["bftele", 0.25, {}]]],
@@ -332,7 +342,9 @@ const PFX = (() => {
     if (c.kind && x.kind !== c.kind) return false;
     if (c.school && x.school !== c.school) return false;
     if (c.blocking && !x.blocking) return false;
+    if (c.north && !(typeof SIDES !== "undefined" && SIDES.inNorth(s))) return false;   // sides.js: the northern holds
     if (f) {
+      if (c.warFoe && !(f.e?.warSide && typeof SIDES !== "undefined" && f.e.warSide !== SIDES.mine(s))) return false;   // a player of another side (sides.js)
       const tags = f.tags || new Set(), n = f.e?.name || "";
       if (c.tag && !c.tag.some((t) => tags.has(t))) return false;
       if (c.tough && !(tags.has("elite") || tags.has("dragon") || f.e?.boss || f.e?.danger === "high")) return false;
@@ -349,7 +361,7 @@ const PFX = (() => {
       if (c.bossFoe && !f.bf) return false;   // bossfight.js
       if (c.bossLast && !(f.bf && f.bf.phase >= f.bf.th.length)) return false;
       if (c.venom && !(f.e?.poison || tags.has("venom") || (VENOM.test(n) && !/dwarven|brass/i.test(n)))) return false;   // Resist Poison
-    } else if (c.foeBelow || c.tag || c.tough || c.big || c.magic || c.archerFoe || c.hpBelow || c.hpAbove || c.first || c.mounted || c.bigHit || c.dark || c.foeEl || c.venom || c.bossFoe || c.bossLast) return false;
+    } else if (c.foeBelow || c.tag || c.tough || c.big || c.magic || c.archerFoe || c.hpBelow || c.hpAbove || c.first || c.mounted || c.bigHit || c.dark || c.foeEl || c.venom || c.bossFoe || c.bossLast || c.warFoe) return false;
     return true;
   }
   function each(s, key, f, x, fn) {

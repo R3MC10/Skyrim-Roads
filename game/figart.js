@@ -91,6 +91,7 @@ const FIGART = (() => {
   const hasGL = () => typeof GEARLOOK !== "undefined";
   const setKey = (id) => (id && hasGL() ? GEARLOOK.setOf(id) : null);
   const setRec = (id) => (id && hasGL() ? GEARLOOK.set(GEARLOOK.setOf(id)) : null);
+  const cloakOf = (eq) => (eq && eq.cloak && typeof D !== "undefined" && D.ITEMS[eq.cloak] && D.ITEMS[eq.cloak].cloakLook) || null;   // side cloaks (cloaks.js)
   function lookOf(src) {
     if (!src) return { r: "nord", id: "x", eq: {}, gl: {} };
     if (src.look) return src.look;
@@ -143,7 +144,7 @@ const FIGART = (() => {
       legC: robe ? body.d : cm ? body.d : "#5a4836", greave: heavy ? cm : null,
       gloves, boots, bootsK, barefoot: !eq.feet && (L.r === "khajiit" || L.r === "argonian"),
       helm, hood: !eq.head && F.hood && (robe || ["nightingale", "shrouded", "guild"].includes(ck)) ? F.hood : null,
-      cape: F.cape || (heavy && !robe ? "#7a2a22" : null),
+      cape: (cloakOf(eq) || {}).c || F.cape || (heavy && !robe ? "#7a2a22" : null), capeSide: (cloakOf(eq) || {}).side || null, capeTrim: (cloakOf(eq) || {}).trim || null,   // a side cloak (cloaks.js) wins
       shield, wk, wset, wkey, staffC, ench: gl.w ? ELEMENT[gl.w] || "#c9b6ff" : null, aglow: !!gl.a,
       amulet: jewel(amulet), ring: jewel(ring),
     };
@@ -626,6 +627,8 @@ const FIGART = (() => {
     fillPath(g, c, st, [-1, -48, -10, -10]);
     g.strokeStyle = tone(c, -0.35); g.lineWidth = st.fine * 1.4;
     for (const k of [0.35, 0.7]) { g.beginPath(); g.moveTo(-4.6 + k, -44); g.quadraticCurveTo(-6.6 - sw * 0.4 * k, -26, -8.6 - sw * k + t, -8); g.stroke(); }
+    if (sp.capeTrim) { g.strokeStyle = sp.capeTrim; g.lineWidth = st.fine * 1.6; g.beginPath(); g.moveTo(-10.8 - sw + t, -7); g.lineTo(-7.6 - sw * 0.8, -5.4); g.lineTo(-5 - sw * 0.5 + t, -7.4); g.stroke(); }   // side cloak hem
+    if (sp.capeSide && typeof SIDES !== "undefined") SIDES.drawEmblem(g, sp.capeSide, -6.4 - sw * 0.45, -27, 2.6);   // the side's emblem on the cloak
   }
   function tail(g, sp, P, st) {
     if (!sp.tail) return;
