@@ -613,8 +613,15 @@
     Store.watch("friends", (docs) => onFriends(docs));
     Store.watch("dms", (docs) => onDMs(docs));
     if (Store.online) Store.put("friends", S.id, SOCIAL.record(S));
-    Store.watch("clans", (docs) => { const before = CLANS.invitesFor(S.id).length; CLANS.set(docs, null); if (CLANS.invitesFor(S.id).length > before && !myClan()) toast(`🏴 You're invited to join a clan. Open 👥 Social → Realm.`); bump(); renderTabs(); });
-    Store.watch("clanmem", (docs) => { CLANS.set(null, docs); bump(); });
+    Store.watch("clans", (docs) => { const before = myClanInvites().length; CLANS.set(docs, null); if (myClanInvites().length > before && !myClan() && typeof INVITES === "undefined") toast(`🏴 You're invited to join a clan. Open 👥 Social → Realm.`); bump(); renderTabs(); invRefresh(); });
+    Store.watch("clanmem", (docs) => {
+      CLANS.set(null, docs); bump();
+      const c = myClan();   // the founder hears "Kacper declined your clan invite." and tidies the invite list
+      if (c && c.founder === S.id && typeof INVITES !== "undefined") for (const n of INVITES.clanNotes(docs, c.id, seenNos, bootT - 60)) {
+        if (n.fresh) toast("🏴 " + n.text);
+        const cur = CLANS.byId(c.id); if (cur && (cur.invites || []).includes(n.id)) Store.put("clans", S.id, (({ id, ...x }) => ({ ...x, invites: (x.invites || []).filter((i) => i !== n.id) }))(cur));
+      }
+    });
     Store.watch("chat", (docs) => onChat(docs));
     Store.watch("homes", (docs) => { homeDocs = docs; if (tab === "town") bump(); });
     if (typeof HSROOMS !== "undefined") HSROOMS.mount({ party: () => party, homes: () => homeDocs });   // party members visit their leader's homestead
@@ -631,6 +638,7 @@
     Store.watch("parties", (docs) => {
       party = docs.find((p) => p.members?.some((m) => m.id === S.id)) || null;
       invites = docs.filter((p) => p.invites?.includes(S.id) && !p.members.some((m) => m.id === S.id));
+      if (typeof INVITES !== "undefined") { for (const m of INVITES.notes(docs, S.id, seenNos, bootT - 60, "party")) toast("👥 " + m); invRefresh(); }   // "Kacper declined your party invite."
       if (ppUI) ppUI.onParty();
       if ((tab === "log" || tab === "social")) bump();
       if (tab === "map") renderPanel(false);
@@ -638,8 +646,10 @@
     if (typeof COOP !== "undefined") {   // co-op dungeons (coop.js)
       coopUI = COOP.ui({ S: () => S, toast, esc, Store, others: () => others, party: () => party, cardOf, persist, publishCard, renderDungeon, renderPanel, bump,
         sendDm: (id, name, text) => { const r = SOCIAL.dm(S, id, name, text); if (!r.err && Store.online) Store.put("dms", r.id, r.doc); } });
-      Store.watch("runs", (docs) => coopUI.onRuns(docs));
+      Store.watch("runs", (docs) => { coopUI.onRuns(docs); if (typeof INVITES !== "undefined") { for (const m of INVITES.notes(docs, S.id, seenNos, bootT - 60, "coop")) toast("⚔ " + m); invRefresh(); } });
     }
+    if (typeof INVITES !== "undefined") INVITES.mount({ list: inviteList, answer: answerInviteCard, toast, onNew: () => SOUND.fx("page"),   // Accept / Decline cards on top (invites.js)
+      openSocial: () => { closeMenu(); tab = "social"; socTab = "party"; bump(); renderTabs(); renderPanel(true); } });
     if (typeof PARTYPLAY !== "undefined") {   // party play: the leader leads, ready checks, shared spoils (partyplay.js)
       ppUI = PARTYPLAY.ui({ S: () => S, party: () => party, others: () => others, cardOf, otherPos: (c) => otherPos(c), livePos: () => livePos(), Store, toast, esc,
         persist, publishCard, renderPanel, bump, travelNow: (name, pos) => travelTo(name, true, pos), modalOpen: () => !!$("#modal"), openModal, closeModal,
@@ -2287,11 +2297,11 @@
   const bannerHTML = (c) => `<span class="banner" style="background:linear-gradient(180deg,${c.colors[0]} 0 58%,${c.colors[1]} 58% 100%)" aria-hidden="true"></span>`;
   function clanPanel() {
     if (!Store.online) return "";
-    const c = myClan(), inv = CLANS.invitesFor(S.id).filter((x) => x.id !== c?.id);
+    const c = myClan(), inv = myClanInvites().filter((x) => x.id !== c?.id);
     if (!c) {
       const sw = (i) => CLANS.COLORS.map((col) => `<button class="swatch ${clanDraft.colors[i] === col ? "on" : ""}" style="background:${col}" data-act="clancol" data-i="${i}" data-id="${col}" aria-label="Colour"></button>`).join("");
       return `<div class="panel"><h2>Clan</h2>
-        ${inv.length ? `<div class="list">${inv.map((x) => `<div class="item on">${bannerHTML(x)}<div class="t">${esc(x.name)} [${esc(x.tag)}]<span>${esc(x.founderName)} invites you</span></div><button class="btn sm pri" data-act="clanjoin" data-id="${esc(x.id)}">Join</button></div>`).join("")}</div>` : ""}
+        ${inv.length ? `<div class="list">${inv.map((x) => `<div class="item on">${bannerHTML(x)}<div class="t">${esc(x.name)} [${esc(x.tag)}]<span>${esc(x.founderName)} invites you</span></div><button class="btn sm pri" data-act="clanjoin" data-id="${esc(x.id)}">Accept</button><button class="btn sm" data-act="clanno" data-id="${esc(x.id)}">Decline</button></div>`).join("")}</div>` : ""}
         <p class="sub">Found your own clan: a name, a short tag shown next to your members' names, and a banner that flies over their houses on the map. Your clan gets its own chat.</p>
         <div class="grid2"><input id="clanname" maxlength="24" placeholder="Clan name" value="${esc(clanDraft.name || "")}" autocomplete="off" aria-label="Clan name"><input id="clantag" maxlength="4" placeholder="Tag (e.g. NORD)" value="${esc(clanDraft.tag || "")}" autocomplete="off" aria-label="Clan tag" style="text-transform:uppercase"></div>
         <p class="sub" style="margin-bottom:4px">Banner top</p><div class="coats">${sw(0)}</div><p class="sub" style="margin-bottom:4px">Banner bottom</p><div class="coats">${sw(1)}</div>
@@ -2366,9 +2376,10 @@
       if (d.from === S.id && d.status !== "open") {           // my offer was answered: settle it
         const m = MP.settle(S, d); Store.remove("trades", d.id);
         if (m) { persist(true); toast(m); }
-      } else if (d.to === S.id && d.status === "open" && !seenTrades.has(d.id)) { seenTrades.add(d.id); toast(`🤝 ${d.fromName} offers you a trade. Open 👥 Social → Trades.`); }
+      } else if (d.to === S.id && d.status === "open" && !seenTrades.has(d.id)) { seenTrades.add(d.id); if (typeof INVITES === "undefined") toast(`🤝 ${d.fromName} offers you a trade. Open 👥 Social → Trades.`); }
     }
     if ((tab === "log" || tab === "social")) bump();
+    invRefresh();
   }
   function openTrade(card, note) {
     const eq = new Set(Object.values(G.loadout(S).equipment));
@@ -2493,9 +2504,10 @@
     duels = docs;
     for (const d of docs) {
       if (d.from === S.id && d.status !== "open") { if (d.status === "done") { festCount("duel"); if (d.winner === S.id) warPoint("duel", "Eastmarch"); } const m = ARENA.settle(S, d); Store.remove("duels", d.id); if (m) { persist(true); SOUND.fx(d.winner === S.id ? "victory" : "click"); toast("⚔ " + m); } }
-      else if (d.to === S.id && d.status === "open" && !seenDuels.has(d.id)) { seenDuels.add(d.id); if (d.t > bootT) { SOUND.fx("shout"); toast(`⚔ ${d.fromName} challenges you in the Windhelm Arena${d.stake ? ` for ${d.stake} gold` : ""}!`); } }
+      else if (d.to === S.id && d.status === "open" && !seenDuels.has(d.id)) { seenDuels.add(d.id); if (d.t > bootT) { SOUND.fx("shout"); if (typeof INVITES === "undefined") toast(`⚔ ${d.fromName} challenges you in the Windhelm Arena${d.stake ? ` for ${d.stake} gold` : ""}!`); } }
     }
     if (tab === "town") bump();
+    invRefresh();
   }
   function arenaHTML() {
     const a = ARENA.me(S), t = G.now();
@@ -2505,7 +2517,7 @@
     const RA = typeof RAIDART !== "undefined" ? RAIDART : null;
     return `${RA ? RA.arenaHTML() + RA.seasonBanner(ARENA.seasonName()) + RA.podium(board.slice(0, 3), raPortrait, UIART.rank) : ""}<div class="card"><h3 class="ico-h">${UIART.rank(a.rating, 30)} ${RA ? "Your standing" : `Season of ${esc(ARENA.seasonName())}`}</h3><p class="sub" style="margin:0">Your rating ${a.rating} · ${a.w} won, ${a.l} lost. Nobody dies in the Arena: the loser kneels and the healers patch everyone up.</p></div>
       ${inc.length ? `<h3 style="margin-top:12px">Challenges for you</h3>${inc.map((d) => `<div class="item on" style="flex-wrap:wrap">${RA ? RA.versus({ id: d.from, name: d.fromName }, { id: S.id, name: S.name }, d.stake, raPortrait) : ""}<div class="t">${esc(d.fromName)}<span>${d.stake ? `Stake ${d.stake} gold each · winner takes ${d.stake * 2}` : "A friendly bout, no bet"} · rating ${d.aRating}</span></div>
-        <div style="display:flex;gap:6px"><button class="btn sm pri" data-act="duelyes" data-id="${esc(d.id)}" ${S.gold >= d.stake ? "" : "disabled"}>Fight</button><button class="btn sm" data-act="duelno" data-id="${esc(d.id)}">No</button></div></div>`).join("")}` : ""}
+        <div style="display:flex;gap:6px"><button class="btn sm pri" data-act="duelyes" data-id="${esc(d.id)}" ${S.gold >= d.stake ? "" : "disabled"}>Accept</button><button class="btn sm" data-act="duelno" data-id="${esc(d.id)}">Decline</button></div></div>`).join("")}` : ""}
       ${out.length ? `<h3 style="margin-top:12px">Waiting for an answer</h3>${out.map((d) => `<div class="item" style="flex-wrap:wrap">${RA ? RA.versus({ id: S.id, name: S.name }, { id: d.to, name: d.toName }, d.stake, raPortrait) : ""}<div class="t">${esc(d.toName)}<span>${d.stake ? `${d.stake} gold held` : "Friendly bout"}</span></div><button class="btn sm" data-act="duelcancel" data-id="${esc(d.id)}">Withdraw</button></div>`).join("")}` : ""}
       <h3 style="margin-top:12px">Challenge someone</h3>
       <div class="chips">${[0, 100, 500, 1000].map((n) => `<button class="chip ${arenaStake === n ? "on" : ""}" data-act="duelstake" data-id="${n}">${n ? n + " gold" : "No bet"}</button>`).join("")}</div>
@@ -2627,13 +2639,49 @@
     toast(`Invited ${card.name}. They'll see it under 👥 Social → Party.`);
   }
   async function acceptInvite(pid) {
-    if (party) await leaveParty();
     const cap = typeof PARTYPLAY !== "undefined" ? PARTYPLAY.MAX_PARTY : 8;
+    const p0 = invites.find((p) => p.id === pid);
+    if (!p0) { invRefresh(); return toast("That party is gone."); }
+    if (p0.members.filter((m) => m.id !== S.id).length >= cap) {   // full: say so, and don't leave your own party for nothing
+      await Store.change("parties", pid, (p) => ({ ...p, invites: (p.invites || []).filter((x) => x !== S.id) }));
+      return toast(`That party is full (${cap} heroes at most).`);
+    }
+    if (party) await leaveParty();
     const r = await Store.change("parties", pid, (p) => (p.members.filter((m) => m.id !== S.id).length >= cap ? { ...p, invites: (p.invites || []).filter((x) => x !== S.id) } : { ...p, invites: (p.invites || []).filter((x) => x !== S.id), members: [...p.members.filter((m) => m.id !== S.id), { id: S.id, name: S.name }] }));
-    toast(r?.after?.members?.some((m) => m.id === S.id) ? "You joined the party." : r ? "That party is full (8 heroes at most)." : "That party is gone.");
+    toast(r?.after?.members?.some((m) => m.id === S.id) ? `You joined ${p0.leaderName}'s party. The leader makes the choices.` : r ? `That party is full (${cap} heroes at most).` : "That party is gone.");
     publishCard();
   }
-  async function declineInvite(pid) { await Store.change("parties", pid, (p) => ({ ...p, invites: (p.invites || []).filter((x) => x !== S.id) })); }
+  async function declineInvite(pid) {
+    const r = await Store.change("parties", pid, (p) => ({ ...p, invites: (p.invites || []).filter((x) => x !== S.id), nos: typeof INVITES !== "undefined" ? INVITES.nos(p, S) : p.nos }));
+    toast(!r ? "That invite is gone." : r.before?.leaderName ? `You declined ${r.before.leaderName}'s party invite.` : "You declined the party invite.");
+    invRefresh();
+  }
+  // ------------------------------------------------------------ invite cards (invites.js): Accept / Decline right on top of the screen
+  const seenNos = new Set();
+  const invRefresh = () => { if (typeof INVITES !== "undefined") INVITES.refresh(); };
+  const myClanInvites = () => CLANS.invitesFor(S.id).filter((x) => !(S.invNo || {})["clan:" + x.id]);
+  function inviteList() {
+    if (!S || typeof INVITES === "undefined" || !Store.online) return [];
+    const t = G.now(), c = myClan();
+    return INVITES.list(S, { parties: invites, runs: coopUI?.myInvites ? coopUI.myInvites() : [], clans: myClanInvites().filter((x) => x.id !== c?.id), inClan: !!c,
+      duels: duels.filter((d) => d.to === S.id && d.status === "open" && t - d.t < ARENA.OPEN_MIN * 60), trades: myIncoming().map((d) => ({ ...d, what: MP.describe(d) })), gold: S.gold });
+  }
+  async function answerInviteCard(kind, id, yes) {
+    if (kind === "party") await (yes ? acceptInvite(id) : declineInvite(id));
+    else if (kind === "coop" && coopUI) await coopUI.act({ dataset: { act: yes ? "coopjoin" : "coopno", id } });
+    else if (kind === "clan") yes ? clanJoin(id) : clanDecline(id);
+    else if (kind === "duel") await answerDuel(id, yes);
+    else if (kind === "trade") await answerTrade(id, yes);
+    bump(); if (tab === "social" || tab === "town") renderPanel(true);
+  }
+  function clanJoin(id) { const r = CLANS.join(S, CLANS.byId(id)); if (r.err) return toast(r.err); persist(true); say(r.text); }
+  function clanDecline(id) {
+    const c = CLANS.byId(id), t = G.now();
+    INVITES.remember(S, "clan:" + id, t);   // the founder's record isn't ours to edit: hide it here, and leave them a note
+    if (Store.online) Store.put("clanmem", S.id, { clan: S.clan || null, name: S.name, t, no: { clan: id, t } });
+    persist(); invRefresh();
+    toast(c ? `You declined the invite to ${c.name}.` : "That invitation is gone.");
+  }
   async function leaveParty() {
     if (!party) return;
     if (party.leader === S.id) await Store.remove("parties", party.id);
@@ -3281,7 +3329,7 @@
     const partyHtml = !shared ? "" : `<div class="panel"><h2>Party${party ? ` · ${party.members.length}/${typeof PARTYPLAY !== "undefined" ? PARTYPLAY.MAX_PARTY : 8}` : ""}</h2>${party ? `<p class="sub">Led by ${esc(party.leaderName)}. The leader picks where to go and asks everyone "Ready?" before setting off; everyone with them follows at the slowest member's pace. The leader handles encounters on the road, members near them fight beside them, and the spoils are shared. Dungeons grow with the party.</p>
         <div class="list">${party.members.map((m) => `<div class="item" data-tip-k="player:${esc(m.id)}"><div class="t">${esc(m.name)}${m.id === party.leader ? " ⚑" : ""}${m.id === S.id ? " (you)" : ""}<span>${m.id === S.id ? "" : (() => { const c = cardOf(m.id); return c ? `${esc(G.holdAt(otherPos(c)))} · ${G.pxDist(otherPos(c), me) <= MP.NEAR_PX ? "with you" : "away"}` : "offline"; })()}</span></div></div>`).join("")}</div>
         <button class="btn" data-act="leaveparty" style="width:100%;margin-top:8px">${party.leader === S.id ? "Disband the party" : "Leave the party"}</button>` : '<p class="sub">You travel alone. Invite someone from the list below.</p>'}
-      ${invites.map((p) => `<div class="item on" style="margin-top:8px"><div class="t">${esc(p.leaderName)} invites you to their party</div><button class="btn sm pri" data-act="accept" data-id="${esc(p.id)}">Join</button><button class="btn sm" data-act="decline" data-id="${esc(p.id)}">No</button></div>`).join("")}
+      ${invites.map((p) => `<div class="item on" style="margin-top:8px"><div class="t">${esc(p.leaderName)} invites you to their party<span>${p.members.length}/${typeof PARTYPLAY !== "undefined" ? PARTYPLAY.MAX_PARTY : 8} heroes</span></div><button class="btn sm pri" data-act="accept" data-id="${esc(p.id)}">Accept</button><button class="btn sm" data-act="decline" data-id="${esc(p.id)}">Decline</button></div>`).join("")}
       ${chests.map((c) => { const sh = MP.shareOf(c, S.id); return `<div class="item on" style="margin-top:8px;flex-wrap:wrap"><div class="t">💰 Party chest from ${esc(c.place)}<span>${c.goldLeft} gold${c.itemsLeft.length ? ", " + c.itemsLeft.map((i) => esc(D.ITEMS[i].name)).join(", ") : ""} · your fair share: ${sh.gold} gold${sh.items.length ? " + " + sh.items.length + " item" + (sh.items.length > 1 ? "s" : "") : ""}</span></div>
         <div style="display:flex;gap:6px;width:100%;flex-wrap:wrap">${c.taken.includes(S.id) ? '<span class="sub">You took your share.</span>' : `<button class="btn sm pri" data-act="share" data-id="${esc(c.id)}">Take my share</button>`}<button class="btn sm danger" data-act="grab" data-id="${esc(c.id)}">Take everything</button></div></div>`; }).join("")}</div>`;
     const canAmbush = shared && !S.trip && !S.location && !S.dungeon;
@@ -3701,7 +3749,8 @@
       case "clanfound": { const r = CLANS.found(S, $("#clanname")?.value, $("#clantag")?.value, clanDraft.colors); if (r.err) return toast(r.err); Store.put("clans", S.id, r.clan); CLANS.set([...CLANS.all.filter((x) => x.id !== S.id), { ...r.clan, id: S.id }], null); persist(true); postNews(`🏴 ${S.name} raised the banner of ${r.clan.name} [${r.clan.tag}].`); say(r.text); break; }
       case "claninv": { const c = myClan(); if (!c || c.founder !== S.id) break; const r = CLANS.invite(c, b.dataset.id); if (r.err) return toast(r.err); Store.put("clans", S.id, (({ id, ...x }) => x)(r.clan)); toast("Invitation sent."); break; }
       case "clankick": { const c = myClan(); if (!c || c.founder !== S.id) break; Store.put("clans", S.id, (({ id, ...x }) => x)(CLANS.kick(c, b.dataset.id).clan)); toast("They're no longer in the clan."); break; }
-      case "clanjoin": { const r = CLANS.join(S, CLANS.byId(b.dataset.id)); if (r.err) return toast(r.err); persist(true); say(r.text); break; }
+      case "clanjoin": clanJoin(b.dataset.id); invRefresh(); break;
+      case "clanno": clanDecline(b.dataset.id); renderPanel(true); break;
       case "clanleave": { const c = myClan(); if (c && c.founder === S.id) { Store.remove("clans", S.id); postNews(`🏴 The banner of ${c.name} was lowered.`); } say(CLANS.leave(S)); persist(true); break; }
       case "achmore": achOpen = !achOpen; renderPanel(true); break;
       case "guide": openGuide(); persist(); break;

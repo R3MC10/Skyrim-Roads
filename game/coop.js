@@ -49,7 +49,12 @@ const COOP = (() => {
     if (activeMembers(run).length >= MAX_MEMBERS) return null;
     return { ...run, members: [...run.members, { id: s.id, name: s.name, level: s.level }], invites: (run.invites || []).filter((x) => x.id !== s.id) };
   }
-  function decline(run, uid) { return { ...run, invites: (run.invites || []).filter((x) => x.id !== uid) }; }
+  /* say no; with a name, the leader gets a short "declined" note (invites.js shows it to them) */
+  function decline(run, uid, name, t = G.now()) {
+    const out = { ...run, invites: (run.invites || []).filter((x) => x.id !== uid) };
+    if (name) out.nos = [...(run.nos || []).filter((x) => x && x.id !== uid).slice(-7), { id: uid, name, t }];
+    return out;
+  }
   /* someone walks out (or falls). The lead passes on; an empty run is over. */
   function removeMember(run, uid) {
     const members = run.members.map((m) => (m.id === uid ? { ...m, left: true } : m));
@@ -224,7 +229,7 @@ const COOP = (() => {
       runs = docs;
       const t = G.now();
       for (const r of docs) if (!live(r, t) && r.leader === S().id) ctx.Store.remove("runs", r.id);   // tidy old runs you led
-      for (const r of myInvites()) if (!seenInv.has(r.id)) { seenInv.add(r.id); toast(`⚔ ${r.leaderName} asks you to raid ${r.place} together. Open 👥 Social → Party.`); }
+      for (const r of myInvites()) if (!seenInv.has(r.id)) { seenInv.add(r.id); if (typeof INVITES === "undefined") toast(`⚔ ${r.leaderName} asks you to raid ${r.place} together. Open 👥 Social → Party.`); }
       const lob = mine(), s = S();
       if (lob && lob.status === "in" && !s.dungeon && s.location === lob.place && !s.trip) {   // the leader went in: follow
         const err = join(s, lob);
@@ -264,7 +269,7 @@ const COOP = (() => {
       if (run && run.place !== place) return `<div class="coop"><h3>⚔ Co-op run</h3><p class="sub">You're in ${esc(run.leaderName)}'s run of ${esc(run.place)}.</p><div class="row"><button class="btn sm pri" data-act="go" data-place="${esc(run.place)}">Travel there</button><button class="btn sm" data-act="coopleave" data-id="${esc(run.id)}">Leave the run</button></div></div>`;
       if (!run) {
         return `<div class="coop"><h3>⚔ Go in together</h3><p class="sub">Raid ${esc(place)} with friends: same rooms, same foes, you fight side by side on your own tactics, and everyone gets their own roll from the boss chest.</p>
-          ${inv.map((r) => `<div class="item on"><div class="t">${esc(r.leaderName)} asks you along<span>${activeMembers(r).length}/${MAX_MEMBERS} heroes · ${r.status === "in" ? "already inside" : "waiting at the door"}</span></div><button class="btn sm pri" data-act="coopjoin" data-id="${esc(r.id)}">Join</button><button class="btn sm" data-act="coopno" data-id="${esc(r.id)}">No</button></div>`).join("")}
+          ${inv.map((r) => `<div class="item on"><div class="t">${esc(r.leaderName)} asks you along<span>${activeMembers(r).length}/${MAX_MEMBERS} heroes · ${r.status === "in" ? "already inside" : "waiting at the door"}</span></div><button class="btn sm pri" data-act="coopjoin" data-id="${esc(r.id)}">Accept</button><button class="btn sm" data-act="coopno" data-id="${esc(r.id)}">Decline</button></div>`).join("")}
           <button class="btn" data-act="coopnew" style="width:100%;margin-top:6px">⚔ Start a co-op run</button></div>`;
       }
       const lead = run.leader === s.id;
@@ -281,7 +286,7 @@ const COOP = (() => {
     function invitesHTML() {
       const inv = myInvites();
       if (!inv.length) return "";
-      return `<div class="panel"><h2>⚔ Dungeon invites</h2><div class="list">${inv.map((r) => `<div class="item on"><div class="t">${esc(r.leaderName)} · ${esc(r.place)}<span>${activeMembers(r).length}/${MAX_MEMBERS} heroes · ${esc(DUNGEONS.describe(r.place))}</span></div>${S().location === r.place ? `<button class="btn sm pri" data-act="coopjoin" data-id="${esc(r.id)}">Join</button>` : `<button class="btn sm pri" data-act="go" data-place="${esc(r.place)}">Travel</button><button class="btn sm" data-act="coopjoin" data-id="${esc(r.id)}">Join</button>`}<button class="btn sm" data-act="coopno" data-id="${esc(r.id)}">No</button></div>`).join("")}</div></div>`;
+      return `<div class="panel"><h2>⚔ Dungeon invites</h2><div class="list">${inv.map((r) => `<div class="item on"><div class="t">${esc(r.leaderName)} · ${esc(r.place)}<span>${activeMembers(r).length}/${MAX_MEMBERS} heroes · ${esc(DUNGEONS.describe(r.place))}</span></div>${S().location === r.place ? `<button class="btn sm pri" data-act="coopjoin" data-id="${esc(r.id)}">Accept</button>` : `<button class="btn sm" data-act="go" data-place="${esc(r.place)}">Travel</button><button class="btn sm pri" data-act="coopjoin" data-id="${esc(r.id)}">Accept</button>`}<button class="btn sm" data-act="coopno" data-id="${esc(r.id)}">Decline</button></div>`).join("")}</div></div>`;
     }
 
     // -- inside the dungeon
@@ -360,12 +365,18 @@ const COOP = (() => {
         if (typeof SOCIAL !== "undefined" && SOCIAL.isFriend(s, id) && ctx.sendDm) ctx.sendDm(id, b.dataset.name, `⚔ Join my co-op run of ${run.place}! I'm waiting at the door.`);
       } else if (a === "coopjoin") {
         const old = mine(); if (old && old.id !== id) await ctx.Store.change("runs", old.id, (x) => removeMember(x, s.id));
+        const pre = runs.find((r) => r.id === id);
+        if (pre && live(pre) && !isMember(pre, s.id) && activeMembers(pre).length >= MAX_MEMBERS) {   // full: say so and drop the invite
+          await ctx.Store.change("runs", id, (x) => decline(x, s.id));
+          return toast(`That run is full (${MAX_MEMBERS} heroes at most).`);
+        }
         const res = await ctx.Store.change("runs", id, (x) => addMember(x, s) || x);
-        if (!res?.after || !isMember(res.after, s.id)) return toast("That run is full or over.");
+        if (!res?.after || !isMember(res.after, s.id)) return toast(res?.after && live(res.after) ? `That run is full (${MAX_MEMBERS} heroes at most).` : "That run is over.");
         toast(s.location === res.after.place ? `You joined ${res.after.leaderName}'s run.` : `You joined. Travel to ${res.after.place} to go in.`);
         if (res.after.status === "in" && s.location === res.after.place) { const err = join(s, { ...res.after, id }); if (!err) { sync(); ctx.persist(true); ctx.renderDungeon(); } else toast(err); }
       } else if (a === "coopno") {
-        await ctx.Store.change("runs", id, (x) => decline(x, s.id));
+        const res = await ctx.Store.change("runs", id, (x) => decline(x, s.id, s.name));
+        toast(res ? `You declined ${res.before?.leaderName ? res.before.leaderName + "'s" : "the"} dungeon invite.` : "That invite is gone.");
       } else if (a === "coopleave") {
         await ctx.Store.change("runs", id, (x) => removeMember(x, s.id));
         toast("You left the run.");
