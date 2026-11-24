@@ -1120,7 +1120,12 @@
       </div><p class="sub" style="margin-bottom:0">${typeof TB !== "undefined" && TB.enabled() ? `You play the fight turn by turn` : `Fighting uses ${aiOn() ? `<b>Smart AI</b> (${esc(S.loadout)} gear)` : `your <b>${esc(S.loadout)}</b> tactics`}`}.${typeof SNEAK2 !== "undefined" ? "" : " A hidden start gives a sneak attack."}</p>${typeof SNEAK2 !== "undefined" ? SNEAK2.noteHTML(S, e, typeof AISET !== "undefined" ? AISET.get(G.loadout(S)).sneak : "safe", esc) : ""}`, "enc");
     ppUI?.onModal();   // a party is with you: they see this too and vote (partyplay.js)
   }
-  const skillLine = (r) => (r.skills || []).length ? `<p class="sub">📈 ${r.skills.map(esc).join(" · ")}</p>` : "";
+  /* the lines under a result: skill-ups and level-ups play as toasts (skillup.js); what's left (a follower's words) gets its own line */
+  const skillsHTML = (list) => {
+    if (typeof SKILLUP === "undefined") return (list || []).length ? `<p class="sub">📈 ${list.map(esc).join(" · ")}</p>` : "";
+    return SKILLUP.others(list).map((l) => `<p class="sub${/^💬/.test(l) ? " su-say" : ""}">${esc(l)}</p>`).join("");
+  };
+  const skillLine = (r) => skillsHTML(r.skills);
   function openEvent(note) {
     const ev = S.trip?.event;
     if (!ev) return;
@@ -1199,7 +1204,7 @@
     if (r.fight) { const inf = CURSE.maybeInfect(S, r.fight.e); if (inf) { persist(); setTimeout(() => toast(inf), 1800); } }
     if (r.fight && !r.died && !r.fled && !r.fight.nonlethal) { tally("foes"); warPoint("fight", G.holdAt(livePos())); if ((r.fight.e?.tags || []).includes("undead")) festCount("undead"); }
     if (r.fight || r.died) SOUND.fight(r); else if (/potion|drink/i.test(r.text || "")) SOUND.fx("potion");
-    const skills = (r.skills || []).length ? `<p class="sub">📈 ${r.skills.map(esc).join(" · ")}</p>` : "";
+    const skills = skillsHTML(r.skills);
     if (r.died) {
       openModal(`<h2>💀 Defeated</h2><p>${esc(r.text)}</p>${r.fight ? fightLog(r.fight) : ""}<p>${esc(r.died)}</p><button class="btn danger" data-act="close" style="width:100%">Continue</button>`, "enc");
       return;

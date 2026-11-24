@@ -16,6 +16,13 @@ const PATCHNOTES = (() => {
       "Foes that are afraid, calmed or still rattled show it with a chip under their health.",
       "Every item's tooltip now says what it does, in fights and out of them: what a scroll or potion really does for you, how hard a weapon hits with your skill and perks, its AP cost in a fight, what food cooks into, and its value and weight. Favourite slots show the full tooltip, not just the name.",
     ] },
+    { id: "b143-skillup", build: 143, date: "24 Nov 2026", title: "Skill-ups like in Skyrim", items: [
+      "When a skill rises, a notice at the top of the screen says so (\"One-Handed increased to 31\") over a thin bar that fills up. When it crosses a level, the bar fills to the end, flashes, chimes softly and starts again from zero.",
+      "Several skills play one after another, quickly. Tap the notice to skip ahead.",
+      "After a fight, skills that grew a little without levelling show their bar creeping up for a moment.",
+      "A new character level gets its own bigger Level up banner with your level bar.",
+      "The fight result no longer lists skill-ups as one long line; your follower's words after a fight are a line of their own.",
+    ] },
     { id: "b143-followeranim", build: 143, date: "24 Nov 2026", title: "Followers fight with their whole body", items: [
       "Followers and party members now really fight in the fight picture: they swing their weapon or draw their bow, cast their spells, raise their shield and flinch when they get hit.",
       "A follower who is knocked down drops to the ground and lies there until someone pulls them back up, and then you see them get back on their feet.",
