@@ -42,6 +42,7 @@ async def main():
         # both sign on
         for pg in (A, B):
             await click(pg, "[data-tab=map]"); await click(pg, "[data-tab=town]"); await pg.wait_for_timeout(300)
+            await pg.evaluate("document.querySelector('#side [data-act=areahub]')?.click()"); await pg.wait_for_timeout(300)   # back to the town board (areaui.js)
             await click(pg, "[data-act=shop][data-id=caravans]"); await pg.wait_for_timeout(300)
             await click(pg, "[data-act=cvsign]"); await pg.wait_for_timeout(700)
         await A.wait_for_timeout(800); await click(A, "[data-act=shop][data-id=caravans]"); await A.wait_for_timeout(400)

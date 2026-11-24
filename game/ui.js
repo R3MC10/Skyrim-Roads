@@ -26,7 +26,7 @@
   const tiBox = (item) => (TI ? TI.box(S, item) : "");
   const tiCls = (item) => (TI && TI.isTome(item) ? " ti-row" : "");
   let zoom = innerWidth < 700 ? 2.4 : 1, follow = true, center = [0.5, 0.5], view = {}, version = 0, rendered = -1, lastPanelRender = 0;
-  let tacticsDraft = { if: "hp_below", pct: 40, do: "potion:health", edit: null }, testResult = null, townShop = null, forgeTab = "make", forgeGroup = "iron", packOpen = null, searchText = "", uxAllPlaces = false, uxHelpOpen = null, packSearch = "";
+  let tacticsDraft = { if: "hp_below", pct: 40, do: "potion:health", edit: null }, testResult = null, townShop = null, townShopAt = null, forgeTab = "make", forgeGroup = "iron", packOpen = null, searchText = "", uxAllPlaces = false, uxHelpOpen = null, packSearch = "";
   let raidDocs = [], raidSeen = null, raidJoined = null, raidAuto = null, enchDraft = {};
   let chatDocs = [], chatRaw = [], chatCh = "world", chatDraft = "", chatSeen = 0, chatSeenIds = new Set(), lastChatSend = 0;
   const bootT = Date.now() / 1000;
@@ -526,7 +526,7 @@
         $("#mapwrap")?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" }); return true;
       }
       tab = o.tab || "map"; testResult = null;
-      if (o.shop) townShop = o.shop; if (o.jtab) jTab = o.jtab; if (o.soc) socTab = o.soc;
+      if (o.shop) { townShop = o.shop; townShopAt = S && S.location; } if (o.jtab) jTab = o.jtab; if (o.soc) socTab = o.soc;
       bump(); renderTabs(); renderPanel(true);
       const el = (o.anchor && document.getElementById(o.anchor)) || $("#side");
       el?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
@@ -2690,7 +2690,7 @@
     hero: ["Character", "Level, skills and perks", "Skills grow as you use them. When you level up, choose Health, Magicka or Stamina and spend perk points in a skill's tree. Below are your powers, shouts, standing stone and achievements."],
     pack: ["Pack", "What you carry and wear", "Open your things to wear, use, compare or drop them. Use the search box to find an item by name. Heavy packs slow you down: sell things or store them at home."],
     tactics: ["Tactics", "How you fight", "Fights play out by themselves. Your rules are checked from the top every turn, like “health below 40% → drink a potion”. Test them against a dummy before a real fight."],
-    town: ["Town", "Shops and services here", "Pick a place from the groups: Shops to buy and sell, Services for the inn, trainers and the forge, Guilds & jobs for paid work. Shops close at night (20:00–08:00)."],
+    town: ["Area", "Places in this town", "Places are grouped like a town: Inn, Market, Services & trainers, Work & jobs, Your home, and Events & fun. Tap one to open it; the ‹ button brings you back. Things ready for you show on top under Right now. Shops close at night (20:00–08:00)."],
     log: ["Journal", "Your quests", "Active quests sit on shelves: main story, Solstheim, Civil War, guilds, Daedric and side quests. Misc holds jobs, bounties, cures and treasure maps. ☆ Track a quest to steer the compass, the map and the What to do next card. Chat, party and the world moved to 👥 Friends; stats and the diary to Character."],
     social: ["Social", "Friends, messages and trades", "Add players as friends, send them messages, and trade by courier from anywhere."],
   };
@@ -2719,39 +2719,47 @@
   function nextCard() {
     if (S.dungeon) return "";
     const here = livePos(), eta = (n) => fmtMin(G.pxDist(here, WORLD.places[n]) * 1.1 / G.speed(S));
-    const rows = [];
-    const row = (ico, title, sub, btn) => rows.push(`<div class="item nx"><span class="nx-i" aria-hidden="true">${ico}</span><div class="t">${title}<span>${sub}</span></div>${btn || ""}</div>`);
-    if (S.trip && S.trip.destName) row("🧭", `On the way to ${esc(S.trip.destName)}`, "You keep travelling even with the app closed.", "");
+    const rows = [], MP = typeof MAPPANEL !== "undefined" ? MAPPANEL : null, R = [];   // mappanel.js: one merged, sorted card (with remind.js's Today rows)
+    const dist = (n) => (n && WORLD.places[n] ? G.pxDist(here, WORLD.places[n]) : 0);
+    const row = (ico, title, sub, btn, m = {}) => { const html = `<div class="item nx"><span class="nx-i" aria-hidden="true">${ico}</span><div class="t">${title}<span>${sub}</span></div>${btn || ""}</div>`; rows.push(html); R.push({ ...m, dist: dist(m.place), html }); };
+    if (S.trip && S.trip.destName) row("🧭", `On the way to ${esc(S.trip.destName)}`, "You keep travelling even with the app closed.", "", { kind: "trip", key: "trip" });
     QUESTS.ensure(S);
     const a = QUESTS.tracked(S);
     if (a) {
       const n = QUESTS.target(a.st), at = n && S.location === n, o = a.st.obj;
       const btn = o.talk && at ? `<button class="btn sm pri" data-act="qtalk" data-id="${a.id}">${esc(o.label)}</button>`
         : n && !at && WORLD.places[n] && !(S.trip && S.trip.destName === n) ? `<button class="btn sm pri" data-act="go" data-place="${esc(n)}">Go</button>` : "";
-      row("◆", `${esc(a.st.title)} <small class="nx-q">${esc(a.def.name)}</small>`, `${esc(a.st.text)}${n && !at && WORLD.places[n] ? ` · ${esc(n)} is ~${eta(n)} away` : ""}`, btn);
+      row("◆", `${esc(a.st.title)} <small class="nx-q">${esc(a.def.name)}</small>`, `${esc(a.st.text)}${n && !at && WORLD.places[n] ? ` · ${esc(n)} is ~${eta(n)} away` : ""}`, btn, { kind: "quest", key: "quest", place: n && !at ? n : null });
     }
-    if (S.pendingLevels > 0 || PERKS.pointsLeft(S) > 0) row("⬆", S.pendingLevels > 0 ? "You can level up" : `${PERKS.pointsLeft(S)} perk point${PERKS.pointsLeft(S) > 1 ? "s" : ""} to spend`, "Open Character to choose what grows.", `<button class="btn sm" data-act="uxtab" data-id="hero">Character</button>`);
-    if (S.location && !S.trip && (TOWNS.isTown(S.location) || G.shopTypes(S.location).length)) row("🏘", `You're in ${esc(S.location)}`, "Shops, the inn, trainers and jobs are in the Area tab.", `<button class="btn sm" data-act="uxtab" data-id="town">Town</button>`);
+    if ((S.pendingLevels > 0 || PERKS.pointsLeft(S) > 0) && !(MP && typeof REMIND !== "undefined")) row("⬆", S.pendingLevels > 0 ? "You can level up" : `${PERKS.pointsLeft(S)} perk point${PERKS.pointsLeft(S) > 1 ? "s" : ""} to spend`, "Open Character to choose what grows.", `<button class="btn sm" data-act="uxtab" data-id="hero">Character</button>`);
+    if (S.location && !S.trip && (TOWNS.isTown(S.location) || G.shopTypes(S.location).length)) row("🏘", `You're in ${esc(S.location)}`, "Shops, the inn, trainers and jobs are in the Area tab.", `<button class="btn sm" data-act="uxtab" data-id="town">Area</button>`, { kind: "town", key: "town" });
     const ob = typeof ONBOARD !== "undefined" ? ONBOARD.rows(S, { here, eta, known, quest: a?.id, online: Store.online, party: !!party, max: 4 - rows.length }) : null;   // [onboard] 1-3 ideas from your state
-    if (ob) rows.push(...ob);
+    if (ob) { rows.push(...ob); ob.forEach((html, i) => { const place = MP ? MP.placeOf(html) : null; R.push({ kind: "idea", key: `idea${i}`, place, dist: dist(place), html }); }); }
     const g = !ob && typeof GUIDE !== "undefined" && S.level < 15 ? GUIDE.STEPS.find((st) => !st[3](S)) : null;
-    if (g) row("📖", `Next step: ${esc(g[1])}`, esc(g[2]), `<button class="btn sm" data-act="guidego" data-id="${g[0]}">Show me</button>`);
+    if (g) row("📖", `Next step: ${esc(g[1])}`, esc(g[2]), `<button class="btn sm" data-act="guidego" data-id="${g[0]}">Show me</button>`, { kind: "guide", key: "guide" });
     if (!S.trip) {
       const near = Object.keys(WORLD.places).filter((n) => known(n) && n !== S.location && !S.discovered.includes(n)).map((n) => [n, G.pxDist(here, WORLD.places[n])]).sort((x, y) => x[1] - y[1])[0];
-      if (near && rows.length < 4) row("✦", `Explore ${esc(near[0])}`, `${KIND[WORLD.places[near[0]][2]]} you haven't visited · ~${eta(near[0])}`, `<button class="btn sm" data-act="go" data-place="${esc(near[0])}">Go</button>`);
+      if (near && (MP || rows.length < 4)) row("✦", `Explore ${esc(near[0])}`, `${KIND[WORLD.places[near[0]][2]]} you haven't visited · ~${eta(near[0])}`, `<button class="btn sm" data-act="go" data-place="${esc(near[0])}">Go</button>`, { kind: "explore", key: "explore", place: near[0] });
+    }
+    if (MP) {
+      const rm = typeof REMIND !== "undefined" ? REMIND.items(S) : [];
+      for (const { x, html } of rm) R.push({ kind: x.state === "ready" ? (x.kind === "hero" ? "hero" : "ready") : x.state, key: x.key, place: x.place && x.place !== S.location ? x.place : null, at: x.at, dist: x.place ? dist(x.place) : 0, html });
+      return MP.card(R, ob && ob.length ? ONBOARD.foot() : "");
     }
     if (!rows.length) return "";
     return `<div class="panel nextcard"><h2>What to do next</h2><div class="list">${rows.join("")}</div>${ob && ob.length ? ONBOARD.foot() : ""}</div>`;
   }
   function panelTravel() {
     const here = livePos();
-    const places = Object.keys(WORLD.places).filter((n) => known(n) && n !== S.location && WORLD.same(here, WORLD.places[n]) && n.toLowerCase().includes(searchText.toLowerCase()))
-      .map((n) => ({ n, d: G.pxDist(here, WORLD.places[n]) })).sort((a, b) => a.d - b.d);
+    const MP = typeof MAPPANEL !== "undefined" ? MAPPANEL : null;   // mappanel.js: All / Towns / Dungeons / Not visited / Other
+    const all = Object.keys(WORLD.places).filter((n) => known(n) && n !== S.location && WORLD.same(here, WORLD.places[n]) && n.toLowerCase().includes(searchText.toLowerCase()))
+      .map((n) => ({ n, d: G.pxDist(here, WORLD.places[n]), kind: WORLD.places[n][2], visited: S.discovered.includes(n) })).sort((a, b) => a.d - b.d);
+    const places = MP ? all.filter((p) => MP.match(p.kind, p.visited)) : all;
     const bag = myBag();
-    return `${ppUI ? ppUI.panelHTML() : ""}${typeof WFX !== "undefined" ? WFX.coldHTML(S) : ""}${nextCard()}${typeof REMIND !== "undefined" ? REMIND.card(S) : ""}${placeHere()}${typeof EXPLORE !== "undefined" ? EXPLORE.placeCard(S) : ""}${typeof RUMOURS !== "undefined" ? RUMOURS.card(S) : ""}${typeof GATHER !== "undefined" ? GATHER.card(S) : ""}<div class="panel"><h2>Where to?</h2><p class="sub">Tap a place on the map, or press <b>Go</b> below. Tap empty ground on the map to roam off the road.</p>${typeof FASTQOL !== "undefined" ? FASTQOL.recentHTML(S) : ""}
-      <input id="search" placeholder="Search places" value="${esc(searchText)}" autocomplete="off" aria-label="Search places">
+    return `${ppUI ? ppUI.panelHTML() : ""}${typeof WFX !== "undefined" ? WFX.coldHTML(S) : ""}${nextCard()}${typeof REMIND !== "undefined" && typeof MAPPANEL === "undefined" ? REMIND.card(S) : ""}${placeHere()}${typeof EXPLORE !== "undefined" ? EXPLORE.placeCard(S) : ""}${typeof RUMOURS !== "undefined" ? RUMOURS.card(S) : ""}${typeof GATHER !== "undefined" ? GATHER.card(S) : ""}<div class="panel"><h2>Where to?</h2><p class="sub">Tap a place on the map, or press <b>Go</b> below. Tap empty ground on the map to roam off the road.</p>${typeof FASTQOL !== "undefined" ? FASTQOL.recentHTML(S) : ""}
+      <input id="search" placeholder="Search places" value="${esc(searchText)}" autocomplete="off" aria-label="Search places">${MP ? MP.chips(MP.countAll(all)) : ""}
       <div class="list">${bag ? `<div class="item on"><div class="t">🎒 Your lost bag<span>${bag.gold} gold · ${Math.max(0, Math.floor((bag.expires - G.now()) / 60))} min left before it's fair game</span></div><button class="btn pri sm" data-act="go" data-place="__bag">Go</button></div>` : ""}
-      ${places.slice(0, searchText || uxAllPlaces ? 40 : 8).map(({ n, d }) => { const k = WORLD.places[n][2]; return `<div class="item"><div class="t">${esc(n)}<span>${KIND[k]} · ${esc(G.holdAt(WORLD.places[n]))}${typeof PLACESTUFF !== "undefined" ? PLACESTUFF.tag(n) : ""}${S.discovered.includes(n) ? "" : " · unvisited"}${(() => { const lf = DUNGEONS.enterable(n) ? DUNGEONS.refillLeft(S, n) : 0; return lf ? ` · 🔒 opens in ${cdSpan(G.now() + lf)}` : ""; })()}</span></div><span class="num sub">${d * 1.1 / G.speed(S) < 1 ? "" : "~"}${fmtMin(d * 1.1 / G.speed(S))}</span><button class="btn sm" data-act="go" data-place="${esc(n)}">Go</button></div>`; }).join("") || `<p class="sub">No places match “${esc(searchText)}”. Try part of the name, like “riv”.</p>`}${!searchText && places.length > 8 ? `<button class="btn" data-act="uxall" style="width:100%;margin-top:8px">${uxAllPlaces ? "Show only the nearest" : `Show all ${places.length} places`}</button>` : ""}${(() => { const n = Object.keys(clearedLeft()).length; return `<button class="btn" data-act="tabgo" data-id="places" style="width:100%;margin-top:8px">📍 Locations: cleared places${n ? ` (${n})` : ""}</button>`; })()}</div>
+      ${places.slice(0, searchText || uxAllPlaces ? 40 : 8).map(({ n, d }) => { const k = WORLD.places[n][2]; return `<div class="item"><div class="t">${esc(n)}<span>${KIND[k]} · ${esc(G.holdAt(WORLD.places[n]))}${typeof PLACESTUFF !== "undefined" ? PLACESTUFF.tag(n) : ""}${S.discovered.includes(n) ? "" : " · unvisited"}${(() => { const lf = DUNGEONS.enterable(n) ? DUNGEONS.refillLeft(S, n) : 0; return lf ? ` · 🔒 opens in ${cdSpan(G.now() + lf)}` : ""; })()}</span></div><span class="num sub">${d * 1.1 / G.speed(S) < 1 ? "" : "~"}${fmtMin(d * 1.1 / G.speed(S))}</span><button class="btn sm" data-act="go" data-place="${esc(n)}">Go</button></div>`; }).join("") || (searchText ? `<p class="sub">No places match “${esc(searchText)}”. Try part of the name, like “riv”.</p>` : `<p class="sub">No places of this kind yet. Tap All to see every place.</p>`)}${!searchText && places.length > 8 ? `<button class="btn" data-act="uxall" style="width:100%;margin-top:8px">${uxAllPlaces ? "Show only the nearest" : `Show all ${places.length} places`}</button>` : ""}${(() => { const n = Object.keys(clearedLeft()).length; return `<button class="btn" data-act="tabgo" data-id="places" style="width:100%;margin-top:8px">📍 Locations: cleared places${n ? ` (${n})` : ""}</button>`; })()}</div>
       <p class="sub status ${Store.online ? "live" : ""}" style="margin-top:12px"><i></i>${Store.mode === "p2p" ? `The world · ${Store.peers ? `${Store.peers} other ${Store.peers === 1 ? "phone" : "phones"} online` : "looking for friends…"}` : Store.online ? `Shared world · ${others.length} other ${others.length === 1 ? "traveller" : "travellers"}` : APP ? "Offline game · saved on this phone" : "Saved in this browser only"}</p>${Store.online ? "" : onlineBtn()}</div>`;
   }
 
@@ -2890,7 +2898,7 @@
     const st = GUIDE.STEPS.find((x) => x[0] === id); if (!st) return;
     const to = st[4]; closeModal(); closeMenu?.();
     tab = to.tab;
-    if (to.shop) { if (S.location && G.shopTypes) townShop = to.shop; }
+    if (to.shop) { if (S.location && G.shopTypes) { townShop = to.shop; townShopAt = S.location; } }
     if (to.tab === "social") socTab = "friends";
     renderTabs(); renderPanel(true);
     $("#side").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
@@ -3076,8 +3084,12 @@
     }
     const open = G.shopsOpen() || (typeof RUMOURS !== "undefined" && RUMOURS.knocked(S, l)), wanted = TOWNS.wanted(S), hold = G.holdAt(WORLD.places[l]);   // knocked at night (rumours.js)
     const sections = [...types.filter((x) => x !== "stables"), ...(TOWNS.INNS[l] ? ["inn"] : []), ...(TOWNS.TRAINERS[l] ? ["train"] : []), "alchemy", ...(types.includes("blacksmith") || HALLS.hasForge(S, l) || (typeof HSROOMS !== "undefined" && HSROOMS.station(S, "forge")) ? ["forge"] : []), "jobs", "streets", ...(TOWNS.followersHere(S).length || l === "Whiterun" ? ["hire"] : []), ...(TOWNS.carriageFrom(l) ? ["carriage"] : []), ...(TOWNS.HOMES[l] ? ["home", "homes", "market"] : []), ...(SMITH.MINES[l] ? ["mine"] : []), ...(l === SPELLCRAFT.TOWN ? ["craft"] : []), ...(CARAVANS.stopsAt(l) ? ["caravans"] : []), ...(l === HALL.TOWN ? ["hall"] : []), ...(HALLS.plotHere(l) || hallDocs.some((d) => d.town === l) || S.hall?.town === l ? ["halls"] : []), "notice", ...(TOWNS.INNS[l] ? ["cook"] : []), ...(l === ARENA.TOWN ? ["arena"] : []), ...(COOK.waterNear(WORLD.places[l]) ? ["fish"] : []), ...(ENCH.hasEnchanter(l) || (typeof HSROOMS !== "undefined" && HSROOMS.station(S, "enchanter")) ? ["enchanter"] : []), ...(types.includes("stables") ? ["stables"] : []), ...(typeof SOL !== "undefined" ? SOL.sections(l) : []), ...(typeof HOMESTEAD !== "undefined" ? HOMESTEAD.sections(l) : [])];
-    townShop = sections.includes(townShop) ? townShop : sections[0];
+    const AU = typeof AREAUI !== "undefined" ? AREAUI : null;   // areaui.js: the Area tab opens on a board of grouped places
+    if (AU && townShopAt !== l) { if (townShopAt != null) townShop = ""; townShopAt = l; }   // a new town opens on its board
+    townShop = sections.includes(townShop) ? townShop : AU ? "" : sections[0];
     const names = { general: "General goods", blacksmith: "Blacksmith", wizard: "Court wizard", stables: "Stables", fence: "Ragged Flagon (fence)", inn: TOWNS.INNS[l] || "Inn", train: "Trainers", alchemy: "Alchemy lab", forge: "Forge", jobs: "Jobs", streets: "Streets", hire: l === "Whiterun" ? "Dragonsreach & hirelings" : "Hirelings", hall: "⚑ Hall of the North", halls: "🏰 Halls & shops", notice: "📜 Jarl's bounty", homes: "🏘 Neighbours", market: "🛒 Market stalls", mine: "⛏ Mine", craft: "✨ Spell crafting", caravans: "🐫 Caravans", cook: "🍲 Cooking pot", arena: "⚔ The Arena", fish: "🎣 Fishing", carriage: "Carriage", enchanter: "Arcane enchanter", home: TOWNS.home(S, l) ? `🏠 ${TOWNS.HOMES[l]?.[0]}` : `Buy ${TOWNS.HOMES[l]?.[0]}`, ...(typeof SOL !== "undefined" ? SOL.NAMES : {}), ...(typeof HOMESTEAD !== "undefined" ? HOMESTEAD.names(S, l) : {}) };
+    const townTop = `${typeof CIVILWAR !== "undefined" ? CIVILWAR.townLine(S, l) : ""}${wanted ? `<p class="sub danger-high">You're wanted in ${esc(hold)}. Shops, inns and trainers turn you away.</p>` : ""}`;
+    if (AU && !townShop) return `<div class="panel au-panel"><h2>${esc(l)}</h2>${PLACEART.scene(l)}${townTop}${typeof RUMOURS !== "undefined" ? RUMOURS.townHTML(S, l, "", open) : ""}${AU.hub({ S, l, sections, names, open, hold })}<p class="sub au-gold">You have <b class="gold">${S.gold} gold</b>.</p></div>`;
     const fac = F.priceFactor(G.skill(S, "Mercantile"));
     let body = "", note = "";
     const shopRow = (i, sell = true) => { const p = G.buyPrice(S, i), it = D.ITEMS[i], tome = it.slot === "tome" && !TI && typeof TOMES !== "undefined" ? ` · ${TOMES.level(it.spell)}${S.spells.includes(it.spell) ? " · you know it" : ""}` : ""; return `<div class="item${tiCls(i)}">${ICONART.item(i, 34)}<div class="t">${esc(it.name)}${iqB(i)}<span>${esc(G.itemStats(i))}${tome} · ${it.weight} wt</span></div>${econB(i)}<span class="num gold">${p}</span><button class="btn sm" data-act="buy" data-item="${esc(i)}" ${open && !wanted && S.gold >= p ? "" : "disabled"}>Buy</button>${it.slot === "ammo" ? (() => { const p20 = G.lotPrice ? G.lotPrice(S, i, 20, "buy") : p * 20; return `<button class="btn sm" data-act="buyn" data-item="${esc(i)}" data-n="20" title="${p20} gold" ${open && !wanted && S.gold >= p20 ? "" : "disabled"}>×20</button>`; })() : ""}${tiBox(i)}</div>`; };
@@ -3243,7 +3255,9 @@
     }
     if (typeof RUMOURS !== "undefined") body = RUMOURS.townHTML(S, l, townShop, open) + body;   // day and night, rumours, your name here
     if (typeof SOL !== "undefined") body += SOL.extraHTML(S, l, townShop, esc);   // Skaal smith's technique, Raven Rock's forge
-    return `<div class="panel"><h2>${esc(l)}</h2>${PLACEART.scene(l)}${typeof CIVILWAR !== "undefined" ? CIVILWAR.townLine(S, l) : ""}${wanted ? `<p class="sub danger-high">You're wanted in ${esc(hold)}. Shops, inns and trainers turn you away.</p>` : ""}
+    if (AU) return `<div class="panel au-panel au-in">${AU.head({ l, sections, names, cur: townShop, desc: TOWN_DESC[townShop] })}${townTop}
+      ${(townShop === "home" && TOWNS.home(S, l)) || (townShop === "hall" && typeof HOMEART !== "undefined") || townShop === "halls" ? "" : PLACEART.section(townShop === "hire" ? "hall" : townShop === "cook" ? "inn" : townShop === "home" && TOWNS.home(S, l) ? "home" : townShop)}${typeof NPCART !== "undefined" ? NPCART.talk(l, townShop, S) : ""}${AU.note(note)}<div class="list">${body}</div><p class="sub" style="margin-top:10px">You have <b class="gold">${S.gold} gold</b>.</p></div>`;
+    return `<div class="panel"><h2>${esc(l)}</h2>${PLACEART.scene(l)}${townTop}
       ${townGroups(sections, names)}
       ${(townShop === "home" && TOWNS.home(S, l)) || (townShop === "hall" && typeof HOMEART !== "undefined") || townShop === "halls" ? "" : PLACEART.section(townShop === "hire" ? "hall" : townShop === "cook" ? "inn" : townShop === "home" && TOWNS.home(S, l) ? "home" : townShop)}${typeof NPCART !== "undefined" ? NPCART.talk(l, townShop, S) : ""}${note ? `<p class="sub" style="margin-top:8px">${note}</p>` : ""}<div class="list">${body}</div><p class="sub" style="margin-top:10px">You have <b class="gold">${S.gold} gold</b>.</p></div>`;
   }
@@ -3636,7 +3650,8 @@
       case "m2mdir": sky.mdir = -(sky.mdir || 1); renderMenu(); break;
       case "buy": { const m = G.buy(S, b.dataset.item, 1); if (/^Bought/.test(m)) GUIDE.mark(S, "trade"); say(m); break; }
       case "buyn": { const m = G.buy(S, b.dataset.item, +b.dataset.n || 1); if (/^Bought/.test(m)) GUIDE.mark(S, "trade"); say(m); break; }
-      case "shop": townShop = b.dataset.id; if (townShop === "halls") hallView = null; renderPanel(true); break;
+      case "shop": { const fromHub = tab === "town" && !townShop && typeof AREAUI !== "undefined"; townShop = b.dataset.id; if (townShop === "halls") hallView = null; renderPanel(true); if (fromHub) $("#side .au-head")?.scrollIntoView({ block: "nearest" }); break; }
+      case "areahub": townShop = ""; renderPanel(true); $("#side")?.scrollIntoView({ block: "start" }); break;   // areaui.js: back to the board
       case "pskill": perkSkill = b.dataset.id; renderPanel(true); break;
       case "skinfo": heroSkill = heroSkill === b.dataset.id ? null : b.dataset.id; renderPanel(true); if (heroSkill) setTimeout(() => $(".skcard")?.scrollIntoView({ block: "nearest", behavior: reduceMotion ? "auto" : "smooth" }), 30); break;
       case "perk": say(PERKS.take(S, b.dataset.id)); publishCard(); break;
