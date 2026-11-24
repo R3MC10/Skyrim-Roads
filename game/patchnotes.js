@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b139-menus2", build: 139, date: "24 Nov 2026", title: "Tidier menus", items: [
+      "Items and Magic work like SkyUI: categories on the left, the list in the middle and the picked thing on the right. On a PC screen they sit side by side; on phones the list stays visible above the details.",
+      "One sort row: name, value, weight, damage, armour and more, plus a button that flips the order. Each category shows how many things are in it.",
+      "Search your spells by name, and find quests in the Journal with the new search box.",
+      "The Character page is much shorter: your hero card comes first, and Powers, Skills and Perks fold away until you open them.",
+      "Follower tabs fit on one row, and lots of menu words are now in Polish.",
+    ] },
     { id: "b138-followerbonds", build: 138, date: "24 Nov 2026", title: "Followers have opinions now", items: [
       "Your follower notices what you do. Help a stranger, rob a sleeping bandit, run from a giant, pray at a shrine, join the Thieves Guild: each follower likes some things and hates others, and says so.",
       "Their loyalty shows as a meter under their name (Hero tab → Follower). Devoted followers hit 10% harder. Unhappy ones grumble, fight 15% softer, sometimes refuse to change gear, style or tactics, and at 0 they walk out (they're fine, just angry, and won't come back for a few days).",

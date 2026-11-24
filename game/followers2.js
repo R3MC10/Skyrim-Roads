@@ -338,7 +338,7 @@ const FOL2 = (() => {
     if (!s.follower || typeof TOWNS === "undefined" || !TOWNS.FOLLOWERS[s.follower.id]) return "";
     const id = s.follower.id, f = st(s), a = ARCH[f.arch] || ARCH.warrior, mx = maxHp(s, id), hp = Math.round(TOWNS.followerHp(s));
     const top = Math.min(capOf(id), s.level || 1), portrait = typeof NPCART !== "undefined" ? NPCART.follower(id, 44) : "";
-    const tabs = `<div class="chips fol2tabs">${[["card", "Overview"], ["bond", "Bond"], ["inv", "Pack"], ["magic", "Magic"], ["tactics", "Tactics"], ["perks", "Skills & perks"]].filter(([k]) => (typeof FAI !== "undefined" || (k !== "magic" && k !== "tactics")) && (k !== "bond" || typeof BONDS !== "undefined")).map(([k, l]) => `<button class="chip ${view === k ? "on" : ""}" data-act="fol2" data-op="view" data-id="${k}">${l}</button>`).join("")}</div>`;
+    const tabs = `<div class="seg fol2tabs" role="tablist" aria-label="Follower">${[["card", "Overview"], ["bond", "Bond"], ["inv", "Gear"], ["magic", "Magic"], ["tactics", "Tactics"], ["perks", "Perks"]].filter(([k]) => (typeof FAI !== "undefined" || (k !== "magic" && k !== "tactics")) && (k !== "bond" || typeof BONDS !== "undefined")).map(([k, l]) => `<button class="${view === k ? "on" : ""}" role="tab" aria-selected="${view === k}" data-act="fol2" data-op="view" data-id="${k}">${l}</button>`).join("")}</div>`;   // one row, no wrapping (menus2)
     const head = `<div class="item fol2head">${portrait}<div class="t">${esc(nameOf(id))} <span class="num">Lv ${f.lvl}</span><span>${esc(a.name)} · ${hp}/${mx} health · hits ~${Math.round(dmg(s))} · armor ${armorRating(f)} · goes down instead of dying</span>
       <div class="bar fol2xp"><i style="width:${f.lvl >= top ? 100 : Math.round(f.xp / need(f.lvl) * 100)}%"></i></div><span class="sub">${f.lvl >= top ? (f.lvl >= capOf(id) ? `Level cap ${capOf(id)}` : "Levels up as you do") : `${f.xp}/${need(f.lvl)} XP to level ${f.lvl + 1}`}${typeof BONDS !== "undefined" ? "" : ` · loyalty ${f.loyal || 50}/100`}</span>${typeof BONDS !== "undefined" ? BONDS.meter(s, esc) : ""}</div>
       <button class="btn sm" data-act="dismiss">Dismiss</button></div>`;
@@ -347,7 +347,7 @@ const FOL2 = (() => {
       const gear = eqSlots().map((slot) => { const r = worn(f, slot), it = itemOf(r); return `<div class="slot">${esc(slotName(slot))}<b style="display:block">${it ? esc(it.name) + (r.temper ? ` +${r.temper}` : "") : "—"}</b></div>`; }).join("");
       body = `<div class="grid2 fol2gear">${gear}</div>
         <h3>Fighting style</h3><p class="sub">${esc(a.desc)} Main skills: ${a.main.map(esc).join(", ")}. They pick perks from these trees by themselves.</p>
-        <div class="chips" style="flex-wrap:wrap">${Object.entries(ARCH).map(([k, v]) => `<button class="chip ${k === f.arch ? "on" : ""}" data-act="fol2" data-op="arch" data-id="${k}">${esc(v.name)}${k === archOf(id) ? " ★" : ""}</button>`).join("")}</div>
+        <div class="chips m2-row">${Object.entries(ARCH).map(([k, v]) => `<button class="chip ${k === f.arch ? "on" : ""}" data-act="fol2" data-op="arch" data-id="${k}">${esc(v.name)}${k === archOf(id) ? " ★" : ""}</button>`).join("")}</div>
         <p class="sub">★ = their natural style. Changing it resets and re-picks their perks.</p>`;
     } else if (view === "inv") {
       const mine = s.inv.filter((r) => { const it = itemOf(r); return it && !it.quest && (wearable(it) || it.slot === "ammo" || it.restore); });
@@ -359,7 +359,7 @@ const FOL2 = (() => {
         : mine.map((r) => { const it = itemOf(r); return `<div class="item"><div class="t">${esc(it.name)}${r.qty > 1 ? ` <span class="num">×${r.qty}</span>` : ""}<span>${it.damage ? `dmg ${it.damage} · ` : ""}${it.armor ? `armor ${it.armor} · ` : ""}${fmtW((it.weight || 0) * r.qty)} wt</span></div>
               <button class="btn sm pri" data-act="fol2" data-op="give" data-id="${r.id}" data-q="1">Give</button>${r.qty > 1 ? `<button class="btn sm" data-act="fol2" data-op="give" data-id="${r.id}" data-q="${r.qty}">All</button>` : ""}</div>`; }).join("") || `<p class="sub">Nothing in your pack they could use.</p>`;
       body = `<p class="sub num">Their pack: ${fmtW(weight(f))}/${carry(f)} weight · potions they carry are drunk when they're badly hurt · archers shoot their best arrows (they never run out)</p>
-        <div class="chips">${[["theirs", "Their pack"], ["yours", "Give from yours"]].map(([k, l]) => `<button class="chip ${invTab === k ? "on" : ""}" data-act="fol2" data-op="invtab" data-id="${k}">${l}</button>`).join("")}
+        <div class="chips m2-row">${[["theirs", "Their pack"], ["yours", "Give from yours"]].map(([k, l]) => `<button class="chip ${invTab === k ? "on" : ""}" data-act="fol2" data-op="invtab" data-id="${k}">${l}</button>`).join("")}
         <button class="btn sm" data-act="fol2" data-op="best">Best gear</button></div><div class="list fol2list">${rows}</div>`;
     } else if (view === "bond" && typeof BONDS !== "undefined") body = BONDS.tab(s, esc);   // opinions, loyalty, personal quest (followerbonds.js)
     else if (view === "magic" && typeof FAI !== "undefined") body = FAI.magicTab(s, f, esc);
@@ -370,7 +370,7 @@ const FOL2 = (() => {
       const taken0 = Object.values(f.perks || {}).reduce((x, y) => x + y, 0);
       body = `<p class="sub">${taken0} perks taken · ${Math.max(0, PERKS.pointsLeft(ps))} waiting (they spend them themselves as soon as they can)</p>
         <div class="grid2 fol2skills">${trees.map((k) => `<div class="slot">${esc(k)} <b class="num">${ps.skills[k].lvl}</b><div class="bar"><i style="width:${ps.skills[k].lvl}%"></i></div></div>`).join("")}</div>
-        <div class="chips" style="flex-wrap:wrap">${trees.map((k) => `<button class="chip ${k === perkTree ? "on" : ""}" data-act="fol2" data-op="tree" data-id="${esc(k)}">${esc(k)} ${PERKS.TREES[k].filter(([pid]) => rank(f, pid)).length}/${PERKS.TREES[k].length}</button>`).join("")}</div>
+        <div class="chips m2-row">${trees.map((k) => `<button class="chip ${k === perkTree ? "on" : ""}" data-act="fol2" data-op="tree" data-id="${esc(k)}">${esc(k)} ${PERKS.TREES[k].filter(([pid]) => rank(f, pid)).length}/${PERKS.TREES[k].length}</button>`).join("")}</div>
         ${typeof SKYUI !== "undefined" ? `<div class="skc fol2sky">${SKYUI.svg(perkTree, ps)}</div>` : ""}
         <div class="list">${PERKS.TREES[perkTree].map(([pid, name, ranks]) => { const r = rank(f, pid); return `<div class="item ${r ? "on" : ""}"><div class="t">${esc(name)}${ranks > 1 ? ` <span class="num">${r}/${ranks}</span>` : r ? " ✓" : ""}<span>${esc(PERKS.BY_ID[pid].desc)}</span></div></div>`; }).join("")}</div>`;
     }

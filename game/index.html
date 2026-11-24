@@ -2102,6 +2102,71 @@ html.art-pixel .fitm,html.art-pixel .fitm .xh{border-radius:0}html.art-pixel .fi
 html.art-pixel .fitarrow .ln{stroke-linecap:butt;stroke-dasharray:6 6;filter:none}html.art-pixel .tbu.fit-next{box-shadow:0 0 0 2px #c8321e}
 @media (max-width:380px){.tbint .fitg{font-size:10px;padding-left:4px}}
 @media (prefers-reduced-motion:reduce){.tbu.fit-next,.fitarrow .ln{animation:none!important}}
+/* [menus2] tidier tab menus (menus2.js): SkyUI categories | list | details, one sort row, folding Character sections */
+.sky-title{display:none}
+.sky-mid{display:flex;flex-direction:column;flex:1 1 0;min-height:min(310px,42vh)}
+.sky-mid .sky-list{flex:1 1 auto;min-height:0}
+.sky-in>.sky-detail{flex:0 1 auto;min-height:0;max-height:40vh}
+.m2-pick{display:none}
+.sky-cat{position:relative}
+.m2-n{position:absolute;top:2px;right:4px;min-width:16px;padding:0 4px;border-radius:8px;background:rgba(236,232,222,.12);color:#cfc6b0;font-size:10px;font-weight:600;line-height:15px;letter-spacing:0;text-align:center}
+.sky-cat.on .m2-n{background:rgba(236,232,222,.24);color:#fff}
+.m2-sort{display:flex;align-items:center;gap:6px;margin:2px 0 4px;min-width:0}
+.m2-sl{flex:none;color:#8c877a;font-size:11px;letter-spacing:.14em;text-transform:uppercase}
+.m2-sc{display:flex;gap:2px;flex:1;min-width:0;overflow-x:auto;scrollbar-width:none}
+.m2-sc::-webkit-scrollbar{display:none}
+.m2-sort .chip{flex:none;margin:0;min-height:36px;padding:4px 9px;font-size:12px}
+.m2-sort .chip.on{color:#fff;border-bottom-color:#ece8de;background:rgba(255,255,255,.06)}
+.m2-dir{flex:none;display:flex;align-items:center;gap:5px;min-height:36px;padding:0 9px;background:rgba(0,0,0,.3);border:1px solid rgba(228,220,200,.22);color:#ddd5c2;font-size:12px;letter-spacing:.06em;white-space:nowrap}
+.m2-dir b{font-size:10px;color:#f3d98b}
+.sb-tiers{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+@media (max-width:420px){.m2-dir span{display:none}.m2-sl{display:none}.sky-cat{min-width:58px}}
+@media (min-width:1000px){
+  .sky-in{width:min(1480px,100%);display:grid;grid-template-columns:200px minmax(0,1fr) minmax(320px,420px);grid-template-rows:auto auto minmax(0,1fr) auto auto;column-gap:18px}
+  .sky-top{grid-column:1/-1;grid-row:1}.sky .uxpop{grid-column:1/-1;grid-row:2}
+  .sky-foot{grid-column:1/-1;grid-row:4}.sky-vitals{grid-column:1/-1;grid-row:5}
+  .sky-cats{grid-column:1;grid-row:3;flex-direction:column;gap:2px;overflow-x:hidden;overflow-y:auto;margin:6px 0 0;padding:6px 10px 6px 0;border:0;border-right:1px solid rgba(228,220,200,.14)}
+  .sky-cat{display:flex;align-items:center;justify-content:flex-start;gap:10px;min-width:0;min-height:42px;padding:6px 10px;text-align:left;font-size:13px}
+  .sky-cat svg{flex:none}
+  .m2-n{position:static;margin-left:auto}
+  .sky-mid{grid-column:2;grid-row:3;min-height:0;margin-top:6px}
+  .sky-in>.sky-detail,.m2-pick{grid-column:3;grid-row:3;max-height:none;min-height:0;overflow:auto;margin-top:6px;border-top:0;border-left:1px solid rgba(228,220,200,.14);padding:12px 4px 8px 16px}
+  .m2-pick{display:flex;align-items:center;justify-content:center;text-align:center;color:#8c877a;font-style:italic}
+  .sky-in:has(.sky-doll) .sky-mid{grid-column:2/-1}
+}
+html.art-pixel .m2-n,html.art-pixel .m2-dir{border-radius:0}
+html.art-pixel .m2-dir{box-shadow:2px 2px 0 rgba(0,0,0,.6)}
+/* Character: one hero card, then sections that fold under their heading */
+.m2-fold>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;min-height:44px;margin:-4px 0}
+.m2-fold>summary::-webkit-details-marker{display:none}
+.m2-fold>summary h2{flex:1;display:flex;align-items:center;gap:12px;justify-content:center;margin:0;font-size:15px;letter-spacing:.16em;text-transform:uppercase;color:#efe8d6}
+#side .m2-fold>summary h2{font-family:var(--sk-ui);font-weight:600;font-size:17px;letter-spacing:.22em;color:#f4f0e6;text-shadow:0 1px 2px #000}
+.m2-fold>summary h2::before,.m2-fold>summary h2::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--sk-line2,rgba(228,220,200,.45)))}
+.m2-fold>summary h2::after{background:linear-gradient(90deg,var(--sk-line2,rgba(228,220,200,.45)),transparent)}
+.m2-fold>summary::after{content:"▸";flex:none;width:20px;text-align:center;color:#cfc6b0;transition:transform .18s}
+.m2-fold[open]>summary::after{transform:rotate(90deg)}
+.m2-fold>summary .m2-note{flex:none;color:var(--gold);font-size:12px}
+.m2-fold>.m2-body{margin-top:10px}
+.m2-fold:not([open]){padding-top:10px;padding-bottom:10px}
+.m2-herogrid{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:center}
+.m2-herogrid .herobox{margin:0}
+.m2-herotxt .sub{margin:2px 0}
+.m2-titles{color:var(--gold)}
+.m2-attrs{grid-template-columns:repeat(3,minmax(0,1fr));margin-top:8px}.m2-attrs b{display:block}
+.m2-links{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.m2-links .btn{flex:1 1 auto}
+@media (max-width:440px){.m2-herogrid{grid-template-columns:1fr;justify-items:stretch}.m2-herogrid .herobox{justify-self:center}}
+.m2-wipe>summary{min-height:40px;cursor:pointer}
+/* follower panel: one tab row that never wraps; chip rows scroll sideways */
+.fol2tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:10px 0}
+.fol2tabs::-webkit-scrollbar,.m2-row::-webkit-scrollbar{display:none}
+.fol2tabs button{flex:1 0 auto;padding:8px 10px;letter-spacing:.12em}
+@media (max-width:440px){.fol2tabs button{padding:8px 5px;letter-spacing:.04em;font-size:12px}}
+.m2-row{flex-wrap:nowrap!important;overflow-x:auto;scrollbar-width:none}
+.m2-row>*{flex:none}
+/* Journal: find a quest */
+.m2-hide{display:none!important}
+.m2-jq{margin:2px 0 10px!important;width:100%}
+@media (max-width:440px){#sky .sky-cols{grid-template-columns:minmax(0,1fr) 2.5em 2.3em 2.9em;gap:5px}#sky .sky-row{padding:8px 6px 8px 8px;font-size:15px}#sky .sky-row .nm img.art.ico{margin-right:5px}#sky .sky-row .nm .eqm{margin-right:2px}}
 </style>
 <script src="access.js"></script>
 </head>
@@ -2248,6 +2313,7 @@ html.art-pixel .fitarrow .ln{stroke-linecap:butt;stroke-dasharray:6 6;filter:non
 <script src="bards.js"></script>
 <script src="skillinfo.js"></script>
 <script src="menus.js"></script>
+<script src="menus2.js"></script>
 <script src="tabmenu.js"></script>
 <script src="fabdodge.js"></script>
 <script src="nickname.js"></script>
@@ -2255,6 +2321,7 @@ html.art-pixel .fitarrow .ln{stroke-linecap:butt;stroke-dasharray:6 6;filter:non
 <script src="pcupdate.js"></script>
 <script src="i18n_story.js"></script>
 <script src="i18n_bonds.js"></script>
+<script src="i18n_menus2.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>
