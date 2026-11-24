@@ -69,8 +69,9 @@ const sellList = ui.slice(ui.indexOf('const fence = shop === "fence"'), ui.index
 if (!/G\.handable\(S\)/.test(sellList)) throw new Error("FAIL shop sell list uses G.handable");
 if (!/data-act="sell" data-id="\$\{r\.id\}">Sell · /.test(ui) || !/canShop && G\.freeQty\(S, r\.id\) > 0\) acts\.push\(`<button class="btn" data-act="sell"/.test(ui)) throw new Error("FAIL item details hide Sell for worn gear");
 if (!/G\.sell\(S, r\.id, G\.freeQty\(S, r\.id\)/.test(ui)) throw new Error("FAIL Sell all sells only the unworn ones");
-for (const tag of ["const loose = G.handable(S)", "const pack = G.handable(S).filter((r) => !r.stolen && D.ITEMS[r.item])", "const putRows = G.handable(S)", "const pack = G.handable(S);"])
+for (const tag of ["const loose = G.handable(S)", "const pack = G.handable(S).filter((r) => !r.stolen && D.ITEMS[r.item])", "const putRows = G.handable(S)"])
   if (!ui.includes(tag)) throw new Error("FAIL list uses G.handable: " + tag);
+if (fs.existsSync(W + "homestash.js") && !/G\.freeQty/.test(fs.readFileSync(W + "homestash.js", "utf8"))) throw new Error("FAIL house chest pack list uses G.freeQty");
 
 // 4. follower: Your pack leaves worn gear out, Give refuses it, a spare copy can be given
 vm.runInContext(`

@@ -33,6 +33,7 @@ tests/out_foeintent/
 tests/out_skillup/
 tests/out_boss/
 tests/pnotes/
+tests/out_stash/
 tests/out_evbanner/
 tests/out_gather/
 tests/bugrep/

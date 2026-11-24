@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b144-homechest", build: 144, date: "24 Nov 2026", title: "A proper chest in your house", items: [
+      "Your house chest now works like a Skyrim chest: switch between the Chest and Your pack, filter by Weapons, Apparel, Potions, Scrolls, Food, Ingredients, Books and Misc, and sort by name, stat, weight or value.",
+      "Every item in the chest and in your pack has its picture again.",
+      "Tap something to move just 1, an amount you pick, or the whole stack, either way. Potions, ingredients, materials and arrows pile up into one stack in the chest.",
+      "Your load and the chest's total weight are shown on top. Gear you wear (in any loadout) stays on you and can't be put away by mistake.",
+      "Improved, named and stolen things keep all that when they go in and come back out.",
+    ] },
     { id: "b144-noequipsell", build: 144, date: "24 Nov 2026", title: "What you wear stays on you", items: [
       "Shops no longer list the gear you're wearing when you sell: weapons in either hand, armour, rings and amulets stay off the Sell list, and Sell all junk never touches them.",
       "The same goes for handing things over: your follower's Your pack list, trades and gifts to other players, market stalls and chests leave out what you wear.",
