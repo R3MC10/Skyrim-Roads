@@ -268,7 +268,7 @@ const HSROOMS = (() => {
       const gold = raidGold(s, h); s.gold += gold; const loot = [];
       for (const [id, n] of R[5]) if (D.ITEMS[id]) { G.give(s, id, n); loot.push(`${itemName(id)} ×${n}`); }
       h.raids.won++; nextRaid(h, t);
-      G.note(s, `🏡 Drove ${R[0].toLowerCase()} off ${HS().PLOTS[pid].name}.`);
+      G.note(s, ` Drove ${R[0].toLowerCase()} off ${HS().PLOTS[pid].name}.`);
       return { title: "The house holds", text: `${R[0]} break and run${allies.length ? `, chased by ${allies.map((a) => a.name).join(" and ")}` : ""}. You take ${gold} gold${loot.length ? ", " + loot.join(", ") : ""} off them.`, fight: f, skills, loot, gold: 0 };
     }
     G.setHealth(s, Math.max(1, G.maxHealth(s) * 0.25), t);   // knocked down at your own door, not killed
@@ -323,7 +323,7 @@ const HSROOMS = (() => {
     return { text: `${L.d.name}'s kitchen sends you off with ${itemName(dish)}.`, fx: "coin" };
   }
 
-  // ---------------------------------------------------------------- pictures (art.js; the pixel style applies too)
+  // ---------------------------------------------------------------- pictures (art.js)
   function person(g, H, x, y, coat = "#30505e", torch = false) {
     H.circle(g, x, y - 26, 4.5, "#d9b48c", "#3b2c1e", 1);
     H.poly(g, [[x - 6, y - 21], [x + 6, y - 21], [x + 8, y], [x - 8, y]], coat, "#3b2c1e", 1);
@@ -418,7 +418,7 @@ const HSROOMS = (() => {
         g.strokeStyle = "#6f4f33"; g.lineWidth = 1.4; for (let i = 0; i < 5; i++) { g.beginPath(); g.moveTo(cx + cw - 20 + i * 3, ground + 10 + i * 7); g.lineTo(cx + cw - 8 + i * 3, ground + 10 + i * 7); g.stroke(); }
       }
       if (rooms.includes("garden")) gardenArt(g, H, 4, ground - 14, h.beds, false);
-      if (ART.drawingStyle() !== "pixel") { g.fillStyle = "rgba(43,32,22,.8)"; g.fillRect(6, 6, 104, 16); g.fillStyle = "#e9d7a8"; g.font = "bold 11px Georgia, serif"; g.fillText(tl(opts.guest ? "Guest of the house" : "Inside the house"), 12, 18); }
+      g.fillStyle = "rgba(43,32,22,.8)"; g.fillRect(6, 6, 104, 16); g.fillStyle = "#e9d7a8"; g.font = "bold 11px Georgia, serif"; g.fillText(tl(opts.guest ? "Guest of the house" : "Inside the house"), 12, 18);
       g.strokeStyle = "#3b2c1e"; g.lineWidth = 3; g.strokeRect(1.5, 1.5, W - 3, HT - 3);
     }, { key, cls: "scene hsin", alt: `Inside: ${["nothing built", "small house", "main hall"][HS().stage(h)]}${wings.length ? ", " + wings.join(", ") : ""}${rooms.length ? ", " + rooms.join(", ") : ""}` });
   }
@@ -438,7 +438,7 @@ const HSROOMS = (() => {
     if (h?.last) out += `<p class="sub hslast">${esc(h.last)}</p>`;
     if (!h?.raid) return out;
     const R = RAIDERS[h.raid.kind] || RAIDERS.bandits, d = defenders(s, pid);
-    return out + `<div class="card hsraid"><h3>⚔ Raid on the house</h3><p class="sub">${esc(R[6])}. ${d.length ? `${esc(d.map((a) => a.name).join(", "))} will fight beside you.` : "Nobody else is home to help."}</p>
+    return out + `<div class="card hsraid"><h3> Raid on the house</h3><p class="sub">${esc(R[6])}. ${d.length ? `${esc(d.map((a) => a.name).join(", "))} will fight beside you.` : "Nobody else is home to help."}</p>
       <div class="hsbtns">${btn("defend", pid, "Defend the house", true, "danger")}${h.raid.kind !== "trolls" ? btn("parley", pid, "Talk them down", !h.raid.talked) : ""}</div>
       <p class="sub">Leave it and your household deals with it within a day. If the raiders win they take materials and the goods waiting in the wings.</p></div>`;
   }
@@ -486,7 +486,7 @@ const HSROOMS = (() => {
     const { d, pid, hs } = L, fake = { small: 1, hall: hs.st >= 2 ? 1 : 0, wings: hs.wings || [], rooms: hs.rooms || [], stock: {}, steward: hs.steward, res: (hs.res || []).map((n) => ({ id: n })), cases: (hs.cases || []).filter((c) => D.ITEMS[c.item]), beds: (hs.beds || []).map((x) => (x && D.ITEMS[x] ? { item: x } : null)) };
     return `<div class="card hsguest"><h3>⚑ ${esc(d.name)}'s homestead</h3><p class="sub">Your party leader's house at ${esc(HS().PLOTS[pid].name)}. Come in.</p>${inside(pid, fake, { guest: true })}
       <p class="sub">${esc(["", "Small house", "Main hall"][hs.st] || "")}${fake.wings.length ? " · " + esc(fake.wings.map((w) => HS().WINGS[w]?.[0] || w).join(", ")) : ""}${fake.rooms.length ? " · " + esc(fake.rooms.map((r) => ROOMS[r]?.[0] || r).join(", ")) : ""}${hs.res?.length ? ` · living here: ${esc(hs.res.join(", "))}` : ""}</p>
-      ${fake.cases.length ? `<p class="sub">On show: ${esc(fake.cases.map((c) => c.name || itemName(c.item)).join(", "))}</p>` : ""}${hs.raided ? `<p class="sub">⚔ Raiders are at the gate. Only ${esc(d.name)} can call the defence.</p>` : ""}
+      ${fake.cases.length ? `<p class="sub">On show: ${esc(fake.cases.map((c) => c.name || itemName(c.item)).join(", "))}</p>` : ""}${hs.raided ? `<p class="sub"> Raiders are at the gate. Only ${esc(d.name)} can call the defence.</p>` : ""}
       <div class="hsbtns">${btn("guestrest", d.id, "Rest in the guest bed", true, "pri")}${fake.wings.includes("kitchen") ? btn("guestmeal", d.id, "Eat at the table") : ""}</div></div>`;
   }
   const VIEWS = [["garden", "Garden"], ["household", "Household"]];

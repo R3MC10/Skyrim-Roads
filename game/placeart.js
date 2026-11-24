@@ -1,7 +1,7 @@
 /* Place art: a painted-in-code scene for every place, town section and dungeon room, in the map's ink-on-parchment
-   style (or pixel art, through ART). Cities get their own landmarks; everything else is built from the hold's climate,
+   style. Cities get their own landmarks; everything else is built from the hold's climate,
    the place's kind or dungeon theme, and a seed from its name so no two look exactly alike. Time of day and weather
-   tint outdoor scenes. Pictures are cached per place|daytime|weather|style, so nothing redraws every frame. [OURS] */
+   tint outdoor scenes. Pictures are cached per place|daytime|weather, so nothing redraws every frame. [OURS] */
 const PLACEART = (() => {
   const W = 360, HH = 160, SW = 360, SH = 96;
   const P = ART.PAL;
@@ -295,7 +295,7 @@ const PLACEART = (() => {
     treasure(g, H, w, h) { corridor(g, H, w, h); const glow = g.createRadialGradient(w / 2, h * 0.62, 4, w / 2, h * 0.62, 70); glow.addColorStop(0, "rgba(214,178,94,0.65)"); glow.addColorStop(1, "rgba(214,178,94,0)"); g.fillStyle = glow; g.fillRect(0, 0, w, h);
       rect(g, H, w / 2 - 34, h * 0.55, 68, h * 0.25, P.wood); g.fillStyle = P.wood; g.beginPath(); g.ellipse(w / 2, h * 0.55, 34, 12, 0, Math.PI, 0); g.fill(); g.strokeStyle = P.ink; g.lineWidth = 1.2; g.stroke();
       g.fillStyle = P.gold; g.fillRect(w / 2 - 34, h * 0.62, 68, 4); g.fillRect(w / 2 - 4, h * 0.58, 8, 10); for (let i = 0; i < 6; i++) H.circle(g, w / 2 - 50 + i * 20, h * 0.84, 4, P.gold, P.ink, 0.6); },
-    puzzle(g, H, w, h) { corridor(g, H, w, h); const sym = ["🐍", "🐋", "🦅"]; for (let i = 0; i < 3; i++) { const x = w * 0.3 + i * w * 0.2; rect(g, H, x - 12, h * 0.35, 24, h * 0.4, "#9a9384"); H.circle(g, x, h * 0.5, 7, null, "#2f5f80", 1.6); g.strokeStyle = "#2f5f80"; g.beginPath(); g.moveTo(x - 4, h * 0.5); g.lineTo(x + 4, h * 0.5); g.stroke(); } void sym; },
+    puzzle(g, H, w, h) { corridor(g, H, w, h); const sym = ["", "", ""]; for (let i = 0; i < 3; i++) { const x = w * 0.3 + i * w * 0.2; rect(g, H, x - 12, h * 0.35, 24, h * 0.4, "#9a9384"); H.circle(g, x, h * 0.5, 7, null, "#2f5f80", 1.6); g.strokeStyle = "#2f5f80"; g.beginPath(); g.moveTo(x - 4, h * 0.5); g.lineTo(x + 4, h * 0.5); g.stroke(); } void sym; },
     rest(g, H, w, h) { corridor(g, H, w, h); fire(g, H, w / 2, h * 0.78, 1.4); rect(g, H, w * 0.15, h * 0.72, 60, 12, "#7a5a8a"); },
     mystery(g, H, w, h) { corridor(g, H, w, h); g.fillStyle = "rgba(201,182,255,0.25)"; g.fillRect(0, 0, w, h); g.fillStyle = P.snow; g.font = "bold 40px serif"; g.textAlign = "center"; g.fillText("?", w / 2, h * 0.62); },
     boss(g, H, w, h) { g.fillStyle = "#1c1410"; g.fillRect(0, 0, w, h); for (let i = 0; i < 5; i++) rect(g, H, 20 + i * 80, h * 0.1, 14, h * 0.7, "#3b2f24");
@@ -355,7 +355,7 @@ const PLACEART = (() => {
           SKY.overlay(g, H, w, h, st, { seed: name, ground: h * 0.7, cover: false }); lit(g, w, h, st, name); frame(g, w, h);
         } finally { curSky = null; }
       };
-      return ART.html(W, HH, draw, { key: `place|${name}|${st.key}|${fest || ""}|${pic ? "pic" : ""}|${typeof LIGHTFX !== "undefined" ? LIGHTFX.key() : ""}`, cls: "scene", alt: name, style: opts.style, painted: !!pic });
+      return ART.html(W, HH, draw, { key: `place|${name}|${st.key}|${fest || ""}|${pic ? "pic" : ""}|${typeof LIGHTFX !== "undefined" ? LIGHTFX.key() : ""}`, cls: "scene", alt: name });
     }
     const md = opts.mood || mood(), wx = opts.weather || weatherId(name);
     const draw = (g, H, w, h) => {
@@ -363,7 +363,7 @@ const PLACEART = (() => {
       d.draw(g, H, w, h, clim); deco(g, H, w, h);
       overlay(g, H, w, h, md, wx, name); frame(g, w, h);
     };
-    return ART.html(W, HH, draw, { key: `place|${name}|${md}|${wx}|${fest || ""}`, cls: "scene", alt: name, style: opts.style });
+    return ART.html(W, HH, draw, { key: `place|${name}|${md}|${wx}|${fest || ""}`, cls: "scene", alt: name });
   }
   /* a slimmer banner for a town section (360×96); null when there's no picture for it */
   const SHOP_PIC = { blacksmith: "forge", enchanter: "wizard" };   // town sections that share a painted banner
@@ -373,11 +373,11 @@ const PLACEART = (() => {
     if (!d && !pic) return "";
     const fest = typeof FXART !== "undefined" ? FXART.festId() : null;
     return ART.html(SW, SH, (g, H, w, h) => { if (pic) ASSETS.cover(g, pic, w, h, 0.5, 0.5); else d(g, H, w, h); if (fest) FXART.festSection(g, H, w, h, fest, id); frame(g, w, h); },
-      { key: `sec|${id}|${fest || ""}|${pic ? "pic" : ""}`, cls: "scene sec", alt: id, style: opts.style, painted: !!pic });
+      { key: `sec|${id}|${fest || ""}|${pic ? "pic" : ""}`, cls: "scene sec", alt: id });
   }
   function room(type, opts = {}) {
     const d = ROOM[type] || ROOM.mystery;
-    return ART.html(SW, SH, (g, H, w, h) => { d(g, H, w, h); frame(g, w, h); }, { key: `room|${type}`, cls: "scene sec", alt: type, style: opts.style });
+    return ART.html(SW, SH, (g, H, w, h) => { d(g, H, w, h); frame(g, w, h); }, { key: `room|${type}`, cls: "scene sec", alt: type });
   }
   return { scene, section, room, drawerFor, climateOf, CITY, THEME, SECTION, ROOM, W, HH };
 })();

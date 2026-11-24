@@ -24,7 +24,7 @@ const A = mk("A", 25);
 ok(!G.startTrip(A, cv.to, WORLD.places[cv.to].slice(0, 2), t), "trip");
 ok(CVROAD.canMeet(A), "can meet while travelling");
 const off = (d) => [p0[0] + d / G.pxDist([0, 0], [1, 0]), p0[1]];
-ok(CVROAD.autoMeet(A, off(CVROAD.MEET_RANGE + 8), t) === null, "no prompt out of range");
+ok(CVROAD.autoMeet(A, off(CVROAD.MEET_RANGE + 8), t)?.id !== cv.id, "no prompt out of range");   // (another caravan may happen to pass that spot: only this one must not prompt)
 ok(CVROAD.autoMeet(A, off(CVROAD.MEET_RANGE - 6), t)?.id === cv.id, "prompt when the road brings you alongside");
 ok(CVROAD.meet(A, cv.id, off(CVROAD.TAP_RANGE + 10), t).err, "tap too far away");
 const ev = CVROAD.meet(A, cv.id, off(10), t);

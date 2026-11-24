@@ -93,7 +93,7 @@ const pub = fresh(); pub.level = 4; pub.pendingLevels = 1; G.levelUp(pub, "magic
 const cb = LEVELUP.cardBits(pub);
 ok(Array.isArray(cb.vit) && cb.vit[1] === G.maxMagicka(pub) && cb.vit[0] === G.maxHealth(pub) && cb.vit[2] === G.maxStamina(pub), "card carries the three maximums");
 ok(typeof cb.lvp === "number" && cb.lvq === 0, "card carries level progress and no waiting level-up");
-ok(/♥\d+ ✦\d+ ⚡\d+/.test(LEVELUP.cardText({ vit: [110, 100, 120] })) && LEVELUP.cardText({}) === "", "roster text");
+ok(/\d+ ✦\d+ \d+/.test(LEVELUP.cardText({ vit: [110, 100, 120] })) && LEVELUP.cardText({}) === "", "roster text");
 const ui = fs.readFileSync(W + "ui.js", "utf8"), tm = fs.readFileSync(W + "tabmenu.js", "utf8"), html = fs.readFileSync(W + "index.html", "utf8");
 ok(/LEVELUP\.cardBits\(S\)/.test(ui), "publishCard sends the level bits");
 ok(/LEVELUP\.cardText\(o\)/.test(ui), "roster shows other players' maximums");

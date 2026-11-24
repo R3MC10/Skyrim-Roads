@@ -3,8 +3,8 @@
    - one-handed weapons, spears and bows hit harder from up high,
    - two-handers and staffs are too clumsy up there, so you jump down and fight on foot,
    - the horse has its own stamina: charging and swinging tire it, and a winded horse gives no bonus,
-   - foes can go for the horse. A horse never dies: when it goes down you're thrown clear and fight
-     on foot, and it limps back to the nearest stables (same rules as horses.js). */
+   - foes can go for the horse. A horse never dies: at 0 health it is downed, you're thrown clear and fight
+     on in the same fight on foot; afterwards it stays with you, downed, until it gets back up (horses.js). */
 const HORSEBACK = (() => {
   const SP_MAX = 100, SP_REGEN = 4, COST = { charge: 35, attack: 12, power: 20 };
   const BONUS = { sword: 1.05, axe: 1.05, mace: 1.05, dagger: 1.03, spear: 1.1, bow: 1.05, fist: 1 };
@@ -55,32 +55,32 @@ const HORSEBACK = (() => {
     const dmg = Math.round((f.e.damage || 10) * (0.85 + Math.random() * 0.3) * 2 * (1 - m.guard));
     m.hp -= dmg; m.hits++;
     if (m.hp > 0) return `${n} hits ${hn(f)} ${dmg} (horse ${Math.round(m.hp)}/${m.max})`;
-    m.hp = 0; m.up = false; m.downTurn = f.turn;
-    const fall = Math.round(G.maxHealth(f.s) * FALL); f.hp -= fall;
-    return `${n} brings ${hn(f)} down! You're thrown clear (−${fall}) and fight on foot`;
+    m.hp = 0; m.up = false; m.downTurn = f.turn || 1;
+    const fall = Math.round(G.maxHealth(f.s) * FALL); f.hp = Math.max(1, f.hp - fall);   // the fall alone never finishes you; the fight goes on
+    return `${n} brings ${hn(f)} down! ${hn(f)} is downed. You're thrown clear (−${fall}) and fight on foot`;
   }
 
   /* each turn: the horse gets its breath back a little */
   function tick(f) { const m = f.mount; if (m?.up) m.sp = Math.min(SP_MAX, m.sp + SP_REGEN); }
 
-  /* after the fight: write the horse's health back; a downed horse heads to the stables */
+  /* after the fight: write the horse's health back; a horse at 0 health is downed (it stays with you) */
   function after(f, t) {
     const m = f.mount, s = f.s, h = s.horse; if (!m || !h || typeof HORSES === "undefined") return [];
     if (m.foot) { h.mounted = true; return []; }   // you climb back on after a fight on foot
-    if (m.downTurn) {
-      const town = HORSES.nearestStables([s.x, s.y]);
-      h.hp = 0; h.hpT = t; h.away = { until: t + HORSES.REST_MIN * 60, town }; h.mounted = true;
-      return [`🐴 ${h.name} goes down, then limps off toward the stables at ${town}. Fetch them there in about ${HORSES.REST_MIN} minutes.`];
+    if (m.downTurn || m.hp <= 0) {
+      HORSES.knockDown(s, t); h.mounted = true;   // you'll ride again once it's back on its feet
+      return [HORSES.downLine(h)];
     }
-    if (m.hp < m.hp0) { h.hp = Math.max(1, m.hp); h.hpT = t; return [`🐴 ${h.name} took ${Math.round(m.hp0 - m.hp)} damage (${Math.round(m.hp)}/${m.max}).`]; }
+    if (m.hp < m.hp0) { h.hp = Math.max(1, m.hp); h.hpT = t; return [` ${h.name} took ${Math.round(m.hp0 - m.hp)} damage (${Math.round(m.hp)}/${m.max}).`]; }
     return [];
   }
 
   /* a hint on the encounter screen */
   function note(s) {
     if (typeof HORSES === "undefined" || !HORSES.present(s)) return "";
-    if (!HORSES.riding(s)) return `<p class="sub mountnote">🐴 ${s.horse.name} is with you, but you're on foot. Ride to open fights with a charge.</p>`;
-    return `<p class="sub mountnote">🐴 On horseback: you open with a charge, and one-handers, spears and bows hit harder from the saddle. Foes may go for ${s.horse.name}.</p>`;
+    if (HORSES.downed(s)) return `<p class="sub mountnote hdown">\uE12D ${s.horse.name} is downed and limps behind you. You fight on foot.</p>`;
+    if (!HORSES.riding(s)) return `<p class="sub mountnote">\uE12D ${s.horse.name} is with you, but you're on foot. Ride to open fights with a charge.</p>`;
+    return `<p class="sub mountnote">\uE12D On horseback: you open with a charge, and one-handers, spears and bows hit harder from the saddle. Foes may go for ${s.horse.name}.</p>`;
   }
 
   /* fight scene: draw the horse under the rider (FIGHTART calls this with the hero's transform set).
@@ -108,5 +108,25 @@ const HORSEBACK = (() => {
   /* is the rider still up at this point of the replay (0..1)? */
   function upAt(f, frac) { const m = f?.mount; if (!m || m.foot) return false; if (!m.downTurn) return true; const n = Math.max(1, f.log.length); return frac < m.downTurn / n; }
 
-  return { SP_MAX, COST, BONUS, CHARGE, engage, up, strike, enemyTurn, tick, after, note, drawHorse, upAt };
+  /* has the horse gone down by this point of the replay (0..1)? */
+  function downAt(f, frac) { const m = f?.mount; if (!m || m.foot || !m.downTurn) return false; return !upAt(f, frac); }
+  /* fight scene: the downed horse lying on its side behind you, ink style, with a "Downed" tag (feet line at y 0) */
+  function drawDowned(g, color, tt, label = "Downed") {
+    const ink = "#1c2128", br = Math.sin(tt * 1.6) * 0.6;   // slow, heavy breathing
+    g.save(); g.lineCap = "round"; g.lineJoin = "round"; g.strokeStyle = ink;
+    g.lineWidth = 3; g.beginPath(); g.moveTo(-6, -6); g.lineTo(6, -2); g.moveTo(0, -8); g.lineTo(12, -6); g.moveTo(22, -7); g.lineTo(34, -3); g.moveTo(26, -9); g.lineTo(38, -8); g.stroke();   // folded legs
+    g.fillStyle = color; g.lineWidth = 1.4;
+    g.beginPath(); g.ellipse(14, -12, 22, 9 + br, 0, 0, 7); g.fill(); g.stroke();   // barrel on its side
+    g.beginPath(); g.moveTo(-6, -14); g.lineTo(-22, -6); g.lineTo(-30, -4); g.lineTo(-28, 0); g.lineTo(-16, -1); g.lineTo(-2, -6); g.closePath(); g.fill(); g.stroke();   // neck and head resting on the ground
+    g.fillStyle = ink; g.beginPath(); g.moveTo(-6, -15); g.lineTo(-20, -8); g.lineTo(-8, -10); g.fill();   // mane
+    g.lineWidth = 1; g.beginPath(); g.moveTo(-25, -3.4); g.lineTo(-22, -3); g.stroke();   // closed eye
+    g.lineWidth = 2; g.beginPath(); g.moveTo(35, -14); g.quadraticCurveTo(44, -12, 42, -2); g.stroke();   // tail
+    if (label) {
+      g.font = "700 9px Cinzel, Georgia, serif"; g.textAlign = "center"; const w = g.measureText(label).width + 10;
+      g.fillStyle = "rgba(28,33,40,0.72)"; g.fillRect(8 - w / 2, -36, w, 13); g.fillStyle = "#ff8a7a"; g.fillText(label, 8, -26.5);
+    }
+    g.restore();
+  }
+
+  return { SP_MAX, COST, BONUS, CHARGE, engage, up, strike, enemyTurn, tick, after, note, drawHorse, upAt, downAt, drawDowned };
 })();

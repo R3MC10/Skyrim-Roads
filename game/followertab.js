@@ -31,13 +31,12 @@ const FOLTAB = (() => {
   const statOf = (r, it) => !it ? null : it.slot === "weapon" ? (it.damage || 0) + (r.temper || 0) : ARMOR().includes(it.slot) ? (it.armor || 0) + (r.temper || 0) : it.restore ? it.restore[1] : null;
   /* things from your pack worth handing over (same as before: gear, arrows, healing) */
   const giveable = (it) => !!it && !it.quest && ((F2()?.wearable?.(it)) || it.slot === "ammo" || !!it.restore || it.slot === "potion");
-  /* your worn items (marked ◆ in Your pack so you don't hand over your own sword by mistake) */
-  function yourWorn(s) { try { return new Set(Object.values(G.loadout(s).equipment || {})); } catch { return new Set(); } }
-  /* rows for one side: "theirs" = the follower's pack, "yours" = your pack */
+  /* rows for one side: "theirs" = the follower's pack, "yours" = your pack. Remigiusz: equipped gear never shows when
+     trading with a follower, so what you wear is left out of Your pack (a pair with one worn shows the spare one). */
   function rows(s, side = "theirs", cat = "all", sort = "name", dir = 1) {
     const f = F2()?.st(s); if (!f) return [];
-    const src = side === "yours" ? (s.inv || []).filter((r) => giveable(itemOf(r))) : f.inv;
-    const on = side === "yours" ? yourWorn(s) : new Set(Object.values(f.eq || {}));
+    const src = side === "yours" ? (G.handable ? G.handable(s) : s.inv || []).filter((r) => giveable(itemOf(r))) : f.inv;
+    const on = side === "yours" ? new Set() : new Set(Object.values(f.eq || {}));
     const out = src.filter((r) => itemOf(r) && (cat === "all" || catOf(itemOf(r)) === cat)).map((r) => {
       const it = itemOf(r), st = statOf(r, it);
       return { id: r.id, r, it, name: (r.tq && typeof TOWNS !== "undefined" && TOWNS.QUALITY ? TOWNS.QUALITY[r.tq] + " " : "") + it.name, type: typeOf(it), stat: st, weight: +((it.weight || 0) * r.qty).toFixed(2), value: it.value || 0, qty: r.qty || 1, eq: on.has(r.id), cat: catOf(it) };
@@ -123,7 +122,7 @@ const FOLTAB = (() => {
     }
     const ico = typeof ICONART !== "undefined" ? ICONART.item(r.item, 56, r) : "";
     return `<div class="sky-detail ft-detail">${ico ? `<div class="sky-ico">${ico}</div>` : ""}<h3>${esc(row.name)}</h3>
-      <dl class="ft-stats">${st.map(([k, v]) => `<dt>${esc(k)}</dt><dd class="num">${esc(v)}</dd>`).join("")}</dl>${cmp}
+      <dl class="ft-stats">${st.map(([k, v]) => `<dt>${esc(k)}</dt><dd class="num">${esc(v)}</dd>`).join("")}</dl>${typeof CHARGE !== "undefined" ? CHARGE.detail(r.item, r, mine ? s : null) : ""}${cmp}
       ${mine && row.eq ? `<p class="sub">You're wearing this. Take it off in Items first.</p>` : ""}<div class="sky-acts">${acts.join("")}</div></div>`;
   }
   /* the Gear view inside the follower panel */
@@ -133,7 +132,7 @@ const FOLTAB = (() => {
     const badge = (n) => typeof MENUS2 !== "undefined" ? MENUS2.badge(n) : n ? ` <b class="m2-n">${n}</b>` : "";
     const statH = { weapons: "Dmg", apparel: "Armor", potions: "Power" }[ui.cat] || "Stat";
     const head = `<div class="sky-head ft-cols"><button data-act="fol2" data-op="ftsort" data-id="name">Name</button><button class="ft-ty" data-act="fol2" data-op="ftsort" data-id="type">Type</button><button data-act="fol2" data-op="ftsort" data-id="stat">${statH}</button><button data-act="fol2" data-op="ftsort" data-id="weight">Wt</button><button data-act="fol2" data-op="ftsort" data-id="value">Value</button></div>`;
-    const body = list.map((r) => `<button class="sky-row ft-cols ${r.id === ui.sel ? "sel" : ""} ${r.eq ? "eq" : ""}" data-act="fol2" data-op="ftsel" data-id="${r.id}" aria-pressed="${r.id === ui.sel}"><span class="nm q-${typeof CC !== "undefined" ? CC.tier(r.r.item, r.r) : "common"}">${r.eq ? `<b class="eqm" title="${ui.side === "yours" ? "You wear this" : "Worn"}" aria-label="Equipped">◆</b>` : ""}${typeof ICONART !== "undefined" ? ICONART.item(r.r.item, 24, r.r) : ""}${esc(r.name)}${r.qty > 1 ? ` <i>(${r.qty})</i>` : ""}${r.it.enchant || r.it.aenchant ? ' <i class="ench">✦</i>' : ""}<small class="ft-ty2">${esc(r.type)}</small></span><span class="ft-ty">${esc(r.type)}</span><span class="num">${r.stat ?? "–"}</span><span class="num">${fmtW(r.weight)}</span><span class="num">${r.value}</span></button>`).join("")
+    const body = list.map((r) => `<button class="sky-row ft-cols ${r.id === ui.sel ? "sel" : ""} ${r.eq ? "eq" : ""}" data-act="fol2" data-op="ftsel" data-id="${r.id}" aria-pressed="${r.id === ui.sel}"><span class="nm q-${typeof CC !== "undefined" ? CC.tier(r.r.item, r.r) : "common"}">${r.eq ? `<b class="eqm" title="${ui.side === "yours" ? "You wear this" : "Worn"}" aria-label="Equipped">◆</b>` : ""}${typeof ICONART !== "undefined" ? ICONART.item(r.r.item, 24, r.r) : ""}${esc(r.name)}${r.qty > 1 ? ` <i>(${r.qty})</i>` : ""}${r.it.enchant || r.it.aenchant ? ' <i class="ench">✦</i>' : ""}${typeof CHARGE !== "undefined" ? CHARGE.tag(r.r.item, r.r, s) : ""}<small class="ft-ty2">${esc(r.type)}</small></span><span class="ft-ty">${esc(r.type)}</span><span class="num">${r.stat ?? "–"}</span><span class="num">${fmtW(r.weight)}</span><span class="num">${r.value}</span></button>`).join("")
       || `<p class="sub sky-empty">${ui.side === "yours" ? "Nothing in your pack they could use here." : "Their pack is empty here. Switch to Your pack to give them something."}</p>`;
     return `<div class="ft-gear">
       <div class="ft-bar"><div class="seg ft-side" role="tablist" aria-label="Whose pack">${[["theirs", "Their pack"], ["yours", "Your pack"]].map(([k, l]) => `<button class="${ui.side === k ? "on" : ""}" role="tab" aria-selected="${ui.side === k}" data-act="fol2" data-op="ftside" data-id="${k}">${esc(l)}</button>`).join("")}</div>

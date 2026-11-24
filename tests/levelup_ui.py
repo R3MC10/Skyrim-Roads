@@ -71,7 +71,7 @@ async def run(p, name, vp, mobile, style):
 async def main():
     async with async_playwright() as p:
         only = os.environ.get("ONLY", "")   # e.g. ONLY=pc_ink to rerun one
-        for name, vp, mob, style in [("phone", {"width": 412, "height": 915}, True, "ink"), ("pc", {"width": 1440, "height": 900}, False, "ink"), ("phone", {"width": 412, "height": 915}, True, "pixel")]:
+        for name, vp, mob, style in [("phone", {"width": 412, "height": 915}, True, "ink"), ("pc", {"width": 1440, "height": 900}, False, "ink")]:
             if not only or only == f"{name}_{style}": await run(p, name, vp, mob, style)
     print("FAILED" if fails else "levelup_ui ok", len(fails))
     sys.exit(1 if fails else 0)

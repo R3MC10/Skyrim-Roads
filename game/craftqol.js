@@ -130,7 +130,7 @@ const CRAFTQOL = (() => {
     const verb = { smith: "You make", refine: "You get", cook: "You cook", alch: "You brew", bench: "At the workbench you make" }[kind] || "You make";
     let text = kind === "temper" ? `You improve it ${made} time${made > 1 ? "s" : ""}: ${got.join("")}.` : `${verb} ${list(got) || "nothing"}${made > 1 && got.some((g) => !g.endsWith("×" + made)) ? ` (${made} batches)` : ""}.`;
     if (used.length) text += ` Used ${list(used)}.`;
-    if (ups.length) text += ` 📈 ${ups.join(" · ")}.`;
+    if (ups.length) text += `  ${ups.join(" · ")}.`;
     if (a.level > b.level) text += ` You reached level ${a.level}! Choose health, magicka or stamina.`;
     const less = /\((Making the same|The same)[^)]*\)/.exec(last || "");
     if (less) text += " " + less[0];
@@ -165,7 +165,7 @@ const CRAFTQOL = (() => {
   }
   function bar(s, kind, ids) {
     const ready = ids.filter((id) => can(s, kind, id).n > 0).length, on = onlyCan(s);
-    return `<div class="cqbar"><button class="chip cqonly ${on ? "on" : ""}" data-act="cqonly" aria-pressed="${on}">${on ? "✔" : "○"} Can make now</button><span class="cqready">${ready} of ${ids.length} ready${favs(s).some((k) => k.startsWith(kind + ":")) ? " · ★ pinned first" : ""}</span></div>`
+    return `<div class="cqbar"><button class="chip cqonly ${on ? "on" : ""}" data-act="cqonly" aria-pressed="${on}">${on ? "" : "○"} Can make now</button><span class="cqready">${ready} of ${ids.length} ready${favs(s).some((k) => k.startsWith(kind + ":")) ? " · ★ pinned first" : ""}</span></div>`
       + (on && !ready && ids.length ? `<p class="sub cqnone">Nothing here you can make from what you carry. Switch off “Can make now” to see what's missing.</p>` : "");
   }
   function star(s, kind, id, label = "") {
@@ -173,7 +173,7 @@ const CRAFTQOL = (() => {
     return `<button class="cqstar ${on ? "on" : ""}" data-act="cqfav" data-k="${kind}" data-id="${esc(id)}" aria-pressed="${on}" aria-label="${on ? "Unpin" : "Pin to the top"}${label ? " " + esc(label) : ""}" title="${on ? "Pinned to the top" : "Pin to the top"}">${on ? "★" : "☆"}</button>`;
   }
   function status(s, kind, id, c = can(s, kind, id)) {
-    if (c.hard) return `<span class="cqst no">🔒 ${esc(c.hard)}</span>`;
+    if (c.hard) return `<span class="cqst no"> ${esc(c.hard)}</span>`;
     if (c.n) return `<span class="cqst ok">Can make ${c.n}${c.out > 1 ? ` (${c.n * c.out} in all)` : ""}</span>`;
     return `<span class="cqst no">Missing: ${esc(c.missing.join(", "))}</span>`;
   }
@@ -198,7 +198,7 @@ const CRAFTQOL = (() => {
       return `<div class="item cqrow"><div class="t">★ ${esc(items.map(nm).join(" + "))}<span>${esc(knownShared(s, items).join(", ") || "No shared effect known")}</span>${status(s, "alch", m, c)}</div>
         <div class="cqbtns">${star(s, "alch", m, "mix")}<button class="btn sm" data-act="cqmix" data-id="${esc(m)}" ${c.n ? "" : "disabled"}>Pick</button>${qty(s, "alch", m, c)}</div></div>`;
     }).join("");
-    return `<div class="cqbar"><button class="chip cqonly ${on ? "on" : ""}" data-act="cqonly" aria-pressed="${on}">${on ? "✔" : "○"} Can make now</button><span class="cqready">${on ? "Only ingredients that pair with one you carry" : "Tap to hide ingredients with no known partner"}</span></div>`
+    return `<div class="cqbar"><button class="chip cqonly ${on ? "on" : ""}" data-act="cqonly" aria-pressed="${on}">${on ? "" : "○"} Can make now</button><span class="cqready">${on ? "Only ingredients that pair with one you carry" : "Tap to hide ingredients with no known partner"}</span></div>`
       + (mixes.length ? `<h3 class="cqh">Favourite mixes</h3>${rows || `<p class="sub">You can't brew any of your favourite mixes right now.</p>`}<h3 class="cqh">Ingredients</h3>` : "");
   }
   function alchFilter(s, rows, sel = []) {
@@ -219,7 +219,7 @@ const CRAFTQOL = (() => {
   }
   function enchBar(s) {
     const on = onlyCan(s);
-    return `<div class="cqbar"><button class="chip cqonly ${on ? "on" : ""}" data-act="cqonly" aria-pressed="${on}">${on ? "✔" : "○"} Can make now</button><span class="cqready">${on ? "Only gear an effect you know fits" : "Showing all your gear"}</span></div>`;
+    return `<div class="cqbar"><button class="chip cqonly ${on ? "on" : ""}" data-act="cqonly" aria-pressed="${on}">${on ? "" : "○"} Can make now</button><span class="cqready">${on ? "Only gear an effect you know fits" : "Showing all your gear"}</span></div>`;
   }
   function enchMissing(blanks, known, gems) {
     const miss = [...(blanks ? [] : ["an unenchanted weapon or piece of armor"]), ...(known ? [] : ["a known effect (break enchanted gear here to learn one)"]), ...(gems ? [] : ["a filled soul gem (court wizards sell them)"])];

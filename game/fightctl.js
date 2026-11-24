@@ -1,7 +1,7 @@
 /* Fight controls: the action bar at the bottom of the turn-based fight screen. [OURS]
    Remigiusz: "Combat controls should be AAA."
    tbfight.js still runs the fight; this module only draws the controls and makes them feel good:
-   - Big thumb-sized buttons with drawn icons (both art styles): Attack / Power attack / Guard (or Shield bash).
+   - Big thumb-sized buttons with drawn icons: Attack / Power attack / Guard (or Shield bash).
    - Every move shows what it costs as gold AP pips; hovering or pressing a move lights up the pips it would spend.
    - A greyed-out move says why ("Need 2 more AP", "Not enough stamina", "None left"...).
    - Quick slots above the big buttons: your shouts and favourite spells, potions and scrolls (★ in the Magic and Items
@@ -80,6 +80,7 @@ const FIGHTCTL = (() => {
     const [k, arg] = a.split(":");
     try {
       if (a === "flee") return f.e.boss ? "Not from a boss" : !f.canFlee ? "No way out here" : "";
+      if (typeof MOUNTFIGHT !== "undefined") { const mw = MOUNTFIGHT.why(f, a); if (mw && (c <= pool || !MOUNTFIGHT.owns(a))) return mw; }   // the saddle
       if (c > pool) return `Need ${c - pool} more AP`;
       if (a === "power_attack") return "Not enough stamina";
       if (a === "block") return f.weapon && f.weapon.skill === "Archery" ? "Not with a bow" : "Not enough stamina";
@@ -97,7 +98,7 @@ const FIGHTCTL = (() => {
     return "";
   }
 
-  // ------------------------------------------------------------------ icons (drawn, in the current art style; emoji fallback)
+  // ------------------------------------------------------------------ icons (drawn; emoji fallback)
   function iconFor(f, a, api, size = 34) {
     if (typeof UIART === "undefined") return `<span class="em">${api.iconOf(f, a)}</span>`;
     try {
@@ -133,6 +134,7 @@ const FIGHTCTL = (() => {
     if (k === "scroll") return (D.ITEMS[arg]?.name || "Scroll").replace(/^Scroll of /i, "");
     if (k === "shout") return arg.toUpperCase();
     if (k === "power") return "Power";
+    if (a === "mount" || a === "dismount") return a === "mount" ? "Mount" : "Dismount";
     return a;
   }
   function dock(sess, api) {
@@ -150,6 +152,7 @@ const FIGHTCTL = (() => {
       btn(sess, api, guard[0], { label: guard[1], extra: "main big gd", key: "3" })].join("");
     const q = quick(f);
     for (const [a] of bx.list) if (q.length < MAXQ + 2 && !q.some((x) => x.a === a)) q.unshift({ a });
+    if (typeof MOUNTFIGHT !== "undefined") for (const [a] of MOUNTFIGHT.moves(f)) q.unshift({ a });   // Mount / Dismount (mountfight.js)
     const tray = q.map((x, i) => btn(sess, api, x.a, { label: shortName(f, x.a), extra: "fc-q" + (x.sugg ? " sugg" : "") + (/^(shout|power):/.test(x.a) ? " shout" : ""), key: String(4 + i), badge: x.a.startsWith("potion:") ? potCount(f, x.a.split(":")[1]) : null })).join("");
     const nSp = (s.spells || []).filter((id) => D.SPELLS[id] && D.SPELLS[id].kind !== "utility").length;
     const nPot = ["health", "magicka", "stamina"].reduce((t, k) => t + potCount(f, k), 0);
@@ -175,7 +178,7 @@ const FIGHTCTL = (() => {
     return `<div class="fc fc-beast ${bx.form}${enter ? " enter" : ""}" data-fcmode="${bx.form}">
       <div class="fc-tray" role="group" aria-label="${bx.form === "wolf" ? "Beast Form" : "Vampire Lord"} moves" style="--n:${Math.max(3, rest.length)}">${tray}</div>
       <div class="tbgrid fc-main">${main}</div>
-      <div class="fc-row"><span class="fc-form">${bx.form === "wolf" ? "🐺 Beast Form" : "🦇 Vampire Lord"} · ${bx.left} round${bx.left === 1 ? "" : "s"} left</span>${btn(sess, api, "flee", { label: "Flee", extra: "flee fc-m", key: "F" })}${end}</div>
+      <div class="fc-row"><span class="fc-form">${bx.form === "wolf" ? " Beast Form" : " Vampire Lord"} · ${bx.left} round${bx.left === 1 ? "" : "s"} left</span>${btn(sess, api, "flee", { label: "Flee", extra: "flee fc-m", key: "F" })}${end}</div>
     </div>`;
   }
   /* the magic / items list: tabs, filters by school, ★ to pin, numbered Cast buttons */

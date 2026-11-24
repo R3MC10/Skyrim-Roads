@@ -19,13 +19,14 @@ const MARKET = (() => {
     if (mine(docs, s.id).length >= capFor(s)) return { err: `Your stall holds ${capFor(s)} things at a time.` };
     const r = G.invRow(s, rowId);
     if (!r || !D.ITEMS[r.item]) return { err: "You don't have that." };
-    if (Object.values(G.loadout(s).equipment || {}).includes(rowId)) return { err: "Take it off first." };
+    const n = G.freeQty ? G.freeQty(s, rowId) : r.qty;   // worn gear stays on you; a pair with one worn puts one on the stall
+    if (n <= 0) return { err: "Take it off first." };
     if (r.stolen) return { err: "Stolen goods go to a fence, not the market." };
     if (D.ITEMS[r.item].noTrade) return { err: "That's bound to you. It can't be sold." };
     price = Math.floor(+price);
     if (!(price >= 1) || price > MAX_PRICE) return { err: "Set a price between 1 and 100,000 gold." };
-    const row = { item: r.item, qty: r.qty, charge: r.charge ?? null, temper: r.temper || 0, tq: r.tq || 0, ...(typeof CRAFTFAIR !== "undefined" ? CRAFTFAIR.pack(r) : {}) };
-    G.take(s, rowId, r.qty);
+    const row = { item: r.item, qty: n, charge: r.charge ?? null, temper: r.temper || 0, tq: r.tq || 0, ...(typeof CRAFTFAIR !== "undefined" ? CRAFTFAIR.pack(r) : {}) };
+    G.take(s, rowId, n);
     const id = `${s.id}-${Math.floor(t)}-${Math.floor(Math.random() * 900 + 100)}`;
     const hall = hallShop(s, town);
     return { id, doc: { seller: s.id, sellerName: s.name, town, row, price, status: "open", t, ...(hall ? { hall: true, hallName: s.hall.name } : {}) },
@@ -47,7 +48,7 @@ const MARKET = (() => {
   /* the seller's game: take the money for sold things, or the goods back for withdrawn ones */
   function settle(s, d) {
     if (d.seller !== s.id) return null;
-    if (d.status === "sold") { const fee = d.hall && typeof HALLS !== "undefined" ? HALLS.HALL_FEE : FEE, net = Math.floor(d.price * (1 - fee)); s.gold += net; return `🛒 ${d.buyerName} bought your ${itemName(d.row)} for ${d.price} gold${d.hall ? " at your hall counter" : ""}. You get ${net} after the market fee.`; }
+    if (d.status === "sold") { const fee = d.hall && typeof HALLS !== "undefined" ? HALLS.HALL_FEE : FEE, net = Math.floor(d.price * (1 - fee)); s.gold += net; return ` ${d.buyerName} bought your ${itemName(d.row)} for ${d.price} gold${d.hall ? " at your hall counter" : ""}. You get ${net} after the market fee.`; }
     if (d.status === "withdrawn") { const id = G.give(s, d.row.item, d.row.qty, d.row.charge); const r = G.invRow(s, id); if (r && d.row.temper) Object.assign(r, { temper: d.row.temper, tq: d.row.tq }); if (typeof CRAFTFAIR !== "undefined") CRAFTFAIR.carry(s, id, d.row, d.row.qty); return `${itemName(d.row)} is back in your pack.`; }
     return null;
   }

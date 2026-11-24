@@ -78,11 +78,11 @@
     "No such side.": "Nie ma takiej strony.", "You've already chosen.": "Już wybrałeś.",
     "Harkon makes his offer in his own hall, at Castle Volkihar.": "Harkon składa ofertę w swojej sali, w zamku Volkihar.",
     "Give Isran your answer at Fort Dawnguard, or turn Harkon down in his hall.": "Daj Isranowi odpowiedź w Forcie Straży Świtu albo odmów Harkonowi w jego sali.",
-    "🏹 You turned Harkon down and sided with the Dawnguard.": "🏹 Odmówiłeś Harkonowi i stanąłeś po stronie Straży Świtu.",
-    "🦇 You accepted Harkon's offer and sided with his court.": "🦇 Przyjąłeś ofertę Harkona i stanąłeś po stronie jego dworu.",
+    " You turned Harkon down and sided with the Dawnguard.": " Odmówiłeś Harkonowi i stanąłeś po stronie Straży Świtu.",
+    " You accepted Harkon's offer and sided with his court.": " Przyjąłeś ofertę Harkona i stanąłeś po stronie jego dworu.",
     // ---- gifts along the way
-    "🏹 Isran adds 40 steel bolts for the crossbow.": "🏹 Isran dorzuca 40 stalowych bełtów do kuszy.",
-    "🦇 Harkon's blood burns through you.": "🦇 Krew Harkona pali cię od środka.", "You're a vampire now, and once a day in a fight you can take the Vampire Lord's form.": "Jesteś teraz wampirem i raz dziennie w walce możesz przybrać postać Wampirzego Lorda.",
+    " Isran adds 40 steel bolts for the crossbow.": " Isran dorzuca 40 stalowych bełtów do kuszy.",
+    " Harkon's blood burns through you.": " Krew Harkona pali cię od środka.", "You're a vampire now, and once a day in a fight you can take the Vampire Lord's form.": "Jesteś teraz wampirem i raz dziennie w walce możesz przybrać postać Wampirzego Lorda.",
     "Two Vampire Lord perks are ready.": "Czekają na ciebie dwa atuty Wampirzego Lorda.",
     "Gunmar keeps the troll armour for now.": "Gunmar na razie zatrzymuje zbroję dla trolla.",
     "Gunmar hands you troll armour for a follower.": "Gunmar daje ci trollową zbroję dla towarzysza.", "Give it to one from the Hero tab.": "Daj ją któremuś w zakładce Bohater.",
@@ -120,9 +120,9 @@
   // every quest line (quests.js, ui.js): the "stage done" line in quest popups, and where to find a quest giver
   for (const [k, v] of [["They're here.", "Są tutaj."], ["Ask to join.", "Poproś, żeby cię przyjęli."]]) if (!(k in I18N_STORY.ex)) I18N_STORY.ex[k] = v;
   I18N_STORY.pats.push(
-    ["📜 {0}: “{1}” done ({2}).", "📜 {0}: „{1}” ukończone ({2})."],
-    ["📜 {0}: “{1}” done.", "📜 {0}: „{1}” ukończone."],
-    ["{9} 📜 {0}: “{1}” done ({2}).", "{9} 📜 {0}: „{1}” ukończone ({2})."],
-    ["{9} 📜 {0}: “{1}” done.", "{9} 📜 {0}: „{1}” ukończone."],
+    [" {0}: “{1}” done ({2}).", " {0}: „{1}” ukończone ({2})."],
+    [" {0}: “{1}” done.", " {0}: „{1}” ukończone."],
+    ["{9}  {0}: “{1}” done ({2}).", "{9}  {0}: „{1}” ukończone ({2})."],
+    ["{9}  {0}: “{1}” done.", "{9}  {0}: „{1}” ukończone."],
     ["Find them at {0}.", "Znajdziesz ich tu: {0}."]);
 })();

@@ -213,7 +213,7 @@ atHour(19);
   const d = LIVING.dayNo();
   ok(JSON.stringify(LIVING.realm(d)) === JSON.stringify(LIVING.realm(d)) && LIVING.realm(d).every((x) => clean(x.x) && x.x.length > 10), "the talk of the day is the same on every phone");
   ok(LIVING.realm(d)[0].x !== LIVING.realm(d + 1)[0].x || LIVING.realm(d)[1].x !== LIVING.realm(d + 1)[1].x, "and changes day to day");
-  const s = mk(); LIVING.news(s, "⚔", "Something happened");
+  const s = mk(); LIVING.news(s, "\uE101", "Something happened");
   const f = LIVING.feed(s); ok(f.length >= 2 && f.every((a, i) => !i || f[i - 1].t >= a.t) && f.some((x) => x.x === "Something happened"), "the feed: newest first, yours and the realm's");
   ok(/Notice board/.test(LIVING.townHTML(s, "Whiterun", "inn", true)), "a notice board in the inn");
 }
@@ -233,7 +233,7 @@ atHour(19);
   ok(RUMOURS.marks(mem).some((m) => m.id === r.whisper.id) && mem.discovered.includes(r.whisper.place), "the leader's whisper is on the member's map");
   ok(/party leader/.test(LIVING.hearWhisper(mem).err || ""), "members leave the asking to the leader");
   ok(/Lydia/.test(LIVING.panel(mem)), "World news says whose world it is");
-  LIVING.news(lead, "🐉", "Leader news"); LIVING.follow(mem, party, [{ id: "L", name: "Lydia", ...LIVING.cardBits(lead, party) }]);
+  LIVING.news(lead, "\uE10F", "Leader news"); LIVING.follow(mem, party, [{ id: "L", name: "Lydia", ...LIVING.cardBits(lead, party) }]);
   ok(LIVING.feed(mem).some((x) => x.x === "Leader news"), "the leader's news reaches the member");
   LIVING.adopt(mem, { w: [{ k: "nope", place: "x" }, { k: "dragon", place: "Nowhere" }], n: [{ x: 5 }] }, "Lydia");
   ok(!LIVING.sharedFor(mem).w.length && !LIVING.sharedFor(mem).n.length, "junk from a card is ignored");
@@ -241,13 +241,13 @@ atHour(19);
   LIVING.bindParty(null);
 }
 
-// 9. both art styles; nothing breaks
+// 9. the pictures; nothing breaks
 {
   const s = mk();
-  for (const style of ["ink", "pixel"]) {
+  for (const style of ["ink"]) {
     globalThis.ART = { style: () => style };
     const b = LIVING.boardArt(3), d1 = LIVING.doorArt(true), d0 = LIVING.doorArt(false);
-    ok(/<svg/.test(b) && /<svg/.test(d1) && d1 !== d0 && (style === "pixel") === / px/.test(b), style + " pictures");
+    ok(/<svg/.test(b) && /<svg/.test(d1) && d1 !== d0, style + " pictures");
     for (const sec of ["inn", "streets", "general", "blacksmith"]) for (const h of [3, 12, 21]) { atHour(h); const html = LIVING.townHTML(s, "Whiterun", sec, G.shopsOpen()); ok(clean(html), style + " " + sec + " at " + h); }
   }
   delete globalThis.ART;

@@ -47,18 +47,18 @@ const TABMENU = (() => {
       perks: (typeof PERKS !== "undefined" ? PERKS.pointsLeft(S) : 0) + (S.pendingLevels || 0), ready: (S.pendingLevels || 0) > 0, task: task(S) };
   }
   function task(S) {
-    if (S.dungeon) return { k: "dun", icon: "🕯", text: `Inside ${S.dungeon.place}`, sub: "Tap to go back in", hot: !!S.dungeon.room?.enemy };
+    if (S.dungeon) return { k: "dun", icon: "", text: `Inside ${S.dungeon.place}`, sub: "Tap to go back in", hot: !!S.dungeon.room?.enemy };
     const tr = S.trip;
     if (tr) {
-      if (tr.status === "encounter") return { k: "enc", icon: "⚔", text: tr.encounter?.hunt ? `🏹 ${tr.encounter.name} spotted` : `${tr.encounter?.name || "Trouble"} blocks the road`, sub: "Tap to face it", hot: true };
-      if (tr.status === "event") return { k: "ev", icon: "🛤", text: "Something by the road", sub: "Tap to take a look" };
+      if (tr.status === "encounter") return { k: "enc", icon: "", text: tr.encounter?.hunt ? ` ${tr.encounter.name} spotted` : `${tr.encounter?.name || "Trouble"} blocks the road`, sub: "Tap to face it", hot: true };
+      if (tr.status === "event") return { k: "ev", icon: "", text: "Something by the road", sub: "Tap to take a look" };
       const left = Math.max(0, G.minutesLeft(S) - (tr.status === "travel" ? (G.now() - tr.lastTick) / 60 : 0)), total = Math.max(left, tr.total || left);
       const how = tr.carriage ? "by carriage" : typeof HORSES !== "undefined" && HORSES.riding(S) ? `riding ${S.horse?.name || "your horse"}` : "on foot";
-      return { k: "trip", icon: tr.carriage || (typeof HORSES !== "undefined" && HORSES.riding(S)) ? "🐎" : "🥾", text: `${tr.roam ? "Roaming" : "Travelling"} to ${tr.destName}`, sub: `${fmtMin(left)} left · ${how}`, progress: total ? Math.round((total - left) / total * 100) : 0 };
+      return { k: "trip", icon: tr.carriage || (typeof HORSES !== "undefined" && HORSES.riding(S)) ? "" : "", text: `${tr.roam ? "Roaming" : "Travelling"} to ${tr.destName}`, sub: `${fmtMin(left)} left · ${how}`, progress: total ? Math.round((total - left) / total * 100) : 0 };
     }
     const qa = typeof QUESTS !== "undefined" ? QUESTS.tracked(S) : null;
-    if (qa) { const tg = QUESTS.target(qa.st); return { k: "quest", icon: "📜", text: qa.def.name, sub: `${qa.st.title || ""}${tg ? ` · ${tg}` : ""}` }; }
-    return { k: "idle", icon: "🧭", text: S.location ? `Resting in ${S.location}` : "Out in the wilds", sub: "No task yet · ask around town or open the Journal" };
+    if (qa) { const tg = QUESTS.target(qa.st); return { k: "quest", icon: "", text: qa.def.name, sub: `${qa.st.title || ""}${tg ? ` · ${tg}` : ""}` }; }
+    return { k: "idle", icon: "", text: S.location ? `Resting in ${S.location}` : "Out in the wilds", sub: "No task yet · ask around town or open the Journal" };
   }
   /* small seeded constellation for a skill card (stars from its perk tree, lines from what each perk needs) */
   function seeded(str) { let a = 7; for (const ch of str) a = (a * 31 + ch.charCodeAt(0)) | 0; return () => { a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -95,14 +95,14 @@ const TABMENU = (() => {
         ${rk < ranks ? `<p class="sub">Needs ${esc(sk)} ${p.req[rk]}${p.needs.length ? ` and ${p.needs.map((x) => esc(PERKS.BY_ID[x]?.name || x)).join(" or ")}` : ""}</p><button class="btn ${err ? "" : "pri"}" data-act="perk" data-id="${esc(id)}" ${err ? "disabled" : ""}>${err ? esc(err) : "Take this perk"}</button>` : `<p class="sub">You have this perk.</p>`}</div>`;
     } else detail = `<p class="sub tw-hint2">${tree.length ? "Tap a star to read its perk. Bright rings are perks you can take now." : "This skill has no perk stars. It still grows as you use it."}</p>`;
     const info = typeof SKILLINFO !== "undefined" ? SKILLINFO.summary?.(sk) : "";
-    return `<div class="panel tw-starp">${lvl}
+    return `<div class="panel tw-starp"><div class="tw-sleft">${lvl}
       <div class="tw-shead"><div><b>Level ${b.level}</b> <span class="sub num">${b.xp}/${b.need}</span></div><div class="${pts > 0 ? "gold" : "sub"}">${pts} perk point${pts === 1 ? "" : "s"}</div></div>
       <div class="tw-car" role="list">${cards}${beastT.map((k) => BEASTART.card(S, k, false)).join("")}</div>
       <div class="tw-skt"><span class="tw-skn">${typeof UIART !== "undefined" ? UIART.skill(sk, 30) : ""}<b>${esc(sk)}</b> <span class="num">${s.lvl}</span></span><span class="sub num">${Math.round(s.xp)}/${Math.round(need)}</span></div>
       <div class="bar"><i style="width:${Math.round(Math.min(1, s.xp / need) * 100)}%;background:var(--frost)"></i></div>
-      ${info ? `<p class="sub">${esc(info)}</p>` : ""}
+      ${info ? `<p class="sub">${esc(info)}</p>` : ""}</div>
       ${tree.length && typeof SKYUI !== "undefined" ? `<div class="tw-bigw"><div class="skc tw-big">${SKYUI.svg(sk, S)}</div></div>` : ""}
-      ${detail}</div>`;
+      <div class="tw-sdet">${detail}</div></div>`;   // tw-sleft / tw-sdet: plain blocks on a phone, the left column beside the stars on a PC (pcfit)
   }
   /* the werewolf's or the Vampire Lord's own sky, chosen from the same row of cards */
   function beastStars(S, list, beastT) {
@@ -136,7 +136,6 @@ const TABMENU = (() => {
   const $ = (s) => document.querySelector(s);
   const ui = () => window.__ui || {};
   const save = () => window.__dbg?.save?.();
-  const pixel = () => typeof ART !== "undefined" && ART.style() === "pixel";
   const ICO = {
     char: '<circle cx="12" cy="7" r="3.6"/><path d="M4.5 21c1-5 4.4-7 7.5-7s6.5 2 7.5 7"/><path d="M18 3l.8 1.6 1.7.3-1.2 1.2.3 1.7-1.6-.8-1.6.8.3-1.7-1.2-1.2 1.7-.3z"/>',
     items: '<path d="M6 8h12l-1 13H7z"/><path d="M9 8V6a3 3 0 016 0v2"/>',
@@ -152,6 +151,7 @@ const TABMENU = (() => {
     search: '<circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5.5 5.5"/>',
     back: '<path d="M15 5l-7 7 7 7"/>', close: '<path d="M6 6l12 12M18 6L6 18"/>',
   };
+  const KEYCAP = { up: "W", left: "A", right: "D", down: "S" };   // shown on a PC only (index.html hides them on touch screens)
   const ico = (k) => `<svg class="tw-i" viewBox="0 0 24 24" aria-hidden="true">${ICO[k] || ""}</svg>`;
   function roseSVG() {
     let ticks = "";
@@ -177,7 +177,6 @@ const TABMENU = (() => {
     const pos = posOf(S), place = !S.trip && S.location;
     let key = place ? `p|${place}` : "w";
     try { if (typeof SKY !== "undefined") key += "|" + SKY.state(pos).key; } catch { /* ignore */ }
-    key += "|" + (pixel() ? "px" : "ink");
     if (key === bgKey && el.firstChild) return;
     bgKey = key;
     let html = "";
@@ -217,13 +216,13 @@ const TABMENU = (() => {
   }
   function hubHTML(S) {
     const b = bar(S), inTown = S.location && !S.trip && typeof TOWNS !== "undefined" && TOWNS.isTown?.(S.location);
-    const dir = (d) => { const m = DIR[d]; return `<button class="tw-dir tw-${d}" data-twgo="${m}" aria-label="${NAME[m]}">${ico(m)}<b>${NAME[m]}</b><small>${SUBT[m]}</small>${m === "char" && b.ready ? '<span class="tw-lvlready">Level up</span>' : m === "char" && b.perks ? '<span class="dot"></span>' : ""}</button>`; };
+    const dir = (d) => { const m = DIR[d]; return `<button class="tw-dir tw-${d}" data-twgo="${m}" aria-label="${NAME[m]}"><kbd class="tw-k" aria-hidden="true">${KEYCAP[d]}</kbd>${ico(m)}<b>${NAME[m]}</b><small>${SUBT[m]}</small>${m === "char" && b.ready ? '<span class="tw-lvlready">Level up</span>' : m === "char" && b.perks ? '<span class="dot"></span>' : ""}</button>`; };
     const quick = [inTown ? ["town", "Area", "town"] : null, ["log", "Journal", "log"], ["social", "Social", "people"], ["settings", "Settings", "gear"], typeof SEARCH !== "undefined" ? ["search", "Search", "search"] : null].filter(Boolean);
     return `<div class="tw-bg" aria-hidden="true"></div><div class="tw-veil" aria-hidden="true"></div>${starsBG()}
       <div class="tw-top"><b class="tw-where"></b><span class="tw-when"></span><small class="tw-fc"></small></div>
       <div class="tw-rose"><div class="tw-disc" aria-hidden="true"><i class="tw-depth"></i><div class="tw-face">${roseSVG()}</div><i class="tw-shine"></i></div>${dir("up")}${dir("left")}${dir("right")}${dir("down")}</div>
-      <p class="tw-hint">Swipe or tap a direction</p>
-      <div class="tw-quick">${quick.map(([id, l, k]) => `<button class="tw-q" data-twq="${id}" aria-label="${l}">${ico(k)}<span>${l}</span></button>`).join("")}</div>
+      <p class="tw-hint"><span class="tw-touch">Swipe or tap a direction</span><span class="tw-keys">Press WASD or click a direction · Tab closes the menu</span></p>
+      <div class="tw-quick">${quick.map(([id, l, k], i) => `<button class="tw-q" data-twq="${id}" aria-label="${l}">${ico(k)}<span>${l}</span><kbd class="tw-k" aria-hidden="true">${i + 1}</kbd></button>`).join("")}</div>
       <div class="tw-bar"></div>`;
   }
   function refreshHub() {
@@ -233,7 +232,6 @@ const TABMENU = (() => {
     if (tk !== lastTop) { lastTop = tk; el.querySelector(".tw-where").textContent = tp.where; el.querySelector(".tw-when").innerHTML = `${tp.skyI}<span>${esc(tp.when)}</span>`; const fcEl = el.querySelector(".tw-fc"); if (fcEl) fcEl.textContent = tp.fc ? `Forecast: ${tp.fc}` : ""; }
     const bh = barHTML(bar(S));
     if (bh !== lastBar) { lastBar = bh; el.querySelector(".tw-bar").innerHTML = bh; }
-    el.classList.toggle("tw-px", pixel());
   }
   function openHub() {
     const S = save(); if (!live || !S || $("#title") || $("#dun")) return false;
@@ -249,10 +247,22 @@ const TABMENU = (() => {
     hubOpen = true; fromHub = false;
     document.body.classList.add("tw-on");
     refreshHub();
+    faceFit(el);
     try { SOUND.fx("page"); } catch { /* sound never breaks the game */ }
     return true;
   }
-  function closeHub() { $("#tw")?.remove(); hubOpen = false; document.body.classList.remove("tw-on"); }
+  /* [artfit] each 3D compass render is 320 px: on a big or sharp screen where the face is drawn bigger than that, show the
+     flat painted compass (1024 px) instead of a blurry blow-up */
+  function faceFit(el) {
+    const f = el.querySelector(".tw-face"); if (!f || f.dataset.fit) return;
+    f.dataset.fit = "1";
+    const fit = () => { const r = f.getBoundingClientRect(), d = (typeof devicePixelRatio !== "undefined" && devicePixelRatio) || 1;
+      const px3d = r.width * d * (f.classList.contains("art-flat") ? 1.16 : 1);
+      f.classList.toggle("art-flat", px3d > 320 * 1.12); };
+    fit();
+    if (typeof FITCANVAS !== "undefined") FITCANVAS.watch(f, fit);
+  }
+  function closeHub() { kb = null; $("#tw")?.remove(); hubOpen = false; document.body.classList.remove("tw-on"); }
   /* go to one of the four menus (from the compass, or swiping round the ring) */
   function go(m, viaHub = true) {
     closeHub(); fromHub = viaHub;
@@ -431,6 +441,51 @@ const TABMENU = (() => {
       const st = e.target.closest?.(".tw-big [data-sk-perk]");
       if (st) { starPick = +st.dataset.skPerk; ui().refresh?.(); requestAnimationFrame(() => document.querySelector(".tw-perk")?.scrollIntoView({ block: "nearest" })); }
     });
+  }
+  // ---- keys on a PC: W A S D (or the arrows) lean the compass that way while held and open that menu when let go,
+  // so a quick tap feels instant but you still see it tilt; Enter or Space opens the one leaning; 1-5 the row of
+  // buttons below; Esc closes. Tab itself (open / close) lives in desktop.js.
+  const KEYDIR = { w: "up", arrowup: "up", s: "down", arrowdown: "down", a: "left", arrowleft: "left", d: "right", arrowright: "right" };
+  let kb = null;   // { d, key, t } while a direction key is held
+  const MINLEAN = 140;   // ms the compass leans before the menu opens, even on the quickest tap
+  function lean(d) {
+    const el = $("#tw"); if (!el) return;
+    cancelAnimationFrame(springT);
+    el.dataset.glow = d || ""; el.style.setProperty("--pull", d ? "1" : "0");
+    const v = { up: [0, -60], down: [0, 60], left: [-60, 0], right: [60, 0] }[d] || [0, 0];
+    tilt(el, v[0], v[1]);
+    if (d) try { SOUND.fx("click"); } catch { /* sound never breaks the game */ }
+  }
+  function keyGo(d) {
+    if (!d || !hubOpen) return;
+    const wait = kb ? Math.max(0, MINLEAN - (Date.now() - kb.t)) : 0;
+    kb = null;
+    setTimeout(() => { if (hubOpen && $("#tw")) go(DIR[d]); }, wait);
+  }
+  function hubKey(e) {
+    if (context() !== "hub" || e.ctrlKey || e.metaKey || e.altKey || e.defaultPrevented) return;
+    const t = e.target, tag = (t && t.tagName) || "";
+    if (/^(INPUT|TEXTAREA|SELECT)$/.test(tag) || t?.isContentEditable) return;
+    const k = String(e.key || "").toLowerCase(), d = KEYDIR[k];
+    if (d) { e.preventDefault(); if (e.repeat && kb) return; if (!kb || kb.d !== d) { kb = { d, key: k, t: Date.now() }; lean(d); } return; }
+    if (k === "enter" || k === " " || k === "spacebar") {
+      const g = kb?.d || $("#tw")?.dataset.glow;
+      if (g) { e.preventDefault(); keyGo(g); }
+      return;   // nothing leaning: let Enter press whatever button has focus
+    }
+    if (k === "escape") { e.preventDefault(); closeHub(); return; }
+    if (/^[1-9]$/.test(k)) { const b = document.querySelectorAll("#tw .tw-q")[+k - 1]; if (b) { e.preventDefault(); b.click(); } }
+  }
+  function hubKeyUp(e) {
+    if (!kb) return;
+    const k = String(e.key || "").toLowerCase();
+    if (k !== kb.key && KEYDIR[k] !== kb.d) return;   // let go of some other key
+    e.preventDefault(); keyGo(kb.d);
+  }
+  if (live) {
+    document.addEventListener("keydown", hubKey, true);
+    document.addEventListener("keyup", hubKeyUp, true);
+    addEventListener("blur", () => { if (kb) { kb = null; letGo(); } });   // the window lost focus mid-press: just spring back
   }
   /* after a swipe, the finger's release shouldn't also tap the button under it */
   function swallowClick() {

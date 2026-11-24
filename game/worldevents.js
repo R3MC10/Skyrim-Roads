@@ -49,21 +49,21 @@ const WORLDEV = (() => {
   function invasionIn(b) {
     const start = b * INV_BLOCK + Math.floor(hash("wev-inv:" + b) * (INV_BLOCK - INV_LEN));
     const hold = HOLDS[Math.floor(hash("wev-invh:" + b) * HOLDS.length)];
-    return { kind: "inv", id: "inv-" + b, hold, sites: gateSites(hold, "gates:" + b), start, end: start + INV_LEN, name: `Daedric invasion in ${hold}`, icon: "🔥" };
+    return { kind: "inv", id: "inv-" + b, hold, sites: gateSites(hold, "gates:" + b), start, end: start + INV_LEN, name: `Daedric invasion in ${hold}`, icon: "" };
   }
   function migrationIn(b) {
     const day = b * MIG_BLOCK + Math.floor(hash("wev-mig:" + b) * MIG_BLOCK);
     const hold = HOLDS[Math.floor(hash("wev-migh:" + b) * HOLDS.length)];
-    return { kind: "mig", id: "mig-" + b, hold, count: 3 + Math.floor(hash("wev-migc:" + b) * 2), start: day * DAY, end: (day + 1) * DAY, name: `Dragon migration over ${hold}`, icon: "🐉" };
+    return { kind: "mig", id: "mig-" + b, hold, count: 3 + Math.floor(hash("wev-migc:" + b) * 2), start: day * DAY, end: (day + 1) * DAY, name: `Dragon migration over ${hold}`, icon: "" };
   }
   const FESTS = [
-    { id: "hearts", name: "Heart's Day", icon: "💌", text: "Lovers' songs, pressed flowers and free mead. Towns are full of music all week.",
+    { id: "hearts", name: "Heart's Day", icon: "", text: "Lovers' songs, pressed flowers and free mead. Towns are full of music all week.",
       games: [["poem", "Recite a poem at the inn", "Speechcraft"], ["dance", "Dance in the square", "Acrobatics"], ["gift", "Haggle for the perfect gift", "Mercantile"]], gift: ["gem_amethyst", 1] },
-    { id: "merchants", name: "The Merchants' Festival", icon: "⚖️", text: "Every trader in the North sets out a stall. Contests of wit and muscle in every market.",
+    { id: "merchants", name: "The Merchants' Festival", icon: "", text: "Every trader in the North sets out a stall. Contests of wit and muscle in every market.",
       games: [["haggle", "Haggling contest", "Mercantile"], ["arm", "Arm wrestling", "Two-Handed"], ["cups", "Find the coin under the cups", "Pickpocket"]], gift: ["gem_sapphire", 1] },
-    { id: "harvest", name: "Harvest's End", icon: "🌾", text: "The fields are in. Feasts, archery at straw targets and fist fights behind the inn.",
+    { id: "harvest", name: "Harvest's End", icon: "", text: "The fields are in. Feasts, archery at straw targets and fist fights behind the inn.",
       games: [["archery", "Archery contest", "Archery"], ["brawl", "Fist fight behind the inn", "Hand-to-Hand"], ["feast", "Help cook the feast", "Alchemy"]], gift: ["mat_moonstone", 2] },
-    { id: "planting", name: "Second Planting", icon: "🌱", text: "Spring sowing and making up old quarrels. Foot races, songs and planting the new fields.",
+    { id: "planting", name: "Second Planting", icon: "", text: "Spring sowing and making up old quarrels. Foot races, songs and planting the new fields.",
       games: [["plant", "Plant the new fields", "Alchemy"], ["race", "Foot race round the walls", "Athletics"], ["songs", "Lead the songs", "Speechcraft"]], gift: ["ing_nirnroot", 3] },
   ];
   const weekOf = (t) => Math.floor((t - MONDAY0) / WEEK);
@@ -76,7 +76,7 @@ const WORLDEV = (() => {
   function caravanIn(b) {
     const start = b * KC_BLOCK + Math.floor(hash("wev-kc:" + b) * (KC_BLOCK - KC_LEN));
     const town = MARKET_TOWNS[Math.floor(hash("wev-kct:" + b) * MARKET_TOWNS.length)];
-    return { kind: "kc", id: "kc-" + b, town, start, end: start + KC_LEN, name: `The Khajiit's grand caravan in ${town}`, icon: "🐪" };
+    return { kind: "kc", id: "kc-" + b, town, start, end: start + KC_LEN, name: `The Khajiit's grand caravan in ${town}`, icon: "" };
   }
   const KINDS = {
     inv: { at: (t) => Math.floor(t / INV_BLOCK), make: invasionIn },
@@ -208,7 +208,7 @@ const WORLDEV = (() => {
     if (gold) parts.push(`${gold} gold`);
     if (st.closed === 3 && myPts >= WIN_PTS) { G.give(s, "sigil_stone"); parts.push("a sigil stone"); if (addTitle(s, "Gatecloser")) parts.push("the title Gatecloser"); }
     stat(s, "inv");
-    return parts.length ? `🔥 ${ev.hold} is free of the Daedra. Your share: ${parts.join(", ")}.` : `🔥 The gates you fought at weren't closed in time. Better luck next invasion.`;
+    return parts.length ? ` ${ev.hold} is free of the Daedra. Your share: ${parts.join(", ")}.` : ` The gates you fought at weren't closed in time. Better luck next invasion.`;
   }
 
   // ---------------------------------------------------------------- dragon migration
@@ -261,7 +261,7 @@ const WORLDEV = (() => {
     m.claimed = true; s.gold += 400; G.give(s, "dragon_scales");
     const ti = addTitle(s, "Dragonwatcher");
     stat(s, "mig");
-    return `🐉 The hunters of the North brought down ${fl.total} dragons over ${ev.hold}. Your share: 400 gold, dragon scales${ti ? " and the title Dragonwatcher" : ""}.`;
+    return ` The hunters of the North brought down ${fl.total} dragons over ${ev.hold}. Your share: 400 gold, dragon scales${ti ? " and the title Dragonwatcher" : ""}.`;
   }
 
   // ---------------------------------------------------------------- festival week
@@ -365,8 +365,9 @@ const WORLDEV = (() => {
   const esc = (x) => String(x ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   let api = null, loopT = null, lastSig = "";
   const me = () => (api ? api.S() : null);
+  const fightCall = (fn, done) => (typeof NOAUTO !== "undefined" ? NOAUTO.call(fn, done) : done(fn()));   // the fight opens on the turn-by-turn screen (noautoplay.js)
 
-  // ---- pictures (drawn through ART, so they follow the ink / pixel art style)
+  // ---- pictures (drawn through ART)
   function drawPic(kind, g, w, h, seed = "") {
     const r = seeded("pic:" + kind + seed);
     if (kind === "inv") {
@@ -408,13 +409,19 @@ const WORLDEV = (() => {
       g.strokeStyle = "#3b2c1e"; g.lineWidth = 1.5; g.beginPath(); g.moveTo(w * 0.3, h * 0.25); g.lineTo(w * 0.3, h * 0.08); g.stroke(); g.fillStyle = "#c4572e"; g.beginPath(); g.moveTo(w * 0.3, h * 0.08); g.lineTo(w * 0.3 + 14, h * 0.12); g.lineTo(w * 0.3, h * 0.16); g.fill();
     }
   }
-  const pic = (kind, w, h, seed = "") => ((typeof ART !== "undefined") ? ART.html(w, h, (g) => drawPic(kind, g, w, h, seed), { key: `wev-${kind}-${seed}`, cls: "wev-pic", alt: "" }) : "");
+  function pic(kind, w, h, seed = "") {
+    if (typeof ART === "undefined") return "";
+    const asset = `wev-${kind}${kind === "fest" && seed ? "-" + seed : ""}`;
+    const image = typeof ASSETS === "undefined" ? null : ASSETS.img(w < 100 ? asset + "-thumb" : asset);
+    const draw = image ? (g) => ASSETS.cover(g, image, w, h) : (g) => drawPic(kind, g, w, h, seed);
+    return ART.html(w, h, draw, { key: image ? asset + "-painted" : `wev-${kind}-${seed}`, cls: "wev-pic", alt: "", painted: !!image });
+  }
 
   // ---- map markers
   const spriteCache = {};
   function sprite(key, w, h, draw) {
-    const st = (typeof ART !== "undefined") ? ART.style() : "ink", k = `${key}|${st}`;
-    if (!spriteCache[k]) spriteCache[k] = (typeof ART !== "undefined") ? ART.canvas(w, h, draw, { style: st }) : null;
+    const k = key;
+    if (!spriteCache[k]) spriteCache[k] = (typeof ART !== "undefined") ? ART.canvas(w, h, draw) : null;
     return spriteCache[k];
   }
   const gateSprite = (closed) => sprite(closed ? "gate0" : "gate1", 40, 40, (g) => {
@@ -470,8 +477,8 @@ const WORLDEV = (() => {
   const COLOR = { inv: "var(--ember)", mig: "#c4372a", fest: "var(--gold)", kc: "#d6b25e" };
   function mainButton(ev, S, t) {
     if (claimable(S, ev, t)) return `<button class="btn sm pri" data-wev="claim" data-id="${ev.id}">Claim</button>`;
-    if (ev.kind === "inv") { const i = ev.sites.indexOf(S.location), st = gatesCached(ev, S); if (i >= 0 && !st.list[i].closed) return `<button class="btn sm danger" data-wev="gate">⚔️ Fight</button>`; const open = st.list.find((g) => !g.closed); return open ? `<button class="btn sm" data-act="go" data-place="${esc(open.site)}">Go</button>` : ""; }
-    if (ev.kind === "mig") return holdOf(S) === ev.hold ? `<button class="btn sm danger" data-wev="hunt">⚔️ Hunt</button>` : `<button class="btn sm" data-act="go" data-place="${esc(CAPITAL[ev.hold])}">Go</button>`;
+    if (ev.kind === "inv") { const i = ev.sites.indexOf(S.location), st = gatesCached(ev, S); if (i >= 0 && !st.list[i].closed) return `<button class="btn sm danger" data-wev="gate"> Fight</button>`; const open = st.list.find((g) => !g.closed); return open ? `<button class="btn sm" data-act="go" data-place="${esc(open.site)}">Go</button>` : ""; }
+    if (ev.kind === "mig") return holdOf(S) === ev.hold ? `<button class="btn sm danger" data-wev="hunt"> Hunt</button>` : `<button class="btn sm" data-act="go" data-place="${esc(CAPITAL[ev.hold])}">Go</button>`;
     if (ev.kind === "kc") return S.location === ev.town ? `<button class="btn sm pri" data-wev="open" data-id="${ev.id}">Browse</button>` : `<button class="btn sm" data-act="go" data-place="${esc(ev.town)}">Go</button>`;
     return `<button class="btn sm pri" data-wev="open" data-id="${ev.id}">Join in</button>`;
   }
@@ -491,13 +498,13 @@ const WORLDEV = (() => {
     let body = "";
     if (ev.kind === "inv") {
       const st = gatesCached(ev, S), myG = S.wev?.[ev.id]?.g || [0, 0, 0];
-      body = `<div class="list">${st.list.map((gt) => `<div class="item wev-gate${gt.closed ? " on" : ""}"><div class="t">${gt.closed ? "🪨" : "🔥"} Gate at ${esc(gt.site)}<span>${gt.closed ? "Closed" : `${gt.total}/${gt.need} to close`}${myG[gt.i] ? ` · you: ${myG[gt.i]}` : ""}</span>${bar(gt.total / gt.need, gt.closed ? "#8f7a66" : "var(--ember)")}</div>
-        ${gt.closed ? "" : S.location === gt.site ? `<button class="btn sm danger" data-wev="gate">⚔️ Fight</button>` : `<button class="btn sm" data-act="go" data-place="${esc(gt.site)}">Travel</button>`}</div>`).join("")}</div>
+      body = `<div class="list">${st.list.map((gt) => `<div class="item wev-gate${gt.closed ? " on" : ""}"><div class="t">${gt.closed ? "" : ""} Gate at ${esc(gt.site)}<span>${gt.closed ? "Closed" : `${gt.total}/${gt.need} to close`}${myG[gt.i] ? ` · you: ${myG[gt.i]}` : ""}</span>${bar(gt.total / gt.need, gt.closed ? "#8f7a66" : "var(--ember)")}</div>
+        ${gt.closed ? "" : S.location === gt.site ? `<button class="btn sm danger" data-wev="gate"> Fight</button>` : `<button class="btn sm" data-act="go" data-place="${esc(gt.site)}">Travel</button>`}</div>`).join("")}</div>
         ${st.names.length ? `<p class="sub">Fighting with you: ${st.names.slice(0, 8).map(esc).join(", ")}${st.names.length > 8 ? "…" : ""}</p>` : ""}`;
     } else if (ev.kind === "mig") {
       const fl = flight(ev, S), m = S.wev?.[ev.id] || {}, cd = m.last ? Math.max(0, MIG_COOLDOWN - (t - m.last)) : 0;
       body = `<p class="sub">${fl.total}/${fl.goal} dragons down · you: ${m.n || 0}/${MIG_MAX}${G.fightLevel(S) < 22 ? " · the young ones come for heroes under level 22" : ""}</p>${bar(fl.total / fl.goal, "#c4372a")}
-        ${holdOf(S) === ev.hold ? `<button class="btn danger wev-wide" data-wev="hunt" ${cd > 0 || (m.n || 0) >= MIG_MAX ? "disabled" : ""}>${cd > 0 ? `Next dragon in ${Math.ceil(cd / 60)} min` : "⚔️ Hunt a dragon"}</button>` : `<button class="btn wev-wide" data-act="go" data-place="${esc(CAPITAL[ev.hold])}">Travel to ${esc(CAPITAL[ev.hold])}</button>`}
+        ${holdOf(S) === ev.hold ? `<button class="btn danger wev-wide" data-wev="hunt" ${cd > 0 || (m.n || 0) >= MIG_MAX ? "disabled" : ""}>${cd > 0 ? `Next dragon in ${Math.ceil(cd / 60)} min` : " Hunt a dragon"}</button>` : `<button class="btn wev-wide" data-act="go" data-place="${esc(CAPITAL[ev.hold])}">Travel to ${esc(CAPITAL[ev.hold])}</button>`}
         ${fl.names.length ? `<p class="sub">Hunting with you: ${fl.names.slice(0, 8).map(esc).join(", ")}</p>` : ""}`;
     } else if (ev.kind === "fest") {
       const town = inTown(S) && !S.trip?.status;
@@ -535,15 +542,14 @@ const WORLDEV = (() => {
     if ((typeof SOUND !== "undefined")) try { SOUND.fx("click"); } catch (er) { /* ignore */ }
     if (act === "open") { const ev = byId(b.dataset.id); if (!ev) return; api.closeModal(); return void api.openModal(detailHTML(ev, S, t), "wevsheet"); }
     if (act === "claim") { const msg = claim(S, b.dataset.id, t); if (!msg) return api.toast("Nothing to claim yet."); api.closeModal(); api.persist(true); if ((typeof SOUND !== "undefined")) try { SOUND.fx("levelup"); } catch (er) { /* ignore */ } return api.showMessage("World event", msg); }
-    if (act === "gate" || act === "hunt") {
-      const out = act === "gate" ? fightGate(S, t) : hunt(S, t);
+    if (act === "gate" || act === "hunt") return void fightCall(() => (act === "gate" ? fightGate(S, t) : hunt(S, t)), (out) => {   // you play it turn by turn
       if (!out.fight) return api.toast(out.text);
       publish(S, out.ev);
       if (out.bag && (typeof Store !== "undefined")) Store.addBag(out.bag);
-      if (out.closedNow && api.postNews) api.postNews(`🔥 ${S.name} helped close the Oblivion gate at ${out.ev.sites[out.i]}!`);
+      if (out.closedNow && api.postNews) api.postNews(` ${S.name} helped close the Oblivion gate at ${out.ev.sites[out.i]}!`);
       api.closeModal(); api.persist(true); render(true);
       return api.showFightResult({ ...out, text: out.text });
-    }
+    });
     if (act === "play") { const r = play(S, b.dataset.game, t); if (r.pts) { const ev = active(t).find((x) => x.kind === "fest"); if (ev) publish(S, ev); api.persist(true); } api.toast(r.text); const ev = active(t).find((x) => x.kind === "fest"); if (ev && document.querySelector(".wevsheet")) { api.closeModal(); api.openModal(detailHTML(ev, S, t), "wevsheet"); } return; }
     if (act === "buy") { const r = buy(S, b.dataset.item, t); api.toast(r.text); if (r.bought) { const ev = active(t).find((x) => x.kind === "kc"); if (ev) publish(S, ev); api.persist(true); if (ev) { api.closeModal(); api.openModal(detailHTML(ev, S, t), "wevsheet"); } } }
   }
@@ -567,7 +573,7 @@ const WORLDEV = (() => {
   function render(force) {
     const S = me(), el = document.getElementById("wev"); if (!S || !el) return;
     const t = nowS(), evs = active(t);
-    const sig = evs.map((ev) => `${ev.id}|${progress(ev, S, t).line}|${left(ev, t)}|${claimable(S, ev, t)}|${S.location}|${S.trip?.status || ""}`).join(";") + ((typeof ART !== "undefined") ? ART.style() : "");
+    const sig = evs.map((ev) => `${ev.id}|${progress(ev, S, t).line}|${left(ev, t)}|${claimable(S, ev, t)}|${S.location}|${S.trip?.status || ""}`).join(";");
     if (!force && sig === lastSig) return;
     lastSig = sig; el.innerHTML = cardHTML(S, t);
   }

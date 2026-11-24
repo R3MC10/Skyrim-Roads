@@ -33,10 +33,9 @@ async def main():
         await pg.wait_for_timeout(400)
         print("tapped compass:", tapped, "| picked shows:", await pg.evaluate("!document.querySelector('#picked').classList.contains('hide')"))
         await pg.evaluate("document.querySelector('[data-act=unpick]')?.click()")
-        # 4: night + pixel style
-        await pg.evaluate("()=>{ ART.setStyle('pixel'); document.documentElement.classList.add('art-pixel'); }")
+        # 4: night
         await pg.evaluate("()=>{const S=window.__dbg.save(); S.trip=null; S.vampire={since:G.now(),fedAt:G.now()}; G.setHealth(S, G.maxHealth(S));}")
-        await pg.wait_for_timeout(1500); await pg.evaluate(clear); await top("4_pixel")
+        await pg.wait_for_timeout(1500); await pg.evaluate(clear); await top("4_night")
         # 5: tabs
         await pg.click("[data-tab=hero]"); await pg.wait_for_timeout(400); await pg.evaluate(clear)
         await pg.screenshot(path="hud/5_tabs.png", clip={"x":0,"y":760,"width":390,"height":84})

@@ -49,7 +49,12 @@ const COOP = (() => {
     if (activeMembers(run).length >= MAX_MEMBERS) return null;
     return { ...run, members: [...run.members, { id: s.id, name: s.name, level: s.level }], invites: (run.invites || []).filter((x) => x.id !== s.id) };
   }
-  function decline(run, uid) { return { ...run, invites: (run.invites || []).filter((x) => x.id !== uid) }; }
+  /* say no; with a name, the leader gets a short "declined" note (invites.js shows it to them) */
+  function decline(run, uid, name, t = G.now()) {
+    const out = { ...run, invites: (run.invites || []).filter((x) => x.id !== uid) };
+    if (name) out.nos = [...(run.nos || []).filter((x) => x && x.id !== uid).slice(-7), { id: uid, name, t }];
+    return out;
+  }
   /* someone walks out (or falls). The lead passes on; an empty run is over. */
   function removeMember(run, uid) {
     const members = run.members.map((m) => (m.id === uid ? { ...m, left: true } : m));
@@ -71,7 +76,7 @@ const COOP = (() => {
     if (run.boss) s.dungeon.boss = run.boss;
     if (typeof PRIESTS !== "undefined") PRIESTS.onEnter(s);   // a dragon priest sleeps there for you, unless you already have its mask
     G.setHealth(s, G.curHealth(s, t), t);
-    G.note(s, `🕯 Entered ${run.place} with ${activeMembers(run).filter((m) => m.id !== s.id).map((m) => m.name).join(", ") || "your party"}`);
+    G.note(s, ` Entered ${run.place} with ${activeMembers(run).filter((m) => m.id !== s.id).map((m) => m.name).join(", ") || "your party"}`);
     return null;
   }
 
@@ -232,11 +237,11 @@ const COOP = (() => {
       runs = docs;
       const t = G.now();
       for (const r of docs) if (!live(r, t) && r.leader === S().id) ctx.Store.remove("runs", r.id);   // tidy old runs you led
-      for (const r of myInvites()) if (!seenInv.has(r.id)) { seenInv.add(r.id); toast(`⚔ ${r.leaderName} asks you to raid ${r.place} together. Open 👥 Social → Party.`); }
+      for (const r of myInvites()) if (!seenInv.has(r.id)) { seenInv.add(r.id); if (typeof INVITES === "undefined") toast(`\uE101 ${r.leaderName} asks you to raid ${r.place} together. Open \uE106 Social → Party.`); }
       const lob = mine(), s = S();
       if (lob && lob.status === "in" && !s.dungeon && s.location === lob.place && !s.trip) {   // the leader went in: follow
         const err = join(s, lob);
-        if (!err) { toast(`🕯 You follow ${lob.leaderName} into ${lob.place}.`); sync(); ctx.persist(true); ctx.renderDungeon(); return; }
+        if (!err) { toast(` You follow ${lob.leaderName} into ${lob.place}.`); sync(); ctx.persist(true); ctx.renderDungeon(); return; }
       }
       if (cur()) { if (sync()) ctx.persist(true); if (document.getElementById("dun")) ctx.renderDungeon(); }
       ctx.bump();
@@ -286,13 +291,13 @@ const COOP = (() => {
       return out.sort((a, b) => (b.here - a.here) || (b.online - a.online) || a.name.localeCompare(b.name)).slice(0, 12);
     }
     function lobbyHTML(place) {
-      if (!ctx.Store.online) return `<div class="coop"><h3>⚔ Go in together</h3><p class="sub">Co-op dungeons need the shared world. Invites show in 👥 Social → Party.</p></div>`;
+      if (!ctx.Store.online) return `<div class="coop"><h3> Go in together</h3><p class="sub">Co-op dungeons need the shared world. Invites show in  Social → Party.</p></div>`;
       const s = S(), run = mine(), inv = myInvites().filter((r) => r.place === place);
-      if (run && run.place !== place) return `<div class="coop"><h3>⚔ Co-op run</h3><p class="sub">You're in ${esc(run.leaderName)}'s run of ${esc(run.place)}.</p><div class="row"><button class="btn sm pri" data-act="go" data-place="${esc(run.place)}">Travel there</button><button class="btn sm" data-act="coopleave" data-id="${esc(run.id)}">Leave the run</button></div></div>`;
+      if (run && run.place !== place) return `<div class="coop"><h3> Co-op run</h3><p class="sub">You're in ${esc(run.leaderName)}'s run of ${esc(run.place)}.</p><div class="row"><button class="btn sm pri" data-act="go" data-place="${esc(run.place)}">Travel there</button><button class="btn sm" data-act="coopleave" data-id="${esc(run.id)}">Leave the run</button></div></div>`;
       if (!run) {
-        return `<div class="coop"><h3>⚔ Go in together</h3><p class="sub">Raid ${esc(place)} with friends: same rooms, same foes, you fight side by side on your own tactics, and everyone gets their own roll from the boss chest.</p>
-          ${inv.map((r) => `<div class="item on"><div class="t">${esc(r.leaderName)} asks you along<span>${activeMembers(r).length}/${MAX_MEMBERS} heroes · ${r.status === "in" ? "already inside" : "waiting at the door"}</span></div><button class="btn sm pri" data-act="coopjoin" data-id="${esc(r.id)}">Join</button><button class="btn sm" data-act="coopno" data-id="${esc(r.id)}">No</button></div>`).join("")}
-          <button class="btn" data-act="coopnew" style="width:100%;margin-top:6px">⚔ Start a co-op run</button></div>`;
+        return `<div class="coop"><h3>\uE101 Go in together</h3><p class="sub">Raid ${esc(place)} with friends: same rooms, same foes, you fight side by side on your own tactics, and everyone gets their own roll from the boss chest.</p>
+          ${inv.map((r) => `<div class="item on"><div class="t">${esc(r.leaderName)} asks you along<span>${activeMembers(r).length}/${MAX_MEMBERS} heroes · ${r.status === "in" ? "already inside" : "waiting at the door"}</span></div><button class="btn sm pri" data-act="coopjoin" data-id="${esc(r.id)}">Accept</button><button class="btn sm" data-act="coopno" data-id="${esc(r.id)}">Decline</button></div>`).join("")}
+          <button class="btn" data-act="coopnew" style="width:100%;margin-top:6px">\uE101 Start a co-op run</button></div>`;
       }
       const lead = run.leader === s.id;
       const mem = activeMembers(run).map((m) => { const c = ctx.cardOf(m.id); const here = m.id === s.id ? s.location === place : c?.loc === place || c?.coop?.run === run.id;
@@ -300,15 +305,15 @@ const COOP = (() => {
         return `<div class="item"><div class="t">${esc(m.name)}${m.id === run.leader ? " ⚑" : ""}${m.id === s.id ? " (you)" : ""}<span>${role ? ROLE[role] + " · " : ""}${c?.coop?.run === run.id ? "inside" : here ? "at the door" : "on the way"}</span></div></div>`; }).join("");
       const pend = (run.invites || []).map((x) => `<span class="chip">${esc(x.name)} · invited</span>`).join("");
       const cands = lead && run.status === "lobby" ? candidates(place).filter((c) => !isMember(run, c.id) && !(run.invites || []).some((x) => x.id === c.id)) : [];
-      return `<div class="coop on"><h3>⚔ Co-op run · ${activeMembers(run).length}/${MAX_MEMBERS}</h3>
+      return `<div class="coop on"><h3> Co-op run · ${activeMembers(run).length}/${MAX_MEMBERS}</h3>
         <div class="list">${mem}</div>${pend ? `<div class="chips">${pend}</div>` : ""}
         ${cands.length ? `<p class="sub" style="margin:8px 0 4px">Invite from your friends, party and anyone here:</p><div class="list">${cands.map((c) => `<div class="item"><div class="t">${esc(c.name)}<span>${c.why}${c.here ? " · here" : c.online ? " · online" : " · offline"}</span></div><button class="btn sm" data-act="coopinv" data-id="${esc(c.id)}" data-name="${esc(c.name)}">Invite</button></div>`).join("")}</div>` : ""}
-        <div class="row" style="margin-top:8px">${lead ? `<button class="btn danger" data-act="coopgo" ${run.status === "in" && s.dungeon ? "disabled" : ""}>🕯 ${run.status === "in" ? "Go back in" : "Go in together"}</button>` : run.status === "in" ? `<button class="btn danger" data-act="coopgo">🕯 Follow them in</button>` : `<span class="sub">Waiting for ${esc(run.leaderName)} to lead the way in.</span>`}<button class="btn sm" data-act="coopleave" data-id="${esc(run.id)}">${lead ? "Call it off" : "Leave"}</button></div></div>`;
+        <div class="row" style="margin-top:8px">${lead ? `<button class="btn danger" data-act="coopgo" ${run.status === "in" && s.dungeon ? "disabled" : ""}> ${run.status === "in" ? "Go back in" : "Go in together"}</button>` : run.status === "in" ? `<button class="btn danger" data-act="coopgo"> Follow them in</button>` : `<span class="sub">Waiting for ${esc(run.leaderName)} to lead the way in.</span>`}<button class="btn sm" data-act="coopleave" data-id="${esc(run.id)}">${lead ? "Call it off" : "Leave"}</button></div></div>`;
     }
     function invitesHTML() {
       const inv = myInvites();
       if (!inv.length) return "";
-      return `<div class="panel"><h2>⚔ Dungeon invites</h2><div class="list">${inv.map((r) => `<div class="item on"><div class="t">${esc(r.leaderName)} · ${esc(r.place)}<span>${activeMembers(r).length}/${MAX_MEMBERS} heroes · ${esc(DUNGEONS.describe(r.place))}</span></div>${S().location === r.place ? `<button class="btn sm pri" data-act="coopjoin" data-id="${esc(r.id)}">Join</button>` : `<button class="btn sm pri" data-act="go" data-place="${esc(r.place)}">Travel</button><button class="btn sm" data-act="coopjoin" data-id="${esc(r.id)}">Join</button>`}<button class="btn sm" data-act="coopno" data-id="${esc(r.id)}">No</button></div>`).join("")}</div></div>`;
+      return `<div class="panel"><h2>\uE101 Dungeon invites</h2><div class="list">${inv.map((r) => `<div class="item on"><div class="t">${esc(r.leaderName)} · ${esc(r.place)}<span>${activeMembers(r).length}/${MAX_MEMBERS} heroes · ${esc(DUNGEONS.describe(r.place))}</span></div>${S().location === r.place ? `<button class="btn sm pri" data-act="coopjoin" data-id="${esc(r.id)}">Accept</button>` : `<button class="btn sm" data-act="go" data-place="${esc(r.place)}">Travel</button><button class="btn sm pri" data-act="coopjoin" data-id="${esc(r.id)}">Accept</button>`}<button class="btn sm" data-act="coopno" data-id="${esc(r.id)}">Decline</button></div>`).join("")}</div></div>`;
     }
 
     // -- inside the dungeon
@@ -321,7 +326,7 @@ const COOP = (() => {
       return `<div class="coopbar" aria-label="Your co-op party">${chips || '<span class="sub">The others haven\'t come in yet.</span>'}</div>`;
     }
     function waiting() { const run = cur(), s = S(); return !!run && run.leader !== s.id && !s.dungeon.room && !s.dungeon.done && (s.dungeon.cstep || 0) >= run.path.length; }
-    function waitHTML() { const run = cur(); return `<div class="card"><h3>⏳ Waiting for ${esc(run.leaderName)}</h3><p class="sub">The leader picks the way. When they step into the next room you'll follow them in.</p></div>`; }
+    function waitHTML() { const run = cur(); return `<div class="card"><h3> Waiting for ${esc(run.leaderName)}</h3><p class="sub">The leader picks the way. When they step into the next room you'll follow them in.</p></div>`; }
     function behindHTML() {
       const run = cur(), s = S();
       if (!run || run.leader !== s.id) return "";
@@ -372,8 +377,8 @@ const COOP = (() => {
       const run = cur(), s = S();
       if (!run || !s.dungeon?.done) return "";
       const mineClaim = run.claims?.[s.id];
-      if (mineClaim || (s.coopClaims || {})[run.id]) return `<div class="card coop"><h3>🎁 Co-op chest</h3><p class="sub">You took your share${mineClaim ? `: ${mineClaim.gold} gold${mineClaim.items.length ? ", " + mineClaim.items.map((i) => esc(D.ITEMS[i]?.name || i)).join(", ") : ""}` : ""}. Everyone gets their own roll; nobody can take yours.</p></div>`;
-      return `<div class="card coop"><h3>🎁 Co-op chest</h3><p class="sub">A second chest for the party. Each of you who beat the boss gets their own fair roll, once.</p><button class="btn pri" data-act="coopclaim" style="width:100%">Take your share</button></div>`;
+      if (mineClaim || (s.coopClaims || {})[run.id]) return `<div class="card coop"><h3> Co-op chest</h3><p class="sub">You took your share${mineClaim ? `: ${mineClaim.gold} gold${mineClaim.items.length ? ", " + mineClaim.items.map((i) => esc(D.ITEMS[i]?.name || i)).join(", ") : ""}` : ""}. Everyone gets their own roll; nobody can take yours.</p></div>`;
+      return `<div class="card coop"><h3> Co-op chest</h3><p class="sub">A second chest for the party. Each of you who beat the boss gets their own fair roll, once.</p><button class="btn pri" data-act="coopclaim" style="width:100%">Take your share</button></div>`;
     }
     async function left() {
       const s = S(), id = s.dungeon?.run;
@@ -396,15 +401,21 @@ const COOP = (() => {
         await ctx.Store.change("runs", run.id, (x) => { const o = invite(x, id, b.dataset.name); err = o.err; return o.run || x; });
         if (err) return toast(err);
         toast(`Invited ${b.dataset.name}.`);
-        if (typeof SOCIAL !== "undefined" && SOCIAL.isFriend(s, id) && ctx.sendDm) ctx.sendDm(id, b.dataset.name, `⚔ Join my co-op run of ${run.place}! I'm waiting at the door.`);
+        if (typeof SOCIAL !== "undefined" && SOCIAL.isFriend(s, id) && ctx.sendDm) ctx.sendDm(id, b.dataset.name, ` Join my co-op run of ${run.place}! I'm waiting at the door.`);
       } else if (a === "coopjoin") {
         const old = mine(); if (old && old.id !== id) await ctx.Store.change("runs", old.id, (x) => removeMember(x, s.id));
+        const pre = runs.find((r) => r.id === id);
+        if (pre && live(pre) && !isMember(pre, s.id) && activeMembers(pre).length >= MAX_MEMBERS) {   // full: say so and drop the invite
+          await ctx.Store.change("runs", id, (x) => decline(x, s.id));
+          return toast(`That run is full (${MAX_MEMBERS} heroes at most).`);
+        }
         const res = await ctx.Store.change("runs", id, (x) => addMember(x, s) || x);
-        if (!res?.after || !isMember(res.after, s.id)) return toast("That run is full or over.");
+        if (!res?.after || !isMember(res.after, s.id)) return toast(res?.after && live(res.after) ? `That run is full (${MAX_MEMBERS} heroes at most).` : "That run is over.");
         toast(s.location === res.after.place ? `You joined ${res.after.leaderName}'s run.` : `You joined. Travel to ${res.after.place} to go in.`);
         if (res.after.status === "in" && s.location === res.after.place) { const err = join(s, { ...res.after, id }); if (!err) { sync(); ctx.persist(true); ctx.renderDungeon(); } else toast(err); }
       } else if (a === "coopno") {
-        await ctx.Store.change("runs", id, (x) => decline(x, s.id));
+        const res = await ctx.Store.change("runs", id, (x) => decline(x, s.id, s.name));
+        toast(res ? `You declined ${res.before?.leaderName ? res.before.leaderName + "'s" : "the"} dungeon invite.` : "That invite is gone.");
       } else if (a === "coopleave") {
         await ctx.Store.change("runs", id, (x) => removeMember(x, s.id));
         toast("You left the run.");
@@ -427,7 +438,7 @@ const COOP = (() => {
         await ctx.Store.change("runs", run.id, (x) => { const o = claim(x, s.id, s.level); got = o.got; return o.run; });
         if (!got || !give(s, run, got)) return toast("Nothing left for you in there.");
         ctx.persist(true);
-        toast(`🎁 Your share: ${got.gold} gold${got.items.length ? ", " + got.items.map((i) => D.ITEMS[i].name).join(", ") : ""}.`);
+        toast(` Your share: ${got.gold} gold${got.items.length ? ", " + got.items.map((i) => D.ITEMS[i].name).join(", ") : ""}.`);
         ctx.renderDungeon();
       }
       ctx.bump(); ctx.renderPanel?.(true);

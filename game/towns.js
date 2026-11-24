@@ -316,7 +316,7 @@ const TOWNS = (() => {
     s.bounty = s.bounty || {};
     s.bounty[hold] = (s.bounty[hold] || 0) + CRIME[crime] + extra;
     if (crime === "murder") s.murdered = true;   // the Dark Brotherhood takes note (guilds.js)
-    G.note(s, `⚖️ Bounty in ${hold}: ${s.bounty[hold]} gold (${crime}).`);
+    G.note(s, ` Bounty in ${hold}: ${s.bounty[hold]} gold (${crime}).`);
     return s.bounty[hold];
   }
   const wanted = (s) => s.location && isTown(s.location) && (s.resisted || {})[G.holdAt(WORLD.places[s.location])] && bounty(s, G.holdAt(WORLD.places[s.location])) > 0;
@@ -424,7 +424,7 @@ const TOWNS = (() => {
       let ok = false;
       if (j.type === "clear") ok = (s.cleared || {})[j.target] >= j.t;
       if (j.type === "deliver") ok = s.location === j.target;
-      if (ok) { done.push(j.id); s.gold += j.reward; msgs.push(`📜 Job done: ${j.type === "clear" ? `${j.target} is cleared` : `the bag reached ${j.target}`}. +${j.reward} gold.`, ...G.useSkill(s, "Etiquette", 20)); }   // [OURS] Etiquette: serving the hold
+      if (ok) { done.push(j.id); s.gold += j.reward; msgs.push(` Job done: ${j.type === "clear" ? `${j.target} is cleared` : `the bag reached ${j.target}`}. +${j.reward} gold.`, ...G.useSkill(s, "Etiquette", 20)); }   // [OURS] Etiquette: serving the hold
     }
     if (done.length) { s.jobs = s.jobs.filter((j) => !done.includes(j.id)); s.jobsDone = [...(s.jobsDone || []), ...done].slice(-40); msgs.forEach((m) => G.note(s, m)); }
     return msgs;
@@ -437,7 +437,7 @@ const TOWNS = (() => {
     let left = j.n;
     for (const r of [...s.inv]) if (r.item === j.item && left > 0) { const k = Math.min(left, r.qty); G.take(s, r.id, k); left -= k; }
     s.gold += j.reward; s.jobs = s.jobs.filter((x) => x.id !== id); s.jobsDone = [...(s.jobsDone || []), id].slice(-40);
-    G.note(s, `📜 Job done: ${j.n} ${D.ITEMS[j.item].name} delivered. +${j.reward} gold.`);
+    G.note(s, ` Job done: ${j.n} ${D.ITEMS[j.item].name} delivered. +${j.reward} gold.`);
     return `The alchemist counts them twice and pays ${j.reward} gold.`;
   }
 
@@ -496,7 +496,7 @@ const TOWNS = (() => {
     const r = s.inv.find((x) => x.item === "dragonstone");   // the stone is only flavour: clearing the barrow is what counts (it may be lost, stashed or in a party's pile)
     if (r) G.take(s, r.id);
     s.gold += 300; s.thaneWhiterun = true;
-    G.note(s, "📜 Gave Farengar the Dragonstone. The Jarl names Lydia your housecarl.");
+    G.note(s, " Gave Farengar the Dragonstone. The Jarl names Lydia your housecarl.");
     return `${r ? "Farengar snatches the Dragonstone." : "You tell Farengar where the Dragonstone lay and draw its map from memory. He's delighted."} The Jarl pays you 300 gold and assigns Lydia as your housecarl. Hire her (free) in Whiterun.`;
   }
   /* may Farengar's quest be handed in? Clearing Bleak Falls Barrow is enough; the stone itself never blocks it */
@@ -519,7 +519,7 @@ const TOWNS = (() => {
     if (s.gold < h[1]) return `${h[0]} costs ${h[1]} gold. You have ${s.gold}.`;
     s.gold -= h[1];
     s.homes = { ...(s.homes || {}), [s.location]: { chest: [], garden: 0 } };
-    G.note(s, `🏠 Bought ${h[0]} in ${s.location}.`);
+    G.note(s, ` Bought ${h[0]} in ${s.location}.`);
     return `The steward hands you the key to ${h[0]}. Your chest is safe even if you die, your bed makes you Well Rested, and the garden grows ingredients.`;
   }
   function sleepHome(s, t = G.now()) {
@@ -527,23 +527,38 @@ const TOWNS = (() => {
     G.setHealth(s, G.maxHealth(s), t); if (typeof WFX !== "undefined") WFX.warmUp(s, 100, t); s.rested = t + RESTED_SECONDS; s.restBonus = 0.1;   // [Skyrim] Well Rested: +10%
     return "You sleep in your own bed. Fully healed and Well Rested: skills improve 10% faster for 40 minutes.";
   }
-  function stash(s, rowId) {
+  /* the house chest: move n of a row either way (default: the whole row). Worn gear (any loadout) stays on you.
+     Alike rows of stackable things (same improvements, stolen mark, crafted value, name) become one stack. */
+  const wornIds = (s) => new Set(Object.values(s.loadouts || {}).flatMap((x) => Object.values(x.equipment || {})));
+  const nv = (v) => (v == null || v === false || v === 0 ? null : v);
+  const alike = (a, b) => a.item === b.item && ["charge", "temper", "tq", "stolen", "cv", "nm"].every((k) => nv(a[k]) === nv(b[k]));
+  const howMany = (n, max) => { const q = Math.floor(+n); return n == null || n === "" || !(q > 0) ? max : Math.min(q, max); };
+  const stackable = (item) => (G.STACKABLE ? G.STACKABLE.has(D.ITEMS[item]?.slot) : ["potion", "scroll", "soulgem", "tome", "ingredient", "trophy", "poison"].includes(D.ITEMS[item]?.slot));
+  function stash(s, rowId, n) {
     const h = home(s); if (!h) return "You don't own a house here.";
-    const r = G.invRow(s, rowId); if (!r) return "You don't have that.";
-    const copy = { ...r }; delete copy.id;
-    G.take(s, rowId, r.qty);
-    const same = h.chest.find((x) => x.item === copy.item && !x.temper && !copy.temper && x.charge == null && copy.charge == null && !x.stolen === !copy.stolen && (x.cv ?? null) === (copy.cv ?? null));
-    if (same && ["potion", "scroll", "soulgem", "tome", "ingredient", "trophy", "poison"].includes(D.ITEMS[copy.item].slot)) same.qty += copy.qty; else h.chest.push(copy);
-    return `${D.ITEMS[copy.item].name}${copy.qty > 1 ? ` ×${copy.qty}` : ""} goes in the chest.`;
+    const r = G.invRow(s, rowId); if (!r || !D.ITEMS[r.item]) return "You don't have that.";
+    let free = G.freeQty ? G.freeQty(s, rowId) : r.qty;   // worn gear stays on you; a spare copy may go
+    if (wornIds(s).has(r.id)) free = Math.min(free, r.qty - 1);   // ...worn in any saved loadout too
+    if (free <= 0) return "You're wearing that. Take it off first.";
+    const q = howMany(n, free), copy = { ...r, qty: q }; delete copy.id;
+    if (!G.take(s, rowId, q)) return "You don't have that many.";
+    const same = stackable(copy.item) && h.chest.find((x) => alike(x, copy));
+    if (same) same.qty += q; else h.chest.push(copy);
+    return `${D.ITEMS[copy.item].name}${q > 1 ? ` ×${q}` : ""} goes in the chest.`;
   }
-  function unstash(s, idx) {
+  function unstash(s, idx, n) {
     const h = home(s); if (!h) return "You don't own a house here.";
-    const r = h.chest[idx]; if (!r) return "It's not in the chest.";
-    h.chest.splice(idx, 1);
-    const id = G.give(s, r.item, r.qty, r.charge);
-    const row = G.invRow(s, id); if (row && (r.temper || r.stolen)) Object.assign(row, { temper: r.temper, tq: r.tq, stolen: r.stolen });
-    if (typeof CRAFTFAIR !== "undefined") CRAFTFAIR.carry(s, id, r, r.qty);
-    return `You take ${D.ITEMS[r.item].name}${r.qty > 1 ? ` ×${r.qty}` : ""}.`;
+    const r = h.chest[idx]; if (!r || !D.ITEMS[r.item]) return "It's not in the chest.";
+    const q = howMany(n, r.qty), part = { ...r, qty: q }; delete part.shown;
+    r.qty -= q; if (r.qty <= 0) h.chest.splice(idx, 1);
+    const fix = (id, k) => {   // improvements, stolen mark, crafted value and name come out with it
+      const row = G.invRow(s, id); if (!row) return;
+      for (const f of ["temper", "tq", "stolen"]) if (part[f]) row[f] = part[f];
+      if (typeof CRAFTFAIR !== "undefined") CRAFTFAIR.carry(s, id, part, k);
+    };
+    if (stackable(part.item)) fix(G.give(s, part.item, q, part.charge), q);
+    else for (let i = 0; i < q; i++) fix(G.give(s, part.item, 1, part.charge), 1);
+    return `You take ${D.ITEMS[part.item].name}${q > 1 ? ` ×${q}` : ""}.`;
   }
   const gardenReady = (s, t = G.now()) => home(s) && (home(s).garden || 0) + 2 * 3600 <= t;   // [OURS] one harvest per game day
   function harvest(s, t = G.now()) {

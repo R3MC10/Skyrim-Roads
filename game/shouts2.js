@@ -117,7 +117,7 @@ const SHOUTS2 = (() => {
     const w0 = WEVENTS.weather;
     WEVENTS.weather = (pos, t) => {
       const c = clear, tt = t || (typeof G !== "undefined" ? G.now() : Date.now() / 1000);
-      if (c && c.until > tt && pos && Math.hypot(pos[0] - c.pos[0], pos[1] - c.pos[1]) < 0.08) return { id: "clear", name: "Clear (your shout)", icon: "☀️", speed: 1, sneak: 0, encounters: 1 };
+      if (c && c.until > tt && pos && Math.hypot(pos[0] - c.pos[0], pos[1] - c.pos[1]) < 0.08) return { id: "clear", name: "Clear (your shout)", icon: "", speed: 1, sneak: 0, encounters: 1 };
       return w0(pos, t);
     };
   }

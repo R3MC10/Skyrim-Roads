@@ -30,7 +30,7 @@ async def main():
         async def clear():
             await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
         async def setup(style, hour, wx, lvl):
-            await pg.evaluate("""([st,h,w,l])=>{ ART.setStyle(st); LIGHTFX.setLevel(l);
+            await pg.evaluate("""([st,h,w,l])=>{ LIGHTFX.setLevel(l);
               G.clock=(t)=>({day:7,hour:h}); WEVENTS.weather=(p,t)=>({...window.__wx(p,t), id:w}); }""", [style, hour, wx, lvl])
         async def shot(name):
             await clear(); await pg.wait_for_timeout(450)
@@ -38,14 +38,14 @@ async def main():
             await el.screenshot(path=OUT + name + ".png")
         if SHOTS:
             # ---- map: before (Lighting Off) and after (High), every time of day, both styles
-            for style in ["ink", "pixel"]:
+            for style in ["ink"]:
                 for name, hour, wx in SCENES:
                     for lvl, tag in [("off", "before"), ("high", "after")]:
                         await setup(style, hour, wx, lvl)
                         await shot(f"map_{style}_{name}_{tag}")
             # zoomed out over all of Skyrim at night: every lit town, the aurora over the north
             await pg.click("#zoomBtn"); await pg.wait_for_timeout(400)
-            for style in ["ink", "pixel"]:
+            for style in ["ink"]:
                 for lvl, tag in [("off", "before"), ("high", "after")]:
                     await setup(style, 23.5, "clear", lvl); await shot(f"mapfar_{style}_night_{tag}")
                 await setup(style, 6.4, "clear", "high"); await shot(f"mapfar_{style}_dawn_after")
@@ -56,14 +56,14 @@ async def main():
             await pg.evaluate("()=>document.documentElement.classList.remove('a11y-hc')")
             # ---- place pictures, before/after
             await pg.evaluate("""()=>{ G.clock=window.__clk; WEVENTS.weather=window.__wx; }""")
-            html = await pg.evaluate("""()=>{ const out=[]; for (const st of ['ink','pixel']) for (const [n,tod,w] of [['Whiterun','dusk','clear'],['Riverwood','night','clear'],['Winterhold','night','clear'],['Solitude','dawn','clear'],['Markarth','day','storm']]) for (const l of ['off','high']) {
-                ART.setStyle(st); LIGHTFX.setLevel(l); out.push(`<figure style="margin:2px;display:inline-block"><figcaption style="font:11px sans-serif;color:#eee">${st} ${n} ${tod} ${w} ${l==='off'?'before':'after'}</figcaption>${PLACEART.scene(n,{tod,weather:w})}</figure>`); }
+            html = await pg.evaluate("""()=>{ const out=[]; for (const st of ['ink']) for (const [n,tod,w] of [['Whiterun','dusk','clear'],['Riverwood','night','clear'],['Winterhold','night','clear'],['Solitude','dawn','clear'],['Markarth','day','storm']]) for (const l of ['off','high']) {
+                LIGHTFX.setLevel(l); out.push(`<figure style="margin:2px;display:inline-block"><figcaption style="font:11px sans-serif;color:#eee">${st} ${n} ${tod} ${w} ${l==='off'?'before':'after'}</figcaption>${PLACEART.scene(n,{tod,weather:w})}</figure>`); }
               return out.join(''); }""")
             pp = await ctx.new_page(); await pp.set_viewport_size({"width": 760, "height": 1800})
             await pp.set_content(f"<body style='background:#222;margin:0'>{html}</body>"); await pp.wait_for_timeout(300)
             await pp.screenshot(path=OUT + "places_before_after.png", full_page=True); await pp.close()
         # settings row is there (Graphics → Lighting)
-        await pg.evaluate("()=>{ ART.setStyle('ink'); LIGHTFX.setLevel('high'); }")
+        await pg.evaluate("()=>{ LIGHTFX.setLevel('high'); }")
         ok = await pg.evaluate("()=>{ const d=document.createElement('div'); d.innerHTML=LIGHTFX.settingsHTML((k,o,c)=>o.map(([v,l])=>`<button data-k=\"${k}\" data-v=\"${v}\" class=\"${String(c)===v?'on':''}\">${l}</button>`).join('')); return d.querySelectorAll('[data-k=lighting]').length===3 && d.querySelector('.on').dataset.v==='high'; }")
         assert ok, "settings row"
         res = {}

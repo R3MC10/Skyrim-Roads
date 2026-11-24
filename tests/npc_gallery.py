@@ -7,9 +7,8 @@ async def main():
         pg = await (await b.new_context(viewport={"width": 900, "height": 900})).new_page()
         errs=[]; pg.on("pageerror", lambda e: errs.append(str(e)))
         await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=gal"); await pg.wait_for_timeout(1500)
-        for st in ["ink","pixel"]:
-            u = await pg.evaluate("""(st)=>{ ART.setStyle(st);
-              const ppl=[["Whiterun","general"],["Whiterun","blacksmith"],["Whiterun","wizard"],["Whiterun","inn"],["Whiterun","alchemy"],["Whiterun","stables"],["Whiterun","carriage"],["Whiterun","hire"],["Whiterun","notice"],["Whiterun","streets"],["Solitude","streets"],["Windhelm","streets"],["Riften","streets"],
+        for st in ["ink"]:
+            u = await pg.evaluate("""(st)=>{ const ppl=[["Whiterun","general"],["Whiterun","blacksmith"],["Whiterun","wizard"],["Whiterun","inn"],["Whiterun","alchemy"],["Whiterun","stables"],["Whiterun","carriage"],["Whiterun","hire"],["Whiterun","notice"],["Whiterun","streets"],["Solitude","streets"],["Windhelm","streets"],["Riften","streets"],
                 ["Solitude","general"],["Solitude","wizard"],["Windhelm","arena"],["Riften","fence"],["Riften","inn"],["Markarth","blacksmith"],["Markarth","wizard"],["Winterhold","wizard"],["Morthal","wizard"],["Dawnstar","blacksmith"],["High Hrothgar","greybeard"],["Karthwasten","general"],["Whiterun","hall"]].map(([t,s])=>NPCART.who(t,s));
               const tr=[["Aela the Huntress","Archery"],["Farkas","Heavy Armor"],["Kesh the Leaper","Acrobatics"],["Urag gro-Shub","Mysticism"],["Scouts-Many-Marshes","Light Armor"],["Vex","Lockpicking"],["Danica Pure-Spring","Restoration"],["Brother Tarn","Unarmored"]];
               const S=96, cols=9, all=ppl.length+tr.length+7, c=document.createElement('canvas'); c.width=cols*S; c.height=Math.ceil(all/cols)*S; const g=c.getContext('2d');

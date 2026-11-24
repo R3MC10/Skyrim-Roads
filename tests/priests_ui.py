@@ -7,7 +7,7 @@ async def main():
         b = await p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-sandbox"])
         ctx = await b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2)
         errs = []
-        for style in ["ink", "pixel"]:
+        for style in ["ink"]:
             pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(style + ": " + str(e)))
             await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=mask{style}"); await pg.wait_for_timeout(1500)
             await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Masked"); await pg.click("#begin"); await pg.wait_for_timeout(900)
@@ -19,7 +19,7 @@ async def main():
                     try: await pg.click(sel, timeout=2500); return
                     except Exception: await pg.wait_for_timeout(200)
                 await pg.click(sel, timeout=3000)
-            await pg.evaluate("(st)=>{ ART.setStyle(st); const S=window.__dbg.save(); const n='Shearpoint'; S.location=n; [S.x,S.y]=WORLD.places[n]; S.discovered.push(n); S.cleared={}; S.level=35; S.hpBonus=4000; for(const k of Object.keys(S.skills)) S.skills[k].lvl=90; G.give(S,'potion_health',5); const w=G.give(S,'steel_sword'); G.equip(S,w); G.setHealth(S,G.maxHealth(S)); QUESTS.ensure(S); }", style)
+            await pg.evaluate("(st)=>{ const S=window.__dbg.save(); const n='Shearpoint'; S.location=n; [S.x,S.y]=WORLD.places[n]; S.discovered.push(n); S.cleared={}; S.level=35; S.hpBonus=4000; for(const k of Object.keys(S.skills)) S.skills[k].lvl=90; G.give(S,'potion_health',5); const w=G.give(S,'steel_sword'); G.equip(S,w); G.setHealth(S,G.maxHealth(S)); QUESTS.ensure(S); }", style)
             await pg.wait_for_timeout(300)
             await click("[data-tab=hero]"); await click("[data-tab=map]"); await pg.wait_for_timeout(400)
             await click("[data-act=enter]"); await pg.wait_for_timeout(500)

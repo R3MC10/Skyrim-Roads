@@ -65,7 +65,7 @@ const LEVELUP = (() => {
   /* "Level 12 · 120 health · 110 magicka · 150 stamina" for someone else's card */
   function cardText(c) {
     if (!c || !Array.isArray(c.vit)) return "";
-    return ` · ♥${c.vit[0]} ✦${c.vit[1]} ⚡${c.vit[2]}`;
+    return ` · \uE17F${c.vit[0]} ✦${c.vit[1]} \uE129${c.vit[2]}`;
   }
   /* the prompt on the Skills screens while a level-up waits */
   function promptHTML(s) {
