@@ -407,7 +407,7 @@ for (const [id, name, spell] of MAGIC.STAFFS) {
   for (const t of new Set(tips)) ok(pl(t), "chip tip in Polish: " + t);
   for (const t of ["Bandit lashes out at itself in a frenzy (12)", "It already took 40 from your spells", "Frenzy: it goes mad and turns on itself", "Not enough magicka"]) ok(pl(t), "fight line in Polish: " + t);
   const pn = PATCHNOTES.LIST ? PATCHNOTES.LIST[0] : null;
-  if (pn) { ok(pn.id === "b144-spelltest" || pn.build >= 144, "patch note on top"); if (pn.id === "b144-spelltest") for (const t of [pn.title, ...pn.items]) ok(pl(t), "patch note in Polish: " + t.slice(0, 40)); }
+  if (pn) { ok(pn.id === "b145-spelltest" || pn.build >= 145, "patch note on top"); if (pn.id === "b145-spelltest") for (const t of [pn.title, ...pn.items]) ok(pl(t), "patch note in Polish: " + t.slice(0, 40)); }
 }
 
 // ---------------------------------------------------------------- 23. every spell was really checked

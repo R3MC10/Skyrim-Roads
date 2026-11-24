@@ -3,7 +3,7 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b144-spelltest", build: 144, date: "24 Nov 2026", title: "Every spell checked and fixed", items: [
+    { id: "b145-spelltest", build: 145, date: "24 Nov 2026", title: "Every spell checked and fixed", items: [
       "We cast every spell in the game (all 125, plus scrolls, staves and your follower's spells) in real fights to make sure each one does what it says.",
       "Fireball, Chain Lightning, Ice Storm, the storms and walls, Mass Paralysis, Hysteria, Harmony and Mayhem now reach the whole group: when foes come two or three at a time, the ones waiting behind take half the damage and stay paralyzed, afraid or calm. A one-target spell like Paralyze ends with the foe you cast it on.",
       "Frenzy and Mayhem really drive foes mad now: instead of just standing there, they hurt themselves each turn.",
@@ -14,6 +14,17 @@ const PATCHNOTES = (() => {
       "Casting without enough magicka now says so, instead of talking about action points.",
       "Playing in Polish? Every spell name and every number line in the Magic menu is translated now.",
     ] },
+    { id: "b144-dawnguard", build: 144, date: "24 Nov 2026", title: "The vampire war", items: [
+      "New quest line from level 12: Isran at Fort Dawnguard (near Riften) sends you into Dimhollow Crypt, where something sleeps in a sealed coffin. It ends at Castle Volkihar, a black keep on an islet off the coast past Solitude.",
+      "Then pick a side. Hunt the night with the Dawnguard (heavy crossbow, hunter's armour, troll armour for your follower) or drink Lord Harkon's blood and become a stronger Vampire Lord. Seven more stages either way, with a big boss fight at the end.",
+      "Six new perks, three per side: Vampire Hunter, Sun-Blessed Plate and Troll Tamer for the Dawnguard; Blood of Harkon, Night Lord and Court of Volkihar for Harkon's court. You can only take your own side's perks.",
+      "In a party only the leader picks the side, and everyone else follows that choice.",
+      "The vampire war fights are long and they hurt: expect to finish them bruised and short on potions, and to lose the odd one. No foe in it can take more than about a third of your health in one blow, though.",
+      "The \"quest stage done\" lines in quest pop-ups and the \"find them at...\" hints in the Journal now show in Polish too.",
+      "Two new achievements, one for each ending. New pictures for the fort, the castle and the story, in both art styles. All of it is in Polish too.",
+    ] },
+    { id: "b143-comingnext", build: 143, date: "24 Nov 2026", title: "Coming next is up to date again", items: [
+      "The Coming next box at the top of Patch notes now shows what's really being built, and it can't get stuck on an old list any more."] },
     { id: "b143-followertab", build: 143, date: "24 Nov 2026", title: "Your follower gets their own tab", items: [
       "Your follower now has their own Follower tab in the Character menu, next to Skills, Character and Perks. Everything about them lives there: overview, bond, gear, magic, tactics, perks, fighting style and Dismiss.",
       "The Character page only keeps one short line about them; tap it to jump to the tab. With nobody following you, the tab tells you who you can hire and where.",
@@ -815,9 +826,14 @@ const PATCHNOTES = (() => {
       "The Hall of the North that everyone builds together, and the Jarl's weekly bounty board.",
       "A main menu and in-app updates."] },
   ];
+  // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
+  // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
+  const NEXT_AT = 144;
   const NEXT = [
-    "A sharper Solitude peninsula and map polish",
-    "More quests and characters",
+    "A new, livelier fight screen that fits on one screen",
+    "On PC, everything fits on one screen without scrolling",
+    "New painted dungeon rooms and a painted world map",
+    "More unique enchantments on gear",
   ];
   const KEY = "rotn_notes_seen";
   const latest = () => LIST[0];
@@ -847,6 +863,6 @@ const PATCHNOTES = (() => {
     const n = latest();
     return `<div class="pnotes pnwhat"><div class="pnkick">What's new</div><h2>${e(n.title)}</h2><ul>${n.items.map((i) => `<li>${e(i)}</li>`).join("")}</ul></div>`;
   }
-  return { LIST, NEXT, latest, seen, markSeen, unseen, html, barHTML, whatsNewHTML, KEY };
+  return { LIST, NEXT, NEXT_AT, latest, seen, markSeen, unseen, html, barHTML, whatsNewHTML, KEY };
 })();
 if (typeof module !== "undefined") module.exports = PATCHNOTES;
