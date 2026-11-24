@@ -11,6 +11,21 @@ const PATCHNOTES = (() => {
       "The Map side panel has one \"What to do next\" list instead of two: no more level-up or perk reminders shown twice. The most urgent things come first, nearest places before far ones; tap Show more for the rest.",
       "The place list has filters: All, Towns, Dungeons, Not visited and Other, each with a count.",
     ] },
+    { id: "b138-greatevents", build: 138, date: "24 Nov 2026", title: "Great world events", items: [
+      "Every 12 hours something big happens in the North: a dragon attacks a town, a Daedric rift tears open, a bandit army besieges a hold capital, or a town throws a great fair. All your friends see the same event at the same time.",
+      "A banner on the map counts down to it 45 minutes ahead, then counts down how long is left. The place glows on the map.",
+      "Dragon, rift and siege are big boss fights in three phases. Go to the place and charge in. Every charge from every player wears the boss down, and whole parties of up to 8 can fight together (the leader starts each charge).",
+      "When it ends you get gold and loot based on how much you helped, plus a title for doing your fair share: Firebreaker, Riftsealer or Siegebreaker. Even a lost fight pays a little.",
+      "Events leave their mark: a burned town is dearer while it rebuilds over a few days, an open rift or a lost siege pushes prices up in that hold, and a saved hold thanks you with cheaper shops.",
+      "Fairs have archery, arm wrestling, a drinking contest and a lucky wheel, a prize stall (top prize: the Fair Champion title), and every shop in town is 25% off.",
+      "New perks: Dragonward (Blocking), Rift Warden (Restoration), Siege Breaker (One-Handed), Fairgoer (Mercantile) and Hero of the Hour (Etiquette).",
+      "Everything about great events is in Polish too: banners, countdowns, fights, fair games, prizes, titles and perks.",
+      "A charge that doesn't finish the boss now says \"Charge landed\" instead of \"Victory\", and the event pop-up waits its turn so it never covers the Objective banner.",
+    ] },
+    { id: "b137-kit", build: 137, date: "24 Nov 2026", title: "Fairer bandit tricks", items: [
+      "Poison, burning, bleeding and venom now respect your armour: if your armour soaked most of the blow, it soaks most of the poison too. Heavy armour finally helps against poisoned blades and fire bolts.",
+      "Foe healers (bandit mages, priests and the like) can only cast their healing spell twice a fight, and it heals a little less. No more endless self-healing against low-level warriors.",
+    ] },
     { id: "b138-followerbonds", build: 138, date: "24 Nov 2026", title: "Followers have opinions now", items: [
       "Your follower notices what you do. Help a stranger, rob a sleeping bandit, run from a giant, pray at a shrine, join the Thieves Guild: each follower likes some things and hates others, and says so.",
       "Their loyalty shows as a meter under their name (Hero tab → Follower). Devoted followers hit 10% harder. Unhappy ones grumble, fight 15% softer, sometimes refuse to change gear, style or tactics, and at 0 they walk out (they're fine, just angry, and won't come back for a few days).",
