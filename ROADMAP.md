@@ -69,6 +69,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Smart AI combat (default; custom tactics optional), crafting mini-games, motion design (63)
 
 ## In progress (write your name before you start)
+- Claude: more unique enchantments (enchants2.js): 22 new weapon and worn enchantments with real fight effects (chain lightning, bloodthirst, numbing cold, wildfire, thorns, last ward, fortune...), signature uniques, 3 Enchanting perks. Branch claude/enchants2.
 - Claude: follower gets their own Character tab (followertab.js): Skills · Character · Follower · Perks…, all follower management moved there, one-line summary on Character, empty state with where to hire, SkyUI-style gear list (their pack / yours, categories, sortable columns, ◆ worn, details with comparison, Give / Give & equip / Equip / Take). Branch claude/followertab.
 - Claude: Polish sweep (i18n_sweep.js): canvas words in the fight picture, minigames and map labels go through the translator; fight log lines, foe and spell names, leftover toasts in Polish; tests/test_polishsweep.js. Branch claude/polish-sweep.
 - Claude: fear and foe-heal limits (foecap.js): Battle Cry / Dismay / fear / calm hold bosses 2 turns (3 a fight) and elites 3 (5 a fight), then they stay rattled (softer blows); foe healing capped at 65% health, 35% a fight, 3-turn rest; Aspect of Terror +1 turn on big foes; tests/test_balfear.js sim. Branch claude/balance-fear.

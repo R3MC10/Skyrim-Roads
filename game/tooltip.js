@@ -57,9 +57,12 @@ const TIP = (() => {
     st.push(["Weight", +((it.weight || 0) * q).toFixed(2)], ["Value", it.value ?? 0]);
     if (q > 1) st.push(["Count", q]);
     const L = [];
-    if (it.enchant) L.push(`✦ ${it.enchant.magnitude} ${it.enchant.effect} damage per hit${r ? ` · charge ${Math.round(100 * (r.charge || 0) / it.enchant.capacity)}%` : ""}`);
+    const enL = typeof ENCH !== "undefined" && ENCH.lines ? ENCH.lines(it) : null;   // plain words for what the enchantment does (enchanting.js)
+    const wn = it.enchant && typeof ENCH !== "undefined" ? ENCH.WEAPON?.[it.enchant.effect]?.[0] : null;   // the enchantment's name first
+    if (it.enchant) L.push(`✦ ${wn && enL?.[0] ? `${wn} · ` : ""}${enL?.[0] || `${it.enchant.magnitude} ${it.enchant.effect} damage per hit`}${r ? ` · charge ${Math.round(100 * (r.charge || 0) / it.enchant.capacity)}%` : ""}`);
     if (it.staff && D_.SPELLS[it.staff.spell]) L.push(`✦ Casts ${D_.SPELLS[it.staff.spell].name} instead of swinging`);
-    if (it.aenchant) L.push(`✦ ${[it.aenchant, ...(it.aenchant.more || [])].map((e) => (e.key.startsWith("dae:") ? e.name : `${e.name} ${e.mag}`)).join(" · ")} while worn`);
+    if (it.aenchant && enL?.length) { const ae = [it.aenchant, ...(it.aenchant.more || [])]; L.push(...enL.map((x, i) => `✦ ${ae[i]?.name && !x.startsWith(ae[i].name) ? `${ae[i].name} · ` : ""}${x}`), "While worn."); }   // name · what it does
+    else if (it.aenchant) L.push(`✦ ${[it.aenchant, ...(it.aenchant.more || [])].map((e) => (e.key.startsWith("dae:") ? e.name : `${e.name} ${e.mag}`)).join(" · ")} while worn`);
     if (it.desc) L.push(it.desc);
     if (it.effects) L.push(it.effects.map(([e, m, d]) => `${e} ${m}${d * 5 >= 60 ? ` for ${Math.round(d * 5 / 60)} min` : ""}`).join(" · "));
     else if (it.restore) L.push(`Restores ${it.restore[1]} ${it.restore[0]}`);
