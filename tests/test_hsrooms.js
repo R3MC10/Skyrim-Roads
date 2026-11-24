@@ -228,7 +228,7 @@ var Rnd2 = (() => { let k = 3; return () => (k = (k * 16807) % 2147483647) / 214
   const lead = { ...doc }; const g = hero(); g.id = "M2"; X.mount({ party: () => ({ id: "p", leader: "L1", members: [{ id: "L1" }, { id: "M2" }] }), homes: () => [lead] });
   say(H.act(g, "guestrest", "L1", t)); say(H.act(g, "guestmeal", "L1", t)); say(H.act(g, "guestmeal", "L1", t + 5)); X.mount({ party: () => null });
   msgs.push(...(m.journal || []).map((n) => n.text).filter((x) => /Drove/.test(x)));
-  for (const x of [PATCHNOTES.LIST[0].title, ...PATCHNOTES.LIST[0].items]) msgs.push(x);
+  { const pn = PATCHNOTES.LIST.find((n) => n.id === "b138-hsrooms") || PATCHNOTES.LIST[0]; for (const x of [pn.title, ...pn.items]) msgs.push(x); }
   for (const msg of msgs) for (const part of String(msg).split(/(?<=[.!?])\\s+/)) { const x = part.trim(); if (x && !skip(x) && tr(x) == null && I18N.story(x) == null && !/increased to|Skill|skill/.test(x)) missing.add(x); }
   for (const id of ["master_builder", "hearth_forge", "gracious_host", "call_to_arms"]) { const p = PERKS.BY_ID[id]; for (const x of [p.name, ...String(p.desc || "").replace(/\\s*\\[OURS\\]/, "").split(/(?<=[.!?])\\s+/)]) if (x && tr(x) == null && I18N.story(x) == null) missing.add(x); }
   ok(msgs.length > 30 && msgs.some((x) => /came while you were away/.test(x)) && msgs.some((x) => /guest bed/.test(x)), "checked " + msgs.length + " messages");
