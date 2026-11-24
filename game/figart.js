@@ -847,6 +847,14 @@ const FIGART = (() => {
     const P = { aim: o.aim != null ? o.aim : wk === "bow" || wk === "crossbow" ? 0 : -0.5 + lunge * 1.1, back: o.back || 0, lean: (o.hunch || 0) + lunge * 0.25, dy: 0, ox: 0, tilt: 0,
       fn: [5 + lunge * 4, 0], ff: [-5, 0], armed: true, wk, draw: o.draw || 0, glow: o.glow ? sp.ench || "#7fb6ff" : null, flask: o.flask, off: o.off || null, front: (o.back || 0) < -0.8,
       shieldOn: !!o.shield, shieldOk: o.shield === undefined ? true : !!o.shield, plainW: wk !== sp.wk, tailP: (o.t || 0) * 2, breath: o.t != null && !(lunge > 0.05) ? Math.sin(o.t * 2.2) : 0, lunge };
+    if (o.clip) {   // [OURS] a named clip (allyanim.js: a follower's attack, cast, block, flinch, fall, getting up), faded in from another
+      const sp2 = wk === sp.wk ? sp : { ...sp, wk }, w = o.w == null ? 1 : o.w;
+      let C = poseAt(o.clip, o.u || 0, sp2);
+      if (o.from && w < 1) C = blend(poseAt(o.from, o.fu || 0, sp2), C, w);
+      for (const key in BASE) if (C[key] !== undefined) P[key] = C[key];
+      P.armed = C.armed !== false; P.front = !!C.front; P.breath = 0; P.lunge = 0;
+      if (P.cast) P.castC = wk === "staff" ? sp.staffC : sp.ench || "#9fd0f0";
+    }
     const sm = g.imageSmoothingEnabled;
     const put = (c) => { const [bx, by, bw, bh] = c.box; if (style === "pixel") g.imageSmoothingEnabled = false; g.drawImage(c, bx, by, bw, bh); g.imageSmoothingEnabled = sm; };
     drawPose(g, sp, P, st, { back: () => put(layer(sp, "back", k, style, P)), front: () => put(layer(sp, "front", k, style, P)) });
