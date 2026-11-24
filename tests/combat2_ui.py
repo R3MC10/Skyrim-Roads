@@ -8,6 +8,7 @@ PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out_combat2")
 os.makedirs(OUT, exist_ok=True)
 SIZES = [(360, 780), (2000, 837), (1366, 768)]
+ASSETS = "&assets" if os.environ.get("ASSETS") else ""   # ASSETS=1: load the painted pictures (backdrops, foes) like the real game
 fails = 0
 def ok(c, msg):
     global fails
@@ -25,7 +26,7 @@ NOSCROLL = """(()=>{ const t=document.querySelector('#tbf'), r=t.getBoundingClie
     covers: r.top <= 0.5 && r.bottom >= innerHeight - 0.5 && r.left <= 0.5 && r.right >= innerWidth - 0.5,
     wide: document.scrollingElement.scrollWidth <= innerWidth + 1 }; })()"""
 MYTURN = "(()=>{const b=document.querySelector('#tbf [data-tba=end]'); return !!b && !b.disabled && !(typeof FIGHTART!=='undefined' && FIGHTART.playing && FIGHTART.playing()) && !TB.session?.done})()"
-CLEAN = "document.querySelector('[data-obt=off]')?.click(); document.querySelectorAll('#obtip').forEach(e=>e.remove())"
+CLEAN = "document.querySelector('[data-obt=off]')?.click(); document.querySelectorAll('#obtip').forEach(e=>e.remove()); document.querySelectorAll('#tip').forEach(e=>{e.style.transition='none'; e.classList.remove('on');})"
 
 async def main():
     async with async_playwright() as p:
@@ -51,7 +52,7 @@ async def main():
             async def evn(): return await pg.evaluate("TB.session ? TB.session.ev.length : 0")
             bad = []; pg.on("requestfailed", lambda r: bad.append(r.url.split("/")[-1]))
             for _ in range(3):   # a busy local server sometimes drops a script; load again rather than test half a game
-                bad.clear(); await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=c2t{w}&tb"); await pg.wait_for_timeout(1500)
+                bad.clear(); await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=c2t{w}&tb{ASSETS}"); await pg.wait_for_timeout(1500)
                 if await pg.evaluate("typeof ENC!=='undefined' && typeof CLANS!=='undefined' && typeof COMBAT2!=='undefined'"): break
                 print("   reload, missing scripts:", bad[:5])
             await pg.wait_for_selector(".press"); await pg.click(".press"); await pg.wait_for_timeout(300); await pg.click(".mi[data-t=new]"); await pg.wait_for_selector("#nm"); await pg.fill("#nm", "Tester"); await pg.click("#begin"); await pg.wait_for_timeout(1200)

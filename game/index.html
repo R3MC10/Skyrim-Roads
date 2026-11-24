@@ -3588,6 +3588,9 @@ html.pcmap .compass i.cl{left:5%}html.pcmap .compass i.cr{right:5%}
 @media (max-width:420px){.lh-pic{width:64px;height:64px}.lh-card .lh-pic{width:56px;height:56px}}
 /* [c2polish] the fight feed: no empty bar before the first line */
 #tbf.c2 .c2ov .tblog[hidden]{display:none}
+/* [c2polish] a long next-move chip on the foe's plate wraps inside the plate instead of printing over itself (phones) */
+#tbf.c2 .c2ov .tbu.foe .tbint{flex-wrap:wrap;white-space:normal;max-width:100%;box-sizing:border-box;row-gap:1px}
+#tbf.c2 .c2ov .tbu.foe .tbint>*{flex:none;white-space:nowrap}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
