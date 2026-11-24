@@ -16,7 +16,7 @@ c.__lang = "en"; c.localStorage = { getItem: () => JSON.stringify({ lang: c.__la
 vm.createContext(c);
 for (const f of fs.readFileSync(W + "index.html", "utf8").match(/<script src="[^"]+"/g).map((m) => m.slice(13, -1)))
   if (fs.existsSync(W + f)) { try { vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c); } catch (er) { if (!/^(store|ui)\.js$/.test(f)) console.log("skipped " + f + ": " + er.message); } }
-c.__N = +(process.env.N || 16);
+c.__N = +(process.env.N || 16); c.__has = (k) => fs.existsSync(W + k + ".webp");
 const SIM = fs.readFileSync(__dirname + "/test_bal_sim.js", "utf8");
 vm.runInContext(SIM.slice(SIM.indexOf("const LEVELS"), SIM.indexOf("const BUILDS")) + `
 let n = 0; const OK = (x, m) => { if (!x) throw new Error("FAIL " + m); n++; };
@@ -103,6 +103,8 @@ let huntLog = [];
     if (fr.fight.won) { won = fr; huntLog.push(fr.text); }
   }
   OK(won, "a level-30 mage who knows its weakness can win");
+  OK(!/the Whitefang|the the /i.test(won.text) && !/the Whitefang/.test(s.trip ? (s.trip.log || []).join(" ") : ""), "named foes don't get a doubled 'the': " + won.text.slice(0, 80));
+  OK(G.theFoe({ name: "Whitefang the Frost Troll", named: true }) === "Whitefang the Frost Troll" && G.theFoe({ name: "The Mudcrab King" }) === "the Mudcrab King" && G.theFoe({ name: "Bandit" }) === "the Bandit" && G.theFoe({ name: "wolf" }, true) === "The wolf", "the foe's name with or without 'the'");
   OK(cnt(s, "lh_trophy_whitefang") === 1, "trophy");
   OK(cnt(s, "lh_mat_whitefang") >= 2, "rare hide");
   OK(s.gold > goldBefore, "the Jarl pays");
@@ -192,6 +194,10 @@ let huntLog = [];
   OK(I18N.tr("Last seen around Dawnstar.") == null || true, "");
 }
 
+// 9b. painted art: every legend has a painted foe picture in the game folder, a colour grade, and the fight uses it
+for (const b of H.L) { const p = H.paintOf({ legend: b.id }); OK(p && __has(p.key) && /brightness/.test(p.filter) && /^#/.test(p.glow), b.id + ": painted picture " + (p && p.key)); }
+OK(H.paintOf({ legend: "nope" }) === null && H.paintOf(null) === null, "only legends get the painted grade");
+
 // 10. balance: a proper boss for 1–8 players. No one-shots, fights last, a known weakness is a real advantage.
 { const N = __N, rows = [];
   const mate = (b, L, i) => { const m = make(b, L); return COOP.allyFromCard({ id: "p" + i, name: "Mate" + i, cur: G.maxHealth(m), coop: { prof: COOP.profile(m) } }); };
@@ -223,6 +229,9 @@ let huntLog = [];
   OK(avg(1) >= avg(0) - 5, "knowing the weakness never makes it harder");
   OK(avg(1) >= 40, "a prepared hunter usually wins");
   OK(rows.filter((r) => r.L >= 25 && r.known).every((r) => r.win >= 25), "every legend at level 25+ is beatable once you know its weakness");
+  // more players never makes it harder (sims are noisy at small N, so a little slack), and knowing the weakness helps at every size
+  for (const r of rows) for (const q of rows) if (q.L === r.L && q.known === r.known && q.P > r.P) OK(q.win >= r.win - 20 && q.rounds <= r.rounds + 12, "a bigger party doesn't make it harder: " + JSON.stringify([r, q]));
+  for (const r of rows) if (!r.known) { const k = rows.find((q) => q.L === r.L && q.P === r.P && q.known); OK(k.win >= r.win - 15 && k.rounds <= r.rounds + 2, "knowing the weakness helps: " + JSON.stringify([r, k])); }
 }
 console.log("\\nLegendary hunt sample:\\n" + huntLog.map((x) => "  · " + x).join("\\n"));
 console.log("OK " + n + " checks");

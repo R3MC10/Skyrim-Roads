@@ -3586,6 +3586,13 @@ html.pcmap .compass i.cl{left:5%}html.pcmap .compass i.cr{right:5%}
 .lh-btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
 .lh-poster .btn{align-self:flex-start;margin-top:4px}
 @media (max-width:420px){.lh-pic{width:64px;height:64px}.lh-card .lh-pic{width:56px;height:56px}}
+/* painted legends: the foe picture in a gold frame on a dark, glowing ground */
+.lh-paint{display:flex;align-items:flex-end;justify-content:center;overflow:hidden;position:relative;border:2px solid #d8b04a;border-radius:8px;
+  background:radial-gradient(circle at 50% 40%,#3a2c1c,#120c08);background:radial-gradient(circle at 50% 62%,color-mix(in srgb,var(--lhglow,#d8b04a) 30%,transparent),transparent 68%),radial-gradient(circle at 50% 40%,#3a2c1c,#120c08);
+  box-shadow:0 0 0 1px #4a3410,inset 0 0 0 1px rgba(255,226,150,.35),0 0 10px rgba(216,176,74,.35)}
+.lh-paint img{width:100%;height:100%;object-fit:contain;display:block}
+.lh-paint::after{content:"";position:absolute;inset:3px;border:1px solid rgba(255,226,150,.28);border-radius:5px;pointer-events:none}
+html.art-pixel .lh-paint{border-radius:0;image-rendering:pixelated}html.art-pixel .lh-paint::after{border-radius:0}
 /* [c2polish] the fight feed: no empty bar before the first line */
 #tbf.c2 .c2ov .tblog[hidden]{display:none}
 /* [c2polish] a long next-move chip on the foe's plate wraps inside the plate instead of printing over itself (phones) */
