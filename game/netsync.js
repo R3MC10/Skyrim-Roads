@@ -50,7 +50,7 @@ const NETSYNC = (() => {
      of the parent; marks from an older instance never leak into a newer one. */
   const SPEC = {
     parties: { members: { arr: "id" }, invites: { set: 1 }, "ready.ok": { pid: "id" }, "ready.no": { pid: "id" }, "halt.votes": { pid: "id" } },
-    runs: { members: { arr: "id" }, invites: { arr: "id" }, at: {}, claims: {}, acts: {}, "chest.killers": { set: 1 }, "vote.votes": {}, "vote.bonus": {}, "vote.done": {} },
+    runs: { members: { arr: "id" }, invites: { arr: "id" }, at: {}, claims: {}, acts: {}, "chest.killers": { set: 1 }, "vote.votes": {}, "vote.bonus": {}, "vote.done": {}, deepKO: {} },
     lvotes: { votes: {}, bonus: {}, done: {} },
     pshare: { claims: {} },
   };
