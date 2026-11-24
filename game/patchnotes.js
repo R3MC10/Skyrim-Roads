@@ -12,6 +12,7 @@ const PATCHNOTES = (() => {
       "On the Start tab you can pick the Warrior, Mage or Thief Stone straight away.",
       "Everyone sees the face you made: in fights, on the map, in your party and as a Stranger on the road.",
       "Already have a character? Nothing changes until you want it to: visit the barber at any inn (40 gold) or the mirror in your house (free).",
+      "Fixed: fights with Blood and gore on could stop with an error, and some menus looked wrong on phones.",
     ] },
     { id: "b146-gore", build: 146, date: "24 Nov 2026", title: "Blood on the snow", items: [
       "Fights get bloody: a blow throws a spray of blood away from whoever struck it, and the drops land and stay on the ground for the whole fight. Big hits and criticals spray more.",

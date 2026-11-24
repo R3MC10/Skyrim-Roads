@@ -26,8 +26,8 @@ async def main():
         for tag, w, h, dpr, race in SIZES:
             ctx = await b.new_context(viewport={"width": w, "height": h}, device_scale_factor=dpr)
             pg = await ctx.new_page(); errs = []
-            pg.on("pageerror", lambda e: errs.append(str(e)))
-            await pg.goto(f"http://{HOST}:{PORT}/index.html?assets&net=bc&notut&p=cg{tag}"); await pg.wait_for_timeout(1500)
+            pg.on("pageerror", lambda e: errs.append(str(e) + " @ " + (e.stack or "")[:300]))
+            await pg.goto(f"http://{HOST}:{PORT}/index.html?assets&net=bc&notut&tb&p=cg{tag}"); await pg.wait_for_timeout(1500)
             await pg.wait_for_selector(".press", state="attached", timeout=20000); await pg.evaluate("document.querySelector('.press').click()"); await pg.wait_for_timeout(500)
             await pg.wait_for_selector(".mi[data-t=new]", state="attached", timeout=10000); await pg.evaluate("document.querySelector('.mi[data-t=new]').click()")
             await pg.wait_for_selector(".cg .cgcan", timeout=10000); await pg.wait_for_timeout(700)
@@ -41,8 +41,8 @@ async def main():
                 await pg.click(f".cgtab[data-tab={t}]"); await pg.wait_for_timeout(250)
                 ok(await pg.evaluate(f"document.querySelector('.cgtab[data-tab={t}]').getAttribute('aria-selected')") == "true", f"{tag}: {t} tab selected")
                 # nudge the first two sliders / swatches on the tab
-                arrs = await pg.query_selector_all(".cgpanel .cgarr[data-cg=inc]")
-                for a in arrs[:2]: await a.click(); await pg.wait_for_timeout(120)
+                na = await pg.evaluate("document.querySelectorAll('.cgpanel .cgarr[data-cg=inc]').length")
+                for i in range(min(2, na)): await pg.locator(".cgpanel .cgarr[data-cg=inc]").nth(i).click(); await pg.wait_for_timeout(120)
                 if t == "face": await pg.click(".cgic[data-cg=zoom]"); await pg.wait_for_timeout(500)
                 await pg.wait_for_timeout(350)
                 ink = await pg.evaluate(INK)
@@ -94,6 +94,7 @@ async def main():
             ok(await pg.evaluate(INK) > 0.01, f"{tag}: mirror preview draws")
             await pg.click(".cgtab[data-tab=hair]"); await pg.wait_for_timeout(300)
             await pg.screenshot(path=os.path.join(OUT, f"cg_{tag}_mirror.png"))
+            await pg.locator(".cgpanel .cgarr[data-cg=inc]").first.click(); await pg.wait_for_timeout(200)
             await pg.click("[data-cg=done]"); await pg.wait_for_timeout(300)
             ok(await pg.evaluate("!!window.__mir && !document.querySelector('.cg')"), f"{tag}: mirror Done closes and hands back the look")
             ok(not errs, f"{tag}: no page errors {errs[:3]}")
