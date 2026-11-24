@@ -237,7 +237,7 @@ const DUNGEONS = (() => {
     const d = s.dungeon, r = d?.room;
     if (!r) return [];
     const pot = G.countRestore(s, "health") ? [["potion", `Drink a healing potion (${G.countRestore(s, "health")})`]] : [];
-    if (r.type === "fight" || r.type === "elite") return [["fight", "Fight"], ["sneak", "Sneak past"], ...pot];
+    if (r.type === "fight" || r.type === "elite") return [["fight", "Fight"], ["sneak", "Sneak past"], ["flee", "Run for it (Athletics)"], ...pot];
     if (r.type === "boss") return [["fight", "Fight"], ...pot];
     if (r.type === "trap") return [["dash", "Time it and dash through (Acrobatics)"], ["trigger", "Look for the trigger (Sneak)"], ["walk", "Just push through"]];
     if (r.type === "treasure") return [["pick", `Pick the lock (${r.tries} picks left)`], ...(POWERS.stone(s) === "tower" && r.tier <= 3 && POWERS.powerReady(s, "stone") ? [["tower", "Use the Tower Stone's power"]] : []), ["smash", "Smash it open"], ["skip", "Leave it"]];
@@ -264,10 +264,29 @@ const DUNGEONS = (() => {
     return { f, skills, gold: g, loot };
   }
 
+  /* the old dice odds for the choices the dungeon mini-games play (dungeongames.js sizes each game from these) */
+  function odds(s, choice, t = G.now()) {
+    const r = s.dungeon?.room, pfx = (k) => (typeof PFX !== "undefined" ? PFX.num(s, k) : 0);
+    if (choice === "dash") return clamp(0.45 + G.skill(s, "Acrobatics") / 150 + 0.15 * G.P(s, "sure_footed") + G.fxSum(s, "trapdodge") / 100 + pfx("trap") / 100, 0.1, 0.95);   // [OURS]
+    if (choice === "trigger") return G.P(s, "light_foot") ? 1 : clamp(0.35 + G.skill(s, "Sneak") / 120 + pfx("trap") / 100, 0.1, 0.95);
+    if (choice === "sneak") return clamp(G.hiddenChance(s, { danger: r?.type === "elite" ? "high" : "medium" }, t) + 0.05, 0.05, 0.95);   // [OURS] same detection as the road
+    if (choice === "flee") return clamp(0.4 + G.skill(s, "Athletics") / 150 - (r?.type === "elite" ? 0.15 : 0), 0.1, 0.9);   // [OURS]
+    if (choice === "smash") return clamp(0.25 + Math.max(G.skill(s, "Two-Handed"), G.skill(s, "One-Handed")) / 400 - 0.04 * (r?.tier || 0), 0.1, 0.6);   // [OURS] was a flat 35%
+    if (choice === "search") return 0.8;
+    return 0.5;
+  }
+  /* a mini-game's result rides on the choice: "dash@0.82" (quality 0..1, 0.5 or more is a pass), plus flags ("search@0.6n": the nest woke).
+     Party members replay the same string, so the leader's play decides it for everyone. No "@": the old dice roll. */
+  const parseChoice = (c) => { const m = /^([a-z]+)@(\d*\.?\d+)([a-z]*)$/.exec(String(c)); return m ? { c: m[1], q: Math.max(0, Math.min(1, +m[2])), fl: m[3] } : { c, q: null, fl: "" }; };
+  const passed = (q, ch) => (q == null ? Math.random() < ch : q >= 0.5);
+  const missMult = (q) => (q == null ? 1 : 0.7 + 0.6 * Math.max(0, 0.5 - q));   // a near miss hurts a little less
+
   /* Resolve a choice in the current room. Returns {text, skills?, fight?, gold?, loot?, died?, bag?, cleared?, stay?} */
   function act(s, choice, t = G.now()) {
     const d = s.dungeon, r = d?.room;
     if (!r) return { text: "" };
+    const pc = parseChoice(choice), q = pc.q, flags = pc.fl;
+    choice = pc.c;
     const done = (o) => { d.room = null; return o; };
     const lose = (res, cause) => { const dd = G.die(s, cause, t); s.dungeon = null; return { ...res, died: dd.msg, bag: dd.bag }; };
     if (choice === "potion") { const m = G.drinkPotion(s, t); return { text: m, stay: true }; }
@@ -275,11 +294,20 @@ const DUNGEONS = (() => {
     if (r.enemy) {
       const e = r.enemy;
       if (choice === "sneak") {
-        const ch = clamp(G.hiddenChance(s, { danger: r.type === "elite" ? "high" : "medium" }, t) + 0.05, 0.05, 0.95);   // [OURS] same detection as the road
+        const ch = odds(s, "sneak", t);
         const skills = G.useSkill(s, "Sneak", 2.5 + 0.625 * 8);                                           // [Skyrim] hiding XP
-        if (Math.random() < ch) return done({ text: `You hug the shadows and slip past the ${e.name.toLowerCase()}.`, skills });
+        if (passed(q, ch)) return done({ text: `You hug the shadows and slip past the ${e.name.toLowerCase()}.`, skills });
         const res = fight(s, e, { enemyFirst: true }, t);
         res.text = `Your foot scrapes the stone. The ${e.name.toLowerCase()} turns.`;
+        res.skills = [...skills, ...res.skills];
+        if (!res.f.won) return lose({ ...res, fight: res.f }, e.name);
+        return done({ ...res, fight: res.f });
+      }
+      if (choice === "flee" && r.type !== "boss") {   // [OURS] turn and run: get away and the room is behind you; get caught and it hits first
+        const skills = G.useSkill(s, "Athletics", 3);
+        if (passed(q, odds(s, "flee", t))) return done({ text: `You turn and run. The ${e.name.toLowerCase()} can't keep up, and you slip past into the next passage.`, skills });
+        const res = fight(s, e, { enemyFirst: true }, t);
+        res.text = `The ${e.name.toLowerCase()} catches up with you.`;
         res.skills = [...skills, ...res.skills];
         if (!res.f.won) return lose({ ...res, fight: res.f }, e.name);
         return done({ ...res, fight: res.f });
@@ -331,19 +359,19 @@ const DUNGEONS = (() => {
 
     if (r.type === "trap") {
       if (choice === "dash") {
-        const ch = clamp(0.45 + G.skill(s, "Acrobatics") / 150 + 0.15 * G.P(s, "sure_footed") + G.fxSum(s, "trapdodge") / 100 + (typeof PFX !== "undefined" ? PFX.num(s, "trap") / 100 : 0), 0.1, 0.95), skills = G.useSkill(s, "Acrobatics", 3);   // [OURS]
-        if (Math.random() < ch) return done({ text: `You time it and dive past ${r.trap}.`, skills });
-        const x = dmg(s, 0.15, 0.3);
+        const ch = odds(s, "dash", t), skills = G.useSkill(s, "Acrobatics", 3);
+        if (passed(q, ch)) return done({ text: q != null && q < 0.8 ? `You time it and dive past ${r.trap}. Close: it nicks your cloak.` : `You time it and dive past ${r.trap}.`, skills });
+        const x = dmg(s, 0.15 * missMult(q), 0.3 * missMult(q));
         if (G.curHealth(s) <= 0) return lose({ text: `${r.trap} catches you.` }, r.trap);
         return done({ text: `Too slow. ${r.trap[0].toUpperCase() + r.trap.slice(1)} catches you (−${x} health).`, skills });
       }
       if (choice === "trigger") {
-        const ch = G.P(s, "light_foot") ? 1 : clamp(0.35 + G.skill(s, "Sneak") / 120 + (typeof PFX !== "undefined" ? PFX.num(s, "trap") / 100 : 0), 0.1, 0.95), skills = G.useSkill(s, "Sneak", 5);
-        if (Math.random() < ch) {
+        const ch = odds(s, "trigger", t), skills = G.useSkill(s, "Sneak", 5);
+        if (passed(q, ch)) {
           const g = goldFound(s, rint(3, 20));
           return done({ text: `You spot the trigger and step around it. Whoever didn't left ${g} gold behind.`, skills });
         }
-        const x = dmg(s, 0.2, 0.35);
+        const x = dmg(s, 0.2 * missMult(q), 0.35 * missMult(q));
         if (G.curHealth(s) <= 0) return lose({ text: "You found the trigger. With your foot." }, r.trap);
         return done({ text: `You find the trigger by stepping on it (−${x} health).`, skills });
       }
@@ -355,7 +383,10 @@ const DUNGEONS = (() => {
     if (r.type === "treasure") {
       if (choice === "skip") return done({ text: "You leave the chest alone." });
       if (choice === "smash") {
-        if (Math.random() < 0.35) { const g = goldFound(s, rint(5, 25) * (r.tier + 1)); return done({ text: `You batter it open. Most of what was inside is ruined; you salvage ${g} gold.` }); }
+        if (passed(q, odds(s, "smash", t))) {
+          if (q != null && q >= 0.9) { const g = goldFound(s, Math.round(rint(5, 25) * (r.tier + 1) * 1.6)); return done({ text: `Clean blows: the lid splits and little is ruined. You salvage ${g} gold.` }); }
+          const g = goldFound(s, rint(5, 25) * (r.tier + 1)); return done({ text: `You batter it open. Most of what was inside is ruined; you salvage ${g} gold.` });
+        }
         return done({ text: "The chest wins. You move on with sore arms." });
       }
       if (choice === "tower") s.stonePowerAt = t;
@@ -375,8 +406,8 @@ const DUNGEONS = (() => {
 
     if (r.type === "rest") {
       if (choice === "rest") { const before = G.curHealth(s); G.setHealth(s, before + G.maxHealth(s) * 0.45); return done({ text: `You catch your breath and bind your wounds (${Math.round(before)} → ${Math.round(G.curHealth(s))} health).` }); }  // [OURS] 45%
-      if (Math.random() < 0.2) { const res = fight(s, foe(s, "skeever", s.dungeon.tier), { enemyFirst: true }, t); if (!res.f.won) return lose({ text: "", fight: res.f }, "Skeever"); return done({ text: "Something in the urns bites back. A skeever!", fight: res.f, skills: res.skills }); }
-      const g = goldFound(s, rint(5, 30)), loot = Math.random() < 0.4 ? [giveFound(s, "potion_health_minor")] : [];
+      if (q != null ? flags.includes("n") : Math.random() < 0.2) { const res = fight(s, foe(s, "skeever", s.dungeon.tier), { enemyFirst: true }, t); if (!res.f.won) return lose({ text: "", fight: res.f }, "Skeever"); return done({ text: "Something in the urns bites back. A skeever!", fight: res.f, skills: res.skills }); }
+      const g = goldFound(s, q == null ? rint(5, 30) : Math.max(2, Math.round(rint(5, 30) * (0.4 + 0.9 * q)))), loot = (q == null ? Math.random() < 0.4 : q >= 0.66) ? [giveFound(s, "potion_health_minor")] : [];
       return done({ text: `You find ${g} gold${loot.length ? " and a " + loot[0] : ""}.` });
     }
 
@@ -438,5 +469,5 @@ const DUNGEONS = (() => {
   function hasDragonstone(s) {
     return (s.inv || []).some((x) => x.item === "dragonstone") || Object.values(s.homes || {}).some((h) => (h?.chest || []).some((x) => x.item === "dragonstone"));
   }
-  return { REFILL_SECONDS, enterable, info, describe, refillLeft, enter, nextChoices, enterRoom, roomChoices, act, leave, ICON, LABEL, THEMES, ENEMY, layout, hasDragonstone };
+  return { odds, parseChoice, REFILL_SECONDS, enterable, info, describe, refillLeft, enter, nextChoices, enterRoom, roomChoices, act, leave, ICON, LABEL, THEMES, ENEMY, layout, hasDragonstone };
 })();

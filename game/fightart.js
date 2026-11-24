@@ -38,7 +38,8 @@ const FIGHTART = (() => {
     let gearO = null; try { if (typeof GEARLOOK !== "undefined" && typeof HEROART !== "undefined" && s?.loadouts) gearO = GEARLOOK.person(HEROART.lookOf(s)); } catch { /* bare save */ }
     const off = f?.off && f?.eq?.offhand ? (G.wtype ? G.wtype(f.eq.offhand.item) : "sword") : null;   // dual wielding
     const ench = typeof COMBATFX !== "undefined" ? COMBATFX.glowOf(COMBATFX.enchantOf(f)) : null;   // [OURS] colour-coded glow (combatfx.js)
-    return { skin: SKIN[s?.race] || SKIN.nord, wt, shield: !!f?.shield, off, ench, body: gearO?.body || body, helm: !!f?.armor?.head, allies, mates, list, beast: !!s?.beastForm, gearO };
+    let look = null; try { if (typeof HEROART !== "undefined" && s?.loadouts) look = HEROART.lookOf(s); } catch { /* bare save */ }
+    return { skin: SKIN[s?.race] || SKIN.nord, wt, shield: !!f?.shield, off, ench, body: gearO?.body || body, helm: !!f?.armor?.head, allies, mates, list, beast: !!s?.beastForm, gearO, look };
   }
   function foeOf(e) {
     if (e?.look) return "player";   // another player: drawn in their own gear (matePerson)
@@ -231,7 +232,8 @@ const FIGHTART = (() => {
     const humanoid = (o) => { if (curArchLook && kind !== "player") Object.assign(o, curArchLook); o.lunge = lunge; if (pose) { o.aim = pose.aim; o.back = pose.back; o.hunch = (o.hunch || 0) + pose.lean; o.draw = pose.draw; if (pose.wt) o.wt = pose.wt; } return person(g, o); };
     if (typeof SOLART !== "undefined" && SOLART.foeFig(g, kind, lunge, glowT, { humanoid, quad: (o) => quad(g, { lunge, ...o }), SKIN })) return;
     switch (kind) {
-      case "player": return humanoid({ ...matePerson(curFoeLook) });
+      case "player": if (curFoeLook && rigged()) return HEROART.fightFigure(g, { look: curFoeLook }, { lunge, t: glowT, aim: pose?.aim, back: pose?.back, hunch: pose?.lean || 0, draw: pose?.draw, wt: pose?.wt || undefined, glow: !!curFoeLook.gl?.w });
+        return humanoid({ ...matePerson(curFoeLook) });
       case "bandit": return humanoid({ skin: SKIN.imperial, body: P.leather, head: "hood", hoodColor: "#5a4836", wt: "axe", shield: false });
       case "forsworn": return humanoid({ skin: SKIN.breton, body: "#7a5a3a", head: "feathers", wt: "sword", cape: "#5f6a48" });
       case "draugr": return humanoid({ skin: "#6a7f78", body: "#4a5550", head: "horned", helmColor: "#5a5a50", wt: "battleaxe", eyes: "#9fd0f0", armC: "#6a7f78" });
@@ -284,6 +286,11 @@ const FIGHTART = (() => {
     if (h.beast && typeof BEASTART !== "undefined") return BEASTART.wolf(g, { lunge, t: glowT });
     if (h.beast) return quad(g, { color: "#4a4038", len: 50, height: 40, head: 10, legW: 5, tail: "bushy", ears: 1, fangs: 1, lunge });
     const wt = pose?.wt || h.wt;
+    if (h.look && rigged()) {   // the shared rigged character (figart.js), posed by the replay
+      const w2 = wt === "fist" ? null : wt;
+      return HEROART.fightFigure(g, { look: h.look }, { t: glowT, wt: w2, shield: h.shield && !TWO_HANDED.has(wt), off: !TWO_HANDED.has(wt) && wt !== "fist" ? h.off : null, lunge,
+        glow: pose ? pose.glow : h.bound, aim: pose?.aim, back: pose?.back, hunch: pose?.lean || 0, draw: pose?.draw, flask: pose?.flask });
+    }
     const go = h.gearO || {};
     person(g, { skin: h.skin, body: h.body, head: go.head || (h.helm ? "helm" : "hair"), helmColor: go.helmColor, hoodColor: go.hoodColor, armC: go.armC, pants: go.pants, boots: go.boots, legs: go.legs, gear: go.gear, wmat: go.wmat,
       shieldColor: go.shieldColor, shieldTrim: go.shieldTrim, shieldShape: go.shieldShape, t: glowT,
@@ -295,8 +302,9 @@ const FIGHTART = (() => {
     if (typeof GEARLOOK !== "undefined") { const o = GEARLOOK.person(L); return { ...o, skin: SKIN[L?.r] || SKIN.nord, glow: !!L?.gl?.w }; }
     return { skin: SKIN[L?.r] || SKIN.nord, body: "#8a7a62", head: "hair", wt: "fist" };
   }
+  const rigged = () => typeof HEROART !== "undefined" && !!HEROART.fightFigure;
   function mate(g, m) {
-    g.save(); g.scale(0.78, 0.78); person(g, matePerson(m.look)); g.restore();
+    g.save(); g.scale(0.78, 0.78); if (m.look && rigged()) HEROART.fightFigure(g, { look: m.look }, {}); else person(g, matePerson(m.look)); g.restore();
   }
   function ally(g, i) { g.save(); g.scale(0.62, 0.62); g.globalAlpha = 0.9; person(g, { skin: [SKIN.nord, SKIN.redguard, SKIN.dunmer][i % 3], body: ["#6a5a40", P.steel, "#4a5a3a"][i % 3], head: i % 2 ? "helm" : "hair", wt: ["sword", "axe", "bow"][i % 3], shield: i % 3 === 0 }); g.restore(); }
 
@@ -342,7 +350,8 @@ const FIGHTART = (() => {
     switch (kind) {
       case "mate": case "follower": {
         g.scale(0.78, 0.78);
-        if (o.look) person(g, { ...matePerson(o.look), lunge });
+        if (o.look && rigged()) HEROART.fightFigure(g, { look: o.look }, { lunge, t });
+        else if (o.look) person(g, { ...matePerson(o.look), lunge });
         else person(g, { skin: SKIN.nord, body: P.steel, head: "helm", wt: "sword", shield: true, lunge });
         break; }
       case "dog": {   // Meeko, the stray from the road
