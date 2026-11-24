@@ -764,7 +764,8 @@ const WorldMap = (() => {
     }
     if (MA) {
       const lift = v.horse ? 15 * s : 0;
-      if (v.horse) g.drawImage(MA.horse(v.horse), px - 27 * s, py - 12 * s - bob * 0.5, 54 * s, 35 * s);   // the horse under you, then you in the saddle
+      if (v.horse && typeof HORSEART !== "undefined" && HORSEART.ok(v.horse, v.moving ? "gallop" : "stand")) { g.save(); g.translate(px, py + 23 * s - bob * 0.5); g.scale(s, s); HORSEART.ride(g, v.horse, v.moving ? "gallop" : "stand", 27); g.restore(); }   // [OURS] the painted horse (horseart.js)
+      else if (v.horse) g.drawImage(MA.horse(v.horse), px - 27 * s, py - 12 * s - bob * 0.5, 54 * s, 35 * s);   // the horse under you, then you in the saddle
       MA.token(g, px + (v.horse ? 3 * s : 0), py - lift - bob, s, v.look, "#8fd3ff", v.horse ? 11 : 13);
       if (v.side && typeof SIDES !== "undefined") SIDES.drawEmblem(g, v.side, px + (v.horse ? 3 * s : 0) + 12 * s, py - lift - bob - 11 * s, 5 * s);   // your side (sides.js)
       if (v.fx && typeof FXART !== "undefined") FXART.mapOver(g, v.fx, P, s, px + (v.horse ? 3 * s : 0), py - lift - bob, v.t, v.reduceMotion);
