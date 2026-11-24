@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b138foetarget", build: 138, date: "24 Nov 2026", title: "See who the enemy goes for", items: [
+      "Every move a foe plans this round now says who it's aimed at: \"→ you\", \"→ Lydia\", a summon or a party member. Bosses with several moves and groups of foes show a target for each one.",
+      "A red crosshair sits on the card of whoever is about to be hit, the next target gets a red outline, and a dashed arrow in the battle picture points from the foe to them.",
+      "What it shows is what happens: the blow lands on that target. It only changes for a real reason, and the screen tells you why: the target went down, or a follower or a guard stepped in front.",
+      "Wind-ups and aimed shots keep their target for the blow that follows. In shared party fights everyone sees the same targets, and the one aimed at you reads \"you\" on your phone.",
+      "How often foes go for you or your companions hasn't changed, they just tell you earlier.",
+    ] },
     { id: "b136vote", build: 136, date: "24 Nov 2026", title: "Vote on the road with your party", items: [
       "Travelling together: when the party leader runs into a foe or something by the road, everyone with them now gets the same window with the same choices, not just a \"wait\" note.",
       "Members tap a choice to vote for it. Your little portrait pops up next to the option you picked, on everyone's phone, the leader's too, and moves as people change their minds. Tap it again to take your vote back, or Just watch to close the window.",

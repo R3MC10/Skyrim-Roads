@@ -837,10 +837,14 @@ const G = (() => {
         if (fp.heal && this.ehp < 0.45 * this.ehp0 && Math.random() < fp.heal) { const h = Math.round(fp.healAmt * this.ehp0); this.ehp = Math.min(this.ehp0, this.ehp + h); return `${n} casts a healing spell: +${h}`; }
       }
       const cover = this.coverAl && this.allies.includes(this.coverAl) ? this.coverAl : null; this.coverAl = null;   // a smart follower stepped in front of you
+      const tg = this.tgtNow; this.tgtNow = undefined;   // foeintent.js: the target its intent showed (null = you), rolled with the same odds
+      const fixed = tg !== undefined && (tg === null || this.allies.includes(tg));
+      this.tgtHit = null; this.tgtFixed = fixed && !cover;
       const aw = typeof FAI !== "undefined" ? FAI.aggro(this) : this.allies.length;   // followerai.js: back-row allies draw fewer blows
-      if (this.allies.length && (cover || Math.random() < aw / (aw + 1) * 0.7)) {   // [OURS] you're still the main target
+      if (this.allies.length && (cover || (fixed ? !!tg : Math.random() < aw / (aw + 1) * 0.7))) {   // [OURS] you're still the main target
         this.blocking = false;
-        const al = cover || (typeof FAI !== "undefined" ? FAI.pickAlly(this) : pick(this.allies));
+        const al = cover || (fixed ? tg : typeof FAI !== "undefined" ? FAI.pickAlly(this) : pick(this.allies));
+        this.tgtHit = al;
         if (al.fsum && typeof FAI !== "undefined") return FAI.hitSummon(this, al);   // a follower's summon takes the blow
         if (al.coop && typeof COOP !== "undefined") return COOP.hitAlly(this, al);   // co-op party members take their own blows
         if (al.follower && Math.random() < F.HIT_CHANCE) {
