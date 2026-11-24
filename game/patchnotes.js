@@ -11,6 +11,23 @@ const PATCHNOTES = (() => {
       "Three new perks: Giant Slayer (One-Handed, more damage to bosses, even more in their last phase), Read the Signs (Block, big boss attacks hurt less) and Break Their Focus (Two-Handed, hard hits always break a big attack and stagger the boss).",
       "Bosses last a bit longer but stay beatable. Followers still only get knocked down. Works in both art styles and in Polish.",
     ] },
+    { id: "b141-pnback", build: 141, date: "24 Nov 2026", title: "Easier way out of the patch notes", items: [
+      "The patch notes now have a bar at the top that stays put while you scroll: ‹ Back on the title screen, ✕ in the game. No more scrolling all the way down to leave.",
+    ] },
+    { id: "b139-perf", build: 139, date: "24 Nov 2026", title: "Faster and smoother", items: [
+      "The game starts a lot faster: the title screen now shows up in about a second instead of several on older phones.",
+      "The world map, the title screen, the road pictures and the fight screen use much less of your phone's power when nothing is moving, so older phones stay smoother and cooler and the battery lasts longer.",
+      "Nothing looks or plays differently, it just runs lighter.",
+    ] },
+    { id: "b139-lightfx", build: 139, date: "24 Nov 2026", title: "Light and weather you can feel", items: [
+      "The map now changes with the light: warm gold at sunrise and sunset, a cool blue night, and a flat grey wash when a storm rolls in.",
+      "At night towns, farms, camps and forts glow with firelight, and the glow flickers a little.",
+      "Beams of sunlight fall across the map at dawn and dusk.",
+      "Mist gathers over valleys, lakes and marshes, thickest in the early morning, and drifts slowly.",
+      "Big cloud shadows slide across the land, and lakes and rivers sparkle in the sun or the moons. On clear nights the northern lights tint the snow up north green and violet.",
+      "Place pictures get the same light: lit windows and fires glow at night, sunbeams at dawn and dusk.",
+      "New Settings → Graphics → Lighting: Off, Low or High. Low keeps the colours and glows but nothing moves, for older phones. Works in both art styles; Reduce motion stops the drifting and High contrast keeps the map brighter and clearer.",
+    ] },
     { id: "b140accounts", build: 140, date: "24 Nov 2026", title: "Accounts: your characters on every device", items: [
       "New on the title screen: Sign in. Make an account with just a name and a password (no email needed) and your characters are kept safe on our server.",
       "Play the same character on your phone, another phone or the PC: under Account, tap Play here. Upload the character you already have with one tap; nothing is lost.",
@@ -762,11 +779,19 @@ const PATCHNOTES = (() => {
     return `<div class="pnotes"><details class="pn pnnext" open><summary><span class="pnt">Coming next</span><span class="pnm">Being built now</span></summary><ul>${NEXT.map((i) => `<li>${e(i)}</li>`).join("")}</ul></details>
       ${LIST.map((n, i) => entryHTML(n, i === 0)).join("")}</div>`;
   }
+  /* a header that stays at the top while the list scrolls, so going back never needs a scroll to the end.
+     where: "page" (title menu: ‹ Back on the left, like an app bar) or "sheet" (in-game popup: ✕ on the right) */
+  function barHTML(where, attr) {
+    const btn = where === "sheet"
+      ? `<button class="pnback pnx" ${attr} aria-label="Close patch notes">✕</button>`
+      : `<button class="pnback" ${attr} aria-label="Back to the menu">‹ Back</button>`;
+    return `<div class="pnbar pn-${where}">${where === "sheet" ? "" : btn}<h2>Patch Notes</h2>${where === "sheet" ? btn : ""}</div>`;
+  }
   /* the one-time popup after an update: just the newest entry */
   function whatsNewHTML() {
     const n = latest();
     return `<div class="pnotes pnwhat"><div class="pnkick">What's new</div><h2>${e(n.title)}</h2><ul>${n.items.map((i) => `<li>${e(i)}</li>`).join("")}</ul></div>`;
   }
-  return { LIST, NEXT, latest, seen, markSeen, unseen, html, whatsNewHTML, KEY };
+  return { LIST, NEXT, latest, seen, markSeen, unseen, html, barHTML, whatsNewHTML, KEY };
 })();
 if (typeof module !== "undefined") module.exports = PATCHNOTES;
