@@ -53,7 +53,8 @@ const enc = (name, L) => G.scaleEnemy({ ...D.ENCOUNTERS.find((e) => e.name === n
 const road = (s, e) => { const f = new G.Fight(s, e, null, T); HORSEBACK.engage(f, T); return f; };
 const perk = (s, id, r = 1) => { s.perks = s.perks || {}; s.perks[id] = r; };
 /* a fixed dice: the next n Math.random() calls return these values, then back to normal */
-const realR = Math.random; let queue = [];
+// seeded dice under the fixed ones, so every run is the same (SEED=n to try others): it failed now and then by luck alone
+let sd = +(process.env.SEED || 7) >>> 0; const realR = () => { sd = (sd + 0x6D2B79F5) >>> 0; let t = sd; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; let queue = [];
 Math.random = () => (queue.length ? queue.shift() : realR());
 
 console.log("1: who starts in the saddle");

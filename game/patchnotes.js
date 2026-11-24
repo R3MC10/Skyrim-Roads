@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b169-mergefix", build: 169, date: "25 Nov 2026", title: "Small fixes after a big update", items: [
+      "A horse knocked down in a fight now stays downed beside you afterwards, like everywhere else, until it gets back up (a few hours, a night's sleep or a stablehand).",
+      "You only see one notice when a skill goes up, not two.",
+      "Patch notes use the new game icons too.",
+      "On phones, the house chest, Report a problem, invite cards, the weather chip and other newer screens lost their styling after the last update. They look right again.",
+    ] },
     { id: "b145-levelup", build: 145, date: "24 Nov 2026", title: "Levelling up feels like Skyrim", items: [
       "When a skill goes up you now see it near the top of the screen: \"One-Handed increased to 36\" with a thin bar for the skill, and your level bar under it filling up, so you always know how close the next level is.",
       "Reaching a new level is a proper moment: a big LEVEL UP with your new level number, the bar fills to the end and starts again.",
@@ -172,7 +178,7 @@ const PATCHNOTES = (() => {
     ] },
     { id: "b143-pickaxe", build: 143, date: "24 Nov 2026", title: "Mining fixed: one pickaxe is enough", items: [
       "A pickaxe never wears out or gets used up. Keep one in your pack and you can mine forever.",
-      "Mines that are also dungeons, like Embershard Mine, have a ⛏ Mine ore button on the map card next to Go inside. You can dig their veins before or after clearing the place.",
+      "Mines that are also dungeons, like Embershard Mine, have a \uE12A Mine ore button on the map card next to Go inside. You can dig their veins before or after clearing the place.",
       "If you can't mine, the game now tells you why: no pickaxe (the blacksmith in Riverwood sells one, cheap), your pickaxe is sitting in your house chest, or the veins need a day to grow back.",
       "Old saves where a pickaxe looked worn out or empty get it working again.",
     ] },
@@ -217,7 +223,7 @@ const PATCHNOTES = (() => {
       "Clear nights: your magicka comes back 50% faster in fights. New perks: Weathered Traveller (Acrobatics) for bad weather and the cold, Starlit Mind (Alteration) for clear nights."] },
     { id: "b154-a11y", build: 154, date: "24 Nov 2026", title: "More accessibility options", items: [
       "Settings → Accessibility → Text size now has four steps: Small, Normal, Large and Huge. Every screen still fits on phones and PC.",
-      "Colour-blind help no longer relies on colour alone: the magicka bar is striped, the stamina bar has ticks, the health, magicka and stamina numbers get ♥ ◆ » marks, danger has shapes (○ minor, ◆ dangerous, ⚠ deadly) and good or bad effects get ▲ ▼ arrows.",
+      "Colour-blind help no longer relies on colour alone: the magicka bar is striped, the stamina bar has ticks, the health, magicka and stamina numbers get ♥ ◆ » marks, danger has shapes (○ minor, ◆ dangerous, \uE123 deadly) and good or bad effects get ▲ ▼ arrows.",
       "New: Easy timing. Mining, fishing, lockpicking and the dungeon room games give you more time, a slower needle and a wider sweet spot.",
       "The accessibility settings are now in Polish too.",
     ] },
@@ -588,10 +594,10 @@ const PATCHNOTES = (() => {
       "Night, dusk and bad weather still darken and tint the scenes outdoors, and caravans still stand behind the fight. Both art styles work: in pixel art the paintings turn into pixels too.",
     ] },
     { id: "b132", build: 132, date: "23 Nov 2026", title: "See what's coming in a fight", items: [
-      "Foes show their next move before they make it. Under the foe's health bar, Next lists what it will do with each of its turns this round, and the first one floats over it in the fight: ⚔ 18–26 for a normal hit, 💥 Huge blow or 🎯 Aimed shot in red when a big one is coming, ✚ when it's about to heal, 🛡 when it raises a shield. The numbers already count your armour and guard. Hold a finger on one to read it.",
-      "Health bars show what's about to come off. Striped parts of your bar are the damage this round's blows plus your poison or burning will take, with the numbers under the bar (for example ⚔ −39 ☠ −18 ≈ −57). The foe's bar does the same for its burning, bleeding and your cloaks. Healing shows as a green edge.",
+      "Foes show their next move before they make it. Under the foe's health bar, Next lists what it will do with each of its turns this round, and the first one floats over it in the fight: \uE101 18–26 for a normal hit, \uE135 Huge blow or \uE145 Aimed shot in red when a big one is coming, ✚ when it's about to heal, \uE102 when it raises a shield. The numbers already count your armour and guard. Hold a finger on one to read it.",
+      "Health bars show what's about to come off. Striped parts of your bar are the damage this round's blows plus your poison or burning will take, with the numbers under the bar (for example \uE101 −39 \uE12E −18 ≈ −57). The foe's bar does the same for its burning, bleeding and your cloaks. Healing shows as a green edge.",
       "Your own poison, burning, bleeding, chill, healing and guard now sit on your own frame as labelled chips (Poisoned −6 ×3 means 6 each time a foe acts, 3 more times).",
-      "The foe's turn plays out one step at a time instead of all at once: each blow, its number and the health bars, then the next. A Skip button jumps to the end, and ⏩ Fast keeps the old quick way.",
+      "The foe's turn plays out one step at a time instead of all at once: each blow, its number and the health bars, then the next. A Skip button jumps to the end, and \uE13C Fast keeps the old quick way.",
       "Banners tell you whose turn it is (Bandit's turn, Your turn), and a new round shows what happened in the last one: how much you dealt and how much you took.",
       "Under a quarter of your health, the edges of the screen pulse red and you hear your heartbeat.",
       "New fight sounds: a horn for your turn, war drums for the foe's, a gong for a new round, a grunt when a foe winds up, poison and burning hissing, healing, the heartbeat, and real recorded sword, axe, mace and arrow hits, clangs, swings, victory and defeat.",
@@ -616,7 +622,7 @@ const PATCHNOTES = (() => {
       "Don't like the blood? Settings → Fights → Blood: Off.",
     ] },
     { id: "b128", build: 128, date: "23 Nov 2026", title: "Hunting", items: [
-      "New 🏹 button on the map: turn hunting on and you travel a little slower, but you run into deer, elk, mountain goats (and horkers by the sea) far more often. Every one is a fight you play.",
+      "New \uE10C button on the map: turn hunting on and you travel a little slower, but you run into deer, elk, mountain goats (and horkers by the sea) far more often. Every one is a fight you play.",
       "Sometimes something else is hunting too: wolves, bears and sabre cats turn up now and then.",
       "Game gives venison or horker meat and hides you can tan into leather. Predators still give their pelts.",
       "New Archery perk, Hunter's Eye: you find game half again as often, hit animals harder, and get an extra piece of meat at rank 2.",
@@ -658,7 +664,7 @@ const PATCHNOTES = (() => {
       "Warriors bash you with their shields (you lose stamina and 1 action point) and raise them to block. Brutes wind up huge blows and roar war cries. Archers take aim for a big shot and fire poison arrows.",
       "Mages throw fire, frost or lightning bolts (burning you, draining stamina or magicka), raise wards against your spells and heal themselves. Rogues use poisoned blades and slip into the shadows.",
       "Wolves pounce and howl, bears and trolls maul (you bleed), trolls regenerate, spiders spit venom, draugr shout you back and breathe frost, necromancers drain your life. Many humanoids carry a healing potion or two.",
-      "You see slow moves coming: a ⚠ or 🎯 on the foe means a big blow lands next turn. Guard, or hit hard enough to break it.",
+      "You see slow moves coming: a \uE123 or \uE145 on the foe means a big blow lands next turn. Guard, or hit hard enough to break it.",
       "Chips on the foe show a raised shield, a ward, shadows or rage. Hold a finger on the foe to see everything it can do.",
     ] },
     { id: "b121", build: 121, date: "23 Nov 2026", title: "Wards hold", items: [
@@ -683,7 +689,7 @@ const PATCHNOTES = (() => {
       "Strikes and attack spells now have a timing ring: a needle sweeps round, tap when it's in the bright zone. Right in the middle is Perfect (25% more damage), anywhere in the zone is Good, and a miss (or no tap) does 20% less.",
       "The better your skill with that weapon or school of magic, the wider the zone. Duelist, Brute Force, Steady Hand and Disintegrate make it wider still.",
       "What you spend floats up from your frame (−3 AP, −58 SP, −40 MP), and a Perfect hit lights up the fight.",
-      "Fast mode and Auto skip the timing ring. Prefer the old cards? Tap 🎯 at the top of the fight screen.",
+      "Fast mode and Auto skip the timing ring. Prefer the old cards? Tap \uE145 at the top of the fight screen.",
     ] },
     { id: "b117", build: 117, date: "23 Nov 2026", title: "Dragons take to the sky", items: [
       "Dragons come in kinds now: Dragon, Frost Dragon, Blood Dragon, Elder, Ancient, Revered and Legendary. Each breathes fire or frost, has its own colour and gets tougher the higher up the list it is. The strongest only show up at high levels.",
@@ -806,7 +812,7 @@ const PATCHNOTES = (() => {
       "First-time tips no longer cover the category buttons in the item and spell menus. They sit lower while a menu is open.",
     ] },
     { id: "b95", build: 95, date: "22 Nov 2026", title: "Tidier pack and safer selling", items: [
-      "Mark anything Keep (🔒) from its item card. Kept things and your favourites are never sold in bulk.",
+      "Mark anything Keep (\uE117) from its item card. Kept things and your favourites are never sold in bulk.",
       "Sell all junk: at a shop, one button sells cheap trinkets and loose gear that's worse than what you wear. You see the list and the total first. Kept, favourite, quest, unique, enchanted and handmade things never count as junk.",
       "Green ▲ and red ▼ arrows on gear show if it's better or worse than what you're wearing: in the pack, the Items menu, shops and market stalls.",
       "New sort buttons in the Items menu: by name, value, weight, value per weight or newest first.",
@@ -830,7 +836,7 @@ const PATCHNOTES = (() => {
       "Fight again: one tap to rerun a test fight against the practice dummy (Tactics), and Challenge again after an Arena bout.",
       "The game remembers your last Arena bet and your last test-fight foe. Riding or walking beside your horse was already remembered."] },
     { id: "b92", build: 92, date: "22 Nov 2026", title: "A clearer first hour", items: [
-      "“What to do next” on the Travel tab now suggests up to three ideas that fit where you are: road fights near Whiterun while you're new, your first dungeon, the main quest, a horse once you can afford one, teaming up with others, and later rumours, world events and building a homestead. Tap ✕ to hide one, or turn them off in ⚙ Settings → Help & tips. They stop once you reach level 15.",
+      "“What to do next” on the Travel tab now suggests up to three ideas that fit where you are: road fights near Whiterun while you're new, your first dungeon, the main quest, a horse once you can afford one, teaming up with others, and later rumours, world events and building a homestead. Tap ✕ to hide one, or turn them off in \uE11E Settings → Help & tips. They stop once you reach level 15.",
       "First-time tips: a small card pops up the first time you're too heavy, level up, enter a dungeon, play a turn-by-turn fight (it explains initiative and action points), get a party invite or hear a rumour. One at a time, they never get in the way, and “Don't show tips” switches them off.",
       "New characters get a welcome tip pointing at the “Your first trip” card, which was easy to miss under the map.",
       "The tutorial, the guide and the road encounter sheet now explain turn-by-turn fights (and Auto) instead of saying fights play out by themselves. In a party, the tutorial tells members that the leader picks where to go.",
@@ -839,7 +845,7 @@ const PATCHNOTES = (() => {
       "The bar along the bottom now has seven tabs, like Skyrim: Character, Items, Magic, Map, Journal, Social and Town. Tabs with more than one page show a row of sub-tabs along the top; slide it sideways to see them all.",
       "Character holds everything about you: Skills (the star skies), Character (your sheet, powers, shouts and follower), Perks, Tactics, Stats, Achievements, Library, Diary and Settings.",
       "Tactics used to have its own tab. It's now under Character → Tactics.",
-      "Settings (sound, Accessibility, Fights, Art style and the rest), the guide, patch notes and Main menu are under Character → Settings. The ⚙ Menu button at the top still opens them too.",
+      "Settings (sound, Accessibility, Fights, Art style and the rest), the guide, patch notes and Main menu are under Character → Settings. The \uE11E Menu button at the top still opens them too.",
       "Achievements and the Library (your discoveries and lore books) each have their own page under Character now, instead of sitting at the bottom of other pages.",
       "Items and Magic open the item and spell menus straight away. The bottom bar stays visible over them, so you can jump to another tab in one tap. A new List button in the item menu shows your pack as a plain list (sell, recharge, eat and so on).",
       "Map has three pages: Travel, Locations (places you've cleared) and World news. World news is the new home of “Word around Skyrim” (rumours and your good name in each hold), world events and festivals, which used to be in the Journal.",
@@ -850,7 +856,7 @@ const PATCHNOTES = (() => {
       "Fixed: after using the compass, opening Items or Magic from the bottom bar and closing it no longer pops the compass back up.",
       "The bottom bar fits on small phones even at the Biggest text size and with one-hand mode on."] },
     { id: "b90", build: 90, date: "22 Nov 2026", title: "Search everything", items: [
-      "New 🔍 Search button in the top bar: one box that finds your gear, every item in the game, spells, shouts you know, perks, skills, places you know, your quests, followers, recipes and settings.",
+      "New \uE105 Search button in the top bar: one box that finds your gear, every item in the game, spells, shouts you know, perks, skills, places you know, your quests, followers, recipes and settings.",
       "Typos are fine: “steal swrod”, “fierball” or “restor helth” still find what you meant. Results come in groups with their pictures, and your last searches are kept for a quick tap.",
       "Tap a result to go straight there: your item opens in the pack, a perk opens its star in the skill's constellation, a place opens on the map with a Travel button, a quest opens in the Journal, a setting lights up its row.",
       "Things you don't have yet get a small card: what an item does and where to get it, a spell's numbers and which shops you know sell its tome right now, what a forge or cooking recipe takes (and how much you have), which ingredients you know make a potion, and where a follower waits to be hired.",
@@ -896,14 +902,14 @@ const PATCHNOTES = (() => {
     { id: "b84", build: 83, date: "22 Nov 2026", title: "Turn-by-turn fights", items: [
       "Fights are now played turn by turn. Everyone rolls for who goes first each round: Acrobatics and Sneak make you quicker, heavy armor slows you down.",
       "On your turn you spend action points (the gold dots): a dagger swing costs less than a greatsword, power attacks and stronger spells cost more. Athletics and Stamina give you more points; Alteration and Magicka give extra points just for spells. Points you don't use keep your guard up.",
-      "Attack, power attack, guard, cast from your Magic list, drink potions, read scrolls, shout or try to run. Tap Auto to let your Smart AI (with your AI settings) play one turn, or Auto ⏩ for the rest of the fight.",
+      "Attack, power attack, guard, cast from your Magic list, drink potions, read scrolls, shout or try to run. Tap Auto to let your Smart AI (with your AI settings) play one turn, or Auto \uE13C for the rest of the fight.",
       "Followers and summons take their own turns. In a party, each player picks their own move on their own phone (60 seconds, then Auto), and foes get tougher the more of you there are. Someone who misses two turns in a row is played by Auto.",
       "Fights last longer and no single blow can take more than 40% of a strong foe's health (or yours). Small fry like skeevers can still go down in one hit.",
       "New perks: Battle Rhythm (Athletics, more action points), Quick Start (Acrobatics) and First Move (Sneak) to act sooner, Quickened Casting (Alteration, a spell point) and Drilled in Steel (Heavy Armor, heavy armor slows you half as much).",
       "Works for road encounters, dungeon rooms, quests and guild jobs, dragon raids, resisting arrest and attacking other players. The live fight scene plays each turn in both art styles.",
       "The world waits while you fight. If you close the game mid-fight, you come back just before the fight started.",
       "The Athletics and Acrobatics skill pages now show your action points and initiative.",
-      "Prefer the old way? Menu → Settings → Fights → Instant (auto). There's also a Fast setting (or the ⏩ button in a fight) that shows foe turns quicker."] },
+      "Prefer the old way? Menu → Settings → Fights → Instant (auto). There's also a Fast setting (or the \uE13C button in a fight) that shows foe turns quicker."] },
     { id: "b82", build: 82, date: "22 Nov 2026", title: "Your AI, your way (and fairer sneak attacks)", items: [
       "Sneak attacks make sense now: heavy armor clanks, daylight gives you away, nights, fog and rain help, and the undead and dragons are hard to fool. The odds show on the encounter card. A sneak blow can't drop a strong foe in one hit any more (weak ones still go down). New Sneak perk: Ambusher.",
       "Smart AI settings on the Tactics tab: pick a style (Careful, Balanced, Aggressive), lean on melee, bow or magic, switch off schools or single spells, choose when to drink potions, shout, sneak up and heal, and how much magicka to keep back.",
@@ -940,9 +946,9 @@ const PATCHNOTES = (() => {
       "The update screen now says whether your app updates itself or needs one more full install."] },
     { id: "b70", build: 70, date: "22 Nov 2026", title: "Bigger perk trees, burning and a real quest journal", items: [
       "Every skill tree now has 9 to 14 perks (284 in total): Skyrim's own like Dual Flurry, Quick Shot, Eagle Eye, Shield Charge, Juggernaut, Impact, Twin Souls, Necromage and Assassin's Blade, plus new ones for Spear, Hand-to-Hand, Unarmored, Mysticism and more. Your old perks stay.",
-      "Fire sets things burning for 3 turns, frost chills and slows (Deep Freeze can freeze solid), shock drains magicka and interrupts casters. Enemy mages, atronachs and dragons can do it to you too. Look for the 🔥 ❄ ⚡ chips under the health bars.",
+      "Fire sets things burning for 3 turns, frost chills and slows (Deep Freeze can freeze solid), shock drains magicka and interrupts casters. Enemy mages, atronachs and dragons can do it to you too. Look for the \uE104 \uE125 \uE129 chips under the health bars.",
       "The Journal is now only quests: Active, Misc and Completed, grouped by questline, with objectives, stages, recommended level and a Track button that drives the compass bar.",
-      "Moved, not lost: chat, party, trades, clans and the leaderboard are under 👥 Friends; stats, diary and the lore library are on your Character page; cleared places are under Map → Locations."] },
+      "Moved, not lost: chat, party, trades, clans and the leaderboard are under \uE106 Friends; stats, diary and the lore library are on your Character page; cleared places are under Map → Locations."] },
     { id: "b68", build: 68, date: "22 Nov 2026", title: "Updates without reinstalling", items: [
       "Install this version once more by hand. After that the app downloads new versions by itself in the background and switches to them the next time you open it — no Android installer, no tapping Install.",
       "If an update ever fails to start, the app goes back to the version inside it on its own.",
@@ -1095,13 +1101,12 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 165;
+  const NEXT_AT = 169;
   const NEXT = [
     "A new, livelier fight screen that fits on one screen",
-    "On PC, everything fits on one screen without scrolling",
-    "New painted dungeon rooms and a parchment dungeon map",
-    "Dwemer ruins and the deep caverns of Blackreach",
-    "Fishing and hunting",
+    "Pick a side: Stormcloaks, Imperial Legion or Aldmeri Dominion",
+    "Esc opens a Skyrim-style pause menu on PC",
+    "Horses that really gallop on the travel strip",
   ];
   const KEY = "rotn_notes_seen";
   const latest = () => LIST[0];

@@ -70,10 +70,10 @@ c.__p.then(() => {
   vm.runInContext(fs.readFileSync(__GAME + "i18n_invites.js", "utf8"), ctx2);
   const tr = (s) => { if (ex.words[s]) return ex.words[s]; for (const [re, f] of ex.pat) { const m = s.match(re); if (m) return f(m); } return null; };
   for (const s of ["Accept", "Decline", "Alfa invites you to their party", "Alfa asks you to raid Bleak Falls Barrow together", "Alfa invites you to the clan Sons [NORD]",
-    "Alfa challenges you in the Windhelm Arena", "Alfa offers you a trade", "👥 Kacper declined your party invite.", "⚔ Kacper declined your dungeon invite.",
+    "Alfa challenges you in the Windhelm Arena", "Alfa offers you a trade", "\uE106 Kacper declined your party invite.", "⚔ Kacper declined your dungeon invite.",
     "🏴 Kacper declined your clan invite.", "The party is full (8/8)", "That party is full (8 heroes at most).", "You declined Alfa's party invite.",
-    "You declined the invite to Sons.", "You need 500 gold", "+2 more invites in 👥 Social", "Invites you can answer right away"]) c.ok(tr(s), "Polish for: " + s);
-  c.ok(tr("👥 Kacper declined your party invite.") === "👥 Kacper odrzuca twoje zaproszenie do drużyny.", "Polish decline note: " + tr("👥 Kacper declined your party invite."));
+    "You declined the invite to Sons.", "You need 500 gold", "+2 more invites in \uE106 Social", "Invites you can answer right away"]) c.ok(tr(s), "Polish for: " + s);
+  c.ok(tr("\uE106 Kacper declined your party invite.") === "\uE106 Kacper odrzuca twoje zaproszenie do drużyny.", "Polish decline note: " + tr("\uE106 Kacper declined your party invite."));
   // patch note on top
   const pn = fs.readFileSync(__GAME + "patchnotes.js", "utf8");
   { const ids = [...pn.slice(pn.indexOf("const LIST = [")).matchAll(/\{ id: "([^"]+)"/g)].slice(0, 40).map((m) => m[1]); c.ok(ids.some((x) => /^b\d+-invitebuttons$/.test(x)), "patch note near the top"); }

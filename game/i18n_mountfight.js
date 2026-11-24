@@ -5,6 +5,14 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
   Object.assign(I18N_EXTRA.words, {
     // moves and reasons
     Mount: "Dosiądź", Dismount: "Zsiądź",
+    "Pick a side: Stormcloaks, Imperial Legion or Aldmeri Dominion": "Wybierz stronę: Gromowładni, Legion Cesarski albo Dominium Aldmerów",
+    "Esc opens a Skyrim-style pause menu on PC": "Na PC Esc otwiera menu pauzy jak w Skyrim",
+    "Horses that really gallop on the travel strip": "Konie, które naprawdę galopują na pasku podróży",
+    "Small fixes after a big update": "Drobne poprawki po dużej aktualizacji",
+    "A horse knocked down in a fight now stays downed beside you afterwards, like everywhere else, until it gets back up (a few hours, a night's sleep or a stablehand).": "Koń powalony w walce zostaje potem przy tobie powalony, tak jak wszędzie indziej, aż sam wstanie (kilka godzin, noc snu albo stajenny).",
+    "You only see one notice when a skill goes up, not two.": "Gdy umiejętność rośnie, widzisz jedno powiadomienie, nie dwa.",
+    "Patch notes use the new game icons too.": "Notatki o zmianach też używają nowych ikon gry.",
+    "On phones, the house chest, Report a problem, invite cards, the weather chip and other newer screens lost their styling after the last update. They look right again.": "Na telefonach skrzynia w domu, Zgłoś problem, karty zaproszeń, ikonka pogody i inne nowsze ekrany straciły wygląd po ostatniej aktualizacji. Znów wyglądają dobrze.",
     "No horse here": "Nie ma tu konia",
     "You're on foot": "Jesteś pieszo",
     "Already in the saddle": "Już siedzisz w siodle",

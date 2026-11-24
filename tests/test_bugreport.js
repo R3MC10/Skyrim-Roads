@@ -145,7 +145,7 @@ async function client() {
   B.close();
   OK(/data-brep="open"/.test(B.settingsHTML()) && /Report a problem/.test(B.settingsHTML()), "Settings has a Report a problem button (the phone's way in)");
   OK(c.I18N_EXTRA.words["Report sent, thanks!"] && c.I18N_EXTRA.words["Report a problem from inside the game"], "Polish lines for the window and the patch note");
-  OK(c.PATCHNOTES.LIST.slice(0, 40).some((x) => x.id === "b144-bugreport" && x.build === 144), "patch note near the top");   // several features ship together; only one note can be first
+  OK(c.PATCHNOTES.LIST.some((x) => x.id === "b144-bugreport" && x.build === 144), "patch note is there");   // several features ship together; the note slides down as newer ones land
 }
 
 // ------------------------------------------------------------------ the server route
