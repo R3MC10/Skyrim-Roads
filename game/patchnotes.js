@@ -3,6 +3,10 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b167-titlewide", build: 167, date: "24 Nov 2026", title: "A wide painting for wide screens", items: [
+      "On a PC or laptop the main menu now has its own wide painting: the warrior on his rock, the castle city in the valley, the dragon and the northern lights fill the whole window, from an old 4:3 screen to a 32:9 ultra-wide. No more tall picture with blurry sides.",
+      "Big and sharp screens get an extra-large copy of the painting so it stays crisp. Phones keep the tall picture they had.",
+    ] },
     { id: "b166-chargebar", build: 166, date: "24 Nov 2026", title: "Charge bars", items: [
       "Enchanted weapons and staffs now show a thin purple charge bar everywhere they appear: your pack, the Items menu and its details, tooltips, the paper doll, shops, chests and stash, follower gear, loot and loot votes, markets and trades.",
       "When the charge runs out the bar turns red and the item says \"no charge\": the enchantment stops working until you recharge it with a filled soul gem (Items → the weapon → Recharge).",
