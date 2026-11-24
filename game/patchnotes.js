@@ -12,6 +12,10 @@ const PATCHNOTES = (() => {
       "Everyone's phone sees the same thing: the same trap, the same results and the same lock outcome. If your phone drops out in the middle of a trap and comes back in time, you get to finish it.",
       "New perks: Trap Tinkerer (Lockpicking 40): trap games are easier, and a trap never spills your gold or dents your armour. Call Out the Danger (Sneak 40): get through a trap cleanly in a party and everyone it still catches takes a quarter less and one stack less poison or bleeding.",
     ] },
+    { id: "b166-appicon", build: 166, date: "24 Nov 2026", title: "A proper icon", items: [
+      "The game has its own icon now: a horned Nord helm under the northern star, on a parchment shield. You'll see it on your phone's home screen, the PC game's window, taskbar and installer, and the browser tab.",
+      "On Android 13 and newer it also follows your themed icons, and game notifications show a small helm instead of a plain square. The loading screen shows the new shield too.",
+    ] },
     { id: "b153-blackreach", build: 153, date: "24 Nov 2026", title: "Dwemer ruins and Blackreach", items: [
       "New quest line from level 14: \"The Dwemer Lexicon\". Calcelmo, the Dwemer scholar in Markarth, sends you through Mzinchaleft, Raldbthar and Alftand. Find the lexicon, turn its rings to match his notes, then ride the great lift down.",
       "Blackreach: a huge glowing cavern under Alftand with its own map. Walk from spot to spot past Falmer, Dwarven machines and giant mushrooms, pick glowing mushrooms and crimson nirnroot, crack the Silent City vault, and beat the Centurion master at the Great Dynamo.",

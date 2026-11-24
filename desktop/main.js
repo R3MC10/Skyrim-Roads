@@ -8,7 +8,7 @@ const ROOT = path.join(__dirname, "www");
 if (!app.requestSingleInstanceLock()) app.quit();
 function make() {
   const w = new BrowserWindow({ width: 1280, height: 860, minWidth: 360, minHeight: 600, backgroundColor: "#0b0c0e", autoHideMenuBar: true,
-    title: "Roads of the North", webPreferences: { contextIsolation: true, sandbox: true } });
+    title: "Roads of the North", icon: path.join(__dirname, "icon.png"), webPreferences: { contextIsolation: true, sandbox: true } });
   w.setMenu(null);
   w.webContents.setWindowOpenHandler(({ url }) => { if (/^https?:/.test(url)) shell.openExternal(url); return { action: "deny" }; });
   w.webContents.on("before-input-event", (e, inp) => { if (inp.type === "keyDown" && inp.key === "F11") { w.setFullScreen(!w.isFullScreen()); e.preventDefault(); } });
