@@ -29,5 +29,16 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
       "Naprawiono zabłąkaną złotą linię pod kartami wydarzeń świata: to był pasek postępu karawany, widoczny, gdy jego karta chowała się pod mapą.",
     "The compass at the top of the PC map is one centred bar, like in Skyrim.":
       "Kompas na górze mapy na PC to jeden wyśrodkowany pasek, jak w Skyrim.",
+    // patch note b175-mappolish
+    "Map polish: a clearer close-up and tidier cards":
+      "Szlif mapy: czytelniejsze zbliżenie i porządek w kartach",
+    "Zoomed in close, the hand-inked chart now uses the painting's own colours, so going from the painting to the chart is smooth. Plains, forests, snow and mountains each get their own calm wash on soft paper, with a gentle shade on the hills.":
+      "Po zbliżeniu ręcznie rysowana mapa używa teraz kolorów z obrazu, więc przejście z obrazu do mapy jest płynne. Równiny, lasy, śnieg i góry mają własny spokojny kolor na miękkim papierze, z lekkim cieniem na wzgórzach.",
+    "Sun rays, cloud shadows, mist and town glows fade as you zoom in, so the close-up stays easy to read.":
+      "Promienie słońca, cienie chmur, mgła i blask miast słabną przy zbliżeniu, więc mapa z bliska jest czytelna.",
+    "On a PC the world event card, its notices (a town rebuilding, a reward waiting), the dragon raid card and the caravan card now sit in one column at the left edge instead of over the middle of the map. The card still folds into a pill. Phones keep the old layout.":
+      "Na PC karta wydarzenia świata, jej powiadomienia (odbudowa miasta, czekająca nagroda), karta ataku smoka i karta karawany stoją teraz w jednej kolumnie przy lewej krawędzi, a nie na środku mapy. Kartę nadal można zwinąć w pigułkę. Na telefonach bez zmian.",
+    "Names on the map no longer pile on top of each other: a camp's or a patrol's name moves aside or waits until you zoom in, and nothing is written under the cards at the left.":
+      "Nazwy na mapie nie nachodzą już na siebie: nazwa obozu czy patrolu przesuwa się albo pojawia dopiero po zbliżeniu, a pod kartami po lewej nic nie jest napisane.",
   });
 })();

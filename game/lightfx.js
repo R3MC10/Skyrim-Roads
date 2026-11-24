@@ -137,8 +137,8 @@ const LIGHTFX = (() => {
   }
   /* the added light on the map, phase 0 or 1 (High crossfades the two so water shimmers and the aurora ripples) */
   const LW = 500, LH = 350;
-  function worldLight(L, shown, phase) {
-    const TR = terrain(), k = `${phase}|${q(L.lights)}|${q(L.shim)}|${q(L.aurora)}|${L.shimCol.map((c) => c >> 4).join(",")}|${shown.length}`;
+  function worldLight(L, shown, phase, close = 0) {
+    const cq = q(close, 5), TR = terrain(), k = `${phase}|${cq}|${q(L.lights)}|${q(L.shim)}|${q(L.aurora)}|${L.shimCol.map((c) => c >> 4).join(",")}|${shown.length}`;
     const slot = "wl" + phase; if (lay[slot] && lay[slot].k === k) return lay[slot].c;
     const { GW, GH } = TR, small = mk(GW, GH), sg = small.getContext("2d"), img = sg.createImageData(GW, GH), d = img.data;
     const ph = phase * 1.7;
@@ -168,7 +168,7 @@ const LIGHTFX = (() => {
       g.globalCompositeOperation = "lighter";
       for (const [, x, y, kind] of shown) {
         const sp = GLOW[kind]; if (!sp) continue;
-        const R = sp[0] * (LW / 1000) * 2.6, a = sp[2] * L.lights;
+        const R = sp[0] * (LW / 1000) * 2.6 * (1 - 0.62 * cq), a = sp[2] * L.lights * (1 - 0.4 * cq);   // zoomed in close: smaller, softer pools of light
         g.globalAlpha = clamp(a); g.drawImage(glowSprite(sp[1]), x * LW - R, y * LH - R * 1.05, R * 2, R * 2);
       }
       g.globalAlpha = 1; g.globalCompositeOperation = "source-over";
@@ -238,6 +238,7 @@ const LIGHTFX = (() => {
      storms add one (colour wash-out). The moving layers are redrawn into small buffers ~3×/s and stretched up once. */
   function map(g, canvas, v, o) {
     const lv = level(); if (lv === "off") return false;
+    const close = clamp(o.close || 0);   // 0 zoomed out … 1 close up (the ink chart): the sky's light shafts and warm lift fade, fires shrink
     const L = nowLight(v.weather), hcOn = hc(), high = lv === "high", still = !!v.reduceMotion, t = still ? 0 : v.t || 0;
     const cw = canvas.width, ch = canvas.height, dpr = o.dpr || 1, f = 0.25, bw = Math.ceil(cw * f), bh = Math.ceil(ch * f);
     const T = g.getTransform(), toBuf = (bg) => bg.setTransform(T.a * f, T.b * f, T.c * f, T.d * f, T.e * f, T.f * f);
@@ -257,7 +258,7 @@ const LIGHTFX = (() => {
       const clouds = high && L.night < 0.6 && !["fog", "blizzard"].includes(L.wx), mist = high && !hcOn && L.fog > 0.04;
       if (clouds || mist) {
         const b = buf("air", bw, bh), bg = b.c.getContext("2d"), fl = mist ? fogLayer(L) : null;
-        const key = `${view}|${tick}|${clouds}|${q(L.night, 5)}|${L.wx}|${fl ? lay.fog.k : ""}`;
+        const key = `${view}|${tick}|${q(close, 5)}|${clouds}|${q(L.night, 5)}|${L.wx}|${fl ? lay.fog.k : ""}`;
         if (b.k !== key) {
           bg.setTransform(1, 0, 0, 1, 0, 0); bg.clearRect(0, 0, bw, bh); toBuf(bg); bg.imageSmoothingEnabled = true;
           if (clouds) {
@@ -265,14 +266,15 @@ const LIGHTFX = (() => {
             if (pat && pat.setTransform && typeof DOMMatrix !== "undefined") {
               const c = v.center || [0.5, 0.5];
               pat.setTransform(new DOMMatrix().translate(t * 3.2 - c[0] * o.W * 0.22, t * 1.1 - c[1] * o.H * 0.22).scale(5.2));
-              bg.globalAlpha = (L.wx === "storm" || L.wx === "rain" ? 0.9 : L.wx === "cloudy" ? 0.75 : 0.45) * (1 - L.night);
+              bg.globalAlpha = (L.wx === "storm" || L.wx === "rain" ? 0.9 : L.wx === "cloudy" ? 0.75 : 0.45) * (1 - L.night) * (1 - 0.7 * close);
               bg.fillStyle = pat; bg.fillRect(x0, y0, x1 - x0, y1 - y0);
             }
           }
           if (fl) {
             const dx = Math.sin(t * 0.045) * 9, dy = Math.cos(t * 0.031) * 4;
-            bg.globalAlpha = 0.6; bg.drawImage(fl, dx, dy, o.W, o.H);
-            bg.globalAlpha = 0.45; bg.drawImage(fl, -dx * 1.4 + 5, -dy + 3, o.W, o.H);
+            const fa = 1 - 0.65 * close;   // close up, the valley mist thins out so the chart stays readable
+            bg.globalAlpha = 0.6 * fa; bg.drawImage(fl, dx, dy, o.W, o.H);
+            bg.globalAlpha = 0.45 * fa; bg.drawImage(fl, -dx * 1.4 + 5, -dy + 3, o.W, o.H);
           }
           bg.globalAlpha = 1; b.k = key;
         }
@@ -284,12 +286,12 @@ const LIGHTFX = (() => {
     const wl = world && (L.lights > 0.03 || L.shim > 0.02 || L.aurora > 0.02);
     if (wl || sl.add) {
       const b = buf("light", bw, bh), bg = b.c.getContext("2d");
-      const wa = wl ? worldLight(L, o.shown, 0) : null, wb = wl && high ? worldLight(L, o.shown, 1) : null;
-      const key = `${view}|${tick}|${wa ? lay.wl0.k : ""}|${wb ? lay.wl1.k : ""}|${lay.scr.k}`;
+      const wa = wl ? worldLight(L, o.shown, 0, close) : null, wb = wl && high ? worldLight(L, o.shown, 1, close) : null;
+      const key = `${view}|${q(close, 5)}|${tick}|${wa ? lay.wl0.k : ""}|${wb ? lay.wl1.k : ""}|${lay.scr.k}`;
       if (b.k !== key) {   // Low and reduce motion: only when the view or the light changes
         bg.setTransform(1, 0, 0, 1, 0, 0); bg.clearRect(0, 0, bw, bh); bg.imageSmoothingEnabled = true;
         bg.globalCompositeOperation = "lighter";
-        if (sl.add) { bg.globalAlpha = high && !still ? 0.85 + 0.15 * Math.sin(t * 0.35) : 1; bg.drawImage(sl.add, 0, 0, bw, bh); }
+        if (sl.add && close < 0.95) { bg.globalAlpha = (high && !still ? 0.85 + 0.15 * Math.sin(t * 0.35) : 1) * (1 - 0.85 * close); bg.drawImage(sl.add, 0, 0, bw, bh); }
         toBuf(bg);
         if (wb) { const a = 0.5 + 0.5 * Math.sin(t * 0.8); bg.globalAlpha = a; bg.drawImage(wa, 0, 0, o.W, o.H); bg.globalAlpha = 1 - a; bg.drawImage(wb, 0, 0, o.W, o.H); }
         else if (wa) { bg.globalAlpha = 1; bg.drawImage(wa, 0, 0, o.W, o.H); }

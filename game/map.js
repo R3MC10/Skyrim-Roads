@@ -98,11 +98,15 @@ const WorldMap = (() => {
     for (const [name, x, y, rot] of WORLD.beyond || []) {
       g.save(); g.translate(x * W, y * H); g.rotate(rot * Math.PI / 180); g.font = FONT(sz * 1.1 * s, 600);
       if (g.letterSpacing !== undefined) g.letterSpacing = `${sp * 1.6 * s}px`;
-      g.globalAlpha = 0.5 * fade; g.fillStyle = "rgba(246,238,220,1)"; g.fillText(LX(name).toUpperCase(), 0, 0); g.restore();
+      const text = LX(name).toUpperCase(), tw = g.measureText(text).width, th = sz * 1.2 * s, a = rot * Math.PI / 180;
+      const bw = tw * Math.abs(Math.cos(a)) + th * Math.abs(Math.sin(a)), bh = tw * Math.abs(Math.sin(a)) + th * Math.abs(Math.cos(a));
+      if (hit([x * W - bw / 2, y * H - bh / 2, bw, bh])) { g.restore(); continue; }   // e.g. under a card docked at the left
+      g.globalAlpha = 0.5 * fade; g.fillStyle = "rgba(246,238,220,1)"; g.fillText(text, 0, 0); g.restore();
     }
     const sl = WORLD.seaLabel || [0.4, 0.05];
     g.font = FONT(sz * 1.15 * s, 600, "italic"); if (g.letterSpacing !== undefined) g.letterSpacing = `${sp * 0.6 * s}px`;
-    g.globalAlpha = 0.6 * fade; g.fillStyle = "rgba(200,222,230,1)"; g.fillText(LX("Sea of Ghosts"), sl[0] * W, sl[1] * H);
+    { const t = LX("Sea of Ghosts"), tw = g.measureText(t).width, th = sz * 1.3 * s;
+      if (!hit([sl[0] * W - tw / 2, sl[1] * H - th / 2, tw, th])) { g.globalAlpha = 0.6 * fade; g.fillStyle = "rgba(200,222,230,1)"; g.fillText(t, sl[0] * W, sl[1] * H); } }
     if (g.letterSpacing !== undefined) g.letterSpacing = "0px";
     g.restore();
     return drawn;
@@ -503,6 +507,10 @@ const WorldMap = (() => {
     const IK = painted && typeof INKMAP !== "undefined" ? INKMAP : null;
     const pscale = painted ? (W * Pcss) / painted.naturalWidth : 0;
     const pa = !painted ? 1 : !IK ? 1 : Math.max(0, Math.min(1, (PAINT_MAX - pscale) / (PAINT_MAX - PAINT_FADE)));
+    // how far into the close-up we are (0 at the painting's own size … 1 well into the ink chart): the sky's light shafts,
+    // cloud shadows, mist and town glows tone down with it so the chart stays clear (lightfx.js, mapart.js)
+    v.close = painted ? Math.max(0, Math.min(1, (pscale - PAINT_FADE) / 1.6)) : Math.max(0, Math.min(1, (v.zoom - 1.6) / 2.4));
+    stats.close = +v.close.toFixed(2);
     stats.paintScale = pa > 0 ? pscale : 0; stats.paintAlpha = painted ? pa : 0; stats.ink = IK ? 1 - pa : 0; stats.roads = ROAD_STYLE; stats.dpr = dpr;
     if (IK && pa < 1) { g.save(); g.setTransform(1, 0, 0, 1, 0, 0); IK.draw(g, painted, k, ox, oy, canvas.width, canvas.height, dpr, 1); g.restore(); }
     if (bimg && pa > 0) { g.globalAlpha = pa; g.drawImage(bimg, 0, 0, W, H); g.globalAlpha = 1; }   // the painting is stretched over the world bounds: world (x, y) → (x·W, y·H)
@@ -565,7 +573,7 @@ const WorldMap = (() => {
     const small = v.zoom < 1.5 && shown.length > 60 ? 0.72 : 1;
     // light and atmosphere over the painted ground, under the markers (lightfx.js; Settings → Graphics → Lighting)
     let lit = false;
-    if (typeof LIGHTFX !== "undefined" && LIGHTFX.on()) { g.save(); g.beginPath(); g.rect(0, OYH, W, H); g.clip(); lit = LIGHTFX.map(g, canvas, v, { s, W, H, shown, view: viewBox, dpr, sol: !!SV }); g.restore(); }
+    if (typeof LIGHTFX !== "undefined" && LIGHTFX.on()) { g.save(); g.beginPath(); g.rect(0, OYH, W, H); g.clip(); lit = LIGHTFX.map(g, canvas, v, { s, W, H, shown, view: viewBox, dpr, sol: !!SV, close: v.close }); g.restore(); }
     if (MA) {
       if (OY) { g.save(); g.translate(0, OYH); MA.night(g, v, s, W, H, dark, shown.map(([n, x, y, kd]) => [n, x, y - OY, kd])); g.restore(); }
       else if (!lit) MA.night(g, v, s, W, H, dark, shown);
@@ -580,6 +588,15 @@ const WorldMap = (() => {
       }
     } else for (const [n, x, y, kind] of shown) icon(g, kind, x * W, y * H, s * (kind === "city" || kind === "town" || v.selected === n ? 1 : small), v.selected === n);
     const boxes = [];
+    // the cards docked over the map (event, raid, caravan: mapdock.js) and the party / quest panels: no names under them
+    stats.dockBlocks = 0;
+    if (typeof MAPDOCK !== "undefined" && g.getTransform && canvas.getBoundingClientRect) try {
+      const cr = canvas.getBoundingClientRect(), inv = g.getTransform().invertSelf(), kx = canvas.width / (cr.width || 1), ky = canvas.height / (cr.height || 1);
+      for (const r of MAPDOCK.rects()) {
+        const a = inv.transformPoint({ x: (r.left - cr.left) * kx, y: (r.top - cr.top) * ky }), b = inv.transformPoint({ x: (r.right - cr.left) * kx, y: (r.bottom - cr.top) * ky });
+        boxes.push([Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(b.x - a.x), Math.abs(b.y - a.y)]); stats.dockBlocks++;
+      }
+    } catch { /* no layout to ask: draw names as before */ }
     for (const [n, x, y, kind] of shown) {
       if (!(v.zoom >= KIND_MIN_ZOOM[kind] || v.selected === n)) continue;
       const size = kind === "city" ? 16 : 14, italic = ["dungeon", "fort", "camp", "lair", "stone", "shrine"].includes(kind);
@@ -603,20 +620,36 @@ const WorldMap = (() => {
       label(g, ` ${dd ? dd + "d" : h ? h + "h" : mm + "m"}`, x * W + 9 * s, y * H - 10 * s, s, 11, "#e8c98a", 700, false, "left");
     }
     if (v.selected && !v.discovered.includes(v.selected)) { const [x, y] = WORLD.places[v.selected]; g.strokeStyle = "#9fd0f0"; g.lineWidth = 2.6 * s; g.beginPath(); g.arc(x * W, y * H, 14 * s, 0, 7); g.stroke(); label(g, v.selected, x * W, y * H + 20 * s, s, 14); }
+    // from here on the places' icons count too, so a camp's or a patrol's name never sits on a farm's house
+    for (const [, x, y] of shown) boxes.push([x * W - 8 * s, y * H - 11 * s, 16 * s, 18 * s]);
     // people and bags: try a few spots around each dot and take the first that doesn't cover another label
     const hit = (bx, by, bw, bh) => boxes.some(([X, Y, Wd, Hd]) => bx < X + Wd && bx + bw > X && by < Y + Hd && by + bh > Y);
-    function smartLabel(text, x, y, size, color) {
+    /* must: a hero's name or a dropped bag always shows; anything else is left out when there's no free spot, and
+       comes back once you zoom in and there's room */
+    function smartLabel(text, x, y, size, color, must) {
       g.font = FONT(size * s, 700, "");
       const w = g.measureText(text).width, h = size * s * 1.25;
       const spots = [[x + 11 * s, y, "left"], [x - 11 * s, y, "right"], [x, y - 15 * s, "center"], [x, y + 16 * s, "center"],
         [x + 11 * s, y - h, "left"], [x + 11 * s, y + h, "left"], [x - 11 * s, y - h, "right"], [x - 11 * s, y + h, "right"]];
-      const box = ([lx, ly, al]) => [al === "left" ? lx : al === "right" ? lx - w : lx - w / 2, ly - h / 2, w, h];
+      const pad = 2 * s, box = ([lx, ly, al]) => [(al === "left" ? lx : al === "right" ? lx - w : lx - w / 2) - pad, ly - h / 2 - pad, w + 2 * pad, h + 2 * pad];
       let pick = spots.find((sp) => !hit(...box(sp)));
-      if (!pick) { for (let k = 2; k < 8 && !pick; k++) { const sp = [x + 11 * s, y + k * h, "left"]; if (!hit(...box(sp))) pick = sp; } }
+      if (!pick && must) { for (let k = 2; k < 8 && !pick; k++) { const sp = [x + 11 * s, y + k * h, "left"]; if (!hit(...box(sp))) pick = sp; } }
+      if (!pick && !must) { stats.labelsSkipped = (stats.labelsSkipped || 0) + 1; return false; }
       pick = pick || spots[0];
       boxes.push(box(pick));
       label(g, text, pick[0], pick[1], s, size, color, 700, false, pick[2]);
     }
+    // names that needn't sit anywhere exact (patrols, wagons): under their sprite, or a step or two lower, or left out
+    // when crowded (must: always shown)
+    function tidyLabel(g2, text, x, y, s2, size, color, weight = 700, italic = false, must = false) {
+      g.font = FONT(size * s, weight, italic ? "italic" : "");
+      const w = g.measureText(text).width + 4 * s, h = size * s * 1.25;
+      let at = [0, 1, 2].map((k) => y + k * h).find((yy) => !hit(x - w / 2, yy - h / 2, w, h));
+      if (at === undefined) { if (!must) { stats.labelsSkipped = (stats.labelsSkipped || 0) + 1; return; } at = y; }
+      boxes.push([x - w / 2, at - h / 2, w, h]);
+      label(g2, text, x, at, s2, size, color, weight, italic);
+    }
+    stats.labelsSkipped = 0;
     // your own name goes first so nothing covers it
     const HF = typeof MAPHERO !== "undefined" && MAPHERO.ok() ? MAPHERO : null;   // heroes as little figures (maphero.js)
     const myTop = py - (v.horse ? 46 : 39) * s - 7 * s;
@@ -639,8 +672,8 @@ const WorldMap = (() => {
       g.fillStyle = "#ffe6d2"; g.fillRect(x - 1.5 * s, y - 5 * s, 3 * s, 10 * s); g.fillRect(x - 5 * s, y - 1.5 * s, 10 * s, 3 * s);
     }
     // other heroes' names are drawn last (below), over town flags, banners and caravans
-    const otherLabels = () => v.others.forEach((o, i) => { const y = P(o.pos)[1]; smartLabel(o.name, (o.drawX ?? o.pos[0]) * W, otherHeads[i] ?? y, 13, o.stranger ? "#e8dcc0" : o.party && HF ? "#c8f0c0" : "#cde0ff"); });
-    for (const b of v.bags) { const [x, y] = P(b.pos); smartLabel(b.label, x, y, 13, "#ffc8b4"); }
+    const otherLabels = () => v.others.forEach((o, i) => { const y = P(o.pos)[1]; smartLabel(o.name, (o.drawX ?? o.pos[0]) * W, otherHeads[i] ?? y, 13, o.stranger ? "#e8dcc0" : o.party && HF ? "#c8f0c0" : "#cde0ff", true); });
+    for (const b of v.bags) { const [x, y] = P(b.pos); smartLabel(b.label, x, y, 13, "#ffc8b4", true); }
     if (v.foe && VI && !v.cones[0].faint) VI.foe(g, v.cones[0].c, s, v.foe, v.t, v.reduceMotion, (n, x, y) => smartLabel(n, x, y - 9 * s, 12, "#ffc0b0"));   // what blocks your road, ahead in your cone
     const perTown = {};
     for (const b of v.banners || []) {   // clan banners over members' houses
@@ -684,7 +717,7 @@ const WorldMap = (() => {
       g.fillStyle = p.on ? "#e2bb64" : "#d65a4a"; g.strokeStyle = "#1b1408"; g.lineWidth = 2 * s;
       g.beginPath(); g.moveTo(x, y); g.arc(x, y - r * 1.6, r, Math.PI * 0.8, Math.PI * 2.2); g.closePath(); g.fill(); g.stroke();
       g.fillStyle = "#fff6df"; g.beginPath(); g.arc(x, y - r * 1.6, r * 0.38, 0, 7); g.fill();
-      smartLabel(p.label, x, y - r * 1.6, 12, p.on ? "#f0d79a" : "#ffd6c8");
+      smartLabel(p.label, x, y - r * 1.6, 12, p.on ? "#f0d79a" : "#ffd6c8", true);
     }
     if (v.hall) {   // the shared Hall of the North: a banner on a pole
       const [hx, hy] = P(v.hall.pos), u = s;
@@ -736,9 +769,9 @@ const WorldMap = (() => {
       const [cx, cy] = P(c.pos), bob2 = c.moving && !v.reduceMotion ? Math.sin(v.t * 6 + cx) * 0.8 * s : 0;
       if (c.near) { const pu = v.reduceMotion ? 0.5 : (Math.sin(v.t * 4) + 1) / 2; g.strokeStyle = `rgba(255,224,138,${0.45 + 0.4 * pu})`; g.lineWidth = 2.2 * s; g.beginPath(); g.arc(cx, cy - 10 * s, (20 + 4 * pu) * s, 0, 7); g.stroke(); }   // close enough to hail: tap the wagons (caravanroad.js)
       g.drawImage(sp, cx - 21 * s, cy - 25 * s + bob2, 42 * s, 30 * s);
-      if (v.zoom >= 1.5 || c.near) label(g, c.near ? `${c.label} · tap to meet` : c.label, cx, cy + 12 * s, s, 11, c.mine || c.near ? "#ffe6a0" : "#f3e7c4", 700, true);
+      if (v.zoom >= 1.5 || c.near) tidyLabel(g, c.near ? `${c.label} · tap to meet` : c.label, cx, cy + 12 * s, s, 11, c.mine || c.near ? "#ffe6a0" : "#f3e7c4", 700, true, !!(c.near || c.mine));
     }
-    if (v.guards && typeof GUARDS !== "undefined") GUARDS.drawMap(g, v.guards, P, s, v.t, v.reduceMotion, v.zoom, label);   // hold guards on patrol (guards.js)
+    if (v.guards && typeof GUARDS !== "undefined") GUARDS.drawMap(g, v.guards, P, s, v.t, v.reduceMotion, v.zoom, tidyLabel);   // hold guards on patrol (guards.js)
     if (v.raid && typeof RAIDART !== "undefined") RAIDART.mapRaid(g, v.raid, P, s, v.t, v.reduceMotion);   // a dragon over a town (raidart.js)
     if (typeof WORLDEV !== "undefined") WORLDEV.drawMap(g, P, s, v.t, v.reduceMotion);   // gates, dragon flights, the Khajiit market (worldevents.js)
     if (typeof GREATEV !== "undefined") GREATEV.drawMap(g, P, s, v.t, v.reduceMotion);   // dragon assaults, rifts, sieges, fairs and what they leave behind (greatevents.js)

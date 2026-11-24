@@ -6,6 +6,9 @@ close on Whiterun at three zoom levels. Checks:
 - no orphan gold bar: every world-event progress bar's own card is on top at the bar's spot (not hidden under the map)
 - roads are drawn in the new hand-inked style
 - the painting is never drawn bigger than ~1.3x its own pixels (past that the ink chart takes over)
+- PC: the event / caravan cards sit in one column at the left edge (mapdock.js), at most ~380px wide, and the map
+  keeps names out from under them; on the phone they stay in the page as before
+Popups, banners, toasts and tooltips are closed before every shot so the map itself is what's seen.
 Run:  py -m http.server 8765 --directory game   then   py tests/mapvisuals_ui.py 8765 [outdir]
 Screenshots land in outdir (default: tests/out_mapvisuals)."""
 import asyncio, os, sys
@@ -15,7 +18,13 @@ PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"
 OUT = sys.argv[2] if len(sys.argv) > 2 else os.path.join(os.path.dirname(os.path.abspath(__file__)), "out_mapvisuals")
 os.makedirs(OUT, exist_ok=True)
 SIZES = [(2000, 810, 1), (2560, 1080, 1), (3440, 1440, 1), (1920, 1080, 1), (390, 844, 3)]
-CLEAR = "document.querySelectorAll('#modal,#sky,#pbanners > *').forEach(m=>m.remove()); typeof TABMENU!=='undefined' && TABMENU.closeHub?.()"
+CLEAR = ("document.querySelectorAll('#modal,#sky,.sky,.tw,#pbanners > *,#hudlane .hl-log > *,#hudlane .hl-say > *,.toast,#tip,#wxpop')"
+         ".forEach(m=>m.remove()); typeof TABMENU!=='undefined' && TABMENU.closeHub?.()")
+QUIET = "#pbanners,#hudlane,#tip,.toast{display:none!important}"
+DOCK = """()=>{ const t=document.getElementById('topcards'); if(!t) return null; const r=t.getBoundingClientRect(), cs=getComputedStyle(t);
+  let kids=[...t.children].filter(c=>c.getClientRects().length && c.offsetHeight>2).map(c=>{const q=c.getBoundingClientRect(); return [q.left,q.right,q.width]});
+  const k=r.width/(parseFloat(cs.width)||r.width||1);   /* big screens scale the whole PC interface up */
+  return { pos: cs.position, disp: cs.display, left: r.left/k, width: r.width/k, kids: kids.map(([a,b,w])=>[a/k,b/k,w/k]), wevIn: !!document.querySelector('#topcards > #wev') }; }"""
 TOWN = """(t)=>{ const S=__dbg.save(); S.location=t; [S.x,S.y]=WORLD.places[t]; S.trip=null;
   for(const n of Object.keys(WORLD.places)) if(!S.discovered.includes(n) && Math.hypot(WORLD.places[n][0]-S.x, WORLD.places[n][1]-S.y) < 0.3) S.discovered.push(n);
   __ui.go('map'); __dbg.publish(); }"""
@@ -44,11 +53,12 @@ async def main():
             await pg.wait_for_timeout(800)
             await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.wait_for_selector("#nm", timeout=15000)
             await pg.fill("#nm", "Tester"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
+            await pg.add_style_tag(content=QUIET)   # banners keep coming from a queue: hide them for the shots
             await pg.evaluate(CLEAR); await pg.evaluate(TOWN, "Whiterun"); await pg.evaluate(CLEAR); await pg.wait_for_timeout(1200)
             mz = await pg.evaluate("()=>typeof PCMAP!=='undefined'&&PCMAP.on()?PCMAP.minZoomFor(document.getElementById('map')):1")
             for name, z in [("out", mz), ("z1_6", 1.6), ("z2_5", 2.5), ("z4_5", 4.5)]:
                 await pg.evaluate("(z)=>__dbg.setView(z,[WORLD.places.Whiterun[0],WORLD.places.Whiterun[1]])", z)
-                await pg.evaluate(CLEAR); await pg.wait_for_timeout(1400)
+                await pg.mouse.move(vw / 2, vh / 2); await pg.evaluate(CLEAR); await pg.wait_for_timeout(1400); await pg.evaluate(CLEAR)
                 await pg.screenshot(path=os.path.join(OUT, f"{tag}_{name}.png"))
                 s = await pg.evaluate(PROBE); st = s["stats"]
                 ok(s["w"] == round(s["cw"] * s["dpr"]) and s["h"] == round(s["ch"] * s["dpr"]), f"{tag} {name}: canvas {s['w']}x{s['h']} = {s['cw']}x{s['ch']} x DPR {s['dpr']}")
@@ -58,6 +68,15 @@ async def main():
                 if name == "out" and s["pc"]:
                     cw, ch = s["cw"] * s["dpr"], s["ch"] * s["dpr"]
                     ok(s["mapW"] * s["dpr"] >= cw - 2 and s["mapH"] * s["dpr"] >= ch - 2, f"{tag}: zoomed out, the map fills the window ({s['mapW']:.0f}x{s['mapH']:.0f})")
+                if name == "out":
+                    d = await pg.evaluate(DOCK)
+                    if d and s["pc"]:
+                        ok(d["pos"] == "fixed" and d["left"] <= 20 and d["width"] <= 381 and all(k[0] <= 20 and k[2] <= 381 for k in d["kids"]),
+                           f"{tag}: event and caravan cards docked at the left edge, <=380px wide ({d['left']:.0f}px, {d['width']:.0f}px wide, {len(d['kids'])} cards)")
+                        ok(d["wevIn"], f"{tag}: the caravan strips sit in the same column")
+                        ok(st.get("dockBlocks", 0) >= len(d["kids"]), f"{tag}: the map keeps names out from under the docked cards ({st.get('dockBlocks', 0)} areas)")
+                    elif d:
+                        ok(d["disp"] == "contents", f"{tag}: phone keeps the cards in the page under the map ({d['disp']})")
                 if name == "z4_5":
                     ok(st.get("ink", 0) > 0.99 and st.get("paintAlpha", 1) == 0, f"{tag}: close up, the ink chart takes over from the painting")
             ok(not errs, f"{tag}: no page errors {errs[:2]}")
