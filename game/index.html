@@ -1789,6 +1789,10 @@ html.art-pixel #pcupd{border-radius:0;box-shadow:4px 4px 0 #000}
 #tbf.tblow::after{content:"";position:fixed;inset:0;z-index:40;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 50%,rgba(190,10,10,.42));box-shadow:inset 0 0 70px 12px rgba(200,10,10,.55);animation:tblow 1.3s ease-in-out infinite}
 @keyframes tblow{0%,100%{opacity:.6}15%{opacity:1}30%{opacity:.7}45%{opacity:.95}}
 html.art-pixel .tbint,html.art-pixel .tbfcl .fp,html.art-pixel .tbskip,html.art-pixel .tbst .st.me{border-radius:0}
+/* popups with motion on: the open animation comes from .mo-pop/.mo-swap (motion.js). Without this, dropping that class after 0.5 s
+   restarted the plain pfade/psheet fade (sheet back to 30% opacity) and dropped the blur: a flicker on every popup */
+.mo-on .modal,.mo-on .modal .sheet{animation:none}
+.mo-on:not(.mo-lite) .modal{-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
 @media (prefers-reduced-motion:reduce){.tbbar s.tbfc,.tbint.big,.tbbub,.tbban.round,.tbban.foe{animation:none!important}#tbf.tblow::after{animation:none;opacity:.6}}
 /* compass: a real 3D disc that tilts toward your finger; the four labels sit round it, never on it */
 .tw-rose{container-type:size;transform:none!important;perspective:900px;--R:max(70px,min(36cqw,calc(50cqw - 66px),calc(50cqh - 84px)))}
