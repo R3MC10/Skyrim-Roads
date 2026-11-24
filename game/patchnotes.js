@@ -19,6 +19,12 @@ const PATCHNOTES = (() => {
       "On your horse you sit in the saddle, and the horse has your horse's coat colour. Standing, it swishes its tail and nods its head; on the road it walks, and on good roads it gallops.",
       "Other players and your party show up the same way, a bit smaller, with a green ring under party members. Works in both art styles; with Reduce motion on, everyone stands still.",
     ] },
+    { id: "hotfix-dunloop", build: 144, date: "24 Nov 2026", title: "Dungeons don't trap you in the same room any more", items: [
+      "Fixed: dungeons could trap you in the same room. In a party, the leader was sometimes sent back into a room they had just cleared, and the others got stuck waiting or stood in a room that never ended.",
+      "Fixed: when the shared world was busy, the leader's way through a dungeon sometimes didn't reach the rest of the party, so they couldn't follow to the boss. It's now sent again until it gets through, and anything missing is filled in.",
+      "Fixed: picking herbs at a claw door in a party no longer breaks the door for the others.",
+      "Stuck right now? Just open the game again: runs that were caught in a loop, a boss room with no boss in it, or a room with no way on are put right when you load.",
+    ] },
     { id: "b143-followeranim", build: 143, date: "24 Nov 2026", title: "Followers fight with their whole body", items: [
       "Followers and party members now really fight in the fight picture: they swing their weapon or draw their bow, cast their spells, raise their shield and flinch when they get hit.",
       "A follower who is knocked down drops to the ground and lies there until someone pulls them back up, and then you see them get back on their feet.",
