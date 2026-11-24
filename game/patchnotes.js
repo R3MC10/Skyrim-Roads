@@ -11,6 +11,15 @@ const PATCHNOTES = (() => {
       "Carriage trips show the carriage again: you on the bench, a horse in front and the wheels turning. Caravans coming the other way get a real horse too.",
       "Horses on the map step more cleanly as well. With Reduce motion on, everyone stands still.",
     ] },
+    { id: "b145-mountfight", build: 145, date: "24 Nov 2026", title: "Fight from the saddle", items: [
+      "Riding when a fight on the road starts? You now play the whole fight on horseback. Your horse has its own health bar under yours.",
+      "New Mount and Dismount moves in the fight. Getting on costs 4 AP and some stamina, and your next blow is a charge: a sure hit that does more and can knock the foe back.",
+      "Up on a horse, bandits with swords and axes have a hard time reaching you, and your horse tramples wolves, skeevers and other small beasts. But archers, mages, spearmen and big beasts go for your horse and can pull you out of the saddle.",
+      "No two-handed power attacks, no dual casting and no Master spells while riding, and arrows sometimes go wide from a moving horse. You also can't sneak up on anyone on horseback: your opening blow is the charge.",
+      "If your horse runs out of health it's knocked down, never killed: you're thrown off, take a little damage, lose 2 AP on your next turn and fight on foot. Afterwards it stays downed beside you until it gets back up.",
+      "Four new perks: Cavalry Charge (One-Handed), Horse Archer (Archery), Steady Steed and Trample (Athletics).",
+      "In a party, everyone who rides is on horseback in the fight picture, and every phone sees the same horses go down.",
+    ] },
     { id: "b146-gore", build: 146, date: "24 Nov 2026", title: "Blood on the snow", items: [
       "Fights get bloody: a blow throws a spray of blood away from whoever struck it, and the drops land and stay on the ground for the whole fight. Big hits and criticals spray more.",
       "Every blow looks different: swords and axes throw arcs of blood, arrows stick in, hammers splat and kick up dust, fire scorches and chars, frost throws ice shards, lightning throws sparks and poison drips green.",
