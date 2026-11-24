@@ -532,8 +532,9 @@ const TOWNS = (() => {
   function stash(s, rowId) {
     const h = home(s); if (!h) return "You don't own a house here.";
     const r = G.invRow(s, rowId); if (!r) return "You don't have that.";
-    const copy = { ...r }; delete copy.id;
-    G.take(s, rowId, r.qty);
+    const n = G.freeQty ? G.freeQty(s, rowId) : r.qty; if (n <= 0) return "Take it off first.";   // worn gear stays on you
+    const copy = { ...r, qty: n }; delete copy.id;
+    G.take(s, rowId, n);
     const same = h.chest.find((x) => x.item === copy.item && !x.temper && !copy.temper && x.charge == null && copy.charge == null && !x.stolen === !copy.stolen && (x.cv ?? null) === (copy.cv ?? null));
     if (same && ["potion", "scroll", "soulgem", "tome", "ingredient", "trophy", "poison"].includes(D.ITEMS[copy.item].slot)) same.qty += copy.qty; else h.chest.push(copy);
     return `${D.ITEMS[copy.item].name}${copy.qty > 1 ? ` ×${copy.qty}` : ""} goes in the chest.`;
