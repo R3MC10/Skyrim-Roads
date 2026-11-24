@@ -3,6 +3,15 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b138-followerbonds", build: 138, date: "24 Nov 2026", title: "Followers have opinions now", items: [
+      "Your follower notices what you do. Help a stranger, rob a sleeping bandit, run from a giant, pray at a shrine, join the Thieves Guild: each follower likes some things and hates others, and says so.",
+      "Their loyalty shows as a meter under their name (Hero tab → Follower). Devoted followers hit 10% harder. Unhappy ones grumble, fight 15% softer, sometimes refuse to change gear, style or tactics, and at 0 they walk out (they're fine, just angry, and won't come back for a few days).",
+      "They talk: little lines on the road and in towns, a word when you arrive somewhere, and a comment after big fights.",
+      "New Bond tab on the follower screen: what they like and dislike, what they said lately, a Talk button and a daily 100-gold gift.",
+      "Every follower has a personal quest that opens at loyalty 80: go somewhere with them, clear a place, and make a last choice. They learn a signature move they use once per fight (a big hit, a volley, a bleeding shot or a heal) and you get a keepsake piece of gear.",
+      "New perks: Kindred Spirit (Speechcraft): loyalty grows faster and drops slower. Heart to Heart (Speechcraft): talks count double and they never refuse your orders. Sworn Companion (Etiquette): personal quests open at 65 and signature moves are 25% stronger.",
+      "In a party only the leader makes choices, so a personal quest's last choice waits until you lead or travel alone.",
+    ] },
     { id: "b135-compass", build: 135, date: "24 Nov 2026", title: "A real 3D compass", items: [
       "The golden compass on the home screen is now a proper 3D piece: drag it and it tilts toward your finger, catching the light and showing its thick bronze edge, then springs back when you let go.",
       "Skills, Magic, Items and Map now sit around the compass instead of on top of it, on phones held upright or sideways.",
