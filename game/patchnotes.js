@@ -3,13 +3,21 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b168-esckey", build: 168, date: "24 Nov 2026", title: "Esc menu and a card you can fold away", items: [
+    { id: "b169-esckey", build: 169, date: "24 Nov 2026", title: "Esc menu and a card you can fold away", items: [
       "On PC, Esc now steps back one thing at a time, just like the back button on a phone: a tooltip, then a window, then the menu you're in, then the compass.",
       "When there's nothing left to close, Esc opens a pause menu like in Skyrim: Resume, Settings, Journal, Patch notes, How to play, Report a problem and Save and quit. The Windows app also has Quit game. Use the arrows and Enter, or the mouse.",
       "In a fight Esc opens the pause menu on top of the fight and never makes you run away. The world doesn't stop for anyone else in your party.",
       "The great world event card on the map can be folded into a small pill with the arrow in its corner (tap the pill to open it again). The game remembers it for your hero.",
       "Notices under it (a town rebuilding, a reward waiting) have an × to hide them until there's new news. A new event never pops the card open: the pill glows for a moment instead.",
       "Fixed: on phones a few newer screens (the house chest, blood in fights, party traps, fishing and hunting and more) had lost part of their look. They're back to normal.",
+    ] },
+    { id: "b169-travelanim", build: 169, date: "24 Nov 2026", title: "Smoother riding on the road", items: [
+      "The picture under your trip got its walking and riding fixed: horses really walk and gallop now, every hoof lands on the road and stays put instead of sliding, and the body, mane and tail move with the stride.",
+      "If anyone in your company is on foot, the horses slow to a walk beside them, so your follower keeps up without shuffling on the spot. Ride alone (or with everyone mounted) and you gallop.",
+      "Everyone on the road is drawn at the same size and stands on the same line: a follower comes up past your horse's shoulder, and riders sit properly in the saddle.",
+      "Name tags sit just above each head and step out of each other's way instead of overlapping.",
+      "Carriage trips show the carriage again: you on the bench, a horse in front and the wheels turning. Caravans coming the other way get a real horse too.",
+      "Horses on the map step more cleanly as well. With Reduce motion on, everyone stands still.",
     ] },
     { id: "b145-levelup", build: 145, date: "24 Nov 2026", title: "Levelling up feels like Skyrim", items: [
       "When a skill goes up you now see it near the top of the screen: \"One-Handed increased to 36\" with a thin bar for the skill, and your level bar under it filling up, so you always know how close the next level is.",
@@ -1103,13 +1111,13 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 165;
+  const NEXT_AT = 169;
   const NEXT = [
     "A new, livelier fight screen that fits on one screen",
-    "On PC, everything fits on one screen without scrolling",
-    "New painted dungeon rooms and a parchment dungeon map",
-    "Dwemer ruins and the deep caverns of Blackreach",
-    "Fishing and hunting",
+    "Dragon Shouts learned from word walls",
+    "Werewolf and vampire paths",
+    "Followers with their own quests, opinions and banter",
+    "Weather that changes how the road and fights go",
   ];
   const KEY = "rotn_notes_seen";
   const latest = () => LIST[0];
