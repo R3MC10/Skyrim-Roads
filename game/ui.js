@@ -876,9 +876,9 @@
     const mins = tripMinutesLeft(), total = Math.max(mins, tr.total || mins), p = pct(total - mins, total);
     const here = livePos(), ground = Terrain.NAMES[Terrain.typeAtPos(here)], sp = Terrain.speedAt(here);
     const pace = sp >= 1.2 ? "fast going" : sp >= 0.95 ? "steady" : sp >= 0.6 ? "slow going" : "very slow going";
-    const html = `<div class="trip"><div class="row"><b>${esc(tr.origin)} → ${esc(tr.destName)}</b><span class="num sub">${fmtMin(mins)}</span>${!tr.carriage && !tr.boat && HORSES.present(S) ? `<button class="btn sm" data-act="hride">${HORSES.riding(S) ? "Walk" : "Ride"}</button>` : ""}${tr.follow ? `<span class="chip ppfollow">⚑ following</span>` : `<button class="btn sm" data-act="stop">Stop</button>`}</div>
+    const html = `<div class="trip"><div class="row"><b>${esc(tr.origin)} → ${esc(tr.destName)}</b><span class="num sub">${fmtMin(mins)}</span>${!tr.carriage && !tr.boat && HORSES.present(S) && HORSES.downed(S) ? `<span class="chip hdownchip">🐴 Downed</span>` : ""}${!tr.carriage && !tr.boat && HORSES.present(S) && !HORSES.downed(S) ? `<button class="btn sm" data-act="hride">${HORSES.riding(S) ? "Walk" : "Ride"}</button>` : ""}${tr.follow ? `<span class="chip ppfollow">⚑ following</span>` : `<button class="btn sm" data-act="stop">Stop</button>`}</div>
       <div class="bar"><i style="background:var(--frost)"></i></div>
-      <div class="sub">${tr.boat ? `⛵ aboard ${esc(tr.ship || "the ship")} · nothing attacks a ship at sea` : tr.carriage ? "🐎 by carriage · safe on the Jarl's roads" : `${esc(ground)} · ${pace} · ${HORSES.riding(S) ? `riding ${esc(S.horse.name)}` : HORSES.present(S) ? `walking beside ${esc(S.horse.name)}` : G.overweight(S) ? "too heavy to run" : "on foot"}`}${S.follower ? ` · ${esc(TOWNS.FOLLOWERS[S.follower.id][0])} with you` : ""}</div>
+      <div class="sub">${tr.boat ? `⛵ aboard ${esc(tr.ship || "the ship")} · nothing attacks a ship at sea` : tr.carriage ? "🐎 by carriage · safe on the Jarl's roads" : `${esc(ground)} · ${pace} · ${HORSES.riding(S) ? `riding ${esc(S.horse.name)}` : HORSES.present(S) && HORSES.downed(S) ? `on foot · ${esc(S.horse.name)} is downed and limps beside you` : HORSES.present(S) ? `walking beside ${esc(S.horse.name)}` : G.overweight(S) ? "too heavy to run" : "on foot"}`}${S.follower ? ` · ${esc(TOWNS.FOLLOWERS[S.follower.id][0])} with you` : ""}</div>
       ${tr.log.length ? `<div class="sub">${esc(tr.log[0])}</div>` : `<div class="sub">The trip keeps going while the page is closed.</div>`}</div>`;
     put(html.replace(/<\/div>$/, `<div class="tripvig"></div></div>`));
     const bar = el.querySelector(".bar i"); if (bar) bar.style.width = `${p}%`;
@@ -3052,19 +3052,19 @@
     const statRow = (st) => `<span class="hstats"><b>🏇 ${(+st.speed).toFixed(2)}×</b><b>🎒 ${Math.round(st.carry)}</b><b>❤ ${Math.round(st.hp)}</b></span>`;
     if (!h) {
       const br = HORSES.breed(horseBreed), bp = HORSES.price(S, horseBreed);
-      return `<div class="card"><h3>Buy a horse · ${bp} gold</h3><p class="sub">Riding, you travel faster and flee more easily. Your horse carries things for you even when you walk beside it. Horses never die: if badly hurt, they limp back to the nearest stables to rest.</p>
+      return `<div class="card"><h3>Buy a horse · ${bp} gold</h3><p class="sub">Riding, you travel faster and flee more easily. Your horse carries things for you even when you walk beside it. Horses never die: at 0 health they are downed. A downed horse stays with you and still carries your things, but you can't ride it until it gets back up (a few hours, a night's sleep, or a stablehand's care).</p>
       <div class="hbreeds">${Object.entries(HORSES.BREEDS).map(([id, b]) => `<button class="hbreed ${id === horseBreed ? "on" : ""}" data-act="hbreed" data-id="${id}" aria-pressed="${id === horseBreed}"><b>${esc(b.name)}</b><span class="num gold">${HORSES.price(S, id)}</span>${statRow(b)}<small>${esc(b.text)}</small></button>`).join("")}</div>
       <p class="sub" style="margin:6px 0 2px">Every horse is a little different: its numbers can come out up to ${Math.round(HORSES.ROLL * 100)}% better or worse than its breed's.</p>
       <div class="coats">${HORSES.COATS.map((c) => swatch(c, c[0] === horseCoat, true)).join("")}</div><p class="sub" style="margin:4px 0 0">${esc(HORSES.coat(horseCoat)[1])}</p>
       <div class="chatrow"><input id="hname" maxlength="16" placeholder="Name your horse" autocomplete="off" aria-label="Horse name"><button class="btn pri" data-act="hbuy" ${open && !wanted && S.gold >= bp ? "" : "disabled"}>Buy ${esc(br.name)}</button></div>
       ${!open ? `<p class="sub">The stables open at 08:00.</p>` : S.gold < bp ? `<p class="sub">You have ${S.gold} gold.</p>` : ""}</div>`;
     }
-    const c = HORSES.coat(h.coat), mh = HORSES.maxHp(h), hp = HORSES.hp(S), aw = HORSES.away(S);
-    const here = aw && h.away.town === l, mins = Math.ceil(HORSES.readyIn(S) / 60);
-    return `<div class="card"><div class="row" style="display:flex;gap:10px;align-items:center">${UIART.horse(h.coat, 44, h.armor && h.armor !== "none")}<div style="flex:1"><h3 style="margin:0">${esc(h.name)}</h3><span class="sub">${esc(HORSES.breed(h.breed).name)} · ${esc(c[1])} · ${esc(HORSES.ARMOR[h.armor].name)}</span>${statRow({ speed: HORSES.speed(S), carry: HORSES.carry(S), hp: mh })}</div></div>
-        ${aw ? `<p>${here ? (mins > 0 ? `${esc(h.name)} is resting here. Ready in about ${mins} min.` : `${esc(h.name)} is rested and waiting for you.`) : `${esc(h.name)} is resting at the stables in ${esc(h.away.town)}.`}</p>
-          ${here ? `<div class="grid2"><button class="btn pri" data-act="hfetch" ${mins > 0 ? "disabled" : ""}>Take ${esc(h.name)}</button><button class="btn" data-act="hhurry" ${mins > 0 ? "" : "disabled"}>Patch up now (${HORSES.HURRY_PRICE} gold)</button></div>` : ""}`
-        : `<div class="vital" style="margin-top:8px"><small><span>Health</span><span class="num">${Math.round(hp)}/${mh}</span></small><div class="bar"><i style="width:${pct(hp, mh)}%;background:var(--sp)"></i></div></div>`}
+    const c = HORSES.coat(h.coat), mh = HORSES.maxHp(h), hp = HORSES.hp(S), dn = HORSES.downed(S);
+    const mins = Math.ceil(HORSES.readyIn(S) / 60), hrs = Math.max(1, Math.round(mins / 5)), tp = HORSES.tendPrice(S);
+    return `<div class="card${dn ? " hdown" : ""}"><div class="row" style="display:flex;gap:10px;align-items:center">${UIART.horse(h.coat, 44, h.armor && h.armor !== "none", dn)}<div style="flex:1"><h3 style="margin:0">${esc(h.name)}${dn ? ` <span class="hdowntag">Downed</span>` : ""}</h3><span class="sub">${esc(HORSES.breed(h.breed).name)} · ${esc(c[1])} · ${esc(HORSES.ARMOR[h.armor].name)}</span>${statRow({ speed: HORSES.speed(S), carry: HORSES.carry(S), hp: mh })}</div></div>
+        ${dn ? `<p>${esc(h.name)} is downed: they limp along beside you but can't be ridden. Back on their feet in about ${hrs} ${hrs === 1 ? "hour" : "hours"} (${mins} min), or after you sleep.</p>
+          <button class="btn pri" data-act="htend" style="width:100%" ${open && S.gold >= tp ? "" : "disabled"}>Tend ${esc(h.name)} (${tp} gold)</button>`
+        : `${hp < mh ? `<button class="btn sm" data-act="htend" style="float:right;margin-top:6px" ${open && S.gold >= tp ? "" : "disabled"}>Tend (${tp} gold)</button>` : ""}<div class="vital" style="margin-top:8px"><small><span>Health</span><span class="num">${Math.round(hp)}/${mh}</span></small><div class="bar"><i style="width:${pct(hp, mh)}%;background:var(--sp)"></i></div></div>`}
         <div class="chatrow" style="margin-top:8px"><input id="hname" maxlength="16" placeholder="New name" autocomplete="off" aria-label="New name"><button class="btn" data-act="hrename">Rename</button></div></div>
       <h3 style="margin-top:12px">Saddlebags</h3>${HORSES.BAGS.map((b, i) => (b ? `<div class="item"><div class="t">${esc(b.name)}<span>carries ${b.carry} more</span></div><span class="num gold">${HORSES.cost(S, b.price)}</span><button class="btn sm" data-act="hbags" ${i !== h.bags + 1 || !open || S.gold < HORSES.cost(S, b.price) || wanted ? "disabled" : ""}>${i <= h.bags ? "Owned" : "Buy"}</button></div>` : "")).join("")}
       <h3 style="margin-top:12px">Horseshoes</h3>${Object.entries(HORSES.SHOES).filter(([id]) => id !== "none").map(([id, a]) => { const have = HORSES.SHOES[h.shoes].speed >= a.speed; return `<div class="item"><div class="t">${esc(a.name)}<span>ride ${Math.round(a.speed * 100)}% faster</span></div><span class="num gold">${HORSES.cost(S, a.price)}</span><button class="btn sm" data-act="hshoes" data-id="${id}" ${have || !open || S.gold < HORSES.cost(S, a.price) || wanted ? "disabled" : ""}>${h.shoes === id ? "Worn" : have ? "Have better" : "Buy"}</button></div>`; }).join("")}
@@ -3757,8 +3757,7 @@
       case "hshoes": say(HORSES.buyShoes(S, b.dataset.id)); break;
       case "hrename": say(HORSES.rename(S, $("#hname")?.value)); break;
       case "harmor": say(HORSES.buyArmor(S, b.dataset.id)); break;
-      case "hfetch": say(HORSES.fetch(S)); publishCard(); break;
-      case "hhurry": say(HORSES.hurry(S)); publishCard(); break;
+      case "htend": say(HORSES.tend(S)); publishCard(); break;
       case "hride": { const m = HORSES.toggle(S); liveCache.key = ""; S.trip && (S.trip.total = G.minutesLeft(S)); say(m); renderTrip(); publishCard(); break; }
       case "bclaim": { const m = BOUNTY.claim(S, +b.dataset.w, b.dataset.id); if (!m) return toast("Nothing to claim there."); SOUND.fx("quest"); say(m); publishCard(); break; }
       case "hallgold": case "hallmat": {
