@@ -3,6 +3,8 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b143-comingnext", build: 143, date: "24 Nov 2026", title: "Coming next is up to date again", items: [
+      "The Coming next box at the top of Patch notes now shows what's really being built, and it can't get stuck on an old list any more."] },
     { id: "b142-balfear", build: 142, date: "24 Nov 2026", title: "Bosses don't run forever, healers don't heal forever", items: [
       "Battle Cry and every other fear or \"stops fighting\" effect now hold a boss for 2 turns and an elite foe for 3. A boss can lose at most 3 turns a fight to fear, an elite 5. For the turns they shake off they stay rattled and hit 20% softer, so the shout still helps. Normal foes still run for the full time.",
       "Foe mages and healers can't patch themselves back to full any more: their own healing stops at about two thirds of their health, adds up to at most a third of it in a whole fight, and a healing spell needs a few turns to come back. Potions and life drain count too.",
@@ -793,9 +795,14 @@ const PATCHNOTES = (() => {
       "The Hall of the North that everyone builds together, and the Jarl's weekly bounty board.",
       "A main menu and in-app updates."] },
   ];
+  // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
+  // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
+  const NEXT_AT = 143;
   const NEXT = [
-    "A sharper Solitude peninsula and map polish",
-    "More quests and characters",
+    "Your follower gets their own tab, with a SkyUI-style bag to swap gear",
+    "Bleak Falls Barrow fixed: clearing it updates your quest log, even on old saves",
+    "The vampire war: side with the Dawnguard or the Volkihar",
+    "Polish for the last bits of English in fights and pop-ups",
   ];
   const KEY = "rotn_notes_seen";
   const latest = () => LIST[0];
@@ -825,6 +832,6 @@ const PATCHNOTES = (() => {
     const n = latest();
     return `<div class="pnotes pnwhat"><div class="pnkick">What's new</div><h2>${e(n.title)}</h2><ul>${n.items.map((i) => `<li>${e(i)}</li>`).join("")}</ul></div>`;
   }
-  return { LIST, NEXT, latest, seen, markSeen, unseen, html, barHTML, whatsNewHTML, KEY };
+  return { LIST, NEXT, NEXT_AT, latest, seen, markSeen, unseen, html, barHTML, whatsNewHTML, KEY };
 })();
 if (typeof module !== "undefined") module.exports = PATCHNOTES;
