@@ -670,7 +670,7 @@ const TRAVELART = (() => {
     }
     V.info = info;
     if (V.canvas.parentNode !== host) host.appendChild(V.canvas);
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const dpr = typeof FITCANVAS !== "undefined" ? Math.min(6, FITCANVAS.ratio(host, W)) : Math.min(2, window.devicePixelRatio || 1);   // the strip's box on screen x density: sharp in a wide panel too
     if (V.canvas.width !== Math.round(W * dpr)) { V.canvas.width = Math.round(W * dpr); V.canvas.height = Math.round(H * dpr); }
     V.still = !!info.reduce; V.dt = 0; V.speed = 0;
     paint(V, performance.now());
