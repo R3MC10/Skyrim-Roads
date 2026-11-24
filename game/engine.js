@@ -93,7 +93,8 @@ const G = (() => {
   function migrate(s) {
     // a won turn-by-turn road fight used to leave the road blocked by a dead foe: clear it
     if (s.trip?.status === "encounter" && (!s.trip.encounter || s.trip.encounter.hp <= 0)) { s.trip.status = "travel"; s.trip.encounter = null; s.trip.lastTick = now(); }
-    if (s.dungeon?.room?.enemy && s.dungeon.room.enemy.hp <= 0) s.dungeon.room = null;   // same bug inside dungeons: a dead foe kept the room shut
+    if (typeof DUNGEONS !== "undefined" && DUNGEONS.repair) DUNGEONS.repair(s);   // a run saved where it can't go on: dead foe, empty boss room, dead end (dungeons.js)
+    else if (s.dungeon?.room?.enemy && s.dungeon.room.enemy.hp <= 0) s.dungeon.room = null;   // same bug inside dungeons: a dead foe kept the room shut
     if ((s.v || 1) < 2) {
       const at = PLACES[s.location] ? s.location : D.START_LOCATION;
       [s.x, s.y] = loc(at); s.location = at; s.trip = null;
