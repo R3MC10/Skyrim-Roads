@@ -3,7 +3,7 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b172-festivals", build: 172, date: "24 Nov 2026", title: "Festivals and the Grand Arena", items: [
+    { id: "b175-festivals", build: 175, date: "24 Nov 2026", title: "Festivals and the Grand Arena", items: [
       "Seven festivals now take turns around Skyrim, each for two days: the Jarl's Tourney in Windhelm, the Harvest Fair in Whiterun, the Lake Honrich Fishing Derby in Riften, the Great Hunt of Falkreath, Forgefire Days in Markarth, the Burning of King Olaf in Solitude and the Midwinter Feast in Dawnstar. Missed one? It comes back three weeks later.",
       "Each festival has three contests out of duels, archery, ring-tilting on your horse, a smithing contest, the fishing derby, the hunt, a mining race and a drinking contest. Three tries each, your best one counts, and every contest has a live board everyone sees.",
       "Festivals are peaceful ground: nothing you wear is lost, nobody dies, no bounty, and players can't attack each other in the festival town. Duel any player there as friends, whatever side of the war they're on.",
@@ -11,6 +11,55 @@ const PATCHNOTES = (() => {
       "The Grand Arena in Windhelm is always open: eight rounds of monsters, alone or with your party, with a new board every week.",
       "Look for \"Festivals\" in any town, and for the festival banner on the map a day before it starts. New perks: Arena Champion (One-Handed), Sportsman (Athletics) and Crowd Favourite (Speechcraft).",
       "Fixed: on phones the house chest and the follower Skills screen showed up without their proper look, and a fight on PC could stop drawing its blood.",
+    ] },
+    { id: "b172-assetquality", build: 172, date: "24 Nov 2026", title: "Sharper pictures on every screen", items: [
+      "Foes in fights are painted at full size now, so they stay sharp on big monitors and 3x phone screens instead of going soft.",
+      "The dragon is no longer squashed into a square: it shows with its proper wide wingspan.",
+      "Paintings (towns, shop banners, fight scenes, event pictures) keep their shape and are never blown up into a blur. On a very big screen a painting shows at its own size instead.",
+      "Fight scenes are drawn at your screen's full sharpness, on phones and on 4K monitors, even when the window grows or the phone turns.",
+      "The painted compass is a bit sharper too.",
+      "Everything the game draws itself (your hero, the new-character picture, the dungeon map, icons) is redrawn at the size it really has on your screen, so it stays crisp from phones to ultrawide monitors.",
+      "On the new-character screen your hero's picture next to the race keeps its shape instead of being stretched tall, and the big live picture is drawn at full sharpness on 3x phones.",
+      "Fixed: on phones a lot of newer screens (the house chest, invites, the problem report, the Dwemer puzzles and more) were missing their proper look. They look right again.",
+      "Fixed: with blood and gore on, the fight picture could stop drawing. It plays again.",
+    ] },
+    { id: "b174-potionregen", build: 174, date: "25 Nov 2026", title: "Potions work over time", items: [
+      "Health, magicka and stamina potions no longer refill you all at once. They pour in over a few rounds in a fight, or a few seconds on the map: small potions over 5, ordinary ones over 4, the big brewed ones over 3. Half comes in right after you drink, so one still pulls you out of trouble.",
+      "Drinking another of the same kind while one is still working doesn't stack: you keep whichever has more left to give. A health and a magicka potion work side by side just fine.",
+      "A small potion chip under your bars shows how many rounds are left, and green numbers rise as it works. On the map a chip sits next to your health bar with the seconds left.",
+      "Followers, party members and the Smart AI won't waste a second potion of a kind that is still working. In a party everyone sees each other's potions working.",
+      "New Alchemy perk, Quick Draught (2 ranks): your potions work one round faster per rank.",
+    ] },
+    { id: "b172-mapvisuals", build: 172, date: "24 Nov 2026", title: "A sharper, prettier world map", items: [
+      "On a PC the map now fills the whole window, even zoomed all the way out. No more small map in the middle with grey clouds and empty dark space around it.",
+      "Places you haven't found yet hide under dark, inked parchment mist instead of grey photo clouds.",
+      "Zoom in close and the blurry painting turns into a crisp hand-inked chart: hills, pines, autumn trees, reeds, rocks and snowy peaks drawn sharp at any zoom, on any screen.",
+      "Roads are thin, slightly wobbly ink lines now, and small paths to farms and landmarks are dotted. The Roads on the map switch in Settings still works.",
+      "Hold names are small, quiet capitals that fade as you zoom in and never cover a town's name.",
+      "Fixed a stray gold line under the world event cards: it was the caravan's progress bar showing through while its card was hidden under the map.",
+      "The compass at the top of the PC map is one centred bar, like in Skyrim.",
+    ] },
+    { id: "b173-gorefx", build: 173, date: "25 Nov 2026", title: "Realistic blood and splatter", items: [
+      "Blows now throw real-looking blood: a wet burst of drops and fine mist flies away from whoever struck, bigger the harder the hit.",
+      "Critical hits and finishing blows add a jet of blood and a wide splash, splatter the ground and smear the foe. The stains slowly fade over the fight.",
+      "Hammers and maces kick up dust and spill less blood. Draugr and skeletons burst into grave dust and bone chips, Dwemer machines spit oil and sparks, Falmer and chaurus bleed green and daedra dark ichor. A blade on armour throws sparks.",
+      "Spells look better too: frost throws ice shards, fire throws embers and smoke, lightning crackles and other magic leaves glowing motes.",
+      "Followers and horses bleed a little but are never splattered or cut up, and still only get knocked down.",
+      "Blood and gore on Full shows all of it; Low keeps the dust, sparks and spell effects without the realistic blood; Off shows none.",
+    ] },
+    { id: "b172-treasure", build: 172, date: "24 Nov 2026", title: "Treasure maps and old relics", items: [
+      "Loot can now hold a hand-drawn treasure map, an old journal with a riddle, or a torn piece of a map (find 2-4 pieces and put them together). They show only the land: hills, woods, water, a landmark or two and an X. No names, no marker on your map.",
+      "Compare the sketch with the world map (pin it next to the map with one tap), travel there and press Dig here on the Travel tab. A wrong guess only tires you out for a little while.",
+      "Stuck? Every two wrong digs you work out a bit more (the hold, then a town and a direction, then the landmark), and innkeepers sell a rumour for 60 gold.",
+      "Buried caches hold gold, gems and rare ore. Now and then you dig up a lost one-of-a-kind item, or a slab over a sealed tomb you can go down into once.",
+      "Relic fragments turn up in Nordic barrows and Dwemer ruins. Three make a restored relic: keep it, or sell it to Urag in Winterhold or Calcelmo in Markarth.",
+      "Maps and pieces can be traded and given away, and point to the same spot for your friend. In a party the leader can ask everyone where to dig, and the gold is split evenly.",
+      "New perks: Cartographer (Streetwise), Antiquarian (Mercantile) and Excavator (Athletics).",
+    ] },
+    { id: "b172-horseart", build: 172, date: "25 Nov 2026", title: "Painted horses", items: [
+      "Horses get painted: in fights, on the road and on the map your horse is now a proper painted horse with saddle and tack, not a little drawing.",
+      "It stands still when you stop and gallops while you ride, you sit in the saddle in fights, and a knocked-down horse lies on its side behind you (it still only gets knocked down).",
+      "Every coat shows: bay, black, grey, white, palomino and paint, also on the stables card and for friends riding with you.",
     ] },
     { id: "b171-esckey", build: 171, date: "24 Nov 2026", title: "Esc menu and a card you can fold away", items: [
       "On PC, Esc now steps back one thing at a time, just like the back button on a phone: a tooltip, then a window, then the menu you're in, then the compass.",
@@ -1140,7 +1189,7 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 172;
+  const NEXT_AT = 174;
   const NEXT = [
     "A new, livelier fight screen that fits on one screen",
     "Dragon Shouts learned from word walls",

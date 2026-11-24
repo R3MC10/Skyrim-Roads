@@ -222,6 +222,7 @@ const PFX = (() => {
     [ "Alchemy", "field_medic", "Field Medic", 1, [40], ["physician"], "Healing potions you drink in a fight heal 20% more. [OURS]", [["potion", 0.2, {}]]],
     [ "Alchemy", "forager", "Forager", 1, [20], ["alchemist"], "You spot plant patches from twice as far away, and foraging turns up one more ingredient. [OURS, gathering]", [["gspot", 1, {}], ["forage", 1, {}]]],
     [ "Alchemy", "wildcrafter", "Wildcrafter", 1, [50], ["forager"], "Picked patches grow back twice as fast, and rare finds (Nirnroot, pearls, glowing fungi) turn up when you forage. [OURS, gathering]", [["regrow", 0.5, {}], ["grare", 1, {}]]],
+    [ "Alchemy", "quick_draught", "Quick Draught", 2, [30, 60], ["physician"], "Restore Health, Magicka and Stamina potions work faster: everything comes in one round sooner per rank (a second sooner on the road), never in under two. [OURS]", [["potfast", 1, {}]]],
     [ "Alchemy", "master_alchemist", "Master Alchemist", 1, [100], ["purity", "green_thumb"], "Everything you brew is another 10% stronger. [OURS]", [["alch", 0.1, {}]]],
     // ---------------------------------------------------------------- road encounters (encounters.js)
     [ "Speechcraft", "smooth_talker", "Smooth Talker", 1, [30], ["persuasion"], "On the road, bluffs, threats and haggling are 10% more likely to work. [OURS]", [["enctalk", 0.1, {}]]],
@@ -327,6 +328,10 @@ const PFX = (() => {
     [S1, "arena_champion", "Arena Champion", 1, [40], ["armsman"], "In festival duels and the Grand Arena, your foes have 10% less health and hit 10% softer, and your Grand Arena score is 10% higher. [OURS]", [["arenafight", 0.1, {}]]],
     [ "Athletics", "sportsman", "Sportsman", 2, [20, 50], ["long_strider"], "Festival contests score 8/16% more, and you hold your mead better in the drinking contest. [OURS]", [["sport", [0.08, 0.16], {}]]],
     [ "Speechcraft", "crowd_favourite", "Crowd Favourite", 1, [30], [], "The crowd loves you: festival and Grand Arena prize gold is 50% higher, and 4th and 5th place also win a ribbon. [OURS]", [["crowdfav", 0.5, {}]]],
+    // ---------------------------------------------------------------- treasure maps and relics (treasure.js)
+    [ "Streetwise", "cartographer", "Cartographer", 1, [25], ["rumour_monger"], "Treasure maps come clearer: one more landmark, firm roads and a full compass, and you know the hold at once. [OURS]", [["tmapx", 1, {}]]],
+    [ "Mercantile", "antiquarian", "Antiquarian", 1, [30], ["haggling"], "You restore relics yourself, anywhere, from one fragment fewer, and collectors pay half again as much for them. [OURS]", [["relicfix", 1, {}], ["relicpay", 0.5, {}]]],
+    [ "Athletics", "excavator", "Excavator", 2, [30, 60], ["long_strider"], "Buried treasure holds 25%/50% more gold and an extra gem or relic fragment, and a wrong dig tires you half as long. [OURS]", [["digloot", [0.25, 0.5], {}], ["diggem", 1, {}], ["digrest", 0.5, {}]]],
   ];
   const FX = {};
   if (typeof PERKS !== "undefined") {

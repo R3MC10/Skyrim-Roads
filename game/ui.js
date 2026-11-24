@@ -491,7 +491,7 @@
   }
 
   // ------------------------------------------------------------ main screen
-  window.__dbg = { save: () => S, fightResult: (r) => showFightResult(r), view: () => view, openEvent: (n) => openEvent(n), openEncounter: (n) => openEncounter(n), tally: (k, n) => tally(k, n), message: (t, x, b) => showMessage(t, x, b), toast: (t) => toast(t), publish: () => publishCard(), others: () => others, party: () => party, pp: () => ppUI, coopRuns: () => coopUI?.runs || [] };   // for testing in the browser console
+  window.__dbg = { save: () => S, fightResult: (r) => showFightResult(r), view: () => view, openEvent: (n) => openEvent(n), openEncounter: (n) => openEncounter(n), tally: (k, n) => tally(k, n), message: (t, x, b) => showMessage(t, x, b), toast: (t) => toast(t), publish: () => publishCard(), others: () => others, party: () => party, pp: () => ppUI, coopRuns: () => coopUI?.runs || [], setView: (z, cn) => { zoom = z; if (cn) center = cn; follow = false; kickMap(); } };   // for testing in the browser console
   /* phone back button: close what's on top, step back to the map, and only then leave the app */
   /* opts.esc: the PC's Esc key (desktop.js). It walks the same steps, except that the compass isn't "home" on a PC and
      a fight isn't left alone: false then means "nothing left to close", and Esc opens the pause menu (pausemenu.js) */
@@ -625,6 +625,7 @@
     if (typeof WORLDEV !== "undefined") WORLDEV.mount({ S: () => S, persist, toast, showFightResult, showMessage, openModal, closeModal, postNews, click: onPanelClick });   // world events (worldevents.js)
     if (typeof SIDEUI !== "undefined") SIDEUI.mount({ S: () => S, persist, toast, showMessage, openModal, closeModal, render: () => renderPanel(true), party: () => party, click: onPanelClick });   // pick a side: letters, recruiters, the Faction tab (sideui.js)
     if (typeof DWEMER !== "undefined") DWEMER.mount({ S: () => S, persist, toast, showMessage, renderPanel });   // the lexicon and valve puzzles (dwemer.js)
+    if (typeof TREASURE !== "undefined") TREASURE.mount({ S: () => S, persist, toast, showMessage, renderPanel, openModal, closeModal, party: () => party, Store: typeof Store !== "undefined" ? Store : null, splitGold: (g, w) => (ppUI && ppUI.splitGold ? ppUI.splitGold(g, w) : null), enterDungeon: () => { selected = null; renderPicked(); dunNote = null; renderDungeon(); } });   // treasure maps and relics (treasure.js)
     if (typeof BLACKREACH !== "undefined") BLACKREACH.mount({ S: () => S, persist, toast, showFightResult, showMessage, renderPanel, tb: tbCall });   // the cavern under Alftand (blackreach.js)
     if (typeof GREATEV !== "undefined") GREATEV.mount({ S: () => S, persist, toast, showFightResult, showMessage, openModal, closeModal, postNews, click: onPanelClick, party: () => party });   // great world events: banner + countdown (greatevents.js)
     if (typeof HOLDUI !== "undefined") HOLDUI.mount({ S: () => S, persist, toast, showFightResult, postNews, refresh: () => { bump(); renderPanel(true); }, party: () => party });   // player-run holds: Jarl, tax, raids (holdui.js)
@@ -968,7 +969,7 @@
     if (!mapResized && (!mapOnScreen || mapCovered())) return 200;
     const moving = S?.trip?.status === "travel" || performance.now() - mapTouchedAt < 1500;
     const wx = WEVENTS.weather(livePos()).id, weatherAnim = !reduceMotion && !["clear", "cloudy", "fog"].includes(wx);
-    const mapAnim = (typeof MAPART !== "undefined" && MAPART.active()) || (typeof MOTION !== "undefined" && MOTION.mapBusy()) || (typeof MAPHERO !== "undefined" && MAPHERO.active());   // a discovery burst or an arrival puff playing   // a discovery burst playing
+    const mapAnim = (typeof INKMAP !== "undefined" && INKMAP.pending()) || (typeof MAPART !== "undefined" && MAPART.active()) || (typeof MOTION !== "undefined" && MOTION.mapBusy()) || (typeof MAPHERO !== "undefined" && MAPHERO.active());   // a discovery burst or an arrival puff playing   // a discovery burst playing
     const raidNow = typeof RAIDART !== "undefined" && WEVENTS.activeRaid();
     const fxNow = typeof FXART !== "undefined" && S ? FXART.state(S) : null;   // spell and shout effects on the map
     const PC = typeof PCMAP !== "undefined" && PCMAP.on();   // PC map home screen (pcmap.js): smooth pan and zoom, living map (mapfx.js)
@@ -1019,7 +1020,7 @@
     let down = null, moved = false, pinch = null;
     const setZoom = (z, fx, fy) => {     // zoom keeping the point under the fingers still
       const PC = typeof PCMAP !== "undefined" && PCMAP.on();   // on a PC you can zoom out to all of Skyrim (pcmap.js)
-      z = Math.max(PC ? PCMAP.minZoomFor(c) : 1, Math.min(PC ? PCMAP.MAXZ : 6, z));
+      z = Math.max(PC ? PCMAP.minZoomFor(c) : 1, Math.min(PC ? (PCMAP.maxZoomFor ? PCMAP.maxZoomFor(c) : PCMAP.MAXZ) : 6, z));
       if (view.transform && fx != null) {
         const { k, ox, oy } = view.transform, mx = (fx - ox) / k / WorldMap.W, my = (fy - oy) / k / WorldMap.H;
         const r = c.getBoundingClientRect(), nk = k * z / zoom;
@@ -1610,10 +1611,12 @@
     if (r.stolen) lines.push("Stolen. Only a fence will buy it.");
     if (it.slot === "recipe" && typeof CRAFTFAIR !== "undefined") lines.push(CRAFTFAIR.knows(S, it.recipe) ? "You already know these forge recipes." : `Read it to learn new forge recipes: ${Object.keys(SMITH.RECIPES).filter((k) => SMITH.RECIPES[k].needs === it.recipe).map((k) => D.ITEMS[k].name).join(", ")}.`);
     if (r.cv != null && it.slot !== "potion") lines.push(`You made this. Shops pay no more than its materials were worth${r.nm ? "" : ", but you can give it a name"}.`);
+    if (typeof TREASURE !== "undefined") lines.push(...TREASURE.detailLines(S, r));   // treasure maps and relics (treasure.js)
     const acts = [];
     const onMain = eq && !(G.loadout(S).equipment.offhand === r.id && G.loadout(S).equipment[it.slot] !== r.id);
     if (G.SLOTS.includes(it.slot)) acts.push(onMain ? `<button class="btn" data-act="uneq" data-slot="${it.slot}" data-id="${r.id}">Unequip</button>` : `<button class="btn pri" data-act="eq" data-id="${r.id}">Equip${G.canOffhand(it) ? " (right hand)" : ""}</button>`);
     acts.push(offhandBtn(r, it, ""));
+    if (typeof TREASURE !== "undefined") acts.push(...TREASURE.detailActs(S, r));
     if (it.slot === "tome") acts.push(`<button class="btn pri" data-act="read" data-id="${r.id}">Read</button>`);
     if (it.slot === "recipe") acts.push(`<button class="btn pri" data-act="cfread" data-id="${r.id}">Read</button>`);
     if (typeof CRAFTFAIR !== "undefined" && CRAFTFAIR.canName(r)) acts.push(`<span class="cf-name"><input id="cfname-${r.id}" maxlength="${CRAFTFAIR.NAME_MAX}" placeholder="Name it" value="${esc(r.nm || "")}" aria-label="Name for this item"><button class="btn" data-act="cfname" data-id="${r.id}">${r.nm ? "Rename" : "Name it"}</button></span>`);
