@@ -106,6 +106,7 @@ const SKILLUP = (() => {
   }
   function add(items) {
     items = items.filter(Boolean); if (!items.length) return;
+    if (typeof LEVELUP !== "undefined" && LEVELUP.live) return;   // levelup.js shows skill rises and level-ups itself (one notice, not two)
     for (const it of items) mark(it.kind === "level" ? `level|${it.lvl}` : `skill|${it.name}|${it.lvl}`);
     enqueue(queue, items);
     if (live && !cur) { clearTimeout(waitT); waitT = setTimeout(next, 120); }

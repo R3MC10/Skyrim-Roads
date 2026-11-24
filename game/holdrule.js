@@ -1,14 +1,14 @@
 /* holdrule.js: player-run holds. [OURS]
-   Builds on clans (clans.js) and the weekly clan war points (wars.js):
-   - CLAIM: a clan member who stands in a hold nobody has claimed, and whose clan has earned at least 10 war points
-     there this week, can challenge the hold's champion (a strong fight). Win, and the clan takes the Jarl's seat.
-   - JARL: the members of the ruling clan vote for one of their own. Terms are half a week (Monday 00:00 and
+   Builds on the sides (sides.js, which answers for CLANS) and the weekly side war points (wars.js):
+   - CLAIM: a side member who stands in a hold nobody has claimed, and whose side has earned at least 10 war points
+     there this week, can challenge the hold's champion (a strong fight). Win, and the side takes the Jarl's seat.
+   - JARL: the members of the ruling side vote for one of their own. Terms are half a week (Monday 00:00 and
      Thursday 12:00 UTC); the votes standing when a term starts pick the Jarl for that term. Until the first vote
      counts, whoever took the hold acts as Jarl.
-   - TAX: the Jarl sets a small tax on shop sales in the hold (0-5%, 2% to start). Players outside the ruling clan pay
-     it on what they buy there; it fills the clan treasury. The Jarl spends the treasury on guards (raids get harder),
+   - TAX: the Jarl sets a small tax on shop sales in the hold (0-5%, 2% to start). Players outside the ruling side pay
+     it on what they buy there; it fills the side treasury. The Jarl spends the treasury on guards (raids get harder),
      a market discount (5% off for everyone for 3 days) or repairs (+1 wall).
-   - RAIDS: once a week, from Saturday 12:00 to Monday 00:00 UTC, other clans (with 10 war points there that week)
+   - RAIDS: once a week, from Saturday 12:00 to Monday 00:00 UTC, other sides (with 10 war points there that week)
      can raid. Each won raid knocks down a wall; a won raid with no walls left takes the hold. A hold that changed
      hands is safe until next week's window.
    Shared data: collection "holds", one record per player (id = their id): what they won, how they vote, tax they
@@ -77,7 +77,7 @@ const HOLDRULE = (() => {
     const out = {};
     for (const e of ev) {
       let s = out[e.h];
-      if (s && !CLANS.byId(s.cid)) { delete out[e.h]; s = null; }   // the clan was disbanded
+      if (s && !CLANS.byId(s.cid)) { delete out[e.h]; s = null; }   // the side was disbanded
       if (e.k === "repair") { if (s && seatKey(s) === e.seat && member(e.uid, s.cid, me)) s.walls = Math.min(WALLS_MAX, s.walls + 1); continue; }
       if (!CLANS.byId(e.c) || !member(e.uid, e.c, me)) continue;
       if (!s) { if (e.k === "claim") out[e.h] = { hold: e.h, cid: e.c, since: e.t, by: e.uid, walls: WALLS, hits: 0, week: weekOf(e.t) }; continue; }
@@ -151,7 +151,7 @@ const HOLDRULE = (() => {
       market: m.length ? SPEND.market.off : 0, marketEnds: m.length ? Math.max(...m.map((x) => x.t)) + SPEND.market.days * DAY : 0 };
   }
   const yourTax = (s, seat, t = now()) => (!seat || member(s.id, seat.cid, s) ? 0 : taxOf(seat, t, s) * Math.max(0, 1 - Math.min(1, pf(s, "holdtax"))));
-  /* shop prices in a hold: tax for outsiders, the Jarl's market discount for everyone, Jarl's Favour for the ruling clan */
+  /* shop prices in a hold: tax for outsiders, the Jarl's market discount for everyone, Jarl's Favour for the ruling side */
   function priceMult(s, hold, t = now()) {
     const seat = seatOf(hold, t, s); if (!seat || !s) return 1;
     let m = 1 + yourTax(s, seat, t);
@@ -182,8 +182,8 @@ const HOLDRULE = (() => {
     const c = CLANS.of(s.id, s);
     const seat = seatOf(hold, t, s);
     const kind = seat ? "raid" : "claim";
-    if (!c) return { kind, why: "Join a clan first: only clans can rule a hold." };
-    if (seat && seat.cid === c.id) return { kind: null, why: "Your clan rules here." };
+    if (!c) return { kind, why: "Pick a side first: only sides can rule a hold." };
+    if (seat && seat.cid === c.id) return { kind: null, why: "Your side rules here." };
     if (ctx.role === "member") return { kind, why: "Only your party leader can start a hold challenge." };
     if ((s.level || 1) < MIN_LEVEL) return { kind, why: `Come back at level ${MIN_LEVEL}.` };
     if (holdHere(s) !== hold) return { kind, why: `You have to be in ${hold} for that.` };
@@ -194,16 +194,16 @@ const HOLDRULE = (() => {
       if (locked(seat, t)) return { kind, why: "This hold changed hands this week. It's safe until next week's window." };
     }
     const pts = warPts(s, hold, c.id);
-    if (pts < WARS.MIN_TO_RULE) return { kind, why: `Your clan needs ${WARS.MIN_TO_RULE} war points in ${hold} this week (has ${pts}). Win fights and clear dungeons here.` };
+    if (pts < WARS.MIN_TO_RULE) return { kind, why: `Your side needs ${WARS.MIN_TO_RULE} war points in ${hold} this week (has ${pts}). Win fights and clear dungeons here.` };
     const last = st(s).acts.filter((a) => a.h === hold).slice(-1)[0];
     if (last && t - last.t < RETRY) return { kind, why: `Catch your breath: try again in ${Math.ceil((RETRY - (t - last.t)) / 60e3)} min.` };
     if (typeof G.curHealth === "function" && G.curHealth(s) < G.maxHealth(s) * 0.3) return { kind, why: "You're too badly hurt. Heal up first." };
     return { kind, why: null };
   }
-  /* the champion of an unclaimed hold, or the ruling clan's defenders (stronger with hired guards) */
+  /* the champion of an unclaimed hold, or the ruling side's defenders (stronger with hired guards) */
   function foeFor(s, hold, kind, guards = 0) {
     const base0 = 16;
-    const lv = Math.max(base0, typeof G.fightLevel === "function" ? G.fightLevel(s) : s.level || 1);   // never weaker than a level-14 foe: a real fight even for a fresh level-10 clan
+    const lv = Math.max(base0, typeof G.fightLevel === "function" ? G.fightLevel(s) : s.level || 1);   // never weaker than a level-14 foe: a real fight even for a fresh level-10 side
     const base = kind === "claim"
       ? { name: `Champion of ${hold}`, level: 14, health: 280, damage: 16, tags: ["humanoid", "elite"], danger: "high", gold: [60, 120] }
       : { name: guards ? `Hold defenders (${guards === 1 ? "with hired guards" : "with two guard hires"})` : "Hold defenders", level: 14, health: 260 + 45 * guards, damage: 15 + 2 * guards, tags: ["humanoid", "elite"], danger: "high", gold: [40, 90] };
@@ -233,7 +233,7 @@ const HOLDRULE = (() => {
     out.took = !!after && after.cid === c.id && (!before || before.cid !== c.id);
     if (f.hp <= 0 && G.die) { const d = G.die(s, "hold", ts); out.died = d.msg; out.bag = d.bag; }
     out.title = out.took ? `${hold} is yours` : f.won ? "Victory" : "Beaten back";
-    out.text = out.took ? (before ? `The last wall falls. ${c.name} [${c.tag}] takes ${hold} from ${before.clan.name}. Your clan's members can now vote for a Jarl.` : `The champion yields. ${c.name} [${c.tag}] now rules ${hold}. Your clan's members can now vote for a Jarl.`)
+    out.text = out.took ? (before ? `The last wall falls. ${c.name} [${c.tag}] takes ${hold} from ${before.clan.name}. Your side's members can now vote for a Jarl.` : `The champion yields. ${c.name} [${c.tag}] now rules ${hold}. Your side's members can now vote for a Jarl.`)
       : f.won ? `You break through the defenders. A wall of ${hold} falls (${after ? after.walls : 0} left). Win again with no walls left to take the hold.`
       : can.kind === "claim" ? (out.died ? `${e.name} cuts you down.` : `${e.name} holds you off.`) : out.died ? "The hold's defenders cut you down." : "The hold's defenders hold you off.";
     return out;
@@ -242,8 +242,8 @@ const HOLDRULE = (() => {
   // ---------------------------------------------------------------- what members and the Jarl do
   function vote(s, hold, cand, t = now()) {
     const seat = seatOf(hold, t, s);
-    if (!seat || !member(s.id, seat.cid, s)) return { err: "Only members of the ruling clan vote for its Jarl." };
-    if (!CLANS.members(seat.clan).some((m) => m.id === cand)) return { err: "They're not in the clan." };
+    if (!seat || !member(s.id, seat.cid, s)) return { err: "Only members of the ruling side vote for its Jarl." };
+    if (!CLANS.members(seat.clan).some((m) => m.id === cand)) return { err: "They're not on that side." };
     const h = st(s), o = h.votes[hold], ts = termStart(t);
     h.votes[hold] = o && okNum(o.t) && o.t < ts ? { c: cand, t, p: o.c, pt: o.t } : { c: cand, t, ...(o && o.p ? { p: o.p, pt: o.pt } : {}) };   // keep the vote that stood at the start of this term
     setDocs(null, s);

@@ -22,6 +22,7 @@ tests/out_heroart2/
 tests/out_followeranim/
 tests/out_caravans/
 tests/out_travelscene/
+tests/out_travelanim/
 tests/out_tooltips/
 tests/out_tabkeys/
 tests/out_combatui/
@@ -52,5 +53,7 @@ tests/out_invites/
 tests/out_holds/
 tests/out_evbanner/
 tests/out_gather/
+tests/out_esckey/
+tests/out_sides/
 tests/out_chargebar/
 tests/out_partytraps/

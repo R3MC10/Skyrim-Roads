@@ -3,7 +3,7 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b169-festivals", build: 169, date: "24 Nov 2026", title: "Festivals and the Grand Arena", items: [
+    { id: "b172-festivals", build: 172, date: "24 Nov 2026", title: "Festivals and the Grand Arena", items: [
       "Seven festivals now take turns around Skyrim, each for two days: the Jarl's Tourney in Windhelm, the Harvest Fair in Whiterun, the Lake Honrich Fishing Derby in Riften, the Great Hunt of Falkreath, Forgefire Days in Markarth, the Burning of King Olaf in Solitude and the Midwinter Feast in Dawnstar. Missed one? It comes back three weeks later.",
       "Each festival has three contests out of duels, archery, ring-tilting on your horse, a smithing contest, the fishing derby, the hunt, a mining race and a drinking contest. Three tries each, your best one counts, and every contest has a live board everyone sees.",
       "Festivals are peaceful ground: nothing you wear is lost, nobody dies, no bounty, and players can't attack each other in the festival town. Duel any player there as friends, whatever side of the war they're on.",
@@ -11,6 +11,51 @@ const PATCHNOTES = (() => {
       "The Grand Arena in Windhelm is always open: eight rounds of monsters, alone or with your party, with a new board every week.",
       "Look for \"Festivals\" in any town, and for the festival banner on the map a day before it starts. New perks: Arena Champion (One-Handed), Sportsman (Athletics) and Crowd Favourite (Speechcraft).",
       "Fixed: on phones the house chest and the follower Skills screen showed up without their proper look, and a fight on PC could stop drawing its blood.",
+    ] },
+    { id: "b171-esckey", build: 171, date: "24 Nov 2026", title: "Esc menu and a card you can fold away", items: [
+      "On PC, Esc now steps back one thing at a time, just like the back button on a phone: a tooltip, then a window, then the menu you're in, then the compass.",
+      "When there's nothing left to close, Esc opens a pause menu like in Skyrim: Resume, Settings, Journal, Patch notes, How to play, Report a problem and Save and quit. The Windows app also has Quit game. Use the arrows and Enter, or the mouse.",
+      "In a fight Esc opens the pause menu on top of the fight and never makes you run away. The world doesn't stop for anyone else in your party.",
+      "The great world event card on the map can be folded into a small pill with the arrow in its corner (tap the pill to open it again). The game remembers it for your hero.",
+      "Notices under it (a town rebuilding, a reward waiting) have an × to hide them until there's new news. A new event never pops the card open: the pill glows for a moment instead.",
+      "Fixed: on phones a few newer screens (the house chest, blood in fights, party traps, fishing and hunting and more) had lost part of their look. They're back to normal.",
+    ] },
+    { id: "b171-charcreate", build: 171, date: "24 Nov 2026", title: "Character creation, rebuilt", items: [
+      "Making a character now works like Skyrim's race menu: a big live picture of your hero that breathes, walks and swings, which you can turn with a finger (or the arrow keys) and zoom in on the face.",
+      "Tabs for Race, Body, Head, Face, Hair, Scars & Paint and Start, with Back and Next, a dice button for a random look and Undo.",
+      "Pick your sex, build, height, skin, face shape, eyes, brows, nose, mouth, age, hair, beard, Khajiit manes and Argonian horns and frills, scars, warpaint and tattoos.",
+      "Every race now has a gift that really works: Nords shrug off frost, Dunmer fire, Bretons magic, Redguards and Bosmer poison, Imperials find more gold, Orcs are better at the forge, Khajiit see in the dark and Argonians and Bosmer resist curses.",
+      "New Etiquette perk Proud Heritage makes your race's gift 25% stronger.",
+      "On the Start tab you can pick the Warrior, Mage or Thief Stone straight away.",
+      "Everyone sees the face you made: in fights, on the map, in your party and as a Stranger on the road.",
+      "Already have a character? Nothing changes until you want it to: visit the barber at any inn (40 gold) or the mirror in your house (free).",
+      "Fixed: fights with Blood and gore on could stop with an error, and some menus looked wrong on phones.",
+    ] },
+    { id: "b170-sides", build: 170, date: "24 Nov 2026", title: "Pick a side: Stormcloaks, Legion or Thalmor", items: [
+      "Player clans are gone. At level 20 a courier brings you three letters, and a new quest, Pick a Side, sends you to the recruiters in Windhelm, Solitude and the Thalmor Embassy. Hear them out and swear to one. Players already past level 20 get the quest the next time they play.",
+      "Old clans are disbanded with a note. Your old guild hall stays open to its members, and holds now belong to sides: war points, Jarls and hold seats work by side instead of by clan. Friends and parties work as before.",
+      "Joining gives you 300 gold and your side's cloak, worn in a new cloak slot and drawn on your hero, in the side's colours with its emblem. Each of the 5 ranks sends a better cloak: small boosts at first, then a power you can use once a fight. Every side's cloaks do different things (frost and war cries, shield walls and soldiers, magicka and illusions).",
+      "You earn rank XP only while you wear your side's cloak: from fights, dungeons, world events and above all beating soldiers of the other sides. A bar on Social → Faction shows how close the next rank is.",
+      "Soldiers of different sides (level 20+) can attack each other anywhere in the same hold, always after a question first. The loser is knocked down and keeps their gear; the winner gets gold, a trophy, war points and rank XP. Guards still add a bounty if they see it. Nobody in a dungeon, nobody just knocked down, and never your own party.",
+      "Each side has its own perks in the skill trees. Changing sides later costs gold, takes you back to the lowest rank and takes away the old cloaks and side perks (the perk points come back).",
+      "Fixed: on phones and small windows a lot of newer screens (the house chest, hold rule, sides and more) had lost their proper look. They're back.",
+    ] },
+    { id: "b169-travelanim", build: 169, date: "24 Nov 2026", title: "Smoother riding on the road", items: [
+      "The picture under your trip got its walking and riding fixed: horses really walk and gallop now, every hoof lands on the road and stays put instead of sliding, and the body, mane and tail move with the stride.",
+      "If anyone in your company is on foot, the horses slow to a walk beside them, so your follower keeps up without shuffling on the spot. Ride alone (or with everyone mounted) and you gallop.",
+      "Everyone on the road is drawn at the same size and stands on the same line: a follower comes up past your horse's shoulder, and riders sit properly in the saddle.",
+      "Name tags sit just above each head and step out of each other's way instead of overlapping.",
+      "Carriage trips show the carriage again: you on the bench, a horse in front and the wheels turning. Caravans coming the other way get a real horse too.",
+      "Horses on the map step more cleanly as well. With Reduce motion on, everyone stands still.",
+    ] },
+    { id: "b145-levelup", build: 145, date: "24 Nov 2026", title: "Levelling up feels like Skyrim", items: [
+      "When a skill goes up you now see it near the top of the screen: \"One-Handed increased to 36\" with a thin bar for the skill, and your level bar under it filling up, so you always know how close the next level is.",
+      "Reaching a new level is a proper moment: a big LEVEL UP with your new level number, the bar fills to the end and starts again.",
+      "Open Skills (from the compass or the Character screen) with a level-up waiting and it asks first, like Skyrim: three pillars, Health, Magicka or Stamina, each +10. Stamina also adds +5 carry weight. Every level still gives a perk point too.",
+      "You can choose later. Level-ups wait for you and stack up, and the compass shows a glowing \"Level up\" on Skills and on your level bar until you spend them.",
+      "Skill books and trainers count the same way as using a skill, so every skill point moves your level bar.",
+      "Other players see your Health, Magicka and Stamina next to your level in the list of travellers.",
+      "Nothing changes for your hero: you keep your level, your perks and every choice you already made.",
     ] },
     { id: "b168-folbuild", build: 168, date: "24 Nov 2026", title: "Followers learn like you do", items: [
       "Your follower now has their own skills, the same list as yours, and they rise with use exactly like yours: swinging a sword raises One-Handed, shooting raises Archery, spells raise their school, blocking raises Block, and blows on their armour raise their armour skill.",
@@ -1095,11 +1140,13 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 169;
+  const NEXT_AT = 172;
   const NEXT = [
     "A new, livelier fight screen that fits on one screen",
-    "On PC, everything fits on one screen without scrolling",
-    "New painted dungeon rooms and a parchment dungeon map",
+    "Dragon Shouts learned from word walls",
+    "Werewolf and vampire paths",
+    "Followers with their own quests, opinions and banter",
+    "Weather that changes how the road and fights go",
   ];
   const KEY = "rotn_notes_seen";
   const latest = () => LIST[0];

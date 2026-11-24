@@ -24,7 +24,7 @@ if EPOCH + k * SLOT + 2 * 864e5 < now: k += 7
 OFFSET = int(max(0, EPOCH + k * SLOT + 3 * 3600e3 - now))
 CLOCK = f"(() => {{ const n = Date.now.bind(Date), o = {OFFSET}; Date.now = () => n() + o; }})();"
 
-SETUP = """() => { ART.setStyle && ART.setStyle('ink'); const S = window.__dbg.save(); S.gold = 500; S.level = 22; S.trip = null; S.dungeon = null;
+SETUP = """() => { ART.setStyle && ART.setStyle('ink'); const S = window.__dbg.save(); S.gold = 500; S.level = 19;   /* under 20: no 'Pick a Side' courier popping up */ S.trip = null; S.dungeon = null;
   for (const k of Object.keys(S.skills)) S.skills[k].lvl = Math.max(S.skills[k].lvl, 45);
   S.location = 'Solitude'; [S.x, S.y] = WORLD.places['Solitude']; G.setHealth(S, G.maxHealth(S));
   const c = TOURNEY.current();
