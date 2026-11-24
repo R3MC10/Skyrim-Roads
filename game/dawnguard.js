@@ -11,7 +11,7 @@
    clears, so a party clears them as a co-op run and votes on the loot (coop.js, lootvote.js).
    Story beats follow the Dawnguard questline, retold in our own words; [OURS] the places used for each stage, numbers. */
 const DAWNGUARD = (() => {
-  const E = (name, health, damage, tags, extra = {}) => ({ name, health, damage, tags, level: 10, danger: "high", gold: [0, 0], text: "", hitCap: 0.36, ...extra });   // hitCap: one blow never takes more than 36% of your health (engine.js)
+  const E = (name, health, damage, tags, extra = {}) => ({ name, health: Math.round(health * 0.88), damage: Math.round(damage * 0.9), tags, level: 10, danger: "high", gold: [0, 0], text: "", hitCap: 0.36, ...extra });   // hitCap: one blow never takes more than 36% of your health (engine.js)
   // ---- rewards ([Skyrim] names, close-to-Skyrim stats; ids keep the weapon type the engine reads from them)
   Object.assign(D.ITEMS, {
     dawnguard_helmet: { name: "Dawnguard Helmet", slot: "head", type: "heavy", armor: 19, weight: 6, value: 300 },
