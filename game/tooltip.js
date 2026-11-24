@@ -426,7 +426,10 @@ const TIP = (() => {
     const h = find(e.target); clearTimeout(showT);
     if (h) showT = setTimeout(() => show(h), 300); else hide();
   }
-  function key(e) { if (e.key === "Escape" && cur) { hide(); return; } if (e.key === "Tab" || e.key.startsWith("Arrow")) lastKey = true; }
+  function key(e) {
+    if (e.key === "Escape" && cur) { hide(); e.preventDefault(); return; }   // Esc closes the tip first (desktop.js skips handled keys)
+    if (e.key === "Tab" || e.key.startsWith("Arrow")) lastKey = true;
+  }
 
   function mount() {
     if (!DOM || mount.done) return; mount.done = true;
