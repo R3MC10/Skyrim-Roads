@@ -66,7 +66,8 @@ const I18N = (() => {
     "Pockets picked": "Okradzione kieszenie", "Potions brewed": "Uwarzone mikstury", "Dungeons cleared": "Oczyszczone lochy", "Quests completed": "Ukończone zadania",
     "Players defeated": "Pokonani gracze", "Questlines completed": "Ukończone wątki", "Arena wins": "Wygrane na arenie", "Jobs done": "Wykonane zlecenia",
     // settings
-    Sound: "Dźwięk", Music: "Muzyka", Effects: "Efekty", Ambience: "Otoczenie", "All sound": "Cały dźwięk", "Art style": "Styl grafiki", "Hand-drawn": "Rysowany", "Pixel art": "Pikselowy",
+    Sound: "Dźwięk", Music: "Muzyka", Effects: "Efekty", Ambience: "Otoczenie", "All sound": "Cały dźwięk", "Art style": "Styl grafiki", Graphics: "Grafika", Lighting: "Oświetlenie", Low: "Niskie", High: "Wysokie",
+    "Light and weather on the map and in place pictures: golden hours, lit towns at night, mist and moving clouds. Low is lighter on old phones.": "Światło i pogoda na mapie i na obrazkach miejsc: złota godzina, oświetlone miasta nocą, mgły i płynące chmury. Niskie mniej obciąża starsze telefony.", "Hand-drawn": "Rysowany", "Pixel art": "Pikselowy",
     Motion: "Ruch", Fights: "Walki", "Turn by turn": "Turowo", "Instant (auto)": "Od razu (auto)", "Foe turns": "Tury wroga", "Normal speed": "Normalna prędkość",
     "Replay speed": "Prędkość powtórki", Crafting: "Rzemiosło", "When you craft": "Przy wytwarzaniu", "Mini-games": "Minigry", "Quick craft": "Szybkie wytwarzanie",
     Survival: "Przetrwanie", "Cold meter": "Licznik zimna", "On (gentle)": "Wł. (łagodny)", Accessibility: "Dostępność", "Accessibility options": "Opcje dostępności",
