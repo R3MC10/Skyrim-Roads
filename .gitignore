@@ -12,3 +12,4 @@ tests/tbf/
 tests/fread/
 tests/bscene/
 tests/out_travelscene/
+tests/out_combatui/

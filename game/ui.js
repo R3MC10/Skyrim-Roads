@@ -282,7 +282,7 @@
       ${typeof I18N !== "undefined" ? `<h3>Language</h3>${I18N.settingRow(seg)}` : ""}
       <h3>Look</h3><div class="setrow"><span>Art style</span>${seg("artStyle", [["ink", "Hand-drawn"], ["pixel", "Pixel art"]], ART.style())}</div>
       ${typeof MOTION !== "undefined" ? `<div class="setrow"><span>Motion</span>${seg("motion", [["full", "Full"], ["lite", "Lite"], ["off", "Off"]], MOTION.pref())}</div>` : ""}
-      ${typeof TB !== "undefined" ? `<h3>Fights</h3><div class="setrow"><span>Foe turns</span>${seg("tbFast", [[false, "Normal speed"], [true, "Fast"]], getPref("tbFast", false))}</div>${typeof COMBATFX !== "undefined" ? `<div class="setrow"><span>Blood</span>${seg("gore", [[true, "On"], [false, "Off"]], getPref("gore", true))}</div>` : ""}` : ""}${typeof FASTQOL !== "undefined" ? FASTQOL.settingsHTML(seg) : ""}
+      ${typeof TB !== "undefined" ? `<h3>Fights</h3><div class="setrow"><span>Foe turns</span>${seg("tbFast", [[false, "Normal speed"], [true, "Fast"]], getPref("tbFast", false))}</div>${typeof COMBATFX !== "undefined" ? `<div class="setrow"><span>Blood</span>${seg("gore", [[true, "On"], [false, "Off"]], getPref("gore", true))}</div>` : ""}` : ""}${typeof FIGHTCTL !== "undefined" && typeof TB !== "undefined" ? FIGHTCTL.settingsHTML(seg) : ""}${typeof FASTQOL !== "undefined" ? FASTQOL.settingsHTML(seg) : ""}
       ${typeof ACCESS !== "undefined" ? ACCESS.settingsHTML(seg) : ""}
       ${typeof ONBOARD !== "undefined" ? ONBOARD.settingsHTML(seg) : ""}
       <h3>Crafting</h3><div class="setrow"><span>When you craft</span>${seg("craftGame", [[true, "Mini-games"], [false, "Quick craft"]], getPref("craftGame", true))}</div>

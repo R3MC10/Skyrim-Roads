@@ -3,6 +3,17 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b137-ctl", build: 137, date: "24 Nov 2026", title: "New fight controls", items: [
+      "Your moves in a fight now sit in a proper action bar at the bottom: three big buttons for Attack, Power attack and Guard (or Shield bash), with Magic, Items, Flee and End turn right under them. Easy to hit with a thumb, even on small phones.",
+      "Every move shows its cost as gold pips, and the AP row at the top lights up which pips a move would use before you tap it. The pips you spend burst away.",
+      "Moves you can't use right now are greyed out and say why: \"Need 2 more AP\", \"Not enough stamina\", \"Need 12 more magicka\", \"None left\".",
+      "Quick slots above the big buttons hold your shouts and your favourite spells, potions and scrolls. Tap the star next to anything in Magic or Items to pin it there. Until you pin something, it suggests your best healing spell, your best attack spell and a health potion.",
+      "Magic and Items open as tabs with filters by school, and your spells and potions have their pictures in both art styles.",
+      "Healing with a follower or friend beside you? Tap the spell or potion and then tap who gets it (or tap it again for yourself). Dragging onto someone still works.",
+      "Buttons react when you press them, and phones give a little buzz.",
+      "On a PC: keys 1 to 9 use the numbered moves, Space ends your turn (and skips the foe's turn or presses Continue), M opens Magic, I opens Items, F flees, Esc goes back.",
+      "Prefer the old cards or the combat wheel? Settings, Fights, Controls. The target button at the top still switches the timing ring on or off.",
+    ] },
     { id: "b136dg", build: 136, date: "24 Nov 2026", title: "Dungeon mini-games, and watching your leader", items: [
       "Dungeon rooms are played now, not rolled. Dash through a trap by running between the swinging blades, find the trigger by spotting the stone that sits low and glints, smash a chest with well-timed swings, sneak past a foe by stopping when it turns (and waiting in the shadows), and search a quiet room by rubbing the dust away. Each takes 5 to 15 seconds.",
       "New choice in fight rooms: Run for it. Tap Left and Right in turn as fast as you can to get past the foe. Get caught and it hits first.",

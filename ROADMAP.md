@@ -69,6 +69,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Smart AI combat (default; custom tactics optional), crafting mini-games, motion design (63)
 
 ## In progress (write your name before you start)
+- Claude: fight controls overhaul (fightctl.js): big action bar with drawn icons and AP cost pips, reasons on greyed-out moves, quick slots for favourite spells/potions/shouts, tap-to-choose targets for healing, press feedback and buzz, keyboard keys on PC (1-9, Space, M, I, Esc). Branch claude/combatui.
 - Claude: dungeon mini-games (dungeongames.js): trap dash, find the trigger, smash a chest, sneak past, run for it, search; replayable from a seed + taps; party members watch the leader play live (also lockpicking and the pillar/claw rings). Branch claude/dungeongames.
 - Claude: dungeons get longer per player in a party (partyplay.js longLayout/sizeRun, coop.js lobby start). Branch claude/partydungeons.
 - Claude: travel strip overhaul (travelart.js): deep parallax scenery by region, sky/time of day, live weather, lighting, passing landmarks and travellers, the destination growing on the horizon. Branch claude/travelscene.
