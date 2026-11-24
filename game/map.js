@@ -359,7 +359,9 @@ const WorldMap = (() => {
     const viewBox = [-ox / k, -oy / k, (canvas.width - ox) / k, (canvas.height - oy) / k];
     const dark = SV ? SV.ambient(g, v, s, W, H, viewBox) : MA ? MA.ambient(g, v, s, W, H, viewBox) : 0;   // water glints, cloud shadows, birds (under the fog)
     const seen = [...v.explored, ...v.discovered.map((n) => WORLD.places[n])].filter((p) => p && WORLD.isSol(p) === !!SV);
-    g.drawImage(fogFor(OY ? seen.map((p) => [p[0], p[1] - OY]) : seen, SV ? "sol" : ""), 0, 0, W, H);
+    const VI = typeof VISION !== "undefined" && v.cones?.length ? VISION : null;
+    const fogImg = fogFor(OY ? seen.map((p) => [p[0], p[1] - OY]) : seen, SV ? "sol" : "");
+    g.drawImage(VI ? VI.veil(fogImg, fogKey, v.cones, W, H, OYH) : fogImg, 0, 0, W, H);   // your cone of sight cuts through the fog (vision.js)
     if (v.rulers?.length && !SV) { g.globalAlpha = 0.26; for (const r of v.rulers) g.drawImage(tintFor(r.hold, r.color), 0, 0, W, H); g.globalAlpha = 1; }   // holds ruled by a clan
     if (OY) g.setTransform(k, 0, 0, k, ox, oy - OYH * k);   // from here on: world coordinates
     const [px, py] = P(v.player);
@@ -369,6 +371,7 @@ const WorldMap = (() => {
       if (v.sneakRing) { g.setLineDash([]); g.fillStyle = "rgba(70,50,110,.18)"; g.strokeStyle = "rgba(190,165,255,.6)"; g.lineWidth = 1.6 * s; g.beginPath(); g.arc(px, py, v.sneakRing, 0, 7); g.fill(); g.stroke(); }
       g.restore();
     }
+    if (VI) for (let i = v.cones.length - 1; i >= 0; i--) VI.edges(g, v.cones[i].c, s, v.cones[i].faint, v.t);   // party members' cones under yours
     // which way you're heading: from how your marker moved (a tiny arrow points that way while you travel)
     { const l = heading.last, d = l ? Math.hypot(px - l[0], py - l[1]) : 99; if (d > 60) heading.a = null; else if (d > 0.3) heading.a = Math.atan2(py - l[1], px - l[0]); if (d > 0.3) heading.last = [px, py];
       if (heading.a == null && v.moving && v.dest?.pos) { const [dx, dy] = P(v.dest.pos); if (Math.hypot(dx - px, dy - py) > 1) heading.a = Math.atan2(dy - py, dx - px); } }   // just set off: point at where you're going
@@ -460,6 +463,7 @@ const WorldMap = (() => {
     }
     for (const o of v.others) { const [x, y] = P(o.pos); smartLabel(o.name, x, y, 13, "#cde0ff"); }
     for (const b of v.bags) { const [x, y] = P(b.pos); smartLabel(b.label, x, y, 13, "#ffc8b4"); }
+    if (v.foe && VI && !v.cones[0].faint) VI.foe(g, v.cones[0].c, s, v.foe, v.t, v.reduceMotion, (n, x, y) => smartLabel(n, x, y - 9 * s, 12, "#ffc0b0"));   // what blocks your road, ahead in your cone
     const perTown = {};
     for (const b of v.banners || []) {   // clan banners over members' houses
       const n = (perTown[b.town] = (perTown[b.town] || 0) + 1) - 1;
@@ -559,6 +563,7 @@ const WorldMap = (() => {
     if (v.guards && typeof GUARDS !== "undefined") GUARDS.drawMap(g, v.guards, P, s, v.t, v.reduceMotion, v.zoom, label);   // hold guards on patrol (guards.js)
     if (v.raid && typeof RAIDART !== "undefined") RAIDART.mapRaid(g, v.raid, P, s, v.t, v.reduceMotion);   // a dragon over a town (raidart.js)
     if (typeof WORLDEV !== "undefined") WORLDEV.drawMap(g, P, s, v.t, v.reduceMotion);   // gates, dragon flights, the Khajiit market (worldevents.js)
+    if (typeof GREATEV !== "undefined") GREATEV.drawMap(g, P, s, v.t, v.reduceMotion);   // dragon assaults, rifts, sieges, fairs and what they leave behind (greatevents.js)
     if (v.cart && typeof CARAVANS !== "undefined") { const sp = CARAVANS.sprite(false, false); if (sp) g.drawImage(sp, px - 50 * s, py - 16 * s, 34 * s, 24 * s); }
     if (v.fx && typeof FXART !== "undefined") FXART.mapUnder(g, v.fx, P, s, px, py, v.t, v.reduceMotion, v);   // spells and shouts around you (fxart.js)
     const pulse = v.reduceMotion ? 0.5 : (Math.sin(v.t * 3) + 1) / 2;
