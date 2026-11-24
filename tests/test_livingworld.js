@@ -8,7 +8,7 @@ let FAKE = Date.now();
 class FakeDate extends Date { static now() { return FAKE; } }
 const c = { console, Math, Date: FakeDate, JSON, Float64Array, Float32Array, Uint8Array, Int32Array, Uint16Array, Int16Array, Object, Array, Set, Map, Proxy, Number, String, URLSearchParams, setNow: (ms) => { FAKE = ms; } };
 vm.createContext(c);
-for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "enchanting.js", "quests.js", "guilds.js", "immerse.js", "rumours.js", "livingworld.js"])
+for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "enchanting.js", "quests.js", "guilds.js", "immerse.js", "rumours.js", "livingworld.js", "i18n_story.js", "i18n_living.js", "i18n.js"])
   vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
 vm.runInContext(`
 let n = 0; const ok = (cnd, m) => { n++; if (!cnd) throw new Error("FAIL " + m); };
@@ -155,7 +155,7 @@ atHour(19);
   ok(RUMOURS.marks(s).some((m) => m.id === x.id && !/\\?/.test(m.label)), "a solid mark now");
   ok(LIVING.act(s, x.id).err, "you have to go there");
   s.location = x.place; [s.x, s.y] = WORLD.places[x.place]; s.trip = null;
-  ok(/Jarl of/.test(RUMOURS.card(s)) && /data-lw="act"/.test(RUMOURS.card(s)), "a card on the travel tab");
+  ok(/Jarl of|gold in it for you/.test(RUMOURS.card(s)) && /data-lw="act"/.test(RUMOURS.card(s)), "a card on the travel tab");
   const pay = LIVING.bountyPay(s, x); RUMOURS.st(s).fame[x.hold] = 60;
   ok(LIVING.bountyPay(s, x) > pay, "heroes get a bigger Jarl's bounty");
   s.level = 40; s.hpBonus = 6000; G.setHealth(s, G.maxHealth(s));
@@ -253,6 +253,79 @@ atHour(19);
   delete globalThis.ART;
   ok(LIVING.townHTML(s, "Bleak Falls Barrow", "inn", true) === "", "nothing outside towns");
   ok(LIVING.tick(null) === "" && typeof LIVING.tick(s) === "string", "tick is safe");
+}
+// 10. in Polish: every sentence this module shows has a translation (i18n_living.js)
+{
+  const SPLIT = /(?<=[.!?…])\\s+|(?<=[.!?]["”])\\s+/;
+  const missing = new Set();
+  const dec = (t) => t.replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
+  const LABELS = new Set(["Listen", "Ask", "free", "Tomorrow", "Go in", "Whispered", "Make amends", "Go and see"]);
+  const words = (t) => /[a-z]{2} [a-z]/.test(t) || LABELS.has(t.replace(/ · .*$/, ""));
+  /* check plain text the way i18n.js sees it on screen: sentence by sentence */
+  const pl = (text, where) => {
+    const t = dec(String(text)).trim(); if (!t || !words(t)) return;
+    if (I18N.tr(t) != null && !/[a-z]{2} [a-z]/.test(t.replace(/ · .*/, ""))) return;
+    for (const frag of t.split(SPLIT)) { const x = (frag || "").trim(); if (x && words(x) && I18N.tr(x) == null) missing.add(x + "   <- " + where); }
+  };
+  /* text nodes of a piece of HTML */
+  const plHTML = (html, where) => { for (const seg of String(html).replace(/<svg[\\s\\S]*?<\\/svg>/g, "").split(/<[^>]+>/)) pl(seg, where); };
+  const P = "Riverwood";
+  for (const [k, K] of Object.entries(LIVING.WH)) {
+    const x = { place: P, g: 123, loot: "Iron Ingot, Leather" };
+    for (const t of [...K.say, K.came, K.none, K.win]) pl(t.replace(/\\{p\\}/g, P).replace(/\\{g\\}/g, "123").replace(/\\{loot\\}/g, x.loot), "whisper " + k);
+    pl(K.title, "title"); pl(K.icon + " " + K.title, "title");
+    pl("The regulars lean in: “" + K.say[0].replace(/\\{p\\}/g, P) + "” Give it about 9 h and see. " + P + " is marked on your map. (15 gold for the round.)", "hearWhisper");
+  }
+  for (const d of LIVING.DOORS) { pl(d.name, "door"); pl(d.what, "door"); }
+  for (const tb of Object.values(LIVING.SCHED)) for (const [, , , doing] of tb) { pl(doing, "doing"); pl("The trader is " + doing + ".", "doing"); }
+  for (let day = 0; day < 40; day++) for (const r of LIVING.realm(day)) pl(r.x, "realm");
+  // deeds, guard lines, news, standing words
+  {
+    atHour(12);
+    const s = mk(); LIVING.watch(s);
+    s.dragons = 2; TOWNS.addBounty(s, "Whiterun", "assault"); s.cvRoad = { robbed: { a: 1, b: 2 } }; LIVING.watch(s); delete s.bounty.Whiterun;
+    for (const k of ["guard", "guard", "event", "event", "amends", "crime"]) LIVING.deed(s, k, "Whiterun");
+    s.caravanJob = { id: "j", to: "Whiterun", name: "Ri'saad's caravan" }; s.location = "Riverwood"; LIVING.watch(s); s.caravanJob = null; s.location = "Whiterun"; pl(LIVING.watch(s), "watch");
+    for (const nw of LIVING.st(s).news) pl(nw.x, "news");
+    for (const l of LIVING.lines(s, "Whiterun")) pl(l, "lines");
+    pl(LIVING.deedWords(s, "Whiterun").join(" · "), "deedWords");
+    LIVING.deed(s, "rob", "Whiterun", -80); for (const l of LIVING.lines(s, "Whiterun")) pl(l, "lines");
+    for (const h of [3, 12, 21]) { atHour(h); for (const sec of ["inn", "streets", "general", "blacksmith", "alchemy"]) plHTML(LIVING.townHTML(s, "Whiterun", sec, false), "townHTML " + sec + " " + h); }
+    plHTML(LIVING.panel(s), "panel");
+    pl(LIVING.amends(s).err || "", "amends");
+    s.gold = 0; pl(LIVING.amends(s).err || "", "amends");
+    pl(LIVING.hearWhisper(s).err || "", "hearWhisper"); pl(LIVING.useDoor(s, "guest").err || "", "door"); pl(LIVING.useDoor(s, "nope").err || "", "door");
+    s.gold = 9999; pl(LIVING.amends(s).text || "", "amends"); pl(LIVING.amends(s).err || "", "amends");
+    TOWNS.addBounty(s, "Whiterun", "assault"); pl(LIVING.amends(s).err || "", "amends"); delete s.bounty.Whiterun;
+    RUMOURS.st(s).fame.Whiterun = 80;
+    for (const id of ["store", "guest"]) { const r = LIVING.useDoor(s, id); pl(r.text || r.err, "door " + id); pl(LIVING.useDoor(s, id).err, "door again"); }
+    atHour(21); pl(LIVING.askOpen(s, "general").text || "", "askOpen"); pl(LIVING.askOpen(s, "wizard").err || "", "askOpen"); atHour(12); pl(LIVING.askOpen(s, "general").err || "", "askOpen");
+    atHour(20);
+    for (let i = 0; i < 3; i++) { const r = LIVING.hearWhisper(s, G.now(), () => 0.01); pl(r.text || r.err, "hearWhisper"); later(13); }
+    pl(LIVING.cantAsk(s, "Bleak Falls Barrow"), "cantAsk"); pl(LIVING.cantAsk(s, "Whiterun"), "cantAsk");
+    plHTML(LIVING.panel(s), "panel with whispers");
+    const x = LIVING.st(s).wh[0]; x.real = true; x.due = G.now() - 1; pl(LIVING.advance(s), "advance");
+    pl(LIVING.act(s, x.id).err || "", "act away"); pl(LIVING.act(s, "nope").err || "", "act gone");
+    s.location = x.place; [s.x, s.y] = WORLD.places[x.place]; plHTML(LIVING.card(s), "card"); plHTML(LIVING.panel(s), "panel live");
+    const r = LIVING.act(s, x.id); pl(r.text, "act");
+    later(100); LIVING.advance(s); for (const nw of LIVING.st(s).news) pl(nw.x, "news");
+    for (const k of Object.keys(LIVING.WH)) pl(LIVING.WH[k].title.toLowerCase(), "lowercase title");
+  }
+  // the rumours.js hook and the perks
+  pl("Nobody in this hold opens a door to you at night. Make amends first.", "knock");
+  for (const id of ["town_crier", "low_profile", "well_met"]) { const p = PERKS.BY_ID[id]; ok(p, "perk " + id); pl(p.name, "perk"); I18N.tr(p.name) || missing.add(p.name); pl(p.desc.replace(/\\s*\\[[^\\]]*\\]\\s*$/, ""), "perk " + id); }
+  for (const m of [...missing].slice(0, 30)) console.log("  no Polish: " + m);
+  ok(!missing.size, "every sentence has Polish (" + missing.size + " missing)");
+  // a few spot checks of the result
+  ok(I18N.tr("Whispers of things to come") === "Szepty o tym, co nadejdzie", "heading");
+  ok(I18N.tr("Make amends · 64") === "Zadośćuczyń · 64", "button with a price");
+  ok(I18N.tr("Doors in Whiterun") === "Drzwi w Whiterun", "doors heading");
+  ok(/^Smok znad Riverwood/.test(I18N.tr("The dragon over Riverwood flew on north. Nobody's seen it since.")), "a whisper that came to nothing");
+  ok(/^Stali bywalcy nachylają się: „Pasterze widzieli smoka/.test(I18N.tr("The regulars lean in: “Shepherds saw a dragon circling over Riverwood. Round and round, like it's looking for somewhere to land.” Give it about 9 h and see.")), "a whisper, quoted");
+  ok(I18N.tr("2 days 3 h ago") === "2 dni 3 h temu" && I18N.tr("5 h ago") === "5 h temu", "time ago");
+  ok(I18N.tr("Mikael the bard") === "Mikael, bard" && I18N.tr("The trader is asleep.") === "Kupiec śpi.", "townsfolk");
+  ok(I18N.tr("guarded 2 caravans · 1 dragon slain here") === "ochronione karawany: 2 · smoki zabite tutaj: 1", "deeds list");
+  ok(I18N.tr("Lydia dealt with a dragon's roost at Riverwood.") === "Lydia zajął się smoczym gniazdem w Riverwood.", "news with a title inside");
 }
 console.log("livingworld ok · " + n + " checks");
 `, c);

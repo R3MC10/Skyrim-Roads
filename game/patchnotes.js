@@ -11,6 +11,7 @@ const PATCHNOTES = (() => {
       "News of the realm in Map → World news and on every inn's notice board: what you did, what came true, and the talk of each day across Skyrim.",
       "In a party the leader's world is everyone's: you see the leader's whispers, marks and news, and the leader does the asking and deciding.",
       "New perks: Town Crier (Speechcraft: whispers come true more often and sooner, bounties pay more), Low Profile (Streetwise: crimes hurt your name less and are forgotten faster), Well Met (Etiquette: doors open sooner, amends cost less).",
+      "All of it is in Polish too, when the game is set to Polish.",
     ] },
     { id: "b137-ctl", build: 137, date: "24 Nov 2026", title: "New fight controls", items: [
       "Your moves in a fight now sit in a proper action bar at the bottom: three big buttons for Attack, Power attack and Guard (or Shield bash), with Magic, Items, Flee and End turn right under them. Easy to hit with a thumb, even on small phones.",
