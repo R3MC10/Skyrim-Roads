@@ -31,3 +31,7 @@ tests/out_followerbonds/
 tests/out_foeintent/
 tests/out_boss/
 tests/pnotes/
+tests/out_paintedmap/
+
+# reference renders and raw paintings for ChatGPT (scripts/map_reference.py); finished art goes to game/ as WebP
+art_gpt/*.png
