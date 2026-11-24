@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b136-dungeons", build: 136, date: "24 Nov 2026", title: "Bigger party, longer dungeon", items: [
+      "Dungeons now get longer for every friend in your party who goes in: 2 more rooms each for the first three friends, then 1 more each. A full party of 8 walks 10 extra rooms before the boss.",
+      "The extra rooms are the usual mix: fights, tough fights, traps, treasure chests, odd finds and the odd spot to rest. There's still a breather room right before the boss.",
+      "The party leader rolls the map once when you go in, so everyone in the party walks exactly the same rooms. This now also works for co-op runs started from the dungeon door (not just the party ready check).",
+      "Going in alone? Nothing changes.",
+    ] },
     { id: "b135-fix", build: 135, date: "24 Nov 2026", title: "Small fix", items: [
       "Fixed: with the Prospector perk, now really every ore vein glints in the mining game (one could stay hidden before).",
     ] },
