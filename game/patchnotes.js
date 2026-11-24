@@ -9,6 +9,9 @@ const PATCHNOTES = (() => {
       "The party leader rolls the map once when you go in, so everyone in the party walks exactly the same rooms. This now also works for co-op runs started from the dungeon door (not just the party ready check).",
       "Going in alone? Nothing changes.",
     ] },
+    { id: "b135-fix", build: 135, date: "24 Nov 2026", title: "Small fix", items: [
+      "Fixed: with the Prospector perk, now really every ore vein glints in the mining game (one could stay hidden before).",
+    ] },
     { id: "b136", build: 136, date: "24 Nov 2026", title: "A proper road picture while you travel", items: [
       "The little picture under your trip is now a real moving landscape: snowy mountains far off, hills and forests that match where you are (pines, the Rift's golden birches, marsh, snowfields, ash wastes, rocky hills), and a road with ruts or old flagstones.",
       "The sky and light follow the real time of day: sun, moons, stars and northern lights at night, warm light at dusk. Snow, rain with lightning, fog, ash and autumn leaves blow through when that's the weather.",
