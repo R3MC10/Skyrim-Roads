@@ -103,8 +103,16 @@ const RUMOURS = (() => {
     if (s.gold < p) return { err: `A drink to loosen tongues costs ${p} gold.` };
     const kinds = Object.keys(KINDS).filter((k) => candidates(s, town, k).length);
     if (!kinds.length) return { err: "Nothing's going on around here. Peaceful, for once." };
-    const kind = pick(kinds, rnd), list = candidates(s, town, kind), where = list[Math.floor(rnd() * Math.min(list.length, 5))].n;
     s.gold -= p;
+    const lead = makeLead(s, town, src, kinds, t, rnd), where = lead.place;
+    r.next[waitKey(town, src)] = t + gameH(WAIT_H);
+    const sk = typeof G !== "undefined" ? [...G.useSkill(s, "Speechcraft", 8), ...(src === "street" ? G.useSkill(s, "Streetwise", 8) : [])] : [];
+    const who = src === "inn" ? `${innkeeper(town)} ${pick(INN_VOICE, rnd)}` : pick(STREET_WHO, rnd);
+    return { lead, text: `${who}: “${cap(lead.say)}” ${where} is marked on your map.${p ? ` (${p} gold for the drink.)` : ""}` + (sk.length ? " " + sk.join(". ") : "") };
+  }
+  /* make a lead about a place near `town`, put it on your list and your map */
+  function makeLead(s, town, src, kinds, t, rnd) {
+    const r = st(s), kind = pick(kinds, rnd), list = candidates(s, town, kind), where = list[Math.floor(rnd() * Math.min(list.length, 5))].n;
     const lead = { id: `${Math.floor(t)}-${hash(where + kind) % 1000}`, kind, place: where, town, hold: holdOf(where), src, made: t, until: t + lifeOf(s), real: rnd() >= falseChance(s, src) };
     if (kind === "bandits") lead.name = pick(BANDIT, rnd);
     if (kind === "shipment") lead.m = pick(MERCHANT, rnd);
@@ -113,11 +121,18 @@ const RUMOURS = (() => {
     if (kind === "beast") [lead.tpl, lead.name, lead.b] = pick(BEAST, rnd);
     lead.say = fill(pick(KINDS[kind].say, rnd), lead);
     r.list.push(lead); r.seen++;
-    r.next[waitKey(town, src)] = t + gameH(WAIT_H);
     if (!s.discovered.includes(where)) s.discovered.push(where);
-    const sk = typeof G !== "undefined" ? [...G.useSkill(s, "Speechcraft", 8), ...(src === "street" ? G.useSkill(s, "Streetwise", 8) : [])] : [];
-    const who = src === "inn" ? `${innkeeper(town)} ${pick(INN_VOICE, rnd)}` : pick(STREET_WHO, rnd);
-    return { lead, text: `${who}: “${cap(lead.say)}” ${where} is marked on your map.${p ? ` (${p} gold for the drink.)` : ""}` + (sk.length ? " " + sk.join(". ") : "") };
+    return lead;
+  }
+  /* news from travellers on the road (caravanroad.js): a free lead about somewhere near `town` -> { lead, say } | { err } */
+  function roadLead(s, town, t = now(), rnd = Math.random) {
+    if (!town || !place(town)) return { err: "They haven't heard anything worth telling." };
+    const r = sync(s, t);
+    if (r.list.length >= MAX_ACTIVE) return { err: `You've already got ${MAX_ACTIVE} leads to chase.` };
+    const kinds = Object.keys(KINDS).filter((k) => candidates(s, town, k).length);
+    if (!kinds.length) return { err: "Nothing much is going on that way." };
+    const lead = makeLead(s, town, "road", kinds, t, rnd);
+    return { lead, say: cap(lead.say) };
   }
   const innkeeper = (town) => { try { return (typeof NPCART !== "undefined" && NPCART.who(town, "inn")?.name) || "The innkeeper"; } catch { return "The innkeeper"; } };
 
@@ -387,6 +402,6 @@ const RUMOURS = (() => {
     });
   }
 
-  return { KINDS, MAX_ACTIVE, LIFE_H, WAIT_H, HOLDS, TIERS, st, hear, act, leads, leadHere, sync, falseChance, candidates, standing, knock, knocked, knockBump, priceMult, sellMult,
+  return { KINDS, MAX_ACTIVE, LIFE_H, WAIT_H, HOLDS, TIERS, st, hear, roadLead, act, leads, leadHere, sync, falseChance, candidates, standing, knock, knocked, knockBump, priceMult, sellMult,
     dayLine, crowd, deedLines, barks, greet, townHTML, card, marks, panel, crowdArt, closedArt, fmtLeft };
 })();

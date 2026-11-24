@@ -11,3 +11,5 @@ android/keystore.properties
 tests/tbf/
 tests/fread/
 tests/bscene/
+tests/out_caravans/
+tests/out_travelscene/
