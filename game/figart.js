@@ -14,6 +14,12 @@
         replay's numbers (o.aim, o.back, o.hunch, o.lunge, o.draw, o.t, o.wt, o.shield, o.off, o.glow, o.flask); the
         torso/head and cloak are cached layers, only the limbs are drawn each frame.
      FIGART.POSES → { idle: 4, walk: 8, attack: 4, cast: 3, block: 2, hit: 2, down: 1, ride: 4, sit: 1 } (frames per pose).
+        sprite/draw also take steps (cut the cycle into more frames than the clip has, for smooth motion; frame 0..steps-1)
+        and gait for "ride" ("stand" | "walk" | gallop by default).
+     FIGART.STRIDE → units travelled per cycle ({ walk, horse: { walk, gallop } }): a scene scrolling the ground at v px/s
+        with px per unit u plays v / (stride · u) cycles a second, so planted feet and hooves move with the ground.
+     FIGART.drawHorse(g, colour, x, y, { k, cyc, gait, flip }) → a horse on its own (hooves at x, y; k = g units per unit).
+     FIGART.contact(src, { pose, frame, steps, gait }) → { foot, seat, hip, planted } in units (feet at 0,0), for tests.
    Missing gear slots (amulet, ring...) are simply not drawn. */
 const FIGART = (() => {
   const TAU = Math.PI * 2;
@@ -86,6 +92,7 @@ const FIGART = (() => {
   const hasGL = () => typeof GEARLOOK !== "undefined";
   const setKey = (id) => (id && hasGL() ? GEARLOOK.setOf(id) : null);
   const setRec = (id) => (id && hasGL() ? GEARLOOK.set(GEARLOOK.setOf(id)) : null);
+  const cloakOf = (eq) => (eq && eq.cloak && typeof D !== "undefined" && D.ITEMS[eq.cloak] && D.ITEMS[eq.cloak].cloakLook) || null;   // side cloaks (cloaks.js)
   function lookOf(src) {
     if (!src) return { r: "nord", id: "x", eq: {}, gl: {} };
     if (src.look) return src.look;
@@ -138,7 +145,7 @@ const FIGART = (() => {
       legC: robe ? body.d : cm ? body.d : "#5a4836", greave: heavy ? cm : null,
       gloves, boots, bootsK, barefoot: !eq.feet && (L.r === "khajiit" || L.r === "argonian"),
       helm, hood: !eq.head && F.hood && (robe || ["nightingale", "shrouded", "guild"].includes(ck)) ? F.hood : null,
-      cape: F.cape || (heavy && !robe ? "#7a2a22" : null),
+      cape: (cloakOf(eq) || {}).c || F.cape || (heavy && !robe ? "#7a2a22" : null), capeSide: (cloakOf(eq) || {}).side || null, capeTrim: (cloakOf(eq) || {}).trim || null,   // a side cloak (cloaks.js) wins
       shield, wk, wset, wkey, staffC, ench: gl.w ? ELEMENT[gl.w] || "#c9b6ff" : null, aglow: !!gl.a,
       amulet: jewel(amulet), ring: jewel(ring),
     };
@@ -206,7 +213,7 @@ const FIGART = (() => {
     P.front = clip.front !== undefined ? clip.front : P.back < -0.8;
     return P;
   }
-  const poseOf = (name, frame, sp, o) => { const n = POSES[name] || 1; return poseAt(name, ((((frame | 0) % n) + n) % n) / n, sp, o); };
+  const poseOf = (name, frame, sp, o) => { const n = POSES[name] || 1; return poseAt(name, (((frame % n) + n) % n) / n, sp, o); };   // fractional frames (o.steps) sample between keys
   /* fade pose a into pose b (w = 0..1) */
   function blend(a, b, w) { const P = mix(a, b, clamp(w, 0, 1)); return Object.assign({}, w < 0.5 ? a : b, P); }
 
@@ -619,6 +626,8 @@ const FIGART = (() => {
     fillPath(g, c, st, [-1, -48, -10, -10]);
     g.strokeStyle = tone(c, -0.35); g.lineWidth = st.fine * 1.4;
     for (const k of [0.35, 0.7]) { g.beginPath(); g.moveTo(-4.6 + k, -44); g.quadraticCurveTo(-6.6 - sw * 0.4 * k, -26, -8.6 - sw * k + t, -8); g.stroke(); }
+    if (sp.capeTrim) { g.strokeStyle = sp.capeTrim; g.lineWidth = st.fine * 1.6; g.beginPath(); g.moveTo(-10.8 - sw + t, -7); g.lineTo(-7.6 - sw * 0.8, -5.4); g.lineTo(-5 - sw * 0.5 + t, -7.4); g.stroke(); }   // side cloak hem
+    if (sp.capeSide && typeof SIDES !== "undefined") SIDES.drawEmblem(g, sp.capeSide, -6.4 - sw * 0.45, -27, 2.6);   // the side's emblem on the cloak
   }
   function tail(g, sp, P, st) {
     if (!sp.tail) return;
@@ -638,27 +647,47 @@ const FIGART = (() => {
   }
 
   // ---- the horse (feet at 0,0, facing right; the saddle seat sits at about y = -40)
+  /* Gaits: each hoof lands (u = 0), stays planted and is carried back under the body at the ground's speed for `duty` of
+     the cycle, then lifts and swings forward. S = half the hoof's travel under its hip (units), so one cycle moves the
+     horse STRIDE = 2·S/duty units: a scene scrolling the ground at v px/s plays v / (STRIDE · px per unit) cycles a
+     second and the hooves never slide. td = when each hoof lands (n = near/left side, f = far side; h = hind, f = front). */
+  const GAIT = {
+    stand: { S: 0, duty: 1, lift: 0, bob: 0, td: { nh: 0, nf: 0, fh: 0, ff: 0 } },
+    walk: { S: 7.4, duty: 0.62, lift: 3.4, bob: 0.4, td: { nh: 0, nf: 0.25, fh: 0.5, ff: 0.75 } },   // the four-beat walk
+    gallop: { S: 8, duty: 0.4, lift: 6.4, bob: 0.4, ext: 0.9, td: { fh: 0, nh: 0.1, ff: 0.38, nf: 0.48 } },   // hinds, then fronts, then a moment in the air
+  };
+  const gaitOf = (gt) => GAIT[gt] || GAIT.gallop;
+  const HIPS = { nf: [15, false, false], nh: [-15, true, false], ff: [11, false, true], fh: [-12, true, true] };   // x, hind, far
+  const HL1 = 11, HL2 = 13.3;
+  /* where each leg is at this frame (0..4 = one cycle; fractions are fine): hip (x, y), knee (kx, ky), hoof top (fx, fy) */
+  function horseLegs(frame, gait) {
+    const G = gaitOf(gait), c = (((frame / 4) % 1) + 1) % 1, bob = Math.sin(c * TAU * 2) * G.bob, out = { bob };
+    for (const id in HIPS) {
+      const [x, hind, far] = HIPS[id], hy = -24 + bob, u = (((c - G.td[id]) % 1) + 1) % 1;
+      let dx, lift = 0;
+      if (G.S === 0) dx = hind ? 1 : -0.5;
+      else if (u < G.duty) dx = G.S - 2 * G.S * (u / G.duty);   // planted: the ground carries it back
+      else { const s = (u - G.duty) / (1 - G.duty), e = (1 - Math.cos(Math.PI * s)) / 2; dx = -G.S + 2 * G.S * e; lift = G.lift * Math.sin(Math.PI * s); }
+      const [kx, ky, fx, fy] = ik(x, hy, x + dx, -0.6 - lift, HL1, HL2 + (G.ext || 0), hind ? 1 : -1);   // knees bend forward in front, hocks point back
+      out[id] = { x, y: hy, kx, ky, fx, fy, hind, far, down: G.S === 0 || u < G.duty };
+    }
+    return out;
+  }
   function horse(g, col, frame, st, part, gait) {   // gait: "stand" (idle: still legs, tail swish, head nod), "walk", or a gallop (default)
     const still = gait === "stand", slow = gait === "walk";
-    const ph = frame / 4 * TAU, mane = tone(col, -0.55), dk = tone(col, -0.25), bob = still ? 0 : Math.sin(ph * 2) * (slow ? 0.4 : 0.8);
-    const nod = still ? Math.sin(ph) * 0.07 : slow ? Math.sin(ph * 2) * 0.04 : 0;
-    const legH = (x, y, ang, bend, far, hind) => {
-      const c = far ? dk : col, l1 = 10.5, l2 = 11.5, kx = x + Math.sin(ang) * l1, ky = y + Math.cos(ang) * l1, a2 = ang + (hind ? bend : -bend), fx = kx + Math.sin(a2) * l2, fy = Math.min(0, ky + Math.cos(a2) * l2);
-      limb(g, x, y, kx, ky, hind ? 6.4 : 5.4, 3.2, c, st); limb(g, kx, ky, fx, fy, 3, 2.4, c, st);
-      poly(g, [[fx - 1.7, fy - 1.2], [fx + 1.9, fy - 1.2], [fx + 2.2, fy + 0.6], [fx - 1.9, fy + 0.6]]); fillPath(g, "#2a2420", st, null, st.fine);
-    };
-    const legs = (far) => {
-      const A = still ? 0.03 : slow ? 0.3 : 0.55, BEND = still ? 0.12 : slow ? 0.5 : 0.9;
-      for (const [x, off, hind] of far ? [[11, 0.6, false], [-12, Math.PI + 0.6, true]] : [[15, 0, false], [-15, Math.PI, true]]) {
-        const a = A * Math.sin(ph + off), bend = BEND * Math.max(0, Math.sin(ph + off + 1.2));
-        legH(x, -24 + bob, hind ? -a * 0.8 : a, bend, far, hind);
-      }
+    const ph = frame / 4 * TAU, mane = tone(col, -0.55), dk = tone(col, -0.25), LG = horseLegs(frame, gait), bob = LG.bob;
+    const nod = still ? Math.sin(ph) * 0.07 : slow ? Math.sin(ph * 2) * 0.04 : Math.sin(ph * 2) * 0.03;
+    const legH = (L) => {
+      const c = L.far ? dk : col;
+      limb(g, L.x, L.y, L.kx, L.ky, L.hind ? 6.4 : 5.4, 3.2, c, st); limb(g, L.kx, L.ky, L.fx, L.fy, 3, 2.4, c, st);
+      poly(g, [[L.fx - 1.7, L.fy - 1.2], [L.fx + 1.9, L.fy - 1.2], [L.fx + 2.2, L.fy + 0.6], [L.fx - 1.9, L.fy + 0.6]]); fillPath(g, "#2a2420", st, null, st.fine);
     };
     if (part !== "front") {
-      legs(true);
-      // the tail
-      const tw = Math.sin(ph) * (still ? 3.6 : 2);
-      g.lineCap = "round"; line(g, [[-23, -35 + bob], [-29 - tw, -30], [-31 - tw, -18], [-30 - tw * 1.4, -12]], st.ink, 4.6); line(g, [[-23, -35 + bob], [-29 - tw, -30], [-31 - tw, -18], [-30 - tw * 1.4, -12]], mane, 3.2);
+      legH(LG.ff); legH(LG.fh);
+      // the tail (streaming back more at speed)
+      const tw = Math.sin(ph) * (still ? 3.6 : 2), fl = still ? 0 : slow ? 1.5 : 5;
+      const tl = [[-23, -35 + bob], [-29 - tw - fl * 0.4, -30 + fl * 0.1], [-31 - tw - fl, -18 - fl * 0.5], [-30 - tw * 1.4 - fl * 1.5, -12 - fl * 0.8]];
+      g.lineCap = "round"; line(g, tl, st.ink, 4.6); line(g, tl, mane, 3.2);
     }
     if (part === "back") return;
     g.save(); g.translate(0, bob);
@@ -672,15 +701,36 @@ const FIGART = (() => {
     poly(g, [[24.4, -59.6], [24.6, -64.6], [27, -60.4]]); fillPath(g, col, st, null, st.fine);
     dot(g, 29.6, -55.6, 0.7, "#1c1714", st); dot(g, 37.4, -47.4, 0.45, "#1c1714", st);
     // mane and forelock
-    g.beginPath(); g.moveTo(24.2, -61.4); for (let i = 0; i <= 6; i++) { const t2 = i / 6, x = 24.2 - t2 * 14, y = -61.4 + t2 * 21; g.lineTo(x - 2.2 - (i % 2) * 1.2, y + 1.2); g.lineTo(x - 0.4, y + 3.2); }
+    const mf = still ? 0 : Math.sin(ph * 2 + 1) * (slow ? 0.4 : 0.9);   // the mane flicks with the stride
+    g.beginPath(); g.moveTo(24.2, -61.4); for (let i = 0; i <= 6; i++) { const t2 = i / 6, x = 24.2 - t2 * 14, y = -61.4 + t2 * 21; g.lineTo(x - 2.2 - (i % 2) * 1.2 - mf * t2, y + 1.2); g.lineTo(x - 0.4, y + 3.2); }
     g.lineTo(11.6, -38); g.quadraticCurveTo(18, -50, 24.2, -61.4); g.closePath(); fillPath(g, mane, st, null, st.fine);
     // tack: bridle, saddle cloth, saddle
     line(g, [[26, -58.8], [30.6, -51.4], [36.6, -46.8]], "#3b2c1e", 0.6); line(g, [[28.4, -50.4], [33.4, -52.6]], "#3b2c1e", 0.5);
     if (nod) g.restore();
     smooth(g, [[-8, -39.4], [9, -41.4], [9.6, -30.4], [-8.6, -29.6]]); fillPath(g, "#7a2a22", st, [8, -41, -8, -30]); line(g, [[-8.4, -31], [9.4, -31.6]], ART.PAL.gold, 0.8);
     smooth(g, [[-6.4, -40.2], [-3, -39], [4, -39.4], [7.4, -42.6], [6.2, -38], [-5.4, -37]]); fillPath(g, "#5e3e26", st, [4, -42, -4, -37]);
-    legs(false);
     g.restore();
+    legH(LG.nh); legH(LG.nf);   // the near legs over the body (their hips already ride the bob, so the hooves stay on the ground)
+  }
+  /* a horse on its own (a caravan's, a carriage's): feet at (x, y), k = g units per horse unit, cyc = 0..1 through the stride */
+  function drawHorse(g, col, x, y, o = {}) {
+    const k = o.k || 0.5, st = styleOf(k * devScale(g)), f = (o.cyc || 0) * 4;
+    g.save(); g.translate(x, y); if (o.flip) g.scale(-1, 1); g.scale(k, k); g.lineJoin = "round"; g.lineCap = "round";
+    horse(g, col, f, st, "back", o.gait); horse(g, col, f, st, "front", o.gait);
+    g.restore();
+  }
+  /* where things touch, in figure units with the feet at 0,0 (for tests and scenes): the lowest foot or hoof (0 = on the
+     ground, negative = in the air), the saddle seat and the rider's hips (riding), and the planted hooves' x */
+  function contact(src, o = {}) {
+    const sp = specOf(lookFor(src, o)), pose = POSES[o.pose] ? o.pose : "idle", frame = frameOf(pose, o), P = posed(sp, pose, frame, o), B = solve(sp, P);
+    const feet = [B.footN, B.footF].map((b) => (b.y + 2.2) * sp.bh), out = { foot: Math.max(...feet) };
+    if (pose === "ride") {
+      const L = horseLegs(frame, o.gait || null), hooves = ["nf", "nh", "ff", "fh"].map((id) => L[id]);
+      out.foot = Math.max(...hooves.map((h) => h.fy + 0.6));
+      out.planted = {}; for (const id of ["nf", "nh", "ff", "fh"]) if (L[id].down) out.planted[id] = [L[id].fx, L[id].fy + 0.6];   // hooves on the ground: leg → [x, y]
+      out.seat = -40 + L.bob; out.hip = B.pelvis.y * sp.bh;
+    }
+    return out;
   }
 
   // ---------------------------------------------------------------- one whole figure, drawn from its solved rig
@@ -740,7 +790,8 @@ const FIGART = (() => {
   const mk = (w, h) => { const c = document.createElement("canvas"); c.width = Math.max(1, Math.ceil(w)); c.height = Math.max(1, Math.ceil(h)); return c; };
   /* seconds per loop of each clip (for o.t in seconds) */
   const LOOP = { idle: 2.4, walk: 0.9, attack: 0.8, cast: 0.9, block: 1.2, hit: 0.5, down: 1, ride: 0.6, sit: 1 };
-  const frameOf = (pose, o) => { const n = POSES[pose]; const f = o.t != null ? Math.floor((o.t / LOOP[pose]) * n) : o.frame | 0; return ((f % n) + n) % n; };
+  /* o.steps (more than the clip's frames) cuts the cycle finer for smooth motion: frame 0..steps-1 → a fractional clip frame */
+  const frameOf = (pose, o) => { const n = POSES[pose], m = o.steps > n ? o.steps | 0 : n; const f = o.t != null ? Math.floor((o.t / LOOP[pose]) * m) : o.frame | 0; return (((f % m) + m) % m) * n / m; };
   /* a look, with optional overrides: o.look (a whole look), o.gear ({slot: itemId}, e.g. for a bandit or draugr card), o.race, o.sex */
   function lookFor(src, o = {}) {
     let L = o.look || lookOf(src);
@@ -838,7 +889,8 @@ const FIGART = (() => {
     drawPose(g, sp, P, st, { back: () => put(layer(sp, "back", k, P)), front: () => put(layer(sp, "front", k, P)) });
   }
 
-  return { POSES, LOOP, RIG, sprite, draw, fight, animator, specOf, lookOf, lookFor, poseOf, poseAt, blend, solve, clipsFor, tone, clear: () => { SPRITES.clear(); LAYERS.clear(); SPECS.clear(); CLIPS.clear(); } };
+  const STRIDE = { walk: 28.8, horse: { stand: 0, walk: 2 * GAIT.walk.S / GAIT.walk.duty, gallop: 2 * GAIT.gallop.S / GAIT.gallop.duty } };   // units travelled per cycle
+  return { POSES, LOOP, RIG, STRIDE, sprite, draw, drawHorse, contact, fight, animator, specOf, lookOf, lookFor, poseOf, poseAt, blend, solve, clipsFor, tone, clear: () => { SPRITES.clear(); LAYERS.clear(); SPECS.clear(); CLIPS.clear(); } };
 })();
 if (typeof HEROART !== "undefined") {   // the shared hero art API lives on HEROART too (see the notes at the top of heroart.js)
   HEROART.sprite = FIGART.sprite; HEROART.drawFigure = FIGART.draw; HEROART.fightFigure = FIGART.fight; HEROART.animator = FIGART.animator; HEROART.POSES = FIGART.POSES;
