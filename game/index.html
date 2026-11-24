@@ -2547,6 +2547,20 @@ html.art-pixel .tbst .st.spl{border-radius:0}
 @media (prefers-reduced-motion:reduce){.invcard{animation:none}}
 html.reduce-motion .invcard{animation:none}
 @media (min-width:900px){.invbar{left:auto;right:18px;transform:none;top:calc(env(safe-area-inset-top,0px) + 70px);width:400px}}
+/* weather chip in the HUD + its card (wxmatters.js) */
+.hstat .wxchip{display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 8px 0 5px;border:0;border-radius:10px;background:rgba(8,9,11,.6);box-shadow:inset 0 0 0 1px rgba(150,190,230,.4);color:#d8e6f2;font:inherit;font-size:11px;letter-spacing:.05em;cursor:pointer;white-space:nowrap}
+.hstat .wxchip .hico{width:13px;height:13px;stroke-width:1.8;fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round}
+.hstat .wxchip.bad{color:#bcd8f2;box-shadow:inset 0 0 0 1px rgba(170,205,240,.7)}
+.hstat .wxchip.night{color:#cdbfff;box-shadow:inset 0 0 0 1px rgba(190,170,255,.55)}
+html.art-pixel .hstat .wxchip{border-radius:0}
+.wxpop{position:fixed;z-index:2147483000;isolation:isolate;padding:10px 12px;background:#0c0e12;border:1px solid rgba(214,178,94,.45);border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,.55);color:#e9e2d0;font-size:13px;line-height:1.35}
+.wxpop .wxp-h{display:flex;align-items:center;gap:6px;margin-bottom:6px;padding-bottom:5px;border-bottom:1px solid rgba(214,178,94,.3)}
+.wxpop .wxp-h .hico{width:16px;height:16px;fill:none;stroke:#d8e6f2;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.wxpop .wxp-h b{letter-spacing:.06em;text-transform:uppercase;font-size:12px}
+.wxpop .wxp-h small{margin-left:auto;color:#a9b8c6;font-size:11px}
+.wxpop ul{margin:0;padding-left:16px}.wxpop li{margin:2px 0}
+html.art-pixel .wxpop{border-radius:0;border-width:2px}
+#clock{cursor:pointer}
 </style>
 <script src="bugreport.js"></script>
 <script src="access.js"></script>
@@ -2691,6 +2705,8 @@ html.reduce-motion .invcard{animation:none}
 <script src="pickgame.js"></script>
 <script src="sneakmode.js"></script>
 <script src="vision.js"></script>
+<script src="thuum.js"></script>
+<script src="wxmatters.js"></script>
 <script src="rumours.js"></script>
 <script src="livingworld.js"></script>
 <script src="motion.js"></script>
@@ -2732,6 +2748,7 @@ html.reduce-motion .invcard{animation:none}
 <script src="i18n_fighttips.js"></script>
 <script src="i18n_pickaxe.js"></script>
 <script src="i18n_followeranim.js"></script>
+<script src="i18n_shouts.js"></script>
 <script src="i18n_bleakfalls.js"></script>
 <script src="i18n_bugreport.js"></script>
 <script src="i18n_paintedmap.js"></script>

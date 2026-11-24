@@ -285,6 +285,10 @@ const PFX = (() => {
     [ "One-Handed", "giant_slayer", "Giant Slayer", 1, [40], ["armsman"], "Bosses take 10% more damage from you, and 20% more once they reach their last phase. [OURS]", [["out", 0.1, { bossFoe: 1 }], ["out", 0.1, { bossLast: 1 }]]],
     [ "Blocking", "read_the_signs", "Read the Signs", 1, [30], ["shield_wall"], "A boss's big attacks (the ones it shows a turn ahead) hurt you 25% less. [OURS]", [["bftele", 0.25, {}]]],
     [ "Two-Handed", "break_their_focus", "Break Their Focus", 1, [35], ["barbarian"], "Any blow that takes a tenth of a boss's health breaks the big attack it's getting ready, and it reels and loses its next move. [OURS]", [["bfbreak", 1, {}]]],
+    // ---------------------------------------------------------------- shouts and weather (thuum.js, wxmatters.js, weatherfx.js)
+    [ "Speechcraft", "thuum_mastery", "Thu'um Mastery", 2, [75, 95], ["commanding_voice"], "Your voice comes back sooner: every shout cools down another 10/20% (all cooldown cuts together stop at half). [OURS]", [["shoutcd", [0.1, 0.2], {}]]],
+    [ "Acrobatics", "weathered_traveller", "Weathered Traveller", 2, [30, 60], ["sure_footed"], "Snow, rain, fog and storms slow your travel 25/50% less, and the cold creeps in 25/50% slower. [OURS]", [["wxslow", [0.25, 0.5], {}], ["coldslow", [0.25, 0.5], {}]]],
+    [ "Alteration", "starlit_mind", "Starlit Mind", 1, [35], ["apprentice_alteration"], "Under a clear night sky your magicka comes back twice as fast in fights (instead of 50% faster). [OURS]", [["starmp", 0.5, {}]]],
   ];
   const FX = {};
   if (typeof PERKS !== "undefined") {
