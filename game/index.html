@@ -2426,6 +2426,50 @@ body:has(#twBtn) .app{padding-bottom:calc(140px + env(safe-area-inset-bottom))}
 .title .page .pnbar{top:-7vh;margin:-18px -18px 10px;padding:4px 10px;border-radius:4px 4px 0 0}
 .sheet.pnsheet .pnbar{top:-20px;margin:-20px -18px 10px;padding:4px 10px}
 html.art-pixel .pnbar,html.art-pixel .pnbar .pnback{border-radius:0}
+/* [followertab] the follower's own Character tab (followertab.js): SkyUI-style gear list, empty state, one-line summary */
+.ft-gear{margin-top:6px}
+.ft-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ft-bar .ft-side{flex:1 1 auto;margin:0;min-width:0}
+.ft-bar .ft-side button{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ft-wt{margin:6px 0 0}
+.ft-cats{margin-top:6px}
+.ft-cats .sky-cat{position:relative;min-width:58px}
+.ft-cols{display:grid;grid-template-columns:minmax(0,1fr) 4.6em 3em 2.8em 3.2em;gap:6px;align-items:center}
+.sky-head.ft-cols{padding:4px 10px}
+.sky-head.ft-cols button{background:none;border:0;color:inherit;font:inherit;letter-spacing:inherit;text-align:right;padding:6px 0;min-height:32px}
+.sky-head.ft-cols>:first-child{text-align:left}
+.sky-row.ft-cols{width:100%;font-size:15px}
+.sky-row.ft-cols .ft-ty{font-size:12px;color:#a59f90;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sky-row .nm .ft-ty2{display:none}
+.ft-list{max-height:52vh;min-height:120px;overflow:auto}
+.ft-detail{max-height:none}
+.ft-detail h3{margin:0 0 6px}
+.ft-stats{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;margin:4px 0 8px;font-size:14px}
+.ft-stats dt{color:#8c877a}
+.ft-stats dd{margin:0;color:#e8dcc0}
+.ft-cmp{display:flex;flex-direction:column;gap:2px;padding:6px 8px;margin:6px 0;background:rgba(255,255,255,.04);border-left:2px solid rgba(228,220,200,.25)}
+.ft-cmp b.up{color:#9fe09a}
+.ft-cmp b.down{color:#f0907a}
+.ft-pick{display:block;padding:14px 4px;text-align:center;color:#8c877a;font-style:italic}
+.ft-empty .ft-lead{font-size:18px;margin:4px 0}
+.ft-empty .ft-here{margin:10px 0;padding:8px;border-left:2px solid var(--gold,#e8c46a);background:rgba(255,255,255,.04)}
+.ft-empty .ft-hire .num{margin-left:4px;color:#e8c46a}
+.ft-hires .ft-town{margin:0;padding:7px 2px;border-bottom:1px solid rgba(228,220,200,.08);display:flex;flex-direction:column;gap:2px}
+.ft-hires .ft-town b{color:#e8dcc0;font-weight:600}
+.ft-hires .ft-town span{color:#b8b09c;font-size:14px}
+.ft-hires .ft-town i{font-style:normal;color:#e8c46a;font-size:12px}
+.ft-sum{padding-top:8px;padding-bottom:8px}
+.ft-line{width:100%;text-align:left;cursor:pointer}
+html.art-pixel .ft-cmp,html.art-pixel .ft-here{border-radius:0}
+html.art-pixel .ft-detail .sky-ico img{image-rendering:pixelated}
+@media (max-width:440px){
+  .ft-cols{grid-template-columns:minmax(0,1fr) 2.8em 2.6em 3em;gap:5px}
+  .ft-cols .ft-ty{display:none}
+  .sky-row .nm .ft-ty2{display:block;font-size:11px;color:#8c877a;line-height:1.1}
+  .sky-row.ft-cols{padding:7px 8px;font-size:15px}
+  .sky-row.ft-cols .nm img.art.ico{width:22px;height:22px;margin-right:5px}
+  .ft-cats .sky-cat{min-width:54px;padding:4px 3px}
+}
 </style>
 <script src="access.js"></script>
 </head>
@@ -2477,6 +2521,7 @@ html.art-pixel .pnbar,html.art-pixel .pnbar .pnback{border-radius:0}
 <script src="roam.js"></script>
 <script src="encounters.js"></script>
 <script src="solstheim.js"></script>
+<script src="questitems.js"></script>
 <script src="explore.js"></script>
 <script src="gather.js"></script>
 <script src="placestuff.js"></script>
@@ -2518,6 +2563,7 @@ html.art-pixel .pnbar,html.art-pixel .pnbar .pnback{border-radius:0}
 <script src="combo.js"></script>
 <script src="partyplay.js"></script>
 <script src="lootvote.js"></script>
+<script src="dawnguard.js"></script>
 <script src="account.js"></script>
 <script src="servernet.js"></script>
 <script src="store.js"></script>
@@ -2532,6 +2578,7 @@ html.art-pixel .pnbar,html.art-pixel .pnbar .pnback{border-radius:0}
 <script src="bscdata.js"></script>
 <script src="battlescene.js"></script>
 <script src="foerig.js"></script>
+<script src="allyanim.js"></script>
 <script src="fightart.js"></script>
 <script src="beastart.js"></script>
 <script src="gearlook.js"></script>
@@ -2554,10 +2601,12 @@ html.art-pixel .pnbar,html.art-pixel .pnbar .pnback{border-radius:0}
 <script src="fxart.js"></script>
 <script src="travelart.js"></script>
 <script src="solart.js"></script>
+<script src="dgart.js"></script>
 <script src="skyui.js"></script>
 <script src="hud.js"></script>
 <script src="immerse.js"></script>
 <script src="followerbonds.js"></script>
+<script src="followertab.js"></script>
 <script src="pickgame.js"></script>
 <script src="sneakmode.js"></script>
 <script src="vision.js"></script>
@@ -2590,12 +2639,17 @@ html.art-pixel .pnbar,html.art-pixel .pnbar .pnback{border-radius:0}
 <script src="i18n_hsrooms.js"></script>
 <script src="i18n_living.js"></script>
 <script src="i18n_bonds.js"></script>
+<script src="i18n_dawnguard.js"></script>
 <script src="i18n_areaui.js"></script>
 <script src="i18n_menus2.js"></script>
+<script src="i18n_followertab.js"></script>
 <script src="i18n_boss.js"></script>
 <script src="i18n_accounts.js"></script>
+<script src="i18n_sweep.js"></script>
 <script src="i18n_balfear.js"></script>
 <script src="i18n_fighttips.js"></script>
+<script src="i18n_followeranim.js"></script>
+<script src="i18n_bleakfalls.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>

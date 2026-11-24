@@ -84,7 +84,7 @@ const DAEDRIC = (() => {
       { title: "Wake Up", rec: 10, text: "Tell Sheogorath the job is done.", obj: { talk: "Solitude", label: "Talk to Sheogorath" }, reward: { gold: 100, items: ["wabbajack"] } },
     ]),
     dae_mephala: P("Mephala", "ebony_blade_greatsword", "Whiterun", 12, "The Whispering Door", "Whiterun", "Dragonsreach, Whiterun", [
-      { title: "Whispers", rec: 12, text: "A locked door in Dragonsreach whispers to you. Balgruuf's son says it's haunted.", obj: { talk: "Whiterun", label: "Listen at the door", need: (s) => ((s.quests || {}).main?.stage ?? 0) >= 3 || (s.quests || {}).main?.done ? null : "The Jarl doesn't trust you yet. Deal with the dragon at the Western Watchtower first." }, reward: { gold: 50 } },
+      { title: "Whispers", rec: 12, text: "A locked door in Dragonsreach whispers to you. Balgruuf's son says it's haunted.", obj: { talk: "Whiterun", label: "Listen at the door", need: (s) => ((s.quests || {}).main?.stage ?? 0) > QUESTS.L.main.stages.findIndex((x) => x.title === "Dragon Rising") || (s.quests || {}).main?.done ? null : "The Jarl doesn't trust you yet. Deal with the dragon at the Western Watchtower first." }, reward: { gold: 50 } },
       { title: "The Whispering Door", rec: 13, text: "The Jarl's steward holds the key. Pick the lock instead.", obj: { talk: "Whiterun", label: "Pick the lock", check: { skill: "Lockpicking", need: 25, bounty: "Whiterun" } }, reward: { gold: 150, items: ["ebony_blade_greatsword"] } },
     ]),
   };

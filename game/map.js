@@ -1,5 +1,6 @@
 /* The world map. The painted base is drawn once (seeded, identical for everyone); fog, routes and markers each frame. */
 const WorldMap = (() => {
+  const LX = (x) => (typeof I18N_SWEEP !== "undefined" ? I18N_SWEEP.c(x) : x);   // words drawn on canvas, in the player's language
   const heading = { a: null, last: null };   // the way your marker last moved
   const W = 1000, H = 700, S = 2.4;          // painted at 2.4× so zooming in stays crisp
   const T = Terrain.T;
@@ -215,6 +216,11 @@ const WorldMap = (() => {
       g.fillStyle = "#8d8274"; g.strokeStyle = "#2c2116"; g.lineWidth = 2.2;
       g.beginPath(); for (let k = 0; k <= 14; k++) { const t = k / 14 * Math.PI * 2, r = 1 + 0.16 * Math.sin(t * 3 + ix * 40); const x = cx + Math.cos(t) * a * r, y = cy + Math.sin(t) * b * r; k ? g.lineTo(x, y) : g.moveTo(x, y); } g.closePath(); g.fill(); g.stroke();
       g.fillStyle = "#eef2f3"; g.beginPath(); g.ellipse(cx - a * 0.15, cy - b * 0.25, a * 0.6, b * 0.4, 0, 0, 7); g.fill();
+      if (what === "volkihar") {   // Castle Volkihar: a black keep with two spires (dawnguard.js)
+        g.fillStyle = "#2a2226"; g.strokeStyle = "#120c0e"; g.lineWidth = 1;
+        g.fillRect(cx - a * 0.5, cy - b * 0.9, a, b * 0.9); g.strokeRect(cx - a * 0.5, cy - b * 0.9, a, b * 0.9);
+        for (const dx of [-0.5, 0.5]) { const x = cx + dx * a; g.beginPath(); g.moveTo(x - a * 0.16, cy - b * 0.9); g.lineTo(x, cy - b * 1.9); g.lineTo(x + a * 0.16, cy - b * 0.9); g.closePath(); g.fill(); g.stroke(); }
+      }
       if (what === "college") {   // towers of the College
         g.fillStyle = "#4a4038"; g.strokeStyle = "#1e1812"; g.lineWidth = 1;
         for (const [dx, h, w] of [[-0.35, 1.3, 0.22], [0.05, 1.9, 0.3], [0.42, 1.1, 0.2]]) { const x = cx + dx * a, top = cy - h * b; g.fillRect(x - w * a / 2, top, w * a, h * b); g.strokeRect(x - w * a / 2, top, w * a, h * b); g.beginPath(); g.moveTo(x - w * a * 0.7, top); g.lineTo(x, top - b * 0.55); g.lineTo(x + w * a * 0.7, top); g.closePath(); g.fill(); }
@@ -236,7 +242,7 @@ const WorldMap = (() => {
       g.save(); g.translate(x * W, y * H); g.rotate(rot * Math.PI / 180); g.font = FONT(15, 700); g.fillStyle = "rgba(245,240,230,.55)";
       if (g.letterSpacing !== undefined) g.letterSpacing = "6px"; g.fillText(name, 0, 0); g.restore();
     }
-    g.font = FONT(20, 600, "italic"); g.fillStyle = "rgba(190,214,222,.75)"; g.fillText("Sea of Ghosts", (WORLD.seaLabel || [0.4])[0] * W, (WORLD.seaLabel || [0, 0.05])[1] * H);
+    g.font = FONT(20, 600, "italic"); g.fillStyle = "rgba(190,214,222,.75)"; g.fillText(LX("Sea of Ghosts"), (WORLD.seaLabel || [0.4])[0] * W, (WORLD.seaLabel || [0, 0.05])[1] * H);
     // compass
     const cx = WORLD.border ? 64 : W - 52, cy = WORLD.border ? H - 64 : H - 70;   // over Hammerfell, off the land
     g.fillStyle = "rgba(240,232,210,.9)"; g.strokeStyle = "#2c2116"; g.lineWidth = 1;
