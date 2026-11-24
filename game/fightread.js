@@ -84,7 +84,7 @@ const FIGHTREAD = (() => {
     const pl = f.kit?.plan || [];
     for (let i = 0; i < n; i++) {
       if (stunned || (f.eParalyzed || 0) > i || (i === 0 && f.stagger) || (f.calmTurns || 0) > i) { out.push({ ic: "💫", label: stunned ? "Stunned" : (f.calmTurns || 0) > i ? "Not fighting" : "Can't act", lo: 0, hi: 0, mid: 0, skip: true }); continue; }
-      if (f.dStance) { out.push({ ic: "🐉", label: "Dragon", lo: capd(lo), hi: capd(hi * 1.3), mid: capd(mid), unknown: true }); continue; }
+      if (f.dStance && !pl[i]?.bf) { out.push({ ic: "🐉", label: "Dragon", lo: capd(lo), hi: capd(hi * 1.3), mid: capd(mid), unknown: true }); continue; }
       const p = pl[i];
       const key = !p ? "blow" : p.id === "land" ? p.wind : p.id;
       const it = INTENT[key] || INTENT.blow;

@@ -91,11 +91,17 @@ const TITLEART = (() => {
       const lw = W * 1.12;
       L = { sky: layer(W, Hh, paintSky, true), far: layer(lw, Hh, paintFar), mid: layer(lw, Hh, paintMid), fore: layer(lw, Hh, paintFore) };
     }
+    /* [perf] ~30 fps: after a picture the loop sleeps on a timer instead of waking (and restyling the page) every refresh */
+    let tmo = 0;
+    const later = () => { tmo = setTimeout(() => { tmo = 0; if (!stopped) raf = requestAnimationFrame(frame); }, 20); };
     function frame(ts) {
       if (stopped || !cv.isConnected) return;
-      if (!reduce) raf = requestAnimationFrame(frame);
-      if (!reduce && (document.hidden || ts - last < 33)) return;
+      if (!reduce && (document.hidden || ts - last < 29)) { raf = requestAnimationFrame(frame); return; }
+      if (!reduce) later();
       last = ts;
+      try { draw(ts); } finally { try { opts.onFrame?.(ts); } catch (e) { /* the fog is optional */ } }
+    }
+    function draw(ts) {
       const a = performance.now(), t = (ts - t0) / 1000;
       g.imageSmoothingEnabled = !px;
       const key = typeof ASSETS !== "undefined" ? ASSETS.img("title") : null;
@@ -120,7 +126,7 @@ const TITLEART = (() => {
     addEventListener("resize", onResize);
     raf = requestAnimationFrame(frame);
     if (reduce) frame(performance.now() + 1000);
-    return () => { stopped = true; cancelAnimationFrame(raf); removeEventListener("resize", onResize); };
+    return () => { stopped = true; cancelAnimationFrame(raf); clearTimeout(tmo); removeEventListener("resize", onResize); };
   }
   const stats = () => ({ frames: stat.frames, avgMs: stat.frames ? +(stat.ms / stat.frames).toFixed(2) : 0 });
 

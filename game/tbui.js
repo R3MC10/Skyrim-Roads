@@ -102,9 +102,11 @@ const TBUI = (() => {
     tipEl.style.left = x + "px"; tipEl.style.top = y + "px"; tipEl.classList.add("on");
   }
   function hideTip() { tipEl?.classList.remove("on"); tipFor = null; }
+  // a phone that fakes mouse events on a tap must not leave a hover tip hanging over the log or the bar
+  const canHover = () => typeof matchMedia !== "function" || matchMedia("(hover: hover) and (pointer: fine)").matches;
   function tipTarget(ev) { return ev.target.closest?.("#tbf [data-tip]") || null; }
   function overTip(ev) {   // mouse only: hover shows the tip
-    if (ev.pointerType !== "mouse" || d?.on) return;
+    if (ev.pointerType !== "mouse" || d?.on || !canHover()) return;
     const t = tipTarget(ev); if (t === tipFor) return;
     if (t) showTip(t); else hideTip();
   }
@@ -215,7 +217,8 @@ const TBUI = (() => {
     addEventListener("pointerup", holdEnd, true);
     addEventListener("pointercancel", holdEnd, true);
     addEventListener("pointerover", overTip, true);
-    addEventListener("pointerdown", (ev) => { if (ev.pointerType === "mouse") hideTip(); }, true);
+    addEventListener("pointerdown", () => hideTip(), true);   // any new touch or click closes a tip that's open
+    addEventListener("click", () => { if (Date.now() >= swallow) hideTip(); }, true);   // an action fires: its tip goes (the screen redraws under it)
     addEventListener("scroll", hideTip, true);
     addEventListener("pointerdown", down, true);
     addEventListener("pointermove", move, { capture: true, passive: false });

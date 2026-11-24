@@ -66,7 +66,8 @@ const I18N = (() => {
     "Pockets picked": "Okradzione kieszenie", "Potions brewed": "Uwarzone mikstury", "Dungeons cleared": "Oczyszczone lochy", "Quests completed": "Ukończone zadania",
     "Players defeated": "Pokonani gracze", "Questlines completed": "Ukończone wątki", "Arena wins": "Wygrane na arenie", "Jobs done": "Wykonane zlecenia",
     // settings
-    Sound: "Dźwięk", Music: "Muzyka", Effects: "Efekty", Ambience: "Otoczenie", "All sound": "Cały dźwięk", "Art style": "Styl grafiki", "Hand-drawn": "Rysowany", "Pixel art": "Pikselowy",
+    Sound: "Dźwięk", Music: "Muzyka", Effects: "Efekty", Ambience: "Otoczenie", "All sound": "Cały dźwięk", "Art style": "Styl grafiki", Graphics: "Grafika", Lighting: "Oświetlenie", Low: "Niskie", High: "Wysokie",
+    "Light and weather on the map and in place pictures: golden hours, lit towns at night, mist and moving clouds. Low is lighter on old phones.": "Światło i pogoda na mapie i na obrazkach miejsc: złota godzina, oświetlone miasta nocą, mgły i płynące chmury. Niskie mniej obciąża starsze telefony.", "Hand-drawn": "Rysowany", "Pixel art": "Pikselowy",
     Motion: "Ruch", Fights: "Walki", "Turn by turn": "Turowo", "Instant (auto)": "Od razu (auto)", "Foe turns": "Tury wroga", "Normal speed": "Normalna prędkość",
     "Replay speed": "Prędkość powtórki", Crafting: "Rzemiosło", "When you craft": "Przy wytwarzaniu", "Mini-games": "Minigry", "Quick craft": "Szybkie wytwarzanie",
     Survival: "Przetrwanie", "Cold meter": "Licznik zimna", "On (gentle)": "Wł. (łagodny)", Accessibility: "Dostępność", "Accessibility options": "Opcje dostępności",
@@ -89,6 +90,7 @@ const I18N = (() => {
     "Potion of Healing": "Mikstura zdrowia", "Potion of Magicka": "Mikstura magii", "Potion of Stamina": "Mikstura wytrzymałości", "Potion of Minor Healing": "Słaba mikstura zdrowia",
     "Potion of Cure Disease": "Mikstura leczenia chorób",
   }, typeof I18N_LIVING !== "undefined" ? I18N_LIVING.pl : {});   // labels from i18n_living.js (the world remembers you)
+  if (typeof I18N_BEAST !== "undefined") Object.assign(PL, I18N_BEAST.pl);
 
   /* patterns for text with numbers in it */
   const PAT = [
@@ -109,7 +111,8 @@ const I18N = (() => {
   /* lines added by feature modules (i18n_hsrooms.js and others): exact lines and number patterns; the lists above win */
   if (typeof I18N_EXTRA !== "undefined") { for (const [k, v] of Object.entries(I18N_EXTRA.words || {})) if (!(k in PL)) PL[k] = v; PAT.push(...(I18N_EXTRA.pat || [])); }
   /* story text: split into sentences, translate each one (exact, or a template whose {markers} are filled from the English) */
-  const ST = typeof I18N_STORY !== "undefined" ? I18N_STORY : { ex: {}, pats: [] };
+  const ST0 = typeof I18N_STORY !== "undefined" ? I18N_STORY : { ex: {}, pats: [] };
+  const ST = { ex: ST0.ex || {}, pats: (ST0.pats || []).concat(typeof I18N_BEAST !== "undefined" ? I18N_BEAST.pats : []) };
   const SPLIT = /(?<=[.!?…])(\s+)|(?<=[.!?]["”])(\s+)/;
   let STP = null;
   function storyPats() {
