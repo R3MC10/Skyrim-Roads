@@ -26,7 +26,7 @@
   const tiBox = (item) => (TI ? TI.box(S, item) : "");
   const tiCls = (item) => (TI && TI.isTome(item) ? " ti-row" : "");
   let zoom = innerWidth < 700 ? 2.4 : 1, follow = true, center = [0.5, 0.5], view = {}, version = 0, rendered = -1, lastPanelRender = 0;
-  let tacticsDraft = { if: "hp_below", pct: 40, do: "potion:health", edit: null }, testResult = null, townShop = null, forgeTab = "make", forgeGroup = "iron", packOpen = null, searchText = "", uxAllPlaces = false, uxHelpOpen = null, packSearch = "";
+  let tacticsDraft = { if: "hp_below", pct: 40, do: "potion:health", edit: null }, testResult = null, townShop = null, townShopAt = null, forgeTab = "make", forgeGroup = "iron", packOpen = null, searchText = "", uxAllPlaces = false, uxHelpOpen = null, packSearch = "";
   let raidDocs = [], raidSeen = null, raidJoined = null, raidAuto = null, enchDraft = {};
   let chatDocs = [], chatRaw = [], chatCh = "world", chatDraft = "", chatSeen = 0, chatSeenIds = new Set(), lastChatSend = 0;
   const bootT = Date.now() / 1000;
@@ -496,7 +496,7 @@
         $("#mapwrap")?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" }); return true;
       }
       tab = o.tab || "map"; testResult = null;
-      if (o.shop) townShop = o.shop; if (o.jtab) jTab = o.jtab; if (o.soc) socTab = o.soc;
+      if (o.shop) { townShop = o.shop; townShopAt = S && S.location; } if (o.jtab) jTab = o.jtab; if (o.soc) socTab = o.soc;
       bump(); renderTabs(); renderPanel(true);
       const el = (o.anchor && document.getElementById(o.anchor)) || $("#side");
       el?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
@@ -2838,7 +2838,7 @@
     const st = GUIDE.STEPS.find((x) => x[0] === id); if (!st) return;
     const to = st[4]; closeModal(); closeMenu?.();
     tab = to.tab;
-    if (to.shop) { if (S.location && G.shopTypes) townShop = to.shop; }
+    if (to.shop) { if (S.location && G.shopTypes) { townShop = to.shop; townShopAt = S.location; } }
     if (to.tab === "social") socTab = "friends";
     renderTabs(); renderPanel(true);
     $("#side").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
@@ -3025,6 +3025,7 @@
     const open = G.shopsOpen() || (typeof RUMOURS !== "undefined" && RUMOURS.knocked(S, l)), wanted = TOWNS.wanted(S), hold = G.holdAt(WORLD.places[l]);   // knocked at night (rumours.js)
     const sections = [...types.filter((x) => x !== "stables"), ...(TOWNS.INNS[l] ? ["inn"] : []), ...(TOWNS.TRAINERS[l] ? ["train"] : []), "alchemy", ...(types.includes("blacksmith") || HALLS.hasForge(S, l) || (typeof HSROOMS !== "undefined" && HSROOMS.station(S, "forge")) ? ["forge"] : []), "jobs", "streets", ...(TOWNS.followersHere(S).length || l === "Whiterun" ? ["hire"] : []), ...(TOWNS.carriageFrom(l) ? ["carriage"] : []), ...(TOWNS.HOMES[l] ? ["home", "homes", "market"] : []), ...(SMITH.MINES[l] ? ["mine"] : []), ...(l === SPELLCRAFT.TOWN ? ["craft"] : []), ...(CARAVANS.stopsAt(l) ? ["caravans"] : []), ...(l === HALL.TOWN ? ["hall"] : []), ...(HALLS.plotHere(l) || hallDocs.some((d) => d.town === l) || S.hall?.town === l ? ["halls"] : []), "notice", ...(TOWNS.INNS[l] ? ["cook"] : []), ...(l === ARENA.TOWN ? ["arena"] : []), ...(COOK.waterNear(WORLD.places[l]) ? ["fish"] : []), ...(ENCH.hasEnchanter(l) || (typeof HSROOMS !== "undefined" && HSROOMS.station(S, "enchanter")) ? ["enchanter"] : []), ...(types.includes("stables") ? ["stables"] : []), ...(typeof SOL !== "undefined" ? SOL.sections(l) : []), ...(typeof HOMESTEAD !== "undefined" ? HOMESTEAD.sections(l) : [])];
     const AU = typeof AREAUI !== "undefined" ? AREAUI : null;   // areaui.js: the Area tab opens on a board of grouped places
+    if (AU && townShopAt !== l) { if (townShopAt != null) townShop = ""; townShopAt = l; }   // a new town opens on its board
     townShop = sections.includes(townShop) ? townShop : AU ? "" : sections[0];
     const names = { general: "General goods", blacksmith: "Blacksmith", wizard: "Court wizard", stables: "Stables", fence: "Ragged Flagon (fence)", inn: TOWNS.INNS[l] || "Inn", train: "Trainers", alchemy: "Alchemy lab", forge: "Forge", jobs: "Jobs", streets: "Streets", hire: l === "Whiterun" ? "Dragonsreach & hirelings" : "Hirelings", hall: "⚑ Hall of the North", halls: "🏰 Halls & shops", notice: "📜 Jarl's bounty", homes: "🏘 Neighbours", market: "🛒 Market stalls", mine: "⛏ Mine", craft: "✨ Spell crafting", caravans: "🐫 Caravans", cook: "🍲 Cooking pot", arena: "⚔ The Arena", fish: "🎣 Fishing", carriage: "Carriage", enchanter: "Arcane enchanter", home: TOWNS.home(S, l) ? `🏠 ${TOWNS.HOMES[l]?.[0]}` : `Buy ${TOWNS.HOMES[l]?.[0]}`, ...(typeof SOL !== "undefined" ? SOL.NAMES : {}), ...(typeof HOMESTEAD !== "undefined" ? HOMESTEAD.names(S, l) : {}) };
     const townTop = `${typeof CIVILWAR !== "undefined" ? CIVILWAR.townLine(S, l) : ""}${wanted ? `<p class="sub danger-high">You're wanted in ${esc(hold)}. Shops, inns and trainers turn you away.</p>` : ""}`;

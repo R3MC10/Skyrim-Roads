@@ -29,6 +29,16 @@
     "Tap one to open it; the ‹ button brings you back.": "Dotknij jednego, by je otworzyć; przycisk ‹ zabiera cię z powrotem.",
     "Things ready for you show on top under Right now.": "To, co na ciebie czeka, jest na górze w sekcji Teraz.",
     "Shops close at night (20:00–08:00).": "Sklepy są zamknięte w nocy (20:00–08:00).",
+    // reminder rows (remind.js) that now sit in the merged "What to do next" card
+    "ready now": "gotowe teraz", "On now": "Trwa teraz", "Starting soon": "Zaraz się zacznie", "You can level up": "Możesz awansować",
+    "Pick Health, Magicka or Stamina.": "Wybierz Zdrowie, Magię lub Wytrzymałość.", "Open your perk trees.": "Otwórz drzewka perków.",
+    "Claim it in the Journal.": "Odbierz w Dzienniku.", "Fills up again": "Znów się zapełnia", "New foes and new loot.": "Nowi wrogowie i nowe łupy.",
+    "Have a look in 👥 Friends.": "Zajrzyj do 👥 Znajomi.", "The gold comes in on its own.": "Złoto wpływa samo.", "With a trade offer for you": "Z ofertą wymiany dla ciebie",
+    "Horse rested": "Koń wypoczęty", "Caravan leaving": "Karawana odjeżdża", "Be in town or it goes without you.": "Bądź w mieście, bo odjedzie bez ciebie.",
+    "Starting now. Every player can join in.": "Zaczyna się teraz. Każdy gracz może dołączyć.", "This lead goes cold in half an hour.": "Ten trop wystygnie za pół godziny.",
+    "Cleared places full again": "Oczyszczone miejsca znów pełne", "Courier trades arriving": "Nadchodzą wymiany kurierem", "Garden and homestead goods": "Ogród i dobra z zagrody",
+    "Rumour leads running out": "Tropy z plotek wygasają", "World events starting": "Zaczynają się wydarzenia", "Your hall can't pay its staff": "Twojego dworu nie stać na służbę",
+    "Your hall's coffer is nearly empty": "Skarbiec twojego dworu jest prawie pusty", "under a minute": "niecała minuta",
     // patch note
     "Tidier towns and map": "Porządniejsze miasta i mapa",
     "The Area tab now opens on a board of small tiles, grouped like a real town: Inn, Market, Services & trainers, Work & jobs, Your home, and Events & fun.": "Zakładka Okolica otwiera się teraz na tablicy małych kafelków, ułożonych jak w prawdziwym mieście: Karczma, Targ, Usługi i trenerzy, Praca i zlecenia, Twój dom oraz Wydarzenia i rozrywka.",
@@ -46,6 +56,8 @@
   const PATS = [
     ["Room {0} gold", "Pokój: {0} złota"], ["{0} lessons left", "Lekcje: {0}"], ["{0} lesson left", "Lekcje: {0}"],
     ["{0} of 3 taken", "Wzięte: {0} z 3"], ["{0} to hand in", "Do oddania: {0}"], ["For sale · {0} gold", "Na sprzedaż · {0} złota"], ["Bounty {0} gold", "Nagroda: {0} złota"],
+    ["{0} perk points to spend", "Punkty perków do wydania: {0}"], ["{0} perk point to spend", "Punkty perków do wydania: {0}"], ["ready {0} ago", "gotowe {0} temu"],
+    ["{0} of {1} so far", "Na razie {0} z {1}"], ["{0} gold waiting on the board.", "{0} złota czeka na tablicy."], ["Stables in {0}", "Stajnie w {0}"],
     ["Show {0} more", "Pokaż jeszcze {0}"], ["{0} ready", "Gotowe: {0}"], ["Back to all of {0}", "Wróć do: {0}"],
   ];
   // the Open tile status vs the Open button: the board's "Open" button text is a status word; keep the button as "Otwórz"

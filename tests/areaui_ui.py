@@ -76,6 +76,12 @@ async def main():
                     await js("window.__ui.refresh()")
                     check(await pg.evaluate("!document.querySelector('#side .au-g[data-g=market]').open"), f"{tag}: a folded group stays folded")
                     await js("document.querySelector('#side .au-g[data-g=market] summary').click()")
+                    # a new town opens on its own board, not on the shop you had open in the last one
+                    await js("document.querySelector('#side .au-tile[data-id=general]').click()")
+                    await pg.evaluate("()=>{const S=window.__dbg.save(); S.location='Riverwood'; [S.x,S.y]=WORLD.places.Riverwood;}")
+                    await tab("map"); await tab("town")
+                    check(await pg.evaluate("document.querySelectorAll('#side .au-tile').length") > 3 and not await pg.query_selector("#side .au-head"), f"{tag}: a new town opens on its board")
+                    await pg.evaluate("()=>{const S=window.__dbg.save(); S.location='Whiterun'; [S.x,S.y]=WORLD.places.Whiterun;}")
 
                     # ---- Map: one card, no repeats
                     await tab("map"); await js("window.__ui.refresh()")

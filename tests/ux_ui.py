@@ -47,6 +47,7 @@ async def main():
         check(await pg.evaluate("document.querySelector('.au-sibs [data-act=shop][data-id=general]').classList.contains('on')"), "General goods opens")
         # help popovers on each tab
         for t in ["map", "hero", "tactics", "town", "log"]:
+            if not await pg.query_selector(f"[data-tab={t}]"): continue   # tabs that moved into other screens
             await tab(pg, t)
             await js(pg, "document.querySelector('.uxhead .uxi').click()")
             txt = await pg.evaluate("document.querySelector('.uxpop')?.innerText || ''")
