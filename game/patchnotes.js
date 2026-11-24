@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b141-polishsweep", build: 141, date: "24 Nov 2026", title: "More of the game in Polish", items: [
+      "Playing in Polish? The fight picture now speaks it too: Ty, Uciekają, Zwycięstwo, Pudło, Blok!, critical hits and sneak attacks.",
+      "The fight log is in Polish now: who hits for how much, misses, staggers, paralysis, staves, potions and spells.",
+      "Foe and spell names, lots of pop-up messages (party, clan, trades, tutorial), the Sea of Ghosts on the map, the Khajiit market and the dungeon minigames are translated as well.",
+    ] },
     { id: "b139-beastpaths", build: 139, date: "24 Nov 2026", title: "Werewolves and vampires, for real", items: [
       "Beast Form is now a real change in turn-by-turn fights: you fight with the wolf's own moves. Claws (2 AP), Maul (4 AP, costs stamina), Pounce (can stagger, every 3 rounds), Howl (ordinary foes cower, tough ones are shaken and hit softer) and Feast on a beaten foe to heal.",
       "As a beast you can't drink potions, cast spells, shout or raise a guard. Silver weapons (the Vigilants, the Dawnguard, the Silver Hand) bite harder, and when you change back you're worn out for two rounds.",
