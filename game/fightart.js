@@ -1313,15 +1313,15 @@ x - 0.5, y - 0.5, bw + 1, bh + 1);
       };
       bar(8, hpD, Math.max(hpL, hpD), hpMax, "#c0392b", L("You"), false);
       bar(W - 8 - bw, ehpD, Math.max(ehpL, ehpD), ehpMax, "#8e6b2b", ((n) => (n.length > 22 ? n.slice(0, 21) + "…" : n))(L(rec.foeName)), true);
-      // status icons with turns left, under each name: 🔥 burning · ❄ chilled · ⚡ jolted
-      const cs = curSt(), ICO = { burn: ["🔥", "#ff9a3c"], chill: ["❄", "#bfe6ff"], shock: ["⚡", "#ffe37a"] };
+      // status icons with turns left, under each name:  burning ·  chilled ·  jolted
+      const cs = curSt(), ICO = { burn: ["", "#ff9a3c"], chill: ["", "#bfe6ff"], shock: ["", "#ffe37a"] };
       const chips = (st, x, right) => {
         let off = 0;
         for (const k of ["burn", "chill", "shock"]) if (st[k]) {
           const txt = `${ICO[k][0]}${st[k]}`, w = 26, cx = right ? x - off - w : x + off;
           g.fillStyle = "rgba(20,22,26,0.78)"; g.fillRect(cx, y + bh + 20, w, 15);
           g.strokeStyle = ICO[k][1]; g.lineWidth = 1; g.strokeRect(cx + 0.5, y + bh + 20.5, w - 1, 14);
-          g.font = "600 10px sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillStyle = ICO[k][1];
+          g.font = "600 10px GameIcons, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillStyle = ICO[k][1];
           g.fillText(txt, cx + w / 2, y + bh + 28);
           off += w + 3;
         }

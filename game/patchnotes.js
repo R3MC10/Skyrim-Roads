@@ -3,7 +3,7 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b167-fightpc", build: 167, date: "24 Nov 2026", title: "The fight fills your PC, and ends in slow motion", items: [
+    { id: "b168-fightpc", build: 168, date: "24 Nov 2026", title: "The fight fills your PC, and ends in slow motion", items: [
       "On a PC or laptop the fight now fills the whole window, like the big map: the picture runs from edge to edge and the cards and the skill bar float over it.",
       "The blow that ends a fight plays in slow motion, then a card shows how it went: how many rounds, the damage you dealt and took, and your best hit. Continue is right on it.",
       "New in Settings → Fights: Fight quality (Low, Medium, High), Frame rate (30, 60 or no cap), and sliders for Camera shake and Fight UI size. Low quality and 30 frames save battery on phones.",
@@ -11,7 +11,7 @@ const PATCHNOTES = (() => {
       "Tooltips in fights now say what a move costs in stamina or magicka instead of action points.",
       "Fixed on phones: a few screens (the house chest, parts of dungeons and fights) were missing some of their styling.",
     ] },
-    { id: "b167-turns", build: 167, date: "24 Nov 2026", title: "No more action points: you choose your turn", items: [
+    { id: "b168-turns", build: 168, date: "24 Nov 2026", title: "No more action points: you choose your turn", items: [
       "Action points are gone. On your turn make up to 4 moves in any order, then press End turn. Blows, power attacks, bashes and guards cost stamina, spells cost magicka, dark magic costs a little health. Doing the same move again in a turn costs more, and a power attack is once a turn.",
       "Moves you don't make turn into guard: end early and you take up to 30% less damage until your next turn.",
       "You see every foe's next move by name with its icon, numbers, who it's aimed at and what it leaves behind (like Venom Spit → Lydia, Poison 3). When it acts, the banner and the log name the move too.",
@@ -19,20 +19,20 @@ const PATCHNOTES = (() => {
       "Out of breath? You can always make one plain swing a turn. Frost and shock bite your stamina and magicka a bit less than before, and trolls and hagravens regenerate at most four times a fight.",
       "The fight speed button and the Skip buttons are gone. Tap the fight scene if you want to finish an animation right away.",
     ] },
-    { id: "b167-stacks", build: 167, date: "24 Nov 2026", title: "Statuses stack, and every move is a minigame", items: [
+    { id: "b168-stacks", build: 168, date: "24 Nov 2026", title: "Statuses stack, and every move is a minigame", items: [
       "Burn, chill, poison, bleed, vulnerable, ward and more now stack. The number on the icon is how many stacks; each one makes it stronger and it drops by 1 every turn. Hold or hover the icon to see what it does.",
       "Bosses can't be stun-locked: every stun, calm or fear gives them Resolve, so the next one is shorter.",
       "Every attack, guard and spell is a quick minigame: tap in the bright zone, time your block, draw your bow or trace a rune. Perfect adds a stack of something nasty, a miss is weaker. Turn it off in Settings → Minigames if you'd rather not.",
       "New perk effects for stacks: enchanted weapons add an extra stack, and resist perks take a stack off what's put on you.",
     ] },
-    { id: "b167-strategy", build: 167, date: "24 Nov 2026", title: "Fights that reward thinking", items: [
+    { id: "b168-strategy", build: 168, date: "24 Nov 2026", title: "Fights that reward thinking", items: [
       "New move: Breathe (Catch your breath). It's free but ends your turn, and gets back a good chunk of stamina and some magicka. Power attacks, bashes and guards burn stamina, so pace yourself: hit hard now, or breathe and hit hard next turn.",
       "Openings: hit a foe that's staggered, stunned or paralyzed and the blow does 30% more (a power attack 45%). A power attack on a frozen foe shatters the frost for extra. Bash or stagger first, then cash in. Still no one-shots.",
       "Frost slows: a chilled or slowed foe acts later in the round, so you and your followers get in first.",
       "Give your follower orders mid-fight with the little buttons on their card: Attack, Defend me (steps in front of you sooner) or Hold back (back row, only guards and heals). Tap again to let them fight their own way.",
       "Perks: Second Wind makes Breathe give 50% more; Savage Strike and Devastating Blow make power attacks into an opening hit even harder. Auto uses all of this too.",
     ] },
-    { id: "b167-combat2", build: 167, date: "24 Nov 2026", title: "A fight screen that feels like a game", items: [
+    { id: "b168-combat2", build: 168, date: "24 Nov 2026", title: "A fight screen that feels like a game", items: [
       "The fight is now one big scene that fills the screen. Everything you need sits right in it, so nothing scrolls, on phones and on PC.",
       "Your health is a glowing orb in the corner with magicka and stamina curving round it; a striped band shows how much the foe is about to take. Slim bars float over your hero's head.",
       "The foe's name, health, statuses and what it plans next hang over its head. Stunned foes wobble with stars, big hits flash and shake the picture.",
@@ -41,6 +41,34 @@ const PATCHNOTES = (() => {
       "Every buff and debuff now shows as a little icon on whoever has it: you, followers, party members and foes. Armour spells, wards, healing over time, potions, shouts and powers, poison, burning, frost, bleeding, fear, paralysis and the rest. Each shows the turns left, and tapping or hovering tells you what it does.",
       "When one lands or wears off, a short word floats up over that fighter: \"+Oakflesh\", \"Poisoned\", \"Burning fades\".",
       "Prefer the old look? Settings → Fight screen → Classic.",
+    ] },
+    { id: "b167-gameicons", build: 167, date: "24 Nov 2026", title: "Proper game icons", items: [
+      "The little phone emotes on buttons, cards and messages are gone. In their place: simple line icons drawn for the game, like the ones on the compass and in the menus.",
+      "Trap, fight, sneak, lockpick, rest, pray, chests, gold, potions, the weather and more: over 150 icons, sharp at any size and in the colour of the text around them.",
+      "Map pins you dropped before switch to the new icons by themselves.",
+    ] },
+    { id: "b166-chargebar", build: 166, date: "24 Nov 2026", title: "Charge bars", items: [
+      "Enchanted weapons and staffs now show a thin purple charge bar everywhere they appear: your pack, the Items menu and its details, tooltips, the paper doll, shops, chests and stash, follower gear, loot and loot votes, markets and trades.",
+      "When the charge runs out the bar turns red and the item says \"no charge\": the enchantment stops working until you recharge it with a filled soul gem (Items → the weapon → Recharge).",
+      "In a turn-by-turn fight a charge meter sits under your health while an enchanted weapon or staff is in your hand.",
+      "New Enchanting perk, Thrifty Runes: enchanted weapons and staffs use 20% less charge, and every kill puts 3% back.",
+      "Old saves: enchanted weapons that had lost their charge number start full again.",
+    ] },
+    { id: "b166-widetitle", build: 166, date: "24 Nov 2026", title: "The title picture on wide screens", items: [
+      "On a wide or ultra-wide PC window the main menu picture is no longer cut off: the warrior, the dragon and the city always fit, and the sides carry on the same painting softly blurred instead of black bars.",
+      "The menu words, the line under each one and the version line at the bottom are brighter and easier to read over the sky.",
+    ] },
+    { id: "b152-fishhunt", build: 152, date: "24 Nov 2026", title: "Gone fishing, gone hunting", items: [
+      "Fishing is a proper little game now: cast (time the power bar for a long cast), wait for the float to go right under, then hold to reel and let go to ease off. Keep the needle in the safe band: too tight and the line snaps, too slack and the fish gets away. Works with a finger or the Space bar.",
+      "Twelve new fish, and what bites depends on the water, the hold, the time of day and the weather. Arctic char and grayling in the cold north, glass catfish and vampire fish only at night, pogfish love the rain, and a rare goldfish only bites in a storm or a downpour.",
+      "Cleaning a catch can give salmon roe, slaughterfish eggs and pearls for alchemy. All the new fish count for fish recipes and sell at any general store.",
+      "Rods in three tiers: the old Fishing Rod, a Fine Fishing Rod (general stores, or make one at the forge) and a Master Angler's Rod (forge, needs Steel Smithing). Better rods widen the safe band, have a stronger line and bring more rare fish.",
+      "Hunting grounds in villages near the wild (Riverwood, Falkreath, Rorikstead, Ivarstead, Morthal, Dawnstar and more) and out in the wilds wherever you stop: creep up on a deer, elk, goat, hare or fox while it grazes, freeze when it looks up, mind the wind, then draw and shoot. Aim into the wind and go for the heart, just behind the front leg.",
+      "Deer, elk, goats and horkers you meet on the road while hunting now have a \"Stalk and shoot\" choice next to Fight.",
+      "Skinning gives meat, hides and sometimes a trophy (antlers, goat horns, a fox tail, a lucky rabbit's foot). A Skinning Knife (general stores) keeps every hide whole; a Steel Skinning Knife (forge) gets extra hides, meat and trophies. Hides tan into leather at any forge, and the forge uses them up.",
+      "New meals: roast leg of goat, roast rabbit leg and bristleback stew.",
+      "New perks: Clean Kill, Wind Reader and Skinner (Archery), Stalker (Sneak), and Angler, Line Sense and Deep Waters (Alchemy, next to Forager). Each one changes how the games play.",
+      "Playing together: friends hunting the same grounds on the same day meet the same animals in the same wind, and friends fishing side by side get the same bites. On the road only the party leader takes the shot, and everyone hears what they brought down.",
     ] },
     { id: "b157-partytraps", build: 157, date: "24 Nov 2026", title: "Traps are for the whole party", items: [
       "In a party dungeon, traps are everyone's problem now: when the leader goes for \"Dash through\" or \"Find the trigger\", every hero in the party plays that trap at the same time on their own phone or PC. Same blades, same stones for everyone, sized to your own skills.",
@@ -1067,7 +1095,7 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 167;
+  const NEXT_AT = 168;
   const NEXT = [
     "Mounted combat: fight from the saddle",
     "Pick a side in the civil war",

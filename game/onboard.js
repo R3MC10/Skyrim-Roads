@@ -38,35 +38,35 @@ const ONBOARD = (() => {
     const lv = s.level || 1, gold = s.gold || 0, eta = ctx.eta || (() => "");
     const hurt = typeof G.curHealth === "function" && G.curHealth(s) < G.maxHealth(s) * 0.4;
     const moving = !!(s.trip && s.trip.status === "travel");
-    if (hurt && !s.dungeon) add({ id: "heal", pri: 100, ico: "❤", title: "Patch yourself up", sub: "You're badly hurt. Rest at an inn (Area tab) or your own bed, drink a potion, eat cooked food, or cast a healing spell. Health doesn't come back by itself." + (s.location && TOWNS.isTown(s.location) ? "" : " Fights on the road go badly when you start them hurt."), btn: s.location && TOWNS.isTown(s.location) ? tabBtn("town", "Area") : null });
-    if (typeof G.overweight === "function" && G.overweight(s)) add({ id: "heavy", pri: 95, ico: "⚖", title: "Lighten your pack", sub: "You're carrying too much, so you walk slowly. Sell loot in a town (Area → General goods) or drop what you don't need.", btn: s.location && TOWNS.isTown(s.location) ? tabBtn("town", "Area") : null });
+    if (hurt && !s.dungeon) add({ id: "heal", pri: 100, ico: "", title: "Patch yourself up", sub: "You're badly hurt. Rest at an inn (Area tab) or your own bed, drink a potion, eat cooked food, or cast a healing spell. Health doesn't come back by itself." + (s.location && TOWNS.isTown(s.location) ? "" : " Fights on the road go badly when you start them hurt."), btn: s.location && TOWNS.isTown(s.location) ? tabBtn("town", "Area") : null });
+    if (typeof G.overweight === "function" && G.overweight(s)) add({ id: "heavy", pri: 95, ico: "", title: "Lighten your pack", sub: "You're carrying too much, so you walk slowly. Sell loot in a town (Area → General goods) or drop what you don't need.", btn: s.location && TOWNS.isTown(s.location) ? tabBtn("town", "Area") : null });
     // the main quest, when you're tracking something else (the card's first row already shows the tracked quest)
     if ((typeof QUESTS !== "undefined")) {
       const act = QUESTS.active(s), main = act.find((a) => a.id === "main");
-      if (main && ctx.quest && ctx.quest !== "main") add({ id: "mainq", pri: 60, ico: "🐉", title: "Follow the main quest", sub: `“${esc(main.st.title)}”: ${esc(main.st.text)}`, btn: { label: "Track", act: "qtrack", attrs: `data-id="main"` } });
+      if (main && ctx.quest && ctx.quest !== "main") add({ id: "mainq", pri: 60, ico: "", title: "Follow the main quest", sub: `“${esc(main.st.title)}”: ${esc(main.st.text)}`, btn: { label: "Track", act: "qtrack", attrs: `data-id="main"` } });
     }
     // low level: easy fights on the roads around Whiterun
     if (lv < 5 && foesBeaten(s) < 6 && !moving && !s.dungeon) {
       const hold = (n) => G.holdAt(WORLD.places[n]) === "Whiterun" && /^(city|town|farm|landmark|stone)$/.test(WORLD.places[n][2]);
       const n = nearest(s, ctx, hold);
-      if (n) add({ id: "road", pri: 70, ico: "⚔", title: "Win a few road fights near Whiterun", sub: `Walk the roads around Whiterun: wolves, skeevers and bandits there are about your level and give good practice. Try ${esc(n)} (~${eta(n)}).`, btn: go(n) });
+      if (n) add({ id: "road", pri: 70, ico: "", title: "Win a few road fights near Whiterun", sub: `Walk the roads around Whiterun: wolves, skeevers and bandits there are about your level and give good practice. Try ${esc(n)} (~${eta(n)}).`, btn: go(n) });
     }
     // a dungeon, once you've a level or two
     if (lv >= 3 && !cleared(s) && !s.dungeon && !moving && (typeof DUNGEONS !== "undefined")) {
       const n = nearest(s, ctx, (x) => DUNGEONS.enterable(x) && !(DUNGEONS.refillLeft && DUNGEONS.refillLeft(s, x)));
-      if (n) add({ id: "dungeon", pri: 65, ico: "🕯", title: "Try a dungeon", sub: `Dungeons hold the best loot. ${esc(n)} is ~${eta(n)} away. Go room by room; you can leave between rooms.`, btn: go(n) });
+      if (n) add({ id: "dungeon", pri: 65, ico: "", title: "Try a dungeon", sub: `Dungeons hold the best loot. ${esc(n)} is ~${eta(n)} away. Go room by room; you can leave between rooms.`, btn: go(n) });
     }
     // a horse once you can afford one with change to spare
     const hp = D.HORSE_PRICE || 1000;
     if (!s.horse && gold >= hp + 150 && lv < VETERAN && (typeof HORSES !== "undefined")) {
       const n = HORSES.nearestStables([s.x, s.y]);
-      add({ id: "horse", pri: 55, ico: "🐎", title: "Buy a horse", sub: `You have the ${hp} gold. Riding is much faster and the horse carries things for you. Stables are outside the big cities; ${esc(n)} is closest.`, btn: s.location === n ? tabBtn("town", "Area") : go(n) });
+      add({ id: "horse", pri: 55, ico: "", title: "Buy a horse", sub: `You have the ${hp} gold. Riding is much faster and the horse carries things for you. Stables are outside the big cities; ${esc(n)} is closest.`, btn: s.location === n ? tabBtn("town", "Area") : go(n) });
     }
     // play with others
-    if (ctx.online && !ctx.party && lv >= 3) add({ id: "party", pri: 45, ico: "⚑", title: "Team up with other players", sub: "Fights are easier together: in a party you travel as one, each plays their own turns, gold is split evenly and loot is voted on. Open 👥 Friends.", btn: tabBtn("social", "Friends") });
+    if (ctx.online && !ctx.party && lv >= 3) add({ id: "party", pri: 45, ico: "⚑", title: "Team up with other players", sub: "Fights are easier together: in a party you travel as one, each plays their own turns, gold is split evenly and loot is voted on. Open  Friends.", btn: tabBtn("social", "Friends") });
     // rumours: once you can handle a detour and you're in a town with an inn
     if (lv >= 4 && (typeof RUMOURS !== "undefined") && !(s.rw && s.rw.seen) && !RUMOURS.leads(s).length && s.location && TOWNS.INNS && TOWNS.INNS[s.location] && !moving)
-      add({ id: "rumour", pri: 40, ico: "👂", title: "Listen for rumours", sub: "Buy a round at the inn (Area tab) and the locals point you at treasure, trouble or a hidden place. Some of it is just gossip.", btn: tabBtn("town", "Area") });
+      add({ id: "rumour", pri: 40, ico: "", title: "Listen for rumours", sub: "Buy a round at the inn (Area tab) and the locals point you at treasure, trouble or a hidden place. Some of it is just gossip.", btn: tabBtn("town", "Area") });
     // world events, once you can survive them
     if (lv >= 8 && (typeof WORLDEV !== "undefined")) {
       const ev = WORLDEV.active()[0];
@@ -74,9 +74,9 @@ const ONBOARD = (() => {
     }
     // a homestead when you're rich and settled
     if ((typeof HOMESTEAD !== "undefined") && !HOMESTEAD.owned(s).length && (gold >= 4000 || lv >= 12))
-      add({ id: "homestead", pri: 30, ico: "🏡", title: "Build your own house", sub: "Buy land near Falkreath, Morthal or Dawnstar from the Jarl's steward and build a home stage by stage. A deed costs about 5000 gold.", btn: s.location !== "Falkreath" ? go("Falkreath") : tabBtn("town", "Area") });
+      add({ id: "homestead", pri: 30, ico: "", title: "Build your own house", sub: "Buy land near Falkreath, Morthal or Dawnstar from the Jarl's steward and build a home stage by stage. A deed costs about 5000 gold.", btn: s.location !== "Falkreath" ? go("Falkreath") : tabBtn("town", "Area") });
     // the next guide step as a fallback
-    if ((typeof GUIDE !== "undefined")) { const g = GUIDE.STEPS.find((x) => !x[3](s)); if (g) add({ id: "guide-" + g[0], pri: 20, ico: "📖", title: `Next step: ${esc(g[1])}`, sub: esc(g[2]), btn: { label: "Show me", act: "guidego", attrs: `data-id="${g[0]}"` } }); }
+    if ((typeof GUIDE !== "undefined")) { const g = GUIDE.STEPS.find((x) => !x[3](s)); if (g) add({ id: "guide-" + g[0], pri: 20, ico: "", title: `Next step: ${esc(g[1])}`, sub: esc(g[2]), btn: { label: "Show me", act: "guidego", attrs: `data-id="${g[0]}"` } }); }
     return out.sort((a, b) => b.pri - a.pri);
   }
   /* 1-3 ideas, or [] when switched off / for veterans / during the guided first trip */
@@ -89,7 +89,7 @@ const ONBOARD = (() => {
   function rows(s, ctx = {}) {
     return ideas(s, ctx).map((c) => `<div class="item nx obrow"><span class="nx-i" aria-hidden="true">${c.ico}</span><div class="t">${c.title}<span>${c.sub}</span></div>${c.btn ? `<button class="btn sm" data-act="${c.btn.act}" ${c.btn.attrs}>${esc(c.btn.label)}</button>` : ""}<button class="obx" data-ob="hide" data-id="${esc(c.id)}" aria-label="Hide this idea">✕</button></div>`);
   }
-  const foot = () => `<p class="obfoot sub"><button class="linkbtn" data-ob="off">Turn these ideas off</button> · they come back in ⚙ Settings → Help &amp; tips</p>`;
+  const foot = () => `<p class="obfoot sub"><button class="linkbtn" data-ob="off">Turn these ideas off</button> · they come back in  Settings → Help &amp; tips</p>`;
 
   // ------------------------------------------------------------------ first-time tips
   /* id, applies(s, ctx), title, text (may depend on ctx) */
@@ -99,7 +99,7 @@ const ONBOARD = (() => {
     ["level", (s) => s.pendingLevels > 0 && (s.level || 1) <= 4, "Level up!", () => "Open <b>Hero</b>: pick Health, Magicka or Stamina, then spend your perk point on a skill you use. Skills rise by using them.", { btn: ["hero", "Open Hero"] }],
     ["heavy", (s) => typeof G.overweight === "function" && G.overweight(s), "Too heavy", () => "You're carrying more than you can, so you walk slowly. Sell loot in a town, keep things in a house chest, or let a horse or follower carry them."],
     ["dungeon", (s) => !!s.dungeon && !cleared(s), "Your first dungeon", () => "Go room by room. Each room may hold foes, a trap or loot; you can leave between rooms and come back later. The boss and the best chest wait at the end."],
-    ["invite", (s, c) => c.invites > 0, "A party invite", () => (typeof INVITES !== "undefined" ? "Someone wants you in their party. Tap Accept on the card at the top to join, or Decline. The leader picks where to go and you travel together; gold is split evenly." : "Someone wants you in their party. Open 👥 <b>Friends → Party</b> to join. The leader picks where to go and you travel together; gold is split evenly."), { btn: ["social", "Friends"] }],
+    ["invite", (s, c) => c.invites > 0, "A party invite", () => (typeof INVITES !== "undefined" ? "Someone wants you in their party. Tap Accept on the card at the top to join, or Decline. The leader picks where to go and you travel together; gold is split evenly." : "Someone wants you in their party. Open \uE106 <b>Friends → Party</b> to join. The leader picks where to go and you travel together; gold is split evenly."), { btn: ["social", "Friends"] }],
     ["rumour", (s) => (typeof RUMOURS !== "undefined") && RUMOURS.leads(s).length > 0, "You've got a lead", () => "Rumours are marked on your map and listed in the Journal → Misc. Go there to see if it's true: some are just gossip."],
   ];
   let bound = null, shown = null, timer = null;
@@ -124,7 +124,7 @@ const ONBOARD = (() => {
     if (!tip) { if (el) el.remove(); shown = null; return; }
     if (!el) { el = document.createElement("div"); el.id = "obtip"; el.setAttribute("role", "status"); el.addEventListener("click", onTipClick); document.body.appendChild(el); }
     el.className = "obtip" + (tip.id === "tbfight" ? " infight" : "");
-    el.innerHTML = `<div class="obtip-h"><b>💡 ${esc(tip.title)}</b><button class="obx" data-obt="ok" aria-label="Close tip">✕</button></div><p>${tip.text}</p>
+    el.innerHTML = `<div class="obtip-h"><b> ${esc(tip.title)}</b><button class="obx" data-obt="ok" aria-label="Close tip">✕</button></div><p>${tip.text}</p>
       <div class="obtip-b">${tip.btn ? `<button class="btn sm pri" data-obt="go" data-id="${tip.btn[0]}">${esc(tip.btn[1])}</button>` : ""}<button class="btn sm" data-obt="ok">Got it</button><button class="linkbtn" data-obt="off">Don't show tips</button></div>`;
     shown = tip.id;
     place();
@@ -153,7 +153,7 @@ const ONBOARD = (() => {
     const s = bound.S(); if (!s) return;
     const k = b.dataset.obt;
     if (shown) markSeen(s, shown);
-    if (k === "off") { setPrefRaw("obTips", false); bound.toast?.("Tips are off. Switch them back on in ⚙ Settings → Help & tips."); }
+    if (k === "off") { setPrefRaw("obTips", false); bound.toast?.("Tips are off. Switch them back on in  Settings → Help & tips."); }
     if (k === "go" && b.dataset.id === "@tut") { const t = document.querySelector("#side .tut"); if (t) t.scrollIntoView({ behavior: "smooth", block: "center" }); }
     else if (k === "go" && bound.click) { const x = document.createElement("button"); x.dataset.act = "uxtab"; x.dataset.id = b.dataset.id; try { bound.click({ target: x }); } catch { /* ignore */ } }
     bound.persist?.();
@@ -187,7 +187,7 @@ const ONBOARD = (() => {
     const b = e.target.closest("[data-ob]"); if (!b || !bound) return;
     const s = bound.S(); if (!s) return;
     if (b.dataset.ob === "hide") { st(s).hid[b.dataset.id] = 1; bound.toast?.("Hidden. More ideas show up as you play."); }
-    if (b.dataset.ob === "off") { setPrefRaw("obNext", false); bound.toast?.("Ideas are off. Switch them back on in ⚙ Settings → Help & tips."); }
+    if (b.dataset.ob === "off") { setPrefRaw("obNext", false); bound.toast?.("Ideas are off. Switch them back on in  Settings → Help & tips."); }
     bound.persist?.(); bound.renderPanel?.(true);
   }
 

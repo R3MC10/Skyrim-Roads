@@ -132,7 +132,7 @@ for (const [build, L] of [["warrior", 20], ["mage", 20], ["archer", 30]]) {
   ok(R.delay({ kind: "foe" }) >= 900 && R.delay({ kind: "round", round: 2 }) > R.delay({ kind: "me" }), "foe turns and new rounds stay on screen longer");
   ok(R.cue({ kind: "foe", text: "Bandit lifts the weapon high, winding up a huge blow. Guard or hit them hard!" }) === "windup", "wind-up has its own sound");
   ok(R.cue({ kind: "foe", text: "Bandit hits 20" }, { kind: "me" }) === "turn-foe" && R.cue({ kind: "foe", text: "Bandit hits 20" }, { kind: "foe" }) === null, "a drum when the foe's turn starts");
-  ok(R.cue({ kind: "tick", text: "🔥 the bandit burns for 9" }) === "dot-burn" && R.cue({ kind: "round", round: 3 }) === "round", "burning and new rounds sound");
+  ok(R.cue({ kind: "tick", text: " the bandit burns for 9" }) === "dot-burn" && R.cue({ kind: "round", round: 3 }) === "round", "burning and new rounds sound");
   ok(fe.act ? R.who(fe, ss).includes(fe.act.name) && R.who(fe, ss).includes(ss.f.e.name) : /turn/.test(R.who(fe, ss)), "the dock says who acts and with what: " + R.who(fe, ss));
 }
 

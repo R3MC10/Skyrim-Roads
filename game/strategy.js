@@ -22,9 +22,9 @@ const STRAT = (() => {
   const OPEN = { hit: 0.3, power: 0.45, chill: 0.15, cap: 0.07 };
   const INIT_CUT = 4;
   const ORDERS = {
-    attack: { ic: "⚔", name: "Attack", tip: "Attack: front row, goes all out with power attacks and damage spells." },
-    defend: { ic: "🛡", name: "Defend me", tip: "Defend me: front row, draws blows and steps in front of you when you're hurt." },
-    hold: { ic: "✋", name: "Hold back", tip: "Hold back: back row, draws fewer blows, only guards, heals and drinks potions." },
+    attack: { ic: "", name: "Attack", tip: "Attack: front row, goes all out with power attacks and damage spells." },
+    defend: { ic: "", name: "Defend me", tip: "Defend me: front row, draws blows and steps in front of you when you're hurt." },
+    hold: { ic: "", name: "Hold back", tip: "Hold back: back row, draws fewer blows, only guards, heals and drinks potions." },
   };
   const tr = (t) => (typeof I18N !== "undefined" && I18N.tr && I18N.lang?.() === "pl" ? I18N.tr(t) ?? t : t);   // data-tip isn't translated on the page
   const esc = (t) => String(t ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));

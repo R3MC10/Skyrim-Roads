@@ -137,7 +137,7 @@ const STACKS = (() => {
   function tick(f, line) {
     if (!f) return;
     const fs = f.foeSt || {};
-    if (fs.poison && fs.poison.turns > 0 && f.ehp > 0) { const d = fs.poison.dmg || 1; f.ehp -= d; if (line) line.me += ` · ☠ poison ${Math.round(d)}`; }
+    if (fs.poison && fs.poison.turns > 0 && f.ehp > 0) { const d = fs.poison.dmg || 1; f.ehp -= d; if (line) line.me += ` ·  poison ${Math.round(d)}`; }
     const s = S(f), mh = myMax(f);
     // shock and chill on you: a little drains away each turn
     const ms = f.meSt || {};

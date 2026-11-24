@@ -44,20 +44,20 @@ const BEASTPATH = (() => {
      cd: rounds between uses · once: once per change (forms) or per fight (vampire)
      zone: where the move is dragged (tbui.js) */
   const MOVES = {
-    "beast:claw": { w: 2, name: "Claws", icon: "🐾", zone: "foe", desc: "Rake the foe with your claws." },
-    "beast:maul": { w: 4, sp: 25, name: "Maul", icon: "💥", zone: "foe", desc: "A savage double swipe. Costs stamina; can knock the foe off balance." },
-    "beast:pounce": { w: 3, cd: 3, name: "Pounce", icon: "🐺", zone: "foe", desc: "Leap on the foe: a hard blow that can stagger it (half the time; bosses less). Every 3 rounds." },
-    "beast:howl": { w: 3, once: true, name: "Howl", icon: "🌕", zone: "foe", desc: "Ordinary foes cower for 2 turns; tough ones are shaken and hit 20% softer for 3 turns. Once per change." },
-    "beast:feast": { w: 4, once: true, name: "Feast", icon: "🍖", zone: "foe", desc: "Tear into a beaten person (below 35% health) and heal from it. Once per change." },
-    "beast:revert": { w: 1, name: "Change back", icon: "↩", zone: "self", desc: "Force the wolf back down. You're spent for a couple of rounds." },
-    "lord:claw": { w: 3, name: "Claws", icon: "🦇", zone: "foe", desc: "Slash with a Vampire Lord's long claws." },
-    "lord:drain": { w: 3, name: "Drain Life", icon: "🩸", zone: "foe", desc: "Pull the life out of the foe and into you." },
-    "lord:grip": { w: 4, cd: 3, name: "Vampiric Grip", icon: "✊", zone: "foe", desc: "Lift the foe by the throat: some damage and it's staggered. Every 3 rounds." },
-    "lord:raise": { w: 4, once: true, name: "Raise Dead", icon: "💀", zone: "self", desc: "A corpse claws its way up to fight for you for 6 turns. Once per change." },
-    "lord:revert": { w: 1, name: "Change back", icon: "↩", zone: "self", desc: "Fold your wings and change back." },
-    "vamp:seduce": { w: 2, once: true, name: "Seduction", icon: "💋", zone: "foe", desc: "An ordinary person or beast lowers its guard and stops fighting for 3 turns. Once a fight." },
-    "vamp:shadows": { w: 3, once: true, minStage: 3, name: "Embrace of Shadows", icon: "🌑", zone: "self", desc: "Hunger stage 3+: melt into the dark. Nothing touches you for 2 turns and your next blow is a sneak attack. Once a fight." },
-    "vamp:bite": { w: 3, once: true, name: "Bite", icon: "🦷", zone: "foe", desc: "Sink your teeth into a beaten person (below 30% health): you feed, heal and your hunger resets. Once a fight." },
+    "beast:claw": { w: 2, name: "Claws", icon: "", zone: "foe", desc: "Rake the foe with your claws." },
+    "beast:maul": { w: 4, sp: 25, name: "Maul", icon: "", zone: "foe", desc: "A savage double swipe. Costs stamina; can knock the foe off balance." },
+    "beast:pounce": { w: 3, cd: 3, name: "Pounce", icon: "", zone: "foe", desc: "Leap on the foe: a hard blow that can stagger it (half the time; bosses less). Every 3 rounds." },
+    "beast:howl": { w: 3, once: true, name: "Howl", icon: "", zone: "foe", desc: "Ordinary foes cower for 2 turns; tough ones are shaken and hit 20% softer for 3 turns. Once per change." },
+    "beast:feast": { w: 4, once: true, name: "Feast", icon: "", zone: "foe", desc: "Tear into a beaten person (below 35% health) and heal from it. Once per change." },
+    "beast:revert": { w: 1, name: "Change back", icon: "", zone: "self", desc: "Force the wolf back down. You're spent for a couple of rounds." },
+    "lord:claw": { w: 3, name: "Claws", icon: "", zone: "foe", desc: "Slash with a Vampire Lord's long claws." },
+    "lord:drain": { w: 3, name: "Drain Life", icon: "", zone: "foe", desc: "Pull the life out of the foe and into you." },
+    "lord:grip": { w: 4, cd: 3, name: "Vampiric Grip", icon: "", zone: "foe", desc: "Lift the foe by the throat: some damage and it's staggered. Every 3 rounds." },
+    "lord:raise": { w: 4, once: true, name: "Raise Dead", icon: "", zone: "self", desc: "A corpse claws its way up to fight for you for 6 turns. Once per change." },
+    "lord:revert": { w: 1, name: "Change back", icon: "", zone: "self", desc: "Fold your wings and change back." },
+    "vamp:seduce": { w: 2, once: true, name: "Seduction", icon: "", zone: "foe", desc: "An ordinary person or beast lowers its guard and stops fighting for 3 turns. Once a fight." },
+    "vamp:shadows": { w: 3, once: true, minStage: 3, name: "Embrace of Shadows", icon: "", zone: "self", desc: "Hunger stage 3+: melt into the dark. Nothing touches you for 2 turns and your next blow is a sneak attack. Once a fight." },
+    "vamp:bite": { w: 3, once: true, name: "Bite", icon: "", zone: "foe", desc: "Sink your teeth into a beaten person (below 30% health): you feed, heal and your hunger resets. Once a fight." },
   };
   const isMove = (a) => !!MOVES[a];
   /* what a move costs: the wolf pays in stamina, the Vampire Lord's dark moves and a vampire's powers in health
@@ -273,7 +273,7 @@ const BEASTPATH = (() => {
       if (s.moonblood && (s.vampire || s.werewolf)) { s.moonblood = null; return null; }
       if (s.moonblood && t - s.moonblood.at >= C.TURN_AFTER) {
         s.moonblood = null; s.werewolf = { since: t, wild: true }; s.wolfDeclined = false;
-        return "🐺 The moon pulls at your bones. You wake in the woods with blood on your hands: you are a werewolf now. Beast Form is in your fights, once a day. See the Character tab.";
+        return " The moon pulls at your bones. You wake in the woods with blood on your hands: you are a werewolf now. Beast Form is in your fights, once a day. See the Character tab.";
       }
       return null;
     };
@@ -297,7 +297,7 @@ const BEASTPATH = (() => {
     if (!e || !/werewolf/i.test(e.name || "") || s.werewolf || s.vampire || s.moonblood || s.sanguinare || immune(s)) return null;
     if (Math.random() >= BITE * (1 - curseRes(s))) return null;
     s.moonblood = { at: t };
-    return "🌕 The werewolf's bite burns and won't close. (Moonblood: cure it within 3 in-game days with a Cure Disease potion or at a shrine, or you'll change at the next moon.)";
+    return " The werewolf's bite burns and won't close. (Moonblood: cure it within 3 in-game days with a Cure Disease potion or at a shrine, or you'll change at the next moon.)";
   }
 
   // ---------------------------------------------------------------- the turn-by-turn screen and the party
@@ -324,11 +324,11 @@ const BEASTPATH = (() => {
     if (a === "vamp:seduce") return "It won't listen";
     return "";
   }
-  const ICONS = { "power:beast": "🐺", "power:lord": "🦇" };
+  const ICONS = { "power:beast": "", "power:lord": "" };
   function icon(f, a) {
     if (MOVES[a]) return MOVES[a].icon;
     if (ICONS[a]) return ICONS[a];
-    if (inForm(f) && (a === "attack" || a === "power_attack")) return inBeast(f) ? (a === "attack" ? "🐾" : "💥") : "🦇";
+    if (inForm(f) && (a === "attack" || a === "power_attack")) return inBeast(f) ? (a === "attack" ? "" : "") : "";
     return null;
   }
   const zone = (a) => (MOVES[a] ? MOVES[a].zone : null);
@@ -423,8 +423,8 @@ const BEASTPATH = (() => {
       { id: "moonhunt", title: "A howl under the moon", weight: 2, minLv: 8,
         when: (s, c) => c.night && !c.sol,
         make: (s) => ({ kin: !!s.werewolf, text: s.werewolf ? "A howl rolls over the trees, and the blood in you answers. Something big is hunting nearby, and it smells you too." : "A howl rolls over the trees, far too close. Branches snap. Something on two legs is running towards you, and it isn't a man any more." }),
-        choices: (e, s) => e.kin ? [["howl", "🐺 Howl back"], ["fight", "⚔️ Fight it for the hunt"], ["leave", "Walk on"]]
-          : [["fight", "⚔️ Stand and fight"], ["hide", `🥷 Hide in the brush (${pct(ENC.sneakCh(s, 0.15))})`], ["leave", "Run for the road"]],
+        choices: (e, s) => e.kin ? [["howl", " Howl back"], ["fight", " Fight it for the hunt"], ["leave", "Walk on"]]
+          : [["fight", " Stand and fight"], ["hide", ` Hide in the brush (${pct(ENC.sneakCh(s, 0.15))})`], ["leave", "Run for the road"]],
         fight: (s) => ({ text: "It bursts out of the dark, all teeth and claws.", foe: werewolfFoe(s), after: "wolfLoot" }),
         hide: (s) => { const win = Math.random() < ENC.sneakCh(s, 0.15), sk = G.useSkill(s, "Sneak", win ? 15 : 5);
           return win ? { text: "You press flat in the ferns. It sniffs the air a long while, then lopes off after a deer.", skills: sk } : { text: "It smells you. It's on you before you can stand.", foe: werewolfFoe(s), enemyFirst: true, skills: sk }; },
@@ -434,7 +434,7 @@ const BEASTPATH = (() => {
       { id: "palecourt", title: "The Ashen Court", weight: 1.5, minLv: 12,
         when: (s, c) => c.night && !c.sol && !s.vampire,
         make: (s) => ({ wolf: !!s.werewolf, text: s.werewolf ? "A black carriage stops beside you. A pale noble wrinkles their nose. \"Dog. The Ashen Court has no use for your kind.\"" : "A black carriage with drawn curtains stops beside you. A pale noble leans out, eyes red as embers. \"You fight well. The Ashen Court could use someone like you. Take the gift, and the night is yours forever.\"" }),
-        choices: (e) => e.wolf ? [["fight", "⚔️ Answer the insult"], ["leave", "Let them go"]] : [["accept", "🩸 Accept the gift"], ["refuse", "Refuse politely"], ["fight", "⚔️ Draw steel"]],
+        choices: (e) => e.wolf ? [["fight", " Answer the insult"], ["leave", "Let them go"]] : [["accept", " Accept the gift"], ["refuse", "Refuse politely"], ["fight", " Draw steel"]],
         accept: (s) => {
           if (s.werewolf || s.vampire) return { text: "\"Your blood is already spoken for.\" The carriage rolls on." };
           s.vampire = { since: nowS(), fedAt: nowS(), court: true }; s.sanguinare = null; s.moonblood = null;
@@ -515,11 +515,11 @@ const BEASTPATH = (() => {
   function panelExtra(s, kind) {
     if (kind === "wolf") {
       const seen = s.bpSeen ? Object.entries(s.bpSeen).filter(([, x]) => nowS() - x.t < CURSE.DAY).map(([h]) => h) : [];
-      return `<details class="bpx"><summary>🐾 Beast Form moves and drawbacks</summary>
+      return `<details class="bpx"><summary> Beast Form moves and drawbacks</summary>
         <p class="sub">In a turn-by-turn fight your hands are claws while you're changed. No spells, scrolls, shouts, potions or guard.</p>
         <div class="list">${["beast:claw", "beast:maul", "beast:pounce", "beast:howl", "beast:feast", "beast:revert"].map((a) => row(a)).join("")}</div>
-        <p class="sub">⚠ Silver (the Silver Hand, Vigilants, Dawnguard) hits you 30% harder in Beast Form. When the beast lets go you're spent for 2 rounds: weaker blows and little stamina.${s.werewolf?.wild ? " Your blood came from a wild werewolf's bite, not the Circle, but the cure is the same." : ""}</p>
-        ${seen.length ? `<p class="sub">👀 People saw you change in ${esc(seen.join(", "))}. Shops there charge more until the talk dies down (a day).</p>` : ""}</details>`;
+        <p class="sub"> Silver (the Silver Hand, Vigilants, Dawnguard) hits you 30% harder in Beast Form. When the beast lets go you're spent for 2 rounds: weaker blows and little stamina.${s.werewolf?.wild ? " Your blood came from a wild werewolf's bite, not the Circle, but the cure is the same." : ""}</p>
+        ${seen.length ? `<p class="sub"> People saw you change in ${esc(seen.join(", "))}. Shops there charge more until the talk dies down (a day).</p>` : ""}</details>`;
     }
     const st = stage(s), lines = [
       ["1", "Barely hungry. People say you look pale."],
@@ -527,7 +527,7 @@ const BEASTPATH = (() => {
       ["3", "Ravenous. Shops charge 15% more. Embrace of Shadows wakes up. The sun burns 4.5% a round."],
       ["4", "Starving. Shops bar the door, townsfolk panic. In daylight your blows are 10% weaker and the sun burns 6% a round."],
     ];
-    return `<details class="bpx"><summary>🩸 Hunger, powers and the Vampire Lord's moves</summary>
+    return `<details class="bpx"><summary> Hunger, powers and the Vampire Lord's moves</summary>
       <div class="list">${lines.map(([n, t]) => `<div class="item${+n === st ? " on" : ""}"><div class="t">Stage ${n}${+n === st ? " (now)" : ""}<span>${esc(t)}</span></div></div>`).join("")}</div>
       <p class="sub">Powers in a fight (not while changed):</p>
       <div class="list">${["vamp:seduce", "vamp:shadows", "vamp:bite"].map((a) => row(a)).join("")}</div>
@@ -537,7 +537,7 @@ const BEASTPATH = (() => {
   function moonPanel(s) {
     if (!s.moonblood) return "";
     const left = Math.max(0, CURSE.TURN_AFTER - (nowS() - s.moonblood.at)), h = Math.floor(left / 3600), m = Math.ceil((left % 3600) / 60);
-    return `<div class="panel" style="border-color:var(--gold)"><h2>🌕 Moonblood</h2><p class="sub">A werewolf's bite that won't heal. In about ${h ? `${h} h ` : ""}${m} min (${(left / CURSE.DAY).toFixed(1)} in-game days) you'll change for the first time and be a werewolf for good. Drink a Potion of Cure Disease or pray at a roadside shrine to stop it, or let the moon have you.</p></div>`;
+    return `<div class="panel" style="border-color:var(--gold)"><h2> Moonblood</h2><p class="sub">A werewolf's bite that won't heal. In about ${h ? `${h} h ` : ""}${m} min (${(left / CURSE.DAY).toFixed(1)} in-game days) you'll change for the first time and be a werewolf for good. Drink a Potion of Cure Disease or pray at a roadside shrine to stop it, or let the moon have you.</p></div>`;
   }
 
   // ---------------------------------------------------------------- wire it all up

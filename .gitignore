@@ -51,4 +51,5 @@ tests/out_invites/
 tests/out_holds/
 tests/out_evbanner/
 tests/out_gather/
+tests/out_chargebar/
 tests/out_partytraps/

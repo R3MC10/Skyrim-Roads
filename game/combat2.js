@@ -50,7 +50,7 @@ const COMBAT2 = (() => {
       const al = o.al;
       if (al && al.fid && typeof UIART !== "undefined" && UIART.follower) { const p = UIART.follower(al.fid, 30); if (p) return p; }
     } catch { /* fall back to a letter */ }
-    const g = o.id.startsWith("foe") ? (f.e?.player ? "⚔" : "☠") : o.id === "sum" ? "✦" : esc(String(o.name || "?").trim()[0] || "?");
+    const g = o.id.startsWith("foe") ? (f.e?.player ? "" : "") : o.id === "sum" ? "✦" : esc(String(o.name || "?").trim()[0] || "?");
     return `<span class="c2gl">${g}</span>`;
   }
   /* the turn order: portraits in a ribbon */

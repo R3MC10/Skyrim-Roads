@@ -175,7 +175,7 @@ const FIGHTCTL = (() => {
     return `<div class="fc fc-beast ${bx.form}${enter ? " enter" : ""}" data-fcmode="${bx.form}">
       <div class="fc-tray" role="group" aria-label="${bx.form === "wolf" ? "Beast Form" : "Vampire Lord"} moves" style="--n:${Math.max(3, rest.length)}">${tray}</div>
       <div class="tbgrid fc-main">${main}</div>
-      <div class="fc-row"><span class="fc-form">${bx.form === "wolf" ? "🐺 Beast Form" : "🦇 Vampire Lord"} · ${bx.left} round${bx.left === 1 ? "" : "s"} left</span>${btn(sess, api, "flee", { label: "Flee", extra: "flee fc-m" })}${end}</div>
+      <div class="fc-row"><span class="fc-form">${bx.form === "wolf" ? " Beast Form" : " Vampire Lord"} · ${bx.left} round${bx.left === 1 ? "" : "s"} left</span>${btn(sess, api, "flee", { label: "Flee", extra: "flee fc-m" })}${end}</div>
     </div>`;
   }
   /* the magic / items list: tabs, filters by school, ★ to pin, numbered Cast buttons */

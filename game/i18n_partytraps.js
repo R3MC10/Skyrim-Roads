@@ -5,15 +5,15 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
 (() => {
   const LABEL = { poisoned: "zatruty", "cut and bleeding": "pocięty i krwawi", burned: "poparzony", "hurt, and their purse spilled": "ranny, a sakiewka się rozsypała", "hurt, and their armour dented": "ranny, a pancerz wgnieciony", "hurt, and your purse spilled": "ranny, a sakiewka się rozsypała", "hurt, and your armour dented": "ranny, a pancerz wgnieciony" };
   Object.assign(I18N_EXTRA.words, {
-    "⚠ Trap results": "⚠ Wyniki pułapki",
+    "\uE123 Trap results": "\uE123 Wyniki pułapki",
     "Trap results": "Wyniki pułapki",
-    "✔ Got through": "✔ Przeszedł cało",
+    "\uE120 Got through": "\uE120 Przeszedł cało",
     "Knocked down, gets back up": "Powalony, ale wstaje",
-    "✔ done": "✔ skończył",
+    "\uE120 done": "\uE120 skończył",
     "… still playing": "… jeszcze gra",
     "Waiting for the rest of the party…": "Czekasz na resztę drużyny…",
-    "⚠ You got through": "⚠ Udało ci się przejść",
-    "⚠ It caught you": "⚠ Pułapka cię dopadła",
+    "\uE123 You got through": "\uE123 Udało ci się przejść",
+    "\uE123 It caught you": "\uE123 Pułapka cię dopadła",
     "You're through untouched.": "Przechodzisz bez zadrapania.",
     "Waiting for the party": "Czekasz na drużynę",
     // perks
@@ -46,8 +46,8 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     [/^It caught you: (.+)\. You take the hit yourself\.$/, (m) => LABEL[m[1]] ? `Pułapka cię dopadła: ${LABEL[m[1]]}. Sam ponosisz skutki.` : null],
     [/^Anyone not done in (\d+)s counts as caught\.$/, (m) => `Kto nie skończy w ${m[1]} s, liczy się jako dopadnięty.`],
     [/^Time's up\. (.+) moves the party on…$/, (m) => `Czas minął. ${m[1]} prowadzi drużynę dalej…`],
-    [/^📣 (.+) called out the danger: the others' hits were softer\.$/, (m) => `📣 ${m[1]} ostrzegł(a) resztę: pozostali oberwali lżej.`],
-    [/^⚠ The whole party plays this trap \((\d+) of you\)\. Fail it and it hits you\.$/, (m) => `⚠ Cała drużyna gra w tę pułapkę (${m[1]} osób). Przegrasz, to oberwiesz.`],
+    [/^\uE156 (.+) called out the danger: the others' hits were softer\.$/, (m) => `\uE156 ${m[1]} ostrzegł(a) resztę: pozostali oberwali lżej.`],
+    [/^\uE123 The whole party plays this trap \((\d+) of you\)\. Fail it and it hits you\.$/, (m) => `\uE123 Cała drużyna gra w tę pułapkę (${m[1]} osób). Przegrasz, to oberwiesz.`],
     [/^(.+) gets knocked down by the trap and climbs back up, hurt\.$/, (m) => `${m[1]} zostaje powalony(-a) przez pułapkę i wstaje, ranny(-a).`],
   );
   if (typeof I18N_STORY !== "undefined" && I18N_STORY.pats) I18N_STORY.pats.push(

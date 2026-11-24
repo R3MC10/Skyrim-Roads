@@ -6,20 +6,20 @@
 const I18N_BEAST = (() => {
   // ---- moves: [icon, English name, Polish name, [[English sentence, Polish sentence], ...]] (desc as in beastpaths.js)
   const MOVES = [
-    ["🐾", "Claws", "Pazury", [["Rake the foe with your claws.", "Rozoraj wroga pazurami."]]],
-    ["💥", "Maul", "Szarpanie", [["A savage double swipe.", "Dzikie podwójne cięcie łapami."], ["Costs stamina; can knock the foe off balance.", "Kosztuje wytrzymałość; może wytrącić wroga z równowagi."]]],
-    ["🐺", "Pounce", "Skok", [["Leap on the foe: a hard blow that can stagger it (half the time; bosses less).", "Skocz na wroga: mocny cios, który może go oszołomić (co drugi raz; bossów rzadziej)."], ["Every 3 rounds.", "Co 3 rundy."]]],
-    ["🌕", "Howl", "Wycie", [["Ordinary foes cower for 2 turns; tough ones are shaken and hit 20% softer for 3 turns.", "Zwykli wrogowie kulą się ze strachu na 2 tury; twardzi są wstrząśnięci i przez 3 tury biją o 20% słabiej."], ["Once per change.", "Raz na przemianę."]]],
-    ["🍖", "Feast", "Uczta", [["Tear into a beaten person (below 35% health) and heal from it.", "Wgryź się w pokonaną osobę (poniżej 35% zdrowia) i ulecz się."], ["Once per change.", "Raz na przemianę."]]],
-    ["↩", "Change back", "Powrót", [["Force the wolf back down.", "Zmuś wilka, żeby się cofnął."], ["You're spent for a couple of rounds.", "Przez dwie rundy jesteś wyczerpany."]]],
-    ["🦇", "Claws", "Pazury", [["Slash with a Vampire Lord's long claws.", "Tnij długimi pazurami Wampirzego Lorda."]]],
-    ["🩸", "Drain Life", "Wyssanie życia", [["Pull the life out of the foe and into you.", "Wyciągnij życie z wroga prosto do siebie."]]],
-    ["✊", "Vampiric Grip", "Wampirzy uścisk", [["Lift the foe by the throat: some damage and it's staggered.", "Unieś wroga za gardło: trochę obrażeń i jest oszołomiony."], ["Every 3 rounds.", "Co 3 rundy."]]],
-    ["💀", "Raise Dead", "Wskrzeszenie", [["A corpse claws its way up to fight for you for 6 turns.", "Trup wygrzebuje się z ziemi i walczy za ciebie przez 6 tur."], ["Once per change.", "Raz na przemianę."]]],
-    ["↩", "Change back", "Powrót", [["Fold your wings and change back.", "Złóż skrzydła i wróć do swojej postaci."]]],
-    ["💋", "Seduction", "Uwiedzenie", [["An ordinary person or beast lowers its guard and stops fighting for 3 turns.", "Zwykła osoba lub zwierzę opuszcza gardę i przestaje walczyć na 3 tury."], ["Once a fight.", "Raz na walkę."]]],
-    ["🌑", "Embrace of Shadows", "Objęcia cieni", [["Hunger stage 3+: melt into the dark.", "Głód, stopień 3+: rozpłyń się w mroku."], ["Nothing touches you for 2 turns and your next blow is a sneak attack.", "Przez 2 tury nic cię nie dosięgnie, a twój następny cios to atak z ukrycia."], ["Once a fight.", "Raz na walkę."]]],
-    ["🦷", "Bite", "Ugryzienie", [["Sink your teeth into a beaten person (below 30% health): you feed, heal and your hunger resets.", "Zatop kły w pokonanej osobie (poniżej 30% zdrowia): pożywiasz się, leczysz i głód znika."], ["Once a fight.", "Raz na walkę."]]],
+    ["", "Claws", "Pazury", [["Rake the foe with your claws.", "Rozoraj wroga pazurami."]]],
+    ["", "Maul", "Szarpanie", [["A savage double swipe.", "Dzikie podwójne cięcie łapami."], ["Costs stamina; can knock the foe off balance.", "Kosztuje wytrzymałość; może wytrącić wroga z równowagi."]]],
+    ["", "Pounce", "Skok", [["Leap on the foe: a hard blow that can stagger it (half the time; bosses less).", "Skocz na wroga: mocny cios, który może go oszołomić (co drugi raz; bossów rzadziej)."], ["Every 3 rounds.", "Co 3 rundy."]]],
+    ["", "Howl", "Wycie", [["Ordinary foes cower for 2 turns; tough ones are shaken and hit 20% softer for 3 turns.", "Zwykli wrogowie kulą się ze strachu na 2 tury; twardzi są wstrząśnięci i przez 3 tury biją o 20% słabiej."], ["Once per change.", "Raz na przemianę."]]],
+    ["", "Feast", "Uczta", [["Tear into a beaten person (below 35% health) and heal from it.", "Wgryź się w pokonaną osobę (poniżej 35% zdrowia) i ulecz się."], ["Once per change.", "Raz na przemianę."]]],
+    ["", "Change back", "Powrót", [["Force the wolf back down.", "Zmuś wilka, żeby się cofnął."], ["You're spent for a couple of rounds.", "Przez dwie rundy jesteś wyczerpany."]]],
+    ["", "Claws", "Pazury", [["Slash with a Vampire Lord's long claws.", "Tnij długimi pazurami Wampirzego Lorda."]]],
+    ["", "Drain Life", "Wyssanie życia", [["Pull the life out of the foe and into you.", "Wyciągnij życie z wroga prosto do siebie."]]],
+    ["", "Vampiric Grip", "Wampirzy uścisk", [["Lift the foe by the throat: some damage and it's staggered.", "Unieś wroga za gardło: trochę obrażeń i jest oszołomiony."], ["Every 3 rounds.", "Co 3 rundy."]]],
+    ["", "Raise Dead", "Wskrzeszenie", [["A corpse claws its way up to fight for you for 6 turns.", "Trup wygrzebuje się z ziemi i walczy za ciebie przez 6 tur."], ["Once per change.", "Raz na przemianę."]]],
+    ["", "Change back", "Powrót", [["Fold your wings and change back.", "Złóż skrzydła i wróć do swojej postaci."]]],
+    ["", "Seduction", "Uwiedzenie", [["An ordinary person or beast lowers its guard and stops fighting for 3 turns.", "Zwykła osoba lub zwierzę opuszcza gardę i przestaje walczyć na 3 tury."], ["Once a fight.", "Raz na walkę."]]],
+    ["", "Embrace of Shadows", "Objęcia cieni", [["Hunger stage 3+: melt into the dark.", "Głód, stopień 3+: rozpłyń się w mroku."], ["Nothing touches you for 2 turns and your next blow is a sneak attack.", "Przez 2 tury nic cię nie dosięgnie, a twój następny cios to atak z ukrycia."], ["Once a fight.", "Raz na walkę."]]],
+    ["", "Bite", "Ugryzienie", [["Sink your teeth into a beaten person (below 30% health): you feed, heal and your hunger resets.", "Zatop kły w pokonanej osobie (poniżej 30% zdrowia): pożywiasz się, leczysz i głód znika."], ["Once a fight.", "Raz na walkę."]]],
   ];
   // ---- perks: [English name, Polish name, English desc, Polish desc]
   const PERKS = [
@@ -35,7 +35,7 @@ const I18N_BEAST = (() => {
   ];
   // ---- short labels, reasons, log pieces
   const pl = {
-    "Beast Form": "Postać bestii", "Vampire Lord": "Wampirzy Lord", "🐺 Beast Form": "🐺 Postać bestii", "🦇 Vampire Lord": "🦇 Wampirzy Lord",
+    "Beast Form": "Postać bestii", "Vampire Lord": "Wampirzy Lord", " Beast Form": " Postać bestii", " Vampire Lord": " Wampirzy Lord",
     "Once per change": "Raz na przemianę", "Once a fight": "Raz na walkę", "Ready in 1 round": "Gotowe za 1 rundę", "Ready in 2 rounds": "Gotowe za 2 rundy", "Ready in 3 rounds": "Gotowe za 3 rundy",
     "Not enough stamina": "Za mało wytrzymałości", "Not hungry enough": "Za mały głód", "Wear it down first": "Najpierw go osłab", "It won't listen": "Nie da się uwieść",
     "Not in Beast Form": "Nie w postaci bestii",
@@ -60,19 +60,19 @@ const I18N_BEAST = (() => {
     "Risen thrall": "Wskrzeszony sługa", "Werewolf": "Wilkołak", "Vampire of the Ashen Court": "Wampir z Popielnego Dworu",
     // the two encounters
     "A howl under the moon": "Wycie pod księżycem", "The Ashen Court": "Popielny Dwór",
-    "🐺 Howl back": "🐺 Odpowiedz wyciem", "⚔️ Fight it for the hunt": "⚔️ Walcz o zdobycz", "Walk on": "Idź dalej", "⚔️ Stand and fight": "⚔️ Stań i walcz", "Run for the road": "Uciekaj na drogę",
-    "⚔️ Answer the insult": "⚔️ Odpowiedz na zniewagę", "Let them go": "Puść ich", "🩸 Accept the gift": "🩸 Przyjmij dar", "Refuse politely": "Grzecznie odmów", "⚔️ Draw steel": "⚔️ Dobądź broni",
+    " Howl back": " Odpowiedz wyciem", " Fight it for the hunt": " Walcz o zdobycz", "Walk on": "Idź dalej", " Stand and fight": " Stań i walcz", "Run for the road": "Uciekaj na drogę",
+    " Answer the insult": " Odpowiedz na zniewagę", "Let them go": "Puść ich", " Accept the gift": " Przyjmij dar", "Refuse politely": "Grzecznie odmów", " Draw steel": " Dobądź broni",
     // Character tab
-    "🐾 Beast Form moves and drawbacks": "🐾 Ruchy i słabości postaci bestii", "🩸 Hunger, powers and the Vampire Lord's moves": "🩸 Głód, moce i ruchy Wampirzego Lorda",
-    "Powers in a fight (not while changed):": "Moce w walce (gdy nie jesteś przemieniony):", "🌕 Moonblood": "🌕 Księżycowa krew", "Moonblood": "Księżycowa krew",
+    " Beast Form moves and drawbacks": " Ruchy i słabości postaci bestii", " Hunger, powers and the Vampire Lord's moves": " Głód, moce i ruchy Wampirzego Lorda",
+    "Powers in a fight (not while changed):": "Moce w walce (gdy nie jesteś przemieniony):", " Moonblood": " Księżycowa krew", "Moonblood": "Księżycowa krew",
     "Stage 1": "Stopień 1", "Stage 2": "Stopień 2", "Stage 3": "Stopień 3", "Stage 4": "Stopień 4",
     "Stage 1 (now)": "Stopień 1 (teraz)", "Stage 2 (now)": "Stopień 2 (teraz)", "Stage 3 (now)": "Stopień 3 (teraz)", "Stage 4 (now)": "Stopień 4 (teraz)",
   };
   for (let n = 1; n <= 16; n++) {
     const r = n === 1 ? "runda" : n % 10 >= 2 && n % 10 <= 4 && (n < 10 || n > 20) ? "rundy" : "rund";
     pl[`${n} round${n === 1 ? "" : "s"} left`] = `zostało: ${n} ${r}`;
-    pl[`🐺 Beast Form · ${n} round${n === 1 ? "" : "s"} left`] = `🐺 Postać bestii · zostało: ${n} ${r}`;
-    pl[`🦇 Vampire Lord · ${n} round${n === 1 ? "" : "s"} left`] = `🦇 Wampirzy Lord · zostało: ${n} ${r}`;
+    pl[` Beast Form · ${n} round${n === 1 ? "" : "s"} left`] = ` Postać bestii · zostało: ${n} ${r}`;
+    pl[` Vampire Lord · ${n} round${n === 1 ? "" : "s"} left`] = ` Wampirzy Lord · zostało: ${n} ${r}`;
   }
   // ---- whole paragraphs [English, Polish]
   const texts = [
@@ -93,8 +93,8 @@ const I18N_BEAST = (() => {
     ["The noble steps down, smiling, and the coachman draws a curved blade.", "Szlachcic wysiada z uśmiechem, a woźnica dobywa zakrzywionego ostrza."],
     ["The noble's smile shows every tooth. Shadows pour out of the carriage.", "Uśmiech szlachcica odsłania wszystkie zęby. Z powozu wylewają się cienie."],
     // Moonblood, the change, the cure, shops
-    ["🌕 The werewolf's bite burns and won't close. (Moonblood: cure it within 3 in-game days with a Cure Disease potion or at a shrine, or you'll change at the next moon.)", "🌕 Ugryzienie wilkołaka pali i nie chce się zamknąć. (Księżycowa krew: wylecz ją w ciągu 3 dni w grze miksturą leczenia chorób albo w kapliczce, inaczej przemienisz się przy następnej pełni.)"],
-    ["🐺 The moon pulls at your bones. You wake in the woods with blood on your hands: you are a werewolf now. Beast Form is in your fights, once a day. See the Character tab.", "🐺 Księżyc szarpie twoje kości. Budzisz się w lesie z krwią na rękach: jesteś teraz wilkołakiem. Postać bestii masz w walkach raz dziennie. Zajrzyj do zakładki Postać."],
+    [" The werewolf's bite burns and won't close. (Moonblood: cure it within 3 in-game days with a Cure Disease potion or at a shrine, or you'll change at the next moon.)", " Ugryzienie wilkołaka pali i nie chce się zamknąć. (Księżycowa krew: wylecz ją w ciągu 3 dni w grze miksturą leczenia chorób albo w kapliczce, inaczej przemienisz się przy następnej pełni.)"],
+    [" The moon pulls at your bones. You wake in the woods with blood on your hands: you are a werewolf now. Beast Form is in your fights, once a day. See the Character tab.", " Księżyc szarpie twoje kości. Budzisz się w lesie z krwią na rękach: jesteś teraz wilkołakiem. Postać bestii masz w walkach raz dziennie. Zajrzyj do zakładki Postać."],
     ["The fever of the bite breaks. The moon has no hold on you.", "Gorączka po ugryzieniu mija. Księżyc nie ma nad tobą władzy."],
     ["The merchant takes one look at your sunken face and bars the door. (Hunger stage 4: feed at an inn first.)", "Kupiec raz spogląda na twoją zapadniętą twarz i zamyka drzwi na rygiel. (Głód, stopień 4: najpierw się pożyw w karczmie.)"],
     ["A werewolf's bite that won't heal.", "Ugryzienie wilkołaka, które nie chce się zagoić."],
@@ -109,7 +109,7 @@ const I18N_BEAST = (() => {
     ["Keep your dogs inside tonight.", "Trzymajcie dziś psy w domu."],
     // Character tab
     ["In a turn-by-turn fight your hands are claws while you're changed. No spells, scrolls, shouts, potions or guard.", "W walce turowej, gdy jesteś przemieniony, twoje dłonie to pazury. Żadnych zaklęć, zwojów, okrzyków, mikstur ani gardy."],
-    ["⚠ Silver (the Silver Hand, Vigilants, Dawnguard) hits you 30% harder in Beast Form. When the beast lets go you're spent for 2 rounds: weaker blows and little stamina.", "⚠ Srebro (Srebrna Dłoń, Czujni, Straż Świtu) rani cię w postaci bestii o 30% mocniej. Kiedy bestia odpuszcza, przez 2 rundy jesteś wyczerpany: słabsze ciosy i mało wytrzymałości."],
+    [" Silver (the Silver Hand, Vigilants, Dawnguard) hits you 30% harder in Beast Form. When the beast lets go you're spent for 2 rounds: weaker blows and little stamina.", " Srebro (Srebrna Dłoń, Czujni, Straż Świtu) rani cię w postaci bestii o 30% mocniej. Kiedy bestia odpuszcza, przez 2 rundy jesteś wyczerpany: słabsze ciosy i mało wytrzymałości."],
     ["Your blood came from a wild werewolf's bite, not the Circle, but the cure is the same.", "Twoja krew pochodzi z ugryzienia dzikiego wilkołaka, nie od Kręgu, ale lekarstwo jest to samo."],
     ["Shops there charge more until the talk dies down (a day).", "Sklepy tam liczą drożej, dopóki gadanie nie ucichnie (dzień)."],
     ["Barely hungry. People say you look pale.", "Ledwie głodny. Ludzie mówią, że jesteś blady."],
@@ -121,12 +121,12 @@ const I18N_BEAST = (() => {
   // ---- sentence patterns [English with {markers}, Polish]
   const pats = [
     ["Seduction: the {0} lowers its guard", "Uwiedzenie: {0} opuszcza gardę"],
-    ["🥷 Hide in the brush ({0})", "🥷 Schowaj się w zaroślach ({0})"],
+    [" Hide in the brush ({0})", " Schowaj się w zaroślach ({0})"],
     ["You take 2 {0}.", "Zabierasz: {0} ×2."],
     ["In the carriage: {0} gold and a Potion of Cure Disease, kept for the servants.", "W powozie: {0} złota i mikstura leczenia chorób, trzymana dla służby."],
     ["In the carriage: {0} gold.", "W powozie: {0} złota."],
     ["In about {0} min ({1} in-game days) you'll change for the first time and be a werewolf for good.", "Za około {0} min ({1} dni w grze) przemienisz się po raz pierwszy i zostaniesz wilkołakiem na dobre."],
-    ["👀 People saw you change in {0}.", "👀 Ludzie widzieli twoją przemianę w: {0}."],
+    [" People saw you change in {0}.", " Ludzie widzieli twoją przemianę w: {0}."],
     ["Need {0} more stamina", "Brakuje {0} wytrzymałości"], ["Need {0} more magicka", "Brakuje {0} magii"],
   ];
   // the moves and perks: name, icon + name, every sentence, and the fight screen tip's first sentence ("Claws: Rake the foe...")
