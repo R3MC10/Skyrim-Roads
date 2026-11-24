@@ -3,6 +3,15 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b136", build: 136, date: "24 Nov 2026", title: "Sharp, never stretched, on every screen", items: [
+      "Pictures keep their shape on every phone, tablet and PC: nothing gets squashed or stretched any more, even when you turn your phone sideways or resize the window.",
+      "The map redraws straight away when you turn your phone or resize the window, instead of looking stretched until you touched it.",
+      "The lockpicking, pickpocketing, forge, alchemy, enchanting and ring mini-games are now sharp on high-resolution phones and tablets (they were blurry before).",
+      "The title screen, the travel scene, the dungeon map's torchlight and the fight scene are sharper on big tablets and PC monitors.",
+      "Pixel art title screen: every pixel is now the same size, so the picture no longer has uneven rows.",
+      "On a big PC monitor, the +gold number, flying loot and fight tips now show up where they should instead of off to the side (they used to push the page sideways).",
+      "Phones with a notch or camera cut-out: menus and popups now stay clear of it, also in landscape.",
+    ] },
     { id: "b135", build: 135, date: "24 Nov 2026", title: "No more flickering popups", items: [
       "Fixed: popups (like tapping an equipment slot) flickered for a split second just after they opened. They now open smoothly and stay put.",
     ] },

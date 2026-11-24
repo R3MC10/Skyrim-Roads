@@ -133,9 +133,9 @@ const IMM = (() => {
   const sfx = (n) => { try { if (typeof SOUND !== "undefined") SOUND.fx(n); } catch { /* sound is optional */ } };
   function draw(cv) {
     const L = lp; if (!L) return;
-    const g = cv.getContext("2d"), W = cv.width, H = cv.height, cx = W / 2, cy = 122;
+    const W = 300, H = 220, g = (typeof FITCANVAS !== "undefined" ? FITCANVAS.fixed(cv, W, H) : cv.getContext("2d")), cx = W / 2, cy = 122;   // sharp at any screen density (fitcanvas.js)
     const pixel = has("ART") && ART.style() === "pixel";
-    g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, W, H);
+    g.clearRect(0, 0, W, H);
     const bg = g.createRadialGradient(cx, cy, 10, cx, cy, 160); bg.addColorStop(0, "#2b2722"); bg.addColorStop(1, "#0b0b0c"); g.fillStyle = bg; g.fillRect(0, 0, W, H);
     const sx = L.shake && !reduce() ? (Math.random() - 0.5) * 3 : 0;
     // brass ring

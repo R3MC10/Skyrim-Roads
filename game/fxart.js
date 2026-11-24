@@ -318,8 +318,8 @@ const FXART = (() => {
     }
     vig.info = info;
     if (vig.canvas.parentNode !== host) host.appendChild(vig.canvas);
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
-    if (vig.canvas.width !== VW * dpr) { vig.canvas.width = VW * dpr; vig.canvas.height = VH * dpr; }
+    const dpr = typeof FITCANVAS !== "undefined" ? Math.min(6, FITCANVAS.ratio(host, VW)) : Math.min(2, window.devicePixelRatio || 1);   // sharp in a wide panel too
+    if (vig.canvas.width !== Math.round(VW * dpr)) { vig.canvas.width = Math.round(VW * dpr); vig.canvas.height = Math.round(VH * dpr); }
     paint(performance.now());
     if (!vig.raf && !info.reduce) vig.raf = requestAnimationFrame(loop);
   }
