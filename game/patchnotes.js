@@ -5,6 +5,7 @@ const PATCHNOTES = (() => {
   const LIST = [
     { id: "b146-namefix", build: 146, date: "24 Nov 2026", title: "Names are just names", items: [
       "A friend with \"Dragon\" (or \"Wolf\", \"Atronach\"...) in their name no longer shows up as that creature in your fights. Players are always drawn as people.",
+      "A friend's dog (Meeko) shows up as a dog in your shared fights, not as a person.",
     ] },
     { id: "b144-dawnguard", build: 144, date: "24 Nov 2026", title: "The vampire war", items: [
       "New quest line from level 12: Isran at Fort Dawnguard (near Riften) sends you into Dimhollow Crypt, where something sleeps in a sealed coffin. It ends at Castle Volkihar, a black keep on an islet off the coast past Solitude.",
