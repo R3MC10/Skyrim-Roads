@@ -2041,6 +2041,40 @@ html.a11y-still #tbf .fc *,html.a11y-still #tbf.fc-aiming .tbu.fc-tgt{animation:
 html.art-pixel .ti-box,html.art-pixel .ti-card,html.art-pixel .ti-stats{border-radius:0}html.art-pixel .ti-box{border-left-width:3px}
 #side[data-tab=log] .ti-box{color:#3b2e1e}
 html.a11y-hc .ti-box,html.a11y-hc .ti-box i,html.a11y-hc .ti-what{color:#ece6d8}
+/* homestead rooms (hsrooms.js): raid alert, party guest card, cut-open inside view */
+.hs .card.hsraid{border:1px solid rgba(228,110,90,.55);background:linear-gradient(180deg,rgba(120,30,20,.35),rgba(20,10,8,.55));box-shadow:0 0 14px rgba(228,110,90,.18) inset;margin:0 0 8px}
+.hs .card.hsraid h3{color:#ffb39a;margin:0 0 4px;letter-spacing:.06em;text-transform:uppercase;font-size:14px}
+.hs .card.hsraid .hsbtns{margin-top:6px}.hs .card.hsraid .btn{flex:1;min-height:44px}
+.hs .card.hsguest{border:1px solid rgba(214,178,94,.4);background:rgba(214,178,94,.07);margin:0 0 8px}
+.hs .card.hsguest h3{color:#f1cd72;margin:0 0 4px;font-size:14px;letter-spacing:.06em;text-transform:uppercase}
+.hs img.art.scene.hsin{margin:2px 0 8px;border-radius:4px;box-shadow:0 1px 6px rgba(0,0,0,.45)}
+.hs .sub.hslast{font-style:italic;color:#d9c69c}
+@media (min-width:900px){.hs img.art.scene.hsin,.hs img.art.scene.hsart{max-width:720px;display:block;margin-left:auto;margin-right:auto}}
+html.art-pixel .hs .card.hsraid,html.art-pixel .hs .card.hsguest,html.art-pixel .hs img.art.scene.hsin{border-radius:0}
+/* phones: messages and banners sit low, above the bottom bar, and never stack more than two deep, so they don't cover screen tabs and pictures */
+@media (max-width:700px){
+  #hudlog{top:auto;bottom:calc(84px + env(safe-area-inset-bottom));flex-direction:column-reverse;max-width:min(86vw,440px)}
+  #hudlog .hlog~.hlog{display:none}
+  #hudlog .toast{font-size:13px;padding:5px 22px 5px 9px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  #hudlog .toast.withic{display:flex}
+  #pbanners{top:auto;bottom:calc(150px + env(safe-area-inset-bottom))}
+  #pbanners>*~*{display:none}
+}
+/* the world remembers you (livingworld.js): who's about, doors, whispers, news of the realm */
+.lw-folk{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;margin:0 0 8px}
+.lw-who{display:grid;grid-template-columns:auto 1fr;column-gap:6px;align-items:center;padding:5px 8px;border:1px solid rgba(214,178,94,.25);border-radius:8px;background:rgba(20,16,12,.35);min-width:0}
+.lw-who span{grid-row:span 2;font-size:16px}.lw-who b{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lw-who small{font-size:11.5px;color:var(--mute);line-height:1.25}
+.lw-who.at-home{opacity:.6}.lw-who.at-inn{border-color:rgba(232,145,58,.55)}
+.lw-where{margin:0 0 8px;font-size:13px;color:var(--mute);font-style:italic}.lw-where.bad{color:var(--ember);font-style:normal}
+.lw-inn{margin:0 0 8px}
+.lw-noticeboard{display:flex;gap:10px;align-items:flex-start;margin:8px 0;padding:8px;border:1px solid #5a4028;border-radius:10px;background:rgba(58,42,26,.35)}
+.lw-noticeboard>div{flex:1;min-width:0}.lw-noticeboard b{font-size:14px}
+.lw-board{width:96px;height:auto;flex:none}.lw-board.px,.lw-door.px{image-rendering:pixelated}
+.lw-feed{display:grid;gap:4px;margin:4px 0 8px}
+.lw-news{display:flex;gap:8px;align-items:flex-start}.lw-news span{flex:none;width:20px;text-align:center}.lw-news p{margin:0;font-size:13px;line-height:1.35;min-width:0}.lw-news small{display:block;font-size:11px;color:var(--mute)}
+.lw-doorrow .lw-door{width:26px;height:34px;flex:none;margin-right:6px}.lw-doorrow.bad .t{color:var(--ember)}.lw-doorrow .t span{white-space:normal}
+.lw-wh .t span,.lw-ask .t span{white-space:normal}.lw-wh.on{border-color:var(--gold)}
+html.art-pixel .lw-who,html.art-pixel .lw-noticeboard{border-radius:0}
 /* [great events] greatevents.js: the banner with a countdown on the map screen, phase bars, the event sheet */
 #gev:empty{display:none}
 .gev-card{display:flex;flex-direction:column;gap:6px;margin:8px 0}
@@ -2204,6 +2238,58 @@ html.art-pixel .m2-dir{box-shadow:2px 2px 0 rgba(0,0,0,.6)}
 .m2-hide{display:none!important}
 .m2-jq{margin:2px 0 10px!important;width:100%}
 @media (max-width:440px){#sky .sky-cols{grid-template-columns:minmax(0,1fr) 2.5em 2.3em 2.9em;gap:5px}#sky .sky-row{padding:8px 6px 8px 8px;font-size:15px}#sky .sky-row .nm img.art.ico{margin-right:5px}#sky .sky-row .nm .eqm{margin-right:2px}}
+/* ==== HUD tidy (hud2.js): one message lane, objective line, docked ★, one floating button, bars fade when full ==== */
+#hudlane{position:fixed;left:8px;top:calc(env(safe-area-inset-top) + 8px);z-index:25;width:min(82vw,440px);display:flex;flex-direction:column;align-items:flex-start;gap:6px;pointer-events:none;transition:top .18s ease}
+#hudlane .hl-log:empty,#hudlane .hl-say:empty{display:none}
+#hudlane #hudlog{position:static;top:auto;left:auto;max-width:100%;width:100%}
+#hudlane #hudlog .toast{max-width:100%;overflow-wrap:anywhere}
+#hudlane #hudlog .hlog{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#hudlane .hl-say{display:flex;flex-direction:column;align-items:flex-start;gap:6px;max-width:100%}
+#hudlane :is(.bark,.folbark){position:static;top:auto;left:auto;max-width:100%;box-sizing:border-box}
+#hudlane .hl-say>.gone{opacity:0;transition:opacity .6s}
+/* the objective: a thin line hanging under the compass */
+.hudobj{position:absolute;top:40px;left:10px;right:52px;z-index:3;display:flex;justify-content:center;align-items:center;gap:6px;height:20px;pointer-events:none;
+  font:500 12px/20px "Barlow Semi Condensed",system-ui,sans-serif;color:#efe8d6;text-shadow:0 1px 2px #000,0 0 6px #000;white-space:nowrap;overflow:hidden}
+.hudobj.hide{display:none}
+.hudobj .ho-d{flex:none;width:6px;height:6px;background:#f1cd72;transform:rotate(45deg);box-shadow:0 0 6px rgba(241,205,114,.6)}
+.hudobj .ho-t{min-width:0;overflow:hidden;text-overflow:ellipsis;padding:0 10px;background:linear-gradient(90deg,transparent,rgba(6,7,9,.55) 18%,rgba(6,7,9,.55) 82%,transparent)}
+.hudobj .ho-t b{font-weight:600;letter-spacing:.03em}
+.hudobj .ho-w{color:rgba(233,226,208,.7);margin-left:6px}.hudobj .ho-w::before{content:"· "}
+.hudobj .ho-t small{font:700 10px/1 "Barlow Condensed",sans-serif;letter-spacing:.18em;text-transform:uppercase;color:#f1cd72;margin-right:7px}
+.hudobj.flash .ho-t{background:linear-gradient(90deg,transparent,rgba(6,7,9,.82) 12%,rgba(6,7,9,.82) 88%,transparent)}
+.hudobj.flash .ho-d{animation:hudpulse 1.1s ease-in-out 3}
+html.art-pixel .hudobj .ho-d{box-shadow:none}
+/* map buttons: one slim capsule instead of four loose circles; the compass gets the room back */
+.mapbtns{gap:0;border-radius:19px;background:rgba(8,9,11,.66);box-shadow:0 0 0 1px rgba(226,187,100,.38),0 2px 8px rgba(0,0,0,.45);overflow:hidden}
+.mapbtns .iconbtn{width:36px;height:36px;border:0;border-radius:0;background:transparent;box-shadow:none;font-size:18px}
+.mapbtns .iconbtn+.iconbtn{border-top:1px solid rgba(226,187,100,.2)}
+.mapbtns .sneakbtn.on,.mapbtns .sneakbtn.huntbtn.on{box-shadow:inset 0 0 0 1px rgba(226,187,100,.55)}
+.compass{right:52px}
+html.art-pixel .mapbtns{border-radius:0}
+/* bars: like Skyrim, a full bar fades away; tap the bars to see them */
+.hb.full{opacity:0;transition:opacity .9s ease .6s}
+.vitals.peek .hb.full,.vitals:focus-within .hb.full{opacity:.6;transition-delay:0s}
+@media (hover:hover){.vitals:hover .hb.full{opacity:.6;transition-delay:0s}}
+.hline .carry.light{opacity:0;transition:opacity .6s}
+.vitals.peek .hline .carry.light{opacity:1}
+@media (hover:hover){.vitals:hover .hline .carry.light{opacity:1}}
+/* ★ favourites lives in the top bar next to Search and Menu */
+.top{grid-template-columns:auto minmax(0,1fr) auto auto auto auto;grid-template-areas:"l w f v s g" "l m m m m m"}
+.top #favTop{grid-area:v;width:38px;height:38px;border-radius:50%;color:#f1cd72;flex:none;background:rgba(10,11,13,.55);border:1px solid rgba(226,187,100,.38);box-shadow:inset 0 0 8px rgba(0,0,0,.6)}
+.top #favTop .hico{width:19px;height:19px;fill:rgba(241,205,114,.18)}
+body:not(.fav-docked) #favTop,body.fav-docked #favBtn{display:none!important}
+html.art-pixel .top #favTop{border-radius:0}
+@media (max-width:374px){.top .iconbtn .ibl{display:none}.top{column-gap:6px}}
+/* the one floating button: smaller, and it moves (hud2.js sets right/bottom) */
+.twbtn{width:46px;height:46px;transition:opacity .2s,transform .2s,bottom .25s ease,right .25s ease}
+.twbtn svg{width:27px;height:27px}
+html.art-pixel .twbtn,html.art-pixel .favbtn{border-radius:0}
+body:has(#twBtn) .app{padding-bottom:calc(140px + env(safe-area-inset-bottom))}
+/* the bottom bar: names fit (hud2.js shrinks long ones), no keyboard letters on small screens */
+.mn-bar .tab .mn-l{text-overflow:ellipsis}
+@media (max-width:600px){.tab .hk{display:none!important}}
+@media (max-width:440px){.mn-bar .tab{letter-spacing:0}.mn-bar .tab .mn-l{text-transform:none;font-size:10.5px;letter-spacing:.01em}}
+@media (prefers-reduced-motion:reduce){#hudlane,.twbtn,.hb.full{transition:none}.hudobj.flash .ho-d{animation:none}}
 </style>
 <script src="access.js"></script>
 </head>
@@ -2285,6 +2371,7 @@ html.art-pixel .m2-dir{box-shadow:2px 2px 0 rgba(0,0,0,.6)}
 <script src="market.js"></script>
 <script src="halls.js"></script>
 <script src="homestead.js"></script>
+<script src="hsrooms.js"></script>
 <script src="mp.js"></script>
 <script src="pvpdeath.js"></script>
 <script src="coop.js"></script>
@@ -2335,6 +2422,7 @@ html.art-pixel .m2-dir{box-shadow:2px 2px 0 rgba(0,0,0,.6)}
 <script src="sneakmode.js"></script>
 <script src="vision.js"></script>
 <script src="rumours.js"></script>
+<script src="livingworld.js"></script>
 <script src="motion.js"></script>
 <script src="favwheel.js"></script>
 <script src="craftgames.js"></script>
@@ -2358,6 +2446,8 @@ html.art-pixel .m2-dir{box-shadow:2px 2px 0 rgba(0,0,0,.6)}
 <script src="desktop.js"></script>
 <script src="pcupdate.js"></script>
 <script src="i18n_story.js"></script>
+<script src="i18n_hsrooms.js"></script>
+<script src="i18n_living.js"></script>
 <script src="i18n_bonds.js"></script>
 <script src="i18n_menus2.js"></script>
 <script src="i18n.js"></script>
@@ -2367,6 +2457,7 @@ html.art-pixel .m2-dir{box-shadow:2px 2px 0 rgba(0,0,0,.6)}
 <script src="search.js"></script>
 <script src="remind.js"></script>
 <script src="tooltip.js"></script>
+<script src="hud2.js"></script>
 <script src="ui.js"></script>
 </body>
 </html>

@@ -12,6 +12,8 @@
      potions) or, for the storage room, keeps 30 things safe even if you die.
    - Perks (perkfx.js): Carpenter (Smithing, fewer materials), Woodsman (Athletics, more from gathering),
      Landed Thane (Etiquette, cheaper deeds and stewards), Estate Income (Mercantile, gold from every wing).
+   Rooms beyond the wings (garden, cellar), stations, display cases, followers living there, raids and party visits
+   live in hsrooms.js (HSROOMS); this file asks it through XR() so it still works without it.
    Lives in the save as s.homestead[plotId]. The screen is a town section in the plot's town (ui.js asks
    HOMESTEAD.sections / names / townHTML / act). */
 const HOMESTEAD = (() => {
@@ -59,7 +61,7 @@ const HOMESTEAD = (() => {
     kitchen: ["Kitchen", "An oven, a larder and a pot that's always on. Every in-game day: 2 hot meals.", { log: 12, stone: 8, clay: 8, nails: 20, fittings: 2 }],
     trophy: ["Trophy room", "Mounted heads and dragon bones. Visitors pay to look: 20 gold a day, +10 for each dragon you've slain (up to 150).", { log: 14, stone: 8, nails: 30, hinge: 2, fittings: 4 }],
     enchanter: ["Enchanter's tower", "A tall tower with a soul-trap circle. Every in-game day: 1 filled Common Soul Gem.", { log: 8, stone: 20, clay: 6, glass: 2, fittings: 4, lock: 1 }],
-    alchemy: ["Alchemy tower", "A tower full of retorts and drying herbs. Every in-game day: 2 potions.", { log: 8, stone: 18, clay: 6, glass: 4, fittings: 2 }],
+    alchemy: ["Alchemy lab", "A tower full of retorts and drying herbs. Every in-game day: 2 potions.", { log: 8, stone: 18, clay: 6, glass: 4, fittings: 2 }],
     storage: ["Storage room", "Chests and barrels. Keeps 30 things safe even if you die, and the other wings keep 2 more days of goods.", { log: 18, stone: 6, nails: 30, hinge: 4, lock: 2 }],
   };
   const GREEN = ["ing_blue_flower", "ing_lavender", "ing_wheat", "ing_garlic", "ing_red_flower", "ing_purple_flower", "ing_juniper", "ing_snowberries", "ing_tundra_cotton", "ing_thistle"];
@@ -67,12 +69,15 @@ const HOMESTEAD = (() => {
   const POTIONS = ["potion_health", "potion_magicka", "potion_stamina"];
 
   const fx = (s, k) => (typeof PFX !== "undefined" ? PFX.num(s, k) : 0);
+  const XR = () => (typeof HSROOMS !== "undefined" ? HSROOMS : null);   // rooms, raids, residents, visits (hsrooms.js)
+  const defOf = (what) => STAGES[what] || WINGS[what] || XR()?.ROOMS[what] || null;
+  const slots = (s) => (XR() ? XR().slots(s) : WING_SLOTS);
   const now = () => (typeof G !== "undefined" ? G.now() : Date.now() / 1000);
   const rint = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
   const pick = (a) => a[Math.floor(Math.random() * a.length)];
   const itemName = (id) => D.ITEMS[id]?.name || id;
   const all = (s) => (s.homestead = s.homestead || {});
-  const plot = (s, pid) => all(s)[pid] || null;
+  const plot = (s, pid) => { const h = all(s)[pid] || null; return h && XR() ? XR().norm(h) : h; };
   const owned = (s) => Object.keys(all(s)).filter((k) => PLOTS[k]);
   const here = (s) => BY_TOWN[s.location] || null;
   const wanted = (s) => typeof TOWNS !== "undefined" && TOWNS.wanted && TOWNS.wanted(s);
@@ -88,7 +93,7 @@ const HOMESTEAD = (() => {
   const wingsOf = (h) => (h?.wings || []);
   const stage = (h) => (!h ? 0 : h.hall ? 2 : h.small ? 1 : 0);
   const stewardHome = (s, pid) => !!plot(s, pid)?.steward && s.follower?.id !== stewardId(pid);
-  const keepDays = (s, pid) => { const h = plot(s, pid); return 1 + (stewardHome(s, pid) ? 2 : 0) + (wingsOf(h).includes("storage") ? 2 : 0); };
+  const keepDays = (s, pid) => { const h = plot(s, pid); return 1 + (stewardHome(s, pid) ? 2 : 0) + (wingsOf(h).includes("storage") ? 2 : 0) + ((h?.rooms || []).includes("cellar") ? 1 : 0); };
 
   // ---------------------------------------------------------------- deed
   function buyDeed(s, t = now()) {
@@ -144,24 +149,25 @@ const HOMESTEAD = (() => {
     const h = plot(s, pid); if (!h) return "You don't own this land.";
     if (what === "small") return h.small ? "The small house is already standing." : null;
     if (what === "hall") return h.hall ? "The main hall is built." : !h.small ? "Build the small house first." : null;
+    if (XR()?.ROOMS[what]) return XR().canBuild(s, pid, what);
     if (!WINGS[what]) return "You can't build that.";
     if (!h.hall) return "Wings go onto the main hall. Build it first.";
     if (wingsOf(h).includes(what)) return `The ${WINGS[what][0].toLowerCase()} is already built.`;
-    if (wingsOf(h).length >= WING_SLOTS) return "All three wing spaces are used.";
+    if (wingsOf(h).length >= slots(s)) return `All ${slots(s) === 3 ? "three" : slots(s)} wing spaces are used.`;
     return null;
   }
-  const costOf = (s, what) => need(s, (STAGES[what] || WINGS[what])[2]);
+  const costOf = (s, what) => need(s, defOf(what)[2]);
   function build(s, pid, what, t = now()) {
     const e = canBuild(s, pid, what); if (e) return { err: e };
     if (s.location !== PLOTS[pid].town) return { err: `You build at ${PLOTS[pid].name}, near ${PLOTS[pid].town}.` };
     const h = plot(s, pid), mats = costOf(s, what), lack = missing(h, mats);
     if (lack.length) return { err: `You still need ${lack.join(", ")}.` };
     for (const [k, n] of Object.entries(mats)) h.stock[k] -= n;
-    const nm = (STAGES[what] || WINGS[what])[0];
-    if (STAGES[what]) h[what] = t; else { h.wings = [...wingsOf(h), what]; h.col[what] = t; }
+    const nm = defOf(what)[0];
+    if (STAGES[what]) h[what] = t; else if (WINGS[what]) { h.wings = [...wingsOf(h), what]; h.col[what] = t; } else { h.rooms = [...(h.rooms || []), what]; if (what === "garden") h.xcol.garden = t; }
     const ups = G.useSkill(s, "Smithing", 40);
     G.note(s, `🏡 Built the ${nm.toLowerCase()} at ${PLOTS[pid].name}.`);
-    return { title: `${PLOTS[pid].name}: ${nm}`, text: `The ${nm.toLowerCase()} stands. ${(STAGES[what] || WINGS[what])[1]}${ups.length ? " " + ups.join(". ") + "." : ""}` };
+    return { title: `${PLOTS[pid].name}: ${nm}`, text: `The ${nm.toLowerCase()} stands. ${defOf(what)[1]}${ups.length ? " " + ups.join(". ") + "." : ""}` };
   }
 
   // ---------------------------------------------------------------- living there
@@ -169,14 +175,15 @@ const HOMESTEAD = (() => {
     const h = plot(s, pid); if (!h?.small) return { err: "Build the small house first: then there's a bed." };
     if (s.location !== PLOTS[pid].town) return { err: "Your bed is at your homestead." };
     G.setHealth(s, G.maxHealth(s), t); if (typeof WFX !== "undefined") WFX.warmUp(s, 100, t);
-    s.rested = t + RESTED; s.restBonus = 0.1;   // [Skyrim] your own bed: Well Rested +10%
-    return { text: "You sleep in your own bed. Fully healed and Well Rested: skills improve 10% faster for 40 minutes.", fx: "click" };
+    const r = XR() ? XR().restOf(h) : { bonus: 0.1, mult: 1 };   // [OURS] the main hall's hearth: +15%; a kitchen breakfast: 1.5x as long
+    s.rested = t + RESTED * r.mult; s.restBonus = r.bonus;   // [Skyrim] your own bed: Well Rested +10%
+    return { text: `You sleep in your own bed${h.hall ? " by the hearth" : ""}. Fully healed and Well Rested: skills improve ${Math.round(r.bonus * 100)}% faster for ${Math.round(RESTED * r.mult / 60)} minutes.${r.mult > 1 ? " Breakfast from the kitchen sees you off." : ""}`, fx: "click" };
   }
   /* what one wing makes in one day: { items: [[id, n]], gold, study } */
   function produce(s, w) {
     const r = { items: [], gold: 0, lines: [] };
     const add = (id, n) => { if (D.ITEMS[id]) r.items.push([id, n]); };
-    if (w === "armory") add(D.ITEMS.arrow_steel ? "arrow_steel" : "arrow_iron", 12);
+    if (w === "armory") add(D.ITEMS.arrow_steel ? "arrow_steel" : "arrow_iron", 12 + (fx(s, "hsforge") ? 6 : 0));   // Hearth Forge: 6 more
     else if (w === "greenhouse") { const pool = GREEN.filter((i) => D.ITEMS[i]), k = G.P(s, "green_thumb") ? 2 : 1; for (let i = 0; i < 6; i++) add(pick(pool), k); }
     else if (w === "kitchen") { const pool = MEALS.filter((i) => D.ITEMS[i]); for (let i = 0; i < 2; i++) add(pool.length ? pick(pool) : "potion_stamina", 1); }
     else if (w === "trophy") r.gold += Math.min(150, 20 + 10 * (s.dragons || 0));
@@ -206,6 +213,8 @@ const HOMESTEAD = (() => {
       h.col[w] = raw > days ? t - ((t - h.col[w]) % DAY) : h.col[w] + days * DAY;   // goods past the cap are lost
       for (let d = 0; d < days; d++) { const r = produce(s, w); gold += r.gold; lines.push(...r.lines); for (const [id, n] of r.items) got[id] = (got[id] || 0) + n; }
     }
+    const ex = XR() ? XR().collectExtra(s, pid, t, got) : null;   // garden, display cases, residents, raid spoils
+    if (ex) { gold += ex.gold; lines.push(...ex.lines); any = any || ex.any; }
     if (!any) return { err: "Nothing is ready yet. The wings make something once an in-game day." };
     for (const [id, n] of Object.entries(got)) G.give(s, id, n);
     s.gold += gold;
@@ -321,7 +330,8 @@ const HOMESTEAD = (() => {
   function scene(pid, h, opts = {}) {
     const p = PLOTS[pid], L = LOOKS[p.look], night = typeof G !== "undefined" && G.isNight(now());
     const wings = wingsOf(h), st = h ? stage(h) : 0, sh = h && h.steward && !opts.away;
-    const key = `hstead|${pid}|${st}|${wings.join(",")}|${sh ? 1 : 0}|${Math.min(6, Math.ceil((h?.stock?.log || 0) / 6))}|${Math.min(6, Math.ceil((h?.stock?.stone || 0) / 6))}|${night ? "n" : "d"}|${opts.thumb || ""}`;
+    const xr = XR() && h ? `${(h.rooms || []).join(",")}|${(h.beds || []).map((b) => b?.item || "").join(",")}|${(h.res || []).length}|${h.raid?.kind || ""}|${opts.ready ? 1 : 0}` : "";
+    const key = `hstead|${pid}|${st}|${wings.join(",")}|${xr}|${sh ? 1 : 0}|${Math.min(6, Math.ceil((h?.stock?.log || 0) / 6))}|${Math.min(6, Math.ceil((h?.stock?.stone || 0) / 6))}|${night ? "n" : "d"}|${opts.thumb || ""}`;
     const draw = (g, H) => {
       H.sky(g, W, HT * 0.62, night ? "night" : L.sky);
       if (night) { g.fillStyle = "#f4f6f8"; const r = H.seeded(pid); for (let i = 0; i < 30; i++) g.fillRect(r() * W, r() * HT * 0.4, 1.2, 1.2); }
@@ -350,7 +360,9 @@ const HOMESTEAD = (() => {
         if (wings[0]) wingArt(g, H, wings[0], cx - 102, base, 48, night);
         if (wings[1]) wingArt(g, H, wings[1], cx - 154, base, 48, night);
         if (wings[2]) wingArt(g, H, wings[2], cx + 56, base, 48, night);
+        if (wings[3]) wingArt(g, H, wings[3], cx + 108, base, 44, night);   // Master Builder's fourth wing
       }
+      if (XR()) XR().drawExtras(g, H, { h, base, cx, W, HT, ready: opts.ready });
       if (sh) person(g, H, cx + (st >= 2 ? 22 : 40), base + 2);
       if (L.fog) { g.fillStyle = "rgba(220,225,215,.22)"; g.fillRect(0, HT * 0.62, W, 16); g.fillRect(0, HT * 0.8, W, 10); }
       if (L.snow) { g.fillStyle = "#f4f6f8"; const r = H.seeded(pid + "s"); for (let i = 0; i < 40; i++) g.fillRect(r() * W, r() * HT, 1.6, 1.6); }
@@ -358,10 +370,12 @@ const HOMESTEAD = (() => {
       if (ART.drawingStyle() !== "pixel") { g.fillStyle = "rgba(43,32,22,.85)"; g.fillRect(W / 2 - 85, 7, 170, 18); g.fillStyle = "#e9d7a8"; g.font = "bold 12px Georgia, serif"; g.textAlign = "center"; g.fillText(p.name, W / 2, 20); g.textAlign = "left"; }
       g.strokeStyle = "#3b2c1e"; g.lineWidth = 3; g.strokeRect(1.5, 1.5, W - 3, HT - 3);
     };
-    return ART.html(W, HT, draw, { key, cls: "scene hsart", alt: `${p.name}: ${["bare land", "small house", "main hall"][st]}${wings.length ? " with " + wings.map((w) => WINGS[w][0]).join(", ") : ""}` });
+    const extra = (h?.rooms || []).map((r) => XR()?.ROOMS[r]?.[0]).filter(Boolean);
+    return ART.html(W, HT, draw, { key, cls: "scene hsart", alt: `${p.name}: ${["bare land", "small house", "main hall"][st]}${wings.length ? " with " + wings.map((w) => WINGS[w][0]).join(", ") : ""}${extra.length ? ", " + extra.join(", ") : ""}${h?.raid ? " (raiders at the gate)" : ""}` });
   }
   /* a small picture of one stage or wing, for the build list */
   function thumb(what) {
+    if (XR()?.ROOMS[what]) return XR().thumb(what);
     const night = false;
     return ART.html(64, 46, (g, H) => {
       H.sky(g, 64, 46, "day"); g.fillStyle = "#8c9a5a"; g.fillRect(0, 36, 64, 10);
@@ -375,7 +389,7 @@ const HOMESTEAD = (() => {
 
   // ---------------------------------------------------------------- the screen (a town section)
   let view = "build";
-  const VIEWS = [["build", "Build"], ["gather", "Gather"], ["bench", "Workbench"], ["home", "Home"], ["steward", "Steward"]];
+  const VIEWS = () => [["build", "Build"], ["gather", "Gather"], ["bench", "Workbench"], ["home", "Home"], ...(typeof HSROOMS !== "undefined" ? HSROOMS.VIEWS : []), ["steward", "Steward"]];
   const CQ = () => (typeof CRAFTQOL !== "undefined" ? CRAFTQOL : null);
   const sections = (town) => (BY_TOWN[town] ? ["homestead"] : []);
   const names = (s, town) => (BY_TOWN[town] ? { homestead: `🏡 ${PLOTS[BY_TOWN[town]].name}` } : {});
@@ -389,6 +403,8 @@ const HOMESTEAD = (() => {
   function townHTML(s, esc) {
     const pid = here(s); if (!pid) return { note: "", body: "" };
     const p = PLOTS[pid], h = plot(s, pid), t = now();
+    if (h && XR()) XR().tick(s, pid, t);
+    const guest = XR() ? XR().guestHTML(s, esc) : "";   // your party leader's homestead here
     if (!h) {
       const price = deedPrice(s), ownList = owned(s).map((k) => PLOTS[k].name);
       return { note: `The Jarl's steward in ${p.town} sells the deed to land nearby. Build your own house on it, stage by stage.`,
@@ -396,9 +412,9 @@ const HOMESTEAD = (() => {
           <p class="sub">Build a small house, then a main hall, then three wings of your choice. You gather the logs, stone and clay here and make the nails, hinges and locks yourself.</p>
           <button class="btn pri" style="width:100%" data-act="hsact" data-id="deed" data-c="${pid}" ${s.gold >= price && !wanted(s) ? "" : "disabled"}>Buy the deed · ${price.toLocaleString()} gold</button>
           ${s.gold < price ? `<p class="sub">You have ${s.gold.toLocaleString()} gold.</p>` : ""}${ownList.length ? `<p class="sub">You own: ${ownList.map(esc).join(", ")}.</p>` : ""}</div>
-          <p class="sub hsother">Other plots: ${Object.entries(PLOTS).filter(([k]) => k !== pid).map(([, o]) => `${esc(o.name)} (${esc(o.town)})`).join(" · ")}</p></div>` };
+          ${guest}<p class="sub hsother">Other plots: ${Object.entries(PLOTS).filter(([k]) => k !== pid).map(([, o]) => `${esc(o.name)} (${esc(o.town)})`).join(" · ")}</p></div>` };
     }
-    const tabs = `<div class="chips hstabs">${VIEWS.map(([k, l]) => `<button class="chip ${view === k ? "on" : ""}" data-act="hsact" data-id="view" data-c="${k}">${l}</button>`).join("")}</div>`;
+    const tabs = `<div class="chips hstabs">${VIEWS().map(([k, l]) => `<button class="chip ${view === k ? "on" : ""}" data-act="hsact" data-id="view" data-c="${k}">${l}</button>`).join("")}</div>`;
     const st = stage(h), wings = wingsOf(h);
     let b = "";
     if (view === "build") {
@@ -406,9 +422,13 @@ const HOMESTEAD = (() => {
         return `<div class="item hsrow ${ok ? "" : "locked"}">${thumb(id)}<div class="t">${esc(def[0])}<span>${esc(def[1])}</span>${ok ? matRow(h, mats, esc) : `<span class="hswhy">${esc(why)}</span>`}</div>${ok ? btn("build", id, "Build", !lack.length, "pri") : ""}</div>`; };
       const done = (id, def) => `<div class="item hsrow on">${thumb(id)}<div class="t">✔ ${esc(def[0])}<span>${esc(def[1])}</span></div></div>`;
       b += `<h3 class="hsh">House</h3>` + ["small", "hall"].map((id) => (h[id] ? done(id, STAGES[id]) : row(id, STAGES[id], !canBuild(s, pid, id), canBuild(s, pid, id)))).join("");
-      b += `<h3 class="hsh">Wings · ${wings.length}/${WING_SLOTS}</h3><p class="sub" style="margin-top:0">${h.hall ? "Three spaces. A wing can't be torn down, so pick the ones you'll use." : "Wings go onto the main hall."}</p>`
-        + wings.map((w) => done(w, WINGS[w])).join("")
-        + (wings.length < WING_SLOTS ? Object.keys(WINGS).filter((w) => !wings.includes(w)).map((w) => row(w, WINGS[w], !!h.hall, "Needs the main hall.")).join("") : "");
+      const ns = slots(s), stTxt = (w) => (XR()?.STATION[w] ? [WINGS[w][0], `${WINGS[w][1]} ${XR().STATION[w]}`] : WINGS[w]);
+      b += `<h3 class="hsh">Wings · ${wings.length}/${ns}</h3><p class="sub" style="margin-top:0">${h.hall ? `${ns === 3 ? "Three" : ns} spaces. A wing can't be torn down, so pick the ones you'll use.` : "Wings go onto the main hall."}</p>`
+        + wings.map((w) => done(w, stTxt(w))).join("")
+        + (wings.length < ns ? Object.keys(WINGS).filter((w) => !wings.includes(w)).map((w) => row(w, stTxt(w), !!h.hall, "Needs the main hall.")).join("") : "");
+      if (XR()) { const R = XR().ROOMS, rooms = h.rooms || [];
+        b += `<h3 class="hsh">Rooms</h3><p class="sub" style="margin-top:0">These don't use a wing space.</p>`
+          + Object.keys(R).map((r) => (rooms.includes(r) ? done(r, R[r]) : row(r, R[r], !XR().canBuild(s, pid, r), XR().canBuild(s, pid, r)))).join(""); }
       b += `<h3 class="hsh">At the plot</h3>` + stockHTML(h, esc);
     } else if (view === "gather") {
       b += Object.entries(GATHER).map(([k, g]) => { const left = cdLeft(h, k, t), tool = g[3] && !count(s, g[3]);
@@ -426,13 +446,16 @@ const HOMESTEAD = (() => {
     } else if (view === "home") {
       if (!h.small) b += `<p class="sub">Nothing to live in yet. Build the small house first.</p>`;
       else {
-        b += `<div class="item"><div class="t">🛏 Your bed<span>Full health and Well Rested (+10% skills for 40 minutes)</span></div>${btn("sleep", pid, "Sleep", true, "pri")}</div>`;
-        const rd = ready(s, pid, t), made = wings.filter((w) => w !== "storage" || fx(s, "hsrent"));
-        if (made.length) {
+        { const r = XR() ? XR().restOf(h) : { bonus: 0.1, mult: 1 };   // the real bonus: hearth +15%, kitchen 1.5x as long
+          b += `<div class="item"><div class="t">🛏 Your bed<span>Full health and Well Rested (+${Math.round(r.bonus * 100)}% skills for ${Math.round(RESTED * r.mult / 60)} minutes)</span></div>${btn("sleep", pid, "Sleep", true, "pri")}</div>`; }
+        const rd = ready(s, pid, t), made = wings.filter((w) => w !== "storage" || fx(s, "hsrent")), xrd = XR() ? XR().extraReady(s, pid, t) : {};
+        if (made.length || Object.keys(xrd).length) {
           b += `<h3 class="hsh">From the wings</h3><p class="sub" style="margin-top:0">Goods pile up for ${keepDays(s, pid)} in-game day${keepDays(s, pid) > 1 ? "s" : ""}${stewardHome(s, pid) ? " (your steward keeps them)" : ""}.</p>`
             + made.map((w) => { const nxt = (h.col[w] || t) + DAY - t; return `<div class="item"><div class="t">${esc(WINGS[w][0])}<span>${rd[w] > 0 ? `<b class="hsready">${rd[w]} day${rd[w] > 1 ? "s" : ""} ready</b>` : `Next in ${Math.max(1, Math.ceil(nxt / 60))} min`}</span></div></div>`; }).join("")
-            + `<button class="btn pri" style="width:100%;margin-top:8px" data-act="hsact" data-id="collect" data-c="${pid}" ${Object.values(rd).some((d) => d > 0) ? "" : "disabled"}>Collect everything</button>`;
+            + [["garden", "Garden"], ["cases", "Display cases"], ["help", "Household help"]].filter(([k]) => k in xrd).map(([k, l]) => `<div class="item"><div class="t">${l}<span>${xrd[k] > 0 ? `<b class="hsready">${xrd[k]} day${xrd[k] > 1 ? "s" : ""} ready</b>` : "Next in under a day"}</span></div></div>`).join("")
+            + `<button class="btn pri" style="width:100%;margin-top:8px" data-act="hsact" data-id="collect" data-c="${pid}" ${Object.values(rd).some((d) => d > 0) || Object.values(xrd).some((d) => d > 0) ? "" : "disabled"}>Collect everything</button>`;
         }
+        if (XR()) b += XR().homeHTML(s, pid, esc);
         if (wings.includes("storage")) {
           const pack = s.inv.filter((r) => !Object.values(G.equipment(s) || {}).some((x) => x && x.id === r.id));
           b += `<h3 class="hsh" id="hsstore">Storage room · ${h.store.length}/${STORE_CAP}</h3>`
@@ -440,6 +463,8 @@ const HOMESTEAD = (() => {
             + `<details><summary class="sub" style="cursor:pointer;min-height:36px">Put something in</summary>${pack.slice(0, 40).map((r) => `<div class="item"><div class="t">${esc(itemName(r.item))}${r.qty > 1 ? ` ×${r.qty}` : ""}</div>${btn("stash", r.id, "Store", h.store.length < STORE_CAP)}</div>`).join("") || `<p class="sub">Your pack is empty.</p>`}</details>`;
         }
       }
+    } else if (XR() && XR().VIEWS.some(([k]) => k === view)) {
+      b += XR().viewHTML(s, pid, view, esc);
     } else if (view === "steward") {
       const [nm, hp, dmg, desc] = p.steward, id = stewardId(pid), port = typeof NPCART !== "undefined" ? NPCART.follower(id, 44) : "";
       b += `<div class="item hsrow">${port}<div class="t">${esc(nm)}<span>${esc(desc)}</span><span>Health ${hp} · hits for ${dmg}</span></div></div>`;
@@ -447,13 +472,16 @@ const HOMESTEAD = (() => {
       else b += `<p class="sub">${s.follower?.id === id ? `${esc(nm)} is travelling with you.` : `${esc(nm)} is at home, minding ${esc(p.name)}.`}</p>${btn("follow", pid, s.follower?.id === id ? "Send home" : "Take along", s.follower?.id === id || !s.follower, "pri")}${s.follower && s.follower.id !== id ? `<p class="sub">${esc(TOWNS.FOLLOWERS[s.follower.id]?.[0] || "Someone")} is with you now.</p>` : ""}`;
     }
     const line = ["Bare land", "Small house", "Main hall"][st] + (wings.length ? ` · ${wings.map((w) => WINGS[w][0]).join(", ")}` : "");
-    return { note: `${p.name}, your homestead near ${p.town}. ${line}.`, body: `<div class="hs">${scene(pid, h, { away: !stewardHome(s, pid) })}${tabs}<div class="hsbody">${b}</div></div>` };
+    const inner = XR() && h.small && (view === "home" || view === "build") ? XR().inside(pid, h) : "";
+    const xready = XR() ? (XR().extraReady(s, pid, t).garden || 0) > 0 : false;
+    return { note: `${p.name}, your homestead near ${p.town}. ${line}.`, body: `<div class="hs">${scene(pid, h, { away: !stewardHome(s, pid), ready: xready })}${XR() ? XR().raidHTML(s, pid, esc) : ""}${guest}${tabs}${inner}<div class="hsbody">${b}</div></div>` };
   }
   /* every button on the screen: data-act="hsact" data-id=what data-c=arg */
   function act(s, what, c, t = now()) {
     const pid = here(s);
-    if (what === "view") { if (VIEWS.some(([k]) => k === c)) view = c; return {}; }
+    if (what === "view") { if (VIEWS().some(([k]) => k === c)) view = c; return {}; }
     if (what === "deed") return buyDeed(s, t);
+    if (what === "guestrest" || what === "guestmeal") return XR() ? XR().act(s, pid, what, c, t) : { err: "Nothing happens." };
     if (!pid || !plot(s, pid)) return { err: "You don't own land here." };
     switch (what) {
       case "gather": return gather(s, pid, c, t);
@@ -467,9 +495,10 @@ const HOMESTEAD = (() => {
       case "follow": return follow(s, pid, t);
       case "order": return order(s, pid, c);
     }
-    return { err: "Nothing happens." };
+    const xr = XR() ? XR().act(s, pid, what, c, t) : null;
+    return xr || { err: "Nothing happens." };
   }
 
   return { DAY, PLOTS, BY_TOWN, MATS, BENCH, STAGES, WINGS, GATHER, DELIVER, WING_SLOTS, STORE_CAP, GATHER_CD, stewardId, plot, owned, stage, deedPrice, stewardFee, costOf, keepDays, stewardHome,
-    buyDeed, gather, make, canBuild, build, sleep, produce, ready, collect, stash, unstash, hire, follow, order, scene, thumb, sections, names, townHTML, act, setView: (v) => { view = v; } };
+    slots, defOf, buyDeed, gather, make, canBuild, build, sleep, produce, ready, collect, stash, unstash, hire, follow, order, scene, thumb, sections, names, townHTML, act, setView: (v) => { view = v; } };
 })();
