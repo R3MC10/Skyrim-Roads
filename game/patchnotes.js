@@ -3,6 +3,15 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b139-hud2", build: 139, date: "24 Nov 2026", title: "A cleaner screen", items: [
+      "Messages, guard chatter and follower lines now share one spot at the top left, under the compass. Only one person talks at a time; the next one waits their turn instead of piling on top.",
+      "Your quest goal is a thin line under the compass. A new goal flashes there instead of a big banner in the middle of the map.",
+      "Big banners (skill up, level up, new quest) sit in the middle of the map, under the messages, never on top of them.",
+      "Health, magicka and stamina fade away when they're full, like in Skyrim. Carry weight only shows when you're getting heavy. Tap the bars to see everything for a moment.",
+      "The ★ favourites button moved to the top bar, next to Search and Menu. The round compass button is the only floating button left: it moves up when there's a button under it, and on big screens it sits in the empty corner of the bottom bar.",
+      "The map buttons (zoom, centre, hunt, sneak) are one slim strip now, so the compass has more room.",
+      "Bottom bar names fit on small phones (no more cut-off \"Społeczność\").",
+    ] },
     { id: "b137-livingworld", build: 137, date: "24 Nov 2026", title: "The world remembers you", items: [
       "What you do is remembered in the hold where you did it: dragons you slay, caravans you guard all the way, caravans you rob, and every crime (even after you pay the bounty, though bad deeds fade over a couple of weeks). It all adds to your name in each hold.",
       "Towns react. Guards and shopkeepers bring up what you did. Do enough good and doors open: the inn's back room (free whispers), the steward's storeroom (a few materials once a day) and a guest room in the Jarl's hall (a free bed once a day). Cause enough trouble and the shutters close: no knocking at night, no whispers, and shops charge you 15% more. Give to the temple in the streets to make amends.",
