@@ -14,12 +14,39 @@ const PATCHNOTES = (() => {
       "On a PC: keys 1 to 9 use the numbered moves, Space ends your turn (and skips the foe's turn or presses Continue), M opens Magic, I opens Items, F flees, Esc goes back.",
       "Prefer the old cards or the combat wheel? Settings, Fights, Controls. The target button at the top still switches the timing ring on or off.",
     ] },
+    { id: "b137", build: 137, date: "24 Nov 2026", title: "Sharp, never stretched, on every screen", items: [
+      "Pictures keep their shape on every phone, tablet and PC: nothing gets squashed or stretched any more, even when you turn your phone sideways or resize the window.",
+      "The map redraws straight away when you turn your phone or resize the window, instead of looking stretched until you touched it.",
+      "The lockpicking, pickpocketing, forge, alchemy, enchanting and ring mini-games are now sharp on high-resolution phones and tablets (they were blurry before).",
+      "The title screen, the travel scene, the dungeon map's torchlight and the fight scene are sharper on big tablets and PC monitors.",
+      "Pixel art title screen: every pixel is now the same size, so the picture no longer has uneven rows.",
+      "On a big PC monitor, the +gold number, flying loot and fight tips now show up where they should instead of off to the side (they used to push the page sideways).",
+      "Phones with a notch or camera cut-out: menus and popups now stay clear of it, also in landscape.",
+    ] },
+    { id: "b136", build: 136, date: "24 Nov 2026", title: "A proper road picture while you travel", items: [
+    ] },
+    { id: "b135-compass", build: 135, date: "24 Nov 2026", title: "A real 3D compass", items: [
+      "The golden compass on the home screen is now a proper 3D piece: drag it and it tilts toward your finger, catching the light and showing its thick bronze edge, then springs back when you let go.",
+      "Skills, Magic, Items and Map now sit around the compass instead of on top of it, on phones held upright or sideways.",
+    ] },
+    { id: "b136-4", build: 136, date: "24 Nov 2026", title: "A proper road picture while you travel", items: [
+    ] },
+    { id: "b136places", build: 136, date: "24 Nov 2026", title: "Something at every place", items: [
+      "Every place on the map now has something to do. 52 spots that used to be just a picture (farms, mills, shrines, cabins, groves, old ruins, the All-Maker Stones) now offer a stall, work, a job, a blessing, a hidden strongbox, herbs or a spot worth searching. Look under \"What's here\" when you arrive.",
+      "Farms and mills: buy fresh food from a small stall, lend a hand once a day for a few coins, or take the farmer's job to clear a nearby cave.",
+      "Shrines and stones: pray for a blessing that heals you and lasts a day (Talos, Azura, Meridia, Boethiah, Mehrunes Dagon, Stendarr, the All-Maker Stones). One blessing at a time.",
+      "Cabins, shacks and lodges hide a strongbox to pick. Ruins and monuments are worth a search every few days: coins, scrolls, sometimes a book. Groves grow rare herbs.",
+      "Everything comes back on a timer (a day for work and blessings, two for herbs, three for strongboxes and searches), so it's worth coming back.",
+      "Raven Rock Mine on Solstheim now has ore veins to mine.",
+      "New perks: Wayfarer's Nose (Lockpicking): strongboxes hold 30% more and refill a day sooner. Pilgrim (Restoration): blessings last two days.",
+      "The places list shows what you can do at each spot.",
+    ] },
     { id: "b136vote", build: 136, date: "24 Nov 2026", title: "Vote on the road with your party", items: [
       "Travelling together: when the party leader runs into a foe or something by the road, everyone with them now gets the same window with the same choices, not just a \"wait\" note.",
       "Members tap a choice to vote for it. Your little portrait pops up next to the option you picked, on everyone's phone, the leader's too, and moves as people change their minds. Tap it again to take your vote back, or Just watch to close the window.",
       "Only the leader's tap actually happens. When they choose, everyone's window closes and you see what they picked and how it went.",
     ] },
-    { id: "b136", build: 136, date: "24 Nov 2026", title: "Meet caravans on the road", items: [
+    { id: "b136-3", build: 136, date: "24 Nov 2026", title: "Meet caravans on the road", items: [
     ] },
     { id: "b137-tomeinfo", build: 137, date: "24 Nov 2026", title: "Know the spell before you buy the tome", items: [
       "Spell tomes for sale now tell you what you'd learn: the school, the level (Novice to Master), how much magicka and how many AP it costs, and what it does, with your own numbers.",
@@ -38,7 +65,7 @@ const PATCHNOTES = (() => {
       "In a fight, your follower shows magicka and stamina bars and which row they're in. Followers are still only knocked down, never killed.",
       "Two new Speechcraft perks: Battle Tutor (your follower learns tomes 10 points early and pays 20% less magicka) and Shield-Brother (combos hit 25% harder).",
     ] },
-    { id: "b136-2", build: 136, date: "24 Nov 2026", title: "Party fights: everyone plays the same fight", items: [
+    { id: "b136-2-3", build: 136, date: "24 Nov 2026", title: "Party fights: everyone plays the same fight", items: [
       "When you follow a party leader into a fight, your phone now opens the full fight screen: the same foe, the same health bars and the same log as everyone else, live.",
       "On your turn you play as yourself, with your own moves, spells, magicka, stamina, potions and shouts. No more being played as a follower.",
       "The leader's and other players' moves show in your log under their names. Followers and summons still fight on their own.",
@@ -56,7 +83,9 @@ const PATCHNOTES = (() => {
       "Your hero now actually walks on the road, rides the horse properly, sits on the wagon bench, and swings, blocks, casts and gets knocked down in fights. Moves flow smoothly from one into the next.",
       "Party members, followers and other players use the same new look, on the road, in fights, in portraits and on the hero tab. Works in both the hand-drawn and the pixel style.",
     ] },
-    { id: "b136-2-2-2", build: 136, date: "24 Nov 2026", title: "Meet caravans on the road", items: [
+    { id: "b136-2-2-2-4", build: 136, date: "24 Nov 2026", title: "Meet caravans on the road", items: [
+    ] },
+    { id: "b136-2-2-2-3", build: 136, date: "24 Nov 2026", title: "Meet caravans on the road", items: [
       "Caravans on the map are now something you can meet while you travel. When you're close, their wagons get a gold ring and say \"tap to meet\": tap them, or just walk up beside them and you'll be asked to stop.",
       "Meeting a caravan pauses your trip. Trade with their merchant (every caravan run carries different goods), ask for news from the road (a rumour or a new place goes on your map), or just wave and carry on.",
       "Guard the wagons: walk the rest of their road with them, at their pace, and get paid when you roll into their stop. Ambushes can still hit the caravan on the way.",
