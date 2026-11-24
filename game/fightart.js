@@ -697,12 +697,19 @@ const FIGHTART = (() => {
     const rec = REG.get(+el.dataset.fs); if (!rec || el.firstChild) return;
     const W = Math.max(300, Math.min(520, Math.round(el.clientWidth || 330))), Hh = Math.round(W * (rec.f.tbTall ? 0.66 : 0.46));   // the turn-by-turn screen gets a taller stage
     const style = ART.style(), pixel = style === "pixel", rm = reduce();
-    const dpr = typeof FITCANVAS !== "undefined" ? Math.min(3, FITCANVAS.ratio(el, W)) : Math.min(2, devicePixelRatio || 1);   // backing pixels per drawing unit: the box on screen × density (sharp on tablets and PCs too)
+    const dpr = typeof FITCANVAS !== "undefined" ? Math.min(6, FITCANVAS.ratio(el, W, 3)) : Math.min(2, devicePixelRatio || 1);   // backing pixels per drawing unit: the box on screen × density (sharp on tablets and PCs too)
     const cv = document.createElement("canvas"); cv.width = Math.round(W * dpr); cv.height = Math.round(Hh * dpr);   // CSS scales it to the box (width:100%)
     if (pixel) cv.style.imageRendering = "pixelated";
     el.appendChild(cv);
     const g = cv.getContext("2d");
-    const k = pixel ? 1 / 3 : dpr;
+    let k = pixel ? 1 / 3 : dpr;
+    // [assetquality] the stage often grows after it's mounted (wide PC column, turning the phone): keep the backing
+    // pixels = the box on screen x density, so the painted scene and foe are never blown up by CSS
+    if (!pixel && typeof FITCANVAS !== "undefined") FITCANVAS.watch(cv, () => {
+      const nk = Math.min(6, FITCANVAS.ratio(cv, W, 3));
+      if (Math.abs(nk - k) / k > 0.04) { k = nk; cv.width = Math.round(W * k); cv.height = Math.round(Hh * k);
+        try { if (!MANUAL) draw(performance.now()); } catch { /* the next frame draws it */ } }
+    });
     const work = pixel ? Object.assign(document.createElement("canvas"), { width: Math.round(W * k), height: Math.round(Hh * k) }) : cv;
     const wg = work.getContext("2d");
     const bg = bgFor(rec.scene, W, Hh, style, rec.wagon, rec.sky);

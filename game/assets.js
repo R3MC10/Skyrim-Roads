@@ -9,7 +9,8 @@
        slugs: whiterun solitude windhelm riften markarth falkreath morthal dawnstar winterhold riverwood ravenrock
      biome-<slug>             1600×900   16:9 backdrops for any other place / road scene of that kind
        slugs: tundra pineforest snowfield marsh reach rift hotsprings mountain coast ashlands cave nordruin dwemerruin falmercave
-     foe-<slug>               1024×1024  transparent PNG, full body, feet at the bottom, facing right
+     foe-<slug>               1254×1254  transparent PNG, full body, feet at the bottom, facing right (any shape is drawn
+                                         true to shape: foe-dragon is 1536×1024)
        slugs: bandit banditchief draugr deathlord wolf bear sabrecat troll frosttroll giant mammoth spider skeever falmer
               centurion dwarvenspider spriggan hagraven vampire necromancer thalmor dragon icewraith flameatronach
               frostatronach stormatronach dremora chaurus mudcrab horker riekling ashspawn
@@ -24,7 +25,7 @@
                                          scripts/map_reference.py. Optional map-world-2x (3000×2100) for close zoom.
      ui-panel                 1024×1024  tileable dark panel texture
      ui-parchment             1024×1024  tileable parchment texture
-     ui-compass               1024×1024  transparent compass rose
+     ui-compass               1254×1254  transparent compass rose
      ui-compass3d             2240×2240  7x7 Blender renders of ui-compass tilted ±26° (scripts/compass3d.py)
      ui-nightsky              1080×1920  night sky for the skills (constellation) page
      ui-frame                 1024×1024  transparent 9-slice frame, 96px corners
@@ -40,7 +41,8 @@
    Under browser automation nothing is fetched unless the URL has ?assets (keeps tests quiet).
    Quality (artfit.js, tests/art_quality_ui.py): pictures are cropped, never squashed, and never shown bigger than the
    file. A box bigger than the file shows the file at its own size; art_quality_ui.py lists those files with the size
-   they need. A bigger copy can sit next to a file as <name>@2x.webp: add the name to HI below. */
+   they need. A bigger copy can sit next to a file as <name>@2x.webp: add the name to HI below.
+   Files still too small for big screens (with the size they need) are listed in art_gpt/REGEN_LIST.md. */
 const ASSETS = (() => {
   const EXT = ["webp", "png", "jpg"];
   /* [artfit] pictures that also come as a bigger <name>@2x.webp (twice the size above): PCs and sharp screens load it.

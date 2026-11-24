@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b166-assetquality", build: 166, date: "24 Nov 2026", title: "Sharper pictures on every screen", items: [
+      "Foes in fights are painted at full size now, so they stay sharp on big monitors and 3x phone screens instead of going soft.",
+      "The dragon is no longer squashed into a square: it shows with its proper wide wingspan.",
+      "Paintings (towns, shop banners, fight scenes, event pictures) keep their shape and are never blown up into a blur. On a very big screen a painting shows at its own size instead.",
+      "Fight scenes and the world map are drawn at your screen's full sharpness, on phones and on 4K monitors.",
+      "The painted compass is a bit sharper too.",
+    ] },
     { id: "b144-noequipsell", build: 144, date: "24 Nov 2026", title: "What you wear stays on you", items: [
       "Shops no longer list the gear you're wearing when you sell: weapons in either hand, armour, rings and amulets stay off the Sell list, and Sell all junk never touches them.",
       "The same goes for handing things over: your follower's Your pack list, trades and gifts to other players, market stalls and chests leave out what you wear.",

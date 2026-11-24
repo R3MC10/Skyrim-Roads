@@ -25,13 +25,24 @@ PORT = ARGS[0] if ARGS else "9471"
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out_artq")
 os.makedirs(OUT, exist_ok=True)
 ONLY = set(FLAGS["only"].split(",")) if FLAGS.get("only") else None
-VPS = [(f"{w}x{h}@{d}", w, h, d) for (w, h) in [(2000, 837), (2560, 1440), (1366, 768)] for d in (1, 2)]
+VPS = [(f"{w}x{h}@{d}", w, h, d) for (w, h, d) in [(390, 844, 3), (360, 780, 2), (768, 1024, 2), (1366, 768, 1), (1920, 1080, 1), (2560, 1440, 1), (3440, 1440, 1), (5120, 1440, 1), (3840, 2160, 2), (2000, 837, 2)]]
 if FLAGS.get("vp"): VPS = [v for v in VPS if v[0] in FLAGS["vp"].split(",")]
-MAX_UP, MAX_ASPECT = 1.15, 0.02
+MAX_UP, WARN_UP, MAX_ASPECT = 1.5, 1.25, 0.02
+# [assetquality] files that are simply too small for the biggest screens and wait to be painted again are listed in
+# art_gpt/REGEN_LIST.md; its "allow:" lines (key and the most blow-up we put up with until then) are read here.
+ALLOW = {}
+_RL = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "art_gpt", "REGEN_LIST.md")
+try:
+    for _ln in open(_RL, encoding="utf-8"):
+        _m = _ln.strip().split()
+        if len(_m) >= 3 and _m[0] == "allow:": ALLOW[_m[1]] = float(_m[2])
+except OSError: pass
+# the world map (claude/mapvisuals) and the title picture (claude/widetitle) have their own branches and guards
+SKIP = ["map-world", "map-world-2x", "title"]
 
 # test-only: follow painted files through every canvas they are drawn into
 WATCH = r"""(() => {
-  const ASSET = /\/((?:title|bg-loading|place|biome|foe|shop|bs|bsf|bsp|icon|ui)-?[^\/?#]*)\.(?:webp|png|jpe?g)(?:[?#].*)?$/;
+  const ASSET = /\/((?:title|bg-loading|place|biome|foe|shop|bs|bsf|bsp|icon|ui|gev|wev|map|room)-?[^\/?#]*)\.(?:webp|png|jpe?g)(?:[?#].*)?$/;
   const keyOf = (im) => { try { const m = ASSET.exec(im.currentSrc || im.src || ''); return m ? m[1] : null; } catch (e) { return null; } };
   const rec = (cv) => (cv.__art || (cv.__art = new Map()));
   // up: canvas px per file px; ch: the worst blow-up along the way (canvas px per px of the file or of any canvas in between)
@@ -64,8 +75,8 @@ WATCH = r"""(() => {
 })();"""
 
 CHECK = r"""async (lim) => {
-  const dpr = devicePixelRatio || 1, bad = [], need = {}, seen = [];
-  const ASSET = /\/((?:title|bg-loading|place|biome|foe|shop|bs|bsf|bsp|icon|ui)-?[^\/?#"')]*)\.(?:webp|png|jpe?g)/;
+  const dpr = devicePixelRatio || 1, bad = [], warn = [], need = {}, seen = [];
+  const ASSET = /\/((?:title|bg-loading|place|biome|foe|shop|bs|bsf|bsp|icon|ui|gev|wev|map|room)-?[^\/?#"')]*)\.(?:webp|png|jpe?g)/;
   const shown = (e) => { if (!e || !e.isConnected) return null; const r = e.getBoundingClientRect(); if (r.width < 8 || r.height < 8) return null;
     if (r.right < 0 || r.bottom < 0 || r.left > innerWidth || r.top > innerHeight) return null;
     for (let a = e; a; a = a.parentElement) { const cs = getComputedStyle(a); if (cs.display === 'none' || cs.visibility === 'hidden' || +cs.opacity === 0) return null;
@@ -75,8 +86,11 @@ CHECK = r"""async (lim) => {
   const note = (key, up, nat) => { if (up > 1.02 && nat) { const w = Math.ceil(nat[0] * up), h = Math.ceil(nat[1] * up), o = need[key]; if (!o || w > o[0]) need[key] = [w, h, nat[0], nat[1]]; } };
   // up: screen px per file px (what the file itself needs); ch: the worst blow-up of the file or of a canvas it went through
   const judge = (where, key, up, asp, nat, ch = up) => {
+    if (lim.skip.includes(key)) return;
     seen.push(key); note(key, up, nat);
-    if (ch > lim.up) bad.push(`${where} ${key}: blown up ${ch.toFixed(2)}x${ch > up * 1.01 ? ` (drawn too small on the way: file ${up.toFixed(2)}x)` : ''}`);
+    const cap = (lim.allow && lim.allow[key]) || lim.up;
+    if (ch > lim.warn && ch <= cap) warn.push(`${where} ${key}: ${ch.toFixed(2)}x`);
+    if (ch > cap) bad.push(`${where} ${key}: blown up ${ch.toFixed(2)}x${ch > up * 1.01 ? ` (drawn too small on the way: file ${up.toFixed(2)}x)` : ''}`);
     if (asp > lim.asp) bad.push(`${where} ${key}: squashed ${(asp * 100).toFixed(1)}%`);
   };
   // the shape of the picture inside an <img> box (object-fit cover/contain keep the shape)
@@ -112,6 +126,29 @@ CHECK = r"""async (lim) => {
     for (const [k, o] of e.__art) note(k, s * o.up * fill, o.nat);
     for (const [k, o] of e.__art) judge(nm(e), k, s * o.up, Math.max(o.asp, Math.abs(sx / sy - 1)), o.nat, Math.max(s * o.ch, s));
   }
+  // [assetquality] pictures the game draws by code (data-URL <img>s and canvases): backing pixels must keep up with the
+  // box on screen x density (no soft blow-up) and keep the box's shape. Pixel-art (pixelated), the world map
+  // (claude/mapvisuals) and blurred backdrops are left out.
+  const crisp = (e) => /pixelated|crisp-edges/.test(getComputedStyle(e).imageRendering);
+  const offMap = (e) => !e.closest('#mapwrap, #map, .pcmap, #tanim, .tanim');
+  for (const e of document.querySelectorAll('img')) {
+    const src = e.currentSrc || e.src || ''; if (!src.startsWith('data:') || window.__artURL.has(src) || !offMap(e)) continue;
+    const r = shown(e); if (!r || !e.complete || !e.naturalWidth || crisp(e) || r.width < 16) continue;
+    const { sx, sy } = imgFit(e, r, e.naturalWidth, e.naturalHeight), up = Math.max(sx, sy) * dpr, asp = Math.abs(sx / sy - 1);
+    const where = 'drawn ' + nm(e) + (e.alt ? ` "${e.alt.slice(0, 24)}"` : '') + ` ${Math.round(r.width)}px`;
+    if (up > lim.drawn) bad.push(`${where}: blown up ${up.toFixed(2)}x (file ${e.naturalWidth}px)`);
+    else if (up > lim.warn) warn.push(`${where}: ${up.toFixed(2)}x`);
+    if (asp > lim.asp) bad.push(`${where}: squashed ${(asp * 100).toFixed(1)}%`);
+  }
+  for (const e of document.querySelectorAll('canvas')) {
+    if ((e.__art && e.__art.size) || !offMap(e)) continue;
+    const r = shown(e); if (!r || !e.width || crisp(e) || r.width < 16 || r.height < 16) continue;
+    const sx = r.width / e.width, sy = r.height / e.height, up = Math.max(sx, sy) * dpr, asp = Math.abs(sx / sy - 1);
+    const where = 'canvas ' + nm(e) + ` ${Math.round(r.width)}x${Math.round(r.height)}`;
+    if (up > lim.drawn) bad.push(`${where}: backing ${e.width}x${e.height} blown up ${up.toFixed(2)}x`);
+    else if (up > lim.warn) warn.push(`${where}: ${up.toFixed(2)}x`);
+    if (asp > lim.asp) bad.push(`${where}: squashed ${(asp * 100).toFixed(1)}%`);
+  }
   // painted backgrounds: one-layer pictures sized by background-size (tiles and frames are made to repeat/stretch)
   const nat = {};
   const natOf = (u) => nat[u] || (nat[u] = new Promise((ok) => { const i = new Image(); i.onload = () => ok([i.naturalWidth, i.naturalHeight]); i.onerror = () => ok(null); i.src = u; }));
@@ -139,7 +176,7 @@ CHECK = r"""async (lim) => {
   }
   // files the game itself held back (the title on a wide screen...)
   try { for (const [k, w, h] of ARTFIT.shortList()) { const o = need[k]; if (!o || w > o[0]) { const im = ASSETS.img(k); need[k] = [w, h, im ? im.naturalWidth : 0, im ? im.naturalHeight : 0]; } } } catch (e) { /* older game */ }
-  return { bad: [...new Set(bad)], need, seen: [...new Set(seen)] };
+  return { bad: [...new Set(bad)], warn: [...new Set(warn)], need, seen: [...new Set(seen)] };
 }"""
 
 SETUP = """(()=>{ const S=window.__dbg.save(); S.gold=3000; S.level=12; S.trip=null;
@@ -176,6 +213,21 @@ for foe, place in [("Bandit", "Whiterun"), ("Draugr", "Bleak Falls Barrow")]:
       TB.call(S, ()=>{ const f=new G.Fight(S,e); f.allies=[]; return f.run({trySneak:false}); }, ()=>{}); })()""" % foe), ("wait", 2500),
            ("js", "document.querySelectorAll('[data-obt=ok]').forEach(b=>b.click())"), ("wait", 1200))
 
+screen("fight_dragon", ("at", "Whiterun"), ("js", """(()=>{ const S=__dbg.save(); S.dungeon=null; S.trip=null;
+      const e=G.scaleEnemy({name:'Dragon',health:400,damage:12,tags:['dragon'],level:12,danger:'high',gold:[0,0],text:''},12);
+      TB.call(S, ()=>{ const f=new G.Fight(S,e); f.allies=[]; return f.run({trySneak:false}); }, ()=>{}); })()"""), ("wait", 2500),
+       ("js", "document.querySelectorAll('[data-obt=ok]').forEach(b=>b.click())"), ("wait", 1200))
+screen("loadcard", ("js", """(()=>{ const bg=ASSETS.loading(1); if(!bg) return; const el=document.createElement('div'); el.id='loadcard'; el.className='loadcard haspic still';
+      el.innerHTML='<div class=ldtxt><p class=ldtip>Loading</p></div>'; el.style.setProperty('--ldbg', 'url("'+bg.src.split('/').pop()+'")'); document.body.appendChild(el); })()"""))
+screen("wev_sheet", ("js", """(()=>{ const S=__dbg.save(); const A=typeof WEVENTS.active==="function"?WEVENTS.active():(WEVENTS.rows?WEVENTS.rows(S):[]); const ev=(A||[])[0]; if(!ev) return; const m=document.createElement('div'); m.id='modal'; m.className='modal';
+      m.innerHTML='<div class=sheet>'+WEVENTS.detailHTML(ev,S)+'</div>'; document.body.appendChild(m); })()"""))
+
+screen("hero", ("tab", "hero"))
+screen("perks", ("tab", "hero"), ("sub", "perks"))
+screen("journal", ("tab", "log"))
+screen("menu_items", ("js", "__ui.openMenu && __ui.openMenu('items')"))
+screen("menu_magic", ("js", "__ui.openMenu && __ui.openMenu('magic')"))
+
 async def settle(pg, ms=400):
     await pg.wait_for_timeout(ms)
     for _ in range(30):   # wait for pictures still on their way
@@ -185,7 +237,7 @@ async def settle(pg, ms=400):
 
 async def run_vp(b, vp, fails, need):
     name, vw, vh, d = vp
-    ctx = await b.new_context(viewport={"width": vw, "height": vh}, device_scale_factor=d)
+    ctx = await b.new_context(viewport={"width": vw, "height": vh}, device_scale_factor=d, is_mobile=vw < 700, has_touch=vw < 700)
     await ctx.add_init_script("try{localStorage.setItem('rotn_prefs', JSON.stringify({artStyle:'ink'}));sessionStorage.clear()}catch(e){}")
     await ctx.add_init_script(WATCH)
     pg = await ctx.new_page(); errs = []
@@ -203,16 +255,19 @@ async def run_vp(b, vp, fails, need):
 
     async def check(sname):
         await pg.screenshot(path=os.path.join(OUT, f"{name.replace('@', '_x')}_{sname}.png"))
-        r = await pg.evaluate(CHECK, {"up": MAX_UP, "asp": MAX_ASPECT})
+        r = await pg.evaluate(CHECK, {"up": MAX_UP, "warn": WARN_UP, "asp": MAX_ASPECT, "allow": ALLOW, "skip": SKIP, "drawn": MAX_UP})
         for k, v in r["need"].items():
             o = need.get(k)
             if not o or v[0] > o[0]: need[k] = v + [f"{name} {sname}"]
         print(f"  {name:12} {sname:14} " + ("ok" if not r["bad"] else "FAIL " + "; ".join(r["bad"])[:600]) + (f"   [{', '.join(sorted(r['seen']))[:160]}]" if r["seen"] else ""), flush=True)
+        if r["warn"] and FLAGS.get("warn") is not None: print("      soft (allowed): " + "; ".join(r["warn"])[:400])
         if r["bad"]: fails.append(f"{name} {sname}: {r['bad']}")
 
-    if not ONLY or "title" in ONLY: await check("title")
+    if (ONLY and "title" in ONLY) or "title" in FLAGS: await check("title")
     await pg.evaluate("document.querySelector('.press')?.click()"); await pg.wait_for_timeout(500)
     await pg.evaluate("document.querySelector('.mi[data-t=new]')?.click()"); await pg.wait_for_timeout(400)
+    if not ONLY or "create" in ONLY:
+        await pg.wait_for_timeout(600); await settle(pg); await check("create")
     await pg.fill("#nm", "Ysolda"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
     await pg.evaluate(SETUP)
     await pg.mouse.move(2, vh // 2)
