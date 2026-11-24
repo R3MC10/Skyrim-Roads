@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b175-potionbal", build: 175, date: "25 Nov 2026", title: "Potions hit harder again", items: [
+      "In a fight 60% of a potion now lands the moment you drink it, and the rest comes in over the next two rounds (small and big brewed ones: the next round). A potion saves you in a pinch again.",
+      "Still one potion of a kind at a time: another of the same kind only helps once the last one has mostly done its work.",
+      "Your tactics presets, followers and the Smart AI's party plans now drink a little earlier, at about half health, since potions take a moment to work.",
+      "Quick Draught is easier to reach (Alchemy 25 and 50) and each rank also makes 5% more of a potion land at once.",
+      "The barber, the mirror, relics, the dig vote and the character screen arrows use proper game icons instead of phone emoji.",
+    ] },
     { id: "b174-potionregen", build: 174, date: "25 Nov 2026", title: "Potions work over time", items: [
       "Health, magicka and stamina potions no longer refill you all at once. They pour in over a few rounds in a fight, or a few seconds on the map: small potions over 5, ordinary ones over 4, the big brewed ones over 3. Half comes in right after you drink, so one still pulls you out of trouble.",
       "Drinking another of the same kind while one is still working doesn't stack: you keep whichever has more left to give. A health and a magicka potion work side by side just fine.",
@@ -1169,7 +1176,7 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 174;
+  const NEXT_AT = 175;
   const NEXT = [
     "A new, livelier fight screen that fits on one screen",
     "Dragon Shouts learned from word walls",

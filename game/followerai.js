@@ -149,7 +149,7 @@ const FAI = (() => {
     if (!al.guard) out.push({ k: "guard", c: 2, v: (tac === "defensive" ? 2.2 : tank(al) ? 1.2 : 0.9) * unit(al) * (al.shield ? 1.4 : 1) * (pp < 0.5 ? 1.5 : 1) * (me < 0.5 ? 1.3 : 1) });
     if (tac !== "ranged" && !al.bow && (tac === "defensive" || (al.shield && tac === "auto")) && pp < 0.45 && me > 0.45 && fight.coverAl !== al) out.push({ k: "cover", c: 2, v: unit(al) * 8 * (0.45 - pp) / 0.45 + unit(al) * 3 });
     // potions from their own pack
-    const potAt = al.savePots ? 0.2 : tac === "aggressive" ? 0.3 : 0.38;
+    const potAt = al.savePots ? 0.2 : tac === "aggressive" ? 0.4 : 0.5;   // potions work over a few rounds (potionfx.js): drink a bit earlier
     const potOn = (res) => typeof POTFX !== "undefined" && POTFX.busy(al, res);   // one of that kind still working: not again
     if (me < potAt && potionRows(f, "health").length && !potOn("health")) out.push({ k: "potion", res: "health", c: 1, v: unit(al) * 20 * (potAt - me + 0.1) });
     if (!al.savePots && al.spells.length && al.mp < 0.2 * al.mpMax && potionRows(f, "magicka").length && !potOn("magicka")) out.push({ k: "potion", res: "magicka", c: 1, v: unit(al) * 4 });

@@ -19,27 +19,28 @@ let fails = 0, n = 0, sid = 0; const OK = (x, m) => { if (!x) { fails++; console
 const fresh = () => { const s = G.newSave("t" + (++sid), "Tester", "nord"); s._test = true; return s; };
 const ENEMY = () => G.scaleEnemy({ ...D.ENCOUNTERS.find((e) => e.health && e.kind !== "event" && e.danger !== "high") }, 10);
 
-// 1. durations: small 5 rounds, ordinary 4, big brewed 3; Quick Draught takes a round off per rank, never under 2
+// 1. durations: ordinary 3 rounds, small and big brewed 2; Quick Draught takes a round off per rank (never under 2) and adds 5% to the first share
 { const s = fresh();
-  OK(POTFX.ticks(s, 25) === 5 && POTFX.ticks(s, 50) === 4 && POTFX.ticks(s, 100) === 3, "durations 5/4/3: " + [POTFX.ticks(s, 25), POTFX.ticks(s, 50), POTFX.ticks(s, 100)]);
+  OK(POTFX.ticks(s, 25) === 2 && POTFX.ticks(s, 50) === 3 && POTFX.ticks(s, 100) === 2, "durations 2/3/2: " + [POTFX.ticks(s, 25), POTFX.ticks(s, 50), POTFX.ticks(s, 100)]);
   OK(PFX.ADD.some((p) => p[1] === "quick_draught"), "the Quick Draught perk is in the Alchemy tree");
+  OK(/60% works at once, the rest over the next 2 rounds/.test(POTFX.note(fresh(), 50)), "tooltip line names the share and rounds: " + POTFX.note(fresh(), 50));
   s.perks = s.perks || {}; s.perks.quick_draught = 2;
-  OK(POTFX.ticks(s, 25) === 3 && POTFX.ticks(s, 50) === 2 && POTFX.ticks(s, 100) === 2, "Quick Draught 2: 3/2/2: " + [POTFX.ticks(s, 25), POTFX.ticks(s, 50), POTFX.ticks(s, 100)]);
-  OK(/4 rounds/.test(POTFX.note(fresh(), 50)), "tooltip line names the rounds: " + POTFX.note(fresh(), 50)); }
+  OK(POTFX.ticks(s, 25) === 2 && POTFX.ticks(s, 50) === 2 && POTFX.ticks(s, 100) === 2, "Quick Draught 2: 2/2/2: " + [POTFX.ticks(s, 25), POTFX.ticks(s, 50), POTFX.ticks(s, 100)]);
+  OK(/70% works at once/.test(POTFX.note(s, 50)), "Quick Draught 2: 70% at once: " + POTFX.note(s, 50)); }
 
-// 2. in a fight: drinking gives nothing at once, half at the end of the round, the rest over the next rounds
+// 2. in a fight: 60% the moment you drink, the rest evenly over the next rounds
 { const s = fresh(); G.give(s, "potion_health", 3);
   const f = new G.Fight(s, ENEMY(), null), mx = G.maxHealth(s);
   f.hp = 20; const amt = D.ITEMS.potion_health.restore[1];
   const txt = f.act("potion:health");
-  OK(f.hp === 20, "no health at the moment of drinking: " + f.hp);
-  OK(/over 4 rounds/.test(txt), "the line says over how many rounds: " + txt);
-  OK(f.potOT && f.potOT.health && f.potOT.health.n === 4, "a potion is working on you");
+  OK(Math.abs(f.hp - (20 + amt * 0.6)) < 0.01, "60% at the moment of drinking: " + f.hp);
+  OK(/now, the rest over the next 2 rounds/.test(txt), "the line says over how many rounds: " + txt);
+  OK(f.potOT && f.potOT.health && f.potOT.health.n === 2, "a potion is working on you");
   const line = { me: "" }; MAGIC.tick(f, line);
-  OK(Math.abs(f.hp - (20 + amt / 2)) < 0.01, "half in the first round: " + f.hp);
+  OK(Math.abs(f.hp - (20 + amt * 0.8)) < 0.01, "an even share at the end of the round: " + f.hp);
   OK(/\\uE15B \\+\\d+ health/.test(line.me), "the round line shows the share: " + line.me);
-  for (let i = 0; i < 3; i++) MAGIC.tick(f, { me: "" });
-  OK(Math.abs(f.hp - Math.min(mx, 20 + amt)) < 0.01 && !f.potOT, "the full amount after 4 rounds, then gone: " + f.hp);
+  MAGIC.tick(f, { me: "" });
+  OK(Math.abs(f.hp - Math.min(mx, 20 + amt)) < 0.01 && !f.potOT, "the full amount after 3 rounds, then gone: " + f.hp);
   MAGIC.tick(f, { me: "" }); OK(Math.abs(f.hp - (20 + amt)) < 0.01, "nothing more after it ran out"); }
 
 // 3. no stacking: a second of the same kind keeps whichever has more left; different kinds side by side
@@ -80,9 +81,9 @@ const ENEMY = () => G.scaleEnemy({ ...D.ENCOUNTERS.find((e) => e.health && e.kin
 { const s = fresh(); const mx = G.maxHealth(s), t0 = 100000;
   G.setHealth(s, 20, t0);
   const msg = POTFX.roadDrink(s, "health", 50, "Potion of Healing", t0);
-  OK(/over 4 seconds/.test(msg), "road line: " + msg);
+  OK(/over 3 seconds/.test(msg), "road line: " + msg);
   OK(Math.round(G.curHealth(s, t0)) === 20, "nothing at once on the road: " + G.curHealth(s, t0));
-  OK(Math.round(G.curHealth(s, t0 + 2)) >= 44 && Math.round(G.curHealth(s, t0 + 2)) <= 46, "half way after 2 s: " + G.curHealth(s, t0 + 2));
+  OK(Math.round(G.curHealth(s, t0 + 1.5)) >= 44 && Math.round(G.curHealth(s, t0 + 1.5)) <= 46, "half way after 1.5 s: " + G.curHealth(s, t0 + 1.5));
   const m2 = POTFX.roadDrink(s, "health", 25, "Potion of Minor Healing", t0 + 1);
   OK(/still working/.test(m2), "a smaller one while one works: " + m2);
   OK(Math.round(G.curHealth(s, t0 + 10)) >= Math.min(mx, 70) - 1 && Math.round(G.curHealth(s, t0 + 10)) <= Math.min(mx, 70) + 1, "all 50 in after it ends: " + G.curHealth(s, t0 + 10));
@@ -105,10 +106,13 @@ const ENEMY = () => G.scaleEnemy({ ...D.ENCOUNTERS.find((e) => e.health && e.kin
 // 9. followers and party members: their own potion over time, chips/glyphs for the party list
 { const al = { name: "Lydia", hp: 20, maxHp: 200 };
   const t = POTFX.ally(al, "health", 50, "Potion of Healing");
-  OK(/over 4 rounds/.test(t) && al.hp === 20, "an ally's potion doesn't land at once: " + t);
+  OK(/\\+30 now, the rest over the next 2 rounds/.test(t) && Math.abs(al.hp - 50) < 0.01, "an ally's potion lands 60% at once: " + t + " " + al.hp);
   const f = { s: fresh(), hp: 50, allies: [al] }; const line = { me: "" };
-  POTFX.tick(f, line); OK(al.hp === 45 && /Lydia \\uE15B \\+25/.test(line.me), "the ally gets the first half at round end: " + al.hp + " " + line.me);
-  OK(POTFX.busy(al, "health"), "the ally's potion counts as working (followers won't drink another)");
+  POTFX.tick(f, line); OK(Math.abs(al.hp - 60) < 0.01 && /Lydia \\uE15B \\+10/.test(line.me), "the ally gets an even share at round end: " + al.hp + " " + line.me);
+  OK(!POTFX.busy(al, "health") && al.potOT && al.potOT.health.n === 1, "after a round only the last share is left: another may be drunk");
+  { const b = { name: "Ria", hp: 20, maxHp: 200 }; POTFX.ally(b, "health", 50, "Potion of Healing");
+    OK(POTFX.busy(b, "health"), "right after drinking the ally's potion counts as working (followers won't drink another)");
+    OK(/still working/.test(POTFX.ally(b, "health", 50, "Potion of Healing")), "a second of the same size right away is wasted"); }
   OK(POTFX.allyIcons(al).length > 0, "a glyph for the party list");
   al.down = true; POTFX.tick(f, { me: "" }); OK(!al.potOT, "a knocked-down ally's potion stops"); }
 

@@ -490,7 +490,7 @@ const WorldMap = (() => {
     // zoomed out past the edges: the map sits in the middle (on a matching surround, below)
     ox = W * k <= canvas.width ? (canvas.width - W * k) / 2 : Math.min(0, Math.max(canvas.width - W * k, ox));
     oy = H * k <= canvas.height ? (canvas.height - H * k) / 2 : Math.min(0, Math.max(canvas.height - H * k, oy));
-    v.transform = { k: k / dpr, ox: ox / dpr, oy: (oy - OYH * k) / dpr };   // screen ↔ world (Solstheim's y included)
+    v.transform = { k: k / dpr, ox: ox / dpr, oy: (oy - OYH * k) / dpr };   // screen <-> world (Solstheim's y included)
     if (ox > 0 || oy > 0 || ox + W * k < canvas.width || oy + H * k < canvas.height) surround(g, canvas.width, canvas.height, ox, oy, W * k, H * k, dpr);
     g.setTransform(k, 0, 0, k, ox, oy);
     g.imageSmoothingEnabled = true; g.imageSmoothingQuality = "high";

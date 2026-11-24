@@ -167,7 +167,7 @@
     CHARGEN.open({ mode, save: S, cost: CHARGEN.BARBER_COST, toast,
       onDone: (look) => {
         if (mode === "barber") { const r = CHARGEN.pay(S, look); if (r.err) return toast(r.err); toast(r.text); }
-        else { APPEAR.apply(S, look); toast("🪞 You like what you see."); }
+        else { APPEAR.apply(S, look); toast("\uE19B You like what you see."); }
         lookCache.k = ""; persist(true); renderPanel(true);
       } });
   }

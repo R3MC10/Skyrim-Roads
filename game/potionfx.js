@@ -1,8 +1,9 @@
 /* potionfx.js: Restore Health / Magicka / Stamina potions work over time instead of all at once. [OURS]
    Remigiusz: "potion should be applying health and magicka and stamina overtime, to avoid spamming".
-   - In a fight a potion gives its total over a few rounds, a share at the end of each round: half at the end of the round
-     you drink it, the rest evenly after. Small potions take 5 rounds, the usual ones 4, big brewed ones (over 75) 3.
-     The Alchemy perk Quick Draught takes off a round per rank (never under 2).
+   - In a fight a potion gives 60% the moment you drink it (it still saves you in a pinch), the rest evenly at the end of
+     the next rounds. Ordinary potions take 3 rounds in all, small ones (30 or less) and big brewed ones (over 75) 2.
+     Another of the same kind (no bigger) is wasted until the last one has under a quarter left. The Alchemy perk Quick Draught takes off a
+     round per rank (never under 2) and adds 5% per rank to the first share. (b175 rebalance: was half at round end over 5/4/3.)
    - On the road (map, towns, dungeons) the same potion takes that many seconds, and the health bar fills as it goes.
      A potion still working when a fight starts carries on in the fight; one still working when a fight ends carries on
      on the road.
@@ -23,60 +24,70 @@ const POTFX = (() => {
   const pnum = (s, k) => { try { return s && typeof PFX !== "undefined" ? PFX.num(s, k) : 0; } catch (e) { return 0; } };
   const tr = (t) => { try { return typeof I18N !== "undefined" && I18N.lang?.() === "pl" ? I18N.tr(t) ?? t : t; } catch (e) { return t; } };
   const rounds = (n) => `${n} ${n === 1 ? "round" : "rounds"}`;
+  const FIRST = 0.6;   // share of a potion that lands the moment you drink it in a fight (balance sim, b175)
+  /* the share that lands at once: Quick Draught adds 5% per rank */
+  const firstOf = (s) => Math.min(0.7, FIRST + 0.05 * Math.round(pnum(s, "potfast")));
 
   /* how many rounds (seconds on the road) a potion of this size takes; s = the drinker's save (perks), or null */
   function ticks(s, amt) {
-    const base = amt <= 30 ? 5 : amt <= 75 ? 4 : 3;
+    const base = amt <= 30 || amt > 75 ? 2 : 3;
     return Math.max(2, base - Math.round(pnum(s, "potfast")));   // Quick Draught
   }
   /* one line for item tooltips */
-  function note(s, amt) { const n = ticks(s, amt); return `Works over ${rounds(n)} in a fight (${n} seconds on the road). Another of the same kind doesn't stack.`; }
+  function note(s, amt) { const n = ticks(s, amt); return `In a fight ${r0(100 * firstOf(s))}% works at once, the rest over the next ${rounds(n - 1)} (${n} seconds on the road). Another of the same kind doesn't stack.`; }
 
   // ------------------------------------------------------------------ in a fight: rounds
   /* put a potion on someone (a Fight, a follower or party member record). Keeps the bigger of what's left and the new one. */
-  function put(h, res, amt, n, name) {
+  function put(h, res, amt, n, name, first) {
     const box = h.potOT || (h.potOT = {}), cur = box[res];
-    if (cur && cur.left >= amt) return { kept: true, cur };
+    if (cur && (cur.left >= amt || (cur.total >= amt && cur.left > 0.25 * cur.total))) return { kept: true, cur };   // one no bigger than the one still working is wasted
     box[res] = { left: amt, n: Math.max(1, n), total: amt, name: name || "" };
+    if (first) box[res].first = first;
     return { kept: false, cur: box[res], replaced: !!cur };
   }
   /* is one of this kind still working (a good part still to come)? AI, tactics and followers leave it alone then */
-  function busy(h, res) { const c = h?.potOT?.[res]; return !!c && c.n > 1 && c.left > Math.max(0.5, 0.3 * (c.total || 0)); }
+  function busy(h, res) { const c = h?.potOT?.[res]; return !!c && c.left > Math.max(0.5, 0.25 * (c.total || 0)); }
   /* you drink in a fight (engine.js Fight.act) */
   function drink(f, res, amt, name) {
-    const n = ticks(f.s, amt), r = put(f, res, amt, n, name);
+    const n = ticks(f.s, amt), fs = firstOf(f.s), r = put(f, res, amt, n, name, fs);
     hookFx();
     if (r.kept) return `Drinks ${name}, but the last one is still working`;
-    return `Drinks ${name}: +${r0(amt)} ${res} over ${rounds(n)}`;
+    giveOne(f, res, f.s);   // the first share lands at once: a potion still saves you in a pinch
+    return `Drinks ${name}: +${r0(amt * fs)} ${res} now, the rest over the next ${rounds(n - 1)}`;
   }
   /* a follower, a party member or a coop ally drinks (or is given) a potion */
   function ally(al, res, amt, name, s = null) {
-    const n = ticks(s, amt), r = put(al, res, amt, n, name);
+    const n = ticks(s, amt), fs = firstOf(s), r = put(al, res, amt, n, name, fs);
     hookFx();
-    return r.kept ? "the last one is still working" : `+${r0(amt)} over ${rounds(n)}`;
+    if (r.kept) return "the last one is still working";
+    giveOne(al, res, s);   // the first share at once, like yours
+    return `+${r0(amt * fs)} now, the rest over the next ${rounds(n - 1)}`;
   }
   const maxOf = (h, res, s) => {
     if (s) return res === "health" ? G.maxHealth(s) : res === "magicka" ? G.maxMagicka(s) : G.maxStamina(s);
     return res === "health" ? (h.maxHp || h.hpMax || h._max || Infinity) : res === "magicka" ? (h.mpMax || Infinity) : (h.spMax || Infinity);
   };
-  /* the next share: half of it in the first round (a potion still saves you in a pinch), the rest evenly over the others */
-  const share = (c) => (c.n <= 1 ? c.left : c.left >= (c.total || c.left) - 0.01 ? c.left / 2 : c.left / c.n);
+  /* the next share: the first is 60% (given the moment you drink), the rest evenly over the other rounds */
+  const share = (c) => (c.n <= 1 ? c.left : c.left >= (c.total || c.left) - 0.01 ? c.left * (c.first || FIRST) : c.left / c.n);
+  /* one share of one kind off h's potion; returns what h actually gained */
+  function giveOne(h, res, s) {
+    const box = h.potOT, c = box?.[res]; if (!c) return 0;
+    const give = share(c);
+    c.left -= give; c.n--;
+    const k = KEY[res]; let got = 0;
+    if (typeof h[k] === "number" && (res !== "health" || h[k] > 0)) {
+      const b = h[k]; h[k] = Math.min(maxOf(h, res, s), h[k] + give);
+      got = h[k] - b;
+    }
+    if (c.n <= 0 || c.left < 0.01) delete box[res];
+    if (!Object.keys(box).length) delete h.potOT;
+    return got;
+  }
   /* one share off everything that's working on h; returns { res: gained } */
   function tickOne(h, s) {
-    const box = h.potOT, got = {};
-    if (!box) return got;
-    for (const res of KINDS) {
-      const c = box[res]; if (!c) continue;
-      const give = share(c);
-      c.left -= give; c.n--;
-      const k = KEY[res];
-      if (typeof h[k] === "number" && (res !== "health" || h[k] > 0)) {
-        const b = h[k]; h[k] = Math.min(maxOf(h, res, s), h[k] + give);
-        if (h[k] - b >= 0.5) got[res] = h[k] - b;
-      }
-      if (c.n <= 0 || c.left < 0.01) delete box[res];
-    }
-    if (!Object.keys(box).length) delete h.potOT;
+    const got = {};
+    if (!h.potOT) return got;
+    for (const res of KINDS) { const g = giveOne(h, res, s); if (g >= 0.5) got[res] = g; }
     return got;
   }
   /* end of every round (MAGIC.tick): you, then your allies */
@@ -153,7 +164,7 @@ const POTFX = (() => {
   }
   const tipOf = (x) => x.road
     ? `${x.name || "Potion"}: +${r0(x.left)} more health over the next ${x.n} ${x.n === 1 ? "second" : "seconds"}. Another one of the same kind doesn't stack.`
-    : `${x.name || "Potion"}: +${r0(share(x))} ${x.res} at the end of this round, less after that, ${x.n} more (${r0(x.left)} left). Another one of the same kind doesn't stack.`;
+    : `${x.name || "Potion"}: +${r0(share(x))} ${x.res} at the end of this round, ${x.n} more (${r0(x.left)} left). Another one of the same kind doesn't stack.`;
   const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
   function icon(res, px = 16) {
     try { if (typeof ICONART !== "undefined") { const h = ICONART.item(ITEM[res], px); if (h) return h; } } catch (e) { /* plain glyph */ }
@@ -204,7 +215,7 @@ const POTFX = (() => {
     const ar0 = S.applyRemote;
     S.applyRemote = function (al, r) {
       ar0.apply(this, arguments);
-      if (al && r && r.potOT && !al.down) for (const [res, c] of Object.entries(r.potOT)) if (c && KINDS.includes(res) && c.left > 0) put(al, res, +c.left, +c.n || 1, c.name);
+      if (al && r && r.potOT && !al.down) for (const [res, c] of Object.entries(r.potOT)) if (c && KINDS.includes(res) && c.left > 0) { const r = put(al, res, +c.left, +c.n || 1, c.name); if (!r.kept && +c.total > +c.left) r.cur.total = +c.total; }   // already started: even shares from here
     };
   }
   if (typeof SHAREDFIGHT !== "undefined" && SHAREDFIGHT.Mirror) {
