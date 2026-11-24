@@ -11,3 +11,4 @@ android/keystore.properties
 tests/tbf/
 tests/fread/
 tests/bscene/
+tests/out_followers2/

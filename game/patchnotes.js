@@ -3,6 +3,18 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b136", build: 136, date: "24 Nov 2026", title: "Followers fight like you do", items: [
+      "Your follower is now a full character. They have their own magicka and stamina, take their own turn with action points like yours, and pick from the same moves: attacks, power attacks, guarding, stepping in front of you, spells and potions.",
+      "Teach them spells: open the follower screen, go to Magic and hand them a spell tome from your pack. They can learn it if they're good enough in that school (Apprentice 25, Adept 50, Expert 75, Master 90). You can tell them not to use a spell.",
+      "Mages throw fire, frost and shock, healers patch you and the party up, conjurers call atronachs and raise the dead, and some cast flesh spells and wards. Their summons fight on their own and fade after a few turns.",
+      "They drink potions you give them when they need them. Tick Save potions for emergencies if you'd rather they wait until it's bad.",
+      "New Tactics tab: Let them decide, Aggressive, Defensive, Healer or Ranged. Healers and archers stand in the back row and get hit less; defensive followers stand in front and draw blows to themselves.",
+      "They can wear everything you can, and hold a second one-handed weapon in the left hand.",
+      "Combos: one of you sets the foe up, someone else cashes in. Shatter (hit a foe someone else froze), Overload (shock a foe someone else set burning), Steam (frost on someone else's burn: it all goes off at once), Thermal shock (fire on someone else's chill) and Opening (your follower, summons and friends hit a staggered or paralyzed foe harder). Combos are capped, so no one-shots.",
+      "Under the foe's health you can now see what it's weak to or shrugs off (fire, frost, shock).",
+      "In a fight, your follower shows magicka and stamina bars and which row they're in. Followers are still only knocked down, never killed.",
+      "Two new Speechcraft perks: Battle Tutor (your follower learns tomes 10 points early and pays 20% less magicka) and Shield-Brother (combos hit 25% harder).",
+    ] },
     { id: "b135", build: 135, date: "24 Nov 2026", title: "No more flickering popups", items: [
       "Fixed: popups (like tapping an equipment slot) flickered for a split second just after they opened. They now open smoothly and stay put.",
     ] },

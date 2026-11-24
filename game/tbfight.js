@@ -217,6 +217,7 @@ const TB = (() => {
       if (mult && mult !== 1 && f.ehp < before) { f.ehp = before - (before - f.ehp) * mult; text += mult > 1 ? " (perfect timing!)" : " (mistimed)"; }
       if (typeof DRAGONS !== "undefined") text += DRAGONS.graze(f, a, before);
       if (typeof FOEKIT !== "undefined") text += FOEKIT.defend(f, a, before);   // its raised shield, ward or dodge
+      if (typeof COMBO !== "undefined" && f.ehp < before) text += COMBO.after(f, a, before);   // followers2: combos
       text += this.capFoe(before);
       if (f.ehp < before) { text += this.flank(before); this.hitters++; }
       if (typeof DRAGONS !== "undefined") DRAGONS.check(f, this);
@@ -274,12 +275,13 @@ const TB = (() => {
     allyMove(al, move, timedOut) {
       const f = this.f;
       if (al.down || f.ehp <= 0) return;
+      if (al.fai && typeof FAI !== "undefined" && !(al.player && move && move !== "auto")) return FAI.turn(this, f, al);   // followers2: their own AP turn
       const b = f.ehp, hpB = f.hp;
       let t;
       if (al.player && move && move !== "auto") t = this.playerMove(al, move);
       else if (al.coop && typeof COOP !== "undefined") t = COOP.allyAct(f, al);
       else if (al.follower && f.ai && typeof COMBATAI !== "undefined") t = COMBATAI.followerAct(f, al);
-      else { const d = al.dmg * (0.85 + Math.random() * 0.3); f.ehp -= d; t = ` · ${al.name} ${Math.round(d)}`; }
+      else { const d = al.dmg * (0.85 + Math.random() * 0.3); f.ehp -= d; t = ` · ${al.name} ${Math.round(d)}`; if (al.fsum && typeof COMBO !== "undefined") t += COMBO.phys(f, b, "al" + f.allies.indexOf(al)); }   // followers2: summons can shatter too
       t = String(t || "").replace(/^ · /, "");
       if (f.ehp < b) { t += this.capFoe(b) + this.flank(b); this.hitters++; }
       if (timedOut) t = `${al.name} took too long and keeps their guard up. ` + t;
@@ -646,7 +648,7 @@ const TB = (() => {
       const role = a.role ? ` · ${a.role}` : a.follower ? " · follower" : a.player ? " · player" : "";
       const tip = `${a.name}${role}. ${down ? "Knocked down" : `${hp} / ${mx} health`}.${down ? " A Rescue spell can bring them back." : " Drag a healing spell, scroll or potion here to use it on them."}`;
       return `<div class="tbu ally${down ? " down" : ""}" data-tbzone="${down ? "ally" : "self ally"}" data-ally="${down ? 1000 + i : i}" data-tip="${esc(tip)}"><small class="nm">${ic} ${esc(a.name)}${fx ? ` <span class="fx">${fx}</span>` : ""}</small>
-        <div class="tbbar mid hp"><b class="gh" style="width:${pc(Math.max(hp, was), mx)}%" data-to="${pc(hp, mx)}"></b><i style="width:${pc(hp, mx)}%"></i><span class="num">${down ? "down" : `${hp} / ${mx}`}</span></div></div>`;
+        <div class="tbbar mid hp"><b class="gh" style="width:${pc(Math.max(hp, was), mx)}%" data-to="${pc(hp, mx)}"></b><i style="width:${pc(hp, mx)}%"></i><span class="num">${down ? "down" : `${hp} / ${mx}`}</span></div>${!down && typeof FAI !== "undefined" ? FAI.frame(a) : ""}</div>`;
     };
     const live = f.allies.filter((a) => a.hp != null).map((a) => one(a, f.allies.indexOf(a), false));
     const downed = (f._downed || []).map((a, i) => one(a, i, true));
@@ -670,6 +672,7 @@ const TB = (() => {
     if (f.tbStunLeft > 0) out.push(`<i class="st stun" data-tip="${typeof TBTIPS !== "undefined" ? TBTIPS.STATUS.stun : ""}">💥</i>`);
     if (f.stagger) out.push(`<i class="st stag" data-tip="${typeof TBTIPS !== "undefined" ? TBTIPS.STATUS.stag : ""}">💫</i>`);
     if (typeof FOEKIT !== "undefined") for (const [c, ic, tip] of FOEKIT.chips(f)) out.push(`<i class="st kit ${c}" data-tip="${esc(tip)}">${ic}</i>`);
+    if (typeof COMBO !== "undefined") for (const [c, ic, tip] of COMBO.chips(f)) out.push(`<i class="st ${c}" data-tip="${esc(tip)}">${ic}</i>`);   // followers2: weak/resists
     return out.length ? `<div class="tbst">${out.join("")}</div>` : "";
   }
   /* animate just what happened since the last screen: a view of the fight with only those lines (the full fight-scene
