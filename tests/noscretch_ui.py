@@ -246,12 +246,17 @@ async def run_one(b, vp, style, report):
         except Exception as e:
             if i == 3: raise
             await pg.wait_for_timeout(1500)
+    try: await pg.wait_for_selector(".press", timeout=45000)   # a busy machine can take a while to unroll the map
+    except Exception: pass
     await pg.wait_for_timeout(2000)
     if not ONLY or "title" in ONLY: await snap("title")
     await ev(pg, "document.querySelector('.press')?.click()"); await pg.wait_for_timeout(500)
     if not ONLY or "title_menu" in ONLY: await snap("title_menu")
     await ev(pg, "document.querySelector('.mi[data-t=new]')?.click()"); await pg.wait_for_timeout(500)
     if not ONLY or "create" in ONLY: await snap("create")
+    for i in range(5):   # the new-character card can come up late
+        if (await ev(pg, "!!document.querySelector('#nm')")) is True: break
+        await ev(pg, "document.querySelector('.press')?.click(); document.querySelector('.mi[data-t=new]')?.click()"); await pg.wait_for_timeout(1500)
     await pg.fill("#nm", "Ysolda"); await pg.click("#begin"); await pg.wait_for_timeout(1800)
     await ev(pg, NOON); await ev(pg, SETUP); await ev(pg, RESET)
     for sname, fn in SCREENS:
