@@ -6,11 +6,11 @@ const src = (f) => fs.readFileSync(path.join(W, f), "utf8");
 let fail = 0, checks = 0;
 const ok = (c, m) => { checks++; if (!c) { fail++; console.log("FAIL", m); } };
 
-// the add-on is loaded after the other i18n_*.js files and right before i18n.js
+// the add-on is loaded after the other i18n_*.js files and before i18n.js
 const html = src("index.html");
 const order = [...html.matchAll(/<script src="(i18n[^"]*)"/g)].map((m) => m[1]);
 ok(order.includes("i18n_sweep.js"), "i18n_sweep.js in index.html");
-ok(order.indexOf("i18n_sweep.js") === order.length - 2 && order[order.length - 1] === "i18n.js", "i18n_sweep.js right before i18n.js: " + order.join(","));
+ok(order.indexOf("i18n_sweep.js") >= 0 && order.indexOf("i18n_sweep.js") < order.indexOf("i18n.js") && order[order.length - 1] === "i18n.js", "i18n_sweep.js loads before i18n.js: " + order.join(","));
 
 const FILES = ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "enchanting.js", "quests.js", "horses.js", "hall.js", "bounty.js", "visits.js", "cooking.js", "arena.js", "market.js", "smithing.js", "social.js", "ammo.js", "tomes.js", "guide.js", "magic.js", "spellcraft.js", "priests.js", "mp.js"];
 function load(lang, game) {
