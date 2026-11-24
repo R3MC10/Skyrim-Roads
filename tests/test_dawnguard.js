@@ -13,8 +13,10 @@ c.__lang = "en"; c.localStorage = { getItem: () => JSON.stringify({ lang: c.__la
   }
   c.__cands = [...out]; }
 vm.createContext(c);
-for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "legendary.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "enchanting.js", "quests.js", "guilds.js", "priests.js", "civilwar.js", "daedric.js", "horses.js", "horseback.js", "hall.js", "bounty.js", "visits.js", "cooking.js", "arena.js", "achievements.js", "market.js", "curses.js", "smithing.js", "craftfair.js", "social.js", "ammo.js", "tomes.js", "magic.js", "guide.js", "combatai.js", "mp.js", "coop.js", "party.js", "followers2.js", "followerai.js", "combo.js", "partyplay.js", "followerbonds.js", "dawnguard.js", "i18n_story.js", "i18n_bonds.js", "i18n_dawnguard.js", "i18n.js"])
-  if (fs.existsSync(W + f)) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
+// the whole game in index.html order, so fights use everything a phone uses (foe perks, shields, follower AI...);
+// the few screen-only files that need a page are skipped
+for (const f of fs.readFileSync(W + "index.html", "utf8").match(/<script src="[^"]+"/g).map((m) => m.slice(13, -1)))
+  if (fs.existsSync(W + f)) { try { vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c); } catch (er) { if (!/^(store|ui)\.js$/.test(f)) console.log("skipped " + f + ": " + er.message); } }
 const SIM = fs.readFileSync(__dirname + "/test_bal_sim.js", "utf8");
 vm.runInContext(SIM.slice(SIM.indexOf("const LEVELS"), SIM.indexOf("const BUILDS")) + `
 let n = 0; const OK = (x, m) => { if (!x) throw new Error("FAIL " + m); n++; };
@@ -143,30 +145,43 @@ OK(Object.keys(DAWNGUARD.PERK_SIDE).every((id) => PFX.FX[id]), "every side perk 
   __lang = "pl"; OK(I18N.lang() === "pl", "Polish on");
   OK(I18N.tr("Dawnguard: Hunt the Night") === "Straż Świtu: Łowy na noc", "line name in Polish");
   OK(/Straż Świtu/.test(I18N.tr(QUESTS.L.dg_awakening.stages[0].text)) && !/Isran is rebuilding/.test(I18N.tr(QUESTS.L.dg_awakening.stages[0].text)), "stage text in Polish");
+  { const done = I18N.tr("📜 Dawnguard: Hunt the Night: “Awakening” done (200 gold, the title Vampire Hunter).");
+    OK(/^📜 Straż Świtu: Łowy na noc: „.+” ukończone \\(200 złota, tytuł .+\\)\\.$/.test(done), "stage-done line in Polish: " + done);
+    const both = I18N.tr("Awakening 📜 Dawnguard: Hunt the Night: “Awakening” done. New objective: Prophet.");
+    OK(/ukończone/.test(both) && /Nowy cel/.test(both) && !/ done/.test(both), "stage-done line after a stage title in Polish: " + both);
+    OK(/^Znajdziesz ich tu: /.test(I18N.tr("Find them at Fort Dawnguard.")), "where to find a quest giver in Polish");
+    OK(I18N.tr("They're here. Ask to join.") === "Są tutaj. Poproś, żeby cię przyjęli.", "quest giver here, in Polish"); }
   __lang = "en"; }
 
 // 8. balance: plain-gear heroes at the recommended level win most fights; the final bosses are beatable at 25+ and never one-shot
 const N = +(process.env.N || 30), rows = [], BUILDS5 = ["warrior", "twohand", "archer", "mage", "spellsword"];
 function trial(id, i, lvl) {
-  const st = QUESTS.L[id].stages[i], o = st.obj; let w = 0, minTurns = 99, turns = 0, left = 0;
+  const st = QUESTS.L[id].stages[i], o = st.obj; let w = 0, minTurns = 99, turns = 0, left = 0, big = 0;
   for (let k = 0; k < N; k++) {
     const s = make(BUILDS5[k % 5], lvl); s.quests = { [id]: { stage: i, t: G.now() } };
     if (id === "dg_volkihar") s.vampire = { since: 0, fedAt: 0 };
     at(s, o.talk); G.setHealth(s, G.maxHealth(s));
     const def = o.fight || o.check.fight, e = QUESTS.foeFor(s, id, i, def), f = new G.Fight(s, e, null, G.now());
     (o.allies || []).forEach(([name, dmg]) => f.allies.push({ name, dmg })); f.run({ t: G.now() });
-    if (f.won) { w++; minTurns = Math.min(minTurns, f.turn); left += Math.max(0, f.hp) / G.maxHealth(s); } turns += f.turn;
+    const mh = G.maxHealth(s); for (const l of f.log) for (const m of String(l.them || "").matchAll(/ hits ([0-9]+)/g)) big = Math.max(big, +m[1] / mh);   // the foe's blows on you
+    if (f.won) { w++; minTurns = Math.min(minTurns, f.turn); left += Math.min(1, Math.max(0, f.hp) / mh); } turns += f.turn;
   }
-  return { w: Math.round(100 * w / N), minTurns, avgTurns: Math.round(turns / N), left: Math.round(100 * left / Math.max(1, w)) };
+  return { w: Math.round(100 * w / N), minTurns, avgTurns: Math.round(turns / N), left: Math.round(100 * left / Math.max(1, w)), big: Math.round(100 * big) };
 }
 for (const id of DAWNGUARD.LINES) QUESTS.L[id].stages.forEach((st, i) => {
   if (!st.obj.fight && !(st.obj.check && st.obj.check.fight)) return;
   const rec = QUESTS.recOf(id, i), r = trial(id, i, rec); rows.push([id, st.title, rec, r]);
-  console.log(id + " · " + st.title + " · lvl " + rec + " · win " + r.w + "% · turns avg " + r.avgTurns + " min " + r.minTurns + " · health left " + r.left + "%");
+  console.log(id + " · " + st.title + " · lvl " + rec + " · win " + r.w + "% · turns avg " + r.avgTurns + " min " + r.minTurns + " · health left " + r.left + "% · biggest hit " + r.big + "%");
 });
-const avg = rows.reduce((a, r) => a + r[3].w, 0) / rows.length; console.log("average win at recommended level:", Math.round(avg) + "%");
-OK(avg >= 55, "fights winnable at the recommended level");
-OK(rows.every((r) => r[3].w >= 25), "no fight a wall at its level");
+const mean = (k) => rows.reduce((a, r) => a + r[3][k], 0) / rows.length, avg = mean("w"), avgLeft = mean("left");
+console.log("at the recommended level: average win " + Math.round(avg) + "% · average health left " + Math.round(avgLeft) + "%");
+OK(avg >= 82 && avg <= 97, "most heroes win at the recommended level, but not all (" + Math.round(avg) + "%)");
+OK(rows.every((r) => r[3].w >= 65), "no fight a wall at its level");
+OK(avgLeft <= 80 && avgLeft >= 40, "fights cost health (" + Math.round(avgLeft) + "% left on average)");
+OK(rows.every((r) => r[3].big <= 40), "no foe takes more than 40% of your health in one blow");
+for (const r of rows) if (QUESTS.L[r[0]].stages.length - 1 === QUESTS.L[r[0]].stages.findIndex((st) => st.title === r[1])) {
+  OK(r[3].minTurns >= 3, r[0] + " final boss lasts at least 3 turns at its level");
+  OK(r[3].left <= 75, r[0] + " final boss costs real health (" + r[3].left + "% left)"); }
 for (const id of ["dg_dawnguard", "dg_volkihar"]) {
   const i = QUESTS.L[id].stages.length - 1;
   for (const lvl of [25, 30, 40]) { const r = trial(id, i, lvl); console.log(id + " final boss at level " + lvl + ": win " + r.w + "% · turns avg " + r.avgTurns + " min " + r.minTurns + " · health left " + r.left + "%");

@@ -117,4 +117,12 @@
   };
   for (const [k, v] of Object.entries(PL)) if (!(k in I18N_STORY.ex)) I18N_STORY.ex[k] = v;
   I18N_STORY.pats.push(["Harkon's blood {0}", "krew Harkona {0}"]);
+  // every quest line (quests.js, ui.js): the "stage done" line in quest popups, and where to find a quest giver
+  for (const [k, v] of [["They're here.", "Są tutaj."], ["Ask to join.", "Poproś, żeby cię przyjęli."]]) if (!(k in I18N_STORY.ex)) I18N_STORY.ex[k] = v;
+  I18N_STORY.pats.push(
+    ["📜 {0}: “{1}” done ({2}).", "📜 {0}: „{1}” ukończone ({2})."],
+    ["📜 {0}: “{1}” done.", "📜 {0}: „{1}” ukończone."],
+    ["{9} 📜 {0}: “{1}” done ({2}).", "{9} 📜 {0}: „{1}” ukończone ({2})."],
+    ["{9} 📜 {0}: “{1}” done.", "{9} 📜 {0}: „{1}” ukończone."],
+    ["Find them at {0}.", "Znajdziesz ich tu: {0}."]);
 })();

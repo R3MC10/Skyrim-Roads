@@ -103,6 +103,7 @@ const I18N = (() => {
     [/^You're in (.+)$/, (m) => `Jesteś w: ${m[1]}`], [/^Go to (.+)$/, (m) => `Idź do: ${m[1]}`], [/^Begin in (.+)$/, (m) => `Zacznij w: ${m[1]}`],
     [/^Continue to (.+)$/, (m) => `Dalej do: ${m[1]}`], [/^(\d+) of (\d+)$/, (m) => `${m[1]} z ${m[2]}`], [/^Level (\d+): (\d+)% to the next level$/, (m) => `Poziom ${m[1]}: ${m[2]}% do następnego`],
     [/^(\d+)\/(\d+) toward level (\d+)$/, (m) => `${m[1]}/${m[2]} do poziomu ${m[3]}`], [/^~(\d+) min$/, (m) => `~${m[1]} min`],
+    [/^the title (.+)$/, (m) => `tytuł ${PL[m[1]] ?? m[1]}`],
   ];
   /* story text: split into sentences, translate each one (exact, or a template whose {markers} are filled from the English) */
   const ST = typeof I18N_STORY !== "undefined" ? I18N_STORY : { ex: {}, pats: [] };
@@ -118,6 +119,9 @@ const I18N = (() => {
     }).sort((a, b) => b.lead.length - a.lead.length);
     return STP;
   }
+  /* a {marker}'s English: a known name, or a list of them ("200 gold, Dawnguard Rune Axe"), each piece looked up on its own */
+  const one = (x) => { const k = PL[x] ?? ST.ex[x]; if (k != null) return k; for (const [re, f] of PAT) { const m = x.match(re); if (m) { const r = f(m); if (r) return r; } } return x; };
+  const fill = (v) => PL[v] ?? ST.ex[v] ?? (v.includes(", ") ? v.split(", ").map(one).join(", ") : one(v));
   function sentence(s) {
     const ex = ST.ex[s] ?? PL[s];
     if (ex != null) return ex;
@@ -125,7 +129,7 @@ const I18N = (() => {
       if (p.lead && !s.startsWith(p.lead)) continue;
       const m = s.match(p.re); if (!m) continue;
       let out = p.pl;
-      p.names.forEach((n, i) => { const v = m[i + 1]; out = out.split(n).join(PL[v] ?? ST.ex[v] ?? v); });
+      p.names.forEach((n, i) => { const v = m[i + 1]; out = out.split(n).join(fill(v)); });
       return out;
     }
     return null;

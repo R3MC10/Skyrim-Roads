@@ -11,7 +11,7 @@
    clears, so a party clears them as a co-op run and votes on the loot (coop.js, lootvote.js).
    Story beats follow the Dawnguard questline, retold in our own words; [OURS] the places used for each stage, numbers. */
 const DAWNGUARD = (() => {
-  const E = (name, health, damage, tags, extra = {}) => ({ name, health, damage, tags, level: 10, danger: "high", gold: [0, 0], text: "", ...extra });
+  const E = (name, health, damage, tags, extra = {}) => ({ name, health, damage, tags, level: 10, danger: "high", gold: [0, 0], text: "", hitCap: 0.36, ...extra });   // hitCap: one blow never takes more than 36% of your health (engine.js)
   // ---- rewards ([Skyrim] names, close-to-Skyrim stats; ids keep the weapon type the engine reads from them)
   Object.assign(D.ITEMS, {
     dawnguard_helmet: { name: "Dawnguard Helmet", slot: "head", type: "heavy", armor: 19, weight: 6, value: 300 },
@@ -30,7 +30,7 @@ const DAWNGUARD = (() => {
     dg_awakening: { name: "Dawnguard: Awakening", giver: "Isran, Fort Dawnguard near Riften (from level 12)", start: "Fort Dawnguard", stages: [
       { title: "A New Order", rec: 12, text: "Isran is rebuilding the Dawnguard, the old vampire hunters. He hears vampires are digging at Dimhollow Crypt. Go and clear it.", obj: { clear: "Dimhollow Crypt" }, reward: { gold: 150 } },
       { title: "Awakening", rec: 13, text: "Deep in the crypt a sealed coffin stands on a ring of stone. Open it. Whatever sleeps inside has guards.",
-        obj: { talk: "Dimhollow Crypt", label: "Open the sealed coffin", fight: E("Crypt guardians", 280, 24, ["undead", "elite"]) }, reward: { gold: 200 } },
+        obj: { talk: "Dimhollow Crypt", label: "Open the sealed coffin", fight: E("Crypt guardians", 360, 34, ["undead", "elite"]) }, reward: { gold: 200 } },
       { title: "Bloodline", rec: 14, text: "The coffin held Serana, a vampire who slept for ages with an Elder Scroll on her back. She wants to go home. Wade out to Castle Volkihar with her and meet her father, Lord Harkon.",
         obj: { talk: "Castle Volkihar", label: "Hear Harkon's offer" }, reward: { gold: 250 } },
     ] },
@@ -40,15 +40,15 @@ const DAWNGUARD = (() => {
       { title: "Old Friends", rec: 16, text: "Isran needs Gunmar, the troll tamer. Gunmar went into Fallowstone Cave after a pack of wild trolls. Clear it with him.",
         obj: { clear: "Fallowstone Cave" }, reward: { gold: 250, items: ["troll_armor"] } },
       { title: "Prophet", rec: 18, text: "Only a Moth Priest can read Serana's Elder Scroll. One is on the road to Dragon Bridge, and vampires are waiting for him. Get there first.",
-        obj: { talk: "Dragon Bridge", label: "Break the vampire ambush", fight: E("Vampire ambush", 320, 30, ["undead", "humanoid", "elite"]), allies: [["Dawnguard hunter", 8]] }, reward: { gold: 300 } },
+        obj: { talk: "Dragon Bridge", label: "Break the vampire ambush", fight: E("Vampire ambush", 520, 42, ["undead", "humanoid", "elite"]), allies: [["Dawnguard hunter", 8]] }, reward: { gold: 300 } },
       { title: "Unseen Visions", rec: 20, text: "The Moth Priest says the prophecy needs a second Elder Scroll. The Dwemer hid one deep in Raldbthar. Clear it.",
         obj: { clear: "Raldbthar" }, reward: { gold: 350 } },
       { title: "Chasing Echoes", rec: 22, text: "Serana's mother hid the last Scroll. Her notes are somewhere in Castle Volkihar's old courtyard. Slip in unseen.",
-        obj: { talk: "Castle Volkihar", label: "Sneak into the courtyard", check: { skill: "Sneak", need: 40, fight: E("Volkihar thralls", 340, 32, ["undead", "humanoid", "elite"]) } }, reward: { gold: 400 } },
+        obj: { talk: "Castle Volkihar", label: "Sneak into the courtyard", check: { skill: "Sneak", need: 40, fight: E("Volkihar thralls", 520, 45, ["undead", "humanoid", "elite"]) } }, reward: { gold: 400 } },
       { title: "The Blood Nest", rec: 24, text: "Harkon feeds his court from a nest of vampires at Bloodlet Throne. Burn it out before the last fight.",
         obj: { clear: "Bloodlet Throne" }, reward: { gold: 450 } },
       { title: "Kindred Judgment", rec: 28, text: "The Scrolls are read. Harkon means to blot out the sun for good. Storm Castle Volkihar with Isran, Serana and the trolls, and end him.",
-        obj: { talk: "Castle Volkihar", label: "Storm the castle and face Harkon", fight: E("Lord Harkon", 820, 48, ["undead", "humanoid", "elite"], { boss: true }), allies: [["Isran", 8], ["Serana", 7], ["Armoured troll", 6]] },
+        obj: { talk: "Castle Volkihar", label: "Storm the castle and face Harkon", fight: E("Lord Harkon", 1200, 62, ["undead", "humanoid", "elite"], { boss: true }), allies: [["Isran", 8], ["Serana", 7], ["Armoured troll", 6]] },
         reward: { gold: 2000, items: ["dawnguard_rune_warhammer"], flag: "dgDawnguard", title: "Hero of the Dawnguard" } },
     ] },
     dg_volkihar: { name: "Volkihar: Harkon's Gift", giver: "Lord Harkon, Castle Volkihar", start: "Castle Volkihar", side: "volkihar", stages: [
@@ -57,15 +57,15 @@ const DAWNGUARD = (() => {
       { title: "A Thrall Taken", rec: 16, text: "The Thalmor took one of Harkon's thralls to Northwatch Keep. Show the court what its new lord can do. Clear the keep.",
         obj: { clear: "Northwatch Keep" }, reward: { gold: 250 } },
       { title: "Prophet", rec: 18, text: "Only a Moth Priest can read Serana's Elder Scroll. One is on the road to Dragon Bridge with a Dawnguard escort. Take him for Harkon.",
-        obj: { talk: "Dragon Bridge", label: "Ambush the Dawnguard escort", fight: E("Dawnguard escort", 320, 30, ["humanoid", "elite"]), allies: [["Vampire thrall", 8]] }, reward: { gold: 300 } },
+        obj: { talk: "Dragon Bridge", label: "Ambush the Dawnguard escort", fight: E("Dawnguard escort", 580, 48, ["humanoid", "elite"]), allies: [["Vampire thrall", 8]] }, reward: { gold: 300 } },
       { title: "Unseen Visions", rec: 20, text: "The Moth Priest says the prophecy needs a second Elder Scroll. The Dwemer hid one deep in Raldbthar. Clear it.",
         obj: { clear: "Raldbthar" }, reward: { gold: 350 } },
       { title: "Chasing Echoes", rec: 22, text: "Serana's mother hid the last Scroll beyond a gate in the castle's old courtyard. Its keepers don't want it opened.",
-        obj: { talk: "Castle Volkihar", label: "Open Valerica's gate", fight: E("Soul Cairn keepers", 340, 32, ["undead", "elite"]), allies: [["Serana", 10]] }, reward: { gold: 400, items: ["vampire_royal_armor"] } },
+        obj: { talk: "Castle Volkihar", label: "Open Valerica's gate", fight: E("Soul Cairn keepers", 1050, 58, ["undead", "elite"]), allies: [["Serana", 10]] }, reward: { gold: 400, items: ["vampire_royal_armor"] } },
       { title: "The Hunter Hunted", rec: 24, text: "Gunmar's armoured trolls are the Dawnguard's teeth. They're kept in Fallowstone Cave. Kill them before the assault.",
         obj: { clear: "Fallowstone Cave" }, reward: { gold: 450 } },
       { title: "Destroying the Dawnguard", rec: 28, text: "The Scrolls are read and the sun will fail. Only Fort Dawnguard stands in the way. Lead Harkon's assault and break Isran.",
-        obj: { talk: "Fort Dawnguard", label: "Lead the assault on Fort Dawnguard", fight: E("Isran and the Dawnguard", 820, 48, ["humanoid", "elite"], { boss: true }), allies: [["Lord Harkon", 8], ["Serana", 7], ["Gargoyle", 6]] },
+        obj: { talk: "Fort Dawnguard", label: "Lead the assault on Fort Dawnguard", fight: E("Isran and the Dawnguard", 1500, 60, ["humanoid", "elite"], { boss: true }), allies: [["Lord Harkon", 8], ["Serana", 7], ["Gargoyle", 6]] },
         reward: { gold: 2000, items: ["harkons_sword"], flag: "dgVolkihar", title: "Lord of Volkihar" } },
     ] },
   };
