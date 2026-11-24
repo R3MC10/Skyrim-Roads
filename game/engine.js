@@ -932,6 +932,7 @@ const G = (() => {
         if (fp.stagger && Math.random() < fp.stagger) { this.sp = Math.max(0, this.sp - 15); this.blocking = false; extra += " · staggers you"; }
         if (fp.paralyze && Math.random() < fp.paralyze) { this.sp = Math.max(0, this.sp - 30); extra += " · knocks the wind out of you"; }
       }
+      if (this.e.hitCap && dmg > this.e.hitCap * maxHealth(s)) dmg = this.e.hitCap * maxHealth(s);   // [OURS] story foes that opt in can't take more than this share of your health in one blow (dawnguard.js)
       this.hp -= dmg;
       if (px) {
         const fe = PFX.foeElement(this.e);   // fire mages burn you, frost trolls chill you, storm atronachs jolt you
