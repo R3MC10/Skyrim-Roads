@@ -78,6 +78,7 @@ const FOL2 = (() => {
       bestEquip(s, id);
       spend(s, id);
     }
+    if (typeof FAI !== "undefined") FAI.seed(f);   // known spells, tactics (followerai.js)
     return f;
   }
   // a stand-in save the perk code can read: level, skills, perks
@@ -126,15 +127,33 @@ const FOL2 = (() => {
   const worn = (f, slot) => f.inv.find((r) => r.id === f.eq[slot]) || null;
   const weight = (f) => f.inv.reduce((a, r) => a + (itemOf(r)?.weight || 0) * r.qty, 0);
   const carry = (f) => 150 + 5 * f.lvl;
-  const ARMOR_SLOTS = ["chest", "head", "hands", "feet", "shield"];
-  const EQ_SLOTS = ["weapon", ...ARMOR_SLOTS];
-  function equip(s, rowId) {
+  /* every equipment slot you have (the engine's shared list: weapon, shield, armor pieces, and jewelry once that's in),
+     plus a left hand for a second one-handed weapon, like yours. Numbered slots ("ring1", "ring2") take items of "ring". */
+  const SLOTS = () => ((typeof G !== "undefined" && G.SLOTS) || ["weapon", "shield", "head", "chest", "hands", "feet"]).filter((x) => x !== "offhand");
+  const ARMOR = () => (typeof G !== "undefined" && G.ARMOR_SLOTS) || ["head", "chest", "hands", "feet", "shield"];
+  const fits = (slot, it) => !!it && (slot === it.slot || (slot.startsWith(it.slot) && /\d$/.test(slot)));
+  const eqSlots = () => { const l = SLOTS(); const i = l.indexOf("weapon"); return [...l.slice(0, i + 1), "offhand", ...l.slice(i + 1)]; };
+  const wearable = (it) => !!it && SLOTS().some((x) => fits(x, it));
+  const canOff = (it) => !!it && it.slot === "weapon" && it.hands !== 2 && it.skill === "One-Handed" && !it.staff;
+  const SLOT_NAME = { weapon: "Right hand", offhand: "Left hand", shield: "Shield", head: "Head", chest: "Body", hands: "Hands", feet: "Feet", amulet: "Neck", ring: "Ring" };
+  const slotName = (k) => SLOT_NAME[k] || SLOT_NAME[k.replace(/\d+$/, "")] || k[0].toUpperCase() + k.slice(1);
+  function slotFor(f, it) { const all = SLOTS().filter((x) => fits(x, it)); return all.find((x) => !f.eq[x]) || all[0] || null; }
+  function equip(s, rowId, left) {
     const f = st(s); if (!f) return "No follower.";
     const r = f.inv.find((x) => x.id === rowId), it = itemOf(r);
-    if (!it || !EQ_SLOTS.includes(it.slot)) return "They can't wear that.";
+    if (!it || !wearable(it)) return "They can't wear that.";
+    if (left) {   // a one-handed weapon in the left hand: no shield, no two-hander
+      if (!canOff(it)) return "Only one-handed weapons fit in the left hand.";
+      if (itemOf(worn(f, "weapon"))?.hands === 2) return "Not with a two-handed weapon.";
+      if (f.eq.weapon === r.id && (r.qty || 1) < 2) return "They only have one of those.";
+      delete f.eq.shield; f.eq.offhand = r.id;
+      return `${nameOf(s.follower.id)} takes the ${it.name} in their left hand.`;
+    }
     if (it.slot === "shield" && itemOf(worn(f, "weapon"))?.hands === 2) return "Not with a two-handed weapon.";
-    if (it.slot === "weapon" && it.hands === 2) delete f.eq.shield;
-    f.eq[it.slot] = r.id;
+    if (it.slot === "shield") delete f.eq.offhand;
+    if (it.slot === "weapon" && it.hands === 2) { delete f.eq.shield; delete f.eq.offhand; }
+    if (it.slot === "weapon" && f.eq.offhand === r.id && (r.qty || 1) < 2) delete f.eq.offhand;
+    f.eq[slotFor(f, it)] = r.id;
     return `${nameOf(s.follower.id)} equips the ${it.name}.`;
   }
   function unequip(s, slot) { const f = st(s); if (f) delete f.eq[slot]; return "Taken off."; }
@@ -143,21 +162,27 @@ const FOL2 = (() => {
     const f = st(s, id); if (!f) return "No follower.";
     const a = ARCH[f.arch] || ARCH.warrior;
     const score = (r) => { const it = itemOf(r); if (!it) return -1;
+      if (it.slot !== "weapon" && !ARMOR().includes(it.slot)) return (it.value || 0) / 100 + (it.enchant || it.aenchant ? 10 : 0) + (r.ench ? 10 : 0);   // amulets and rings: the best one
       if (it.slot === "weapon") { if (it.staff) return a.mage ? 50 + (it.value || 0) / 100 : -1; return (it.damage || 0) + (r.temper || 0) + (it.skill === a.weapon ? 100 : it.skill === "One-Handed" && a.weapon === "Two-Handed" ? 20 : 0); }
       const typeBonus = it.type === a.armor ? 100 : a.armor === "cloth" ? (it.type === "cloth" ? 100 : it.type === "light" ? 10 : -50) : it.type === "cloth" ? -20 : 0;
       return (it.armor || 0) + (r.temper || 0) + typeBonus + (it.enchant ? 5 : 0); };
     f.eq = {};
-    for (const slot of EQ_SLOTS) {
-      const best = f.inv.filter((r) => itemOf(r)?.slot === slot).sort((x, y) => score(y) - score(x))[0];
+    const used = new Set();
+    for (const slot of SLOTS()) {
+      const best = f.inv.filter((r) => fits(slot, itemOf(r)) && !used.has(r.id)).sort((x, y) => score(y) - score(x))[0];
       if (!best || score(best) < 0) continue;
       if (slot === "shield" && (a.weapon === "Two-Handed" || a.weapon === "Archery" || itemOf(worn(f, "weapon"))?.hands === 2)) continue;
       if (slot === "weapon" && a.mage === 1 && !itemOf(best).staff) continue;   // mages keep their hands free for spells
-      f.eq[slot] = best.id;
+      f.eq[slot] = best.id; if ((best.qty || 1) < 2) used.add(best.id);
+    }
+    if (a.sneaky && a.weapon === "One-Handed" && !f.eq.shield) {   // thieves fight with a blade in each hand when they have two
+      const off = f.inv.filter((r) => canOff(itemOf(r)) && !used.has(r.id)).sort((x, y) => score(y) - score(x))[0];
+      if (off && f.eq.weapon) f.eq.offhand = off.id;
     }
     return `${nameOf(id)} puts on their best kit.`;
   }
   const STACK = new Set(["potion", "ammo", "ingredient", "misc", "food", "ore", "ingot", "gem", "soulgem", "scroll", "poison"]);
-  const stackable = (it) => it && (STACK.has(it.slot) || !EQ_SLOTS.includes(it.slot)) && !it.enchant;
+  const stackable = (it) => it && (STACK.has(it.slot) || !wearable(it)) && !it.enchant;
   /* hand an item from your pack to them */
   function give(s, invId, qty = 1) {
     const f = st(s); if (!f) return "No follower.";
@@ -212,7 +237,7 @@ const FOL2 = (() => {
   function armorRating(f) {
     const a = ARCH[f.arch] || ARCH.warrior;
     let ar = 0;
-    for (const slot of ARMOR_SLOTS) { const r = worn(f, slot), it = itemOf(r); if (!it || !it.armor) continue;
+    for (const slot of ARMOR()) { const r = worn(f, slot), it = itemOf(r); if (!it || !it.armor) continue;
       const sk = it.type === "heavy" ? "Heavy Armor" : it.type === "light" ? "Light Armor" : slot === "shield" ? "Blocking" : null;
       ar += (it.armor + (r.temper || 0)) * (1 + (sk ? skillOf(f, sk) : 15) / 200) * (1 + 0.2 * rank(f, ARMOR_PERK[it.type] || "")); }
     if (a.mage && a.main.includes("Alteration")) ar += 40 + skillOf(f, "Alteration") * 0.6;   // [Skyrim] mages cast a flesh spell
@@ -232,11 +257,13 @@ const FOL2 = (() => {
   /* an ally record for your own follower (engine pushes it) */
   function ally(s, hp) {
     const f = st(s); if (!f) return null;
-    return { name: nameOf(s.follower.id), dmg: dmg(s), hp, follower: true, fid: s.follower.id, kind: "follower", look: look(s), heals: healer(f) && skillOf(f, "Restoration") >= 25 ? 2 : 0 };
+    const rec = { name: nameOf(s.follower.id), dmg: dmg(s), hp, follower: true, fid: s.follower.id, kind: "follower", look: look(s), heals: healer(f) && skillOf(f, "Restoration") >= 25 ? 2 : 0 };
+    return typeof FAI !== "undefined" ? FAI.equipAlly(s, f, rec) : rec;   // spells, magicka, stamina, AP, tactics
   }
   /* their own turn's extras: drink a potion when badly hurt, heal you when you're in trouble. null = just attack */
   function turn(fight, al) {
     const s = fight.s, f = s.folData?.[al.fid]; if (!f || al.fid !== s.follower?.id) return null;
+    if (al.fai && typeof FAI !== "undefined") return FAI.turn(null, fight, al) || ` · ${al.name} keeps their guard up`;   // their whole turn, picked by their AI
     const max = maxHp(s, al.fid);
     if (al.hp < max * 0.35) { const p = potions(f)[0]; if (p) { const amt = D.ITEMS[p.item].restore[1]; al.hp = Math.min(max, al.hp + amt); p.qty--; if (p.qty <= 0) f.inv = f.inv.filter((x) => x !== p); return ` · ${al.name} drinks a ${D.ITEMS[p.item].name} (+${amt})`; } }
     if (al.heals > 0 && fight.hp > 0 && fight.hp < G.maxHealth(s) * 0.4) { al.heals--; const before = fight.hp; fight.hp = Math.min(G.maxHealth(s), fight.hp + healAmt(f)); return ` · ${al.name} heals you +${Math.round(fight.hp - before)}`; }
@@ -265,7 +292,7 @@ const FOL2 = (() => {
 
   // ---- how they look (your screen and everyone else's)
   const raceOf = (id) => INFO[id]?.[2] || "nord";
-  const eqItems = (f) => { const o = {}; for (const slot of EQ_SLOTS) { const r = worn(f, slot); if (r) o[slot] = r.item; } return o; };
+  const eqItems = (f) => { const o = {}; for (const slot of eqSlots()) { const r = worn(f, slot); if (r) o[slot] = r.item; } return o; };
   function look(s, id = s.follower?.id) { const f = st(s, id); return { r: raceOf(id), id: "f-" + id, eq: f ? eqItems(f) : {}, gl: {} }; }
   /* the small summary that goes in your player card, so party members can see and fight beside them */
   function card(s) {
@@ -311,30 +338,32 @@ const FOL2 = (() => {
     if (!s.follower || typeof TOWNS === "undefined" || !TOWNS.FOLLOWERS[s.follower.id]) return "";
     const id = s.follower.id, f = st(s), a = ARCH[f.arch] || ARCH.warrior, mx = maxHp(s, id), hp = Math.round(TOWNS.followerHp(s));
     const top = Math.min(capOf(id), s.level || 1), portrait = typeof NPCART !== "undefined" ? NPCART.follower(id, 44) : "";
-    const tabs = `<div class="chips fol2tabs">${[["card", "Overview"], ["inv", "Pack"], ["perks", "Skills & perks"]].map(([k, l]) => `<button class="chip ${view === k ? "on" : ""}" data-act="fol2" data-op="view" data-id="${k}">${l}</button>`).join("")}</div>`;
+    const tabs = `<div class="chips fol2tabs">${[["card", "Overview"], ["inv", "Pack"], ["magic", "Magic"], ["tactics", "Tactics"], ["perks", "Skills & perks"]].filter(([k]) => typeof FAI !== "undefined" || (k !== "magic" && k !== "tactics")).map(([k, l]) => `<button class="chip ${view === k ? "on" : ""}" data-act="fol2" data-op="view" data-id="${k}">${l}</button>`).join("")}</div>`;
     const head = `<div class="item fol2head">${portrait}<div class="t">${esc(nameOf(id))} <span class="num">Lv ${f.lvl}</span><span>${esc(a.name)} · ${hp}/${mx} health · hits ~${Math.round(dmg(s))} · armor ${armorRating(f)} · goes down instead of dying</span>
       <div class="bar fol2xp"><i style="width:${f.lvl >= top ? 100 : Math.round(f.xp / need(f.lvl) * 100)}%"></i></div><span class="sub">${f.lvl >= top ? (f.lvl >= capOf(id) ? `Level cap ${capOf(id)}` : "Levels up as you do") : `${f.xp}/${need(f.lvl)} XP to level ${f.lvl + 1}`} · loyalty ${f.loyal || 50}/100</span></div>
       <button class="btn sm" data-act="dismiss">Dismiss</button></div>`;
     let body = "";
     if (view === "card") {
-      const gear = EQ_SLOTS.map((slot) => { const r = worn(f, slot), it = itemOf(r); return `<div class="slot">${slot === "chest" ? "Body" : slot[0].toUpperCase() + slot.slice(1)}<b style="display:block">${it ? esc(it.name) + (r.temper ? ` +${r.temper}` : "") : "—"}</b></div>`; }).join("");
+      const gear = eqSlots().map((slot) => { const r = worn(f, slot), it = itemOf(r); return `<div class="slot">${esc(slotName(slot))}<b style="display:block">${it ? esc(it.name) + (r.temper ? ` +${r.temper}` : "") : "—"}</b></div>`; }).join("");
       body = `<div class="grid2 fol2gear">${gear}</div>
         <h3>Fighting style</h3><p class="sub">${esc(a.desc)} Main skills: ${a.main.map(esc).join(", ")}. They pick perks from these trees by themselves.</p>
         <div class="chips" style="flex-wrap:wrap">${Object.entries(ARCH).map(([k, v]) => `<button class="chip ${k === f.arch ? "on" : ""}" data-act="fol2" data-op="arch" data-id="${k}">${esc(v.name)}${k === archOf(id) ? " ★" : ""}</button>`).join("")}</div>
         <p class="sub">★ = their natural style. Changing it resets and re-picks their perks.</p>`;
     } else if (view === "inv") {
-      const mine = s.inv.filter((r) => { const it = itemOf(r); return it && !it.quest && (EQ_SLOTS.includes(it.slot) || it.slot === "ammo" || it.restore); });
+      const mine = s.inv.filter((r) => { const it = itemOf(r); return it && !it.quest && (wearable(it) || it.slot === "ammo" || it.restore); });
       const rows = invTab === "theirs"
-        ? f.inv.map((r) => { const it = itemOf(r), on = Object.values(f.eq).includes(r.id), eqable = EQ_SLOTS.includes(it?.slot);
+        ? f.inv.map((r) => { const it = itemOf(r), on = Object.values(f.eq).includes(r.id), eqable = wearable(it), slotOn = on ? Object.keys(f.eq).find((k) => f.eq[k] === r.id) : null;
             return `<div class="item ${on ? "on" : ""}"><div class="t">${esc(it?.name || r.item)}${r.qty > 1 ? ` <span class="num">×${r.qty}</span>` : ""}${on ? " · worn" : ""}<span>${it?.damage ? `dmg ${it.damage} · ` : ""}${it?.armor ? `armor ${it.armor} · ` : ""}${fmtW((it?.weight || 0) * r.qty)} wt</span></div>
-              ${eqable ? (on ? `<button class="btn sm" data-act="fol2" data-op="uneq" data-id="${it.slot}">Take off</button>` : `<button class="btn sm pri" data-act="fol2" data-op="eq" data-id="${r.id}">Equip</button>`) : ""}
+              ${eqable ? (on ? `<button class="btn sm" data-act="fol2" data-op="uneq" data-id="${slotOn}">Take off</button>` : `<button class="btn sm pri" data-act="fol2" data-op="eq" data-id="${r.id}">Equip</button>${canOff(it) && f.eq.weapon ? `<button class="btn sm" data-act="fol2" data-op="eqoff" data-id="${r.id}">Left hand</button>` : ""}`) : ""}
               <button class="btn sm" data-act="fol2" data-op="take" data-id="${r.id}" data-q="${r.qty}">Take</button></div>`; }).join("") || `<p class="sub">Their pack is empty. Give them gear from yours.</p>`
         : mine.map((r) => { const it = itemOf(r); return `<div class="item"><div class="t">${esc(it.name)}${r.qty > 1 ? ` <span class="num">×${r.qty}</span>` : ""}<span>${it.damage ? `dmg ${it.damage} · ` : ""}${it.armor ? `armor ${it.armor} · ` : ""}${fmtW((it.weight || 0) * r.qty)} wt</span></div>
               <button class="btn sm pri" data-act="fol2" data-op="give" data-id="${r.id}" data-q="1">Give</button>${r.qty > 1 ? `<button class="btn sm" data-act="fol2" data-op="give" data-id="${r.id}" data-q="${r.qty}">All</button>` : ""}</div>`; }).join("") || `<p class="sub">Nothing in your pack they could use.</p>`;
       body = `<p class="sub num">Their pack: ${fmtW(weight(f))}/${carry(f)} weight · potions they carry are drunk when they're badly hurt · archers shoot their best arrows (they never run out)</p>
         <div class="chips">${[["theirs", "Their pack"], ["yours", "Give from yours"]].map(([k, l]) => `<button class="chip ${invTab === k ? "on" : ""}" data-act="fol2" data-op="invtab" data-id="${k}">${l}</button>`).join("")}
         <button class="btn sm" data-act="fol2" data-op="best">Best gear</button></div><div class="list fol2list">${rows}</div>`;
-    } else {
+    } else if (view === "magic" && typeof FAI !== "undefined") body = FAI.magicTab(s, f, esc);
+    else if (view === "tactics" && typeof FAI !== "undefined") body = FAI.tacticsTab(s, f, esc);
+    else {
       const ps = pseudo(f), trees = [...a.main, ...a.sec].filter((k) => PERKS.TREES[k]);
       if (!trees.includes(perkTree)) perkTree = trees[0];
       const taken0 = Object.values(f.perks || {}).reduce((x, y) => x + y, 0);
@@ -354,6 +383,11 @@ const FOL2 = (() => {
       case "tree": perkTree = id; return "";
       case "arch": return setArch(s, id);
       case "eq": return equip(s, +id);
+      case "eqoff": return equip(s, +id, true);
+      case "teach": return typeof FAI !== "undefined" ? FAI.teach(s, +id) : "";
+      case "spell": return typeof FAI !== "undefined" ? FAI.toggle(s, id) : "";
+      case "tactic": return typeof FAI !== "undefined" ? FAI.setTactic(s, id) : "";
+      case "savepots": return typeof FAI !== "undefined" ? FAI.setSavePots(s, id === "1") : "";
       case "uneq": return unequip(s, id);
       case "best": return bestEquip(s);
       case "give": return give(s, +id, +(d.q || 1));
