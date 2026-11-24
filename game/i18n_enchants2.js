@@ -68,13 +68,13 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
   ];
   if (typeof I18N_STORY !== "undefined") { I18N_STORY.pats = I18N_STORY.pats || []; I18N_STORY.pats.push(...PATS); }
 
-  // ---- fight log: bits our effects add inside an attack line ("Attack ⚡ chain lightning: 34"), and lines of their own
+  // ---- fight log: bits our effects add inside an attack line ("Attack \uE129 chain lightning: 34"), and lines of their own
   const INLINE = [
-    [/ ⚡ chain lightning/, " ⚡ łańcuch błyskawic"], [/, jumps twice/, ", przeskakuje dwa razy"], [/ ❄ numbed/, " ❄ odrętwienie"], [/ \+frost\b/, " +mróz"],
-    [/ 🔥 wildfire/, " 🔥 pożoga"], [/ \+dragonbane/, " +zguba smoków"], [/ \+banishing/, " +odpędzenie"], [/ ✧ banished to Oblivion/, " ✧ odesłany do Otchłani"],
-    [/, ⚡ thunderclap staggers/, ", ⚡ grzmot zachwiewa"], [/ \+reaping \(finishing\)/, " +żniwo (dobicie)"], [/ \+reaping/, " +żniwo"], [/ \+sunder ×(\d)/, " +skruszenie ×$1"],
-    [/ \+spellbreaker/, " +łamacz zaklęć"], [/, their spell breaks/, ", zaklęcie pęka"], [/ ✦ surge/, " ✦ przypływ mocy"], [/ 🩸 drinks (\d+)/, " 🩸 pije $1"],
-    [/ 🔁 echoes (\d+)/, " 🔁 echo $1"], [/ ☠ venom ×(\d)/, " ☠ jad ×$1"],
+    [/ \uE129 chain lightning/, " \uE129 łańcuch błyskawic"], [/, jumps twice/, ", przeskakuje dwa razy"], [/ \uE125 numbed/, " \uE125 odrętwienie"], [/ \+frost\b/, " +mróz"],
+    [/ \uE104 wildfire/, " \uE104 pożoga"], [/ \+dragonbane/, " +zguba smoków"], [/ \+banishing/, " +odpędzenie"], [/ ✧ banished to Oblivion/, " ✧ odesłany do Otchłani"],
+    [/, \uE129 thunderclap staggers/, ", \uE129 grzmot zachwiewa"], [/ \+reaping \(finishing\)/, " +żniwo (dobicie)"], [/ \+reaping/, " +żniwo"], [/ \+sunder ×(\d)/, " +skruszenie ×$1"],
+    [/ \+spellbreaker/, " +łamacz zaklęć"], [/, their spell breaks/, ", zaklęcie pęka"], [/ ✦ surge/, " ✦ przypływ mocy"], [/ \uE11F drinks (\d+)/, " \uE11F pije $1"],
+    [/ \uE15C echoes (\d+)/, " \uE15C echo $1"], [/ \uE12E venom ×(\d)/, " \uE12E jad ×$1"],
   ];
   const ANY = new RegExp(INLINE.map(([re]) => re.source).join("|"));
   const tr0 = (x) => { try { return typeof I18N !== "undefined" ? I18N.tr(x) : null; } catch (e) { return null; } };
@@ -88,9 +88,9 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
   I18N_EXTRA.pat.push(
     [ANY, inline],
     [/^✦ (.+)$/, (m) => { const x = tr0(m[1]); return x && x !== m[1] ? `✦ ${x}` : null; }],   // tooltip lines: "✦ Thorns"
-    [/^☠ venom (\d+)$/, (m) => `☠ jad ${m[1]}`],
-    [/^🛡 Last Ward soaks (\d+)$/, (m) => `🛡 Ostatnia osłona pochłania ${m[1]}`],
-    [/^🛡 a Last Ward rises \((\d+)\)$/, (m) => `🛡 wznosi się Ostatnia osłona (${m[1]})`],
+    [/^\uE12E venom (\d+)$/, (m) => `\uE12E jad ${m[1]}`],
+    [/^\uE102 Last Ward soaks (\d+)$/, (m) => `\uE102 Ostatnia osłona pochłania ${m[1]}`],
+    [/^\uE102 a Last Ward rises \((\d+)\)$/, (m) => `\uE102 wznosi się Ostatnia osłona (${m[1]})`],
     [/^(\d+) taken from your magicka$/, (m) => `${m[1]} pobrane z twojej magii`],
     [/^thorns (\d+)$/, (m) => `ciernie ${m[1]}`],
   );

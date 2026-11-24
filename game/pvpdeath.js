@@ -34,7 +34,7 @@ const PVPDEATH = (() => {
     s.pickTemple = true;
     const n = items.reduce((a, i) => a + i[1], 0);
     const msg = `Killed by ${killer}. Your gear (${n} item${n === 1 ? "" : "s"}) and ${gold} gold dropped where you fell; you kept the rest of your gold and your pack. You wake up in ${town}'s temple. Pick the temple you want to go to.`;
-    G.note(s, "💀 " + msg);
+    G.note(s, " " + msg);
     return { msg, bag };
   }
   /* go to the temple you picked (only right after a player killed you) */
@@ -47,7 +47,7 @@ const PVPDEATH = (() => {
   function stay(s) { s.pickTemple = false; }
   function pickHTML(s, esc = (x) => x) {
     const list = temples(s);
-    return `<h2>🕯 Choose a temple</h2><p class="sub">Where do you want to wake up?</p><div class="list">${list.map((n) => `<button class="item btn" data-act="pvptemple" data-id="${esc(n)}"${n === s.location ? ' style="border-color:var(--gold)"' : ""}><div class="t">${esc(n)}${n === s.location ? " (here)" : ""}</div></button>`).join("")}</div>`;
+    return `<h2> Choose a temple</h2><p class="sub">Where do you want to wake up?</p><div class="list">${list.map((n) => `<button class="item btn" data-act="pvptemple" data-id="${esc(n)}"${n === s.location ? ' style="border-color:var(--gold)"' : ""}><div class="t">${esc(n)}${n === s.location ? " (here)" : ""}</div></button>`).join("")}</div>`;
   }
   return { die, goTo, stay, temples, pickHTML };
 })();

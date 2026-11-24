@@ -1,5 +1,5 @@
 /* Hunting mini-game and skinning. [OURS rules; animals, hides and antlers from Skyrim]
-   hunting.js already turns animals up on the road as fights (the 🏹 map toggle). This file adds the hunter's way:
+   hunting.js already turns animals up on the road as fights (the \uE10C map toggle). This file adds the hunter's way:
    - Stalk: the animal grazes; hold "Creep closer" to close in. It lifts its head now and then: moving while it looks makes it
      nervous fast. The wind matters: blowing from you towards it carries your scent. Your Sneak skill and the Stalker perk
      slow its alarm. When the alarm meter fills, it bolts.
@@ -262,9 +262,9 @@ const HUNTGAME = (() => {
     const el = document.createElement("div");
     el.id = "huntgame"; el.className = "craftgame fhgame";
     el.innerHTML = `<div class="cgcard fhcard" role="dialog" aria-label="Hunting">
-      <h3>🏹 ${esc(g.a.name)}</h3><p class="cgsub">${esc(w.name)} · ${w.n} ${w.kind === "bolt" ? "bolts" : "arrows"} · Archery ${g.archery} · Sneak ${g.sneak}</p>
+      <h3>\uE10C ${esc(g.a.name)}</h3><p class="cgsub">${esc(w.name)} · ${w.n} ${w.kind === "bolt" ? "bolts" : "arrows"} · Archery ${g.archery} · Sneak ${g.sneak}</p>
       <canvas id="hgcv" width="${W}" height="${H}" aria-hidden="true"></canvas>
-      <div class="hgbars"><span class="hglab">👁</span><div class="hgalert" id="hgalert"><i></i></div><span class="hgdist" id="hgdist"></span></div>
+      <div class="hgbars"><span class="hglab">\uE14B</span><div class="hgalert" id="hgalert"><i></i></div><span class="hgdist" id="hgdist"></span></div>
       <p class="fhmsg" id="hgmsg" aria-live="polite"></p>
       <div class="cgrow" id="hgrow"></div>
       <p class="cghint" id="hghint"></p></div>`;

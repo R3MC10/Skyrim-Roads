@@ -2,16 +2,16 @@
    Each has a small effect on the world, a goal, and a reward + title for reaching it once per year. [OURS] */
 const FEST = (() => {
   const EVENTS = [
-    { id: "witching", name: "The Witchingmoon", icon: "🎃", from: [10, 25], to: [11, 1],
+    { id: "witching", name: "The Witchingmoon", icon: "", from: [10, 25], to: [11, 1],
       text: "The dead walk thicker at night. Undead on the roads after dark, and they carry more gold.",
       goal: { key: "undead", n: 10, what: "Defeat 10 undead" }, reward: { gold: 300, item: ["soul_gem_common", 2], title: "Gravewarden" } },
-    { id: "frostfall", name: "Frostfall Blizzards", icon: "❄️", from: [11, 15], to: [11, 30],
+    { id: "frostfall", name: "Frostfall Blizzards", icon: "", from: [11, 15], to: [11, 30],
       text: "Snow and blizzards sweep all of Skyrim, even the south. Hot Fish Soup helps; carriages don't care.",
       goal: { key: "arrive", n: 8, what: "Finish 8 trips while the blizzards last" }, reward: { gold: 300, item: ["mat_firewood", 5], title: "Frostwalker" } },
-    { id: "newlife", name: "The New Life Festival", icon: "🎉", from: [12, 28], to: [1, 3],
+    { id: "newlife", name: "The New Life Festival", icon: "", from: [12, 28], to: [1, 3],
       text: "Skyrim celebrates the new year. Inn rooms are free, and every innkeeper has a gift for you once a day.",
       goal: { key: "gift", n: 3, what: "Collect the innkeepers' gift on 3 days" }, reward: { gold: 500, item: ["mat_moonstone", 2], title: "Reveler" } },
-    { id: "midyear", name: "The Midyear Celebration", icon: "☀️", from: [6, 16], to: [6, 22],
+    { id: "midyear", name: "The Midyear Celebration", icon: "", from: [6, 16], to: [6, 22],
       text: "Long days and fairs. Shops sell 10% cheaper, and the Arena is packed.",
       goal: { key: "duel", n: 3, what: "Fight 3 Arena duels" }, reward: { gold: 400, item: ["mat_steel", 4], title: "Champion of Midyear" } },
   ];

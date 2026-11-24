@@ -20,7 +20,7 @@ async def main():
         x, y = box["x"] + box["width"] * 0.7, box["y"] + box["height"] * 0.3
         await A.mouse.move(x, y); await A.mouse.down(); await A.wait_for_timeout(800); await A.mouse.up(); await A.wait_for_timeout(300)
         print("pin dialog:", await A.query_selector("#pinlabel") is not None)
-        await A.click("[data-act=pinicon][data-id='🌿']"); await A.fill("#pinlabel", "Herb patch"); await A.click("[data-act=pinsave]"); await A.wait_for_timeout(400)
+        await A.click("[data-act=pinicon][data-id='\ue12b']"); await A.fill("#pinlabel", "Herb patch"); await A.click("[data-act=pinsave]"); await A.wait_for_timeout(400)
         print("picked:", (await A.inner_text("#picked")).replace("\n"," | "))
         print("pins:", await A.evaluate("JSON.stringify(window.__dbg.save().pins)"))
         await A.click("#picked [data-act=unpick]"); await A.wait_for_timeout(300)
