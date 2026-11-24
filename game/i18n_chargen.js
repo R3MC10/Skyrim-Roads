@@ -95,7 +95,7 @@ var I18N_CHARGEN = {
       "Wybierz płeć, budowę, wzrost, skórę, kształt twarzy, oczy, brwi, nos, usta, wiek, włosy, brodę, grzywę Khajiita i rogi oraz kryzy Argonianina, blizny, barwy wojenne i tatuaże.",
     "Every race now has a gift that really works: Nords shrug off frost, Dunmer fire, Bretons magic, Redguards and Bosmer poison, Imperials find more gold, Orcs are better at the forge, Khajiit see in the dark and Argonians and Bosmer resist curses.":
       "Każda rasa ma teraz dar, który naprawdę działa: Nordowie znoszą mróz, Dunmerowie ogień, Bretończycy magię, Redgardzi i Bosmerowie truciznę, Cesarscy znajdują więcej złota, Orkowie lepiej kują, Khajiici widzą w ciemności, a Argonianie i Bosmerowie opierają się klątwom.",
-    "New Speechcraft perk Proud Heritage makes your race's gift 25% stronger.": "Nowy atut Elokwencji Dumne dziedzictwo wzmacnia dar twojej rasy o 25%.",
+    "New Etiquette perk Proud Heritage makes your race's gift 25% stronger.": "Nowy atut Etykiety Dumne dziedzictwo wzmacnia dar twojej rasy o 25%.",
     "On the Start tab you can pick the Warrior, Mage or Thief Stone straight away.": "Na zakładce Start możesz od razu wybrać Kamień Wojownika, Maga albo Złodzieja.",
     "Everyone sees the face you made: in fights, on the map, in your party and as a Stranger on the road.": "Wszyscy widzą twarz, którą stworzysz: w walkach, na mapie, w drużynie i jako Nieznajomy na drodze.",
     "Already have a character? Nothing changes until you want it to: visit the barber at any inn (40 gold) or the mirror in your house (free).":

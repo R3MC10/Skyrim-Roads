@@ -152,7 +152,7 @@ const PFX = (() => {
     [ "Speechcraft", "shield_brother", "Shield-Brother", 1, [60], ["leadership"], "Combos with your follower, summons and party hit 25% harder (Shatter, Overload, Steam, Thermal shock, Opening). [OURS]", [["combo", 0.25, {}]]],
     [ "Speechcraft", "talk_down", "Talk Down", 1, [50], ["bribery"], "Bribes and fines cost 25% less. [OURS]", [["bribe", 0.25, {}]]],
     [ "Speechcraft", "rally", "Rally", 1, [80], ["inspiring"], "Your follower and party allies fight another 15% harder. [OURS]", [["allies", 0.15, {}]]],
-    [ "Speechcraft", "proud_heritage", "Proud Heritage", 1, [30], ["silver_tongue"], "Your race's gifts (resistances, Imperial luck, Orc forge-blood...) are 25% stronger. [OURS]", [["heritage", 0.25, {}]]],
+    [ "Etiquette", "proud_heritage", "Proud Heritage", 1, [30], ["courtly_manners"], "Your race's gifts (resistances, Imperial luck, Orc forge-blood...) are 25% stronger. [OURS]", [["heritage", 0.25, {}]]],
     [ "Speechcraft", "orator", "Orator", 1, [100], ["commanding_voice", "rally"], "Jobs pay 10% more and prices are 5% better. [OURS]", [["job", 0.1, {}], ["price", 0.05, {}]]],
     // ---------------------------------------------------------------- Etiquette (3 → 9)
     [ "Etiquette", "good_host", "Good Host", 1, [30], ["courtly_manners"], "Inns and trainers cost another 10% less. [OURS]", [["inn", 0.1, {}]]],

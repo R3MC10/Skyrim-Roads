@@ -3,7 +3,7 @@
    the same [key, value, condition] form perks use, and PFX.each (perkfx.js) adds them to the perk sums, so the fight
    engine, the Smart AI and the town code pick them up with no extra wiring:
      "in" (damage taken), "gold" (gold found), "regenmp", "curseres", "temper", "hit", "travel".
-   The Speechcraft perk Proud Heritage ("heritage") makes all of them 25% stronger. */
+   The Etiquette perk Proud Heritage ("heritage") makes all of them 25% stronger. */
 const RACEFX = (() => {
   const LIST = {
     nord: { name: "Resist Frost", desc: "Frost and cold-blooded foes hurt you half as much.", fx: [["in", -0.5, { foeEl: "frost" }]] },

@@ -3,6 +3,16 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b167-charcreate", build: 167, date: "24 Nov 2026", title: "Character creation, rebuilt", items: [
+      "Making a character now works like Skyrim's race menu: a big live picture of your hero that breathes, walks and swings, which you can turn with a finger (or the arrow keys) and zoom in on the face.",
+      "Tabs for Race, Body, Head, Face, Hair, Scars & Paint and Start, with Back and Next, a dice button for a random look and Undo.",
+      "Pick your sex, build, height, skin, face shape, eyes, brows, nose, mouth, age, hair, beard, Khajiit manes and Argonian horns and frills, scars, warpaint and tattoos.",
+      "Every race now has a gift that really works: Nords shrug off frost, Dunmer fire, Bretons magic, Redguards and Bosmer poison, Imperials find more gold, Orcs are better at the forge, Khajiit see in the dark and Argonians and Bosmer resist curses.",
+      "New Etiquette perk Proud Heritage makes your race's gift 25% stronger.",
+      "On the Start tab you can pick the Warrior, Mage or Thief Stone straight away.",
+      "Everyone sees the face you made: in fights, on the map, in your party and as a Stranger on the road.",
+      "Already have a character? Nothing changes until you want it to: visit the barber at any inn (40 gold) or the mirror in your house (free).",
+    ] },
     { id: "b166-widetitle", build: 166, date: "24 Nov 2026", title: "The title picture on wide screens", items: [
       "On a wide or ultra-wide PC window the main menu picture is no longer cut off: the warrior, the dragon and the city always fit, and the sides carry on the same painting softly blurred instead of black bars.",
       "The menu words, the line under each one and the version line at the bottom are brighter and easier to read over the sky.",
