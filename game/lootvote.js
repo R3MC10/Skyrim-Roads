@@ -204,7 +204,7 @@ const LOOTVOTE = (() => {
       const rows = v.items.map((it) => {
         const nm = D.ITEMS[it.item]?.name || it.item, tier = typeof CC !== "undefined" ? CC.tier(it.item, it) : "common";
         const want = p.has(it.i), others = v.members.filter((m) => m !== s.id && (v.votes?.[m] || []).includes(it.i)).length;
-        return `<div class="lv-row q-${tier}">${typeof ICONART !== "undefined" ? ICONART.item(it.item, 28, it) : ""}<span class="nm">${it.qty > 1 ? `${it.qty}× ` : ""}${esc(nm)}${others ? `<small>${others} other${others > 1 ? "s" : ""} want it</small>` : ""}</span>
+        return `<div class="lv-row q-${tier}">${typeof ICONART !== "undefined" ? ICONART.item(it.item, 28, it) : ""}<span class="nm">${it.qty > 1 ? `${it.qty}× ` : ""}${esc(nm)}${typeof TOMEINFO !== "undefined" && TOMEINFO.isTome(it.item) ? `<small class="ti-line">${esc(TOMEINFO.line(s, it.item))}</small>` : ""}${others ? `<small>${others} other${others > 1 ? "s" : ""} want it</small>` : ""}</span>
           ${mine ? `<b class="lv-tag">${want ? "Want" : "Pass"}</b>` : `<button class="btn sm ${want ? "pri" : ""}" data-act="lvpick" data-k="${esc(key)}" data-i="${it.i}">${want ? "✔ Want" : "Want"}</button>`}</div>`;
       }).join("") || '<p class="sub">No items this time.</p>';
       const n = v.members.length, each = Math.floor((v.gold || 0) / n);
