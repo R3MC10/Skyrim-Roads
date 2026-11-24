@@ -203,7 +203,7 @@ const FIGHTCTL = (() => {
     const lostAp = same ? Math.max(0, last.ap - sess.ap) : 0, lostSp = same ? Math.max(0, last.spAp - sess.spAp) : 0;
     last = { key, ap: sess.ap, spAp: sess.spAp };
     const row = (n, m, cls, lost) => Array.from({ length: m }, (_, i) => `<i class="${i < n ? "on " : i < n + lost ? "lost " : ""}${cls}"></i>`).join("");
-    return `<span class="fc-apl">AP</span><span class="fc-pips" data-k="ap">${row(sess.ap, sess.st.ap, "ap", lostAp)}</span><b class="fc-apn num">${sess.ap}<small>/${sess.st.ap}</small></b>${sess.st.spellAp ? `<span class="fc-apl sap">✦</span><span class="fc-pips" data-k="sap">${row(sess.spAp, sess.st.spellAp, "sap", lostSp)}</span>` : ""}<em>Your turn</em>`;
+    return `<span class="fc-apl">AP</span><span class="fc-pips" data-k="ap">${row(sess.ap, sess.st.ap, "ap", lostAp)}</span><b class="fc-apn num">${sess.ap}<small>/${sess.st.ap}</small></b>${sess.st.spellAp ? `<span class="fc-apl sap">✦</span><span class="fc-pips" data-k="sap">${row(sess.spAp, sess.st.spellAp, "sap", lostSp)}</span>` : ""}<em>Your turn${sess.until ? ` <b class="num" id="tbcd">${Math.max(0, Math.ceil((sess.until - Date.now()) / 1000))}s</b>` : ""}</em>`;
   }
 
   // ------------------------------------------------------------------ settings row (Settings → Fights)

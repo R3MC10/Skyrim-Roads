@@ -1,7 +1,31 @@
-/* Hero art: your character drawn from the save — race, the gear you wear, enchantment glow, vampire eyes —
-   in the shared ART style (hand-drawn ink, or pixel art). Drawn in a 160×220 box and scaled.
-   HEROART.figure(saveOrCard, w, h) → <img> html; HEROART.portrait(saveOrCard, size) → round head-and-shoulders <img>;
-   HEROART.lookOf(save) → the small "what you look like" object shared on your player card. [OURS] */
+/* Hero art: your character drawn from the save — race, sex, the gear you wear, enchantment glow, vampire eyes —
+   in the shared ART style (hand-drawn ink, or pixel art). [OURS]
+
+   ======== THE CHARACTER API (one renderer for you, party members, followers, other players and humanoid foes) ========
+   The drawing itself lives in figart.js: a bone rig (root → spine → neck → head, two arms upper → fore → hand,
+   pelvis → two legs thigh → shin → foot) with every part attached to its bone, posed by keyframed clips that are
+   sampled over time and blended into each other. Frames are cached as offscreen canvases (cheap on phones).
+
+   "card" = a save, a player card {look}, a look object, or a plain {race, sex, name} (e.g. a foe card).
+   opts on every call: pose  "idle" | "walk" | "attack" | "cast" | "block" | "hit" | "down" | "ride" | "sit"
+                       frame (0..POSES[pose]-1)  or  t (seconds into the clip; loops)
+                       scale (1 = 64 px tall), h (px tall), style "ink" | "pixel" (default: the player's setting)
+                       horse (colour, for "ride"), armed (false = weapons put away)
+                       look / gear {slot: itemId} / race / sex "m"|"f"  → override how the card looks; a foe, e.g. a bandit:
+                         HEROART.figure({name: "Bandit", race: "redguard"}, {pose: "attack", gear: {chest: "hide_armor", weapon: "iron_war_axe"}})
+                       from {pose, t|frame} + w (0..1) → a frame fading from another clip into this one
+     HEROART.figure(card, opts)              → <canvas> of that frame; canvas.ax/.ay = feet position in canvas px, canvas.k = px per unit
+     HEROART.figure(card, w, h, {bare})      → <img> html: the standing figure on parchment (hero tab, paper doll, title)  [old form, kept]
+     HEROART.portrait(card, size)            → <img> html: round head-and-shoulders
+     HEROART.sprite(card, opts)              → the same cached canvas as figure(card, opts)
+     HEROART.drawFigure(g, card, x, y, opts) → draws it with the feet at (x, y), opts.h tall in g's units, sharp at g's zoom; opts.flip faces left
+     HEROART.animator(fade = 0.18)           → { play(pose, now), draw(g, card, x, y, now, opts) }: switching clips fades over `fade` seconds
+     HEROART.fightFigure(g, card, o)         → fight scenes: feet at 0,0, ~60 units tall, posed live from the replay's numbers
+                                               (o.aim, o.back, o.hunch, o.lunge, o.draw, o.t, o.wt, o.shield, o.off, o.glow, o.flask)
+     HEROART.POSES                           → frames per clip;  HEROART.lookOf(save) → the shared look object
+                                               {r: race, id, sx: "f" | undefined, eq: {slot: itemId}, gl: {w: weapon enchant, a: armour enchant}, v, ww}
+   Missing slots (amulet, ring...) are fine: whatever is in eq is drawn, the rest is skipped.
+   ===================================================================================================================== */
 const HEROART = (() => {
   const P = () => ART.PAL;
   // ---- races ([Skyrim] looks): skin, hair choices, head build
@@ -38,17 +62,20 @@ const HEROART = (() => {
         if (it?.enchant) gl.w = it.enchant.effect; if (it?.aenchant) gl.a = 1;
       }
     } catch { /* bare save */ }
-    return { r: s.race, id: s.id || s.name || "x", eq, gl, v: s.vampire ? 1 : 0, ww: s.werewolf ? 1 : 0 };
+    const L = { r: s.race, id: s.id || s.name || "x", eq, gl, v: s.vampire ? 1 : 0, ww: s.werewolf ? 1 : 0 };
+    if (s.sex === "f") L.sx = "f";
+    return L;
   }
-  const lookFrom = (src) => (src?.look ? src.look : src?.loadouts ? lookOf(src) : { r: src?.race || "nord", id: src?.id || src?.name || "x", eq: {}, gl: {} });
-  const keyOf = (L) => JSON.stringify([L.r, L.id, L.eq, L.gl, L.v, L.ww]);
+  const lookFrom = (src) => (src?.look ? src.look : src?.loadouts ? lookOf(src) : src?.eq && src?.r ? src : { r: src?.race || "nord", id: src?.id || src?.name || "x", eq: {}, gl: {}, sx: src?.sex === "f" ? "f" : undefined });
+  const keyOf = (L) => JSON.stringify([L.r, L.id, L.eq, L.gl, L.v, L.ww, L.sx || ""]);
+  const rigged = () => typeof FIGART !== "undefined";
 
   // ---------------------------------------------------------------- drawing (160×220 box)
   function draw(g, H, L) {
     const pal = P(), race = RACE[L.r] || RACE.nord, rnd = ART.seeded(L.id + L.r);
     const skin = L.v ? "#d8d3cc" : race.skin[Math.floor(rnd() * race.skin.length)];
     const hairC = race.hair.length ? race.hair[Math.floor(rnd() * race.hair.length)] : null;
-    const beard = rnd() < race.beard, hairStyle = String(L.id).startsWith("preview") ? 0 : [0, 0, 1, 2, 2, 0, 1, 3][Math.floor(rnd() * 8)], paint = rnd() < 0.3 ? ["#1c2128", "#2f4f8a", "#8e2b25"][Math.floor(rnd() * 3)] : null;
+    const fem = L.sx === "f", beard = rnd() < race.beard && !fem, hs0 = String(L.id).startsWith("preview") ? 0 : [0, 0, 1, 2, 2, 0, 1, 3][Math.floor(rnd() * 8)], hairStyle = fem ? [2, 1, 2, 1][hs0] : hs0, paint = rnd() < 0.3 ? ["#1c2128", "#2f4f8a", "#8e2b25"][Math.floor(rnd() * 3)] : null;
     const eq = L.eq || {};
     const chest = eq.chest, head = eq.head, hands = eq.hands, feet = eq.feet, shield = eq.shield, weapon = eq.weapon;
     const cm = chest ? MAT[matOf(chest)] : MAT.cloth, robe = !!chest && cm.w === "robe", F = (chest && cm.f) || {};
@@ -328,24 +355,28 @@ const HEROART = (() => {
 
   // ---------------------------------------------------------------- public
   function figure(src, w = 160, h = 220, opts = {}) {
+    if (w && typeof w === "object") return rigged() ? FIGART.sprite(src, w) : null;   // the new form: a posed frame as a canvas
     const L = lookFrom(src);
     return ART.html(w, h, (g, H) => {
       if (!opts.bare) {
         if (ART.style() === "pixel") { g.fillStyle = "#eeccaa"; g.fillRect(0, 0, w, h); g.fillStyle = "#ccaa88"; g.fillRect(0, h * 0.86, w, h * 0.14); }   // flat colours the pixel filter keeps as they are
         else { H.parchment(g, w, h, 7); g.fillStyle = "rgba(59,44,30,0.10)"; g.fillRect(0, h * 0.86, w, h * 0.14); }
       }
+      if (rigged()) { const fh = Math.min(h * 0.7, w * 1.05); FIGART.draw(g, { look: L }, w / 2 - fh * 0.04, h * 0.93, { pose: "idle", frame: 0, h: fh }); return; }
       const k = Math.min(w / 160, h / 220); g.translate((w - 160 * k) / 2, h - 220 * k); g.scale(k, k);
       draw(g, H, L);
-    }, { key: "hero|" + keyOf(L) + (opts.bare ? "|b" : ""), alt: `${D.RACES[L.r]?.name || ""} character`, cls: opts.cls || "herofig" });
+    }, { key: "hero2|" + keyOf(L) + (opts.bare ? "|b" : ""), alt: `${D.RACES[L.r]?.name || ""} character`, cls: opts.cls || "herofig" });
   }
   function portrait(src, size = 40) {
     const L = lookFrom(src);
     return ART.html(size, size, (g, H) => {
       g.save(); g.beginPath(); g.arc(size / 2, size / 2, size / 2 - 1, 0, Math.PI * 2); g.clip();
       g.fillStyle = ART.PAL.parchDark; g.fillRect(0, 0, size, size);
-      const k = size / 64; g.scale(k, k); g.translate(-48, -12); draw(g, H, L); g.restore();
+      if (rigged()) { const k = size * 0.46 / 12; FIGART.draw(g, { look: L }, size / 2 - 3.2 * k, size * 0.45 + 55.4 * k, { pose: "idle", frame: 0, h: 61 * k, armed: false }); }
+      else { const k = size / 64; g.scale(k, k); g.translate(-48, -12); draw(g, H, L); }
+      g.restore();
       g.strokeStyle = ART.PAL.ink; g.lineWidth = 1.5; g.beginPath(); g.arc(size / 2, size / 2, size / 2 - 1, 0, Math.PI * 2); g.stroke();
-    }, { key: "port|" + keyOf(L) + "|" + size, alt: "", cls: "heroport" });
+    }, { key: "port2|" + keyOf(L) + "|" + size, alt: "", cls: "heroport" });
   }
   return { figure, portrait, lookOf, matOf, weaponKind, RACE, MAT };
 })();

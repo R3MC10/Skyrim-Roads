@@ -1794,6 +1794,14 @@ html.art-pixel .tbint,html.art-pixel .tbfcl .fp,html.art-pixel .tbskip,html.art-
 .mo-on .modal,.mo-on .modal .sheet{animation:none}
 .mo-on:not(.mo-lite) .modal{-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
 @media (prefers-reduced-motion:reduce){.tbbar s.tbfc,.tbint.big,.tbbub,.tbban.round,.tbban.foe{animation:none!important}#tbf.tblow::after{animation:none;opacity:.6}}
+/* followers as full characters (followerai.js): magicka/stamina under their health, row + tactic; Tactics tab; foe weak/resist chips (combo.js) */
+.tbu .faibars{display:flex;gap:3px;margin-top:2px}.tbu .faibars .tbbar{flex:1;height:4px;min-height:4px}.tbu .faibars .tbbar i{height:100%}
+.tbu .fairow{display:block;font-size:10px;opacity:.75;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fol2 .fol2tac{display:flex;flex-direction:column;gap:6px;margin:6px 0 10px}
+.fol2 .fol2tac .item.tac{width:100%;text-align:left;cursor:pointer;font:inherit;color:inherit}
+.fol2 .fol2tac .item.tac.on{box-shadow:inset 3px 0 0 #e8c46a;background:rgba(232,196,106,.12)}
+.tbst .st.weak{color:#ffd27a;background:rgba(110,70,10,.75)}.tbst .st.resist{color:#a9c4e8;background:rgba(20,40,70,.75)}
+html.art-pixel .tbu .faibars .tbbar,html.art-pixel .tbu .faibars .tbbar i,html.art-pixel .fol2 .fol2tac .item.tac,html.art-pixel .tbst .st.weak,html.art-pixel .tbst .st.resist{border-radius:0}
 /* dungeon mini-games (dungeongames.js) */
 .lockpick.dgame{z-index:96}.dgame .lpcard{width:min(380px,100%)}.dgame canvas{border:1px solid rgba(214,178,94,.3);user-select:none;-webkit-user-select:none}
 .dgrow .dgk{min-height:58px;font-size:17px;user-select:none;-webkit-user-select:none;touch-action:none}
@@ -1925,6 +1933,25 @@ html.art-pixel .tbint,html.art-pixel .tbfcl .fp,html.art-pixel .tbskip,html.art-
 /* reduce motion */
 @media (prefers-reduced-motion:reduce){#tbf .fc.enter>*,#tbf .fc-pick.enter .fc-sheet,#tbf .fc .tbact.end.ready,#tbf .tbap .fc-pips i.pv,#tbf .tbap .fc-pips i.lost,#tbf.fc-aiming .tbu.fc-tgt,#tbf .fc-aimbar,#tbf .tbu.fc-hitme{animation:none}#tbf .fc .tbact.fc-press::after{display:none}}
 html.a11y-still #tbf .fc *,html.a11y-still #tbf.fc-aiming .tbu.fc-tgt{animation:none!important}
+/* spell tome info before you buy or read it (tomeinfo.js), SkyUI item info */
+.item.ti-row{flex-wrap:wrap}
+.ti-box{flex:0 0 auto;box-sizing:border-box;width:calc(100% - 44px);min-width:0;margin:2px 0 0 44px;overflow-wrap:anywhere;padding:5px 8px;font-size:13px;line-height:1.4;border-left:2px solid rgba(214,178,94,.35);background:rgba(0,0,0,.18);color:#d9d2c2}
+.ti-box i,.ti-what{font-style:normal;color:#c9c2b3}
+.ti-box .nv{white-space:normal}
+.ti-v{font-size:12.5px;margin-top:3px;font-weight:600}.ti-v.ok{color:#8fd49a}.ti-v.low{color:#e8a25c}
+.ti-card{margin:8px 0 4px;padding:8px 10px;border:1px solid rgba(214,178,94,.22);border-radius:6px;background:rgba(0,0,0,.25)}
+.ti-h{font-family:var(--title,Cinzel),serif;font-size:16px;letter-spacing:.06em;color:#f4ecd8;text-align:center;margin-bottom:6px}
+.ti-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:rgba(214,178,94,.18);border-block:1px solid rgba(214,178,94,.3);margin-bottom:6px}
+.ti-stat{background:rgba(14,15,18,.92);padding:5px 2px;text-align:center;min-width:0}
+.ti-stat b{display:block;font-size:14px;color:#f4ecd8;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.ti-stat.mana b{color:#6fa8ff}
+.ti-stat small{display:block;font-family:var(--title,Cinzel),serif;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#d6b25e}
+.ti-what{margin:4px 0;font-size:13.5px;line-height:1.45}
+.ti-card .spl-info{margin:4px 0}
+.lv-row .ti-line,.loot-row .ti-line{display:block;white-space:normal;font-size:11.5px;line-height:1.3;color:var(--mute,#a9a395)}
+html.art-pixel .ti-box,html.art-pixel .ti-card,html.art-pixel .ti-stats{border-radius:0}html.art-pixel .ti-box{border-left-width:3px}
+#side[data-tab=log] .ti-box{color:#3b2e1e}
+html.a11y-hc .ti-box,html.a11y-hc .ti-box i,html.a11y-hc .ti-what{color:#ece6d8}
 </style>
 <script src="access.js"></script>
 </head>
@@ -1980,12 +2007,14 @@ html.a11y-still #tbf .fc *,html.a11y-still #tbf.fc-aiming .tbu.fc-tgt{animation:
 <script src="tomes.js"></script>
 <script src="magic.js"></script>
 <script src="spellbook.js"></script>
+<script src="tomeinfo.js"></script>
 <script src="spellcraft.js"></script>
 <script src="combatai.js"></script>
 <script src="sneak2.js"></script>
 <script src="aiset.js"></script>
 <script src="tbradial.js"></script>
 <script src="tbfight.js"></script>
+<script src="sharedfight.js"></script>
 <script src="foegroups.js"></script>
 <script src="dragons.js"></script>
 <script src="foekit.js"></script>
@@ -2006,6 +2035,8 @@ html.a11y-still #tbf .fc *,html.a11y-still #tbf.fc-aiming .tbu.fc-tgt{animation:
 <script src="coop.js"></script>
 <script src="party.js"></script>
 <script src="followers2.js"></script>
+<script src="followerai.js"></script>
+<script src="combo.js"></script>
 <script src="partyplay.js"></script>
 <script src="lootvote.js"></script>
 <script src="store.js"></script>
@@ -2019,10 +2050,12 @@ html.a11y-still #tbf .fc *,html.a11y-still #tbf.fc-aiming .tbu.fc-tgt{animation:
 <script src="combatfx.js"></script>
 <script src="bscdata.js"></script>
 <script src="battlescene.js"></script>
+<script src="foerig.js"></script>
 <script src="fightart.js"></script>
 <script src="beastart.js"></script>
 <script src="gearlook.js"></script>
 <script src="heroart.js"></script>
+<script src="figart.js"></script>
 <script src="mapart.js"></script>
 <script src="placeart.js"></script>
 <script src="eventart.js"></script>
@@ -2054,6 +2087,7 @@ html.a11y-still #tbf .fc *,html.a11y-still #tbf.fc-aiming .tbu.fc-tgt{animation:
 <script src="craftqol.js"></script>
 <script src="polish.js"></script>
 <script src="caravans.js"></script>
+<script src="caravanroad.js"></script>
 <script src="worldevents.js"></script>
 <script src="economy.js"></script>
 <script src="bards.js"></script>

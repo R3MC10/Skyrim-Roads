@@ -72,7 +72,7 @@ const ids = (s, x = {}) => ONBOARD.ideas(s, { ...ctx, ...x }).map((i) => i.id);
   s.pendingLevels = 1;
   ok(ONBOARD.pickTip(s, { fightOpen: false, invites: 0 }).id === "level", "first level-up tip");
   ok(ONBOARD.pickTip(s, { fightOpen: true, invites: 0 }).id === "tbfight", "in a fight only the fight tip");
-  ok(/initiative/i.test(ONBOARD.pickTip(s, { fightOpen: true, party: true }).text) && /60 seconds/.test(ONBOARD.pickTip(s, { fightOpen: true, party: true }).text), "fight tip explains initiative, and party turns in a party");
+  ok(/initiative/i.test(ONBOARD.pickTip(s, { fightOpen: true, party: true }).text) && /90 seconds/.test(ONBOARD.pickTip(s, { fightOpen: true, party: true }).text), "fight tip explains initiative, and party turns in a party");
   ONBOARD.markSeen(s, "level"); ok(ONBOARD.pickTip(s, { fightOpen: false, invites: 0 }) === null, "a seen tip doesn't come back");
   ok(ONBOARD.pickTip(s, { fightOpen: false, invites: 1 }).id === "invite", "party invite tip");
   G.give(s, "mat_iron", 600); ok(ONBOARD.pickTip(s, { fightOpen: false }).id === "heavy", "over-encumbered tip");

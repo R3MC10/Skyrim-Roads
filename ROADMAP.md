@@ -70,12 +70,18 @@ our own marked [OURS]; plain-language UI; phone first.
 
 ## In progress (write your name before you start)
 - Claude: fight controls overhaul (fightctl.js): big action bar with drawn icons and AP cost pips, reasons on greyed-out moves, quick slots for favourite spells/potions/shouts, tap-to-choose targets for healing, press feedback and buzz, keyboard keys on PC (1-9, Space, M, I, Esc). Branch claude/combatui.
+- Claude: shared party fights (sharedfight.js): everyone in a party plays the same fight on their own full fight screen, with their own moves. Branch claude/partysync.
+- Claude: character art upgrade (figart.js): one shared, bone-rigged character renderer (keyframed clips blended over time) with real proportions, shading, race, sex, hair and worn gear (idle, walk, attack, cast, block, hit, down, riding, sitting), used by the travel strip, fights, hero tab, paper doll and portraits; humanoid foes can borrow it via HEROART.figure(card, {gear}). Branch claude/heroart2.
+- Claude: caravans you can meet while travelling (caravanroad.js): tap or walk up to one, trade, news, guard the wagons, walk with them, rob them. Branch claude/caravans.
 - Claude: dungeon mini-games (dungeongames.js): trap dash, find the trigger, smash a chest, sneak past, run for it, search; replayable from a seed + taps; party members watch the leader play live (also lockpicking and the pillar/claw rings). Branch claude/dungeongames.
 - Claude: dungeons get longer per player in a party (partyplay.js longLayout/sizeRun, coop.js lobby start). Branch claude/partydungeons.
 - Claude: travel strip overhaul (travelart.js): deep parallax scenery by region, sky/time of day, live weather, lighting, passing landmarks and travellers, the destination growing on the horizon. Branch claude/travelscene.
 - Claude: visual overhaul (fits every screen and resolution) — branches claude/fit-*, in passes.
+- Claude: spell tome info before buying/reading (tomeinfo.js: school, level, magicka, AP, what it does, known?, skill enough?) in shops, pack, loot, search; TOMEINFO.box/html/line for the tooltip work. Branch claude/tomeinfo.
 - Kacper: reading the fight (fightread.js): foe intents, health forecasts for poison/burning/blows on both sides, turn-by-turn playback with banners and round summaries, low-health warning, combat sounds (ElevenLabs, `node scripts/gen_audio.mjs game/ combat`). Branch ccr-23a36e7d-impjqi.
 - Kacper: painted battle scenes (battlescene.js + bscdata.js, pictures bs-/bsf-/bsp-*.webp from the scene pack via scripts/import_battlescenes.py). Branch ccr-23a36e7d-impjqi.
+- Claude: followers as full characters (followerai.js: spells from tomes, magicka/stamina/AP, every gear slot, own potions, tactics, rows) and party combos + foe weak/resist chips (combo.js). Branch claude/followers2.
+- Claude: foe rigs (foerig.js): every enemy is a little skeleton with its own animations (breathing, attacks, flinch, stagger, dodge, fall, gloat); painted foes bend and lunge too. Branch claude/foerigs.
 - Kacper: audio: the rest of scripts/gen_audio.mjs (free ElevenLabs plan has ~4k credits a month; music needs a paid plan).
 
 ## Standing rules
