@@ -3,6 +3,10 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b166-appicon", build: 166, date: "24 Nov 2026", title: "A proper icon", items: [
+      "The game has its own icon now: a horned Nord helm under the northern star, on a parchment shield. You'll see it on your phone's home screen, the PC game's window, taskbar and installer, and the browser tab.",
+      "On Android 13 and newer it also follows your themed icons, and game notifications show a small helm instead of a plain square. The loading screen shows the new shield too.",
+    ] },
     { id: "b153-blackreach", build: 153, date: "24 Nov 2026", title: "Dwemer ruins and Blackreach", items: [
       "New quest line from level 14: \"The Dwemer Lexicon\". Calcelmo, the Dwemer scholar in Markarth, sends you through Mzinchaleft, Raldbthar and Alftand. Find the lexicon, turn its rings to match his notes, then ride the great lift down.",
       "Blackreach: a huge glowing cavern under Alftand with its own map. Walk from spot to spot past Falmer, Dwarven machines and giant mushrooms, pick glowing mushrooms and crimson nirnroot, crack the Silent City vault, and beat the Centurion master at the Great Dynamo.",
