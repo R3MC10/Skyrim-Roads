@@ -331,14 +331,14 @@ const GATHER = (() => {
     if (!Number.isFinite(s.x) || s.dungeon) return "";
     const list = nearby(s, t), f = canForage(s, t);
     if (!list.length && !f.ok && !f.left) return "";
-    const rows = list.map((n) => `<div class="item gnode ${n.ripe ? "" : "picked"}">${ICONART.item(n.ing, 30)}<div class="t">${esc(name(n.ing))}<span>${n.ripe ? `${Math.round(n.d)} paces away · ${D.ITEMS[n.ing].weight} wt each` : `Picked · grows back in ~${Math.ceil(growsIn(s, n, t) / 300)} in-game h`}</span></div>${n.ripe ? `<button class="btn sm" data-act="gpick" data-id="${n.id}">Gather</button>` : ""}</div>`).join("");
+    const rows = list.map((n) => `<div class="item gnode ${n.ripe ? "" : "gdone"}">${ICONART.item(n.ing, 30)}<div class="t">${esc(name(n.ing))}<span>${n.ripe ? `${Math.round(n.d)} paces away · ${D.ITEMS[n.ing].weight} wt each` : `Picked · grows back in ~${Math.ceil(growsIn(s, n, t) / 300)} in-game h`}</span></div>${n.ripe ? `<button class="btn sm" data-act="gpick" data-id="${n.id}">Gather</button>` : ""}</div>`).join("");
     const ripeN = list.filter((n) => n.ripe).length;
     return `<div class="panel gcard"><h2>🌿 Gathering</h2>
       ${rows || '<p class="sub">No plants spotted right here. Patches you pass on the road show on the map as leaves.</p>'}
       <div class="gbtns">${ripeN > 1 ? `<button class="btn" data-act="gpickall">Gather all (${ripeN})</button>` : ""}
       <button class="btn" data-act="gforage" ${f.ok ? "" : "disabled"} title="${esc(f.why || "Search the ground for whatever grows here")}">🔍 Forage here</button>
-      <button class="btn" data-act="gnotes">📖 Herbalist's notes</button>
-      <button class="btn ${st(s).auto ? "pri" : ""}" data-act="gauto" aria-pressed="${st(s).auto}">${st(s).auto ? "Auto-pick: On" : "Auto-pick: Off"}</button></div>
+      <button class="btn" data-act="gnotes">📖 Herbalist's notes</button></div>
+      <div class="gauto"><button class="btn ${st(s).auto ? "pri" : ""}" data-act="gauto" aria-pressed="${st(s).auto}">${st(s).auto ? "Auto-pick: On" : "Auto-pick: Off"}</button></div>
       ${!f.ok && f.why ? `<p class="sub">${esc(f.why)}</p>` : ""}</div>`;
   }
 

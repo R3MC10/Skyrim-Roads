@@ -18,6 +18,7 @@ const LOOTVOTE = (() => {
 
   /* a run counts as a party run (shared pile, leader decides) when two or more heroes are in it */
   const partyRun = (run) => !!run && act(run).length >= 2;
+  const lastAt = (path, row, col) => { for (let i = (path || []).length - 1; i >= 0; i--) if (path[i][0] === row && path[i][1] === col) return i; return -1; };   // where a room sits in the shared path
 
   // ---- gains: what a single action added to a save (new rows, bigger stacks, gold)
   function snap(s) { const q = {}; for (const r of s.inv) q[r.id] = r.qty; return { q, next: s.nextInv, gold: s.gold }; }
@@ -149,12 +150,17 @@ const LOOTVOTE = (() => {
     async function aroundAct(c, doAct) {
       const s = S(), r = run();
       if (!inPartyRun()) return doAct();
-      const step = Math.max(0, (s.dungeon.cstep || 1) - 1), before = snap(s);
+      const dd = s.dungeon, pi = leader() ? lastAt(r.path, dd.row, dd.col) : -1;   // the leader files the choice under the room's place in the shared path, even if their own count drifted
+      const step = pi >= 0 ? pi : Math.max(0, (dd.cstep || 1) - 1), before = snap(s);
       const res = doAct();
       const got = strip(s, before);
       if (leader()) {
         if ((got.items.length || got.gold) && res) res.text = `${res.text || ""} Into the party's loot pile: ${[got.gold ? got.gold + " gold" : "", ...got.items.map((x) => (x.qty > 1 ? `${x.qty}× ` : "") + (D.ITEMS[x.item]?.name || x.item))].filter(Boolean).join(", ")}.`.trim();
-        await Store.change("runs", r.id, (x) => poolAdd(recordAct(x, step, c), got.items, got.gold));
+        const tok = Math.random().toString(36).slice(2);   // a busy store answers null: try again, but never write the same choice twice (members would replay it twice)
+        for (let k = 0; k < 4; k++) {
+          if (k) await new Promise((ok) => setTimeout(ok, 250 * k));
+          if (await Store.change("runs", r.id, (x) => ((x.actIds || []).includes(tok) ? x : { ...poolAdd(recordAct(x, step, c), got.items, got.gold), actIds: [...(x.actIds || []).slice(-40), tok] }))) break;
+        }
       } else if (res && (got.items.length || got.gold)) res.text = `${res.text || ""} (Finds go to the party's loot pile.)`.trim();
       ctx.persist(true);
       return res;
