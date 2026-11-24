@@ -832,7 +832,7 @@ const FIGHTART = (() => {
       if (rm) { shake = 0; return; }
       if (b.power) { hitstop = 0.08; shake = Math.max(shake, 5); }
       if (b.crit || b.sneak) { slowT = 0.45; shake = Math.max(shake, 4); }
-      if (b.final) { slowT = 0.6; shake = Math.max(shake, 8); zoomT = 0.9; if (!CFX) { zcx = tx; zcy = ty; } flash = Math.max(flash, 0.3); flashC = "#fff"; }
+      if (b.final) { slowT = f.bf && b.who === "me" ? 1.4 : 0.6; shake = Math.max(shake, 8); zoomT = f.bf ? 1.5 : 0.9; if (!CFX) { zcx = tx; zcy = ty; } flash = Math.max(flash, 0.3); flashC = "#fff"; }
     }
     let ringT = 1, ringX = 0, ringC = "#e9dcc0", beamT = 1, beamC = "#9affc0";
     function landNumbers(b) {   // the number and the health bars, once per beat (on the last hit)
@@ -893,7 +893,7 @@ const FIGHTART = (() => {
       shake = Math.max(0, shake - dtr * 22); flash = Math.max(0, flash - dtr * 2.5); zoomT = Math.max(0, zoomT - dtr);
       if (CFX && !rm) {   // the camera leans toward the swing, follows the blow, punches in on crits and holds on the killing blow
         let tf = 0.5, tz = 1;
-        if (phase === "play" && beats[bi]) { const b2 = beats[bi], m2 = MOVES[b2.move] || MOVES.wait; [tf, tz] = CFX.camFor(b2, Math.min(1, lt / b2.dur), { hx: hx0 / W, fx: fx0 / W, hitU: m2.hits[0] ?? 0.55 }); }
+        if (phase === "play" && beats[bi]) { const b2 = beats[bi], m2 = MOVES[b2.move] || MOVES.wait; [tf, tz] = CFX.camFor(b2, Math.min(1, lt / b2.dur), { hx: hx0 / W, fx: fx0 / W, hitU: m2.hits[0] ?? 0.55, boss: !!f.bf }); }
         else if (phase === "fall") { tf = (won && !turned ? fx0 : hx0) / W; tz = 1.15; }
         if (zoomT > 0) tz = Math.max(tz, 1.2);
         camF += (tf - camF) * Math.min(1, dtr * 4); zoom += (tz - zoom) * Math.min(1, dtr * (tz > zoom ? 7 : 3));

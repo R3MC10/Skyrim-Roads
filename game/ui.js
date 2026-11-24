@@ -260,7 +260,7 @@
   const backBtn = `<button class="btn" data-t="menu">Back</button>`;
   function titleSubpage() {
     if (titlePage === "settings") return `<h2>Settings</h2>${settingsHTML()}${typeof PATCHNOTES !== "undefined" ? `<button class="btn" data-t="notes" style="width:100%;margin-top:12px">📜 Patch notes</button>` : ""}${backBtn}`;
-    if (titlePage === "notes") { PATCHNOTES.markSeen(); return `<h2>Patch Notes</h2>${PATCHNOTES.html()}${backBtn}`; }
+    if (titlePage === "notes") { PATCHNOTES.markSeen(); return `${PATCHNOTES.barHTML("page", 'data-t="menu"')}${PATCHNOTES.html()}${backBtn}`; }
     if (titlePage === "account" && typeof ACCOUNT !== "undefined") return `${ACCOUNT.pageHTML()}${backBtn}`;
     if (titlePage === "confirmNew") return `<h2>Start over?</h2><p>${(typeof ACCOUNT !== "undefined" && ACCOUNT.newCharText(S)) || `${esc(S.name)} (level ${S.level}) and everything they carry will be gone for good. Other players' worlds aren't affected.`}</p>
       <button class="btn danger" data-t="wipe">Yes, make a new character</button>${backBtn}`;
@@ -684,7 +684,7 @@
   }
   function openNotes() {
     PATCHNOTES.markSeen();
-    openModal(`<h2>Patch Notes</h2>${PATCHNOTES.html()}<button class="btn pri" data-act="close" style="width:100%;margin-top:12px">Done</button>`, "pnsheet");
+    openModal(`${PATCHNOTES.barHTML("sheet", 'data-act="close"')}${PATCHNOTES.html()}<button class="btn pri" data-act="close" style="width:100%;margin-top:12px">Done</button>`, "pnsheet");
   }
   /* road events and encounters (events.js + encounters.js): only while you're watching. About one every
      2 minutes of walking (≈ every half in-game hour), never two within 45 seconds. */
@@ -1206,6 +1206,7 @@
     }
     if (!r.fight && S.trip?.status === "encounter") return openEncounter(r.text);
     const loot = r.fight ? [r.gold ? `${r.gold} gold` : "", ...(r.loot || [])].filter(Boolean) : [];
+    if (typeof BOSSFIGHT !== "undefined") BOSSFIGHT.reveal(r);   // a beaten boss: the big loot card
     openModal(`<h2>${r.title ? esc(r.title) : r.fled ? "Got away" : r.fight ? "Victory" : "Away"}</h2><p>${esc(r.text)}</p>${r.fight ? fightLog(r.fight) : ""}
       ${loot.length ? lootList(r) : ""}${typeof FASTQOL !== "undefined" ? FASTQOL.lootHTML(S, r) : ""}${skills}
       <button class="btn pri" data-act="close" style="width:100%">Continue to ${esc(S.trip?.destName || "the road")}</button>`);
@@ -1448,6 +1449,7 @@
     } else if (r.partyChest) { S.gold += r.partyChest.gold; r.partyChest.items.forEach((i) => G.give(S, i)); }
     if (r.cleared) { tally("dungeons"); warPoint("dungeon", G.holdAt(WORLD.places[S.dungeon?.place] || livePos())); const jm = TOWNS.checkJobs(S); if (jm.length) { tally("jobs", jm.length); r.text += " " + jm.join(" "); } postNews(`🏆 ${S.name} cleared ${S.dungeon?.place}.`); }
     persist(true);
+    if (typeof BOSSFIGHT !== "undefined") BOSSFIGHT.reveal(r);   // the boss room: the big loot card
     dunNote = r; renderDungeon();
   }
 
