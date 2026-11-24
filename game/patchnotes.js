@@ -9,6 +9,7 @@ const PATCHNOTES = (() => {
       "Skills: the skill list and its perk stars sit side by side, and the stars grow to fill the space. The side panel gets wider while they're open.",
       "Fights on a PC show a big battle picture on the left, with the fighters and your moves on the right, all without scrolling. Dungeons put the room on the left and the dungeon map on the right.",
       "Text and buttons are a little bigger on large monitors. Phones look the same as before.",
+      "Paintings stay sharp: shop banners, town pictures, fight scenes, foes and the title picture are never stretched or blown up into a blur any more. On a very big or sharp screen a painting shows at its own size instead.",
     ] },
     { id: "b142-balfear", build: 142, date: "24 Nov 2026", title: "Bosses don't run forever, healers don't heal forever", items: [
       "Battle Cry and every other fear or \"stops fighting\" effect now hold a boss for 2 turns and an elite foe for 3. A boss can lose at most 3 turns a fight to fear, an elite 5. For the turns they shake off they stay rattled and hit 20% softer, so the shout still helps. Normal foes still run for the full time.",

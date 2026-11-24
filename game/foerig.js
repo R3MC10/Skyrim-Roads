@@ -703,7 +703,8 @@ const FOERIG = (() => {
     if (typeof document === "undefined" || !im.naturalWidth) return im;
     let c = picCache.get(im);
     if (!c) {
-      const h = Math.min(im.naturalHeight, 384), w = Math.round(im.naturalWidth * h / im.naturalHeight);
+      const big = (typeof innerWidth !== "undefined" && innerWidth >= 1100) || (typeof devicePixelRatio !== "undefined" && devicePixelRatio > 1.5);   // [artfit] PCs and sharp screens get the full picture (no blow-up)
+      const h = Math.min(im.naturalHeight, big ? 2048 : 384), w = Math.round(im.naturalWidth * h / im.naturalHeight);
       c = document.createElement("canvas"); c.width = w; c.height = h; const x = c.getContext("2d"); x.imageSmoothingQuality = "high"; x.drawImage(im, 0, 0, w, h); picCache.set(im, c);
     }
     return c;

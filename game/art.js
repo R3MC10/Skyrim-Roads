@@ -83,10 +83,13 @@ const ART = (() => {
   }
 
   const cache = new Map();
-  /* draw(g, H, w, h) into a canvas of w×h CSS pixels; opts.style overrides the player's choice */
+  /* draw(g, H, w, h) into a canvas of w×h CSS pixels; opts.style overrides the player's choice.
+     opts.scale: backing pixels per CSS pixel (default the screen's density, at most 2) */
   let drawing = null;   // the style of the picture being drawn right now (drawers can ask: ART.drawingStyle())
+  let srcPU = 0;        // a painted file drawn into the picture: its pixels per drawing unit (ASSETS.cover tells us)
+  const noteSrc = (pu) => { if (pu > 0) srcPU = srcPU ? Math.min(srcPU, pu) : pu; };
   function canvas(w, h, draw, opts = {}) {
-    const st = opts.style || style(), dpr = DPR();
+    const st = opts.style || style(), dpr = opts.scale || DPR();
     const prev = drawing; drawing = st;
     try { return canvasIn(w, h, draw, opts, st, dpr); } finally { drawing = prev; }
   }
@@ -94,6 +97,7 @@ const ART = (() => {
     const c = document.createElement("canvas");
     c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); c.style.width = w + "px"; c.style.height = h + "px";
     const g = c.getContext("2d");
+    g.imageSmoothingEnabled = true; g.imageSmoothingQuality = "high";
     if (st === "pixel") {
       const raw = document.createElement("canvas"); raw.width = w * 2; raw.height = h * 2;
       const rg = raw.getContext("2d"); rg.scale(2, 2); draw(rg, H, w, h);
@@ -104,18 +108,51 @@ const ART = (() => {
     c.dataset.art = st;
     return c;
   }
-  /* a cached data URL, for <img> tags inside HTML templates */
+  /* How sharp to draw a picture for an <img> tag. A picture in a wide PC panel needs many more pixels than its drawing
+     size: aim for the biggest box it can get on this screen (side panel or popup). Backing pixels per drawing unit. */
+  const SCENE_CAP = 6;
+  function budget(w) {
+    let px = 0;
+    try {
+      const z = parseFloat(getComputedStyle(document.documentElement).zoom) || 1, d = (typeof devicePixelRatio !== "undefined" && devicePixelRatio) || 1;
+      const side = document.getElementById("side"), sw = side ? side.getBoundingClientRect().width : 0;
+      const box = innerWidth >= 1100 ? Math.max(sw, Math.min(innerWidth * 0.5, 980) * z) : Math.min(innerWidth, 640) * z;   // screen px the picture may fill
+      px = box * Math.min(3, d);
+    } catch { /* no window: tests */ }
+    return Math.max(DPR(), Math.min(SCENE_CAP, px / w));
+  }
+  /* a cached data URL, for <img> tags inside HTML templates. A picture with a painted file inside is redrawn as sharp as
+     that file allows (up to what this screen can show); drawn-by-code pictures keep the screen's density. */
+  const meta = new Map();   // data URL -> { maxw }: the widest it can be shown (screen px) without blowing anything up
   function url(w, h, draw, opts = {}) {
-    const st = opts.style || style(), k = opts.key ? `${opts.key}|${w}x${h}|${st}` : null;
+    const st = opts.style || style();
+    let sc = opts.scale || DPR();
+    const want = st === "pixel" || opts.scale ? sc : budget(w);
+    const k = opts.key ? `${opts.key}|${w}x${h}|${st}|${Math.round(want * 4)}` : null;
     if (k && cache.has(k)) return cache.get(k);
     let u = "";
-    try { u = canvas(w, h, draw, { ...opts, style: st }).toDataURL("image/png"); } catch (e) { console.warn("art failed", opts.key, e); }
+    try {
+      srcPU = 0;
+      let c = canvas(w, h, draw, { ...opts, style: st, scale: sc });
+      const pu = st === "pixel" ? 0 : srcPU;
+      if (pu) { const best = Math.max(sc, Math.min(want, pu)); if (best > sc * 1.05) { sc = best; c = canvas(w, h, draw, { ...opts, style: st, scale: sc }); } }
+      u = pu ? c.toDataURL("image/webp", 0.92) : "";
+      if (!u.startsWith("data:image/webp")) u = c.toDataURL("image/png");
+      if (pu) { meta.set(u, { maxw: Math.round(w * Math.min(sc, pu)) }); if (meta.size > 500) meta.delete(meta.keys().next().value); }
+    } catch (e) { console.warn("art failed", opts.key, e); }
     if (k) { if (cache.size > 400) cache.delete(cache.keys().next().value); cache.set(k, u); }
     return u;
   }
-  const html = (w, h, draw, opts = {}) => { const u = url(w, h, draw, opts); return u ? `<img class="art ${opts.cls || ""}" src="${u}" width="${w}" height="${h}" alt="${(opts.alt || "").replace(/"/g, "&quot;")}" ${style() === "pixel" ? 'style="image-rendering:pixelated"' : ""}>` : ""; };
+  /* an <img> keeps its shape (height follows width); one with a painted file inside is never shown wider than its own
+     sharp pixels (--art-k = screen pixels per CSS pixel, kept by artfit.js) and sits centred when it stops short */
+  const html = (w, h, draw, opts = {}) => {
+    const u = url(w, h, draw, opts); if (!u) return "";
+    const m = style() === "pixel" ? null : meta.get(u);
+    const st = style() === "pixel" ? ' style="image-rendering:pixelated"' : m ? ` style="max-width:min(100%,calc(${m.maxw}px / var(--art-k,1)))" data-maxw="${m.maxw}"` : "";
+    return `<img class="art ${opts.cls || ""}" src="${u}" width="${w}" height="${h}" alt="${(opts.alt || "").replace(/"/g, "&quot;")}"${st}>`;
+  };
   function setStyle(st) { try { const p = JSON.parse(localStorage.getItem(PREFS_KEY) || "{}"); p.artStyle = st; localStorage.setItem(PREFS_KEY, JSON.stringify(p)); } catch { /* ignore */ } cache.clear(); }
   const drawingStyle = () => drawing || style();
   const clear = () => cache.clear();
-  return { PAL, H, style, setStyle, drawingStyle, canvas, url, html, seeded, clear };
+  return { PAL, H, style, setStyle, drawingStyle, canvas, url, html, seeded, clear, noteSrc, budget };
 })();

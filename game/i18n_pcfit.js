@@ -14,5 +14,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
       "Walki na komputerze pokazują duży obraz bitwy po lewej, a walczących i twoje ruchy po prawej, bez przewijania. Lochy pokazują komnatę po lewej i mapę lochu po prawej.",
     "Text and buttons are a little bigger on large monitors. Phones look the same as before.":
       "Tekst i przyciski są trochę większe na dużych monitorach. Na telefonach wszystko wygląda jak wcześniej.",
+    "Paintings stay sharp: shop banners, town pictures, fight scenes, foes and the title picture are never stretched or blown up into a blur any more. On a very big or sharp screen a painting shows at its own size instead.":
+      "Obrazy są ostre: banery sklepów, obrazy miast, sceny walk, przeciwnicy i obraz tytułowy nie są już rozciągane ani powiększane do rozmycia. Na bardzo dużym lub ostrym ekranie obraz pokazuje się w swoim własnym rozmiarze.",
   });
 })();

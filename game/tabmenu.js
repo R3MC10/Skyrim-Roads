@@ -249,8 +249,20 @@ const TABMENU = (() => {
     hubOpen = true; fromHub = false;
     document.body.classList.add("tw-on");
     refreshHub();
+    faceFit(el);
     try { SOUND.fx("page"); } catch { /* sound never breaks the game */ }
     return true;
+  }
+  /* [artfit] each 3D compass render is 320 px: on a big or sharp screen where the face is drawn bigger than that, show the
+     flat painted compass (1024 px) instead of a blurry blow-up */
+  function faceFit(el) {
+    const f = el.querySelector(".tw-face"); if (!f || f.dataset.fit) return;
+    f.dataset.fit = "1";
+    const fit = () => { const r = f.getBoundingClientRect(), d = (typeof devicePixelRatio !== "undefined" && devicePixelRatio) || 1;
+      const px3d = r.width * d * (f.classList.contains("art-flat") ? 1.16 : 1);
+      f.classList.toggle("art-flat", px3d > 320 * 1.12); };
+    fit();
+    if (typeof FITCANVAS !== "undefined") FITCANVAS.watch(f, fit);
   }
   function closeHub() { $("#tw")?.remove(); hubOpen = false; document.body.classList.remove("tw-on"); }
   /* go to one of the four menus (from the compass, or swiping round the ring) */

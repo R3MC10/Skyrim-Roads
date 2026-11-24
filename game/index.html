@@ -2472,6 +2472,15 @@ html.art-pixel .pnbar,html.art-pixel .pnbar .pnback{border-radius:0}
     .tw-starp .tw-card .tw-cbar{width:100%}
   }
 }
+/* ==== art fit (artfit.js, tests/art_quality_ui.py): painted pictures keep their shape and are never blown up past their own pixels ==== */
+img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
+.tw-bg img.art[data-maxw]{max-width:none!important}
+:root.has-ui-compass3d .tw-face.art-flat{inset:0;background:var(--asset-compass) center/100% no-repeat}   /* face bigger than a 3D render: the flat painted compass */   /* the compass's blurred backdrop: blurred on purpose, it fills the screen */
+/* the fight stage shows the middle of a 1480 px painted plate: past ~1100 screen pixels wide it would be blown up */
+@media (min-width:700px){ .tbf .tbstage{max-width:calc(1100px / var(--art-k,1));margin-left:auto;margin-right:auto} }
+@media (min-width:1100px) and (orientation:landscape){
+  .loadcard.haspic{background-size:auto,min(100%,calc(1080px / var(--art-k,1))) auto;background-color:#07090c}
+}
 </style>
 <script src="access.js"></script>
 </head>
@@ -2570,7 +2579,7 @@ html.art-pixel .pnbar,html.art-pixel .pnbar .pnback{border-radius:0}
 <script src="map.js"></script>
 <script src="backup.js"></script>
 <script src="sound.js"></script>
-<script src="fitcanvas.js"></script><script src="art.js"></script>
+<script src="fitcanvas.js"></script><script src="artfit.js"></script><script src="art.js"></script>
 <script src="assets.js"></script>
 <script src="colorcode.js"></script>
 <script src="skyart.js"></script>
