@@ -3,6 +3,16 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b153-blackreach", build: 153, date: "24 Nov 2026", title: "Dwemer ruins and Blackreach", items: [
+      "New quest line from level 14: \"The Dwemer Lexicon\". Calcelmo, the Dwemer scholar in Markarth, sends you through Mzinchaleft, Raldbthar and Alftand. Find the lexicon, turn its rings to match his notes, then ride the great lift down.",
+      "Blackreach: a huge glowing cavern under Alftand with its own map. Walk from spot to spot past Falmer, Dwarven machines and giant mushrooms, pick glowing mushrooms and crimson nirnroot, crack the Silent City vault, and beat the Centurion master at the Great Dynamo.",
+      "A secret waits at the Tower of Mzark if you know the first word of Unrelenting Force.",
+      "Puzzle rooms in Dwemer ruins are now steam valve puzzles: turn a valve and its neighbours turn too. Get every needle up before the pressure blows.",
+      "Dwemer scrap (Solid Dwemer Metal, Dwemer Gears, Large Struts) drops from Dwarven machines. Smelt it into Dwarven ingots at any forge once you have the Dwarven Smithing perk.",
+      "The whole Dwarven set is in: dagger, mace, greatsword, battleaxe, warhammer, gauntlets, boots and shield. Find them in Dwemer ruins or make them at the forge (it uses up the materials).",
+      "New perks: Dwemer Tinkerer (Smithing), Dwemer Lore (Lockpicking), Blind Hunter (Sneak) and Steam-Proof (Heavy Armor).",
+      "In a party only the leader turns the lexicon, picks the way through Blackreach and works the vault. Everyone else follows with \"Join your leader\".",
+    ] },
     { id: "b143-bleakfalls", build: 143, date: "24 Nov 2026", title: "Farengar's quest can't get stuck any more", items: [
       "Bleak Falls Barrow (main quest): clearing the barrow now moves the quest on by itself. The next step, \"The Dragonstone\", sends you to Farengar in Whiterun.",
       "Farengar doesn't need the Dragonstone in your pack any more. If it got lost, ended up in a chest or went to someone else in a party, just tell him: clearing the barrow is enough. Hand it in under Area tab → Court wizard, or with the button in the Journal.",
@@ -823,7 +833,7 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 144;
+  const NEXT_AT = 153;
   const NEXT = [
     "A new, livelier fight screen that fits on one screen",
     "On PC, everything fits on one screen without scrolling",

@@ -493,6 +493,8 @@
       if (typeof FAVWHEEL !== "undefined" && FAVWHEEL.open) { FAVWHEEL.hide(); return true; }
       if ($("#sky") && !$("#modal")) { closeMenu(); if (typeof TABMENU !== "undefined") TABMENU.menuClosed(); return true; }
       if ($("#modal")) { if (!$("#modal [data-act=enc], #modal [data-act=ev], #modal [data-act=guard]")) closeModal(); return true; }
+      if (typeof DWEMER !== "undefined" && DWEMER.closeOv()) return true;   // a lexicon / valve puzzle (dwemer.js)
+      if (typeof BLACKREACH !== "undefined" && BLACKREACH.close()) return true;   // the Blackreach map (blackreach.js)
       if ($("#dun")) { closeDungeon(); return true; }
       if (selected) { selected = null; renderPicked(); return true; }
       if (S && (tab === "stats" || tab === "diary") && !document.body.classList.contains("tw-char")) { tab = "hero"; renderTabs(); renderPanel(true); return true; }   // [journal] Character sub-pages
@@ -508,7 +510,7 @@
       if (typing) return false;
       if ($("#title")) return true;
       if (!S || S.dungeon || S.trip?.event || S.encounter) return false;
-      if (["modal", "tbf", "tbwatch", "lockpick", "pickgame", "sky", "tw", "nickbox"].some((id) => document.getElementById(id))) return false;
+      if (["modal", "tbf", "tbwatch", "lockpick", "pickgame", "sky", "tw", "nickbox", "breach", "dwgame"].some((id) => document.getElementById(id))) return false;
       if ((coopUI?.runs || []).length) return false;
       return true;
     },
@@ -595,6 +597,8 @@
     Store.watch("raids", (docs) => { raidDocs = docs; });
     if (typeof ONBOARD !== "undefined") ONBOARD.mount({ S: () => S, persist, toast, renderPanel, click: onPanelClick, party: () => party, invites: () => invites });   // first-time tips (onboard.js)
     if (typeof WORLDEV !== "undefined") WORLDEV.mount({ S: () => S, persist, toast, showFightResult, showMessage, openModal, closeModal, postNews, click: onPanelClick });   // world events (worldevents.js)
+    if (typeof DWEMER !== "undefined") DWEMER.mount({ S: () => S, persist, toast, showMessage, renderPanel });   // the lexicon and valve puzzles (dwemer.js)
+    if (typeof BLACKREACH !== "undefined") BLACKREACH.mount({ S: () => S, persist, toast, showFightResult, showMessage, renderPanel, tb: tbCall });   // the cavern under Alftand (blackreach.js)
     if (typeof GREATEV !== "undefined") GREATEV.mount({ S: () => S, persist, toast, showFightResult, showMessage, openModal, closeModal, postNews, click: onPanelClick, party: () => party });   // great world events: banner + countdown (greatevents.js)
     Store.watch("trades", (docs) => onTrades(docs));
     Store.watch("duels", (docs) => onDuels(docs));
@@ -1334,7 +1338,7 @@
     const left = DUNGEONS.refillLeft(S, l), lvl = { 1: 1, 2: 6, 3: 12 }[DUNGEONS.info(l).tier];
     const th = DUNGEONS.info(l).theme, rec = th === "lair" ? 20 : th === "giantcamp" ? 10 : lvl;
     return `<div class="panel" style="border-color:var(--ember)"><h2>${esc(l)}</h2>${PLACEART.scene(l)}<p class="sub">${esc(DUNGEONS.describe(l))} · good from about level ${rec}. Inside, you pick your own way room by room down to the boss. Health doesn't come back on its own in there, and you can leave between rooms whenever you like.</p>
-      ${left ? refillCard(l, left) : `<button class="btn danger" data-act="enter" style="width:100%">🕯 Go inside</button>${coopUI ? coopUI.lobbyHTML(l) : ""}`}${SMITH.MINES[l] ? `<div style="margin-top:10px">${mineHTML(l)}</div>` : ""}</div>`;
+      ${left ? refillCard(l, left) : `<button class="btn danger" data-act="enter" style="width:100%">🕯 Go inside</button>${coopUI ? coopUI.lobbyHTML(l) : ""}`}${SMITH.MINES[l] ? `<div style="margin-top:10px">${mineHTML(l)}</div>` : ""}${typeof BLACKREACH !== "undefined" ? BLACKREACH.placeCard(S, l) : ""}</div>`;
   }
   function closeDungeon() { $("#dun")?.remove(); }
   function dunMap(d) {
@@ -3519,6 +3523,7 @@
       case "jfold": { const f = jFolds(); f[b.dataset.id] = !f[b.dataset.id]; try { localStorage.setItem("ux_jfold", JSON.stringify(f)); } catch { /* fine */ } renderPanel(true); break; }
       case "unpick": selected = null; roamSpot = null; renderPicked(); break;
       case "xsearch": case "xdig": case "xread": exploreAct(b.dataset.act, b.dataset.id); break;
+      case "breach": if (typeof BLACKREACH !== "undefined") BLACKREACH.onClick(b); break;   // blackreach.js: the way down from Alftand / Raldbthar
       case "pstuff": if (typeof PLACESTUFF !== "undefined") PLACESTUFF.onClick(b, S, { toast, openModal, persist, renderPanel }); break;   // placestuff.js: something at every place
       case "gpick": case "gpickall": case "gforage": case "gauto": case "gplant": case "gunplant": case "gnotes": gatherAct(b.dataset.act, b.dataset.id); break;
       case "spotpin": if (roamSpot) { const [x, y] = roamSpot; selected = null; renderPicked(); openPinDialog(x, y); } break;
