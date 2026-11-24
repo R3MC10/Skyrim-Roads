@@ -1794,6 +1794,55 @@ html.art-pixel .tbint,html.art-pixel .tbfcl .fp,html.art-pixel .tbskip,html.art-
 .mo-on .modal,.mo-on .modal .sheet{animation:none}
 .mo-on:not(.mo-lite) .modal{-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
 @media (prefers-reduced-motion:reduce){.tbbar s.tbfc,.tbint.big,.tbbub,.tbban.round,.tbban.foe{animation:none!important}#tbf.tblow::after{animation:none;opacity:.6}}
+/* compass: a real 3D disc that tilts toward your finger; the four labels sit round it, never on it */
+.tw-rose{container-type:size;transform:none!important;perspective:900px;--R:max(70px,min(36cqw,calc(50cqw - 66px),calc(50cqh - 84px)))}
+:root.has-ui-compass .tw-rose{background:none}
+.tw-disc{position:absolute;left:50%;top:50%;width:calc(var(--R)*2);height:calc(var(--R)*2);margin:calc(var(--R)*-1) 0 0 calc(var(--R)*-1);transform-style:preserve-3d;
+  transform:translate3d(calc(var(--tx,0)*.35px),calc(var(--ty,0)*.35px),0) rotateY(calc(var(--tx,0)*.42deg)) rotateX(calc(var(--ty,0)*-.42deg));
+  transition:transform .65s cubic-bezier(.25,1.7,.5,1);will-change:transform;animation:twbob 6s ease-in-out infinite}
+.tw.drag .tw-disc{transition:transform .06s linear;animation:none}
+@keyframes twbob{0%,100%{transform:rotateX(4deg) rotateY(-3deg)}50%{transform:rotateX(-3deg) rotateY(4deg)}}
+.tw-face,.tw-depth{position:absolute;inset:0;border-radius:50%}
+.tw-face{transform:translateZ(14px);display:grid;place-items:center}
+.tw-face>.tw-rosesvg{position:static;width:100%;height:auto;transform:none!important}
+:root.has-ui-compass .tw-face{background:var(--asset-compass) center/100% no-repeat;filter:drop-shadow(0 2px 2px rgba(0,0,0,.6))}
+:root.has-ui-compass .tw-face>svg.tw-rosesvg{opacity:0}
+.tw-depth{transform:translateZ(0);inset:3%;background:radial-gradient(circle,#2a2116 0 60%,#120e09 72%,transparent 73%);box-shadow:0 calc(14px + var(--pull,0)*16px) 30px rgba(0,0,0,.7)}
+.tw-shine{position:absolute;inset:4%;border-radius:50%;transform:translateZ(16px);pointer-events:none;mix-blend-mode:screen;opacity:calc(.25 + var(--pull,0)*.55);
+  background:radial-gradient(circle at calc(50% - var(--tx,0)*.7%) calc(38% - var(--ty,0)*.7%),rgba(255,236,190,.5),rgba(255,236,190,0) 45%)}
+.tw[data-glow] .tw-face{filter:drop-shadow(0 0 calc(var(--pull,0)*14px) rgba(255,214,130,.55))}
+.tw-dir{min-width:0;width:auto;max-width:150px;padding:4px 6px}
+.tw-up{top:auto;bottom:calc(50% + var(--R) + 2px);left:50%;transform:translateX(-50%)}
+.tw-down{bottom:auto;top:calc(50% + var(--R) + 2px);left:50%;transform:translateX(-50%)}
+.tw-left{left:auto;right:calc(50% + var(--R) + 2px);top:50%;transform:translateY(-50%)}
+.tw-right{right:auto;left:calc(50% + var(--R) + 2px);top:50%;transform:translateY(-50%)}
+.tw-left,.tw-right{max-width:min(130px,calc(50cqw - var(--R) - 2px))}
+.tw-left small,.tw-right small{max-width:100%}
+.tw-dir:active,.tw[data-glow] .tw-dir{transform-origin:center}
+.tw-up:active,.tw[data-glow=up] .tw-up,.tw-down:active,.tw[data-glow=down] .tw-down{transform:translateX(-50%) scale(1.08)}
+.tw-left:active,.tw[data-glow=left] .tw-left,.tw-right:active,.tw[data-glow=right] .tw-right{transform:translateY(-50%) scale(1.08)}
+@media (max-width:420px){.tw-left b,.tw-right b{font-size:15px;letter-spacing:.08em}.tw-left small,.tw-right small{font-size:10.5px}}
+@media (orientation:landscape) and (max-height:520px){.tw-rose{height:min(72vh,340px);--R:max(70px,min(36cqw,calc(50cqw - 150px),calc(50cqh - 56px)))}.tw-left{left:auto}.tw-right{right:auto}.tw-up small,.tw-down small{display:none}.tw-up .ic,.tw-down .ic{display:none}}
+@media (prefers-reduced-motion:reduce){.tw-disc{animation:none;transition:none}}
+/* painted compass: it's a cut-out, so no dark disc behind it; with the Blender sheet the 3D comes from the renders */
+:root.has-ui-compass .tw-depth{display:none}
+:root.has-ui-compass3d .tw-face{inset:-8%;background:var(--asset-compass3d) 0 0/700% 700% no-repeat;background-position:calc(var(--cc,3)*100%/6) calc(var(--cr,3)*100%/6);filter:drop-shadow(0 calc(8px + var(--pull,0)*12px) calc(10px + var(--pull,0)*10px) rgba(0,0,0,.75))}
+:root.has-ui-compass3d .tw-face>svg.tw-rosesvg{opacity:0}
+:root.has-ui-compass3d .tw-disc{transform:translate3d(calc(var(--tx,0)*.3px),calc(var(--ty,0)*.3px),0);transition:none;animation:none}
+:root.has-ui-compass3d .tw-shine{inset:12%;opacity:calc(var(--pull,0)*.5)}
+:root.has-ui-compass3d .tw[data-glow] .tw-face{filter:drop-shadow(0 0 calc(var(--pull,0)*14px) rgba(255,214,130,.5)) drop-shadow(0 14px 14px rgba(0,0,0,.7))}
+/* party votes on the road (partyplay.js): voters' faces pop in by the option they picked */
+.pvhas,[data-act=ppvote]{position:relative}
+.pvchips{position:absolute;top:-11px;right:-4px;display:flex;flex-direction:row-reverse;pointer-events:none;z-index:2}
+.pvchip{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;margin-left:-9px;border-radius:50%;background:#2a241c;border:2px solid #e8c66a;box-shadow:0 2px 6px rgba(0,0,0,.55);overflow:hidden;animation:pvpop .38s cubic-bezier(.3,1.6,.5,1) both}
+.pvchip img,.pvchip canvas{width:100%;height:100%;display:block;border-radius:50%}
+.pvchip b{font-size:13px;color:#f1e3c0}
+@keyframes pvpop{0%{opacity:0;transform:translateY(8px) scale(.2)}70%{opacity:1;transform:translateY(-2px) scale(1.12)}100%{transform:none}}
+[data-act=ppvote].pvmine{outline:2px solid #e8c66a;outline-offset:1px}
+.pvnote{margin:8px 0 4px;color:#e8c66a}
+.pvopts{margin-top:14px}.ppvote .evc,.ppvote .pvopts{padding-top:6px}
+html.art-pixel .pvchip{border-radius:2px;border-width:3px;box-shadow:2px 2px 0 rgba(0,0,0,.6)}html.art-pixel .pvchip img{border-radius:0;image-rendering:pixelated}
+@media (prefers-reduced-motion:reduce){.pvchip{animation:none}}
 /* followers as full characters (followerai.js): magicka/stamina under their health, row + tactic; Tactics tab; foe weak/resist chips (combo.js) */
 .tbu .faibars{display:flex;gap:3px;margin-top:2px}.tbu .faibars .tbbar{flex:1;height:4px;min-height:4px}.tbu .faibars .tbbar i{height:100%}
 .tbu .fairow{display:block;font-size:10px;opacity:.75;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1908,6 +1957,7 @@ html.a11y-hc .ti-box,html.a11y-hc .ti-box i,html.a11y-hc .ti-what{color:#ece6d8}
 <script src="solstheim.js"></script>
 <script src="explore.js"></script>
 <script src="gather.js"></script>
+<script src="placestuff.js"></script>
 <script src="ammo.js"></script>
 <script src="tomes.js"></script>
 <script src="magic.js"></script>

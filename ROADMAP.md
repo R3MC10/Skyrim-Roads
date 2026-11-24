@@ -70,6 +70,7 @@ our own marked [OURS]; plain-language UI; phone first.
 
 ## In progress (write your name before you start)
 - Claude: tooltips over almost anything (tooltip.js): hover with a mouse, hold a finger on phones; items, spells, perks, skills, places, quests, followers, party, HUD bars, gold. Branch claude/tooltips.
+- Claude: something at every place (placestuff.js): every map location offers trade, work, a job, a blessing, a stash, herbs or a search. Branch claude/fullmap.
 - Claude: shared party fights (sharedfight.js): everyone in a party plays the same fight on their own full fight screen, with their own moves. Branch claude/partysync.
 - Claude: character art upgrade (figart.js): one shared, bone-rigged character renderer (keyframed clips blended over time) with real proportions, shading, race, sex, hair and worn gear (idle, walk, attack, cast, block, hit, down, riding, sitting), used by the travel strip, fights, hero tab, paper doll and portraits; humanoid foes can borrow it via HEROART.figure(card, {gear}). Branch claude/heroart2.
 - Claude: caravans you can meet while travelling (caravanroad.js): tap or walk up to one, trade, news, guard the wagons, walk with them, rob them. Branch claude/caravans.
@@ -83,6 +84,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Claude: followers as full characters (followerai.js: spells from tomes, magicka/stamina/AP, every gear slot, own potions, tactics, rows) and party combos + foe weak/resist chips (combo.js). Branch claude/followers2.
 - Claude: foe rigs (foerig.js): every enemy is a little skeleton with its own animations (breathing, attacks, flinch, stagger, dodge, fall, gloat); painted foes bend and lunge too. Branch claude/foerigs.
 - Kacper: audio: the rest of scripts/gen_audio.mjs (free ElevenLabs plan has ~4k credits a month; music needs a paid plan).
+- Claude: party votes on the road (partyplay.js): everyone with the leader sees the same encounter/event window, members vote, their faces pop up by the option they picked, only the leader acts. Branch claude/partyvote.
 
 ## Standing rules
 - Perk trees grow with the game: every new system (gathering, magic, encounters, crafting, party play...) adds or adjusts perks with real effects in the matching trees (perkfx.js), keeping old perk ids and a clean star layout.
