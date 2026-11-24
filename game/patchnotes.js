@@ -36,6 +36,15 @@ const PATCHNOTES = (() => {
       "Followers and horses bleed a little but are never splattered or cut up, and still only get knocked down.",
       "Blood and gore on Full shows all of it; Low keeps the dust, sparks and spell effects without the realistic blood; Off shows none.",
     ] },
+    { id: "b172-treasure", build: 172, date: "24 Nov 2026", title: "Treasure maps and old relics", items: [
+      "Loot can now hold a hand-drawn treasure map, an old journal with a riddle, or a torn piece of a map (find 2-4 pieces and put them together). They show only the land: hills, woods, water, a landmark or two and an X. No names, no marker on your map.",
+      "Compare the sketch with the world map (pin it next to the map with one tap), travel there and press Dig here on the Travel tab. A wrong guess only tires you out for a little while.",
+      "Stuck? Every two wrong digs you work out a bit more (the hold, then a town and a direction, then the landmark), and innkeepers sell a rumour for 60 gold.",
+      "Buried caches hold gold, gems and rare ore. Now and then you dig up a lost one-of-a-kind item, or a slab over a sealed tomb you can go down into once.",
+      "Relic fragments turn up in Nordic barrows and Dwemer ruins. Three make a restored relic: keep it, or sell it to Urag in Winterhold or Calcelmo in Markarth.",
+      "Maps and pieces can be traded and given away, and point to the same spot for your friend. In a party the leader can ask everyone where to dig, and the gold is split evenly.",
+      "New perks: Cartographer (Streetwise), Antiquarian (Mercantile) and Excavator (Athletics).",
+    ] },
     { id: "b172-horseart", build: 172, date: "25 Nov 2026", title: "Painted horses", items: [
       "Horses get painted: in fights, on the road and on the map your horse is now a proper painted horse with saddle and tack, not a little drawing.",
       "It stands still when you stop and gallops while you ride, you sit in the saddle in fights, and a knocked-down horse lies on its side behind you (it still only gets knocked down).",
