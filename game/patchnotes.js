@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b137-tomeinfo", build: 137, date: "24 Nov 2026", title: "Know the spell before you buy the tome", items: [
+      "Spell tomes for sale now tell you what you'd learn: the school, the level (Novice to Master), how much magicka and how many AP it costs, and what it does, with your own numbers.",
+      "Each tome also says if you already know the spell and if your skill is high enough. Too low, and it warns you the spell will cost more and sometimes fizzle.",
+      "You see this at court wizards, the College, general stores, travelling traders, caravans, the Khajiit caravan, other players' market stalls, in your pack, in fight loot, in the party loot vote and in search.",
+    ] },
     { id: "b136dg", build: 136, date: "24 Nov 2026", title: "Dungeon mini-games, and watching your leader", items: [
       "Dungeon rooms are played now, not rolled. Dash through a trap by running between the swinging blades, find the trigger by spotting the stone that sits low and glints, smash a chest with well-timed swings, sneak past a foe by stopping when it turns (and waiting in the shadows), and search a quiet room by rubbing the dust away. Each takes 5 to 15 seconds.",
       "New choice in fight rooms: Run for it. Tap Left and Right in turn as fast as you can to get past the foe. Get caught and it hits first.",
