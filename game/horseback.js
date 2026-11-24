@@ -83,26 +83,15 @@ const HORSEBACK = (() => {
     return `<p class="sub mountnote">\uE12D On horseback: you open with a charge, and one-handers, spears and bows hit harder from the saddle. Foes may go for ${s.horse.name}.</p>`;
   }
 
+  const PSEAT = 52;   // the painted horse: its saddle seat this high above the ground line (the rider stands 30 up, legs behind the barrel)
   /* fight scene: draw the horse under the rider (FIGHTART calls this with the hero's transform set).
      part "back" = legs, tail, neck and head (behind the rider); part "front" = the barrel and saddle cloth over the rider's legs */
-  /* [hook] painted horse art: ASSETS key horse-<coat>-<pose>, pose "ride" (standing, facing right, hooves on the bottom edge)
-     or "down" (lying on its side). Pictures come from the horse-art PR; until a file exists this returns null and the drawn horse stays. */
-  function horseImg(coat, pose) {
-    if (!coat || typeof ASSETS === "undefined" || !ASSETS.img) return null;
-    try { return ASSETS.img(`horse-${coat}-${pose}`); } catch { return null; }
-  }
-  /* draw a painted horse with its hooves on y 0, h units tall, centred on cx; true when it was drawn */
-  function blitHorse(g, im, cx, h, lunge) {
-    if (!im || !im.naturalWidth) return false;
-    const w = h * im.naturalWidth / im.naturalHeight;
-    g.drawImage(im, cx - w / 2 + (lunge || 0) * 6, -h + 3, w, h);
-    return true;
-  }
-  function drawHorse(g, color, lunge, tt, part = "back", coat = null) {
-    const im = horseImg(coat, "ride");
-    if (im && im.naturalWidth) {   // the painting is the whole horse: drawn behind the rider, nothing over the legs
-      if (part === "back") { g.save(); g.translate(0, Math.sin(tt * 9) * 0.8); blitHorse(g, im, 4, 82, lunge); g.restore(); }
-      return;
+  function drawHorse(g, color, lunge, tt, part = "back") {
+    if (typeof HORSEART !== "undefined" && HORSEART.ok(color, "stand")) {   // [OURS] the painted horse (horseart.js): whole behind you, its barrel over your legs
+      const bob = Math.abs(Math.sin(tt * 2.2)) * 0.7 + lunge * 2;
+      g.save(); g.translate(lunge * 6, 0);
+      HORSEART.ride(g, color, "stand", PSEAT, { bob, clip: part === "front" ? "barrel" : null });
+      g.restore(); return;
     }
     const k = Math.sin(tt * 9) * 2 + lunge * 6, ink = "#1c2128";
     g.save(); g.translate(-4, 0); g.scale(1.5, 1.5);
@@ -129,16 +118,18 @@ const HORSEBACK = (() => {
   /* has the horse gone down by this point of the replay (0..1)? */
   function downAt(f, frac) { const m = f?.mount; if (!m || m.foot || !m.downTurn) return false; return !upAt(f, frac); }
   /* fight scene: the downed horse lying on its side behind you, ink style, with a "Downed" tag (feet line at y 0) */
-  function drawDowned(g, color, tt, label = "Downed", coat = null) {
+  function drawDowned(g, color, tt, label = "Downed") {
+    if (typeof HORSEART !== "undefined" && HORSEART.ok(color, "down")) {   // [OURS] the painted horse lying down (horseart.js), breathing slowly
+      const br = Math.sin(tt * 1.6) * 0.008, w = 88;
+      g.save(); g.translate(4, 0); g.scale(1, 1 + br); HORSEART.lying(g, color, w); g.restore();
+      if (label) {
+        g.save(); g.font = "700 9px Cinzel, Georgia, serif"; g.textAlign = "center"; const tw = g.measureText(label).width + 10, ty = -w * 0.44 - 6;
+        g.fillStyle = "rgba(28,33,40,0.72)"; g.fillRect(8 - tw / 2, ty - 10, tw, 13); g.fillStyle = "#ff8a7a"; g.fillText(label, 8, ty - 0.5); g.restore();
+      }
+      return;
+    }
     const ink = "#1c2128", br = Math.sin(tt * 1.6) * 0.6;   // slow, heavy breathing
     g.save(); g.lineCap = "round"; g.lineJoin = "round"; g.strokeStyle = ink;
-    if (blitHorse(g, horseImg(coat, "down"), 8, 34, 0)) {   // painted horse lying down
-      if (label) {
-        g.font = "700 9px Cinzel, Georgia, serif"; g.textAlign = "center"; const w = g.measureText(label).width + 10;
-        g.fillStyle = "rgba(28,33,40,0.72)"; g.fillRect(8 - w / 2, -46, w, 13); g.fillStyle = "#ff8a7a"; g.fillText(label, 8, -36.5);
-      }
-      g.restore(); return;
-    }
     g.lineWidth = 3; g.beginPath(); g.moveTo(-6, -6); g.lineTo(6, -2); g.moveTo(0, -8); g.lineTo(12, -6); g.moveTo(22, -7); g.lineTo(34, -3); g.moveTo(26, -9); g.lineTo(38, -8); g.stroke();   // folded legs
     g.fillStyle = color; g.lineWidth = 1.4;
     g.beginPath(); g.ellipse(14, -12, 22, 9 + br, 0, 0, 7); g.fill(); g.stroke();   // barrel on its side
@@ -153,5 +144,5 @@ const HORSEBACK = (() => {
     g.restore();
   }
 
-  return { SP_MAX, COST, BONUS, CHARGE, engage, up, strike, enemyTurn, tick, after, note, drawHorse, upAt, downAt, drawDowned, horseImg };
+  return { SP_MAX, COST, BONUS, CHARGE, engage, up, strike, enemyTurn, tick, after, note, drawHorse, upAt, downAt, drawDowned };
 })();
