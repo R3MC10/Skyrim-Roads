@@ -3,6 +3,15 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b138-greatevents", build: 138, date: "24 Nov 2026", title: "Great world events", items: [
+      "Every 12 hours something big happens in the North: a dragon attacks a town, a Daedric rift tears open, a bandit army besieges a hold capital, or a town throws a great fair. All your friends see the same event at the same time.",
+      "A banner on the map counts down to it 45 minutes ahead, then counts down how long is left. The place glows on the map.",
+      "Dragon, rift and siege are big boss fights in three phases. Go to the place and charge in. Every charge from every player wears the boss down, and whole parties of up to 8 can fight together (the leader starts each charge).",
+      "When it ends you get gold and loot based on how much you helped, plus a title for doing your fair share: Firebreaker, Riftsealer or Siegebreaker. Even a lost fight pays a little.",
+      "Events leave their mark: a burned town is dearer while it rebuilds over a few days, an open rift or a lost siege pushes prices up in that hold, and a saved hold thanks you with cheaper shops.",
+      "Fairs have archery, arm wrestling, a drinking contest and a lucky wheel, a prize stall (top prize: the Fair Champion title), and every shop in town is 25% off.",
+      "New perks: Dragonward (Blocking), Rift Warden (Restoration), Siege Breaker (One-Handed), Fairgoer (Mercantile) and Hero of the Hour (Etiquette).",
+    ] },
     { id: "b135-compass", build: 135, date: "24 Nov 2026", title: "A real 3D compass", items: [
       "The golden compass on the home screen is now a proper 3D piece: drag it and it tilts toward your finger, catching the light and showing its thick bronze edge, then springs back when you let go.",
       "Skills, Magic, Items and Map now sit around the compass instead of on top of it, on phones held upright or sideways.",

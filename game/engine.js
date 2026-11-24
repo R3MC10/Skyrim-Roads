@@ -1303,7 +1303,8 @@ const G = (() => {
     const base = econOn() && ECON.isTrade(item) ? Math.max(Math.round(v * 1.05), Math.round(v * cutOf(s, item))) : F.buyPrice(v, skill(s, "Mercantile"));
     return Math.max(1, Math.round(base / haggle(s) * (typeof FEST !== "undefined" ? FEST.shopDiscount() : 1)   // Midyear: 10% off
       * (typeof WARS !== "undefined" && town && PLACES[town] ? WARS.discount(s, holdAt(PLACES[town])) : 1)   // your clan rules this hold
-      * (typeof RUMOURS !== "undefined" && town ? RUMOURS.priceMult(s, town) : 1)));   // local hero discount; knocked-up shop at night (rumours.js)
+      * (typeof RUMOURS !== "undefined" && town ? RUMOURS.priceMult(s, town) : 1)   // local hero discount; knocked-up shop at night (rumours.js)
+      * (typeof GREATEV !== "undefined" && town ? GREATEV.priceMult(s, town) : 1)));   // a fair in town, a burned town, a plundered or grateful hold (greatevents.js)
   };
   function sellPrice(s, row, town = s.location, extra = 0) {
     const it = D.ITEMS[row.item];
