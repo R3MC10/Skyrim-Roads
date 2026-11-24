@@ -7,6 +7,13 @@ const PATCHNOTES = (() => {
       "The golden compass on the home screen is now a proper 3D piece: drag it and it tilts toward your finger, catching the light and showing its thick bronze edge, then springs back when you let go.",
       "Skills, Magic, Items and Map now sit around the compass instead of on top of it, on phones held upright or sideways.",
     ] },
+    { id: "b136", build: 136, date: "24 Nov 2026", title: "A proper road picture while you travel", items: [
+      "The little picture under your trip is now a real moving landscape: snowy mountains far off, hills and forests that match where you are (pines, the Rift's golden birches, marsh, snowfields, ash wastes, rocky hills), and a road with ruts or old flagstones.",
+      "The sky and light follow the real time of day: sun, moons, stars and northern lights at night, warm light at dusk. Snow, rain with lightning, fog, ash and autumn leaves blow through when that's the weather.",
+      "Things pass by on the way: signposts, wayshrines, standing stones, ruins, camps and lanterns, and other travellers, guard patrols and Khajiit caravans come the other way. At night you carry a torch and windows light up.",
+      "The place you're heading to rises on the horizon and grows as you get closer, and a gold thread along the bottom shows how far you've come.",
+      "Runs smoothly on phones and stops when you can't see it, so it doesn't drain the battery. Works in both art styles (pixel art stays crisp).",
+    ] },
     { id: "b135", build: 135, date: "24 Nov 2026", title: "No more flickering popups", items: [
       "Fixed: popups (like tapping an equipment slot) flickered for a split second just after they opened. They now open smoothly and stay put.",
     ] },
