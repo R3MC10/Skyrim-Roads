@@ -318,9 +318,10 @@ const TABMENU = (() => {
     if (!charTabs().some(([id]) => id === tab)) exitChar(); else markChar(tab);
   }
   /* the phone's back button. true = handled, false = let the app close, null = not ours */
-  function back() {
+  function back(opts) {
     if (!live || !save()) return null;
     if (charMode) { openHub(); return true; }
+    if (opts && opts.esc) { if (hubOpen && $("#tw")) { closeHub(); return true; } return null; }   // PC Esc: the compass closes, the map is home
     if (hubOpen) return false;
     return openHub();
   }

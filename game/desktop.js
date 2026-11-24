@@ -1,12 +1,22 @@
-/* desktop.js: on a PC (or any keyboard), Esc works like the phone's back button: closes the top menu or window,
-   one step at a time. It never quits the game; at the main screen it does nothing. */
+/* desktop.js: on a PC (or any keyboard), Esc works like the phone's back button: closes the top tooltip, window,
+   menu or the compass, one step at a time (ui.js __ui.back, the same steps as Android's back button). With nothing
+   left to close (the bare map, or a fight) it opens the Esc menu (pausemenu.js); Esc again closes that.
+   In a text box Esc only clears a search or leaves the box. It never quits the game by itself. */
 (function () {
   if (typeof addEventListener !== "function" || typeof document === "undefined") return;
   addEventListener("keydown", (e) => {
     if (e.key !== "Escape" || e.defaultPrevented || e.repeat) return;
     if (document.getElementById("nickbox")) return;   // the nickname box must be answered
+    const t = e.target, tag = (t && t.tagName) || "";
+    if (/^(INPUT|TEXTAREA|SELECT)$/.test(tag) || t?.isContentEditable) {   // typing: clear a search box, else just leave the box
+      e.preventDefault();
+      if (tag === "INPUT" && t.type === "search" && t.value) { t.value = ""; t.dispatchEvent(new Event("input", { bubbles: true })); } else t.blur?.();
+      return;
+    }
     e.preventDefault();
-    try { window.__ui?.back?.(); } catch (x) { /* nothing to close */ }
+    let r = true;
+    try { r = window.__ui?.back?.({ esc: true }); } catch (x) { /* nothing to close */ }
+    if (r === false && typeof PAUSEM !== "undefined" && window.__ui?.inGame?.()) PAUSEM.open();
   });
   /* hotkeys: a letter opens its tab (the letters show on the tabs), Tab opens or closes the compass menu
      (inside it W A S D / the arrows pick a direction and 1-5 the buttons below: tabmenu.js) */

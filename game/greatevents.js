@@ -511,17 +511,20 @@ const GREATEV = (() => {
   function bannerHTML(S, t = nowS()) {
     const ev = current(t), rc = recent(t, 1).filter((e) => claimable(S, e, t)), af = aftermath(S, t);
     if (!ev && !rc.length && !af.length) return "";
-    let h = "";
+    let h = "", cd = null, st = "";
     if (ev) {
-      const cd = countdown(ev, t), st = stage(ev, t), tl = ev.kind === "fair" ? null : tallyCached(ev, S);
+      cd = countdown(ev, t); st = stage(ev, t); const tl = ev.kind === "fair" ? null : tallyCached(ev, S);
       h += `<div class="gev-banner gev-${ev.kind} gev-${st}" data-gev="open" data-id="${ev.id}">
         <div class="gev-head">${pic(ev.kind, 64, 46, ev.dKind || "", tl ? Math.min(2, tl.phase) : 0)}<div class="gev-t"><span class="gev-kind">${ICON[ev.kind]} ${T(st === "warn" ? "Coming soon" : "Great world event")}</span><b>${esc(ev.name)}</b><span class="sub">${esc(statusLine(ev, S, t))}</span></div>
         <div class="gev-clock"><span>${cd.label}</span><b data-gev-end="${st === "warn" ? ev.start : ev.end}">${cd.txt}</b></div></div>
         ${tl && st === "on" ? phaseBar(ev, tl) : ""}<div class="gev-row">${mainButton(ev, S, t)}</div></div>`;
     }
-    for (const e of rc) h += `<div class="gev-strip" data-gev="open" data-id="${e.id}"><span>${e.icon} ${esc(T("{name}: over, your reward is waiting", { name: e.name }))}</span><button class="btn sm pri" data-gev="claim" data-id="${e.id}">${T("Claim")}</button></div>`;
-    for (const a of af) h += `<div class="gev-strip gev-after"><span>${a.kind === "dragon" ? "🔥" : a.kind === "rift" ? "🌀" : a.out === "won" ? "🛡️" : "💰"} ${esc(aftermathLine(a))}</span></div>`;
-    return `<div class="gev-card">${h}</div>`;
+    /* each strip carries a key naming its news, so the × on it (gevstack.js) hides it until the news changes */
+    const strips = [];
+    for (const e of rc) strips.push({ key: "claim:" + e.id, html: `<div class="gev-strip" data-gev="open" data-id="${e.id}"><span>${e.icon} ${esc(T("{name}: over, your reward is waiting", { name: e.name }))}</span><button class="btn sm pri" data-gev="claim" data-id="${e.id}">${T("Claim")}</button></div>` });
+    for (const a of af) strips.push({ key: "after:" + a.ev.id + ":" + a.out, html: `<div class="gev-strip gev-after"><span>${a.kind === "dragon" ? "🔥" : a.kind === "rift" ? "🌀" : a.out === "won" ? "🛡️" : "💰"} ${esc(aftermathLine(a))}</span></div>` });
+    if (typeof GEVSTACK !== "undefined") return GEVSTACK.compose({ id: S.id, ev, evKey: ev ? ev.id + ":" + st : "", end: ev ? (st === "warn" ? ev.start : ev.end) : 0, cdTxt: cd ? cd.txt : "", banner: h, strips }, t);
+    return `<div class="gev-card">${h}${strips.map((x) => x.html).join("")}</div>`;
   }
   const RULES = {
     dragon: "The dragon attacks in three phases: it circles and burns, lands in the streets, then fights on wounded. Go to the town and charge in: each charge is a short fight, and everything you do wears it down for everyone. The more heroes join, the tougher it gets. In a party, the leader starts each charge and members close by fight beside them. Kill it before time runs out or the town burns and has to rebuild for 3 days. Your reward depends on your share: gold, dragon bones and scales, its soul, and the title Firebreaker if you did at least half a fair share.",
@@ -605,13 +608,16 @@ const GREATEV = (() => {
   function render(force) {
     const S = me(), el = document.getElementById("gev"); if (!S || !el) return;
     const t = nowS(), ev = current(t);
-    const sig = (ev ? `${ev.id}|${stage(ev, t)}|${statusLine(ev, S, t)}|${ev.kind === "fair" ? "" : tallyCached(ev, S).total}|${claimable(S, ev, t)}` : "") + `|${S.location}|${S.trip?.status || ""}|${recent(t, 1).filter((e) => claimable(S, e, t)).length}|${aftermath(S, t).map((a) => a.ev.id + Math.round(a.rebuilt * 100)).join()}|${partyOf()?.leader || ""}`;
+    const sig = (ev ? `${ev.id}|${stage(ev, t)}|${statusLine(ev, S, t)}|${ev.kind === "fair" ? "" : tallyCached(ev, S).total}|${claimable(S, ev, t)}` : "") + `|${S.location}|${S.trip?.status || ""}|${recent(t, 1).filter((e) => claimable(S, e, t)).length}|${aftermath(S, t).map((a) => a.ev.id + Math.round(a.rebuilt * 100)).join()}|${partyOf()?.leader || ""}|${typeof GEVSTACK !== "undefined" ? GEVSTACK.sig() : ""}`;
     if (!force && sig === lastSig) return;
     lastSig = sig; el.innerHTML = bannerHTML(S, t);
   }
   function loop() {
     const S = me(); if (!S) return;
-    if (!document.getElementById("gev")) { const raid = document.getElementById("raid"); if (!raid) return; const el = document.createElement("div"); el.id = "gev"; raid.before(el); el.addEventListener("click", (e) => { if (e.target.closest("[data-act]") && api.click) api.click(e); }); lastSig = ""; }
+    if (!document.getElementById("gev")) { const raid = document.getElementById("raid"); if (!raid) return; const el = document.createElement("div"); el.id = "gev";
+      /* the event card and the dragon raid card share one column (#topcards): on a PC they float together at the top of the map instead of on top of each other */
+      if (raid.parentElement?.id === "topcards") raid.before(el); else { const top = document.createElement("div"); top.id = "topcards"; raid.before(top); top.append(el, raid); }
+      el.addEventListener("click", (e) => { if (e.target.closest("[data-act]") && api.click) api.click(e); }); lastSig = ""; }
     try { announce(S, nowS()); render(false); tick(); } catch (e) { console.warn("great events", e); }
   }
   /* ui.js calls this once the main screen is up */
@@ -619,6 +625,7 @@ const GREATEV = (() => {
     api = a;
     if (typeof Store !== "undefined") Store.watch("gevents", (list) => { setDocs(list); if (document.getElementById("gev")) render(true); });
     if (!mount.bound) { document.addEventListener("click", onClick); mount.bound = true; }
+    if (typeof GEVSTACK !== "undefined") GEVSTACK.mount(() => render(true));
     clearInterval(loopT); loopT = setInterval(loop, 1000); loop();
   }
 
