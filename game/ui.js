@@ -682,6 +682,8 @@
       Store.watch("runs", () => pvUI.onRuns());
     }
     if (typeof DGAMES !== "undefined") DGAMES.mount({ S: () => S, party: () => party, Store });   // watch the party leader's dungeon mini-games live
+    if (typeof LIVECURSOR !== "undefined") LIVECURSOR.mount({ Store, uid: () => S.id, name: () => S.name });   // the player's pointer while others watch (livecursor.js)
+    if (typeof PTRAPS !== "undefined" && coopUI) PTRAPS.mount({ S: () => S, runs: () => coopUI.runs, Store, toast, persist, act: (c) => dungeonAct(c) });   // the whole party plays each trap (partytraps.js)
     Store.watch("chests", (docs) => { const had = chests.length; chests = docs.filter((c) => c.members?.some((m) => m.id === S.id)); if (chests.length > had) toast("💰 A party chest is waiting. Open 👥 Social → Party."); if (tab === "log") bump(); });
     Store.watch("news", (docs) => { news = docs.sort((a, b) => b.t - a.t); if (news.length > 40) news.slice(40).forEach((n) => Store.remove("news", n.id)); if ((tab === "log" || tab === "social")) bump(); });
     G.setAllyProvider(() => allies());
@@ -1450,6 +1452,7 @@
   /* a room choice, with its mini-game when it has one (also how a settled party vote is carried out, partyvote.js) */
   function dunChoice(dc) {
     const dg = typeof DGAMES !== "undefined" && !(lvUI && lvUI.memberLocked());   // dungeon mini-games; the party watches the leader play (dungeongames.js)
+    if (dg && typeof PTRAPS !== "undefined" && PTRAPS.wants(S, dc)) return PTRAPS.start(S, dc, dungeonAct);   // a trap in a party run: everyone plays it (partytraps.js)
     if (dg && DGAMES.handles(S, dc)) return DGAMES.play(S, dc, dungeonAct);
     if (dc.startsWith("game:") && typeof EXPLORE !== "undefined") { EXPLORE.openGame(S, dungeonAct); if (dg) DGAMES.mirror("ring"); return; }
     if (dc === "pick" && typeof IMM !== "undefined" && IMM.wantsGame()) { IMM.pick("dungeon", dungeonAct, S); if (dg) DGAMES.mirror("lock"); return; }
@@ -1474,6 +1477,7 @@
   }
   function dungeonAct(c, replay = false) {
     if (lvUI && !replay && lvUI.memberLocked()) return toast("In a party only the leader decides. Their choice happens to you too.");
+    if (replay && typeof PTRAPS !== "undefined" && coopUI && S.dungeon?.run) c = PTRAPS.mine(S, coopUI.runs.find((x) => x.id === S.dungeon.run), c, PTRAPS.docs);   // a party trap: your own result, not the leader's
     const runId = S.dungeon?.run || null, roomType = S.dungeon?.room?.type, hp0 = G.curHealth(S), found0 = S.dungeon?.found.length || 0, gold0 = S.dungeon?.gold || 0;
     const act = () => {   // the party loot pile wraps the room; a fight inside it pauses on the turn-by-turn screen
       let r, err; const p = lvUI ? lvUI.aroundAct(c, () => { try { return (r = DUNGEONS.act(S, c)); } catch (x) { err = x; throw x; } }) : (r = DUNGEONS.act(S, c));

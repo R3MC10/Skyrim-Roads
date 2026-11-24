@@ -266,6 +266,9 @@ const PFX = (() => {
     [ "Sneak", "patient_shadow", "Patient Shadow", 1, [50], ["muffled_movement"], "Sneaking past a foe in a dungeon: you're noticed a third slower, the shadows are wider and you hear it turn sooner. [OURS]", [["dgsneak", 0.3, {}]]],
     [ "Two-Handed", "lid_breaker", "Lid Breaker", 1, [25], ["barbarian"], "Smashing chests open: the bright zone on the swing is a third wider. [OURS]", [["dgsmash", 0.3, {}]]],
     [ "Athletics", "sprinter", "Sprinter", 1, [30], ["long_strider"], "Running from a dungeon fight: a quarter fewer steps to get away. [OURS]", [["dgflee", 0.25, {}]]],
+    // ---------------------------------------------------------------- party traps (partytraps.js)
+    [ "Lockpicking", "trap_tinkerer", "Trap Tinkerer", 1, [40], ["apprentice_locks"], "You know how traps are built: dashing past blades and finding the trigger are both easier, and a trap that catches you never spills your gold or dents your armour. [OURS]", [["dgdash", 0.15, {}], ["dgspot", 0.15, {}], ["trapsting", 1, {}]]],
+    [ "Sneak", "call_the_danger", "Call Out the Danger", 1, [40], ["trap_sense"], "In a party, when you get through a trap cleanly, you shout a warning: everyone the trap still catches takes a quarter less damage and one stack less poison or bleeding. [OURS]", [["ptwarn", 1, {}]]],
     // ---------------------------------------------------------------- werewolves and vampires (beastpaths.js)
     [ "Restoration", "bane_of_night", "Bane of the Night", 1, [35], ["novice_restoration"], "Vampires and werewolves take 20% more from your blows and hit you 10% softer. [OURS]", [["out", 0.2, { tag: ["nightkin"] }], ["in", -0.1, { tag: ["nightkin"] }]]],
     [ "Alchemy", "wolfsbane", "Wolfsbane", 1, [30], ["physician"], "You chew wolfsbane and garlic on the road: half as likely to catch a vampire's or a werewolf's curse. [OURS]", [["curseres", 0.5, {}]]],
