@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b144-eventart", build: 144, date: "24 Nov 2026", title: "Painted events and shops", items: [
+      "World events now have painted pictures: the Khajiit's grand caravan, Daedric invasions, dragon migrations and all four festival weeks each get their own.",
+      "Great world events do too: dragon assaults, Daedric rifts, sieges and town fairs.",
+      "You see a small picture on the event's card under the map and a wide one when you open it.",
+      "Nine town places have new painted banners: the court wizard and enchanter, the market, stables, your home, the hall, the fence, the arena, the mine and the docks.",
+    ] },
     { id: "b143-followeranim", build: 143, date: "24 Nov 2026", title: "Followers fight with their whole body", items: [
       "Followers and party members now really fight in the fight picture: they swing their weapon or draw their bow, cast their spells, raise their shield and flinch when they get hit.",
       "A follower who is knocked down drops to the ground and lies there until someone pulls them back up, and then you see them get back on their feet.",
