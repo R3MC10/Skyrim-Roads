@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b136", build: 136, date: "24 Nov 2026", title: "Party fights: everyone plays the same fight", items: [
+      "When you follow a party leader into a fight, your phone now opens the full fight screen: the same foe, the same health bars and the same log as everyone else, live.",
+      "On your turn you play as yourself, with your own moves, spells, magicka, stamina, potions and shouts. No more being played as a follower.",
+      "The leader's and other players' moves show in your log under their names. Followers and summons still fight on their own.",
+      "Each turn has 90 seconds; if time runs out, that player holds back and guards. If you get knocked down, you get back up after the fight, badly hurt.",
+      "If the leader's phone goes quiet for two minutes, the fight breaks off.",
+    ] },
     { id: "b135", build: 135, date: "24 Nov 2026", title: "No more flickering popups", items: [
       "Fixed: popups (like tapping an equipment slot) flickered for a split second just after they opened. They now open smoothly and stay put.",
     ] },
