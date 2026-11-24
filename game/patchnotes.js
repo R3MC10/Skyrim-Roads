@@ -61,6 +61,12 @@ const PATCHNOTES = (() => {
       "A friend with \"Dragon\" (or \"Wolf\", \"Atronach\"...) in their name no longer shows up as that creature in your fights. Players are always drawn as people.",
       "A friend's dog (Meeko) shows up as a dog in your shared fights, not as a person.",
     ] },
+    { id: "b145-invitebuttons", build: 145, date: "24 Nov 2026", title: "Invites you can answer right away", items: [
+      "Every invite now pops up as a card at the top of the screen with Accept and Decline: party invites, co-op dungeon runs, clan invites, Arena challenges and trade offers. No more digging through menus.",
+      "When you decline, the other player is told plainly, for example \"Kacper declined your party invite.\" You can now decline a clan invite too.",
+      "A full party or run tells you it's full instead of pulling you out of your own party first.",
+      "On the phone, an invite that arrives while the game is in the background shows a notification with Accept and Decline buttons.",
+    ] },
     { id: "b144-dawnguard", build: 144, date: "24 Nov 2026", title: "The vampire war", items: [
       "New quest line from level 12: Isran at Fort Dawnguard (near Riften) sends you into Dimhollow Crypt, where something sleeps in a sealed coffin. It ends at Castle Volkihar, a black keep on an islet off the coast past Solitude.",
       "Then pick a side. Hunt the night with the Dawnguard (heavy crossbow, hunter's armour, troll armour for your follower) or drink Lord Harkon's blood and become a stronger Vampire Lord. Seven more stages either way, with a big boss fight at the end.",
