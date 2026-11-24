@@ -270,6 +270,13 @@ const PFX = (() => {
     [ "Speechcraft", "kindred_spirit", "Kindred Spirit", 1, [25], [], "Your follower warms to you 50% faster when you do things they like, and cools 25% slower when you don't. [OURS]", [["folbond", 0.5, {}], ["folgrudge", 0.25, {}]]],
     [ "Speechcraft", "heart_to_heart", "Heart to Heart", 1, [45], ["kindred_spirit"], "Talking with your follower does twice as much for their loyalty, and they never refuse your orders, however unhappy. [OURS]", [["foltalk", 1, {}], ["folobey", 1, {}]]],
     [ "Etiquette", "sworn_companion", "Sworn Companion", 1, [50], ["courtly_manners"], "Followers ask you for their personal quest at loyalty 65 instead of 80, and their signature move is 25% stronger. [OURS]", [["folquest", 15, {}], ["folsig", 0.25, {}]]],
+    // ---------------------------------------------------------------- the vampire war (dawnguard.js): one side's perks each, the other side can't take them
+    [ "Archery", "dg_bolt_hunter", "Vampire Hunter", 1, [30], [], "Dawnguard only. Bows and crossbows do 25% more damage to vampires and the undead. [Skyrim: Dawnguard]", [["out", 0.25, { sk: AR, tag: ["undead"] }]]],
+    [ "Heavy Armor", "dg_sun_ward", "Sun-Blessed Plate", 1, [35], [], "Dawnguard only. In heavy armor, vampires and the undead hit you 15% softer. [OURS]", [["in", -0.15, { heavy: 1, tag: ["undead"] }]]],
+    [ "Etiquette", "dg_troll_tamer", "Troll Tamer", 1, [30], [], "Dawnguard only. Gunmar's training: your follower fights 15% harder and shrugs off 10% of the blows they take. [OURS]", [["allies", 0.15, {}], ["foltaken", 0.1, {}]]],
+    [ "Illusion", "volk_blood_of_harkon", "Blood of Harkon", 1, [30], [], "Volkihar only. Your Vampire Lord form lasts 3 turns longer, and changing heals a tenth of your health. [OURS]", [["lordturns", 3, {}], ["lordheal", 0.1, {}]]],
+    [ "Illusion", "volk_night_lord", "Night Lord", 1, [45], ["volk_blood_of_harkon"], "Volkihar only. As a Vampire Lord your drain life is 30% stronger. [OURS]", [["lorddrain", 0.3, {}]]],
+    [ "Illusion", "volk_court", "Court of Volkihar", 1, [60], ["volk_night_lord"], "Volkihar only. As a Vampire Lord you hit 20% harder and take 10% less damage. [OURS]", [["lordout", 0.2, {}], ["lordin", -0.1, {}]]],
     // ---------------------------------------------------------------- boss fights (bossfight.js)
     [ "One-Handed", "giant_slayer", "Giant Slayer", 1, [40], ["armsman"], "Bosses take 10% more damage from you, and 20% more once they reach their last phase. [OURS]", [["out", 0.1, { bossFoe: 1 }], ["out", 0.1, { bossLast: 1 }]]],
     [ "Blocking", "read_the_signs", "Read the Signs", 1, [30], ["shield_wall"], "A boss's big attacks (the ones it shows a turn ahead) hurt you 25% less. [OURS]", [["bftele", 0.25, {}]]],

@@ -38,7 +38,7 @@ function play(s,id){
 const hero=make("spellsword",45); hero.quests={}; QUESTS.ensure(hero); hero.skills.Lockpicking.lvl=80;
 // Mephala waits for the main quest
 at(hero,"Whiterun"); QUESTS.join(hero,"dae_mephala"); ok(/dragon/.test(QUESTS.talk(hero,"dae_mephala").text),"Mephala needs Dragon Rising");
-hero.quests.main.stage=3;
+hero.quests.main.stage=QUESTS.L.main.stages.findIndex(x=>x.title==="The Way of the Voice");
 const before={...Object.fromEntries(D.SKILL_GROUPS.Mage.concat(D.SKILL_GROUPS.Warrior,D.SKILL_GROUPS.Thief).map(k=>[k,hero.skills[k].lvl]))};
 for(const id of DAEDRIC.LINES) play(hero,id);
 for(const id of DAEDRIC.LINES) ok(has(hero,QUESTS.L[id].art),"got "+QUESTS.L[id].art);
