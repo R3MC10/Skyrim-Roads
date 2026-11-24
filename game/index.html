@@ -2188,6 +2188,13 @@ html.art-pixel .fitm,html.art-pixel .fitm .xh{border-radius:0}html.art-pixel .fi
 html.art-pixel .fitarrow .ln{stroke-linecap:butt;stroke-dasharray:6 6;filter:none}html.art-pixel .tbu.fit-next{box-shadow:0 0 0 2px #c8321e}
 @media (max-width:380px){.tbint .fitg{font-size:10px;padding-left:4px}}
 @media (prefers-reduced-motion:reduce){.tbu.fit-next,.fitarrow .ln{animation:none!important}}
+/* [perf] the red "next to act" pulse fades a glow layer in and out (cheap for the phone) instead of repainting the whole card every frame */
+.tbu.fit-next{animation:none}
+.tbu.fit-next::after{content:"";position:absolute;inset:-1px;border-radius:inherit;pointer-events:none;opacity:0;box-shadow:0 0 0 1px rgba(255,96,64,1),0 0 22px rgba(255,70,40,.65);animation:fitglow 1.6s ease-in-out infinite}
+@keyframes fitglow{50%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.tbu.fit-next::after{animation:none!important}}
+/* [perf] the compass screen is fully hidden under a fight or the sky view: stop its twinkles and spins there */
+body:has(> #tbf) #tw *,body:has(> #sky) #tw *{animation-play-state:paused!important}
 /* ==== HUD tidy (hud2.js): one message lane, objective line, docked ★, one floating button, bars fade when full ==== */
 #hudlane{position:fixed;left:8px;top:calc(env(safe-area-inset-top) + 8px);z-index:25;width:min(82vw,440px);display:flex;flex-direction:column;align-items:flex-start;gap:6px;pointer-events:none;transition:top .18s ease}
 #hudlane .hl-log:empty,#hudlane .hl-say:empty{display:none}

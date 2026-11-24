@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b139-perf", build: 139, date: "24 Nov 2026", title: "Faster and smoother", items: [
+      "The game starts a lot faster: the title screen now shows up in about a second instead of several on older phones.",
+      "The world map, the title screen, the road pictures and the fight screen use much less of your phone's power when nothing is moving, so older phones stay smoother and cooler and the battery lasts longer.",
+      "Nothing looks or plays differently, it just runs lighter.",
+    ] },
     { id: "b139-lightfx", build: 139, date: "24 Nov 2026", title: "Light and weather you can feel", items: [
       "The map now changes with the light: warm gold at sunrise and sunset, a cool blue night, and a flat grey wash when a storm rolls in.",
       "At night towns, farms, camps and forts glow with firelight, and the glow flickers a little.",

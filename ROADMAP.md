@@ -69,6 +69,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Smart AI combat (default; custom tactics optional), crafting mini-games, motion design (63)
 
 ## In progress (write your name before you start)
+- Claude: performance pass: faster start (map terrain built row by row), map/title/road pictures sleep between frames and stop when hidden or covered, cheaper fight-screen glow, tests/perf_ui.py measures it. Branch claude/perf.
 - Claude: lighting and atmosphere (lightfx.js): time-of-day colour grade, glowing towns and camps at night, dawn/dusk light shafts, fog banks over valleys and lakes, cloud-shadow parallax, water shimmer, aurora on the northern snow, vignette; on the map and in place pictures. Settings → Graphics → Lighting Off/Low/High. Branch claude/lightfx.
 - Claude: homestead rooms (hsrooms.js): garden and cellar, wings as real stations, display cases, followers living there, raids, party visits to the leader's home, 4 Smithing/Speech perks. Branch claude/homestead.
 - Claude: HUD tidy (hud2.js): one message lane with a queue under the compass, objective line under the compass, bars fade when full, ★ in the top bar, one floating compass button that steps out of the way, map buttons in one strip, bottom-bar names fit. Branch claude/hud2.
