@@ -493,12 +493,16 @@
   // ------------------------------------------------------------ main screen
   window.__dbg = { save: () => S, fightResult: (r) => showFightResult(r), view: () => view, openEvent: (n) => openEvent(n), openEncounter: (n) => openEncounter(n), tally: (k, n) => tally(k, n), message: (t, x, b) => showMessage(t, x, b), toast: (t) => toast(t), publish: () => publishCard(), others: () => others, party: () => party, pp: () => ppUI, coopRuns: () => coopUI?.runs || [], setView: (z, cn) => { zoom = z; if (cn) center = cn; follow = false; kickMap(); } };   // for testing in the browser console
   /* phone back button: close what's on top, step back to the map, and only then leave the app */
+  /* opts.esc: the PC's Esc key (desktop.js). It walks the same steps, except that the compass isn't "home" on a PC and
+     a fight isn't left alone: false then means "nothing left to close", and Esc opens the pause menu (pausemenu.js) */
   window.__ui = {
-    back() {
+    back(opts) {
+      const escKey = !!(opts && opts.esc);
+      if (typeof PAUSEM !== "undefined" && PAUSEM.isOpen()) { PAUSEM.close(); return true; }   // the Esc menu is the very top
       if (typeof BUGREPORT !== "undefined" && BUGREPORT.isOpen()) { BUGREPORT.close(); return true; }   // the report window sits on top of everything
       if ($("#title")) { if (titlePage !== "menu" && titlePage !== "press") { titlePage = "menu"; renderTitle(); return true; } return false; }
       if (!S && $("#toTitle")) { app.innerHTML = ""; showTitle("menu"); return true; }
-      if (typeof TB !== "undefined" && TB.open) return true;   // a turn-based fight is on: finish it (or Flee)
+      if (typeof TB !== "undefined" && TB.open) { if ($("#modal.pm-top")) { closeModal(); return true; } return !escKey; }   // a turn-based fight is on: finish it (or Flee); Esc pauses
       if (typeof FAVWHEEL !== "undefined" && FAVWHEEL.open) { FAVWHEEL.hide(); return true; }
       if (typeof LEVELUP !== "undefined" && LEVELUP.isOpen) { LEVELUP.close(); return true; }   // the level-up pillars: decide later
       if ($("#sky") && !$("#modal")) { closeMenu(); if (typeof TABMENU !== "undefined") TABMENU.menuClosed(); return true; }
@@ -509,11 +513,17 @@
       if (selected) { selected = null; renderPicked(); return true; }
       if (S && (tab === "stats" || tab === "diary") && !document.body.classList.contains("tw-char")) { tab = "hero"; renderTabs(); renderPanel(true); return true; }   // [journal] Character sub-pages
       if (S && tab === "places") { tab = "map"; renderTabs(); renderPanel(true); return true; }
-      if (typeof TABMENU !== "undefined") { const r = TABMENU.back(); if (r !== null) return r; }   // the compass is home (tabmenu.js)
+      if (typeof TABMENU !== "undefined") { const r = TABMENU.back(opts); if (r !== null) return r; }   // the compass is home (tabmenu.js); on a PC the map is
       if (S && tab !== "map") { tab = "map"; bump(); renderTabs(); renderPanel(true); return true; }
       return false;
     },
     save() { if (S) Store.save(S); },
+    /* for the Esc menu (pausemenu.js) */
+    inGame: () => !!S && !$("#title"),
+    settings: () => { if (S) openSound(); },
+    notes: () => { if (typeof PATCHNOTES !== "undefined") openNotes(); },
+    guide: () => { if (S) { openGuide(); persist(); } },
+    toTitle() { if (S) Store.save(S); try { sessionStorage.setItem("rotn_open", "menu"); } catch { /* ignore */ } location.reload(); },
     /* is this a good moment to restart on a new version? not mid-fight, dungeon, trade, menu, mini-game or typing */
     safeToUpdate() {
       const el = document.activeElement, typing = /^(INPUT|TEXTAREA|SELECT)$/.test(el?.tagName || "") || el?.isContentEditable;
