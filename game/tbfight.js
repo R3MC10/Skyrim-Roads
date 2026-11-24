@@ -13,7 +13,7 @@
 
    Each round: everyone rolls initiative (base + d10); you spend AP on actions (weapon by type, power attacks, guard,
    spells by tier, shouts, potions, flee); leftover AP becomes guard. Followers, summons, thralls and party members act on
-   their own initiative; real players in your party pick their own move on their own phone (60 s, then Auto).
+   their own initiative; real players in your party play their own turn on their own phone (sharedfight.js; 90 s, then guard).
    No one-shots: a single blow can't take more than 40% of a strong target's health, except a finishing blow.
    The AI is reached through one adapter, TB.aiPick(fight, actor), which uses COMBATAI.decide(fight, actor, settings)
    when another module provides it, otherwise the fight's own choice (Smart AI or your custom tactics). */
@@ -31,7 +31,7 @@ const TB = (() => {
   const MAX_FOES = 6;           // [OURS] a party meets one foe per hero, one after another (like dungeon rooms), at most 6; bosses stay alone
   const MAX_ROUNDS = 40;
   const MP_REGEN = 1.6, SP_REGEN = 1.4;
-  const TURN_SECONDS = 60;      // a real player's turn in a party fight, then Auto
+  const TURN_SECONDS = 90;      // a real player's turn in a party fight (on their own full fight screen, sharedfight.js), then they just guard
   const pfx = (s, k) => (typeof PFX !== "undefined" ? PFX.num(s, k) : 0);
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const d10 = () => 1 + Math.floor(Math.random() * 10);
@@ -64,6 +64,22 @@ const TB = (() => {
     return 3;
   }
   const isSpell = (a) => /^(spell|dual|scroll):/.test(a);
+  /* [OURS] shared party fights: the foe's state handed over to a player's phone for their turn and back (sharedfight.js) */
+  const FOE_KEYS = ["foeSt", "eParalyzed", "tbStunLeft", "tbStunCd", "tbStunRound", "stagger", "calmTurns", "bleed", "kit", "kitDot", "kitApLoss", "kitLast", "dStance", "fearTurns", "disarmed", "soulTrap", "eMagic", "fpAvoided", "ehp0"];
+  /* what a teammate's spell can leave on someone (spellbook.js): handed back with the turn */
+  const BUFF_KEYS = ["ward", "reflect", "armorRed", "armorT", "imbue", "thorns", "heroT", "unseen", "dmg", "_baseDmg"];
+  /* "You hit the bandit" from one phone reads "Beta hits the bandit" on the others */
+  const IRREG = { are: "is", were: "was", have: "has", do: "does", go: "goes", can: "can", "can't": "can't", will: "will", "don't": "doesn't", may: "may", must: "must", could: "could" };
+  const conj = (w) => IRREG[w.toLowerCase()] || (/ed$/.test(w) ? w : /(s|sh|ch|x|z|o)$/.test(w) ? w + "es" : /[^aeiou]y$/.test(w) ? w.slice(0, -1) + "ies" : w + "s");
+  function voice(t, name) {
+    if (!name) return String(t ?? "");
+    let subj = false;
+    const out = String(t ?? "").replace(/\byourself\b/gi, "themselves").replace(/(^|[.!?·]\s*|, )[Yy]ou('re)?\s+([A-Za-z']+)/g, (m, pre, re, w) => { subj = true; return re ? `${pre}${name} is ${w}` : `${pre}${name} ${conj(w)}`; })
+      .replace(new RegExp(`(\\b${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} [a-z']+ [a-z']+ and )([a-z']+)`, "g"), (m, a, w) => a + (/s$/.test(w) ? w : conj(w)));   // "Beta holds back and keeps..."
+    // after the name has been said: "their guard", not "Beta's guard" again
+    return out.replace(/\b[Yy]ou're\b/g, `${name} is`).replace(/\b[Yy]ou've\b/g, `${name} has`).replace(/\b[Yy]ou are\b/g, `${name} is`)   // "(Beta is poisoned)", not "(Beta're poisoned)"
+      .replace(/\b[Yy]ours\b/g, subj ? "theirs" : `${name}'s`).replace(/\b[Yy]our\b/g, subj ? "their" : `${name}'s`).replace(/\b[Yy]ou\b/g, name);
+  }
 
   /* ------------------------------------------------------------------ the AI adapter (one place, so better AIs can plug in) */
   function aiPick(f, actor = "me", settings) {
@@ -89,6 +105,7 @@ const TB = (() => {
       this.ap = 0; this.spAp = 0; this.cur = null; this.done = false; this.waiting = null;
       this.lines = { me: [], them: [], a: null };   // this round's log line for the fight log
       this.hitters = 0;
+      this.everyone = f.allies.slice();   // who started the fight beside you (party view: knocked-down teammates stay listed)
       this.players = Math.min(7, f.allies.filter((a) => a.player && !a.follower && a.kind !== "follower").length);   // real players with you (a party is up to 8; followers never count)
       // foe archetypes and groups (foegroups.js): a bandit archer, a draugr mage... and on your own, sometimes 2 or 3 of them
       const grp = typeof FOEGROUPS !== "undefined" ? FOEGROUPS.prep(f, this.players) : { n: 1, hpMul: [1] };
@@ -129,7 +146,11 @@ const TB = (() => {
       const al = f.allies.reduce((a, x) => a + (x.dmg || 0), 0);
       return Math.max(w, m) + al;
     }
-    emit(who, text, kind, extra = {}) { const e = { who, text, kind, round: this.round, hp: Math.max(0, Math.round(this.f.hp)), ehp: Math.max(0, Math.round(this.f.ehp)), ...extra }; this.ev.push(e); return e; }
+    emit(who, text, kind, extra = {}) {
+      const e = { who, text, kind, round: this.round, hp: Math.max(0, Math.round(this.f.hp)), ehp: Math.max(0, Math.round(this.f.ehp)), ...extra };
+      if (this.remote && this.players && !this.mirror) { const ph = {}; for (const a of this.everyone) if (a.pid) ph[a.pid] = Math.max(0, Math.round(a.hp || 0)); e.ph = ph; }   // every player's health at this moment, for their own screens
+      this.ev.push(e); return e;
+    }
     get over() { const f = this.f; if (f.ehp <= 0 && f.hp > 0 && !f.endWon && this.wave < this.waves) this.nextFoe(); return f.hp <= 0 || f.ehp <= 0 || !!f.endWon || this.round > this.maxRounds; }
     /* a party fight: the foe fell, the next one steps in */
     nextFoe() {
@@ -181,7 +202,8 @@ const TB = (() => {
         }
         if (o.al && o.al.player && o.al.pid && this.remote && !o.al.down && (o.al.late || 0) >= 2 && (!this.remote.live || this.remote.live())) { this.allyMove(o.al, "guard", true); this.idx++; continue; }   // missed two turns: they just guard (no auto fighting)
         if (o.al && o.al.player && o.al.pid && this.remote && !o.al.down && (!this.remote.live || this.remote.live())) {   // a real player: their own phone picks
-          if (!this.waiting) { this.waiting = { pid: o.al.pid, name: o.al.name, until: Date.now() + TURN_SECONDS * 1000, al: o.al }; this.remote.ask(this, o.al); }
+          if (!this.waiting) { this.waiting = { pid: o.al.pid, name: o.al.name, until: Date.now() + TURN_SECONDS * 1000, al: o.al, tid: `${this.round}.${this.idx}` }; this.remote.ask(this, o.al); }
+          if (this.waiting.reply) { const rp = this.waiting.reply; this.waiting = null; o.al.late = 0; this.applyRemote(o.al, rp); this.idx++; continue; }   // their whole turn, played on their own fight screen
           if (this.waiting.move) { const m = this.waiting.move; this.waiting = null; o.al.late = 0; this.allyMove(o.al, m); this.idx++; continue; }
           if (Date.now() < this.waiting.until) return { turn: "wait", who: o.al.name, until: this.waiting.until };
           this.waiting = null; o.al.late = (o.al.late || 0) + 1; this.allyMove(o.al, "guard", true); this.idx++; continue;
@@ -217,6 +239,7 @@ const TB = (() => {
       if (mult && mult !== 1 && f.ehp < before) { f.ehp = before - (before - f.ehp) * mult; text += mult > 1 ? " (perfect timing!)" : " (mistimed)"; }
       if (typeof DRAGONS !== "undefined") text += DRAGONS.graze(f, a, before);
       if (typeof FOEKIT !== "undefined") text += FOEKIT.defend(f, a, before);   // its raised shield, ward or dodge
+      if (typeof COMBO !== "undefined" && f.ehp < before) text += COMBO.after(f, a, before);   // followers2: combos
       text += this.capFoe(before);
       if (f.ehp < before) { text += this.flank(before); this.hitters++; }
       if (typeof DRAGONS !== "undefined") DRAGONS.check(f, this);
@@ -274,15 +297,17 @@ const TB = (() => {
     allyMove(al, move, timedOut) {
       const f = this.f;
       if (al.down || f.ehp <= 0) return;
+      if (al.fai && typeof FAI !== "undefined" && !(al.player && move && move !== "auto")) return FAI.turn(this, f, al);   // followers2: their own AP turn
       const b = f.ehp, hpB = f.hp;
       let t;
       if (al.player && move && move !== "auto") t = this.playerMove(al, move);
       else if (al.coop && typeof COOP !== "undefined") t = COOP.allyAct(f, al);
       else if (al.follower && f.ai && typeof COMBATAI !== "undefined") t = COMBATAI.followerAct(f, al);
-      else { const d = al.dmg * (0.85 + Math.random() * 0.3); f.ehp -= d; t = ` · ${al.name} ${Math.round(d)}`; }
+      else { const d = al.dmg * (0.85 + Math.random() * 0.3); f.ehp -= d; t = ` · ${al.name} ${Math.round(d)}`; if (al.fsum && typeof COMBO !== "undefined") t += COMBO.phys(f, b, "al" + f.allies.indexOf(al)); }   // followers2: summons can shatter too
       t = String(t || "").replace(/^ · /, "");
       if (f.ehp < b) { t += this.capFoe(b) + this.flank(b); this.hitters++; }
       if (timedOut) t = `${al.name} took too long and keeps their guard up. ` + t;
+      if (al.left != null && --al.left <= 0) { f.allies = f.allies.filter((x) => x !== al); t += ` · ${al.name} fades away`; }   // a teammate's summon runs out
       this.lines.me.push(t);
       this.emit(al.player ? "mate" : "ally", t, "ally", { name: al.name, healed: Math.max(0, Math.round(f.hp - hpB)) });
     }
@@ -295,6 +320,57 @@ const TB = (() => {
       if (m === "potion" && al.pots > 0) { al.pots--; al.hp = Math.min(al.maxHp || al.hp, al.hp + (al.potAmt || 50)); return `${al.name} drinks a potion`; }
       const d = al.dmg * (al.tired ? 0.8 : 1) * (0.85 + Math.random() * 0.3); al.tired = 0; f.ehp -= d; return `${al.name} attacks ${Math.round(d)}`;
     }
+    /* a teammate played their turn on their own phone (sharedfight.js): take over what it did to the foe, to them and to
+       the rest of us. r = {wave, e0, ehp, fs, hp0, hp, hpMax, guard, self, allies, summon, hits, fled, ev:[{text,a,dmg}]} */
+    applyRemote(al, r) {
+      const f = this.f;
+      if (!r || !al || al.down) return;
+      const name = al.name, b = f.ehp, sameFoe = r.wave == null || r.wave === this.wave;
+      if (sameFoe && r.fs) for (const k of FOE_KEYS) if (k in r.fs && k !== "ehp0") f[k] = r.fs[k] && typeof r.fs[k] === "object" ? clone(r.fs[k]) : r.fs[k];
+      if (sameFoe && typeof r.e0 === "number" && typeof r.ehp === "number") f.ehp = b - clamp(r.e0 - r.ehp, 0, Math.max(0, b));
+      if (typeof r.hp === "number" && typeof r.hp0 === "number") { if (r.hpMax > 0) al.maxHp = r.hpMax; al.hp = clamp((al.hp || 0) + (r.hp - r.hp0), 1, al.maxHp || Math.max(al.hp || 1, r.hp)); }
+      al.tbGuard = clamp(+r.guard || 0, 0, 0.3);
+      if (r.self) {
+        if (r.self.ward > 0) al.ward = Math.max(al.ward || 0, r.self.ward);
+        if (r.self.armorRed > (al.armorRed || 0)) { al.armorRed = Math.min(0.7, r.self.armorRed); al.armorT = Math.max(al.armorT || 0, r.self.armorT || 6); }
+      }
+      for (const x of r.allies || []) this.remoteBuff(x);
+      if (r.summon && r.summon.turns > 0 && r.summon.dmg > 0) {   // their summon fights on its own, beside the rest of us
+        let sm = f.allies.find((a) => a.summonOf === al.pid);
+        if (!sm) { sm = { name: `${name}'s ${r.summon.name || "summon"}`, summon: true, summonOf: al.pid, init: 6 }; f.allies.push(sm); }
+        sm.dmg = r.summon.dmg; sm.left = Math.min(12, r.summon.turns);
+      }
+      this.hitters += Math.max(0, r.hits | 0);
+      for (const e of (r.ev || []).slice(0, 12)) {
+        const t = voice(e.text, name);
+        this.lines.me.push(t);
+        this.emit("mate", t, "ally", { name, a: e.a, wt: r.wt, by: al.pid, dmg: Math.max(0, Math.round(e.dmg || 0)) });
+      }
+      if (r.fled) {   // they broke away: out of this fight (their summon goes with them)
+        al.gone = true; f.allies = f.allies.filter((x) => x !== al && x.summonOf !== al.pid);
+        if (!(r.ev || []).length) this.emit("mate", `${name} breaks away and leaves the fight`, "ally", { name, by: al.pid });
+      }
+      if (typeof DRAGONS !== "undefined") DRAGONS.check(f, this);
+    }
+    /* a spell a teammate cast on someone else in the fight (heal, ward, stoneskin, rescue...) */
+    remoteBuff(x) {
+      const f = this.f;
+      if (!x || !x.k) return;
+      const up = typeof x.hp === "number" && typeof x.hp0 === "number" ? x.hp - x.hp0 : 0;
+      if (x.k === "host") {
+        if (up > 0) { const b = f.hp; f.hp = Math.min(G.maxHealth(f.s), f.hp + up); if (f.hp > b) this.emit("mate", `It mends you: +${Math.round(f.hp - b)} health`, "ally", { healed: Math.round(f.hp - b), by: "heal" }); }
+        if (x.ward > 0 && x.ward > (f.ward || 0)) { f.ward = x.ward; f.wardMax = Math.max(f.wardMax || 0, x.ward); }
+        return;
+      }
+      const all = [...new Set([...this.everyone, ...f.allies, ...(f._downed || [])])], al = all.find((a) => a.tbk === x.k);
+      if (!al || al.gone) return;
+      for (const k of BUFF_KEYS) if (k in x) al[k] = x[k] && typeof x[k] === "object" ? clone(x[k]) : x[k];
+      const isDown = al.down || !f.allies.includes(al);
+      if (isDown && x.revive) {   // pulled back from the brink
+        al.down = false; al.hp = Math.max(1, x.hp || 1); f._downed = (f._downed || []).filter((a) => a !== al); if (!f.allies.includes(al)) f.allies.push(al);
+        if (f.followerDown === al.name) f.followerDown = null;
+      } else if (!isDown && up) al.hp = Math.max(1, (al.hp || 0) + up);
+    }
     foeAct(prefix) {
       const f = this.f;
       if (f.ehp <= 0 || f.endWon) return;
@@ -305,17 +381,19 @@ const TB = (() => {
       const hpB = f.hp;
       // foes go after your healers and casters when they can (party fights)
       if (f.allies.length && !f.coverAl) { const h = f.allies.find((a) => !a.down && a.player && (a.role === "healer" || a.heals > 0)); if (h && Math.random() < 0.5) f.coverAl = h; }
-      const guards = f.allies.filter((a) => a.guard); guards.forEach((a) => { a._red = a.red; a.red = Math.min(0.85, (a.red || 0) + 0.4); });
+      const guards = f.allies.filter((a) => a.guard || a.tbGuard); guards.forEach((a) => { a._red = a.red; a.red = Math.min(0.85, (a.red || 0) + (a.guard ? 0.4 : 0) + (a.tbGuard || 0)); });   // tbGuard: AP a teammate kept back on their own phone
+      const pa = this.everyone.filter((a) => a.pid), pb = pa.map((a) => a.hp || 0);
       if (typeof DRAGONS !== "undefined") DRAGONS.check(f, this);   // allies and bleeding may have brought it down
       let t = typeof DRAGONS !== "undefined" && f.dStance ? DRAGONS.turn(f, () => f.enemyTurn()) : typeof FOEKIT !== "undefined" && f.kit ? FOEKIT.turn(f, () => f.enemyTurn()) : f.enemyTurn();
-      guards.forEach((a) => { a.red = a._red; a.guard = 0; });
+      guards.forEach((a) => { a.red = a._red; a.guard = 0; a.tbGuard = 0; });
       const loss = hpB - f.hp;
       if (loss > 0 && f.tbGuard) { const back = loss * f.tbGuard; f.hp += back; t += ` (guard −${Math.round(back)})`; }
       const mh = G.maxHealth(f.s), cap = HIT_CAP * mh, loss2 = hpB - f.hp;
       if (loss2 > cap && hpB > cap) { f.hp = hpB - cap; t += " (you stay on your feet)"; }
       f.tbGuard = 0;
       this.lines.them.push(prefix + t);
-      this.emit("foe", prefix + t, "foe", { dmg: Math.max(0, Math.round(hpB - f.hp)) });
+      const hits = {}; pa.forEach((a, i) => { const d = Math.round(pb[i] - (a.hp || 0)); if (d > 0) hits[a.pid] = d; });
+      this.emit("foe", prefix + t, "foe", { dmg: Math.max(0, Math.round(hpB - f.hp)), ...(pa.length ? { hits } : {}) });
     }
     /* no one-shots on strong foes: one blow takes at most 40% of their health, unless it finishes them */
     capFoe(before) {
@@ -454,7 +532,7 @@ const TB = (() => {
   function play(sess, ctx, onDone) {
     open = true;
     ui = { sess, ctx, onDone, shown: 0, menu: null, busy: false, queue: [] };
-    if (hooks.remote) sess.remote = hooks.remote;
+    if (hooks.remote && !sess.mirror) sess.remote = hooks.remote;   // a teammate's view of the leader's fight never publishes a fight of its own
     let el = document.getElementById("tbf");
     if (!el) { el = document.createElement("div"); el.id = "tbf"; el.setAttribute("role", "dialog"); el.setAttribute("aria-label", "Turn-based fight"); document.body.appendChild(el); }
     el.className = "tbf " + (typeof ART !== "undefined" && ART.style && ART.style() === "pixel" ? "pixel" : "ink");
@@ -562,7 +640,7 @@ const TB = (() => {
     const pips = (n, m, cls) => Array.from({ length: m }, (_, i) => `<i class="${i < n ? "on" : ""} ${cls}"></i>`).join("");
     const allies = partyHTML(f);
     const mine = state.turn === "me";
-    const wait = state.turn === "wait" ? `<p class="tbwait">⏳ ${esc(state.who)} is choosing their move… <b class="num" id="tbcd">${Math.max(0, Math.ceil((state.until - Date.now()) / 1000))}s</b>, then Auto</p>` : "";
+    const wait = state.turn === "wait" ? `<p class="tbwait">⏳ ${esc(state.who)} is choosing their move… <b class="num" id="tbcd">${Math.max(0, Math.ceil((state.until - Date.now()) / 1000))}s</b>, then they guard</p>` : "";
     const scene = (newEv.length || !ui.lastScene) && typeof FIGHTART !== "undefined" ? sceneFor(newEv) : "";
     const fmt = typeof TBUI !== "undefined" ? TBUI.logLine : (e) => `<div class="tbl ${e.kind}">${esc(e.text)}</div>`;
     const recent = vis.filter((e) => e.kind !== "round"), lastE = recent[recent.length - 1];
@@ -579,7 +657,7 @@ const TB = (() => {
     const rBar = (v, p, m, cls, lb) => `<div class="tbbar mid ${cls}"><b class="gh" style="width:${pc(Math.max(v, p), m)}%" data-to="${pc(v, m)}"></b><i style="width:${pc(v, m)}%"></i><span class="num"><em>${lb}</em> ${v} / ${Math.round(m)}</span></div>`;
     let banner = "";
     if (playing) { if (R) { const e = newEv[newEv.length - 1], pv = vis[vis.length - 2]; banner = R.bannerHTML(R.banner(e, pv, sess)); } }
-    else if (sess.done) banner = `<div class="tbban ${f.won ? "won" : "lost"}">${f.won ? (f.escaped ? "Escaped" : "Victory") : "Defeated"}</div>`;
+    else if (sess.done) banner = `<div class="tbban ${f.won ? "won" : "lost"}">${esc(sess.endLabel || (f.won ? (f.escaped ? "Escaped" : "Victory") : "Defeated"))}</div>`;
     else if (mine && ui.bannerFor !== sess.round) {
       ui.bannerFor = sess.round;
       const rb = R ? R.banner(newEv.filter((e) => e.kind === "round").pop(), null, sess) : null;   // a new round that starts with you: its summary goes under "Your turn"
@@ -596,7 +674,7 @@ const TB = (() => {
       <button class="tblog" aria-live="polite" data-tbx="log" aria-label="Fight log, tap for the full log"${log ? "" : " hidden"}>${log}</button>
       ${wait}
       <div class="tbdock">
-        <div class="tbap">${playing ? `<em class="them">${esc(R ? R.who(vis[vis.length - 1], sess) : "")}</em><button class="tbskip" data-tbx="skip" aria-label="Skip to the end of this turn">Skip ▸▸</button>` : mine ? `<span>AP</span>${pips(sess.ap, sess.st.ap, "ap")}${sess.st.spellAp ? `<span>✦</span>${pips(sess.spAp, sess.st.spellAp, "sap")}` : ""}<em>Your turn</em>` : sess.done ? "" : `<em class="them">${esc(sess.cur?.name || "")}'s turn…</em>`}</div>
+        <div class="tbap">${playing ? `<em class="them">${esc(R ? R.who(vis[vis.length - 1], sess) : "")}</em><button class="tbskip" data-tbx="skip" aria-label="Skip to the end of this turn">Skip ▸▸</button>` : mine ? `<span>AP</span>${pips(sess.ap, sess.st.ap, "ap")}${sess.st.spellAp ? `<span>✦</span>${pips(sess.spAp, sess.st.spellAp, "sap")}` : ""}<em>Your turn${sess.until ? ` <b class="num" id="tbcd">${Math.max(0, Math.ceil((sess.until - Date.now()) / 1000))}s</b>` : ""}</em>` : sess.done ? "" : `<em class="them">${esc(sess.cur?.name || "")}'s turn…</em>`}</div>
         ${playing ? "" : sess.done ? `<button class="btn pri tbdone" data-tbx="done">${f.won ? (f.escaped ? "Continue" : "Victory — continue") : "Continue"}</button>` : mine ? actionsHTML(sess) : ""}
       </div>
       ${ui.logOpen ? fullLog(sess, fmt) : ""}
@@ -646,7 +724,7 @@ const TB = (() => {
       const role = a.role ? ` · ${a.role}` : a.follower ? " · follower" : a.player ? " · player" : "";
       const tip = `${a.name}${role}. ${down ? "Knocked down" : `${hp} / ${mx} health`}.${down ? " A Rescue spell can bring them back." : " Drag a healing spell, scroll or potion here to use it on them."}`;
       return `<div class="tbu ally${down ? " down" : ""}" data-tbzone="${down ? "ally" : "self ally"}" data-ally="${down ? 1000 + i : i}" data-tip="${esc(tip)}"><small class="nm">${ic} ${esc(a.name)}${fx ? ` <span class="fx">${fx}</span>` : ""}</small>
-        <div class="tbbar mid hp"><b class="gh" style="width:${pc(Math.max(hp, was), mx)}%" data-to="${pc(hp, mx)}"></b><i style="width:${pc(hp, mx)}%"></i><span class="num">${down ? "down" : `${hp} / ${mx}`}</span></div></div>`;
+        <div class="tbbar mid hp"><b class="gh" style="width:${pc(Math.max(hp, was), mx)}%" data-to="${pc(hp, mx)}"></b><i style="width:${pc(hp, mx)}%"></i><span class="num">${down ? "down" : `${hp} / ${mx}`}</span></div>${!down && typeof FAI !== "undefined" ? FAI.frame(a) : ""}</div>`;
     };
     const live = f.allies.filter((a) => a.hp != null).map((a) => one(a, f.allies.indexOf(a), false));
     const downed = (f._downed || []).map((a, i) => one(a, i, true));
@@ -670,6 +748,7 @@ const TB = (() => {
     if (f.tbStunLeft > 0) out.push(`<i class="st stun" data-tip="${typeof TBTIPS !== "undefined" ? TBTIPS.STATUS.stun : ""}">💥</i>`);
     if (f.stagger) out.push(`<i class="st stag" data-tip="${typeof TBTIPS !== "undefined" ? TBTIPS.STATUS.stag : ""}">💫</i>`);
     if (typeof FOEKIT !== "undefined") for (const [c, ic, tip] of FOEKIT.chips(f)) out.push(`<i class="st kit ${c}" data-tip="${esc(tip)}">${ic}</i>`);
+    if (typeof COMBO !== "undefined") for (const [c, ic, tip] of COMBO.chips(f)) out.push(`<i class="st ${c}" data-tip="${esc(tip)}">${ic}</i>`);   // followers2: weak/resists
     return out.length ? `<div class="tbst">${out.join("")}</div>` : "";
   }
   /* animate just what happened since the last screen: a view of the fight with only those lines (the full fight-scene
@@ -732,7 +811,8 @@ const TB = (() => {
     waitT = setInterval(() => {
       if (!ui) return clearInterval(waitT);
       const s = ui.sess;
-      if (s.waiting) { const c = document.getElementById("tbcd"); if (c) c.textContent = Math.max(0, Math.ceil((s.waiting.until - Date.now()) / 1000)) + "s"; if (s.waiting.move || Date.now() >= s.waiting.until) step(s.advance()); }
+      if (s.waiting) { const c = document.getElementById("tbcd"); if (c) c.textContent = Math.max(0, Math.ceil((s.waiting.until - Date.now()) / 1000)) + "s"; if (s.waiting.move || s.waiting.reply || Date.now() >= s.waiting.until) step(s.advance()); }
+      else if (s.mirror && s.until) { const c = document.getElementById("tbcd"); if (c) c.textContent = Math.max(0, Math.ceil((s.until - Date.now()) / 1000)) + "s"; if (Date.now() >= s.until && !ui.timing) { ui.menu = null; s.timeUp(); step(s.advance()); } }   // your turn in a teammate's fight ran out
     }, 500);
   }
   function close() {
@@ -750,25 +830,52 @@ const TB = (() => {
   // ------------------------------------------------------------------ live party fights (everyone sees the fight; each player picks on their own phone)
   /* The phone that started the fight runs it and owns the record tbf/<id>. It keeps the record up to date (foe, health,
      log, who's in it) so party members in the fight watch it live on their own screen. When a member's turn comes the
-     record holds {turn:{pid, until}} and the member's phone writes back {reply:{pid, move}}. 60 s, then Auto. */
+     record holds {turn:{pid, until}} and the member's phone writes back {reply:{pid, move}}. Since v2 a whole turn comes back in tbf/<id>~<pid> (sharedfight.js). 90 s, then guard. */
+  const players = (sess) => [...new Set([...(sess.everyone || []), ...sess.f.allies, ...(sess.f._downed || [])])].filter((a) => a && a.player && a.pid && !a.gone);
   function fightState(sess) {
     const f = sess.f, w = sess.waiting;
     return { foe: f.e.name, boss: !!f.e.boss, round: sess.round, wave: sess.wave || 1, waves: sess.waves || 1,
       ehp: Math.max(0, Math.round(f.ehp)), ehpMax: sess.ehpMax, ownerName: f.s.name, hp: Math.max(0, Math.round(f.hp)), hpMax: G.maxHealth(f.s),
-      pids: f.allies.filter((a) => a.player && a.pid).map((a) => a.pid),
+      pids: players(sess).map((a) => a.pid),   // knocked-down players stay in: they still watch the fight to the end
       allies: f.allies.filter((a) => !a.summon).slice(0, 9).map((a) => ({ name: a.name, pid: a.pid || null, hp: Math.max(0, Math.round(a.hp ?? 0)), hpMax: Math.round(a.hp0 || a.maxHp || a.hp || 1), down: !!a.down })),
-      turn: w ? { pid: w.pid, until: w.until, name: w.name, heals: w.al?.heals || 0, pots: w.al?.pots || 0 } : null,
+      turn: w ? { pid: w.pid, until: w.until, name: w.name, heals: w.al?.heals || 0, pots: w.al?.pots || 0, tid: w.tid || null } : null,
       log: sess.ev.filter((e) => e.kind !== "round").slice(-6).map((e) => e.text),
-      done: !!sess.done, won: sess.done ? !!f.won : null, t: Date.now() / 1000 };
+      done: !!sess.done, won: sess.done ? !!f.won : null, t: Date.now() / 1000, ...shared(sess) };
+  }
+  /* v2: everything a teammate's phone needs to show the same fight on its full fight screen and play real turns in it
+     (sharedfight.js). Older phones read only the fields above and keep the small "Fighting beside" box. */
+  let kseq = 0;
+  function shared(sess) {
+    const f = sess.f;
+    const all = [...new Set([...(sess.everyone || []), ...f.allies, ...(f._downed || [])])].filter((a) => a && !a.summon && !a.gone && a.hp != null);
+    const fs = {}; for (const k of FOE_KEYS) if (f[k] !== undefined) fs[k] = f[k];
+    const e = {}; for (const [k, v] of Object.entries(f.e || {})) if (!["loot", "drops", "group"].includes(k) && typeof v !== "function") e[k] = v;
+    const look = typeof HEROART !== "undefined" && HEROART.lookOf ? (() => { try { return HEROART.lookOf(f.s); } catch (x) { return null; } })() : null;
+    const roster = [{ k: "host", host: true, player: true, name: f.s.name || "Leader", hp: Math.max(0, Math.round(f.hp)), hpMax: G.maxHealth(f.s), down: f.hp <= 0, look, ward: Math.round(f.ward || 0) },
+      ...all.map((a) => { a.tbk = a.tbk || (a.pid ? "p:" + a.pid : "a" + ++kseq);
+        const o = { k: a.tbk, pid: a.pid || null, name: a.name, hp: Math.max(0, Math.round(a.hp || 0)), hpMax: Math.round(a.maxHp || a.hpMax || a._max || a.hp0 || Math.max(1, a.hp || 1)), down: !!a.down || !f.allies.includes(a),
+          player: !!a.player, follower: !!(a.follower || a.kind === "follower"), role: a.role || null, look: a.look || null };
+        for (const k of BUFF_KEYS) if (a[k] != null) o[k] = a[k];
+        return o; })];
+    const evs = sess.ev.slice(-24).map((x, i, arr) => {
+      const o = { n: sess.ev.length - arr.length + i, kind: x.kind, who: x.who, text: x.text, round: x.round, hp: x.hp, ehp: x.ehp };
+      for (const k of ["a", "wt", "dmg", "healed", "name", "wave", "by", "hits", "ph"]) if (x[k] != null) o[k] = x[k];
+      return o;
+    });
+    return { v: 2, foeE: e, fs, kind: sess.kind, hitters: sess.hitters || 0, roster,
+      order: sess.order.map((o) => ({ id: o.id, name: o.name, init: o.init, pid: o.al?.pid || null })), idx: sess.idx,
+      cur: sess.cur ? { id: sess.cur.id, name: sess.cur.name, pid: sess.cur.al?.pid || null } : null, evs,
+      escaped: sess.done ? !!f.escaped : null };
   }
   function remoteFor(store, myId) {
     if (!store || typeof store.put !== "function") return null;
-    let fid = null, cur = null, watching = false, last = "", lastT = 0, made = false, timer = null;
+    let fid = null, cur = null, watching = false, last = "", lastT = 0, made = false, timer = null, beat = null, pidsSeen = new Set();
     const push = (force) => {
       const sess = cur; if (!sess || !fid) return;
       const st = fightState(sess); if (!st.pids.length) return;
+      st.pids.forEach((p) => pidsSeen.add(p));
       const k = JSON.stringify({ ...st, t: 0 });
-      if (k === last) return;
+      if (k === last && Date.now() - lastT < 14000) return;   // nothing new (a heartbeat every ~15 s so teammates know the leader's still there)
       if (!force && Date.now() - lastT < 600) { clearTimeout(timer); timer = setTimeout(() => push(true), 650); return; }
       last = k; lastT = Date.now();
       if (!made) { made = true; store.put("tbf", fid, { owner: myId, ...st }); }
@@ -776,18 +883,23 @@ const TB = (() => {
     };
     const watchReplies = () => {
       if (watching || !store.watch) return; watching = true;
-      store.watch("tbf", (docs) => { const s2 = cur, d = fid && docs.find((x) => x.id === fid); if (s2 && d?.reply && s2.waiting && d.reply.pid === s2.waiting.pid && d.reply.round === s2.round) s2.waiting.move = d.reply.move; });
+      store.watch("tbf", (docs) => {
+        const s2 = cur, w = s2?.waiting; if (!s2 || !fid || !w) return;
+        const rp = docs.find((x) => x.id === `${fid}~${w.pid}`);   // a whole turn played on their own fight screen (sharedfight.js)
+        if (rp && rp.tid && rp.tid === w.tid && !w.reply) { w.reply = rp; return; }
+        const d = docs.find((x) => x.id === fid); if (d?.reply && d.reply.pid === w.pid && d.reply.round === s2.round) w.move = d.reply.move;   // an older phone: one simple move
+      });
     };
-    const start = (sess) => { cur = sess; fid = fid || `${myId}-${Math.floor(Date.now() / 1000)}`; watchReplies(); };
+    const start = (sess) => { cur = sess; fid = fid || `${myId}-${Math.floor(Date.now() / 1000)}`; watchReplies(); if (!beat) beat = setInterval(() => push(), 5000); };
     return {
       /* called whenever the fight screen updates */
-      sync(sess) { if (!sess.f.allies.some((a) => a.player && a.pid)) return; start(sess); push(sess.done); },
+      sync(sess) { if (!players(sess).length) return; start(sess); push(sess.done); },
       ask(sess) { start(sess); push(true); },
       live: () => !!store.online,
       end() {
-        clearTimeout(timer);
-        if (cur && fid) { push(true); const id = fid; setTimeout(() => store.remove?.("tbf", id), 12000); }   // members see the ending, then it's tidied away
-        fid = null; cur = null; made = false; last = "";
+        clearTimeout(timer); clearInterval(beat); beat = null;
+        if (cur && fid) { push(true); const id = fid, ps = [...pidsSeen]; setTimeout(() => { store.remove?.("tbf", id); ps.forEach((p) => store.remove?.("tbf", `${id}~${p}`)); }, 12000); }   // members see the ending, then it's tidied away
+        fid = null; cur = null; made = false; last = ""; pidsSeen = new Set();
       },
     };
   }
@@ -799,8 +911,9 @@ const TB = (() => {
     store.watch("tbf", (docs) => {
       const me = getMe(); if (!me) return;
       const nowS = Date.now() / 1000;
-      const d = docs.find((x) => x.owner !== me && (x.pids || []).includes(me) && nowS - (x.t || 0) < 180 && !watchClosed[x.id])
-        || docs.find((x) => x.turn && x.turn.pid === me && !(x.reply && x.reply.round === x.round) && x.turn.until > Date.now() && !watchClosed[x.id]);
+      const mine = (x) => !watchClosed[x.id] && !(typeof SHAREDFIGHT !== "undefined" && SHAREDFIGHT.claims(x));   // the full shared fight screen takes these (sharedfight.js)
+      const d = docs.find((x) => x.owner !== me && (x.pids || []).includes(me) && nowS - (x.t || 0) < 180 && mine(x))
+        || docs.find((x) => x.turn && x.turn.pid === me && !(x.reply && x.reply.round === x.round) && x.turn.until > Date.now() && mine(x));
       let el = document.getElementById("tbwatch");
       if (!d || open) { if (el) el.remove(); return; }
       if (!el) {
@@ -830,5 +943,7 @@ const TB = (() => {
     });
   }
 
-  return { T, stats, cost, aiPick, targetOrder, Session, simulate, call, enabled, init, remoteFor, watchTurns, safeSave, zoneOf, get open() { return open; }, get session() { return open && ui ? ui.sess : null; }, WCOST, TIERC, HIT_CAP, FOE_HP, PARTY_HP, TURN_SECONDS, syncInPlace, _origRun: origRun };
+  /* sharedfight.js: open a teammate's view of a fight, and redraw it when the leader's phone sends news */
+  function redraw(sess, state) { if (ui && ui.sess === sess && open) render(state || sess.advance()); }
+  return { T, stats, cost, aiPick, targetOrder, Session, simulate, call, enabled, init, remoteFor, watchTurns, safeSave, zoneOf, play, redraw, fightState, voice, FOE_KEYS, BUFF_KEYS, close: () => { if (open) close(); }, get open() { return open; }, get session() { return open && ui ? ui.sess : null; }, WCOST, TIERC, HIT_CAP, FOE_HP, PARTY_HP, TURN_SECONDS, syncInPlace, _origRun: origRun };
 })();

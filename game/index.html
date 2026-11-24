@@ -1794,6 +1794,14 @@ html.art-pixel .tbint,html.art-pixel .tbfcl .fp,html.art-pixel .tbskip,html.art-
 .mo-on .modal,.mo-on .modal .sheet{animation:none}
 .mo-on:not(.mo-lite) .modal{-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
 @media (prefers-reduced-motion:reduce){.tbbar s.tbfc,.tbint.big,.tbbub,.tbban.round,.tbban.foe{animation:none!important}#tbf.tblow::after{animation:none;opacity:.6}}
+/* followers as full characters (followerai.js): magicka/stamina under their health, row + tactic; Tactics tab; foe weak/resist chips (combo.js) */
+.tbu .faibars{display:flex;gap:3px;margin-top:2px}.tbu .faibars .tbbar{flex:1;height:4px;min-height:4px}.tbu .faibars .tbbar i{height:100%}
+.tbu .fairow{display:block;font-size:10px;opacity:.75;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fol2 .fol2tac{display:flex;flex-direction:column;gap:6px;margin:6px 0 10px}
+.fol2 .fol2tac .item.tac{width:100%;text-align:left;cursor:pointer;font:inherit;color:inherit}
+.fol2 .fol2tac .item.tac.on{box-shadow:inset 3px 0 0 #e8c46a;background:rgba(232,196,106,.12)}
+.tbst .st.weak{color:#ffd27a;background:rgba(110,70,10,.75)}.tbst .st.resist{color:#a9c4e8;background:rgba(20,40,70,.75)}
+html.art-pixel .tbu .faibars .tbbar,html.art-pixel .tbu .faibars .tbbar i,html.art-pixel .fol2 .fol2tac .item.tac,html.art-pixel .tbst .st.weak,html.art-pixel .tbst .st.resist{border-radius:0}
 /* dungeon mini-games (dungeongames.js) */
 .lockpick.dgame{z-index:96}.dgame .lpcard{width:min(380px,100%)}.dgame canvas{border:1px solid rgba(214,178,94,.3);user-select:none;-webkit-user-select:none}
 .dgrow .dgk{min-height:58px;font-size:17px;user-select:none;-webkit-user-select:none;touch-action:none}
@@ -1884,6 +1892,7 @@ html.a11y-hc .ti-box,html.a11y-hc .ti-box i,html.a11y-hc .ti-what{color:#ece6d8}
 <script src="aiset.js"></script>
 <script src="tbradial.js"></script>
 <script src="tbfight.js"></script>
+<script src="sharedfight.js"></script>
 <script src="foegroups.js"></script>
 <script src="dragons.js"></script>
 <script src="foekit.js"></script>
@@ -1903,6 +1912,8 @@ html.a11y-hc .ti-box,html.a11y-hc .ti-box i,html.a11y-hc .ti-what{color:#ece6d8}
 <script src="coop.js"></script>
 <script src="party.js"></script>
 <script src="followers2.js"></script>
+<script src="followerai.js"></script>
+<script src="combo.js"></script>
 <script src="partyplay.js"></script>
 <script src="lootvote.js"></script>
 <script src="store.js"></script>
@@ -1916,10 +1927,12 @@ html.a11y-hc .ti-box,html.a11y-hc .ti-box i,html.a11y-hc .ti-what{color:#ece6d8}
 <script src="combatfx.js"></script>
 <script src="bscdata.js"></script>
 <script src="battlescene.js"></script>
+<script src="foerig.js"></script>
 <script src="fightart.js"></script>
 <script src="beastart.js"></script>
 <script src="gearlook.js"></script>
 <script src="heroart.js"></script>
+<script src="figart.js"></script>
 <script src="mapart.js"></script>
 <script src="placeart.js"></script>
 <script src="eventart.js"></script>
@@ -1951,6 +1964,7 @@ html.a11y-hc .ti-box,html.a11y-hc .ti-box i,html.a11y-hc .ti-what{color:#ece6d8}
 <script src="craftqol.js"></script>
 <script src="polish.js"></script>
 <script src="caravans.js"></script>
+<script src="caravanroad.js"></script>
 <script src="worldevents.js"></script>
 <script src="economy.js"></script>
 <script src="bards.js"></script>

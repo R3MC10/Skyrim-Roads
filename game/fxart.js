@@ -200,6 +200,21 @@ const FXART = (() => {
     const skin = race ? race.skin[0] : "#e2b894";
     let body = "#6b5640", wl = null;
     try { if (typeof GEARLOOK !== "undefined") { wl = GEARLOOK.walker(look); body = wl.body; } else { const ch = look?.eq?.chest; if (ch && typeof HEROART !== "undefined") { const m = HEROART.MAT[HEROART.matOf(ch)]; if (m) body = m.c; } } } catch { /* plain clothes */ }
+    if (look && typeof HEROART !== "undefined" && HEROART.drawFigure) {   // the shared rigged character (figart.js), walking or riding
+      try {
+        const cyc = (((ph / (Math.PI * 2)) % 1) + 1) % 1;
+        if (carriage) {
+          H.poly(g, [[x - 26, base - 18], [x + 18, base - 18], [x + 18, base - 8], [x - 26, base - 8]], PAL.wood, PAL.ink, 1.2);
+          for (const wx of [x - 18, x + 10]) { H.circle(g, wx, base - 6, 6, "#5a4030", PAL.ink, 1.2); g.strokeStyle = PAL.ink; g.lineWidth = 1; g.beginPath(); g.moveTo(wx + Math.cos(ph) * 5, base - 6 + Math.sin(ph) * 5); g.lineTo(wx - Math.cos(ph) * 5, base - 6 - Math.sin(ph) * 5); g.stroke(); }
+          horse(g, H, x + 40, base, ph, "#6b4a2e");
+          HEROART.drawFigure(g, { look }, x - 6, base - 10, { pose: "sit", h: 34 });
+          return;
+        }
+        if (riding) HEROART.drawFigure(g, { look }, x, base, { pose: "ride", frame: Math.floor(cyc * 4), h: 30, horse: horseColor || "#6b4a2e" });
+        else HEROART.drawFigure(g, { look }, x, base, { pose: "walk", frame: Math.floor(cyc * 8), h: 36 });
+        return;
+      } catch { /* fall back to the simple walker */ }
+    }
     if (carriage) {   // a wagon with you on the bench
       H.poly(g, [[x - 26, base - 18], [x + 18, base - 18], [x + 18, base - 8], [x - 26, base - 8]], PAL.wood, PAL.ink, 1.2);
       for (const wx of [x - 18, x + 10]) { H.circle(g, wx, base - 6, 6, "#5a4030", PAL.ink, 1.2); g.strokeStyle = PAL.ink; g.lineWidth = 1; g.beginPath(); g.moveTo(wx + Math.cos(ph) * 5, base - 6 + Math.sin(ph) * 5); g.lineTo(wx - Math.cos(ph) * 5, base - 6 - Math.sin(ph) * 5); g.stroke(); }

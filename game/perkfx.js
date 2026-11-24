@@ -148,6 +148,8 @@ const PFX = (() => {
     [ "Speechcraft", "commanding_voice", "Commanding Voice", 1, [60], ["intimidation"], "Shouts cool down 15% faster. [OURS]", [["shoutcd", 0.15, {}]]],
     [ "Speechcraft", "inspiring", "Inspiring", 1, [40], ["persuasion"], "Your follower and party allies fight 15% harder. [OURS]", [["allies", 0.15, {}]]],
     [ "Speechcraft", "leadership", "Leadership", 2, [50, 80], ["inspiring"], "Your follower learns from fights 25/50% faster and shrugs off 10/20% of the blows they take. [OURS]", [["folxp", 0.25, {}], ["foltaken", 0.1, {}]]],
+    [ "Speechcraft", "battle_tutor", "Battle Tutor", 1, [40], ["inspiring"], "Your follower can learn spell tomes 10 skill points early, and their spells cost 20% less magicka. [OURS]", [["folteach", 10, {}], ["folmp", 0.2, {}]]],
+    [ "Speechcraft", "shield_brother", "Shield-Brother", 1, [60], ["leadership"], "Combos with your follower, summons and party hit 25% harder (Shatter, Overload, Steam, Thermal shock, Opening). [OURS]", [["combo", 0.25, {}]]],
     [ "Speechcraft", "talk_down", "Talk Down", 1, [50], ["bribery"], "Bribes and fines cost 25% less. [OURS]", [["bribe", 0.25, {}]]],
     [ "Speechcraft", "rally", "Rally", 1, [80], ["inspiring"], "Your follower and party allies fight another 15% harder. [OURS]", [["allies", 0.15, {}]]],
     [ "Speechcraft", "orator", "Orator", 1, [100], ["commanding_voice", "rally"], "Jobs pay 10% more and prices are 5% better. [OURS]", [["job", 0.1, {}], ["price", 0.05, {}]]],
@@ -215,7 +217,7 @@ const PFX = (() => {
     // ---------------------------------------------------------------- world events (worldevents.js)
     [ "Conjuration", "gate_breaker", "Gate Breaker", 1, [40], ["summoner"], "You know how Oblivion works: Daedra take 15% more damage from you and hit you 10% softer, and your fights at an Oblivion gate count 25% more towards closing it. [OURS]", [["out", 0.15, { tag: ["daedra"] }], ["in", -0.1, { tag: ["daedra"] }], ["wevgate", 0.25, {}]]],
     [ "Archery", "sky_hunter", "Sky Hunter", 1, [50], ["eagle_eye"], "Bows do 15% more to dragons, and every migrating dragon you bring down drops an extra dragon bone. [OURS]", [["out", 0.15, { sk: AR, tag: ["dragon"] }], ["wevbone", 1, {}]]],
-    [ "Speechcraft", "caravan_friend", "Caravan Friend", 1, [40], ["bribery"], "The Khajiit's grand caravan sells to you 15% cheaper and sets aside one more rare item for you. [OURS]", [["wevmarket", 0.15, {}], ["wevstock", 1, {}]]],
+    [ "Speechcraft", "caravan_friend", "Caravan Friend", 1, [40], ["bribery"], "The Khajiit's grand caravan sells to you 15% cheaper and sets aside one more rare item for you. Caravans you meet on the road pay you 25% more to guard their wagons. [OURS]", [["wevmarket", 0.15, {}], ["wevstock", 1, {}], ["cvpay", 0.25, {}]]],
     // ---------------------------------------------------------------- homesteads (homestead.js)
     [ "Smithing", "carpenter", "Carpenter", 1, [30], ["steel_smithing"], "Building at your homestead takes 25% fewer materials. [OURS, from Hearthfire]", [["hsmats", 0.25, {}]]],
     [ "Athletics", "woodsman", "Woodsman", 1, [30], ["long_strider"], "The sawmill, quarry and clay pit at your homestead give 50% more. [OURS]", [["hsyield", 0.5, {}]]],
