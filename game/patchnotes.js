@@ -3,7 +3,19 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b136", build: 136, date: "24 Nov 2026", title: "Party fights: everyone plays the same fight", items: [
+    { id: "b136", build: 136, date: "24 Nov 2026", title: "Followers fight like you do", items: [
+      "Your follower is now a full character. They have their own magicka and stamina, take their own turn with action points like yours, and pick from the same moves: attacks, power attacks, guarding, stepping in front of you, spells and potions.",
+      "Teach them spells: open the follower screen, go to Magic and hand them a spell tome from your pack. They can learn it if they're good enough in that school (Apprentice 25, Adept 50, Expert 75, Master 90). You can tell them not to use a spell.",
+      "Mages throw fire, frost and shock, healers patch you and the party up, conjurers call atronachs and raise the dead, and some cast flesh spells and wards. Their summons fight on their own and fade after a few turns.",
+      "They drink potions you give them when they need them. Tick Save potions for emergencies if you'd rather they wait until it's bad.",
+      "New Tactics tab: Let them decide, Aggressive, Defensive, Healer or Ranged. Healers and archers stand in the back row and get hit less; defensive followers stand in front and draw blows to themselves.",
+      "They can wear everything you can, and hold a second one-handed weapon in the left hand.",
+      "Combos: one of you sets the foe up, someone else cashes in. Shatter (hit a foe someone else froze), Overload (shock a foe someone else set burning), Steam (frost on someone else's burn: it all goes off at once), Thermal shock (fire on someone else's chill) and Opening (your follower, summons and friends hit a staggered or paralyzed foe harder). Combos are capped, so no one-shots.",
+      "Under the foe's health you can now see what it's weak to or shrugs off (fire, frost, shock).",
+      "In a fight, your follower shows magicka and stamina bars and which row they're in. Followers are still only knocked down, never killed.",
+      "Two new Speechcraft perks: Battle Tutor (your follower learns tomes 10 points early and pays 20% less magicka) and Shield-Brother (combos hit 25% harder).",
+    ] },
+    { id: "b136-2", build: 136, date: "24 Nov 2026", title: "Party fights: everyone plays the same fight", items: [
       "When you follow a party leader into a fight, your phone now opens the full fight screen: the same foe, the same health bars and the same log as everyone else, live.",
       "On your turn you play as yourself, with your own moves, spells, magicka, stamina, potions and shouts. No more being played as a follower.",
       "The leader's and other players' moves show in your log under their names. Followers and summons still fight on their own.",
@@ -15,7 +27,7 @@ const PATCHNOTES = (() => {
       "Wolves lunge and snap, bears rear up and swipe, spiders rear back and bite, mudcrabs pinch, dragons rear up and spread their wings before they breathe, mammoths stomp, ice wraiths coil and strike.",
       "The painted enemy pictures move too: they bend, lunge into their attacks, recoil when hit and fall over. Works in both the hand-drawn and the pixel art style.",
     ] },
-    { id: "b136-2", build: 136, date: "24 Nov 2026", title: "Your hero, properly drawn", items: [
+    { id: "b136-2-2", build: 136, date: "24 Nov 2026", title: "Your hero, properly drawn", items: [
       "Characters got a big art upgrade: real proportions, shading, faces that match your race (snouts, whiskers, tusks, pointy ears, tails), hair and beards.",
       "Everything you wear shows up: helmet, armour and its colours, cloak, shield, weapon, even an amulet or ring.",
       "Your hero now actually walks on the road, rides the horse properly, sits on the wagon bench, and swings, blocks, casts and gets knocked down in fights. Moves flow smoothly from one into the next.",
@@ -46,7 +58,7 @@ const PATCHNOTES = (() => {
     { id: "b135-fix", build: 135, date: "24 Nov 2026", title: "Small fix", items: [
       "Fixed: with the Prospector perk, now really every ore vein glints in the mining game (one could stay hidden before).",
     ] },
-    { id: "b136-2-2", build: 136, date: "24 Nov 2026", title: "A proper road picture while you travel", items: [
+    { id: "b136-2-2-2", build: 136, date: "24 Nov 2026", title: "A proper road picture while you travel", items: [
       "The little picture under your trip is now a real moving landscape: snowy mountains far off, hills and forests that match where you are (pines, the Rift's golden birches, marsh, snowfields, ash wastes, rocky hills), and a road with ruts or old flagstones.",
       "The sky and light follow the real time of day: sun, moons, stars and northern lights at night, warm light at dusk. Snow, rain with lightning, fog, ash and autumn leaves blow through when that's the weather.",
       "Things pass by on the way: signposts, wayshrines, standing stones, ruins, camps and lanterns, and other travellers, guard patrols and Khajiit caravans come the other way. At night you carry a torch and windows light up.",

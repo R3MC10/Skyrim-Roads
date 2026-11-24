@@ -148,6 +148,8 @@ const PFX = (() => {
     [ "Speechcraft", "commanding_voice", "Commanding Voice", 1, [60], ["intimidation"], "Shouts cool down 15% faster. [OURS]", [["shoutcd", 0.15, {}]]],
     [ "Speechcraft", "inspiring", "Inspiring", 1, [40], ["persuasion"], "Your follower and party allies fight 15% harder. [OURS]", [["allies", 0.15, {}]]],
     [ "Speechcraft", "leadership", "Leadership", 2, [50, 80], ["inspiring"], "Your follower learns from fights 25/50% faster and shrugs off 10/20% of the blows they take. [OURS]", [["folxp", 0.25, {}], ["foltaken", 0.1, {}]]],
+    [ "Speechcraft", "battle_tutor", "Battle Tutor", 1, [40], ["inspiring"], "Your follower can learn spell tomes 10 skill points early, and their spells cost 20% less magicka. [OURS]", [["folteach", 10, {}], ["folmp", 0.2, {}]]],
+    [ "Speechcraft", "shield_brother", "Shield-Brother", 1, [60], ["leadership"], "Combos with your follower, summons and party hit 25% harder (Shatter, Overload, Steam, Thermal shock, Opening). [OURS]", [["combo", 0.25, {}]]],
     [ "Speechcraft", "talk_down", "Talk Down", 1, [50], ["bribery"], "Bribes and fines cost 25% less. [OURS]", [["bribe", 0.25, {}]]],
     [ "Speechcraft", "rally", "Rally", 1, [80], ["inspiring"], "Your follower and party allies fight another 15% harder. [OURS]", [["allies", 0.15, {}]]],
     [ "Speechcraft", "orator", "Orator", 1, [100], ["commanding_voice", "rally"], "Jobs pay 10% more and prices are 5% better. [OURS]", [["job", 0.1, {}], ["price", 0.05, {}]]],
