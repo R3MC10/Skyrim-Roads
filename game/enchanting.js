@@ -134,7 +134,7 @@ const ENCH = (() => {
   /* how strong an enchantment would be ([OURS] scaling): soul size × (0.4 + 0.6 × skill/100), Enchanter perk +10% per rank */
   function strength(s, gemItem) { return (GEM_POWER[gemItem] || 0.6) * (0.4 + 0.6 * Math.min(100, G.skill(s, "Enchanting")) / 100) * (1 + 0.1 * G.P(s, "enchanter")) * (1 + (typeof HSROOMS !== "undefined" ? HSROOMS.bonus(s, "ench") : 0)); }   // +10% at your own enchanter's tower
   /* [OURS] the bigger Enchanting tree: Fire/Frost/Storm/Hex/Warding Enchanter, Insightful and Corpus Enchanter, Jeweller, Extra Effect (capped) */
-  const classOf = (eff) => WEAPON[eff] ? (["fire", "frost", "shock"].includes(eff) ? eff : "other") : ARMOR[eff][5];
+  const classOf = (eff) => WEAPON[eff] ? (WEAPON[eff][6] || (["fire", "frost", "shock"].includes(eff) ? eff : "other")) : ARMOR[eff][5];   // [6]: perk class of the newer effects (enchants2.js)
   function perkBoost(s, eff, it) {
     if (typeof PFX === "undefined") return 0;
     return Math.min(0.5, PFX.sum(s, "ench", null, { el: classOf(eff), kind: JEWEL(it) ? "jewel" : "gear" }));

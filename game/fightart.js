@@ -329,6 +329,7 @@ const FIGHTART = (() => {
     if (a.valor) return "valor";
     if (a.odah) return "odah";
     if (a.beast) return "beast";
+    if (a.player || a.pid || a.host) return "soldier";   // a real player is never guessed from their name ("Dragon..." is not a dragon)
     const n = (a.name || "").toLowerCase();
     if (/ice wolf/.test(n)) return "icewolf";
     if (/werewolf/.test(n)) return "werewolf";
@@ -1076,6 +1077,9 @@ const FIGHTART = (() => {
       const over = phase !== "play" && phase !== "idle" && phase !== "settle";   // "idle": one turn of a turn-by-turn fight has played, both still stand
       const meDown = over && !won, foeDown = over && won && !turned, fallE = EASE.out(fall);
       const hdg = heroDodge < 1 ? Math.sin(heroDodge * Math.PI) : 0, fdg = foeDodge < 1 ? Math.sin(foeDodge * Math.PI) : 0;
+      if (rec.horse && typeof HORSEBACK !== "undefined" && HORSEBACK.drawDowned && HORSEBACK.downAt(f, phase === "play" ? bi / Math.max(1, beats.length) : 1)) {   // [OURS] your horse is downed: it lies behind you, you fight on foot
+        wg.save(); wg.translate(hx0 - 58 * s, groundY); wg.scale(s, s); HORSEBACK.drawDowned(wg, rec.horse, tt, L("Downed")); wg.restore();
+      }
       wg.save(); wg.translate(hx0 + (heroP.dx - heroKnock - hdg * 18) * s, groundY + (heroP.dy - hdg * 3) * s); wg.scale(s, s);
       if (meDown) { wg.translate(-6 * fallE, 0); wg.rotate(-Math.PI / 2 * fallE); wg.translate(0, 6 * fallE); }
       if (st.invis && !(b && b.who === "me" && b.move !== "self" && b.move !== "shout")) wg.globalAlpha = 0.28 + Math.sin(tt * 3) * 0.05;
