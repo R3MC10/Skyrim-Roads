@@ -3,13 +3,32 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b139accounts", build: 139, date: "24 Nov 2026", title: "Accounts: your characters on every device", items: [
+    { id: "b140accounts", build: 140, date: "24 Nov 2026", title: "Accounts: your characters on every device", items: [
       "New on the title screen: Sign in. Make an account with just a name and a password (no email needed) and your characters are kept safe on our server.",
       "Play the same character on your phone, another phone or the PC: under Account, tap Play here. Upload the character you already have with one tap; nothing is lost.",
       "One device at a time: if you sign in somewhere else, the game asks whether to play there instead. The other device is told right away and stops saving, so your two devices never fight over your progress.",
       "Your progress saves to your account a few seconds after you play, and catches up by itself when you're back online. If a character was played somewhere else in the meantime, you choose which copy to keep.",
       "Signed in, the shared world (other players, parties, chat, trades, the market) comes through our server too, so friends see each other more reliably. Not signed in? Everything works exactly as before.",
       "There's no email on accounts yet, so keep your password safe: it can't be reset for now.",
+    ] },
+    { id: "b139-hud2", build: 139, date: "24 Nov 2026", title: "A cleaner screen", items: [
+      "Messages, guard chatter and follower lines now share one spot at the top left, under the compass. Only one person talks at a time; the next one waits their turn instead of piling on top.",
+      "Your quest goal is a thin line under the compass. A new goal flashes there instead of a big banner in the middle of the map.",
+      "Big banners (skill up, level up, new quest) sit in the middle of the map, under the messages, never on top of them.",
+      "Health, magicka and stamina fade away when they're full, like in Skyrim. Carry weight only shows when you're getting heavy. Tap the bars to see everything for a moment.",
+      "The ★ favourites button moved to the top bar, next to Search and Menu. The round compass button is the only floating button left: it moves up when there's a button under it, and on big screens it sits in the empty corner of the bottom bar.",
+      "The map buttons (zoom, centre, hunt, sneak) are one slim strip now, so the compass has more room.",
+      "Bottom bar names fit on small phones (no more cut-off \"Społeczność\").",
+    ] },
+    { id: "b137-livingworld", build: 137, date: "24 Nov 2026", title: "The world remembers you", items: [
+      "What you do is remembered in the hold where you did it: dragons you slay, caravans you guard all the way, caravans you rob, and every crime (even after you pay the bounty, though bad deeds fade over a couple of weeks). It all adds to your name in each hold.",
+      "Towns react. Guards and shopkeepers bring up what you did. Do enough good and doors open: the inn's back room (free whispers), the steward's storeroom (a few materials once a day) and a guest room in the Jarl's hall (a free bed once a day). Cause enough trouble and the shutters close: no knocking at night, no whispers, and shops charge you 15% more. Give to the temple in the streets to make amends.",
+      "Townsfolk keep their own hours. Area → Streets shows who's about and what they're doing. In the evening the trader, the smith and the stablemaster go for a drink at the inn: find them there and they'll open up for you without the night charge.",
+      "Whispers of things to come: listen in an inn (evenings are best) and hear about something that hasn't happened yet: a dragon looking for a roost, a warband gathering, a troll coming down, a vampire nest, a stranded merchant, a forgotten shrine. Most come true about half a day later and become a real place on your map, with a bounty for dealing with it. Some come to nothing.",
+      "News of the realm in Map → World news and on every inn's notice board: what you did, what came true, and the talk of each day across Skyrim.",
+      "In a party the leader's world is everyone's: you see the leader's whispers, marks and news, and the leader does the asking and deciding.",
+      "New perks: Town Crier (Speechcraft: whispers come true more often and sooner, bounties pay more), Low Profile (Streetwise: crimes hurt your name less and are forgotten faster), Well Met (Etiquette: doors open sooner, amends cost less).",
+      "All of it is in Polish too, when the game is set to Polish.",
     ] },
     { id: "b138-greatevents", build: 138, date: "24 Nov 2026", title: "Great world events", items: [
       "Every 12 hours something big happens in the North: a dragon attacks a town, a Daedric rift tears open, a bandit army besieges a hold capital, or a town throws a great fair. All your friends see the same event at the same time.",
