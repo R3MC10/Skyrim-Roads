@@ -657,6 +657,7 @@ const FOERIG = (() => {
     if (/chaurus/.test(n)) return { body: "spider", skin: "chaurus", o: { mode: "chaurus", leg: "#5a4a32", body: "#7a6440", eye: "#e8d060" } };
     if (/horker/.test(n)) return { body: "quad", skin: "horker", o: QUAD_LOOK.horker() };
     if (/dremora/.test(n)) return { body: "hum", skin: "person", o: HUM_LOOK.dremora() };
+    if (/werewolf/.test(n)) return { body: "hum", skin: "person", o: { scale: 1.25, skin: "#4a4038", body: "#4a4038", head: "hair", hair: "#2e2620", wt: "fist", hunch: 0.45, armC: "#4a4038", eyes: "#ffd23a", pants: "#3a3028", claws: 1 } };   // a wild werewolf (beastpaths.js)
     if (/thalmor|justiciar/.test(n) && fk === "mage") return { body: "hum", skin: "person", o: HUM_LOOK.thalmor() };
     if (/necromancer|conjurer|warlock/.test(n) && fk === "mage") return { body: "hum", skin: "person", o: HUM_LOOK.necromancer() };
     if (/spriggan/.test(n) || fk === "sol_spriggan") return { body: "hum", skin: "spriggan", o: fk === "sol_spriggan" || /burnt/.test(n) ? { skin: "#3a2e26", glowC: "#ffb040", wt: "fist", attacks: { ...HUM_ATTACKS, default: "claw", cast: "cast" } } : { skin: "#5a4632", glowC: "#e8c24a", wt: "fist", attacks: { ...HUM_ATTACKS, default: "claw", cast: "cast" } } };

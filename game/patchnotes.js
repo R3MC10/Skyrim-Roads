@@ -3,6 +3,16 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b138-beastpaths", build: 138, date: "24 Nov 2026", title: "Werewolves and vampires, for real", items: [
+      "Beast Form is now a real change in turn-by-turn fights: you fight with the wolf's own moves. Claws (2 AP), Maul (4 AP, costs stamina), Pounce (can stagger, every 3 rounds), Howl (ordinary foes cower, tough ones are shaken and hit softer) and Feast on a beaten foe to heal.",
+      "As a beast you can't drink potions, cast spells, shout or raise a guard. Silver weapons (the Vigilants, the Dawnguard, the Silver Hand) bite harder, and when you change back you're worn out for two rounds.",
+      "The Vampire Lord gets Drain Life, Vampiric Grip, Raise Dead and his claws. A vampire who isn't changed can use Seduction, Embrace of Shadows when hungry enough, and a Bite to feed in the middle of a fight.",
+      "The sun burns hungry vampires every round when you fight outdoors by day. A starving vampire pays more in shops and gets turned away at the door; townsfolk talk about how pale you look.",
+      "New at night on the road: a werewolf on the hunt (its bite can give you Moonblood, which turns you in three days unless you cure it at a shrine or with a cure potion), and the Ashen Court, vampires who offer you their gift.",
+      "Changing in town is seen: people scatter and prices go up in that hold for a day.",
+      "New perk stars. Werewolf: Rending Claws, Howl of the Pack, Silver Hide, Endless Hunt. Vampire Lord: Blood Magic, Grave Servants, Sun Ward. New skill perks: Bane of the Night (Restoration, hurts vampires) and Wolfsbane (Alchemy, half the chance to catch either curse).",
+      "In a party your form shows on everyone's phone, and theirs on yours. Only the leader answers the Ashen Court.",
+    ] },
     { id: "b135-compass", build: 135, date: "24 Nov 2026", title: "A real 3D compass", items: [
       "The golden compass on the home screen is now a proper 3D piece: drag it and it tilts toward your finger, catching the light and showing its thick bronze edge, then springs back when you let go.",
       "Skills, Magic, Items and Map now sit around the compass instead of on top of it, on phones held upright or sideways.",

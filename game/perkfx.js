@@ -242,6 +242,9 @@ const PFX = (() => {
     [ "Sneak", "patient_shadow", "Patient Shadow", 1, [50], ["muffled_movement"], "Sneaking past a foe in a dungeon: you're noticed a third slower, the shadows are wider and you hear it turn sooner. [OURS]", [["dgsneak", 0.3, {}]]],
     [ "Two-Handed", "lid_breaker", "Lid Breaker", 1, [25], ["barbarian"], "Smashing chests open: the bright zone on the swing is a third wider. [OURS]", [["dgsmash", 0.3, {}]]],
     [ "Athletics", "sprinter", "Sprinter", 1, [30], ["long_strider"], "Running from a dungeon fight: a quarter fewer steps to get away. [OURS]", [["dgflee", 0.25, {}]]],
+    // ---------------------------------------------------------------- werewolves and vampires (beastpaths.js)
+    [ "Restoration", "bane_of_night", "Bane of the Night", 1, [35], ["novice_restoration"], "Vampires and werewolves take 20% more from your blows and hit you 10% softer. [OURS]", [["out", 0.2, { tag: ["nightkin"] }], ["in", -0.1, { tag: ["nightkin"] }]]],
+    [ "Alchemy", "wolfsbane", "Wolfsbane", 1, [30], ["physician"], "You chew wolfsbane and garlic on the road: half as likely to catch a vampire's or a werewolf's curse. [OURS]", [["curseres", 0.5, {}]]],
     [ "Lockpicking", "keen_searcher", "Keen Searcher", 1, [30], ["novice_locks"], "Searching rooms: your hand sweeps a wider patch of dust at once. [OURS]", [["dgsearch", 0.3, {}]]],
   ];
   const FX = {};
