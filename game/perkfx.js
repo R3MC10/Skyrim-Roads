@@ -269,6 +269,8 @@ const PFX = (() => {
     // ---------------------------------------------------------------- followers become people (followerbonds.js)
     [ "Speechcraft", "kindred_spirit", "Kindred Spirit", 1, [25], [], "Your follower warms to you 50% faster when you do things they like, and cools 25% slower when you don't. [OURS]", [["folbond", 0.5, {}], ["folgrudge", 0.25, {}]]],
     [ "Speechcraft", "heart_to_heart", "Heart to Heart", 1, [45], ["kindred_spirit"], "Talking with your follower does twice as much for their loyalty, and they never refuse your orders, however unhappy. [OURS]", [["foltalk", 1, {}], ["folobey", 1, {}]]],
+    // ---------------------------------------------------------------- party votes in dungeons (partyvote.js)
+    [ "Speechcraft", "voice_of_reason", "Voice of Reason", 1, [35], ["persuasion"], "In a party dungeon vote, your vote counts twice. [OURS]", [["pvweight", 1, {}]]],
     [ "Etiquette", "sworn_companion", "Sworn Companion", 1, [50], ["courtly_manners"], "Followers ask you for their personal quest at loyalty 65 instead of 80, and their signature move is 25% stronger. [OURS]", [["folquest", 15, {}], ["folsig", 0.25, {}]]],
     // ---------------------------------------------------------------- the vampire war (dawnguard.js): one side's perks each, the other side can't take them
     [ "Archery", "dg_bolt_hunter", "Vampire Hunter", 1, [30], [], "Dawnguard only. Bows and crossbows do 25% more damage to vampires and the undead. [Skyrim: Dawnguard]", [["out", 0.25, { sk: AR, tag: ["undead"] }]]],

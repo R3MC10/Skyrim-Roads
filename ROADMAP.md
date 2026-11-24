@@ -69,6 +69,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Smart AI combat (default; custom tactics optional), crafting mini-games, motion design (63)
 
 ## In progress (write your name before you start)
+- Claude: party votes in dungeons (partyvote.js): every dungeon choice in a party run (which way, fight/sneak/run, lock, rest, puzzle...) is a vote, voters' faces by their pick live on every phone, change your vote until it closes, majority wins, tie → leader, 20 s ring timer, Decide now for the leader, offline players don't block; the leader settles it with a sequence number and every phone applies it once; Voice of Reason perk (your vote counts twice); tests/test_partyvote.js, tests/dungeonvote_ui.py. Branch claude/dungeonvote.
 - Claude: followers play their fight clips (allyanim.js): followers, party members and summons swing or shoot, cast, block, flinch, get knocked down and get back up in the fight picture (both art styles, painted scenes too); tests/test_followeranim.js, tests/followeranim_ui.py. Branch claude/followeranim.
 - Claude: Bleak Falls Barrow quest fix: clearing the barrow moves the main quest on by itself (new stage "The Dragonstone"), Farengar's hand-in never needs the stone, old stuck saves repaired on load, quest items bound to you and given back when a stage needs them (questitems.js), tests/test_bleakfalls.js audits every "carry an item" stage. Branch claude/bleakfalls-fix.
 - Claude: Dawnguard-style vampire war with a choice of side (dawnguard.js, dgart.js, i18n_dawnguard.js): Fort Dawnguard, Dimhollow Crypt and Castle Volkihar on the map, a shared opening, then hunters (crossbows, hunter's gear, troll armour for your follower) or Harkon's court (a stronger Vampire Lord); side perks, an achievement per ending, story pictures in both art styles. Branch claude/dawnguard.
@@ -113,6 +114,7 @@ our own marked [OURS]; plain-language UI; phone first.
 ## Standing rules
 - Perk trees grow with the game: every new system (gathering, magic, encounters, crafting, party play...) adds or adjusts perks with real effects in the matching trees (perkfx.js), keeping old perk ids and a clean star layout.
 - Party size up to 8 players.
+- In a party, dungeon choices (which way, what to do in a room) are voted by everyone in the run: faces by the picks, majority wins, a tie goes the leader's way, 20 s timer (partyvote.js). On the road the leader still decides and the others' votes are advice. Loot is voted at the end of a dungeon, gold split evenly.
 
 ## Next rounds (in order)
 1. Ideas offered: favourites wheel, Dragon Shouts from word walls, werewolf/vampire paths, weather that matters.
