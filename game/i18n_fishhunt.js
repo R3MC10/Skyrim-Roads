@@ -27,7 +27,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "Creep closer (hold)": "Skradaj się (przytrzymaj)", "Draw": "Napnij", "Leave": "Odejdź", "Loose": "Strzał", "Lower": "Opuść", "Hunt again": "Poluj dalej",
     "Creep closer while its head is down; freeze when it looks up. Watch the wind: scent carries downwind.": "Skradaj się, gdy ma łeb przy ziemi; zamrzyj, gdy go podnosi. Uważaj na wiatr: niesie twój zapach.",
     "Drag (or use the arrow keys) to aim. Aim into the wind. The heart sits just behind the front leg.": "Przeciągnij (albo użyj strzałek), żeby celować. Bierz poprawkę na wiatr. Serce jest tuż za przednią nogą.",
-    "You draw and hold your breath.": "Napinasz cięciwę i wstrzymujesz oddech.",
+    "A clean shot.": "Czysty strzał.", "You draw and hold your breath.": "Napinasz cięciwę i wstrzymujesz oddech.",
     "It runs, wounded. You follow the blood trail and find it.": "Ucieka ranne. Idziesz po śladach krwi i je znajdujesz.", "There's nothing worth taking.": "Nie ma nic wartego zabrania.",
     "It runs, wounded, and you lose the trail.": "Ucieka ranne i gubisz trop.", "Your shot goes wide. It's gone in a heartbeat.": "Pudło. W mgnieniu oka znika.",
     "There's no game in a dungeon.": "W podziemiach nie ma zwierzyny.", "You need a bow or a crossbow.": "Potrzebujesz łuku albo kuszy.",
@@ -70,7 +70,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     ["You've caught {0} fish so far.", "Złowione ryby: {0}."], ["You've brought down {0} so far.", "Upolowane zwierzęta: {0}."],
     ["{0} more animals around here today.", "Zwierząt w okolicy na dziś: jeszcze {0}."],
     ["Water nearby: {0}.", "Woda w pobliżu: {0}."],
-    ["A clean shot. The {0} drops where it stood.", "Czysty strzał. Zwierzę ({0}) pada w miejscu."],
+    ["The {0} drops where it stood.", "Zwierzę ({0}) pada w miejscu."],
     ["You skin it: {0}.", "Skórujesz zwierzę: {0}."],
     ["The {0} catches your scent and bolts.", "Zwierzę ({0}) wyczuwa twój zapach i ucieka."],
   );

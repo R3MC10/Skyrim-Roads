@@ -837,7 +837,7 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 144;
+  const NEXT_AT = 152;
   const NEXT = [
     "A new, livelier fight screen that fits on one screen",
     "On PC, everything fits on one screen without scrolling",
