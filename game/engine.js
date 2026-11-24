@@ -143,6 +143,7 @@ const G = (() => {
     // quests stuck on an old save move on: Bleak Falls Barrow already cleared moves the main quest to Farengar's hand-in
     // (no Dragonstone needed), and a missing quest item a stage needs comes back (questitems.js)
     if (typeof QUESTS !== "undefined") { QUESTS.ensure(s); QUESTS.check(s); }
+    if (typeof LEVELUP !== "undefined") { const m = LEVELUP.migrate(s); if (m) note(s, m); }   // levelup.js: keeps your level, tidies odd numbers
     return s;
   }
   function note(s, text) { s.journal.unshift({ t: now(), text }); s.journal = s.journal.slice(0, 60); }
@@ -183,22 +184,43 @@ const G = (() => {
       sk.xp -= F.skillXpNeeded(name, sk.lvl);
       sk.lvl += 1;
       msgs.push(`${name} increased to ${sk.lvl}`);
-      s.charXp += sk.lvl;
-      while (s.charXp >= F.charXpNeeded(s.level)) {
-        s.charXp -= F.charXpNeeded(s.level);
-        s.level += 1;
-        s.pendingLevels += 1;
-        msgs.push(`You reached level ${s.level}! Choose health, magicka or stamina.`);
-      }
+      msgs.push(...skillRose(s, name));
     }
     return msgs;
+  }
+  /* [Skyrim] a skill just went up by one: character XP = the skill's new level; enough XP is a level-up to spend
+     (+10 Health/Magicka/Stamina and a perk point). Every way a skill rises comes through here, so levelup.js
+     (LEVELUP.on) hears about every skill increase and every new level. */
+  function skillRose(s, name, quiet = false) {
+    const lvl = s.skills[name].lvl, msgs = [], from = s.level, fromXp = +s.charXp || 0;
+    s.charXp = fromXp + lvl;
+    while (s.charXp >= F.charXpNeeded(s.level)) {
+      s.charXp -= F.charXpNeeded(s.level);
+      s.level += 1;
+      s.pendingLevels = (s.pendingLevels || 0) + 1;
+      msgs.push(quiet ? `You reached level ${s.level}!` : `You reached level ${s.level}! Choose health, magicka or stamina.`);
+    }
+    if (typeof LEVELUP !== "undefined") {
+      LEVELUP.emit("skill", { s, skill: name, lvl, from, fromXp });
+      for (let l = from + 1; l <= s.level; l++) LEVELUP.emit("level", { s, level: l });
+    }
+    return msgs;
+  }
+  /* skill books and trainers: +1 to a skill straight away (no XP), with the character XP it gives */
+  function raiseSkill(s, name) {
+    const sk = s.skills[name];
+    if (!sk || sk.lvl >= 100) return [];
+    sk.lvl += 1;
+    return skillRose(s, name, true);
   }
   function levelUp(s, attr) {
     if (s.pendingLevels <= 0) return "No level-up to spend.";
     const f = { health: "hpBonus", magicka: "mpBonus", stamina: "spBonus" }[attr];
+    if (!f) return "Choose Health, Magicka or Stamina.";
     s[f] += F.ATTRIBUTE_PER_LEVEL;
     s.pendingLevels -= 1;
     if (attr === "health") s.health = Math.min(maxHealth(s), s.health + F.ATTRIBUTE_PER_LEVEL);
+    if (typeof LEVELUP !== "undefined") LEVELUP.emit("choice", { s, attr });
     return `+${F.ATTRIBUTE_PER_LEVEL} ${attr}` + (attr === "stamina" ? ` and +${F.CARRY_PER_STAMINA_LEVEL} carry weight` : "");
   }
 
@@ -601,6 +623,7 @@ const G = (() => {
       return false;
     }
     affordable(a) {
+      if (typeof MOUNTFIGHT !== "undefined") { const mf = MOUNTFIGHT.allow(this, a); if (mf != null) return mf; }   // [OURS] Mount / Dismount, and what the saddle rules out (mountfight.js)
       if (a === "attack") return true;
       if (a === "flee") return !!this.canFlee && !this.e.boss;   // only on the road, never from a boss
       if (a === "power_attack") return this.sp >= this.paCost;
@@ -651,12 +674,13 @@ const G = (() => {
       const sk = this.weaponSkill();
       if (power) this.sp -= this.paCost;
       const ammoK = this.bound ? null : this.ammoKind(), shot = ammoK ? this.shoot() : null;
-      const sneak = (this.turn === 1 && this.hidden) || this.sneakNext;
+      const sneak = (this.turn === 1 && this.hidden && !this.mount?.up) || this.sneakNext;   // [OURS] nobody sneaks up on horseback: riders open with a charge (mountfight.js)
       this.sneakNext = false;
       const mt = this.mount && typeof HORSEBACK !== "undefined" ? HORSEBACK.strike(this, power, sneak) : null;   // [OURS] fighting from the saddle (horseback.js)
       const px = { power, sneak, sk, wt: this.wt };   // [OURS] for the bigger perk trees (perkfx.js)
       const aimW = ammoK && this.wx ? 1 - (1 - this.wx.aim) * (typeof PFX !== "undefined" && PFX.has(this.s, "aimwx", this, px) ? 0.5 : 1) : 1;
       const sure = typeof PFX !== "undefined" && PFX.has(this.s, "sure", this, px);
+      if (mt?.miss) return mt.miss;   // [OURS] an arrow from a moving horse
       if (!sneak && !mt?.sure && !sure && Math.random() > Math.min(0.98, (F.HIT_CHANCE + (typeof PFX !== "undefined" ? PFX.sum(this.s, "hit", this, px) : 0)) * aimW)) return power ? "Power attack misses" : "Attack misses";
       const s = this.s, wt = this.wt;
       let dmg = this.weaponDamage() * rnd(...F.DAMAGE_SPREAD) * (power ? F.POWER_ATTACK_DAMAGE : 1);
@@ -798,6 +822,7 @@ const G = (() => {
       return sp.name;
     }
     act(a) {
+      if (typeof MOUNTFIGHT !== "undefined" && MOUNTFIGHT.owns(a)) return MOUNTFIGHT.act(this, a);   // [OURS] getting on / off your horse mid-fight
       if (a === "attack") return this.attack(false);
       if (a === "flee") {   // break off and run (road fights only)
         const ch = 0.45 + skill(this.s, "Athletics") / 200 - (this.e.danger === "high" ? 0.2 : 0) + (riding(this.s) ? 0.15 : 0);
@@ -880,6 +905,7 @@ const G = (() => {
         const al = cover || (fixed ? tg : typeof FAI !== "undefined" ? FAI.pickAlly(this) : pick(this.allies));
         this.tgtHit = al;
         if (al.fsum && typeof FAI !== "undefined") return FAI.hitSummon(this, al);   // a follower's summon takes the blow
+        if (al.mt?.up && typeof MOUNTFIGHT !== "undefined") { const mr = MOUNTFIGHT.allyTurn(this, al); if (mr) return mr; }   // [OURS] a teammate on horseback
         if (al.coop && typeof COOP !== "undefined") return COOP.hitAlly(this, al);   // co-op party members take their own blows
         if (al.follower && Math.random() < F.HIT_CHANCE) {
           let d = this.e.damage * rnd(...F.DAMAGE_SPREAD) * (typeof FOL2 !== "undefined" && al.fid === s.follower?.id ? FOL2.taken(s) : 0.8);   // [OURS] followers wear armor (their real armor, with FOL2)
@@ -1439,7 +1465,7 @@ const G = (() => {
 
   return {
     MAP_W, MAP_H, STEP_SECONDS, SLOTS, ARMOR_SLOTS, JEWEL_SLOTS, wornSlot, GAME_SPEED, now, pxDist, holdAt, clock, isNight, shopsOpen, clockText,
-    P, wtype, fxSum, lockChance, lockRoll, setAllyProvider, hiddenChance, rested, haggle, SPELL_TIER, newSave, maxHealth, maxMagicka, maxStamina, curHealth, setHealth, skill, useSkill, levelUp, fightLevel,
+    P, wtype, fxSum, lockChance, lockRoll, setAllyProvider, hiddenChance, rested, haggle, SPELL_TIER, newSave, maxHealth, maxMagicka, maxStamina, curHealth, setHealth, skill, useSkill, skillRose, raiseSkill, levelUp, fightLevel,
     riding, withHorse, STACKABLE, give, take, invRow, wornCount, freeQty, handable, carried, capacity, overweight, equipment, equip, unequip, equipOff, canOffhand, countRestore, itemStats,
     loadout: lo, addRule, ruleSlot, deadRules, fixTactics, saveLoadoutAs, deleteLoadout, spellCost, describeRule, describeAction, Fight, scaleEnemy, scaleQuestFoe, questLevel, rollLoot,
     rollEncounter, die, speed, discoverRadius, startTrip, startEvent, eventChoices, eventChoice, buyFrom, minutesLeft, minutesTo, posAfter, advance, encounterAction, migrate, PLACES,
