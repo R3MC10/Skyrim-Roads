@@ -24,6 +24,8 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
       "Kiedy leci tura wroga, stuknij gdziekolwiek w walkę, żeby ją przyspieszyć (Spacja na PC). Klawisz F już nie ucieka, więc nie zwiejesz przez przypadek.",
     "Tooltips in fights now say what a move costs in stamina or magicka instead of action points.":
       "Podpowiedzi w walce mówią teraz, ile ruch kosztuje wytrzymałości albo magii, a nie punktów akcji.",
+    "Fixed on phones: a few screens (the house chest, parts of dungeons and fights) were missing some of their styling.":
+      "Poprawka na telefonach: kilku ekranom (skrzyni w domu, częściom lochów i walk) brakowało części wyglądu.",
     // Coming next
     "Mounted combat: fight from the saddle": "Walka konno: bij się z siodła",
     "Pick a side in the civil war": "Wybierz stronę w wojnie domowej",
