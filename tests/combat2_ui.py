@@ -106,6 +106,26 @@ async def main():
                 ok((back or await pg.evaluate("!!TB.session?.done")) and await evn() > n0, f"{tag}: End Turn hands over to the foe and back (or the fight ends)")
             else: ok(False, f"{tag}: End Turn button")
             await shot("4_end"); await noscroll("after End Turn")
+            # no speed / skip buttons: a turn is hurried by tapping the scene
+            ok(await pg.evaluate("![...document.querySelectorAll('#tbf .tbskip:not(.tbhurry), #tbf [data-fspd]')].some(e=>e.getBoundingClientRect().width>0)"), f"{tag}: no speed or Skip buttons")
+            # win: the foes drop to 1 health, attack until it ends; slow finisher, then the result card
+            for _ in range(12):
+                if await pg.evaluate("!!TB.session?.done"): break
+                await pg.evaluate("(()=>{const f=TB.session.f; f.ehp=1; (f.adds||[]).forEach(a=>{a.ehp=1; a.hp=1;});})()")
+                if await my_turn():
+                    sel = "#tbf [data-tba=attack]:not([disabled])"
+                    if await pg.evaluate(f"!!document.querySelector('{sel}')"): await pg.click(sel)
+                    else: await pg.click("#tbf [data-tba=end]")
+                    await pg.mouse.move(2, 2); await pg.wait_for_timeout(400)
+            card = False
+            for _ in range(40):
+                await pg.evaluate(CLEAN)
+                if await pg.evaluate("!!document.querySelector('#tbf .c2res.on')"): card = True; break
+                await pg.wait_for_timeout(250)
+            ok(card, f"{tag}: the fight ends on a result card")
+            if card:
+                ok(await pg.evaluate("!!document.querySelector('#tbf .c2res .tbdone')"), f"{tag}: the result card holds the way out")
+                await shot("5_result")
             ok(not errs, f"{tag}: no page errors {errs[:3]}")
             await ctx.close()
         await b.close()

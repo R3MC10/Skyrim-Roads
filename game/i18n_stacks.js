@@ -57,8 +57,8 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     // patch notes (build 146)
     "Out of breath? You can always make one plain swing a turn. Frost and shock bite your stamina and magicka a bit less than before, and trolls and hagravens regenerate at most four times a fight.":
       "Brak tchu? Zawsze możesz zrobić jeden zwykły zamach na turę. Mróz i porażenie zabierają trochę mniej wytrzymałości i magii niż wcześniej, a trolle i wiedźmy kruków regenerują się najwyżej cztery razy na walkę.",
-    "The fight speed button and the Skip to result button are gone. Tap the fight scene if you want to finish an animation right away.":
-      "Przycisk szybkości walki i przycisk Pomiń do wyniku zniknęły. Stuknij scenę walki, jeśli chcesz od razu dokończyć animację.",
+    "The fight speed button and the Skip buttons are gone. Tap the fight scene if you want to finish an animation right away.":
+      "Przycisk szybkości walki i przyciski Pomiń zniknęły. Stuknij scenę walki, jeśli chcesz od razu dokończyć animację.",
     "Action points are gone. On your turn make up to 4 moves in any order, then press End turn. Blows, power attacks, bashes and guards cost stamina, spells cost magicka, dark magic costs a little health. Doing the same move again in a turn costs more, and a power attack is once a turn.":
       "Punktów akcji już nie ma. W swojej turze zrób do 4 ruchów w dowolnej kolejności i naciśnij Koniec tury. Ciosy, potężne ataki, uderzenia tarczą i garda kosztują wytrzymałość, czary magię, mroczna magia trochę zdrowia. Ten sam ruch drugi raz w turze kosztuje więcej, a potężny atak jest raz na turę.",
     "Moves you don't make turn into guard: end early and you take up to 30% less damage until your next turn.":

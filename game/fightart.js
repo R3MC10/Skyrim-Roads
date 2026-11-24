@@ -655,7 +655,7 @@ const FIGHTART = (() => {
     REG.set(id, { f, scene: arena ? "arena" : sceneOf(s), hero: { ...heroOf(s, f), bound: false }, foe: f.e?.look || f.foeLook ? "player" : arena ? "bandit" : foeOf(f.e), foeLook: f.e?.look || f.foeLook || null, wagon: f.e?.cart ? "cart" : f.e?.caravan ? (f.e.khajiit ? "khajiit" : "nord") : null, foeName: f.e?.name || f.foeName || (arena && (f.log[0].them.match(/^(.+?) hits for/) || [])[1]) || "Opponent", played: !!f.tbPlayed });   // a turn-based fight was already watched live
     { const rec = REG.get(id), outdoor = !["cave", "dwemer"].includes(rec.scene) && !s?.dungeon; if (outdoor && typeof SKY !== "undefined" && s) rec.sky = SKY.state([s.x, s.y]); }   // the sky over this fight
     if (typeof BSCENE !== "undefined") { const rec = REG.get(id); rec.art = BSCENE.artOf(s, { arena: rec.scene === "arena" }); if (rec.art) BSCENE.prefetch(rec.art); }   // [OURS] painted scene (battlescene.js); rec.scene stays the drawn fallback
-    { const rec = REG.get(id); if (f.mount && !f.mount.foot && typeof HORSEBACK !== "undefined") rec.horse = typeof HORSES !== "undefined" && s?.horse ? HORSES.coat(s.horse.coat)[2] : "#6b4a2e"; }   // [OURS] fighting from the saddle
+    { const rec = REG.get(id); if (f.mount && !f.mount.foot && typeof HORSEBACK !== "undefined") { rec.horse = typeof HORSES !== "undefined" && s?.horse ? HORSES.coat(s.horse.coat)[2] : "#6b4a2e"; rec.horseCoat = s?.horse?.coat || null; } }   // [OURS] fighting from the saddle
     if (REG.size > 40) REG.delete(REG.keys().next().value);
     return id;
   }
@@ -695,9 +695,10 @@ const FIGHTART = (() => {
 
   function mount(el) {
     const rec = REG.get(+el.dataset.fs); if (!rec || el.firstChild) return;
-    const W = Math.max(300, Math.min(520, Math.round(el.clientWidth || 330))), Hh = Math.round(W * (rec.f.tbTall ? 0.66 : 0.46));   // the turn-by-turn screen gets a taller stage
+    const W = Math.max(300, Math.min(520, Math.round(el.clientWidth || 330))), Hh = Math.round(W * (rec.f.tbAspect || (rec.f.tbTall ? 0.66 : 0.46)));   // the turn-by-turn screen gets a taller stage (on a PC: the window's own shape, combat2.js)
     const style = ART.style(), pixel = style === "pixel", rm = reduce();
-    const dpr = typeof FITCANVAS !== "undefined" ? Math.min(3, FITCANVAS.ratio(el, W)) : Math.min(2, devicePixelRatio || 1);   // backing pixels per drawing unit: the box on screen × density (sharp on tablets and PCs too)
+    const FS = typeof FIGHTSET !== "undefined" ? FIGHTSET : null;   // [OURS] Settings → Fights: quality, camera, frame rate (fightset.js)
+    const dpr = Math.min(FS ? FS.dpr() : 3, typeof FITCANVAS !== "undefined" ? FITCANVAS.ratio(el, W) : Math.min(2, devicePixelRatio || 1));   // backing pixels per drawing unit: the box on screen × density (sharp on tablets and PCs too)
     const cv = document.createElement("canvas"); cv.width = Math.round(W * dpr); cv.height = Math.round(Hh * dpr);   // CSS scales it to the box (width:100%)
     if (pixel) cv.style.imageRendering = "pixelated";
     el.appendChild(cv);
@@ -706,7 +707,7 @@ const FIGHTART = (() => {
     const work = pixel ? Object.assign(document.createElement("canvas"), { width: Math.round(W * k), height: Math.round(Hh * k) }) : cv;
     const wg = work.getContext("2d");
     const bg = bgFor(rec.scene, W, Hh, style, rec.wagon, rec.sky);
-    const wxp = rec.sky ? SKY.particles(rec.sky, W, Hh, { reduce: rm }) : null;   // snow, rain, leaves or fireflies during the replay
+    const wxp = rec.sky && (!FS || FS.weather()) ? SKY.particles(rec.sky, W, Hh, { reduce: rm }) : null;   // snow, rain, leaves or fireflies during the replay
     const f = rec.f, beats = beatsOf(f, rec.hero);
     const hp0 = f.hp0 ?? Math.max(1, ...((f.log || []).map((l) => l.hp).filter((v) => v != null)));
     const ehp0 = f.ehp0 ?? Math.max(1, ...((f.log || []).map((l) => l.ehp).filter((v) => v != null)));
@@ -856,7 +857,7 @@ const FIGHTART = (() => {
       if (rm) { shake = 0; return; }
       if (b.power) { hitstop = 0.08; shake = Math.max(shake, 5); }
       if (b.crit || b.sneak) { slowT = 0.45; shake = Math.max(shake, 4); }
-      if (b.final) { slowT = f.bf && b.who === "me" ? 1.4 : 0.6; shake = Math.max(shake, 8); zoomT = f.bf ? 1.5 : 0.9; if (!CFX) { zcx = tx; zcy = ty; } flash = Math.max(flash, 0.3); flashC = "#fff"; }
+      if (b.final) { slowT = f.bf && b.who === "me" ? 1.4 : f.tbTall ? 1.3 : 0.6; /* [OURS] the blow that ends a turn-by-turn fight plays in slow motion */ shake = Math.max(shake, 8); zoomT = f.bf ? 1.5 : 0.9; if (!CFX) { zcx = tx; zcy = ty; } flash = Math.max(flash, 0.3); flashC = "#fff"; }
     }
     let ringT = 1, ringX = 0, ringC = "#e9dcc0", beamT = 1, beamC = "#9affc0";
     function landNumbers(b) {   // the number and the health bars, once per beat (on the last hit)
@@ -1010,7 +1011,7 @@ const FIGHTART = (() => {
       const tt = now / 1000;
       poses(b, m, u, st, tt);
       // camera
-      const sh = rm ? 0 : shake, z = zoom, ox = (sh ? (Math.random() - 0.5) * sh * 2 : 0) + (CFX && !rm ? CFX.pan(camF * W, z, W, zcx) : 0), oy = (sh ? (Math.random() - 0.5) * sh * 2 : 0) + (CFX && !rm ? CFX.pan(heroChest, z, Hh, zcy) : 0);
+      const camK = FS ? FS.cam() : 1, sh = rm ? 0 : shake * camK, z = 1 + (zoom - 1) * camK, ox = (sh ? (Math.random() - 0.5) * sh * 2 : 0) + (CFX && !rm ? CFX.pan(camF * W, z, W, zcx) : 0), oy = (sh ? (Math.random() - 0.5) * sh * 2 : 0) + (CFX && !rm ? CFX.pan(heroChest, z, Hh, zcy) : 0);
       wg.setTransform(1, 0, 0, 1, 0, 0); wg.imageSmoothingEnabled = !pixel;
       if (z !== 1 || sh) { wg.fillStyle = "#1c2128"; wg.fillRect(0, 0, work.width, work.height); }
       const sc = k * z, tx = (ox + zcx - zcx * z) * k, ty = (oy + zcy - zcy * z) * k;
@@ -1066,15 +1067,15 @@ const FIGHTART = (() => {
       const meDown = over && !won, foeDown = over && won && !turned, fallE = EASE.out(fall);
       const hdg = heroDodge < 1 ? Math.sin(heroDodge * Math.PI) : 0, fdg = foeDodge < 1 ? Math.sin(foeDodge * Math.PI) : 0;
       if (rec.horse && typeof HORSEBACK !== "undefined" && HORSEBACK.drawDowned && HORSEBACK.downAt(f, phase === "play" ? bi / Math.max(1, beats.length) : 1)) {   // [OURS] your horse is downed: it lies behind you, you fight on foot
-        wg.save(); wg.translate(hx0 - 58 * s, groundY); wg.scale(s, s); HORSEBACK.drawDowned(wg, rec.horse, tt, L("Downed")); wg.restore();
+        wg.save(); wg.translate(hx0 - 58 * s, groundY); wg.scale(s, s); HORSEBACK.drawDowned(wg, rec.horse, tt, L("Downed"), rec.horseCoat); wg.restore();
       }
       wg.save(); wg.translate(hx0 + (heroP.dx - heroKnock - hdg * 18) * s, groundY + (heroP.dy - hdg * 3) * s); wg.scale(s, s);
       if (meDown) { wg.translate(-6 * fallE, 0); wg.rotate(-Math.PI / 2 * fallE); wg.translate(0, 6 * fallE); }
       if (st.invis && !(b && b.who === "me" && b.move !== "self" && b.move !== "shout")) wg.globalAlpha = 0.28 + Math.sin(tt * 3) * 0.05;
       const onHorse = rec.horse && !meDown && typeof HORSEBACK !== "undefined" && HORSEBACK.upAt(f, phase === "play" ? bi / Math.max(1, beats.length) : 1);   // the rider sits up on the horse
-      if (onHorse) { HORSEBACK.drawHorse(wg, rec.horse, 0, tt, "back"); wg.translate(0, -30); }
+      if (onHorse) { HORSEBACK.drawHorse(wg, rec.horse, 0, tt, "back", rec.horseCoat); wg.translate(0, -30); }
       { const fs = b ? b.st : st, form = fs && (fs.beast || fs.lord) && (phase === "play" || phase === "settle" || phase === "idle"); heroFig(wg, form ? { ...rec.hero, beast: fs.beast, lord: fs.lord } : rec.hero, form ? Math.max(0, Math.min(1, (heroP.dx || 0) / 40)) : 0, tt, heroP); }   // werewolf or Vampire Lord while changed
-      if (onHorse) { wg.translate(0, 30); HORSEBACK.drawHorse(wg, rec.horse, 0, tt, "front"); }
+      if (onHorse) { wg.translate(0, 30); HORSEBACK.drawHorse(wg, rec.horse, 0, tt, "front", rec.horseCoat); }
       wg.restore();
       if (rec.hero.ench && !meDown && heroP.wt !== "fist" && !heroP.flask) {   // [OURS] an enchanted weapon glows in its colour and sheds motes
         const c = rec.hero.ench; tipOf(1, heroP, heroP.wt, 24);
@@ -1338,8 +1339,10 @@ const FIGHTART = (() => {
       finish() { if (!done) finish(); },   // [OURS] tap anywhere on the fight screen (fastqol.js)
       get done() { return done; }, get beat() { return bi; }, get cam() { return [zoom, camF, deathK]; }, beats, el,
     };
+    const minGap = FS ? FS.frameMs() : 0;   // the frame-rate cap (Settings → Fights → Frame rate)
     function frame(now) {
       if (!cv.isConnected) { cancelAnimationFrame(raf); LIVE.delete(runner); return; }
+      if (minGap && now - lastNow < minGap) { raf = requestAnimationFrame(frame); return; }
       if (!MANUAL) { const dt = Math.min(0.05, Math.max(0, (now - lastNow) / 1000)); update(dt); draw(now); }
       lastNow = now;
       if (!done) raf = requestAnimationFrame(frame); else { LIVE.delete(runner); idleArt(); }

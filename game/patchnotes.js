@@ -3,6 +3,44 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b166-fightpc", build: 166, date: "24 Nov 2026", title: "The fight fills your PC, and ends in slow motion", items: [
+      "On a PC or laptop the fight now fills the whole window, like the big map: the picture runs from edge to edge and the cards and the skill bar float over it.",
+      "The blow that ends a fight plays in slow motion, then a card shows how it went: how many rounds, the damage you dealt and took, and your best hit. Continue is right on it.",
+      "New in Settings → Fights: Fight quality (Low, Medium, High), Frame rate (30, 60 or no cap), and sliders for Camera shake and Fight UI size. Low quality and 30 frames save battery on phones.",
+      "While a foe's turn plays, tap anywhere on the fight to hurry it along (Space on a PC). The F key doesn't flee any more, so you can't run off by accident.",
+      "Tooltips in fights now say what a move costs in stamina or magicka instead of action points.",
+    ] },
+    { id: "b166-turns", build: 166, date: "24 Nov 2026", title: "No more action points: you choose your turn", items: [
+      "Action points are gone. On your turn make up to 4 moves in any order, then press End turn. Blows, power attacks, bashes and guards cost stamina, spells cost magicka, dark magic costs a little health. Doing the same move again in a turn costs more, and a power attack is once a turn.",
+      "Moves you don't make turn into guard: end early and you take up to 30% less damage until your next turn.",
+      "You see every foe's next move by name with its icon, numbers, who it's aimed at and what it leaves behind (like Venom Spit → Lydia, Poison 3). When it acts, the banner and the log name the move too.",
+      "The turn order ribbon at the top lights up whoever is acting right now, foes included, so you always know whose go it is.",
+      "Out of breath? You can always make one plain swing a turn. Frost and shock bite your stamina and magicka a bit less than before, and trolls and hagravens regenerate at most four times a fight.",
+      "The fight speed button and the Skip buttons are gone. Tap the fight scene if you want to finish an animation right away.",
+    ] },
+    { id: "b166-stacks", build: 166, date: "24 Nov 2026", title: "Statuses stack, and every move is a minigame", items: [
+      "Burn, chill, poison, bleed, vulnerable, ward and more now stack. The number on the icon is how many stacks; each one makes it stronger and it drops by 1 every turn. Hold or hover the icon to see what it does.",
+      "Bosses can't be stun-locked: every stun, calm or fear gives them Resolve, so the next one is shorter.",
+      "Every attack, guard and spell is a quick minigame: tap in the bright zone, time your block, draw your bow or trace a rune. Perfect adds a stack of something nasty, a miss is weaker. Turn it off in Settings → Minigames if you'd rather not.",
+      "New perk effects for stacks: enchanted weapons add an extra stack, and resist perks take a stack off what's put on you.",
+    ] },
+    { id: "b166-strategy", build: 166, date: "24 Nov 2026", title: "Fights that reward thinking", items: [
+      "New move: Breathe (Catch your breath). It's free but ends your turn, and gets back a good chunk of stamina and some magicka. Power attacks, bashes and guards burn stamina, so pace yourself: hit hard now, or breathe and hit hard next turn.",
+      "Openings: hit a foe that's staggered, stunned or paralyzed and the blow does 30% more (a power attack 45%). A power attack on a frozen foe shatters the frost for extra. Bash or stagger first, then cash in. Still no one-shots.",
+      "Frost slows: a chilled or slowed foe acts later in the round, so you and your followers get in first.",
+      "Give your follower orders mid-fight with the little buttons on their card: Attack, Defend me (steps in front of you sooner) or Hold back (back row, only guards and heals). Tap again to let them fight their own way.",
+      "Perks: Second Wind makes Breathe give 50% more; Savage Strike and Devastating Blow make power attacks into an opening hit even harder. Auto uses all of this too.",
+    ] },
+    { id: "b166-combat2", build: 166, date: "24 Nov 2026", title: "A fight screen that feels like a game", items: [
+      "The fight is now one big scene that fills the screen. Everything you need sits right in it, so nothing scrolls, on phones and on PC.",
+      "Your health is a glowing orb in the corner with magicka and stamina curving round it; a striped band shows how much the foe is about to take. Slim bars float over your hero's head.",
+      "The foe's name, health, statuses and what it plans next hang over its head. Stunned foes wobble with stars, big hits flash and shake the picture.",
+      "Moves are round drawn buttons with what they cost in stamina or magicka on them. Magic and Items open as a drawer of cards over the fight. End Turn shows the guard you keep.",
+      "Turn order is a ribbon of little portraits at the top, followers sit in small cards at the side, and the fight log is a short fading feed (tap it for the whole log).",
+      "Every buff and debuff now shows as a little icon on whoever has it: you, followers, party members and foes. Armour spells, wards, healing over time, potions, shouts and powers, poison, burning, frost, bleeding, fear, paralysis and the rest. Each shows the turns left, and tapping or hovering tells you what it does.",
+      "When one lands or wears off, a short word floats up over that fighter: \"+Oakflesh\", \"Poisoned\", \"Burning fades\".",
+      "Prefer the old look? Settings → Fight screen → Classic.",
+    ] },
     { id: "b165-pcmap", build: 165, date: "24 Nov 2026", title: "The big map on PC", items: [
       "On a PC or laptop the world map is now your home screen: it fills the whole window, and Items, Skills, Magic and the Journal open on top of it over a blurred map. On phones nothing changes.",
       "Drag to look around, scroll to zoom smoothly from all of Skyrim down to a single village, and press Space to jump back to your hero. WASD and the arrows move the map too (while the compass is closed).",
@@ -18,37 +56,6 @@ const PATCHNOTES = (() => {
       "Standing still they breathe and their cloak moves a bit. On the road they walk and turn to face the way they're going, and there's a small puff of dust when you arrive.",
       "On your horse you sit in the saddle, and the horse has your horse's coat colour. Standing, it swishes its tail and nods its head; on the road it walks, and on good roads it gallops.",
       "Other players and your party show up the same way, a bit smaller, with a green ring under party members. Works in both art styles; with Reduce motion on, everyone stands still.",
-    ] },
-    { id: "b146-turns", build: 146, date: "24 Nov 2026", title: "No more action points: you choose your turn", items: [
-      "Action points are gone. On your turn make up to 4 moves in any order, then press End turn. Blows, power attacks, bashes and guards cost stamina, spells cost magicka, dark magic costs a little health. Doing the same move again in a turn costs more, and a power attack is once a turn.",
-      "Moves you don't make turn into guard: end early and you take up to 30% less damage until your next turn.",
-      "You see every foe's next move by name with its icon, numbers, who it's aimed at and what it leaves behind (like Venom Spit → Lydia, Poison 3). When it acts, the banner and the log name the move too.",
-      "The turn order ribbon at the top lights up whoever is acting right now, foes included, so you always know whose go it is.",
-      "Out of breath? You can always make one plain swing a turn. Frost and shock bite your stamina and magicka a bit less than before, and trolls and hagravens regenerate at most four times a fight.",
-      "The fight speed button and the Skip to result button are gone. Tap the fight scene if you want to finish an animation right away.",
-    ] },
-    { id: "b146-stacks", build: 146, date: "24 Nov 2026", title: "Statuses stack, and every move is a minigame", items: [
-      "Burn, chill, poison, bleed, vulnerable, ward and more now stack. The number on the icon is how many stacks; each one makes it stronger and it drops by 1 every turn. Hold or hover the icon to see what it does.",
-      "Bosses can't be stun-locked: every stun, calm or fear gives them Resolve, so the next one is shorter.",
-      "Every attack, guard and spell is a quick minigame: tap in the bright zone, time your block, draw your bow or trace a rune. Perfect adds a stack of something nasty, a miss is weaker. Turn it off in Settings → Minigames if you'd rather not.",
-      "New perk effects for stacks: enchanted weapons add an extra stack, and resist perks take a stack off what's put on you.",
-    ] },
-    { id: "b145-strategy", build: 145, date: "24 Nov 2026", title: "Fights that reward thinking", items: [
-      "New move: Breathe (Catch your breath). It's free but ends your turn, and gets back a good chunk of stamina and some magicka. Power attacks, bashes and guards burn stamina, so pace yourself: hit hard now, or breathe and hit hard next turn.",
-      "Openings: hit a foe that's staggered, stunned or paralyzed and the blow does 30% more (a power attack 45%). A power attack on a frozen foe shatters the frost for extra. Bash or stagger first, then cash in. Still no one-shots.",
-      "Frost slows: a chilled or slowed foe acts later in the round, so you and your followers get in first.",
-      "Give your follower orders mid-fight with the little buttons on their card: Attack, Defend me (steps in front of you sooner) or Hold back (back row, only guards and heals). Tap again to let them fight their own way.",
-      "Perks: Second Wind makes Breathe give 50% more; Savage Strike and Devastating Blow make power attacks into an opening hit even harder. Auto uses all of this too.",
-    ] },
-    { id: "b144-combat2", build: 144, date: "24 Nov 2026", title: "A fight screen that feels like a game", items: [
-      "The fight is now one big scene that fills the screen. Everything you need sits right in it, so nothing scrolls, on phones and on PC.",
-      "Your health is a glowing orb in the corner with magicka and stamina curving round it; a striped band shows how much the foe is about to take. Slim bars float over your hero's head.",
-      "The foe's name, health, statuses and what it plans next hang over its head. Stunned foes wobble with stars, big hits flash and shake the picture.",
-      "Moves are round drawn buttons with their AP cost on the rim. Magic and Items open as a drawer of cards over the fight. End Turn glows when you're out of AP and still shows the guard you keep.",
-      "Turn order is a ribbon of little portraits at the top, followers sit in small cards at the side, and the fight log is a short fading feed (tap it for the whole log).",
-      "Every buff and debuff now shows as a little icon on whoever has it: you, followers, party members and foes. Armour spells, wards, healing over time, potions, shouts and powers, poison, burning, frost, bleeding, fear, paralysis and the rest. Each shows the turns left, and tapping or hovering tells you what it does.",
-      "When one lands or wears off, a short word floats up over that fighter: \"+Oakflesh\", \"Poisoned\", \"Burning fades\".",
-      "Prefer the old look? Settings → Fight screen → Classic.",
     ] },
     { id: "b145-eventart", build: 145, date: "24 Nov 2026", title: "Painted events and shops", items: [
       "World events now have painted pictures: the Khajiit's grand caravan, Daedric invasions, dragon migrations and all four festival weeks each get their own.",
@@ -1004,10 +1011,10 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 165;
+  const NEXT_AT = 166;
   const NEXT = [
-    "A new, livelier fight screen that fits on one screen",
-    "On PC, everything fits on one screen without scrolling",
+    "Mounted combat: fight from the saddle",
+    "Pick a side in the civil war",
     "New painted dungeon rooms and a parchment dungeon map",
     "Dwemer ruins and the deep caverns of Blackreach",
     "Fishing and hunting",

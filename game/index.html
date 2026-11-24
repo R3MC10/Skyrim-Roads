@@ -2579,11 +2579,11 @@ html.art-pixel .pnbar,html.art-pixel .pnbar .pnback{border-radius:0}
 #tbf.c2 .fc:not(.fc-pick) .tbact[data-tz="self"] .ic,#tbf.c2 .fc:not(.fc-pick) .tbact[data-tz="ally"] .ic{border-color:rgba(140,190,255,.7)}
 #tbf.c2 .fc:not(.fc-pick) .tbact.shout .ic{background:radial-gradient(circle at 50% 32%,#4b3a62,#1a1222 68%,#0c0811);border-color:rgba(200,160,255,.7)}
 #tbf.c2 .fc:not(.fc-pick) .tbact.sugg .ic{border-style:dashed}
-#tbf.c2 .fc:not(.fc-pick) .tbact b{font-size:10px;letter-spacing:.05em;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 1px;margin-top:2px}
+#tbf.c2 .fc:not(.fc-pick) .tbact b{font-size:10px;letter-spacing:.05em;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 1px;margin-top:5px}
 #tbf.c2 .fc:not(.fc-pick) .tbact.big b{font-size:11px}
 #tbf.c2 .fc:not(.fc-pick) .tbact small{display:none}
 #tbf.c2 .fc:not(.fc-pick) .tbact small.fc-why{display:block;font-size:8.5px;line-height:1.1;max-width:100%;margin-top:-1px}
-#tbf.c2 .fc:not(.fc-pick) .tbact .cp{position:absolute;left:50%;top:calc(var(--d) - 5px);bottom:auto;transform:translateX(-50%);display:flex;gap:2px;padding:1px 3px;border-radius:6px;background:rgba(0,0,0,.7);z-index:1}
+#tbf.c2 .fc:not(.fc-pick) .tbact .cp{position:absolute;left:50%;top:calc(var(--d) - 11px);bottom:auto;transform:translateX(-50%);display:flex;gap:2px;padding:1px 3px;border-radius:6px;background:rgba(0,0,0,.7);z-index:1}
 #tbf.c2 .fc:not(.fc-pick) .tbact .cp i{width:5px;height:5px}
 #tbf.c2 .fc:not(.fc-pick) .tbact .cp:empty{display:none}
 #tbf.c2 .fc:not(.fc-pick) .tbact .fc-k{top:-3px;right:calc(50% - var(--d) / 2 - 7px);z-index:2}
@@ -3069,6 +3069,34 @@ html.pcmap.pcq-off:not(.pc-side) .pcqtab{transform:none}
 .pcqtab svg{width:20px;height:20px}
 html.pcmap.pc-reduce .pcquest,html.pcmap.pc-reduce .pcqtab,html.pcmap.pc-reduce #side{transition:none!important;animation:none!important}
 html.pcmap.pc-home:has(.pcparty.on) .vitals{left:14px}
+/* build 146: no Skip button; while a turn plays, tapping anywhere on the fight hurries it along (an invisible layer) */
+#tbf .tbin{position:relative}
+#tbf .tbskip.tbhurry{position:absolute;inset:0;z-index:30;margin:0;padding:0;min-height:0;border:0;border-radius:0;background:transparent;color:transparent;font-size:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#tbf .tbskip.tbhurry:focus-visible{outline:2px solid rgba(214,178,94,.6);outline-offset:-4px}
+/* [pc] the fight fills a PC window (combat2.js): the picture runs edge to edge, only a soft edge into the skill bar */
+#tbf.c2.c2wide .tbscene .fscene{-webkit-mask-image:linear-gradient(180deg,#000 84%,rgba(0,0,0,.4));mask-image:linear-gradient(180deg,#000 84%,rgba(0,0,0,.4))}
+#tbf.c2.c2wide .c2bd{display:none}
+/* Settings → Fights (fightset.js): Fight UI size zooms the skill bar, the turn ribbon and the side cards; Camera shake scales the shake */
+#tbf.c2 .tbdock,#tbf.c2 .tbtop,#tbf.c2 .c2ov .tbparty{zoom:var(--c2ui,1)}
+@keyframes c2shake{10%,90%{transform:translate(calc(-2px*var(--c2cam,1)),calc(1px*var(--c2cam,1)))}20%,80%{transform:translate(calc(4px*var(--c2cam,1)),calc(-2px*var(--c2cam,1)))}30%,50%,70%{transform:translate(calc(-6px*var(--c2cam,1)),calc(2px*var(--c2cam,1)))}40%,60%{transform:translate(calc(6px*var(--c2cam,1)),calc(-1px*var(--c2cam,1)))}}
+.sndrow.fsrow span{width:auto;min-width:70px;flex:0 0 auto}.sndrow.fsrow b.num{min-width:3em;text-align:right;font-size:14px;color:var(--gold,#e2bb64)}
+/* the result card after the slow-motion finisher (combat2.js) */
+#tbf .c2res{position:absolute;inset:0;z-index:40;display:grid;place-items:center;padding:16px;background:radial-gradient(ellipse at center,rgba(0,0,0,.3),rgba(0,0,0,.72));opacity:0;pointer-events:none;transition:opacity .45s}
+#tbf .c2res.on{opacity:1;pointer-events:auto}
+#tbf .c2rescard{width:min(100%,400px);padding:16px 20px 14px;text-align:center;background:linear-gradient(180deg,rgba(20,18,15,.96),rgba(8,8,9,.97));border:1px solid rgba(214,178,94,.55);border-radius:14px;box-shadow:0 10px 40px rgba(0,0,0,.6),inset 0 0 0 1px rgba(255,255,255,.04);transform:scale(.92);transition:transform .45s cubic-bezier(.2,1.4,.4,1)}
+#tbf .c2res.on .c2rescard{transform:none}
+#tbf .c2rescard h2{margin:2px 0;font:700 30px/1.1 Cinzel,Georgia,serif;letter-spacing:.12em;text-transform:uppercase;color:#f3d98b;text-shadow:0 0 18px rgba(226,187,100,.45)}
+#tbf .c2res.lose h2{color:#ff9a86;text-shadow:0 0 18px rgba(255,80,50,.4)}
+#tbf .c2res.away h2{color:#cfe3ff;text-shadow:0 0 18px rgba(120,170,255,.35)}
+#tbf .c2resr{display:block;font:600 11px/1 "Barlow Semi Condensed",sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#a9a294}
+#tbf .c2resfoe{margin:0 0 12px;color:#cfc6b0;font-size:14px}
+#tbf .c2resst{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:14px}
+#tbf .c2resst span{display:flex;flex-direction:column;gap:2px;padding:7px 4px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
+#tbf .c2resst b{font-size:21px;color:#fff3d6}#tbf .c2resst small{font-size:11px;color:#a9a294;line-height:1.2}
+#tbf .c2rescard .tbdone{width:100%;margin:0}
+html.art-pixel #tbf .c2rescard,html.art-pixel #tbf .c2resst span{border-radius:0}
+@media (prefers-reduced-motion:reduce){#tbf .c2res,#tbf .c2rescard{transition:none}}
+html.a11y-still #tbf .c2res,html.a11y-still #tbf .c2rescard{transition:none}
 </style>
 <script src="bugreport.js"></script>
 <script src="access.js"></script>
@@ -3155,6 +3183,7 @@ html.pcmap.pc-home:has(.pcparty.on) .vitals{left:14px}
 <script src="foeintent.js"></script>
 <script src="fxicons.js"></script>
 <script src="strategy.js"></script>
+<script src="fightset.js"></script>
 <script src="combat2.js"></script>
 <script src="guide.js"></script>
 <script src="patchnotes.js"></script>
@@ -3266,6 +3295,7 @@ html.pcmap.pc-home:has(.pcparty.on) .vitals{left:14px}
 <script src="i18n_sweep.js"></script>
 <script src="i18n_balfear.js"></script>
 <script src="i18n_combat2.js"></script>
+<script src="i18n_fightset.js"></script>
 <script src="i18n_stacks.js"></script>
 <script src="i18n_fighttips.js"></script>
 <script src="i18n_pickaxe.js"></script>

@@ -11,7 +11,7 @@
      yourself). Dragging still works as before (tbui.js).
    - Press feedback (glow, a small squash, a short buzz on phones), the bar rises in at the start of your turn and the
      move pip you just used bursts away.
-   - PC keys: 1-9 the numbered moves, Space ends the turn (or skips / continues), M magic, I items, Esc back or cancel.
+   - PC keys: 1-9 the numbered moves, Space ends the turn (or hurries the foe's turn / continues), R Breathe (no F key any more: build 146), M magic, I items, Esc back or cancel.
    The old cards and the combat wheel are still there: Settings → Fights → Controls. */
 const FIGHTCTL = (() => {
   const DOM = typeof document !== "undefined";
@@ -162,7 +162,7 @@ const FIGHTCTL = (() => {
     return `<div class="fc${enter ? " enter" : ""}" data-fcmode="main">
       <div class="fc-tray" role="group" aria-label="Quick slots" style="--n:${Math.max(3, q.length)}">${tray || `<p class="fc-empty">Quick slots: tap ★ next to a spell or potion to pin it here</p>`}</div>
       <div class="tbgrid fc-main">${main}</div>
-      <div class="fc-row">${menuB("magic", "Magic", `${nSp} spell${nSp === 1 ? "" : "s"}`, "M", iconFor(f, "magic", api, 26))}${menuB("items", "Items", `${nPot} potion${nPot === 1 ? "" : "s"}`, "I", iconFor(f, "items", api, 26))}${typeof STRAT !== "undefined" ? btn(sess, api, "recover", { label: "Breathe", extra: "rec fc-m", key: "R" }) : ""}${btn(sess, api, "flee", { label: "Flee", extra: "flee fc-m", key: "F" })}${end}</div>
+      <div class="fc-row">${menuB("magic", "Magic", `${nSp} spell${nSp === 1 ? "" : "s"}`, "M", iconFor(f, "magic", api, 26))}${menuB("items", "Items", `${nPot} potion${nPot === 1 ? "" : "s"}`, "I", iconFor(f, "items", api, 26))}${typeof STRAT !== "undefined" ? btn(sess, api, "recover", { label: "Breathe", extra: "rec fc-m", key: "R" }) : ""}${btn(sess, api, "flee", { label: "Flee", extra: "flee fc-m" })}${end}</div>
     </div>`;
   }
   /* changed into a beast or a Vampire Lord: the form's own moves, big; no magic or items (beastpaths.js) */
@@ -175,7 +175,7 @@ const FIGHTCTL = (() => {
     return `<div class="fc fc-beast ${bx.form}${enter ? " enter" : ""}" data-fcmode="${bx.form}">
       <div class="fc-tray" role="group" aria-label="${bx.form === "wolf" ? "Beast Form" : "Vampire Lord"} moves" style="--n:${Math.max(3, rest.length)}">${tray}</div>
       <div class="tbgrid fc-main">${main}</div>
-      <div class="fc-row"><span class="fc-form">${bx.form === "wolf" ? "🐺 Beast Form" : "🦇 Vampire Lord"} · ${bx.left} round${bx.left === 1 ? "" : "s"} left</span>${btn(sess, api, "flee", { label: "Flee", extra: "flee fc-m", key: "F" })}${end}</div>
+      <div class="fc-row"><span class="fc-form">${bx.form === "wolf" ? "🐺 Beast Form" : "🦇 Vampire Lord"} · ${bx.left} round${bx.left === 1 ? "" : "s"} left</span>${btn(sess, api, "flee", { label: "Flee", extra: "flee fc-m" })}${end}</div>
     </div>`;
   }
   /* the magic / items list: tabs, filters by school, ★ to pin, numbered Cast buttons */
@@ -363,7 +363,6 @@ const FIGHTCTL = (() => {
     const ch = k.length === 1 ? k.toUpperCase() : "";
     if (ch === "M") return hit(fc.querySelector('[data-tbm="magic"]:not(.on)')) || hit(fc.querySelector('[data-tbm=""]'));
     if (ch === "I") return hit(fc.querySelector('[data-tbm="items"]:not(.on)')) || hit(fc.querySelector('[data-tbm=""]'));
-    if (ch === "F") return hit(fc.querySelector('[data-fk="F"]'));
     if (ch === "R") return hit(fc.querySelector('[data-fk="R"]'));   // Catch your breath (strategy.js)
   }
 

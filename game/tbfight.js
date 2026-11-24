@@ -769,8 +769,9 @@ const TB = (() => {
       ${allies}
       <button class="tblog" aria-live="polite" data-tbx="log" aria-label="Fight log, tap for the full log"${log ? "" : " hidden"}>${log}</button>
       ${wait}
+      ${playing ? `<button class="tbskip tbhurry" data-tbx="skip" aria-label="Tap the fight to hurry this turn along"></button>` : ""}
       <div class="tbdock">
-        <div class="tbap">${playing ? `<em class="them">${esc(R ? R.who(vis[vis.length - 1], sess) : "")}</em><button class="tbskip" data-tbx="skip" aria-label="Skip to the end of this turn">Skip ▸▸</button>` : mine && typeof FIGHTCTL !== "undefined" && FIGHTCTL.on() ? FIGHTCTL.apHTML(sess) : mine ? `<span>Moves</span>${pips(sess.st.acts - sess.myActs, sess.st.acts, "ap")}<em>Your turn${sess.until ? ` <b class="num" id="tbcd">${Math.max(0, Math.ceil((sess.until - Date.now()) / 1000))}s</b>` : ""}</em>` : sess.done ? "" : `<em class="them">${esc(sess.cur?.name || "")}'s turn…</em>`}</div>
+        <div class="tbap">${playing ? `<em class="them">${esc(R ? R.who(vis[vis.length - 1], sess) : "")}</em>` : mine && typeof FIGHTCTL !== "undefined" && FIGHTCTL.on() ? FIGHTCTL.apHTML(sess) : mine ? `<span>Moves</span>${pips(sess.st.acts - sess.myActs, sess.st.acts, "ap")}<em>Your turn${sess.until ? ` <b class="num" id="tbcd">${Math.max(0, Math.ceil((sess.until - Date.now()) / 1000))}s</b>` : ""}</em>` : sess.done ? "" : `<em class="them">${esc(sess.cur?.name || "")}'s turn…</em>`}</div>
         ${playing ? "" : sess.done ? `<button class="btn pri tbdone" data-tbx="done">${f.won ? (f.escaped ? "Continue" : "Victory — continue") : "Continue"}</button>` : mine ? actionsHTML(sess) : ""}
       </div>
       ${ui.logOpen ? fullLog(sess, fmt) : ""}
@@ -862,7 +863,7 @@ const TB = (() => {
     const keep = fast() && !sess.done ? lines.filter((l, i) => l.me || i === lines.map((x) => !!x.them).lastIndexOf(true)) : lines;   // Fast: your moves and the foe's last blow
     const v = Object.create(f);
     v.log = keep.length ? keep : lines; v.hp0 = ui.lastHp ?? f.hp0; v.ehp0 = ui.lastEhp ?? f.ehp0; v.won = sess.done ? f.won : undefined;
-    v.tbTall = true; v.tbMid = !sess.done; v.tbHud = typeof COMBAT2 !== "undefined" && COMBAT2.on(); v.tbHpMax = G.maxHealth(f.s); v.tbEhpMax = sess.ehpMax;   // fightart: stay standing between turns, bars against full health
+    v.tbTall = true; v.tbAspect = typeof COMBAT2 !== "undefined" && COMBAT2.aspect ? COMBAT2.aspect() : null; v.tbMid = !sess.done; v.tbHud = typeof COMBAT2 !== "undefined" && COMBAT2.on(); v.tbHpMax = G.maxHealth(f.s); v.tbEhpMax = sess.ehpMax;   // fightart: stay standing between turns, bars against full health
     ui.lastHp = lines[lines.length - 1].hp; ui.lastEhp = lines[lines.length - 1].ehp;
     return FIGHTART.placeholder(v, f.s);
   }
@@ -878,7 +879,7 @@ const TB = (() => {
     if (b.dataset.tbm !== undefined) { ui.menu = b.dataset.tbm || null; return step(); }
     if (b.dataset.tbx === "autoall") { ui.menu = null; sess.autoRest = true; sess.autoTurn(); return step(sess.advance()); }   // no button for players any more; screen tests use it to finish a fight
     if (b.dataset.tbx === "done") return close();
-    if (b.dataset.tbx === "skip") { ui.skip = true; return render(ui.pendState || { turn: sess.done ? "done" : sess.cur?.id === "me" ? "me" : "auto" }); }
+    if (b.dataset.tbx === "skip") { ui.skip = true; try { FIGHTART.finishAll(); } catch (e) { /* nothing playing */ } return render(ui.pendState || { turn: sess.done ? "done" : sess.cur?.id === "me" ? "me" : "auto" }); }
     if (b.dataset.tbx === "log") { ui.logOpen = true; return step(); }
     if (b.dataset.tbx === "logx") { ui.logOpen = false; return step(); }
     if (b.dataset.tba) {

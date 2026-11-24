@@ -102,6 +102,7 @@ const COMBAT2 = (() => {
   let bdT = null;
   function backdrop(stage) {
     let bd = stage.querySelector(".c2bd");
+    if (typeof FIGHTSET !== "undefined" && !FIGHTSET.backdrop()) { clearInterval(bdT); bd?.remove(); return; }   // Fight quality: Low
     if (!bd) { bd = document.createElement("canvas"); bd.className = "c2bd"; bd.width = 48; bd.height = 32; bd.setAttribute("aria-hidden", "true"); stage.prepend(bd); }
     clearInterval(bdT);
     const copy = () => {
@@ -116,29 +117,44 @@ const COMBAT2 = (() => {
   }
 
   // ------------------------------------------------------------------ where everything goes
+  /* [pc] On a PC (any wide window) the fight picture fills the whole window, like the map home screen (pcmap.js): the
+     stage is drawn at the window's own shape instead of the phone's 0.66, and the cards and skill bar float over it. */
+  const wideOf = (W, H) => W >= 900 && W / H >= 1.25;
+  const shapeOf = (W, H) => Math.max(0.36, Math.min(0.66, H / W));
+  function aspect() {
+    if (!DOM || !on()) return null;
+    const tin = document.querySelector("#tbf .tbin");
+    const W = (tin && tin.clientWidth) || (typeof innerWidth === "number" ? innerWidth : 0), H = (tin && tin.clientHeight) || (typeof innerHeight === "number" ? innerHeight : 0);
+    return W && H && wideOf(W, H) ? shapeOf(W, H) : null;
+  }
   function place(el, late) {
     const tin = el.querySelector(".tbin"); if (!tin || !el.classList.contains("c2")) return;
     const W = tin.clientWidth, H = tin.clientHeight; if (!W || !H) return;
-    const wide = W >= 900 && W / H >= 1.25;
+    const wide = wideOf(W, H);
     el.classList.toggle("c2wide", wide); el.classList.toggle("c2tall", !wide);
     const dock = el.querySelector(".tbdock");
     const mainUp = !!dock?.querySelector(".fc:not(.fc-pick), .tbgrid, .tbwheel");
-    if (mainUp && dock.offsetHeight > 40) mem.dock = dock.offsetHeight;
+    const dockH = dock ? dock.getBoundingClientRect().height : 0;   // (Fight UI size zooms the bar: measure what's on screen)
+    if (mainUp && dockH > 40) mem.dock = dockH;
     const dh = Math.max(mem.dock || 0, wide ? 118 : 178);
     const top = (el.querySelector(".tbtop")?.offsetHeight || 40) + 4;
     const aH = H - dh;
-    let ch = Math.min(aH * (wide ? 0.92 : 0.8), (W * (wide ? 1 : 1.34)) / A);
-    ch = Math.max(110, ch);
-    const cw = ch * A, cx = (W - cw) / 2;
-    let cy = top + Math.max(0, aH - top - ch) * (wide ? 0.4 : 0.5);
-    if (cy + ch > aH + 10) cy = Math.max(0, aH + 10 - ch);
+    let ch, cw, cx, cy;
+    if (wide) {   // the whole window: the picture is drawn at this shape (aspect() above), so nothing is cut off
+      cw = W; ch = W * shapeOf(W, H); cx = 0; cy = ch > H ? (H - ch) * 0.6 : (H - ch) / 2;
+    } else {
+      ch = Math.max(110, Math.min(aH * 0.8, (W * 1.34) / A));
+      cw = ch * A; cx = (W - cw) / 2;
+      cy = top + Math.max(0, aH - top - ch) * 0.5;
+      if (cy + ch > aH + 10) cy = Math.max(0, aH + 10 - ch);
+    }
     const s = ch / 150, gy = cy + ch * 0.8;
     const hx = cx + cw * 0.27, hy = gy - 66 * s, fx = cx + cw * 0.72, fy = gy - 74 * s;
     const st = tin.style, px = (v) => v.toFixed(1) + "px";
     st.setProperty("--c2cw", px(cw)); st.setProperty("--c2ch", px(ch)); st.setProperty("--c2cx", px(cx)); st.setProperty("--c2cy", px(cy));
     st.setProperty("--c2dock", px(dh)); st.setProperty("--c2top", px(top)); st.setProperty("--c2ah", px(aH));
     st.setProperty("--c2hx", px(hx)); st.setProperty("--c2hy", px(hy)); st.setProperty("--c2fx", px(fx)); st.setProperty("--c2fy", px(fy));
-    st.setProperty("--c2side", px(Math.max(150, cx - 24)));
+    st.setProperty("--c2side", px(wide ? Math.max(240, Math.min(340, W * 0.18)) : Math.max(150, cx - 24)));
     // the foe's arrow (foeintent.js) is measured off the picture: draw it again when the picture moved
     const geo = [cx, cy, cw].map((v) => Math.round(v)).join();
     if (geo !== mem.geo || late) {
@@ -198,6 +214,44 @@ const COMBAT2 = (() => {
     }
   }
 
+  // ------------------------------------------------------------------ the result card
+  /* what the fight came to, from the event list: damage you (and your side) dealt and took, the biggest single blow */
+  function tally(sess) {
+    const f = sess.f || {};
+    let dealt = 0, taken = 0, best = 0, pe = sess.ehpMax ?? f.ehp0 ?? null, ph = f.hp0 ?? null;
+    for (const e of sess.ev || []) {
+      if (e.ehp != null) { if (pe != null && e.ehp < pe) { const d = pe - e.ehp; dealt += d; if (e.kind !== "foe" && e.kind !== "tick") best = Math.max(best, d); } pe = e.ehp; }
+      if (e.hp != null) { if (ph != null && e.hp < ph) taken += ph - e.hp; ph = e.hp; }
+    }
+    return { rounds: sess.round || 1, dealt: Math.round(dealt), taken: Math.round(taken), best: Math.round(best) };
+  }
+  /* after the last blow (played in slow motion by fightart.js) a card says how it went; Continue moves onto it */
+  let resT = null;
+  function result(el, sess, o) {
+    const tin = el.querySelector(".tbin"); if (!tin) return;
+    tin.querySelector(":scope > .c2res")?.remove(); clearTimeout(resT);
+    if (!sess.done || o.playing) return;
+    const f = sess.f || {}, t = tally(sess), done = el.querySelector(".tbdock .tbdone");
+    const kind = f.won ? (f.escaped ? "away" : "win") : "lose";
+    const title = kind === "win" ? T("Victory") : kind === "away" ? T("You got away") : T("Defeated");
+    const card = document.createElement("div");
+    card.className = `c2res ${kind}`; card.setAttribute("role", "dialog"); card.setAttribute("aria-label", title);
+    const row = (v, l) => `<span><b class="num">${esc(String(v))}</b><small>${esc(T(l))}</small></span>`;
+    card.innerHTML = `<div class="c2rescard"><small class="c2resr">${esc(T(t.rounds === 1 ? "1 round" : `${t.rounds} rounds`))}</small><h2>${esc(title)}</h2>
+      <p class="c2resfoe">${esc(f.e?.name || "")}</p><div class="c2resst">${row(t.dealt, "Damage dealt")}${row(t.taken, "Damage taken")}${row(t.best, "Best hit")}</div></div>`;
+    if (done) card.querySelector(".c2rescard").appendChild(done);
+    tin.appendChild(card);
+    // wait for the slow-motion finisher to play out, then show it (at most 4 s)
+    const t0 = Date.now();
+    const show = () => {
+      if (!card.isConnected) return;
+      const anim = typeof FIGHTART !== "undefined" && FIGHTART.playing && FIGHTART.playing();
+      if (anim && Date.now() - t0 < 4000) { resT = setTimeout(show, 150); return; }
+      card.classList.add("on"); el.querySelectorAll(".tbhurry").forEach((b) => b.remove());
+    };
+    show();
+  }
+
   // ------------------------------------------------------------------ after each redraw (tbfight.js render)
   function layout(el, sess, o = {}) {
     if (!DOM || !el) return;
@@ -206,6 +260,7 @@ const COMBAT2 = (() => {
     if (!use) return;
     if (mem.sess !== sess) mem = { sess, dock: 0, hp: null, mp: null, sp: null, mine: false };
     const tin = el.querySelector(".tbin"), stage = el.querySelector(".tbstage"); if (!tin || !stage) return;
+    if (typeof FIGHTSET !== "undefined") FIGHTSET.apply();   // Fight UI size, camera (fightset.js)
     backdrop(stage);
     ribbon(el, sess);
     // the cards move into the scene
@@ -269,14 +324,15 @@ const COMBAT2 = (() => {
       const fl = (cls) => { const x = document.createElement("i"); x.className = "c2flash " + cls; stage.appendChild(x); setTimeout(() => x.remove(), 700); };
       if (foeHit) fl("foe" + (crit ? " crit" : ""));
       if (meHit) fl("me");
-      if (crit || o.big) { stage.classList.remove("c2shake"); void stage.offsetWidth; stage.classList.add("c2shake"); }
+      if ((crit || o.big) && (typeof FIGHTSET === "undefined" || FIGHTSET.cam() > 0)) { stage.classList.remove("c2shake"); void stage.offsetWidth; stage.classList.add("c2shake"); }
     }
+    result(el, sess, o);
     place(el);
     fxPops(ov, fxNow, !!sess.done);
     requestAnimationFrame(() => place(el, true));
     setTimeout(() => place(el, true), 140); setTimeout(() => place(el, true), 450);   // the scene draws its canvas a moment later; the boss bar lands after this
   }
 
-  return { on, settingsHTML, layout, place, portraitOf };
+  return { on, settingsHTML, layout, place, portraitOf, aspect, wideOf, shapeOf, tally };
 })();
 if (typeof module !== "undefined") module.exports = COMBAT2;
