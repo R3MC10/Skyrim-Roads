@@ -372,8 +372,12 @@ const COOP = (() => {
       } else if (a === "coopgo") {
         const run = mine();
         if (!run) return;
-        if (run.status === "lobby" && run.leader === s.id) await ctx.Store.change("runs", run.id, (x) => ({ ...x, status: "in" }));
-        const err = join(s, { ...run, status: "in" });
+        let go = run;
+        if (run.status === "lobby" && run.leader === s.id) {   // the leader sizes the map once for everyone going in (partyplay.js)
+          const res = await ctx.Store.change("runs", run.id, (x) => (x.status === "lobby" && typeof PARTYPLAY !== "undefined" ? { ...PARTYPLAY.sizeRun(x, activeMembers(x).length), status: "in" } : { ...x, status: "in" }));
+          if (res?.after) go = { ...res.after, id: run.id };
+        }
+        const err = join(s, { ...go, status: "in" });
         if (err) return toast(err);
         if (typeof IMM !== "undefined") IMM.loading(`Entering ${run.place} together…`);
         sync(); report(); ctx.persist(true); ctx.renderDungeon();

@@ -70,6 +70,9 @@ our own marked [OURS]; plain-language UI; phone first.
 
 ## In progress (write your name before you start)
 - Claude: cone of sight on the map (vision.js): heading cone through the fog, spotting places/travellers, range by time/weather/hills/perks, party cones. Branch claude/visioncone.
+- Claude: dungeon mini-games (dungeongames.js): trap dash, find the trigger, smash a chest, sneak past, run for it, search; replayable from a seed + taps; party members watch the leader play live (also lockpicking and the pillar/claw rings). Branch claude/dungeongames.
+- Claude: dungeons get longer per player in a party (partyplay.js longLayout/sizeRun, coop.js lobby start). Branch claude/partydungeons.
+- Claude: travel strip overhaul (travelart.js): deep parallax scenery by region, sky/time of day, live weather, lighting, passing landmarks and travellers, the destination growing on the horizon. Branch claude/travelscene.
 - Claude: visual overhaul (fits every screen and resolution) — branches claude/fit-*, in passes.
 - Kacper: reading the fight (fightread.js): foe intents, health forecasts for poison/burning/blows on both sides, turn-by-turn playback with banners and round summaries, low-health warning, combat sounds (ElevenLabs, `node scripts/gen_audio.mjs game/ combat`). Branch ccr-23a36e7d-impjqi.
 - Kacper: painted battle scenes (battlescene.js + bscdata.js, pictures bs-/bsf-/bsp-*.webp from the scene pack via scripts/import_battlescenes.py). Branch ccr-23a36e7d-impjqi.

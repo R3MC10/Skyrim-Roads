@@ -1794,6 +1794,15 @@ html.art-pixel .tbint,html.art-pixel .tbfcl .fp,html.art-pixel .tbskip,html.art-
 .mo-on .modal,.mo-on .modal .sheet{animation:none}
 .mo-on:not(.mo-lite) .modal{-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
 @media (prefers-reduced-motion:reduce){.tbbar s.tbfc,.tbint.big,.tbbub,.tbban.round,.tbban.foe{animation:none!important}#tbf.tblow::after{animation:none;opacity:.6}}
+/* dungeon mini-games (dungeongames.js) */
+.lockpick.dgame{z-index:96}.dgame .lpcard{width:min(380px,100%)}.dgame canvas{border:1px solid rgba(214,178,94,.3);user-select:none;-webkit-user-select:none}
+.dgrow .dgk{min-height:58px;font-size:17px;user-select:none;-webkit-user-select:none;touch-action:none}
+.dgok{color:#9fd28a}.dgbad{color:#e58a6f}.dgwait{color:var(--mute,#a9a395);font-style:italic}
+.dglive{margin:8px 0 0;font-size:12px;letter-spacing:.06em;color:#d6b25e}
+.dgwatch .lpcard{box-shadow:0 0 0 1px rgba(214,178,94,.45),0 20px 60px rgba(0,0,0,.6)}.dgwatch #dgwtxt{min-height:38px}
+.dgame .lpcard.dgwin{animation:dgwin .5s ease-out}.dgame .lpcard.dglose{animation:lpsnap .35s}
+@keyframes dgwin{50%{transform:scale(1.03)}}
+@media (prefers-reduced-motion:reduce){.dgame .lpcard.dgwin,.dgame .lpcard.dglose{animation:none}}
 </style>
 <script src="access.js"></script>
 </head>
@@ -1905,6 +1914,7 @@ html.art-pixel .tbint,html.art-pixel .tbfcl .fp,html.art-pixel .tbskip,html.art-
 <script src="homeart.js"></script>
 <script src="titleart.js"></script>
 <script src="fxart.js"></script>
+<script src="travelart.js"></script>
 <script src="solart.js"></script>
 <script src="skyui.js"></script>
 <script src="hud.js"></script>
@@ -1917,6 +1927,7 @@ html.art-pixel .tbint,html.art-pixel .tbfcl .fp,html.art-pixel .tbskip,html.art-
 <script src="favwheel.js"></script>
 <script src="craftgames.js"></script>
 <script src="minegame.js"></script>
+<script src="dungeongames.js"></script>
 <script src="hunting.js"></script>
 <script src="craftqol.js"></script>
 <script src="polish.js"></script>
