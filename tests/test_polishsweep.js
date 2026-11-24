@@ -35,7 +35,7 @@ const want = {
   // minigames and map labels
   CLEARED: "OCZYSZCZONE", "Hits 4": "Trafienia: 4", "Swings left 2": "Zostało zamachów: 2", "Wrong guesses left: 3": "Pomyłki do wykorzystania: 3",
   "Found 2/5": "Znaleziono 2/5", "Picks left: 7": "Wytrychy: 7", "Now: Left": "Teraz: w lewo", Aim: "Celuj", "Sea of Ghosts": "Morze Duchów",
-  "TO WINDHELM ⛵": "DO WINDHELMU ⛵", "Khajiit market": "Targ Khajiitów",
+  "TO WINDHELM \uE12F": "DO WINDHELMU \uE12F", "Khajiit market": "Targ Khajiitów",
   // fight log
   "Raises guard": "Unosisz gardę", "Skeever hits 2": "Skeever trafia: 2", "Giant hits 14 (blocked 49%)": "Olbrzym trafia: 14 (zablokowano 49%)",
   "Mudcrab misses": "Błotny krab: pudło", "Power attack, staggers: 18": "Potężny atak, zachwianie: 18", "Sneak attack ×2: 4": "Atak z ukrycia ×2: 4",
@@ -46,7 +46,7 @@ const want = {
   "Rout: the skeever cowers": "Rozgromienie: skeever kuli się ze strachu", "Dispel does nothing in a fight": "Rozproszenie nic nie daje w walce",
   "Alfa hits 12": "Alfa trafia: 12",   // player names stay as they are
   // toasts
-  "You can't afford that.": "Nie stać cię na to.", "🏴 You're invited to join a clan. Open 👥 Social → Realm.": "🏴 Masz zaproszenie do klanu. Otwórz 👥 Społeczność → Królestwo.",
+  "You can't afford that.": "Nie stać cię na to.", "\uE13E You're invited to join a clan. Open \uE106 Social → Realm.": "\uE13E Masz zaproszenie do klanu. Otwórz \uE106 Społeczność → Królestwo.",
 };
 for (const [en, pl] of Object.entries(want)) { ok(t(en) === pl, `"${en}" → "${t(en)}" (want "${pl}")`); n++; }
 // the older lists still win and still work
@@ -78,7 +78,7 @@ const has = (f, s) => { const ok2 = src(f).includes(s); ok(ok2, f + " has " + s)
 has("fightart.js", 'L("You")'); has("fightart.js", 'L(won ? (turned ? "They flee" : "Victory") : "Defeated")'); has("fightart.js", 'L("CRITICAL")');
 has("fightart.js", "L(b.sneak)"); has("fightart.js", "ftx[i] = L(txt)"); has("fightart.js", "L(rec.foeName)");
 has("dunart.js", 'LX("CLEARED")'); has("dungeongames.js", 'LX("Noticed")'); has("dungeongames.js", "LX(`Hits ${st.hits}`)"); has("craftgames.js", 'LX("Aim")');
-has("map.js", 'LX("Sea of Ghosts")'); has("solart.js", 'LX("TO WINDHELM ⛵")'); has("worldevents.js", 'LX("Khajiit market")'); has("raidart.js", "LX(`Season of ${name}`)");
+has("map.js", 'LX("Sea of Ghosts")'); has("solart.js", 'LX("TO WINDHELM \uE12F")'); has("worldevents.js", 'LX("Khajiit market")'); has("raidart.js", "LX(`Season of ${name}`)");
 // the English lines still exist in the game (so the Polish isn't stale)
 const game = fs.readdirSync(W).filter((f) => f.endsWith(".js") && !f.startsWith("i18n")).map(src).join("\n");
 for (const en of ["You can't afford that.", "Ready check cancelled.", "Raises guard", "They flee", "Khajiit market", "Unbreakable pick"]) ok(game.includes(en), "still in the game: " + en);

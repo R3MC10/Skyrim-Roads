@@ -86,7 +86,7 @@ const MENUS2 = (() => {
     if (!live || !side) return;
     if (tab === "log") {
       const seg = side.querySelector("#j-quests .jseg");
-      if (seg && !side.querySelector("#m2jq")) seg.insertAdjacentHTML("afterend", `<input id="m2jq" class="uxsearch m2-jq" type="search" placeholder="🔍 Find a quest" value="${esc(jq)}" autocomplete="off" aria-label="Find a quest">`);
+      if (seg && !side.querySelector("#m2jq")) seg.insertAdjacentHTML("afterend", `<input id="m2jq" class="uxsearch m2-jq" type="search" placeholder=" Find a quest" value="${esc(jq)}" autocomplete="off" aria-label="Find a quest">`);
       filterJournal(side);
     }
   }

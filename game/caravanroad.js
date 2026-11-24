@@ -69,12 +69,12 @@ const CVROAD = (() => {
   const isMeet = (e) => !!e && /^cvmeet_/.test(e.id || "");
 
   function choices(e, s) {
-    if (e.robbed) return [["rob", "⚔️ Fight the guards"], ["leave", "Back off"]];
+    if (e.robbed) return [["rob", " Fight the guards"], ["leave", "Back off"]];
     const c = find(e.cid), out = [["trade", "Trade with the merchant"]];
     if (!e.heard) out.push(["news", "Ask for news from the road"]);
     if (c && c.phase === "road" && !s.caravanJob && 1 - frac(c) > MIN_LEFT) out.push(["escort", `Guard the wagons to ${e.to} (${escortPay(s, c)} gold)`]);
     if (!e.joined && c && c.phase === "road") out.push(["join", "Walk with them a while (safer road)"]);
-    out.push(["rob", "⚔️ Rob the wagons"], ["leave", "Wave and move on"]);
+    out.push(["rob", " Rob the wagons"], ["leave", "Wave and move on"]);
     return out;
   }
   function choose(s, e, choice, t = now()) {

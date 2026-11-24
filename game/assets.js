@@ -3,7 +3,10 @@
    Files sit flat next to index.html. For each key the game tries <name>.webp, then .png, then .jpg.
 
    Manifest (name — size — notes):
-     title                    1080×1920  portrait key art for the title screen
+     title                    1080×1920  portrait key art for the title screen (phones, tall and square-ish windows)
+     title-wide               1774×887   2:1 key art for landscape windows (titleart.js): warrior on the left rock, city
+                                         right of centre, dragon, aurora. Optional title-wide-2x (3548×1774, a careful
+                                         Lanczos upscale) for big or sharp screens; titleart.js picks it per window.
      bg-loading-1 … 4         1080×1920  loading / travel cards
      place-<slug>             1600×900   16:9 city & town backdrops
        slugs: whiterun solitude windhelm riften markarth falkreath morthal dawnstar winterhold riverwood ravenrock

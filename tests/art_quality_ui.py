@@ -39,6 +39,8 @@ try:
 except OSError: pass
 # the world map (claude/mapvisuals) and the title picture (claude/widetitle) have their own branches and guards
 SKIP = ["map-world", "map-world-2x", "title"]
+# the wide title painting (titleart.js WUP) fills a 32:9 or 5K window even past its 2x file: allowed up to 1.8x there
+ALLOW.setdefault("title-wide", 1.8); ALLOW.setdefault("title-wide-2x", 1.8)
 
 # test-only: follow painted files through every canvas they are drawn into
 WATCH = r"""(() => {
@@ -64,8 +66,9 @@ WATCH = r"""(() => {
         if (key && /shadow/.test(key)) key = null;
         const k = Math.max(bx, by);
         if (key) add(this.canvas, key, k, k, asp, [sw0, sh0]);
+        // a canvas marked __soft (the title's blurred side fill) is blurry on purpose too
         // a soft glow laid over the picture (light bloom: a small copy added with "lighter"/"screen") is blurry on purpose
-        else if (src.__art && !/^(lighter|screen)$/.test(this.globalCompositeOperation)) for (const [kk, o] of src.__art) add(this.canvas, kk, o.up * k, Math.max(o.ch * k, k), Math.max(o.asp, asp), o.nat);
+        else if (src.__art && !src.__soft && !/^(lighter|screen)$/.test(this.globalCompositeOperation)) for (const [kk, o] of src.__art) add(this.canvas, kk, o.up * k, Math.max(o.ch * k, k), Math.max(o.asp, asp), o.nat);
       }
     } catch (e) { /* never break the game */ }
     return di.call(this, src, ...a);

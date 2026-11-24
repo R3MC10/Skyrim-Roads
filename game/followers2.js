@@ -65,6 +65,7 @@ const FOL2 = (() => {
   const archOf = (id) => INFO[id]?.[0] || "warrior";
   const capOf = (id) => INFO[id]?.[1] || 40;
   const nameOf = (id) => (typeof TOWNS !== "undefined" && TOWNS.FOLLOWERS[id]?.[0]) || id;
+  const FB = () => (typeof FBUILD !== "undefined" ? FBUILD : null);   // folbuild.js: real skills, builds from gear
 
   // ---- the stored state of one follower
   function st(s, id = s.follower?.id) {
@@ -74,23 +75,26 @@ const FOL2 = (() => {
     if (!f) {
       f = s.folData[id] = { inv: [], next: 1, eq: {}, lvl: 1, xp: 0, perks: {}, arch: archOf(id), fights: 0, loyal: 50 };
       f.lvl = clamp((s.level || 1) - 1, 1, capOf(id));
+      if (FB()) FB().seed(f, id);
       for (const it of INFO[id]?.[3] || []) if (has(it)) { const r = { id: f.next++, item: it, qty: 1, charge: D.ITEMS[it].enchant?.capacity ?? null }; f.inv.push(r); }
       bestEquip(s, id);
       spend(s, id);
     }
+    if (!f.skills && FB()) FB().seed(f, id);   // old saves: skills from their level and build (folbuild.js)
     if (typeof FAI !== "undefined") FAI.seed(f);   // known spells, tactics (followerai.js)
     return f;
   }
   // a stand-in save the perk code can read: level, skills, perks
   function pseudo(f) {
     const a = ARCH[f.arch] || ARCH.warrior, skills = {};
+    if (f.skills) return { level: f.lvl, skills: f.skills, perks: f.perks, race: "nord", fx: [], inv: [], loadouts: {}, spells: [] };   // their own skills (folbuild.js)
     for (const k of SKILLS()) {
       const v = a.main.includes(k) ? 20 + 2.6 * (f.lvl - 1) : a.sec.includes(k) ? 15 + 1.5 * (f.lvl - 1) : 15;
       skills[k] = { lvl: Math.round(clamp(v, 15, 100)), xp: 0 };
     }
     return { level: f.lvl, skills, perks: f.perks, race: "nord", fx: [], inv: [], loadouts: {}, spells: [] };
   }
-  const skillOf = (f, k) => pseudo(f).skills[k]?.lvl || 15;
+  const skillOf = (f, k) => (f.skills ? f.skills[k]?.lvl ?? 15 : pseudo(f).skills[k]?.lvl || 15);
   const rank = (f, id) => f.perks?.[id] || 0;
 
   /* [OURS] followers spend their own points: round-robin through their main trees, then the secondary ones,
@@ -147,16 +151,18 @@ const FOL2 = (() => {
       if (itemOf(worn(f, "weapon"))?.hands === 2) return "Not with a two-handed weapon.";
       if (f.eq.weapon === r.id && (r.qty || 1) < 2) return "They only have one of those.";
       delete f.eq.shield; f.eq.offhand = r.id;
-      return `${nameOf(s.follower.id)} takes the ${it.name} in their left hand.`;
+      return `${nameOf(s.follower.id)} takes the ${it.name} in their left hand.` + refit(s);
     }
     if (it.slot === "shield" && itemOf(worn(f, "weapon"))?.hands === 2) return "Not with a two-handed weapon.";
     if (it.slot === "shield") delete f.eq.offhand;
     if (it.slot === "weapon" && it.hands === 2) { delete f.eq.shield; delete f.eq.offhand; }
     if (it.slot === "weapon" && f.eq.offhand === r.id && (r.qty || 1) < 2) delete f.eq.offhand;
     f.eq[slotFor(f, it)] = r.id;
-    return `${nameOf(s.follower.id)} equips the ${it.name}.`;
+    return `${nameOf(s.follower.id)} equips the ${it.name}.` + refit(s);
   }
-  function unequip(s, slot) { const f = st(s); if (f) delete f.eq[slot]; return "Taken off."; }
+  function unequip(s, slot) { const f = st(s); if (f) delete f.eq[slot]; return "Taken off." + refit(s); }
+  /* their gear changed: the build follows it (folbuild.js), free */
+  const refit = (s) => { const m = FB() ? FB().refit(s) : ""; return m ? " " + m : ""; };
   /* best kit for their style: weapon of their skill by damage (a bow for archers), armor of their type by rating */
   function bestEquip(s, id = s.follower?.id) {
     const f = st(s, id); if (!f) return "No follower.";
@@ -207,10 +213,11 @@ const FOL2 = (() => {
     if (!r) return "They don't have that.";
     const n = Math.min(r.qty, Math.max(1, qty));
     r.qty -= n;
-    if (r.qty <= 0) { f.inv = f.inv.filter((x) => x !== r); for (const k of Object.keys(f.eq)) if (f.eq[k] === r.id) delete f.eq[k]; }
+    let wasWorn = false;
+    if (r.qty <= 0) { f.inv = f.inv.filter((x) => x !== r); for (const k of Object.keys(f.eq)) if (f.eq[k] === r.id) { delete f.eq[k]; wasWorn = true; } }
     if (stackable(it)) G.give(s, r.item, n);
     else { const { id: _drop, ...rest } = r; s.inv.push({ ...rest, qty: 1, id: s.nextInv++ }); for (let i = 1; i < n; i++) s.inv.push({ ...rest, qty: 1, id: s.nextInv++ }); }
-    return `You take ${n > 1 ? n + "× " : ""}${it?.name || "it"} back.`;
+    return `You take ${n > 1 ? n + "× " : ""}${it?.name || "it"} back.` + (wasWorn ? refit(s) : "");
   }
 
   // ---- what their kit and perks mean in a fight
@@ -251,6 +258,7 @@ const FOL2 = (() => {
     const fd = typeof TOWNS !== "undefined" ? TOWNS.FOLLOWERS[id] : null; if (!fd) return 100;
     const f = s.folData?.[id];
     const lvl = f ? f.lvl : clamp((s.level || 1) - 1, 1, capOf(id));
+    if (f?.ups) return Math.round(fd[3] * (1 + 0.015 * (lvl - 1)) + 10 * (f.ups.health || 0));   // folbuild.js: +10 for every Health pick at a level-up
     return Math.round(fd[3] * (1 + 0.05 * (lvl - 1)));   // [OURS] same 5% a level as before, but by their own level
   }
   const potions = (f) => f.inv.filter((r) => itemOf(r)?.restore?.[0] === "health");
@@ -278,6 +286,7 @@ const FOL2 = (() => {
     const f = st(s); if (!f || !fight) return [];
     const e = fight.e || {}, id = s.follower.id;
     f.fights = (f.fights || 0) + 1;
+    if (FB()) { if (fight.won) f.loyal = Math.min(100, (f.loyal || 50) + 1); return FB().after(s, fight); }   // skills rise with use, levels from skill XP (folbuild.js)
     if (!fight.won) return [];
     const behind = f.lvl < (s.level || 1) - 3 ? 2 : 1;
     f.xp += Math.round((12 + (e.level || s.level || 1) * 3) * (e.boss || (e.tags || []).includes("boss") ? 3 : 1) * behind * (1 + Math.min(0.5, pnum(s, "folxp"))));
@@ -286,7 +295,7 @@ const FOL2 = (() => {
     while (f.lvl < top && f.xp >= need(f.lvl)) {
       f.xp -= need(f.lvl); f.lvl++;
       const took = spend(s, id);
-      msgs.push(`⬆ ${nameOf(id)} reaches level ${f.lvl}${took.length ? ` and learns ${took.join(", ")}` : ""}.`);
+      msgs.push(` ${nameOf(id)} reaches level ${f.lvl}${took.length ? ` and learns ${took.join(", ")}` : ""}.`);
     }
     if (f.lvl >= top) f.xp = Math.min(f.xp, need(f.lvl) - 1);
     return msgs;
@@ -301,7 +310,8 @@ const FOL2 = (() => {
     const id = s.follower?.id; if (!id) return null;
     const f = st(s), a = ARCH[f.arch] || ARCH.warrior, mx = maxHp(s, id);
     return { id, n: nameOf(id), l: f.lvl, a: f.arch, r: raceOf(id), eq: eqItems(f), dmg: dmg(s), hp: mx,
-      cur: Math.round(typeof TOWNS !== "undefined" ? TOWNS.followerHp(s) : mx), red: Math.round((1 - taken(s)) * 100) / 100, role: a.role, heals: healer(f) ? 2 : 0, ha: healAmt(f), sn: !!a.sneaky };
+      cur: Math.round(typeof TOWNS !== "undefined" ? TOWNS.followerHp(s) : mx), red: Math.round((1 - taken(s)) * 100) / 100, role: a.role, heals: healer(f) ? 2 : 0, ha: healAmt(f), sn: !!a.sneaky,
+      ...(FB() ? FB().card(f) : {}) };   // their top skills and perk count, for party members' screens
   }
   const lookFromCard = (c) => (c?.fold ? { r: c.fold.r || "nord", id: "f-" + c.fold.id + "-" + c.id, eq: { ...(c.fold.eq || {}) }, gl: {} } : null);
   /* someone else's follower, fighting beside you on your phone from their card ([OURS] same fighting code as co-op allies) */
@@ -340,15 +350,15 @@ const FOL2 = (() => {
     if (!s.follower || typeof TOWNS === "undefined" || !TOWNS.FOLLOWERS[s.follower.id]) return "";
     const id = s.follower.id, f = st(s), a = ARCH[f.arch] || ARCH.warrior, mx = maxHp(s, id), hp = Math.round(TOWNS.followerHp(s));
     const top = Math.min(capOf(id), s.level || 1), portrait = typeof NPCART !== "undefined" ? NPCART.follower(id, 44) : "";
-    const tabs = `<div class="seg fol2tabs" role="tablist" aria-label="Follower">${[["card", "Overview"], ["bond", "Bond"], ["inv", "Gear"], ["magic", "Magic"], ["tactics", "Tactics"], ["perks", "Perks"]].filter(([k]) => (typeof FAI !== "undefined" || (k !== "magic" && k !== "tactics")) && (k !== "bond" || typeof BONDS !== "undefined")).map(([k, l]) => `<button class="${view === k ? "on" : ""}" role="tab" aria-selected="${view === k}" data-act="fol2" data-op="view" data-id="${k}">${l}</button>`).join("")}</div>`;   // one row, no wrapping (menus2)
+    const tabs = `<div class="seg fol2tabs" role="tablist" aria-label="Follower">${[["card", "Overview"], ["bond", "Bond"], ["inv", "Gear"], ["magic", "Magic"], ["tactics", "Tactics"], ["perks", FB() ? "Skills" : "Perks"]].filter(([k]) => (typeof FAI !== "undefined" || (k !== "magic" && k !== "tactics")) && (k !== "bond" || typeof BONDS !== "undefined")).map(([k, l]) => `<button class="${view === k ? "on" : ""}" role="tab" aria-selected="${view === k}" data-act="fol2" data-op="view" data-id="${k}">${l}</button>`).join("")}</div>`;   // one row, no wrapping (menus2)
     const head = `<div class="item fol2head">${portrait}<div class="t">${esc(nameOf(id))} <span class="num">Lv ${f.lvl}</span><span>${esc(a.name)} · ${hp}/${mx} health · hits ~${Math.round(dmg(s))} · armor ${armorRating(f)} · goes down instead of dying</span>
-      <div class="bar fol2xp"><i style="width:${f.lvl >= top ? 100 : Math.round(f.xp / need(f.lvl) * 100)}%"></i></div><span class="sub">${f.lvl >= top ? (f.lvl >= capOf(id) ? `Level cap ${capOf(id)}` : "Levels up as you do") : `${f.xp}/${need(f.lvl)} XP to level ${f.lvl + 1}`}${typeof BONDS !== "undefined" ? "" : ` · loyalty ${f.loyal || 50}/100`}</span>${typeof BONDS !== "undefined" ? BONDS.meter(s, esc) : ""}</div>
+      <div class="bar fol2xp"><i style="width:${f.lvl >= top ? 100 : Math.round((FB() && f.skills ? (f.cxp || 0) / F.charXpNeeded(f.lvl) : f.xp / need(f.lvl)) * 100)}%"></i></div><span class="sub">${f.lvl >= top ? (f.lvl >= capOf(id) ? `Level cap ${capOf(id)}` : "Levels up as you do") : FB() && f.skills ? `${Math.floor(f.cxp || 0)}/${F.charXpNeeded(f.lvl)} toward level ${f.lvl + 1}` : `${f.xp}/${need(f.lvl)} XP to level ${f.lvl + 1}`}${typeof BONDS !== "undefined" ? "" : ` · loyalty ${f.loyal || 50}/100`}</span>${typeof BONDS !== "undefined" ? BONDS.meter(s, esc) : ""}</div>
       <button class="btn sm" data-act="dismiss">Dismiss</button></div>`;
     let body = "";
     if (view === "card") {
       const gear = eqSlots().map((slot) => { const r = worn(f, slot), it = itemOf(r); return `<div class="slot">${esc(slotName(slot))}<b style="display:block">${it ? esc(it.name) + (r.temper ? ` +${r.temper}` : "") : "—"}</b></div>`; }).join("");
       body = `<div class="grid2 fol2gear">${gear}</div>
-        <h3>Fighting style</h3><p class="sub">${esc(a.desc)} Main skills: ${a.main.map(esc).join(", ")}. They pick perks from these trees by themselves.</p>
+        <h3>Fighting style</h3><p class="sub">${esc(a.desc)} Main skills: ${a.main.map(esc).join(", ")}. They pick perks from these trees by themselves.</p>${FB() ? `<p class="sub">Their gear picks the build; tap a style to have them put on their best gear for it.</p>` : ""}
         <div class="chips m2-row">${Object.entries(ARCH).map(([k, v]) => `<button class="chip ${k === f.arch ? "on" : ""}" data-act="fol2" data-op="arch" data-id="${k}">${esc(v.name)}${k === archOf(id) ? " ★" : ""}</button>`).join("")}</div>
         <p class="sub">★ = their natural style. Changing it resets and re-picks their perks.</p>`;
     } else if (view === "inv" && typeof FOLTAB !== "undefined") body = FOLTAB.gear(s, f, esc);   // SkyUI-style list (followertab.js)
@@ -369,9 +379,10 @@ const FOL2 = (() => {
     else if (view === "tactics" && typeof FAI !== "undefined") body = FAI.tacticsTab(s, f, esc);
     else {
       const ps = pseudo(f), trees = [...a.main, ...a.sec].filter((k) => PERKS.TREES[k]);
+      if (FB()) body += FB().view(s, f, esc, id) + `<h3>Browse their trees</h3>`;
       if (!trees.includes(perkTree)) perkTree = trees[0];
       const taken0 = Object.values(f.perks || {}).reduce((x, y) => x + y, 0);
-      body = `<p class="sub">${taken0} perks taken · ${Math.max(0, PERKS.pointsLeft(ps))} waiting (they spend them themselves as soon as they can)</p>
+      body += `<p class="sub">${taken0} perks taken · ${Math.max(0, PERKS.pointsLeft(ps))} waiting (they spend them themselves as soon as they can)</p>
         <div class="grid2 fol2skills">${trees.map((k) => `<div class="slot">${esc(k)} <b class="num">${ps.skills[k].lvl}</b><div class="bar"><i style="width:${ps.skills[k].lvl}%"></i></div></div>`).join("")}</div>
         <div class="chips m2-row">${trees.map((k) => `<button class="chip ${k === perkTree ? "on" : ""}" data-act="fol2" data-op="tree" data-id="${esc(k)}">${esc(k)} ${PERKS.TREES[k].filter(([pid]) => rank(f, pid)).length}/${PERKS.TREES[k].length}</button>`).join("")}</div>
         ${typeof SKYUI !== "undefined" ? `<div class="skc fol2sky">${SKYUI.svg(perkTree, ps)}</div>` : ""}
@@ -388,12 +399,12 @@ const FOL2 = (() => {
       case "arch": return setArch(s, id);
       case "eq": return equip(s, +id);
       case "eqoff": return equip(s, +id, true);
-      case "teach": return typeof FAI !== "undefined" ? FAI.teach(s, +id) : "";
+      case "teach": return typeof FAI !== "undefined" ? FAI.teach(s, +id) + refit(s) : "";
       case "spell": return typeof FAI !== "undefined" ? FAI.toggle(s, id) : "";
       case "tactic": return typeof FAI !== "undefined" ? FAI.setTactic(s, id) : "";
       case "savepots": return typeof FAI !== "undefined" ? FAI.setSavePots(s, id === "1") : "";
       case "uneq": return unequip(s, id);
-      case "best": return bestEquip(s);
+      case "best": return bestEquip(s) + refit(s);
       case "give": return give(s, +id, +(d.q || 1));
       case "take": return takeBack(s, +id, +(d.q || 1));
     }

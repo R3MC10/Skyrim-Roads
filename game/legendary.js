@@ -16,7 +16,7 @@ const LEGEND = (() => {
     s.legend[sk] = stars(s, sk) + 1;
     s.skills[sk].lvl = START; s.skills[sk].xp = 0;
     const b = bonus(s, sk);
-    return `⭐ ${sk} is Legendary (${s.legend[sk]}★). It starts again from ${START} and keeps your perks; it gives +${b} to ${sk} for good${b >= MAX_BONUS ? " (the most stars can give)" : ""}. Raising it again raises your level again.`;
+    return ` ${sk} is Legendary (${s.legend[sk]}★). It starts again from ${START} and keeps your perks; it gives +${b} to ${sk} for good${b >= MAX_BONUS ? " (the most stars can give)" : ""}. Raising it again raises your level again.`;
   }
   /* a skill's progress: level, XP toward the next, percent and how far from 100 */
   function row(s, sk) {

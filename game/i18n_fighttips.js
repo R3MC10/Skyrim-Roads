@@ -49,8 +49,8 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
   I18N_EXTRA.pat.push(
     [/^Need (\d+) more magicka: you have (\d+), it needs (\d+)$/, (m) => `Brakuje ${m[1]} magii: masz ${m[2]}, potrzeba ${m[3]}`],
     [/^Need (\d+) more AP: you have (\d+) left, it costs (\d+)$/, (m) => `Brakuje ${m[1]} AP: zostało ci ${m[2]}, kosztuje ${m[3]}`],
-    [/^⚠ Need (\d+) more magicka: you have (\d+), it needs (\d+)$/, (m) => `⚠ Brakuje ${m[1]} magii: masz ${m[2]}, potrzeba ${m[3]}`],
-    [/^⚠ Need (\d+) more AP: you have (\d+) left, it costs (\d+)$/, (m) => `⚠ Brakuje ${m[1]} AP: zostało ci ${m[2]}, kosztuje ${m[3]}`],
+    [/^\uE123 Need (\d+) more magicka: you have (\d+), it needs (\d+)$/, (m) => `\uE123 Brakuje ${m[1]} magii: masz ${m[2]}, potrzeba ${m[3]}`],
+    [/^\uE123 Need (\d+) more AP: you have (\d+) left, it costs (\d+)$/, (m) => `\uE123 Brakuje ${m[1]} AP: zostało ci ${m[2]}, kosztuje ${m[3]}`],
     [/^Both hands: ([\d.]+)× the effect for more magicka\.$/, (m) => `Obie ręce: ${m[1]}× mocniej za więcej magii.`],
     [/^Afraid: it cowers and won't fight for (\d+) more turns?\.$/, (m) => `Przestraszony: kuli się i nie walczy jeszcze przez ${m[1]} tur.`],
     [/^Calmed: it stops fighting for (\d+) more turns?\.$/, (m) => `Uspokojony: nie walczy jeszcze przez ${m[1]} tur.`],

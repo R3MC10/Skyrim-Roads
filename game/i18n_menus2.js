@@ -16,8 +16,8 @@
     "Pick an item to see it here.": "Wybierz przedmiot, aby go tu zobaczyć.",
     "Pick a spell, power or shout to read it here.": "Wybierz zaklęcie, moc lub okrzyk, aby o nim przeczytać.",
     "Pick a skill to see what it does.": "Wybierz umiejętność, aby zobaczyć, co daje.",
-    "🔍 Find an item by name": "🔍 Szukaj przedmiotu po nazwie", "🔍 Find a spell by name": "🔍 Szukaj zaklęcia po nazwie",
-    "Find an item": "Szukaj przedmiotu", "Find a spell": "Szukaj zaklęcia", "🔍 Find a quest": "🔍 Szukaj zadania", "Find a quest": "Szukaj zadania",
+    " Find an item by name": " Szukaj przedmiotu po nazwie", " Find a spell by name": " Szukaj zaklęcia po nazwie",
+    "Find an item": "Szukaj przedmiotu", "Find a spell": "Szukaj zaklęcia", " Find a quest": " Szukaj zadania", "Find a quest": "Szukaj zadania",
     "No quest matches that.": "Żadne zadanie nie pasuje.",
     // item and spell buttons
     "Unequip": "Zdejmij", "Equip": "Załóż", "Take off": "Zdejmij", "Keep": "Zachowaj", "Favourite": "Ulubione", "List": "Lista",
