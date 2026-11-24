@@ -2813,6 +2813,61 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 .dd-next{margin:6px 0}
 .dd-camp .evc{display:grid;gap:8px}
 @media (min-width:900px){.dd-mods{grid-template-columns:1fr 1fr}.dd-banner{font-size:13px}}
+/* party traps (partytraps.js) and the live cursor (livecursor.js) */
+.dgparty{color:#e8b86a}
+.ptlist{display:flex;flex-direction:column;gap:4px;margin:10px 0 4px;text-align:left}
+.ptrow{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:6px 9px;background:rgba(255,255,255,.04);box-shadow:inset 0 0 0 1px rgba(228,220,200,.1);font-size:14px}
+.ptrow b{font-weight:600;color:#e9dcc0}.ptrow span{font-size:13px;color:#cfc6b0;text-align:right}
+.ptrow.ok span,.ptrow.in span{color:#9fd28a}.ptrow.bad span{color:#e58a6f}.ptrow.me{box-shadow:inset 0 0 0 1px rgba(214,178,94,.55)}
+.ptrow.fol{margin-left:16px;padding:4px 9px;font-size:13px;opacity:.9}.ptrow.fol b::before{content:"↳ ";color:#a9a395}
+.ptwarned{color:#d6b25e}.ptres .lpcard,.ptwait .lpcard{box-shadow:0 0 0 1px rgba(214,178,94,.45),0 20px 60px rgba(0,0,0,.6)}
+.lcur{position:fixed;left:0;top:0;z-index:140;pointer-events:none;will-change:transform;display:flex;align-items:flex-start}
+.lcur svg{display:block;filter:drop-shadow(0 1px 2px rgba(0,0,0,.8));transition:transform .12s}
+.lcur svg path{fill:#f3d27a;stroke:#140c06;stroke-width:1.4;stroke-linejoin:round}
+.lcur .lcname{margin:14px 0 0 -2px;padding:1px 6px;font-size:11px;font-weight:600;letter-spacing:.04em;white-space:nowrap;color:#140c06;background:#f3d27a;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.6)}
+.lcur.down svg{transform:scale(.82)}.lcur.down::before{content:"";position:absolute;left:-9px;top:-9px;width:18px;height:18px;border-radius:50%;border:2px solid #f3d27a;opacity:.8}
+.lcur.wait{opacity:.55}
+@media (prefers-reduced-motion:reduce){.lcur svg{transition:none}}
+/* fishing.js + huntgame.js: the fishing and hunting mini-games (one screen on PC, phone friendly) */
+.fhgame .fhcard{width:min(600px,100%);max-height:100%;overflow:auto;padding:12px 12px 10px}
+.fhgame .fhcard canvas{max-width:min(100%,560px,calc((100vh - 300px) * 1.867))!important;max-width:min(100%,560px,calc((100dvh - 300px) * 1.867))!important;box-shadow:0 0 0 1px rgba(228,220,200,.22)}
+.fhmeter{position:relative;height:22px;margin:8px 2px 4px;background:linear-gradient(90deg,rgba(228,220,200,.06),rgba(228,220,200,.14));box-shadow:inset 0 0 0 1px rgba(228,220,200,.25);visibility:hidden}
+.fhmeter.on{visibility:visible}
+.fhmeter .fhband{position:absolute;top:2px;bottom:2px;background:rgba(150,190,140,.42);box-shadow:inset 0 0 0 1px rgba(190,220,170,.6)}
+.fhmeter.aim .fhband{background:rgba(232,196,106,.35);box-shadow:inset 0 0 0 1px rgba(232,196,106,.7)}
+.fhmeter .fhdanger{position:absolute;top:2px;bottom:2px;right:2px;width:7%;background:repeating-linear-gradient(135deg,rgba(182,55,42,.75) 0 4px,rgba(182,55,42,.35) 4px 8px)}
+.fhmeter .fhneedle{position:absolute;top:-4px;bottom:-4px;width:4px;margin-left:-2px;background:#efe6cf;box-shadow:0 0 6px rgba(239,230,207,.7);transition:background .15s}
+.fhmeter.hot .fhneedle{background:#e0543f;box-shadow:0 0 10px rgba(224,84,63,.9)}
+.fhmeter.slack .fhneedle{background:#8fb2d8}
+.fhdist{height:6px;margin:0 2px;background:rgba(228,220,200,.08);visibility:hidden}
+.fhdist.on{visibility:visible}
+.fhdist i{display:block;height:100%;width:0;background:linear-gradient(90deg,#6a8fb0,#a8c8e0)}
+.fhmsg{min-height:2.6em;margin:6px 0 2px;font-size:15px;line-height:1.3;color:#e8dcc0}
+.fhgame .btn.fhbig{min-height:56px;font-size:18px;letter-spacing:.06em;touch-action:none;user-select:none;-webkit-user-select:none}
+.fhgame .cghint{min-height:2.4em}
+.hgbars{display:flex;align-items:center;gap:8px;margin:8px 2px 2px}
+.hglab{font-size:15px;line-height:1}
+.hgalert{flex:1;height:12px;background:rgba(228,220,200,.08);box-shadow:inset 0 0 0 1px rgba(228,220,200,.22)}
+.hgalert i{display:block;height:100%;width:0;background:linear-gradient(90deg,#c9a24a,#e0a03f)}
+.hgalert.hot i{background:linear-gradient(90deg,#d0603e,#e0331f)}
+.hgdist{min-width:3.4em;text-align:right;font-variant-numeric:tabular-nums;color:#b8b09c;font-size:14px}
+#hgrow .btn{flex:1 1 0}
+#hgrow .btn.fhbig{flex:2 1 0}
+@media (max-width:440px){
+  .fhgame .fhcard{padding:10px 8px 8px}
+  .fhgame .fhcard canvas{max-width:100%!important}
+  .fhmsg{font-size:14px}
+  #hgrow{flex-wrap:wrap}
+  #hgrow .btn.fhbig{flex:1 1 100%}
+}
+/* [OURS] title on wide screens: a dark scrim behind the menu column + stronger shadows, so the words read over a bright sky */
+.title .vign{background:radial-gradient(clamp(240px,34vw,620px) 62vh at 50% 58%,rgba(5,7,10,.58) 0%,rgba(5,7,10,.32) 55%,transparent 100%),linear-gradient(to top,rgba(4,5,7,.7) 0%,rgba(4,5,7,0) 16%),radial-gradient(120% 90% at 50% 45%,transparent 50%,rgba(0,0,0,.75) 100%)}
+.title .mi{color:#d8d1bf}
+.title .mi small{font-size:15px;color:#c9c1ad}
+.title .tag{color:#cfc7b3}
+.title .foot{font-size:14px;color:#b5ad9a}
+.title .press,.title .mi,.title .foot,.title .tag,.title .mi small{text-shadow:0 1px 2px rgba(0,0,0,1),0 0 10px rgba(0,0,0,.95),0 0 26px rgba(0,0,0,.7)}
+.title h1{filter:drop-shadow(0 2px 3px rgba(0,0,0,.9)) drop-shadow(0 0 18px rgba(0,0,0,.6))}
 </style>
 <script src="bugreport.js"></script>
 <script src="access.js"></script>
@@ -2979,7 +3034,11 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 <script src="craftgames.js"></script>
 <script src="minegame.js"></script>
 <script src="dungeongames.js"></script>
+<script src="livecursor.js"></script>
+<script src="partytraps.js"></script>
 <script src="hunting.js"></script>
+<script src="fishing.js"></script>
+<script src="huntgame.js"></script>
 <script src="craftqol.js"></script>
 <script src="polish.js"></script>
 <script src="caravans.js"></script>
@@ -3016,6 +3075,7 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 <script src="i18n_fighttips.js"></script>
 <script src="i18n_pickaxe.js"></script>
 <script src="i18n_pcfit.js"></script>
+<script src="i18n_widetitle.js"></script>
 <script src="i18n_followeranim.js"></script>
 <script src="i18n_shouts.js"></script>
 <script src="i18n_bleakfalls.js"></script>
@@ -3032,6 +3092,8 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 <script src="i18n_pcmap.js"></script>
 <script src="i18n_eventart.js"></script>
 <script src="i18n_appicon.js"></script>
+<script src="i18n_partytraps.js"></script>
+<script src="i18n_fishhunt.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>
