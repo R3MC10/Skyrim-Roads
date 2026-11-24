@@ -2041,6 +2041,21 @@ html.a11y-still #tbf .fc *,html.a11y-still #tbf.fc-aiming .tbu.fc-tgt{animation:
 html.art-pixel .ti-box,html.art-pixel .ti-card,html.art-pixel .ti-stats{border-radius:0}html.art-pixel .ti-box{border-left-width:3px}
 #side[data-tab=log] .ti-box{color:#3b2e1e}
 html.a11y-hc .ti-box,html.a11y-hc .ti-box i,html.a11y-hc .ti-what{color:#ece6d8}
+/* the world remembers you (livingworld.js): who's about, doors, whispers, news of the realm */
+.lw-folk{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;margin:0 0 8px}
+.lw-who{display:grid;grid-template-columns:auto 1fr;column-gap:6px;align-items:center;padding:5px 8px;border:1px solid rgba(214,178,94,.25);border-radius:8px;background:rgba(20,16,12,.35);min-width:0}
+.lw-who span{grid-row:span 2;font-size:16px}.lw-who b{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lw-who small{font-size:11.5px;color:var(--mute);line-height:1.25}
+.lw-who.at-home{opacity:.6}.lw-who.at-inn{border-color:rgba(232,145,58,.55)}
+.lw-where{margin:0 0 8px;font-size:13px;color:var(--mute);font-style:italic}.lw-where.bad{color:var(--ember);font-style:normal}
+.lw-inn{margin:0 0 8px}
+.lw-noticeboard{display:flex;gap:10px;align-items:flex-start;margin:8px 0;padding:8px;border:1px solid #5a4028;border-radius:10px;background:rgba(58,42,26,.35)}
+.lw-noticeboard>div{flex:1;min-width:0}.lw-noticeboard b{font-size:14px}
+.lw-board{width:96px;height:auto;flex:none}.lw-board.px,.lw-door.px{image-rendering:pixelated}
+.lw-feed{display:grid;gap:4px;margin:4px 0 8px}
+.lw-news{display:flex;gap:8px;align-items:flex-start}.lw-news span{flex:none;width:20px;text-align:center}.lw-news p{margin:0;font-size:13px;line-height:1.35;min-width:0}.lw-news small{display:block;font-size:11px;color:var(--mute)}
+.lw-doorrow .lw-door{width:26px;height:34px;flex:none;margin-right:6px}.lw-doorrow.bad .t{color:var(--ember)}.lw-doorrow .t span{white-space:normal}
+.lw-wh .t span,.lw-ask .t span{white-space:normal}.lw-wh.on{border-color:var(--gold)}
+html.art-pixel .lw-who,html.art-pixel .lw-noticeboard{border-radius:0}
 /* [great events] greatevents.js: the banner with a countdown on the map screen, phase bars, the event sheet */
 #gev:empty{display:none}
 .gev-card{display:flex;flex-direction:column;gap:6px;margin:8px 0}
@@ -2270,6 +2285,7 @@ html.art-pixel .fitarrow .ln{stroke-linecap:butt;stroke-dasharray:6 6;filter:non
 <script src="sneakmode.js"></script>
 <script src="vision.js"></script>
 <script src="rumours.js"></script>
+<script src="livingworld.js"></script>
 <script src="motion.js"></script>
 <script src="favwheel.js"></script>
 <script src="craftgames.js"></script>
@@ -2292,6 +2308,7 @@ html.art-pixel .fitarrow .ln{stroke-linecap:butt;stroke-dasharray:6 6;filter:non
 <script src="desktop.js"></script>
 <script src="pcupdate.js"></script>
 <script src="i18n_story.js"></script>
+<script src="i18n_living.js"></script>
 <script src="i18n_bonds.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
