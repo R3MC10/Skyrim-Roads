@@ -693,16 +693,39 @@ const FIGHTART = (() => {
   const setPref = (k, v) => { try { const p = prefs(); p[k] = v; localStorage.setItem("rotn_prefs", JSON.stringify(p)); } catch { /* private mode */ } };
   const autoSkip = () => typeof navigator !== "undefined" && navigator.webdriver && !(typeof location !== "undefined" && /[?&]fightanim/.test(location.search));
 
+  /* [assetquality] backing pixels per drawing unit for the stage: its laid-out width (not the on-screen box, which is
+     still small while the fight sheet pops in with a scale animation; a transform never tells a ResizeObserver) x zoom
+     x density, up to 6 */
+  const stageK = (e, W) => {
+    const z = FITCANVAS.zoom(), lw = (e.offsetWidth || e.clientWidth || 0) * z;
+    return Math.min(6, Math.max(1, (lw > 0 ? lw / W : 1) * FITCANVAS.dpr(3)));
+  };
   function mount(el) {
     const rec = REG.get(+el.dataset.fs); if (!rec || el.firstChild) return;
     const W = Math.max(300, Math.min(520, Math.round(el.clientWidth || 330))), Hh = Math.round(W * (rec.f.tbAspect || (rec.f.tbTall ? 0.66 : 0.46)));   // the turn-by-turn screen gets a taller stage (on a PC: the window's own shape, combat2.js)
     const rm = reduce();
-    const FS = typeof FIGHTSET !== "undefined" ? FIGHTSET : null;   // [OURS] Settings → Fights: quality, camera, frame rate (fightset.js)
-    const dpr = Math.min(FS ? FS.dpr() : 3, typeof FITCANVAS !== "undefined" ? FITCANVAS.ratio(el, W) : Math.min(2, devicePixelRatio || 1));   // backing pixels per drawing unit: the box on screen × density (sharp on tablets and PCs too)
+    const FS = typeof FIGHTSET !== "undefined" ? FIGHTSET : null;   // [OURS] Settings → Fights: quality caps the sharpness (fightset.js)
+    const kOf = (e) => Math.min(FS ? FS.dpr() : 6, stageK(e, W));
+    const dpr = typeof FITCANVAS !== "undefined" ? kOf(el) : Math.min(2, devicePixelRatio || 1);   // backing pixels per drawing unit: the box on screen × density (sharp on tablets and PCs too)
     const cv = document.createElement("canvas"); cv.width = Math.round(W * dpr); cv.height = Math.round(Hh * dpr);   // CSS scales it to the box (width:100%)
     el.appendChild(cv);
     const g = cv.getContext("2d");
-    const k = dpr;
+    let k = dpr;
+    // [assetquality] the stage often grows after it's mounted (wide PC column, turning the phone): keep the backing
+    // pixels = the box on screen x density, so the painted scene and foe are never blown up by CSS
+    // (it can also be measured while its sheet is still being laid out, and be full size by the first resize report,
+    // which only sets the baseline: so check again on the next frames too)
+    if (typeof FITCANVAS !== "undefined") {
+      const refit = () => {
+        if (!cv.isConnected || !cv.offsetWidth) return;
+        const nk = kOf(cv);
+        if (Math.abs(nk - k) / k > 0.04) { k = nk; cv.width = Math.round(W * k); cv.height = Math.round(Hh * k);
+          try { if (!MANUAL) draw(performance.now()); } catch { /* the next frame draws it */ } }
+      };
+      FITCANVAS.watch(cv, refit);
+      if (typeof requestAnimationFrame === "function") requestAnimationFrame(refit);
+      setTimeout(refit, 450);
+    }
     const work = cv, wg = g;   // one canvas: the stage is drawn straight to the screen
 
     const bg = bgFor(rec.scene, W, Hh, rec.wagon, rec.sky);

@@ -42,6 +42,17 @@ const PATCHNOTES = (() => {
       "When one lands or wears off, a short word floats up over that fighter: \"+Oakflesh\", \"Poisoned\", \"Burning fades\".",
       "Prefer the old look? Settings → Fight screen → Classic.",
     ] },
+    { id: "b172-assetquality", build: 172, date: "24 Nov 2026", title: "Sharper pictures on every screen", items: [
+      "Foes in fights are painted at full size now, so they stay sharp on big monitors and 3x phone screens instead of going soft.",
+      "The dragon is no longer squashed into a square: it shows with its proper wide wingspan.",
+      "Paintings (towns, shop banners, fight scenes, event pictures) keep their shape and are never blown up into a blur. On a very big screen a painting shows at its own size instead.",
+      "Fight scenes are drawn at your screen's full sharpness, on phones and on 4K monitors, even when the window grows or the phone turns.",
+      "The painted compass is a bit sharper too.",
+      "Everything the game draws itself (your hero, the new-character picture, the dungeon map, icons) is redrawn at the size it really has on your screen, so it stays crisp from phones to ultrawide monitors.",
+      "On the new-character screen your hero's picture next to the race keeps its shape instead of being stretched tall, and the big live picture is drawn at full sharpness on 3x phones.",
+      "Fixed: on phones a lot of newer screens (the house chest, invites, the problem report, the Dwemer puzzles and more) were missing their proper look. They look right again.",
+      "Fixed: with blood and gore on, the fight picture could stop drawing. It plays again.",
+    ] },
     { id: "b174-potionregen", build: 174, date: "25 Nov 2026", title: "Potions work over time", items: [
       "Health, magicka and stamina potions no longer refill you all at once. They pour in over a few rounds in a fight, or a few seconds on the map: small potions over 5, ordinary ones over 4, the big brewed ones over 3. Half comes in right after you drink, so one still pulls you out of trouble.",
       "Drinking another of the same kind while one is still working doesn't stack: you keep whichever has more left to give. A health and a magicka potion work side by side just fine.",
@@ -65,6 +76,15 @@ const PATCHNOTES = (() => {
       "Spells look better too: frost throws ice shards, fire throws embers and smoke, lightning crackles and other magic leaves glowing motes.",
       "Followers and horses bleed a little but are never splattered or cut up, and still only get knocked down.",
       "Blood and gore on Full shows all of it; Low keeps the dust, sparks and spell effects without the realistic blood; Off shows none.",
+    ] },
+    { id: "b172-treasure", build: 172, date: "24 Nov 2026", title: "Treasure maps and old relics", items: [
+      "Loot can now hold a hand-drawn treasure map, an old journal with a riddle, or a torn piece of a map (find 2-4 pieces and put them together). They show only the land: hills, woods, water, a landmark or two and an X. No names, no marker on your map.",
+      "Compare the sketch with the world map (pin it next to the map with one tap), travel there and press Dig here on the Travel tab. A wrong guess only tires you out for a little while.",
+      "Stuck? Every two wrong digs you work out a bit more (the hold, then a town and a direction, then the landmark), and innkeepers sell a rumour for 60 gold.",
+      "Buried caches hold gold, gems and rare ore. Now and then you dig up a lost one-of-a-kind item, or a slab over a sealed tomb you can go down into once.",
+      "Relic fragments turn up in Nordic barrows and Dwemer ruins. Three make a restored relic: keep it, or sell it to Urag in Winterhold or Calcelmo in Markarth.",
+      "Maps and pieces can be traded and given away, and point to the same spot for your friend. In a party the leader can ask everyone where to dig, and the gold is split evenly.",
+      "New perks: Cartographer (Streetwise), Antiquarian (Mercantile) and Excavator (Athletics).",
     ] },
     { id: "b172-horseart", build: 172, date: "25 Nov 2026", title: "Painted horses", items: [
       "Horses get painted: in fights, on the road and on the map your horse is now a proper painted horse with saddle and tack, not a little drawing.",

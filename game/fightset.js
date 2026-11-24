@@ -20,7 +20,7 @@ const FIGHTSET = (() => {
   const uiScale = () => clamp(numOr(prefs().fsUi, 1), 0.8, 1.3);     // 0.8 … 1.3
   const fps = () => (FPS.includes(prefs().fsFps) ? prefs().fsFps : 0);
   /* backing pixels per drawing unit the fight picture may use */
-  const dpr = () => ({ low: 1, med: 2, high: 3 })[quality()];
+  const dpr = () => ({ low: 1, med: 2, high: 6 })[quality()];
   const weather = () => quality() !== "low";
   const backdrop = () => quality() !== "low";
   /* the shortest gap between two drawn frames (0: draw every frame the screen offers) */

@@ -1094,6 +1094,7 @@ const G = (() => {
     if (tags.has("beast") && typeof SMITH !== "undefined") { const p = SMITH.peltFor(e.name); if (p && Math.random() < 0.7) { give(s, p); got.push(D.ITEMS[p].name); } }   // [Skyrim] pelts from animals
     if (e.hunt && typeof HUNT !== "undefined") got.push(...HUNT.loot(s, e));
     if (typeof JEWELRY !== "undefined") got.push(...JEWELRY.loot(s, e));   // rings and amulets, often enchanted (jewelry.js)   // venison and hides from game (hunting.js)
+    if (typeof TREASURE !== "undefined") got.push(...TREASURE.loot(s, e));   // treasure maps, old journals, torn map pieces (treasure.js)
     if (typeof GATHER !== "undefined") got.push(...GATHER.creatureParts(s, e));   // [Skyrim] claws, teeth, eggs, jelly (gather.js)
     return got;
   }

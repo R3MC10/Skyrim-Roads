@@ -324,6 +324,10 @@ const PFX = (() => {
     [ "Speechcraft", "thuum_mastery", "Thu'um Mastery", 2, [75, 95], ["commanding_voice"], "Your voice comes back sooner: every shout cools down another 10/20% (all cooldown cuts together stop at half). [OURS]", [["shoutcd", [0.1, 0.2], {}]]],
     [ "Acrobatics", "weathered_traveller", "Weathered Traveller", 2, [30, 60], ["sure_footed"], "Snow, rain, fog and storms slow your travel 25/50% less, and the cold creeps in 25/50% slower. [OURS]", [["wxslow", [0.25, 0.5], {}], ["coldslow", [0.25, 0.5], {}]]],
     [ "Alteration", "starlit_mind", "Starlit Mind", 1, [35], ["apprentice_alteration"], "Under a clear night sky your magicka comes back twice as fast in fights (instead of 50% faster). [OURS]", [["starmp", 0.5, {}]]],
+    // ---------------------------------------------------------------- treasure maps and relics (treasure.js)
+    [ "Streetwise", "cartographer", "Cartographer", 1, [25], ["rumour_monger"], "Treasure maps come clearer: one more landmark, firm roads and a full compass, and you know the hold at once. [OURS]", [["tmapx", 1, {}]]],
+    [ "Mercantile", "antiquarian", "Antiquarian", 1, [30], ["haggling"], "You restore relics yourself, anywhere, from one fragment fewer, and collectors pay half again as much for them. [OURS]", [["relicfix", 1, {}], ["relicpay", 0.5, {}]]],
+    [ "Athletics", "excavator", "Excavator", 2, [30, 60], ["long_strider"], "Buried treasure holds 25%/50% more gold and an extra gem or relic fragment, and a wrong dig tires you half as long. [OURS]", [["digloot", [0.25, 0.5], {}], ["diggem", 1, {}], ["digrest", 0.5, {}]]],
   ];
   const FX = {};
   if (typeof PERKS !== "undefined") {
