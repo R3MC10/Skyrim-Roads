@@ -70,17 +70,17 @@ const HORSEBACK = (() => {
     if (m.downTurn) {
       const town = HORSES.nearestStables([s.x, s.y]);
       h.hp = 0; h.hpT = t; h.away = { until: t + HORSES.REST_MIN * 60, town }; h.mounted = true;
-      return [`🐴 ${h.name} goes down, then limps off toward the stables at ${town}. Fetch them there in about ${HORSES.REST_MIN} minutes.`];
+      return [` ${h.name} goes down, then limps off toward the stables at ${town}. Fetch them there in about ${HORSES.REST_MIN} minutes.`];
     }
-    if (m.hp < m.hp0) { h.hp = Math.max(1, m.hp); h.hpT = t; return [`🐴 ${h.name} took ${Math.round(m.hp0 - m.hp)} damage (${Math.round(m.hp)}/${m.max}).`]; }
+    if (m.hp < m.hp0) { h.hp = Math.max(1, m.hp); h.hpT = t; return [` ${h.name} took ${Math.round(m.hp0 - m.hp)} damage (${Math.round(m.hp)}/${m.max}).`]; }
     return [];
   }
 
   /* a hint on the encounter screen */
   function note(s) {
     if (typeof HORSES === "undefined" || !HORSES.present(s)) return "";
-    if (!HORSES.riding(s)) return `<p class="sub mountnote">🐴 ${s.horse.name} is with you, but you're on foot. Ride to open fights with a charge.</p>`;
-    return `<p class="sub mountnote">🐴 On horseback: you open with a charge, and one-handers, spears and bows hit harder from the saddle. Foes may go for ${s.horse.name}.</p>`;
+    if (!HORSES.riding(s)) return `<p class="sub mountnote"> ${s.horse.name} is with you, but you're on foot. Ride to open fights with a charge.</p>`;
+    return `<p class="sub mountnote"> On horseback: you open with a charge, and one-handers, spears and bows hit harder from the saddle. Foes may go for ${s.horse.name}.</p>`;
   }
 
   /* fight scene: draw the horse under the rider (FIGHTART calls this with the hero's transform set).

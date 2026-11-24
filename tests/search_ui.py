@@ -1,4 +1,4 @@
-"""Search everything (search.js) on a phone: the 🔍 button in the top bar, results for each kind, typos, the card for
+"""Search everything (search.js) on a phone: the \ue105 button in the top bar, results for each kind, typos, the card for
 things you don't own, and that tapping a result lands on the right screen (pack row, perk star, map + Travel, Journal
 quest, settings row). Both art styles, two phone sizes, and Biggest text at 360 px.
 Run:  python -m http.server 9600 --directory game   then   python tests/search_ui.py 9600 [outdir]

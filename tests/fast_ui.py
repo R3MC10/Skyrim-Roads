@@ -79,7 +79,7 @@ async def main():
                 for _ in range(3):
                     sp.append(await pg.evaluate("document.querySelector('#modal [data-fsx]')?.textContent"))
                     await pg.click("#modal [data-fsx]"); await pg.wait_for_timeout(120)
-                ok(sp == ["⏩ ×1", "⏩ ×2", "⏩ ×4"], f"{tag}: speed cycles {sp}")
+                ok(sp == ["\ue13c ×1", "\ue13c ×2", "\ue13c ×4"], f"{tag}: speed cycles {sp}")
                 ok(await pg.evaluate("JSON.parse(localStorage.getItem('rotn_prefs')).fightSpeed === 1"), f"{tag}: speed back at ×1 and saved")
                 ok(await pg.evaluate("document.querySelector('#modal [data-fss]')?.textContent === 'Skip to result'"), f"{tag}: Skip to result button")
                 bad = await pg.evaluate(OVERFLOW, "#modal .fsbtn, #modal .fqloot, #modal .fqloot .btn")

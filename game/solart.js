@@ -150,7 +150,7 @@ const SOLART = (() => {
     spaced("THE ASH WASTES", 0.44 * W, 0.735 * H, FONT(14, 700, "italic"), "rgba(70,56,48,.62)", "4px");
     spaced("VVARDENFELL", 0.93 * W, 0.985 * H, FONT(11, 700), "rgba(240,210,180,.6)", "4px");
     g.font = FONT(18, 600, "italic"); g.fillStyle = "rgba(190,214,222,.72)"; g.fillText(LX("Sea of Ghosts"), 0.5 * W, 0.02 * H + 4);
-    g.save(); g.translate(0.035 * W, 0.5 * H); g.rotate(-Math.PI / 2); g.font = FONT(13, 700); g.fillStyle = "rgba(245,240,230,.5)"; if (g.letterSpacing !== undefined) g.letterSpacing = "5px"; g.fillText(LX("TO WINDHELM ⛵"), 0, 0); g.restore();
+    g.save(); g.translate(0.035 * W, 0.5 * H); g.rotate(-Math.PI / 2); g.font = FONT(13, 700); g.fillStyle = "rgba(245,240,230,.5)"; if (g.letterSpacing !== undefined) g.letterSpacing = "5px"; g.fillText(LX("TO WINDHELM "), 0, 0); g.restore();
     const cx = W - 52, cy = 80;   // compass (top right: Red Mountain has the bottom corner)
     g.fillStyle = "rgba(240,232,210,.9)"; g.strokeStyle = "#2c2116"; g.lineWidth = 1;
     g.beginPath(); g.moveTo(cx, cy - 26); g.lineTo(cx + 6, cy); g.lineTo(cx, cy + 26); g.lineTo(cx - 6, cy); g.closePath(); g.fill(); g.stroke();

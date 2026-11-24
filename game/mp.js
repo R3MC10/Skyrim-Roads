@@ -38,13 +38,13 @@ const MP = (() => {
     if (seen) { TOWNS.addBounty(s, hold, f.won ? "murder" : "assault"); bountyText = ` Someone saw it: your bounty in ${hold} is now ${TOWNS.bounty(s, hold)} gold.`; }
     const id = `${s.id}-${Math.floor(t)}-${rint(100, 999)}`;
     if (f.won) {
-      G.note(s, `🗡 You killed ${card.name}.`); s.pvpKills = (s.pvpKills || 0) + 1;
+      G.note(s, ` You killed ${card.name}.`); s.pvpKills = (s.pvpKills || 0) + 1;
       return { text: `${ambush ? "You burst out of hiding. " : ""}${card.name} falls. Their bag drops where they fell; for ten minutes only you and they can see it.${bountyText}`, fight: f, skills, won: true,
-        doc: { type: "kill", from: s.id, fromName: s.name, to: card.id, toName: card.name, t, ambush, at: pos || [s.x, s.y] }, id, news: `🗡 ${s.name} killed ${card.name}${ambush ? " in an ambush" : ""} in ${s.location || "the wilds of " + hold}.` };
+        doc: { type: "kill", from: s.id, fromName: s.name, to: card.id, toName: card.name, t, ambush, at: pos || [s.x, s.y] }, id, news: ` ${s.name} killed ${card.name}${ambush ? " in an ambush" : ""} in ${s.location || "the wilds of " + hold}.` };
     }
     const d = typeof PVPDEATH !== "undefined" ? PVPDEATH.die(s, card.name, t) : G.die(s, card.name, t, true);
     return { text: `${card.name} was stronger than you thought.${bountyText}`, fight: f, skills, won: false, died: d.msg, bag: d.bag,
-      doc: { type: "failed", from: s.id, fromName: s.name, to: card.id, toName: card.name, t }, id, news: `🛡 ${card.name} fought off ${s.name}'s attack.` };
+      doc: { type: "failed", from: s.id, fromName: s.name, to: card.id, toName: card.name, t }, id, news: ` ${card.name} fought off ${s.name}'s attack.` };
   }
 
   /* one try per player every 10 real minutes, caught or not */
@@ -72,7 +72,7 @@ const MP = (() => {
     }
     let bountyText = "";
     if (!G.P(s, "misdirection") && witnessed(s)) { const hold = G.holdAt([s.x, s.y]); TOWNS.addBounty(s, hold, "pickpocket"); bountyText = ` Bounty in ${hold}: ${TOWNS.bounty(s, hold)} gold.`; }
-    return { text: `${card.name} catches your hand in their purse.${bountyText}`, doc: { type: "caught", from: s.id, fromName: s.name, to: card.id, t }, id, news: `👀 ${card.name} caught ${s.name} with a hand in their purse.` };
+    return { text: `${card.name} catches your hand in their purse.${bountyText}`, doc: { type: "caught", from: s.id, fromName: s.name, to: card.id, t }, id, news: ` ${card.name} caught ${s.name} with a hand in their purse.` };
   }
 
   /* apply something another player did to you. Returns {text, bag?} */

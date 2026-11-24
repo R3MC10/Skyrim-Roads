@@ -47,18 +47,18 @@ const TABMENU = (() => {
       perks: (typeof PERKS !== "undefined" ? PERKS.pointsLeft(S) : 0) + (S.pendingLevels || 0), task: task(S) };
   }
   function task(S) {
-    if (S.dungeon) return { k: "dun", icon: "🕯", text: `Inside ${S.dungeon.place}`, sub: "Tap to go back in", hot: !!S.dungeon.room?.enemy };
+    if (S.dungeon) return { k: "dun", icon: "", text: `Inside ${S.dungeon.place}`, sub: "Tap to go back in", hot: !!S.dungeon.room?.enemy };
     const tr = S.trip;
     if (tr) {
-      if (tr.status === "encounter") return { k: "enc", icon: "⚔", text: tr.encounter?.hunt ? `🏹 ${tr.encounter.name} spotted` : `${tr.encounter?.name || "Trouble"} blocks the road`, sub: "Tap to face it", hot: true };
-      if (tr.status === "event") return { k: "ev", icon: "🛤", text: "Something by the road", sub: "Tap to take a look" };
+      if (tr.status === "encounter") return { k: "enc", icon: "", text: tr.encounter?.hunt ? ` ${tr.encounter.name} spotted` : `${tr.encounter?.name || "Trouble"} blocks the road`, sub: "Tap to face it", hot: true };
+      if (tr.status === "event") return { k: "ev", icon: "", text: "Something by the road", sub: "Tap to take a look" };
       const left = Math.max(0, G.minutesLeft(S) - (tr.status === "travel" ? (G.now() - tr.lastTick) / 60 : 0)), total = Math.max(left, tr.total || left);
       const how = tr.carriage ? "by carriage" : typeof HORSES !== "undefined" && HORSES.riding(S) ? `riding ${S.horse?.name || "your horse"}` : "on foot";
-      return { k: "trip", icon: tr.carriage || (typeof HORSES !== "undefined" && HORSES.riding(S)) ? "🐎" : "🥾", text: `${tr.roam ? "Roaming" : "Travelling"} to ${tr.destName}`, sub: `${fmtMin(left)} left · ${how}`, progress: total ? Math.round((total - left) / total * 100) : 0 };
+      return { k: "trip", icon: tr.carriage || (typeof HORSES !== "undefined" && HORSES.riding(S)) ? "" : "", text: `${tr.roam ? "Roaming" : "Travelling"} to ${tr.destName}`, sub: `${fmtMin(left)} left · ${how}`, progress: total ? Math.round((total - left) / total * 100) : 0 };
     }
     const qa = typeof QUESTS !== "undefined" ? QUESTS.tracked(S) : null;
-    if (qa) { const tg = QUESTS.target(qa.st); return { k: "quest", icon: "📜", text: qa.def.name, sub: `${qa.st.title || ""}${tg ? ` · ${tg}` : ""}` }; }
-    return { k: "idle", icon: "🧭", text: S.location ? `Resting in ${S.location}` : "Out in the wilds", sub: "No task yet · ask around town or open the Journal" };
+    if (qa) { const tg = QUESTS.target(qa.st); return { k: "quest", icon: "", text: qa.def.name, sub: `${qa.st.title || ""}${tg ? ` · ${tg}` : ""}` }; }
+    return { k: "idle", icon: "", text: S.location ? `Resting in ${S.location}` : "Out in the wilds", sub: "No task yet · ask around town or open the Journal" };
   }
   /* small seeded constellation for a skill card (stars from its perk tree, lines from what each perk needs) */
   function seeded(str) { let a = 7; for (const ch of str) a = (a * 31 + ch.charCodeAt(0)) | 0; return () => { a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }

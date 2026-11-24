@@ -101,7 +101,7 @@ const VISION = (() => {
       const d = Math.hypot(p[0] * MAP_W - c.x, p[1] * MAP_H - c.y);
       if (d > c.range * (SPOT[p[2]] ?? 0.3) || !inCone(c, p)) continue;
       s.discovered.push(n); (s.explored = s.explored || []).push([p[0], p[1]]); found.push(n);
-      if (log) log(s, `👁 Spotted ${n} in the distance`);
+      if (log) log(s, ` Spotted ${n} in the distance`);
       if (typeof EXPLORE !== "undefined" && EXPLORE.onDiscover) EXPLORE.onDiscover(s, n, log);
     }
     return found;

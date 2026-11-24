@@ -363,7 +363,7 @@ const DGAMES = (() => {
         const x = 300 / (n + 1) * (i + 1), y = 100, tok = ring[(m.idx || [])[i] || 0] || "?";
         g.fillStyle = C.stone; g.strokeStyle = C.gold; g.lineWidth = 3;
         if (px) { g.fillRect(x - 36, y - 36, 72, 72); g.strokeRect(x - 36, y - 36, 72, 72); } else { g.beginPath(); g.arc(x, y, 38, 0, 7); g.fill(); g.stroke(); }
-        g.fillStyle = C.ink; g.font = "28px sans-serif"; g.textAlign = "center"; g.fillText((typeof EXPLORE !== "undefined" && EXPLORE.SYM?.[tok]) || "◆", x, y + 6); g.font = "12px sans-serif"; g.fillText(tok, x, y + 54); g.textAlign = "left";
+        g.fillStyle = C.ink; g.font = "28px GameIcons, sans-serif"; g.textAlign = "center"; g.fillText((typeof EXPLORE !== "undefined" && EXPLORE.SYM?.[tok]) || "◆", x, y + 6); g.font = "12px sans-serif"; g.fillText(tok, x, y + 54); g.textAlign = "left";
       });
     },
   };
@@ -430,7 +430,7 @@ const DGAMES = (() => {
       <h3>${esc(INFO[c].title)}</h3><p class="lpsub">${esc(sub(s, c, o))}</p>
       <canvas id="dgc" width="300" height="200" aria-hidden="true"></canvas>
       <p class="lphint" id="dghint">${INFO[c].hint}</p>
-      ${ctrls ? `<div class="lprow dgrow">${ctrls}</div>` : ""}${out ? '<p class="dglive">👁 Your party is watching</p>' : ""}</div>`;
+      ${ctrls ? `<div class="lprow dgrow">${ctrls}</div>` : ""}${out ? '<p class="dglive"> Your party is watching</p>' : ""}</div>`;
     document.body.appendChild(el);
     const cv = el.querySelector("#dgc");
     live = { st, run, c, el, cv, over: false, acc: 0, last: performance.now(), lastCell: null, down: false };
@@ -515,7 +515,7 @@ const DGAMES = (() => {
     const el = document.createElement("div");
     el.id = "dgwatch"; el.className = "lockpick dgame dgwatch";
     el.innerHTML = `<div class="lpcard" role="dialog" aria-label="Watching the leader">
-      <h3>👁 ${esc(doc.byName || "The leader")}</h3><p class="lpsub">${esc(doc.title || INFO[doc.kind]?.title || "")} · watching</p>
+      <h3> ${esc(doc.byName || "The leader")}</h3><p class="lpsub">${esc(doc.title || INFO[doc.kind]?.title || "")} · watching</p>
       <canvas id="dgwc" width="300" height="200" aria-hidden="true"></canvas>
       <p class="lphint" id="dgwtxt">${esc(doc.byName || "The leader")} is playing. What happens, happens to you too.</p>
       <div class="lprow"><button class="btn" id="dgwhide">Hide</button></div></div>`;

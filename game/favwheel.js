@@ -62,7 +62,7 @@ const FAVWHEEL = (() => {
         const res = it.restore?.[0];
         if (!res) return { ok: false, text: `${it.name} can't be queued for a fight.` };
         if (s.favPot === res) { delete s.favPot; return { ok: true, text: `${it.name} unqueued.` }; }
-        s.favPot = res; return { ok: true, text: `🧪 ${it.name} queued: in your next fights you'll drink ${res} potions without saving them.` };
+        s.favPot = res; return { ok: true, text: ` ${it.name} queued: in your next fights you'll drink ${res} potions without saving them.` };
       }
       const r = rowFor(s, e.id);
       if (Object.values(G.equipment(s)).some((x) => x && x.id === r.id)) return { ok: true, text: `${it.name} is already worn.` };
@@ -72,7 +72,7 @@ const FAVWHEEL = (() => {
     const a = actionOf(e);
     if (s.favReady === a) { delete s.favReady; return { ok: true, text: `${nfo.name} no longer readied.` }; }
     s.favReady = a;
-    return { ok: true, text: `✋ ${nfo.name} readied: Smart AI opens your fights with it when it can.` };
+    return { ok: true, text: ` ${nfo.name} readied: Smart AI opens your fights with it when it can.` };
   }
 
   // ---- fight hooks (Smart AI): the readied opener on the first turn, the queued potion kind not saved

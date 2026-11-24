@@ -384,7 +384,7 @@ const PFX = (() => {
 
   // ---------------------------------------------------------------- elemental statuses
   const VENOM = /spider|chaurus|spriggan|snake|viper|skeever|hagraven|assassin|poison/i;
-  const ICON = { burn: "🔥", chill: "❄️", shock: "⚡" };
+  const ICON = { burn: "", chill: "", shock: "" };
   const VERB = { burn: "burns", chill: "is chilled", shock: "is jolted" };
   /* which element a foe's blows carry, if any (name based: fire mages, dragons, atronachs, witches...) */
   function foeElement(e) {

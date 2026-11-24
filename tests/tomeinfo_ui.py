@@ -29,7 +29,7 @@ async def run(b, style):
     ok(len(rows) >= 5, f"[{style}] court wizard shows tome rows with info ({len(rows)})")
     ok(all("magicka" in r or "no magicka" in r for r in rows), f"[{style}] every tome row names its magicka cost")
     ok(all(("AP" in r) or ("out of fights" in r) for r in rows), f"[{style}] every tome row names its AP cost")
-    ok(all(("✓" in r) or ("⚠" in r) for r in rows), f"[{style}] every tome row says if your skill is enough")
+    ok(all(("✓" in r) or ("\ue123" in r) for r in rows), f"[{style}] every tome row says if your skill is enough")
     await pg.evaluate("document.querySelector('.item.ti-row')?.scrollIntoView({block:'start'}); window.scrollBy(0,-90); document.querySelector('#side')?.scrollBy?.(0,-90)")
     await pg.wait_for_timeout(300)
     await pg.screenshot(path=OUT + f"shop_{style}.png")

@@ -213,7 +213,7 @@ atHour(19);
   const d = LIVING.dayNo();
   ok(JSON.stringify(LIVING.realm(d)) === JSON.stringify(LIVING.realm(d)) && LIVING.realm(d).every((x) => clean(x.x) && x.x.length > 10), "the talk of the day is the same on every phone");
   ok(LIVING.realm(d)[0].x !== LIVING.realm(d + 1)[0].x || LIVING.realm(d)[1].x !== LIVING.realm(d + 1)[1].x, "and changes day to day");
-  const s = mk(); LIVING.news(s, "⚔", "Something happened");
+  const s = mk(); LIVING.news(s, "\uE101", "Something happened");
   const f = LIVING.feed(s); ok(f.length >= 2 && f.every((a, i) => !i || f[i - 1].t >= a.t) && f.some((x) => x.x === "Something happened"), "the feed: newest first, yours and the realm's");
   ok(/Notice board/.test(LIVING.townHTML(s, "Whiterun", "inn", true)), "a notice board in the inn");
 }
@@ -233,7 +233,7 @@ atHour(19);
   ok(RUMOURS.marks(mem).some((m) => m.id === r.whisper.id) && mem.discovered.includes(r.whisper.place), "the leader's whisper is on the member's map");
   ok(/party leader/.test(LIVING.hearWhisper(mem).err || ""), "members leave the asking to the leader");
   ok(/Lydia/.test(LIVING.panel(mem)), "World news says whose world it is");
-  LIVING.news(lead, "🐉", "Leader news"); LIVING.follow(mem, party, [{ id: "L", name: "Lydia", ...LIVING.cardBits(lead, party) }]);
+  LIVING.news(lead, "\uE10F", "Leader news"); LIVING.follow(mem, party, [{ id: "L", name: "Lydia", ...LIVING.cardBits(lead, party) }]);
   ok(LIVING.feed(mem).some((x) => x.x === "Leader news"), "the leader's news reaches the member");
   LIVING.adopt(mem, { w: [{ k: "nope", place: "x" }, { k: "dragon", place: "Nowhere" }], n: [{ x: 5 }] }, "Lydia");
   ok(!LIVING.sharedFor(mem).w.length && !LIVING.sharedFor(mem).n.length, "junk from a card is ignored");

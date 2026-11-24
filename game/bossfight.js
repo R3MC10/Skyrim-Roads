@@ -27,15 +27,15 @@ const BOSSFIGHT = (() => {
   // ------------------------------------------------------------------ big attacks you see coming
   //  mul: how hard it hits compared with a plain blow; ans: what softens it (cut = what's left); a shout or a shield bash always breaks it
   const TELE = {
-    slam: { ic: "💥", name: "Crushing Blow", mul: 2.1, ans: ["block"], cut: 0.5 },
-    sweep: { ic: "🌀", name: "Wide Sweep", mul: 1.8, ans: ["dodge"], cut: 0.3 },
-    storm: { ic: "⚡", name: "Spell Storm", mul: 2.0, ans: ["ward", "block"], cut: 0.5, magic: true },
-    breath: { ic: "🔥", name: "Great Breath", mul: 2.1, ans: ["ward", "dodge"], cut: 0.45, magic: true },
-    tail: { ic: "🐉", name: "Tail Sweep", mul: 1.8, ans: ["dodge"], cut: 0.3 },
-    thuum: { ic: "🗣", name: "Unrelenting Force", mul: 1.7, ans: ["block"], cut: 0.5, magic: true, ap: 2 },
-    soul: { ic: "💀", name: "Soul Rend", mul: 2.3, ans: [], cut: 1, magic: true },
-    steam: { ic: "♨", name: "Steam Blast", mul: 1.9, ans: ["dodge"], cut: 0.3 },
-    pounce: { ic: "🐾", name: "Savage Leap", mul: 1.9, ans: ["dodge"], cut: 0.3 },
+    slam: { ic: "", name: "Crushing Blow", mul: 2.1, ans: ["block"], cut: 0.5 },
+    sweep: { ic: "", name: "Wide Sweep", mul: 1.8, ans: ["dodge"], cut: 0.3 },
+    storm: { ic: "", name: "Spell Storm", mul: 2.0, ans: ["ward", "block"], cut: 0.5, magic: true },
+    breath: { ic: "", name: "Great Breath", mul: 2.1, ans: ["ward", "dodge"], cut: 0.45, magic: true },
+    tail: { ic: "", name: "Tail Sweep", mul: 1.8, ans: ["dodge"], cut: 0.3 },
+    thuum: { ic: "", name: "Unrelenting Force", mul: 1.7, ans: ["block"], cut: 0.5, magic: true, ap: 2 },
+    soul: { ic: "", name: "Soul Rend", mul: 2.3, ans: [], cut: 1, magic: true },
+    steam: { ic: "", name: "Steam Blast", mul: 1.9, ans: ["dodge"], cut: 0.3 },
+    pounce: { ic: "", name: "Savage Leap", mul: 1.9, ans: ["dodge"], cut: 0.3 },
   };
   const HINT = {
     block: "Block (or keep 1+ AP back) to halve it",
@@ -64,7 +64,7 @@ const BOSSFIGHT = (() => {
       ph: [null, { fx: ["enrage"], say: "{0} gets angry and hits harder" }, { fx: ["add"], say: "{0} calls for help", add: "Loyal guard" }] },
   };
   const ELS = ["fire", "frost", "shock"];
-  const EL_IC = { fire: "🔥", frost: "❄", shock: "⚡" };
+  const EL_IC = { fire: "", frost: "", shock: "" };
   const ENRAGE = [1, 1.1, 1.2];   // how much harder it hits in each phase it got angry in
   const HP_UP = 1.06;              // bosses get a little more health (balanced in tests/test_bossfight.js)
 
@@ -152,7 +152,7 @@ const BOSSFIGHT = (() => {
   function register() {
     if (typeof FIGHTREAD === "undefined" || !FIGHTREAD.INTENT || FIGHTREAD.INTENT.bf_slam) return;
     for (const [k, d] of Object.entries(TELE)) {
-      FIGHTREAD.INTENT["bft_" + k] = { ic: "⚠", label: "Readies " + d.name, tele: true, note: "lands next turn" };
+      FIGHTREAD.INTENT["bft_" + k] = { ic: "", label: "Readies " + d.name, tele: true, note: "lands next turn" };
       FIGHTREAD.INTENT["bf_" + k] = { ic: d.ic, label: d.name, mul: d.mul, big: true, note: d.ans.length ? d.ans.join(" / ") : "only a shout or bash stops it" };
     }
   }
@@ -318,9 +318,9 @@ const BOSSFIGHT = (() => {
     const f = sess.f, b = f.bf, mx = Math.max(1, sess.ehpMax), pc = clamp(100 * ehpNow / mx, 0, 100);
     const ticks = b.th.map((t, i) => `<b class="bftick${b.phase > i ? " past" : ""}" style="left:${(t * 100).toFixed(1)}%"></b>`).join("");
     const ph = fmt("Phase {0}/{1}", b.phase + 1, phasesOf(b));
-    const add = b.add && b.add.hp > 0 ? `<div class="bfadd"><span>➕ ${esc(T(b.add.name))}</span><i><b style="width:${(100 * b.add.hp / b.add.max).toFixed(1)}%"></b></i><em>${esc(T("takes some of your blows"))}</em></div>` : "";
-    const hz = b.hazard ? `<span class="bfhz">${EL_IC[b.hazard.el] || "☠"} ${esc(fmt("{0}: {1} a round", T(b.hazard.name), Math.round(b.hazard.dmg)))}</span>` : "";
-    const rage = b.rage > 1 ? `<span class="bfhz rage">😡 ${esc(fmt("+{0}% damage", Math.round((b.rage - 1) * 100)))}</span>` : "";
+    const add = b.add && b.add.hp > 0 ? `<div class="bfadd"><span> ${esc(T(b.add.name))}</span><i><b style="width:${(100 * b.add.hp / b.add.max).toFixed(1)}%"></b></i><em>${esc(T("takes some of your blows"))}</em></div>` : "";
+    const hz = b.hazard ? `<span class="bfhz">${EL_IC[b.hazard.el] || ""} ${esc(fmt("{0}: {1} a round", T(b.hazard.name), Math.round(b.hazard.dmg)))}</span>` : "";
+    const rage = b.rage > 1 ? `<span class="bfhz rage"> ${esc(fmt("+{0}% damage", Math.round((b.rage - 1) * 100)))}</span>` : "";
     return `<div class="bfbar" data-tip="${esc(T("Boss: the marks on the bar are where it changes how it fights."))}"><div class="bfname"><b>${esc(pl() ? T(f.e.name) : f.e.name)}</b><small>${esc(T(b.ep))}</small><span class="bfph">${esc(ph)}</span></div>
       <div class="bftrack"><i style="width:${pc.toFixed(1)}%"></i>${ticks}</div>${hz || rage ? `<div class="bfchips">${rage}${hz}</div>` : ""}${add}</div>`;
   }
@@ -357,7 +357,7 @@ const BOSSFIGHT = (() => {
     const gold = r.stripGold || r.gold || 0;
     if (!items.length && !gold) return;
     const li = items.map((n, i) => `<li style="--i:${i}">${esc(pl() ? T(n) || n : n)}</li>`).join("");
-    overlay("bfloot", `<div class="bfcard"><small>${esc(say(f, "{0} is beaten"))}</small><h2>${esc(T("Boss loot"))}</h2>${gold ? `<p class="bfgold">💰 ${esc(fmt("{0} gold", gold))}</p>` : ""}<ul>${li}</ul><em>${esc(T("Tap to close"))}</em></div>`, 0, document.getElementById("tbf"));
+    overlay("bfloot", `<div class="bfcard"><small>${esc(say(f, "{0} is beaten"))}</small><h2>${esc(T("Boss loot"))}</h2>${gold ? `<p class="bfgold"> ${esc(fmt("{0} gold", gold))}</p>` : ""}<ul>${li}</ul><em>${esc(T("Tap to close"))}</em></div>`, 0, document.getElementById("tbf"));
   }
 
   if (typeof TB !== "undefined" && Array.isArray(TB.FOE_KEYS) && !TB.FOE_KEYS.includes("bf")) TB.FOE_KEYS.push("bf");   // party fights: every phone sees the same boss

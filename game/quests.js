@@ -71,8 +71,8 @@ const QUESTS = (() => {
     const m = q(s).main;   // Bleak Falls Barrow became two stages (clear it, then tell Farengar): later stages of old saves move up one
     if (!m.bf) { m.bf = 1; if (!m.done && m.stage >= 2) m.stage++; }
     const th = q(s).thieves;   // the Thieves Guild line grew from 4 to 10 stages: finished old runs pick up the new chapters
-    if (!q(s).masks && L.masks && typeof PRIESTS !== "undefined" && PRIESTS.shouldStart(s)) { q(s).masks = { stage: 0, t: G.now() }; G.note(s, "🎭 New quest: Masks of the Dragon Priests (Journal)."); }   // [Skyrim] the dragon priests
-    if (th && !th.v2) { th.v2 = true; if (th.done) { th.done = false; th.stage = 3; th.t = G.now(); G.note(s, "📜 Brynjolf has more work for you: the Thieves Guild story goes on (Journal)."); } }
+    if (!q(s).masks && L.masks && typeof PRIESTS !== "undefined" && PRIESTS.shouldStart(s)) { q(s).masks = { stage: 0, t: G.now() }; G.note(s, " New quest: Masks of the Dragon Priests (Journal)."); }   // [Skyrim] the dragon priests
+    if (th && !th.v2) { th.v2 = true; if (th.done) { th.done = false; th.stage = 3; th.t = G.now(); G.note(s, " Brynjolf has more work for you: the Thieves Guild story goes on (Journal)."); } }
   }
   const stageOf = (s, id, v) => { const st = L[id].stages[v.stage]; return typeof PRIESTS !== "undefined" ? PRIESTS.stageFor(s, st) : st; };   // masks: the next ruin filled in
   const active = (s) => Object.entries(q(s)).filter(([id, v]) => !v.done && L[id]).map(([id, v]) => ({ id, ...v, def: L[id], st: stageOf(s, id, v) }));
@@ -103,10 +103,10 @@ const QUESTS = (() => {
     if (r.title && !(s.titles || []).includes(r.title)) s.titles = [...(s.titles || []), r.title];
     if (r.horse && typeof GUILDS !== "undefined") GUILDS.giveHorse(s, r.horse, msgs);
     const got = [r.gold ? `${r.gold} gold` : "", ...(r.items || []).map((i) => D.ITEMS[i].name), r.title ? `the title ${r.title}` : ""].filter(Boolean).join(", ");
-    msgs.push(`📜 ${L[id].name}: “${st.title}” done${got ? ` (${got})` : ""}.`);
+    msgs.push(` ${L[id].name}: “${st.title}” done${got ? ` (${got})` : ""}.`);
     G.note(s, msgs[msgs.length - 1]);
     v.stage++; v.t = G.now(); v.base = { ...(s.stats || {}) };
-    if (v.stage >= L[id].stages.length) { v.done = true; msgs.push(`🏆 ${L[id].name} complete!`); }
+    if (v.stage >= L[id].stages.length) { v.done = true; msgs.push(` ${L[id].name} complete!`); }
     else msgs.push(`New objective: ${L[id].stages[v.stage].title}. ${L[id].stages[v.stage].text}`);
   }
   /* run after anything that might finish an objective; returns messages */

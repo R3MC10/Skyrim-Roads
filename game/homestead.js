@@ -39,8 +39,8 @@ const HOMESTEAD = (() => {
   if (typeof TOWNS !== "undefined") for (const [pid, p] of Object.entries(PLOTS)) TOWNS.FOLLOWERS[stewardId(pid)] = [p.steward[0], p.name, STEWARD_FEE, p.steward[1], p.steward[2], p.steward[3]];
 
   // building materials kept at the plot: [name, icon]
-  const MATS = { log: ["Sawn logs", "🪵"], stone: ["Quarried stone", "🪨"], clay: ["Clay", "🟫"], quartz: ["Quartz", "💎"],
-    nails: ["Nails", "📌"], hinge: ["Hinges", "🔩"], lock: ["Locks", "🔒"], fittings: ["Iron fittings", "⚙"], glass: ["Glass", "🪟"] };
+  const MATS = { log: ["Sawn logs", ""], stone: ["Quarried stone", ""], clay: ["Clay", ""], quartz: ["Quartz", ""],
+    nails: ["Nails", ""], hinge: ["Hinges", ""], lock: ["Locks", ""], fittings: ["Iron fittings", ""], glass: ["Glass", ""] };
   // the workbench: part → [how many you get, inventory items used, plot stock used]
   const BENCH = {
     nails: [20, { mat_iron: 1 }, {}], hinge: [2, { mat_iron: 1 }, {}], lock: [1, { mat_iron: 1 }, {}],
@@ -105,7 +105,7 @@ const HOMESTEAD = (() => {
     if (s.gold < price) return { err: `The deed to ${p.name} costs ${price} gold. You have ${s.gold}.` };
     s.gold -= price;
     all(s)[pid] = { t, small: 0, hall: 0, wings: [], stock: {}, cd: {}, col: {}, store: [], steward: false };
-    G.note(s, `🏡 Bought the deed to ${p.name} near ${p.town}.`);
+    G.note(s, ` Bought the deed to ${p.name} near ${p.town}.`);
     return { title: p.name, text: `The Jarl's steward hands you the deed to ${p.name} for ${price} gold. Cut logs at the sawmill, dig stone and clay, make nails and hinges at the workbench, then raise a small house.` };
   }
 
@@ -166,7 +166,7 @@ const HOMESTEAD = (() => {
     const nm = defOf(what)[0];
     if (STAGES[what]) h[what] = t; else if (WINGS[what]) { h.wings = [...wingsOf(h), what]; h.col[what] = t; } else { h.rooms = [...(h.rooms || []), what]; if (what === "garden") h.xcol.garden = t; }
     const ups = G.useSkill(s, "Smithing", 40);
-    G.note(s, `🏡 Built the ${nm.toLowerCase()} at ${PLOTS[pid].name}.`);
+    G.note(s, ` Built the ${nm.toLowerCase()} at ${PLOTS[pid].name}.`);
     return { title: `${PLOTS[pid].name}: ${nm}`, text: `The ${nm.toLowerCase()} stands. ${defOf(what)[1]}${ups.length ? " " + ups.join(". ") + "." : ""}` };
   }
 
@@ -392,7 +392,7 @@ const HOMESTEAD = (() => {
   const VIEWS = () => [["build", "Build"], ["gather", "Gather"], ["bench", "Workbench"], ["home", "Home"], ...(typeof HSROOMS !== "undefined" ? HSROOMS.VIEWS : []), ["steward", "Steward"]];
   const CQ = () => (typeof CRAFTQOL !== "undefined" ? CRAFTQOL : null);
   const sections = (town) => (BY_TOWN[town] ? ["homestead"] : []);
-  const names = (s, town) => (BY_TOWN[town] ? { homestead: `🏡 ${PLOTS[BY_TOWN[town]].name}` } : {});
+  const names = (s, town) => (BY_TOWN[town] ? { homestead: ` ${PLOTS[BY_TOWN[town]].name}` } : {});
   const btn = (act, c, label, ok = true, cls = "") => `<button class="btn sm ${cls}" data-act="hsact" data-id="${act}" data-c="${c}" ${ok ? "" : "disabled"}>${label}</button>`;
   function matRow(h, mats, esc) {
     return `<div class="hsmats">${Object.entries(mats).map(([k, n]) => { const have = h.stock[k] || 0; return `<span class="hsm ${have >= n ? "ok" : "no"}" title="${esc(MATS[k][0])}">${MATS[k][1]} ${have}/${n}</span>`; }).join("")}</div>`;
@@ -420,7 +420,7 @@ const HOMESTEAD = (() => {
     if (view === "build") {
       const row = (id, def, ok, why) => { const mats = costOf(s, id), lack = missing(h, mats);
         return `<div class="item hsrow ${ok ? "" : "locked"}">${thumb(id)}<div class="t">${esc(def[0])}<span>${esc(def[1])}</span>${ok ? matRow(h, mats, esc) : `<span class="hswhy">${esc(why)}</span>`}</div>${ok ? btn("build", id, "Build", !lack.length, "pri") : ""}</div>`; };
-      const done = (id, def) => `<div class="item hsrow on">${thumb(id)}<div class="t">✔ ${esc(def[0])}<span>${esc(def[1])}</span></div></div>`;
+      const done = (id, def) => `<div class="item hsrow on">${thumb(id)}<div class="t"> ${esc(def[0])}<span>${esc(def[1])}</span></div></div>`;
       b += `<h3 class="hsh">House</h3>` + ["small", "hall"].map((id) => (h[id] ? done(id, STAGES[id]) : row(id, STAGES[id], !canBuild(s, pid, id), canBuild(s, pid, id)))).join("");
       const ns = slots(s), stTxt = (w) => (XR()?.STATION[w] ? [WINGS[w][0], `${WINGS[w][1]} ${XR().STATION[w]}`] : WINGS[w]);
       b += `<h3 class="hsh">Wings · ${wings.length}/${ns}</h3><p class="sub" style="margin-top:0">${h.hall ? `${ns === 3 ? "Three" : ns} spaces. A wing can't be torn down, so pick the ones you'll use.` : "Wings go onto the main hall."}</p>`
@@ -447,7 +447,7 @@ const HOMESTEAD = (() => {
       if (!h.small) b += `<p class="sub">Nothing to live in yet. Build the small house first.</p>`;
       else {
         { const r = XR() ? XR().restOf(h) : { bonus: 0.1, mult: 1 };   // the real bonus: hearth +15%, kitchen 1.5x as long
-          b += `<div class="item"><div class="t">🛏 Your bed<span>Full health and Well Rested (+${Math.round(r.bonus * 100)}% skills for ${Math.round(RESTED * r.mult / 60)} minutes)</span></div>${btn("sleep", pid, "Sleep", true, "pri")}</div>`; }
+          b += `<div class="item"><div class="t"> Your bed<span>Full health and Well Rested (+${Math.round(r.bonus * 100)}% skills for ${Math.round(RESTED * r.mult / 60)} minutes)</span></div>${btn("sleep", pid, "Sleep", true, "pri")}</div>`; }
         const rd = ready(s, pid, t), made = wings.filter((w) => w !== "storage" || fx(s, "hsrent")), xrd = XR() ? XR().extraReady(s, pid, t) : {};
         if (made.length || Object.keys(xrd).length) {
           b += `<h3 class="hsh">From the wings</h3><p class="sub" style="margin-top:0">Goods pile up for ${keepDays(s, pid)} in-game day${keepDays(s, pid) > 1 ? "s" : ""}${stewardHome(s, pid) ? " (your steward keeps them)" : ""}.</p>`

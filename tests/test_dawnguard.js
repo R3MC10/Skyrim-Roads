@@ -145,9 +145,9 @@ OK(Object.keys(DAWNGUARD.PERK_SIDE).every((id) => PFX.FX[id]), "every side perk 
   __lang = "pl"; OK(I18N.lang() === "pl", "Polish on");
   OK(I18N.tr("Dawnguard: Hunt the Night") === "Straż Świtu: Łowy na noc", "line name in Polish");
   OK(/Straż Świtu/.test(I18N.tr(QUESTS.L.dg_awakening.stages[0].text)) && !/Isran is rebuilding/.test(I18N.tr(QUESTS.L.dg_awakening.stages[0].text)), "stage text in Polish");
-  { const done = I18N.tr("📜 Dawnguard: Hunt the Night: “Awakening” done (200 gold, the title Vampire Hunter).");
-    OK(/^📜 Straż Świtu: Łowy na noc: „.+” ukończone \\(200 złota, tytuł .+\\)\\.$/.test(done), "stage-done line in Polish: " + done);
-    const both = I18N.tr("Awakening 📜 Dawnguard: Hunt the Night: “Awakening” done. New objective: Prophet.");
+  { const done = I18N.tr("\uE103 Dawnguard: Hunt the Night: “Awakening” done (200 gold, the title Vampire Hunter).");
+    OK(/^\uE103 Straż Świtu: Łowy na noc: „.+” ukończone \\(200 złota, tytuł .+\\)\\.$/.test(done), "stage-done line in Polish: " + done);
+    const both = I18N.tr("Awakening \uE103 Dawnguard: Hunt the Night: “Awakening” done. New objective: Prophet.");
     OK(/ukończone/.test(both) && /Nowy cel/.test(both) && !/ done/.test(both), "stage-done line after a stage title in Polish: " + both);
     OK(/^Znajdziesz ich tu: /.test(I18N.tr("Find them at Fort Dawnguard.")), "where to find a quest giver in Polish");
     OK(I18N.tr("They're here. Ask to join.") === "Są tutaj. Poproś, żeby cię przyjęli.", "quest giver here, in Polish"); }

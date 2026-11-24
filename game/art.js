@@ -1,6 +1,6 @@
 /* Art: one shared toolkit for every picture in the game (fight scenes, places, icons, your character).
    Everything is drawn in code on a canvas in the same ink-on-parchment style as the map, so the app stays small and
-   works offline. The player can switch the whole game to pixel art (⚙ Settings → Art style): the same drawing is
+   works offline. The player can switch the whole game to pixel art ( Settings → Art style): the same drawing is
    rendered small, snapped to a limited palette and blown up with hard edges. [OURS]
 
    How to draw something:

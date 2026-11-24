@@ -2,14 +2,14 @@ import asyncio, json, sys
 from playwright.async_api import async_playwright
 SEED = """()=>{
  const S=window.__dbg.save(); S.level=30; S.gold=50000;
- S.pins=[...Array(20)].map((_,i)=>({id:'p'+i,x:0.2+Math.random()*0.6,y:0.2+Math.random()*0.6,label:'Pin '+i,icon:'📍'}));
+ S.pins=[...Array(20)].map((_,i)=>({id:'p'+i,x:0.2+Math.random()*0.6,y:0.2+Math.random()*0.6,label:'Pin '+i,icon:'\ue122'}));
  const IDS=Object.keys(D.ITEMS).filter(k=>!k.startsWith('brew|')&&D.ITEMS[k]&&D.ITEMS[k].slot); for(let i=0;i<300;i++) G.give(S, IDS[i%IDS.length], 1);
  S.discovered=Object.keys(WORLD.places);
  for(let i=0;i<120;i++) S.explored.push([Math.random(),Math.random()]);
  const put=(c,n,f)=>{for(let i=0;i<n;i++) Store.put(c,'x'+c+i,f(i));};
  const now=G.now();
  put('chat',80,i=>({from:'u'+i%9,name:'Player'+i%9,text:'Message number '+i+' about the dragon over Whiterun',ch:'world',t:now-i}));
- put('news',40,i=>({text:'🏆 Someone did something '+i,t:now-i}));
+ put('news',40,i=>({text:'\ue130 Someone did something '+i,t:now-i}));
  put('ladder',40,i=>({name:'P'+i,race:'nord',level:i,gold:i*100,dragons:i%5,cleared:i%9,kills:0,t:now}));
  put('homes',30,i=>({name:'H'+i,race:'nord',level:5,towns:['Whiterun','Riften'],dragons:2,cleared:3,titles:[],show:[],souls:0,t:now}));
  put('bounty',40,i=>({uid:'u'+i,name:'P'+i,week:BOUNTY.week(),c:{foes:3,dungeons:1,arrivals:2,potions:1,dragons:0,jobs:1},t:now}));

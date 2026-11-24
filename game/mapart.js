@@ -1,6 +1,6 @@
 /* Map art: hand-drawn markers for every kind of place, player tokens with portraits, footprints, and the living
    touches over the painted map (water glints, cloud shadows, birds, night lights, discovery bursts).
-   Everything is drawn once into small cached canvases through ART (so ⚙ Settings → Art style applies), and the map
+   Everything is drawn once into small cached canvases through ART (so  Settings → Art style applies), and the map
    just stamps them each frame. [OURS] */
 const MAPART = (() => {
   const cache = new Map();

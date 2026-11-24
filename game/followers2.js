@@ -284,7 +284,7 @@ const FOL2 = (() => {
     while (f.lvl < top && f.xp >= need(f.lvl)) {
       f.xp -= need(f.lvl); f.lvl++;
       const took = spend(s, id);
-      msgs.push(`⬆ ${nameOf(id)} reaches level ${f.lvl}${took.length ? ` and learns ${took.join(", ")}` : ""}.`);
+      msgs.push(` ${nameOf(id)} reaches level ${f.lvl}${took.length ? ` and learns ${took.join(", ")}` : ""}.`);
     }
     if (f.lvl >= top) f.xp = Math.min(f.xp, need(f.lvl) - 1);
     return msgs;

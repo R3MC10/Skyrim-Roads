@@ -44,7 +44,7 @@ async def main():
         await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Reader"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
         for style in ["ink", "pixel"]:
             await pg.evaluate(f"ART.setStyle('{style}')")
-            # the same path as the in-game "📜 Patch notes" buttons: a data-act="notes" button inside a panel
+            # the same path as the in-game "\ue103 Patch notes" buttons: a data-act="notes" button inside a panel
             await pg.evaluate("(()=>{ __dbg.message('Notes','x'); const m=document.querySelector('#modal'); const b=document.createElement('button'); b.dataset.act='notes'; m.querySelector('.sheet').appendChild(b); b.click(); })()")
             await pg.wait_for_timeout(500)
             ok(await pg.evaluate("!!document.querySelector('#modal .pnsheet .pnbar .pnx')"), f"{style} popup: ✕ sits in a header bar")

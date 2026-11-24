@@ -1,5 +1,5 @@
 /* Inventory helpers [OURS]: small things that make a full pack less of a chore.
-   - Keep (🔒): mark a thing so bulk actions never touch it. Favourites-wheel items count as kept too.
+   - Keep (): mark a thing so bulk actions never touch it. Favourites-wheel items count as kept too.
    - Sell all junk: at a shop, one tap sells cheap trinkets and loose gear that's worse than what you wear
      (never kept, favourite, quest, unique, enchanted or crafted things). You see the list and the total first.
    - Pack sorting (name, value, weight, value per weight, newest) and green ▲ / red ▼ arrows on gear
@@ -24,7 +24,7 @@ const INVQOL = (() => {
   function toggleKeep(s, id) {
     const r = G.invRow(s, id); if (!r) return "You don't have that.";
     if (r.keep) { delete r.keep; return `${nameOf(r)} is no longer marked Keep.`; }
-    r.keep = 1; return `🔒 ${nameOf(r)} marked Keep. Bulk selling will leave it alone.`;
+    r.keep = 1; return ` ${nameOf(r)} marked Keep. Bulk selling will leave it alone.`;
   }
   const isFav = (s, r) => typeof FAVWHEEL !== "undefined" && !!s && FAVWHEEL.has(s, FAVWHEEL.entryFor(s, r.id));
   const isUnique = (r) => { const it = item(r); return !!it && !!(it.unique || it.dae || (it.noTrade && (it.value || 0) >= 1000)); };
@@ -72,7 +72,7 @@ const INVQOL = (() => {
     return c > 0 ? `<i class="iq-up" title="Better than worn: ${esc(t)}" aria-label="Better than what you wear">▲</i>` : `<i class="iq-dn" title="Worse than worn: ${esc(t)}" aria-label="Worse than what you wear">▼</i>`;
   }
   /* the little marks after an item's name in lists */
-  const badge = (s, itemId, r = null) => (r && (isKeep(r) || isFav(s, r)) ? `<i class="iq-keep" title="${isKeep(r) ? "Keep" : "Favourite"}" aria-label="${isKeep(r) ? "Kept" : "Favourite"}">${isKeep(r) ? "🔒" : "★"}</i>` : "") + arrow(s, itemId, r);
+  const badge = (s, itemId, r = null) => (r && (isKeep(r) || isFav(s, r)) ? `<i class="iq-keep" title="${isKeep(r) ? "Keep" : "Favourite"}" aria-label="${isKeep(r) ? "Kept" : "Favourite"}">${isKeep(r) ? "" : "★"}</i>` : "") + arrow(s, itemId, r);
 
   // ---------------------------------------------------------------- junk
   function junkWhy(s, r, worn, fence) {
@@ -191,12 +191,12 @@ const INVQOL = (() => {
     const sale = lastSale(s), j = junk(s, fence), jt = j.reduce((a, x) => a + x.price, 0);
     const total = sale ? sale.rows.reduce((a, x) => a + x.price, 0) : 0;
     const what = sale ? (sale.rows.length === 1 ? nameOf(sale.rows[0].row) : `${sale.rows.length} things`) : "";
-    return `<div class="iq-shop">${j.length ? `<button class="btn sm" data-act="iqjunk" data-f="${fence ? 1 : 0}" ${ok ? "" : "disabled"}>🧹 Sell all junk · ${j.length} · ${jt}g</button>` : ""}${sale ? `<button class="btn sm" data-act="iqundo" ${ok && s.gold >= total ? "" : "disabled"}>↶ Buy back ${esc(what)} · ${total}g</button>` : ""}</div>`;
+    return `<div class="iq-shop">${j.length ? `<button class="btn sm" data-act="iqjunk" data-f="${fence ? 1 : 0}" ${ok ? "" : "disabled"}> Sell all junk · ${j.length} · ${jt}g</button>` : ""}${sale ? `<button class="btn sm" data-act="iqundo" ${ok && s.gold >= total ? "" : "disabled"}>↶ Buy back ${esc(what)} · ${total}g</button>` : ""}</div>`;
   }
   /* extra buttons for an item's actions (pack row and the Items menu) */
   function acts(s, r, worn, small = true) {
     if (!r || !item(r)) return [];
-    const c = small ? "btn sm" : "btn", out = [`<button class="${c} iq-k ${isKeep(r) ? "on" : ""}" data-act="iqkeep" data-id="${r.id}" aria-pressed="${isKeep(r)}">${isKeep(r) ? "🔒 Kept" : "🔓 Keep"}</button>`];
+    const c = small ? "btn sm" : "btn", out = [`<button class="${c} iq-k ${isKeep(r) ? "on" : ""}" data-act="iqkeep" data-id="${r.id}" aria-pressed="${isKeep(r)}">${isKeep(r) ? " Kept" : " Keep"}</button>`];
     if (!worn && !isQuest(r)) {
       out.push(`<button class="${c}" data-act="iqdrop" data-id="${r.id}" data-n="1">Drop</button>`);
       if (r.qty > 1) out.push(`<button class="${c}" data-act="iqdrop" data-id="${r.id}" data-n="${r.qty}">Drop all</button>`);
@@ -205,7 +205,7 @@ const INVQOL = (() => {
   }
   function junkModal(s, fence) {
     const j = junk(s, fence), tot = j.reduce((a, x) => a + x.price, 0);
-    return `<h2>Sell all junk?</h2><p class="sub">Cheap trinkets and loose gear worse than what you wear. Kept 🔒, favourite, quest, unique, enchanted and handmade things are never in this list.</p>
+    return `<h2>Sell all junk?</h2><p class="sub">Cheap trinkets and loose gear worse than what you wear. Kept , favourite, quest, unique, enchanted and handmade things are never in this list.</p>
       <div class="list iq-junk">${j.map((x) => `<div class="item">${typeof ICONART !== "undefined" ? ICONART.item(x.r.item, 28, x.r) : ""}<div class="t">${esc(nameOf(x.r))}${x.qty > 1 ? ` ×${x.qty}` : ""}<span>${esc(x.why)}</span></div><span class="num gold">${x.price}</span></div>`).join("")}</div>
       <p class="iq-total">Total: <b class="num gold">${tot}</b> gold</p>
       <div class="iq-btns"><button class="btn pri" data-act="iqjunkgo" data-f="${fence ? 1 : 0}">Sell ${j.length} for ${tot}g</button><button class="btn" data-act="iqno">Cancel</button></div>

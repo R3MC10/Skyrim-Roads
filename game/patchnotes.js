@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b167-gameicons", build: 167, date: "24 Nov 2026", title: "Proper game icons", items: [
+      "The little phone emotes on buttons, cards and messages are gone. In their place: simple line icons drawn for the game, like the ones on the compass and in the menus.",
+      "Trap, fight, sneak, lockpick, rest, pray, chests, gold, potions, the weather and more: over 150 icons, sharp at any size and in the colour of the text around them.",
+      "Map pins you dropped before switch to the new icons by themselves.",
+    ] },
     { id: "b165-pcmap", build: 165, date: "24 Nov 2026", title: "The big map on PC", items: [
       "On a PC or laptop the world map is now your home screen: it fills the whole window, and Items, Skills, Magic and the Journal open on top of it over a blurred map. On phones nothing changes.",
       "Drag to look around, scroll to zoom smoothly from all of Skyrim down to a single village, and press Space to jump back to your hero. WASD and the arrows move the map too (while the compass is closed).",
@@ -867,7 +872,7 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 165;
+  const NEXT_AT = 167;
   const NEXT = [
     "A new, livelier fight screen that fits on one screen",
     "New painted dungeon rooms and a painted world map",

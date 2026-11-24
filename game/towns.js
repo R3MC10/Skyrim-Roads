@@ -318,7 +318,7 @@ const TOWNS = (() => {
     s.bounty = s.bounty || {};
     s.bounty[hold] = (s.bounty[hold] || 0) + CRIME[crime] + extra;
     if (crime === "murder") s.murdered = true;   // the Dark Brotherhood takes note (guilds.js)
-    G.note(s, `⚖️ Bounty in ${hold}: ${s.bounty[hold]} gold (${crime}).`);
+    G.note(s, ` Bounty in ${hold}: ${s.bounty[hold]} gold (${crime}).`);
     return s.bounty[hold];
   }
   const wanted = (s) => s.location && isTown(s.location) && (s.resisted || {})[G.holdAt(WORLD.places[s.location])] && bounty(s, G.holdAt(WORLD.places[s.location])) > 0;
@@ -426,7 +426,7 @@ const TOWNS = (() => {
       let ok = false;
       if (j.type === "clear") ok = (s.cleared || {})[j.target] >= j.t;
       if (j.type === "deliver") ok = s.location === j.target;
-      if (ok) { done.push(j.id); s.gold += j.reward; msgs.push(`📜 Job done: ${j.type === "clear" ? `${j.target} is cleared` : `the bag reached ${j.target}`}. +${j.reward} gold.`, ...G.useSkill(s, "Etiquette", 20)); }   // [OURS] Etiquette: serving the hold
+      if (ok) { done.push(j.id); s.gold += j.reward; msgs.push(` Job done: ${j.type === "clear" ? `${j.target} is cleared` : `the bag reached ${j.target}`}. +${j.reward} gold.`, ...G.useSkill(s, "Etiquette", 20)); }   // [OURS] Etiquette: serving the hold
     }
     if (done.length) { s.jobs = s.jobs.filter((j) => !done.includes(j.id)); s.jobsDone = [...(s.jobsDone || []), ...done].slice(-40); msgs.forEach((m) => G.note(s, m)); }
     return msgs;
@@ -439,7 +439,7 @@ const TOWNS = (() => {
     let left = j.n;
     for (const r of [...s.inv]) if (r.item === j.item && left > 0) { const k = Math.min(left, r.qty); G.take(s, r.id, k); left -= k; }
     s.gold += j.reward; s.jobs = s.jobs.filter((x) => x.id !== id); s.jobsDone = [...(s.jobsDone || []), id].slice(-40);
-    G.note(s, `📜 Job done: ${j.n} ${D.ITEMS[j.item].name} delivered. +${j.reward} gold.`);
+    G.note(s, ` Job done: ${j.n} ${D.ITEMS[j.item].name} delivered. +${j.reward} gold.`);
     return `The alchemist counts them twice and pays ${j.reward} gold.`;
   }
 
@@ -498,7 +498,7 @@ const TOWNS = (() => {
     const r = s.inv.find((x) => x.item === "dragonstone");   // the stone is only flavour: clearing the barrow is what counts (it may be lost, stashed or in a party's pile)
     if (r) G.take(s, r.id);
     s.gold += 300; s.thaneWhiterun = true;
-    G.note(s, "📜 Gave Farengar the Dragonstone. The Jarl names Lydia your housecarl.");
+    G.note(s, " Gave Farengar the Dragonstone. The Jarl names Lydia your housecarl.");
     return `${r ? "Farengar snatches the Dragonstone." : "You tell Farengar where the Dragonstone lay and draw its map from memory. He's delighted."} The Jarl pays you 300 gold and assigns Lydia as your housecarl. Hire her (free) in Whiterun.`;
   }
   /* may Farengar's quest be handed in? Clearing Bleak Falls Barrow is enough; the stone itself never blocks it */
@@ -521,7 +521,7 @@ const TOWNS = (() => {
     if (s.gold < h[1]) return `${h[0]} costs ${h[1]} gold. You have ${s.gold}.`;
     s.gold -= h[1];
     s.homes = { ...(s.homes || {}), [s.location]: { chest: [], garden: 0 } };
-    G.note(s, `🏠 Bought ${h[0]} in ${s.location}.`);
+    G.note(s, ` Bought ${h[0]} in ${s.location}.`);
     return `The steward hands you the key to ${h[0]}. Your chest is safe even if you die, your bed makes you Well Rested, and the garden grows ingredients.`;
   }
   function sleepHome(s, t = G.now()) {

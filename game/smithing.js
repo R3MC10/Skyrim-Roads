@@ -161,10 +161,10 @@ const SMITH = (() => {
     const no = api.mineBlock(s, place, t); if (no) return no;
     const m = MINES[place];
     got = got || mineRoll(s, place);
-    if (!Object.keys(got).length) { s.mined = { ...(s.mined || {}), [place]: t }; return `⛏ You chip at the rock in ${m[0]} but bring nothing out. The veins need a day to settle.`; }
+    if (!Object.keys(got).length) { s.mined = { ...(s.mined || {}), [place]: t }; return ` You chip at the rock in ${m[0]} but bring nothing out. The veins need a day to settle.`; }
     for (const [o, k] of Object.entries(got)) G.give(s, o, k);
     s.mined = { ...(s.mined || {}), [place]: t };
-    return `⛏ You work the veins in ${m[0]}: ${Object.entries(got).map(([o, k]) => `${k} ${D.ITEMS[o].name}`).join(", ")}.`;
+    return ` You work the veins in ${m[0]}: ${Object.entries(got).map(([o, k]) => `${k} ${D.ITEMS[o].name}`).join(", ")}.`;
   }
   const byGroup = (g) => Object.keys(RECIPES).filter((id) => RECIPES[id].group === g).sort((a, b) => D.ITEMS[a].value - D.ITEMS[b].value);
   const api = { use, MINES, VEIN_RENEW, mineLeft, mine, mineBlock, mineRoll, oreBag, oreCount, GEM_BAG, GROUPS, RECIPES, REFINE, GEMS, PERK_FOR, info, make, refineInfo, refine, byGroup, peltFor, atForge, count, matText, xpFor };

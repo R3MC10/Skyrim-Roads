@@ -22,8 +22,8 @@ const AREAUI = (() => {
   ];
   const GROUP_OF = {};
   for (const [g, , ids] of GROUPS) for (const id of ids) GROUP_OF[id] = g;
-  const ICON = { inn: "🍺", cook: "🍲", hire: "🛡", general: "🧺", blacksmith: "⚒", wizard: "🔮", market: "🛒", stables: "🐎", fence: "🗝", train: "📚", forge: "🔥", alchemy: "⚗", enchanter: "✨",
-    craft: "🌀", carriage: "🛞", docks: "⚓", jobs: "📋", notice: "📜", caravans: "🐫", mine: "⛏", streets: "🏙", home: "🏠", homestead: "🪵", homes: "🏘", halls: "🏰", hall: "⚑", arena: "⚔", fish: "🎣" };
+  const ICON = { inn: "", cook: "", hire: "", general: "", blacksmith: "", wizard: "", market: "", stables: "", fence: "", train: "", forge: "", alchemy: "", enchanter: "",
+    craft: "", carriage: "", docks: "", jobs: "", notice: "", caravans: "", mine: "", streets: "", home: "", homestead: "", homes: "", halls: "", hall: "⚑", arena: "", fish: "" };
   /* short tile names where the screen's own name is long */
   const SHORT = { fence: "Fence", hire: "Hirelings", wizard: "Court wizard", general: "General goods", cook: "Cooking pot", craft: "Spell crafting", homes: "Neighbours", hall: "Hall of the North", halls: "Halls & shops", notice: "Jarl's bounty", market: "Market stalls" };
   /* a few words when there's no live status */

@@ -76,7 +76,7 @@ const TIP = (() => {
     if (it.slot === "ingredient" && s && g("TOWNS")?.INGREDIENT_FX?.[itemId]) { const T = g("TOWNS"); L.push("Effects: " + T.INGREDIENT_FX[itemId][1].map((e, i) => (T.known(s, itemId)[i] ? e : "?")).join(", ")); }
     if (it.slot === "material") L.push("Used at the forge to improve gear.");
     if (it.dish) L.push("A new meal replaces the last one's effect.");
-    if (r?.stolen) L.push("✋ Stolen. Only a fence will buy it.");
+    if (r?.stolen) L.push(" Stolen. Only a fence will buy it.");
     // better or worse than what you wear (the same sums as the ▲/▼ marks in lists)
     let cmp = "";
     if (s && G_?.equipment && (G_.SLOTS || []).includes(it.slot)) {
@@ -105,13 +105,13 @@ const TIP = (() => {
     const cost = sp.kind === "utility" ? null : s && G_?.spellCost ? G_.spellCost(s, sp) : null;
     return head(sp.name, `sch-${String(sp.school).toLowerCase()}`) + sub(`${sp.level || "Novice"} ${sp.school}${sp.element ? ` · ${sp.element}` : ""}`)
       + line(M?.describe ? M.describe(sp) : "") + (s && M?.infoHTML && sp.kind !== "utility" ? M.infoHTML(s, id) : stats([["Magicka", cost]]))
-      + (fail ? `<p class="tt-dn">⚠ Above your ${esc(sp.school)} skill: costs more and fizzles ${Math.round(fail * 100)}% of the time</p>` : "")
+      + (fail ? `<p class="tt-dn"> Above your ${esc(sp.school)} skill: costs more and fizzles ${Math.round(fail * 100)}% of the time</p>` : "")
       + (s && !s.spells?.includes(id) ? hint("You don't know this spell yet.") : "");
   });
   register("shout", (id, s) => {
     const PW = g("POWERS"), sh = PW?.SHOUTS?.[id]; if (!sh) return null;
     const [name, words, cds, desc] = sh, lv = s ? PW.level(s, id) : 0;
-    return head(name, "sch-shout") + sub(`Shout · ${words.map((w) => (s && PW.known(s, w) ? (PW.unlocked(s, w) ? w : w + "🔒") : "···")).join(" ")}`) + line(desc)
+    return head(name, "sch-shout") + sub(`Shout · ${words.map((w) => (s && PW.known(s, w) ? (PW.unlocked(s, w) ? w : w + "") : "···")).join(" ")}`) + line(desc)
       + (lv ? stats([["Words", lv], ["Cooldown", `${cds[lv - 1]} s`]]) : hint("Learn its words at word walls; unlock each with a dragon soul."));
   });
   register("power", (id, s) => {

@@ -91,7 +91,7 @@ const BARDS = (() => {
     if (s.songsRewarded.includes(song.week)) return null;
     s.songsRewarded = [...s.songsRewarded, song.week].slice(-20);
     s.gold += REWARD_GOLD;
-    let text = `🎵 The bards sing your verse in every inn this week. The innkeepers send you ${REWARD_GOLD} gold.`;
+    let text = ` The bards sing your verse in every inn this week. The innkeepers send you ${REWARD_GOLD} gold.`;
     if (!(s.titles || []).includes(TITLE)) { s.titles = [...(s.titles || []), TITLE]; text += ` People call you ${TITLE}.`; }
     return text;
   }

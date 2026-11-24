@@ -47,7 +47,7 @@ const MARKET = (() => {
   /* the seller's game: take the money for sold things, or the goods back for withdrawn ones */
   function settle(s, d) {
     if (d.seller !== s.id) return null;
-    if (d.status === "sold") { const fee = d.hall && typeof HALLS !== "undefined" ? HALLS.HALL_FEE : FEE, net = Math.floor(d.price * (1 - fee)); s.gold += net; return `🛒 ${d.buyerName} bought your ${itemName(d.row)} for ${d.price} gold${d.hall ? " at your hall counter" : ""}. You get ${net} after the market fee.`; }
+    if (d.status === "sold") { const fee = d.hall && typeof HALLS !== "undefined" ? HALLS.HALL_FEE : FEE, net = Math.floor(d.price * (1 - fee)); s.gold += net; return ` ${d.buyerName} bought your ${itemName(d.row)} for ${d.price} gold${d.hall ? " at your hall counter" : ""}. You get ${net} after the market fee.`; }
     if (d.status === "withdrawn") { const id = G.give(s, d.row.item, d.row.qty, d.row.charge); const r = G.invRow(s, id); if (r && d.row.temper) Object.assign(r, { temper: d.row.temper, tq: d.row.tq }); if (typeof CRAFTFAIR !== "undefined") CRAFTFAIR.carry(s, id, d.row, d.row.qty); return `${itemName(d.row)} is back in your pack.`; }
     return null;
   }

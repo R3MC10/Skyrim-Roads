@@ -1,6 +1,6 @@
 /* Raid, Arena and clan art: a dragon circling a raided town on the map, the raid box's dragon health and top
    fighters, the Windhelm Arena with a cheering crowd, big clan banners and a map of the holds by ruling clan.
-   Drawn with the shared ART toolkit, so it follows ⚙ Settings → Art style (hand-drawn / pixel). Everything static is
+   Drawn with the shared ART toolkit, so it follows  Settings → Art style (hand-drawn / pixel). Everything static is
    cached; only the dragon on the map and the Arena crowd animate, and only while they're on screen. [OURS] */
 const RAIDART = (() => {
   const LX = (x) => (typeof I18N_SWEEP !== "undefined" ? I18N_SWEEP.c(x) : x);   // words drawn on canvas, in the player's language
@@ -73,8 +73,8 @@ const RAIDART = (() => {
     const mine = me.raid?.id === raid.id ? Math.round(me.raid.dmg) : 0;
     const rows = [...docs.filter((d) => d.raid === raid.id && d.uid !== me.id).map((d) => ({ id: d.uid, name: d.name, dmg: Math.round(d.dmg || 0) })), ...(mine ? [{ id: me.id, name: me.name, dmg: mine, me: true }] : [])]
       .sort((a, b) => b.dmg - a.dmg).slice(0, 3);
-    const medal = ["🥇", "🥈", "🥉"];
-    return `<div class="raidhp"><div class="raidhp-top"><span>🐉 ${typeof WEVENTS !== "undefined" && WEVENTS.kindOf ? WEVENTS.kindOf(raid).name : "Dragon"}</span><span class="num">${left > 0 ? `${left} / ${tl.need}` : "slain"}</span></div>
+    const medal = [0, 1, 2].map((i) => `<i class="rmed m${i}"></i>`);   // gold, silver, bronze
+    return `<div class="raidhp"><div class="raidhp-top"><span> ${typeof WEVENTS !== "undefined" && WEVENTS.kindOf ? WEVENTS.kindOf(raid).name : "Dragon"}</span><span class="num">${left > 0 ? `${left} / ${tl.need}` : "slain"}</span></div>
       <div class="raidhp-bar"><i style="width:${(frac * 100).toFixed(1)}%"></i></div>
       ${rows.length ? `<div class="raidtop">${rows.map((r, i) => `<div class="rt ${r.me ? "me" : ""}">${portraitOf ? portraitOf(r.id, 30) : ""}<span class="rn">${medal[i]} ${r.name.replace(/[<>&"]/g, "")}${r.me ? " (you)" : ""}</span><b class="num">${r.dmg}</b></div>`).join("")}</div>` : ""}</div>`;
   }
@@ -161,7 +161,7 @@ const RAIDART = (() => {
   }
   /* a challenge: both fighters face each other, the stake between them */
   function versus(a, b, stake, portraitOf) {
-    return `<div class="versus">${portraitOf ? portraitOf(a.id, 36) : ""}<span class="vn">${String(a.name).replace(/[<>&"]/g, "")}</span><span class="vs">${stake ? `⚔<small>${stake * 2} gold</small>` : "⚔<small>friendly</small>"}</span><span class="vn">${String(b.name).replace(/[<>&"]/g, "")}</span>${portraitOf ? portraitOf(b.id, 36) : ""}</div>`;
+    return `<div class="versus">${portraitOf ? portraitOf(a.id, 36) : ""}<span class="vn">${String(a.name).replace(/[<>&"]/g, "")}</span><span class="vs">${stake ? `<small>${stake * 2} gold</small>` : "<small>friendly</small>"}</span><span class="vn">${String(b.name).replace(/[<>&"]/g, "")}</span>${portraitOf ? portraitOf(b.id, 36) : ""}</div>`;
   }
   /* fightart hook: stands full of people above the arena wall */
   function stands(g, w, h, top, bottom) {

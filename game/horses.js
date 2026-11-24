@@ -133,10 +133,10 @@ const HORSES = (() => {
     if (!present(s) || Math.random() >= chance) return null;
     const h = s.horse, cur = hp(s, t), dmg = Math.round((e.damage || 10) * (3 + Math.random() * 3) * (1 - ARMOR[h.armor].guard));
     h.hp = cur - dmg; h.hpT = t;
-    if (h.hp > 0) return `🐴 The ${e.name} hurts ${h.name} (${Math.round(h.hp)}/${maxHp(h)}).`;
+    if (h.hp > 0) return ` The ${e.name} hurts ${h.name} (${Math.round(h.hp)}/${maxHp(h)}).`;
     const town = nearestStables([s.x, s.y]);
     h.hp = 0; h.away = { until: t + REST_MIN * 60, town }; h.mounted = true;
-    return `🐴 ${h.name} goes down, then limps off toward the stables at ${town}. Fetch them there in about ${REST_MIN} minutes.`;
+    return ` ${h.name} goes down, then limps off toward the stables at ${town}. Fetch them there in about ${REST_MIN} minutes.`;
   }
   const readyIn = (s, t = nowS()) => (away(s) ? Math.max(0, s.horse.away.until - t) : 0);
   function fetch(s, t = nowS()) {
