@@ -82,6 +82,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Claude: followers as full characters (followerai.js: spells from tomes, magicka/stamina/AP, every gear slot, own potions, tactics, rows) and party combos + foe weak/resist chips (combo.js). Branch claude/followers2.
 - Claude: foe rigs (foerig.js): every enemy is a little skeleton with its own animations (breathing, attacks, flinch, stagger, dodge, fall, gloat); painted foes bend and lunge too. Branch claude/foerigs.
 - Kacper: audio: the rest of scripts/gen_audio.mjs (free ElevenLabs plan has ~4k credits a month; music needs a paid plan).
+- Claude: party votes on the road (partyplay.js): everyone with the leader sees the same encounter/event window, members vote, their faces pop up by the option they picked, only the leader acts. Branch claude/partyvote.
 
 ## Standing rules
 - Perk trees grow with the game: every new system (gathering, magic, encounters, crafting, party play...) adds or adjusts perks with real effects in the matching trees (perkfx.js), keeping old perk ids and a clean star layout.
