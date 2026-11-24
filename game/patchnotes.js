@@ -3,7 +3,7 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b168-sides", build: 168, date: "24 Nov 2026", title: "Pick a side: Stormcloaks, Legion or Thalmor", items: [
+    { id: "b170-sides", build: 170, date: "24 Nov 2026", title: "Pick a side: Stormcloaks, Legion or Thalmor", items: [
       "Player clans are gone. At level 20 a courier brings you three letters, and a new quest, Pick a Side, sends you to the recruiters in Windhelm, Solitude and the Thalmor Embassy. Hear them out and swear to one. Players already past level 20 get the quest the next time they play.",
       "Old clans are disbanded with a note. Your old guild hall stays open to its members, and holds now belong to sides: war points, Jarls and hold seats work by side instead of by clan. Friends and parties work as before.",
       "Joining gives you 300 gold and your side's cloak, worn in a new cloak slot and drawn on your hero, in the side's colours with its emblem. Each of the 5 ranks sends a better cloak: small boosts at first, then a power you can use once a fight. Every side's cloaks do different things (frost and war cries, shield walls and soldiers, magicka and illusions).",
@@ -11,6 +11,14 @@ const PATCHNOTES = (() => {
       "Soldiers of different sides (level 20+) can attack each other anywhere in the same hold, always after a question first. The loser is knocked down and keeps their gear; the winner gets gold, a trophy, war points and rank XP. Guards still add a bounty if they see it. Nobody in a dungeon, nobody just knocked down, and never your own party.",
       "Each side has its own perks in the skill trees. Changing sides later costs gold, takes you back to the lowest rank and takes away the old cloaks and side perks (the perk points come back).",
       "Fixed: on phones and small windows a lot of newer screens (the house chest, hold rule, sides and more) had lost their proper look. They're back.",
+    ] },
+    { id: "b169-travelanim", build: 169, date: "24 Nov 2026", title: "Smoother riding on the road", items: [
+      "The picture under your trip got its walking and riding fixed: horses really walk and gallop now, every hoof lands on the road and stays put instead of sliding, and the body, mane and tail move with the stride.",
+      "If anyone in your company is on foot, the horses slow to a walk beside them, so your follower keeps up without shuffling on the spot. Ride alone (or with everyone mounted) and you gallop.",
+      "Everyone on the road is drawn at the same size and stands on the same line: a follower comes up past your horse's shoulder, and riders sit properly in the saddle.",
+      "Name tags sit just above each head and step out of each other's way instead of overlapping.",
+      "Carriage trips show the carriage again: you on the bench, a horse in front and the wheels turning. Caravans coming the other way get a real horse too.",
+      "Horses on the map step more cleanly as well. With Reduce motion on, everyone stands still.",
     ] },
     { id: "b145-levelup", build: 145, date: "24 Nov 2026", title: "Levelling up feels like Skyrim", items: [
       "When a skill goes up you now see it near the top of the screen: \"One-Handed increased to 36\" with a thin bar for the skill, and your level bar under it filling up, so you always know how close the next level is.",
@@ -1104,13 +1112,13 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 165;
+  const NEXT_AT = 169;
   const NEXT = [
     "A new, livelier fight screen that fits on one screen",
-    "On PC, everything fits on one screen without scrolling",
-    "New painted dungeon rooms and a parchment dungeon map",
-    "Dwemer ruins and the deep caverns of Blackreach",
-    "Fishing and hunting",
+    "Dragon Shouts learned from word walls",
+    "Werewolf and vampire paths",
+    "Followers with their own quests, opinions and banter",
+    "Weather that changes how the road and fights go",
   ];
   const KEY = "rotn_notes_seen";
   const latest = () => LIST[0];

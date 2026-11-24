@@ -4,7 +4,7 @@
 (() => {
   if (typeof I18N_STORY === "undefined") return;
   const PL = {
-    // ---- the patch note (patchnotes.js b168-sides)
+    // ---- the patch note (patchnotes.js b170-sides)
     "Pick a side: Stormcloaks, Legion or Thalmor": "Wybierz stronę: Gromowładni, Legion albo Thalmor",
     "Player clans are gone. At level 20 a courier brings you three letters, and a new quest, Pick a Side, sends you to the recruiters in Windhelm, Solitude and the Thalmor Embassy. Hear them out and swear to one. Players already past level 20 get the quest the next time they play.": "Klany graczy znikają. Na poziomie 20 kurier przynosi ci trzy listy, a nowe zadanie, Wybierz stronę, wysyła cię do werbowników w Windhelmie, Samotni i Ambasadzie Thalmoru. Wysłuchaj ich i przysięgnij jednej stronie. Gracze, którzy mają już ponad 20 poziom, dostaną zadanie przy następnej grze.",
     "Old clans are disbanded with a note. Your old guild hall stays open to its members, and holds now belong to sides: war points, Jarls and hold seats work by side instead of by clan. Friends and parties work as before.": "Stare klany zostają rozwiązane z krótką wiadomością. Dawna siedziba gildii zostaje otwarta dla jej członków, a twierdze należą teraz do stron: punkty wojny, jarlowie i rządy w twierdzach liczą się według stron, a nie klanów. Znajomi i drużyny działają jak dawniej.",
