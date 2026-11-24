@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b172-horseart", build: 172, date: "25 Nov 2026", title: "Painted horses", items: [
+      "Horses get painted: in fights, on the road and on the map your horse is now a proper painted horse with saddle and tack, not a little drawing.",
+      "It stands still when you stop and gallops while you ride, you sit in the saddle in fights, and a knocked-down horse lies on its side behind you (it still only gets knocked down).",
+      "Every coat shows: bay, black, grey, white, palomino and paint, also on the stables card and for friends riding with you.",
+    ] },
     { id: "b171-esckey", build: 171, date: "24 Nov 2026", title: "Esc menu and a card you can fold away", items: [
       "On PC, Esc now steps back one thing at a time, just like the back button on a phone: a tooltip, then a window, then the menu you're in, then the compass.",
       "When there's nothing left to close, Esc opens a pause menu like in Skyrim: Resume, Settings, Journal, Patch notes, How to play, Report a problem and Save and quit. The Windows app also has Quit game. Use the arrows and Enter, or the mouse.",
