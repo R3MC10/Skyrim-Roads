@@ -184,6 +184,14 @@ const PFX = (() => {
     [ "Acrobatics", "feather_step", "Feather Step", 1, [60], ["sure_footed"], "Carry 25 more. [OURS]", [["carry", 25, {}]]],
     // ---------------------------------------------------------------- Smithing (5 → 11)
     [ "Archery", "hunters_eye", "Hunter's Eye", 2, [20, 50], ["overdraw"], "Hunting: you find game half again as often, every kill gives an extra piece of meat (rank 2), and you hit animals 10%/20% harder. [OURS]", [["huntrate", [0.5, 0.5], {}], ["huntmeat", [0, 1], {}], ["out", [0.1, 0.2], { tag: ["animal"] }]]],
+    // ---------------------------------------------------------------- fishing, hunting and skinning mini-games (fishing.js, huntgame.js)
+    [ "Archery", "clean_kill", "Clean Kill", 2, [25, 50], ["overdraw"], "Hunting game: the heart-and-lungs spot on an animal is 25/50% bigger, and a wounded animal is easier to track down. [OURS]", [["huntvital", [0.25, 0.5], {}], ["hunttrack", [0.15, 0.3], {}]]],
+    [ "Archery", "wind_reader", "Wind Reader", 1, [40], ["clean_kill", "hunters_eye"], "Hunting game: the wind pushes your arrows half as much, and your aim sways 30% less. [OURS]", [["huntwind", 0.5, {}], ["huntsway", 0.3, {}]]],
+    [ "Archery", "skinner", "Skinner", 1, [30], ["hunters_eye", "clean_kill"], "Skinning: one more pelt or hide from every animal you shoot, and trophies (antlers, horns, tusks) turn up twice as often. [OURS]", [["skinyield", 1, {}], ["trophy", 1, {}]]],
+    [ "Sneak", "stalker", "Stalker", 2, [20, 45], ["stealth"], "Hunting game: animals take 25/50% longer to notice you creeping closer. [OURS]", [["huntstalk", [0.25, 0.5], {}]]],
+    [ "Alchemy", "angler", "Angler", 2, [15, 40], ["alchemist"], "Fishing: the safe band on the tension meter is 20/40% wider, and fish tire 15/30% faster. [OURS, gathering]", [["fishband", [0.2, 0.4], {}], ["fishtire", [0.15, 0.3], {}]]],
+    [ "Alchemy", "line_sense", "Line Sense", 1, [30], ["angler"], "Fishing: you feel the bite. You have half again as long to hook it, and a slack line takes longer to lose the fish. [OURS, gathering]", [["fishbite", 0.5, {}], ["fishslack", 0.5, {}]]],
+    [ "Alchemy", "deep_waters", "Deep Waters", 1, [50], ["line_sense", "forager"], "Fishing: rare fish bite twice as often, and cleaning a catch gives roe, pearls and eggs for alchemy more often. [OURS, gathering]", [["fishrare", 1, {}], ["fishgut", 0.5, {}]]],
     [ "Smithing", "prospector", "Prospector", 1, [30], ["steel_smithing"], "Mining: you spot every vein in the rock, gems turn up more often, and you get 2 more swings. [OURS]", [["prospect", 1, {}], ["mineswing", 2, {}], ["gemfind", 0.1, {}]]],
     [ "Smithing", "orcish_smithing", "Orcish Smithing", 1, [50], ["dwarven_smithing"], "Improving weapons and armor adds 1 more. [Skyrim: Orcish gear, improve twice as much]", [["temper", 1, {}]]],
     [ "Smithing", "ebony_smithing", "Ebony Smithing", 1, [80], ["orcish_smithing"], "Improving adds another 1. [Skyrim]", [["temper", 1, {}]]],

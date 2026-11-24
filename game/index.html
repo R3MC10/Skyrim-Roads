@@ -2806,8 +2806,39 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 .lcur .lcname{margin:14px 0 0 -2px;padding:1px 6px;font-size:11px;font-weight:600;letter-spacing:.04em;white-space:nowrap;color:#140c06;background:#f3d27a;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.6)}
 .lcur.down svg{transform:scale(.82)}.lcur.down::before{content:"";position:absolute;left:-9px;top:-9px;width:18px;height:18px;border-radius:50%;border:2px solid #f3d27a;opacity:.8}
 .lcur.wait{opacity:.55}
-html.art-pixel .lcur .lcname,html.art-pixel .ptrow{border-radius:0}html.art-pixel .lcur svg{image-rendering:pixelated}
 @media (prefers-reduced-motion:reduce){.lcur svg{transition:none}}
+/* fishing.js + huntgame.js: the fishing and hunting mini-games (one screen on PC, phone friendly) */
+.fhgame .fhcard{width:min(600px,100%);max-height:100%;overflow:auto;padding:12px 12px 10px}
+.fhgame .fhcard canvas{max-width:min(100%,560px,calc((100vh - 300px) * 1.867))!important;max-width:min(100%,560px,calc((100dvh - 300px) * 1.867))!important;box-shadow:0 0 0 1px rgba(228,220,200,.22)}
+.fhmeter{position:relative;height:22px;margin:8px 2px 4px;background:linear-gradient(90deg,rgba(228,220,200,.06),rgba(228,220,200,.14));box-shadow:inset 0 0 0 1px rgba(228,220,200,.25);visibility:hidden}
+.fhmeter.on{visibility:visible}
+.fhmeter .fhband{position:absolute;top:2px;bottom:2px;background:rgba(150,190,140,.42);box-shadow:inset 0 0 0 1px rgba(190,220,170,.6)}
+.fhmeter.aim .fhband{background:rgba(232,196,106,.35);box-shadow:inset 0 0 0 1px rgba(232,196,106,.7)}
+.fhmeter .fhdanger{position:absolute;top:2px;bottom:2px;right:2px;width:7%;background:repeating-linear-gradient(135deg,rgba(182,55,42,.75) 0 4px,rgba(182,55,42,.35) 4px 8px)}
+.fhmeter .fhneedle{position:absolute;top:-4px;bottom:-4px;width:4px;margin-left:-2px;background:#efe6cf;box-shadow:0 0 6px rgba(239,230,207,.7);transition:background .15s}
+.fhmeter.hot .fhneedle{background:#e0543f;box-shadow:0 0 10px rgba(224,84,63,.9)}
+.fhmeter.slack .fhneedle{background:#8fb2d8}
+.fhdist{height:6px;margin:0 2px;background:rgba(228,220,200,.08);visibility:hidden}
+.fhdist.on{visibility:visible}
+.fhdist i{display:block;height:100%;width:0;background:linear-gradient(90deg,#6a8fb0,#a8c8e0)}
+.fhmsg{min-height:2.6em;margin:6px 0 2px;font-size:15px;line-height:1.3;color:#e8dcc0}
+.fhgame .btn.fhbig{min-height:56px;font-size:18px;letter-spacing:.06em;touch-action:none;user-select:none;-webkit-user-select:none}
+.fhgame .cghint{min-height:2.4em}
+.hgbars{display:flex;align-items:center;gap:8px;margin:8px 2px 2px}
+.hglab{font-size:15px;line-height:1}
+.hgalert{flex:1;height:12px;background:rgba(228,220,200,.08);box-shadow:inset 0 0 0 1px rgba(228,220,200,.22)}
+.hgalert i{display:block;height:100%;width:0;background:linear-gradient(90deg,#c9a24a,#e0a03f)}
+.hgalert.hot i{background:linear-gradient(90deg,#d0603e,#e0331f)}
+.hgdist{min-width:3.4em;text-align:right;font-variant-numeric:tabular-nums;color:#b8b09c;font-size:14px}
+#hgrow .btn{flex:1 1 0}
+#hgrow .btn.fhbig{flex:2 1 0}
+@media (max-width:440px){
+  .fhgame .fhcard{padding:10px 8px 8px}
+  .fhgame .fhcard canvas{max-width:100%!important}
+  .fhmsg{font-size:14px}
+  #hgrow{flex-wrap:wrap}
+  #hgrow .btn.fhbig{flex:1 1 100%}
+}
 </style>
 <script src="bugreport.js"></script>
 <script src="access.js"></script>
@@ -2976,6 +3007,8 @@ html.art-pixel .lcur .lcname,html.art-pixel .ptrow{border-radius:0}html.art-pixe
 <script src="livecursor.js"></script>
 <script src="partytraps.js"></script>
 <script src="hunting.js"></script>
+<script src="fishing.js"></script>
+<script src="huntgame.js"></script>
 <script src="craftqol.js"></script>
 <script src="polish.js"></script>
 <script src="caravans.js"></script>
@@ -3028,6 +3061,7 @@ html.art-pixel .lcur .lcname,html.art-pixel .ptrow{border-radius:0}html.art-pixe
 <script src="i18n_eventart.js"></script>
 <script src="i18n_appicon.js"></script>
 <script src="i18n_partytraps.js"></script>
+<script src="i18n_fishhunt.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>
