@@ -12,6 +12,8 @@ const PATCHNOTES = (() => {
       "The \"quest stage done\" lines in quest pop-ups and the \"find them at...\" hints in the Journal now show in Polish too.",
       "Two new achievements, one for each ending. New pictures for the fort, the castle and the story, in both art styles. All of it is in Polish too.",
     ] },
+    { id: "b143-comingnext", build: 143, date: "24 Nov 2026", title: "Coming next is up to date again", items: [
+      "The Coming next box at the top of Patch notes now shows what's really being built, and it can't get stuck on an old list any more."] },
     { id: "b143-followertab", build: 143, date: "24 Nov 2026", title: "Your follower gets their own tab", items: [
       "Your follower now has their own Follower tab in the Character menu, next to Skills, Character and Perks. Everything about them lives there: overview, bond, gear, magic, tactics, perks, fighting style and Dismiss.",
       "The Character page only keeps one short line about them; tap it to jump to the tab. With nobody following you, the tab tells you who you can hire and where.",
@@ -813,9 +815,14 @@ const PATCHNOTES = (() => {
       "The Hall of the North that everyone builds together, and the Jarl's weekly bounty board.",
       "A main menu and in-app updates."] },
   ];
+  // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
+  // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
+  const NEXT_AT = 144;
   const NEXT = [
-    "A sharper Solitude peninsula and map polish",
-    "More quests and characters",
+    "A new, livelier fight screen that fits on one screen",
+    "On PC, everything fits on one screen without scrolling",
+    "New painted dungeon rooms and a painted world map",
+    "More unique enchantments on gear",
   ];
   const KEY = "rotn_notes_seen";
   const latest = () => LIST[0];
@@ -845,6 +852,6 @@ const PATCHNOTES = (() => {
     const n = latest();
     return `<div class="pnotes pnwhat"><div class="pnkick">What's new</div><h2>${e(n.title)}</h2><ul>${n.items.map((i) => `<li>${e(i)}</li>`).join("")}</ul></div>`;
   }
-  return { LIST, NEXT, latest, seen, markSeen, unseen, html, barHTML, whatsNewHTML, KEY };
+  return { LIST, NEXT, NEXT_AT, latest, seen, markSeen, unseen, html, barHTML, whatsNewHTML, KEY };
 })();
 if (typeof module !== "undefined") module.exports = PATCHNOTES;
