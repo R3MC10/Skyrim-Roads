@@ -69,6 +69,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Smart AI combat (default; custom tactics optional), crafting mini-games, motion design (63)
 
 ## In progress (write your name before you start)
+- Claude: dungeon mini-games (dungeongames.js): trap dash, find the trigger, smash a chest, sneak past, run for it, search; replayable from a seed + taps; party members watch the leader play live (also lockpicking and the pillar/claw rings). Branch claude/dungeongames.
 - Claude: visual overhaul (fits every screen and resolution) — branches claude/fit-*, in passes.
 - Kacper: reading the fight (fightread.js): foe intents, health forecasts for poison/burning/blows on both sides, turn-by-turn playback with banners and round summaries, low-health warning, combat sounds (ElevenLabs, `node scripts/gen_audio.mjs game/ combat`). Branch ccr-23a36e7d-impjqi.
 - Kacper: painted battle scenes (battlescene.js + bscdata.js, pictures bs-/bsf-/bsp-*.webp from the scene pack via scripts/import_battlescenes.py). Branch ccr-23a36e7d-impjqi.

@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b136dg", build: 136, date: "24 Nov 2026", title: "Dungeon mini-games, and watching your leader", items: [
+      "Dungeon rooms are played now, not rolled. Dash through a trap by running between the swinging blades, find the trigger by spotting the stone that sits low and glints, smash a chest with well-timed swings, sneak past a foe by stopping when it turns (and waiting in the shadows), and search a quiet room by rubbing the dust away. Each takes 5 to 15 seconds.",
+      "New choice in fight rooms: Run for it. Tap Left and Right in turn as fast as you can to get past the foe. Get caught and it hits first.",
+      "Your skills still matter: better Acrobatics, Sneak, Athletics and weapon skills make the games easier, and a near miss hurts less than a bad one. Light Foot shows you the trigger stone.",
+      "New perks: Blade Dancer (Acrobatics), Trap Sense and Patient Shadow (Sneak), Lid Breaker (Two-Handed), Sprinter (Athletics) and Keen Searcher (Lockpicking) each make one of these games easier.",
+      "In a party, everyone in the dungeon watches the leader play live: the blades, the chest, the lock and the pillar rings, tap by tap, and then sees what happened. The leader's play decides it for the whole party.",
+    ] },
     { id: "b135", build: 135, date: "24 Nov 2026", title: "No more flickering popups", items: [
       "Fixed: popups (like tapping an equipment slot) flickered for a split second just after they opened. They now open smoothly and stay put.",
     ] },
