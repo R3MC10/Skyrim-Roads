@@ -121,16 +121,18 @@ const GEARLOOK = (() => {
       boots: ft ? ft.c : null, legs: robe ? "robe" : "legs", head, helmColor, hoodColor, helmSet: hk,
       shield: !!eq.shield, shieldColor: sh ? sh.c : null, shieldTrim: sh ? sh.trim : null, shieldShape: sh ? (sh.w === "heavy" && !/^(iron|hide)/.test(setOf(eq.shield)) ? "kite" : "round") : null,
       gear: ch ? { set: setOf(eq.chest), ...ch } : null, glow: !!L?.gl?.w, aglow: !!L?.gl?.a,
-      cape: ch?.f?.cape || (ch && ch.w === "heavy" ? "#7a2a22" : null), wt: wkOf(eq.weapon) || "fist", wmat: eq.weapon ? set(setOf(eq.weapon)) : null,
+      cape: cloakC(eq) || ch?.f?.cape || (ch && ch.w === "heavy" ? "#7a2a22" : null), wt: wkOf(eq.weapon) || "fist", wmat: eq.weapon ? set(setOf(eq.weapon)) : null,
     };
     return o;
   }
   /* small travel figure colours */
+  /* a side cloak (cloaks.js) colours the cape */
+  const cloakC = (eq) => (eq && eq.cloak && typeof D !== "undefined" && D.ITEMS[eq.cloak]?.cloakLook?.c) || null;
   function walker(L) {
     const eq = L?.eq || {}, ch = eq.chest ? set(setOf(eq.chest)) : null;
     return {
       body: ch ? ch.c : "#6b5640", trim: ch ? ch.trim : "#8f7a66", dark: ch ? ch.d : "#4d3c2c", heavy: !!ch && ch.w === "heavy", robe: !!ch && ch.w === "robe",
-      fur: !!ch?.f?.fur, cape: ch?.f?.cape || (ch?.f?.hood ? ch.f.hood : "#8e2b25"), hood: !!(ch?.f?.hood && !eq.head),
+      fur: !!ch?.f?.fur, cape: cloakC(eq) || ch?.f?.cape || (ch?.f?.hood ? ch.f.hood : "#8e2b25"), hood: !!(ch?.f?.hood && !eq.head),
       helm: eq.head ? set(setOf(eq.head)).c : null, horns: !!(eq.head && set(setOf(eq.head)).f?.horns), shield: eq.shield ? set(setOf(eq.shield)).c : null,
       weapon: eq.weapon ? set(setOf(eq.weapon)).trim : null, glow: L?.gl?.w ? true : !!ch?.f?.glow, glowC: ch?.f?.glow || "#c9b6ff",
     };
