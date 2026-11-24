@@ -388,7 +388,7 @@ const DEEPDELVE = (() => {
   // ---------------------------------------------------------------- screens
   const E = (x) => String(x ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   function modChips(keys) {
-    return keys.map((k) => `<div class="dd-mod" data-mod="${k}"><b>${MODS[k].icon} ${E(MODS[k].name)}</b><span>${E(MODS[k].desc)}</span></div>`).join("");
+    return keys.map((k) => `<div class="dd-mod" data-mod="${k}"><div class="dd-mn"><b>${MODS[k].icon} ${E(MODS[k].name)}</b></div><div class="dd-md">${E(MODS[k].desc)}</div></div>`).join("");
   }
   /* on a dungeon's place card: the difficulty picker (level 30+) and the depths note */
   function placeCard(s, place) {
