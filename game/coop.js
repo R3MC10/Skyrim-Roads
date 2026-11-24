@@ -170,7 +170,7 @@ const COOP = (() => {
   function hitAlly(f, al) {
     const n = f.e.name;
     const guard = f.allies.find((a) => a.coop && !a.down && a.role === "guard");
-    if (guard && guard !== al && Math.random() < 0.5) al = guard;
+    if (guard && guard !== al && !f.tgtFixed && Math.random() < 0.5) al = guard;   // foeintent.js already rolled this when it showed the target
     if (Math.random() > F.HIT_CHANCE) return `${n} swings at ${al.name} and misses`;
     let d = f.e.damage * (0.85 + Math.random() * 0.3) * (1 - al.red) * (al.role === "guard" ? 0.6 : 1);   // [OURS] a guard blocks
     if (typeof SPELLBOOK !== "undefined") d = SPELLBOOK.allyTakes(f, al, d);   // support spells you cast on them

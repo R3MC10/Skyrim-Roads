@@ -37,6 +37,8 @@ const FOEKIT = (() => {
   }
   const dot = (f, name, dmg, turns, magic) => { f.kitDot = { name, dmg: Math.max(1, dmg), turns, magic: !!magic }; };
   const base = (f) => Math.max(1, f.e.damage || 5);
+  /* poison, burning and bleeding follow the blow that caused them: armour that soaked most of the cut soaks most of the poison too */
+  const thru = (f, r, mul) => Math.max(0.25, Math.min(1, r.loss / (base(f) * mul)));
   const MOVES = {
     // warriors: shield on the arm
     shield_bash: { label: "Shield bash", cd: 3, w: 3, run(f, et, n) { const r = hit(f, et, 0.7); if (r.loss > 0) { const b = f.sp; f.sp = Math.max(0, f.sp - G.maxStamina(f.s) * 0.25); f.kitApLoss = 1; return `${n} slams you with a shield: ${r.t} (−${Math.round(b - f.sp)} stamina, −1 AP next turn)`; } return `${n} swings a shield at you: ${r.t}`; } },
@@ -46,28 +48,28 @@ const FOEKIT = (() => {
     war_cry: { label: "War cry", cd: 5, w: 2, buff: true, run(f, et, n) { f.kit.rage = 3; return `${n} roars a war cry (hits 25% harder for 3 turns)`; } },
     // archers
     take_aim: { label: "Take aim", cd: 4, w: 3, tele: true, run(f, et, n) { f.kit.windup = "aimed"; return `${n} draws and takes careful aim at you...`; } },
-    poison_arrow: { label: "Poison arrow", cd: 4, w: 2, run(f, et, n) { const r = hit(f, et, 0.8); if (r.loss > 0) { dot(f, "poison", base(f) * 0.35, 3); return `${n} looses a poisoned arrow: ${r.t} (you're poisoned)`; } return `${n} looses a poisoned arrow: ${r.t}`; } },
+    poison_arrow: { label: "Poison arrow", cd: 4, w: 2, run(f, et, n) { const r = hit(f, et, 0.8); if (r.loss > 0) { dot(f, "poison", base(f) * 0.35 * thru(f, r, 0.8), 3); return `${n} looses a poisoned arrow: ${r.t} (you're poisoned)`; } return `${n} looses a poisoned arrow: ${r.t}`; } },
     // mages
     bolt: { label: "Bolt", cd: 2, w: 4, run(f, et, n) {
       const el = elOf(f), r = hit(f, et, 1.15, { magic: true });
       let x = "";
       if (r.loss > 0) {
-        if (el === "fire") { dot(f, "burning", base(f) * 0.3, 2, true); x = " (you're burning)"; }
+        if (el === "fire") { dot(f, "burning", base(f) * 0.3 * thru(f, r, 1.15), 2, true); x = " (you're burning)"; }
         else if (el === "frost") { const b = f.sp; f.sp = Math.max(0, f.sp - G.maxStamina(f.s) * 0.15); x = ` (−${Math.round(b - f.sp)} stamina)`; }
         else { const b = f.mp; f.mp = Math.max(0, f.mp - G.maxMagicka(f.s) * 0.15); x = ` (−${Math.round(b - f.mp)} magicka)`; }
       }
       return `${n} casts ${EL[el].bolt}: ${r.t}${x}`;
     } },
     foe_ward: { label: "Ward", cd: 5, w: 2, buff: true, run(f, et, n) { f.kit.ward = Math.round(base(f) * 2.5); return `${n} raises a ward against your spells (${f.kit.ward})`; } },
-    mend: { label: "Healing spell", cd: 5, w: 3, when: (f) => f.ehp < (f.ehp0 || f.ehp) * 0.55, run(f, et, n) { const h = Math.round((f.ehp0 || f.ehp) * 0.12); f.ehp = Math.min(f.ehp0 || f.ehp + h, f.ehp + h); return `${n} casts a healing spell: +${h}`; } },
+    mend: { label: "Healing spell", cd: 5, w: 3, when: (f) => f.ehp < (f.ehp0 || f.ehp) * 0.55 && (f.kit.used.mend || 0) < 2, run(f, et, n) { const h = Math.round((f.ehp0 || f.ehp) * 0.1);   /* a foe's magicka runs dry: two heals a fight */ f.ehp = Math.min(f.ehp0 || f.ehp + h, f.ehp + h); return `${n} casts a healing spell: +${h}`; } },
     // rogues
-    poison_blade: { label: "Poisoned blade", cd: 3, w: 3, run(f, et, n) { const r = hit(f, et, 0.9); if (r.loss > 0) { dot(f, "poison", base(f) * 0.4, 3); return `${n} cuts you with a poisoned blade: ${r.t} (you're poisoned)`; } return `${n} slashes with a poisoned blade: ${r.t}`; } },
+    poison_blade: { label: "Poisoned blade", cd: 3, w: 3, run(f, et, n) { const r = hit(f, et, 0.9); if (r.loss > 0) { dot(f, "poison", base(f) * 0.4 * thru(f, r, 0.9), 3); return `${n} cuts you with a poisoned blade: ${r.t} (you're poisoned)`; } return `${n} slashes with a poisoned blade: ${r.t}`; } },
     shadowstep: { label: "Shadowstep", cd: 4, w: 2, buff: true, run(f, et, n) { f.kit.evade = 0.6; return `${n} slips into the shadows (your next blow may miss)`; } },
     // beasts
     pounce: { label: "Pounce", cd: 3, w: 3, run(f, et, n) { const r = hit(f, et, 1.1); if (r.loss > 0) { const b = f.sp; f.sp = Math.max(0, f.sp - G.maxStamina(f.s) * 0.2); return `${n} pounces on you: ${r.t} (−${Math.round(b - f.sp)} stamina)`; } return `${n} pounces: ${r.t}`; } },
-    maul: { label: "Maul", cd: 3, w: 3, run(f, et, n) { const r = hit(f, et, 0.9); if (r.loss > 0) { dot(f, "bleeding", base(f) * 0.2, 3); return `${n} mauls you: ${r.t} (you're bleeding)`; } return `${n} claws at you: ${r.t}`; } },
+    maul: { label: "Maul", cd: 3, w: 3, run(f, et, n) { const r = hit(f, et, 0.9); if (r.loss > 0) { dot(f, "bleeding", base(f) * 0.2 * thru(f, r, 0.9), 3); return `${n} mauls you: ${r.t} (you're bleeding)`; } return `${n} claws at you: ${r.t}`; } },
     howl: { label: "Howl", cd: 6, w: 1, buff: true, run(f, et, n) { f.kit.rage = 2; return `${n} howls, hackles up (hits 25% harder for 2 turns)`; } },
-    venom: { label: "Venom spit", cd: 3, w: 3, run(f, et, n) { const r = hit(f, et, 0.7); if (r.loss > 0) dot(f, "venom", base(f) * 0.3, 3); else return `${n} spits venom: ${r.t}`; return `${n} spits venom: ${r.t} (you're poisoned)`; } },
+    venom: { label: "Venom spit", cd: 3, w: 3, run(f, et, n) { const r = hit(f, et, 0.7); if (r.loss > 0) dot(f, "venom", base(f) * 0.3 * thru(f, r, 0.7), 3); else return `${n} spits venom: ${r.t}`; return `${n} spits venom: ${r.t} (you're poisoned)`; } },
     regen: { label: "Regenerate", cd: 5, w: 3, when: (f) => f.ehp < (f.ehp0 || f.ehp) * 0.8, run(f, et, n) { const h = Math.round((f.ehp0 || f.ehp) * 0.05); f.ehp = Math.min(f.ehp0 || f.ehp + h, f.ehp + h); return `${n}'s wounds close up: +${h}`; } },
     // undead
     force: { label: "Unrelenting Force", cd: 5, w: 2, run(f, et, n) { const r = hit(f, et, 0.6, { magic: true }); f.kitApLoss = 2; const b = f.sp; f.sp = Math.max(0, f.sp - G.maxStamina(f.s) * 0.2); return `${n} shouts FUS RO DAH! ${r.t} (you're knocked back: −2 AP next turn, −${Math.round(b - f.sp)} stamina)`; } },

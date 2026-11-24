@@ -265,7 +265,7 @@ const HALLS = (() => {
     s.fx = (s.fx || []).filter((f) => f !== old);
     s.fx.push({ key: "barter", mag: n, until: t + 3 * DAY, name: "Hall trophies" });
   }
-  const trophyOk = (r) => { const it = D.ITEMS[r?.item]; return !!it && ["trophy", "valuable"].includes(it.slot) && !r.stolen; };
+  const trophyOk = (r) => { const it = D.ITEMS[r?.item]; return !!it && ["trophy", "valuable", "ring", "amulet"].includes(it.slot) && !r.stolen; };
 
   /* ---- storage and the trophy wall. For guild halls, `who` is the player; members (not the founder) take
      at most CLAN_TAKES_PER_DAY things a day. */
