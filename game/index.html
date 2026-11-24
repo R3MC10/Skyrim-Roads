@@ -2555,6 +2555,33 @@ html.pcmap.pcq-off:not(.pc-side) .pcqtab{transform:none}
 .pcqtab svg{width:20px;height:20px}
 html.pcmap.pc-reduce .pcquest,html.pcmap.pc-reduce .pcqtab,html.pcmap.pc-reduce #side{transition:none!important;animation:none!important}
 html.pcmap.pc-home:has(.pcparty.on) .vitals{left:14px}
+/* [chargebar] chargebar.js: the thin purple charge bar of enchanted weapons and staffs, everywhere */
+.cbar{--cb-a:#6b4fc8;--cb-b:#b49cff;position:relative;display:inline-block;vertical-align:middle;width:46px;height:5px;border-radius:3px;background:rgba(10,8,20,.65);box-shadow:inset 0 0 0 1px rgba(180,156,255,.38),0 0 0 1px rgba(0,0,0,.35);overflow:hidden;line-height:0}
+.cbar i{display:block;height:100%;background:linear-gradient(90deg,var(--cb-a),var(--cb-b));box-shadow:0 0 4px rgba(180,156,255,.6);border-radius:inherit}
+.cbar.cb-empty{background:rgba(120,20,20,.55);box-shadow:inset 0 0 0 1px rgba(255,110,90,.65),0 0 0 1px rgba(0,0,0,.35)}
+.cbar.cb-empty i{background:#d4483a}
+.cb-ico{position:relative;display:inline-block;flex:none;vertical-align:middle;line-height:0}
+.cb-ico>img.art.ico{margin:0!important}
+.sky-row .nm .cb-ico{margin-right:8px}
+.cbar.cb-on{position:absolute;width:auto;border-radius:2px;pointer-events:none}
+.cb-inl{display:inline-flex;align-items:center;gap:5px;vertical-align:middle;white-space:nowrap}
+.cb-inl .cbar{width:40px;height:5px}
+.cb-pct{font-style:normal;color:#c9b8ff;font-size:12px}
+.cb-none{font-style:normal;font-weight:600;color:#ff8a78;font-size:.85em;white-space:nowrap}
+.cb-detail{margin:8px 0 4px;clear:both}
+.cb-detail .cb-head{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
+.cb-detail .cb-head b{color:#c9b8ff;font-size:13px;letter-spacing:0;text-transform:none}
+.cb-detail.cb-empty .cb-head b{color:#ff8a78}
+.cbar.cb-wide{display:block;width:100%;height:7px;margin:3px 0}
+.cb-detail small{color:var(--mute);font-size:12px}
+.tbsub .tbbar.ch{grid-column:1/-1}
+.tbbar.ch i{background:linear-gradient(90deg,#5a3fb8,#b49cff)}
+.tbbar.ch.cb-empty{background:rgba(140,24,24,.45)}
+.tbbar.ch.cb-empty i{background:#d4483a}
+.tbbar.ch.cb-empty .num{color:#ffd0c8}
+html.art-pixel .cbar,html.art-pixel .cbar i,html.art-pixel .tbbar.ch{border-radius:0}
+html.art-pixel .cbar i{background:repeating-linear-gradient(90deg,var(--cb-b) 0 3px,var(--cb-a) 3px 4px);box-shadow:none}
+html.art-pixel .cbar.cb-empty i{background:#d4483a}
 </style>
 <script src="access.js"></script>
 </head>
@@ -2724,6 +2751,7 @@ html.pcmap.pc-home:has(.pcparty.on) .vitals{left:14px}
 <script src="nickname.js"></script>
 <script src="desktop.js"></script>
 <script src="pcupdate.js"></script>
+<script src="chargebar.js"></script>
 <script src="i18n_story.js"></script>
 <script src="i18n_beast.js"></script>
 <script src="i18n_hsrooms.js"></script>

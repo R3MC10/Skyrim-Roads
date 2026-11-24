@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b166-chargebar", build: 166, date: "24 Nov 2026", title: "Charge bars", items: [
+      "Enchanted weapons and staffs now show a thin purple charge bar everywhere they appear: your pack, the Items menu and its details, tooltips, the paper doll, shops, chests and stash, follower gear, loot and loot votes, markets and trades.",
+      "When the charge runs out the bar turns red and the item says \"no charge\": the enchantment stops working until you recharge it with a filled soul gem (Items → the weapon → Recharge).",
+      "In a turn-by-turn fight a charge meter sits under your health while an enchanted weapon or staff is in your hand.",
+      "New Enchanting perk, Thrifty Runes: enchanted weapons and staffs use 20% less charge, and every kill puts 3% back.",
+      "Old saves: enchanted weapons that had lost their charge number start full again.",
+    ] },
     { id: "b165-pcmap", build: 165, date: "24 Nov 2026", title: "The big map on PC", items: [
       "On a PC or laptop the world map is now your home screen: it fills the whole window, and Items, Skills, Magic and the Journal open on top of it over a blurred map. On phones nothing changes.",
       "Drag to look around, scroll to zoom smoothly from all of Skyrim down to a single village, and press Space to jump back to your hero. WASD and the arrows move the map too (while the compass is closed).",

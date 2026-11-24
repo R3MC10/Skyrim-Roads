@@ -38,3 +38,4 @@ tests/out_pcmap/
 art_gpt/*.png
 tests/out_evbanner/
 tests/out_gather/
+tests/out_chargebar/
