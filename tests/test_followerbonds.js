@@ -3,8 +3,16 @@
 const fs = require("fs"), vm = require("vm");
 const W = process.env.W || require("path").join(__dirname, "../game/");
 const c = { console, Math, Date, JSON, Float64Array, Float32Array, Uint8Array, Int32Array, Uint16Array, Int16Array, Object, Array, Set, Map, Proxy, Number, String };
+c.__lang = "en"; c.localStorage = { getItem: () => JSON.stringify({ lang: c.__lang }), setItem() {} };   // the Polish part flips this
+{ // every double-quoted string in followerbonds.js that reads like words (ids, css, html bits and templates left out)
+  const code = /^(?:[a-z0-9_:\-#. ]*|.*\$\{.*|.*[=<>].*|[\][(){}].*|bond_\w+|\w+:[\w-]+|One-Handed|Two-Handed|Archery|Sneak|Destruction|Restoration|aria-live|&quot;| up| down)$/, out = new Set();
+  for (const line of fs.readFileSync(W + "followerbonds.js", "utf8").split("\n")) {
+    if (/^\s*(\/\/|\/\*|\*)/.test(line)) continue;
+    for (const m of line.matchAll(/"((?:[^"\\\n]|\\.)*)"/g)) { const v = m[1].replace(/\\"/g, '"'); if (/[A-Za-z]{2}/.test(v) && !code.test(v)) out.add(v); }
+  }
+  c.__cands = [...out]; }
 vm.createContext(c);
-for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "legendary.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "enchanting.js", "quests.js", "guilds.js", "priests.js", "horses.js", "horseback.js", "hall.js", "bounty.js", "visits.js", "cooking.js", "arena.js", "market.js", "smithing.js", "craftfair.js", "social.js", "ammo.js", "tomes.js", "magic.js", "combatai.js", "mp.js", "coop.js", "party.js", "followers2.js", "followerai.js", "combo.js", "partyplay.js", "followerbonds.js"])
+for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "legendary.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "enchanting.js", "quests.js", "guilds.js", "priests.js", "horses.js", "horseback.js", "hall.js", "bounty.js", "visits.js", "cooking.js", "arena.js", "market.js", "smithing.js", "craftfair.js", "social.js", "ammo.js", "tomes.js", "magic.js", "combatai.js", "mp.js", "coop.js", "party.js", "followers2.js", "followerai.js", "combo.js", "partyplay.js", "followerbonds.js", "i18n_story.js", "i18n_bonds.js", "i18n.js"])
   if (fs.existsSync(W + f)) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
 vm.runInContext(`
 let n = 0; const OK = (x, m) => { if (!x) throw new Error("FAIL " + m); n++; };
@@ -130,6 +138,28 @@ const foe = G.scaleEnemy({ ...D.ENCOUNTERS.find((e) => e.name === "Bandit outlaw
 { const s = mk("u", "UI"); TOWNS.hire(s, "lydia"); const h = BONDS.tab(s, (x) => String(x));
   OK(/Loyalty/.test(h) && /Likes/.test(h) && /Personal quest/.test(h) && /data-b="talk"/.test(h), "Bond tab has meter, opinions, quest, talk");
   FOL2.act(s, { op: "view", id: "bond" }); OK(/class="bond"/.test(FOL2.panel(s, (x) => String(x))), "follower screen shows the Bond tab"); FOL2.reset(); }
+
+// 11. Polish: every line players can see has a translation, and the screens and messages come out in Polish
+{ const places = new Set(Object.keys(WORLD.places)), missing = __cands.filter((v) => !places.has(v) && !TOWNS.FOLLOWERS[v] && !BONDS.TAGS[v] && I18N.tr(v) == null);
+  OK(!missing.length, "every followerbonds line has Polish (" + missing.length + " missing: " + missing.slice(0, 6).join(" | ") + ")");
+  __lang = "pl";
+  OK(I18N.lang() === "pl" && BONDS.T("Talk") === "Porozmawiaj" && BONDS.F("A gift costs {0} gold.", 100) === "Prezent kosztuje 100 złota.", "T and F translate when the game is in Polish");
+  const s = mk("pl", "Polak"); TOWNS.hire(s, "lydia"); BONDS.observe(s);
+  const h = BONDS.tab(s, (x) => String(x));
+  OK(/Lojalność/.test(h) && /Lubi:/.test(h) && /Osobiste zadanie/.test(h) && /Porozmawiaj/.test(h) && /Zadowolony/.test(h) && /Pomaganie ludziom|Wielkie walki/.test(h), "Bond tab is in Polish");
+  OK(!/>(?:Likes:|Dislikes:|Personal quest|Lately|Talk|Listen)</.test(h) && !/Loyalty </.test(h), "no English labels left on the Bond tab");
+  OK(/Lojalność/.test(BONDS.meter(s)), "the meter is in Polish");
+  const said = BONDS.say(s, "Keep your eyes on the treeline. Bandits love this stretch.", { bubble: false });
+  OK(said === 'Lydia: "Miej oko na linię drzew. Bandyci uwielbiają ten odcinek."', "lines are said in Polish: " + said);
+  OK(s.bondLog === undefined && FOL2.st(s).bond.log[0].l.startsWith("Keep your eyes"), "the log keeps English underneath, so switching language back works");
+  OK(/Miej oko/.test(BONDS.tab(s, (x) => String(x))), "the Lately log shows the line in Polish");
+  FOL2.st(s).loyal = 90; const q = BONDS.questStart(s);
+  OK(/Przysięga huskarla/.test(q) && /idź do: Whiterun/.test(q), "quest start message is in Polish: " + q);
+  FOL2.st(s).bond.q.stage = 2; const done = BONDS.questChoose(s, 1);
+  OK(/Lydia podnosi/.test(done) && /Zaprzysiężona tarcza/.test(done) && /Tarcza przysięgi Lydii/.test(done), "quest ending, move and keepsake are in Polish: " + done.slice(0, 120));
+  const m = { dog: BONDS.T("wags his tail") }; OK(m.dog === "merda ogonem", "dog lines work without the stars");
+  __lang = "en";
+  OK(/Loyalty/.test(BONDS.meter(s)) && BONDS.T("Talk") === "Talk", "back in English everything is English again"); }
 
 console.log("followerbonds ok · " + n + " checks");
 `, c);

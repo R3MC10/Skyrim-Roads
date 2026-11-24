@@ -11,6 +11,7 @@ const PATCHNOTES = (() => {
       "Every follower has a personal quest that opens at loyalty 80: go somewhere with them, clear a place, and make a last choice. They learn a signature move they use once per fight (a big hit, a volley, a bleeding shot or a heal) and you get a keepsake piece of gear.",
       "New perks: Kindred Spirit (Speechcraft): loyalty grows faster and drops slower. Heart to Heart (Speechcraft): talks count double and they never refuse your orders. Sworn Companion (Etiquette): personal quests open at 65 and signature moves are 25% stronger.",
       "In a party only the leader makes choices, so a personal quest's last choice waits until you lead or travel alone.",
+      "All of it is in Polish too: the Bond tab, every line they say, their quests, moves and keepsakes.",
     ] },
     { id: "b135-compass", build: 135, date: "24 Nov 2026", title: "A real 3D compass", items: [
       "The golden compass on the home screen is now a proper 3D piece: drag it and it tilts toward your finger, catching the light and showing its thick bronze edge, then springs back when you let go.",

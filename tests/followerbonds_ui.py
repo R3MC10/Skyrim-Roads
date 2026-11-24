@@ -6,7 +6,9 @@ Screenshots: tests/out_followerbonds/."""
 import asyncio, sys, os
 from playwright.async_api import async_playwright
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"
-OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out_followerbonds") + os.sep; os.makedirs(OUT, exist_ok=True)
+LANG = os.environ.get("LANG_UI", "en")   # LANG_UI=pl runs the same walk with the game in Polish
+WORDS = {"en": ["Likes", "Dislikes", "Personal quest", "Lydia"], "pl": ["Lubi", "Nie lubi", "Osobiste zadanie", "Lydia", "Lojalność"]}[LANG]
+OUT =os.path.join(os.path.dirname(os.path.abspath(__file__)), "out_followerbonds") + os.sep; os.makedirs(OUT, exist_ok=True)
 CHROME = os.environ.get("CHROME", "/usr/bin/google-chrome")
 fails = []
 def ok(c, m):
@@ -27,9 +29,9 @@ async def main():
         errs = []
         for vw, vh, tag in [(390, 844, "phone"), (1920, 1080, "pc")]:
             for style in ["ink", "pixel"]:
-                name = f"{tag}_{style}"
+                name = f"{tag}_{style}" + ("" if LANG == "en" else "_" + LANG)
                 ctx = await b.new_context(viewport={"width": vw, "height": vh}, device_scale_factor=2 if tag == "phone" else 1, has_touch=tag == "phone")
-                await ctx.add_init_script(f"localStorage.setItem('rotn_prefs', JSON.stringify({{artStyle:'{style}',obTips:false}}))")
+                await ctx.add_init_script(f"localStorage.setItem('rotn_prefs', JSON.stringify({{artStyle:'{style}',obTips:false,lang:'{LANG}'}}))")
                 pg = await ctx.new_page(); pg.on("pageerror", lambda e, n=name: errs.append(n + " " + str(e)))
                 await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=fb{name}"); await pg.wait_for_timeout(2000)
                 await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Bondtest"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
@@ -59,7 +61,10 @@ async def main():
                 ok(await pg.query_selector(".fol2 .bondm") is not None, f"{name}: loyalty meter under her name")
                 ok(await tap(".fol2 [data-op=view][data-id=bond]"), f"{name}: open the Bond tab")
                 txt = await pg.evaluate("document.querySelector('.fol2 .bond')?.textContent || ''")
-                ok("Likes" in txt and "Dislikes" in txt and "Personal quest" in txt and "Lydia" in txt, f"{name}: Bond tab shows opinions, quest and what she said")
+                ok(all(w in txt for w in WORDS), f"{name}: Bond tab shows opinions, quest and what she said")
+                if LANG == "pl":
+                    eng = [w for w in ["Likes:", "Dislikes:", "Personal quest", "Lately", "What they think", "Loyalty", "Talk"] if w in txt]
+                    ok(not eng, f"{name}: no English left on the Bond tab {eng}")
                 ok(await snap(".fol2", f"{name}_bond.png"), f"{name}: Bond tab shot")
                 # talk button works
                 l0 = await pg.evaluate("() => BONDS.loyalty(window.__dbg.save())")
@@ -84,6 +89,9 @@ async def main():
                 await pg.evaluate("() => { const S = window.__dbg.save(); BONDS.say(S, 'Keep your eyes on the treeline. Bandits love this stretch.', { mood: 'force' }); }")
                 await pg.wait_for_timeout(500)
                 ok(await pg.query_selector("#folbark") is not None, f"{name}: speech bubble shows")
+                if LANG == "pl":
+                    bt = await pg.evaluate("document.querySelector('#folbark')?.textContent || ''")
+                    ok("Miej oko" in bt, f"{name}: the bubble speaks Polish ({bt[:50]})")
                 await pg.screenshot(path=OUT + f"{name}_bubble.png")
                 # no sideways scroll on the follower screen
                 over = await pg.evaluate("() => document.documentElement.scrollWidth - window.innerWidth")
