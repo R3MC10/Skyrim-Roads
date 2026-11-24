@@ -18,19 +18,19 @@ const AREAUI = (() => {
     ["services", "Services & trainers", ["train", "forge", "alchemy", "enchanter", "craft", "carriage", "docks"]],
     ["work", "Work & jobs", ["jobs", "notice", "caravans", "mine", "streets"]],
     ["home", "Your home", ["home", "homestead", "homes", "halls", "hall"]],
-    ["events", "Events & fun", ["arena", "fish"]],
+    ["events", "Events & fun", ["arena", "fish", "hunt"]],
   ];
   const GROUP_OF = {};
   for (const [g, , ids] of GROUPS) for (const id of ids) GROUP_OF[id] = g;
   const ICON = { inn: "🍺", cook: "🍲", hire: "🛡", general: "🧺", blacksmith: "⚒", wizard: "🔮", market: "🛒", stables: "🐎", fence: "🗝", train: "📚", forge: "🔥", alchemy: "⚗", enchanter: "✨",
-    craft: "🌀", carriage: "🛞", docks: "⚓", jobs: "📋", notice: "📜", caravans: "🐫", mine: "⛏", streets: "🏙", home: "🏠", homestead: "🪵", homes: "🏘", halls: "🏰", hall: "⚑", arena: "⚔", fish: "🎣" };
+    craft: "🌀", carriage: "🛞", docks: "⚓", jobs: "📋", notice: "📜", caravans: "🐫", mine: "⛏", streets: "🏙", home: "🏠", homestead: "🪵", homes: "🏘", halls: "🏰", hall: "⚑", arena: "⚔", fish: "🎣", hunt: "🏹" };
   /* short tile names where the screen's own name is long */
   const SHORT = { fence: "Fence", hire: "Hirelings", wizard: "Court wizard", general: "General goods", cook: "Cooking pot", craft: "Spell crafting", homes: "Neighbours", hall: "Hall of the North", halls: "Halls & shops", notice: "Jarl's bounty", market: "Market stalls" };
   /* a few words when there's no live status */
   const TAG = { inn: "Sleep, rumours", cook: "Meals that buff", hire: "Fight beside you", general: "Food, potions, kit", blacksmith: "Weapons, armor, metal", wizard: "Tomes, staffs, soul gems",
     market: "Players' stalls", stables: "Horses and carts", fence: "Buys stolen goods", train: "Raise a skill", forge: "Make, smelt, improve", alchemy: "Brew potions", enchanter: "Enchant gear",
     craft: "Your own spells", carriage: "Safe, fast rides", docks: "Boats", jobs: "Small paid work", notice: "This week's goals", caravans: "Guard for pay", mine: "Dig ore", streets: "Pickpocket, bounty",
-    home: "Your house", homestead: "Build your own", homes: "Players' houses", halls: "Build a hall", hall: "Everyone builds it", arena: "Duel for a stake", fish: "Cast a line" };
+    home: "Your house", homestead: "Build your own", homes: "Players' houses", halls: "Build a hall", hall: "Everyone builds it", arena: "Duel for a stake", fish: "Cast a line", hunt: "Stalk deer and elk" };
   const DEFAULT_OPEN = { inn: true, market: true, services: true, work: true, home: true, events: true };
 
   // ------------------------------------------------------------ pure helpers (tested in node)

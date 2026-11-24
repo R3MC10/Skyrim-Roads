@@ -3,6 +3,17 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b152-fishhunt", build: 152, date: "24 Nov 2026", title: "Gone fishing, gone hunting", items: [
+      "Fishing is a proper little game now: cast (time the power bar for a long cast), wait for the float to go right under, then hold to reel and let go to ease off. Keep the needle in the safe band: too tight and the line snaps, too slack and the fish gets away. Works with a finger or the Space bar.",
+      "Twelve new fish, and what bites depends on the water, the hold, the time of day and the weather. Arctic char and grayling in the cold north, glass catfish and vampire fish only at night, pogfish love the rain, and a rare goldfish only bites in a storm or a downpour.",
+      "Cleaning a catch can give salmon roe, slaughterfish eggs and pearls for alchemy. All the new fish count for fish recipes and sell at any general store.",
+      "Rods in three tiers: the old Fishing Rod, a Fine Fishing Rod (general stores, or make one at the forge) and a Master Angler's Rod (forge, needs Steel Smithing). Better rods widen the safe band, have a stronger line and bring more rare fish.",
+      "Hunting grounds in villages near the wild (Riverwood, Falkreath, Rorikstead, Ivarstead, Morthal, Dawnstar and more) and out in the wilds wherever you stop: creep up on a deer, elk, goat, hare or fox while it grazes, freeze when it looks up, mind the wind, then draw and shoot. Aim into the wind and go for the heart, just behind the front leg.",
+      "Deer, elk, goats and horkers you meet on the road while hunting now have a \"Stalk and shoot\" choice next to Fight.",
+      "Skinning gives meat, hides and sometimes a trophy (antlers, goat horns, a fox tail, a lucky rabbit's foot). A Skinning Knife (general stores) keeps every hide whole; a Steel Skinning Knife (forge) gets extra hides, meat and trophies. Hides tan into leather at any forge, and the forge uses them up.",
+      "New meals: roast leg of goat, roast rabbit leg and bristleback stew.",
+      "New perks: Clean Kill, Wind Reader and Skinner (Archery), Stalker (Sneak), and Angler, Line Sense and Deep Waters (Alchemy, next to Forager). Each one changes how the games play.",
+    ] },
     { id: "b143-bleakfalls", build: 143, date: "24 Nov 2026", title: "Farengar's quest can't get stuck any more", items: [
       "Bleak Falls Barrow (main quest): clearing the barrow now moves the quest on by itself. The next step, \"The Dragonstone\", sends you to Farengar in Whiterun.",
       "Farengar doesn't need the Dragonstone in your pack any more. If it got lost, ended up in a chest or went to someone else in a party, just tell him: clearing the barrow is enough. Hand it in under Area tab → Court wizard, or with the button in the Journal.",

@@ -1116,6 +1116,7 @@
         <button class="btn" data-act="enc" data-a="flee">🏃 Flee</button>
         <button class="btn" data-act="enc" data-a="sneak">🥷 Sneak past${typeof SNEAK2 !== "undefined" ? ` (${Math.round(SNEAK2.chance(S, e) * 100)}%)` : ""}</button>
         <button class="btn" data-act="enc" data-a="potion" ${G.countRestore(S, "health") ? "" : "disabled"}>🧪 Potion (${G.countRestore(S, "health")})</button>
+        ${typeof HUNTGAME !== "undefined" && HUNTGAME.fromEncounter(e) && ppUI?.canDecide?.() !== false ? (() => { const no = HUNTGAME.block(S, true); return `<button class="btn pri" data-act="huntroad" style="grid-column:1/-1" ${no ? "disabled" : ""}>🏹 Stalk and shoot${no ? ` · ${esc(no)}` : ""}</button>`; })() : ""}
         ${e.bountyHold ? `<button class="btn pri" data-act="enc" data-a="pay" style="grid-column:1/-1">⚖️ Pay your ${esc(e.bountyHold)} bounty (${TOWNS.bounty(S, e.bountyHold)} gold)</button>` : ""}
       </div><p class="sub" style="margin-bottom:0">${typeof TB !== "undefined" && TB.enabled() ? `You play the fight turn by turn` : `Fighting uses ${aiOn() ? `<b>Smart AI</b> (${esc(S.loadout)} gear)` : `your <b>${esc(S.loadout)}</b> tactics`}`}.${typeof SNEAK2 !== "undefined" ? "" : " A hidden start gives a sneak attack."}</p>${typeof SNEAK2 !== "undefined" ? SNEAK2.noteHTML(S, e, typeof AISET !== "undefined" ? AISET.get(G.loadout(S)).sneak : "safe", esc) : ""}`, "enc");
     ppUI?.onModal();   // a party is with you: they see this too and vote (partyplay.js)
@@ -2158,56 +2159,42 @@
     }).join("") + `<p class="sub" style="margin-top:8px">General stores sell salt, vegetables and meat. Garlic and lavender grow in home gardens and are sold by alchemists.</p>`;
   }
   function fishCard() {
-    const c = COOK.canFish(S, livePos()), caught = (S.stats || {}).fish || 0;
-    return `<div class="item"><div class="t">🎣 Go fishing<span>${c.err ? esc(c.err) : `You've caught ${caught} fish so far.`}</span></div><button class="btn sm pri" data-act="fishgo" ${c.err ? "disabled" : ""}>Cast</button></div>`;
+    const c = FISHGAME.canFish(S, livePos()), caught = (S.stats || {}).fish || 0, rod = FISHGAME.rodOf(S);
+    return `<div class="item"><div class="t">🎣 Go fishing<span>${c.err ? esc(c.err) : `<b>${esc(rod.name)}</b> · You've caught ${caught} fish so far.`}</span></div><button class="btn sm pri" data-act="fishgo" ${c.err ? "disabled" : ""}>Cast</button></div>`;
+  }
+  /* hunting grounds (huntgame.js): stalk an animal, shoot it, skin it */
+  function huntCard() {
+    if (typeof HUNTGAME === "undefined") return "";
+    const err = HUNTGAME.block(S), n = (S.stats || {}).hunted || 0;
+    return `<div class="item"><div class="t">🏹 Go hunting<span>${err ? esc(err) : `${HUNTGAME.groundLeft(S)} animals around here today · You've brought down ${n} so far.`}</span></div><button class="btn sm pri" data-act="huntgo" ${err ? "disabled" : ""}>Stalk</button></div>`;
   }
   function wildsFood() {
     if (S.trip?.status === "travel" || S.trip?.status === "encounter" || S.dungeon) return "";
     const lit = COOK.campLit(S), water = COOK.waterNear(livePos());
     return `<div class="panel"><h2>Camp</h2>
       ${lit ? `<p class="sub">Your fire crackles. ${Math.ceil((S.camp.until - G.now()) / 60)} minutes of warmth left.</p>${cookList()}` : `<div class="item"><div class="t">🔥 Make a campfire<span>Uses 1 Firewood · lets you cook here for ${COOK.CAMP_MIN} minutes</span></div><button class="btn sm" data-act="camp">Light</button></div>`}
-      ${water ? fishCard() : ""}</div>`;
+      ${water ? fishCard() : ""}${huntCard()}</div>`;
   }
-  let fishState = null, fishRaf = 0;
+  /* fishing.js: cast, wait for the bite, reel with the tension meter */
   function openFishing() {
-    const c = COOK.canFish(S, livePos());
-    if (c.err) return toast(c.err);
-    cancelAnimationFrame(fishRaf);
-    fishState = { phase: "wait", water: c.water, at: performance.now() + 1500 + Math.random() * 3000, bite: null };
-    drawFishing("You cast your line and wait…");
-    const loop = (ts) => {
-      if (!fishState || !$("#fishbar")) return;
-      if (fishState.phase === "wait" && ts >= fishState.at) {
-        fishState.phase = "bite"; fishState.bite = COOK.bite(fishState.water); fishState.t0 = ts; fishState.until = ts + 5000;
-        SOUND.fx("click"); if (navigator.vibrate) try { navigator.vibrate(60); } catch { /* not allowed */ }
-        drawFishing("A bite! Reel in when the needle is in the green.");
-      }
-      if (fishState.phase === "bite") {
-        const period = fishState.bite.zone[1] - fishState.bite.zone[0] < 0.22 ? 1900 : 2500;   // rarer fish: a narrower zone and a quicker needle
-        const ph = ((ts - fishState.t0) % period) / period; fishState.needle = ph < 0.5 ? ph * 2 : 2 - ph * 2;
-        const n = $("#fishneedle"); if (n) n.style.left = `${fishState.needle * 100}%`;
-        if (ts > fishState.until) { fishState.phase = "done"; drawFishing("Too slow. It got away.", true); return; }
-      }
-      fishRaf = requestAnimationFrame(loop);
-    };
-    fishRaf = requestAnimationFrame(loop);
+    const err = FISHGAME.play(S, livePos(), { onCatch: () => persist(), onClose: () => { persist(true); renderPanel(true); } });
+    if (err) toast(err);
   }
-  function drawFishing(msg, done = false) {
-    const b = fishState?.bite;
-    openModal(`<h2>Fishing</h2><p class="sub" style="margin-top:0">${esc({ river: "A river", lake: "A lake", sea: "The Sea of Ghosts" }[fishState?.water] || "Water")} · rod in hand</p>
-      <p id="fishmsg">${esc(msg)}</p>
-      <div class="fishbar" id="fishbar">${b ? `<i class="zone" style="left:${b.zone[0] * 100}%;width:${(b.zone[1] - b.zone[0]) * 100}%"></i><i class="needle" id="fishneedle"></i>` : `<i class="bob"></i>`}</div>
-      ${done ? `<div class="grid2" style="margin-top:12px"><button class="btn pri" data-act="fishgo">Cast again</button><button class="btn" data-act="fishstop">Done</button></div>`
-        : `<button class="btn pri" data-act="fishreel" style="width:100%;margin-top:12px;min-height:64px;font-size:20px">Reel in!</button><button class="btn" data-act="fishstop" style="width:100%;margin-top:8px">Stop</button>`}`);
-  }
-  function reelIn() {
-    if (!fishState) return;
-    if (fishState.phase === "wait") { fishState.phase = "done"; cancelAnimationFrame(fishRaf); return drawFishing("Too soon. You scared it off.", true); }
-    if (fishState.phase !== "bite") return;
-    cancelAnimationFrame(fishRaf); fishState.phase = "done";
-    const r = COOK.reel(S, fishState.bite, fishState.needle ?? 0);
-    if (r.ok) { SOUND.fx("coin"); persist(); }
-    drawFishing(r.text, true);
+  /* huntgame.js: from a hunting ground, or from an animal met on the road (road = the encounter ends either way) */
+  function openHunt(road = false) {
+    const e = road ? S.trip?.encounter : null, id = road ? HUNTGAME.fromEncounter(e) : null;
+    if (road && !id) return;
+    if (road) closeModal();
+    const err = HUNTGAME.play(S, { id, road, pos: livePos() }, (res) => {
+      if (road) {
+        if (!res) return openEncounter();   // lowered the bow before anything happened: back to the choice
+        HUNTGAME.endRoad(S);
+        ppUI?.leaderResolved(res.kill ? `brought down the ${e.name}` : `the ${e.name} got away`);
+        renderTrip();
+      }
+      persist(true); renderPanel(true);
+    });
+    if (err) { toast(err); if (road) openEncounter(); }
   }
 
   // ------------------------------------------------------------ visiting homes and gifts
@@ -3083,11 +3070,11 @@
       return wildsFood() + `<div class="panel"><h2>${l ? esc(l) : "The wilds"}</h2><p class="sub">${l ? "There's nothing to buy here." : "You're out on the road."} Cities and towns have shops, inns, trainers, alchemy labs, forges and jobs.</p></div>`;
     }
     const open = G.shopsOpen() || (typeof RUMOURS !== "undefined" && RUMOURS.knocked(S, l)), wanted = TOWNS.wanted(S), hold = G.holdAt(WORLD.places[l]);   // knocked at night (rumours.js)
-    const sections = [...types.filter((x) => x !== "stables"), ...(TOWNS.INNS[l] ? ["inn"] : []), ...(TOWNS.TRAINERS[l] ? ["train"] : []), "alchemy", ...(types.includes("blacksmith") || HALLS.hasForge(S, l) || (typeof HSROOMS !== "undefined" && HSROOMS.station(S, "forge")) ? ["forge"] : []), "jobs", "streets", ...(TOWNS.followersHere(S).length || l === "Whiterun" ? ["hire"] : []), ...(TOWNS.carriageFrom(l) ? ["carriage"] : []), ...(TOWNS.HOMES[l] ? ["home", "homes", "market"] : []), ...(SMITH.MINES[l] ? ["mine"] : []), ...(l === SPELLCRAFT.TOWN ? ["craft"] : []), ...(CARAVANS.stopsAt(l) ? ["caravans"] : []), ...(l === HALL.TOWN ? ["hall"] : []), ...(HALLS.plotHere(l) || hallDocs.some((d) => d.town === l) || S.hall?.town === l ? ["halls"] : []), "notice", ...(TOWNS.INNS[l] ? ["cook"] : []), ...(l === ARENA.TOWN ? ["arena"] : []), ...(COOK.waterNear(WORLD.places[l]) ? ["fish"] : []), ...(ENCH.hasEnchanter(l) || (typeof HSROOMS !== "undefined" && HSROOMS.station(S, "enchanter")) ? ["enchanter"] : []), ...(types.includes("stables") ? ["stables"] : []), ...(typeof SOL !== "undefined" ? SOL.sections(l) : []), ...(typeof HOMESTEAD !== "undefined" ? HOMESTEAD.sections(l) : [])];
+    const sections = [...types.filter((x) => x !== "stables"), ...(TOWNS.INNS[l] ? ["inn"] : []), ...(TOWNS.TRAINERS[l] ? ["train"] : []), "alchemy", ...(types.includes("blacksmith") || HALLS.hasForge(S, l) || (typeof HSROOMS !== "undefined" && HSROOMS.station(S, "forge")) ? ["forge"] : []), "jobs", "streets", ...(TOWNS.followersHere(S).length || l === "Whiterun" ? ["hire"] : []), ...(TOWNS.carriageFrom(l) ? ["carriage"] : []), ...(TOWNS.HOMES[l] ? ["home", "homes", "market"] : []), ...(SMITH.MINES[l] ? ["mine"] : []), ...(l === SPELLCRAFT.TOWN ? ["craft"] : []), ...(CARAVANS.stopsAt(l) ? ["caravans"] : []), ...(l === HALL.TOWN ? ["hall"] : []), ...(HALLS.plotHere(l) || hallDocs.some((d) => d.town === l) || S.hall?.town === l ? ["halls"] : []), "notice", ...(TOWNS.INNS[l] ? ["cook"] : []), ...(l === ARENA.TOWN ? ["arena"] : []), ...(COOK.waterNear(WORLD.places[l]) ? ["fish"] : []), ...(ENCH.hasEnchanter(l) || (typeof HSROOMS !== "undefined" && HSROOMS.station(S, "enchanter")) ? ["enchanter"] : []), ...(types.includes("stables") ? ["stables"] : []), ...(typeof SOL !== "undefined" ? SOL.sections(l) : []), ...(typeof HOMESTEAD !== "undefined" ? HOMESTEAD.sections(l) : []), ...(typeof HUNTGAME !== "undefined" ? HUNTGAME.sections(l) : [])];
     const AU = typeof AREAUI !== "undefined" ? AREAUI : null;   // areaui.js: the Area tab opens on a board of grouped places
     if (AU && townShopAt !== l) { if (townShopAt != null) townShop = ""; townShopAt = l; }   // a new town opens on its board
     townShop = sections.includes(townShop) ? townShop : AU ? "" : sections[0];
-    const names = { general: "General goods", blacksmith: "Blacksmith", wizard: "Court wizard", stables: "Stables", fence: "Ragged Flagon (fence)", inn: TOWNS.INNS[l] || "Inn", train: "Trainers", alchemy: "Alchemy lab", forge: "Forge", jobs: "Jobs", streets: "Streets", hire: l === "Whiterun" ? "Dragonsreach & hirelings" : "Hirelings", hall: "⚑ Hall of the North", halls: "🏰 Halls & shops", notice: "📜 Jarl's bounty", homes: "🏘 Neighbours", market: "🛒 Market stalls", mine: "⛏ Mine", craft: "✨ Spell crafting", caravans: "🐫 Caravans", cook: "🍲 Cooking pot", arena: "⚔ The Arena", fish: "🎣 Fishing", carriage: "Carriage", enchanter: "Arcane enchanter", home: TOWNS.home(S, l) ? `🏠 ${TOWNS.HOMES[l]?.[0]}` : `Buy ${TOWNS.HOMES[l]?.[0]}`, ...(typeof SOL !== "undefined" ? SOL.NAMES : {}), ...(typeof HOMESTEAD !== "undefined" ? HOMESTEAD.names(S, l) : {}) };
+    const names = { general: "General goods", blacksmith: "Blacksmith", wizard: "Court wizard", stables: "Stables", fence: "Ragged Flagon (fence)", inn: TOWNS.INNS[l] || "Inn", train: "Trainers", alchemy: "Alchemy lab", forge: "Forge", jobs: "Jobs", streets: "Streets", hire: l === "Whiterun" ? "Dragonsreach & hirelings" : "Hirelings", hall: "⚑ Hall of the North", halls: "🏰 Halls & shops", notice: "📜 Jarl's bounty", homes: "🏘 Neighbours", market: "🛒 Market stalls", mine: "⛏ Mine", craft: "✨ Spell crafting", caravans: "🐫 Caravans", cook: "🍲 Cooking pot", arena: "⚔ The Arena", fish: "🎣 Fishing", hunt: "🏹 Hunting grounds", carriage: "Carriage", enchanter: "Arcane enchanter", home: TOWNS.home(S, l) ? `🏠 ${TOWNS.HOMES[l]?.[0]}` : `Buy ${TOWNS.HOMES[l]?.[0]}`, ...(typeof SOL !== "undefined" ? SOL.NAMES : {}), ...(typeof HOMESTEAD !== "undefined" ? HOMESTEAD.names(S, l) : {}) };
     const townTop = `${typeof CIVILWAR !== "undefined" ? CIVILWAR.townLine(S, l) : ""}${wanted ? `<p class="sub danger-high">You're wanted in ${esc(hold)}. Shops, inns and trainers turn you away.</p>` : ""}`;
     if (AU && !townShop) return `<div class="panel au-panel"><h2>${esc(l)}</h2>${PLACEART.scene(l)}${townTop}${typeof RUMOURS !== "undefined" ? RUMOURS.townHTML(S, l, "", open) : ""}${AU.hub({ S, l, sections, names, open, hold })}<p class="sub au-gold">You have <b class="gold">${S.gold} gold</b>.</p></div>`;
     const fac = F.priceFactor(G.skill(S, "Mercantile"));
@@ -3154,8 +3141,11 @@
       note = `The inn's cooking pot. Cooked meals give buffs for a while; a new meal replaces the last one's.`;
       body = cookList();
     } else if (townShop === "fish") {
-      note = `Water nearby: ${COOK.waterNear(WORLD.places[l])}. Cast, wait for a bite, and reel in when the needle is in the green.`;
+      note = `Water nearby: ${COOK.waterNear(WORLD.places[l])}. Cast, wait for the float to dip, then reel in while keeping the line in the safe band. Better rods (general store, forge) make it easier.`;
       body = fishCard();
+    } else if (townShop === "hunt") {
+      note = `Deer, elk, foxes and hares come down to the meadows here. Stalk one, shoot it, and skin it for meat, hides and trophies. A skinning knife keeps the hides whole; hides tan into leather at the forge.`;
+      body = huntCard();
     } else if (townShop === "caravans") {
       note = "Caravans roll between the holds on a timetable everyone shares. Sign on as a guard while the wagons wait, travel with them, fight off the ambushes, and collect your pay on arrival.";
       body = caravansHTML(l);
@@ -3721,8 +3711,8 @@
       case "duelno": answerDuel(b.dataset.id, false); break;
       case "duelcancel": Store.change("duels", b.dataset.id, (d) => (d.status === "open" ? { ...d, status: "cancelled" } : d)); break;
       case "fishgo": GUIDE.mark(S, "fish"); openFishing(); break;
-      case "fishreel": reelIn(); break;
-      case "fishstop": cancelAnimationFrame(fishRaf); fishState = null; closeModal(); renderPanel(true); break;
+      case "huntgo": GUIDE.mark?.(S, "hunt"); openHunt(); break;
+      case "huntroad": openHunt(true); break;
       case "cook": GUIDE.mark(S, "cook"); say(COOK.cook(S, b.dataset.id)); SOUND.fx("potion"); break;
       case "camp": say(COOK.makeCamp(S)); break;
       case "eatfood": say(COOK.eatFood(S, +b.dataset.id)); if ($("#sky")) renderMenu(); break;
