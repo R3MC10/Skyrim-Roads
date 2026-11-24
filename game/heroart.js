@@ -97,7 +97,8 @@ const HEROART = (() => {
     g.save(); g.translate(80, 206); g.scale(race.w, race.h); g.translate(-80, -206);
 
     // a cape behind the body (heavy sets and cloaked sets)
-    const capeC = F.cape || (heavy && !robe ? "#7a2a22" : null);
+    const ck = eq.cloak && D.ITEMS[eq.cloak] ? D.ITEMS[eq.cloak].cloakLook : null;   // a side cloak (cloaks.js)
+    const capeC = (ck && ck.c) || F.cape || (heavy && !robe ? "#7a2a22" : null);
     if (capeC) { H.poly(g, [[58, 70], [102, 70], [112, 186], [96, 192], [80, 184], [64, 192], [48, 186]], capeC, ink, 1.4); g.strokeStyle = "rgba(0,0,0,0.18)"; g.lineWidth = 1.2; for (const x of [66, 80, 94]) { g.beginPath(); g.moveTo(x, 78); g.lineTo(x + (x - 80) * 0.25, 184); g.stroke(); } }
     // tail (behind)
     if (race.tail) {
@@ -144,6 +145,11 @@ const HEROART = (() => {
       H.poly(g, [[74, 70], [86, 70], [82, 126], [78, 126]], cm.trim, null); g.strokeStyle = cm.trim; g.lineWidth = 3; g.beginPath(); g.moveTo(62, 110); g.lineTo(98, 110); g.stroke();
     } else armourChest(g, H, cm, F, heavy, matOf(chest), ink);
     if (L.gl.a) glow(g, 80, 98, 34, "#9fd0f0", 0.25);
+    if (ck) {   // the side cloak over the shoulders, pinned with the side's emblem
+      H.poly(g, [[58, 70], [68, 68], [66, 82], [56, 80]], ck.c, ink, 1.2); H.poly(g, [[102, 70], [92, 68], [94, 82], [104, 80]], ck.c, ink, 1.2);
+      if (ck.fur) { g.fillStyle = ck.fur; g.beginPath(); g.ellipse(80, 70, 22, 4.5, 0, 0, 7); g.fill(); g.strokeStyle = ink; g.lineWidth = 1; g.stroke(); }
+      if (typeof SIDES !== "undefined") SIDES.drawEmblem(g, ck.side, 66, 76, 6.5);
+    }
 
     // neck and head
     H.poly(g, [[74, 58], [86, 58], [86, 71], [74, 71]], skin, ink, 1.3);

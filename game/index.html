@@ -2792,6 +2792,24 @@ html.pcmap.pcq-off:not(.pc-side) .pcqtab{transform:none}
 .pcqtab svg{width:20px;height:20px}
 html.pcmap.pc-reduce .pcquest,html.pcmap.pc-reduce .pcqtab,html.pcmap.pc-reduce #side{transition:none!important;animation:none!important}
 html.pcmap.pc-home:has(.pcparty.on) .vitals{left:14px}
+/* [sides] sideui.js: the Faction tab, the courier's letters, the recruiters, side emblems on travellers */
+.sidep h3,.srec h3{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);margin:14px 0 6px;font-weight:600;display:flex;align-items:center;gap:8px}
+.shead{display:flex;align-items:center;gap:12px;margin:4px 0 10px}.shead b{display:block;font-size:18px;color:var(--ink)}.shead .sub{display:block}
+.sem{display:inline-flex;flex:none;line-height:0}.sem svg,.sem3 svg,.sideico svg{display:block;filter:drop-shadow(0 1px 1px rgba(0,0,0,.5))}
+.sem3{display:flex;justify-content:center;gap:14px;margin:8px 0 10px}
+.sideico{display:inline-flex;vertical-align:middle;margin:0 -4px 0 -10px;align-self:flex-end;z-index:1}
+.sxp{background:#15130f;border:1px solid #3a3226;border-radius:6px;padding:9px 11px;margin:6px 0}.sxp-t{display:flex;justify-content:space-between;font-size:13px;color:var(--mute);margin-bottom:5px}.sxp .bar{height:7px}.sxp .sub{margin:6px 0 0}
+.scloak .sub{display:block;margin-top:2px;font-size:12.5px}.scloak.off{opacity:.62}.scloak .sci{flex:none;line-height:0}
+.spips{display:inline-flex;gap:4px}.spips i{width:9px;height:9px;transform:rotate(45deg);border:1px solid var(--gold);display:block}.spips i.on{background:var(--gold)}
+.sbon{margin:4px 0 6px;padding-left:20px}.sbon li{margin:3px 0}
+.sstand .t .sub{display:block;font-size:12.5px;margin-top:2px}
+.sswitch{border-top:1px solid var(--line);margin-top:12px;padding-top:10px}
+.sp-stormcloak .shead b{color:#9cc0ea}.sp-imperial .shead b{color:#e0907f}.sp-thalmor .shead b{color:#e2c983}
+.sletter .btn.pri{background:#5a3d1c;color:#f4e6c4;border-color:#3a2612}
+.sletter{background:linear-gradient(#e9dcb9,#d9c69c);color:#2a2014;border-radius:6px;padding:14px 14px 10px;box-shadow:inset 0 0 22px rgba(90,60,20,.35)}.sletter h2{color:#3a2612;text-align:center}.sletter p,.sletter li{font-family:Georgia,serif}.sletter .btn:not(.pri){color:#2a2014;border-color:#7a6440}
+@media (max-width:520px){.shead b{font-size:16px}.sem3{gap:8px}.sem3 svg{width:38px;height:auto}}
+.shead>div{display:flex!important;flex-direction:column;align-items:flex-start;min-width:0}.shead>div>b,.shead>div>.sub{display:block!important}
+.sxp .sxp-t{display:flex!important;justify-content:space-between;gap:10px}
 /* [chargebar] chargebar.js: the thin purple charge bar of enchanted weapons and staffs, everywhere */
 .cbar{--cb-a:#6b4fc8;--cb-b:#b49cff;position:relative;display:inline-block;vertical-align:middle;width:46px;height:5px;border-radius:3px;background:rgba(10,8,20,.65);box-shadow:inset 0 0 0 1px rgba(180,156,255,.38),0 0 0 1px rgba(0,0,0,.35);overflow:hidden;line-height:0}
 .cbar i{display:block;height:100%;background:linear-gradient(90deg,var(--cb-a),var(--cb-b));box-shadow:0 0 4px rgba(180,156,255,.6);border-radius:inherit}
@@ -3149,6 +3167,9 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 <script src="lootvote.js"></script>
 <script src="partyvote.js"></script>
 <script src="dawnguard.js"></script>
+<script src="sides.js"></script>
+<script src="sidequest.js"></script>
+<script src="cloaks.js"></script>
 <script src="dwemer.js"></script>
 <script src="blackreach.js"></script>
 <script src="account.js"></script>
@@ -3245,6 +3266,7 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 <script src="i18n_living.js"></script>
 <script src="i18n_bonds.js"></script>
 <script src="i18n_dawnguard.js"></script>
+<script src="i18n_sides.js"></script>
 <script src="i18n_dwemer.js"></script>
 <script src="i18n_areaui.js"></script>
 <script src="i18n_menus2.js"></script>
@@ -3299,6 +3321,7 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 <script src="invites.js"></script>
 <script src="holdui.js"></script>
 <script src="netsync.js"></script>
+<script src="sideui.js"></script>
 <script src="ui.js"></script>
 </body>
 </html>
