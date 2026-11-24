@@ -20,6 +20,20 @@
 @font-face{font-family:"Cormorant Garamond";font-style:normal;font-weight:600;font-display:swap;src:url(font-cormorant-garamond-600.woff2) format("woff2")}
 @font-face{font-family:"Cormorant Garamond";font-style:normal;font-weight:700;font-display:swap;src:url(font-cormorant-garamond-700.woff2) format("woff2")}
 @font-face{font-family:"Cormorant Garamond";font-style:italic;font-weight:600;font-display:swap;src:url(font-cormorant-garamond-600-italic.woff2) format("woff2")}
+/* game icons (gameicons.js): line icons on U+E100-E1FF. Each UI font face above has an icon twin (same family, style and
+   weight) so an icon is just a character in any text. GameIcons is the font alone (for canvas text in other fonts). */
+@font-face{font-family:"GameIcons";font-weight:100 900;font-display:block;unicode-range:U+E100-E1FF;src:url(font-gameicons.woff2) format("woff2")}
+@font-face{font-family:"Cinzel";font-style:normal;font-weight:600;font-display:block;unicode-range:U+E100-E1FF;src:url(font-gameicons.woff2) format("woff2")}
+@font-face{font-family:"Cinzel";font-style:normal;font-weight:700;font-display:block;unicode-range:U+E100-E1FF;src:url(font-gameicons.woff2) format("woff2")}
+@font-face{font-family:"Barlow Semi Condensed";font-style:normal;font-weight:400;font-display:block;unicode-range:U+E100-E1FF;src:url(font-gameicons.woff2) format("woff2")}
+@font-face{font-family:"Barlow Semi Condensed";font-style:normal;font-weight:500;font-display:block;unicode-range:U+E100-E1FF;src:url(font-gameicons.woff2) format("woff2")}
+@font-face{font-family:"Barlow Semi Condensed";font-style:normal;font-weight:600;font-display:block;unicode-range:U+E100-E1FF;src:url(font-gameicons.woff2) format("woff2")}
+@font-face{font-family:"Barlow Condensed";font-style:normal;font-weight:500;font-display:block;unicode-range:U+E100-E1FF;src:url(font-gameicons.woff2) format("woff2")}
+@font-face{font-family:"Barlow Condensed";font-style:normal;font-weight:600;font-display:block;unicode-range:U+E100-E1FF;src:url(font-gameicons.woff2) format("woff2")}
+@font-face{font-family:"Cormorant Garamond";font-style:normal;font-weight:600;font-display:block;unicode-range:U+E100-E1FF;src:url(font-gameicons.woff2) format("woff2")}
+@font-face{font-family:"Cormorant Garamond";font-style:normal;font-weight:700;font-display:block;unicode-range:U+E100-E1FF;src:url(font-gameicons.woff2) format("woff2")}
+@font-face{font-family:"Cormorant Garamond";font-style:italic;font-weight:600;font-display:block;unicode-range:U+E100-E1FF;src:url(font-gameicons.woff2) format("woff2")}
+
 </style>
 <style>
 /* VOICE: a Nord's field kit at night — iron, frost, candle-lit parchment.
@@ -229,7 +243,7 @@ input,select{border-radius:3px;border-color:rgba(228,220,200,.22);background:rgb
 .chips.quick{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}.chips.quick .chip{white-space:nowrap;flex:none}
 .chatrow{display:flex;gap:8px;margin-top:6px}.chatrow input{flex:1;margin:0}.chatrow .btn{flex:none}
 .linkbtn{background:none;border:0;padding:0;color:var(--frost);text-decoration:underline;min-height:0}
-textarea.code{width:100%;margin:8px 0;padding:10px;border-radius:6px;border:1px solid var(--line);background:#0f1114;color:var(--ink);font:13px/1.35 ui-monospace,Menlo,monospace;word-break:break-all;resize:vertical}
+textarea.code{width:100%;margin:8px 0;padding:10px;border-radius:6px;border:1px solid var(--line);background:#0f1114;color:var(--ink);font:13px/1.35 GameIcons,ui-monospace,Menlo,monospace;word-break:break-all;resize:vertical}
 .coats{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
 .coat{width:40px;height:40px;border-radius:50%;border:2px solid #4a4237;padding:0;box-shadow:inset 0 0 0 3px #121417}
 .coat.on{border-color:var(--gold);box-shadow:inset 0 0 0 3px #121417,0 0 0 2px rgba(226,187,100,.35)}.coat:disabled{opacity:1;cursor:default}
@@ -552,7 +566,7 @@ input:focus,select:focus{outline:none;border-bottom-color:#fff;background:rgba(2
 .top .iconbtn.snd,.top .iconbtn.soc{width:38px;height:38px;border-radius:50%;background:rgba(10,11,13,.55);border:1px solid rgba(226,187,100,.38);color:#e9e2d0;box-shadow:inset 0 0 8px rgba(0,0,0,.6)}
 .top .iconbtn.soc.on{border-color:#e2bb64;color:#ffe9b0;box-shadow:0 0 10px rgba(226,187,100,.35),inset 0 0 8px rgba(0,0,0,.6)}
 /* map buttons */
-.mapbtns .iconbtn{width:40px;height:40px;border-radius:50%;background:rgba(8,9,11,.62);border:1px solid rgba(226,187,100,.38);color:#efe8d6;font:600 20px/1 Georgia,serif;text-shadow:0 1px 2px #000;box-shadow:0 2px 8px rgba(0,0,0,.45)}
+.mapbtns .iconbtn{width:40px;height:40px;border-radius:50%;background:rgba(8,9,11,.62);border:1px solid rgba(226,187,100,.38);color:#efe8d6;font:600 20px/1 GameIcons,Georgia,serif;text-shadow:0 1px 2px #000;box-shadow:0 2px 8px rgba(0,0,0,.45)}
 /* compass */
 .compass{position:absolute;top:8px;left:10px;right:58px;height:30px;pointer-events:none;z-index:3;overflow:hidden;
   background:linear-gradient(90deg,transparent,rgba(6,7,9,.62) 14%,rgba(6,7,9,.62) 86%,transparent)}
@@ -566,7 +580,7 @@ input:focus,select:focus{outline:none;border-bottom-color:#fff;background:rgba(2
 .compass .cm{position:absolute;top:50%;transform:translate(-50%,-50%);line-height:0;color:#efe8d6}.compass .cm .hico{paint-order:stroke}
 .compass .cm .hico{width:15px;height:15px;stroke-width:1.7}
 .compass .cm[data-place]{pointer-events:auto;cursor:pointer;padding:6px}
-.compass .cm.unk em{font:italic 700 13px/1 Georgia,serif;color:rgba(233,226,208,.55)}
+.compass .cm.unk em{font:italic 700 13px/1 GameIcons,Georgia,serif;color:rgba(233,226,208,.55)}
 .compass .cm.pp i{display:block;width:6px;height:6px;border-radius:50%;background:#8fd3ff;box-shadow:0 0 0 1px #0b2333}
 .compass .cm.quest{color:#f1cd72;z-index:2}.compass .cm.quest .hico{width:16px;height:16px;fill:#f1cd72;stroke:#3b2c1e;stroke-width:1.2}
 .compass .cm.raid{color:#ff8a6a;animation:hudpulse 1.4s ease-in-out infinite}
@@ -705,7 +719,7 @@ input:focus,select:focus{outline:none;border-bottom-color:#fff;background:rgba(2
 .xstats b{color:var(--gold,#e2bb64);float:right}
 .xh{margin:12px 0 6px;font-size:.85em;letter-spacing:.1em;text-transform:uppercase;color:#cdbb8e}
 .item.dim{opacity:.5}.xbook{font-size:22px;width:28px;text-align:center}
-.xread p{font-family:var(--serif,Georgia,serif);font-size:1.05em;line-height:1.6;color:#e9e1cc;background:linear-gradient(180deg,rgba(64,52,34,.35),rgba(30,24,16,.35));border:1px solid rgba(214,178,94,.25);padding:12px;border-radius:4px}
+.xread p{font-family:var(--serif,GameIcons,Georgia,serif);font-size:1.05em;line-height:1.6;color:#e9e1cc;background:linear-gradient(180deg,rgba(64,52,34,.35),rgba(30,24,16,.35));border:1px solid rgba(214,178,94,.25);padding:12px;border-radius:4px}
 .panel.xcard{border-color:var(--gold,#e2bb64)}
 /* ---- fair levelling: progress view and Legendary skills (legendary.js) */
 .leg-stars{color:#e8c66a;text-shadow:0 0 6px rgba(232,198,106,.55);font-weight:700;letter-spacing:1px}
@@ -1182,7 +1196,7 @@ h3[class*="cat-"]{color:var(--cat)}
 .aispells{max-height:150px;overflow:auto}.chip.sm{min-height:34px;padding:0 10px;font-size:13px}
 .tcrow{display:flex;gap:6px;align-items:center}.tcrow select{flex:1;min-width:0}.tcrow .chip{flex:0 0 auto}.tjoin{align-self:center;margin:2px 0}
 .rcard .rdrag{cursor:grab;touch-action:none}.rcard.dragging{opacity:.6;outline:1px dashed var(--gold,#c9a45a)}.rcard.dropat{box-shadow:0 -3px 0 var(--gold,#c9a45a)}
-#sharein{width:100%;font-family:monospace;font-size:12px;min-height:64px;background:#11100c;color:inherit;border:1px solid #3a3226;border-radius:6px;padding:6px}
+#sharein{width:100%;font-family:GameIcons,monospace;font-size:12px;min-height:64px;background:#11100c;color:inherit;border:1px solid #3a3226;border-radius:6px;padding:6px}
 .aiprev{margin-top:8px}.aiprev b{color:var(--gold,#c9a45a)}.sneak2{margin:6px 0 0}
 /* party play (partyplay.js): ready check chips, the leader / following card */
 .ppcard{border-color:rgba(214,178,94,.45)!important;background:linear-gradient(180deg,rgba(40,34,22,.55),rgba(16,15,12,.6))}
@@ -1393,7 +1407,7 @@ html.a11y-hc i.iq-up{color:var(--buff,#6fd36a)!important}html.a11y-hc i.iq-dn{co
 .cqalch .cqready{flex:1;min-width:90px}
 .item .t span.cqst,.cqst{display:block;font-size:13px;margin-top:2px}
 .item .t span.cqst.ok,.cqst.ok{color:var(--buff,#8fd49a)}
-.item .t span.cqst.ok::before{content:"✔ "}
+.item .t span.cqst.ok::before{content:"\E120  "}
 .item .t span.cqst.no,.cqst.no{color:var(--debuff,#e39a86)}
 .cqstar{min-width:36px;min-height:36px;padding:0;border:0;background:transparent;color:var(--mute);font-size:20px;line-height:1;cursor:pointer}
 .cqstar.on{color:var(--gold)}
@@ -1493,7 +1507,7 @@ html.a11y-still .srch-flash{animation:none;outline:2px solid #e2bb64}
 .rmd-soon .rmd-when{color:var(--mute)}
 .rmd-n{font:600 .62em/1 var(--sans,inherit);color:#15120c;background:var(--gold);border-radius:10px;padding:3px 7px;vertical-align:middle;margin-left:6px;letter-spacing:.02em}
 .rmd-more{display:block;margin:8px auto 0;min-height:36px}
-.rmd-b{position:absolute;top:3px;right:calc(50% - 24px);min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--gold);color:#15120c;font:700 11px/18px system-ui,sans-serif;text-align:center;box-shadow:0 0 0 2px rgba(10,11,13,.85);pointer-events:none;z-index:2}
+.rmd-b{position:absolute;top:3px;right:calc(50% - 24px);min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--gold);color:#15120c;font:700 11px/18px GameIcons,system-ui,sans-serif;text-align:center;box-shadow:0 0 0 2px rgba(10,11,13,.85);pointer-events:none;z-index:2}
 .iconbtn > .rmd-b{top:-5px;right:-5px}
 .tw-dir > .rmd-b{top:0;right:auto;left:calc(50% + 14px)}
 .tab:has(> .rmd-b) > .dot,.iconbtn:has(> .rmd-b) > .dot,.tw-dir:has(> .rmd-b) > .dot{display:none}
@@ -1520,7 +1534,7 @@ body:has(#favBtn) .app,body:has(#twBtn) .app{padding-bottom:calc(190px + env(saf
 .tbw-turn{margin-top:8px}.tbw-turn.sent .tbaskb{opacity:.4;pointer-events:none}.tbw-turn .tbaskb{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}
 .tbw-wait{color:#8c877a;margin:8px 0 0}.tbw-end{display:flex;justify-content:space-between;align-items:center;margin-top:8px}.tbw-end.won b{color:#f3d98b}.tbw-end.lost b{color:#c96a5f}
 .tab .hk{display:none}
-@media (hover:hover) and (pointer:fine){.tab .hk{display:block;position:absolute;top:3px;right:calc(50% - 22px);min-width:14px;padding:0 3px;border:1px solid rgba(214,207,190,.35);border-bottom-width:2px;border-radius:3px;background:rgba(0,0,0,.45);color:rgba(236,226,200,.8);font:600 9px/12px system-ui,sans-serif;letter-spacing:0;text-transform:none;text-align:center}.tab.on .hk{color:#fff3cf;border-color:rgba(243,217,139,.6)}}
+@media (hover:hover) and (pointer:fine){.tab .hk{display:block;position:absolute;top:3px;right:calc(50% - 22px);min-width:14px;padding:0 3px;border:1px solid rgba(214,207,190,.35);border-bottom-width:2px;border-radius:3px;background:rgba(0,0,0,.45);color:rgba(236,226,200,.8);font:600 9px/12px GameIcons,system-ui,sans-serif;letter-spacing:0;text-transform:none;text-align:center}.tab.on .hk{color:#fff3cf;border-color:rgba(243,217,139,.6)}}
 .lootbox{margin:10px 0;border-top:1px solid rgba(228,220,200,.18);border-bottom:1px solid rgba(228,220,200,.18);background:rgba(0,0,0,.18)}
 .loot-h,.loot-row{display:grid;grid-template-columns:32px 1fr 44px 52px;gap:8px;align-items:center;padding:4px 8px}
 .loot-h{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#8c877a;border-bottom:1px solid rgba(228,220,200,.12)}.loot-h span:nth-child(n+3),.loot-row .num{text-align:right}
@@ -1570,7 +1584,7 @@ body:has(#favBtn) .app,body:has(#twBtn) .app{padding-bottom:calc(190px + env(saf
 .drop-hot{border-color:#f3d98b!important;box-shadow:0 0 0 3px #f3d98b,0 0 26px rgba(243,217,139,.55)!important}
 .tbu.drop-hot{transform:scale(1.03)}
 .tblog{display:block;width:100%;text-align:left;color:inherit;font:inherit;font-size:13px;border:1px solid rgba(255,255,255,.06);flex:1 1 72px;min-height:72px;max-height:none;cursor:pointer;position:relative}.tblog[hidden]{display:none}
-.tblog::after{content:"📜 tap for the full log";position:sticky;bottom:0;float:right;font-size:10px;opacity:.45}
+.tblog::after{content:"\E103  tap for the full log";position:sticky;bottom:0;float:right;font-size:10px;opacity:.45}
 .tbl{display:flex;gap:6px;align-items:baseline;padding:2px 0}.tbl .li{flex:none;width:16px;text-align:center;opacity:.85}
 .tbl .nd{color:#ffd27a;font-weight:700}.tbl.foe .nd{color:#ff8a78}.tbl .nh{color:#8fe08a;font-weight:700}.tbl .cr{font-style:normal;color:#ffcf5a;font-weight:700;text-transform:uppercase;font-size:.85em;letter-spacing:.04em}
 .tbl.fresh{animation:tbfresh 1.2s ease}
@@ -1642,7 +1656,7 @@ body:has(#favBtn) .app,body:has(#twBtn) .app{padding-bottom:calc(190px + env(saf
 .tbu.ally{padding:5px 7px 6px}.tbu.ally .nm{font-size:11.5px;color:#cfe8c4}.tbu.ally .fx{font-size:10px;letter-spacing:1px}
 .tbu.ally .tbbar.mid{margin-top:3px}
 .tbu.ally.down{opacity:.5;filter:grayscale(.7)}.tbu.ally.down.drop-ok{opacity:1}
-.tbf.dz-self .tbu.me .nm::after,.tbf.dz-ally .tbu.ally .nm::after{content:" ⬇";color:#f3d98b}
+.tbf.dz-self .tbu.me .nm::after,.tbf.dz-ally .tbu.ally .nm::after{content:" \E138 ";color:#f3d98b}
 /* [foe archetypes] foegroups.js: "Bandit outlaw  archer  2/3" */
 .tbu.foe .nm .arch{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:#e8b98a;border:1px solid rgba(232,185,138,.35);border-radius:6px;padding:0 4px;margin-left:4px;vertical-align:1px}
 /* combat wheel and timing ring (tbradial.js) */
@@ -2175,7 +2189,7 @@ html.a11y-hc .ti-box,html.a11y-hc .ti-box i,html.a11y-hc .ti-what{color:#ece6d8}
 .au-ht b.au-name{cursor:pointer}
 .au-sibs,.mp-f{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--sk-line,#3a3a3a);margin:0 0 6px}
 .au-sibs::-webkit-scrollbar,.mp-f::-webkit-scrollbar{display:none}
-#side .au-sibs button,#side .mp-f button{flex:none;white-space:nowrap;background:none;border:0;border-bottom:2px solid transparent;color:var(--sk-mute,#9d978a);font-family:var(--sk-ui,system-ui);font-weight:600;font-size:13px;letter-spacing:.05em;text-transform:uppercase;padding:6px 8px;min-height:40px;cursor:pointer}
+#side .au-sibs button,#side .mp-f button{flex:none;white-space:nowrap;background:none;border:0;border-bottom:2px solid transparent;color:var(--sk-mute,#9d978a);font-family:var(--sk-ui,GameIcons,system-ui);font-weight:600;font-size:13px;letter-spacing:.05em;text-transform:uppercase;padding:6px 8px;min-height:40px;cursor:pointer}
 #side .au-sibs button.on,#side .mp-f button.on{color:var(--sk-ink,#ece8de);border-bottom-color:var(--gold);background:linear-gradient(0deg,rgba(226,187,100,.12),transparent)}
 .mp-f{margin-top:8px}.mp-f small{font-size:11px;color:var(--sk-mute,#9d978a);letter-spacing:0}
 .au-in .tg-desc{margin:0 2px 6px}
@@ -2431,6 +2445,12 @@ html.a11y-still #skillup.on{animation:none}
   .sky-row.ft-cols .nm img.art.ico{width:22px;height:22px;margin-right:5px}
   .ft-cats .sky-cat{min-width:54px;padding:4px 3px}
 }
+/* [OURS] gore.js: a red flash round the screen edges when you take a big hit */
+.gorevig{position:fixed;inset:0;pointer-events:none;z-index:9000;opacity:0;background:radial-gradient(ellipse at center,rgba(90,0,0,0) 52%,rgba(110,6,6,.55) 82%,rgba(70,0,0,.85) 100%)}
+.gorevig.on{animation:gorevig .75s ease-out forwards}
+@keyframes gorevig{0%{opacity:0}12%{opacity:var(--gv,.7)}100%{opacity:0}}
+.a11y-still .gorevig,.a11y-hc .gorevig{display:none}
+@media (prefers-reduced-motion:reduce){.gorevig{display:none}}
 /* painted dungeon rooms (dunrooms.js) and the parchment dungeon map (dunart.js) */
 .dun .dcol{display:grid;gap:10px;min-width:0;align-content:start}
 .droomart{position:relative;margin:-2px 0 10px}
@@ -2712,6 +2732,33 @@ html.pcmap.pcq-off:not(.pc-side) .pcqtab{transform:none}
 .pcqtab svg{width:20px;height:20px}
 html.pcmap.pc-reduce .pcquest,html.pcmap.pc-reduce .pcqtab,html.pcmap.pc-reduce #side{transition:none!important;animation:none!important}
 html.pcmap.pc-home:has(.pcparty.on) .vitals{left:14px}
+/* [chargebar] chargebar.js: the thin purple charge bar of enchanted weapons and staffs, everywhere */
+.cbar{--cb-a:#6b4fc8;--cb-b:#b49cff;position:relative;display:inline-block;vertical-align:middle;width:46px;height:5px;border-radius:3px;background:rgba(10,8,20,.65);box-shadow:inset 0 0 0 1px rgba(180,156,255,.38),0 0 0 1px rgba(0,0,0,.35);overflow:hidden;line-height:0}
+.cbar i{display:block;height:100%;background:linear-gradient(90deg,var(--cb-a),var(--cb-b));box-shadow:0 0 4px rgba(180,156,255,.6);border-radius:inherit}
+.cbar.cb-empty{background:rgba(120,20,20,.55);box-shadow:inset 0 0 0 1px rgba(255,110,90,.65),0 0 0 1px rgba(0,0,0,.35)}
+.cbar.cb-empty i{background:#d4483a}
+.cb-ico{position:relative;display:inline-block;flex:none;vertical-align:middle;line-height:0}
+.cb-ico>img.art.ico{margin:0!important}
+.sky-row .nm .cb-ico{margin-right:8px}
+.cbar.cb-on{position:absolute;width:auto;border-radius:2px;pointer-events:none}
+.cb-inl{display:inline-flex;align-items:center;gap:5px;vertical-align:middle;white-space:nowrap}
+.cb-inl .cbar{width:40px;height:5px}
+.cb-pct{font-style:normal;color:#c9b8ff;font-size:12px}
+.cb-none{font-style:normal;font-weight:600;color:#ff8a78;font-size:.85em;white-space:nowrap}
+.cb-detail{margin:8px 0 4px;clear:both}
+.cb-detail .cb-head{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
+.cb-detail .cb-head b{color:#c9b8ff;font-size:13px;letter-spacing:0;text-transform:none}
+.cb-detail.cb-empty .cb-head b{color:#ff8a78}
+.cbar.cb-wide{display:block;width:100%;height:7px;margin:3px 0}
+.cb-detail small{color:var(--mute);font-size:12px}
+.tbsub .tbbar.ch{grid-column:1/-1}
+.tbbar.ch i{background:linear-gradient(90deg,#5a3fb8,#b49cff)}
+.tbbar.ch.cb-empty{background:rgba(140,24,24,.45)}
+.tbbar.ch.cb-empty i{background:#d4483a}
+.tbbar.ch.cb-empty .num{color:#ffd0c8}
+/* [gameicons] line icons in place of emoji (gameicons.js): inline svg variant, raid medals */
+.gisvg{width:1.1em;height:1.1em;vertical-align:-.18em}
+.raidtop .rmed{font-style:normal}.raidtop .rmed.m0{color:#f1cd72}.raidtop .rmed.m1{color:#d4d8dc}.raidtop .rmed.m2{color:#c98a52}
 /* ==== PC fit (tests/pcfit_ui.py): on a wide landscape screen the game fills the window, the page never scrolls; only side lists do ==== */
 @media (min-width:1100px) and (orientation:landscape){
   html,body{height:100%;overflow:hidden}
@@ -2792,7 +2839,63 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 .breach .br-pin:disabled{cursor:default}
 .breach .br-acts{display:grid;gap:8px;margin-top:8px}
 @media (max-width:420px){.breach .br-pin span{font-size:10px;max-width:84px}}
+/* party traps (partytraps.js) and the live cursor (livecursor.js) */
+.dgparty{color:#e8b86a}
+.ptlist{display:flex;flex-direction:column;gap:4px;margin:10px 0 4px;text-align:left}
+.ptrow{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:6px 9px;background:rgba(255,255,255,.04);box-shadow:inset 0 0 0 1px rgba(228,220,200,.1);font-size:14px}
+.ptrow b{font-weight:600;color:#e9dcc0}.ptrow span{font-size:13px;color:#cfc6b0;text-align:right}
+.ptrow.ok span,.ptrow.in span{color:#9fd28a}.ptrow.bad span{color:#e58a6f}.ptrow.me{box-shadow:inset 0 0 0 1px rgba(214,178,94,.55)}
+.ptrow.fol{margin-left:16px;padding:4px 9px;font-size:13px;opacity:.9}.ptrow.fol b::before{content:"↳ ";color:#a9a395}
+.ptwarned{color:#d6b25e}.ptres .lpcard,.ptwait .lpcard{box-shadow:0 0 0 1px rgba(214,178,94,.45),0 20px 60px rgba(0,0,0,.6)}
+.lcur{position:fixed;left:0;top:0;z-index:140;pointer-events:none;will-change:transform;display:flex;align-items:flex-start}
+.lcur svg{display:block;filter:drop-shadow(0 1px 2px rgba(0,0,0,.8));transition:transform .12s}
+.lcur svg path{fill:#f3d27a;stroke:#140c06;stroke-width:1.4;stroke-linejoin:round}
+.lcur .lcname{margin:14px 0 0 -2px;padding:1px 6px;font-size:11px;font-weight:600;letter-spacing:.04em;white-space:nowrap;color:#140c06;background:#f3d27a;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.6)}
+.lcur.down svg{transform:scale(.82)}.lcur.down::before{content:"";position:absolute;left:-9px;top:-9px;width:18px;height:18px;border-radius:50%;border:2px solid #f3d27a;opacity:.8}
+.lcur.wait{opacity:.55}
+@media (prefers-reduced-motion:reduce){.lcur svg{transition:none}}
+/* fishing.js + huntgame.js: the fishing and hunting mini-games (one screen on PC, phone friendly) */
+.fhgame .fhcard{width:min(600px,100%);max-height:100%;overflow:auto;padding:12px 12px 10px}
+.fhgame .fhcard canvas{max-width:min(100%,560px,calc((100vh - 300px) * 1.867))!important;max-width:min(100%,560px,calc((100dvh - 300px) * 1.867))!important;box-shadow:0 0 0 1px rgba(228,220,200,.22)}
+.fhmeter{position:relative;height:22px;margin:8px 2px 4px;background:linear-gradient(90deg,rgba(228,220,200,.06),rgba(228,220,200,.14));box-shadow:inset 0 0 0 1px rgba(228,220,200,.25);visibility:hidden}
+.fhmeter.on{visibility:visible}
+.fhmeter .fhband{position:absolute;top:2px;bottom:2px;background:rgba(150,190,140,.42);box-shadow:inset 0 0 0 1px rgba(190,220,170,.6)}
+.fhmeter.aim .fhband{background:rgba(232,196,106,.35);box-shadow:inset 0 0 0 1px rgba(232,196,106,.7)}
+.fhmeter .fhdanger{position:absolute;top:2px;bottom:2px;right:2px;width:7%;background:repeating-linear-gradient(135deg,rgba(182,55,42,.75) 0 4px,rgba(182,55,42,.35) 4px 8px)}
+.fhmeter .fhneedle{position:absolute;top:-4px;bottom:-4px;width:4px;margin-left:-2px;background:#efe6cf;box-shadow:0 0 6px rgba(239,230,207,.7);transition:background .15s}
+.fhmeter.hot .fhneedle{background:#e0543f;box-shadow:0 0 10px rgba(224,84,63,.9)}
+.fhmeter.slack .fhneedle{background:#8fb2d8}
+.fhdist{height:6px;margin:0 2px;background:rgba(228,220,200,.08);visibility:hidden}
+.fhdist.on{visibility:visible}
+.fhdist i{display:block;height:100%;width:0;background:linear-gradient(90deg,#6a8fb0,#a8c8e0)}
+.fhmsg{min-height:2.6em;margin:6px 0 2px;font-size:15px;line-height:1.3;color:#e8dcc0}
+.fhgame .btn.fhbig{min-height:56px;font-size:18px;letter-spacing:.06em;touch-action:none;user-select:none;-webkit-user-select:none}
+.fhgame .cghint{min-height:2.4em}
+.hgbars{display:flex;align-items:center;gap:8px;margin:8px 2px 2px}
+.hglab{font-size:15px;line-height:1}
+.hgalert{flex:1;height:12px;background:rgba(228,220,200,.08);box-shadow:inset 0 0 0 1px rgba(228,220,200,.22)}
+.hgalert i{display:block;height:100%;width:0;background:linear-gradient(90deg,#c9a24a,#e0a03f)}
+.hgalert.hot i{background:linear-gradient(90deg,#d0603e,#e0331f)}
+.hgdist{min-width:3.4em;text-align:right;font-variant-numeric:tabular-nums;color:#b8b09c;font-size:14px}
+#hgrow .btn{flex:1 1 0}
+#hgrow .btn.fhbig{flex:2 1 0}
+@media (max-width:440px){
+  .fhgame .fhcard{padding:10px 8px 8px}
+  .fhgame .fhcard canvas{max-width:100%!important}
+  .fhmsg{font-size:14px}
+  #hgrow{flex-wrap:wrap}
+  #hgrow .btn.fhbig{flex:1 1 100%}
+}
+/* [OURS] title on wide screens: a dark scrim behind the menu column + stronger shadows, so the words read over a bright sky */
+.title .vign{background:radial-gradient(clamp(240px,34vw,620px) 62vh at 50% 58%,rgba(5,7,10,.58) 0%,rgba(5,7,10,.32) 55%,transparent 100%),linear-gradient(to top,rgba(4,5,7,.7) 0%,rgba(4,5,7,0) 16%),radial-gradient(120% 90% at 50% 45%,transparent 50%,rgba(0,0,0,.75) 100%)}
+.title .mi{color:#d8d1bf}
+.title .mi small{font-size:15px;color:#c9c1ad}
+.title .tag{color:#cfc7b3}
+.title .foot{font-size:14px;color:#b5ad9a}
+.title .press,.title .mi,.title .foot,.title .tag,.title .mi small{text-shadow:0 1px 2px rgba(0,0,0,1),0 0 10px rgba(0,0,0,.95),0 0 26px rgba(0,0,0,.7)}
+.title h1{filter:drop-shadow(0 2px 3px rgba(0,0,0,.9)) drop-shadow(0 0 18px rgba(0,0,0,.6))}
 </style>
+<script src="gameicons.js"></script>
 <script src="bugreport.js"></script>
 <script src="access.js"></script>
 </head>
@@ -2904,6 +3007,7 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 <script src="colorcode.js"></script>
 <script src="skyart.js"></script>
 <script src="combatfx.js"></script>
+<script src="gore.js"></script>
 <script src="enchants2.js"></script>
 <script src="bscdata.js"></script>
 <script src="battlescene.js"></script>
@@ -2957,7 +3061,11 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 <script src="craftgames.js"></script>
 <script src="minegame.js"></script>
 <script src="dungeongames.js"></script>
+<script src="livecursor.js"></script>
+<script src="partytraps.js"></script>
 <script src="hunting.js"></script>
+<script src="fishing.js"></script>
+<script src="huntgame.js"></script>
 <script src="craftqol.js"></script>
 <script src="polish.js"></script>
 <script src="caravans.js"></script>
@@ -2974,6 +3082,7 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 <script src="nickname.js"></script>
 <script src="desktop.js"></script>
 <script src="pcupdate.js"></script>
+<script src="chargebar.js"></script>
 <script src="i18n_story.js"></script>
 <script src="i18n_beast.js"></script>
 <script src="i18n_hsrooms.js"></script>
@@ -2994,6 +3103,7 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 <script src="i18n_fighttips.js"></script>
 <script src="i18n_pickaxe.js"></script>
 <script src="i18n_pcfit.js"></script>
+<script src="i18n_widetitle.js"></script>
 <script src="i18n_followeranim.js"></script>
 <script src="i18n_shouts.js"></script>
 <script src="i18n_bleakfalls.js"></script>
@@ -3008,7 +3118,10 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 <script src="i18n_netsync.js"></script>
 <script src="i18n_pcmap.js"></script>
 <script src="i18n_eventart.js"></script>
+<script src="i18n_gore.js"></script>
 <script src="i18n_appicon.js"></script>
+<script src="i18n_partytraps.js"></script>
+<script src="i18n_fishhunt.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>

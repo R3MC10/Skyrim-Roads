@@ -33,7 +33,7 @@ async def main():
         n = await A.locator(f"[data-act=coopinv][data-id='{idb}']").count()
         assert n == 1, "Beta listed as friend to invite"
         await A.click(f"[data-act=coopinv][data-id='{idb}']"); await A.wait_for_timeout(1000)
-        await clean(B); await B.evaluate("()=>window.__ui.go('social')"); await B.wait_for_timeout(300); await B.click("[data-act=soctab][data-id=party]"); await B.wait_for_timeout(300)   # invites live in 👥 Friends → Party
+        await clean(B); await B.evaluate("()=>window.__ui.go('social')"); await B.wait_for_timeout(300); await B.click("[data-act=soctab][data-id=party]"); await B.wait_for_timeout(300)   # invites live in \ue106 Friends → Party
         assert await B.locator("[data-act=coopjoin]").count() >= 1, "B sees invite in Friends → Party"
         await B.locator("#j-coop").scroll_into_view_if_needed(); await B.screenshot(path=SHOT + "invite_B.png")
         await B.locator("[data-act=coopjoin]").first.click(); await B.wait_for_timeout(900)

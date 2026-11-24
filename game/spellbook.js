@@ -413,7 +413,7 @@ const SPELLBOOK = (() => {
       s.rituals[school] = "done";
       const master = sellable().find(([id, sp]) => sp.level === "Master" && sp.school === school && !s.spells.includes(id));
       if (master) G.give(s, tomeOf(master[0]));
-      out.push(`🎓 Ritual passed: you are a Master of ${school}.${master ? ` ${TEACHERS[school]} sends you ${D.SPELLS[master[0]].name}'s tome; the other Master tomes are now for sale at the College.` : ""}`);
+      out.push(` Ritual passed: you are a Master of ${school}.${master ? ` ${TEACHERS[school]} sends you ${D.SPELLS[master[0]].name}'s tome; the other Master tomes are now for sale at the College.` : ""}`);
     }
     return out;
   }
@@ -426,7 +426,7 @@ const SPELLBOOK = (() => {
     const tomes = stockAt(town, shop, s).filter(spellOfTome).length;
     if (!tomes && shop !== "wizard") return "";
     const hidden = rotation(town, shop).filter((i) => spellOfTome(i) && gateWhy(s, i, town, shop) && !gateWhy({ ...s, skills: Object.fromEntries(Object.keys(s.skills).map((k) => [k, { ...s.skills[k], lvl: 100 }])) }, i, town, shop)).length;
-    return `<p class="sub sb-note">📜 ${who ? `<b>${esc(who)}</b> sells ` : "Sells "}${tomes} spell tome${tomes === 1 ? "" : "s"} (up to ${cap}). New stock in about ${mins} in-game hour${mins === 1 ? "" : "s"}.${hidden ? ` ${hidden} more appear as your schools grow (Apprentice at 25, Adept 50, Expert 75).` : ""}</p>`;
+    return `<p class="sub sb-note"> ${who ? `<b>${esc(who)}</b> sells ` : "Sells "}${tomes} spell tome${tomes === 1 ? "" : "s"} (up to ${cap}). New stock in about ${mins} in-game hour${mins === 1 ? "" : "s"}.${hidden ? ` ${hidden} more appear as your schools grow (Apprentice at 25, Adept 50, Expert 75).` : ""}</p>`;
   }
   const esc = (x) => String(x).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   function ritualHTML(s) {

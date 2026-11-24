@@ -10,7 +10,7 @@ c.__lang = "en"; c.localStorage = { getItem: () => JSON.stringify({ lang: c.__la
   const code = /^(?:[a-z0-9_:\-#. ]*|[a-z]+[A-Z]\w*|.*\$\{.*|.*[=<>].*|[\][(){}].*|\w+:[\w-]+|One-Handed|Two-Handed|Archery|Sneak|Smithing|Lockpicking|Alchemy|FUS|M0,.*|M-.*|&\w+;|\w+\|.*|width:.*)$/, out = new Set();
   for (const f of ["dwemer.js", "blackreach.js"]) for (const line of fs.readFileSync(W + f, "utf8").split("\n")) {
     if (/^\s*(\/\/|\/\*|\*)/.test(line)) continue;
-    for (const m of line.replace(/\/\/ .*$/, "").matchAll(/"((?:[^"\\\n]|\\.)*)"/g)) { const v = m[1].replace(/\\"/g, '"').trim(); if (/[A-Za-z]{2}/.test(v) && !code.test(v)) out.add(v); }
+    for (const m of line.replace(/\/\/ .*$/, "").matchAll(/"((?:[^"\\\n]|\\.)*)"/g)) { const v = m[1].replace(/\\"/g, '"').replace(/\\u([0-9A-Fa-f]{4})/g, (_, h) => String.fromCharCode(parseInt(h, 16))).trim(); if (/[A-Za-z]{2}/.test(v) && !code.test(v)) out.add(v); }
   }
   c.__cands = [...out]; }
 vm.createContext(c);

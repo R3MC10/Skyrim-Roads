@@ -71,16 +71,16 @@ const HORSEBACK = (() => {
       HORSES.knockDown(s, t); h.mounted = true;   // you'll ride again once it's back on its feet
       return [HORSES.downLine(h)];
     }
-    if (m.hp < m.hp0) { h.hp = Math.max(1, m.hp); h.hpT = t; return [`🐴 ${h.name} took ${Math.round(m.hp0 - m.hp)} damage (${Math.round(m.hp)}/${m.max}).`]; }
+    if (m.hp < m.hp0) { h.hp = Math.max(1, m.hp); h.hpT = t; return [` ${h.name} took ${Math.round(m.hp0 - m.hp)} damage (${Math.round(m.hp)}/${m.max}).`]; }
     return [];
   }
 
   /* a hint on the encounter screen */
   function note(s) {
     if (typeof HORSES === "undefined" || !HORSES.present(s)) return "";
-    if (HORSES.downed(s)) return `<p class="sub mountnote hdown">🐴 ${s.horse.name} is downed and limps behind you. You fight on foot.</p>`;
-    if (!HORSES.riding(s)) return `<p class="sub mountnote">🐴 ${s.horse.name} is with you, but you're on foot. Ride to open fights with a charge.</p>`;
-    return `<p class="sub mountnote">🐴 On horseback: you open with a charge, and one-handers, spears and bows hit harder from the saddle. Foes may go for ${s.horse.name}.</p>`;
+    if (HORSES.downed(s)) return `<p class="sub mountnote hdown">\uE12D ${s.horse.name} is downed and limps behind you. You fight on foot.</p>`;
+    if (!HORSES.riding(s)) return `<p class="sub mountnote">\uE12D ${s.horse.name} is with you, but you're on foot. Ride to open fights with a charge.</p>`;
+    return `<p class="sub mountnote">\uE12D On horseback: you open with a charge, and one-handers, spears and bows hit harder from the saddle. Foes may go for ${s.horse.name}.</p>`;
   }
 
   /* fight scene: draw the horse under the rider (FIGHTART calls this with the hero's transform set).

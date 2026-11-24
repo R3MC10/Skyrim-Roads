@@ -30,10 +30,10 @@ const QITEMS = (() => {
           const ch = home[1].chest, i = ch.findIndex((x) => x.item === item), r = ch[i];
           if (r.qty > 1) r.qty--; else ch.splice(i, 1);
           G.give(s, item, 1, r.charge ?? null);
-          out.push(`📜 You'll need the ${name} for your quest, so you took it from your house chest in ${home[0]}.`);
+          out.push(` You'll need the ${name} for your quest, so you took it from your house chest in ${home[0]}.`);
         } else {
           G.give(s, item);
-          out.push(`📜 The ${name} you need for your quest turns up in your pack after all.`);
+          out.push(` The ${name} you need for your quest turns up in your pack after all.`);
         }
         G.note(s, out[out.length - 1]);
       }

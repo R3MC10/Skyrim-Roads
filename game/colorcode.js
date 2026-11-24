@@ -59,11 +59,11 @@ const CC = (() => {
 
   // ---- painting text
   const EL_RE = [
-    [/🔥|\bburn(s|ing)?\b|\bfire\b|flames?\b|firebolt|fireball|incinerate/i, "fire"],
-    [/❄|\bfrost\b|\bchill(ed|s)?\b|\bfreez(e|es|ing)\b|frostbite|ice spike|\bice\b/i, "frost"],
-    [/⚡|\bshock(ed|s)?\b|\bsparks\b|lightning|thunder/i, "shock"],
-    [/☠|\bpoison(ed|s)?\b|\bvenom\b/i, "poison"],
-    [/💚|\bheal(s|ed|ing)?\b|\brestore(s|d)?\b|\bregenerat/i, "heal"],
+    [/|\bburn(s|ing)?\b|\bfire\b|flames?\b|firebolt|fireball|incinerate/i, "fire"],
+    [/|\bfrost\b|\bchill(ed|s)?\b|\bfreez(e|es|ing)\b|frostbite|ice spike|\bice\b/i, "frost"],
+    [/|\bshock(ed|s)?\b|\bsparks\b|lightning|thunder/i, "shock"],
+    [/|\bpoison(ed|s)?\b|\bvenom\b/i, "poison"],
+    [/|\bheal(s|ed|ing)?\b|\brestore(s|d)?\b|\bregenerat/i, "heal"],
   ];
   function lineElement(t) { for (const [re, el] of EL_RE) if (re.test(t)) return el; return ""; }
   /* + numbers green, - numbers red, inside short effect texts (".fx-text" or elements marked data-cc="fx") */
@@ -84,10 +84,10 @@ const CC = (() => {
     const sw = (cls, t) => `<span class="ccsw ${cls}">${t}</span>`;
     return `<div class="cclegend"><b>Colour key</b>
       <p>${TIERS.map((t) => sw("q-" + t, TIER_NAME[t])).join("")}</p>
-      <p>${sw("el-fire", "🔥 Fire")}${sw("el-frost", "❄ Frost")}${sw("el-shock", "⚡ Shock")}${sw("el-poison", "☠ Poison")}${sw("el-heal", "✚ Healing")}</p>
+      <p>${sw("el-fire", " Fire")}${sw("el-frost", " Frost")}${sw("el-shock", " Shock")}${sw("el-poison", " Poison")}${sw("el-heal", "✚ Healing")}</p>
       <p>${["destruction", "restoration", "alteration", "conjuration", "illusion", "mysticism"].map((x) => sw("sch-" + x, x[0].toUpperCase() + x.slice(1))).join("")}</p>
       <p>${sw("cat-warrior", "Warrior skills")}${sw("cat-mage", "Mage skills")}${sw("cat-thief", "Thief skills")}${sw("cat-crafting", "Crafting")}${sw("cat-social", "Social")}${sw("cat-movement", "Movement")}</p>
-      <p>${sw("buff", "+ Buff")}${sw("debuff", "− Debuff")}${sw("is-stolen", "✋ Stolen")}${sw("qt-main", "Main quest")}${sw("qt-guild", "Guild")}${sw("qt-daedric", "Daedric")}${sw("qt-war", "Civil War")}${sw("qt-side", "Side")}</p></div>`;
+      <p>${sw("buff", "+ Buff")}${sw("debuff", "− Debuff")}${sw("is-stolen", " Stolen")}${sw("qt-main", "Main quest")}${sw("qt-guild", "Guild")}${sw("qt-daedric", "Daedric")}${sw("qt-war", "Civil War")}${sw("qt-side", "Side")}</p></div>`;
   }
   // repaint whatever the game just drew (one pass per frame at most)
   let queued = false;

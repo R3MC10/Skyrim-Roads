@@ -5,7 +5,7 @@
      coffer, a downed horse, level-ups and perk points.
    - A "Today" card (Travel tab) lists them with Go buttons; small number badges sit on the tab buttons.
      Anyone can ask for a tab's count with REMIND.badge(tabId); REMIND.paint() puts the badges on whatever tab buttons
-     exist right now (bottom tabs, the 👥 button, the compass), so it doesn't care how the menus are laid out.
+     exist right now (bottom tabs, the  button, the compass), so it doesn't care how the menus are laid out.
    - Phone notifications while the app is closed (app.js asks window.__ui.upcoming(), which adds REMIND.notes()):
      one switch per kind in Settings, and never more than CAP a day.
    Only reads the save and other modules; it never changes game rules. */
@@ -64,7 +64,7 @@ const REMIND = (() => {
     // level up and perk points
     safe(() => {
       const pts = typeof PERKS !== "undefined" ? PERKS.pointsLeft(S) : 0;
-      if (S.pendingLevels > 0) add({ key: "lvl", kind: "hero", icon: "⬆", title: "You can level up", sub: "Pick Health, Magicka or Stamina.", state: "ready", tab: "hero", go: { tab: "hero" } });
+      if (S.pendingLevels > 0) add({ key: "lvl", kind: "hero", icon: "", title: "You can level up", sub: "Pick Health, Magicka or Stamina.", state: "ready", tab: "hero", go: { tab: "hero" } });
       if (pts > 0) add({ key: "perks", kind: "hero", icon: "★", title: `${pts} perk point${pts > 1 ? "s" : ""} to spend`, sub: "Open your perk trees.", state: "ready", tab: "hero", go: { tab: "hero", menu: "perks" } });
     });
 
@@ -73,8 +73,8 @@ const REMIND = (() => {
       for (const [town, h] of Object.entries(S.homes || {})) {
         if (!h) continue;
         const name = (typeof TOWNS !== "undefined" && TOWNS.HOMES[town]?.[0]) || town, readyAt = (h.garden || 0) + 7200;
-        if (readyAt <= t) add({ key: `garden:${town}`, nk: `garden:${town}:${h.garden || 0}`, kind: "home", icon: "🌿", title: `The garden at ${name} is ripe`, sub: `${town} · harvest it at your house.`, state: "ready", at: readyAt, place: town, tab: tabAt(town, "town"), go: goAt(town, "town", { shop: "home" }) });
-        else add({ key: `garden:${town}`, nk: `garden:${town}:${h.garden || 0}`, kind: "home", icon: "🌿", title: `The garden at ${name}`, sub: `${town} · ripe again`, state: "soon", at: readyAt, place: town });
+        if (readyAt <= t) add({ key: `garden:${town}`, nk: `garden:${town}:${h.garden || 0}`, kind: "home", icon: "", title: `The garden at ${name} is ripe`, sub: `${town} · harvest it at your house.`, state: "ready", at: readyAt, place: town, tab: tabAt(town, "town"), go: goAt(town, "town", { shop: "home" }) });
+        else add({ key: `garden:${town}`, nk: `garden:${town}:${h.garden || 0}`, kind: "home", icon: "", title: `The garden at ${name}`, sub: `${town} · ripe again`, state: "soon", at: readyAt, place: town });
       }
     });
 
@@ -85,10 +85,10 @@ const REMIND = (() => {
         const P = HOMESTEAD.PLOTS[pid], h = HOMESTEAD.plot(S, pid), rd = HOMESTEAD.ready(S, pid, t), wings = Object.keys(rd);
         if (!P || !h || !wings.length) continue;
         const days = wings.reduce((a, w) => a + rd[w], 0), cap = HOMESTEAD.keepDays(S, pid), full = wings.some((w) => rd[w] >= cap);
-        if (days > 0) add({ key: `hs:${pid}`, kind: "home", icon: "🏡", title: `Goods waiting at ${P.name}`, sub: `${P.town} · ${full ? "the wings are full, anything more is lost" : `${days} day${days > 1 ? "s" : ""} of goods from your wings`}`, state: "ready", at: t, place: P.town, tab: tabAt(P.town, "town"), go: goAt(P.town, "town", { shop: "homestead" }) });
+        if (days > 0) add({ key: `hs:${pid}`, kind: "home", icon: "", title: `Goods waiting at ${P.name}`, sub: `${P.town} · ${full ? "the wings are full, anything more is lost" : `${days} day${days > 1 ? "s" : ""} of goods from your wings`}`, state: "ready", at: t, place: P.town, tab: tabAt(P.town, "town"), go: goAt(P.town, "town", { shop: "homestead" }) });
         else {
           const nxt = Math.min(...wings.map((w) => (h.col?.[w] || t) + HOMESTEAD.DAY));
-          add({ key: `hs:${pid}`, nk: `hs:${pid}:${Math.round(nxt)}`, kind: "home", icon: "🏡", title: `Goods at ${P.name}`, sub: `${P.town} · the wings make more`, state: "soon", at: nxt, place: P.town });
+          add({ key: `hs:${pid}`, nk: `hs:${pid}:${Math.round(nxt)}`, kind: "home", icon: "", title: `Goods at ${P.name}`, sub: `${P.town} · the wings make more`, state: "soon", at: nxt, place: P.town });
         }
       }
     });
@@ -97,14 +97,14 @@ const REMIND = (() => {
     safe(() => {
       if (typeof HORSES === "undefined" || !HORSES.downed(S, t)) return;
       const d = S.horse.down, nm = S.horse.name || "Your horse", town = HORSES.nearestStables([S.x, S.y]);
-      add({ key: "horse", nk: `horse:${Math.round(d.until || 0)}`, kind: "horse", icon: "🐎", title: `${nm} is downed`, sub: `Back up in about ${Math.max(1, Math.ceil((d.until - t) / 60))} min · or a stablehand in ${town}`, state: "soon", at: d.until, place: town, tab: tabAt(town, "town"), go: goAt(town, "town", { shop: "stables" }) });
+      add({ key: "horse", nk: `horse:${Math.round(d.until || 0)}`, kind: "horse", icon: "\uE12D", title: `${nm} is downed`, sub: `Back up in about ${Math.max(1, Math.ceil((d.until - t) / 60))} min · or a stablehand in ${town}`, state: "soon", at: d.until, place: town, tab: tabAt(town, "town"), go: goAt(town, "town", { shop: "stables" }) });
     });
 
     // caravan you signed on with (caravans.js)
     safe(() => {
       const j = S.caravanJob; if (!j || j.status !== "signed") return;
       const there = here === j.from;
-      add({ key: "caravan", nk: `caravan:${j.id}`, kind: "caravan", icon: "🐫", title: `Your caravan leaves ${j.from}`, sub: there ? `${j.name} to ${j.to} · stay in town` : `${j.name} to ${j.to} · be there or it leaves without you`, state: "ending", at: j.depart, place: j.from, tab: there ? null : "map", go: goAt(j.from, "town", { shop: "caravans" }) });
+      add({ key: "caravan", nk: `caravan:${j.id}`, kind: "caravan", icon: "", title: `Your caravan leaves ${j.from}`, sub: there ? `${j.name} to ${j.to} · stay in town` : `${j.name} to ${j.to} · be there or it leaves without you`, state: "ending", at: j.depart, place: j.from, tab: there ? null : "map", go: goAt(j.from, "town", { shop: "caravans" }) });
     });
 
     // courier trades from friends (social.js), and market stall gold (market.js)
@@ -112,11 +112,11 @@ const REMIND = (() => {
       for (const d of c.trades || []) {
         if (!d || d.to !== S.id || d.status !== "open") continue;
         const arrived = typeof SOCIAL === "undefined" || SOCIAL.arrived(d, t);
-        if (arrived) add({ key: `trade:${d.id}`, kind: "courier", icon: "📦", title: `A trade offer from ${d.fromName || "a friend"}`, sub: "Have a look in 👥 Friends.", state: "ready", at: d.arrive || t, tab: "social", go: { tab: "social", soc: "friends" } });
-        else add({ key: `trade:${d.id}`, kind: "courier", icon: "📦", title: `A courier is on the way from ${d.fromName || "a friend"}`, sub: "With a trade offer for you", state: "soon", at: d.arrive });
+        if (arrived) add({ key: `trade:${d.id}`, kind: "courier", icon: "", title: `A trade offer from ${d.fromName || "a friend"}`, sub: "Have a look in  Friends.", state: "ready", at: d.arrive || t, tab: "social", go: { tab: "social", soc: "friends" } });
+        else add({ key: `trade:${d.id}`, kind: "courier", icon: "", title: `A courier is on the way from ${d.fromName || "a friend"}`, sub: "With a trade offer for you", state: "soon", at: d.arrive });
       }
       const sold = (c.stalls || []).filter((d) => d && d.seller === S.id && d.status === "sold");
-      if (sold.length) add({ key: "stall", kind: "market", icon: "🛒", title: `Sold at your stall: ${sold.length} thing${sold.length > 1 ? "s" : ""}`, sub: "The gold comes in on its own.", state: "ready", at: t, tab: "town", go: { tab: "town", shop: "market" } });
+      if (sold.length) add({ key: "stall", kind: "market", icon: "", title: `Sold at your stall: ${sold.length} thing${sold.length > 1 ? "s" : ""}`, sub: "The gold comes in on its own.", state: "ready", at: t, tab: "town", go: { tab: "town", shop: "market" } });
     });
 
     // the bounty board (bounty.js): rewards this week and last week
@@ -124,7 +124,7 @@ const REMIND = (() => {
       if (typeof BOUNTY === "undefined") return;
       const w = BOUNTY.week();
       for (const wk of [w, w - 1]) for (const g of BOUNTY.board(wk, S.id)) if (BOUNTY.claimable(S, wk, g.kind))
-        add({ key: `bounty:${wk}:${g.kind}`, kind: "board", icon: "📜", title: `Bounty reward: ${g.title}`, sub: `${g.gold} gold waiting on the board.`, state: "ready", tab: "log", go: { tab: "log", jtab: "misc", anchor: "j-bounty" } });
+        add({ key: `bounty:${wk}:${g.kind}`, kind: "board", icon: "", title: `Bounty reward: ${g.title}`, sub: `${g.gold} gold waiting on the board.`, state: "ready", tab: "log", go: { tab: "log", jtab: "misc", anchor: "j-bounty" } });
     });
 
     // the seasonal festival (festivals.js)
@@ -154,7 +154,7 @@ const REMIND = (() => {
       if (typeof RUMOURS === "undefined") return;
       for (const r of RUMOURS.leads(S, t)) {
         const K = RUMOURS.KINDS[r.kind] || {};
-        add({ key: `lead:${r.id}`, nk: `lead:${r.id}`, kind: "rumours", icon: K.icon || "💬", title: `${K.title || "A rumour"} at ${r.place}`, sub: `Heard in ${r.town || "town"}`, state: "ending", at: r.until, place: r.place, tab: here === r.place ? "map" : null, go: { place: r.place, tab: "map" } });
+        add({ key: `lead:${r.id}`, nk: `lead:${r.id}`, kind: "rumours", icon: K.icon || "", title: `${K.title || "A rumour"} at ${r.place}`, sub: `Heard in ${r.town || "town"}`, state: "ending", at: r.until, place: r.place, tab: here === r.place ? "map" : null, go: { place: r.place, tab: "map" } });
       }
     });
 
@@ -163,8 +163,8 @@ const REMIND = (() => {
       if (typeof DUNGEONS === "undefined") return;
       for (const [name, when] of Object.entries(S.cleared || {})) {
         const at = when + DUNGEONS.REFILL_SECONDS;
-        if (at <= t && t - at < REOPEN_WINDOW) add({ key: `place:${name}`, nk: `place:${name}:${Math.round(at)}`, kind: "places", icon: "⚔", title: `${name} is full of foes again`, sub: "New foes and new loot.", state: "ready", at, place: name, go: { place: name, tab: "map" } });
-        else if (at > t && at - t < SOON_S) add({ key: `place:${name}`, nk: `place:${name}:${Math.round(at)}`, kind: "places", icon: "⚔", title: name, sub: "Fills up again", state: "soon", at, place: name, go: { place: name, tab: "map" } });
+        if (at <= t && t - at < REOPEN_WINDOW) add({ key: `place:${name}`, nk: `place:${name}:${Math.round(at)}`, kind: "places", icon: "", title: `${name} is full of foes again`, sub: "New foes and new loot.", state: "ready", at, place: name, go: { place: name, tab: "map" } });
+        else if (at > t && at - t < SOON_S) add({ key: `place:${name}`, nk: `place:${name}:${Math.round(at)}`, kind: "places", icon: "", title: name, sub: "Fills up again", state: "soon", at, place: name, go: { place: name, tab: "map" } });
       }
     });
 
@@ -172,7 +172,7 @@ const REMIND = (() => {
     safe(() => {
       const h = S.hall; if (!h || typeof HALLS === "undefined") return;
       const w = HALLS.wages(h); if (!(w > 0) || (h.coffer || 0) >= w * 2) return;
-      add({ key: "coffer", kind: "hall", icon: "🏰", title: (h.coffer || 0) < w ? "Your hall can't pay its staff" : "Your hall's coffer is nearly empty", sub: `${h.coffer || 0} gold left, wages are ${w} a day. Unpaid staff leave.`, state: "ready", place: h.town, tab: tabAt(h.town, "town"), go: goAt(h.town, "town", { shop: "halls" }) });
+      add({ key: "coffer", kind: "hall", icon: "", title: (h.coffer || 0) < w ? "Your hall can't pay its staff" : "Your hall's coffer is nearly empty", sub: `${h.coffer || 0} gold left, wages are ${w} a day. Unpaid staff leave.`, state: "ready", place: h.town, tab: tabAt(h.town, "town"), go: goAt(h.town, "town", { shop: "halls" }) });
     });
 
     const rank = { ready: 0, ending: 1, soon: 2 };
@@ -270,13 +270,13 @@ const REMIND = (() => {
       if (x.state === "soon") {
         at = x.at * 1000;
         if (x.kind === "home") { title = `${x.icon} ${x.title.replace(/^Goods at/, "Goods ready at")}${/garden/.test(x.key) ? " is ripe" : ""}`; body = `${x.place} · tap to go and collect.`; }
-        else if (x.kind === "horse") { title = `🐎 ${(S.horse?.name) || "Your horse"} is back on their feet`; body = "Ready to ride again."; }
-        else if (x.kind === "courier") { title = "📦 A courier is here"; body = x.title.replace(/^A courier is on the way from/, "A trade offer from") + "."; }
+        else if (x.kind === "horse") { title = `\uE12D ${(S.horse?.name) || "Your horse"} is back on their feet`; body = "Ready to ride again."; }
+        else if (x.kind === "courier") { title = "\uE126 A courier is here"; body = x.title.replace(/^A courier is on the way from/, "A trade offer from") + "."; }
         else if (x.kind === "events") { if (/^wev:kc-/.test(x.key)) continue; title = `${x.icon} ${x.title}`; body = "Starting now. Every player can join in."; }
-        else if (x.kind === "places") { title = `⚔ ${x.title} is full again`; body = "New foes and new loot."; }
+        else if (x.kind === "places") { title = ` ${x.title} is full again`; body = "New foes and new loot."; }
         else continue;
       } else if (x.state === "ending") {
-        if (x.kind === "caravan") { at = (x.at - 10 * 60) * 1000; title = `🐫 ${x.title} in 10 minutes`; body = "Be in town or it goes without you."; }
+        if (x.kind === "caravan") { at = (x.at - 10 * 60) * 1000; title = ` ${x.title} in 10 minutes`; body = "Be in town or it goes without you."; }
         else if (x.kind === "rumours") { at = (x.at - 30 * 60) * 1000; title = `${x.icon} ${x.title}`; body = "This lead goes cold in half an hour."; }
         else continue;
       } else continue;

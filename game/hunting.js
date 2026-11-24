@@ -1,6 +1,6 @@
 /* Hunting. [OURS, animals from Skyrim]
    Remigiusz: "Hunting should be triggering encounters Vs animal combats when toggled on."
-   - The 🏹 button on the map turns hunting on. While it's on you travel a bit slower (you're tracking game), and on the
+   - The  button on the map turns hunting on. While it's on you travel a bit slower (you're tracking game), and on the
      road you run into animals much more often: deer, elk, mountain goats, horkers on the coast, and now and then
      something that hunts back (wolves, bears, sabre cats). Each one is a fight you play.
    - Prey gives venison (or horker meat) and hides you can tan into leather; predators give their pelts as before.
