@@ -10,11 +10,12 @@ const VISITS = (() => {
   /* what other players see about you */
   function record(s) {
     const homes = Object.keys(s.homes || {}).filter((t) => TOWNS.HOMES[t]);
-    if (!homes.length) return null;
+    const hs = typeof HSROOMS !== "undefined" ? HSROOMS.record(s) : null;   // homesteads, for party visits (hsrooms.js)
+    if (!homes.length && !hs) return null;
     const show = [];
     for (const t of homes) for (const r of s.homes[t].chest || []) if (r.shown && show.length < SHOW_MAX && D.ITEMS[r.item]) show.push({ name: itemName(r), town: t, item: r.item });
     return { name: s.name, race: s.race, level: s.level, towns: homes, motto: clean(s.motto, MOTTO_MAX), dragons: s.dragons || 0,
-      cleared: Object.keys(s.cleared || {}).length, titles: (s.titles || []).slice(-6), show, souls: s.souls || 0,
+      cleared: Object.keys(s.cleared || {}).length, titles: (s.titles || []).slice(-6), show, souls: s.souls || 0, ...(hs ? { hs } : {}),
       ...(typeof ACH !== "undefined" ? { ach: { n: ACH.count(s), total: ACH.total, latest: ACH.latest(s, 4) } } : {}) };
   }
   /* homes of other players in this town */
