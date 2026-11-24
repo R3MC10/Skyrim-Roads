@@ -517,7 +517,7 @@
       return true;
     },
     /* for the Tab compass (tabmenu.js) */
-    openMenu: (p) => openMenu(p), closeMenu: () => closeMenu(), refresh: () => { bump(); renderPanel(true); }, fight: (r) => showFightResult(r),
+    openMenu: (p) => openMenu(p), closeMenu: () => closeMenu(), refresh: () => { bump(); renderPanel(true); }, fight: (r) => showFightResult(r), tbCall: (fn, done) => tbCall(fn, done),   // tbCall: event fights open the turn-by-turn screen (noautoplay.js)
     go(t) { closeMenu(); tab = t; testResult = null; bump(); renderTabs(); renderPanel(true); },
     get tab() { return tab; },
     /* [remind] Go buttons: open a screen ({ tab, shop, jtab, soc, anchor }) or pick a place on the map ({ place }) */
@@ -1443,7 +1443,7 @@
       let r, err; const p = lvUI ? lvUI.aroundAct(c, () => { try { return (r = DUNGEONS.act(S, c)); } catch (x) { err = x; throw x; } }) : (r = DUNGEONS.act(S, c));
       p?.catch?.((x) => { if (x !== err) console.warn(x); }); if (err) throw err; return r;
     };
-    if (replay) return dungeonDone(act(), runId, roomType, hp0, found0, gold0);   // members follow the leader's choice: no fight screen
+    if (replay) return dungeonDone(typeof NOAUTO !== "undefined" ? NOAUTO.carried(act) : act(), runId, roomType, hp0, found0, gold0);   // members follow the leader's choice: its fight was played on the shared fight screen, the AI doesn't fight it again (noautoplay.js)
     tbCall(act, (r) => dungeonDone(r, runId, roomType, hp0, found0, gold0));
   }
   function dungeonDone(r, runId, roomType, hp0, found0, gold0) {

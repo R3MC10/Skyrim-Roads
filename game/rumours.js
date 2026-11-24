@@ -398,13 +398,15 @@ const RUMOURS = (() => {
         const r = knock(S); if (r.err) return toast(r.err);
         sfx("click"); ui.save(); ui.refresh(); toast(r.text);
       } else if (what === "act") {
-        const r = act(S, b.dataset.id);
-        if (r.err) return toast(r.err);
-        if (!r.dud) G.note?.(S, `📜 ${r.text}`);
-        ui.save(); ui.refresh();
-        if ((r.fight || r.died) && ui.fight) return ui.fight(r);
-        sfx(r.dud ? "click" : "coin");
-        msg(r.dud ? "Just talk" : "The rumour was true", r.text + (r.loot?.length && !r.found ? ` Loot: ${r.loot.join(", ")}.` : ""));
+        const id = b.dataset.id, go = typeof NOAUTO !== "undefined" ? NOAUTO.call : (fn, done) => done(fn());   // a fight opens on the turn-by-turn screen (noautoplay.js)
+        go(() => act(S, id), (r) => {
+          if (r.err) return toast(r.err);
+          if (!r.dud) G.note?.(S, `📜 ${r.text}`);
+          ui.save(); ui.refresh();
+          if ((r.fight || r.died) && ui.fight) return ui.fight(r);
+          sfx(r.dud ? "click" : "coin");
+          msg(r.dud ? "Just talk" : "The rumour was true", r.text + (r.loot?.length && !r.found ? ` Loot: ${r.loot.join(", ")}.` : ""));
+        });
       }
     });
   }
