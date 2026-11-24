@@ -12,7 +12,8 @@ function make() {
   w.setMenu(null);
   w.webContents.setWindowOpenHandler(({ url }) => { if (/^https?:/.test(url)) shell.openExternal(url); return { action: "deny" }; });
   w.webContents.on("before-input-event", (e, inp) => { if (inp.type === "keyDown" && inp.key === "F11") { w.setFullScreen(!w.isFullScreen()); e.preventDefault(); } });
-  w.loadURL("app://game/index.html");
+  // the game shows its own "new version" card on PC (pcupdate.js): it needs to know the build and whether this copy can update itself
+  w.loadURL(`app://game/index.html?pc=${process.env.PORTABLE_EXECUTABLE_DIR ? "portable" : "setup"}&v=${encodeURIComponent(app.getVersion())}`);
   return w;
 }
 app.whenReady().then(() => {

@@ -20,8 +20,8 @@ Object.assign(D.ITEMS, {
   dwarven_armor: { name: "Dwarven Armor", slot: "chest", type: "heavy", armor: 34, weight: 45, value: 400 },
   forsworn_sword: { name: "Forsworn Sword", slot: "weapon", hands: 1, skill: "One-Handed", damage: 8, weight: 10, value: 30 },
   forsworn_armor: { name: "Forsworn Armor", slot: "chest", type: "light", armor: 20, weight: 6, value: 55 },
-  golden_claw: { name: "Golden Claw", slot: "trophy", weight: 0.3, value: 100 },
-  dragonstone: { name: "Dragonstone", slot: "trophy", weight: 20, value: 0 },
+  golden_claw: { name: "Golden Claw", slot: "trophy", weight: 0.3, value: 100, quest: true },   // quest: stays with the finder (party loot pile, followers, the hall)
+  dragonstone: { name: "Dragonstone", slot: "trophy", weight: 20, value: 0, quest: true },
   ing_spider_egg: { name: "Spider Egg", slot: "ingredient", weight: 0.2, value: 5 },
   ing_bone_meal: { name: "Bone Meal", slot: "ingredient", weight: 0.5, value: 5 },
   ing_skeever_tail: { name: "Skeever Tail", slot: "ingredient", weight: 0.2, value: 3 },

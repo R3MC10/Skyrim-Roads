@@ -101,6 +101,7 @@ const LOOTVOTE = (() => {
     for (const r of mine) {
       const { i, qty = 1, item, ...props } = r;
       if (!D.ITEMS[item]) continue;
+      if (D.ITEMS[item].quest && (s.inv.some((x) => x.item === item) || (item === "dragonstone" && s.thaneWhiterun))) continue;   // a pile from before quest items stayed with their finder: no second copy
       if (STACK.has(D.ITEMS[item].slot) || !Object.keys(props).length) G.give(s, item, qty, props.charge ?? null);
       else for (let k = 0; k < qty; k++) s.inv.push({ ...props, item, qty: 1, id: s.nextInv++ });
       if (s.dungeon) s.dungeon.found.push(D.ITEMS[item].name);

@@ -16,7 +16,7 @@ const QUESTS = (() => {
   const L = {
     main: { name: "The Dragonborn", giver: "Main quest", stages: [
       { title: "Before the Storm", text: "Riverwood's smith says Whiterun must be warned about the dragon. Go to Whiterun.", obj: { go: "Whiterun" }, reward: { gold: 50 } },
-      { title: "Bleak Falls Barrow", text: "The court wizard Farengar wants a Dragonstone from Bleak Falls Barrow. Bring it to him in Whiterun (Area tab, Dragonsreach).", obj: { flag: "thaneWhiterun" }, reward: { gold: 100 } },
+      { title: "Bleak Falls Barrow", text: "The court wizard Farengar wants a Dragonstone from Bleak Falls Barrow. Bring it to him in Whiterun (Area tab, Court wizard).", obj: { flag: "thaneWhiterun" }, reward: { gold: 100 } },
       { title: "Dragon Rising", text: "A dragon is attacking the Western Watchtower. Go there and kill it.", obj: { talk: "Western Watchtower", label: "Fight the dragon", fight: E("Mirmulnir", 180, 17, ["big", "dragon", "elite"]), allies: [["Irileth", 9], ["Whiterun guard", 6], ["Whiterun guard", 6]] }, reward: { gold: 200 } },
       { title: "The Way of the Voice", text: "The Greybeards have summoned you. Climb to High Hrothgar and speak with them.", obj: { flag: "greybeards" }, reward: { gold: 100 } },
       { title: "The Horn of Jurgen Windcaller", text: "The Greybeards want the Horn of Jurgen Windcaller from Ustengrav. Clear Ustengrav.", obj: { clear: "Ustengrav" }, reward: { gold: 300, items: ["horn_jurgen"] } },
