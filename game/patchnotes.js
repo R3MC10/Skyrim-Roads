@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b178-deepdelve-bal", build: 178, date: "25 Nov 2026", title: "Fairer deep expeditions and difficulty tiers", items: [
+      "Veteran, Legendary and Mythic are fairer when you go alone: a careful hero with a follower now beats the legendary lair about 1 time in 3 on Legendary and now and then even on Mythic.",
+      "A full party has it tougher on Legendary and Mythic: the foes grow more for every extra player, so four friends still need to work for the deepest hoard.",
+      "Going higher in level no longer makes the depths harder. A level 40 hero now does better down there than a level 30 one.",
+      "The master of the legendary lair at the very bottom has a little less health, so that fight is long but winnable.",
+    ] },
     { id: "b176-deepdelve", build: 176, date: "25 Nov 2026", title: "Deep expeditions and harder dungeons", items: [
       "Deadly dungeons go deeper. When the master falls, stairs lead down to five more levels: entrance guardians, traps and elites, the ancient vault, the cursed sanctuary and the legendary lair.",
       "After each level's big fight you make camp and choose: Extract (climb out with everything), Rest (costs a ration) or Descend. In a party it's a vote, with everyone's face by their pick.",
