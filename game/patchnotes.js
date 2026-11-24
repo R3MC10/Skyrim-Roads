@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b156-noautoplay", build: 156, date: "24 Nov 2026", title: "You always pick your own moves", items: [
+      "Charging into a great world event (dragon attacks, rifts, sieges), closing an Oblivion gate, hunting migrating dragons, chasing a rumour or a whisper now opens the turn-by-turn fight, so you choose every move instead of your hero fighting on their own.",
+      "In a party dungeon, your phone no longer fights the room a second time by itself after the leader picks. You only take part in the shared fight.",
+      "If a party member's phone can't be reached during a fight, their hero just keeps their guard up instead of attacking for them.",
+      "Running out of time on your turn only raises your guard, and the fight log now says so.",
+    ] },
     { id: "b143-spelltactics", build: 143, date: "24 Nov 2026", title: "Cleaner spell cards", items: [
       "Spell, power and shout cards in the Magic menu no longer have the \"Use first in every fight\" button. Set up what you cast in a fight in the Tactics tab instead; your current tactics stay as they are.",
     ] },

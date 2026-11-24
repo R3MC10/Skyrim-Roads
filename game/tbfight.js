@@ -299,7 +299,7 @@ const TB = (() => {
         if (f.summonTurns > 0 && f.ehp > 0) { const b = f.ehp; f.summonTurns--; f.ehp -= f.summonDmg; const t = `Your ${f.summonName || "summon"} strikes ${Math.round(f.summonDmg)}` + this.capFoe(b) + this.flank(b); this.hitters++; this.lines.me.push(t); this.emit("sum", t, "ally"); }
         return;
       }
-      if (o.al) return this.allyMove(o.al, "auto");
+      if (o.al) return o.al.player && o.al.pid && !this.opts.auto ? this.allyMove(o.al, "guard", true) : this.allyMove(o.al, "auto");   // a real player is never played by the AI: no word from their phone, they just guard (noautoplay.js)
     }
     allyMove(al, move, timedOut) {
       const f = this.f;

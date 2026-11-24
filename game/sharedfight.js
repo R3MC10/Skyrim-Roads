@@ -125,7 +125,7 @@ const SHAREDFIGHT = (() => {
       if (this.myTurn && this.idx !== i0) this.sendTurn();
       return r;
     }
-    timeUp() { if (!this.myTurn) return; this.endTurn(true); this.sendTurn(); }
+    timeUp() { if (!this.myTurn) return; this.endTurn(true); this.emit("me", "You hold back and keep your guard up (out of time)", "guard"); this.sendTurn(); }   // a timeout only guards, and says so (noautoplay.js)
     /* everything your turn did, for the leader's phone */
     reply() {
       const f = this.f, t0 = this.t0 || { ehp: f.ehp, hp: f.hp, ev: 0, hitters: 0, ward: 0, armor: 0, snap: new Map() };
