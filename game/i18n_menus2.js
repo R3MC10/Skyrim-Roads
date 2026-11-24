@@ -30,6 +30,15 @@
     "Follower": "Towarzysz", "Overview": "Przegląd", "Gear": "Ekwipunek", "Fighting style": "Styl walki",
     "Their pack": "Ich plecak", "Give from yours": "Daj ze swojego", "Best gear": "Najlepszy sprzęt", "Dismiss": "Odpraw", "Give": "Daj",
     "★ = their natural style. Changing it resets and re-picks their perks.": "★ = naturalny styl. Zmiana resetuje i wybiera atuty od nowa.",
+    // patch note
+    "Tidier menus": "Porządniejsze menu",
+    "Items and Magic work like SkyUI: categories on the left, the list in the middle and the picked thing on the right.": "Przedmioty i Magia działają jak SkyUI: kategorie po lewej, lista na środku, a wybrana rzecz po prawej.",
+    "On a PC screen they sit side by side; on phones the list stays visible above the details.": "Na ekranie komputera stoją obok siebie; na telefonie lista zostaje widoczna nad szczegółami.",
+    "One sort row: name, value, weight, damage, armour and more, plus a button that flips the order.": "Jeden pasek sortowania: nazwa, wartość, waga, obrażenia, pancerz i więcej, plus przycisk odwracający kolejność.",
+    "Each category shows how many things are in it.": "Każda kategoria pokazuje, ile w niej rzeczy.",
+    "Search your spells by name, and find quests in the Journal with the new search box.": "Szukaj zaklęć po nazwie i znajduj zadania w Dzienniku nowym polem wyszukiwania.",
+    "The Character page is much shorter: your hero card comes first, and Powers, Skills and Perks fold away until you open them.": "Strona Postaci jest dużo krótsza: najpierw karta bohatera, a Moce, Umiejętności i Atuty są zwinięte, dopóki ich nie otworzysz.",
+    "Follower tabs fit on one row, and lots of menu words are now in Polish.": "Zakładki towarzysza mieszczą się w jednym rzędzie, a wiele słów w menu jest teraz po polsku.",
   };
   for (const [k, v] of Object.entries(PL)) if (!(k in I18N_STORY.ex)) I18N_STORY.ex[k] = v;
 })();
