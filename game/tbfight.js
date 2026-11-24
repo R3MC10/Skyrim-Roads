@@ -60,6 +60,7 @@ const TB = (() => {
   function base(f, a) {
     if (typeof BEASTPATH !== "undefined") { const c = BEASTPATH.cost(f, a); if (c) return c; }   // claws and a changed form's own moves (beastpaths.js)
     if (typeof STRAT !== "undefined" && STRAT.owns(a)) return STRAT.cost(f, a);   // Catch your breath (strategy.js)
+    if (typeof MOUNTFIGHT !== "undefined" && MOUNTFIGHT.owns(a)) return MOUNTFIGHT.cost(f, a);   // getting on / off your horse (mountfight.js)
     const s = f.s, [k, arg] = a.split(":");
     if (a === "attack") return { sp: ATK_SP[f.wt] || 9 };
     if (a === "power_attack") return { sp: f.paCost || 0, eng: { sp: f.paCost || 0 } };
@@ -246,7 +247,7 @@ const TB = (() => {
     /* ---- your actions */
     /* a new turn of yours: nothing used yet (apSet keeps its old name for the modules that check it) */
     beginTurn() {
-      this.used = {}; this.myActs = 0; this.pots = 0; this.apSet = true; this.f.kitApLoss = 0;   // kitApLoss: old saves / phones, ignored now
+      this.used = {}; this.myActs = Math.min(1, this.f.kitApLoss || 0); this.pots = 0; this.apSet = true; this.f.kitApLoss = 0;   // kitApLoss: thrown from the saddle (mountfight.js) = one move fewer this turn
       const w = typeof STACKS !== "undefined" ? STACKS.beginTurn(this.f) : "";   // Winded / Drained stacks bite (stacks.js)
       if (w) this.emit("tick", w.replace(/^ · /, ""), "tick");
     }
@@ -399,6 +400,7 @@ const TB = (() => {
       if (sameFoe && typeof r.e0 === "number" && typeof r.ehp === "number") f.ehp = b - clamp(r.e0 - r.ehp, 0, Math.max(0, b));
       if (typeof r.hp === "number" && typeof r.hp0 === "number") { if (r.hpMax > 0) al.maxHp = r.hpMax; al.hp = clamp((al.hp || 0) + (r.hp - r.hp0), 1, al.maxHp || Math.max(al.hp || 1, r.hp)); }
       al.tbGuard = clamp(+r.guard || 0, 0, 0.3);
+      if (typeof MOUNTFIGHT !== "undefined") MOUNTFIGHT.fromMate(al, r.mt);   // they got on / off their horse on their phone
       if (r.self) {
         if (r.self.ward > 0) al.ward = Math.max(al.ward || 0, r.self.ward);
         if (r.self.armorRed > (al.armorRed || 0)) { al.armorRed = Math.min(0.7, r.self.armorRed); al.armorT = Math.max(al.armorT || 0, r.self.armorT || 6); }
@@ -660,6 +662,7 @@ const TB = (() => {
   const ICON = { recover: "", bash: "", attack: "", bow: "", power_attack: "", block: "", magic: "✦", items: "", flee: "", end: "", shout: "", power: "", potion: "", scroll: "", heal: "✚" };
   function iconOf(f, a) {
     if (typeof BEASTPATH !== "undefined") { const ic = BEASTPATH.icon(f, a); if (ic) return ic; }
+    if (a === "mount" || a === "dismount") return "\uE12D";
     if (a === "attack") return f.wt === "bow" || f.wt === "crossbow" ? ICON.bow : ICON.attack;
     const k = a.split(":")[0];
     if (k === "spell" || k === "dual") { const sp = spellOf(a); return sp?.kind === "heal" ? ICON.heal : sp?.element === "fire" ? "" : sp?.element === "frost" ? "" : sp?.element === "shock" ? "" : ICON.magic; }
@@ -686,7 +689,8 @@ const TB = (() => {
       return `<div class="tbmenu"><div class="tbmh"><b> Items</b><small>Drag a potion onto yourself, or tap it</small></div><div class="tbgrid">${pots || scrolls ? pots + scrolls : `<p class="sub">No potions or scrolls.</p>`}${shouts}</div><button class="tbact back" data-tbm="">‹ Back</button></div>`;
     }
     const bx = typeof BEASTPATH !== "undefined" ? BEASTPATH.moves(f) : { form: null, list: [] };   // Beast Form / Vampire Lord moves, vampire powers (beastpaths.js)
-    const sh = bx.form ? "" : shoutsFor(f).map(([a, n]) => B(a, n, "shout")).join("") + bx.list.map(([a, n]) => B(a, n, "shout beast")).join("");
+    const mv = typeof MOUNTFIGHT !== "undefined" && !bx.form ? MOUNTFIGHT.moves(f) : [];   // Mount / Dismount (mountfight.js)
+    const sh = bx.form ? "" : shoutsFor(f).map(([a, n]) => B(a, n, "shout")).join("") + bx.list.map(([a, n]) => B(a, n, "shout beast")).join("") + mv.map(([a, n]) => B(a, n, "mount")).join("");
     if (typeof TBRADIAL !== "undefined" && TBRADIAL.on()) {   // the combat wheel: moves in a ring round End turn
       const W = (a, label, extra = "") => { const c = cost(f, a, sess), ok = sess.canAfford(a), z = zoneOf(a);
         const tip = typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.action(f, a, c))}"` : "";
@@ -695,7 +699,7 @@ const TB = (() => {
         f.shield && typeof SHIELDFX !== "undefined" ? W("bash", "Bash", "main") : W("block", "Guard", "main"),
         `<button class="tbact menu" data-tbm="magic"><span class="ic" aria-hidden="true">${ICON.magic}</span><b>Magic ▸</b><small>${(s.spells || []).length} spells</small></button>`,
         `<button class="tbact menu" data-tbm="items"><span class="ic" aria-hidden="true">${ICON.items}</span><b>Items ▸</b><small>potions</small></button>`,
-        ...shoutsFor(f).map(([a, n]) => W(a, n.replace("Shout ", ""), "shout")), ...bx.list.map(([a, n]) => W(a, n, "shout beast")), W("flee", "Flee", "flee")];
+        ...shoutsFor(f).map(([a, n]) => W(a, n.replace("Shout ", ""), "shout")), ...bx.list.map(([a, n]) => W(a, n, "shout beast")), ...mv.map(([a, n]) => W(a, n, "mount")), W("flee", "Flee", "flee")];
       const hub = `<button class="tbact end" data-tba="end"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.action(f, "end", 0))}"` : ""}><span class="ic" aria-hidden="true">${ICON.end}</span><b>End</b><small>${guardTxt(sess)}</small></button>`;
       return TBRADIAL.wheel(sl, hub);
     }
@@ -966,6 +970,7 @@ const TB = (() => {
           player: !!a.player, follower: !!(a.follower || a.kind === "follower"), role: a.role || null, look: a.look || null, kind: a.kind || null, fid: a.fid || null };
         for (const k of BUFF_KEYS) if (a[k] != null) o[k] = a[k];
         return o; })];
+    if (typeof MOUNTFIGHT !== "undefined") MOUNTFIGHT.roster(f, all, roster);   // who's in the saddle, and their horses' health (mountfight.js)
     const evs = sess.ev.slice(-24).map((x, i, arr) => {
       const o = { n: sess.ev.length - arr.length + i, kind: x.kind, who: x.who, text: x.text, round: x.round, hp: x.hp, ehp: x.ehp };
       for (const k of ["a", "wt", "dmg", "healed", "name", "wave", "by", "hits", "ph"]) if (x[k] != null) o[k] = x[k];

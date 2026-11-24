@@ -1055,7 +1055,12 @@ const FIGHTART = (() => {
           const ax = hx0 - (backs[i] * squeeze - allyLunge * 14) * s, ay = groundY + 2 - i * 2 - lift * s, sc2 = s * rs;
           if (a.name && !two && (a.kind === "mate" || a.kind === "follower" || a.kind === "valor" || a.kind === "dog")) mateTags.push([a.name, ax * z + ox + zcx - zcx * z, (ay - 66 * sc2) * z + oy + zcy - zcy * z]);
           const an = animOf(a), al2 = an && an.clip === "attack" && !an.shoot ? Math.sin(Math.PI * Math.min(1, an.u / 0.8)) * (an.w ?? 1) : 0;
-          wg.save(); wg.translate(ax + al2 * 4 * s, ay); wg.scale(sc2, sc2); if (back) wg.globalAlpha = 0.92; allyFig(wg, a.kind, { lunge: allyLunge, t: tt, i, look: a.look, anim: an }); wg.restore();
+          const ahc = a.kind === "mate" && typeof MOUNTFIGHT !== "undefined" && typeof HORSEBACK !== "undefined" && !(an && an.clip === "down") ? MOUNTFIGHT.allyHorse(f, a.name) : null;   // a teammate in the saddle (mountfight.js)
+          wg.save(); wg.translate(ax + al2 * 4 * s, ay); wg.scale(sc2, sc2); if (back) wg.globalAlpha = 0.92;
+          if (ahc) { HORSEBACK.drawHorse(wg, ahc, 0, tt + i, "back"); wg.translate(0, -30); }
+          allyFig(wg, a.kind, { lunge: allyLunge, t: tt, i, look: a.look, anim: an });
+          if (ahc) { wg.translate(0, 30); HORSEBACK.drawHorse(wg, ahc, 0, tt + i, "front"); }
+          wg.restore();
           const sp = SPARK[a.kind]; if (sp && Math.random() < (two ? 0.09 : 0.18) * pmul) spawn(sp[1], sp[0], ax + (Math.random() - 0.5) * 18 * s, ay + (sp[2] - Math.random() * 30) * s, (Math.random() - 0.5) * 14 * s, -20 * s, 0.7, 2.2, 0);
         });
       });
@@ -1083,10 +1088,13 @@ const FIGHTART = (() => {
       wg.save(); wg.translate(hx0 + (heroP.dx - heroKnock - hdg * 18) * s, groundY + (heroP.dy - hdg * 3) * s); wg.scale(s, s);
       if (meDown) { wg.translate(-6 * fallE, 0); wg.rotate(-Math.PI / 2 * fallE); wg.translate(0, 6 * fallE); }
       if (st.invis && !(b && b.who === "me" && b.move !== "self" && b.move !== "shout")) wg.globalAlpha = 0.28 + Math.sin(tt * 3) * 0.05;
-      const onHorse = rec.horse && !meDown && typeof HORSEBACK !== "undefined" && HORSEBACK.upAt(f, phase === "play" ? bi / Math.max(1, beats.length) : 1);   // the rider sits up on the horse
-      if (onHorse) { HORSEBACK.drawHorse(wg, rec.horse, 0, tt, "back", rec.horseCoat); wg.translate(0, -30); }
+      const MFx = typeof MOUNTFIGHT !== "undefined" ? MOUNTFIGHT : null, rfrac = phase === "play" && b ? (b.li != null ? b.li + u : (bi + u) / Math.max(1, beats.length) * (f.log || []).length) / Math.max(1, (f.log || []).length) : 1;
+      const mp = rec.horse && !meDown && MFx ? MFx.pose(f, rfrac, b ? b.who : null) : null;   // mountfight.js: charge, getting on / off, thrown, the horse waiting or knocked down
+      const onHorse = rec.horse && !meDown && typeof HORSEBACK !== "undefined" && (mp ? mp.ride : HORSEBACK.upAt(f, phase === "play" ? bi / Math.max(1, beats.length) : 1));   // the rider sits up on the horse
+      if (mp && !mp.ride && mp.stand) MFx.drawStand(wg, rec.horse, mp, tt, rec.horseCoat);
+      if (onHorse) { if (mp) MFx.drawMount(wg, rec.horse, mp, tt, "back", rec.horseCoat); else HORSEBACK.drawHorse(wg, rec.horse, 0, tt, "back", rec.horseCoat); wg.save(); if (mp) MFx.seat(wg, mp); else wg.translate(0, -30); }
       { const fs = b ? b.st : st, form = fs && (fs.beast || fs.lord) && (phase === "play" || phase === "settle" || phase === "idle"); heroFig(wg, form ? { ...rec.hero, beast: fs.beast, lord: fs.lord } : rec.hero, form ? Math.max(0, Math.min(1, (heroP.dx || 0) / 40)) : 0, tt, heroP); }   // werewolf or Vampire Lord while changed
-      if (onHorse) { wg.translate(0, 30); HORSEBACK.drawHorse(wg, rec.horse, 0, tt, "front", rec.horseCoat); }
+      if (onHorse) { wg.restore(); if (mp) MFx.drawMount(wg, rec.horse, mp, tt, "front", rec.horseCoat); else HORSEBACK.drawHorse(wg, rec.horse, 0, tt, "front", rec.horseCoat); }
       wg.restore();
       if (GS) GS.drawMarks(wg, "hero", hx0 + (heroP.dx - heroKnock - hdg * 18) * s, heroChest - (onHorse ? 30 * s : 0), s, hpD / hpMax, meDown || !!st.invis);
       if (rec.hero.ench && !meDown && heroP.wt !== "fist" && !heroP.flask) {   // [OURS] an enchanted weapon glows in its colour and sheds motes

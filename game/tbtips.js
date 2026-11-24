@@ -16,6 +16,7 @@ const TBTIPS = (() => {
     const ct = c && typeof c === "object" && typeof TB !== "undefined" && TB.costTxt ? TB.costTxt(c) : "";
     const apTxt = !ct ? "" : ct === "free" ? "Free." : `Costs ${ct}${c.n ? ` (done ${c.n}× this turn, so it costs more)` : ""}.`;
     if (typeof STRAT !== "undefined" && STRAT.owns(a)) return `${STRAT.tip(f, a)} ${apTxt}`;
+    if (typeof MOUNTFIGHT !== "undefined" && MOUNTFIGHT.owns(a)) return `${MOUNTFIGHT.tip(f, a)} ${apTxt}`;   // mountfight.js
     if (a === "attack") {
       const d = foeCut(f, safeDmg(f));
       return `Attack with your ${weaponName(f)}: about ${range(d)} damage, ${hitPct()}% to hit. ${apTxt}`;
