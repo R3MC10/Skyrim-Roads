@@ -73,7 +73,7 @@ const SMITH = (() => {
 
   // ---- helpers
   const count = (s, item) => s.inv.filter((r) => r.item === item).reduce((a, r) => a + r.qty, 0);
-  const atForge = (s) => !!s.location && G.shopTypes(s.location).includes("blacksmith") && !s.trip;
+  const atForge = (s) => !!s.location && (G.shopTypes(s.location).includes("blacksmith") || (typeof HSROOMS !== "undefined" && HSROOMS.station(s, "forge"))) && !s.trip;   // or your homestead's armory
   function use(s, mats) {           // take exactly these amounts from the pack, across stacks
     for (const [item, n] of mats) {
       let left = n;

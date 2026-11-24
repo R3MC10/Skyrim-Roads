@@ -4,6 +4,7 @@ import asyncio, sys, os, shutil
 from playwright.async_api import async_playwright
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8847"
 OUT = sys.argv[2] if len(sys.argv) > 2 else "."
+LANG = sys.argv[3] if len(sys.argv) > 3 else "en"   # "pl": play in Polish
 os.makedirs(OUT, exist_ok=True)
 
 async def main():
@@ -14,6 +15,7 @@ async def main():
         for style in ("ink", "pixel"):
             ctx = await b.new_context(viewport={"width": 412, "height": 915}, device_scale_factor=2)
             errs = []
+            if LANG == "pl": await ctx.add_init_script("try{const p=JSON.parse(localStorage.getItem('rotn_prefs')||'{}');p.lang='pl';localStorage.setItem('rotn_prefs',JSON.stringify(p))}catch(e){}")
             pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
             await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=hs{style}"); await pg.wait_for_timeout(1800)
             await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Builder"); await pg.click("#begin"); await pg.wait_for_timeout(1000)
@@ -28,7 +30,7 @@ async def main():
                 for _ in range(3):  # the panel can re-render mid-shot; try again
                     try:
                         await pg.wait_for_timeout(200); el = await pg.query_selector("div.hs")
-                        if el: await el.screenshot(path=os.path.join(OUT, f"hs_{name}_{style}.png"), timeout=5000)
+                        if el: await el.screenshot(path=os.path.join(OUT, f"hs_{name}_{style}{'_pl' if LANG == 'pl' else ''}.png"), timeout=5000)
                         return
                     except Exception: pass
             async def overflow(): return await pg.evaluate("document.documentElement.scrollWidth > innerWidth + 1")
@@ -70,12 +72,12 @@ async def main():
                 if w == "hall": await shot("hall")
             h = await pg.evaluate("window.__dbg.save().homestead.pinewatch")
             ok(h["small"] and h["hall"] and h["wings"] == ["library", "greenhouse", "enchanter"], f"built house, hall and three wings {h['wings']}")
-            ok(await pg.evaluate("!document.querySelector('[data-act=hsact][data-id=build]')"), "no more build buttons once full")
+            ok(await pg.evaluate("!document.querySelector('[data-act=hsact][data-id=build]:not([data-c=garden]):not([data-c=cellar])')"), "no more wing build buttons once full (garden and cellar don't take a wing space)")
             await shot("full")
             # home: sleep and collect a day later
             await click("[data-act=hsact][data-id=view][data-c=home]")
             await click("[data-act=hsact][data-id=sleep]")
-            ok(await pg.evaluate("window.__dbg.save().restBonus===0.1"), "slept in own bed: Well Rested")
+            ok(await pg.evaluate("window.__dbg.save().restBonus===0.15"), "slept in own bed by the main hall's hearth: Well Rested +15%")
             await pg.evaluate("()=>{const h=window.__dbg.save().homestead.pinewatch; for (const w of h.wings) h.col[w]-=HOMESTEAD.DAY+5;}")
             await click("[data-act=hsact][data-id=view][data-c=home]")
             ok(await pg.evaluate("!!document.querySelector('.hs .hsready')"), "goods ready shown")
