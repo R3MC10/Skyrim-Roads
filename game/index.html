@@ -2470,6 +2470,16 @@ html.art-pixel .ft-detail .sky-ico img{image-rendering:pixelated}
   .sky-row.ft-cols .nm img.art.ico{width:22px;height:22px;margin-right:5px}
   .ft-cats .sky-cat{min-width:54px;padding:4px 3px}
 }
+/* [mountfight] your horse's health bar in a fight (mountfight.js) */
+#tbf .mfhorse{position:relative;height:14px;margin-top:3px;border-radius:7px;background:rgba(120,80,40,.18);border:1px solid rgba(200,160,110,.45);overflow:hidden}
+#tbf .mfhorse i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,rgba(150,100,50,.6),rgba(210,170,110,.85));transition:width .45s ease}
+#tbf .mfhorse span{position:relative;display:block;font-size:10.5px;line-height:13px;text-align:center;color:#fff4e2;text-shadow:0 1px 2px #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#tbf .mfhorse.by{opacity:.75}
+#tbf .mfhorse.down{border-color:rgba(200,90,70,.6)}
+#tbf .mfhorse.down i{background:rgba(160,60,50,.5)}
+#tbf .mfst{margin-top:2px;font-size:10.5px}
+#tbf .mfst .st{font-style:normal;padding:0 5px;border-radius:6px;background:rgba(230,200,90,.18);border:1px solid rgba(230,200,90,.45);color:#f3e2a8}
+#tbf .tbact.mount{border-color:rgba(200,160,110,.6)}
 </style>
 <script src="access.js"></script>
 </head>
@@ -2504,6 +2514,7 @@ html.art-pixel .ft-detail .sky-ico img{image-rendering:pixelated}
 <script src="daedric.js"></script>
 <script src="horses.js"></script>
 <script src="horseback.js"></script>
+<script src="mountfight.js"></script>
 <script src="hall.js"></script>
 <script src="bounty.js"></script>
 <script src="visits.js"></script>
@@ -2649,6 +2660,7 @@ html.art-pixel .ft-detail .sky-ico img{image-rendering:pixelated}
 <script src="i18n_balfear.js"></script>
 <script src="i18n_followeranim.js"></script>
 <script src="i18n_bleakfalls.js"></script>
+<script src="i18n_mountfight.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>

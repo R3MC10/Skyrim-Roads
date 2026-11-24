@@ -57,6 +57,7 @@ const TB = (() => {
     if (a === "block") return 2;
     if (a === "bash") return 3;
     if (a === "flee") return 99;
+    if (typeof MOUNTFIGHT !== "undefined" && MOUNTFIGHT.owns(a)) return MOUNTFIGHT.cost(f, a);   // getting on / off your horse (mountfight.js)
     const [k, arg] = a.split(":");
     if (k === "spell" || k === "dual") { const c = TIERC[tierOf(arg, D.SPELLS[arg])] || 3; return k === "dual" ? c + 2 : c; }
     if (k === "scroll") return 2;
@@ -337,6 +338,7 @@ const TB = (() => {
       if (sameFoe && typeof r.e0 === "number" && typeof r.ehp === "number") f.ehp = b - clamp(r.e0 - r.ehp, 0, Math.max(0, b));
       if (typeof r.hp === "number" && typeof r.hp0 === "number") { if (r.hpMax > 0) al.maxHp = r.hpMax; al.hp = clamp((al.hp || 0) + (r.hp - r.hp0), 1, al.maxHp || Math.max(al.hp || 1, r.hp)); }
       al.tbGuard = clamp(+r.guard || 0, 0, 0.3);
+      if (typeof MOUNTFIGHT !== "undefined") MOUNTFIGHT.fromMate(al, r.mt);   // they got on / off their horse on their phone
       if (r.self) {
         if (r.self.ward > 0) al.ward = Math.max(al.ward || 0, r.self.ward);
         if (r.self.armorRed > (al.armorRed || 0)) { al.armorRed = Math.min(0.7, r.self.armorRed); al.armorT = Math.max(al.armorT || 0, r.self.armorT || 6); }
@@ -586,6 +588,7 @@ const TB = (() => {
   const ICON = { bash: "🛡", attack: "⚔", bow: "🏹", power_attack: "💥", block: "🛡", magic: "✦", items: "⚗", flee: "🏃", end: "⏭", shout: "🗣", power: "✴", potion: "🧪", scroll: "📜", heal: "✚" };
   function iconOf(f, a) {
     if (typeof BEASTPATH !== "undefined") { const ic = BEASTPATH.icon(f, a); if (ic) return ic; }
+    if (a === "mount" || a === "dismount") return "🐎";
     if (a === "attack") return f.wt === "bow" || f.wt === "crossbow" ? ICON.bow : ICON.attack;
     const k = a.split(":")[0];
     if (k === "spell" || k === "dual") { const sp = spellOf(a); return sp?.kind === "heal" ? ICON.heal : sp?.element === "fire" ? "🔥" : sp?.element === "frost" ? "❄" : sp?.element === "shock" ? "⚡" : ICON.magic; }
@@ -612,7 +615,8 @@ const TB = (() => {
       return `<div class="tbmenu"><div class="tbmh"><b>⚗ Items</b><small>Drag a potion onto yourself, or tap it</small></div><div class="tbgrid">${pots || scrolls ? pots + scrolls : `<p class="sub">No potions or scrolls.</p>`}${shouts}</div><button class="tbact back" data-tbm="">‹ Back</button></div>`;
     }
     const bx = typeof BEASTPATH !== "undefined" ? BEASTPATH.moves(f) : { form: null, list: [] };   // Beast Form / Vampire Lord moves, vampire powers (beastpaths.js)
-    const sh = bx.form ? "" : shoutsFor(f).map(([a, n]) => B(a, n, "shout")).join("") + bx.list.map(([a, n]) => B(a, n, "shout beast")).join("");
+    const mv = typeof MOUNTFIGHT !== "undefined" && !bx.form ? MOUNTFIGHT.moves(f) : [];   // Mount / Dismount (mountfight.js)
+    const sh = bx.form ? "" : shoutsFor(f).map(([a, n]) => B(a, n, "shout")).join("") + bx.list.map(([a, n]) => B(a, n, "shout beast")).join("") + mv.map(([a, n]) => B(a, n, "mount")).join("");
     if (typeof TBRADIAL !== "undefined" && TBRADIAL.on()) {   // the combat wheel: moves in a ring round End turn
       const W = (a, label, extra = "") => { const c = cost(f, a), ok = sess.canAfford(a), z = zoneOf(a);
         const tip = typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.action(f, a, c))}"` : "";
@@ -621,7 +625,7 @@ const TB = (() => {
         f.shield && typeof SHIELDFX !== "undefined" ? W("bash", "Bash", "main") : W("block", "Guard", "main"),
         `<button class="tbact menu" data-tbm="magic"><span class="ic" aria-hidden="true">${ICON.magic}</span><b>Magic ▸</b><small>${(s.spells || []).length} spells</small></button>`,
         `<button class="tbact menu" data-tbm="items"><span class="ic" aria-hidden="true">${ICON.items}</span><b>Items ▸</b><small>potions</small></button>`,
-        ...shoutsFor(f).map(([a, n]) => W(a, n.replace("Shout ", ""), "shout")), ...bx.list.map(([a, n]) => W(a, n, "shout beast")), W("flee", "Flee", "flee")];
+        ...shoutsFor(f).map(([a, n]) => W(a, n.replace("Shout ", ""), "shout")), ...bx.list.map(([a, n]) => W(a, n, "shout beast")), ...mv.map(([a, n]) => W(a, n, "mount")), W("flee", "Flee", "flee")];
       const hub = `<button class="tbact end" data-tba="end"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.action(f, "end", 0))}"` : ""}><span class="ic" aria-hidden="true">${ICON.end}</span><b>End</b><small>${sess.ap > 0 ? `+${Math.min(30, sess.ap * 10)}%` : "ready"}</small></button>`;
       return TBRADIAL.wheel(sl, hub);
     }
@@ -686,7 +690,7 @@ const TB = (() => {
     el.innerHTML = `<div class="tbin">
       <div class="tbtop"><b>Round ${sess.round}</b><span class="tbord">${order}</span><button class="tbff" data-tbx="log" aria-label="Full fight log">📜</button><button class="tbff ${fast() ? "on" : ""}" data-tbx="fast" aria-label="Fast foe turns">⏩</button>${typeof TBRADIAL !== "undefined" ? `<button class="tbff ${TBRADIAL.on() ? "on" : ""}" data-tbx="wheel" aria-label="Combat wheel and timing ring" data-tip="${typeof FIGHTCTL !== "undefined" && FIGHTCTL.on() ? "Timing ring: after a strike or a damage spell, tap when the needle is in the bright zone (Perfect +25%, a miss −20%). Tap to switch it on or off." : "Combat wheel: your moves in a ring, and a timing ring for strikes and spells (Perfect +25%, a miss −20%). Tap to switch to cards."}">🎯</button>` : ""}</div>
       <div class="tbstage" data-tbzone="foe"><div class="tbscene" id="tbscene">${scene || (ui.lastScene || "")}</div>${banner}${rd ? rd.bubble : ""}<div class="tbhint" aria-hidden="true"></div></div>
-      <div class="tbvit"><div class="tbu me" data-tbzone="self"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.me(f, sess.st))}"` : ""}><small class="nm">🛡 ${esc(s.name || "You")}</small>${uBar(hpNow, prev.hp, hpMax, "hp", rd ? rd.meMarks(hpNow, hpMax) : "")}${rd ? rd.meLine : ""}<div class="tbsub">${rBar(mpNow, prev.mp, mpMax, "mp", "MP")}${rBar(spNow, prev.sp, spMax, "sp", "SP")}</div>${f.ward > 0 ? `<div class="tbward" title="Ward: soaks magic until it breaks. Cast it again to refill it."><i style="width:${pc(f.ward, f.wardMax || f.ward)}%"></i><span>🔰 Ward ${Math.round(f.ward)} / ${Math.round(f.wardMax || f.ward)}</span></div>` : ""}${R ? R.myChips(f) : ""}</div>
+      <div class="tbvit"><div class="tbu me" data-tbzone="self"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.me(f, sess.st))}"` : ""}><small class="nm">🛡 ${esc(s.name || "You")}</small>${uBar(hpNow, prev.hp, hpMax, "hp", rd ? rd.meMarks(hpNow, hpMax) : "")}${rd ? rd.meLine : ""}<div class="tbsub">${rBar(mpNow, prev.mp, mpMax, "mp", "MP")}${rBar(spNow, prev.sp, spMax, "sp", "SP")}</div>${f.ward > 0 ? `<div class="tbward" title="Ward: soaks magic until it breaks. Cast it again to refill it."><i style="width:${pc(f.ward, f.wardMax || f.ward)}%"></i><span>🔰 Ward ${Math.round(f.ward)} / ${Math.round(f.wardMax || f.ward)}</span></div>` : ""}${typeof MOUNTFIGHT !== "undefined" ? MOUNTFIGHT.barHTML(f) : ""}${R ? R.myChips(f) : ""}</div>
         <div class="tbu foe" data-tbzone="foe"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.foe(f, sess.ehpMax))}"` : ""}><small class="nm">${f.e.player ? "⚔" : "☠"} ${esc(f.e.name)}${f.e.archLabel && !String(f.e.name).toLowerCase().includes(f.e.archLabel) ? ` <span class="arch">${esc(f.e.archLabel)}</span>` : ""}${sess.waves > 1 ? ` <span class="arch">${sess.wave}/${sess.waves}</span>` : ""}</small>${uBar(ehpNow, prev.ehp, sess.ehpMax, "hp foe", rd ? rd.foeMarks(ehpNow, sess.ehpMax) : "")}${rd ? rd.foeLine : ""}${statusChips(f)}${rd ? rd.intents : ""}</div></div>
       ${allies}
       <button class="tblog" aria-live="polite" data-tbx="log" aria-label="Fight log, tap for the full log"${log ? "" : " hidden"}>${log}</button>
@@ -878,6 +882,7 @@ const TB = (() => {
           player: !!a.player, follower: !!(a.follower || a.kind === "follower"), role: a.role || null, look: a.look || null };
         for (const k of BUFF_KEYS) if (a[k] != null) o[k] = a[k];
         return o; })];
+    if (typeof MOUNTFIGHT !== "undefined") MOUNTFIGHT.roster(f, all, roster);   // who's in the saddle, and their horses' health (mountfight.js)
     const evs = sess.ev.slice(-24).map((x, i, arr) => {
       const o = { n: sess.ev.length - arr.length + i, kind: x.kind, who: x.who, text: x.text, round: x.round, hp: x.hp, ehp: x.ehp };
       for (const k of ["a", "wt", "dmg", "healed", "name", "wave", "by", "hits", "ph"]) if (x[k] != null) o[k] = x[k];

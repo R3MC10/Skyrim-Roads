@@ -80,6 +80,7 @@ const FIGHTCTL = (() => {
     const [k, arg] = a.split(":");
     try {
       if (a === "flee") return f.e.boss ? "Not from a boss" : !f.canFlee ? "No way out here" : "";
+      if (typeof MOUNTFIGHT !== "undefined") { const mw = MOUNTFIGHT.why(f, a); if (mw && (c <= pool || !MOUNTFIGHT.owns(a))) return mw; }   // the saddle
       if (c > pool) return `Need ${c - pool} more AP`;
       if (a === "power_attack") return "Not enough stamina";
       if (a === "block") return f.weapon && f.weapon.skill === "Archery" ? "Not with a bow" : "Not enough stamina";
@@ -133,6 +134,7 @@ const FIGHTCTL = (() => {
     if (k === "scroll") return (D.ITEMS[arg]?.name || "Scroll").replace(/^Scroll of /i, "");
     if (k === "shout") return arg.toUpperCase();
     if (k === "power") return "Power";
+    if (a === "mount" || a === "dismount") return a === "mount" ? "Mount" : "Dismount";
     return a;
   }
   function dock(sess, api) {
@@ -150,6 +152,7 @@ const FIGHTCTL = (() => {
       btn(sess, api, guard[0], { label: guard[1], extra: "main big gd", key: "3" })].join("");
     const q = quick(f);
     for (const [a] of bx.list) if (q.length < MAXQ + 2 && !q.some((x) => x.a === a)) q.unshift({ a });
+    if (typeof MOUNTFIGHT !== "undefined") for (const [a] of MOUNTFIGHT.moves(f)) q.unshift({ a });   // Mount / Dismount (mountfight.js)
     const tray = q.map((x, i) => btn(sess, api, x.a, { label: shortName(f, x.a), extra: "fc-q" + (x.sugg ? " sugg" : "") + (/^(shout|power):/.test(x.a) ? " shout" : ""), key: String(4 + i), badge: x.a.startsWith("potion:") ? potCount(f, x.a.split(":")[1]) : null })).join("");
     const nSp = (s.spells || []).filter((id) => D.SPELLS[id] && D.SPELLS[id].kind !== "utility").length;
     const nPot = ["health", "magicka", "stamina"].reduce((t, k) => t + potCount(f, k), 0);

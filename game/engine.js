@@ -591,6 +591,7 @@ const G = (() => {
       return false;
     }
     affordable(a) {
+      if (typeof MOUNTFIGHT !== "undefined") { const mf = MOUNTFIGHT.allow(this, a); if (mf != null) return mf; }   // [OURS] Mount / Dismount, and what the saddle rules out (mountfight.js)
       if (a === "attack") return true;
       if (a === "flee") return !!this.canFlee && !this.e.boss;   // only on the road, never from a boss
       if (a === "power_attack") return this.sp >= this.paCost;
@@ -641,12 +642,13 @@ const G = (() => {
       const sk = this.weaponSkill();
       if (power) this.sp -= this.paCost;
       const ammoK = this.bound ? null : this.ammoKind(), shot = ammoK ? this.shoot() : null;
-      const sneak = (this.turn === 1 && this.hidden) || this.sneakNext;
+      const sneak = (this.turn === 1 && this.hidden && !this.mount?.up) || this.sneakNext;   // [OURS] nobody sneaks up on horseback: riders open with a charge (mountfight.js)
       this.sneakNext = false;
       const mt = this.mount && typeof HORSEBACK !== "undefined" ? HORSEBACK.strike(this, power, sneak) : null;   // [OURS] fighting from the saddle (horseback.js)
       const px = { power, sneak, sk, wt: this.wt };   // [OURS] for the bigger perk trees (perkfx.js)
       const aimW = ammoK && this.wx ? 1 - (1 - this.wx.aim) * (typeof PFX !== "undefined" && PFX.has(this.s, "aimwx", this, px) ? 0.5 : 1) : 1;
       const sure = typeof PFX !== "undefined" && PFX.has(this.s, "sure", this, px);
+      if (mt?.miss) return mt.miss;   // [OURS] an arrow from a moving horse
       if (!sneak && !mt?.sure && !sure && Math.random() > Math.min(0.98, (F.HIT_CHANCE + (typeof PFX !== "undefined" ? PFX.sum(this.s, "hit", this, px) : 0)) * aimW)) return power ? "Power attack misses" : "Attack misses";
       const s = this.s, wt = this.wt;
       let dmg = this.weaponDamage() * rnd(...F.DAMAGE_SPREAD) * (power ? F.POWER_ATTACK_DAMAGE : 1);
@@ -787,6 +789,7 @@ const G = (() => {
       return sp.name;
     }
     act(a) {
+      if (typeof MOUNTFIGHT !== "undefined" && MOUNTFIGHT.owns(a)) return MOUNTFIGHT.act(this, a);   // [OURS] getting on / off your horse mid-fight
       if (a === "attack") return this.attack(false);
       if (a === "flee") {   // break off and run (road fights only)
         const ch = 0.45 + skill(this.s, "Athletics") / 200 - (this.e.danger === "high" ? 0.2 : 0) + (riding(this.s) ? 0.15 : 0);
@@ -865,6 +868,7 @@ const G = (() => {
         const al = cover || (fixed ? tg : typeof FAI !== "undefined" ? FAI.pickAlly(this) : pick(this.allies));
         this.tgtHit = al;
         if (al.fsum && typeof FAI !== "undefined") return FAI.hitSummon(this, al);   // a follower's summon takes the blow
+        if (al.mt?.up && typeof MOUNTFIGHT !== "undefined") { const mr = MOUNTFIGHT.allyTurn(this, al); if (mr) return mr; }   // [OURS] a teammate on horseback
         if (al.coop && typeof COOP !== "undefined") return COOP.hitAlly(this, al);   // co-op party members take their own blows
         if (al.follower && Math.random() < F.HIT_CHANCE) {
           let d = this.e.damage * rnd(...F.DAMAGE_SPREAD) * (typeof FOL2 !== "undefined" && al.fid === s.follower?.id ? FOL2.taken(s) : 0.8);   // [OURS] followers wear armor (their real armor, with FOL2)
