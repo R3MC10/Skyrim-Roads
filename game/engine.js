@@ -853,13 +853,16 @@ const G = (() => {
         if (fp.heal && this.ehp < 0.45 * this.ehp0 && Math.random() < fp.heal) { const h = Math.round(fp.healAmt * this.ehp0); this.ehp = Math.min(this.ehp0, this.ehp + h); return `${n} casts a healing spell: +${h}`; }
       }
       const cover = this.coverAl && this.allies.includes(this.coverAl) ? this.coverAl : null; this.coverAl = null;   // a smart follower stepped in front of you
-      if (this.allies.length && (cover || Math.random() < this.allies.length / (this.allies.length + 1) * 0.7)) {   // [OURS] you're still the main target
+      const aw = typeof FAI !== "undefined" ? FAI.aggro(this) : this.allies.length;   // followerai.js: back-row allies draw fewer blows
+      if (this.allies.length && (cover || Math.random() < aw / (aw + 1) * 0.7)) {   // [OURS] you're still the main target
         this.blocking = false;
-        const al = cover || pick(this.allies);
+        const al = cover || (typeof FAI !== "undefined" ? FAI.pickAlly(this) : pick(this.allies));
+        if (al.fsum && typeof FAI !== "undefined") return FAI.hitSummon(this, al);   // a follower's summon takes the blow
         if (al.coop && typeof COOP !== "undefined") return COOP.hitAlly(this, al);   // co-op party members take their own blows
         if (al.follower && Math.random() < F.HIT_CHANCE) {
           let d = this.e.damage * rnd(...F.DAMAGE_SPREAD) * (typeof FOL2 !== "undefined" && al.fid === s.follower?.id ? FOL2.taken(s) : 0.8);   // [OURS] followers wear armor (their real armor, with FOL2)
           if (typeof SPELLBOOK !== "undefined") d = SPELLBOOK.allyTakes(this, al, d);   // wards, stoneskin and veils you cast on them
+          if (al.fai && typeof FAI !== "undefined") d = FAI.takes(this, al, d);   // a follower on guard blocks part of it
           al.hp -= d;
           if (al.hp <= 0) { this.allies = this.allies.filter((x) => x !== al); this.followerDown = al.name; return `${n} knocks ${al.name} to their knees. ${al.name} is down!`; }   // [Skyrim] protected followers kneel instead of dying
           return `${n} hits ${al.name} ${Math.round(d)}`;
@@ -1186,7 +1189,7 @@ const G = (() => {
         if (ce) { const e = scaleEnemy(ce, fightLevel(s)); tr.status = "encounter"; tr.encounter = e; out.encounter = e; note(s, `⚠️ Caravan ambush: ${e.name}`); return out; }
         continue;
       }
-      const rate = tr.carriage || tr.follow ? 0 : ENCOUNTER_PER_MIN * (isNight(stepT) ? D.NIGHT_ENCOUNTER_MULT : 1) * (typeof WEVENTS !== "undefined" ? WEVENTS.weather([s.x, s.y], stepT).encounters : 1) * (typeof SNEAKMODE !== "undefined" ? SNEAKMODE.encounterMult(s) : 1);   // nobody robs a carriage on a Jarl's road; party members following their leader leave the road to them (partyplay.js)
+      const rate = tr.carriage || tr.follow ? 0 : ENCOUNTER_PER_MIN * (isNight(stepT) ? D.NIGHT_ENCOUNTER_MULT : 1) * (typeof WEVENTS !== "undefined" ? WEVENTS.weather([s.x, s.y], stepT).encounters : 1) * (typeof SNEAKMODE !== "undefined" ? SNEAKMODE.encounterMult(s) : 1) * (typeof CVROAD !== "undefined" ? CVROAD.ambushMult(s, stepT) : 1);   // nobody robs a carriage on a Jarl's road; party members following their leader leave the road to them (partyplay.js)
       if (Math.random() < 1 - (1 - rate) ** (dt / 60)) {
         const e = rollEncounter(s, stepT);
         if (e.danger === "low" && e.kind === "event") {   // every fight is yours to play: the trip stops for it (no auto fighting)
