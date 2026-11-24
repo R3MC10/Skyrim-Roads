@@ -70,6 +70,7 @@ our own marked [OURS]; plain-language UI; phone first.
 
 ## In progress (write your name before you start)
 - Claude: foe intents show their target (foeintent.js): "→ you / → Lydia" on every intent chip, a crosshair on the targeted card and an arrow in the scene; the shown target is the one hit. Branch claude/foeintent.
+- Claude: fight controls overhaul (fightctl.js): big action bar with drawn icons and AP cost pips, reasons on greyed-out moves, quick slots for favourite spells/potions/shouts, tap-to-choose targets for healing, press feedback and buzz, keyboard keys on PC (1-9, Space, M, I, Esc). Branch claude/combatui.
 - Claude: something at every place (placestuff.js): every map location offers trade, work, a job, a blessing, a stash, herbs or a search. Branch claude/fullmap.
 - Claude: shared party fights (sharedfight.js): everyone in a party plays the same fight on their own full fight screen, with their own moves. Branch claude/partysync.
 - Claude: character art upgrade (figart.js): one shared, bone-rigged character renderer (keyframed clips blended over time) with real proportions, shading, race, sex, hair and worn gear (idle, walk, attack, cast, block, hit, down, riding, sitting), used by the travel strip, fights, hero tab, paper doll and portraits; humanoid foes can borrow it via HEROART.figure(card, {gear}). Branch claude/heroart2.
@@ -78,6 +79,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Claude: dungeons get longer per player in a party (partyplay.js longLayout/sizeRun, coop.js lobby start). Branch claude/partydungeons.
 - Claude: travel strip overhaul (travelart.js): deep parallax scenery by region, sky/time of day, live weather, lighting, passing landmarks and travellers, the destination growing on the horizon. Branch claude/travelscene.
 - Claude: visual overhaul (fits every screen and resolution) — branches claude/fit-*, in passes.
+- Claude: no stretching anywhere (fitcanvas.js: canvases sized from their box × density with redraw on resize; safe areas; zoom-correct popups; tests/noscretch_ui.py audits every screen at 11 sizes). Branch claude/noscretch.
 - Claude: spell tome info before buying/reading (tomeinfo.js: school, level, magicka, AP, what it does, known?, skill enough?) in shops, pack, loot, search; TOMEINFO.box/html/line for the tooltip work. Branch claude/tomeinfo.
 - Kacper: reading the fight (fightread.js): foe intents, health forecasts for poison/burning/blows on both sides, turn-by-turn playback with banners and round summaries, low-health warning, combat sounds (ElevenLabs, `node scripts/gen_audio.mjs game/ combat`). Branch ccr-23a36e7d-impjqi.
 - Kacper: painted battle scenes (battlescene.js + bscdata.js, pictures bs-/bsf-/bsp-*.webp from the scene pack via scripts/import_battlescenes.py). Branch ccr-23a36e7d-impjqi.
