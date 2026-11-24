@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b162-tabkeys", build: 144, date: "24 Nov 2026", title: "Steer the compass menu with your keyboard", items: [
+      "On a PC, Tab opens the compass menu and Tab (or Esc) closes it again. It leaves Tab alone while you type, in a fight or in a minigame.",
+      "Inside it, W A S D or the arrow keys pick a direction: W Skills, A Magic, D Items, S Map. Hold the key and the compass leans that way; let go and the menu opens. Enter or Space also opens the one it leans to.",
+      "Number keys 1 to 5 press the buttons along the bottom (Area, Journal, Social, Settings, Search). Little key badges show which key does what. Phones look and work the same as before.",
+    ] },
     { id: "b143-followeranim", build: 143, date: "24 Nov 2026", title: "Followers fight with their whole body", items: [
       "Followers and party members now really fight in the fight picture: they swing their weapon or draw their bow, cast their spells, raise their shield and flinch when they get hit.",
       "A follower who is knocked down drops to the ground and lies there until someone pulls them back up, and then you see them get back on their feet.",
