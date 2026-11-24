@@ -18,20 +18,25 @@
     "productName": "Roads of the North",
     "files": [
       "main.js",
-      "www/**/*"
+      "www/**/*",
+      "icon.png"
     ],
     "directories": {
-      "output": "dist"
+      "output": "dist",
+      "buildResources": "build"
     },
     "win": {
-      "artifactName": "RoadsOfTheNorth-${arch}-${target}.${ext}"
+      "artifactName": "RoadsOfTheNorth-${arch}-${target}.${ext}",
+      "icon": "build/icon.ico"
     },
     "portable": {
       "artifactName": "RoadsOfTheNorth-PC-portable.exe"
     },
     "nsis": {
       "artifactName": "RoadsOfTheNorth-PC-setup.exe",
-      "oneClick": true
+      "oneClick": true,
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico"
     },
     "publish": [
       {

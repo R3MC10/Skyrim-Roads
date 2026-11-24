@@ -25,6 +25,10 @@ const I18N = (() => {
     "Close up": "Zbliż", "Move up": "W górę", "Move down": "W dół", "Sort:": "Sortuj:", "Name ▾": "Nazwa ▾", "Main": "Główny", "Main menu": "Menu główne",
     "Back to the main menu": "Wróć do menu głównego", "Close menu": "Zamknij menu", "Tap to begin": "Dotknij, aby zacząć", "Unrolling the map…": "Rozwijanie mapy…",
     "Roads of the North": "Drogi Północy", "Skyrim: Roads of the North": "Skyrim: Drogi Północy", "Continue": "Dalej", "CONTINUE": "DALEJ", "Save and play": "Zapisz i graj",
+    // dungeon map legend and room buttons (dunart.js)
+    "Tough fight": "Trudna walka", Trap: "Pułapka", Treasure: "Skarb", Puzzle: "Zagadka", Rest: "Odpoczynek", Unknown: "Nieznane",
+    "Go to: Fight": "Idź do: Walka", "Go to: Tough fight": "Idź do: Trudna walka", "Go to: Trap": "Idź do: Pułapka", "Go to: Treasure": "Idź do: Skarb",
+    "Go to: Puzzle": "Idź do: Zagadka", "Go to: Rest": "Idź do: Odpoczynek", "Go to: Unknown": "Idź do: Nieznane", "Go to: Boss": "Idź do: Boss",
     // bottom bar and screens
     Character: "Postać", Items: "Przedmioty", Magic: "Magia", Map: "Mapa", Journal: "Dziennik", Social: "Społeczność", Town: "Miasto", Area: "Okolica", Skills: "Umiejętności",
     Perks: "Atuty", Tactics: "Taktyka", Stats: "Statystyki", Diary: "Pamiętnik", Library: "Biblioteka", Achievements: "Osiągnięcia", Settings: "Ustawienia",
