@@ -6,6 +6,20 @@ const PATCHNOTES = (() => {
     { id: "b141-pnback", build: 141, date: "24 Nov 2026", title: "Easier way out of the patch notes", items: [
       "The patch notes now have a bar at the top that stays put while you scroll: ‹ Back on the title screen, ✕ in the game. No more scrolling all the way down to leave.",
     ] },
+    { id: "b139-perf", build: 139, date: "24 Nov 2026", title: "Faster and smoother", items: [
+      "The game starts a lot faster: the title screen now shows up in about a second instead of several on older phones.",
+      "The world map, the title screen, the road pictures and the fight screen use much less of your phone's power when nothing is moving, so older phones stay smoother and cooler and the battery lasts longer.",
+      "Nothing looks or plays differently, it just runs lighter.",
+    ] },
+    { id: "b139-lightfx", build: 139, date: "24 Nov 2026", title: "Light and weather you can feel", items: [
+      "The map now changes with the light: warm gold at sunrise and sunset, a cool blue night, and a flat grey wash when a storm rolls in.",
+      "At night towns, farms, camps and forts glow with firelight, and the glow flickers a little.",
+      "Beams of sunlight fall across the map at dawn and dusk.",
+      "Mist gathers over valleys, lakes and marshes, thickest in the early morning, and drifts slowly.",
+      "Big cloud shadows slide across the land, and lakes and rivers sparkle in the sun or the moons. On clear nights the northern lights tint the snow up north green and violet.",
+      "Place pictures get the same light: lit windows and fires glow at night, sunbeams at dawn and dusk.",
+      "New Settings → Graphics → Lighting: Off, Low or High. Low keeps the colours and glows but nothing moves, for older phones. Works in both art styles; Reduce motion stops the drifting and High contrast keeps the map brighter and clearer.",
+    ] },
     { id: "b140accounts", build: 140, date: "24 Nov 2026", title: "Accounts: your characters on every device", items: [
       "New on the title screen: Sign in. Make an account with just a name and a password (no email needed) and your characters are kept safe on our server.",
       "Play the same character on your phone, another phone or the PC: under Account, tap Play here. Upload the character you already have with one tap; nothing is lost.",

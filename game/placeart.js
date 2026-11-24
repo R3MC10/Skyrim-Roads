@@ -333,6 +333,8 @@ const PLACEART = (() => {
     if (kind === "lair") return { outdoor: true, back: true, draw: THEME.lair };
     return { outdoor: true, back: true, draw: (g, H, w, h, clim) => landmark(g, H, w, h, name, clim) };
   }
+  /* light and atmosphere over the finished picture (lightfx.js) */
+  const lit = (g, w, h, st, name) => { if (typeof LIGHTFX !== "undefined") LIGHTFX.picture(g, w, h, st, { seed: name, ground: h * 0.7 }); };
   function weatherId(name) { try { const p = WORLD.places[name]; return p && typeof WEVENTS !== "undefined" ? WEVENTS.weather(p).id : "clear"; } catch { return "clear"; } }
 
   /* the big picture for a place (360×160), as an <img> string */
@@ -347,13 +349,13 @@ const PLACEART = (() => {
       const draw = (g, H, w, h) => {
         curSky = st;
         try {
-          if (pic) { ASSETS.cover(g, pic, w, h, 0.5, 0.55); deco(g, H, w, h); SKY.overlay(g, H, w, h, st, { seed: name, ground: h * 0.7, cover: false }); frame(g, w, h); return; }   // a painted backdrop
+          if (pic) { ASSETS.cover(g, pic, w, h, 0.5, 0.55); deco(g, H, w, h); SKY.overlay(g, H, w, h, st, { seed: name, ground: h * 0.7, cover: false }); lit(g, w, h, st, name); frame(g, w, h); return; }   // a painted backdrop
           if (d.back) backdrop(g, H, w, h, clim, name, SKY.mood(st)); else SKY.backdrop(g, H, w, h, st, { horizon: 0.62, seed: name });
           d.draw(g, H, w, h, clim); deco(g, H, w, h);
-          SKY.overlay(g, H, w, h, st, { seed: name, ground: h * 0.7, cover: false }); frame(g, w, h);
+          SKY.overlay(g, H, w, h, st, { seed: name, ground: h * 0.7, cover: false }); lit(g, w, h, st, name); frame(g, w, h);
         } finally { curSky = null; }
       };
-      return ART.html(W, HH, draw, { key: `place|${name}|${st.key}|${fest || ""}|${pic ? "pic" : ""}`, cls: "scene", alt: name, style: opts.style, painted: !!pic });
+      return ART.html(W, HH, draw, { key: `place|${name}|${st.key}|${fest || ""}|${pic ? "pic" : ""}|${typeof LIGHTFX !== "undefined" ? LIGHTFX.key() : ""}`, cls: "scene", alt: name, style: opts.style, painted: !!pic });
     }
     const md = opts.mood || mood(), wx = opts.weather || weatherId(name);
     const draw = (g, H, w, h) => {
