@@ -3,6 +3,17 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b172-assetquality", build: 172, date: "24 Nov 2026", title: "Sharper pictures on every screen", items: [
+      "Foes in fights are painted at full size now, so they stay sharp on big monitors and 3x phone screens instead of going soft.",
+      "The dragon is no longer squashed into a square: it shows with its proper wide wingspan.",
+      "Paintings (towns, shop banners, fight scenes, event pictures) keep their shape and are never blown up into a blur. On a very big screen a painting shows at its own size instead.",
+      "Fight scenes are drawn at your screen's full sharpness, on phones and on 4K monitors, even when the window grows or the phone turns.",
+      "The painted compass is a bit sharper too.",
+      "Everything the game draws itself (your hero, the new-character picture, the dungeon map, icons) is redrawn at the size it really has on your screen, so it stays crisp from phones to ultrawide monitors.",
+      "On the new-character screen your hero's picture next to the race keeps its shape instead of being stretched tall, and the big live picture is drawn at full sharpness on 3x phones.",
+      "Fixed: on phones a lot of newer screens (the house chest, invites, the problem report, the Dwemer puzzles and more) were missing their proper look. They look right again.",
+      "Fixed: with blood and gore on, the fight picture could stop drawing. It plays again.",
+    ] },
     { id: "b174-potionregen", build: 174, date: "25 Nov 2026", title: "Potions work over time", items: [
       "Health, magicka and stamina potions no longer refill you all at once. They pour in over a few rounds in a fight, or a few seconds on the map: small potions over 5, ordinary ones over 4, the big brewed ones over 3. Half comes in right after you drink, so one still pulls you out of trouble.",
       "Drinking another of the same kind while one is still working doesn't stack: you keep whichever has more left to give. A health and a magicka potion work side by side just fine.",
