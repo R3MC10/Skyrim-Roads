@@ -51,7 +51,7 @@ const MENUS = (() => {
     el.classList.add("mn-bar");
     const on = groupOf(tab);
     el.innerHTML = GROUPS.map(([id, label]) => `<button class="tab ${id === on ? "on" : ""}" role="tab" aria-selected="${id === on}" data-tab="${id}" aria-label="${label}"><svg viewBox="0 0 24 24" aria-hidden="true">${I[id]}</svg><span class="mn-l">${label}</span>${HOTKEYS[id] ? `<kbd class="hk" aria-hidden="true">${HOTKEYS[id]}</kbd>` : ""}</button>`).join("");
-    if (typeof REMIND !== "undefined") { try { REMIND.attach("#tabs [data-tab=social]", "social"); } catch { /* badges are optional */ } }   // remind.js: the 👥 button's badge moves here
+    if (typeof REMIND !== "undefined") { try { REMIND.attach("#tabs [data-tab=social]", "social"); } catch { /* badges are optional */ } }   // remind.js: the  button's badge moves here
     return true;
   }
   /* the sub-tab row at the top of a screen (SkyUI's category strip) */
@@ -91,9 +91,9 @@ const MENUS = (() => {
         const notesNew = typeof PATCHNOTES !== "undefined" && PATCHNOTES.unseen && PATCHNOTES.unseen();
         return `<div class="panel mn-set"><h2>Settings</h2>${x.settings ? x.settings() : ""}</div>
           <div class="panel"><h2>Help & news</h2><div class="list">
-            <button class="btn" data-act="guide" style="width:100%">📖 Guide for new players</button>
-            ${typeof PATCHNOTES !== "undefined" ? `<button class="btn" data-act="notes" style="width:100%;margin-top:8px">📜 Patch notes${notesNew ? ' <b class="gold">· new</b>' : ""}</button>` : ""}
-            <div class="grid2" style="margin-top:8px">${live && window.__app ? `<button class="btn" data-act="toupdate">${x.update?.newer ? "⬆ Update ready" : "Check for updates"}</button>` : ""}<button class="btn" data-act="totitle" ${live && window.__app ? "" : 'style="grid-column:1/-1"'}>Main menu</button></div></div></div>`;
+            <button class="btn" data-act="guide" style="width:100%"> Guide for new players</button>
+            ${typeof PATCHNOTES !== "undefined" ? `<button class="btn" data-act="notes" style="width:100%;margin-top:8px"> Patch notes${notesNew ? ' <b class="gold">· new</b>' : ""}</button>` : ""}
+            <div class="grid2" style="margin-top:8px">${live && window.__app ? `<button class="btn" data-act="toupdate">${x.update?.newer ? " Update ready" : "Check for updates"}</button>` : ""}<button class="btn" data-act="totitle" ${live && window.__app ? "" : 'style="grid-column:1/-1"'}>Main menu</button></div></div></div>`;
       },
     };
   }

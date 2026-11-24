@@ -385,7 +385,7 @@ const WorldMap = (() => {
     // zoomed out past the edges (PC map, pcmap.js: all of Skyrim in a wide window): the map sits in the middle
     ox = W * k <= canvas.width ? (canvas.width - W * k) / 2 : Math.min(0, Math.max(canvas.width - W * k, ox));
     oy = H * k <= canvas.height ? (canvas.height - H * k) / 2 : Math.min(0, Math.max(canvas.height - H * k, oy));
-    v.transform = { k: k / dpr, ox: ox / dpr, oy: (oy - OYH * k) / dpr };   // screen ↔ world (Solstheim's y included)
+    v.transform = { k: k / dpr, ox: ox / dpr, oy: (oy - OYH * k) / dpr };   // screen <-> world (Solstheim's y included)
     g.setTransform(k, 0, 0, k, ox, oy);
     g.imageSmoothingEnabled = true; g.imageSmoothingQuality = "high";
     if (bimg) g.drawImage(bimg, 0, 0, W, H);   // the painting is stretched over the world bounds: world (x, y) → (x·W, y·H)
@@ -432,7 +432,7 @@ const WorldMap = (() => {
       if (rt < 1) g.globalAlpha = rt;
       const [bx, by] = P(v.route[v.route.length - 1]);
       g.strokeStyle = "#fff0cd"; g.lineWidth = 2.4 * s; g.beginPath(); g.arc(bx, by, 9 * s, 0, 7); g.stroke();
-      if (v.dest && !v.discovered.includes(v.dest.name)) label(g, v.dest.roam ? "🧭 " + v.dest.name : v.dest.name + " ?", bx + 13 * s, by, s, 15, "#ffeac0", 700, false, "left");
+      if (v.dest && !v.discovered.includes(v.dest.name)) label(g, v.dest.roam ? " " + v.dest.name : v.dest.name + " ?", bx + 13 * s, by, s, 15, "#ffeac0", 700, false, "left");
       g.globalAlpha = 1;
     }
     if (v.spot) {   // a tapped spot for free roam
@@ -474,7 +474,7 @@ const WorldMap = (() => {
     if (v.cleared) for (const [n, x, y, kind] of shown) {
       const left = v.cleared[n]; if (!left || !(v.zoom >= KIND_MIN_ZOOM[kind] || v.selected === n)) continue;
       const gs = left * G.GAME_SPEED, dd = Math.floor(gs / 86400), h = Math.floor(gs / 3600), mm = Math.ceil(gs / 60);
-      label(g, `⏳ ${dd ? dd + "d" : h ? h + "h" : mm + "m"}`, x * W + 9 * s, y * H - 10 * s, s, 11, "#e8c98a", 700, false, "left");
+      label(g, ` ${dd ? dd + "d" : h ? h + "h" : mm + "m"}`, x * W + 9 * s, y * H - 10 * s, s, 11, "#e8c98a", 700, false, "left");
     }
     if (v.selected && !v.discovered.includes(v.selected)) { const [x, y] = WORLD.places[v.selected]; g.strokeStyle = "#9fd0f0"; g.lineWidth = 2.6 * s; g.beginPath(); g.arc(x * W, y * H, 14 * s, 0, 7); g.stroke(); label(g, v.selected, x * W, y * H + 20 * s, s, 14); }
     // people and bags: try a few spots around each dot and take the first that doesn't cover another label
@@ -505,6 +505,7 @@ const WorldMap = (() => {
       if (HF) { const r = HF.draw(g, x, y, s, { id: "o:" + (o.id || o.name), look: o.look || { r: o.race || "nord", id: o.name, eq: {}, gl: {} }, horse: o.horse || null, moving: !!o.moving, gallop: !!o.horse && !!o.moving, t: v.t, reduce: v.reduceMotion, scale: 0.82, ring: o.party ? "#8fe08a" : "#6f9fe8" }); otherHeads.push(r.head); continue; }
       if (MA) MA.token(g, x, y, s, o.look || { r: o.race || "nord", id: o.name, eq: {}, gl: {} }, o.party ? "#8fe08a" : "#6f9fe8", 10);
       else { g.fillStyle = "#2f62a8"; g.strokeStyle = "#e6f0ff"; g.lineWidth = 2 * s; g.beginPath(); g.arc(x, y, 6.5 * s, 0, 7); g.fill(); g.stroke(); }
+      if (o.side && typeof SIDES !== "undefined") SIDES.drawEmblem(g, o.side, x + 10 * s, y - 9 * s, 4.5 * s);   // sides.js: their side, even on a stranger
     }
     for (const b of v.bags) {
       const [x, y] = P(b.pos), R = 9 * s;
@@ -542,7 +543,7 @@ const WorldMap = (() => {
       const [x, y] = P(m.pos), r = 7 * s;
       g.strokeStyle = "#1b1408"; g.lineWidth = 5 * s; g.beginPath(); g.moveTo(x - r, y - r); g.lineTo(x + r, y + r); g.moveTo(x + r, y - r); g.lineTo(x - r, y + r); g.stroke();
       g.strokeStyle = "#c9392b"; g.lineWidth = 3 * s; g.stroke();
-      smartLabel("🗺 " + m.label, x, y - r, 11, "#ffd6c8");
+      smartLabel(" " + m.label, x, y - r, 11, "#ffd6c8");
     }
     for (const m of v.rumours || []) {   // rumours you heard (rumours.js): an ember ring with a "?"; it might be true
       const [x, y] = P(m.pos), r = 8 * s, pulse = v.reduceMotion ? 0.5 : (Math.sin(v.t * 2 + x) + 1) / 2;
@@ -640,6 +641,7 @@ const WorldMap = (() => {
       const lift = v.horse ? 15 * s : 0;
       if (v.horse) g.drawImage(MA.horse(v.horse), px - 27 * s, py - 12 * s - bob * 0.5, 54 * s, 35 * s);   // the horse under you, then you in the saddle
       MA.token(g, px + (v.horse ? 3 * s : 0), py - lift - bob, s, v.look, "#8fd3ff", v.horse ? 11 : 13);
+      if (v.side && typeof SIDES !== "undefined") SIDES.drawEmblem(g, v.side, px + (v.horse ? 3 * s : 0) + 12 * s, py - lift - bob - 11 * s, 5 * s);   // your side (sides.js)
       if (v.fx && typeof FXART !== "undefined") FXART.mapOver(g, v.fx, P, s, px + (v.horse ? 3 * s : 0), py - lift - bob, v.t, v.reduceMotion);
       label(g, v.name, px + 16 * s, py - 16 * s - lift, s, 14, "#d8f0ff", 700, false, "left");
       arrow(px + (v.horse ? 3 * s : 0), py - lift - bob, (v.horse ? 18 : 21) * s);

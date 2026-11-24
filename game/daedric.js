@@ -105,7 +105,7 @@ const DAEDRIC = (() => {
     s.daeOghmaRead = true;
     const grp = Object.keys(OGHMA).map((g) => [g, D.SKILL_GROUPS[g].filter((k) => s.skills[k] && s.skills[k].lvl < 100).sort((a, b) => s.skills[b].lvl - s.skills[a].lvl).slice(0, 3)])
       .sort((a, b) => b[1].reduce((t, k) => t + s.skills[k].lvl, 0) - a[1].reduce((t, k) => t + s.skills[k].lvl, 0))[0];
-    const msgs = [`📖 You read the Oghma Infinium and walk the ${OGHMA[grp[0]]}.`];
+    const msgs = [` You read the Oghma Infinium and walk the ${OGHMA[grp[0]]}.`];
     for (const k of grp[1]) { const sk = s.skills[k]; for (let i = 0; i < 5 && sk.lvl < 100; i++) { const was = sk.lvl; sk.xp = Math.max(sk.xp, F.skillXpNeeded(k, sk.lvl)); msgs.push(...G.useSkill(s, k, 0)); if (sk.lvl === was) break; } }
     G.note(s, msgs[0]);
     return msgs;

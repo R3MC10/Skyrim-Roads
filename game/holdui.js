@@ -24,7 +24,7 @@ const HOLDUI = (() => {
   const clanOf = (s) => (s && typeof CLANS !== "undefined" ? CLANS.of(s.id, s) : null);
 
   // ---------------------------------------------------------------- ink pictures
-  /* the hold's keep: walls standing or broken, guards on the walls, the ruling clan's banner on the tower */
+  /* the hold's keep: walls standing or broken, guards on the walls, the ruling side's banner on the tower */
   function keepArt(seat, fx, w = 300, h = 120) {
     if (typeof ART === "undefined") return "";
     const walls = seat ? seat.walls : H.WALLS, cols = seat ? seat.clan.colors : ["#cdb98f", "#cdb98f"], guards = fx?.guards || 0;
@@ -79,7 +79,7 @@ const HOLDUI = (() => {
   function detailHTML(s, hold, t) {
     const seat = H.seatOf(hold, t, s), c = clanOf(s), fx = H.effects(seat, t, s), win = H.windowAt(t);
     const rul = typeof WARS !== "undefined" ? WARS.rulers(s)[hold] : null;
-    const head = `<div class="hr-head">${bannerOf(seat?.clan || null)}<div><h3>${esc(hold)}</h3><span class="sub">${seat ? `Ruled by ${esc(seat.clan.name)} [${esc(seat.clan.tag)}]` : rul ? `Looked after by ${esc(rul.name)} [${esc(rul.tag)}] (top clan last week). Nobody holds the Jarl's seat.` : "Nobody holds the Jarl's seat."}</span></div></div>`;
+    const head = `<div class="hr-head">${bannerOf(seat?.clan || null)}<div><h3>${esc(hold)}</h3><span class="sub">${seat ? `Ruled by ${esc(seat.clan.name)} [${esc(seat.clan.tag)}]` : rul ? `Looked after by ${esc(rul.name)} [${esc(rul.tag)}] (top side last week). Nobody holds the Jarl's seat.` : "Nobody holds the Jarl's seat."}</span></div></div>`;
     const stats = [];
     let acts = "";
     if (seat) {
@@ -98,11 +98,11 @@ const HOLDUI = (() => {
       stats.push(statRow("Claim", "Beat the hold's champion"));
     }
     const pts = c && typeof WARS !== "undefined" ? H.warPts(s, hold, c.id) : 0;
-    if (c) stats.push(statRow("Your clan's war points here", `${pts} / ${WARS.MIN_TO_RULE}`, pts >= WARS.MIN_TO_RULE ? "good" : ""));
+    if (c) stats.push(statRow("Your side's war points here", `${pts} / ${WARS.MIN_TO_RULE}`, pts >= WARS.MIN_TO_RULE ? "good" : ""));
     const can = H.canFight(s, hold, t, { role: role(s) });
     if (can.kind) {
-      const label = can.kind === "claim" ? "⚔ Challenge the champion" : "⚔ Raid the hold";
-      acts = `<div class="hr-act"><button class="btn ${can.why ? "" : "danger"}" data-hact="fight" data-h="${esc(hold)}" ${can.why ? "disabled" : ""}>${label}</button><p class="sub">${esc(can.why || (can.kind === "claim" ? `A hard fight. Win and ${c ? `${c.name} rules ${hold}` : "your clan rules it"}. ${H.CLAIM_GOLD} gold.` : `Each win knocks down a wall (${seat.walls} left). Win with no walls left to take the hold. ${H.RAID_GOLD} gold a win.`))}</p></div>` + acts;
+      const label = can.kind === "claim" ? "\uE101 Challenge the champion" : "\uE101 Raid the hold";
+      acts = `<div class="hr-act"><button class="btn ${can.why ? "" : "danger"}" data-hact="fight" data-h="${esc(hold)}" ${can.why ? "disabled" : ""}>${label}</button><p class="sub">${esc(can.why || (can.kind === "claim" ? `A hard fight. Win and ${c ? `${c.name} rules ${hold}` : "your side rules it"}. ${H.CLAIM_GOLD} gold.` : `Each win knocks down a wall (${seat.walls} left). Win with no walls left to take the hold. ${H.RAID_GOLD} gold a win.`))}</p></div>` + acts;
     }
     return `${head}${keepArt(seat, fx)}<div class="hr-stats">${stats.join("")}</div>${acts}`;
   }
@@ -118,12 +118,12 @@ const HOLDUI = (() => {
       const why = tr.balance < v.cost ? `Needs ${v.cost} gold` : k === "guards" && fx.guards >= v.max ? "As many as the hold can feed" : k === "repair" && seat.walls >= H.WALLS_MAX ? "Walls are at full strength" : "";
       return `<div class="hr-spend"><div><b>${esc(v.name)}</b><span class="sub">${esc(v.what)}</span></div><button class="btn sm" data-hact="spend" data-h="${esc(seat.hold)}" data-id="${k}" ${why ? "disabled" : ""}>${why ? esc(why) : `${v.cost} gold`}</button></div>`;
     }).join("");
-    return `<div class="hr-box jarl"><h4>You are the Jarl</h4><p class="sub">Set the tax shoppers who aren't in your clan pay here, and spend the treasury.</p>
+    return `<div class="hr-box jarl"><h4>You are the Jarl</h4><p class="sub">Set the tax shoppers who aren't on your side pay here, and spend the treasury.</p>
       <div class="hr-taxrow" role="group" aria-label="Tax">${steps.map((r) => `<button class="chip${Math.abs(r - tax) < 1e-9 ? " on" : ""}" data-hact="tax" data-h="${esc(seat.hold)}" data-id="${r}">${Math.round(r * 100)}%</button>`).join("")}</div>${sp}</div>`;
   }
   function windowLine(t) {
     const w = H.windowAt(t);
-    return w.open ? `⚔ The raid window is open: ${span(w.closes - t)} left.` : `The raid window opens on Saturday at 12:00 UTC (in ${span(w.opens - t)}).`;
+    return w.open ? `\uE101 The raid window is open: ${span(w.closes - t)} left.` : `The raid window opens on Saturday at 12:00 UTC (in ${span(w.opens - t)}).`;
   }
   /* Social → Realm: the whole Holds panel */
   function panel(s) {
@@ -131,11 +131,11 @@ const HOLDUI = (() => {
     const t = H.now(), seats = H.seats(t, s), holds = Object.keys(WORLD.holds);
     if (!pick || !holds.includes(pick)) pick = holds.includes(H.holdHere(s)) ? H.holdHere(s) : Object.keys(seats)[0] || holds[0];
     const rul = typeof WARS !== "undefined" ? WARS.rulers(s) : {};
-    const intro = clanOf(s) ? "Clans claim a hold by beating its champion. Members vote for a Jarl, who sets a small tax on shop sales and spends it on the hold. Other clans can raid once a week." : "Clans rule the holds. You only notice it in the shops: outsiders pay the ruling clan's small tax. Join or found a clan (below) to take part.";
+    const intro = clanOf(s) ? "Sides claim a hold by beating its champion. Members vote for a Jarl, who sets a small tax on shop sales and spends it on the hold. Other sides can raid once a week." : "Sides rule the holds. You only notice it in the shops: outsiders pay the ruling side's small tax. Pick a side (Social → Faction) to take part.";
     return `<div class="panel hr-panel"><h2>Holds</h2><p class="sub">${intro} ${windowLine(t)}</p>
       <div class="hr-grid"><div class="hr-side">${typeof RAIDART !== "undefined" ? RAIDART.holdsMap(rul) : ""}
-        <div class="hr-list" role="list"><div class="hr-lh"><span></span><span>Hold</span><span>Clan</span><span>Tax</span></div>${holds.map((h) => rowHTML(s, h, seats, t)).join("")}</div>
-        <p class="sub hr-foot">* looked after by last week's top clan, no Jarl yet.</p></div>
+        <div class="hr-list" role="list"><div class="hr-lh"><span></span><span>Hold</span><span>Side</span><span>Tax</span></div>${holds.map((h) => rowHTML(s, h, seats, t)).join("")}</div>
+        <p class="sub hr-foot">* looked after by last week's top side, no Jarl yet.</p></div>
       <div class="hr-detail" id="hr-detail">${detailHTML(s, pick, t)}</div></div></div>`;
   }
   /* a line on the town page */
@@ -144,7 +144,7 @@ const HOLDUI = (() => {
     const hold = G.holdAt(WORLD.places[place]), t = H.now(), seat = H.seatOf(hold, t, s);
     if (!seat) return "";
     const j = H.jarlOf(seat, t, s), you = H.yourTax(s, seat, t), fx = H.effects(seat, t, s);
-    const tax = clanOf(s)?.id === seat.cid ? "your clan pays no tax" : you > 0 ? `${pct(you)} tax on what you buy` : "no tax for you";
+    const tax = clanOf(s)?.id === seat.cid ? "your side pays no tax" : you > 0 ? `${pct(you)} tax on what you buy` : "no tax for you";
     return `<p class="sub hr-town"><span class="hr-chip" style="background:${seat.clan.colors[0]}"></span>${esc(hold)} is ruled by ${esc(seat.clan.name)} [${esc(seat.clan.tag)}] · Jarl ${esc(j?.name || "—")} · ${tax}${fx.market ? " · market 5% off" : ""}.</p>`;
   }
 

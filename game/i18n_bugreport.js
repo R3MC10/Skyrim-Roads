@@ -4,7 +4,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
 (() => {
   Object.assign(I18N_EXTRA.words, {
     "Report a problem": "Zgłoś problem",
-    "🐞 Report a problem": "🐞 Zgłoś problem",
+    "\uE105 Report a problem": "\uE105 Zgłoś problem",
     "On a PC, F12 opens it from anywhere.": "Na PC otworzysz to zewsząd klawiszem F12.",
     "Tell us what went wrong or what could be better. It goes straight to the people fixing the game.": "Napisz, co poszło nie tak albo co może być lepsze. Trafi to prosto do tych, którzy poprawiają grę.",
     "Short title": "Krótki tytuł",

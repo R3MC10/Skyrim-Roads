@@ -19,7 +19,7 @@ const foe = (name, L) => G.scaleEnemy({ ...D.ENCOUNTERS.find((e) => e.name === n
 const counts = {};
 for (const [sk, tree] of Object.entries(PERKS.TREES)) {
   counts[sk] = tree.length;
-  ok(tree.length >= 9 && tree.length <= 24, sk + " has 9–24 perks (" + tree.length + ")");   // trees grow with the game (spellbook.js adds Support branches, new systems add perks)
+  ok(tree.length >= 9 && tree.length <= 28, sk + " has 9–28 perks (" + tree.length + ")");   // trees grow with the game (spellbook.js adds Support branches, new systems add perks)
   const ids = new Set(tree.map((p) => p[0]));
   for (const [id, name, ranks, req, needs, desc] of tree) {
     ok(PERKS.BY_ID[id] && PERKS.BY_ID[id].skill === sk, id + " registered");

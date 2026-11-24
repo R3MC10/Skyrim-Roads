@@ -184,6 +184,14 @@ const PFX = (() => {
     [ "Acrobatics", "feather_step", "Feather Step", 1, [60], ["sure_footed"], "Carry 25 more. [OURS]", [["carry", 25, {}]]],
     // ---------------------------------------------------------------- Smithing (5 → 11)
     [ "Archery", "hunters_eye", "Hunter's Eye", 2, [20, 50], ["overdraw"], "Hunting: you find game half again as often, every kill gives an extra piece of meat (rank 2), and you hit animals 10%/20% harder. [OURS]", [["huntrate", [0.5, 0.5], {}], ["huntmeat", [0, 1], {}], ["out", [0.1, 0.2], { tag: ["animal"] }]]],
+    // ---------------------------------------------------------------- fishing, hunting and skinning mini-games (fishing.js, huntgame.js)
+    [ "Archery", "clean_kill", "Clean Kill", 2, [25, 50], ["overdraw"], "Hunting game: the heart-and-lungs spot on an animal is 25/50% bigger, and a wounded animal is easier to track down. [OURS]", [["huntvital", [0.25, 0.5], {}], ["hunttrack", [0.15, 0.3], {}]]],
+    [ "Archery", "wind_reader", "Wind Reader", 1, [40], ["clean_kill", "hunters_eye"], "Hunting game: the wind pushes your arrows half as much, and your aim sways 30% less. [OURS]", [["huntwind", 0.5, {}], ["huntsway", 0.3, {}]]],
+    [ "Archery", "skinner", "Skinner", 1, [30], ["hunters_eye", "clean_kill"], "Skinning: one more pelt or hide from every animal you shoot, and trophies (antlers, horns, tusks) turn up twice as often. [OURS]", [["skinyield", 1, {}], ["trophy", 1, {}]]],
+    [ "Sneak", "stalker", "Stalker", 2, [20, 45], ["stealth"], "Hunting game: animals take 25/50% longer to notice you creeping closer. [OURS]", [["huntstalk", [0.25, 0.5], {}]]],
+    [ "Alchemy", "angler", "Angler", 2, [15, 40], ["alchemist"], "Fishing: the safe band on the tension meter is 20/40% wider, and fish tire 15/30% faster. [OURS, gathering]", [["fishband", [0.2, 0.4], {}], ["fishtire", [0.15, 0.3], {}]]],
+    [ "Alchemy", "line_sense", "Line Sense", 1, [30], ["angler"], "Fishing: you feel the bite. You have half again as long to hook it, and a slack line takes longer to lose the fish. [OURS, gathering]", [["fishbite", 0.5, {}], ["fishslack", 0.5, {}]]],
+    [ "Alchemy", "deep_waters", "Deep Waters", 1, [50], ["line_sense", "forager"], "Fishing: rare fish bite twice as often, and cleaning a catch gives roe, pearls and eggs for alchemy more often. [OURS, gathering]", [["fishrare", 1, {}], ["fishgut", 0.5, {}]]],
     [ "Smithing", "prospector", "Prospector", 1, [30], ["steel_smithing"], "Mining: you spot every vein in the rock, gems turn up more often, and you get 2 more swings. [OURS]", [["prospect", 1, {}], ["mineswing", 2, {}], ["gemfind", 0.1, {}]]],
     [ "Smithing", "orcish_smithing", "Orcish Smithing", 1, [50], ["dwarven_smithing"], "Improving weapons and armor adds 1 more. [Skyrim: Orcish gear, improve twice as much]", [["temper", 1, {}]]],
     [ "Smithing", "ebony_smithing", "Ebony Smithing", 1, [80], ["orcish_smithing"], "Improving adds another 1. [Skyrim]", [["temper", 1, {}]]],
@@ -202,6 +210,7 @@ const PFX = (() => {
     [ "Enchanting", "jeweller", "Jeweller", 1, [30], ["enchanter"], "Enchantments you put on rings and amulets are 15% stronger, and foes drop rings and amulets 50% more often. [OURS]", [["ench", 0.15, { kind: "jewel" }], ["jewelfind", 0.5, {}]]],
     [ "Enchanting", "warding_enchanter", "Warding Enchanter", 1, [40], ["insightful_enchanter"], "Resist Magic, Fire, Frost, Shock and Poison enchantments are 25% stronger. [OURS]", [["ench", 0.25, { el: "ward" }]]],
     [ "Enchanting", "hex_enchanter", "Hex Enchanter", 1, [50], ["fire_enchanter"], "Weapon enchantments that aren't fire, frost or shock (absorb, paralyze, fear, calm, bleeding, turn undead) are 25% stronger. [OURS]", [["ench", 0.25, { el: "other" }]]],
+    [ "Enchanting", "thrifty_runes", "Thrifty Runes", 1, [30], ["soul_squeezer"], "Your enchanted weapons and staffs use 20% less charge per hit or cast, and every kill puts 3% back into your enchanted weapon. [OURS]", [["enchcost", 0.2, {}], ["siphon", 0.03, {}]]],
     [ "Enchanting", "rune_smith", "Rune Smith", 1, [80], ["deep_charge"], "Elemental statuses from your enchanted weapons last a turn longer. [OURS]", [["enchstatus", 1, {}]]],
     // the newer enchantments (enchants2.js)
     [ "Enchanting", "runic_enchanter", "Runic Enchanter", 1, [60], ["hex_enchanter"], "Bloodthirst, Thunderclap, Reaping, Sundering, Spellbreaker, Echo Strike, Venom, Dragonbane and Banishing enchantments are 25% stronger. [OURS]", [["ench", 0.25, { el: "rune" }]]],
@@ -266,6 +275,9 @@ const PFX = (() => {
     [ "Sneak", "patient_shadow", "Patient Shadow", 1, [50], ["muffled_movement"], "Sneaking past a foe in a dungeon: you're noticed a third slower, the shadows are wider and you hear it turn sooner. [OURS]", [["dgsneak", 0.3, {}]]],
     [ "Two-Handed", "lid_breaker", "Lid Breaker", 1, [25], ["barbarian"], "Smashing chests open: the bright zone on the swing is a third wider. [OURS]", [["dgsmash", 0.3, {}]]],
     [ "Athletics", "sprinter", "Sprinter", 1, [30], ["long_strider"], "Running from a dungeon fight: a quarter fewer steps to get away. [OURS]", [["dgflee", 0.25, {}]]],
+    // ---------------------------------------------------------------- party traps (partytraps.js)
+    [ "Lockpicking", "trap_tinkerer", "Trap Tinkerer", 1, [40], ["apprentice_locks"], "You know how traps are built: dashing past blades and finding the trigger are both easier, and a trap that catches you never spills your gold or dents your armour. [OURS]", [["dgdash", 0.15, {}], ["dgspot", 0.15, {}], ["trapsting", 1, {}]]],
+    [ "Sneak", "call_the_danger", "Call Out the Danger", 1, [40], ["trap_sense"], "In a party, when you get through a trap cleanly, you shout a warning: everyone the trap still catches takes a quarter less damage and one stack less poison or bleeding. [OURS]", [["ptwarn", 1, {}]]],
     // ---------------------------------------------------------------- werewolves and vampires (beastpaths.js)
     [ "Restoration", "bane_of_night", "Bane of the Night", 1, [35], ["novice_restoration"], "Vampires and werewolves take 20% more from your blows and hit you 10% softer. [OURS]", [["out", 0.2, { tag: ["nightkin"] }], ["in", -0.1, { tag: ["nightkin"] }]]],
     [ "Alchemy", "wolfsbane", "Wolfsbane", 1, [30], ["physician"], "You chew wolfsbane and garlic on the road: half as likely to catch a vampire's or a werewolf's curse. [OURS]", [["curseres", 0.5, {}]]],
@@ -283,6 +295,16 @@ const PFX = (() => {
     [ "Illusion", "volk_blood_of_harkon", "Blood of Harkon", 1, [30], [], "Volkihar only. Your Vampire Lord form lasts 3 turns longer, and changing heals a tenth of your health. [OURS]", [["lordturns", 3, {}], ["lordheal", 0.1, {}]]],
     [ "Illusion", "volk_night_lord", "Night Lord", 1, [45], ["volk_blood_of_harkon"], "Volkihar only. As a Vampire Lord your drain life is 30% stronger. [OURS]", [["lorddrain", 0.3, {}]]],
     [ "Illusion", "volk_court", "Court of Volkihar", 1, [60], ["volk_night_lord"], "Volkihar only. As a Vampire Lord you hit 20% harder and take 10% less damage. [OURS]", [["lordout", 0.2, {}], ["lordin", -0.1, {}]]],
+    // ---------------------------------------------------------------- the three sides (sides.js): one side's perks each; changing sides takes them back
+    [ "One-Handed", "sc_nord_steel", "Nord Steel", 1, [30], [], "Stormcloaks only. One-handed blows hit 10% harder in the northern holds (Haafingar, Hjaalmarch, the Pale, Winterhold, Eastmarch). [OURS]", [["out", 0.1, { sk: "One-Handed", north: 1 }]]],
+    [ "Light Armor", "sc_winter_born", "Winter-Born", 1, [25], [], "Stormcloaks only. Frost hurts you 15% less. [OURS]", [["in", -0.15, { foeEl: "frost" }]]],
+    [ "One-Handed", "sc_sons_of_skyrim", "Sons of Skyrim", 1, [50], ["sc_nord_steel"], "Stormcloaks only. You hit soldiers of the other sides 10% harder. [OURS]", [["out", 0.1, { warFoe: 1 }]]],
+    [ "Blocking", "im_shield_drill", "Legion Shield Drill", 1, [30], [], "Imperial Legion only. With a shield up, blocking stops 8% more. [OURS]", [["block", 0.08, { shield: 1 }]]],
+    [ "Speechcraft", "im_writ", "Imperial Writ", 1, [25], [], "Imperial Legion only. Fines and bribes cost 25% less. [OURS]", [["bribe", 0.25, {}]]],
+    [ "Heavy Armor", "im_legion_drill", "Legion Drill", 1, [40], [], "Imperial Legion only. Soldiers of the other sides hit you 10% softer. [OURS]", [["in", -0.1, { warFoe: 1 }]]],
+    [ "Destruction", "ad_focus", "Aldmeri Focus", 1, [30], [], "Aldmeri Dominion only. Destruction spells cost 10% less. [OURS]", [["scost", 0.1, { school: "Destruction" }]]],
+    [ "Alteration", "ad_wellspring", "Wellspring of Aldmeris", 1, [30], [], "Aldmeri Dominion only. Magicka comes back 25% faster in fights. [OURS]", [["regenmp", 0.25, {}]]],
+    [ "Destruction", "ad_justiciar", "Justiciar's Rebuke", 1, [50], ["ad_focus"], "Aldmeri Dominion only. You soak up 10% of the magic that soldiers of the other sides throw at you. [OURS]", [["absorb", 0.1, { warFoe: 1 }]]],
     // ---------------------------------------------------------------- the Dwemer ruins and Blackreach (dwemer.js, blackreach.js)
     [ "Smithing", "dwemer_tinkerer", "Dwemer Tinkerer", 1, [35], ["dwarven_smithing"], "Each piece of Dwemer scrap smelts into one more Dwarven ingot, and you know where to hit a machine: 10% more damage to Dwarven constructs. [OURS]", [["dwscrap", 1, {}], ["out", 0.1, { tag: ["construct"] }]]],
     [ "Lockpicking", "dwemer_lore", "Dwemer Lore", 1, [30], ["apprentice_locks"], "Dwemer puzzles show you the next valve or ring to turn, valves hold three more turns before they blow, and half the time a beaten foe in a Dwemer ruin leaves extra scrap. [OURS]", [["dwlore", 1, {}], ["dwloot", 0.5, {}]]],
@@ -293,7 +315,7 @@ const PFX = (() => {
     [ "Blocking", "read_the_signs", "Read the Signs", 1, [30], ["shield_wall"], "A boss's big attacks (the ones it shows a turn ahead) hurt you 25% less. [OURS]", [["bftele", 0.25, {}]]],
     // ---------------------------------------------------------------- player-run holds (holdrule.js)
     [ "Speechcraft", "fair_dues", "Fair Dues", 2, [20, 45], [], "A hold's tax costs you half as much when you shop there (rank 2: you pay none). [OURS]", [["holdtax", 0.5, {}]]],
-    [ "Speechcraft", "jarls_favour", "Jarl's Favour", 1, [50], ["fair_dues"], "In a hold your clan rules, shops sell to you another 5% cheaper, and while you're its Jarl, taxes fill the treasury 20% faster. [OURS]", [["jarlfav", 0.05, {}], ["jarlpurse", 0.2, {}]]],
+    [ "Speechcraft", "jarls_favour", "Jarl's Favour", 1, [50], ["fair_dues"], "In a hold your side rules, shops sell to you another 5% cheaper, and while you're its Jarl, taxes fill the treasury 20% faster. [OURS]", [["jarlfav", 0.05, {}], ["jarlpurse", 0.2, {}]]],
     [ "Etiquette", "hold_warden", "Hold Warden", 1, [35], ["courtly_manners"], "In hold challenges and raids, the champion and the defenders have 10% less health and hit 10% softer. [OURS]", [["holdfight", 0.1, {}]]],
     [ "Two-Handed", "break_their_focus", "Break Their Focus", 1, [35], ["barbarian"], "Any blow that takes a tenth of a boss's health breaks the big attack it's getting ready, and it reels and loses its next move. [OURS]", [["bfbreak", 1, {}]]],
     // ---------------------------------------------------------------- shouts and weather (thuum.js, wxmatters.js, weatherfx.js)
@@ -348,14 +370,16 @@ const PFX = (() => {
     if (c.normal && x.power) return false;
     if (c.sneak && !x.sneak) return false;
     if (c.first && !(f && f.firstHit)) return false;
-    if (c.mounted && !(f && f.mount)) return false;
+    if (c.mounted && !(f && f.mount?.up)) return false;   // in the saddle right now (not when your horse just waits nearby)
     if (c.weapon && !(f && f.weapon)) return false;
     if (c.tempered && !(f && f.temper > 0)) return false;
     if (c.el && x.el !== c.el) return false;
     if (c.kind && x.kind !== c.kind) return false;
     if (c.school && x.school !== c.school) return false;
     if (c.blocking && !x.blocking) return false;
+    if (c.north && !(typeof SIDES !== "undefined" && SIDES.inNorth(s))) return false;   // sides.js: the northern holds
     if (f) {
+      if (c.warFoe && !(f.e?.warSide && typeof SIDES !== "undefined" && f.e.warSide !== SIDES.mine(s))) return false;   // a player of another side (sides.js)
       const tags = f.tags || new Set(), n = f.e?.name || "";
       if (c.tag && !c.tag.some((t) => tags.has(t))) return false;
       if (c.tough && !(tags.has("elite") || tags.has("dragon") || f.e?.boss || f.e?.danger === "high")) return false;
@@ -372,7 +396,7 @@ const PFX = (() => {
       if (c.bossFoe && !f.bf) return false;   // bossfight.js
       if (c.bossLast && !(f.bf && f.bf.phase >= f.bf.th.length)) return false;
       if (c.venom && !(f.e?.poison || tags.has("venom") || (VENOM.test(n) && !/dwarven|brass/i.test(n)))) return false;   // Resist Poison
-    } else if (c.foeBelow || c.tag || c.tough || c.big || c.magic || c.archerFoe || c.hpBelow || c.hpAbove || c.first || c.mounted || c.bigHit || c.dark || c.foeEl || c.venom || c.bossFoe || c.bossLast) return false;
+    } else if (c.foeBelow || c.tag || c.tough || c.big || c.magic || c.archerFoe || c.hpBelow || c.hpAbove || c.first || c.mounted || c.bigHit || c.dark || c.foeEl || c.venom || c.bossFoe || c.bossLast || c.warFoe) return false;
     return true;
   }
   function each(s, key, f, x, fn) {
@@ -407,7 +431,7 @@ const PFX = (() => {
 
   // ---------------------------------------------------------------- elemental statuses
   const VENOM = /spider|chaurus|spriggan|snake|viper|skeever|hagraven|assassin|poison/i;
-  const ICON = { burn: "🔥", chill: "❄️", shock: "⚡" };
+  const ICON = { burn: "", chill: "", shock: "" };
   const VERB = { burn: "burns", chill: "is chilled", shock: "is jolted" };
   /* which element a foe's blows carry, if any (name based: fire mages, dragons, atronachs, witches...) */
   function foeElement(e) {
