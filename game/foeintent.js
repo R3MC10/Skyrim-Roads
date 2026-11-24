@@ -24,7 +24,7 @@ const FOEINTENT = (() => {
      shared-fight roster (tbfight.js shared(): "p:<id>" for players, the ally's tbk otherwise) */
   const keyOf = (a) => (!a ? HOST : a.tbk || (a.tbk = a.pid ? "p:" + a.pid : "i" + ++seq));
   const kindOf = (a) => (!a ? "you" : a.player ? "player" : a.fsum || a.summon || a.summonOf ? "summon" : a.thrall ? "thrall" : a.follower || a.kind === "follower" || a.fai ? "follower" : "ally");
-  const ICON = { you: "🛡", player: "🧑", follower: "⚔", summon: "✦", thrall: "💀", ally: "🐾" };
+  const ICON = { you: "", player: "", follower: "", summon: "✦", thrall: "", ally: "" };
   const descOf = (a, f) => ({ k: keyOf(a), n: a ? String(a.name || "Ally") : String(f?.s?.name || "You"), kind: kindOf(a) });
   const liveAllies = (f) => (f.allies || []).filter((a) => a && !a.down && !(a.hp != null && a.hp <= 0));
   const findAlly = (f, k) => (k === HOST ? null : liveAllies(f).find((a) => keyOf(a) === k) || undefined);

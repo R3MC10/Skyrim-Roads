@@ -26,7 +26,8 @@
     try {
       if ((await LN.checkPermissions()).display !== "granted") return;
       await clearAll();
-      const list = (window.__ui?.upcoming?.() || []).map((n) => ({ id: n.id, title: n.title, body: n.body, channelId: "road", schedule: { at: new Date(n.at), allowWhileIdle: true } }));
+      const plain = (t) => String(t || "").replace(/[-]\s?/g, "");   // game icons only exist in the game's font
+      const list = (window.__ui?.upcoming?.() || []).map((n) => ({ id: n.id, title: plain(n.title), body: plain(n.body), channelId: "road", schedule: { at: new Date(n.at), allowWhileIdle: true } }));
       if (list.length) await LN.schedule({ notifications: list });
     } catch (e) { /* never block going to the background */ }
   }

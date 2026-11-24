@@ -87,9 +87,10 @@ const FAI = (() => {
   function pools(f) {
     const a = archOf(f), mage = a.mage || 0, L = f.lvl || 1;
     const heavy = Object.values(f.eq || {}).some((id) => itemOf(f.inv.find((r) => r.id === id))?.type === "heavy");
+    const u = f.ups;   // folbuild.js: +10 magicka / stamina for each pick at their level-ups
     return {
-      mp: Math.round(60 + 140 * mage + 4 * (L - 1) + (f.spells?.length ? 20 : 0)),
-      sp: Math.round(100 + 3 * (L - 1) + (mage >= 1 ? -20 : 20)),
+      mp: Math.round(60 + 140 * mage + (u ? 1 * (L - 1) + 10 * (u.magicka || 0) : 4 * (L - 1)) + (f.spells?.length ? 20 : 0)),
+      sp: Math.round(100 + (u ? 1 * (L - 1) + 10 * (u.stamina || 0) : 3 * (L - 1)) + (mage >= 1 ? -20 : 20)),
       ap: clamp(6 + Math.floor(L / 20), 6, 8),
       init: Math.round(8 + skill(f, "Sneak") / 20 + (a.sneaky ? 2 : 0) - (heavy ? 1 : 0)),
     };
@@ -108,6 +109,7 @@ const FAI = (() => {
       mpCut: pnum(s, "folmp"),
       boost: 1, sp0: null, melee: archOf(f).mage >= 1 && (!w || w.staff) ? Math.max(1, 4 * (1 + skill(f, "Hand-to-Hand") / 200) * 0.55 * (w?.staff ? 2 : 1)) : null });
     if (!rec.maxHp || rec.maxHp < rec.hp) rec.maxHp = Math.max(rec.hp || 1, rec.maxHp || 1);
+    if (typeof FBUILD !== "undefined") FBUILD.equip(s, f, rec);   // the skill each action trains, their perks' real effects
     return rec;
   }
 
@@ -121,7 +123,7 @@ const FAI = (() => {
     const f = folOf(fight, al); if (!f) return unit(al);
     const aug = Math.max(rank(f, "augmented_flames"), rank(f, "augmented_frost"), rank(f, "augmented_shock"));
     const staff = itemOf(f.inv.find((r) => r.id === f.eq.weapon))?.staff ? 1.15 : 1;
-    const raw = (6 + skill(f, sp.school) * 0.18) * (sp.school === "Destruction" ? 1 + 0.25 * aug : 1) * staff * 0.55;
+    const raw = (6 + skill(f, sp.school) * 0.18) * (sp.school === "Destruction" ? (1 + 0.25 * aug) * (al.px?.spell || 1) : 1) * staff * 0.55;
     return raw * (al.boost || 1) / Math.max(1, al.ap || 6);
   }
   const rank = (f, id) => f.perks?.[id] || 0;
@@ -144,7 +146,7 @@ const FAI = (() => {
     const pp = playerPct(fight), me = selfPct(al), boss = isBoss(fight);
     out.push({ k: "attack", c: wc, v: unit(al) * wc * opener(fight, al) * comboPhys(fight, al) });
     if (al.sp >= 25) out.push({ k: "power", c: wc + 2, v: powerHit(al) * comboPhys(fight, al) + (al.bow ? 0 : unit(al) * 2 * (boss ? 0.15 : 0.35)) * (tac === "aggressive" ? 1.4 : 1) });
-    if (!al.guard) out.push({ k: "guard", c: 2, v: (tac === "defensive" ? 2.2 : 0.9) * unit(al) * (al.shield ? 1.4 : 1) * (pp < 0.5 ? 1.5 : 1) * (me < 0.5 ? 1.3 : 1) });
+    if (!al.guard) out.push({ k: "guard", c: 2, v: (tac === "defensive" ? 2.2 : tank(al) ? 1.2 : 0.9) * unit(al) * (al.shield ? 1.4 : 1) * (pp < 0.5 ? 1.5 : 1) * (me < 0.5 ? 1.3 : 1) });
     if (tac !== "ranged" && !al.bow && (tac === "defensive" || (al.shield && tac === "auto")) && pp < 0.45 && me > 0.45 && fight.coverAl !== al) out.push({ k: "cover", c: 2, v: unit(al) * 8 * (0.45 - pp) / 0.45 + unit(al) * 3 });
     // potions from their own pack
     const potAt = al.savePots ? 0.2 : tac === "aggressive" ? 0.3 : 0.38;
@@ -288,8 +290,8 @@ const FAI = (() => {
     // attack / power attack
     const wc = WCOST[al.wt] || 3, power = o.k === "power";
     if (power) al.sp -= 25;
-    if (Math.random() > (typeof F !== "undefined" ? F.HIT_CHANCE + 0.05 : 0.9)) return { text: `${n} ${power ? "swings hard and" : ""} misses`.replace("  ", " ") };
-    let d = (power ? powerHit(al) : unit(al) * wc) * rnd(), tag = "";
+    if (Math.random() > (typeof F !== "undefined" ? F.HIT_CHANCE + 0.05 : 0.9) + (al.px?.hit || 0)) return { text: `${n} ${power ? "swings hard and" : ""} misses`.replace("  ", " ") };
+    let d = (power ? powerHit(al) * (al.px?.pow || 1) : unit(al) * wc) * (al.px?.out || 1) * rnd(), tag = "";   // their perks (folbuild.js mods)
     const op = opener(fight, al); if (op > 1) { d *= op; al.opened = true; tag = " (sneak attack)"; }
     if (al.dual && !al.bow) { d *= 1.1; }
     fight.ehp -= d;
@@ -314,6 +316,7 @@ const FAI = (() => {
         if (o.k === "guard" && parts.length && (al.tactic !== "defensive")) break;   // leftover AP become guard below
         const before = fight.ehp, myB = fight.hp;
         const r = doOne(fight, al, o); ap -= o.c;
+        if (typeof FBUILD !== "undefined") FBUILD.acted(fight, al, o, r);   // their skills rise with use, like yours
         let t = r.text;
         if (r.phys && fight.ehp < before && typeof COMBO !== "undefined") t += COMBO.phys(fight, before, aid);
         if (sess && fight.ehp < before) { t += sess.capFoe(before); t += sess.flank(before); sess.hitters++; }
@@ -333,7 +336,9 @@ const FAI = (() => {
   }
 
   // ------------------------------------------------------------------ being hit (engine.js enemyTurnInner calls these)
-  const weight = (al) => (!al.fai ? FRONT : al.tactic === "defensive" ? TAUNT : al.row === "back" ? BACK : FRONT);
+  /* a sword-and-shield follower left to their own style is a tank: they draw blows like Defensive */
+  const tank = (al) => !!al.fai && (al.tactic || "auto") === "auto" && al.shield && (al.build || al.arch) === "warrior";
+  const weight = (al) => (!al.fai ? FRONT : al.tactic === "defensive" || tank(al) ? TAUNT : al.row === "back" ? BACK : FRONT);
   /* how many "targets" the allies add up to (you count as 1): back-row allies draw fewer blows */
   const aggro = (fight) => fight.allies.reduce((a, x) => a + weight(x), 0);
   function pickAlly(fight) {
@@ -344,7 +349,7 @@ const FAI = (() => {
   /* a follower guarding with a shield takes much less */
   function takes(fight, al, d) {
     if (!(d > 0) || !al.guard) return d;
-    const f = folOf(fight, al), pct = Math.min(0.75, (al.shield ? 0.45 : 0.3) + (f ? skill(f, "Blocking") / 400 : 0));
+    const f = folOf(fight, al), pct = Math.min(0.75, (al.shield ? 0.45 : 0.3) + (f ? skill(f, "Blocking") / 400 : 0) + (al.px?.block || 0));
     return d * (1 - pct);
   }
   /* a summon is hit: it takes the blow and fades when it runs out of health (never "knocked down") */

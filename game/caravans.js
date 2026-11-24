@@ -139,7 +139,7 @@ const CARAVANS = (() => {
       const err = G.startTrip(s, j.to, L.B, j.depart); if (err) { s.caravanJob = null; return err; }
       s.trip.path = L.path; s.trip.speed = SPEED; s.trip.caravan = j.id; s.trip.lastTick = j.depart; s.trip.total = L.secs / 60;
       j.status = "road";
-      return `🐫 ${j.name} rolls out of ${j.from} with you guarding the wagons.`;
+      return ` ${j.name} rolls out of ${j.from} with you guarding the wagons.`;
     }
     if (j.status === "road" && s.trip?.caravan !== j.id && s.location !== j.to) { s.caravanJob = null; return "You lost the caravan. No pay this time."; }
     return null;

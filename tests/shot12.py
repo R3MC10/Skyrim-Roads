@@ -11,7 +11,7 @@ async def main():
         await pg.fill("#nm","Remi"); await pg.click("#begin"); await pg.wait_for_timeout(1000)
         await pg.evaluate("""() => { const S=window.__dbg.save(); S.location='Riverwood'; const t=Date.now()/1000;
             WEVENTS.activeRaid = () => ({id:'raid-test', town:'Riverwood', start:t-60, end:t+900});
-            WEVENTS.weather = () => ({id:'snow',name:'Snow',icon:'🌨',speed:.85,sneak:.05,encounters:1});
+            WEVENTS.weather = () => ({id:'snow',name:'Snow',icon:'\ue190',speed:.85,sneak:.05,encounters:1});
             window.__fakedb.store.set('raids/raid-test-B',{raid:'raid-test',uid:'B',name:'Bjorn',dmg:300}); window.__fakedb.emit('raids'); }""")
         await pg.wait_for_timeout(2000)
         await pg.screenshot(path="/home/claude/tests/r4_raid.png")
