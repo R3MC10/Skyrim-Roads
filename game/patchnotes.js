@@ -3,6 +3,15 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b136", build: 136, date: "24 Nov 2026", title: "Meet caravans on the road", items: [
+      "Caravans on the map are now something you can meet while you travel. When you're close, their wagons get a gold ring and say \"tap to meet\": tap them, or just walk up beside them and you'll be asked to stop.",
+      "Meeting a caravan pauses your trip. Trade with their merchant (every caravan run carries different goods), ask for news from the road (a rumour or a new place goes on your map), or just wave and carry on.",
+      "Guard the wagons: walk the rest of their road with them, at their pace, and get paid when you roll into their stop. Ambushes can still hit the caravan on the way.",
+      "Walk with them a while: stay close to the wagons and bandits leave you alone far more often.",
+      "Or rob them. You'll fight their guards and get a bounty in that hold, but the gold and goods are yours if you win. They'll remember your face for a day.",
+      "In a party, only the leader stops for a caravan; everyone else sees what happens.",
+      "Caravan Friend (Speechcraft) now also pays 25% more for guarding caravans you meet on the road.",
+    ] },
     { id: "b135", build: 135, date: "24 Nov 2026", title: "No more flickering popups", items: [
       "Fixed: popups (like tapping an equipment slot) flickered for a split second just after they opened. They now open smoothly and stay put.",
     ] },
