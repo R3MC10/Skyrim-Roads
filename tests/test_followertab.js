@@ -104,8 +104,8 @@ TOWNS.hire(A, "lydia");
 OK(FOL2.st(A).inv.length === kept, "her pack is kept for next time");
 OK(/goes down instead of dying/.test(FOLTAB.panel(A)), "followers go down, never die");
 // 10. the patch note is first, has a unique id, and every line has Polish
-const pn = PATCHNOTES.LIST.find((x) => x.id === "b143-followertab") || {};   // newer notes may sit above it
-OK(pn.id === "b143-followertab" && new Set(PATCHNOTES.LIST.map((x) => x.id)).size === PATCHNOTES.LIST.length, "patch note listed with a unique id");
+const pn = PATCHNOTES.LIST.find((x) => x.id === "b143-followertab");
+OK(pn && new Set(PATCHNOTES.LIST.map((x) => x.id)).size === PATCHNOTES.LIST.length, "patch note on top with a unique id");
 for (const x of [pn.title, ...pn.items]) OK(I18N_STORY.ex[x], "Polish for: " + x.slice(0, 40));
 console.log("test_followertab: " + n + " checks OK");
 `, c);
