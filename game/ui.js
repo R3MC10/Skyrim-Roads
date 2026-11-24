@@ -2187,7 +2187,7 @@
       if (road) {
         if (!res) return openEncounter();   // lowered the bow before anything happened: back to the choice
         HUNTGAME.endRoad(S);
-        ppUI?.leaderResolved(res.kill ? `brought down the ${e.name}` : `the ${e.name} got away`);
+        ppUI?.leaderResolved(HUNTGAME.told(res, e.name));   // the party hears exactly what the leader got
         renderTrip();
       }
       persist(true); renderPanel(true);

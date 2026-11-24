@@ -85,6 +85,14 @@ const FISHGAME = (() => {
 
   // ====================================================================== the rules (pure, tested in Node)
   const nowS = () => Date.now() / 1000;
+  /* seeded rolls: a cast is decided by shared things (the water, the hold, the weather, the in-game hour, which cast of the sitting
+     it is), so friends fishing side by side get the same fish, bite and fight on every phone */
+  function hash(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+  function rng(seed) { let a = typeof seed === "number" ? seed >>> 0 : hash(String(seed)); return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+  const HOUR = () => 3600 / ((typeof G !== "undefined" && G.GAME_SPEED) || 12);
+  function castSeed(ctx, n = 0, t = (typeof G !== "undefined" ? G.now() : nowS())) {
+    return ["fish", ctx.water || "", ctx.hold || "", ctx.wx || "", ctx.night ? 1 : 0, Math.floor(t / HOUR()), Math.round((ctx.cast || 0.5) * 4), n].join("|");
+  }
   /* where and when you're fishing */
   function context(s, pos, t = nowS()) {
     const water = typeof COOK !== "undefined" ? COOK.waterNear(pos) : null;
@@ -254,13 +262,14 @@ const FISHGAME = (() => {
     const p = st.phase;
     if (p === "aim") {
       st.ctx.cast = 0.15 + power() * 0.85; st.held = false;
-      st.wait = waitFor(st.ctx); st.fish = roll(st.s, st.ctx);
+      st.seed = castSeed(st.ctx, st.casts = (st.casts || 0) + 1);
+      st.wait = waitFor(st.ctx, rng(st.seed + "|wait")); st.fish = roll(st.s, st.ctx, rng(st.seed + "|fish"));
       sfx("click"); setPhase("fly", st.ctx.cast > 0.8 ? "A long cast, out over the deep water." : st.ctx.cast < 0.4 ? "A short cast, close to the bank." : "You cast your line.");
     } else if (p === "wait") {
       st.held = false;
       const tw = st.pt - st.wait.at;
       if (tw >= 0 && tw <= biteWindow(st.s)) {
-        st.g = hook(st.s, st.fish); sfx("hit"); buzz([30, 40, 30]);
+        st.g = hook(st.s, st.fish, rng(st.seed + "|hook")); sfx("hit"); buzz([30, 40, 30]);
         setPhase("reel", isRare(st.fish) ? "It's heavy! Something rare is on the line." : "Hooked! Reel it in.");
       } else { sfx("miss"); end("Too soon. The splash scares it off."); }
     } else if (p === "done") { st.held = false; setPhase("aim", ""); }
@@ -289,13 +298,13 @@ const FISHGAME = (() => {
       if (g.run > 0 && !st.wasRun) buzz(20);
       st.wasRun = g.run > 0;
       if (g.over === "landed") {
-        const r = land(st.s, st.fish); st.caught++; st.landed = r.item;
+        const r = land(st.s, st.fish, rng(st.seed + "|land")); st.caught++; st.landed = r.item;
         sfx("coin"); buzz([20, 30, 60]);
         if (typeof GUIDE !== "undefined") try { GUIDE.mark(st.s, "fish"); } catch { /* fine */ }
         st.opts.onCatch?.(r);
         end(r.text, r);
-      } else if (g.over === "snap") { sfx("miss"); buzz(120); end(["Snap! The line breaks.", "Too tight: the line parts with a crack."][Math.floor(Math.random() * 2)]); }
-      else if (g.over === "slip") { sfx("miss"); end(["The line goes slack. It threw the hook.", "A flick of the tail and it's gone."][Math.floor(Math.random() * 2)]); }
+      } else if (g.over === "snap") { sfx("miss"); buzz(120); end(["Snap! The line breaks.", "Too tight: the line parts with a crack."][hash(st.seed) % 2]); }
+      else if (g.over === "slip") { sfx("miss"); end(["The line goes slack. It threw the hook.", "A flick of the tail and it's gone."][hash(st.seed) % 2]); }
     } else if (p === "aim") {
       const el = document.querySelector("#fishgame"); if (el) el.querySelector(".fhneedle").style.left = (power() * 100).toFixed(1) + "%";
     }
@@ -411,6 +420,6 @@ const FISHGAME = (() => {
     if (DOM) document.querySelector("#fishgame")?.remove();
     st = null;
   }
-  return { RODS, FISH, COLD, WARM, BITE, rodOf, context, canFish, table, roll, waitFor, biteWindow, hook, step, gut, land, isRare, play, close, state: () => st, _down: down, _up: up };
+  return { hash, rng, castSeed, RODS, FISH, COLD, WARM, BITE, rodOf, context, canFish, table, roll, waitFor, biteWindow, hook, step, gut, land, isRare, play, close, state: () => st, _down: down, _up: up };
 })();
 if (typeof module !== "undefined") module.exports = FISHGAME;

@@ -19,6 +19,9 @@ const HUNTGAME = (() => {
   const sfx = (n) => { try { if (typeof SOUND !== "undefined") SOUND.fx(n); } catch { /* no audio */ } };
   const buzz = (p) => { try { if (DOM && navigator.vibrate) navigator.vibrate(p); } catch { /* not allowed */ } };
   const rint = (rnd, a, b) => a + Math.floor(rnd() * (b - a + 1));
+  /* seeded rolls: the same seed gives the same animal, wind and result on every phone (no local Math.random for what others see) */
+  function hash(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+  function rng(seed) { let a = typeof seed === "number" ? seed >>> 0 : hash(String(seed)); return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 
   // ====================================================================== items
   Object.assign(D.ITEMS, {
@@ -114,6 +117,15 @@ const HUNTGAME = (() => {
   const PER_DAY = 3;
   const dayLen = () => 24 * 3600 / ((typeof G !== "undefined" && G.GAME_SPEED) || 12);
   const groundKey = (s) => (s.location ? s.location : `w${Math.round(s.x * 50)}_${Math.round(s.y * 50)}`);
+  /* what a hunt is seeded from: shared things only. A road hunt: the trip and the beast the leader met (the leader plays it, the
+     party hears the result). The hunting grounds: the place, the in-game day and which hunt of the day it is, so party mates
+     stalking the same grounds see the same animal, wind and distance. */
+  function seedFor(s, opts = {}, t = (typeof G !== "undefined" ? G.now() : 0)) {
+    if (opts.seed) return String(opts.seed);
+    if (opts.road) { const tr = s.trip || {}, e = tr.encounter || {}; return ["road", tr.destName || "", (tr.start || []).map((v) => Math.round(v * 1000)).join(","), tr.idx || 0, e.name || "", e.lvl || e.level || 0].join("|"); }
+    const key = groundKey(s);
+    return ["ground", key, Math.floor(t / dayLen()), PER_DAY - groundLeft(s, key, t)].join("|");
+  }
   const sections = (town) => (TOWNS_HG.includes(town) ? ["hunt"] : []);
   function groundLeft(s, key = groundKey(s), t = G.now()) {
     const g = (s.hgrounds || {})[key], day = Math.floor(t / dayLen());
@@ -223,7 +235,7 @@ const HUNTGAME = (() => {
     if (g.moved > 10) skills.push(...(G.useSkill(s, "Sneak", Math.min(8, g.moved / 8)) || []));
     let got = {};
     if (quality === "clean" || quality === "rough") {
-      got = skin(s, g.id, quality, rnd);
+      got = skin(s, g.id, quality, g.seed ? rng(g.seed + "|skin") : rnd);   // its own stream: the same hide and meat for everyone with this seed
       for (const [i, n] of Object.entries(got)) G.give(s, i, n);
       skills.push(...(G.useSkill(s, "Archery", quality === "clean" ? 14 : 8) || []));
       s.stats = { ...(s.stats || {}), hunted: ((s.stats || {}).hunted || 0) + 1 };
@@ -242,8 +254,10 @@ const HUNTGAME = (() => {
     if (!DOM) return;
     const no = block(s, !!opts.road); if (no) return no;
     close();
-    const id = opts.id || pickAnimal(s, opts.pos || [s.x, s.y]);
-    const g = plan(s, id, opts), w = weapon(s);
+    const seed = seedFor(s, opts), rnd = rng(seed);
+    const id = opts.id || pickAnimal(s, opts.pos || [s.x, s.y], rnd);
+    const g = plan(s, id, opts, rnd), w = weapon(s);
+    g.seed = seed;
     st = { s, g, opts, done, phase: "stalk", moving: false, aim: [box(g).bx - 40, box(g).by - 10], drawT: 0, last: performance.now(), raf: 0, keys: {}, arrow: null, res: null };
     const el = document.createElement("div");
     el.id = "huntgame"; el.className = "craftgame fhgame";
@@ -336,14 +350,14 @@ const HUNTGAME = (() => {
       }
     } else if (st.phase === "flight") {
       st.arrow.t += dt / 0.35;
-      if (st.arrow.t >= 1) { const q = outcome(g, st.shot.hit); end(st.shot.hit, q); }
+      if (st.arrow.t >= 1) { st.resRnd = rng(g.seed + "|res"); const q = outcome(g, st.shot.hit, st.resRnd); end(st.shot.hit, q); }
     }
   }
   function end(shot, quality) {
     const S = st;
     S.g.over = S.g.over || "done";
     if (!S.opts.road) useGround(S.s);
-    const r = settle(S.s, S.g, shot, quality || "fled");
+    const r = settle(S.s, S.g, shot, quality || "fled", S.resRnd || rng(S.g.seed + "|res"));
     S.res = { ...r, shot, quality, id: S.g.id };
     sfx(r.kill ? "coin" : "miss"); if (r.kill) buzz([20, 30, 60]);
     S.fleeT = 0;
@@ -469,11 +483,16 @@ const HUNTGAME = (() => {
     st = null;
   }
   /* a hunt that started from a road encounter: the encounter is over either way */
+  /* one line the rest of the party hears when the leader finishes a road hunt (same text on every phone) */
+  function told(res, name) {
+    const list = Object.entries(res?.got || {}).map(([i, n]) => `${n > 1 ? n + " " : ""}${D.ITEMS[i]?.name || i}`).join(", ");
+    return res?.kill ? `brought down the ${name}${list ? `: ${list}` : ""}` : `the ${name} got away`;
+  }
   function endRoad(s) {
     if (s.trip?.status !== "encounter") return;
     s.trip.status = "travel"; s.trip.encounter = null; s.trip.lastTick = G.now();
   }
-  return { ANIMALS, HABITAT, TOWNS_HG, PER_DAY, W, H, knifeTier, habitat, pickAnimal, fromEncounter, sections, groundKey, groundLeft, useGround, weapon, block,
-    plan, scent, alertRate, stalkStep, box, swayAt, drift, shoot, outcome, skin, settle, play, close, endRoad, state: () => st, _toAim: toAim, _loose: loose };
+  return { hash, rng, seedFor, ANIMALS, HABITAT, TOWNS_HG, PER_DAY, W, H, knifeTier, habitat, pickAnimal, fromEncounter, sections, groundKey, groundLeft, useGround, weapon, block,
+    plan, scent, alertRate, stalkStep, box, swayAt, drift, shoot, outcome, skin, settle, play, close, told, endRoad, state: () => st, _toAim: toAim, _loose: loose };
 })();
 if (typeof module !== "undefined") module.exports = HUNTGAME;

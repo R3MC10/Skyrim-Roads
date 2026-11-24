@@ -59,6 +59,8 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "New meals: roast leg of goat, roast rabbit leg and bristleback stew.": "Nowe dania: pieczony udziec z kozicy, pieczony zajęczy udziec i gulasz ze szczeciniaka.",
     "New perks: Clean Kill, Wind Reader and Skinner (Archery), Stalker (Sneak), and Angler, Line Sense and Deep Waters (Alchemy, next to Forager). Each one changes how the games play.":
       "Nowe atuty: Clean Kill, Wind Reader i Skinner (Łucznictwo), Stalker (Skradanie) oraz Angler, Line Sense i Deep Waters (Alchemia, obok Forager). Każdy zmienia to, jak grasz w te mini-gry.",
+    "Playing together: friends hunting the same grounds on the same day meet the same animals in the same wind, and friends fishing side by side get the same bites. On the road only the party leader takes the shot, and everyone hears what they brought down.":
+      "Gra razem: znajomi polujący w tych samych terenach tego samego dnia spotykają te same zwierzęta przy tym samym wietrze, a łowiący ramię w ramię dostają te same brania. W drodze strzela tylko przywódca drużyny, a wszyscy słyszą, co upolował.",
   });
   I18N_EXTRA.pat.push(
     [/^(\d+) arrows$/, (m) => `${m[1]} strzał`], [/^(\d+) bolts$/, (m) => `${m[1]} bełtów`],

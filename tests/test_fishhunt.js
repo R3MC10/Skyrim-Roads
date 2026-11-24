@@ -3,7 +3,7 @@ const fs = require("fs"), vm = require("vm"), path = require("path");
 const W = process.env.W || path.join(__dirname, "../game/");
 const c = vm.createContext({ process: { env: process.env }, console, Math, Date, JSON, Float64Array, Float32Array, Uint8Array, Int32Array, Uint16Array, Int16Array, Object, Array, Set, Map, Proxy, Number, String, RUNS: 10 });
 const TBT = fs.readFileSync(path.join(__dirname, "test_tbfight.js"), "utf8");
-const FILES = JSON.parse(TBT.match(/for \(const f of (\[[^\]]+\])\)/)[1]).concat(["smithing.js", "cooking.js", "gather.js", "hunting.js", "fishing.js", "huntgame.js"]).filter((f, i, a) => a.indexOf(f) === i);
+const FILES = JSON.parse(TBT.match(/for \(const f of (\[[^\]]+\])\)/)[1]).concat(["smithing.js", "cooking.js", "gather.js", "hunting.js", "fishing.js", "huntgame.js", "coop.js", "party.js", "partyplay.js", "lootvote.js"]).filter((f, i, a) => a.indexOf(f) === i);
 for (const f of FILES) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
 vm.runInContext(TBT.slice(TBT.indexOf("const LEVELS"), TBT.indexOf("{ const TUNE")) + "; this.make = make;", c);
 let fails = 0, n = 0;
@@ -151,6 +151,70 @@ const share = (list, id) => { const t = list.reduce((a, [, w]) => a + w, 0), f =
   }
   const src = ["fishing.js", "huntgame.js"].map((f) => fs.readFileSync(W + f, "utf8")).join("\n");
   for (const k of keys) ok(src.includes(`"${k}"`), "perk effect is read in the games: " + k);
+}
+// ---------------------------------------------------------------- network: two phones, same seed, same result
+{ const net = (x) => JSON.parse(JSON.stringify(x));   // what goes over the wire
+  const two = () => { const a = hero({ skinner: 1 }), b = hero({ skinner: 1 }); a.id = "pA"; a.name = "Ana"; b.id = "pB"; b.name = "Bo"; for (const s of [a, b]) G.give(s, "skin_knife"); return [a, b]; };
+  const t = 1.8e9;
+  // hunting grounds: party mates in the same village, same day, same hunt of the day -> same animal, wind, distance, result
+  { const [a, b] = two(), sa = H.seedFor(a, {}, t), sb = H.seedFor(b, {}, t);
+    ok(sa === sb && /^ground\|Riverwood\|/.test(sa), "two phones in Riverwood get the same hunt seed: " + sa);
+    const ra = H.rng(sa), rb = H.rng(sb), ia = H.pickAnimal(a, [a.x, a.y], ra), ib = H.pickAnimal(b, [b.x, b.y], rb);
+    const ga = H.plan(a, ia, {}, ra), gb = H.plan(b, ib, {}, rb);
+    ok(ia === ib && JSON.stringify(ga.wind) === JSON.stringify(gb.wind) && ga.dist === gb.dist && ga.facing === gb.facing && ga.headT === gb.headT, `same animal, wind and distance on both phones (${ia}, wind ${ga.wind.dir}x${ga.wind.str}, ${ga.dist.toFixed(1)})`);
+    ga.seed = sa; gb.seed = sb;
+    for (const hit of ["heart", "body"]) {
+      const qa = H.outcome(ga, hit, H.rng(sa + "|res")), qb = H.outcome(gb, hit, H.rng(sb + "|res"));
+      ok(qa === qb, `the ${hit} shot ends the same way on both phones (${qa})`);
+    }
+    const ra2 = H.settle(a, { ...ga }, "heart", "clean", H.rng(sa + "|res")), rb2 = H.settle(b, { ...gb }, "heart", "clean", H.rng(sb + "|res"));
+    ok(JSON.stringify(ra2.got) === JSON.stringify(rb2.got) && ra2.text === rb2.text, "same hide, meat and trophy on both phones: " + ra2.text);
+    H.useGround(a, undefined, t); H.useGround(b, undefined, t);
+    const na = H.seedFor(a, {}, t), nb = H.seedFor(b, {}, t);
+    ok(na === nb && na !== sa, "the next hunt of the day is new, and still the same for both");
+    ok(H.seedFor(a, {}, t + 24 * 3600 / G.GAME_SPEED) !== na, "a new day, new animals");
+    // the same seed, replayed a hundred times, never drifts
+    let same = true; for (let k = 0; k < 100; k++) { const r1 = H.rng("x" + k), r2 = H.rng("x" + k); for (let j = 0; j < 20; j++) if (r1() !== r2()) same = false; }
+    ok(same, "the seeded roll is the same every time");
+  }
+  // the road: only the leader plays the hunt; the member's phone gets the leader's halt and the result, word for word
+  { const P = c.PARTYPLAY, [lead, mem] = two();
+    if (!P) ok(false, "partyplay loaded");
+    else {
+      let p = { id: "party1", leader: lead.id, leaderName: lead.name, members: [{ id: lead.id, name: lead.name }, { id: mem.id, name: mem.name }] };
+      lead.trip = { destName: "Whiterun", start: [0.41, 0.52], idx: 3, status: "encounter", encounter: { name: "Elk", lvl: 5 } };
+      const s1 = H.seedFor(lead, { road: true }), s2 = H.seedFor(net(lead), { road: true });
+      ok(s1 === s2 && s1.startsWith("road|Whiterun|"), "a road hunt's seed comes from the trip and the beast (same from a copy sent over the wire)");
+      const g = H.plan(lead, "elk", { road: true }, H.rng(s1)); g.seed = s1;
+      const q = H.outcome(g, "heart", H.rng(s1 + "|res")), res = H.settle(lead, g, "heart", q, H.rng(s1 + "|res"));
+      p = P.halt(p, lead.id, { kind: "encounter", name: "Elk", opts: [["fight", "Fight", "btn"], ["huntroad", "Stalk and shoot", "btn"]] }, t);
+      mem.trip = { follow: lead.id, status: "hold", destName: "Whiterun" };
+      ok(P.canVote(net(p), mem.id, t) && !P.canDecide(mem, p) && P.canDecide(lead, p), "the member following sees the halt and can only vote; the leader decides");
+      const text = H.told({ ...res, kill: res.kill }, "Elk");
+      p = P.resolve(p, lead.id, text, t + 5);
+      const onB = net(p);   // the member's phone
+      ok(onB.halt.done.text === text && (res.kill ? text.includes(D.ITEMS.pelt_elk.name) || !res.got.pelt_elk : /got away/.test(text)), "the member hears exactly what the leader got: " + onB.halt.done.text);
+      ok(P.resolve(onB, mem.id, "something else").halt.done.text === text, "a member can't rewrite the result");
+      ok(!mem.inv.some((r) => r.item === "pelt_elk"), "the hides stay with the leader who shot (no double loot)");
+    }
+  }
+  // fishing side by side: same water, hour and cast -> same fish, same bite, same fight
+  { const [a, b] = two(); for (const s of [a, b]) G.give(s, "fishing_rod");
+    const ctx = { water: "river", hold: "Whiterun", night: false, wx: "clear", cast: 0.7 };
+    const ka = F.castSeed(ctx, 1, t), kb = F.castSeed(net(ctx), 1, t);
+    ok(ka === kb && F.castSeed(ctx, 2, t) !== ka, "two anglers' first casts share a seed; the next cast is new");
+    const fa = F.roll(a, ctx, F.rng(ka + "|fish")), fb = F.roll(b, ctx, F.rng(kb + "|fish"));
+    const wa = F.waitFor(ctx, F.rng(ka + "|wait")), wb = F.waitFor(ctx, F.rng(kb + "|wait"));
+    const ha = F.hook(a, fa, F.rng(ka + "|hook")), hb = F.hook(b, fb, F.rng(kb + "|hook"));
+    ok(fa === fb && wa.at === wb.at && JSON.stringify(wa.nib) === JSON.stringify(wb.nib) && JSON.stringify(ha.band) === JSON.stringify(hb.band) && ha.runIn === hb.runIn, `same fish (${fa}), bite and fight on both phones`);
+    const la = F.land(a, fa, F.rng(ka + "|land")), lb = F.land(b, fb, F.rng(kb + "|land"));
+    ok(la.item === lb.item && JSON.stringify(la.extra) === JSON.stringify(lb.extra), "same catch and cleaning on both phones");
+  }
+  // nothing shared is rolled with Math.random any more (only the defaults of the pure helpers, which play() always overrides)
+  for (const f of ["fishing.js", "huntgame.js"]) {
+    const src = fs.readFileSync(W + f, "utf8").replace(/rnd = Math\.random/g, "").replace(/\/\*[\s\S]*?\*\//g, "");
+    ok(!/Math\.random/.test(src), f + ": no stray Math.random in the game");
+  }
 }
 console.log(fails ? `${fails}/${n} FAILED` : `fishhunt: all ${n} passed`);
 process.exit(fails ? 1 : 0);

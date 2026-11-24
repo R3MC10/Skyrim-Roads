@@ -13,6 +13,7 @@ const PATCHNOTES = (() => {
       "Skinning gives meat, hides and sometimes a trophy (antlers, goat horns, a fox tail, a lucky rabbit's foot). A Skinning Knife (general stores) keeps every hide whole; a Steel Skinning Knife (forge) gets extra hides, meat and trophies. Hides tan into leather at any forge, and the forge uses them up.",
       "New meals: roast leg of goat, roast rabbit leg and bristleback stew.",
       "New perks: Clean Kill, Wind Reader and Skinner (Archery), Stalker (Sneak), and Angler, Line Sense and Deep Waters (Alchemy, next to Forager). Each one changes how the games play.",
+      "Playing together: friends hunting the same grounds on the same day meet the same animals in the same wind, and friends fishing side by side get the same bites. On the road only the party leader takes the shot, and everyone hears what they brought down.",
     ] },
     { id: "b143-spelltactics", build: 143, date: "24 Nov 2026", title: "Cleaner spell cards", items: [
       "Spell, power and shout cards in the Magic menu no longer have the \"Use first in every fight\" button. Set up what you cast in a fight in the Tactics tab instead; your current tactics stay as they are.",
