@@ -203,6 +203,7 @@ const RUMOURS = (() => {
       const db = GUILDS.rank(s, "brotherhood"); if (db && db.i >= 2) deeds.push("whispers of the Dark Brotherhood");
     }
     pos *= 1 + pfx(s, "fame");
+    if ((typeof LIVING !== "undefined")) { pos += LIVING.points(s, hold); deeds.push(...LIVING.deedWords(s, hold)); }   // deeds remembered (livingworld.js)
     const bounty = (s.bounty || {})[hold] || 0;
     const pts = Math.round(pos - Math.min(60, bounty / 20) - (s.resisted?.[hold] ? 15 : 0));
     if (bounty) deeds.push(`${bounty} gold bounty`);
@@ -227,7 +228,8 @@ const RUMOURS = (() => {
     return { n: 1, text: "Nearly empty. One snorer by the fire." };
   }
   const KNOCK = 0.15, KNOCK_SELL = 0.1;
-  const knockBump = (s, town) => { const sd = standing(s, holdOf(town)); return KNOCK * Math.max(0, 1 - pfx(s, "knock")) * (sd.pts >= 50 ? 0.5 : 1); };
+  const knockBump = (s, town) => { if (s?.rw?.knock?.free && s.rw.knock.town === town) return 0;   // a shopkeeper you found at the inn (livingworld.js)
+    const sd = standing(s, holdOf(town)); return KNOCK * Math.max(0, 1 - pfx(s, "knock")) * (sd.pts >= 50 ? 0.5 : 1); };
   function knocked(s, town = s?.location, t = now()) {
     const k = s?.rw?.knock;
     return !!(k && town && k.town === town && t < k.until && !G.shopsOpen(t));
@@ -237,6 +239,7 @@ const RUMOURS = (() => {
     if (!town || !G.shopTypes(town).length) return { err: "There's no shop here." };
     if (G.shopsOpen(t)) return { err: "The shops are open. Walk right in." };
     if (typeof TOWNS !== "undefined" && TOWNS.wanted(s)) return { err: "Nobody opens the door for a wanted criminal." };
+    if ((typeof LIVING !== "undefined") && LIVING.shut(s, holdOf(town))) return { err: "Nobody in this hold opens a door to you at night. Make amends first." };
     const h = hour(t), left = h >= 8 ? 24 - h + 8 : 8 - h;
     st(s).knock = { town, until: t + gameH(left) };
     const b = Math.round(knockBump(s, town) * 100), sd = standing(s, holdOf(town));
@@ -248,6 +251,7 @@ const RUMOURS = (() => {
     if (!s || !town || !place(town)) return 1;
     let m = 1 - standing(s, holdOf(town)).off;
     if (knocked(s, town, t)) m *= 1 + knockBump(s, town);
+    if ((typeof LIVING !== "undefined")) m *= LIVING.priceAdj(s, holdOf(town));   // scorned: shops charge more (livingworld.js)
     return m;
   }
   /* and what they pay you by this (engine.js sellPrice) */
@@ -275,6 +279,7 @@ const RUMOURS = (() => {
     if (sd.bounty) out.push("I know your face. There's a price on it in this hold.", "Behave yourself. We know what you did.");
     if (sd.pts >= 50) out.push(`Hero of ${hold}! It's an honour.`, "The children play at being you, you know.");
     else if (sd.pts >= 25) out.push("Good to see you back. You've done right by this hold.");
+    if ((typeof LIVING !== "undefined")) out.push(...LIVING.lines(s, hold));   // caravans, crimes, dragons, whispers seen through (livingworld.js)
     return out;
   }
   /* extra guard barks (immerse.js adds them to its pool) */
@@ -350,17 +355,19 @@ const RUMOURS = (() => {
         const wait = waitLeft(s, town, "street"), n = leads(s).length;
         out += `<div class="item rw-ask"><div class="t">Chat with the locals<span>${wait > 0 ? `They've told you all they know. Try again in about ${fmtLeft(wait)}.` : "Free, but street talk is wrong more often than the innkeeper."}</span></div><button class="btn sm" data-rw="hear" data-src="street" ${wait > 0 || n >= MAX_ACTIVE ? "disabled" : ""}>Chat</button></div>`;
       }
+      if ((typeof LIVING !== "undefined")) out += LIVING.townHTML(s, town, section, open);   // who's about, doors, whispers (livingworld.js)
       return out;
     } catch (e) { return ""; }
   }
   /* Travel tab: a card when you're standing where a rumour points */
   function card(s) {
-    const lead = leadHere(s); if (!lead) return "";
+    const lw = (typeof LIVING !== "undefined") ? LIVING.card(s) : "";   // a whisper that came true here (livingworld.js)
+    const lead = leadHere(s); if (!lead) return lw;
     const K = KINDS[lead.kind], verb = { bandits: "⚔ Find the camp", shipment: "📦 Search for the cart", lights: "✨ Wait for the lights", rescue: "🕯 Search for them", beast: "🐾 Track it down" }[lead.kind];
-    return `<div class="panel xcard rw-card"><h2>${K.icon} ${esc(K.title)}</h2><p class="sub">“${esc(cap(lead.say))}” Heard in ${esc(lead.town)}. It might be true.</p><button class="btn pri" data-rw="act" data-id="${esc(lead.id)}" style="width:100%">${verb}</button></div>`;
+    return `<div class="panel xcard rw-card"><h2>${K.icon} ${esc(K.title)}</h2><p class="sub">“${esc(cap(lead.say))}” Heard in ${esc(lead.town)}. It might be true.</p><button class="btn pri" data-rw="act" data-id="${esc(lead.id)}" style="width:100%">${verb}</button></div>` + lw;
   }
   /* map marks for map.js */
-  const marks = (s) => { try { return leads(s).map((r) => ({ id: r.id, pos: place(r.place).slice(0, 2), label: `${KINDS[r.kind].icon} ${r.place}`, here: s.location === r.place })); } catch { return []; } };
+  const marks = (s) => { try { return leads(s).map((r) => ({ id: r.id, pos: place(r.place).slice(0, 2), label: `${KINDS[r.kind].icon} ${r.place}`, here: s.location === r.place })).concat((typeof LIVING !== "undefined") ? LIVING.marks(s) : []); } catch { return []; } };
   /* Journal → Misc */
   function panel(s) {
     try {
@@ -371,7 +378,7 @@ const RUMOURS = (() => {
       return `<div class="panel rw-panel"><h2>🍺 Word around Skyrim</h2><p class="sub">Ask innkeepers what's new, or chat with the locals in the streets. Rumours put a mark on your map and last about a day and a half. Most are true. Some aren't.</p>
         ${rows ? `<div class="list">${rows}</div>` : `<p class="sub">No leads right now.</p>`}
         ${r.seen ? `<p class="sub">Rumours heard: ${r.seen} · just talk: ${r.duds}</p>` : ""}
-        <h3 class="xh">Your name in the holds</h3><p class="sub">What you've done gets around. Friends of a hold get 3% off in its shops, heroes 6%. Crimes drag your name down.</p><div class="list">${reps}</div></div>`;
+        <h3 class="xh">Your name in the holds</h3><p class="sub">What you've done gets around. Friends of a hold get 3% off in its shops, heroes 6%. Crimes drag your name down.</p><div class="list">${reps}</div></div>` + ((typeof LIVING !== "undefined") ? LIVING.panel(s) : "");
     } catch { return ""; }
   }
 
