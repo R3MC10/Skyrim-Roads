@@ -134,6 +134,7 @@ const G = (() => {
       if (it && (it.slot === "ring" || it.slot === "amulet") && r.qty > 1) { const n = r.qty - 1; r.qty = 1; for (let i = 0; i < n; i++) s.inv.push({ id: s.nextInv++, item: r.item, qty: 1, charge: null }); }
     }
     if (typeof AMMO !== "undefined") { const m = AMMO.migrate(s); if (m) note(s, m); }
+    if (typeof CHARGE !== "undefined") CHARGE.migrate(s);   // enchanted weapons with no charge number start full (chargebar.js)
     if (s.horse && typeof HORSES !== "undefined") HORSES.fix(s);   // a horse once sent off to a stables (or marked dead or lost) is yours again, downed
     if (fixTactics(s)) note(s, "⚔ Your tactics were fixed: rules you added under \"Always → Attack\" never fired. They now come first.");
     if (typeof SPELLCRAFT !== "undefined") SPELLCRAFT.register(s);   // crafted spells back into the spellbook
@@ -294,6 +295,12 @@ const G = (() => {
   function unequip(s, slot) { delete lo(s).equipment[slot]; }
   /* which equipment slot a row is worn in (rings can be on either finger) */
   function wornSlot(s, id) { const eq = lo(s).equipment; return Object.keys(eq).find((k) => eq[k] === id) || null; }
+  /* [OURS] Remigiusz: "equipped gear should never show when selling items, and the same applies when trading inventory
+     with a follower or another player." How many of a row you have on (a stack of 2 swords can be in both hands), how
+     many you could hand away, and the hand-away list: worn rows drop out, a pair with one worn shows as one. */
+  function wornCount(s, id) { let n = 0; for (const v of Object.values(lo(s)?.equipment || {})) if (v === id) n++; return n; }
+  function freeQty(s, id) { const r = invRow(s, id); return r ? Math.max(0, (r.qty || 1) - wornCount(s, id)) : 0; }
+  function handable(s, rows = s.inv) { const out = []; for (const r of rows || []) { const n = freeQty(s, r.id); if (n > 0) out.push(n === r.qty ? r : { ...r, qty: n }); } return out; }
   /* [OURS] dual wielding: a one-handed weapon in your left hand (no shield). Remigiusz: "Dual weilding should be possible." */
   const canOffhand = (it) => !!it && it.slot === "weapon" && it.hands !== 2 && it.skill === "One-Handed" && !it.staff;
   function equipOff(s, id) {
@@ -412,7 +419,7 @@ const G = (() => {
   });
   /* dual casting: magicka for both hands (Dual Casting perks cut it) */
   const dualCost = (s, sp, f) => spellCost(s, sp) * (typeof MAGIC !== "undefined" ? MAGIC.DUAL_COST : 2.8) * (1 - Math.min(0.5, PX(s, "dualcost", f, { school: sp.school })));
-  const enchantCost = (e, s) => F.enchantCost(e.base_cost, e.magnitude, e.max_magnitude, skill(s, "Enchanting")) * (1 - 0.1 * P(s, "enchanter"));
+  const enchantCost = (e, s) => F.enchantCost(e.base_cost, e.magnitude, e.max_magnitude, skill(s, "Enchanting")) * (1 - 0.1 * P(s, "enchanter")) * (typeof CHARGE !== "undefined" ? CHARGE.costMult(s) : 1);   // Thrifty Runes
   function describeAction(a) {
     if (D.BASIC_ACTIONS[a]) return D.BASIC_ACTIONS[a];
     const [kind, arg] = a.split(":");
@@ -1392,6 +1399,7 @@ const G = (() => {
     if (!shopsOpen(t) && !knockOk(s, t)) return `The shops are closed (${clockText(t)}).`;
     const r = invRow(s, id);
     if (!r || r.qty < qty) return "You don't have that.";
+    if (qty > freeQty(s, id)) return "You're wearing that. Take it off first.";   // [OURS] worn gear is never sold
     if (D.ITEMS[r.item].noTrade) return `The ${D.ITEMS[r.item].name} is bound to you. No merchant will take it.`;
     const price = lotPrice(s, r.item, qty, "sell", r), name = D.ITEMS[r.item].name, item = r.item;
     const wasStolen = !!invRow(s, id)?.stolen;
@@ -1430,7 +1438,7 @@ const G = (() => {
   return {
     MAP_W, MAP_H, STEP_SECONDS, SLOTS, ARMOR_SLOTS, JEWEL_SLOTS, wornSlot, GAME_SPEED, now, pxDist, holdAt, clock, isNight, shopsOpen, clockText,
     P, wtype, fxSum, lockChance, lockRoll, setAllyProvider, hiddenChance, rested, haggle, SPELL_TIER, newSave, maxHealth, maxMagicka, maxStamina, curHealth, setHealth, skill, useSkill, levelUp, fightLevel,
-    riding, withHorse, give, take, invRow, carried, capacity, overweight, equipment, equip, unequip, equipOff, canOffhand, countRestore, itemStats,
+    riding, withHorse, STACKABLE, give, take, invRow, wornCount, freeQty, handable, carried, capacity, overweight, equipment, equip, unequip, equipOff, canOffhand, countRestore, itemStats,
     loadout: lo, addRule, ruleSlot, deadRules, fixTactics, saveLoadoutAs, deleteLoadout, spellCost, describeRule, describeAction, Fight, scaleEnemy, scaleQuestFoe, questLevel, rollLoot,
     rollEncounter, die, speed, discoverRadius, startTrip, startEvent, eventChoices, eventChoice, buyFrom, minutesLeft, minutesTo, posAfter, advance, encounterAction, migrate, PLACES,
     spellDamage, spellHeal, spellArmor, spellSummon, spellCalm, dualCost, shopTypes, shopStock, buyPrice, sellPrice, lotPrice, buy, sell, readTome, drinkPotion, recharge, clone, note,

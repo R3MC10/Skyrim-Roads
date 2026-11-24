@@ -110,7 +110,7 @@ const BSCENE = (() => {
   const ovCache = new Map();
   function overlayFor(W, Hh, o) {
     if (!o.sky && !o.wagon) return null;
-    const k = `${W}|${Hh}|${o.style}|${o.sky ? o.sky.key : ""}|${o.wagon || ""}`;
+    const k = `${W}|${Hh}|${o.sky ? o.sky.key : ""}|${o.wagon || ""}`;
     if (ovCache.has(k)) return ovCache.get(k);
     let cv = null;
     try {
@@ -118,13 +118,13 @@ const BSCENE = (() => {
         if (o.sky && typeof SKY !== "undefined") SKY.overlay(g, H, W, Hh, o.sky, { seed: "bscene", ground: Hh * 0.8, cover: false, weather: false, season: false });
         if (o.wagon && typeof CARAVANS !== "undefined") { g.save(); g.translate(W * 0.36, Hh * 0.38); g.globalAlpha = 0.9; CARAVANS.drawWagon(g, H, W * 0.3, Hh * 0.42, { khajiit: o.wagon === "khajiit", cover: o.wagon !== "cart", animal: true }); g.restore(); }
       };
-      cv = typeof ART !== "undefined" && ART.canvas ? ART.canvas(W, Hh, draw, { style: o.style, block: 3 }) : null;
+      cv = typeof ART !== "undefined" && ART.canvas ? ART.canvas(W, Hh, draw) : null;
     } catch (e) { cv = null; }
     if (ovCache.size > 8) ovCache.delete(ovCache.keys().next().value);
     ovCache.set(k, cv);
     return cv;
   }
-  /* behind the fighters: plate, light and weather, then every prop in manifest order. o: { W, Hh, t, ox, sky, wagon, style } */
+  /* behind the fighters: plate, light and weather, then every prop in manifest order. o: { W, Hh, t, ox, sky, wagon } */
   function back(g, sc, o) {
     const { W, Hh } = o, { pw, left } = frameOf(W, Hh), cam = camOf(o.ox, W), P = DATA.planes, t = o.t || 0;
     strip(g, img(sc.bg), left + cam * P.far * pw, 0, pw, Hh, W);

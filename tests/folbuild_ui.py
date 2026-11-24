@@ -1,4 +1,4 @@
-"""Followers who learn like you (folbuild.js): Follower tab -> Skills at phone size (360x780, ink and pixel) and PC
+"""Followers who learn like you (folbuild.js): Follower tab -> Skills at phone size (360x780) and PC
 (1280x800). Their build badge, level bar, every skill with a bar, perks by tree; giving a bow makes them an archer.
 Usage: python3 folbuild_ui.py PORT   (screenshots go to $OUT or tests/out_folbuild/)"""
 import asyncio, sys, os
@@ -21,7 +21,11 @@ async def run(b, style, vw, vh, tag):
     await ctx.add_init_script(f"localStorage.setItem('rotn_prefs', JSON.stringify({{artStyle:'{style}'}}))")
     pg = await ctx.new_page(); errs = []; pg.on("pageerror", lambda e: errs.append(str(e)))
     await pg.goto(f"http://localhost:{PORT}/index.html?assets&net=bc&notut&p=fb{tag}"); await pg.wait_for_timeout(1500)
-    await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Sigrid"); await pg.click("#begin"); await pg.wait_for_timeout(1200)
+    await pg.wait_for_selector(".press", state="attached", timeout=45000); await pg.wait_for_timeout(800)
+    await pg.evaluate("document.querySelector('.press')?.click()"); await pg.wait_for_timeout(600)
+    await pg.wait_for_selector(".mi[data-t=new]", state="attached", timeout=20000)
+    await pg.evaluate("document.querySelector('.mi[data-t=new]')?.click()"); await pg.wait_for_selector("#nm", state="attached", timeout=20000)
+    await pg.evaluate("()=>{const n=document.querySelector('#nm'); n.value='Sigrid'; n.dispatchEvent(new Event('input',{bubbles:true})); document.querySelector('#begin').click()}"); await pg.wait_for_timeout(1500)
     await pg.evaluate(SETUP); await pg.evaluate(CLEAR)
     async def tap(sel):
         try: await pg.click(sel, timeout=4000); await pg.wait_for_timeout(250); return True
@@ -64,7 +68,6 @@ async def main():
         exe = os.environ.get("CHROME") or ("/usr/bin/google-chrome" if os.path.exists("/usr/bin/google-chrome") else None)
         b = await (p.chromium.launch(executable_path=exe, args=["--no-sandbox"]) if exe else p.chromium.launch(args=["--no-sandbox"]))
         await run(b, "ink", 360, 780, "phone_ink")
-        await run(b, "pixel", 360, 780, "phone_pixel")
         await run(b, "ink", 1280, 800, "pc_ink")
         await b.close()
     print("RESULT", "OK" if not fails else f"FAIL {len(fails)}")

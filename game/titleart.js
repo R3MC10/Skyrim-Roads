@@ -5,11 +5,10 @@
      TITLEART.intro(onDone, { reduce })   → a ≤6 s three-panel intro (tap to skip); calls onDone once
    Layers are painted once into offscreen canvases (sky, far peaks with the Throat of the World, a pine ridge, the
    foreground cliff) and slid against each other each frame; only the aurora ribbons and the passing dragon are drawn
-   live. ~30 fps, paused when hidden; in pixel style everything is drawn at a third of the size and scaled up. */
+   live. ~30 fps, paused when hidden. */
 const TITLEART = (() => {
   const INK = "#14100c";
   let stat = { frames: 0, ms: 0 };
-  const pixel = () => ART.style() === "pixel";
 
   /* layers are painted in a landscape-shaped space 300 units tall (so peaks keep their shape on a tall phone),
      anchored to the bottom of the screen; the sky layer covers the whole height */
@@ -75,19 +74,72 @@ const TITLEART = (() => {
     g.restore();
   }
 
+  /* [OURS] the painted key art is a tall picture (1080x1920): the hero bottom-left, a dragon top-right, the city on the right.
+     On a phone it fills the screen as before; on wider windows the zoom is capped so the subjects (SUBJ, as parts of the
+     picture) always fit, and the sides are filled with a blurred, mirrored copy of the same painting fading in, so a wide
+     or ultra-wide window shows a whole scene instead of a strip of sky. ZM is the most the slow push-in ever zooms. */
+  // UPMAX: at the deepest zoom one file pixel covers at most 1.1 screen pixels (artfit; art_quality_ui.py allows 1.15), so the
+  // 1080-wide painting still fills a 1170-pixel phone edge to edge
+  const SUBJ = { x0: 0.1, x1: 0.9, y0: 0.38, y1: 0.92 }, ZM = 1.07, UPMAX = 1.1;
+  function keyFit(iw, ih, W, H, cap = Infinity) {
+    const cov = Math.max(W / iw, H / ih);
+    const s = Math.min(cov, cap * UPMAX / ZM, H / ((SUBJ.y1 - SUBJ.y0) * ih * ZM), W / ((SUBJ.x1 - SUBJ.x0) * iw * ZM));
+    const w = iw * s, h = ih * s;
+    // bottom-aligned where it can be; just enough of the foreground rocks is cropped to keep the hero's head clear of the top
+    const y = Math.min(H - SUBJ.y1 * h, Math.max(H - h, H - H / ZM - SUBJ.y0 * h));
+    return { x: (W - w) / 2, y, w, h, s };
+  }
+  let comp = null, compKey = null, compW = 0, compH = 0, compCap = 0, lastFit = null, lastZ = 1, lastCss = 1;
+  function skyTone(im) {
+    try { const c = document.createElement("canvas"); c.width = c.height = 1; const g = c.getContext("2d"); g.drawImage(im, 0, 0, im.naturalWidth, Math.max(1, im.naturalHeight * 0.04), 0, 0, 1, 1); const d = g.getImageData(0, 0, 1, 1).data; return `rgb(${d[0]},${d[1]},${d[2]})`; } catch { return "#1b2636"; }
+  }
+  function buildComp(im, W, H, cap = Infinity) {
+    const nw = im.naturalWidth, nh = im.naturalHeight, f = keyFit(nw, nh, W, H, cap), f0 = keyFit(nw, nh, W, H);
+    // [artfit] held back to the file's own pixels: remember how big a file this screen would need (for repainting)
+    if (f.s < f0.s * 0.995 && typeof ARTFIT !== "undefined") ARTFIT.short("title", nw * f0.s * ZM / cap, nh * f0.s * ZM / cap);
+    const c = document.createElement("canvas"); c.width = W; c.height = H;
+    const g = c.getContext("2d");
+    g.fillStyle = skyTone(im); g.fillRect(0, 0, W, H);
+    if (f.x > 0.5 || f.y > 0.5) {
+      // the sides: the same painting stretched across the whole window and heavily blurred, so its colours (the dark
+      // hillside on the left, the sunset in the middle, the city's glow on the right) carry on out to the edges at the
+      // same horizon; no copies of the hero
+      const d = 24, sc = document.createElement("canvas"); sc.width = Math.max(2, Math.ceil(W / d)); sc.height = Math.max(2, Math.ceil(H / d));
+      sc.__soft = true; const sg = sc.getContext("2d"); sg.imageSmoothingEnabled = true; sg.imageSmoothingQuality = "high";
+      if (typeof sg.filter === "string") sg.filter = "blur(1.5px)";
+      sg.drawImage(im, -sc.width * 0.04, f.y / d, sc.width * 1.08, f.h / d);
+      g.save(); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = "high"; g.drawImage(sc, 0, 0, W, H); g.restore();
+      g.fillStyle = "rgba(8,10,16,.3)"; g.fillRect(0, 0, W, H);
+      const side = g.createLinearGradient(0, 0, W, 0);   // a soft vignette toward the far edges
+      side.addColorStop(0, "rgba(4,5,8,.55)"); side.addColorStop(Math.max(0.01, f.x / W * 0.9), "rgba(4,5,8,.08)");
+      side.addColorStop(Math.min(0.99, 1 - f.x / W * 0.9), "rgba(4,5,8,.08)"); side.addColorStop(1, "rgba(4,5,8,.55)");
+      g.fillStyle = side; g.fillRect(0, 0, W, H);
+      // the painting itself, its edges feathered into the copies
+      const a = document.createElement("canvas"); a.width = W; a.height = H;
+      const ag = a.getContext("2d"); ag.drawImage(im, f.x, f.y, f.w, f.h);
+      ag.globalCompositeOperation = "destination-out";
+      const fe = f.w * 0.16;
+      if (f.x > 0.5) {
+        for (const [x0, x1] of [[f.x, f.x + fe], [f.x + f.w, f.x + f.w - fe]]) {
+          const gr = ag.createLinearGradient(x0, 0, x1, 0); gr.addColorStop(0, "rgba(0,0,0,1)"); gr.addColorStop(1, "rgba(0,0,0,0)");
+          ag.fillStyle = gr; ag.fillRect(Math.min(x0, x1) - 1, 0, fe + 2, H);
+        }
+      }
+      if (f.y > 0.5) { const fy = Math.min(f.h * 0.08, f.y + H * 0.05), gr = ag.createLinearGradient(0, f.y, 0, f.y + fy); gr.addColorStop(0, "rgba(0,0,0,1)"); gr.addColorStop(1, "rgba(0,0,0,0)"); ag.fillStyle = gr; ag.fillRect(0, f.y - 1, W, fy + 1); }
+      g.drawImage(a, 0, 0);
+    } else g.drawImage(im, f.x, f.y, f.w, f.h);
+    comp = c; compKey = im; compW = W; compH = H; compCap = cap; lastFit = f;
+  }
+
   /* animate the title panorama on `cv` (full screen); returns stop() */
   function start(cv, opts = {}) {
-    const reduce = !!opts.reduce, px = pixel(), k = px ? 1 / 3 : Math.min(2, (typeof devicePixelRatio !== "undefined" && devicePixelRatio) || 1);   // 2: sharp on phones (1.5 looked soft at 3x), still cheap enough to animate
-    let W = 0, Hh = 0, L = null, stopped = false, raf = 0, last = 0, t0 = performance.now();
+    const reduce = !!opts.reduce, k = Math.min(2, (typeof devicePixelRatio !== "undefined" && devicePixelRatio) || 1);   // 2: sharp on phones (1.5 looked soft at 3x), still cheap enough to animate
+    let W = 0, Hh = 0, L = null, stopped = false, raf = 0, last = 0, t0 = performance.now(), unitPx = 1;
     const g = cv.getContext("2d");
     function build() {
-      if (px) {   // pixel art: every art pixel the same whole number of screen pixels (no uneven rows), a hair past the edges
-        const d = (typeof devicePixelRatio !== "undefined" && devicePixelRatio) || 1, step = Math.max(1, Math.round(3 * d));
-        W = Math.max(1, Math.ceil(innerWidth * d / step)); Hh = Math.max(1, Math.ceil(innerHeight * d / step));
-        cv.style.width = (W * step / d) + "px"; cv.style.height = (Hh * step / d) + "px"; cv.dataset.fit = "pixel";
-      } else { W = Math.max(1, Math.round(innerWidth * k)); Hh = Math.max(1, Math.round(innerHeight * k)); cv.style.width = cv.style.height = ""; delete cv.dataset.fit; }
+      W = Math.max(1, Math.round(innerWidth * k)); Hh = Math.max(1, Math.round(innerHeight * k)); cv.style.width = cv.style.height = "";
       cv.width = W; cv.height = Hh;
-      cv.style.imageRendering = px ? "pixelated" : "";
+      try { const bw = cv.getBoundingClientRect().width; unitPx = bw > 0 ? bw * ((typeof devicePixelRatio !== "undefined" && devicePixelRatio) || 1) / W : 1; } catch { unitPx = 1; }   // screen pixels per canvas pixel
       const lw = W * 1.12;
       L = { sky: layer(W, Hh, paintSky, true), far: layer(lw, Hh, paintFar), mid: layer(lw, Hh, paintMid), fore: layer(lw, Hh, paintFore) };
     }
@@ -103,11 +155,14 @@ const TITLEART = (() => {
     }
     function draw(ts) {
       const a = performance.now(), t = (ts - t0) / 1000;
-      g.imageSmoothingEnabled = !px;
+      g.imageSmoothingEnabled = true;
       const key = typeof ASSETS !== "undefined" ? ASSETS.img("title") : null;
       if (key) {   // hand-painted key art: a slow push-in, with the live aurora on top
         const z = 1.04 + (reduce ? 0 : Math.sin(t * 0.05) * 0.03);
-        g.save(); g.translate(W / 2, Hh / 2); g.scale(z, z); g.translate(-W / 2, -Hh / 2); ASSETS.cover(g, key, W, Hh, 0.5, 0.4); g.restore();
+        if (compKey !== key || compW !== W || compH !== Hh || compCap !== 1 / (unitPx || 1)) buildComp(key, W, Hh, 1 / (unitPx || 1));
+        lastZ = z; lastCss = (cv.getBoundingClientRect().width || innerWidth) / W;
+        // the push-in grows from the bottom middle, so the hero's feet stay put and his head never leaves the top
+        g.save(); g.translate(W / 2, Hh); g.scale(z, z); g.translate(-W / 2, -Hh); g.drawImage(comp, 0, 0); g.restore();
         g.save(); g.globalAlpha = 0.45; aurora(g, W, Hh, reduce ? 2 : t); g.restore();
         stat.frames++; stat.ms += performance.now() - a;
         return;
@@ -116,7 +171,8 @@ const TITLEART = (() => {
       aurora(g, W, Hh, reduce ? 2 : t);
       // the dragon crosses every ~18 s, behind the far peaks
       const cyc = 18, p = ((t + 6) % cyc) / 7;
-      if (!reduce && p < 1) dragon(g, W * (1.1 - p * 1.3), Hh * (0.24 + Math.sin(p * 6) * 0.03), Math.max(0.35, Hh / 900) * (px ? 1 : 1.2), t * 7);
+      if (!reduce && p < 1) dragon(g, W * (1.1 - p * 1.3), Hh * (0.24 + Math.sin(p * 6) * 0.03), Math.max(0.35, Hh / 900) * 1.2, t * 7);
+
       const dx = (amp, sp) => (reduce ? 0 : Math.sin(t * sp) * amp * W) - W * 0.06;
       g.drawImage(L.far, dx(0.012, 0.05), 0); g.drawImage(L.mid, dx(0.025, 0.05), 0); g.drawImage(L.fore, dx(0.04, 0.05), 0);
       stat.frames++; stat.ms += performance.now() - a;
@@ -127,6 +183,15 @@ const TITLEART = (() => {
     raf = requestAnimationFrame(frame);
     if (reduce) frame(performance.now() + 1000);
     return () => { stopped = true; cancelAnimationFrame(raf); clearTimeout(tmo); removeEventListener("resize", onResize); };
+  }
+  /* where the key art sits on screen in CSS pixels (for tests): the picture, its subject box, and both at the shallowest/deepest zoom */
+  function keyRect() {
+    if (!lastFit) return null;
+    const f = lastFit, c = lastCss, H = compH, W = compW;
+    const at = (z) => { const X = (x) => (W / 2 + (x - W / 2) * z) * c, Y = (y) => (H - (H - y) * z) * c;
+      return { x: X(f.x), y: Y(f.y), w: f.w * z * c, h: f.h * z * c,
+        subj: { x0: X(f.x + SUBJ.x0 * f.w), x1: X(f.x + SUBJ.x1 * f.w), y0: Y(f.y + SUBJ.y0 * f.h), y1: Y(f.y + SUBJ.y1 * f.h) } }; };
+    return { vw: W * c, vh: H * c, now: at(lastZ), deepest: at(ZM), shallowest: at(1.01), SUBJ };
   }
   const stats = () => ({ frames: stat.frames, avgMs: stat.frames ? +(stat.ms / stat.frames).toFixed(2) : 0 });
 
@@ -208,5 +273,5 @@ const TITLEART = (() => {
     setTimeout(finish, 6000);   // never longer than six seconds
     return finish;
   }
-  return { start, stats, createScene, intro, PANELS };
+  return { start, stats, keyRect, keyFit, createScene, intro, PANELS };
 })();

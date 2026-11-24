@@ -14,10 +14,14 @@
 const { WebSocketServer } = require("ws");
 const NETSYNC = require("./netsync.js");   // party records merge field by field, by the same rules as the phones (a copy of game/netsync.js)
 
-const COLS = ["players", "bags", "attacks", "parties", "chests", "news", "raids", "trades", "ladder", "chat", "hall", "hallchest", "bounty", "homes", "gifts", "duels", "clans", "clanmem", "war", "stalls", "friends", "dms", "guards", "verses", "verselikes", "runs", "econ", "halls", "pshare", "lvotes", "tbf", "wevents", "dgame", "holds", "greets"];   // = store.js COLS (test_hub.js checks they match)
-const KEEP = { chat: 864e5, attacks: 36e5, dgame: 36e5, raids: 864e5, duels: 864e5, tbf: 36e5, runs: 6 * 36e5, pshare: 864e5, lvotes: 864e5, guards: 2 * 864e5, econ: 3 * 864e5,
+const COLS = ["players", "bags", "attacks", "parties", "chests", "news", "raids", "trades", "ladder", "chat", "hall", "hallchest", "bounty", "homes", "gifts", "duels", "clans", "clanmem", "war", "stalls", "friends", "dms", "guards", "verses", "verselikes", "runs", "econ", "halls", "pshare", "lvotes", "tbf", "wevents", "dgame", "ptrap", "lcur", "holds", "greets"];   // = store.js COLS (test_hub.js checks they match)
+const KEEP = { chat: 864e5, attacks: 36e5, dgame: 36e5, raids: 864e5, duels: 864e5, tbf: 36e5, runs: 6 * 36e5, pshare: 864e5, lvotes: 864e5, guards: 2 * 864e5, econ: 3 * 864e5, ptrap: 36e5, lcur: 6e5,
   trades: 7 * 864e5, dms: 14 * 864e5, verses: 14 * 864e5, verselikes: 14 * 864e5, bounty: 15 * 864e5, war: 15 * 864e5, gifts: 30 * 864e5, wevents: 9 * 864e5, players: 90 * 864e5 };
 const MAX_MSG = 4 * 1024 * 1024;
+/* Remigiusz: "equipped gear should never show when selling items ... or trading with another player". The game never
+   puts worn gear in these records; a record that says it does (a worn/eq flag on an item) is dropped as a safety net. */
+const HANDOVER = ["trades", "gifts", "stalls"];
+const holdsWorn = (doc) => [...(Array.isArray(doc.items) ? doc.items : []), doc.row].some((x) => x && typeof x === "object" && (x.worn || x.eq));
 
 function createHub({ store, now = () => Date.now(), authToken, events, log = () => {} }) {
   const world = {};              // col -> { id -> doc }
@@ -93,12 +97,13 @@ function createHub({ store, now = () => Date.now(), authToken, events, log = () 
     if (data.t === "put") {
       if (data.col === "players" && data.id !== c.uid) return;                   // only your own public card
       if (!data.doc || data.doc._by !== c.uid) return;                            // records are signed by who wrote them
+      if (HANDOVER.includes(data.col) && holdsWorn(data.doc)) return;            // worn gear never changes hands (trades, gifts, stalls)
       merge(data.col, data.id, data.doc);
     } else if (data.t === "hello") {
       if (data.uid !== c.uid) return;
       for (const [col, recs] of Object.entries(data.world || {})) {
         if (!okCol(col) || !recs || typeof recs !== "object") continue;
-        for (const [id, d] of Object.entries(recs)) if (col !== "players" || id === c.uid || (world.players?.[id])) merge(col, id, d);   // others' cards only update cards the hub already knows
+        for (const [id, d] of Object.entries(recs)) if (!(HANDOVER.includes(col) && d && typeof d === "object" && holdsWorn(d)) &&col !== "players" || id === c.uid || (world.players?.[id])) merge(col, id, d);   // others' cards only update cards the hub already knows
       }
     } else if (data.t === "sum") {
       if (data.uid !== c.uid) return;   // the desync check (netsync.js): fingerprints only, passed on, never kept

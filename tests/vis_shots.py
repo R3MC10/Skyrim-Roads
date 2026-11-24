@@ -1,4 +1,4 @@
-"""Screenshot tour of the main screens. Usage: python3 vis_shots.py PORT OUTPREFIX [ink|pixel]"""
+"""Screenshot tour of the main screens. Usage: python3 vis_shots.py PORT OUTPREFIX """
 import asyncio, sys
 from playwright.async_api import async_playwright
 PORT, OUT = sys.argv[1], sys.argv[2]
@@ -11,7 +11,6 @@ async def main():
         pg = await ctx.new_page(); errs = []
         pg.on("pageerror", lambda e: errs.append(str(e)))
         await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=vs{STYLE}"); await pg.wait_for_timeout(1500)
-        if STYLE == "pixel": await pg.evaluate("()=>{ART.setStyle('pixel')}")
         await pg.screenshot(path=f"{OUT}title_{STYLE}.png")
         await pg.click(".press"); await pg.wait_for_timeout(400)
         await pg.screenshot(path=f"{OUT}menu_{STYLE}.png")

@@ -18,8 +18,7 @@ async def main():
         # top bar icon present
         print("top bar:", await pg.evaluate("document.querySelector('#clock')?.innerText"), "| icon:", await pg.evaluate("!!document.querySelector('#clock img.skyic')"))
         sheets = {}
-        for style in ["ink", "pixel"]:
-            await pg.evaluate(f"ART.setStyle('{style}')")
+        for style in ["ink"]:
             rows = []
             for (tod, wx, season, north) in COMBOS:
                 urls = await pg.evaluate("""async ([tod,wx,season,north])=>{
@@ -55,7 +54,6 @@ async def main():
                 y += h + 6
             sheet.save(f"vwx/sheet_{style}.png"); sheets[style] = len(rows)
         # a real fight scene mid-replay with weather particles (snow at night, winter)
-        await pg.evaluate("ART.setStyle('ink')")
         shot = await pg.evaluate("""async()=>{ const S=window.__dbg.save(); const st=SKY.make({tod:'night',weather:'snow',season:'winter',north:true,cold:true}); const orig=SKY.state; SKY.state=()=>st;
             const base=D.ENCOUNTERS.find(e=>e.name==='Lone wolf')||D.ENCOUNTERS[0]; const f=new G.Fight(S,G.scaleEnemy(base,S.level)); f.run();
             const d=document.createElement('div'); d.style.width='360px'; d.innerHTML=FIGHTART.placeholder(f,S); document.body.appendChild(d); SKY.state=orig;

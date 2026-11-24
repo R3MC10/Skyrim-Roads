@@ -1,17 +1,17 @@
 /* Map art: hand-drawn markers for every kind of place, player tokens with portraits, footprints, and the living
    touches over the painted map (water glints, cloud shadows, birds, night lights, discovery bursts).
-   Everything is drawn once into small cached canvases through ART (so ⚙ Settings → Art style applies), and the map
+   Everything is drawn once into small cached canvases through ART, and the map
    just stamps them each frame. [OURS] */
 const MAPART = (() => {
   const cache = new Map();
-  const st = () => (typeof ART !== "undefined" ? ART.style() : "ink");
   const dprNow = () => Math.min(2, window.devicePixelRatio || 1);
   /* a cached sprite canvas, w×h CSS px */
   function sprite(key, w, h, draw) {
-    const k = `${key}|${st()}|${w}x${h}|${dprNow()}`;
+    const k = `${key}|${w}x${h}|${dprNow()}`;
     let c = cache.get(k);
     if (!c) {
-      c = ART.canvas(w, h, draw, st() === "pixel" ? { block: 2 } : {});
+      c = ART.canvas(w, h, draw);
+
       if (cache.size > 300) cache.delete(cache.keys().next().value);
       cache.set(k, c);
     }
@@ -177,7 +177,7 @@ const MAPART = (() => {
   const portraits = new Map();   // look key → canvas (or "loading")
   function portraitCanvas(look) {
     if (typeof HEROART === "undefined" || !look) return null;
-    const key = JSON.stringify(look) + st();
+    const key = JSON.stringify(look);
     const have = portraits.get(key);
     if (have && have !== "loading") return have;
     if (!have) {
@@ -190,7 +190,8 @@ const MAPART = (() => {
   /* a round token: ring colour, portrait inside (or a plain dot until it's ready). Built once per look + ring. */
   const tokens = new Map();
   function tokenCanvas(look, ring, r) {
-    const p = portraitCanvas(look), key = JSON.stringify(look) + ring + r + st() + dprNow() + (p ? 1 : 0);
+    const p = portraitCanvas(look), key = JSON.stringify(look) + ring + r + dprNow()
+ + (p ? 1 : 0);
     let c = tokens.get(key); if (c) return c;
     const d = dprNow(), size = (r + 4) * 2, R = r;
     c = document.createElement("canvas"); c.width = Math.ceil(size * d); c.height = Math.ceil((size + 4) * d);

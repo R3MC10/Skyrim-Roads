@@ -3,13 +3,91 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b166-folbuild", build: 166, date: "24 Nov 2026", title: "Followers learn like you do", items: [
+    { id: "b167-folbuild", build: 167, date: "24 Nov 2026", title: "Followers learn like you do", items: [
       "Your follower now has their own skills, the same list as yours, and they rise with use exactly like yours: swinging a sword raises One-Handed, shooting raises Archery, spells raise their school, blocking raises Block, and blows on their armour raise their armour skill.",
       "Their skill increases add up to level-ups, like yours. At each level they pick +10 Health, Magicka or Stamina to suit how they fight, and get a perk point. They still never go past your level.",
       "Their gear picks their build: give them a bow and they become an archer, a staff or spells make a mage, a two-hander a two-handed warrior, a sword and shield a tank, a dagger a sneaky thief. Change it as often as you like, it's free.",
       "They spend their perk points themselves in the trees of their build, with the same perks and real effects as yours. A new build means a free respec into the new trees.",
       "They fight by their build: archers and mages stay at the back, mages cast, sword-and-shield tanks raise their shield and draw blows away from you.",
       "Follower tab → Skills shows their level, every skill with a bar, their build and their perks. A small note pops up when one of their skills goes up. Followers you already have get skills from their level and gear.",
+    ] },
+    { id: "b166-chargebar", build: 166, date: "24 Nov 2026", title: "Charge bars", items: [
+      "Enchanted weapons and staffs now show a thin purple charge bar everywhere they appear: your pack, the Items menu and its details, tooltips, the paper doll, shops, chests and stash, follower gear, loot and loot votes, markets and trades.",
+      "When the charge runs out the bar turns red and the item says \"no charge\": the enchantment stops working until you recharge it with a filled soul gem (Items → the weapon → Recharge).",
+      "In a turn-by-turn fight a charge meter sits under your health while an enchanted weapon or staff is in your hand.",
+      "New Enchanting perk, Thrifty Runes: enchanted weapons and staffs use 20% less charge, and every kill puts 3% back.",
+      "Old saves: enchanted weapons that had lost their charge number start full again.",
+    ] },
+    { id: "b166-widetitle", build: 166, date: "24 Nov 2026", title: "The title picture on wide screens", items: [
+      "On a wide or ultra-wide PC window the main menu picture is no longer cut off: the warrior, the dragon and the city always fit, and the sides carry on the same painting softly blurred instead of black bars.",
+      "The menu words, the line under each one and the version line at the bottom are brighter and easier to read over the sky.",
+    ] },
+    { id: "b152-fishhunt", build: 152, date: "24 Nov 2026", title: "Gone fishing, gone hunting", items: [
+      "Fishing is a proper little game now: cast (time the power bar for a long cast), wait for the float to go right under, then hold to reel and let go to ease off. Keep the needle in the safe band: too tight and the line snaps, too slack and the fish gets away. Works with a finger or the Space bar.",
+      "Twelve new fish, and what bites depends on the water, the hold, the time of day and the weather. Arctic char and grayling in the cold north, glass catfish and vampire fish only at night, pogfish love the rain, and a rare goldfish only bites in a storm or a downpour.",
+      "Cleaning a catch can give salmon roe, slaughterfish eggs and pearls for alchemy. All the new fish count for fish recipes and sell at any general store.",
+      "Rods in three tiers: the old Fishing Rod, a Fine Fishing Rod (general stores, or make one at the forge) and a Master Angler's Rod (forge, needs Steel Smithing). Better rods widen the safe band, have a stronger line and bring more rare fish.",
+      "Hunting grounds in villages near the wild (Riverwood, Falkreath, Rorikstead, Ivarstead, Morthal, Dawnstar and more) and out in the wilds wherever you stop: creep up on a deer, elk, goat, hare or fox while it grazes, freeze when it looks up, mind the wind, then draw and shoot. Aim into the wind and go for the heart, just behind the front leg.",
+      "Deer, elk, goats and horkers you meet on the road while hunting now have a \"Stalk and shoot\" choice next to Fight.",
+      "Skinning gives meat, hides and sometimes a trophy (antlers, goat horns, a fox tail, a lucky rabbit's foot). A Skinning Knife (general stores) keeps every hide whole; a Steel Skinning Knife (forge) gets extra hides, meat and trophies. Hides tan into leather at any forge, and the forge uses them up.",
+      "New meals: roast leg of goat, roast rabbit leg and bristleback stew.",
+      "New perks: Clean Kill, Wind Reader and Skinner (Archery), Stalker (Sneak), and Angler, Line Sense and Deep Waters (Alchemy, next to Forager). Each one changes how the games play.",
+      "Playing together: friends hunting the same grounds on the same day meet the same animals in the same wind, and friends fishing side by side get the same bites. On the road only the party leader takes the shot, and everyone hears what they brought down.",
+    ] },
+    { id: "b157-partytraps", build: 157, date: "24 Nov 2026", title: "Traps are for the whole party", items: [
+      "In a party dungeon, traps are everyone's problem now: when the leader goes for \"Dash through\" or \"Find the trigger\", every hero in the party plays that trap at the same time on their own phone or PC. Same blades, same stones for everyone, sized to your own skills.",
+      "Whoever fails takes the hit themselves, and each trap hurts in its own way: poison darts stack up poison, blades, spikes and bear traps make you bleed, fire, steam and runes burn, an oil slick spills some of your gold, and rockfalls dent your armour. Whoever gets through is fine.",
+      "A results card shows who got through and who got hit with what. There's a time limit: anyone who hasn't finished by then (lost the connection, put the phone away) counts as caught, and the party moves on. Followers roll by their own stats and get knocked down if caught, never killed.",
+      "Chests stay the leader's job: only the leader picks the lock or smashes it, and everyone else watches live. The loot still goes into the party pile for the vote at the end, and gold is split evenly. Party members now also see the lock open (or not) exactly as it did for the leader.",
+      "When you watch another player's mini-game, you now see their pointer or finger on screen as a little arrow with their name, moving smoothly as they play.",
+      "Everyone's phone sees the same thing: the same trap, the same results and the same lock outcome. If your phone drops out in the middle of a trap and comes back in time, you get to finish it.",
+      "New perks: Trap Tinkerer (Lockpicking 40): trap games are easier, and a trap never spills your gold or dents your armour. Call Out the Danger (Sneak 40): get through a trap cleanly in a party and everyone it still catches takes a quarter less and one stack less poison or bleeding.",
+    ] },
+    { id: "b166-appicon", build: 166, date: "24 Nov 2026", title: "A proper icon", items: [
+      "The game has its own icon now: a horned Nord helm under the northern star, on a parchment shield. You'll see it on your phone's home screen, the PC game's window, taskbar and installer, and the browser tab.",
+      "On Android 13 and newer it also follows your themed icons, and game notifications show a small helm instead of a plain square. The loading screen shows the new shield too.",
+    ] },
+    { id: "b153-blackreach", build: 153, date: "24 Nov 2026", title: "Dwemer ruins and Blackreach", items: [
+      "New quest line from level 14: \"The Dwemer Lexicon\". Calcelmo, the Dwemer scholar in Markarth, sends you through Mzinchaleft, Raldbthar and Alftand. Find the lexicon, turn its rings to match his notes, then ride the great lift down.",
+      "Blackreach: a huge glowing cavern under Alftand with its own map. Walk from spot to spot past Falmer, Dwarven machines and giant mushrooms, pick glowing mushrooms and crimson nirnroot, crack the Silent City vault, and beat the Centurion master at the Great Dynamo.",
+      "A secret waits at the Tower of Mzark if you know the first word of Unrelenting Force.",
+      "Puzzle rooms in Dwemer ruins are now steam valve puzzles: turn a valve and its neighbours turn too. Get every needle up before the pressure blows.",
+      "Dwemer scrap (Solid Dwemer Metal, Dwemer Gears, Large Struts) drops from Dwarven machines. Smelt it into Dwarven ingots at any forge once you have the Dwarven Smithing perk.",
+      "The whole Dwarven set is in: dagger, mace, greatsword, battleaxe, warhammer, gauntlets, boots and shield. Find them in Dwemer ruins or make them at the forge (it uses up the materials).",
+      "New perks: Dwemer Tinkerer (Smithing), Dwemer Lore (Lockpicking), Blind Hunter (Sneak) and Steam-Proof (Heavy Armor).",
+      "In a party only the leader turns the lexicon, picks the way through Blackreach and works the vault. Everyone else follows with \"Join your leader\".",
+    ] },
+    { id: "b150-dunrooms", build: 150, date: "24 Nov 2026", title: "Painted dungeon rooms and a new dungeon map", items: [
+      "Dungeon rooms are painted now: caves, Nordic barrows and Dwemer ruins each have their own picture for fights, tough fights, traps, treasure, puzzles, rest spots and the boss. Bandit mines have a painted fight room so far; more dungeon kinds get theirs soon.",
+      "Where a room has no painting yet, it borrows the closest one (a mine uses the cave pictures, a temple the barrow ones), and only falls back to the old drawing if nothing fits.",
+      "The dungeon map is a parchment chart now: every room is an ink badge with its own symbol, corridors appear as your torchlight reaches them, rooms further ahead stay pencil question marks, and the way you came is a red-ink trail that draws itself as you walk.",
+      "The room you're in glows and the rooms you can go to next pulse, so it's easy to see where to tap.",
+      "On PC the dungeon fits on one screen: the room on the left, the map on the right, no scrolling the page.",
+    ] },
+    { id: "b145-pcfit", build: 145, date: "24 Nov 2026", title: "The game fills the whole window on a PC", items: [
+      "On a wide PC screen everything now fits on one screen: no more empty bands at the sides and no scrolling the page. The map and the side panel share the full width, and only long lists in the side panel scroll.",
+      "The place card on the map (Travel, X) no longer hides behind the bottom bar.",
+      "Skills: the skill list and its perk stars sit side by side, and the stars grow to fill the space. The side panel gets wider while they're open.",
+      "Fights on a PC show a big battle picture on the left, with the fighters and your moves on the right, all without scrolling. Dungeons put the room on the left and the dungeon map on the right.",
+      "Text and buttons are a little bigger on large monitors. Phones look the same as before.",
+      "Paintings stay sharp: shop banners, town pictures, fight scenes, foes and the title picture are never stretched or blown up into a blur any more. On a very big or sharp screen a painting shows at its own size instead.",
+    ] },
+    { id: "b144-nopixel", build: 144, date: "24 Nov 2026", title: "One art style: hand-drawn", items: [
+      "The pixel-art look is gone. The game now has one style, the hand-drawn one, so every picture, menu and fight gets the full care.",
+      "If you had pixel art switched on, you'll just see the hand-drawn look next time you open the game. Nothing else changes, and your save is untouched.",
+      "The Art style row is gone from Settings.",
+    ] },
+    { id: "b144-homechest", build: 144, date: "24 Nov 2026", title: "A proper chest in your house", items: [
+      "Your house chest now works like a Skyrim chest: switch between the Chest and Your pack, filter by Weapons, Apparel, Potions, Scrolls, Food, Ingredients, Books and Misc, and sort by name, stat, weight or value.",
+      "Every item in the chest and in your pack has its picture again.",
+      "Tap something to move just 1, an amount you pick, or the whole stack, either way. Potions, ingredients, materials and arrows pile up into one stack in the chest.",
+      "Your load and the chest's total weight are shown on top. Gear you wear (in any loadout) stays on you and can't be put away by mistake.",
+      "Improved, named and stolen things keep all that when they go in and come back out.",
+    ] },
+    { id: "b144-noequipsell", build: 144, date: "24 Nov 2026", title: "What you wear stays on you", items: [
+      "Shops no longer list the gear you're wearing when you sell: weapons in either hand, armour, rings and amulets stay off the Sell list, and Sell all junk never touches them.",
+      "The same goes for handing things over: your follower's Your pack list, trades and gifts to other players, market stalls and chests leave out what you wear.",
+      "Got two of the same thing and wear one? Only the spare one shows up. Take something off first if you really want to part with it.",
     ] },
     { id: "b165-pcmap", build: 165, date: "24 Nov 2026", title: "The big map on PC", items: [
       "On a PC or laptop the world map is now your home screen: it fills the whole window, and Items, Skills, Magic and the Journal open on top of it over a blurred map. On phones nothing changes.",

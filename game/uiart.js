@@ -1,7 +1,7 @@
 /* Pictures for everything that isn't an item, a place or a fight: spells, skills, powers and shouts, standing stones,
    questlines, achievements, followers, horses, Arena ranks, clan banners, festivals, holds, guide steps, the title
-   panorama, the death and level-up screens. Same shared ART toolkit (ink on parchment, or pixel art); every icon
-   is drawn in a 40×40 box and cached per style. [OURS]
+   panorama, the death and level-up screens. Same shared ART toolkit (ink on parchment); every icon
+   is drawn in a 40×40 box and cached. [OURS]
      UIART.spell(id, size) · UIART.skill(name, size) · UIART.power(kind, id, size) · UIART.stone(id, size)
      UIART.shout(id, size) · UIART.quest(lineId, size) · UIART.ach(id, size) · UIART.follower(id, size)
      UIART.horse(coat, size) · UIART.rank(rating, size) · UIART.banner(colors, size) · UIART.hold(color, size)

@@ -42,8 +42,6 @@ async def main():
         el = await pg.query_selector("#side .panel")
         if el: await el.screenshot(path="ai_tactics_custom.png")
         await click("[data-act=aimode][data-id=smart]"); await pg.wait_for_timeout(300)
-        # the pixel style too
-        await pg.evaluate("(()=>{try{const S=window.__dbg.save(); S.artStyle='pixel';}catch(e){}})()")
         el = await pg.query_selector("#side .panel")
         if el: await el.screenshot(path="ai_tactics_smart2.png")
         print("errors:", errs)

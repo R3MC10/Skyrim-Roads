@@ -195,7 +195,9 @@ const FOL2 = (() => {
     const r = G.invRow(s, invId), it = itemOf(r);
     if (!r || !it) return "You don't have that.";
     if (it.quest) return "Keep quest items yourself.";
-    const n = Math.min(r.qty, Math.max(1, qty));
+    const free = G.freeQty ? G.freeQty(s, r.id) : r.qty;   // what you wear now never changes hands; a pair with one worn gives the spare
+    if (free <= 0) return "You're wearing that. Take it off first.";
+    const n = Math.min(free, Math.max(1, qty));
     if (r.qty <= n) { const ids = new Set(); for (const l of Object.values(s.loadouts || {})) for (const v of Object.values(l.equipment || {})) ids.add(v); if (ids.has(r.id)) return "You're wearing that in a loadout. Take it off first."; }
     if (weight(f) + (it.weight || 0) * n > carry(f) + 1e-6) return `${nameOf(s.follower.id)} can't carry that much (${Math.round(weight(f))}/${carry(f)}).`;
     const copy = { ...r, qty: n };
@@ -361,7 +363,7 @@ const FOL2 = (() => {
         <p class="sub">★ = their natural style. Changing it resets and re-picks their perks.</p>`;
     } else if (view === "inv" && typeof FOLTAB !== "undefined") body = FOLTAB.gear(s, f, esc);   // SkyUI-style list (followertab.js)
     else if (view === "inv") {
-      const mine = s.inv.filter((r) => { const it = itemOf(r); return it && !it.quest && (wearable(it) || it.slot === "ammo" || it.restore); });
+      const mine = (G.handable ? G.handable(s) : s.inv).filter((r) => { const it = itemOf(r); return it && !it.quest && (wearable(it) || it.slot === "ammo" || it.restore); });
       const rows = invTab === "theirs"
         ? f.inv.map((r) => { const it = itemOf(r), on = Object.values(f.eq).includes(r.id), eqable = wearable(it), slotOn = on ? Object.keys(f.eq).find((k) => f.eq[k] === r.id) : null;
             return `<div class="item ${on ? "on" : ""}"><div class="t">${esc(it?.name || r.item)}${r.qty > 1 ? ` <span class="num">×${r.qty}</span>` : ""}${on ? " · worn" : ""}<span>${it?.damage ? `dmg ${it.damage} · ` : ""}${it?.armor ? `armor ${it.armor} · ` : ""}${fmtW((it?.weight || 0) * r.qty)} wt</span></div>
