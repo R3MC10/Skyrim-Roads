@@ -14,6 +14,14 @@ const PATCHNOTES = (() => {
       "Fixed: on phones a lot of newer screens (the house chest, invites, the problem report, the Dwemer puzzles and more) were missing their proper look. They look right again.",
       "Fixed: with blood and gore on, the fight picture could stop drawing. It plays again.",
     ] },
+    { id: "b173-gorefx", build: 173, date: "25 Nov 2026", title: "Realistic blood and splatter", items: [
+      "Blows now throw real-looking blood: a wet burst of drops and fine mist flies away from whoever struck, bigger the harder the hit.",
+      "Critical hits and finishing blows add a jet of blood and a wide splash, splatter the ground and smear the foe. The stains slowly fade over the fight.",
+      "Hammers and maces kick up dust and spill less blood. Draugr and skeletons burst into grave dust and bone chips, Dwemer machines spit oil and sparks, Falmer and chaurus bleed green and daedra dark ichor. A blade on armour throws sparks.",
+      "Spells look better too: frost throws ice shards, fire throws embers and smoke, lightning crackles and other magic leaves glowing motes.",
+      "Followers and horses bleed a little but are never splattered or cut up, and still only get knocked down.",
+      "Blood and gore on Full shows all of it; Low keeps the dust, sparks and spell effects without the realistic blood; Off shows none.",
+    ] },
     { id: "b172-horseart", build: 172, date: "25 Nov 2026", title: "Painted horses", items: [
       "Horses get painted: in fights, on the road and on the map your horse is now a proper painted horse with saddle and tack, not a little drawing.",
       "It stands still when you stop and gallops while you ride, you sit in the saddle in fights, and a knocked-down horse lies on its side behind you (it still only gets knocked down).",
@@ -1147,7 +1155,7 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 169;
+  const NEXT_AT = 173;
   const NEXT = [
     "A new, livelier fight screen that fits on one screen",
     "Dragon Shouts learned from word walls",
