@@ -564,6 +564,7 @@
     Store.watch("stalls", (docs) => onStalls(docs));
     if (typeof TB !== "undefined") {   // turn-based fights: toasts, and live turns for real players in your party
       TB.init({ toast: (t) => toast(t), remote: TB.remoteFor(Store, S.id) });   // only used while you're online with party members
+      if (typeof SHAREDFIGHT !== "undefined") SHAREDFIGHT.mount({ store: Store, S: () => S, persist, toast: (t) => t && toast(t), after: () => renderPanel(true) });   // the leader's fight on your own full fight screen (sharedfight.js)
       TB.watchTurns(Store, () => S?.id);
     }
     Store.watch("halls", (docs) => onHalls(docs));
@@ -612,6 +613,7 @@
       Store.watch("runs", () => { lvUI.onRuns(); if (S.dungeon && $("#dun")) renderDungeon(); });
       Store.watch("lvotes", (docs) => lvUI.onVotes(docs));
     }
+    if (typeof DGAMES !== "undefined") DGAMES.mount({ S: () => S, party: () => party, Store });   // watch the party leader's dungeon mini-games live
     Store.watch("chests", (docs) => { const had = chests.length; chests = docs.filter((c) => c.members?.some((m) => m.id === S.id)); if (chests.length > had) toast("💰 A party chest is waiting. Open 👥 Social → Party."); if (tab === "log") bump(); });
     Store.watch("news", (docs) => { news = docs.sort((a, b) => b.t - a.t); if (news.length > 40) news.slice(40).forEach((n) => Store.remove("news", n.id)); if ((tab === "log" || tab === "social")) bump(); });
     G.setAllyProvider(() => allies());
@@ -658,6 +660,25 @@
     [S.x, S.y] = livePos();
     if (G.startEvent(S)) { persist(); ppUI?.leaderHalt("event", "something by the road", S.trip?.event?.text || ""); openEvent(); }
   }
+  /* caravans on the road (caravanroad.js): your road brings you alongside one, or you tap its wagon on the map */
+  function meetCaravan(cid, auto) {
+    if (typeof CVROAD === "undefined") return;
+    if (typeof PARTYPLAY !== "undefined" && !PARTYPLAY.canDecide(S)) { if (!auto) toast("Only your party's leader can stop for a caravan."); return; }
+    const ev = CVROAD.meet(S, cid, livePos());
+    if (!ev || ev.err) { if (!auto) toast(ev?.err || "That caravan has moved on."); return; }
+    lastEventAt = Date.now(); SOUND.fx?.("arrive");
+    persist(); ppUI?.leaderHalt("event", ev.name, ev.text); openEvent();
+  }
+  function maybeCaravan() {
+    if (typeof CVROAD === "undefined" || document.hidden || $("#modal") || S.trip?.status !== "travel" || Date.now() - lastEventAt < 8000) return;
+    if (typeof PARTYPLAY !== "undefined" && !PARTYPLAY.canDecide(S)) return;
+    const c = CVROAD.autoMeet(S, livePos()); if (c) meetCaravan(c.id, true);
+  }
+  function caravanEscortPay() {
+    if (typeof CVROAD === "undefined" || S.trip || !S.caravanJob?.escort) return;
+    const m = CVROAD.arrived(S); if (!m) return;
+    persist(true); SOUND.fx("coin"); showMessage("Caravan", "🐫 " + m);
+  }
 
   function tick() {
     if (!S) return;
@@ -690,8 +711,9 @@
           if (qa) setTimeout(() => toast(`📜 ${qa.st.title}: "${qa.st.obj.label}" is waiting in the Journal.`), 2500);
           if (out.solIntro) { persist(true); setTimeout(() => showMessage("Quest", out.solIntro), 700); }
         }
-      } else { Store.save(S); maybeRoadEvent(); }
+      } else { Store.save(S); maybeRoadEvent(); maybeCaravan(); }
     }
+    caravanEscortPay();
     followParty(); ppUI?.tick(); checkAmbush(); renderRaid(); soundTick();
     if (S.tut?.step > 0 && TUT[S.tut.step]?.done()) bump();
     if (Math.floor(t) % 5 === 0) { checkAch(); bloodTick(); }
@@ -817,7 +839,7 @@
     put(html.replace(/<\/div>$/, `<div class="tripvig"></div></div>`));
     const bar = el.querySelector(".bar i"); if (bar) bar.style.width = `${p}%`;
     if (tr.boat && typeof SOLART !== "undefined") { const tv = el.querySelector(".tripvig"); if (tv && !tv.dataset.sea) { tv.dataset.sea = 1; tv.innerHTML = SOLART.sea(); } }   // at sea (solart.js)
-    else if (typeof FXART !== "undefined") FXART.vignette(el.querySelector(".tripvig"), { ground, progress: p / 100, riding: HORSES.riding(S), carriage: !!tr.carriage, boat: !!tr.boat, horse: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, look: myLook(), company: typeof PARTY !== "undefined" ? PARTY.companions(S, party, others, here, (o) => otherPos(o), MP.NEAR_PX) : [], reduce: reduceMotion, sky: typeof SKY !== "undefined" ? SKY.state(here) : null });
+    else if (typeof FXART !== "undefined") FXART.vignette(el.querySelector(".tripvig"), { ground, progress: p / 100, dest: tr.destName, origin: tr.origin, riding: HORSES.riding(S), carriage: !!tr.carriage, boat: !!tr.boat, horse: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, look: myLook(), company: typeof PARTY !== "undefined" ? PARTY.companions(S, party, others, here, (o) => otherPos(o), MP.NEAR_PX) : [], reduce: reduceMotion, sky: typeof SKY !== "undefined" ? SKY.state(here) : null });
   }
   function renderTabs() {
     tabsEl.querySelectorAll(".tab").forEach((b) => {
@@ -859,7 +881,7 @@
       rulers: Object.entries(WARS.rulers(S)).map(([hold, c]) => ({ hold, color: c.colors[0] })),
       banners: CLANS.banners(homeDocs, S, VISITS.record(S)).filter((b) => WORLD.places[b.town]).map((b) => ({ ...b, pos: WORLD.places[b.town].slice(0, 2) })),
       cleared: clearedLeft(), bags: visibleBags(), selected: selected && WORLD.places[selected] ? selected : null, t: ts / 1000, zoom, center, reduceMotion, weather: WEVENTS.weather(pos).id, quest: questPos(), mask: typeof PRIESTS !== "undefined" ? PRIESTS.marker(S)?.pos : null, tmaps: typeof EXPLORE !== "undefined" ? EXPLORE.marks(S) : [], rumours: typeof RUMOURS !== "undefined" ? RUMOURS.marks(S) : [], herbs: typeof GATHER !== "undefined" ? GATHER.marks(S) : [], pins: (S.pins || []).map((p) => ({ pos: [p.x, p.y], label: `${p.icon} ${p.label}`, on: selected === "__pin:" + p.id })),
-      routes: party ? others.filter((o) => o.moving && o.path?.length > 1 && party.members.some((m) => m.id === o.id)).map((o) => ({ path: o.path, from: otherPos(o), name: o.name })) : [], horse: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, cart: CARAVANS.hasCart(S), guards: typeof GUARDS !== "undefined" ? GUARDS.visible(S) : null, caravans: CARAVANS.all().map((c) => { const cp = CARAVANS.pos(c); return { cp, c }; }).map(({ cp, c }) => ({ pos: cp, visible: G.pxDist(cp, pos) < 160 || S.discovered.some((n) => WORLD.places[n] && ["city", "town"].includes(WORLD.places[n][2]) && G.pxDist(cp, WORLD.places[n]) < 45), khajiit: c.line.khajiit, moving: c.phase === "road", mine: S.caravanJob?.id === c.id, label: c.line.name.replace(/'s caravan$/, "") })).filter((c) => !(c.mine && S.trip?.caravan)), hall: S.discovered.includes(HALL.TOWN) || known(HALL.TOWN) ? { pos: HALL.POS, label: `Hall of the North · ${HALL.progress().name}` } : null,
+      routes: party ? others.filter((o) => o.moving && o.path?.length > 1 && party.members.some((m) => m.id === o.id)).map((o) => ({ path: o.path, from: otherPos(o), name: o.name })) : [], horse: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, cart: CARAVANS.hasCart(S), guards: typeof GUARDS !== "undefined" ? GUARDS.visible(S) : null, caravans: CARAVANS.all().map((c) => { const cp = CARAVANS.pos(c); return { cp, c }; }).map(({ cp, c }) => ({ pos: cp, visible: G.pxDist(cp, pos) < 160 || S.discovered.some((n) => WORLD.places[n] && ["city", "town"].includes(WORLD.places[n][2]) && G.pxDist(cp, WORLD.places[n]) < 45), khajiit: c.line.khajiit, moving: c.phase === "road", mine: S.caravanJob?.id === c.id, id: c.id, near: typeof CVROAD !== "undefined" && c.phase === "road" && CVROAD.canMeet(S) && G.pxDist(cp, pos) <= CVROAD.TAP_RANGE, label: c.line.name.replace(/'s caravan$/, "") })).filter((c) => !(c.mine && S.trip?.caravan)), hall: S.discovered.includes(HALL.TOWN) || known(HALL.TOWN) ? { pos: HALL.POS, label: `Hall of the North · ${HALL.progress().name}` } : null,
     };
     WorldMap.draw($("#map"), view);
   }
@@ -918,6 +940,8 @@
       const wasMove = moved; down = null; clearTimeout(press);
       if (wasMove || pressed || !view.transform || e.type === "pointercancel") return;
       const r = c.getBoundingClientRect();
+      const cvTap = typeof CVROAD !== "undefined" && S.trip?.status === "travel" ? CVROAD.hit(view.caravans, screenToWorld(e.clientX - r.left, e.clientY - r.top), WorldMap.W, WorldMap.H, 24 / view.transform.k) : null;
+      if (cvTap) return meetCaravan(cvTap.id);   // tapped a caravan's wagons while travelling: stop and meet them
       const pin = pinAt(e.clientX - r.left, e.clientY - r.top);
       selected = pin ? "__pin:" + pin.id : WorldMap.placeAt(view, e.clientX - r.left, e.clientY - r.top, known);
       if (!selected) { const w = screenToWorld(e.clientX - r.left, e.clientY - r.top); if (WORLD.onMap(w)) { roamSpot = w; selected = "__spot"; } }
@@ -1329,6 +1353,7 @@
     tbCall(act, (r) => dungeonDone(r, runId, roomType, hp0, found0, gold0));
   }
   function dungeonDone(r, runId, roomType, hp0, found0, gold0) {
+    if (typeof DGAMES !== "undefined") DGAMES.result(r);   // the party watching the leader's mini-game reads what happened
     if (r.cleared && runId) S.lastRun = runId;
     if (S.dungeon) { const newFound = S.dungeon.found.slice(found0); r.stripLoot = [...new Set([...(r.loot || []), ...newFound])]; r.stripGold = r.gold || (S.dungeon.gold - gold0) || 0; }
     r.roomType = roomType; r.hurt = roomType === "trap" && G.curHealth(S) < hp0 - 0.5;
@@ -3459,7 +3484,13 @@
       case "enter": { if (ppUI) { const pm = ppUI.beforeEnter(); if (pm === "check") { renderPanel(true); break; } if (pm) return toast(pm); } const err = DUNGEONS.enter(S); if (err) return toast(err); if (typeof IMM !== "undefined") IMM.loading(`Entering ${S.dungeon?.place || "the dungeon"}…`); selected = null; renderPicked(); dunNote = null; persist(true); renderDungeon(); break; }
       case "dun": renderDungeon(); break;
       case "droom": dungeonRoom(b.dataset.c); break;
-      case "dact": if (b.dataset.c.startsWith("game:") && typeof EXPLORE !== "undefined") { EXPLORE.openGame(S, dungeonAct); break; } if (b.dataset.c === "pick" && typeof IMM !== "undefined" && IMM.wantsGame()) { IMM.pick("dungeon", dungeonAct, S); break; } dungeonAct(b.dataset.c); break;
+      case "dact": {
+        const dc = b.dataset.c, dg = typeof DGAMES !== "undefined" && !(lvUI && lvUI.memberLocked());   // dungeon mini-games; the party watches the leader play (dungeongames.js)
+        if (dg && DGAMES.handles(S, dc)) { DGAMES.play(S, dc, dungeonAct); break; }
+        if (dc.startsWith("game:") && typeof EXPLORE !== "undefined") { EXPLORE.openGame(S, dungeonAct); if (dg) DGAMES.mirror("ring"); break; }
+        if (dc === "pick" && typeof IMM !== "undefined" && IMM.wantsGame()) { IMM.pick("dungeon", dungeonAct, S); if (dg) DGAMES.mirror("lock"); break; }
+        dungeonAct(dc); break;
+      }
       case "dmin": closeDungeon(); tab = "pack"; renderTabs(); renderPanel(true); break;
       case "dleave": { if (S.dungeon?.run && lvUI) { S.lastRun = S.dungeon.run; lvUI.leaderLeaving(); } if (S.dungeon?.run && coopUI) coopUI.left(); if (typeof IMM !== "undefined") IMM.loading("Back to the open road…"); const m = DUNGEONS.leave(S); dunNote = null; persist(true); closeDungeon(); renderPanel(true); showMessage("Back outside", m); break; }
       case "ev": if (b.dataset.c === "pick" && typeof IMM !== "undefined" && IMM.wantsGame()) { IMM.pick("event", eventAction, S); break; } eventAction(b.dataset.c); break;
