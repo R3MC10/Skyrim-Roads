@@ -225,7 +225,7 @@ const ENC = (() => {
 
   add({ id: "cart", title: "An abandoned cart", weight: 3.5,
     when: (s, c) => !c.sol,
-    make: () => ({ text: "A cart lies on its side, a dead horse still in harness. Crates spill across the road." }),
+    make: () => ({ text: "A cart lies on its side, its horse long gone. Crates spill across the road." }),
     choices: (e, s) => [["tracks", `🔎 Check for tracks first (${pct(trackCh(s))})`], ["search", "📦 Search the crates"], ["leave", "Don't touch it"]],
     tracks: (s) => { const ch = trackCh(s); if (Math.random() < ch) return fightRes("Fresh boot prints lead into the trees: an ambush, waiting. You circle round and catch them unawares.", enc("Bandit outlaw"), { hidden: true, after: "cartLoot", skills: xp(s, "Sneak", 15) }); return { text: "You can't make sense of the tracks.", keep: true, skills: xp(s, "Sneak", 3) }; },
     search: (s) => Math.random() < 0.3 ? fightRes("It was bait! Bandits burst from the trees.", enc("Bandit outlaw"), { enemyFirst: true, after: "cartLoot" }) : { text: byIdx.cart.cartLoot(s) || "Mostly broken pottery." },

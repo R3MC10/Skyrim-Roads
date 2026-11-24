@@ -105,7 +105,9 @@ const TBUI = (() => {
   function hideTip() { tipEl?.classList.remove("on"); tipFor = null; }
   // a phone that fakes mouse events on a tap must not leave a hover tip hanging over the log or the bar
   const canHover = () => typeof matchMedia !== "function" || matchMedia("(hover: hover) and (pointer: fine)").matches;
-  function tipTarget(ev) { return ev.target.closest?.("#tbf [data-tip]") || null; }
+  // tooltip.js (with fighttips.js) shows the fight's tooltips when it's loaded; this small one is only the fallback
+  const bigTips = () => typeof TIP !== "undefined" && !!TIP.eatClick;
+  function tipTarget(ev) { return bigTips() ? null : ev.target.closest?.("#tbf [data-tip]") || null; }
   function overTip(ev) {   // mouse only: hover shows the tip
     if (ev.pointerType !== "mouse" || d?.on || !canHover()) return;
     const t = tipTarget(ev); if (t === tipFor) return;
@@ -201,6 +203,7 @@ const TBUI = (() => {
   // the browser's own click after a drag lands on whatever is under the finger: ignore it
   let swallow = 0;
   function eatClick(ev) {
+    if (ev.isTrusted && bigTips() && ev.target.closest?.("#tbf") && TIP.eatClick(ev)) return;   // the lift after holding for a tooltip: no cast, no target picking (fightctl.js listens after this)
     if (Date.now() < swallow && ev.isTrusted && ev.target.closest?.("#tbf")) { ev.stopPropagation(); ev.preventDefault(); swallow = 0; }
   }
   function key(ev) {
@@ -228,6 +231,8 @@ const TBUI = (() => {
     addEventListener("click", eatClick, true);
     addEventListener("keydown", key);
   }
-  return { logLine, after, get dragging() { return !!d?.on; } };
+  /* tooltip.js: a finger held still shows a tooltip; that press isn't the start of a drag any more */
+  function look() { if (d && !d.on) d = null; }
+  return { logLine, after, look, get dragging() { return !!d?.on; } };
 })();
 if (typeof module !== "undefined") module.exports = TBUI;

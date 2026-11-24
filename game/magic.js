@@ -371,8 +371,9 @@ const MAGIC = (() => {
       case "bound": add(`${R(sp.amount * (1 + PXS(s, "bound")))} base damage (${sp.skill})`, "buff"); break;
       case "reanimate": add(`a slain foe up to level ${sp.amount} rises`, "buff"); add(`${sp.fights} fights`, "dur"); break;
       case "soultrap": add("fills an empty soul gem if it dies", "buff"); break;
-      default: { const d = describe(sp); if (d) add(d, "dur"); }
+      default: { const d = (typeof MAGIC !== "undefined" ? MAGIC.describe : describe)(sp); if (d) add(d.replace(/\d+\.\d+/g, (x) => R(+x)), "dur"); }   // MAGIC.describe: spellbook.js adds its own kinds
     }
+    if (sp.area) add("reaches the whole group (half to the ones behind)", "dur");   // spellfx.js
     return out;
   }
   /* the cost and numbers of a spell, single and dual cast: { cost, dualCost, single, dual } */

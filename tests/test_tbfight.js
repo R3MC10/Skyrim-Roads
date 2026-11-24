@@ -214,6 +214,10 @@ if (typeof SHAREDFIGHT !== "undefined") { console.log("8b: shared party fights")
   ok(r.turn === "wait" && ss.waiting?.tid, "the leader's phone waits for Beta's turn");
   const d = { id: "fid1", owner: "p1", ...TB.fightState(ss) };
   ok(d.v === 2 && d.turn.tid === ss.waiting.tid && d.roster.some((x) => x.host && x.name === "Alfa") && d.roster.some((x) => x.pid === "p2") && d.foeE.name && d.order.length && d.evs.length, "v2 record: foe, roster, turn order, events");
+  { const dog = { name: "Meeko", kind: "dog", follower: true, fid: "meeko", hp: 140, maxHp: 140, dmg: 5 }; f.allies.push(dog);
+    const dd = { id: "fid1", owner: "p1", ...TB.fightState(ss) }; f.allies.splice(f.allies.indexOf(dog), 1);
+    const sd = fresh("mage", 20); sd.id = "p2"; sd.name = "Beta"; const md = SHAREDFIGHT.build(sd, dd, () => {});
+    ok(dd.roster.find((x) => x.name === "Meeko")?.kind === "dog" && md.f.allies.find((a) => a.name === "Meeko")?.kind === "dog", "a teammate's dog stays a dog on every phone"); }
   ok(TB.TURN_SECONDS === 90, "90 s for a player's turn");
   const s2 = fresh("mage", 20); s2.id = "p2"; s2.name = "Beta";
   let sent = null; const m = SHAREDFIGHT.build(s2, d, (x) => { sent = x; });

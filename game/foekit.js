@@ -152,7 +152,7 @@ const FOEKIT = (() => {
     for (const id in k.cd) if (k.cd[id] > 0) k.cd[id]--;
     if (k.rage > 0) k.rage--;
     const pl = k.plan && k.plan.length ? k.plan.shift() : null;   // what its intent said it would do (plan below)
-    if (f.calmTurns > 0 || f.eParalyzed > 0 || f.stagger) { if (k.windup) { k.windup = null; return pre + enemyTurn() + " (the wind-up is lost)"; } return pre + enemyTurn(); }
+    if (f.calmTurns > 0 || f.eParalyzed > 0 || f.stagger || f.fearTurns > 0 || f.unseen > 0) { if (k.windup) { k.windup = null; return pre + enemyTurn() + " (the wind-up is lost)"; } return pre + enemyTurn(); }
     if (k.windup) {
       const w = WIND[k.windup]; k.windup = null;
       const r = hit(f, enemyTurn, w.mul);

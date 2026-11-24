@@ -99,7 +99,7 @@ const ONBOARD = (() => {
     ["level", (s) => s.pendingLevels > 0 && (s.level || 1) <= 4, "Level up!", () => "Open <b>Hero</b>: pick Health, Magicka or Stamina, then spend your perk point on a skill you use. Skills rise by using them.", { btn: ["hero", "Open Hero"] }],
     ["heavy", (s) => typeof G.overweight === "function" && G.overweight(s), "Too heavy", () => "You're carrying more than you can, so you walk slowly. Sell loot in a town, keep things in a house chest, or let a horse or follower carry them."],
     ["dungeon", (s) => !!s.dungeon && !cleared(s), "Your first dungeon", () => "Go room by room. Each room may hold foes, a trap or loot; you can leave between rooms and come back later. The boss and the best chest wait at the end."],
-    ["invite", (s, c) => c.invites > 0, "A party invite", () => "Someone wants you in their party. Open 👥 <b>Friends → Party</b> to join. The leader picks where to go and you travel together; gold is split evenly.", { btn: ["social", "Friends"] }],
+    ["invite", (s, c) => c.invites > 0, "A party invite", () => (typeof INVITES !== "undefined" ? "Someone wants you in their party. Tap Accept on the card at the top to join, or Decline. The leader picks where to go and you travel together; gold is split evenly." : "Someone wants you in their party. Open 👥 <b>Friends → Party</b> to join. The leader picks where to go and you travel together; gold is split evenly."), { btn: ["social", "Friends"] }],
     ["rumour", (s) => (typeof RUMOURS !== "undefined") && RUMOURS.leads(s).length > 0, "You've got a lead", () => "Rumours are marked on your map and listed in the Journal → Misc. Go there to see if it's true: some are just gossip."],
   ];
   let bound = null, shown = null, timer = null;
@@ -132,6 +132,7 @@ const ONBOARD = (() => {
   /* in a fight: sit in the free space just above the action buttons, never over them (over the picture if there's no room) */
   function place() {
     const el = document.getElementById("obtip"); if (!el) return;
+    if (shown === "invite" && typeof INVITES !== "undefined") { el.style.top = "auto"; el.style.bottom = "calc(84px + env(safe-area-inset-bottom))"; return; }   // the invite card sits on top: keep clear of it
     if (!el.classList.contains("infight")) {   // elsewhere: just under the top bar, so Menu and Friends stay tappable
       const bar = document.querySelector("#dun .hd") || document.querySelector("#app .top"), b = bar ? bar.getBoundingClientRect().bottom / (typeof FITCANVAS !== "undefined" ? FITCANVAS.zoom() : 1) : 0;
       el.style.top = Math.max(10, Math.min(b + 6, innerHeight * 0.3)) + "px"; el.style.bottom = "auto";

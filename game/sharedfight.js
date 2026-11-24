@@ -98,7 +98,7 @@ const SHAREDFIGHT = (() => {
       for (const r of list) {
         if (r.k === "p:" + me || (r.pid && r.pid === me)) { this.meDown = !!r.down; f.hp = r.down ? 0 : r.hp; continue; }
         let a = this.byKey.get(r.k); if (!a) { a = {}; this.byKey.set(r.k, a); }
-        Object.assign(a, { tbk: r.k, name: r.name, hp: r.hp, maxHp: r.hpMax, player: !!r.player, follower: !!r.follower, pid: r.pid || null, look: r.look || null, role: r.role || null, host: !!r.host, down: !!r.down });
+        Object.assign(a, { tbk: r.k, name: r.name, hp: r.hp, maxHp: r.hpMax, player: !!r.player, follower: !!r.follower, pid: r.pid || null, look: r.look || null, role: r.role || null, host: !!r.host, down: !!r.down, kind: r.kind || null, fid: r.fid || null });   // kind: a dog stays a dog on every phone
         for (const k of TB.BUFF_KEYS) if (r[k] != null) a[k] = clone(r[k]); else if (k !== "dmg") delete a[k];
         if (a.dmg == null) a.dmg = 0;
         (r.down ? down : live).push(a);
@@ -125,7 +125,7 @@ const SHAREDFIGHT = (() => {
       if (this.myTurn && this.idx !== i0) this.sendTurn();
       return r;
     }
-    timeUp() { if (!this.myTurn) return; this.endTurn(true); this.sendTurn(); }
+    timeUp() { if (!this.myTurn) return; this.endTurn(true); this.emit("me", "You hold back and keep your guard up (out of time)", "guard"); this.sendTurn(); }   // a timeout only guards, and says so (noautoplay.js)
     /* everything your turn did, for the leader's phone */
     reply() {
       const f = this.f, t0 = this.t0 || { ehp: f.ehp, hp: f.hp, ev: 0, hitters: 0, ward: 0, armor: 0, snap: new Map() };

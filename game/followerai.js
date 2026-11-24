@@ -389,6 +389,6 @@ const FAI = (() => {
       <p class="sub">${row === "back" ? "Back row: draws fewer blows" : "Front row: takes blows meant for you"} · initiative ${p.init} · ${p.mp} magicka · ${p.sp} stamina</p>`;
   }
 
-  return { TACTICS, START, USABLE, REQ, seed, canLearn, teach, toggle, setTactic, setSavePots, pools, rowOf, equipAlly, options, decide, turn, aggro, pickAlly, takes, hitSummon, frame, magicTab, tacticsTab, mpCost, healAmt };
+  return { TACTICS, START, USABLE, REQ, seed, canLearn, teach, toggle, setTactic, setSavePots, pools, rowOf, equipAlly, options, decide, turn, doCast, aggro, pickAlly, takes, hitSummon, frame, magicTab, tacticsTab, mpCost, healAmt };
 })();
 if (typeof module !== "undefined") module.exports = FAI;
