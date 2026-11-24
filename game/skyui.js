@@ -44,7 +44,7 @@ const SKYUI = (() => {
     tree.forEach((p, i) => {
       const [x, y, up] = pos[p[0]], rk = PERKS.rank(s, p[0]), can = !PERKS.canTake(s, p[0]) && rk < p[2];
       const label = p[1].length > 14 ? p[1].slice(0, 13) + "…" : p[1];
-      stars += `<g class="st ${rk ? "on" : ""} ${can ? "can" : ""}" data-sk-perk="${i}" role="button" tabindex="0" aria-label="${esc(p[1])}${rk ? " (taken)" : can ? " (can take)" : ""}">
+      stars += `<g class="st ${rk ? "on" : ""} ${can ? "can" : ""}" data-sk-perk="${i}" data-tip-k="perk:${esc(p[0])}" role="button" tabindex="0" aria-label="${esc(p[1])}${rk ? " (taken)" : can ? " (can take)" : ""}">
         <circle class="glow" cx="${x}" cy="${y}" r="14"/><circle cx="${x}" cy="${y}" r="16" fill="transparent"/>
         <circle class="core" cx="${x}" cy="${y}" r="${rk ? 4.2 : 3.2}"/>${can ? `<circle cx="${x}" cy="${y}" r="7.5" fill="none" stroke="#cfe3ff" stroke-width="1" stroke-dasharray="2 2"/>` : ""}
         <text class="lbl" x="${x}" y="${up < 0 ? y - 11 : y + 17}" text-anchor="middle">${esc(label)}${p[2] > 1 ? ` ${rk}/${p[2]}` : ""}</text></g>`;

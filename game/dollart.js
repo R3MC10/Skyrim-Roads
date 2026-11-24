@@ -2,14 +2,17 @@
    slot with stat comparisons, loadout thumbnails, and the race showcase on the character creation screen. Drawing
    goes through ART/HEROART/ICONART/UIART so both art styles work and everything is cached. [OURS] */
 const DOLL = (() => {
-  const LEFT = ["head", "chest", "hands", "feet"], RIGHT = ["weapon", "shield"];
-  const NAMES = { weapon: "Weapon", shield: "Shield", head: "Head", chest: "Chest", hands: "Hands", feet: "Feet", ammo: "Ammo" };
+  const LEFT = ["head", "chest", "hands", "feet"], RIGHT = ["weapon", "shield"], JEWEL = ["amulet", "ring", "ring2"];
+  const NAMES = { weapon: "Weapon", shield: "Shield", head: "Head", chest: "Chest", hands: "Hands", feet: "Feet", ammo: "Ammo", amulet: "Amulet", ring: "Ring", ring2: "Ring" };
+  const itemSlot = (slot) => (slot === "ring2" ? "ring" : slot);   // both ring fingers take rings
+  const isJewel = (slot) => JEWEL.includes(slot);
   const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
   /* the one number that matters for a piece in its slot: damage for weapons, armor for everything else */
   function statOf(row) {
     if (!row) return 0;
     const it = D.ITEMS[row.item]; if (!it) return 0;
+    if (it.slot === "ring" || it.slot === "amulet") return it.aenchant ? [it.aenchant, ...(it.aenchant.more || [])].reduce((a, e) => a + (e.mag || 0), 0) : 0;   // jewellery: how much magic it holds
     return it.slot === "weapon" ? (it.damage || 0) + (row.temper || 0) : (it.armor || 0) + (row.temper || 0);
   }
   /* compare a candidate row with what's worn in that slot: { val, cur, diff, dir: "up"|"down"|"same" } */
@@ -19,8 +22,8 @@ const DOLL = (() => {
   }
   /* every item you could put in a slot, best first; the worn one is marked */
   function candidates(s, slot) {
-    const worn = G.equipment(s)[slot];
-    return s.inv.filter((r) => D.ITEMS[r.item]?.slot === slot)
+    const eq = G.equipment(s), worn = eq[slot], other = slot === "ring" ? eq.ring2 : slot === "ring2" ? eq.ring : null;
+    return s.inv.filter((r) => D.ITEMS[r.item]?.slot === itemSlot(slot) && !(other && other.id === r.id))
       .map((r) => ({ row: r, worn: !!worn && worn.id === r.id, cmp: compare(r, worn) }))
       .sort((a, b) => b.worn - a.worn || b.cmp.val - a.cmp.val || D.ITEMS[a.row.item].name.localeCompare(D.ITEMS[b.row.item].name));
   }
@@ -38,6 +41,9 @@ const DOLL = (() => {
         weapon: () => { P([[12, 30], [28, 10]]); P([[10, 25], [17, 32]]); P([[11, 31], [8, 34]]); },
         shield: () => P([[12, 10], [28, 10], [28, 22], [20, 32], [12, 22], [12, 10]]),
         ammo: () => { P([[10, 30], [30, 10]]); P([[30, 10], [25, 11]]); P([[30, 10], [29, 15]]); P([[10, 30], [14, 30]]); },
+        ring: () => { g.beginPath(); g.ellipse(20 * k, 24 * k, 9 * k, 8 * k, 0, 0, Math.PI * 2); g.stroke(); P([[16, 15], [20, 9], [24, 15]]); },
+        ring2: () => { g.beginPath(); g.ellipse(20 * k, 24 * k, 9 * k, 8 * k, 0, 0, Math.PI * 2); g.stroke(); P([[16, 15], [20, 9], [24, 15]]); },
+        amulet: () => { g.beginPath(); g.moveTo(9 * k, 7 * k); g.quadraticCurveTo(20 * k, 30 * k, 31 * k, 7 * k); g.stroke(); P([[20, 24], [15, 29], [20, 35], [25, 29], [20, 24]]); },
       }[slot] || (() => {}))();
       g.globalAlpha = 1;
     }, { key: "doll-empty:" + slot, cls: "ico" });
@@ -46,7 +52,7 @@ const DOLL = (() => {
     const r = eq[slot], it = r && D.ITEMS[r.item];
     const label = it ? `${(r.tq && typeof TOWNS !== "undefined" ? TOWNS.QUALITY[r.tq] + " " : "") + it.name}` : `Nothing (${NAMES[slot].toLowerCase()})`;
     return `<button class="dslot ${r ? "full" : ""}" data-act="dollslot" data-slot="${slot}" aria-label="${esc(NAMES[slot])}: ${esc(label)}">
-      ${r ? ICONART.item(r.item, size, r) : emptyIcon(slot, size)}<span class="dsl">${NAMES[slot]}</span>${r ? `<span class="dst num">${statOf(r)}</span>` : ""}</button>`;
+      ${r ? ICONART.item(r.item, size, r) : emptyIcon(slot, size)}<span class="dsl">${NAMES[slot]}</span>${r && !isJewel(slot) ? `<span class="dst num">${statOf(r)}</span>` : r && it.aenchant ? `<span class="dst dench">✦</span>` : ""}</button>`;
   }
   /* the equipment screen: slots | figure | slots, then the numbers */
   function screen(s, stats) {
@@ -56,14 +62,21 @@ const DOLL = (() => {
       <div class="dcol">${LEFT.map((sl) => slotBtn(s, sl, eq)).join("")}</div>
       <div class="dfig">${HEROART.figure(s, 150, 206)}</div>
       <div class="dcol">${RIGHT.map((sl) => slotBtn(s, sl, eq)).join("")}</div>
-    </div>${ammoRow}
+    </div>
+    <div class="djewel" aria-label="Amulet and rings">${JEWEL.map((sl) => slotBtn(s, sl, eq, 40)).join("")}</div>${ammoRow}
     <div class="dsum"><span>🛡 Armor <b class="num">${stats.armor}</b></span><span>⚔ Damage <b class="num">${stats.dmg}</b></span><span>⚖ <b class="num">${stats.carried}</b>/${stats.cap}</span></div>`;
   }
   /* the picker sheet for one slot */
   function picker(s, slot) {
     const list = candidates(s, slot), worn = G.equipment(s)[slot];
     const arrow = (c) => c.dir === "up" ? `<b class="dup">▲ ${c.diff}</b>` : c.dir === "down" ? `<b class="ddown">▼ ${-c.diff}</b>` : `<b class="dsame">=</b>`;
-    const unit = slot === "weapon" ? "damage" : "armor";
+    const unit = slot === "weapon" ? "damage" : "armor", jw = isJewel(slot);
+    const fx = (row) => { const it = D.ITEMS[row.item]; return typeof ENCH !== "undefined" && ENCH.lines ? ENCH.lines(it).join(" ") : ""; };
+    if (jw) return `<h2>${NAMES[slot]}${slot === "ring2" ? " (second hand)" : slot === "ring" ? " (first hand)" : ""}</h2><p class="sub">${worn ? `Wearing ${esc(D.ITEMS[worn.item].name)}.` : "Nothing here."} You can wear one amulet and two rings. Their magic is what counts: enchant plain ones at an arcane enchanter.</p>
+      <div class="list dpick">${list.length ? list.map((c) => { const it = D.ITEMS[c.row.item], t = fx(c.row);
+        return `<button class="item ${c.worn ? "on" : ""}" data-act="${c.worn ? "dolloff" : "dolleq"}" data-id="${c.row.id}" data-slot="${slot}">${ICONART.item(c.row.item, 36, c.row)}<div class="t">${esc(it.name)}${c.worn ? " ✓" : ""}<span>${esc(t || "No enchantment yet")} · ${it.weight} wt</span></div>
+          <span class="dcmp">${c.worn ? `<i>worn</i>` : ""}</span></button>`; }).join("") : `<p class="sub">You have no ${slot === "amulet" ? "amulets" : "rings"}. Foes and dungeons drop them, general stores sell plain ones, and the forge makes them from ingots and gems.</p>`}</div>
+      <div class="evc">${worn ? `<button class="btn" data-act="dolloff" data-slot="${slot}">Take it off</button>` : ""}<button class="btn" data-act="close">Close</button></div>`;
     const twoH = slot === "shield" && worn == null && G.equipment(s).weapon && D.ITEMS[G.equipment(s).weapon.item]?.hands === 2;
     return `<h2>${NAMES[slot]}</h2><p class="sub">${worn ? `Wearing ${esc(D.ITEMS[worn.item].name)} (${statOf(worn)} ${unit}).` : "Nothing in this slot."} Tap one to put it on.${twoH ? " You can't hold a shield with a two-handed weapon." : ""}</p>
       <div class="list dpick">${list.length ? list.map((c) => { const it = D.ITEMS[c.row.item];
@@ -89,5 +102,5 @@ const DOLL = (() => {
         <div class="rsk">${sk.map((k, i) => `<span class="rskill">${UIART.skill(k, 22)}<b>+${i === 0 ? 10 : 5}</b> ${esc(k)}</span>`).join("")}</div>
         <p class="rpow">${UIART.power(race, 24)}<span><b>${esc(r.power)}</b>${POWER_DESC(race) ? ` · ${esc(POWER_DESC(race))}` : ""}</span></p></div></div>`;
   }
-  return { SLOTS_LEFT: LEFT, SLOTS_RIGHT: RIGHT, NAMES, statOf, compare, candidates, screen, picker, loadoutThumb, racePicker, showcase, starterSave };
+  return { SLOTS_LEFT: LEFT, SLOTS_RIGHT: RIGHT, SLOTS_JEWEL: JEWEL, NAMES, statOf, compare, candidates, screen, picker, loadoutThumb, racePicker, showcase, starterSave };
 })();

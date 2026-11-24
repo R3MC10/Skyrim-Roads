@@ -10,7 +10,7 @@ const SHOPCAP = (() => {
   const HIGH = /elven|dwarven|orcish|glass|ebony|daedric|dragon|stalhrim|nordic|ancient|scaled|steel plate|bonemold|chitin|falmer|nightingale|forsworn|silver (sword|greatsword)|officer|blades|dawnguard|ornate|guard's/i;
   const ARMORISH = new Set(["weapon", "head", "chest", "hands", "feet", "shield", "ammo"]);
   const JEWEL = /_(ring|necklace|circlet|amulet)$/;
-  const PLAIN_JEWEL = /^(silver|gold)_(ring|necklace)$/;
+  const PLAIN_JEWEL = /^(iron|silver|gold)_(ring|necklace)$/;
   const ENCH_MAX = 20;          // Fortify enchantments on found armour go up to 40: shops stop at half
   const baseOf = (id) => (String(id).startsWith("ench|") ? String(id).split("|")[1] : String(id));
   const isJewel = (id, it) => JEWEL.test(baseOf(id)) || ["ring", "neck", "amulet", "circlet"].includes(it?.slot);

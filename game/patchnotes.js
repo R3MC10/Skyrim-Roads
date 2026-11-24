@@ -7,6 +7,38 @@ const PATCHNOTES = (() => {
       "Poison, burning, bleeding and venom now respect your armour: if your armour soaked most of the blow, it soaks most of the poison too. Heavy armour finally helps against poisoned blades and fire bolts.",
       "Foe healers (bandit mages, priests and the like) can only cast their healing spell twice a fight, and it heals a little less. No more endless self-healing against low-level warriors.",
     ] },
+    { id: "b138-followerbonds", build: 138, date: "24 Nov 2026", title: "Followers have opinions now", items: [
+      "Your follower notices what you do. Help a stranger, rob a sleeping bandit, run from a giant, pray at a shrine, join the Thieves Guild: each follower likes some things and hates others, and says so.",
+      "Their loyalty shows as a meter under their name (Hero tab → Follower). Devoted followers hit 10% harder. Unhappy ones grumble, fight 15% softer, sometimes refuse to change gear, style or tactics, and at 0 they walk out (they're fine, just angry, and won't come back for a few days).",
+      "They talk: little lines on the road and in towns, a word when you arrive somewhere, and a comment after big fights.",
+      "New Bond tab on the follower screen: what they like and dislike, what they said lately, a Talk button and a daily 100-gold gift.",
+      "Every follower has a personal quest that opens at loyalty 80: go somewhere with them, clear a place, and make a last choice. They learn a signature move they use once per fight (a big hit, a volley, a bleeding shot or a heal) and you get a keepsake piece of gear.",
+      "New perks: Kindred Spirit (Speechcraft): loyalty grows faster and drops slower. Heart to Heart (Speechcraft): talks count double and they never refuse your orders. Sworn Companion (Etiquette): personal quests open at 65 and signature moves are 25% stronger.",
+      "In a party only the leader makes choices, so a personal quest's last choice waits until you lead or travel alone.",
+      "All of it is in Polish too: the Bond tab, every line they say, their quests, moves and keepsakes.",
+    ] },
+    { id: "b138foetarget", build: 138, date: "24 Nov 2026", title: "See who the enemy goes for", items: [
+      "Every move a foe plans this round now says who it's aimed at: \"→ you\", \"→ Lydia\", a summon or a party member. Bosses with several moves and groups of foes show a target for each one.",
+      "A red crosshair sits on the card of whoever is about to be hit, the next target gets a red outline, and a dashed arrow in the battle picture points from the foe to them.",
+      "What it shows is what happens: the blow lands on that target. It only changes for a real reason, and the screen tells you why: the target went down, or a follower or a guard stepped in front.",
+      "Wind-ups and aimed shots keep their target for the blow that follows. In shared party fights everyone sees the same targets, and the one aimed at you reads \"you\" on your phone.",
+      "How often foes go for you or your companions hasn't changed, they just tell you earlier.",
+    ] },
+    { id: "b137tt", build: 137, date: "24 Nov 2026", title: "Tooltips on almost everything", items: [
+      "Rest the mouse on almost anything to read what it is: items, spells, tomes, perks, skills, places, quests, followers, party members, your health, magicka and stamina bars, carry weight, level and gold.",
+      "On a phone, hold your finger on it for a moment instead. Holding doesn't press the button underneath, and a normal tap works just like before.",
+      "Item tooltips show damage or armor, weight, value, enchantments and how it compares with what you're wearing. Places you haven't found yet stay secret.",
+    ] },
+    { id: "b136", build: 136, date: "24 Nov 2026", title: "Rings, amulets and lots more enchantments", items: [
+      "You can now wear one amulet and two rings. They have their own slots under your character in the Pack tab: tap one to put something on.",
+      "Rings and amulets are real gear now. Iron, silver, gold, moonstone and dwarven pieces, plain or set with a gem. Foes and bosses drop them (often enchanted), general stores sell plain ones, court wizards sell a few weak enchanted ones, and the forge makes them from an ingot and a gem.",
+      "Enchant rings and amulets at an arcane enchanter like any other gear. Gem-set and finer pieces hold stronger magic. Break enchanted ones down to learn their effect.",
+      "27 new enchantments (44 in all): Paralyze, Fear, Calm, Soul Trap, Turn Undead, Bleeding, Absorb Stamina and Magicka on weapons; Resist Fire, Frost, Shock and Poison, Regenerate Health, Magicka and Stamina, Fortify Block, Critical, Evasion, Heavy and Light Armor, cheaper Alteration, Conjuration and Illusion, and Fortify Smithing, Alchemy, Pickpocket and Speech on worn gear.",
+      "Wearing several pieces with the same enchantment adds up, but only to a limit, so stacking can't make fights a walkover. Extra weapon and Destruction damage pieces count for less each (the best one in full, the next half), up to +25%.",
+      "Four famous pieces can turn up on the strongest foes: the Gauldur Amulet, the Amulet of Articulation, the Ring of the Erudite and the Ring of the Hunt.",
+      "New Enchanting perks: Jeweller (stronger magic on rings and amulets, and you find more of them), Warding Enchanter (stronger resistances) and Hex Enchanter (stronger paralyze, fear, absorb and the like).",
+      "Item details now say in plain words what each enchantment does.",
+    ] },
     { id: "b136vision", build: 136, date: "24 Nov 2026", title: "A cone of sight on the map", items: [
       "Your marker on the map now looks the way you're walking, with a soft cone of sight in front of it. When you stop, it keeps looking that way.",
       "Inside the cone the fog thins out and you see clearly: other travellers further off than before, caravans, guard patrols, and the foe that blocks your road, standing right ahead of you.",
@@ -36,7 +68,7 @@ const PATCHNOTES = (() => {
       "On a big PC monitor, the +gold number, flying loot and fight tips now show up where they should instead of off to the side (they used to push the page sideways).",
       "Phones with a notch or camera cut-out: menus and popups now stay clear of it, also in landscape.",
     ] },
-    { id: "b136", build: 136, date: "24 Nov 2026", title: "A proper road picture while you travel", items: [
+    { id: "b136-5", build: 136, date: "24 Nov 2026", title: "A proper road picture while you travel", items: [
     ] },
     { id: "b135-compass", build: 135, date: "24 Nov 2026", title: "A real 3D compass", items: [
       "The golden compass on the home screen is now a proper 3D piece: drag it and it tilts toward your finger, catching the light and showing its thick bronze edge, then springs back when you let go.",
