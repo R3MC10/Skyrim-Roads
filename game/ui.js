@@ -3245,11 +3245,12 @@
     if (id === "dragonborn") return "Solstheim";
     if (/^cw_/.test(id)) return "Civil War";
     if (/^dae_/.test(id)) return "Daedric";
+    if (/^dg_/.test(id)) return "Dawnguard";   // dawnguard.js
     if (["companions", "thieves", "brotherhood", "college"].includes(id)) return "Guilds";
     if (CURE_Q.has(id) || /^cure_/.test(id)) return "Misc";
     return "Side quests";
   }
-  const Q_ORDER = ["Main quest", "Solstheim", "Civil War", "Guilds", "Daedric", "Side quests"];
+  const Q_ORDER = ["Main quest", "Solstheim", "Civil War", "Dawnguard", "Guilds", "Daedric", "Side quests"];
   function rewardHint(r) {
     if (!r) return "";
     const bits = [];

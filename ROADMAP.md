@@ -69,6 +69,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Smart AI combat (default; custom tactics optional), crafting mini-games, motion design (63)
 
 ## In progress (write your name before you start)
+- Claude: Dawnguard-style vampire war with a choice of side (dawnguard.js, dgart.js, i18n_dawnguard.js): Fort Dawnguard, Dimhollow Crypt and Castle Volkihar on the map, a shared opening, then hunters (crossbows, hunter's gear, troll armour for your follower) or Harkon's court (a stronger Vampire Lord); side perks, an achievement per ending, story pictures in both art styles. Branch claude/dawnguard.
 - Claude: foe kit balance (foekit.js): poison/burning/bleeding respect armour, foe heals capped at two a fight (fixes flaky test_foekit Bandit check). Branch claude/foekitflake.
 - Claude: followers become people (followerbonds.js): opinions and a loyalty meter, banter on the road and in towns, comments on places and fights, a personal quest per follower (signature move + keepsake), low-loyalty trouble (grumbling, refusing orders, leaving), Kindred Spirit / Heart to Heart / Sworn Companion perks. Branch claude/followerbonds.
 - Claude: foe intents show their target (foeintent.js): "→ you / → Lydia" on every intent chip, a crosshair on the targeted card and an arrow in the scene; the shown target is the one hit. Branch claude/foeintent.

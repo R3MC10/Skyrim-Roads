@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b139-dawnguard", build: 139, date: "24 Nov 2026", title: "The vampire war", items: [
+      "New quest line from level 12: Isran at Fort Dawnguard (near Riften) sends you into Dimhollow Crypt, where something sleeps in a sealed coffin. It ends at Castle Volkihar, a black keep on an islet off the coast past Solitude.",
+      "Then pick a side. Hunt the night with the Dawnguard (heavy crossbow, hunter's armour, troll armour for your follower) or drink Lord Harkon's blood and become a stronger Vampire Lord. Seven more stages either way, with a big boss fight at the end.",
+      "Six new perks, three per side: Vampire Hunter, Sun-Blessed Plate and Troll Tamer for the Dawnguard; Blood of Harkon, Night Lord and Court of Volkihar for Harkon's court. You can only take your own side's perks.",
+      "In a party only the leader picks the side, and everyone else follows that choice.",
+      "Two new achievements, one for each ending. New pictures for the fort, the castle and the story, in both art styles. All of it is in Polish too.",
+    ] },
     { id: "b137-kit", build: 137, date: "24 Nov 2026", title: "Fairer bandit tricks", items: [
       "Poison, burning, bleeding and venom now respect your armour: if your armour soaked most of the blow, it soaks most of the poison too. Heavy armour finally helps against poisoned blades and fire bolts.",
       "Foe healers (bandit mages, priests and the like) can only cast their healing spell twice a fight, and it heals a little less. No more endless self-healing against low-level warriors.",
