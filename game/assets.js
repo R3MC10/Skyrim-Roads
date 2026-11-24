@@ -16,6 +16,10 @@
        slugs: bandit banditchief draugr deathlord wolf bear sabrecat troll frosttroll giant mammoth spider skeever falmer
               centurion dwarvenspider spriggan hagraven vampire necromancer thalmor dragon icewraith flameatronach
               frostatronach stormatronach dremora chaurus mudcrab horker riekling ashspawn
+     horse-<coat>-<pose>      ~1024 max  painted horses (horseart.js): transparent, side view facing right, saddled, no rider,
+                                         hooves on the bottom edge, trimmed. poses stand gallop rear down (lying, head right).
+                                         Have: grey (all four), bay (stand). A missing coat borrows the grey picture, tinted;
+                                         add new files to HORSEART.HAVE (and their seat point to META). WebP q88.
      shop-<id>                1200×375   painted banners for town sections (shown above each shop's list)
        ids: general forge (also blacksmith) inn (also cook) alchemy wizard (also enchanter) market stables home hall
             fence arena mine — raw 3:2 paintings go through art/conv: crop the middle band, WebP q80
@@ -30,6 +34,10 @@
      map-world                2000×1400  hand-painted world map, exact 10:7, covering the world bounds edge to edge (x·width,
                                          y·height); replaces the procedural map ground (paintedmap.js). Reference to paint over:
                                          scripts/map_reference.py. Optional map-world-2x (3000×2100) for close zoom.
+     gfx-<effect>             strips     rendered combat effect sprites (scripts/make_gfx.py, drawn by gorefx2.js): frames side by side,
+                                         transparent WebP. blood-burst-1/2 (10×256²), blood-burst-3 (12×256²), blood-spray (8×256²),
+                                         oil-burst green-burst ichor-burst dust bonedust frost embers motes (10×192²), shock (8×192²),
+                                         sparks (8×160²); decal atlases 4×2: blood-decals (384² cells), oil-decals (128² cells).
      ui-panel                 1024×1024  tileable dark panel texture
      ui-parchment             1024×1024  tileable parchment texture
      ui-compass               1024×1024  transparent compass rose

@@ -83,9 +83,16 @@ const HORSEBACK = (() => {
     return `<p class="sub mountnote">\uE12D On horseback: you open with a charge, and one-handers, spears and bows hit harder from the saddle. Foes may go for ${s.horse.name}.</p>`;
   }
 
+  const PSEAT = 52;   // the painted horse: its saddle seat this high above the ground line (the rider stands 30 up, legs behind the barrel)
   /* fight scene: draw the horse under the rider (FIGHTART calls this with the hero's transform set).
      part "back" = legs, tail, neck and head (behind the rider); part "front" = the barrel and saddle cloth over the rider's legs */
   function drawHorse(g, color, lunge, tt, part = "back") {
+    if (typeof HORSEART !== "undefined" && HORSEART.ok(color, "stand")) {   // [OURS] the painted horse (horseart.js): whole behind you, its barrel over your legs
+      const bob = Math.abs(Math.sin(tt * 2.2)) * 0.7 + lunge * 2;
+      g.save(); g.translate(lunge * 6, 0);
+      HORSEART.ride(g, color, "stand", PSEAT, { bob, clip: part === "front" ? "barrel" : null });
+      g.restore(); return;
+    }
     const k = Math.sin(tt * 9) * 2 + lunge * 6, ink = "#1c2128";
     g.save(); g.translate(-4, 0); g.scale(1.5, 1.5);
     g.strokeStyle = ink; g.lineCap = "round";
@@ -112,6 +119,15 @@ const HORSEBACK = (() => {
   function downAt(f, frac) { const m = f?.mount; if (!m || m.foot || !m.downTurn) return false; return !upAt(f, frac); }
   /* fight scene: the downed horse lying on its side behind you, ink style, with a "Downed" tag (feet line at y 0) */
   function drawDowned(g, color, tt, label = "Downed") {
+    if (typeof HORSEART !== "undefined" && HORSEART.ok(color, "down")) {   // [OURS] the painted horse lying down (horseart.js), breathing slowly
+      const br = Math.sin(tt * 1.6) * 0.008, w = 88;
+      g.save(); g.translate(4, 0); g.scale(1, 1 + br); HORSEART.lying(g, color, w); g.restore();
+      if (label) {
+        g.save(); g.font = "700 9px Cinzel, Georgia, serif"; g.textAlign = "center"; const tw = g.measureText(label).width + 10, ty = -w * 0.44 - 6;
+        g.fillStyle = "rgba(28,33,40,0.72)"; g.fillRect(8 - tw / 2, ty - 10, tw, 13); g.fillStyle = "#ff8a7a"; g.fillText(label, 8, ty - 0.5); g.restore();
+      }
+      return;
+    }
     const ink = "#1c2128", br = Math.sin(tt * 1.6) * 0.6;   // slow, heavy breathing
     g.save(); g.lineCap = "round"; g.lineJoin = "round"; g.strokeStyle = ink;
     g.lineWidth = 3; g.beginPath(); g.moveTo(-6, -6); g.lineTo(6, -2); g.moveTo(0, -8); g.lineTo(12, -6); g.moveTo(22, -7); g.lineTo(34, -3); g.moveTo(26, -9); g.lineTo(38, -8); g.stroke();   // folded legs
