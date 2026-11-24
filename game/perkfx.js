@@ -152,6 +152,7 @@ const PFX = (() => {
     [ "Speechcraft", "shield_brother", "Shield-Brother", 1, [60], ["leadership"], "Combos with your follower, summons and party hit 25% harder (Shatter, Overload, Steam, Thermal shock, Opening). [OURS]", [["combo", 0.25, {}]]],
     [ "Speechcraft", "talk_down", "Talk Down", 1, [50], ["bribery"], "Bribes and fines cost 25% less. [OURS]", [["bribe", 0.25, {}]]],
     [ "Speechcraft", "rally", "Rally", 1, [80], ["inspiring"], "Your follower and party allies fight another 15% harder. [OURS]", [["allies", 0.15, {}]]],
+    [ "Etiquette", "proud_heritage", "Proud Heritage", 1, [30], ["courtly_manners"], "Your race's gifts (resistances, Imperial luck, Orc forge-blood...) are 25% stronger. [OURS]", [["heritage", 0.25, {}]]],
     [ "Speechcraft", "orator", "Orator", 1, [100], ["commanding_voice", "rally"], "Jobs pay 10% more and prices are 5% better. [OURS]", [["job", 0.1, {}], ["price", 0.05, {}]]],
     // ---------------------------------------------------------------- Etiquette (3 → 9)
     [ "Etiquette", "good_host", "Good Host", 1, [30], ["courtly_manners"], "Inns and trainers cost another 10% less. [OURS]", [["inn", 0.1, {}]]],
@@ -295,6 +296,16 @@ const PFX = (() => {
     [ "Illusion", "volk_blood_of_harkon", "Blood of Harkon", 1, [30], [], "Volkihar only. Your Vampire Lord form lasts 3 turns longer, and changing heals a tenth of your health. [OURS]", [["lordturns", 3, {}], ["lordheal", 0.1, {}]]],
     [ "Illusion", "volk_night_lord", "Night Lord", 1, [45], ["volk_blood_of_harkon"], "Volkihar only. As a Vampire Lord your drain life is 30% stronger. [OURS]", [["lorddrain", 0.3, {}]]],
     [ "Illusion", "volk_court", "Court of Volkihar", 1, [60], ["volk_night_lord"], "Volkihar only. As a Vampire Lord you hit 20% harder and take 10% less damage. [OURS]", [["lordout", 0.2, {}], ["lordin", -0.1, {}]]],
+    // ---------------------------------------------------------------- the three sides (sides.js): one side's perks each; changing sides takes them back
+    [ "One-Handed", "sc_nord_steel", "Nord Steel", 1, [30], [], "Stormcloaks only. One-handed blows hit 10% harder in the northern holds (Haafingar, Hjaalmarch, the Pale, Winterhold, Eastmarch). [OURS]", [["out", 0.1, { sk: "One-Handed", north: 1 }]]],
+    [ "Light Armor", "sc_winter_born", "Winter-Born", 1, [25], [], "Stormcloaks only. Frost hurts you 15% less. [OURS]", [["in", -0.15, { foeEl: "frost" }]]],
+    [ "One-Handed", "sc_sons_of_skyrim", "Sons of Skyrim", 1, [50], ["sc_nord_steel"], "Stormcloaks only. You hit soldiers of the other sides 10% harder. [OURS]", [["out", 0.1, { warFoe: 1 }]]],
+    [ "Blocking", "im_shield_drill", "Legion Shield Drill", 1, [30], [], "Imperial Legion only. With a shield up, blocking stops 8% more. [OURS]", [["block", 0.08, { shield: 1 }]]],
+    [ "Speechcraft", "im_writ", "Imperial Writ", 1, [25], [], "Imperial Legion only. Fines and bribes cost 25% less. [OURS]", [["bribe", 0.25, {}]]],
+    [ "Heavy Armor", "im_legion_drill", "Legion Drill", 1, [40], [], "Imperial Legion only. Soldiers of the other sides hit you 10% softer. [OURS]", [["in", -0.1, { warFoe: 1 }]]],
+    [ "Destruction", "ad_focus", "Aldmeri Focus", 1, [30], [], "Aldmeri Dominion only. Destruction spells cost 10% less. [OURS]", [["scost", 0.1, { school: "Destruction" }]]],
+    [ "Alteration", "ad_wellspring", "Wellspring of Aldmeris", 1, [30], [], "Aldmeri Dominion only. Magicka comes back 25% faster in fights. [OURS]", [["regenmp", 0.25, {}]]],
+    [ "Destruction", "ad_justiciar", "Justiciar's Rebuke", 1, [50], ["ad_focus"], "Aldmeri Dominion only. You soak up 10% of the magic that soldiers of the other sides throw at you. [OURS]", [["absorb", 0.1, { warFoe: 1 }]]],
     // ---------------------------------------------------------------- the Dwemer ruins and Blackreach (dwemer.js, blackreach.js)
     [ "Smithing", "dwemer_tinkerer", "Dwemer Tinkerer", 1, [35], ["dwarven_smithing"], "Each piece of Dwemer scrap smelts into one more Dwarven ingot, and you know where to hit a machine: 10% more damage to Dwarven constructs. [OURS]", [["dwscrap", 1, {}], ["out", 0.1, { tag: ["construct"] }]]],
     [ "Lockpicking", "dwemer_lore", "Dwemer Lore", 1, [30], ["apprentice_locks"], "Dwemer puzzles show you the next valve or ring to turn, valves hold three more turns before they blow, and half the time a beaten foe in a Dwemer ruin leaves extra scrap. [OURS]", [["dwlore", 1, {}], ["dwloot", 0.5, {}]]],
@@ -305,7 +316,7 @@ const PFX = (() => {
     [ "Blocking", "read_the_signs", "Read the Signs", 1, [30], ["shield_wall"], "A boss's big attacks (the ones it shows a turn ahead) hurt you 25% less. [OURS]", [["bftele", 0.25, {}]]],
     // ---------------------------------------------------------------- player-run holds (holdrule.js)
     [ "Speechcraft", "fair_dues", "Fair Dues", 2, [20, 45], [], "A hold's tax costs you half as much when you shop there (rank 2: you pay none). [OURS]", [["holdtax", 0.5, {}]]],
-    [ "Speechcraft", "jarls_favour", "Jarl's Favour", 1, [50], ["fair_dues"], "In a hold your clan rules, shops sell to you another 5% cheaper, and while you're its Jarl, taxes fill the treasury 20% faster. [OURS]", [["jarlfav", 0.05, {}], ["jarlpurse", 0.2, {}]]],
+    [ "Speechcraft", "jarls_favour", "Jarl's Favour", 1, [50], ["fair_dues"], "In a hold your side rules, shops sell to you another 5% cheaper, and while you're its Jarl, taxes fill the treasury 20% faster. [OURS]", [["jarlfav", 0.05, {}], ["jarlpurse", 0.2, {}]]],
     [ "Etiquette", "hold_warden", "Hold Warden", 1, [35], ["courtly_manners"], "In hold challenges and raids, the champion and the defenders have 10% less health and hit 10% softer. [OURS]", [["holdfight", 0.1, {}]]],
     [ "Two-Handed", "break_their_focus", "Break Their Focus", 1, [35], ["barbarian"], "Any blow that takes a tenth of a boss's health breaks the big attack it's getting ready, and it reels and loses its next move. [OURS]", [["bfbreak", 1, {}]]],
     // ---------------------------------------------------------------- shouts and weather (thuum.js, wxmatters.js, weatherfx.js)
@@ -367,7 +378,9 @@ const PFX = (() => {
     if (c.kind && x.kind !== c.kind) return false;
     if (c.school && x.school !== c.school) return false;
     if (c.blocking && !x.blocking) return false;
+    if (c.north && !(typeof SIDES !== "undefined" && SIDES.inNorth(s))) return false;   // sides.js: the northern holds
     if (f) {
+      if (c.warFoe && !(f.e?.warSide && typeof SIDES !== "undefined" && f.e.warSide !== SIDES.mine(s))) return false;   // a player of another side (sides.js)
       const tags = f.tags || new Set(), n = f.e?.name || "";
       if (c.tag && !c.tag.some((t) => tags.has(t))) return false;
       if (c.tough && !(tags.has("elite") || tags.has("dragon") || f.e?.boss || f.e?.danger === "high")) return false;
@@ -384,7 +397,7 @@ const PFX = (() => {
       if (c.bossFoe && !f.bf) return false;   // bossfight.js
       if (c.bossLast && !(f.bf && f.bf.phase >= f.bf.th.length)) return false;
       if (c.venom && !(f.e?.poison || tags.has("venom") || (VENOM.test(n) && !/dwarven|brass/i.test(n)))) return false;   // Resist Poison
-    } else if (c.foeBelow || c.tag || c.tough || c.big || c.magic || c.archerFoe || c.hpBelow || c.hpAbove || c.first || c.mounted || c.bigHit || c.dark || c.foeEl || c.venom || c.bossFoe || c.bossLast) return false;
+    } else if (c.foeBelow || c.tag || c.tough || c.big || c.magic || c.archerFoe || c.hpBelow || c.hpAbove || c.first || c.mounted || c.bigHit || c.dark || c.foeEl || c.venom || c.bossFoe || c.bossLast || c.warFoe) return false;
     return true;
   }
   function each(s, key, f, x, fn) {
@@ -393,6 +406,8 @@ const PFX = (() => {
       if (!r || !fx) continue;
       for (const [k, v, c] of fx) if (k === key && ok(s, c, f, x)) fn(val(v, r), id);
     }
+    // what your race is born with (racefx.js): Resist Frost, Imperial Luck, Orc Forge-Blood...
+    if (typeof RACEFX !== "undefined" && s.race) for (const [k, v, c] of RACEFX.fx(s)) if (k === key && ok(s, c, f, x)) fn(v, "race");
     // worn enchantments that work like perks (Resist Fire, Fortify Block, Fortify Critical, Evasion... see enchanting.js PFXMAP)
     if (typeof ENCH !== "undefined" && ENCH.pfxWorn && s.loadouts && s.inv) for (const [k, v, c] of ENCH.pfxWorn(s, f)) if (k === key && ok(s, c, f, x)) fn(v, "ench");
   }

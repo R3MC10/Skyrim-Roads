@@ -91,6 +91,7 @@ const G = (() => {
     return [+q[0].toFixed(4), +q[1].toFixed(4)];
   };
   function migrate(s) {
+    if (typeof APPEAR !== "undefined") APPEAR.migrate(s);   // an old save keeps its face as a chosen look (appear.js)
     if (Array.isArray(s.pins) && typeof GI !== "undefined") for (const p of s.pins) if (p) p.icon = GI.swap(p.icon);   // map pins saved with emoji get the matching game icon
     // a won turn-by-turn road fight used to leave the road blocked by a dead foe: clear it
     if (s.trip?.status === "encounter" && (!s.trip.encounter || s.trip.encounter.hp <= 0)) { s.trip.status = "travel"; s.trip.encounter = null; s.trip.lastTick = now(); }
