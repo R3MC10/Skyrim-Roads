@@ -76,7 +76,7 @@ const pb = FIGHTART.beatsOf({ ...tb, followerDown: null, log: [{ me: " · Beta a
 ok(pb[0].allyActs[0].clip === "attack" && pb[1].allyActs[0].clip === "down" && pb.downEnd.has("Beta"), "a party member swings and goes down");
 
 // 3) the rig takes every clip in both art styles, blends without NaN, and the poses really differ
-for (const style of ["ink", "pixel"]) {
+for (const style of ["ink"]) {
   ART.drawingStyle = () => style;
   for (const clip of ["idle", "attack", "cast", "block", "hit", "down"]) for (const u of [0, 0.3, 0.55, 0.8]) { real(g, { look }, { t: 1, clip, u }); real(g, { look }, { t: 1, clip, u, from: "idle", fu: 0, w: 0.5 }); }
   real(g, { look: { ...look, eq: { ...look.eq, weapon: "hunting_bow" } } }, { t: 1, clip: "attack", u: 0.3 });

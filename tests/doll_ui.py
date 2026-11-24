@@ -22,8 +22,7 @@ async def main():
         await pg.screenshot(path="doll_create.png", full_page=True)
         await pg.click(".rpick[data-race=nord]"); await pg.fill("#nm", "Dolly"); await pg.click("#begin"); await pg.wait_for_timeout(1200)
         await pg.evaluate("""()=>{const S=window.__dbg.save(); for (const i of ['steel_sword','steel_armor','steel_helmet','iron_shield','iron_greatsword','hunting_bow','leather_boots','iron_gauntlets']) G.give(S,i); G.give(S,'arrow_iron',20);}""")
-        for style in ["ink", "pixel"]:
-            await pg.evaluate(f"ART.setStyle('{style}')")
+        for style in ["ink"]:
             await pg.evaluate("()=>{const S=window.__dbg.save(); for (const sl of G.SLOTS) G.unequip(S, sl);}")
             await pg.evaluate("document.querySelector('#sky')?.remove()")
             await click("[data-tab=pack]"); await pg.wait_for_timeout(300)

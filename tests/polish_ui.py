@@ -11,8 +11,8 @@ async def main():
         await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Polly"); await pg.click("#begin"); await pg.wait_for_timeout(2500)
         clear = "document.querySelectorAll('#modal').forEach(m=>m.remove())"
         await pg.evaluate(clear)
-        for style in ["ink", "pixel"]:
-            await pg.evaluate(f"()=>{{ ART.setStyle('{style}'); POLISH.texture(); }}")
+        for style in ["ink"]:
+            await pg.evaluate(f"()=>{{ POLISH.texture(); }}")
             for t in ["map", "hero", "tactics", "town", "log"]:
                 await pg.evaluate(clear)
                 await pg.click("[data-tab=hero]" if t == "tactics" else f"[data-tab={t}]")

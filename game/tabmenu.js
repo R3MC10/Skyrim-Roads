@@ -136,7 +136,6 @@ const TABMENU = (() => {
   const $ = (s) => document.querySelector(s);
   const ui = () => window.__ui || {};
   const save = () => window.__dbg?.save?.();
-  const pixel = () => typeof ART !== "undefined" && ART.style() === "pixel";
   const ICO = {
     char: '<circle cx="12" cy="7" r="3.6"/><path d="M4.5 21c1-5 4.4-7 7.5-7s6.5 2 7.5 7"/><path d="M18 3l.8 1.6 1.7.3-1.2 1.2.3 1.7-1.6-.8-1.6.8.3-1.7-1.2-1.2 1.7-.3z"/>',
     items: '<path d="M6 8h12l-1 13H7z"/><path d="M9 8V6a3 3 0 016 0v2"/>',
@@ -178,7 +177,6 @@ const TABMENU = (() => {
     const pos = posOf(S), place = !S.trip && S.location;
     let key = place ? `p|${place}` : "w";
     try { if (typeof SKY !== "undefined") key += "|" + SKY.state(pos).key; } catch { /* ignore */ }
-    key += "|" + (pixel() ? "px" : "ink");
     if (key === bgKey && el.firstChild) return;
     bgKey = key;
     let html = "";
@@ -234,7 +232,6 @@ const TABMENU = (() => {
     if (tk !== lastTop) { lastTop = tk; el.querySelector(".tw-where").textContent = tp.where; el.querySelector(".tw-when").innerHTML = `${tp.skyI}<span>${esc(tp.when)}</span>`; const fcEl = el.querySelector(".tw-fc"); if (fcEl) fcEl.textContent = tp.fc ? `Forecast: ${tp.fc}` : ""; }
     const bh = barHTML(bar(S));
     if (bh !== lastBar) { lastBar = bh; el.querySelector(".tw-bar").innerHTML = bh; }
-    el.classList.toggle("tw-px", pixel());
   }
   function openHub() {
     const S = save(); if (!live || !S || $("#title") || $("#dun")) return false;

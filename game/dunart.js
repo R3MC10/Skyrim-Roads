@@ -1,6 +1,6 @@
 /* Dungeon art: a drawn map of the dungeon you're in (rooms as themed chambers joined by torch-lit corridors,
    fog over the deep rows, the boss chamber at the end), a flickering torch overlay, a loot strip with item icons,
-   and small animations for chests, traps and campfires. Uses the shared ART toolkit, so both art styles work. [OURS] */
+   and small animations for chests, traps and campfires. Uses the shared ART toolkit. [OURS] */
 const DUNART = (() => {
   const LX = (x) => (typeof I18N_SWEEP !== "undefined" ? I18N_SWEEP.c(x) : x);   // words drawn on canvas, in the player's language
   // ---- colours per dungeon theme: background, corridor, chamber fill, chamber edge, accent
@@ -46,7 +46,7 @@ const DUNART = (() => {
     }
   }
 
-  // ---- room-type symbols, drawn in ink so they read in both styles
+  // ---- room-type symbols, drawn in ink
   function symbol(g, H, type, x, y, s, theme, col = "#1c1612") {
     g.save(); g.translate(x, y); g.strokeStyle = col; g.fillStyle = col; g.lineCap = "round"; g.lineJoin = "round";
     const line = (pts, w = 2.2) => { g.lineWidth = w; g.beginPath(); pts.forEach(([a, b], i) => (i ? g.lineTo(a * s, b * s) : g.moveTo(a * s, b * s))); g.stroke(); };
@@ -158,24 +158,14 @@ const DUNART = (() => {
     const rows = d.rows, h = heightOf(rows), next = nextSet(d);
     const key = `dun|${d.place}|${d.theme}|${JSON.stringify(rows.map((r) => r.map((n) => n.type[0] + n.links.join(""))))}|${d.row}|${d.col}|${(d.path || []).join(";")}|${d.done ? 1 : 0}|${d.room ? 1 : 0}`;
     let torches = [];
-    const url = ART.style() === "pixel" ? pixelURL(key, h, (g, H) => { torches = drawMap(g, H, W, h, d, next); })
-      : ART.url(W, h, (g, H, w, hh) => { torches = drawMap(g, H, w, hh, d, next); }, { key });
+    const url = ART.url(W, h, (g, H, w, hh) => { torches = drawMap(g, H, w, hh, d, next); }, { key });
     if (!torches.length) torches = torchSpots(d);
     const nodes = [...next].map((k) => { const [r, c] = k.split(":").map(Number), [x, y] = xy(rows, r, c), n = rows[r][c];
       return `<button class="dnode" data-act="droom" data-c="${c}" style="left:${(x / W * 100).toFixed(2)}%;top:${(y / h * 100).toFixed(2)}%" aria-label="Go to: ${DUNGEONS.LABEL[n.type]}"></button>`; }).join("");
     const here = d.row >= 0 && !d.done ? xy(rows, d.row, d.col) : null;
     return `<div class="dmap" data-w="${W}" data-h="${h}" data-torch="${torches.map((p) => p.map(Math.round).join(",")).join(";")}" data-here="${here ? here.map(Math.round).join(",") : ""}" data-theme="${d.theme}">
-      <img src="${url}" width="${W}" height="${h}" alt="Map of ${String(d.place).replace(/"/g, "")}" ${ART.style() === "pixel" ? 'style="image-rendering:pixelated"' : ""}>
+      <img src="${url}" width="${W}" height="${h}" alt="Map of ${String(d.place).replace(/"/g, "")}">
       <canvas class="dflick" aria-hidden="true"></canvas>${nodes}</div>`;
-  }
-  /* pixel look for the map: draw it at half size and let the browser blow it up with hard edges. The shared
-     palette filter would turn the grey stone green here, so the dungeon keeps its own colours. */
-  const pxCache = new Map();
-  function pixelURL(key, h, draw) {
-    if (pxCache.has(key)) return pxCache.get(key);
-    const k = 0.5, c = document.createElement("canvas"); c.width = Math.round(W * k); c.height = Math.round(h * k);
-    const g = c.getContext("2d"); g.imageSmoothingEnabled = false; g.scale(k, k); draw(g, ART.H);
-    const u = c.toDataURL("image/png"); if (pxCache.size > 40) pxCache.delete(pxCache.keys().next().value); pxCache.set(key, u); return u;
   }
   function torchSpots(d) {   // the same spots drawMap uses, when the drawing came from the cache
     const rows = d.rows, path = d.path || [], out = [];
@@ -193,9 +183,8 @@ const DUNART = (() => {
     const torches = (box.dataset.torch || "").split(";").filter(Boolean).map((s) => s.split(",").map(Number));
     const here = box.dataset.here ? box.dataset.here.split(",").map(Number) : null;
     const next = [...box.querySelectorAll(".dnode")].map((b) => [parseFloat(b.style.left) / 100 * w, parseFloat(b.style.top) / 100 * h]);
-    const pixel = ART.style() === "pixel", k = pixel ? 0.34 : typeof FITCANVAS !== "undefined" ? FITCANVAS.ratio(cv, w) : Math.min(2, devicePixelRatio || 1);   // the map is shown up to 560 wide: size from the box
+    const k = typeof FITCANVAS !== "undefined" ? FITCANVAS.ratio(cv, w) : Math.min(2, devicePixelRatio || 1);   // the map is shown up to 560 wide: size from the box
     cv.width = Math.round(w * k); cv.height = Math.round(h * k);
-    if (pixel) cv.style.imageRendering = "pixelated";
     const g = cv.getContext("2d"); g.setTransform(k, 0, 0, k, 0, 0);
     const glow = (x, y, r, a, col) => { const gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, `rgba(${col},${a})`); gr.addColorStop(1, `rgba(${col},0)`); g.fillStyle = gr; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); };
     let last = 0;
@@ -237,8 +226,8 @@ const DUNART = (() => {
   function chestHTML(open) { return `<canvas class="dchest" width="120" height="84" data-open="${open ? 1 : 0}" aria-hidden="true"></canvas>`; }
   function animateChest(root, reduce) {
     const cv = root?.querySelector(".dchest"); if (!cv) return;
-    const dpr = Math.min(2, devicePixelRatio || 1), w = 120, h = 84, pixel = ART.style() === "pixel", k = pixel ? 0.5 : dpr;
-    cv.width = w * k; cv.height = h * k; cv.style.width = w + "px"; cv.style.height = h + "px"; if (pixel) cv.style.imageRendering = "pixelated";
+    const dpr = Math.min(2, devicePixelRatio || 1), w = 120, h = 84, k = dpr;
+    cv.width = w * k; cv.height = h * k; cv.style.width = w + "px"; cv.style.height = h + "px";
     const g = cv.getContext("2d"); g.setTransform(k, 0, 0, k, 0, 0);
     const open = cv.dataset.open === "1", t0 = performance.now(), dur = reduce ? 0 : 900;
     const draw = (p) => {

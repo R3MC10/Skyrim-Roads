@@ -6,7 +6,7 @@
      Colour help   protanopia / deuteranopia / tritanopia: CSS variables for health / magicka / stamina, danger,
                    buffs, loot rarity and enemy colours, plus a small colour map that canvas drawing goes through
                    (map markers, fight bars) — swapped at the canvas fillStyle / strokeStyle level, so the art files
-                   need no changes and both art styles keep working.
+                   need no changes.
      High contrast brighter grey text, solid dark panels, firmer outlines.
      Reduce motion "auto" follows the phone's setting; "on" / "off" override it. Every module that asks
                    matchMedia("(prefers-reduced-motion: reduce)") gets this answer, so screen shake, hit flashes,

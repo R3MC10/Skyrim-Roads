@@ -49,8 +49,8 @@ async def main():
                 bad = await pg.evaluate(OVERFLOW)
                 if bad: fails.append(f"{vw} {name}: {bad[:6]}")
 
-            for style in ["ink", "pixel"]:
-                await pg.evaluate(f"ART.setStyle('{style}'); __ui.go('map')"); await pg.wait_for_timeout(300)
+            for style in ["ink"]:
+                await pg.evaluate(f"__ui.go('map')"); await pg.wait_for_timeout(300)
                 for size in ["0", "3"]:
                     await pg.evaluate(f"ACCESS.pref('a11yText','{size}'); __ui.go('map')"); await pg.wait_for_timeout(300)
                     await pg.evaluate(CLEAR)
@@ -58,7 +58,7 @@ async def main():
                     await pg.evaluate("document.querySelector('#rmd-card')?.scrollIntoView({block:'start'})")
                     await shot(f"{style}_text{size}_card")
                     await pg.evaluate("scrollTo(0, document.documentElement.scrollHeight)"); await shot(f"{style}_text{size}_tabs")
-            await pg.evaluate("ACCESS.pref('a11yText','0'); ART.setStyle('ink'); __ui.go('map')")
+            await pg.evaluate("ACCESS.pref('a11yText','0'); __ui.go('map')")
 
             # badges: Hero has the level-up, Travel has the far-away things
             await pg.evaluate("REMIND.paint()")

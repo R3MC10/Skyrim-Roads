@@ -1,5 +1,5 @@
 /* Effects art: festival decorations on town pictures, spell and shout effects on the map, and a little animated strip
-   of you on the road while you travel. Drawn with the shared toolkit (art.js), in both art styles. [OURS]
+   of you on the road while you travel. Drawn with the shared toolkit (art.js). [OURS]
      FXART.festId()                         → the festival on now (or one forced for tests), or null
      FXART.festDecor(g, H, w, h, id, seed)  draws that festival's decorations over a town picture
      FXART.festSection(g, H, w, h, id, sec) small touches over a town-section banner (the inn gets confetti)

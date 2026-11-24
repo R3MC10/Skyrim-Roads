@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b144-nopixel", build: 144, date: "24 Nov 2026", title: "One art style: hand-drawn", items: [
+      "The pixel-art look is gone. The game now has one style, the hand-drawn one, so every picture, menu and fight gets the full care.",
+      "If you had pixel art switched on, you'll just see the hand-drawn look next time you open the game. Nothing else changes, and your save is untouched.",
+      "The Art style row is gone from Settings.",
+    ] },
     { id: "b144-homechest", build: 144, date: "24 Nov 2026", title: "A proper chest in your house", items: [
       "Your house chest now works like a Skyrim chest: switch between the Chest and Your pack, filter by Weapons, Apparel, Potions, Scrolls, Food, Ingredients, Books and Misc, and sort by name, stat, weight or value.",
       "Every item in the chest and in your pack has its picture again.",
