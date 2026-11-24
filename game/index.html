@@ -1794,6 +1794,18 @@ html.art-pixel .tbint,html.art-pixel .tbfcl .fp,html.art-pixel .tbskip,html.art-
 .mo-on .modal,.mo-on .modal .sheet{animation:none}
 .mo-on:not(.mo-lite) .modal{-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
 @media (prefers-reduced-motion:reduce){.tbbar s.tbfc,.tbint.big,.tbbub,.tbban.round,.tbban.foe{animation:none!important}#tbf.tblow::after{animation:none;opacity:.6}}
+/* party votes on the road (partyplay.js): voters' faces pop in by the option they picked */
+.pvhas,[data-act=ppvote]{position:relative}
+.pvchips{position:absolute;top:-11px;right:-4px;display:flex;flex-direction:row-reverse;pointer-events:none;z-index:2}
+.pvchip{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;margin-left:-9px;border-radius:50%;background:#2a241c;border:2px solid #e8c66a;box-shadow:0 2px 6px rgba(0,0,0,.55);overflow:hidden;animation:pvpop .38s cubic-bezier(.3,1.6,.5,1) both}
+.pvchip img,.pvchip canvas{width:100%;height:100%;display:block;border-radius:50%}
+.pvchip b{font-size:13px;color:#f1e3c0}
+@keyframes pvpop{0%{opacity:0;transform:translateY(8px) scale(.2)}70%{opacity:1;transform:translateY(-2px) scale(1.12)}100%{transform:none}}
+[data-act=ppvote].pvmine{outline:2px solid #e8c66a;outline-offset:1px}
+.pvnote{margin:8px 0 4px;color:#e8c66a}
+.pvopts{margin-top:14px}.ppvote .evc,.ppvote .pvopts{padding-top:6px}
+html.art-pixel .pvchip{border-radius:2px;border-width:3px;box-shadow:2px 2px 0 rgba(0,0,0,.6)}html.art-pixel .pvchip img{border-radius:0;image-rendering:pixelated}
+@media (prefers-reduced-motion:reduce){.pvchip{animation:none}}
 /* followers as full characters (followerai.js): magicka/stamina under their health, row + tactic; Tactics tab; foe weak/resist chips (combo.js) */
 .tbu .faibars{display:flex;gap:3px;margin-top:2px}.tbu .faibars .tbbar{flex:1;height:4px;min-height:4px}.tbu .faibars .tbbar i{height:100%}
 .tbu .fairow{display:block;font-size:10px;opacity:.75;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

@@ -14,12 +14,19 @@ const PATCHNOTES = (() => {
       "On a PC: keys 1 to 9 use the numbered moves, Space ends your turn (and skips the foe's turn or presses Continue), M opens Magic, I opens Items, F flees, Esc goes back.",
       "Prefer the old cards or the combat wheel? Settings, Fights, Controls. The target button at the top still switches the timing ring on or off.",
     ] },
+    { id: "b136vote", build: 136, date: "24 Nov 2026", title: "Vote on the road with your party", items: [
+      "Travelling together: when the party leader runs into a foe or something by the road, everyone with them now gets the same window with the same choices, not just a \"wait\" note.",
+      "Members tap a choice to vote for it. Your little portrait pops up next to the option you picked, on everyone's phone, the leader's too, and moves as people change their minds. Tap it again to take your vote back, or Just watch to close the window.",
+      "Only the leader's tap actually happens. When they choose, everyone's window closes and you see what they picked and how it went.",
+    ] },
+    { id: "b136", build: 136, date: "24 Nov 2026", title: "Meet caravans on the road", items: [
+    ] },
     { id: "b137-tomeinfo", build: 137, date: "24 Nov 2026", title: "Know the spell before you buy the tome", items: [
       "Spell tomes for sale now tell you what you'd learn: the school, the level (Novice to Master), how much magicka and how many AP it costs, and what it does, with your own numbers.",
       "Each tome also says if you already know the spell and if your skill is high enough. Too low, and it warns you the spell will cost more and sometimes fizzle.",
       "You see this at court wizards, the College, general stores, travelling traders, caravans, the Khajiit caravan, other players' market stalls, in your pack, in fight loot, in the party loot vote and in search.",
     ] },
-    { id: "b136", build: 136, date: "24 Nov 2026", title: "Followers fight like you do", items: [
+    { id: "b136-2", build: 136, date: "24 Nov 2026", title: "Followers fight like you do", items: [
       "Your follower is now a full character. They have their own magicka and stamina, take their own turn with action points like yours, and pick from the same moves: attacks, power attacks, guarding, stepping in front of you, spells and potions.",
       "Teach them spells: open the follower screen, go to Magic and hand them a spell tome from your pack. They can learn it if they're good enough in that school (Apprentice 25, Adept 50, Expert 75, Master 90). You can tell them not to use a spell.",
       "Mages throw fire, frost and shock, healers patch you and the party up, conjurers call atronachs and raise the dead, and some cast flesh spells and wards. Their summons fight on their own and fade after a few turns.",
@@ -43,7 +50,7 @@ const PATCHNOTES = (() => {
       "Wolves lunge and snap, bears rear up and swipe, spiders rear back and bite, mudcrabs pinch, dragons rear up and spread their wings before they breathe, mammoths stomp, ice wraiths coil and strike.",
       "The painted enemy pictures move too: they bend, lunge into their attacks, recoil when hit and fall over. Works in both the hand-drawn and the pixel art style.",
     ] },
-    { id: "b136-2-2", build: 136, date: "24 Nov 2026", title: "Your hero, properly drawn", items: [
+    { id: "b136-2-2-2", build: 136, date: "24 Nov 2026", title: "Your hero, properly drawn", items: [
       "Characters got a big art upgrade: real proportions, shading, faces that match your race (snouts, whiskers, tusks, pointy ears, tails), hair and beards.",
       "Everything you wear shows up: helmet, armour and its colours, cloak, shield, weapon, even an amulet or ring.",
       "Your hero now actually walks on the road, rides the horse properly, sits on the wagon bench, and swings, blocks, casts and gets knocked down in fights. Moves flow smoothly from one into the next.",
@@ -74,7 +81,7 @@ const PATCHNOTES = (() => {
     { id: "b135-fix", build: 135, date: "24 Nov 2026", title: "Small fix", items: [
       "Fixed: with the Prospector perk, now really every ore vein glints in the mining game (one could stay hidden before).",
     ] },
-    { id: "b136-2-2-2", build: 136, date: "24 Nov 2026", title: "A proper road picture while you travel", items: [
+    { id: "b136-2-2-2-2", build: 136, date: "24 Nov 2026", title: "A proper road picture while you travel", items: [
       "The little picture under your trip is now a real moving landscape: snowy mountains far off, hills and forests that match where you are (pines, the Rift's golden birches, marsh, snowfields, ash wastes, rocky hills), and a road with ruts or old flagstones.",
       "The sky and light follow the real time of day: sun, moons, stars and northern lights at night, warm light at dusk. Snow, rain with lightning, fog, ash and autumn leaves blow through when that's the weather.",
       "Things pass by on the way: signposts, wayshrines, standing stones, ruins, camps and lanterns, and other travellers, guard patrols and Khajiit caravans come the other way. At night you carry a torch and windows light up.",
