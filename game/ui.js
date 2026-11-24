@@ -320,7 +320,7 @@
       ${typeof ONBOARD !== "undefined" ? ONBOARD.settingsHTML(seg) : ""}
       <h3>Crafting</h3><div class="setrow"><span>When you craft</span>${seg("craftGame", [[true, "Mini-games"], [false, "Quick craft"]], getPref("craftGame", true))}</div>
       ${S && typeof WFX !== "undefined" ? `<h3>Survival</h3><div class="setrow"><span>Cold meter</span>${seg("survival", [[true, "On (gentle)"], [false, "Off"]], S.survival !== false)}</div>` : ""}
-      <h3>Map</h3><div class="setrow"><span>Map opens</span>${seg("zoomFar", [[false, "Close up"], [true, "All Skyrim"]], getPref("zoomFar", false))}</div>
+      <h3>Map</h3><div class="setrow"><span>Map opens</span>${seg("zoomFar", [[false, "Close up"], [true, "All Skyrim"]], getPref("zoomFar", false))}</div>${typeof PCMAP !== "undefined" ? PCMAP.settingsHTML(seg) : ""}
       ${APP ? `<h3>Phone</h3><div class="setrow"><span>Notifications</span>${seg("notify", [[true, "On"], [false, "Off"]], getPref("notify", true))}</div>${typeof REMIND !== "undefined" ? REMIND.settingsHTML(seg) : ""}
       <p class="mute" style="font-size:13px">Updates download and install by themselves, at a quiet moment (never mid-fight, in a dungeon or a trade).</p>` : ""}`;
   }
@@ -339,6 +339,7 @@
     if (typeof FASTQOL !== "undefined" && FASTQOL.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }   // replay speed, carry on after road events
     if (k === "survival") { if (S) { S.survival = v; if (!v) S.coldV = 0; persist(); try { renderPanel(true); } catch { /* title */ } } SOUND.fx("click"); return true; }
     if (typeof PAINTEDMAP !== "undefined" && PAINTEDMAP.pref(k, b.dataset.v)) { SOUND.fx("click"); if (S) { try { renderPanel(true); } catch { /* title screen */ } } return true; }   // Graphics → Roads on the map (paintedmap.js)
+    if (typeof PCMAP !== "undefined" && PCMAP.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }   // Map → Map quality (pcmap.js, mapfx.js)
     if (typeof LIGHTFX !== "undefined" && LIGHTFX.pref(k, b.dataset.v)) { SOUND.fx("click"); if (S) { try { renderPanel(true); } catch { /* title screen */ } } return true; }   // Graphics → Lighting
     if (k === "motion") { MOTION.setPref(b.dataset.v); SOUND.fx("click"); return true; }
     if (k === "artStyle") { ART.setStyle(b.dataset.v); SOUND.fx("click"); if (typeof POLISH !== "undefined") POLISH.texture(); if (S) { try { renderPanel(true); } catch { /* title screen */ } } return true; }
@@ -584,6 +585,11 @@
     };
     $("#centerBtn").onclick = () => { mapTouchedAt = performance.now(); kickMap(); follow = true; if (zoom === 1) zoom = 2.4; $("#zoomBtn").textContent = "－"; };
     bindMap();
+    if (typeof GREET !== "undefined") GREET.mount({ S: () => S, Store, toast, persist: () => persist(), others: () => others, party: () => party, otherPos: (o) => otherPos(o), livePos: () => livePos() });   // Strangers until you greet each other (greet.js)
+    if (typeof PCMAP !== "undefined") PCMAP.mount({ S: () => S, party: () => party, others: () => others, otherPos: (o) => otherPos(o), livePos: () => livePos(), tab: () => tab, skyPage: () => sky?.page,   // PC: the map is the home screen (pcmap.js)
+      view: () => ({ zoom, center, transform: view.transform }), setView: (z, cn) => { zoom = z; center = cn; follow = false; mapTouchedAt = performance.now(); kickMap(); const zb = $("#zoomBtn"); if (zb) zb.textContent = zoom > 1.01 ? "－" : "＋"; },
+      recentre: () => { follow = true; mapTouchedAt = performance.now(); kickMap(); }, kick: () => { mapResized = true; kickMap(); },
+      go: (t) => window.__ui.go(t), openMenu: (p) => openMenu(p), closeMenu: () => closeMenu(), jump: (o) => window.__ui.jump(o), toast });
     if (typeof HUD !== "undefined") HUD.mount($("#mapwrap"), (name) => { if (WORLD.places[name]) { SOUND.fx("click"); selected = name; roamSpot = null; renderPicked(); } });
     $("#sndBtn").onclick = openSound;
     $("#socBtn").onclick = () => { SOUND.fx("click"); closeMenu(); tab = "social"; bump(); renderTabs(); renderPanel(true); $("#side").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" }); };
@@ -836,7 +842,7 @@
     const qp = questPos(), qa = qp ? QUESTS.tracked(S) : null;
     const raid = WEVENTS.activeRaid();
     HUD.compass({ pos, target, W, H, places: [...near.slice(0, 8), ...unk.slice(0, 3)],
-      players: others.filter((o) => !o.hiding && sameMap(o) && seesHero(o)).map((o) => ({ name: o.name, pos: otherPos(o) })).filter((o) => G.pxDist(pos, o.pos) < 220).slice(0, 8),
+      players: others.filter((o) => !o.hiding && sameMap(o) && seesHero(o)).map((o) => ({ name: typeof GREET !== "undefined" ? GREET.label(S, o, party) : o.name, pos: otherPos(o) })).filter((o) => G.pxDist(pos, o.pos) < 220).slice(0, 8),
       quest: qp ? { pos: qp, name: qa ? QUESTS.target(qa.st) : "" } : null,
       raid: raid && WORLD.places[raid.town] ? { town: raid.town, pos: WORLD.places[raid.town] } : null });
     if (typeof HUD2 !== "undefined") { const tq = QUESTS.tracked(S); HUD2.objective(tq && tq.st ? { title: tq.st.title, where: QUESTS.target(tq.st) } : null); }   // hud2.js: the objective line under the compass
@@ -922,7 +928,8 @@
     const mapAnim = (typeof MAPART !== "undefined" && MAPART.active()) || (typeof MOTION !== "undefined" && MOTION.mapBusy()) || (typeof MAPHERO !== "undefined" && MAPHERO.active());   // a discovery burst or an arrival puff playing   // a discovery burst playing
     const raidNow = typeof RAIDART !== "undefined" && WEVENTS.activeRaid();
     const fxNow = typeof FXART !== "undefined" && S ? FXART.state(S) : null;   // spell and shout effects on the map
-    const gap = moving || mapAnim ? 33 : weatherAnim || (raidNow && !reduceMotion) || (fxNow?.anim && !reduceMotion) ? 66 : 125;
+    const PC = typeof PCMAP !== "undefined" && PCMAP.on();   // PC map home screen (pcmap.js): smooth pan and zoom, living map (mapfx.js)
+    const gap = PC && performance.now() - mapTouchedAt < 400 ? 16 : moving || mapAnim ? 33 : PC && typeof MAPFX !== "undefined" && MAPFX.busy(reduceMotion) ? 50 : weatherAnim || (raidNow && !reduceMotion) || (fxNow?.anim && !reduceMotion) ? 66 : 125;
     if (!mapResized && ts - lastFrame < gap - 4) return gap - (ts - lastFrame);
     lastFrame = ts; mapResized = false;
     const pos = livePos();
@@ -935,7 +942,7 @@
       player: pos, name: S.name, look: myLook(), moving: S.trip?.status === "travel", trail: S.trip?.trail, dest: S.trip ? { pos: S.trip.dest, name: S.trip.destName, roam: !!S.trip.roam } : null, spot: selected === "__spot" ? roamSpot : null,
       route: S.trip && !S.trip.boat ? (S.trip.status === "travel" ? S.trip.path.slice(S.trip.idx + 1) : [S.trip.dest]) : null,
       sight: typeof SNEAKMODE !== "undefined" && !S.location && !S.dungeon ? SNEAKMODE.SIGHT_PX : 0, sneakRing: typeof SNEAKMODE !== "undefined" && S.sneak ? SNEAKMODE.myRange(S) : 0,
-      discovered: S.discovered, explored: [...S.explored, pos], others: others.filter((o) => sameMap(o) && seesHero(o)).map((o) => ({ name: (o.clan ? `[${o.clan}] ` : "") + o.name + (party?.members.some((m) => m.id === o.id) ? " ⚑" : ""), pos: otherPos(o), look: o.look, race: o.race, id: o.id, moving: !!o.moving, horse: typeof o.ride === "string" ? o.ride : null, party: !!party?.members.some((m) => m.id === o.id) })),
+      discovered: S.discovered, explored: [...S.explored, pos], atPlace: !!S.location, others: others.filter((o) => sameMap(o) && seesHero(o)).map((o) => ({ name: typeof GREET !== "undefined" ? GREET.label(S, o, party) : (o.clan ? `[${o.clan}] ` : "") + o.name + (party?.members.some((m) => m.id === o.id) ? " ⚑" : ""), stranger: typeof GREET !== "undefined" && !GREET.knows(S, o.id, party), atPlace: !!o.loc, pos: otherPos(o), look: o.look, race: o.race, id: o.id, moving: !!o.moving, horse: typeof o.ride === "string" ? o.ride : null, party: !!party?.members.some((m) => m.id === o.id) })),
       rulers: Object.entries(WARS.rulers(S)).map(([hold, c]) => ({ hold, color: c.colors[0] })),
       banners: CLANS.banners(homeDocs, S, VISITS.record(S)).filter((b) => WORLD.places[b.town]).map((b) => ({ ...b, pos: WORLD.places[b.town].slice(0, 2) })),
       cleared: clearedLeft(), bags: visibleBags(), selected: selected && WORLD.places[selected] ? selected : null, t: ts / 1000, zoom, center, reduceMotion, weather: WEVENTS.weather(pos).id, quest: questPos(), mask: typeof PRIESTS !== "undefined" ? PRIESTS.marker(S)?.pos : null, tmaps: typeof EXPLORE !== "undefined" ? EXPLORE.marks(S) : [], rumours: typeof RUMOURS !== "undefined" ? RUMOURS.marks(S) : [], herbs: typeof GATHER !== "undefined" ? GATHER.marks(S) : [], pins: (S.pins || []).map((p) => ({ pos: [p.x, p.y], label: `${p.icon} ${p.label}`, on: selected === "__pin:" + p.id })),
@@ -968,7 +975,8 @@
     const c = $("#map"), pts = new Map();
     let down = null, moved = false, pinch = null;
     const setZoom = (z, fx, fy) => {     // zoom keeping the point under the fingers still
-      z = Math.max(1, Math.min(6, z));
+      const PC = typeof PCMAP !== "undefined" && PCMAP.on();   // on a PC you can zoom out to all of Skyrim (pcmap.js)
+      z = Math.max(PC ? PCMAP.minZoomFor(c) : 1, Math.min(PC ? PCMAP.MAXZ : 6, z));
       if (view.transform && fx != null) {
         const { k, ox, oy } = view.transform, mx = (fx - ox) / k / WorldMap.W, my = (fy - oy) / k / WorldMap.H;
         const r = c.getBoundingClientRect(), nk = k * z / zoom;
@@ -1003,7 +1011,8 @@
       if (!down) return;
       const dx = e.clientX - down.x, dy = e.clientY - down.y;
       if (Math.hypot(dx, dy) > 8) { moved = true; clearTimeout(press); }
-      if (moved && zoom > 1 && view.transform) { follow = false; center = [down.c[0] - dx / (WorldMap.W * view.transform.k), down.c[1] - dy / (WorldMap.H * view.transform.k)]; }
+      if (moved && (zoom > 1 || (typeof PCMAP !== "undefined" && PCMAP.on())) && view.transform) { follow = false; center = [down.c[0] - dx / (WorldMap.W * view.transform.k), down.c[1] - dy / (WorldMap.H * view.transform.k)];
+        if (typeof PCMAP !== "undefined" && PCMAP.on()) center = PCMAP.clampCenter(center, zoom, c.clientWidth, c.clientHeight, center[1] >= 1.5 ? WORLD.SOL_OY : 0); }
     });
     const up = (e) => {
       pts.delete(e.pointerId);
@@ -1013,15 +1022,22 @@
       const wasMove = moved; down = null; clearTimeout(press);
       if (wasMove || pressed || !view.transform || e.type === "pointercancel") return;
       const r = c.getBoundingClientRect();
+      if (typeof GREET !== "undefined") { GREET.close(); if (GREET.tap(view, e.clientX - r.left, e.clientY - r.top)) return; }   // another hero: their card, Greet (greet.js)
       const cvTap = typeof CVROAD !== "undefined" && S.trip?.status === "travel" ? CVROAD.hit(view.caravans, screenToWorld(e.clientX - r.left, e.clientY - r.top), WorldMap.W, WorldMap.H, 24 / view.transform.k) : null;
       if (cvTap) return meetCaravan(cvTap.id);   // tapped a caravan's wagons while travelling: stop and meet them
       const pin = pinAt(e.clientX - r.left, e.clientY - r.top);
       selected = pin ? "__pin:" + pin.id : WorldMap.placeAt(view, e.clientX - r.left, e.clientY - r.top, known);
       if (!selected) { const w = screenToWorld(e.clientX - r.left, e.clientY - r.top); if (WORLD.onMap(w)) { roamSpot = w; selected = "__spot"; } }
+      if (selected && selected === S.location && typeof PCMAP !== "undefined" && PCMAP.on()) { selected = null; renderPicked(); tab = "town"; bump(); renderTabs(); renderPanel(true); PCMAP.refresh(); return; }   // PC: the town you're in opens its places beside the map
       renderPicked();
     };
     c.addEventListener("pointerup", up); c.addEventListener("pointercancel", up);
-    c.addEventListener("wheel", (e) => { e.preventDefault(); mapTouchedAt = performance.now(); kickMap(); const r = c.getBoundingClientRect(); setZoom(zoom * (e.deltaY < 0 ? 1.15 : 1 / 1.15), e.clientX - r.left, e.clientY - r.top); }, { passive: false });
+    c.addEventListener("dblclick", (e) => {   // PC: double-click a place to set off at once
+      if (typeof PCMAP === "undefined" || !PCMAP.on() || !view.transform) return;
+      const r = c.getBoundingClientRect(), n = WorldMap.placeAt(view, e.clientX - r.left, e.clientY - r.top, known);
+      if (n && n !== S.location && !S.trip && !S.dungeon) travelTo(n);
+    });
+    c.addEventListener("wheel", (e) => { if (typeof PCMAP !== "undefined" && PCMAP.wheel(e, c)) return; e.preventDefault(); mapTouchedAt = performance.now(); kickMap(); const r = c.getBoundingClientRect(); setZoom(zoom * (e.deltaY < 0 ? 1.15 : 1 / 1.15), e.clientX - r.left, e.clientY - r.top); }, { passive: false });
   }
   let roamSpot = null;
   function renderPicked() {

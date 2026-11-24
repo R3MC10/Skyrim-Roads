@@ -3,6 +3,16 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b165-pcmap", build: 165, date: "24 Nov 2026", title: "The big map on PC", items: [
+      "On a PC or laptop the world map is now your home screen: it fills the whole window, and Items, Skills, Magic and the Journal open on top of it over a blurred map. On phones nothing changes.",
+      "Drag to look around, scroll to zoom smoothly from all of Skyrim down to a single village, and press Space to jump back to your hero. WASD and the arrows move the map too (while the compass is closed).",
+      "Double-click a place to travel there. Click the town you're in to open its places in a panel on the side. Road events pop up as a card in the middle of the map.",
+      "A slim bar along the bottom shows your level, experience, gold and weight, with buttons and keys for the menus: J Journal, I Items, K Skills, M Magic, Tab the compass. Your party sits in cards on the left.",
+      "The quest you follow sits in the top right corner. Press Q (or the little arrow) and it slides away, leaving a small tab on the edge to bring it back.",
+      "The map lives: each hold has its own weather, smoke rises from the chimneys of towns you've found, and clouds and birds drift over the land. Settings → Map quality (Low, Medium, High) sets how much of it you get.",
+      "Your hero no longer stands on top of the town picture, and other players' names are never hidden behind town flags.",
+      "Everywhere, phones too: players outside your party are Strangers until you greet each other. Be in the same town or the same spot on the road, click their hero and press Greet. Once they accept, you both know each other's names for good.",
+    ] },
     { id: "b163-maphero", build: 163, date: "24 Nov 2026", title: "Your hero walks the map", items: [
       "On the world map you're no longer a blue dot: it's a little figure of your own character, with your race, armour, helmet and weapon.",
       "Standing still they breathe and their cloak moves a bit. On the road they walk and turn to face the way they're going, and there's a small puff of dust when you arrive.",
