@@ -29,8 +29,15 @@ async def main():
             errs = []
             async def player(pid, name):
                 pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(pid + " " + str(e)))
-                await pg.goto(f"http://localhost:{PORT}/index.html?assets&net=bc&notut&p={pid}{vw}"); await pg.wait_for_timeout(1500)
-                await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", name); await pg.click("#begin"); await pg.wait_for_timeout(1500)
+                url = f"http://localhost:{PORT}/index.html?assets&net=bc&notut&p={pid}{vw}"
+                await pg.goto(url)
+                try: await pg.wait_for_selector(".press", timeout=45000)
+                except Exception: await pg.goto(url); await pg.wait_for_selector(".press", timeout=45000)   # a slow first load: try once more
+                await pg.wait_for_timeout(800)
+                await pg.click(".press"); await pg.click(".mi[data-t=new]")
+                try: await pg.wait_for_selector("#nm", timeout=15000)
+                except Exception: await pg.screenshot(path=os.path.join(OUT, f"debug_{pid}{vw}.png")); raise
+                await pg.fill("#nm", name); await pg.click("#begin"); await pg.wait_for_timeout(1500)
                 await pg.evaluate(CLEAR); await pg.evaluate(TOWN, "Whiterun"); await pg.evaluate(CLEAR); await pg.wait_for_timeout(500)
                 return pg
             async def shot(pg, name):   # quest pop-ups from arriving in Whiterun aren't what we're looking at
@@ -57,8 +64,9 @@ async def main():
             # wheel zoom toward the cursor and keys
             await A.evaluate(CLEAR)
             z0 = await A.evaluate("()=>__dbg.view().zoom")
-            await A.mouse.move(vw * 0.6, vh * 0.4)
-            for _ in range(4): await A.mouse.wheel(0, -240); await A.wait_for_timeout(80)
+            await A.mouse.move(vw * 0.6, vh * 0.55)
+            for _ in range(4):   # a late quest pop-up would (rightly) swallow the wheel
+                await A.evaluate("document.getElementById('modal')?.remove()"); await A.mouse.wheel(0, -240); await A.wait_for_timeout(80)
             await A.wait_for_timeout(600)
             z1 = await A.evaluate("()=>__dbg.view().zoom")
             if not z1 > z0: fails.append(f"{tag}: wheel didn't zoom in ({z0} -> {z1})")
