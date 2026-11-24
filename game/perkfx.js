@@ -356,7 +356,7 @@ const PFX = (() => {
     if (c.normal && x.power) return false;
     if (c.sneak && !x.sneak) return false;
     if (c.first && !(f && f.firstHit)) return false;
-    if (c.mounted && !(f && f.mount)) return false;
+    if (c.mounted && !(f && f.mount?.up)) return false;   // in the saddle right now (not when your horse just waits nearby)
     if (c.weapon && !(f && f.weapon)) return false;
     if (c.tempered && !(f && f.temper > 0)) return false;
     if (c.el && x.el !== c.el) return false;
@@ -415,7 +415,7 @@ const PFX = (() => {
 
   // ---------------------------------------------------------------- elemental statuses
   const VENOM = /spider|chaurus|spriggan|snake|viper|skeever|hagraven|assassin|poison/i;
-  const ICON = { burn: "🔥", chill: "❄️", shock: "⚡" };
+  const ICON = { burn: "", chill: "", shock: "" };
   const VERB = { burn: "burns", chill: "is chilled", shock: "is jolted" };
   /* which element a foe's blows carry, if any (name based: fire mages, dragons, atronachs, witches...) */
   function foeElement(e) {

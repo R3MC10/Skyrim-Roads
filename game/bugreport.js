@@ -220,7 +220,7 @@ const BUGREPORT = (() => {
     return false;
   }
   /* the Settings button (Settings is the phone's way in) */
-  const settingsHTML = () => `<h3>Help</h3><button class="btn" data-brep="open" style="width:100%">🐞 Report a problem</button><p class="mute" style="font-size:13px;margin-top:4px">On a PC, F12 opens it from anywhere.</p>`;
+  const settingsHTML = () => `<h3>Help</h3><button class="btn" data-brep="open" style="width:100%">\uE105 Report a problem</button><p class="mute" style="font-size:13px;margin-top:4px">On a PC, F12 opens it from anywhere.</p>`;
 
   // ---------------------------------------------------------------- start
   hook(typeof console !== "undefined" ? console : null, typeof window !== "undefined" ? window : null);

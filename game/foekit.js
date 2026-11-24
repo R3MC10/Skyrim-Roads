@@ -198,12 +198,12 @@ const FOEKIT = (() => {
   function chips(f) {
     const k = f.kit; if (!k) return [];
     const out = [];
-    if (k.windup) out.push(["windup", k.windup === "aimed" ? "🎯" : "⚠", k.windup === "aimed" ? "Taking aim: a big shot lands next turn. Guard, or hit it hard to throw it off." : "Winding up: a huge blow lands next turn. Guard, or hit it hard to break it."]);
-    if (k.guard > 0) out.push(["guard", "🛡", "Shield raised: your next melee blow does half."]);
-    if (k.ward > 0) out.push(["ward", "🔰" + k.ward, "Ward up: soaks damage from your spells."]);
-    if (k.evade > 0) out.push(["evade", "👤", "In the shadows: your next blow may miss."]);
-    if (k.rage > 0) out.push(["rage", "😡" + k.rage, "Enraged: hits 25% harder."]);
-    if (f.kitDot && typeof FIGHTREAD === "undefined") out.push(["dot", "☠" + f.kitDot.turns, `You're ${f.kitDot.name === "burning" ? "burning" : f.kitDot.name === "bleeding" ? "bleeding" : "poisoned"}: ${Math.round(f.kitDot.dmg)} a turn.`]);   // with fightread.js it sits on your own frame
+    if (k.windup) out.push(["windup", k.windup === "aimed" ? "" : "", k.windup === "aimed" ? "Taking aim: a big shot lands next turn. Guard, or hit it hard to throw it off." : "Winding up: a huge blow lands next turn. Guard, or hit it hard to break it."]);
+    if (k.guard > 0) out.push(["guard", "", "Shield raised: your next melee blow does half."]);
+    if (k.ward > 0) out.push(["ward", "" + k.ward, "Ward up: soaks damage from your spells."]);
+    if (k.evade > 0) out.push(["evade", "", "In the shadows: your next blow may miss."]);
+    if (k.rage > 0) out.push(["rage", "" + k.rage, "Enraged: hits 25% harder."]);
+    if (f.kitDot && typeof FIGHTREAD === "undefined") out.push(["dot", "" + f.kitDot.turns, `You're ${f.kitDot.name === "burning" ? "burning" : f.kitDot.name === "bleeding" ? "bleeding" : "poisoned"}: ${Math.round(f.kitDot.dmg)} a turn.`]);   // with fightread.js it sits on your own frame
     return out;
   }
   /* what it can do, for its tooltip */

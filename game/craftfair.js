@@ -108,8 +108,8 @@ const CRAFTFAIR = (() => {
   addStock("Markarth", "blacksmith", ["recipe_forsworn"]);
 
   const knows = (s, k) => (s.recipes || []).includes(k);
-  const foundNote = (s, esc = (x) => x) => `<p class="sub">📜 Special recipes come from recipe scrolls found in the world. Read one from your pack to learn it.</p>` +
-    Object.entries(SETS).map(([k, st]) => `<p class="sub">${knows(s, k) ? "✅" : "🔒"} <b>${esc(st.name)}</b>${knows(s, k) ? " (known)" : ` · ${esc(st.hint)}`}</p>`).join("");
+  const foundNote = (s, esc = (x) => x) => `<p class="sub"> Special recipes come from recipe scrolls found in the world. Read one from your pack to learn it.</p>` +
+    Object.entries(SETS).map(([k, st]) => `<p class="sub">${knows(s, k) ? "" : ""} <b>${esc(st.name)}</b>${knows(s, k) ? " (known)" : ` · ${esc(st.hint)}`}</p>`).join("");
   function read(s, rowId) {
     const r = G.invRow(s, rowId), it = r && D.ITEMS[r.item];
     if (!it || it.slot !== "recipe") return "That isn't a recipe.";
@@ -118,7 +118,7 @@ const CRAFTFAIR = (() => {
     G.take(s, rowId);
     s.recipes = [...(s.recipes || []), it.recipe];
     const made = Object.keys(SMITH.RECIPES).filter((id) => SMITH.RECIPES[id].needs === it.recipe).map((id) => D.ITEMS[id].name);
-    return `📜 You study the ${it.name}. New forge recipes: ${made.join(", ")}.${st.perk ? ` (Needs the ${(typeof PERKS !== "undefined" && PERKS.BY_ID[st.perk]?.name) || st.perk} perk.)` : ""}`;
+    return ` You study the ${it.name}. New forge recipes: ${made.join(", ")}.${st.perk ? ` (Needs the ${(typeof PERKS !== "undefined" && PERKS.BY_ID[st.perk]?.name) || st.perk} perk.)` : ""}`;
   }
 
   // ---- 5. naming what you made

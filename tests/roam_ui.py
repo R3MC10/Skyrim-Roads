@@ -17,7 +17,7 @@ async def main():
         for fx, fy in [(0.62, 0.55), (0.4, 0.62), (0.55, 0.35), (0.3, 0.4), (0.7, 0.7)]:
             await pg.mouse.click(box["x"] + box["width"] * fx, box["y"] + box["height"] * fy); await pg.wait_for_timeout(300)
             txt = await pg.inner_text("#picked")
-            if "🧭" in txt and "Walk here" in txt: picked = txt; break
+            if "\ue14c" in txt and "Walk here" in txt: picked = txt; break
         print("picked:", (picked or txt).replace("\n", " | "))
         await pg.screenshot(path="roam_pick.png")
         await pg.click("#picked [data-act=go]"); await pg.wait_for_timeout(500)

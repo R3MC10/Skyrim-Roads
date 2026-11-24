@@ -64,7 +64,7 @@ const DOLL = (() => {
       <div class="dcol">${RIGHT.map((sl) => slotBtn(s, sl, eq)).join("")}</div>
     </div>
     <div class="djewel" aria-label="Amulet and rings">${JEWEL.map((sl) => slotBtn(s, sl, eq, 40)).join("")}</div>${ammoRow}
-    <div class="dsum"><span>🛡 Armor <b class="num">${stats.armor}</b></span><span>⚔ Damage <b class="num">${stats.dmg}</b></span><span>⚖ <b class="num">${stats.carried}</b>/${stats.cap}</span></div>`;
+    <div class="dsum"><span> Armor <b class="num">${stats.armor}</b></span><span> Damage <b class="num">${stats.dmg}</b></span><span> <b class="num">${stats.carried}</b>/${stats.cap}</span></div>`;
   }
   /* the picker sheet for one slot */
   function picker(s, slot) {

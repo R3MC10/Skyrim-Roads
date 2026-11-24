@@ -168,10 +168,10 @@ const BLACKREACH = (() => {
   function actions(s, t = G.now()) {
     const k = here(s); if (!k) return [];
     const n = NODES[k], out = [], member = role(s) === "member";
-    if (n.kind === "lift") out.push(["up", `⬆ Ride up to ${n.exit}`]);
-    if (n.kind === "gather") out.push(["gather", "🍄 Pick mushrooms and nirnroot", (R(s).gather || -1e12) > t - DAY ? "picked today" : ""]);
-    if (n.vault && isClear(s, k, t) && !member) out.push(["vault", "⚙ Work the vault's valves", vaultLeft(s, t) ? "cooling" : ""]);
-    if (canCall(s) && !member) out.push(["dragon", "📢 Shout at the great orb"]);
+    if (n.kind === "lift") out.push(["up", `\uE137 Ride up to ${n.exit}`]);
+    if (n.kind === "gather") out.push(["gather", "\uE12B Pick mushrooms and nirnroot", (R(s).gather || -1e12) > t - DAY ? "picked today" : ""]);
+    if (n.vault && isClear(s, k, t) && !member) out.push(["vault", "\uE11E Work the vault's valves", vaultLeft(s, t) ? "cooling" : ""]);
+    if (canCall(s) && !member) out.push(["dragon", "\uE156 Shout at the great orb"]);
     return out;
   }
 
@@ -194,9 +194,9 @@ const BLACKREACH = (() => {
   function placeCard(s, place) {
     if (!entryAt(place) || !open(s)) return "";
     const member = role(s) === "member", la = member ? leaderAt() : null;
-    return `<div class="card br-card"><h3>⚙ Blackreach</h3><p class="sub" style="margin-top:0">${esc(entryAt(place) === "lift" ? "The great lift hums, ready to take you down to the glowing city below." : "A rattling lift leads down to Blackreach.")}</p>
+    return `<div class="card br-card"><h3>\uE11E Blackreach</h3><p class="sub" style="margin-top:0">${esc(entryAt(place) === "lift" ? "The great lift hums, ready to take you down to the glowing city below." : "A rattling lift leads down to Blackreach.")}</p>
       ${member ? (la ? `<button class="btn pri" data-act="breach" data-k="follow" style="width:100%">Join your leader (${esc(NODES[la]?.name || "")})</button>` : `<p class="sub">Your leader takes the lift; you follow.</p>`)
-        : `<button class="btn pri" data-act="breach" data-k="enter" style="width:100%">${here(s) ? "Back to Blackreach" : "⬇ Ride down to Blackreach"}</button>`}</div>`;
+        : `<button class="btn pri" data-act="breach" data-k="enter" style="width:100%">${here(s) ? "Back to Blackreach" : "\uE138 Ride down to Blackreach"}</button>`}</div>`;
   }
   function render() {
     const el = DOM && document.getElementById("breach"); if (!el || !ctx) return;
@@ -207,7 +207,7 @@ const BLACKREACH = (() => {
       return `<button class="br-pin ${cls}" style="left:${m.x * 100}%;top:${m.y * 100}%" data-act="breach" data-k="go" data-id="${id}" ${can ? "" : "disabled"} aria-label="${esc(m.name)}"><i></i><span>${esc(m.name)}</span></button>`; }).join("");
     const acts = actions(s, t).map(([a, label, note]) => `<button class="btn ${note ? "" : "pri"}" data-act="breach" data-k="${a}" ${note ? "disabled" : ""}>${esc(label)}${note ? ` (${esc(note)})` : ""}</button>`).join("");
     const la = member ? leaderAt() : null;
-    el.innerHTML = `<div class="in"><div class="hd"><h2>⚙ Blackreach</h2><button class="btn sm" data-act="breach" data-k="close">Close</button></div>
+    el.innerHTML = `<div class="in"><div class="hd"><h2>\uE11E Blackreach</h2><button class="btn sm" data-act="breach" data-k="close">Close</button></div>
       <div class="br-map">${map}${pins}</div>
       <div class="card"><h3>${esc(n.name)}</h3><p class="sub" style="margin-top:0">${esc(n.text)}</p>
       ${member ? `<p class="sub">In a party your leader picks the way.${la && la !== k ? ` They're at ${esc(NODES[la].name)}.` : ""}</p>${la && la !== k ? `<button class="btn pri" data-act="breach" data-k="follow">Join your leader</button>` : ""}` : `<p class="sub">Tap a glowing spot on the map to walk there. Red spots hold foes.</p>`}

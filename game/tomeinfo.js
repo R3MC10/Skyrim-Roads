@@ -81,7 +81,7 @@ const TOMEINFO = (() => {
     const f = facts(s, item); if (!f) return "";
     const v = verdict(f);
     const does = f.parts.length ? partsHTML(f.parts) + (NUMERIC.has(f.kind) ? "" : `<br><i>${esc(whatText(f))}</i>`) : `<i>${esc(whatText(f) || "A spell.")}</i>`;
-    return `<div class="ti-box" data-tome="${esc(f.id)}"><div class="ti-does">${does}</div>${v ? `<div class="ti-v ${v.ok ? "ok" : "low"}">${v.ok ? "✓" : "⚠"} ${esc(v.t)}</div>` : ""}</div>`;
+    return `<div class="ti-box" data-tome="${esc(f.id)}"><div class="ti-does">${does}</div>${v ? `<div class="ti-v ${v.ok ? "ok" : "low"}">${v.ok ? "✓" : ""} ${esc(v.t)}</div>` : ""}</div>`;
   }
 
   /* SkyUI-style card: name, a strip of stat boxes, the description, exact numbers single/dual, the verdict */
@@ -96,7 +96,7 @@ const TOMEINFO = (() => {
     const desc = !nums || !NUMERIC.has(f.kind) ? `<p class="ti-what">${esc(whatText(f) || "A spell.")}${f.utility ? " No magicka: a short rest between casts." : ""}${f.support ? " Cast it on a teammate in fights." : ""}</p>` : "";
     return `<div class="ti-card" data-tome="${esc(f.id)}">${opts.head === false ? "" : `<div class="ti-h">${esc(f.name)}</div>`}
       <div class="ti-stats">${stats}</div>${desc}${nums}
-      ${v ? `<div class="ti-v ${v.ok ? "ok" : "low"}">${v.ok ? "✓" : "⚠"} ${esc(v.t)}</div>` : ""}</div>`;
+      ${v ? `<div class="ti-v ${v.ok ? "ok" : "low"}">${v.ok ? "✓" : ""} ${esc(v.t)}</div>` : ""}</div>`;
   }
 
   // every list that shows G.itemStats (sell list, pack rows, caravans, market stalls, events) gets the tome line
