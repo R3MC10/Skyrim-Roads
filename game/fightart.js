@@ -1053,7 +1053,7 @@ const FIGHTART = (() => {
       if (st.invis && !(b && b.who === "me" && b.move !== "self" && b.move !== "shout")) wg.globalAlpha = 0.28 + Math.sin(tt * 3) * 0.05;
       const onHorse = rec.horse && !meDown && typeof HORSEBACK !== "undefined" && HORSEBACK.upAt(f, phase === "play" ? bi / Math.max(1, beats.length) : 1);   // the rider sits up on the horse
       if (onHorse) { HORSEBACK.drawHorse(wg, rec.horse, 0, tt, "back"); wg.translate(0, -30); }
-      { const fs = b ? b.st : st, form = fs && (fs.beast || fs.lord) && phase === "play"; heroFig(wg, form ? { ...rec.hero, beast: fs.beast, lord: fs.lord } : rec.hero, form ? Math.max(0, Math.min(1, (heroP.dx || 0) / 40)) : 0, tt, heroP); }   // werewolf or Vampire Lord while changed
+      { const fs = b ? b.st : st, form = fs && (fs.beast || fs.lord) && (phase === "play" || phase === "settle" || phase === "idle"); heroFig(wg, form ? { ...rec.hero, beast: fs.beast, lord: fs.lord } : rec.hero, form ? Math.max(0, Math.min(1, (heroP.dx || 0) / 40)) : 0, tt, heroP); }   // werewolf or Vampire Lord while changed
       if (onHorse) { wg.translate(0, 30); HORSEBACK.drawHorse(wg, rec.horse, 0, tt, "front"); }
       wg.restore();
       if (rec.hero.ench && !meDown && heroP.wt !== "fist" && !heroP.flask) {   // [OURS] an enchanted weapon glows in its colour and sheds motes
