@@ -99,6 +99,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Claude: foe rigs (foerig.js): every enemy is a little skeleton with its own animations (breathing, attacks, flinch, stagger, dodge, fall, gloat); painted foes bend and lunge too. Branch claude/foerigs.
 - Kacper: audio: the rest of scripts/gen_audio.mjs (free ElevenLabs plan has ~4k credits a month; music needs a paid plan).
 - Claude: party votes on the road (partyplay.js): everyone with the leader sees the same encounter/event window, members vote, their faces pop up by the option they picked, only the leader acts. Branch claude/partyvote.
+- Claude: werewolf and vampire paths, part 2 (beastpaths.js): Moonblood bites from werewolves, the Ashen Court's offer, Beast Form and Vampire Lord moves with their own AP costs and drawbacks, vampire powers by hunger stage and the sun in fights, townsfolk reacting, new perk stars, forms shown on every phone in shared party fights. Branch claude/beastpaths.
 - Claude: great world events (greatevents.js): timed, date-seeded events with a map banner and countdown: a dragon assault on a town (3-phase boss, parties of up to 8), a Daedric rift, a bandit army besieging a hold, and town fairs (games, prizes, cheap shops). Rewards by share, world after-effects (burned town rebuilds, plundered hold, Jarl's thanks), 4 perks. Branch claude/worldevents.
 
 ## Standing rules

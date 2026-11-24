@@ -47,7 +47,7 @@ const FIGHTART = (() => {
     const sk = typeof SOLART !== "undefined" ? SOLART.foeKind(n) : null; if (sk) return sk;   // Solstheim's creatures (solart.js)
     if (tg.has("dragon") || /^dragon$|dragon\b(?! priest)/.test(n)) return "dragon";
     const R = [[/priest/, "lich"], [/troll/, "troll"], [/mammoth/, "mammoth"], [/giant(?! frostbite)(?!.*spider)/, "giant"], [/dwarven spider/, "dspider"], [/spider/, "spider"],
-      [/bear/, "bear"], [/sabre|cat\b/, "cat"], [/wolves|pack/, "wolves"], [/wolf/, "wolf"], [/skeever/, "skeever"], [/mudcrab|crab/, "crab"],
+      [/bear/, "bear"], [/sabre|cat\b/, "cat"], [/werewolf/, "werewolf"], [/wolves|pack/, "wolves"], [/wolf/, "wolf"], [/skeever/, "skeever"], [/mudcrab|crab/, "crab"],
       [/draugr|restless|wight|scourge|deathlord/, "draugr"], [/skeleton/, "skeleton"], [/vampire/, "vampire"], [/hagraven/, "hagraven"],
       [/necromancer|mage|justiciar|thalmor|wizard|conjurer/, "mage"], [/forsworn|briarheart/, "forsworn"], [/centurion/, "centurion"], [/sphere|dwarven|construct/, "sphere"],
       [/falmer/, "falmer"], [/wisp|spriggan/, "wisp"], [/atronach/, "atronach"]];
@@ -240,6 +240,8 @@ const FIGHTART = (() => {
       case "skeleton": { g.save(); g.strokeStyle = "#e6e0cc"; g.lineWidth = 3; g.lineCap = "round"; const bone = (a, b) => { g.strokeStyle = P.ink; g.lineWidth = 4.6; g.beginPath(); g.moveTo(...a); g.lineTo(...b); g.stroke(); g.strokeStyle = "#e6e0cc"; g.lineWidth = 2.6; g.beginPath(); g.moveTo(...a); g.lineTo(...b); g.stroke(); };
         bone([-6, 0], [0, -26]); bone([7, 0], [0, -26]); bone([0, -26], [0, -48]); for (let i = 0; i < 3; i++) bone([-7, -44 + i * 5], [7, -44 + i * 5]); bone([0, -46], [-10, -32]); bone([0, -46], [12 + lunge * 6, -38]);
         H.circle(g, 1, -56, 7, "#e6e0cc", P.ink, 1.4); g.fillStyle = P.ink; g.fillRect(-3, -58, 3, 3); g.fillRect(3, -58, 3, 3); g.translate(13 + lunge * 6, -38); weapon(g, "sword"); g.restore(); return; }
+      case "werewolf": if (typeof BEASTART !== "undefined") { g.save(); g.scale(1.1, 1.1); BEASTART.wolf(g, { lunge, t: glowT }); g.restore(); return; }   // a wild werewolf on the road (beastpaths.js)
+        return quad(g, { color: "#4a4038", len: 50, height: 40, head: 10, legW: 5, tail: "bushy", ears: 1, fangs: 1, lunge });
       case "vampire": return humanoid({ skin: "#d8d4dc", body: "#3a2030", head: "hair", hair: "#1c1418", wt: "dagger", eyes: "#e0303a", cape: "#5a1020" });
       case "mage": return humanoid({ skin: SKIN.altmer, body: "#3a3a6a", legs: "robe", head: "hood", hoodColor: "#2a2a4a", wt: "staff" });
       case "hagraven": return humanoid({ skin: "#8a7a80", body: "#3a3040", legs: "robe", head: "bird", wt: "staff", hunch: 0.25 });
@@ -309,11 +311,13 @@ const FIGHTART = (() => {
   function ally(g, i) { g.save(); g.scale(0.62, 0.62); g.globalAlpha = 0.9; person(g, { skin: [SKIN.nord, SKIN.redguard, SKIN.dunmer][i % 3], body: ["#6a5a40", P.steel, "#4a5a3a"][i % 3], head: i % 2 ? "helm" : "hair", wt: ["sword", "axe", "bow"][i % 3], shield: i % 3 === 0 }); g.restore(); }
 
   /* [summ] every kind of helper gets its own figure: what an ally record is */
-  const ALLY_KINDS = ["follower", "mate", "soldier", "zombie", "icewolf", "werewolf", "gargoyle", "dremora", "valor", "odah", "dragon", "beast", "familiar", "flame_atronach", "frost_atronach", "storm_atronach", "dog"];
+  const ALLY_KINDS = ["follower", "mate", "soldier", "zombie", "icewolf", "werewolf", "vlord", "gargoyle", "dremora", "valor", "odah", "dragon", "beast", "familiar", "flame_atronach", "frost_atronach", "storm_atronach", "dog"];
   const FLYERS = new Set(["odah", "dragon"]);
-  const ALLY_W = { mate: 24, follower: 24, soldier: 20, zombie: 20, valor: 26, dremora: 24, icewolf: 36, beast: 40, familiar: 34, werewolf: 30, gargoyle: 30, flame_atronach: 28, frost_atronach: 30, storm_atronach: 32 };   // how much room each figure needs in the line
+  const ALLY_W = { mate: 24, follower: 24, soldier: 20, zombie: 20, valor: 26, dremora: 24, icewolf: 36, beast: 40, familiar: 34, werewolf: 30, vlord: 30, gargoyle: 30, flame_atronach: 28, frost_atronach: 30, storm_atronach: 32 };   // how much room each figure needs in the line
   function allyKind(a) {
     if (!a) return "soldier";
+    if (a.form === "wolf") return "werewolf";   // a teammate in Beast Form or Vampire Lord form (beastpaths.js: the form travels with their turn)
+    if (a.form === "lord") return "vlord";
     if (a.kind && ALLY_KINDS.includes(a.kind)) return a.kind;
     if (a.look) return "mate";
     if (a.follower) return "follower";
@@ -372,6 +376,11 @@ const FIGHTART = (() => {
         g.scale(0.62, 0.62);
         if (typeof BEASTART !== "undefined") BEASTART.wolf(g, { lunge, t: t + i });
         else quad(g, { color: "#4a4038", len: 50, height: 40, head: 10, legW: 5, tail: "bushy", ears: 1, fangs: 1, lunge });
+        break; }
+      case "vlord": {
+        g.scale(0.62, 0.62);
+        if (typeof BEASTART !== "undefined") BEASTART.lord(g, { lunge, t: t + i });
+        else quad(g, { color: "#3a2030", len: 40, height: 44, head: 9, legW: 4, ears: 1, fangs: 1, lunge });
         break; }
       case "gargoyle": {   // stone wings, hovering low, swoops when it strikes
         const hov = -10 - Math.sin(t * 2.4 + i) * 4 + lunge * 8;
@@ -490,7 +499,7 @@ const FIGHTART = (() => {
     dragon: "breath", mage: "cast", hagraven: "cast", lich: "cast", wisp: "cast", atronach: "cast", bandit: "axe", forsworn: "sword", draugr: "battleaxe", skeleton: "sword", vampire: "dagger", falmer: "sword", sphere: "sword" };
   const FOE_EL = { mage: "shock", hagraven: "fire", lich: "frost", wisp: "frost", atronach: "fire", dragon: "fire" };
   const REACH = { bear: 0.88, cat: 0.9, mammoth: 0.55, giant: 0.72, troll: 0.78, centurion: 0.66, skeever: 1.06, dragon: 0.5 };
-  const SIZE = { giant: 1.5, troll: 1.35, centurion: 1.6, mammoth: 1.5, dragon: 1.1 };
+  const SIZE = { giant: 1.5, troll: 1.35, centurion: 1.6, mammoth: 1.5, dragon: 1.1, werewolf: 1.25 };
   const moveFor = (wt) => MOVES[wt] ? wt : "sword";
   function beatsOf(f, h) {
     const lines = f.log || [], beats = [];
@@ -498,6 +507,9 @@ const FIGHTART = (() => {
     const nm = (f.e?.name || "").toLowerCase(), strip = (t) => (nm ? t.toLowerCase().split(nm).join("") : t.toLowerCase());
     const kind = foeOf(f.e), archer = /archer|hunter|marksman|ranger|sniper/.test(nm), base = f.wt0 || h.wt;
     const st = { bound: false, invis: false, rune: null, ward: false, soul: false, cloak: null, guard: false, beast: false, lord: false, summon: null };
+    { const as = lines.map((l) => l.a || ""), back = lines.some((l) => /change back/.test(l.me || ""));   // a turn-by-turn screen shows a few lines at a time: start in the form you're in (beastpaths.js)
+      if (!as.includes("power:beast")) st.beast = (f.pw?.beast || 0) > 0 || (back && !!f.usedBeast && !as.includes("power:lord"));
+      if (!as.includes("power:lord")) st.lord = (f.pw?.lord || 0) > 0 || (back && !!f.usedLord && !st.beast); }
     let foeAtk = 0;
     lines.forEach((l, li) => {
       const raw = l.me || "", parts = raw.split(" · "), me = parts[0], extra = parts.slice(1).join(" · "), them = strip(l.them || "");
@@ -512,7 +524,17 @@ const FIGHTART = (() => {
         let lwt = l.wt || base; if (lwt === base) lwt = h.wt;   // staffs and crossbows are told apart by the scene, not the engine
         if (l.wt && l.wt !== base) st.bound = true;
         const spellish = k === "spell" || k === "dual" || k === "scroll" || (!k && (elementOf(me) || /ward|cloak|heal|bound|summon|familiar|rune|wall|conjur|raise|paralyz|calm|fear|courage|invisib|soul|turn|oakflesh|dragonhide|armor/i.test(me)) && !/^(power )?attack|^sneak attack/i.test(me));
-        if (k === "potion" || (!k && /^drinks/i.test(me))) {
+        if (k === "beast" || k === "lord" || k === "vamp") {   // a form's own moves and a vampire's powers (beastpaths.js)
+          if (k === "beast") st.beast = true; if (k === "lord") st.lord = true;
+          if (arg === "howl") Object.assign(b, { move: "shout", fx: "fus", el: null });
+          else if (arg === "raise") { st.summon = "zombie"; Object.assign(b, { move: "self", fx: "necro", el: null }); }
+          else if (arg === "shadows") { st.invis = true; Object.assign(b, { move: "self", fx: "invis", el: null }); }
+          else if (arg === "seduce") Object.assign(b, { move: "cast", fx: "illusion", el: null });
+          else if (arg === "revert") Object.assign(b, { move: "self", fx: "glow", el: null });
+          else if (arg === "drain") { b.drain = true; Object.assign(b, { move: "claw", wt: null }); }
+          else Object.assign(b, { move: "claw", wt: null, power: arg === "maul" || arg === "pounce", miss: /misses|dodges/i.test(me) });
+          if (arg === "bite" || arg === "feast") b.crit = true;
+        } else if (k === "potion" || (!k && /^drinks/i.test(me))) {
           const it = typeof D !== "undefined" && D.ITEMS?.[arg]; const res = it?.restore?.[0] || (/magicka/i.test(me) ? "magicka" : /stamina/i.test(me) ? "stamina" : "health");
           Object.assign(b, { move: "potion", fx: "potion", el: res, flask: res === "magicka" ? "#4a7ac8" : res === "stamina" ? "#4a9a5a" : "#c03a3a" });
         } else if (k === "block" || (!k && /^raises guard|^shield bash/i.test(me))) {
@@ -1031,7 +1053,7 @@ const FIGHTART = (() => {
       if (st.invis && !(b && b.who === "me" && b.move !== "self" && b.move !== "shout")) wg.globalAlpha = 0.28 + Math.sin(tt * 3) * 0.05;
       const onHorse = rec.horse && !meDown && typeof HORSEBACK !== "undefined" && HORSEBACK.upAt(f, phase === "play" ? bi / Math.max(1, beats.length) : 1);   // the rider sits up on the horse
       if (onHorse) { HORSEBACK.drawHorse(wg, rec.horse, 0, tt, "back"); wg.translate(0, -30); }
-      { const fs = b ? b.st : st, form = fs && (fs.beast || fs.lord) && phase === "play"; heroFig(wg, form ? { ...rec.hero, beast: fs.beast, lord: fs.lord } : rec.hero, form ? Math.max(0, Math.min(1, (heroP.dx || 0) / 40)) : 0, tt, heroP); }   // werewolf or Vampire Lord while changed
+      { const fs = b ? b.st : st, form = fs && (fs.beast || fs.lord) && (phase === "play" || phase === "settle" || phase === "idle"); heroFig(wg, form ? { ...rec.hero, beast: fs.beast, lord: fs.lord } : rec.hero, form ? Math.max(0, Math.min(1, (heroP.dx || 0) / 40)) : 0, tt, heroP); }   // werewolf or Vampire Lord while changed
       if (onHorse) { wg.translate(0, 30); HORSEBACK.drawHorse(wg, rec.horse, 0, tt, "front"); }
       wg.restore();
       if (rec.hero.ench && !meDown && heroP.wt !== "fist" && !heroP.flask) {   // [OURS] an enchanted weapon glows in its colour and sheds motes

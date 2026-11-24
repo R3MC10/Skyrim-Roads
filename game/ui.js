@@ -2072,6 +2072,7 @@
   }
   function bloodPanel() {
     const t = G.now(), here = S.location;
+    const bpx = (k) => (typeof BEASTPATH !== "undefined" ? BEASTPATH.panelExtra(S, k) : "");   // forms, moves, hunger and townsfolk (beastpaths.js)
     const tree = (k) => typeof BEASTART !== "undefined" ? BEASTART.panel(S, k) : "";
     const cureQ = (id) => { const v = (S.quests || {})[id], d = QUESTS.L[id]; if (!d || !v || v.done) return ""; const st = d.stages[v.stage];
       return `<div class="item on"><div class="t">📜 ${esc(d.name)}: ${esc(st.title)}<span>${esc(st.text)}</span></div></div>`; };
@@ -2079,14 +2080,15 @@
       const st = CURSE.stage(S), dd = CURSE.daysUnfed ? CURSE.daysUnfed(S) : CURSE.hoursUnfed(S) / 2, dtxt = dd < 1 ? `${Math.round(dd * 24)} in-game hours` : `${dd.toFixed(1)} in-game days`;
       return `<div class="panel" style="border-color:#7a1414"><h2>🩸 Vampire</h2><p class="sub">Hunger: stage ${st} of 4 (${dtxt} since you fed; one stage per day). The hungrier you are, the stronger your Destruction and Illusion and your night-time blows, the less frost hurts you, and the more fire burns. Poison barely touches you. By day the sun slows your healing outside. Feed at an inn (Area tab), or win a fight as a Vampire Lord.</p>
         <div class="item"><div class="t">🦇 Vampire Lord<span>Once a day, in your Tactics: for ${CURSE.LORD_TURNS || 12} turns you drain the foe's life every turn and take less damage. No potions while changed.</span></div><span class="num sub">${CURSE.lordReady(S) ? "Ready" : "Used today"}</span></div>
-        ${cureQ("cure_vamp")}${tree("lord")}</div>`;
+        ${bpx("lord")}${cureQ("cure_vamp")}${tree("lord")}</div>`;
     }
+    if (S.moonblood && typeof BEASTPATH !== "undefined") return BEASTPATH.moonPanel(S);
     if (S.sanguinare) {
       const left = Math.max(0, CURSE.TURN_AFTER - (t - S.sanguinare.at)), h = Math.floor(left / 3600), m = Math.ceil((left % 3600) / 60);
       return `<div class="panel" style="border-color:#7a1414"><h2>🩸 Sanguinare Vampiris</h2><p class="sub">A vampire's disease. In about ${h ? `${h} h ` : ""}${m} min (${(left / CURSE.DAY).toFixed(1)} in-game days) you'll turn into a vampire. Drink a Potion of Cure Disease (general stores, court wizards) or pray at a roadside shrine to stop it, or let it happen.</p></div>`;
     }
     if (S.werewolf) return `<div class="panel" style="border-color:var(--gold)"><h2>🐺 Werewolf</h2><p class="sub">Beast Form, once a day, is in your Tactics: for ${CURSE.BEAST_TURNS} turns you hit much harder, take less damage and heal a bit, but can't drink potions. Win a fight in Beast Form against a person and you feed: it heals you and grows your werewolf perks. Beds no longer make you Rested, and you can't catch diseases.</p>
-      ${cureQ("cure_wolf")}${tree("wolf")}</div>`;
+      ${bpx("wolf")}${cureQ("cure_wolf")}${tree("wolf")}</div>`;
     if (CURSE.offered(S)) return `<div class="panel" style="border-color:var(--gold)"><h2>🐺 The Circle's offer</h2><p class="sub">The Companions' inner circle offers you their secret: the blood of the beast. Once a day you can turn into a werewolf in a fight, and feeding grows its own perk stars. Beds won't make you Rested any more. If you ever want it gone, Aela knows how: the Glenmoril witches' heads.</p>
       <div class="grid2"><button class="btn pri" data-act="wolfyes" ${here === "Whiterun" ? "" : "disabled"}>Accept${here === "Whiterun" ? "" : " (in Whiterun)"}</button><button class="btn" data-act="wolfno">No, thank you</button></div></div>`;
     return "";

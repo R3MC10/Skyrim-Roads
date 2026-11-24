@@ -2188,6 +2188,14 @@ html.art-pixel .fitm,html.art-pixel .fitm .xh{border-radius:0}html.art-pixel .fi
 html.art-pixel .fitarrow .ln{stroke-linecap:butt;stroke-dasharray:6 6;filter:none}html.art-pixel .tbu.fit-next{box-shadow:0 0 0 2px #c8321e}
 @media (max-width:380px){.tbint .fitg{font-size:10px;padding-left:4px}}
 @media (prefers-reduced-motion:reduce){.tbu.fit-next,.fitarrow .ln{animation:none!important}}
+/* Beast Form / Vampire Lord: the form's own moves on the action bar (beastpaths.js, fightctl.js) */
+#tbf .fc-beast .fc-row{grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,2.3fr)}
+#tbf .fc-beast .fc-form{display:flex;align-items:center;justify-content:center;text-align:center;padding:4px 6px;border:1px solid rgba(214,178,94,.35);border-radius:10px;font:600 12px/1.25 "Barlow Semi Condensed",sans-serif;color:#f3d98b;background:rgba(20,16,12,.85)}
+#tbf .fc-beast.wolf .tbact.beast{border-color:rgba(214,150,80,.6);background:linear-gradient(180deg,rgba(70,46,26,.98),rgba(22,14,8,.99))}
+#tbf .fc-beast.lord .tbact.beast{border-color:rgba(200,70,90,.6);background:linear-gradient(180deg,rgba(60,22,34,.98),rgba(18,8,12,.99))}
+#tbf .fc .tbact .ic .em{font-size:clamp(20px,6vw,30px);line-height:1}
+#tbf .fc-tray .tbact .ic .em{font-size:20px}
+html.art-pixel #tbf .fc-beast .fc-form{border-radius:0}
 /* bossfight.js: boss bar, big-attack warning, intro / phase / finisher / loot cards */
 #tbf .bfwrap{margin:2px 0 4px}
 #tbf .bfbar{position:relative;padding:4px 8px 5px;border:1px solid rgba(214,178,94,.55);border-radius:4px;background:linear-gradient(180deg,rgba(30,22,14,.92),rgba(12,10,8,.92));box-shadow:0 0 14px rgba(0,0,0,.7),inset 0 0 0 1px rgba(0,0,0,.6)}
@@ -2462,6 +2470,7 @@ html.art-pixel .pnbar,html.art-pixel .pnbar .pnback{border-radius:0}
 <script src="desktop.js"></script>
 <script src="pcupdate.js"></script>
 <script src="i18n_story.js"></script>
+<script src="i18n_beast.js"></script>
 <script src="i18n_hsrooms.js"></script>
 <script src="i18n_living.js"></script>
 <script src="i18n_bonds.js"></script>
@@ -2473,6 +2482,7 @@ html.art-pixel .pnbar,html.art-pixel .pnbar .pnback{border-radius:0}
 <script src="onboard.js"></script>
 <script src="search.js"></script>
 <script src="remind.js"></script>
+<script src="beastpaths.js"></script>
 <script src="tooltip.js"></script>
 <script src="bossfight.js"></script>
 <script src="hud2.js"></script>
