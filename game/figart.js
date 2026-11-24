@@ -640,6 +640,11 @@ const FIGART = (() => {
   // ---- the horse (feet at 0,0, facing right; the saddle seat sits at about y = -40)
   function horse(g, col, frame, st, part, gait) {   // gait: "stand" (idle: still legs, tail swish, head nod), "walk", or a gallop (default)
     const still = gait === "stand", slow = gait === "walk";
+    if (typeof HORSEART !== "undefined") {   // [OURS] the painted horse (horseart.js): drawn whole behind the rider, nothing in front
+      const pz = still ? "stand" : "gallop";
+      if (part === "front" && HORSEART.ok(col, pz)) return;
+      if (part !== "front" && HORSEART.ride(g, col, pz, 40, { bob: still ? 0 : Math.abs(Math.sin(frame / 4 * TAU)) * (slow ? 0.5 : 1.3) })) return;
+    }
     const ph = frame / 4 * TAU, mane = tone(col, -0.55), dk = tone(col, -0.25), bob = still ? 0 : Math.sin(ph * 2) * (slow ? 0.4 : 0.8);
     const nod = still ? Math.sin(ph) * 0.07 : slow ? Math.sin(ph * 2) * 0.04 : 0;
     const legH = (x, y, ang, bend, far, hind) => {
@@ -734,7 +739,7 @@ const FIGART = (() => {
   function styleOf(k) {
     return { k, ink: ART.PAL.ink, lw: Math.max(0.6, 0.85 / k), fine: Math.max(0.28, 0.55 / k) };
   }
-  const BOX = { walk: [-30, -84, 74, 90], ride: [-38, -96, 84, 99], sit: [-24, -66, 48, 70], down: [-74, -26, 108, 30], idle: [-46, -112, 100, 118] };
+  const BOX = { walk: [-30, -84, 74, 90], ride: [-48, -96, 104, 99], sit: [-24, -66, 48, 70], down: [-74, -26, 108, 30], idle: [-46, -112, 100, 118] };
   const boxOf = (pose) => BOX[pose] || BOX.idle;
   const SPRITES = new Map(), MAX_SPRITES = 220;
   const mk = (w, h) => { const c = document.createElement("canvas"); c.width = Math.max(1, Math.ceil(w)); c.height = Math.max(1, Math.ceil(h)); return c; };
@@ -771,7 +776,7 @@ const FIGART = (() => {
       const fp = o.from.pose, a = posed(sp, fp, frameOf(fp, o.from), o), b = posed(sp, pose, frame, o);
       return render(sp, blend(a, b, o.w), o.w < 0.5 ? fp : pose, k);
     }
-    const key = `${sp.key}|${pose}|${frame}|${k}|${o.horse || ""}${o.gait ? ":" + o.gait : ""}|${o.armed === undefined ? "" : +o.armed}`;
+    const key = `${sp.key}|${pose}|${frame}|${k}|${o.horse || ""}${o.gait ? ":" + o.gait : ""}${o.horse && typeof HORSEART !== "undefined" ? ":p" + HORSEART.sig() : ""}|${o.armed === undefined ? "" : +o.armed}`;
     let c = SPRITES.get(key);
     if (c) { SPRITES.delete(key); SPRITES.set(key, c); return c; }
     c = render(sp, posed(sp, pose, frame, o), pose, k);

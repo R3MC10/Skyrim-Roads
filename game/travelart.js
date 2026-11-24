@@ -379,9 +379,10 @@ const TRAVELART = (() => {
     if (newFigApi()) {
       try {
         const frame = ((Math.floor(ph / TAU * 8) % 8) + 8) % 8, pose = m.carriage ? "cart" : m.riding ? "ride" : "walk";
-        const key = `${pose}|${frame}|${m.horse || ""}|${JSON.stringify(m.look || null)}`;
+        const hv = m.riding && typeof HORSEART !== "undefined" ? HORSEART.sig() + (m.gait || "") : "";   // [OURS] painted horses (horseart.js): redraw when they arrive
+        const key = `${pose}|${frame}|${m.horse || ""}${hv}|${JSON.stringify(m.look || null)}`;
         let c = figCache.get(key);
-        if (!c) { c = HEROART.figure(m.look || {}, { pose, frame, scale: 1, horse: m.horse }); figCache.set(key, c); while (figCache.size > 120) figCache.delete(figCache.keys().next().value); }
+        if (!c) { c = HEROART.figure(m.look || {}, { pose, frame, scale: 1, horse: m.horse, gait: m.gait || undefined }); figCache.set(key, c); while (figCache.size > 120) figCache.delete(figCache.keys().next().value); }
         if (c && typeof c === "object" && c.width > 0 && typeof c.getContext === "function") {
           const th = (m.carriage ? 40 : m.riding ? 56 : 42) * sc, tw = c.width * th / c.height;
           g.save(); g.translate(x, base); if (m.flip) g.scale(-1, 1); g.drawImage(c, -tw / 2, -th, tw, th); g.restore(); return;
@@ -574,11 +575,11 @@ const TRAVELART = (() => {
       const { m, i, row, cx, cy } = sp; if (cx < -20) continue;
       const sc = row ? 0.86 : 0.96;
       shadow(g, cx, cy, m.riding ? 14 : 6, L);
-      figure(g, { look: m.look, riding: m.riding, horse: m.horse }, cx, cy, ph0 + (i + 1) * 1.7, sc);
+      figure(g, { look: m.look, riding: m.riding, horse: m.horse, gait: V.still ? "stand" : null }, cx, cy, ph0 + (i + 1) * 1.7, sc);
       if (!big || row === 0) tags.push([m.name, cx, cy - (m.riding ? 58 : 46) * sc - (big && Math.floor(i / 2) % 2 ? 11 : 0), m.follower, false]);
     }
     shadow(g, hx, FEET + 2, mounted ? 16 : 7, L);
-    figure(g, { look: info.look, riding: info.riding, carriage: info.carriage, horse: info.horse }, hx, FEET + 2, ph0, 1.08);
+    figure(g, { look: info.look, riding: info.riding, carriage: info.carriage, horse: info.horse, gait: V.still ? "stand" : null }, hx, FEET + 2, ph0, 1.08);
     if (co.length) tags.push(["You", hx, FEET - (info.riding ? 64 : 52), false, true]);
     if (L.glow > 0.5 && !info.carriage) lights.push([hx + 7, FEET - 20 - (info.riding ? 10 : 0), 34, "255,170,90", 0.75 + Math.sin(t * 11) * 0.05 + Math.sin(t * 17) * 0.04]);   // a torch for the dark road
     strip(fgLayer(B, kind, ctx), 1.35);
