@@ -3,12 +3,18 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b178-leghuntpolish", build: 178, date: "25 Nov 2026", title: "Legendary hunts: painted beasts and fairer fights", items: [
+    { id: "b179-leghuntpolish", build: 179, date: "25 Nov 2026", title: "Legendary hunts: painted beasts and fairer fights", items: [
       "The Jarl's posters, your hunt card and the bestiary now show each legendary beast as a proper painting in a gold frame, in its own colours: the White Ghost is snow white, Grimfang and Ashtusk are black as soot, Bloodmoon has a blood-red tint.",
       "In the fight the beast is that same painting too, a little bigger than its ordinary kin and in its legendary colours.",
       "Fixed: winning said \"You defeat the Whitefang the Frost Troll\". Named foes don't get an extra \"the\" any more.",
       "Fixed: Whitefang (and any legendary troll) healed far more often in a big party, because more players gave it more turns. It now heals at most once every three rounds, so a party of 8 does at least as well as a party of 4.",
       "Knowing a beast's weakness always helps now: its guard drops so it has less health, and the fight no longer quietly gives it extra health to make up for your bonus damage.",
+    ] },
+    { id: "b178-fightpolish", build: 178, date: "25 Nov 2026", title: "A tidier fight screen", items: [
+      "On a PC, your follower's name over their head is a small tag again instead of a giant label.",
+      "Snow and rain in fights on a big screen fall as fine flakes and drops, not big squares.",
+      "On phones, holding a move to read what it does shows the tip above the skill bar, so it no longer covers the Moves row.",
+      "The short fight log in the corner sits on a soft dark strip, so a single line reads clearly instead of looking half faded.",
     ] },
     { id: "b176-deepdelve", build: 176, date: "25 Nov 2026", title: "Deep expeditions and harder dungeons", items: [
       "Deadly dungeons go deeper. When the master falls, stairs lead down to five more levels: entrance guardians, traps and elites, the ancient vault, the cursed sanctuary and the legendary lair.",

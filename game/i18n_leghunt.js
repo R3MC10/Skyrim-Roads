@@ -4,7 +4,7 @@
 (() => {
   if (typeof I18N_STORY === "undefined") return;
   const PL = {
-    // ---- the patch note (patchnotes.js b178-leghuntpolish)
+    // ---- the patch note (patchnotes.js b179-leghuntpolish)
     "Legendary hunts: painted beasts and fairer fights": "Legendarne łowy: malowane bestie i uczciwsze walki",
     "The Jarl's posters, your hunt card and the bestiary now show each legendary beast as a proper painting in a gold frame, in its own colours: the White Ghost is snow white, Grimfang and Ashtusk are black as soot, Bloodmoon has a blood-red tint.": "Plakaty Jarla, karta łowów i bestiariusz pokazują teraz każdą legendarną bestię jako prawdziwy obraz w złotej ramie, w jej własnych barwach: Biały Duch jest biały jak śnieg, Grimfang i Ashtusk czarne jak sadza, a Krwawy Księżyc ma krwistoczerwony odcień.",
     "In the fight the beast is that same painting too, a little bigger than its ordinary kin and in its legendary colours.": "W walce bestia to ten sam obraz, trochę większy od zwykłych pobratymców i w legendarnych barwach.",
