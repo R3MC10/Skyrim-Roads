@@ -8,7 +8,7 @@ const c = { console, Math, Date, JSON, Float64Array, Float32Array, Uint8Array, I
 vm.createContext(c);
 const files = ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "enchanting.js", "quests.js",
   "cooking.js", "smithing.js", "ammo.js", "gather.js", "halls.js", "homestead.js", "horses.js", "bounty.js", "festivals.js", "market.js", "social.js", "caravans.js", "rumours.js", "worldevents.js", "mp.js", "remind.js",
-  "areaui.js", "mappanel.js"];
+  "areaui.js", "mappanel.js", "patchnotes.js", "i18n_story.js", "i18n_areaui.js", "i18n.js"];
 for (const f of files) if (fs.existsSync(W + f)) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c, { filename: f });
 vm.runInContext(`
 let pass = 0;
@@ -69,6 +69,13 @@ ok(MAPPANEL.test("dungeons", "lair", true) && MAPPANEL.test("new", "farm", false
 const cnt = MAPPANEL.countAll([{ kind: "city", visited: true }, { kind: "dungeon", visited: false }]);
 ok(cnt.all === 2 && cnt.towns === 1 && cnt.dungeons === 1 && cnt.new === 1 && cnt.other === 0, "filter counts");
 ok(!/data-id="other"/.test(MAPPANEL.chips(cnt)) && /data-id="towns"/.test(MAPPANEL.chips(cnt)), "empty filters are hidden");
+
+// ---- Polish for the patch note and the board's words
+const pn = PATCHNOTES.LIST.find((n) => n.id === "b139-areaui");
+const miss = [];
+for (const m of [pn.title, ...pn.items]) for (const part of m.split(/(?<=[.!?])\s+/)) { const x = part.trim(); if (x && I18N.tr(x) == null && I18N.story(x) == null) miss.push(x); }
+ok(miss.length === 0, "Polish for every patch note line: " + miss.slice(0, 3).join(" | "));
+for (const w of ["Inn", "Market", "Services & trainers", "Work & jobs", "Your home", "Events & fun", "Right now", "What to do next", "Not visited"]) ok(I18N.tr(w) != null || I18N.story(w) != null, "Polish for " + w);
 
 console.log("test_areaui: " + pass + " checks passed");
 `, c);

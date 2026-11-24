@@ -29,6 +29,19 @@
     "Tap one to open it; the ‹ button brings you back.": "Dotknij jednego, by je otworzyć; przycisk ‹ zabiera cię z powrotem.",
     "Things ready for you show on top under Right now.": "To, co na ciebie czeka, jest na górze w sekcji Teraz.",
     "Shops close at night (20:00–08:00).": "Sklepy są zamknięte w nocy (20:00–08:00).",
+    // patch note
+    "Tidier towns and map": "Porządniejsze miasta i mapa",
+    "The Area tab now opens on a board of small tiles, grouped like a real town: Inn, Market, Services & trainers, Work & jobs, Your home, and Events & fun.": "Zakładka Okolica otwiera się teraz na tablicy małych kafelków, ułożonych jak w prawdziwym mieście: Karczma, Targ, Usługi i trenerzy, Praca i zlecenia, Twój dom oraz Wydarzenia i rozrywka.",
+    "Each tile says what's going on there (open or closed, room price, lessons left, jobs taken, garden ripe, your bounty).": "Każdy kafelek mówi, co się tam dzieje (otwarte czy zamknięte, cena pokoju, ile lekcji zostało, wzięte zlecenia, dojrzały ogród, twoja nagroda za głowę).",
+    "Things waiting for you in town (a job to hand in, a ripe garden) sit on top under Right now.": "To, co czeka na ciebie w mieście (zlecenie do oddania, dojrzały ogród), jest na górze w sekcji Teraz.",
+    "Tap a tile to go in.": "Dotknij kafelka, by wejść.",
+    "A back button and a row of the neighbouring places (say, all the shops) keep everything one tap away.": "Przycisk powrotu i rząd sąsiednich miejsc (na przykład wszystkich sklepów) trzymają wszystko o jedno dotknięcie.",
+    "Shops no longer dump their whole stock the moment you open the Area tab.": "Sklepy nie wysypują już całego towaru, gdy tylko otworzysz zakładkę Okolica.",
+    "Long how-it-works notes fold up; tap More to read them.": "Długie opisy działania są zwinięte; dotknij Więcej, by je przeczytać.",
+    "You can fold whole groups you never use, and they stay folded.": "Możesz zwinąć całe grupy, których nie używasz, i zostaną zwinięte.",
+    "The Map side panel has one \"What to do next\" list instead of two: no more level-up or perk reminders shown twice.": "Panel boczny Mapy ma jedną listę „Co dalej” zamiast dwóch: przypomnienia o awansie i perkach nie pokazują się już podwójnie.",
+    "The most urgent things come first, nearest places before far ones; tap Show more for the rest.": "Najpilniejsze sprawy są pierwsze, bliskie miejsca przed dalekimi; resztę pokaże Pokaż więcej.",
+    "The place list has filters: All, Towns, Dungeons, Not visited and Other, each with a count.": "Lista miejsc ma filtry: Wszystko, Miasta, Lochy, Nieodwiedzone i Inne, każdy z liczbą.",
   };
   const PATS = [
     ["Room {0} gold", "Pokój: {0} złota"], ["{0} lessons left", "Lekcje: {0}"], ["{0} lesson left", "Lekcje: {0}"],
