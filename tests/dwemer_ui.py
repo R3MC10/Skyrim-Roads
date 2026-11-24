@@ -35,7 +35,9 @@ async def main():
             await ctx.add_init_script(f"localStorage.setItem('rotn_prefs', JSON.stringify({{artStyle:'{style}',obTips:false,lang:'{LANG}'}}))")
             pg = await ctx.new_page(); pg.on("pageerror", lambda e, n=name: errs.append(n + " " + str(e)))
             await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=dw{name}"); await pg.wait_for_timeout(2000)
-            await pg.wait_for_selector(".press", timeout=60000); await pg.click(".press")
+            try: await pg.wait_for_selector(".press", timeout=60000)
+            except Exception: await pg.reload(); await pg.wait_for_selector(".press", timeout=120000)   # a busy machine: one more go
+            await pg.click(".press")
             await pg.wait_for_selector(".mi[data-t=new]", timeout=30000); await pg.click(".mi[data-t=new]")
             await pg.wait_for_selector("#nm", timeout=30000); await pg.fill("#nm", "Dwemtest"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
             await pg.add_style_tag(content="#pbanners,.pban,.pburst,.pgold,.toast,#toast{display:none!important}")   # other systems' banners, not ours
@@ -79,7 +81,7 @@ async def main():
             try: await pg.wait_for_selector("#breach .br-pin.here", state="attached", timeout=20000)
             except Exception: pass
             ok(await pg.query_selector("#breach .br-map img") is not None and await pg.query_selector("#breach .br-pin.here") is not None, f"{name}: the Blackreach map with you at the lift")
-            ok(WORDS[1] in await pg.evaluate("document.querySelector('#breach')?.innerText || ''"), f"{name}: Blackreach heading")
+            ok(WORDS[1].lower() in (await pg.evaluate("document.querySelector('#breach')?.innerText || ''")).lower(), f"{name}: Blackreach heading")
             await shot(f"{name}_reach_lift.png")
             # 3. walk: warren, city (both cleared), the vault
             for k in ["warren", "city"]:

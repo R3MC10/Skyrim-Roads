@@ -95,3 +95,14 @@ const DWART = (() => {
   }
   return { storyKind, reachMap, centurion, tower, mushroom };
 })();
+/* achievement icons: the lexicon's brass cog (the Journal emblem) and the great orb with a dragon's wing across it */
+if (typeof UIART !== "undefined" && UIART.ACH) {
+  if (typeof DWEMER !== "undefined") UIART.ACH.dw_lexicon = (g) => DWEMER.emblem(g);
+  UIART.ACH.dw_dragon = (g) => {
+    const ink = "#1a120a"; g.lineJoin = "round"; g.strokeStyle = ink; g.lineWidth = 1.2;
+    g.fillStyle = "#3a8a7c"; g.beginPath(); g.arc(20, 20, 14, 0, Math.PI * 2); g.fill(); g.stroke();   // the glowing orb
+    g.fillStyle = "#9ae8d8"; g.beginPath(); g.arc(16, 15, 4, 0, Math.PI * 2); g.fill();
+    g.fillStyle = "#2a1a14"; g.beginPath(); g.moveTo(4, 30); g.quadraticCurveTo(12, 18, 20, 22); g.lineTo(24, 12); g.lineTo(27, 21);
+    g.lineTo(32, 14); g.lineTo(33, 23); g.quadraticCurveTo(28, 30, 20, 28); g.quadraticCurveTo(12, 28, 4, 30); g.closePath(); g.fill(); g.stroke();   // a wing
+  };
+}
