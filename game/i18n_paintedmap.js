@@ -1,4 +1,4 @@
-/* i18n_paintedmap.js: Polish for paintedmap.js (the Roads on the map setting) and its patch notes (b168-mapvisuals too).
+/* i18n_paintedmap.js: Polish for paintedmap.js (the Roads on the map setting) and its patch notes (b170-mapvisuals too).
    Loaded before i18n.js; exact lines go in I18N_EXTRA.words. */
 var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, pat: [] };
 (() => {
@@ -12,7 +12,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
       "Gdy obraz jest w grze, w Ustawienia → Grafika pojawia się przełącznik Drogi na mapie, jeśli namalowane drogi ci wystarczą.",
     "Until the painting arrives, the map looks and works just like before.":
       "Dopóki obrazu nie ma, mapa wygląda i działa tak jak wcześniej.",
-    // patch note b168-mapvisuals
+    // patch note b170-mapvisuals
     "A sharper, prettier world map":
       "Lepsza, ostrzejsza mapa świata",
     "On a PC the map now fills the whole window, even zoomed all the way out. No more small map in the middle with grey clouds and empty dark space around it.":

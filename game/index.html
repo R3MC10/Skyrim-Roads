@@ -2445,6 +2445,55 @@ html.a11y-still #skillup.on{animation:none}
   .sky-row.ft-cols .nm img.art.ico{width:22px;height:22px;margin-right:5px}
   .ft-cats .sky-cat{min-width:54px;padding:4px 3px}
 }
+/* ==== levelling like Skyrim (levelup.js): skill notice + level bar, the LEVEL UP moment, the three pillars, the prompt ==== */
+#lvln{position:fixed;top:calc(64px + env(safe-area-inset-top));left:0;right:0;display:flex;flex-direction:column;align-items:center;pointer-events:none;z-index:88}
+.lvn{display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 30px 10px;min-width:min(86vw,320px);max-width:92vw;background:radial-gradient(ellipse at center,rgba(6,7,8,.82) 0,rgba(6,7,8,.6) 55%,transparent 75%);animation:lvnin .35s var(--ease) both}
+.lvn.out{animation:lvnout .38s ease-in forwards}
+@keyframes lvnin{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@keyframes lvnout{to{opacity:0;transform:translateY(-4px)}}
+.lvn-t{margin:0;display:flex;align-items:center;gap:7px;font:600 15px/1.2 Cinzel,Georgia,serif;letter-spacing:.06em;color:#f2ead6;text-shadow:0 1px 0 #000,0 0 10px rgba(0,0,0,.9);text-align:center}
+.lvn-t b{color:#fff;font-size:17px}.lvn-t img{flex:none}
+.lvn-sb{display:block;width:min(56vw,190px);height:3px;background:rgba(255,255,255,.14);border-radius:2px;overflow:hidden;box-shadow:0 0 0 1px rgba(0,0,0,.55)}
+.lvn-sb>i{display:block;height:100%;background:var(--frost);transition:width 1.1s var(--ease)}
+.lvn-lv{display:flex;align-items:center;gap:8px;font:600 12px/1 Cinzel,Georgia,serif;color:#cfc6b0;text-shadow:0 1px 0 #000;margin-top:2px}
+.lvn-xb{display:block;width:min(62vw,230px);height:6px;border:1px solid rgba(226,187,100,.6);background:rgba(0,0,0,.55);border-radius:1px;overflow:hidden}
+.lvn-xb>i{display:block;height:100%;background:linear-gradient(90deg,#9b7a35,#e2bb64 70%,#f4dc9a);box-shadow:0 0 8px rgba(226,187,100,.55);transition:width 1.2s var(--ease)}
+.lvn-level{padding:14px 44px 14px;background:radial-gradient(ellipse at center,rgba(6,7,8,.96) 0,rgba(6,7,8,.88) 58%,transparent 80%)}
+.lvn-big{display:flex;align-items:center;justify-content:center;white-space:nowrap;margin:0;font:700 26px/1 Cinzel,Georgia,serif;letter-spacing:.3em;text-transform:uppercase;color:#ffe9b0;text-shadow:0 1px 0 #000,0 0 18px rgba(226,187,100,.55);padding-left:.3em}
+.lvn-n{margin:2px 0 4px;font:700 40px/1 Cinzel,Georgia,serif;color:#fff6de;text-shadow:0 2px 0 #000,0 0 22px rgba(226,187,100,.6);animation:lvnpop .6s var(--ease) both .15s}
+@keyframes lvnpop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
+.lvn-level .lvn-big::before,.lvn-level .lvn-big::after{content:"";display:inline-block;width:5px;height:5px;background:#e2bb64;transform:rotate(45deg);margin:0 .9em;vertical-align:middle;opacity:.9}
+.lvlprompt{display:flex;align-items:center;gap:12px;width:100%;margin:0 0 12px;padding:11px 14px;background:linear-gradient(90deg,rgba(226,187,100,.2),rgba(226,187,100,.06));border:1px solid var(--gold);border-radius:6px;color:var(--ink);text-align:left;cursor:pointer;animation:lvpglow 2.4s ease-in-out infinite}
+.lvlprompt .lvp-ar{flex:none;display:grid;place-items:center;width:34px;height:34px;border:1px solid var(--gold);border-radius:50%;color:var(--gold);font-size:15px}
+.lvlprompt .lvp-tx{display:flex;flex-direction:column;gap:2px;min-width:0}
+.lvlprompt b{font:700 17px/1.1 Cinzel,Georgia,serif;letter-spacing:.12em;text-transform:uppercase;color:#ffe9b0}
+.lvlprompt small{font-size:13px;color:var(--mute)}
+@keyframes lvpglow{0%,100%{box-shadow:0 0 0 rgba(226,187,100,0)}50%{box-shadow:0 0 16px rgba(226,187,100,.45)}}
+.lvk{position:fixed;inset:0;z-index:95;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(4,5,6,.82);animation:lvnin .3s var(--ease) both}
+.lvk-in{width:min(560px,100%);max-height:100%;overflow:auto;text-align:center;padding:18px 12px 14px;background:var(--tex,#16181b);border-top:1px solid rgba(226,187,100,.55);border-bottom:1px solid rgba(226,187,100,.55)}
+.lvk-k{margin:0;font:600 12px/1 Cinzel,Georgia,serif;letter-spacing:.3em;text-transform:uppercase;color:#cfc6b0}
+.lvk-h{margin:6px 0 4px;font:700 24px/1.15 Cinzel,Georgia,serif;letter-spacing:.06em;color:#ffe9b0}
+.lvk-s{margin:0 0 14px;font-size:13px;color:var(--mute)}
+.lvk-cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-items:end}
+.lvk-p{--c:var(--hp);position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;min-height:208px;padding:18px 6px 14px;justify-content:flex-end;background:linear-gradient(180deg,rgba(0,0,0,.15),color-mix(in srgb,var(--c) 26%,transparent));border:1px solid color-mix(in srgb,var(--c) 70%,#000);border-radius:3px 3px 0 0;color:var(--ink);cursor:pointer;transition:transform .18s var(--ease),box-shadow .18s}
+.lvk-magicka{--c:var(--mp)}.lvk-stamina{--c:var(--sp)}
+.lvk-p .lvk-cap{position:absolute;top:-7px;left:-5px;right:-5px;height:7px;background:color-mix(in srgb,var(--c) 55%,#1b1e22);border:1px solid color-mix(in srgb,var(--c) 70%,#000);border-radius:2px}
+.lvk-p .lvk-base{position:absolute;bottom:-6px;left:-6px;right:-6px;height:6px;background:#2a2d31;border:1px solid #000}
+.lvk-p b{font:700 17px/1 Cinzel,Georgia,serif;letter-spacing:.08em;text-transform:uppercase;color:#fff3d8}
+.lvk-v{font-size:15px;color:#d8d0bd}.lvk-v i{font-style:normal;color:var(--mute)}.lvk-v em{font-style:normal;font-weight:700;color:#fff}
+.lvk-p small{font-size:11.5px;color:var(--mute);line-height:1.2}
+.lvk-p:hover,.lvk-p:focus-visible{transform:translateY(-4px);box-shadow:0 0 18px color-mix(in srgb,var(--c) 60%,transparent);outline:none}
+.lvk-p.lvk-took{animation:lvktook .6s var(--ease)}
+@keyframes lvktook{40%{box-shadow:0 0 26px var(--c);transform:translateY(-6px)}}
+.lvk-later{margin-top:18px}
+.tw-dir .tw-lvlready{position:absolute;left:50%;top:-34px;transform:translateX(-50%);white-space:nowrap;padding:2px 9px;font:700 11px/1.4 Cinzel,Georgia,serif;letter-spacing:.14em;text-transform:uppercase;color:#1b1407;background:linear-gradient(180deg,#f4dc9a,#e2bb64);border-radius:9px;box-shadow:0 0 12px rgba(226,187,100,.8);animation:lvpglow 2s ease-in-out infinite}
+.tw-lv.tw-lvgo .tw-lvn{box-shadow:0 0 14px rgba(226,187,100,.85)}
+.tw-xp em.tw-lvup{font-style:normal;color:#ffe9b0;text-shadow:0 0 8px rgba(226,187,100,.7)}
+html.art-pixel .lvn-t,html.art-pixel .lvn-big,html.art-pixel .lvn-n,html.art-pixel .lvk-h,html.art-pixel .lvk-p b{text-shadow:2px 2px 0 #000}
+html.art-pixel .lvk-p,html.art-pixel .lvlprompt,html.art-pixel .lvn-xb{border-radius:0}
+@media (min-width:900px){#lvln{top:calc(16vh + env(safe-area-inset-top))}.lvn{min-width:440px;padding:12px 60px 14px}.lvk-p{min-height:250px}.lvn-t{font-size:19px}.lvn-big{font-size:36px}.lvn-level{padding:22px 90px}}
+@media (max-width:380px){.lvk-p{min-height:176px;padding:14px 3px 12px}.lvk-p b{font-size:14px}.lvk-v{font-size:13px}.lvn-big{font-size:21px}}
+@media (prefers-reduced-motion:reduce){.lvn,.lvk,.lvn-n,.lvlprompt,.tw-dir .tw-lvlready{animation:none}.lvn-xb>i,.lvn-sb>i{transition:none}}
 /* [mountfight] your horse's health bar in a fight (mountfight.js) */
 #tbf .mfhorse{position:relative;height:14px;margin-top:3px;border-radius:7px;background:rgba(120,80,40,.18);border:1px solid rgba(200,160,110,.45);overflow:hidden}
 #tbf .mfhorse i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,rgba(150,100,50,.6),rgba(210,170,110,.85));transition:width .45s ease}
@@ -2904,6 +2953,22 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 .title .foot{font-size:14px;color:#b5ad9a}
 .title .press,.title .mi,.title .foot,.title .tag,.title .mi small{text-shadow:0 1px 2px rgba(0,0,0,1),0 0 10px rgba(0,0,0,.95),0 0 26px rgba(0,0,0,.7)}
 .title h1{filter:drop-shadow(0 2px 3px rgba(0,0,0,.9)) drop-shadow(0 0 18px rgba(0,0,0,.6))}
+/* [folbuild] followers learn like you: their build, level, skills with bars and perks (folbuild.js), SkyUI style */
+.fb-build{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;margin:6px 0 10px;border:1px solid rgba(214,178,94,.35);border-radius:4px;background:linear-gradient(180deg,rgba(40,34,22,.45),rgba(14,13,11,.55))}
+.fb-build .t{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.fb-build .t b{font:600 17px "Barlow Semi Condensed",sans-serif;color:#f0dca8;letter-spacing:.04em}
+.fb-badge{flex:none;min-width:84px;padding:8px 10px;text-align:center;border:1px solid rgba(226,187,100,.6);border-radius:3px;font:600 14px "Barlow Semi Condensed",sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#f1cd72;background:rgba(226,187,100,.08)}
+.fb-cxp{height:5px;margin:2px 0}.fb-cxp i{background:linear-gradient(90deg,#b98a3a,#e8c46a)}
+.fb-skills{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:4px 14px;margin:6px 0 12px}
+.fb-sk{display:grid;grid-template-columns:1fr auto;align-items:baseline;padding:3px 2px;border-bottom:1px solid rgba(200,190,170,.12);color:#a9a294;font-size:13px}
+.fb-sk.main{color:#e8dcc0}.fb-sk.main .fb-n{font-weight:600}
+.fb-sk .num{color:#f0dca8}
+.fb-sk .bar{grid-column:1/-1;height:4px;margin-top:3px}.fb-sk .bar i{background:linear-gradient(90deg,#6f8fb8,#bcd6ff)}
+.fb-sk .fb-prog{grid-column:1/-1;height:2px;background:rgba(255,255,255,.06)}.fb-sk .fb-prog i{display:block;height:100%;background:#e8c46a}
+.fb-perks{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px 14px;margin:6px 0 12px}
+.fb-tree h4{margin:0 0 3px;font:600 13px "Barlow Semi Condensed",sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#d6b25e}
+.fb-tree ul{margin:0;padding:0 0 0 14px;color:#e8dcc0;font-size:13px}.fb-tree li{margin:1px 0}
+@media (max-width:420px){.fb-build{flex-direction:column}.fb-skills{grid-template-columns:1fr 1fr}}
 /* [mapvisuals] PC map: the cards floating over the map (world events, news) sit above the fixed map canvas, so a
    card can never hide under the map and leave only its progress bar showing as a stray gold line */
 html.pcmap div:has(> #mapwrap) > :not(#mapwrap,#vitals){position:relative;z-index:1}
@@ -2934,6 +2999,7 @@ html.pcmap .compass i.cl{left:5%}html.pcmap .compass i.cr{right:5%}
 <script src="perkfx.js"></script>
 <script src="foeperks.js"></script>
 <script src="legendary.js"></script>
+<script src="levelup.js"></script>
 <script src="powers.js"></script>
 <script src="engine.js"></script>
 <script src="foecap.js"></script>
@@ -3010,6 +3076,7 @@ html.pcmap .compass i.cl{left:5%}html.pcmap .compass i.cr{right:5%}
 <script src="party.js"></script>
 <script src="followers2.js"></script>
 <script src="followerai.js"></script>
+<script src="folbuild.js"></script>
 <script src="combo.js"></script>
 <script src="partyplay.js"></script>
 <script src="lootvote.js"></script>
@@ -3115,6 +3182,7 @@ html.pcmap .compass i.cl{left:5%}html.pcmap .compass i.cr{right:5%}
 <script src="i18n_areaui.js"></script>
 <script src="i18n_menus2.js"></script>
 <script src="i18n_followertab.js"></script>
+<script src="i18n_folbuild.js"></script>
 <script src="i18n_homestash.js"></script>
 <script src="i18n_noequip.js"></script>
 <script src="i18n_boss.js"></script>
@@ -3129,6 +3197,7 @@ html.pcmap .compass i.cl{left:5%}html.pcmap .compass i.cr{right:5%}
 <script src="i18n_followeranim.js"></script>
 <script src="i18n_shouts.js"></script>
 <script src="i18n_bleakfalls.js"></script>
+<script src="i18n_levelup.js"></script>
 <script src="i18n_mountfight.js"></script>
 <script src="i18n_bugreport.js"></script>
 <script src="i18n_paintedmap.js"></script>
