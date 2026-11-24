@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b137tt", build: 137, date: "24 Nov 2026", title: "Tooltips on almost everything", items: [
+      "Rest the mouse on almost anything to read what it is: items, spells, tomes, perks, skills, places, quests, followers, party members, your health, magicka and stamina bars, carry weight, level and gold.",
+      "On a phone, hold your finger on it for a moment instead. Holding doesn't press the button underneath, and a normal tap works just like before.",
+      "Item tooltips show damage or armor, weight, value, enchantments and how it compares with what you're wearing. Places you haven't found yet stay secret.",
+    ] },
     { id: "b136", build: 136, date: "24 Nov 2026", title: "Rings, amulets and lots more enchantments", items: [
       "You can now wear one amulet and two rings. They have their own slots under your character in the Pack tab: tap one to put something on.",
       "Rings and amulets are real gear now. Iron, silver, gold, moonstone and dwarven pieces, plain or set with a gem. Foes and bosses drop them (often enchanted), general stores sell plain ones, court wizards sell a few weak enchanted ones, and the forge makes them from an ingot and a gem.",

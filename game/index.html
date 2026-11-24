@@ -1873,6 +1873,33 @@ html.art-pixel .tbu .faibars .tbbar,html.art-pixel .tbu .faibars .tbbar i,html.a
 .dgame .lpcard.dgwin{animation:dgwin .5s ease-out}.dgame .lpcard.dglose{animation:lpsnap .35s}
 @keyframes dgwin{50%{transform:scale(1.03)}}
 @media (prefers-reduced-motion:reduce){.dgame .lpcard.dgwin,.dgame .lpcard.dglose{animation:none}}
+/* [tooltips] tooltip.js: hover with a mouse, hold a finger, or tab onto almost anything */
+.tt-probe{position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
+.tip{position:fixed;z-index:400;left:0;top:0;box-sizing:border-box;min-width:140px;padding:9px 12px 10px;color:#ece6d6;font:400 clamp(13px,.35vw + 11.5px,16px)/1.38 "Barlow Semi Condensed",system-ui,sans-serif;background:linear-gradient(180deg,rgba(14,14,13,.96),rgba(8,8,8,.96));border:1px solid rgba(236,230,214,.18);border-top-color:rgba(226,187,100,.7);border-bottom-color:rgba(226,187,100,.7);border-radius:3px;box-shadow:0 10px 28px rgba(0,0,0,.65);pointer-events:none;opacity:0;transform:translateY(3px);transition:opacity .12s,transform .12s;overflow-wrap:anywhere}
+.tip.on{opacity:1;transform:none}
+.tip.tt-below{transform:translateY(-3px)}.tip.tt-below.on{transform:none}
+.tip::after{content:"";position:absolute;left:var(--ax,50%);width:9px;height:9px;margin-left:-5px;background:#0b0b0b;border:1px solid rgba(226,187,100,.7);transform:rotate(45deg)}
+.tip.tt-above::after{bottom:-6px;border-top:0;border-left:0}
+.tip.tt-below::after{top:-6px;border-bottom:0;border-right:0}
+.tip p{margin:4px 0 0}
+.tip .tt-plain{margin:0}
+.tip .tt-h{display:block;font:700 1.08em/1.2 "Cinzel",Georgia,serif;letter-spacing:.03em;color:#f4ecd8}
+.tip .tt-h[class*="sch-"]{color:var(--sch,#f4ecd8)}
+.tip .tt-h.tt-hp{color:#ef7d73}.tip .tt-h.tt-mp{color:#8fb8f2}.tip .tt-h.tt-sp{color:#8fd49a}.tip .tt-h.tt-gold{color:var(--gold)}
+.tip .tt-sub{margin-top:1px;font-size:.86em;letter-spacing:.06em;text-transform:uppercase;color:#a49d8c}
+.tip .tt-stats{display:flex;flex-wrap:wrap;gap:2px 12px;margin:6px 0 2px;padding:5px 0 4px;border-top:1px solid rgba(236,230,214,.12);border-bottom:1px solid rgba(236,230,214,.12);font-size:.9em;color:#a49d8c}
+.tip .tt-stats b{color:#f4ecd8;font-weight:600;font-variant-numeric:tabular-nums}
+.tip .tt-hint{color:#a49d8c;font-size:.88em;font-style:italic}
+.tip .tt-up{color:#8fdc8a}.tip .tt-dn{color:#ff8b7e}.tip .tt-eq{color:var(--gold)}
+.tip .spl-info{margin:6px 0 2px;font-size:.9em}
+.tip .tt-note{margin:0 0 6px;padding-bottom:5px;border-bottom:1px solid rgba(236,230,214,.12);color:var(--gold);font-size:.92em}
+.tip .tt-tome{margin-top:6px;font-size:.92em}
+html.art-pixel .tip,.tip.tt-px{border-radius:0;border:2px solid #d6b25e;background:#0d0d0c;box-shadow:4px 4px 0 #000;transition:opacity .1s steps(2)}
+html.art-pixel .tip::after,.tip.tt-px::after{border-width:2px;background:#0d0d0c;border-color:#d6b25e}
+html.art-pixel .tip .tt-h,.tip.tt-px .tt-h{font-family:inherit;text-shadow:2px 2px 0 #000}
+@media (prefers-reduced-motion:reduce){.tip,.tip.tt-below{transition:none;transform:none}}
+/* holding a finger on these shows a tooltip: no phone menu or text selection */
+[data-tip],[data-tip-k],[data-tipt],.sky-row,.item,.hb,.dslot,.qhead,.tw-card,.skill,[data-sk-perk],#lvlb,#goldv{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 /* fight controls (fightctl.js): the action bar, quick slots, AP pips, pickers, targeting, keys */
 #tbf .fc{display:flex;flex-direction:column;gap:7px}
 #tbf .fc .ic,#tbf .fc img,#tbf .fc canvas,#tbf .fc .fc-sic,#tbf .fc .cp,#tbf .fc .fc-k,#tbf .fc .fc-n{pointer-events:none;-webkit-user-drag:none;user-select:none;-webkit-user-select:none}   /* a press on an icon is a press on its button, never an image drag */
@@ -2170,6 +2197,7 @@ html.a11y-hc .ti-box,html.a11y-hc .ti-box i,html.a11y-hc .ti-what{color:#ece6d8}
 <script src="onboard.js"></script>
 <script src="search.js"></script>
 <script src="remind.js"></script>
+<script src="tooltip.js"></script>
 <script src="ui.js"></script>
 </body>
 </html>
