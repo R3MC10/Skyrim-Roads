@@ -31,7 +31,7 @@ const HORSEART = (() => {
     bay: "sepia(0.85) saturate(1.9) hue-rotate(-12deg) brightness(0.66) contrast(1.08)",
     black: "brightness(0.36) contrast(1.25) saturate(0.5)",
     white: "brightness(1.32) contrast(0.88) saturate(0.4)",
-    palomino: "sepia(1) saturate(2.1) hue-rotate(-4deg) brightness(1.05)",
+    palomino: "sepia(0.9) saturate(1.35) hue-rotate(-6deg) brightness(0.98)",
     paint: "sepia(0.7) saturate(1.5) hue-rotate(-8deg) brightness(0.82)",
   };
   const IDS = ["bay", "black", "grey", "white", "palomino", "paint"];

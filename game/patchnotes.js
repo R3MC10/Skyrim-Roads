@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b170-horseart", build: 170, date: "25 Nov 2026", title: "Painted horses", items: [
+      "Horses get painted: in fights, on the road and on the map your horse is now a proper painted horse with saddle and tack, not a little drawing.",
+      "It stands still when you stop and gallops while you ride, you sit in the saddle in fights, and a knocked-down horse lies on its side behind you (it still only gets knocked down).",
+      "Every coat shows: bay, black, grey, white, palomino and paint, also on the stables card and for friends riding with you.",
+    ] },
     { id: "b169-travelanim", build: 169, date: "24 Nov 2026", title: "Smoother riding on the road", items: [
       "The picture under your trip got its walking and riding fixed: horses really walk and gallop now, every hoof lands on the road and stays put instead of sliding, and the body, mane and tail move with the stride.",
       "If anyone in your company is on foot, the horses slow to a walk beside them, so your follower keeps up without shuffling on the spot. Ride alone (or with everyone mounted) and you gallop.",

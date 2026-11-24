@@ -53,23 +53,25 @@ async def main():
             await pg.screenshot(path=os.path.join(OUT, f"{tag}_map_stand.png"))
             await pg.evaluate("()=>{ const S=__dbg.save(); G.startTrip(S,'Riverwood',WORLD.places.Riverwood.slice(0,2)); }"); await pg.wait_for_timeout(1600); await pg.evaluate(CLEAR)
             await pg.screenshot(path=os.path.join(OUT, f"{tag}_map_ride.png"))
-            el = await pg.query_selector("#trip")
-            if el and await el.is_visible():
-                await pg.evaluate("()=>{ document.querySelector('#trip').scrollIntoView({block:'center'}); }"); await pg.wait_for_timeout(500)
-                await el.screenshot(path=os.path.join(OUT, f"{tag}_travel.png"))
-            else:
-                await pg.screenshot(path=os.path.join(OUT, f"{tag}_travel_page.png")); print(tag, "trip panel not visible")
+            # the travel strip, straight from its painter: riding (galloping) and stopped (standing), with a riding friend
+            shots = await pg.evaluate("""()=>{ const S=__dbg.save(), look=HEROART.lookOf(S), sky=SKY.make({tod:'day',season:'summer',weather:'clear'}), out=[];
+              const co=[{name:'Kacper',look:{...look,r:'dunmer',id:'k'},riding:true,horse:'#2b2724'}];
+              for (const [nm,still] of [['ride',false],['stopped',true]]) { const c=TRAVELART.frame({ground:'Tundra',progress:0.5,look,sky,dest:'Riverwood',origin:'Whiterun',riding:true,horse:HORSES.coat(S.horse.coat)[2],company:co}, 640, {scale:3,warm:30,still}); out.push([nm,c.toDataURL('image/png')]); }
+              return out; }""")
+            for nm, url in shots:
+                path = os.path.join(OUT, f"{tag}_travel_{nm}.png")
+                with open(path, "wb") as f: f.write(base64.b64decode(url.split(",")[1]))
             # a mounted fight
             await pg.evaluate("()=>{ const S=__dbg.save(); S.trip=null; S.location='Whiterun'; [S.x,S.y]=WORLD.places.Whiterun; }")
             await pg.evaluate(FIGHT); await pg.wait_for_timeout(300); await pg.evaluate(CLEAR)
-            await pg.click("[data-tab=map]"); await pg.wait_for_timeout(300)
+            await pg.evaluate("()=>__ui.go('map')"); await pg.wait_for_timeout(500)
             if await pg.query_selector("[data-act=openenc]"): await pg.click("[data-act=openenc]")
-            await pg.wait_for_timeout(300)
+            await pg.wait_for_timeout(500)
             if await pg.query_selector("[data-act=enc][data-a=fight]"):
-                await pg.click("[data-act=enc][data-a=fight]"); await pg.wait_for_timeout(900)
-                await pg.screenshot(path=os.path.join(OUT, f"{tag}_fight.png"))
-                el = await pg.query_selector("#modal .fscene")
-                if el: await el.screenshot(path=os.path.join(OUT, f"{tag}_fight_scene.png"))
+                await pg.click("[data-act=enc][data-a=fight]")
+                for i, w in enumerate([1200, 2500]):
+                    await pg.wait_for_timeout(w)
+                    await pg.screenshot(path=os.path.join(OUT, f"{tag}_fight{i}.png"))
             else: fails.append(tag + ": no fight button")
             # the stable card
             await pg.evaluate(CLEAR)
