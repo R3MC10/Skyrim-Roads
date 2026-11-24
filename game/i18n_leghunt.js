@@ -141,7 +141,7 @@
     "The search area on your map gets smaller.": "Obszar poszukiwań na mapie się zmniejsza.",
     "A caravan lies wrecked across the road, crates smashed and horses gone.": "W poprzek drogi leży rozbita karawana, skrzynie roztrzaskane, koni brak.", "The guards are bandaging each other.": "Strażnicy opatrują się nawzajem.",
     "A farmer waves you down, white as a sheet.": "Macha do ciebie rolniczka, blada jak ściana.", "She saw it this morning, and she wants it dead.": "Widziała go dziś rano i chce, żeby zdechł.",
-    "Signs of the hunt": "Ślady zwierzyny", "🔍 Look over the body": "🔍 Obejrzyj ciało", "🗣 Ask what they saw": "🗣 Zapytaj, co widzieli", "🔍 Talk to the guards": "🔍 Porozmawiaj ze strażnikami",
+    "Signs of the hunt": "Ślady zwierzyny", "\uE105 Look over the body": "\uE105 Obejrzyj ciało", "\uE110 Ask what they saw": "\uE110 Zapytaj, co widzieli", "\uE105 Talk to the guards": "\uE105 Porozmawiaj ze strażnikami",
     "You note the spot and move on.": "Zapamiętujesz miejsce i ruszasz dalej.",
     "You read the tracks like a book: how it walks, where it rests, what it's afraid of.": "Czytasz tropy jak książkę: jak chodzi, gdzie odpoczywa, czego się boi.",
     "You lose the trail on stony ground, but you know which way it went.": "Gubisz trop na kamienistym gruncie, ale wiesz, w którą stronę poszedł.",
@@ -152,8 +152,8 @@
     "Nothing here.": "Nic tu nie ma.", "It's not been this way.": "Nie przechodził tędy.", "Search inside the area on your map.": "Szukaj w obszarze zaznaczonym na mapie.",
     "Someone here saw it, and is glad to talk about it.": "Ktoś tutaj go widział i chętnie o tym opowie.",
     "The beast you've been hunting": "Bestia, na którą polujesz", "How do you want to do this?": "Jak chcesz to rozegrać?",
-    "🐾 Track it to its lair": "🐾 Wytrop go aż do legowiska", "Not yet": "Jeszcze nie",
-    "🍖 Prepare: bait and potions": "🍖 Przygotuj się: przynęta i mikstury", "🍖 Prepare: bait and potions (needs meat)": "🍖 Przygotuj się: przynęta i mikstury (potrzebne mięso)",
+    "\uE115 Track it to its lair": "\uE115 Wytrop go aż do legowiska", "Not yet": "Jeszcze nie",
+    "\uE149 Prepare: bait and potions": "\uE149 Przygotuj się: przynęta i mikstury", "\uE149 Prepare: bait and potions (needs meat)": "\uE149 Przygotuj się: przynęta i mikstury (potrzebne mięso)",
     "It's gone.": "Zniknął.", "Whatever it was, it's not your hunt any more.": "Czymkolwiek to było, to już nie twoje łowy.",
     "You hold back.": "Wstrzymujesz się.", "It'll still be out there, somewhere close.": "Wciąż tam będzie, gdzieś blisko.",
     "You settle in downwind and wait.": "Kryjesz się z wiatrem i czekasz.", "It walks right past you.": "Przechodzi tuż obok ciebie.",
@@ -176,7 +176,7 @@
     "Pale Lady's Circlet": "Diadem Bladej Pani", "A thin silver circlet with a wisp heart set in it.": "Cienki srebrny diadem z osadzonym sercem ognika.",
     "Grimscale Sword": "Miecz Ponurołuskiego", "A blade of reaper chitin.": "Ostrze z chityny żniwiarza.", "It hisses when it cuts.": "Syczy, gdy tnie.",
     "Bloodmoon Wolf Helm": "Wilczy hełm Krwawego Księżyca", "A werewolf's head, made into a helmet.": "Łeb wilkołaka przerobiony na hełm.", "Hircine approves.": "Hircyn to pochwala.",
-    "Legendary hunts": "Legendarne łowy", "🐾 Legendary hunts": "🐾 Legendarne łowy", "Jarl's beast contracts": "Zlecenia jarla na bestie",
+    "Legendary hunts": "Legendarne łowy", "\uE115 Legendary hunts": "\uE115 Legendarne łowy", "Jarl's beast contracts": "Zlecenia jarla na bestie",
     "The Jarl's contracts on legendary beasts, and your bestiary.": "Zlecenia jarla na legendarne bestie i twój bestiariusz.",
     // ---- the board and the hunt card
     "Weak to:": "Słaby na:", "Resists:": "Odporny na:", "Big move:": "Wielki atak:", "Unknown": "Nieznane",
@@ -199,8 +199,8 @@
   };
   for (const [k, v] of Object.entries(PL)) if (!(k in I18N_STORY.ex)) I18N_STORY.ex[k] = v;
   I18N_STORY.pats.push(
-    ["🐾 Read the tracks ({0})", "🐾 Odczytaj tropy ({0})"],
-    ["🏹 Set an ambush ({0})", "🏹 Zastaw zasadzkę ({0})"],
+    ["\uE115 Read the tracks ({0})", "\uE115 Odczytaj tropy ({0})"],
+    ["\uE10C Set an ambush ({0})", "\uE10C Zastaw zasadzkę ({0})"],
     ["Last seen around {0}.", "Ostatnio widziany w okolicy: {0}."],
     ["{0} is dead.", "{0} nie żyje."],
     ["The Jarl's reward: {0} gold.", "Nagroda jarla: {0} złota."],

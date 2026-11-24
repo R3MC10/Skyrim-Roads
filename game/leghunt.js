@@ -122,7 +122,7 @@ const LEGHUNT = (() => {
 
   // what the weaknesses and resistances are called, and what clues say about them
   const KIND = { fire: "Fire", frost: "Frost", shock: "Shock", blunt: "Maces and hammers", blade: "Blades and axes", archery: "Arrows" };
-  const KIC = { fire: "🔥", frost: "❄", shock: "⚡", blunt: "🔨", blade: "🗡", archery: "🏹" };
+  const KIC = { fire: "\uE104", frost: "\uE125", shock: "\uE129", blunt: "\uE14E", blade: "\uE161", archery: "\uE10C" };
   const WEAK_LINE = {
     fire: "They saw it run from a burning cart. Fire is what it hates.",
     frost: "They saw it slow right down when the frost came. Cold makes it sluggish.",
@@ -142,16 +142,16 @@ const LEGHUNT = (() => {
 
   // ================================================================ its big move and its phases (bossfight.js)
   const SIG = {
-    pinch: { ic: "🦀", name: "Royal Pinch", mul: 1.9, ans: ["block", "dodge"], cut: 0.4 },
-    ghost: { ic: "👻", name: "Ghost Pounce", mul: 2.0, ans: ["block"], cut: 0.45 },
-    thorns: { ic: "🌿", name: "Thorn Swarm", mul: 1.9, ans: ["dodge"], cut: 0.3 },
-    web: { ic: "🕸", name: "Venom Web", mul: 1.8, ans: ["dodge", "ward"], cut: 0.35, magic: true },
-    maul: { ic: "🐻", name: "Crushing Maul", mul: 2.1, ans: ["block"], cut: 0.5 },
-    glacier: { ic: "❄", name: "Glacier Roar", mul: 2.0, ans: ["ward", "block"], cut: 0.5, magic: true },
-    charge: { ic: "🐘", name: "Trampling Charge", mul: 2.2, ans: ["dodge"], cut: 0.3 },
-    wail: { ic: "💠", name: "Wail of the Mist", mul: 1.9, ans: ["ward"], cut: 0.4, magic: true },
-    acid: { ic: "🧪", name: "Acid Spit", mul: 1.9, ans: ["ward", "dodge"], cut: 0.4, magic: true },
-    howl: { ic: "🌕", name: "Hunter's Howl", mul: 1.8, ans: ["ward", "block"], cut: 0.5, magic: true },
+    pinch: { ic: "\uE16A", name: "Royal Pinch", mul: 1.9, ans: ["block", "dodge"], cut: 0.4 },
+    ghost: { ic: "\uE14D", name: "Ghost Pounce", mul: 2.0, ans: ["block"], cut: 0.45 },
+    thorns: { ic: "\uE12B", name: "Thorn Swarm", mul: 1.9, ans: ["dodge"], cut: 0.3 },
+    web: { ic: "\uE172", name: "Venom Web", mul: 1.8, ans: ["dodge", "ward"], cut: 0.35, magic: true },
+    maul: { ic: "\uE170", name: "Crushing Maul", mul: 2.1, ans: ["block"], cut: 0.5 },
+    glacier: { ic: "\uE125", name: "Glacier Roar", mul: 2.0, ans: ["ward", "block"], cut: 0.5, magic: true },
+    charge: { ic: "\uE135", name: "Trampling Charge", mul: 2.2, ans: ["dodge"], cut: 0.3 },
+    wail: { ic: "\uE192", name: "Wail of the Mist", mul: 1.9, ans: ["ward"], cut: 0.4, magic: true },
+    acid: { ic: "\uE15B", name: "Acid Spit", mul: 1.9, ans: ["ward", "dodge"], cut: 0.4, magic: true },
+    howl: { ic: "\uE13F", name: "Hunter's Howl", mul: 1.8, ans: ["ward", "block"], cut: 0.5, magic: true },
   };
   const PH = {
     mudking: [{ fx: ["add"], say: "{0} clacks and its royal guard crawls out of the sand", add: "Royal guard crabs" }, { fx: ["enrage"], say: "{0} snaps its claws in a fury" }],
@@ -304,7 +304,7 @@ const LEGHUNT = (() => {
     return { id: "lh_clue", title: "Signs of the hunt", lh: c.id, kind, text };
   }
   function clueChoices(e, s) {
-    const act = { tracks: ["read", `🐾 Read the tracks (${pct(trackCh(s))})`], victim: ["look", "🔍 Look over the body"], witness: ["ask", "🗣 Ask what they saw"], caravan: ["look", "🔍 Talk to the guards"] }[e.kind];
+    const act = { tracks: ["read", `\uE115 Read the tracks (${pct(trackCh(s))})`], victim: ["look", "\uE105 Look over the body"], witness: ["ask", "\uE110 Ask what they saw"], caravan: ["look", "\uE105 Talk to the guards"] }[e.kind];
     return [act, ["leave", "Not now"]];
   }
   function clueChoose(s, e, ch) {
@@ -352,7 +352,7 @@ const LEGHUNT = (() => {
     return { id: "lh_meet", title: "The beast you've been hunting", lh: c.id, text: def.meet + " " + "How do you want to do this?" };
   }
   function meetChoices(e, s) {
-    return [["ambush", `🏹 Set an ambush (${pct(ambushCh(s))})`], ["lair", "🐾 Track it to its lair"], ["prep", `🍖 Prepare: bait and potions${baitIn(s) ? "" : " (needs meat)"}`], ["leave", "Not yet"]];
+    return [["ambush", `\uE10C Set an ambush (${pct(ambushCh(s))})`], ["lair", "\uE115 Track it to its lair"], ["prep", `\uE149 Prepare: bait and potions${baitIn(s) ? "" : " (needs meat)"}`], ["leave", "Not yet"]];
   }
   function foeFor(s, id, open) {
     const c = BY[id], k = known(s, id);
@@ -524,7 +524,7 @@ const LEGHUNT = (() => {
     pics.set(key, url);
     return url;
   }
-  const pic = (id, size) => { const u = portrait(id, size); return u ? `<img class="lh-pic" src="${u}" width="${size || 92}" height="${size || 92}" alt="">` : `<span class="lh-pic lh-ph">🐾</span>`; };
+  const pic = (id, size) => { const u = portrait(id, size); return u ? `<img class="lh-pic" src="${u}" width="${size || 92}" height="${size || 92}" alt="">` : `<span class="lh-pic lh-ph">\uE115</span>`; };
 
   // ================================================================ the screens
   const tl = (x) => `<b>${T(KIND[x])}</b>`;
@@ -539,11 +539,11 @@ const LEGHUNT = (() => {
     const def = BY[c.id], a = area(c), np = nearPlace(a), ready = c.clues >= NEED, inside = G.pxDist([s.x, s.y], [a.x, a.y]) <= a.r * 1.25 + 20;
     const lead = canDecide(s);
     const btns = [];
-    if (where === "wild" && s.location && !s.trip && !ready && inside && !c.searched.includes(s.location)) btns.push(`<button class="btn sm pri" data-act="lhact" data-id="search">🔎 ${T("Search for signs here")}</button>`);
-    if (ready && near(s) && !s.trip) btns.push(`<button class="btn sm danger" data-act="lhact" data-id="track">⚔ ${T("Track it down")}</button>`);
-    if (np && s.location !== np && !s.trip) btns.push(`<button class="btn sm" data-act="go" data-place="${esc(np)}">🧭 ${T("Head for the area")}</button>`);
+    if (where === "wild" && s.location && !s.trip && !ready && inside && !c.searched.includes(s.location)) btns.push(`<button class="btn sm pri" data-act="lhact" data-id="search">\uE105 ${T("Search for signs here")}</button>`);
+    if (ready && near(s) && !s.trip) btns.push(`<button class="btn sm danger" data-act="lhact" data-id="track">\uE101 ${T("Track it down")}</button>`);
+    if (np && s.location !== np && !s.trip) btns.push(`<button class="btn sm" data-act="go" data-place="${esc(np)}">\uE14C ${T("Head for the area")}</button>`);
     if (where === "town") btns.push(`<button class="btn sm" data-act="lhact" data-id="abandon">${T("Give up the hunt")}</button>`);
-    return `<div class="lh-card lh-hunt">${pic(c.id, 72)}<div class="t"><b>🐾 ${esc(T(def.name))}</b>
+    return `<div class="lh-card lh-hunt">${pic(c.id, 72)}<div class="t"><b>\uE115 ${esc(T(def.name))}</b>
       <span>${T(ready ? "You know where it is. Get close and track it down." : "Find signs of it inside the area on your map.")}</span>
       <span>${T("Clues:")} ${dots(c.clues)} · ${T("Somewhere around")} <b>${esc(T(np || ""))}</b> (${esc(T(G.holdAt([a.x, a.y]) || ""))})</span>
       ${traits(s, c.id)}${lead ? "" : `<span class="sub">${T("Your party leader leads the hunt.")}</span>`}
@@ -556,7 +556,7 @@ const LEGHUNT = (() => {
     const btn = !on && !busy && lvlOk && cool <= 0 && canDecide(s) ? `<button class="btn sm pri" data-act="lhact" data-id="accept" data-c="${c.id}">${T("Take the contract")}</button>` : "";
     return `<div class="lh-poster${c.town === l ? " here" : ""}">${pic(c.id)}<div class="t"><b>${esc(T(c.name))}</b><small>${esc(T(c.ep))}</small>
       <span>${esc(T(c.desc))}</span>
-      <span>📍 ${esc(T(c.hold))} · ⚑ ${T("Posted by the Jarl of")} ${esc(T(c.town))} · <b class="gold">${pay}</b> ${T("gold")}</span>
+      <span>\uE122 ${esc(T(c.hold))} · ⚑ ${T("Posted by the Jarl of")} ${esc(T(c.town))} · <b class="gold">${pay}</b> ${T("gold")}</span>
       ${b.seen || scholar(s) ? traits(s, c.id) : ""}${state}${btn}</div></div>`;
   }
   function bestiary(s, esc) {
@@ -565,18 +565,18 @@ const LEGHUNT = (() => {
     return seen.map((c) => { const b = st(s).best[c.id]; return `<div class="item lh-best">${pic(c.id, 48)}<div class="t"><b>${esc(T(c.name))}</b><span>${T("Slain:")} ${b.kills || 0} · ${esc(T(c.hold))}</span>${traits(s, c.id)}</div></div>`; }).join("");
   }
   const sections = (l) => (l && typeof TOWNS !== "undefined" && TOWNS.isTown(l) ? ["hunts"] : []);
-  const names = () => ({ hunts: "🐾 Legendary hunts" });
+  const names = () => ({ hunts: "\uE115 Legendary hunts" });
   function townHTML(s, esc) {
     const l = s.location, local = L.filter((c) => c.town === l), rest = L.filter((c) => c.town !== l);
     const note = "Jarls pay well for the beasts that terrorise their holds. Take a contract, find signs of it on the road (the area on your map shrinks with every clue), then choose how to face it. Learn its weakness first: it makes the fight much easier.";
     const body = `${huntCard(s, esc, "town")}
       ${local.length ? `<h3>⚑ ${T("The Jarl's own contracts")}</h3>${local.map((c) => poster(s, c, esc, l)).join("")}` : ""}
-      <h3>📜 ${T("Contracts from across Skyrim")}</h3>${rest.map((c) => poster(s, c, esc, l)).join("")}
-      <h3>📖 ${T("Bestiary")}</h3>${bestiary(s, esc)}`;
+      <h3>\uE103 ${T("Contracts from across Skyrim")}</h3>${rest.map((c) => poster(s, c, esc, l)).join("")}
+      <h3>\uE108 ${T("Bestiary")}</h3>${bestiary(s, esc)}`;
     return { note, body };
   }
   /* out in the wilds: the hunt card with Search / Track it down (ui.js puts it on top of the place panel) */
-  function wildHTML(s, esc) { return cur(s) || leaderHunt() ? `<div class="panel lh-wild">${cur(s) ? huntCard(s, esc, "wild") : `<p class="sub">🐾 ${T("Your party leader is on a legendary hunt. Stay close.")}</p>`}</div>` : ""; }
+  function wildHTML(s, esc) { return cur(s) || leaderHunt() ? `<div class="panel lh-wild">${cur(s) ? huntCard(s, esc, "wild") : `<p class="sub">\uE115 ${T("Your party leader is on a legendary hunt. Stay close.")}</p>`}</div>` : ""; }
 
   // ================================================================ the map: rough areas, never exact markers
   function drawMap(g, P, sc, s, t, rm) {
@@ -594,7 +594,7 @@ const LEGHUNT = (() => {
       g.beginPath(); g.arc(x, y, R, 0, Math.PI * 2); g.fill(); g.stroke();
       if (g.setLineDash) g.setLineDash([]);
       g.font = `${Math.round(13 * sc)}px serif`; g.textAlign = "center"; g.fillStyle = "#3a2414";
-      g.fillText("🐾", x, y + 4 * sc);
+      g.fillText("\uE115", x, y + 4 * sc);
       g.font = `bold ${Math.round(10 * sc)}px serif`; g.fillStyle = "rgba(40,24,12,0.9)";
       g.fillText(T(BY[a.id].name), x, y + R + 12 * sc);
       g.restore();
