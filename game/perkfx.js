@@ -284,6 +284,10 @@ const PFX = (() => {
     // ---------------------------------------------------------------- boss fights (bossfight.js)
     [ "One-Handed", "giant_slayer", "Giant Slayer", 1, [40], ["armsman"], "Bosses take 10% more damage from you, and 20% more once they reach their last phase. [OURS]", [["out", 0.1, { bossFoe: 1 }], ["out", 0.1, { bossLast: 1 }]]],
     [ "Blocking", "read_the_signs", "Read the Signs", 1, [30], ["shield_wall"], "A boss's big attacks (the ones it shows a turn ahead) hurt you 25% less. [OURS]", [["bftele", 0.25, {}]]],
+    // ---------------------------------------------------------------- player-run holds (holdrule.js)
+    [ "Speechcraft", "fair_dues", "Fair Dues", 2, [20, 45], [], "A hold's tax costs you half as much when you shop there (rank 2: you pay none). [OURS]", [["holdtax", 0.5, {}]]],
+    [ "Speechcraft", "jarls_favour", "Jarl's Favour", 1, [50], ["fair_dues"], "In a hold your clan rules, shops sell to you another 5% cheaper, and while you're its Jarl, taxes fill the treasury 20% faster. [OURS]", [["jarlfav", 0.05, {}], ["jarlpurse", 0.2, {}]]],
+    [ "Etiquette", "hold_warden", "Hold Warden", 1, [35], ["courtly_manners"], "In hold challenges and raids, the champion and the defenders have 10% less health and hit 10% softer. [OURS]", [["holdfight", 0.1, {}]]],
     [ "Two-Handed", "break_their_focus", "Break Their Focus", 1, [35], ["barbarian"], "Any blow that takes a tenth of a boss's health breaks the big attack it's getting ready, and it reels and loses its next move. [OURS]", [["bfbreak", 1, {}]]],
     // ---------------------------------------------------------------- shouts and weather (thuum.js, wxmatters.js, weatherfx.js)
     [ "Speechcraft", "thuum_mastery", "Thu'um Mastery", 2, [75, 95], ["commanding_voice"], "Your voice comes back sooner: every shout cools down another 10/20% (all cooldown cuts together stop at half). [OURS]", [["shoutcd", [0.1, 0.2], {}]]],

@@ -2577,6 +2577,61 @@ html.art-pixel .wxpop{border-radius:0;border-width:2px}
   .tw-dir .tw-k{position:absolute;top:2px;right:calc(50% + 16px)}
   .tw-q .tw-k{margin-left:2px;opacity:.75}
   .tw[data-glow=up] .tw-up .tw-k,.tw[data-glow=down] .tw-down .tw-k,.tw[data-glow=left] .tw-left .tw-k,.tw[data-glow=right] .tw-right .tw-k{color:#fff3cf;border-color:rgba(243,217,139,.7)}
+/* player-run holds (holdui.js): SkyUI list | details, two columns on a PC, stacked on a phone */
+.hr-panel h3{margin:0;font-size:19px;letter-spacing:.04em}
+.hr-panel h4{margin:0 0 4px;font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:var(--gold)}
+.hr-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin-top:8px}
+.hr-side .raid-map,.hr-side img{max-width:100%;height:auto}
+.hr-list{display:grid;border-top:1px solid rgba(226,187,100,.35);border-bottom:1px solid rgba(226,187,100,.35);margin-top:6px}
+.hr-lh,.hr-row{display:grid;grid-template-columns:12px minmax(0,1fr) 4.2em 3.2em;gap:8px;align-items:center}
+.hr-lh{padding:4px 8px;font-size:12px;color:var(--mute);text-transform:uppercase;letter-spacing:.08em}
+.hr-row{width:100%;text-align:left;min-height:40px;padding:6px 8px;border:0;border-left:3px solid transparent;background:transparent;color:var(--ink);font-size:15px}
+.hr-row:nth-child(odd){background:rgba(255,255,255,.025)}
+.hr-row.on{background:linear-gradient(90deg,rgba(226,187,100,.22),rgba(226,187,100,0));border-left-color:var(--gold)}
+.hr-row.mine .hr-n{color:var(--gold)}
+.hr-row .hr-who,.hr-row .hr-tax{text-align:right;color:var(--mute)}
+.hr-n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hr-here{color:var(--frost);font-size:12px}
+.hr-chip{display:inline-block;width:10px;height:10px;border-radius:2px;border:1px solid rgba(0,0,0,.5);vertical-align:middle;margin-right:6px}
+.hr-row .hr-chip{margin:0}
+.hr-foot{margin:4px 0 0;font-size:12px}
+.hr-detail{display:grid;gap:8px;align-content:start}
+.hr-head{display:flex;gap:10px;align-items:center}
+.hr-head .sub{display:block}
+.hr-none{background:#2a2e33}
+img.hr-keep{display:block;width:100%;max-width:420px;height:auto;border-radius:8px;border:1px solid #4a4237}
+.hr-stats{display:grid;grid-template-columns:minmax(0,1fr);border-top:1px solid var(--line)}
+.hr-stat{display:flex;justify-content:space-between;gap:10px;padding:5px 2px;border-bottom:1px solid var(--line);font-size:14px}
+.hr-stat span{color:var(--mute)}
+.hr-stat b{font-weight:600;text-align:right}
+.hr-stat.gold b{color:var(--gold)}
+.hr-stat.good b{color:#9fd59a}
+.hr-act{display:grid;gap:4px}
+.hr-act .sub{margin:0}
+.hr-box{border:1px solid #4a4237;border-radius:10px;padding:10px;display:grid;gap:6px;background:rgba(0,0,0,.15)}
+.hr-box.jarl{border-color:rgba(226,187,100,.6)}
+.hr-box .sub{margin:0}
+.hr-cand{display:grid;grid-template-columns:minmax(0,1fr) 2em auto;gap:8px;align-items:center}
+.hr-cand.on span:first-child{color:var(--gold)}
+.hr-taxrow{display:flex;flex-wrap:wrap;gap:6px}
+.hr-spend{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.hr-spend .sub{display:block;font-size:12px}
+.hr-spend .btn{flex:0 0 auto}
+.hr-town .hr-chip{margin-right:6px}
+.hr-panel{container-type:inline-size}
+@container (min-width:440px){
+  .hr-grid{grid-template-columns:minmax(0,44%) minmax(0,1fr)}
+  .hr-lh,.hr-row{grid-template-columns:10px minmax(0,1fr) 3.4em;gap:6px}
+  .hr-lh span:last-child,.hr-row .hr-tax{display:none}
+  .hr-here{display:none}
+  .hr-detail{max-height:calc(100vh - 150px);overflow:auto}
+}
+@container (min-width:760px){
+  .hr-grid{grid-template-columns:minmax(0,1fr) minmax(0,1.15fr)}
+  .hr-lh,.hr-row{grid-template-columns:12px minmax(0,1fr) 4.2em 3.2em;gap:8px}
+  .hr-lh span:last-child,.hr-row .hr-tax{display:block}
+  .hr-here{display:inline}
+  .hr-stats{grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:14px}
 }
 </style>
 <script src="bugreport.js"></script>
@@ -2622,6 +2677,7 @@ html.art-pixel .wxpop{border-radius:0;border-width:2px}
 <script src="clans.js"></script>
 <script src="festivals.js"></script>
 <script src="wars.js"></script>
+<script src="holdrule.js"></script>
 <script src="curses.js"></script>
 <script src="smithing.js"></script>
 <script src="jewelry.js"></script>
@@ -2774,6 +2830,7 @@ html.art-pixel .wxpop{border-radius:0;border-width:2px}
 <script src="i18n_enchants2.js"></script>
 <script src="i18n_invites.js"></script>
 <script src="i18n_tabkeys.js"></script>
+<script src="i18n_holds.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>
@@ -2789,6 +2846,7 @@ html.art-pixel .wxpop{border-radius:0;border-width:2px}
 <script src="hud2.js"></script>
 <script src="skillup.js"></script>
 <script src="invites.js"></script>
+<script src="holdui.js"></script>
 <script src="ui.js"></script>
 </body>
 </html>

@@ -63,6 +63,15 @@ const PATCHNOTES = (() => {
       "New: Easy timing. Mining, fishing, lockpicking and the dungeon room games give you more time, a slower needle and a wider sweet spot.",
       "The accessibility settings are now in Polish too.",
     ] },
+    { id: "b151-holds", build: 144, date: "24 Nov 2026", title: "Clans can rule holds: a Jarl, taxes and raids", items: [
+      "Clans can now take a hold for real. Get 10 war points in a hold this week, go there and beat its champion (Social → Realm → Holds). Win, and your clan rules it.",
+      "Members of the ruling clan vote for a Jarl. Votes are counted twice a week (Monday and Thursday noon, UTC), so a term lasts half a week.",
+      "The Jarl sets a small tax on shop sales in the hold, from 0% to 5%. Only people outside the clan pay it, and it fills the clan's treasury.",
+      "The Jarl spends the treasury: hire guards (tougher raids for a week), a market discount (5% off for everyone for 3 days) or wall repairs.",
+      "Other clans can raid once a week, from Saturday 12:00 to Monday 00:00 UTC. Every win knocks down a wall; win again with no walls left and the hold changes hands. A hold that just changed hands is safe until the next week.",
+      "Not in a clan? You only notice it in the shops. Town pages and the Holds screen show who rules, who the Jarl is and what tax you pay.",
+      "New perks: Fair Dues and Jarl's Favour (Speechcraft), and Hold Warden (Etiquette).",
+    ] },
     { id: "b143-bleakfalls", build: 143, date: "24 Nov 2026", title: "Farengar's quest can't get stuck any more", items: [
       "Bleak Falls Barrow (main quest): clearing the barrow now moves the quest on by itself. The next step, \"The Dragonstone\", sends you to Farengar in Whiterun.",
       "Farengar doesn't need the Dragonstone in your pack any more. If it got lost, ended up in a chest or went to someone else in a party, just tell him: clearing the barrow is enough. Hand it in under Area tab → Court wizard, or with the button in the Journal.",
