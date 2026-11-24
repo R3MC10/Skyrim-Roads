@@ -52,6 +52,9 @@ async def main():
                 n = await pg.evaluate("document.querySelectorAll('.lh-poster').length")
                 check(n >= 2, f"{tag}: Dawnstar's board shows {n} beast posters")
                 check(await pg.evaluate("!!document.querySelector('.lh-poster img, .lh-poster .lh-pic')"), f"{tag}: posters have a picture of the beast")
+                try: await pg.wait_for_function("document.querySelectorAll('.lh-poster .lh-paint img').length >= 2 && [...document.querySelectorAll('.lh-paint img')].every(i => i.complete)", timeout=8000)
+                except Exception: pass
+                check(await pg.evaluate("document.querySelectorAll('.lh-poster .lh-paint img').length >= 2"), f"{tag}: posters show the painted beast in its gold frame")
                 check(not await pg.evaluate("document.documentElement.scrollWidth > innerWidth + 1"), f"{tag}: board fits the screen width")
                 await pg.evaluate("document.querySelector('.lh-poster')?.scrollIntoView({block:'start'})"); await shot("board")
                 await pg.evaluate("document.querySelector('[data-act=lhact][data-id=accept][data-c=whitefang]')?.click()"); await pg.wait_for_timeout(600); await pg.evaluate(CLEAN)
@@ -84,6 +87,16 @@ async def main():
                 await shot("meet")
                 await pg.evaluate("document.querySelector('#modal [data-act=ev][data-c=ambush]')?.click()"); await pg.wait_for_timeout(2500)
                 check(await pg.evaluate("!!document.querySelector('#tbf')"), f"{tag}: the boss fight opens")
+                await pg.wait_for_timeout(1500)
+                check(await pg.evaluate("ASSETS.stateOf('foe-frosttroll') === 'ok'"), f"{tag}: the fight loads Whitefang's painted picture")
+                try: await pg.get_by_text("Got it", exact=True).first.click(timeout=1500)
+                except Exception: pass
+                await pg.mouse.move(2, 2); await pg.wait_for_timeout(400)
+                cv = await pg.evaluate_handle("[...document.querySelectorAll('#tbf canvas, canvas')].sort((a, b) => b.width * b.height - a.width * a.height)[0]")
+                try:
+                    el = cv.as_element(); await el.scroll_into_view_if_needed(); await pg.wait_for_timeout(500)
+                    path = os.path.join(OUT, f"lh_{tag}_scene.png"); await el.screenshot(path=path); shots.append(path)
+                except Exception as ex: print("no scene shot:", str(ex)[:100])
                 await shot("fight")
                 await ctx.close()
             await b.close()

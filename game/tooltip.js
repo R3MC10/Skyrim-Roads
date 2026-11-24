@@ -328,6 +328,13 @@ const TIP = (() => {
     box.style.setProperty("--ax", Math.round(Math.max(12, Math.min(tw - 12, cx - x))) + "px");
     box.classList.toggle("tt-above", side === "above"); box.classList.toggle("tt-below", side === "below");
   }
+  /* [c2polish] a button on the fight screen's skill bar: the box goes above the whole bar (not over the Moves row) */
+  function anchor(el) {
+    const r = el.getBoundingClientRect(), bar = el.closest?.("#tbf.c2 .tbdock");
+    if (!bar) return r;
+    const b = bar.getBoundingClientRect();
+    return { left: r.left, width: r.width, right: r.right, top: Math.min(r.top, b.top), bottom: r.bottom, height: r.bottom - Math.min(r.top, b.top) };
+  }
   function show(hit, rect = null) {
     if (!DOM) return;
     const main = hit.k ? html(hit.k) : hit.t ? `<p class="tt-plain">${esc(hit.t)}</p>` : null;
@@ -337,7 +344,7 @@ const TIP = (() => {
     if (!box.isConnected) document.body.appendChild(box);
     box.innerHTML = body;
     cur = hit; hit.rect = rect;
-    place(rect || hit.el.getBoundingClientRect());
+    place(rect || anchor(hit.el));
     box.classList.add("on");
     if (hit.el?.id) hit.el.setAttribute("aria-describedby", "tip");
     clearInterval(watchT); watchT = setInterval(watch, 300);

@@ -2486,7 +2486,7 @@ html.art-pixel .pnbar,html.art-pixel .pnbar .pnback{border-radius:0}
 #tbf.c2 .tbparty .tbu.ally .fairow{display:none}
 #tbf.c2 .tbparty .tbu.ally.down{opacity:.6;filter:grayscale(.7)}
 /* the fight log: a short fading feed */
-#tbf.c2 .c2ov .tblog{position:absolute;left:6px;top:var(--c2top,48px);display:flex;flex-direction:column;justify-content:flex-end;width:auto;max-width:62%;min-height:0;max-height:62px;flex:none;overflow:hidden;padding:2px 4px;margin:0;background:none;border:0;border-radius:0;font-size:11.5px;line-height:1.25;text-shadow:0 1px 2px #000,0 0 6px #000,0 0 2px #000;-webkit-mask-image:linear-gradient(180deg,transparent,#000 48%);mask-image:linear-gradient(180deg,transparent,#000 48%)}
+#tbf.c2 .c2ov .tblog{position:absolute;left:6px;top:var(--c2top,48px);display:flex;flex-direction:column;justify-content:flex-end;width:auto;max-width:62%;min-height:0;max-height:62px;flex:none;overflow:hidden;padding:2px 4px;margin:0;background:rgba(8,10,14,.42);border:0;border-radius:6px;font-size:11.5px;line-height:1.25;text-shadow:0 1px 2px #000,0 0 6px #000,0 0 2px #000;-webkit-mask-image:linear-gradient(180deg,transparent,#000 30px);mask-image:linear-gradient(180deg,transparent,#000 30px);-webkit-mask-size:100% 62px;mask-size:100% 62px;-webkit-mask-position:bottom;mask-position:bottom;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
 #tbf.c2 .c2ov .tblog .tbl{flex:none;padding:0}
 #tbf.c2 .c2ov .tblog::after{display:none}
 /* the skill bar */
@@ -2607,7 +2607,7 @@ html.art-pixel .pnbar,html.art-pixel .pnbar .pnback{border-radius:0}
 #tbf.c2.c2wide .c2ov .tbparty .tbu.ally,#tbf.c2.c2wide .c2ov .tbparty.many .tbu.ally{width:100%;padding:5px 8px 6px}
 #tbf.c2.c2wide .tbparty .tbu.ally .nm{font-size:12px}#tbf.c2.c2wide .tbparty .tbu.ally .tbbar.mid{height:12px}#tbf.c2.c2wide .tbparty .tbu.ally .tbbar .num{font-size:10px;line-height:12px}
 #tbf.c2.c2wide .tbparty .tbu.ally .fairow{display:block}
-#tbf.c2.c2wide .c2ov .tblog{left:auto;right:16px;top:auto;bottom:calc(var(--c2dock,130px) + 14px);width:min(380px,var(--c2side,360px));max-width:none;max-height:132px;font-size:13px;padding:4px 8px}
+#tbf.c2.c2wide .c2ov .tblog{left:auto;right:16px;top:auto;bottom:calc(var(--c2dock,130px) + 14px);width:min(380px,var(--c2side,360px));max-width:none;max-height:132px;font-size:13px;padding:4px 8px;-webkit-mask-image:linear-gradient(180deg,transparent,#000 48px);mask-image:linear-gradient(180deg,transparent,#000 48px);-webkit-mask-size:100% 132px;mask-size:100% 132px}
 #tbf.c2.c2wide .tbord{flex:0 1 auto;margin:0 auto}
 #tbf.c2.c2wide .tbini .c2nm{display:block;padding-left:2px}
 #tbf.c2.c2wide .tbini .c2pt{width:30px;height:30px}
@@ -3586,6 +3586,18 @@ html.pcmap .compass i.cl{left:5%}html.pcmap .compass i.cr{right:5%}
 .lh-btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
 .lh-poster .btn{align-self:flex-start;margin-top:4px}
 @media (max-width:420px){.lh-pic{width:64px;height:64px}.lh-card .lh-pic{width:56px;height:56px}}
+/* painted legends: the foe picture in a gold frame on a dark, glowing ground */
+.lh-paint{display:flex;align-items:flex-end;justify-content:center;overflow:hidden;position:relative;border:2px solid #d8b04a;border-radius:8px;
+  background:radial-gradient(circle at 50% 40%,#3a2c1c,#120c08);background:radial-gradient(circle at 50% 62%,color-mix(in srgb,var(--lhglow,#d8b04a) 30%,transparent),transparent 68%),radial-gradient(circle at 50% 40%,#3a2c1c,#120c08);
+  box-shadow:0 0 0 1px #4a3410,inset 0 0 0 1px rgba(255,226,150,.35),0 0 10px rgba(216,176,74,.35)}
+.lh-paint img{width:100%;height:100%;object-fit:contain;display:block}
+.lh-paint::after{content:"";position:absolute;inset:3px;border:1px solid rgba(255,226,150,.28);border-radius:5px;pointer-events:none}
+html.art-pixel .lh-paint{border-radius:0;image-rendering:pixelated}html.art-pixel .lh-paint::after{border-radius:0}
+/* [c2polish] the fight feed: no empty bar before the first line */
+#tbf.c2 .c2ov .tblog[hidden]{display:none}
+/* [c2polish] a long next-move chip on the foe's plate wraps inside the plate instead of printing over itself (phones) */
+#tbf.c2 .c2ov .tbu.foe .tbint{flex-wrap:wrap;white-space:normal;max-width:100%;box-sizing:border-box;row-gap:1px}
+#tbf.c2 .c2ov .tbu.foe .tbint>*{flex:none;white-space:nowrap}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
