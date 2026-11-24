@@ -71,7 +71,7 @@ ok(cnt.all === 2 && cnt.towns === 1 && cnt.dungeons === 1 && cnt.new === 1 && cn
 ok(!/data-id="other"/.test(MAPPANEL.chips(cnt)) && /data-id="towns"/.test(MAPPANEL.chips(cnt)), "empty filters are hidden");
 
 // ---- Polish for the patch note and the board's words
-const pn = PATCHNOTES.LIST.find((n) => n.id === "b139-areaui");
+const pn = PATCHNOTES.LIST.find((n) => n.id === "b141-areaui");
 const miss = [];
 for (const m of [pn.title, ...pn.items]) for (const part of m.split(/(?<=[.!?])\s+/)) { const x = part.trim(); if (x && I18N.tr(x) == null && I18N.story(x) == null) miss.push(x); }
 ok(miss.length === 0, "Polish for every patch note line: " + miss.slice(0, 3).join(" | "));

@@ -52,6 +52,7 @@ const Store = (() => {
 
   // a BroadcastChannel stand-in for tests (?net=bc): tabs of one browser act as phones
   function transport() {
+    if (typeof SERVERNET !== "undefined" && SERVERNET.on()) return SERVERNET;   // [OURS] signed in: the shared world comes through our server (servernet.js)
     if (/[?&]net=bc/.test(location.search) && window.BroadcastChannel) return {
       name: "bc",
       join(code, h) {
@@ -126,6 +127,11 @@ const Store = (() => {
     COLS.forEach(emit);
     net = T.join(code, {
       onJoin(peer) { net.send({ t: "hello", uid, world }, peer); },
+      onWorld(w) {   // [OURS] the server's copy of the whole world (servernet.js), merged like a hello from a peer that's always there
+        for (const col of COLS) for (const [id, d] of Object.entries(w?.[col] || {})) merge(col, id, d);
+        tidy(); persistWorld(); COLS.forEach(emit);
+        if (mode === "p2p" && (world.players || {})[uid]) net.send({ t: "put", col: "players", id: uid, doc: world.players[uid] });   // re-announce my card
+      },
       onLeave(peer) { const u = peerUid[peer]; delete peerUid[peer]; if (u && !Object.values(peerUid).includes(u)) { online.delete(u); emit("players"); } p2pStatus = onlineCount() ? "connected" : "searching"; statusChanged(); },
       onMessage(m, peer) {
         if (!m || typeof m !== "object") return;
@@ -188,10 +194,11 @@ const Store = (() => {
 
   /* Save whenever state changed. One write in flight at a time; bursts collapse into one write. */
   function save(state) {
+    if (typeof ACCOUNT !== "undefined" && ACCOUNT.holding()) return;   // [OURS] a character from your account is being put in this slot (account.js)
     if (typeof TB !== "undefined" && TB.safeSave) state = TB.safeSave(state);   // mid turn-by-turn fight: save the game as it was before it
     const json = JSON.stringify(state);
     if (json === lastSaveJson) return;
-    if (mode === "local" || mode === "p2p") { ls.set("sk.save", state); lastSaveJson = json; return; }
+    if (mode === "local" || mode === "p2p") { ls.set("sk.save", state); lastSaveJson = json; if (typeof ACCOUNT !== "undefined") ACCOUNT.onSave(state, json); return; }   // [OURS] and to your account (account.js)
     if (!writable) return;
     pendingSave = json;
     if (saving) return;

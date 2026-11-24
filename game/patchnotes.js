@@ -3,13 +3,21 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b139-areaui", build: 139, date: "24 Nov 2026", title: "Tidier towns and map", items: [
+    { id: "b141-areaui", build: 141, date: "24 Nov 2026", title: "Tidier towns and map", items: [
       "The Area tab now opens on a board of small tiles, grouped like a real town: Inn, Market, Services & trainers, Work & jobs, Your home, and Events & fun. Each tile says what's going on there (open or closed, room price, lessons left, jobs taken, garden ripe, your bounty).",
       "Things waiting for you in town (a job to hand in, a ripe garden) sit on top under Right now.",
       "Tap a tile to go in. A back button and a row of the neighbouring places (say, all the shops) keep everything one tap away. Shops no longer dump their whole stock the moment you open the Area tab.",
       "Long how-it-works notes fold up; tap More to read them. You can fold whole groups you never use, and they stay folded.",
       "The Map side panel has one \"What to do next\" list instead of two: no more level-up or perk reminders shown twice. The most urgent things come first, nearest places before far ones; tap Show more for the rest.",
       "The place list has filters: All, Towns, Dungeons, Not visited and Other, each with a count.",
+    ] },
+    { id: "b140accounts", build: 140, date: "24 Nov 2026", title: "Accounts: your characters on every device", items: [
+      "New on the title screen: Sign in. Make an account with just a name and a password (no email needed) and your characters are kept safe on our server.",
+      "Play the same character on your phone, another phone or the PC: under Account, tap Play here. Upload the character you already have with one tap; nothing is lost.",
+      "One device at a time: if you sign in somewhere else, the game asks whether to play there instead. The other device is told right away and stops saving, so your two devices never fight over your progress.",
+      "Your progress saves to your account a few seconds after you play, and catches up by itself when you're back online. If a character was played somewhere else in the meantime, you choose which copy to keep.",
+      "Signed in, the shared world (other players, parties, chat, trades, the market) comes through our server too, so friends see each other more reliably. Not signed in? Everything works exactly as before.",
+      "There's no email on accounts yet, so keep your password safe: it can't be reset for now.",
     ] },
     { id: "b138-hsrooms", build: 138, date: "24 Nov 2026", title: "Homestead rooms, raids and guests", items: [
       "Two new rooms that don't use a wing space: a Garden with six beds (plant herbs or vegetables from your pack, each bed gives 2 a day) and a Cellar under the main hall that keeps 40 things safe and keeps goods waiting a day longer.",

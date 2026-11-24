@@ -14,6 +14,9 @@ jobs:
           node-version: 22
       - name: Syntax check every game file
         run: for f in game/*.js app.js; do node --check "$f" || exit 1; done
+      - name: Server dependencies (accounts server and shared world, for test_server.js / test_hub.js)
+        working-directory: server
+        run: npm ci --no-audit --no-fund
       - name: Game tests (quick set; long balance sims skipped)
         working-directory: tests
         run: |
