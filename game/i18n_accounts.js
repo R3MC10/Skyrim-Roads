@@ -1,5 +1,5 @@
 /* i18n_accounts.js: Polish for accounts (account.js): sign in, your characters, playing on one device at a time, the two
-   copies choice, and their patch note. Loaded before i18n.js; exact lines go in I18N_EXTRA.words (merged into I18N.PL). */
+   copies choice, and their patch note; also the patch notes' pinned Back bar (patchnotes.js barHTML) and its note. Loaded before i18n.js; exact lines go in I18N_EXTRA.words (merged into I18N.PL). */
 var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, pat: [] };
 (() => {
   Object.assign(I18N_EXTRA.words, {
@@ -60,6 +60,11 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
       "Jeśli w międzyczasie postać była używana gdzie indziej, wybierasz, którą kopię zachować.",
     "Signed in, the shared world (other players, parties, chat, trades, the market) comes through our server too, so friends see each other more reliably.":
       "Po zalogowaniu wspólny świat (inni gracze, drużyny, czat, wymiany, targ) też przechodzi przez nasz serwer, więc znajomi widzą się nawzajem pewniej.",
+    // the patch notes' pinned bar and its note
+    "‹ Back": "‹ Wróć", "Easier way out of the patch notes": "Łatwiejsze wyjście z listy zmian",
+    "The patch notes now have a bar at the top that stays put while you scroll: ‹ Back on the title screen, ✕ in the game.":
+      "Lista zmian ma teraz pasek u góry, który zostaje na miejscu podczas przewijania: ‹ Wróć na ekranie tytułowym, ✕ w grze.",
+    "No more scrolling all the way down to leave.": "Nie trzeba już przewijać na sam dół, żeby wyjść.",
     "Not signed in?": "Nie logujesz się?", "Everything works exactly as before.": "Wszystko działa dokładnie tak jak wcześniej.",
     "There's no email on accounts yet, so keep your password safe: it can't be reset for now.": "Konta nie mają jeszcze e-maila, więc pilnuj hasła: na razie nie da się go zresetować.",
   });

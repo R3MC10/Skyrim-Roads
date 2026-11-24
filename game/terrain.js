@@ -84,21 +84,44 @@ function makeTerrain(W, opts = {}) {
     else if (p[1] < (W.snowLine + (W.snowSlope || 0) * (p[0] / MW - 0.5) + n * (opts.snowNoise || 0.06)) * MH && t !== T.MARSH && t !== T.FOREST && t !== T.ASH) t = T.SNOW;
     return t;
   }
-  function typeAt(p) {
-    if (!inPoly(p, land)) return (W.islets || []).some(([cx, cy, rx, ry]) => ((p[0] / MW - cx) / rx) ** 2 + ((p[1] / MH - cy) / ry) ** 2 < 1) ? T.SNOW : T.SEA;   // little islands (the College of Winterhold)
-    if (border.length && !inPoly(p, border)) return T.BEYOND;
-    if (lakePolys.length) { for (const poly of lakePolys) if (inPoly(p, poly) && !lakeIsles.some((isle) => inPoly(p, isle))) return T.LAKE; }
-    else for (const [cx, cy, rx, ry] of W.lakes) if (((p[0] - cx * MW) / (rx * MW)) ** 2 + ((p[1] - cy * MH) / (ry * MH)) ** 2 < 1) return T.LAKE;
-    return baseType(p, heightAt(p));
+  /* the same even-odd test as inPoly, for a whole grid row at once: the edges' crossings with the row's line are
+     worked out once (same sums, so the same answers), then each cell just counts the crossings to its right */
+  function rowCrossings(poly, y) {
+    const xs = [];
+    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      const [xi, yi] = poly[i], [xj, yj] = poly[j];
+      if ((yi > y) !== (yj > y)) xs.push((xj - xi) * (y - yi) / (yj - yi) + xi);
+    }
+    return Float64Array.from(xs).sort();
   }
+  function inRow(xs, x) {   // how many crossings lie right of x (x < xc), odd = inside
+    let lo = 0, hi = xs.length;
+    while (lo < hi) { const m = (lo + hi) >> 1; if (xs[m] > x) hi = m; else lo = m + 1; }
+    return ((xs.length - lo) & 1) === 1;
+  }
+  function typeAtWith(p, ins, h) {
+    if (!ins(p, land)) return (W.islets || []).some(([cx, cy, rx, ry]) => ((p[0] / MW - cx) / rx) ** 2 + ((p[1] / MH - cy) / ry) ** 2 < 1) ? T.SNOW : T.SEA;   // little islands (the College of Winterhold)
+    if (border.length && !ins(p, border)) return T.BEYOND;
+    if (lakePolys.length) { for (const poly of lakePolys) if (ins(p, poly) && !lakeIsles.some((isle) => ins(p, isle))) return T.LAKE; }
+    else for (const [cx, cy, rx, ry] of W.lakes) if (((p[0] - cx * MW) / (rx * MW)) ** 2 + ((p[1] - cy * MH) / (ry * MH)) ** 2 < 1) return T.LAKE;
+    return baseType(p, h ?? heightAt(p));
+  }
+  const typeAt = (p) => typeAtWith(p, inPoly);
 
   // ---- the grid
   const grid = new Uint8Array(GW * GH);
   const hgrid = new Float32Array(GW * GH);
-  for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) {
-    const p = [(x + 0.5) * 4, (y + 0.5) * 4];
-    grid[y * GW + x] = typeAt(p);
-    hgrid[y * GW + x] = heightAt(p);
+  const allPolys = [land, border, ...lakePolys, ...lakeIsles];
+  for (let y = 0; y < GH; y++) {
+    const py = (y + 0.5) * 4, rows = new Map();
+    for (const poly of allPolys) if (!rows.has(poly)) rows.set(poly, rowCrossings(poly, py));
+    const ins = (p, poly) => (rows.has(poly) ? inRow(rows.get(poly), p[0]) : inPoly(p, poly));
+    for (let x = 0; x < GW; x++) {
+      const p = [(x + 0.5) * 4, py];
+      const h = heightAt(p);
+      grid[y * GW + x] = typeAtWith(p, ins, h);
+      hgrid[y * GW + x] = h;
+    }
   }
   // roads and rivers are drawn onto the grid (rivers first, roads over them become bridges)
   function stamp(lines, fn) {

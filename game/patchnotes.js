@@ -11,6 +11,51 @@ const PATCHNOTES = (() => {
       "The Map side panel has one \"What to do next\" list instead of two: no more level-up or perk reminders shown twice. The most urgent things come first, nearest places before far ones; tap Show more for the rest.",
       "The place list has filters: All, Towns, Dungeons, Not visited and Other, each with a count.",
     ] },
+    { id: "b141-menus2", build: 141, date: "24 Nov 2026", title: "Tidier menus", items: [
+      "Items and Magic work like SkyUI: categories on the left, the list in the middle and the picked thing on the right. On a PC screen they sit side by side; on phones the list stays visible above the details.",
+      "One sort row: name, value, weight, damage, armour and more, plus a button that flips the order. Each category shows how many things are in it.",
+      "Search your spells by name, and find quests in the Journal with the new search box.",
+      "The Character page is much shorter: your hero card comes first, and Powers, Skills and Perks fold away until you open them.",
+      "Follower tabs fit on one row, and lots of menu words are now in Polish.",
+    ] },
+    { id: "b139-beastpaths", build: 139, date: "24 Nov 2026", title: "Werewolves and vampires, for real", items: [
+      "Beast Form is now a real change in turn-by-turn fights: you fight with the wolf's own moves. Claws (2 AP), Maul (4 AP, costs stamina), Pounce (can stagger, every 3 rounds), Howl (ordinary foes cower, tough ones are shaken and hit softer) and Feast on a beaten foe to heal.",
+      "As a beast you can't drink potions, cast spells, shout or raise a guard. Silver weapons (the Vigilants, the Dawnguard, the Silver Hand) bite harder, and when you change back you're worn out for two rounds.",
+      "The Vampire Lord gets Drain Life, Vampiric Grip, Raise Dead and his claws. A vampire who isn't changed can use Seduction, Embrace of Shadows when hungry enough, and a Bite to feed in the middle of a fight.",
+      "The sun burns hungry vampires every round when you fight outdoors by day. A starving vampire pays more in shops and gets turned away at the door; townsfolk talk about how pale you look.",
+      "New at night on the road: a werewolf on the hunt (its bite can give you Moonblood, which turns you in three days unless you cure it at a shrine or with a cure potion), and the Ashen Court, vampires who offer you their gift.",
+      "Changing in town is seen: people scatter and prices go up in that hold for a day.",
+      "New perk stars. Werewolf: Rending Claws, Howl of the Pack, Silver Hide, Endless Hunt. Vampire Lord: Blood Magic, Grave Servants, Sun Ward. New skill perks: Bane of the Night (Restoration, hurts vampires) and Wolfsbane (Alchemy, half the chance to catch either curse).",
+      "In a party your form shows on everyone's phone, and theirs on yours. Only the leader answers the Ashen Court.",
+      "The wild werewolf on the road now looks like the real thing: the same wolf on two legs you turn into, not a hairy man.",
+      "All of it is in Polish too: the moves, the night encounters, Moonblood, the vampire's hunger and the new perks.",
+      "Fight tooltips close as soon as you tap a move, so they never hang over the log or the buttons.",
+    ] },
+    { id: "b139-bossfights", build: 139, date: "24 Nov 2026", title: "Boss fights feel like big moments", items: [
+      "Dragons, dragon priests, Daedric and quest bosses and the boss at the end of a dungeon now get a proper entrance: black bars, their name and title, and a slow zoom. Tap to skip it.",
+      "Bosses have a big health bar at the top with marks for their phases. Knock them past a mark and they change: they get angrier, call for help, set the ground on fire or switch to a new element. A banner tells you what just happened.",
+      "Bosses warn you a turn ahead before their big attacks. The warning tells you how to answer: block, a ward or keep AP back to dodge. A shout or a shield bash can break the attack before it lands.",
+      "The final blow on a boss plays in slow motion, and the loot gets its own big reveal.",
+      "Three new perks: Giant Slayer (One-Handed, more damage to bosses, even more in their last phase), Read the Signs (Block, big boss attacks hurt less) and Break Their Focus (Two-Handed, hard hits always break a big attack and stagger the boss).",
+      "Bosses last a bit longer but stay beatable. Followers still only get knocked down. Works in both art styles and in Polish.",
+    ] },
+    { id: "b141-pnback", build: 141, date: "24 Nov 2026", title: "Easier way out of the patch notes", items: [
+      "The patch notes now have a bar at the top that stays put while you scroll: ‹ Back on the title screen, ✕ in the game. No more scrolling all the way down to leave.",
+    ] },
+    { id: "b139-perf", build: 139, date: "24 Nov 2026", title: "Faster and smoother", items: [
+      "The game starts a lot faster: the title screen now shows up in about a second instead of several on older phones.",
+      "The world map, the title screen, the road pictures and the fight screen use much less of your phone's power when nothing is moving, so older phones stay smoother and cooler and the battery lasts longer.",
+      "Nothing looks or plays differently, it just runs lighter.",
+    ] },
+    { id: "b139-lightfx", build: 139, date: "24 Nov 2026", title: "Light and weather you can feel", items: [
+      "The map now changes with the light: warm gold at sunrise and sunset, a cool blue night, and a flat grey wash when a storm rolls in.",
+      "At night towns, farms, camps and forts glow with firelight, and the glow flickers a little.",
+      "Beams of sunlight fall across the map at dawn and dusk.",
+      "Mist gathers over valleys, lakes and marshes, thickest in the early morning, and drifts slowly.",
+      "Big cloud shadows slide across the land, and lakes and rivers sparkle in the sun or the moons. On clear nights the northern lights tint the snow up north green and violet.",
+      "Place pictures get the same light: lit windows and fires glow at night, sunbeams at dawn and dusk.",
+      "New Settings → Graphics → Lighting: Off, Low or High. Low keeps the colours and glows but nothing moves, for older phones. Works in both art styles; Reduce motion stops the drifting and High contrast keeps the map brighter and clearer.",
+    ] },
     { id: "b140accounts", build: 140, date: "24 Nov 2026", title: "Accounts: your characters on every device", items: [
       "New on the title screen: Sign in. Make an account with just a name and a password (no email needed) and your characters are kept safe on our server.",
       "Play the same character on your phone, another phone or the PC: under Account, tap Play here. Upload the character you already have with one tap; nothing is lost.",
@@ -762,11 +807,19 @@ const PATCHNOTES = (() => {
     return `<div class="pnotes"><details class="pn pnnext" open><summary><span class="pnt">Coming next</span><span class="pnm">Being built now</span></summary><ul>${NEXT.map((i) => `<li>${e(i)}</li>`).join("")}</ul></details>
       ${LIST.map((n, i) => entryHTML(n, i === 0)).join("")}</div>`;
   }
+  /* a header that stays at the top while the list scrolls, so going back never needs a scroll to the end.
+     where: "page" (title menu: ‹ Back on the left, like an app bar) or "sheet" (in-game popup: ✕ on the right) */
+  function barHTML(where, attr) {
+    const btn = where === "sheet"
+      ? `<button class="pnback pnx" ${attr} aria-label="Close patch notes">✕</button>`
+      : `<button class="pnback" ${attr} aria-label="Back to the menu">‹ Back</button>`;
+    return `<div class="pnbar pn-${where}">${where === "sheet" ? "" : btn}<h2>Patch Notes</h2>${where === "sheet" ? btn : ""}</div>`;
+  }
   /* the one-time popup after an update: just the newest entry */
   function whatsNewHTML() {
     const n = latest();
     return `<div class="pnotes pnwhat"><div class="pnkick">What's new</div><h2>${e(n.title)}</h2><ul>${n.items.map((i) => `<li>${e(i)}</li>`).join("")}</ul></div>`;
   }
-  return { LIST, NEXT, latest, seen, markSeen, unseen, html, whatsNewHTML, KEY };
+  return { LIST, NEXT, latest, seen, markSeen, unseen, html, barHTML, whatsNewHTML, KEY };
 })();
 if (typeof module !== "undefined") module.exports = PATCHNOTES;

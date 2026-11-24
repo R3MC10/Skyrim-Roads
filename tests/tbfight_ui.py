@@ -71,6 +71,10 @@ async def main():
             ok(await pg.evaluate("!!document.querySelector('#tbf .tbscene .fscene canvas')"), f"{style}: the fight scene plays")
             # Auto for the rest of the fight
             ok(not await pg.evaluate("!!document.querySelector('#tbf .tbact.auto')"), f"{style}: no Auto buttons")
+            # the foe's moves play out one by one (a few seconds); wait for your turn (or the end) before pressing Auto
+            for _ in range(50):
+                if await pg.evaluate("!!document.querySelector('#tbf .tbgrid, #tbf .tbdone')"): break
+                await pg.wait_for_timeout(200)
             if await pg.evaluate("!!document.querySelector('#tbf .tbgrid')"):
                 await pg.evaluate("(()=>{const g=document.querySelector('#tbf .tbgrid')||document.querySelector('#tbf');const b=document.createElement('button');b.dataset.tbx='autoall';g.append(b);b.click()})()")
             for _ in range(60):

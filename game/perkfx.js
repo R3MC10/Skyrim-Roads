@@ -262,11 +262,18 @@ const PFX = (() => {
     [ "Sneak", "patient_shadow", "Patient Shadow", 1, [50], ["muffled_movement"], "Sneaking past a foe in a dungeon: you're noticed a third slower, the shadows are wider and you hear it turn sooner. [OURS]", [["dgsneak", 0.3, {}]]],
     [ "Two-Handed", "lid_breaker", "Lid Breaker", 1, [25], ["barbarian"], "Smashing chests open: the bright zone on the swing is a third wider. [OURS]", [["dgsmash", 0.3, {}]]],
     [ "Athletics", "sprinter", "Sprinter", 1, [30], ["long_strider"], "Running from a dungeon fight: a quarter fewer steps to get away. [OURS]", [["dgflee", 0.25, {}]]],
+    // ---------------------------------------------------------------- werewolves and vampires (beastpaths.js)
+    [ "Restoration", "bane_of_night", "Bane of the Night", 1, [35], ["novice_restoration"], "Vampires and werewolves take 20% more from your blows and hit you 10% softer. [OURS]", [["out", 0.2, { tag: ["nightkin"] }], ["in", -0.1, { tag: ["nightkin"] }]]],
+    [ "Alchemy", "wolfsbane", "Wolfsbane", 1, [30], ["physician"], "You chew wolfsbane and garlic on the road: half as likely to catch a vampire's or a werewolf's curse. [OURS]", [["curseres", 0.5, {}]]],
     [ "Lockpicking", "keen_searcher", "Keen Searcher", 1, [30], ["novice_locks"], "Searching rooms: your hand sweeps a wider patch of dust at once. [OURS]", [["dgsearch", 0.3, {}]]],
     // ---------------------------------------------------------------- followers become people (followerbonds.js)
     [ "Speechcraft", "kindred_spirit", "Kindred Spirit", 1, [25], [], "Your follower warms to you 50% faster when you do things they like, and cools 25% slower when you don't. [OURS]", [["folbond", 0.5, {}], ["folgrudge", 0.25, {}]]],
     [ "Speechcraft", "heart_to_heart", "Heart to Heart", 1, [45], ["kindred_spirit"], "Talking with your follower does twice as much for their loyalty, and they never refuse your orders, however unhappy. [OURS]", [["foltalk", 1, {}], ["folobey", 1, {}]]],
     [ "Etiquette", "sworn_companion", "Sworn Companion", 1, [50], ["courtly_manners"], "Followers ask you for their personal quest at loyalty 65 instead of 80, and their signature move is 25% stronger. [OURS]", [["folquest", 15, {}], ["folsig", 0.25, {}]]],
+    // ---------------------------------------------------------------- boss fights (bossfight.js)
+    [ "One-Handed", "giant_slayer", "Giant Slayer", 1, [40], ["armsman"], "Bosses take 10% more damage from you, and 20% more once they reach their last phase. [OURS]", [["out", 0.1, { bossFoe: 1 }], ["out", 0.1, { bossLast: 1 }]]],
+    [ "Blocking", "read_the_signs", "Read the Signs", 1, [30], ["shield_wall"], "A boss's big attacks (the ones it shows a turn ahead) hurt you 25% less. [OURS]", [["bftele", 0.25, {}]]],
+    [ "Two-Handed", "break_their_focus", "Break Their Focus", 1, [35], ["barbarian"], "Any blow that takes a tenth of a boss's health breaks the big attack it's getting ready, and it reels and loses its next move. [OURS]", [["bfbreak", 1, {}]]],
   ];
   const FX = {};
   if (typeof PERKS !== "undefined") {
@@ -332,8 +339,10 @@ const PFX = (() => {
       if (c.dark && !(f.wx?.dark || f.dark)) return false;
       if (c.foeBelow && !(f.ehp > 0 && f.ehp < c.foeBelow * (f.e?.health || f.ehp0 || 1))) return false;   // the foe is nearly done
       if (c.foeEl && (f._foeEl === undefined ? (f._foeEl = (f.e && foeElement(f.e)?.el) || null) : f._foeEl) !== c.foeEl) return false;   // Resist Fire/Frost/Shock: their blows carry that element
+      if (c.bossFoe && !f.bf) return false;   // bossfight.js
+      if (c.bossLast && !(f.bf && f.bf.phase >= f.bf.th.length)) return false;
       if (c.venom && !(f.e?.poison || tags.has("venom") || (VENOM.test(n) && !/dwarven|brass/i.test(n)))) return false;   // Resist Poison
-    } else if (c.foeBelow || c.tag || c.tough || c.big || c.magic || c.archerFoe || c.hpBelow || c.hpAbove || c.first || c.mounted || c.bigHit || c.dark || c.foeEl || c.venom) return false;
+    } else if (c.foeBelow || c.tag || c.tough || c.big || c.magic || c.archerFoe || c.hpBelow || c.hpAbove || c.first || c.mounted || c.bigHit || c.dark || c.foeEl || c.venom || c.bossFoe || c.bossLast) return false;
     return true;
   }
   function each(s, key, f, x, fn) {
