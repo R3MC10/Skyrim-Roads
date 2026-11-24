@@ -12,6 +12,23 @@ const PATCHNOTES = (() => {
       "Each side has its own perks in the skill trees. Changing sides later costs gold, takes you back to the lowest rank and takes away the old cloaks and side perks (the perk points come back).",
       "Fixed: on phones and small windows a lot of newer screens (the house chest, hold rule, sides and more) had lost their proper look. They're back.",
     ] },
+    { id: "b145-levelup", build: 145, date: "24 Nov 2026", title: "Levelling up feels like Skyrim", items: [
+      "When a skill goes up you now see it near the top of the screen: \"One-Handed increased to 36\" with a thin bar for the skill, and your level bar under it filling up, so you always know how close the next level is.",
+      "Reaching a new level is a proper moment: a big LEVEL UP with your new level number, the bar fills to the end and starts again.",
+      "Open Skills (from the compass or the Character screen) with a level-up waiting and it asks first, like Skyrim: three pillars, Health, Magicka or Stamina, each +10. Stamina also adds +5 carry weight. Every level still gives a perk point too.",
+      "You can choose later. Level-ups wait for you and stack up, and the compass shows a glowing \"Level up\" on Skills and on your level bar until you spend them.",
+      "Skill books and trainers count the same way as using a skill, so every skill point moves your level bar.",
+      "Other players see your Health, Magicka and Stamina next to your level in the list of travellers.",
+      "Nothing changes for your hero: you keep your level, your perks and every choice you already made.",
+    ] },
+    { id: "b168-folbuild", build: 168, date: "24 Nov 2026", title: "Followers learn like you do", items: [
+      "Your follower now has their own skills, the same list as yours, and they rise with use exactly like yours: swinging a sword raises One-Handed, shooting raises Archery, spells raise their school, blocking raises Block, and blows on their armour raise their armour skill.",
+      "Their skill increases add up to level-ups, like yours. At each level they pick +10 Health, Magicka or Stamina to suit how they fight, and get a perk point. They still never go past your level.",
+      "Their gear picks their build: give them a bow and they become an archer, a staff or spells make a mage, a two-hander a two-handed warrior, a sword and shield a tank, a dagger a sneaky thief. Change it as often as you like, it's free.",
+      "They spend their perk points themselves in the trees of their build, with the same perks and real effects as yours. A new build means a free respec into the new trees.",
+      "They fight by their build: archers and mages stay at the back, mages cast, sword-and-shield tanks raise their shield and draw blows away from you.",
+      "Follower tab → Skills shows their level, every skill with a bar, their build and their perks. A small note pops up when one of their skills goes up. Followers you already have get skills from their level and gear.",
+    ] },
     { id: "b167-titlewide", build: 167, date: "24 Nov 2026", title: "A wide painting for wide screens", items: [
       "On a PC or laptop the main menu now has its own wide painting: the warrior on his rock, the castle city in the valley, the dragon and the northern lights fill the whole window, from an old 4:3 screen to a 32:9 ultra-wide. No more tall picture with blurry sides.",
       "Big and sharp screens get an extra-large copy of the painting so it stays crisp. Phones keep the tall picture they had.",
