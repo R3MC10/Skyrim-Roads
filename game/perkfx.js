@@ -249,6 +249,10 @@ const PFX = (() => {
     [ "Two-Handed", "lid_breaker", "Lid Breaker", 1, [25], ["barbarian"], "Smashing chests open: the bright zone on the swing is a third wider. [OURS]", [["dgsmash", 0.3, {}]]],
     [ "Athletics", "sprinter", "Sprinter", 1, [30], ["long_strider"], "Running from a dungeon fight: a quarter fewer steps to get away. [OURS]", [["dgflee", 0.25, {}]]],
     [ "Lockpicking", "keen_searcher", "Keen Searcher", 1, [30], ["novice_locks"], "Searching rooms: your hand sweeps a wider patch of dust at once. [OURS]", [["dgsearch", 0.3, {}]]],
+    // ---------------------------------------------------------------- followers become people (followerbonds.js)
+    [ "Speechcraft", "kindred_spirit", "Kindred Spirit", 1, [25], [], "Your follower warms to you 50% faster when you do things they like, and cools 25% slower when you don't. [OURS]", [["folbond", 0.5, {}], ["folgrudge", 0.25, {}]]],
+    [ "Speechcraft", "heart_to_heart", "Heart to Heart", 1, [45], ["kindred_spirit"], "Talking with your follower does twice as much for their loyalty, and they never refuse your orders, however unhappy. [OURS]", [["foltalk", 1, {}], ["folobey", 1, {}]]],
+    [ "Etiquette", "sworn_companion", "Sworn Companion", 1, [50], ["courtly_manners"], "Followers ask you for their personal quest at loyalty 65 instead of 80, and their signature move is 25% stronger. [OURS]", [["folquest", 15, {}], ["folsig", 0.25, {}]]],
   ];
   const FX = {};
   if (typeof PERKS !== "undefined") {
