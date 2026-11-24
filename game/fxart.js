@@ -6,7 +6,7 @@
      FXART.cast(kind, info)                 remember a one-off effect (clairvoyance, recall, whirlwind, transmute)
      FXART.state(S, pos)                    → what effects are on now (null when nothing), for the map view
      FXART.mapUnder(g, fx, P, s, px, py, t, reduce, v) / FXART.mapOver(...)   draw them on the map
-     FXART.vignette(host, info)             the travel strip (one reused canvas, ~10 fps, only while on screen) */
+     FXART.vignette(host, info)             the travel strip (drawn by travelart.js; the walker and horse below are its fallback figures) */
 const FXART = (() => {
   const PAL = ART.PAL;
   let forced = null;   // tests: FXART.force("newlife")
@@ -194,45 +194,7 @@ const FXART = (() => {
   }
 
   // ---------------------------------------------------------------- the travel strip
-  const VW = 360, VH = 84;
-  const GROUND = {   // terrain name → [ground colour, scenery kind]
-    "Road": ["#b9a98d", "grass"], "Bridge": ["#b9a98d", "grass"], "Grassland": ["#8c9a5a", "grass"], "Tundra": ["#a99c78", "tundra"], "Forest": ["#557a47", "forest"],
-    "Pine forest": ["#3d5d36", "pine"], "Autumn forest": ["#a8622e", "autumn"], "Marsh": ["#6a7a5a", "marsh"], "Snow": ["#e8eef2", "snow"], "Volcanic tundra": ["#7d6c58", "ash"],
-    "Rocky hills": ["#8f7a66", "rock"], "Mountains": ["#8f7a66", "rock"], "High peaks": ["#d8e2e8", "snow"], "River (ford)": ["#8c9a5a", "grass"], "Lake": ["#8c9a5a", "grass"], "Sea": ["#8c9a5a", "grass"],
-  };
-  const layers = new Map();
-  function layer(key, w, h, draw) {
-    let c = layers.get(key); if (c) return c;
-    c = document.createElement("canvas"); c.width = w * 2; c.height = h;
-    const g = c.getContext("2d"); draw(g, ART.H, w, h);
-    if (layers.size > 24) layers.delete(layers.keys().next().value);
-    layers.set(key, c); return c;
-  }
-  /* each layer is drawn twice side by side so it can scroll forever */
-  function farLayer(kind, st, w, h) {
-    return layer(`far|${kind}|${st?.key || ""}`, w, h, (g, H) => {
-      for (const off of [0, w]) {
-        g.save(); g.translate(off, 0);
-        H.mountains(g, w + 40, h * 0.62, h * 0.42, 5, kind === "ash" ? "#6e5f50" : PAL.rock, kind !== "ash");
-        g.restore();
-      }
-    });
-  }
-  function nearLayer(kind, w, h) {
-    return layer(`near|${kind}`, w, h, (g, H) => {
-      const r = ART.seeded("near|" + kind);
-      for (let i = 0; i < 9; i++) {
-        const x0 = r() * w, s = 0.8 + r() * 0.6;
-        for (const x of [x0, x0 + w]) {
-          if (kind === "pine" || kind === "forest" || kind === "snow") { H.poly(g, [[x - 7 * s, h * 0.7], [x, h * 0.7 - 22 * s], [x + 7 * s, h * 0.7]], kind === "snow" ? "#5f7f6a" : PAL.forest, PAL.ink, 1); if (kind === "snow") H.poly(g, [[x - 3 * s, h * 0.7 - 12 * s], [x, h * 0.7 - 22 * s], [x + 3 * s, h * 0.7 - 12 * s]], PAL.snow, null); }
-          else if (kind === "autumn") { g.fillStyle = PAL.wood; g.fillRect(x - 1.2, h * 0.7 - 10 * s, 2.4, 10 * s); H.circle(g, x, h * 0.7 - 14 * s, 7 * s, ["#c4572e", "#e8923a", "#c9a24c"][i % 3], PAL.ink, 1); }
-          else if (kind === "rock" || kind === "ash" || kind === "tundra") H.poly(g, [[x - 8 * s, h * 0.72], [x - 3 * s, h * 0.72 - 8 * s], [x + 6 * s, h * 0.72 - 5 * s], [x + 9 * s, h * 0.72]], kind === "ash" ? "#5e5046" : "#a8987e", PAL.ink, 1);
-          else if (kind === "marsh") { g.strokeStyle = "#4f6a3e"; g.lineWidth = 1.4; for (let k = -2; k <= 2; k++) { g.beginPath(); g.moveTo(x + k * 2, h * 0.72); g.lineTo(x + k * 3, h * 0.72 - 9 * s); g.stroke(); } }
-          else { g.fillStyle = PAL.wood; g.fillRect(x - 1.2, h * 0.7 - 9 * s, 2.4, 9 * s); H.circle(g, x, h * 0.7 - 13 * s, 6.5 * s, PAL.leaf, PAL.ink, 1); }
-        }
-      }
-    });
-  }
+  const VW = 360, VH = 112;   // the travel strip's size (travelart.js)
   function walker(g, H, x, base, ph, look, riding, carriage, horseColor) {
     const race = look && typeof HEROART !== "undefined" && HEROART.RACE[look.r] ? HEROART.RACE[look.r] : null;
     const skin = race ? race.skin[0] : "#e2b894";
@@ -299,89 +261,9 @@ const FXART = (() => {
     H.poly(g, [[x + 12, base - 18], [x + 18, base - 28], [x + 23, base - 25], [x + 17, base - 15]], color, PAL.ink, 1.1);
     g.strokeStyle = PAL.ink; g.lineWidth = 1.6; g.beginPath(); g.moveTo(x - 13, base - 17); g.quadraticCurveTo(x - 19, base - 14, x - 17, base - 6); g.stroke();
   }
-  /* the sky and the weather on top are still pictures: draw them once per sky state, then just copy them */
-  function flat(key, draw) {
-    let c = layers.get(key); if (c) return c;
-    c = document.createElement("canvas"); c.width = VW * 2; c.height = VH * 2;
-    const g = c.getContext("2d"); g.scale(2, 2); draw(g, ART.H);
-    if (layers.size > 24) layers.delete(layers.keys().next().value);
-    layers.set(key, c); return c;
-  }
-  const skyLayer = (st) => flat(`sky|${st?.key || "plain"}`, (g, H) => { if (st && typeof SKY !== "undefined") SKY.backdrop(g, H, VW, VH, st, { horizon: 0.66, seed: "vig" }); else H.sky(g, VW, VH, "day"); });
-  const overLayer = (st) => flat(`over|${st.key}`, (g, H) => SKY.overlay(g, H, VW, VH, st, { seed: "vig", ground: VH * 0.8, cover: false }));
-  let vig = null;   // { canvas, host, info, last, raf }
-  function vignette(host, info) {
-    if (!host) return;
-    if (!vig) {
-      const c = document.createElement("canvas"); c.className = "tripvig-c"; c.setAttribute("aria-hidden", "true");
-      vig = { canvas: c, info, last: 0, off: 0, raf: 0 };
-    }
-    vig.info = info;
-    if (vig.canvas.parentNode !== host) host.appendChild(vig.canvas);
-    const dpr = typeof FITCANVAS !== "undefined" ? Math.min(6, FITCANVAS.ratio(host, VW)) : Math.min(2, window.devicePixelRatio || 1);   // sharp in a wide panel too
-    if (vig.canvas.width !== Math.round(VW * dpr)) { vig.canvas.width = Math.round(VW * dpr); vig.canvas.height = Math.round(VH * dpr); }
-    paint(performance.now());
-    if (!vig.raf && !info.reduce) vig.raf = requestAnimationFrame(loop);
-  }
-  function loop(ts) {
-    vig.raf = 0;
-    if (!vig.canvas.isConnected || vig.info.reduce) return;
-    if (ts - vig.last >= 100) { vig.off += (vig.info.riding || vig.info.carriage ? 3.2 : 1.8); paint(ts); }
-    vig.raf = requestAnimationFrame(loop);
-  }
-  function paint(ts) {
-    vig.last = ts;
-    const c = vig.canvas, info = vig.info, pixel = ART.style() === "pixel";
-    const g0 = c.getContext("2d"), dpr = c.width / VW;
-    let g = g0, small = null;
-    if (pixel) { small = paint.small || (paint.small = document.createElement("canvas")); small.width = VW / 3; small.height = VH / 3; g = small.getContext("2d"); g.setTransform(1 / 3, 0, 0, 1 / 3, 0, 0); }
-    else g.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const H = ART.H, [gcol, kind] = GROUND[info.ground] || GROUND.Grassland, st = info.sky || null;
-    g.drawImage(skyLayer(st), 0, 0, VW, VH);
-    const far = farLayer(kind, st, VW, VH), near = nearLayer(kind, VW, VH);
-    const fo = (vig.off * 0.25) % VW, no = (vig.off * 0.9) % VW;
-    g.drawImage(far, -fo, 0, VW * 2, VH);
-    g.fillStyle = gcol; g.fillRect(0, VH * 0.7, VW, VH * 0.3);
-    g.drawImage(near, -no, 0, VW * 2, VH);
-    g.fillStyle = "rgba(185,169,141,0.9)"; g.fillRect(0, VH * 0.8, VW, 8); g.strokeStyle = PAL.ink; g.lineWidth = 0.8; g.beginPath(); g.moveTo(0, VH * 0.8); g.lineTo(VW, VH * 0.8); g.moveTo(0, VH * 0.8 + 8); g.lineTo(VW, VH * 0.8 + 8); g.stroke();
-    g.fillStyle = "rgba(59,44,30,0.35)"; for (let x = -(vig.off % 22); x < VW; x += 22) g.fillRect(x, VH * 0.8 + 3.5, 8, 1.2);   // ruts in the road
-    if (st && typeof SKY !== "undefined") g.drawImage(overLayer(st), 0, 0, VW, VH);
-    // your party and followers walk (or ride) a step behind you: one line for a few, two staggered lines for a big party (up to 10)
-    const co = (info.company || []).slice(0, 15), big = co.length > 4, cols = big ? Math.ceil(co.length / 2) : co.length, tags = [];
-    const p = Math.max(0, Math.min(1, info.progress || 0)), room = Math.min(big ? 5 : 3, cols) * (big ? 26 : 30), x = 40 + room + p * (VW - 110 - room);   // leave room behind you for your company
-    const step = big ? Math.min(1, (x - 30) / (cols * 26 + 12)) : 1;   // up to 8 heroes and their followers: bunch up so everyone fits
-    const spots = co.map((m, i) => { const c = big ? Math.floor(i / 2) : i, row = big ? i % 2 : 0;
-      return { m, i, row, cx: x - (info.riding || info.carriage ? 16 : 0) - (big ? ((m.riding ? 30 : 22) * (c + 1) + row * 12) * step : (m.riding ? 34 : 24) * (i + 1) * 1.1), cy: VH * 0.8 + 6 - (big ? row * 7 : (i % 2) * 2) }; });
-    for (const sp of [...spots.filter((q) => q.row === 1), ...spots.filter((q) => q.row === 0)]) {   // back line first
-      const { m, i, row, cx, cy } = sp;
-      if (cx < -20) continue;
-      const sc = row ? 1.02 : 1.2;
-      g.save(); g.translate(cx, cy); g.scale(sc, sc);
-      walker(g, H, 0, 0, vig.off * 0.35 + (i + 1) * 1.7, m.look, m.riding, false, m.horse); g.restore();
-      if (!big || row === 0) tags.push([m.name, cx, cy - (m.riding ? 60 : 50) * sc / 1.2 - (big && Math.floor(i / 2) % 2 ? 12 : 0), m.follower, false]);   // a big company: names on the front line, staggered
-    }
-    g.save(); g.translate(x, VH * 0.8 + 6); g.scale(1.35, 1.35);
-    walker(g, H, 0, 0, vig.off * 0.35, info.look, info.riding, info.carriage, info.horse); g.restore();
-    if (co.length) tags.push(["You", x, VH * 0.8 + 6 - (info.riding ? 68 : 56), false, true]);
-    // where you're heading: a little signpost at the right edge
-    g.fillStyle = PAL.wood; g.fillRect(VW - 30, VH * 0.48, 2.4, VH * 0.34); H.poly(g, [[VW - 44, VH * 0.48], [VW - 16, VH * 0.48], [VW - 11, VH * 0.53], [VW - 16, VH * 0.58], [VW - 44, VH * 0.58]], "#c9a75e", PAL.ink, 1);
-    g.strokeStyle = PAL.ink; g.lineWidth = 2; g.strokeRect(1, 1, VW - 2, VH - 2);
-    if (pixel) { g0.setTransform(1, 0, 0, 1, 0, 0); g0.imageSmoothingEnabled = false; g0.clearRect(0, 0, c.width, c.height); g0.drawImage(small, 0, 0, c.width, c.height); c.style.imageRendering = "pixelated"; }
-    else c.style.imageRendering = "";
-    if (tags.length) { g0.setTransform(dpr, 0, 0, dpr, 0, 0); for (const t of tags) nameTag(g0, ...t); }   // names stay crisp in both styles
-  }
-  function nameTag(g, name, x, y, follower, you) {
-    if (!name) return;
-    y = Math.max(8, y);
-    g.save(); g.font = `600 ${you ? 9 : 8}px "Barlow Semi Condensed", sans-serif`; g.textAlign = "center"; g.textBaseline = "middle";
-    const w = g.measureText(name).width + 8;
-    g.fillStyle = "rgba(14,15,18,0.72)"; g.fillRect(x - w / 2, y - 6, w, 12);
-    g.strokeStyle = you ? "rgba(214,178,94,0.9)" : follower ? "rgba(180,170,150,0.6)" : "rgba(143,224,138,0.8)"; g.lineWidth = 0.8; g.strokeRect(x - w / 2 + 0.4, y - 5.6, w - 0.8, 11.2);
-    g.fillStyle = you ? "#f0d890" : follower ? "#e4dccb" : "#c8f0c0"; g.fillText(name, x, y + 0.5);
-    g.restore();
-  }
-  /* for tests: paint a frame without a host */
-  function vignetteFrame(info, off = 0) { const c = document.createElement("canvas"); const save = vig; vig = { canvas: c, info, last: 0, off, raf: 0 }; c.width = VW; c.height = VH; paint(0); vig = save; return c; }
+  /* the travel strip itself lives in travelart.js (parallax scenery, sky, weather, landmarks); these keep the old names working */
+  function vignette(host, info) { if (typeof TRAVELART !== "undefined") TRAVELART.mount(host, info); }
+  function vignetteFrame(info, off = 0) { return typeof TRAVELART !== "undefined" ? TRAVELART.frame(info, off) : null; }
 
   return { FESTS, festId, force, festDecor, festSection, cast, state, mapUnder, mapOver, vignette, vignetteFrame, walker, horse, VW, VH };
 })();

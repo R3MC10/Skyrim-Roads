@@ -69,6 +69,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Smart AI combat (default; custom tactics optional), crafting mini-games, motion design (63)
 
 ## In progress (write your name before you start)
+- Claude: travel strip overhaul (travelart.js): deep parallax scenery by region, sky/time of day, live weather, lighting, passing landmarks and travellers, the destination growing on the horizon. Branch claude/travelscene.
 - Claude: visual overhaul (fits every screen and resolution) — branches claude/fit-*, in passes.
 - Claude: no stretching anywhere (fitcanvas.js: canvases sized from their box × density with redraw on resize; safe areas; zoom-correct popups; tests/noscretch_ui.py audits every screen at 11 sizes). Branch claude/noscretch.
 - Kacper: reading the fight (fightread.js): foe intents, health forecasts for poison/burning/blows on both sides, turn-by-turn playback with banners and round summaries, low-health warning, combat sounds (ElevenLabs, `node scripts/gen_audio.mjs game/ combat`). Branch ccr-23a36e7d-impjqi.
