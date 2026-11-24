@@ -21,7 +21,7 @@ Object.assign(D.ITEMS, {
   forsworn_sword: { name: "Forsworn Sword", slot: "weapon", hands: 1, skill: "One-Handed", damage: 8, weight: 10, value: 30 },
   forsworn_armor: { name: "Forsworn Armor", slot: "chest", type: "light", armor: 20, weight: 6, value: 55 },
   golden_claw: { name: "Golden Claw", slot: "trophy", weight: 0.3, value: 100, quest: true },   // quest: stays with the finder (party loot pile, followers, the hall)
-  dragonstone: { name: "Dragonstone", slot: "trophy", weight: 20, value: 0, quest: true },
+  dragonstone: { name: "Dragonstone", slot: "trophy", weight: 20, value: 0, quest: true, noTrade: true },   // bound to you (kept when you die); the quest never needs it, clearing the barrow is enough
   ing_spider_egg: { name: "Spider Egg", slot: "ingredient", weight: 0.2, value: 5 },
   ing_bone_meal: { name: "Bone Meal", slot: "ingredient", weight: 0.5, value: 5 },
   ing_skeever_tail: { name: "Skeever Tail", slot: "ingredient", weight: 0.2, value: 3 },
@@ -465,9 +465,32 @@ const DUNGEONS = (() => {
     return `You climb back into daylight with ${got}.`;
   }
 
+  /* a run saved in a state it can't go on from gets put right (called on load): a dead foe holding a room shut,
+     a boss room with no boss in it (the boss waits again), a room that leads nowhere. Returns what was fixed, or null. */
+  function repair(s) {
+    const d = s.dungeon;
+    if (!d || !Array.isArray(d.rows) || !d.rows.length || d.done) return null;
+    const fixed = [], last = d.rows.length - 1;
+    const backFromBoss = () => {
+      if (last < 1) { d.row = -1; d.col = 0; return; }
+      d.row = last - 1; d.col = Math.max(0, d.rows[last - 1].findIndex((n) => n.links.includes(d.col)));
+    };
+    if (d.room?.enemy && d.room.enemy.hp <= 0) {   // a won fight that never finished (old turn-by-turn fights)
+      if (d.room.type === "boss") { d.room = null; backFromBoss(); fixed.push("boss waits again"); }
+      else { d.room = null; fixed.push("dead foe cleared"); }
+    }
+    if (d.row >= 0 && !d.rows[d.row]?.[d.col]) { d.row = Math.min(d.row, last - 1); d.col = 0; d.room = null; fixed.push("lost place"); }
+    if (!d.room) {
+      if (d.row >= last) { backFromBoss(); fixed.push("boss room was empty"); }
+      else if (d.row >= 0 && !nextChoices(s).length) { d.rows[d.row][d.col].links = d.rows[d.row + 1].map((_, i) => i); fixed.push("dead end opened"); }
+    }
+    if (fixed.length && typeof console !== "undefined") console.warn(`dungeon repaired (${d.place}): ${fixed.join(", ")}`);
+    return fixed.length ? fixed : null;
+  }
+
   // the Dragonstone in your pack or in any of your house chests
   function hasDragonstone(s) {
     return (s.inv || []).some((x) => x.item === "dragonstone") || Object.values(s.homes || {}).some((h) => (h?.chest || []).some((x) => x.item === "dragonstone"));
   }
-  return { odds, parseChoice, REFILL_SECONDS, enterable, info, describe, refillLeft, enter, nextChoices, enterRoom, roomChoices, act, leave, ICON, LABEL, THEMES, ENEMY, layout, hasDragonstone };
+  return { odds, parseChoice, REFILL_SECONDS, enterable, info, describe, refillLeft, enter, nextChoices, enterRoom, roomChoices, act, leave, repair, ICON, LABEL, THEMES, ENEMY, layout, hasDragonstone };
 })();

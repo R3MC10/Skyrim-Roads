@@ -1,0 +1,30 @@
+name: Hourly game update
+# Game updates go out once per full hour: if main changed since the last build, start a build.
+# Hotfix: run "Build the Android app" by hand (Actions tab > Run workflow) to ship at once.
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: write
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Build if main changed since the last release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git fetch -q --tags
+          LAST=$(gh release list --limit 1 --json tagName -q '.[0].tagName')
+          BUSY=$(gh run list --workflow android.yml --limit 5 --json status -q '[.[]|select(.status!="completed")]|length')
+          if [ "$BUSY" != "0" ]; then echo "A build is already running"; exit 0; fi
+          if [ -n "$LAST" ] && [ "$(git rev-list -n1 "$LAST")" = "$(git rev-parse HEAD)" ]; then echo "Nothing new since $LAST"; exit 0; fi
+          # nothing but docs/art changed: skip
+          if [ -n "$LAST" ] && [ -z "$(git diff --name-only "$LAST" HEAD -- . ':!*.md' ':!art/**' ':!.github/workflows/cleanup.yml')" ]; then echo "Only docs changed"; exit 0; fi
+          gh workflow run android.yml --ref main
+          echo "Started a build (last release: $LAST)"

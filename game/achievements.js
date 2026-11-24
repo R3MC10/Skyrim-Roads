@@ -24,6 +24,8 @@ const ACH = (() => {
     ["champion", "🛡", "Arena Champion", "Win 10 duels in the Arena", (s) => [n((s.stats || {}).duels), 10]],
     ["stablemaster", "🐎", "Stablemaster", "Own a horse in armor", (s) => [s.horse && s.horse.armor && s.horse.armor !== "none" ? 1 : 0, 1]],
     ["rich", "💰", "Coin Hoarder", "Carry 10,000 gold", (s) => [n(s.gold), 10000]],
+    ["dg_dawnguard", "🏹", "Dawn Breaks", "End the vampire war with the Dawnguard", (s) => [s.dgDawnguard ? 1 : 0, 1]],   // dawnguard.js
+    ["dg_volkihar", "🦇", "Lord of the Night", "End the vampire war at Harkon's side", (s) => [s.dgVolkihar ? 1 : 0, 1]],
   ];
   const BY = Object.fromEntries(LIST.map((a) => [a[0], a]));
   function progress(s) { return LIST.map(([id, icon, name, what, f]) => { const [cur, goal] = f(s); return { id, icon, name, what, cur: Math.min(cur, goal), goal, done: !!(s.ach || {})[id] }; }); }

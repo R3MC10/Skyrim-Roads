@@ -7,6 +7,17 @@ const I18N_STORY = {
 "Go to Whiterun.": "Idź do Whiterun.",
 "The court wizard Farengar wants a Dragonstone from Bleak Falls Barrow.": "Nadworny mag Farengar chce Smoczego Kamienia z Bleak Falls Barrow.",
 "Bring it to him in Whiterun (Area tab, Court wizard).": "Zanieś mu go do Whiterun (zakładka Okolica, Nadworny mag).",
+"The court wizard Farengar wants a Dragonstone that lies at the end of Bleak Falls Barrow.": "Nadworny mag Farengar chce Smoczego Kamienia, który leży na końcu Bleak Falls Barrow.",
+"Clear the barrow.": "Oczyść kurhan.",
+"The Dragonstone": "Smoczy Kamień",
+"You found the Dragonstone in Bleak Falls Barrow.": "Znalazłeś Smoczy Kamień w Bleak Falls Barrow.",
+"Tell Farengar in Whiterun (Area tab, Court wizard).": "Powiedz o tym Farengarowi w Whiterun (zakładka Okolica, Nadworny mag).",
+"Give Farengar the Dragonstone": "Oddaj Farengarowi Smoczy Kamień",
+"Farengar already has the Dragonstone.": "Farengar ma już Smoczy Kamień.",
+"Farengar wants the Dragonstone from the end of Bleak Falls Barrow.": "Farengar chce Smoczego Kamienia z końca Bleak Falls Barrow.",
+"Clear the barrow first.": "Najpierw oczyść kurhan.",
+"You tell Farengar where the Dragonstone lay and draw its map from memory.": "Mówisz Farengarowi, gdzie leżał Smoczy Kamień, i z pamięci rysujesz jego mapę.",
+"He's delighted.": "Jest zachwycony.",
 "A dragon is attacking the Western Watchtower.": "Smok atakuje Zachodnią Wieżę Strażniczą.",
 "Go there and kill it.": "Idź tam i go zabij.",
 "The Way of the Voice": "Droga Głosu",
@@ -1474,6 +1485,14 @@ const I18N_STORY = {
 "Questlines completed": "Ukończone wątki zadań"
 },
   pats: [
+[
+"📜 You'll need the {0} for your quest, so you took it from your house chest in {1}.",
+"📜 {0} będzie ci potrzebny do zadania, więc wziąłeś go ze skrzyni w domu w {1}."
+],
+[
+"📜 The {0} you need for your quest turns up in your pack after all.",
+"📜 {0}, potrzebny ci do zadania, jednak znajduje się w twoim plecaku."
+],
 [
 "New objective: {0}.",
 "Nowy cel: {0}."

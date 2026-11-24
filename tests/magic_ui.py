@@ -37,7 +37,8 @@ async def main():
         idx = next(i for i, t in enumerate(await pg.evaluate("[...document.querySelectorAll('#sky .sky-row')].map(b=>b.textContent.trim())")) if "Flame Cloak" in t)
         await pg.click(f"#sky .sky-row >> nth={idx}"); await pg.wait_for_timeout(200)
         print("cloak detail:", (await pg.inner_text("#sky .sky-detail"))[:220].replace("\n", " | "))
-        await pg.click("[data-act=skytac]"); await pg.wait_for_timeout(300)
+        assert not await pg.query_selector("#sky .sky-detail [data-act=skytac]"), "spell card must not have tactics buttons"
+        await pg.evaluate("() => { const L=G.loadout(window.__dbg.save()); if(!L.rules.some(r=>r.do==='spell:flame_cloak')) L.rules.unshift({if:'always',do:'spell:flame_cloak'}); }")
         # test fight in tactics
         await pg.evaluate("()=>{ document.querySelector('#sky')?.remove(); }")
         await pg.evaluate(clr); await pg.click("[data-tab=hero]"); await pg.wait_for_timeout(250); await pg.click("[data-act=tabgo][data-id=tactics]"); await pg.wait_for_timeout(400)

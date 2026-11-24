@@ -93,7 +93,8 @@ const G = (() => {
   function migrate(s) {
     // a won turn-by-turn road fight used to leave the road blocked by a dead foe: clear it
     if (s.trip?.status === "encounter" && (!s.trip.encounter || s.trip.encounter.hp <= 0)) { s.trip.status = "travel"; s.trip.encounter = null; s.trip.lastTick = now(); }
-    if (s.dungeon?.room?.enemy && s.dungeon.room.enemy.hp <= 0) s.dungeon.room = null;   // same bug inside dungeons: a dead foe kept the room shut
+    if (typeof DUNGEONS !== "undefined" && DUNGEONS.repair) DUNGEONS.repair(s);   // a run saved where it can't go on: dead foe, empty boss room, dead end (dungeons.js)
+    else if (s.dungeon?.room?.enemy && s.dungeon.room.enemy.hp <= 0) s.dungeon.room = null;   // same bug inside dungeons: a dead foe kept the room shut
     if ((s.v || 1) < 2) {
       const at = PLACES[s.location] ? s.location : D.START_LOCATION;
       [s.x, s.y] = loc(at); s.location = at; s.trip = null;
@@ -135,11 +136,9 @@ const G = (() => {
     if (typeof AMMO !== "undefined") { const m = AMMO.migrate(s); if (m) note(s, m); }
     if (fixTactics(s)) note(s, "⚔ Your tactics were fixed: rules you added under \"Always → Attack\" never fired. They now come first.");
     if (typeof SPELLCRAFT !== "undefined") SPELLCRAFT.register(s);   // crafted spells back into the spellbook
-    // Bleak Falls Barrow cleared but no Dragonstone (the claw door used to make the boss skip it): hand it over so the quest can finish
-    if (s.cleared?.["Bleak Falls Barrow"] && !s.thaneWhiterun && typeof DUNGEONS !== "undefined" && D.ITEMS.dragonstone && !DUNGEONS.hasDragonstone(s)) {
-      give(s, "dragonstone");
-      note(s, "📜 You find the Dragonstone from Bleak Falls Barrow in your pack after all. Bring it to Farengar in Dragonsreach (Whiterun).");
-    }
+    // quests stuck on an old save move on: Bleak Falls Barrow already cleared moves the main quest to Farengar's hand-in
+    // (no Dragonstone needed), and a missing quest item a stage needs comes back (questitems.js)
+    if (typeof QUESTS !== "undefined") { QUESTS.ensure(s); QUESTS.check(s); }
     return s;
   }
   function note(s, text) { s.journal.unshift({ t: now(), text }); s.journal = s.journal.slice(0, 60); }
@@ -934,6 +933,7 @@ const G = (() => {
         if (fp.stagger && Math.random() < fp.stagger) { this.sp = Math.max(0, this.sp - 15); this.blocking = false; extra += " · staggers you"; }
         if (fp.paralyze && Math.random() < fp.paralyze) { this.sp = Math.max(0, this.sp - 30); extra += " · knocks the wind out of you"; }
       }
+      if (this.e.hitCap && dmg > this.e.hitCap * maxHealth(s)) dmg = this.e.hitCap * maxHealth(s);   // [OURS] story foes that opt in can't take more than this share of your health in one blow (dawnguard.js)
       this.hp -= dmg;
       if (px) {
         const fe = PFX.foeElement(this.e);   // fire mages burn you, frost trolls chill you, storm atronachs jolt you

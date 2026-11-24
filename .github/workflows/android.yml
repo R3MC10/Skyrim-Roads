@@ -1,8 +1,7 @@
 name: Build the Android app
+# Started once per full hour by hourly-release.yml when main changed.
+# Hotfix: run this workflow by hand to ship at once.
 on:
-  push:
-    branches: [main]
-    paths-ignore: ["**.md", ".github/workflows/cleanup.yml", "art/**"]
   workflow_dispatch:
 permissions:
   contents: write
@@ -11,6 +10,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: What changed since the last build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git fetch -q --tags
+          LAST=$(gh release list --limit 1 --json tagName -q '.[0].tagName')
+          { echo "CHANGES<<EOF_CHANGES"; if [ -n "$LAST" ]; then git log --no-merges --format='- %s' "$LAST"..HEAD | head -40; else git log -1 --format='- %s'; fi; echo "EOF_CHANGES"; } >> "$GITHUB_ENV"
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -79,7 +87,7 @@ jobs:
             RoadsOfTheNorth.apk
             game-shell*.zip
           body: |
-            ${{ github.event.head_commit.message }}
+            ${{ env.CHANGES }}
 
             ---
             Open this page on your Android phone, tap **RoadsOfTheNorth.apk**, then open the download.

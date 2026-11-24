@@ -85,11 +85,12 @@ const COOP = (() => {
     e.health = Math.round(e.health * m); e.hp = e.health; e.damage = Math.round(e.damage * [0, 0.8, 0.95, 1.1][tier] * 10) / 10;
     return e;
   }
-  const canPick = (s, run) => !!run && run.leader === s.id && !s.dungeon?.room && (s.dungeon?.cstep || 0) === run.path.length;
+  const canPick = (s, run) => !!run && run.leader === s.id && !s.dungeon?.room && (s.dungeon?.cstep || 0) >= run.path.length;   // ahead of the record = a pick the store dropped: the next pick is still written
   /* the leader stepped into a room (DUNGEONS.enterRoom already ran on their side): record it for everyone */
   function recordPick(run, d) {
     const step = run.path.length;
-    if ((d.cstep || 0) !== step) return null;    // someone else moved first; don't fork the path
+    if ((d.cstep || 0) < step) return null;      // someone else moved first; don't fork the path
+    if (step && run.path[step - 1][0] >= d.row) return null;   // a late write for a room the record is already past: the path only ever goes deeper
     const spec = { type: d.room.type };
     if (d.room.enemy && d.room.type !== "boss") spec.key = keyOf(d.room.enemy.name);
     return { ...run, status: "in", path: [...run.path, [d.row, d.col]], rooms: [...run.rooms, spec] };
@@ -109,11 +110,18 @@ const COOP = (() => {
   /* catch up with the leader, one room at a time. Returns how many rooms you walked into (0 or 1). */
   function follow(s, run) {
     const d = s.dungeon;
-    if (!d || d.run !== run?.id || d.room || d.done) return 0;
+    if (!d || d.run !== run?.id || d.done) return 0;
     const i = d.cstep || 0;
     if (i >= run.path.length) return 0;
     const [row, col] = run.path[i];
+    if (d.row >= 0 && d.row === row && d.col === col) {   // you already stand in that room (a fight snapshot undid the count, or the path names it twice): count it, never walk it again
+      d.cstep = i + 1;
+      if (typeof console !== "undefined") console.warn(`coop: room ${row}:${col} already walked, moving on`);
+      return 0;
+    }
+    if (d.room) return 0;
     d.row = row - 1; d.col = i ? run.path[i - 1][1] : 0;
+    if (d.row >= 0 && !(d.rows[d.row]?.[d.col]?.links || []).includes(col)) { const via = (d.rows[d.row] || []).findIndex((n) => n.links.includes(col)); if (via >= 0) d.col = via; else if (!d.rows[d.row]?.[d.col]) d.col = 0; }   // the recorded way skipped a room: step in from one that leads there
     const err = DUNGEONS.enterRoom(s, col);
     if (err) { d.row = row; d.col = col; d.room = null; d.cstep = i + 1; return 0; }   // shouldn't happen; skip rather than get stuck
     d.cstep = i + 1; d.path = d.path || []; d.path.push([d.row, d.col]);
@@ -121,7 +129,7 @@ const COOP = (() => {
     return 1;
   }
   /* the leader's own room: count the step */
-  function picked(s, run) { const d = s.dungeon; d.cstep = (d.cstep || 0) + 1; shape(s, run, run.rooms[d.cstep - 1]); }
+  function picked(s, run) { const d = s.dungeon; d.cstep = Math.max((d.cstep || 0) + 1, run.path?.length || 0); shape(s, run, run.rooms[d.cstep - 1]); }
 
   // ---- who stands beside you, and how they fight (from their own tactics)
   function profile(s) {
@@ -237,9 +245,28 @@ const COOP = (() => {
       const s = S(), run = cur();
       if (!run || !s.dungeon) return 0;
       if (!isMember(run, s.id)) return 0;
+      if (run.leader === s.id) heal(s, run);
       const n = follow(s, run);
       if (n) report();
       return n;
+    }
+    /* safety net: rooms the leader walked that never reached the run record (the store dropped the write) are written
+       now, so the others can follow all the way to the boss instead of waiting forever */
+    let healing = false;
+    function heal(s, run) {
+      const d = s.dungeon;
+      if (healing || !d?.path?.length || d.run !== run.id) return;
+      const tail = (path, lr) => { const out = []; for (const p of path) if (p[0] > lr && (!out.length || p[0] > out[out.length - 1][0])) out.push(p); return out; };
+      const lastRow = (r) => (r.path.length ? r.path[r.path.length - 1][0] : -1);
+      if (!tail(d.path, lastRow(run)).length) return;
+      healing = true;
+      ctx.Store.change("runs", run.id, (r) => {
+        const add = r.leader === s.id ? tail(d.path, lastRow(r)) : [];
+        if (!add.length) return r;
+        if (typeof console !== "undefined") console.warn(`coop: ${add.length} room(s) missing from the run record, written now`);
+        return { ...r, path: [...r.path, ...add.map((p) => [p[0], p[1]])], rooms: [...r.rooms, ...add.map((p) => ({ type: d.rows[p[0]]?.[p[1]]?.type || "fight" }))] };
+      }).then((res) => { const nd = S().dungeon, p = res?.after?.path; if (nd && p?.length && nd.row === p[p.length - 1][0] && nd.col === p[p.length - 1][1]) nd.cstep = p.length; })
+        .catch(() => {}).finally(() => { healing = false; });
     }
     function report() {
       const s = S(), d = s.dungeon, id = d?.run;
@@ -312,13 +339,25 @@ const COOP = (() => {
     async function afterPick() {
       const run = cur(), s = S(), d = s.dungeon;
       if (!run || !d?.room) return;
-      const res = await ctx.Store.change("runs", run.id, (r) => recordPick(r, d) || r);
-      const nr = res?.after;
-      if (nr && nr.path.length === (d.cstep || 0) + 1) picked(s, nr);
-      else if (nr) {   // someone else moved first: step back out and follow the shared path instead
-        d.room = null; d.path?.pop(); const p = d.path?.[d.path.length - 1]; if (p) { d.row = p[0]; d.col = p[1]; } else { d.row = -1; d.col = 0; }
-        toast("Someone else moved first."); follow(s, nr);
-      } else picked(s, { ...run, rooms: [...run.rooms, { type: d.room.type, key: d.room.enemy ? keyOf(d.room.enemy.name) : undefined }] });   // offline: carry on
+      // count the room right away: a fight started before the store answers snapshots the save (tbfight.js), and a late
+      // count was undone when it ended, which sent the leader back into the same room
+      const step = Math.max(d.cstep || 0, run.path.length), at = [d.row, d.col];
+      const pre = { row: d.row, col: d.col, cstep: step, room: { type: d.room.type, enemy: d.room.enemy ? { name: d.room.enemy.name } : null } };
+      const spec = { type: d.room.type }; if (d.room.enemy && d.room.type !== "boss") spec.key = keyOf(d.room.enemy.name);
+      d.cstep = step + 1; shape(s, run, spec);
+      const here = () => { const nd = S().dungeon; return !!nd && nd.run === run.id && nd.row === at[0] && nd.col === at[1]; };   // (a fight's snapshot swaps the save object, so look it up fresh)
+      let nr = null;
+      for (let k = 0; k < 4 && !nr; k++) {   // a busy store (someone else holds the lease) answers null: try again
+        if (k) { await new Promise((ok) => setTimeout(ok, 250 * k)); if (!here()) break; }   // already in another room: that pick writes the way on
+        nr = (await ctx.Store.change("runs", run.id, (r) => recordPick(r, pre) || r))?.after || null;
+      }
+      const mine = nr && nr.path.length && nr.path[nr.path.length - 1][0] === at[0] && nr.path[nr.path.length - 1][1] === at[1];
+      if (mine) { if (here()) S().dungeon.cstep = nr.path.length; }
+      else if (nr && here() && nr.path.length > step) {   // someone else moved first: step back out and follow the shared path instead
+        const d = S().dungeon;
+        d.room = null; d.cstep = step; d.path?.pop(); const p = d.path?.[d.path.length - 1]; if (p) { d.row = p[0]; d.col = p[1]; } else { d.row = -1; d.col = 0; }
+        toast("Someone else moved first."); follow(S(), nr);
+      }   // offline, or the store never answered: carry on; the next pick is written all the same (canPick/recordPick allow a leader ahead of the record)
       report(); ctx.persist(true); ctx.renderDungeon();
     }
     async function afterAct(r, runId) {
