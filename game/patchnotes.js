@@ -3,6 +3,9 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b135", build: 135, date: "24 Nov 2026", title: "No more flickering popups", items: [
+      "Fixed: popups (like tapping an equipment slot) flickered for a split second just after they opened. They now open smoothly and stay put.",
+    ] },
     { id: "b134", build: 134, date: "24 Nov 2026", title: "The Dragonstone in parties, and PC updates", items: [
       "Fixed: in a party, the Dragonstone and the Golden Claw went into the party's loot pile, so only one player got them and everyone else couldn't finish Farengar's quest. Now every player keeps their own.",
       "If you cleared Bleak Falls Barrow in a party and don't have the Dragonstone, it's back in your pack next time you open the game. Bring it to Farengar in Dragonsreach.",
