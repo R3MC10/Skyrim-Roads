@@ -69,6 +69,11 @@ const PATCHNOTES = (() => {
       "Their gear works like your Items menu: their pack or yours, filters (All, Weapons, Armor, Potions, Other), a list you can sort by name, type, damage or armour, weight and value, and a ◆ on what they wear.",
       "Tap an item to see its stats and how it compares with what they wear now, then Give, Give & equip, Equip, Take off or Take it back.",
     ] },
+    { id: "b143-paintedmap", build: 143, date: "24 Nov 2026", title: "Ready for a painted world map", items: [
+      "The world map can now show a hand-painted picture of Skyrim instead of the drawn one. Towns, roads, fog, your cone of sight, light, weather and markers all sit on top of it, exactly where they were.",
+      "Once the painting is in, Settings → Graphics gets a Roads on the map switch, in case the painted roads are enough for you.",
+      "Until the painting arrives, the map looks and works just like before.",
+    ] },
     { id: "b141-polishsweep", build: 141, date: "24 Nov 2026", title: "More of the game in Polish", items: [
       "Playing in Polish? The fight picture now speaks it too: Ty, Uciekają, Zwycięstwo, Pudło, Blok!, critical hits and sneak attacks.",
       "The fight log is in Polish now: who hits for how much, misses, staggers, paralysis, staves, potions and spells.",
