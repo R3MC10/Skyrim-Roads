@@ -3,7 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b136", build: 136, date: "24 Nov 2026", title: "Your hero, properly drawn", items: [
+    { id: "b136", build: 136, date: "24 Nov 2026", title: "Enemies come alive", items: [
+      "Every enemy now moves like your hero does: they breathe while they wait, wind up and swing, bite, claw, stomp, breathe fire or cast, flinch when you hit them, reel from big blows, duck aside when you miss, and crumple to the ground when beaten. Beat you, and they gloat.",
+      "Wolves lunge and snap, bears rear up and swipe, spiders rear back and bite, mudcrabs pinch, dragons rear up and spread their wings before they breathe, mammoths stomp, ice wraiths coil and strike.",
+      "The painted enemy pictures move too: they bend, lunge into their attacks, recoil when hit and fall over. Works in both the hand-drawn and the pixel art style.",
+    ] },
+    { id: "b136-2", build: 136, date: "24 Nov 2026", title: "Your hero, properly drawn", items: [
       "Characters got a big art upgrade: real proportions, shading, faces that match your race (snouts, whiskers, tusks, pointy ears, tails), hair and beards.",
       "Everything you wear shows up: helmet, armour and its colours, cloak, shield, weapon, even an amulet or ring.",
       "Your hero now actually walks on the road, rides the horse properly, sits on the wagon bench, and swings, blocks, casts and gets knocked down in fights. Moves flow smoothly from one into the next.",
@@ -34,7 +39,7 @@ const PATCHNOTES = (() => {
     { id: "b135-fix", build: 135, date: "24 Nov 2026", title: "Small fix", items: [
       "Fixed: with the Prospector perk, now really every ore vein glints in the mining game (one could stay hidden before).",
     ] },
-    { id: "b136-2", build: 136, date: "24 Nov 2026", title: "A proper road picture while you travel", items: [
+    { id: "b136-2-2", build: 136, date: "24 Nov 2026", title: "A proper road picture while you travel", items: [
       "The little picture under your trip is now a real moving landscape: snowy mountains far off, hills and forests that match where you are (pines, the Rift's golden birches, marsh, snowfields, ash wastes, rocky hills), and a road with ruts or old flagstones.",
       "The sky and light follow the real time of day: sun, moons, stars and northern lights at night, warm light at dusk. Snow, rain with lightning, fog, ash and autumn leaves blow through when that's the weather.",
       "Things pass by on the way: signposts, wayshrines, standing stones, ruins, camps and lanterns, and other travellers, guard patrols and Khajiit caravans come the other way. At night you carry a torch and windows light up.",
