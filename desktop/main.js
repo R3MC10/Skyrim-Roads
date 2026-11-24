@@ -1,6 +1,6 @@
 /* Roads of the North for Windows: the same game as the phone app in its own window.
    The game is served from app://game/ so saves (localStorage) stay put between updates.
-   Esc works like the phone's back button (handled in the game, desktop.js). Closing the window is the only way out. */
+   Esc works like the phone's back button and then opens the Esc menu (desktop.js, pausemenu.js); its Quit game closes this window (window.close). */
 const { app, BrowserWindow, protocol, net, shell, dialog } = require("electron");
 const path = require("path"), { pathToFileURL } = require("url");
 protocol.registerSchemesAsPrivileged([{ scheme: "app", privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true, stream: true } }]);

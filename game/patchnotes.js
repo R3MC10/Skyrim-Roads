@@ -12,6 +12,14 @@ const PATCHNOTES = (() => {
       "Maps and pieces can be traded and given away, and point to the same spot for your friend. In a party the leader can ask everyone where to dig, and the gold is split evenly.",
       "New perks: Cartographer (Streetwise), Antiquarian (Mercantile) and Excavator (Athletics).",
     ] },
+    { id: "b171-esckey", build: 171, date: "24 Nov 2026", title: "Esc menu and a card you can fold away", items: [
+      "On PC, Esc now steps back one thing at a time, just like the back button on a phone: a tooltip, then a window, then the menu you're in, then the compass.",
+      "When there's nothing left to close, Esc opens a pause menu like in Skyrim: Resume, Settings, Journal, Patch notes, How to play, Report a problem and Save and quit. The Windows app also has Quit game. Use the arrows and Enter, or the mouse.",
+      "In a fight Esc opens the pause menu on top of the fight and never makes you run away. The world doesn't stop for anyone else in your party.",
+      "The great world event card on the map can be folded into a small pill with the arrow in its corner (tap the pill to open it again). The game remembers it for your hero.",
+      "Notices under it (a town rebuilding, a reward waiting) have an × to hide them until there's new news. A new event never pops the card open: the pill glows for a moment instead.",
+      "Fixed: on phones a few newer screens (the house chest, blood in fights, party traps, fishing and hunting and more) had lost part of their look. They're back to normal.",
+    ] },
     { id: "b171-charcreate", build: 171, date: "24 Nov 2026", title: "Character creation, rebuilt", items: [
       "Making a character now works like Skyrim's race menu: a big live picture of your hero that breathes, walks and swings, which you can turn with a finger (or the arrow keys) and zoom in on the face.",
       "Tabs for Race, Body, Head, Face, Hair, Scars & Paint and Start, with Back and Next, a dice button for a random look and Undo.",
