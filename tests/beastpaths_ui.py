@@ -6,6 +6,8 @@ At 390x844 (phone, touch) and 1920x1080 (PC), in both art styles:
 - no Magic or Items while changed; Claws spends 2 AP
 - a hungry vampire meets the Ashen Court: Seduction and Embrace of Shadows in the quick slots; Vampire Lord's own moves
 - the vampire panel on the Hero tab shows the new Lord stars and the sun warning
+- the wild werewolf is drawn with the wolf body; a tooltip never stays open after a move is tapped
+- in Polish (phone): the encounter, the beast's moves and the log are in Polish
 Screenshots in tests/out_beastpaths/ (gitignored)."""
 import asyncio, sys, os
 from playwright.async_api import async_playwright
@@ -48,26 +50,29 @@ async def finish(pg):
     await pg.evaluate("document.querySelector('#tbf .tbdone')?.click()"); await pg.wait_for_timeout(600)
     await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
 
-async def run(p, w, h, touch):
+async def run(p, w, h, touch, lang=None):
+    PL = lang == "pl"
     kw = {"executable_path": CHROME, "args": ["--no-sandbox"]} if os.path.exists(CHROME) else {}
     b = await p.chromium.launch(**kw)
     ctx = await b.new_context(viewport={"width": w, "height": h}, device_scale_factor=2 if touch else 1, has_touch=touch, is_mobile=touch)
     errs = []
+    if PL: await ctx.add_init_script("try{const k='rotn_prefs';localStorage.setItem(k,JSON.stringify({...JSON.parse(localStorage.getItem(k)||'{}'),lang:'pl'}))}catch(e){}")
     pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
     await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=bp{w}&tb&fightanim"); await pg.wait_for_timeout(1800)
     await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Moon"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
     await pg.evaluate("localStorage.setItem('rotn_prefs', JSON.stringify({...JSON.parse(localStorage.getItem('rotn_prefs')||'{}'), tips:false}))")
-    tag0 = f"{w}x{h}"
-    for style in ["ink", "pixel"]:
+    tag0 = f"{w}x{h}" + ("_pl" if PL else "")
+    for style in (["ink"] if PL else ["ink", "pixel"]):
         tag = f"{tag0}_{style}"
         # ---------------- the werewolf
         await pg.evaluate(START, [style, "wolf"]); await pg.wait_for_timeout(500)
         txt = await pg.evaluate("document.querySelector('#modal')?.innerText||''")
-        ok("howl" in txt.lower(), f"{tag}: a werewolf can howl back at the hunting werewolf")
+        ok(("odpowiedz wyciem" in txt.lower() and "wycie pod księżycem" in txt.lower()) if PL else "howl" in txt.lower(), f"{tag}: a werewolf can howl back at the hunting werewolf {txt[:160]!r}")
         await pg.screenshot(path=OUT + f"{tag}_moonhunt.png")
         await pg.click("#modal [data-act=ev][data-c=fight]"); await pg.wait_for_timeout(800)
         await pg.evaluate(CLEAN)
         ok(await pg.evaluate("TB.open && /Werewolf/.test(TB.session.f.e.name)"), f"{tag}: fighting the werewolf")
+        ok(await pg.evaluate("FOERIG.kindOf('werewolf','Werewolf').body==='wrap' && FOERIG.kindOf('werewolf','Werewolf').o.kind==='werewolf'"), f"{tag}: the wild werewolf has the wolf body (same as Beast Form)")
         if not await my_turn(pg): ok(False, f"{tag}: my turn comes"); await finish(pg); continue
         await pg.wait_for_timeout(500)
         ok(await pg.evaluate("!!document.querySelector(\"#tbf .fc [data-tba='power:beast']:not([disabled])\")"), f"{tag}: Beast Form waits in the quick slots")
@@ -90,7 +95,17 @@ async def run(p, w, h, touch):
             ap1 = await pg.evaluate("TB.session ? TB.session.ap : -1")
             ok(ap1 == ap0 - 2 or ap1 == -1 or ap1 > ap0, f"{tag}: Claws spends 2 AP ({ap0}->{ap1})")
             log = await pg.evaluate("[...document.querySelectorAll('#tbf .tbl, #tbf .tblog')].map(e=>e.textContent).join(' ')")
-            ok("Claws" in log, f"{tag}: the log shows the claws")
+            ok(("pazury" in log.lower() and "claws" not in log.lower()) if PL else "Claws" in log, f"{tag}: the log shows the claws")
+            if PL:
+                bar = await pg.evaluate("document.querySelector('#tbf .fc').innerText")
+                ok(all(x in bar.lower() for x in ["pazury", "szarpanie", "postać bestii"]) and "need" not in bar.lower(), f"{tag}: the beast's bar is in Polish: {bar[:120]!r}")
+            # a tooltip never lingers after a move is tapped (phone) or clicked (PC)
+            if await my_turn(pg, '#tbf .fc [data-tba="beast:howl"]:not([disabled])', 20):
+                if touch: await pg.tap("#tbf .fc [data-tba='beast:howl']")
+                else: await pg.hover("#tbf .fc [data-tba='beast:howl']"); await pg.wait_for_timeout(200); await pg.click("#tbf .fc [data-tba='beast:howl']")
+                await pg.wait_for_timeout(1000)
+                ok(not await pg.evaluate("!!document.querySelector('.tbtip.on')"), f"{tag}: no tooltip left open after Howl")
+                await pg.screenshot(path=OUT + f"{tag}_wolf_howl.png")
             await pg.wait_for_timeout(700); await pg.mouse.move(2, 2); await pg.evaluate(CLEAN)
             await pg.screenshot(path=OUT + f"{tag}_wolf_claws.png")
         else:
@@ -99,7 +114,7 @@ async def run(p, w, h, touch):
         # ---------------- the vampire
         await pg.evaluate(START, [style, "vamp"]); await pg.wait_for_timeout(500)
         txt = await pg.evaluate("document.querySelector('#modal')?.innerText||''")
-        ok("Ashen Court" in txt or "court" in txt.lower(), f"{tag}: the Ashen Court on the road")
+        ok(("popielny dwór" in txt.lower()) if PL else ("Ashen Court" in txt or "court" in txt.lower()), f"{tag}: the Ashen Court on the road")
         await pg.screenshot(path=OUT + f"{tag}_ashencourt.png")
         await pg.click("#modal [data-act=ev][data-c=fight]"); await pg.wait_for_timeout(800)
         await pg.evaluate(CLEAN)
@@ -127,7 +142,7 @@ async def run(p, w, h, touch):
         await pg.evaluate("document.querySelector('[data-tab=map]')?.click()"); await pg.wait_for_timeout(200)
         await pg.evaluate("document.querySelector('[data-tab=hero]')?.click()"); await pg.wait_for_timeout(600)
         side = await pg.evaluate("(document.querySelector('#side')||document.body).innerText")
-        ok("Sun Ward" in side or "Blood Magic" in side or await pg.evaluate("!!document.querySelector(\"[data-id='lord:blood_magic']\")"), f"{tag}: the new Lord stars show on the Hero tab")
+        ok("Sun Ward" in side or "Blood Magic" in side or "Magia krwi" in side or await pg.evaluate("!!document.querySelector(\"[data-id='lord:blood_magic']\")"), f"{tag}: the new Lord stars show on the Hero tab")
         panel = await pg.query_selector("#side .bstars")
         if panel:
             await panel.scroll_into_view_if_needed(); await panel.screenshot(path=OUT + f"{tag}_lord_sky.png")
@@ -138,6 +153,7 @@ async def main():
     async with async_playwright() as p:
         await run(p, 390, 844, True)
         await run(p, 1920, 1080, False)
+        await run(p, 390, 844, True, "pl")
     print("RESULT", "OK" if not fails else "FAIL " + "; ".join(fails))
     if fails: sys.exit(1)
 asyncio.run(main())

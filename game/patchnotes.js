@@ -12,6 +12,9 @@ const PATCHNOTES = (() => {
       "Changing in town is seen: people scatter and prices go up in that hold for a day.",
       "New perk stars. Werewolf: Rending Claws, Howl of the Pack, Silver Hide, Endless Hunt. Vampire Lord: Blood Magic, Grave Servants, Sun Ward. New skill perks: Bane of the Night (Restoration, hurts vampires) and Wolfsbane (Alchemy, half the chance to catch either curse).",
       "In a party your form shows on everyone's phone, and theirs on yours. Only the leader answers the Ashen Court.",
+      "The wild werewolf on the road now looks like the real thing: the same wolf on two legs you turn into, not a hairy man.",
+      "All of it is in Polish too: the moves, the night encounters, Moonblood, the vampire's hunger and the new perks.",
+      "Fight tooltips close as soon as you tap a move, so they never hang over the log or the buttons.",
     ] },
     { id: "b137-ctl", build: 137, date: "24 Nov 2026", title: "New fight controls", items: [
       "Your moves in a fight now sit in a proper action bar at the bottom: three big buttons for Attack, Power attack and Guard (or Shield bash), with Magic, Items, Flee and End turn right under them. Easy to hit with a thumb, even on small phones.",
