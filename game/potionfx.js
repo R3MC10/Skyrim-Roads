@@ -1,7 +1,7 @@
 /* potionfx.js: Restore Health / Magicka / Stamina potions work over time instead of all at once. [OURS]
    Remigiusz: "potion should be applying health and magicka and stamina overtime, to avoid spamming".
-   - In a fight a potion gives its total over a few rounds, a share at the end of each round (the first share at the end
-     of the round you drink it). Small potions take 5 rounds, the usual ones 4, big brewed ones (over 75) 3.
+   - In a fight a potion gives its total over a few rounds, a share at the end of each round: half at the end of the round
+     you drink it, the rest evenly after. Small potions take 5 rounds, the usual ones 4, big brewed ones (over 75) 3.
      The Alchemy perk Quick Draught takes off a round per rank (never under 2).
    - On the road (map, towns, dungeons) the same potion takes that many seconds, and the health bar fills as it goes.
      A potion still working when a fight starts carries on in the fight; one still working when a fight ends carries on
@@ -40,8 +40,8 @@ const POTFX = (() => {
     box[res] = { left: amt, n: Math.max(1, n), total: amt, name: name || "" };
     return { kept: false, cur: box[res], replaced: !!cur };
   }
-  /* is one of this kind still working (more than one share to come)? AI and tactics leave it alone then */
-  function busy(h, res) { const c = h?.potOT?.[res]; return !!c && c.n > 1 && c.left > 0.5; }
+  /* is one of this kind still working (a good part still to come)? AI, tactics and followers leave it alone then */
+  function busy(h, res) { const c = h?.potOT?.[res]; return !!c && c.n > 1 && c.left > Math.max(0.5, 0.3 * (c.total || 0)); }
   /* you drink in a fight (engine.js Fight.act) */
   function drink(f, res, amt, name) {
     const n = ticks(f.s, amt), r = put(f, res, amt, n, name);
@@ -59,13 +59,15 @@ const POTFX = (() => {
     if (s) return res === "health" ? G.maxHealth(s) : res === "magicka" ? G.maxMagicka(s) : G.maxStamina(s);
     return res === "health" ? (h.maxHp || h.hpMax || h._max || Infinity) : res === "magicka" ? (h.mpMax || Infinity) : (h.spMax || Infinity);
   };
+  /* the next share: half of it in the first round (a potion still saves you in a pinch), the rest evenly over the others */
+  const share = (c) => (c.n <= 1 ? c.left : c.left >= (c.total || c.left) - 0.01 ? c.left / 2 : c.left / c.n);
   /* one share off everything that's working on h; returns { res: gained } */
   function tickOne(h, s) {
     const box = h.potOT, got = {};
     if (!box) return got;
     for (const res of KINDS) {
       const c = box[res]; if (!c) continue;
-      const give = c.n <= 1 ? c.left : c.left / c.n;
+      const give = share(c);
       c.left -= give; c.n--;
       const k = KEY[res];
       if (typeof h[k] === "number" && (res !== "health" || h[k] > 0)) {
@@ -151,7 +153,7 @@ const POTFX = (() => {
   }
   const tipOf = (x) => x.road
     ? `${x.name || "Potion"}: +${r0(x.left)} more health over the next ${x.n} ${x.n === 1 ? "second" : "seconds"}. Another one of the same kind doesn't stack.`
-    : `${x.name || "Potion"}: +${r0(x.left / Math.max(1, x.n))} ${x.res} at the end of each round, ${x.n} more (${r0(x.left)} left). Another one of the same kind doesn't stack.`;
+    : `${x.name || "Potion"}: +${r0(share(x))} ${x.res} at the end of this round, less after that, ${x.n} more (${r0(x.left)} left). Another one of the same kind doesn't stack.`;
   const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
   function icon(res, px = 16) {
     try { if (typeof ICONART !== "undefined") { const h = ICONART.item(ITEM[res], px); if (h) return h; } } catch (e) { /* plain glyph */ }

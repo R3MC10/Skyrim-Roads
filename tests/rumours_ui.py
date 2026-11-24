@@ -25,12 +25,12 @@ async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch()
         ctx = await b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2, is_mobile=True, has_touch=True)
-        for style in ["ink", "pixel"]:
+        for style in ["ink"]:
             pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
             await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=rw{style}"); await pg.wait_for_timeout(1800)
             await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Rumo"); await pg.click("#begin"); await pg.wait_for_timeout(1000)
             await close_modals(pg)
-            await pg.evaluate("""(st)=>{ ART.setStyle(st); const S=window.__dbg.save(); S.location="Whiterun"; [S.x,S.y]=WORLD.places.Whiterun; S.trip=null; S.gold=3000; S.level=20; S.hpBonus=3000; G.setHealth(S,G.maxHealth(S));
+            await pg.evaluate("""(st)=>{ const S=window.__dbg.save(); S.location="Whiterun"; [S.x,S.y]=WORLD.places.Whiterun; S.trip=null; S.gold=3000; S.level=20; S.hpBonus=3000; G.setHealth(S,G.maxHealth(S));
                 S.dragons=1; S.cleared={"Bleak Falls Barrow":G.now()}; S.thaneWhiterun=true; S.homes={Whiterun:{}};
                 for (let i=0;i<6;i++) QUESTS.check(S); window.__ui.save&&window.__ui.save(); }""", style)
             await pg.wait_for_timeout(3200); await close_modals(pg)

@@ -83,5 +83,5 @@ okS(/TOMEINFO\.box\(S, i\)/.test(fs.readFileSync(W + "worldevents.js", "utf8")),
 okS(/TOMEINFO\.line\(s, it\.item\)/.test(fs.readFileSync(W + "lootvote.js", "utf8")), "loot vote rows show the tome line");
 okS(/TOMEINFO\.html\(S, e\.id/.test(fs.readFileSync(W + "search.js", "utf8")), "search spell page shows the tome card");
 okS(html.indexOf('src="tomeinfo.js"') > html.indexOf('src="spellbook.js"') && html.indexOf('src="tomeinfo.js"') < html.indexOf('src="ui.js"'), "tomeinfo.js loads after spellbook.js, before ui.js");
-okS(/\.ti-box\{/.test(html) && /html\.art-pixel \.ti-box/.test(html), "tome info styles for ink and pixel");
+okS(/\.ti-box\{/.test(html), "tome info styles");
 console.log("tomeinfo", c.__n, "checks + screen hooks: ALL OK");

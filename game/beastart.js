@@ -1,7 +1,7 @@
 /* Werewolf and Vampire Lord art [OURS]: the two forms in the fight scene (drawn in the same canvas units as
    fightart.js's people: feet at 0, about 60 tall, facing right), and the perk constellations for both trees
-   (the Werewolf's and the Vampire Lord's own skies, like Skyrim's). Works in both art styles: the fight canvas
-   is pixelated as a whole in pixel style, and the constellations use the same SkyUI look as the skill trees. */
+   (the Werewolf's and the Vampire Lord's own skies, like Skyrim's). The constellations use the
+   same SkyUI look as the skill trees. */
 const BEASTART = (() => {
   const H = ART.H, INK = ART.PAL.ink;
   const esc = (s) => String(s ?? "").replace(/[<>&"]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" })[c]);

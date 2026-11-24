@@ -69,7 +69,11 @@ our own marked [OURS]; plain-language UI; phone first.
 - Smart AI combat (default; custom tactics optional), crafting mini-games, motion design (63)
 
 ## In progress (write your name before you start)
-- Claude: potions over time (potionfx.js): Restore Health/Magicka/Stamina potions give their total over a few rounds (seconds on the map) instead of all at once; same kind does not stack (keeps the bigger remainder); buff chip + rising numbers; party sync; Alchemy perk Quick Draught. Branch claude/potionregen.
+- Claude: potions over time (potionfx.js): Restore Health/Magicka/Stamina potions give their total over a few rounds (seconds on the map) instead of all at once; same kind does not stack (keeps the bigger remainder); buff chip + rising numbers; half lands in the first round; party sync; Alchemy perk Quick Draught. Branch claude/potionregen.
+- Claude: PC fit: on a wide landscape window (1100px+) the game fills the window and the page never scrolls; map + side panel share the width (wider for the Skills stars), Skills stars beside the list, fight scene left / moves right, dungeon room left / map right, slightly bigger text on big monitors; only side lists scroll. tests/pcfit_ui.py. Art quality (artfit.js): paintings cropped never squashed, drawn as sharp as the file allows and never blown up past it; tests/art_quality_ui.py lists files to repaint bigger. Branch claude/pcfit.
+- Claude: pixel art removed (one hand-drawn style): Settings row gone (old pixel saves load as hand-drawn), pixel branches in art.js and every *art.js, pixel CSS and pixel test variants deleted. Branch claude/nopixel.
+- Claude: house chest as a SkyUI container menu (homestash.js): Chest / Your pack, categories with counts, sort row, item icons on every row, Store/Take 1, an amount or all, load and chest weight, worn gear (any loadout) refused, alike stacks merge; tests/test_stash.js + tests/stash_ui.py. Branch claude/stashfix.
+- Claude: worn gear never changes hands (G.wornCount/freeQty/handable in engine.js): shop Sell lists (all shops, fences), item-details Sell, Sell all, Sell all junk, follower Your pack + Give / Give & equip, player trades (refused by sender, receiver and hub), gifts, stalls, chests skip what you wear; two copies with one worn shows the spare; tests/test_noequipsell.js. Branch claude/noequipsell.
 - Claude: HOTFIX dungeon room loop (coop.js, lootvote.js, dungeons.js repair, explore.js claw door): the party leader was sent back into a room after a turn-by-turn fight undid the late room count, dropped store writes left the party unable to follow; stuck saves repaired on load; tests/test_dunloop.js. Branch claude/hotfix-dunloop.
 - Claude: tooltips in fights (fighttips.js): tooltip.js over every part of the fight screen (spell rows, Cast/Dual with perk numbers and why greyed, potions, scrolls, quick slots, AP, bars, you, foe, status chips incl. afraid/calmed/rattled); holding a finger shows the tip and never casts; drag still works. Branch claude/fighttips.
 - Claude: Skyrim skill-up toasts (skillup.js): "X increased to N" over a filling bar at the top of the HUD lane, flash + chime on a crossed level, queued (tap to skip), XP creep after fights, bigger Level up banner with the level bar; fight result keeps follower lines separate; tests/test_skillup.js + skillup_ui.py. Branch claude/skillup.
@@ -139,6 +143,7 @@ Player reports: GitHub issues labelled player-report; Claude picks them up and f
 ## Standing rules
 - Perk trees grow with the game: every new system (gathering, magic, encounters, crafting, party play...) adds or adjusts perks with real effects in the matching trees (perkfx.js), keeping old perk ids and a clean star layout.
 - Party size up to 8 players.
+- One art style: hand-drawn (pixel art was removed on 24 Nov 2026).
 - In a party, dungeon choices (which way, what to do in a room) are voted by everyone in the run: faces by the picks, majority wins, a tie goes the leader's way, 20 s timer (partyvote.js). On the road the leader still decides and the others' votes are advice. Loot is voted at the end of a dungeon, gold split evenly.
 
 ## Next rounds (in order)

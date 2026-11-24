@@ -1,6 +1,6 @@
 """Foe intents with a target (foeintent.js) on the real fight screen.
 python3 foeintent_ui.py 8765   (serve ../game on that port first)
-Phone 390x844 and desktop 1920x1080, ink and pixel art, alone and with Lydia. Checks: every intent chip names its
+Phone 390x844 and desktop 1920x1080, alone and with Lydia. Checks: every intent chip names its
 target ("→ you" / "→ Lydia"), the crosshair badge sits on the targeted card, the arrow is drawn in the battle scene,
 nothing scrolls sideways, no page errors, reduce motion stops the animations, and after End turn the foe hits the one
 its intent showed. Screenshots go to tests/out_foeintent/."""
@@ -15,7 +15,7 @@ def ok(x, m):
     print(("ok  " if x else "FAIL"), m)
     if not x: fails.append(m)
 
-START = """([st, lydia])=>{ ART.setStyle(st); document.querySelectorAll('#modal').forEach(m=>m.remove());
+START = """([st, lydia])=>{ document.querySelectorAll('#modal').forEach(m=>m.remove());
   try { const p=JSON.parse(localStorage.getItem('rotn_prefs')||'{}'); p.tbFast=true; localStorage.setItem('rotn_prefs', JSON.stringify(p)); } catch(e){}
   const S=window.__dbg.save(); S.level=20; S.gold=5000; S.thaneWhiterun=true; for (const k of ['One-Handed','Destruction','Restoration','Athletics','Acrobatics']) S.skills[k].lvl=45;
   G.setHealth(S,G.maxHealth(S)); S.dungeon=null; S.trip=null;
@@ -87,11 +87,11 @@ async def run(p, W, H, style, lydia, reduce=False):
 
 async def main():
     async with async_playwright() as p:
-        for style in ["ink", "pixel"]:
+        for style in ["ink"]:
             for W, H in [(390, 844), (1920, 1080)]:
                 for lydia in [False, True]:
                     await run(p, W, H, style, lydia)
-        await run(p, 360, 740, "pixel", True, reduce=True)
+        await run(p, 360, 740, "ink", True, reduce=True)
     print("FAILED " + str(len(fails)) if fails else "foeintent ui: all ok")
     sys.exit(1 if fails else 0)
 
