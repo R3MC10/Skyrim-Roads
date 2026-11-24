@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b143-bleakfalls", build: 143, date: "24 Nov 2026", title: "Farengar's quest can't get stuck any more", items: [
+      "Bleak Falls Barrow (main quest): clearing the barrow now moves the quest on by itself. The next step, \"The Dragonstone\", sends you to Farengar in Whiterun.",
+      "Farengar doesn't need the Dragonstone in your pack any more. If it got lost, ended up in a chest or went to someone else in a party, just tell him: clearing the barrow is enough. Hand it in under Area tab → Court wizard, or with the button in the Journal.",
+      "If your quest was stuck on \"bring him the Dragonstone\", it fixes itself next time you open the game. Clearing the barrow before you got the quest counts too.",
+      "Quest items (the Dragonstone, a Glenmoril witch's head, the filled black soul gem) are now bound to you: you keep them when you die. If a quest needs one you don't carry any more, it comes back from your house chest or turns up in your pack.",
+    ] },
     { id: "b144-dawnguard", build: 144, date: "24 Nov 2026", title: "The vampire war", items: [
       "New quest line from level 12: Isran at Fort Dawnguard (near Riften) sends you into Dimhollow Crypt, where something sleeps in a sealed coffin. It ends at Castle Volkihar, a black keep on an islet off the coast past Solitude.",
       "Then pick a side. Hunt the night with the Dawnguard (heavy crossbow, hunter's armour, troll armour for your follower) or drink Lord Harkon's blood and become a stronger Vampire Lord. Seven more stages either way, with a big boss fight at the end.",
