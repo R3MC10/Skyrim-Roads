@@ -296,13 +296,25 @@ const BEASTPATH = (() => {
   /* buttons on the fight screen: while changed, your form's moves replace the weapon ones; otherwise the changes
      and a vampire's powers sit beside the shouts */
   function moves(f) {
-    if (inBeast(f)) return { form: "wolf", list: ["beast:claw", "beast:maul", "beast:pounce", "beast:howl", "beast:feast", "beast:revert"].map((a) => [a, MOVES[a].name]) };
-    if (inLord(f)) return { form: "lord", list: ["lord:claw", "lord:drain", "lord:grip", "lord:raise", "lord:revert"].map((a) => [a, MOVES[a].name]) };
+    if (inBeast(f)) return { form: "wolf", left: f.pw.beast, list: ["beast:claw", "beast:maul", "beast:pounce", "beast:howl", "beast:feast", "beast:revert"].map((a) => [a, MOVES[a].name]) };
+    if (inLord(f)) return { form: "lord", left: f.pw.lord, list: ["lord:claw", "lord:drain", "lord:grip", "lord:raise", "lord:revert"].map((a) => [a, MOVES[a].name]) };
     const out = [];
     try { if (f.affordable("power:beast")) out.push(["power:beast", "Beast Form"]); } catch (e) { /* not a wolf */ }
     try { if (f.affordable("power:lord")) out.push(["power:lord", "Vampire Lord"]); } catch (e) { /* not a vampire */ }
     if (f.s.vampire) for (const a of ["vamp:seduce", "vamp:shadows", "vamp:bite"]) if (canMove(f, a)) out.push([a, MOVES[a].name]);
     return { form: null, list: out };
+  }
+  /* why a form's move is greyed out, for the action bar (fightctl.js) */
+  function why(f, a) {
+    const m = MOVES[a]; if (!m) return "";
+    const b = bpf(f), wait = m.cd && b.cdAt[a] != null ? m.cd - (b.round - b.cdAt[a]) : 0;
+    if (m.once && b.used[a]) return a.startsWith("vamp:") ? "Once a fight" : "Once per change";
+    if (wait > 0) return `Ready in ${wait} round${wait === 1 ? "" : "s"}`;
+    if (m.sp && f.sp < m.sp) return "Not enough stamina";
+    if (m.minStage && stage(f.s) < m.minStage) return "Not hungry enough";
+    if (a === "beast:feast" || a === "vamp:bite") return "Wear it down first";
+    if (a === "vamp:seduce") return "It won't listen";
+    return "";
   }
   const ICONS = { "power:beast": "🐺", "power:lord": "🦇" };
   function icon(f, a) {
@@ -524,6 +536,6 @@ const BEASTPATH = (() => {
   if (typeof CURSE !== "undefined") { hookCurse(); addStars(); }
   hookTB(); hookAI(); hookRoad(); hookTown(); tagNightkin();
 
-  return { MOVES, cost, canMove, doMove, moves, icon, zone, tip, aiMove, form, formT, inForm, inBeast, inLord, clawBase, priceMult, refuse, seenIn, moonBite, panelExtra, moonPanel,
+  return { MOVES, cost, canMove, doMove, moves, why, icon, zone, tip, aiMove, form, formT, inForm, inBeast, inLord, clawBase, priceMult, refuse, seenIn, moonBite, panelExtra, moonPanel,
     werewolfFoe, courtFoe, STARS, BITE, SILVER, sunOut, VAMP_BARKS };
 })();
