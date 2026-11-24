@@ -115,8 +115,9 @@ const ENCH = (() => {
   const known = (s) => s.enchants || [];
   const hasEnchanter = (place) => !!place && (G.shopTypes(place).includes("wizard") || place === "Winterhold");
 
+  const atEnchanter = (s) => hasEnchanter(s.location) || (typeof HSROOMS !== "undefined" && HSROOMS.station(s, "enchanter"));   // your homestead's enchanter's tower
   function disenchant(s, rowId) {   // [Skyrim] destroys the item, teaches its effect
-    if (!hasEnchanter(s.location)) return "You need an arcane enchanter: court wizards' towers and the College of Winterhold have one.";
+    if (!atEnchanter(s)) return "You need an arcane enchanter: court wizards' towers and the College of Winterhold have one.";
     const r = G.invRow(s, rowId), it = r && D.ITEMS[r.item];
     if (!isEnchanted(it)) return "That isn't enchanted.";
     if (it.mask) return "The mask's old magic won't come loose. It isn't something you can break for its secrets.";
@@ -131,7 +132,7 @@ const ENCH = (() => {
     return `The ${it.name} crumbles into light. You learned ${nameOf(eff)}.` + (sk.length ? " " + sk.join(". ") : "");
   }
   /* how strong an enchantment would be ([OURS] scaling): soul size × (0.4 + 0.6 × skill/100), Enchanter perk +10% per rank */
-  function strength(s, gemItem) { return (GEM_POWER[gemItem] || 0.6) * (0.4 + 0.6 * Math.min(100, G.skill(s, "Enchanting")) / 100) * (1 + 0.1 * G.P(s, "enchanter")); }
+  function strength(s, gemItem) { return (GEM_POWER[gemItem] || 0.6) * (0.4 + 0.6 * Math.min(100, G.skill(s, "Enchanting")) / 100) * (1 + 0.1 * G.P(s, "enchanter")) * (1 + (typeof HSROOMS !== "undefined" ? HSROOMS.bonus(s, "ench") : 0)); }   // +10% at your own enchanter's tower
   /* [OURS] the bigger Enchanting tree: Fire/Frost/Storm/Hex/Warding Enchanter, Insightful and Corpus Enchanter, Jeweller, Extra Effect (capped) */
   const classOf = (eff) => WEAPON[eff] ? (["fire", "frost", "shock"].includes(eff) ? eff : "other") : ARMOR[eff][5];
   function perkBoost(s, eff, it) {
@@ -149,7 +150,7 @@ const ENCH = (() => {
   const canTake = (it, eff) => WEAPON[eff] ? it.slot === "weapon" && !it.staff : !!ARMOR[eff] && ARMOR[eff][3].includes(it.slot);
   const slotWord = (sl) => ({ chest: "body", ring: "rings", amulet: "amulets", shield: "shields", head: "head", hands: "hands", feet: "feet" })[sl] || sl;
   function enchant(s, rowId, eff, gemRowId, opt = {}) {   // opt.boost: mini-game multiplier on magnitude; opt.botch: the soul slips away (craftgames.js)
-    if (!hasEnchanter(s.location)) return "You need an arcane enchanter.";
+    if (!atEnchanter(s)) return "You need an arcane enchanter.";
     const r = G.invRow(s, rowId), g = G.invRow(s, gemRowId), it = r && D.ITEMS[r.item];
     if (!canBase(it)) return "Pick an unenchanted weapon, piece of armor, ring or amulet.";
     if (!known(s).includes(eff)) return "You don't know that enchantment.";
@@ -238,5 +239,5 @@ const ENCH = (() => {
     return { dmg: 0, label: "" };
   }
   const isElement = (eff) => ["fire", "frost", "shock"].includes(eff);
-  return { WEAPON, ARMOR, PFXMAP, CAP, FOUND, known, hasEnchanter, disenchant, preview, enchant, canTake, canBase, worn, wornList, pfxWorn, isEnchanted, effectOf, strength, perkBoost, describe, lines, nameOf, onHit, isElement, classOf, JEWEL_SLOTS: J };
+  return { WEAPON, ARMOR, PFXMAP, CAP, FOUND, known, hasEnchanter, atEnchanter, disenchant, preview, enchant, canTake, canBase, worn, wornList, pfxWorn, isEnchanted, effectOf, strength, perkBoost, describe, lines, nameOf, onHit, isElement, classOf, JEWEL_SLOTS: J };
 })();
