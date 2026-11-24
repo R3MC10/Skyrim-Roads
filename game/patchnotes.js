@@ -3,13 +3,21 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b168-travelanim", build: 168, date: "24 Nov 2026", title: "Smoother riding on the road", items: [
+    { id: "b169-travelanim", build: 169, date: "24 Nov 2026", title: "Smoother riding on the road", items: [
       "The picture under your trip got its walking and riding fixed: horses really walk and gallop now, every hoof lands on the road and stays put instead of sliding, and the body, mane and tail move with the stride.",
       "If anyone in your company is on foot, the horses slow to a walk beside them, so your follower keeps up without shuffling on the spot. Ride alone (or with everyone mounted) and you gallop.",
       "Everyone on the road is drawn at the same size and stands on the same line: a follower comes up past your horse's shoulder, and riders sit properly in the saddle.",
       "Name tags sit just above each head and step out of each other's way instead of overlapping.",
       "Carriage trips show the carriage again: you on the bench, a horse in front and the wheels turning. Caravans coming the other way get a real horse too.",
       "Horses on the map step more cleanly as well. With Reduce motion on, everyone stands still.",
+    ] },
+    { id: "b168-folbuild", build: 168, date: "24 Nov 2026", title: "Followers learn like you do", items: [
+      "Your follower now has their own skills, the same list as yours, and they rise with use exactly like yours: swinging a sword raises One-Handed, shooting raises Archery, spells raise their school, blocking raises Block, and blows on their armour raise their armour skill.",
+      "Their skill increases add up to level-ups, like yours. At each level they pick +10 Health, Magicka or Stamina to suit how they fight, and get a perk point. They still never go past your level.",
+      "Their gear picks their build: give them a bow and they become an archer, a staff or spells make a mage, a two-hander a two-handed warrior, a sword and shield a tank, a dagger a sneaky thief. Change it as often as you like, it's free.",
+      "They spend their perk points themselves in the trees of their build, with the same perks and real effects as yours. A new build means a free respec into the new trees.",
+      "They fight by their build: archers and mages stay at the back, mages cast, sword-and-shield tanks raise their shield and draw blows away from you.",
+      "Follower tab → Skills shows their level, every skill with a bar, their build and their perks. A small note pops up when one of their skills goes up. Followers you already have get skills from their level and gear.",
     ] },
     { id: "b167-titlewide", build: 167, date: "24 Nov 2026", title: "A wide painting for wide screens", items: [
       "On a PC or laptop the main menu now has its own wide painting: the warrior on his rock, the castle city in the valley, the dragon and the northern lights fill the whole window, from an old 4:3 screen to a 32:9 ultra-wide. No more tall picture with blurry sides.",
@@ -1086,13 +1094,13 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 165;
+  const NEXT_AT = 169;
   const NEXT = [
     "A new, livelier fight screen that fits on one screen",
-    "On PC, everything fits on one screen without scrolling",
-    "New painted dungeon rooms and a parchment dungeon map",
-    "Dwemer ruins and the deep caverns of Blackreach",
-    "Fishing and hunting",
+    "Dragon Shouts learned from word walls",
+    "Werewolf and vampire paths",
+    "Followers with their own quests, opinions and banter",
+    "Weather that changes how the road and fights go",
   ];
   const KEY = "rotn_notes_seen";
   const latest = () => LIST[0];
