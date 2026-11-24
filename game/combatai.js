@@ -323,6 +323,7 @@ const COMBATAI = (() => {
 
   // ---- followers fight smart too: cover you when you're hurt, punish an opening
   function followerAct(f, al) {
+    if (al.fai && typeof FAI !== "undefined") return FAI.turn(null, f, al) || ` · ${al.name} keeps their guard up`;   // a full character: followerai.js picks the whole turn
     const mh = G.maxHealth(f.s), base = al.dmg * avgSpread();
     const amax = typeof TOWNS !== "undefined" && f.s.follower ? TOWNS.followerMax(f.s, f.s.follower.id) : al.hp;
     if (f.hp / mh < 0.35 && al.hp > amax * 0.45 && f.ehp > base) { f.coverAl = al; const d = base * 0.6; f.ehp -= d; return ` · ${al.name} steps in front of you (${Math.round(d)})`; }
@@ -344,6 +345,7 @@ const COMBATAI = (() => {
      to use instead of the loadout's. Returns { action, rule, why }. */
   function decide(f, actor = "player", settings = null) {
     if (actor && typeof actor === "object") {
+      if (actor.fai && typeof FAI !== "undefined") { const o = FAI.decide(f, actor); return o ? { action: o.k === "cast" ? "spell:" + o.id : o.k === "potion" ? "potion:" + o.res : o.k, rule: 0, why: "their own tactics" } : { action: "guard", rule: 0, why: "keeps their guard up" }; }
       const al = actor, mh = G.maxHealth(f.s), base = (al.dmg || 0) * avgSpread(), amax = al.max ?? al.hp;
       if (f.hp / mh < 0.35 && al.hp > amax * 0.45 && f.ehp > base) return { action: "cover", rule: 0, why: "steps in front of you" };
       if (f.eParalyzed > 0 || f.stagger || f.calmTurns > 0) return { action: "exploit", rule: 0, why: "hits the opening" };

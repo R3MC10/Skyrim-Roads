@@ -153,7 +153,7 @@ async def main():
                 if ins["a"] and ins["b"] == ins["a"] and ins["c"] == ins["a"]: break
             check(f"[{style}] all three go in together", ins.get("a") and ins.get("b") == ins.get("a") and ins.get("c") == ins.get("a"), str(ins))
             rows = await A.evaluate("() => window.__dbg.save().dungeon?.rows?.length || 0")
-            check(f"[{style}] three heroes: the way is about twice as long", rows >= 8, f"{rows} rows")
+            check(f"[{style}] three heroes: the way is 4 rooms longer", rows >= 10, f"{rows} rows")
             # step into a fight room: three foes wait there
             wv = await A.evaluate("""() => { const S = window.__dbg.save(), d = S.dungeon; const opts = d.rows[0].map((n, i) => [n.type, i]); const f = opts.find(o => o[0] === 'fight' || o[0] === 'elite');
                 if (!f) { d.rows[0][0].type = 'fight'; } const col = f ? f[1] : 0;
