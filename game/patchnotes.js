@@ -7,6 +7,15 @@ const PATCHNOTES = (() => {
       "Poison, burning, bleeding and venom now respect your armour: if your armour soaked most of the blow, it soaks most of the poison too. Heavy armour finally helps against poisoned blades and fire bolts.",
       "Foe healers (bandit mages, priests and the like) can only cast their healing spell twice a fight, and it heals a little less. No more endless self-healing against low-level warriors.",
     ] },
+    { id: "b136vision", build: 136, date: "24 Nov 2026", title: "A cone of sight on the map", items: [
+      "Your marker on the map now looks the way you're walking, with a soft cone of sight in front of it. When you stop, it keeps looking that way.",
+      "Inside the cone the fog thins out and you see clearly: other travellers further off than before, caravans, guard patrols, and the foe that blocks your road, standing right ahead of you.",
+      "Places inside your cone get spotted from afar and go on your map, so you find them before you walk past them. Big cities show up from far away, a small shrine only when you're close.",
+      "How far you see depends on the world: night, fog, storms and blizzards cut it short, hills and mountain passes let you see much further, and riding a horse helps a little. Practised archers have sharper eyes too.",
+      "Party members each have their own fainter cone, so you can see where everyone is looking.",
+      "New perks: Far Sight (Archery) lets you see further and wider on the map; Owl Eyes (Sneak) makes darkness and bad weather hurt your sight only half as much.",
+      "Works in both art styles: soft ink edges in the drawn style, chunky dotted edges in pixel art.",
+    ] },
     { id: "b137-ctl", build: 137, date: "24 Nov 2026", title: "New fight controls", items: [
       "Your moves in a fight now sit in a proper action bar at the bottom: three big buttons for Attack, Power attack and Guard (or Shield bash), with Magic, Items, Flee and End turn right under them. Easy to hit with a thumb, even on small phones.",
       "Every move shows its cost as gold pips, and the AP row at the top lights up which pips a move would use before you tap it. The pips you spend burst away.",

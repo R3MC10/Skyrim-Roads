@@ -11,6 +11,7 @@ android/keystore.properties
 tests/tbf/
 tests/fread/
 tests/bscene/
+tests/out_visioncone/
 tests/out_noscretch/
 tests/out_followers2/
 tests/out_partysync/

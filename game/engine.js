@@ -1143,7 +1143,7 @@ const G = (() => {
       const stepT = tr.lastTick + dt;
       tr.lastTick = stepT;
       if (!tr.path) { tr.path = Terrain.route([s.x, s.y], tr.dest); tr.idx = 0; }
-      const mv = Terrain.moveAlong(tr.path, tr.idx, [s.x, s.y], dt, speed(s) / 60);
+      const mv = Terrain.moveAlong(tr.path, tr.idx, [s.x, s.y], dt, speed(s) / 60), was = [s.x, s.y];
       [s.x, s.y] = mv.done ? tr.dest : mv.pos; tr.idx = mv.idx;
       if (typeof SNEAKMODE !== "undefined" && s.sneak && !tr.carriage && !tr.follow) SNEAKMODE.train(s, dt).forEach((m) => tripLog(s, "📈 " + m));
       const last = s.explored[s.explored.length - 1];
@@ -1154,6 +1154,7 @@ const G = (() => {
       const known = new Set(s.discovered);
       for (const [n, [lx, ly, kind]] of Object.entries(PLACES))
         if (!known.has(n) && pxDist([s.x, s.y], [lx, ly]) <= discoverRadius(kind)) { s.discovered.push(n); tripLog(s, `📍 Discovered ${n}`); if (typeof EXPLORE !== "undefined") EXPLORE.onDiscover(s, n, tripLog); }
+      if (typeof VISION !== "undefined") VISION.step(s, was, stepT, tripLog);   // look ahead: spot places inside your cone of sight (vision.js)
       if (typeof GATHER !== "undefined") GATHER.onStep(s, (m) => tripLog(s, m), stepT);   // plant patches you pass (gather.js)
       const pk = pickUpBags(s, bags.filter((b) => !out.taken.includes(b.id)), stepT);
       out.taken.push(...pk.taken);
