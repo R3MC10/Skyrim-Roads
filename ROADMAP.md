@@ -70,6 +70,9 @@ our own marked [OURS]; plain-language UI; phone first.
 
 ## In progress (write your name before you start)
 - Claude: lighting and atmosphere (lightfx.js): time-of-day colour grade, glowing towns and camps at night, dawn/dusk light shafts, fog banks over valleys and lakes, cloud-shadow parallax, water shimmer, aurora on the northern snow, vignette; on the map and in place pictures. Settings → Graphics → Lighting Off/Low/High. Branch claude/lightfx.
+- Claude: homestead rooms (hsrooms.js): garden and cellar, wings as real stations, display cases, followers living there, raids, party visits to the leader's home, 4 Smithing/Speech perks. Branch claude/homestead.
+- Claude: HUD tidy (hud2.js): one message lane with a queue under the compass, objective line under the compass, bars fade when full, ★ in the top bar, one floating compass button that steps out of the way, map buttons in one strip, bottom-bar names fit. Branch claude/hud2.
+- Claude: the world remembers you (livingworld.js): deeds per hold (dragons, crimes, caravans robbed or guarded), towns react (prices, guard lines, doors that open or close, making amends), townsfolk keep daily hours, whispers in inns that come true later as places on the map, a News of the realm feed, party members share the leader's world. Branch claude/livingworld.
 - Claude: foe kit balance (foekit.js): poison/burning/bleeding respect armour, foe heals capped at two a fight (fixes flaky test_foekit Bandit check). Branch claude/foekitflake.
 - Claude: followers become people (followerbonds.js): opinions and a loyalty meter, banter on the road and in towns, comments on places and fights, a personal quest per follower (signature move + keepsake), low-loyalty trouble (grumbling, refusing orders, leaving), Kindred Spirit / Heart to Heart / Sworn Companion perks. Branch claude/followerbonds.
 - Claude: foe intents show their target (foeintent.js): "→ you / → Lydia" on every intent chip, a crosshair on the targeted card and an arrow in the scene; the shown target is the one hit. Branch claude/foeintent.
@@ -93,6 +96,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Claude: foe rigs (foerig.js): every enemy is a little skeleton with its own animations (breathing, attacks, flinch, stagger, dodge, fall, gloat); painted foes bend and lunge too. Branch claude/foerigs.
 - Kacper: audio: the rest of scripts/gen_audio.mjs (free ElevenLabs plan has ~4k credits a month; music needs a paid plan).
 - Claude: party votes on the road (partyplay.js): everyone with the leader sees the same encounter/event window, members vote, their faces pop up by the option they picked, only the leader acts. Branch claude/partyvote.
+- Claude: great world events (greatevents.js): timed, date-seeded events with a map banner and countdown: a dragon assault on a town (3-phase boss, parties of up to 8), a Daedric rift, a bandit army besieging a hold, and town fairs (games, prizes, cheap shops). Rewards by share, world after-effects (burned town rebuilds, plundered hold, Jarl's thanks), 4 perks. Branch claude/worldevents.
 
 ## Standing rules
 - Perk trees grow with the game: every new system (gathering, magic, encounters, crafting, party play...) adds or adjusts perks with real effects in the matching trees (perkfx.js), keeping old perk ids and a clean star layout.

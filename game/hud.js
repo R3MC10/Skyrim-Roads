@@ -98,7 +98,7 @@ const HUD = (() => {
       return `<div class="hb ${cls}${full && !v.danger ? " full" : ""}${p < 30 ? " low" : ""}${flash}" title="${k}: ${Math.round(cur)} / ${max}"><span class="cap l"></span><span class="track"><i style="--p:${p.toFixed(1)}%"></i></span><span class="cap r"></span><small class="num">${Math.round(cur)}</small></div>`;
     };
     const html = `<div class="hbars">${bar("Magicka", v.mp, v.mpMax, "mp")}${bar("Health", v.hp, v.hpMax, "hp")}${bar("Stamina", v.sp, v.spMax, "sp")}</div>
-      <div class="hline"><span class="hstat">${status(v)}</span><span class="carry ${v.over ? "over" : ""}">${icon("weight")}Carry <b class="num">${Math.round(v.w)}</b>/${Math.round(v.cap)}${v.over ? " · too heavy" : ""}</span></div>`;
+      <div class="hline"><span class="hstat">${status(v)}</span><span class="carry ${v.over ? "over" : ""}${!v.over && v.cap && v.w / v.cap < 0.75 ? " light" : ""}">${icon("weight")}Carry <b class="num">${Math.round(v.w)}</b>/${Math.round(v.cap)}${v.over ? " · too heavy" : ""}</span></div>`;
     if (el.dataset.html !== html) {
       el.innerHTML = html; el.dataset.html = html;
       if (!reduce()) setTimeout(() => el.querySelectorAll(".hb.flash").forEach((b) => b.classList.remove("flash")), 700);
@@ -122,7 +122,7 @@ const HUD = (() => {
   function log(el, text) {
     if (!el || typeof document === "undefined") return;
     let stack = document.getElementById("hudlog");
-    if (!stack) { stack = document.createElement("div"); stack.id = "hudlog"; stack.setAttribute("aria-hidden", "true"); document.body.appendChild(stack); }
+    if (!stack) { stack = document.createElement("div"); stack.id = "hudlog"; stack.setAttribute("aria-hidden", "true"); ((typeof HUD2 !== "undefined" && HUD2.logHost()) || document.body).appendChild(stack); }
     if (el.parentNode !== stack) stack.prepend(el);
     const prev = el.dataset.last;
     if (prev && prev !== text && !el.classList.contains("hide")) {
