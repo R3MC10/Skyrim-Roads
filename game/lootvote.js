@@ -154,7 +154,8 @@ const LOOTVOTE = (() => {
       const got = strip(s, before);
       if (leader()) {
         if ((got.items.length || got.gold) && res) res.text = `${res.text || ""} Into the party's loot pile: ${[got.gold ? got.gold + " gold" : "", ...got.items.map((x) => (x.qty > 1 ? `${x.qty}× ` : "") + (D.ITEMS[x.item]?.name || x.item))].filter(Boolean).join(", ")}.`.trim();
-        await Store.change("runs", r.id, (x) => poolAdd(recordAct(x, step, c), got.items, got.gold));
+        const rec = c === "pick" && res ? (/^Click/.test(res.text || "") ? "pick@1" : "pick@0") : c;   // the lock: members replay whether it opened, not a roll of their own
+        await Store.change("runs", r.id, (x) => poolAdd(recordAct(x, step, rec), got.items, got.gold));
       } else if (res && (got.items.length || got.gold)) res.text = `${res.text || ""} (Finds go to the party's loot pile.)`.trim();
       ctx.persist(true);
       return res;

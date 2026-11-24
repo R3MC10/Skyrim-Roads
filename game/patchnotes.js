@@ -3,6 +3,15 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b157-partytraps", build: 157, date: "24 Nov 2026", title: "Traps are for the whole party", items: [
+      "In a party dungeon, traps are everyone's problem now: when the leader goes for \"Dash through\" or \"Find the trigger\", every hero in the party plays that trap at the same time on their own phone or PC. Same blades, same stones for everyone, sized to your own skills.",
+      "Whoever fails takes the hit themselves, and each trap hurts in its own way: poison darts stack up poison, blades, spikes and bear traps make you bleed, fire, steam and runes burn, an oil slick spills some of your gold, and rockfalls dent your armour. Whoever gets through is fine.",
+      "A results card shows who got through and who got hit with what. There's a time limit: anyone who hasn't finished by then (lost the connection, put the phone away) counts as caught, and the party moves on. Followers roll by their own stats and get knocked down if caught, never killed.",
+      "Chests stay the leader's job: only the leader picks the lock or smashes it, and everyone else watches live. The loot still goes into the party pile for the vote at the end, and gold is split evenly. Party members now also see the lock open (or not) exactly as it did for the leader.",
+      "When you watch another player's mini-game, you now see their pointer or finger on screen as a little arrow with their name, moving smoothly as they play.",
+      "Everyone's phone sees the same thing: the same trap, the same results and the same lock outcome. If your phone drops out in the middle of a trap and comes back in time, you get to finish it.",
+      "New perks: Trap Tinkerer (Lockpicking 40): trap games are easier, and a trap never spills your gold or dents your armour. Call Out the Danger (Sneak 40): get through a trap cleanly in a party and everyone it still catches takes a quarter less and one stack less poison or bleeding.",
+    ] },
     { id: "b143-spelltactics", build: 143, date: "24 Nov 2026", title: "Cleaner spell cards", items: [
       "Spell, power and shout cards in the Magic menu no longer have the \"Use first in every fight\" button. Set up what you cast in a fight in the Tactics tab instead; your current tactics stay as they are.",
     ] },
