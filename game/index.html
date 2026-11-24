@@ -2761,6 +2761,37 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 @media (min-width:1100px) and (orientation:landscape){
   .loadcard.haspic{background-size:auto,min(100%,calc(1080px / var(--art-k,1))) auto;background-color:#07090c}
 }
+/* Dwemer puzzles (dwemer.js): valves and the lexicon's rings, on the xgame overlay */
+.dwgame .dw-in{width:min(440px,100%)}
+.dwgame .xg-clue{margin:0 0 8px;color:#d8cdb2;font-size:.95em;line-height:1.4}
+.dwgame .dw-row{display:flex;gap:6px;justify-content:center;margin:8px 0 10px;flex-wrap:wrap}
+.dwgame .dw-valve{width:64px;height:64px;padding:0;border-radius:50%;border:1px solid rgba(214,178,94,.45);background:#14120e;cursor:pointer}
+.dwgame .dw-valve:active{transform:rotate(25deg)}
+.dwgame .dw-valve-svg{width:100%;height:100%;display:block}
+.dwgame .hint{box-shadow:0 0 0 2px #7ad0a0,0 0 14px rgba(122,208,160,.7)}
+.dwgame .dw-row.lex .dw-ring{display:flex;flex-direction:column;align-items:center;gap:6px;border-radius:10px;padding:4px}
+.dwgame .dw-face{width:84px;height:84px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(circle at 40% 35%,#8a6a32,#4a3a1c 60%,#1d1810);border:3px solid #c9a24a;color:#7ad0c0}
+.dwgame .dw-face small{color:#e8d6a8;font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.dwgame .dw-glyph{width:40px;height:40px}.dwgame .dw-glyph.sm{width:18px;height:18px;vertical-align:-4px}
+.dwgame .dw-goal{color:#e8d6a8;white-space:nowrap}
+.dwgame .dw-gauge{height:8px;border-radius:4px;background:#2a2620;border:1px solid #4a4237;overflow:hidden;margin:0 0 6px}
+.dwgame .dw-gauge i{display:block;height:100%;background:linear-gradient(90deg,#7ad0a0,#e8a040,#d65a4a)}
+.dwgame .dw-msg{margin:4px 0 10px;color:#e8d6a8;font-weight:600}
+/* Blackreach (blackreach.js): the cavern map with its spots */
+.breach{z-index:9}
+.breach .br-map{position:relative;border:1px solid #4a4237;border-radius:12px;overflow:hidden;background:#14141c}
+.breach .br-map img.br-art{width:100%;height:auto;display:block}
+.breach .br-pin{position:absolute;transform:translate(-50%,-50%);background:none;border:0;padding:0;display:flex;flex-direction:column;align-items:center;cursor:pointer;color:#e8d6a8}
+.breach .br-pin i{width:16px;height:16px;border-radius:50%;background:#3a4048;border:2px solid #8a8f94;display:block}
+.breach .br-pin span{font-size:11px;line-height:1.1;margin-top:2px;padding:1px 4px;border-radius:4px;background:rgba(10,10,14,.75);white-space:nowrap;max-width:110px;overflow:hidden;text-overflow:ellipsis}
+.breach .br-pin.go i{background:#4ad0c8;border-color:#c8fff8;box-shadow:0 0 10px rgba(74,208,200,.8)}
+.breach .br-pin.foe i{background:var(--ember);border-color:#ffb0a0}
+.breach .br-pin.go.foe i{box-shadow:0 0 10px rgba(214,90,74,.9)}
+.breach .br-pin.here i{background:var(--gold);border-color:#fff3c8;box-shadow:0 0 12px rgba(226,187,100,.9);width:20px;height:20px}
+.breach .br-pin.sealed{opacity:.5}
+.breach .br-pin:disabled{cursor:default}
+.breach .br-acts{display:grid;gap:8px;margin-top:8px}
+@media (max-width:420px){.breach .br-pin span{font-size:10px;max-width:84px}}
 </style>
 <script src="bugreport.js"></script>
 <script src="access.js"></script>
@@ -2860,6 +2891,8 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 <script src="lootvote.js"></script>
 <script src="partyvote.js"></script>
 <script src="dawnguard.js"></script>
+<script src="dwemer.js"></script>
+<script src="blackreach.js"></script>
 <script src="account.js"></script>
 <script src="servernet.js"></script>
 <script src="store.js"></script>
@@ -2905,6 +2938,7 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 <script src="travelart.js"></script>
 <script src="solart.js"></script>
 <script src="dgart.js"></script>
+<script src="dwart.js"></script>
 <script src="skyui.js"></script>
 <script src="hud.js"></script>
 <script src="immerse.js"></script>
@@ -2946,6 +2980,7 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 <script src="i18n_living.js"></script>
 <script src="i18n_bonds.js"></script>
 <script src="i18n_dawnguard.js"></script>
+<script src="i18n_dwemer.js"></script>
 <script src="i18n_areaui.js"></script>
 <script src="i18n_menus2.js"></script>
 <script src="i18n_followertab.js"></script>
