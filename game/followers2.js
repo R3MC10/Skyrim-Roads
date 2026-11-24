@@ -338,9 +338,9 @@ const FOL2 = (() => {
     if (!s.follower || typeof TOWNS === "undefined" || !TOWNS.FOLLOWERS[s.follower.id]) return "";
     const id = s.follower.id, f = st(s), a = ARCH[f.arch] || ARCH.warrior, mx = maxHp(s, id), hp = Math.round(TOWNS.followerHp(s));
     const top = Math.min(capOf(id), s.level || 1), portrait = typeof NPCART !== "undefined" ? NPCART.follower(id, 44) : "";
-    const tabs = `<div class="chips fol2tabs">${[["card", "Overview"], ["inv", "Pack"], ["magic", "Magic"], ["tactics", "Tactics"], ["perks", "Skills & perks"]].filter(([k]) => typeof FAI !== "undefined" || (k !== "magic" && k !== "tactics")).map(([k, l]) => `<button class="chip ${view === k ? "on" : ""}" data-act="fol2" data-op="view" data-id="${k}">${l}</button>`).join("")}</div>`;
+    const tabs = `<div class="chips fol2tabs">${[["card", "Overview"], ["bond", "Bond"], ["inv", "Pack"], ["magic", "Magic"], ["tactics", "Tactics"], ["perks", "Skills & perks"]].filter(([k]) => (typeof FAI !== "undefined" || (k !== "magic" && k !== "tactics")) && (k !== "bond" || typeof BONDS !== "undefined")).map(([k, l]) => `<button class="chip ${view === k ? "on" : ""}" data-act="fol2" data-op="view" data-id="${k}">${l}</button>`).join("")}</div>`;
     const head = `<div class="item fol2head">${portrait}<div class="t">${esc(nameOf(id))} <span class="num">Lv ${f.lvl}</span><span>${esc(a.name)} · ${hp}/${mx} health · hits ~${Math.round(dmg(s))} · armor ${armorRating(f)} · goes down instead of dying</span>
-      <div class="bar fol2xp"><i style="width:${f.lvl >= top ? 100 : Math.round(f.xp / need(f.lvl) * 100)}%"></i></div><span class="sub">${f.lvl >= top ? (f.lvl >= capOf(id) ? `Level cap ${capOf(id)}` : "Levels up as you do") : `${f.xp}/${need(f.lvl)} XP to level ${f.lvl + 1}`} · loyalty ${f.loyal || 50}/100</span></div>
+      <div class="bar fol2xp"><i style="width:${f.lvl >= top ? 100 : Math.round(f.xp / need(f.lvl) * 100)}%"></i></div><span class="sub">${f.lvl >= top ? (f.lvl >= capOf(id) ? `Level cap ${capOf(id)}` : "Levels up as you do") : `${f.xp}/${need(f.lvl)} XP to level ${f.lvl + 1}`}${typeof BONDS !== "undefined" ? "" : ` · loyalty ${f.loyal || 50}/100`}</span>${typeof BONDS !== "undefined" ? BONDS.meter(s, esc) : ""}</div>
       <button class="btn sm" data-act="dismiss">Dismiss</button></div>`;
     let body = "";
     if (view === "card") {
@@ -361,7 +361,8 @@ const FOL2 = (() => {
       body = `<p class="sub num">Their pack: ${fmtW(weight(f))}/${carry(f)} weight · potions they carry are drunk when they're badly hurt · archers shoot their best arrows (they never run out)</p>
         <div class="chips">${[["theirs", "Their pack"], ["yours", "Give from yours"]].map(([k, l]) => `<button class="chip ${invTab === k ? "on" : ""}" data-act="fol2" data-op="invtab" data-id="${k}">${l}</button>`).join("")}
         <button class="btn sm" data-act="fol2" data-op="best">Best gear</button></div><div class="list fol2list">${rows}</div>`;
-    } else if (view === "magic" && typeof FAI !== "undefined") body = FAI.magicTab(s, f, esc);
+    } else if (view === "bond" && typeof BONDS !== "undefined") body = BONDS.tab(s, esc);   // opinions, loyalty, personal quest (followerbonds.js)
+    else if (view === "magic" && typeof FAI !== "undefined") body = FAI.magicTab(s, f, esc);
     else if (view === "tactics" && typeof FAI !== "undefined") body = FAI.tacticsTab(s, f, esc);
     else {
       const ps = pseudo(f), trees = [...a.main, ...a.sec].filter((k) => PERKS.TREES[k]);

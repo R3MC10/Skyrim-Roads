@@ -221,6 +221,12 @@ const PFX = (() => {
     [ "Conjuration", "gate_breaker", "Gate Breaker", 1, [40], ["summoner"], "You know how Oblivion works: Daedra take 15% more damage from you and hit you 10% softer, and your fights at an Oblivion gate count 25% more towards closing it. [OURS]", [["out", 0.15, { tag: ["daedra"] }], ["in", -0.1, { tag: ["daedra"] }], ["wevgate", 0.25, {}]]],
     [ "Archery", "sky_hunter", "Sky Hunter", 1, [50], ["eagle_eye"], "Bows do 15% more to dragons, and every migrating dragon you bring down drops an extra dragon bone. [OURS]", [["out", 0.15, { sk: AR, tag: ["dragon"] }], ["wevbone", 1, {}]]],
     [ "Speechcraft", "caravan_friend", "Caravan Friend", 1, [40], ["bribery"], "The Khajiit's grand caravan sells to you 15% cheaper and sets aside one more rare item for you. Caravans you meet on the road pay you 25% more to guard their wagons. [OURS]", [["wevmarket", 0.15, {}], ["wevstock", 1, {}], ["cvpay", 0.25, {}]]],
+    // ---------------------------------------------------------------- great world events (greatevents.js)
+    [ "Blocking", "dragonward", "Dragonward", 1, [40], ["shield_wall"], "You've learned to take a dragon's charge: dragons hit you 10% softer, and your charges against a dragon attacking a town count 20% more. [OURS]", [["in", -0.1, { tag: ["dragon"] }], ["gevdragon", 0.2, {}]]],
+    [ "Restoration", "rift_warden", "Rift Warden", 1, [40], ["regeneration"], "After every charge in a great world event you catch your breath and heal 20% of your health, and your charges at a Daedric rift count 20% more. [OURS]", [["gevheal", 0.2, {}], ["gevrift", 0.2, {}]]],
+    [ "One-Handed", "siege_breaker", "Siege Breaker", 1, [40], ["armsman"], "Bandit raiders, ram crews and warlords take 15% more damage from you, and your charges against a siege count 20% more. [OURS]", [["out", 0.15, { tag: ["siege"] }], ["gevsiege", 0.2, {}]]],
+    [ "Mercantile", "fairgoer", "Fairgoer", 1, [30], ["haggling"], "At a town fair the shops sell to you another 10% cheaper, and every fair game gives you 1 more point. [OURS]", [["gevshop", 0.1, {}], ["gevgame", 1, {}]]],
+    [ "Etiquette", "hero_of_the_hour", "Hero of the Hour", 1, [35], ["courtly_manners"], "Rewards from great world events and fair prizes pay you 20% more gold. [OURS]", [["gevgold", 0.2, {}]]],
     // ---------------------------------------------------------------- homesteads (homestead.js)
     [ "Smithing", "carpenter", "Carpenter", 1, [30], ["steel_smithing"], "Building at your homestead takes 25% fewer materials. [OURS, from Hearthfire]", [["hsmats", 0.25, {}]]],
     [ "Athletics", "woodsman", "Woodsman", 1, [30], ["long_strider"], "The sawmill, quarry and clay pit at your homestead give 50% more. [OURS]", [["hsyield", 0.5, {}]]],
@@ -249,6 +255,10 @@ const PFX = (() => {
     [ "Two-Handed", "lid_breaker", "Lid Breaker", 1, [25], ["barbarian"], "Smashing chests open: the bright zone on the swing is a third wider. [OURS]", [["dgsmash", 0.3, {}]]],
     [ "Athletics", "sprinter", "Sprinter", 1, [30], ["long_strider"], "Running from a dungeon fight: a quarter fewer steps to get away. [OURS]", [["dgflee", 0.25, {}]]],
     [ "Lockpicking", "keen_searcher", "Keen Searcher", 1, [30], ["novice_locks"], "Searching rooms: your hand sweeps a wider patch of dust at once. [OURS]", [["dgsearch", 0.3, {}]]],
+    // ---------------------------------------------------------------- followers become people (followerbonds.js)
+    [ "Speechcraft", "kindred_spirit", "Kindred Spirit", 1, [25], [], "Your follower warms to you 50% faster when you do things they like, and cools 25% slower when you don't. [OURS]", [["folbond", 0.5, {}], ["folgrudge", 0.25, {}]]],
+    [ "Speechcraft", "heart_to_heart", "Heart to Heart", 1, [45], ["kindred_spirit"], "Talking with your follower does twice as much for their loyalty, and they never refuse your orders, however unhappy. [OURS]", [["foltalk", 1, {}], ["folobey", 1, {}]]],
+    [ "Etiquette", "sworn_companion", "Sworn Companion", 1, [50], ["courtly_manners"], "Followers ask you for their personal quest at loyalty 65 instead of 80, and their signature move is 25% stronger. [OURS]", [["folquest", 15, {}], ["folsig", 0.25, {}]]],
   ];
   const FX = {};
   if (typeof PERKS !== "undefined") {
