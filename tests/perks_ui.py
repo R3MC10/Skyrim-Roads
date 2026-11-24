@@ -19,8 +19,7 @@ async def main():
         await pg.evaluate(clear)
         await pg.evaluate("""()=>{const S=window.__dbg.save(); S.level=40; for (const k in S.skills) S.skills[k].lvl=75;
           S.perks={armsman:3,fighting_stance:1,critical_charge:1,bladesman:1,dual_flurry:1,novice_destruction:1,apprentice_destruction:1,augmented_flames:1,intense_flames:1,stealth:2,muffled_movement:1}; }""")
-        for style in ["ink", "pixel"]:
-            if style == "pixel": await pg.evaluate("ART.setStyle('pixel')")
+        for style in ["ink"]:
             for sk in ["One-Handed", "Destruction", "Sneak", "Unarmored"]:
                 await pg.evaluate("TABMENU.closeHub && TABMENU.closeHub(); __ui.go('stars')"); await pg.wait_for_timeout(500); await pg.evaluate(clear)
                 await pg.evaluate(f"document.querySelector('#side .tw-card[data-id=\"{sk}\"]')?.click()"); await pg.wait_for_timeout(500); await pg.evaluate(clear)

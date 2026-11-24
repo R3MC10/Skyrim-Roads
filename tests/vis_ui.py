@@ -17,13 +17,12 @@ async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-sandbox"])
         errs = []
-        for style in ["ink", "pixel"]:
+        for style in ["ink"]:
             # --- 1. no picture files: everything falls back to drawn art
             ctx = await b.new_context(viewport={"width": 412, "height": 915})
             pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
             await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&assets&p=vis0{style}"); await pg.wait_for_timeout(1500)
             await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Ves"); await pg.click("#begin"); await pg.wait_for_timeout(900)
-            if style == "pixel": await pg.evaluate("()=>{ART.setStyle('pixel')}")
             await pg.evaluate("()=>{const S=__dbg.save(); S.location='Whiterun'; [S.x,S.y]=WORLD.places.Whiterun; window.__ui.go('town')}"); await pg.wait_for_timeout(1500)
             st = await pg.evaluate("()=>Object.fromEntries(ASSETS.status())")
             ok(st.get("place-whiterun") == "none" and st.get("ui-panel") == "none", f"[{style}] missing files are noted as missing: {st}")
@@ -47,7 +46,6 @@ async def main():
             px = await pg.evaluate("()=>{const c=document.querySelector('#tfog')?.previousElementSibling?.tagName==='CANVAS'?document.querySelector('#tfog').previousElementSibling:document.querySelector('#title canvas'); if(!c) return null; const g=c.getContext('2d'); const d=g.getImageData(c.width/2|0,c.height/3|0,1,1).data; return [d[0],d[1],d[2]]}")
             ok(px is not None and px[2] > 120 and px[0] < 90, f"[{style}] title shows the painted key art {px}")
             await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Ves"); await pg.click("#begin"); await pg.wait_for_timeout(900)
-            if style == "pixel": await pg.evaluate("()=>{ART.setStyle('pixel')}")
             await pg.evaluate("()=>{const S=__dbg.save(); S.location='Whiterun'; [S.x,S.y]=WORLD.places.Whiterun; ASSETS.img('place-whiterun'); ASSETS.img(ASSETS.foeKey('Frost Troll','troll')); ASSETS.img('foe-troll');}")
             await pg.wait_for_timeout(1200)
             st = await pg.evaluate("()=>Object.fromEntries(ASSETS.status())")

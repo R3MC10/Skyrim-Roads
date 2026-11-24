@@ -1,6 +1,6 @@
 /* Paper doll: your character in the middle of the Pack tab with the equipment slots around it, a picker sheet per
    slot with stat comparisons, loadout thumbnails, and the race showcase on the character creation screen. Drawing
-   goes through ART/HEROART/ICONART/UIART so both art styles work and everything is cached. [OURS] */
+   goes through ART/HEROART/ICONART/UIART so everything is cached. [OURS] */
 const DOLL = (() => {
   const LEFT = ["head", "chest", "hands", "feet"], RIGHT = ["weapon", "shield"], JEWEL = ["amulet", "ring", "ring2"];
   const NAMES = { weapon: "Weapon", shield: "Shield", head: "Head", chest: "Chest", hands: "Hands", feet: "Feet", ammo: "Ammo", amulet: "Amulet", ring: "Ring", ring2: "Ring" };

@@ -1,6 +1,6 @@
 """Charge bars on screen (chargebar.js): the Items menu (icons, "no charge", the detail card), a mouse tooltip on PC,
 the shop's sell list and the wizard's staffs, the paper doll's weapon picker, and the charge meter in a turn-by-turn fight.
-Both art styles, a 390x844 phone and a 1920x1080 PC, painted assets on (?assets).
+Hand-drawn style, a 390x844 phone and a 1920x1080 PC, painted assets on (?assets).
 Run:  python -m http.server 8765 --directory game   then   python tests/chargebar_ui.py 8765 [outdir]   — prints "chargebar_ui: all good".
 Screenshots in tests/out_chargebar/ (gitignored) unless an outdir is given."""
 import asyncio, os, sys
@@ -34,7 +34,7 @@ async def main():
     async with async_playwright() as p:
         kw = {"executable_path": CHROME, "args": ["--no-sandbox"]} if os.path.exists(CHROME) else {}
         b = await p.chromium.launch(**kw)
-        for style in ["ink", "pixel"]:
+        for style in ["ink"]:
             for vw, vh, pc in [(390, 844, False), (1920, 1080, True)]:
                 tag = f"{style}_{'pc' if pc else 'phone'}"
                 ctx = await b.new_context(viewport={"width": vw, "height": vh}, device_scale_factor=1)

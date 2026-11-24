@@ -13,8 +13,7 @@ async def main():
         clear = "document.querySelectorAll('#modal').forEach(m=>m.remove())"
         async def save_url(u, name):
             open(OUT + name, "wb").write(base64.b64decode(u.split(",")[1]))
-        for style in ["ink", "pixel"]:
-            await pg.evaluate(f"ART.setStyle('{style}')")
+        for style in ["ink"]:
             # 1. festivals on a town picture and the inn banner
             for fid in ["newlife", "midyear", "witching", "frostfall"]:
                 urls = await pg.evaluate("""(f)=>{ FXART.force(f); const pick=(h)=>(h.match(/src="([^"]+)"/)||[])[1]; return [pick(PLACEART.scene('Whiterun')), pick(PLACEART.scene('Riverwood')), pick(PLACEART.section('inn'))]; }""", fid)
@@ -22,7 +21,6 @@ async def main():
                     if u: await save_url(u, f"fest_{style}_{fid}_{i}.png")
             await pg.evaluate("FXART.force(null)")
         # in the game: Town tab of Whiterun during New Life
-        await pg.evaluate("ART.setStyle('ink')")
         await pg.evaluate("()=>{ FXART.force('newlife'); const S=window.__dbg.save(); S.location='Whiterun'; [S.x,S.y]=WORLD.places.Whiterun; }")
         await pg.evaluate(clear); await pg.click("[data-tab=town]"); await pg.wait_for_timeout(400)
         await pg.evaluate(clear)
@@ -31,8 +29,7 @@ async def main():
         await pg.wait_for_timeout(300); el = await pg.query_selector("#side"); await el.screenshot(path=OUT + "ui_inn_newlife.png")
         await pg.evaluate("FXART.force(null)")
         # 2. map effects: cast utility spells for real, then the one-off ones
-        for style in ["ink", "pixel"]:
-            await pg.evaluate(f"ART.setStyle('{style}')")
+        for style in ["ink"]:
             r = await pg.evaluate("""()=>{ const S=window.__dbg.save(); S.location='Whiterun'; [S.x,S.y]=WORLD.places.Whiterun; S.trip=null;
                 for (const id of ['candlelight','detect_life','muffle','mark','clairvoyance','transmute']) if (!S.spells.includes(id)) S.spells.push(id);
                 for (const k of Object.keys(S.skills)) S.skills[k].lvl=100; S.castAt={};
@@ -49,13 +46,11 @@ async def main():
             await pg.wait_for_timeout(450); await pg.evaluate(clear)
             el = await pg.query_selector("#mapwrap"); await el.screenshot(path=OUT + f"map_recall_{style}.png")
         # real UI path: cast from the Magic menu (castout action) and a road shout hook
-        await pg.evaluate("ART.setStyle('ink')")
         # vampire at night eyes + werewolf paws: just state check
         st = await pg.evaluate("()=>{ const S=window.__dbg.save(); S.vampire={stage:2}; S.werewolf=true; const s=FXART.state(S); return s?Object.keys(s).filter(k=>s[k]&&k!=='shots'):null; }")
         print("state keys:", st)
         # 3. travel vignette
-        for style in ["ink", "pixel"]:
-            await pg.evaluate(f"ART.setStyle('{style}')")
+        for style in ["ink"]:
             await pg.evaluate("()=>{ const S=window.__dbg.save(); S.vampire=null; S.werewolf=false; S.location='Whiterun'; [S.x,S.y]=WORLD.places.Whiterun; S.trip=null; const e=G.startTrip(S,'Riverwood',WORLD.places.Riverwood.slice(0,2)); return e; }")
             await pg.evaluate(clear); await pg.click("[data-tab=map]"); await pg.wait_for_timeout(1500); await pg.evaluate(clear)
             has = await pg.evaluate("!!document.querySelector('#trip .tripvig canvas')")
@@ -66,7 +61,6 @@ async def main():
             off = await pg.evaluate("document.querySelector('#trip .tripvig canvas') ? 1 : 0")
             print(style, "vignette mounted:", has, off)
         # riding
-        await pg.evaluate("ART.setStyle('ink')")
         await pg.evaluate("()=>{ const S=window.__dbg.save(); HORSES.buy?.(S,'Bess','bay'); S.gold=9999; }")
         print("errors:", errs)
         await b.close()

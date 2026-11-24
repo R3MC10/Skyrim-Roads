@@ -82,6 +82,7 @@ const HOMESTEAD = (() => {
   const here = (s) => BY_TOWN[s.location] || null;
   const wanted = (s) => typeof TOWNS !== "undefined" && TOWNS.wanted && TOWNS.wanted(s);
   const count = (s, item) => s.inv.filter((r) => r.item === item).reduce((a, r) => a + r.qty, 0);
+  const hasTool = (s, item) => (item === "pickaxe" && typeof SMITH !== "undefined" && SMITH.hasPickaxe ? SMITH.hasPickaxe(s) : count(s, item) > 0);   // a pickaxe is never used up
   function consume(s, item, n) {
     for (const r of [...s.inv].filter((x) => x.item === item)) { if (n <= 0) break; const k = Math.min(n, r.qty); G.take(s, r.id, k); n -= k; }
   }
@@ -120,7 +121,7 @@ const HOMESTEAD = (() => {
     const h = plot(s, pid), g = GATHER[k]; if (!h || !g) return { err: "You don't own land here." };
     if (s.location !== PLOTS[pid].town) return { err: `${PLOTS[pid].name} is near ${PLOTS[pid].town}.` };
     const left = cdLeft(h, k, t); if (left > 0) return { err: `The ${g[0].toLowerCase()} needs a rest. Again in ${Math.ceil(left / 60)} min.` };
-    if (g[3] && !count(s, g[3])) return { err: `You need a ${itemName(g[3]).toLowerCase()} for the quarry. Blacksmiths sell them.` };
+    if (g[3] && !hasTool(s, g[3])) return { err: `You need a ${itemName(g[3]).toLowerCase()} for the quarry. Blacksmiths sell them.` };
     const n = Math.round(rint(g[2][0], g[2][1]) * (1 + fx(s, "hsyield")));
     h.stock[g[1]] = (h.stock[g[1]] || 0) + n; h.cd[k] = t;
     let extra = "";
@@ -265,7 +266,7 @@ const HOMESTEAD = (() => {
     return { text: `Your steward has ${d[1]} ${MATS[d[0]][0].toLowerCase()} delivered for ${d[2]} gold.`, fx: "coin" };
   }
 
-  // ---------------------------------------------------------------- pictures (art.js toolkit; pixel style applies too)
+  // ---------------------------------------------------------------- pictures (art.js toolkit)
   const W = 360, HT = 190;
   const LOOKS = {
     lake: { ground: "#8c9a5a", ground2: "#6f7f44", sky: "day", water: "#5f8797", trees: "pine" },
@@ -367,7 +368,7 @@ const HOMESTEAD = (() => {
       if (L.fog) { g.fillStyle = "rgba(220,225,215,.22)"; g.fillRect(0, HT * 0.62, W, 16); g.fillRect(0, HT * 0.8, W, 10); }
       if (L.snow) { g.fillStyle = "#f4f6f8"; const r = H.seeded(pid + "s"); for (let i = 0; i < 40; i++) g.fillRect(r() * W, r() * HT, 1.6, 1.6); }
       if (night) { g.fillStyle = "rgba(20,26,45,.3)"; g.fillRect(0, 0, W, HT); }
-      if (ART.drawingStyle() !== "pixel") { g.fillStyle = "rgba(43,32,22,.85)"; g.fillRect(W / 2 - 85, 7, 170, 18); g.fillStyle = "#e9d7a8"; g.font = "bold 12px Georgia, serif"; g.textAlign = "center"; g.fillText(p.name, W / 2, 20); g.textAlign = "left"; }
+      g.fillStyle = "rgba(43,32,22,.85)"; g.fillRect(W / 2 - 85, 7, 170, 18); g.fillStyle = "#e9d7a8"; g.font = "bold 12px Georgia, serif"; g.textAlign = "center"; g.fillText(p.name, W / 2, 20); g.textAlign = "left";
       g.strokeStyle = "#3b2c1e"; g.lineWidth = 3; g.strokeRect(1.5, 1.5, W - 3, HT - 3);
     };
     const extra = (h?.rooms || []).map((r) => XR()?.ROOMS[r]?.[0]).filter(Boolean);
@@ -431,7 +432,7 @@ const HOMESTEAD = (() => {
           + Object.keys(R).map((r) => (rooms.includes(r) ? done(r, R[r]) : row(r, R[r], !XR().canBuild(s, pid, r), XR().canBuild(s, pid, r)))).join(""); }
       b += `<h3 class="hsh">At the plot</h3>` + stockHTML(h, esc);
     } else if (view === "gather") {
-      b += Object.entries(GATHER).map(([k, g]) => { const left = cdLeft(h, k, t), tool = g[3] && !count(s, g[3]);
+      b += Object.entries(GATHER).map(([k, g]) => { const left = cdLeft(h, k, t), tool = g[3] && !hasTool(s, g[3]);
         return `<div class="item"><div class="t">${MATS[g[1]][1]} ${esc(g[0])}<span>${g[2][0]}–${g[2][1]} ${esc(MATS[g[1]][0].toLowerCase())}${k === "quarry" ? ", sometimes quartz · needs a pickaxe" : ""}${fx(s, "hsyield") ? " · Woodsman +50%" : ""}</span>${left ? `<span class="hswhy">Again in ${Math.ceil(left / 60)} min</span>` : tool ? `<span class="hswhy">You have no pickaxe</span>` : ""}</div>${btn("gather", k, "Work", !left && !tool, "pri")}</div>`; }).join("");
       b += `<h3 class="hsh">Deliveries</h3><p class="sub" style="margin-top:0">${stewardHome(s, pid) ? "Your steward can have materials brought in." : "Hire a steward (and leave them at home) to order materials."}</p>`
         + Object.entries(DELIVER).map(([k, d]) => `<div class="item"><div class="t">${MATS[d[0]][1]} ${d[1]} ${esc(MATS[d[0]][0].toLowerCase())}</div><span class="num gold">${d[2]}</span>${btn("order", k, "Order", stewardHome(s, pid) && s.gold >= d[2])}</div>`).join("");

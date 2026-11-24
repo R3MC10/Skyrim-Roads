@@ -1,5 +1,5 @@
 /* Hero art: your character drawn from the save — race, sex, the gear you wear, enchantment glow, vampire eyes —
-   in the shared ART style (hand-drawn ink, or pixel art). [OURS]
+   in the shared ART style (hand-drawn ink). [OURS]
 
    ======== THE CHARACTER API (one renderer for you, party members, followers, other players and humanoid foes) ========
    The drawing itself lives in figart.js: a bone rig (root → spine → neck → head, two arms upper → fore → hand,
@@ -9,7 +9,7 @@
    "card" = a save, a player card {look}, a look object, or a plain {race, sex, name} (e.g. a foe card).
    opts on every call: pose  "idle" | "walk" | "attack" | "cast" | "block" | "hit" | "down" | "ride" | "sit"
                        frame (0..POSES[pose]-1)  or  t (seconds into the clip; loops)
-                       scale (1 = 64 px tall), h (px tall), style "ink" | "pixel" (default: the player's setting)
+                       scale (1 = 64 px tall), h (px tall)
                        horse (colour, for "ride"), armed (false = weapons put away)
                        look / gear {slot: itemId} / race / sex "m"|"f"  → override how the card looks; a foe, e.g. a bandit:
                          HEROART.figure({name: "Bandit", race: "redguard"}, {pose: "attack", gear: {chest: "hide_armor", weapon: "iron_war_axe"}})
@@ -359,8 +359,7 @@ const HEROART = (() => {
     const L = lookFrom(src);
     return ART.html(w, h, (g, H) => {
       if (!opts.bare) {
-        if (ART.style() === "pixel") { g.fillStyle = "#eeccaa"; g.fillRect(0, 0, w, h); g.fillStyle = "#ccaa88"; g.fillRect(0, h * 0.86, w, h * 0.14); }   // flat colours the pixel filter keeps as they are
-        else { H.parchment(g, w, h, 7); g.fillStyle = "rgba(59,44,30,0.10)"; g.fillRect(0, h * 0.86, w, h * 0.14); }
+        H.parchment(g, w, h, 7); g.fillStyle = "rgba(59,44,30,0.10)"; g.fillRect(0, h * 0.86, w, h * 0.14);
       }
       if (rigged()) { const fh = Math.min(h * 0.7, w * 1.05); FIGART.draw(g, { look: L }, w / 2 - fh * 0.04, h * 0.93, { pose: "idle", frame: 0, h: fh }); return; }
       const k = Math.min(w / 160, h / 220); g.translate((w - 160 * k) / 2, h - 220 * k); g.scale(k, k);
