@@ -15,6 +15,11 @@ const PATCHNOTES = (() => {
       "New perks: Clean Kill, Wind Reader and Skinner (Archery), Stalker (Sneak), and Angler, Line Sense and Deep Waters (Alchemy, next to Forager). Each one changes how the games play.",
       "Playing together: friends hunting the same grounds on the same day meet the same animals in the same wind, and friends fishing side by side get the same bites. On the road only the party leader takes the shot, and everyone hears what they brought down.",
     ] },
+    { id: "b143-followeranim", build: 143, date: "24 Nov 2026", title: "Followers fight with their whole body", items: [
+      "Followers and party members now really fight in the fight picture: they swing their weapon or draw their bow, cast their spells, raise their shield and flinch when they get hit.",
+      "A follower who is knocked down drops to the ground and lies there until someone pulls them back up, and then you see them get back on their feet.",
+      "Summons and other helpers lunge, flinch and fall the same way. Works in both art styles and in the painted battle scenes.",
+    ] },
     { id: "b143-spelltactics", build: 143, date: "24 Nov 2026", title: "Cleaner spell cards", items: [
       "Spell, power and shout cards in the Magic menu no longer have the \"Use first in every fight\" button. Set up what you cast in a fight in the Tactics tab instead; your current tactics stay as they are.",
     ] },
