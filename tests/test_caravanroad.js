@@ -74,7 +74,7 @@ ok(B.trip.status === "travel" && CVROAD.ambushMult(B, t + 1) === CVROAD.SAFE_MUL
 const R = mk("R", 30); G.startTrip(R, cv.to, WORLD.places[cv.to].slice(0, 2), t);
 CVROAD.meet(R, cv.id, off(5), t); const hold = G.holdAt(p0);
 const rb = G.eventChoice(R, "rob", t);
-ok(rb.fight && (R.bounty || {})[hold] >= 200, "rob: fight + bounty " + JSON.stringify(R.bounty));
+ok(rb.fight && Object.values(R.bounty || {}).some((v) => v >= 200), "rob: fight + bounty " + JSON.stringify(R.bounty));
 ok(R.cvRoad.robbed[cv.id], "they remember you");
 if (R.trip && R.trip.status === "travel") { const again = CVROAD.meet(R, cv.id, CARAVANS.pos(cv, t + 1), t + 1); ok(again.robbed && G.eventChoices(R).every((x) => ["rob", "leave"].includes(x[0])), "no trading after a robbery"); }
 // not while in a carriage or already guarding

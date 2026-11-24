@@ -3,7 +3,7 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b139-dawnguard", build: 139, date: "24 Nov 2026", title: "The vampire war", items: [
+    { id: "b144-dawnguard", build: 144, date: "24 Nov 2026", title: "The vampire war", items: [
       "New quest line from level 12: Isran at Fort Dawnguard (near Riften) sends you into Dimhollow Crypt, where something sleeps in a sealed coffin. It ends at Castle Volkihar, a black keep on an islet off the coast past Solitude.",
       "Then pick a side. Hunt the night with the Dawnguard (heavy crossbow, hunter's armour, troll armour for your follower) or drink Lord Harkon's blood and become a stronger Vampire Lord. Seven more stages either way, with a big boss fight at the end.",
       "Six new perks, three per side: Vampire Hunter, Sun-Blessed Plate and Troll Tamer for the Dawnguard; Blood of Harkon, Night Lord and Court of Volkihar for Harkon's court. You can only take your own side's perks.",
@@ -11,6 +11,11 @@ const PATCHNOTES = (() => {
       "The vampire war fights are long and they hurt: expect to finish them bruised and short on potions, and to lose the odd one. No foe in it can take more than about a third of your health in one blow, though.",
       "The \"quest stage done\" lines in quest pop-ups and the \"find them at...\" hints in the Journal now show in Polish too.",
       "Two new achievements, one for each ending. New pictures for the fort, the castle and the story, in both art styles. All of it is in Polish too.",
+    ] },
+    { id: "b141-polishsweep", build: 141, date: "24 Nov 2026", title: "More of the game in Polish", items: [
+      "Playing in Polish? The fight picture now speaks it too: Ty, Uciekają, Zwycięstwo, Pudło, Blok!, critical hits and sneak attacks.",
+      "The fight log is in Polish now: who hits for how much, misses, staggers, paralysis, staves, potions and spells.",
+      "Foe and spell names, lots of pop-up messages (party, clan, trades, tutorial), the Sea of Ghosts on the map, the Khajiit market and the dungeon minigames are translated as well.",
     ] },
     { id: "b142-balfear", build: 142, date: "24 Nov 2026", title: "Bosses don't run forever, healers don't heal forever", items: [
       "Battle Cry and every other fear or \"stops fighting\" effect now hold a boss for 2 turns and an elite foe for 3. A boss can lose at most 3 turns a fight to fear, an elite 5. For the turns they shake off they stay rattled and hit 20% softer, so the shout still helps. Normal foes still run for the full time.",
