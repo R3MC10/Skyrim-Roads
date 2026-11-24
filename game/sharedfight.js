@@ -70,6 +70,7 @@ const SHAREDFIGHT = (() => {
         if (!(f.ehp0 > 0)) f.ehp0 = this.ehpMax;
         this.hitters = d.hitters || 0;
         this.roster(d.roster || []);
+        if (typeof MOUNTFIGHT !== "undefined") MOUNTFIGHT.mirror(this, d);   // your horse and everyone else's, as the leader's phone has them
         this.order = (d.order || []).map((o) => ({ id: o.pid === me ? "me" : o.id === "me" ? "host" : o.id, name: o.pid === me ? myName : o.name, init: o.init }));
         this.idx = d.idx || 0;
         const c = d.cur;
@@ -150,6 +151,7 @@ const SHAREDFIGHT = (() => {
     sendTurn() {
       if (!this.myTurn) return null;
       const r = this.reply(), f = this.f;
+      if (f.mount && typeof MOUNTFIGHT !== "undefined") r.mt = MOUNTFIGHT.out(f.mount);   // you got on / off your horse this turn
       this.doneTid = this.myTurn.tid; this.myTurn = null; this.until = 0; this.apSet = false;
       this.cur = { id: "me-wait", name: f.s.name || "You" };
       f.tbGuard = 0; f.summonTurns = 0;   // your guard and your summon now live on the leader's phone

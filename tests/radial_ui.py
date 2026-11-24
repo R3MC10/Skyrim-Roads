@@ -55,7 +55,7 @@ async def main():
       if await pg.evaluate("!!document.querySelector('#tbf [data-tba=attack]:not([disabled])')"):
         await pg.click("#tbf [data-tba=attack]"); await pg.wait_for_timeout(3200)
         ok(await pg.evaluate("!document.querySelector('.tbtime')"), f"{tag}: no tap closes the ring by itself")
-      # the 🎯 button switches back to cards
+      # the \ue145 button switches back to cards
       if await pg.evaluate("!!document.querySelector('#tbf [data-tbx=wheel]')"):
         await pg.evaluate("localStorage.setItem('rotn_prefs', JSON.stringify({...JSON.parse(localStorage.getItem('rotn_prefs')||'{}'), tbWheel:false}))")
       ok(not errs, f"{tag}: no page errors {errs[:2]}")

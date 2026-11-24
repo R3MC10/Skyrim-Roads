@@ -14,7 +14,7 @@ const SPELLFX = (() => {
   const SPLASH = 0.5, SPLASH_CAP = 0.5;   // the ones behind take half; never more than half their health before they step in
   const HOLD = ["eParalyzed", "calmTurns", "fearTurns"];
   const r0 = (x) => Math.round(x || 0);
-  const EL_IC = { fire: "🔥", frost: "❄", shock: "⚡" };
+  const EL_IC = { fire: "\uE104", frost: "\uE125", shock: "\uE129" };
   const turns = (n) => `${n} ${n === 1 ? "turn" : "turns"}`;
 
   if (typeof D !== "undefined") for (const id of AREA) if (D.SPELLS[id]) D.SPELLS[id].area = true;
@@ -51,26 +51,26 @@ const SPELLFX = (() => {
   /* your spell buffs: [{ k, ic, n, tip, shown }] (shown: the fight screen already draws it its own way) */
   function me(f) {
     const out = [];
-    if (f.armorSpell > 0) out.push({ k: "armor", ic: "🪨", n: `+${r0(f.armorSpell)}`, tip: `Flesh spell: +${r0(f.armorSpell)} armour for the rest of the fight.` });
-    if (f.ward > 0) out.push({ k: "ward", ic: "🔰", n: r0(f.ward), tip: "", shown: true });
+    if (f.armorSpell > 0) out.push({ k: "armor", ic: "\uE159", n: `+${r0(f.armorSpell)}`, tip: `Flesh spell: +${r0(f.armorSpell)} armour for the rest of the fight.` });
+    if (f.ward > 0) out.push({ k: "ward", ic: "\uE102", n: r0(f.ward), tip: "", shown: true });
     if (f.regen) out.push({ k: "regen", ic: "✚", n: r0(f.regen.amt), tip: "", shown: true });
     if (f.cloak) out.push({ k: "cloak", ic: EL_IC[f.cloak.el] || "✦", n: `×${f.cloak.turns}`, tip: `${f.cloak.name}: ${r0(f.cloak.dmg)} ${f.cloak.el} damage to the foe each round, ${turns(f.cloak.turns)} left.` });
-    if (f.summonTurns > 0) out.push({ k: "summon", ic: "👻", n: `×${f.summonTurns}`, tip: `Your ${f.summonName || "summon"} fights beside you: ${r0(f.summonDmg)} damage a turn, ${turns(f.summonTurns)} left. It vanishes when the fight ends.` });
-    if (f.bound) out.push({ k: "bound", ic: "⚔", n: r0(f.bound.dmg), tip: `A ${f.bound.wt === "bow" ? "bow" : f.bound.wt} of light in your hands: ${r0(f.bound.dmg)} base damage. It fades when the fight ends.` });
-    if (f.unseen > 0) out.push({ k: "unseen", ic: "👁", n: `×${f.unseen}`, tip: `Unseen: the foe can't find you for ${turns(f.unseen)}. Your next blow is a sneak attack.` });
+    if (f.summonTurns > 0) out.push({ k: "summon", ic: "\uE15D", n: `×${f.summonTurns}`, tip: `Your ${f.summonName || "summon"} fights beside you: ${r0(f.summonDmg)} damage a turn, ${turns(f.summonTurns)} left. It vanishes when the fight ends.` });
+    if (f.bound) out.push({ k: "bound", ic: "\uE101", n: r0(f.bound.dmg), tip: `A ${f.bound.wt === "bow" ? "bow" : f.bound.wt} of light in your hands: ${r0(f.bound.dmg)} base damage. It fades when the fight ends.` });
+    if (f.unseen > 0) out.push({ k: "unseen", ic: "\uE14B", n: `×${f.unseen}`, tip: `Unseen: the foe can't find you for ${turns(f.unseen)}. Your next blow is a sneak attack.` });
     return out;
   }
   /* what your spells are doing to the foe */
   function foe(f) {
     const out = [];
     if (f.calmTurns > 0) out.push(f.calmFrenzy
-      ? { k: "calm", ic: "🌀", n: `×${f.calmTurns}`, tip: `Frenzied: it hurts itself instead of you, ${turns(f.calmTurns)} left.` }
-      : { k: "calm", ic: "🕊", n: `×${f.calmTurns}`, tip: `Calmed: it isn't fighting, ${turns(f.calmTurns)} left.` });
-    if (f.fearTurns > 0) out.push({ k: "fear", ic: "😱", n: `×${f.fearTurns}`, tip: `Afraid: it cowers instead of attacking, ${turns(f.fearTurns)} left.` });
+      ? { k: "calm", ic: "\uE15C", n: `×${f.calmTurns}`, tip: `Frenzied: it hurts itself instead of you, ${turns(f.calmTurns)} left.` }
+      : { k: "calm", ic: "\uE160", n: `×${f.calmTurns}`, tip: `Calmed: it isn't fighting, ${turns(f.calmTurns)} left.` });
+    if (f.fearTurns > 0) out.push({ k: "fear", ic: "\uE142", n: `×${f.fearTurns}`, tip: `Afraid: it cowers instead of attacking, ${turns(f.fearTurns)} left.` });
     for (const x of f.dots || []) out.push({ k: "dot", ic: EL_IC[x.el] || "✦", n: `${r0(x.dmg)}×${x.turns}`, tip: `${x.name}: ${r0(x.dmg)} ${x.el} damage each round, ${turns(x.turns)} left.` });
     if (f.rune) out.push({ k: "rune", ic: "ᛝ", n: r0(f.rune.dmg), tip: `${f.rune.name}: ${r0(f.rune.dmg)} ${f.rune.el} damage when the foe moves on it.` });
-    if (f.soulTrap) out.push({ k: "soul", ic: "💜", n: "", tip: "Soul Trap: if it dies, its soul fills an empty soul gem." });
-    if (f.eParalyzed > 0) out.push({ k: "para", ic: "✋", n: f.eParalyzed, tip: "", shown: true });
+    if (f.soulTrap) out.push({ k: "soul", ic: "\uE168", n: "", tip: "Soul Trap: if it dies, its soul fills an empty soul gem." });
+    if (f.eParalyzed > 0) out.push({ k: "para", ic: "\uE15E", n: f.eParalyzed, tip: "", shown: true });
     return out;
   }
   const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);

@@ -214,7 +214,7 @@ const FISHGAME = (() => {
     el.id = "fishgame"; el.className = "craftgame fhgame";
     const wxName = typeof WEVENTS !== "undefined" ? (() => { try { return WEVENTS.weather(pos).name; } catch { return ""; } })() : "";
     el.innerHTML = `<div class="cgcard fhcard" role="dialog" aria-label="Fishing">
-      <h3>🎣 Fishing</h3><p class="cgsub">${esc(WATER[ctx.water] || "Water")}${ctx.hold ? " · " + esc(ctx.hold) : ""}${wxName ? " · " + esc(wxName) : ""}${ctx.night ? " · night" : ""} · ${esc(rod.name)}</p>
+      <h3>\uE146 Fishing</h3><p class="cgsub">${esc(WATER[ctx.water] || "Water")}${ctx.hold ? " · " + esc(ctx.hold) : ""}${wxName ? " · " + esc(wxName) : ""}${ctx.night ? " · night" : ""} · ${esc(rod.name)}</p>
       <canvas id="fhcv" width="${W}" height="${H}" aria-hidden="true"></canvas>
       <div class="fhmeter" id="fhmeter" aria-hidden="true"><i class="fhband"></i><i class="fhdanger"></i><b class="fhneedle"></b></div>
       <div class="fhdist" id="fhdist" aria-hidden="true"><i></i></div>

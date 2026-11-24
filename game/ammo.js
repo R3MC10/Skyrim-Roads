@@ -70,7 +70,7 @@ const AMMO = (() => {
     const bows = s.inv.filter((r) => { const it = D.ITEMS[r.item]; return it?.skill === "Archery"; });
     if (!bows.length) return null;
     G.give(s, "arrow_iron", 40);
-    return "🏹 Bows now need arrows. You find a quiver of 40 Iron Arrows in your pack. Blacksmiths and general stores sell more.";
+    return " Bows now need arrows. You find a quiver of 40 Iron Arrows in your pack. Blacksmiths and general stores sell more.";
   }
   return { ARROWS, BOLTS, RECOVER, LOOT_QTY, kindFor, best, count, status, label, migrate };
 })();

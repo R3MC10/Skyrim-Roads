@@ -3,13 +3,36 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b167-folbuild", build: 167, date: "24 Nov 2026", title: "Followers learn like you do", items: [
+    { id: "b168-folbuild", build: 168, date: "24 Nov 2026", title: "Followers learn like you do", items: [
       "Your follower now has their own skills, the same list as yours, and they rise with use exactly like yours: swinging a sword raises One-Handed, shooting raises Archery, spells raise their school, blocking raises Block, and blows on their armour raise their armour skill.",
       "Their skill increases add up to level-ups, like yours. At each level they pick +10 Health, Magicka or Stamina to suit how they fight, and get a perk point. They still never go past your level.",
       "Their gear picks their build: give them a bow and they become an archer, a staff or spells make a mage, a two-hander a two-handed warrior, a sword and shield a tank, a dagger a sneaky thief. Change it as often as you like, it's free.",
       "They spend their perk points themselves in the trees of their build, with the same perks and real effects as yours. A new build means a free respec into the new trees.",
       "They fight by their build: archers and mages stay at the back, mages cast, sword-and-shield tanks raise their shield and draw blows away from you.",
       "Follower tab → Skills shows their level, every skill with a bar, their build and their perks. A small note pops up when one of their skills goes up. Followers you already have get skills from their level and gear.",
+    ] },
+    { id: "b145-mountfight", build: 145, date: "24 Nov 2026", title: "Fight from the saddle", items: [
+      "Riding when a fight on the road starts? You now play the whole fight on horseback. Your horse has its own health bar under yours.",
+      "New Mount and Dismount moves in the fight. Getting on costs 4 AP and some stamina, and your next blow is a charge: a sure hit that does more and can knock the foe back.",
+      "Up on a horse, bandits with swords and axes have a hard time reaching you, and your horse tramples wolves, skeevers and other small beasts. But archers, mages, spearmen and big beasts go for your horse and can pull you out of the saddle.",
+      "No two-handed power attacks, no dual casting and no Master spells while riding, and arrows sometimes go wide from a moving horse. You also can't sneak up on anyone on horseback: your opening blow is the charge.",
+      "If your horse runs out of health it's knocked down, never killed: you're thrown off, take a little damage, lose 2 AP on your next turn and fight on foot. Afterwards it stays downed beside you until it gets back up.",
+      "Four new perks: Cavalry Charge (One-Handed), Horse Archer (Archery), Steady Steed and Trample (Athletics).",
+      "In a party, everyone who rides is on horseback in the fight picture, and every phone sees the same horses go down.",
+    ] },
+    { id: "b146-gore", build: 146, date: "24 Nov 2026", title: "Blood on the snow", items: [
+      "Fights get bloody: a blow throws a spray of blood away from whoever struck it, and the drops land and stay on the ground for the whole fight. Big hits and criticals spray more.",
+      "Every blow looks different: swords and axes throw arcs of blood, arrows stick in, hammers splat and kick up dust, fire scorches and chars, frost throws ice shards, lightning throws sparks and poison drips green.",
+      "Not everything bleeds: skeletons and draugr chip bone and dust, dwarven machines leak oil and lose gears, ghosts lose wisps, daedra bleed black, dragons splash big and dark, and Falmer and chaurus bleed green.",
+      "Wounds show: red streaks build up on a fighter as their health drops, a bleeding foe keeps dripping, and you get a red flash at the edges of the screen when you take a heavy hit.",
+      "A killing blow leaves the body in a pool, and a strong finisher now and then knocks a helmet or weapon flying, or takes a limb off a beast or a skeleton.",
+      "Followers, party members and horses get hit and bleed too, but they still only get knocked down.",
+      "Settings → Fights → Blood and gore: Off, Low or Full. Everyone in a shared fight sees the same spray.",
+    ] },
+    { id: "b167-gameicons", build: 167, date: "24 Nov 2026", title: "Proper game icons", items: [
+      "The little phone emotes on buttons, cards and messages are gone. In their place: simple line icons drawn for the game, like the ones on the compass and in the menus.",
+      "Trap, fight, sneak, lockpick, rest, pray, chests, gold, potions, the weather and more: over 150 icons, sharp at any size and in the colour of the text around them.",
+      "Map pins you dropped before switch to the new icons by themselves.",
     ] },
     { id: "b166-chargebar", build: 166, date: "24 Nov 2026", title: "Charge bars", items: [
       "Enchanted weapons and staffs now show a thin purple charge bar everywhere they appear: your pack, the Items menu and its details, tooltips, the paper doll, shops, chests and stash, follower gear, loot and loot votes, markets and trades.",

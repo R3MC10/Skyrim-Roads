@@ -5,7 +5,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
 (() => {
   Object.assign(I18N_EXTRA.words, {
     // ---- fishing
-    "Fishing": "Wędkowanie", "🎣 Fishing": "🎣 Wędkowanie", "🎣 Go fishing": "🎣 Na ryby", "A river": "Rzeka", "A lake": "Jezioro", "The Sea of Ghosts": "Morze Duchów", "night": "noc",
+    "Fishing": "Wędkowanie", "\uE146 Fishing": "\uE146 Wędkowanie", "\uE146 Go fishing": "\uE146 Na ryby", "A river": "Rzeka", "A lake": "Jezioro", "The Sea of Ghosts": "Morze Duchów", "night": "noc",
     "Cast": "Zarzuć", "Hook!": "Zatnij!", "Reel (hold)": "Zwijaj (przytrzymaj)", "Cast again": "Zarzuć znowu", "Done": "Gotowe", "Cast a line": "Zarzuć wędkę",
     "Tap (or press Space) when the power bar is high for a long cast.": "Stuknij (albo wciśnij Spację), gdy pasek siły jest wysoko, żeby zarzucić daleko.",
     "Wait for the float to go right under, then tap. Twitches are only nibbles.": "Poczekaj, aż spławik całkiem zniknie pod wodą, i wtedy stuknij. Drgnięcia to tylko skubanie.",
@@ -23,7 +23,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "Cast, wait for the float to dip, then reel in while keeping the line in the safe band.": "Zarzuć, poczekaj, aż spławik zanurkuje, i zwijaj, trzymając żyłkę w bezpiecznym pasku.",
     "Wind": "Wiatr", "No wind": "Bez wiatru",
     // ---- hunting
-    "Hunting": "Polowanie", "🏹 Hunting grounds": "🏹 Tereny łowieckie", "🏹 Go hunting": "🏹 Na polowanie", "Stalk": "Podejdź", "Stalk deer and elk": "Podchodź jelenie i łosie", "🏹 Stalk and shoot": "🏹 Podejdź i strzel",
+    "Hunting": "Polowanie", "\uE10C Hunting grounds": "\uE10C Tereny łowieckie", "\uE10C Go hunting": "\uE10C Na polowanie", "Stalk": "Podejdź", "Stalk deer and elk": "Podchodź jelenie i łosie", "\uE10C Stalk and shoot": "\uE10C Podejdź i strzel",
     "Creep closer (hold)": "Skradaj się (przytrzymaj)", "Draw": "Napnij", "Leave": "Odejdź", "Loose": "Strzał", "Lower": "Opuść", "Hunt again": "Poluj dalej",
     "Creep closer while its head is down; freeze when it looks up. Watch the wind: scent carries downwind.": "Skradaj się, gdy ma łeb przy ziemi; zamrzyj, gdy go podnosi. Uważaj na wiatr: niesie twój zapach.",
     "Drag (or use the arrow keys) to aim. Aim into the wind. The heart sits just behind the front leg.": "Przeciągnij (albo użyj strzałek), żeby celować. Bierz poprawkę na wiatr. Serce jest tuż za przednią nogą.",
