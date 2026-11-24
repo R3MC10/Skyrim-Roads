@@ -4,10 +4,10 @@
    will take (on you AND on foes, at all times, like Slay the Spire's intents), a low-health warning, and sounds for all
    of it.
    - Intents: at the start of each round every foe action is decided ahead (foekit.js plan), so its frame and a bubble
-     over it in the scene show what it will do: ⚔ 18–26, 💥 Huge blow 40–55, ✚ Heal, 🛡 Raise shield...
+     over it in the scene show what it will do:  18–26,  Huge blow 40–55, ✚ Heal,  Raise shield...
    - Forecast: your health bar marks what this round's foe blows and your poison / burning will take ("about −46"),
      the foe's bar marks what its burning, bleeding and your cloaks will take at the end of the round.
-   - Pacing: tbfight.js shows the events one at a time with these delays (Fast ⏩ keeps the old all-at-once view;
+   - Pacing: tbfight.js shows the events one at a time with these delays (Fast  keeps the old all-at-once view;
      the Skip button jumps to the end). Banners: "Round 3" with last round's summary, "Bandit's turn", "Your turn".
    - Low health (under 25%): the screen edges pulse red and you hear your heartbeat.
    Pure helpers (plan, intents, forecast, summary, banner, delay, cue) are testable in node; the rest needs a page. */
@@ -21,29 +21,29 @@ const FIGHTREAD = (() => {
 
   /* what each foe move looks like as an intent. mul: how hard it hits compared to a plain blow */
   const INTENT = {
-    blow: { ic: "⚔", label: "Attack", mul: 1 },
-    smash: { ic: "💥", label: "Huge blow", mul: 1.9, big: true },
-    aimed: { ic: "🎯", label: "Aimed shot", mul: 1.7, big: true },
-    shield_bash: { ic: "🛡", label: "Shield bash", mul: 0.7, note: "and −1 AP" },
-    raise_shield: { ic: "🛡", label: "Raises shield", buff: true, note: "your next melee blow does half" },
-    wind_up: { ic: "⚠", label: "Winds up", tele: true, note: "a huge blow comes after" },
-    war_cry: { ic: "📣", label: "War cry", buff: true, note: "hits 25% harder for 3 turns" },
-    take_aim: { ic: "⚠", label: "Takes aim", tele: true, note: "an aimed shot comes after" },
-    poison_arrow: { ic: "🏹", label: "Poison arrow", mul: 0.8, dot: "poison" },
+    blow: { ic: "", label: "Attack", mul: 1 },
+    smash: { ic: "", label: "Huge blow", mul: 1.9, big: true },
+    aimed: { ic: "", label: "Aimed shot", mul: 1.7, big: true },
+    shield_bash: { ic: "", label: "Shield bash", mul: 0.7, note: "and −1 AP" },
+    raise_shield: { ic: "", label: "Raises shield", buff: true, note: "your next melee blow does half" },
+    wind_up: { ic: "", label: "Winds up", tele: true, note: "a huge blow comes after" },
+    war_cry: { ic: "", label: "War cry", buff: true, note: "hits 25% harder for 3 turns" },
+    take_aim: { ic: "", label: "Takes aim", tele: true, note: "an aimed shot comes after" },
+    poison_arrow: { ic: "", label: "Poison arrow", mul: 0.8, dot: "poison" },
     bolt: { ic: "✦", label: "Spell", mul: 1.15 },
-    foe_ward: { ic: "🔰", label: "Ward", buff: true, note: "soaks your spells" },
+    foe_ward: { ic: "", label: "Ward", buff: true, note: "soaks your spells" },
     mend: { ic: "✚", label: "Heals", heal: 0.12 },
-    poison_blade: { ic: "🗡", label: "Poisoned blade", mul: 0.9, dot: "poison" },
-    shadowstep: { ic: "👤", label: "Shadowstep", buff: true, note: "your next blow may miss" },
-    pounce: { ic: "🐾", label: "Pounce", mul: 1.1, note: "and −stamina" },
-    maul: { ic: "🐾", label: "Maul", mul: 0.9, dot: "bleeding" },
-    howl: { ic: "📣", label: "Howl", buff: true, note: "hits 25% harder for 2 turns" },
-    venom: { ic: "🕷", label: "Venom", mul: 0.7, dot: "poison" },
+    poison_blade: { ic: "", label: "Poisoned blade", mul: 0.9, dot: "poison" },
+    shadowstep: { ic: "", label: "Shadowstep", buff: true, note: "your next blow may miss" },
+    pounce: { ic: "", label: "Pounce", mul: 1.1, note: "and −stamina" },
+    maul: { ic: "", label: "Maul", mul: 0.9, dot: "bleeding" },
+    howl: { ic: "", label: "Howl", buff: true, note: "hits 25% harder for 2 turns" },
+    venom: { ic: "", label: "Venom", mul: 0.7, dot: "poison" },
     regen: { ic: "✚", label: "Regenerates", heal: 0.05 },
-    force: { ic: "🗣", label: "Shout", mul: 0.6, note: "and −2 AP" },
-    frost_breath: { ic: "❄", label: "Frost breath", mul: 1.1 },
-    life_drain: { ic: "🩸", label: "Drain life", mul: 0.9, note: "and heals itself" },
-    potion: { ic: "🧪", label: "Drinks a potion", heal: 0.18 },
+    force: { ic: "", label: "Shout", mul: 0.6, note: "and −2 AP" },
+    frost_breath: { ic: "", label: "Frost breath", mul: 1.1 },
+    life_drain: { ic: "", label: "Drain life", mul: 0.9, note: "and heals itself" },
+    potion: { ic: "", label: "Drinks a potion", heal: 0.18 },
   };
 
   /* decide the foe's actions for the rest of this round (call at the start of a round, or when a new foe steps in) */
@@ -83,8 +83,8 @@ const FIGHTREAD = (() => {
     const out = [];
     const pl = f.kit?.plan || [];
     for (let i = 0; i < n; i++) {
-      if (stunned || (f.eParalyzed || 0) > i || (i === 0 && f.stagger) || (f.calmTurns || 0) > i) { out.push({ ic: "💫", label: stunned ? "Stunned" : (f.calmTurns || 0) > i ? "Not fighting" : "Can't act", lo: 0, hi: 0, mid: 0, skip: true }); continue; }
-      if (f.dStance && !pl[i]?.bf) { out.push({ ic: "🐉", label: "Dragon", lo: capd(lo), hi: capd(hi * 1.3), mid: capd(mid), unknown: true }); continue; }
+      if (stunned || (f.eParalyzed || 0) > i || (i === 0 && f.stagger) || (f.calmTurns || 0) > i) { out.push({ ic: "", label: stunned ? "Stunned" : (f.calmTurns || 0) > i ? "Not fighting" : "Can't act", lo: 0, hi: 0, mid: 0, skip: true }); continue; }
+      if (f.dStance && !pl[i]?.bf) { out.push({ ic: "", label: "Dragon", lo: capd(lo), hi: capd(hi * 1.3), mid: capd(mid), unknown: true }); continue; }
       const p = pl[i];
       const key = !p ? "blow" : p.id === "land" ? p.wind : p.id;
       const it = INTENT[key] || INTENT.blow;
@@ -107,21 +107,21 @@ const FIGHTREAD = (() => {
     const known = its.some((it) => it.tgt);   // foeintent.js: the targets are rolled already, so only the blows aimed at you count
     const hitSum = known ? its.reduce((a, it) => a + (it.tgt && it.tgt.me ? it.mid || 0 : 0), 0) : its.reduce((a, it) => a + (it.mid || 0), 0) * pMe;
     const atMe = known ? its.filter((it) => it.tgt && it.tgt.me && it.mid).length : n;
-    if (hitSum >= 1) { me.hit = r0(hitSum); me.parts.push({ k: "hit", ic: "⚔", n: me.hit, t: known ? `${atMe} foe ${atMe === 1 ? "blow" : "blows"} aimed at you this round` : `${n} foe ${n === 1 ? "action" : "actions"} left this round${allies ? " (some may go at your teammates)" : ""}` }); }
+    if (hitSum >= 1) { me.hit = r0(hitSum); me.parts.push({ k: "hit", ic: "", n: me.hit, t: known ? `${atMe} foe ${atMe === 1 ? "blow" : "blows"} aimed at you this round` : `${n} foe ${n === 1 ? "action" : "actions"} left this round${allies ? " (some may go at your teammates)" : ""}` }); }
     if (f.kitDot && n) {   // ticks at the start of each foe action
       const d = Math.min(f.hp - 1, f.kitDot.dmg * Math.min(f.kitDot.turns, n));
-      if (d >= 1) { me.dot += d; me.parts.push({ k: f.kitDot.name === "burning" ? "burn" : f.kitDot.name === "bleeding" ? "bleed" : "poison", ic: f.kitDot.name === "burning" ? "🔥" : f.kitDot.name === "bleeding" ? "🩸" : "☠", n: r0(d), t: `${f.kitDot.name}: ${r0(f.kitDot.dmg)} each foe turn, ${f.kitDot.turns} more` }); }
+      if (d >= 1) { me.dot += d; me.parts.push({ k: f.kitDot.name === "burning" ? "burn" : f.kitDot.name === "bleeding" ? "bleed" : "poison", ic: f.kitDot.name === "burning" ? "" : f.kitDot.name === "bleeding" ? "" : "", n: r0(d), t: `${f.kitDot.name}: ${r0(f.kitDot.dmg)} each foe turn, ${f.kitDot.turns} more` }); }
     }
-    if (f.meSt?.burn) { me.dot += f.meSt.burn.dmg; me.parts.push({ k: "burn", ic: "🔥", n: r0(f.meSt.burn.dmg), t: `burning: ${r0(f.meSt.burn.dmg)} at the end of the round, ${f.meSt.burn.turns} more` }); }
+    if (f.meSt?.burn) { me.dot += f.meSt.burn.dmg; me.parts.push({ k: "burn", ic: "", n: r0(f.meSt.burn.dmg), t: `burning: ${r0(f.meSt.burn.dmg)} at the end of the round, ${f.meSt.burn.turns} more` }); }
     if (f.regen) { me.heal += f.regen.amt; me.parts.push({ k: "heal", ic: "✚", n: r0(f.regen.amt), t: "healing at the end of the round" }); }
     me.dot = r0(me.dot);
     if (f.ehp > 0) {
       const el = (x) => (typeof MAGIC !== "undefined" && MAGIC.elem ? MAGIC.elem(f, x) : 1);
       const add = (k, ic, v, t) => { if (v >= 1) { foe.dot += v; foe.parts.push({ k, ic, n: r0(v), t }); } };
-      if (f.foeSt?.burn) add("burn", "🔥", f.foeSt.burn.dmg, `burning, ${f.foeSt.burn.turns} more`);
-      if (f.bleed?.length) add("bleed", "🩸", f.bleed.reduce((a, y) => a + y.dmg, 0), "bleeding");
-      for (const x of f.dots || []) add(x.el === "fire" ? "burn" : "dot", x.el === "fire" ? "🔥" : x.el === "frost" ? "❄" : x.el === "shock" ? "⚡" : "☠", x.dmg * el(x.el), `${x.name}, ${x.turns} more`);
-      if (f.cloak) add("cloak", f.cloak.el === "frost" ? "❄" : f.cloak.el === "shock" ? "⚡" : "🔥", f.cloak.dmg * el(f.cloak.el), `${f.cloak.name}, ${f.cloak.turns} more`);
+      if (f.foeSt?.burn) add("burn", "", f.foeSt.burn.dmg, `burning, ${f.foeSt.burn.turns} more`);
+      if (f.bleed?.length) add("bleed", "", f.bleed.reduce((a, y) => a + y.dmg, 0), "bleeding");
+      for (const x of f.dots || []) add(x.el === "fire" ? "burn" : "dot", x.el === "fire" ? "" : x.el === "frost" ? "" : x.el === "shock" ? "" : "", x.dmg * el(x.el), `${x.name}, ${x.turns} more`);
+      if (f.cloak) add("cloak", f.cloak.el === "frost" ? "" : f.cloak.el === "shock" ? "" : "", f.cloak.dmg * el(f.cloak.el), `${f.cloak.name}, ${f.cloak.turns} more`);
       foe.dot = r0(foe.dot);
       const h = its.reduce((a, it) => a + (it.heal || 0), 0);
       if (h) { foe.heal = h; foe.parts.push({ k: "heal", ic: "✚", n: h, t: "it plans to heal" }); }
@@ -148,13 +148,13 @@ const FIGHTREAD = (() => {
   function myChips(f) {
     const out = [];
     const k = f.kitDot;
-    if (k) { const nm = k.name === "burning" ? "Burning" : k.name === "bleeding" ? "Bleeding" : "Poisoned"; out.push(`<i class="st me ${k.name === "burning" ? "burn" : k.name === "bleeding" ? "bleed" : "poison"}" data-tip="${esc(`${nm}: you lose ${r0(k.dmg)} health each time a foe acts, ${k.turns} more times. A Cure Poison potion or winning the fight ends it.`)}">${k.name === "burning" ? "🔥" : k.name === "bleeding" ? "🩸" : "☠"} ${nm} −${r0(k.dmg)}<small>×${k.turns}</small></i>`); }
+    if (k) { const nm = k.name === "burning" ? "Burning" : k.name === "bleeding" ? "Bleeding" : "Poisoned"; out.push(`<i class="st me ${k.name === "burning" ? "burn" : k.name === "bleeding" ? "bleed" : "poison"}" data-tip="${esc(`${nm}: you lose ${r0(k.dmg)} health each time a foe acts, ${k.turns} more times. A Cure Poison potion or winning the fight ends it.`)}">${k.name === "burning" ? "" : k.name === "bleeding" ? "" : ""} ${nm} −${r0(k.dmg)}<small>×${k.turns}</small></i>`); }
     const ms = f.meSt || {};
-    if (ms.burn) out.push(`<i class="st me burn" data-tip="${esc(`Burning: −${r0(ms.burn.dmg)} health at the end of the round, ${ms.burn.turns} more rounds.`)}">🔥 Burning −${r0(ms.burn.dmg)}<small>×${ms.burn.turns}</small></i>`);
-    if (ms.chill) out.push(`<i class="st me chill" data-tip="Chilled: your stamina doesn't come back this round.">❄ Chilled<small>×${ms.chill.turns}</small></i>`);
-    if (ms.shock) out.push(`<i class="st me shock" data-tip="Jolted: the shock drained some magicka.">⚡ Jolted<small>×${ms.shock.turns}</small></i>`);
+    if (ms.burn) out.push(`<i class="st me burn" data-tip="${esc(`Burning: −${r0(ms.burn.dmg)} health at the end of the round, ${ms.burn.turns} more rounds.`)}"> Burning −${r0(ms.burn.dmg)}<small>×${ms.burn.turns}</small></i>`);
+    if (ms.chill) out.push(`<i class="st me chill" data-tip="Chilled: your stamina doesn't come back this round."> Chilled<small>×${ms.chill.turns}</small></i>`);
+    if (ms.shock) out.push(`<i class="st me shock" data-tip="Jolted: the shock drained some magicka."> Jolted<small>×${ms.shock.turns}</small></i>`);
     if (f.regen) out.push(`<i class="st me heal" data-tip="${esc(`Healing: +${r0(f.regen.amt)} health at the end of each round, ${f.regen.turns} more.`)}">✚ +${r0(f.regen.amt)}<small>×${f.regen.turns}</small></i>`);
-    if (f.tbGuard > 0) out.push(`<i class="st me guard" data-tip="${esc(`Guard up: the next blows do ${r0(f.tbGuard * 100)}% less.`)}">🛡 −${r0(f.tbGuard * 100)}%</i>`);
+    if (f.tbGuard > 0) out.push(`<i class="st me guard" data-tip="${esc(`Guard up: the next blows do ${r0(f.tbGuard * 100)}% less.`)}"> −${r0(f.tbGuard * 100)}%</i>`);
     return out.length ? `<div class="tbst mine">${out.join("")}</div>` : "";
   }
   const rng = (it) => (it.lo || it.hi ? (r0(it.lo) === r0(it.hi) ? `${r0(it.hi)}` : `${r0(it.lo)}–${r0(it.hi)}`) : "");
@@ -169,7 +169,7 @@ const FIGHTREAD = (() => {
     const cls = it.skip ? "skip" : it.big ? "big" : it.tele ? "tele" : it.heal ? "heal" : it.buff ? "buff" : "hit";
     const n = it.heal ? `+${it.heal}` : rng(it);
     const FI = typeof FOEINTENT !== "undefined" ? FOEINTENT : null;   // foeintent.js: "→ Lydia"
-    return `<span class="tbint ${cls}${it.tgt ? " tgt" : ""}" data-tip="${esc(intentTip(it, name) + (FI ? FI.tipText(it, name) : ""))}">${it.ic}${n ? ` <b>${n}</b>` : ` <b class="w">${esc(it.label)}</b>`}${it.dot ? "<em>☠</em>" : ""}${FI ? FI.chipHTML(it) : ""}</span>`;
+    return `<span class="tbint ${cls}${it.tgt ? " tgt" : ""}" data-tip="${esc(intentTip(it, name) + (FI ? FI.tipText(it, name) : ""))}">${it.ic}${n ? ` <b>${n}</b>` : ` <b class="w">${esc(it.label)}</b>`}${it.dot ? "<em></em>" : ""}${FI ? FI.chipHTML(it) : ""}</span>`;
   }
   /* the foe frame: "Next:" and its intents; plus the forecast lines under both bars */
   function panels(sess) {

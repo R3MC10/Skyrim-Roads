@@ -91,7 +91,7 @@ const SPELLCRAFT = (() => {
     s.customSpells = [...(s.customSpells || []), { id, name, school: d.school, level: d.level, base: d.base, parts: d.parts, t }];
     register(s);
     const sk = G.useSkill(s, d.school, 20 + d.base / 4);
-    return { id, text: `✨ The College's spellwrights bind ${d.parts.map((p) => p.label).join(" and ")} into "${name}" (${price} gold). Add it to your tactics.` + (sk.length ? " " + sk.join(". ") : "") };
+    return { id, text: ` The College's spellwrights bind ${d.parts.map((p) => p.label).join(" and ")} into "${name}" (${price} gold). Add it to your tactics.` + (sk.length ? " " + sk.join(". ") : "") };
   }
   function forget(s, id) {
     const c = (s.customSpells || []).find((x) => x.id === id); if (!c) return "You don't have that spell.";

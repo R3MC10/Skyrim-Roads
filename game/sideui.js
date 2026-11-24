@@ -20,10 +20,10 @@ const SIDEUI = (() => {
     const r = SIDES.rank(s), wear = !C() || !!C().active(s);
     return `<div class="sxp"><div class="sxp-t"><span>Rank XP</span><span class="num">${b.hi ? `${b.pts} / ${b.hi}` : `${b.pts} · top rank`}</span></div>
       <div class="bar"><i style="width:${pct(b.pct)}%;background:${esc(L(SIDES.mine(s)).colors[1])}"></i></div>
-      <p class="sub">${r.next ? `Next rank: ${esc(r.next.name)}.` : "You hold the highest rank."} ${wear ? "Your cloak is on: fights, dungeons, world events and wins over rival soldiers earn rank XP." : "⚠ Put your side's cloak on to earn rank XP."}</p></div>`;
+      <p class="sub">${r.next ? `Next rank: ${esc(r.next.name)}.` : "You hold the highest rank."} ${wear ? "Your cloak is on: fights, dungeons, world events and wins over rival soldiers earn rank XP." : " Put your side's cloak on to earn rank XP."}</p></div>`;
   }
   function cloakRow(c, tag) {
-    return `<div class="item scloak${c.have ? "" : " off"}"><span class="sci">${typeof ICONART !== "undefined" ? ICONART.item(c.id, 32) : "🧥"}</span><div class="t">${esc(c.name)}<span>${esc(tag)} · ${esc(c.rankName)}${c.power ? ` · power: ${esc(c.power)}` : ""}</span><span class="sub">${esc(c.desc)}</span></div></div>`;
+    return `<div class="item scloak${c.have ? "" : " off"}"><span class="sci">${typeof ICONART !== "undefined" ? ICONART.item(c.id, 32) : ""}</span><div class="t">${esc(c.name)}<span>${esc(tag)} · ${esc(c.rankName)}${c.power ? ` · power: ${esc(c.power)}` : ""}</span><span class="sub">${esc(c.desc)}</span></div></div>`;
   }
   function ladder(s) {
     const c = C(); if (!c) return "";
@@ -57,7 +57,7 @@ const SIDEUI = (() => {
   }
   function panel() {
     const s = S(); if (!s || !ok()) return "";
-    const head = '<h2>⚔ Faction</h2>';
+    const head = '<h2> Faction</h2>';
     if ((s.level || 1) < SIDES.MIN_LEVEL) {
       return `<div class="panel sidep">${head}<p>Skyrim is at war. At level ${SIDES.MIN_LEVEL} a courier will find you with letters from the Stormcloaks, the Imperial Legion and the Aldmeri Dominion, and you'll pick a side.</p>
         <p class="sub">Soldiers of rival sides can fight each other anywhere in the same hold. Anyone under level ${SIDES.MIN_LEVEL}, or without a side, is left in peace.</p>

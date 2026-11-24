@@ -16,7 +16,7 @@
                      A11Y.timingEase()  → 1, or 1.5 with Easy timing: multiply time limits by it (or divide sweep speeds)
                      A11Y.zoneEase()    → 1, or 1.4 with Easy timing: multiply sweet-spot / safe-zone widths by it
      Colour is never the only signal: with a colour-blind mode on, bars get patterns (magicka striped, stamina ticked),
-                   danger words get a shape (○ minor, ◆ dangerous, ⚠ deadly) and good/bad effects an arrow (CSS).
+                   danger words get a shape (○ minor, ◆ dangerous, \uE123 deadly) and good/bad effects an arrow (CSS).
    Saved in the same "rotn_prefs" store as the other settings.
    ACCESS.settingsHTML(seg) / ACCESS.pref(key, value) are the two hooks Settings uses. */
 const ACCESS = (() => {

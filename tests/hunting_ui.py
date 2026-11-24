@@ -1,4 +1,4 @@
-"""Hunting: the 🏹 button on the map turns it on; on the road a deer turns up as a fight.
+"""Hunting: the \ue10c button on the map turns it on; on the road a deer turns up as a fight.
 Usage: python3 hunting_ui.py PORT"""
 import asyncio, sys, os
 from playwright.async_api import async_playwright

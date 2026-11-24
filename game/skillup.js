@@ -4,7 +4,7 @@
    (about 1.2 s each, tap to skip). After a fight, skills that gained XP without levelling creep up briefly too.
    A character level-up gets its own bigger "Level up" banner with the character-level bar.
    It sits in the HUD message lane (hud2.js docks it at the top of the lane, so nothing overlaps),
-   and the plain "📈 X increased to N" line under a fight result is gone; follower lines stay as normal lines.
+   and the plain "\uE136 X increased to N" line under a fight result is gone; follower lines stay as normal lines.
    The queue and bar maths are plain functions for tests/test_skillup.js. [OURS] */
 const SKILLUP = (() => {
   const live = typeof document !== "undefined" && typeof window !== "undefined";

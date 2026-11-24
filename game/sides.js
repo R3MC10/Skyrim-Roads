@@ -116,7 +116,7 @@ const SIDES = (() => {
   function migrate(s) {
     if (!s || !s.clan) return null;
     s.clanOld = s.clan; s.clan = null;
-    return "🏴 Player clans are gone: from level 20 everyone picks a side in the war instead (Stormcloaks, Imperial Legion or Aldmeri Dominion). Your clan has been disbanded. Its guild hall stays open to everyone who was in it, and any hold it ruled is free for the sides to take.";
+    return " Player clans are gone: from level 20 everyone picks a side in the war instead (Stormcloaks, Imperial Legion or Aldmeri Dominion). Your clan has been disbanded. Its guild hall stays open to everyone who was in it, and any hold it ruled is free for the sides to take.";
   }
   /* may this player use an old clan's guild hall? (halls.js) */
   function oldHall(s, h) {
@@ -246,13 +246,13 @@ const SIDES = (() => {
       const rw = reward(s, card, foeSide, hold, t);
       return { text: `${ambush ? "You burst out of hiding. " : ""}${card.name} of the ${L.name} goes down. They'll get up again, bruised.${rw.text}${bountyText}`, fight: f, skills, won: true, war: true, warHold: rw.hold, gold: rw.gold || 0,
         doc: { type: "warknock", from: s.id, fromName: s.name, fromSide: me, to: card.id, toName: card.name, t, hold, at, ambush },
-        id, news: `⚔ ${s.name} (${LIST[me].name}) knocked down ${card.name} (${L.name}) in ${place}.` };
+        id, news: ` ${s.name} (${LIST[me].name}) knocked down ${card.name} (${L.name}) in ${place}.` };
     }
     G.setHealth(s, Math.max(1, G.maxHealth(s) * KNOCK_HP), t);   // knocked down, not killed: you keep everything
     s.safeUntil = t + SAFE;
     return { text: `${card.name} of the ${L.name} knocks you down. You keep your gear and gold, and nobody can attack you for 10 minutes.${bountyText}`, fight: f, skills, won: false, war: true, knocked: true,
       doc: { type: "warheld", from: s.id, fromName: s.name, fromSide: me, to: card.id, toName: card.name, t, hold, at },
-      id, news: `🛡 ${card.name} (${L.name}) beat off ${s.name} (${LIST[me].name}) in ${place}.` };
+      id, news: ` ${card.name} (${L.name}) beat off ${s.name} (${LIST[me].name}) in ${place}.` };
   }
   /* the defender's phone applies a cross-side attack. Returns { text, bad?, warHold? } (warHold: give war points there) */
   function receive(s, doc, t = gnow()) {

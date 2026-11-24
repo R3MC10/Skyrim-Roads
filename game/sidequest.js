@@ -56,7 +56,7 @@ const SIDEQ = (() => {
     if (SIDES.mine(s)) { if (x && !x.done) { x.done = true; x.stage = 1; } return null; }
     if (x || (s.level || 1) < SIDES.MIN_LEVEL) return null;
     q(s)[ID] = { stage: 0, t: typeof G !== "undefined" ? G.now() : Date.now() / 1000, heard: {} };
-    const m = "📜 New quest: Pick a Side. A courier brought letters from the Stormcloaks, the Imperial Legion and the Aldmeri Dominion (Journal).";
+    const m = " New quest: Pick a Side. A courier brought letters from the Stormcloaks, the Imperial Legion and the Aldmeri Dominion (Journal).";
     if (typeof G !== "undefined" && G.note && s.journal) G.note(s, m);
     return m;
   }

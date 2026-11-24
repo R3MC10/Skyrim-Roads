@@ -106,13 +106,13 @@ const SIDECLOAK = (() => {
     const hurt = (pct) => f.hp > 0 && f.hp < pct * mh;
     for (const p of powersOf(a.side, a.rank)) {
       if (st.used[p]) continue;
-      if (p === "cry" && hurt(0.5)) { st.used[p] = 1; const h = Math.round(0.12 * mh); f.hp = Math.min(mh, f.hp + h); if (typeof f.sp === "number") f.sp = Math.min(G.maxStamina ? G.maxStamina(f.s) : f.sp, f.sp + 0.3 * (G.maxStamina ? G.maxStamina(f.s) : 100)); say(`📯 Battle Cry: +${h} health, stamina back`); }
-      else if (p === "wall" && hurt(0.4)) { st.used[p] = 1; st.guard = 2; st.guardPct = 0.5; say("🛡 Shield Wall: half damage for two turns"); }
-      else if (p === "surge" && typeof f.mp === "number" && G.maxMagicka && f.mp < 0.25 * G.maxMagicka(f.s)) { st.used[p] = 1; const mm = G.maxMagicka(f.s), m = Math.round(0.4 * mm); f.mp = Math.min(mm, f.mp + m); say(`✨ Mana Surge: +${m} magicka`); }
+      if (p === "cry" && hurt(0.5)) { st.used[p] = 1; const h = Math.round(0.12 * mh); f.hp = Math.min(mh, f.hp + h); if (typeof f.sp === "number") f.sp = Math.min(G.maxStamina ? G.maxStamina(f.s) : f.sp, f.sp + 0.3 * (G.maxStamina ? G.maxStamina(f.s) : 100)); say(` Battle Cry: +${h} health, stamina back`); }
+      else if (p === "wall" && hurt(0.4)) { st.used[p] = 1; st.guard = 2; st.guardPct = 0.5; say(" Shield Wall: half damage for two turns"); }
+      else if (p === "surge" && typeof f.mp === "number" && G.maxMagicka && f.mp < 0.25 * G.maxMagicka(f.s)) { st.used[p] = 1; const mm = G.maxMagicka(f.s), m = Math.round(0.4 * mm); f.mp = Math.min(mm, f.mp + m); say(` Mana Surge: +${m} magicka`); }
       else if (st.n < 2) continue;
-      else if (p === "storm") { st.used[p] = 1; const d = Math.max(1, Math.round(Math.min(0.12 * foeMax, Math.max(1, f.ehp - 1)))); f.ehp -= d; say(`❄ Voice of the Storm: ${d} frost`); }
-      else if (p === "guard") { st.used[p] = 1; const dmg = Math.max(3, Math.min(0.05 * foeMax, 3 + 0.35 * (f.s.level || 1))); (f.allies = f.allies || []).push({ name: "Legion soldier", dmg, kind: "guard" }); say("⚔ Call the Guard: a Legion soldier joins you"); }
-      else if (p === "spike") { st.used[p] = 1; f.stagger = true; say("🌀 Mind Spike: the foe is dazed"); }
+      else if (p === "storm") { st.used[p] = 1; const d = Math.max(1, Math.round(Math.min(0.12 * foeMax, Math.max(1, f.ehp - 1)))); f.ehp -= d; say(` Voice of the Storm: ${d} frost`); }
+      else if (p === "guard") { st.used[p] = 1; const dmg = Math.max(3, Math.min(0.05 * foeMax, 3 + 0.35 * (f.s.level || 1))); (f.allies = f.allies || []).push({ name: "Legion soldier", dmg, kind: "guard" }); say(" Call the Guard: a Legion soldier joins you"); }
+      else if (p === "spike") { st.used[p] = 1; f.stagger = true; say(" Mind Spike: the foe is dazed"); }
     }
   }
   if (typeof PFX !== "undefined" && PFX.tick && !PFX.tick._cloak) {
@@ -145,7 +145,7 @@ const SIDECLOAK = (() => {
       got.push(r);
       const id = idOf(side, r);
       if (!(s.inv || []).some((x) => x.item === id)) G.give(s, id, 1);
-      const m = r === 1 ? `🧥 The ${L.name} give you their colours: ${D.ITEMS[id].name}.` : `🧥 Promoted to ${L.ranks[r - 1]}! The quartermaster sends you a ${D.ITEMS[id].name}.`;
+      const m = r === 1 ? ` The ${L.name} give you their colours: ${D.ITEMS[id].name}.` : ` Promoted to ${L.ranks[r - 1]}! The quartermaster sends you a ${D.ITEMS[id].name}.`;
       notes.push(m); if (G.note && s.journal) G.note(s, m);
     }
     return notes;

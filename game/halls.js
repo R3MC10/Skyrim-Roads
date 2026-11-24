@@ -74,7 +74,7 @@ const HALLS = (() => {
     if (s.gold < price) return { err: `A plot in ${town} costs ${price} gold. You have ${s.gold}.` };
     s.gold -= price;
     s.hall = blank(town, clean(hallName, NAME_MAX) || `${s.name}'s Hall`, t);
-    G.note(s, `🏰 Bought a hall plot in ${town}.`);
+    G.note(s, ` Bought a hall plot in ${town}.`);
     return { text: `The steward hands you the deed to a plot in ${town}. ${s.hall.name} stands, with a hearth to rest by. Build rooms, decorate and hire staff.` };
   }
   /* the founder raises a guild hall for the clan; returns {id, doc} for the "halls" collection */
@@ -178,7 +178,7 @@ const HALLS = (() => {
       for (const id of Object.keys(h.staff || {})) {
         const w = STAFF[id]?.[2] || 0;
         if ((h[purseKey] || 0) >= w) { h[purseKey] -= w; paidOut += w; }
-        else { const st = { ...h.staff }; delete st[id]; h.staff = st; msgs.push(`💸 Your ${STAFF[id][0].toLowerCase()} wasn't paid and left the hall.`); addLog(h, `The ${STAFF[id][0].toLowerCase()} left, unpaid.`); }
+        else { const st = { ...h.staff }; delete st[id]; h.staff = st; msgs.push(` Your ${STAFF[id][0].toLowerCase()} wasn't paid and left the hall.`); addLog(h, `The ${STAFF[id][0].toLowerCase()} left, unpaid.`); }
       }
       if (!h.staff?.guard && (h.storage || []).length && rnd() < THIEF_CHANCE) {
         const i2 = Math.floor(rnd() * h.storage.length), r = h.storage[i2];
@@ -187,9 +187,9 @@ const HALLS = (() => {
       }
     }
     h.paid = (h.paid || t) + days * DAY;
-    if (paidOut) msgs.push(`🏰 ${h.name}: paid ${paidOut} gold in wages for ${days} day${days > 1 ? "s" : ""}.`);
-    if (earned) msgs.push(`🏰 The steward brought in ${earned} gold.`);
-    if (stolen.length) { msgs.push(`🗝 A thief got into ${h.name} and took ${stolen.join(", ")}. Hire a guard.`); addLog(h, `A thief took ${stolen.join(", ")}.`); }
+    if (paidOut) msgs.push(` ${h.name}: paid ${paidOut} gold in wages for ${days} day${days > 1 ? "s" : ""}.`);
+    if (earned) msgs.push(` The steward brought in ${earned} gold.`);
+    if (stolen.length) { msgs.push(` A thief got into ${h.name} and took ${stolen.join(", ")}. Hire a guard.`); addLog(h, `A thief took ${stolen.join(", ")}.`); }
     return msgs;
   }
 

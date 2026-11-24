@@ -64,7 +64,7 @@ const PRIESTS = (() => {
   function onEnter(s) {
     const d = s.dungeon, p = d && BY_LAIR[d.place];
     if (!p || got(s, p.id)) return null;
-    if (s.level < MIN_LEVEL) { G.note(s, `🎭 Something sleeps behind a sealed sarcophagus in ${d.place}. Come back stronger (level ${MIN_LEVEL}).`); return null; }
+    if (s.level < MIN_LEVEL) { G.note(s, ` Something sleeps behind a sealed sarcophagus in ${d.place}. Come back stronger (level ${MIN_LEVEL}).`); return null; }
     d.boss = "priest_" + p.id; d.priest = p.id;
     return p;
   }
@@ -77,7 +77,7 @@ const PRIESTS = (() => {
     const give = (item) => { G.give(s, item); d.found.push(D.ITEMS[item].name); out.push(D.ITEMS[item].name); };
     give(maskId(id));
     if (id === "morokei" && !carried(s, "mask_wooden")) give("mask_wooden");
-    G.note(s, `🎭 ${BY[id].name}'s mask is yours (${count(s)}/${LIST.length}).`);
+    G.note(s, ` ${BY[id].name}'s mask is yours (${count(s)}/${LIST.length}).`);
     if (typeof QUESTS !== "undefined") QUESTS.ensure(s);
     return out;
   }
