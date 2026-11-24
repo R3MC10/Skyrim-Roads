@@ -54,5 +54,6 @@ tests/out_holds/
 tests/out_evbanner/
 tests/out_gather/
 tests/out_esckey/
+tests/out_sides/
 tests/out_chargebar/
 tests/out_partytraps/
