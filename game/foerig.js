@@ -648,7 +648,9 @@ const FOERIG = (() => {
     horker: () => ({ color: "#7a6656", len: 58, height: 30, head: 10, legW: 5, headY: 0.95, horker: 1, flipper: 1, big: 1 }),
     sol_hopper: () => ({ color: "#6e6a52", len: 26, height: 22, head: 6, legW: 2, tail: "long", eye: "#c4572e" }),
   };
-  function kindOf(fk, name) {
+  let lookHook = null;   // leghunt.js: legendary beasts reuse a rig, bigger and recoloured
+  function kindOf(fk, name) { const k = kindOf0(fk, name); return lookHook ? lookHook(k, name) : k; }
+  function kindOf0(fk, name) {
     const n = String(name || "").toLowerCase();
     // the fight's kinds are broad: a few foes get their own body by name
     if (/ice wraith|wraith/.test(n)) return { body: "wraith", skin: "wraith", o: { color: "#bfe0f0" } };
@@ -822,5 +824,5 @@ const FOERIG = (() => {
   }
   const BODIES = ["hum", "quad", "spider", "crab", "sphere", "wraith", "wisp", "dragon", "wrap"];
   const CLIPS = ["idle", "hit", "stagger", "block", "death", "taunt", "cast"];
-  return { on, define, pose, sample, solve, paint, ctl, kindOf, build, dirRot, BODIES, CLIPS, HUM_CLIPS, HUM_BONES };
+  return { on, define, pose, sample, solve, paint, ctl, kindOf, lookHook: (fn) => { lookHook = fn; }, build, dirRot, BODIES, CLIPS, HUM_CLIPS, HUM_BONES };
 })();

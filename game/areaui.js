@@ -16,7 +16,7 @@ const AREAUI = (() => {
     ["inn", "Inn", ["inn", "cook", "hire"]],
     ["market", "Market", ["general", "blacksmith", "wizard", "market", "stables", "fence"]],
     ["services", "Services & trainers", ["train", "forge", "alchemy", "enchanter", "craft", "carriage", "docks"]],
-    ["work", "Work & jobs", ["jobs", "notice", "caravans", "mine", "streets"]],
+    ["work", "Work & jobs", ["jobs", "notice", "hunts", "caravans", "mine", "streets"]],
     ["home", "Your home", ["home", "homestead", "homes", "halls", "hall"]],
     ["events", "Events & fun", ["arena", "fish", "hunt"]],
   ];
@@ -25,9 +25,9 @@ const AREAUI = (() => {
   const ICON = { inn: "\uE15A", cook: "\uE148", hire: "\uE102", general: "\uE197", blacksmith: "\uE14E", wizard: "\uE15D", market: "\uE133", stables: "\uE12D", fence: "\uE134", train: "\uE109", forge: "\uE104", alchemy: "\uE15B", enchanter: "\uE10A",
     craft: "\uE15C", carriage: "\uE13B", docks: "\uE12F", jobs: "\uE103", notice: "\uE103", caravans: "\uE13B", mine: "\uE12A", streets: "\uE119", home: "\uE11D", homestead: "\uE17A", homes: "\uE11C", halls: "\uE119", hall: "⚑", arena: "\uE101", fish: "\uE146", hunt: "\uE10C" };
   /* short tile names where the screen's own name is long */
-  const SHORT = { fence: "Fence", hire: "Hirelings", wizard: "Court wizard", general: "General goods", cook: "Cooking pot", craft: "Spell crafting", homes: "Neighbours", hall: "Hall of the North", halls: "Halls & shops", notice: "Jarl's bounty", market: "Market stalls" };
+  const SHORT = { hunts: "Legendary hunts", fence: "Fence", hire: "Hirelings", wizard: "Court wizard", general: "General goods", cook: "Cooking pot", craft: "Spell crafting", homes: "Neighbours", hall: "Hall of the North", halls: "Halls & shops", notice: "Jarl's bounty", market: "Market stalls" };
   /* a few words when there's no live status */
-  const TAG = { inn: "Sleep, rumours", cook: "Meals that buff", hire: "Fight beside you", general: "Food, potions, kit", blacksmith: "Weapons, armor, metal", wizard: "Tomes, staffs, soul gems",
+  const TAG = { hunts: "Jarl's beast contracts", inn: "Sleep, rumours", cook: "Meals that buff", hire: "Fight beside you", general: "Food, potions, kit", blacksmith: "Weapons, armor, metal", wizard: "Tomes, staffs, soul gems",
     market: "Players' stalls", stables: "Horses and carts", fence: "Buys stolen goods", train: "Raise a skill", forge: "Make, smelt, improve", alchemy: "Brew potions", enchanter: "Enchant gear",
     craft: "Your own spells", carriage: "Safe, fast rides", docks: "Boats", jobs: "Small paid work", notice: "This week's goals", caravans: "Guard for pay", mine: "Dig ore", streets: "Pickpocket, bounty",
     home: "Your house", homestead: "Build your own", homes: "Players' houses", halls: "Build a hall", hall: "Everyone builds it", arena: "Duel for a stake", fish: "Cast a line", hunt: "Stalk deer and elk" };

@@ -3501,6 +3501,23 @@ html.pcmap .compass{left:50%;right:auto;width:min(980px,52vw);transform:translat
   -webkit-mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)}
 html.pcmap .compass::before,html.pcmap .compass::after{left:3%;right:3%;background:linear-gradient(90deg,transparent,rgba(214,182,110,.7) 18%,rgba(214,182,110,.7) 82%,transparent)}
 html.pcmap .compass i.cl{left:5%}html.pcmap .compass i.cr{right:5%}
+/* Legendary hunts (leghunt.js): Jarl contract posters, the hunt card, the bestiary */
+.lh-poster,.lh-card{display:flex;gap:10px;align-items:flex-start;padding:10px;margin:8px 0;border:1px solid var(--line);border-radius:10px;background:rgba(40,30,18,.35)}
+.lh-poster.here{border-color:var(--gold);box-shadow:inset 0 0 0 1px rgba(226,187,100,.25)}
+.lh-card.lh-hunt{border-color:var(--ember);background:rgba(70,24,16,.3)}
+.lh-poster .t,.lh-card .t{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
+.lh-poster small{color:var(--mute);font-style:italic}
+.lh-poster span,.lh-card span{font-size:13px;line-height:1.35}
+.lh-pic{flex:none;width:92px;height:92px;border-radius:8px;background:#e9dcc0;border:1px solid #6a5636;object-fit:contain}
+.lh-card .lh-pic{width:72px;height:72px}.lh-best .lh-pic{width:48px;height:48px}
+.lh-ph{display:flex;align-items:center;justify-content:center;font-size:34px}
+.lh-traits{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px}.lh-traits span{font-size:12px!important}
+.lh-unk{color:var(--mute)}
+.lh-dots{display:inline-flex;gap:3px;vertical-align:middle}.lh-dots i{width:10px;height:10px;border-radius:50%;border:1px solid var(--gold);display:inline-block}.lh-dots i.on{background:var(--gold)}
+.lh-tag{align-self:flex-start;font-size:11px!important;padding:1px 6px;border-radius:6px;border:1px solid var(--line);color:var(--mute)}.lh-tag.on{border-color:var(--ember);color:var(--ember)}
+.lh-btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.lh-poster .btn{align-self:flex-start;margin-top:4px}
+@media (max-width:420px){.lh-pic{width:64px;height:64px}.lh-card .lh-pic{width:56px;height:56px}}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -3720,6 +3737,7 @@ html.pcmap .compass i.cl{left:5%}html.pcmap .compass i.cr{right:5%}
 <script src="i18n_dawnguard.js"></script>
 <script src="i18n_sides.js"></script>
 <script src="i18n_dwemer.js"></script>
+<script src="i18n_leghunt.js"></script>
 <script src="i18n_areaui.js"></script>
 <script src="i18n_menus2.js"></script>
 <script src="i18n_followertab.js"></script>
@@ -3782,6 +3800,7 @@ html.pcmap .compass i.cl{left:5%}html.pcmap .compass i.cr{right:5%}
 <script src="holdui.js"></script>
 <script src="netsync.js"></script>
 <script src="sideui.js"></script>
+<script src="leghunt.js"></script>
 <script src="ui.js"></script>
 </body>
 </html>

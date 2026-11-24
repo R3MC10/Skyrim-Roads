@@ -3,7 +3,7 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b175-fightpc", build: 175, date: "25 Nov 2026", title: "The fight fills your PC, and ends in slow motion", items: [
+    { id: "b176-fightpc", build: 176, date: "25 Nov 2026", title: "The fight fills your PC, and ends in slow motion", items: [
       "On a PC or laptop the fight now fills the whole window, like the big map: the picture runs from edge to edge and the cards and the skill bar float over it.",
       "The blow that ends a fight plays in slow motion, then a card shows how it went: how many rounds, the damage you dealt and took, and your best hit. Continue is right on it.",
       "New in Settings → Fights: Fight quality (Low, Medium, High), Frame rate (30, 60 or no cap), and sliders for Camera shake and Fight UI size. Low quality and 30 frames save battery on phones.",
@@ -11,7 +11,7 @@ const PATCHNOTES = (() => {
       "Tooltips in fights now say what a move costs in stamina or magicka instead of action points.",
       "Fixed on phones: a few screens (the house chest, parts of dungeons and fights) were missing some of their styling.",
     ] },
-    { id: "b175-turns", build: 175, date: "25 Nov 2026", title: "No more action points: you choose your turn", items: [
+    { id: "b176-turns", build: 176, date: "25 Nov 2026", title: "No more action points: you choose your turn", items: [
       "Action points are gone. On your turn make up to 4 moves in any order, then press End turn. Blows, power attacks, bashes and guards cost stamina, spells cost magicka, dark magic costs a little health. Doing the same move again in a turn costs more, and a power attack is once a turn.",
       "Moves you don't make turn into guard: end early and you take up to 30% less damage until your next turn.",
       "You see every foe's next move by name with its icon, numbers, who it's aimed at and what it leaves behind (like Venom Spit → Lydia, Poison 3). When it acts, the banner and the log name the move too.",
@@ -19,20 +19,20 @@ const PATCHNOTES = (() => {
       "Out of breath? You can always make one plain swing a turn. Frost and shock bite your stamina and magicka a bit less than before, and trolls and hagravens regenerate at most four times a fight.",
       "The fight speed button and the Skip buttons are gone. Tap the fight scene if you want to finish an animation right away.",
     ] },
-    { id: "b175-stacks", build: 175, date: "25 Nov 2026", title: "Statuses stack, and every move is a minigame", items: [
+    { id: "b176-stacks", build: 176, date: "25 Nov 2026", title: "Statuses stack, and every move is a minigame", items: [
       "Burn, chill, poison, bleed, vulnerable, ward and more now stack. The number on the icon is how many stacks; each one makes it stronger and it drops by 1 every turn. Hold or hover the icon to see what it does.",
       "Bosses can't be stun-locked: every stun, calm or fear gives them Resolve, so the next one is shorter.",
       "Every attack, guard and spell is a quick minigame: tap in the bright zone, time your block, draw your bow or trace a rune. Perfect adds a stack of something nasty, a miss is weaker. Turn it off in Settings → Minigames if you'd rather not.",
       "New perk effects for stacks: enchanted weapons add an extra stack, and resist perks take a stack off what's put on you.",
     ] },
-    { id: "b175-strategy", build: 175, date: "25 Nov 2026", title: "Fights that reward thinking", items: [
+    { id: "b176-strategy", build: 176, date: "25 Nov 2026", title: "Fights that reward thinking", items: [
       "New move: Breathe (Catch your breath). It's free but ends your turn, and gets back a good chunk of stamina and some magicka. Power attacks, bashes and guards burn stamina, so pace yourself: hit hard now, or breathe and hit hard next turn.",
       "Openings: hit a foe that's staggered, stunned or paralyzed and the blow does 30% more (a power attack 45%). A power attack on a frozen foe shatters the frost for extra. Bash or stagger first, then cash in. Still no one-shots.",
       "Frost slows: a chilled or slowed foe acts later in the round, so you and your followers get in first.",
       "Give your follower orders mid-fight with the little buttons on their card: Attack, Defend me (steps in front of you sooner) or Hold back (back row, only guards and heals). Tap again to let them fight their own way.",
       "Perks: Second Wind makes Breathe give 50% more; Savage Strike and Devastating Blow make power attacks into an opening hit even harder. Auto uses all of this too.",
     ] },
-    { id: "b175-combat2", build: 175, date: "25 Nov 2026", title: "A fight screen that feels like a game", items: [
+    { id: "b176-combat2", build: 176, date: "25 Nov 2026", title: "A fight screen that feels like a game", items: [
       "The fight is now one big scene that fills the screen. Everything you need sits right in it, so nothing scrolls, on phones and on PC.",
       "Your health is a glowing orb in the corner with magicka and stamina curving round it; a striped band shows how much the foe is about to take. Slim bars float over your hero's head.",
       "The foe's name, health, statuses and what it plans next hang over its head. Stunned foes wobble with stars, big hits flash and shake the picture.",
@@ -41,6 +41,15 @@ const PATCHNOTES = (() => {
       "Every buff and debuff now shows as a little icon on whoever has it: you, followers, party members and foes. Armour spells, wards, healing over time, potions, shouts and powers, poison, burning, frost, bleeding, fear, paralysis and the rest. Each shows the turns left, and tapping or hovering tells you what it does.",
       "When one lands or wears off, a short word floats up over that fighter: \"+Oakflesh\", \"Poisoned\", \"Burning fades\".",
       "Prefer the old look? Settings → Fight screen → Classic.",
+    ] },
+    { id: "b175-legendhunts", build: 175, date: "25 Nov 2026", title: "Legendary beasts: Jarl contracts and monster hunts", items: [
+      "Ten named monsters now roam Skyrim, from the Mudcrab King on the Solitude shore to the White Ghost sabre cat, Whitefang the frost troll near Dawnstar and Bloodmoon, the werewolf of Hircine, in the Falkreath woods. Each one lives in its own hold and wanders between nearby places over time.",
+      "Open Legendary hunts in a town to see the Jarl's posters. Take a contract and the map shows a rough area where the beast was last seen, not an exact spot.",
+      "On the road you find clues: tracks (your hunting skill decides how much you read from them), a victim, a witness, a wrecked caravan. Every clue shrinks the area, and some tell you what the beast fears and what barely hurts it. You can also search the place you're standing in.",
+      "Close in and choose how to start the fight: set an ambush, track it to its lair (harder start, better loot) or lay bait and drink your potions first. In a party the leader chooses.",
+      "Each beast is a real boss with its own big move to dodge, block or ward against. Hitting it with what it fears really helps: a known weakness means more damage and a shorter fight, and the frost troll stops healing once you know to bring fire.",
+      "Rewards: the Jarl's gold, a trophy, rare hides and parts you can turn into ten unique pieces of gear at the forge (the forge uses them up), sometimes a unique item from the body, and a new bestiary entry. Party members each get their own trophy and share.",
+      "New perks: Experienced Tracker (Archery) finds an extra clue each time, Monster Scholar (Speech) tells you what a beast resists and hits legends harder, Trophy Hunter (Smithing) gets more rare parts and unique items.",
     ] },
     { id: "b172-assetquality", build: 172, date: "24 Nov 2026", title: "Sharper pictures on every screen", items: [
       "Foes in fights are painted at full size now, so they stay sharp on big monitors and 3x phone screens instead of going soft.",
@@ -1219,7 +1228,7 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 175;
+  const NEXT_AT = 176;
   const NEXT = [
     "Dragon Shouts learned from word walls",
     "Werewolf and vampire paths",
