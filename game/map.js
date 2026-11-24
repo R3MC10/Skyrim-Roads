@@ -505,6 +505,7 @@ const WorldMap = (() => {
       if (HF) { const r = HF.draw(g, x, y, s, { id: "o:" + (o.id || o.name), look: o.look || { r: o.race || "nord", id: o.name, eq: {}, gl: {} }, horse: o.horse || null, moving: !!o.moving, gallop: !!o.horse && !!o.moving, t: v.t, reduce: v.reduceMotion, scale: 0.82, ring: o.party ? "#8fe08a" : "#6f9fe8" }); otherHeads.push(r.head); continue; }
       if (MA) MA.token(g, x, y, s, o.look || { r: o.race || "nord", id: o.name, eq: {}, gl: {} }, o.party ? "#8fe08a" : "#6f9fe8", 10);
       else { g.fillStyle = "#2f62a8"; g.strokeStyle = "#e6f0ff"; g.lineWidth = 2 * s; g.beginPath(); g.arc(x, y, 6.5 * s, 0, 7); g.fill(); g.stroke(); }
+      if (o.side && typeof SIDES !== "undefined") SIDES.drawEmblem(g, o.side, x + 10 * s, y - 9 * s, 4.5 * s);   // sides.js: their side, even on a stranger
     }
     for (const b of v.bags) {
       const [x, y] = P(b.pos), R = 9 * s;
@@ -639,6 +640,7 @@ const WorldMap = (() => {
       const lift = v.horse ? 15 * s : 0;
       if (v.horse) g.drawImage(MA.horse(v.horse), px - 27 * s, py - 12 * s - bob * 0.5, 54 * s, 35 * s);   // the horse under you, then you in the saddle
       MA.token(g, px + (v.horse ? 3 * s : 0), py - lift - bob, s, v.look, "#8fd3ff", v.horse ? 11 : 13);
+      if (v.side && typeof SIDES !== "undefined") SIDES.drawEmblem(g, v.side, px + (v.horse ? 3 * s : 0) + 12 * s, py - lift - bob - 11 * s, 5 * s);   // your side (sides.js)
       if (v.fx && typeof FXART !== "undefined") FXART.mapOver(g, v.fx, P, s, px + (v.horse ? 3 * s : 0), py - lift - bob, v.t, v.reduceMotion);
       label(g, v.name, px + 16 * s, py - 16 * s - lift, s, 14, "#d8f0ff", 700, false, "left");
       arrow(px + (v.horse ? 3 * s : 0), py - lift - bob, (v.horse ? 18 : 21) * s);

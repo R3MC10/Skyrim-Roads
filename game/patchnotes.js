@@ -3,7 +3,7 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b168-fightpc", build: 168, date: "24 Nov 2026", title: "The fight fills your PC, and ends in slow motion", items: [
+    { id: "b172-fightpc", build: 172, date: "25 Nov 2026", title: "The fight fills your PC, and ends in slow motion", items: [
       "On a PC or laptop the fight now fills the whole window, like the big map: the picture runs from edge to edge and the cards and the skill bar float over it.",
       "The blow that ends a fight plays in slow motion, then a card shows how it went: how many rounds, the damage you dealt and took, and your best hit. Continue is right on it.",
       "New in Settings → Fights: Fight quality (Low, Medium, High), Frame rate (30, 60 or no cap), and sliders for Camera shake and Fight UI size. Low quality and 30 frames save battery on phones.",
@@ -11,7 +11,7 @@ const PATCHNOTES = (() => {
       "Tooltips in fights now say what a move costs in stamina or magicka instead of action points.",
       "Fixed on phones: a few screens (the house chest, parts of dungeons and fights) were missing some of their styling.",
     ] },
-    { id: "b168-turns", build: 168, date: "24 Nov 2026", title: "No more action points: you choose your turn", items: [
+    { id: "b172-turns", build: 172, date: "25 Nov 2026", title: "No more action points: you choose your turn", items: [
       "Action points are gone. On your turn make up to 4 moves in any order, then press End turn. Blows, power attacks, bashes and guards cost stamina, spells cost magicka, dark magic costs a little health. Doing the same move again in a turn costs more, and a power attack is once a turn.",
       "Moves you don't make turn into guard: end early and you take up to 30% less damage until your next turn.",
       "You see every foe's next move by name with its icon, numbers, who it's aimed at and what it leaves behind (like Venom Spit → Lydia, Poison 3). When it acts, the banner and the log name the move too.",
@@ -19,20 +19,20 @@ const PATCHNOTES = (() => {
       "Out of breath? You can always make one plain swing a turn. Frost and shock bite your stamina and magicka a bit less than before, and trolls and hagravens regenerate at most four times a fight.",
       "The fight speed button and the Skip buttons are gone. Tap the fight scene if you want to finish an animation right away.",
     ] },
-    { id: "b168-stacks", build: 168, date: "24 Nov 2026", title: "Statuses stack, and every move is a minigame", items: [
+    { id: "b172-stacks", build: 172, date: "25 Nov 2026", title: "Statuses stack, and every move is a minigame", items: [
       "Burn, chill, poison, bleed, vulnerable, ward and more now stack. The number on the icon is how many stacks; each one makes it stronger and it drops by 1 every turn. Hold or hover the icon to see what it does.",
       "Bosses can't be stun-locked: every stun, calm or fear gives them Resolve, so the next one is shorter.",
       "Every attack, guard and spell is a quick minigame: tap in the bright zone, time your block, draw your bow or trace a rune. Perfect adds a stack of something nasty, a miss is weaker. Turn it off in Settings → Minigames if you'd rather not.",
       "New perk effects for stacks: enchanted weapons add an extra stack, and resist perks take a stack off what's put on you.",
     ] },
-    { id: "b168-strategy", build: 168, date: "24 Nov 2026", title: "Fights that reward thinking", items: [
+    { id: "b172-strategy", build: 172, date: "25 Nov 2026", title: "Fights that reward thinking", items: [
       "New move: Breathe (Catch your breath). It's free but ends your turn, and gets back a good chunk of stamina and some magicka. Power attacks, bashes and guards burn stamina, so pace yourself: hit hard now, or breathe and hit hard next turn.",
       "Openings: hit a foe that's staggered, stunned or paralyzed and the blow does 30% more (a power attack 45%). A power attack on a frozen foe shatters the frost for extra. Bash or stagger first, then cash in. Still no one-shots.",
       "Frost slows: a chilled or slowed foe acts later in the round, so you and your followers get in first.",
       "Give your follower orders mid-fight with the little buttons on their card: Attack, Defend me (steps in front of you sooner) or Hold back (back row, only guards and heals). Tap again to let them fight their own way.",
       "Perks: Second Wind makes Breathe give 50% more; Savage Strike and Devastating Blow make power attacks into an opening hit even harder. Auto uses all of this too.",
     ] },
-    { id: "b168-combat2", build: 168, date: "24 Nov 2026", title: "A fight screen that feels like a game", items: [
+    { id: "b172-combat2", build: 172, date: "25 Nov 2026", title: "A fight screen that feels like a game", items: [
       "The fight is now one big scene that fills the screen. Everything you need sits right in it, so nothing scrolls, on phones and on PC.",
       "Your health is a glowing orb in the corner with magicka and stamina curving round it; a striped band shows how much the foe is about to take. Slim bars float over your hero's head.",
       "The foe's name, health, statuses and what it plans next hang over its head. Stunned foes wobble with stars, big hits flash and shake the picture.",
@@ -41,6 +41,34 @@ const PATCHNOTES = (() => {
       "Every buff and debuff now shows as a little icon on whoever has it: you, followers, party members and foes. Armour spells, wards, healing over time, potions, shouts and powers, poison, burning, frost, bleeding, fear, paralysis and the rest. Each shows the turns left, and tapping or hovering tells you what it does.",
       "When one lands or wears off, a short word floats up over that fighter: \"+Oakflesh\", \"Poisoned\", \"Burning fades\".",
       "Prefer the old look? Settings → Fight screen → Classic.",
+    ] },
+    { id: "b171-charcreate", build: 171, date: "24 Nov 2026", title: "Character creation, rebuilt", items: [
+      "Making a character now works like Skyrim's race menu: a big live picture of your hero that breathes, walks and swings, which you can turn with a finger (or the arrow keys) and zoom in on the face.",
+      "Tabs for Race, Body, Head, Face, Hair, Scars & Paint and Start, with Back and Next, a dice button for a random look and Undo.",
+      "Pick your sex, build, height, skin, face shape, eyes, brows, nose, mouth, age, hair, beard, Khajiit manes and Argonian horns and frills, scars, warpaint and tattoos.",
+      "Every race now has a gift that really works: Nords shrug off frost, Dunmer fire, Bretons magic, Redguards and Bosmer poison, Imperials find more gold, Orcs are better at the forge, Khajiit see in the dark and Argonians and Bosmer resist curses.",
+      "New Etiquette perk Proud Heritage makes your race's gift 25% stronger.",
+      "On the Start tab you can pick the Warrior, Mage or Thief Stone straight away.",
+      "Everyone sees the face you made: in fights, on the map, in your party and as a Stranger on the road.",
+      "Already have a character? Nothing changes until you want it to: visit the barber at any inn (40 gold) or the mirror in your house (free).",
+      "Fixed: fights with Blood and gore on could stop with an error, and some menus looked wrong on phones.",
+    ] },
+    { id: "b170-sides", build: 170, date: "24 Nov 2026", title: "Pick a side: Stormcloaks, Legion or Thalmor", items: [
+      "Player clans are gone. At level 20 a courier brings you three letters, and a new quest, Pick a Side, sends you to the recruiters in Windhelm, Solitude and the Thalmor Embassy. Hear them out and swear to one. Players already past level 20 get the quest the next time they play.",
+      "Old clans are disbanded with a note. Your old guild hall stays open to its members, and holds now belong to sides: war points, Jarls and hold seats work by side instead of by clan. Friends and parties work as before.",
+      "Joining gives you 300 gold and your side's cloak, worn in a new cloak slot and drawn on your hero, in the side's colours with its emblem. Each of the 5 ranks sends a better cloak: small boosts at first, then a power you can use once a fight. Every side's cloaks do different things (frost and war cries, shield walls and soldiers, magicka and illusions).",
+      "You earn rank XP only while you wear your side's cloak: from fights, dungeons, world events and above all beating soldiers of the other sides. A bar on Social → Faction shows how close the next rank is.",
+      "Soldiers of different sides (level 20+) can attack each other anywhere in the same hold, always after a question first. The loser is knocked down and keeps their gear; the winner gets gold, a trophy, war points and rank XP. Guards still add a bounty if they see it. Nobody in a dungeon, nobody just knocked down, and never your own party.",
+      "Each side has its own perks in the skill trees. Changing sides later costs gold, takes you back to the lowest rank and takes away the old cloaks and side perks (the perk points come back).",
+      "Fixed: on phones and small windows a lot of newer screens (the house chest, hold rule, sides and more) had lost their proper look. They're back.",
+    ] },
+    { id: "b169-travelanim", build: 169, date: "24 Nov 2026", title: "Smoother riding on the road", items: [
+      "The picture under your trip got its walking and riding fixed: horses really walk and gallop now, every hoof lands on the road and stays put instead of sliding, and the body, mane and tail move with the stride.",
+      "If anyone in your company is on foot, the horses slow to a walk beside them, so your follower keeps up without shuffling on the spot. Ride alone (or with everyone mounted) and you gallop.",
+      "Everyone on the road is drawn at the same size and stands on the same line: a follower comes up past your horse's shoulder, and riders sit properly in the saddle.",
+      "Name tags sit just above each head and step out of each other's way instead of overlapping.",
+      "Carriage trips show the carriage again: you on the bench, a horse in front and the wheels turning. Caravans coming the other way get a real horse too.",
+      "Horses on the map step more cleanly as well. With Reduce motion on, everyone stands still.",
     ] },
     { id: "b145-levelup", build: 145, date: "24 Nov 2026", title: "Levelling up feels like Skyrim", items: [
       "When a skill goes up you now see it near the top of the screen: \"One-Handed increased to 36\" with a thin bar for the skill, and your level bar under it filling up, so you always know how close the next level is.",
@@ -1134,13 +1162,12 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 168;
+  const NEXT_AT = 172;
   const NEXT = [
-    "Mounted combat: fight from the saddle",
-    "Pick a side in the civil war",
-    "New painted dungeon rooms and a parchment dungeon map",
-    "Dwemer ruins and the deep caverns of Blackreach",
-    "Fishing and hunting",
+    "Dragon Shouts learned from word walls",
+    "Werewolf and vampire paths",
+    "Followers with their own quests, opinions and banter",
+    "Weather that changes how the road and fights go",
   ];
   const KEY = "rotn_notes_seen";
   const latest = () => LIST[0];

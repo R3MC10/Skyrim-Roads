@@ -64,18 +64,26 @@ const HEROART = (() => {
     } catch { /* bare save */ }
     const L = { r: s.race, id: s.id || s.name || "x", eq, gl, v: s.vampire ? 1 : 0, ww: s.werewolf ? 1 : 0 };
     if (s.sex === "f") L.sx = "f";
+    if (s.app) L.a = typeof APPEAR !== "undefined" ? APPEAR.compact(s.app) : s.app;   // the look chosen in character creation (appear.js)
     return L;
   }
-  const lookFrom = (src) => (src?.look ? src.look : src?.loadouts ? lookOf(src) : src?.eq && src?.r ? src : { r: src?.race || "nord", id: src?.id || src?.name || "x", eq: {}, gl: {}, sx: src?.sex === "f" ? "f" : undefined });
-  const keyOf = (L) => JSON.stringify([L.r, L.id, L.eq, L.gl, L.v, L.ww, L.sx || ""]);
+  const lookFrom = (src) => (src?.look ? src.look : src?.loadouts ? lookOf(src) : src?.eq && src?.r ? src : { r: src?.race || "nord", id: src?.id || src?.name || "x", eq: {}, gl: {}, sx: src?.sex === "f" ? "f" : undefined, a: src?.app || undefined });
+  const keyOf = (L) => JSON.stringify([L.r, L.id, L.eq, L.gl, L.v, L.ww, L.sx || "", L.a || 0]);
   const rigged = () => typeof FIGART !== "undefined";
 
   // ---------------------------------------------------------------- drawing (160×220 box)
   function draw(g, H, L) {
     const pal = P(), race = RACE[L.r] || RACE.nord, rnd = ART.seeded(L.id + L.r);
-    const skin = L.v ? "#d8d3cc" : race.skin[Math.floor(rnd() * race.skin.length)];
-    const hairC = race.hair.length ? race.hair[Math.floor(rnd() * race.hair.length)] : null;
-    const fem = L.sx === "f", beard = rnd() < race.beard && !fem, hs0 = String(L.id).startsWith("preview") ? 0 : [0, 0, 1, 2, 2, 0, 1, 3][Math.floor(rnd() * 8)], hairStyle = fem ? [2, 1, 2, 1][hs0] : hs0, paint = rnd() < 0.3 ? ["#1c2128", "#2f4f8a", "#8e2b25"][Math.floor(rnd() * 3)] : null;
+    let skin = L.v ? "#d8d3cc" : race.skin[Math.floor(rnd() * race.skin.length)];
+    let hairC = race.hair.length ? race.hair[Math.floor(rnd() * race.hair.length)] : null;
+    let fem = L.sx === "f", beard = rnd() < race.beard && !fem, hs0 = String(L.id).startsWith("preview") ? 0 : [0, 0, 1, 2, 2, 0, 1, 3][Math.floor(rnd() * 8)], hairStyle = fem ? [2, 1, 2, 1][hs0] : hs0, paint = rnd() < 0.3 ? ["#1c2128", "#2f4f8a", "#8e2b25"][Math.floor(rnd() * 3)] : null;
+    if (L.a && typeof APPEAR !== "undefined") {   // a look chosen in character creation (appear.js)
+      const A = APPEAR.norm(L.a, L.r); fem = A.sx === "f";
+      if (!L.v) skin = APPEAR.skinOf(L.r, A.skin);
+      hairC = race.hair.length ? APPEAR.hairColOf(L.r, A.hairC) : null;
+      beard = A.beard !== "none" && A.beard !== "stubble"; hairStyle = { long: 2, braid: 1, ponytail: 1, shaved: 3, bald: 3 }[A.hair] || 0;
+      paint = A.paint !== "none" ? APPEAR.paintOf(A.paintC) : null;
+    }
     const eq = L.eq || {};
     const chest = eq.chest, head = eq.head, hands = eq.hands, feet = eq.feet, shield = eq.shield, weapon = eq.weapon;
     const cm = chest ? MAT[matOf(chest)] : MAT.cloth, robe = !!chest && cm.w === "robe", F = (chest && cm.f) || {};
@@ -89,7 +97,8 @@ const HEROART = (() => {
     g.save(); g.translate(80, 206); g.scale(race.w, race.h); g.translate(-80, -206);
 
     // a cape behind the body (heavy sets and cloaked sets)
-    const capeC = F.cape || (heavy && !robe ? "#7a2a22" : null);
+    const ck = eq.cloak && D.ITEMS[eq.cloak] ? D.ITEMS[eq.cloak].cloakLook : null;   // a side cloak (cloaks.js)
+    const capeC = (ck && ck.c) || F.cape || (heavy && !robe ? "#7a2a22" : null);
     if (capeC) { H.poly(g, [[58, 70], [102, 70], [112, 186], [96, 192], [80, 184], [64, 192], [48, 186]], capeC, ink, 1.4); g.strokeStyle = "rgba(0,0,0,0.18)"; g.lineWidth = 1.2; for (const x of [66, 80, 94]) { g.beginPath(); g.moveTo(x, 78); g.lineTo(x + (x - 80) * 0.25, 184); g.stroke(); } }
     // tail (behind)
     if (race.tail) {
@@ -136,6 +145,11 @@ const HEROART = (() => {
       H.poly(g, [[74, 70], [86, 70], [82, 126], [78, 126]], cm.trim, null); g.strokeStyle = cm.trim; g.lineWidth = 3; g.beginPath(); g.moveTo(62, 110); g.lineTo(98, 110); g.stroke();
     } else armourChest(g, H, cm, F, heavy, matOf(chest), ink);
     if (L.gl.a) glow(g, 80, 98, 34, "#9fd0f0", 0.25);
+    if (ck) {   // the side cloak over the shoulders, pinned with the side's emblem
+      H.poly(g, [[58, 70], [68, 68], [66, 82], [56, 80]], ck.c, ink, 1.2); H.poly(g, [[102, 70], [92, 68], [94, 82], [104, 80]], ck.c, ink, 1.2);
+      if (ck.fur) { g.fillStyle = ck.fur; g.beginPath(); g.ellipse(80, 70, 22, 4.5, 0, 0, 7); g.fill(); g.strokeStyle = ink; g.lineWidth = 1; g.stroke(); }
+      if (typeof SIDES !== "undefined") SIDES.drawEmblem(g, ck.side, 66, 76, 6.5);
+    }
 
     // neck and head
     H.poly(g, [[74, 58], [86, 58], [86, 71], [74, 71]], skin, ink, 1.3);
@@ -215,7 +229,7 @@ const HEROART = (() => {
       }
     }
     // eyes
-    const eyeC = L.v ? "#e0302a" : race.eyes || "#3b4a5a";
+    const eyeC = L.v ? "#e0302a" : L.a && typeof APPEAR !== "undefined" ? APPEAR.eyeOf(L.r, APPEAR.norm(L.a, L.r).eyes) : race.eyes || "#3b4a5a";
     for (const x of [74, 86]) {
       g.fillStyle = "#f4f0e6"; g.beginPath(); g.ellipse(x, 44, 3, 2.2, 0, 0, 7); g.fill();
       g.fillStyle = eyeC; g.beginPath(); (race.ears === "cat" || race.ears === "lizard") ? g.ellipse(x, 44, 0.9, 2.1, 0, 0, 7) : g.arc(x, 44, 1.5, 0, 7); g.fill();

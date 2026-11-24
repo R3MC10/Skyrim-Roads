@@ -14,6 +14,12 @@
         replay's numbers (o.aim, o.back, o.hunch, o.lunge, o.draw, o.t, o.wt, o.shield, o.off, o.glow, o.flask); the
         torso/head and cloak are cached layers, only the limbs are drawn each frame.
      FIGART.POSES → { idle: 4, walk: 8, attack: 4, cast: 3, block: 2, hit: 2, down: 1, ride: 4, sit: 1 } (frames per pose).
+        sprite/draw also take steps (cut the cycle into more frames than the clip has, for smooth motion; frame 0..steps-1)
+        and gait for "ride" ("stand" | "walk" | gallop by default).
+     FIGART.STRIDE → units travelled per cycle ({ walk, horse: { walk, gallop } }): a scene scrolling the ground at v px/s
+        with px per unit u plays v / (stride · u) cycles a second, so planted feet and hooves move with the ground.
+     FIGART.drawHorse(g, colour, x, y, { k, cyc, gait, flip }) → a horse on its own (hooves at x, y; k = g units per unit).
+     FIGART.contact(src, { pose, frame, steps, gait }) → { foot, seat, hip, planted } in units (feet at 0,0), for tests.
    Missing gear slots (amulet, ring...) are simply not drawn. */
 const FIGART = (() => {
   const TAU = Math.PI * 2;
@@ -86,14 +92,17 @@ const FIGART = (() => {
   const hasGL = () => typeof GEARLOOK !== "undefined";
   const setKey = (id) => (id && hasGL() ? GEARLOOK.setOf(id) : null);
   const setRec = (id) => (id && hasGL() ? GEARLOOK.set(GEARLOOK.setOf(id)) : null);
+  const cloakOf = (eq) => (eq && eq.cloak && typeof D !== "undefined" && D.ITEMS[eq.cloak] && D.ITEMS[eq.cloak].cloakLook) || null;   // side cloaks (cloaks.js)
   function lookOf(src) {
     if (!src) return { r: "nord", id: "x", eq: {}, gl: {} };
     if (src.look) return src.look;
     if (src.eq && (src.r || src.gl)) return src;
     if (src.loadouts && typeof HEROART !== "undefined") return HEROART.lookOf(src);
-    return { r: src.race || "nord", id: src.id || src.name || "x", eq: {}, gl: {}, sx: src.sex === "f" ? "f" : undefined };
+    const L0 = { r: src.race || "nord", id: src.id || src.name || "x", eq: {}, gl: {}, sx: src.sex === "f" ? "f" : undefined };
+    if (src.app) L0.a = src.app;
+    return L0;
   }
-  const keyOf = (L) => JSON.stringify([L.r, L.id, L.eq, L.gl, L.v, L.ww, L.sx || ""]);
+  const keyOf = (L) => JSON.stringify([L.r, L.id, L.eq, L.gl, L.v, L.ww, L.sx || "", L.a || 0]);
   const RACE0 = { skin: ["#e2b894"], hair: ["#8a5a34"], beard: 0.5, ears: "round", h: 1, w: 1 };
   const SPECS = new Map();
   function specOf(L) {
@@ -138,12 +147,69 @@ const FIGART = (() => {
       legC: robe ? body.d : cm ? body.d : "#5a4836", greave: heavy ? cm : null,
       gloves, boots, bootsK, barefoot: !eq.feet && (L.r === "khajiit" || L.r === "argonian"),
       helm, hood: !eq.head && F.hood && (robe || ["nightingale", "shrouded", "guild"].includes(ck)) ? F.hood : null,
-      cape: F.cape || (heavy && !robe ? "#7a2a22" : null),
+      cape: (cloakOf(eq) || {}).c || F.cape || (heavy && !robe ? "#7a2a22" : null), capeSide: (cloakOf(eq) || {}).side || null, capeTrim: (cloakOf(eq) || {}).trim || null,   // a side cloak (cloaks.js) wins
       shield, wk, wset, wkey, staffC, ench: gl.w ? ELEMENT[gl.w] || "#c9b6ff" : null, aglow: !!gl.a,
       amulet: jewel(amulet), ring: jewel(ring),
     };
+    if (L.a && typeof APPEAR !== "undefined") appearOn(sp, L, race);   // a look chosen in character creation (appear.js)
     if (SPECS.size > 200) SPECS.delete(SPECS.keys().next().value);
     SPECS.set(key, sp); return sp;
+  }
+
+  /* [OURS] character creation (appear.js): the chosen face, hair, build... on top of the seeded defaults */
+  const mixC = (a, b, t) => { const x = rgbOf(a), y = rgbOf(b); return x && y ? hexOf(x.map((v, i) => v + (y[i] - v) * t)) : a; };
+  function appearOn(sp, L, race) {
+    const A = APPEAR.norm(L.a, L.r), r = L.r;
+    sp.A = A; sp.fem = A.sx === "f";
+    if (!L.v) { sp.skin = APPEAR.skinOf(r, A.skin); sp.eyes = APPEAR.eyeOf(r, A.eyes); }
+    sp.skinD = tone(sp.skin, -0.22);
+    let hc = (race.hair || []).length ? APPEAR.hairColOf(r, A.hairC) : null;
+    if (hc && A.age >= 2) hc = mixC(hc, A.age === 3 ? "#dcd8d0" : "#a8a49c", A.age === 3 ? 0.72 : 0.28);   // greying with age
+    sp.hairC = hc; sp.hairStyle = A.hair;
+    if (r === "argonian") { sp.horns = A.horns; sp.hornI = A.hairC; sp.hornC = APPEAR.hairColOf(r, A.hairC); }
+    sp.beardStyle = A.beard; sp.beard = A.beard !== "none" && A.beard !== "stubble" && !!hc; sp.beardLen = APPEAR.beardLen(A);
+    sp.face = A.face; sp.nose = A.nose; sp.mouth = A.mouth; sp.brows = A.brows; sp.age = A.age; sp.scar = A.scar; sp.tattoo = A.tattoo;
+    sp.paint = A.paint !== "none" ? APPEAR.paintOf(A.paintC) : null; sp.paintS = A.paint;
+    sp.bw = (race.w || 1) * (sp.fem ? 0.93 : 1) * APPEAR.bw(A); sp.bh = (race.h || 1) * (sp.fem ? 0.97 : 1) * APPEAR.bh(A);
+  }
+  /* the extra face marks: age lines, scars, warpaint styles, tattoos */
+  function faceMarks(g, sp, st, eyeX, eyeY, covered) {
+    if (sp.age >= 2) {
+      const c = "rgba(60,40,30,0.38)";
+      line(g, [[eyeX - 1.3, eyeY + 0.1], [eyeX - 2, eyeY + 0.5]], c, st.fine * 0.8); line(g, [[eyeX - 1.3, eyeY - 0.3], [eyeX - 2.1, eyeY - 0.5]], c, st.fine * 0.8);
+      line(g, [[0.4, -3.6], [2.8, -3.8]], c, st.fine * 0.7);
+      if (sp.age >= 3) { line(g, [[0.6, -2.8], [2.6, -2.9]], c, st.fine * 0.7); if (sp.ears !== "lizard") line(g, [[4.2, 2.1], [3.5, 3.7]], c, st.fine * 0.8); }
+    }
+    if (sp.tattoo && sp.tattoo !== "none" && !covered) {
+      g.globalAlpha = 0.6; const c = "#2f4f8a";
+      if (sp.tattoo === "rune") { line(g, [[1.6, -4.6], [1.6, -2.8]], c, st.fine * 1.1); line(g, [[0.9, -4.2], [2.3, -3.2]], c, st.fine * 1.1); line(g, [[2.3, -4.2], [0.9, -3.2]], c, st.fine * 1.1); }
+      else if (sp.tattoo === "dots") for (const [x, y] of [[1.4, 1.2], [2.2, 1.6], [1.2, 2.2], [2, 2.6]]) dot(g, x, y, 0.28, c, st);
+      else if (sp.tattoo === "lines") for (const x of [2.4, 3.1, 3.8]) line(g, [[x, 4.1], [x - 0.1, 5.2]], c, st.fine * 1.1);
+      else if (sp.tattoo === "spiral") { g.strokeStyle = c; g.lineWidth = st.fine * 1.1; g.beginPath(); for (let i = 0; i <= 24; i++) { const a = i * 0.45, rr = 0.15 + i * 0.045; const x = 1.6 + Math.cos(a) * rr, y = 1.5 + Math.sin(a) * rr; i ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke(); }
+      g.globalAlpha = 1;
+    }
+    if (sp.paintS && sp.paintS !== "band" && sp.paint && !covered) {
+      g.globalAlpha = 0.6; g.fillStyle = sp.paint;
+      if (sp.paintS === "stripes") for (let i = 0; i < 3; i++) g.fillRect(0.6 + i * 0.15, 0.7 + i * 0.85, 2.8, 0.38);
+      else if (sp.paintS === "jaw") { g.beginPath(); g.moveTo(0.2, 2.6); g.quadraticCurveTo(1.8, 3.4, 4.3, 3.9); g.quadraticCurveTo(4, 5.4, 2.6, 5.5); g.quadraticCurveTo(0.6, 5.5, -0.6, 3.4); g.closePath(); g.fill(); }
+      else if (sp.paintS === "eye") { g.strokeStyle = sp.paint; g.lineWidth = 0.75; g.beginPath(); g.ellipse(eyeX, eyeY, 1.5, 1.15, 0, 0, TAU); g.stroke(); line(g, [[eyeX - 0.2, eyeY + 1.1], [eyeX - 0.5, eyeY + 2.6]], sp.paint, 0.5); }
+      g.globalAlpha = 1;
+    }
+    if (sp.scar && sp.scar !== "none" && !(sp.helm && sp.helm.visor)) {
+      const c = sp.ears === "lizard" || sp.ears === "cat" ? "rgba(232,214,190,0.8)" : "rgba(150,64,52,0.8)", w = st.fine * 1.2;
+      if (sp.scar === "eye") { line(g, [[eyeX - 0.7, eyeY - 2.2], [eyeX + 0.1, eyeY - 0.4]], c, w); line(g, [[eyeX + 0.2, eyeY + 0.5], [eyeX + 0.6, eyeY + 1.6]], c, w); }
+      else if (sp.scar === "cheek") line(g, [[1.3, 0.8], [3.3, 2.4]], c, w);
+      else if (sp.scar === "lip") line(g, [[4.0, 2.8], [3.8, 4.1]], c, w);
+      else if (sp.scar === "brow") line(g, [[eyeX - 0.3, eyeY - 2], [eyeX + 0.5, eyeY - 0.9]], c, w);
+      else if (sp.scar === "claw") for (let i = 0; i < 3; i++) line(g, [[0.6 + i * 0.75, -0.2 + i * 0.1], [1.6 + i * 0.75, 2.6 + i * 0.1]], c, w);
+    }
+  }
+  /* Argonian head-dress other than the old frills */
+  function lizardCrest(g, sp, st) {
+    const c = sp.hornC || "#4d6a44", c2 = tone(c, 0.15);
+    if (sp.horns === "horns") for (const [dx, k] of [[0, 1], [1.4, 0.8]]) { g.beginPath(); g.moveTo(-1.6 + dx, -5); g.quadraticCurveTo(-6 + dx, -8.4 * k, -9 + dx, -4.6 * k); g.quadraticCurveTo(-6 + dx, -6 * k, -2.6 + dx, -3.4); g.closePath(); fillPath(g, dx ? c2 : "#e8dcc0", st, null, st.lw * 0.7); }
+    else if (sp.horns === "crest") { for (let i = 0; i < 6; i++) { poly(g, [[2.2 - i * 1.3, -5.6 + i * 0.3], [1.6 - i * 1.3, -8.6 + i * 0.5], [0.8 - i * 1.3, -5.4 + i * 0.4]]); fillPath(g, i % 2 ? c : c2, st, null, st.lw * 0.6); } }
+    else if (sp.horns === "spikes") for (let i = 0; i < 5; i++) { const a = -1.9 + i * 0.42, x = -1 + Math.cos(a) * 5, y = -0.4 + Math.sin(a) * 5.4; poly(g, [[x, y], [x + Math.cos(a) * 2.4 - 0.6, y + Math.sin(a) * 2.4], [x - 0.6 * Math.sin(a) + 0.4, y + 0.6 * Math.cos(a)]]); fillPath(g, i % 2 ? c : c2, st, null, st.lw * 0.6); }
   }
 
   // ---------------------------------------------------------------- animation clips
@@ -206,7 +272,7 @@ const FIGART = (() => {
     P.front = clip.front !== undefined ? clip.front : P.back < -0.8;
     return P;
   }
-  const poseOf = (name, frame, sp, o) => { const n = POSES[name] || 1; return poseAt(name, ((((frame | 0) % n) + n) % n) / n, sp, o); };
+  const poseOf = (name, frame, sp, o) => { const n = POSES[name] || 1; return poseAt(name, (((frame % n) + n) % n) / n, sp, o); };   // fractional frames (o.steps) sample between keys
   /* fade pose a into pose b (w = 0..1) */
   function blend(a, b, w) { const P = mix(a, b, clamp(w, 0, 1)); return Object.assign({}, w < 0.5 ? a : b, P); }
 
@@ -319,10 +385,11 @@ const FIGART = (() => {
       g.quadraticCurveTo(6.6, 2.6, 5.4, 2.8); g.quadraticCurveTo(5.4, 3.8, 4.5, 4.2); g.quadraticCurveTo(4, 5.4, 2.4, 5.4); g.quadraticCurveTo(0.2, 5.4, -0.8, 3.4);
       g.quadraticCurveTo(-4.8, 2.6, -4.6, -1.2); g.quadraticCurveTo(-4.4, -5.8, -1, -6);
     } else {
-      const orc = sp.ears === "orc", jaw = orc ? 0.6 : sp.fem ? -0.3 : 0;
+      const orc = sp.ears === "orc", jaw = (orc ? 0.6 : sp.fem ? -0.3 : 0) + [0, 0.55, -0.4, 0.35][sp.face || 0];
+      const nx = (orc ? 5.3 : sp.fem ? 5.3 : 5.7) + [0, 0.35, 0.15, -0.45][sp.nose || 0], ny = 1.7 + [0, 0.35, 0.1, -0.1][sp.nose || 0];
       g.moveTo(-1, -6.1); g.quadraticCurveTo(3.2, -6.2, 4, -3); g.quadraticCurveTo(orc ? 5 : 4.5, -1.6, 4.2, -0.8);
-      g.lineTo(orc ? 5.3 : sp.fem ? 5.3 : 5.7, 1.7); g.lineTo(4.5, 2.3); g.quadraticCurveTo(4.8, 2.8, 4.4, 3.3); g.quadraticCurveTo(4.7, 3.9, 4.1 + jaw * 0.4, 4.4);
-      g.quadraticCurveTo(4 + jaw, 5.4 + jaw * 0.3, 2.6, 5.5 + jaw * 0.2); g.quadraticCurveTo(0.6, 5.5, -0.6, 3.4); g.quadraticCurveTo(-4.6, 2.6, -4.4, -1.2); g.quadraticCurveTo(-4.2, -5.8, -1, -6.1);
+      if (sp.nose === 1) g.quadraticCurveTo(nx - 0.2, 0.2, nx, ny); else g.lineTo(nx, ny); g.lineTo(4.5, 2.3); g.quadraticCurveTo(4.8, 2.8, 4.4, 3.3); g.quadraticCurveTo(4.7, 3.9, 4.1 + jaw * 0.4, 4.4);
+      if (sp.face === 3) { g.lineTo(4 + jaw, 5.3 + jaw * 0.3); g.lineTo(2.6, 5.6 + jaw * 0.2); } else g.quadraticCurveTo(4 + jaw, 5.4 + jaw * 0.3, 2.6, 5.5 + jaw * 0.2); g.quadraticCurveTo(0.6, 5.5, -0.6, 3.4); g.quadraticCurveTo(-4.6, 2.6, -4.4, -1.2); g.quadraticCurveTo(-4.2, -5.8, -1, -6.1);
     }
     g.closePath();
   }
@@ -339,9 +406,12 @@ const FIGART = (() => {
       if (sp.hairStyle === "long") { smooth(g, [[-1.6, -6.4], [-5.4, -4], [-5.8, 2], [-6, 8.4], [-3.2, 9.6], [-2.4, 4], [-1.4, 0]]); fillPath(g, hc, st, [-1, -6, -6, 8]); }
       if (sp.hairStyle === "braid") { for (let i = 0; i < 5; i++) { g.beginPath(); g.ellipse(-4.4 - i * 0.25, 2.6 + i * 1.6, 1.25, 1, 0.3, 0, TAU); fillPath(g, hc, st, null, st.lw * 0.7); } }
       if (sp.hairStyle === "bun") { dot(g, -4.4, -4.4, 2.2, hc, st, st.lw * 0.8); }
+      if (sp.hairStyle === "ponytail") { smooth(g, [[-3.6, -4.8], [-6.6, -3.4], [-7.8, 1.4], [-7, 6.4], [-5.6, 4.4], [-5.4, 0], [-3.8, -2.2]]); fillPath(g, hc, st, [-3, -5, -7, 5]); dot(g, -5.4, -3.6, 0.7, tone(hc, -0.35), st); }
+      if (sp.hairStyle === "wild") { for (let i = 0; i < 6; i++) { const a = -2.6 + i * 0.42, x = -1 + Math.cos(a) * 4.6, y = -0.6 + Math.sin(a) * 5.4; poly(g, [[x + 1.1 * Math.sin(a), y - 1.1 * Math.cos(a)], [x + Math.cos(a) * 3.2, y + Math.sin(a) * 3.2], [x - 1.1 * Math.sin(a), y + 1.1 * Math.cos(a)]]); fillPath(g, hc, st, null, st.lw * 0.7); } }
     }
     if (hood) { smooth(g, [[4.6, -3.6], [3.6, -8.4], [-1.6, -8.2], [-6.4, -6.4], [-6.6, 0], [-6.4, 5], [-4.8, 8.2], [-0.6, 7.4], [2.2, 5.6], [1.4, 1], [2.6, -2.4]]); fillPath(g, tone(hood, -0.25), st, [3, -8, -6, 6], 0); }
-    if (sp.ears === "lizard" && !covered) for (let i = 0; i < 4; i++) { poly(g, [[-2.6 + i * 0.6, -5 + i * 1.6], [-8.4 - i * 0.4, -6.4 + i * 3], [-3.4 + i * 0.6, -3.4 + i * 1.6]]); fillPath(g, i % 2 ? "#4d6a44" : "#5e7a50", st, null, st.lw * 0.7); }
+    if (sp.ears === "lizard" && !covered && sp.horns && sp.horns !== "frills") lizardCrest(g, sp, st);
+    else if (sp.ears === "lizard" && !covered) for (let i = 0; i < 4; i++) { poly(g, [[-2.6 + i * 0.6, -5 + i * 1.6], [-8.4 - i * 0.4, -6.4 + i * 3], [-3.4 + i * 0.6, -3.4 + i * 1.6]]); fillPath(g, sp.hornI ? (i % 2 ? sp.hornC : tone(sp.hornC, 0.15)) : i % 2 ? "#4d6a44" : "#5e7a50", st, null, st.lw * 0.7); }
     // the head
     headShape(g, sp); fillPath(g, skin, st, [4, -5, -4, 4]);
     // ears
@@ -360,7 +430,7 @@ const FIGART = (() => {
     if (sp.vamp) glowAt(g, eyeX, eyeY, 2, "#e0302a", 0.5, st);
     g.strokeStyle = ink; g.lineWidth = st.fine;
     g.beginPath(); g.moveTo(eyeX - 0.9, eyeY - 0.5); g.quadraticCurveTo(eyeX, eyeY - 0.95, eyeX + 0.9, eyeY - 0.35); g.stroke();   // lid
-    if (sp.ears !== "lizard") { g.lineWidth = sp.ears === "orc" ? st.fine * 2 : st.fine * 1.4; g.beginPath(); g.moveTo(eyeX - 1, eyeY - 1.3); g.lineTo(eyeX + 1.2, eyeY - 1.1); g.stroke(); }   // brow
+    if (sp.ears !== "lizard") { g.lineWidth = (sp.ears === "orc" ? st.fine * 2 : st.fine * 1.4) * [1, 1.7, 0.7, 1][sp.brows || 0]; g.beginPath(); g.moveTo(eyeX - 1, eyeY - 1.3 + (sp.brows === 1 ? 0.15 : 0)); if (sp.brows === 3) g.quadraticCurveTo(eyeX, eyeY - 2.1, eyeX + 1.2, eyeY - 1.2); else g.lineTo(eyeX + 1.2, eyeY - 1.1); g.stroke(); }   // brow
     g.lineWidth = st.fine;
     if (sp.ears === "lizard") { g.beginPath(); g.moveTo(4.6, 3.2); g.lineTo(8.6, 1.8); g.stroke(); dot(g, 8.6, 0.6, 0.3, ink, st); for (const [x, y] of [[0, -3], [2, -4], [-2, -1], [1, 1], [5, -1.6]]) dot(g, x, y, 0.55, "rgba(0,0,0,0.14)", st); }
     else if (sp.ears === "cat") {
@@ -368,21 +438,28 @@ const FIGART = (() => {
       g.strokeStyle = "rgba(244,240,230,0.85)"; g.lineWidth = st.fine * 0.8; for (const dy of [1.2, 2.1]) { g.beginPath(); g.moveTo(5.4, dy); g.lineTo(9, dy - 0.6 + (dy - 1.5)); g.stroke(); }
       g.strokeStyle = "rgba(59,44,30,0.45)"; g.lineWidth = st.fine * 1.4; for (const x of [0.4, 2]) { g.beginPath(); g.moveTo(x, -6); g.lineTo(x + 0.5, -4); g.stroke(); }
     } else {
-      line(g, [[3.7, 3.4], [4.4, 3.3]], ink, st.fine); line(g, [[4.6, 1.9], [4.9, 2.2]], ink, st.fine);   // mouth and nostril
+      if (!sp.mouth) line(g, [[3.7, 3.4], [4.4, 3.3]], ink, st.fine);   // mouth
+      else { g.strokeStyle = ink; g.lineWidth = st.fine * (sp.mouth === 2 ? 1.3 : 1); g.beginPath(); g.moveTo(sp.mouth === 2 ? 3.4 : 3.6, sp.mouth === 3 ? 3.6 : 3.35); g.quadraticCurveTo(4, sp.mouth === 1 ? 3.85 : sp.mouth === 3 ? 3.05 : 3.4, 4.45, sp.mouth === 1 ? 3.05 : sp.mouth === 3 ? 3.65 : 3.3); g.stroke(); }
+      if (sp.nose === 2) line(g, [[4.4, 1.9], [5, 2.4]], ink, st.fine * 1.3); else line(g, [[4.6, 1.9], [4.9, 2.2]], ink, st.fine);   // nostril
       if (sp.ears === "orc") { poly(g, [[3.7, 4.2], [4.2, 2.4], [4.6, 4.3]]); fillPath(g, "#f4f0e6", st, null, st.fine); }
       if (sp.fem) dot(g, 2.4, 1.6, 1, "rgba(200,90,80,0.22)", st);
     }
-    if (sp.paint && !covered) { g.globalAlpha = 0.55; g.fillStyle = sp.paint; g.fillRect(1.2, -1.4, 3.2, 1.3); g.globalAlpha = 1; }
+    if (sp.paint && !covered && (!sp.paintS || sp.paintS === "band")) { g.globalAlpha = 0.55; g.fillStyle = sp.paint; g.fillRect(1.2, -1.4, 3.2, 1.3); g.globalAlpha = 1; }
+    if (sp.A) faceMarks(g, sp, st, eyeX, eyeY, covered);
     // beard and moustache
     if (sp.beard && hc && !(helm && helm.visor)) {
       const L = sp.beardLen;
       g.beginPath(); g.moveTo(0.2, 0.8); g.quadraticCurveTo(0.6, 4.6, 2.4, 5.6 + L * 0.4); g.lineTo(3.6, 5.8 + L); g.quadraticCurveTo(4.9, 5.6 + L * 0.5, 4.7, 3.9); g.lineTo(3.8, 3.8); g.quadraticCurveTo(2.6, 4.1, 1.8, 2.4); g.closePath();
       fillPath(g, hc, st, [4, 2, 1, 6 + L]); line(g, [[3.9, 2.5], [5, 2.8], [5.1, 3.4]], hc, 0.9);
       g.strokeStyle = tone(hc, -0.3); g.lineWidth = st.fine * 0.8; for (const x of [1.6, 2.6, 3.5]) { g.beginPath(); g.moveTo(x, 3.6); g.lineTo(x + 0.4, 5 + L * 0.7); g.stroke(); }
-    } else if (!sp.fem && sp.ears === "round" && !covered) dot(g, 2.6, 3.8, 1.6, "rgba(60,40,30,0.08)", st);   // stubble
+      if (sp.beardStyle === "braided") for (const y of [5.6 + L * 0.45, 5.6 + L * 0.8]) line(g, [[2.4, y], [4, y - 0.3]], "#8f8a84", st.fine * 1.6);   // braid rings
+    } else if (sp.beardStyle === "stubble" && !(helm && helm.visor)) { g.beginPath(); g.moveTo(0.4, 1.2); g.quadraticCurveTo(0.8, 4.6, 2.6, 5.3); g.quadraticCurveTo(4.2, 5.2, 4.4, 3.8); g.quadraticCurveTo(2.6, 4, 1.8, 2.2); g.closePath(); g.fillStyle = "rgba(50,36,26,0.22)"; g.fill(); }
+    else if (!sp.fem && sp.ears === "round" && !covered) dot(g, 2.6, 3.8, 1.6, "rgba(60,40,30,0.08)", st);   // stubble
     // hair on top
     if (hc && !covered) {
-      if (sp.hairStyle === "shaved") { hairCap(g, sp); g.globalAlpha = 0.45; g.fillStyle = hc; g.fill(); g.globalAlpha = 1; }
+      if (sp.hairStyle === "bald") { /* nothing on top */ }
+      else if (sp.hairStyle === "mohawk") { smooth(g, [[3, -5.2], [1.6, -7.8], [-1.6, -8.2], [-4.6, -6.4], [-5.4, -3.2], [-4.2, -4.8], [-1.4, -6.4], [1.4, -6.2]]); fillPath(g, hc, st, [2, -8, -4, -4]); }
+      else if (sp.hairStyle === "shaved") { hairCap(g, sp); g.globalAlpha = 0.45; g.fillStyle = hc; g.fill(); g.globalAlpha = 1; }
       else if (sp.ears !== "cat" || sp.hairStyle !== "short") {
         hairCap(g, sp); fillPath(g, hc, st, [3, -7, -4, 2]);
         g.strokeStyle = tone(hc, -0.32); g.lineWidth = st.fine * 0.9; for (const [a, b] of [[[2.6, -5.4], [-2, -4.6]], [[1.2, -6], [-3.6, -2.4]], [[3.2, -4.2], [-1.4, -2.6]]]) { g.beginPath(); g.moveTo(...a); g.quadraticCurveTo((a[0] + b[0]) / 2, Math.min(a[1], b[1]) - 0.8, ...b); g.stroke(); }
@@ -619,6 +696,8 @@ const FIGART = (() => {
     fillPath(g, c, st, [-1, -48, -10, -10]);
     g.strokeStyle = tone(c, -0.35); g.lineWidth = st.fine * 1.4;
     for (const k of [0.35, 0.7]) { g.beginPath(); g.moveTo(-4.6 + k, -44); g.quadraticCurveTo(-6.6 - sw * 0.4 * k, -26, -8.6 - sw * k + t, -8); g.stroke(); }
+    if (sp.capeTrim) { g.strokeStyle = sp.capeTrim; g.lineWidth = st.fine * 1.6; g.beginPath(); g.moveTo(-10.8 - sw + t, -7); g.lineTo(-7.6 - sw * 0.8, -5.4); g.lineTo(-5 - sw * 0.5 + t, -7.4); g.stroke(); }   // side cloak hem
+    if (sp.capeSide && typeof SIDES !== "undefined") SIDES.drawEmblem(g, sp.capeSide, -6.4 - sw * 0.45, -27, 2.6);   // the side's emblem on the cloak
   }
   function tail(g, sp, P, st) {
     if (!sp.tail) return;
@@ -638,27 +717,47 @@ const FIGART = (() => {
   }
 
   // ---- the horse (feet at 0,0, facing right; the saddle seat sits at about y = -40)
+  /* Gaits: each hoof lands (u = 0), stays planted and is carried back under the body at the ground's speed for `duty` of
+     the cycle, then lifts and swings forward. S = half the hoof's travel under its hip (units), so one cycle moves the
+     horse STRIDE = 2·S/duty units: a scene scrolling the ground at v px/s plays v / (STRIDE · px per unit) cycles a
+     second and the hooves never slide. td = when each hoof lands (n = near/left side, f = far side; h = hind, f = front). */
+  const GAIT = {
+    stand: { S: 0, duty: 1, lift: 0, bob: 0, td: { nh: 0, nf: 0, fh: 0, ff: 0 } },
+    walk: { S: 7.4, duty: 0.62, lift: 3.4, bob: 0.4, td: { nh: 0, nf: 0.25, fh: 0.5, ff: 0.75 } },   // the four-beat walk
+    gallop: { S: 8, duty: 0.4, lift: 6.4, bob: 0.4, ext: 0.9, td: { fh: 0, nh: 0.1, ff: 0.38, nf: 0.48 } },   // hinds, then fronts, then a moment in the air
+  };
+  const gaitOf = (gt) => GAIT[gt] || GAIT.gallop;
+  const HIPS = { nf: [15, false, false], nh: [-15, true, false], ff: [11, false, true], fh: [-12, true, true] };   // x, hind, far
+  const HL1 = 11, HL2 = 13.3;
+  /* where each leg is at this frame (0..4 = one cycle; fractions are fine): hip (x, y), knee (kx, ky), hoof top (fx, fy) */
+  function horseLegs(frame, gait) {
+    const G = gaitOf(gait), c = (((frame / 4) % 1) + 1) % 1, bob = Math.sin(c * TAU * 2) * G.bob, out = { bob };
+    for (const id in HIPS) {
+      const [x, hind, far] = HIPS[id], hy = -24 + bob, u = (((c - G.td[id]) % 1) + 1) % 1;
+      let dx, lift = 0;
+      if (G.S === 0) dx = hind ? 1 : -0.5;
+      else if (u < G.duty) dx = G.S - 2 * G.S * (u / G.duty);   // planted: the ground carries it back
+      else { const s = (u - G.duty) / (1 - G.duty), e = (1 - Math.cos(Math.PI * s)) / 2; dx = -G.S + 2 * G.S * e; lift = G.lift * Math.sin(Math.PI * s); }
+      const [kx, ky, fx, fy] = ik(x, hy, x + dx, -0.6 - lift, HL1, HL2 + (G.ext || 0), hind ? 1 : -1);   // knees bend forward in front, hocks point back
+      out[id] = { x, y: hy, kx, ky, fx, fy, hind, far, down: G.S === 0 || u < G.duty };
+    }
+    return out;
+  }
   function horse(g, col, frame, st, part, gait) {   // gait: "stand" (idle: still legs, tail swish, head nod), "walk", or a gallop (default)
     const still = gait === "stand", slow = gait === "walk";
-    const ph = frame / 4 * TAU, mane = tone(col, -0.55), dk = tone(col, -0.25), bob = still ? 0 : Math.sin(ph * 2) * (slow ? 0.4 : 0.8);
-    const nod = still ? Math.sin(ph) * 0.07 : slow ? Math.sin(ph * 2) * 0.04 : 0;
-    const legH = (x, y, ang, bend, far, hind) => {
-      const c = far ? dk : col, l1 = 10.5, l2 = 11.5, kx = x + Math.sin(ang) * l1, ky = y + Math.cos(ang) * l1, a2 = ang + (hind ? bend : -bend), fx = kx + Math.sin(a2) * l2, fy = Math.min(0, ky + Math.cos(a2) * l2);
-      limb(g, x, y, kx, ky, hind ? 6.4 : 5.4, 3.2, c, st); limb(g, kx, ky, fx, fy, 3, 2.4, c, st);
-      poly(g, [[fx - 1.7, fy - 1.2], [fx + 1.9, fy - 1.2], [fx + 2.2, fy + 0.6], [fx - 1.9, fy + 0.6]]); fillPath(g, "#2a2420", st, null, st.fine);
-    };
-    const legs = (far) => {
-      const A = still ? 0.03 : slow ? 0.3 : 0.55, BEND = still ? 0.12 : slow ? 0.5 : 0.9;
-      for (const [x, off, hind] of far ? [[11, 0.6, false], [-12, Math.PI + 0.6, true]] : [[15, 0, false], [-15, Math.PI, true]]) {
-        const a = A * Math.sin(ph + off), bend = BEND * Math.max(0, Math.sin(ph + off + 1.2));
-        legH(x, -24 + bob, hind ? -a * 0.8 : a, bend, far, hind);
-      }
+    const ph = frame / 4 * TAU, mane = tone(col, -0.55), dk = tone(col, -0.25), LG = horseLegs(frame, gait), bob = LG.bob;
+    const nod = still ? Math.sin(ph) * 0.07 : slow ? Math.sin(ph * 2) * 0.04 : Math.sin(ph * 2) * 0.03;
+    const legH = (L) => {
+      const c = L.far ? dk : col;
+      limb(g, L.x, L.y, L.kx, L.ky, L.hind ? 6.4 : 5.4, 3.2, c, st); limb(g, L.kx, L.ky, L.fx, L.fy, 3, 2.4, c, st);
+      poly(g, [[L.fx - 1.7, L.fy - 1.2], [L.fx + 1.9, L.fy - 1.2], [L.fx + 2.2, L.fy + 0.6], [L.fx - 1.9, L.fy + 0.6]]); fillPath(g, "#2a2420", st, null, st.fine);
     };
     if (part !== "front") {
-      legs(true);
-      // the tail
-      const tw = Math.sin(ph) * (still ? 3.6 : 2);
-      g.lineCap = "round"; line(g, [[-23, -35 + bob], [-29 - tw, -30], [-31 - tw, -18], [-30 - tw * 1.4, -12]], st.ink, 4.6); line(g, [[-23, -35 + bob], [-29 - tw, -30], [-31 - tw, -18], [-30 - tw * 1.4, -12]], mane, 3.2);
+      legH(LG.ff); legH(LG.fh);
+      // the tail (streaming back more at speed)
+      const tw = Math.sin(ph) * (still ? 3.6 : 2), fl = still ? 0 : slow ? 1.5 : 5;
+      const tl = [[-23, -35 + bob], [-29 - tw - fl * 0.4, -30 + fl * 0.1], [-31 - tw - fl, -18 - fl * 0.5], [-30 - tw * 1.4 - fl * 1.5, -12 - fl * 0.8]];
+      g.lineCap = "round"; line(g, tl, st.ink, 4.6); line(g, tl, mane, 3.2);
     }
     if (part === "back") return;
     g.save(); g.translate(0, bob);
@@ -672,15 +771,36 @@ const FIGART = (() => {
     poly(g, [[24.4, -59.6], [24.6, -64.6], [27, -60.4]]); fillPath(g, col, st, null, st.fine);
     dot(g, 29.6, -55.6, 0.7, "#1c1714", st); dot(g, 37.4, -47.4, 0.45, "#1c1714", st);
     // mane and forelock
-    g.beginPath(); g.moveTo(24.2, -61.4); for (let i = 0; i <= 6; i++) { const t2 = i / 6, x = 24.2 - t2 * 14, y = -61.4 + t2 * 21; g.lineTo(x - 2.2 - (i % 2) * 1.2, y + 1.2); g.lineTo(x - 0.4, y + 3.2); }
+    const mf = still ? 0 : Math.sin(ph * 2 + 1) * (slow ? 0.4 : 0.9);   // the mane flicks with the stride
+    g.beginPath(); g.moveTo(24.2, -61.4); for (let i = 0; i <= 6; i++) { const t2 = i / 6, x = 24.2 - t2 * 14, y = -61.4 + t2 * 21; g.lineTo(x - 2.2 - (i % 2) * 1.2 - mf * t2, y + 1.2); g.lineTo(x - 0.4, y + 3.2); }
     g.lineTo(11.6, -38); g.quadraticCurveTo(18, -50, 24.2, -61.4); g.closePath(); fillPath(g, mane, st, null, st.fine);
     // tack: bridle, saddle cloth, saddle
     line(g, [[26, -58.8], [30.6, -51.4], [36.6, -46.8]], "#3b2c1e", 0.6); line(g, [[28.4, -50.4], [33.4, -52.6]], "#3b2c1e", 0.5);
     if (nod) g.restore();
     smooth(g, [[-8, -39.4], [9, -41.4], [9.6, -30.4], [-8.6, -29.6]]); fillPath(g, "#7a2a22", st, [8, -41, -8, -30]); line(g, [[-8.4, -31], [9.4, -31.6]], ART.PAL.gold, 0.8);
     smooth(g, [[-6.4, -40.2], [-3, -39], [4, -39.4], [7.4, -42.6], [6.2, -38], [-5.4, -37]]); fillPath(g, "#5e3e26", st, [4, -42, -4, -37]);
-    legs(false);
     g.restore();
+    legH(LG.nh); legH(LG.nf);   // the near legs over the body (their hips already ride the bob, so the hooves stay on the ground)
+  }
+  /* a horse on its own (a caravan's, a carriage's): feet at (x, y), k = g units per horse unit, cyc = 0..1 through the stride */
+  function drawHorse(g, col, x, y, o = {}) {
+    const k = o.k || 0.5, st = styleOf(k * devScale(g)), f = (o.cyc || 0) * 4;
+    g.save(); g.translate(x, y); if (o.flip) g.scale(-1, 1); g.scale(k, k); g.lineJoin = "round"; g.lineCap = "round";
+    horse(g, col, f, st, "back", o.gait); horse(g, col, f, st, "front", o.gait);
+    g.restore();
+  }
+  /* where things touch, in figure units with the feet at 0,0 (for tests and scenes): the lowest foot or hoof (0 = on the
+     ground, negative = in the air), the saddle seat and the rider's hips (riding), and the planted hooves' x */
+  function contact(src, o = {}) {
+    const sp = specOf(lookFor(src, o)), pose = POSES[o.pose] ? o.pose : "idle", frame = frameOf(pose, o), P = posed(sp, pose, frame, o), B = solve(sp, P);
+    const feet = [B.footN, B.footF].map((b) => (b.y + 2.2) * sp.bh), out = { foot: Math.max(...feet) };
+    if (pose === "ride") {
+      const L = horseLegs(frame, o.gait || null), hooves = ["nf", "nh", "ff", "fh"].map((id) => L[id]);
+      out.foot = Math.max(...hooves.map((h) => h.fy + 0.6));
+      out.planted = {}; for (const id of ["nf", "nh", "ff", "fh"]) if (L[id].down) out.planted[id] = [L[id].fx, L[id].fy + 0.6];   // hooves on the ground: leg → [x, y]
+      out.seat = -40 + L.bob; out.hip = B.pelvis.y * sp.bh;
+    }
+    return out;
   }
 
   // ---------------------------------------------------------------- one whole figure, drawn from its solved rig
@@ -740,7 +860,8 @@ const FIGART = (() => {
   const mk = (w, h) => { const c = document.createElement("canvas"); c.width = Math.max(1, Math.ceil(w)); c.height = Math.max(1, Math.ceil(h)); return c; };
   /* seconds per loop of each clip (for o.t in seconds) */
   const LOOP = { idle: 2.4, walk: 0.9, attack: 0.8, cast: 0.9, block: 1.2, hit: 0.5, down: 1, ride: 0.6, sit: 1 };
-  const frameOf = (pose, o) => { const n = POSES[pose]; const f = o.t != null ? Math.floor((o.t / LOOP[pose]) * n) : o.frame | 0; return ((f % n) + n) % n; };
+  /* o.steps (more than the clip's frames) cuts the cycle finer for smooth motion: frame 0..steps-1 → a fractional clip frame */
+  const frameOf = (pose, o) => { const n = POSES[pose], m = o.steps > n ? o.steps | 0 : n; const f = o.t != null ? Math.floor((o.t / LOOP[pose]) * m) : o.frame | 0; return (((f % m) + m) % m) * n / m; };
   /* a look, with optional overrides: o.look (a whole look), o.gear ({slot: itemId}, e.g. for a bandit or draugr card), o.race, o.sex */
   function lookFor(src, o = {}) {
     let L = o.look || lookOf(src);
@@ -838,7 +959,10 @@ const FIGART = (() => {
     drawPose(g, sp, P, st, { back: () => put(layer(sp, "back", k, P)), front: () => put(layer(sp, "front", k, P)) });
   }
 
-  return { POSES, LOOP, RIG, sprite, draw, fight, animator, specOf, lookOf, lookFor, poseOf, poseAt, blend, solve, clipsFor, tone, clear: () => { SPRITES.clear(); LAYERS.clear(); SPECS.clear(); CLIPS.clear(); } };
+  const STRIDE = { walk: 28.8, horse: { stand: 0, walk: 2 * GAIT.walk.S / GAIT.walk.duty, gallop: 2 * GAIT.gallop.S / GAIT.gallop.duty } };   // units travelled per cycle
+  return { POSES, LOOP, RIG, STRIDE, sprite, draw, drawHorse, contact, fight, animator, specOf, lookOf, lookFor, poseOf, poseAt, blend, solve, clipsFor, tone, clear: () => { SPRITES.clear(); LAYERS.clear(); SPECS.clear(); CLIPS.clear(); },
+    /* [OURS] forget the cached frames of one look (character creation makes a new look on every click; chargen.js) */
+    drop: (src) => { const k = specOf(lookFor(src)).key + "|"; for (const m of [SPRITES, LAYERS]) for (const key of [...m.keys()]) if (key.startsWith(k)) m.delete(key); } };
 })();
 if (typeof HEROART !== "undefined") {   // the shared hero art API lives on HEROART too (see the notes at the top of heroart.js)
   HEROART.sprite = FIGART.sprite; HEROART.drawFigure = FIGART.draw; HEROART.fightFigure = FIGART.fight; HEROART.animator = FIGART.animator; HEROART.POSES = FIGART.POSES;

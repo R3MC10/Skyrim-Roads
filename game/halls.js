@@ -221,6 +221,7 @@ const HALLS = (() => {
   function canUse(s, h) {
     if (!h) return false;
     if (!isClan(h)) return s.hall === h;
+    if (typeof SIDES !== "undefined") return SIDES.oldHall(s, h);   // clans are gone (sides.js): an old guild hall stays open to its old members
     const c = typeof CLANS !== "undefined" ? CLANS.of(s.id, s) : null;
     return !!c && c.id === h.clan;
   }
