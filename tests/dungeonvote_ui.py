@@ -23,7 +23,7 @@ async def main():
         chrome = os.environ.get("CHROME") or ("/usr/bin/google-chrome" if os.path.exists("/usr/bin/google-chrome") else None)
         b = await p.chromium.launch(executable_path=chrome, args=["--no-sandbox"])
         errs = []
-        for style in (os.environ.get("STYLES") or "ink,pixel").split(","):
+        for style in (os.environ.get("STYLES") or "ink").split(","):
             ctx = await b.new_context(viewport={"width": 412, "height": 915}, device_scale_factor=2)
             await ctx.add_init_script(f"localStorage.setItem('rotn_prefs', JSON.stringify({{artStyle:'{style}'}}))")
             async def phone(tag, name):

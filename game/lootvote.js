@@ -170,10 +170,11 @@ const LOOTVOTE = (() => {
       const got = strip(s, before);
       if (leader()) {
         if ((got.items.length || got.gold) && res) res.text = `${res.text || ""} Into the party's loot pile: ${[got.gold ? got.gold + " gold" : "", ...got.items.map((x) => (x.qty > 1 ? `${x.qty}× ` : "") + (D.ITEMS[x.item]?.name || x.item))].filter(Boolean).join(", ")}.`.trim();
+        const rec = c === "pick" && res ? (/^Click/.test(res.text || "") ? "pick@1" : "pick@0") : c;   // the lock: members replay whether it opened, not a roll of their own
         const tok = Math.random().toString(36).slice(2);   // a busy store answers null: try again, but never write the same choice twice (members would replay it twice)
         for (let k = 0; k < 4; k++) {
           if (k) await new Promise((ok) => setTimeout(ok, 250 * k));
-          if (await Store.change("runs", r.id, (x) => ((x.actIds || []).includes(tok) ? x : { ...poolAdd(recordAct(x, step, c), got.items, got.gold), actIds: [...(x.actIds || []).slice(-40), tok] }))) break;
+          if (await Store.change("runs", r.id, (x) => ((x.actIds || []).includes(tok) ? x : { ...poolAdd(recordAct(x, step, rec), got.items, got.gold), actIds: [...(x.actIds || []).slice(-40), tok] }))) break;
         }
       } else if (res && (got.items.length || got.gold)) res.text = `${res.text || ""} (Finds go to the party's loot pile.)`.trim();
       ctx.persist(true);

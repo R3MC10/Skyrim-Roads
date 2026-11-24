@@ -171,7 +171,7 @@ const PERKS = (() => {
       ["steel_smithing", "Steel Smithing", 1, [20], [], "Improve steel and Ancient Nord gear twice as much. [Skyrim]"],
       ["arcane_blacksmith", "Arcane Blacksmith", 1, [60], ["steel_smithing"], "You can improve enchanted weapons and armor. [Skyrim]"],
       ["elven_smithing", "Elven Smithing", 1, [30], ["steel_smithing"], "Improve Elven gear twice as much. [Skyrim]"],
-      ["dwarven_smithing", "Dwarven Smithing", 1, [30], ["steel_smithing"], "Improve Dwarven gear twice as much. [Skyrim]"],
+      ["dwarven_smithing", "Dwarven Smithing", 1, [30], ["steel_smithing"], "Improve Dwarven gear twice as much, and smelt Dwemer scrap from the ruins into Dwarven ingots. [Skyrim]"],
       ["advanced_armors", "Advanced Armors", 1, [50], ["steel_smithing"], "Improve chainmail and steel plate twice as much. [Skyrim]"],
     ],
     "Enchanting": [

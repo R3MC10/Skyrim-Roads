@@ -1,5 +1,5 @@
 """Spell tome info at a merchant (tomeinfo.js): the court wizard's tome rows show school, level, magicka, what the
-spell does and whether your skill is enough; the pack's tome card too. Ink and pixel, 390x844.
+spell does and whether your skill is enough; the pack's tome card too. 390x844.
 Usage: python3 tomeinfo_ui.py PORT   (screenshots in tests/out_tomeinfo/)"""
 import asyncio, sys, os, re
 from playwright.async_api import async_playwright
@@ -19,7 +19,7 @@ async def run(b, style):
     await pg.evaluate("""(st)=>{ document.querySelectorAll('#modal').forEach(m=>m.remove()); const S=window.__dbg.save(); S.location='Winterhold'; [S.x,S.y]=WORLD.places.Winterhold; S.gold=5000;
       for (const k of ['Destruction','Restoration','Alteration','Conjuration','Illusion']) S.skills[k].lvl = 40;
       if(!S.discovered.includes('Winterhold')) S.discovered.push('Winterhold'); G.shopsOpen=()=>true;
-      ART.setStyle(st); document.documentElement.classList.toggle('art-pixel', st==='pixel'); }""", style)
+      }""", style)
     await pg.click("[data-tab=map]"); await pg.click("[data-tab=town]"); await pg.wait_for_timeout(400)
     for _ in range(4):
         await pg.evaluate(CLEAR); await pg.wait_for_timeout(400)
@@ -49,7 +49,7 @@ async def main():
     os.makedirs(OUT, exist_ok=True)
     async with async_playwright() as p:
         b = await p.chromium.launch(args=["--no-sandbox"])
-        for st in ("ink", "pixel"): await run(b, st)
+        for st in ("ink",): await run(b, st)
         await b.close()
     print("RESULT", "OK" if not fails else f"FAIL {len(fails)}")
 asyncio.run(main())

@@ -49,7 +49,7 @@ vm.runInContext(`(() => {
   ok(F.speed() === 1 && F.autoRoad() === false, "defaults: x1, wait for me");
   ok(F.pref("fightSpeed", "4") && F.speed() === 1, "an old saved speed is ignored (no speed button since build 146)");
   ok(F.pref("fqAutoRoad", "true") && F.autoRoad() === true, "carry on");
-  ok(F.pref("artStyle", "ink") === false, "other settings untouched");
+  ok(F.pref("lang", "en") === false, "other settings untouched");
   const seg = (k, opts, cur) => k + ":" + opts.map(([v, l]) => (String(v) === String(cur) ? "[" + l + "]" : l)).join(",");
   const sh = F.settingsHTML(seg);
   ok(!/fightSpeed/.test(sh) && /fqAutoRoad:Wait for me,\\[Carry on\\]/.test(sh), "settings rows " + sh);

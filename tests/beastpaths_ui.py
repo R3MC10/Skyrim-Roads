@@ -20,7 +20,7 @@ def ok(c, m):
     if not c: fails.append(m)
 
 # kind: 'wolf' -> a werewolf on the hunt (moonhunt), 'vamp' -> the Ashen Court (palecourt), fought
-START = """([st, kind])=>{ ART.setStyle(st); document.querySelectorAll('#modal').forEach(m=>m.remove());
+START = """([st, kind])=>{ document.querySelectorAll('#modal').forEach(m=>m.remove());
   localStorage.removeItem('rotn_fcfav');
   const S=window.__dbg.save(); S.level=20; S._test=true; for (const k of ['One-Handed','Heavy Armor','Athletics','Restoration']) S.skills[k].lvl=50;
   S.hpBonus=200; S.spBonus=60; S.follower=null;
@@ -62,7 +62,7 @@ async def run(p, w, h, touch, lang=None):
     await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Moon"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
     await pg.evaluate("localStorage.setItem('rotn_prefs', JSON.stringify({...JSON.parse(localStorage.getItem('rotn_prefs')||'{}'), tips:false}))")
     tag0 = f"{w}x{h}" + ("_pl" if PL else "")
-    for style in (["ink"] if PL else ["ink", "pixel"]):
+    for style in ["ink"]:
         tag = f"{tag0}_{style}"
         # ---------------- the werewolf
         await pg.evaluate(START, [style, "wolf"]); await pg.wait_for_timeout(500)

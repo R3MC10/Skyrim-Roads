@@ -1,6 +1,6 @@
 """Party votes on the road, two phones: the leader meets something, the member gets the same window and votes,
 the voter's face pops up by their pick on both phones, a changed vote moves the face, and only the leader's tap acts
-(the member's window closes and they hear the pick). Road events and encounters, ink and pixel art.
+(the member's window closes and they hear the pick). Road events and encounters.
 Usage: python3 partyvote_ui.py PORT   (serve game/ first: python3 -m http.server PORT --directory ../game)"""
 import asyncio, os, sys
 from playwright.async_api import async_playwright
@@ -21,7 +21,7 @@ async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch(executable_path=os.environ.get("CHROME") or ("/usr/bin/google-chrome" if os.path.exists("/usr/bin/google-chrome") else None), args=["--no-sandbox"])
         errs = []
-        for style in (os.environ.get("STYLES") or "ink,pixel").split(","):
+        for style in (os.environ.get("STYLES") or "ink").split(","):
             ctx = await b.new_context(viewport={"width": 412, "height": 915}, device_scale_factor=2)
             await ctx.add_init_script(f"localStorage.setItem('rotn_prefs', JSON.stringify({{artStyle:'{style}'}}))")
             async def phone(tag, name):

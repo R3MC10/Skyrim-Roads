@@ -1,5 +1,5 @@
 /* fitcanvas.js and the no-stretch rules: canvases sized from their box × screen density (capped), fixed-unit mini-game
-   canvases keep their shape, pixel art blown up by whole steps, and no stylesheet squashes a picture with
+   canvases keep their shape, and no stylesheet squashes a picture with
    background-size:100% 100%. The on-screen check of every screen is tests/noscretch_ui.py. */
 const fs = require("fs"), vm = require("vm"), path = require("path");
 const W = process.env.W || path.join(__dirname, "../game/");
@@ -39,9 +39,6 @@ for (const dpr of [1, 1.5, 2, 2.625, 3, 4]) {
   // a picture drawn 520 units wide into a 900px box gets enough pixels
   const box = fakeCanvas(900, 400);
   ok(Math.abs(F.ratio(box, 520) - (900 / 520) * d) < 1e-9, `dpr ${dpr} ratio: box/units × density`);
-  // pixel art: whole-number steps only
-  const st = F.pixelStep(360, 120);
-  ok(Number.isInteger(st) && st >= 1 && st * 120 <= 360 * dpr + 1e-6, `dpr ${dpr} pixelStep ${st}`);
 }
 
 // stylesheet: no painted picture squashed to fit a box

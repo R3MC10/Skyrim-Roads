@@ -3,14 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b166-fightpc", build: 166, date: "24 Nov 2026", title: "The fight fills your PC, and ends in slow motion", items: [
+    { id: "b167-fightpc", build: 167, date: "24 Nov 2026", title: "The fight fills your PC, and ends in slow motion", items: [
       "On a PC or laptop the fight now fills the whole window, like the big map: the picture runs from edge to edge and the cards and the skill bar float over it.",
       "The blow that ends a fight plays in slow motion, then a card shows how it went: how many rounds, the damage you dealt and took, and your best hit. Continue is right on it.",
       "New in Settings → Fights: Fight quality (Low, Medium, High), Frame rate (30, 60 or no cap), and sliders for Camera shake and Fight UI size. Low quality and 30 frames save battery on phones.",
       "While a foe's turn plays, tap anywhere on the fight to hurry it along (Space on a PC). The F key doesn't flee any more, so you can't run off by accident.",
       "Tooltips in fights now say what a move costs in stamina or magicka instead of action points.",
     ] },
-    { id: "b166-turns", build: 166, date: "24 Nov 2026", title: "No more action points: you choose your turn", items: [
+    { id: "b167-turns", build: 167, date: "24 Nov 2026", title: "No more action points: you choose your turn", items: [
       "Action points are gone. On your turn make up to 4 moves in any order, then press End turn. Blows, power attacks, bashes and guards cost stamina, spells cost magicka, dark magic costs a little health. Doing the same move again in a turn costs more, and a power attack is once a turn.",
       "Moves you don't make turn into guard: end early and you take up to 30% less damage until your next turn.",
       "You see every foe's next move by name with its icon, numbers, who it's aimed at and what it leaves behind (like Venom Spit → Lydia, Poison 3). When it acts, the banner and the log name the move too.",
@@ -18,20 +18,20 @@ const PATCHNOTES = (() => {
       "Out of breath? You can always make one plain swing a turn. Frost and shock bite your stamina and magicka a bit less than before, and trolls and hagravens regenerate at most four times a fight.",
       "The fight speed button and the Skip buttons are gone. Tap the fight scene if you want to finish an animation right away.",
     ] },
-    { id: "b166-stacks", build: 166, date: "24 Nov 2026", title: "Statuses stack, and every move is a minigame", items: [
+    { id: "b167-stacks", build: 167, date: "24 Nov 2026", title: "Statuses stack, and every move is a minigame", items: [
       "Burn, chill, poison, bleed, vulnerable, ward and more now stack. The number on the icon is how many stacks; each one makes it stronger and it drops by 1 every turn. Hold or hover the icon to see what it does.",
       "Bosses can't be stun-locked: every stun, calm or fear gives them Resolve, so the next one is shorter.",
       "Every attack, guard and spell is a quick minigame: tap in the bright zone, time your block, draw your bow or trace a rune. Perfect adds a stack of something nasty, a miss is weaker. Turn it off in Settings → Minigames if you'd rather not.",
       "New perk effects for stacks: enchanted weapons add an extra stack, and resist perks take a stack off what's put on you.",
     ] },
-    { id: "b166-strategy", build: 166, date: "24 Nov 2026", title: "Fights that reward thinking", items: [
+    { id: "b167-strategy", build: 167, date: "24 Nov 2026", title: "Fights that reward thinking", items: [
       "New move: Breathe (Catch your breath). It's free but ends your turn, and gets back a good chunk of stamina and some magicka. Power attacks, bashes and guards burn stamina, so pace yourself: hit hard now, or breathe and hit hard next turn.",
       "Openings: hit a foe that's staggered, stunned or paralyzed and the blow does 30% more (a power attack 45%). A power attack on a frozen foe shatters the frost for extra. Bash or stagger first, then cash in. Still no one-shots.",
       "Frost slows: a chilled or slowed foe acts later in the round, so you and your followers get in first.",
       "Give your follower orders mid-fight with the little buttons on their card: Attack, Defend me (steps in front of you sooner) or Hold back (back row, only guards and heals). Tap again to let them fight their own way.",
       "Perks: Second Wind makes Breathe give 50% more; Savage Strike and Devastating Blow make power attacks into an opening hit even harder. Auto uses all of this too.",
     ] },
-    { id: "b166-combat2", build: 166, date: "24 Nov 2026", title: "A fight screen that feels like a game", items: [
+    { id: "b167-combat2", build: 167, date: "24 Nov 2026", title: "A fight screen that feels like a game", items: [
       "The fight is now one big scene that fills the screen. Everything you need sits right in it, so nothing scrolls, on phones and on PC.",
       "Your health is a glowing orb in the corner with magicka and stamina curving round it; a striped band shows how much the foe is about to take. Slim bars float over your hero's head.",
       "The foe's name, health, statuses and what it plans next hang over its head. Stunned foes wobble with stars, big hits flash and shake the picture.",
@@ -40,6 +40,61 @@ const PATCHNOTES = (() => {
       "Every buff and debuff now shows as a little icon on whoever has it: you, followers, party members and foes. Armour spells, wards, healing over time, potions, shouts and powers, poison, burning, frost, bleeding, fear, paralysis and the rest. Each shows the turns left, and tapping or hovering tells you what it does.",
       "When one lands or wears off, a short word floats up over that fighter: \"+Oakflesh\", \"Poisoned\", \"Burning fades\".",
       "Prefer the old look? Settings → Fight screen → Classic.",
+    ] },
+    { id: "b157-partytraps", build: 157, date: "24 Nov 2026", title: "Traps are for the whole party", items: [
+      "In a party dungeon, traps are everyone's problem now: when the leader goes for \"Dash through\" or \"Find the trigger\", every hero in the party plays that trap at the same time on their own phone or PC. Same blades, same stones for everyone, sized to your own skills.",
+      "Whoever fails takes the hit themselves, and each trap hurts in its own way: poison darts stack up poison, blades, spikes and bear traps make you bleed, fire, steam and runes burn, an oil slick spills some of your gold, and rockfalls dent your armour. Whoever gets through is fine.",
+      "A results card shows who got through and who got hit with what. There's a time limit: anyone who hasn't finished by then (lost the connection, put the phone away) counts as caught, and the party moves on. Followers roll by their own stats and get knocked down if caught, never killed.",
+      "Chests stay the leader's job: only the leader picks the lock or smashes it, and everyone else watches live. The loot still goes into the party pile for the vote at the end, and gold is split evenly. Party members now also see the lock open (or not) exactly as it did for the leader.",
+      "When you watch another player's mini-game, you now see their pointer or finger on screen as a little arrow with their name, moving smoothly as they play.",
+      "Everyone's phone sees the same thing: the same trap, the same results and the same lock outcome. If your phone drops out in the middle of a trap and comes back in time, you get to finish it.",
+      "New perks: Trap Tinkerer (Lockpicking 40): trap games are easier, and a trap never spills your gold or dents your armour. Call Out the Danger (Sneak 40): get through a trap cleanly in a party and everyone it still catches takes a quarter less and one stack less poison or bleeding.",
+    ] },
+    { id: "b166-appicon", build: 166, date: "24 Nov 2026", title: "A proper icon", items: [
+      "The game has its own icon now: a horned Nord helm under the northern star, on a parchment shield. You'll see it on your phone's home screen, the PC game's window, taskbar and installer, and the browser tab.",
+      "On Android 13 and newer it also follows your themed icons, and game notifications show a small helm instead of a plain square. The loading screen shows the new shield too.",
+    ] },
+    { id: "b153-blackreach", build: 153, date: "24 Nov 2026", title: "Dwemer ruins and Blackreach", items: [
+      "New quest line from level 14: \"The Dwemer Lexicon\". Calcelmo, the Dwemer scholar in Markarth, sends you through Mzinchaleft, Raldbthar and Alftand. Find the lexicon, turn its rings to match his notes, then ride the great lift down.",
+      "Blackreach: a huge glowing cavern under Alftand with its own map. Walk from spot to spot past Falmer, Dwarven machines and giant mushrooms, pick glowing mushrooms and crimson nirnroot, crack the Silent City vault, and beat the Centurion master at the Great Dynamo.",
+      "A secret waits at the Tower of Mzark if you know the first word of Unrelenting Force.",
+      "Puzzle rooms in Dwemer ruins are now steam valve puzzles: turn a valve and its neighbours turn too. Get every needle up before the pressure blows.",
+      "Dwemer scrap (Solid Dwemer Metal, Dwemer Gears, Large Struts) drops from Dwarven machines. Smelt it into Dwarven ingots at any forge once you have the Dwarven Smithing perk.",
+      "The whole Dwarven set is in: dagger, mace, greatsword, battleaxe, warhammer, gauntlets, boots and shield. Find them in Dwemer ruins or make them at the forge (it uses up the materials).",
+      "New perks: Dwemer Tinkerer (Smithing), Dwemer Lore (Lockpicking), Blind Hunter (Sneak) and Steam-Proof (Heavy Armor).",
+      "In a party only the leader turns the lexicon, picks the way through Blackreach and works the vault. Everyone else follows with \"Join your leader\".",
+    ] },
+    { id: "b150-dunrooms", build: 150, date: "24 Nov 2026", title: "Painted dungeon rooms and a new dungeon map", items: [
+      "Dungeon rooms are painted now: caves, Nordic barrows and Dwemer ruins each have their own picture for fights, tough fights, traps, treasure, puzzles, rest spots and the boss. Bandit mines have a painted fight room so far; more dungeon kinds get theirs soon.",
+      "Where a room has no painting yet, it borrows the closest one (a mine uses the cave pictures, a temple the barrow ones), and only falls back to the old drawing if nothing fits.",
+      "The dungeon map is a parchment chart now: every room is an ink badge with its own symbol, corridors appear as your torchlight reaches them, rooms further ahead stay pencil question marks, and the way you came is a red-ink trail that draws itself as you walk.",
+      "The room you're in glows and the rooms you can go to next pulse, so it's easy to see where to tap.",
+      "On PC the dungeon fits on one screen: the room on the left, the map on the right, no scrolling the page.",
+    ] },
+    { id: "b145-pcfit", build: 145, date: "24 Nov 2026", title: "The game fills the whole window on a PC", items: [
+      "On a wide PC screen everything now fits on one screen: no more empty bands at the sides and no scrolling the page. The map and the side panel share the full width, and only long lists in the side panel scroll.",
+      "The place card on the map (Travel, X) no longer hides behind the bottom bar.",
+      "Skills: the skill list and its perk stars sit side by side, and the stars grow to fill the space. The side panel gets wider while they're open.",
+      "Fights on a PC show a big battle picture on the left, with the fighters and your moves on the right, all without scrolling. Dungeons put the room on the left and the dungeon map on the right.",
+      "Text and buttons are a little bigger on large monitors. Phones look the same as before.",
+      "Paintings stay sharp: shop banners, town pictures, fight scenes, foes and the title picture are never stretched or blown up into a blur any more. On a very big or sharp screen a painting shows at its own size instead.",
+    ] },
+    { id: "b144-nopixel", build: 144, date: "24 Nov 2026", title: "One art style: hand-drawn", items: [
+      "The pixel-art look is gone. The game now has one style, the hand-drawn one, so every picture, menu and fight gets the full care.",
+      "If you had pixel art switched on, you'll just see the hand-drawn look next time you open the game. Nothing else changes, and your save is untouched.",
+      "The Art style row is gone from Settings.",
+    ] },
+    { id: "b144-homechest", build: 144, date: "24 Nov 2026", title: "A proper chest in your house", items: [
+      "Your house chest now works like a Skyrim chest: switch between the Chest and Your pack, filter by Weapons, Apparel, Potions, Scrolls, Food, Ingredients, Books and Misc, and sort by name, stat, weight or value.",
+      "Every item in the chest and in your pack has its picture again.",
+      "Tap something to move just 1, an amount you pick, or the whole stack, either way. Potions, ingredients, materials and arrows pile up into one stack in the chest.",
+      "Your load and the chest's total weight are shown on top. Gear you wear (in any loadout) stays on you and can't be put away by mistake.",
+      "Improved, named and stolen things keep all that when they go in and come back out.",
+    ] },
+    { id: "b144-noequipsell", build: 144, date: "24 Nov 2026", title: "What you wear stays on you", items: [
+      "Shops no longer list the gear you're wearing when you sell: weapons in either hand, armour, rings and amulets stay off the Sell list, and Sell all junk never touches them.",
+      "The same goes for handing things over: your follower's Your pack list, trades and gifts to other players, market stalls and chests leave out what you wear.",
+      "Got two of the same thing and wear one? Only the spare one shows up. Take something off first if you really want to part with it.",
     ] },
     { id: "b165-pcmap", build: 165, date: "24 Nov 2026", title: "The big map on PC", items: [
       "On a PC or laptop the world map is now your home screen: it fills the whole window, and Items, Skills, Magic and the Journal open on top of it over a blurred map. On phones nothing changes.",
@@ -1011,7 +1066,7 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 166;
+  const NEXT_AT = 167;
   const NEXT = [
     "Mounted combat: fight from the saddle",
     "Pick a side in the civil war",

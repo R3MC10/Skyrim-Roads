@@ -9,7 +9,6 @@ async def run(b, style, errs):
     pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
     await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&hub=0&motion&p=fw{style}"); await pg.wait_for_timeout(1800)
     await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Hulda"); await pg.click("#begin"); await pg.wait_for_timeout(1200)
-    await pg.evaluate("try{ART.setStyle('%s')}catch(e){}" % style)
     await pg.evaluate("setInterval(()=>document.querySelectorAll('#modal').forEach(m=>m.remove()),250)")
     await pg.evaluate("""()=>{const S=window.__dbg.save(); S.level=20; G.give(S,'steel_sword'); G.give(S,'iron_war_axe'); G.give(S,'potion_health',3); if(!S.spells.includes('flames')) S.spells.push('flames'); S.skills.Destruction.lvl=40;}""")
     res = {}
@@ -74,7 +73,7 @@ async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-sandbox"])
         out = {}
-        for st in ("ink", "pixel"):
+        for st in ("ink",):
             r = await run(b, st, errs); out[st] = r; print(st, r)
         await b.close()
     bad = []

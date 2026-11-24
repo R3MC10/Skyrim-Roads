@@ -18,7 +18,7 @@ def ok(c, m):
     print(("ok   " if c else "FAIL ") + m)
     if not c: fails.append(m)
 
-START = """(st)=>{ ART.setStyle(st); document.querySelectorAll('#modal').forEach(m=>m.remove());
+START = """(st)=>{ document.querySelectorAll('#modal').forEach(m=>m.remove());
   localStorage.removeItem('rotn_fcfav');
   const S=window.__dbg.save(); S.level=20; for (const k of ['One-Handed','Destruction','Restoration','Athletics','Acrobatics']) S.skills[k].lvl=45;
   S.mpBonus=120; for (const id of ['flames','sparks','healing']) if (D.SPELLS[id] && !S.spells.includes(id)) S.spells.push(id);
@@ -48,7 +48,7 @@ async def run(p, w, h, touch):
     await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Thumbs"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
     await pg.evaluate("localStorage.setItem('rotn_prefs', JSON.stringify({...JSON.parse(localStorage.getItem('rotn_prefs')||'{}'), tips:false}))")
     tag0 = f"{w}x{h}"
-    for style in ["ink", "pixel"]:
+    for style in ["ink"]:
         tag = f"{tag0}_{style}"
         await pg.evaluate(START, style); await pg.wait_for_timeout(400)
         await pg.click("#modal [data-act=ev][data-c=fight]"); await pg.wait_for_timeout(800)

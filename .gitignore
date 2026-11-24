@@ -34,6 +34,11 @@ tests/out_skillup/
 tests/out_boss/
 tests/pnotes/
 tests/out_combat2/
+tests/out_dwemer/
+tests/out_dunrooms/
+tests/out_pcfit/
+tests/out_artq/
+tests/out_stash/
 tests/out_evbanner/
 tests/out_gather/
 tests/bugrep/
@@ -46,3 +51,4 @@ tests/out_invites/
 tests/out_holds/
 tests/out_evbanner/
 tests/out_gather/
+tests/out_partytraps/

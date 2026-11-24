@@ -20,9 +20,6 @@ async def main():
             el = await pg.query_selector("#mapwrap"); await el.screenshot(path=OUT + name + ".png")
         await shot("ink_near")
         await pg.click("#zoomBtn"); await pg.wait_for_timeout(700); await shot("ink_far"); await pg.click("#zoomBtn"); await pg.wait_for_timeout(400)
-        await pg.evaluate("()=>ART.setStyle('pixel')"); await pg.wait_for_timeout(900); await shot("pixel_near")
-        await pg.click("#zoomBtn"); await pg.wait_for_timeout(700); await shot("pixel_far"); await pg.click("#zoomBtn")
-        await pg.evaluate("()=>ART.setStyle('ink')")
         # roam into Hammerfell is refused, roam inside works
         r = await pg.evaluate("()=>{const S=window.__dbg.save(); return [ROAM.plan(S,[0.15,0.85]).err||'', ROAM.plan(S,[0.6,0.6]).pos ? 'ok':'no']}")
         print("roam:", r)

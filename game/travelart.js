@@ -8,8 +8,8 @@
      TRAVELART.mount(host, info)   draw into host (one reused canvas); keeps animating while it's on screen
      TRAVELART.frame(info, dist)   → a one-off canvas (tests, screenshots)
    info: { ground, progress, riding, carriage, horse, look, company, reduce, sky, dest, origin }
-   Performance: every static layer is drawn once into an offscreen canvas and scrolled; the pixel style draws into a
-   half-size buffer that is blown up with hard edges; the loop stops while the strip is off screen or the app hidden. */
+   Performance: every static layer is drawn once into an offscreen canvas and scrolled; the loop stops while the strip
+   is off screen or the app hidden. */
 const TRAVELART = (() => {
   const W = 360, H = 112, TW = 720, HZ = 64, FEET = 97;
   const TAU = Math.PI * 2;
@@ -76,11 +76,6 @@ const TRAVELART = (() => {
     const c = makeCanvas(TW * rs, (y1 - y0) * rs), g = c.getContext("2d");
     g.setTransform(rs, 0, 0, rs, 0, -y0 * rs);
     draw(g);
-    if (rs < 1) try {   // pixel style: hard silhouettes, no soft edge pixels
-      const img = g.getImageData(0, 0, c.width, c.height), d = img.data;
-      for (let i = 3; i < d.length; i += 4) d[i] = d[i] < 110 ? 0 : 255;
-      g.putImageData(img, 0, 0);
-    } catch { /* fake canvas in tests */ }
     if (haze > 0) { g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = "source-atop"; g.fillStyle = rgba(hazeCol, Math.min(0.88, haze)); g.fillRect(0, 0, c.width, c.height); g.globalCompositeOperation = "source-over"; }
     L = { c, y0, y1 };
     layers.set(k, L);
@@ -295,10 +290,10 @@ const TRAVELART = (() => {
     });
   }
   function fogStrip(ctx) {
-    const { rs, pixel } = ctx;
-    return layer(`fog|${pixel}`, rs, 40, H, 0, "#000000", (g) => {
+    const { rs } = ctx;
+    return layer("fog", rs, 40, H, 0, "#000000", (g) => {
       const r = seeded("fog");
-      for (let i = 0; i < 26; i++) { const x = r() * TW, y = 60 + r() * 44, rx = 30 + r() * 50, ry = 5 + r() * 7; wrap(x, (xx) => { if (pixel) ellipse(g, xx, y, rx, ry, "rgba(230,232,232,0.22)"); else { const gr = g.createRadialGradient(xx, y, 0, xx, y, rx); gr.addColorStop(0, "rgba(232,234,234,0.42)"); gr.addColorStop(1, "rgba(232,234,234,0)"); g.save(); g.translate(xx, y); g.scale(1, ry / rx); g.translate(-xx, -y); g.fillStyle = gr; g.fillRect(xx - rx, y - rx, rx * 2, rx * 2); g.restore(); } }); }
+      for (let i = 0; i < 26; i++) { const x = r() * TW, y = 60 + r() * 44, rx = 30 + r() * 50, ry = 5 + r() * 7; wrap(x, (xx) => { { const gr = g.createRadialGradient(xx, y, 0, xx, y, rx); gr.addColorStop(0, "rgba(232,234,234,0.42)"); gr.addColorStop(1, "rgba(232,234,234,0)"); g.save(); g.translate(xx, y); g.scale(1, ry / rx); g.translate(-xx, -y); g.fillStyle = gr; g.fillRect(xx - rx, y - rx, rx * 2, rx * 2); g.restore(); } }); }
     });
   }
   function skyCanvas(st, rs) {
@@ -322,7 +317,7 @@ const TRAVELART = (() => {
   const SLOT = 170, TSLOT = 520;
   const LANDMARKS = { sign: 0.16, shrine: 0.1, stone: 0.07, cairn: 0.1, ruin: 0.08, fence: 0.16, camp: 0.06, lamp: 0.1, cart: 0.05, none: 0.32 };
   function landmark(g, type, x, base, r, ink, lights, t, snowy) {
-    const o = ink ? INK : null;
+    const o = INK;
     if (type === "sign") {
       g.fillStyle = "#5a3e26"; g.fillRect(x - 1, base - 26, 2.4, 26);
       const boards = 2 + Math.floor(r() * 2);
@@ -380,13 +375,13 @@ const TRAVELART = (() => {
     return figApi;
   }
   /* m: { look, riding, carriage, horse, flip } — feet at (x, base), sc ≈ 1 for a full-size hero */
-  function figure(g, m, x, base, ph, sc, style) {
+  function figure(g, m, x, base, ph, sc) {
     if (newFigApi()) {
       try {
         const frame = ((Math.floor(ph / TAU * 8) % 8) + 8) % 8, pose = m.carriage ? "cart" : m.riding ? "ride" : "walk";
-        const key = `${style}|${pose}|${frame}|${m.horse || ""}|${JSON.stringify(m.look || null)}`;
+        const key = `${pose}|${frame}|${m.horse || ""}|${JSON.stringify(m.look || null)}`;
         let c = figCache.get(key);
-        if (!c) { c = HEROART.figure(m.look || {}, { pose, frame, scale: 1, style, horse: m.horse }); figCache.set(key, c); while (figCache.size > 120) figCache.delete(figCache.keys().next().value); }
+        if (!c) { c = HEROART.figure(m.look || {}, { pose, frame, scale: 1, horse: m.horse }); figCache.set(key, c); while (figCache.size > 120) figCache.delete(figCache.keys().next().value); }
         if (c && typeof c === "object" && c.width > 0 && typeof c.getContext === "function") {
           const th = (m.carriage ? 40 : m.riding ? 56 : 42) * sc, tw = c.width * th / c.height;
           g.save(); g.translate(x, base); if (m.flip) g.scale(-1, 1); g.drawImage(c, -tw / 2, -th, tw, th); g.restore(); return;
@@ -406,9 +401,9 @@ const TRAVELART = (() => {
   /* travellers coming the other way: a lone walker, a pair of guards, or a Khajiit caravan with its lantern */
   const GUARD = { r: "nord", id: "guard", eq: { chest: "iron_armor", head: "iron_helmet", shield: "iron_shield", weapon: "iron_sword" } };
   function traveller(g, type, x, base, ph, ctx, lights, r) {
-    const { L, style } = ctx;
-    if (type === "walker") { shadow(g, x, base, 5, L); figure(g, { look: { r: ["nord", "imperial", "breton", "redguard"][Math.floor(r() * 4)], id: "trav" + Math.floor(r() * 9), eq: { chest: "hide_armor" } }, flip: true }, x, base, ph, 0.82, style); }
-    else if (type === "guards") for (const dx of [0, 15]) { shadow(g, x + dx, base, 5, L); figure(g, { look: GUARD, flip: true }, x + dx, base, ph + dx, 0.84, style); }
+    const { L } = ctx;
+    if (type === "walker") { shadow(g, x, base, 5, L); figure(g, { look: { r: ["nord", "imperial", "breton", "redguard"][Math.floor(r() * 4)], id: "trav" + Math.floor(r() * 9), eq: { chest: "hide_armor" } }, flip: true }, x, base, ph, 0.82); }
+    else if (type === "guards") for (const dx of [0, 15]) { shadow(g, x + dx, base, 5, L); figure(g, { look: GUARD, flip: true }, x + dx, base, ph + dx, 0.84); }
     else if (type === "caravan") {
       shadow(g, x + 10, base, 26, L);
       if (typeof FXART !== "undefined" && FXART.horse) { g.save(); g.translate(x - 22, base); g.scale(-1, 1); FXART.horse(g, ART.H, 0, 0, ph, "#7a5a3a"); g.restore(); }
@@ -419,7 +414,7 @@ const TRAVELART = (() => {
       for (const wx of [x - 2, x + 22]) { g.beginPath(); g.arc(wx, base - 4, 4, 0, TAU); g.fillStyle = "#4a3424"; g.fill(); g.strokeStyle = "#2a1e14"; g.lineWidth = 0.8; g.stroke(); g.beginPath(); g.moveTo(wx + Math.cos(ph) * 3.4, base - 4 + Math.sin(ph) * 3.4); g.lineTo(wx - Math.cos(ph) * 3.4, base - 4 - Math.sin(ph) * 3.4); g.stroke(); }
       g.fillStyle = "#2a2420"; g.fillRect(x - 9, base - 22, 2.4, 3.4); g.fillStyle = "#ffd890"; g.fillRect(x - 8.6, base - 21.4, 1.6, 2.2);
       lights.push([x - 7.8, base - 20.5, 22, "255,196,120", 0.9]);
-      figure(g, { look: { r: "khajiit", id: "caravan", eq: {} }, flip: true }, x + 36, base, ph, 0.8, style);
+      figure(g, { look: { r: "khajiit", id: "caravan", eq: {} }, flip: true }, x + 36, base, ph, 0.8);
     }
   }
   /* where you're heading, rising on the horizon as you near it */
@@ -496,8 +491,8 @@ const TRAVELART = (() => {
     for (let i = 0; i < n; i++) parts.push({ x: r() * W, y: kind === "mote" || kind === "fly" ? 66 + r() * 40 : r() * H, z: 0.45 + r() * 0.9, a: r() * TAU, c: ["#c4572e", "#e8923a", "#d6b25e", "#a8622e"][i % 4] });
     return { kind, key: kind + "|" + (st?.weather || ""), parts, splash: [] };
   }
-  function stepParts(P, g, dt, t, st, pixel, scroll) {
-    const wind = st?.wind ?? 0.2, kind = P.kind, px = pixel ? 2 : 1;
+  function stepParts(P, g, dt, t, st, scroll) {
+    const wind = st?.wind ?? 0.2, kind = P.kind, px = 1;
     for (const p of P.parts) {
       if (kind === "snow") { p.y += (14 + 22 * p.z) * dt * (1 + wind * 0.6); p.x += (Math.sin(t * 1.3 + p.a) * 7 - wind * 60 * p.z - scroll * p.z * 0.6) * dt; }
       else if (kind === "rain") { p.y += 260 * p.z * dt; p.x -= (30 + wind * 110) * p.z * dt + scroll * 0.4 * dt; if (p.y > FEET + 4 * p.z && p.z > 0.9 && P.splash.length < 30) { P.splash.push({ x: p.x, y: 90 + (p.z - 0.9) * 30, a: 1 }); p.y = -10; } }
@@ -511,35 +506,31 @@ const TRAVELART = (() => {
     }
     if (kind === "snow") { g.fillStyle = "rgba(255,255,255,0.92)"; for (const p of P.parts) { const s = Math.max(px, 0.9 + p.z * 1.4); g.globalAlpha = 0.5 + p.z * 0.4; g.fillRect(p.x, p.y, s, s); } g.globalAlpha = 1; }
     else if (kind === "rain") {
-      g.strokeStyle = "rgba(200,214,228,0.55)"; g.lineWidth = pixel ? 2 : 0.8; g.beginPath(); for (const p of P.parts) { const l = 5 + p.z * 6; g.moveTo(p.x, p.y); g.lineTo(p.x - (2 + wind * 5) * p.z, p.y + l); } g.stroke();
-      g.strokeStyle = "rgba(220,230,240,0.6)"; g.lineWidth = pixel ? 2 : 0.6;
+      g.strokeStyle = "rgba(200,214,228,0.55)"; g.lineWidth = 0.8; g.beginPath(); for (const p of P.parts) { const l = 5 + p.z * 6; g.moveTo(p.x, p.y); g.lineTo(p.x - (2 + wind * 5) * p.z, p.y + l); } g.stroke();
+      g.strokeStyle = "rgba(220,230,240,0.6)"; g.lineWidth = 0.6;
       for (let i = P.splash.length - 1; i >= 0; i--) { const s = P.splash[i]; s.a -= dt * 5; s.x -= scroll * dt; if (s.a <= 0) { P.splash.splice(i, 1); continue; } g.globalAlpha = s.a; g.beginPath(); g.ellipse(s.x, s.y, 2.5 * (1.4 - s.a), 0.7, 0, 0, TAU); g.stroke(); } g.globalAlpha = 1;
     }
     else if (kind === "ash") for (const p of P.parts) { g.fillStyle = p.z > 0.9 ? "rgba(58,50,44,0.8)" : "rgba(120,108,98,0.55)"; g.fillRect(p.x, p.y, Math.max(px, p.z * 2.2), Math.max(px, p.z * 1.2)); }
-    else if (kind === "leaf") for (const p of P.parts) { g.save(); g.translate(p.x, p.y); g.rotate(p.a); g.scale(1, Math.abs(Math.cos(p.a * 1.7)) * 0.8 + 0.2); g.fillStyle = p.c; const s = (pixel ? 1.6 : 1.2) * (0.7 + p.z * 0.6); g.beginPath(); g.moveTo(0, -2.6 * s); g.quadraticCurveTo(2.2 * s, 0, 0, 2.6 * s); g.quadraticCurveTo(-2.2 * s, 0, 0, -2.6 * s); g.fill(); g.restore(); }
+    else if (kind === "leaf") for (const p of P.parts) { g.save(); g.translate(p.x, p.y); g.rotate(p.a); g.scale(1, Math.abs(Math.cos(p.a * 1.7)) * 0.8 + 0.2); g.fillStyle = p.c; const s = (1.2) * (0.7 + p.z * 0.6); g.beginPath(); g.moveTo(0, -2.6 * s); g.quadraticCurveTo(2.2 * s, 0, 0, 2.6 * s); g.quadraticCurveTo(-2.2 * s, 0, 0, -2.6 * s); g.fill(); g.restore(); }
     else if (kind === "petal") { for (const p of P.parts) { g.fillStyle = p.z > 0.9 ? "rgba(255,255,255,0.9)" : "rgba(248,206,222,0.9)"; g.fillRect(p.x, p.y, Math.max(px, 1.6 * p.z), Math.max(px, 1.1 * p.z)); } }
-    else if (kind === "fly" || kind === "mote") for (const p of P.parts) { const a = kind === "fly" ? 0.35 + 0.65 * Math.abs(Math.sin(t * 2.2 + p.a)) : 0.25 + 0.25 * Math.sin(t + p.a); g.globalAlpha = a; g.fillStyle = kind === "fly" ? "#eaff9a" : "#f4e2a0"; g.fillRect(p.x, p.y, px * (kind === "fly" ? 1.6 : 1), px * (kind === "fly" ? 1.6 : 1)); if (kind === "fly" && !pixel) { g.globalAlpha = a * 0.3; g.beginPath(); g.arc(p.x + 0.8, p.y + 0.8, 2.4, 0, TAU); g.fill(); } } g.globalAlpha = 1;
+    else if (kind === "fly" || kind === "mote") for (const p of P.parts) { const a = kind === "fly" ? 0.35 + 0.65 * Math.abs(Math.sin(t * 2.2 + p.a)) : 0.25 + 0.25 * Math.sin(t + p.a); g.globalAlpha = a; g.fillStyle = kind === "fly" ? "#eaff9a" : "#f4e2a0"; g.fillRect(p.x, p.y, px * (kind === "fly" ? 1.6 : 1), px * (kind === "fly" ? 1.6 : 1)); if (kind === "fly") { g.globalAlpha = a * 0.3; g.beginPath(); g.arc(p.x + 0.8, p.y + 0.8, 2.4, 0, TAU); g.fill(); } } g.globalAlpha = 1;
   }
 
   // ---------------------------------------------------------------- one frame
-  let styleCache = { at: 0, v: "ink" };
-  const artStyle = (now) => { if (now - styleCache.at > 800) styleCache = { at: now, v: ART.style() }; return styleCache.v; };
   function paint(V, now) {
-    const info = V.info || {}, pixel = artStyle(now) === "pixel", ink = !pixel;
+    const info = V.info || {}, ink = true;
     const out = V.canvas, dpr = out.width / W;
-    const rs = pixel ? 0.5 : dpr;
+    const rs = dpr;
     let g = out.getContext("2d");
-    if (pixel) { if (!V.buf || V.buf.width !== W * rs) V.buf = makeCanvas(W * rs, H * rs); g = V.buf.getContext("2d", { willReadFrequently: true }); }
     g.setTransform(rs, 0, 0, rs, 0, 0); g.globalCompositeOperation = "source-over"; g.globalAlpha = 1;
-    g.imageSmoothingEnabled = !pixel;
+    g.imageSmoothingEnabled = true;
     g.clearRect(0, 0, W, H);
     const st = info.sky || null, kind = GROUND[info.ground] || "grass", B = BIOME[kind], L = light(st);
     const snowy = !!B.snowy || (st?.snow ?? 0) > 0.45;
     const paved = info.ground === "Road" || info.ground === "Bridge";
-    const ctx = { rs, L, st, ink, pixel, snowy, B, style: pixel ? "pixel" : "ink" };
+    const ctx = { rs, L, st, ink, snowy, B };
     const d = V.dist, t = V.t, p = Math.max(0, Math.min(1, info.progress || 0));
-    const snap = (v) => (pixel ? Math.round(v * rs) / rs : v);
-    const strip = (Lr, speed, extra = 0, tg = g) => { const ox = snap(((d * speed + extra) % TW + TW) % TW), y = Lr.y0, h = Lr.y1 - Lr.y0; tg.drawImage(Lr.c, -ox, y, TW, h); tg.drawImage(Lr.c, TW - ox, y, TW, h); };
+    const strip = (Lr, speed, extra = 0, tg = g) => { const ox = ((d * speed + extra) % TW + TW) % TW, y = Lr.y0, h = Lr.y1 - Lr.y0; tg.drawImage(Lr.c, -ox, y, TW, h); tg.drawImage(Lr.c, TW - ox, y, TW, h); };
     const lights = [];
     // far to near
     strip(farLayer(B, kind, ctx, 0), 0.03);
@@ -561,10 +552,10 @@ const TRAVELART = (() => {
     const tint = (tg, k) => { tg.globalCompositeOperation = "source-atop"; tg.globalAlpha = k; for (const c of L.tints) { tg.fillStyle = c; tg.fillRect(0, 0, W, H); } tg.globalAlpha = 1; tg.globalCompositeOperation = "source-over"; };
     tint(g, 1);
     // people on the road go on their own sheet: they take a little less of the night, so you can still see them
-    const tgt = pixel ? V.buf : out;
+    const tgt = out;
     if (!V.cb || V.cb.width !== tgt.width || V.cb.height !== tgt.height) V.cb = makeCanvas(tgt.width, tgt.height);
     const wg = g; g = V.cb.getContext("2d");
-    g.setTransform(rs, 0, 0, rs, 0, 0); g.globalCompositeOperation = "source-over"; g.globalAlpha = 1; g.imageSmoothingEnabled = !pixel; g.clearRect(0, 0, W, H);
+    g.setTransform(rs, 0, 0, rs, 0, 0); g.globalCompositeOperation = "source-over"; g.globalAlpha = 1; g.imageSmoothingEnabled = true; g.clearRect(0, 0, W, H);
     for (let i = Math.floor((d * 1.8 - 80) / TSLOT) - 1; i <= Math.floor((d * 1.8 + W + 80) / TSLOT) + 1; i++) {
       const r = seeded(seed + "|t" + i); const roll = r(); if (roll > 0.42) continue;
       const type = roll < 0.12 ? "caravan" : roll < 0.22 ? "guards" : "walker";
@@ -583,11 +574,11 @@ const TRAVELART = (() => {
       const { m, i, row, cx, cy } = sp; if (cx < -20) continue;
       const sc = row ? 0.86 : 0.96;
       shadow(g, cx, cy, m.riding ? 14 : 6, L);
-      figure(g, { look: m.look, riding: m.riding, horse: m.horse }, cx, cy, ph0 + (i + 1) * 1.7, sc, ctx.style);
+      figure(g, { look: m.look, riding: m.riding, horse: m.horse }, cx, cy, ph0 + (i + 1) * 1.7, sc);
       if (!big || row === 0) tags.push([m.name, cx, cy - (m.riding ? 58 : 46) * sc - (big && Math.floor(i / 2) % 2 ? 11 : 0), m.follower, false]);
     }
     shadow(g, hx, FEET + 2, mounted ? 16 : 7, L);
-    figure(g, { look: info.look, riding: info.riding, carriage: info.carriage, horse: info.horse }, hx, FEET + 2, ph0, 1.08, ctx.style);
+    figure(g, { look: info.look, riding: info.riding, carriage: info.carriage, horse: info.horse }, hx, FEET + 2, ph0, 1.08);
     if (co.length) tags.push(["You", hx, FEET - (info.riding ? 64 : 52), false, true]);
     if (L.glow > 0.5 && !info.carriage) lights.push([hx + 7, FEET - 20 - (info.riding ? 10 : 0), 34, "255,170,90", 0.75 + Math.sin(t * 11) * 0.05 + Math.sin(t * 17) * 0.04]);   // a torch for the dark road
     strip(fgLayer(B, kind, ctx), 1.35);
@@ -597,8 +588,8 @@ const TRAVELART = (() => {
     g.globalCompositeOperation = "destination-over";
     if (st?.tod === "night" && !["storm", "blizzard", "fog", "rain", "snow"].includes(st.weather)) {
       const r = seeded("tw"); g.fillStyle = "#ffffff";
-      for (let i = 0; i < 14; i++) { const x = r() * W, y = r() * HZ * 0.8, a = 0.3 + 0.7 * Math.abs(Math.sin(t * (0.8 + r() * 1.6) + i)); g.globalAlpha = a; g.fillRect(x, y, pixel ? 2 : 1.2, pixel ? 2 : 1.2); }
-      const sh = (t % 9) / 9; if (sh < 0.08) { g.globalAlpha = 1 - sh / 0.08; g.strokeStyle = "#ffffff"; g.lineWidth = pixel ? 2 : 0.8; const sx = W * 0.2 + sh * 1400, sy = 12 + sh * 160; g.beginPath(); g.moveTo(sx, sy); g.lineTo(sx - 16, sy - 6); g.stroke(); }
+      for (let i = 0; i < 14; i++) { const x = r() * W, y = r() * HZ * 0.8, a = 0.3 + 0.7 * Math.abs(Math.sin(t * (0.8 + r() * 1.6) + i)); g.globalAlpha = a; g.fillRect(x, y, 1.2, 1.2); }
+      const sh = (t % 9) / 9; if (sh < 0.08) { g.globalAlpha = 1 - sh / 0.08; g.strokeStyle = "#ffffff"; g.lineWidth = 0.8; const sx = W * 0.2 + sh * 1400, sy = 12 + sh * 160; g.beginPath(); g.moveTo(sx, sy); g.lineTo(sx - 16, sy - 6); g.stroke(); }
       g.globalAlpha = 1;
     }
     g.drawImage(skyCanvas(st, rs), 0, 0, W, H);
@@ -608,41 +599,32 @@ const TRAVELART = (() => {
       g.globalCompositeOperation = "lighter";
       for (const [x, y, R, c, a, small] of lights) {
         const k = Math.max(0, Math.min(1, a)) * (small ? 1 : L.glow);
-        if (pixel) { g.fillStyle = `rgba(${c},${0.08 * k})`; g.beginPath(); g.arc(x, y, R * 0.5, 0, TAU); g.fill(); g.fillStyle = `rgba(${c},${0.12 * k})`; g.beginPath(); g.arc(x, y, R * 0.25, 0, TAU); g.fill(); }
-        else { const gr = g.createRadialGradient(x, y, 0, x, y, R); gr.addColorStop(0, `rgba(${c},${0.55 * k})`); gr.addColorStop(0.4, `rgba(${c},${0.16 * k})`); gr.addColorStop(1, `rgba(${c},0)`); g.fillStyle = gr; g.fillRect(x - R, y - R, R * 2, R * 2); }
-        if (small) { g.fillStyle = `rgba(${c},${0.9 * k})`; g.fillRect(x - 0.7, y - 0.7, pixel ? 2 : 1.4, pixel ? 2 : 1.4); }
+        { const gr = g.createRadialGradient(x, y, 0, x, y, R); gr.addColorStop(0, `rgba(${c},${0.55 * k})`); gr.addColorStop(0.4, `rgba(${c},${0.16 * k})`); gr.addColorStop(1, `rgba(${c},0)`); g.fillStyle = gr; g.fillRect(x - R, y - R, R * 2, R * 2); }
+        if (small) { g.fillStyle = `rgba(${c},${0.9 * k})`; g.fillRect(x - 0.7, y - 0.7, 1.4, 1.4); }
       }
       g.globalCompositeOperation = "source-over";
     }
     // live weather
     const wk = weatherKind(st, kind);
-    if (wk && wk !== "mist") { const want = wk + "|" + (st?.weather || ""); if (!V.parts || V.parts.key !== want) V.parts = makeParts(wk, st); if (!V.still) stepParts(V.parts, g, V.dt, t, st, pixel, V.speed); else stepParts(V.parts, g, 0, t, st, pixel, 0); }
+    if (wk && wk !== "mist") { const want = wk + "|" + (st?.weather || ""); if (!V.parts || V.parts.key !== want) V.parts = makeParts(wk, st); if (!V.still) stepParts(V.parts, g, V.dt, t, st, V.speed); else stepParts(V.parts, g, 0, t, st, 0); }
     if (st?.weather === "fog" || st?.weather === "blizzard") { g.globalAlpha = st.weather === "fog" ? 0.7 : 0.5; strip(fogStrip(ctx), 1.6, t * 14); g.globalAlpha = 1; }
     if (st?.weather === "storm" && !V.still) {
       if (V.flash <= 0 && Math.random() < V.dt * 0.22) { V.flash = 1; V.bolt = seeded("b" + Math.floor(t))(); }
       if (V.flash > 0) {
-        if (V.flash > 0.6) { g.strokeStyle = "rgba(240,244,255,0.95)"; g.lineWidth = pixel ? 2 : 1.2; g.beginPath(); let x = W * (0.15 + V.bolt * 0.6), y = 0; g.moveTo(x, y); const rb = seeded("bolt" + V.bolt); while (y < HZ) { x += (rb() - 0.5) * 12; y += 6 + rb() * 6; g.lineTo(x, y); } g.stroke(); }
+        if (V.flash > 0.6) { g.strokeStyle = "rgba(240,244,255,0.95)"; g.lineWidth = 1.2; g.beginPath(); let x = W * (0.15 + V.bolt * 0.6), y = 0; g.moveTo(x, y); const rb = seeded("bolt" + V.bolt); while (y < HZ) { x += (rb() - 0.5) * 12; y += 6 + rb() * 6; g.lineTo(x, y); } g.stroke(); }
         g.fillStyle = `rgba(230,236,255,${0.32 * V.flash})`; g.fillRect(0, 0, W, H); V.flash -= V.dt * 3.5;
       }
     }
     // frame: vignette, the road ahead as a thin gold thread, the edge
-    if (!pixel) g.drawImage(vignetteCanvas(rs), 0, 0, W, H);
-    else { g.fillStyle = "rgba(10,8,6,0.22)"; g.fillRect(0, 0, W, 2); g.fillRect(0, H - 2, W, 2); g.fillRect(0, 0, 2, H); g.fillRect(W - 2, 0, 2, H); }
+    g.drawImage(vignetteCanvas(rs), 0, 0, W, H);
     const ty = H - 4.5, x0 = 10, x1 = W - 10, xp = x0 + (x1 - x0) * p;
-    g.fillStyle = "rgba(12,10,8,0.55)"; g.fillRect(x0, ty - 1, x1 - x0, pixel ? 2 : 2);
-    g.fillStyle = "#d6b25e"; g.fillRect(x0, ty - 1, xp - x0, pixel ? 2 : 2);
-    poly(g, [[xp, ty - 3.4], [xp + 3, ty], [xp, ty + 3.4 - 1], [xp - 3, ty]], "#f0d890", ink ? INK : null, 0.6);
+    g.fillStyle = "rgba(12,10,8,0.55)"; g.fillRect(x0, ty - 1, x1 - x0, 2);
+    g.fillStyle = "#d6b25e"; g.fillRect(x0, ty - 1, xp - x0, 2);
+    poly(g, [[xp, ty - 3.4], [xp + 3, ty], [xp, ty + 3.4 - 1], [xp - 3, ty]], "#f0d890", INK, 0.6);
     poly(g, [[x1, ty - 7], [x1, ty + 1], [x1 + 1.6, ty + 1], [x1 + 1.6, ty - 7]], "#5a4430", null); poly(g, [[x1 + 1.6, ty - 7], [x1 + 8, ty - 5.2], [x1 + 1.6, ty - 3.4]], "#c4572e", null);   // a pennant at the end of the road
     if (ink) { g.strokeStyle = "rgba(59,44,30,0.9)"; g.lineWidth = 1.5; g.strokeRect(0.75, 0.75, W - 1.5, H - 1.5); }
-    // the pixel style: band the colours and blow the small picture up with hard edges
     const og = out.getContext("2d");
-    if (pixel) {
-      try { const img = g.getImageData(0, 0, V.buf.width, V.buf.height), dd = img.data, q = 20; for (let i = 0; i < dd.length; i += 4) { dd[i] = Math.min(255, Math.round(dd[i] / q) * q); dd[i + 1] = Math.min(255, Math.round(dd[i + 1] / q) * q); dd[i + 2] = Math.min(255, Math.round(dd[i + 2] / q) * q); dd[i + 3] = 255; } g.putImageData(img, 0, 0); } catch { /* tainted or fake canvas */ }
-      og.setTransform(1, 0, 0, 1, 0, 0); og.imageSmoothingEnabled = false; og.clearRect(0, 0, out.width, out.height); og.drawImage(V.buf, 0, 0, out.width, out.height);
-      og.strokeStyle = "#1c1410"; og.lineWidth = dpr * 2; og.strokeRect(dpr, dpr, out.width - dpr * 2, out.height - dpr * 2);
-      if (out.style) out.style.imageRendering = "pixelated";
-    } else if (out.style) out.style.imageRendering = "";
-    if (tags.length) { og.setTransform(dpr, 0, 0, dpr, 0, 0); for (const tg of tags) nameTag(og, ...tg); }   // names stay crisp in both styles
+    if (tags.length) { og.setTransform(dpr, 0, 0, dpr, 0, 0); for (const tg of tags) nameTag(og, ...tg); }   // names stay crisp
   }
   function nameTag(g, name, x, y, follower, you) {
     if (!name) return;

@@ -11,7 +11,6 @@ async def run(b, style, errs):
     pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
     await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&hub=0&p=mg2{style}"); await pg.wait_for_timeout(1800)
     await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Magus"); await pg.click("#begin"); await pg.wait_for_timeout(1300)
-    await pg.evaluate("try{ART.setStyle('%s')}catch(e){}" % style)
     await pg.evaluate("setInterval(()=>document.querySelectorAll('#modal').forEach(m=>m.remove()),250)")
     # shops open, low skills, in Whiterun
     await pg.evaluate("""()=>{const S=window.__dbg.save(); S.gold=99999; S.location='Whiterun'; [S.x,S.y]=WORLD.places.Whiterun; for (const k of ['Destruction','Alteration','Illusion','Conjuration','Restoration','Mysticism']) S.skills[k].lvl=10;
@@ -93,7 +92,7 @@ async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-sandbox"])
         out = {}
-        for st in ("ink", "pixel"):
+        for st in ("ink",):
             r = await run(b, st, errs); out[st] = r; print(st, r)
             await beams(b, st, errs)
         await b.close()

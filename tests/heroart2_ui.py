@@ -22,7 +22,7 @@ window.__looks = [
 ];
 window.__sheet = (style, rows, poses) => {
   const H = 96, cellW = 120, c = document.createElement("canvas"); c.width = cellW * poses.length; c.height = (H + 40) * rows.length;
-  const g = c.getContext("2d"); g.fillStyle = style === "pixel" ? "#eeccaa" : "#efe3c8"; g.fillRect(0, 0, c.width, c.height);
+  const g = c.getContext("2d"); g.fillStyle = "#efe3c8"; g.fillRect(0, 0, c.width, c.height);
   rows.forEach((L, j) => poses.forEach(([pose, frame], i) => {
     HEROART.drawFigure(g, {look: L}, i * cellW + cellW / 2 - (pose === "ride" ? 4 : 0), (j + 1) * (H + 40) - 10, {pose, frame, h: pose === "ride" ? 70 : H, style, horse: "#6b4a2e"});
   }));
@@ -42,8 +42,7 @@ async def main():
         await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
         await pg.evaluate("()=>{" + LOOKS + "}"); await pg.evaluate("()=>{" + FIGHT_JS + "}")
         files = []
-        for st in ["ink", "pixel"]:
-            await pg.evaluate(f"ART.setStyle('{st}')")
+        for st in ["ink"]:
             # every clip for every look
             poses = [["idle", 0], ["walk", 1], ["walk", 5], ["attack", 0], ["attack", 2], ["cast", 1], ["block", 0], ["hit", 0], ["down", 0], ["ride", 1], ["sit", 0]]
             img_of(await pg.evaluate("([s,p])=>__sheet(s,__looks,p)", [st, poses])).save(OUT + f"poses_{st}.png"); files.append(f"poses_{st}.png")
@@ -75,7 +74,6 @@ async def main():
                 el = await pg.query_selector("#f2box .fscene")
                 if el: await el.screenshot(path=OUT + f"fight_{ms}_{st}.png"); files.append(f"fight_{ms}_{st}.png")
             await pg.evaluate("FIGHTART.manual(false); document.getElementById('f2box')?.remove(); document.getElementById('hb2')?.remove()")
-        await pg.evaluate("ART.setStyle('ink')")
         print("files:", [OUT + f for f in files])
         print("errors:", errs)
         await b.close()

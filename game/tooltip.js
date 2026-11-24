@@ -332,7 +332,6 @@ const TIP = (() => {
     if (!body) return hide();
     if (!box) { box = document.createElement("div"); box.id = "tip"; box.className = "tip"; box.setAttribute("role", "tooltip"); }
     if (!box.isConnected) document.body.appendChild(box);
-    box.classList.toggle("tt-px", document.documentElement.classList.contains("art-pixel"));
     box.innerHTML = body;
     cur = hit; hit.rect = rect;
     place(rect || hit.el.getBoundingClientRect());
