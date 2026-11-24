@@ -43,6 +43,9 @@ const I18N = (() => {
     "🍲 Cooking pot": "🍲 Kociołek", "Skill trainer": "Trener umiejętności", "Hirelings": "Najemnicy", "Show on map": "Pokaż na mapie", "Centre on me": "Wyśrodkuj na mnie",
     "Zoom map": "Przybliż mapę", "Map of Skyrim": "Mapa Skyrim", "Where to?": "Dokąd?", "Pick where to go": "Wybierz, dokąd iść", "Travel": "Podróż", "Gather": "Zbieraj",
     "🔍 Forage here": "🔍 Szukaj tu ziół", "Something nearby": "Coś w pobliżu", "Discoveries": "Odkrycia", "Cleared locations": "Oczyszczone miejsca",
+    "Tidier Gathering card": "Porządniejsza karta Zbierania",
+    "On the Map panel, plants you already picked no longer pile up on top of each other in the Gathering card. Every plant gets its own line, and Auto-pick sits on its own row below the buttons.":
+      "Na panelu Mapy zebrane już rośliny nie nachodzą na siebie w karcie Zbierania. Każda roślina ma własny wiersz, a Auto-zbieranie ma osobny rząd pod przyciskami.",
     "📍 Locations: cleared places": "📍 Lokacje: oczyszczone miejsca", "Places discovered": "Odkryte miejsca", "📍 Places discovered:": "📍 Odkryte miejsca:",
     "No leads right now.": "Na razie brak tropów.", "Nobody here knows you yet.": "Nikt tu cię jeszcze nie zna.", "Your name in the holds": "Twoja sława w krainach",
     "What is this screen?": "Co to za ekran?", "Open the guide": "Otwórz poradnik", "📖 Guide for new players": "📖 Poradnik dla nowych graczy", "📖 New to the game?": "📖 Nowy w grze?",

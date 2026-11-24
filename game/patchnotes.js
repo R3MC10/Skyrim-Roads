@@ -3,6 +3,9 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b144-gatherfix", build: 144, date: "24 Nov 2026", title: "Tidier Gathering card", items: [
+      "On the Map panel, plants you already picked no longer pile up on top of each other in the Gathering card. Every plant gets its own line, and Auto-pick sits on its own row below the buttons.",
+    ] },
     { id: "b143-followertab", build: 143, date: "24 Nov 2026", title: "Your follower gets their own tab", items: [
       "Your follower now has their own Follower tab in the Character menu, next to Skills, Character and Perks. Everything about them lives there: overview, bond, gear, magic, tactics, perks, fighting style and Dismiss.",
       "The Character page only keeps one short line about them; tap it to jump to the tab. With nobody following you, the tab tells you who you can hire and where.",
