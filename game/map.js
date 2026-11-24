@@ -552,8 +552,9 @@ const WorldMap = (() => {
       const sp = CARAVANS.sprite(c.khajiit, true); if (!sp) continue;
       if (!c.visible) continue;   // only where you've been: no wagons drawn into the fog
       const [cx, cy] = P(c.pos), bob2 = c.moving && !v.reduceMotion ? Math.sin(v.t * 6 + cx) * 0.8 * s : 0;
+      if (c.near) { const pu = v.reduceMotion ? 0.5 : (Math.sin(v.t * 4) + 1) / 2; g.strokeStyle = `rgba(255,224,138,${0.45 + 0.4 * pu})`; g.lineWidth = 2.2 * s; g.beginPath(); g.arc(cx, cy - 10 * s, (20 + 4 * pu) * s, 0, 7); g.stroke(); }   // close enough to hail: tap the wagons (caravanroad.js)
       g.drawImage(sp, cx - 21 * s, cy - 25 * s + bob2, 42 * s, 30 * s);
-      if (v.zoom >= 1.5) label(g, c.label, cx, cy + 12 * s, s, 11, c.mine ? "#ffe6a0" : "#f3e7c4", 700, true);
+      if (v.zoom >= 1.5 || c.near) label(g, c.near ? `${c.label} · tap to meet` : c.label, cx, cy + 12 * s, s, 11, c.mine || c.near ? "#ffe6a0" : "#f3e7c4", 700, true);
     }
     if (v.guards && typeof GUARDS !== "undefined") GUARDS.drawMap(g, v.guards, P, s, v.t, v.reduceMotion, v.zoom, label);   // hold guards on patrol (guards.js)
     if (v.raid && typeof RAIDART !== "undefined") RAIDART.mapRaid(g, v.raid, P, s, v.t, v.reduceMotion);   // a dragon over a town (raidart.js)
