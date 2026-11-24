@@ -207,7 +207,7 @@ const BOSSFIGHT = (() => {
     }
     return out.length ? out.join(" · ") + " · " : "";
   }
-  const stuck = (f) => f.calmTurns > 0 || f.eParalyzed > 0 || f.stagger;
+  const stuck = (f) => f.calmTurns > 0 || f.eParalyzed > 0 || f.stagger || f.fearTurns > 0 || f.unseen > 0;   // afraid or can't find you: no big attack either
   function turn(sess, go) {
     const f = sess.f, b = f.bf;
     if (!b || !f.kit) return go();
