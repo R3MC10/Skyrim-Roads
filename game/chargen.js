@@ -221,7 +221,7 @@ const CHARGEN = (() => {
   // ---------------------------------------------------------------- the preview
   function paint(force) {
     const c = st?.can; if (!c || !c.isConnected) return;
-    const r = c.getBoundingClientRect(), dpr = Math.min(2, (typeof devicePixelRatio !== "undefined" && devicePixelRatio) || 1);
+    const r = c.getBoundingClientRect(), dpr = Math.min(3, (typeof devicePixelRatio !== "undefined" && devicePixelRatio) || 1);
     const W = Math.max(1, Math.round(r.width * dpr)), H = Math.max(1, Math.round(r.height * dpr));
     if (c.width !== W || c.height !== H) { c.width = W; c.height = H; force = true; }
     const anim = motionOn(), now = anim ? performance.now() / 1000 : 0;
