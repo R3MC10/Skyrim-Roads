@@ -60,7 +60,7 @@ const EXPLORE = (() => {
   };
   for (const c of Object.values(CLAWS)) if (c.name) D.ITEMS[c.item] = { name: c.name, slot: "trophy", weight: 0.3, value: 100 };
   const RING = ["Bear", "Moth", "Owl", "Wolf", "Hawk", "Snake", "Whale", "Dragon", "Fox", "Eagle"];
-  const SYM = { Bear: "🐻", Moth: "🦋", Owl: "🦉", Wolf: "🐺", Hawk: "🪶", Snake: "🐍", Whale: "🐋", Dragon: "🐉", Fox: "🦊", Eagle: "🦅" };
+  const SYM = { Bear: "", Moth: "", Owl: "", Wolf: "", Hawk: "", Snake: "", Whale: "", Dragon: "", Fox: "", Eagle: "" };
 
   // ------------------------------------------------------------------ lore books [OURS texts, short, set in Skyrim]
   const LORE = [
@@ -173,8 +173,8 @@ const EXPLORE = (() => {
   function onDiscover(s, place, log) {
     const sec = SECRETS[place];
     if (!sec || st(s).secrets[place]) return null;
-    if (sec.auto) { const r = claim(s, place); if (r && log) log(s, `🔍 ${place}: ${r.text}`); return r; }
-    if (log) log(s, `🔍 Something about ${place} catches your eye. Stop there and search the area.`);
+    if (sec.auto) { const r = claim(s, place); if (r && log) log(s, ` ${place}: ${r.text}`); return r; }
+    if (log) log(s, ` Something about ${place} catches your eye. Stop there and search the area.`);
     return null;
   }
   const hasSecret = (s, place) => !!SECRETS[place] && !st(s).secrets[place] && placeOk(place);
@@ -262,11 +262,11 @@ const EXPLORE = (() => {
       if (r?.x === "claw") {
         const c = CLAWS[s.dungeon.place], out = [];
         if (ownClaw(s, c)) out.push([`set:${r.order}`, `Check the claw's palm and turn the rings: ${r.order.replace(/-/g, ", ")}`]);
-        out.push(["game:claw", "🔘 Turn the rings yourself"]);
+        out.push(["game:claw", " Turn the rings yourself"]);
         return out;
       }
       const base = origChoices(s);
-      if (r?.type === "puzzle" && r.options?.length > 1 && !r.x) base.splice(base.length - 1, 0, ["game:pillars", "🧩 Turn the pillars yourself"]);
+      if (r?.type === "puzzle" && r.options?.length > 1 && !r.x) base.splice(base.length - 1, 0, ["game:pillars", " Turn the pillars yourself"]);
       return base;
     };
     DUNGEONS.act = (s, choice, t = G.now()) => {
@@ -308,13 +308,13 @@ const EXPLORE = (() => {
       }
       // books: a skill book room may hold a lore book too; treasure and mystery rooms sometimes do
       if (!dd.room && ((kind === "mystery" && mys === "book") || ((kind === "treasure" || kind === "mystery") && Math.random() < 0.12))) {
-        const b = randomLore(s); if (b) { dd.found.push(`"${b.title}"`); extra.push(`📖 You pocket a book: "${b.title}". It's in your Library.`); }
+        const b = randomLore(s); if (b) { dd.found.push(`"${b.title}"`); extra.push(` You pocket a book: "${b.title}". It's in your Library.`); }
       }
-      if (!dd.room && kind === "treasure" && Math.random() < 0.06) { const id = freshMap(s); if (id) { G.give(s, "map_" + id); dd.found.push(MAP_BY[id].title); extra.push(`🗺 Tucked in the lid: ${MAP_BY[id].title}.`); } }
+      if (!dd.room && kind === "treasure" && Math.random() < 0.06) { const id = freshMap(s); if (id) { G.give(s, "map_" + id); dd.found.push(MAP_BY[id].title); extra.push(` Tucked in the lid: ${MAP_BY[id].title}.`); } }
       if (res.cleared) {
         const u = firstClear(s, place);
-        if (u) { dd.found.push(u); extra.push(`✨ On the boss lies something unique: ${u}.`); res.unique = u; }
-        if (Math.random() < 0.3) { const id = freshMap(s); if (id) { G.give(s, "map_" + id); dd.found.push(MAP_BY[id].title); extra.push(`🗺 And a scrap of parchment: ${MAP_BY[id].title}.`); } }
+        if (u) { dd.found.push(u); extra.push(` On the boss lies something unique: ${u}.`); res.unique = u; }
+        if (Math.random() < 0.3) { const id = freshMap(s); if (id) { G.give(s, "map_" + id); dd.found.push(MAP_BY[id].title); extra.push(` And a scrap of parchment: ${MAP_BY[id].title}.`); } }
       }
       if (extra.length) res.text = `${res.text || ""} ${extra.join(" ")}`.trim();
       return res;
@@ -357,11 +357,11 @@ const EXPLORE = (() => {
   function placeCard(s) {
     if (!s || s.trip?.status === "travel" || s.dungeon) return "";
     const dg = digHere(s);
-    if (dg) return `<div class="panel xcard"><h2>🗺 ${esc(MAP_BY[dg].title)}</h2><p class="sub">${esc(MAP_BY[dg].hint)} This is the spot.</p><button class="btn pri" data-act="xdig" data-id="${dg}" style="width:100%">⛏ Dig here</button></div>`;
+    if (dg) return `<div class="panel xcard"><h2> ${esc(MAP_BY[dg].title)}</h2><p class="sub">${esc(MAP_BY[dg].hint)} This is the spot.</p><button class="btn pri" data-act="xdig" data-id="${dg}" style="width:100%"> Dig here</button></div>`;
     const l = s.location;
     if (l && hasSecret(s, l)) {
       const need = SECRETS[l].need;
-      return `<div class="panel xcard"><h2>🔍 Something's hidden here</h2><p class="sub">You have a feeling ${esc(l)} isn't telling you everything.${need ? ` Getting to it may take some ${esc(need[0])}.` : ""}</p><button class="btn" data-act="xsearch" style="width:100%">🔍 Search the area</button></div>`;
+      return `<div class="panel xcard"><h2> Something's hidden here</h2><p class="sub">You have a feeling ${esc(l)} isn't telling you everything.${need ? ` Getting to it may take some ${esc(need[0])}.` : ""}</p><button class="btn" data-act="xsearch" style="width:100%"> Search the area</button></div>`;
     }
     return "";
   }
@@ -374,17 +374,17 @@ const EXPLORE = (() => {
   function panel(s) {
     const c = counts(s), x = st(s);
     const left = LORE.length - x.lore.length;
-    const books = LORE.filter(([id]) => x.lore.includes(id)).map(([id, title]) => `<div class="item"><span class="xbook" aria-hidden="true">📖</span><div class="t">${esc(title)}</div><button class="btn sm" data-act="xread" data-id="${id}">Read</button></div>`).join("")
-      + (left ? `<div class="item dim"><span class="xbook" aria-hidden="true">📕</span><div class="t">${left} more ${left === 1 ? "book" : "books"} to find<span>In dungeon chests, hidden caches and buried treasure</span></div></div>` : "");
-    const maps = openMaps(s).map((id) => `<div class="item on"><span class="xbook" aria-hidden="true">🗺</span><div class="t">${esc(MAP_BY[id].title)}<span>${esc(MAP_BY[id].hint)} The X is on your map.</span></div></div>`).join("");
-    const uniq = Object.entries(UNIQUE_AT).filter(([p]) => x.uniques[p]).map(([p, id]) => `<div class="item">${typeof ICONART !== "undefined" ? ICONART.item(id, 28) : "✨"}<div class="t">${esc(D.ITEMS[id].name)}<span>${esc(p)}</span></div></div>`).join("");
+    const books = LORE.filter(([id]) => x.lore.includes(id)).map(([id, title]) => `<div class="item"><span class="xbook" aria-hidden="true"></span><div class="t">${esc(title)}</div><button class="btn sm" data-act="xread" data-id="${id}">Read</button></div>`).join("")
+      + (left ? `<div class="item dim"><span class="xbook" aria-hidden="true"></span><div class="t">${left} more ${left === 1 ? "book" : "books"} to find<span>In dungeon chests, hidden caches and buried treasure</span></div></div>` : "");
+    const maps = openMaps(s).map((id) => `<div class="item on"><span class="xbook" aria-hidden="true"></span><div class="t">${esc(MAP_BY[id].title)}<span>${esc(MAP_BY[id].hint)} The X is on your map.</span></div></div>`).join("");
+    const uniq = Object.entries(UNIQUE_AT).filter(([p]) => x.uniques[p]).map(([p, id]) => `<div class="item">${typeof ICONART !== "undefined" ? ICONART.item(id, 28) : ""}<div class="t">${esc(D.ITEMS[id].name)}<span>${esc(p)}</span></div></div>`).join("");
     return `<div class="panel"><h2>Discoveries</h2><p class="sub">Things worth finding off the road. Search places that catch your eye, clear dungeons for their one-of-a-kind treasures, collect books for your library and follow treasure maps to the X.</p>
-      <div class="xstats"><span>🔍 Secrets <b>${c.secrets[0]}/${c.secrets[1]}</b></span><span>✨ Uniques <b>${c.uniques[0]}/${c.uniques[1]}</b></span><span>📖 Books <b>${c.lore[0]}/${c.lore[1]}</b></span><span>🗺 Treasure <b>${c.maps[0]}/${c.maps[1]}</b></span></div>
+      <div class="xstats"><span> Secrets <b>${c.secrets[0]}/${c.secrets[1]}</b></span><span> Uniques <b>${c.uniques[0]}/${c.uniques[1]}</b></span><span> Books <b>${c.lore[0]}/${c.lore[1]}</b></span><span> Treasure <b>${c.maps[0]}/${c.maps[1]}</b></span></div>
       ${maps ? `<h3 class="xh">Treasure maps</h3><div class="list">${maps}</div>` : ""}
       ${uniq ? `<h3 class="xh">Unique treasures</h3><div class="list">${uniq}</div>` : ""}
       <h3 class="xh">Library</h3><div class="list">${books}</div></div>`;
   }
-  const bookHTML = (id) => { const b = LORE_BY[id]; return b ? `<div class="xread"><h2>📖 ${esc(b.title)}</h2><p>${esc(b.text)}</p><button class="btn" data-act="close" style="width:100%">Close</button></div>` : ""; };
+  const bookHTML = (id) => { const b = LORE_BY[id]; return b ? `<div class="xread"><h2> ${esc(b.title)}</h2><p>${esc(b.text)}</p><button class="btn" data-act="close" style="width:100%">Close</button></div>` : ""; };
 
   /* one entry point for the panel buttons: -> {text, html?, err?} */
   function act(s, what, id) {

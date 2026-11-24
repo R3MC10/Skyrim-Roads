@@ -8,6 +8,8 @@
    Every game is deterministic: a seed plus a list of small input events [tick, key, a, b] replays it exactly (30 ticks a second).
    Party play: while the leader plays (these games, the lock and the pillar/claw rings), the seed, the taps and the result go
    to the shared "dgame" collection, and party members in the same dungeon watch the same game live, then read the result.
+   Live cursor (livecursor.js): while the party watches, the player's pointer shows over the watchers' copy, named.
+   Party traps (partytraps.js): play(s, c, run, { seed, party }) opens the same game for every hero at once, no streaming.
    Automated tests and simulations keep the old roll unless the URL has ?dgame. */
 const DGAMES = (() => {
   const LX = (x) => (typeof I18N_SWEEP !== "undefined" ? I18N_SWEEP.c(x) : x);   // words drawn on canvas, in the player's language
@@ -362,7 +364,7 @@ const DGAMES = (() => {
         const x = 300 / (n + 1) * (i + 1), y = 100, tok = ring[(m.idx || [])[i] || 0] || "?";
         g.fillStyle = C.stone; g.strokeStyle = C.gold; g.lineWidth = 3;
         g.beginPath(); g.arc(x, y, 38, 0, 7); g.fill(); g.stroke();
-        g.fillStyle = C.ink; g.font = "28px sans-serif"; g.textAlign = "center"; g.fillText((typeof EXPLORE !== "undefined" && EXPLORE.SYM?.[tok]) || "◆", x, y + 6); g.font = "12px sans-serif"; g.fillText(tok, x, y + 54); g.textAlign = "left";
+        g.fillStyle = C.ink; g.font = "28px GameIcons, sans-serif"; g.textAlign = "center"; g.fillText((typeof EXPLORE !== "undefined" && EXPLORE.SYM?.[tok]) || "◆", x, y + 6); g.font = "12px sans-serif"; g.fillText(tok, x, y + 54); g.textAlign = "left";
       });
     },
   };
@@ -370,7 +372,9 @@ const DGAMES = (() => {
   function drawMirror(cv, kind, m) { const { g, C } = prep(cv); frame(g, C); D[kind](g, m || {}, C); }
 
   // ====================================================================== streaming to the party ("dgame" collection)
-  let ctx = null, out = null, mirrorT = null;
+  let ctx = null, out = null, mirrorT = null, mirrorCur = null;
+  const LC = () => (typeof LIVECURSOR !== "undefined" ? LIVECURSOR : null);
+  const chan = (gid) => "dg-" + gid;
   const me = () => ctx?.S?.();
   function streaming() {
     const s = me(), p = ctx?.party?.();
@@ -404,22 +408,27 @@ const DGAMES = (() => {
     streamStart({ kind, mirror: true, m: null, title: kind === "lock" ? "Picking the lock" : "The rings" });
     if (!out) return;
     let gone = 0;
+    if (mirrorCur) mirrorCur();
+    const target = DOM ? document.querySelector(kind === "lock" ? "#lpc" : "#xgame") : null;
+    mirrorCur = LC() && target ? LC().send(target, chan(out.doc.gid)) : null;
+    const stopCur = () => { if (mirrorCur) { mirrorCur(); mirrorCur = null; } };
     mirrorT = setInterval(() => {
-      if (!out) return clearInterval(mirrorT);
+      if (!out) { stopCur(); return clearInterval(mirrorT); }
       let m = null;
       if (kind === "lock" && typeof IMM !== "undefined" && IMM.lock) { const L = IMM.lock; m = { angle: Math.round(L.angle), rot: Math.round(L.rot * 100) / 100, strain: Math.round(L.strain * 100) / 100, picks: L.picks, unb: !!L.unbreakable }; }
       if (kind === "ring" && typeof EXPLORE !== "undefined" && EXPLORE.game) { const x = EXPLORE.game; m = { rings: x.rings, idx: x.idx.slice(), claw: !!x.claw }; }
       if (m) { gone = 0; out.doc.m = m; push(); return; }
-      if (++gone >= 2) { out.doc.done = true; push(true); clearInterval(mirrorT); setTimeout(() => { if (out?.doc.mirror) out = null; }, 4000); }
+      if (++gone >= 2) { out.doc.done = true; push(true); clearInterval(mirrorT); stopCur(); setTimeout(() => { if (out?.doc.mirror) out = null; }, 4000); }
     }, 200);
   }
 
   // ====================================================================== the leader's game screen
   let live = null;
-  function play(s, c, run) {
+  /* opt (party traps): { seed: the shared seed, party: { by, n, trap } } — no streaming, everyone plays their own */
+  function play(s, c, run, opt = {}) {
     close();
-    const o = optsFor(s, c), seed = (Math.random() * 2147483647) | 0, st = make(c, seed, o);
-    streamStart({ kind: c, seed, o, title: INFO[c].title });
+    const o = optsFor(s, c), seed = opt.seed != null ? opt.seed >>> 0 : (Math.random() * 2147483647) | 0, st = make(c, seed, o);
+    if (opt.party) out = null; else streamStart({ kind: c, seed, o, title: INFO[c].title });
     const el = document.createElement("div");
     el.id = "dgame"; el.className = "lockpick dgame";
     const ctrls = c === "flee" ? `<button class="btn pri dgk" data-k="L">Left</button><button class="btn pri dgk" data-k="R">Right</button>`
@@ -429,10 +438,11 @@ const DGAMES = (() => {
       <h3>${esc(INFO[c].title)}</h3><p class="lpsub">${esc(sub(s, c, o))}</p>
       <canvas id="dgc" width="300" height="200" aria-hidden="true"></canvas>
       <p class="lphint" id="dghint">${INFO[c].hint}</p>
-      ${ctrls ? `<div class="lprow dgrow">${ctrls}</div>` : ""}${out ? '<p class="dglive">👁 Your party is watching</p>' : ""}</div>`;
+      ${ctrls ? `<div class="lprow dgrow">${ctrls}</div>` : ""}${out ? '<p class="dglive">\uE14B Your party is watching</p>' : ""}${opt.party ? `<p class="dglive dgparty">\uE123 The whole party plays this trap (${opt.party.n || 2} of you). Fail it and it hits you.</p>` : ""}</div>`;
     document.body.appendChild(el);
     const cv = el.querySelector("#dgc");
-    live = { st, run, c, el, cv, over: false, acc: 0, last: performance.now(), lastCell: null, down: false };
+    live = { st, run, c, el, cv, over: false, acc: 0, last: performance.now(), lastCell: null, down: false, party: !!opt.party };
+    if (out && LC()) live.cur = LC().send(cv, chan(out.doc.gid));   // the watchers see your pointer
     const send = (k, a, b) => { if (!live || live.st.over) return; const ev = [live.st.tick, k]; if (a !== undefined) ev.push(a); if (b !== undefined) ev.push(b); input(live.st, ev); if (out) { out.doc.ev = live.st.ev; } };
     const cell = (e) => { const r = cv.getBoundingClientRect(), x = ((e.clientX - r.left) / r.width) * 300, y = ((e.clientY - r.top) / r.height) * 200; return [x, y]; };
     const holdKey = c === "dash" || c === "sneak";
@@ -493,7 +503,7 @@ const DGAMES = (() => {
     setTimeout(() => { close(); L.run(choiceOf(st)); }, reduce() ? 300 : 900);
   }
   function close() {
-    if (live) { cancelAnimationFrame(live.raf); removeEventListener("keydown", live.key, true); removeEventListener("keyup", live.keyup, true); }
+    if (live) { cancelAnimationFrame(live.raf); removeEventListener("keydown", live.key, true); removeEventListener("keyup", live.keyup, true); live.cur?.(); }
     document.querySelector("#dgame")?.remove(); live = null;
   }
 
@@ -514,13 +524,14 @@ const DGAMES = (() => {
     const el = document.createElement("div");
     el.id = "dgwatch"; el.className = "lockpick dgame dgwatch";
     el.innerHTML = `<div class="lpcard" role="dialog" aria-label="Watching the leader">
-      <h3>👁 ${esc(doc.byName || "The leader")}</h3><p class="lpsub">${esc(doc.title || INFO[doc.kind]?.title || "")} · watching</p>
+      <h3> ${esc(doc.byName || "The leader")}</h3><p class="lpsub">${esc(doc.title || INFO[doc.kind]?.title || "")} · watching</p>
       <canvas id="dgwc" width="300" height="200" aria-hidden="true"></canvas>
       <p class="lphint" id="dgwtxt">${esc(doc.byName || "The leader")} is playing. What happens, happens to you too.</p>
       <div class="lprow"><button class="btn" id="dgwhide">Hide</button></div></div>`;
     document.body.appendChild(el);
     el.querySelector("#dgwhide").onclick = () => { hidden.add(watch?.gid); closeWatch(); };
     watch = { gid: doc.gid, doc, el, cv: el.querySelector("#dgwc"), st: doc.mirror ? null : make(doc.kind, doc.seed, doc.o || {}), last: performance.now(), acc: 0, shown: false, closeAt: 0 };
+    watch.cur = LC() ? LC().attach(watch.cv, chan(doc.gid), doc.byName || "") : null;   // their pointer, named, always on screen
     const loop = (now) => {
       const W = watch; if (!W || W.el !== el) return;
       const dt = Math.min(0.25, (now - W.last) / 1000); W.last = now;
@@ -548,7 +559,7 @@ const DGAMES = (() => {
     };
     watch.raf = requestAnimationFrame(loop);
   }
-  function closeWatch() { if (watch) cancelAnimationFrame(watch.raf); document.querySelector("#dgwatch")?.remove(); watch = null; }
+  function closeWatch() { if (watch) { cancelAnimationFrame(watch.raf); watch.cur?.(); } document.querySelector("#dgwatch")?.remove(); watch = null; }
 
   /* ctx: { S(), party(), Store } */
   function mount(c) { ctx = c; if (c?.Store?.watch) c.Store.watch("dgame", onDocs); }

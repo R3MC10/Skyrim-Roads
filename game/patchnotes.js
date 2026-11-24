@@ -3,6 +3,60 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b168-festivals", build: 168, date: "24 Nov 2026", title: "Festivals and the Grand Arena", items: [
+      "Seven festivals now take turns around Skyrim, each for two days: the Jarl's Tourney in Windhelm, the Harvest Fair in Whiterun, the Lake Honrich Fishing Derby in Riften, the Great Hunt of Falkreath, Forgefire Days in Markarth, the Burning of King Olaf in Solitude and the Midwinter Feast in Dawnstar. Missed one? It comes back three weeks later.",
+      "Each festival has three contests out of duels, archery, ring-tilting on your horse, a smithing contest, the fishing derby, the hunt, a mining race and a drinking contest. Three tries each, your best one counts, and every contest has a live board everyone sees.",
+      "Festivals are peaceful ground: nothing you wear is lost, nobody dies, no bounty, and players can't attack each other in the festival town. Duel any player there as friends, whatever side of the war they're on.",
+      "Compete for yourself, your clan or a hold, and win glory for them. Winners get a title, a trophy and a little gold, plus a ceremonial prize the first time they win each festival.",
+      "The Grand Arena in Windhelm is always open: eight rounds of monsters, alone or with your party, with a new board every week.",
+      "Look for \"Festivals\" in any town, and for the festival banner on the map a day before it starts. New perks: Arena Champion (One-Handed), Sportsman (Athletics) and Crowd Favourite (Speechcraft).",
+    ] },
+    { id: "b146-gore", build: 146, date: "24 Nov 2026", title: "Blood on the snow", items: [
+      "Fights get bloody: a blow throws a spray of blood away from whoever struck it, and the drops land and stay on the ground for the whole fight. Big hits and criticals spray more.",
+      "Every blow looks different: swords and axes throw arcs of blood, arrows stick in, hammers splat and kick up dust, fire scorches and chars, frost throws ice shards, lightning throws sparks and poison drips green.",
+      "Not everything bleeds: skeletons and draugr chip bone and dust, dwarven machines leak oil and lose gears, ghosts lose wisps, daedra bleed black, dragons splash big and dark, and Falmer and chaurus bleed green.",
+      "Wounds show: red streaks build up on a fighter as their health drops, a bleeding foe keeps dripping, and you get a red flash at the edges of the screen when you take a heavy hit.",
+      "A killing blow leaves the body in a pool, and a strong finisher now and then knocks a helmet or weapon flying, or takes a limb off a beast or a skeleton.",
+      "Followers, party members and horses get hit and bleed too, but they still only get knocked down.",
+      "Settings → Fights → Blood and gore: Off, Low or Full. Everyone in a shared fight sees the same spray.",
+    ] },
+    { id: "b167-gameicons", build: 167, date: "24 Nov 2026", title: "Proper game icons", items: [
+      "The little phone emotes on buttons, cards and messages are gone. In their place: simple line icons drawn for the game, like the ones on the compass and in the menus.",
+      "Trap, fight, sneak, lockpick, rest, pray, chests, gold, potions, the weather and more: over 150 icons, sharp at any size and in the colour of the text around them.",
+      "Map pins you dropped before switch to the new icons by themselves.",
+    ] },
+    { id: "b166-chargebar", build: 166, date: "24 Nov 2026", title: "Charge bars", items: [
+      "Enchanted weapons and staffs now show a thin purple charge bar everywhere they appear: your pack, the Items menu and its details, tooltips, the paper doll, shops, chests and stash, follower gear, loot and loot votes, markets and trades.",
+      "When the charge runs out the bar turns red and the item says \"no charge\": the enchantment stops working until you recharge it with a filled soul gem (Items → the weapon → Recharge).",
+      "In a turn-by-turn fight a charge meter sits under your health while an enchanted weapon or staff is in your hand.",
+      "New Enchanting perk, Thrifty Runes: enchanted weapons and staffs use 20% less charge, and every kill puts 3% back.",
+      "Old saves: enchanted weapons that had lost their charge number start full again.",
+    ] },
+    { id: "b166-widetitle", build: 166, date: "24 Nov 2026", title: "The title picture on wide screens", items: [
+      "On a wide or ultra-wide PC window the main menu picture is no longer cut off: the warrior, the dragon and the city always fit, and the sides carry on the same painting softly blurred instead of black bars.",
+      "The menu words, the line under each one and the version line at the bottom are brighter and easier to read over the sky.",
+    ] },
+    { id: "b152-fishhunt", build: 152, date: "24 Nov 2026", title: "Gone fishing, gone hunting", items: [
+      "Fishing is a proper little game now: cast (time the power bar for a long cast), wait for the float to go right under, then hold to reel and let go to ease off. Keep the needle in the safe band: too tight and the line snaps, too slack and the fish gets away. Works with a finger or the Space bar.",
+      "Twelve new fish, and what bites depends on the water, the hold, the time of day and the weather. Arctic char and grayling in the cold north, glass catfish and vampire fish only at night, pogfish love the rain, and a rare goldfish only bites in a storm or a downpour.",
+      "Cleaning a catch can give salmon roe, slaughterfish eggs and pearls for alchemy. All the new fish count for fish recipes and sell at any general store.",
+      "Rods in three tiers: the old Fishing Rod, a Fine Fishing Rod (general stores, or make one at the forge) and a Master Angler's Rod (forge, needs Steel Smithing). Better rods widen the safe band, have a stronger line and bring more rare fish.",
+      "Hunting grounds in villages near the wild (Riverwood, Falkreath, Rorikstead, Ivarstead, Morthal, Dawnstar and more) and out in the wilds wherever you stop: creep up on a deer, elk, goat, hare or fox while it grazes, freeze when it looks up, mind the wind, then draw and shoot. Aim into the wind and go for the heart, just behind the front leg.",
+      "Deer, elk, goats and horkers you meet on the road while hunting now have a \"Stalk and shoot\" choice next to Fight.",
+      "Skinning gives meat, hides and sometimes a trophy (antlers, goat horns, a fox tail, a lucky rabbit's foot). A Skinning Knife (general stores) keeps every hide whole; a Steel Skinning Knife (forge) gets extra hides, meat and trophies. Hides tan into leather at any forge, and the forge uses them up.",
+      "New meals: roast leg of goat, roast rabbit leg and bristleback stew.",
+      "New perks: Clean Kill, Wind Reader and Skinner (Archery), Stalker (Sneak), and Angler, Line Sense and Deep Waters (Alchemy, next to Forager). Each one changes how the games play.",
+      "Playing together: friends hunting the same grounds on the same day meet the same animals in the same wind, and friends fishing side by side get the same bites. On the road only the party leader takes the shot, and everyone hears what they brought down.",
+    ] },
+    { id: "b157-partytraps", build: 157, date: "24 Nov 2026", title: "Traps are for the whole party", items: [
+      "In a party dungeon, traps are everyone's problem now: when the leader goes for \"Dash through\" or \"Find the trigger\", every hero in the party plays that trap at the same time on their own phone or PC. Same blades, same stones for everyone, sized to your own skills.",
+      "Whoever fails takes the hit themselves, and each trap hurts in its own way: poison darts stack up poison, blades, spikes and bear traps make you bleed, fire, steam and runes burn, an oil slick spills some of your gold, and rockfalls dent your armour. Whoever gets through is fine.",
+      "A results card shows who got through and who got hit with what. There's a time limit: anyone who hasn't finished by then (lost the connection, put the phone away) counts as caught, and the party moves on. Followers roll by their own stats and get knocked down if caught, never killed.",
+      "Chests stay the leader's job: only the leader picks the lock or smashes it, and everyone else watches live. The loot still goes into the party pile for the vote at the end, and gold is split evenly. Party members now also see the lock open (or not) exactly as it did for the leader.",
+      "When you watch another player's mini-game, you now see their pointer or finger on screen as a little arrow with their name, moving smoothly as they play.",
+      "Everyone's phone sees the same thing: the same trap, the same results and the same lock outcome. If your phone drops out in the middle of a trap and comes back in time, you get to finish it.",
+      "New perks: Trap Tinkerer (Lockpicking 40): trap games are easier, and a trap never spills your gold or dents your armour. Call Out the Danger (Sneak 40): get through a trap cleanly in a party and everyone it still catches takes a quarter less and one stack less poison or bleeding.",
+    ] },
     { id: "b166-appicon", build: 166, date: "24 Nov 2026", title: "A proper icon", items: [
       "The game has its own icon now: a horned Nord helm under the northern star, on a parchment shield. You'll see it on your phone's home screen, the PC game's window, taskbar and installer, and the browser tab.",
       "On Android 13 and newer it also follows your themed icons, and game notifications show a small helm instead of a plain square. The loading screen shows the new shield too.",

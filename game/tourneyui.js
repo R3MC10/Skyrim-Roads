@@ -61,7 +61,7 @@ const TOURNEYUI = (() => {
       const bx = w / 2;
       g.beginPath(); g.moveTo(bx, h - 24); g.lineTo(bx, 26); g.stroke();
       g.fillStyle = c1; g.beginPath(); g.moveTo(bx + 1, 30); g.lineTo(bx + 26, 30); g.lineTo(bx + 26, 64); g.lineTo(bx + 13, 56); g.lineTo(bx + 1, 64); g.closePath(); g.fill(); g.stroke();
-      g.fillStyle = c2; g.font = "16px serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(f.icon, bx + 13, 44);
+      g.fillStyle = c2; g.beginPath(); g.moveTo(bx + 13, 36); g.lineTo(bx + 19, 44); g.lineTo(bx + 13, 52); g.lineTo(bx + 7, 44); g.closePath(); g.fill(); g.stroke();   // the emblem
       if (!on) { g.fillStyle = "rgba(233,220,192,.45)"; g.fillRect(0, 0, w, h); }
     }, { key: `fest|${f.id}|${w}x${h}|${on ? 1 : 0}`, cls: "tn-art", alt: f.name, style: "ink" });
   }
@@ -112,7 +112,7 @@ const TOURNEYUI = (() => {
     const others = T.docsFor(c.key, docs).filter((d) => d.uid !== s.id && d.snap);
     const rec = T.duelRecord(s, c.key, docs), e = T.entry(s, c.key, false);
     const here = T.here(s, c.place);
-    return `<div class="tn-card tn-duels"><div class="tn-ch"><span class="tn-ic" aria-hidden="true">🤝</span><b>Friendly duels</b><span class="sub num">${rec.w} won · ${rec.l} lost</span></div>
+    return `<div class="tn-card tn-duels"><div class="tn-ch"><span class="tn-ic" aria-hidden="true">\uE198</span><b>Friendly duels</b><span class="sub num">${rec.w} won · ${rec.l} lost</span></div>
       <p class="sub">Duel any player at the festival, whatever side they're on. No stake, no bounty, no grudges: ${T.PAIR_MAX} bouts per pair, and wins count for your hold or clan.</p>
       ${others.length ? others.map((d) => { const n = (e?.duels || []).filter((x) => x.vs === d.uid).length;
         return `<div class="item"><div class="t">${esc(d.name)}${d.title ? ` <small>· ${esc(d.title)}</small>` : ""}<span>${d.rep && d.rep.k !== "self" ? `for ${esc(T.repName(d.rep))} · ` : ""}${n}/${T.PAIR_MAX} bouts</span></div><button class="btn sm" data-tact="pvp" data-id="${esc(d.uid)}" ${here && n < T.PAIR_MAX ? "" : "disabled"}>Duel</button></div>`; }).join("")
@@ -127,7 +127,7 @@ const TOURNEYUI = (() => {
   function prizesHTML(s) {
     const list = T.claimable(s);
     if (!list.length) return "";
-    return `<div class="tn-card tn-prize"><div class="tn-ch"><span class="tn-ic" aria-hidden="true">🏆</span><b>Prizes waiting</b></div>${list.map((fk) => { const f = T.byKey(fk);
+    return `<div class="tn-card tn-prize"><div class="tn-ch"><span class="tn-ic" aria-hidden="true">\uE130</span><b>Prizes waiting</b></div>${list.map((fk) => { const f = T.byKey(fk);
       return `<div class="item"><div class="t">${esc(f ? f.name : "The Grand Arena week")}<span>${f ? `${esc(f.place)} · ended ${esc(day(f.end))}` : `ended ${esc(day(T.endsOf(fk)))}`}</span></div><button class="btn sm pri" data-tact="claim" data-id="${esc(fk)}">Collect</button></div>`; }).join("")}</div>`;
   }
   function calendarHTML(t = Date.now()) {
@@ -155,13 +155,13 @@ const TOURNEYUI = (() => {
     return `<div class="tn tn-pit"><div class="tn-hero">${pitArt()}<div><h3>The Grand Arena</h3><p class="sub">${T.PIT_ROUNDS} rounds of monsters, each one harder. Your health carries over; the healers patch you up a little between rounds. Nobody dies in the Pit and nothing you wear is lost.</p>
       <p class="sub">This week's board closes in ${span(T.pitEnds(wk) - t)}.${best != null ? ` Your best: <b class="num">${best}</b>.` : ""}</p></div></div>
       ${prizesHTML(s)}
-      <div class="tn-grid"><div class="tn-card"><div class="tn-ch"><span class="tn-ic" aria-hidden="true">🩸</span><b>${run ? `Round ${run.r} of ${T.PIT_ROUNDS}` : "A new run"}</b>${run ? `<span class="sub num">${Math.round(run.hp * 100)}% health</span>` : ""}</div>
+      <div class="tn-grid"><div class="tn-card"><div class="tn-ch"><span class="tn-ic" aria-hidden="true">\uE11F</span><b>${run ? `Round ${run.r} of ${T.PIT_ROUNDS}` : "A new run"}</b>${run ? `<span class="sub num">${Math.round(run.hp * 100)}% health</span>` : ""}</div>
         ${run ? `<div class="tn-bar" aria-hidden="true"><i style="width:${Math.round(run.hp * 100)}%"></i></div>` : ""}
         <p class="sub">${allies.length ? `Your party fights with you: ${allies.map((a) => esc(a.name)).join(", ")}. The monsters grow to match.` : rl === "member" ? "" : "You fight alone. Bring a party for bigger monsters and a team score."}</p>
         <button class="btn pri tn-go" data-tact="pit" ${no ? "disabled" : ""}>${run ? `Fight round ${run.r}` : "Enter the Pit"}</button>
         ${run ? `<button class="btn sm" data-tact="pitout" ${no ? "disabled" : ""}>Walk out with ${run.r - 1} ${run.r - 1 === 1 ? "round" : "rounds"}</button>` : ""}
         ${no ? `<p class="sub tn-why">${esc(no)}</p>` : ""}</div>
-        <div class="tn-card"><div class="tn-ch"><span class="tn-ic" aria-hidden="true">📜</span><b>This week's board</b></div>${boardHTML(T.board(fk, "pit", docs, s), s, 8)}</div></div>
+        <div class="tn-card"><div class="tn-ch"><span class="tn-ic" aria-hidden="true">\uE103</span><b>This week's board</b></div>${boardHTML(T.board(fk, "pit", docs, s), s, 8)}</div></div>
       <h4>Glory</h4>${gloryHTML(fk, s)}${repHTML(s)}</div>`;
   }
   /* party members close by (the fight code's own allies list, set by ui.js) */
@@ -171,7 +171,7 @@ const TOURNEYUI = (() => {
   const sections = (l) => [...(isTown(l) ? ["festival"] : []), ...(l === T.PIT_TOWN ? ["pit"] : [])];
   function names(s, l) {
     const c = T.current();
-    return { festival: c && c.place === l ? `🎪 ${c.name}` : "🎪 Festivals", pit: "🩸 Grand Arena" };
+    return { festival: c && c.place === l ? `\uE175 ${c.name}` : "\uE175 Festivals", pit: "\uE11F Grand Arena" };
   }
   function townHTML(s, shop, l) {
     if (shop === "pit") return { note: "Monster rounds for a weekly board. Alone or with your party; in a party only the leader starts the rounds.", body: pitHTML(s) };
@@ -196,7 +196,7 @@ const TOURNEYUI = (() => {
   /* reminders (remind.js): a festival on now, prizes to collect */
   function reminders(s, add, goAt) {
     const n = T.claimable(s).length;
-    if (n) add({ key: "tourney:prize", kind: "board", icon: "🏆", title: `Festival prizes waiting`, sub: `${n} to collect at any town's Festivals.`, state: "ready", go: goAt(s.location && isTown(s.location) ? s.location : T.PIT_TOWN, "town", { shop: "festival" }) });
+    if (n) add({ key: "tourney:prize", kind: "board", icon: "\uE130", title: `Festival prizes waiting`, sub: `${n} to collect at any town's Festivals.`, state: "ready", go: goAt(s.location && isTown(s.location) ? s.location : T.PIT_TOWN, "town", { shop: "festival" }) });
     const c = T.current();
     if (c) { const e = T.entry(s, c.key, false), done = e ? c.contests.every((k) => T.triesLeft(s, c.key, k) <= 0) : false;
       if (!done) add({ key: `tourney:${c.key}`, kind: "board", icon: c.icon, title: `${c.name} is on`, sub: `${c.place} · ends in ${span(c.end - Date.now())}`, state: "ending", place: c.place, go: goAt(c.place, "town", { shop: "festival" }) }); }
@@ -212,7 +212,7 @@ const TOURNEYUI = (() => {
     g.fillStyle = a.colors[0]; g.beginPath(); g.moveTo(bx, by); g.lineTo(bx + 16 * s, by + wave); g.lineTo(bx + 16 * s, by + 12 * s + wave); g.lineTo(bx + 8 * s, by + 9 * s + wave * 0.5); g.lineTo(bx, by + 12 * s); g.closePath(); g.fill(); g.stroke();
     g.fillStyle = a.colors[1]; g.fillRect(bx + 2 * s, by + 4 * s + wave * 0.3, 11 * s, 2 * s);
     if (a.on && !rm) { g.strokeStyle = `rgba(255,224,138,${0.35 + 0.3 * (Math.sin((tt || 0) * 4) + 1) / 2})`; g.lineWidth = 2 * s; g.beginPath(); g.arc(x, y, 15 * s, 0, 7); g.stroke(); }
-    const txt = LX(a.on ? `🎪 ${a.name}` : `🎪 ${a.name} (soon)`);
+    const txt = LX(a.on ? a.name : `${a.name} (soon)`);
     g.font = `700 ${Math.round(9 * s)}px sans-serif`; g.textAlign = "center"; g.lineWidth = 3 * s; g.strokeStyle = "rgba(20,14,8,.88)"; g.strokeText(txt, bx + 8 * s, by - 4 * s); g.fillStyle = "#ffe6a0"; g.fillText(txt, bx + 8 * s, by - 4 * s);
     g.restore();
   }
@@ -225,10 +225,10 @@ const TOURNEYUI = (() => {
   function drink(s, done) {
     const d = { mugs: 0 };
     if (automated()) { while (!d.done && d.mugs < 5) T.drinkStep(s, d); return done(d); }
-    const el = sheet(`<h3>🍺 Drinking contest</h3><p class="cgsub">Mug after mug. Stop before you're under the table.</p><div class="tn-mugs" id="tnm"></div><p class="cghint" id="tnh"></p>
+    const el = sheet(`<h3>\uE15A Drinking contest</h3><p class="cgsub">Mug after mug. Stop before you're under the table.</p><div class="tn-mugs" id="tnm"></div><p class="cghint" id="tnh"></p>
       <div class="cgrow"><button class="btn" id="tnstop">Stop here</button><button class="btn pri" id="tnmore">Another mug!</button></div>`);
     const draw = () => {
-      el.querySelector("#tnm").innerHTML = "🍺".repeat(d.mugs) || "&nbsp;";
+      el.querySelector("#tnm").innerHTML = "\uE15A".repeat(d.mugs) || "&nbsp;";
       const ch = Math.round(T.steady(s, d.mugs) * 100);
       el.querySelector("#tnh").textContent = d.fell ? `Down you go after ${d.mugs} mugs. The crowd roars anyway.` : `${d.mugs} mugs. The room ${d.mugs < 3 ? "is steady" : d.mugs < 6 ? "sways a little" : "spins"}. About ${ch}% you keep your feet on the next one.`;
       if (d.fell) { el.querySelector("#tnmore").disabled = true; el.querySelector("#tnstop").textContent = "Done"; }
@@ -242,7 +242,7 @@ const TOURNEYUI = (() => {
     const fish = [];
     if (automated() || typeof COOK === "undefined") { for (let i = 0; i < 3; i++) { const b = typeof COOK !== "undefined" ? COOK.bite(water) : null; fish.push(b && !b.rare ? b.item : null); } return done(fish); }
     let cast = 0, b = null, t0 = 0, raf = 0, needle = 0;
-    const el = sheet(`<h3>🎣 Fishing derby</h3><p class="cgsub">Cast <span id="tnc">1</span> of 3 · rare fish score most</p><div class="tn-reel"><i class="tn-z" id="tnz"></i><i class="tn-nd" id="tnn"></i></div><p class="cghint" id="tnh">Tap when the needle is in the green.</p><div class="tn-mugs" id="tnf"></div>
+    const el = sheet(`<h3>\uE146 Fishing derby</h3><p class="cgsub">Cast <span id="tnc">1</span> of 3 · rare fish score most</p><div class="tn-reel"><i class="tn-z" id="tnz"></i><i class="tn-nd" id="tnn"></i></div><p class="cghint" id="tnh">Tap when the needle is in the green.</p><div class="tn-mugs" id="tnf"></div>
       <div class="cgrow"><button class="btn pri" id="tnreel">Reel in</button></div>`);
     const next = () => {
       if (cast >= 3) { cancelAnimationFrame(raf); el.querySelector("#tnreel").textContent = "Done"; el.querySelector("#tnreel").onclick = () => { closeSheet(); done(fish); }; return; }
@@ -318,11 +318,11 @@ const TOURNEYUI = (() => {
     switch (b.dataset.tact) {
       case "try": tryContest(b.dataset.k); break;
       case "rep": after(T.setRep(s, b.dataset.k)); break;
-      case "claim": { const r = T.claim(s, b.dataset.id, docs); after(r); if (!r.err && r.titles?.length) api.postNews?.(`🏆 ${s.name} is ${r.titles.join(" and ")}!`); break; }
+      case "claim": { const r = T.claim(s, b.dataset.id, docs); after(r); if (!r.err && r.titles?.length) api.postNews?.(`\uE130 ${s.name} is ${r.titles.join(" and ")}!`); break; }
       case "pvp": { const d = docs.find((x) => x.uid === b.dataset.id && x.fk === T.current()?.key); fight(() => T.pvp(S(), d)); break; }
       case "pit": {
         let allies = []; try { allies = api?.allies?.() || []; } catch { /* alone */ }
-        fight(() => T.pitRound(S(), { role: role(S()), allies }), (out) => { if (out.done && out.score != null && out.round >= 5) api.postNews?.(`🩸 ${s.name} lasted ${out.won ? T.PIT_ROUNDS : out.round - 1} rounds in the Grand Arena.`); });
+        fight(() => T.pitRound(S(), { role: role(S()), allies }), (out) => { if (out.done && out.score != null && out.round >= 5) api.postNews?.(`\uE11F ${s.name} lasted ${out.won ? T.PIT_ROUNDS : out.round - 1} rounds in the Grand Arena.`); });
         break;
       }
       case "pitout": after(T.pitFinish(s)); break;

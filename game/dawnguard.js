@@ -105,7 +105,7 @@ const DAWNGUARD = (() => {
     const why = gate(s, id); if (why) return why;
     if (!JOIN_AT[id].includes(s.location)) return id === "dg_volkihar" ? "Harkon makes his offer in his own hall, at Castle Volkihar." : "Give Isran your answer at Fort Dawnguard, or turn Harkon down in his hall.";
     q(s)[id] = { stage: 0, t: G.now(), base: { ...(s.stats || {}) } };
-    G.note(s, sideId === "dawnguard" ? "🏹 You turned Harkon down and sided with the Dawnguard." : "🦇 You accepted Harkon's offer and sided with his court.");
+    G.note(s, sideId === "dawnguard" ? " You turned Harkon down and sided with the Dawnguard." : " You accepted Harkon's offer and sided with his court.");
     return `${L[id].name}: ${L[id].stages[0].title}. ${L[id].stages[0].text}`;
   }
 
@@ -114,13 +114,13 @@ const DAWNGUARD = (() => {
   const dg = (s) => (s.dgWar = s.dgWar || {});
   function sync(s, t = G.now()) {
     const out = [], v = q(s);
-    if (v.dg_dawnguard && v.dg_dawnguard.stage >= 1 && !dg(s).bolts) { dg(s).bolts = true; G.give(s, "bolt_steel", 40); out.push("🏹 Isran adds 40 steel bolts for the crossbow."); }
+    if (v.dg_dawnguard && v.dg_dawnguard.stage >= 1 && !dg(s).bolts) { dg(s).bolts = true; G.give(s, "bolt_steel", 40); out.push(" Isran adds 40 steel bolts for the crossbow."); }
     if (v.dg_dawnguard && v.dg_dawnguard.stage >= 2 && !dg(s).troll) { dg(s).troll = true; out.push(trollArmor(s)); }
     if (v.dg_volkihar && v.dg_volkihar.stage >= 1 && !dg(s).blood) {
       dg(s).blood = true;
       if (!s.vampire) { s.vampire = { since: t, fedAt: t }; s.sanguinare = null; }
       const b = beast(s); b.kills = Math.max(b.kills || 0, 4);   // [OURS] Harkon's blood is old: two Vampire Lord perks right away
-      out.push("🦇 Harkon's blood burns through you. You're a vampire now, and once a day in a fight you can take the Vampire Lord's form. Two Vampire Lord perks are ready.");
+      out.push(" Harkon's blood burns through you. You're a vampire now, and once a day in a fight you can take the Vampire Lord's form. Two Vampire Lord perks are ready.");
     }
     if (out.length) for (const m of out) G.note(s, m);
     return out;

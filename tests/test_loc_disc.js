@@ -14,7 +14,7 @@ for (const dest of ["Windhelm","Markarth","Riften","Falkreath"]) {
   const got=s.discovered.slice(before);
   console.log("to", dest, "found", got.length, ":", got.slice(0,8).join(", "), got.length>8?"…":"");
 }
-ok(s.journal.some(j=>/📍 Discovered/.test(j.text)),"journal line");
+ok(s.journal.some(j=>/\uE122 Discovered/.test(j.text)),"journal line");
 // radii
 ok(G.discoverRadius("city")>G.discoverRadius("landmark"),"radius by kind");
 // rumours can reveal hidden places

@@ -15,7 +15,7 @@ const WXM = (() => {
   const BAD = ["rain", "fog", "storm", "snow", "blizzard", "ashstorm"];
   const DOCKS = ["Windhelm", "Raven Rock"];
   const pnum = (s, k) => (typeof PFX !== "undefined" && s ? PFX.num(s, k) : 0);
-  const wxAt = (pos, t) => (typeof WEVENTS !== "undefined" && pos ? WEVENTS.weather(pos, t) : { id: "clear", name: "Clear", icon: "☀️", speed: 1, sneak: 0 });
+  const wxAt = (pos, t) => (typeof WEVENTS !== "undefined" && pos ? WEVENTS.weather(pos, t) : { id: "clear", name: "Clear", icon: "\uE153", speed: 1, sneak: 0 });
   const night = (t) => (typeof G !== "undefined" && G.isNight ? G.isNight(t) : false);
   const posOf = (s) => (s && s.x != null ? [s.x, s.y] : null);
 
@@ -64,7 +64,7 @@ const WXM = (() => {
     if (docks0) SOL.docksHTML = (s, esc, opts = {}) => {
       const r = docks0(s, esc, opts), t = now();
       if (!coastStorm(s.location, t)) return r;
-      return { note: `${r.note} ⛈ ${stormMsg(s.location, t)}`, body: String(r.body).replace('data-act="sail"', 'data-act="sail" disabled data-storm="1"') };
+      return { note: `${r.note} \uE191 ${stormMsg(s.location, t)}`, body: String(r.body).replace('data-act="sail"', 'data-act="sail" disabled data-storm="1"') };
     };
   }
 

@@ -6,9 +6,9 @@ const I18N_LIVING = (() => {
   /* buttons, headings, labels: things too short to be a sentence */
   const pl = {
     Ask: "Zapytaj", free: "za darmo", Tomorrow: "Jutro", "Go in": "Wejdź", "Make amends": "Zadośćuczyń",
-    Whispered: "Szepty", "Go and see": "Idź zobaczyć", "⚔ Deal with it": "⚔ Zajmij się tym", "Notice board": "Tablica ogłoszeń",
+    Whispered: "Szepty", "Go and see": "Idź zobaczyć", " Deal with it": " Zajmij się tym", "Notice board": "Tablica ogłoszeń",
     "In the inn right now": "Teraz w karczmie", "Who's about": "Kto jest na ulicach", "What they remember": "Co pamiętają",
-    "Whispers of things to come": "Szepty o tym, co nadejdzie", "📯 News of the realm": "📯 Wieści z królestwa", "News of the realm": "Wieści z królestwa",
+    "Whispers of things to come": "Szepty o tym, co nadejdzie", " News of the realm": " Wieści z królestwa", "News of the realm": "Wieści z królestwa",
     "The whispers were true": "Szepty były prawdziwe", "Shutters close as you pass": "Okiennice zamykają się, gdy przechodzisz",
     "Roosting dragon": "Gniazdujący smok", "Warband chieftain": "Herszt bandy wojennej", "Old troll of the heights": "Stary troll z gór", "Nest master": "Pan gniazda",
     // townsfolk when the art has no name for them
@@ -149,8 +149,8 @@ const I18N_LIVING = (() => {
       "Drzwi otwierają się szybciej: zaplecze karczmy, spiżarnia zarządcy i komnata gościnna jarla wymagają o 25% mniej poważania, a zadośćuczynienie kosztuje o 40% mniej.",
   };
 
-  const TITLES = [["🐉", "A dragon's roost", "Smocze gniazdo"], ["⚔", "A warband gathers", "Zbiera się banda wojenna"], ["🦍", "A troll comes down", "Troll schodzi z gór"],
-    ["🦇", "A nest in the dark", "Gniazdo w mroku"], ["🛞", "A stranded merchant", "Kupiec utknął w drodze"], ["🕯", "A forgotten shrine", "Zapomniana kapliczka"]];
+  const TITLES = [["", "A dragon's roost", "Smocze gniazdo"], ["", "A warband gathers", "Zbiera się banda wojenna"], ["", "A troll comes down", "Troll schodzi z gór"],
+    ["", "A nest in the dark", "Gniazdo w mroku"], ["", "A stranded merchant", "Kupiec utknął w drodze"], ["", "A forgotten shrine", "Zapomniana kapliczka"]];
   for (const [i, en, p] of TITLES) { pl[en] = p; ex[`${i} ${en}`] = `${i} ${p}`; }
 
   /* sentences with names, places and numbers in them */

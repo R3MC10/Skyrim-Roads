@@ -44,7 +44,7 @@
     "A festival prize.": "Nagroda z festynu.", "Worth more on your shelf than at the trader's.": "Więcej warta na półce niż u kupca.",
     "Second or third place.": "Drugie albo trzecie miejsce.", "Someone has to be.": "Ktoś musi.",
     // ---- the screens
-    "Festivals": "Festyny", "🎪 Festivals": "🎪 Festyny", "🩸 Grand Arena": "🩸 Wielka Arena", "Contests and prizes": "Konkursy i nagrody", "Monster rounds": "Rundy z potworami",
+    "Festivals": "Festyny", "\uE175 Festivals": "\uE175 Festyny", "\uE11F Grand Arena": "\uE11F Wielka Arena", "Contests and prizes": "Konkursy i nagrody", "Monster rounds": "Rundy z potworami",
     "Prizes waiting": "Nagrody czekają", "On now!": "Trwa teraz!", "Collect": "Odbierz", "Coming up": "Wkrótce", "Glory": "Chwała", "Holds": "Twierdze", "Clans": "Klany",
     "You compete for": "Startujesz dla", "Yourself": "Siebie", "A hold…": "Twierdza…", "no score yet": "brak wyniku",
     "Have a go": "Spróbuj", "Step into the ring": "Wejdź do kręgu", "Duel": "Pojedynek", "Friendly duels": "Przyjacielskie pojedynki",
@@ -124,7 +124,7 @@
     ["{0} friendly duel won.", "Wygrany przyjacielski pojedynek: {0}."], ["{0} friendly duels won.", "Wygrane przyjacielskie pojedynki: {0}."],
     ["A ceremonial prize: {0}.", "Nagroda ceremonialna: {0}."], ["{0}: {1} gold.", "{0}: {1} złota."], ["{0}: {1} gold, {2}.", "{0}: {1} złota, {2}."],
     ["{0}: {1} gold, {2}, and the title {3}.", "{0}: {1} złota, {2} i tytuł {3}."], ["{0}: {1} gold, and the title {2}.", "{0}: {1} złota i tytuł {2}."],
-    ["🏆 {0} is {1}!", "🏆 {0} zostaje: {1}!"], ["🩸 {0} lasted {1} rounds in the Grand Arena.", "🩸 {0} wytrzymuje {1} rund na Wielkiej Arenie."],
-    ["🎪 {0} (soon)", "🎪 {0} (wkrótce)"], ["in {0}", "za {0}"],
+    ["\uE130 {0} is {1}!", "\uE130 {0} zostaje: {1}!"], ["\uE11F {0} lasted {1} rounds in the Grand Arena.", "\uE11F {0} wytrzymuje {1} rund na Wielkiej Arenie."],
+    ["{0} (soon)", "{0} (wkrótce)"], ["in {0}", "za {0}"],
   );
 })();

@@ -159,7 +159,7 @@ const DWEMER = (() => {
   const reachOpen = (s) => !!st(s).reach || (q(s)[ID] && (q(s)[ID].done || q(s)[ID].stage > STAGE.lift));
   function sync(s) {
     const out = [];
-    if (reachOpen(s) && !st(s).reach) { st(s).reach = true; out.push("⚙ The great lift groans into life. Blackreach is open: go down from Alftand (Map, at Alftand)."); }
+    if (reachOpen(s) && !st(s).reach) { st(s).reach = true; out.push("\uE11E The great lift groans into life. Blackreach is open: go down from Alftand (Map, at Alftand)."); }
     if (out.length) for (const m of out) G.note(s, m);
     return out;
   }

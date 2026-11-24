@@ -29,7 +29,7 @@ async def main():
             await pg.evaluate("()=>{ const b=[...document.querySelectorAll('#modal [data-act=ev]')].find(x=>x.dataset.c==='pay'); b&&b.click(); }"); await pg.wait_for_timeout(400)
             print(style, "after choice picture:", await pg.evaluate("!!document.querySelector('#modal img.art.scene.evt')"))
             # story popups through showMessage
-            for t, x in [("Quest", "📜 The Dragonborn: “Bleak Falls Barrow” done (100 gold)."), ("Quest", "📜 The Companions: “Proving Honor” done (200 gold)."), ("The dragon falls", "Mirmulnir crashes down. You absorb its soul."), ("The Change", "Your blood burns. You are a vampire now.")]:
+            for t, x in [("Quest", "\ue103 The Dragonborn: “Bleak Falls Barrow” done (100 gold)."), ("Quest", "\ue103 The Companions: “Proving Honor” done (200 gold)."), ("The dragon falls", "Mirmulnir crashes down. You absorb its soul."), ("The Change", "Your blood burns. You are a vampire now.")]:
                 await clear(); await pg.evaluate(f"window.__dbg.message({t!r}, {x!r})"); await pg.wait_for_timeout(300)
                 ok = await pg.evaluate("!!document.querySelector('#modal img.art.scene.evt')"); print(style, t, "picture:", ok)
                 m = await pg.query_selector("#modal")

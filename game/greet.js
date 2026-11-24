@@ -136,7 +136,7 @@ const GREET = (() => {
     el.innerHTML = `<button class="iconbtn gc-x" data-g="x" aria-label="${esc(L("Close"))}">✕</button>
       <b>${esc(kn ? label(S, o, party) : L("Stranger"))}</b><span>${esc([race, o.level ? `${L("level")} ${o.level}` : "", o.loc ? o.loc : ""].filter(Boolean).join(" · "))}</span>
       ${kn ? `<p class="gc-n">${esc(inParty(party, o.id) ? L("In your party.") : L("You know each other."))}</p>`
-        : can.ok ? `<button class="btn pri sm" data-g="greet">👋 ${esc(L("Greet"))}</button>` : `<p class="gc-n">${esc(can.why)}</p>`}`;
+        : can.ok ? `<button class="btn pri sm" data-g="greet"> ${esc(L("Greet"))}</button>` : `<p class="gc-n">${esc(can.why)}</p>`}`;
     const wrap = document.getElementById("mapwrap") || document.body;
     el.style.left = Math.max(8, Math.min((wrap.clientWidth || 400) - 250, sx + 14)) + "px";
     el.style.top = Math.max(8, Math.min((wrap.clientHeight || 400) - 140, sy - 20)) + "px";

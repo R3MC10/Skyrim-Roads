@@ -58,7 +58,7 @@ const CURSE = (() => {
   function update(s, t = nowS()) {
     if (s.sanguinare && !s.vampire && t - s.sanguinare.at >= TURN_AFTER) {
       s.sanguinare = null; s.vampire = { since: t, fedAt: t };
-      return "🩸 You wake up hungry for something that isn't food. You are a vampire now. See the Character tab.";
+      return " You wake up hungry for something that isn't food. You are a vampire now. See the Character tab.";
     }
     return null;
   }
@@ -85,7 +85,7 @@ const CURSE = (() => {
 
   // ---- perk stars: [id, name, ranks, needs, x, y, desc]   (x/y: a 0..100 sky for the constellation)
   const TREES = {
-    wolf: { name: "Werewolf", icon: "🐺", unit: "feed", perks: [
+    wolf: { name: "Werewolf", icon: "", unit: "feed", perks: [
       ["bestial_strength", "Bestial Strength", 4, [], 50, 92, "Beast Form hits 10% harder per rank."],
       ["totem_terror", "Totem of Terror", 1, ["bestial_strength"], 28, 74, "Your howl as you change makes ordinary foes cower for 2 turns."],
       ["animal_vigor", "Animal Vigor", 1, ["bestial_strength"], 72, 74, "Changing heals you more, and your beast body holds more health."],
@@ -95,7 +95,7 @@ const CURSE = (() => {
       ["totem_ice_brothers", "Totem of Ice Brothers", 1, ["totem_predator"], 26, 30, "Two ice wolves answer your howl and fight with you."],
       ["totem_moon", "Totem of the Moon", 1, ["totem_ice_brothers"], 46, 10, "Werewolf brothers answer instead: much stronger than wolves."],
     ] },
-    lord: { name: "Vampire Lord", icon: "🦇", unit: "kill", perks: [
+    lord: { name: "Vampire Lord", icon: "", unit: "kill", perks: [
       ["power_grave", "Power of the Grave", 1, [], 50, 92, "As a Vampire Lord you take 15% less damage."],
       ["detect_all", "Detect All Creatures", 1, ["power_grave"], 30, 76, "Nothing hides from you: your drain is 15% stronger."],
       ["vampiric_grip", "Vampiric Grip", 1, ["power_grave"], 70, 76, "You yank the foe off its feet as you change: it's staggered."],
@@ -228,13 +228,13 @@ const CURSE = (() => {
     if (f.usedBeast && s.werewolf && (person || (tg.has("beast") && P(f, "wolf", "savage_feeding")))) {
       const b = bp(s), before = points(s, "wolf"); b.feeds++;
       const h = G.maxHealth(s) * (P(f, "wolf", "gorging") ? 0.4 : 0.2); f.hp = Math.min(G.maxHealth(s), f.hp + h);
-      out.push(`🐺 You feed on the ${f.e?.name || "body"} (+${Math.round(h)} health)${points(s, "wolf") > before ? ". A new werewolf perk is ready!" : ""}`);
+      out.push(` You feed on the ${f.e?.name || "body"} (+${Math.round(h)} health)${points(s, "wolf") > before ? ". A new werewolf perk is ready!" : ""}`);
     }
     if (f.usedLord && s.vampire) {
       const b = bp(s), before = points(s, "lord"); b.kills++; s.vampire.fedAt = f.t;   // a Lord's kill is a feed
-      out.push(`🦇 The Vampire Lord drinks its fill${points(s, "lord") > before ? ". A new Vampire Lord perk is ready!" : ""}`);
+      out.push(` The Vampire Lord drinks its fill${points(s, "lord") > before ? ". A new Vampire Lord perk is ready!" : ""}`);
     }
-    if (person && !tg.has("dragon")) { const r = s.inv.find((x) => x.item === "soul_gem_black"); if (r) { G.take(s, r.id, 1); G.give(s, "soul_gem_black_full"); s.blackGemFull = true; out.push("⚫ The black soul gem drinks a human soul."); } }
+    if (person && !tg.has("dragon")) { const r = s.inv.find((x) => x.item === "soul_gem_black"); if (r) { G.take(s, r.id, 1); G.give(s, "soul_gem_black_full"); s.blackGemFull = true; out.push(" The black soul gem drinks a human soul."); } }
     return out;
   }
   /* Smart AI: what a form is worth for the rest of this fight (in "turns of your damage" like other powers) */
@@ -266,7 +266,7 @@ const CURSE = (() => {
     const q = (s.quests = s.quests || {}), msgs = [];
     for (const id of QIDS) {
       const cursed = Q[id].cure === "vamp" ? !!s.vampire : !!s.werewolf, v = q[id];
-      if (cursed && (!v || (v.done && v.cured))) { q[id] = { stage: 0, t: G.now() }; G.note(s, `📜 New quest: ${Q[id].name} (Journal).`); }
+      if (cursed && (!v || (v.done && v.cured))) { q[id] = { stage: 0, t: G.now() }; G.note(s, ` New quest: ${Q[id].name} (Journal).`); }
       else if (v && v.done && !v.cured && cursed) {
         v.cured = true;
         if (Q[id].cure === "vamp") { const r = s.inv.find((x) => x.item === "soul_gem_black_full"); if (r) G.take(s, r.id, 1); s.blackGemFull = false; msgs.push(cureVampire(s)); }

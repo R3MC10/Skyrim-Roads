@@ -26,35 +26,35 @@ const TOURNEY = (() => {
 
   // ---------------------------------------------------------------- the festivals
   const FESTS = [
-    { id: "tourney", name: "The Jarl's Tourney", place: "Windhelm", icon: "⚔", colors: ["#2f4a6d", "#d9c7a0"], contests: ["duel", "archery", "joust"], title: "Tourney Champion", prize: "fest_tourney_sword",
+    { id: "tourney", name: "The Jarl's Tourney", place: "Windhelm", icon: "\uE101", colors: ["#2f4a6d", "#d9c7a0"], contests: ["duel", "archery", "joust"], title: "Tourney Champion", prize: "fest_tourney_sword",
       text: "The Jarl of Eastmarch opens the lists below the Palace of the Kings. Knights, sellswords and farmhands all try their luck." },
-    { id: "harvest", name: "The Harvest Fair", place: "Whiterun", icon: "🌾", colors: ["#8a5a1c", "#e8d27a"], contests: ["smith", "drink", "archery"], title: "Harvest Champion", prize: "fest_harvest_crown",
+    { id: "harvest", name: "The Harvest Fair", place: "Whiterun", icon: "\uE12C", colors: ["#8a5a1c", "#e8d27a"], contests: ["smith", "drink", "archery"], title: "Harvest Champion", prize: "fest_harvest_crown",
       text: "Carts of cabbages fill the Plains District. Battle-Born mead flows, and the smiths of the Skyforge judge the anvils." },
-    { id: "derby", name: "The Lake Honrich Fishing Derby", place: "Riften", icon: "🎣", colors: ["#2f6b62", "#cfe0c8"], water: "lake", contests: ["fish", "drink", "duel"], title: "Derby Champion", prize: "fest_derby_cap",
+    { id: "derby", name: "The Lake Honrich Fishing Derby", place: "Riften", icon: "\uE146", colors: ["#2f6b62", "#cfe0c8"], water: "lake", contests: ["fish", "drink", "duel"], title: "Derby Champion", prize: "fest_derby_cap",
       text: "Boats crowd the lake below Riften's docks. The biggest catch takes the purse, and the Bee and Barb runs out of mead by noon." },
-    { id: "hunt", name: "The Great Hunt of Falkreath", place: "Falkreath", icon: "🦌", colors: ["#3d5a2a", "#d8c79a"], contests: ["hunt", "archery", "joust"], title: "Hunt-Master", prize: "fest_hunt_bow",
+    { id: "hunt", name: "The Great Hunt of Falkreath", place: "Falkreath", icon: "\uE115", colors: ["#3d5a2a", "#d8c79a"], contests: ["hunt", "archery", "joust"], title: "Hunt-Master", prize: "fest_hunt_bow",
       text: "Horns at dawn in the pine forest. Hunters bring their best kill to the Jarl's longhouse." },
-    { id: "forgefire", name: "Forgefire Days", place: "Markarth", icon: "🔥", colors: ["#7a2e1c", "#e0b070"], contests: ["smith", "mine", "duel"], title: "Master of the Forge", prize: "fest_forge_hammer",
+    { id: "forgefire", name: "Forgefire Days", place: "Markarth", icon: "\uE104", colors: ["#7a2e1c", "#e0b070"], contests: ["smith", "mine", "duel"], title: "Master of the Forge", prize: "fest_forge_hammer",
       text: "Hammers ring from the Warrens to Understone Keep. The Silver-Bloods pay for the best blade and the fastest pick in Cidhna Mine." },
-    { id: "olaf", name: "The Burning of King Olaf", place: "Solitude", icon: "🎭", colors: ["#5a2a5e", "#e6c26a"], contests: ["drink", "duel", "archery"], title: "Hero of Olaf's Night", prize: "fest_olaf_mask",
+    { id: "olaf", name: "The Burning of King Olaf", place: "Solitude", icon: "\uE14D", colors: ["#5a2a5e", "#e6c26a"], contests: ["drink", "duel", "archery"], title: "Hero of Olaf's Night", prize: "fest_olaf_mask",
       text: "The Bards College burns a straw King Olaf on the bridge, and all of Solitude drinks to the dragon he never really caught." },
-    { id: "midwinter", name: "The Midwinter Feast", place: "Dawnstar", icon: "❄", colors: ["#3a5a7a", "#e8eef2"], water: "sea", contests: ["drink", "fish", "mine"], title: "Midwinter Champion", prize: "fest_midwinter_circlet",
+    { id: "midwinter", name: "The Midwinter Feast", place: "Dawnstar", icon: "\uE125", colors: ["#3a5a7a", "#e8eef2"], water: "sea", contests: ["drink", "fish", "mine"], title: "Midwinter Champion", prize: "fest_midwinter_circlet",
       text: "In the long night Dawnstar lights fires along the shore: ice fishing on the Sea of Ghosts, a race in Iron-Breaker Mine, and mead until dawn." },
   ];
   const BY_ID = Object.fromEntries(FESTS.map((f) => [f.id, f]));
 
   // ---------------------------------------------------------------- the contests
   const CONTESTS = {
-    duel: { name: "Duelling ring", icon: "⚔", fight: true, skills: ["One-Handed", "Two-Handed", "Archery", "Destruction"], max: 100,
+    duel: { name: "Duelling ring", icon: "\uE101", fight: true, skills: ["One-Handed", "Two-Handed", "Archery", "Destruction"], max: 100,
       what: "A friendly bout with one of the festival's champions. Win with health to spare for more points. Nobody gets hurt for real." },
-    archery: { name: "Archery butts", icon: "🏹", game: "precise", skills: ["Archery"], max: 125, what: "Three arrows at the straw target. Loose when the ring meets the mark." },
-    joust: { name: "Ring-tilting", icon: "🐎", game: "precise", skills: ["One-Handed"], horse: true, max: 125, what: "Ride at the hanging rings with a lance. Bring your own horse." },
-    smith: { name: "Smithing contest", icon: "⚒", game: "hammer", skills: ["Smithing"], max: 125, what: "Forge a blade from the fair's own iron in three strikes. The judges keep it." },
-    fish: { name: "Fishing derby", icon: "🎣", game: "fish", skills: [], max: 120, what: "Three casts with a borrowed rod. Rare fish score most. You keep what you catch." },
-    hunt: { name: "The hunt", icon: "🦌", game: "precise", skills: ["Archery", "Sneak"], max: 140, what: "The huntsmen drive a beast past your hide. Take one clean shot. Bigger game, more points." },
-    mine: { name: "Mining race", icon: "⛏", game: "mine", skills: ["Smithing"], max: 110, what: "One rock face and a borrowed pick. Ore and gems score points. You keep what you dig." },
-    drink: { name: "Drinking contest", icon: "🍺", game: "drink", skills: [], max: 120, what: "Mug after mug of mead. Stop while you can still stand, or end up under the table." },
-    pit: { name: "Grand Arena", icon: "🩸", fight: true, skills: [], max: 850, what: "Rounds of monsters in the Pit, alone or with your party. Each round is harder. The healers patch you up a little between rounds." },
+    archery: { name: "Archery butts", icon: "\uE10C", game: "precise", skills: ["Archery"], max: 125, what: "Three arrows at the straw target. Loose when the ring meets the mark." },
+    joust: { name: "Ring-tilting", icon: "\uE12D", game: "precise", skills: ["One-Handed"], horse: true, max: 125, what: "Ride at the hanging rings with a lance. Bring your own horse." },
+    smith: { name: "Smithing contest", icon: "\uE14E", game: "hammer", skills: ["Smithing"], max: 125, what: "Forge a blade from the fair's own iron in three strikes. The judges keep it." },
+    fish: { name: "Fishing derby", icon: "\uE146", game: "fish", skills: [], max: 120, what: "Three casts with a borrowed rod. Rare fish score most. You keep what you catch." },
+    hunt: { name: "The hunt", icon: "\uE115", game: "precise", skills: ["Archery", "Sneak"], max: 140, what: "The huntsmen drive a beast past your hide. Take one clean shot. Bigger game, more points." },
+    mine: { name: "Mining race", icon: "\uE12A", game: "mine", skills: ["Smithing"], max: 110, what: "One rock face and a borrowed pick. Ore and gems score points. You keep what you dig." },
+    drink: { name: "Drinking contest", icon: "\uE15A", game: "drink", skills: [], max: 120, what: "Mug after mug of mead. Stop while you can still stand, or end up under the table." },
+    pit: { name: "Grand Arena", icon: "\uE11F", fight: true, skills: [], max: 850, what: "Rounds of monsters in the Pit, alone or with your party. Each round is harder. The healers patch you up a little between rounds." },
   };
   const GRADE = { botched: 10, rough: 30, good: 55, great: 75, masterful: 90, perfect: 100 };
   const FISH_RARE = new Set(["fish_spadetail", "fish_longfin", "fish_betty", "fish_perch"]), FISH_JUNK = new Set(["fish_slaughterfish", "fish_mudcrab"]);
@@ -413,7 +413,7 @@ const TOURNEY = (() => {
       } else { gold += 15; lines.push(`${C.icon} ${C.name}: ${ord(i + 1)} place. Thanks for taking part.`); }
     }
     const dw = Math.min(PAIR_MAX, (e.duels || []).filter((d) => d.won).length);
-    if (dw) { gold += 10 * dw; lines.push(`⚔ ${dw} friendly duel${dw > 1 ? "s" : ""} won.`); }
+    if (dw) { gold += 10 * dw; lines.push(`\uE101 ${dw} friendly duel${dw > 1 ? "s" : ""} won.`); }
     if (firsts) {
       const prize = fest ? fest.prize : "fest_pit_axe";
       if (!T.got[prize] && D.ITEMS[prize]) { items.push([prize, 1]); T.got[prize] = t; lines.push(`A ceremonial prize: ${D.ITEMS[prize].name}.`); }
