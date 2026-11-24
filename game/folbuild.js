@@ -177,7 +177,7 @@ const FBUILD = (() => {
     for (const [k, v] of Object.entries(b)) { const r = rise(s, id, k, v, m); for (const u of r.ups) up[u] = f.skills[u].lvl; lv.push(...r.lv); }
     delete fight._fsx[id];
     const msgs = Object.entries(up).map(([k, l]) => `${name}: ${k} increased to ${l}`);
-    for (const x of lv) msgs.push(`⬆ ${name} reaches level ${x.lvl} (+10 ${ATTR_NAME[x.attr].toLowerCase()})${x.took.length ? ` and learns ${x.took.join(", ")}` : ""}.`);
+    for (const x of lv) msgs.push(`\uE137 ${name} reaches level ${x.lvl} (+10 ${ATTR_NAME[x.attr].toLowerCase()})${x.took.length ? ` and learns ${x.took.join(", ")}` : ""}.`);
     if (typeof window !== "undefined" && msgs.length) try { window.dispatchEvent(new CustomEvent("folskill", { detail: { id, msgs } })); } catch (e) { /* fine */ }
     return msgs;
   }

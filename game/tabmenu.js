@@ -44,7 +44,7 @@ const TABMENU = (() => {
     const need = (S.level + 3) * 25, xp = Math.max(0, Math.round(S.charXp || 0));
     const w = G.carried(S), cap = G.capacity(S);
     return { level: S.level, xp, need, pct: Math.max(0, Math.min(100, Math.round(xp / need * 100))), gold: S.gold, w: Math.round(w), cap: Math.round(cap), over: w > cap,
-      perks: (typeof PERKS !== "undefined" ? PERKS.pointsLeft(S) : 0) + (S.pendingLevels || 0), task: task(S) };
+      perks: (typeof PERKS !== "undefined" ? PERKS.pointsLeft(S) : 0) + (S.pendingLevels || 0), ready: (S.pendingLevels || 0) > 0, task: task(S) };
   }
   function task(S) {
     if (S.dungeon) return { k: "dun", icon: "", text: `Inside ${S.dungeon.place}`, sub: "Tap to go back in", hot: !!S.dungeon.room?.enemy };
@@ -84,7 +84,7 @@ const TABMENU = (() => {
     if (!list.includes(starSkill)) starSkill = list.filter((k) => PERKS.TREES[k]).sort((a, b) => S.skills[b].lvl - S.skills[a].lvl)[0] || list[0];
     const sk = starSkill, s = S.skills[sk], need = F.skillXpNeeded(sk, s.lvl), tree = PERKS.TREES[sk] || [];
     const b = bar(S), pts = PERKS.pointsLeft(S);
-    const lvl = S.pendingLevels > 0 ? `<div class="tw-lvlup"><b>Level up!</b> Choose what grows by 10:<div class="tw-lvbtns"><button class="btn" data-act="lvl" data-a="health">Health</button><button class="btn" data-act="lvl" data-a="magicka">Magicka</button><button class="btn" data-act="lvl" data-a="stamina">Stamina</button></div></div>` : "";
+    const lvl = S.pendingLevels > 0 && typeof LEVELUP !== "undefined" ? LEVELUP.promptHTML(S) : S.pendingLevels > 0 ? `<div class="tw-lvlup"><b>Level up!</b> Choose what grows by 10:<div class="tw-lvbtns"><button class="btn" data-act="lvl" data-a="health">Health</button><button class="btn" data-act="lvl" data-a="magicka">Magicka</button><button class="btn" data-act="lvl" data-a="stamina">Stamina</button></div></div>` : "";
     const cards = list.map((k) => { const v = S.skills[k], n = F.skillXpNeeded(k, v.lvl), taken = (PERKS.TREES[k] || []).filter(([id]) => PERKS.rank(S, id)).length;
       return `<button class="tw-card ${k === sk ? "on" : ""}" data-twa="skill" data-id="${esc(k)}" aria-pressed="${k === sk}">${mini(k, S)}<b>${esc(k)}</b><span class="num">${v.lvl}${taken ? ` · ★${taken}` : ""}</span><i class="tw-cbar"><i style="width:${Math.round(Math.min(1, v.xp / n) * 100)}%"></i></i></button>`; }).join("");
     let detail = "";
@@ -211,12 +211,12 @@ const TABMENU = (() => {
   function barHTML(b) {
     const t = b.task;
     return `<button class="tw-task ${t.hot ? "hot" : ""}" data-twa="task" data-k="${t.k}"><span class="tw-ti">${t.icon}</span><span class="tw-tt"><b>${esc(t.text)}</b><small>${esc(t.sub)}</small></span>${t.progress != null ? `<i class="tw-tp"><i style="width:${t.progress}%"></i></i>` : ""}</button>
-      <div class="tw-stats"><div class="tw-lv"><span class="tw-lvn num" aria-label="Level ${b.level}"><span>${b.level}</span></span><span class="tw-xp"><small>Level ${b.level}${b.perks ? ` <em class="gold">· ${b.perks} to spend</em>` : ""}<span class="num">${b.xp}/${b.need}</span></small><i class="tw-xpb"><i style="width:${b.pct}%"></i></i></span></div>
+      <div class="tw-stats"><div class="tw-lv${b.ready ? " tw-lvgo" : ""}"><span class="tw-lvn num" aria-label="Level ${b.level}"><span>${b.level}</span></span><span class="tw-xp"><small>Level ${b.level}${b.ready ? ` <em class="tw-lvup">· Level up!</em>` : b.perks ? ` <em class="gold">· ${b.perks} to spend</em>` : ""}<span class="num">${b.xp}/${b.need}</span></small><i class="tw-xpb"><i style="width:${b.pct}%"></i></i></span></div>
       <div class="tw-st gold">${ico("gold")}<b class="num">${b.gold}</b></div><div class="tw-st ${b.over ? "over" : ""}">${ico("weight")}<b class="num">${b.w}/${b.cap}</b></div></div>`;
   }
   function hubHTML(S) {
     const b = bar(S), inTown = S.location && !S.trip && typeof TOWNS !== "undefined" && TOWNS.isTown?.(S.location);
-    const dir = (d) => { const m = DIR[d]; return `<button class="tw-dir tw-${d}" data-twgo="${m}" aria-label="${NAME[m]}"><kbd class="tw-k" aria-hidden="true">${KEYCAP[d]}</kbd>${ico(m)}<b>${NAME[m]}</b><small>${SUBT[m]}</small>${m === "char" && b.perks ? '<span class="dot"></span>' : ""}</button>`; };
+    const dir = (d) => { const m = DIR[d]; return `<button class="tw-dir tw-${d}" data-twgo="${m}" aria-label="${NAME[m]}"><kbd class="tw-k" aria-hidden="true">${KEYCAP[d]}</kbd>${ico(m)}<b>${NAME[m]}</b><small>${SUBT[m]}</small>${m === "char" && b.ready ? '<span class="tw-lvlready">Level up</span>' : m === "char" && b.perks ? '<span class="dot"></span>' : ""}</button>`; };
     const quick = [inTown ? ["town", "Area", "town"] : null, ["log", "Journal", "log"], ["social", "Social", "people"], ["settings", "Settings", "gear"], typeof SEARCH !== "undefined" ? ["search", "Search", "search"] : null].filter(Boolean);
     return `<div class="tw-bg" aria-hidden="true"></div><div class="tw-veil" aria-hidden="true"></div>${starsBG()}
       <div class="tw-top"><b class="tw-where"></b><span class="tw-when"></span><small class="tw-fc"></small></div>
@@ -267,7 +267,7 @@ const TABMENU = (() => {
   function go(m, viaHub = true) {
     closeHub(); fromHub = viaHub;
     const u = ui();
-    if (m === "char") { u.closeMenu?.(); enterChar("stars"); return; }
+    if (m === "char") { u.closeMenu?.(); enterChar("stars"); if (typeof LEVELUP !== "undefined" && LEVELUP.live) LEVELUP.open(); return; }   // like Skyrim: a waiting level-up asks first
     if (charMode) exitChar();
     if (m === "items" || m === "magic") { u.openMenu?.(m); return; }
     u.closeMenu?.(); fromHub = false; u.go?.("map");
