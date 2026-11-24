@@ -7,6 +7,7 @@
    (HEROART), through one small helper, so the characters look the same as everywhere else.
      TRAVELART.mount(host, info)   draw into host (one reused canvas); keeps animating while it's on screen
      TRAVELART.frame(info, dist)   → a one-off canvas (tests, screenshots)
+     TRAVELART.debug()             → where everyone stood in the last live picture (feet line, figures, name tags), for tests
    info: { ground, progress, riding, carriage, horse, look, company, reduce, sky, dest, origin }
    Performance: every static layer is drawn once into an offscreen canvas and scrolled; the loop stops while the strip
    is off screen or the app hidden. */
@@ -367,33 +368,55 @@ const TRAVELART = (() => {
   }
 
   // ---------------------------------------------------------------- the characters: drawn by the hero art, one helper
-  let figApi = null;
-  const figCache = new Map();
-  function newFigApi() {
-    if (figApi !== null) return figApi;
-    try { figApi = typeof HEROART !== "undefined" && typeof HEROART.figure === "function" && /pose/.test(String(HEROART.figure)); } catch { figApi = false; }
-    return figApi;
-  }
-  /* m: { look, riding, carriage, horse, flip } — feet at (x, base), sc ≈ 1 for a full-size hero */
-  function figure(g, m, x, base, ph, sc) {
-    if (newFigApi()) {
+  /* People and horses on the road all share one scale (U strip px per figure unit; a person is 61 units, a horse's back
+     about 40), so a walker comes up past a horse's shoulder and a rider sits on a horse the same size as everyone's.
+     Their stride follows the road: a figure that covers `stride` units a cycle plays d / (stride · U · sc) cycles after
+     the road has scrolled d px, so planted feet and hooves move exactly with the ground (no sliding, no moonwalking). */
+  const U = 0.54, STEPS = 12;
+  const figOk = () => typeof FIGART !== "undefined" && typeof FIGART.sprite === "function";
+  const strideOf = (riding, gait) => (riding ? FIGART.STRIDE.horse[gait || "gallop"] || FIGART.STRIDE.horse.gallop : FIGART.STRIDE.walk);
+  const cycOf = (dist, riding, gait, sc) => { const s = strideOf(riding, gait); return s ? dist / (s * U * sc) : 0; };
+  const devOf = (g) => { try { const t = g.getTransform(); return Math.hypot(t.a, t.b) || 1; } catch { return 1; } };
+  /* m: { look, riding, horse, gait, flip, still } — feet (or hooves) exactly at (x, base); cyc = how far through the stride */
+  function figure(g, m, x, base, cyc, sc, steps = STEPS) {
+    if (figOk()) {
       try {
-        const frame = ((Math.floor(ph / TAU * 8) % 8) + 8) % 8, pose = m.carriage ? "cart" : m.riding ? "ride" : "walk";
-        const hv = m.riding && typeof HORSEART !== "undefined" ? HORSEART.sig() + (m.gait || "") : "";   // [OURS] painted horses (horseart.js): redraw when they arrive
-        const key = `${pose}|${frame}|${m.horse || ""}${hv}|${JSON.stringify(m.look || null)}`;
-        let c = figCache.get(key);
-        if (!c) { c = HEROART.figure(m.look || {}, { pose, frame, scale: 1, horse: m.horse, gait: m.gait || undefined }); figCache.set(key, c); while (figCache.size > 120) figCache.delete(figCache.keys().next().value); }
-        if (c && typeof c === "object" && c.width > 0 && typeof c.getContext === "function") {
-          const th = (m.carriage ? 40 : m.riding ? 56 : 42) * sc, tw = c.width * th / c.height;
-          g.save(); g.translate(x, base); if (m.flip) g.scale(-1, 1); g.drawImage(c, -tw / 2, -th, tw, th); g.restore(); return;
+        const pose = m.riding ? "ride" : m.still ? "idle" : m.sit ? "sit" : "walk", n = m.still || m.sit ? 1 : steps;
+        const u = sc * U, c = FIGART.sprite({ look: m.look || {} }, { pose, frame: Math.floor((((cyc % 1) + 1) % 1) * n), steps: n, k: u * Math.min(3, devOf(g)), horse: m.riding ? m.horse || "#6b4a2e" : undefined, gait: m.riding ? (m.still ? "stand" : m.gait || undefined) : undefined });
+        if (c && c.width > 0) {
+          const s = u / c.k;   // canvas px → strip units
+          g.save(); g.translate(x, base); if (m.flip) g.scale(-1, 1); g.drawImage(c, -c.ax * s, -c.ay * s, c.width * s, c.height * s); g.restore(); return;
         }
-      } catch { figApi = false; }
+      } catch { /* fall back to the simple walker */ }
     }
     if (typeof FXART === "undefined" || !FXART.walker) return;
     g.save(); g.translate(x, base); if (m.flip) g.scale(-1, 1); g.scale(sc * 1.08, sc * 1.08);
-    try { FXART.walker(g, ART.H, 0, 0, ph, m.look || null, !!m.riding, !!m.carriage, m.horse || null); } catch { /* a figure that can't draw stays out */ }
+    try { FXART.walker(g, ART.H, 0, 0, cyc * TAU, m.look || null, !!m.riding, false, m.horse || null); } catch { /* a figure that can't draw stays out */ }
     g.restore();
   }
+  /* a horse on its own, pulling something: hooves at (x, base) */
+  function lone(g, col, x, base, cyc, sc, gait, flip) {
+    if (figOk() && FIGART.drawHorse) { try { FIGART.drawHorse(g, col, x, base, { k: U * sc, cyc: ((cyc % 1) + 1) % 1, gait, flip }); return; } catch { /* old horse below */ } }
+    if (typeof FXART !== "undefined" && FXART.horse) { g.save(); g.translate(x, base); if (flip) g.scale(-1, 1); FXART.horse(g, ART.H, 0, 0, cyc * TAU, col); g.restore(); }
+  }
+  /* is anyone in the company walking? then the horses walk with them */
+  const onFoot = (info) => (!info.riding && !info.carriage) || (info.company || []).slice(0, 15).some((m) => !m.riding);
+  /* your carriage: the horse in front, the wagon with you on the bench, wheels turning with the road */
+  function carriage(g, info, x, base, cyc, gait, ctx, d) {
+    const ink = ctx.ink ? INK : null, ph = d / 5;
+    lone(g, "#6b4a2e", x + 26, base, cyc, 1, gait, false);
+    line2(g, x + 4, base - 15, x + 14, base - 19, "#4a3424", 1.2);   // the shaft to the horse
+    poly(g, [[x - 34, base - 18], [x + 6, base - 18], [x + 6, base - 9], [x - 34, base - 9]], "#7a5432", ink, 0.8);
+    poly(g, [[x - 34, base - 18], [x - 34, base - 24], [x - 31, base - 24], [x - 31, base - 18]], "#6a4628", ink, 0.6);
+    figure(g, { look: info.look, sit: true }, x - 8, base - 18 + 13.5 * U, 0, 1);
+    for (const wx of [x - 26, x - 2]) {
+      g.beginPath(); g.arc(wx, base - 5.5, 5.5, 0, TAU); g.fillStyle = "#4a3424"; g.fill(); g.strokeStyle = "#2a1e14"; g.lineWidth = 0.9; g.stroke();
+      for (const a of [ph, ph + Math.PI / 2]) { g.beginPath(); g.moveTo(wx + Math.cos(a) * 4.6, base - 5.5 + Math.sin(a) * 4.6); g.lineTo(wx - Math.cos(a) * 4.6, base - 5.5 - Math.sin(a) * 4.6); g.stroke(); }
+    }
+  }
+  function line2(g, x0, y0, x1, y1, c, w) { g.strokeStyle = c; g.lineWidth = w; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke(); }
+  /* the top of a figure's head above its feet (strip px), for name tags */
+  const topOf = (riding, sc) => (riding ? 78 : 66) * U * sc;
   function shadow(g, x, base, w, L) {
     const dx = Math.max(-14, Math.min(14, (x - L.sunX) * 0.04 * L.shadowLen * 4));
     g.fillStyle = `rgba(14,10,18,${L.shadowA})`;
@@ -401,13 +424,14 @@ const TRAVELART = (() => {
   }
   /* travellers coming the other way: a lone walker, a pair of guards, or a Khajiit caravan with its lantern */
   const GUARD = { r: "nord", id: "guard", eq: { chest: "iron_armor", head: "iron_helmet", shield: "iron_shield", weapon: "iron_sword" } };
-  function traveller(g, type, x, base, ph, ctx, lights, r) {
-    const { L } = ctx;
-    if (type === "walker") { shadow(g, x, base, 5, L); figure(g, { look: { r: ["nord", "imperial", "breton", "redguard"][Math.floor(r() * 4)], id: "trav" + Math.floor(r() * 9), eq: { chest: "hide_armor" } }, flip: true }, x, base, ph, 0.82); }
-    else if (type === "guards") for (const dx of [0, 15]) { shadow(g, x + dx, base, 5, L); figure(g, { look: GUARD, flip: true }, x + dx, base, ph + dx, 0.84); }
+  /* walk = how far (px) they've walked along the road so far: their legs and wheels follow it */
+  function traveller(g, type, x, base, walk, ctx, lights, r, still) {
+    const { L } = ctx, SC = 0.84, cyc = (riding, gait) => (still ? 0 : cycOf(walk, riding, gait, SC)), ph = still ? 0 : walk / 4;
+    if (type === "walker") { shadow(g, x, base, 5, L); figure(g, { look: { r: ["nord", "imperial", "breton", "redguard"][Math.floor(r() * 4)], id: "trav" + Math.floor(r() * 9), eq: { chest: "hide_armor" } }, flip: true, still }, x, base, cyc(false), SC, 8); }
+    else if (type === "guards") for (const dx of [0, 15]) { shadow(g, x + dx, base, 5, L); figure(g, { look: GUARD, flip: true, still }, x + dx, base, cyc(false) + dx * 0.031, SC, 8); }
     else if (type === "caravan") {
       shadow(g, x + 10, base, 26, L);
-      if (typeof FXART !== "undefined" && FXART.horse) { g.save(); g.translate(x - 22, base); g.scale(-1, 1); FXART.horse(g, ART.H, 0, 0, ph, "#7a5a3a"); g.restore(); }
+      lone(g, "#7a5a3a", x - 24, base, cyc(true, "walk"), SC, still ? "stand" : "walk", true);
       // the wagon: wheels, bed, a striped canvas cover
       poly(g, [[x - 8, base - 13], [x + 28, base - 13], [x + 28, base - 6], [x - 8, base - 6]], "#7a5432", ctx.ink ? INK : null, 0.7);
       g.beginPath(); g.moveTo(x - 6, base - 13); g.quadraticCurveTo(x + 10, base - 34, x + 26, base - 13); g.closePath(); g.fillStyle = "#d8c8a0"; g.fill(); if (ctx.ink) { g.strokeStyle = INK; g.lineWidth = 0.7; g.stroke(); }
@@ -415,7 +439,7 @@ const TRAVELART = (() => {
       for (const wx of [x - 2, x + 22]) { g.beginPath(); g.arc(wx, base - 4, 4, 0, TAU); g.fillStyle = "#4a3424"; g.fill(); g.strokeStyle = "#2a1e14"; g.lineWidth = 0.8; g.stroke(); g.beginPath(); g.moveTo(wx + Math.cos(ph) * 3.4, base - 4 + Math.sin(ph) * 3.4); g.lineTo(wx - Math.cos(ph) * 3.4, base - 4 - Math.sin(ph) * 3.4); g.stroke(); }
       g.fillStyle = "#2a2420"; g.fillRect(x - 9, base - 22, 2.4, 3.4); g.fillStyle = "#ffd890"; g.fillRect(x - 8.6, base - 21.4, 1.6, 2.2);
       lights.push([x - 7.8, base - 20.5, 22, "255,196,120", 0.9]);
-      figure(g, { look: { r: "khajiit", id: "caravan", eq: {} }, flip: true }, x + 36, base, ph, 0.8);
+      figure(g, { look: { r: "khajiit", id: "caravan", eq: {} }, flip: true, still }, x + 36, base, cyc(false), SC, 8);
     }
   }
   /* where you're heading, rising on the horizon as you near it */
@@ -561,27 +585,42 @@ const TRAVELART = (() => {
       const r = seeded(seed + "|t" + i); const roll = r(); if (roll > 0.42) continue;
       const type = roll < 0.12 ? "caravan" : roll < 0.22 ? "guards" : "walker";
       const x = i * TSLOT + r() * 200 - d * 1.8; if (x < -70 || x > W + 70) continue;
-      traveller(g, type, x, 92, d * 0.3 + i, ctx, lights, r);
+      traveller(g, type, x, 92, d * 0.8 + i * 37, ctx, lights, r, V.still);   // they walk the other way: 0.8 px of road for every px we go
     }
     // your company a step behind, then you
-    const co = (info.company || []).slice(0, 15), big = co.length > 4, cols = big ? Math.ceil(co.length / 2) : co.length, tags = [];
-    const mounted = info.riding || info.carriage;
-    const hx = Math.min(W * 0.7, 132 + Math.min(cols, 6) * (big ? 22 : 28) * 0.55) + p * 30;
-    const step = Math.min(1, (hx - 26) / Math.max(1, cols * (big ? 24 : 30) + 16));
-    const spots = co.map((m, i) => { const c = big ? Math.floor(i / 2) : i, row = big ? i % 2 : 0;
-      return { m, i, row, cx: hx - (mounted ? 18 : 0) - ((m.riding ? 34 : 26) * (c + 1) + row * 12) * step, cy: FEET - (big ? row * 5 : (i % 2) * 1.5) }; });
-    const ph0 = d * (mounted ? 0.2 : 0.3);
+    // Everyone keeps one pace: with anyone on foot the horses walk beside them (speedOf slows the road to a walk),
+    // otherwise the riders gallop. Feet and hooves stand on one ground line (FEET; the back row of a big party a little
+    // further up the road and smaller).
+    const co = (info.company || []).slice(0, 15), big = co.length > 4, tags = [], still = !!V.still;
+    const gait = still ? "stand" : onFoot(info) ? "walk" : null;
+    const lead = info.carriage ? "carriage" : info.riding ? "ride" : "walk";
+    const width = (m) => (m.riding ? 40 : 20);   // a horse and rider take up about 40 px of road, a walker 20
+    const cols = []; co.forEach((m, i) => { const c = big ? Math.floor(i / 2) : i; (cols[c] = cols[c] || []).push(i); });
+    const colW = cols.map((ix) => Math.max(...ix.map((i) => width(co[i])))), need = colW.reduce((a, b) => a + b + 4, 0);
+    const back = lead === "carriage" ? 34 : lead === "ride" ? 20 : 8;   // the leader's back end, behind its feet
+    const hx = Math.min(W * 0.7, Math.max(128, 60 + back + need * 0.6)) + p * 30;
+    const step = Math.min(1, (hx - back - 14) / Math.max(1, need));
+    const spots = []; let cur = hx - back - 2;
+    cols.forEach((ix, c) => { const cx = cur - colW[c] / 2 * step; cur -= (colW[c] + 4) * step;
+      ix.forEach((i, k) => { const row = big ? k : 0; spots.push({ m: co[i], i, row, cx: cx + (row ? 6 * step : 0), cy: FEET - row * 5 }); }); });
+    const figs = [];
     for (const sp of [...spots.filter((q) => q.row === 1), ...spots.filter((q) => q.row === 0)]) {
-      const { m, i, row, cx, cy } = sp; if (cx < -20) continue;
-      const sc = row ? 0.86 : 0.96;
-      shadow(g, cx, cy, m.riding ? 14 : 6, L);
-      figure(g, { look: m.look, riding: m.riding, horse: m.horse, gait: V.still ? "stand" : null }, cx, cy, ph0 + (i + 1) * 1.7, sc);
-      if (!big || row === 0) tags.push([m.name, cx, cy - (m.riding ? 58 : 46) * sc - (big && Math.floor(i / 2) % 2 ? 11 : 0), m.follower, false]);
+      const { m, i, row, cx, cy } = sp; if (cx < -24) continue;
+      const sc = row ? 0.88 : 1, riding = !!m.riding;
+      shadow(g, cx, cy, riding ? 14 : 6, L);
+      const cyc = still ? 0 : cycOf(d, riding, gait, sc) + i * 0.37;   // a little out of step with each other
+      figure(g, { look: m.look, riding, horse: m.horse, gait, still }, cx, cy, cyc, sc, big ? 8 : STEPS);
+      figs.push({ name: m.name, x: cx, feet: cy, riding, row, sc, cyc });
+      if (!big || row === 0) tags.push({ name: m.name, x: cx, y: cy - topOf(riding, sc) - 7, follower: m.follower, you: false });
     }
-    shadow(g, hx, FEET + 2, mounted ? 16 : 7, L);
-    figure(g, { look: info.look, riding: info.riding, carriage: info.carriage, horse: info.horse, gait: V.still ? "stand" : null }, hx, FEET + 2, ph0, 1.08);
-    if (co.length) tags.push(["You", hx, FEET - (info.riding ? 64 : 52), false, true]);
-    if (L.glow > 0.5 && !info.carriage) lights.push([hx + 7, FEET - 20 - (info.riding ? 10 : 0), 34, "255,170,90", 0.75 + Math.sin(t * 11) * 0.05 + Math.sin(t * 17) * 0.04]);   // a torch for the dark road
+    shadow(g, hx, FEET, lead === "walk" ? 7 : 16, L);
+    const cyc0 = still ? 0 : cycOf(d, lead !== "walk", gait, 1);
+    if (lead === "carriage") carriage(g, info, hx, FEET, cyc0, gait, ctx, d);
+    else figure(g, { look: info.look, riding: lead === "ride", horse: info.horse, gait, still }, hx, FEET, cyc0, 1);
+    figs.push({ name: "You", x: hx, feet: FEET, riding: lead === "ride", carriage: lead === "carriage", row: 0, sc: 1, cyc: cyc0, you: true });
+    if (co.length) tags.push({ name: "You", x: hx, y: FEET - (lead === "walk" ? topOf(false, 1) : lead === "ride" ? topOf(true, 1) : 40) - 7, you: true });
+    V.dbg = { feet: FEET, U, gait, speed: V.speed, dist: d, figs, tags };
+    if (L.glow > 0.5 && lead !== "carriage") lights.push([hx + 7, FEET - 20 - (lead === "ride" ? 12 : 0), 34, "255,170,90", 0.75 + Math.sin(t * 11) * 0.05 + Math.sin(t * 17) * 0.04]);   // a torch for the dark road
     strip(fgLayer(B, kind, ctx), 1.35);
     tint(g, L.tod === "night" ? 0.62 : 0.85);
     const cb = V.cb; g = wg; g.drawImage(cb, 0, 0, W, H);
@@ -625,13 +664,25 @@ const TRAVELART = (() => {
     poly(g, [[x1, ty - 7], [x1, ty + 1], [x1 + 1.6, ty + 1], [x1 + 1.6, ty - 7]], "#5a4430", null); poly(g, [[x1 + 1.6, ty - 7], [x1 + 8, ty - 5.2], [x1 + 1.6, ty - 3.4]], "#c4572e", null);   // a pennant at the end of the road
     if (ink) { g.strokeStyle = "rgba(59,44,30,0.9)"; g.lineWidth = 1.5; g.strokeRect(0.75, 0.75, W - 1.5, H - 1.5); }
     const og = out.getContext("2d");
-    if (tags.length) { og.setTransform(dpr, 0, 0, dpr, 0, 0); for (const tg of tags) nameTag(og, ...tg); }   // names stay crisp
+    if (tags.length) { og.setTransform(dpr, 0, 0, dpr, 0, 0); placeTags(og, tags); for (const tg of tags) nameTag(og, tg.name, tg.x, tg.y, tg.follower, tg.you, tg.w); }   // names stay crisp
   }
-  function nameTag(g, name, x, y, follower, you) {
+  const tagFont = (you) => `600 ${you ? 9 : 8}px "Barlow Semi Condensed", sans-serif`;
+  /* name tags sit just over each head; when two would touch, the later one steps up a row (yours is placed first) */
+  function placeTags(g, tags) {
+    tags.sort((a, b) => (b.you ? 1 : 0) - (a.you ? 1 : 0));
+    const put = [];
+    for (const tg of tags) {
+      g.save(); g.font = tagFont(tg.you); tg.w = g.measureText(tg.name || "").width + 8; g.restore();
+      tg.y = Math.max(8, tg.y);
+      for (let n = 0; n < 4 && put.some((o) => Math.abs(o.x - tg.x) < (o.w + tg.w) / 2 + 2 && Math.abs(o.y - tg.y) < 13); n++) tg.y = Math.max(8, tg.y - 13);
+      put.push(tg);
+    }
+  }
+  function nameTag(g, name, x, y, follower, you, w0) {
     if (!name) return;
     y = Math.max(8, y);
-    g.save(); g.font = `600 ${you ? 9 : 8}px "Barlow Semi Condensed", sans-serif`; g.textAlign = "center"; g.textBaseline = "middle";
-    const w = g.measureText(name).width + 8;
+    g.save(); g.font = tagFont(you); g.textAlign = "center"; g.textBaseline = "middle";
+    const w = w0 || g.measureText(name).width + 8;
     g.fillStyle = "rgba(14,15,18,0.72)"; g.fillRect(x - w / 2, y - 6, w, 12);
     g.strokeStyle = you ? "rgba(214,178,94,0.9)" : follower ? "rgba(180,170,150,0.6)" : "rgba(143,224,138,0.8)"; g.lineWidth = 0.8; g.strokeRect(x - w / 2 + 0.4, y - 5.6, w - 0.8, 11.2);
     g.fillStyle = you ? "#f0d890" : follower ? "#e4dccb" : "#c8f0c0"; g.fillText(name, x, y + 0.5);
@@ -640,7 +691,8 @@ const TRAVELART = (() => {
 
   // ---------------------------------------------------------------- the live strip
   let V = null;   // { canvas, info, dist, t, raf, last, visible, ema }
-  const speedOf = (info) => (info.carriage ? 40 : info.riding ? 48 : 22);   // strip pixels a second at the road
+  /* strip pixels a second at the road: a gallop, a carriage at a trot, or everyone's walking pace when anyone is on foot */
+  const speedOf = (info) => (onFoot(info) ? 22 : info.carriage ? 40 : 48);
   function mount(host, info) {
     if (!host) return;
     if (!V) {
@@ -680,5 +732,8 @@ const TRAVELART = (() => {
     for (let i = 0; i < (opts.warm || 0); i++) { paint(v, 0); v.t += 1 / 30; v.dist += v.speed / 30; }
     paint(v, 0); return c;
   }
-  return { mount, frame, W, H, BIOME, GROUND, figure, weatherKind };
+  /* for tests: where everyone stood in the last picture of the live strip (strip units: feet line, each figure's x and
+     feet, the name tags after placing) */
+  const debug = () => (V && V.dbg ? JSON.parse(JSON.stringify(V.dbg)) : null);
+  return { mount, frame, debug, W, H, U, FEET, BIOME, GROUND, figure, weatherKind, speedOf };
 })();
