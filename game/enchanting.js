@@ -29,12 +29,12 @@ const ENCH = (() => {
     magicka: ["Fortify Magicka", "max:magicka", 40, ["head", "chest", "hands", ...J], 150, "corpus", "Magicka", "+{m} magicka."],
     stamina: ["Fortify Stamina", "max:stamina", 40, ["chest", "feet", "shield", ...J], 150, "corpus", "Stamina", "+{m} stamina."],
     carry: ["Fortify Carry Weight", "carry", 40, ["hands", "feet", ...J], 0, "armor", "Carry Weight", "+{m} carry weight."],
-    onehanded: ["Fortify One-Handed", "dmg:One-Handed", 25, ["hands", "feet", ...J], 40, "armor", "One-Handed", "One-handed weapons do {m}% more damage."],
-    twohanded: ["Fortify Two-Handed", "dmg:Two-Handed", 25, ["hands", "feet", ...J], 40, "armor", "Two-Handed", "Two-handed weapons do {m}% more damage."],
-    archery: ["Fortify Archery", "dmg:Archery", 25, ["head", "hands", ...J], 40, "armor", "Archery", "Bows and crossbows do {m}% more damage."],
+    onehanded: ["Fortify One-Handed", "dmg:One-Handed", 25, ["hands", "feet", ...J], 25, "armor", "One-Handed", "One-handed weapons do {m}% more damage."],
+    twohanded: ["Fortify Two-Handed", "dmg:Two-Handed", 25, ["hands", "feet", ...J], 25, "armor", "Two-Handed", "Two-handed weapons do {m}% more damage."],
+    archery: ["Fortify Archery", "dmg:Archery", 25, ["head", "hands", ...J], 25, "armor", "Archery", "Bows and crossbows do {m}% more damage."],
     sneak: ["Fortify Sneak", "skill:Sneak", 25, ["feet", "hands", "head", ...J], 60, "armor", "Sneak", "+{m} Sneak."],
     lockpicking: ["Fortify Lockpicking", "skill:Lockpicking", 25, ["head", "hands", ...J], 60, "armor", "Lockpicking", "+{m} Lockpicking: locks open more often."],
-    destruction: ["Fortify Destruction", "spell:Destruction", 25, ["head", "chest", ...J], 40, "armor", "Destruction", "Destruction spells do {m}% more damage."],
+    destruction: ["Fortify Destruction", "spell:Destruction", 25, ["head", "chest", ...J], 25, "armor", "Destruction", "Destruction spells do {m}% more damage."],
     restoration: ["Fortify Restoration", "spell:Restoration", 25, ["head", "chest", ...J], 40, "armor", "Restoration", "Healing spells heal {m}% more."],
     barter: ["Fortify Barter", "barter", 20, ["head", "hands", ...J], 40, "armor", "Barter", "Prices are {m}% better when you buy and sell."],
     resist: ["Resist Magic", "resist", 25, ["shield", "chest", ...J], 50, "ward", "Resist Magic", "Mages and dragons hurt you {m}% less."],
@@ -49,7 +49,7 @@ const ENCH = (() => {
     resist_poison: ["Resist Poison", "pfx:resist_poison", 30, ["chest", "shield", ...J], 50, "ward", "Resist Poison", "Spiders, chaurus, spriggans and other poisonous foes hurt you {m}% less."],
     // ---- new: fighting
     block: ["Fortify Block", "pfx:block", 15, ["shield", "hands", ...J], 25, "armor", "Blocking", "Blocking takes another {m}% off a blow."],
-    crit: ["Fortify Critical", "pfx:crit", 8, ["hands", "ring"], 15, "armor", "Precision", "{m}% chance a weapon hit is a critical."],
+    crit: ["Fortify Critical", "pfx:crit", 8, ["hands", "ring"], 10, "armor", "Precision", "{m}% chance a weapon hit is a critical."],
     evasion: ["Fortify Evasion", "pfx:evasion", 8, ["feet", "chest", "ring"], 12, "armor", "Evasion", "{m}% chance to dodge a blow completely."],
     heavyarmor: ["Fortify Heavy Armor", "skill:Heavy Armor", 25, ["chest", "hands", ...J], 60, "armor", "Heavy Armor", "+{m} Heavy Armor: heavy pieces protect more."],
     lightarmor: ["Fortify Light Armor", "skill:Light Armor", 25, ["chest", "hands", ...J], 60, "armor", "Light Armor", "+{m} Light Armor: light pieces protect more."],
@@ -186,9 +186,13 @@ const ENCH = (() => {
     for (const id of Object.values(G.loadout(s).equipment)) { const r = G.invRow(s, id), it = r && D.ITEMS[r.item]; if (!it?.aenchant) continue; out.push(it.aenchant, ...(it.aenchant.more || [])); }   // masks carry several
     return out;
   }
+  /* offence boosts (weapon and Destruction damage) give diminishing returns when stacked: the strongest piece counts
+     in full, the next half, the next a quarter... then the cap. Stops two rings + an amulet halving a hard fight. */
+  const DIM = (key) => key.startsWith("dmg:") || key === "spell:Destruction";
   function worn(s, key) {
     let n = 0;
-    for (const e of wornList(s)) if (e.key === key) n += e.mag;
+    if (DIM(key)) { const m = wornList(s).filter((e) => e.key === key).map((e) => e.mag).sort((a, b) => b - a); m.forEach((v, i) => { n += v / (1 << i); }); }
+    else for (const e of wornList(s)) if (e.key === key) n += e.mag;
     return CAP[key] ? Math.min(CAP[key], n) : n;
   }
   /* worn effects the fight code reads through PFX: [[pfx key, value, condition]], each effect summed and capped.
