@@ -34,7 +34,10 @@ const FIGHTART = (() => {
     const body = !chest ? "#8a7a62" : chest.type === "heavy" ? P.steel : chest.type === "cloth" ? P.cloth : chest.type === "medium" ? "#9a9a8e" : P.leather;
     const allies = (f?.allies || []).length + (s?.thrall ? 1 : 0);
     const mates = (f?.allies || []).filter((a) => a.look).slice(0, 7).map((a) => ({ name: a.name, look: a.look }));   // party members: drawn in their own gear
-    const list = (f?.allies || []).map((a) => ({ kind: allyKind(a), name: a.name, look: a.look || (a.follower && typeof PARTY !== "undefined" && a.fid ? PARTY.followerLook(a.fid) : null) }));
+    const toSlot = (a) => ({ kind: allyKind(a), name: a.name, look: a.look || (a.follower && typeof PARTY !== "undefined" && a.fid ? PARTY.followerLook(a.fid) : null) });
+    const list = (f?.allies || []).map(toSlot);
+    for (const a of f?._downed || []) if (a && a.name && !list.some((x) => x.name === a.name)) list.push(toSlot(a));   // [OURS] knocked down, not gone: they lie there until they get back up (allyanim.js)
+    if (f?.followerDown && !list.some((x) => x.name === f.followerDown)) { const fid = s?.follower?.id; list.push({ kind: "follower", name: f.followerDown, look: fid && fid !== "meeko" && typeof PARTY !== "undefined" ? PARTY.followerLook(fid) : null }); }
     if (s?.thrall && !(f?.allies || []).some((a) => a.thrall)) list.push({ kind: "zombie", name: s.thrall.name });
     let gearO = null; try { if (typeof GEARLOOK !== "undefined" && typeof HEROART !== "undefined" && s?.loadouts) gearO = GEARLOOK.person(HEROART.lookOf(s)); } catch { /* bare save */ }
     const off = f?.off && f?.eq?.offhand ? (G.wtype ? G.wtype(f.eq.offhand.item) : "sword") : null;   // dual wielding
@@ -326,6 +329,7 @@ const FIGHTART = (() => {
     if (a.valor) return "valor";
     if (a.odah) return "odah";
     if (a.beast) return "beast";
+    if (a.player || a.pid || a.host) return "soldier";   // a real player is never guessed from their name ("Dragon..." is not a dragon)
     const n = (a.name || "").toLowerCase();
     if (/ice wolf/.test(n)) return "icewolf";
     if (/werewolf/.test(n)) return "werewolf";
@@ -350,12 +354,20 @@ const FIGHTART = (() => {
   const ATRO = { flame_atronach: ["#fff2c0", "#e8823a", "rgba(196,87,46,0)"], frost_atronach: ["#ffffff", "#9fd0f0", "rgba(120,170,220,0)"], storm_atronach: ["#f4f0ff", "#9a8ae8", "rgba(110,90,200,0)"] };
   /* draws one helper at the origin, feet on the ground, facing the foe (right). o: { lunge 0..1, t seconds, i slot, look } */
   function allyFig(g, kind, o = {}) {
-    const lunge = o.lunge || 0, t = o.t || 0, i = o.i || 0;
+    const an = o.anim, t = o.t || 0, i = o.i || 0, rig = (kind === "mate" || kind === "follower") && o.look && rigged();
+    let lunge = o.lunge || 0;
     g.save(); g.lineJoin = "round"; g.lineCap = "round";
+    if (an && !rig) {   // [OURS] figures without the shared rig still act out their clip (allyanim.js): lunge, flinch, fall, get up
+      const w = an.w == null ? 1 : an.w, fall = an.clip === "down" ? (an.from && an.from !== "down" ? w : 1) : an.from === "down" ? 1 - w : 0;
+      if (an.clip === "attack") lunge = Math.max(lunge, Math.sin(Math.PI * Math.min(1, an.u / 0.8)) * w);
+      if (an.clip === "hit" || (an.clip === "down" && an.from === "hit")) { const k = an.clip === "hit" ? w : 1 - w; g.translate(-3 * k, 0); g.rotate(-0.18 * k); }
+      if (fall > 0) { g.translate(-6 * fall, 0); g.rotate(-Math.PI / 2 * fall); g.translate(0, 6 * fall); }
+      if (an.clip === "block") g.translate(-2 * w, 0);
+    }
     switch (kind) {
       case "mate": case "follower": {
         g.scale(0.78, 0.78);
-        if (o.look && rigged()) HEROART.fightFigure(g, { look: o.look }, { lunge, t });
+        if (rig) HEROART.fightFigure(g, { look: o.look }, an ? { t, clip: an.clip, u: an.u, from: an.from, fu: an.fu, w: an.w } : { lunge, t });
         else if (o.look) person(g, { ...matePerson(o.look), lunge });
         else person(g, { skin: SKIN.nord, body: P.steel, head: "helm", wt: "sword", shield: true, lunge });
         break; }
@@ -512,6 +524,10 @@ const FIGHTART = (() => {
       if (!as.includes("power:beast")) st.beast = (f.pw?.beast || 0) > 0 || (back && !!f.usedBeast && !as.includes("power:lord"));
       if (!as.includes("power:lord")) st.lord = (f.pw?.lord || 0) > 0 || (back && !!f.usedLord && !st.beast); }
     let foeAtk = 0;
+    // [OURS] allies play their own clips (allyanim.js): who did what in each beat, and who is down on the ground
+    const AA = typeof ALLYANIM !== "undefined" ? ALLYANIM : null, anames = (h.list || []).map((a) => a.name).filter(Boolean);
+    const downs = AA ? AA.downAtStart(f, lines, anames) : new Set();
+    const track = (b) => { b.downs = [...downs]; for (const a of b.allyActs || []) { if (a.clip === "down") downs.add(a.name); else if (a.clip === "getup") downs.delete(a.name); } return b; };
     lines.forEach((l, li) => {
       const raw = l.me || "", parts = raw.split(" · "), me = parts[0], extra = parts.slice(1).join(" · "), them = strip(l.them || "");
       const nhp = l.hp ?? hp, nehp = l.ehp ?? ehp;
@@ -583,15 +599,17 @@ const FIGHTART = (() => {
         if (st.lord && /drain life/.test(extra)) b.drain = true;
         Object.assign(b, { st: { ...st } });
         if (/change back/.test(extra)) { st.beast = false; st.lord = false; }
-        beats.push(b);
+        if (AA) { b.allyActs = AA.actsOf(extra, anames); for (const n of AA.revivedIn(me, anames)) if (!b.allyActs.some((a) => a.name === n)) b.allyActs.push({ name: n, clip: "getup" }); }
+        beats.push(track(b));
       }
       if (them) {
         const b = { who: "them", li, move: "wait", wt: null, fx: null, el: null, miss: false, dmg: hp != null && nhp != null ? Math.max(0, Math.round(hp - nhp)) : null, hpT: nhp, ehpT: nehp, ally: false };
+        const fo = AA ? AA.foeOn(them, anames) : null;   // the blow goes for one of your allies
         if (/steps on your/.test(them)) b.rune = st.rune || "fire", st.rune = null;
         if (/cowers|can't find you|isn't fighting|is paralyzed|is staggered|frozen|flees|obeys|shrugs/.test(them) && !/ hits | misses/.test(them)) {
           b.status = /paralyz|frozen/.test(them) ? "para" : /stagger/.test(them) ? "stagger" : /can't find/.test(them) ? "lost" : "fear";
-        } else if (/goes for|knocks .* to their knees| hits (?!\d)[a-z]/.test(them) && ((f.allies || []).length || f.followerDown)) {
-          Object.assign(b, { move: FOE_MOVE[kind] || "sword", ally: true });
+        } else if (fo || (/goes for|knocks .* to their knees| hits (?!\d)[a-z]/.test(them) && ((f.allies || []).length || f.followerDown))) {
+          Object.assign(b, { move: FOE_MOVE[kind] || "sword", ally: true, allyActs: fo ? [fo] : [] });
         } else if (/(^| )(misses|attacks, but you dodge)/.test(them)) {
           Object.assign(b, { move: FOE_MOVE[kind] || "sword", miss: true });
         } else if (/hits|blow|breath|bites|claws|strikes|\d/.test(them)) {
@@ -609,16 +627,21 @@ const FIGHTART = (() => {
         }
         b.guard = st.guard; st.guard = false;
         b.st = { ...st };
-        beats.push(b);
+        beats.push(track(b));
       }
-      if (!me && !them) beats.push({ who: "me", li, move: "wait", hpT: nhp, ehpT: nehp, st: { ...st } });
+      if (!me && !them) {   // a turn-by-turn ally line (" · Lydia hits 12"): their own beat, so they swing, cast or guard on screen
+        const acts = AA && extra ? AA.actsOf(extra, anames) : [];
+        if (AA && extra) for (const n of AA.revivedIn(extra, anames)) if (!acts.some((a) => a.name === n)) acts.push({ name: n, clip: "getup" });
+        beats.push(track(acts.length ? { who: "me", li, move: "wait", ally: true, allyOnly: true, allyActs: acts, dmg: ehp != null && nehp != null ? Math.max(0, Math.round(ehp - nehp)) : null, hpT: nhp, ehpT: nehp, st: { ...st } } : { who: "me", li, move: "wait", hpT: nhp, ehpT: nehp, st: { ...st } }));
+      }
       hp = nhp; ehp = nehp;
     });
     // the finishing blow: the beat that drops the loser
     const won = f.won ?? true;
     for (const b of beats) if ((won ? b.ehpT != null && b.ehpT <= 0 : b.hpT != null && b.hpT <= 0) || b.turned) { b.final = true; break; }
     if (!beats.some((b) => b.final) && beats.length) beats[beats.length - 1].final = f.won != null;
-    for (const b of beats) { const m = MOVES[b.move] || MOVES.wait; b.dur = m.dur * (b.power ? 1.15 : 1); b.num = b.dmg ? String(b.dmg) : null; }
+    for (const b of beats) { const m = MOVES[b.move] || MOVES.wait; b.dur = b.allyOnly ? 820 : m.dur * (b.power ? 1.15 : 1); b.num = b.dmg ? String(b.dmg) : null; }
+    beats.downEnd = downs;   // who is still down once it has all played
     return beats;
   }
   const animFor = (wt) => MOVES[wt] ? wt : null;   // for tests: every weapon type has its own move
@@ -1017,7 +1040,11 @@ const FIGHTART = (() => {
       const ALLY_MAX = 7, mateTags = [], alist = rec.hero.list || [], groundL = alist.filter((a) => !FLYERS.has(a.kind)).slice(0, ALLY_MAX), flyers = alist.filter((a) => FLYERS.has(a.kind)).slice(0, 1);
       const nGen = Math.max(0, Math.min(ALLY_MAX, rec.hero.allies) - groundL.length - flyers.length);
       const slots = [...groundL, ...Array.from({ length: Math.min(ALLY_MAX - groundL.length, nGen) }, () => ({ kind: "soldier" }))];
-      const allyLunge = b && b.who === "me" && b.ally && u > 0.5 && u < 0.85 ? Math.sin((u - 0.5) / 0.35 * Math.PI) : 0;
+      const allyLunge0 = b && b.who === "me" && b.ally && u > 0.5 && u < 0.85 ? Math.sin((u - 0.5) / 0.35 * Math.PI) : 0;
+      const AA = typeof ALLYANIM !== "undefined" ? ALLYANIM : null, named = !!(b && b.allyActs && b.allyActs.length), hitU0 = m && m.hits.length ? m.hits[0] : 0.5;
+      const allyLunge = named ? 0 : allyLunge0;   // [OURS] named allies play their own clip (allyanim.js); the rest step in together as before
+      const animOf = (a) => AA && a.name ? AA.anim(b, a.name, u, hitU0, beats.downEnd) : null;
+      if (slots.length) { const tag = slots.map((a) => { const x = animOf(a); return x ? x.clip : "idle"; }).join(","); if (cv.dataset.allyClips !== tag) cv.dataset.allyClips = tag; }   // which clip each ally is on (screen tests)
       const two = slots.length > 3, frontN = two ? Math.ceil(slots.length / 2) : slots.length;
       const rowsA = two ? [slots.slice(frontN), slots.slice(0, frontN)] : [slots];   // the back line is drawn first
       rowsA.forEach((row, ri) => {
@@ -1027,7 +1054,8 @@ const FIGHTART = (() => {
         row.forEach((a, i) => {
           const ax = hx0 - (backs[i] * squeeze - allyLunge * 14) * s, ay = groundY + 2 - i * 2 - lift * s, sc2 = s * rs;
           if (a.name && !two && (a.kind === "mate" || a.kind === "follower" || a.kind === "valor" || a.kind === "dog")) mateTags.push([a.name, ax * z + ox + zcx - zcx * z, (ay - 66 * sc2) * z + oy + zcy - zcy * z]);
-          wg.save(); wg.translate(ax, ay); wg.scale(sc2, sc2); if (back) wg.globalAlpha = 0.92; allyFig(wg, a.kind, { lunge: allyLunge, t: tt, i, look: a.look }); wg.restore();
+          const an = animOf(a), al2 = an && an.clip === "attack" && !an.shoot ? Math.sin(Math.PI * Math.min(1, an.u / 0.8)) * (an.w ?? 1) : 0;
+          wg.save(); wg.translate(ax + al2 * 4 * s, ay); wg.scale(sc2, sc2); if (back) wg.globalAlpha = 0.92; allyFig(wg, a.kind, { lunge: allyLunge, t: tt, i, look: a.look, anim: an }); wg.restore();
           const sp = SPARK[a.kind]; if (sp && Math.random() < (two ? 0.09 : 0.18) * pmul) spawn(sp[1], sp[0], ax + (Math.random() - 0.5) * 18 * s, ay + (sp[2] - Math.random() * 30) * s, (Math.random() - 0.5) * 14 * s, -20 * s, 0.7, 2.2, 0);
         });
       });
@@ -1049,6 +1077,9 @@ const FIGHTART = (() => {
       const over = phase !== "play" && phase !== "idle" && phase !== "settle";   // "idle": one turn of a turn-by-turn fight has played, both still stand
       const meDown = over && !won, foeDown = over && won && !turned, fallE = EASE.out(fall);
       const hdg = heroDodge < 1 ? Math.sin(heroDodge * Math.PI) : 0, fdg = foeDodge < 1 ? Math.sin(foeDodge * Math.PI) : 0;
+      if (rec.horse && typeof HORSEBACK !== "undefined" && HORSEBACK.drawDowned && HORSEBACK.downAt(f, phase === "play" ? bi / Math.max(1, beats.length) : 1)) {   // [OURS] your horse is downed: it lies behind you, you fight on foot
+        wg.save(); wg.translate(hx0 - 58 * s, groundY); wg.scale(s, s); HORSEBACK.drawDowned(wg, rec.horse, tt, L("Downed")); wg.restore();
+      }
       wg.save(); wg.translate(hx0 + (heroP.dx - heroKnock - hdg * 18) * s, groundY + (heroP.dy - hdg * 3) * s); wg.scale(s, s);
       if (meDown) { wg.translate(-6 * fallE, 0); wg.rotate(-Math.PI / 2 * fallE); wg.translate(0, 6 * fallE); }
       if (st.invis && !(b && b.who === "me" && b.move !== "self" && b.move !== "shout")) wg.globalAlpha = 0.28 + Math.sin(tt * 3) * 0.05;

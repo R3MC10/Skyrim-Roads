@@ -645,24 +645,26 @@ const FIGART = (() => {
   }
 
   // ---- the horse (feet at 0,0, facing right; the saddle seat sits at about y = -40)
-  function horse(g, col, frame, st, part) {
-    const ph = frame / 4 * TAU, mane = tone(col, -0.55), dk = tone(col, -0.25), bob = Math.sin(ph * 2) * 0.8;
+  function horse(g, col, frame, st, part, gait) {   // gait: "stand" (idle: still legs, tail swish, head nod), "walk", or a gallop (default)
+    const still = gait === "stand", slow = gait === "walk";
+    const ph = frame / 4 * TAU, mane = tone(col, -0.55), dk = tone(col, -0.25), bob = still ? 0 : Math.sin(ph * 2) * (slow ? 0.4 : 0.8);
+    const nod = still ? Math.sin(ph) * 0.07 : slow ? Math.sin(ph * 2) * 0.04 : 0;
     const legH = (x, y, ang, bend, far, hind) => {
       const c = far ? dk : col, l1 = 10.5, l2 = 11.5, kx = x + Math.sin(ang) * l1, ky = y + Math.cos(ang) * l1, a2 = ang + (hind ? bend : -bend), fx = kx + Math.sin(a2) * l2, fy = Math.min(0, ky + Math.cos(a2) * l2);
       limb(g, x, y, kx, ky, hind ? 6.4 : 5.4, 3.2, c, st); limb(g, kx, ky, fx, fy, 3, 2.4, c, st);
       poly(g, [[fx - 1.7, fy - 1.2], [fx + 1.9, fy - 1.2], [fx + 2.2, fy + 0.6], [fx - 1.9, fy + 0.6]]); fillPath(g, "#2a2420", st, null, st.fine);
     };
     const legs = (far) => {
-      const A = 0.55;
+      const A = still ? 0.03 : slow ? 0.3 : 0.55, BEND = still ? 0.12 : slow ? 0.5 : 0.9;
       for (const [x, off, hind] of far ? [[11, 0.6, false], [-12, Math.PI + 0.6, true]] : [[15, 0, false], [-15, Math.PI, true]]) {
-        const a = A * Math.sin(ph + off), bend = 0.9 * Math.max(0, Math.sin(ph + off + 1.2));
+        const a = A * Math.sin(ph + off), bend = BEND * Math.max(0, Math.sin(ph + off + 1.2));
         legH(x, -24 + bob, hind ? -a * 0.8 : a, bend, far, hind);
       }
     };
     if (part !== "front") {
       legs(true);
       // the tail
-      const tw = Math.sin(ph) * 2;
+      const tw = Math.sin(ph) * (still ? 3.6 : 2);
       g.lineCap = "round"; line(g, [[-23, -35 + bob], [-29 - tw, -30], [-31 - tw, -18], [-30 - tw * 1.4, -12]], st.ink, 4.6); line(g, [[-23, -35 + bob], [-29 - tw, -30], [-31 - tw, -18], [-30 - tw * 1.4, -12]], mane, 3.2);
     }
     if (part === "back") return;
@@ -670,7 +672,8 @@ const FIGART = (() => {
     // body
     smooth(g, [[21, -31], [21.6, -24], [10, -19.4], [-8, -19.6], [-19.6, -22], [-24.6, -31], [-20.6, -39], [-6, -37.2], [10, -40.6], [17.6, -37]]);
     fillPath(g, col, st, [12, -42, -6, -19]);
-    // neck and head
+    // neck and head (nodding a little when standing or walking)
+    if (nod) { g.save(); g.translate(14, -38); g.rotate(nod); g.translate(-14, 38); }
     smooth(g, [[11, -40], [17, -52], [23.4, -60.6], [28.6, -57.4], [24, -44], [22.4, -33.6], [17, -31]]); fillPath(g, col, st, [24, -58, 16, -36]);
     smooth(g, [[23.2, -61], [29.6, -59.4], [36.4, -50.4], [38.8, -46.6], [36, -44.4], [29.4, -48.4], [24.4, -52]]); fillPath(g, col, st, [32, -58, 28, -46]);
     poly(g, [[24.4, -59.6], [24.6, -64.6], [27, -60.4]]); fillPath(g, col, st, null, st.fine);
@@ -680,6 +683,7 @@ const FIGART = (() => {
     g.lineTo(11.6, -38); g.quadraticCurveTo(18, -50, 24.2, -61.4); g.closePath(); fillPath(g, mane, st, null, st.fine);
     // tack: bridle, saddle cloth, saddle
     line(g, [[26, -58.8], [30.6, -51.4], [36.6, -46.8]], "#3b2c1e", 0.6); line(g, [[28.4, -50.4], [33.4, -52.6]], "#3b2c1e", 0.5);
+    if (nod) g.restore();
     smooth(g, [[-8, -39.4], [9, -41.4], [9.6, -30.4], [-8.6, -29.6]]); fillPath(g, "#7a2a22", st, [8, -41, -8, -30]); line(g, [[-8.4, -31], [9.4, -31.6]], ART.PAL.gold, 0.8);
     smooth(g, [[-6.4, -40.2], [-3, -39], [4, -39.4], [7.4, -42.6], [6.2, -38], [-5.4, -37]]); fillPath(g, "#5e3e26", st, [4, -42, -4, -37]);
     legs(false);
@@ -690,7 +694,7 @@ const FIGART = (() => {
   function drawPose(g, sp, P, st, layers) {
     g.save(); g.lineJoin = "round"; g.lineCap = "round";
     if (P.rot) { g.translate(26 * Math.min(1, Math.abs(P.rot) / (Math.PI / 2)), -4.6 * Math.min(1, Math.abs(P.rot) / (Math.PI / 2))); g.rotate(P.rot); }
-    if (P.ride && P.horseC) horse(g, P.horseC, P.frame || 0, st, "back");
+    if (P.ride && P.horseC) horse(g, P.horseC, P.frame || 0, st, "back", P.gait);
     g.scale(sp.bw, sp.bh);
     const B = solve(sp, P), S = B.spine, hn = B.handN, hf = B.handF;
     const inSpine = (fn) => { g.save(); at(g, S); fn(); g.restore(); };
@@ -705,7 +709,7 @@ const FIGART = (() => {
     fist(g, hf.x, hf.y, hcF, st);
     if (shieldOn && shieldBehind) shieldHere(false);
     if (P.cast && !P.front) glowAt(g, hf.x, hf.y, 5 + P.cast * 3, P.castC || "#9fd0f0", 0.75, st);
-    if (P.ride && P.horseC) { g.save(); g.scale(1 / sp.bw, 1 / sp.bh); horse(g, P.horseC, P.frame || 0, st, "front"); g.restore(); }
+    if (P.ride && P.horseC) { g.save(); g.scale(1 / sp.bw, 1 / sp.bh); horse(g, P.horseC, P.frame || 0, st, "front", P.gait); g.restore(); }
     if (!P.noFar) leg(g, sp, B.thighF, B.shinF, B.footF, st, true);
     leg(g, sp, B.thighN, B.shinN, B.footN, st, false);
     robeSkirt(g, sp, P, st, W);
@@ -777,7 +781,7 @@ const FIGART = (() => {
   }
   function posed(sp, pose, frame, o) {
     const P = poseOf(pose, frame, sp, o); P.frame = frame;
-    if (pose === "ride") P.horseC = o.horse || "#6b4a2e";
+    if (pose === "ride") { P.horseC = o.horse || "#6b4a2e"; P.gait = o.gait || null; }
     if (sp.wk === "staff" || P.cast) P.castC = sp.wk === "staff" ? sp.staffC : sp.ench || "#9fd0f0";
     return P;
   }
@@ -789,7 +793,7 @@ const FIGART = (() => {
       const fp = o.from.pose, a = posed(sp, fp, frameOf(fp, o.from), o), b = posed(sp, pose, frame, o);
       return render(sp, blend(a, b, o.w), o.w < 0.5 ? fp : pose, k, style);
     }
-    const key = `${sp.key}|${pose}|${frame}|${k}|${style}|${o.horse || ""}|${o.armed === undefined ? "" : +o.armed}`;
+    const key = `${sp.key}|${pose}|${frame}|${k}|${style}|${o.horse || ""}${o.gait ? ":" + o.gait : ""}|${o.armed === undefined ? "" : +o.armed}`;
     let c = SPRITES.get(key);
     if (c) { SPRITES.delete(key); SPRITES.set(key, c); return c; }
     c = render(sp, posed(sp, pose, frame, o), pose, k, style);
@@ -847,6 +851,14 @@ const FIGART = (() => {
     const P = { aim: o.aim != null ? o.aim : wk === "bow" || wk === "crossbow" ? 0 : -0.5 + lunge * 1.1, back: o.back || 0, lean: (o.hunch || 0) + lunge * 0.25, dy: 0, ox: 0, tilt: 0,
       fn: [5 + lunge * 4, 0], ff: [-5, 0], armed: true, wk, draw: o.draw || 0, glow: o.glow ? sp.ench || "#7fb6ff" : null, flask: o.flask, off: o.off || null, front: (o.back || 0) < -0.8,
       shieldOn: !!o.shield, shieldOk: o.shield === undefined ? true : !!o.shield, plainW: wk !== sp.wk, tailP: (o.t || 0) * 2, breath: o.t != null && !(lunge > 0.05) ? Math.sin(o.t * 2.2) : 0, lunge };
+    if (o.clip) {   // [OURS] a named clip (allyanim.js: a follower's attack, cast, block, flinch, fall, getting up), faded in from another
+      const sp2 = wk === sp.wk ? sp : { ...sp, wk }, w = o.w == null ? 1 : o.w;
+      let C = poseAt(o.clip, o.u || 0, sp2);
+      if (o.from && w < 1) C = blend(poseAt(o.from, o.fu || 0, sp2), C, w);
+      for (const key in BASE) if (C[key] !== undefined) P[key] = C[key];
+      P.armed = C.armed !== false; P.front = !!C.front; P.breath = 0; P.lunge = 0;
+      if (P.cast) P.castC = wk === "staff" ? sp.staffC : sp.ench || "#9fd0f0";
+    }
     const sm = g.imageSmoothingEnabled;
     const put = (c) => { const [bx, by, bw, bh] = c.box; if (style === "pixel") g.imageSmoothingEnabled = false; g.drawImage(c, bx, by, bw, bh); g.imageSmoothingEnabled = sm; };
     drawPose(g, sp, P, st, { back: () => put(layer(sp, "back", k, style, P)), front: () => put(layer(sp, "front", k, style, P)) });

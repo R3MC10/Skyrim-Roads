@@ -21,7 +21,7 @@
     "No quest matches that.": "Żadne zadanie nie pasuje.",
     // item and spell buttons
     "Unequip": "Zdejmij", "Equip": "Załóż", "Take off": "Zdejmij", "Keep": "Zachowaj", "Favourite": "Ulubione", "List": "Lista",
-    "Cast now": "Rzuć teraz", "Use first in every fight": "Używaj na początku każdej walki", "Remove from tactics": "Usuń z taktyki",
+    "Cast now": "Rzuć teraz", "Cleaner spell cards": "Czytelniejsze karty zaklęć", "Spell, power and shout cards in the Magic menu no longer have the \"Use first in every fight\" button. Set up what you cast in a fight in the Tactics tab instead; your current tactics stay as they are.": "Karty zaklęć, mocy i okrzyków w menu Magii nie mają już przycisku „Używaj na początku każdej walki”. To, czego używasz w walce, ustawiasz teraz w zakładce Taktyka; twoja obecna taktyka zostaje bez zmian.",
     // Character
     "Progress": "Postępy", "Level up": "Awans", "Dragon souls": "Smocze dusze",
     "Skills rise as you use them, with Skyrim's own rates.": "Umiejętności rosną, gdy ich używasz, w tempie jak w Skyrim.",

@@ -29,7 +29,8 @@ const HSTASH = (() => {
   /* rows for one side; a chest row's key is its place in the chest, a pack row's key is its inventory id */
   function rows(s, side = "chest", cat = "all", sort = "name", dir = 1) {
     const on = worn(s);
-    const src = side === "pack" ? (s.inv || []).filter((r) => !on.has(r.id)).map((r) => [r.id, r]) : chestOf(s).map((r, i) => [i, r]);
+    const spare = (r) => { let n = G.freeQty ? G.freeQty(s, r.id) : r.qty || 1; if (on.has(r.id)) n = Math.min(n, (r.qty || 1) - 1); return n > 0 ? (n === r.qty ? r : { ...r, qty: n }) : null; };   // two copies, one worn: the spare shows
+    const src = side === "pack" ? (s.inv || []).map(spare).filter(Boolean).map((r) => [r.id, r]) : chestOf(s).map((r, i) => [i, r]);
     const out = [];
     for (const [key, r] of src) {
       const it = itemOf(r); if (!it) continue;   // an item this build doesn't know: keep it, just don't draw it

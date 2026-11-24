@@ -1,8 +1,9 @@
-/* The world map. The painted base is drawn once (seeded, identical for everyone); fog, routes and markers each frame. */
+/* The world map. The painted base is drawn once (seeded, identical for everyone); fog, routes and markers each frame.
+   A hand-painted picture (paintedmap.js, ASSETS "map-world") takes the procedural base's place when it is in the game folder. */
 const WorldMap = (() => {
   const LX = (x) => (typeof I18N_SWEEP !== "undefined" ? I18N_SWEEP.c(x) : x);   // words drawn on canvas, in the player's language
   const heading = { a: null, last: null };   // the way your marker last moved
-  const W = 1000, H = 700, S = 2.4;          // painted at 2.4× so zooming in stays crisp
+  const W = 1000, H = 700, S0 = 2.4;         // painted at 2.4× so zooming in stays crisp
   const T = Terrain.T;
   const P = (p) => [p[0] * W, p[1] * H];
   function rng(seed) { return () => { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -26,9 +27,59 @@ const WorldMap = (() => {
     if (close) g.closePath();
   }
 
-  function drawBase() {
+  /* roads and bridges, in map units (also drawn over a painted base: paintedmap.js) */
+  let bridges = null;   // [x, y] grid cells, found once
+  function paintRoads(g) {
+    if (!bridges) {
+      const GW = Terrain.GW, GH = Terrain.GH, grid = Terrain.grid; bridges = [];
+      for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) if (grid[y * GW + x] === T.BRIDGE) bridges.push([x, y]);
+    }
+    for (const chain of Terrain.roads) {
+      const pts = chain.map(([x, y]) => [x / W, y / H]);
+      g.strokeStyle = "rgba(70,46,26,.85)"; g.lineWidth = 2.4; g.lineJoin = "round"; g.lineCap = "round";
+      smoothPath(g, pts); g.stroke();
+      g.strokeStyle = "rgba(226,206,160,.55)"; g.lineWidth = 0.8; g.setLineDash([3, 4]); smoothPath(g, pts); g.stroke(); g.setLineDash([]);
+    }
+    for (const [x, y] of bridges) {
+      g.fillStyle = "#5a3d24"; g.fillRect(x * 4 - 0.5, y * 4 - 0.5, 5, 5); g.fillStyle = "#c8a878"; g.fillRect(x * 4 + 0.5, y * 4 + 1.5, 3, 1);
+    }
+  }
+  /* hold names, the province names beyond the border, the sea's name, the compass and the frame, in map units
+     (baked into the procedural base; drawn each frame over a painted one: paintedmap.js) */
+  function paintTop(g, opts = {}) {
+    const ON = (k) => opts[k] !== false;
+    if (ON("labels")) {   // ---- names
+      g.textAlign = "center"; g.textBaseline = "middle";
+      for (const [name, v] of Object.entries(WORLD.holds)) {
+        g.font = FONT(17, 700, "italic"); g.fillStyle = "rgba(92,56,38,.78)";
+        g.save(); g.translate(v[0][0] * W, v[0][1] * H); if (g.letterSpacing !== undefined) g.letterSpacing = "3px"; g.fillText(name.toUpperCase(), 0, 0); g.restore();
+      }
+      for (const [name, x, y, rot] of WORLD.beyond) {
+        g.save(); g.translate(x * W, y * H); g.rotate(rot * Math.PI / 180); g.font = FONT(15, 700); g.fillStyle = "rgba(245,240,230,.55)";
+        if (g.letterSpacing !== undefined) g.letterSpacing = "6px"; g.fillText(name, 0, 0); g.restore();
+      }
+      g.font = FONT(20, 600, "italic"); g.fillStyle = "rgba(190,214,222,.75)"; g.fillText(LX("Sea of Ghosts"), (WORLD.seaLabel || [0.4])[0] * W, (WORLD.seaLabel || [0, 0.05])[1] * H);
+    }
+    if (ON("compass")) {   // compass
+      const cx = WORLD.border ? 64 : W - 52, cy = WORLD.border ? H - 64 : H - 70;   // over Hammerfell, off the land
+      g.fillStyle = "rgba(240,232,210,.9)"; g.strokeStyle = "#2c2116"; g.lineWidth = 1;
+      g.beginPath(); g.moveTo(cx, cy - 30); g.lineTo(cx + 7, cy); g.lineTo(cx, cy + 30); g.lineTo(cx - 7, cy); g.closePath(); g.fill(); g.stroke();
+      g.beginPath(); g.moveTo(cx - 30, cy); g.lineTo(cx, cy - 7); g.lineTo(cx + 30, cy); g.lineTo(cx, cy + 7); g.closePath(); g.fill(); g.stroke();
+      g.font = FONT(15, 700); g.fillStyle = "#f2e8cf"; g.fillText("N", cx, cy - 40);
+    }
+    if (ON("frame")) {
+      // frame
+      g.strokeStyle = "#1f170f"; g.lineWidth = 6; g.strokeRect(3, 3, W - 6, H - 6);
+      g.strokeStyle = "rgba(190,160,110,.75)"; g.lineWidth = 1.2; g.strokeRect(9, 9, W - 18, H - 18);
+    }
+  }
+
+  /* the painted base. opts: {roads, labels, compass, frame, scale} (all on by default); the reference render for a
+     hand-painted map (scripts/map_reference.py) turns labels, compass and frame off */
+  function drawBase(opts = {}) {
+    const ON = (k) => opts[k] !== false, S = opts.scale || S0;
     const c = document.createElement("canvas");
-    c.width = W * S; c.height = H * S;
+    c.width = Math.round(W * S); c.height = Math.round(H * S);
     const g = c.getContext("2d");
     g.scale(S, S);
     const r = rng(11), u = (a, b) => a + r() * (b - a);
@@ -185,15 +236,7 @@ const WorldMap = (() => {
     }
 
     // ---- roads with bridges
-    for (const chain of Terrain.roads) {
-      const pts = chain.map(([x, y]) => [x / W, y / H]);
-      g.strokeStyle = "rgba(70,46,26,.85)"; g.lineWidth = 2.4; g.lineJoin = "round"; g.lineCap = "round";
-      smoothPath(g, pts); g.stroke();
-      g.strokeStyle = "rgba(226,206,160,.55)"; g.lineWidth = 0.8; g.setLineDash([3, 4]); smoothPath(g, pts); g.stroke(); g.setLineDash([]);
-    }
-    for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) if (grid[y * GW + x] === T.BRIDGE) {
-      g.fillStyle = "#5a3d24"; g.fillRect(x * 4 - 0.5, y * 4 - 0.5, 5, 5); g.fillStyle = "#c8a878"; g.fillRect(x * 4 + 0.5, y * 4 + 1.5, 3, 1);
-    }
+    if (ON("roads")) paintRoads(g);
     g.restore();
 
     // ---- coastline, ice floes, sea strokes
@@ -216,6 +259,11 @@ const WorldMap = (() => {
       g.fillStyle = "#8d8274"; g.strokeStyle = "#2c2116"; g.lineWidth = 2.2;
       g.beginPath(); for (let k = 0; k <= 14; k++) { const t = k / 14 * Math.PI * 2, r = 1 + 0.16 * Math.sin(t * 3 + ix * 40); const x = cx + Math.cos(t) * a * r, y = cy + Math.sin(t) * b * r; k ? g.lineTo(x, y) : g.moveTo(x, y); } g.closePath(); g.fill(); g.stroke();
       g.fillStyle = "#eef2f3"; g.beginPath(); g.ellipse(cx - a * 0.15, cy - b * 0.25, a * 0.6, b * 0.4, 0, 0, 7); g.fill();
+      if (what === "volkihar") {   // Castle Volkihar: a black keep with two spires (dawnguard.js)
+        g.fillStyle = "#2a2226"; g.strokeStyle = "#120c0e"; g.lineWidth = 1;
+        g.fillRect(cx - a * 0.5, cy - b * 0.9, a, b * 0.9); g.strokeRect(cx - a * 0.5, cy - b * 0.9, a, b * 0.9);
+        for (const dx of [-0.5, 0.5]) { const x = cx + dx * a; g.beginPath(); g.moveTo(x - a * 0.16, cy - b * 0.9); g.lineTo(x, cy - b * 1.9); g.lineTo(x + a * 0.16, cy - b * 0.9); g.closePath(); g.fill(); g.stroke(); }
+      }
       if (what === "college") {   // towers of the College
         g.fillStyle = "#4a4038"; g.strokeStyle = "#1e1812"; g.lineWidth = 1;
         for (const [dx, h, w] of [[-0.35, 1.3, 0.22], [0.05, 1.9, 0.3], [0.42, 1.1, 0.2]]) { const x = cx + dx * a, top = cy - h * b; g.fillRect(x - w * a / 2, top, w * a, h * b); g.strokeRect(x - w * a / 2, top, w * a, h * b); g.beginPath(); g.moveTo(x - w * a * 0.7, top); g.lineTo(x, top - b * 0.55); g.lineTo(x + w * a * 0.7, top); g.closePath(); g.fill(); }
@@ -227,26 +275,7 @@ const WorldMap = (() => {
       g.strokeStyle = "rgba(170,200,210,.22)"; g.lineWidth = 0.8; g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + 4, y - 2, x + 8, y); g.stroke();
     }
 
-    // ---- names
-    g.textAlign = "center"; g.textBaseline = "middle";
-    for (const [name, v] of Object.entries(WORLD.holds)) {
-      g.font = FONT(17, 700, "italic"); g.fillStyle = "rgba(92,56,38,.78)";
-      g.save(); g.translate(v[0][0] * W, v[0][1] * H); if (g.letterSpacing !== undefined) g.letterSpacing = "3px"; g.fillText(name.toUpperCase(), 0, 0); g.restore();
-    }
-    for (const [name, x, y, rot] of WORLD.beyond) {
-      g.save(); g.translate(x * W, y * H); g.rotate(rot * Math.PI / 180); g.font = FONT(15, 700); g.fillStyle = "rgba(245,240,230,.55)";
-      if (g.letterSpacing !== undefined) g.letterSpacing = "6px"; g.fillText(name, 0, 0); g.restore();
-    }
-    g.font = FONT(20, 600, "italic"); g.fillStyle = "rgba(190,214,222,.75)"; g.fillText(LX("Sea of Ghosts"), (WORLD.seaLabel || [0.4])[0] * W, (WORLD.seaLabel || [0, 0.05])[1] * H);
-    // compass
-    const cx = WORLD.border ? 64 : W - 52, cy = WORLD.border ? H - 64 : H - 70;   // over Hammerfell, off the land
-    g.fillStyle = "rgba(240,232,210,.9)"; g.strokeStyle = "#2c2116"; g.lineWidth = 1;
-    g.beginPath(); g.moveTo(cx, cy - 30); g.lineTo(cx + 7, cy); g.lineTo(cx, cy + 30); g.lineTo(cx - 7, cy); g.closePath(); g.fill(); g.stroke();
-    g.beginPath(); g.moveTo(cx - 30, cy); g.lineTo(cx, cy - 7); g.lineTo(cx + 30, cy); g.lineTo(cx, cy + 7); g.closePath(); g.fill(); g.stroke();
-    g.font = FONT(15, 700); g.fillStyle = "#f2e8cf"; g.fillText("N", cx, cy - 40);
-    // frame
-    g.strokeStyle = "#1f170f"; g.lineWidth = 6; g.strokeRect(3, 3, W - 6, H - 6);
-    g.strokeStyle = "rgba(190,160,110,.75)"; g.lineWidth = 1.2; g.strokeRect(9, 9, W - 18, H - 18);
+    paintTop(g, opts);
     return c;
   }
 
@@ -341,7 +370,11 @@ const WorldMap = (() => {
   function draw(canvas, v) {
     // Solstheim has its own painted map (solart.js); its places sit SOL_OY map-heights below Skyrim's
     const SV = v.region === "solstheim" && typeof SOLART !== "undefined" ? SOLART : null, OY = SV ? WORLD.SOL_OY : 0, OYH = OY * H;
-    const bimg = SV ? SV.base() : (base = base || drawBase());
+    // a hand-painted map (paintedmap.js, ASSETS "map-world") replaces the procedural ground; while it is still loading
+    // the procedural one is not built at all (saves memory and start-up time on phones)
+    const PM = !SV && typeof PAINTEDMAP !== "undefined" ? PAINTEDMAP : null, painted = PM ? PM.image(v.zoom) : null;
+    if (painted && base) base = null;   // drop the procedural picture once the painting is in
+    const bimg = SV ? SV.base() : painted || (PM && PM.pending() ? null : (base = base || drawBase()));
     const dpr = Math.min(2, window.devicePixelRatio || 1);
     const cw = canvas.clientWidth, ch = canvas.clientHeight;
     if (canvas.width !== Math.round(cw * dpr) || canvas.height !== Math.round(ch * dpr)) { canvas.width = Math.round(cw * dpr); canvas.height = Math.round(ch * dpr); }
@@ -349,11 +382,15 @@ const WorldMap = (() => {
     g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, canvas.width, canvas.height);
     const k = Math.max(canvas.width / W, canvas.height / H) * v.zoom;
     let ox = canvas.width / 2 - v.center[0] * W * k, oy = canvas.height / 2 - (v.center[1] - OY) * H * k;
-    ox = Math.min(0, Math.max(canvas.width - W * k, ox)); oy = Math.min(0, Math.max(canvas.height - H * k, oy));
+    // zoomed out past the edges (PC map, pcmap.js: all of Skyrim in a wide window): the map sits in the middle
+    ox = W * k <= canvas.width ? (canvas.width - W * k) / 2 : Math.min(0, Math.max(canvas.width - W * k, ox));
+    oy = H * k <= canvas.height ? (canvas.height - H * k) / 2 : Math.min(0, Math.max(canvas.height - H * k, oy));
     v.transform = { k: k / dpr, ox: ox / dpr, oy: (oy - OYH * k) / dpr };   // screen ↔ world (Solstheim's y included)
     g.setTransform(k, 0, 0, k, ox, oy);
     g.imageSmoothingEnabled = true; g.imageSmoothingQuality = "high";
-    g.drawImage(bimg, 0, 0, W, H);
+    if (bimg) g.drawImage(bimg, 0, 0, W, H);   // the painting is stretched over the world bounds: world (x, y) → (x·W, y·H)
+    else { g.fillStyle = "#26404c"; g.fillRect(0, 0, W, H); }
+    if (painted) { g.save(); if (PM.roads()) paintRoads(g); paintTop(g); g.restore(); }   // roads (Settings → Graphics), names, compass, frame
     const sl = SV ? null : seasonLayer(v.season ?? (typeof WEVENTS !== "undefined" ? WEVENTS.season() : null)); if (sl) g.drawImage(sl, 0, 0, W, H);   // winter snow, autumn colours, spring green
     const s = dpr / k;                    // 1 screen px in map units: keeps icons and labels the same size at any zoom
     const MA = typeof MAPART !== "undefined" ? MAPART : null;
@@ -364,6 +401,8 @@ const WorldMap = (() => {
     const fogImg = fogFor(OY ? seen.map((p) => [p[0], p[1] - OY]) : seen, SV ? "sol" : "");
     g.drawImage(VI ? VI.veil(fogImg, fogKey, v.cones, W, H, OYH) : fogImg, 0, 0, W, H);   // your cone of sight cuts through the fog (vision.js)
     if (v.rulers?.length && !SV) { g.globalAlpha = 0.26; for (const r of v.rulers) g.drawImage(tintFor(r.hold, r.color), 0, 0, W, H); g.globalAlpha = 1; }   // holds ruled by a clan
+    const FX = !SV && typeof MAPFX !== "undefined" && MAPFX.on() ? MAPFX : null;
+    if (FX) FX.draw(g, v, dpr / k, W, H, [-ox / k, -oy / k, (canvas.width - ox) / k, (canvas.height - oy) / k]);   // PC map: each hold's weather, chimney smoke (mapfx.js)
     if (OY) g.setTransform(k, 0, 0, k, ox, oy - OYH * k);   // from here on: world coordinates
     const [px, py] = P(v.player);
     if (v.sight || v.sneakRing) {   // fog of war: how far you see other heroes; sneaking: how close they must come to see you (sneakmode.js)
@@ -453,9 +492,17 @@ const WorldMap = (() => {
       label(g, text, pick[0], pick[1], s, size, color, 700, false, pick[2]);
     }
     // your own name goes first so nothing covers it
-    g.font = FONT(14 * s, 700, ""); { const w = g.measureText(v.name).width; boxes.push([px + 12 * s, py - 13 * s - 9 * s, w, 18 * s]); }
+    const HF = typeof MAPHERO !== "undefined" && MAPHERO.ok() ? MAPHERO : null;   // heroes as little figures (maphero.js)
+    const myTop = py - (v.horse ? 46 : 39) * s - 7 * s;
+    // standing in a town, heroes step aside so the town's own icon stays in sight: you to its right, others to its left
+    const hx = HF && v.atPlace && !v.moving ? px + 18 * s : px, townSlot = {};
+    g.font = FONT(14 * s, 700, ""); { const w = g.measureText(v.name).width; boxes.push(HF ? [hx - w / 2, myTop - 9 * s, w, 18 * s] : [px + 12 * s, py - 13 * s - 9 * s, w, 18 * s]); if (HF) boxes.push([hx - 12 * s, myTop + 9 * s, 24 * s, py - myTop - 9 * s]); }   // and your figure, so names never sit on it
+    const otherHeads = [];
     for (const o of v.others) {
-      const [x, y] = P(o.pos);
+      let [x, y] = P(o.pos);
+      if (HF && o.atPlace && !o.moving) { const key = Math.round(x) + "," + Math.round(y), n = (townSlot[key] = (townSlot[key] || 0) + 1) - 1; x -= (18 + n * 14) * s; }
+      o.drawX = x / W;   // where the figure really stands (greet.js finds clicks on it)
+      if (HF) { const r = HF.draw(g, x, y, s, { id: "o:" + (o.id || o.name), look: o.look || { r: o.race || "nord", id: o.name, eq: {}, gl: {} }, horse: o.horse || null, moving: !!o.moving, gallop: !!o.horse && !!o.moving, t: v.t, reduce: v.reduceMotion, scale: 0.82, ring: o.party ? "#8fe08a" : "#6f9fe8" }); otherHeads.push(r.head); continue; }
       if (MA) MA.token(g, x, y, s, o.look || { r: o.race || "nord", id: o.name, eq: {}, gl: {} }, o.party ? "#8fe08a" : "#6f9fe8", 10);
       else { g.fillStyle = "#2f62a8"; g.strokeStyle = "#e6f0ff"; g.lineWidth = 2 * s; g.beginPath(); g.arc(x, y, 6.5 * s, 0, 7); g.fill(); g.stroke(); }
     }
@@ -464,7 +511,8 @@ const WorldMap = (() => {
       g.fillStyle = "#7a1414"; g.strokeStyle = "#ffdcc8"; g.lineWidth = 2 * s; g.beginPath(); g.arc(x, y, R, 0, 7); g.fill(); g.stroke();
       g.fillStyle = "#ffe6d2"; g.fillRect(x - 1.5 * s, y - 5 * s, 3 * s, 10 * s); g.fillRect(x - 5 * s, y - 1.5 * s, 10 * s, 3 * s);
     }
-    for (const o of v.others) { const [x, y] = P(o.pos); smartLabel(o.name, x, y, 13, "#cde0ff"); }
+    // other heroes' names are drawn last (below), over town flags, banners and caravans
+    const otherLabels = () => v.others.forEach((o, i) => { const y = P(o.pos)[1]; smartLabel(o.name, (o.drawX ?? o.pos[0]) * W, otherHeads[i] ?? y, 13, o.stranger ? "#e8dcc0" : o.party && HF ? "#c8f0c0" : "#cde0ff"); });
     for (const b of v.bags) { const [x, y] = P(b.pos); smartLabel(b.label, x, y, 13, "#ffc8b4"); }
     if (v.foe && VI && !v.cones[0].faint) VI.foe(g, v.cones[0].c, s, v.foe, v.t, v.reduceMotion, (n, x, y) => smartLabel(n, x, y - 9 * s, 12, "#ffc0b0"));   // what blocks your road, ahead in your cone
     const perTown = {};
@@ -530,7 +578,7 @@ const WorldMap = (() => {
       PRIESTS.drawMask(g, mx, my - 2 * s, 0.75 * s, "morokei");
     }
     // weather over everything, in screen space
-    if (v.weather && v.weather !== "clear") {
+    if (v.weather && v.weather !== "clear" && !(FX && FX.regional())) {   // (the PC map draws each hold's own weather instead)
       g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
       const cw2 = canvas.width, ch2 = canvas.height, tt = v.reduceMotion ? 0 : v.t;
       if (v.weather === "ashstorm") {   // Solstheim: ash blowing across the map
@@ -567,10 +615,10 @@ const WorldMap = (() => {
     if (v.raid && typeof RAIDART !== "undefined") RAIDART.mapRaid(g, v.raid, P, s, v.t, v.reduceMotion);   // a dragon over a town (raidart.js)
     if (typeof WORLDEV !== "undefined") WORLDEV.drawMap(g, P, s, v.t, v.reduceMotion);   // gates, dragon flights, the Khajiit market (worldevents.js)
     if (typeof GREATEV !== "undefined") GREATEV.drawMap(g, P, s, v.t, v.reduceMotion);   // dragon assaults, rifts, sieges, fairs and what they leave behind (greatevents.js)
-    if (v.cart && typeof CARAVANS !== "undefined") { const sp = CARAVANS.sprite(false, false); if (sp) g.drawImage(sp, px - 50 * s, py - 16 * s, 34 * s, 24 * s); }
+    if (v.cart && typeof CARAVANS !== "undefined") { const sp = CARAVANS.sprite(false, false); if (sp) { const back = HF && MAPHERO.flipped("me") ? 16 : -50; g.drawImage(sp, px + back * s, py - 16 * s, 34 * s, 24 * s); } }
     if (v.fx && typeof FXART !== "undefined") FXART.mapUnder(g, v.fx, P, s, px, py, v.t, v.reduceMotion, v);   // spells and shouts around you (fxart.js)
     const pulse = v.reduceMotion ? 0.5 : (Math.sin(v.t * 3) + 1) / 2;
-    g.fillStyle = `rgba(110,200,255,${0.18 + 0.12 * pulse})`; g.beginPath(); g.arc(px, py, (15 + 6 * pulse) * s, 0, 7); g.fill();
+    if (!HF) { g.fillStyle = `rgba(110,200,255,${0.18 + 0.12 * pulse})`; g.beginPath(); g.arc(px, py, (15 + 6 * pulse) * s, 0, 7); g.fill(); }
     const arrow = (cx, cy, rr) => {   // the direction arrow, just outside your marker, pointing the way you're going
       if (!v.moving || heading.a == null) return;
       const a = heading.a, z = 7 * s;
@@ -579,6 +627,14 @@ const WorldMap = (() => {
       g.beginPath(); g.moveTo(z, 0); g.lineTo(-z * 0.75, -z * 0.85); g.lineTo(-z * 0.3, 0); g.lineTo(-z * 0.75, z * 0.85); g.closePath(); g.stroke(); g.fill();
       g.restore();
     };
+    otherLabels();
+    if (HF) {   // you: walking, standing, or in the saddle, facing the way you travel
+      const r = HF.draw(g, hx, py, s, { id: "me", look: v.look, horse: v.horse, moving: v.moving, gallop: !!v.gallop, t: v.t, reduce: v.reduceMotion, heading: v.moving ? heading.a : null, ring: "#6ec8ff" });
+      if (v.fx && typeof FXART !== "undefined") FXART.mapOver(g, v.fx, P, s, hx, r.head, v.t, v.reduceMotion);
+      label(g, v.name, hx, Math.min(myTop, r.top - 7 * s), s, 14, "#d8f0ff", 700, false, "center");
+      arrow(hx, py - 2 * s, (v.horse ? 30 : 20) * s);
+      return;
+    }
     if (MA) {
       const lift = v.horse ? 15 * s : 0;
       if (v.horse) g.drawImage(MA.horse(v.horse), px - 27 * s, py - 12 * s - bob * 0.5, 54 * s, 35 * s);   // the horse under you, then you in the saddle
@@ -609,6 +665,6 @@ const WorldMap = (() => {
     }
     return best;
   }
-  const ready = () => { base = base || drawBase(); };
-  return { draw, placeAt, ready, W, H, base: () => (base = base || drawBase()) };
+  const ready = () => { if (typeof PAINTEDMAP !== "undefined" && (PAINTEDMAP.pending() || PAINTEDMAP.image(1))) return; base = base || drawBase(); };
+  return { draw, placeAt, ready, W, H, base: () => (base = base || drawBase()), paintBase: drawBase, paintRoads, paintTop };
 })();

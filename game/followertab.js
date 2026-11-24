@@ -31,13 +31,12 @@ const FOLTAB = (() => {
   const statOf = (r, it) => !it ? null : it.slot === "weapon" ? (it.damage || 0) + (r.temper || 0) : ARMOR().includes(it.slot) ? (it.armor || 0) + (r.temper || 0) : it.restore ? it.restore[1] : null;
   /* things from your pack worth handing over (same as before: gear, arrows, healing) */
   const giveable = (it) => !!it && !it.quest && ((F2()?.wearable?.(it)) || it.slot === "ammo" || !!it.restore || it.slot === "potion");
-  /* your worn items (marked ◆ in Your pack so you don't hand over your own sword by mistake) */
-  function yourWorn(s) { try { return new Set(Object.values(G.loadout(s).equipment || {})); } catch { return new Set(); } }
-  /* rows for one side: "theirs" = the follower's pack, "yours" = your pack */
+  /* rows for one side: "theirs" = the follower's pack, "yours" = your pack. Remigiusz: equipped gear never shows when
+     trading with a follower, so what you wear is left out of Your pack (a pair with one worn shows the spare one). */
   function rows(s, side = "theirs", cat = "all", sort = "name", dir = 1) {
     const f = F2()?.st(s); if (!f) return [];
-    const src = side === "yours" ? (s.inv || []).filter((r) => giveable(itemOf(r))) : f.inv;
-    const on = side === "yours" ? yourWorn(s) : new Set(Object.values(f.eq || {}));
+    const src = side === "yours" ? (G.handable ? G.handable(s) : s.inv || []).filter((r) => giveable(itemOf(r))) : f.inv;
+    const on = side === "yours" ? new Set() : new Set(Object.values(f.eq || {}));
     const out = src.filter((r) => itemOf(r) && (cat === "all" || catOf(itemOf(r)) === cat)).map((r) => {
       const it = itemOf(r), st = statOf(r, it);
       return { id: r.id, r, it, name: (r.tq && typeof TOWNS !== "undefined" && TOWNS.QUALITY ? TOWNS.QUALITY[r.tq] + " " : "") + it.name, type: typeOf(it), stat: st, weight: +((it.weight || 0) * r.qty).toFixed(2), value: it.value || 0, qty: r.qty || 1, eq: on.has(r.id), cat: catOf(it) };

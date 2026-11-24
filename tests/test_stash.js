@@ -124,8 +124,8 @@ OK(TOWNS.home(s3).chest.every((r) => r.qty > 0) && s3.inv.every((r) => r.qty > 0
 
 // 9. Polish and patch note
 OK(I18N_STORY.ex["Your pack"] && I18N_STORY.ex["Store 1"] && I18N_STORY.pats.some(([en]) => en === "Take all ({0})"), "Polish lines are in");
-const pn = PATCHNOTES.LIST[0];
-OK(pn.id === "b144-homechest" && pn.build > PATCHNOTES.LIST[1].build && new Set(PATCHNOTES.LIST.map((x) => x.id)).size === PATCHNOTES.LIST.length, "patch note on top, newer build, unique id");
+const pn = PATCHNOTES.LIST.find((x) => x.id === "b144-homechest");
+OK(pn && new Set(PATCHNOTES.LIST.map((x) => x.id)).size === PATCHNOTES.LIST.length, "patch note listed, unique id");
 for (const x of [pn.title, ...pn.items]) OK(I18N_STORY.ex[x], "Polish for: " + x.slice(0, 40));
 console.log("stash ok:", n, "checks");
 `, c);

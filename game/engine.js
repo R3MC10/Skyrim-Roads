@@ -93,7 +93,8 @@ const G = (() => {
   function migrate(s) {
     // a won turn-by-turn road fight used to leave the road blocked by a dead foe: clear it
     if (s.trip?.status === "encounter" && (!s.trip.encounter || s.trip.encounter.hp <= 0)) { s.trip.status = "travel"; s.trip.encounter = null; s.trip.lastTick = now(); }
-    if (s.dungeon?.room?.enemy && s.dungeon.room.enemy.hp <= 0) s.dungeon.room = null;   // same bug inside dungeons: a dead foe kept the room shut
+    if (typeof DUNGEONS !== "undefined" && DUNGEONS.repair) DUNGEONS.repair(s);   // a run saved where it can't go on: dead foe, empty boss room, dead end (dungeons.js)
+    else if (s.dungeon?.room?.enemy && s.dungeon.room.enemy.hp <= 0) s.dungeon.room = null;   // same bug inside dungeons: a dead foe kept the room shut
     if ((s.v || 1) < 2) {
       const at = PLACES[s.location] ? s.location : D.START_LOCATION;
       [s.x, s.y] = loc(at); s.location = at; s.trip = null;
@@ -133,13 +134,12 @@ const G = (() => {
       if (it && (it.slot === "ring" || it.slot === "amulet") && r.qty > 1) { const n = r.qty - 1; r.qty = 1; for (let i = 0; i < n; i++) s.inv.push({ id: s.nextInv++, item: r.item, qty: 1, charge: null }); }
     }
     if (typeof AMMO !== "undefined") { const m = AMMO.migrate(s); if (m) note(s, m); }
+    if (s.horse && typeof HORSES !== "undefined") HORSES.fix(s);   // a horse once sent off to a stables (or marked dead or lost) is yours again, downed
     if (fixTactics(s)) note(s, "⚔ Your tactics were fixed: rules you added under \"Always → Attack\" never fired. They now come first.");
     if (typeof SPELLCRAFT !== "undefined") SPELLCRAFT.register(s);   // crafted spells back into the spellbook
-    // Bleak Falls Barrow cleared but no Dragonstone (the claw door used to make the boss skip it): hand it over so the quest can finish
-    if (s.cleared?.["Bleak Falls Barrow"] && !s.thaneWhiterun && typeof DUNGEONS !== "undefined" && D.ITEMS.dragonstone && !DUNGEONS.hasDragonstone(s)) {
-      give(s, "dragonstone");
-      note(s, "📜 You find the Dragonstone from Bleak Falls Barrow in your pack after all. Bring it to Farengar in Dragonsreach (Whiterun).");
-    }
+    // quests stuck on an old save move on: Bleak Falls Barrow already cleared moves the main quest to Farengar's hand-in
+    // (no Dragonstone needed), and a missing quest item a stage needs comes back (questitems.js)
+    if (typeof QUESTS !== "undefined") { QUESTS.ensure(s); QUESTS.check(s); }
     return s;
   }
   function note(s, text) { s.journal.unshift({ t: now(), text }); s.journal = s.journal.slice(0, 60); }
@@ -294,6 +294,12 @@ const G = (() => {
   function unequip(s, slot) { delete lo(s).equipment[slot]; }
   /* which equipment slot a row is worn in (rings can be on either finger) */
   function wornSlot(s, id) { const eq = lo(s).equipment; return Object.keys(eq).find((k) => eq[k] === id) || null; }
+  /* [OURS] Remigiusz: "equipped gear should never show when selling items, and the same applies when trading inventory
+     with a follower or another player." How many of a row you have on (a stack of 2 swords can be in both hands), how
+     many you could hand away, and the hand-away list: worn rows drop out, a pair with one worn shows as one. */
+  function wornCount(s, id) { let n = 0; for (const v of Object.values(lo(s)?.equipment || {})) if (v === id) n++; return n; }
+  function freeQty(s, id) { const r = invRow(s, id); return r ? Math.max(0, (r.qty || 1) - wornCount(s, id)) : 0; }
+  function handable(s, rows = s.inv) { const out = []; for (const r of rows || []) { const n = freeQty(s, r.id); if (n > 0) out.push(n === r.qty ? r : { ...r, qty: n }); } return out; }
   /* [OURS] dual wielding: a one-handed weapon in your left hand (no shield). Remigiusz: "Dual weilding should be possible." */
   const canOffhand = (it) => !!it && it.slot === "weapon" && it.hands !== 2 && it.skill === "One-Handed" && !it.staff;
   function equipOff(s, id) {
@@ -318,7 +324,7 @@ const G = (() => {
   }
   function itemStats(item) {
     const it = D.ITEMS[item];
-    if (it.slot === "weapon") return `${it.damage} dmg · ${it.skill}${it.hands === 2 ? " · 2 hands" : ""}${it.enchant ? ` · +${it.enchant.magnitude} ${it.enchant.effect}` : ""}`;
+    if (it.slot === "weapon") return `${it.damage} dmg · ${it.skill}${it.hands === 2 ? " · 2 hands" : ""}${it.enchant ? ` · +${it.enchant.magnitude} ${typeof ENCH !== "undefined" && ENCH.short ? ENCH.short(it.enchant.effect) : it.enchant.effect}` : ""}`;
     if (ARMOR_SLOTS.includes(it.slot)) return `${it.armor} armor · ${it.type}${it.aenchant ? ` · ${it.aenchant.name}${it.aenchant.mag > 1 ? " " + it.aenchant.mag : ""}${it.aenchant.more?.length ? ` +${it.aenchant.more.length} more` : ""}` : ""}`;
     if (it.effects) return it.effects.map(([e, m, d]) => `${e} ${m}${d * 5 >= 60 ? ` · ${Math.round(d * 5 / 60)} min` : ""}`).join(", ");
     if (it.slot === "potion") return it.restore ? `+${it.restore[1]} ${it.restore[0]}` : it.cures ? "Cures diseases" : "";
@@ -684,7 +690,7 @@ const G = (() => {
           this.charges[this.weaponInv] = charge - cost;
           if (en.effect === "frost") this.slowed = 2;
           const em = en.magnitude * (1 + (typeof PFX !== "undefined" ? PFX.sum(s, "enchhit", this, px) : 0));   // Deep Charge
-          const oh = typeof ENCH !== "undefined" && ENCH.onHit ? ENCH.onHit(this, en, em) : { dmg: em, label: ` +${en.effect}` };   // absorb, paralyze, fear, bleed... (enchanting.js)
+          const oh = typeof ENCH !== "undefined" && ENCH.onHit ? ENCH.onHit(this, en, em, { label, dmg }) : { dmg: em, label: ` +${en.effect}` };   // absorb, paralyze, fear, bleed... (enchanting.js)
           dmg += oh.dmg;
           label += oh.label;
           if (typeof PFX !== "undefined" && ["fire", "frost", "shock"].includes(en.effect)) this.pendingEl = [en.effect, em, "weapon"];   // burning / chill / jolt after the hit lands
@@ -783,7 +789,8 @@ const G = (() => {
         if ((this.tags.has("undead") || this.tags.has("construct")) && !P(s, "master_of_the_mind")) return `${sp.name}: no effect on the ${this.tags.has("undead") ? "undead" : "machine"}`;
         const cm = spellCalm(s, sp, this.tags, this);
         if ((this.e.level ?? 99) > cm.cap) return `${sp.name}: no effect (level too high)`;
-        this.calmTurns = cm.turns; return `${sp.name}: it stops fighting`;
+        this.calmTurns = cm.turns; this.calmFrenzy = !!sp.frenzy;   // Frenzy, Mayhem: it turns its weapon on itself instead
+        return sp.frenzy ? `${sp.name}: it goes mad and turns on itself` : `${sp.name}: it stops fighting`;
       }
       return sp.name;
     }
@@ -844,7 +851,11 @@ const G = (() => {
     }
     enemyTurnInner() {
       const n = this.e.name, s = this.s;
-      if (this.calmTurns > 0) { this.calmTurns--; return `${n} isn't fighting`; }
+      if (this.calmTurns > 0) {
+        this.calmTurns--; const mad = this.calmFrenzy; if (!this.calmTurns) this.calmFrenzy = false;
+        if (mad) { const d = Math.max(1, (this.e.damage || 5) * 0.8 * (0.85 + Math.random() * 0.3)); this.ehp -= d; return `${n} lashes out at itself in a frenzy (${Math.round(d)})`; }
+        return `${n} isn't fighting`;
+      }
       if (this.eParalyzed > 0) { this.eParalyzed--; return `${n} is paralyzed`; }
       if (this.stagger) { this.stagger = false; return `${n} is staggered`; }
       const fp = this.fp;
@@ -934,6 +945,7 @@ const G = (() => {
         if (fp.stagger && Math.random() < fp.stagger) { this.sp = Math.max(0, this.sp - 15); this.blocking = false; extra += " · staggers you"; }
         if (fp.paralyze && Math.random() < fp.paralyze) { this.sp = Math.max(0, this.sp - 30); extra += " · knocks the wind out of you"; }
       }
+      if (this.e.hitCap && dmg > this.e.hitCap * maxHealth(s)) dmg = this.e.hitCap * maxHealth(s);   // [OURS] story foes that opt in can't take more than this share of your health in one blow (dawnguard.js)
       this.hp -= dmg;
       if (px) {
         const fe = PFX.foeElement(this.e);   // fire mages burn you, frost trolls chill you, storm atronachs jolt you
@@ -1386,6 +1398,7 @@ const G = (() => {
     if (!shopsOpen(t) && !knockOk(s, t)) return `The shops are closed (${clockText(t)}).`;
     const r = invRow(s, id);
     if (!r || r.qty < qty) return "You don't have that.";
+    if (qty > freeQty(s, id)) return "You're wearing that. Take it off first.";   // [OURS] worn gear is never sold
     if (D.ITEMS[r.item].noTrade) return `The ${D.ITEMS[r.item].name} is bound to you. No merchant will take it.`;
     const price = lotPrice(s, r.item, qty, "sell", r), name = D.ITEMS[r.item].name, item = r.item;
     const wasStolen = !!invRow(s, id)?.stolen;
@@ -1424,7 +1437,7 @@ const G = (() => {
   return {
     MAP_W, MAP_H, STEP_SECONDS, SLOTS, ARMOR_SLOTS, JEWEL_SLOTS, wornSlot, GAME_SPEED, now, pxDist, holdAt, clock, isNight, shopsOpen, clockText,
     P, wtype, fxSum, lockChance, lockRoll, setAllyProvider, hiddenChance, rested, haggle, SPELL_TIER, newSave, maxHealth, maxMagicka, maxStamina, curHealth, setHealth, skill, useSkill, levelUp, fightLevel,
-    riding, withHorse, STACKABLE, give, take, invRow, carried, capacity, overweight, equipment, equip, unequip, equipOff, canOffhand, countRestore, itemStats,
+    riding, withHorse, STACKABLE, give, take, invRow, wornCount, freeQty, handable, carried, capacity, overweight, equipment, equip, unequip, equipOff, canOffhand, countRestore, itemStats,
     loadout: lo, addRule, ruleSlot, deadRules, fixTactics, saveLoadoutAs, deleteLoadout, spellCost, describeRule, describeAction, Fight, scaleEnemy, scaleQuestFoe, questLevel, rollLoot,
     rollEncounter, die, speed, discoverRadius, startTrip, startEvent, eventChoices, eventChoice, buyFrom, minutesLeft, minutesTo, posAfter, advance, encounterAction, migrate, PLACES,
     spellDamage, spellHeal, spellArmor, spellSummon, spellCalm, dualCost, shopTypes, shopStock, buyPrice, sellPrice, lotPrice, buy, sell, readTome, drinkPotion, recharge, clone, note,

@@ -90,10 +90,10 @@ function runTo(s, place, pickFn, pre){
   s.location="Whiterun"; const m=TOWNS.deliverDragonstone(s); ok(s.thaneWhiterun && !s.inv.some(x=>x.item==="dragonstone"), "Farengar takes it: "+m.slice(0,40));
   runTo(s,"Bleak Falls Barrow"); ok(!s.inv.some(x=>x.item==="dragonstone"), "no more Dragonstones once delivered");
 }
-{ // saves stuck before the fix: cleared the barrow, no stone, not thane -> the stone turns up on load
-  const s=hero(5); s.cleared={"Bleak Falls Barrow":G.now()};
-  G.migrate(s); ok(s.inv.filter(x=>x.item==="dragonstone").length===1 && /Dragonstone/.test(s.journal[0].text), "stuck saves get the Dragonstone back");
-  G.migrate(s); ok(s.inv.filter(x=>x.item==="dragonstone").length===1, "only once");
+{ // saves stuck before the fix: cleared the barrow, no stone, not thane -> on load the quest moves to the hand-in, no stone needed (test_bleakfalls.js)
+  const s=hero(5); s.cleared={"Bleak Falls Barrow":G.now()}; s.location="Whiterun";
+  G.migrate(s); ok(QUESTS.L.main.stages[s.quests.main.stage].title==="The Dragonstone" && TOWNS.canDeliverDragonstone(s), "stuck saves move on to Farengar, stone or not");
+  G.migrate(s); ok(QUESTS.L.main.stages[s.quests.main.stage].title==="The Dragonstone" && !s.inv.some(x=>x.item==="dragonstone"), "only once, no stone conjured");
   const t=hero(5); t.cleared={"Bleak Falls Barrow":G.now()}; t.thaneWhiterun=true; G.migrate(t); ok(!t.inv.some(x=>x.item==="dragonstone"), "not after the quest is done");
   const u=hero(5); u.cleared={"Bleak Falls Barrow":G.now()}; u.homes={Riverwood:{chest:[{item:"dragonstone",qty:1}]}}; G.migrate(u); ok(!u.inv.some(x=>x.item==="dragonstone"), "not when it's in a house chest");
 }
