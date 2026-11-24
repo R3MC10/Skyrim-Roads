@@ -1,5 +1,6 @@
 /* The world map. The painted base is drawn once (seeded, identical for everyone); fog, routes and markers each frame. */
 const WorldMap = (() => {
+  const LX = (x) => (typeof I18N_SWEEP !== "undefined" ? I18N_SWEEP.c(x) : x);   // words drawn on canvas, in the player's language
   const heading = { a: null, last: null };   // the way your marker last moved
   const W = 1000, H = 700, S = 2.4;          // painted at 2.4× so zooming in stays crisp
   const T = Terrain.T;
@@ -236,7 +237,7 @@ const WorldMap = (() => {
       g.save(); g.translate(x * W, y * H); g.rotate(rot * Math.PI / 180); g.font = FONT(15, 700); g.fillStyle = "rgba(245,240,230,.55)";
       if (g.letterSpacing !== undefined) g.letterSpacing = "6px"; g.fillText(name, 0, 0); g.restore();
     }
-    g.font = FONT(20, 600, "italic"); g.fillStyle = "rgba(190,214,222,.75)"; g.fillText("Sea of Ghosts", (WORLD.seaLabel || [0.4])[0] * W, (WORLD.seaLabel || [0, 0.05])[1] * H);
+    g.font = FONT(20, 600, "italic"); g.fillStyle = "rgba(190,214,222,.75)"; g.fillText(LX("Sea of Ghosts"), (WORLD.seaLabel || [0.4])[0] * W, (WORLD.seaLabel || [0, 0.05])[1] * H);
     // compass
     const cx = WORLD.border ? 64 : W - 52, cy = WORLD.border ? H - 64 : H - 70;   // over Hammerfell, off the land
     g.fillStyle = "rgba(240,232,210,.9)"; g.strokeStyle = "#2c2116"; g.lineWidth = 1;

@@ -14,6 +14,7 @@
    Shared progress uses the world-sync collection "wevents": each player writes only their own record
    (id eventId-playerId), so totals are sums and nobody overwrites anybody (like dragon raids and the bounty board). */
 const WORLDEV = (() => {
+  const LX = (x) => (typeof I18N_SWEEP !== "undefined" ? I18N_SWEEP.c(x) : x);   // words drawn on canvas, in the player's language
   const HOUR = 3600, DAY = 86400, WEEK = 7 * DAY, MONDAY0 = Date.UTC(2026, 0, 5) / 1000;   // weeks start Monday 00:00 UTC, like the bounty board
   const nowS = () => (typeof G !== "undefined" ? G.now() : Date.now() / 1000);
   const hash = (str) => { let x = 2166136261; for (const c of String(str)) x = Math.imul(x ^ c.charCodeAt(0), 16777619) >>> 0; x ^= x >>> 16; x = Math.imul(x, 0x85ebca6b); x ^= x >>> 13; x = Math.imul(x, 0xc2b2ae35); x ^= x >>> 16; return (x >>> 0) / 4294967296; };
@@ -456,7 +457,7 @@ const WORLDEV = (() => {
         const [x, y] = P(p);
         const sp = (typeof CARAVANS !== "undefined") && CARAVANS.sprite ? CARAVANS.sprite(true, false) : null;
         if (sp) g.drawImage(sp, x + 8 * s, y - 4 * s, 34 * s, 24 * s);
-        g.font = `700 ${Math.round(9 * s)}px sans-serif`; g.textAlign = "center"; g.lineWidth = 3 * s; g.strokeStyle = "rgba(20,14,8,.85)"; g.strokeText("Khajiit market", x + 25 * s, y + 28 * s); g.fillStyle = "#ffe6a0"; g.fillText("Khajiit market", x + 25 * s, y + 28 * s);
+        g.font = `700 ${Math.round(9 * s)}px sans-serif`; g.textAlign = "center"; g.lineWidth = 3 * s; g.strokeStyle = "rgba(20,14,8,.85)"; g.strokeText(LX("Khajiit market"), x + 25 * s, y + 28 * s); g.fillStyle = "#ffe6a0"; g.fillText(LX("Khajiit market"), x + 25 * s, y + 28 * s);
       } else if (ev.kind === "fest") {
         const sp = lanternSprite(); if (!sp) continue;
         for (const town of Object.values(CAPITAL)) { const p = WORLD.places[town]; if (!p) continue; const [x, y] = P(p), bob = rm ? 0 : Math.sin(tt * 2 + x) * 1.5 * s; g.drawImage(sp, x - 18 * s, y - 22 * s + bob, 9 * s, 12 * s); g.drawImage(sp, x + 9 * s, y - 24 * s - bob, 9 * s, 12 * s); }
