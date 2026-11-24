@@ -2041,6 +2041,43 @@ html.a11y-still #tbf .fc *,html.a11y-still #tbf.fc-aiming .tbu.fc-tgt{animation:
 html.art-pixel .ti-box,html.art-pixel .ti-card,html.art-pixel .ti-stats{border-radius:0}html.art-pixel .ti-box{border-left-width:3px}
 #side[data-tab=log] .ti-box{color:#3b2e1e}
 html.a11y-hc .ti-box,html.a11y-hc .ti-box i,html.a11y-hc .ti-what{color:#ece6d8}
+/* [great events] greatevents.js: the banner with a countdown on the map screen, phase bars, the event sheet */
+#gev:empty{display:none}
+.gev-card{display:flex;flex-direction:column;gap:6px;margin:8px 0}
+.gev-banner{position:relative;padding:10px 12px;border:1px solid rgba(214,178,94,.55);border-left:4px solid #e2533a;border-radius:10px;background:linear-gradient(100deg,rgba(70,18,10,.9),rgba(14,12,12,.75));cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,.4);min-width:0}
+.gev-banner.gev-rift{border-left-color:#c44a8a;background:linear-gradient(100deg,rgba(52,12,40,.9),rgba(14,12,14,.75))}
+.gev-banner.gev-siege{border-left-color:#b08a4a;background:linear-gradient(100deg,rgba(52,40,22,.9),rgba(14,12,12,.75))}
+.gev-banner.gev-fair{border-left-color:#f2c45a;background:linear-gradient(100deg,rgba(40,52,60,.9),rgba(14,12,12,.75))}
+.gev-banner.gev-warn{border-style:dashed}
+.gev-head{display:flex;align-items:center;gap:10px;min-width:0}
+.gev-pic{flex:0 0 auto;border-radius:6px;overflow:hidden;line-height:0}
+.gev-t{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:1px}
+.gev-kind{font-size:var(--fs-xs);letter-spacing:.08em;text-transform:uppercase;color:var(--gold-2,#d6b25e)}
+.gev-t b{font-size:var(--fs-sm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gev-t .sub{font-size:var(--fs-xs);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gev-clock{flex:0 0 auto;text-align:center;display:flex;flex-direction:column;line-height:1.1}
+.gev-clock span{font-size:var(--fs-xs);opacity:.8}
+.gev-clock b{font-family:"Cinzel",serif;font-size:1.25em;color:#ffe6a0;font-variant-numeric:tabular-nums;min-width:4.2em}
+.gev-row{display:flex;justify-content:flex-end;margin-top:6px}
+.gev-phases{display:flex;gap:3px;margin-top:8px}
+.gev-ph{position:relative;height:16px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden;min-width:0}
+.gev-ph i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#c4372a,#e8923a)}
+.gev-ph.done i{background:#6f8a52}
+.gev-ph span{position:relative;display:block;font-size:10px;line-height:16px;padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#f4ead0;text-shadow:0 1px 2px #000}
+.gev-ph.on{outline:1px solid #ffd27a}
+.gev-strip{display:flex;align-items:center;gap:8px;justify-content:space-between;padding:6px 10px;border:1px solid rgba(214,178,94,.3);border-radius:8px;background:rgba(20,16,12,.7);font-size:var(--fs-sm);min-width:0}
+.gev-strip span{min-width:0}
+.gev-after{opacity:.9;font-size:var(--fs-xs)}
+.gev-sheet{text-align:left}
+.gev-sheet .gev-pic{display:block;margin:0 auto 8px;max-width:100%}
+.gev-sheet .gev-pic canvas,.gev-sheet .gev-pic img{max-width:100%;height:auto}
+.gev-h3{margin:10px 0 4px;font-size:var(--fs-sm)}
+.gev-win{color:#a8d88a;font-weight:600}
+.gev-bar{height:6px;margin-top:3px}
+.art-pixel .gev-banner,.art-pixel .gev-strip,.art-pixel .gev-ph{border-radius:0}
+@media (max-width:640px){.gev-row{justify-content:flex-start;padding-right:64px}.gev-phases{padding-right:56px}}
+@media (min-width:900px){.gev-card{max-width:760px}}
+@media (prefers-reduced-motion:reduce){.gev-banner{box-shadow:none}}</style>
 /* followers become people (followerbonds.js): loyalty meter, Bond tab, speech bubble */
 .bondm{margin:5px 0 2px}
 .bondl{display:block;font-family:"Barlow Condensed",sans-serif;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#cbbf9f}
@@ -2296,6 +2333,7 @@ body:has(#twBtn) .app{padding-bottom:calc(140px + env(safe-area-inset-bottom))}
 <script src="caravans.js"></script>
 <script src="caravanroad.js"></script>
 <script src="worldevents.js"></script>
+<script src="greatevents.js"></script>
 <script src="economy.js"></script>
 <script src="bards.js"></script>
 <script src="skillinfo.js"></script>
