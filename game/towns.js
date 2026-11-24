@@ -156,7 +156,8 @@ const TOWNS = (() => {
       const key = EFFECTS[e]?.[3] || "none";
       if (key.startsWith("restore:")) {
         const res = key.split(":")[1];
-        if (res === "health") { const b = G.curHealth(s, t); G.setHealth(s, b + m, t); out.push(`health ${Math.round(b)} → ${Math.round(G.curHealth(s, t))}`); }
+        if (res === "health" && typeof POTFX !== "undefined") { const n = POTFX.ticks(s, m); out.push(POTFX.roadStart(s, m, n, it.name, t).kept ? "the last one is still working" : `health +${Math.round(m)} over ${n} seconds`); }   // over a few seconds (potionfx.js)
+        else if (res === "health") { const b = G.curHealth(s, t); G.setHealth(s, b + m, t); out.push(`health ${Math.round(b)} → ${Math.round(G.curHealth(s, t))}`); }
         else out.push(`${res} +${m}`);
       } else if (key !== "none" && !key.startsWith("poison")) {
         s.fx = (s.fx || []).filter((f) => f.until > t);

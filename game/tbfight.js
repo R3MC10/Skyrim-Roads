@@ -327,6 +327,7 @@ const TB = (() => {
       if (m === "power") { const d = al.dmg * 1.6 * (0.85 + Math.random() * 0.3); f.ehp -= d; al.tired = 1; return `${al.name} power attack ${Math.round(d)}`; }
       if (m === "guard") { al.guard = 1; return `${al.name} raises their guard`; }
       if (m === "heal" && al.heals > 0) { al.heals--; const mh = G.maxHealth(f.s), b = f.hp; f.hp = Math.min(mh, f.hp + (al.healAmt || 40)); return `${al.name} heals you +${Math.round(f.hp - b)}`; }
+      if (m === "potion" && al.pots > 0 && typeof POTFX !== "undefined") { al.pots--; return `${al.name} drinks a potion: ${POTFX.ally(al, "health", al.potAmt || 50, "Potion of Healing")}`; }
       if (m === "potion" && al.pots > 0) { al.pots--; al.hp = Math.min(al.maxHp || al.hp, al.hp + (al.potAmt || 50)); return `${al.name} drinks a potion`; }
       const d = al.dmg * (al.tired ? 0.8 : 1) * (0.85 + Math.random() * 0.3); al.tired = 0; f.ehp -= d; return `${al.name} attacks ${Math.round(d)}`;
     }
@@ -578,6 +579,7 @@ const TB = (() => {
       const r = f.findPotion(arg); if (!r) return null;
       const it = D.ITEMS[r.item]; f.used[r.id] = (f.used[r.id] || 0) + 1;
       if (arg !== "health") { f.used[r.id]--; return null; }   // only health potions can be given
+      if (typeof POTFX !== "undefined") return `You give ${al.name} a ${it.name}: ${POTFX.ally(al, "health", it.restore[1], it.name)}`;   // over a few rounds (potionfx.js)
       al.hp = Math.min(mx, al.hp + it.restore[1]); return `You give ${al.name} a ${it.name}: +${Math.round(al.hp - b)}`;
     }
     const sp = spellOf(a); if (!sp || sp.kind !== "heal") return null;
@@ -735,6 +737,7 @@ const TB = (() => {
     const restFoe = was.ehp - now.ehp - toFoe, restMe = was.hp - now.hp - toMe + healMe;
     if (restFoe >= 1) out.push({ at: "foe", n: -Math.round(restFoe), el: f.foeSt?.burn ? "fire" : f.foeSt?.shock ? "shock" : f.foeSt?.chill ? "frost" : "phys" });
     if (restMe >= 1) out.push({ at: "me", n: -Math.round(restMe), el: "phys" });
+    for (const e of evs) { if (e.mpUp > 0) out.push({ at: "me", n: e.mpUp, el: "mp", tag: "MP" }); if (e.spUp > 0) out.push({ at: "me", n: e.spUp, el: "sp", tag: "SP" }); }   // a magicka or stamina potion working (potionfx.js)
     if (now.mp < was.mp - 0.5) out.push({ at: "me", n: now.mp - was.mp, el: "mp", tag: "MP" });
     if (now.sp < was.sp - 0.5) out.push({ at: "me", n: now.sp - was.sp, el: "sp", tag: "SP" });
     return out.slice(-8);
@@ -747,7 +750,7 @@ const TB = (() => {
     const one = (a, i, down) => {
       const mx = Math.round(a.maxHp || a.hpMax || a._max || Math.max(a.hp || 0, 1)), hp = Math.max(0, Math.round(a.hp || 0));
       const was = ui.prevAl.get(a) ?? hp; ui.prevAl.set(a, hp);
-      const fx = [a.ward > 0 ? "" : "", a.armorT > 0 ? "" : "", a.imbue?.turns > 0 ? "" : "", a.heroT > 0 ? "⚑" : "", a.unseen > 0 ? "" : "", a.guard ? "" : ""].join("");
+      const fx = [a.ward > 0 ? "" : "", a.armorT > 0 ? "" : "", a.imbue?.turns > 0 ? "" : "", a.heroT > 0 ? "⚑" : "", a.unseen > 0 ? "" : "", a.guard ? "" : "", typeof POTFX !== "undefined" ? POTFX.allyIcons(a) : ""].join("");
       const ic = a.player ? "" : a.follower ? "" : a.summon ? "✦" : "";
       const role = a.role ? ` · ${a.role}` : a.follower ? " · follower" : a.player ? " · player" : "";
       const tip = `${a.name}${role}. ${down ? "Knocked down" : `${hp} / ${mx} health`}.${down ? " A Rescue spell can bring them back." : " Drag a healing spell, scroll or potion here to use it on them."}`;
@@ -881,7 +884,7 @@ const TB = (() => {
     const fs = {}; for (const k of FOE_KEYS) if (f[k] !== undefined) fs[k] = f[k];
     const e = {}; for (const [k, v] of Object.entries(f.e || {})) if (!["loot", "drops", "group"].includes(k) && typeof v !== "function") e[k] = v;
     const look = typeof HEROART !== "undefined" && HEROART.lookOf ? (() => { try { return HEROART.lookOf(f.s); } catch (x) { return null; } })() : null;
-    const roster = [{ k: "host", host: true, player: true, name: f.s.name || "Leader", hp: Math.max(0, Math.round(f.hp)), hpMax: G.maxHealth(f.s), down: f.hp <= 0, look, ward: Math.round(f.ward || 0), form: typeof BEASTPATH !== "undefined" ? BEASTPATH.form(f) : null },
+    const roster = [{ k: "host", host: true, player: true, name: f.s.name || "Leader", hp: Math.max(0, Math.round(f.hp)), hpMax: G.maxHealth(f.s), down: f.hp <= 0, look, ward: Math.round(f.ward || 0), form: typeof BEASTPATH !== "undefined" ? BEASTPATH.form(f) : null, ...(f.potOT ? { potOT: f.potOT } : {}) },
       ...all.map((a) => { a.tbk = a.tbk || (a.pid ? "p:" + a.pid : "a" + ++kseq);
         const o = { k: a.tbk, pid: a.pid || null, name: a.name, hp: Math.max(0, Math.round(a.hp || 0)), hpMax: Math.round(a.maxHp || a.hpMax || a._max || a.hp0 || Math.max(1, a.hp || 1)), down: !!a.down || !f.allies.includes(a),
           player: !!a.player, follower: !!(a.follower || a.kind === "follower"), role: a.role || null, look: a.look || null, kind: a.kind || null, fid: a.fid || null };

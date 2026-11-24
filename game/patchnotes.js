@@ -3,13 +3,66 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b172-deepdelve", build: 172, date: "25 Nov 2026", title: "Deep expeditions and harder dungeons", items: [
+    { id: "b175-deepdelve", build: 175, date: "25 Nov 2026", title: "Deep expeditions and harder dungeons", items: [
       "Deadly dungeons go deeper. When the master falls, stairs lead down to five more levels: entrance guardians, traps and elites, the ancient vault, the cursed sanctuary and the legendary lair.",
       "After each level's big fight you make camp and choose: Extract (climb out with everything), Rest (costs a ration) or Descend. In a party it's a vote, with everyone's face by their pick.",
       "There's no free healing down there: health, potions, injuries and curses come with you to the next level. The gold and loot get much better the deeper you go.",
       "What you find below is only yours once you climb out. Get knocked out down there and the expedition's finds are lost, but never your gear or anything you brought in. Followers just get knocked down, as always.",
       "From level 30 every dungeon has Veteran, Legendary and Mythic difficulty: tougher foes, more gold, and 1 to 3 modifiers you can read on the map before you go in (Frozen Depths, Restless Dead, Dwemer Overcharge, Blood Moon, Arcane Instability, Ancient Darkness, Cursed Sanctuary, Relentless Hunt). They change every week.",
       "New perks: Dungeon Veteran (Athletics) and Deep Delver (Lockpicking). Pathfinder (Athletics) now also finds the way out of the depths.",
+    ] },
+    { id: "b175-legendhunts", build: 175, date: "25 Nov 2026", title: "Legendary beasts: Jarl contracts and monster hunts", items: [
+      "Ten named monsters now roam Skyrim, from the Mudcrab King on the Solitude shore to the White Ghost sabre cat, Whitefang the frost troll near Dawnstar and Bloodmoon, the werewolf of Hircine, in the Falkreath woods. Each one lives in its own hold and wanders between nearby places over time.",
+      "Open Legendary hunts in a town to see the Jarl's posters. Take a contract and the map shows a rough area where the beast was last seen, not an exact spot.",
+      "On the road you find clues: tracks (your hunting skill decides how much you read from them), a victim, a witness, a wrecked caravan. Every clue shrinks the area, and some tell you what the beast fears and what barely hurts it. You can also search the place you're standing in.",
+      "Close in and choose how to start the fight: set an ambush, track it to its lair (harder start, better loot) or lay bait and drink your potions first. In a party the leader chooses.",
+      "Each beast is a real boss with its own big move to dodge, block or ward against. Hitting it with what it fears really helps: a known weakness means more damage and a shorter fight, and the frost troll stops healing once you know to bring fire.",
+      "Rewards: the Jarl's gold, a trophy, rare hides and parts you can turn into ten unique pieces of gear at the forge (the forge uses them up), sometimes a unique item from the body, and a new bestiary entry. Party members each get their own trophy and share.",
+      "New perks: Experienced Tracker (Archery) finds an extra clue each time, Monster Scholar (Speech) tells you what a beast resists and hits legends harder, Trophy Hunter (Smithing) gets more rare parts and unique items.",
+    ] },
+    { id: "b172-assetquality", build: 172, date: "24 Nov 2026", title: "Sharper pictures on every screen", items: [
+      "Foes in fights are painted at full size now, so they stay sharp on big monitors and 3x phone screens instead of going soft.",
+      "The dragon is no longer squashed into a square: it shows with its proper wide wingspan.",
+      "Paintings (towns, shop banners, fight scenes, event pictures) keep their shape and are never blown up into a blur. On a very big screen a painting shows at its own size instead.",
+      "Fight scenes are drawn at your screen's full sharpness, on phones and on 4K monitors, even when the window grows or the phone turns.",
+      "The painted compass is a bit sharper too.",
+      "Everything the game draws itself (your hero, the new-character picture, the dungeon map, icons) is redrawn at the size it really has on your screen, so it stays crisp from phones to ultrawide monitors.",
+      "On the new-character screen your hero's picture next to the race keeps its shape instead of being stretched tall, and the big live picture is drawn at full sharpness on 3x phones.",
+      "Fixed: on phones a lot of newer screens (the house chest, invites, the problem report, the Dwemer puzzles and more) were missing their proper look. They look right again.",
+      "Fixed: with blood and gore on, the fight picture could stop drawing. It plays again.",
+    ] },
+    { id: "b174-potionregen", build: 174, date: "25 Nov 2026", title: "Potions work over time", items: [
+      "Health, magicka and stamina potions no longer refill you all at once. They pour in over a few rounds in a fight, or a few seconds on the map: small potions over 5, ordinary ones over 4, the big brewed ones over 3. Half comes in right after you drink, so one still pulls you out of trouble.",
+      "Drinking another of the same kind while one is still working doesn't stack: you keep whichever has more left to give. A health and a magicka potion work side by side just fine.",
+      "A small potion chip under your bars shows how many rounds are left, and green numbers rise as it works. On the map a chip sits next to your health bar with the seconds left.",
+      "Followers, party members and the Smart AI won't waste a second potion of a kind that is still working. In a party everyone sees each other's potions working.",
+      "New Alchemy perk, Quick Draught (2 ranks): your potions work one round faster per rank.",
+    ] },
+    { id: "b172-mapvisuals", build: 172, date: "24 Nov 2026", title: "A sharper, prettier world map", items: [
+      "On a PC the map now fills the whole window, even zoomed all the way out. No more small map in the middle with grey clouds and empty dark space around it.",
+      "Places you haven't found yet hide under dark, inked parchment mist instead of grey photo clouds.",
+      "Zoom in close and the blurry painting turns into a crisp hand-inked chart: hills, pines, autumn trees, reeds, rocks and snowy peaks drawn sharp at any zoom, on any screen.",
+      "Roads are thin, slightly wobbly ink lines now, and small paths to farms and landmarks are dotted. The Roads on the map switch in Settings still works.",
+      "Hold names are small, quiet capitals that fade as you zoom in and never cover a town's name.",
+      "Fixed a stray gold line under the world event cards: it was the caravan's progress bar showing through while its card was hidden under the map.",
+      "The compass at the top of the PC map is one centred bar, like in Skyrim.",
+    ] },
+    { id: "b173-gorefx", build: 173, date: "25 Nov 2026", title: "Realistic blood and splatter", items: [
+      "Blows now throw real-looking blood: a wet burst of drops and fine mist flies away from whoever struck, bigger the harder the hit.",
+      "Critical hits and finishing blows add a jet of blood and a wide splash, splatter the ground and smear the foe. The stains slowly fade over the fight.",
+      "Hammers and maces kick up dust and spill less blood. Draugr and skeletons burst into grave dust and bone chips, Dwemer machines spit oil and sparks, Falmer and chaurus bleed green and daedra dark ichor. A blade on armour throws sparks.",
+      "Spells look better too: frost throws ice shards, fire throws embers and smoke, lightning crackles and other magic leaves glowing motes.",
+      "Followers and horses bleed a little but are never splattered or cut up, and still only get knocked down.",
+      "Blood and gore on Full shows all of it; Low keeps the dust, sparks and spell effects without the realistic blood; Off shows none.",
+    ] },
+    { id: "b172-treasure", build: 172, date: "24 Nov 2026", title: "Treasure maps and old relics", items: [
+      "Loot can now hold a hand-drawn treasure map, an old journal with a riddle, or a torn piece of a map (find 2-4 pieces and put them together). They show only the land: hills, woods, water, a landmark or two and an X. No names, no marker on your map.",
+      "Compare the sketch with the world map (pin it next to the map with one tap), travel there and press Dig here on the Travel tab. A wrong guess only tires you out for a little while.",
+      "Stuck? Every two wrong digs you work out a bit more (the hold, then a town and a direction, then the landmark), and innkeepers sell a rumour for 60 gold.",
+      "Buried caches hold gold, gems and rare ore. Now and then you dig up a lost one-of-a-kind item, or a slab over a sealed tomb you can go down into once.",
+      "Relic fragments turn up in Nordic barrows and Dwemer ruins. Three make a restored relic: keep it, or sell it to Urag in Winterhold or Calcelmo in Markarth.",
+      "Maps and pieces can be traded and given away, and point to the same spot for your friend. In a party the leader can ask everyone where to dig, and the gold is split evenly.",
+      "New perks: Cartographer (Streetwise), Antiquarian (Mercantile) and Excavator (Athletics).",
     ] },
     { id: "b172-horseart", build: 172, date: "25 Nov 2026", title: "Painted horses", items: [
       "Horses get painted: in fights, on the road and on the map your horse is now a proper painted horse with saddle and tack, not a little drawing.",
@@ -1144,7 +1197,7 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 169;
+  const NEXT_AT = 175;
   const NEXT = [
     "A new, livelier fight screen that fits on one screen",
     "Dragon Shouts learned from word walls",

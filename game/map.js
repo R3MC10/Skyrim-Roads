@@ -27,22 +27,96 @@ const WorldMap = (() => {
     if (close) g.closePath();
   }
 
-  /* roads and bridges, in map units (also drawn over a painted base: paintedmap.js) */
-  let bridges = null;   // [x, y] grid cells, found once
-  function paintRoads(g) {
+  /* roads and bridges, in map units (also drawn over a painted base: paintedmap.js), as hand-inked paths: a thin dark
+     ink line with a slight wobble on a faint parchment edge for the main roads, a dotted trail for the side paths
+     (roads that link no city, or end at a farm or a landmark). s = map units per CSS px (the line stays thin at any
+     zoom, growing only a little as you zoom in); without s (the baked procedural map) it's drawn at map scale. */
+  let bridges = null, inkRoads = null;   // bridges: [x, y] grid cells; inkRoads: wobbly points + minor flag, found once
+  const ROAD_STYLE = "ink";
+  function roadLines() {
+    if (inkRoads) return inkRoads;
+    const kinds = (n) => (typeof n === "string" && WORLD.places[n] ? WORLD.places[n][2] : null);
+    inkRoads = Terrain.roads.map((chain, ci) => {
+      const names = (WORLD.roads[ci] || []).filter((x) => typeof x === "string"), ends = [names[0], names[names.length - 1]].map(kinds);
+      const minor = !names.some((n) => kinds(n) === "city") || ends.some((k) => k === "farm" || k === "landmark");
+      const pts = [];   // a gentle hand wobble: the chain resampled every ~3 map units, nudged sideways by smooth noise
+      for (let i = 1; i < chain.length; i++) {
+        const [ax, ay] = chain[i - 1], [bx, by] = chain[i], d = Math.hypot(bx - ax, by - ay), n = Math.max(1, Math.round(d / 3)), nx = -(by - ay) / (d || 1), ny = (bx - ax) / (d || 1);
+        for (let k = i === 1 ? 0 : 1; k <= n; k++) {
+          const t = k / n, x = ax + (bx - ax) * t, y = ay + (by - ay) * t, w = (Terrain.vnoise ? Terrain.vnoise(x / 9 + ci * 3.1, y / 9) - 0.5 : Math.sin(x * 0.37 + y * 0.21 + ci) * 0.5) * 1.3;
+          const edge = (i === 1 && k === 0) || (i === chain.length - 1 && k === n) ? 0 : 1;   // the ends stay on the towns
+          pts.push([x + nx * w * edge, y + ny * w * edge]);
+        }
+      }
+      return { pts, minor };
+    });
+    return inkRoads;
+  }
+  function paintRoads(g, s) {
     if (!bridges) {
       const GW = Terrain.GW, GH = Terrain.GH, grid = Terrain.grid; bridges = [];
       for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) if (grid[y * GW + x] === T.BRIDGE) bridges.push([x, y]);
     }
-    for (const chain of Terrain.roads) {
-      const pts = chain.map(([x, y]) => [x / W, y / H]);
-      g.strokeStyle = "rgba(70,46,26,.85)"; g.lineWidth = 2.4; g.lineJoin = "round"; g.lineCap = "round";
-      smoothPath(g, pts); g.stroke();
-      g.strokeStyle = "rgba(226,206,160,.55)"; g.lineWidth = 0.8; g.setLineDash([3, 4]); smoothPath(g, pts); g.stroke(); g.setLineDash([]);
+    const px = s || 0.45, zoomIn = s ? Math.min(1.8, Math.max(1, Math.log2(0.5 / s + 1))) : 1;   // CSS px → map units; lines thicken a touch close up
+    const line = (pts) => { g.beginPath(); g.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length - 1; i++) { const [ax, ay] = pts[i], [bx, by] = pts[i + 1]; g.quadraticCurveTo(ax, ay, (ax + bx) / 2, (ay + by) / 2); } g.lineTo(...pts[pts.length - 1]); };
+    g.save(); g.lineJoin = "round"; g.lineCap = "round";
+    for (const r of roadLines()) {
+      if (r.pts.length < 2) continue;
+      if (r.minor) {   // a dotted foot trail
+        g.strokeStyle = "rgba(38,26,16,.78)"; g.lineWidth = 1.25 * px * zoomIn; g.setLineDash([0.01, 3.6 * px * zoomIn]);
+        line(r.pts); g.stroke(); g.setLineDash([]);
+      } else {         // a main road: faint parchment edge, then the ink line
+        g.strokeStyle = "rgba(238,224,190,.32)"; g.lineWidth = 3.4 * px * zoomIn; line(r.pts); g.stroke();
+        g.strokeStyle = "rgba(34,22,12,.86)"; g.lineWidth = 1.35 * px * zoomIn; line(r.pts); g.stroke();
+      }
     }
-    for (const [x, y] of bridges) {
-      g.fillStyle = "#5a3d24"; g.fillRect(x * 4 - 0.5, y * 4 - 0.5, 5, 5); g.fillStyle = "#c8a878"; g.fillRect(x * 4 + 0.5, y * 4 + 1.5, 3, 1);
+    // bridges: two short ink rails across the water
+    g.strokeStyle = "rgba(34,22,12,.9)"; g.lineWidth = 1 * px * zoomIn; g.beginPath();
+    for (const [x, y] of bridges) { const cx = x * 4 + 2, cy = y * 4 + 2, r = Math.max(2.2, 4 * px * zoomIn); g.moveTo(cx - r, cy - r * 0.45); g.lineTo(cx + r, cy - r * 0.45); g.moveTo(cx - r, cy + r * 0.45); g.lineTo(cx + r, cy + r * 0.45); }
+    g.stroke(); g.restore();
+  }
+  /* the names of the holds, the provinces beyond and the sea, drawn live over a painted map: small letter-spaced
+     capitals at a clamped screen size, faint, fading out as you zoom in close, and skipped (or nudged) where they'd
+     cover a place, its name, or a hero. boxes: [x, y, w, h] in map units that must stay clear. */
+  function paintRegionNames(g, s, P, boxes) {
+    const fade = Math.max(0, Math.min(1, (6.5 - P) / 2.5));   // P: CSS px per map unit; gone by ~6.5
+    if (fade <= 0.01) return 0;
+    const hit = (b) => boxes.some(([X, Y, Wd, Hd]) => b[0] < X + Wd && b[0] + b[2] > X && b[1] < Y + Hd && b[1] + b[3] > Y);
+    const sz = Math.max(10, Math.min(17, 6 + 2.6 * P)), sp = sz * 0.32;
+    g.save(); g.textAlign = "center"; g.textBaseline = "middle"; g.lineJoin = "round";
+    let drawn = 0;
+    for (const [name, v] of Object.entries(WORLD.holds)) {
+      const text = LX(name).toUpperCase(), x = v[0][0] * W, y0 = v[0][1] * H;
+      g.font = FONT(sz * s, 600); if (g.letterSpacing !== undefined) g.letterSpacing = `${sp * s}px`;
+      const w = g.measureText(text).width + sp * s, h = sz * s * 1.1;
+      const y = [0, -1.6, 1.6, -3.2, 3.2].map((d) => y0 + d * h).find((yy) => !hit([x - w / 2, yy - h / 2, w, h]));
+      if (y === undefined) continue;
+      boxes.push([x - w / 2, y - h / 2, w, h]);
+      g.globalAlpha = 0.62 * fade; g.lineWidth = 2.6 * s; g.strokeStyle = "rgba(244,232,204,.55)"; g.strokeText(text, x, y);
+      g.fillStyle = "rgba(70,44,26,1)"; g.fillText(text, x, y); drawn++;
     }
+    for (const [name, x, y, rot] of WORLD.beyond || []) {
+      g.save(); g.translate(x * W, y * H); g.rotate(rot * Math.PI / 180); g.font = FONT(sz * 1.1 * s, 600);
+      if (g.letterSpacing !== undefined) g.letterSpacing = `${sp * 1.6 * s}px`;
+      g.globalAlpha = 0.5 * fade; g.fillStyle = "rgba(246,238,220,1)"; g.fillText(LX(name).toUpperCase(), 0, 0); g.restore();
+    }
+    const sl = WORLD.seaLabel || [0.4, 0.05];
+    g.font = FONT(sz * 1.15 * s, 600, "italic"); if (g.letterSpacing !== undefined) g.letterSpacing = `${sp * 0.6 * s}px`;
+    g.globalAlpha = 0.6 * fade; g.fillStyle = "rgba(200,222,230,1)"; g.fillText(LX("Sea of Ghosts"), sl[0] * W, sl[1] * H);
+    if (g.letterSpacing !== undefined) g.letterSpacing = "0px";
+    g.restore();
+    return drawn;
+  }
+  /* the compass rose and the frame over a painted map, sized in screen px (s = map units per CSS px) */
+  function paintChrome(g, s) {
+    const cx = WORLD.border ? 64 : W - 52, cy = WORLD.border ? H - 64 : H - 70, R = 24 * s;
+    g.save(); g.fillStyle = "rgba(240,232,210,.88)"; g.strokeStyle = "#2c2116"; g.lineWidth = 1 * s; g.lineJoin = "round";
+    g.beginPath(); g.moveTo(cx, cy - R); g.lineTo(cx + R * 0.23, cy); g.lineTo(cx, cy + R); g.lineTo(cx - R * 0.23, cy); g.closePath(); g.fill(); g.stroke();
+    g.beginPath(); g.moveTo(cx - R, cy); g.lineTo(cx, cy - R * 0.23); g.lineTo(cx + R, cy); g.lineTo(cx, cy + R * 0.23); g.closePath(); g.fill(); g.stroke();
+    g.font = FONT(13 * s, 700); g.textAlign = "center"; g.textBaseline = "middle"; g.fillStyle = "#f2e8cf"; g.fillText("N", cx, cy - R - 9 * s);
+    g.strokeStyle = "#1f170f"; g.lineWidth = 3 * s; g.strokeRect(1.5 * s, 1.5 * s, W - 3 * s, H - 3 * s);
+    g.strokeStyle = "rgba(190,160,110,.75)"; g.lineWidth = 1 * s; g.strokeRect(6 * s, 6 * s, W - 12 * s, H - 12 * s);
+    g.restore();
   }
   /* hold names, the province names beyond the border, the sea's name, the compass and the frame, in map units
      (baked into the procedural base; drawn each frame over a painted one: paintedmap.js) */
@@ -286,10 +360,17 @@ const WorldMap = (() => {
     if (fog && key === fogKey) return fog;
     fogKey = key;
     fog = fog || document.createElement("canvas");
-    fog.width = W; fog.height = H;
+    fog.width = W * 1.8; fog.height = H * 1.8;   // finer than the map units: the mist's edge and its ink lines stay sharp
     const g = fog.getContext("2d");
+    g.setTransform(1.8, 0, 0, 1.8, 0, 0);
     g.globalCompositeOperation = "source-over";
-    g.fillStyle = "rgba(10,11,14,.93)"; g.fillRect(0, 0, W, H);
+    // undiscovered land: dark sepia parchment mist, mottled, with faint ink hatching (not grey clouds)
+    g.fillStyle = "rgba(30,24,17,.94)"; g.fillRect(0, 0, W, H);
+    const r = rng(29);
+    for (let i = 0; i < 70; i++) { const x = r() * W, y = r() * H, rad = 30 + r() * 80, gr = g.createRadialGradient(x, y, 0, x, y, rad); gr.addColorStop(0, r() < 0.6 ? "rgba(96,78,54,.16)" : "rgba(12,9,6,.18)"); gr.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = gr; g.fillRect(x - rad, y - rad, rad * 2, rad * 2); }
+    g.strokeStyle = "rgba(150,124,86,.13)"; g.lineWidth = 0.5; g.beginPath();
+    for (let d = -H; d < W; d += 4.5) { const w = Math.sin(d * 0.07) * 1.5; g.moveTo(d, H); g.lineTo(d + H * 0.6 + w, 0); }
+    g.stroke();
     g.globalCompositeOperation = "destination-out";
     for (const p of pts) {
       const [x, y] = P(p), grd = g.createRadialGradient(x, y, 22, x, y, 72);
@@ -367,6 +448,29 @@ const WorldMap = (() => {
     g.putImageData(img, 0, 0);
     return (seasonCache[season] = c);
   }
+  /* how big the painting may be drawn, in screen px per painting px: sharp up to PAINT_FADE, gone by PAINT_MAX */
+  const PAINT_MAX = 1.3, PAINT_FADE = 1.0;
+  const stats = {};   // what the last frame drew (tests read it: map.js → WorldMap.stats())
+  /* beyond the map's edge (only when it's smaller than the window): dark sea-ink parchment, a soft shadow and an ink
+     rule round the sheet, so the map reads as a chart laid on the table rather than a box floating in grey */
+  let surroundTex = null;
+  function surround(g, cw, ch, ox, oy, mw, mh, dpr) {
+    if (!surroundTex) {
+      surroundTex = document.createElement("canvas"); surroundTex.width = surroundTex.height = 256;
+      const t = surroundTex.getContext("2d"), r = rng(7);
+      t.fillStyle = "#1c2328"; t.fillRect(0, 0, 256, 256);
+      for (let i = 0; i < 900; i++) { t.fillStyle = r() < 0.5 ? "rgba(0,0,0,.12)" : "rgba(170,160,130,.05)"; t.fillRect(r() * 256, r() * 256, 1 + r() * 2, 1 + r() * 2); }
+      t.strokeStyle = "rgba(150,170,175,.09)"; t.lineWidth = 1;
+      for (let i = 0; i < 26; i++) { const x = r() * 256, y = r() * 256; t.beginPath(); t.moveTo(x, y); t.quadraticCurveTo(x + 6, y - 3, x + 12, y); t.stroke(); }
+    }
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+    g.fillStyle = g.createPattern(surroundTex, "repeat"); g.fillRect(0, 0, cw, ch);
+    const vg = g.createRadialGradient(cw / 2, ch / 2, Math.min(cw, ch) * 0.3, cw / 2, ch / 2, Math.max(cw, ch) * 0.75);
+    vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(0,0,0,.55)"); g.fillStyle = vg; g.fillRect(0, 0, cw, ch);
+    g.shadowColor = "rgba(0,0,0,.6)"; g.shadowBlur = 18 * dpr; g.fillStyle = "#2a2219"; g.fillRect(ox, oy, mw, mh); g.shadowBlur = 0;
+    g.strokeStyle = "rgba(214,182,110,.45)"; g.lineWidth = 1 * dpr; g.strokeRect(ox - 5 * dpr, oy - 5 * dpr, mw + 10 * dpr, mh + 10 * dpr);
+    g.restore();
+  }
   function draw(canvas, v) {
     // Solstheim has its own painted map (solart.js); its places sit SOL_OY map-heights below Skyrim's
     const SV = v.region === "solstheim" && typeof SOLART !== "undefined" ? SOLART : null, OY = SV ? WORLD.SOL_OY : 0, OYH = OY * H;
@@ -375,26 +479,39 @@ const WorldMap = (() => {
     const PM = !SV && typeof PAINTEDMAP !== "undefined" ? PAINTEDMAP : null, painted = PM ? PM.image(v.zoom) : null;
     if (painted && base) base = null;   // drop the procedural picture once the painting is in
     const bimg = SV ? SV.base() : painted || (PM && PM.pending() ? null : (base = base || drawBase()));
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    // the canvas holds one pixel per device pixel (phones up to 3×), so lines and words are as sharp as the screen
+    const dpr = Math.min(3, window.devicePixelRatio || 1);
     const cw = canvas.clientWidth, ch = canvas.clientHeight;
     if (canvas.width !== Math.round(cw * dpr) || canvas.height !== Math.round(ch * dpr)) { canvas.width = Math.round(cw * dpr); canvas.height = Math.round(ch * dpr); }
     const g = canvas.getContext("2d");
     g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, canvas.width, canvas.height);
     const k = Math.max(canvas.width / W, canvas.height / H) * v.zoom;
     let ox = canvas.width / 2 - v.center[0] * W * k, oy = canvas.height / 2 - (v.center[1] - OY) * H * k;
-    // zoomed out past the edges (PC map, pcmap.js: all of Skyrim in a wide window): the map sits in the middle
+    // zoomed out past the edges: the map sits in the middle (on a matching surround, below)
     ox = W * k <= canvas.width ? (canvas.width - W * k) / 2 : Math.min(0, Math.max(canvas.width - W * k, ox));
     oy = H * k <= canvas.height ? (canvas.height - H * k) / 2 : Math.min(0, Math.max(canvas.height - H * k, oy));
-    v.transform = { k: k / dpr, ox: ox / dpr, oy: (oy - OYH * k) / dpr };   // screen <-> world (Solstheim's y included)
+    v.transform = { k: k / dpr, ox: ox / dpr, oy: (oy - OYH * k) / dpr };   // screen ↔ world (Solstheim's y included)
+    if (ox > 0 || oy > 0 || ox + W * k < canvas.width || oy + H * k < canvas.height) surround(g, canvas.width, canvas.height, ox, oy, W * k, H * k, dpr);
     g.setTransform(k, 0, 0, k, ox, oy);
     g.imageSmoothingEnabled = true; g.imageSmoothingQuality = "high";
-    if (bimg) g.drawImage(bimg, 0, 0, W, H);   // the painting is stretched over the world bounds: world (x, y) → (x·W, y·H)
-    else { g.fillStyle = "#26404c"; g.fillRect(0, 0, W, H); }
-    if (painted) { g.save(); if (PM.roads()) paintRoads(g); paintTop(g); g.restore(); }   // roads (Settings → Graphics), names, compass, frame
+    // UI: icons and words a little bigger on big monitors (never smaller than on a phone)
+    const UI = Math.max(1, Math.min(1.3, Math.min(cw, ch) / 860));
+    const s = dpr / k * UI;               // 1 CSS px in map units (× UI): keeps icons and labels the same size at any zoom
+    const Pcss = k / dpr;                 // CSS px per map unit
+    // the painting is never shown bigger than PAINT_MAX × its own pixels (it would turn soft): past PAINT_FADE it fades
+    // into the close-up ink chart (inkmap.js), a wash of its own colours with crisp hand-inked detail on top
+    const IK = painted && typeof INKMAP !== "undefined" ? INKMAP : null;
+    const pscale = painted ? (W * Pcss) / painted.naturalWidth : 0;
+    const pa = !painted ? 1 : !IK ? 1 : Math.max(0, Math.min(1, (PAINT_MAX - pscale) / (PAINT_MAX - PAINT_FADE)));
+    stats.paintScale = pa > 0 ? pscale : 0; stats.paintAlpha = painted ? pa : 0; stats.ink = IK ? 1 - pa : 0; stats.roads = ROAD_STYLE; stats.dpr = dpr;
+    if (IK && pa < 1) { g.save(); g.setTransform(1, 0, 0, 1, 0, 0); IK.draw(g, painted, k, ox, oy, canvas.width, canvas.height, dpr, 1); g.restore(); }
+    if (bimg && pa > 0) { g.globalAlpha = pa; g.drawImage(bimg, 0, 0, W, H); g.globalAlpha = 1; }   // the painting is stretched over the world bounds: world (x, y) → (x·W, y·H)
+    else if (!bimg) { g.fillStyle = "#26404c"; g.fillRect(0, 0, W, H); }
+    if (painted) { if (PM.roads()) paintRoads(g, s / UI); paintChrome(g, s / UI); }   // roads (Settings → Graphics), compass, frame (the names come after the places)
     const sl = SV ? null : seasonLayer(v.season ?? (typeof WEVENTS !== "undefined" ? WEVENTS.season() : null)); if (sl) g.drawImage(sl, 0, 0, W, H);   // winter snow, autumn colours, spring green
-    const s = dpr / k;                    // 1 screen px in map units: keeps icons and labels the same size at any zoom
     const MA = typeof MAPART !== "undefined" ? MAPART : null;
     const viewBox = [-ox / k, -oy / k, (canvas.width - ox) / k, (canvas.height - oy) / k];
+    g.save(); g.beginPath(); g.rect(0, 0, W, H); g.clip();   // clouds, mist and light stay on the map itself
     const dark = SV ? SV.ambient(g, v, s, W, H, viewBox) : MA ? MA.ambient(g, v, s, W, H, viewBox) : 0;   // water glints, cloud shadows, birds (under the fog)
     const seen = [...v.explored, ...v.discovered.map((n) => WORLD.places[n])].filter((p) => p && WORLD.isSol(p) === !!SV);
     const VI = typeof VISION !== "undefined" && v.cones?.length ? VISION : null;
@@ -403,6 +520,7 @@ const WorldMap = (() => {
     if (v.rulers?.length && !SV) { g.globalAlpha = 0.26; for (const r of v.rulers) g.drawImage(tintFor(r.hold, r.color), 0, 0, W, H); g.globalAlpha = 1; }   // holds ruled by a clan
     const FX = !SV && typeof MAPFX !== "undefined" && MAPFX.on() ? MAPFX : null;
     if (FX) FX.draw(g, v, dpr / k, W, H, [-ox / k, -oy / k, (canvas.width - ox) / k, (canvas.height - oy) / k]);   // PC map: each hold's weather, chimney smoke (mapfx.js)
+    g.restore();   // (the clip to the map)
     if (OY) g.setTransform(k, 0, 0, k, ox, oy - OYH * k);   // from here on: world coordinates
     const [px, py] = P(v.player);
     if (v.sight || v.sneakRing) {   // fog of war: how far you see other heroes; sneaking: how close they must come to see you (sneakmode.js)
@@ -446,7 +564,8 @@ const WorldMap = (() => {
     // zoomed out, the many small spots shrink so cities and towns stay easy to see
     const small = v.zoom < 1.5 && shown.length > 60 ? 0.72 : 1;
     // light and atmosphere over the painted ground, under the markers (lightfx.js; Settings → Graphics → Lighting)
-    const lit = typeof LIGHTFX !== "undefined" && LIGHTFX.on() && LIGHTFX.map(g, canvas, v, { s, W, H, shown, view: viewBox, dpr, sol: !!SV });
+    let lit = false;
+    if (typeof LIGHTFX !== "undefined" && LIGHTFX.on()) { g.save(); g.beginPath(); g.rect(0, OYH, W, H); g.clip(); lit = LIGHTFX.map(g, canvas, v, { s, W, H, shown, view: viewBox, dpr, sol: !!SV }); g.restore(); }
     if (MA) {
       if (OY) { g.save(); g.translate(0, OYH); MA.night(g, v, s, W, H, dark, shown.map(([n, x, y, kd]) => [n, x, y - OY, kd])); g.restore(); }
       else if (!lit) MA.night(g, v, s, W, H, dark, shown);
@@ -469,6 +588,13 @@ const WorldMap = (() => {
       if (n !== v.selected && boxes.some(([X, Y, Wd, Hd]) => bx < X + Wd && bx + bw > X && by < Y + Hd && by + bh > Y)) continue;
       boxes.push([bx, by, bw, bh]);
       label(g, n, x * W, y * H + (MA ? (kind === "city" ? 20 : 16) : 17) * s, s, size, "#fbf3dc", kind === "city" ? 700 : 600, italic);
+    }
+    // hold / province / sea names: faint, under nothing important (places, their names, icons, you)
+    if (painted) {
+      const keep = boxes.slice();
+      for (const [, x, y] of shown) keep.push([x * W - 9 * s, y * H - 11 * s, 18 * s, 20 * s]);
+      keep.push([px - 22 * s, py - 56 * s, 44 * s, 64 * s]);
+      stats.regionNames = paintRegionNames(g, s, Pcss / UI, keep);
     }
     // cleared dungeons: a small timer badge until they open again
     if (v.cleared) for (const [n, x, y, kind] of shown) {
@@ -615,7 +741,8 @@ const WorldMap = (() => {
     if (v.guards && typeof GUARDS !== "undefined") GUARDS.drawMap(g, v.guards, P, s, v.t, v.reduceMotion, v.zoom, label);   // hold guards on patrol (guards.js)
     if (v.raid && typeof RAIDART !== "undefined") RAIDART.mapRaid(g, v.raid, P, s, v.t, v.reduceMotion);   // a dragon over a town (raidart.js)
     if (typeof WORLDEV !== "undefined") WORLDEV.drawMap(g, P, s, v.t, v.reduceMotion);   // gates, dragon flights, the Khajiit market (worldevents.js)
-    if (typeof GREATEV !== "undefined") GREATEV.drawMap(g, P, s, v.t, v.reduceMotion);   // dragon assaults, rifts, sieges, fairs and what they leave behind (greatevents.js)
+    if (typeof GREATEV !== "undefined") GREATEV.drawMap(g, P, s, v.t, v.reduceMotion);
+    if (typeof LEGHUNT !== "undefined" && !SV) LEGHUNT.drawMap(g, P, s, null, v.t, v.reduceMotion);   // legendary hunts: rough search areas, never exact (leghunt.js)   // dragon assaults, rifts, sieges, fairs and what they leave behind (greatevents.js)
     if (v.cart && typeof CARAVANS !== "undefined") { const sp = CARAVANS.sprite(false, false); if (sp) { const back = HF && MAPHERO.flipped("me") ? 16 : -50; g.drawImage(sp, px + back * s, py - 16 * s, 34 * s, 24 * s); } }
     if (v.fx && typeof FXART !== "undefined") FXART.mapUnder(g, v.fx, P, s, px, py, v.t, v.reduceMotion, v);   // spells and shouts around you (fxart.js)
     const pulse = v.reduceMotion ? 0.5 : (Math.sin(v.t * 3) + 1) / 2;
@@ -669,5 +796,5 @@ const WorldMap = (() => {
     return best;
   }
   const ready = () => { if (typeof PAINTEDMAP !== "undefined" && (PAINTEDMAP.pending() || PAINTEDMAP.image(1))) return; base = base || drawBase(); };
-  return { draw, placeAt, ready, W, H, base: () => (base = base || drawBase()), paintBase: drawBase, paintRoads, paintTop };
+  return { draw, placeAt, ready, W, H, base: () => (base = base || drawBase()), paintBase: drawBase, paintRoads, paintTop, stats: () => ({ ...stats }), PAINT_MAX, ROAD_STYLE };
 })();

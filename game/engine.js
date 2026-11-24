@@ -153,16 +153,17 @@ const G = (() => {
   const maxMagicka = (s) => D.RACES[s.race].magicka + s.mpBonus + fxSum(s, "max:magicka") + (s.stone === "atronach" ? 50 : 0);   // [Skyrim] Atronach Stone
   const maxStamina = (s) => 100 + s.spBonus + fxSum(s, "max:stamina");
   function curHealth(s, t = now()) {
-    if (s.dungeon) return Math.min(maxHealth(s), s.health);   // [OURS] no regeneration inside a dungeon
+    const pot = typeof POTFX !== "undefined" ? POTFX.due(s, t) : 0;   // a potion drunk on the road fills you up over a few seconds (potionfx.js)
+    if (s.dungeon) return Math.min(maxHealth(s), s.health + pot);   // [OURS] no regeneration inside a dungeon
     // [OURS] no passive healing: health only comes back from potions, food, spells, beds, or a "regenerate health" effect while it lasts
     const rate = F.REGEN_PER_SECOND.health * maxHealth(s) * (s.stone === "lady" ? 1.25 : 1), from = s.healthTs || t;
     let gain = 0;
     for (const f of s.fx || []) if (f.key === "regen:health" && f.mag > 0) gain += Math.max(0, Math.min(t, f.until) - from) * rate * (1 + f.mag / 100);   // food, potions, shrines: only while they last
     const worn = (typeof ENCH !== "undefined" && s.loadouts ? ENCH.worn(s, "regen:health") : 0) + (typeof CURSE !== "undefined" ? CURSE.fx(s, "regen:health", t) : 0);
     if (worn > 0) gain += Math.max(0, t - from) * rate * (worn / 100);   // enchanted gear heals slowly
-    return Math.min(maxHealth(s), s.health + gain);
+    return Math.min(maxHealth(s), s.health + gain + pot);
   }
-  function setHealth(s, hp, t = now()) { s.health = Math.max(0, Math.min(maxHealth(s), hp)); s.healthTs = t; }
+  function setHealth(s, hp, t = now()) { if (typeof POTFX !== "undefined") POTFX.settle(s, t); s.health = Math.max(0, Math.min(maxHealth(s), hp)); s.healthTs = t; }
   const skill = (s, name) => s.skills[name].lvl + fxSum(s, "skill:" + name) + (typeof LEGEND !== "undefined" ? LEGEND.bonus(s, name) : 0);   // potions add skill points [OURS simplification]; legendary stars add a little
   /* [OURS] fair levelling: foes scale with how strong you are in a fight, not just your level. Levelling by crafting,
      trading or sneaking raises your level but not your fighting, so foes follow your best attack and defence skills
@@ -853,6 +854,7 @@ const G = (() => {
         const r = this.findPotion(arg), it = D.ITEMS[r.item];
         this.used[r.id] = (this.used[r.id] || 0) + 1;
         const [res, amt] = it.restore;
+        if (typeof POTFX !== "undefined") return POTFX.drink(this, res, res === "health" ? amt * (1 + (typeof PFX !== "undefined" ? PFX.sum(this.s, "potion", this, {}) : 0)) : amt, it.name);   // over a few rounds, no stacking (potionfx.js)
         if (res === "health") this.hp = Math.min(maxHealth(this.s), this.hp + amt * (1 + (typeof PFX !== "undefined" ? PFX.sum(this.s, "potion", this, {}) : 0)));   // Field Medic
         else if (res === "magicka") this.mp = Math.min(maxMagicka(this.s), this.mp + amt);
         else this.sp = Math.min(maxStamina(this.s), this.sp + amt);
@@ -1094,6 +1096,7 @@ const G = (() => {
     if (tags.has("beast") && typeof SMITH !== "undefined") { const p = SMITH.peltFor(e.name); if (p && Math.random() < 0.7) { give(s, p); got.push(D.ITEMS[p].name); } }   // [Skyrim] pelts from animals
     if (e.hunt && typeof HUNT !== "undefined") got.push(...HUNT.loot(s, e));
     if (typeof JEWELRY !== "undefined") got.push(...JEWELRY.loot(s, e));   // rings and amulets, often enchanted (jewelry.js)   // venison and hides from game (hunting.js)
+    if (typeof TREASURE !== "undefined") got.push(...TREASURE.loot(s, e));   // treasure maps, old journals, torn map pieces (treasure.js)
     if (typeof GATHER !== "undefined") got.push(...GATHER.creatureParts(s, e));   // [Skyrim] claws, teeth, eggs, jelly (gather.js)
     return got;
   }
@@ -1282,6 +1285,7 @@ const G = (() => {
       const f = new Fight(s, e, null, t), r = f.findPotion("health");
       if (!r) return { text: "You have no healing potions!" };
       const before = curHealth(s, t), it = D.ITEMS[r.item];
+      if (typeof POTFX !== "undefined") { take(s, r.id); return { text: POTFX.roadDrink(s, "health", it.restore[1], it.name, t) }; }   // over a few seconds (potionfx.js)
       take(s, r.id); setHealth(s, before + it.restore[1], t);
       return { text: `You drink a ${it.name} (${Math.round(before)} → ${Math.round(curHealth(s))} health).` };
     }
@@ -1450,6 +1454,7 @@ const G = (() => {
     const f = new Fight(s, { name: "-", health: 1, damage: 0 }), r = f.findPotion("health");
     if (!r) return "No healing potions.";
     const before = curHealth(s, t), it = D.ITEMS[r.item];
+    if (typeof POTFX !== "undefined") { take(s, r.id); return POTFX.roadDrink(s, "health", it.restore[1], it.name, t); }   // over a few seconds (potionfx.js)
     take(s, r.id); setHealth(s, before + it.restore[1], t);
     return `${it.name}: ${Math.round(before)} → ${Math.round(curHealth(s, t))} health.`;
   }

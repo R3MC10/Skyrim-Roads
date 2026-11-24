@@ -20,6 +20,7 @@ const TIP = (() => {
     TOMEINFO: () => (typeof TOMEINFO !== "undefined" ? TOMEINFO : undefined),   // tomeinfo.js: the shop's full spell-tome card
     CHARGE: () => (typeof CHARGE !== "undefined" ? CHARGE : undefined),   // chargebar.js: the charge bar of enchanted weapons and staffs
     COOK: () => (typeof COOK !== "undefined" ? COOK : undefined),
+    POTFX: () => (typeof POTFX !== "undefined" ? POTFX : undefined),   // potionfx.js: potions work over a few rounds
   };
   const g = (n) => { try { return MODS[n] ? MODS[n]() : undefined; } catch { return undefined; } };
   const has = (n) => g(n) !== undefined;
@@ -69,6 +70,7 @@ const TIP = (() => {
     if (it.desc) L.push(it.desc);
     if (it.effects) L.push(it.effects.map(([e, m, d]) => `${e} ${m}${d * 5 >= 60 ? ` for ${Math.round(d * 5 / 60)} min` : ""}`).join(" · "));
     else if (it.restore) L.push(`Restores ${it.restore[1]} ${it.restore[0]}`);
+    if (it.restore && g("POTFX")) L.push(g("POTFX").note(s, it.restore[1]));   // over a few rounds (potionfx.js)
     else if (it.cures) L.push("Cures diseases");
     let tomeCard = "";
     const TI = g("TOMEINFO");

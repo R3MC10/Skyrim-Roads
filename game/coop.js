@@ -174,6 +174,7 @@ const COOP = (() => {
       al.heals--; const before = f.hp; f.hp = Math.min(mh, f.hp + al.healAmt);
       return ` · ${al.name} heals you +${Math.round(f.hp - before)}`;
     }
+    if (al.pots > 0 && al.hp / al.maxHp * 100 < al.potAt && typeof POTFX !== "undefined") { if (POTFX.busy(al, "health")) return ""; al.pots--; return ` · ${al.name} drinks a potion: ${POTFX.ally(al, "health", al.potAmt, "Potion of Healing")}`; }   // over a few rounds (potionfx.js)
     if (al.pots > 0 && al.hp / al.maxHp * 100 < al.potAt) { al.pots--; al.hp = Math.min(al.maxHp, al.hp + al.potAmt); return ` · ${al.name} drinks a potion`; }
     let d = al.dmg * (0.85 + Math.random() * 0.3);
     let tag = "";
