@@ -10,6 +10,10 @@ const PATCHNOTES = (() => {
       "The great world event card on the map can be folded into a small pill with the arrow in its corner (tap the pill to open it again). The game remembers it for your hero.",
       "Notices under it (a town rebuilding, a reward waiting) have an × to hide them until there's new news. A new event never pops the card open: the pill glows for a moment instead.",
     ] },
+    { id: "b167-titlewide", build: 167, date: "24 Nov 2026", title: "A wide painting for wide screens", items: [
+      "On a PC or laptop the main menu now has its own wide painting: the warrior on his rock, the castle city in the valley, the dragon and the northern lights fill the whole window, from an old 4:3 screen to a 32:9 ultra-wide. No more tall picture with blurry sides.",
+      "Big and sharp screens get an extra-large copy of the painting so it stays crisp. Phones keep the tall picture they had.",
+    ] },
     { id: "b145-mountfight", build: 145, date: "24 Nov 2026", title: "Fight from the saddle", items: [
       "Riding when a fight on the road starts? You now play the whole fight on horseback. Your horse has its own health bar under yours.",
       "New Mount and Dismount moves in the fight. Getting on costs 4 AP and some stamina, and your next blow is a charge: a sure hit that does more and can knock the foe back.",
