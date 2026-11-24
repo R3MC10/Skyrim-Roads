@@ -80,8 +80,9 @@ for (const base of FOES) {
   f.kit.guard = 0.5; const b2 = f.ehp; f.ehp -= 30; K.defend(f, "spell:firebolt", b2); ok(f.kit.guard === 0.5, "a shield doesn't stop a spell");
   // wind-up lands harder next turn
   f.kit.windup = "smash"; f.hp = G.maxHealth(s); let t3 = ""; for (let i = 0; i < 10 && !/huge blow down/.test(t3); i++) { f.kit.windup = "smash"; t3 = K.turn(f, () => f.enemyTurn()); } ok(/huge blow down/.test(t3), "a wind-up lands next turn: " + t3);
-  // AP loss from a shield bash
-  f.kitApLoss = 1; ok(K.apLoss(f) === 1 && K.apLoss(f) === 0, "a shield bash costs you 1 AP once");
+  // a shield bash winds you now (no more action points): old saves' kitApLoss is just cleared
+  f.kitApLoss = 1; ok(K.apLoss(f) === 0 && !f.kitApLoss, "old action-point loss is ignored and cleared");
+  if (K.wind && typeof STACKS !== "undefined") { K.wind(f, 1); ok(STACKS.get(f, "me", "winded") === 1, "a shield bash winds you (1 stack)"); }
   // poison ticks and never kills by itself
   f.kitDot = { name: "poison", dmg: 9999, turns: 2 }; f.hp = 50; K.turn(f, () => "x"); ok(f.hp >= 1, "poison never finishes you by itself");
 }

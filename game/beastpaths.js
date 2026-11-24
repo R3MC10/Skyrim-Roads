@@ -4,8 +4,9 @@
    - Catching it: a werewolf's bite in a fight can pass on Moonblood (3 in-game days, then you change for the first
      time; a Cure Disease potion or a shrine stops it, like Sanguinare). A night road encounter with a wild werewolf,
      and the Ashen Court, a vampire noble's carriage that offers you the gift outright.
-   - Real forms in turn-by-turn fights: in Beast Form your weapon hand is a claw. Claws (2 AP), Maul (4 AP, stamina),
-     Pounce (3 AP, staggers, every 3 rounds), Howl (once per change), Feast (once, on a beaten person), Change back.
+   - Real forms in turn-by-turn fights: in Beast Form your weapon hand is a claw. Claws and Maul (stamina),
+     Pounce (stamina, staggers, every 3 rounds), Howl (once per change), Feast (once, on a beaten person), Change back.
+     A Vampire Lord's dark moves and a vampire's powers cost health instead (build 145: no more action points).
      A Vampire Lord has Claws, Drain Life, Vampiric Grip, Raise Dead and Change back. No spells, scrolls, shouts or
      potions while changed. Drawbacks: silver weapons (Silver Hand, Vigilants, Dawnguard) bite harder, and Beast Form
      leaves you spent for a couple of rounds after you change back.
@@ -39,38 +40,45 @@ const BEASTPATH = (() => {
   const immune = (s) => typeof PRIESTS !== "undefined" && PRIESTS.immune && PRIESTS.immune(s);
 
   // ---------------------------------------------------------------- the moves
-  /* ap: action points · sp: stamina · cd: rounds between uses · once: once per change (forms) or per fight (vampire)
+  /* w: how heavy the move is (sets its stamina or health price, see cost below) · sp: stamina the engine takes ·
+     cd: rounds between uses · once: once per change (forms) or per fight (vampire)
      zone: where the move is dragged (tbui.js) */
   const MOVES = {
-    "beast:claw": { ap: 2, name: "Claws", icon: "", zone: "foe", desc: "Rake the foe with your claws." },
-    "beast:maul": { ap: 4, sp: 25, name: "Maul", icon: "", zone: "foe", desc: "A savage double swipe. Costs stamina; can knock the foe off balance." },
-    "beast:pounce": { ap: 3, cd: 3, name: "Pounce", icon: "", zone: "foe", desc: "Leap on the foe: a hard blow that can stagger it (half the time; bosses less). Every 3 rounds." },
-    "beast:howl": { ap: 3, once: true, name: "Howl", icon: "", zone: "foe", desc: "Ordinary foes cower for 2 turns; tough ones are shaken and hit 20% softer for 3 turns. Once per change." },
-    "beast:feast": { ap: 4, once: true, name: "Feast", icon: "", zone: "foe", desc: "Tear into a beaten person (below 35% health) and heal from it. Once per change." },
-    "beast:revert": { ap: 1, name: "Change back", icon: "", zone: "self", desc: "Force the wolf back down. You're spent for a couple of rounds." },
-    "lord:claw": { ap: 3, name: "Claws", icon: "", zone: "foe", desc: "Slash with a Vampire Lord's long claws." },
-    "lord:drain": { ap: 3, name: "Drain Life", icon: "", zone: "foe", desc: "Pull the life out of the foe and into you." },
-    "lord:grip": { ap: 4, cd: 3, name: "Vampiric Grip", icon: "", zone: "foe", desc: "Lift the foe by the throat: some damage and it's staggered. Every 3 rounds." },
-    "lord:raise": { ap: 4, once: true, name: "Raise Dead", icon: "", zone: "self", desc: "A corpse claws its way up to fight for you for 6 turns. Once per change." },
-    "lord:revert": { ap: 1, name: "Change back", icon: "", zone: "self", desc: "Fold your wings and change back." },
-    "vamp:seduce": { ap: 2, once: true, name: "Seduction", icon: "", zone: "foe", desc: "An ordinary person or beast lowers its guard and stops fighting for 3 turns. Once a fight." },
-    "vamp:shadows": { ap: 3, once: true, minStage: 3, name: "Embrace of Shadows", icon: "", zone: "self", desc: "Hunger stage 3+: melt into the dark. Nothing touches you for 2 turns and your next blow is a sneak attack. Once a fight." },
-    "vamp:bite": { ap: 3, once: true, name: "Bite", icon: "", zone: "foe", desc: "Sink your teeth into a beaten person (below 30% health): you feed, heal and your hunger resets. Once a fight." },
+    "beast:claw": { w: 2, name: "Claws", icon: "", zone: "foe", desc: "Rake the foe with your claws." },
+    "beast:maul": { w: 4, sp: 25, name: "Maul", icon: "", zone: "foe", desc: "A savage double swipe. Costs stamina; can knock the foe off balance." },
+    "beast:pounce": { w: 3, cd: 3, name: "Pounce", icon: "", zone: "foe", desc: "Leap on the foe: a hard blow that can stagger it (half the time; bosses less). Every 3 rounds." },
+    "beast:howl": { w: 3, once: true, name: "Howl", icon: "", zone: "foe", desc: "Ordinary foes cower for 2 turns; tough ones are shaken and hit 20% softer for 3 turns. Once per change." },
+    "beast:feast": { w: 4, once: true, name: "Feast", icon: "", zone: "foe", desc: "Tear into a beaten person (below 35% health) and heal from it. Once per change." },
+    "beast:revert": { w: 1, name: "Change back", icon: "", zone: "self", desc: "Force the wolf back down. You're spent for a couple of rounds." },
+    "lord:claw": { w: 3, name: "Claws", icon: "", zone: "foe", desc: "Slash with a Vampire Lord's long claws." },
+    "lord:drain": { w: 3, name: "Drain Life", icon: "", zone: "foe", desc: "Pull the life out of the foe and into you." },
+    "lord:grip": { w: 4, cd: 3, name: "Vampiric Grip", icon: "", zone: "foe", desc: "Lift the foe by the throat: some damage and it's staggered. Every 3 rounds." },
+    "lord:raise": { w: 4, once: true, name: "Raise Dead", icon: "", zone: "self", desc: "A corpse claws its way up to fight for you for 6 turns. Once per change." },
+    "lord:revert": { w: 1, name: "Change back", icon: "", zone: "self", desc: "Fold your wings and change back." },
+    "vamp:seduce": { w: 2, once: true, name: "Seduction", icon: "", zone: "foe", desc: "An ordinary person or beast lowers its guard and stops fighting for 3 turns. Once a fight." },
+    "vamp:shadows": { w: 3, once: true, minStage: 3, name: "Embrace of Shadows", icon: "", zone: "self", desc: "Hunger stage 3+: melt into the dark. Nothing touches you for 2 turns and your next blow is a sneak attack. Once a fight." },
+    "vamp:bite": { w: 3, once: true, name: "Bite", icon: "", zone: "foe", desc: "Sink your teeth into a beaten person (below 30% health): you feed, heal and your hunger resets. Once a fight." },
   };
   const isMove = (a) => !!MOVES[a];
-  function apOf(f, a) {
+  /* what a move costs: the wolf pays in stamina, the Vampire Lord's dark moves and a vampire's powers in health
+     ({ sp, hp, eng }: eng is the stamina the engine itself takes for Maul) */
+  function priceOf(f, a) {
     const m = MOVES[a]; if (!m) return null;
-    let c = m.ap;
-    if (a === "beast:howl" && R(f.s, "wolf", "blood_howl")) c -= 1;
-    if (a === "lord:drain" && R(f.s, "lord", "blood_magic")) c -= 1;
-    return c;
+    if (/revert$/.test(a)) return { sp: 0, hp: 0 };
+    let w = m.w;
+    if (a === "beast:howl" && R(f.s, "wolf", "blood_howl")) w *= 0.5;   // Howl of the Pack
+    if (a === "lord:drain" && R(f.s, "lord", "blood_magic")) w *= 0.5;   // Blood Magic
+    if (a === "beast:maul") return { sp: m.sp, eng: { sp: m.sp } };
+    if (a.startsWith("beast:") || a === "lord:claw") return { sp: 8 * w };   // in line with a weapon blow (tbfight ATK_SP)
+    const mh = typeof G !== "undefined" && G.maxHealth ? G.maxHealth(f.s) : 100;
+    return { hp: mh * (a.startsWith("lord:") ? 0.015 : 0.01) * w };
   }
-  /* AP cost for tbfight.js: our moves, and Attack / Power attack turned into claws while you're changed */
+  /* cost for tbfight.js: our moves, and Attack / Power attack turned into claws while you're changed */
   function cost(f, a) {
-    if (isMove(a)) return apOf(f, a);
-    if (inBeast(f) && a === "attack") return apOf(f, "beast:claw");
-    if (inBeast(f) && a === "power_attack") return apOf(f, "beast:maul");
-    if (inLord(f) && a === "attack") return apOf(f, "lord:claw");
+    if (isMove(a)) return priceOf(f, a);
+    if (inBeast(f) && a === "attack") return priceOf(f, "beast:claw");
+    if (inBeast(f) && a === "power_attack") return priceOf(f, "beast:maul");
+    if (inLord(f) && a === "attack") return priceOf(f, "lord:claw");
     return null;
   }
   function canMove(f, a) {
@@ -326,8 +334,9 @@ const BEASTPATH = (() => {
   const zone = (a) => (MOVES[a] ? MOVES[a].zone : null);
   function tip(f, a, c) {
     const m = MOVES[a]; if (!m) return null;
-    const ap = c >= 99 ? "" : ` ${c} AP${m.sp ? ` + ${m.sp} stamina` : ""}.`;
-    return `${m.name}: ${m.desc}${ap}`;
+    const pr = c && typeof c === "object" ? c : priceOf(f, a);
+    const t = typeof TB !== "undefined" && TB.costTxt ? TB.costTxt({ sp: Math.round(pr?.sp || 0), mp: 0, hp: Math.round(pr?.hp || 0) }) : "";
+    return `${m.name}: ${m.desc}${t ? ` Costs ${t}.` : ""}`;
   }
   /* Smart AI while changed: feast when it can, open with a howl, pounce on cooldown, maul with stamina, claws otherwise */
   function aiMove(f) {
@@ -392,7 +401,7 @@ const BEASTPATH = (() => {
     }
     if (typeof TBTIPS !== "undefined" && TBTIPS.action) {
       const t0 = TBTIPS.action;
-      TBTIPS.action = (f, a, ap) => tip(f, a, ap) || (inForm(f) && (a === "attack" || a === "power_attack") ? tip(f, inBeast(f) ? (a === "attack" ? "beast:claw" : "beast:maul") : "lord:claw", ap) : null) || t0(f, a, ap);
+      TBTIPS.action = (f, a, c) => tip(f, a, c) || (inForm(f) && (a === "attack" || a === "power_attack") ? tip(f, inBeast(f) ? (a === "attack" ? "beast:claw" : "beast:maul") : "lord:claw", c) : null) || t0(f, a, c);
     }
   }
 
@@ -448,12 +457,12 @@ const BEASTPATH = (() => {
   const STARS = {
     wolf: [
       ["rending_claws", "Rending Claws", 1, ["bestial_strength"], 50, 64, "Your claws, mauls and pounces leave wounds that bleed for 3 turns."],
-      ["blood_howl", "Howl of the Pack", 1, ["totem_terror"], 38, 42, "Howl costs 1 AP less, and even tough foes cower for a turn."],
+      ["blood_howl", "Howl of the Pack", 1, ["totem_terror"], 38, 42, "Howl costs half the stamina, and even tough foes cower for a turn."],
       ["silver_hide", "Silver Hide", 1, ["animal_vigor"], 62, 46, "Silver weapons no longer hurt you more in Beast Form."],
       ["endless_hunt", "Endless Hunt", 1, ["savage_feeding"], 62, 10, "Beast Form lasts 3 rounds longer, and changing back no longer leaves you spent."],
     ],
     lord: [
-      ["blood_magic", "Blood Magic", 1, ["detect_all"], 56, 60, "Drain Life costs 1 AP less and drains 20% more."],
+      ["blood_magic", "Blood Magic", 1, ["detect_all"], 56, 60, "Drain Life costs half the health and drains 20% more."],
       ["grave_servants", "Grave Servants", 1, ["vampiric_grip"], 92, 72, "Raise Dead brings up two thralls instead of one."],
       ["sun_ward", "Sun Ward", 1, ["unearthly_will"], 28, 10, "The sun no longer burns you in fights, and slows your healing only half as much."],
     ],
@@ -502,7 +511,7 @@ const BEASTPATH = (() => {
 
   // ---------------------------------------------------------------- the Character tab (ui.js bloodPanel)
   const esc = (t) => String(t ?? "").replace(/[<>&"]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" })[c]);
-  const row = (a, extra = "") => { const m = MOVES[a]; return `<div class="item bpmove"><div class="t">${m.icon} ${esc(m.name)}<span>${esc(m.desc)}${extra}</span></div><span class="num sub">${m.ap} AP</span></div>`; };
+  const row = (a, extra = "") => { const m = MOVES[a]; return `<div class="item bpmove"><div class="t">${m.icon} ${esc(m.name)}<span>${esc(m.desc)}${extra}</span></div><span class="num sub">${/revert$/.test(a) ? "free" : a.startsWith("beast:") || a === "lord:claw" ? "stamina" : "health"}</span></div>`; };
   function panelExtra(s, kind) {
     if (kind === "wolf") {
       const seen = s.bpSeen ? Object.entries(s.bpSeen).filter(([, x]) => nowS() - x.t < CURSE.DAY).map(([h]) => h) : [];

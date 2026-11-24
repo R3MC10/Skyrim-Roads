@@ -22,17 +22,17 @@ const s = c.make("mage", 20); s.health = G.maxHealth(s); s.healthTs = G.now();
 for (const id of ["flames", "healing", "greater_ward", "fear"]) if (D.SPELLS[id] && !s.spells.includes(id)) s.spells.push(id);
 const e = G.scaleEnemy({ name: "Bandit", health: 260, damage: 14, tags: ["humanoid"], level: 20, danger: "medium", gold: [0, 0], text: "" }, 20);
 const f = new G.Fight(s, e); f.allies = [];
-const sess = { f, ap: 6, spAp: 2, st: { ap: 6, spellAp: 2, init: 12 }, ehpMax: Math.round(f.ehp), canAfford: (a) => { const cc = TB.cost(f, a), pool = sess.ap + (/^(spell|dual|scroll):/.test(a) ? sess.spAp : 0); return cc <= pool && (a === "flee" || a === "attack" || f.affordable(a)); } };
+const sess = Object.assign(Object.create(TB.Session.prototype), { f, myActs: 0, pots: 0, used: {}, st: { acts: 4, pots: 2, spCut: 0, mpCut: 0, init: 12 }, ehpMax: Math.round(f.ehp) });   // build 146: no AP, moves cost stamina / magicka
 
-// spells: what it does, numbers with perks, single and dual, magicka, AP, how long
+// spells: what it does, numbers with perks, single and dual, magicka, cost, how long
 { const h = FT.html(sess, "spell:flames"); ok(clean(h), "Flames tooltip " + text(h));
-  ok(/Flames/.test(h) && /Destruction/.test(h) && /magicka/i.test(h) && /AP/.test(h), "names, school, magicka and AP");
+  ok(/Flames/.test(h) && /Destruction/.test(h) && /magicka/i.test(h) && /Costs <b>\d+ magicka/.test(h), "names, school, magicka and the cost");
   ok(h.includes(String(Math.round(G.spellDamage(s, D.SPELLS.flames)))), "the damage with your perks " + Math.round(G.spellDamage(s, D.SPELLS.flames)));
   ok(/Dual cast/.test(h), "the dual cast row");
   ok(/turns?/.test(text(h)), "how long the burn lasts");
   ok(/drag it onto the foe/.test(h), "how to use it");
   const d = FT.html(sess, "dual:flames"); ok(clean(d) && /dual cast/.test(d) && /Both hands/.test(d), "Dual button " + text(d));
-  ok(/AP <b>/.test(d) && d.includes(String(TB.cost(f, "dual:flames"))), "dual AP cost");
+  ok(/Costs <b>/.test(d) && d.includes(String(TB.cost(f, "dual:flames", sess).mp)), "dual magicka cost");
   const heal = Object.keys(D.SPELLS).find((k) => D.SPELLS[k].kind === "heal" && s.spells.includes(k));
   if (heal) ok(/onto yourself or a teammate/.test(FT.html(sess, "spell:" + heal)), "a heal goes on yourself or a teammate");
   const ward = s.spells.find((k) => D.SPELLS[k]?.kind === "ward");
@@ -42,9 +42,11 @@ const sess = { f, ap: 6, spAp: 2, st: { ap: 6, spellAp: 2, init: 12 }, ehpMax: M
 { f.mp = 10; const sp = D.SPELLS.flames, need = Math.ceil(G.spellCost(s, sp));
   if (need > 10) { const h = FT.html(sess, "spell:flames"); ok(/tt-dn/.test(h) && new RegExp(`Need ${need - 10} more magicka: you have 10, it needs ${need}`).test(h), "not enough magicka: " + text(h)); }
   f.mp = G.maxMagicka(s);
-  const ap0 = sess.ap, sp0 = sess.spAp; sess.ap = 0; sess.spAp = 0;
-  const a = FT.html(sess, "attack"); ok(/Need \d+ more AP: you have 0 left, it costs \d+/.test(a), "no AP: " + text(a));
-  sess.ap = ap0; sess.spAp = sp0;
+  sess.myActs = 4;
+  const a = FT.html(sess, "attack"); ok(/tt-dn/.test(a) && /4 moves a turn/.test(a), "out of moves: " + text(a));
+  sess.myActs = 1; f.sp = 0;
+  const a2 = FT.html(sess, "attack"); ok(/Need \d+ more stamina: you have 0, it needs \d+/.test(a2), "out of stamina: " + text(a2));
+  sess.myActs = 0; f.sp = G.maxStamina(s);
   f.sp = 0; const p = FT.html(sess, "power_attack"); ok(/tt-dn/.test(p) && /stamina/.test(p), "power attack without stamina: " + text(p)); f.sp = G.maxStamina(s);
   ok(!/tt-dn/.test(FT.html(sess, "attack")), "an attack you can afford isn't flagged");
 }
@@ -52,7 +54,7 @@ const sess = { f, ap: 6, spAp: 2, st: { ap: 6, spellAp: 2, init: 12 }, ehpMax: M
 { for (const a of ["attack", "power_attack", "block", "flee", "end"]) ok(clean(FT.html(sess, a)), "move " + a + ": " + text(FT.html(sess, a)).slice(0, 80));
   ok(/damage/.test(FT.html(sess, "attack")), "attack gives damage");
   ok(/Stamina/.test(FT.html(sess, "power_attack")), "power attack gives its stamina cost");
-  ok(/Guard/.test(FT.html(sess, "end")), "end turn says what leftover AP gives");
+  ok(/Guard/.test(FT.html(sess, "end")), "end turn says what the moves you don't make give");
   G.give(s, "potion_health");
   const cnt = s.inv.filter((r) => D.ITEMS[r.item]?.slot === "potion" && D.ITEMS[r.item].restore?.[0] === "health").reduce((t, r) => t + r.qty, 0);
   const h = FT.html(sess, "potion:health"); ok(clean(h) && /Restores/.test(h) && new RegExp(`Left <b>${cnt}<`).test(h), "a health potion: what it restores and how many " + text(h));
@@ -60,7 +62,7 @@ const sess = { f, ap: 6, spAp: 2, st: { ap: 6, spellAp: 2, init: 12 }, ehpMax: M
   if (sc) { G.give(s, sc); ok(clean(FT.html(sess, "scroll:" + sc)) && /uses the scroll up/.test(FT.html(sess, "scroll:" + sc)), "a scroll"); }
 }
 // the AP row, bars, you, the foe, menus, filters
-{ ok(/Action points/.test(FT.html(sess, "ap")) && /6\/6/.test(FT.html(sess, "ap")) && /spell AP/i.test(FT.html(sess, "ap")), "AP row " + text(FT.html(sess, "ap")));
+{ ok(/Moves/.test(FT.html(sess, "ap")) && /0\/4/.test(FT.html(sess, "ap")) && /stamina/i.test(FT.html(sess, "ap")), "moves row " + text(FT.html(sess, "ap")));
   for (const k of ["hp", "mp", "sp"]) ok(clean(FT.html(sess, k)) && /Now/.test(FT.html(sess, k)), "bar " + k);
   ok(/Cheapest spell/.test(FT.html(sess, "mp")), "magicka bar names the cheapest spell " + text(FT.html(sess, "mp")));
   ok(/Armour/.test(FT.html(sess, "me")) && /Initiative/.test(FT.html(sess, "me")), "you: armour and initiative");
@@ -75,7 +77,7 @@ const sess = { f, ap: 6, spAp: 2, st: { ap: 6, spellAp: 2, init: 12 }, ehpMax: M
 }
 // the Polish file has every new fixed line
 { const pl = fs.readFileSync(W + "i18n_fighttips.js", "utf8");
-  for (const t of ["Action points", "Every move costs AP: the gold pips on its button.", "Drag attacks and spells here.", "Tooltips in fights"]) ok(pl.includes(JSON.stringify(t)), "Polish for " + t);
+  for (const t of ["Moves made", "Make up to 4 moves a turn. Blows and guards cost stamina, spells magicka: the coloured numbers on each button.", "Drag attacks and spells here.", "Tooltips in fights"]) ok(pl.includes(JSON.stringify(t)), "Polish for " + t);
 }
 console.log(fails ? `${fails}/${n} FAILED` : `fighttips ok (${n} checks)`);
 process.exit(fails ? 1 : 0);

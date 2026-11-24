@@ -77,9 +77,9 @@ const CHARGEN = (() => {
     const vals = list.map((x, i) => (Array.isArray(x) ? x : [i, x])), cur = vals.findIndex(([v]) => v === st.app[k]), i = cur < 0 ? 0 : cur;
     return `<div class="cgrow"><span class="cglab" id="cgl-${k}">${esc(L(label))}</span>
       <div class="cgstep" role="group" aria-labelledby="cgl-${k}">
-        <button class="cgarr" data-cg="dec" data-k="${k}" aria-label="${esc(L("Previous"))}: ${esc(L(label))}">◀</button>
+        <button class="cgarr" data-cg="dec" data-k="${k}" aria-label="${esc(L("Previous"))}: ${esc(L(label))}">‹</button>
         <span class="cgval" aria-live="polite">${esc(L(vals[i][1], null, k))}</span><span class="cgn">${i + 1}/${vals.length}</span>
-        <button class="cgarr" data-cg="inc" data-k="${k}" aria-label="${esc(L("Next"))}: ${esc(L(label))}">▶</button>
+        <button class="cgarr" data-cg="inc" data-k="${k}" aria-label="${esc(L("Next"))}: ${esc(L(label))}">›</button>
       </div>${note ? `<span class="cgnote sub">${esc(L(note))}</span>` : ""}</div>`;
   }
   function swatches(k, label, cols) {
@@ -164,7 +164,7 @@ const CHARGEN = (() => {
         <div class="cgfoot">
           ${create ? `<div class="cgnm"><label class="sub" for="nm">Your name</label><input id="nm" maxlength="24" autocomplete="off" placeholder="e.g. Remigiusz" value="${esc(st.name || "")}"></div>` : ""}
           <div class="cgbar">
-            <button class="btn" data-cg="rand" title="${esc(L("Randomise"))}"><span aria-hidden="true">🎲</span> <span>${esc(L("Randomise"))}</span></button>
+            <button class="btn" data-cg="rand" title="${esc(L("Randomise"))}"><span aria-hidden="true"></span> <span>${esc(L("Randomise"))}</span></button>
             <button class="btn" data-cg="undo" title="${esc(L("Undo"))}"><span aria-hidden="true">↶</span> <span>${esc(L("Undo"))}</span></button>
             <button class="btn" data-cg="back">‹ ${esc(L("Back"))}</button>
             <button class="btn" data-cg="next">${esc(L("Next"))} ›</button>
@@ -368,8 +368,8 @@ const CHARGEN = (() => {
     s.gold -= cost; APPEAR.apply(s, app);
     return { text: L("The barber trims, braids and paints. You look like a new person ({g} gold).", { g: cost }) };
   }
-  const barberRow = (s) => `<div class="item"><div class="t">💈 ${esc(L("Barber and face-painter"))}<span>${esc(L("Change your hair, beard, face and warpaint. Your race and name stay."))}</span></div><span class="num gold">${BARBER_COST}</span><button class="btn sm" data-act="barber" ${(s.gold || 0) >= BARBER_COST ? "" : "disabled"}>${esc(L("Sit down"))}</button></div>`;
-  const mirrorRow = () => `<div class="item"><div class="t">🪞 ${esc(L("Your mirror"))}<span>${esc(L("Change your look for free."))}</span></div><button class="btn sm" data-act="mirror">${esc(L("Look"))}</button></div>`;
+  const barberRow = (s) => `<div class="item"><div class="t">${esc(L("Barber and face-painter"))}<span>${esc(L("Change your hair, beard, face and warpaint. Your race and name stay."))}</span></div><span class="num gold">${BARBER_COST}</span><button class="btn sm" data-act="barber" ${(s.gold || 0) >= BARBER_COST ? "" : "disabled"}>${esc(L("Sit down"))}</button></div>`;
+  const mirrorRow = () => `<div class="item"><div class="t">${esc(L("Your mirror"))}<span>${esc(L("Change your look for free."))}</span></div><button class="btn sm" data-act="mirror">${esc(L("Look"))}</button></div>`;
 
   return { create, open, close, pay, barberRow, mirrorRow, BARBER_COST, TABS, get state() { return st; } };
 })();
