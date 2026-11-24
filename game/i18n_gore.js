@@ -20,7 +20,7 @@ Object.assign(I18N_EXTRA.words, {
     "Ustawienia → Walki → Krew i flaki: Wył., Niskie albo Pełne. We wspólnej walce wszyscy widzą te same bryzgi.",
 });
 
-/* gorefx2.js: realistic splatter patch note (b172-gorefx) */
+/* gorefx2.js: realistic splatter patch note (b173-gorefx) */
 Object.assign(I18N_EXTRA.words, {
   "Realistic blood and splatter":
     "Realistyczna krew i rozbryzgi",
