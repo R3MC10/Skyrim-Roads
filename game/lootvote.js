@@ -56,11 +56,25 @@ const LOOTVOTE = (() => {
   const rollBonus = (s) => (typeof PFX !== "undefined" && s ? Math.max(0, Math.min(MAX_BONUS, Math.round(PFX.num(s, "lootroll")))) : 0);
   /* inside Store.change: a member's wants (indices of items), and their roll bonus */
   function castVote(vote, uid, wants, t = now(), bonus = 0) {
-    if (!vote || !vote.members.includes(uid) || closed(vote, t)) return vote;
+    if (!vote || !vote.members.includes(uid) || vote.sealed || closed(vote, t)) return vote;
     const b = Math.max(0, Math.min(MAX_BONUS, Math.round(+bonus || 0)));
     return { ...vote, votes: { ...vote.votes, [uid]: [...new Set((wants || []).filter((i) => Number.isInteger(i) && i >= 0 && i < vote.items.length))] }, bonus: { ...(vote.bonus || {}), [uid]: b } };
   }
-  const closed = (vote, t = now()) => !!vote && (t >= vote.ends || vote.members.every((m) => vote.votes[m]));
+  const closed = (vote, t = now()) => !!vote && (!!vote.sealed || t >= vote.ends || vote.members.every((m) => vote.votes[m]));
+  /* [netsync] the leader seals the vote when it's over on their phone: the votes at that moment are what every phone
+     shares out, so a vote landing late, or a phone whose clock runs fast, can't give someone a different result */
+  const SEAL_GRACE = 45;
+  function seal(vote, uid, t = now()) {
+    if (!vote || vote.sealed || uid !== vote.leader || !closed(vote, t)) return vote;
+    return { ...vote, sealed: { votes: { ...(vote.votes || {}) }, bonus: { ...(vote.bonus || {}) }, t } };
+  }
+  /* the vote to share out, or null while it's still open (or waiting for the leader's seal) */
+  function final(vote, t = now()) {
+    if (!vote) return null;
+    if (vote.sealed) return { ...vote, votes: vote.sealed.votes || {}, bonus: vote.sealed.bonus || {} };
+    if (vote.members.every((m) => vote.votes?.[m])) return vote;   // everyone voted: the same on every phone
+    return t >= vote.ends + SEAL_GRACE ? vote : null;              // the leader never sealed it (gone): the clock decides
+  }
   /* who gets what: the same answer on every phone */
   function resolve(vote, seed) {
     const out = { items: {}, rolls: [], gold: {} };
@@ -227,10 +241,16 @@ const LOOTVOTE = (() => {
     async function showVote(v, key, runId, voteId) {
       const s = S();
       if (!v.members.includes(s.id)) return;
+      if (closed(v) && !v.sealed && v.leader === s.id) {   // the leader seals it for everyone
+        const sc = runId ? await Store.change("runs", runId, (x) => (x.vote ? { ...x, vote: seal(x.vote, s.id) } : x)) : await Store.change("lvotes", voteId, (x) => seal(x, s.id));
+        const sv = runId ? sc?.after?.vote : sc?.after;
+        if (sv?.sealed) v = sv;
+      }
       if (closed(v)) {
-        if (v.done?.[s.id] || (s.lootTaken || {})[key] || resultShown[key]) return;
+        const fv = final(v);
+        if (!fv || v.done?.[s.id] || (s.lootTaken || {})[key] || resultShown[key]) return;
         resultShown[key] = true;
-        const res = resolve(v, key.replace(/^(run|lv):/, ""));
+        const res = resolve(fv, key.replace(/^(run|lv):/, ""));
         const ch = runId ? await Store.change("runs", runId, (x) => (x.vote ? { ...x, vote: markDone(x.vote, s.id) } : x))
           : await Store.change("lvotes", voteId, (x) => markDone(x, s.id));
         const after = runId ? ch?.after?.vote : ch?.after, before = runId ? ch?.before?.vote : ch?.before;
@@ -276,5 +296,5 @@ const LOOTVOTE = (() => {
     return { memberLocked, lockedHTML, aroundAct, follow, onRuns, leaderLeaving, onVotes, act, tick, snap: () => snap(S()) };
   }
 
-  return { VOTE_SECONDS, MAX_HEROES, partyRun, rollBonus, roadVote, snap, strip, addTo, pileSize, openVote, castVote, closed, resolve, markDone, deliver, poolAdd, recordAct, startRunVote, chestToPool, d100, ui };
+  return { VOTE_SECONDS, MAX_HEROES, partyRun, rollBonus, roadVote, snap, strip, addTo, pileSize, openVote, castVote, closed, seal, final, resolve, markDone, deliver, poolAdd, recordAct, startRunVote, chestToPool, d100, ui };
 })();

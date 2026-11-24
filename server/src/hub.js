@@ -4,6 +4,7 @@
 // always online and never forgets.
 //   client → hub   {k:"auth", token, uid}                 first message: your session and the character you play
 //                  {k:"m", data, to?}                      a message for one player (to = their peer id) or for everyone
+//                                                          data.t: "put" (one record), "hello" (several), "sum" (fingerprints)
 //   hub → client   {k:"ready", peer}  {k:"world", world}  {k:"peers", list:[{peer, uid}]}
 //                  {k:"join", peer, uid}  {k:"leave", peer}  {k:"m", from, data}
 // Records merge like on the phones: the newer _v wins (ties by _by). A player can only write their own public card and
@@ -11,6 +12,7 @@
 // in on another device closes the old one (code 4001) at once.
 "use strict";
 const { WebSocketServer } = require("ws");
+const NETSYNC = require("./netsync.js");   // party records merge field by field, by the same rules as the phones (a copy of game/netsync.js)
 
 const COLS = ["players", "bags", "attacks", "parties", "chests", "news", "raids", "trades", "ladder", "chat", "hall", "hallchest", "bounty", "homes", "gifts", "duels", "clans", "clanmem", "war", "stalls", "friends", "dms", "guards", "verses", "verselikes", "runs", "econ", "halls", "pshare", "lvotes", "tbf", "wevents", "dgame"];   // = store.js COLS (test_hub.js checks they match)
 const KEEP = { chat: 864e5, attacks: 36e5, dgame: 36e5, raids: 864e5, duels: 864e5, tbf: 36e5, runs: 6 * 36e5, pshare: 864e5, lvotes: 864e5, guards: 2 * 864e5, econ: 3 * 864e5,
@@ -27,6 +29,14 @@ function createHub({ store, now = () => Date.now(), authToken, events, log = () 
   function merge(col, id, doc) {
     if (!okCol(col) || typeof id !== "string" || id.length > 120 || !doc || typeof doc !== "object" || typeof doc._v !== "number") return false;
     const cur = (world[col] = world[col] || {})[id];
+    const m = cur ? NETSYNC.mergeDoc(col, cur, doc) : null;
+    if (m) {
+      if (NETSYNC.same(m, cur)) return false;
+      world[col][id] = m;
+      dirty.set(col + "\u0000" + id, [col, id]);
+      if (!flushT) flushT = setTimeout(flush, 1500);
+      return true;
+    }
     if (cur && (cur._v > doc._v || (cur._v === doc._v && String(cur._by) >= String(doc._by)))) return false;
     world[col][id] = doc;
     dirty.set(col + "\u0000" + id, [col, id]);
@@ -90,6 +100,8 @@ function createHub({ store, now = () => Date.now(), authToken, events, log = () 
         if (!okCol(col) || !recs || typeof recs !== "object") continue;
         for (const [id, d] of Object.entries(recs)) if (col !== "players" || id === c.uid || (world.players?.[id])) merge(col, id, d);   // others' cards only update cards the hub already knows
       }
+    } else if (data.t === "sum") {
+      if (data.uid !== c.uid) return;   // the desync check (netsync.js): fingerprints only, passed on, never kept
     } else return;
     const out = { k: "m", from: c.peer, data };
     if (to != null) { const x = conns.get(+to); if (x) send(x, out); }

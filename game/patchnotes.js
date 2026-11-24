@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b160-netsync", build: 160, date: "24 Nov 2026", title: "Parties stay in step", items: [
+      "In a party everyone now sees the same thing. When two of you tap at the same moment (a vote, Ready, the next room, the boss chest), nobody's tap gets lost any more.",
+      "Every few seconds the phones in a party quietly compare notes. If one missed something (weak signal, screen off, a reconnect), it catches up by itself.",
+      "A dungeon room is the same for the whole party: the same puzzle, the same trap and the same chest lock as the leader's.",
+      "Loot votes: the leader's phone closes the vote for everyone, so a late vote or a phone with a wrong clock can't hand out different loot on different phones.",
+      "Anything you did while your connection dropped is sent as soon as you're back online.",
+    ] },
     { id: "b143-followeranim", build: 143, date: "24 Nov 2026", title: "Followers fight with their whole body", items: [
       "Followers and party members now really fight in the fight picture: they swing their weapon or draw their bow, cast their spells, raise their shield and flinch when they get hit.",
       "A follower who is knocked down drops to the ground and lies there until someone pulls them back up, and then you see them get back on their feet.",
