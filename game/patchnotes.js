@@ -14,6 +14,15 @@ const PATCHNOTES = (() => {
       "Fixed: on phones a lot of newer screens (the house chest, invites, the problem report, the Dwemer puzzles and more) were missing their proper look. They look right again.",
       "Fixed: with blood and gore on, the fight picture could stop drawing. It plays again.",
     ] },
+    { id: "b172-mapvisuals", build: 172, date: "24 Nov 2026", title: "A sharper, prettier world map", items: [
+      "On a PC the map now fills the whole window, even zoomed all the way out. No more small map in the middle with grey clouds and empty dark space around it.",
+      "Places you haven't found yet hide under dark, inked parchment mist instead of grey photo clouds.",
+      "Zoom in close and the blurry painting turns into a crisp hand-inked chart: hills, pines, autumn trees, reeds, rocks and snowy peaks drawn sharp at any zoom, on any screen.",
+      "Roads are thin, slightly wobbly ink lines now, and small paths to farms and landmarks are dotted. The Roads on the map switch in Settings still works.",
+      "Hold names are small, quiet capitals that fade as you zoom in and never cover a town's name.",
+      "Fixed a stray gold line under the world event cards: it was the caravan's progress bar showing through while its card was hidden under the map.",
+      "The compass at the top of the PC map is one centred bar, like in Skyrim.",
+    ] },
     { id: "b173-gorefx", build: 173, date: "25 Nov 2026", title: "Realistic blood and splatter", items: [
       "Blows now throw real-looking blood: a wet burst of drops and fine mist flies away from whoever struck, bigger the harder the hit.",
       "Critical hits and finishing blows add a jet of blood and a wide splash, splatter the ground and smear the foe. The stains slowly fade over the fight.",
