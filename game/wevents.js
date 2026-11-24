@@ -18,9 +18,9 @@ const WEVENTS = (() => {
 
   // ---- weather: changes every 30 real minutes, per hold ([OURS] effects)
   const W = {
-    clear: ["Clear", "☀️", 1, 0, 1], cloudy: ["Overcast", "☁️", 1, 0.03, 1], rain: ["Rain", "🌧", 0.92, 0.08, 1], fog: ["Fog", "🌫", 0.95, 0.15, 1],
-    storm: ["Thunderstorm", "⛈", 0.9, 0.1, 0.8], snow: ["Snow", "🌨", 0.85, 0.05, 1], blizzard: ["Blizzard", "❄️", 0.7, 0.12, 0.7],
-    ashstorm: ["Ash storm", "🌋", 0.65, 0.15, 0.8],   // [Skyrim] Solstheim's ash storms off Red Mountain ([OURS] effects)
+    clear: ["Clear", "", 1, 0, 1], cloudy: ["Overcast", "", 1, 0.03, 1], rain: ["Rain", "", 0.92, 0.08, 1], fog: ["Fog", "", 0.95, 0.15, 1],
+    storm: ["Thunderstorm", "", 0.9, 0.1, 0.8], snow: ["Snow", "", 0.85, 0.05, 1], blizzard: ["Blizzard", "", 0.7, 0.12, 0.7],
+    ashstorm: ["Ash storm", "", 0.65, 0.15, 0.8],   // [Skyrim] Solstheim's ash storms off Red Mountain ([OURS] effects)
   };
   const COLD = ["Winterhold", "The Pale"], WET = ["The Rift", "Hjaalmarch", "Haafingar"];
   function weatherAt(hold, t = now()) {

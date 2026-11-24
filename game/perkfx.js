@@ -184,6 +184,14 @@ const PFX = (() => {
     [ "Acrobatics", "feather_step", "Feather Step", 1, [60], ["sure_footed"], "Carry 25 more. [OURS]", [["carry", 25, {}]]],
     // ---------------------------------------------------------------- Smithing (5 → 11)
     [ "Archery", "hunters_eye", "Hunter's Eye", 2, [20, 50], ["overdraw"], "Hunting: you find game half again as often, every kill gives an extra piece of meat (rank 2), and you hit animals 10%/20% harder. [OURS]", [["huntrate", [0.5, 0.5], {}], ["huntmeat", [0, 1], {}], ["out", [0.1, 0.2], { tag: ["animal"] }]]],
+    // ---------------------------------------------------------------- fishing, hunting and skinning mini-games (fishing.js, huntgame.js)
+    [ "Archery", "clean_kill", "Clean Kill", 2, [25, 50], ["overdraw"], "Hunting game: the heart-and-lungs spot on an animal is 25/50% bigger, and a wounded animal is easier to track down. [OURS]", [["huntvital", [0.25, 0.5], {}], ["hunttrack", [0.15, 0.3], {}]]],
+    [ "Archery", "wind_reader", "Wind Reader", 1, [40], ["clean_kill", "hunters_eye"], "Hunting game: the wind pushes your arrows half as much, and your aim sways 30% less. [OURS]", [["huntwind", 0.5, {}], ["huntsway", 0.3, {}]]],
+    [ "Archery", "skinner", "Skinner", 1, [30], ["hunters_eye", "clean_kill"], "Skinning: one more pelt or hide from every animal you shoot, and trophies (antlers, horns, tusks) turn up twice as often. [OURS]", [["skinyield", 1, {}], ["trophy", 1, {}]]],
+    [ "Sneak", "stalker", "Stalker", 2, [20, 45], ["stealth"], "Hunting game: animals take 25/50% longer to notice you creeping closer. [OURS]", [["huntstalk", [0.25, 0.5], {}]]],
+    [ "Alchemy", "angler", "Angler", 2, [15, 40], ["alchemist"], "Fishing: the safe band on the tension meter is 20/40% wider, and fish tire 15/30% faster. [OURS, gathering]", [["fishband", [0.2, 0.4], {}], ["fishtire", [0.15, 0.3], {}]]],
+    [ "Alchemy", "line_sense", "Line Sense", 1, [30], ["angler"], "Fishing: you feel the bite. You have half again as long to hook it, and a slack line takes longer to lose the fish. [OURS, gathering]", [["fishbite", 0.5, {}], ["fishslack", 0.5, {}]]],
+    [ "Alchemy", "deep_waters", "Deep Waters", 1, [50], ["line_sense", "forager"], "Fishing: rare fish bite twice as often, and cleaning a catch gives roe, pearls and eggs for alchemy more often. [OURS, gathering]", [["fishrare", 1, {}], ["fishgut", 0.5, {}]]],
     [ "Smithing", "prospector", "Prospector", 1, [30], ["steel_smithing"], "Mining: you spot every vein in the rock, gems turn up more often, and you get 2 more swings. [OURS]", [["prospect", 1, {}], ["mineswing", 2, {}], ["gemfind", 0.1, {}]]],
     [ "Smithing", "orcish_smithing", "Orcish Smithing", 1, [50], ["dwarven_smithing"], "Improving weapons and armor adds 1 more. [Skyrim: Orcish gear, improve twice as much]", [["temper", 1, {}]]],
     [ "Smithing", "ebony_smithing", "Ebony Smithing", 1, [80], ["orcish_smithing"], "Improving adds another 1. [Skyrim]", [["temper", 1, {}]]],
@@ -202,6 +210,7 @@ const PFX = (() => {
     [ "Enchanting", "jeweller", "Jeweller", 1, [30], ["enchanter"], "Enchantments you put on rings and amulets are 15% stronger, and foes drop rings and amulets 50% more often. [OURS]", [["ench", 0.15, { kind: "jewel" }], ["jewelfind", 0.5, {}]]],
     [ "Enchanting", "warding_enchanter", "Warding Enchanter", 1, [40], ["insightful_enchanter"], "Resist Magic, Fire, Frost, Shock and Poison enchantments are 25% stronger. [OURS]", [["ench", 0.25, { el: "ward" }]]],
     [ "Enchanting", "hex_enchanter", "Hex Enchanter", 1, [50], ["fire_enchanter"], "Weapon enchantments that aren't fire, frost or shock (absorb, paralyze, fear, calm, bleeding, turn undead) are 25% stronger. [OURS]", [["ench", 0.25, { el: "other" }]]],
+    [ "Enchanting", "thrifty_runes", "Thrifty Runes", 1, [30], ["soul_squeezer"], "Your enchanted weapons and staffs use 20% less charge per hit or cast, and every kill puts 3% back into your enchanted weapon. [OURS]", [["enchcost", 0.2, {}], ["siphon", 0.03, {}]]],
     [ "Enchanting", "rune_smith", "Rune Smith", 1, [80], ["deep_charge"], "Elemental statuses from your enchanted weapons last a turn longer. [OURS]", [["enchstatus", 1, {}]]],
     // the newer enchantments (enchants2.js)
     [ "Enchanting", "runic_enchanter", "Runic Enchanter", 1, [60], ["hex_enchanter"], "Bloodthirst, Thunderclap, Reaping, Sundering, Spellbreaker, Echo Strike, Venom, Dragonbane and Banishing enchantments are 25% stronger. [OURS]", [["ench", 0.25, { el: "rune" }]]],
@@ -266,6 +275,9 @@ const PFX = (() => {
     [ "Sneak", "patient_shadow", "Patient Shadow", 1, [50], ["muffled_movement"], "Sneaking past a foe in a dungeon: you're noticed a third slower, the shadows are wider and you hear it turn sooner. [OURS]", [["dgsneak", 0.3, {}]]],
     [ "Two-Handed", "lid_breaker", "Lid Breaker", 1, [25], ["barbarian"], "Smashing chests open: the bright zone on the swing is a third wider. [OURS]", [["dgsmash", 0.3, {}]]],
     [ "Athletics", "sprinter", "Sprinter", 1, [30], ["long_strider"], "Running from a dungeon fight: a quarter fewer steps to get away. [OURS]", [["dgflee", 0.25, {}]]],
+    // ---------------------------------------------------------------- party traps (partytraps.js)
+    [ "Lockpicking", "trap_tinkerer", "Trap Tinkerer", 1, [40], ["apprentice_locks"], "You know how traps are built: dashing past blades and finding the trigger are both easier, and a trap that catches you never spills your gold or dents your armour. [OURS]", [["dgdash", 0.15, {}], ["dgspot", 0.15, {}], ["trapsting", 1, {}]]],
+    [ "Sneak", "call_the_danger", "Call Out the Danger", 1, [40], ["trap_sense"], "In a party, when you get through a trap cleanly, you shout a warning: everyone the trap still catches takes a quarter less damage and one stack less poison or bleeding. [OURS]", [["ptwarn", 1, {}]]],
     // ---------------------------------------------------------------- werewolves and vampires (beastpaths.js)
     [ "Restoration", "bane_of_night", "Bane of the Night", 1, [35], ["novice_restoration"], "Vampires and werewolves take 20% more from your blows and hit you 10% softer. [OURS]", [["out", 0.2, { tag: ["nightkin"] }], ["in", -0.1, { tag: ["nightkin"] }]]],
     [ "Alchemy", "wolfsbane", "Wolfsbane", 1, [30], ["physician"], "You chew wolfsbane and garlic on the road: half as likely to catch a vampire's or a werewolf's curse. [OURS]", [["curseres", 0.5, {}]]],
@@ -403,7 +415,7 @@ const PFX = (() => {
 
   // ---------------------------------------------------------------- elemental statuses
   const VENOM = /spider|chaurus|spriggan|snake|viper|skeever|hagraven|assassin|poison/i;
-  const ICON = { burn: "🔥", chill: "❄️", shock: "⚡" };
+  const ICON = { burn: "", chill: "", shock: "" };
   const VERB = { burn: "burns", chill: "is chilled", shock: "is jolted" };
   /* which element a foe's blows carry, if any (name based: fire mages, dragons, atronachs, witches...) */
   function foeElement(e) {

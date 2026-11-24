@@ -35,7 +35,7 @@ const GREATEV = (() => {
   const BLOCK = 12 * HOUR, WARN = 45 * MIN;   // two great events a day, each announced 45 minutes ahead
   const KINDS = ["dragon", "rift", "siege", "fair"];
   const LEN = { dragon: 60 * MIN, rift: 90 * MIN, siege: 2 * HOUR, fair: 3 * HOUR };
-  const ICON = { dragon: "🐉", rift: "🌀", siege: "⚔️", fair: "🎪" };
+  const ICON = { dragon: "", rift: "", siege: "", fair: "" };
   const KIND_NAME = { dragon: "Dragon assault", rift: "Daedric rift", siege: "Siege", fair: "Town fair" };
   /* every 4 blocks (2 days) each kind comes once, in one of 8 orders: a fight (dragon or rift) opens each cycle and
      a siege or fair closes it, so the same kind never comes twice in a row */
@@ -287,7 +287,7 @@ const GREATEV = (() => {
     const ti = p.title && addTitle(s, p.title);
     stat(s, "fair");
     const list = [T("{n} gold", { n: gold }), ...(D.ITEMS[p.item] ? [`${D.ITEMS[p.item].name}${p.q > 1 ? ` ×${p.q}` : ""}`] : []), ...(ti ? [T("the title {title}", { title: p.title })] : [])];
-    return { text: "🎪 " + T("Prize: {list}.", { list: list.join(", ") }), got: true };
+    return { text: " " + T("Prize: {list}.", { list: list.join(", ") }), got: true };
   }
 
   // ---------------------------------------------------------------- rewards
@@ -446,7 +446,7 @@ const GREATEV = (() => {
   const fairTent = () => sprite("fairtent", 34, 30, (g) => { g.fillStyle = "#e9dcc0"; g.strokeStyle = "#3b2c1e"; g.lineWidth = 1.2; g.beginPath(); g.moveTo(3, 28); g.lineTo(17, 4); g.lineTo(31, 28); g.closePath(); g.fill(); g.stroke(); g.fillStyle = "#c4572e"; for (const x of [10, 17, 24]) { g.beginPath(); g.moveTo(x - 2, 28); g.lineTo(17, 4); g.lineTo(x + 2, 28); g.fill(); } g.fillStyle = "#d6b25e"; g.beginPath(); g.moveTo(17, 4); g.lineTo(17, 0); g.lineTo(24, 2); g.fill(); });
   const scaffold = () => sprite("scaffold", 30, 24, (g) => { g.strokeStyle = "#8f6a42"; g.lineWidth = 2; for (const x of [5, 15, 25]) { g.beginPath(); g.moveTo(x, 24); g.lineTo(x, 4); g.stroke(); } for (const y of [8, 16]) { g.beginPath(); g.moveTo(3, y); g.lineTo(27, y); g.stroke(); } g.beginPath(); g.moveTo(5, 22); g.lineTo(25, 6); g.stroke(); });
   const dragonSprite = (f) => sprite("gdrg" + f, 40, 40, (g) => { if (typeof RAIDART !== "undefined") RAIDART.drawDragon(g, 40, 40, f); });
-  function label(g, text, x, y, s, col = "#ffe6a0") { g.font = `700 ${Math.round(9 * s)}px sans-serif`; g.textAlign = "center"; g.lineWidth = 3 * s; g.strokeStyle = "rgba(20,14,8,.88)"; g.strokeText(text, x, y); g.fillStyle = col; g.fillText(text, x, y); }
+  function label(g, text, x, y, s, col = "#ffe6a0") { g.font = `700 ${Math.round(9 * s)}px GameIcons, sans-serif`; g.textAlign = "center"; g.lineWidth = 3 * s; g.strokeStyle = "rgba(20,14,8,.88)"; g.strokeText(text, x, y); g.fillStyle = col; g.fillText(text, x, y); }
   let tallyCache = { k: "", v: null };
   function tallyCached(ev, s) { const k = ev.id + ":" + ver + ":" + (s?.gev?.[ev.id]?.p || 0); if (tallyCache.k !== k) tallyCache = { k, v: tally(ev, s) }; return tallyCache.v; }
   function drawMap(g, P, s, t, rm) {
@@ -499,7 +499,7 @@ const GREATEV = (() => {
     if (st === "warn") return `<button class="btn sm" data-gev="open" data-id="${ev.id}">${T("Ready")}</button>`;
     if (ev.kind === "fair") return `<button class="btn sm pri" data-gev="open" data-id="${ev.id}">${T("Play")}</button>`;
     if (tallyCached(ev, S).done) return `<button class="btn sm" data-gev="open" data-id="${ev.id}">${T("Open")}</button>`;
-    return leaderOnly(partyOf(), S) ? `<button class="btn sm" data-gev="open" data-id="${ev.id}">${T("With leader")}</button>` : `<button class="btn sm danger" data-gev="fight">${T("⚔️ Fight")}</button>`;
+    return leaderOnly(partyOf(), S) ? `<button class="btn sm" data-gev="open" data-id="${ev.id}">${T("With leader")}</button>` : `<button class="btn sm danger" data-gev="fight">${T(" Fight")}</button>`;
   }
   function statusLine(ev, S, t) {
     if (ev.kind === "fair") { const m = S.gev?.[ev.id]; return T("Games, prizes, shops 25% off") + (m?.f ? " · " + T("your points {n}", { n: m.f }) : ""); }
@@ -522,7 +522,7 @@ const GREATEV = (() => {
     /* each strip carries a key naming its news, so the × on it (gevstack.js) hides it until the news changes */
     const strips = [];
     for (const e of rc) strips.push({ key: "claim:" + e.id, html: `<div class="gev-strip" data-gev="open" data-id="${e.id}"><span>${e.icon} ${esc(T("{name}: over, your reward is waiting", { name: e.name }))}</span><button class="btn sm pri" data-gev="claim" data-id="${e.id}">${T("Claim")}</button></div>` });
-    for (const a of af) strips.push({ key: "after:" + a.ev.id + ":" + a.out, html: `<div class="gev-strip gev-after"><span>${a.kind === "dragon" ? "🔥" : a.kind === "rift" ? "🌀" : a.out === "won" ? "🛡️" : "💰"} ${esc(aftermathLine(a))}</span></div>` });
+    for (const a of af) strips.push({ key: "after:" + a.ev.id + ":" + a.out, html: `<div class="gev-strip gev-after"><span>${a.kind === "dragon" ? "" : a.kind === "rift" ? "" : a.out === "won" ? "" : ""} ${esc(aftermathLine(a))}</span></div>` });
     if (typeof GEVSTACK !== "undefined") return GEVSTACK.compose({ id: S.id, ev, evKey: ev ? ev.id + ":" + st : "", end: ev ? (st === "warn" ? ev.start : ev.end) : 0, cdTxt: cd ? cd.txt : "", banner: h, strips }, t);
     return `<div class="gev-card">${h}${strips.map((x) => x.html).join("")}</div>`;
   }
@@ -546,7 +546,7 @@ const GREATEV = (() => {
       const myC = credit(ev, S), fair = tl.need / Math.max(1, tl.people);
       body = `${phaseBar(ev, tl)}<p class="sub">${tl.total}/${tl.need} · ${T(tl.people === 1 ? "{n} hero" : "{n} heroes", { n: tl.people || 0 })}${myC ? " · " + T("your share {pct}% of a fair share", { pct: Math.round((myC / fair) * 100) }) : ""}</p>
         ${tl.done ? `<p class="gev-win">${T("Victory! Everyone who fought can claim a share.")}</p>` : st === "warn" ? `<p class="sub">${esc(T("It begins in {time}. Gather at {place}.", { time: cd.txt, place: ev.place }))}</p>` : ""}
-        ${!tl.done && st === "on" && here ? (lead ? `<p class="sub">${T("In a party, your leader starts each charge. Stay close to them and you fight beside them.")}</p>` : `<button class="btn danger wev-wide" data-gev="fight" ${cdn > 0 ? "disabled" : ""}>${cdn > 0 ? T("Catch your breath ({n} s)", { n: Math.ceil(cdn) }) : esc(T("⚔️ Charge: {phase}", { phase: T(PHASES[ev.kind][tl.phase].title).toLowerCase() }))}</button>`) : ""}
+        ${!tl.done && st === "on" && here ? (lead ? `<p class="sub">${T("In a party, your leader starts each charge. Stay close to them and you fight beside them.")}</p>` : `<button class="btn danger wev-wide" data-gev="fight" ${cdn > 0 ? "disabled" : ""}>${cdn > 0 ? T("Catch your breath ({n} s)", { n: Math.ceil(cdn) }) : esc(T(" Charge: {phase}", { phase: T(PHASES[ev.kind][tl.phase].title).toLowerCase() }))}</button>`) : ""}
         ${here ? "" : `<button class="btn wev-wide" data-act="go" data-place="${esc(ev.place)}">${esc(T("Travel to {place}", { place: ev.place }))}</button>`}
         ${tl.names.length ? `<p class="sub">${T("Fighting with you: {names}", { names: tl.names.slice(0, 8).map(esc).join(", ") + (tl.names.length > 8 ? "…" : "") })}</p>` : ""}`;
     }

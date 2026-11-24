@@ -51,7 +51,7 @@ const miner = (skill = 15) => { const s = c.make("warrior", 10); s.location = "D
   ok(sloppy < best && Math.abs(sloppy / quick - 1) < 0.2, "all Good blows give about what a quick dig does"); }
 // mine() takes the dug-out items, and the vein needs a day
 { const s = miner(), before = SMITH.count(s, "ore_iron");
-  const m = SMITH.mine(s, "Dawnstar", G.now(), { ore_iron: 4 }); ok(/⛏/.test(m) && SMITH.count(s, "ore_iron") === before + 4, "mine() gives what you dug: " + m);
+  const m = SMITH.mine(s, "Dawnstar", G.now(), { ore_iron: 4 }); ok(/\uE12A/.test(m) && SMITH.count(s, "ore_iron") === before + 4, "mine() gives what you dug: " + m);
   ok(/bare/.test(SMITH.mineBlock(s, "Dawnstar")) && /bare/.test(SMITH.mine(s, "Dawnstar")), "then the veins are bare for a day");
   const s2 = miner(); ok(/nothing/.test(SMITH.mine(s2, "Dawnstar", G.now(), {})), "digging nothing still uses the veins up"); }
 // stalhrim still needs the Skaal technique (Solstheim wraps mineBlock)

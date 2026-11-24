@@ -75,7 +75,7 @@ const COMBO = (() => {
   }
 
   /* weaknesses and resistances to fire/frost/shock, as chips under the foe's health (from MAGIC.elem) */
-  const EL = [["fire", "🔥"], ["frost", "❄"], ["shock", "⚡"]];
+  const EL = [["fire", ""], ["frost", ""], ["shock", ""]];
   function chips(f) {
     if (typeof MAGIC === "undefined" || !f.e) return [];
     const out = [];

@@ -9,6 +9,7 @@ android/keystore.properties
 
 # screen test screenshots
 tests/tbf/
+tests/gore/
 tests/acct/
 tests/fread/
 tests/bscene/
@@ -51,3 +52,5 @@ tests/out_holds/
 tests/out_evbanner/
 tests/out_gather/
 tests/out_esckey/
+tests/out_chargebar/
+tests/out_partytraps/

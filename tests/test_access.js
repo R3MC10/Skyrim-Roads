@@ -189,7 +189,8 @@ const minGap = (cols, m) => { let w = 1e9; for (let i = 0; i < cols.length; i++)
 {
   const src = fs.readFileSync(W + "cooking.js", "utf8"), ui = fs.readFileSync(W + "ui.js", "utf8"), imm = fs.readFileSync(W + "immerse.js", "utf8");
   ok(/A11Y\.zoneEase\(\)/.test(src) && /rare, zone/.test(src), "fishing zone widens with Easy timing");
-  ok(/5000 \* \(typeof A11Y/.test(ui) && /A11Y\.timingEase\(\) : 1\);   \/\/ rarer fish/.test(ui), "fishing bite lasts longer and the needle slows");
+  const fishSrc = fs.existsSync(W + "fishing.js") ? fs.readFileSync(W + "fishing.js", "utf8") : "";
+  ok(fishSrc ? /\* ease\(\)\.timingEase\(\)/.test(fishSrc) && /\* ease\(\)\.zoneEase\(\)/.test(fishSrc) : /5000 \* \(typeof A11Y/.test(ui) && /A11Y\.timingEase\(\) : 1\);   \/\/ rarer fish/.test(ui), "fishing bite lasts longer and the safe band widens");
   ok(/sweetWidth\(o\.chance, o\.picks, o\.unbreakable\) \* \(typeof A11Y/.test(imm), "lock sweet spot widens");
 }
 // ---- colour is never the only signal: shapes and patterns in the colour-blind CSS
