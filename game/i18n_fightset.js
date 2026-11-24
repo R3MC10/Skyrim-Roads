@@ -26,6 +26,16 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
       "Podpowiedzi w walce mówią teraz, ile ruch kosztuje wytrzymałości albo magii, a nie punktów akcji.",
     "Fixed on phones: a few screens (the house chest, parts of dungeons and fights) were missing some of their styling.":
       "Poprawka na telefonach: kilku ekranom (skrzyni w domu, częściom lochów i walk) brakowało części wyglądu.",
+    // build 178 patch note
+    "A tidier fight screen": "Schludniejszy ekran walki",
+    "On a PC, your follower's name over their head is a small tag again instead of a giant label.":
+      "Na PC imię towarzysza nad głową to znów mała plakietka, a nie wielki napis.",
+    "Snow and rain in fights on a big screen fall as fine flakes and drops, not big squares.":
+      "Śnieg i deszcz w walce na dużym ekranie padają drobnymi płatkami i kroplami, a nie wielkimi kwadratami.",
+    "On phones, holding a move to read what it does shows the tip above the skill bar, so it no longer covers the Moves row.":
+      "Na telefonach przytrzymanie ruchu pokazuje podpowiedź nad paskiem umiejętności, więc nie zasłania już rzędu Ruchy.",
+    "The short fight log in the corner sits on a soft dark strip, so a single line reads clearly instead of looking half faded.":
+      "Krótki dziennik walki w rogu leży na miękkim ciemnym pasku, więc pojedyncza linijka jest czytelna i nie wygląda na wyblakłą.",
     // Coming next
     "Mounted combat: fight from the saddle": "Walka konno: bij się z siodła",
     "Pick a side in the civil war": "Wybierz stronę w wojnie domowej",

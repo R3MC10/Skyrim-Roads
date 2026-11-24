@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b178-fightpolish", build: 178, date: "25 Nov 2026", title: "A tidier fight screen", items: [
+      "On a PC, your follower's name over their head is a small tag again instead of a giant label.",
+      "Snow and rain in fights on a big screen fall as fine flakes and drops, not big squares.",
+      "On phones, holding a move to read what it does shows the tip above the skill bar, so it no longer covers the Moves row.",
+      "The short fight log in the corner sits on a soft dark strip, so a single line reads clearly instead of looking half faded.",
+    ] },
     { id: "b176-deepdelve", build: 176, date: "25 Nov 2026", title: "Deep expeditions and harder dungeons", items: [
       "Deadly dungeons go deeper. When the master falls, stairs lead down to five more levels: entrance guardians, traps and elites, the ancient vault, the cursed sanctuary and the legendary lair.",
       "After each level's big fight you make camp and choose: Extract (climb out with everything), Rest (costs a ration) or Descend. In a party it's a vote, with everyone's face by their pick.",
