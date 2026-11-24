@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b176-leghuntpolish", build: 176, date: "25 Nov 2026", title: "Legendary hunts: painted beasts and fairer fights", items: [
+      "The Jarl's posters, your hunt card and the bestiary now show each legendary beast as a proper painting in a gold frame, in its own colours: the White Ghost is snow white, Grimfang and Ashtusk are black as soot, Bloodmoon has a blood-red tint.",
+      "In the fight the beast is that same painting too, a little bigger than its ordinary kin and in its legendary colours.",
+      "Fixed: winning said \"You defeat the Whitefang the Frost Troll\". Named foes don't get an extra \"the\" any more.",
+      "Fixed: Whitefang (and any legendary troll) healed far more often in a big party, because more players gave it more turns. It now heals at most once every three rounds, so a party of 8 does at least as well as a party of 4.",
+      "Knowing a beast's weakness always helps now: its guard drops so it has less health, and the fight no longer quietly gives it extra health to make up for your bonus damage.",
+    ] },
     { id: "b175-legendhunts", build: 175, date: "25 Nov 2026", title: "Legendary beasts: Jarl contracts and monster hunts", items: [
       "Ten named monsters now roam Skyrim, from the Mudcrab King on the Solitude shore to the White Ghost sabre cat, Whitefang the frost troll near Dawnstar and Bloodmoon, the werewolf of Hircine, in the Falkreath woods. Each one lives in its own hold and wanders between nearby places over time.",
       "Open Legendary hunts in a town to see the Jarl's posters. Take a contract and the map shows a rough area where the beast was last seen, not an exact spot.",

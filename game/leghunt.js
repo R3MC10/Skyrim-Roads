@@ -178,7 +178,7 @@ const LEGHUNT = (() => {
       if (f.e.lhKnown && BY[id].weak === "fire" && f.kit && f.kit.ids) f.kit.ids = f.kit.ids.filter((m) => m !== "regen");   // you came with fire: its wounds stop closing up
       if (sess && sess.ehpMax) {
         const pl = sess.players || 0;
-        let k = (f.e.lhKnown ? 1 : GUARD) * (pl ? (1 + BAL.party * pl) / (1 + 0.45 * pl) : 1);   // its guard is up while you don't know where it's weak; a party hunt grows a little gentler than a dungeon boss
+        let k = (f.e.lhKnown ? KNOWN : GUARD) * (pl ? (1 + BAL.party * pl) / (1 + 0.45 * pl) : 1);   // its guard is up while you don't know where it's weak (and down once you do); a party hunt grows a little gentler than a dungeon boss
         const top = k;
         if (f.e.lhOpen === "prep") { k *= 0.9; b.teleCd = (b.teleCd || 0) + 2; }   // baited and ready: it starts hurt, its big move comes later
         f.ehp = Math.round(f.ehp * k); f.ehp0 = Math.round(f.ehp0 * top); sess.ehpMax = Math.round(sess.ehpMax * top); f.e.tbHp = sess.ehpMax;
@@ -186,8 +186,27 @@ const LEGHUNT = (() => {
       }
       return b;
     };
+    // the fight sizes a foe's health from the damage you'd deal it: leave its weakness and resistance out of that guess,
+    // or a known weakness just buys it more health and the advantage is gone (tbfight.js estimate)
+    if (typeof TB !== "undefined" && TB.Session && !TB.Session.prototype.__lh) {
+      const est0 = TB.Session.prototype.estimate;
+      TB.Session.prototype.estimate = function (f) {
+        if (!f || !f.e || !BY[f.e.legend]) return est0.call(this, f);
+        f.lhEst = 1; try { return est0.call(this, f); } finally { f.lhEst = 0; }
+      };
+      TB.Session.prototype.__lh = true;
+    }
+    // a troll's wounds close up at most once every few rounds: more players means more foe turns, not more healing (foekit.js)
+    if (typeof FOEKIT !== "undefined" && FOEKIT.MOVES && FOEKIT.MOVES.regen && !FOEKIT.MOVES.regen.__lh) {
+      const R = FOEKIT.MOVES.regen, when0 = R.when, run0 = R.run;
+      R.when = (f) => when0(f) && !(f.e && BY[f.e.legend] && (f.turn || 0) - (f.lhRegen ?? -99) < REGEN_EVERY);
+      R.run = function (f, ...a) { if (f.e && BY[f.e.legend]) f.lhRegen = f.turn || 0; return run0.call(this, f, ...a); };
+      R.__lh = true;
+    }
   }
   const GUARD = 1.15;   // how much more health it has while you don't know its weakness
+  const KNOWN = 0.85;   // ...and how much less once you do: you know where to hit, its guard is down
+  const REGEN_EVERY = 3;   // rounds between a legendary troll's regenerations, however many of you there are
   const BAL = { hp: 0.42, dmg: 0.7, party: 0.03 };   // overall toughness (tuned with tests/test_leghunt.js sims)
 
   // ================================================================ weakness and resistance in the fight
@@ -199,7 +218,7 @@ const LEGHUNT = (() => {
     return "blade";
   }
   function mulFor(f, kind) {
-    const c = f && f.e && BY[f.e.legend]; if (!c) return 1;
+    const c = f && f.e && !f.lhEst && BY[f.e.legend]; if (!c) return 1;
     if (kind === c.weak) return f.e.lhKnown ? WEAK_K : WEAK_UNK;
     if (kind === c.resist) return RES_K;
     return 1;
@@ -357,7 +376,7 @@ const LEGHUNT = (() => {
   function foeFor(s, id, open) {
     const c = BY[id], k = known(s, id);
     return { name: c.name, level: c.lvl, danger: "high", tags: [...c.tags, "legend", "elite"], health: Math.round(c.hp * BAL.hp), damage: Math.round(c.dmg * BAL.dmg), gold: [0, 0], text: c.desc,
-      boss: true, qboss: true, legend: id, lhKnown: k.weak ? 1 : 0, lhOpen: open, epithet: c.ep, hitCap: 0.34, ...(c.el ? { element: c.el } : {}) };
+      boss: true, qboss: true, named: true, legend: id, lhKnown: k.weak ? 1 : 0, lhOpen: open, epithet: c.ep, hitCap: 0.34, ...(c.el ? { element: c.el } : {}) };
   }
   function meetChoose(s, e, ch) {
     const c = cur(s);
@@ -524,7 +543,29 @@ const LEGHUNT = (() => {
     pics.set(key, url);
     return url;
   }
-  const pic = (id, size) => { const u = portrait(id, size); return u ? `<img class="lh-pic" src="${u}" width="${size || 92}" height="${size || 92}" alt="">` : `<span class="lh-pic lh-ph">\uE115</span>`; };
+  /* the painted foe picture (assets.js) each legend is made from, and the colour grade + glow that marks it as legendary:
+     g grayscale, sp sepia, s saturate, h hue (deg), b brightness, c contrast */
+  const PAINT = {
+    mudking: ["foe-mudcrab", { sp: 0.35, s: 1.6, h: -18, b: 1.02, c: 1.08 }, "#ff9a5a"],
+    whiteghost: ["foe-sabrecat", { g: 0.9, b: 1.5, c: 0.92 }, "#eaf6ff"],
+    briar: ["foe-spriggan", { s: 1.35, h: 12, b: 1.05 }, "#a8e060"],
+    vyrthax: ["foe-spider", { g: 0.75, b: 1.35 }, "#9a5af0"],
+    grimfang: ["foe-bear", { b: 0.55, c: 1.35, s: 0.7 }, "#e0b060"],
+    whitefang: ["foe-frosttroll", { s: 0.55, b: 1.18, h: -8 }, "#bfe8ff"],
+    ashtusk: ["foe-mammoth", { b: 0.42, c: 1.45, sp: 0.2 }, "#ff6a2a"],
+    palelady: ["foe-icewraith", { s: 0.6, b: 1.3, h: 10 }, "#9fd8ff"],
+    grimscale: ["foe-chaurus", { s: 1.4, h: -25 }, "#f06a2a"],
+    hircine: ["foe-wolf", { sp: 0.3, s: 1.7, h: -28, b: 0.78, c: 1.15 }, "#d02a1a"],
+  };
+  const gradeCss = (o) => `grayscale(${o.g || 0}) sepia(${o.sp || 0}) saturate(${o.s ?? 1}) hue-rotate(${o.h || 0}deg) brightness(${o.b ?? 1}) contrast(${o.c ?? 1})`;
+  /* for fightart.js: which painted picture a legend uses, and its grade (no glow: a canvas filter every frame stays cheap) */
+  const paintOf = (e) => { const p = e && BY[e.legend] && PAINT[e.legend]; return p ? { key: p[0], filter: gradeCss(p[1]), glow: p[2], scale: 1.12 } : null; };
+  function painted(id, size) {
+    const p = PAINT[id]; if (!p || typeof ASSETS === "undefined" || typeof Image === "undefined") return "";
+    const u = ASSETS.url(p[0]); if (!u) return "";   // still loading (or not there): the ink portrait stands in, the screen redraws when it arrives
+    return `<span class="lh-pic lh-paint" style="--lhglow:${p[2]}"><img src="${u}" width="${size || 92}" height="${size || 92}" alt="" style="filter:${gradeCss(p[1])} drop-shadow(0 0 4px ${p[2]})"></span>`;
+  }
+  const pic = (id, size) => { const pp = painted(id, size); if (pp) return pp; const u = portrait(id, size); return u ? `<img class="lh-pic" src="${u}" width="${size || 92}" height="${size || 92}" alt="">` : `<span class="lh-pic lh-ph">\uE115</span>`; };
 
   // ================================================================ the screens
   const tl = (x) => `<b>${T(KIND[x])}</b>`;
@@ -610,6 +651,6 @@ const LEGHUNT = (() => {
   init();
 
   return { BAL, L, BY, NEED, MOVE, COOL, SIG, KIND, GUARD, WEAK_K, WEAK_UNK, RES_K, hauntOf, area, nearPlace, st, cur, best, known, accept, abandon, search, trackDown, act,
-    addClue, clueEvent, meetEvent, foeFor, reward, roll, eventBoost, near, mulFor, look, portrait, sections, names, townHTML, wildHTML, huntCard, drawMap, mount,
+    addClue, clueEvent, meetEvent, foeFor, reward, roll, eventBoost, near, mulFor, look, portrait, paintOf, PAINT, KNOWN, REGEN_EVERY, sections, names, townHTML, wildHTML, huntCard, drawMap, mount,
     trackCh, ambushCh, baitIn, setLeaderCard: (fn) => { leaderCard = fn; }, get ctx() { return ctx; } };
 })();

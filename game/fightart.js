@@ -1178,7 +1178,9 @@ const FIGHTART = (() => {
         wg.save(); wg.globalAlpha = 0.25; wg.fillStyle = "#000"; wg.beginPath(); wg.ellipse(0, 0, 46, 7, 0, 0, 7); wg.fill(); wg.restore();
         wg.translate(0, -(22 + Math.sin(tt * 1.7) * 5));
       }
-      const foePic = foeK !== "player" && typeof ASSETS !== "undefined" ? ASSETS.img(ASSETS.foeKey(rec.foeName, foeK)) : null;
+      const lhP = typeof LEGHUNT !== "undefined" && LEGHUNT.paintOf ? LEGHUNT.paintOf(rec.f?.e) : null;   // a legendary beast: its own painted picture, colour-graded and a little bigger (leghunt.js)
+      const foePic = foeK !== "player" && typeof ASSETS !== "undefined" ? ASSETS.img(lhP ? lhP.key : ASSETS.foeKey(rec.foeName, foeK)) : null;
+      const picK = lhP && foePic ? lhP.scale : 1;
       if (RIG) {   // [OURS] the rig picks its clip from the beat: an attack locked to the move's timing, the fall, a gloat, a stagger...
         const R = RIGST, them = b && b.who === "them";
         R.t = rm ? 0 : tt; R.clip = null; R.u = 0; R.hitU = null; R.jitter = false; R.still = !!rm;
@@ -1187,14 +1189,15 @@ const FIGHTART = (() => {
         else if (meDown) R.clip = "taunt";
         else if (them && b.status) { if (b.status === "stagger") R.clip = "stagger", R.u = u; else if (b.status === "para") R.clip = "para", R.u = 0.3, R.jitter = true; else if (b.status === "fear") R.clip = "cower"; }
         else if (them && m && b.move !== "wait") { R.clip = RIG.clipFor(b.move); R.u = u; R.hitU = m.hits?.[0] ?? null; }
-        R.pic = foePic; R.picH = foePic ? (foeK === "dragon" ? 120 : 66) * Math.min(1.8, fSize) : 0; R.filter = curDragon?.filter || null;
+        R.pic = foePic; R.picH = foePic ? (foeK === "dragon" ? 120 : 66) * Math.min(1.8, fSize) * picK : 0; R.filter = curDragon?.filter || (lhP && foePic ? lhP.filter : null);
         RIG.draw(wg, R);
         if (cv.dataset.rig !== RIG.state) cv.dataset.rig = RIG.state;   // which clip is on (screen tests)
       } else if (foePic) {   // a painted foe: stands on the ground line, breathes, leans into its attacks
-        const hU = (foeK === "dragon" ? 120 : 66) * Math.min(1.8, fSize), wU = hU * foePic.naturalWidth / foePic.naturalHeight;
+        const hU = (foeK === "dragon" ? 120 : 66) * Math.min(1.8, fSize) * picK, wU = hU * foePic.naturalWidth / foePic.naturalHeight;
         const breathe = 1 + Math.sin(tt * 2.2) * 0.012;
         wg.save(); wg.translate(lunge * 10, 0); wg.scale(1, breathe);
         if (curDragon?.filter) wg.filter = curDragon.filter;   // a frost dragon, a blood dragon...
+        else if (lhP) wg.filter = lhP.filter;   // a legendary beast
         wg.drawImage(foePic, -wU / 2, -hU, wU, hU);
         wg.restore();
       } else foeFig(wg, foeK, lunge, tt, isPerson ? foeP : null);
