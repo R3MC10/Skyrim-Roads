@@ -3,6 +3,16 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b136", build: 136, date: "24 Nov 2026", title: "Rings, amulets and lots more enchantments", items: [
+      "You can now wear one amulet and two rings. They have their own slots under your character in the Pack tab: tap one to put something on.",
+      "Rings and amulets are real gear now. Iron, silver, gold, moonstone and dwarven pieces, plain or set with a gem. Foes and bosses drop them (often enchanted), general stores sell plain ones, court wizards sell a few weak enchanted ones, and the forge makes them from an ingot and a gem.",
+      "Enchant rings and amulets at an arcane enchanter like any other gear. Gem-set and finer pieces hold stronger magic. Break enchanted ones down to learn their effect.",
+      "27 new enchantments (44 in all): Paralyze, Fear, Calm, Soul Trap, Turn Undead, Bleeding, Absorb Stamina and Magicka on weapons; Resist Fire, Frost, Shock and Poison, Regenerate Health, Magicka and Stamina, Fortify Block, Critical, Evasion, Heavy and Light Armor, cheaper Alteration, Conjuration and Illusion, and Fortify Smithing, Alchemy, Pickpocket and Speech on worn gear.",
+      "Wearing several pieces with the same enchantment adds up, but only to a limit, so stacking can't make fights a walkover.",
+      "Four famous pieces can turn up on the strongest foes: the Gauldur Amulet, the Amulet of Articulation, the Ring of the Erudite and the Ring of the Hunt.",
+      "New Enchanting perks: Jeweller (stronger magic on rings and amulets, and you find more of them), Warding Enchanter (stronger resistances) and Hex Enchanter (stronger paralyze, fear, absorb and the like).",
+      "Item details now say in plain words what each enchantment does.",
+    ] },
     { id: "b135", build: 135, date: "24 Nov 2026", title: "No more flickering popups", items: [
       "Fixed: popups (like tapping an equipment slot) flickered for a split second just after they opened. They now open smoothly and stay put.",
     ] },

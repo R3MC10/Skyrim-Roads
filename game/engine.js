@@ -8,7 +8,8 @@ const G = (() => {
   const ENCOUNTER_PER_MIN = 0.16, DISCOVER_PX = 55, BAG_PICKUP_PX = 30, BAG_MINUTES = 30, TRAIL_STEP_PX = 25;
   const STEP_SECONDS = 30;          // travel is simulated in 30-second steps (also while the page is closed)
   const GAME_SPEED = 12, GAME_EPOCH = 1795132800, NIGHT_START = 20, NIGHT_END = 6, SHOP_OPEN = 8, SHOP_CLOSE = 20;
-  const SLOTS = ["weapon", "shield", "head", "chest", "hands", "feet"];
+  const SLOTS = ["weapon", "shield", "head", "chest", "hands", "feet", "amulet", "ring"];
+  const JEWEL_SLOTS = ["amulet", "ring", "ring2"];   // [Skyrim] one amulet, and (ours) two rings: "ring2" is the second ring finger
   const ARMOR_SLOTS = ["head", "chest", "hands", "feet", "shield"];
   const ARMOR_SKILL = { light: "Light Armor", medium: "Medium Armor", heavy: "Heavy Armor" };
   const STACKABLE = new Set(["potion", "scroll", "soulgem", "tome", "ingredient", "trophy", "poison", "material", "food", "valuable", "ammo"]);
@@ -127,6 +128,10 @@ const G = (() => {
       note(s, "🗺 The world map was re-measured from Skyrim itself: every place, road, river, lake and mountain now sits exactly where it is in the game.");
     }
     s.discovered = s.discovered.filter((n) => PLACES[n]);
+    for (const r of [...(s.inv || [])]) {   // rings and amulets used to stack as valuables: now each one is its own piece of gear
+      const it = D.ITEMS[r.item];
+      if (it && (it.slot === "ring" || it.slot === "amulet") && r.qty > 1) { const n = r.qty - 1; r.qty = 1; for (let i = 0; i < n; i++) s.inv.push({ id: s.nextInv++, item: r.item, qty: 1, charge: null }); }
+    }
     if (typeof AMMO !== "undefined") { const m = AMMO.migrate(s); if (m) note(s, m); }
     if (fixTactics(s)) note(s, "⚔ Your tactics were fixed: rules you added under \"Always → Attack\" never fired. They now come first.");
     if (typeof SPELLCRAFT !== "undefined") SPELLCRAFT.register(s);   // crafted spells back into the spellbook
@@ -261,7 +266,7 @@ const G = (() => {
     for (const [slot, id] of Object.entries(lo(s).equipment)) { const r = invRow(s, id); if (r) out[slot] = r; }
     return out;
   }
-  function equip(s, id) {
+  function equip(s, id, hint) {
     const r = invRow(s, id);
     if (!r) return "You don't have that.";
     const it = D.ITEMS[r.item];
@@ -276,10 +281,19 @@ const G = (() => {
       if (it.slot === "shield" || (it.slot === "weapon" && it.hands === 2)) { delete eq.offhand; extra += " Left-hand weapon put away."; }
       else if (it.slot === "weapon" && offR && offR.id === id && (offR.qty || 1) < 2) { delete eq.offhand; }
     }
+    if (it.slot === "ring") {   // two ring fingers: the free one, or the one you picked (hint), else swap the first
+      const other = (k) => (k === "ring" ? "ring2" : "ring");
+      const at = hint === "ring" || hint === "ring2" ? hint : eq.ring == null ? "ring" : eq.ring2 == null ? "ring2" : "ring";
+      if (eq[other(at)] === id) delete eq[other(at)];   // one ring can't sit on two fingers
+      eq[at] = id;
+      return `Equipped ${it.name}.`;
+    }
     eq[it.slot] = id;
     return `Equipped ${it.name}.${extra}`;
   }
   function unequip(s, slot) { delete lo(s).equipment[slot]; }
+  /* which equipment slot a row is worn in (rings can be on either finger) */
+  function wornSlot(s, id) { const eq = lo(s).equipment; return Object.keys(eq).find((k) => eq[k] === id) || null; }
   /* [OURS] dual wielding: a one-handed weapon in your left hand (no shield). Remigiusz: "Dual weilding should be possible." */
   const canOffhand = (it) => !!it && it.slot === "weapon" && it.hands !== 2 && it.skill === "One-Handed" && !it.staff;
   function equipOff(s, id) {
@@ -314,6 +328,7 @@ const G = (() => {
     if (it.slot === "trophy") return it.dae || it.desc ? "Daedric artifact" : "Trophy";
     if (it.slot === "material") return "Crafting material";
     if (it.slot === "valuable") return "Valuable · sells well";
+    if (it.slot === "ring" || it.slot === "amulet") return `${it.slot === "ring" ? "Ring" : "Amulet"}${it.aenchant ? ` · ${it.aenchant.name}${it.aenchant.mag > 1 ? " " + it.aenchant.mag : ""}${it.aenchant.more?.length ? ` +${it.aenchant.more.length} more` : ""}` : " · can be enchanted"}`;
     if (it.slot === "misc" && it.desc) return it.desc;
     if (it.slot === "ammo") return `${it.damage} damage · ${it.ammo === "bolt" ? "crossbow bolt" : "arrow"}`;
     if (it.shoots === "bolt") return `${it.damage} dmg · Archery · shoots bolts`;
@@ -499,9 +514,10 @@ const G = (() => {
     critChance() {   // [Skyrim] crits only come from perks; crit damage = half the weapon's base damage, perks add 25/50/75%
       const s = this.s, wt = this.wt;
       const r = wt === "sword" || wt === "dagger" ? P(s, "bladesman") : wt === "greatsword" ? P(s, "deep_wounds") : wt === "bow" ? P(s, "critical_shot") : 0;
-      if (r) return [[0, 0.1, 0.15, 0.2][r], 0.5 * (1 + 0.25 * r)];
-      if (wt === "spear" && P(s, "impale")) return [0.15, 0.5];
-      return [0, 0];
+      const ex = typeof PFX !== "undefined" ? Math.min(0.15, PFX.sum(s, "crit", this, {})) : 0;   // Fortify Critical rings and gauntlets
+      if (r) return [[0, 0.1, 0.15, 0.2][r] + ex, 0.5 * (1 + 0.25 * r)];
+      if (wt === "spear" && P(s, "impale")) return [0.15 + ex, 0.5];
+      return ex ? [ex, 0.5] : [0, 0];
     }
     armorRating() {
       const s = this.s;
@@ -667,10 +683,10 @@ const G = (() => {
         if (charge >= cost) {
           this.charges[this.weaponInv] = charge - cost;
           if (en.effect === "frost") this.slowed = 2;
-          if (en.effect === "absorb") this.hp = Math.min(maxHealth(this.s), this.hp + en.magnitude);
           const em = en.magnitude * (1 + (typeof PFX !== "undefined" ? PFX.sum(s, "enchhit", this, px) : 0));   // Deep Charge
-          dmg += em;
-          label += ` +${en.effect}`;
+          const oh = typeof ENCH !== "undefined" && ENCH.onHit ? ENCH.onHit(this, en, em) : { dmg: em, label: ` +${en.effect}` };   // absorb, paralyze, fear, bleed... (enchanting.js)
+          dmg += oh.dmg;
+          label += oh.label;
           if (typeof PFX !== "undefined" && ["fire", "frost", "shock"].includes(en.effect)) this.pendingEl = [en.effect, em, "weapon"];   // burning / chill / jolt after the hit lands
         }
       }
@@ -1022,7 +1038,8 @@ const G = (() => {
     for (const table of [...(tags.has("humanoid") ? ["humanoid"] : []), ...(tags.has("elite") ? ["elite"] : [])])
       for (const [item, ch] of D.LOOT[table]) if (Math.random() < ch) { const q = ammoQty(item); give(s, item, q); got.push(D.ITEMS[item].name + (q > 1 ? ` ×${q}` : "")); }
     if (tags.has("beast") && typeof SMITH !== "undefined") { const p = SMITH.peltFor(e.name); if (p && Math.random() < 0.7) { give(s, p); got.push(D.ITEMS[p].name); } }   // [Skyrim] pelts from animals
-    if (e.hunt && typeof HUNT !== "undefined") got.push(...HUNT.loot(s, e));   // venison and hides from game (hunting.js)
+    if (e.hunt && typeof HUNT !== "undefined") got.push(...HUNT.loot(s, e));
+    if (typeof JEWELRY !== "undefined") got.push(...JEWELRY.loot(s, e));   // rings and amulets, often enchanted (jewelry.js)   // venison and hides from game (hunting.js)
     if (typeof GATHER !== "undefined") got.push(...GATHER.creatureParts(s, e));   // [Skyrim] claws, teeth, eggs, jelly (gather.js)
     return got;
   }
@@ -1390,7 +1407,7 @@ const G = (() => {
   }
 
   return {
-    MAP_W, MAP_H, STEP_SECONDS, SLOTS, ARMOR_SLOTS, GAME_SPEED, now, pxDist, holdAt, clock, isNight, shopsOpen, clockText,
+    MAP_W, MAP_H, STEP_SECONDS, SLOTS, ARMOR_SLOTS, JEWEL_SLOTS, wornSlot, GAME_SPEED, now, pxDist, holdAt, clock, isNight, shopsOpen, clockText,
     P, wtype, fxSum, lockChance, lockRoll, setAllyProvider, hiddenChance, rested, haggle, SPELL_TIER, newSave, maxHealth, maxMagicka, maxStamina, curHealth, setHealth, skill, useSkill, levelUp, fightLevel,
     riding, withHorse, give, take, invRow, carried, capacity, overweight, equipment, equip, unequip, equipOff, canOffhand, countRestore, itemStats,
     loadout: lo, addRule, ruleSlot, deadRules, fixTactics, saveLoadoutAs, deleteLoadout, spellCost, describeRule, describeAction, Fight, scaleEnemy, scaleQuestFoe, questLevel, rollLoot,
