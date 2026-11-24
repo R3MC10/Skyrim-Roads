@@ -3,6 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b139-bossfights", build: 139, date: "24 Nov 2026", title: "Boss fights feel like big moments", items: [
+      "Dragons, dragon priests, Daedric and quest bosses and the boss at the end of a dungeon now get a proper entrance: black bars, their name and title, and a slow zoom. Tap to skip it.",
+      "Bosses have a big health bar at the top with marks for their phases. Knock them past a mark and they change: they get angrier, call for help, set the ground on fire or switch to a new element. A banner tells you what just happened.",
+      "Bosses warn you a turn ahead before their big attacks. The warning tells you how to answer: block, a ward or keep AP back to dodge. A shout or a shield bash can break the attack before it lands.",
+      "The final blow on a boss plays in slow motion, and the loot gets its own big reveal.",
+      "Three new perks: Giant Slayer (One-Handed, more damage to bosses, even more in their last phase), Read the Signs (Block, big boss attacks hurt less) and Break Their Focus (Two-Handed, hard hits always break a big attack and stagger the boss).",
+      "Bosses last a bit longer but stay beatable. Followers still only get knocked down. Works in both art styles and in Polish.",
+    ] },
     { id: "b141-pnback", build: 141, date: "24 Nov 2026", title: "Easier way out of the patch notes", items: [
       "The patch notes now have a bar at the top that stays put while you scroll: ‹ Back on the title screen, ✕ in the game. No more scrolling all the way down to leave.",
     ] },
