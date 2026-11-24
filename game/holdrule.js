@@ -211,6 +211,7 @@ const HOLDRULE = (() => {
     const w = Math.min(0.2, pf(s, "holdfight"));   // Hold Warden
     if (w) { e.health = Math.round(e.health * (1 - w)); e.damage = Math.max(1, Math.round(e.damage * (1 - w))); }
     e.hold = hold;
+    e.hitCap = 0.6;   // a critical power attack can't take more than 60% of your health in one blow (no one-shots; engine.js hitCap)
     return e;
   }
   /* one challenge or raid fight. Returns the fight result for the result screen, plus what changed. */
