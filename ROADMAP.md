@@ -69,6 +69,8 @@ our own marked [OURS]; plain-language UI; phone first.
 - Smart AI combat (default; custom tactics optional), crafting mini-games, motion design (63)
 
 ## In progress (write your name before you start)
+- Claude: performance pass: faster start (map terrain built row by row), map/title/road pictures sleep between frames and stop when hidden or covered, cheaper fight-screen glow, tests/perf_ui.py measures it. Branch claude/perf.
+- Claude: lighting and atmosphere (lightfx.js): time-of-day colour grade, glowing towns and camps at night, dawn/dusk light shafts, fog banks over valleys and lakes, cloud-shadow parallax, water shimmer, aurora on the northern snow, vignette; on the map and in place pictures. Settings → Graphics → Lighting Off/Low/High. Branch claude/lightfx.
 - Claude: homestead rooms (hsrooms.js): garden and cellar, wings as real stations, display cases, followers living there, raids, party visits to the leader's home, 4 Smithing/Speech perks. Branch claude/homestead.
 - Claude: HUD tidy (hud2.js): one message lane with a queue under the compass, objective line under the compass, bars fade when full, ★ in the top bar, one floating compass button that steps out of the way, map buttons in one strip, bottom-bar names fit. Branch claude/hud2.
 - Claude: the world remembers you (livingworld.js): deeds per hold (dragons, crimes, caravans robbed or guarded), towns react (prices, guard lines, doors that open or close, making amends), townsfolk keep daily hours, whispers in inns that come true later as places on the map, a News of the realm feed, party members share the leader's world. Branch claude/livingworld.
@@ -91,6 +93,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Claude: spell tome info before buying/reading (tomeinfo.js: school, level, magicka, AP, what it does, known?, skill enough?) in shops, pack, loot, search; TOMEINFO.box/html/line for the tooltip work. Branch claude/tomeinfo.
 - Kacper: reading the fight (fightread.js): foe intents, health forecasts for poison/burning/blows on both sides, turn-by-turn playback with banners and round summaries, low-health warning, combat sounds (ElevenLabs, `node scripts/gen_audio.mjs game/ combat`). Branch ccr-23a36e7d-impjqi.
 - Kacper: painted battle scenes (battlescene.js + bscdata.js, pictures bs-/bsf-/bsp-*.webp from the scene pack via scripts/import_battlescenes.py). Branch ccr-23a36e7d-impjqi.
+- Kacper: accounts + hosted server on Railway (server/, game/account.js): username/password accounts, cloud characters, one device at a time. Branch kacper/accounts, plan in server/PLAN.md.
 - Claude: followers as full characters (followerai.js: spells from tomes, magicka/stamina/AP, every gear slot, own potions, tactics, rows) and party combos + foe weak/resist chips (combo.js). Branch claude/followers2.
 - Claude: foe rigs (foerig.js): every enemy is a little skeleton with its own animations (breathing, attacks, flinch, stagger, dodge, fall, gloat); painted foes bend and lunge too. Branch claude/foerigs.
 - Kacper: audio: the rest of scripts/gen_audio.mjs (free ElevenLabs plan has ~4k credits a month; music needs a paid plan).

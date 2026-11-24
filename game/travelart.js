@@ -686,6 +686,7 @@ const TRAVELART = (() => {
       const dt = Math.min(0.1, gap / 1000);
       V.last = ts; V.dt = dt; V.t += dt; V.speed = speedOf(V.info); V.dist += V.speed * dt;
       const t0 = performance.now(); paint(V, ts); V.ema = V.ema * 0.92 + (performance.now() - t0) * 0.08;
+      if (minGap) { V.raf = -1; setTimeout(() => { if (V.raf === -1) { V.raf = 0; if (!V.info.reduce) V.raf = requestAnimationFrame(loop); } }, 20); return; }   // [perf] at 30 fps, sleep between pictures
     }
     V.raf = requestAnimationFrame(loop);
   }

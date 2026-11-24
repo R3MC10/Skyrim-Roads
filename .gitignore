@@ -9,6 +9,7 @@ android/keystore.properties
 
 # screen test screenshots
 tests/tbf/
+tests/acct/
 tests/fread/
 tests/bscene/
 tests/out_jewelry/

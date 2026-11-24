@@ -125,6 +125,7 @@
     try { await Promise.race([document.fonts?.ready, new Promise((r) => setTimeout(r, 2500))]); } catch { /* fonts optional */ }
     S = await Store.loadSave();
     if (S) S = G.migrate(S);
+    if (typeof ACCOUNT !== "undefined") ACCOUNT.init({ getSave: () => S, onTitle: () => !!$("#title"), rerender: () => { if ($("#title") && titlePage === "account") renderTitle(); } });   // [OURS] accounts (account.js)
     if (getPref("zoomFar", false)) zoom = 1;
     let open = null; try { open = sessionStorage.getItem("rotn_open"); sessionStorage.removeItem("rotn_open"); } catch { /* ignore */ }
     if (open === "update") { showTitle("update"); checkUpdate(true); } else showTitle(open === "menu" ? "menu" : "press");
@@ -194,8 +195,9 @@
       el.addEventListener("click", onTitleClick);
       el.addEventListener("input", onSettingsInput);
       el.addEventListener("change", onSettingsInput);
-      startFog();
-      try { titleStop = TITLEART.start($("#tanim"), { reduce: reduceMotion }); } catch (e) { console.warn("title art", e); }
+      const fog = startFog();   // the fog and snow are painted in step with the panorama behind them (one wake-up per frame)
+      try { titleStop = TITLEART.start($("#tanim"), { reduce: reduceMotion, onFrame: fog }); } catch (e) { console.warn("title art", e); fog.loop(); }
+      setTimeout(shineRest, 300);
       const foot = async () => { if (!$("#title")) return; $("#tfoot").textContent = `${await versionText()} · ${worldText()}`; setTimeout(foot, 3000); };
       foot();
     }
@@ -205,6 +207,26 @@
     renderTitle();
   }
   let titleStop = null;
+  /* [perf] the light sweeping over the title (CSS "tshine": 7 s a round, still for the first 60%) can't run on the graphics
+     chip, so the page restyled and repainted the title every refresh even while the sweep sat still. Pause it for the
+     still part and jump straight to where it moves again: it looks exactly the same */
+  function shineRest() {
+    const h1 = document.querySelector("#title h1"), a = h1?.getAnimations?.().find((x) => x.animationName === "tshine");
+    if (!a || a.effect?.getTiming?.().iterations !== Infinity) return;
+    const tm = a.effect.getTiming(), delay = +tm.delay || 0, dur = +tm.duration || 0, still = dur * 0.6;
+    if (!dur) return;
+    const step = () => {
+      if (!h1.isConnected || !$("#title")) return;
+      const ct = Number(a.currentTime) || 0;
+      if (ct < delay) { setTimeout(step, delay - ct + 20); return; }
+      const local = (ct - delay) % dur;
+      if (local < still) {   // sitting still: pause, and later carry on from where the sweep starts
+        a.pause();
+        setTimeout(() => { if (!h1.isConnected) return; a.currentTime = ct - local + still; a.play(); setTimeout(step, dur - still + 30); }, still - local);
+      } else setTimeout(step, dur - local + 30);
+    };
+    step();
+  }
   /* fade the title out instead of cutting; it stops taking taps at once and drops its id so a new title can open */
   function closeTitle() {
     cancelAnimationFrame(titleAnim); try { titleStop?.(); } catch { /* ignore */ } titleStop = null;
@@ -223,6 +245,7 @@
       body = `<nav class="menu" aria-label="Main menu">
         ${S ? item("continue", "Continue", `${S.name} · Level ${S.level} ${D.RACES[S.race].name} · ${S.location || G.holdAt([S.x, S.y])}`) : ""}
         ${item("new", S ? "New Character" : "Begin")}
+        ${typeof ACCOUNT !== "undefined" && ACCOUNT.on() ? item("account", ACCOUNT.signedIn() ? "Account" : "Sign in", ACCOUNT.menuSub()) : ""}
         ${item("settings", "Settings")}
         ${item("update", "Updates", "", update?.newer ? "New" : "")}
         ${typeof PATCHNOTES !== "undefined" ? item("notes", "Patch Notes", "", PATCHNOTES.unseen() && S ? "New" : "") : ""}
@@ -238,7 +261,8 @@
   function titleSubpage() {
     if (titlePage === "settings") return `<h2>Settings</h2>${settingsHTML()}${typeof PATCHNOTES !== "undefined" ? `<button class="btn" data-t="notes" style="width:100%;margin-top:12px">📜 Patch notes</button>` : ""}${backBtn}`;
     if (titlePage === "notes") { PATCHNOTES.markSeen(); return `<h2>Patch Notes</h2>${PATCHNOTES.html()}${backBtn}`; }
-    if (titlePage === "confirmNew") return `<h2>Start over?</h2><p>${esc(S.name)} (level ${S.level}) and everything they carry will be gone for good. Other players' worlds aren't affected.</p>
+    if (titlePage === "account" && typeof ACCOUNT !== "undefined") return `${ACCOUNT.pageHTML()}${backBtn}`;
+    if (titlePage === "confirmNew") return `<h2>Start over?</h2><p>${(typeof ACCOUNT !== "undefined" && ACCOUNT.newCharText(S)) || `${esc(S.name)} (level ${S.level}) and everything they carry will be gone for good. Other players' worlds aren't affected.`}</p>
       <button class="btn danger" data-t="wipe">Yes, make a new character</button>${backBtn}`;
     if (titlePage === "update") return `<h2>Updates</h2>${updateHTML()}${backBtn}`;
     if (titlePage === "backup") return `<h2>Back up</h2>${backupHTML()}<button class="btn" data-t="settings">Back</button>`;
@@ -270,7 +294,8 @@
       case "continue": closeTitle(); startGame(); break;
       case "tutorial": S.tut = { step: 1, seen: {} }; Store.save(S); closeTitle(); startGame(); break;
       case "new": if (S) { titlePage = "confirmNew"; renderTitle(); } else { closeTitle(); showCreate(); } break;
-      case "wipe": Store.wipe().then(() => { S = null; closeTitle(); showCreate(); }); break;
+      case "wipe": if (typeof ACCOUNT !== "undefined" && ACCOUNT.signedIn() && ACCOUNT.linked()) { ACCOUNT.newCharacter(); break; }   // signed in: the old one stays on the account, the new one gets its own id
+        Store.wipe().then(() => { S = null; closeTitle(); showCreate(); }); break;
       case "update": titlePage = "update"; renderTitle(); checkUpdate(true); break;
       case "doupdate": runUpdate(); break;
       default: titlePage = t; renderTitle();
@@ -287,6 +312,7 @@
       ${S ? `<h3>Your character</h3><div class="chatrow" style="margin-bottom:8px"><input id="myname" maxlength="24" autocomplete="off" value="${esc(S.name)}" aria-label="Your name"><button class="btn" data-act="rename">Change name</button></div><div class="grid2"><button class="btn" data-act="bk" data-bk="openbackup">Back up</button><button class="btn" data-act="bk" data-bk="openrestore">Restore</button></div>` : `<h3>Your character</h3><button class="btn" data-act="bk" data-bk="openrestore" style="width:100%">Restore from a backup</button>`}
       ${typeof I18N !== "undefined" ? `<h3>Language</h3>${I18N.settingRow(seg)}` : ""}
       <h3>Look</h3><div class="setrow"><span>Art style</span>${seg("artStyle", [["ink", "Hand-drawn"], ["pixel", "Pixel art"]], ART.style())}</div>
+      ${typeof LIGHTFX !== "undefined" ? LIGHTFX.settingsHTML(seg) : ""}
       ${typeof MOTION !== "undefined" ? `<div class="setrow"><span>Motion</span>${seg("motion", [["full", "Full"], ["lite", "Lite"], ["off", "Off"]], MOTION.pref())}</div>` : ""}
       ${typeof TB !== "undefined" ? `<h3>Fights</h3><div class="setrow"><span>Foe turns</span>${seg("tbFast", [[false, "Normal speed"], [true, "Fast"]], getPref("tbFast", false))}</div>${typeof COMBATFX !== "undefined" ? `<div class="setrow"><span>Blood</span>${seg("gore", [[true, "On"], [false, "Off"]], getPref("gore", true))}</div>` : ""}` : ""}${typeof FIGHTCTL !== "undefined" && typeof TB !== "undefined" ? FIGHTCTL.settingsHTML(seg) : ""}${typeof FASTQOL !== "undefined" ? FASTQOL.settingsHTML(seg) : ""}
       ${typeof ACCESS !== "undefined" ? ACCESS.settingsHTML(seg) : ""}
@@ -311,6 +337,7 @@
     if (typeof ONBOARD !== "undefined" && ONBOARD.pref(k, b.dataset.v)) { SOUND.fx("click"); if (S) { try { renderPanel(true); } catch { /* title */ } } return true; }
     if (typeof FASTQOL !== "undefined" && FASTQOL.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }   // replay speed, carry on after road events
     if (k === "survival") { if (S) { S.survival = v; if (!v) S.coldV = 0; persist(); try { renderPanel(true); } catch { /* title */ } } SOUND.fx("click"); return true; }
+    if (typeof LIGHTFX !== "undefined" && LIGHTFX.pref(k, b.dataset.v)) { SOUND.fx("click"); if (S) { try { renderPanel(true); } catch { /* title screen */ } } return true; }   // Graphics → Lighting
     if (k === "motion") { MOTION.setPref(b.dataset.v); SOUND.fx("click"); return true; }
     if (k === "artStyle") { ART.setStyle(b.dataset.v); SOUND.fx("click"); if (typeof POLISH !== "undefined") POLISH.texture(); if (S) { try { renderPanel(true); } catch { /* title screen */ } } return true; }
     if (k === "mute") { SOUND.set("mute", v); if ($("#sndBtn")) $("#sndBtn").innerHTML = hudIcon(v ? "mute" : "gear", v ? "🔇" : "⚙") + '<small class="ibl" aria-hidden="true">Menu</small>'; }
@@ -430,6 +457,9 @@
     fit(); addEventListener("resize", fit);
     const W = () => innerWidth, H = () => innerHeight;
     const blobs = Array.from({ length: 9 }, (_, i) => ({ x: Math.random() * W(), y: H() * (0.35 + Math.random() * 0.7), r: 160 + Math.random() * 260, v: 6 + Math.random() * 12, a: 0.05 + Math.random() * 0.06, ph: i }));
+    /* [perf] one soft fog blob painted once and stamped (scaled, faded) instead of building nine big gradients every frame */
+    const puff = document.createElement("canvas"); puff.width = puff.height = 256;
+    { const pg = puff.getContext("2d"), g = pg.createRadialGradient(128, 128, 0, 128, 128, 128); g.addColorStop(0, "rgba(200,210,220,1)"); g.addColorStop(1, "rgba(200,210,220,0)"); pg.fillStyle = g; pg.fillRect(0, 0, 256, 256); }
     const flakes = Array.from({ length: 70 }, () => ({ x: Math.random() * W(), y: Math.random() * H(), s: 0.6 + Math.random() * 1.8, v: 12 + Math.random() * 30, w: Math.random() * 6 }));
     let last = performance.now();
     const draw = (ts) => {
@@ -438,18 +468,18 @@
       cx.clearRect(0, 0, W(), H());
       for (const b of blobs) {
         if (!reduceMotion) { b.x += b.v * dt; if (b.x - b.r > W()) b.x = -b.r; }
-        const g = cx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r);
-        g.addColorStop(0, `rgba(200,210,220,${b.a})`); g.addColorStop(1, "rgba(200,210,220,0)");
-        cx.fillStyle = g; cx.fillRect(b.x - b.r, b.y - b.r, b.r * 2, b.r * 2);
+        cx.globalAlpha = b.a; cx.drawImage(puff, b.x - b.r, b.y - b.r, b.r * 2, b.r * 2);
       }
+      cx.globalAlpha = 1;
       cx.fillStyle = "rgba(235,240,245,.55)";
       for (const f of flakes) {
         if (!reduceMotion) { f.y += f.v * dt; f.x += Math.sin(ts / 1000 + f.w) * 8 * dt; if (f.y > H()) { f.y = -4; f.x = Math.random() * W(); } }
         cx.beginPath(); cx.arc(f.x, f.y, f.s, 0, 7); cx.fill();
       }
-      if (!reduceMotion) titleAnim = requestAnimationFrame(draw);
     };
-    titleAnim = requestAnimationFrame(draw);
+    /* without the panorama (it failed to start) the fog runs on its own, as before */
+    draw.loop = () => { const step = (ts) => { if (!$("#title")) return; draw(ts); if (!reduceMotion) titleAnim = requestAnimationFrame(step); }; titleAnim = requestAnimationFrame(step); };
+    return draw;
   }
 
   // ------------------------------------------------------------ main screen
@@ -539,7 +569,7 @@
     window.scrollTo(0, 0);
     if (!(typeof MENUS !== "undefined" && MENUS.bar(tabsEl, tab))) tabsEl.innerHTML = TABS.map(([id, label, svg]) => `<button class="tab ${id === tab ? "on" : ""}" role="tab" aria-selected="${id === tab}" data-tab="${id}"><svg viewBox="0 0 24 24">${svg}</svg>${label}</button>`).join("");
     tabsEl.onclick = (e) => { const b = e.target.closest("[data-tab]"); if (!b) return; SOUND.fx("click"); if (typeof TABMENU !== "undefined" && TABMENU.fromBar) TABMENU.fromBar(); const to = typeof MENUS !== "undefined" ? MENUS.pick(b.dataset.tab) : b.dataset.tab; if (to === "pack" || to[0] === "@") return openMenu(to === "pack" ? "items" : to.slice(1)); closeMenu(); tab = to; testResult = null; bump(); renderTabs(); renderPanel(true); if (typeof POLISH !== "undefined") POLISH.swap($("#side")); if (typeof MOTION !== "undefined") MOTION.panel($("#side")); $("#side").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" }); };
-    $("#zoomBtn").onclick = () => { mapTouchedAt = performance.now(); zoom = zoom > 1.01 ? 1 : 2.4; follow = true; $("#zoomBtn").textContent = zoom > 1.01 ? "－" : "＋"; };
+    $("#zoomBtn").onclick = () => { mapTouchedAt = performance.now(); kickMap(); zoom = zoom > 1.01 ? 1 : 2.4; follow = true; $("#zoomBtn").textContent = zoom > 1.01 ? "－" : "＋"; };
     if ($("#sneakBtn")) $("#sneakBtn").onclick = () => {
       if (!S) return; const onNow = SNEAKMODE.toggle(S); SOUND.fx("click"); persist(true);
       const b = $("#sneakBtn"); b.classList.toggle("on", onNow); b.setAttribute("aria-pressed", String(onNow));
@@ -550,7 +580,7 @@
       const b = $("#huntBtn"); b.classList.toggle("on", onNow); b.setAttribute("aria-pressed", String(onNow));
       toast(onNow ? "🏹 You're hunting. You travel a little slower, but you'll run into deer, elk and worse far more often." : "You stop tracking game.");
     };
-    $("#centerBtn").onclick = () => { mapTouchedAt = performance.now(); follow = true; if (zoom === 1) zoom = 2.4; $("#zoomBtn").textContent = "－"; };
+    $("#centerBtn").onclick = () => { mapTouchedAt = performance.now(); kickMap(); follow = true; if (zoom === 1) zoom = 2.4; $("#zoomBtn").textContent = "－"; };
     bindMap();
     if (typeof HUD !== "undefined") HUD.mount($("#mapwrap"), (name) => { if (WORLD.places[name]) { SOUND.fx("click"); selected = name; roamSpot = null; renderPicked(); } });
     $("#sndBtn").onclick = openSound;
@@ -868,17 +898,30 @@
   let lastFrame = 0;
   /* battery: draw the map only while it's on screen, at 30 fps while something moves and 8 fps when all is still */
   let mapOnScreen = true, mapTouchedAt = 0, mapObserved = null, mapResized = false;
+  /* [perf] between map pictures the loop sleeps on a timer instead of waking every screen refresh: an idle map used to
+     wake the page 60 times a second just to decide not to draw, which kept the phone busy restyling everything else */
+  let frameWait = 0;
+  const nextFrame = (ms) => { if (ms > 20) frameWait = setTimeout(() => { frameWait = 0; requestAnimationFrame(frame); }, ms - 12); else requestAnimationFrame(frame); };
+  function kickMap() { if (frameWait) { clearTimeout(frameWait); frameWait = 0; requestAnimationFrame(frame); } }   // a touch or resize: draw on the next refresh
+  /* full-screen screens that hide the map completely (fight screen, menus, the compass home screen with its picture) */
+  const mapCovered = () => !!(document.getElementById("tbf") || document.getElementById("sky") || document.querySelector("#tw > .tw-bg > *"));
   function frame(ts) {
-    requestAnimationFrame(frame);
+    let wait = 16;
+    try { wait = mapFrame(ts); } finally { nextFrame(wait); }
+  }
+  function mapFrame(ts) {   // draws the map if it's time; returns ms until it should look again
     const m = $("#map");
-    if (m && mapObserved !== m && window.IntersectionObserver) { mapObserved = m; new IntersectionObserver((es) => { mapOnScreen = es[0].isIntersecting; }).observe(m);
-      if (typeof FITCANVAS !== "undefined") FITCANVAS.watch(m, () => { mapResized = true; }); }   // phone turned / window resized: redraw at once (no stretched map)
+    if (m && mapObserved !== m && window.IntersectionObserver) { mapObserved = m; new IntersectionObserver((es) => { mapOnScreen = es[0].isIntersecting; if (mapOnScreen) kickMap(); }).observe(m);
+      if (typeof FITCANVAS !== "undefined") FITCANVAS.watch(m, () => { mapResized = true; kickMap(); }); }   // phone turned / window resized: redraw at once (no stretched map)
+    if (document.hidden || !m) return 250;
+    if (!mapResized && (!mapOnScreen || mapCovered())) return 200;
     const moving = S?.trip?.status === "travel" || performance.now() - mapTouchedAt < 1500;
     const wx = WEVENTS.weather(livePos()).id, weatherAnim = !reduceMotion && !["clear", "cloudy", "fog"].includes(wx);
     const mapAnim = (typeof MAPART !== "undefined" && MAPART.active()) || (typeof MOTION !== "undefined" && MOTION.mapBusy());   // a discovery burst playing
     const raidNow = typeof RAIDART !== "undefined" && WEVENTS.activeRaid();
     const fxNow = typeof FXART !== "undefined" && S ? FXART.state(S) : null;   // spell and shout effects on the map
-    if (document.hidden || !m || (!mapResized && (!mapOnScreen || ts - lastFrame < (moving || mapAnim ? 33 : weatherAnim || (raidNow && !reduceMotion) || (fxNow?.anim && !reduceMotion) ? 66 : 125)))) return;
+    const gap = moving || mapAnim ? 33 : weatherAnim || (raidNow && !reduceMotion) || (fxNow?.anim && !reduceMotion) ? 66 : 125;
+    if (!mapResized && ts - lastFrame < gap - 4) return gap - (ts - lastFrame);
     lastFrame = ts; mapResized = false;
     const pos = livePos();
     if (follow) center = pos;
@@ -897,6 +940,7 @@
       routes: party ? others.filter((o) => o.moving && o.path?.length > 1 && party.members.some((m) => m.id === o.id)).map((o) => ({ path: o.path, from: otherPos(o), name: o.name })) : [], horse: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, cart: CARAVANS.hasCart(S), guards: typeof GUARDS !== "undefined" ? GUARDS.visible(S).map((p) => (p.visible || !myCone || !VISION.inCone(myCone, p.pos) ? p : { ...p, visible: true })) : null, caravans: CARAVANS.all().map((c) => { const cp = CARAVANS.pos(c); return { cp, c }; }).map(({ cp, c }) => ({ pos: cp, visible: G.pxDist(cp, pos) < 160 || (myCone && VISION.inCone(myCone, cp)) || S.discovered.some((n) => WORLD.places[n] && ["city", "town"].includes(WORLD.places[n][2]) && G.pxDist(cp, WORLD.places[n]) < 45), khajiit: c.line.khajiit, moving: c.phase === "road", mine: S.caravanJob?.id === c.id, id: c.id, near: typeof CVROAD !== "undefined" && c.phase === "road" && CVROAD.canMeet(S) && G.pxDist(cp, pos) <= CVROAD.TAP_RANGE, label: c.line.name.replace(/'s caravan$/, "") })).filter((c) => !(c.mine && S.trip?.caravan)), hall: S.discovered.includes(HALL.TOWN) || known(HALL.TOWN) ? { pos: HALL.POS, label: `Hall of the North · ${HALL.progress().name}` } : null,
     };
     WorldMap.draw($("#map"), view);
+    return gap;
   }
   /* cones of sight (vision.js): yours, then each party member's (fainter); none inside a dungeon */
   function visionCones(pos) {
@@ -933,7 +977,7 @@
     };
     let press = null, pressed = false;
     c.addEventListener("pointerdown", (e) => {
-      pts.set(e.pointerId, [e.clientX, e.clientY]); c.setPointerCapture(e.pointerId); mapTouchedAt = performance.now();
+      pts.set(e.pointerId, [e.clientX, e.clientY]); c.setPointerCapture(e.pointerId); mapTouchedAt = performance.now(); kickMap();
       clearTimeout(press); pressed = false;
       if (pts.size === 1) press = setTimeout(() => {   // hold a finger still on the map: drop a pin there
         if (moved || pts.size !== 1 || !view.transform) return;
@@ -946,7 +990,7 @@
     });
     c.addEventListener("pointermove", (e) => {
       if (!pts.has(e.pointerId)) return;
-      mapTouchedAt = performance.now();
+      mapTouchedAt = performance.now(); kickMap();
       pts.set(e.pointerId, [e.clientX, e.clientY]);
       const r = c.getBoundingClientRect();
       if (pinch && pts.size === 2) {
@@ -975,7 +1019,7 @@
       renderPicked();
     };
     c.addEventListener("pointerup", up); c.addEventListener("pointercancel", up);
-    c.addEventListener("wheel", (e) => { e.preventDefault(); mapTouchedAt = performance.now(); const r = c.getBoundingClientRect(); setZoom(zoom * (e.deltaY < 0 ? 1.15 : 1 / 1.15), e.clientX - r.left, e.clientY - r.top); }, { passive: false });
+    c.addEventListener("wheel", (e) => { e.preventDefault(); mapTouchedAt = performance.now(); kickMap(); const r = c.getBoundingClientRect(); setZoom(zoom * (e.deltaY < 0 ? 1.15 : 1 / 1.15), e.clientX - r.left, e.clientY - r.top); }, { passive: false });
   }
   let roamSpot = null;
   function renderPicked() {
