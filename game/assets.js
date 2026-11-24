@@ -17,6 +17,10 @@
        slugs: bandit banditchief draugr deathlord wolf bear sabrecat troll frosttroll giant mammoth spider skeever falmer
               centurion dwarvenspider spriggan hagraven vampire necromancer thalmor dragon icewraith flameatronach
               frostatronach stormatronach dremora chaurus mudcrab horker riekling ashspawn
+     horse-<coat>-<pose>      ~1024 max  painted horses (horseart.js): transparent, side view facing right, saddled, no rider,
+                                         hooves on the bottom edge, trimmed. poses stand gallop rear down (lying, head right).
+                                         Have: grey (all four), bay (stand). A missing coat borrows the grey picture, tinted;
+                                         add new files to HORSEART.HAVE (and their seat point to META). WebP q88.
      shop-<id>                1200×375   painted banners for town sections (shown above each shop's list)
        ids: general forge (also blacksmith) inn (also cook) alchemy wizard (also enchanter) market stables home hall
             fence arena mine — raw 3:2 paintings go through art/conv: crop the middle band, WebP q80
