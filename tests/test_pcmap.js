@@ -15,11 +15,14 @@ ok(PCMAP.wide(1920, 1080, true) && PCMAP.wide(2560, 1080, true), "on for 1920x10
 ok(!PCMAP.wide(1920, 1080, false), "off with a touch screen");
 ok(!PCMAP.wide(390, 844, true) && !PCMAP.wide(1000, 1080, true), "off for narrow windows");
 
-// zoom: all of Skyrim fits at the min zoom
-const mz = PCMAP.minZoom(2560, 1080); // k at zoom 1 = max(2.56, 1.543) = 2.56; fit = 1.543 → 0.6027
-ok(near(mz, (1080 / 700) / (2560 / 1000)), "min zoom fits the whole map in an ultrawide window");
-ok(near(PCMAP.minZoom(1000, 700), 1), "a 10:7 window fits at zoom 1");
+// zoom: zoomed all the way out the painting fills the window edge to edge (no empty band beside it) [mapvisuals]
+const mz = PCMAP.minZoom(2560, 1080);
+ok(near(mz, 1) && near(PCMAP.minZoom(3440, 1440), 1) && near(PCMAP.minZoom(1000, 700), 1), "min zoom: the map fills the window on any shape");
 ok(PCMAP.MAXZ >= 6, "zooms in close");
+for (const [cw, ch] of [[1920, 1080], [2000, 810], [2560, 1080], [3440, 1440]]) {
+  const z = PCMAP.maxZoom(cw, ch), px = Math.max(cw / 1000, ch / 700) * z;
+  ok(z >= 3 && z <= PCMAP.MAXZ && (px <= 14.01 || z === 3), `max zoom at ${cw}x${ch}: about 14 px per map unit (${px.toFixed(1)})`);
+}
 
 // zoom toward the cursor: the point under the mouse stays under the mouse
 for (const [cw, ch] of [[1920, 1080], [2560, 1080]]) {
@@ -34,7 +37,9 @@ let c = PCMAP.clampCenter([-1, 2], 2, 1920, 1080);
 const k2 = Math.max(1.92, 1080 / 700) * 2;
 ok(near(c[0], 1920 / 2 / (k2 * 1000)) && near(c[1], 1 - 1080 / 2 / (k2 * 700)), "can't drag past the edge of the map");
 c = PCMAP.clampCenter([0.1, 0.9], mz, 2560, 1080);
-ok(near(c[0], 0.5) && near(c[1], 0.5), "zoomed all the way out, the map sits in the middle");
+ok(near(c[0], 0.5) && c[1] > 0.5 && c[1] < 1, "zoomed all the way out on an ultrawide, the map fills the width and pans up and down");
+c = PCMAP.clampCenter([0.1, 0.9], 0.6, 2560, 1080);
+ok(near(c[0], 0.5) && near(c[1], 0.5), "smaller than the window, the map sits in the middle");
 c = PCMAP.clampCenter([0.5, 2.5], 2, 1920, 1080, 2);
 ok(c[1] > 2 && c[1] < 3, "Solstheim keeps its own map space");
 

@@ -2792,6 +2792,16 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 .breach .br-pin:disabled{cursor:default}
 .breach .br-acts{display:grid;gap:8px;margin-top:8px}
 @media (max-width:420px){.breach .br-pin span{font-size:10px;max-width:84px}}
+/* [mapvisuals] PC map: the cards floating over the map (world events, news) sit above the fixed map canvas, so a
+   card can never hide under the map and leave only its progress bar showing as a stray gold line */
+html.pcmap div:has(> #mapwrap) > :not(#mapwrap,#vitals){position:relative;z-index:1}
+/* [mapvisuals] PC map: the compass is one centred Skyrim bar (not a strip stretched across a wide window): dark ink band,
+   gold rules top and bottom fading at the ends, end caps */
+html.pcmap .compass{left:50%;right:auto;width:min(980px,52vw);transform:translateX(-50%);top:10px;height:32px;overflow:hidden;
+  background:linear-gradient(90deg,rgba(8,8,10,0),rgba(8,8,10,.78) 9%,rgba(8,8,10,.78) 91%,rgba(8,8,10,0));
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)}
+html.pcmap .compass::before,html.pcmap .compass::after{left:3%;right:3%;background:linear-gradient(90deg,transparent,rgba(214,182,110,.7) 18%,rgba(214,182,110,.7) 82%,transparent)}
+html.pcmap .compass i.cl{left:5%}html.pcmap .compass i.cr{right:5%}
 </style>
 <script src="bugreport.js"></script>
 <script src="access.js"></script>
@@ -2896,6 +2906,7 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 <script src="account.js"></script>
 <script src="servernet.js"></script>
 <script src="store.js"></script>
+<script src="inkmap.js"></script>
 <script src="map.js"></script>
 <script src="backup.js"></script>
 <script src="sound.js"></script>

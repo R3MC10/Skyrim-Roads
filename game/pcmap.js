@@ -32,8 +32,11 @@ const PCMAP = (() => {
   // ------------------------------------------------------------ pure helpers (tested in node)
   /* a PC-sized window with a mouse? */
   const wide = (w, h, fine) => !!fine && w >= 1100 && h >= 620;
-  /* the zoom at which all of Skyrim fits the window (the map's zoom 1 fills it edge to edge) */
-  const minZoom = (cw, ch) => (cw > 0 && ch > 0 ? Math.min(cw / W, ch / H) / Math.max(cw / W, ch / H) : 1);
+  /* the farthest you can zoom out: the map's zoom 1, where the painting fills the whole window edge to edge (on a wide
+     window it fills the width and you pan up and down), so there's never an empty band beside it [mapvisuals] */
+  const minZoom = (cw, ch) => 1;
+  /* the closest you can zoom in: about 14 screen px per map unit (a town's streets), whatever the window size */
+  const maxZoom = (cw, ch) => (cw > 0 && ch > 0 ? clamp(14 / Math.max(cw / W, ch / H), 3, MAXZ) : MAXZ);
   /* the centre that keeps world point m (0..1) under screen point f at zoom z */
   function anchorCenter(m, f, z, cw, ch) { const k = Math.max(cw / W, ch / H) * z; return [m[0] - (f[0] - cw / 2) / k / W, m[1] - (f[1] - ch / 2) / k / H]; }
   /* keep the centre where the map still covers the window (or in the middle when it's smaller than the window) */
@@ -207,7 +210,7 @@ const PCMAP = (() => {
     const r = canvas.getBoundingClientRect(), f = [e.clientX - r.left, e.clientY - r.top];
     const m = [(f[0] - t.ox) / t.k / W, (f[1] - t.oy) / t.k / H];
     const dy = e.deltaMode === 1 ? e.deltaY * 33 : e.deltaMode === 2 ? e.deltaY * 400 : e.deltaY;
-    const from = zAnim ? zAnim.target : v.zoom, target = clamp(from * Math.exp(-clamp(dy, -300, 300) * 0.0016), minZoom(r.width, r.height), MAXZ);
+    const from = zAnim ? zAnim.target : v.zoom, target = clamp(from * Math.exp(-clamp(dy, -300, 300) * 0.0016), minZoom(r.width, r.height), maxZoom(r.width, r.height));
     zAnim = { target, m, f, cw: r.width, ch: r.height };
     if (reduce()) { step(true); return true; }
     if (!zAnim.raf) zAnim.raf = requestAnimationFrame(() => step(false));
@@ -225,6 +228,7 @@ const PCMAP = (() => {
     a.raf = requestAnimationFrame(() => step(false));
   }
   const minZoomFor = (canvas) => { const r = canvas.getBoundingClientRect(); return minZoom(r.width, r.height); };
+  const maxZoomFor = (canvas) => { const r = canvas.getBoundingClientRect(); return maxZoom(r.width, r.height); };
 
   // ------------------------------------------------------------ keys
   const held = new Set();
@@ -273,6 +277,6 @@ const PCMAP = (() => {
     panRaf = requestAnimationFrame(panStep);
   }
 
-  return { wide, minZoom, minZoomFor, anchorCenter, clampCenter, fogAt, fogged, modeOf, quality, setQuality, settingsHTML, pref, on, check, mount, wheel, refresh, toggleQuest, act, MAXZ };
+  return { wide, minZoom, minZoomFor, maxZoom, maxZoomFor, anchorCenter, clampCenter, fogAt, fogged, modeOf, quality, setQuality, settingsHTML, pref, on, check, mount, wheel, refresh, toggleQuest, act, MAXZ };
 })();
 if (typeof module !== "undefined") module.exports = PCMAP;
