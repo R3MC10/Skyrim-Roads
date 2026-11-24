@@ -3,6 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b166-folbuild", build: 166, date: "24 Nov 2026", title: "Followers learn like you do", items: [
+      "Your follower now has their own skills, the same list as yours, and they rise with use exactly like yours: swinging a sword raises One-Handed, shooting raises Archery, spells raise their school, blocking raises Block, and blows on their armour raise their armour skill.",
+      "Their skill increases add up to level-ups, like yours. At each level they pick +10 Health, Magicka or Stamina to suit how they fight, and get a perk point. They still never go past your level.",
+      "Their gear picks their build: give them a bow and they become an archer, a staff or spells make a mage, a two-hander a two-handed warrior, a sword and shield a tank, a dagger a sneaky thief. Change it as often as you like, it's free.",
+      "They spend their perk points themselves in the trees of their build, with the same perks and real effects as yours. A new build means a free respec into the new trees.",
+      "They fight by their build: archers and mages stay at the back, mages cast, sword-and-shield tanks raise their shield and draw blows away from you.",
+      "Follower tab → Skills shows their level, every skill with a bar, their build and their perks. A small note pops up when one of their skills goes up. Followers you already have get skills from their level and gear.",
+    ] },
     { id: "b165-pcmap", build: 165, date: "24 Nov 2026", title: "The big map on PC", items: [
       "On a PC or laptop the world map is now your home screen: it fills the whole window, and Items, Skills, Magic and the Journal open on top of it over a blurred map. On phones nothing changes.",
       "Drag to look around, scroll to zoom smoothly from all of Skyrim down to a single village, and press Space to jump back to your hero. WASD and the arrows move the map too (while the compass is closed).",

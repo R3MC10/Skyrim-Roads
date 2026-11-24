@@ -2743,6 +2743,22 @@ html.pcmap.pcq-off:not(.pc-side) .pcqtab{transform:none}
 .pcqtab svg{width:20px;height:20px}
 html.pcmap.pc-reduce .pcquest,html.pcmap.pc-reduce .pcqtab,html.pcmap.pc-reduce #side{transition:none!important;animation:none!important}
 html.pcmap.pc-home:has(.pcparty.on) .vitals{left:14px}
+/* [folbuild] followers learn like you: their build, level, skills with bars and perks (folbuild.js), SkyUI style */
+.fb-build{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;margin:6px 0 10px;border:1px solid rgba(214,178,94,.35);border-radius:4px;background:linear-gradient(180deg,rgba(40,34,22,.45),rgba(14,13,11,.55))}
+.fb-build .t{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.fb-build .t b{font:600 17px "Barlow Semi Condensed",sans-serif;color:#f0dca8;letter-spacing:.04em}
+.fb-badge{flex:none;min-width:84px;padding:8px 10px;text-align:center;border:1px solid rgba(226,187,100,.6);border-radius:3px;font:600 14px "Barlow Semi Condensed",sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#f1cd72;background:rgba(226,187,100,.08)}
+.fb-cxp{height:5px;margin:2px 0}.fb-cxp i{background:linear-gradient(90deg,#b98a3a,#e8c46a)}
+.fb-skills{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:4px 14px;margin:6px 0 12px}
+.fb-sk{display:grid;grid-template-columns:1fr auto;align-items:baseline;padding:3px 2px;border-bottom:1px solid rgba(200,190,170,.12);color:#a9a294;font-size:13px}
+.fb-sk.main{color:#e8dcc0}.fb-sk.main .fb-n{font-weight:600}
+.fb-sk .num{color:#f0dca8}
+.fb-sk .bar{grid-column:1/-1;height:4px;margin-top:3px}.fb-sk .bar i{background:linear-gradient(90deg,#6f8fb8,#bcd6ff)}
+.fb-sk .fb-prog{grid-column:1/-1;height:2px;background:rgba(255,255,255,.06)}.fb-sk .fb-prog i{display:block;height:100%;background:#e8c46a}
+.fb-perks{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px 14px;margin:6px 0 12px}
+.fb-tree h4{margin:0 0 3px;font:600 13px "Barlow Semi Condensed",sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#d6b25e}
+.fb-tree ul{margin:0;padding:0 0 0 14px;color:#e8dcc0;font-size:13px}.fb-tree li{margin:1px 0}
+@media (max-width:420px){.fb-build{flex-direction:column}.fb-skills{grid-template-columns:1fr 1fr}}
 </style>
 <script src="bugreport.js"></script>
 <script src="access.js"></script>
@@ -2837,6 +2853,7 @@ html.pcmap.pc-home:has(.pcparty.on) .vitals{left:14px}
 <script src="party.js"></script>
 <script src="followers2.js"></script>
 <script src="followerai.js"></script>
+<script src="folbuild.js"></script>
 <script src="combo.js"></script>
 <script src="partyplay.js"></script>
 <script src="lootvote.js"></script>
@@ -2929,6 +2946,7 @@ html.pcmap.pc-home:has(.pcparty.on) .vitals{left:14px}
 <script src="i18n_areaui.js"></script>
 <script src="i18n_menus2.js"></script>
 <script src="i18n_followertab.js"></script>
+<script src="i18n_folbuild.js"></script>
 <script src="i18n_boss.js"></script>
 <script src="i18n_accounts.js"></script>
 <script src="i18n_spells.js"></script>
