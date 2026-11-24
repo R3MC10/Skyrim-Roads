@@ -231,6 +231,14 @@ const COMBAT2 = (() => {
         const l = FX.ally(f, a, down); putFx(card, l, "ally", ".tbbar"); fxNow.push([a, l, card]);
       }
     }
+    if (party && f && typeof STRAT !== "undefined") {   // orders for your follower: Attack / Defend me / Hold back (strategy.js)
+      const live = !!o.mine && !o.playing && !sess.done;
+      for (const card of party.querySelectorAll(".tbu.ally[data-ally]")) {
+        const i = +card.dataset.ally; if (i >= 1000) continue;
+        card.querySelector(":scope > .c2ord")?.remove();
+        const h = STRAT.ordersHTML((f.allies || [])[i], i, live); if (h) card.insertAdjacentHTML("beforeend", h);
+      }
+    }
     if (foe) {
       ov.appendChild(foe);
       const fh = num(foe.querySelector(".tbbar.big .num"));

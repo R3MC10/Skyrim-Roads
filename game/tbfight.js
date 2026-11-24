@@ -52,6 +52,7 @@ const TB = (() => {
   /* AP cost of an action */
   function cost(f, a) {
     if (typeof BEASTPATH !== "undefined") { const c = BEASTPATH.cost(f, a); if (c != null) return c; }   // claws and a changed form's own moves (beastpaths.js)
+    if (typeof STRAT !== "undefined" && STRAT.owns(a)) return STRAT.cost(f, a);   // Catch your breath (strategy.js)
     if (a === "attack") return WCOST[f.wt] || 3;
     if (a === "power_attack") return (WCOST[f.wt] || 3) + 2;
     if (a === "block") return 2;
@@ -175,7 +176,7 @@ const TB = (() => {
       const tg = f.tags, base = 6 + Math.min(12, this.foeLevel / 4) + (tg.has("beast") ? 3 : 0) + (tg.has("big") || tg.has("construct") ? -2 : 0);
       // the foe acts 1–3 times a round (whole actions, the fraction is a chance), more with a big party
       let n = T.acts[this.kind] + Math.floor(this.players / 2); const whole = Math.floor(n); n = whole + (Math.random() < n - whole ? 1 : 0);
-      for (let i = 0; i < Math.max(1, n); i++) out.push({ id: i ? "foe" + (i + 1) : "foe", name: f.e.name, init: Math.round(base) - 4 * i + d10(), extra: i > 0 });
+      for (let i = 0; i < Math.max(1, n); i++) out.push({ id: i ? "foe" + (i + 1) : "foe", name: f.e.name, init: Math.round(base) - 4 * i + d10() - (typeof STRAT !== "undefined" ? STRAT.foeInitCut(f) : 0), extra: i > 0 });   // frost slows it (strategy.js)
       out.sort((a, b) => b.init - a.init || (a.id === "me" ? -1 : 1));
       return out;
     }
@@ -221,6 +222,7 @@ const TB = (() => {
     canAfford(a) {
       const c = cost(this.f, a), pool = this.ap + (isSpell(a) ? this.spAp : 0);
       if (a === "bash") return c <= pool && typeof SHIELDFX !== "undefined" && SHIELDFX.can(this.f);
+      if (typeof STRAT !== "undefined" && STRAT.owns(a)) return c <= pool && STRAT.can(this.f, a);
       return c <= pool && (a === "flee" || this.f.affordable(a) || a === "attack");
     }
     pay(a) {
@@ -238,7 +240,9 @@ const TB = (() => {
       this.pay(a);
       const before = f.ehp, myBefore = f.hp;
       let text = null;
-      if (al && zoneOf(a) === "self") text = onAlly(f, a, al);
+      const setup = typeof STRAT !== "undefined" ? STRAT.setup(f) : "";   // staggered, stunned, chilled: an opening (strategy.js)
+      if (typeof STRAT !== "undefined" && STRAT.owns(a)) text = STRAT.act(f, a);
+      if (text == null && al && zoneOf(a) === "self") text = onAlly(f, a, al);
       if (text == null) { f.tbTarget = al || null; try { text = a === "bash" ? SHIELDFX.bash(f) : f.act(a); } finally { f.tbTarget = null; } }
       if (f.hidden) f.hidden = false;   // only your first strike can be a sneak attack
       if (mult && mult !== 1 && f.ehp < before) { f.ehp = before - (before - f.ehp) * mult; text += mult > 1 ? " (perfect timing!)" : " (mistimed)"; }
@@ -246,6 +250,7 @@ const TB = (() => {
       if (typeof FOEKIT !== "undefined") text += FOEKIT.defend(f, a, before);   // its raised shield, ward or dodge
       if (f.bf && typeof BOSSFIGHT !== "undefined") text += BOSSFIGHT.answer(this, a, before);   // its helpers, and breaking a big attack
       if (typeof COMBO !== "undefined" && f.ehp < before) text += COMBO.after(f, a, before);   // followers2: combos
+      if (typeof STRAT !== "undefined" && f.ehp < before) text += STRAT.after(f, a, before, setup);
       text += this.capFoe(before);
       if (f.ehp < before) { text += this.flank(before); this.hitters++; }
       if (typeof DRAGONS !== "undefined") DRAGONS.check(f, this);
@@ -282,6 +287,7 @@ const TB = (() => {
       while (!this.over && this.idx === idx0 && guard++ < 6) {
         let a = aiPick(f, "me");
         if (!this.canAfford(a)) a = this.canAfford("attack") ? "attack" : null;
+        if (typeof STRAT !== "undefined") a = STRAT.ai(this, a);   // cash in openings, catch your breath
         if (f.bf && typeof BOSSFIGHT !== "undefined") a = BOSSFIGHT.ai(this, a);   // answer a big attack that's coming
         if (!a) break;
         if (a === "block" && this.myActs > 0) break;   // guard with leftover points instead of a second raise
@@ -583,7 +589,7 @@ const TB = (() => {
     if (typeof f.addXp === "function") f.addXp("Restoration", sp.xp || 10);
     al.hp = Math.min(mx, al.hp + amt); return `${sp.name} on ${al.name}: +${Math.round(al.hp - b)}`;
   }
-  const ICON = { bash: "🛡", attack: "⚔", bow: "🏹", power_attack: "💥", block: "🛡", magic: "✦", items: "⚗", flee: "🏃", end: "⏭", shout: "🗣", power: "✴", potion: "🧪", scroll: "📜", heal: "✚" };
+  const ICON = { recover: "🌬", bash: "🛡", attack: "⚔", bow: "🏹", power_attack: "💥", block: "🛡", magic: "✦", items: "⚗", flee: "🏃", end: "⏭", shout: "🗣", power: "✴", potion: "🧪", scroll: "📜", heal: "✚" };
   function iconOf(f, a) {
     if (typeof BEASTPATH !== "undefined") { const ic = BEASTPATH.icon(f, a); if (ic) return ic; }
     if (a === "attack") return f.wt === "bow" || f.wt === "crossbow" ? ICON.bow : ICON.attack;

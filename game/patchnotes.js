@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b145-strategy", build: 145, date: "24 Nov 2026", title: "Fights that reward thinking", items: [
+      "New move: Breathe (Catch your breath). 3 AP to get back a good chunk of stamina and some magicka. Power attacks, bashes and guards burn stamina, so pace yourself: hit hard now, or breathe and hit hard next turn.",
+      "Openings: hit a foe that's staggered, stunned or paralyzed and the blow does 30% more (a power attack 45%). A power attack on a frozen foe shatters the frost for extra. Bash or stagger first, then cash in. Still no one-shots.",
+      "Frost slows: a chilled or slowed foe acts later in the round, so you and your followers get in first.",
+      "Give your follower orders mid-fight with the little buttons on their card: Attack, Defend me (steps in front of you sooner) or Hold back (back row, only guards and heals). Tap again to let them fight their own way.",
+      "Perks: Second Wind makes Breathe give 50% more; Savage Strike and Devastating Blow make power attacks into an opening hit even harder. Auto uses all of this too.",
+    ] },
     { id: "b144-combat2", build: 144, date: "24 Nov 2026", title: "A fight screen that feels like a game", items: [
       "The fight is now one big scene that fills the screen. Everything you need sits right in it, so nothing scrolls, on phones and on PC.",
       "Your health is a glowing orb in the corner with magicka and stamina curving round it; a striped band shows how much the foe is about to take. Slim bars float over your hero's head.",

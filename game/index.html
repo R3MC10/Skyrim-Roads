@@ -2748,6 +2748,23 @@ html.art-pixel .ft-detail .sky-ico img{image-rendering:pixelated}
   .sky-row.ft-cols .nm img.art.ico{width:22px;height:22px;margin-right:5px}
   .ft-cats .sky-cat{min-width:54px;padding:4px 3px}
 }
+/* [strategy] Catch your breath on the skill bar; orders on your follower's card (strategy.js) */
+#tbf .fc-row{grid-template-columns:repeat(4,minmax(0,1fr)) minmax(0,2.3fr)}
+#tbf.c2 .fc:not(.fc-pick) .fc-tray{grid-column:1 / 4}
+#tbf.c2 .fc-empty{grid-column:1 / 4}
+#tbf.c2 .fc:not(.fc-pick) .tbact.flee{grid-row:1;grid-column:4}
+#tbf.c2 .fc:not(.fc-pick) .tbact.rec{grid-row:2;grid-column:4}
+#tbf.c2.c2wide .fc:not(.fc-pick){grid-template-columns:minmax(0,1fr) repeat(3,84px) repeat(4,60px) 156px}
+#tbf.c2.c2wide .fc:not(.fc-pick) .fc-tray{grid-column:1}
+#tbf.c2.c2wide .fc-empty{grid-column:1}
+#tbf.c2.c2wide .fc:not(.fc-pick) .tbact.rec{grid-row:1;grid-column:7}
+#tbf.c2.c2wide .fc:not(.fc-pick) .tbact.flee{grid-row:1;grid-column:8}
+#tbf.c2.c2wide .fc:not(.fc-pick) .tbact.end{grid-column:9}
+#tbf .c2ord{display:flex;gap:3px;margin-top:3px;justify-content:center}
+#tbf .c2ord .c2o{flex:1 1 0;min-width:0;height:22px;padding:0;border-radius:6px;border:1px solid rgba(214,178,94,.35);background:rgba(20,16,10,.75);color:#e9e1cc;font-size:12px;line-height:20px;cursor:pointer}
+#tbf .c2ord .c2o.on{border-color:#f3d98b;background:linear-gradient(180deg,#5a4524,#2a1f10);box-shadow:0 0 8px rgba(243,217,139,.45)}
+#tbf .c2ord .c2o:disabled{opacity:.45;cursor:default}
+#tbf.c2.c2wide .c2ord .c2o{height:26px;font-size:14px}
 </style>
 <script src="access.js"></script>
 </head>
@@ -2826,6 +2843,7 @@ html.art-pixel .ft-detail .sky-ico img{image-rendering:pixelated}
 <script src="fightread.js"></script>
 <script src="foeintent.js"></script>
 <script src="fxicons.js"></script>
+<script src="strategy.js"></script>
 <script src="combat2.js"></script>
 <script src="guide.js"></script>
 <script src="patchnotes.js"></script>

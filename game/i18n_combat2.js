@@ -24,6 +24,27 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
       "Każde wzmocnienie i osłabienie widać teraz jako małą ikonkę na tym, kto je ma: na tobie, towarzyszach, członkach drużyny i wrogach. Czary pancerza, osłony, leczenie w czasie, mikstury, okrzyki i moce, trucizna, podpalenie, mróz, krwawienie, strach, paraliż i cała reszta. Każda pokazuje, ile tur zostało, a dotknięcie lub najechanie mówi, co robi.",
     "When one lands or wears off, a short word floats up over that fighter: \"+Oakflesh\", \"Poisoned\", \"Burning fades\".":
       "Gdy coś zadziała albo minie, nad walczącym unosi się krótki napis: \"+Dębowa skóra\", \"Zatruty\", \"Podpalenie mija\".",
+    // strategy.js: Breathe, openings, follower orders, perks, patch note
+    "Breathe": "Oddech",
+    "Already fresh": "Już wypoczęty",
+    "Attack": "Atak", "Defend me": "Broń mnie", "Hold back": "Trzymaj się z tyłu",
+    "Attack: front row, goes all out with power attacks and damage spells.": "Atak: pierwsza linia, idzie na całość z silnymi ciosami i czarami obrażeń.",
+    "Defend me: front row, draws blows and steps in front of you when you're hurt.": "Broń mnie: pierwsza linia, ściąga na siebie ciosy i staje przed tobą, gdy jesteś ranny.",
+    "Hold back: back row, draws fewer blows, only guards, heals and drinks potions.": "Trzymaj się z tyłu: tylna linia, mniej ciosów, tylko garda, leczenie i mikstury.",
+    "Stamina regenerates 25% faster in fights, and Catch your breath gives 50% more. [OURS]": "Wytrzymałość odnawia się w walce o 25% szybciej, a Oddech daje o 50% więcej.",
+    "Power attacks do 25% more damage, and an opening (a staggered, stunned or paralyzed foe) pays off 50% more. [Skyrim: standing power attacks]": "Silne ciosy zadają o 25% więcej obrażeń, a odsłonięcie (zachwiany, ogłuszony lub sparaliżowany wróg) opłaca się o 50% bardziej.",
+    "Power attacks do 25% more damage, and an opening (a staggered, stunned or paralyzed foe) pays off 50% more. [Skyrim]": "Silne ciosy zadają o 25% więcej obrażeń, a odsłonięcie (zachwiany, ogłuszony lub sparaliżowany wróg) opłaca się o 50% bardziej.",
+    "Fights that reward thinking": "Walki, w których myślenie popłaca",
+    "New move: Breathe (Catch your breath). 3 AP to get back a good chunk of stamina and some magicka. Power attacks, bashes and guards burn stamina, so pace yourself: hit hard now, or breathe and hit hard next turn.":
+      "Nowy ruch: Oddech. Za 3 AP odzyskujesz sporo wytrzymałości i trochę magii. Silne ciosy, uderzenia tarczą i garda zużywają wytrzymałość, więc rozkładaj siły: uderz mocno teraz albo złap oddech i uderz mocno w następnej turze.",
+    "Openings: hit a foe that's staggered, stunned or paralyzed and the blow does 30% more (a power attack 45%). A power attack on a frozen foe shatters the frost for extra. Bash or stagger first, then cash in. Still no one-shots.":
+      "Odsłonięcia: uderz wroga zachwianego, ogłuszonego lub sparaliżowanego, a cios zada o 30% więcej (silny cios o 45%). Silny cios w zamrożonego wroga kruszy lód i zadaje więcej. Najpierw uderz tarczą lub zachwiej, potem wykorzystaj okazję. Dalej bez zabijania jednym ciosem.",
+    "Frost slows: a chilled or slowed foe acts later in the round, so you and your followers get in first.":
+      "Mróz spowalnia: wychłodzony lub spowolniony wróg działa później w rundzie, więc ty i towarzysze uderzacie pierwsi.",
+    "Give your follower orders mid-fight with the little buttons on their card: Attack, Defend me (steps in front of you sooner) or Hold back (back row, only guards and heals). Tap again to let them fight their own way.":
+      "Wydawaj towarzyszowi rozkazy w trakcie walki małymi przyciskami na jego karcie: Atak, Broń mnie (szybciej staje przed tobą) albo Trzymaj się z tyłu (tylna linia, tylko garda i leczenie). Dotknij ponownie, by walczył po swojemu.",
+    "Perks: Second Wind makes Breathe give 50% more; Savage Strike and Devastating Blow make power attacks into an opening hit even harder. Auto uses all of this too.":
+      "Atuty: Drugi oddech sprawia, że Oddech daje o 50% więcej; Dziki cios i Niszczycielski cios sprawiają, że silne ciosy w odsłonięcie bolą jeszcze bardziej. Auto też z tego korzysta.",
     // buff and debuff icons (fxicons.js)
     "Armour spell": "Czar pancerza", "Ward": "Osłona", "Healing": "Leczenie", "Cloak": "Płaszcz", "Rune": "Runa", "Bound weapon": "Przywołana broń",
     "Invisible": "Niewidzialny", "Sneak attack": "Atak z ukrycia", "Courage": "Odwaga", "Summon": "Przywołaniec", "Reanimate": "Ożywienie", "Guard": "Garda",
@@ -50,6 +71,15 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
   const n = (k, one, few, many) => (+k === 1 ? one : +k % 10 >= 2 && +k % 10 <= 4 && (+k % 100 < 10 || +k % 100 >= 20) ? few : many);
   const tury = (k) => `${k} ${n(k, "tura", "tury", "tur")}`;
   I18N_EXTRA.pat.push(
+    [/^You catch your breath \(\+(\d+) stamina(?:, \+(\d+) magicka)?\)$/, (m) => `Łapiesz oddech (+${m[1]} wytrzymałości${m[2] ? `, +${m[2]} magii` : ""})`],
+    [/^Catch your breath: get back (\d+) stamina and (\d+) magicka\. Power attacks, bashes and guards need stamina, spells need magicka\. (\d+) AP\.$/, (m) => `Oddech: odzyskujesz ${m[1]} wytrzymałości i ${m[2]} magii. Silne ciosy, uderzenia tarczą i garda potrzebują wytrzymałości, czary magii. ${m[3]} AP.`],
+    [/^opening! \+(\d+)$/, (m) => `odsłonięcie! +${m[1]}`],
+    [/^shatters the frost! \+(\d+)$/, (m) => `kruszy lód! +${m[1]}`],
+    [/^(.+): attack!$/, (m) => `${m[1]}: atak!`],
+    [/^(.+): defend me!$/, (m) => `${m[1]}: broń mnie!`],
+    [/^(.+): hold back!$/, (m) => `${m[1]}: trzymaj się z tyłu!`],
+    [/^(.+) fights their own way$/, (m) => `${m[1]} walczy po swojemu`],
+    [/^Orders for (.+)$/, (m) => `Rozkazy dla: ${m[1]}`],
     [/^(.+) fades$/, (m) => `${tr(m[1])} mija`],
     [/^Poisoned: you lose (\d+) health each time a foe acts, (\d+) more times\. A Cure Poison potion or winning the fight ends it\.$/, (m) => `Zatruty: tracisz ${m[1]} zdrowia za każdym razem, gdy wróg działa, jeszcze ${m[2]} razy. Kończy to mikstura leczenia trucizny albo wygrana walka.`],
     [/^Burning: −(\d+) health (each turn|at the end of the round), (\d+) more\.$/, (m) => `Podpalenie: −${m[1]} zdrowia ${m[2] === "each turn" ? "co turę" : "na koniec rundy"}, jeszcze ${m[3]}.`],

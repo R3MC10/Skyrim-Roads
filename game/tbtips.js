@@ -14,6 +14,7 @@ const TBTIPS = (() => {
   /* text for one action card */
   function action(f, a, ap) {
     const apTxt = ap >= 99 ? "Uses all your AP." : `${ap} AP.`;
+    if (typeof STRAT !== "undefined" && STRAT.owns(a)) return `${STRAT.tip(f, a)} ${apTxt}`;
     if (a === "attack") {
       const d = foeCut(f, safeDmg(f));
       return `Attack with your ${weaponName(f)}: about ${range(d)} damage, ${hitPct()}% to hit. ${apTxt}`;

@@ -17,7 +17,7 @@ def ok(c, msg):
 START = """()=>{ ART.setStyle('ink'); document.querySelectorAll('#modal').forEach(m=>m.remove());
   const S=window.__dbg.save(); S.level=20; for (const k of ['One-Handed','Destruction','Restoration']) S.skills[k].lvl=45;
   S.mpBonus=60; for (const id of ['flames','oakflesh','healing']) if (D.SPELLS[id] && !S.spells.includes(id)) S.spells.push(id);
-  G.give(S,'potion_health',2); G.setHealth(S,Math.round(G.maxHealth(S)*0.6)); S.dungeon=null; S.trip=null;
+  S.follower={id:'lydia',hp:TOWNS.followerMax(S,'lydia'),ts:G.now()}; G.give(S,'potion_health',2); G.setHealth(S,Math.round(G.maxHealth(S)*0.6)); S.dungeon=null; S.trip=null;
   S.location='Whiterun'; [S.x,S.y]=WORLD.places.Whiterun; S.location=null; G.startTrip(S,'Riverwood',WORLD.places.Riverwood.slice(0,2));
   const d=ENC.byId.banditToll; S.trip.status='event'; S.trip.event={id:d.id,title:d.title,enc:true,...d.make(S,ENC.ctx(S))}; window.__dbg.openEvent(); }"""
 NOSCROLL = """(()=>{ const t=document.querySelector('#tbf'), r=t.getBoundingClientRect();
@@ -86,8 +86,18 @@ async def main():
                 await pg.click("#tbf [data-tbm=items]"); await pg.wait_for_timeout(400)
                 await shot("3_items"); await noscroll("items drawer open")
                 if await pg.evaluate("!!document.querySelector('#tbf [data-tba=\"potion:health\"]:not([disabled])')"):
-                    n0 = await evn(); await pg.click("#tbf [data-tba='potion:health']")
+                    n0 = await evn(); await pg.click("#tbf [data-tba='potion:health']"); await pg.wait_for_timeout(300)
+                    if await evn() == n0 and await pg.evaluate("!!document.querySelector('#tbf [data-tba=\"potion:health\"]')"):
+                        await pg.click("#tbf [data-tba='potion:health']")   # with a follower it asks who gets it: tap again for yourself
                     ok(await my_turn() and await evn() > n0, f"{tag}: drinking a potion works")
+            # strategy.js: Breathe on the skill bar, orders on the follower's card
+            if await pg.evaluate("!!document.querySelector('#tbf [data-tbm=\"\"]')"): await pg.click("#tbf [data-tbm='']"); await pg.wait_for_timeout(300)
+            ok(await pg.evaluate("!!document.querySelector('#tbf .fc [data-tba=recover]')"), f"{tag}: Breathe is on the skill bar")
+            if await pg.evaluate("!!document.querySelector('#tbf [data-strat-ord=hold]:not([disabled])')"):
+                await pg.click("#tbf [data-strat-ord=hold]"); await pg.wait_for_timeout(400)
+                ok(await pg.evaluate("TB.session.f.allies.some((a)=>a.order==='hold') && !!document.querySelector('#tbf [data-strat-ord=hold].on')"), f"{tag}: ordering the follower to hold back works")
+                await shot("3b_orders"); await noscroll("with follower orders")
+            else: ok(False, f"{tag}: order buttons on the follower's card")
             # end the turn
             n0 = await evn()
             if await pg.evaluate("!!document.querySelector('#tbf [data-tba=end]')"):

@@ -9,7 +9,7 @@ const PERKS = (() => {
       ["bladesman", "Bladesman", 3, [30, 60, 90], ["armsman"], "Swords: 10/15/20% chance of a critical hit doing 25/50/75% extra critical damage. [Skyrim]"],
       ["bone_breaker", "Bone Breaker", 3, [30, 60, 90], ["armsman"], "Maces ignore 25/50/75% of armor. [Skyrim]"],
       ["hack_and_slash", "Hack and Slash", 3, [30, 60, 90], ["armsman"], "War axes make wounds bleed for 3/4/5 extra damage a turn for 3 turns. [Skyrim]"],
-      ["savage_strike", "Savage Strike", 1, [50], ["fighting_stance"], "Power attacks do 25% more damage. [Skyrim: standing power attacks]"],
+      ["savage_strike", "Savage Strike", 1, [50], ["fighting_stance"], "Power attacks do 25% more damage, and an opening (a staggered, stunned or paralyzed foe) pays off 50% more. [Skyrim: standing power attacks]"],
       ["paralyzing_strike", "Paralyzing Strike", 1, [100], ["savage_strike"], "Power attacks have a 25% chance to paralyze for 2 turns. [Skyrim: backwards power attack]"],
     ],
     "Two-Handed": [
@@ -18,7 +18,7 @@ const PERKS = (() => {
       ["deep_wounds", "Deep Wounds", 3, [30, 60, 90], ["barbarian"], "Greatswords: 10/15/20% chance of a critical hit doing 25/50/75% extra critical damage. [Skyrim]"],
       ["skullcrusher", "Skullcrusher", 3, [30, 60, 90], ["barbarian"], "Warhammers ignore 25/50/75% of armor. [Skyrim]"],
       ["limbsplitter", "Limbsplitter", 3, [30, 60, 90], ["barbarian"], "Battle axes make wounds bleed for 3/4/5 extra damage a turn for 3 turns. [Skyrim]"],
-      ["devastating_blow", "Devastating Blow", 1, [50], ["champions_stance"], "Power attacks do 25% more damage. [Skyrim]"],
+      ["devastating_blow", "Devastating Blow", 1, [50], ["champions_stance"], "Power attacks do 25% more damage, and an opening (a staggered, stunned or paralyzed foe) pays off 50% more. [Skyrim]"],
       ["warmaster", "Warmaster", 1, [100], ["devastating_blow"], "Power attacks have a 25% chance to paralyze for 2 turns. [Skyrim]"],
     ],
     "Archery": [
@@ -160,7 +160,7 @@ const PERKS = (() => {
     ],
     "Athletics": [
       ["long_strider", "Long Strider", 3, [20, 50, 80], [], "Travel 5% faster per rank. [OURS]"],
-      ["second_wind", "Second Wind", 1, [40], ["long_strider"], "Stamina regenerates 25% faster in fights. [OURS]"],
+      ["second_wind", "Second Wind", 1, [40], ["long_strider"], "Stamina regenerates 25% faster in fights, and Catch your breath gives 50% more. [OURS]"],
       ["marathon", "Marathon", 1, [70], ["second_wind"], "Being overweight only slows you half as much. [OURS]"],
     ],
     "Acrobatics": [

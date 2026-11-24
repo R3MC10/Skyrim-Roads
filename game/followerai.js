@@ -142,10 +142,11 @@ const FAI = (() => {
   function options(fight, al, ap) {
     const f = folOf(fight, al), out = [], tac = al.tactic || "auto", wc = WCOST[al.wt] || 3;
     const pp = playerPct(fight), me = selfPct(al), boss = isBoss(fight);
+    const cv = al.order === "defend" ? 0.7 : 0.45;   // ordered to defend you: steps in front of you sooner (strategy.js)
     out.push({ k: "attack", c: wc, v: unit(al) * wc * opener(fight, al) * comboPhys(fight, al) });
     if (al.sp >= 25) out.push({ k: "power", c: wc + 2, v: powerHit(al) * comboPhys(fight, al) + (al.bow ? 0 : unit(al) * 2 * (boss ? 0.15 : 0.35)) * (tac === "aggressive" ? 1.4 : 1) });
     if (!al.guard) out.push({ k: "guard", c: 2, v: (tac === "defensive" ? 2.2 : 0.9) * unit(al) * (al.shield ? 1.4 : 1) * (pp < 0.5 ? 1.5 : 1) * (me < 0.5 ? 1.3 : 1) });
-    if (tac !== "ranged" && !al.bow && (tac === "defensive" || (al.shield && tac === "auto")) && pp < 0.45 && me > 0.45 && fight.coverAl !== al) out.push({ k: "cover", c: 2, v: unit(al) * 8 * (0.45 - pp) / 0.45 + unit(al) * 3 });
+    if (tac !== "ranged" && !al.bow && (tac === "defensive" || (al.shield && tac === "auto")) && pp < cv && me > 0.45 && fight.coverAl !== al) out.push({ k: "cover", c: 2, v: unit(al) * 8 * (cv - pp) / cv + unit(al) * 3 });
     // potions from their own pack
     const potAt = al.savePots ? 0.2 : tac === "aggressive" ? 0.3 : 0.38;
     if (me < potAt && potionRows(f, "health").length) out.push({ k: "potion", res: "health", c: 1, v: unit(al) * 20 * (potAt - me + 0.1) });
@@ -211,7 +212,8 @@ const FAI = (() => {
 
   /* Smart AI for followers: the best option per AP, with the tactic's leanings. Returns one option or null. */
   function decide(fight, al, ap = al.ap || 6) {
-    const opts = options(fight, al, ap);
+    let opts = options(fight, al, ap);
+    if (al.order === "hold" && typeof STRAT !== "undefined") opts = opts.filter((o) => STRAT.allowed(al, o));   // your order: Hold back (strategy.js)
     if (!opts.length) return null;
     let best = null, bv = -1;
     for (const o of opts) { const v = o.v / Math.max(1, o.c) * (o.k === "guard" ? 0.8 : 1); if (v > bv) { bv = v; best = o; } }
@@ -333,7 +335,7 @@ const FAI = (() => {
   }
 
   // ------------------------------------------------------------------ being hit (engine.js enemyTurnInner calls these)
-  const weight = (al) => (!al.fai ? FRONT : al.tactic === "defensive" ? TAUNT : al.row === "back" ? BACK : FRONT);
+  const weight = (al) => (!al.fai ? FRONT : al.order === "hold" ? BACK : al.tactic === "defensive" ? TAUNT : al.row === "back" ? BACK : FRONT);
   /* how many "targets" the allies add up to (you count as 1): back-row allies draw fewer blows */
   const aggro = (fight) => fight.allies.reduce((a, x) => a + weight(x), 0);
   function pickAlly(fight) {

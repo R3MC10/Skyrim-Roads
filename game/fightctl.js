@@ -79,6 +79,7 @@ const FIGHTCTL = (() => {
     const f = sess.f, pool = sess.ap + (/^(spell|dual|scroll):/.test(a) ? sess.spAp : 0);
     const [k, arg] = a.split(":");
     try {
+      if (typeof STRAT !== "undefined" && STRAT.owns(a)) return c > pool ? `Need ${c - pool} more AP` : STRAT.why(f, a);
       if (a === "flee") return f.e.boss ? "Not from a boss" : !f.canFlee ? "No way out here" : "";
       if (c > pool) return `Need ${c - pool} more AP`;
       if (a === "power_attack") return "Not enough stamina";
@@ -161,7 +162,7 @@ const FIGHTCTL = (() => {
     return `<div class="fc${enter ? " enter" : ""}" data-fcmode="main">
       <div class="fc-tray" role="group" aria-label="Quick slots" style="--n:${Math.max(3, q.length)}">${tray || `<p class="fc-empty">Quick slots: tap ★ next to a spell or potion to pin it here</p>`}</div>
       <div class="tbgrid fc-main">${main}</div>
-      <div class="fc-row">${menuB("magic", "Magic", `${nSp} spell${nSp === 1 ? "" : "s"}`, "M", iconFor(f, "magic", api, 26))}${menuB("items", "Items", `${nPot} potion${nPot === 1 ? "" : "s"}`, "I", iconFor(f, "items", api, 26))}${btn(sess, api, "flee", { label: "Flee", extra: "flee fc-m", key: "F" })}${end}</div>
+      <div class="fc-row">${menuB("magic", "Magic", `${nSp} spell${nSp === 1 ? "" : "s"}`, "M", iconFor(f, "magic", api, 26))}${menuB("items", "Items", `${nPot} potion${nPot === 1 ? "" : "s"}`, "I", iconFor(f, "items", api, 26))}${typeof STRAT !== "undefined" ? btn(sess, api, "recover", { label: "Breathe", extra: "rec fc-m", key: "R" }) : ""}${btn(sess, api, "flee", { label: "Flee", extra: "flee fc-m", key: "F" })}${end}</div>
     </div>`;
   }
   /* changed into a beast or a Vampire Lord: the form's own moves, big; no magic or items (beastpaths.js) */
@@ -358,6 +359,7 @@ const FIGHTCTL = (() => {
     if (ch === "M") return hit(fc.querySelector('[data-tbm="magic"]:not(.on)')) || hit(fc.querySelector('[data-tbm=""]'));
     if (ch === "I") return hit(fc.querySelector('[data-tbm="items"]:not(.on)')) || hit(fc.querySelector('[data-tbm=""]'));
     if (ch === "F") return hit(fc.querySelector('[data-fk="F"]'));
+    if (ch === "R") return hit(fc.querySelector('[data-fk="R"]'));   // Catch your breath (strategy.js)
   }
 
   if (DOM && typeof addEventListener === "function") {
