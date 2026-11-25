@@ -33,6 +33,8 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "Dragons, rifts and sieges for everyone, and long expeditions.": "Smoki, szczeliny i oblężenia dla wszystkich oraz długie wyprawy.",
     "Giants, hagravens, Thalmor and assassins on the road.": "Olbrzymi, wiedźmokruki, Thalmor i zabójcy na drogach.",
     "Hunt legendary beasts across Skyrim.": "Poluj na legendarne bestie w całym Skyrim.",
+    // Coming next (patchnotes.js)
+    "Mentoring: play side by side with friends of any level": "Mentoring: graj ramię w ramię z przyjaciółmi na każdym poziomie",
     // patch note b346
     "New things open as you level up": "Nowe rzeczy otwierają się z kolejnymi poziomami",
     "A new hero no longer gets every system at once. The big ones open one by one as you level up: perks at level 2, gathering and cooking at 3, the forge at 4, followers and alchemy at 5, horses at 6, hard dungeons at 7, clans and houses at 8, and so on up to legendary hunts at 20.":
