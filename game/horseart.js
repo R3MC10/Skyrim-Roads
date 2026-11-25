@@ -5,7 +5,7 @@
 
    Pictures: side view facing right, saddled, no rider, hooves on the bottom edge (trimmed, ~1024 px).
      poses: stand · gallop · rear · down (knocked down, lying, head right)
-     coats: HORSES.COATS ids (bay black grey white palomino paint). A coat or pose that has no file of its own borrows
+     coats: HORSES.COATS ids (bay chestnut black grey white palomino paint). A coat or pose that has no file of its own borrows
      the grey picture of that pose, tinted to the coat (ctx.filter); a pose that has no file at all borrows "stand".
 
    API: HORSEART.coatOf(colourOrId) → coat id · HORSEART.ok(coat, pose) → picture ready?
@@ -13,11 +13,12 @@
                                                 o.bob lifts it, o.clip = "barrel" draws only the barrel under the saddle
         HORSEART.lying(g, coat, w)              draws the downed horse w wide, centred on x 0, feet line at y 0
         HORSEART.icon(g, coat, size, down)      the stable-card picture inside a size×size square
+        HORSEART.card(coat, w) → an <img> of the whole standing horse w wide (the stables coat preview), "" until loaded
         HORSEART.sig() → changes whenever a horse picture arrives (put it in sprite cache keys) */
 const HORSEART = (() => {
   const POSES = ["stand", "gallop", "rear", "down"];
   /* files in the game folder: add a pose here when its picture is dropped in */
-  const HAVE = { grey: ["stand", "gallop", "rear", "down"], bay: ["stand"] };
+  const HAVE = { grey: ["stand", "gallop", "rear", "down"], bay: ["stand"], black: ["stand", "gallop", "down"], chestnut: ["stand", "gallop", "down"] };
   /* where the saddle seat is (fraction of the trimmed picture) and the belly line under it, per picture */
   const META = {
     "grey-stand": { sx: 0.43, sy: 0.285, belly: 0.6, w: 1022, h: 1024 },
@@ -26,15 +27,18 @@ const HORSEART = (() => {
     "grey-down": { sx: 0.46, sy: 0.2, belly: 0.85, w: 1024, h: 451 },
     "bay-stand": { sx: 0.455, sy: 0.31, belly: 0.6, w: 1024, h: 977 },
   };
+  /* black and chestnut are repaints of the grey pictures on the same canvas, so they share its seat points */
+  for (const c of ["black", "chestnut"]) for (const p of ["stand", "gallop", "down"]) META[`${c}-${p}`] = META[`grey-${p}`];
   /* how a grey picture is tinted for a coat that has no painting of its own */
   const TINT = {
     bay: "sepia(0.85) saturate(1.9) hue-rotate(-12deg) brightness(0.66) contrast(1.08)",
+    chestnut: "sepia(0.9) saturate(2.2) hue-rotate(-18deg) brightness(0.78) contrast(1.06)",
     black: "brightness(0.36) contrast(1.25) saturate(0.5)",
     white: "brightness(1.32) contrast(0.88) saturate(0.4)",
     palomino: "sepia(0.9) saturate(1.35) hue-rotate(-6deg) brightness(0.98)",
     paint: "sepia(0.7) saturate(1.5) hue-rotate(-8deg) brightness(0.82)",
   };
-  const IDS = ["bay", "black", "grey", "white", "palomino", "paint"];
+  const IDS = ["bay", "chestnut", "black", "grey", "white", "palomino", "paint"];
   const coats = () => (typeof HORSES !== "undefined" && HORSES.COATS ? HORSES.COATS : []);
   const hash = (s) => { let h = 2166136261; for (const ch of String(s)) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
   /* a coat id from a coat id or its colour (fights and map markers pass the colour); anything else picks one by name */
@@ -111,6 +115,15 @@ const HORSEART = (() => {
     g.drawImage(c, cw - sw, 0, sw, sh, 0, 0, size, size);
     return true;
   }
-  if (typeof ASSETS !== "undefined" && ASSETS.on) ASSETS.on(() => { sig(); });
-  return { POSES, HAVE, META, TINT, coatOf, source, ok, sig, ride, lying, icon };
+  /* the whole standing horse, for the coat picker at the stables */
+  function card(coat, w = 120) {
+    if (typeof ART === "undefined") return "";
+    const id = coatOf(coat), rec = mips(id, "stand");
+    if (!rec) return typeof ASSETS === "undefined" || ASSETS.state("horse-" + source(id, "stand").key) !== "loading" ? "" : `<span class="hcoatpic hcoatwait" data-coat="${id}" data-w="${w}"></span>`;   // filled in when the picture arrives
+    const h = Math.round(w * rec.h / rec.w);
+    return ART.html(w, h, (g) => { g.drawImage(pick(rec, h * devScale(g)), 0, 0, w, h); }, { key: `hcard:${id}:${w}:${sig()}`, cls: "hcoatpic", alt: id });
+  }
+  const fill = () => { if (typeof document === "undefined") return; for (const el of document.querySelectorAll(".hcoatwait")) { const h = card(el.dataset.coat, +el.dataset.w || 120); if (h && !/hcoatwait/.test(h)) el.outerHTML = h; } };
+  if (typeof ASSETS !== "undefined" && ASSETS.on) ASSETS.on(() => { sig(); fill(); });
+  return { POSES, HAVE, META, TINT, coatOf, source, ok, sig, ride, lying, icon, card };
 })();

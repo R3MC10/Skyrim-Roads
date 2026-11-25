@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b194-horsecoats", build: 194, date: "25 Nov 2026", title: "Black and chestnut horses", items: [
+      "Black and chestnut horses are painted too: a glossy black with a white star, and a copper chestnut with a light mane, a white blaze and white socks. They stand, gallop and lie down like the grey.",
+      "Chestnut is a new coat at the stables. The stables now show the whole horse in the coat you pick before you buy.",
+      "Wild horses by the road can be chestnut too.",
+    ] },
     { id: "b193-rigpolish", build: 193, date: "25 Nov 2026", title: "Painted weapons and better swings", items: [
       "Fighters swing like they mean it: a sword goes up and back over the shoulder, then comes down and forward in one arc, the body turning into the blow and the weight stepping onto the front foot. No more blade sliding through your own head.",
       "Bows are drawn properly: the bow arm straight, the string hand pulled back to the cheek, then the hand flies back as the arrow goes.",
