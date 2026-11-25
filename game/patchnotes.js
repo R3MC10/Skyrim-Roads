@@ -3,6 +3,15 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b204-artround3", build: 204, date: "25 Nov 2026", title: "Fresh paint for fights and mini-games", items: [
+      "Fourteen more fight places are freshly painted, bigger and sharper: the arena, ash wastes, autumn woods, bandit camps, Forsworn cliffs, forts, giant camps, lairs, marshes, mines, rocky highlands, temples, Thalmor halls and vampire lairs.",
+      "Fighters pick up the light of each of these places, so they match the new paintings.",
+      "The shiny floor in Thalmor halls reflects a bit less, so it doesn't steal the show.",
+      "Black and chestnut horses now rear up in their own colours when you get thrown from the saddle.",
+      "Lockpicking happens on a painted chest front, with the lock sitting right on its iron plate. When a chest opens, its lid lifts a little.",
+      "Hunting: branches hang in from the top corners and grass grows along the bottom, swaying in the wind, without hiding the animals or your aim.",
+      "Fishing: painted splashes and rings on the water when the line lands, on every nibble, on the bite and when you land the fish.",
+    ] },
     { id: "b203-rigcohesion", build: 203, date: "25 Nov 2026", title: "Fighters that belong in the scene", items: [
       "Fighters and foes now take on the light of the place you fight in: cold and blue in the snow, warm and torch-lit in caves, dim in barrows, with a faint edge of light on their backs.",
       "Fighters are a touch softer so they match the painted backdrops instead of looking pasted on top.",
