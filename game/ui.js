@@ -500,11 +500,22 @@
   /* phone back button: close what's on top, step back to the map, and only then leave the app */
   /* opts.esc: the PC's Esc key (desktop.js). It walks the same steps, except that the compass isn't "home" on a PC and
      a fight isn't left alone: false then means "nothing left to close", and Esc opens the pause menu (pausemenu.js) */
+  /* [qa-core] full-screen mini-games sit over everything, so the phone's back button used to reach the screens under them
+     (and at last minimised the app) while the game stayed open. Press the game's own way out instead, as a player would */
+  const GAME_EXITS = ["#fishgame #fhdone", "#huntgame #hglow", "#huntgame #hgfin", "#huntgame #hgdone", "#minegame #mgok", "#minegame #mgdone",
+    "#lockpick #lpleave", "#pickgame #ppleave", "#smithgame #sgquick", "#craftgame #cgquick", "#xgame [data-act=close]"];
+  function backOutOfGame() {
+    for (const sel of GAME_EXITS) { const b = document.querySelector(sel); if (b && !b.disabled && b.offsetParent !== null) { b.click(); return true; } }
+    const rc = $("#rct"); if (rc) { rc.click(); return true; }   // runecraft.js closes when its backdrop is tapped
+    return false;
+  }
   window.__ui = {
     back(opts) {
       const escKey = !!(opts && opts.esc);
       if (typeof PAUSEM !== "undefined" && PAUSEM.isOpen()) { PAUSEM.close(); return true; }   // the Esc menu is the very top
       if (typeof BUGREPORT !== "undefined" && BUGREPORT.isOpen()) { BUGREPORT.close(); return true; }   // the report window sits on top of everything
+      if (S && typeof CHARGEN !== "undefined" && document.querySelector(".cg-over")) { CHARGEN.close(false); return true; }   // [qa-core] the barber / mirror: back = Cancel, never something hidden under it
+      { const x = backOutOfGame(); if (x) return x; }   // [qa-core] a mini-game or the rune table: back leaves it (its own Leave / Done button)
       if ($("#title")) { if (titlePage !== "menu" && titlePage !== "press") { titlePage = "menu"; renderTitle(); return true; } return false; }
       if (!S && $("#toTitle")) { app.innerHTML = ""; showTitle("menu"); return true; }
       if (typeof TB !== "undefined" && TB.open) { if ($("#modal.pm-top")) { closeModal(); return true; } return !escKey; }   // a turn-based fight is on: finish it (or Flee); Esc pauses
@@ -518,6 +529,7 @@
       if (selected) { selected = null; renderPicked(); return true; }
       if (S && (tab === "stats" || tab === "diary") && !document.body.classList.contains("tw-char")) { tab = "hero"; renderTabs(); renderPanel(true); return true; }   // [journal] Character sub-pages
       if (S && tab === "places") { tab = "map"; renderTabs(); renderPanel(true); return true; }
+      if (S && tab === "town" && townShop && $("#side .au-back")) { townShop = ""; renderPanel(true); return true; }   // [qa-core] in a shop or the inn: back goes to the town's board first, like its ‹ button
       if (typeof TABMENU !== "undefined") { const r = TABMENU.back(opts); if (r !== null) return r; }   // the compass is home (tabmenu.js); on a PC the map is
       if (S && tab !== "map") { tab = "map"; bump(); renderTabs(); renderPanel(true); return true; }
       return false;
