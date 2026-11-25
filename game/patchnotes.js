@@ -3,11 +3,19 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b303-remakeonce", build: 303, date: "25 Nov 2026", title: "Everyone gets to remake their hero once", items: [
+    { id: "b304-remakeonce", build: 304, date: "25 Nov 2026", title: "Everyone gets to remake their hero once", items: [
       "Everyone gets to remake their hero once: pick race, sex and look again.",
       "When you next step onto the map, the character creator opens once for every hero made before this update. Your name, level, trained skills, perks, gear and quests all stay.",
       "Change race and only the race's starting skill boost moves: what you trained yourself is kept, and you get the new race's power and gifts.",
       "Happy with your hero? Tap Keep as is. It never pops up in a fight, a dungeon or a party vote: it waits until you're back on the map.",
+    ] },
+    { id: "b303-pcupdates", build: 303, date: "25 Nov 2026", title: "The PC game updates itself", items: [
+      "On Windows the game now updates by itself in the background, the installed and the portable version alike: no more downloading a new setup for every build.",
+      "Usually only the files that changed get downloaded, so an update is often just a few megabytes. A card in the corner shows how far along it is.",
+      "When it's ready the card says Restart to update. On the title screen it switches over by itself, and otherwise the new version starts the next time you open the game. Your saves stay.",
+      "If a new version ever fails to start, the game goes back to the one before by itself and skips the broken one.",
+      "The title screen's Update page now works on PC too. The whole app only downloads again when the app itself changes.",
+      "Older PC copies need the new version once (from the GitHub page); after that they keep themselves up to date.",
     ] },
     { id: "b302-hotbardnd", build: 302, date: "25 Nov 2026", title: "Drag and drop on the hotbar, single or dual cast", items: [
       "In Edit hotbar you can now drag moves, spells, potions and poisons from the list onto a slot, drag one slot onto another to swap them, or drag a slot off the bar to empty it. With a mouse just drag; on a phone hold a row for a moment until it lifts, then drag. Tapping still works too.",

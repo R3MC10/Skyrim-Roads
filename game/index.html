@@ -1715,6 +1715,9 @@ body:has(#favBtn) .app,body:has(#twBtn) .app{padding-bottom:calc(190px + env(saf
 #pcupd .t{color:var(--gold);font-weight:600;letter-spacing:.04em;text-transform:uppercase;font-size:13px}
 #pcupd .d{color:var(--ink);font-size:14px;line-height:1.4}
 #pcupd .b{display:flex;gap:8px;justify-content:flex-end}
+#pcupd .b:empty{display:none}
+#pcupd .pbar{height:6px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;box-shadow:inset 0 0 0 1px rgba(226,187,100,.25)}
+#pcupd .pbar i{display:block;height:100%;width:3%;background:linear-gradient(90deg,#9c7a35,var(--gold));transition:width .4s ease-out}
 @keyframes pcupdIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 /* [fightread] fightread.js: foe intents, what's coming off each health bar, your own statuses, round banners, low health */
 .tbbar s.tbfc{position:absolute;top:0;bottom:0;text-decoration:none;pointer-events:none;background:repeating-linear-gradient(135deg,rgba(255,255,255,.55) 0 3px,rgba(255,255,255,.08) 3px 6px);box-shadow:inset 0 0 0 1px rgba(255,255,255,.35);animation:tbfc 1.4s ease-in-out infinite}
@@ -5412,6 +5415,7 @@ body:has(#tbf) #gnear{display:none!important}
 <script src="i18n_gatherarea.js"></script>
 <script src="i18n_weaponfx.js"></script>
 <script src="i18n_phantom.js"></script>
+<script src="i18n_pcupdate.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>
