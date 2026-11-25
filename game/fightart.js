@@ -485,10 +485,10 @@ const FIGHTART = (() => {
   const MOVES = {
     dagger: { dur: 850, hits: [0.32, 0.5], trail: "stab", fx: "stab", kf: [I0(0), R(0.2, -0.9, 0, -0.05, 70, 0, 0), R(0.32, 0.15, 0, 0.2, 96, 0, 0, "in"), R(0.41, -0.7, 0, 0.06, 88, 0, 0, "out"), R(0.5, 0.2, 0, 0.22, 98, 0, 0, "in"), R(0.7, -0.3, 0, 0.05, 76, 0, 0, "out"), I0(1)] },
     sword: { dur: 950, hits: [0.44], trail: "arc", fx: "slash", kf: [I0(0), R(0.26, -2.1, 0, -0.12, 74, 0, 0), R(0.44, 0.95, 0, 0.2, 96, 0, 0, "in"), R(0.6, 0.8, 0, 0.15, 92, 0, 0, "out"), I0(1)] },
-    axe: { dur: 950, hits: [0.46], trail: "arc", fx: "chop", kf: [I0(0), R(0.3, -2.7, 0, -0.2, 74, -3, 0), R(0.46, 0.75, 0, 0.3, 94, 0, 0, "in"), R(0.62, 0.6, 0, 0.26, 90, 0, 0, "out"), I0(1)] },
-    mace: { dur: 950, hits: [0.46], trail: "arc", fx: "dust", kf: [I0(0), R(0.28, -1.8, 0, -0.12, 74, 0, 0), R(0.46, 1.05, 0, 0.24, 96, 0, 0, "in"), R(0.62, 0.9, 0, 0.2, 92, 0, 0, "out"), I0(1)] },
+    axe: { dur: 950, hits: [0.46], trail: "chop", fx: "chop", kf: [I0(0), R(0.3, -2.7, 0, -0.2, 74, -3, 0), R(0.46, 0.75, 0, 0.3, 94, 0, 0, "in"), R(0.62, 0.6, 0, 0.26, 90, 0, 0, "out"), I0(1)] },
+    mace: { dur: 950, hits: [0.46], trail: "blunt", fx: "dust", kf: [I0(0), R(0.28, -1.8, 0, -0.12, 74, 0, 0), R(0.46, 1.05, 0, 0.24, 96, 0, 0, "in"), R(0.62, 0.9, 0, 0.2, 92, 0, 0, "out"), I0(1)] },
     greatsword: { dur: 1100, hits: [0.5], trail: "wide", fx: "sweep", kf: [I0(0), R(0.34, -2.5, 0, -0.24, 70, 0, 0), R(0.5, 1.3, 0, 0.34, 98, 0, 0, "in"), R(0.68, 1.1, 0, 0.28, 94, 0, 0, "out"), I0(1)] },
-    battleaxe: { dur: 1150, hits: [0.52], trail: "arc", fx: "slam", kf: [I0(0), R(0.22, -1.6, 0, -0.1, 56, 0, 0), R(0.38, -3.0, 0, -0.3, 80, -9, 0, "out"), R(0.52, 0.95, 0, 0.4, 96, 0, 0, "in"), R(0.72, 0.9, 0, 0.36, 92, 0, 0, "out"), I0(1)] },
+    battleaxe: { dur: 1150, hits: [0.52], trail: "chop", fx: "chop", kf: [I0(0), R(0.22, -1.6, 0, -0.1, 56, 0, 0), R(0.38, -3.0, 0, -0.3, 80, -9, 0, "out"), R(0.52, 0.95, 0, 0.4, 96, 0, 0, "in"), R(0.72, 0.9, 0, 0.36, 92, 0, 0, "out"), I0(1)] },
     spear: { dur: 900, hits: [0.42], trail: "stab", fx: "pierce", kf: [I0(0), R(0.26, 0.35, 0, -0.14, 52, 0, 0), R(0.42, 0.5, 0, 0.24, 84, 0, 0, "in"), R(0.58, 0.45, 0, 0.18, 78, 0, 0, "out"), I0(1)] },
     bow: { dur: 1050, hits: [0.72], proj: [0.52, 0.72, "arrow"], kf: [B0(0), R(0.15, -0.05, -0.9, 0, 0, 0, 0.1), R(0.42, -0.05, -1.0, -0.04, -3, 0, 1), R(0.5, -0.05, -1.0, -0.04, -3, 0, 1), R(0.53, -0.05, -0.8, -0.1, -5, 0, 0, "out"), B0(1)] },
     crossbow: { dur: 800, hits: [0.42], proj: [0.32, 0.42, "bolt"], kf: [R(0, 0, 0, 0, 0, 0, 1), R(0.28, -0.02, -0.6, 0.02, 0, 0, 1), R(0.32, -0.08, -0.6, -0.12, -7, 0, 0, "out"), R(0.6, -0.02, -0.4, -0.04, -2, 0, 0), R(1, 0, 0, 0, 0, 0, 1)] },
@@ -509,7 +509,7 @@ const FIGHTART = (() => {
     breath: { dur: 1250, hits: [0.56], proj: [0.36, 0.86, "cone"], kf: [B0(0), R(0.3, 0, 0, -0.15, -4, -6, 0), R(0.38, 0, 0, 0.1, 4, 0, 0.6, "in"), R(0.86, 0, 0, 0.1, 4, 0, 0.6), B0(1)] },
     drain: { dur: 1000, hits: [0.6], proj: [0.36, 0.8, "drain"], kf: [I0(0), R(0.3, -1.2, -1.2, -0.06, 0, 0, 0), R(0.4, -0.3, -0.6, 0.1, 6, 0, 0, "in"), R(0.8, -0.3, -0.6, 0.1, 6, 0, 0), I0(1)] },
   };
-  MOVES.club = MOVES.mace; MOVES.warhammer = MOVES.battleaxe;
+  MOVES.club = MOVES.mace; MOVES.warhammer = { ...MOVES.battleaxe, fx: "slam", trail: "blunt" };   // [weaponfx] the same heavy swing; a hammer thuds and the ground shakes, an axe chops
   const WEAPONS = ["dagger", "sword", "greatsword", "axe", "battleaxe", "mace", "warhammer", "spear", "bow", "crossbow", "staff", "fist", "club"];
   const FOE_MOVE = { wolf: "bite", wolves: "bite", skeever: "bite", spider: "bite", dspider: "bite", crab: "claw", bear: "claw", cat: "claw", troll: "claw", mammoth: "stomp", giant: "slam", centurion: "slam",
     dragon: "breath", mage: "cast", hagraven: "cast", lich: "cast", wisp: "cast", atronach: "cast", bandit: "axe", forsworn: "sword", draugr: "battleaxe", skeleton: "sword", vampire: "dagger", falmer: "sword", sphere: "sword" };
@@ -864,6 +864,12 @@ const FIGHTART = (() => {
     const lowQ = !!(FS && FS.quality && FS.quality() === "low");
     const AFX = typeof ARROWFX !== "undefined" ? ARROWFX.scene({ s, groundY, reduce: rm, low: lowQ }) : null;
     const MFX = typeof MOVEFX !== "undefined" ? MOVEFX.scene({ s, W, H: Hh, groundY, reduce: rm, low: lowQ }) : null;
+    /* [weaponfx] when and where each weapon's blow plays (weaponfx.js): the trail during each hit's swing, the hit on the contact frame */
+    const WFX = typeof WEAPONFX !== "undefined" ? WEAPONFX : null, WLOG = [];
+    const wlog = (e) => { if (WLOG.length < 300) WLOG.push(e); };
+    let heroTip = null, heroTipBi = -1, trW = -1, foePicOn = false;
+    const swingOn = (m, u, show) => WFX ? WFX.swingAt(m.hits, u, show) : (u > m.hits[0] - 0.18 && u < m.hits[0] + (show ? 0.22 : 0.1) ? 0 : -1);
+    function trailWin(w, b, u) { if (w !== trW) { TRL.length = 0; trW = w; if (w >= 0 && b) wlog({ k: "trail", b: bi, u, i: w, who: b.who }); } }
     let seatLift = 0, muteFx = false;   // how high you sit in the saddle (shots leave from there); muteFx: movefx draws this impact, the shared bursts stay quiet
     // ---- state (all allocated once)
     let bi = 0, lt = 0, hitIdx = 0, phase = beats.length ? "play" : "end", phaseT = 0, real = 0, hitstop = 0, slowT = 0, shake = 0, zoom = 1, zoomT = 0, zcx = W / 2, zcy = Hh / 2, flash = 0, flashC = "#fff";
@@ -900,6 +906,7 @@ const FIGHTART = (() => {
        moves; drawn as a soft crescent between the two that tapers and fades toward its tail. The painted fighter reports
        its real blade (PAINTRIG.tip), the ink figures the drawn tip; a jump or a point far over the head starts it over */
     const TRL = []; let heroRig = false, tipN = -1;
+    cv.__wfx = { log: WLOG, live: () => ({ trail: TRL.length, shapes: MFX ? MFX.shapes() : 0 }) };   // [weaponfx] for the screen test
     const nowS = () => real;   // the scene's own clock, so a paused or hand-stepped scene keeps its trail
     function pushTrail(x, y, bx, by) {
       if (!(isFinite(x) && isFinite(y) && isFinite(bx) && isFinite(by))) return;
@@ -951,10 +958,19 @@ const FIGHTART = (() => {
     const handY = (side) => side > 0 ? groundY - 46 * s : foeK === "dragon" ? groundY - 80 * s : groundY - 46 * s * Math.min(1.4, fSize);
     const allyX = () => hx0 - 26 * s;
     const GEO = { hand: [0, 0], hand2: [0, 0], from: [0, 0], to: [0, 0], ally: [0, 0], gy: groundY };   // [movefx] where things are this frame
-    function mfxGeo() {
+    /* [weaponfx] the hero's weapon tip: the painted blade (captured as the figure is drawn), else the ink figure's tip */
+    function heroTipAt(wt) {
+      if (heroRig) return heroTip && heroTipBi === bi ? heroTip : null;
+      tipOf(1, heroP, wt || heroP.wt || rec.hero.wt, 20); return [TR[20], TR[21] - seatLift];
+    }
+    const foeBox = () => ({ x: fx0 - (foeP.dx || 0) * s, y: foeChest, w: 26 * s * Math.min(1.6, fSize), h: 44 * s * Math.min(1.6, fSize) });
+    function mfxGeo(b) {
       const hx = handX(1, heroP), hy = handY(1) - seatLift;
       GEO.hand[0] = hx; GEO.hand[1] = hy; GEO.hand2[0] = hx - 12 * s; GEO.hand2[1] = hy + 5 * s;
       GEO.from[0] = hx0; GEO.from[1] = heroChest - seatLift; GEO.to[0] = fx0 - (foeP.dx || 0) * s; GEO.to[1] = foeChest; GEO.ally[0] = allyX(); GEO.ally[1] = groundY - 36 * s;
+      const tp = b && b.who === "me" ? heroTipAt(b.move === "staff" ? "staff" : null) : null;
+      GEO.tip = tp; GEO.at = WFX ? WFX.anchor(tp, foeBox(), 1) : null;   // [weaponfx] the blow lands where the blade meets the body
+      if (tp && b.move === "staff") { GEO.hand[0] = tp[0]; GEO.hand[1] = tp[1]; }   // a staff's spell leaves its tip
       return GEO;
     }
 
@@ -1112,8 +1128,10 @@ const FIGHTART = (() => {
         const u = Math.min(1, lt / b.dur);
         if (b.tag && !b.tagShown && u >= (b.tagU || 0)) { b.tagShown = true; label = L(b.tag); labelT = 1.1; labelC = b.who === "me" ? "#e9dcc0" : "#ffb070"; }   // [phantom] "Winds up!", "Counter!": what this beat is when it isn't a plain blow
         // charging hands, projectiles in flight
-        const own = MFX ? MFX.step(dt, b, (f.log || [])[b.li], m, u, mfxGeo()) : false;   // [movefx] this spell's own charge, delivery and impact
-        if (!own && m.charge && u > m.charge[0] && u < m.charge[1] && Math.random() < 0.7 * pmul) { const side = b.who === "me" ? 1 : -1, P0 = side > 0 ? heroP : foeP, c = colOf(b.fx, b.el); spawn(0, c[(Math.random() * c.length) | 0], handX(side, P0) + (Math.random() - 0.5) * 14 * s, handY(side) + (Math.random() - 0.5) * 14 * s, 0, -20 * s, 0.4, 1.8, 0); }
+        const own = MFX ? MFX.step(dt, b, (f.log || [])[b.li], m, u, mfxGeo(b)) : false;   // [movefx] this spell's own charge, delivery and impact
+        const stTip = b.who === "me" && b.move === "staff" ? heroTipAt("staff") : null;   // [weaponfx] a staff gathers and looses its spell at its tip
+        if (!own && m.charge && u > m.charge[0] && u < m.charge[1] && Math.random() < 0.7 * pmul) { const side = b.who === "me" ? 1 : -1, P0 = side > 0 ? heroP : foeP, c = colOf(b.fx, b.el), cx = stTip ? stTip[0] : handX(side, P0), cy = stTip ? stTip[1] : handY(side); spawn(0, c[(Math.random() * c.length) | 0], cx + (Math.random() - 0.5) * (stTip ? 6 : 14) * s, cy + (Math.random() - 0.5) * (stTip ? 6 : 14) * s, 0, -20 * s, 0.4, 1.8, 0); }
+        if (stTip && m.proj && u >= m.proj[0] && !b.boltLog) { b.boltLog = 1; wlog({ k: "bolt", b: bi, u, who: "me", tip: true, x: stTip[0], y: stTip[1] }); }
         if (m.proj && !own) projStep(b, m, u);
         sampleTrail(b, m, u);
         if (!own && b.who === "me" && !b.miss && b.fx === "wall" && u > 0.45) for (let i = 0; i < 3; i++) if (Math.random() < 0.9 * pmul) {   // walls and storms: columns of fire, frost or lightning
@@ -1122,12 +1140,17 @@ const FIGHTART = (() => {
           if (b.el === "frost" && Math.random() < 0.3) spawn(2, "#e0f4ff", x, groundY - 10 * s, 0, -20 * s, 0.9, 6, 0);
         }
         if (b.burn && u > 0.8 && Math.random() < 0.6 * pmul) { const c = colOf("wall", b.burn === "dust" ? "fire" : b.burn); spawn(0, c[0], fx0 + (Math.random() - 0.5) * 20 * s, foeChest + 10 * s, 0, -50 * s, 0.4, 3, 0); }
-        while (hitIdx < m.hits.length && u >= m.hits[hitIdx]) { const lastHit = hitIdx === m.hits.length - 1; impact(b, lastHit); if (lastHit) landNumbers(b); hitIdx++; }
+        while (hitIdx < m.hits.length && u >= m.hits[hitIdx]) {
+          const lastHit = hitIdx === m.hits.length - 1;
+          if (meleeOf(b)) { const me = b.who === "me", at = me && WFX ? WFX.anchor(heroTipAt(), foeBox(), 1) : null;   // [weaponfx] one blow per contact frame (screen tests)
+            wlog({ k: b.miss ? "whiff" : "impact", b: bi, u, i: hitIdx, who: me ? "me" : b.ally ? "ally" : "them", kind: WFX && WFX.KIND[b.move] ? WFX.kindOf(b.move) : null, onFoe: me && (!at || Math.abs(at[0] - fx0) < 40 * s * Math.min(1.6, fSize)), onHero: !me && !b.ally, x: at ? at[0] : null, y: at ? at[1] : null }); }
+          impact(b, lastHit); if (lastHit) landNumbers(b); hitIdx++;
+        }
         if (b.wolf && u > 0.55 && wolfT >= 1) wolfT = 0;   // your familiar joins in
         if (u >= 1) {
           if (!m.hits.length) landNumbers(b);
           revealLog(b.li);
-          bi++; lt = 0; hitIdx = 0; boltOn = 0; TRL.length = 0;
+          bi++; lt = 0; hitIdx = 0; boltOn = 0; TRL.length = 0; trW = -1;
           if (bi >= beats.length) { phase = f.tbMid ? (CFX && !rm ? "settle" : "idle") : "fall"; phaseT = 0; if (phase === "idle") { done = true; rec.played = true; revealLog(1e9); ctl?.remove(); } if (phase === "fall") pickDeath(); }
         }
       } else if (phase === "settle") {   // a turn-by-turn fight: let the camera ease back before the scene rests
@@ -1166,7 +1189,8 @@ const FIGHTART = (() => {
       }
       if (u < a0 || u > a1 + 0.02) { if (u > a1) boltOn = 0; return; }
       const p = Math.max(0, Math.min(1, (u - a0) / (a1 - a0)));
-      const breathMe = type === "cone" && me, x0 = breathMe ? hx0 + (heroP.dx + 12) * s : handX(side, me ? heroP : foeP), y0 = breathMe ? groundY - 56 * s : handY(side), x1 = me ? fx0 : (b.ally ? allyX() : hx0), y1 = me ? foeChest : heroChest;
+      const breathMe = type === "cone" && me, sTip = me && b.move === "staff" ? heroTipAt("staff") : null;   // [weaponfx] a staff's bolt leaves the staff's tip, not the hand
+      const x0 = sTip ? sTip[0] : breathMe ? hx0 + (heroP.dx + 12) * s : handX(side, me ? heroP : foeP), y0 = sTip ? sTip[1] : breathMe ? groundY - 56 * s : handY(side), x1 = me ? fx0 : (b.ally ? allyX() : hx0), y1 = me ? foeChest : heroChest;
       const fx = b.fx || type, el = b.el;
       if (type === "spell" && AT_FOE.has(fx)) { projX = -1; return; }
       if (type === "spell" && (fx === "shock" || el === "shock") || type === "spell" && fx === "paralyze") {   // instant lightning
@@ -1196,10 +1220,12 @@ const FIGHTART = (() => {
     }
     function sampleTrail(b, m, u) {   // the weapon tip, every step, so the trail follows the real arc
       if (!m.trail) return;
-      const hitU = m.hits[0], side = b.who === "me" ? 1 : -1;
+      const side = b.who === "me" ? 1 : -1;
       if (side > 0 && heroRig) return;   // the painted figure reports its own blade while it is drawn (draw)
-      if (u > hitU - 0.18 && u < hitU + 0.1) {
-        poses(b, m, u, b.st, 0); const P0 = side > 0 ? heroP : foeP; tipOf(side, P0, side > 0 ? heroP.wt : (foeP.wt || FOE_MOVE[foeK]), 22);
+      if (side < 0 && foePicOn) return;   // [weaponfx] a foe shown as a picture: where its weapon is isn't known, so no smear floating in the air
+      const w = swingOn(m, u, false);
+      if (w >= 0) {
+        trailWin(w, b, u); poses(b, m, u, b.st, 0); const P0 = side > 0 ? heroP : foeP; tipOf(side, P0, side > 0 ? heroP.wt : (foeP.wt || FOE_MOVE[foeK]), 22);
         const hx = handX(side, P0), hy = handY(side), x = TR[22], y = TR[23];
         pushTrail(x, y, hx + (x - hx) * 0.45, hy + (y - hy) * 0.45);
       }
@@ -1252,6 +1278,12 @@ const FIGHTART = (() => {
           (b.shotBy = b.shotBy || []).push(a.name);
           AFX.fire(null, { x0: ax + 16 * sc2, y0: ay - (ahc ? 74 : 44) * sc2, x1: fx0, y1: foeChest, dur: 0.24, sp: ARROWFX.spec({ wt: /crossbow/.test(a.look?.wt || "") ? "crossbow" : "bow" }), miss: false, gore: !!GS });
         }
+        if (an && an.clip === "attack" && !an.shoot && an.u >= 0.4 && b && phase === "play" && a.name && !(b.hitBy && b.hitBy.includes(a.name))) {   // [weaponfx] a follower's blow: one small hit on the foe as it lands
+          (b.hitBy = b.hitBy || []).push(a.name);
+          const ln = (f.log || [])[b.li], said = `${ln?.me || ""} ${ln?.them || ""}`, miss = said.includes(`${a.name} miss`);
+          if (!miss) { const hx = fx0 - (foeFront * 0.6 + 4) * s, hy = foeChest; burst(hx, hy, Math.round(5 * pmul) || 1, 1, COL.spark, 200 * s, 0.18, 1.5, 220); burst(hx, hy + 6 * s, 3, 2, COL.dust, 50 * s, 0.4, 4, -10, true); foeKnock = Math.max(foeKnock, 5); }
+          wlog({ k: miss ? "whiff" : "impact", b: bi, u, i: 0, who: "ally", name: a.name, kind: null, onFoe: !miss, onHero: false });
+        }
         wg.save(); wg.translate(ax, ay); wg.scale(sc2, sc2); if (p.row && !al2) wg.globalAlpha = 0.94;
         if (ahc) { const by = -30 - (HORSEBACK.riderBob ? HORSEBACK.riderBob(ahc, tt + i) : 0); wg.save(); wg.translate(0, by); allyFig(wg, a.kind, { lunge: allyLunge, t: tt, i, look: a.look, anim: an, ride: true, rideLayer: "far" }); wg.restore(); }
         if (ahc) { HORSEBACK.drawHorse(wg, ahc, 0, tt + i, "back"); HORSEBACK.drawHorse(wg, ahc, 0, tt + i, "front"); wg.translate(0, -30 - (HORSEBACK.riderBob ? HORSEBACK.riderBob(ahc, tt + i) : 0)); }   // [riding] the horse first, the rider on it
@@ -1300,9 +1332,11 @@ const FIGHTART = (() => {
       if (onHorse) { for (const part of ["back", "front"]) { if (mp) MFx.drawMount(wg, rec.horse, mp, tt, part, rec.horseCoat); else HORSEBACK.drawHorse(wg, rec.horse, 0, tt, part, rec.horseCoat); } wg.save(); seatHere(); }
       { const fs = b ? b.st : st, form = fs && (fs.beast || fs.lord) && (phase === "play" || phase === "settle" || phase === "idle"); heroFig(wg, form ? { ...rec.hero, beast: fs.beast, lord: fs.lord } : rec.hero, form ? Math.max(0, Math.min(1, (heroP.dx || 0) / 40)) : 0, tt, heroP);
         if (form) heroRig = false;
-        else if (painted && b && b.who === "me" && m && m.trail && phase === "play" && u > m.hits[0] - 0.15 && u < m.hits[0] + 0.1 && PAINTRIG.tip) {   // [rigraces] the painted blade, where it really is
+        else if (painted && PAINTRIG.tip) {   // [rigraces] the painted blade, where it really is ([weaponfx] read right after it's drawn: a painted bandit reports under the same name)
           const T = PAINTRIG.tip("me");
-          if (T && T.n !== tipN) { tipN = T.n; const q = TRL[TRL.length - 1]; if (q && TRL.length < 8 && (T.x - tx) / sc < q.x - s) TRL.length = 0;   /* the backswing leaves no trail */ pushTrail((T.x - tx) / sc, (T.y - ty) / sc, (T.bx - tx) / sc, (T.by - ty) / sc); }
+          if (T && isFinite(T.x)) { heroTip = [(T.x - tx) / sc, (T.y - ty) / sc]; heroTipBi = bi; }
+          const w = b && b.who === "me" && m && m.trail && phase === "play" ? swingOn(m, u, false) : -1;
+          if (T && w >= 0 && T.n !== tipN) { tipN = T.n; trailWin(w, b, u); const q = TRL[TRL.length - 1]; if (q && TRL.length < 8 && (T.x - tx) / sc < q.x - s) TRL.length = 0;   /* the backswing leaves no trail */ pushTrail((T.x - tx) / sc, (T.y - ty) / sc, (T.bx - tx) / sc, (T.by - ty) / sc); }
         } }   // werewolf or Vampire Lord while changed
       if (onHorse) wg.restore();
       wg.restore();
@@ -1377,7 +1411,7 @@ const FIGHTART = (() => {
       const foePic0 = foeK !== "player" && typeof ASSETS !== "undefined" ? ASSETS.img(lhP ? lhP.key : ASSETS.foeKey(rec.foeName, foeK, rec.f?.e?.arch)) : null;
       const foePic = foePic0 && RL ? RL.graded(foePic0) : foePic0;   // [rigcohesion] in the scene's light
       if (foePic && RL && !curDragon?.air) RL.shadow(wg, foeK === "dragon" ? -10 : 2, 0.4, (foeK === "dragon" ? 60 : 20) * Math.min(1.8, fSize) * picK0(), 4.2 * Math.min(1.8, fSize), foeDown ? 0.4 : 0.75);   // its contact shadow
-      const picK = picK0();
+      const picK = picK0(); foePicOn = !!foePic;
       if (RIG) {   // [OURS] the rig picks its clip from the beat: an attack locked to the move's timing, the fall, a gloat, a stagger...
         const R = RIGST, them = b && b.who === "them";
         R.t = rm ? 0 : tt; R.clip = null; R.u = 0; R.hitU = null; R.jitter = false; R.still = !!rm;
@@ -1427,10 +1461,11 @@ const FIGHTART = (() => {
       // weather in front of the fighters
       if (wxp) { const dt = Math.min(0.05, Math.max(0, (now - lastNow) / 1000)); lastNow = now; wxp.step(wg, done ? 0 : dt); }
       // weapon trail
-      if (b && m && m.trail && phase === "play") {
-        const hitU = m.hits[0];
+      if (b && m && m.trail && phase === "play" && !(b.who !== "me" && foePicOn)) {   // [weaponfx] only during this hit's own swing, fading out just after contact
+        const w = swingOn(m, u, true), hitU = w >= 0 ? m.hits[w] : 0, sh0 = WFX ? WFX.SHOW : 0.22;
         trailC = b.who === "me" && rec.hero.ench ? rec.hero.ench[1] : "#f4f6ff";
-        if (TRL.length > 1 && u < hitU + 0.22) trail(m.trail, b.miss ? 0.35 : 0.75 * (u < hitU + 0.1 ? 1 : 1 - (u - hitU - 0.1) / 0.12), b.power);
+        if (w >= 0 && w === trW && TRL.length > 1) trail(m.trail, b.miss ? 0.35 : 0.75 * (u < hitU + 0.03 ? 1 : Math.max(0, 1 - (u - hitU - 0.03) / (sh0 - 0.03))), b.power);
+        else if (w < 0 && TRL.length && u > (m.hits[m.hits.length - 1] || 0)) TRL.length = 0;   // the swing is over: nothing left hanging in the air
       }
       // a projectile in flight
       if (projX >= 0 && b && m && m.proj && u >= m.proj[0] && u <= m.proj[1]) projectile();
@@ -1486,16 +1521,19 @@ const FIGHTART = (() => {
     /* [rigcohesion] a faint motion smear hugging the blade: only the blade's last ~75° of travel, a few feathered streaks
        from the tip to part way down the blade, each a soft wide pass and a thin one, clear at the tail and at most about
        0.35 strong at the blade (additive), so it reads as speed, never as a white sector in the sky */
+    const TRAILP = WFX ? { arc: WFX.of("sword"), wide: WFX.of("greatsword"), chop: WFX.of("axe"), blunt: WFX.of("mace"), stab: WFX.of("dagger") } : null;
     function trail(kind, a, power) {
-      const now = nowS(), life = kind === "stab" ? 0.08 : 0.12;
+      const tp = TRAILP && (TRAILP[kind] || TRAILP.arc);   // [weaponfx] each weapon's own smear: a blade's thin arc, an axe's short chop, a hammer's brief heavy blur, a dagger's flick
+      const now = nowS(), life = tp ? tp.life : kind === "stab" ? 0.08 : 0.12;
       while (TRL.length && now - TRL[0].t > life) TRL.shift();
       if (TRL.length < 2) return;
-      const bladeA = (q) => Math.atan2(q.y - q.by, q.x - q.bx), maxTurn = kind === "stab" ? 0.6 : 1.3;
+      if (tp) a *= tp.a;
+      const bladeA = (q) => Math.atan2(q.y - q.by, q.x - q.bx), maxTurn = tp ? tp.turn : kind === "stab" ? 0.6 : 1.3;
       let turned = 0, from = TRL.length - 1;
       for (let i = TRL.length - 1; i > 0; i--) { let d = bladeA(TRL[i]) - bladeA(TRL[i - 1]); d = Math.atan2(Math.sin(d), Math.cos(d)); turned += Math.abs(d); if (turned > maxTurn) break; from = i - 1; }
       const pts = TRL.slice(from), n = pts.length; if (n < 2) return;
       const c = power ? "#ffe6b0" : trailC, rgb = /^#[0-9a-f]{6}$/i.test(c) ? [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16)).join(",") : "244,246,255";
-      const top = 0.35 * Math.min(1, a / 0.75), reach = kind === "wide" ? 0.5 : kind === "stab" ? 0.2 : 0.4, h = pts[n - 1], t0 = pts[0];
+      const top = 0.35 * Math.min(1, a / 0.75), reach = tp ? tp.reach : kind === "wide" ? 0.5 : kind === "stab" ? 0.2 : 0.4, h = pts[n - 1], t0 = pts[0];
       const at = (q, f) => [q.x + (q.bx - q.x) * f, q.y + (q.by - q.y) * f];
       wg.save(); additive(); wg.lineCap = "round"; wg.lineJoin = "round";
       for (let k = 0; k < 4; k++) {

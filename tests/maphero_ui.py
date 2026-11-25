@@ -50,14 +50,36 @@ async def main():
                 x, y = await A.evaluate(HERE)
                 await A.screenshot(path=os.path.join(OUT, f"{tag}_{name}_close.png"), clip={"x": max(0, x - 120), "y": max(0, y - 140), "width": 240, "height": 200})
 
-            await shot("foot_idle")
-            await A.evaluate(TRIP, "Riverwood"); await A.wait_for_timeout(1500); await shot("foot_walk")
+            # [mapheroanim] a short strip of close-ups per state, to see the figure move (idle horse: spread over its ~6 s loop)
+            async def strip(name, n, gap):
+                files = []
+                for i in range(n):
+                    x, y = await A.evaluate(HERE)
+                    f = os.path.join(OUT, f"{tag}_{name}_f{i}.png"); files.append(f)
+                    await A.screenshot(path=f, clip={"x": max(0, x - 70), "y": max(0, y - 90), "width": 140, "height": 110})
+                    await A.wait_for_timeout(gap)
+                strips[name] = files
+
+            strips = {}
+            await shot("foot_idle"); await strip("foot_idle", 6, 300)
+            await A.evaluate(TRIP, "Riverwood"); await A.wait_for_timeout(1500); await shot("foot_walk"); await strip("foot_walk", 6, 120)
             await A.evaluate(STOP); await A.wait_for_timeout(300)
-            await A.evaluate(HORSE); await A.wait_for_timeout(600); await shot("horse_idle")
-            await A.evaluate(TRIP, "Riverwood"); await A.wait_for_timeout(1500); await shot("horse_ride")
+            await A.evaluate(HORSE); await A.wait_for_timeout(600); await shot("horse_idle"); await strip("horse_idle", 8, 750)
+            await A.evaluate(TRIP, "Riverwood"); await A.wait_for_timeout(1500); await shot("horse_ride"); await strip("horse_ride", 8, 90)
             await A.evaluate(STOP); await A.wait_for_timeout(300)
             await A.evaluate("()=>{ const S=__dbg.save(); S.horse.mounted=false; }"); await A.wait_for_timeout(600); await shot("foot_pixel")
             await A.click("#zoomBtn"); await A.wait_for_timeout(500); await shot("foot_zoomed_out")
+            try:   # one picture per state: the frames side by side
+                from PIL import Image
+                rows = [[Image.open(f) for f in fs] for fs in strips.values()]
+                w = max(sum(i.width for i in r) for r in rows); h = sum(r[0].height for r in rows)
+                sheet = Image.new("RGB", (w, h), (20, 16, 12)); yy = 0
+                for r in rows:
+                    xx = 0
+                    for im in r: sheet.paste(im, (xx, yy)); xx += im.width
+                    yy += r[0].height
+                sheet.save(os.path.join(OUT, f"{tag}_strip.png"))
+            except ImportError: pass
             mh = await A.evaluate("()=>window.__mh")
             print(tag, "figure draws:", mh)
             if not mh or mh.get("idle", 0) < 1: fails.append(f"{tag}: standing figure never drawn")

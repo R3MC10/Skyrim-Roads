@@ -3,13 +3,27 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b297-pets", build: 297, date: "25 Nov 2026", title: "Pets: Meeko walks with your follower", items: [
+    { id: "b299-pets", build: 299, date: "25 Nov 2026", title: "Pets: Meeko walks with your follower", items: [
       "Meeko is a pet now, not a follower. You can have a follower and a pet with you at the same time.",
       "The Follower tab has two parts, Follower and Pet, and each one has its own Dismiss.",
       "Pets don't wear gear. If Meeko was holding anything, it's back in your pack. His loyalty, his quest and his Pounce stay.",
       "In fights Meeko has his own turn and his own health bar next to your follower. He's a bit weaker than a follower, gets knocked down and never dies, and carries a little for you.",
       "New Etiquette perk, Pack Leader: your pet bites harder, takes less and gets up stronger.",
       "Your party sees your pet and it fights beside them too. Pets never count toward the 8 players.",
+    ] },
+    { id: "b298-mapheroanim", build: 298, date: "25 Nov 2026", title: "Your hero moves on the map", items: [
+      "Your horse on the world map is alive now: standing, it breathes, shifts its weight, tosses its head now and then and flicks its tail.",
+      "On the road its legs swing as it walks or gallops, its body bobs and rocks, and you sit into each stride in the saddle.",
+      "Little puffs of dust kick up behind the hooves (or your boots) while you travel, and walking and standing on foot look smoother too.",
+      "Your friends' figures on the map move the same way. Reduce motion in Settings still keeps everyone still.",
+    ] },
+    { id: "b297-weaponfx", build: 297, date: "25 Nov 2026", title: "Weapon hits that fit the weapon", items: [
+      "Weapon effects in fights are much smaller now and match what you swing: a sword leaves a thin slash, an axe a short chop, a mace or warhammer a heavy thud with a puff of dust (no slash), a dagger a quick little stab, a spear a thrust.",
+      "The hit now shows up the moment the weapon actually connects, right where it meets the body, instead of a big white swoosh popping up early in front of the foe.",
+      "A dagger's two stabs each get their own quick trail, and every hit plays once. A miss is just a faint swish, with no sparks.",
+      "A staff's spell now gathers and flies from the top of the staff, not from your chest.",
+      "When your follower steps in and hits the foe, you now see the blow land.",
+      "Power attacks get a small gleam on the blade instead of a star floating in the air, and only they crack the ground.",
     ] },
     { id: "b296-nomountfight", build: 296, date: "25 Nov 2026", title: "Horses are for travel", items: [
       "Horses are for travel now: fights always happen on foot.",
@@ -1985,7 +1999,7 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 285;
+  const NEXT_AT = 297;
   const NEXT = [
     "Mentoring: play side by side with friends of any level",
     "Shrines of your own: build a Daedric altar at your longhouse",
