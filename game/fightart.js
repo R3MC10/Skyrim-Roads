@@ -556,8 +556,8 @@ const FIGHTART = (() => {
         } else if (k === "potion" || (!k && /^drinks/i.test(me))) {
           const it = typeof D !== "undefined" && D.ITEMS?.[arg]; const res = it?.restore?.[0] || (/magicka/i.test(me) ? "magicka" : /stamina/i.test(me) ? "stamina" : "health");
           Object.assign(b, { move: "potion", fx: "potion", el: res, flask: res === "magicka" ? "#4a7ac8" : res === "stamina" ? "#4a9a5a" : "#c03a3a" });
-        } else if (k === "block" || (!k && /^raises guard|^shield bash/i.test(me))) {
-          b.move = /^shield bash/i.test(me) ? "bash" : "block"; st.guard = true;
+        } else if (k === "block" || k === "bash" || (!k && /^raises guard|^shield bash/i.test(me))) {   // [movefx2] a turn-by-turn bash (a: "bash") is a bash too, not a sword swing
+          b.move = k === "bash" || /^shield bash/i.test(me) ? "bash" : "block"; st.guard = true;
         } else if (k === "shout" || k === "power") {
           const fx = k === "shout" ? SHOUT_FX[arg] || "fus" : RACE_FX[arg] || "glow";
           Object.assign(b, { move: k === "shout" ? "shout" : "self", fx, el: arg === "frost_breath" || arg === "ice_form" ? "frost" : arg === "fire_breath" || arg === "dunmer" ? "fire" : null });
