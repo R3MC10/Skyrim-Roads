@@ -301,7 +301,7 @@
     if (b.dataset.act === "bk") { bkClick(b); return; }
     if (b.dataset.act) { settingsAction(b.dataset.act, b) && renderTitle(); return; }
     const t = b.dataset.t;
-    SOUND.fx(t === "menu" && titlePage === "press" ? "arrive" : "click");
+    if (!(t === "menu" && titlePage === "press")) SOUND.fx("click");   // "Tap to begin" stays silent
     switch (t) {
       case "continue": closeTitle(); startGame(); break;
       case "tutorial": S.tut = { step: 1, seen: {} }; Store.save(S); closeTitle(); startGame(); break;

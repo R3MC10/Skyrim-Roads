@@ -3,6 +3,9 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b286-titlesilent", build: 286, date: "25 Nov 2026", title: "Quiet start", items: [
+      "Tapping \"Tap to begin\" on the title screen no longer plays a sound.",
+    ] },
     { id: "b285-testsgreen2", build: 285, date: "25 Nov 2026", title: "Coming next, refreshed", items: [
       "The Coming next list in Patch notes is up to date again.",
     ] },
