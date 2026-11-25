@@ -4800,6 +4800,22 @@ body:has(#tbf) #gnear{display:none!important}
 @media (prefers-reduced-motion:reduce){.skc .st .ring{animation:none}}
 /* the "Tap a star..." hint sits under the sky, never over it (only a picked perk's panel docks at the bottom) */
 @media (max-width:899.98px){.tw-starp>.tw-sdet.hint{position:static;min-height:0;max-height:none;background:none}}
+
+/* compass in two layers: the ring stays put, only the star tilts and follows your finger (like it used to) */
+.tw-ring{display:none}
+:root.has-ui-compass-ring.has-ui-compass-star .tw-ring{display:block;position:absolute;left:50%;top:50%;width:calc(var(--R)*2);height:calc(var(--R)*2);margin:calc(var(--R)*-1) 0 0 calc(var(--R)*-1);background:var(--asset-compass-ring) center/100% no-repeat;filter:drop-shadow(0 6px 10px rgba(0,0,0,.6));pointer-events:none}
+:root.has-ui-compass-ring.has-ui-compass-star .tw-disc{transform:translate3d(calc(var(--tx,0)*.35px),calc(var(--ty,0)*.35px),0) rotateY(calc(var(--tx,0)*.42deg)) rotateX(calc(var(--ty,0)*-.42deg));transition:transform .65s cubic-bezier(.25,1.7,.5,1);animation:twbob 6s ease-in-out infinite}
+:root.has-ui-compass-ring.has-ui-compass-star .tw.drag .tw-disc{transition:transform .06s linear;animation:none}
+:root.has-ui-compass-ring.has-ui-compass-star .tw-face,:root.has-ui-compass-ring.has-ui-compass-star .tw-face.art-flat{inset:0;background:var(--asset-compass-star) center/100% no-repeat;filter:drop-shadow(0 calc(6px + var(--pull,0)*10px) calc(8px + var(--pull,0)*8px) rgba(0,0,0,.75))}
+:root.has-ui-compass-ring.has-ui-compass-star .tw[data-glow] .tw-face{filter:drop-shadow(0 0 calc(4px + var(--pull,0)*14px) rgba(255,206,110,.6)) drop-shadow(0 12px 12px rgba(0,0,0,.7))}
+:root.has-ui-compass-ring.has-ui-compass-star .tw-shine,:root.has-ui-compass-ring.has-ui-compass-star .tw-depth{display:none}
+@media (prefers-reduced-motion:reduce){:root.has-ui-compass-ring.has-ui-compass-star .tw-disc{animation:none;transition:none}}
+/* the chosen direction lights up in gold (while you drag toward it, or point at it with a mouse) */
+.tw[data-glow=up] .tw-up b,.tw[data-glow=down] .tw-down b,.tw[data-glow=left] .tw-left b,.tw[data-glow=right] .tw-right b{color:#ffe7a6;text-shadow:0 0 6px rgba(255,214,120,.95),0 0 18px rgba(240,180,70,.75),0 0 34px rgba(220,150,40,.45),0 2px 6px #000}
+.tw[data-glow=up] .tw-up .tw-i,.tw[data-glow=down] .tw-down .tw-i,.tw[data-glow=left] .tw-left .tw-i,.tw[data-glow=right] .tw-right .tw-i{stroke:#ffd98a;filter:drop-shadow(0 0 6px rgba(255,200,100,.9)) drop-shadow(0 1px 3px #000)}
+.tw[data-glow=up] .tw-up small,.tw[data-glow=down] .tw-down small,.tw[data-glow=left] .tw-left small,.tw[data-glow=right] .tw-right small{color:#e8cf8f}
+@media (hover:hover){.tw-dir:hover b,.tw-dir:focus-visible b{color:#ffe7a6;text-shadow:0 0 6px rgba(255,214,120,.95),0 0 18px rgba(240,180,70,.75),0 2px 6px #000}.tw-dir:hover .tw-i,.tw-dir:focus-visible .tw-i{stroke:#ffd98a;filter:drop-shadow(0 0 6px rgba(255,200,100,.9))}}
+.tw-dir b,.tw-dir .tw-i,.tw-dir small{transition:color .15s,text-shadow .2s,stroke .15s,filter .2s}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>

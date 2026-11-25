@@ -3,6 +3,10 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b275-compass", build: 275, date: "25 Nov 2026", title: "A livelier compass", items: [
+      "On the main menu compass, the ring now stays still and only the star tilts and follows your finger.",
+      "The direction you're heading for lights up in gold.",
+    ] },
     { id: "b274-qacore4", build: 274, date: "25 Nov 2026", title: "Foes speak Polish", items: [
       "Fixed: in Polish, foe names in road fights and dungeons (like the Imperial escort or a flame atronach) were in English.",
       "Locked chests now say how hard the lock is in plain words: simple, fairly easy, tricky, hard or very hard.",
