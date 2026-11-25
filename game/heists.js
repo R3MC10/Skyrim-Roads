@@ -500,7 +500,7 @@ const HEISTS = (() => {
     const title = { clean: " Clean getaway", seen: " Away, but seen", caught: " Caught", quit: " Called it off" }[res.outcome];
     const rows = [res.gold ? [` ${"Gold"}`, `${res.gold}`] : null, res.cut && res.gold ? ["Fence's cut", `${pct(res.cut)}%`] : null,
       res.prize ? ["Prize", PRIZES[res.prize].name] : null, res.bounty ? ["Bounty", `${res.bounty} (${res.hold})`] : null,
-      res.deeds?.length ? ["Corruption", res.hold] : null].filter(Boolean);
+      res.deeds?.length ? ["Corruption in " + res.hold, "Up"] : null].filter(Boolean);
     return `<div class="hz-modal hz-end ${cls}"><h2>${esc0(title)}</h2><p class="sub">${esc0(h ? h.name[0] : "")}</p>
       ${res.lines.map((l) => `<p class="hz-say">${esc0(l)}</p>`).join("")}${rows.length ? `<div class="hz-sum">${rows.map(([a, b]) => `<div><span>${esc0(a)}</span><b>${esc0(b)}</b></div>`).join("")}</div>` : ""}
       ${extra ? `<p class="sub">${esc0(extra)}</p>` : ""}<button class="btn pri" data-act="close" style="width:100%">${esc0("Continue")}</button></div>`;

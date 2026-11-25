@@ -82,7 +82,7 @@
     // the end
     " Clean getaway": " Czysta ucieczka", " Away, but seen": " Uciekłeś, ale cię widziano", " Caught": " Złapany", " Called it off": " Odwołane",
     "Clean getaway": "Czysta ucieczka", "Away, but seen": "Uciekłeś, ale cię widziano", "Called it off": "Odwołane",
-    " Gold": " Złoto", "Fence's cut": "Dola pasera", "Prize": "Łup", "Bounty": "Nagroda za głowę", "Corruption": "Korupcja", "Continue": "Dalej",
+    " Gold": " Złoto", "Fence's cut": "Dola pasera", "Prize": "Łup", "Bounty": "Nagroda za głowę", "Corruption": "Korupcja", "Up": "Rośnie", "Continue": "Dalej",
     // ---- perks
     "Locksmith": "Ślusarz", "Infiltrator": "Infiltrator", "Escape Artist": "Mistrz ucieczek",
     "On a heist every lock counts one grade easier per rank, and you bring two spare picks.": "Podczas skoku każdy zamek jest o stopień łatwiejszy na każdą rangę, a ty masz dwa zapasowe wytrychy.",
@@ -127,6 +127,7 @@
     ["The fence takes {0}% and pays you {1} gold.", "Paser bierze {0}% i płaci ci {1} złota."],
     ["Bounty in {0}: {1} gold.", "Nagroda za głowę w {0}: {1} złota."],
     ["Corruption in {0} goes up.", "Korupcja w {0} rośnie."],
+    ["Corruption in {0}", "Korupcja w {0}"],
     [" Your party is voting: {0} of {1} have voted.", " Drużyna głosuje: zagłosowało {0} z {1}."],
     ["Heist: {0}.", "Skok: {0}."], ["The party picked: {0}.", "Drużyna wybrała: {0}."],
     [" {0}: {1}", " {0}: {1}"],
