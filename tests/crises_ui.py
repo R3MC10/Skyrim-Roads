@@ -1,11 +1,11 @@
 """Regional crises on screen (crises.js): the Hold status line on a town page, the notice strip, the map sign,
 the Hold status card, a contract fight and the ringleader. Phone (390x844), desktop (1920x1080) and phone in Polish.
-Run from the repo root:  PYTHONIOENCODING=utf-8 python tests/crises_ui.py [port] [outdir]   (default tests/out_cr/)"""
+Run from the repo root:  PYTHONIOENCODING=utf-8 python tests/crises_ui.py [port] [outdir]   (default  or the temp folder)"""
 import asyncio, os, socket, subprocess, sys, time
 from playwright.async_api import async_playwright
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = sys.argv[2] if len(sys.argv) > 2 else os.path.join(ROOT, "tests", "out_cr"); os.makedirs(OUT, exist_ok=True)
+OUT = sys.argv[2] if len(sys.argv) > 2 else (os.environ.get("SHOTS") or os.path.join(__import__("tempfile").gettempdir(), "out_cr")); os.makedirs(OUT, exist_ok=True)
 
 def free_port():
     for p in range(9500, 9600):
@@ -46,7 +46,9 @@ async def main():
                 async def clear(): await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
                 async def shot(name, el=None):
                     path = os.path.join(OUT, f"crises_{tag}_{name}.png")
-                    if el: await el.screenshot(path=path)
+                    if el:   # the map and its strips redraw every second: an element can be swapped out under us
+                        try: await el.scroll_into_view_if_needed(timeout=3000); await el.screenshot(path=path, timeout=5000)
+                        except Exception as e: print(f"  (shot {name} skipped: {str(e).splitlines()[0]})"); return
                     else: await pg.screenshot(path=path)
                     shots.append(path)
                 async def to_map():
@@ -57,10 +59,11 @@ async def main():
                     el = await pg.query_selector(".cr-town")
                     if el: await el.click(); await pg.wait_for_timeout(600)
                     return await pg.query_selector(".crsheet")
+                n0 = len(errs)
                 for _ in range(3):
                     await pg.goto(f"http://localhost:{PORT}/index.html?notut&p=cr{tag}")
                     try: await pg.wait_for_selector(".press", timeout=10000); break
-                    except Exception: print(tag, "title screen didn't come up, reloading")
+                    except Exception: print(tag, "title screen didn't come up, reloading"); del errs[n0:]   # a half-loaded page doesn't count
                 await pg.wait_for_timeout(800)
                 await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Hrodny"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
                 # 1. stage 3: town line, strip, map sign
@@ -73,12 +76,16 @@ async def main():
                 tl = await pg.query_selector(".cr-town")
                 check(tl is not None, f"{tag}: Hold status line on the town page")
                 if tl:
-                    await tl.scroll_into_view_if_needed(); await shot("townline", tl)
+                    await shot("townline", tl)
                     t = await tl.text_content()
                     check(("Stan krainy" in t and "Hold status" not in t) if pl else "Hold status" in t, f"{tag}: town line text ({t[:70]!r})")
+                # the strip is news: it sits on the map in the "World news" drawer (gevstack.js), shut by default
+                await to_map(); await pg.evaluate("scrollTo(0, 0)")
+                for sel in ("#gev [data-gevs=open]", "#gev [data-gevs=news][aria-expanded=false]"):
+                    if await pg.query_selector(sel): await pg.evaluate(f"document.querySelector('{sel}')?.click()"); await pg.wait_for_timeout(500)
                 strip = await pg.query_selector(".cr-strip")
                 check(strip is not None, f"{tag}: crisis notice strip")
-                if strip: await strip.scroll_into_view_if_needed(); await shot("strip", strip)
+                if strip: await shot("strip", strip)
                 # 2. the Hold status card
                 sh = await sheet()
                 check(sh is not None, f"{tag}: the Hold status card opens")

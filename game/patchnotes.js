@@ -3,10 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b249-qafight", build: 249, date: "25 Nov 2026", title: "Fight fixes", items: [
+    { id: "b250-qafight", build: 250, date: "25 Nov 2026", title: "Fight fixes", items: [
       "Fixed: on phones, casting a heal with a follower along asked you to tap a portrait, but the Magic menu covered every portrait. The bar at the top now has a button for each person you can heal.",
       "Fixed: if the last foe fell between your moves, End turn and every other button could do nothing and the fight never ended. Any tap now finishes the fight.",
       "Fixed: more of the fight screen is in Polish (choosing who gets a heal, Your turn, Dual, the Magic and Items hints).",
+    ] },
+    { id: "b249-testsgreen", build: 249, date: "25 Nov 2026", title: "Coming next, tidied", items: [
+      "Picking herbs by hand is out now, so it left the Coming next list.",
     ] },
     { id: "b248-chargenrig", build: 248, date: "25 Nov 2026", title: "Character creation shows your real fighter", items: [
       "Character creation now shows the same painted hero you fight with: armour, weapon and all. Stand, Walk and Fight show how you'll really look on the road and in battle.",
@@ -1713,9 +1716,8 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 240;
+  const NEXT_AT = 249;
   const NEXT = [
-    "Hands-on gathering: a little harvest game for every kind of plant",
     "Mentoring: play side by side with friends of any level",
     "Shrines of your own: build a Daedric altar at your longhouse",
   ];
