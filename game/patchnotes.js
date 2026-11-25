@@ -3,6 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b225-heistart", build: 225, date: "25 Nov 2026", title: "Heists you can see", items: [
+      "Every heist now shows a painting of the house you're robbing: Battle-Born's farm, the Shatter-Shield house on the icy docks, Erikur's townhouse, the Silver-Blood stone house and Maven's manor on the canal.",
+      "On phones the heist takes the whole screen. The house sits at the top and your choices at the bottom, within thumb reach. The X in the corner closes it, and you carry on later from the town.",
+      "The picture changes mood with each step: cold and quiet while you look around, darker while you sneak, amber at the edges when people grow suspicious, and cold and grey on the way out.",
+      "When the alarm goes up, the edges glow red and pulse, and the picture gives a short jolt. Your buttons stay put.",
+      "Lanterns flicker, the lit window glows softly and a few snowflakes drift by on phones. If your phone is set to reduce motion, all of that stays still.",
+      "The heist loot and tools have new painted icons: the signet ring, gold compass, jewelled goblet, torc, ruby brooch, forged papers and the Draught of Shadows.",
+    ] },
     { id: "b224-meekofix", build: 224, date: "25 Nov 2026", title: "Meeko comes back", items: [
       "Meeko the stray dog has no home town, so once he left you (Dismiss, or walking off when he got fed up) he was gone for good. Now he finds you again on the road.",
       "Lost him already? He's out there looking for you. Travel without a follower and he'll come bounding up, with his old level and gear. Your journal and the Follower tab say so.",
