@@ -3,6 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b336-channel", build: 336, date: "25 Nov 2026", title: "See your friends get ready", items: [
+      "In a party fight, when a friend casts a spell, swings, draws a bow or uses a skill from an item, you now see them get ready for it: their hero raises a hand with embers, gathers frost or sparks, pulls back their weapon or draws the bowstring, and a small bar over their head fills while they play their minigame.",
+      "Each kind of move has its own colour: fire orange, frost ice blue, shock violet, healing gold, blows steel grey, bows green.",
+      "A great hit flashes gold, a fumble makes them stumble, and if a move gets called off the bar just fades away.",
+      "Your own hero takes the same stance behind your minigame, in solo fights too.",
+      "A minigame can't hold up the fight any more: after 12 seconds the move is called off and you keep your guard up.",
+      "Fixed: in a party fight, an update from your friends could close your minigame halfway through. It now stays open until you finish it.",
+    ] },
     { id: "b335-dollrig2", build: 335, date: "25 Nov 2026", title: "Your hero stands face-on on the Items screen", items: [
       "On the Items screen your hero now faces you, like in Skyrim's inventory, and stands relaxed with their gear: they breathe, sway a little, their cape and hair lag behind, and now and then they shift their grip.",
       "A one-handed weapon hangs from the right hand, a two-hander rests point-down in both hands, a bow sits in the left hand and a staff or spear stands planted by the right foot.",

@@ -781,7 +781,8 @@ const FIGHTART = (() => {
     const work = cv, wg = g;   // one canvas: the stage is drawn straight to the screen
 
     const bg = bgFor(rec.scene, W, Hh, rec.wagon, rec.sky);
-    const wxp = rec.sky && (!FS || FS.weather()) ? SKY.particles(rec.sky, W, Hh, { reduce: rm, scale: () => vs }) : null;   // snow, rain, leaves or fireflies during the replay
+    const CHAN = typeof CHANNEL !== "undefined" ? CHANNEL : null;   // [channel] moves being prepared (channel.js)
+    const wxp = rec.sky && (!FS || FS.weather()) ? SKY.particles(rec.sky, W, Hh, { reduce: rm, scale: () => vs * (CHAN ? CHAN.ambient() : 1) }) : null;   // [channel] thinner when many prepare at once   // snow, rain, leaves or fireflies during the replay
     const f = rec.f, beats = beatsOf(f, rec.hero);
     const hp0 = f.hp0 ?? Math.max(1, ...((f.log || []).map((l) => l.hp).filter((v) => v != null)));
     const ehp0 = f.ehp0 ?? Math.max(1, ...((f.log || []).map((l) => l.ehp).filter((v) => v != null)));
@@ -1257,6 +1258,7 @@ const FIGHTART = (() => {
       foeP.wt = b && b.who === "them" && b.wt ? b.wt : null;
       const mine = !!(b && b.who === "me" && m);   // [OURS] the painted figure (rig.js) plays the body of the move, its blow landing on the hit frame
       heroP.move = mine ? b.move : null; heroP.mu = mine ? poseU : null; heroP.hitU = mine && m.hits ? m.hits[0] : null; heroP.power = mine && !!b.power;
+      if (!mine && CHAN) CHAN.heroPose(heroP, rec.hero.wt);   // [channel] preparing a move: the cast / wind-up / draw pose while the minigame runs
     }
     function sampleTrail(b, m, u) {   // the weapon tip, every step, so the trail follows the real arc
       if (!m.trail) return;
@@ -1303,7 +1305,7 @@ const FIGHTART = (() => {
       const allyLunge0 = b && b.who === "me" && b.ally && u > 0.5 && u < 0.85 ? Math.sin((u - 0.5) / 0.35 * Math.PI) : 0;
       const AA = typeof ALLYANIM !== "undefined" ? ALLYANIM : null, named = !!(b && b.allyActs && b.allyActs.length), hitU0 = m && m.hits.length ? m.hits[0] : 0.5;
       const allyLunge = named ? 0 : allyLunge0;   // [OURS] named allies play their own clip (allyanim.js); the rest step in together as before
-      const animOf = (a) => AA && a.name ? AA.anim(b, a.name, u, hitU0, beats.downEnd) : null;
+      const animOf = (a) => { const x = AA && a.name ? AA.anim(b, a.name, u, hitU0, beats.downEnd) : null; return x || (CHAN && a.kind === "mate" ? CHAN.allyAnim(a.name) : null); };   // [channel] a teammate preparing a move
       if (slots.length) { const tag = slots.map((a) => { const x = animOf(a); return x ? x.clip : "idle"; }).join(","); if (cv.dataset.allyClips !== tag) cv.dataset.allyClips = tag; }   // which clip each ally is on (screen tests)
       const two = slots.length > 3;
       const order = slots.map((a, i) => ({ a, i, p: slotOf.get(i) || { x: hx0 - (26 + i * 20) * s, y: groundY, sc: 1, row: 0 } })).sort((p, q) => q.p.row - p.p.row || p.p.x - q.p.x);
@@ -1313,7 +1315,7 @@ const FIGHTART = (() => {
         // a melee blow: they step out of their row up to the foe, then back to their spot
         const tx = fx0 - (foeFront + 16) * s, sc2 = s * (p.sc + (1 - p.sc) * al2), ax = p.x + Math.max(0, tx - p.x) * al2 + allyLunge * 14 * s, ay = p.y + (groundY - p.y) * al2;
         const ahc = a.kind === "mate" && typeof MOUNTFIGHT !== "undefined" && typeof HORSEBACK !== "undefined" && !(an && an.clip === "down") ? MOUNTFIGHT.allyHorse(f, a.name) : null;   // a teammate in the saddle (mountfight.js)
-        if (a.name && !two && (a.kind === "mate" || a.kind === "follower" || a.kind === "valor" || a.kind === "dog")) mateTags.push([a.name, ax * z + ox + zcx - zcx * z, (ay - (66 + (ahc ? 30 : 0)) * sc2) * z + oy + zcy - zcy * z]);   // [followersize] just over the head (a rider sits higher)
+        if (a.name && !two && (a.kind === "mate" || a.kind === "follower" || a.kind === "valor" || a.kind === "dog") && !(CHAN && CHAN.busy(a.name))) mateTags.push([a.name, ax * z + ox + zcx - zcx * z, (ay - (66 + (ahc ? 30 : 0)) * sc2) * z + oy + zcy - zcy * z]);   // [followersize] just over the head (a rider sits higher)
         if (AFX && an && an.shoot && an.u >= 0.55 && b && phase === "play" && !(b.shotBy && b.shotBy.includes(a.name))) {   // [arrowfx] a follower or party archer looses at the foe
           (b.shotBy = b.shotBy || []).push(a.name);
           AFX.fire(null, { x0: ax + 16 * sc2, y0: ay - (ahc ? 74 : 44) * sc2, x1: fx0, y1: foeChest, dur: 0.24, sp: ARROWFX.spec({ wt: /crossbow/.test(a.look?.wt || "") ? "crossbow" : "bow" }), miss: false, gore: !!GS });
@@ -1414,6 +1416,7 @@ const FIGHTART = (() => {
       if (st.ward || (b && b.who === "me" && b.fx === "ward" && u > 0.4)) hexWard(hx0 + 26 * s, heroChest, b && b.who === "them" && b.absorbed && u > 0.4 ? 1 : 0.5, tt);
       const cloakEl = st.cloak || (b && b.who === "me" && b.fx === "cloak" && u > 0.4 ? b.el || "fire" : null);
       if (cloakEl) orbit(hx0 + heroP.dx * s, heroChest, colOf("cloak", cloakEl), tt);
+      if (CHAN) CHAN.scene({ spawn, ffx: FFX, s, pmul, rm, hero: [hx0 + heroP.dx * s, heroChest], foe: [fx0, foeChest], allyAt: (n) => { const p = LAY && LAY.allies.find((q) => q.name === n); return p ? [p.x, p.y - 36 * s * p.sc] : null; }, flash: (a, c) => { flash = Math.max(flash, a); flashC = c; }, shake: (v) => { shake = Math.max(shake, v); } });   // [channel] motes at the hands, a crit's gold flash
       if (b && b.who === "me" && b.fx === "armor" && u > 0.4) { wg.save(); wg.globalAlpha = 0.5 * (1 - u); wg.strokeStyle = "#e0c890"; wg.lineWidth = 3; wg.beginPath(); wg.ellipse(hx0, groundY - 32 * s, 20 * s, 36 * s, 0, 0, 7); wg.stroke(); wg.restore(); }
       // the foe (faces left)
       wg.save();

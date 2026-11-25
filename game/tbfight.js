@@ -869,6 +869,7 @@ const TB = (() => {
       if (R) R.play("turn-me");
     }
     if (R && newEv.length) { const k = Math.max(0, newEv.length - 3); newEv.slice(k).forEach((e, i) => R.play(R.cue(e, vis[vis.indexOf(e) - 1]), i * 0.25)); }
+    const keepGame = ui.timing ? el.querySelector(":scope > .tbtime:not(.hit)") : null;   // [channel] an update from the party mid-minigame must not wipe your game
     el.innerHTML = `<div class="tbin">
       <div class="tbtop"><b>Round ${sess.round}</b><span class="tbord">${order}</span><button class="tbff" data-tbx="log" aria-label="Full fight log"></button>${typeof TBRADIAL !== "undefined" ? `<button class="tbff ${TBRADIAL.on() ? "on" : ""}" data-tbx="wheel" aria-label="Combat wheel and timing ring" data-tip="${typeof FIGHTCTL !== "undefined" && FIGHTCTL.on() ? "Timing ring: after a strike or a damage spell, tap when the needle is in the bright zone (Perfect +25%, a miss −20%). Tap to switch it on or off." : "Combat wheel: your moves in a ring, and a timing ring for strikes and spells (Perfect +25%, a miss −20%). Tap to switch to cards."}"></button>` : ""}</div>
       <div class="tbstage" data-tbzone="foe"><div class="tbscene" id="tbscene">${scene || (keepScene ? "" : ui.lastScene || "")}</div>${banner}${rd ? rd.bubble : ""}<div class="tbhint" aria-hidden="true"></div></div>
@@ -885,6 +886,7 @@ const TB = (() => {
       ${ui.logOpen ? fullLog(sess, fmt) : ""}
     </div>`;
     if (scene) ui.lastScene = scene;
+    if (keepGame) el.appendChild(keepGame);
     if (keepScene) { const box = el.querySelector("#tbscene"); if (box) box.prepend(keepScene); }
     if (typeof COMBAT2 !== "undefined") { try { COMBAT2.layout(el, sess, { playing, mine, pops, big: prev.hp - hpNow > hpMax * 0.15 }); } catch (e) { console.warn("combat2", e); } }   // combat2.js: the cards go into the scene
     if (typeof TBUI !== "undefined") TBUI.after(el, { hurt: hpNow < prev.hp, hit: ehpNow < prev.ehp, big: prev.hp - hpNow > hpMax * 0.15, mine, pops });
@@ -1003,6 +1005,7 @@ const TB = (() => {
       const live = document.querySelector("#tbf .tbtime:not(.hit)");
       if (live && Date.now() - (ui.timingAt || 0) < 12000) return;
       ui.timing = false; ui.timingTok = (ui.timingTok || 0) + 1; live?.remove();   // the old game's result is dropped
+      if (typeof CHANNEL !== "undefined") CHANNEL.cancelMine(ui.sess, "stuck");   // [channel] its bar on everyone's screen fades
     }
     const b = ev.target.closest("button"); if (!b || b.disabled) return;
     const sess = ui.sess;
@@ -1019,8 +1022,9 @@ const TB = (() => {
       ui.menu = null;
       const root = document.getElementById("tbf"), tgt = root?.dataset.tbt; if (root) delete root.dataset.tbt;
       const a = b.dataset.tba, f = sess.f;
-      const go = (g) => {
+      const go = (g, mv) => {   // mv: [channel] a move that ran out of time becomes a guard
         if (!ui || ui.sess !== sess) return;
+        const a = mv || b.dataset.tba;
         const was = { sp: f.sp, mp: f.mp, hp: f.hp };
         let r;
         try { r = sess.act(a, tgt, g ? g.mult : 1, g); }
@@ -1038,11 +1042,19 @@ const TB = (() => {
         ui.timing = true; ui.timingAt = Date.now();
         let game;
         const g0 = MINIGAME.kindFor(f, a);
-        try { game = MINIGAME.play(root, f, a, { icon: iconOf(f, a), label: g0 && g0.label ? g0.label : sp ? sp.name : a === "power_attack" ? "Power attack" : a === "bash" ? "Shield bash" : a === "block" ? "Guard" : f.wt === "bow" || f.wt === "crossbow" ? "Shoot" : "Attack" }); }
+        const CH = typeof CHANNEL !== "undefined" ? CHANNEL : null, ch = CH ? CH.begin(sess, a, tgt, iconOf(f, a)) : null;   // [channel] everyone sees you prepare it
+        try { game = MINIGAME.play(root, f, a, { icon: iconOf(f, a), label: g0 && g0.label ? g0.label : sp ? sp.name : a === "power_attack" ? "Power attack" : a === "bash" ? "Shield bash" : a === "block" ? "Guard" : f.wt === "bow" || f.wt === "crossbow" ? "Shoot" : "Attack", onProgress: ch ? (p) => CH.progress(sess, ch, p) : null }); }
         catch (e) { console.error("minigame", a, e); game = null; }   // a broken minigame must not lock the fight: the move goes in as a normal hit
-        if (!game || typeof game.then !== "function") { ui.timing = false; return go(null); }
+        if (!game || typeof game.then !== "function") { ui.timing = false; if (ch) CH.done(sess, ch, null); return go(null); }
         const tok = ui.timingTok;
-        return game.then((g) => { if (!ui || ui.timingTok !== tok) return; ui.timing = false; go(g); }, () => { if (!ui || ui.timingTok !== tok) return; ui.timing = false; go(null); });
+        if (ch) game = CH.race(ch, game);   // [channel] a hard deadline: on timeout the move is cancelled and you guard
+        return game.then((g) => {
+          if (!ui || ui.timingTok !== tok) return;
+          ui.timing = false;
+          if (ch && g === CH.TIMEOUT) { document.querySelector("#tbf .tbtime:not(.hit)")?.remove(); CH.cancel(sess, ch, "timeout"); return go(null, sess.canAfford("block") ? "block" : "end"); }
+          if (ch) CH.done(sess, ch, g);
+          go(g);
+        }, () => { if (!ui || ui.timingTok !== tok) return; ui.timing = false; if (ch) CH.done(sess, ch, null); go(null); });
       }
       // the old timing ring (wheel only, when the minigames are off)
       if (typeof TBRADIAL !== "undefined" && TBRADIAL.on() && !fast() && TBRADIAL.timed(a, zoneOf(a)) && sess.canAfford(a) && typeof MINIGAME === "undefined") {
@@ -1133,7 +1145,8 @@ const TB = (() => {
     return { v: 2, foeE: e, fs, kind: sess.kind, hitters: sess.hitters || 0, roster,
       order: sess.order.map((o) => ({ id: o.id, name: o.name, init: o.init, pid: o.al?.pid || null })), idx: sess.idx,
       cur: sess.cur ? { id: sess.cur.id, name: sess.cur.name, pid: sess.cur.al?.pid || null } : null, evs,
-      escaped: sess.done ? !!f.escaped : null, ...(typeof PARTYSPELLS !== "undefined" ? PARTYSPELLS.forRecord(sess) : {}) };   // crafted spells cast in this fight (partyspells.js)
+      escaped: sess.done ? !!f.escaped : null, ...(typeof PARTYSPELLS !== "undefined" ? PARTYSPELLS.forRecord(sess) : {}),
+      ...(typeof CHANNEL !== "undefined" ? CHANNEL.forRecord(sess) : {}) };   // [channel] the moves being prepared right now (also restores them after a reconnect)   // crafted spells cast in this fight (partyspells.js)
   }
   function remoteFor(store, myId) {
     if (!store || typeof store.put !== "function") return null;
@@ -1164,6 +1177,7 @@ const TB = (() => {
       sync(sess) { if (!players(sess).length) return; start(sess); push(sess.done); },
       ask(sess) { start(sess); push(true); },
       live: () => !!store.online,
+      fid: () => fid,   // [channel] the fight record's id (channel.js reads teammates' tbf/<fid>~ch~<pid>)
       end() {
         clearTimeout(timer); clearInterval(beat); beat = null;
         if (cur && fid) { push(true); const id = fid, ps = [...pidsSeen]; setTimeout(() => { store.remove?.("tbf", id); ps.forEach((p) => store.remove?.("tbf", `${id}~${p}`)); }, 12000); }   // members see the ending, then it's tidied away
