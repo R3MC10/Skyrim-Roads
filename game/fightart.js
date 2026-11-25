@@ -295,7 +295,8 @@ const FIGHTART = (() => {
     if (h.look && rigged()) {   // the shared rigged character (figart.js), posed by the replay
       const w2 = wt === "fist" ? null : wt;
       return HEROART.fightFigure(g, { look: h.look }, { t: glowT, wt: w2, shield: h.shield && !TWO_HANDED.has(wt), off: !TWO_HANDED.has(wt) && wt !== "fist" ? h.off : null, lunge,
-        glow: pose ? pose.glow : h.bound, aim: pose?.aim, back: pose?.back, hunch: pose?.lean || 0, draw: pose?.draw, flask: pose?.flask });
+        glow: pose ? pose.glow : h.bound, aim: pose?.aim, back: pose?.back, hunch: pose?.lean || 0, draw: pose?.draw, flask: pose?.flask,
+        move: pose?.move, mu: pose?.mu, hitU: pose?.hitU, power: pose?.power, knock: pose?.knock || 0, down: pose?.down || 0, ride: !!pose?.ride });
     }
     const go = h.gearO || {};
     person(g, { skin: h.skin, body: h.body, head: go.head || (h.helm ? "helm" : "hair"), helmColor: go.helmColor, hoodColor: go.hoodColor, armC: go.armC, pants: go.pants, boots: go.boots, legs: go.legs, gear: go.gear, wmat: go.wmat,
@@ -748,7 +749,10 @@ const FIGHTART = (() => {
       return ln?.st ? { me: ln.st.me || {}, foe: ln.st.foe || {} } : NOST;
     }
     const turned = !!f.endWon;
-    const groundY = Hh * 0.8, s = Hh / 150, hx0 = W * 0.27, fx0 = W * 0.72;
+    const groundY = Hh * 0.8, s = Hh / 150, fx0 = W * 0.72;
+    /* [OURS] on a tall phone stage the figures are big next to the width: step you in from the left edge so the allies
+       standing behind you (and your own wind-up) stay on screen */
+    const hasAllies = (rec.hero.list || []).length > 0 || (rec.hero.allies || 0) > 0, hx0 = Math.max(W * 0.27, Math.min(W * 0.4, (hasAllies ? 60 : 24) * s));
     const foeK = rec.foe, fSize = SIZE[foeK] || 1, reach = REACH[foeK] || 1, isPerson = PERSON.has(foeK);
     const foeChest = groundY - 34 * s * fSize, heroChest = groundY - 36 * s;
     // [OURS] foe rigs (foerig.js): the foe is a little skeleton that breathes, winds up, flinches, staggers and falls
@@ -1035,6 +1039,8 @@ const FIGHTART = (() => {
       if (b && b.who === "them" && b.status === "stagger") foeP.lean = Math.sin(tt * 12) * 0.08 - 0.12;
       heroP.wt = b && b.who === "me" && b.move !== "potion" ? b.wt : rec.hero.wt; heroP.glow = !!(st && st.bound); heroP.flask = b && b.move === "potion" && u > 0.15 && u < 0.85 ? b.flask : null;
       foeP.wt = b && b.who === "them" && b.wt ? b.wt : null;
+      const mine = !!(b && b.who === "me" && m);   // [OURS] the painted figure (rig.js) plays the body of the move, its blow landing on the hit frame
+      heroP.move = mine ? b.move : null; heroP.mu = mine ? u : null; heroP.hitU = mine && m.hits ? m.hits[0] : null; heroP.power = mine && !!b.power;
     }
     function sampleTrail(b, m, u) {   // the weapon tip, every step, so the trail follows the real arc
       if (!m.trail) return;
@@ -1114,12 +1120,15 @@ const FIGHTART = (() => {
         wg.save(); wg.translate(hx0 - 58 * s, groundY); wg.scale(s, s); HORSEBACK.drawDowned(wg, rec.horse, tt, L("Downed"), rec.horseCoat); wg.restore();
       }
       wg.save(); wg.translate(hx0 + (heroP.dx - heroKnock - hdg * 18) * s, groundY + (heroP.dy - hdg * 3) * s); wg.scale(s, s);
-      if (meDown) { wg.translate(-6 * fallE, 0); wg.rotate(-Math.PI / 2 * fallE); wg.translate(0, 6 * fallE); }
+      const painted = !!rec.hero.look && !rec.hero.beast && typeof PAINTRIG !== "undefined" && PAINTRIG.can(rec.hero.look);   // the painted figure falls by itself
+      heroP.knock = heroKnock; heroP.down = meDown && painted ? fallE : 0;
+      if (meDown && !painted) { wg.translate(-6 * fallE, 0); wg.rotate(-Math.PI / 2 * fallE); wg.translate(0, 6 * fallE); }
       if (st.invis && !(b && b.who === "me" && b.move !== "self" && b.move !== "shout")) wg.globalAlpha = 0.28 + Math.sin(tt * 3) * 0.05;
       const MFx = typeof MOUNTFIGHT !== "undefined" ? MOUNTFIGHT : null, rfrac = phase === "play" && b ? (b.li != null ? b.li + u : (bi + u) / Math.max(1, beats.length) * (f.log || []).length) / Math.max(1, (f.log || []).length) : 1;
       const mp = rec.horse && !meDown && MFx ? MFx.pose(f, rfrac, b ? b.who : null) : null;   // mountfight.js: charge, getting on / off, thrown, the horse waiting or knocked down
       const onHorse = rec.horse && !meDown && typeof HORSEBACK !== "undefined" && (mp ? mp.ride : HORSEBACK.upAt(f, phase === "play" ? bi / Math.max(1, beats.length) : 1));   // the rider sits up on the horse
       if (mp && !mp.ride && mp.stand) MFx.drawStand(wg, rec.horse, mp, tt, rec.horseCoat);
+      heroP.ride = !!onHorse;
       if (onHorse) { if (mp) MFx.drawMount(wg, rec.horse, mp, tt, "back", rec.horseCoat); else HORSEBACK.drawHorse(wg, rec.horse, 0, tt, "back", rec.horseCoat); wg.save(); if (mp) MFx.seat(wg, mp); else wg.translate(0, -30); }
       { const fs = b ? b.st : st, form = fs && (fs.beast || fs.lord) && (phase === "play" || phase === "settle" || phase === "idle"); heroFig(wg, form ? { ...rec.hero, beast: fs.beast, lord: fs.lord } : rec.hero, form ? Math.max(0, Math.min(1, (heroP.dx || 0) / 40)) : 0, tt, heroP); }   // werewolf or Vampire Lord while changed
       if (onHorse) { wg.restore(); if (mp) MFx.drawMount(wg, rec.horse, mp, tt, "front", rec.horseCoat); else HORSEBACK.drawHorse(wg, rec.horse, 0, tt, "front", rec.horseCoat); }
