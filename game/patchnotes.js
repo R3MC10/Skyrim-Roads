@@ -3,6 +3,9 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b236-glowfix", build: 236, date: "25 Nov 2026", title: "No more glowing blob next to your weapon", items: [
+      "An enchanted weapon used to leave a big glowing blob floating in the air beside your hero in fights. The glow now sits on the weapon itself, as a slim shine along the blade.",
+    ] },
     { id: "b235-testsgreen", build: 235, date: "25 Nov 2026", title: "Small Polish fixes", items: [
       "In Polish, the \"stage done\" line of the vampire war quests is fully translated again.",
       "The Coming next list is up to date.",
