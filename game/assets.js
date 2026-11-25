@@ -56,6 +56,10 @@
                                          4×2: blood-decals (384² cells), oil/green/ichor/sap-decals (192² cells); <liquid>-drops (4×2 of
                                          48², flying drops, head right); blood-drips (4×128×160, body stains). The rest from
                                          scripts/make_gfx.py: dust bonedust frost embers motes (10×192²), shock (8×192²), sparks (8×160²).
+     lock-<face>              720×720    painted lock faces for the lockpicking game (lockgame.js), transparent, keyhole centre
+                                         at (0.5, 0.40): iron steel nordic dwemer noble. GPT art, trimmed, 1.5x Lanczos, WebP q86.
+     tool-lockpick            933×80     the pick, horizontal, hook tip on the right; tool-tension-wrench 705×116, bend on the right.
+                                         Missing files: lockgame.js draws the lock and tools in code.
      ui-panel                 1024×1024  tileable dark panel texture
      ui-parchment             1024×1024  tileable parchment texture
      ui-compass               1254×1254  transparent compass rose

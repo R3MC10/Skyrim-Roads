@@ -135,7 +135,7 @@ var I18N_AFFL = (() => {
     "Cures: a priest at a temple, the Vow of Cleansing (slay three daedra), or two Void Salts.": "Lekarstwa: kapłan w świątyni, Ślub Oczyszczenia (zabij trzy daedry) albo dwie sole pustki.",
     "People on the road and in town notice, and your party sees your afflictions and feels a little of them in a fight together.": "Ludzie na drodze i w mieście to zauważają, a drużyna widzi twoje przypadłości i trochę je czuje we wspólnej walce.",
     "New perks: Embrace the Curse (Illusion, upsides stronger) and Warding Rites (Restoration, downsides weaker).": "Nowe atuty: Przyjmij klątwę (Iluzja, dobre strony silniejsze) i Obrzędy ochronne (Przywracanie, złe strony słabsze).",
-    // ---- patch note: painted affliction scenes (b194)
+    // ---- patch note: painted affliction scenes (b195)
     "Painted affliction scenes": "Malowane sceny przypadłości",
     "The black shrine by the road is now a painting: an obsidian altar in a ring of standing stones under the moon, glowing purple.": "Czarna kapliczka przy drodze jest teraz obrazem: obsydianowy ołtarz w kręgu kamieni pod księżycem, w fioletowej poświacie.",
     "Catching the Draugr Curse shows a frozen barrow altar, and catching the Dwemer Resonance (or the humming pipe on the road) shows a glowing Dwemer pipe in a ruined hall.": "Złapanie klątwy draugrów pokazuje zamarznięty ołtarz w kurhanie, a złapanie rezonansu Dwemerów (albo brzęcząca rura przy drodze) pokazuje świecącą rurę Dwemerów w zrujnowanej sali.",
