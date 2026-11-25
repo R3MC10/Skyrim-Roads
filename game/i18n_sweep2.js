@@ -72,7 +72,7 @@ const I18N_SWEEP2 = (() => {
     "You're playing offline. Go online (Map tab) to see friends and messages.": "Grasz offline. Połącz się (karta Mapa), żeby zobaczyć przyjaciół i wiadomości.",
     "No friends yet. Add people from Social → Party (travellers near you), or search below.": "Nie masz jeszcze przyjaciół. Dodaj kogoś w Społeczność → Drużyna (podróżni w pobliżu) albo wyszukaj poniżej.",
     // the Items doll
-    "Tap a slot to change what you wear. Loadout:": "Dotknij miejsca, żeby zmienić to, co nosisz. Zestaw:", "Show your pack as a plain list": "Pokaż plecak jako zwykłą listę",
+    "Show your pack as a plain list": "Pokaż plecak jako zwykłą listę",
     "Amulet and rings": "Amulet i pierścienie",
     // the inn, rumours and the bard
     "Sleep to heal and get Rested; hear rumours.": "Prześpij się, żeby się wyleczyć i wypocząć; posłuchaj plotek.",

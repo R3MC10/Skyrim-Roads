@@ -5310,6 +5310,19 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 .fj-t .fj-fight{color:#f0a08a;border-color:rgba(240,120,100,.45)}.fj-t .fj-dungeon{color:#b6a6e8;border-color:rgba(170,150,230,.45)}.fj-t .fj-trade{color:#e8cf7a;border-color:rgba(230,200,110,.45)}
 .fj-t .fj-party{display:block;color:#cbb98f}.fj-t .fj-party.full{color:#e39a7c}.fj-t .fj-why{display:block;font-style:italic;opacity:.75}
 .fbtns .btn[data-act=fjoin][disabled]{opacity:.45;cursor:not-allowed}
+/* ==== [dollrig] the paper doll: slots in even rows either side of the figure, readable labels, the crest in the card's corner ==== */
+.doll{grid-template-columns:66px minmax(0,1fr) 66px;align-items:start;gap:8px}
+.doll .dcol{gap:8px;justify-content:flex-start}
+.doll .dfig{align-self:stretch;align-items:flex-start}
+.doll .dfig img{width:200px;max-width:100%;height:auto}
+.dslot{width:62px;min-height:64px;padding:5px 2px 3px}
+.dslot .dsl{font-size:11px;letter-spacing:.05em;color:#cbbd9c;line-height:1.15;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dslot:not(.full) .dsl{color:var(--mute)}
+.dslot .dst{top:-6px;right:-6px}
+.djewel{gap:12px;margin:2px 0 6px}.djewel .dslot{width:58px;min-height:60px}
+.doll .bust-badge.ok{top:6px;left:max(0px,calc(50% - 94px));--bs:50px}
+.sky-doll .dhint{text-align:center;margin:8px 0 0}
+@media (min-width:900px){.doll{grid-template-columns:74px minmax(0,1fr) 74px;gap:12px}.doll .dslot{width:70px;min-height:72px}.doll .dcol{gap:10px}.doll .dslot .dsl{font-size:12px}}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -5706,6 +5719,7 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 <script src="i18n_phantom.js"></script>
 <script src="i18n_pcupdate.js"></script>
 <script src="i18n_friendjoin.js"></script>
+<script src="i18n_dollrig.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>
