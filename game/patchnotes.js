@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b316-noaitab", build: 316, date: "25 Nov 2026", title: "One set of gear, no fight robot settings", items: [
+      "Character → AI & Loadouts is gone: the fight rules editor, share codes, the AI tester and gear loadouts. You pick every move in a fight yourself, so they had nothing left to do.",
+      "You wear one set of gear. If you had several loadouts, you keep the gear of the one you had on; nothing leaves your pack.",
+      "Old saves load as before. Hint texts that pointed to AI & Loadouts now give a real tip instead.",
+    ] },
     { id: "b315-hourlyupdates", build: 315, date: "25 Nov 2026", title: "Updates arrive on time", items: [
       "New versions now reach the app reliably within about an hour of a change, instead of sometimes waiting many hours.",
     ] },
