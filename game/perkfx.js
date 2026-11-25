@@ -315,6 +315,10 @@ const PFX = (() => {
     // ---------------------------------------------------------------- boss fights (bossfight.js)
     [ "One-Handed", "giant_slayer", "Giant Slayer", 1, [40], ["armsman"], "Bosses take 10% more damage from you, and 20% more once they reach their last phase. [OURS]", [["out", 0.1, { bossFoe: 1 }], ["out", 0.1, { bossLast: 1 }]]],
     [ "Blocking", "read_the_signs", "Read the Signs", 1, [30], ["shield_wall"], "A boss's big attacks (the ones it shows a turn ahead) hurt you 25% less. [OURS]", [["bftele", 0.25, {}]]],
+    // ---------------------------------------------------------------- combat combos (reactions.js)
+    [ "Two-Handed", "cold_breaker", "Cold Breaker", 1, [30], ["barbarian"], "Shatter (a power attack on a chilled foe) hits 40% harder, and it can take a bigger bite out of the foe. [OURS]", [["shatter", 0.4, {}]]],
+    [ "Speechcraft", "tactician", "Tactician", 1, [40], ["leadership"], "Combo setups last a round longer: oil, a mark, a bash or a shout leave the foe open one more round, and burning ground burns one round more. [OURS]", [["rxlong", 1, {}]]],
+    [ "Blocking", "bodyguard", "Bodyguard", 1, [35], ["shield_wall"], "When you cover your allies, the blows you take for them hit another 25% softer (60% in all). [OURS]", [["rxcover", 0.25, {}]]],
     // ---------------------------------------------------------------- player-run holds (holdrule.js)
     [ "Speechcraft", "fair_dues", "Fair Dues", 2, [20, 45], [], "A hold's tax costs you half as much when you shop there (rank 2: you pay none). [OURS]", [["holdtax", 0.5, {}]]],
     [ "Speechcraft", "jarls_favour", "Jarl's Favour", 1, [50], ["fair_dues"], "In a hold your side rules, shops sell to you another 5% cheaper, and while you're its Jarl, taxes fill the treasury 20% faster. [OURS]", [["jarlfav", 0.05, {}], ["jarlpurse", 0.2, {}]]],
@@ -336,6 +340,9 @@ const PFX = (() => {
     [AR, "lh_tracker", "Experienced Tracker", 1, [40], ["hunters_eye"], "On a legendary hunt every clue counts twice, you read one extra secret from every sign, and tracks and ambushes are easier. [OURS]", [["lhclue", 1, {}]]],
     [ "Speechcraft", "lh_scholar", "Monster Scholar", 1, [30], ["persuasion"], "You have read every bestiary in the College: you know what a legendary beast resists before you meet it, and you hit legendary beasts 10% harder. [OURS]", [["lhscholar", 1, {}], ["out", 0.1, { tag: ["legend"] }]]],
     [ "Smithing", "lh_trophy", "Trophy Hunter", 2, [30, 60], ["steel_smithing"], "When you skin a legendary beast you take 1/2 more pieces of its rare hide, and you are 10/20% more likely to find its unique piece. [OURS]", [["lhharvest", [1, 2], {}], ["lhuniq", [0.1, 0.2], {}]]],
+    // afflictions (afflictions.js reads affup / affdown)
+    [ "Illusion", "aff_embrace", "Embrace the Curse", 1, [25], ["novice_illusion"], "You stop fighting what's in your blood: every affliction's upsides are 50% stronger. [OURS]", [["affup", 0.5, {}]]],
+    [ "Restoration", "aff_warding", "Warding Rites", 1, [30], ["novice_restoration"], "Old prayers and salt lines keep the worst at bay: every affliction's downsides are 40% weaker. [OURS]", [["affdown", 0.4, {}]]],
   ];
   const FX = {};
   if (typeof PERKS !== "undefined") {

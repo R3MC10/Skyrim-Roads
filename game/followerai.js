@@ -219,7 +219,7 @@ const FAI = (() => {
     if (al.order === "hold" && typeof STRAT !== "undefined") opts = opts.filter((o) => STRAT.allowed(al, o));   // your order: Hold back (strategy.js)
     if (!opts.length) return null;
     let best = null, bv = -1;
-    for (const o of opts) { const v = o.v / Math.max(1, o.c) * (o.k === "guard" ? 0.8 : 1); if (v > bv) { bv = v; best = o; } }
+    for (const o of opts) { const v = o.v / Math.max(1, o.c) * (o.k === "guard" ? 0.8 : 1) * (typeof REACT !== "undefined" ? REACT.value(fight, al, o) : 1); if (v > bv) { bv = v; best = o; } }   // a combo waiting (reactions.js)
     return best;
   }
 
@@ -318,13 +318,16 @@ const FAI = (() => {
         const o = decide(fight, al, ap);
         if (!o) break;
         if (o.k === "guard" && parts.length && (al.tactic !== "defensive")) break;   // leftover pace becomes guard below
-        const before = fight.ehp, myB = fight.hp;
+        const before = fight.ehp, myB = fight.hp, rxPre = typeof REACT !== "undefined" ? REACT.pre(fight) : null;
         const r = doOne(fight, al, o); ap -= o.c;
         if (typeof FBUILD !== "undefined") FBUILD.acted(fight, al, o, r);   // their skills rise with use, like yours
         let t = r.text;
-        if (r.phys && fight.ehp < before && typeof COMBO !== "undefined") t += COMBO.phys(fight, before, aid);
+        const rx = r.phys && fight.ehp < before && typeof REACT !== "undefined" ? REACT.ally(sess, fight, al, o.k, before, rxPre) : { key: null };   // Shatter, Exploit, Precision... (reactions.js)
+        if (rx.key) { t += rx.text; fight._rxPend = rx.key; }
+        else if (r.phys && fight.ehp < before && typeof COMBO !== "undefined") t += COMBO.phys(fight, before, aid);
+        if (o.k === "cast" && fight.hp > myB && fight.bf && typeof BOSSFIGHT !== "undefined" && BOSSFIGHT.cleanse) t += BOSSFIGHT.cleanse(fight);   // their healing washes a boss's hex off you
         if (sess && fight.ehp < before) { t += sess.capFoe(before); t += sess.flank(before); sess.hitters++; }
-        if (fight.ehp < before && typeof COMBO !== "undefined") t += COMBO.opening(fight, before, aid);
+        if (fight.ehp < before && typeof COMBO !== "undefined" && !rx.key) t += COMBO.opening(fight, before, aid);
         if (sess) { sess.lines.me.push(t); sess.emit("ally", t, "ally", { name: al.name, dmg: Math.max(0, Math.round(before - fight.ehp)), healed: Math.max(0, Math.round(fight.hp - myB)), a: o.k === "cast" ? "spell:" + o.id : o.k === "power" ? "power_attack" : "attack", wt: al.wt }); }
         else parts.push(t);
         if (o.k === "guard" || o.k === "cover") break;
