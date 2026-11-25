@@ -80,12 +80,12 @@ async def run(b, vw, vh, style, fails):
     await shot("fight_end")
     if await pg.query_selector("#tbf [data-tbx=done]"): await pg.click("#tbf [data-tbx=done]"); await pg.wait_for_timeout(700)
     await shot("fight_result"); await clear()
-    # 5. arrive in Whiterun, then the tutorial's Town / Journal / Tactics steps
+    # 5. arrive in Whiterun, then the tutorial's Town / Journal steps
     await pg.evaluate("(()=>{const S=__dbg.save(); S.trip=null; S.location='Whiterun'; [S.x,S.y]=WORLD.places.Whiterun; G.setHealth(S, G.maxHealth(S));})()"); await pg.wait_for_timeout(1500); await clear()
     await tab("map"); await pg.evaluate("scrollTo(0,0)"); await shot("arrived")
     print(tag, "5 tutorial:", await pg.evaluate(TUT))
     await tab("town"); await shot("town")
-    await tab("log"); await tab("tactics"); await pg.wait_for_timeout(800); await shot("tactics_done")
+    await tab("log"); await tab("hero"); await pg.wait_for_timeout(800); await shot("hero_done")
     t = await pg.evaluate(TUT); print(tag, "6 after tutorial:", t)
     # 6. first level-up: tip, then its button opens Hero
     await pg.evaluate("__dbg.save().pendingLevels=1"); await pg.wait_for_timeout(1500)

@@ -1067,6 +1067,18 @@ const TB = (() => {
     if (cb) cb();
   }
 
+  /* [dundropout] end the fight on screen at once, as if it never started: the save goes back to just before it (nobody
+     dies, nothing is lost) and the action that started it isn't finished. Used when a co-op run ends under you. */
+  function abort() {
+    if (!open) return false;
+    const snap = saveSnap, liveSave = liveS;
+    if (ui) ui.onDone = null;
+    close();
+    saveSnap = null; liveS = null; mode = null; fin = null; finalS = null; Math.random = realRandom;
+    if (snap && liveSave) replaceInPlace(liveSave, snap);
+    return true;
+  }
+
   // ------------------------------------------------------------------ live party fights (everyone sees the fight; each player picks on their own phone)
   /* The phone that started the fight runs it and owns the record tbf/<id>. It keeps the record up to date (foe, health,
      log, who's in it) so party members in the fight watch it live on their own screen. When a member's turn comes the
@@ -1186,5 +1198,5 @@ const TB = (() => {
 
   /* sharedfight.js: open a teammate's view of a fight, and redraw it when the leader's phone sends news */
   function redraw(sess, state) { if (ui && ui.sess === sess && open) render(state || sess.advance()); }
-  return { T, sceneLines, stats, cost, preview, aiPick, targetOrder, Session, simulate, call, enabled, init, remoteFor, watchTurns, safeSave, zoneOf, play, redraw, fightState, voice, FOE_KEYS, BUFF_KEYS, costTxt, costHTML, base, close: () => { if (open) close(); }, get open() { return open; }, get session() { return open && ui ? ui.sess : null; }, ATK_SP, MAX_ACTS, MAX_POTS, REPEAT, HIT_CAP, FOE_HP, PARTY_HP, TURN_SECONDS, syncInPlace, _origRun: origRun };
+  return { T, sceneLines, stats, cost, preview, aiPick, targetOrder, Session, simulate, call, enabled, init, remoteFor, watchTurns, safeSave, zoneOf, play, redraw, fightState, voice, FOE_KEYS, BUFF_KEYS, costTxt, costHTML, base, close: () => { if (open) close(); }, abort, get open() { return open; }, get session() { return open && ui ? ui.sess : null; }, ATK_SP, MAX_ACTS, MAX_POTS, REPEAT, HIT_CAP, FOE_HP, PARTY_HP, TURN_SECONDS, syncInPlace, _origRun: origRun };
 })();

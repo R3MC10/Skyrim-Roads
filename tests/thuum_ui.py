@@ -32,7 +32,7 @@ async def main():
             # ---- rain in the wilds near Whiterun: the chip, the tooltip, the card
             await pg.evaluate(FORCE, "rain")
             await pg.evaluate("""()=>{const S=window.__dbg.save(); S.location=null; const p=WORLD.places.Whiterun; S.x=p[0]+0.012; S.y=p[1]+0.01;}""")
-            await tab("tactics"); await tab("map"); await pg.wait_for_timeout(600)
+            await tab("log"); await tab("map"); await pg.wait_for_timeout(600)
             chip = await pg.query_selector(".hstat .wxchip")
             ok(chip is not None, f"{tag}: weather chip in the HUD")
             tip = await pg.evaluate("document.querySelector('.hstat .wxchip')?.dataset.tip || ''")

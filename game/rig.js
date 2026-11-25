@@ -10,7 +10,8 @@
           plus move + mu + power (the replay's move and its time 0..1), knock (how hard you were just hit), down (0..1,
           knocked down), dying (0..1, a foe's death fall), ride (in the saddle)
      PAINTRIG.can(look)   → the painted parts for this look are loaded (fightart.js then lets the rig play the fall)
-     PAINTRIG.draw(g, look, { clip, u, t }) → one clip frame on its own (the viewer, tests)
+     PAINTRIG.draw(g, look, { clip, u, t }) → one clip frame on its own (the viewer, tests); doll: the paper doll's
+                          stance (dollHold); the shield shows its face over the body unless shieldOut: false
      PAINTRIG.setOf(sp)   → which painted set a look wears · PAINTRIG.geo(set) → its skeleton in units (tests)
    Gear: light armour, robes and plain clothes → leather; iron (and banded, chain) → iron; steel and heavier → steel;
    women get the women's sets the same way. Dunmer, Khajiit and Argonians wear their own painted head (RIGDATA.HEADS, scaled
@@ -316,6 +317,50 @@ const PAINTRIG = (() => {
     const [kn, an] = ik(hip[0], hip[1], want[0], want[1], G.thigh, G.shin, -1);
     legAt(g, ctx, { hip, knee: kn, ankle: an, toe: 0.05 }, far ? "d" : "n");
   }
+  /* [dollrig] the paper doll's stance: each weapon at a calm, natural angle, its grip square in the fist. DOLL_ANG is the
+     blade's (melee) or the bow's (ranged) angle on screen (0 = pointing at the foe, minus = up). The upper arm hangs a
+     little forward and the forearm follows the hand, so the wrist stays straight: a melee hand closes across the haft
+     (the fist points a quarter turn round from the blade), a bow hand grips the riser along its own line. */
+  const DOLL_ANG = { sword: -0.85, axe: -0.95, mace: -0.95, club: -0.95, warhammer: -1.05, dagger: -0.35, greatsword: -1.05, battleaxe: -1.1, spear: -1.42, staff: -1.48, bow: 0.42, crossbow: 0.3 };
+  const DOLL_FORE = { bow: 1.0, crossbow: 0.45 };   // a ranged weapon's forearm: the bow hangs low by the hip (its string clear of the face), the crossbow at the waist
+  const TIPS0 = { dagger: [10, -8], sword: [20, -20], greatsword: [28, -28], axe: [19, -16], battleaxe: [28, -22], mace: [16, -16], warhammer: [18, -18], spear: [32, -30], club: [18, -24], staff: [10, -32] };
+  const tipOf = (wk) => (TIPS0[wk] ? Math.atan2(TIPS0[wk][1], TIPS0[wk][0]) : -Math.PI / 4);
+  function dollHold(G, B, wk) {
+    if (!wk || wk === "fist" || DOLL_ANG[wk] == null) return null;
+    const ranged = RANGED.has(wk), th = DOLL_ANG[wk], ha = ranged ? DOLL_FORE[wk] : th + Math.PI / 2;
+    const lift = wk === "staff" || wk === "spear" ? 0.55 : ranged ? 0.12 : 0.22, ua = Math.PI / 2 - lift + B.sa;
+    const el = add(B.S, [Math.cos(ua) * G.upper, Math.sin(ua) * G.upper]);
+    return { wr: add(el, [Math.cos(ha) * G.fore * 0.99, Math.sin(ha) * G.fore * 0.99]), el, ha, th, wa: ranged ? th : th - tipOf(wk) };
+  }
+  /* the off arm brought round in front of the belly, so the shield's face shows over the body */
+  const dollShieldHand = (G, B) => { const R = G.upper + G.fore; return add(B.SF, [R * 0.02, R * 0.62]); };
+  /* [dollrig] where the skull is in a head picture (measured pixels, neck at q.p): the top of the head, the forehead at
+     brow height, and the skull's length; read off the picture's alpha once (cached on the picture), or guessed from the
+     neck's width when it can't be read (node, a tainted canvas) */
+  const SKULL = new WeakMap();
+  function skullGuess(q) { const nw = q.nw || q.w * 0.35; return { ty: Math.max(0, q.p[1] - 2.2 * nw), fx: Math.min(q.w, q.p[0] + 1.0 * nw), w: 1.45 * nw }; }
+  function skullOf(q, img) {
+    if (img && typeof img === "object" && SKULL.has(img)) return SKULL.get(img);
+    let sk = skullGuess(q);
+    try {
+      if (img && typeof document !== "undefined") {
+        const iw = img.width || img.naturalWidth, ih = img.height || img.naturalHeight, k = Math.min(1, 240 / Math.max(iw, ih));
+        const c = mk(iw * k, ih * k), x = c.getContext("2d", { willReadFrequently: true }); x.drawImage(img, 0, 0, c.width, c.height);
+        const d = x.getImageData(0, 0, c.width, c.height).data, fx = c.width / q.w, fy = c.height / q.h, nw = q.nw || q.w * 0.35;
+        const x0 = Math.max(0, Math.round((q.p[0] - 1.0 * nw) * fx)), x1 = Math.min(c.width - 1, Math.round((q.p[0] + 1.6 * nw) * fx));
+        const a = (X, Y) => d[(Y * c.width + X) * 4 + 3] > 128;
+        let top = -1;
+        for (let Y = 0; Y < c.height && top < 0; Y++) { let n = 0; for (let X = x0; X <= x1; X++) if (a(X, Y) && ++n >= 2) { top = Y; break; } }
+        if (top >= 0) {
+          const ty = top / fy, yb = Math.round((ty + 0.3 * (q.p[1] - ty)) * fy);
+          let front = -1; for (let X = x1; X >= x0; X--) if (a(X, yb)) { front = X; break; }
+          if (front > 0) sk = { ty, fx: front / fx, w: 1.45 * nw };
+        }
+      }
+    } catch { /* the guess */ }
+    if (img && typeof img === "object") SKULL.set(img, sk);
+    return sk;
+  }
   function figure(g, ctx, P, sp, o, wk) {
     const G = ctx.G, m = G.m, B = solve(G, P), kit = ctx.kit, st = ctx.st;
     if (o.rideLayer === "far") {   // [riding] the first of two passes in the saddle: only the far leg, drawn before the horse so its body covers it
@@ -327,6 +372,17 @@ const PAINTRIG = (() => {
     const ranged = RANGED.has(wk), two = TWO_MELEE.has(wk) || wk === "staff" || wk === "spear";
     const tipA = wk && kit && kit.TIP[wk] ? Math.atan2(kit.TIP[wk][1], kit.TIP[wk][0]) : -Math.PI / 4;
     let wa = B.sa + P.aim;   // the weapon's frame, as on the ink figures
+    if (o.doll && !P.ride && !(P.down > 0) && P.hand !== "open") {   // [dollrig] the paper doll's calm stance
+      const H = dollHold(G, B, wk);
+      if (H) { P.nearHand = H.wr; wa = H.wa; }
+      if (o.shield && !two && !ranged) P.farHand = dollShieldHand(G, B);
+      if (H || P.farHand) Object.assign(B, solve(G, P));
+    } else if (o.shield && o.shieldOut && !two && !ranged && !P.farHand && !P.ride && !(P.down > 0) && P.hand !== "open") {
+      /* [dollrig] in a fight the shield arm comes up into a guard in front of the chest (it hung back behind the hip,
+         the shield floating off the body); a lunge, a wind-up or a block (P.back) hand the arm back to the clip */
+      const w = clamp(1 - (o.lunge || 0) * 1.6, 0, 1) * clamp(1 - Math.abs(P.back || 0), 0, 1) * (o.move && o.mu != null ? clamp(Math.abs(o.mu - 0.5) * 4 - 1, 0, 1) : 1);   // a swing lowers it (it never covers the face)
+      if (w > 0.01) { const R = G.upper + G.fore, gd = add(B.SF, rot(B.sa, [R * 0.2, R * 0.5])), h0 = B.armF.wr; P.farHand = [h0[0] + (gd[0] - h0[0]) * w, h0[1] + (gd[1] - h0[1]) * w]; Object.assign(B, solve(G, P)); }
+    }
     const gear = typeof RIGGEAR !== "undefined" ? RIGGEAR : null;
     const armedN = !!wk && wk !== "fist" && !P.flask, openAll = P.hand === "open";
     const glowC = o.glow ? sp.ench || "#7fb6ff" : null, castC = wk === "staff" ? sp.staffC : sp.ench || "#9fd0f0";
@@ -358,7 +414,7 @@ const PAINTRIG = (() => {
     }
     if (farOn) { P.farHand = farOn; Object.assign(B, solve(G, P)); }
     const shieldOn = !!o.shield && !two && !ranged, shieldFront = shieldOn && (P.front || P.back < -0.8 || !!o.shieldOut);   // shieldOut: a fight scene shows the shield's face over the body (side-on behind the torso it vanished)
-    const kS = m * 1.35;
+    const kS = m * (o.doll ? 1.1 : 1.35);   // [dollrig] on the doll the shield's face is over the body: a touch smaller, so the chest still shows
     const shieldHere = (front) => { if (!kit) return; const wr = B.armF.wr; g.save(); g.translate(wr[0], wr[1]); g.rotate(B.sa); g.scale(kS, kS); if (gear) gear.shield(g, sp, front, st); else kit.shieldAt(g, sp, 0, 0, front, st); g.restore(); };
     // the far arm, in shade, behind everything
     const farPart = shieldOn || o.off || farOn ? "hand-fist" : "hand-open";
@@ -378,6 +434,12 @@ const PAINTRIG = (() => {
     uprightAt(g, ctx, "torso", "n", B.W, B.sa, ctx.Q.torso.cut);
     { const q = ctx.Q.pelvis, ky = q.hip[1] - 10; putR(g, pic(ctx.r, "pelvis", "n", q.w * G.u * ctx.dev), q, G.u, B.W[0], B.W[1], B.pa, [[0, 0, q.w, ky + 1], [0, ky, q.w, q.h, clamp(sw * 0.55 - B.pa * 0.3, -0.25, 0.25), ky]]); }   // belt flaps, pouches and fur swing a little
     putR(g, himg, hq, hu, B.N[0], B.N[1], hk, headR(hq, hairK, "front"));
+    if (sp.helm && gear && gear.helmet) {   // [dollrig] the worn helmet over the painted head (no painted helmets yet: shaded drawing)
+      const sk = skullOf(hq, rh ? rh.imgs.head : ctx.r.imgs.head);
+      g.save(); g.translate(B.N[0], B.N[1]); g.rotate(hk);
+      gear.helmet(g, sp, { fx: (sk.fx - hq.p[0]) * hu, ty: (sk.ty - hq.p[1]) * hu, w: sk.w * hu }, st);
+      g.restore();
+    }
     if (shieldFront) shieldHere(true);
     // the near arm: upper arm, forearm, then whatever is in the hand, then the hand over its grip
     limbAt(g, ctx, "uparm", "n", B.armN.sh, B.armN.el);
@@ -472,12 +534,13 @@ const PAINTRIG = (() => {
     const name = D.CLIPS[o.clip] ? o.clip : "idle", C = D.CLIPS[name], u = o.u != null ? o.u : ((o.t || 0) / C.len) % 1;
     const wk = o.wt === undefined ? sp.wk : o.wt || null, P = sample(name, u);
     P.hand = C.hand || null; P.front = !!C.front || P.back < -0.8; P.clip = name; P.ride = !!C.ride;
-    render(g, r, sp, P, { shield: o.shield === undefined ? !!sp.shield : o.shield, glow: o.glow, t: o.t, ride: P.ride }, wk);
+    const shield = o.shield === undefined ? !!sp.shield : o.shield;
+    render(g, r, sp, P, { shield, shieldOut: o.shieldOut === undefined ? shield : o.shieldOut, doll: !!o.doll, glow: o.glow, t: o.t, ride: P.ride }, wk);
     return true;
   }
   /* the blade of the figure last drawn for who ("me" by default): tip x,y and a point 42% up the blade (bx,by), in the
      canvas's pixels at draw time; n counts draws, so a caller can tell a fresh one (null: no blade) */
   const tip = (who) => TIPS.get(who || "me") || null;
-  return { setOf, geo, raceHead, tip, can, fight, draw, sample, warp, controls, solve, ready, get broken() { return broken; }, reset: () => { broken = false; REC.clear(); HREC.clear(); } };
+  return { setOf, geo, raceHead, tip, can, fight, draw, sample, warp, controls, solve, ready, dollHold, dollShieldHand, skullOf, skullGuess, tipOf, DOLL_ANG, get broken() { return broken; }, reset: () => { broken = false; REC.clear(); HREC.clear(); } };
 })();
 if (typeof module !== "undefined") module.exports = PAINTRIG;

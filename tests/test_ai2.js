@@ -1,4 +1,4 @@
-/* Sneak openers, AI settings, hybrid, richer tactics, share codes, preview, decide() (sneak2.js + aiset.js).
+/* Sneak openers, AI settings, hybrid, richer tactics, decide() (sneak2.js + aiset.js).
    W=/path/to/web/ node test_ai2.js  — prints "ai2 ok · N checks" */
 const fs = require("fs"), vm = require("vm");
 const W = process.env.W || require("path").join(__dirname, "../game/");
@@ -130,7 +130,7 @@ function caster(lv = 20) {
   const s2 = mk(20); L(s2).mode = "custom"; L(s2).rules = [{ if: "first_turn", conds: [{ if: "first_turn" }, { if: "enemy_humanoid" }], join: "and", do: "block" }, { if: "always", do: "attack" }];
   const f2 = new G.Fight(s2, foe(medFoe.name, 20)); f2.run({}); ok(f2.log.find((l) => l.turn === 1).a === "block" && f2.log.find((l) => l.turn === 2)?.a !== "block", "AND rule fires on turn 1 only");
 }
-// ---------- 7. presets, hybrid, share codes
+// ---------- 7. presets, hybrid (share codes went with the AI & Loadouts tab)
 {
   const s = caster(); for (const id of Object.keys(AISET.PRESETS)) {
     const Lx = { rules: [], equipment: {}, mode: "smart" }; AISET.applyPreset(s, Lx, id);
@@ -143,16 +143,6 @@ function caster(lv = 20) {
   const f = new G.Fight(h, foe(medFoe.name, 20)); f.run({});
   ok(f.ai && f.log.find((l) => l.turn === 1).a === "block" && f.log.find((l) => l.turn === 1).rule === 1, "Hybrid: your rule fires first (logged as rule 1)");
   ok(f.log.filter((l) => l.turn > 1).every((l) => l.rule === 0), "…then Smart AI (the always→attack filler doesn't block it)");
-  // share
-  const a = caster(); L(a).mode = "hybrid"; AISET.get(L(a)).style = "careful"; AISET.get(L(a)).schools.Illusion = false;
-  L(a).rules = [AISET.makeRule({ if: "hp_below", pct: 30 }, [{ if: "enemy_boss" }], "or"), { if: "always", do: "attack" }]; L(a).rules[0].do = "potion:health";
-  const code = AISET.encode(L(a)); ok(/^ROTN1-/.test(code), "share code made");
-  const Lb = { rules: [], equipment: {} }; ok(AISET.importInto(Lb, code), "share code imported");
-  ok(Lb.mode === "hybrid" && Lb.ai.style === "careful" && Lb.ai.schools.Illusion === false && Lb.rules[0].join === "or" && Lb.rules[0].conds.length === 2 && Lb.rules[0].do === "potion:health", "round trip keeps mode, settings and AND/OR rules");
-  ok(!AISET.decode("hello") && !AISET.decode("ROTN1-!!!"), "junk codes refused");
-  const evil = "ROTN1-" + Buffer.from(JSON.stringify({ v: 1, mode: "x", ai: { style: "<b>", healAt: 9999, w: { magic: 99 } }, rules: [{ if: "always", do: "<img src=x onerror=1>" }, { if: "nope", do: "attack" }, { if: "hp_below", pct: 40, do: "potion:health" }] })).toString("base64");
-  const ev = AISET.decode(evil);
-  ok(ev && ev.mode === "smart" && ev.ai.style === "balanced" && ev.ai.healAt === 90 && ev.ai.w.magic === 2 && ev.rules.length === 1, "a hostile code is cleaned (bad actions, unknown conditions, out-of-range numbers)");
 }
 // ---------- 8. decide(): one turn at a time, no dice
 {
@@ -167,15 +157,13 @@ function caster(lv = 20) {
   f.hp = G.maxHealth(s) * 0.2; ok(COMBATAI.decide(f, { name: "Lydia", dmg: 10, hp: 200, max: 200 }).action === "cover", "decide() for a follower: covers a hurt hero");
   ok(COMBATAI.settingsOf(L(s)) === L(s).ai, "settings live on the loadout as one object");
 }
-// ---------- 9. flee rules on the road, preview, target order
+// ---------- 9. flee rules on the road, target order (the preview went with the AI & Loadouts tab)
 {
   const s = mk(20, { Athletics: 100 }); L(s).mode = "custom"; L(s).rules = [{ if: "always", do: "flee" }];
   s.trip = { status: "encounter", encounter: foe(medFoe.name, 20), path: [[s.x, s.y], [s.x + 10, s.y]], from: "Whiterun", to: "Riverwood", start: G.now(), lastTick: G.now(), log: [] };
   let fled = false; for (let i = 0; i < 6 && !fled; i++) { s.trip.status = "encounter"; s.trip.encounter = foe(medFoe.name, 20); G.setHealth(s, G.maxHealth(s)); const r = G.encounterAction(s, "fight"); if (r.fled) fled = true; }
   ok(fled, "a flee rule breaks off a road fight and the trip goes on");
   const f = new G.Fight(mk(20), foe(medFoe.name, 20)); ok(!f.affordable("flee"), "…but not where there's nowhere to run");
-  const p = AISET.preview(caster(), medFoe.name, 20);
-  ok(p && p.n === 20 && p.win >= 0 && p.win <= 100 && p.turns > 0 && Object.keys(p.xp).length > 0, `preview: ${p.win}% wins, ${p.turns} turns, xp ${JSON.stringify(p.xp)}`);
   const foes = [{ name: "Bandit", health: 50, hp: 50, damage: 5 }, { name: "Bandit mage", health: 60, hp: 60, damage: 9, tags: ["mage"] }, { name: "Bandit chief", health: 200, hp: 200, damage: 20 }];
   const Lt = { ai: { target: "casters" } }; ok(AISET.pickTarget(Lt, foes)[0].name === "Bandit mage", "target: casters first");
   Lt.ai.target = "strongest"; ok(AISET.pickTarget(Lt, foes)[0].name === "Bandit chief", "target: strongest first");

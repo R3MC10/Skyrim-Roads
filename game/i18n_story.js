@@ -1429,7 +1429,7 @@ const I18N_STORY = {
 "Fights play out by themselves, following your Tactics.": "Walki toczą się same, według twojej Taktyki.",
 "Put a healing potion rule at the top.": "Daj regułę z miksturą leczenia na samą górę.",
 "Rules are checked from the top down.": "Reguły sprawdzane są od góry do dołu.",
-"The first one that fits is used.": "Używana jest pierwsza pasująca.",
+
 "Cleared dungeons fill up again after three in-game days.": "Oczyszczone lochy znowu się zapełniają po trzech dniach w grze.",
 "One in-game day passes every two real hours.": "Jeden dzień w grze mija co dwie godziny w rzeczywistości.",
 "Shops close at night.": "Sklepy w nocy są zamknięte.",
