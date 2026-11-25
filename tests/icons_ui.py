@@ -48,12 +48,6 @@ async def main():
         await jsclick("[data-act=smode][data-id=sell]"); await pg.wait_for_timeout(300); el = await pg.query_selector("#side"); await el.screenshot(path=_SHOTS + "icons_sell.png")
         await town("forge"); el = await pg.query_selector("#side"); await el.screenshot(path=_SHOTS + "icons_forge.png")
         await jsclick("[data-act=fgroup][data-id=jewel]"); await pg.wait_for_timeout(300); el = await pg.query_selector("#side"); await el.screenshot(path=_SHOTS + "icons_forge_jewel.png")
-        # tactics test fight portrait
-        await pg.evaluate("document.querySelectorAll('#modal,#sky').forEach(m=>m.remove()); window.__ui.go('tactics')"); await pg.wait_for_timeout(300)   # the Tactics screen (rules, loadouts, test fight) has no menu button since fights went turn-based; open it directly
-        if await pg.query_selector("#te"):
-            await pg.evaluate("document.querySelector('#te').value='Frost troll'")
-            await jsclick("[data-act=test]"); await pg.wait_for_timeout(400)
-            print("test fight portrait:", await pg.evaluate("!!document.querySelector('#side img.eico')"))
         print("icons in shop:", await pg.evaluate("document.querySelectorAll('img.art.ico').length"))
         print("errors:", errs)
         print("RESULT", "OK" if not errs and not missing else "FAIL missing " + str(missing))

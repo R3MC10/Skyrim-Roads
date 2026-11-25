@@ -1731,7 +1731,6 @@ const D = {
  },
  "DEFAULT_PRESET": "warrior",
  "MAX_RULES": 16,
- "TURNS": [2, 3, 4, 5, 6, 8, 10],
- "MAX_LOADOUTS": 5
+ "TURNS": [2, 3, 4, 5, 6, 8, 10]
 };
 if (typeof module !== 'undefined') module.exports = D;

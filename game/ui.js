@@ -27,7 +27,7 @@
   const tiCls = (item) => (TI && TI.isTome(item) ? " ti-row" : "");
   let zoom = innerWidth < 700 ? 2.4 : 1, follow = true, center = [0.5, 0.5], view = {}, version = 0, rendered = -1, lastPanelRender = 0;
   let townCtx = null;   // locscreen.js: what panelTown found at this place, for the full-screen scene
-  let tacticsDraft = { if: "hp_below", pct: 40, do: "potion:health", edit: null }, testResult = null, townShop = null, townShopAt = null, townNews = false, forgeTab = "make", forgeGroup = "iron", packOpen = null, searchText = "", uxAllPlaces = false, uxHelpOpen = null, packSearch = "";
+  let townShop = null, townShopAt = null, townNews = false, forgeTab = "make", forgeGroup = "iron", packOpen = null, searchText = "", uxAllPlaces = false, uxHelpOpen = null, packSearch = "";
   let raidDocs = [], raidSeen = null, raidJoined = null, raidAuto = null, enchDraft = {};
   let chatDocs = [], chatRaw = [], chatCh = "world", chatDraft = "", chatSeen = 0, chatSeenIds = new Set(), lastChatSend = 0;
   const bootT = Date.now() / 1000;
@@ -72,7 +72,7 @@
     const card = { name: S.name, race: S.race, level: S.level, x: S.x, y: S.y,
       t0: tr ? tr.lastTick : G.now(), moving: !!(tr && tr.status === "travel"), dest: tr ? tr.dest : null,
       path: tr && tr.status === "travel" ? [[S.x, S.y], ...tr.path.slice(tr.idx + 1)].slice(0, 120) : null,
-      speed: G.speed(S), loc: S.location || null, region: WORLD.regionOf([S.x, S.y]), look: HEROART.lookOf(S), ride: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, party: party?.id || null, hiding: !!S.ambush, facing: S.facing ?? null, ...(typeof SNEAKMODE !== "undefined" ? SNEAKMODE.cardBits(S) : {}), clan: myClan()?.tag || null, ...(typeof SIDES !== "undefined" ? SIDES.cardBits(S) : {}), ...MP.stats(S), coop: coopUI?.card() || null, ...(typeof PARTY !== "undefined" ? PARTY.cardBits(S, party) : {}), ...(typeof LIVING !== "undefined" ? LIVING.cardBits(S, party) : {}), ...(typeof LEVELUP !== "undefined" ? LEVELUP.cardBits(S) : {}), ...(typeof AFFL !== "undefined" ? AFFL.cardBits(S) : {}), ...(typeof FRIENDJOIN !== "undefined" ? FRIENDJOIN.bits(S, party) : {}), ...(typeof AVATAR !== "undefined" ? AVATAR.cardBits(S) : {}) };
+      speed: G.speed(S), loc: S.location || null, region: WORLD.regionOf([S.x, S.y]), look: HEROART.lookOf(S), ride: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, party: party?.id || null, hiding: !!S.ambush, facing: S.facing ?? null, ...(typeof SNEAKMODE !== "undefined" ? SNEAKMODE.cardBits(S) : {}), clan: myClan()?.tag || null, ...(typeof SIDES !== "undefined" ? SIDES.cardBits(S) : {}), ...MP.stats(S), coop: coopUI?.card() || null, ...(typeof PARTY !== "undefined" ? PARTY.cardBits(S, party) : {}), ...(typeof LIVING !== "undefined" ? LIVING.cardBits(S, party) : {}), ...(typeof LEVELUP !== "undefined" ? LEVELUP.cardBits(S) : {}), ...(typeof AFFL !== "undefined" ? AFFL.cardBits(S) : {}), ...(typeof FRIENDJOIN !== "undefined" ? FRIENDJOIN.bits(S, party) : {}), ...(typeof AVATAR !== "undefined" ? AVATAR.cardBits(S) : {}), ...(typeof SAMEVER !== "undefined" ? SAMEVER.cardBits() : {}) };
     const json = JSON.stringify({ ...card, t0: 0, cur: Math.round(card.cur / 10) });
     if (!force && json === lastCardJson) return;
     lastCardJson = json;
@@ -278,7 +278,7 @@
         ${item("new", S ? "New Character" : "Begin")}
         ${typeof ACCOUNT !== "undefined" && ACCOUNT.on() ? item("account", ACCOUNT.signedIn() ? "Account" : "Sign in", ACCOUNT.menuSub()) : ""}
         ${item("settings", "Settings")}
-        ${item("update", "Updates", "", update?.newer ? "New" : "")}
+        ${item("update", "Updates", "", updNewer() ? "New" : "")}
         ${typeof PATCHNOTES !== "undefined" ? item("notes", "Patch Notes", "", PATCHNOTES.unseen() && S ? "New" : "") : ""}
         ${item("howto", "How to Play")}
         ${item("credits", "Credits")}</nav>`;
@@ -331,6 +331,7 @@
         Store.wipe().then(() => { S = null; closeTitle(); showCreate(); }); break;
       case "update": titlePage = "update"; renderTitle(); checkUpdate(true); break;
       case "doupdate": runUpdate(); break;
+      case "sameready": SV()?.restartNow(); break;
       default: titlePage = t; renderTitle();
     }
   }
@@ -441,30 +442,45 @@
     }
   }
 
-  // ---- updates
+  // ---- updates: one newest build for everyone (samever.js holds the state: your build, the newest, downloads, errors)
   let updateHow = "";
+  const SV = () => (typeof SAMEVER !== "undefined" ? SAMEVER : null);
+  const updNewer = () => !!(update?.newer || (SV() && SV().state.latest > SV().state.mine && SV().state.mine));
   function updateHTML() {
-    if (!window.__app) return `<p>You're playing the web version, which is always up to date. The phone app downloads new versions by itself and switches over when you next open it.</p>`;
-    if (!update) return `<p class="sub">${esc(updateMsg || "Checking for a new version…")}</p>`;
-    if (window.__app.how && !updateHow) window.__app.how().then((t) => { updateHow = t; if (titlePage === "update") renderTitle(); }).catch(() => {});
-    const cur = update.current.build, lat = update.latest;
-    const when = lat.date ? new Date(lat.date).toLocaleDateString() : "";
+    const sv = SV(), st = sv ? sv.state : { mine: 0, latest: 0 }, web = !window.__app;
+    if (window.__app?.how && !updateHow) window.__app.how().then((t) => { updateHow = t; if (titlePage === "update") renderTitle(); }).catch(() => {});
+    const mine = update?.current?.build || st.mine, latest = update?.latest?.build || st.latest;
+    const row = (label, v) => `<p>${label} <b>${v ? `build ${v}` : "…"}</b></p>`;
+    const head = `<div class="upd-st" id="updst">${row(web ? "Web version:" : "Your version:", mine)}${row("Newest version:", latest)}</div>`;
     const howLine = updateHow ? `<p class="sub">${esc(updateHow)}</p>` : "";
-    if (!update.newer) return `${howLine}<p>You have the newest version: <b>build ${cur}</b>.</p>${updateMsg ? `<p class="sub">${esc(updateMsg)}</p>` : ""}<button class="btn" data-t="update">Check again</button>`;
-    return `<p>A new version is ready: <b>build ${lat.build}</b>${when ? ` (${esc(when)})` : ""}. You have build ${cur}.</p>
+    const again = `<button class="btn" data-t="update">Check again</button>`;
+    // what's happening right now
+    if (st.dl) return `${head}<p id="umsg">${st.dl.pct >= 0 ? `Updating: downloading build ${st.dl.build}… ${st.dl.pct}%` : `Updating to build ${st.dl.build}…`}</p><div class="uprog"><i id="ubar" style="width:${Math.max(3, st.dl.pct)}%"></i></div>${howLine}`;
+    if (st.ready) return `${head}<p>Build ${st.ready.build} is ready. The game switches over now (your progress is saved).</p><button class="btn pri" data-t="sameready">${st.ready.web ? "Reload now" : "Restart now"}</button>${howLine}`;
+    if (st.checking && !update) return `${head}<p class="sub">Checking for a new version…</p>`;
+    // a failed check shows its reason and Retry, even when an earlier check worked
+    const errLine = st.err ? `<p class="err">Couldn't check for a new version (${esc(st.err)}). Check your internet.</p>` : "";
+    const retry = st.err ? `<button class="btn pri" data-t="update">Retry</button>` : again;
+    if (!updNewer()) return `${head}${errLine || `<p>You have the newest version. Everyone you play with is on the same build once they've updated too.</p>`}${howLine}${retry}`;
+    if (web) return `${head}<p>A new version is out: <b>build ${latest}</b></p><p>Reload to play it: your progress is saved.</p><button class="btn pri" data-t="doupdate">Reload now</button>`;
+    const lat = update.latest, when = lat.date ? new Date(lat.date).toLocaleDateString() : "";
+    return `${head}<p>A new version is ready: <b>build ${lat.build}</b>${when ? ` (${esc(when)})` : ""}.</p>
       ${lat.notes ? `<h3>What's new</h3><div class="notes">${esc(lat.notes)}</div>` : ""}
       <p class="sub">Your character and progress stay. ${((update.size || lat.size) / 1048576).toFixed(1)} MB download${update.quick ? ", no reinstall: the game just restarts" : ""}.</p>
       ${updateMsg ? `<p id="umsg">${esc(updateMsg)}</p><div class="uprog"><i id="ubar" style="width:${Math.max(0, updatePct)}%"></i></div>` : ""}
       ${howLine}<button class="btn pri" data-t="doupdate" ${updateBusy ? "disabled" : ""}>${updateBusy ? "Updating…" : "Update now"}</button>`;
   }
+  /* "Check again" / Retry: really asks again (the app's and PC's updater skip their cache; the web asks our server) */
   async function checkUpdate(force) {
-    if (!window.__app) return;
-    if (force) { update = null; updateMsg = ""; }
-    try { update = await window.__app.check(force); }
-    catch (err) { updateMsg = `Couldn't reach GitHub (${err.message}). Check your internet and try again.`; update = null; }
-    if (titlePage === "update") renderTitle(); else if ($("#title")) renderTitle();
+    if (!SV()) return;
+    if (force) { updateMsg = ""; if (window.__app) update = null; }
+    if (titlePage === "update") renderTitle();
+    try { const r = await SV().check(force); if (window.__app) update = r; }
+    catch (err) { update = null; } // SAMEVER keeps the reason in state.err; the page shows it with Retry
+    if ($("#title")) renderTitle();
   }
   async function runUpdate() {
+    if (!window.__app) { const sv = SV(); if (sv && sv.state.latest > sv.state.mine) sv.freshReload(sv.state.latest); return; }   // web: reload on the new files
     if (!update?.newer || updateBusy) return;
     updateBusy = true; updateMsg = "Starting…"; updatePct = 0; renderTitle();
     try {
@@ -475,18 +491,35 @@
       });
       if (r === "applied") updateMsg = "Restarting on the new version…";
       else if (r === "installer") updateMsg = "Tap Install (or Update) on Android's screen. The game reopens on the new version.";
-    } catch (err) { updateMsg = `The update didn't finish: ${err.message}. Try again.`; }
+    } catch (err) { updateMsg = `The update didn't finish: ${err.message}.`; }
     updateBusy = false;
     if (titlePage === "update") renderTitle();
   }
-  function updateStaged(r) {
-    update = r;
-    toast(` Build ${r.latest.build} is downloaded. The game restarts on it at the next quiet moment (your progress is saved).`);
+  /* the app / PC downloaded a newer build: the "Update ready" card (go() switches over; quiet: the PC shows its own card) */
+  function updateStaged(r, go, quiet) {
+    if (r) update = r;
+    if (SV() && go) SV().ready(r?.latest?.build, go, { quiet: !!quiet });
+    if ($("#title")) renderTitle();
   }
+  /* background download progress (build 0 = it stopped; err says why) */
+  function updateProgress(build, pct, err) {
+    const sv = SV(); if (!sv) return;
+    if (build > 0) sv.dl(build, pct); else { sv.dlDone(); if (err) sv.set({ err: String(err).slice(0, 140) }); }
+  }
+  let updRaf = 0;
+  if (SV()) SV().onChange(() => {   // keep the Updates page and the menu's "New" badge true to what's happening
+    if (updRaf || !$("#title")) return;
+    updRaf = requestAnimationFrame(() => {
+      updRaf = 0;
+      const st = SV().state, m = $("#umsg"), bar = $("#ubar");
+      if (titlePage === "update" && st.dl && m && bar) { m.textContent = st.dl.pct >= 0 ? `Updating: downloading build ${st.dl.build}… ${st.dl.pct}%` : `Updating to build ${st.dl.build}…`; bar.style.width = `${Math.max(3, st.dl.pct)}%`; return; }
+      if (titlePage === "update" || titlePage === "menu") renderTitle();
+    });
+  });
   function updateAvailable(r) {
     update = r;
-    if ($("#title")) { if (titlePage === "menu") renderTitle(); return; }
-    toast(`A new version (build ${r.latest.build}) is ready. Open  to update.`);
+    if ($("#title")) { if (titlePage === "menu" || titlePage === "update") renderTitle(); return; }
+    toast(`A new version (build ${r.latest.build}) is ready. Open  to update.`);
   }
 
   // ---- fog and snow
@@ -583,9 +616,17 @@
       if ((coopUI?.runs || []).length) return false;
       return true;
     },
+    /* pressing Restart now / Update (samever.js): fine in a menu (it saves first), never mid-fight, dungeon, event or mini-game */
+    safeToRestart() {
+      if ($("#title") || !S) return true;
+      if (S.dungeon || S.trip?.event || S.encounter) return false;
+      if (["tbf", "tbwatch", "lockpick", "pickgame", "breach", "dwgame", "lvlpick"].some((id) => document.getElementById(id))) return false;
+      if (document.querySelector(".craftgame, .lockpick, .smithgame, .xgame, .rct-wrap, #exp-layer:not(:empty)")) return false;
+      return true;
+    },
     /* for the Tab compass (tabmenu.js) */
     openMenu: (p) => openMenu(p), closeMenu: () => closeMenu(), refresh: () => { bump(); renderPanel(true); }, fight: (r) => showFightResult(r), tbCall: (fn, done) => tbCall(fn, done),   // tbCall: event fights open the turn-by-turn screen (noautoplay.js)
-    go(t) { closeMenu(); tab = t; testResult = null; bump(); renderTabs(); renderPanel(true); if (typeof MENUTOP !== "undefined") MENUTOP.top(); },   // a screen opens at its top
+    go(t) { closeMenu(); tab = t; bump(); renderTabs(); renderPanel(true); if (typeof MENUTOP !== "undefined") MENUTOP.top(); },   // a screen opens at its top
     get tab() { return tab; },
     /* [remind] Go buttons: open a screen ({ tab, shop, jtab, soc, anchor }) or pick a place on the map ({ place }) */
     remindData: () => ({ trades, stalls }),
@@ -596,7 +637,7 @@
         tab = "map"; selected = o.place; roamSpot = null; bump(); renderTabs(); renderPanel(true); renderPicked();
         $("#mapwrap")?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" }); return true;
       }
-      tab = o.tab || "map"; testResult = null;
+      tab = o.tab || "map";
       if (o.shop) { townShop = o.shop; townShopAt = S && S.location; } if (o.jtab) jTab = o.jtab; if (o.soc) socTab = o.soc;
       bump(); renderTabs(); renderPanel(true);
       const el = (o.anchor && document.getElementById(o.anchor)) || $("#side");
@@ -604,7 +645,8 @@
       return true;
     },
     updateAvailable: (r) => updateAvailable(r),
-    updateStaged: (r) => updateStaged(r),
+    updateStaged: (r, go, quiet) => updateStaged(r, go, quiet),
+    updateProgress: (b, pct, err) => updateProgress(b, pct, err),
     permissionBack: () => { if ($("#title") && titlePage === "update") { updateMsg = "Thanks. Tap Update now again."; renderTitle(); } },
     /* things worth a phone notification while the app is closed: arrival and the next dragon attack (times in ms) */
     upcoming() {
@@ -639,7 +681,7 @@
     tabsEl.classList.remove("hide");
     window.scrollTo(0, 0);
     if (!(typeof MENUS !== "undefined" && MENUS.bar(tabsEl, tab))) tabsEl.innerHTML = TABS.map(([id, label, svg]) => `<button class="tab ${id === tab ? "on" : ""}" role="tab" aria-selected="${id === tab}" data-tab="${id}"><svg viewBox="0 0 24 24">${svg}</svg>${label}</button>`).join("");
-    tabsEl.onclick = (e) => { const b = e.target.closest("[data-tab]"); if (!b) return; SOUND.fx("click"); if (typeof TABMENU !== "undefined" && TABMENU.fromBar) TABMENU.fromBar(); const to = typeof MENUS !== "undefined" ? MENUS.pick(b.dataset.tab) : b.dataset.tab; if (to === "pack" || to[0] === "@") return openMenu(to === "pack" ? "items" : to.slice(1)); closeMenu(); tab = to; testResult = null; bump(); renderTabs(); renderPanel(true); if (typeof POLISH !== "undefined") POLISH.swap($("#side")); if (typeof MOTION !== "undefined") MOTION.panel($("#side")); if (typeof MENUTOP !== "undefined") MENUTOP.top(); else $("#side").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" }); };   // menutop.js: the top of the screen (a smooth scroll stopped short while the panel slid in)
+    tabsEl.onclick = (e) => { const b = e.target.closest("[data-tab]"); if (!b) return; SOUND.fx("click"); if (typeof TABMENU !== "undefined" && TABMENU.fromBar) TABMENU.fromBar(); const to = typeof MENUS !== "undefined" ? MENUS.pick(b.dataset.tab) : b.dataset.tab; if (to === "pack" || to[0] === "@") return openMenu(to === "pack" ? "items" : to.slice(1)); closeMenu(); tab = to; bump(); renderTabs(); renderPanel(true); if (typeof POLISH !== "undefined") POLISH.swap($("#side")); if (typeof MOTION !== "undefined") MOTION.panel($("#side")); if (typeof MENUTOP !== "undefined") MENUTOP.top(); else $("#side").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" }); };   // menutop.js: the top of the screen (a smooth scroll stopped short while the panel slid in)
     $("#zoomBtn").onclick = () => { mapTouchedAt = performance.now(); kickMap(); zoom = zoom > 1.01 ? 1 : 2.4; follow = true; $("#zoomBtn").textContent = zoom > 1.01 ? "－" : "＋"; };
     if ($("#sneakBtn")) $("#sneakBtn").onclick = () => {
       if (!S) return; const onNow = SNEAKMODE.toggle(S); SOUND.fx("click"); persist(true);
@@ -667,7 +709,6 @@
     { let ls = $("#locs"); if (!ls) { ls = document.createElement("div"); ls.id = "locs"; ls.hidden = true; document.body.appendChild(ls); } ls.addEventListener("click", onPanelClick); ls.addEventListener("change", onPanelChange); }   // locscreen.js: the place full screen
     $("#side").addEventListener("change", onPanelChange);
     $("#side").addEventListener("input", onPanelInput);
-    $("#side").addEventListener("pointerdown", onRuleDrag);   // drag a rule's number to reorder tactics
     $("#side").addEventListener("keydown", (e) => { if (e.target.id === "chatin" && e.key === "Enter") { e.preventDefault(); chatSend(e.target.value); } if (e.target.id === "dmin" && e.key === "Enter") { e.preventDefault(); sendDM(); } });
     $("#trip").addEventListener("click", onPanelClick);
     $("#raid").addEventListener("click", onPanelClick);
@@ -749,6 +790,7 @@
     }
     if (typeof INVITES !== "undefined") INVITES.mount({ list: inviteList, answer: answerInviteCard, toast, onNew: () => SOUND.fx("page"),   // Accept / Decline cards on top (invites.js)
       openSocial: () => { closeMenu(); tab = "social"; socTab = "party"; bump(); renderTabs(); renderPanel(true); } });
+    if (typeof SAMEVER !== "undefined") SAMEVER.watch({ S: () => S, party: () => party, cardOf });   // party mates on a newer build: "Update to play together" (samever.js)
     if (typeof FRIENDJOIN !== "undefined") FRIENDJOIN.mount({ S: () => S, party: () => party, cardOf, Store, toast, invite: (c) => invite(c), invites: () => invites, acceptInvite: (pid) => acceptInvite(pid),   // friends: what they're doing + Ask to join (friendjoin.js)
       fighting: () => (typeof TB !== "undefined" && TB.open) || !!S?.encounter, trading: () => tab === "town" && !!townShop && townShop !== "inn", publishCard: (f) => publishCard(f), refreshInvites: invRefresh,
       bump: () => { if (tab === "social") bump(); }, render: () => { if (tab === "social") renderPanel(true); } });
@@ -947,7 +989,7 @@
     openModal(`<h2>Settings</h2>${settingsHTML()}
       <button class="btn" data-act="guide" style="width:100%;margin-top:14px"> Guide for new players</button>
       ${typeof PATCHNOTES !== "undefined" ? `<button class="btn" data-act="notes" style="width:100%;margin-top:8px"> Patch notes</button>` : ""}
-      <div class="grid2" style="margin-top:8px">${window.__app ? `<button class="btn" data-act="toupdate">${update?.newer ? " Update ready" : "Check for updates"}</button>` : ""}<button class="btn" data-act="totitle" ${window.__app ? "" : 'style="grid-column:1/-1"'}>Main menu</button></div>
+      <div class="grid2" style="margin-top:8px"><button class="btn" data-act="toupdate">${updNewer() ? " Update ready" : "Check for updates"}</button><button class="btn" data-act="totitle">Main menu</button></div>
       <button class="btn pri" data-act="close" style="width:100%;margin-top:10px">Done</button>`);
     const m = $("#modal");
     m.addEventListener("input", onSettingsInput); m.addEventListener("change", onSettingsInput);
@@ -1317,7 +1359,7 @@
         <button class="btn" data-act="enc" data-a="potion" ${G.countRestore(S, "health") ? "" : "disabled"}>\uE15B Potion (${G.countRestore(S, "health")})</button>
         ${typeof HUNTGAME !== "undefined" && HUNTGAME.fromEncounter(e) && ppUI?.canDecide?.() !== false ? (() => { const no = HUNTGAME.block(S, true); return `<button class="btn pri" data-act="huntroad" style="grid-column:1/-1" ${no ? "disabled" : ""}>\uE10C Stalk and shoot${no ? ` · ${esc(no)}` : ""}</button>`; })() : ""}
         ${e.bountyHold ? `<button class="btn pri" data-act="enc" data-a="pay" style="grid-column:1/-1">\uE121 Pay your ${esc(e.bountyHold)} bounty (${TOWNS.bounty(S, e.bountyHold)} gold)</button>` : ""}
-      </div><p class="sub" style="margin-bottom:0">${typeof TB !== "undefined" && TB.enabled() ? `You play the fight turn by turn` : `Fighting uses ${aiOn() ? `<b>Smart AI</b> (${esc(S.loadout)} gear)` : `your <b>${esc(S.loadout)}</b> tactics`}`}.${typeof SNEAK2 !== "undefined" ? "" : " A hidden start gives a sneak attack."}</p>${typeof SNEAK2 !== "undefined" ? SNEAK2.noteHTML(S, e, typeof AISET !== "undefined" ? AISET.get(G.loadout(S)).sneak : "safe", esc) : ""}`, "enc");
+      </div><p class="sub" style="margin-bottom:0">You play the fight turn by turn.${typeof SNEAK2 !== "undefined" ? "" : " A hidden start gives a sneak attack."}</p>${typeof SNEAK2 !== "undefined" ? SNEAK2.noteHTML(S, e, typeof AISET !== "undefined" ? AISET.get(G.loadout(S)).sneak : "safe", esc) : ""}`, "enc");
     ppUI?.onModal();   // a party is with you: they see this too and vote (partyplay.js)
   }
   /* the lines under a result: skill-ups and level-ups play as toasts (skillup.js); what's left (a follower's words) gets its own line */
@@ -1579,7 +1621,7 @@
       main = `<div class="card ${e ? "foe" : ""} ${r.type === "rest" ? "rest" : ""}">${typeof DUNROOMS !== "undefined" ? DUNROOMS.room(r.type, d.theme, e) : PLACEART.room(r.type)}<h3>${DUNGEONS.ICON[r.type]} ${e ? esc(e.name) : r.title ? esc(r.title) : DUNGEONS.LABEL[r.type]}</h3><p>${esc(r.text)}</p>
         ${e ? `<div class="vital"><small><span>${esc(e.name)}</span><span class="num">${e.hp}/${e.health} · hits for ~${Math.round(e.damage)}</span></small><div class="bar"><i style="width:100%;background:var(--ember)"></i></div></div>` : ""}
         <div class="evc">${DUNGEONS.roomChoices(S).map(([c, label]) => `<button class="btn ${["fight", "pick", "rest", "read", "pray", "open", "loot", "burn", "dash"].includes(c) || c.startsWith("set:") ? (e ? "danger" : "pri") : ""}" data-act="dact" data-c="${esc(c)}">${esc(label)}</button>`).join("")}</div>
-        ${e ? `<p class="sub" style="margin-bottom:0">${typeof TB !== "undefined" && TB.enabled() ? `You play the fight turn by turn` : `Fighting uses ${aiOn() ? `<b>Smart AI</b> (${esc(S.loadout)} gear)` : `your <b>${esc(S.loadout)}</b> tactics`}`}.</p>` : ""}</div>`;
+        ${e ? `<p class="sub" style="margin-bottom:0">You play the fight turn by turn.</p>` : ""}</div>`;
     } else {
       const nx = DUNGEONS.nextChoices(S), row = d.rows[d.row + 1];
       main = `<div class="card">${d.row < 0 ? `<div class="dentrance">${PLACEART.scene(d.place, { indoor: true })}</div>` : ""}<h3>${d.row < 0 ? "The entrance" : "Which way?"}</h3><p class="sub">${d.row < 0 ? `You light a torch and step into ${esc(d.place)}.` : "The passage splits."} Tap a glowing room on the map, or pick here:</p>
@@ -1814,7 +1856,6 @@
     return `<div class="gearprev">${eq ? "" : `<figure>${HEROART.figure({ look: L }, 84, 116)}<figcaption>Now</figcaption></figure>`}<figure>${HEROART.figure({ look: tryL }, 84, 116)}<figcaption>${eq ? "Worn" : "With this"}${setN ? ` · ${esc(setN)}` : ""}</figcaption></figure></div>`;
   }
   // ---- magic
-  const inTactics = (a) => G.loadout(S).rules.some((r) => r.do === a);
   // pictures for spells, powers, shouts and stones in menus (uiart.js)
   function magicIcon(id, size = 24) {
     const [k, a] = String(id).split(":");
@@ -1941,7 +1982,7 @@
       const rows = magicRows(); const sel = rows.find((r) => r.id === sky.sel) || null;
       const tiers = ["all", "Novice", "Apprentice", "Adept", "Expert", "Master"];
       head = `<div class="sb-tiers">${tiers.map((t) => `<button class="sb-tier ${(sky.tier || "all") === t ? "on" : ""} tier-${t.toLowerCase()}" data-act="skytier" data-id="${t}">${t === "all" ? "All tiers" : t}</button>`).join("")}</div>${typeof MENUS2 !== "undefined" ? MENUS2.magicSortBar(sky) : `<div class="sky-head sky-cols2"><button data-act="skymsort" data-id="name">Name${sky.msort !== "cost" ? " ▾" : ""}</button><button data-act="skymsort" data-id="cost">Cost${sky.msort === "cost" ? " ▾" : ""}</button></div>`}`;
-      list = rows.map((r) => `<button class="sky-row sky-cols2 ${r.id === sky.sel ? "sel" : ""} ${inTactics(r.id) ? "eq" : ""}${r.school ? ` sch-${r.school.toLowerCase()}` : ""}${r.el ? ` el-${r.el}` : ""}${r.support ? " sb-sup" : ""}" data-act="skysel" data-id="${esc(r.id)}"><span class="nm sk-nm ${typeof CC !== "undefined" ? `sch-${CC.school(r.id)} el-${CC.element(r.id) || "none"}` : ""}">${magicIcon(r.id, 26)}<span>${esc(r.name)}<small>${esc(r.sub)}</small></span></span><span class="num cost-mag">${r.cost ?? ""}</span></button>`).join("") || '<p class="sub sky-empty">Nothing here.</p>';
+      list = rows.map((r) => `<button class="sky-row sky-cols2 ${r.id === sky.sel ? "sel" : ""} ${r.school ? ` sch-${r.school.toLowerCase()}` : ""}${r.el ? ` el-${r.el}` : ""}${r.support ? " sb-sup" : ""}" data-act="skysel" data-id="${esc(r.id)}"><span class="nm sk-nm ${typeof CC !== "undefined" ? `sch-${CC.school(r.id)} el-${CC.element(r.id) || "none"}` : ""}">${magicIcon(r.id, 26)}<span>${esc(r.name)}<small>${esc(r.sub)}</small></span></span><span class="num cost-mag">${r.cost ?? ""}</span></button>`).join("") || '<p class="sub sky-empty">Nothing here.</p>';
       detail = sel ? magicDetail(sel) : "";
     } else {
       const rows = skillRows(); const sel = rows.find((r) => r.id === sky.sel) || null;
@@ -2099,7 +2140,6 @@
     map: "Start with the “What to do next” card. Press Go to travel; tap any place on the map to see how far it is.",
     hero: "Your level, skills and perks. A dot on this tab means you can level up or spend a perk point.",
     pack: "Everything you carry. Tap an item to wear or use it; search by name at the top of the list.",
-    tactics: "Rules used when your turn is played for you (in a party, if you take too long). They're checked top to bottom every turn. Test them against a dummy before a real fight.",
     town: "Places in town are grouped: Shops, Services, Guilds & jobs. Each town has different ones; shops close at night.",
     log: "Only your quests live here: Active, Misc and Completed. ☆ Track the one you're on and the compass and map follow it.",
   };
@@ -2840,7 +2880,7 @@
   /* open the Area tab after arriving (arrivearea.js); like tapping it, without scrolling a phone away from the map */
   function goArea() {
     if (tab === "town" && !$("#sky")) return;
-    closeMenu(); tab = "town"; testResult = null; bump(); renderTabs(); renderPanel(true);
+    closeMenu(); tab = "town"; bump(); renderTabs(); renderPanel(true);
     if (typeof PCMAP !== "undefined" && PCMAP.on()) PCMAP.refresh();
     if (typeof MOTION !== "undefined") MOTION.panel($("#side"));
   }
@@ -2913,6 +2953,8 @@
   async function invite(card) {
     if (party?.members.some((m) => m.id === card.id)) return toast(`${card.name} is already in your party.`);
     if (party && party.leader !== S.id) return toast("Only your party leader can invite.");
+    if (typeof SAMEVER !== "undefined" && SAMEVER.blockWith(cardOf(card.id) || card, card.name)) return;   // different builds can't play together: say why
+
     const cap = typeof PARTYPLAY !== "undefined" ? PARTYPLAY.MAX_PARTY : 8;
     if (party && party.members.length + (party.invites || []).length >= cap) return toast(`A party holds up to ${cap} heroes.`);
     if (party) { await Store.change("parties", party.id, (p) => ({ ...p, invites: [...new Set([...(p.invites || []), card.id])] })); }
@@ -2923,6 +2965,7 @@
     const cap = typeof PARTYPLAY !== "undefined" ? PARTYPLAY.MAX_PARTY : 8;
     const p0 = invites.find((p) => p.id === pid);
     if (!p0) { invRefresh(); return toast("That party is gone."); }
+    if (typeof SAMEVER !== "undefined" && SAMEVER.blockWith(cardOf(p0.leader), p0.leaderName)) return;   // the leader is on another build: update first
     if (p0.members.filter((m) => m.id !== S.id).length >= cap) {   // full: say so, and don't leave your own party for nothing
       await Store.change("parties", pid, (p) => ({ ...p, invites: (p.invites || []).filter((x) => x !== S.id) }));
       return toast(`That party is full (${cap} heroes at most).`);
@@ -3019,7 +3062,6 @@
     map: ["Map", "Pick where to go", "The card at the top says what to do next. Press Go to walk there: trips keep going while the app is closed. The gold ◆ on the map is your current quest; tap empty ground to roam off the road."],
     hero: ["Character", "Level, skills and perks", "Skills grow as you use them. When you level up, choose Health, Magicka or Stamina and spend perk points in a skill's tree. Below are your powers, shouts, standing stone and achievements."],
     pack: ["Pack", "What you carry and wear", "Open your things to wear, use, compare or drop them. Use the search box to find an item by name. Heavy packs slow you down: sell things or store them at home."],
-    tactics: ["AI & Loadouts", "Gear sets and auto-play rules", "Loadouts are gear sets you switch between. The Smart AI or your own rules play your turn when the game plays it for you (in a party, if you take too long). Rules are checked from the top every turn, like “health below 40% → drink a potion”. Test them against a dummy before a real fight."],
     town: ["Area", "Places in this town", "Places are grouped like a town: Inn, Market, Services & trainers, Work & jobs, Your home, and Events & fun. Tap one to open it; the ‹ button brings you back. Things ready for you show on top under Right now. Shops close at night (20:00–08:00)."],
     log: ["Journal", "Your quests", "Active quests sit on shelves: main story, Solstheim, Civil War, guilds, Daedric and side quests. Misc holds jobs, bounties, cures and treasure maps. ☆ Track a quest to steer the compass, the map and the What to do next card. Chat, party and the world moved to  Friends; stats and the diary to Character."],
     social: ["Social", "Friends, messages and trades", "Add players as friends, send them messages, and trade by courier from anywhere."],
@@ -3045,12 +3087,13 @@
     if (typeof RIDING !== "undefined" && S) RIDING.sync(S);   // the map's ride button: a horse just bought, back on its feet, out of a dungeon …
     if (!force && side.contains(document.activeElement) && document.activeElement.matches("input,select")) return;
     rendered = version; lastPanelRender = Date.now();
+    if (tab === "tactics") tab = "hero";   // the old AI & Loadouts tab is gone
     const mtFresh = typeof MENUTOP !== "undefined" && MENUTOP.fresh(side, MENUTOP.panelKey(tab, tab === "log" ? jTab : "", tab === "social" ? socTab : ""));   // menutop.js: a new screen starts at its top
     side.dataset.tab = tab; townCtx = null;
     const openD = [...side.querySelectorAll("details")].map((d) => d.open), y = scrollY;
     const twp = typeof TABMENU !== "undefined" ? { stars: () => TABMENU.stars(S), perks: () => TABMENU.perks(S) } : {};
-    const mnp = typeof MENUS !== "undefined" ? MENUS.panels({ S, ach: achPanel, settings: settingsHTML, fest: festPanel, idPanel, update }) : {};   // menus.js: tab homes
-    side.innerHTML = tutTip() + (typeof MENUS !== "undefined" ? MENUS.subnav(tab) : "") + screenHead() + ({ ...mnp, map: panelTravel, hero: panelHero, pack: panelPack, tactics: panelTactics, town: () => { const t = panelTown(); return (townCtx && typeof LOCSCREEN !== "undefined" ? LOCSCREEN.sceneBtn() : "") + (typeof ARRIVEAREA !== "undefined" ? ARRIVEAREA.gatherHTML(S) : "") + t; }, log: panelLog, social: panelSocial, stats: panelStats, diary: panelDiary, places: panelPlaces, follower: () => typeof FOLTAB !== "undefined" ? FOLTAB.panel(S, esc, svgI) : "", ...twp }[tab] || panelTravel)();
+    const mnp = typeof MENUS !== "undefined" ? MENUS.panels({ S, ach: achPanel, settings: settingsHTML, fest: festPanel, idPanel, update: updNewer() ? { ...(update || {}), newer: true } : update }) : {};   // menus.js: tab homes
+    side.innerHTML = tutTip() + (typeof MENUS !== "undefined" ? MENUS.subnav(tab) : "") + screenHead() + ({ ...mnp, map: panelTravel, hero: panelHero, pack: panelPack, town: () => { const t = panelTown(); return (townCtx && typeof LOCSCREEN !== "undefined" ? LOCSCREEN.sceneBtn() : "") + (typeof ARRIVEAREA !== "undefined" ? ARRIVEAREA.gatherHTML(S) : "") + t; }, log: panelLog, social: panelSocial, stats: panelStats, diary: panelDiary, places: panelPlaces, follower: () => typeof FOLTAB !== "undefined" ? FOLTAB.panel(S, esc, svgI) : "", ...twp }[tab] || panelTravel)();
     if (typeof TABMENU !== "undefined") TABMENU.afterPanel(tab);
     if (typeof MENUS !== "undefined") MENUS.afterPanel(tab);
     if (typeof MENUS2 !== "undefined") MENUS2.afterPanel(tab, side);   // menus2.js: Find a quest
@@ -3201,35 +3244,6 @@
       ${Object.entries(groups).map(([g, rows]) => [g, (typeof INVQOL !== "undefined" ? INVQOL.sorted(S, rows) : rows).filter((r) => !packSearch || ((r.tq ? TOWNS.QUALITY[r.tq] + " " : "") + D.ITEMS[r.item].name).toLowerCase().includes(packSearch.toLowerCase()))]).filter(([, rows]) => rows.length).map(([g, rows]) => `<h3 style="margin-top:12px">${g}</h3><div class="list">${rows.map(row).join("")}</div>`).join("") || (packSearch ? `<p class="sub">Nothing called “${esc(packSearch)}”. Try part of the name.</p>` : '<p class="sub">Your pack is empty. Buy things in a town (Area tab → Shops) or loot them on the road.</p>')}</div>`;
   }
 
-  let pendingPreset = null, pendingDel = false;
-  function tacticActions() {
-    return [...Object.entries(D.BASIC_ACTIONS).map(([id, l]) => [id, l]),
-      ...S.spells.filter((x) => D.SPELLS[x] && D.SPELLS[x].kind !== "utility").map((x) => [`spell:${x}`, `Cast ${D.SPELLS[x].name} (${G.spellCost(S, D.SPELLS[x])} magicka)`]),
-      ...S.spells.filter((x) => D.SPELLS[x] && MAGIC.dualable(D.SPELLS[x])).map((x) => [`dual:${x}`, `Dual-cast ${D.SPELLS[x].name} (×${MAGIC.DUAL_POWER}, ${Math.round(G.dualCost(S, D.SPELLS[x]))} magicka)`]),
-      ...["health", "magicka", "stamina"].map((r) => [`potion:${r}`, `Drink a ${r} potion (have ${G.countRestore(S, r)})`]),
-      ...[...new Set(S.inv.filter((r) => D.ITEMS[r.item]?.slot === "scroll").map((r) => r.item))].map((i) => [`scroll:${i}`, `Read ${D.ITEMS[i].name}`]),
-      ["power:race", `Use ${POWERS.RACE[S.race][0]} (racial power, once a day)`],
-      ...(S.werewolf ? [["power:beast", "Beast Form (werewolf, once a day: much stronger, no potions)"]] : []),
-      ...(S.vampire ? [["power:lord", "Vampire Lord (vampire, once a day: drain life every turn, no potions)"]] : []),
-      ...(POWERS.stoneHasPower(S) && S.stone !== "tower" ? [["power:stone", `Use ${POWERS.STONES[S.stone][0]}'s power (once a day)`]] : []),
-      ...Object.keys(POWERS.SHOUTS).filter((id) => !POWERS.ROAD_SHOUTS.includes(id) && POWERS.level(S, id)).map((id) => [`shout:${id}`, `Shout ${POWERS.SHOUTS[id][0]} (${POWERS.level(S, id)} word${POWERS.level(S, id) > 1 ? "s" : ""})`])];
-  }
-  /* why a rule may not fire right now */
-  function ruleWarn(r) {
-    const [kind, arg] = r.do.split(":");
-    if (kind === "spell" && !S.spells.includes(arg)) return "You don't know this spell, so it's skipped.";
-    if (kind === "potion" && !G.countRestore(S, arg)) return `You have no ${arg} potions.`;
-    if (kind === "scroll" && !S.inv.some((x) => x.item === arg)) return "You have none of these scrolls.";
-    if (kind === "shout" && !POWERS.level(S, arg)) return "You can't shout this yet.";
-    if (!D.CONDITIONS[r.if]) return "Unknown condition.";
-    return "";
-  }
-  function firedSummary(f) {
-    if (f.ai) { const n = {}; for (const l of f.log) if (l.a) { const k = G.describeAction(l.a); n[k] = (n[k] || 0) + 1; } const top = Object.entries(n).sort((a, b) => b[1] - a[1]).slice(0, 4); return top.length ? "Smart AI used: " + top.map(([k, v]) => `${k} ×${v}`).join(", ") + "." : "Smart AI fought for you."; }
-    const n = {}; for (const l of f.log) if (l.rule) n[l.rule] = (n[l.rule] || 0) + 1;
-    const ks = Object.keys(n).sort((a, b) => a - b);
-    return ks.length ? "Rules used: " + ks.map((k) => `#${k} ×${n[k]}`).join(", ") + "." : "No rule fired: you just attacked.";
-  }
   // ------------------------------------------------------------ the newbie guide
   function guideHTML() {
     const pr = GUIDE.progress(S);
@@ -3265,88 +3279,6 @@
     const a = typeof AMMO !== "undefined" ? AMMO.status(S) : null; if (!a) return "";
     return `<p class="sub ammo ${a.best ? "" : "warn"}"> ${esc(a.text)}</p>`;
   }
-  const aiOn = () => typeof COMBATAI !== "undefined" && COMBATAI.isSmart(G.loadout(S));
-  function aiToggle(L) {   // Smart AI, your own rules, or both (Hybrid), per loadout
-    if (typeof COMBATAI === "undefined") return "";
-    const m = L.mode === "custom" ? "custom" : L.mode === "hybrid" && typeof AISET !== "undefined" ? "hybrid" : "smart";
-    const b = (id, label) => `<button class="chip ${m === id ? "on" : ""}" role="radio" aria-checked="${m === id}" data-act="aimode" data-id="${id}">${label}</button>`;
-    const desc = m === "smart" ? esc(COMBATAI.DESC) + " Your rules below are kept: switch to Custom or Hybrid to use them again."
-      : m === "hybrid" ? "Your rules come first; when none of them fires, Smart AI picks the move (the “Always → Attack” filler doesn't stop it). Tune the AI below."
-      : "Your rules decide every move. Smart AI is one tap away.";
-    return `<div class="aimode ${m !== "custom" ? "on" : ""}" role="radiogroup" aria-label="How you fight"><span class="aimode-l">Combat</span>${b("smart", " Smart AI")}${typeof AISET !== "undefined" ? b("hybrid", " Hybrid") : ""}${b("custom", " Custom tactics")}</div>
-      <p class="sub aidesc">${desc}</p>${m !== "custom" ? aiSettingsHTML(L) : ""}`;
-  }
-  let aiSetOpen = false, rulesFoldOpen = false, shareOpen = false, shareMsg = "", previewResult = null;
-  function aiSettingsHTML(L) {   // aiset.js: how Smart AI fights for this loadout
-    if (typeof AISET === "undefined") return "";
-    const st = AISET.get(L), seg = (key, opts) => `<div class="aiseg" role="radiogroup">${opts.map(([v, l]) => `<button class="chip ${st[key] === v ? "on" : ""}" role="radio" aria-checked="${st[key] === v}" data-act="aiset" data-k="${key}" data-v="${v}">${l}</button>`).join("")}</div>`;
-    const row = (label, html, hint) => `<div class="airow"><div class="airow-l">${label}${hint ? `<small>${hint}</small>` : ""}</div>${html}</div>`;
-    const known = [...new Set((S.spells || []).map((id) => D.SPELLS[id]?.school).filter(Boolean))];
-    const schools = AISET.SCHOOLS.filter((k) => known.includes(k));
-    const spells = (S.spells || []).filter((id) => D.SPELLS[id] && D.SPELLS[id].kind !== "utility");
-    const tr = AISET.trainable(S, L);
-    const slider = (key, min, max, step, unit) => `<input type="range" class="aislide" id="ai_${key}" min="${min}" max="${max}" step="${step}" value="${st[key]}" aria-label="${key}"><b class="num" id="ai_${key}_v">${st[key]}${unit}</b>`;
-    return `<details class="aiset card" ${aiSetOpen ? "open" : ""} id="aisetbox"><summary data-act="aisetopen"> AI settings <span class="sub">· ${esc(AISET.STYLES[st.style])} · ${st.prefer === "mix" ? "mixed attacks" : "prefers " + st.prefer}${st.train ? " · Spread practice" : ""}</span></summary>
-      ${row("Style", seg("style", [["careful", " Careful"], ["balanced", " Balanced"], ["aggressive", " Aggressive"]]), "Careful heals and guards sooner; Aggressive pushes damage")}
-      ${row("Prefer", seg("prefer", [["mix", "Mix"], ["melee", " Melee"], ["ranged", " Ranged"], ["magic", " Magic"]]), "How much it leans on each")}
-      ${row("Weights", ["melee", "ranged", "magic"].map((k) => `<label class="aiw">${k}<input type="range" class="aislide" id="aiw_${k}" min="0" max="2" step="0.1" value="${st.w[k]}"><b class="num" id="aiw_${k}_v">${st.w[k].toFixed(1)}×</b></label>`).join(""))}
-      ${schools.length ? row("Schools", `<div class="chips">${schools.map((k) => `<button class="chip ${st.schools[k] === false ? "" : "on"}" data-act="aischool" data-id="${k}" aria-pressed="${st.schools[k] !== false}">${esc(k)}</button>`).join("")}</div>`, "Tap to forbid a school") : ""}
-      ${spells.length ? row("Spells", `<div class="chips aispells">${spells.map((id) => `<button class="chip sm ${st.off.includes(id) ? "" : "on"}" data-act="aispell" data-id="${esc(id)}" aria-pressed="${!st.off.includes(id)}">${esc(D.SPELLS[id].name)}</button>`).join("")}</div>`, "Tap a spell to keep the AI off it") : ""}
-      ${row("Spread practice", `<button class="chip ${st.train ? "on" : ""}" data-act="aitrain" aria-pressed="${st.train}">${st.train ? "On" : "Off"}</button>`, st.train ? `In easy fights it rotates: ${esc(tr.join(", "))}. Dangerous fights it plays to win.` : "Level every skill you use, not just your best one")}
-      ${row("Potions", seg("potions", [["emergency", "When needed"], ["free", "Freely"], ["never", "Never"]]))}
-      ${row("Shouts & powers", seg("shouts", [["yes", "Yes"], ["boss", "Bosses only"], ["no", "Never"]]))}
-      ${row("Sneak opener", seg("sneak", [["safe", "When safe"], ["always", "Always try"], ["never", "Never"]]), "A failed try lets the foe strike first")}
-      ${row("Heal below", slider("healAt", 10, 90, 5, "%"), "When healing starts to matter")}
-      ${row("Keep magicka", slider("mpReserve", 0, 60, 5, "%"), "Held back for emergencies")}
-      ${row("Target first", seg("target", [["weakest", "Weakest"], ["strongest", "Strongest"], ["casters", "Casters"]]), "When several foes stand")}
-      ${row("Support allies first", `<button class="chip ${st.support ? "on" : ""}" data-act="aisupport" aria-pressed="${st.support}">${st.support ? "On" : "Off"}</button>`, "Heal and shield friends before hitting")}
-      <button class="btn sm" data-act="aireset" style="margin-top:6px">Reset AI settings</button></details>`;
-  }
-  function ruleEditorConds() {   // the IF rows of the rule editor: AND / OR, each one can be NOT
-    const rows = [tacticsDraft, ...(tacticsDraft.extra || [])];
-    const condOpts = (cur) => Object.entries(D.CONDITIONS).map(([id, [label, p]]) => `<option value="${id}" ${cur === id ? "selected" : ""}>${esc(label)}${p === "turn" ? " …" : p ? " …%" : ""}</option>`).join("");
-    return rows.map((c, k) => {
-      const kind = D.CONDITIONS[c.if]?.[1], vals = kind === "turn" ? D.TURNS : D.PERCENTS;
-      if (kind && !vals.includes(c.pct)) c.pct = kind === "turn" ? 3 : 50;
-      const sel = k === 0 ? 'id="tc"' : `data-ci="${k}" class="tcx"`, psel = k === 0 ? 'id="tp"' : `data-ci="${k}" class="tpx"`;
-      return `${k ? `<button class="chip sm tjoin" data-act="rjoin">${tacticsDraft.join === "or" ? "OR" : "AND"}</button>` : `<label class="sub">If</label>`}
-        <div class="tcrow"><button class="chip sm ${c.not ? "on" : ""}" data-act="rnot" data-i="${k}" aria-pressed="${!!c.not}" title="NOT">NOT</button><select ${sel} aria-label="Condition">${condOpts(c.if)}</select>
-        ${kind ? `<select ${psel} aria-label="${kind === "turn" ? "Turn" : "Percent"}">${vals.map((p) => `<option value="${p}" ${c.pct === p ? "selected" : ""}>${p}${kind === "turn" ? "" : "%"}</option>`).join("")}</select>` : ""}
-        ${k ? `<button class="iconbtn" data-act="rxdel" data-i="${k}" aria-label="Remove condition">✕</button>` : ""}</div>`;
-    }).join("") + ((tacticsDraft.extra || []).length < 3 && typeof AISET !== "undefined" ? `<button class="btn sm" data-act="rxadd">+ Add a condition (AND / OR)</button>` : "");
-  }
-  function panelTactics() {
-    const L = G.loadout(S), rules = L.rules, smart = typeof COMBATAI !== "undefined" && COMBATAI.isSmart(L);
-    const actList = tacticActions();
-    if (!actList.some(([id]) => id === tacticsDraft.do)) actList.push([tacticsDraft.do, G.describeAction(tacticsDraft.do)]);
-    const actOpts = actList.map(([id, l]) => `<option value="${esc(id)}" ${tacticsDraft.do === id ? "selected" : ""}>${esc(l)}</option>`).join("");
-    const enemies = D.ENCOUNTERS.filter((e) => e.kind !== "event");
-    const dead = G.deadRules(rules), editing = tacticsDraft.edit != null && rules[tacticsDraft.edit];
-    const cards = rules.map((r, i) => { const d = G.describeRule(r), w = dead[i] || ruleWarn(r);
-      return `<div class="rcard ${r.off ? "off" : ""} ${dead[i] ? "dead" : ""} ${tacticsDraft.edit === i ? "editing" : ""}"><div class="rhead"><span class="n rdrag" data-drag="${i}" title="Drag to reorder" aria-label="Rule ${i + 1}: drag to move">${i + 1}</span>${r.do === "power:stone" && S.stone ? UIART.stone(S.stone, 30) : r.do === "power:race" ? UIART.power(S.race, 30) : UIART.action(r.do, 30)}<div class="rtxt"><div><small>IF</small> <b>${esc(d.cond)}</b></div><div><small>THEN</small> <b>${esc(d.act)}</b></div>${r.off ? '<div class="rw">Switched off</div>' : w ? `<div class="rw"> ${esc(w)}</div>` : ""}</div></div>
-        <div class="racts"><button class="iconbtn" data-act="rup" data-i="${i}" aria-label="Move up" ${i ? "" : "disabled"}>↑</button><button class="iconbtn" data-act="rdown" data-i="${i}" aria-label="Move down" ${i < rules.length - 1 ? "" : "disabled"}>↓</button><button class="iconbtn" data-act="roff" data-i="${i}" aria-label="${r.off ? "Switch on" : "Switch off"}">${r.off ? "" : ""}</button><button class="iconbtn" data-act="redit" data-i="${i}" aria-label="Edit">✎</button><button class="iconbtn" data-act="rdel" data-i="${i}" aria-label="Remove">✕</button></div></div>`; }).join("");
-    return `<div class="panel ${smart ? "ai-smart" : ""}"><h2>Tactics · ${esc(S.loadout)}</h2>${aiToggle(L)}<div class="rulesbox">${smart ? `<details class="rulesfold" ${rulesFoldOpen || tacticsDraft.edit != null ? "open" : ""}><summary data-act="rulesfold">Your rules (${rules.length}) · kept, used in Custom and Hybrid</summary>` : ""}<p class="sub">Every turn, the <b>first</b> rule that is true <b>and</b> possible (enough magicka, stamina, potions…) fires. If none does, you attack. Power attacks cost ${F.powerAttackCost(G.equipment(S).weapon ? D.ITEMS[G.equipment(S).weapon.item].weight : 0)} stamina now.</p>${ammoNote()}
-      <div class="rlist">${cards || '<p class="sub">No rules: you will just attack.</p>'}</div>
-      <div class="card redit" id="tedit"><h3>${editing ? `Change rule ${tacticsDraft.edit + 1}` : "Add a rule"}</h3>
-      ${ruleEditorConds()}
-      <label class="sub">Then</label><select id="ta" aria-label="Action">${actOpts}</select>
-      ${editing ? `<div class="grid2"><button class="btn pri" data-act="rsave">Save rule ${tacticsDraft.edit + 1}</button><button class="btn" data-act="rcancel">Cancel</button></div>`
-        : `<button class="btn pri" data-act="radd" style="width:100%" ${rules.length >= D.MAX_RULES ? "disabled" : ""}>Add rule ${rules.length >= D.MAX_RULES ? `(max ${D.MAX_RULES})` : ""}</button><p class="sub" style="margin:4px 0 0">New rules go above “Always → Attack”, so they get used.</p>`}</div>${smart ? "</details>" : ""}
-      ${typeof AITEST !== "undefined" ? AITEST.html(S, esc) : ""}
-      <h3 style="margin-top:14px">Presets</h3>${(() => { const PR = typeof AISET !== "undefined" ? AISET.PRESETS : D.PRESETS;
-        return pendingPreset && PR[pendingPreset] ? `<div class="card"><p>Replace your ${rules.length} rule${rules.length === 1 ? "" : "s"} with the <b>${esc(PR[pendingPreset].name)}</b> preset?${PR[pendingPreset].desc ? ` <span class="sub">${esc(PR[pendingPreset].desc)}</span>` : ""}</p><div class="grid2"><button class="btn danger" data-act="presetyes">Replace</button><button class="btn" data-act="presetno">Keep mine</button></div></div>`
-        : `<div class="chips">${Object.entries(PR).map(([id, p]) => `<button class="chip" data-act="preset" data-id="${id}" title="${esc(p.desc || "")}">${esc(p.name)}</button>`).join("")}</div><p class="sub" style="margin:4px 0 0">Presets are built from the spells and gear you have now.</p>`; })()}
-      ${typeof AISET !== "undefined" ? `<h3 style="margin-top:14px">Share</h3><div class="grid2"><button class="btn" data-act="sharecopy"> Copy share code</button><button class="btn" data-act="shareopen"> Paste a code</button></div>
-        ${shareOpen ? `<div class="list" style="margin-top:6px"><textarea id="sharein" rows="3" placeholder="ROTN1-…" aria-label="Share code"></textarea><button class="btn pri" data-act="shareimport">Use these tactics</button></div>` : ""}${shareMsg ? `<p class="sub">${esc(shareMsg)}</p>` : ""}` : ""}</div></div>
-      <div class="panel"><h2>Test fight</h2><p class="sub">A practice fight at full health. Nothing is used up, and you can't die.</p>
-      <div class="list"><select id="te" aria-label="Enemy">${enemies.map((e) => `<option ${previewResult?.foe === e.name || testResult?.name === e.name || (!previewResult && !testResult && typeof FASTQOL !== "undefined" && FASTQOL.mem("testFoe") === e.name) ? "selected" : ""}>${esc(e.name)}</option>`).join("")}</select><div class="grid2"><button class="btn pri" data-act="test">Fight it</button>${typeof AISET !== "undefined" ? `<button class="btn" data-act="preview">Run 20 fights</button>` : ""}</div></div>
-      ${previewResult ? `<div class="card aiprev"><p><b>${previewResult.win}%</b> wins against the ${esc(previewResult.foe)} · ${previewResult.turns} turns on average${previewResult.win ? ` · ${previewResult.hpLeft}% health left` : ""}</p><p class="sub">Skill XP per fight: ${Object.entries(previewResult.xp).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${esc(k)} ${v}`).join(" · ") || "none"}</p></div>` : ""}
-      ${testResult ? `<p style="margin-top:10px;display:flex;align-items:center;gap:10px">${ICONART.enemy(testResult.name, D.ENCOUNTERS.find((x) => x.name === testResult.name)?.tags, 40)}<span><b>${testResult.f.won ? "Victory" : "Defeat"}</b> against the ${esc(testResult.name)}.</span></p><p class="sub">${firedSummary(testResult.f)}</p>${fightLog(testResult.f)}${typeof FASTQOL !== "undefined" ? FASTQOL.againHTML("test") : ""}` : ""}</div>
-      <div class="panel"><h2>Loadouts</h2><p class="sub">A loadout is gear + rules. Switch before a fight.</p>
-      <div class="chips">${Object.keys(S.loadouts).map((n) => `<button class="chip lochip ${n === S.loadout ? "on" : ""}" data-act="lo" data-name="${esc(n)}">${DOLL.loadoutThumb(S, n)}${esc(n)}</button>`).join("")}</div>
-      <div class="list"><input id="lon" maxlength="20" placeholder="New loadout name, e.g. Dragon" aria-label="New loadout name"><div class="grid2"><button class="btn" data-act="losave">Save current as</button>${pendingDel ? `<button class="btn danger" data-act="lodelyes">Really delete ${esc(S.loadout)}?</button>` : `<button class="btn danger" data-act="lodel">Delete ${esc(S.loadout)}</button>`}</div></div></div>`;
-  }
-
   let horseCoat = "bay", horseBreed = "bay";
   function cartHTML(open, wanted) {
     const c = S.cart, coat = S.horse ? HORSES.coat(S.horse.coat)[2] : undefined;
@@ -3830,30 +3762,8 @@
       <h3 style="margin-top:12px">Your crafted spells · ${mine.length}/${SPELLCRAFT.MAX}</h3>
       ${mine.length ? mine.map((c) => `<div class="item">${UIART.spell(c.id, 34)}<div class="t">${esc(c.name)}<span>${esc(c.school)} · ${esc(c.level)} · ${G.spellCost(S, D.SPELLS[c.id])} magicka · ${c.parts.map((p) => esc(p.label)).join(" + ")}</span></div><button class="btn sm" data-act="craftdel" data-id="${esc(c.id)}">Forget</button></div>`).join("") : `<p class="sub">None yet.</p>`}`;
   }
-  /* drag a tactics rule by its number to a new place (touch and mouse); the ↑ ↓ buttons still work */
-  function onRuleDrag(e) {
-    const h = e.target.closest?.("[data-drag]"); if (!h) return;
-    const from = +h.dataset.drag, list = h.closest(".rlist"); if (!list) return;
-    e.preventDefault(); e.stopPropagation();
-    const card = h.closest(".rcard"); card.classList.add("dragging"); let to = from;
-    const cards = () => [...list.querySelectorAll(".rcard")];
-    const move = (ev) => {
-      const y = ev.clientY; to = cards().findIndex((c) => { const r = c.getBoundingClientRect(); return y < r.top + r.height / 2; });
-      if (to < 0) to = cards().length - 1; else if (to > from) to--;
-      cards().forEach((c, k) => c.classList.toggle("dropat", k === (to >= from ? to + 1 : to) && to !== from));
-    };
-    const up = () => {
-      removeEventListener("pointermove", move); removeEventListener("pointerup", up); removeEventListener("pointercancel", up);
-      card.classList.remove("dragging"); cards().forEach((c) => c.classList.remove("dropat"));
-      const L = G.loadout(S); if (to === from || !L.rules[from]) return;
-      const [r] = L.rules.splice(from, 1); L.rules.splice(Math.max(0, Math.min(L.rules.length, to)), 0, r);
-      tacticsDraft.edit = null; persist(); renderPanel(true); toast(`Rule moved to ${to + 1}.`);
-    };
-    addEventListener("pointermove", move); addEventListener("pointerup", up); addEventListener("pointercancel", up);
-  }
   function onPanelInput(e) {
     if (/^snd_/.test(e.target.id || "")) return onSettingsInput(e);   // Character → Settings
-    if (/^aiw?_/.test(e.target.id || "") && e.target.type === "range") { const o = $("#" + e.target.id + "_v"); if (o) o.textContent = e.target.id.startsWith("aiw_") ? (+e.target.value).toFixed(1) + "×" : e.target.value + "%"; return; }
     if (["cfAm", "cfBm", "cfName"].includes(e.target.id)) {
       if (e.target.id === "cfName") craftDraft.name = e.target.value; else { craftDraft[e.target.id === "cfAm" ? "am" : "bm"] = +e.target.value; const v = $("#" + e.target.id + "v"); if (v) v.textContent = e.target.value; }
       const pv = $("#cfPrev"); if (pv) pv.innerHTML = craftPreview(); return;
@@ -3863,14 +3773,6 @@
   function onPanelChange(e) {
     const id = e.target.id;
     if (/^snd_/.test(id || "")) return onSettingsInput(e);
-    if (id === "tc") { tacticsDraft.if = e.target.value; renderPanel(true); }
-    if (e.target.classList?.contains("tcx")) { const c = tacticsDraft.extra?.[+e.target.dataset.ci - 1]; if (c) { c.if = e.target.value; delete c.pct; renderPanel(true); } }
-    if (e.target.classList?.contains("tpx")) { const c = tacticsDraft.extra?.[+e.target.dataset.ci - 1]; if (c) c.pct = +e.target.value; }
-    if (/^aiw?_/.test(id) && typeof AISET !== "undefined") { const L = G.loadout(S), st = AISET.get(L), v = +e.target.value;
-      if (id.startsWith("aiw_")) { st.w[id.slice(4)] = Math.max(0, Math.min(2, v)); st.prefer = "mix"; } else st[id.slice(3)] = v;
-      Object.assign(st, AISET.clean(st)); persist(); renderPanel(true); }
-    if (id === "tp") tacticsDraft.pct = +e.target.value;
-    if (id === "ta") tacticsDraft.do = e.target.value;
     if (id === "ench_item") { enchDraft.item = +e.target.value; renderPanel(true); }
     if (id === "ench_eff") { enchDraft.eff = e.target.value; renderPanel(true); }
     if (id === "ench_gem") { enchDraft.gem = +e.target.value; renderPanel(true); }
@@ -4079,8 +3981,8 @@
       case "vfeed": say(CURSE.feed(S)); break;
       case "jtab": jTab = b.dataset.id; renderPanel(true); if (typeof MENUTOP !== "undefined") MENUTOP.top(); else scrollTo(0, 0); break;
       case "qtrack": { const id = b.dataset.id; S.trackQ = QUESTS.tracked(S)?.id === id && S.trackQ === id ? null : id; persist(); renderPanel(true); bump(); toast(S.trackQ ? `★ Tracking ${QUESTS.L[id]?.name || "the quest"}.` : "No quest tracked: the first active quest shows."); break; }
-      case "qmap": { const n = b.dataset.place, p = WORLD.places[n]; if (!p) break; closeMenu?.(); tab = "map"; selected = n; follow = false; center = [p[0], p[1]]; if (zoom < 2) zoom = 2.4; testResult = null; renderTabs(); renderPanel(true); renderPicked(); bump(); scrollTo(0, 0); break; }
-      case "tabgo": closeMenu?.(); tab = b.dataset.id; testResult = null; renderTabs(); renderPanel(true); bump(); if (typeof MENUTOP !== "undefined") MENUTOP.top(); else if (b.closest(".mn-sub")) $("#side").scrollIntoView({ block: "start" }); else scrollTo(0, 0); break;
+      case "qmap": { const n = b.dataset.place, p = WORLD.places[n]; if (!p) break; closeMenu?.(); tab = "map"; selected = n; follow = false; center = [p[0], p[1]]; if (zoom < 2) zoom = 2.4; renderTabs(); renderPanel(true); renderPicked(); bump(); scrollTo(0, 0); break; }
+      case "tabgo": closeMenu?.(); tab = b.dataset.id; renderTabs(); renderPanel(true); bump(); if (typeof MENUTOP !== "undefined") MENUTOP.top(); else if (b.closest(".mn-sub")) $("#side").scrollIntoView({ block: "start" }); else scrollTo(0, 0); break;
       case "jgo": { const id = b.dataset.id, to = MOVED[id] || ["log", "active"]; closeMenu?.(); tab = to[0]; if (to[0] === "social") { socTab = to[1]; socWith = null; } if (to[0] === "log") jTab = to[1]; renderTabs(); renderPanel(true); bump(); requestAnimationFrame(() => { const el = $("#j-" + id); if (el) { const y = el.getBoundingClientRect().top + scrollY - 64; scrollTo({ top: y, behavior: "auto" }); } else scrollTo(0, 0); }); break; }
       case "festclaim": { const m = FEST.claim(S); if (!m) break; SOUND.fx("levelup"); say(m); publishCard(); break; }
       case "festgift": { const m = FEST.innGift(S); if (m) { SOUND.fx("coin"); say(m); } break; }
@@ -4223,57 +4125,6 @@
       case "attack": { const c = cardOf(b.dataset.id); if (c) doAttack(c); break; }
       case "pick": { const c = cardOf(b.dataset.id); if (c) doPickpocket(c); break; }
       case "ambush": S.ambush = !S.ambush; persist(true); toast(S.ambush ? "You crouch in the brush beside the road and wait." : "You step back onto the road."); renderPanel(true); break;
-      case "rup": case "rdown": { const i = +b.dataset.i, j = a === "rup" ? i - 1 : i + 1; if (j < 0 || j >= L.rules.length || !L.rules[i]) break; [L.rules[i], L.rules[j]] = [L.rules[j], L.rules[i]]; tacticsDraft.edit = null; persist(); renderPanel(true); break; }
-      case "rdel": { const i = +b.dataset.i; if (!L.rules[i]) break; const [gone] = L.rules.splice(i, 1); tacticsDraft.edit = null; persist(); renderPanel(true); toast(`Removed: ${G.describeRule(gone).cond} → ${G.describeRule(gone).act}`); break; }
-      case "roff": { const r = L.rules[+b.dataset.i]; if (!r) break; if (r.off) delete r.off; else r.off = true; persist(); renderPanel(true); break; }
-      case "redit": { const r = L.rules[+b.dataset.i]; if (!r) break; const c0 = r.conds?.[0] || r;
-        Object.assign(tacticsDraft, { if: c0.if, do: r.do, pct: c0.pct ?? 50, not: !!c0.not, extra: (r.conds || []).slice(1).map((c) => ({ ...c })), join: r.join || "and", edit: +b.dataset.i }); renderPanel(true); $("#tedit")?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "center" }); break; }
-      case "rcancel": tacticsDraft.edit = null; tacticsDraft.extra = []; tacticsDraft.not = false; renderPanel(true); break;
-      case "rsave": case "radd": { GUIDE.mark(S, "tactics");
-        let r = { if: tacticsDraft.if, do: tacticsDraft.do }; if (D.CONDITIONS[r.if]?.[1]) r.pct = tacticsDraft.pct;
-        if (typeof AISET !== "undefined" && ((tacticsDraft.extra || []).length || tacticsDraft.not)) { r = AISET.makeRule({ if: tacticsDraft.if, pct: tacticsDraft.pct, not: tacticsDraft.not }, tacticsDraft.extra || [], tacticsDraft.join); r.do = tacticsDraft.do; }
-        if (a === "rsave" && L.rules[tacticsDraft.edit]) { const old = L.rules[tacticsDraft.edit]; if (old.off) r.off = true; L.rules[tacticsDraft.edit] = r; tacticsDraft.edit = null; toast("Rule saved."); }
-        else if (!G.addRule(L.rules, r)) return toast(`Max ${D.MAX_RULES} rules.`);
-        else toast(`Rule ${L.rules.indexOf(r) + 1} added.`);
-        tacticsDraft.extra = []; tacticsDraft.not = false; tacticsDraft.join = "and";
-        persist(); renderPanel(true); break;
-      }
-      case "preset": pendingPreset = b.dataset.id; renderPanel(true); break;
-      case "presetno": pendingPreset = null; renderPanel(true); break;
-      case "presetyes": { const id = pendingPreset; pendingPreset = null;
-        if (typeof AISET !== "undefined" && AISET.PRESETS[id]) { const pb = AISET.applyPreset(S, L, id); tacticsDraft.edit = null; say(`${AISET.PRESETS[id].name} tactics loaded for your kit${pb.mode === "hybrid" ? " (Hybrid: your rules first, then Smart AI)" : " (Custom tactics on)"}.`); break; }
-        if (!D.PRESETS[id]) break; L.rules = G.clone(D.PRESETS[id].rules); tacticsDraft.edit = null; say(`${D.PRESETS[id].name} tactics loaded. Rules for spells you don't know are skipped.`); break; }
-      case "aimode": { const m = ["custom", "hybrid"].includes(b.dataset.id) ? b.dataset.id : "smart"; L.mode = m; persist(); renderPanel(true); toast(m === "smart" ? " Smart AI fights for this loadout." : m === "hybrid" ? " Your rules first, then Smart AI." : " Your own tactics fight for this loadout."); break; }
-      case "aisetopen": e.preventDefault(); aiSetOpen = !aiSetOpen; renderPanel(true); break;
-      case "rulesfold": e.preventDefault(); rulesFoldOpen = !rulesFoldOpen; renderPanel(true); break;   // Smart AI: your rules folded into one row
-      case "aiset": { const st = AISET.get(L), k = b.dataset.k, v = b.dataset.v; st[k] = v; if (k === "prefer") st.w = { ...AISET.PREFER[v] }; Object.assign(st, AISET.clean(st)); persist(); renderPanel(true); break; }
-      case "aischool": { const st = AISET.get(L), k = b.dataset.id; if (st.schools[k] === false) delete st.schools[k]; else st.schools[k] = false; persist(); renderPanel(true); break; }
-      case "aispell": { const st = AISET.get(L), id = b.dataset.id, i = st.off.indexOf(id); if (i >= 0) st.off.splice(i, 1); else st.off.push(id); persist(); renderPanel(true); break; }
-      case "aitrain": { const st = AISET.get(L); st.train = !st.train; persist(); renderPanel(true); toast(st.train ? " Spread practice: easy fights level all your skills." : "Spread practice off."); break; }
-      case "aisupport": { const st = AISET.get(L); st.support = !st.support; persist(); renderPanel(true); break; }
-      case "aireset": L.ai = AISET.clean({}); persist(); renderPanel(true); toast("AI settings reset."); break;
-      case "rxadd": (tacticsDraft.extra = tacticsDraft.extra || []).push({ if: "enemy_hp_below", pct: 50 }); tacticsDraft.join = tacticsDraft.join || "and"; renderPanel(true); break;
-      case "rxdel": { const k = +b.dataset.i; if (tacticsDraft.extra) tacticsDraft.extra.splice(k - 1, 1); renderPanel(true); break; }
-      case "rjoin": tacticsDraft.join = tacticsDraft.join === "or" ? "and" : "or"; renderPanel(true); break;
-      case "rnot": { const k = +b.dataset.i, c = k ? tacticsDraft.extra[k - 1] : tacticsDraft; c.not = !c.not; renderPanel(true); break; }
-      case "sharecopy": { const code = AISET.encode(L); shareMsg = "";
-        const done = () => { shareMsg = "Share code copied. Send it to a friend: they paste it in Character → AI & Loadouts."; renderPanel(true); };
-        try { if (navigator.clipboard?.writeText) navigator.clipboard.writeText(code).then(done, () => { shareMsg = code; renderPanel(true); }); else { shareMsg = code; renderPanel(true); } } catch { shareMsg = code; renderPanel(true); }
-        break; }
-      case "shareopen": shareOpen = !shareOpen; shareMsg = ""; renderPanel(true); break;
-      case "shareimport": { const code = ($("#sharein")?.value || "").trim(); if (!AISET.importInto(L, code)) { shareMsg = "That code doesn't work. Check you copied all of it (it starts with ROTN1-)."; renderPanel(true); break; }
-        shareOpen = false; shareMsg = ""; tacticsDraft.edit = null; persist(); renderPanel(true); toast(" Tactics loaded into this loadout."); break; }
-      case "preview": { const name = $("#te").value; previewResult = AISET.preview(S, name, S.level, 20); renderPanel(true); break; }
-      case "test": {
-        const name = $("#te").value, e2 = G.scaleEnemy(D.ENCOUNTERS.find((x) => x.name === name), S.level);
-        const sim = G.clone(S); sim.health = G.maxHealth(sim); sim.healthTs = G.now(); sim._test = true;
-        const f = new G.Fight(sim, e2); f.run();
-        testResult = { f, name }; if (typeof FASTQOL !== "undefined") FASTQOL.setMem("testFoe", name); renderPanel(true); break;
-      }
-      case "lo": if (S.trip?.status === "encounter") return toast("Not in the middle of a fight!"); S.loadout = b.dataset.name; tacticsDraft.edit = null; pendingPreset = null; say(`Switched to ${S.loadout}: its own gear and tactics.`); break;
-      case "losave": { const n = ($("#lon").value || "").trim().slice(0, 20); if (!n) return toast("Give it a name first."); say(G.saveLoadoutAs(S, n)); break; }
-      case "lodel": pendingDel = true; renderPanel(true); setTimeout(() => { if (pendingDel) { pendingDel = false; if (tab === "tactics") renderPanel(true); } }, 5000); break;
-      case "lodelyes": pendingDel = false; tacticsDraft.edit = null; say(G.deleteLoadout(S, S.loadout)); break;
     }
   }
 

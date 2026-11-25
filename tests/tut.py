@@ -24,7 +24,7 @@ async def main():
         await clear(); await pg.click("[data-tab=town]"); await pg.wait_for_timeout(300); print("4:", await tip())
         await clear(); await pg.click("[data-tab=log]"); await pg.wait_for_timeout(300); print("5:", await tip())
         g0 = await pg.evaluate("window.__dbg.save().gold")
-        await clear(); await pg.click("[data-tab=tactics]"); await pg.wait_for_timeout(800)
+        await clear(); await pg.click("[data-tab=hero]"); await pg.wait_for_timeout(800)
         print("done:", await pg.evaluate("window.__dbg.save().gold") - g0, await pg.evaluate("document.querySelector('#toast')?.textContent"), "| tip now:", await tip())
         if await pg.query_selector("[data-act=guideno]"): await pg.click("[data-act=guideno]"); await pg.wait_for_timeout(200)
         await pg.click("[data-act=tutseen]"); await pg.wait_for_timeout(200); print("after Got it:", await tip())

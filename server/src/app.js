@@ -4,6 +4,7 @@
 const A = require("./auth");
 const { createReports } = require("./reports");
 const { createReportsReader } = require("./reportsread");
+const { createVersion } = require("./version");
 
 const LIMITS = {
   user: /^[A-Za-z0-9_-]{3,20}$/,
@@ -31,10 +32,11 @@ function limiter(max, windowMs, clock) {
 class HttpError extends Error { constructor(status, code, message, extra = {}) { super(message); this.status = status; this.code = code; this.extra = extra; } }
 const fail = (status, code, message, extra) => { throw new HttpError(status, code, message, extra); };
 
-function createApp({ store, now = () => Date.now(), origins = null, trustProxy = true, events = null, reportEnv = process.env, reportFetch = globalThis.fetch, log = (m) => console.log(m) } = {}) {
+function createApp({ store, now = () => Date.now(), origins = null, trustProxy = true, events = null, reportEnv = process.env, reportFetch = globalThis.fetch, versionFetch = globalThis.fetch, log = (m) => console.log(m) } = {}) {
   const loginByUser = limiter(10, 10 * 60e3, now), loginByIp = limiter(60, 10 * 60e3, now), registerByIp = limiter(20, 60 * 60e3, now);
   const report = createReports({ store, limiter: (max, ms) => limiter(max, ms, now), env: reportEnv, fetch: reportFetch, log, now });   // player reports → GitHub issues (reports.js)
   const reader = createReportsReader({ store, env: reportEnv, now });   // reading stored reports back, behind REPORTS_READ_KEY (reportsread.js)
+  const version = createVersion({ fetch: versionFetch, now });   // the newest game build, from GitHub releases (version.js)
   const asHttp = async (fn) => { try { return await fn(); } catch (e) { if (e.status) fail(e.status, e.code, e.message); throw e; } };
   const allowed = origins && origins.length ? new Set(origins) : null;
 
@@ -108,6 +110,7 @@ function createApp({ store, now = () => Date.now(), origins = null, trustProxy =
 
   const routes = {
     "GET /api/health": async () => ({ ok: true, store: store.kind, time: now() }),
+    "GET /api/version": async () => { try { return await version.get(); } catch (e) { fail(503, "no_version", "Couldn't reach GitHub to see the newest build."); } },
     "POST /api/register": async (req, b) => {
       if (!registerByIp(ipOf(req))) fail(429, "slow_down", "Too many new accounts from here. Try again later.");
       const { username, password, lc } = checkCreds(b);
