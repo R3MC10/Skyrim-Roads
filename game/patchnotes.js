@@ -3,10 +3,38 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b239-qafight", build: 239, date: "25 Nov 2026", title: "Fight fixes", items: [
+    { id: "b245-qafight", build: 245, date: "25 Nov 2026", title: "Fight fixes", items: [
       "Fixed: on phones, casting a heal with a follower along asked you to tap a portrait, but the Magic menu covered every portrait. The bar at the top now has a button for each person you can heal.",
       "Fixed: if the last foe fell between your moves, End turn and every other button could do nothing and the fight never ended. Any tap now finishes the fight.",
       "Fixed: more of the fight screen is in Polish (choosing who gets a heal, Your turn, Dual, the Magic and Items hints).",
+    ] },
+    { id: "b244-fighthotfix", build: 244, date: "25 Nov 2026", title: "Fight fix", items: [
+      "Fixed: in some fights your attacks did nothing. If the little timing game after a move gets stuck or vanishes, your next press goes through as a normal hit.",
+    ] },
+    { id: "b243-gptqa", build: 243, date: "25 Nov 2026", title: "Dungeon rooms and small fixes", items: [
+      "Fixed: foes in dungeons were met with road lines, like webs stretched \"across the road\" deep in a barrow. Bandits, wolves, spiders, draugr and the rest now get their own lines for caves, mines, forts, barrows and other places.",
+      "Fixed: a weapon's details said \"One-handed weapon · One-Handed\". Now it just says \"One-handed weapon\".",
+      "Fixed: the turn order at the top of a fight could show three bandits when only one was there. A foe that moves 2 or 3 times a round still has a mark for each move, but the later ones now say 2nd and 3rd and look smaller, so you can see it's the same foe.",
+    ] },
+    { id: "b242-noap", build: 242, date: "25 Nov 2026", title: "No more AP", items: [
+      "A plain attack takes just 1 of your 4 moves and some stamina. There are no action points any more, anywhere.",
+      "Potion and scroll tooltips in your pack still said they cost AP in a fight. They now say: 1 move, free.",
+      "Followers with a sword, axe, mace, spear or staff swing more often for a bit less each, so their turns feel quicker. Their damage a turn stays the same.",
+    ] },
+    { id: "b241-qaside3", build: 241, date: "25 Nov 2026", title: "Cleaner perk texts", items: [
+      "Fixed: a few perks (Duelist, Brute Force, Steady Hand, Disintegrate, Intimidation) showed a stray design note like [OURS] in the middle of their description.",
+      "Fixed: in Polish, the house, homestead and arena lines on the town board are translated.",
+    ] },
+    { id: "b240-qaside2", build: 240, date: "25 Nov 2026", title: "More Polish in towns", items: [
+      "Fixed: in Polish, the cooking pot, the forge, the notice board's weekly goals, the Hall of the North, the streets, trainers and hirelings are translated.",
+      "Fixed: in Polish, the Social tabs, the bard's song lines and the time left on world events are translated.",
+    ] },
+    { id: "b239-qacore1", build: 239, date: "25 Nov 2026", title: "Back button and first-trip fixes", items: [
+      "Fixed: the phone's back button did nothing in fishing, hunting, mining, lockpicking and the other mini-games, and pressing it again could close the app. Now it leaves the game, like its Done or Leave button.",
+      "Fixed: back in the barber's chair or at the rune table closes them instead of opening the compass behind them.",
+      "Fixed: back inside a shop, the inn or the forge goes to the town's list of places first, not straight to the compass.",
+      "Fixed: the first-trip guide said to open the Town tab; it's called Area now.",
+      "Fixed: in Polish, the first-trip guide, the first-time tips and the \"you set off\" and \"you arrived\" messages were still in English.",
     ] },
     { id: "b238-qaside", build: 238, date: "25 Nov 2026", title: "Company fixes", items: [
       "Fixed: tapping Found twice quickly could pay for the company twice.",
@@ -1657,7 +1685,7 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 235;
+  const NEXT_AT = 240;
   const NEXT = [
     "Hands-on gathering: a little harvest game for every kind of plant",
     "Mentoring: play side by side with friends of any level",

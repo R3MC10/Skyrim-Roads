@@ -1,6 +1,7 @@
 """Side-systems bug hunt regressions (claude/qa-side-*), in the real game on a phone (390x844, touch) and a PC (1920x1080).
 Usage: python qaside_ui.py PORT -> RESULT OK
 - Company: a quick double tap on Found / Put in / Give used to run twice (gold paid twice, below zero, ingots given twice).
+- The phone back button leaves a mini-game instead of switching the tab under it.
 - Updates wait while a mini-game is open (fishing, mining, the forge...), so a restart never eats a catch."""
 import asyncio, sys, os
 from playwright.async_api import async_playwright
@@ -51,6 +52,25 @@ async def updates(pg, tag):
         await pg.evaluate("() => document.querySelector('#qa-mg')?.remove()")
         ok(base and not s, f"{tag}: no update restart while a .{cls} mini-game is open (idle {base}, open {s})")
 
+async def backkey(pg, tag):
+    # the phone back button leaves a mini-game (like Esc) instead of switching the tab hidden under it
+    await pg.evaluate("""() => { const S = window.__dbg.save(); S.trip = null; S.location = 'Riverwood'; [S.x, S.y] = WORLD.places.Riverwood; G.give(S, 'fishing_rod', 1); G.give(S, 'pickaxe', 1); }""")
+    await pg.evaluate("() => window.__ui.jump({ tab: 'town', shop: 'fish' })"); await pg.evaluate(CLEAN); await pg.wait_for_timeout(300)
+    await pg.evaluate("() => document.querySelector('[data-act=fishgo]')?.click()"); await pg.wait_for_timeout(500)
+    opened = await pg.evaluate("() => !!document.querySelector('#fishgame')")
+    t0 = await pg.evaluate("() => document.querySelector('#tabs .on, .tabs .on')?.textContent || ''")
+    r = await pg.evaluate("() => window.__ui.back()"); await pg.wait_for_timeout(400)
+    gone = await pg.evaluate("() => !document.querySelector('#fishgame')")
+    t1 = await pg.evaluate("() => document.querySelector('#tabs .on, .tabs .on')?.textContent || ''")
+    ok(opened and r and gone and t0 == t1, f'{tag}: back closes the fishing game and stays on the same tab (open {opened}, closed {gone}, tab {t0!r} -> {t1!r})')
+    await pg.evaluate(CLEAN)
+    await pg.evaluate("() => MINEGAME.play(window.__dbg.save(), Object.keys(SMITH.MINES)[0], () => {})"); await pg.wait_for_timeout(500)
+    opened = await pg.evaluate("() => !!document.querySelector('#minegame')")
+    r = await pg.evaluate("() => window.__ui.back()"); await pg.wait_for_timeout(400)
+    gone = await pg.evaluate("() => !document.querySelector('#minegame')")
+    ok(opened and r and gone, f'{tag}: back closes the mining game (open {opened}, closed {gone})')
+    await pg.evaluate("() => document.querySelectorAll('.craftgame,.lockpick,.smithgame').forEach(m => m.remove())")
+
 async def main():
     async with async_playwright() as p:
         kw = {"executable_path": CHROME, "args": ["--no-sandbox"]} if os.path.exists(CHROME) else {}
@@ -60,10 +80,11 @@ async def main():
             ctx = await b.new_context(viewport={"width": vw, "height": vh}, has_touch=tag == "phone")
             await ctx.add_init_script("localStorage.setItem('rotn_prefs', JSON.stringify({obTips:false,lang:'en'}))")
             pg = await ctx.new_page(); pg.on("pageerror", lambda e, t=tag: errs.append(t + " " + str(e)))
-            await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=qas{tag}"); await pg.wait_for_timeout(2000)
+            await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&minegame&p=qas{tag}"); await pg.wait_for_timeout(2000)
             await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Qaside"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
             await company(pg, tag)
             await updates(pg, tag)
+            await backkey(pg, tag)
             await ctx.close()
         ok(not errs, "no page errors " + str(errs[:3]))
         await b.close()
