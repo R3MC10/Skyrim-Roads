@@ -4942,6 +4942,58 @@ body:has(#tbf) #gnear{display:none!important}
 #tbf.hb-dragging{cursor:grabbing}
 #tbf .tbtop .tbff.hb-ed svg{display:block;margin:auto}
 #tbf.c2 .tbtop .fdc-menu .tbff.hb-ed svg{flex:none;margin:0}
+/* [foepanel] foepanel.js: a slim Skyrim-style foe plate (name, thin bar, one row of icons; numbers on hover / tap), a
+   one-line boss warning, and a fight log you can scroll that sits in a corner with no fighter in it */
+#tbf.c2 .c2ov .tbu.foe.fpl{width:min(184px,50vw);padding:0 2px;background:none;border:0;border-radius:0;box-shadow:none;text-align:center;transition:none}
+#tbf.c2.c2wide .c2ov .tbu.foe.fpl{width:224px}
+#tbf.c2 .c2ov .tbu.foe.fpl::after{display:none}
+#tbf.c2 .c2ov .tbu.foe.fpl.c2low,#tbf.c2 .c2ov .tbu.foe.fpl.fit-next,#tbf.c2 .c2ov .tbu.foe.fpl.drop-ok{border:0;box-shadow:none;background:none}
+#tbf.c2 .c2ov .tbu.foe.fpl>.nm{display:block;margin:0 0 2px;font-size:11.5px;line-height:1.2;font-variant:small-caps;letter-spacing:.09em;color:#f1e9d4;text-shadow:0 1px 2px #000,0 0 6px #000,0 0 3px #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#tbf.c2.c2wide .c2ov .tbu.foe.fpl>.nm{font-size:13.5px}
+#tbf.c2 .c2ov .tbu.foe.fpl>.nm .arch{font-size:.85em;opacity:.75}
+#tbf.c2 .c2ov .tbu.foe.fpl .tbbar.big{height:5px;margin:0 auto;border-radius:1px;background:rgba(0,0,0,.55);border:1px solid rgba(226,205,150,.5);box-shadow:0 0 0 1px rgba(0,0,0,.55),0 1px 4px rgba(0,0,0,.7);overflow:visible}
+#tbf.c2.c2wide .c2ov .tbu.foe.fpl .tbbar.big{height:6px}
+#tbf.c2 .c2ov .tbu.foe.fpl .tbbar.big>i,#tbf.c2 .c2ov .tbu.foe.fpl .tbbar.big>b.gh{border-radius:0}
+#tbf.c2 .c2ov .tbu.foe.fpl .tbbar.big .num{display:none}
+#tbf.c2 .c2ov .tbu.foe.fpl.fpl-open .tbbar.big .num,#tbf.c2 .c2ov .tbu.foe.fpl:hover .tbbar.big .num{display:block;position:absolute;left:0;right:0;top:7px;font-size:10px;line-height:12px;color:#f1e9d4;text-shadow:0 1px 2px #000,0 0 4px #000}
+#tbf.c2 .c2ov .tbu.foe.fpl.fpl-open .tbbar.big,#tbf.c2 .c2ov .tbu.foe.fpl:hover .tbbar.big{margin-bottom:13px}
+#tbf.c2 .c2ov .tbu.foe.fpl .tbfcl{display:none}
+#tbf.c2 .c2ov .tbu.foe.fpl.fpl-open .tbfcl{display:flex;justify-content:center}
+#tbf.c2 .c2ov .tbu.foe.fpl>.c2fx,#tbf.c2 .c2ov .tbu.foe.fpl>.tbst{display:flex;flex-wrap:nowrap;justify-content:center;gap:3px;margin-top:4px;overflow:hidden}
+#tbf.c2 .c2ov .tbu.foe.fpl .c2fx .c2e{width:18px;height:18px;font-size:10px;box-shadow:0 1px 3px rgba(0,0,0,.8)}
+#tbf.c2.c2wide .c2ov .tbu.foe.fpl .c2fx .c2e{width:21px;height:21px;font-size:12px}
+#tbf.c2 .c2ov .tbu.foe.fpl:not(.fpl-open) .c2fx .c2e small{display:none}
+#tbf.c2 .c2ov .tbu.foe.fpl .tbints{justify-content:center;margin-top:4px;gap:3px}
+#tbf.c2 .c2ov .tbu.foe.fpl .tbints>small{display:none}
+#tbf.c2 .c2ov .tbu.foe.fpl .tbint{font-size:10.5px;padding:1px 6px;border:0;border-radius:2px;background:rgba(0,0,0,.42);text-shadow:0 1px 2px #000;box-shadow:none}
+#tbf.c2.c2wide .c2ov .tbu.foe.fpl .tbint{font-size:12px}
+#tbf.c2 .c2ov .tbu.foe.fpl .tbint.big{background:rgba(110,22,12,.5)}
+#tbf.c2 .c2ov .tbu.foe.fpl .fdc-intx{font-size:10px;padding:0 5px;min-height:0;border-radius:2px;background:rgba(0,0,0,.35);border:0}
+#tbf.c2 .c2ov .tbu.foe.fpl:not(.fpl-open) .tbints .tbint~.tbint{display:none}
+#tbf.c2 .c2ov .tbu.foe.fpl.fpl-open .tbints .tbint~.tbint{display:inline-flex}
+#tbf.c2 .c2ov .tbu.foe.fpl.fpl-boss>.nm,#tbf.c2 .c2ov .tbu.foe.fpl.fpl-boss .tbbar.big{display:none}
+#tbf.c2 .c2ov .tbu.foe.fpl.fpl-boss>.c2fx{margin-top:0}
+/* the boss's big attack: one line, light */
+#tbf.c2 .bftele{display:flex;align-items:baseline;gap:8px;margin:3px auto 0;max-width:100%;width:fit-content;box-sizing:border-box;padding:3px 10px;border:0;border-left:2px solid #ff7a50;border-radius:2px;background:rgba(30,10,6,.5);box-shadow:none;animation:none;white-space:nowrap;overflow:hidden;color:#ffe6d2;text-shadow:0 1px 2px #000}
+#tbf.c2 .bftele b{display:inline;flex:none;font-size:12.5px;color:#fff0dc}
+#tbf.c2 .bftele small{display:block;flex:1 1 auto;min-width:0;margin:0;font-size:11.5px;color:#ffcfae;overflow:hidden;text-overflow:ellipsis}
+#tbf.c2:not(.c2wide) .bftele small{display:none}
+/* the log: the whole fight, scroll it; the newest line at the bottom */
+#tbf.c2 .c2ov .tblog.fpl-log{display:block;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;scrollbar-width:thin;scrollbar-color:rgba(236,230,214,.3) transparent;max-height:58px;padding:2px 6px;-webkit-mask-image:linear-gradient(180deg,rgba(0,0,0,.35),#000 12px);mask-image:linear-gradient(180deg,rgba(0,0,0,.35),#000 12px);-webkit-mask-size:100% 100%;mask-size:100% 100%;background:rgba(8,10,14,.38)}
+#tbf.c2.c2wide .c2ov .tblog.fpl-log{max-height:100px}
+#tbf.c2 .c2ov .tblog.fpl-log.fpl-at{right:auto;bottom:auto}
+#tbf.c2 .c2ov .tblog.fpl-log .tbl{display:flex}
+#tbf.c2 .c2ov .tblog.fpl-log::-webkit-scrollbar{width:4px}
+#tbf.c2 .c2ov .tblog.fpl-log::-webkit-scrollbar-thumb{background:rgba(236,230,214,.3);border-radius:2px}
+#tbf.c2 .c2ov .tblog.fpl-log .fpl-new{display:none;position:sticky;bottom:0;width:fit-content;margin:-15px 0 0 auto;padding:1px 7px;border-radius:9px;background:rgba(226,187,100,.92);color:#1a1408;font:700 10.5px/15px "Barlow Semi Condensed",sans-serif;text-shadow:none;cursor:pointer}
+#tbf.c2 .c2ov .tblog.fpl-log.fpl-held .fpl-new{display:block}
+.tblog:not([hidden]).fpl-log{display:block;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scroll-behavior:auto}
+.tblog.fpl-log .tbl{display:flex}
+.tblog.fpl-log .fpl-new{display:none;position:sticky;bottom:0;width:fit-content;margin:-15px 0 0 auto;padding:1px 7px;border-radius:9px;background:rgba(226,187,100,.92);color:#1a1408;font:700 10.5px/15px "Barlow Semi Condensed",sans-serif;cursor:pointer}
+.tblog.fpl-log.fpl-held .fpl-new{display:block}
+#tbf.c2 .c2ov .tbu.foe.fpl .tbints{flex-wrap:nowrap}
+#tbf.c2 .c2ov .tbu.foe.fpl.fpl-open .tbints{flex-wrap:wrap}
+#tbf.c2 .c2ov .tbu.foe.fpl:not(.fpl-open) .tbint{flex-wrap:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis}
 /* ==== "What would the AI do?" tester and folded rules (aitester.js) ==== */
 .ai-smart .rulesbox{opacity:1;filter:none}
 .rulesfold{margin:0 0 8px;border:1px solid var(--line);background:rgba(0,0,0,.18);padding:0 10px}
@@ -5140,6 +5192,7 @@ body:has(#tbf) #gnear{display:none!important}
 <script src="combat2.js"></script>
 <script src="fightfit.js"></script>
 <script src="fightdeclutter.js"></script>
+<script src="foepanel.js"></script>
 <script src="movepreview.js"></script>
 <script src="guide.js"></script>
 <script src="patchnotes.js"></script>
@@ -5322,6 +5375,7 @@ body:has(#tbf) #gnear{display:none!important}
 <script src="i18n_balfear.js"></script>
 <script src="i18n_combat2.js"></script>
 <script src="i18n_fightdeclutter.js"></script>
+<script src="i18n_foepanel.js"></script>
 <script src="i18n_hotbar.js"></script>
 <script src="i18n_movepreview.js"></script>
 <script src="i18n_busts.js"></script><script src="i18n_npcportraits.js"></script>
