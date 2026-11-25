@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b187-paintrig", build: 187, date: "25 Nov 2026", title: "Painted fighters that really move", items: [
+      "In fights you, your party mates and your followers are now painted like the foes, in leather, iron or steel to match what you wear.",
+      "They move joint by joint: a sword swing winds up behind the head and cuts through, a power attack sinks low, two-handers swing wide, bows draw and loose, spells glow in the hand, shields block and bash.",
+      "When hit they flinch and stagger; when knocked down they fall and get back up. Your weapon and shield sit in your hands.",
+      "On phones you and the follower behind you are no longer cut off at the left edge.",
+    ] },
     { id: "b186-backdrops2", build: 186, date: "25 Nov 2026", title: "Sharper fight backdrops and a town street", items: [
       "The pine forest, snow pass, tundra road, cave, burial barrow and Dwemer vault behind your fights are painted again, much bigger and with more detail. They stay sharp on big PC screens and ultrawide monitors.",
       "New: a town street. Fights in a town or city, or on the road right outside one (guards, bounty hunters, brawls, festival duels), now happen among Nordic longhouses with the hold's hall on the hill.",
