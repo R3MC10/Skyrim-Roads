@@ -43,8 +43,9 @@ async def main():
                     await pg.wait_for_timeout(250)
                     if await pg.evaluate("()=>!window.__dbg.save().trip"): break
                 return err
-            async def wait_li(ms=3000):
+            async def wait_li(ms=3000):   # (closing any window the arrival itself opens, like a quest note: the picture waits for those)
                 for _ in range(ms // 100):
+                    await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
                     c = await pg.evaluate(LI)
                     if c: return c
                     await pg.wait_for_timeout(100)
