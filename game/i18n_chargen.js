@@ -6,7 +6,7 @@ var I18N_CHARGEN = {
     "height:Short": "Niski", "hair:Short": "Krótkie", "beard:Short": "Krótka", "beard:Long": "Długa", "beard:Full": "Pełna", "beard:None": "Bez brody", "hair:Long": "Długie",
     "scar:None": "Bez blizny", "paint:None": "Bez barw", "tattoo:None": "Bez tatuażu", "build:Average": "Przeciętna", "height:Average": "Przeciętny", "brows:Normal": "Zwykłe",
     // the screen
-    "Create your character": "Stwórz postać", "Character creation": "Tworzenie postaci", "The barber": "Fryzjer", "Your mirror": "Twoje lustro",
+    "Close-up": "Zbliżenie", "Create your character": "Stwórz postać", "Character creation": "Tworzenie postaci", "The barber": "Fryzjer", "Your mirror": "Twoje lustro",
     "A shared Skyrim you travel in real time. Walking from Whiterun to Windhelm takes about ten minutes, and the road is rarely empty.":
       "Wspólny Skyrim, po którym podróżujesz w prawdziwym czasie. Droga z Whiterun do Windhelm zajmuje około dziesięciu minut, a na szlaku rzadko bywa pusto.",
     "A new look for {g} gold. Your race, name and stone stay as they are.": "Nowy wygląd za {g} sztuk złota. Rasa, imię i kamień zostają bez zmian.",
