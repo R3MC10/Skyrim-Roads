@@ -132,6 +132,10 @@ const MAPTILES = (() => {
   const reset = () => { cache.clear(); off = false; okCount = failCount = 0; loading = 0; frame = 0; };
   /* switch the pyramid off/on (tests that hand the game a placeholder painting turn it off so only theirs is seen) */
   const enable = (v = true) => { off = !v; };
-  return { TILE, LEVELS, TOP, MAX_TILES, levelFor, tilesIn, draw, pending, stats, reset, grain, enable, get off() { return off; } };
+  /* [perf] map.js keeps the painted ground as one finished picture while the view stays put; it changes when a tile
+     arrives or fails, and while some tile in view is still missing the ground is drawn fresh every frame */
+  const settled = () => !off ? loading === 0 && lastDraw.tiles === lastDraw.wanted : true;
+  const version = () => okCount * 1000 + failCount;
+  return { TILE, LEVELS, TOP, MAX_TILES, levelFor, tilesIn, draw, pending, stats, reset, grain, enable, settled, version, get off() { return off; } };
 })();
 if (typeof module !== "undefined") module.exports = MAPTILES;

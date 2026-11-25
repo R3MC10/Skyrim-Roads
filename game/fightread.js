@@ -175,6 +175,8 @@ const FIGHTREAD = (() => {
     if (ms.shock) out.push(`<i class="st me shock" data-tip="Jolted: the shock drained some magicka."> Jolted<small>×${ms.shock.turns}</small></i>`);
     if (f.regen) out.push(`<i class="st me heal" data-tip="${esc(`Healing: +${r0(f.regen.amt)} health at the end of each round, ${f.regen.turns} more.`)}">✚ +${r0(f.regen.amt)}<small>×${f.regen.turns}</small></i>`);
     if (f.tbGuard > 0) out.push(`<i class="st me guard" data-tip="${esc(`Guard up: the next blows do ${r0(f.tbGuard * 100)}% less.`)}"> −${r0(f.tbGuard * 100)}%</i>`);
+    // [phonefight] winded, drained, might, haste: their stack count too
+    if (typeof FXICONS !== "undefined") for (const x of FXICONS.me(f)) if (x.stk && x.n != null && ["winded", "drained", "might", "haste"].includes(x.k)) out.push(`<i class="st me stk fx-${x.k}" data-tip="${esc(x.tip)}">${x.ic} ${esc(x.lbl)}<small>×${x.n}</small></i>`);
     return out.length ? `<div class="tbst mine">${out.join("")}</div>` : "";
   }
   const rng = (it) => (it.lo || it.hi ? (r0(it.lo) === r0(it.hi) ? `${r0(it.hi)}` : `${r0(it.lo)}–${r0(it.hi)}`) : "");

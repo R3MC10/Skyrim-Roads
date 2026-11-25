@@ -3,11 +3,28 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b326-notices", build: 326, date: "25 Nov 2026", title: "Pop-ups take turns", items: [
+    { id: "b329-notices", build: 329, date: "25 Nov 2026", title: "Pop-ups take turns", items: [
       "Windows that pop up on their own (a quest, a courier, a world event) now open one at a time. If one arrives while another window, a fight or a menu is open, it waits and opens right after, instead of replacing the one you were reading.",
       "The same message arriving twice shows once.",
       "Banners, messages, tips and a stranger's greeting stack neatly under each other and never cover each other or the top and bottom bar buttons. If there's no room, they wait.",
       "In fights, combo banners and a boss's phase card never sit on your action buttons, and they wait while Items, Magic or the result is open. Taps go through the boss's phase card to your buttons.",
+    ] },
+    { id: "b328-dunloop", build: 328, date: "25 Nov 2026", title: "Dungeons no longer send you round in circles", items: [
+      "Dungeons no longer send you round in circles: every room you finish moves you on to the next one, all the way to the boss and out.",
+      "On a deep expedition in a party, the others now follow the leader down the stairs and through every new level, instead of waiting at the camp for good.",
+      "In a party, the leader's choices reach everyone in the order they were made, so nobody gets left behind in a cleared room or at the camp when the connection is slow.",
+      "If your game was saved at a camp or right after a boss and the room got lost, loading it puts you back at the camp (or lets you leave), instead of making you fight the same boss again.",
+    ] },
+    { id: "b327-phonefight", build: 327, date: "25 Nov 2026", title: "Fights fit your phone", items: [
+      "On a phone the fight log now shows only its newest line. Tap the small arrow next to it to see the last few lines, and again to fold it. The game remembers your choice.",
+      "The foe's health shows as numbers under its bar on a phone, so you can see how close it is to falling without tapping it.",
+      "Every status icon in a fight shows its number: how many stacks of burning, poison, bleeding, vulnerable, winded and the rest, or how many turns a spell has left. On the foe, on you and on your party. Hold or hover an icon for the full text.",
+    ] },
+    { id: "b326-smooth", build: 326, date: "25 Nov 2026", title: "Smoother map, travel and fights", items: [
+      "The map is much lighter to draw: the painted ground and the fog are kept ready while you look around, so the map no longer stutters and your phone stays cooler.",
+      "The first-person travel view rests between its pictures instead of waking up all the time.",
+      "Fight scenes that are scrolled away stop redrawing, and quick turns no longer pile up extra work, so fights stay smooth.",
+      "Fewer little hitches every second on every screen, and saving your game is quicker.",
     ] },
     { id: "b325-dundropout", build: 325, date: "25 Nov 2026", title: "When someone leaves a dungeon run", items: [
       "If someone in a co-op dungeon run closes the game or loses their connection for about half a minute, the run now ends for everyone in it, party or not. A short network hiccup or a quick switch to another app doesn't count.",

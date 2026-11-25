@@ -4933,7 +4933,6 @@ body:has(#tbf) #gnear{display:none!important}
 #tbf.c2 .c2ov .tbu.foe.fpl>.c2fx,#tbf.c2 .c2ov .tbu.foe.fpl>.tbst{display:flex;flex-wrap:nowrap;justify-content:center;gap:3px;margin-top:4px;overflow:hidden}
 #tbf.c2 .c2ov .tbu.foe.fpl .c2fx .c2e{width:18px;height:18px;font-size:10px;box-shadow:0 1px 3px rgba(0,0,0,.8)}
 #tbf.c2.c2wide .c2ov .tbu.foe.fpl .c2fx .c2e{width:21px;height:21px;font-size:12px}
-#tbf.c2 .c2ov .tbu.foe.fpl:not(.fpl-open) .c2fx .c2e small{display:none}
 #tbf.c2 .c2ov .tbu.foe.fpl .tbints{justify-content:center;margin-top:4px;gap:3px}
 #tbf.c2 .c2ov .tbu.foe.fpl .tbints>small{display:none}
 #tbf.c2 .c2ov .tbu.foe.fpl .tbint{font-size:10.5px;padding:1px 6px;border:0;border-radius:2px;background:rgba(0,0,0,.42);text-shadow:0 1px 2px #000;box-shadow:none}
@@ -5254,6 +5253,26 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 .nq-wait{visibility:hidden!important}
 body.nq-fighthold .rxban,body.nq-fighthold #fhints,body.nq-fighthold .bfov.bfphase{visibility:hidden!important}
 .bfov.bfphase{pointer-events:none}
+/* [phonefight] phonefight.js: on a phone (the tall fight layout) the log folds to its newest line behind a small arrow,
+   and the foe's health shows in numbers under its bar */
+#tbf.c2.pff .c2ov .tblog.fpl-log{padding-left:28px}
+#tbf.c2.pff:not(.pff-log) .c2ov .tblog.fpl-log{max-height:calc(1.25em + 5px);overflow:hidden;-webkit-mask-image:none;mask-image:none}
+#tbf.c2.pff:not(.pff-log) .c2ov .tblog.fpl-log .fpl-new{display:none}
+#tbf.c2 .c2ov .pff-lt{position:absolute;z-index:6;width:44px;height:44px;min-width:44px;padding:0;margin:0;border:0;background:none;box-shadow:none;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent}
+#tbf.c2 .c2ov .pff-lt[hidden]{display:none}
+#tbf.c2 .c2ov .pff-lt>i{display:block;width:20px;height:18px;border-radius:4px;background:rgba(8,10,14,.7);border:1px solid rgba(226,205,150,.45);position:relative}
+#tbf.c2 .c2ov .pff-lt>i::after{content:"";position:absolute;left:6px;top:3px;width:6px;height:6px;border-right:2px solid #e2cd96;border-bottom:2px solid #e2cd96;transform:rotate(45deg)}
+#tbf.c2.pff-log .c2ov .pff-lt>i::after{top:6px;transform:rotate(-135deg)}
+#tbf.c2 .c2ov .pff-lt:focus-visible>i{outline:2px solid #e2cd96;outline-offset:1px}
+#tbf.c2.pff .c2ov .tbu.foe.fpl:not(.fpl-boss) .tbbar.big{height:7px;margin-bottom:15px}
+#tbf.c2.pff .c2ov .tbu.foe.fpl:not(.fpl-boss) .tbbar.big .num{display:block;position:absolute;left:0;right:0;top:9px;bottom:auto;height:13px;font-size:11.5px;line-height:13px;font-weight:700;color:#f1e9d4;text-shadow:0 1px 2px #000,0 0 4px #000}
+/* [phonefight] every status icon in a fight shows its stack count (or turns left) as a readable badge, the foe's plate too */
+#tbf.c2 .c2e small{min-width:14px;height:14px;right:-6px;bottom:-5px;padding:0 3px;border-radius:7px;font:700 10px/12px "Barlow Semi Condensed",sans-serif;z-index:1}
+#tbf.c2 .c2fx.ally .c2e small{min-width:12px;height:12px;right:-5px;bottom:-4px;font-size:9px;line-height:10px}
+#tbf.c2 .c2fx{gap:6px}
+#tbf.c2 .c2ov .tbu.foe.fpl>.c2fx{gap:7px;padding:0 6px 6px}
+#tbf.c2 .c2fx.ally{gap:5px;padding-bottom:4px}
+.tbst .st.stk small{margin-left:2px;font-size:10px;font-weight:700}
 /* ==== someone dropped out of a co-op dungeon run (dundropout.js) ==== */
 .modal.ddnote{z-index:30}
 .ddrop-sheet{max-width:min(94vw,520px);width:100%}
@@ -5461,6 +5480,7 @@ body.nq-fighthold .rxban,body.nq-fighthold #fhints,body.nq-fighthold .bfov.bfpha
 <script src="fightfit.js"></script>
 <script src="fightdeclutter.js"></script>
 <script src="foepanel.js"></script>
+<script src="phonefight.js"></script>
 <script src="movepreview.js"></script>
 <script src="guide.js"></script>
 <script src="patchnotes.js"></script>
@@ -5655,6 +5675,7 @@ body.nq-fighthold .rxban,body.nq-fighthold #fhints,body.nq-fighthold .bfov.bfpha
 <script src="i18n_combat2.js"></script>
 <script src="i18n_fightdeclutter.js"></script>
 <script src="i18n_foepanel.js"></script>
+<script src="i18n_phonefight.js"></script>
 <script src="i18n_hotbar.js"></script>
 <script src="i18n_movepreview.js"></script>
 <script src="i18n_busts.js"></script><script src="i18n_avatars.js"></script><script src="i18n_npcportraits.js"></script>
@@ -5689,6 +5710,7 @@ body.nq-fighthold .rxban,body.nq-fighthold #fhints,body.nq-fighthold .bfov.bfpha
 <script src="i18n_bugreport.js"></script>
 <script src="i18n_menutop.js"></script>
 <script src="i18n_hourlyupdates.js"></script>
+<script src="i18n_dunloop.js"></script>
 <script src="i18n_paintedmap.js"></script>
 <script src="i18n_horsedown.js"></script>
 <script src="i18n_enchants2.js"></script>
@@ -5766,6 +5788,7 @@ body.nq-fighthold .rxban,body.nq-fighthold #fhints,body.nq-fighthold .bfov.bfpha
 <script src="i18n_dollrig.js"></script>
 <script src="i18n_partyinvites.js"></script>
 <script src="i18n_samever.js"></script>
+<script src="i18n_smooth.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>

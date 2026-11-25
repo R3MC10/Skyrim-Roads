@@ -179,6 +179,7 @@ const COMBAT2 = (() => {
     }
     if (FF) { FF.party(el, { W, H, top, dh, wide }); FF.unclash(el, { W, H, top, dh }); }   // a full party: more columns / slimmer plates instead of running off screen
     if (typeof FOEPANEL !== "undefined") FOEPANEL.place(el, { W, H, top, dh, wide });   // [foepanel] the plate over the foe's head (never on a fighter), the log in a free corner
+    if (typeof PHONEFIGHT !== "undefined") PHONEFIGHT.place(el);   // [phonefight] the log's fold arrow follows the log
   }
   let rsT = null;
   if (DOM && typeof addEventListener === "function") addEventListener("resize", () => { clearTimeout(rsT); rsT = setTimeout(() => { const el = document.getElementById("tbf"); if (el) place(el); }, 60); });
@@ -260,6 +261,7 @@ const COMBAT2 = (() => {
   }
 
   // ------------------------------------------------------------------ after each redraw (tbfight.js render)
+  const later = { raf: 0, t: [] };   // the layout passes still to come after the last redraw
   function layout(el, sess, o = {}) {
     if (!DOM || !el) return;
     const use = on();
@@ -335,8 +337,10 @@ const COMBAT2 = (() => {
     result(el, sess, o);
     place(el);
     fxPops(ov, fxNow, !!sess.done);
-    requestAnimationFrame(() => place(el, true));
-    setTimeout(() => place(el, true), 140); setTimeout(() => place(el, true), 450);   // the scene draws its canvas a moment later; the boss bar lands after this
+    // [perf] the follow-up passes of an older redraw are dropped: quick turns used to stack up four layout passes each
+    cancelAnimationFrame(later.raf); later.t.forEach(clearTimeout);
+    later.raf = requestAnimationFrame(() => place(el, true));
+    later.t = [setTimeout(() => place(el, true), 140), setTimeout(() => place(el, true), 450)];   // the scene draws its canvas a moment later; the boss bar lands after this
   }
 
   return { on, settingsHTML, layout, place, portraitOf, aspect, wideOf, shapeOf, tally };

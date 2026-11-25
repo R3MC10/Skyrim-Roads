@@ -18,7 +18,7 @@ def ok(c, m):
     if not c: fails.append(m)
 
 START = """([kind])=>{ document.querySelectorAll('#modal').forEach(m=>m.remove());
-  try { const p=JSON.parse(localStorage.getItem('rotn_prefs')||'{}'); p.tbFast=true; p.tips=false; localStorage.setItem('rotn_prefs', JSON.stringify(p)); } catch(e){}
+  try { const p=JSON.parse(localStorage.getItem('rotn_prefs')||'{}'); p.tbFast=true; p.tips=false; localStorage.setItem('rotn_prefs', JSON.stringify(p)); localStorage.setItem('rotn_pfflog','1'); } catch(e){}   // phones: the log unfolded (phonefight.js), so it scrolls
   const S=window.__dbg.save(); S.level=25; S.hpBonus=220; for (const k of ['One-Handed','Blocking','Heavy Armor','Restoration']) S.skills[k].lvl=50;
   S.follower={id:'jenassa',hp:9999,ts:0}; G.setHealth(S,G.maxHealth(S)); S.dungeon=null; S.trip=null;
   FOEGROUPS.prep = (f) => {
@@ -74,7 +74,8 @@ async def run(p, kind, w, h, touch):
     await pg.screenshot(path=OUT + tag + ".png")
     ok(g["plate"] is not None, f"{tag}: the foe's plate shows")
     ok("none" in g["bg"] and ("rgba(0, 0, 0, 0)" in g["bg"] or "transparent" in g["bg"]), f"{tag}: no dark box behind the plate ({g['bg']})")
-    ok(not g["numShown"], f"{tag}: the numbers wait for a hover / tap")
+    if w >= 900: ok(not g["numShown"], f"{tag}: the numbers wait for a hover")
+    elif kind != "chief": ok(g["numShown"], f"{tag}: on a phone the health numbers always show (phonefight.js)")
     if kind == "chief":
         ok(g["at"] == "boss" and g["bf"] and g["plate"]["top"] >= g["bf"]["bottom"] - 1, f"{tag}: a boss's icons sit under the boss bar ({g['at']})")
         ok(g["tele"] and g["tele"]["bottom"] - g["tele"]["top"] <= 34, f"{tag}: the boss's warning is one slim line ({g['tele'] and round(g['tele']['bottom'] - g['tele']['top'])}px)")
