@@ -3,12 +3,23 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b251-notify", build: 251, date: "25 Nov 2026", title: "Tidier pop-ups", items: [
+    { id: "b253-notify", build: 253, date: "25 Nov 2026", title: "Tidier pop-ups", items: [
       "All the pop-up messages now take turns: at most one message and one banner at a time, never on top of each other. Level ups and finished quests go first.",
       "Loot and gold that arrive together are added up into one line (\"Iron Dagger ×3\", one gold total), and a skill that rises a few times in a row shows as \"21 → 24\".",
       "Achievements earned together share one banner, so \"First Steps\" and \"Coin Hoarder\" no longer pop one after the other when you start.",
       "Nothing pops up over the perk stars, item details, character creation, mini-games, party votes or your fight buttons any more. Big news waits until you're done; small loot lines go straight to the history.",
       "New: a message history. Tap the little scroll next to the messages at the top left to see the last 200, sorted into Rewards, Quests, Party and World.",
+    ] },
+    { id: "b252-qaside2a", build: 252, date: "25 Nov 2026", title: "Forge and lockpicking fixes", items: [
+      "Fixed: in Polish, the forge was still mostly in English: the Make, Smelt & tan and Improve tabs, batch crafting, what's missing, and the line you get after making something.",
+      "Fixed: in Polish, the lockpicking hint under the lock is translated.",
+      "Fixed: after a festival smithing contest, your next forged item could get a free chance to save a material it never earned.",
+    ] },
+    { id: "b251-perklayout", build: 251, date: "25 Nov 2026", title: "Tidier perk stars", items: [
+      "Perk names in the star trees never sit on top of each other any more, and long names are never cut short with \"…\": they wrap onto a second line instead.",
+      "Each perk now sits right above the perks it needs, with the first ones at the bottom, so the trees read from the ground up.",
+      "On a phone, pinch the stars to zoom in or out and drag to look around. Zoomed far out, only the perks you can take keep their names.",
+      "On a phone, tapping a star shows the perk in a panel at the bottom of the screen instead of a pop-up over the stars.",
     ] },
     { id: "b250-qafight", build: 250, date: "25 Nov 2026", title: "Fight fixes", items: [
       "Fixed: on phones, casting a heal with a follower along asked you to tap a portrait, but the Magic menu covered every portrait. The bar at the top now has a button for each person you can heal.",

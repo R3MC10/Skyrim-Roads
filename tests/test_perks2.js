@@ -114,10 +114,25 @@ for (const [id, fx] of Object.entries(PFX.FX)) {
 
 // 5. star layout: no two stars or labels overlap, every tree fits
 for (const [sk, tree] of Object.entries(PERKS.TREES)) {
-  const { pos } = SKYUI.layout(tree); const pts = tree.map((p) => pos[p[0]]);
-  let bad = 0; for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++) { const dx = Math.abs(pts[i][0] - pts[j][0]), dy = Math.abs(pts[i][1] - pts[j][1]); if (dy < 24 && dx < 70) bad++; }
-  ok(bad === 0, sk + " stars don't crowd (" + bad + " pairs)");
-  ok(pts.every((p) => p[0] >= 20 && p[0] <= 340), sk + " stars stay inside the sky");
+  for (const mode of ["phone", "pc"]) {
+    const L = SKYUI.layout(tree, { mode }), pts = tree.map((p) => L.pos[p[0]]), lab = tree.map((p) => L.labels[p[0]]), M = SKYUI.MODES[mode];
+    let bad = 0; for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++) { const dx = Math.abs(pts[i][0] - pts[j][0]), dy = Math.abs(pts[i][1] - pts[j][1]); if (dy < M.sy * 0.5 && dx < M.sx * 0.9) bad++; }
+    ok(bad === 0, sk + " " + mode + ": stars don't crowd (" + bad + " pairs)");
+    let over = 0; for (let i = 0; i < lab.length; i++) for (let j = i + 1; j < lab.length; j++) { const a = lab[i], b = lab[j]; if (a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h) over++; }
+    ok(over === 0, sk + " " + mode + ": labels don't overlap (" + over + ")");
+    ok(lab.every((l) => l.lines.length <= 2 && !l.lines.join("").includes("…")), sk + " " + mode + ": labels on at most 2 lines, never cut short");
+    ok(pts.every((p) => p[0] >= 0 && p[0] <= L.W && p[1] >= 0 && p[1] <= L.H), sk + " " + mode + ": stars stay inside the sky");
+    // roots at the bottom: a perk always sits above every perk it needs
+    ok(tree.every((p) => (p[4] || []).every((n) => !L.pos[n] || L.pos[n][1] > L.pos[p[0]][1])), sk + " " + mode + ": every perk sits above the perks it needs");
+  }
+}
+// any tree works, new perks included: a made-up wide tree with long names still lays out with no overlaps
+{ const big = []; for (let i = 0; i < 30; i++) big.push(["t" + i, ["Saddle Caster", "Very Long Perk Name Here", "Ox", "Thunderous Mounted Charge"][i % 4] + " " + i, 1 + (i % 3), [], i < 6 ? [] : ["t" + (i % 6), "t" + ((i * 7) % i)]]);
+  for (const mode of ["phone", "pc"]) { const L = SKYUI.layout(big, { mode }), lab = Object.values(L.labels); let over = 0;
+    for (let i = 0; i < lab.length; i++) for (let j = i + 1; j < lab.length; j++) { const a = lab[i], b = lab[j]; if (a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h) over++; }
+    ok(over === 0 && lab.length === 30, "a made-up 30-perk tree (" + mode + "): no label overlaps (" + over + ")"); }
+  const a = JSON.stringify(SKYUI.layout(big, { mode: "phone" })), b2 = JSON.stringify(SKYUI.layout(big, { mode: "phone" }));
+  ok(a === b2, "the layout is the same every time");
 }
 
 // 6. quick fight sim: a full-perk build stays sane against an equal foe

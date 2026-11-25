@@ -4587,6 +4587,18 @@ body.nf-p0 #pbanners,body.nf-p0 #skillup,body.nf-p0 #lvln,body.nf-p0 #hudlog{vis
 #nfhist .nf-l li.nf-none{border:0;color:rgba(233,226,208,.6)}
 #nfhist .nf-t{overflow-wrap:anywhere}#nfhist .nf-t small{display:block;font-size:12px;color:rgba(233,226,208,.65);text-transform:uppercase;letter-spacing:.05em}
 #nfhist time{flex:none;font-size:12px;color:rgba(233,226,208,.55)}
+/* perklayout (skyui.js): the perk sky at real size in a box you pan with a finger and pinch to zoom; names never overlap */
+.skc.skv{overflow:auto;overscroll-behavior:contain;touch-action:pan-x pan-y;max-height:62vh;scrollbar-width:thin}
+.skc.skv{display:flex}.skc.skv>svg{max-width:none;flex:none;margin:auto}
+.skc .lbl{font-size:var(--skfs,11px);font-weight:500;paint-order:stroke;stroke:rgba(4,8,16,.85);stroke-width:3px;stroke-linejoin:round}
+.skc .st.sel .lbl{fill:#ffe7a8}
+.skc.far .st:not(.can):not(.sel) .lbl{display:none}
+.tw-starp>.tw-bigw .tw-big.skv{max-height:none}
+@media (max-width:899.98px){
+  .tw-starp>.tw-sdet{position:sticky;bottom:0;z-index:3;min-height:150px;max-height:180px;overflow:auto;overscroll-behavior:contain;margin:0 -2px;padding:0 2px 6px;background:linear-gradient(180deg,rgba(7,11,18,.9),rgba(7,11,18,.98))}
+  .tw-starp>.tw-sdet .tw-perk{margin-top:6px}
+  .tw-starp .skc.tw-big.skv{max-height:max(260px,calc(100vh - 330px))}
+}
 /* chargenrig.js: character creation drawn with the painted fight figure; a small drawn close-up of the face details on
    the Head / Face / Hair / Scars tabs (the painted head is one per race); the race card shows the painted bust */
 .cgdetail{display:none}
@@ -4953,7 +4965,9 @@ body.nf-p0 #pbanners,body.nf-p0 #skillup,body.nf-p0 #lvln,body.nf-p0 #hudlog{vis
 <script src="i18n_sweep2.js"></script>
 <script src="i18n_gather.js"></script>
 <script src="i18n_qacore.js"></script>
+<script src="i18n_qaside2.js"></script>
 <script src="i18n_gptqa.js"></script>
+<script src="i18n_perklayout.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>
