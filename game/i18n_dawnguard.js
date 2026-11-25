@@ -125,4 +125,8 @@
     ["{9}  {0}: “{1}” done ({2}).", "{9}  {0}: „{1}” ukończone ({2})."],
     ["{9}  {0}: “{1}” done.", "{9}  {0}: „{1}” ukończone."],
     ["Find them at {0}.", "Znajdziesz ich tu: {0}."]);
+  // the same line once the icon in front is split off (i18n_sweep2.js translates the rest of an icon-led line);
+  // put first so the looser "{0}: {1} gold, {2}." festival line doesn't grab it
+  I18N_STORY.pats.unshift(["{0}: “{1}” done ({2}).", "{0}: „{1}” ukończone ({2})."], ["{0}: “{1}” done.", "{0}: „{1}” ukończone."],
+    ["“{0}” done ({1}).", "„{0}” ukończone ({1})."], ["“{0}” done.", "„{0}” ukończone."]);
 })();

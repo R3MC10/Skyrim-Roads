@@ -7,13 +7,13 @@ PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"
 OUT = sys.argv[2] if len(sys.argv) > 2 else os.path.join(os.path.dirname(os.path.abspath(__file__)), "out_smithgame")
 os.makedirs(OUT, exist_ok=True)
 SIZES = [("phone360", 360, 780, 3, True), ("phone412", 412, 915, 2.625, True), ("pc1920", 1920, 1080, 1, False), ("pc3440", 3440, 1440, 1, False)]
-CHROME = "/usr/bin/google-chrome"
+CHROME = (__import__("os").environ.get("CHROME") or ("/usr/bin/google-chrome" if __import__("os").path.exists("/usr/bin/google-chrome") else None))
 HOST = os.environ.get("HOST", "localhost")
 
 async def main():
     async with async_playwright() as p:
         kw = {"args": ["--no-sandbox"]}
-        if os.path.exists(CHROME): kw["executable_path"] = CHROME
+        if CHROME and os.path.exists(CHROME): kw["executable_path"] = CHROME
         b = await p.chromium.launch(**kw)
         errs, res = [], {}
         for name, w, h, dpr, touch in SIZES:

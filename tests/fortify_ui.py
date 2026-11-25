@@ -1,12 +1,14 @@
 import asyncio
+import sys
+PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"
 from playwright.async_api import async_playwright
 async def main():
     async with async_playwright() as p:
-        b = await p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-sandbox"])
+        b = await p.chromium.launch(executable_path=(__import__("os").environ.get("CHROME") or ("/usr/bin/google-chrome" if __import__("os").path.exists("/usr/bin/google-chrome") else None)), args=["--no-sandbox"])
         ctx = await b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2)
         errs = []
         pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
-        await pg.goto("http://localhost:8765/index.html?net=bc&notut&p=fo"); await pg.wait_for_timeout(1800)
+        await pg.goto("http://localhost:" + PORT + "/index.html?net=bc&notut&p=fo"); await pg.wait_for_timeout(1800)
         await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Fori"); await pg.click("#begin"); await pg.wait_for_timeout(1000)
         print(await pg.evaluate("""()=>{const S=window.__dbg.save(); const a=G.give(S,'ench|hide_bracers|onehanded|12|0'); const b=G.give(S,'ench|leather_boots|sneak|12|0'); return [G.equip(S,a), G.equip(S,b), G.skill(S,'Sneak'), S.skills.Sneak.lvl, G.fxSum(S,'dmg:One-Handed')]}"""))
         for _ in range(4):

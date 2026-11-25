@@ -3,6 +3,30 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b237-mountcombat", build: 237, date: "25 Nov 2026", title: "Fight from the saddle", items: [
+      "Mounted combat is back: ride into a fight and stay in the saddle, or get on and off with the new Mount and Dismount moves.",
+      "Getting on takes 2 moves and 20 stamina. You can dual cast from the saddle for a bit more magicka.",
+      "New Destruction perk: Saddle Caster.",
+      "Your horse can be knocked down in a fight, but it always gets back up afterwards.",
+    ] },
+    { id: "b236-glowfix", build: 236, date: "25 Nov 2026", title: "No more glowing blob next to your weapon", items: [
+      "An enchanted weapon used to leave a big glowing blob floating in the air beside your hero in fights. The glow now sits on the weapon itself, as a slim shine along the blade.",
+    ] },
+    { id: "b235-testsgreen", build: 235, date: "25 Nov 2026", title: "Small Polish fixes", items: [
+      "In Polish, the \"stage done\" line of the vampire war quests is fully translated again.",
+      "The Coming next list is up to date.",
+    ] },
+    { id: "b234-riding", build: 234, date: "25 Nov 2026", title: "Riding on the map", items: [
+      "The map has a ride button next to zoom: tap it to get on or off your horse. You see the horse walk up and you climb into the saddle, or slide down.",
+      "On foot your horse walks along just behind you on the map.",
+      "Riders on the map have both legs now: the near leg over the horse's side, the far leg behind it, for every coat.",
+      "The rider moves smoothly with the horse's walk and gallop instead of jerking along.",
+    ] },
+    { id: "b233-folsex", build: 233, date: "25 Nov 2026", title: "Your followers look like themselves", items: [
+      "Jenassa, Lydia and the other women who follow you now look like themselves in fights.",
+      "Aela, Brelyna, Uthgerd, Mjoll, Annekke, Borgakh and Hrolfa at Pinewatch get a woman's face and body too, on your screen and on your party's.",
+      "A dark elf woman now wears a dark elf woman's face, not a man's.",
+    ] },
     { id: "b232-arrivearea", build: 232, date: "25 Nov 2026", title: "The Area tab opens when you arrive", items: [
       "When you reach a town, a dungeon entrance or another place on the map, the Area tab opens by itself, so shops, the inn and what you can do there are right in front of you.",
       "If a fight, a road event or any window is still open, it waits until you close it.",
@@ -1621,8 +1645,9 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 222;
+  const NEXT_AT = 235;
   const NEXT = [
+    "Hands-on gathering: a little harvest game for every kind of plant",
     "Mentoring: play side by side with friends of any level",
     "Shrines of your own: build a Daedric altar at your longhouse",
   ];

@@ -3,8 +3,10 @@ phones, 3 columns on wide screens, folding Character sections, one follower tab 
 Usage: python3 menus2_ui.py PORT   (screenshots go to $OUT or /home/claude/tests/menus2/)"""
 import asyncio, sys, os
 from playwright.async_api import async_playwright
+_SHOTS = (__import__("os").environ.get("SHOTS") or __import__("os").path.join(__import__("tempfile").gettempdir(), "rotn_shots")).replace("\\", "/").rstrip("/") + "/"   # screenshots: $SHOTS or the temp folder
+__import__("os").makedirs(_SHOTS, exist_ok=True)
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"
-OUT = os.environ.get("OUT", "/home/claude/tests/menus2/")
+OUT = os.environ.get("OUT", _SHOTS + "menus2/")
 os.makedirs(OUT, exist_ok=True)
 fails = []
 def ok(c, m):
