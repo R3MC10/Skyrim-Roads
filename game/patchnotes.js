@@ -3,6 +3,10 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b240-qaside2", build: 240, date: "25 Nov 2026", title: "More Polish in towns", items: [
+      "Fixed: in Polish, the cooking pot, the forge, the notice board's weekly goals, the Hall of the North, the streets, trainers and hirelings are translated.",
+      "Fixed: in Polish, the Social tabs, the bard's song lines and the time left on world events are translated.",
+    ] },
     { id: "b239-qacore1", build: 239, date: "25 Nov 2026", title: "Back button and first-trip fixes", items: [
       "Fixed: the phone's back button did nothing in fishing, hunting, mining, lockpicking and the other mini-games, and pressing it again could close the app. Now it leaves the game, like its Done or Leave button.",
       "Fixed: back in the barber's chair or at the rune table closes them instead of opening the compass behind them.",
@@ -1659,7 +1663,7 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 235;
+  const NEXT_AT = 240;
   const NEXT = [
     "Hands-on gathering: a little harvest game for every kind of plant",
     "Mentoring: play side by side with friends of any level",
