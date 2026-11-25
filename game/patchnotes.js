@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b239-qacore1", build: 239, date: "25 Nov 2026", title: "Back button and first-trip fixes", items: [
+      "Fixed: the phone's back button did nothing in fishing, hunting, mining, lockpicking and the other mini-games, and pressing it again could close the app. Now it leaves the game, like its Done or Leave button.",
+      "Fixed: back in the barber's chair or at the rune table closes them instead of opening the compass behind them.",
+      "Fixed: back inside a shop, the inn or the forge goes to the town's list of places first, not straight to the compass.",
+      "Fixed: the first-trip guide said to open the Town tab; it's called Area now.",
+      "Fixed: in Polish, the first-trip guide, the first-time tips and the \"you set off\" and \"you arrived\" messages were still in English.",
+    ] },
     { id: "b238-qaside", build: 238, date: "25 Nov 2026", title: "Company fixes", items: [
       "Fixed: tapping Found twice quickly could pay for the company twice.",
       "Fixed: tapping Put in twice quickly could put the same gold in the treasury twice and leave your purse below zero.",
