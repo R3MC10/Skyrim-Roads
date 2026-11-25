@@ -26,6 +26,7 @@
   const tiBox = (item) => (TI ? TI.box(S, item) : "");
   const tiCls = (item) => (TI && TI.isTome(item) ? " ti-row" : "");
   let zoom = innerWidth < 700 ? 2.4 : 1, follow = true, center = [0.5, 0.5], view = {}, version = 0, rendered = -1, lastPanelRender = 0;
+  let townCtx = null;   // locscreen.js: what panelTown found at this place, for the full-screen scene
   let tacticsDraft = { if: "hp_below", pct: 40, do: "potion:health", edit: null }, testResult = null, townShop = null, townShopAt = null, townNews = false, forgeTab = "make", forgeGroup = "iron", packOpen = null, searchText = "", uxAllPlaces = false, uxHelpOpen = null, packSearch = "";
   let raidDocs = [], raidSeen = null, raidJoined = null, raidAuto = null, enchDraft = {};
   let chatDocs = [], chatRaw = [], chatCh = "world", chatDraft = "", chatSeen = 0, chatSeenIds = new Set(), lastChatSend = 0;
@@ -543,7 +544,8 @@
       if ($("#sky") && !$("#modal") && escKey && sky.page === "items" && sky.sel != null && typeof ITEMCMP !== "undefined" && ITEMCMP.side($("#sky"))) { sky.sel = null; renderMenu(); return true; }   // [itemdetail] Esc lets go of the pinned item first
       if ($("#sky") && !$("#modal")) { closeMenu(); if (typeof TABMENU !== "undefined") TABMENU.menuClosed(); return true; }
       if ($("#modal")) { if (!$("#modal [data-act=enc], #modal [data-act=ev], #modal [data-act=guard]")) closeModal(); return true; }
-      if (typeof WAGONS !== "undefined" && WAGONS.isOpen()) { WAGONS.close(); return true; }   // [caravan-panel] a caravan's panel: back closes it
+      if (typeof WAGONS !== "undefined" && WAGONS.isOpen()) { WAGONS.close(); return true; }
+      if (typeof LOCSCREEN !== "undefined" && LOCSCREEN.closeSheet()) return true;   // a card open on the place's scene   // [caravan-panel] a caravan's panel: back closes it
       if (typeof DWEMER !== "undefined" && DWEMER.closeOv()) return true;   // a lexicon / valve puzzle (dwemer.js)
       if (typeof BLACKREACH !== "undefined" && BLACKREACH.close()) return true;   // the Blackreach map (blackreach.js)
       if ($("#dun")) { closeDungeon(); return true; }
@@ -655,6 +657,7 @@
     $("#sndBtn").onclick = openSound;
     $("#socBtn").onclick = () => { SOUND.fx("click"); closeMenu(); tab = "social"; bump(); renderTabs(); renderPanel(true); $("#side").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" }); };
     $("#side").addEventListener("click", onPanelClick);
+    { let ls = $("#locs"); if (!ls) { ls = document.createElement("div"); ls.id = "locs"; ls.hidden = true; document.body.appendChild(ls); } ls.addEventListener("click", onPanelClick); ls.addEventListener("change", onPanelChange); }   // locscreen.js: the place full screen
     $("#side").addEventListener("change", onPanelChange);
     $("#side").addEventListener("input", onPanelInput);
     $("#side").addEventListener("pointerdown", onRuleDrag);   // drag a rule's number to reorder tactics
@@ -2976,20 +2979,32 @@
     return `<div class="uxhead"><div class="uxh-t"><b>${h[0]}</b><span>${h[1]}</span></div><button class="uxi" data-act="uxhelp" data-id="${tab}" aria-label="What is this screen?" aria-expanded="${uxHelpOpen === tab}">ⓘ</button></div>
       ${uxHelpOpen === tab ? `<div class="uxpop" role="note"><p>${h[2]}</p>${typeof CC !== "undefined" ? CC.legend() : ""}<button class="btn sm" data-act="uxhelp" data-id="${tab}">Got it</button></div>` : ""}`;
   }
+  /* locscreen.js: the Area tab at a real place opens as a painted scene ("" = no scene: another tab, a shop open, List mode) */
+  function locScene() {
+    const L = typeof LOCSCREEN !== "undefined" ? LOCSCREEN : null;
+    if (!L || !S || tab !== "town" || !townCtx || $("#sky") || L.mode(S) !== "scene" || L.placeOf(S) !== townCtx.l) return "";
+    const c = townCtx, l = c.l, gather = typeof GATHERUI !== "undefined" ? GATHERUI.html(S) : "";   // gatherui.js: its g* buttons reach onPanelClick through #locs
+    const players = others.filter((o) => o && o.id !== S.id && o.loc === l && !o.hiding).map((o) => ({ name: typeof GREET !== "undefined" ? GREET.label(S, o, party) : o.name, sub: party && party.members?.some((m) => m.id === o.id) ? "In your party" : "Player" }));
+    try {
+      if (c.town) return L.html({ S, l, sections: c.sections, names: c.names, open: c.open, hold: c.hold, wanted: c.wanted, players, sheets: { gather, news: c.news.join("") + (c.rumours || "") } });
+      return L.html({ S, l, sections: [], players, sheets: { main: placeHere(), gather, hunt: typeof LEGHUNT !== "undefined" ? LEGHUNT.wildHTML(S, esc) : "", camp: wildsFood() } });
+    } catch (e) { console.warn("locscreen", e); return ""; }
+  }
   function renderPanel(force) {
     const side = $("#side"); if (!side) return;   // the game screen isn't up yet (title or intro)
     if (typeof RIDING !== "undefined" && S) RIDING.sync(S);   // the map's ride button: a horse just bought, back on its feet, out of a dungeon …
     if (!force && side.contains(document.activeElement) && document.activeElement.matches("input,select")) return;
     rendered = version; lastPanelRender = Date.now();
-    side.dataset.tab = tab;
+    side.dataset.tab = tab; townCtx = null;
     const openD = [...side.querySelectorAll("details")].map((d) => d.open), y = scrollY;
     const twp = typeof TABMENU !== "undefined" ? { stars: () => TABMENU.stars(S), perks: () => TABMENU.perks(S) } : {};
     const mnp = typeof MENUS !== "undefined" ? MENUS.panels({ S, ach: achPanel, settings: settingsHTML, fest: festPanel, idPanel, update }) : {};   // menus.js: tab homes
-    side.innerHTML = tutTip() + (typeof MENUS !== "undefined" ? MENUS.subnav(tab) : "") + screenHead() + ({ ...mnp, map: panelTravel, hero: panelHero, pack: panelPack, tactics: panelTactics, town: () => (typeof ARRIVEAREA !== "undefined" ? ARRIVEAREA.gatherHTML(S) : "") + panelTown(), log: panelLog, social: panelSocial, stats: panelStats, diary: panelDiary, places: panelPlaces, follower: () => typeof FOLTAB !== "undefined" ? FOLTAB.panel(S, esc, svgI) : "", ...twp }[tab] || panelTravel)();
+    side.innerHTML = tutTip() + (typeof MENUS !== "undefined" ? MENUS.subnav(tab) : "") + screenHead() + ({ ...mnp, map: panelTravel, hero: panelHero, pack: panelPack, tactics: panelTactics, town: () => { const t = panelTown(); return (townCtx && typeof LOCSCREEN !== "undefined" ? LOCSCREEN.sceneBtn() : "") + (typeof ARRIVEAREA !== "undefined" ? ARRIVEAREA.gatherHTML(S) : "") + t; }, log: panelLog, social: panelSocial, stats: panelStats, diary: panelDiary, places: panelPlaces, follower: () => typeof FOLTAB !== "undefined" ? FOLTAB.panel(S, esc, svgI) : "", ...twp }[tab] || panelTravel)();
     if (typeof TABMENU !== "undefined") TABMENU.afterPanel(tab);
     if (typeof MENUS !== "undefined") MENUS.afterPanel(tab);
     if (typeof MENUS2 !== "undefined") MENUS2.afterPanel(tab, side);   // menus2.js: Find a quest
     if (tab === "town" && typeof AREAUI !== "undefined") AREAUI.fitSoon(side);   // areaui.js: one or two columns of places
+    if (typeof LOCSCREEN !== "undefined") LOCSCREEN.show(locScene());   // locscreen.js: the place full screen
     if (!force) { side.querySelectorAll("details").forEach((d, i) => { if (openD[i] != null) d.open = openD[i]; }); scrollTo(0, y); }
     const cl = $("#chatlog"); if (cl) cl.scrollTop = cl.scrollHeight;
   }
@@ -3363,6 +3378,7 @@
   function panelTown() {
     const l = S.location, types = l ? G.shopTypes(l) : [];
     if (!l || (!types.length && !TOWNS.isTown(l))) {
+      if (l && WORLD.places[l]) townCtx = { l };   // locscreen.js: a place without shops (cave mouth, farm, stone...)
       if (l && (DUNGEONS.enterable(l) || POWERS.STONE_AT[l] || l === "High Hrothgar" || (typeof PLACESTUFF !== "undefined" && PLACESTUFF.offers(l).length))) return (typeof LEGHUNT !== "undefined" ? LEGHUNT.wildHTML(S, esc) : "") + placeHere();
       return (typeof LEGHUNT !== "undefined" ? LEGHUNT.wildHTML(S, esc) : "") + wildsFood() + `<div class="panel"><h2>${l ? esc(l) : "The wilds"}</h2><p class="sub">${l ? "There's nothing to buy here." : "You're out on the road."} Cities and towns have shops, inns, trainers, alchemy labs, forges and jobs.</p></div>`;
     }
@@ -3377,6 +3393,7 @@
     const townTop = news.join("") + wantedLine;
     /* [stations] on a place's own page the town lines the board already shows fold into one "Town news (N)" row; being wanted stays in view */
     const newsRow = news.length ? `<div class="au-news${townNews ? " on" : ""}"><button class="au-newsb" data-act="townnews" aria-expanded="${townNews}"><span>Town news</span> <span class="au-nn">(${news.length})</span><span class="au-chev" aria-hidden="true">${townNews ? "▴" : "▾"}</span></button>${townNews ? `<div class="au-newsin">${news.join("")}</div>` : ""}</div>` : "";
+    if (AU && !townShop) townCtx = { l, town: true, sections, names, open, hold, news, wanted: wantedLine, rumours: typeof RUMOURS !== "undefined" ? RUMOURS.townHTML(S, l, "", open) : "" };   // locscreen.js
     if (AU && !townShop) return `<div class="panel au-panel"><h2>${esc(l)}</h2>${PLACEART.scene(l)}${townTop}${typeof RUMOURS !== "undefined" ? RUMOURS.townHTML(S, l, "", open) : ""}${AU.hub({ S, l, sections, names, open, hold })}<p class="sub au-gold">You have <b class="gold">${S.gold} gold</b>.</p></div>`;
     const fac = F.priceFactor(G.skill(S, "Mercantile"));
     let body = "", note = "";
@@ -3811,6 +3828,7 @@
     if (!b || b.disabled) return;
     const a = b.dataset.act, L = G.loadout(S);
     if (a.startsWith("coop") && coopUI) return void coopUI.act(b);
+    if (/^loc(sheet|mode|leave)$/.test(a) && typeof LOCSCREEN !== "undefined") { SOUND.fx("click"); return void LOCSCREEN.act(b, { S, refresh: () => { townShop = ""; renderPanel(true); }, leave: () => { tab = "map"; bump(); renderTabs(); renderPanel(true); } }); }
     if ((a === "lvpick" || a === "lvsend") && lvUI) return void lvUI.act(b);
     if (/^pp(ready|go|cancel|kick|catch|vote|vhide)$/.test(a) && ppUI) return void ppUI.act(b);
     if (a.startsWith("cq") && CQ) return void CQ.act(S, b, { toast, openModal, closeModal, persist, renderPanel, tally, sound: (n) => SOUND.fx(n), guide: (k) => GUIDE.mark(S, k), selectMix: (ids) => { alchSel = ids; renderPanel(true); }, alchSel: () => alchSel });   // crafting shortcuts (craftqol.js)

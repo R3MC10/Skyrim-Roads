@@ -134,6 +134,6 @@ const AREAUI = (() => {
   function fitSoon(root) { fit(root); setTimeout(() => fit(root), 90); try { document.fonts.ready.then(() => fit(root)); } catch { /* no font API */ } }
   if (live && typeof window !== "undefined") window.addEventListener("resize", () => fit(document.getElementById("side")));
 
-  return { GROUPS, ICON, group, groupOf, siblings, plain, label, note, status, hub, head, fit, fitSoon };
+  return { GROUPS, ICON, group, groupOf, siblings, plain, label, note, status, readyHere, hub, head, fit, fitSoon };
 })();
 if (typeof module !== "undefined") module.exports = AREAUI;
