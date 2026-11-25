@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b299-netfix", build: 299, date: "25 Nov 2026", title: "Players can see each other again", items: [
+      "Players can see each other again. Since accounts came in, players who signed in and players who didn't were in two separate worlds, so friends vanished from each other's map, Social tab and parties.",
+      "Signed in, your phone now joins both: the account world and the phone-to-phone world. Signed in or not, you see each other, chat, trade and team up like before.",
+      "A friend who signed in on an older version still only sees players who signed in. If someone is missing, ask them to update the game.",
+    ] },
     { id: "b298-mapheroanim", build: 298, date: "25 Nov 2026", title: "Your hero moves on the map", items: [
       "Your horse on the world map is alive now: standing, it breathes, shifts its weight, tosses its head now and then and flicks its tail.",
       "On the road its legs swing as it walks or gallops, its body bobs and rocks, and you sit into each stride in the saddle.",
