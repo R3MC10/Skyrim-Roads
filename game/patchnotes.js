@@ -3,9 +3,15 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b234-testsgreen", build: 234, date: "25 Nov 2026", title: "Small Polish fixes", items: [
+    { id: "b235-testsgreen", build: 235, date: "25 Nov 2026", title: "Small Polish fixes", items: [
       "In Polish, the \"stage done\" line of the vampire war quests is fully translated again.",
       "The Coming next list is up to date.",
+    ] },
+    { id: "b234-riding", build: 234, date: "25 Nov 2026", title: "Riding on the map", items: [
+      "The map has a ride button next to zoom: tap it to get on or off your horse. You see the horse walk up and you climb into the saddle, or slide down.",
+      "On foot your horse walks along just behind you on the map.",
+      "Riders on the map have both legs now: the near leg over the horse's side, the far leg behind it, for every coat.",
+      "The rider moves smoothly with the horse's walk and gallop instead of jerking along.",
     ] },
     { id: "b233-folsex", build: 233, date: "25 Nov 2026", title: "Your followers look like themselves", items: [
       "Jenassa, Lydia and the other women who follow you now look like themselves in fights.",
@@ -1630,7 +1636,7 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 231;
+  const NEXT_AT = 235;
   const NEXT = [
     "Hands-on gathering: a little harvest game for every kind of plant",
     "Mentoring: play side by side with friends of any level",
