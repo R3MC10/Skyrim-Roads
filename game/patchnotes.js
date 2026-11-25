@@ -3,6 +3,10 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b318-partytrain", build: 318, date: "25 Nov 2026", title: "Your party walks in a line", items: [
+      "Travelling as a party, everyone now walks in a line on the map so you can see each of you: the leader in front, the rest following one behind another along the road.",
+      "Standing in a town, your party lines up in a row next to the town instead of all on one spot, so every name is readable.",
+    ] },
     { id: "b316-menutop", build: 316, date: "25 Nov 2026", title: "Menus open at the top", items: [
       "On a phone, every tab and sub-tab (Character, Map, Journal, Social, Area and the rest) now opens at its top, instead of half way down an old list or on the map above it.",
       "The compass's Area, Journal and Social links take you straight to that screen, and the full-screen Character page always starts at the top.",
