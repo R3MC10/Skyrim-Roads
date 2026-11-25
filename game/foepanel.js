@@ -124,7 +124,7 @@ const FOEPANEL = (() => {
   function newest(lg, smooth) {
     log.held = false;
     lg.classList.remove("fpl-held");
-    if (smooth && lg.scrollTo) lg.scrollTo({ top: lg.scrollHeight, behavior: "smooth" }); else lg.scrollTop = lg.scrollHeight;
+    log.userAt = 0; lg.scrollTop = lg.scrollHeight;   // (a jump: a smooth glide would count as you scrolling)
   }
   function decorate(el, sess) {
     if (!DOM || !el) return;
