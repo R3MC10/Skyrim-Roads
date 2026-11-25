@@ -33,9 +33,18 @@ const POLISH = (() => {
     if (!el) { el = document.createElement("div"); el.id = "pbanners"; el.setAttribute("aria-live", "polite"); document.body.appendChild(el); }
     return el;
   }
+  /* [smallpolish] banners wait until the screen is clear: no menu or window (overlays.js ranks them), no fight, and on a
+     phone no other tab open (a new objective used to flash over Social) */
+  function busy() {
+    if (document.querySelector("#sky, #modal .sheet, #favwheel")) return true;
+    if (typeof OVERLAYS !== "undefined" && (OVERLAYS.level() >= OVERLAYS.LEVEL.decision || OVERLAYS.menuOpen() || OVERLAYS.fightOpen())) return true;
+    const ui = typeof window !== "undefined" ? window.__ui : null;
+    if (typeof PCMAP !== "undefined" && PCMAP.on && PCMAP.on()) return document.documentElement.classList.contains("pc-full");   // PC: the map stays in sight beside a side screen
+    return !!(ui && ui.tab && ui.tab !== "map");
+  }
   function banner(kind, title, big, icon = "") {
     if (typeof document === "undefined") return;
-    if (kind === "objective" && typeof HUD2 !== "undefined" && HUD2.objFlash(big)) return;
+    if (kind === "objective" && typeof HUD2 !== "undefined" && !busy() && HUD2.objFlash(big)) return;
     if (typeof SKILLUP !== "undefined" && SKILLUP.claim(kind, big)) return;   // skillup.js: skill-ups and level-ups get the Skyrim toast with a bar   // hud2.js: a new objective flashes on the line under the compass
     // a burst of skill rises merges into one banner
     const last = queue[queue.length - 1];
@@ -45,9 +54,10 @@ const POLISH = (() => {
     if (!showing) next();
   }
   function next() {
-    if (queue.length && document.querySelector("#sky, #modal .sheet, #favwheel")) { showing = true; setTimeout(next, 700); return; }   // wait until menus and pop-ups close, like Skyrim
+    if (queue.length && busy()) { showing = true; setTimeout(next, 700); return; }   // wait until menus and pop-ups close, like Skyrim
     const b = queue.shift();
     if (!b) { showing = false; return; }
+    if (b.kind === "objective" && typeof HUD2 !== "undefined" && HUD2.objFlash(b.big)) { showing = true; setTimeout(next, 5300); return; }   // back on the map: flash it on the objective line
     showing = true;
     const el = document.createElement("div");
     el.className = `pban pban-${b.kind}`;

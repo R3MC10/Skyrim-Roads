@@ -3,12 +3,35 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b224-companyart", build: 224, date: "25 Nov 2026", title: "Painted company art", items: [
+    { id: "b226-companyart", build: 226, date: "25 Nov 2026", title: "Painted company art", items: [
       "The Company screen opens with a painted banner of your longhouse at dusk, with the name in clear light letters.",
       "The Rooms tab shows your longhouse, and it changes as you build: the library lights more windows, the forge makes the doorway glow, the trophy hall hangs antlers and shields, the stables add lanterns and the planning table puts up company banners.",
       "The Expedition Table now sits on a painted war table lit by candles. Each offer has its own painting, a clear risk colour (green, amber or red), the reward and how long it takes, with the step list under Details.",
       "In a party vote, small portraits on each expedition card show who voted for it.",
       "The six Daedric artifacts have painted pictures on their cards and on the contract that rewards them.",
+    ] },
+    { id: "b225-heistart", build: 225, date: "25 Nov 2026", title: "Heists you can see", items: [
+      "Every heist now shows a painting of the house you're robbing: Battle-Born's farm, the Shatter-Shield house on the icy docks, Erikur's townhouse, the Silver-Blood stone house and Maven's manor on the canal.",
+      "On phones the heist takes the whole screen. The house sits at the top and your choices at the bottom, within thumb reach. The X in the corner closes it, and you carry on later from the town.",
+      "The picture changes mood with each step: cold and quiet while you look around, darker while you sneak, amber at the edges when people grow suspicious, and cold and grey on the way out.",
+      "When the alarm goes up, the edges glow red and pulse, and the picture gives a short jolt. Your buttons stay put.",
+      "Lanterns flicker, the lit window glows softly and a few snowflakes drift by on phones. If your phone is set to reduce motion, all of that stays still.",
+      "The heist loot and tools have new painted icons: the signet ring, gold compass, jewelled goblet, torc, ruby brooch, forged papers and the Draught of Shadows.",
+    ] },
+    { id: "b224-meekofix", build: 224, date: "25 Nov 2026", title: "Meeko comes back", items: [
+      "Meeko the stray dog has no home town, so once he left you (Dismiss, or walking off when he got fed up) he was gone for good. Now he finds you again on the road.",
+      "Lost him already? He's out there looking for you. Travel without a follower and he'll come bounding up, with his old level and gear. Your journal and the Follower tab say so.",
+      "If he walked off because he was unhappy, give him three days first, like any other follower.",
+      "In fights Meeko is a dog again, not a person with his name. A friend's Meeko too.",
+    ] },
+    { id: "b223-smallpolish", build: 223, date: "25 Nov 2026", title: "Small polish", items: [
+      "The title screen's emblem is now the game's own helm under the northern star, inked in gold. The \"Web version · looking for friends\" line moved into Settings.",
+      "Creating a character on a phone: all the tabs fit or slide into view, the open tab stays in sight, and the bottom bar is slimmer so the race card isn't hidden.",
+      "Magic menu: all the tier buttons fit on a phone (Master included), and the bottom line shows your magicka and how much comes back each round instead of armor and damage.",
+      "Racial powers like Battle Cry get a proper medallion icon that matches the spells.",
+      "Map: labels like \"Rebuilding 97%\" and festival names find a free spot instead of sitting on a hold's or a town's name. On big PC screens the cards and the quest tracker beside the map are a bit larger.",
+      "Company: Rooms, Expeditions, Treasury and Members on one row; Plan, Trophies and Log sit in a small More row under them.",
+      "A new objective waits until you close menus and windows instead of popping up over them.",
     ] },
     { id: "b222-overlays", build: 222, date: "25 Nov 2026", title: "One thing on screen at a time", items: [
       "The first-fight tip no longer sits on top of the VICTORY card. Results always come first, then windows that ask you something, then tips, then messages.",

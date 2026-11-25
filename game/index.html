@@ -4326,6 +4326,7 @@ canvas.dunfx{position:absolute;inset:0;width:100%;height:100%;pointer-events:non
   .dun .dmapcard{scroll-margin-top:8px}
 }
 @media (min-width:900px) and (min-height:520px){.dstrip{display:none}}
+<<<<<<< HEAD
 /* company art (longhouse.js, expedition.js, bargains.js): painted banner, the hall with its rooms, the Expedition Table */
 .lng-banner img.lng-paint{height:auto;aspect-ratio:15/4;min-height:112px;opacity:1}
 .lng-banner:has(img.lng-paint) .lng-bt{background:linear-gradient(0deg,rgba(0,0,0,.35),rgba(0,0,0,.25) 70%,rgba(0,0,0,0))}
@@ -4369,6 +4370,114 @@ canvas.dunfx{position:absolute;inset:0;width:100%;height:100%;pointer-events:non
 .dbg-art.sm{width:36px;height:36px;flex-basis:36px}
 .dbg-reward{display:flex;align-items:center;gap:8px}.dbg-reward .sub{margin:4px 0}
 .dbg-reward .dbg-ic{width:26px;height:26px;flex:0 0 26px;color:var(--dbc,var(--gold))}
+=======
+/* [heistart] the heist screen over its house painting (heistscene.js): full screen on phones, a big window on PCs.
+   The colour grade, vignettes and ambience sit on the picture only; the choices never move. */
+.modal .sheet.hz.hz-fs{padding:0;overflow:hidden;display:flex;flex-direction:column;width:min(880px,96vw);max-width:none;height:min(90vh,860px);max-height:none;background:#08090b}
+:root .modal .sheet.hz.hz-fs{border:1px solid rgba(226,187,100,.30);border-image:none}
+.sheet.hz-fs>.hz-full{position:relative;flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
+.hz-bg{position:absolute;inset:-4px;overflow:hidden;pointer-events:none;background:#08090b;z-index:0}
+.hz-bg i{position:absolute;display:block}
+.hz-box{position:absolute;left:0;top:0;width:100%;aspect-ratio:16/9;overflow:hidden}
+.hz-cam{position:absolute;inset:0;will-change:transform;animation:hzbreath 14s ease-in-out infinite alternate}
+.hz-img{position:absolute;inset:0;background:radial-gradient(ellipse at 60% 28%,rgba(240,184,90,.10),transparent 30%),linear-gradient(180deg,#141b2c 0%,#1c2333 55%,#0d0f14 100%);background-size:cover;background-position:center;transition:opacity .6s}
+.hz-img.none{opacity:.9}.hz-img.none~i{display:none}
+.hz-glow{width:9%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(255,190,110,.9),rgba(255,180,92,0) 68%);mix-blend-mode:screen;opacity:.08;animation:hzwin 4.6s ease-in-out infinite alternate}
+.hz-lamp{width:6%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,#FFB45C,rgba(255,180,92,0) 70%);mix-blend-mode:screen;opacity:.14;animation:hzlamp 1.1s steps(1,end) infinite}
+.hz-lamp.l1{animation-duration:1.55s;animation-delay:-.4s}.hz-lamp.l2{animation-duration:.85s;animation-delay:-.7s}
+.hz-fade{left:0;right:0;bottom:-1px;height:42%;background:linear-gradient(180deg,rgba(8,9,11,0),rgba(8,9,11,.75) 60%,#08090b)}
+.hz-box::before{content:"";position:absolute;left:0;right:0;top:0;height:26%;z-index:1;background:linear-gradient(180deg,rgba(8,9,11,.7),rgba(8,9,11,0))}
+/* one grade per step: a tint (colour blend) and a vignette + darkening, cross-fading on opacity */
+.hz-tint,.hz-vig,.hz-tense,.hz-red{inset:0;opacity:0;transition:opacity 1s ease}
+.hz-tint{mix-blend-mode:color}
+.hz-tint.g-scout{background:rgba(104,139,168,.22)}
+.hz-vig.g-scout{background:radial-gradient(ellipse 75% 70% at 50% 38%,transparent 55%,rgba(0,0,0,.25))}
+.hz-tint.g-sneak{background:rgba(20,43,64,.42)}
+.hz-vig.g-sneak{background:radial-gradient(ellipse 70% 65% at 50% 38%,transparent 45%,rgba(0,0,0,.45)),rgba(0,0,0,.16)}
+.hz-tint.g-susp{background:rgba(20,43,64,.30)}
+.hz-vig.g-susp{background:radial-gradient(ellipse 72% 66% at 50% 38%,transparent 48%,rgba(185,132,57,.30) 85%,rgba(120,80,30,.45)),rgba(0,0,0,.10)}
+.hz-tint.g-alarm{background:radial-gradient(ellipse 75% 70% at 50% 40%,rgba(165,31,25,0) 35%,rgba(165,31,25,.55))}
+.hz-vig.g-alarm{background:radial-gradient(ellipse 70% 65% at 50% 40%,transparent 45%,rgba(30,0,0,.55)),rgba(0,0,0,.05)}
+.hz-tint.g-escape{background:rgba(52,77,96,.5)}
+.hz-vig.g-escape{background:radial-gradient(ellipse 72% 66% at 50% 38%,transparent 45%,rgba(0,0,0,.45)),rgba(0,0,0,.12)}
+.hz-full[data-g=scout] .g-scout,.hz-full[data-g=sneak] .g-sneak,.hz-full[data-g=susp] .g-susp,.hz-full[data-g=alarm] .g-alarm,.hz-full[data-g=escape] .g-escape{opacity:1}
+.hz-full[data-g=alarm] .g-alarm{transition-duration:.2s}
+/* tension follows suspicion: darker edges from 30, a slow pulse from 90 */
+.hz-tense{background:radial-gradient(ellipse 70% 65% at 50% 40%,transparent 50%,rgba(0,0,0,.5))}
+.hz-full[data-t="1"] .hz-tense,.hz-full[data-t="2"] .hz-tense{opacity:.6}
+.hz-full[data-t="3"] .hz-tense{background:radial-gradient(ellipse 70% 65% at 50% 40%,transparent 50%,rgba(150,95,30,.5));opacity:.5;animation:hztense 1.1s ease-in-out infinite alternate}
+/* the alarm: red edges pulsing 0.08-0.22 every 1.4 s, and one short shake of the picture */
+.hz-red{background:radial-gradient(ellipse 68% 62% at 50% 42%,transparent 50%,#d0281e)}
+.hz-full[data-g=alarm] .hz-red{opacity:.15;transition-duration:.2s;animation:hzred 1.4s ease-in-out infinite}
+.hz-bg.shake{animation:hzshake .18s linear}
+/* a few snowflakes, phones only */
+.hz-snow{position:absolute;inset:0;display:none}
+.hz-snow i{top:-8px;width:3px;height:3px;border-radius:50%;background:rgba(240,244,250,.75);opacity:.7;animation:hzsnow 50s linear infinite}
+.hz-snow i:nth-child(3n){width:2px;height:2px;opacity:.5}
+/* the choices on top */
+.hz-ui{position:relative;z-index:1;flex:1 1 auto;min-height:0;overflow:auto;display:flex;flex-direction:column;padding:16px 18px calc(14px + env(safe-area-inset-bottom))}
+.hz-ui>.hz-top{padding-right:36px}
+.hz-full .hz-top h2,.hz-full .hz-top .sub{text-shadow:0 1px 2px #000,0 0 12px rgba(0,0,0,.9)}
+.hz-full .hz-top h2{border-bottom-color:rgba(214,178,94,.5)}
+.hz-full .hz-track li{background:rgba(6,7,9,.45)}
+.hz-low{margin-top:auto;padding-top:24px;width:100%;max-width:600px;align-self:center}
+.hz-full .hz-heat{background:rgba(8,9,11,.78)}
+.hz-full .hz-say{background:rgba(8,9,11,.78)}
+.hz-full .hz-opt{background:rgba(12,13,16,.82)}
+.hz-full .hz-opt:hover:not([disabled]),.hz-full .hz-opt:focus-visible{background:linear-gradient(90deg,rgba(232,196,106,.18),rgba(12,13,16,.86))}
+.hz-full .hz-vote{background:rgba(40,32,14,.82)}
+.hz-card .hz-cardpic{position:absolute;left:0;right:0;top:0;height:92px;z-index:1;background-size:cover;border-bottom:1px solid rgba(214,178,94,.25)}
+.hz-card .hz-cardpic.none{display:none}
+.hz-card .hz-cardpic:not(.none)~.hz-scene>span{display:none}
+.hz-x{position:absolute;top:10px;right:10px;z-index:2;width:36px;height:36px;display:grid;place-items:center;padding:0;font:400 24px/1 sans-serif;color:#e2d8bf;background:rgba(8,9,11,.6);border:1px solid rgba(226,187,100,.35);border-radius:3px;cursor:pointer}
+.hz-x:hover,.hz-x:focus-visible{border-color:#e2bb64;color:#fbf1d6;outline:none}
+@media (max-width:700px){
+  .modal .sheet.hz.hz-fs{position:fixed;inset:0;width:100%;height:100%;border-radius:0;animation:none}
+  :root .modal .sheet.hz.hz-fs{border:0}
+  .sheet.hz-fs::before,.sheet.hz-fs::after{display:none}
+  .hz-box{width:auto;height:60%;left:50%;transform:translateX(calc(-1 * var(--fx,50%)))}
+  .hz-ui{padding:calc(12px + env(safe-area-inset-top)) 12px calc(12px + env(safe-area-inset-bottom))}
+  .hz-x{top:calc(8px + env(safe-area-inset-top));right:8px}
+  .hz-snow{display:block}
+}
+@keyframes hzbreath{from{transform:scale(1.015)}to{transform:scale(1.025)}}
+@keyframes hzwin{from{opacity:.04}to{opacity:.2}}
+@keyframes hzlamp{0%{opacity:.14}17%{opacity:.21}31%{opacity:.11}46%{opacity:.23}58%{opacity:.16}71%{opacity:.10}86%{opacity:.19}}
+@keyframes hztense{from{opacity:.35}to{opacity:.7}}
+@keyframes hzred{0%,100%{opacity:.08}50%{opacity:.22}}
+@keyframes hzshake{0%,100%{transform:translate(0,0)}20%{transform:translate(-3px,1px)}40%{transform:translate(3px,-2px)}60%{transform:translate(-2px,2px)}80%{transform:translate(2px,-1px)}}
+@keyframes hzsnow{from{transform:translate(0,0)}50%{transform:translate(14px,450px)}to{transform:translate(-6px,900px)}}
+.hz-paused .hz-bg,.hz-paused .hz-bg *{animation-play-state:paused!important}
+@media (prefers-reduced-motion:reduce){.hz-bg,.hz-bg *{animation:none!important}.hz-snow{display:none!important}.hz-tint,.hz-vig,.hz-tense,.hz-red{transition:none}}
+/* [smallpolish] title: the version / world line moved into Settings */
+.title .tver{margin:-4px 0 10px;text-align:center;font-size:13px;color:#b5ad9a}
+/* [smallpolish] chargen on a phone: tabs fit (no step numbers, tighter, a fade where more scroll in), a lower stage and a
+   two-row footer (name + Randomise/Undo/Back/Next on one row, Begin under), so the race card shows */
+@media (max-width:599.98px){
+  .cg{grid-template-rows:minmax(200px,33vh) minmax(0,1fr)}
+  .cghead{padding:8px 12px 2px;align-items:center}.cghead h2{font-size:1.05rem}.cghead .btn{min-height:36px;padding:0 10px;font-size:12px;letter-spacing:.08em}
+  .cgtabs{padding:2px 6px 0;-webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent)}
+  .cgtab{padding:0 8px;font-size:.8rem;letter-spacing:.03em}.cgtab .cgtn{display:none}
+  .cgpanel{padding:8px 12px 12px}
+  .cg-create .cgfoot{grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:6px}
+  .cg-create .cgfoot .cgnm label{display:none}.cg-create .cgfoot .cgnm input{min-height:42px}
+  .cg-create .cgfoot .cgbar{grid-template-columns:repeat(4,42px);gap:4px}.cg-create .cgfoot .cgbar .btn{min-height:42px;padding:0}
+  .cg-create .cgfoot .cgbegin{grid-column:1/-1;min-height:44px}
+}
+/* [smallpolish] Magic: all six tier chips fit on a phone */
+@media (max-width:599.98px){.sb-tiers{gap:4px}.sb-tier{flex:1 1 auto;min-width:0;padding:7px 5px;letter-spacing:0;font-size:11px}}
+/* [smallpolish] Company: four main tabs on one row, Plan / Trophies / Log in a small More row (like Social) */
+.seg.lng-seg{flex-wrap:nowrap;margin-bottom:0}
+.lng-seg button{flex:1 1 0;min-width:0;min-height:46px;padding:4px 2px;font-size:14px;letter-spacing:.06em;line-height:1.15;white-space:normal;overflow-wrap:anywhere}
+.socmore.lng-more{grid-template-columns:repeat(3,minmax(0,1fr));margin:8px 0 10px}
+@media (max-width:420px){.lng-seg button{font-size:12.5px;letter-spacing:.02em}}
+/* [smallpolish] PC map on big screens: the docked cards and the quest tracker read 10% larger */
+@media (min-width:1600px){
+  html.pcmap #topcards,html.pcmap div:has(> #mapwrap) > #topcards{zoom:1.1;max-height:calc(var(--dock-max,calc(100vh - 220px)) / 1.1)}
+  html.pcmap .pcquest{zoom:1.1}
+  html.pcmap .pcb-clock,html.pcmap .pcb-stat,html.pcmap .pcb-btn{font-size:14.5px}
+}
+>>>>>>> origin/main
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -4573,6 +4682,7 @@ canvas.dunfx{position:absolute;inset:0;width:100%;height:100%;pointer-events:non
 <script src="partytraps.js"></script>
 <script src="hunting.js"></script>
 <script src="bonds.js"></script>
+<script src="meeko.js"></script>
 <script src="scenegrade.js"></script>
 <script src="fishart.js"></script>
 <script src="fishing.js"></script>
@@ -4597,6 +4707,7 @@ canvas.dunfx{position:absolute;inset:0;width:100%;height:100%;pointer-events:non
 <script src="desktop.js"></script>
 <script src="pcupdate.js"></script>
 <script src="treasure.js"></script>
+<script src="heistscene.js"></script>
 <script src="heists.js"></script>
 <script src="chargebar.js"></script>
 <script src="i18n_story.js"></script>
@@ -4668,6 +4779,7 @@ canvas.dunfx{position:absolute;inset:0;width:100%;height:100%;pointer-events:non
 <script src="i18n_chargen.js"></script>
 <script src="i18n_gore.js"></script>
 <script src="i18n_appicon.js"></script>
+<script src="i18n_smallpolish.js"></script>
 <script src="i18n_tourney.js"></script>
 <script src="i18n_partytraps.js"></script>
 <script src="i18n_fishhunt.js"></script>

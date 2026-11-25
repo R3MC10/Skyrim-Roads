@@ -4,6 +4,7 @@
 var I18N_LONGHOUSE = (() => {
   const TPL = {
     // ---- errors and replies
+    "More": "Więcej",
     "You're not in a company.": "Nie należysz do kompanii.",
     "The longhouse didn't answer. Try again.": "Długi dom nie odpowiada. Spróbuj jeszcze raz.",
     "You're already in a company.": "Już należysz do kompanii.",

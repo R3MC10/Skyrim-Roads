@@ -98,6 +98,9 @@
                                          dagon azura nocturnal hircine boethiah meridia. The line glyph stays as the fallback.
      expedition-table         1920×1080  the Expedition Table backdrop (expedition.js), shown darkened behind the offers, WebP q80
      exp-<id>                 1280×480   8:3 offer thumbnails (expedition.js TPL): courier wolves relic caravan outlaw beast. No text.
+     heist-<house>            2048×1152  painted night scene of each heist house (heistscene.js), lit window as the focus, calm
+                                         dark yard in the bottom third for the choices. WebP q80. houses: battleborn
+                                         shattershield erikur silverblood blackbriar (the ids in heists.js HOUSES)
      ui-panel                 1024×1024  tileable dark panel texture
      ui-parchment             1024×1024  tileable parchment texture
      ui-compass               1254×1254  transparent compass rose
@@ -109,6 +112,7 @@
        armour sets (helmet/armor/gauntlets/boots/shield) hide leather iron steel chainmail elven dwarven ancient-nord
        stalhrim chitin bonemold forsworn guild nightingale shrouded; weapons iron/steel/elven/dwarven/ancient-nord/
        stalhrim/skyforge-steel swords, war axes, greatswords, battleaxes, daggers, maces, bows, crossbows, staffs.
+       Painted so far: the heist loot and tools icon-hs-signet -compass -goblet -torc -brooch -papers -draught (WebP q85).
 
    API: ASSETS.img(key) → a loaded HTMLImageElement or null (asks for the file the first time).
         ASSETS.state(key) → "ok" | "loading" | "none" (asks for the file the first time).
