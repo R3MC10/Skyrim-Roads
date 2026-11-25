@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b266-itemdetail", build: 266, date: "25 Nov 2026", title: "Item details beside the list", items: [
+      "On a PC, resting the mouse on an item in your pack shows its details in the right-hand panel instead of a box over the list. Click an item to keep it there; press Esc to let go.",
+      "Weapons, armour, shields and jewellery now show how they compare with what you wear: damage, armour, weight and value, better in green and worse in red. A two-handed weapon is compared with both your hands.",
+      "On a phone, the item details panel at the bottom is solid (the list no longer shows through) and never takes more than about half the screen.",
+      "When you pick one category, the middle column says what it shows: Damage, Armor or Effect.",
+    ] },
     { id: "b265-qacore3", build: 265, date: "25 Nov 2026", title: "Crafting in Polish", items: [
       "Fixed: in Polish, the arcane enchanter, parts of the alchemy lab and one cooking recipe were still in English.",
       "Fixed: in Polish, the messages after brewing, cooking, eating a meal and improving gear were half in English.",

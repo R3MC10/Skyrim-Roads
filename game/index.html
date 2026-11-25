@@ -4713,6 +4713,15 @@ body.nf-p0 #pbanners,body.nf-p0 #skillup,body.nf-p0 #lvln,body.nf-p0 #hudlog{vis
 #tbf .fc-aimbar .fc-who:active{background:rgba(96,66,24,.95)}
 /* [notify-2] an onboarding tip waits, hidden, while it would cover the dungeon route strip */
 #obtip.obwait{visibility:hidden;pointer-events:none}
+/* [itemdetail] itemcmp.js: an item against what you wear (Items side panel and the tooltip / phone sheet) */
+.ic-cmp{margin:8px 0 4px;padding:6px 0 4px;border-top:1px solid rgba(236,230,214,.12);font-size:.94em}
+.ic-cmp .ic-h{margin:0 0 3px;color:#a49d8c}.ic-cmp .ic-h b{color:#f4ecd8;font-weight:600}
+.ic-cmp .ic-r{display:flex;justify-content:space-between;gap:12px;padding:1px 0;color:#cfc8b6}
+.ic-cmp .ic-r b{font-weight:600;font-variant-numeric:tabular-nums}
+.ic-cmp .ic-up,.tip .ic-cmp .ic-up{color:#8fdc8a}.ic-cmp .ic-dn,.tip .ic-cmp .ic-dn{color:#ff8b7e}
+.sky-detail .ic-cmp .ic-h.tt-up{color:#8fdc8a}.sky-detail .tt-eq{color:var(--gold)}
+/* the phone's details sheet: solid (the list never shows through) and at most 55% of the screen */
+.tip.tt-sheet{background:#0b0b0a;max-height:55vh}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -5055,6 +5064,7 @@ body.nf-p0 #pbanners,body.nf-p0 #skillup,body.nf-p0 #lvln,body.nf-p0 #hudlog{vis
 <script src="i18n_gptqa.js"></script>
 <script src="i18n_perklayout.js"></script>
 <script src="i18n_crafticons.js"></script>
+<script src="i18n_itemdetail.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>
@@ -5066,6 +5076,7 @@ body.nf-p0 #pbanners,body.nf-p0 #skillup,body.nf-p0 #lvln,body.nf-p0 #hudlog{vis
 <script src="areaui.js"></script>
 <script src="mappanel.js"></script>
 <script src="beastpaths.js"></script>
+<script src="itemcmp.js"></script>
 <script src="tooltip.js"></script>
 <script src="fighttips.js"></script>
 <script src="bossfight.js"></script>
