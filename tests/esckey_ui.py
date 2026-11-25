@@ -65,11 +65,15 @@ async def main():
                 await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
                 for _ in range(3):
                     name = await pg.evaluate(JUMP); print(tag, "event:", name)
-                    try: await pg.wait_for_selector("#gev .gev-strip", timeout=8000); break
+                    try: await pg.wait_for_selector("#gev .gev-strip, #gev .gevs-news", timeout=8000); break
                     except Exception: print("no notices yet, jumping again")
                 await pg.wait_for_timeout(2500); await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
                 await pg.evaluate("__ui.go('map')"); await pg.wait_for_timeout(3000); await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
                 await pg.evaluate("document.querySelector('#gev')?.scrollIntoView({block:'center'})"); await pg.wait_for_timeout(1200)
+                # [mapread] economy notices sit in a shut "World news (n)" drawer; open it to reach their x buttons
+                if await pg.query_selector("#gev .gevs-news[aria-expanded=false]"):
+                    await pg.click("#gev .gevs-news"); await pg.wait_for_timeout(500)
+                    check(await pg.query_selector("#gev .gevs-drawer") is not None, f"{tag}: World news opens into a drawer")
                 n_strips = await pg.evaluate("document.querySelectorAll('#gev .gev-strip').length")
                 check(await pg.query_selector("#gev .gevs-fold") is not None and n_strips >= 1, f"{tag}: the event card has a fold button and {n_strips} notice(s)")
                 await shot("open")

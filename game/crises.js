@@ -625,41 +625,61 @@ const CRISES = (() => {
     g.stroke();
   }
   /* where the sign goes: left of the town by default; if a card docked over the map (mapdock.js) would cover it, the right
-     side of the town, else nudged out just past the card's edge with a thin line back to the town */
-  function signSpot(g, x, y, s, txt, dock) {
+     side of the town, else nudged out just past the card's edge with a thin line back to the town.
+     [mapread] avoid: the map's label boxes so far (your party, the objective, town names, place icons): the sign takes
+     the first of six spots round the town that's free of them, and only falls back to the old rule when none is */
+  function signSpot(g, x, y, s, txt, dock, avoid) {
     g.font = `700 ${Math.round(8.5 * s)}px GameIcons, sans-serif`;
     const tw = g.measureText(txt).width, pad = 4 * s;
     const box = (ox, oy, right) => right ? [ox - 10 * s, oy - 10 * s, 22 * s + tw + pad, 26 * s] : [ox - 12 * s - tw - pad, oy - 10 * s, 22 * s + tw + pad, 26 * s];
-    const hits = (b) => (dock || []).filter(([X, Y, Wd, Hd]) => b[0] < X + Wd && b[0] + b[2] > X && b[1] < Y + Hd && b[1] + b[3] > Y);
-    const left = { ox: x - 26 * s, oy: y - 8 * s, right: false };
-    if (!hits(box(left.ox, left.oy, false)).length) return left;
-    const right = { ox: x + 26 * s, oy: y - 8 * s, right: true };
-    if (!hits(box(right.ox, right.oy, true)).length) return right;
-    const edge = Math.max(...hits(box(right.ox, right.oy, true)).map(([X, , Wd]) => X + Wd));
-    return { ox: edge + 14 * s, oy: y - 8 * s, right: true, line: true };
+    const over = (list, b) => (list || []).filter(([X, Y, Wd, Hd]) => b[0] < X + Wd && b[0] + b[2] > X && b[1] < Y + Hd && b[1] + b[3] > Y);
+    const hits = (b) => over(dock, b);
+    const at = (c) => ({ ...c, box: box(c.ox, c.oy, c.right) });
+    if (avoid) {
+      const spots = [[-26, -8, false], [26, -8, true], [-26, -30, false], [26, -30, true], [-26, 16, false], [26, 16, true]];
+      for (const [dx, dy, right] of spots) { const c = at({ ox: x + dx * s, oy: y + dy * s, right }); if (!hits(c.box).length && !over(avoid, c.box).length) return c; }
+    }
+    const left = at({ ox: x - 26 * s, oy: y - 8 * s, right: false });
+    if (!hits(left.box).length) return left;
+    const right = at({ ox: x + 26 * s, oy: y - 8 * s, right: true });
+    if (!hits(right.box).length) return right;
+    const edge = Math.max(...hits(right.box).map(([X, , Wd]) => X + Wd));
+    return at({ ox: edge + 14 * s, oy: y - 8 * s, right: true, line: true });
   }
-  function drawMap(g, P, s, t, rm, dock) {
-    const S = me(); if (!S || typeof WORLD === "undefined") return;
-    const now = nowS(), tt = rm ? 0 : t || 0;
-    let list = []; try { list = around(now); } catch (e) { return; }
+  /* [mapread] the signs to draw and where: map.js calls this once the higher-priority labels are placed (so the signs
+     keep clear of them), and the signs' own boxes go into avoid so patrols, wagons and pins keep clear of the signs */
+  function plan(g, P, s, dock, avoid) {
+    const S = me(); if (!S || typeof WORLD === "undefined") return [];
+    const now = nowS(), out = [];
+    let list = []; try { list = around(now); } catch (e) { return []; }
     for (const cr of list) {
       const p = WORLD.places[cr.place]; if (!p) continue;
       const st = status(cr, S, now); if (st.state !== "active" && st.state !== "boss") continue;
-      const [x, y] = P(p), ch = CHAINS[cr.chain], pu = rm ? 0.5 : (Math.sin(tt * 2 + cr.c) + 1) / 2;
+      const [x, y] = P(p), ch = CHAINS[cr.chain];
       const txt = st.state === "boss" ? T("Ringleader!") : T(ch.stages[st.stage - 1][0]);
+      g.save(); const sp = signSpot(g, x, y, s, txt, dock, avoid); g.restore();   // beside the town, clear of the great event marker and the docked cards
+      if (avoid) avoid.push(sp.box);
+      out.push({ cr, st, x, y, ch, txt, sp });
+    }
+    return out;
+  }
+  function drawMap(g, P, s, t, rm, dock, pre) {
+    const items = Array.isArray(pre) ? pre : plan(g, P, s, dock);
+    const tt = rm ? 0 : t || 0;
+    for (const { cr, st, x, y, ch, txt, sp } of items) {
+      const pu = rm ? 0.5 : (Math.sin(tt * 2 + cr.c) + 1) / 2, ox = sp.ox, oy = sp.oy;
       g.save();
-      const sp = signSpot(g, x, y, s, txt, dock), ox = sp.ox, oy = sp.oy;   // beside the town, clear of the great event marker and the docked cards
       g.strokeStyle = ch.color; g.globalAlpha = 0.35 + 0.35 * pu; g.lineWidth = 2 * s;
       g.beginPath(); g.arc(x, y, (22 + st.stage * 2 + 3 * pu) * s, 0, 7); g.stroke();
       g.globalAlpha = 1;
-      if (sp.line) { g.strokeStyle = ch.color; g.globalAlpha = 0.7; g.lineWidth = 1.2 * s; g.beginPath(); g.moveTo(x + 6 * s, y - 3 * s); g.lineTo(ox - 9 * s, oy); g.stroke(); g.globalAlpha = 1; }
+      if (sp.line || Math.abs(oy - (y - 8 * s)) > 2 * s) { g.strokeStyle = ch.color; g.globalAlpha = 0.7; g.lineWidth = 1.2 * s; g.beginPath(); g.moveTo(x + (ox > x ? 6 : -6) * s, y - 3 * s); g.lineTo(ox + (ox > x ? -9 : 9) * s, oy); g.stroke(); g.globalAlpha = 1; }   // a thin line back to the town when the sign had to move
       g.fillStyle = "rgba(20,14,8,.85)"; g.beginPath(); g.arc(ox, oy, 9 * s, 0, 7); g.fill();
       g.strokeStyle = st.state === "boss" ? "#ffb38a" : ch.color; g.lineWidth = 1.4 * s; g.beginPath(); g.arc(ox, oy, 9 * s, 0, 7); g.stroke();
       g.lineCap = "round"; drawGlyph(g, ch.icon, ox, oy, 5 * s);
       // five stage pips under the glyph
       for (let i = 0; i < STAGES; i++) { g.fillStyle = i < st.stage ? (st.state === "boss" ? "#ffb38a" : ch.color) : "rgba(20,14,8,.7)"; g.beginPath(); g.arc(ox - 8 * s + i * 4 * s, oy + 13 * s, 1.5 * s, 0, 7); g.fill(); }
       const tx = sp.right ? ox + 12 * s : ox - 12 * s;
-      g.font = `700 ${Math.round(8.5 * s)}px GameIcons, sans-serif`; g.textAlign = sp.right ? "left" : "right"; g.lineWidth = 3 * s; g.strokeStyle = "rgba(20,14,8,.88)"; g.strokeText(txt, tx, oy + 3 * s); g.fillStyle = st.state === "boss" ? "#ffb38a" : "#f1e4c6"; g.fillText(txt, tx, oy + 3 * s);
+      g.font = `700 ${Math.round(8.5 * s)}px GameIcons, sans-serif`; g.textAlign = sp.right ? "left" : "right"; g.lineJoin = "round"; g.lineWidth = 2.2 * s; g.strokeStyle = "rgba(20,14,8,.8)"; g.strokeText(txt, tx, oy + 3 * s); g.fillStyle = st.state === "boss" ? "#ffb38a" : "#f1e4c6"; g.fillText(txt, tx, oy + 3 * s);
       g.restore();
     }
   }
@@ -743,5 +763,5 @@ const CRISES = (() => {
   return { HOLDS, CAPITAL, VARS, BASE, CHAINS, CONTRACTS, CYCLE, STAGE, SPAN, STAGES, AFTER, FOE, BOSS, NEED_SOLO, NEED_PER, PLAYER_CAP, ALL_CAP, FOOD_N, FOOD_MAX, CONTRACT_CD, BOSS_CD,
     cycleAt, baseline, snowiness, pressure, picks, byId, around, setDocs, mine, record, rows, deeds, tally, status, crisisIn, values, level, needFor,
     priceMult, encounterMult, deed, onFight, contract, contractBlock, boss, bossBlock, makeFoe, claimable, claim, foodCount,
-    sheetHTML, townLine, strips, sig, drawMap, mount, openSheet, hookWorld, _dirty: () => isDirty };
+    sheetHTML, townLine, strips, sig, drawMap, plan, signSpot, mount, openSheet, hookWorld, _dirty: () => isDirty };
 })();

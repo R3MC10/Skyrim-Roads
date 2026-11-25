@@ -359,6 +359,29 @@ const WorldMap = (() => {
 
   // ---- fog: rebuilt only when what you've seen changes
   let fog = null, fogKey = "";
+  const EXPLORED_CLEAR = 0.8;   // how much of the mist lifts over explored land (0.94 mist → about 19% left)
+  /* the holds the seen points lie in (Skyrim only; Solstheim is one small island and keeps the plain rings) */
+  function exploredHolds(pts, region = "") {
+    if (region) return [];
+    const out = new Set(); for (const p of pts) if (p && isFinite(p[0]) && isFinite(p[1])) out.add(HOLD_NAMES[holdIndex(p[0], p[1])]);
+    return [...out].filter(Boolean);
+  }
+  /* a soft mask (white = explored) at half the map's units: the holds you know plus a wide ring round each seen point */
+  let lmask = null;
+  function exploredMask(pts, region) {
+    if (typeof document === "undefined") return null;
+    lmask = lmask || document.createElement("canvas"); lmask.width = W / 2; lmask.height = H / 2;
+    const m = lmask.getContext("2d"); m.setTransform(0.5, 0, 0, 0.5, 0, 0); m.clearRect(0, 0, W, H);
+    if ("filter" in m) m.filter = "blur(6px)";
+    for (const h of exploredHolds(pts, region)) m.drawImage(tintFor(h, "#ffffff"), 0, 0, W, H);
+    m.filter = "none";
+    for (const p of pts) {
+      const [x, y] = P(p), R = 130, grd = m.createRadialGradient(x, y, 40, x, y, R);
+      grd.addColorStop(0, "rgba(255,255,255,1)"); grd.addColorStop(1, "rgba(255,255,255,0)");
+      m.fillStyle = grd; m.fillRect(x - R, y - R, R * 2, R * 2);
+    }
+    return lmask;
+  }
   function fogFor(pts, region = "") {
     const key = region + pts.length + ":" + (pts[pts.length - 1] || []).join(",");
     if (fog && key === fogKey) return fog;
@@ -376,6 +399,10 @@ const WorldMap = (() => {
     for (let d = -H; d < W; d += 4.5) { const w = Math.sin(d * 0.07) * 1.5; g.moveTo(d, H); g.lineTo(d + H * 0.6 + w, 0); }
     g.stroke();
     g.globalCompositeOperation = "destination-out";
+    // [mapread] explored land: every hold you've set foot in (and a wide ring round your trail) sits under a light
+    // veil (about a fifth of the mist), so the painting reads; land you've never been near stays dark
+    const lm = exploredMask(pts, region);
+    if (lm) { g.globalAlpha = EXPLORED_CLEAR; g.drawImage(lm, 0, 0, W, H); g.globalAlpha = 1; }
     for (const p of pts) {
       const [x, y] = P(p), grd = g.createRadialGradient(x, y, 22, x, y, 72);
       grd.addColorStop(0, "rgba(0,0,0,1)"); grd.addColorStop(1, "rgba(0,0,0,0)");
@@ -400,9 +427,10 @@ const WorldMap = (() => {
     else { g.fillStyle = "#6e1914"; g.strokeStyle = light; g.beginPath(); g.moveTo(x, y - R); g.lineTo(x + R, y + R * 0.8); g.lineTo(x - R, y + R * 0.8); g.closePath(); g.fill(); g.stroke(); }
     if (selected) { g.strokeStyle = "#9fd0f0"; g.lineWidth = 2.6 * s; g.beginPath(); g.arc(x, y, R * 2.2, 0, 7); g.stroke(); }
   }
-  function label(g, text, x, y, s, size, color = "#fbf3dc", weight = 700, italic = false, align = "center") {
+  const LABEL_HALO = 2.3;   // the dark ring round map words, in CSS px (was 3.4)
+  function label(g, text, x, y, s, size,color = "#fbf3dc", weight = 700, italic = false, align = "center") {
     g.font = FONT(size * s, weight, italic ? "italic" : ""); g.textAlign = align; g.textBaseline = "middle";
-    g.lineJoin = "round"; g.lineWidth = 3.4 * s; g.strokeStyle = "rgba(24,17,10,.95)"; g.fillStyle = color;
+    g.lineJoin = "round"; g.lineWidth = LABEL_HALO * s; g.strokeStyle = "rgba(24,17,10,.78)"; g.fillStyle = color;   // [mapread] a thinner, softer halo
     g.strokeText(text, x, y); g.fillText(text, x, y);
   }
 
@@ -475,6 +503,46 @@ const WorldMap = (() => {
     g.strokeStyle = "rgba(214,182,110,.45)"; g.lineWidth = 1 * dpr; g.strokeRect(ox - 5 * dpr, oy - 5 * dpr, mw + 10 * dpr, mh + 10 * dpr);
     g.restore();
   }
+  /* [mapread] cluster pins: below CLUSTER_ZOOM, hold patrols and passing wagons (not yours, not one close enough to
+     hail) within CLUSTER_PX screen pixels of each other are drawn as one pin with a count; zoom in and they split up */
+  const CLUSTER_ZOOM = 3, CLUSTER_PX = 72;
+  function clusterMovers(v, P, s) {
+    const out = { skip: new Set(), pins: [] };
+    if (!(v.zoom < CLUSTER_ZOOM)) return out;
+    const items = [];
+    for (const c of v.caravans || []) if (c && c.visible && !c.near && !c.mine && c.pos) items.push({ o: c, kind: "wagon", pos: P(c.pos) });
+    for (const q of v.guards || []) if (q && q.visible && q.pos) items.push({ o: q, kind: "guards", pos: P(q.pos) });
+    const R = CLUSTER_PX * s, used = new Set();
+    for (const a of items) {
+      if (used.has(a)) continue;
+      const grp = items.filter((b) => !used.has(b) && Math.hypot(b.pos[0] - a.pos[0], b.pos[1] - a.pos[1]) <= R);
+      if (grp.length < 2) continue;
+      for (const b of grp) { used.add(b); out.skip.add(b.o); }
+      out.pins.push({ x: grp.reduce((t, b) => t + b.pos[0], 0) / grp.length, y: grp.reduce((t, b) => t + b.pos[1], 0) / grp.length, n: grp.length, items: grp });
+    }
+    return out;
+  }
+  function drawCluster(g, pin, s, boxes) {
+    const { x, y, n, items } = pin;
+    // up to two of its members, small and side by side, under a round count badge
+    const show = items.slice(0, 2);
+    show.forEach((it, i) => {
+      const dx = (show.length === 1 ? 0 : i ? 7 : -7) * s;
+      let sp = null;
+      try { sp = it.kind === "wagon" ? (typeof CARAVANS !== "undefined" ? CARAVANS.sprite(it.o.khajiit, true) : null) : (typeof GUARDS !== "undefined" ? GUARDS.sprite(it.o.hold) : null); } catch { sp = null; }
+      if (!sp) return;
+      if (it.kind === "wagon") g.drawImage(sp, x + dx - 13 * s, y - 16 * s, 26 * s, 19 * s);
+      else g.drawImage(sp, x + dx - 9 * s, y - 16 * s, 18 * s, 17 * s);
+    });
+    // the badge sits top-right unless a name or pin is already there, then top-left
+    const r = 7.5 * s, by = y - 17 * s, hitAt = (cx) => (boxes || []).some(([X, Y, Wd, Hd]) => cx - r < X + Wd && cx + r > X && by - r < Y + Hd && by + r > Y);
+    const bx = hitAt(x + 12 * s) && !hitAt(x - 12 * s) ? x - 12 * s : x + 12 * s;
+    g.fillStyle = "rgba(20,14,8,.9)"; g.beginPath(); g.arc(bx, by, r, 0, 7); g.fill();
+    g.strokeStyle = "#d8b46a"; g.lineWidth = 1.4 * s; g.beginPath(); g.arc(bx, by, r, 0, 7); g.stroke();
+    g.fillStyle = "#fbf0d0"; g.font = `700 ${Math.round(9.5 * s)}px "Barlow Semi Condensed", system-ui, sans-serif`; g.textAlign = "center"; g.textBaseline = "middle";
+    g.fillText(String(n), bx, by + 0.5 * s);
+    if (boxes) boxes.push([x - 20 * s, y - 25 * s, 40 * s, 29 * s]);
+  }
   function draw(canvas, v) {
     // Solstheim has its own painted map (solart.js); its places sit SOL_OY map-heights below Skyrim's
     const SV = v.region === "solstheim" && typeof SOLART !== "undefined" ? SOLART : null, OY = SV ? WORLD.SOL_OY : 0, OYH = OY * H;
@@ -531,6 +599,31 @@ const WorldMap = (() => {
     g.restore();   // (the clip to the map)
     if (OY) g.setTransform(k, 0, 0, k, ox, oy - OYH * k);   // from here on: world coordinates
     const [px, py] = P(v.player);
+    /* [mapread] who gets room first when words and markers crowd: 1 your party (your name and figure, party members),
+       2 the objective (the quest marker, where you're heading), 3 cities then towns, 4 the rest (crisis signs, then
+       camps, pins, patrols, wagons...). Each tier's boxes go in first, so later tiers move aside or wait for a closer zoom. */
+    const boxes = [], dockBoxes = [];
+    // the cards docked over the map (event, raid, caravan: mapdock.js) and the party / quest panels: no names under them
+    stats.dockBlocks = 0;
+    if (typeof MAPDOCK !== "undefined" && g.getTransform && canvas.getBoundingClientRect) try {
+      const cr = canvas.getBoundingClientRect(), inv = g.getTransform().invertSelf(), kx = canvas.width / (cr.width || 1), ky = canvas.height / (cr.height || 1);
+      for (const r of MAPDOCK.rects()) {
+        const a = inv.transformPoint({ x: (r.left - cr.left) * kx, y: (r.top - cr.top) * ky }), b = inv.transformPoint({ x: (r.right - cr.left) * kx, y: (r.bottom - cr.top) * ky });
+        const db = [Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(b.x - a.x), Math.abs(b.y - a.y)]; boxes.push(db); dockBoxes.push(db); stats.dockBlocks++;
+      }
+    } catch { /* no layout to ask: draw names as before */ }
+    // tier 1: your own name and figure, so nothing covers them
+    const HF = typeof MAPHERO !== "undefined" && MAPHERO.ok() ? MAPHERO : null;   // heroes as little figures (maphero.js)
+    const myTop = py - (v.horse ? 46 : 39) * s - 7 * s;
+    // standing in a town, heroes step aside so the town's own icon stays in sight: you to its right, others to its left
+    const hx = HF && v.atPlace && !v.moving ? px + 18 * s : px, townSlot = {};
+    g.font = FONT(14 * s, 700, ""); { const w = g.measureText(v.name).width; boxes.push(HF ? [hx - w / 2, myTop - 9 * s, w, 18 * s] : [px + 12 * s, py - 13 * s - 9 * s, w, 18 * s]); if (HF) boxes.push([hx - 12 * s, myTop + 9 * s, 24 * s, py - myTop - 9 * s]); }   // and your figure, so names never sit on it
+    // ... and your party members: room for their figure and name (given back just before their names are placed)
+    const partyRes = [];
+    for (const o of v.others || []) if (o.party && o.pos) { const [ox2, oy2] = P(o.pos), b = [ox2 - 36 * s, oy2 - 44 * s, 100 * s, 48 * s]; partyRes.push(b); boxes.push(b); }
+    // tier 2: the objective (the quest's gold diamond; the name of where you're heading is added where it's drawn)
+    if (v.quest) { const [qx, qy] = P(v.quest); boxes.push([qx - 13 * s, qy - 13 * s, 26 * s, 26 * s]); }
+    stats.tiers = { party: 1 + partyRes.length, objective: v.quest ? 1 : 0 };
     if (v.sight || v.sneakRing) {   // fog of war: how far you see other heroes; sneaking: how close they must come to see you (sneakmode.js)
       g.save();
       if (v.sight) { g.setLineDash([5 * s, 7 * s]); g.strokeStyle = "rgba(230,220,190,.3)"; g.lineWidth = 1.3 * s; g.beginPath(); g.arc(px, py, v.sight, 0, 7); g.stroke(); }
@@ -558,7 +651,8 @@ const WorldMap = (() => {
       if (rt < 1) g.globalAlpha = rt;
       const [bx, by] = P(v.route[v.route.length - 1]);
       g.strokeStyle = "#fff0cd"; g.lineWidth = 2.4 * s; g.beginPath(); g.arc(bx, by, 9 * s, 0, 7); g.stroke();
-      if (v.dest && !v.discovered.includes(v.dest.name)) label(g, v.dest.roam ? " " + v.dest.name : v.dest.name + " ?", bx + 13 * s, by, s, 15, "#ffeac0", 700, false, "left");
+      if (v.dest && !v.discovered.includes(v.dest.name)) { const dt = v.dest.roam ? " " + v.dest.name : v.dest.name + " ?"; g.font = FONT(15 * s, 700, ""); boxes.push([bx + 11 * s, by - 10 * s, g.measureText(dt).width + 4 * s, 20 * s]); label(g, dt, bx + 13 * s, by, s, 15, "#ffeac0", 700, false, "left"); }
+      boxes.push([bx - 11 * s, by - 11 * s, 22 * s, 22 * s]);
       g.globalAlpha = 1;
     }
     if (v.spot) {   // a tapped spot for free roam
@@ -587,24 +681,21 @@ const WorldMap = (() => {
         g.drawImage(m.c, x * W - w / 2, y * H - h * 0.62, w, h);
       }
     } else for (const [n, x, y, kind] of shown) icon(g, kind, x * W, y * H, s * (kind === "city" || kind === "town" || v.selected === n ? 1 : small), v.selected === n);
-    const boxes = [], dockBoxes = [];
-    // the cards docked over the map (event, raid, caravan: mapdock.js) and the party / quest panels: no names under them
-    stats.dockBlocks = 0;
-    if (typeof MAPDOCK !== "undefined" && g.getTransform && canvas.getBoundingClientRect) try {
-      const cr = canvas.getBoundingClientRect(), inv = g.getTransform().invertSelf(), kx = canvas.width / (cr.width || 1), ky = canvas.height / (cr.height || 1);
-      for (const r of MAPDOCK.rects()) {
-        const a = inv.transformPoint({ x: (r.left - cr.left) * kx, y: (r.top - cr.top) * ky }), b = inv.transformPoint({ x: (r.right - cr.left) * kx, y: (r.bottom - cr.top) * ky });
-        const db = [Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(b.x - a.x), Math.abs(b.y - a.y)]; boxes.push(db); dockBoxes.push(db); stats.dockBlocks++;
-      }
-    } catch { /* no layout to ask: draw names as before */ }
+    // tier 3 (cities, then towns) and the places of tier 4: cities and towns that would sit on a higher tier try a line
+    // lower, then above their icon; smaller places are simply left out until you zoom in
+    stats.placeNamesMoved = 0;
     for (const [n, x, y, kind] of shown) {
       if (!(v.zoom >= KIND_MIN_ZOOM[kind] || v.selected === n)) continue;
       const size = kind === "city" ? 16 : 14, italic = ["dungeon", "fort", "camp", "lair", "stone", "shrine"].includes(kind);
       g.font = FONT(size * s, kind === "city" ? 700 : 600, italic ? "italic" : "");
-      const w = g.measureText(n).width, bx = x * W - w / 2 - 2 * s, by = y * H + 9 * s, bw = w + 4 * s, bh = size * s * 1.2;
-      if (n !== v.selected && boxes.some(([X, Y, Wd, Hd]) => bx < X + Wd && bx + bw > X && by < Y + Hd && by + bh > Y)) continue;
-      boxes.push([bx, by, bw, bh]);
-      label(g, n, x * W, y * H + (MA ? (kind === "city" ? 20 : 16) : 17) * s, s, size, "#fbf3dc", kind === "city" ? 700 : 600, italic);
+      const w = g.measureText(n).width, bx = x * W - w / 2 - 2 * s, bw = w + 4 * s, bh = size * s * 1.2, dy0 = (MA ? (kind === "city" ? 20 : 16) : 17) * s;
+      const tries = n === v.selected || !(kind === "city" || kind === "town") ? [dy0] : [dy0, dy0 + bh, -dy0 - 6 * s];
+      const free = (dy) => { const by = y * H + dy - 11 * s; return !boxes.some(([X, Y, Wd, Hd]) => bx < X + Wd && bx + bw > X && by < Y + Hd && by + bh > Y); };
+      const dy = n === v.selected ? dy0 : tries.find(free);
+      if (dy === undefined) continue;
+      if (dy !== dy0) stats.placeNamesMoved++;
+      boxes.push([bx, y * H + dy - 11 * s, bw, bh]);
+      label(g, n, x * W, y * H + dy, s, size, "#fbf3dc", kind === "city" ? 700 : 600, italic);
     }
     // hold / province / sea names: faint, under nothing important (places, their names, icons, you)
     if (painted) {
@@ -624,6 +715,9 @@ const WorldMap = (() => {
     for (const [, x, y] of shown) boxes.push([x * W - 8 * s, y * H - 11 * s, 16 * s, 18 * s]);
     // people and bags: try a few spots around each dot and take the first that doesn't cover another label
     const hit = (bx, by, bw, bh) => boxes.some(([X, Y, Wd, Hd]) => bx < X + Wd && bx + bw > X && by < Y + Hd && by + bh > Y);
+    // tier 4 begins with the crisis signs (crises.js): placed clear of everything above, drawn later over the wagons
+    let crSigns = null;
+    if (typeof CRISES !== "undefined" && CRISES.plan) try { crSigns = CRISES.plan(g, P, s, dockBoxes, boxes); } catch { crSigns = null; }
     /* must: a hero's name or a dropped bag always shows; anything else is left out when there's no free spot, and
        comes back once you zoom in and there's room */
     function smartLabel(text, x, y, size, color, must) {
@@ -650,12 +744,6 @@ const WorldMap = (() => {
       label(g2, text, x, at, s2, size, color, weight, italic);
     }
     stats.labelsSkipped = 0;
-    // your own name goes first so nothing covers it
-    const HF = typeof MAPHERO !== "undefined" && MAPHERO.ok() ? MAPHERO : null;   // heroes as little figures (maphero.js)
-    const myTop = py - (v.horse ? 46 : 39) * s - 7 * s;
-    // standing in a town, heroes step aside so the town's own icon stays in sight: you to its right, others to its left
-    const hx = HF && v.atPlace && !v.moving ? px + 18 * s : px, townSlot = {};
-    g.font = FONT(14 * s, 700, ""); { const w = g.measureText(v.name).width; boxes.push(HF ? [hx - w / 2, myTop - 9 * s, w, 18 * s] : [px + 12 * s, py - 13 * s - 9 * s, w, 18 * s]); if (HF) boxes.push([hx - 12 * s, myTop + 9 * s, 24 * s, py - myTop - 9 * s]); }   // and your figure, so names never sit on it
     const otherHeads = [];
     for (const o of v.others) {
       let [x, y] = P(o.pos);
@@ -762,20 +850,25 @@ const WorldMap = (() => {
     }
     if (typeof MOTION !== "undefined") { MOTION.trackDiscoveries(v.discovered); MOTION.fogLift(g, s, W, H); }   // fog wipes off new places
     if (MA) { MA.trackDiscoveries(v.discovered); MA.drawBursts(g, s, W, H, v.reduceMotion); }
+    // [mapread] zoomed out, patrols and wagons standing close together become one cluster pin with a count
+    const CL = clusterMovers(v, P, s);
+    stats.clusters = CL.pins.length;
     // caravans rolling between the holds, and your cart behind your horse
     if (v.caravans && typeof CARAVANS !== "undefined") for (const c of v.caravans) {
       const sp = CARAVANS.sprite(c.khajiit, true); if (!sp) continue;
       if (!c.visible) continue;   // only where you've been: no wagons drawn into the fog
+      if (CL.skip.has(c)) continue;   // in a cluster pin
       const [cx, cy] = P(c.pos), bob2 = c.moving && !v.reduceMotion ? Math.sin(v.t * 6 + cx) * 0.8 * s : 0;
       if (c.near) { const pu = v.reduceMotion ? 0.5 : (Math.sin(v.t * 4) + 1) / 2; g.strokeStyle = `rgba(255,224,138,${0.45 + 0.4 * pu})`; g.lineWidth = 2.2 * s; g.beginPath(); g.arc(cx, cy - 10 * s, (20 + 4 * pu) * s, 0, 7); g.stroke(); }   // close enough to hail: tap the wagons (caravanroad.js)
       g.drawImage(sp, cx - 21 * s, cy - 25 * s + bob2, 42 * s, 30 * s);
       if (v.zoom >= 1.5 || c.near) tidyLabel(g, c.near ? `${c.label} · tap to meet` : c.label, cx, cy + 12 * s, s, 11, c.mine || c.near ? "#ffe6a0" : "#f3e7c4", 700, true, !!(c.near || c.mine));
     }
-    if (v.guards && typeof GUARDS !== "undefined") GUARDS.drawMap(g, v.guards, P, s, v.t, v.reduceMotion, v.zoom, tidyLabel);   // hold guards on patrol (guards.js)
+    if (v.guards && typeof GUARDS !== "undefined") GUARDS.drawMap(g, CL.skip.size ? v.guards.filter((q) => !CL.skip.has(q)) : v.guards, P, s, v.t, v.reduceMotion, v.zoom, tidyLabel);   // hold guards on patrol (guards.js)
+    for (const pin of CL.pins) drawCluster(g, pin, s, boxes);
     if (v.raid && typeof RAIDART !== "undefined") RAIDART.mapRaid(g, v.raid, P, s, v.t, v.reduceMotion);   // a dragon over a town (raidart.js)
     if (typeof WORLDEV !== "undefined") WORLDEV.drawMap(g, P, s, v.t, v.reduceMotion);   // gates, dragon flights, the Khajiit market (worldevents.js)
     if (typeof GREATEV !== "undefined") GREATEV.drawMap(g, P, s, v.t, v.reduceMotion);
-    if (typeof CRISES !== "undefined") CRISES.drawMap(g, P, s, v.t, v.reduceMotion, dockBoxes);   // a hold in crisis: sign and stage pips by its capital, kept clear of the docked cards (crises.js)
+    if (typeof CRISES !== "undefined") CRISES.drawMap(g, P, s, v.t, v.reduceMotion, dockBoxes, crSigns);   // a hold in crisis: sign and stage pips by its capital, kept clear of the docked cards (crises.js)
     if (typeof LEGHUNT !== "undefined" && !SV) LEGHUNT.drawMap(g, P, s, null, v.t, v.reduceMotion);   // legendary hunts: rough search areas, never exact (leghunt.js)   // dragon assaults, rifts, sieges, fairs and what they leave behind (greatevents.js)
     if (typeof TOURNEYUI !== "undefined") TOURNEYUI.drawMap(g, P, s, v.t, v.reduceMotion);   // a festival banner over the host town (tourneyui.js)
     if (v.cart && typeof CARAVANS !== "undefined") { const sp = CARAVANS.sprite(false, false); if (sp) { const back = HF && MAPHERO.flipped("me") ? 16 : -50; g.drawImage(sp, px + back * s, py - 16 * s, 34 * s, 24 * s); } }
@@ -790,6 +883,7 @@ const WorldMap = (() => {
       g.beginPath(); g.moveTo(z, 0); g.lineTo(-z * 0.75, -z * 0.85); g.lineTo(-z * 0.3, 0); g.lineTo(-z * 0.75, z * 0.85); g.closePath(); g.stroke(); g.fill();
       g.restore();
     };
+    for (const b of partyRes) { const i = boxes.indexOf(b); if (i >= 0) boxes.splice(i, 1); }   // party members' names take their reserved room
     otherLabels();
     if (HF) {   // you: walking, standing, or in the saddle, facing the way you travel
       const r = HF.draw(g, hx, py, s, { id: "me", look: v.look, horse: v.horse, moving: v.moving, gallop: !!v.gallop, t: v.t, reduce: v.reduceMotion, heading: v.moving ? heading.a : null, ring: "#6ec8ff" });
@@ -831,5 +925,5 @@ const WorldMap = (() => {
     return best;
   }
   const ready = () => { if (typeof PAINTEDMAP !== "undefined" && (PAINTEDMAP.pending() || PAINTEDMAP.image(1))) return; base = base || drawBase(); };
-  return { draw, placeAt, ready, W, H, base: () => (base = base || drawBase()), paintBase: drawBase, paintRoads, paintTop, stats: () => ({ ...stats }), PAINT_MAX, ROAD_STYLE };
+  return { draw, placeAt, ready, clusterMovers, exploredHolds, CLUSTER_ZOOM, LABEL_HALO, EXPLORED_CLEAR, W, H, base: () => (base = base || drawBase()), paintBase: drawBase, paintRoads, paintTop, stats: () => ({ ...stats }), PAINT_MAX, ROAD_STYLE };
 })();
