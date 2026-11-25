@@ -1951,12 +1951,15 @@
   // ------------------------------------------------------------ the Jarl's bounty board
   let lastDragons = null;
   // ------------------------------------------------------------ tutorial: a guided first trip, then one tip per tab
+  /* [qa-core] tutorial lines are translated whole (i18n_qacore.js): the on-screen swap can't reach sentences split by <b> */
+  const LT = (en, v) => typeof I18N !== "undefined" && I18N.t ? I18N.t(en, v) : en.replace(/\{(\w+)\}/g, (m, k) => (v && k in v ? String(v[k]) : m));
+  if (typeof I18N !== "undefined" && I18N.add && typeof I18N_QACORE !== "undefined") I18N.add(I18N_QACORE.tpl);
   const TUT = [
     null,
-    { title: "Your first trip", text: () => ppUI && party && !ppUI.canDecide() ? `Welcome to Skyrim, ${S.name}. You're in a party: the leader picks where to go and you travel with them. Watch the map; the next step starts when you set off.` : `Welcome to Skyrim, ${S.name}. Everything happens in real time. Tap <b>Whiterun</b> on the map and press <b>Travel</b>, or press <b>Go</b> next to it in the list below.${party ? " Your party comes along." : ""}`, done: () => !!S.trip || S.location === "Whiterun" },
-    { title: "On the road", text: () => `You're walking. Trips keep going even when the app is closed, and something may happen by the road${typeof TB !== "undefined" && TB.enabled() ? ": if it's a fight, you play it turn by turn (or press Auto)" : ""}. You can ride a horse later, or take a carriage between cities.`, done: () => !S.trip },
-    { title: "You've arrived", text: () => `Open the <b>Town</b> tab. In towns and cities it has shops, the inn, trainers, the forge, jobs and more${S.location && TOWNS.isTown(S.location) ? "" : " (this spot is out in the wilds, so it shows what you can do here)"}.`, done: () => tab === "town" },
-    { title: "Quests", text: () => "Now open the <b>Journal</b>. Your quests are there, and the gold diamond on the map shows where to go next. Chat and other players are under <b>Social</b>.", done: () => tab === "log" },
+    { title: "Your first trip", text: () => ppUI && party && !ppUI.canDecide() ? LT("Welcome to Skyrim, {name}. You're in a party: the leader picks where to go and you travel with them. Watch the map; the next step starts when you set off.", { name: esc(S.name) }) : LT("Welcome to Skyrim, {name}. Everything happens in real time. Tap <b>Whiterun</b> on the map and press <b>Travel</b>, or press <b>Go</b> next to it in the list below.", { name: esc(S.name) }) + (party ? " " + LT("Your party comes along.") : ""), done: () => !!S.trip || S.location === "Whiterun" },
+    { title: "On the road", text: () => typeof TB !== "undefined" && TB.enabled() ? LT("You're walking. Trips keep going even when the app is closed, and something may happen by the road: if it's a fight, you play it turn by turn (or press Auto). You can ride a horse later, or take a carriage between cities.") : LT("You're walking. Trips keep going even when the app is closed, and something may happen by the road. You can ride a horse later, or take a carriage between cities."), done: () => !S.trip },
+    { title: "You've arrived", text: () => S.location && TOWNS.isTown(S.location) ? LT("Open the <b>Area</b> tab. In towns and cities it has shops, the inn, trainers, the forge, jobs and more.") : LT("Open the <b>Area</b> tab. This spot is out in the wilds, so it shows what you can do here."), done: () => tab === "town" },   // [qa-core] the tab is called Area now
+    { title: "Quests", text: () => LT("Now open the <b>Journal</b>. Your quests are there, and the gold diamond on the map shows where to go next. Chat and other players are under <b>Social</b>."), done: () => tab === "log" },
   ];
   const TAB_TIPS = {
     map: "Start with the “What to do next” card. Press Go to travel; tap any place on the map to see how far it is.",
@@ -1974,7 +1977,7 @@
     if (t.step > 0 && t.step < TUT.length) {
       while (t.step < TUT.length && TUT[t.step].done()) t.step++;
       if (t.step >= TUT.length) { t.step = 0; S.gold += 100; Store.save(S); setTimeout(() => { SOUND.fx("quest"); toast("Tutorial done. Riverwood's steward sends you 100 gold for the road."); }, 300); }
-      else { const st = TUT[t.step]; return `<div class="tut"><div class="tut-h"><b>${esc(st.title)}</b><span class="sub">${t.step} of ${TUT.length - 1}</span></div><p>${st.text()}</p><button class="linkbtn" data-act="tutskip">Skip the tutorial</button></div>`; }
+      else { const st = TUT[t.step]; return `<div class="tut"><div class="tut-h"><b>${esc(LT(st.title))}</b><span class="sub">${esc(LT("{n} of {m}", { n: t.step, m: TUT.length - 1 }))}</span></div><p>${st.text()}</p><button class="linkbtn" data-act="tutskip">${esc(LT("Skip the tutorial"))}</button></div>`; }
     }
     if (guideOffer()) return guideOffer();
     if (TAB_TIPS[tab] && !t.seen?.[tab]) return `<div class="tut"><p> ${TAB_TIPS[tab]}</p><button class="btn sm" data-act="tutseen">Got it</button></div>`;
