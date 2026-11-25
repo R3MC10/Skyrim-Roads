@@ -212,8 +212,16 @@ const TOURNEYUI = (() => {
     if (c) { const e = T.entry(s, c.key, false), done = e ? c.contests.every((k) => T.triesLeft(s, c.key, k) <= 0) : false;
       if (!done) add({ key: `tourney:${c.key}`, kind: "board", icon: c.icon, title: `${c.name} is on`, sub: `${c.place} · ends in ${span(c.end - Date.now())}`, state: "ending", place: c.place, go: goAt(c.place, "town", { shop: "festival" }) }); }
   }
+  /* [smallpolish] map.js asks where the festival's name may go before it paints the hold names: right of the flag
+     first, then left of the town, then under it, so it never sits on a hold's or a town's name */
+  function plan(g, P, sc, tt, rm, spot) {
+    const a = T.announced(); if (!a || typeof WORLD === "undefined" || !spot) return null;
+    const p = WORLD.places[a.place]; if (!p) return null;
+    const [x, y] = P(p), s = sc, px = Math.round(9 * s), bx = x + 12 * s, by = y - 30 * s, ty = by + 6 * s;
+    return spot(LX(a.on ? a.name : `${a.name} (soon)`), `700 ${px}px sans-serif`, px, [[bx + 20 * s, ty, "left"], [x - 12 * s, ty, "right"], [bx + 20 * s, ty - px * 1.4, "left"], [x, y + 34 * s, "center"], [x - 12 * s, ty - px * 1.4, "right"]], true);
+  }
   /* a banner over the host town on the map */
-  function drawMap(g, P, sc, tt, rm) {
+  function drawMap(g, P, sc, tt, rm, pl) {
     const a = T.announced(); if (!a || typeof WORLD === "undefined") return;
     const p = WORLD.places[a.place]; if (!p) return;
     const [x, y] = P(p), wave = rm ? 0 : Math.sin((tt || 0) * 3) * 2 * sc, s = sc;
@@ -225,8 +233,8 @@ const TOURNEYUI = (() => {
     if (a.on && !rm) { g.strokeStyle = `rgba(255,224,138,${0.35 + 0.3 * (Math.sin((tt || 0) * 4) + 1) / 2})`; g.lineWidth = 2 * s; g.beginPath(); g.arc(x, y, 15 * s, 0, 7); g.stroke(); }
     const txt = LX(a.on ? a.name : `${a.name} (soon)`);
     // the name to the right of the flag, clear of the town's marker (and your own name above it)
-    const tx = bx + 20 * s, ty = by + 6 * s + wave * 0.5;
-    g.font = `700 ${Math.round(9 * s)}px sans-serif`; g.textAlign = "left"; g.textBaseline = "middle"; g.lineJoin = "round"; g.lineWidth = 3 * s; g.strokeStyle = "rgba(20,14,8,.88)"; g.strokeText(txt, tx, ty); g.fillStyle = "#ffe6a0"; g.fillText(txt, tx, ty);
+    const tx = pl ? pl.x : bx + 20 * s, ty = (pl ? pl.y : by + 6 * s) + wave * 0.5;
+    g.font = `700 ${Math.round(9 * s)}px sans-serif`; g.textAlign = pl ? pl.align : "left"; g.textBaseline = "middle"; g.lineJoin = "round"; g.lineWidth = 3 * s; g.strokeStyle = "rgba(20,14,8,.88)"; g.strokeText(txt, tx, ty); g.fillStyle = "#ffe6a0"; g.fillText(txt, tx, ty);
     g.restore();
   }
 
@@ -354,5 +362,5 @@ const TOURNEYUI = (() => {
     if (!mount.bound && DOM) { document.addEventListener("click", onClick, true); document.addEventListener("change", onChange, true); mount.bound = true; }
     setTimeout(() => publish(false), 4000);
   }
-  return { mount, publish, sections, names, townHTML, townLine, status, reminders, drawMap, banner, pitArt, festHTML, pitHTML, get docs() { return docs; } };
+  return { mount, publish, sections, names, townHTML, townLine, status, reminders, drawMap, plan, banner, pitArt, festHTML, pitHTML, get docs() { return docs; } };
 })();

@@ -697,6 +697,24 @@ const WorldMap = (() => {
       boxes.push([bx, y * H + dy - 11 * s, bw, bh]);
       label(g, n, x * W, y * H + dy, s, size, "#fbf3dc", kind === "city" ? 700 : 600, italic);
     }
+    /* [smallpolish] event labels (great events and what they leave behind, festivals) find a free spot too: clear of
+       your party, the objective, town names and icons. They go in before the hold names, so a hold name steps aside
+       instead of sitting under "Rebuilding 97%". must: falls back to the first try when nothing is free */
+    const evIcons = shown.map(([, x, y]) => [x * W - 8 * s, y * H - 11 * s, 16 * s, 18 * s]);
+    function evSpot(text, font, px, tries, must) {
+      g.font = font; const w = g.measureText(text).width, h = px * 1.3, pad = 2 * s;
+      const box = ([lx, ly, al]) => [(al === "left" ? lx : al === "right" ? lx - w : lx - w / 2) - pad, ly - h / 2 - pad, w + 2 * pad, h + 2 * pad];
+      const clear = (b) => ![...boxes, ...evIcons].some(([X, Y, Wd, Hd]) => b[0] < X + Wd && b[0] + b[2] > X && b[1] < Y + Hd && b[1] + b[3] > Y);
+      let pick = tries.find((t) => clear(box(t)));
+      if (!pick && !must) { stats.evLabelsSkipped = (stats.evLabelsSkipped || 0) + 1; return null; }
+      pick = pick || tries[0];
+      if (pick !== tries[0]) stats.evLabelsMoved = (stats.evLabelsMoved || 0) + 1;
+      boxes.push(box(pick)); return { x: pick[0], y: pick[1], align: pick[2] || "center" };
+    }
+    stats.evLabelsMoved = 0; stats.evLabelsSkipped = 0;
+    let gevPlan = null, tnPlan = null;
+    if (typeof GREATEV !== "undefined" && GREATEV.plan) try { gevPlan = GREATEV.plan(g, P, s, v.t, evSpot); } catch { gevPlan = null; }
+    if (typeof TOURNEYUI !== "undefined" && TOURNEYUI.plan) try { tnPlan = TOURNEYUI.plan(g, P, s, v.t, v.reduceMotion, evSpot); } catch { tnPlan = null; }
     // hold / province / sea names: faint, under nothing important (places, their names, icons, you)
     if (painted) {
       const keep = boxes.slice();
@@ -867,10 +885,10 @@ const WorldMap = (() => {
     for (const pin of CL.pins) drawCluster(g, pin, s, boxes);
     if (v.raid && typeof RAIDART !== "undefined") RAIDART.mapRaid(g, v.raid, P, s, v.t, v.reduceMotion);   // a dragon over a town (raidart.js)
     if (typeof WORLDEV !== "undefined") WORLDEV.drawMap(g, P, s, v.t, v.reduceMotion);   // gates, dragon flights, the Khajiit market (worldevents.js)
-    if (typeof GREATEV !== "undefined") GREATEV.drawMap(g, P, s, v.t, v.reduceMotion);
+    if (typeof GREATEV !== "undefined") GREATEV.drawMap(g, P, s, v.t, v.reduceMotion, gevPlan);
     if (typeof CRISES !== "undefined") CRISES.drawMap(g, P, s, v.t, v.reduceMotion, dockBoxes, crSigns);   // a hold in crisis: sign and stage pips by its capital, kept clear of the docked cards (crises.js)
     if (typeof LEGHUNT !== "undefined" && !SV) LEGHUNT.drawMap(g, P, s, null, v.t, v.reduceMotion);   // legendary hunts: rough search areas, never exact (leghunt.js)   // dragon assaults, rifts, sieges, fairs and what they leave behind (greatevents.js)
-    if (typeof TOURNEYUI !== "undefined") TOURNEYUI.drawMap(g, P, s, v.t, v.reduceMotion);   // a festival banner over the host town (tourneyui.js)
+    if (typeof TOURNEYUI !== "undefined") TOURNEYUI.drawMap(g, P, s, v.t, v.reduceMotion, tnPlan);   // a festival banner over the host town (tourneyui.js)
     if (v.cart && typeof CARAVANS !== "undefined") { const sp = CARAVANS.sprite(false, false); if (sp) { const back = HF && MAPHERO.flipped("me") ? 16 : -50; g.drawImage(sp, px + back * s, py - 16 * s, 34 * s, 24 * s); } }
     if (v.fx && typeof FXART !== "undefined") FXART.mapUnder(g, v.fx, P, s, px, py, v.t, v.reduceMotion, v);   // spells and shouts around you (fxart.js)
     const pulse = v.reduceMotion ? 0.5 : (Math.sin(v.t * 3) + 1) / 2;

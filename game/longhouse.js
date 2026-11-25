@@ -496,10 +496,13 @@ const LONGHOUSE = (() => {
     const off = typeof Store !== "undefined" && !Store.online ? `<p class="sub">${T("You're playing offline: the longhouse is shared once you go online.")}</p>` : "";
     if (!d) return `<div class="panel lng" id="lng-root"><h2> ${T("Company")}</h2>${off}${typeof EXPEDITION !== "undefined" ? EXPEDITION.trackerHTML(S) : ""}${outsideHTML(S)}</div>`;
     const x = derive(d);
-    const tabs = [["rooms", T("Rooms")], ...(typeof EXPEDITION !== "undefined" ? [["exp", T("Expeditions")]] : []), ["plan", T("Plan")], ["trophy", T("Trophies")], ["gold", T("Treasury")], ["members", T("Members")], ["log", T("Log")]];
+    /* [smallpolish] four main tabs on one row; Plan, Trophies and Log sit in a small "More" row under them (like Social) */
+    const tabs = [["rooms", T("Rooms")], ...(typeof EXPEDITION !== "undefined" ? [["exp", T("Expeditions")]] : []), ["gold", T("Treasury")], ["members", T("Members")]];
+    const more = [["plan", T("Plan")], ["trophy", T("Trophies")], ["log", T("Log")]];
+    const tbtn = ([k, l]) => `<button class="${tab === k ? "on" : ""}" data-lng="tab" data-id="${k}" aria-pressed="${tab === k}">${l}</button>`;
     const body = tab === "exp" && typeof EXPEDITION !== "undefined" ? EXPEDITION.panelHTML(S, d) : tab === "plan" ? planHTML(S, d, x) : tab === "trophy" ? trophyHTML(S, x) : tab === "gold" ? treasuryHTML(S, d, x) : tab === "members" ? membersHTML(S, d) : tab === "log" ? logHTML(x) : roomsHTML(S, d, x);
     return `<div class="panel lng" id="lng-root"><h2> ${T("Company")}</h2>${off}${banner(d, x)}
-      <div class="seg lng-seg">${tabs.map(([k, l]) => `<button class="${tab === k ? "on" : ""}" data-lng="tab" data-id="${k}">${l}</button>`).join("")}</div>${body}</div>`;
+      <div class="seg lng-seg" role="group" aria-label="${T("Company")}">${tabs.map(tbtn).join("")}</div><div class="socmore lng-more" role="group" aria-label="${T("More")}"><span class="socmore-l">${T("More")}</span>${more.map(tbtn).join("")}</div>${body}</div>`;
   }
   /* an invitation pops up once */
   function checkInvites(S) {
