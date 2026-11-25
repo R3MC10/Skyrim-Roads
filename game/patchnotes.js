@@ -1,4 +1,4 @@
-﻿/* Patch notes: what changed in each build, newest first, in plain words. [OURS]
+/* Patch notes: what changed in each build, newest first, in plain words. [OURS]
    To add a build: put a new entry at the TOP of LIST with a new id. The newest id is what the
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
