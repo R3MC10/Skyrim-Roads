@@ -18,7 +18,7 @@
 const HORSEART = (() => {
   const POSES = ["stand", "gallop", "rear", "down"];
   /* files in the game folder: add a pose here when its picture is dropped in */
-  const HAVE = { grey: ["stand", "gallop", "rear", "down"], bay: ["stand"], black: ["stand", "gallop", "down"], chestnut: ["stand", "gallop", "down"] };
+  const HAVE = { grey: ["stand", "gallop", "rear", "down"], bay: ["stand"], black: ["stand", "gallop", "rear", "down"], chestnut: ["stand", "gallop", "rear", "down"] };
   /* where the saddle seat is (fraction of the trimmed picture) and the belly line under it, per picture */
   const META = {
     "grey-stand": { sx: 0.43, sy: 0.285, belly: 0.6, w: 1022, h: 1024 },
@@ -28,7 +28,7 @@ const HORSEART = (() => {
     "bay-stand": { sx: 0.455, sy: 0.31, belly: 0.6, w: 1024, h: 977 },
   };
   /* black and chestnut are repaints of the grey pictures on the same canvas, so they share its seat points */
-  for (const c of ["black", "chestnut"]) for (const p of ["stand", "gallop", "down"]) META[`${c}-${p}`] = META[`grey-${p}`];
+  for (const c of ["black", "chestnut"]) for (const p of ["stand", "gallop", "rear", "down"]) META[`${c}-${p}`] = META[`grey-${p}`];
   /* how a grey picture is tinted for a coat that has no painting of its own */
   const TINT = {
     bay: "sepia(0.85) saturate(1.9) hue-rotate(-12deg) brightness(0.66) contrast(1.08)",

@@ -361,6 +361,10 @@ const MOUNTFIGHT = (() => {
     if (!HB?.drawHorse) return;
     const rear = p?.ev === "thrown" ? Math.sin(Math.PI * Math.min(1, p.u)) : 0, lunge = p?.lunge || 0;
     g.save();
+    if (rear > 0.3 && typeof HORSEART !== "undefined" && HORSEART.ok(coat || color, "rear")) {   // the painted rear (each coat has one): up on its hind legs
+      if (part !== "front") HORSEART.ride(g, coat || color, "rear", 52, { bob: -2 * (rear - 0.3) });
+      g.restore(); return;
+    }
     if (rear) { g.translate(-22, 0); g.rotate(-0.4 * rear); g.translate(22, 0); }
     if (lunge) g.translate(10 * lunge, 0);
     HB.drawHorse(g, color, lunge, tt, part, coat);
