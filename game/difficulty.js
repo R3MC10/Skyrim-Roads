@@ -12,7 +12,9 @@
    party fight carries the leader's snapshot to every phone (tbfight.js fightState → sharedfight.js Mirror.sync).
    Public world events and world bosses (and other players) are always Normal for everyone.
    One hook per stat: foe damage here (apply), foe health in tbfight.js Session, minigame windows in minigame.js width(),
-   tactics in foekit.js (kit use) and foeintent.js (targets), skill practice in engine.js Fight.apply. */
+   tactics in foekit.js (kit use) and foeintent.js (targets), skill practice in engine.js Fight.apply.
+   Only the timing games inside fights change; crafting, lockpicking, fishing and dungeon-room games don't (that would
+   touch the economy). Accessibility's "Easy timing" (access.js) is separate and still eases those. */
 const DIFF = (() => {
   const LEVELS = {
     story: { id: "story", name: "Story", hp: 0.85, dmg: 0.7, win: 1.4, tac: "basic", kit: 0.8,
