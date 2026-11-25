@@ -1,12 +1,12 @@
 """Daedric bargains on screen (bargains.js): the black shrine on the road, accepting a contract, the Daedric bargains
 fold on the Character page (contract card, artifact cards, Ascend / Refuse / Bind), and the Ascend popup.
 Phone (390x844), desktop (1920x1080) and phone in Polish.
-Run from the repo root:  PYTHONIOENCODING=utf-8 python tests/bargains_ui.py [port] [outdir]   (default tests/out_dbg/)"""
+Run from the repo root:  PYTHONIOENCODING=utf-8 python tests/bargains_ui.py [port] [outdir]   (default  or the temp folder)"""
 import asyncio, os, socket, subprocess, sys, time
 from playwright.async_api import async_playwright
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = sys.argv[2] if len(sys.argv) > 2 else os.path.join(ROOT, "tests", "out_dbg"); os.makedirs(OUT, exist_ok=True)
+OUT = sys.argv[2] if len(sys.argv) > 2 else (os.environ.get("SHOTS") or os.path.join(__import__("tempfile").gettempdir(), "out_dbg")); os.makedirs(OUT, exist_ok=True)
 
 def free_port():
     for p in range(9600, 9700):
@@ -56,10 +56,11 @@ async def main():
                     else: await pg.screenshot(path=path)
                     shots.append(path)
                     if el: await pg.evaluate(UNHIDE)
+                n0 = len(errs)
                 for _ in range(3):
                     await pg.goto(f"http://127.0.0.1:{PORT}/index.html?notut&p=dbg{tag}{QA}")
                     try: await pg.wait_for_selector(".press", timeout=10000); break
-                    except Exception: print(tag, "title screen didn't come up, reloading")
+                    except Exception: print(tag, "title screen didn't come up, reloading"); del errs[n0:]   # a half-loaded page (a script dropped by the little server) doesn't count
                 await pg.wait_for_timeout(800)
                 await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Hrodny"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
                 await pg.wait_for_function("() => !!window.__dbg?.save?.()", timeout=20000)   # painted art (?assets) can make the start slower

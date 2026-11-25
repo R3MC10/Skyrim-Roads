@@ -68,10 +68,11 @@ async def main():
                 async def company():
                     await clear(); await pg.evaluate("() => window.__ui.go('social')"); await pg.wait_for_timeout(400)
                     await tap("[data-act=soctab][data-id=company]"); await pg.wait_for_timeout(500)
+                n0 = len(errs)
                 for _ in range(3):
                     await pg.goto(f"http://localhost:{PORT}/index.html?notut&p=lng{tag}{QA}")
                     try: await pg.wait_for_selector(".press", timeout=10000); break
-                    except Exception: print(tag, "title screen didn't come up, reloading")
+                    except Exception: print(tag, "title screen didn't come up, reloading"); del errs[n0:]   # a half-loaded page doesn't count
                 await pg.wait_for_timeout(800)
                 await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Hrodny"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
                 await pg.evaluate("() => { const S = window.__dbg.save(); S.gold = 4000; S.location = 'Whiterun'; S.trip = null; }")

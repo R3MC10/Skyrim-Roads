@@ -96,7 +96,7 @@ async def run(p, w, h, touch):
                 ok(await pg.evaluate("!!document.querySelector('#tbf .fc-aimbar') && document.querySelectorAll('#tbf .tbu.fc-tgt').length >= 2"), f"{tag}: healing asks who gets it")
                 await pg.screenshot(path=OUT + f"{tag}_aim.png")
                 ap0 = await pg.evaluate("-TB.session.myActs")
-                await pg.click("#tbf .tbu.ally.fc-tgt"); await pg.wait_for_timeout(600)
+                await pg.click("#tbf .fc-aimbar .fc-who:not(.me)"); await pg.wait_for_timeout(600)   # the name button (the open Magic menu covers the portraits on phones)
                 ap1 = await pg.evaluate("TB.session ? -TB.session.myActs : -1")
                 ok(not await pg.evaluate("!!document.querySelector('#tbf .fc-aimbar')") and (ap1 < ap0 or ap1 == -1 or not await pg.evaluate("!!document.querySelector('#tbf .fc [data-tba=attack]')")), f"{tag}: tapping the follower casts it on them")
                 ok(await pg.evaluate(r"/Healing on Lydia: \+\d/.test([...document.querySelectorAll('#tbf .tbl')].map(e=>e.textContent).join(' '))"), f"{tag}: the log shows the heal on the follower")

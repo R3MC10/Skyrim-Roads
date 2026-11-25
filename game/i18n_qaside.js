@@ -14,6 +14,17 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "More Polish in towns": "Więcej polskiego w miastach",
     "Fixed: in Polish, the cooking pot, the forge, the notice board's weekly goals, the Hall of the North, the streets, trainers and hirelings are translated.": "Naprawione: po polsku są już kocioł, kuźnia, tygodniowe cele z tablicy ogłoszeń, Hala Północy, ulice, trenerzy i najemnicy.",
     "Fixed: in Polish, the Social tabs, the bard's song lines and the time left on world events are translated.": "Naprawione: po polsku są już zakładki Społeczności, wersy pieśni barda i czas do końca wydarzeń świata.",
+    // town board lines (batch 3)
+    "Your house: a safe chest, a bed and a garden.": "Twój dom: bezpieczna skrzynia, łóżko i ogród.",
+    "Visit other players' houses here.": "Tu odwiedzisz domy innych graczy.",
+    "Land outside town: build your own house, stage by stage.": "Ziemia za miastem: zbuduj własny dom, etap po etapie.",
+    "Duel other players for a stake.": "Pojedynkuj się z innymi graczami o stawkę.",
+    "Only for someone the Jarl trusts (bring Farengar the Dragonstone)": "Tylko dla kogoś, komu ufa Jarl (przynieś Farengarowi Smoczy Kamień)",
+    "For sale": "Na sprzedaż",
+    // patch note b241
+    "Cleaner perk texts": "Czystsze opisy atutów",
+    "Fixed: a few perks (Duelist, Brute Force, Steady Hand, Disintegrate, Intimidation) showed a stray design note like [OURS] in the middle of their description.": "Naprawione: kilka atutów (Duelist, Brute Force, Steady Hand, Disintegrate, Intimidation) pokazywało w środku opisu zabłąkaną notatkę projektową, np. [OURS].",
+    "Fixed: in Polish, the house, homestead and arena lines on the town board are translated.": "Naprawione: po polsku są już opisy domu, gospodarstwa i areny na tablicy miasta.",
     // social
     "Word on the road": "Wieści z gościńca",
     "Quiet, for now.": "Na razie cisza.",
