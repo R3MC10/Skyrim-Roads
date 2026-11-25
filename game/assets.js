@@ -27,7 +27,7 @@
                                          iron steel (both nordm and nordf) · part: head torso pelvis uparm forearm hand-open hand-fist
                                          thigh shin foot leg-bent. A set is used once all 11 parts load; until then the ink figure stays.
      rig-head-<race><m|f>     ~430-650   painted heads for other races on the same bodies (rig.js; RIGDATA.HEADS): dunmer khajiit
-                                         argonian, m/f. Scaled so the neck is 110 px at 1x (like the Nord necks), trimmed, 2x, WebP q84.
+                                         argonian imperial breton redguard altmer bosmer orc, m/f. Scaled so the neck is 110 px at 1x (like the Nord necks), trimmed, 2x, WebP q84.
                                          A missing one keeps the Nord head with a skin tint.
      rig-w-<pic>              ~200-460   painted weapons and shields the painted fighters hold (riggear.js; grip points in its
                                          PIV table): transparent, trimmed, WebP q86. Weapons lie flat, point right: sword
