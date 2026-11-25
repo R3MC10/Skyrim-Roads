@@ -262,6 +262,8 @@ const TB = (() => {
       const nb = typeof ENCH2 !== "undefined" ? ENCH2.numb(f) : { init: 0, acts: 0 }; n -= nb.acts;   // Numbing Cold: later in the order, a move lost (enchants2.js)
       for (let i = 0; i < Math.max(1, n); i++) out.push({ id: i ? "foe" + (i + 1) : "foe", name: f.e.name, init: Math.round(base - nb.init) - 4 * i + d10() - (typeof STRAT !== "undefined" ? STRAT.foeInitCut(f) : 0), extra: i > 0 });   // frost slows it (strategy.js)
       out.sort((a, b) => b.init - a.init || (a.id === "me" ? -1 : 1));
+      // [partyfoeturns] the foe's moves are numbered in the order they happen: its 2nd move never sits before its 1st
+      let k = 0; for (const o of out) if (o.id.startsWith("foe")) { o.id = k ? "foe" + (k + 1) : "foe"; o.extra = k > 0; k++; }
       return out;
     }
     startRound() {
@@ -537,17 +539,21 @@ const TB = (() => {
       const hpB = f.hp;
       // foes go after your healers and casters when they can (party fights)
       const FI = typeof FOEINTENT !== "undefined" ? FOEINTENT : null;
+      let act = null;   // the move it shows, by name (" Venom Spit → Meeko"): the log, the banner and the scene say it as it happens
+      // [partyfoeturns] read this move's intent BEFORE its target is taken off the list: read after, it named the next
+      // move's target ("Heavy Swing → you" while the blow hit a teammate)
+      try { if (typeof FIGHTREAD !== "undefined" && !this.mirror) act = FIGHTREAD.actName(FIGHTREAD.intents(this)[0], this); } catch (x) { act = null; }
       if (FI) FI.next(this);   // foeintent.js: the target its intent showed (healers first is part of that roll)
       if (typeof REACT !== "undefined") REACT.foePre(this);   // Intercept: a blow meant for a friend comes to you
       else if (!FI && f.allies.length && !f.coverAl) { const h = f.allies.find((a) => !a.down && a.player && (a.role === "healer" || a.heals > 0)); if (h && Math.random() < 0.5) f.coverAl = h; }
-      let act = null;   // the move it shows, by name (" Venom Spit → Meeko"): the log, the banner and the scene say it as it happens
-      try { if (typeof FIGHTREAD !== "undefined" && !this.mirror) act = FIGHTREAD.actName(FIGHTREAD.intents(this)[0], this); } catch (x) { act = null; }
+      f.tgtHit = undefined;   // engine.js says who the blow really went to (null = the leader's hero)
       const guards = f.allies.filter((a) => a.guard || a.tbGuard); guards.forEach((a) => { a._red = a.red; a.red = Math.min(0.85, (a.red || 0) + (a.guard ? 0.4 : 0) + (a.tbGuard || 0)); });   // tbGuard: guard a teammate kept on their own phone
       const pa = this.everyone.filter((a) => a.pid), pb = pa.map((a) => a.hp || 0);
       if (typeof DRAGONS !== "undefined") DRAGONS.check(f, this);   // allies and bleeding may have brought it down
       const go = () => (typeof DRAGONS !== "undefined" && f.dStance ? DRAGONS.turn(f, () => f.enemyTurn()) : typeof FOEKIT !== "undefined" && f.kit ? FOEKIT.turn(f, () => f.enemyTurn()) : f.enemyTurn());
       let t = f.bf && typeof BOSSFIGHT !== "undefined" ? BOSSFIGHT.turn(this, go) : go();   // bosses: phases and big attacks (bossfight.js)
       guards.forEach((a) => { a.red = a._red; a.guard = 0; a.tbGuard = 0; });
+      if (act && act.tgt && f.tgtHit !== undefined) act.tgt = f.tgtHit ? String(f.tgtHit.name || act.tgt) : "you";   // someone stepped in front: name who it really hit
       if (FI) { FI.done(this); t = FI.say(this, t); }   // "takes aim at Lydia"
       if (typeof STACKS !== "undefined") {   // Chill and Weak stacks soften its blows (stacks.js)
         const so = STACKS.foeSoften(f), l0 = hpB - f.hp;
@@ -1113,7 +1119,12 @@ const TB = (() => {
         for (const k of BUFF_KEYS) if (a[k] != null) o[k] = a[k];
         return o; })];
     if (typeof MOUNTFIGHT !== "undefined") MOUNTFIGHT.roster(f, all, roster);   // who's in the saddle, and their horses' health (mountfight.js)
-    const evs = sess.ev.slice(-24).map((x, i, arr) => {
+    /* [partyfoeturns] the events of this round and the last one (at least 24, at most 96): a big party (8 heroes, their
+       followers, a foe with 5-6 moves) easily makes more than 24 lines between two records, and a phone that missed a
+       record (busy, asleep for a moment) lost the foe's moves in between: they never played on that screen */
+    let from = sess.ev.length - 24;
+    for (let i = sess.ev.length - 1; i >= 0 && i >= sess.ev.length - 96; i--) { if (sess.ev[i].round < (sess.round || 0) - 1) break; from = Math.min(from, i); }
+    const evs = sess.ev.slice(Math.max(0, from)).map((x, i, arr) => {
       const o = { n: sess.ev.length - arr.length + i, kind: x.kind, who: x.who, text: x.text, round: x.round, hp: x.hp, ehp: x.ehp };
       for (const k of ["a", "wt", "dmg", "healed", "name", "wave", "by", "hits", "ph"]) if (x[k] != null) o[k] = x[k];
       return o;
