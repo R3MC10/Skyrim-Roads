@@ -3,11 +3,18 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b290-aitester", build: 290, date: "25 Nov 2026", title: "What would the AI do?", items: [
+    { id: "b291-aitester", build: 291, date: "25 Nov 2026", title: "What would the AI do?", items: [
       "Character → AI & Loadouts has a new card, What would the AI do?: set your health, stamina and magicka, the foe's health, what kind of foe (normal, strong, boss, dragon, caster), how many and whether a friend is down, and it shows the move your loadout would play right now and why.",
       "In Custom and Hybrid it goes through your rules from the top: a tick for the one that fires, a cross and the reason for the ones it skips (like \"health is 80%, rule needs below 40%\").",
       "With Smart AI on, your own rules fold into one row (they're kept for Custom and Hybrid) instead of sitting there greyed out.",
       "In fights, moves the AI plays for you end with a short [AI] reason in the log. Moves you pick yourself don't.",
+    ] },
+    { id: "b290-itemcards2", build: 290, date: "25 Nov 2026", title: "Item cards say what changes", items: [
+      "The damage at the top of a weapon's card is now what it really hits for in your hands, with your skill and perks, the same number as in the comparison below. The weapon's own number is shown next to it as \"base\".",
+      "Item cards now say what else changes when you put something on: a two-handed weapon takes your shield off (and with it its armour and Shield bash), a shield takes a two-handed weapon off, and a bow or crossbow tells you when you have nothing to shoot.",
+      "When a weapon uses a different skill from the one you hold, the card says so, with both of your skill levels.",
+      "This shows on loot and reward cards, in the Items menu, in shops and on the phone's bottom sheet.",
+      "Putting on a shield while holding a two-handed weapon now takes the weapon off, instead of saying no.",
     ] },
     { id: "b289-followersize", build: 289, date: "25 Nov 2026", title: "Followers at full size, softer glows", items: [
       "In fights your follower and your party now stand as tall as you do (women and some races a touch shorter, like in Skyrim) instead of looking like dwarves next to you. Everyone still fits on screen, and name tags sit just above their heads.",
