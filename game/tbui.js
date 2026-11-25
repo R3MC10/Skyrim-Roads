@@ -54,20 +54,36 @@ const TBUI = (() => {
     const spot = { me: el.querySelector(".tbu.me"), foe: el.querySelector(".tbu.foe") };
     const stage0 = el.querySelector(".tbstage"), cvs = stage0?.querySelector(".tbscene canvas");
     const stage = cvs && cvs.getBoundingClientRect().width > 40 ? cvs : stage0;   // numbers rise from the fighters in the picture
-    const used = { me: 0, foe: 0 };
+    const used = { me: 0, foe: 0 }, wheel = typeof TBRADIAL !== "undefined" && TBRADIAL.on();
+    let slot = 0;
     pops.forEach((p, i) => {
       const t = spot[p.at]; if (!t) return;
+      if (p.tag && p.n < 0 && p.at === "me" && wheel) return;   // the wheel already floated what you spent (tbradial.js)
       const r = t.getBoundingClientRect(), sr = stage?.getBoundingClientRect();
+      if (p.tag && p.at === "me") {
+        /* [rigpolish] magicka/stamina from your frame: above the frame (your name sits at its top), one fixed column each
+           so two numbers never land on each other */
+        const s = document.createElement("span");
+        s.className = `tbpop el-${p.el}${p.n > 0 ? " up" : ""}`;
+        s.textContent = (p.n > 0 ? "+" : "") + Math.round(p.n) + " " + p.tag;
+        const nm = t.querySelector(".nm, .c2orb"), top = Math.min(r.top, nm ? nm.getBoundingClientRect().top : r.top);
+        s.style.left = (Math.min(innerWidth - 50, r.left + 44 + 80 * slot) - hb.left) + "px";
+        s.style.top = (top - 24 - hb.top) + "px";
+        s.style.animationDelay = (reduce() ? 0 : i * 170) + "ms"; slot++;
+        host.appendChild(s); setTimeout(() => s.remove(), 1500 + i * 170);
+        return;
+      }
       const k = used[p.at]++;
       const s = document.createElement("span");
       s.className = `tbpop el-${p.el}${p.crit ? " crit" : ""}${p.n > 0 ? " up" : ""}`;
       s.textContent = (p.n > 0 ? "+" : "") + Math.round(p.n) + (p.tag ? " " + p.tag : "") + (p.crit ? "!" : "");
       // damage rises from the fighter in the scene; spent magicka/stamina from your own frame
       const overScene = sr && !p.tag;
-      const x = overScene ? (p.at === "foe" ? sr.left + sr.width * 0.72 : sr.left + sr.width * 0.28) : r.left + r.width * 0.5;
-      const y = overScene ? sr.top + sr.height * 0.42 : r.top + 6;
-      s.style.left = (x - hb.left + (k % 2 ? 22 : -14) + Math.random() * 10) + "px";
-      s.style.top = (y - hb.top - k * 18) + "px";
+      /* [rigpolish] a little inside and above the fighter, so it never sits on the big number the scene itself draws on them */
+      const x = overScene ? (p.at === "foe" ? sr.left + sr.width * 0.62 : sr.left + sr.width * 0.36) : r.left + r.width * 0.5;
+      const y = overScene ? sr.top + sr.height * (sr.width > sr.height * 1.4 ? 0.3 : 0.52) : r.top + 6;   // tall phone scenes: the foe card sits up there
+      s.style.left = (x - hb.left + (k % 2 ? 26 : -18)) + "px";
+      s.style.top = (y - hb.top - k * 26) + "px";   // a line apart (the numbers are 22px tall), never on top of each other
       s.style.animationDelay = (reduce() ? 0 : i * 170) + "ms";
       host.appendChild(s); setTimeout(() => s.remove(), 1500 + i * 170);
     });

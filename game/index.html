@@ -3638,6 +3638,19 @@ html.art-pixel .rxban,html.art-pixel #tbf .tbact.rxon .rxbadge{border-radius:0;i
 .affbtns{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px}.affcard .sub{margin:4px 0}
 .affbadge{margin-left:6px;font-size:14px;letter-spacing:2px}.affbadge i{font-style:normal}
 .affparty{margin-top:8px}
+/* [rigpolish] narrow phones: the quick slots shrink to share their row (none slides under Flee), and move names wrap to
+   two small lines instead of being cut off */
+#tbf.c2 .fc:not(.fc-pick) .fc-tray .tbact b{white-space:normal;text-overflow:clip;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.08;text-align:center}
+@media (max-width:440px){
+  #tbf.c2:not(.c2wide) .fc:not(.fc-pick) .fc-tray{gap:2px;overflow-x:auto}
+  #tbf.c2:not(.c2wide) .fc:not(.fc-pick) .fc-tray .tbact{--d:34px;flex:1 1 0;width:auto;min-width:38px;max-width:50px}
+  #tbf.c2:not(.c2wide) .fc:not(.fc-pick) .tbact small.fc-why{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:8px;text-align:center}
+  #tbf.c2:not(.c2wide) .fc:not(.fc-pick) .tbact:not(.end) b{white-space:normal;overflow:hidden;text-overflow:clip;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-size:8.5px;line-height:1.08;letter-spacing:.02em;text-align:center;overflow-wrap:anywhere;margin-top:4px}
+  #tbf.c2:not(.c2wide) .fc:not(.fc-pick) .tbact.big:not(.end) b{font-size:9.5px}
+  #tbf.c2:not(.c2wide) .fc:not(.fc-pick) .fc-tray .tbact b{font-size:7.2px;letter-spacing:-.01em;padding:0}
+  #tbf.c2:not(.c2wide) .fc:not(.fc-pick) .tbact:is(.flee,.rec,[data-tbm]) b{display:block;white-space:nowrap;overflow:visible;max-width:none;font-size:8px;letter-spacing:0}
+  #tbf.c2:not(.c2wide) .fc:not(.fc-pick) .tbact.big{--d:50px}
+}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
