@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b326-notices", build: 326, date: "25 Nov 2026", title: "Pop-ups take turns", items: [
+      "Windows that pop up on their own (a quest, a courier, a world event) now open one at a time. If one arrives while another window, a fight or a menu is open, it waits and opens right after, instead of replacing the one you were reading.",
+      "The same message arriving twice shows once.",
+      "Banners, messages, tips and a stranger's greeting stack neatly under each other and never cover each other or the top and bottom bar buttons. If there's no room, they wait.",
+      "In fights, combo banners and a boss's phase card never sit on your action buttons, and they wait while Items, Magic or the result is open. Taps go through the boss's phase card to your buttons.",
+    ] },
     { id: "b314-reportname", build: 314, date: "25 Nov 2026", title: "Reports show who sent them", items: [
       "When you report a problem, your player name (your account name, or your hero's name if you're not signed in) now goes with it, so we know who to ask if we need more details.",
       "The report window shows the name it's sent as, right above the Send button.",
