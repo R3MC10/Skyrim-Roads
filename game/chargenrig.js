@@ -54,9 +54,9 @@ const CGRIG = (() => {
      frame is drawn once off screen and the topmost painted row read back. Cached per look + clip; a figure whose parts were
      still arriving is measured again a couple of times (the biggest reach wins). null: can't tell (node, no canvas). */
   const BOUNDS = new Map(), NB = 10, BK = 2, BW = 220, BH = 360, BFEET = 340;
-  function reach(look, clip) {
+  function reach(look, clip, extra) {   // extra: more PAINTRIG.draw options (the paper doll's { doll: true })
     if (typeof document === "undefined") return null;
-    const key = clip + "|" + JSON.stringify(look), had = BOUNDS.get(key), now = Date.now();
+    const key = clip + "|" + JSON.stringify(look) + (extra ? "|" + JSON.stringify(extra) : ""), had = BOUNDS.get(key), now = Date.now();
     if (had && (had.n >= 3 || now - had.at < 1500)) return had.up;
     try {
       const R = rig(), C = RIGDATA.CLIPS[clip];
@@ -66,7 +66,7 @@ const CGRIG = (() => {
       for (let i = 0; i < NB; i++) {
         x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, BW, BH);
         x.setTransform(BK, 0, 0, BK, BW / 2, BFEET);
-        if (!R.draw(x, look, { clip, u: i / NB, t: C ? (i / NB) * C.len : 0 })) return had ? had.up : null;
+        if (!R.draw(x, look, { clip, u: i / NB, t: C ? (i / NB) * C.len : 0, ...(extra || {}) })) return had ? had.up : null;
         const d = x.getImageData(0, 0, BW, Math.max(1, Math.min(BH, top))).data;
         for (let j = 3; j < d.length; j += 4) if (d[j] > 40) { top = Math.floor((j >> 2) / BW); break; }
       }

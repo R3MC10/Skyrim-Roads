@@ -385,11 +385,11 @@ const HEROART = (() => {
   }
   function paintFig(g, L, w, h) {
     const sp = FIGART.specOf(FIGART.lookFor({ look: L })), bh = Math.max(0.8, sp.bh || 1);
-    let up = null; try { up = CGRIG.reach(L, "idle"); } catch { /* can't tell */ }   // a raised blade stays inside the card
+    let up = null; try { up = CGRIG.reach(L, "idle", { doll: true }); } catch { /* can't tell */ }   // a raised blade stays inside the card
     // the weapon hand reaches ~28 units in front (right) of the feet: a touch left of centre, and never past the right edge
     const k = Math.min((h * 0.74) / (61 * bh), (w * 0.9) / 44, (w * 0.5) / 28, up > 0 ? (h * 0.89) / up : Infinity);
     g.save(); g.translate(w * 0.45, h * 0.93); g.scale(k, k);
-    try { return !!PAINTRIG.draw(g, L, { clip: "idle", u: 0, glow: !!(L.gl && L.gl.w) }); } finally { g.restore(); }
+    try { return !!PAINTRIG.draw(g, L, { clip: "idle", u: 0, doll: true, glow: !!(L.gl && L.gl.w) }); } finally { g.restore(); }   // [dollrig] the calm stance: weapon in the fist, shield and helmet showing
   }
   function figure(src, w = 160, h = 220, opts = {}) {
     if (w && typeof w === "object") return rigged() ? FIGART.sprite(src, w) : null;   // the new form: a posed frame as a canvas
@@ -402,7 +402,7 @@ const HEROART = (() => {
       if (rigged()) { const fh = Math.min(h * 0.7, w * 1.05); FIGART.draw(g, { look: L }, w / 2 - fh * 0.04, h * 0.93, { pose: "idle", frame: 0, h: fh }); return; }
       const k = Math.min(w / 160, h / 220); g.translate((w - 160 * k) / 2, h - 220 * k); g.scale(k, k);
       draw(g, H, L);
-    }, { key: "hero3|" + keyOf(L) + (opts.bare ? "|b" : "") + (painted ? "|p" : "|i"), alt: `${D.RACES[L.r]?.name || ""} character`, cls: (opts.cls || "herofig") + (painted ? " hfig-p" : "") });
+    }, { key: "hero4|" + keyOf(L) + (opts.bare ? "|b" : "") + (painted ? "|p" : "|i"), alt: `${D.RACES[L.r]?.name || ""} character`, cls: (opts.cls || "herofig") + (painted ? " hfig-p" : "") });
     if (ps === "wait" && html) {   // ink for now: swapped for the painted figure once its pictures arrive
       const id = "h" + (++pendN); PEND.set(id, { src: { look: L }, w, h, opts }); if (PEND.size > 200) PEND.delete(PEND.keys().next().value);
       html = html.replace("<img ", `<img data-hfk="${id}" `);

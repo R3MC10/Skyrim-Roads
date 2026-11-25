@@ -375,7 +375,7 @@ const PARTYPLAY = (() => {
     function face(p, uid, size = 26) {
       const c = uid === me().id ? me() : ctx.cardOf(uid);
       let h = "";
-      try { h = c && typeof HEROART !== "undefined" ? HEROART.portrait(c, size) : ""; } catch { h = ""; }
+      try { h = c && typeof AVATAR !== "undefined" ? AVATAR.portrait(c, size) : ""; } catch { h = ""; }
       return h || `<b>${esc((nameOf(p, uid) || "?").slice(0, 1).toUpperCase())}</b>`;
     }
     /* put voters' faces next to the options in whatever vote window is open (only new faces pop in) */
