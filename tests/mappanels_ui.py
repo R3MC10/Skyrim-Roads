@@ -101,7 +101,10 @@ async def tap_place(pg, n):
     await pg.evaluate("document.querySelector('#mapwrap')?.scrollIntoView({block:'start'})"); await pg.wait_for_timeout(700)
     s = await pg.evaluate(SPOT, n)
     await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
+    # caravans roll in and out of towns: keep a passing wagon from catching the tap meant for the place
+    await pg.evaluate("()=>{ if (typeof WAGONS !== 'undefined' && !WAGONS.__tap) { WAGONS.__tap = WAGONS.tap; WAGONS.tap = () => false; } }")
     await pg.mouse.click(s["x"], s["y"]); await pg.wait_for_timeout(450)
+    await pg.evaluate("()=>{ if (typeof WAGONS !== 'undefined' && WAGONS.__tap) { WAGONS.tap = WAGONS.__tap; delete WAGONS.__tap; } }")
     return await pg.evaluate("document.querySelector('.mpanel .wg-h b')?.textContent || ''")
 
 def judge(res, tag, what, c, pc, need=1):
@@ -154,6 +157,7 @@ async def run(b, vp, tag, errs, res):
             judge(res, tag, "the dungeon you're at", c, pc)
             res[f"{tag} the dungeon you're at: Go inside"] = "enter" in c.get("acts", [])
             await pg.screenshot(path=os.path.join(OUT, f"mpn_{tag}_inside.png"))
+        await pg.evaluate("()=>{ document.querySelector('#locs:not([hidden]) [data-act=locleave]')?.click(); }"); await pg.wait_for_timeout(300)   # the place full screen (locscreen.js) back to the map
         await pg.evaluate("()=>{ const S = window.__dbg.save(), w = WORLD.places['Whiterun']; S.location = null; S.x = w[0] + 0.03; S.y = w[1] + 0.02; }")
     # your pin
     await pg.evaluate("()=>{ const S = window.__dbg.save(), w = WORLD.places['Whiterun']; S.pins = [{ id: 'tp1', x: w[0] - 0.05, y: w[1] + 0.04, icon: '★', label: 'Good fishing' }]; window.__dbg.setView(3.2, [w[0] - 0.05, w[1] + 0.04]); }")
@@ -184,11 +188,13 @@ async def run(b, vp, tag, errs, res):
     await tap_place(pg, P["dungeon"])
     r = await pg.evaluate("window.__ui.back()")
     res[f"{tag} back button closes it"] = r is True and await pg.evaluate("!document.querySelector('.mpanel')")
-    await tap_place(pg, P["dungeon"])
+    await pg.wait_for_timeout(700); await tap_place(pg, P["dungeon"])   # not a double-click (that travels on a PC)
+    if not await pg.evaluate("!!document.querySelector('.mpanel')"): print(f"  {tag} after back, re-tap:", await pg.evaluate(CHECK), await pg.evaluate("({trip: !!window.__dbg.save().trip, locs: !!document.querySelector('#locs:not([hidden])')})"))
     await pg.click(".mpanel [data-wg=x]"); await pg.wait_for_timeout(300)
     res[f"{tag} X closes it"] = await pg.evaluate("!document.querySelector('.mpanel')")
     # Travel from the panel still sets off
-    await tap_place(pg, P["city"])
+    await pg.wait_for_timeout(700); await tap_place(pg, P["city"])
+    if not await pg.evaluate("!!document.querySelector('.mpanel [data-act=go]')"): print(f"  {tag} travel tap:", await pg.evaluate(CHECK), await pg.evaluate("({trip: !!window.__dbg.save().trip, loc: window.__dbg.save().location, locs: !!document.querySelector('#locs:not([hidden])')})"))
     await pg.click(".mpanel [data-act=go]"); await pg.wait_for_timeout(500)
     res[f"{tag} Travel sets off and closes the panel"] = await pg.evaluate("!!window.__dbg.save().trip && !document.querySelector('.mpanel')")
     await pg.context.close()
@@ -198,6 +204,7 @@ async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch(executable_path=EXE) if EXE else await p.chromium.launch()
         for vp, tag in (({"width": 360, "height": 780}, "p360"), ({"width": 390, "height": 844}, "p390"), ({"width": 1440, "height": 900}, "pc1440"), ({"width": 1735, "height": 950}, "pc1735"), ({"width": 1920, "height": 1080}, "pc1920")):
+            if os.environ.get("ONLY") and os.environ["ONLY"] != tag: continue
             await run(b, vp, tag, errs, res)
         await b.close()
     res["no page errors"] = not errs
