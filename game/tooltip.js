@@ -57,7 +57,13 @@ const TIP = (() => {
       : { potion: "Potion", poison: "Poison", food: "Food", ingredient: "Ingredient", tome: "Spell tome", scroll: "Scroll", soulgem: "Soul gem", ammo: "Ammo", material: "Crafting material", valuable: "Valuable", trophy: "Trophy", recipe: "Forge recipe", misc: "Item" }[it.slot] || "Item";
     const q = r?.qty || 1;
     const st = [];
-    if (it.slot === "weapon") st.push(["Damage", it.damage + (r?.temper ? ` +${r.temper}` : "")]);
+    const dmg = it.slot === "weapon" && !it.staff && it.damage && s ? (() => { try {   // what it really hits for in your hands (skill and perks)
+      if (g("ITEMCMP")) return g("ITEMCMP").hits(s, itemId, r);
+      const F_ = g("F"), sk = it.skill, lv = G_.skill(s, sk), P = (k) => (G_.P ? G_.P(s, k) : 0);
+      const perk = { "One-Handed": 0.2 * P("armsman"), "Two-Handed": 0.2 * P("barbarian"), "Archery": 0.2 * P("overdraw"), "Spear": 0.15 * P("long_reach") }[sk] || 0;
+      return Math.round(F_.weaponDamage(it.damage + (r?.temper || 0), lv, sk === "Archery") * (1 + perk));
+    } catch { return 0; } })() : 0;
+    if (it.slot === "weapon") st.push(dmg ? ["Hits for", `${dmg} (${it.damage + (r?.temper || 0)} base)`] : ["Damage", it.damage + (r?.temper ? ` +${r.temper}` : "")]);   // [itemcards2] the same number as the compare below
     if ((G_?.ARMOR_SLOTS || []).includes(it.slot)) st.push(["Armor", (it.armor || 0) + (r?.temper ? ` +${r.temper}` : "")]);
     if (it.slot === "ammo") st.push(["Damage", it.damage]);
     st.push(["Weight", +((it.weight || 0) * q).toFixed(2)], ["Value", it.value ?? 0]);
@@ -83,12 +89,7 @@ const TIP = (() => {
       L.push(`${it.slot === "tome" ? "Teaches" : "Casts"} ${sp.name}: ${sp.level || "Novice"} ${sp.school}${M?.describe ? ` · ${M.describe(sp)}` : ""}${s && it.slot === "tome" && s.spells?.includes(it.spell) ? " (you know it)" : ""}`);
     }
     if (it.slot === "scroll" && s && D_.SPELLS[it.spell]) { try { const ps = g("MAGIC").nums(s, it.spell, false); if (ps.length) L.push("For you: " + ps.map((p) => p.t).join(" · ") + " · no magicka"); } catch { /* old magic.js */ } }
-    if (it.slot === "weapon" && !it.staff && it.damage) {   // what it really hits for in your hands (skill and perks)
-      const F_ = g("F"), dmg = (() => { try {
-        const sk = it.skill, lv = G_.skill(s, sk), P = (k) => (G_.P ? G_.P(s, k) : 0);
-        const perk = { "One-Handed": 0.2 * P("armsman"), "Two-Handed": 0.2 * P("barbarian"), "Archery": 0.2 * P("overdraw"), "Spear": 0.15 * P("long_reach") }[sk] || 0;
-        return Math.round(F_.weaponDamage(it.damage + (r?.temper || 0), lv, sk === "Archery") * (1 + perk));
-      } catch { return 0; } })();
+    if (it.slot === "weapon" && !it.staff && it.damage) {
       L.push(dmg && s ? `Hits for about ${dmg} with your ${it.skill} skill and perks` : `${it.damage} base damage, more as your ${it.skill} skill grows`);
     }
     if (it.slot === "ammo") L.push(`Shot from a ${/bolt/.test(itemId) ? "crossbow" : "bow"}: ${it.damage} damage added to each shot`);
