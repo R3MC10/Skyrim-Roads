@@ -17,6 +17,8 @@ const HARVEST = (() => {
   const name = (id) => D.ITEMS[id]?.name || id;
   const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const hash = (a, b) => { let h = (a * 374761393 + b * 668265263 + 1442695041) | 0; h = (h ^ (h >>> 13)) * 1274126177 | 0; return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+  /* a line with {markers}, in Polish when the game is (i18n_gather.js holds the Polish) */
+  const T = (en, v) => (typeof I18N !== "undefined" && I18N.t ? I18N.t(en, v) : (v ? en.replace(/\{(\w+)\}/g, (m, k) => (k in v ? String(v[k]) : m)) : en));
   const strHash = (str) => { let h = 7; for (const c of String(str)) h = (h * 31 + c.charCodeAt(0)) | 0; return Math.abs(h); };
 
   // ------------------------------------------------------------------ how each plant is picked
@@ -103,8 +105,8 @@ const HARVEST = (() => {
   }
   function tagHTML(s, id) {
     const p = primeOf(s, id);
-    return (p.l ? ` <b class="hg-tag hg-l" title="Glowing: your next potion with it is 25% stronger">✦${p.l} glowing</b>` : "")
-      + (p.p ? ` <b class="hg-tag hg-p" title="Perfect: your next potion with it is 15% stronger">★${p.p} perfect</b>` : "");
+    return (p.l ? ` <b class="hg-tag hg-l" title="${esc(T("Glowing: your next potion with it is 25% stronger"))}">✦${esc(T("{n} glowing", { n: p.l }))}</b>` : "")
+      + (p.p ? ` <b class="hg-tag hg-p" title="${esc(T("Perfect: your next potion with it is 15% stronger"))}">★${esc(T("{n} perfect", { n: p.p }))}</b>` : "");
   }
   /* brewing with a specimen makes that potion stronger (one bonus per potion: the best one) */
   function brewHook() {
@@ -126,7 +128,7 @@ const HARVEST = (() => {
       if (r && /^You brew/.test(r.text || "")) {
         const rec = hs(s).prime[best.id];
         if (rec) { rec[best.k] = Math.max(0, (rec[best.k] || 0) - 1); if (!rec.p && !rec.l) delete hs(s).prime[best.id]; }
-        r.text += ` The ${RARE[best.k].word.toLowerCase()} ${name(best.id)} makes it ${Math.round((mult - 1) * 100)}% stronger.`;
+        r.text += " " + T(best.k === "l" ? "The glowing {item} makes it {n}% stronger." : "The perfect {item} makes it {n}% stronger.", { item: name(best.id), n: Math.round((mult - 1) * 100) });
         r.specimen = best.k;
       }
       return r;
@@ -160,20 +162,20 @@ const HARVEST = (() => {
     const g = hs(s), d = dayOf(t);
     if (g.ordDay.d !== d) g.ordDay = { d, n: 0 };
     if (g.ordDay.n >= ORDERS_PER_DAY) return { err: "The alchemists have all they need from you today. Try again tomorrow." };
-    if (have(s, o.ing) < o.n) return { err: `You need ${o.n} ${name(o.ing)} (you have ${have(s, o.ing)}).` };
+    if (have(s, o.ing) < o.n) return { err: T("You need {n} {item} (you have {m}).", { n: o.n, item: name(o.ing), m: have(s, o.ing) }) };
     let left = o.n;
     for (const r of [...s.inv.filter((x) => x.item === o.ing && !x.stolen), ...s.inv.filter((x) => x.item === o.ing && x.stolen)]) { if (left <= 0) break; const k = Math.min(left, r.qty); G.take(s, r.id, k); left -= k; }
     s.gold = (s.gold || 0) + o.reward;
     g.ord[town] = d; g.ordDay.n++;
     let sk = []; try { sk = G.useSkill(s, "Alchemy", 6 + o.reward / 6) || []; } catch (e) { sk = []; }
-    return { ok: true, text: `You hand over ${o.n} ${name(o.ing)} and get ${o.reward} gold.${sk.length ? " " + sk.join(". ") : ""}`, gold: o.reward };
+    return { ok: true, text: T("You hand over {n} {item} and get {g} gold.", { n: o.n, item: name(o.ing), g: o.reward }) + (sk.length ? " " + sk.join(". ") : ""), gold: o.reward };
   }
   function orderHTML(s, t = G.now()) {
     const o = order(s.location, t, s);
     if (!o) return "";
     const n = have(s, o.ing), done = filled(s, s.location, t);
-    return `<div class="panel hg-order"><h2>Herb order</h2><div class="item">${typeof ICONART !== "undefined" ? ICONART.item(o.ing, 30) : ""}<div class="t">${esc(o.n)} ${esc(name(o.ing))}<span>${done ? "Filled. A new order comes tomorrow." : `Pays ${o.reward} gold${o.hard ? " (hard times in the hold: they pay extra)" : ""} · you have ${n}`}</span></div>${done ? "" : `<button class="btn sm ${n >= o.n ? "pri" : ""}" data-act="hdeliver" ${n >= o.n ? "" : "disabled"}>Deliver</button>`}</div>
-      <p class="sub">${esc(name(o.ing))} is wanted here today, so it also sells for more in this town.</p></div>`;
+    return `<div class="panel hg-order"><h2>Herb order</h2><div class="item">${typeof ICONART !== "undefined" ? ICONART.item(o.ing, 30) : ""}<div class="t">${esc(o.n)} ${esc(name(o.ing))}<span>${done ? "Filled. A new order comes tomorrow." : esc(T(o.hard ? "Pays {g} gold (hard times in the hold: they pay extra) · you have {n}" : "Pays {g} gold · you have {n}", { g: o.reward, n }))}</span></div>${done ? "" : `<button class="btn sm ${n >= o.n ? "pri" : ""}" data-act="hdeliver" ${n >= o.n ? "" : "disabled"}>Deliver</button>`}</div>
+      <p class="sub">${esc(T("{item} is wanted here today, so it also sells for more in this town.", { item: name(o.ing) }))}</p></div>`;
   }
   /* the ordered plant is in demand: it sells (and costs) more in that town today */
   function econHook() {
@@ -211,7 +213,7 @@ const HARVEST = (() => {
     return n ? { id: n.id, ing: n.ing, kind: kindOf(n.ing), name: name(n.ing), d: n.d, quick: canQuick(s, n.ing), riding: !!(tr && tr.status === "travel") } : null;
   }
   function cardFoot(s) {
-    return `<p class="sub hg-foot">Tap <b>Gather</b> to pick by hand: better hands, bigger yield. Picked a plant ${quickAt(s)} times? <b>Quick</b> skips the mini-game. In a party everyone picks their own share of each patch.</p>`;
+    return `<p class="sub hg-foot">${esc(T("Tap Gather to pick by hand: better hands, bigger yield. Picked a plant {n} times? Quick skips the mini-game. In a party everyone picks their own share of each patch.", { n: quickAt(s) }))}</p>`;
   }
   function progress(s, id) { return { done: handPicked(s, id), need: quickAt(s), quick: canQuick(s, id), single: single(id) }; }
 
@@ -226,6 +228,6 @@ const HARVEST = (() => {
   };
 
   brewHook(); econHook(); kitchenHooks();
-  return { KINDS, kindOf, single, howTo, hs, canQuick, handPicked, quickAt, amount, YIELD, RARE, RARE_PER_DAY, rareChance, afterPick, primeOf, tagHTML,
+  return { T, KINDS, kindOf, single, howTo, hs, canQuick, handPicked, quickAt, amount, YIELD, RARE, RARE_PER_DAY, rareChance, afterPick, primeOf, tagHTML,
     order, deliver, orderHTML, filled, ORDERS_PER_DAY, ORDER_CAP, nearPrompt, cardFoot, progress, SCORE, tolOf, dayOf };
 })();

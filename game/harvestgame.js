@@ -324,10 +324,10 @@ const HARVESTGAME = (() => {
     if (r && r.ok) {
       rows += `<div class="hg-row">${icon(r.item)}<span class="hg-nm">${esc(D.ITEMS[r.item]?.name || r.item)}</span><span class="hg-n">×${esc(r.n)}</span></div>`;
       if (r.thumb) rows += `<div class="hg-row hg-sub"><span class="hg-nm">Green Thumb</span><span class="hg-n">doubled</span></div>`;
-      if (r.rare) rows += `<div class="hg-row hg-rare hg-${r.rare.k}">${icon(r.item)}<span class="hg-nm">${r.rare.k === "l" ? "✦" : "★"} ${esc(r.rare.word)} ${esc(D.ITEMS[r.item]?.name || "")}</span><span class="hg-n">+${Math.round((r.rare.mult - 1) * 100)}% potion</span></div>`;
+      if (r.rare) rows += `<div class="hg-row hg-rare hg-${r.rare.k}">${icon(r.item)}<span class="hg-nm">${r.rare.k === "l" ? "✦" : "★"} ${esc(HARVEST.T(r.rare.k === "l" ? "Glowing {item}" : "Perfect {item}", { item: D.ITEMS[r.item]?.name || "" }))}</span><span class="hg-n">${esc(HARVEST.T("+{n}% potion", { n: Math.round((r.rare.mult - 1) * 100) }))}</span></div>`;
     } else rows = `<div class="hg-row hg-sub"><span class="hg-nm">${esc((r && r.err) || "Nothing gathered.")}</span></div>`;
     let note = "";
-    if (r && r.after && !r.after.single) note = r.after.quick && !(r.before && r.before.quick) ? `Quick Gather unlocked for ${esc(D.ITEMS[r.item]?.name || "")}.` : r.after.quick ? "You can Quick Gather this one now." : `Hand-picked ${r.after.done} of ${r.after.need}: then Quick Gather opens.`;
+    if (r && r.after && !r.after.single) note = r.after.quick && !(r.before && r.before.quick) ? esc(HARVEST.T("Quick Gather unlocked for {item}.", { item: D.ITEMS[r.item]?.name || "" })) : r.after.quick ? "You can Quick Gather this one now." : esc(HARVEST.T("Hand-picked {n} of {m}: then Quick Gather opens.", { n: r.after.done, m: r.after.need }));
     box.innerHTML = `<div class="hg-result"><div class="hg-grade ${cls}">${esc(label)}</div>${g.why ? `<p class="hg-why">${esc(g.why)}</p>` : ""}<div class="hg-list"><div class="hg-cap">Harvest</div>${rows}</div>${note ? `<p class="hg-note">${note}</p>` : ""}<button class="btn pri hg-done">Done</button></div>`;
     g.el.classList.add("hg-over"); g.shown = true;
     const b = box.querySelector(".hg-done"); b.addEventListener("click", done); try { b.focus({ preventScroll: true }); } catch (e) { /* ignore */ }
