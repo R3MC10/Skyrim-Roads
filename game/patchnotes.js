@@ -3,6 +3,9 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b279-beasthint", build: 279, date: "25 Nov 2026", title: "Where Beast Form lives", items: [
+      "Fixed: the werewolf card on the Character tab still sent you to the old Tactics page for Beast Form. It now says the truth: it's in the Magic menu, under Powers.",
+    ] },
     { id: "b278-compassfix", build: 278, date: "25 Nov 2026", title: "Compass fix", items: [
       "The main menu compass ring no longer drifts and spins: it stays still.",
       "The star now slides flat, straight up, down, left or right toward the direction you swipe.",
