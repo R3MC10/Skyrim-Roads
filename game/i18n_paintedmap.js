@@ -4,6 +4,16 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
 (() => {
   Object.assign(I18N_EXTRA.words, {
     "Roads on the map": "Drogi na mapie",
+    // patch note b230-map4k
+    "Sharp painted map, close up": "Malowana mapa jest teraz ostra z bliska",
+    "The painted world map stays sharp now, even zoomed all the way in on a phone or a big 4K screen. It used to turn soft and then swap to a plain drawn chart.":
+      "Malowana mapa świata jest teraz ostra nawet przy pełnym zbliżeniu, na telefonie i na dużym ekranie 4K. Wcześniej robiła się rozmyta, a potem zamieniała się w zwykłą rysowaną mapę.",
+    "Zoom in and the map loads finer pieces of the painting just for the part you look at, so it stays light on your phone. Until they arrive you see the normal painting.":
+      "Gdy przybliżasz, mapa wczytuje drobniejsze kawałki obrazu tylko dla miejsca, na które patrzysz, więc nie obciąża telefonu. Zanim dotrą, widzisz zwykły obraz.",
+    "Up close you can see fine brushwork: grass on the plains, snow, rock and little waves on the sea, with a faint paper grain on top.":
+      "Z bliska widać drobne pociągnięcia pędzla: trawę na równinach, śnieg, skały i małe fale na morzu, a na wierzchu delikatne ziarno papieru.",
+    "Names, roads, fog, pins and your hero sit exactly where they did before.":
+      "Nazwy, drogi, mgła, znaczniki i twój bohater są dokładnie tam, gdzie wcześniej.",
     // patch note
     "Ready for a painted world map": "Gotowi na malowaną mapę świata",
     "The world map can now show a hand-painted picture of Skyrim instead of the drawn one. Towns, roads, fog, your cone of sight, light, weather and markers all sit on top of it, exactly where they were.":

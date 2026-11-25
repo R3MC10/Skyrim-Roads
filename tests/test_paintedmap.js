@@ -123,5 +123,22 @@ f = frame(view());
 ok(f.built.length === 0, "painting arrives later: it takes over (procedural picture released)");
 ok(c.PAINTEDMAP.image(1) === files["map-world"].im && c.PAINTEDMAP.active(), "PAINTEDMAP.image / active");
 
+// ---- 7. the tile pyramid (maptiles.js): every tile file there, the right level per zoom, only the tiles in view
+const MT = require(__GAME + "maptiles.js");
+const idx = fs.readFileSync(__GAME + "index.html", "utf8");
+ok(idx.includes('<script src="maptiles.js"></script>') && idx.indexOf("maptiles.js") < idx.indexOf('src="map.js"'), "index.html loads maptiles.js before map.js");
+ok(/mapt-<L>-<col>-<row>/.test(assetsSrc), "assets.js manifest lists the mapt- tiles");
+let missingTiles = 0, tileCount = 0;
+for (let L = 1; L <= MT.TOP; L++) {
+  const [lw, lh] = MT.LEVELS[L];
+  for (let r = 0; r < Math.ceil(lh / MT.TILE); r++) for (let cc = 0; cc < Math.ceil(lw / MT.TILE); cc++) { tileCount++; if (!fs.existsSync(__GAME + `mapt-${L}-${cc}-${r}.webp`)) missingTiles++; }
+}
+ok(missingTiles === 0, `all ${tileCount} pyramid tiles are in the game folder (${missingTiles} missing)`);
+ok(MT.LEVELS[MT.TOP][0] >= 7680 && MT.LEVELS[MT.TOP][0] / MT.LEVELS[MT.TOP][1] === 10 / 7, "top level is 8K-class and exactly 10:7");
+ok(MT.levelFor(2000) === 1 && MT.levelFor(6000) === 1 && MT.levelFor(6100) === 2 && MT.levelFor(30000) === 2, "level per zoom: level 1 up to 1.5x its pixels, then level 2");
+const tv = MT.tilesIn(2, [480, 330, 520, 360]);   // a small box around Whiterun
+ok(tv.length >= 1 && tv.length <= 4 && tv.every(([x, y]) => x >= 7 && x <= 8 && y >= 5 && y <= 5), `only the tiles in view are asked for (${JSON.stringify(tv)})`);
+ok(MT.tilesIn(2, [-50, -50, 1050, 750]).length === 176, "whole map at level 2 = 16x11 tiles, clamped at the edges");
+
 console.log(bad.length ? `\n${bad.length} FAILED` : "\nall ok");
 process.exit(bad.length ? 1 : 0);

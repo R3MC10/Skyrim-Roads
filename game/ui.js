@@ -991,7 +991,7 @@
     if (!mapResized && (!mapOnScreen || mapCovered())) return 200;
     const moving = S?.trip?.status === "travel" || performance.now() - mapTouchedAt < 1500;
     const wx = WEVENTS.weather(livePos()).id, weatherAnim = !reduceMotion && !["clear", "cloudy", "fog"].includes(wx);
-    const mapAnim = (typeof INKMAP !== "undefined" && INKMAP.pending()) || (typeof MAPART !== "undefined" && MAPART.active()) || (typeof MOTION !== "undefined" && MOTION.mapBusy()) || (typeof MAPHERO !== "undefined" && MAPHERO.active());   // a discovery burst or an arrival puff playing   // a discovery burst playing
+    const mapAnim = (typeof INKMAP !== "undefined" && INKMAP.pending()) || (typeof MAPTILES !== "undefined" && MAPTILES.pending()) || (typeof MAPART !== "undefined" && MAPART.active()) || (typeof MOTION !== "undefined" && MOTION.mapBusy()) || (typeof MAPHERO !== "undefined" && MAPHERO.active());   // a discovery burst or an arrival puff playing   // a discovery burst playing
     const raidNow = typeof RAIDART !== "undefined" && WEVENTS.activeRaid();
     const fxNow = typeof FXART !== "undefined" && S ? FXART.state(S) : null;   // spell and shout effects on the map
     const PC = typeof PCMAP !== "undefined" && PCMAP.on();   // PC map home screen (pcmap.js): smooth pan and zoom, living map (mapfx.js)
