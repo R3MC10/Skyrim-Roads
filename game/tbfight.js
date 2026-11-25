@@ -312,6 +312,7 @@ const TB = (() => {
       const w = typeof STACKS !== "undefined" ? STACKS.beginTurn(this.f) : "";   // Winded / Drained stacks bite (stacks.js)
       if (w) this.emit("tick", w.replace(/^ · /, ""), "tick");
       if (typeof REACT !== "undefined") REACT.beginTurn(this.f);   // Cover allies drops when your turn comes back
+      if (this.f.kit) this.f.kit.myTurns = (this.f.kit.myTurns || 0) + 1;   // [first30] a teaching foe waits for your answer to its wind-up (foekit.js)
     }
     /* why you can't do a move now ("" = you can) */
     why(a) {

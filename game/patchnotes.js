@@ -3,6 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b336-first30", build: 336, date: "25 Nov 2026", title: "A guided start for new heroes", items: [
+      "New characters no longer get a welcome popup and a pile of tips. Instead there's one short quest line, Before the Storm, with one goal at a time and one button that does it.",
+      "Your first fight starts a minute after you make your hero: a bandit at Riverwood's mill. While you fight, one short hint at a time shows you how to attack, how to read what the foe does next, and how to guard when it winds up a huge blow.",
+      "Then you put on the armour he drops, walk to Whiterun, meet the Jarl, reach level 2, pick your first perk, and face a tougher bandit chief. The last step pays well and tells you what comes next.",
+      "Losing one of these fights costs nothing: you get back up at full health and try again.",
+      "On a PC the goal, its button and Skip sit in the quest tracker at the top right of the map.",
+      "Don't need it? Tap Skip the tutorial on the goal card and the main quest carries on as before. Heroes you already have aren't affected.",
+    ] },
     { id: "b333-maprider", build: 333, date: "25 Nov 2026", title: "Your rider on the map looks like you", items: [
       "On the world map your hero now looks like they really do: your race, your helmet, your armour, your shield and weapon, the same as on the hero screen. That goes for walking and standing too.",
       "Your horse on the map has a new body that really moves: it walks, trots and gallops, and it picks the one that fits how fast you're going. On a road you gallop; in deep snow or rough hills you slow down to a trot or a walk.",
