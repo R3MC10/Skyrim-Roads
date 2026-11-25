@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b289-followersize", build: 289, date: "25 Nov 2026", title: "Followers at full size, softer glows", items: [
+      "In fights your follower and your party now stand as tall as you do (women and some races a touch shorter, like in Skyrim) instead of looking like dwarves next to you. Everyone still fits on screen, and name tags sit just above their heads.",
+      "Enchanted weapons no longer hide under a big glowing blob. Now a thin shine runs along the blade's edges in the enchantment's colour (fire orange, frost pale blue, shock violet, absorb purple) and gently pulses; axes and maces glow faintly around the head, bows along the limb.",
+      "Summons step out with a short, faint shimmer instead of a white flash that covered them, and the portal they come through is see-through. Sovngarde heroes and other helpers shed smaller sparks.",
+      "Your shield now shows on your arm in fights (and on followers and party members who carry one, like Lydia).",
+    ] },
     { id: "b288-itemgames", build: 288, date: "25 Nov 2026", title: "Shield bash minigame, poisons in fights", items: [
       "Shield bash now has its own quick game in turn-based fights: slam as your shield meets the foe. A Perfect hits harder and gives Might and Haste, a Miss hits softer. Guard had the same problem and works again too.",
       "A staff now draws the rune of its spell's school instead of the sword bar, and scrolls draw their spell's rune.",

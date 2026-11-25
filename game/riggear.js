@@ -79,7 +79,7 @@ const RIGGEAR = (() => {
   const devScale = (g) => { try { const t = g.getTransform(); const s = Math.hypot(t.a, t.b); return isFinite(s) && s > 0 ? s : 1; } catch { return 1; } };
   function shadowOn(g, glow, st) {
     const d = devScale(g);
-    if (glow) { g.shadowColor = glow; g.shadowBlur = 4 * ((st && st.k) || 1); g.shadowOffsetX = 0; g.shadowOffsetY = 0; return; }
+    if (glow) { g.shadowColor = /^#[0-9a-f]{6}$/i.test(glow) ? glow + "70" : glow; g.shadowBlur = 2.6 * ((st && st.k) || 1); g.shadowOffsetX = 0; g.shadowOffsetY = 0; return; }   // [weaponshine] a faint coloured edge, not a halo
     g.shadowColor = "rgba(0,0,0,0.38)"; g.shadowBlur = 1.6 * d; g.shadowOffsetX = 0.5 * d; g.shadowOffsetY = 0.9 * d;
   }
   function shadowOff(g) { g.shadowColor = "rgba(0,0,0,0)"; g.shadowBlur = 0; g.shadowOffsetX = 0; g.shadowOffsetY = 0; }
