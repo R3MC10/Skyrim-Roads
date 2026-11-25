@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b216-dungeonphone", build: 216, date: "25 Nov 2026", title: "Dungeons fit your phone better", items: [
+      "A strip above the room shows how deep you are and the rooms you can go to next. Tap one to go there, or tap Map for the whole chart.",
+      "The room's choices sit two to a row, so Fight, Sneak, Run and your potion fit on the screen without scrolling.",
+      "No more snow or rain inside caves and ruins. Instead you see dust in the torchlight in barrows, water dripping in caves, and sparks drifting in Dwemer ruins and by campfires.",
+      "The foe waiting in a room now stands in the painting, so a draugr that opens its eyes is really there.",
+    ] },
     { id: "b214-daedric", build: 214, date: "25 Nov 2026", title: "Daedric bargains and artifacts that wake up", items: [
       "Black shrines by the road can now carry an offer from one of six Daedric princes: Mehrunes Dagon, Azura, Nocturnal, Hircine, Boethiah and Meridia (from level 8).",
       "Accept a contract and do three things your prince likes, counted from how you really play: slaying foes, winning at night, picking pockets and locks, hunting beasts, fighting alone or putting the dead to rest.",

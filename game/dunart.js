@@ -195,6 +195,9 @@ const DUNART = (() => {
     return `<div class="legend dlegend">${TYPES.filter((k) => d.rows.some((row) => row.some((n) => n.type === k))).map((k) => `<span>${ART.html(22, 22, (g, H, w, h) => {
       H.circle(g, w / 2, h / 2, 10, "#ecdcb6", RING[k], 1.4); symbol(g, H, k, w / 2, h / 2, 6.5, d.theme, INK); }, { key: `dleg|${k}|${d.theme}`, style: "ink", cls: "dlg", alt: "" })}${L[k] || k}</span>`).join("")}</div>`;
   }
+  /* one ink medallion for a room type, as an <img> (the legend and the phone route strip, dunstrip.js) */
+  const medalHTML = (k, theme, sz = 22, cls = "dlg") => ART.html(sz, sz, (g, H, w, h) => {
+    H.circle(g, w / 2, h / 2, w / 2 - 1, "#ecdcb6", RING[k] || INK, 1.4); symbol(g, H, k, w / 2, h / 2, w * 0.3, theme, INK); }, { key: `dleg|${k}|${theme}|${sz}`, style: "ink", cls, alt: "" });
   let inked = "";   // the last step already inked in, so a redraw of the same room doesn't replay it
   /* HTML for the map: the drawing, a glow canvas on top, and tap targets for the rooms you can go to next */
   function mapHTML(d) {
@@ -310,5 +313,5 @@ const DUNART = (() => {
 
   /* everything that should start after the dungeon screen is drawn */
   function after(root, reduce) { start(root, reduce); animateChest(root, reduce); if (typeof DUNROOMS !== "undefined") DUNROOMS.after(root); }
-  return { TH, TYPES, W, GAP, mapHTML, legendHTML, drawMap, symbol, chamber, lootStrip, chestHTML, after, themeOf, xy, heightOf, curve, newestStep };
+  return { TH, TYPES, W, GAP, mapHTML, legendHTML, medalHTML, drawMap, symbol, chamber, lootStrip, chestHTML, after, themeOf, xy, heightOf, curve, newestStep };
 })();
