@@ -3,11 +3,22 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b290-layout3", build: 290, date: "25 Nov 2026", title: "Titles you can read, hotbar in order", items: [
+    { id: "b292-layout3", build: 292, date: "25 Nov 2026", title: "Titles you can read, hotbar in order", items: [
       "On phones the round message history button no longer sits on a screen's title (Area, Journal, Social, AI & Loadouts, a dungeon's name): the title makes room for it.",
       "The fight hotbar on phones shows its slots in key order again: 1 to 5 on top, 6 to 0 below. Catch your breath no longer jumps out of line.",
       "Tab strips that don't fit the screen (like Character's Skills, Character, Follower, AI & Loadouts...) fade out at the edge that has more tabs, and the chosen tab is always fully in view.",
       "The Journal's chosen tab (Active, Misc, Completed) is now dark ink with a gold underline, easy to read on the parchment.",
+    { id: "b291-herocard", build: 291, date: "25 Nov 2026", title: "Your hero card looks like you", items: [
+      "The figure in the Items menu (and on the Hero page, title cards and other players' cards) is now the same painted hero you see in fights: your sex, race, hair and the armour and weapon you wear. It changes as soon as you change gear or look.",
+      "A woman no longer shows up as a bearded man there, and a raised weapon stays inside the card.",
+      "The small round race portrait next to it only shows when it matches your hero's sex.",
+    ] },
+    { id: "b290-itemcards2", build: 290, date: "25 Nov 2026", title: "Item cards say what changes", items: [
+      "The damage at the top of a weapon's card is now what it really hits for in your hands, with your skill and perks, the same number as in the comparison below. The weapon's own number is shown next to it as \"base\".",
+      "Item cards now say what else changes when you put something on: a two-handed weapon takes your shield off (and with it its armour and Shield bash), a shield takes a two-handed weapon off, and a bow or crossbow tells you when you have nothing to shoot.",
+      "When a weapon uses a different skill from the one you hold, the card says so, with both of your skill levels.",
+      "This shows on loot and reward cards, in the Items menu, in shops and on the phone's bottom sheet.",
+      "Putting on a shield while holding a two-handed weapon now takes the weapon off, instead of saying no.",
     ] },
     { id: "b289-followersize", build: 289, date: "25 Nov 2026", title: "Followers at full size, softer glows", items: [
       "In fights your follower and your party now stand as tall as you do (women and some races a touch shorter, like in Skyrim) instead of looking like dwarves next to you. Everyone still fits on screen, and name tags sit just above their heads.",
