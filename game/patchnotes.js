@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b233-folsex", build: 233, date: "25 Nov 2026", title: "Your followers look like themselves", items: [
+      "Jenassa, Lydia and the other women who follow you now look like themselves in fights.",
+      "Aela, Brelyna, Uthgerd, Mjoll, Annekke, Borgakh and Hrolfa at Pinewatch get a woman's face and body too, on your screen and on your party's.",
+      "A dark elf woman now wears a dark elf woman's face, not a man's.",
+    ] },
     { id: "b232-arrivearea", build: 232, date: "25 Nov 2026", title: "The Area tab opens when you arrive", items: [
       "When you reach a town, a dungeon entrance or another place on the map, the Area tab opens by itself, so shops, the inn and what you can do there are right in front of you.",
       "If a fight, a road event or any window is still open, it waits until you close it.",
