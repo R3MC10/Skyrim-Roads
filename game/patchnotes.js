@@ -3,11 +3,49 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b269-nocover", build: 269, date: "25 Nov 2026", title: "Nothing covers your buttons", items: [
+    { id: "b272-nocover", build: 272, date: "25 Nov 2026", title: "Nothing covers your buttons", items: [
       "The round message history button now sits at the left end of the messages (on a PC, next to World news) and steps aside when there's a button under it. It used to land on Leave in a dungeon, the info button in a town and other buttons in the corner. It hides while a menu, the character creator, the perk stars or a mini-game is open.",
       "Big banners (quest done, achievements) stay in a slim strip near the top and pick a spot with no buttons under it. On the map and in a dungeon they never drop below the top fifth of the screen, so the dungeon route stays readable.",
       "On a phone, the Gather prompt is a strip right on top of the bottom bar, and the page gets room for it at the end. On a PC it no longer shows when the Gathering card already has the same Gather button.",
       "Character creation: a raised sword is never cut off at the top and never touches the turn and Face buttons.",
+    ] },
+    { id: "b271-movepreview", build: 271, date: "25 Nov 2026", title: "See a move before you make it", items: [
+      "In a fight, rest the mouse on a move (or hold your finger on it on a phone): the foe's health bar shows a striped piece for what it could lose, from the lowest to the highest hit.",
+      "Your stamina or magicka dims by what the move costs, and one of your move diamonds fades. Healing spells show the health you'd get back; End turn shows the guard you keep.",
+      "The numbers match the tooltip, and a strong foe never shows more than 40% gone from one blow. A quick tap still does the move right away.",
+      "Bandit archers now carry a bow instead of an axe, bandit mages a staff and a spell, and Forsworn and draugr archers have their own pictures too.",
+    ] },
+    { id: "b270-stations", build: 270, date: "25 Nov 2026", title: "Places open on the work", items: [
+      "Opening the Forge, a shop, the inn or any other place in town now shows its tabs and list right away: the town news folds into one \"Town news\" row you can open, and the how-it-works note sits under the list.",
+      "The \"New to the game?\" card only shows on the map and the town's board, not inside a place.",
+      "Each place's painting is a little shorter on phones and the person who runs it takes one compact line.",
+      "Hold status says in a word how each number is doing (Food 43 short, Security 66 safe), coloured green, gold or red.",
+      "In the Company tab, the banner shrinks to a name strip when your painted longhouse is shown right below it.",
+    ] },
+    { id: "b269-mysteryrooms", build: 269, date: "25 Nov 2026", title: "Mystery rooms with real choices", items: [
+      "Unknown rooms in dungeons can now hold six new things: a sealed passage, a collapsed tunnel, a wounded traveller, a patrol (draugr in barrows), a cursed offering and an unstable rope bridge.",
+      "Each choice shows the skill it uses and your chance, like \"Lockpicking · 62%\", and what it can bring: a shortcut past the next rooms (never past the boss), gold and loot, a blessing for the rest of the dungeon, or an ambush where the foe is staggered and you move first.",
+      "Failing never leaves you stuck: you lose some health, the next foe hears you coming, or you end up in a fight on the way round. A curse fades when you leave.",
+      "In a party the whole party votes, and the best of you at that skill makes the attempt. Everyone sees how it went.",
+      "Patient Shadow (Sneak) now also makes these checks 10% easier.",
+    ] },
+    { id: "b268-npcportraits", build: 268, date: "25 Nov 2026", title: "Painted faces for the people you meet", items: [
+      "The smiths, innkeepers, court wizards and merchants of Whiterun, Riverwood, Solitude, Windhelm and Riften now have painted portraits, and so do four Jarls, Whiterun's steward and the Greybeard who greets you.",
+      "Guards, and Nord innkeepers and merchants who don't have their own painting yet, get a painted face too. Guards keep their hold's colours around the picture.",
+      "The face next to who you're talking to is bigger on a PC, and trainers' faces are a little bigger in their list.",
+    ] },
+    { id: "b267-itemdetail", build: 267, date: "25 Nov 2026", title: "Item details beside the list", items: [
+      "On a PC, resting the mouse on an item in your pack shows its details in the right-hand panel instead of a box over the list. Click an item to keep it there; press Esc to let go.",
+      "Weapons, armour, shields and jewellery now show how they compare with what you wear: damage, armour, weight and value, better in green and worse in red. A two-handed weapon is compared with both your hands.",
+      "On a phone, the item details panel at the bottom is solid (the list no longer shows through) and never takes more than about half the screen.",
+      "When you pick one category, the middle column says what it shows: Damage, Armor or Effect.",
+    ] },
+    { id: "b266-perksky", build: 266, date: "25 Nov 2026", title: "The perk stars open on what you can take", items: [
+      "Opening a skill's stars now shows the perks you can take right away, instead of the top of the sky. On a phone the first stars at the bottom are no longer cut off.",
+      "Stars tell you more at a glance: perks you have are gold (with gold lines), ones you can take now shine bright with a slowly pulsing ring, ones that need a higher skill are blue-grey, and ones that need another perk first are dim.",
+      "Long lines that jump over a row are now faint dashed curves, so the sky no longer looks like a tangle of wires. They light up when you pick one of their stars.",
+      "On a phone, every star is easier to tap, and the \"Tap a star\" hint sits under the stars instead of covering the bottom row.",
+      "On a PC, the stars grow to fill the panel.",
     ] },
     { id: "b265-qacore3", build: 265, date: "25 Nov 2026", title: "Crafting in Polish", items: [
       "Fixed: in Polish, the arcane enchanter, parts of the alchemy lab and one cooking recipe were still in English.",

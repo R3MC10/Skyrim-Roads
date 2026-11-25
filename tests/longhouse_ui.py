@@ -102,7 +102,10 @@ async def main():
                 await tap("[data-lng=tab][data-id=rooms]"); await pg.wait_for_timeout(300)
                 if QA:
                     await pg.wait_for_timeout(1500); await company(); await tap("[data-lng=tab][data-id=rooms]"); await pg.wait_for_timeout(500)
-                    check(await pg.evaluate("!!document.querySelector('#lng-root .lng-view svg') && !!document.querySelector('#lng-root .lng-banner img.lng-paint')"), f"{tag}: the painted hall and banner")
+                    check(await pg.evaluate("!!document.querySelector('#lng-root .lng-view svg') && !!document.querySelector('#lng-root .lng-banner.lng-strip') && !document.querySelector('#lng-root .lng-banner img')"), f"{tag}: the painted hall, banner shrunk to a name strip")
+                    await tap("[data-lng=tab][data-id=gold]"); await pg.wait_for_timeout(300)
+                    check(await pg.evaluate("!!document.querySelector('#lng-root .lng-banner img.lng-paint')"), f"{tag}: painted banner on tabs without the hall")
+                    await tap("[data-lng=tab][data-id=rooms]"); await pg.wait_for_timeout(300)
                     el = await pg.query_selector("#lng-root .lng-view")
                     if el: await el.screenshot(path=os.path.join(OUT, f"longhouse_{tag}_hall.png"))
                     # every room at level 3, then nothing built: the overlays change with the rooms
