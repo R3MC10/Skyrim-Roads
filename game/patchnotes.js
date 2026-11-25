@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b184-backdrops2", build: 184, date: "25 Nov 2026", title: "Sharper fight backdrops and a town street", items: [
+      "The pine forest, snow pass, tundra road, cave, burial barrow and Dwemer vault behind your fights are painted again, much bigger and with more detail. They stay sharp on big PC screens and ultrawide monitors.",
+      "New: a town street. Fights in a town or city, or on the road right outside one (guards, bounty hunters, brawls, festival duels), now happen among Nordic longhouses with the hold's hall on the hill.",
+      "The ground in front of the fighters has a bit more texture and shade, so it no longer looks like a flat block.",
+    ] },
     { id: "b183-potionbal", build: 183, date: "25 Nov 2026", title: "Potions hit harder again", items: [
       "In a fight 60% of a potion now lands the moment you drink it, and the rest comes in over the next two rounds (small and big brewed ones: the next round). A potion saves you in a pinch again.",
       "Still one potion of a kind at a time: another of the same kind only helps once the last one has mostly done its work.",
