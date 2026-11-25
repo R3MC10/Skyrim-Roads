@@ -38,7 +38,7 @@ const HARVESTGAME = (() => {
   function art(kind) {
     const c = document.createElement("canvas"); c.width = 256; c.height = 256;
     const g = c.getContext("2d"), pic = typeof ASSETS !== "undefined" && kind !== "clam" ? ASSETS.img("harvest-" + kind) : null;
-    if (pic) { g.drawImage(pic, 0, 0, 256, 256); return c; }
+    if (pic) { g.drawImage(pic, 0, 0, 256, 256); c.painted = true; return c; }
     drawn(g, kind);
     return c;
   }
@@ -294,6 +294,9 @@ const HARVESTGAME = (() => {
     const loop = () => {
       if (cur !== g) return;
       const t = nowS(), dt = Math.min(0.05, t - last); last = t;
+      if (!g.art.painted && g.kind !== "clam" && typeof ASSETS !== "undefined" && ASSETS.img("harvest-" + g.kind)) {   // the painting arrived after the game opened
+        g.art = art(g.kind); if (g.kind === "egg") [g.nest, g.eggPic] = split(g.art, EGG);
+      }
       if (!g.over) {
         if (g.kind === "clam" && g.prying) { g.v += dt / g.fill; if (g.v >= 1) { g.prying = false; g.held = false; clamMiss(g); } }
         if (!g.held && (g.kind === "root" || g.kind === "nirn" || g.kind === "egg")) { g.strain = Math.max(0, g.strain - dt * 0.5); }
@@ -344,6 +347,7 @@ const HARVESTGAME = (() => {
   /* the prompt over the map when a ripe patch is in reach, also while walking or riding */
   function nearHTML(s) {
     const n = HARVEST.nearPrompt(s); if (!n) return "";
+    if (n.kind !== "clam" && typeof ASSETS !== "undefined") ASSETS.img("harvest-" + n.kind);   // start loading the painting before Gather is tapped
     return `<div class="gnear">${typeof ICONART !== "undefined" ? ICONART.item(n.ing, 28) : ""}<span class="gn-t"><b>${esc(n.name)}</b><small>${n.riding ? "in reach as you pass" : "in reach"} · ${esc(HARVEST.howTo(n.ing))}</small></span>${n.quick ? `<button class="btn sm" data-act="gquick" data-id="${esc(n.id)}">Quick</button>` : ""}<button class="btn sm pri" data-act="gpick" data-id="${esc(n.id)}">Gather</button></div>`;
   }
 
