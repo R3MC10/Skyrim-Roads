@@ -354,6 +354,8 @@ const BOSSFIGHT = (() => {
     o.addEventListener("click", kill);
     document.body.appendChild(o);
     if (ms) setTimeout(kill, still() ? Math.min(ms, 1800) : ms);
+    const kind = cls === "bfintro" ? "intro" : cls === "bfphase" ? "phase" : cls === "bffin" ? "end" : null;
+    if (kind && typeof FIGHTPRES !== "undefined") FIGHTPRES.show(kind, o);   // [fightscreen] one big card at a time (fightpres.js)
     return o;
   }
   function intro(el, sess) {
@@ -388,7 +390,7 @@ const BOSSFIGHT = (() => {
       wrap.innerHTML = barHTML(sess, ehpNow ?? Math.max(0, f.ehp)) + teleHTML(sess);
       if (top && top.nextSibling) tin.insertBefore(wrap, top.nextSibling); else tin.prepend(wrap);
     }
-    if (!sess.bfIntro) { sess.bfIntro = true; intro(el, sess); }
+    if (!sess.bfIntro) { sess.bfIntro = true; if (typeof FIGHTPRES === "undefined" || FIGHTPRES.introOnce(sess)) intro(el, sess); }   // [fightscreen] once per fight
     const ph = newEv.filter((e) => e && e.phase).pop();
     if (ph) { const show = () => overlay("bfphase", `<div class="bfpc"><small>${esc(fmt("Phase {0}", ph.phase))}</small><h3>${esc(String(ph.banner || "").replace(/^[^:]*:\s*/, ""))}</h3></div>`, 2400, el); if (typeof NOTICES !== "undefined") NOTICES.fightTip("bfphase", show); else show(); }   // [notices] waits while a fight window is open
     if (sess.done && f.won && !f.escaped && f.ehp <= 0 && !sess.bfFin) {

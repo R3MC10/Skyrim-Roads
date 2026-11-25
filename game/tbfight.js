@@ -891,6 +891,7 @@ const TB = (() => {
     if (typeof FIGHTDC !== "undefined") { try { FIGHTDC.decorate(el, sess); } catch (e) { console.warn("declutter", e); } }   // the "…" menu, the foe's folded moves (fightdeclutter.js)
     if (typeof FOEPANEL !== "undefined") { try { FOEPANEL.decorate(el, sess); } catch (e) { console.warn("foepanel", e); } }   // the slim foe plate, the scrollable log (foepanel.js)
     if (typeof PHONEFIGHT !== "undefined") { try { PHONEFIGHT.decorate(el, sess); } catch (e) { console.warn("phonefight", e); } }   // phones: the log folds, the foe's health in numbers (phonefight.js)
+    if (typeof FIGHTPRES !== "undefined") { try { FIGHTPRES.after(el); } catch (e) { console.warn("fightpres", e); } }   // one big banner at a time (fightpres.js)
   }
   /* floating numbers for what just happened: damage coloured by element, heals, crits, and what you spent */
   const ELEM = [["fire", /\b(fire|flame|burn|scorch|ember)/i], ["frost", /\b(frost|ice|cold|freez|chill)/i], ["shock", /\b(shock|lightning|spark|thunder)/i], ["poison", /\b(poison|venom|toxic)/i]];
