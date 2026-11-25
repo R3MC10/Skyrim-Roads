@@ -197,7 +197,7 @@ function landed(build, L, base, prep, a, look, tries = 25) {
   for (const id of ["cold_breaker", "tactician", "bodyguard"]) { const p = c.PERKS.BY_ID[id]; need.add(p.name); need.add(p.desc.replace(/\s*\[OURS\]$/, "")); }
   for (const k of need) if (k && !(k in PLX)) miss.push(k);
   ok(miss.length === 0, "every combo line has Polish: missing " + miss.join(" | "));
-  const note = c.PATCHNOTES.LIST.find((x) => x.id === "b191-combos");
+  const note = c.PATCHNOTES.LIST.find((x) => x.id === "b192-combos");
   ok(note && note === c.PATCHNOTES.LIST[0] || note, "a patch note for combos");
   if (note) { const pm = [note.title, ...note.items].filter((x) => !words[x]); ok(pm.length === 0, "the patch note has Polish: missing " + pm.join(" | ")); }
   const all = src + fs.readFileSync(W + "i18n_combos.js", "utf8");

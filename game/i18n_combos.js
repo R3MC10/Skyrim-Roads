@@ -58,7 +58,7 @@
   };
   for (const k in PL) if (!(k in I18N_STORY.ex)) I18N_STORY.ex[k] = PL[k];   // never overwrite an older translation
 })();
-// the patch note (patchnotes.js b191) and the Coming next line
+// the patch note (patchnotes.js b192) and the Coming next line
 var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, pat: [] };
 Object.assign(I18N_EXTRA.words, {
   "Combat combos and teamwork": "Kombinacje w walce i praca zespołowa",

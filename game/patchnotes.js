@@ -3,7 +3,7 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b191-combos", build: 191, date: "25 Nov 2026", title: "Combat combos and teamwork", items: [
+    { id: "b192-combos", build: 192, date: "25 Nov 2026", title: "Combat combos and teamwork", items: [
       "Set a foe up, then cash in. Freeze it and hit it with a power attack to Shatter the frost for big extra damage. Shield-bash it and follow with a power attack this round for an Exploit: it hits harder and the foe keeps reeling. Knock it off balance with a shout and your next blows land harder.",
       "New in the general store: the Oil Flask. Throw it at a foe, then any fire (a spell, a fire weapon, Fire Breath) sets the ground ablaze and burns it for a few rounds.",
       "New moves when they fit: Mark target (when you or a friend has a bow, the next three arrows at it are critical hits) and Cover allies (blows meant for your friends come to you, softer).",
@@ -11,6 +11,14 @@ const PATCHNOTES = (() => {
       "A move that would set off a combo right now glows and gets a small icon, and a short banner shows when a combo lands.",
       "Bosses have two new big moves you see a turn ahead: Withering Hex (wash it off with a potion or a healing spell) and Marked for Death, which goes for a friend unless you cover them.",
       "Three new perks: Cold Breaker (Two-Handed: Shatter hits harder), Tactician (Speechcraft: setups last a round longer) and Bodyguard (Blocking: covering friends hurts you less).",
+    ] },
+    { id: "b191-afflictions", build: 191, date: "25 Nov 2026", title: "Afflictions", items: [
+      "Dark gifts with an upside and a downside: catch the Draugr Curse in the deepest barrows, take a Daedric Mark at a black shrine by the road, or pick up the Dwemer Resonance in Dwemer ruins.",
+      "Each grows in three stages with what you do, and works in every fight: frost hurts a Draugr-cursed hero less but potions heal them less, the marked hit daedra harder but bad luck follows them, the Dwemer hum boosts shock but drains your magicka outside the ruins.",
+      "Lycanthropy and Vampirism show up in the same place on the Character screen, with their stage.",
+      "Cures: a priest at a temple, the Vow of Cleansing (slay three daedra), or two Void Salts.",
+      "People on the road and in town notice, and your party sees your afflictions and feels a little of them in a fight together.",
+      "New perks: Embrace the Curse (Illusion, upsides stronger) and Warding Rites (Restoration, downsides weaker).",
     ] },
     { id: "b190-festart", build: 190, date: "25 Nov 2026", title: "Painted festival headers", items: [
       "Every festival now has a painted picture on top of its screen: the Harvest Fair, the Burning of King Olaf, the Jarl's Tourney, the Fishing Derby, the Great Hunt, Forgefire Days and the Midwinter Feast.",
@@ -1332,11 +1340,10 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 191;
+  const NEXT_AT = 192;
   const NEXT = [
     "Painted riders on the road and on the map",
     "Makeovers for fishing, hunting, mining and lockpicking",
-    "Afflictions with an upside and a downside: lycanthropy, the Draugr curse and the Daedric mark",
     "An adventuring company longhouse: a shared base with a treasury, a trophy hall and stables",
     "Daedric bargains and artifacts that awaken, plus regional crises and heists",
     "Follower and horse bonds, and spell crafting",

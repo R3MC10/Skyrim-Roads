@@ -340,6 +340,9 @@ const PFX = (() => {
     [AR, "lh_tracker", "Experienced Tracker", 1, [40], ["hunters_eye"], "On a legendary hunt every clue counts twice, you read one extra secret from every sign, and tracks and ambushes are easier. [OURS]", [["lhclue", 1, {}]]],
     [ "Speechcraft", "lh_scholar", "Monster Scholar", 1, [30], ["persuasion"], "You have read every bestiary in the College: you know what a legendary beast resists before you meet it, and you hit legendary beasts 10% harder. [OURS]", [["lhscholar", 1, {}], ["out", 0.1, { tag: ["legend"] }]]],
     [ "Smithing", "lh_trophy", "Trophy Hunter", 2, [30, 60], ["steel_smithing"], "When you skin a legendary beast you take 1/2 more pieces of its rare hide, and you are 10/20% more likely to find its unique piece. [OURS]", [["lhharvest", [1, 2], {}], ["lhuniq", [0.1, 0.2], {}]]],
+    // afflictions (afflictions.js reads affup / affdown)
+    [ "Illusion", "aff_embrace", "Embrace the Curse", 1, [25], ["novice_illusion"], "You stop fighting what's in your blood: every affliction's upsides are 50% stronger. [OURS]", [["affup", 0.5, {}]]],
+    [ "Restoration", "aff_warding", "Warding Rites", 1, [30], ["novice_restoration"], "Old prayers and salt lines keep the worst at bay: every affliction's downsides are 40% weaker. [OURS]", [["affdown", 0.4, {}]]],
   ];
   const FX = {};
   if (typeof PERKS !== "undefined") {
