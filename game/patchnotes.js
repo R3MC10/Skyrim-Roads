@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b293-perkkeys", build: 293, date: "25 Nov 2026", title: "Perk stars with the keyboard", items: [
+      "On a PC the Skills page now works like Skyrim's: A and D (or the arrows) step through the skills, W and S move up and down the list, and the stars on the right follow the skill you're on.",
+      "E, Enter or Space takes you into the stars. There W A S D jump to the nearest star that way (stars joined by a line first), its perk shows on the left, and E takes it if you can.",
+      "Tab, Esc or Backspace (or S at the bottom) go back to the skills. A bright ring shows where you are, and a small key hint sits at the bottom. The mouse and phones work as before.",
+    ] },
     { id: "b290-itemcards2", build: 290, date: "25 Nov 2026", title: "Item cards say what changes", items: [
       "The damage at the top of a weapon's card is now what it really hits for in your hands, with your skill and perks, the same number as in the comparison below. The weapon's own number is shown next to it as \"base\".",
       "Item cards now say what else changes when you put something on: a two-handed weapon takes your shield off (and with it its armour and Shield bash), a shield takes a two-handed weapon off, and a bow or crossbow tells you when you have nothing to shoot.",
