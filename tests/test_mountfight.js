@@ -81,7 +81,7 @@ console.log("2: Mount / Dismount in a turn-by-turn fight");
   ok(TB.cost(f, "mount").sp === 20 && TB.cost(f, "dismount").sp === 0, "Mount 20 stamina, Dismount free");
   ok(ss.canAfford("mount") && !ss.canAfford("dismount"), "on foot: Mount yes, Dismount no");
   const sp0 = f.sp, mv0 = ss.myActs; r = ss.act("mount");
-  ok(f.mount.up && Math.abs(f.sp - (sp0 - MOUNTFIGHT.N.mountSp)) < 0.01 && ss.myActs === mv0 + 1, "Mount: in the saddle, −20 stamina, one move: " + (sp0 - f.sp));
+  ok(f.mount.up && Math.abs(f.sp - (sp0 - MOUNTFIGHT.N.mountSp)) < 0.01 && ss.myActs === mv0 + 2, "Mount: in the saddle, −20 stamina, two moves: " + (sp0 - f.sp) + " / " + (ss.myActs - mv0));
   ok(ss.ev.some((e) => /swing up onto Frost/.test(e.text)), "the log says you got on");
   ok(!ss.canAfford("mount") && (ss.myActs >= TB.MAX_ACTS || ss.canAfford("dismount")), "up: Mount gone, Dismount there");
   // finish the turn, then the next blow is a charge
@@ -91,7 +91,8 @@ console.log("2: Mount / Dismount in a turn-by-turn fight");
   const before = ss.ev.length; ss.act("attack");
   ok(!ss.ev.slice(before).some((e) => /Mounted charge/.test(e.text)), "only one charge per getting on");
   if (ss.canAfford("dismount")) { ss.act("dismount"); ok(!f.mount.up && ss.ev.some((e) => /slide down from Frost/.test(e.text)), "Dismount: on foot, the horse waits"); }
-  const sp = make("warrior", 20); perk(sp, "steady_steed"); const fs2 = road(sp, enc("Bandit outlaw", 20)); ok(TB.cost(fs2, "mount").sp === 15, "Steady Steed: Mount costs 15 stamina");
+  const sp = make("warrior", 20); perk(sp, "steady_steed"); const fs2 = road(sp, enc("Bandit outlaw", 20)); ok(TB.cost(fs2, "mount").sp === 15 && TB.cost(fs2, "mount").acts === 1, "Steady Steed: Mount costs 15 stamina and one move");
+  ok(TB.cost(f, "mount").acts === 2 && TB.cost(f, "dismount").acts === 1, "Mount takes two moves, Dismount one");
   const low = make("warrior", 20); low.horse.mounted = false; const fl = road(low, enc("Bandit outlaw", 20)); fl.sp = 5;
   ok(!fl.affordable("mount") && /stamina/.test(MOUNTFIGHT.why(fl, "mount")), "no stamina, no getting on");
   ok(/can't get on/.test(fl.act("mount")), "a forced Mount without stamina just says no");
@@ -104,7 +105,12 @@ console.log("3: what the saddle rules out");
   const dmg = (up) => { let t = 0; for (let i = 0; i < 400; i++) { const x = make("twohand", 20), y = road(x, enc("Bandit outlaw", 20)); y.ehp = 1e6; y.sp = 500; if (up) { MOUNTFIGHT.act(y, "mount"); y.mount.charged = true; y.mount.recharge = false; } y.turn = 3; queue = [0]; y.attack(false); t += 1e6 - y.ehp; } return t / 400; };
   const du = dmg(true), dd = dmg(false); ok(du < dd * 0.95 && du > dd * 0.75, "a two-hander swings clumsily up there: " + du.toFixed(1) + " vs " + dd.toFixed(1));
   const m = make("warrior", 20); m.spells = ["flames", "fireball"]; const fm = road(m, enc("Bandit outlaw", 20));
-  ok(!fm.affordable("dual:flames") && /reins/.test(MOUNTFIGHT.why(fm, "dual:flames")), "no dual casting in the saddle");
+  fm.mp = 1000; ok(fm.affordable("dual:flames") && !MOUNTFIGHT.why(fm, "dual:flames"), "dual casting works in the saddle");
+  { const c1 = TB.cost(fm, "dual:flames").mp; fm.mount.up = false; const c0 = TB.cost(fm, "dual:flames").mp; fm.mount.up = true;
+    ok(c1 > c0 && c1 <= Math.ceil(c0 * 1.21), "dual casting from the saddle takes a bit more magicka: " + c1 + " vs " + c0);
+    const sc = make("warrior", 20); sc.spells = ["flames"]; perk(sc, "saddle_caster"); const fsc = road(sc, enc("Bandit outlaw", 20)); fsc.mp = 1000;
+    ok(fsc.mount.up && TB.cost(fsc, "dual:flames").mp === c0 && MOUNTFIGHT.dualPow(fsc) > 1, "Saddle Caster: no extra magicka, dual casts hit harder"); }
+  { const before = fm.mp, e0 = fm.ehp; fm.ehp = 1e6; const t = fm.act("dual:flames"); ok(/dual/i.test(t) && fm.mp < before && fm.mount.up, "a dual cast from the saddle: " + t); }
   const master = Object.keys(D.SPELLS).find((id) => D.SPELLS[id].level === "Master");
   if (master) ok(MOUNTFIGHT.blocked(fm, "spell:" + master), "no Master spells in the saddle (" + master + ")");
   fm.mount.up = false; ok(MOUNTFIGHT.allow(fm, "dual:flames") === null, "on foot: back to normal");
@@ -113,7 +119,7 @@ console.log("3: what the saddle rules out");
 console.log("4: charge, trample, bow");
 { const run = (L, perkId, foe, n = 400) => { let st = 0, mult = 0, lab = 0; for (let i = 0; i < n; i++) { const s = make("warrior", L); if (perkId) perk(s, perkId); const f = road(s, enc(foe, L)); f.turn = 1; const r = HORSEBACK.strike(f, false, false); if (f.stagger) st++; mult += r.mult; if (/knocks them back/.test(r.label)) lab++; } return { st: st / n, mult: mult / n, lab: lab / n }; };
   const a = run(20, null, "Bandit outlaw"), b = run(20, "cavalry_charge", "Bandit outlaw");
-  ok(a.st > 0.15 && a.st < 0.35 && Math.abs(a.lab - a.st) < 0.01, "a charge knocks the foe back ~25%: " + a.st);
+  ok(a.st > 0.08 && a.st < 0.3 && Math.abs(a.lab - a.st) < 0.01, "a charge knocks the foe back ~15%: " + a.st);
   ok(b.st === 1 && Math.abs(b.mult - a.mult * 1.3) < 0.01, "Cavalry Charge: +30% and always knocks back (" + a.mult.toFixed(2) + " → " + b.mult.toFixed(2) + ")");
   const s = make("warrior", 20), f = road(s, enc("Bandit outlaw", 20)); f.ehp = 1e6; f.turn = 1; f.attack(false); f.stagger = false;
   { const x = make("warrior", 20), y = road(x, enc("Bandit outlaw", 20)); y.ehp = 1e6; y.turn = 1; y.hidden = true; const t = y.attack(false); ok(/Mounted charge/.test(t) && !/Sneak/.test(t), "hidden in the saddle: no sneak attack, the opening is a charge: " + t);

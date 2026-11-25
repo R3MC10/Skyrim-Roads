@@ -4,12 +4,15 @@
    going is fast. A small hop and a puff of dust when a trip ends. Works in both art styles (the figure follows ART).
    Reduce motion (Settings → Accessibility) keeps everyone still: one standing frame, no hop, no dust.
    API: MAPHERO.draw(g, x, y, s, o) → { top, head }  (feet at x,y in map units; s = one screen px in map units)
-          o = { id, look, horse: coat colour | null, moving, gallop, t (seconds), reduce, heading (radians | null), scale, ring,
+          o = { id, look, horse: coat colour | null, led: coat colour | null (on foot, the horse walking behind you), moving, gallop, t (seconds), reduce, heading (radians | null), scale, ring,
                 label (text drawn centred above the head; leave out when the caller places names itself), labelColor, labelSize }
         MAPHERO.figure(g, hero, x, y, t, opts) → the same, for other screens (e.g. a PC full-screen map):
           hero = { id, look, horse, moving, gallop, heading }, opts = { s (one screen px in g's units, default 1), scale,
           reduce, ring, label, labelColor, labelSize }. The label is whatever the caller passes (a name, "Stranger", ...).
-        MAPHERO.active() → true while an arrival puff is playing (the map keeps drawing smoothly)
+        MAPHERO.active() → true while an arrival puff or a mount / dismount is playing (the map keeps drawing smoothly)
+   [riding] Getting on or off (o.horse turns on or off) plays a short move instead of a swap: the horse walks up from
+   behind and you climb into the saddle, or you slide down and it steps back. In the saddle the frames are cut finer
+   (RIDE_STEPS) so the gait and the rider's sway move smoothly together.
         MAPHERO.flipped(id) → true when that hero faces left */
 const MAPHERO = (() => {
   const HEROES = new Map();   // id → { flip, last, moving, arrive }
@@ -39,20 +42,48 @@ const MAPHERO = (() => {
     g.restore();
   }
   /* the frame for this moment: idle 4 frames over 2.4 s, walking 8 over 0.9 s, the horse standing / walking / galloping */
+  const RIDE_STEPS = 12, MOUNT_T = 0.8;
   function poseFor(o) {
     if (o.reduce) return o.horse ? { pose: "ride", frame: 0, gait: "stand" } : { pose: "idle", frame: 0 };
     const t = o.t || 0;
     if (o.horse) {
       const gait = !o.moving ? "stand" : o.gallop ? null : "walk", per = !o.moving ? 2.6 : o.gallop ? 0.5 : 1.1;
-      return { pose: "ride", frame: Math.floor((t / per) * 4) % 4, gait };
+      return { pose: "ride", frame: Math.floor((t / per) * RIDE_STEPS) % RIDE_STEPS, steps: RIDE_STEPS, gait };
     }
     if (o.moving) return { pose: "walk", frame: Math.floor((t / 0.9) * 8) % 8 };
     return { pose: "idle", frame: Math.floor((t / 2.4) * 4) % 4 };
   }
+  const ease = (x) => { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); };
+  /* getting on or off on the map: the horse beside you and you climbing up / sliding down (false once it is over) */
+  function mounting(g, st, x, y, s, sc, o, tn) {
+    const M = st.mt; if (!M) return false;
+    const u = (tn - M.t0) / MOUNT_T; if (u >= 1 || o.reduce) { st.mt = null; return false; }
+    const hr = 30 * sc * s, hf = 36 * sc * s, k = hr / 61, dir = st.flip ? -1 : 1;
+    const v = M.on ? u : 1 - u;   // 0 on foot .. 1 in the saddle
+    const walk = M.on ? ease(v / 0.4) : 1 - ease((u - 0.6) / 0.4), hx = x - dir * 22 * sc * s * (1 - walk);   // the horse comes up from behind / steps back
+    const dpr = Math.min(2, (typeof window !== "undefined" && window.devicePixelRatio) || 1);
+    g.save(); g.shadowColor = "rgba(255,244,214,.85)"; g.shadowBlur = 3 * dpr;
+    try {
+      if (v >= 0.72) {   // astride: the saddle figure, settling down into the seat
+        const sink = (1 - ease((v - 0.72) / 0.28)) * 3 * sc * s;
+        HEROART.drawFigure(g, { look: o.look }, hx, y - sink, { pose: "ride", frame: 0, h: hr, horse: M.horse, gait: "stand", flip: st.flip });
+      } else {
+        if (typeof FIGART !== "undefined" && FIGART.drawHorse) FIGART.drawHorse(g, M.horse, hx, y, { k, flip: st.flip, gait: "stand" });
+        const up = ease((v - 0.4) / 0.32), lift = up * 26 * k;   // a foot in the stirrup, then up
+        g.save(); g.translate(x + dir * 3 * sc * s * (1 - up), y - lift); g.rotate(dir * 0.18 * Math.sin(Math.PI * up));
+        HEROART.drawFigure(g, { look: o.look }, 0, 0, { pose: "idle", frame: 0, h: hf, flip: st.flip });
+        g.restore();
+      }
+    } catch { /* no figure renderer */ }
+    g.restore();
+    return true;
+  }
   function draw(g, x, y, s, o = {}) {
     const st = stateOf(o.id || "me"), sc = o.scale || 1, h = (o.horse ? 30 : 36) * sc * s;
     face(st, x, y, o.heading, s);
-    const tn = now();
+    const tn = now(), hz = o.horse || null;
+    if (st.hz !== undefined && !!st.hz !== !!hz && !o.reduce) { st.mt = { t0: tn, on: !!hz, horse: hz || st.hz }; busyUntil = Math.max(busyUntil, tn + MOUNT_T + 0.05); }
+    st.hz = hz;
     if (st.moving && !o.moving && !o.reduce) { st.arrive = tn; busyUntil = Math.max(busyUntil, tn + 0.9); }
     st.moving = !!o.moving;
     const u = st.arrive ? (tn - st.arrive) / 0.9 : 2;
@@ -63,11 +94,20 @@ const MAPHERO = (() => {
     g.fillStyle = o.ring ? o.ring.replace(/^#(..)(..)(..)$/, (m, r, gg, b) => `rgba(${parseInt(r, 16)},${parseInt(gg, 16)},${parseInt(b, 16)},${0.22 + 0.14 * pulse})`) : "rgba(110,200,255,.3)";
     g.beginPath(); g.ellipse(x, y, rw + 3 * pulse * s, rw * 0.36 + pulse * s, 0, 0, 7); g.fill();
     const p = poseFor(o), dpr = Math.min(2, (typeof window !== "undefined" && window.devicePixelRatio) || 1);
-    g.save();
-    g.shadowColor = "rgba(255,244,214,.85)"; g.shadowBlur = 3 * dpr;   // a pale rim so the ink figure reads on dark ground
-    try { HEROART.drawFigure(g, { look: o.look }, x, y - hop, { pose: p.pose, frame: p.frame, h, horse: o.horse || undefined, gait: p.gait, flip: st.flip }); }
-    catch { /* no figure renderer: the caller falls back */ }
-    g.restore();
+    const busy = mounting(g, st, x, y - hop, s, sc, o, tn);
+    if (!busy && !o.horse && o.led && typeof FIGART !== "undefined" && FIGART.drawHorse) {   // [riding] on foot: your horse walks along just behind you
+      const dir = st.flip ? -1 : 1, k = 30 * sc * s / 61, cyc = o.reduce || !o.moving ? 0 : (((o.t || 0) / 1.1) % 1);
+      g.save(); g.globalAlpha = 0.96;
+      try { FIGART.drawHorse(g, o.led, x - dir * 20 * sc * s, y - 1.5 * sc * s, { k, flip: st.flip, gait: o.moving && !o.reduce ? "walk" : "stand", cyc }); } catch { /* no horse art */ }
+      g.restore();
+    }
+    if (!busy) {
+      g.save();
+      g.shadowColor = "rgba(255,244,214,.85)"; g.shadowBlur = 3 * dpr;   // a pale rim so the ink figure reads on dark ground
+      try { HEROART.drawFigure(g, { look: o.look }, x, y - hop, { pose: p.pose, frame: p.frame, steps: p.steps, h, horse: o.horse || undefined, gait: p.gait, flip: st.flip }); }
+      catch { /* no figure renderer: the caller falls back */ }
+      g.restore();
+    }
     const top = y - hop - h * (o.horse ? 1.5 : 1.06), head = y - hop - h * (o.horse ? 1.32 : 0.9);
     if (o.label) label(g, String(o.label), x, top - 7 * s, s, o.labelSize || 14 * sc, o.labelColor || "#d8f0ff");
     return { top, head };
@@ -78,5 +118,5 @@ const MAPHERO = (() => {
     g.strokeText(text, x, y); g.fillText(text, x, y); g.restore();
   }
   const figure = (g, hero, x, y, t, opts = {}) => draw(g, x, y, opts.s || 1, { ...hero, ...opts, t });
-  return { draw, figure, ok, active: () => now() < busyUntil, flipped: (id) => !!HEROES.get(id)?.flip };
+  return { draw, figure, ok, poseFor, MOUNT_T, mountingNow: (id) => !!HEROES.get(id || "me")?.mt, active: () => now() < busyUntil, flipped: (id) => !!HEROES.get(id)?.flip };
 })();

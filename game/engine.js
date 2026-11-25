@@ -446,7 +446,7 @@ const G = (() => {
     turns: sp.turns + PX(s, "calmturns", f),   // Hypnotic Gaze
   });
   /* dual casting: magicka for both hands (Dual Casting perks cut it) */
-  const dualCost = (s, sp, f) => spellCost(s, sp) * (typeof MAGIC !== "undefined" ? MAGIC.DUAL_COST : 2.8) * (1 - Math.min(0.5, PX(s, "dualcost", f, { school: sp.school })));
+  const dualCost = (s, sp, f) => spellCost(s, sp) * (typeof MAGIC !== "undefined" ? MAGIC.DUAL_COST : 2.8) * (1 - Math.min(0.5, PX(s, "dualcost", f, { school: sp.school }))) * (f && typeof MOUNTFIGHT !== "undefined" ? MOUNTFIGHT.dualMul(f) : 1);   // [OURS] from the saddle: a little more (mountfight.js)
   const enchantCost = (e, s) => F.enchantCost(e.base_cost, e.magnitude, e.max_magnitude, skill(s, "Enchanting")) * (1 - 0.1 * P(s, "enchanter")) * (typeof CHARGE !== "undefined" ? CHARGE.costMult(s) : 1);   // Thrifty Runes
   function describeAction(a) {
     if (D.BASIC_ACTIONS[a]) return D.BASIC_ACTIONS[a];
@@ -636,7 +636,7 @@ const G = (() => {
       const [kind, arg] = a.split(":");
       if ((kind === "power" || kind === "shout") && this.pw) return POWERS.affordable(this, kind, arg);
       if (kind === "spell") return this.s.spells.includes(arg) && D.SPELLS[arg] && this.mp >= spellCost(this.s, D.SPELLS[arg]);
-      if (kind === "dual") return this.s.spells.includes(arg) && D.SPELLS[arg] && typeof MAGIC !== "undefined" && MAGIC.dualable(D.SPELLS[arg]) && this.mp >= spellCost(this.s, D.SPELLS[arg]) * MAGIC.DUAL_COST;
+      if (kind === "dual") return this.s.spells.includes(arg) && D.SPELLS[arg] && typeof MAGIC !== "undefined" && MAGIC.dualable(D.SPELLS[arg]) && this.mp >= spellCost(this.s, D.SPELLS[arg]) * MAGIC.DUAL_COST * (typeof MOUNTFIGHT !== "undefined" ? MOUNTFIGHT.dualMul(this) : 1);
       if (kind === "potion") return !!this.findPotion(arg) && !(typeof CURSE !== "undefined" && CURSE.noPotions(this));   // no potions in Beast Form
       if (kind === "scroll") return !!this.findItem(arg);
       return false;
@@ -781,7 +781,7 @@ const G = (() => {
       let sp = D.SPELLS[id];
       const mg = typeof MAGIC !== "undefined";
       if (!free) this.mp -= dual && mg ? dualCost(this.s, sp, this) : spellCost(this.s, sp);
-      if (dual && mg) sp = { ...sp, amount: (sp.amount || 0) * MAGIC.DUAL_POWER, name: `${sp.name} (dual)` };   // [Skyrim] dual casting
+      if (dual && mg) sp = { ...sp, amount: (sp.amount || 0) * MAGIC.DUAL_POWER * (typeof MOUNTFIGHT !== "undefined" ? MOUNTFIGHT.dualPow(this) : 1), name: `${sp.name} (dual)` };   // [Skyrim] dual casting
       const s = this.s;
       if (!free && mg && Math.random() < MAGIC.failChance(s, id)) { this.addXp(sp.school, sp.xp * 0.25); return `${sp.name} fizzles (too advanced for you yet)`; }
       if (mg && MAGIC.KINDS[sp.kind]) { this.addXp(sp.school, sp.xp); return MAGIC.KINDS[sp.kind](this, sp, id); }
