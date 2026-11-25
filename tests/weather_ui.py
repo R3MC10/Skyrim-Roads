@@ -19,26 +19,16 @@ async def main():
             # a blizzard in the wilds near Winterhold, no warm clothes: the cold meter shows on Travel
             await pg.evaluate(FORCE, "blizzard")
             await pg.evaluate("""()=>{const S=window.__dbg.save(); S.location=null; const w=WORLD.places.Winterhold; S.x=w[0]+0.01; S.y=w[1]+0.01; for (const sl of ['chest','head','hands','feet']) G.unequip(S, sl); S.coldV=82; S.coldT=G.now();}""")
-            await tab("tactics"); await tab("map")
+            await tab("log"); await tab("map")
             cold = await pg.evaluate("document.querySelector('.wxcold')?.innerText || ''")
             ok("Freezing" in cold, f"cold meter on Travel: {cold!r}")
             top = await pg.evaluate("document.querySelector('#clock')?.innerText || document.querySelector('#clock')?.title || ''")
             ok("Freezing" in top or "Blizzard" in top, f"top bar shows weather/cold: {top!r}")
             el = await pg.query_selector(".wxcold")
             if el: await el.screenshot(path=f"wx_cold_{style}.png")
-            # a test fight: the log summary names the weather; stamina is lower
-            await tab("tactics")
-            await clean(); await pg.evaluate("document.querySelector('[data-act=test]').click()"); await pg.wait_for_timeout(1500)
-            summ = await pg.evaluate("document.querySelector('.flog')?.closest('details')?.querySelector('summary')?.innerText || ''")
-            ok("Blizzard" in summ, f"fight log names the blizzard: {summ!r}")
-            await pg.screenshot(path=f"wx_fight_blizzard_{style}.png")
-            # ash storm and fog fight scenes, to look at the particles
-            for wid in ("ashstorm", "fog", "storm"):
-                await pg.evaluate(FORCE, wid); await clean()
-                await pg.evaluate("document.querySelector('[data-act=test]')?.click()"); await pg.wait_for_timeout(2500)
-                cv = await pg.query_selector("#modal canvas, .fightart canvas, canvas.fa")
-                if cv: await cv.screenshot(path=f"wx_fight_{wid}_{style}.png")
-                else: await pg.screenshot(path=f"wx_fight_{wid}_{style}.png")
+            # a fight in a blizzard knows its weather (the log summary names it)
+            wx = await pg.evaluate("(()=>{const S=window.__dbg.save(); const f=new G.Fight(G.clone(S), G.scaleEnemy(D.ENCOUNTERS.find(e=>e.kind!=='event'), S.level)); f.run(); return (f.wx&&f.wx.name)||''})()")
+            ok("Blizzard" in wx, f"a fight knows the blizzard: {wx!r}")
             # encounter-style note
             await pg.evaluate(FORCE, "rain")
             note = await pg.evaluate("WFX.noteHTML(window.__dbg.save())")

@@ -79,9 +79,7 @@ const I18N_SWEEP = (() => {
     "Tutorial skipped. You can replay it from How to Play in the main menu.": "Samouczek pominięty. Możesz go powtórzyć z „Jak grać” w menu głównym.",
     "Shared with your party in the chat.": "Udostępnione drużynie na czacie.", "That gift is gone.": "Tego prezentu już nie ma.",
     "Nothing to claim there.": "Nie ma tu nic do odebrania.", "Too late. Someone took it.": "Za późno. Ktoś to zabrał.",
-    "They're not around.": "Tej osoby nie ma w pobliżu.", "Rule saved.": "Zasada zapisana.", "AI settings reset.": "Ustawienia SI przywrócone.",
-    " Tactics loaded into this loadout.": " Taktyka wczytana do tego zestawu.", "Not in the middle of a fight!": "Nie w środku walki!",
-    "Give it a name first.": "Najpierw nadaj nazwę.",
+    "They're not around.": "Tej osoby nie ma w pobliżu.", 
   };
 
   // ---------------------------------------------------------------- lines with names and numbers in them

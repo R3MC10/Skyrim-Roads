@@ -18,8 +18,10 @@ const hc=DOLL.candidates(s,"head"); ok(hc.length===1 && hc[0].cmp.diff===D.ITEMS
 ok(DOLL.candidates(s,"feet").length===0,"nothing for feet");
 // equip shield then a two-hander drops the shield (existing rules, used by the picker)
 G.equip(s,sh); ok(G.equipment(s).shield,"shield on"); G.equip(s,g2); ok(!G.equipment(s).shield,"2H takes off shield");
-// loadouts: equipment is per loadout
-G.saveLoadoutAs(s,"Archer"); s.loadout="Archer"; G.unequip(s,"weapon"); ok(!G.equipment(s).weapon,"unequip in Archer"); s.loadout="Main"; ok(G.equipment(s).weapon,"Main keeps its weapon");
+// one set of gear: an old save with several loadouts keeps the one it had on (the AI & Loadouts tab is gone)
+{ const o=G.clone(s); o.loadouts.Archer={rules:[],equipment:{}}; o.loadout="Archer"; o.loadouts.Archer.equipment.weapon=o.loadouts.Main.equipment.weapon; o.loadouts.Main.equipment={};
+  G.oneLoadout(o); ok(Object.keys(o.loadouts).join()==="Main" && o.loadout==="Main","one loadout left"); ok(G.equipment(o).weapon,"the worn set's weapon stays on");
+  ok(Array.isArray(G.loadout(o).rules) && G.loadout(o).rules.length>0,"default rules for the fight AI"); }
 for (const r of Object.keys(D.RACES)) { const p=DOLL.starterSave(r); ok(p && p.race===r,"starter "+r); }
 console.log("doll ok · weapon candidates", cands.map(x=>x.row.item+":"+x.cmp.val).join(" "));
 `,c);

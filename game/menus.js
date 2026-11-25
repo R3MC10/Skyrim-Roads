@@ -16,7 +16,7 @@ const MENUS = (() => {
   };
   /* [bottom tab id, label, first screen, sub-tabs [screen id, label]]. "pack" and "magic" open the SkyUI item/spell menu. */
   const GROUPS = [
-    ["hero", "Character", "hero", [["stars", "Skills"], ["hero", "Character"], ["follower", "Follower"], ["perks", "Perks"], ["tactics", "AI & Loadouts"], ["stats", "Stats"], ["ach", "Achievements"], ["library", "Library"], ["diary", "Diary"], ["settings", "Settings"]]],
+    ["hero", "Character", "hero", [["stars", "Skills"], ["hero", "Character"], ["follower", "Follower"], ["perks", "Perks"], ["stats", "Stats"], ["ach", "Achievements"], ["library", "Library"], ["diary", "Diary"], ["settings", "Settings"]]],
     ["pack", "Items", "@items", [["pack", "Items"]]],
     ["magic", "Magic", "@magic", []],
     ["map", "Map", "map", [["map", "Travel"], ["places", "Locations"], ["world", "World news"]]],

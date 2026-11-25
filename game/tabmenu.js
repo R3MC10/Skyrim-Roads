@@ -146,7 +146,6 @@ const TABMENU = (() => {
     town: '<path d="M4 20v-8l8-6 8 6v8z"/><path d="M10 20v-5h4v5"/>',
     log: '<path d="M6 3h12v18H6z"/><path d="M9 8h6M9 12h6M9 16h4"/>',
     people: '<circle cx="9" cy="8" r="3.2"/><path d="M3 19c.6-3.6 3-5.4 6-5.4s5.4 1.8 6 5.4"/><circle cx="17" cy="9" r="2.4"/><path d="M15.8 13.8c2.6.1 4.4 1.7 4.9 4.6"/>',
-    tactics: '<path d="M5 19L19 5M14 5h5v5"/><path d="M5 5l6 6M14 14l5 5"/>',
     gear: '<circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.6M12 18.6v2.6M2.8 12h2.6M18.6 12h2.6M5.5 5.5l1.9 1.9M16.6 16.6l1.9 1.9M5.5 18.5l1.9-1.9M16.6 7.4l1.9-1.9"/>',
     search: '<circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5.5 5.5"/>',
     back: '<path d="M15 5l-7 7 7 7"/>', close: '<path d="M6 6l12 12M18 6L6 18"/>',
@@ -280,7 +279,6 @@ const TABMENU = (() => {
       const id = q.dataset.twq; closeHub();
       if (id === "settings") { document.getElementById("sndBtn")?.click(); return; }
       if (id === "search") { if (typeof SEARCH !== "undefined") SEARCH.open(); return; }
-      if (id === "tactics") { enterChar("tactics"); fromHub = true; return; }
       ui().go?.(id); window.scrollTo(0, 0); return;
     }
     const t = e.target.closest("[data-twa=task]");

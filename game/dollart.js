@@ -1,5 +1,5 @@
 /* Paper doll: your character in the middle of the Pack tab with the equipment slots around it, a picker sheet per
-   slot with stat comparisons, loadout thumbnails, and the race showcase on the character creation screen. Drawing
+   slot with stat comparisons, and the race showcase on the character creation screen. Drawing
    goes through ART/HEROART/ICONART/UIART so everything is cached. [OURS] */
 const DOLL = (() => {
   const LEFT = ["head", "chest", "hands", "feet"], RIGHT = ["weapon", "shield"], JEWEL = ["amulet", "ring", "ring2"];
@@ -84,8 +84,6 @@ const DOLL = (() => {
           <span class="dcmp">${c.worn ? `<i>worn</i>` : arrow(c.cmp)}</span></button>`; }).join("") : `<p class="sub">You have nothing for this slot. Blacksmiths and the forge can help.</p>`}</div>
       <div class="evc">${worn ? `<button class="btn" data-act="dolloff" data-slot="${slot}">Take it off</button>` : ""}<button class="btn" data-act="close">Close</button></div>`;
   }
-  /* a tiny portrait of how a loadout looks */
-  const loadoutThumb = (s, name, size = 22) => HEROART.portrait({ ...s, loadout: name }, size);
 
   // ---- character creation
   const POWER_DESC = (race) => (typeof POWERS !== "undefined" && POWERS.RACE?.[race]) ? POWERS.RACE[race][1] : "";
@@ -102,5 +100,5 @@ const DOLL = (() => {
         <div class="rsk">${sk.map((k, i) => `<span class="rskill">${UIART.skill(k, 22)}<b>+${i === 0 ? 10 : 5}</b> ${esc(k)}</span>`).join("")}</div>
         <p class="rpow">${UIART.power(race, 24)}<span><b>${esc(r.power)}</b>${POWER_DESC(race) ? ` · ${esc(POWER_DESC(race))}` : ""}</span></p></div></div>`;
   }
-  return { SLOTS_LEFT: LEFT, SLOTS_RIGHT: RIGHT, SLOTS_JEWEL: JEWEL, NAMES, statOf, compare, candidates, screen, picker, loadoutThumb, racePicker, showcase, starterSave };
+  return { SLOTS_LEFT: LEFT, SLOTS_RIGHT: RIGHT, SLOTS_JEWEL: JEWEL, NAMES, statOf, compare, candidates, screen, picker, racePicker, showcase, starterSave };
 })();
