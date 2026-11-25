@@ -199,7 +199,7 @@ const HUNTART = (() => {
       } else if (shot && shot.hit !== "miss") V.stuckInk = { dx: shot.x - b.bx, dy: shot.y - b.by };
       if (shot) burst(V, shot, shot.hit, gore, b);
     }
-    let pose = null, feetY = b.by, fade = 1;
+    let pose = null, feetY = b.by, fade = 1, inIt = null;
     if (P) {
       const R = P.R, s = b.rx / R.hw;
       feetY = b.by + (R.feet - R.c[1]) * s;
@@ -260,7 +260,8 @@ const HUNTART = (() => {
       }
       if (V.stuck) V.stuck.run = done ? Math.min(1.2, V.phT * 0.6) : 0;
       const out = drawRig(g, P, pose, V.stuck);
-      if (out.stuck && (pose.alpha ?? 1) > 0.05) stuckArrow(g, out.stuck.x / base, out.stuck.y / base, Math.max(6, b.rx * 0.35) * (pose.s / s), pose.alpha ?? 1, st.g.kind);
+      // the arrow in it is drawn after the grass in front, so the fletching never hides in the tufts
+      if (out.stuck && (pose.alpha ?? 1) > 0.05) inIt = [out.stuck.x / base, out.stuck.y / base, stuckLen(b) * (pose.s / s), pose.alpha ?? 1];
       if (!done && G2.alert > 0.66 && Math.sin(V.T * 10) > -0.2 && out.nose) alertMark(g, out.nose.x / base, out.nose.y / base - b.rx * 0.9);
     } else {
       // no painted animal for this one: the ink animal, with a shadow and the old flee / fall
@@ -273,7 +274,7 @@ const HUNTART = (() => {
         gr.addColorStop(0, "rgba(20,18,10,.3)"); gr.addColorStop(1, "rgba(20,18,10,0)"); g.fillStyle = gr;
         g.fillRect(b.bx + ox - b.rx * 1.4, b.by + b.ry * 1.5, b.rx * 2.8, b.ry * 0.8);
         A.drawAnimal(g, G2.id, b.bx + ox, b.by, b.rx, b.ry, G2.head === "up" && !kill, fleeing ? -G2.facing : G2.facing, V.T, kill, fleeing);
-        if (V.stuckInk) stuckArrow(g, b.bx + ox + V.stuckInk.dx, b.by + V.stuckInk.dy + (kill ? b.ry * 0.5 : 0), Math.max(6, b.rx * 0.35), fade, st.g.kind);
+        if (V.stuckInk) stuckArrow(g, b.bx + ox + V.stuckInk.dx, b.by + V.stuckInk.dy + (kill ? b.ry * 0.5 : 0), stuckLen(b), fade, st.g.kind);
         g.restore();
       }
       feetY = b.by + b.ry * 1.9;
@@ -281,6 +282,7 @@ const HUNTART = (() => {
     }
     // grass in front of its feet, so it stands in the meadow rather than on it
     if (!done || clean || fade > 0.05) tufts(g, b.bx, feetY + 1, b.rx, V.T, wd, near);
+    if (inIt) stuckArrow(g, inIt[0], inIt[1], inIt[2], inIt[3], st.g.kind);
     // the arrow stuck in the ground after a miss, or still flying past
     if (done && shot && shot.hit === "miss") missArrow(g, st, V, b);
     drawSplats(g, V);
@@ -459,17 +461,19 @@ const HUNTART = (() => {
     const x = lerp(a.from[0], a.to[0], k), y = lerp(a.from[1], a.to[1], k) - hgt * 4 * k * (1 - k);
     return [x, y];
   }
-  function shaft(g, x, y, ang, len, alpha, bolt) {
+  function shaft(g, x, y, ang, len, alpha, bolt, fat) {
     const dx = Math.cos(ang), dy = Math.sin(ang), nx = -dy, ny = dx;
     const ar = !bolt && img("rig-w-arrow");
     if (ar) {   // the painted arrow (tip at its right end), with the line drawing as the fallback
-      const h = Math.max(1.8, len * (ar.naturalHeight || ar.height) / Math.max(1, ar.naturalWidth || ar.width) * 1.15);
-      g.save(); g.globalAlpha = alpha; g.translate(x, y); g.rotate(ang); g.imageSmoothingEnabled = true; g.drawImage(ar, -len, -h / 2, len, h); g.restore();
+      const h = Math.max(fat ? 7 : 1.8, len * (ar.naturalHeight || ar.height) / Math.max(1, ar.naturalWidth || ar.width) * (fat ? 2.6 : 1.15));
+      g.save(); g.globalAlpha = alpha; g.translate(x, y); g.rotate(ang); g.imageSmoothingEnabled = true;
+      if (fat) { g.shadowColor = "rgba(0,0,0,.55)"; g.shadowBlur = 3; g.shadowOffsetY = 1; }   // a soft edge so it reads on dark fur and in fog
+      g.drawImage(ar, -len, -h / 2, len, h); g.restore();
       return;
     }
     g.save(); g.globalAlpha = alpha; g.lineCap = "round";
-    g.strokeStyle = "#2c2016"; g.lineWidth = Math.max(1, len * 0.07); g.beginPath(); g.moveTo(x - dx * len, y - dy * len); g.lineTo(x, y); g.stroke();
-    g.fillStyle = bolt ? "#5a5148" : "#d7ceb8"; const f = len * 0.22, b0 = [x - dx * len, y - dy * len];
+    g.strokeStyle = "#2c2016"; g.lineWidth = Math.max(fat ? 1.6 : 1, len * 0.07); g.beginPath(); g.moveTo(x - dx * len, y - dy * len); g.lineTo(x, y); g.stroke();
+    g.fillStyle = bolt ? "#5a5148" : "#d7ceb8"; const f = len * (fat ? 0.3 : 0.22), b0 = [x - dx * len, y - dy * len];
     for (const sg of [1, -1]) { g.beginPath(); g.moveTo(b0[0] + dx * f * 0.2, b0[1] + dy * f * 0.2); g.lineTo(b0[0] + dx * f + nx * f * 0.35 * sg, b0[1] + dy * f + ny * f * 0.35 * sg); g.lineTo(b0[0] + dx * f * 1.2, b0[1] + dy * f * 1.2); g.closePath(); g.fill(); }
     g.restore();
   }
@@ -482,9 +486,12 @@ const HUNTART = (() => {
     g.stroke(); g.restore();
     shaft(g, x, y, Math.atan2(y2 - y, x2 - x), len, 1, st.g.kind === "bolt");
   }
+  /* how long the stuck arrow looks: about half the animal's body, so you can see it (and its fletching) */
+  const stuckLen = (b) => Math.max(26, b.rx * 1.2);
   function stuckArrow(g, x, y, len, alpha, kind) {
-    // foreshortened: it points back towards you, down and to the left
-    shaft(g, x, y, -2.45, len, alpha, kind === "bolt");
+    // it came down out of its arc from your side: tip buried a little in the hide, shaft and feathers up and back towards you
+    const ang = 1.0, dx = Math.cos(ang), dy = Math.sin(ang);
+    shaft(g, x + dx * len * 0.12, y + dy * len * 0.12, ang, len, alpha, kind === "bolt", true);
   }
   function missArrow(g, st, V, b) {
     const s = st.shot, t = V.phT;

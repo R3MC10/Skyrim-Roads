@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b203-tidy2", build: 203, date: "25 Nov 2026", title: "Arrows you can see, and a fresh Coming next", items: [
+      "Hunting: the arrow stuck in an animal is now sized to the animal, with its feathers sticking out, so you can see where you hit.",
+      "Mining: the mine's name and the line under it stay on top when the pickaxe swings at the top row on small phones.",
+      "Forge: on a PC the heat strip moves to the left while you quench, so it no longer covers the blade. On phones \"A perfect quench!\" and the other calls sit on a dark plate and are easy to read.",
+      "The Coming next list is up to date: afflictions, combos, the new mini-games, painted fighters, races and horse coats are in the game now, so they're off the list.",
+    ] },
     { id: "b202-tidy1", build: 202, date: "25 Nov 2026", title: "Weather on the lake and in the woods", items: [
       "Fishing and hunting follow the clock and the sky: at night the scene goes dark blue with a moon, snow falls and turns it cold, rain and fog make it grey, and the day is brighter and less orange.",
       "When hunting you now hold a painted bow that bends as you draw, and your arrows are painted too.",
@@ -1408,12 +1414,12 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 192;
+  const NEXT_AT = 203;
   const NEXT = [
-    "Painted riders on the road and on the map",
-    "Makeovers for fishing, hunting, mining and lockpicking",
+    "Painted fighters that blend into every scene, and 14 more painted battle backdrops",
     "An adventuring company longhouse: a shared base with a treasury, a trophy hall and stables",
-    "Daedric bargains and artifacts that awaken, plus regional crises and heists",
+    "Daedric bargains and artifacts that awaken",
+    "Regional crises and heists",
     "Follower and horse bonds, and spell crafting",
   ];
   const KEY = "rotn_notes_seen";
