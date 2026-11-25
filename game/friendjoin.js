@@ -82,8 +82,8 @@ const FRIENDJOIN = (() => {
     const p = presence(card, nowMs);
     if (!p.online) return { ok: false, why: "They're offline." };
     const tg = target(card);
-    if (myParty && (myParty.members || []).some((m) => m.id === card.id)) return { ok: false, hide: true, why: "Already in your party." };
-    if (tg.id === me.id) return { ok: false, hide: true, why: "That's your party." };
+    if (myParty && (myParty.members || []).some((m) => m.id === card.id)) return { ok: false, hide: true, mate: true, why: "Already in your party." };
+    if (tg.id === me.id) return { ok: false, hide: true, mate: true, why: "That's your party." };
     if (card.dungeon) return { ok: false, why: "In a dungeon run. Ask when they're out." };
     if (p.party && p.party.full) return { ok: false, why: `Their party is full (${CAP}/${CAP}).` };
     const mine = (docs || []).find((d) => d && d.from === me.id && isOpen(d, t));
@@ -97,11 +97,13 @@ const FRIENDJOIN = (() => {
     const tg = target(card);
     return { id: reqId(me.id, tg.id), doc: { from: me.id, fromName: me.name, fromLevel: me.level || 1, ...(typeof AVATAR !== "undefined" ? { fromAv: AVATAR.of(me) } : {}), to: tg.id, toName: tg.name, via: card.id, viaName: card.name, t, st: "open" } };
   }
-  /* open requests waiting for me (I'm the leader, or alone) */
-  const incoming = (docs, myId, t = nowS()) => (docs || []).filter((d) => d && d.to === myId && d.from !== myId && isOpen(d, t)).sort((a, b) => b.t - a.t);
+  /* open requests waiting for me (I'm the leader, or alone). party: my party record; a request from someone who is in
+     it by now is stale and never shows */
+  const incoming = (docs, myId, t = nowS(), party = null) => (docs || []).filter((d) => d && d.to === myId && d.from !== myId && isOpen(d, t) && !(party?.members || []).some((m) => m.id === d.from)).sort((a, b) => b.t - a.t);
   /* my answer. party: my party record (null when I'm alone) */
   function answer(doc, yes, party, t = nowS()) {
     if (!isOpen(doc, t)) return { err: "That request ran out." };
+    if ((party?.members || []).some((m) => m.id === doc.from)) return { err: `${doc.fromName || "They"} is already in your party.` };
     let st = yes ? "yes" : "no";
     if (yes && party && (party.members || []).length + (party.invites || []).filter((x) => x !== doc.from).length >= CAP) st = "full";
     if (yes && party && party.leader !== doc.to) return { err: "Only your party leader can take people in." };
@@ -111,7 +113,7 @@ const FRIENDJOIN = (() => {
   /* cards for invites.js */
   function inviteCards(docs, myId, party, t = nowS()) {
     const n = party ? (party.members || []).length : 1, full = n >= CAP;
-    return incoming(docs, myId, t).map((d) => ({ key: "join:" + d.id, kind: "join", id: d.id, from: d.fromName, uid: d.from, av: d.fromAv || "", t: d.t || 0,
+    return incoming(docs, myId, t, party).map((d) => ({ key: "join:" + d.id, kind: "join", id: d.id, from: d.fromName, uid: d.from, av: d.fromAv || "", t: d.t || 0,
       text: `${d.fromName} asks to join your party`, sub: full ? `Your party is full (${n}/${CAP})` : `Level ${d.fromLevel || 1}${d.via && d.via !== myId ? ` · friend of ${d.viaName}` : ""} · party ${n}/${CAP}`, can: true, full }));
   }
 
@@ -132,6 +134,7 @@ const FRIENDJOIN = (() => {
     for (const d of docs) {
       if (d.from !== s.id) continue;
       const o = outcome(d, t), key = d.id + ":" + d.t;
+      if (o && o !== "yes" && (ctx.party?.()?.members || []).some((m) => m.id === d.to || m.id === d.via)) { told.add(key); continue; }   // you're in their party by now: no stale "no answer" note
       if (o === "yes") {
         const inv = (ctx.invites?.() || []).find((p) => p.leader === d.to);
         if (inv && !joined.has(key)) { joined.add(key); told.add(key); ctx.acceptInvite?.(inv.id); }
@@ -151,7 +154,7 @@ const FRIENDJOIN = (() => {
     const p = presence(card);
     if (!p.online) return null;
     const c = canAsk(s, card, ctx.party?.(), docs, log);
-    const btn = c.hide ? "" : `<button class="btn sm ${c.ok ? "pri" : ""}" data-act="fjoin" data-id="${esc(card.id)}"${c.ok ? "" : ` disabled aria-disabled="true" title="${esc(c.why)}"`}>Ask to join</button>`;
+    const btn = c.mate ? `<span class="inparty">In your party</span>` : c.hide ? "" : `<button class="btn sm ${c.ok ? "pri" : ""}" data-act="fjoin" data-id="${esc(card.id)}"${c.ok ? "" : ` disabled aria-disabled="true" title="${esc(c.why)}"`}>Ask to join</button>`;
     const act = p.act && p.act !== "idle" ? `<b class="fj-act fj-${esc(p.act)}">${esc(ACT[p.act])}</b>` : "";
     return { line: p.line, party: p.partyLine, act, btn, why: c.ok || c.hide ? "" : c.why, full: !!(p.party && p.party.full) };
   }

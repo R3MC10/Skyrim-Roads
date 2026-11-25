@@ -120,7 +120,7 @@ const GREET = (() => {
     let best = null, bd = 22;
     for (const o of v.others) {
       if (!o.id) continue;
-      const x = (o.drawX ?? o.pos[0]) * W * k + ox, y = o.pos[1] * H * k + oy - 14;   // the figure stands above its feet
+      const x = (o.drawX ?? o.pos[0]) * W * k + ox, y = (o.drawY ?? o.pos[1]) * H * k + oy - 14;   // the figure stands above its feet
       const d = Math.hypot(x - sx, y - sy); if (d < bd) { bd = d; best = o; }
     }
     if (!best) return false;

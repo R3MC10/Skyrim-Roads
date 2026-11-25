@@ -352,7 +352,7 @@ const SEARCH = (() => {
     later(() => { const st = document.querySelector(`#side [data-sk-perk="${perkIdx}"]`); st ? st.dispatchEvent(new MouseEvent("click", { bubbles: true })) : null; }, 3);
   }
   function toQuest(id) {
-    const u = ui(); u.go?.("log"); window.scrollTo(0, 0);
+    const u = ui(); u.go?.("log");
     let card = document.getElementById("q-" + id);
     for (const t of qState(save(), id) === "done" ? ["done"] : ["active", "misc"]) { if (card) break; fire("jtab", { id: t }); card = document.getElementById("q-" + id); }
     later(() => flash(document.getElementById("q-" + id)));
@@ -369,7 +369,7 @@ const SEARCH = (() => {
       flash(el || m.querySelector("h2"));
     }, 1);
   }
-  function toTown(section) { ui().go?.("town"); if (section) fire("shop", { id: section }); window.scrollTo(0, 0); }
+  function toTown(section) { ui().go?.("town"); if (section) { fire("shop", { id: section }); if (typeof MENUTOP !== "undefined") MENUTOP.top(); } }
   function toHero(text, t = "hero") {
     ui().go?.(t);
     later(() => { const el = [...document.querySelectorAll("#side .panel")].find((p) => p.textContent.includes(text)); flash(el); });
