@@ -58,7 +58,10 @@ async def main():
                 await pg.click(sel, timeout=3000)
             async def go_town(section):
                 await tap("[data-tab=map]"); await tap("[data-tab=town]"); await pg.wait_for_timeout(250)
-                await tap(f"[data-id={section}]"); await pg.wait_for_timeout(250)
+                # inside a place the Area tab only shows that group's neighbours (areaui.js): back to the board, then the tile
+                if not await pg.query_selector(f"#side [data-id={section}]"):
+                    await pg.evaluate("document.querySelector('#side [data-act=areahub]')?.click()"); await pg.wait_for_timeout(250)
+                await pg.evaluate(f"document.querySelector('#side [data-id={section}]')?.click()"); await pg.wait_for_timeout(250)
             async def batch(sel, label):
                 await tap(sel); await pg.wait_for_selector("#modal [data-act=cqgo]", timeout=3000)
                 await shot(label + "_confirm", el=None)
@@ -98,9 +101,9 @@ async def main():
                 await pg.evaluate(f"G.give({S},'mat_iron',3); G.give({S},'mat_strips',2)"); await pg.evaluate(CLEAR)
                 await tap("[data-act=fgroup][data-id=iron]"); await pg.wait_for_timeout(200)
                 await tap("[data-act=smake][data-id=iron_dagger]")
-                try: await pg.wait_for_selector("#craftgame", timeout=3000); print(tag, "single Make → mini-game opens")
+                try: await pg.wait_for_selector("#smithgame, #craftgame", timeout=3000); print(tag, "single Make → mini-game opens")   # the forge plays smithgame.js
                 except Exception: fails.append(f"{tag} single Make did not open the mini-game")
-                await pg.evaluate("document.querySelector('#cgquick')?.click()"); await pg.wait_for_timeout(300)
+                await pg.evaluate("(document.querySelector('#sgquick') || document.querySelector('#cgquick'))?.click()"); await pg.wait_for_timeout(300)
                 await pg.evaluate("history.replaceState(null,'',location.href.replace('&craftgame',''))")
             # ---- smelt & tan
             await pg.evaluate(CLEAR); await tap("[data-act=ftab][data-id=refine]"); await pg.wait_for_timeout(250)
