@@ -3,6 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b219-mapread", build: 219, date: "25 Nov 2026", title: "An easier map to read", items: [
+      "Land you've already explored now sits under a light mist instead of the heavy one. Places you've never been stay dark.",
+      "Names no longer pile up: your party and your objective always show first, then towns, then everything else. A town's name steps aside instead of vanishing.",
+      "Zoomed out, guard patrols and passing wagons that stand close together turn into one pin with a number. Zoom in and they split up again.",
+      "Crisis signs find a free spot next to their town, with a thin line back to it if they had to move.",
+      "Map names have a thinner dark outline, so the painting shows through more.",
+      "Everyday world news (prices, rebuilding, battles far away) now folds into one World news button. Tap it to read it all. Things you can act on right now, like a reward to claim or a ringleader to fight, stay open.",
+    ] },
     { id: "b218-expedition", build: 218, date: "25 Nov 2026", title: "The Expedition Table: tonight's adventure", items: [
       "The company's planning table now lays out three expeditions every day: a short, a medium and a long one. Open Social, then Company, then Expeditions.",
       "Everyone in the company sees the same three, and new ones come every day. Missing a day costs nothing.",
