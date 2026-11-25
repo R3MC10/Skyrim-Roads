@@ -427,6 +427,13 @@ const WorldMap = (() => {
     else { g.fillStyle = "#6e1914"; g.strokeStyle = light; g.beginPath(); g.moveTo(x, y - R); g.lineTo(x + R, y + R * 0.8); g.lineTo(x - R, y + R * 0.8); g.closePath(); g.fill(); g.stroke(); }
     if (selected) { g.strokeStyle = "#9fd0f0"; g.lineWidth = 2.6 * s; g.beginPath(); g.arc(x, y, R * 2.2, 0, 7); g.stroke(); }
   }
+  /* a place's map marker as a picture (the map panel's header, mappanel.js): a data URL, cached per kind */
+  const kindPics = {};
+  function kindIcon(kind) {
+    if (kindPics[kind] || typeof document === "undefined") return kindPics[kind] || "";
+    try { const c = document.createElement("canvas"); c.width = c.height = 64; const g = c.getContext("2d"); icon(g, kind, 32, 34, 3.4, false); kindPics[kind] = c.toDataURL(); } catch (e) { kindPics[kind] = ""; }
+    return kindPics[kind];
+  }
   const LABEL_HALO = 2.3;   // the dark ring round map words, in CSS px (was 3.4)
   function label(g, text, x, y, s, size,color = "#fbf3dc", weight = 700, italic = false, align = "center") {
     g.font = FONT(size * s, weight, italic ? "italic" : ""); g.textAlign = align; g.textBaseline = "middle";
@@ -961,5 +968,5 @@ const WorldMap = (() => {
     return best;
   }
   const ready = () => { if (typeof PAINTEDMAP !== "undefined" && (PAINTEDMAP.pending() || PAINTEDMAP.image(1))) return; base = base || drawBase(); };
-  return { draw, placeAt, ready, clusterMovers, exploredHolds, CLUSTER_ZOOM, LABEL_HALO, EXPLORED_CLEAR, W, H, base: () => (base = base || drawBase()), paintBase: drawBase, paintRoads, paintTop, stats: () => ({ ...stats }), PAINT_MAX, ROAD_STYLE };
+  return { draw, placeAt, kindIcon, ready, clusterMovers, exploredHolds, CLUSTER_ZOOM, LABEL_HALO, EXPLORED_CLEAR, W, H, base: () => (base = base || drawBase()), paintBase: drawBase, paintRoads, paintTop, stats: () => ({ ...stats }), PAINT_MAX, ROAD_STYLE };
 })();

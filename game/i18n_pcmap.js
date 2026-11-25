@@ -52,6 +52,9 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "You greet the stranger. Wait for them to answer.": "Witasz nieznajomego. Poczekaj na odpowiedź.",
     "In your party.": "W twojej drużynie.",
     "You know each other.": "Znacie się.",
+    // [map-panels] a hero's map panel (greet.js)
+    "Say hello: once they answer, you'll both know each other's names": "Przywitaj się: gdy odpowiedzą, poznacie swoje imiona", "Between you": "Między wami", Strangers: "Obcy",
+    Where: "Gdzie", travelling: "w podróży", "in a dungeon": "w lochu",
     // patch note
     "The big map on PC": "Wielka mapa na komputerze",
     "On a PC or laptop the world map is now your home screen: it fills the whole window, and Items, Skills, Magic and the Journal open on top of it over a blurred map. On phones nothing changes.":

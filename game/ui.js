@@ -72,7 +72,7 @@
     const card = { name: S.name, race: S.race, level: S.level, x: S.x, y: S.y,
       t0: tr ? tr.lastTick : G.now(), moving: !!(tr && tr.status === "travel"), dest: tr ? tr.dest : null,
       path: tr && tr.status === "travel" ? [[S.x, S.y], ...tr.path.slice(tr.idx + 1)].slice(0, 120) : null,
-      speed: G.speed(S), loc: S.location || null, region: WORLD.regionOf([S.x, S.y]), look: HEROART.lookOf(S), ride: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, party: party?.id || null, hiding: !!S.ambush, facing: S.facing ?? null, ...(typeof SNEAKMODE !== "undefined" ? SNEAKMODE.cardBits(S) : {}), clan: myClan()?.tag || null, ...(typeof SIDES !== "undefined" ? SIDES.cardBits(S) : {}), ...MP.stats(S), coop: coopUI?.card() || null, ...(typeof PARTY !== "undefined" ? PARTY.cardBits(S, party) : {}), ...(typeof LIVING !== "undefined" ? LIVING.cardBits(S, party) : {}), ...(typeof LEVELUP !== "undefined" ? LEVELUP.cardBits(S) : {}), ...(typeof AFFL !== "undefined" ? AFFL.cardBits(S) : {}) };
+      speed: G.speed(S), loc: S.location || null, region: WORLD.regionOf([S.x, S.y]), look: HEROART.lookOf(S), ride: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, party: party?.id || null, hiding: !!S.ambush, facing: S.facing ?? null, ...(typeof SNEAKMODE !== "undefined" ? SNEAKMODE.cardBits(S) : {}), clan: myClan()?.tag || null, ...(typeof SIDES !== "undefined" ? SIDES.cardBits(S) : {}), ...MP.stats(S), coop: coopUI?.card() || null, ...(typeof PARTY !== "undefined" ? PARTY.cardBits(S, party) : {}), ...(typeof LIVING !== "undefined" ? LIVING.cardBits(S, party) : {}), ...(typeof LEVELUP !== "undefined" ? LEVELUP.cardBits(S) : {}), ...(typeof AFFL !== "undefined" ? AFFL.cardBits(S) : {}), ...(typeof FRIENDJOIN !== "undefined" ? FRIENDJOIN.bits(S, party) : {}) };
     const json = JSON.stringify({ ...card, t0: 0, cur: Math.round(card.cur / 10) });
     if (!force && json === lastCardJson) return;
     lastCardJson = json;
@@ -544,8 +544,8 @@
       if ($("#sky") && !$("#modal") && escKey && sky.page === "items" && sky.sel != null && typeof ITEMCMP !== "undefined" && ITEMCMP.side($("#sky"))) { sky.sel = null; renderMenu(); return true; }   // [itemdetail] Esc lets go of the pinned item first
       if ($("#sky") && !$("#modal")) { closeMenu(); if (typeof TABMENU !== "undefined") TABMENU.menuClosed(); return true; }
       if ($("#modal")) { if (!$("#modal [data-act=enc], #modal [data-act=ev], #modal [data-act=guard]")) closeModal(); return true; }
-      if (typeof WAGONS !== "undefined" && WAGONS.isOpen()) { WAGONS.close(); return true; }
-      if (typeof LOCSCREEN !== "undefined" && LOCSCREEN.closeSheet()) return true;   // a card open on the place's scene   // [caravan-panel] a caravan's panel: back closes it
+      if (typeof MAPSHEET !== "undefined" && MAPSHEET.isOpen()) { MAPSHEET.close(); selected = null; return true; }   // [map-panels] a caravan's, place's or hero's panel: back closes it
+      if (typeof LOCSCREEN !== "undefined" && LOCSCREEN.closeSheet()) return true;   // a card open on the place's scene
       if (typeof DWEMER !== "undefined" && DWEMER.closeOv()) return true;   // a lexicon / valve puzzle (dwemer.js)
       if (typeof BLACKREACH !== "undefined" && BLACKREACH.close()) return true;   // the Blackreach map (blackreach.js)
       if ($("#dun")) { closeDungeon(); return true; }
@@ -622,7 +622,7 @@
         <div>
           <div class="mapwrap" id="mapwrap"><canvas id="map" aria-label="Map of Skyrim"></canvas>
             <div class="mapbtns">${typeof RIDING !== "undefined" ? RIDING.button(S) : ""}<button class="iconbtn" id="zoomBtn" aria-label="Zoom map">${zoom === 1 ? "＋" : "－"}</button><button class="iconbtn" id="centerBtn" aria-label="Centre on me">◎</button>${typeof HUNT !== "undefined" ? `<button class="iconbtn sneakbtn huntbtn${S?.hunting ? " on" : ""}" id="huntBtn" aria-label="Hunt" aria-pressed="${!!S?.hunting}" title="Hunt: slower, but you run into animals far more often"><svg viewBox="0 0 24 24" aria-hidden="true" width="20" height="20"><path d="M6 3c5 3 5 15 0 18" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M6 3v18" stroke="currentColor" stroke-width="1" opacity=".7"/><path d="M4 12h15m0 0-3-3m3 3-3 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>` : ""}${typeof SNEAKMODE !== "undefined" ? `<button class="iconbtn sneakbtn${S?.sneak ? " on" : ""}" id="sneakBtn" aria-label="Sneak" aria-pressed="${!!S?.sneak}" title="Sneak: slower, fewer fights, harder to spot"><svg viewBox="0 0 24 24" aria-hidden="true" width="20" height="20"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg></button>` : ""}</div>
-            <div class="picked hide" id="picked"></div></div>
+</div>
           <div class="vitals" id="vitals"></div>
           <div id="trip"></div>
           <div id="raid"></div>
@@ -648,7 +648,7 @@
     $("#centerBtn").onclick = () => { mapTouchedAt = performance.now(); kickMap(); follow = true; if (zoom === 1) zoom = 2.4; $("#zoomBtn").textContent = "－"; };
     bindMap();
     if (typeof WAGONS !== "undefined") WAGONS.mount({ S: () => S, Store, toast, persist: () => persist(), livePos: () => livePos(), kick: () => kickMap(), message: (t, x) => showMessage(t, x), canDecide: () => (typeof PARTYPLAY === "undefined" || PARTYPLAY.canDecide(S)), secsTo: (p) => G.minutesTo(S, p) * 60, zoom: () => zoom, zoomAt: (z, x, y) => { mapZoomAt?.(z, x, y); mapTouchedAt = performance.now(); kickMap(); }, go: (cid, intent) => chaseCaravan(cid, intent) });   // tap a caravan's wagons on the map: their card (wagons.js)
-    if (typeof GREET !== "undefined") GREET.mount({ S: () => S, Store, toast, persist: () => persist(), others: () => others, party: () => party, otherPos: (o) => otherPos(o), livePos: () => livePos() });   // Strangers until you greet each other (greet.js)
+    if (typeof GREET !== "undefined") GREET.mount({ S: () => S, Store, toast, persist: () => persist(), others: () => others, party: () => party, otherPos: (o) => otherPos(o), livePos: () => livePos(), onAct: (e) => onPanelClick(e), acts: (o) => heroActs(o) });   // Strangers until you greet each other (greet.js); their map panel (mapsheet.js)
     if (typeof PCMAP !== "undefined") PCMAP.mount({ S: () => S, party: () => party, others: () => others, otherPos: (o) => otherPos(o), livePos: () => livePos(), tab: () => tab, skyPage: () => sky?.page,   // PC: the map is the home screen (pcmap.js)
       view: () => ({ zoom, center, transform: view.transform }), setView: (z, cn) => { zoom = z; center = cn; follow = false; mapTouchedAt = performance.now(); kickMap(); const zb = $("#zoomBtn"); if (zb) zb.textContent = zoom > 1.01 ? "－" : "＋"; },
       recentre: () => { follow = true; mapTouchedAt = performance.now(); kickMap(); }, kick: () => { mapResized = true; kickMap(); },
@@ -683,6 +683,7 @@
     if (typeof EXPEDITION !== "undefined") EXPEDITION.mount({ S: () => S, persist, toast, render: () => { if (document.getElementById("lng-root")) renderPanel(true); }, party: () => party, cardOf,
       online: (id) => { const c = cardOf(id); return !!c && (typeof SOCIAL === "undefined" || SOCIAL.status(c).online); } });   // the Expedition Table: tonight's adventure (expedition.js)
     if (typeof LONGHOUSE !== "undefined") LONGHOUSE.mount({ S: () => S, persist, toast, showMessage, render: () => renderPanel(true), party: () => party });   // the adventuring company longhouse (longhouse.js)
+    if (typeof COMMISSIONS !== "undefined") COMMISSIONS.mount({ S: () => S, persist, toast, render: () => { if (document.getElementById("lng-root")) renderPanel(true); }, party: () => party });   // the company's Commissions board (commissions.js)
     if (typeof HOLDUI !== "undefined") HOLDUI.mount({ S: () => S, persist, toast, showFightResult, postNews, refresh: () => { bump(); renderPanel(true); }, party: () => party });   // player-run holds: Jarl, tax, raids (holdui.js)
     if (typeof TOURNEYUI !== "undefined") TOURNEYUI.mount({ S: () => S, persist, toast, showFightResult, postNews, tbCall, refresh: () => { bump(); renderPanel(true); }, party: () => party, allies: () => allies() });   // festivals, contests and the Grand Arena (tourneyui.js)
     Store.watch("trades", (docs) => onTrades(docs));
@@ -720,7 +721,6 @@
     Store.watch("hall", (docs) => { HALL.setDonors(docs, S); if (tab === "town") bump(); });
     Store.watch("hallchest", (docs) => { HALL.setChest(docs); if (tab === "town") bump(); });
     Store.watch("ladder", (docs) => { ladderDocs = docs; if ((tab === "log" || tab === "social")) bump(); });
-    $("#picked").addEventListener("click", onPanelClick);
     Store.watchPlayers((ps) => { others = ps; if (typeof SIDES !== "undefined") SIDES.setCards(ps); if ((tab === "log" || tab === "social")) bump(); });
     Store.watchBags((b) => { bags = b; });
     Store.watch("attacks", (docs) => onAttacks(docs));
@@ -739,6 +739,9 @@
     }
     if (typeof INVITES !== "undefined") INVITES.mount({ list: inviteList, answer: answerInviteCard, toast, onNew: () => SOUND.fx("page"),   // Accept / Decline cards on top (invites.js)
       openSocial: () => { closeMenu(); tab = "social"; socTab = "party"; bump(); renderTabs(); renderPanel(true); } });
+    if (typeof FRIENDJOIN !== "undefined") FRIENDJOIN.mount({ S: () => S, party: () => party, cardOf, Store, toast, invite: (c) => invite(c), invites: () => invites, acceptInvite: (pid) => acceptInvite(pid),   // friends: what they're doing + Ask to join (friendjoin.js)
+      fighting: () => (typeof TB !== "undefined" && TB.open) || !!S?.encounter, trading: () => tab === "town" && !!townShop && townShop !== "inn", publishCard: (f) => publishCard(f), refreshInvites: invRefresh,
+      bump: () => { if (tab === "social") bump(); }, render: () => { if (tab === "social") renderPanel(true); } });
     if (typeof PARTYPLAY !== "undefined") {   // party play: the leader leads, ready checks, shared spoils (partyplay.js)
       ppUI = PARTYPLAY.ui({ S: () => S, party: () => party, others: () => others, cardOf, otherPos: (c) => otherPos(c), livePos: () => livePos(), Store, toast, esc,
         persist, publishCard, renderPanel, bump, travelNow: (name, pos) => travelTo(name, true, pos), modalOpen: () => !!$("#modal"), openModal, closeModal,
@@ -1203,12 +1206,13 @@
       const wasMove = moved; down = null; clearTimeout(press);
       if (wasMove || pressed || !view.transform || e.type === "pointercancel") return;
       const r = c.getBoundingClientRect();
-      if (typeof GREET !== "undefined") { GREET.close(); if (GREET.tap(view, e.clientX - r.left, e.clientY - r.top)) return; }   // another hero: their card, Greet (greet.js)
+      if (typeof GREET !== "undefined" && GREET.tap(view, e.clientX - r.left, e.clientY - r.top)) return;   // another hero: their panel, Greet (greet.js)
       const cvTap = typeof CVROAD !== "undefined" && S.trip?.status === "travel" ? CVROAD.hit(view.caravans, screenToWorld(e.clientX - r.left, e.clientY - r.top), WorldMap.W, WorldMap.H, 24 / view.transform.k) : null;
-      if (cvTap) return meetCaravan(cvTap.id);   // tapped a caravan's wagons while travelling: stop and meet them
-      if (typeof WAGONS !== "undefined") { if (WAGONS.tap(view, e.clientX - r.left, e.clientY - r.top, c)) return; if (WAGONS.isOpen()) WAGONS.close(); }   // any other wagon: its card; a cluster pin: zoom in (wagons.js)
+      if (cvTap) { if (typeof MAPSHEET !== "undefined") MAPSHEET.close(); return meetCaravan(cvTap.id); }   // tapped a caravan's wagons while travelling: stop and meet them
+      if (typeof WAGONS !== "undefined" && WAGONS.tap(view, e.clientX - r.left, e.clientY - r.top, c)) return;   // any other wagon: its panel; a cluster pin: zoom in (wagons.js)
       const pin = pinAt(e.clientX - r.left, e.clientY - r.top);
       selected = pin ? "__pin:" + pin.id : WorldMap.placeAt(view, e.clientX - r.left, e.clientY - r.top, known);
+      if (!selected && typeof MAPSHEET !== "undefined" && MAPSHEET.isOpen()) { MAPSHEET.close(); selected = null; return; }   // [map-panels] the empty map closes an open panel first
       if (!selected) { const w = screenToWorld(e.clientX - r.left, e.clientY - r.top); if (WORLD.onMap(w)) { roamSpot = w; selected = "__spot"; } }
       if (selected && selected === S.location && typeof PCMAP !== "undefined" && PCMAP.on()) { selected = null; renderPicked(); tab = "town"; bump(); renderTabs(); renderPanel(true); PCMAP.refresh(); return; }   // PC: the town you're in opens its places beside the map
       renderPicked();
@@ -1222,31 +1226,12 @@
     c.addEventListener("wheel", (e) => { if (typeof PCMAP !== "undefined" && PCMAP.wheel(e, c)) return; e.preventDefault(); mapTouchedAt = performance.now(); kickMap(); const r = c.getBoundingClientRect(); setZoom(zoom * (e.deltaY < 0 ? 1.15 : 1 / 1.15), e.clientX - r.left, e.clientY - r.top); }, { passive: false });
   }
   let roamSpot = null;
+  /* [map-panels] a tapped place, pin or spot opens in the map panel (mapsheet.js + placepanel.js) */
   function renderPicked() {
-    const el = $("#picked");
-    if (!selected) { el.classList.add("hide"); return; }
-    if (selected === "__spot") {   // free roam: any spot on the map
-      if (!roamSpot) { selected = null; return renderPicked(); }
-      const r = ROAM.plan(S, roamSpot);
-      el.classList.remove("hide");
-      el.innerHTML = r.err ? `<div class="t"><b> ${esc(r.err)}</b><span>Tap somewhere on land to roam there.</span></div><button class="iconbtn" data-act="unpick" aria-label="Close">✕</button>`
-        : `<div class="t"><b> ${esc(r.name[0].toUpperCase() + r.name.slice(1))}</b><span>${esc(r.ground)} · ${esc(G.holdAt(r.pos))} · ${fmtMin(G.minutesTo(S, r.pos))}${r.snapped ? " · nearest dry land" : ""}</span></div>
-        <button class="btn pri" data-act="go" data-place="__spot">Walk here</button><button class="btn" data-act="spotpin">Pin</button><button class="iconbtn" data-act="unpick" aria-label="Close">✕</button>`;
-      return;
-    }
-    if (selected.startsWith("__pin:")) {
-      const p = (S.pins || []).find((q) => "__pin:" + q.id === selected); if (!p) { selected = null; return renderPicked(); }
-      el.classList.remove("hide");
-      el.innerHTML = `<div class="t"><b>${esc(p.icon)} ${esc(p.label)}</b><span>Your pin · ${esc(G.holdAt([p.x, p.y]))} · ${fmtMin(G.minutesTo(S, [p.x, p.y]))}</span></div>
-        <button class="btn pri" data-act="go" data-place="${esc(selected)}">Travel</button>${party ? `<button class="btn" data-act="pinshare" data-id="${esc(p.id)}">Share</button>` : ""}<button class="btn" data-act="pindel" data-id="${esc(p.id)}">Remove</button><button class="btn" data-act="unpick" aria-label="Close">✕</button>`;
-      return;
-    }
-    const [x, y, kind] = WORLD.places[selected];
-    const here = S.location === selected;
-    const mins = here ? 0 : G.minutesTo(S, [x, y]);
-    el.classList.remove("hide");
-    el.innerHTML = `<div class="t"><b>${esc(selected)}</b><span>${KIND[kind]} · ${esc(G.holdAt([x, y]))}${S.discovered.includes(selected) ? "" : " · not yet visited"}${here ? " · you are here" : ` · ${fmtMin(mins)}`}</span></div>
-      ${here ? (DUNGEONS.enterable(selected) && !S.trip ? `<button class="btn danger" data-act="enter">Go inside</button>` : "") + (SMITH.MINES[selected] && !S.trip ? `<button class="btn" data-act="mine">\uE12A Mine ore</button>` : "") : `<button class="btn pri" data-act="go" data-place="${esc(selected)}">Travel</button>`}<button class="iconbtn" data-act="unpick" aria-label="Close">✕</button>`;
+    if (!selected) { if (typeof MAPSHEET !== "undefined") MAPSHEET.close("place"); return; }
+    const sp = typeof PLACEPANEL !== "undefined" && PLACEPANEL.spec(S, selected, { fmtMin, KIND, party, roamSpot });
+    if (!sp) { selected = null; return renderPicked(); }
+    MAPSHEET.open({ ...sp, onClick: (e) => onPanelClick(e), onClose: (why) => { if (why === "swap" && MAPSHEET.isOpen("place")) return; selected = null; roamSpot = null; kickMap(); } });
   }
 
   // ------------------------------------------------------------ travel
@@ -2695,8 +2680,8 @@
       const adds = SOCIAL.addedMe(friendDocs, S);
       body = `${adds.length ? `<h3>Added you</h3>${adds.map((d) => `<div class="item on"><div class="t">${esc(d.name)}<span>wants to be friends</span></div><button class="btn sm pri" data-act="faddrec" data-id="${esc(d.id)}">Add back</button></div>`).join("")}` : ""}
         <h3 style="margin-top:8px">Your friends · ${fr.length}</h3>
-        ${fr.length ? fr.map((f) => `<div class="item" style="flex-wrap:wrap">${HEROART.portrait(f.card || { race: "nord", id: f.id }, 38)}${f.card?.look ? `<span class="pgear">${HEROART.figure({ look: f.card.look }, 30, 42, { bare: true })}</span>` : ""}<div class="t"><i class="onl ${f.st.online ? "on" : ""}"></i>${esc(f.name)}<span>${esc(f.st.text)}</span></div>
-          <div class="fbtns"><button class="btn sm" data-act="fmsg" data-id="${esc(f.id)}"> Message</button><button class="btn sm" data-act="ftrade" data-id="${esc(f.id)}"> Trade</button>${fRemoveAsk === f.id ? `<button class="btn sm danger" data-act="fdel" data-id="${esc(f.id)}">Really remove?</button>` : `<button class="btn sm" data-act="fdelask" data-id="${esc(f.id)}" aria-label="Remove friend">✕</button>`}</div></div>`).join("")
+        ${fr.length ? fr.map((f) => `<div class="item" style="flex-wrap:wrap">${HEROART.portrait(f.card || { race: "nord", id: f.id }, 38)}${f.card?.look ? `<span class="pgear">${HEROART.figure({ look: f.card.look }, 30, 42, { bare: true })}</span>` : ""}${(() => { const fj = typeof FRIENDJOIN !== "undefined" ? FRIENDJOIN.rowHTML(f.card, esc) : null; f.fj = fj; return fj ? `<div class="t fj-t"><i class="onl on"></i>${esc(f.name)}${fj.act}<span>${esc(fj.line)}</span><span class="fj-party${fj.full ? " full" : ""}">${esc(fj.party)}</span>${fj.why ? `<span class="fj-why">${esc(fj.why)}</span>` : ""}</div>` : `<div class="t"><i class="onl ${f.st.online ? "on" : ""}"></i>${esc(f.name)}<span>${esc(f.st.text)}</span></div>`; })()}
+          <div class="fbtns">${f.fj?.btn || ""}<button class="btn sm" data-act="fmsg" data-id="${esc(f.id)}"> Message</button><button class="btn sm" data-act="ftrade" data-id="${esc(f.id)}"> Trade</button>${fRemoveAsk === f.id ? `<button class="btn sm danger" data-act="fdel" data-id="${esc(f.id)}">Really remove?</button>` : `<button class="btn sm" data-act="fdelask" data-id="${esc(f.id)}" aria-label="Remove friend">✕</button>`}</div></div>`).join("")
           : `<p class="sub">No friends yet. Add people from Social → Party (travellers near you), or search below.</p>`}
         <h3 style="margin-top:12px">Add a friend</h3>
         <input id="socsearch" placeholder="Type a name" value="${esc(socSearch)}" autocomplete="off" aria-label="Search players by name">
@@ -2816,6 +2801,15 @@
     }
   }
   function cardOf(id) { return others.find((o) => o.id === id); }
+  /* [map-panels] another hero's panel on the map: Invite, Trade, Friend (the same buttons as Social → Travellers) */
+  function heroActs(o) {
+    if (!Store.online) return [];
+    const inP = party?.members.some((m) => m.id === o.id), near = !MP.canTarget(S, o, livePos(), otherPos(o)), out = [];
+    if (!inP) out.push({ label: "Invite to your party", sub: party && party.leader !== S.id ? "Only your party leader can invite" : "They'll see it under Social → Party", off: !!party && party.leader !== S.id, data: { act: "invite", id: o.id } });
+    out.push({ label: "Trade", sub: near ? "Swap items and gold" : "Get to the same place to trade", off: !near, data: { act: "trade", id: o.id } });
+    if (!SOCIAL.isFriend(S, o.id)) out.push({ label: "Add as a friend", sub: "See where they are and send messages", data: { act: "fadd", id: o.id } });
+    return out;
+  }
   function allies() {
     if (typeof PARTY !== "undefined") PARTY.clear();
     if (S.trip?.caravan) {   // guarding a caravan: the other guards who signed on fight with you, plus two hired swords
@@ -2936,7 +2930,7 @@
     if (!S || typeof INVITES === "undefined" || !Store.online) return [];
     const t = G.now(), c = myClan();
     return INVITES.list(S, { parties: invites, runs: coopUI?.myInvites ? coopUI.myInvites() : [], clans: myClanInvites().filter((x) => x.id !== c?.id), inClan: !!c,
-      duels: duels.filter((d) => d.to === S.id && d.status === "open" && t - d.t < ARENA.OPEN_MIN * 60), trades: myIncoming().map((d) => ({ ...d, what: MP.describe(d) })), gold: S.gold });
+      duels: duels.filter((d) => d.to === S.id && d.status === "open" && t - d.t < ARENA.OPEN_MIN * 60), trades: myIncoming().map((d) => ({ ...d, what: MP.describe(d) })), gold: S.gold, joins: typeof FRIENDJOIN !== "undefined" ? FRIENDJOIN.cards() : [] });
   }
   async function answerInviteCard(kind, id, yes) {
     if (kind === "party") await (yes ? acceptInvite(id) : declineInvite(id));
@@ -2944,6 +2938,7 @@
     else if (kind === "clan") yes ? clanJoin(id) : clanDecline(id);
     else if (kind === "duel") await answerDuel(id, yes);
     else if (kind === "trade") await answerTrade(id, yes);
+    else if (kind === "join" && typeof FRIENDJOIN !== "undefined") await FRIENDJOIN.reply(id, yes);
     bump(); if (tab === "social" || tab === "town") renderPanel(true);
   }
   function clanJoin(id) { const r = CLANS.join(S, CLANS.byId(id)); if (r.err) return toast(r.err); persist(true); say(r.text); }
@@ -4166,6 +4161,7 @@
       case "fadd": case "faddrec": { const c = cardOf(b.dataset.id) || (() => { const d = friendDocs.find((x) => x.id === b.dataset.id); return d ? { id: d.id, name: d.name } : null; })(); if (!c) return toast("They're not around."); const m = SOCIAL.add(S, c); persist(true); publishFriends(); toast(m); renderPanel(true); renderTabs(); break; }
       case "fdelask": fRemoveAsk = b.dataset.id; renderPanel(true); break;
       case "fdel": toast(SOCIAL.remove(S, b.dataset.id)); fRemoveAsk = null; persist(true); publishFriends(); renderPanel(true); break;
+      case "fjoin": if (typeof FRIENDJOIN !== "undefined") FRIENDJOIN.ask(b.dataset.id); break;
       case "fmsg": socTab = "msgs"; socWith = b.dataset.id; tab = "social"; renderTabs(); renderPanel(true); setTimeout(() => { const cl = $("#chatlog"); if (cl) cl.scrollTop = cl.scrollHeight; }, 20); break;
       case "dmback": socWith = null; renderPanel(true); break;
       case "dmsend": sendDM(); break;

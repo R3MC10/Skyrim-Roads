@@ -374,6 +374,9 @@ const PFX = (() => {
     // the Expedition Table (expedition.js reads exreroll / exscout)
     [ "Etiquette", "exp_leader", "Expedition Leader", 2, [30, 60], ["courtly_manners"], "The company listens when you plan: once a day (twice at rank 2) you can ask the Expedition Table for three fresh offers, for the whole company. [OURS]", [["exreroll", [1, 2], {}]]],
     [ "Sneak", "exp_scout", "Seasoned Scout", 1, [30], ["stealth"], "You read the road: an expedition's road event shows you how each choice will turn out, and its choices go 10% better for you. [OURS]", [["exscout", 1, {}]]],
+    // the company's Commissions board (commissions.js reads cmgold / cmcraft)
+    [ "Speechcraft", "cm_broker", "Commission Broker", 2, [25, 50], ["persuasion"], "You talk the towns up: your share of commission gold is 15/30% bigger. [OURS]", [["cmgold", [0.15, 0.3], {}]]],
+    [ "Smithing", "cm_mark", "Master's Mark", 1, [35], ["steel_smithing"], "Towns trust your maker's mark: orders for crafted goods you finish give the company half again the materials, and a better chance of an extra item. [OURS]", [["cmcraft", 0.5, {}]]],
   ];
   const FX = {};
   if (typeof PERKS !== "undefined") {
