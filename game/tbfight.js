@@ -452,6 +452,7 @@ const TB = (() => {
       let t;
       if (al.player && move && move !== "auto") t = this.playerMove(al, move);
       else if (al.coop && typeof COOP !== "undefined") t = COOP.allyAct(f, al);
+      else if (al.pet && typeof PETS !== "undefined") t = PETS.turn(f, al);   // your pet: its signature move or a bite (pets.js)
       else if (al.follower && f.ai && typeof COMBATAI !== "undefined") t = COMBATAI.followerAct(f, al);
       else { const d = al.dmg * (0.85 + Math.random() * 0.3); f.ehp -= d; t = ` · ${al.name} ${Math.round(d)}`; if (al.fsum && typeof COMBO !== "undefined") t += COMBO.phys(f, b, "al" + f.allies.indexOf(al)); }   // followers2: summons can shatter too
       t = String(t || "").replace(/^ · /, "");
@@ -838,6 +839,7 @@ const TB = (() => {
     const mine = state.turn === "me";
     const wait = state.turn === "wait" ? `<p class="tbwait"> ${esc(state.who)} is choosing their move… <b class="num" id="tbcd">${Math.max(0, Math.ceil((state.until - Date.now()) / 1000))}s</b>, then they guard</p>` : "";
     const scene = (newEv.length || !ui.lastScene) && typeof FIGHTART !== "undefined" ? sceneFor(newEv) : "";
+    const keepScene = !scene && ui.lastScene ? el.querySelector("#tbscene > .fscene") : null;   // [phantom] nothing new happened: the scene on screen stays as it is (redrawing it played the last blow again)
     const fmt = typeof TBUI !== "undefined" ? TBUI.logLine : (e) => `<div class="tbl ${e.kind}">${esc(e.text)}</div>`;
     const recent = vis.filter((e) => e.kind !== "round"), lastE = recent[recent.length - 1];
     const log = recent.slice(-10).map((e) => fmt(e, e === lastE && newEv.includes(e))).join("");
@@ -863,7 +865,7 @@ const TB = (() => {
     if (R && newEv.length) { const k = Math.max(0, newEv.length - 3); newEv.slice(k).forEach((e, i) => R.play(R.cue(e, vis[vis.indexOf(e) - 1]), i * 0.25)); }
     el.innerHTML = `<div class="tbin">
       <div class="tbtop"><b>Round ${sess.round}</b><span class="tbord">${order}</span><button class="tbff" data-tbx="log" aria-label="Full fight log"></button>${typeof TBRADIAL !== "undefined" ? `<button class="tbff ${TBRADIAL.on() ? "on" : ""}" data-tbx="wheel" aria-label="Combat wheel and timing ring" data-tip="${typeof FIGHTCTL !== "undefined" && FIGHTCTL.on() ? "Timing ring: after a strike or a damage spell, tap when the needle is in the bright zone (Perfect +25%, a miss −20%). Tap to switch it on or off." : "Combat wheel: your moves in a ring, and a timing ring for strikes and spells (Perfect +25%, a miss −20%). Tap to switch to cards."}"></button>` : ""}</div>
-      <div class="tbstage" data-tbzone="foe"><div class="tbscene" id="tbscene">${scene || (ui.lastScene || "")}</div>${banner}${rd ? rd.bubble : ""}<div class="tbhint" aria-hidden="true"></div></div>
+      <div class="tbstage" data-tbzone="foe"><div class="tbscene" id="tbscene">${scene || (keepScene ? "" : ui.lastScene || "")}</div>${banner}${rd ? rd.bubble : ""}<div class="tbhint" aria-hidden="true"></div></div>
       <div class="tbvit"><div class="tbu me" data-tbzone="self"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.me(f, sess.st))}"` : ""}><small class="nm">\uE102 ${esc(s.name || "You")}</small>${uBar(hpNow, prev.hp, hpMax, "hp", rd ? rd.meMarks(hpNow, hpMax) : "")}${rd ? rd.meLine : ""}<div class="tbsub">${rBar(mpNow, prev.mp, mpMax, "mp", "MP")}${rBar(spNow, prev.sp, spMax, "sp", "SP")}${typeof CHARGE !== "undefined" ? CHARGE.fightBar(f) : ""}</div>${f.ward > 0 ? `<div class="tbward" title="Ward: soaks magic until it breaks. Cast it again to refill it."><i style="width:${pc(f.ward, f.wardMax || f.ward)}%"></i><span>\uE102 Ward ${Math.round(f.ward)} / ${Math.round(f.wardMax || f.ward)}</span></div>` : ""}${R ? R.myChips(f) : ""}${typeof SPELLFX !== "undefined" ? SPELLFX.meHTML(f) : ""}</div>
         <div class="tbu foe" data-tbzone="foe"${typeof TBTIPS !== "undefined" ? ` data-tip="${esc(TBTIPS.foe(f, sess.ehpMax))}"` : ""}><small class="nm">${f.e.player ? "\uE101" : "\uE12E"} ${esc(f.e.name)}${f.e.archLabel && !String(f.e.name).toLowerCase().includes(f.e.archLabel) ? ` <span class="arch">${esc(f.e.archLabel)}</span>` : ""}${sess.waves > 1 ? ` <span class="arch">${sess.wave}/${sess.waves}</span>` : ""}</small>${uBar(ehpNow, prev.ehp, sess.ehpMax, "hp foe", rd ? rd.foeMarks(ehpNow, sess.ehpMax) : "")}${rd ? rd.foeLine : ""}${statusChips(f)}${rd ? rd.intents : ""}</div></div>
       ${allies}
@@ -877,6 +879,7 @@ const TB = (() => {
       ${ui.logOpen ? fullLog(sess, fmt) : ""}
     </div>`;
     if (scene) ui.lastScene = scene;
+    if (keepScene) { const box = el.querySelector("#tbscene"); if (box) box.prepend(keepScene); }
     if (typeof COMBAT2 !== "undefined") { try { COMBAT2.layout(el, sess, { playing, mine, pops, big: prev.hp - hpNow > hpMax * 0.15 }); } catch (e) { console.warn("combat2", e); } }   // combat2.js: the cards go into the scene
     if (typeof TBUI !== "undefined") TBUI.after(el, { hurt: hpNow < prev.hp, hit: ehpNow < prev.ehp, big: prev.hp - hpNow > hpMax * 0.15, mine, pops });
     if (typeof FOEINTENT !== "undefined") { el.classList.toggle("tbplay", playing); try { FOEINTENT.decorate(el, sess); } catch (e) { console.warn("foe targets", e); } }   // crosshairs and the arrow
@@ -926,7 +929,7 @@ const TB = (() => {
       const was = ui.prevAl.get(a) ?? hp; ui.prevAl.set(a, hp);
       const fx = [a.ward > 0 ? "" : "", a.armorT > 0 ? "" : "", a.imbue?.turns > 0 ? "" : "", a.heroT > 0 ? "⚑" : "", a.unseen > 0 ? "" : "", a.guard ? "" : "", typeof POTFX !== "undefined" ? POTFX.allyIcons(a) : ""].join("");
       const ic = a.player ? "" : a.follower ? "" : a.summon ? "✦" : "";
-      const role = a.role ? ` · ${a.role}` : a.follower ? " · follower" : a.player ? " · player" : "";
+      const role = a.role ? ` · ${a.role}` : a.follower ? " · follower" : a.pet || a.partyPet ? " · pet" : a.player ? " · player" : "";
       const tip = `${a.name}${role}. ${down ? "Knocked down" : `${hp} / ${mx} health`}.${down ? " A Rescue spell can bring them back." : " Drag a healing spell, scroll or potion here to use it on them."}`;
       return `<div class="tbu ally${down ? " down" : ""}" data-tbzone="${down ? "ally" : "self ally"}" data-ally="${down ? 1000 + i : i}" data-tip="${esc(tip)}"><small class="nm">${ic} ${esc(a.name)}${fx ? ` <span class="fx">${fx}</span>` : ""}</small>
         <div class="tbbar mid hp"><b class="gh" style="width:${pc(Math.max(hp, was), mx)}%" data-to="${pc(hp, mx)}"></b><i style="width:${pc(hp, mx)}%"></i><span class="num">${down ? "down" : `${hp} / ${mx}`}</span></div>${!down && typeof FAI !== "undefined" ? FAI.frame(a) : ""}</div>`;
@@ -960,9 +963,13 @@ const TB = (() => {
   }
   /* animate just what happened since the last screen: a view of the fight with only those lines (the full fight-scene
      animations per weapon, spell, enemy and ally come from fightart.js) */
+  /* [phantom] the fight scene's lines for some events. An end-of-round tick is a "tick", not an "attack": it used to make you swing */
+  function sceneLines(evs, f) {
+    return evs.filter((e) => ["me", "foe", "ally", "tick"].includes(e.kind)).map((e) => ({ turn: e.round, me: e.kind === "foe" ? "" : e.kind === "ally" ? " · " + e.text : e.text, them: e.kind === "foe" ? e.text : "", a: e.kind === "tick" ? "tick" : e.a || "attack", wt: e.wt || f.wt, hp: e.hp, ehp: e.ehp }));
+  }
   function sceneFor(evs) {
     const sess = ui.sess, f = sess.f;
-    const lines = evs.filter((e) => ["me", "foe", "ally", "tick"].includes(e.kind)).map((e) => ({ turn: e.round, me: e.kind === "foe" ? "" : e.kind === "ally" ? " · " + e.text : e.text, them: e.kind === "foe" ? e.text : "", a: e.a || "attack", wt: e.wt || f.wt, hp: e.hp, ehp: e.ehp }));
+    const lines = sceneLines(evs, f);
     if (!lines.length && ui.lastScene) return "";
     if (!lines.length) lines.push({ turn: 0, me: "", them: "", a: "attack", wt: f.wt, hp: Math.round(f.hp), ehp: Math.round(f.ehp) });   // the opening stand-off
     const keep = fast() && !sess.done ? lines.filter((l, i) => l.me || i === lines.map((x) => !!x.them).lastIndexOf(true)) : lines;   // Fast: your moves and the foe's last blow
@@ -1177,5 +1184,5 @@ const TB = (() => {
 
   /* sharedfight.js: open a teammate's view of a fight, and redraw it when the leader's phone sends news */
   function redraw(sess, state) { if (ui && ui.sess === sess && open) render(state || sess.advance()); }
-  return { T, stats, cost, preview, aiPick, targetOrder, Session, simulate, call, enabled, init, remoteFor, watchTurns, safeSave, zoneOf, play, redraw, fightState, voice, FOE_KEYS, BUFF_KEYS, costTxt, costHTML, base, close: () => { if (open) close(); }, get open() { return open; }, get session() { return open && ui ? ui.sess : null; }, ATK_SP, MAX_ACTS, MAX_POTS, REPEAT, HIT_CAP, FOE_HP, PARTY_HP, TURN_SECONDS, syncInPlace, _origRun: origRun };
+  return { T, sceneLines, stats, cost, preview, aiPick, targetOrder, Session, simulate, call, enabled, init, remoteFor, watchTurns, safeSave, zoneOf, play, redraw, fightState, voice, FOE_KEYS, BUFF_KEYS, costTxt, costHTML, base, close: () => { if (open) close(); }, get open() { return open; }, get session() { return open && ui ? ui.sess : null; }, ATK_SP, MAX_ACTS, MAX_POTS, REPEAT, HIT_CAP, FOE_HP, PARTY_HP, TURN_SECONDS, syncInPlace, _origRun: origRun };
 })();

@@ -3,7 +3,8 @@ name: Hourly game update
 # Hotfix: run "Build the Android app" by hand (Actions tab > Run workflow) to ship at once.
 on:
   schedule:
-    - cron: "0 * * * *"
+    # GitHub often skips crons at minute 0 (busiest time); run off-peak at :07 (still once per hour).
+    - cron: "7 * * * *"
   workflow_dispatch:
 permissions:
   contents: read

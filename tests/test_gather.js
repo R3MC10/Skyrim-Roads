@@ -8,7 +8,7 @@ vm.createContext(c);
 const files = ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "enchanting.js", "quests.js", "smithing.js", "roam.js"];
 if (fs.existsSync(W + "solworld.js")) files.push("solworld.js");
 for (const f of ["perkfx.js"]) if (fs.existsSync(W + f)) files.splice(files.indexOf("powers.js"), 0, f);
-files.push("explore.js", "gather.js", "mp.js");
+files.push("explore.js", "gather.js", "mp.js"); if (fs.existsSync(W + "gatherui.js")) files.push("gatherui.js");
 for (const f of files) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
 let fails = 0;
 c.ok = (cond, msg) => { if (!cond) { fails++; console.log("FAIL", msg); } else console.log("ok  ", msg); };

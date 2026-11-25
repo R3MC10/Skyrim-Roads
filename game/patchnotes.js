@@ -3,10 +3,57 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b295-perkkeys", build: 295, date: "25 Nov 2026", title: "Perk stars with the keyboard", items: [
+    { id: "b302-perkkeys", build: 302, date: "25 Nov 2026", title: "Perk stars with the keyboard", items: [
       "On a PC the Skills page now works like Skyrim's: A and D (or the arrows) step through the skills, W and S move up and down the list, and the stars on the right follow the skill you're on.",
       "E, Enter or Space takes you into the stars. There W A S D jump to the nearest star that way (stars joined by a line first), its perk shows on the left, and E takes it if you can.",
       "Tab, Esc or Backspace (or S at the bottom) go back to the skills. A bright ring shows where you are, and a small key hint sits at the bottom. The mouse and phones work as before.",
+    ] },
+    { id: "b301-gatherarea", build: 301, date: "25 Nov 2026", title: "Gathering moved to the Area tab", items: [
+      "Gathering no longer floats over the map. It's now its own section in the Area tab: the plants around you, which ones are ripe and when picked ones grow back, Gather or Quick pick for each, Forage here (with how long until you can search again), Herbalist's notes and the Auto-pick switch.",
+      "The how-it-works text hides behind a small \"?\" next to the heading.",
+      "On the map a ripe plant in reach still shows its own Gather button, so you can pick it without leaving the map. In a party everyone still picks their own share.",
+    ] },
+    { id: "b300-pets", build: 300, date: "25 Nov 2026", title: "Pets: Meeko walks with your follower", items: [
+      "Meeko is a pet now, not a follower. You can have a follower and a pet with you at the same time.",
+      "The Follower tab has two parts, Follower and Pet, and each one has its own Dismiss.",
+      "Pets don't wear gear. If Meeko was holding anything, it's back in your pack. His loyalty, his quest and his Pounce stay.",
+      "In fights Meeko has his own turn and his own health bar next to your follower. He's a bit weaker than a follower, gets knocked down and never dies, and carries a little for you.",
+      "New Etiquette perk, Pack Leader: your pet bites harder, takes less and gets up stronger.",
+      "Your party sees your pet and it fights beside them too. Pets never count toward the 8 players.",
+    ] },
+    { id: "b299-netfix", build: 299, date: "25 Nov 2026", title: "Players can see each other again", items: [
+      "Players can see each other again. Since accounts came in, players who signed in and players who didn't were in two separate worlds, so friends vanished from each other's map, Social tab and parties.",
+      "Signed in, your phone now joins both: the account world and the phone-to-phone world. Signed in or not, you see each other, chat, trade and team up like before.",
+      "A friend who signed in on an older version still only sees players who signed in. If someone is missing, ask them to update the game.",
+    ] },
+    { id: "b298-mapheroanim", build: 298, date: "25 Nov 2026", title: "Your hero moves on the map", items: [
+      "Your horse on the world map is alive now: standing, it breathes, shifts its weight, tosses its head now and then and flicks its tail.",
+      "On the road its legs swing as it walks or gallops, its body bobs and rocks, and you sit into each stride in the saddle.",
+      "Little puffs of dust kick up behind the hooves (or your boots) while you travel, and walking and standing on foot look smoother too.",
+      "Your friends' figures on the map move the same way. Reduce motion in Settings still keeps everyone still.",
+    ] },
+    { id: "b297-weaponfx", build: 297, date: "25 Nov 2026", title: "Weapon hits that fit the weapon", items: [
+      "Weapon effects in fights are much smaller now and match what you swing: a sword leaves a thin slash, an axe a short chop, a mace or warhammer a heavy thud with a puff of dust (no slash), a dagger a quick little stab, a spear a thrust.",
+      "The hit now shows up the moment the weapon actually connects, right where it meets the body, instead of a big white swoosh popping up early in front of the foe.",
+      "A dagger's two stabs each get their own quick trail, and every hit plays once. A miss is just a faint swish, with no sparks.",
+      "A staff's spell now gathers and flies from the top of the staff, not from your chest.",
+      "When your follower steps in and hits the foe, you now see the blow land.",
+      "Power attacks get a small gleam on the blade instead of a star floating in the air, and only they crack the ground.",
+    ] },
+    { id: "b296-nomountfight", build: 296, date: "25 Nov 2026", title: "Horses are for travel", items: [
+      "Horses are for travel now: fights always happen on foot.",
+      "Riding when a fight starts on the road? You get down and fight on foot. Your horse waits beside you, safe: nobody goes for it and a fight never hurts it. You ride on afterwards.",
+      "No more Mount and Dismount moves, charges or trampling in fights, and no horse health bar in the fight.",
+      "The old saddle perks help on the road instead: Cavalry Charge lets you ride 8% faster, Horse Archer means 20% fewer fights find you while you ride, Steady Steed lets your horse carry 25/50 more, Trample makes it 10% faster off the road, and Saddle Caster makes dual-cast destruction spells 5% cheaper.",
+      "Ranger now makes you travel 3% faster, and Lance makes spear power attacks 10% stronger.",
+      "The warhorse speciality now means fewer fights find you while you ride.",
+      "An ambush on the road no longer hurts your horse.",
+    ] },
+    { id: "b295-phantomattacks", build: 295, date: "25 Nov 2026", title: "No one swings on their own any more", items: [
+      "In a fight, you, your friends and the foe only swing when they really strike. Catching your breath, the end-of-round burns, bleeds and poison, marking the foe and covering your friends used to show you swinging your weapon. Now they don't.",
+      "When the foe winds up a big blow, takes aim, roars a war cry, drinks a potion, raises a ward or a shield, or slips into the shadows, it no longer swings at you. A short word over the picture says what it did (\"Winds up!\", \"Takes aim!\", \"War cry!\").",
+      "Opening a menu or tapping the hotbar while a blow is still playing no longer plays that blow a second time. In a party fight the picture no longer starts the last move over when news comes from the leader's phone.",
+      "Blows that happen on their own say so on the picture: \"Counter!\" when you punch back after a miss, \"Thorns!\" when your armour bites back, \"Riposte!\" after a dodge.",
     ] },
     { id: "b294-aitester", build: 294, date: "25 Nov 2026", title: "What would the AI do?", items: [
       "Character → AI & Loadouts has a new card, What would the AI do?: set your health, stamina and magicka, the foe's health, what kind of foe (normal, strong, boss, dragon, caster), how many and whether a friend is down, and it shows the move your loadout would play right now and why.",
@@ -1967,7 +2014,7 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 285;
+  const NEXT_AT = 297;
   const NEXT = [
     "Mentoring: play side by side with friends of any level",
     "Shrines of your own: build a Daedric altar at your longhouse",
