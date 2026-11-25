@@ -3,12 +3,96 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b253-phonelayout", build: 253, date: "25 Nov 2026", title: "Tidier screens on phones", items: [
+    { id: "b262-phonelayout", build: 262, date: "25 Nov 2026", title: "Tidier screens on phones", items: [
       "On a phone, the Area tab lists places in full-width rows: icon, name and whether it's open. Open places come first; shut ones fold away under \"Closed\". Two columns only when every name fits.",
       "On a phone, the Company tab shows your longhouse right under the Party / Company / Friends / Realm row. Messages, trades and chat fold away under More.",
       "On a phone, the Items menu has one Sort button (pick what to sort by) next to the up/down switch, instead of a row of tiny buttons.",
       "On a phone, holding a finger on an item opens its details in a panel at the bottom of the screen. The list stays where it was; tap elsewhere to close it.",
       "On a PC map, the floating Gathering card and the world event cards on the left no longer cover each other: the cards stop above it and scroll.",
+    ] },
+    { id: "b261-notify2", build: 261, date: "25 Nov 2026", title: "Promotions and tips back in their place", items: [
+      "When you're promoted on a side, the banner shows again (it was quietly swallowed before).",
+      "The tips for new players no longer sit on top of the dungeon's route buttons: they move below them, or wait until there's room.",
+    ] },
+    { id: "b260-crafticons", build: 260, date: "25 Nov 2026", title: "Painted crafting icons", items: [
+      "Iron, steel and dwarven ingots, leather, firewood and refined moonstone have painted icons in your pack and at the forge.",
+      "So do six alchemy and cooking ingredients: blue mountain flower, lavender, wheat, salt, garlic and fire salts.",
+    ] },
+    { id: "b259-movefx2", build: 259, date: "25 Nov 2026", title: "Every blow and shout has its own look", items: [
+      "Every weapon swings its own way now: a sword leaves a diagonal slash, a greatsword a wide sweep, axes and warhammers chop down from above, maces and clubs crack in with a dust ring, daggers stab twice and spears drive straight through.",
+      "Power attacks wind up with a gleam along the blade, hit bigger and leave a gouge or cracks in the ground. A critical flashes white, a sneak attack leaves a dark second cut, and an enchanted weapon sprays fire, frost or sparks.",
+      "Combos show too: Shatter bursts into ice, Overload forks with lightning, Steam puffs up and an opening rings gold.",
+      "Shield bash knocks stars around the foe's head. Every shout rolls out of your mouth in its own colour (Unrelenting Force kicks up a dust wave, Fire Breath is a stream of flame), and every race power, werewolf move and Vampire Lord power has its own look.",
+    ] },
+    { id: "b258-fightpos", build: 258, date: "25 Nov 2026", title: "Everyone stands in the right place", items: [
+      "In a fight your party, followers and summons now stand in neat rows behind you, all of them on screen, even a full party of 8 on a phone. Before, some stood off the edge of the screen.",
+      "Foes still waiting their turn now stand behind the one you're fighting, so you can see what's coming.",
+      "Big foes like dragons and giants keep their size but always fit on screen, and the foe's health bar sits over its head, even over a dragon's.",
+      "When a party member swings at the foe, they step up to it and then go back to their place.",
+      "The ring under the one the foe is about to hit is now under the right person.",
+    ] },
+    { id: "b257-qaside2b", build: 257, date: "25 Nov 2026", title: "Halls, inns and festivals in Polish", items: [
+      "Fixed: a festival in a hold's capital said the place twice, like \"Falkreath, Falkreath\".",
+      "Fixed: in Polish, the Hall of the North's sizes and shared chest, buying a house or a hall plot, the neighbours list, renting a room and writing a bard's verse are translated.",
+      "Fixed: in Polish, festival times, the player search box and the \"% there\" under your skills are translated.",
+    ] },
+    { id: "b256-qacore2", build: 256, date: "25 Nov 2026", title: "Title screen in Polish and the level-up tip", items: [
+      "Fixed: in Polish, the title screen, How to Play, Credits, Settings and the Updates page still had lines in English.",
+      "Fixed: in Polish, every perk description, the hirelings' descriptions and the patch-note dates were still in English.",
+      "Fixed: the first level-up tip and one Dawnguard line still sent you to the Hero tab; it's called Character now."
+    ] },
+    { id: "b255-notify", build: 255, date: "25 Nov 2026", title: "Tidier pop-ups", items: [
+      "All the pop-up messages now take turns: at most one message and one banner at a time, never on top of each other. Level ups and finished quests go first.",
+      "Loot and gold that arrive together are added up into one line (\"Iron Dagger ×3\", one gold total), and a skill that rises a few times in a row shows as \"21 → 24\".",
+      "Achievements earned together share one banner, so \"First Steps\" and \"Coin Hoarder\" no longer pop one after the other when you start.",
+      "Nothing pops up over the perk stars, item details, character creation, mini-games, party votes or your fight buttons any more. Big news waits until you're done; small loot lines go straight to the history.",
+      "New: a message history. Tap the little scroll next to the messages at the top left to see the last 200, sorted into Rewards, Quests, Party and World.",
+    ] },
+    { id: "b254-qafight", build: 254, date: "25 Nov 2026", title: "Party dungeon fixes", items: [
+      "Fixed: in a party dungeon, the waiting screen still said only the leader decides. It now says everyone votes on each choice.",
+    ] },
+    { id: "b253-wagons", build: 253, date: "25 Nov 2026", title: "Caravans you can talk to", items: [
+      "Tap or click any caravan's wagons on the map to see who they are, where they're going, what they carry and how they're doing: rolling, resting in town, broken down, under attack, guarded or robbed.",
+      "Catch up sends you to where you'll meet them on their road. When you reach them, whatever you picked on the card happens.",
+      "Trade right from the card when you're beside them. Their packs follow their cargo, and when the hold they're heading for is in crisis they carry relief goods and their prices follow that crisis.",
+      "Escorting them pays when they arrive. If that hold's Jarl is paying for supply escorts, it counts as one and helps end the crisis.",
+      "Ask for news: a lead or a new place on your map, and how things stand where they're going.",
+      "Now and then a wagon breaks down or gets attacked on the road. Fix the wheel or fight beside their guards for a reward and a better name in the hold. Everyone sees who helped.",
+      "Robbing wagons is a crime: a bounty, a fight with their guards and a worse name. You can't rob wagons another hero is guarding.",
+      "On a PC the wagons light up under the mouse. Zoomed out, tapping a group pin zooms in on it. In a party the leader decides.",
+      "Caravan Friend (Speech) now also makes caravans on the road sell to you 10% cheaper.",
+      "In Polish, everything about caravans is now in Polish too: their names on the map, meetings on the road, the caravan board in town, your caravan job, your cart and the wares they sell.",
+    ] },
+    { id: "b252-qaside2a", build: 252, date: "25 Nov 2026", title: "Forge and lockpicking fixes", items: [
+      "Fixed: in Polish, the forge was still mostly in English: the Make, Smelt & tan and Improve tabs, batch crafting, what's missing, and the line you get after making something.",
+      "Fixed: in Polish, the lockpicking hint under the lock is translated.",
+      "Fixed: after a festival smithing contest, your next forged item could get a free chance to save a material it never earned.",
+    ] },
+    { id: "b251-perklayout", build: 251, date: "25 Nov 2026", title: "Tidier perk stars", items: [
+      "Perk names in the star trees never sit on top of each other any more, and long names are never cut short with \"…\": they wrap onto a second line instead.",
+      "Each perk now sits right above the perks it needs, with the first ones at the bottom, so the trees read from the ground up.",
+      "On a phone, pinch the stars to zoom in or out and drag to look around. Zoomed far out, only the perks you can take keep their names.",
+      "On a phone, tapping a star shows the perk in a panel at the bottom of the screen instead of a pop-up over the stars.",
+    ] },
+    { id: "b250-qafight", build: 250, date: "25 Nov 2026", title: "Fight fixes", items: [
+      "Fixed: on phones, casting a heal with a follower along asked you to tap a portrait, but the Magic menu covered every portrait. The bar at the top now has a button for each person you can heal.",
+      "Fixed: if the last foe fell between your moves, End turn and every other button could do nothing and the fight never ended. Any tap now finishes the fight.",
+      "Fixed: more of the fight screen is in Polish (choosing who gets a heal, Your turn, Dual, the Magic and Items hints).",
+    ] },
+    { id: "b249-testsgreen", build: 249, date: "25 Nov 2026", title: "Coming next, tidied", items: [
+      "Picking herbs by hand is out now, so it left the Coming next list.",
+    ] },
+    { id: "b248-chargenrig", build: 248, date: "25 Nov 2026", title: "Character creation shows your real fighter", items: [
+      "Character creation now shows the same painted hero you fight with: armour, weapon and all. Stand, Walk and Fight show how you'll really look on the road and in battle.",
+      "Picking a race swaps the painted head (Dunmer, Khajiit and Argonian have their own) and skin colour; everything else you chose stays.",
+      "Face zooms right in on your hero's head. On the Head, Face, Hair and Scars tabs a small close-up shows the details you pick.",
+      "The race card shows the painted bust of the race instead of the little drawn figure.",
+    ] },
+    { id: "b247-movefx1", build: 247, date: "25 Nov 2026", title: "Real arrows and spell effects", items: [
+      "Bows and crossbows shoot a real arrow or bolt now: it leaves the string, arcs over (a bolt flies flatter and faster), and sticks in, breaks on a shield, or sails past on a miss and lands in the ground behind.",
+      "Archer foes, crossbowmen and the Dwarven ballista shoot too, and your followers and party members loose their own arrows. Shots leave from the saddle when you ride.",
+      "Fire, frost, shock, poison and life-drain arrows leave a coloured trail; power shots and sneak shots are bigger.",
+      "Every spell now has its own look: Flames is a jet, Firebolt a comet, Fireball a lob that bursts, Ice Spike a shard, Icy Spear a big spear, Lightning Bolt a jagged arc, Chain Lightning forks from foe to foe, and so on through healing, wards, flesh spells, summons, illusions and the rest. Dual casting looks bigger, from both hands.",
     ] },
     { id: "b246-gathering", build: 246, date: "25 Nov 2026", title: "Picking herbs by hand", items: [
       "Gathering is now a short hands-on mini-game: snip flowers at the stem, dig roots up slowly, scrape fungus in one stroke, pick only the ripe berries, lift eggs gently and ease a fragile Nirnroot out of the mud. Do it well and you get more; even a clumsy try gives you something.",
@@ -1703,9 +1787,8 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 240;
+  const NEXT_AT = 249;
   const NEXT = [
-    "Hands-on gathering: a little harvest game for every kind of plant",
     "Mentoring: play side by side with friends of any level",
     "Shrines of your own: build a Daedric altar at your longhouse",
   ];

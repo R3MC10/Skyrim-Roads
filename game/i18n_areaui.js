@@ -23,7 +23,7 @@
     "Garden ripe": "Ogród dojrzał", "Your horse": "Twój koń",
     // phone layout: shut places fold away; Social's More line
     "Closed": "Zamknięte", "Messages, trades, chat": "Wiadomości, wymiany, czat", "Sort by": "Sortuj według",
-    // patch note b253
+    // patch note b262
     "Tidier screens on phones": "Porządniejsze ekrany na telefonie",
     "On a phone, the Area tab lists places in full-width rows: icon, name and whether it's open. Open places come first; shut ones fold away under \"Closed\". Two columns only when every name fits.":
       "Na telefonie zakładka Okolica pokazuje miejsca w wierszach na całą szerokość: ikona, nazwa i czy jest otwarte. Otwarte są na górze, zamknięte chowają się pod „Zamknięte”. Dwie kolumny tylko wtedy, gdy mieszczą się wszystkie nazwy.",

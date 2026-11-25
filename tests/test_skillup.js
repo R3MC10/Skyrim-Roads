@@ -12,8 +12,15 @@ const near = (a, b) => Math.abs(a - b) < 1e-6;
 const need = () => 100;
 const SU = SKILLUP;
 
+// [notify-2] only real level-ups and skill rises are ours: a side's "Promoted" rank banner and "+5 rank XP" show normally
+ok(SU.ours("level", "You reached level 9") && SU.ours("level", "12"), "a level-up is ours");
+ok(!SU.ours("level", "Ice-Veins") && !SU.ours("level", "Legate"), "a promotion rank name is not swallowed");
+ok(SU.ours("skill", "One-Handed 26") && SU.ours("skill", "Archery 21 · Sneak 30"), "a skill rise is ours");
+ok(!SU.ours("skill", "+5 rank XP") && !SU.ours("quest", "Bleak Falls Barrow"), "rank XP and other kinds are not");
+ok(!SU.claim("level", "Ice-Veins"), "claim() hands a promotion back");
+
 // the bar's run
-let r = SU.run({ lvl: 30, xp: 50 }, { lvl: 30, xp: 80 }, need);
+let r =SU.run({ lvl: 30, xp: 50 }, { lvl: 30, xp: 80 }, need);
 ok(r.length === 1 && near(r[0].a, 0.5) && near(r[0].b, 0.8) && !r[0].cross, "no level: one creep 0.5 → 0.8");
 r = SU.run({ lvl: 30, xp: 90 }, { lvl: 31, xp: 20 }, need);
 ok(r.length === 2 && r[0].cross && near(r[0].a, 0.9) && r[0].b === 1 && r[0].lvl === 31, "a level crossed: runs to the end at 31");

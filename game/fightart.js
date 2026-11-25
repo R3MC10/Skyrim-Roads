@@ -520,7 +520,7 @@ const FIGHTART = (() => {
     const lines = f.log || [], beats = [];
     let hp = f.hp0 ?? null, ehp = f.ehp0 ?? null;
     const nm = (f.e?.name || "").toLowerCase(), strip = (t) => (nm ? t.toLowerCase().split(nm).join("") : t.toLowerCase());
-    const kind = foeOf(f.e), archer = /archer|hunter|marksman|ranger|sniper/.test(nm), base = f.wt0 || h.wt;
+    const kind = foeOf(f.e), archer = /archer|hunter|marksman|ranger|sniper|bowman|crossbow|ballista|sharpshooter/.test(nm), bolter = /crossbow|ballista/.test(nm), base = f.wt0 || h.wt;
     const st = { bound: false, invis: false, rune: null, ward: false, soul: false, cloak: null, guard: false, beast: false, lord: false, summon: null };
     { const as = lines.map((l) => l.a || ""), back = lines.some((l) => /change back/.test(l.me || ""));   // a turn-by-turn screen shows a few lines at a time: start in the form you're in (beastpaths.js)
       if (!as.includes("power:beast")) st.beast = (f.pw?.beast || 0) > 0 || (back && !!f.usedBeast && !as.includes("power:lord"));
@@ -556,8 +556,8 @@ const FIGHTART = (() => {
         } else if (k === "potion" || (!k && /^drinks/i.test(me))) {
           const it = typeof D !== "undefined" && D.ITEMS?.[arg]; const res = it?.restore?.[0] || (/magicka/i.test(me) ? "magicka" : /stamina/i.test(me) ? "stamina" : "health");
           Object.assign(b, { move: "potion", fx: "potion", el: res, flask: res === "magicka" ? "#4a7ac8" : res === "stamina" ? "#4a9a5a" : "#c03a3a" });
-        } else if (k === "block" || (!k && /^raises guard|^shield bash/i.test(me))) {
-          b.move = /^shield bash/i.test(me) ? "bash" : "block"; st.guard = true;
+        } else if (k === "block" || k === "bash" || (!k && /^raises guard|^shield bash/i.test(me))) {   // [movefx2] a turn-by-turn bash (a: "bash") is a bash too, not a sword swing
+          b.move = k === "bash" || /^shield bash/i.test(me) ? "bash" : "block"; st.guard = true;
         } else if (k === "shout" || k === "power") {
           const fx = k === "shout" ? SHOUT_FX[arg] || "fus" : RACE_FX[arg] || "glow";
           Object.assign(b, { move: k === "shout" ? "shout" : "self", fx, el: arg === "frost_breath" || arg === "ice_form" ? "frost" : arg === "fire_breath" || arg === "dunmer" ? "fire" : null });
@@ -588,6 +588,7 @@ const FIGHTART = (() => {
             const sn = me.match(/^Sneak attack ×(\d+)/i); if (sn) b.sneak = `SNEAK ATTACK ×${sn[1]}`;
             b.second = /second arrow/.test(me);
             const en = me.match(/\+(fire|frost|shock|absorb)/); if (en) b.enchant = en[1] === "absorb" ? "drain" : en[1];
+            if (!b.enchant && /poison/i.test(raw) && (b.move === "bow" || b.move === "crossbow")) b.poison = true;   // [arrowfx] a poisoned arrow drips green
             if (/paralyzes/.test(me)) b.para = true;
             if (st.beast || st.lord) Object.assign(b, { move: "claw", wt: null });   // a werewolf or a Vampire Lord fights with claws
             st.invis = false;
@@ -613,11 +614,14 @@ const FIGHTART = (() => {
         } else if (fo || (/goes for|knocks .* to their knees| hits (?!\d)[a-z]/.test(them) && ((f.allies || []).length || f.followerDown))) {
           Object.assign(b, { move: FOE_MOVE[kind] || "sword", ally: true, allyActs: fo ? [fo] : [] });
         } else if (/(^| )(misses|attacks, but you dodge)/.test(them)) {
-          Object.assign(b, { move: FOE_MOVE[kind] || "sword", miss: true });
+          const aw0 = typeof FOEGROUPS !== "undefined" ? FOEGROUPS.look(f.e)?.wt : null, shoots = bolter || archer || aw0 === "bow";   // [arrowfx] an archer's miss still flies
+          Object.assign(b, { move: bolter ? "crossbow" : shoots ? "bow" : FOE_MOVE[kind] || "sword", miss: true });
+          if (shoots) b.wt = bolter ? "crossbow" : "bow";
         } else if (/hits|blow|breath|bites|claws|strikes|\d/.test(them)) {
           const aw = typeof FOEGROUPS !== "undefined" ? FOEGROUPS.look(f.e)?.wt : null;   // the foe's archetype weapon
-          b.move = archer || aw === "bow" ? "bow" : aw === "staff" ? "cast" : aw && MOVES[aw] ? aw : FOE_MOVE[kind] || "sword";
-          if (archer || aw === "bow") b.wt = "bow"; else if (aw && aw !== "staff") b.wt = aw;
+          b.move = bolter ? "crossbow" : archer || aw === "bow" ? "bow" : aw === "staff" ? "cast" : aw && MOVES[aw] ? aw : FOE_MOVE[kind] || "sword";
+          if (bolter) b.wt = "crossbow"; else if (archer || aw === "bow") b.wt = "bow"; else if (aw && aw !== "staff") b.wt = aw;
+          if (/ballista/.test(nm)) b.ballista = true;   // [arrowfx] a big brass bolt
           foeAtk++;
           if (kind === "draugr" && foeAtk % 3 === 0) Object.assign(b, { move: "shout", fx: "fus" });
           if (kind === "vampire" && foeAtk % 2 === 0) Object.assign(b, { move: "drain", el: "drain" });
@@ -735,6 +739,7 @@ const FIGHTART = (() => {
       const refit = () => {
         if (!cv.isConnected || !cv.offsetWidth) return;
         vs = Math.max(1, cv.offsetWidth / W);
+        try { replace(); } catch (e) { /* not laid out yet: mount does it */ }   // [fightpos] the visible part of the stage may have changed
         const nk = kOf(cv);
         if (Math.abs(nk - k) / k > 0.04) { k = nk; cv.width = Math.round(W * k); cv.height = Math.round(Hh * k);
           try { if (!MANUAL) draw(performance.now()); } catch { /* the next frame draws it */ } }
@@ -760,16 +765,72 @@ const FIGHTART = (() => {
       return ln?.st ? { me: ln.st.me || {}, foe: ln.st.foe || {} } : NOST;
     }
     const turned = !!f.endWon;
-    const groundY = Hh * 0.8, s = Hh / 150, fx0 = W * 0.72;
-    /* [OURS] on a tall phone stage the figures are big next to the width: step you in from the left edge so the allies
-       standing behind you (and your own wind-up) stay on screen */
-    const hasAllies = (rec.hero.list || []).length > 0 || (rec.hero.allies || 0) > 0, hx0 = Math.max(W * 0.27, Math.min(W * 0.4, (hasAllies ? 60 : 24) * s));
+    const groundY = Hh * 0.8, s = Hh / 150;
     const foeK = rec.foe, fSize = SIZE[foeK] || 1, reach = REACH[foeK] || 1, isPerson = PERSON.has(foeK);
-    const foeChest = groundY - 34 * s * fSize, heroChest = groundY - 36 * s;
+    const heroChest = groundY - 36 * s;
+    /* [fightpos] where everyone stands comes from fightpos.js: you, up to 7 other players plus followers, thralls and
+       summons in depth rows behind you, the foe across the gap (big ones shrink only when they would not fit) and the
+       foes still waiting their turn behind it, all inside the part of the stage that is really on screen (the phone's
+       immersive screen crops its sides). The health plate, pop-ups and the target ring read the same spots. */
+    const ALLY_MAX = 11, alist0 = rec.hero.list || [], groundL = alist0.filter((a) => !FLYERS.has(a.kind)).slice(0, ALLY_MAX), flyers = alist0.filter((a) => FLYERS.has(a.kind)).slice(0, 1);
+    const nGen = Math.max(0, Math.min(ALLY_MAX, rec.hero.allies) - groundL.length - flyers.length);
+    const slots = [...groundL, ...Array.from({ length: Math.min(ALLY_MAX - groundL.length, nGen) }, () => ({ kind: "soldier" }))];
+    const FP = typeof FIGHTPOS !== "undefined" ? FIGHTPOS : null, nWait = Math.max(0, rec.f.tbWait | 0);
+    const hasAllies = slots.length > 0 || flyers.length > 0;
+    let LAY = null, band = [0, W], fx0 = W * 0.72, hx0 = Math.max(W * 0.27, Math.min(W * 0.4, (hasAllies ? 60 : 24) * s)), FSC = 1, foeChest = groundY - 34 * s * fSize;
+    const slotOf = new Map();   // an ally (its place in slots) -> its spot
+    function bandOf() {   // the stage's on-screen part, in stage units (a parent that clips it, or the window)
+      if (!cv.isConnected || typeof getComputedStyle !== "function") return [0, W];
+      const rc = cv.getBoundingClientRect(); if (!rc.width) return [0, W];
+      let lo = 0, hi = typeof innerWidth === "number" && innerWidth ? innerWidth : rc.right;
+      for (let e = cv.parentElement; e && e !== document.body; e = e.parentElement) {
+        if (getComputedStyle(e).overflowX === "visible") continue;
+        const er = e.getBoundingClientRect(); lo = Math.max(lo, er.left); hi = Math.min(hi, er.right);
+      }
+      const l = Math.max(0, ((lo - rc.left) / rc.width) * W), r = Math.min(W, ((hi - rc.left) / rc.width) * W);
+      return r - l > W * 0.5 ? [Math.round(l), Math.round(r)] : [0, W];
+    }
+    function relayout() {
+      if (!FP) return false;
+      const nb = bandOf(); if (LAY && Math.abs(nb[0] - band[0]) < 3 && Math.abs(nb[1] - band[1]) < 3) return false;
+      band = nb;
+      const MF = typeof MOUNTFIGHT !== "undefined" && typeof HORSEBACK !== "undefined" ? MOUNTFIGHT : null;
+      const al = slots.map((a, i) => ({ name: "#" + i, kind: a.kind, ride: !!(MF && a.kind === "mate" && a.name && MF.allyHorse(f, a.name)) }));
+      for (const a of flyers) al.push({ name: "#fly", kind: a.kind });
+      LAY = FP.layout({ W, Hh, l: band[0], r: band[1], groundY, ride: !!rec.horse, allies: al, foe: { kind: foeK }, waiting: nWait });
+      hx0 = LAY.hero.x; fx0 = LAY.foe.x; FSC = LAY.foe.fs; foeChest = groundY - 34 * s * fSize * FSC;
+      slotOf.clear();
+      for (const p of LAY.allies) { const i = +p.name.slice(1); slotOf.set(i, p); p.name = slots[i]?.name || p.name; }   // the target ring finds them by name
+      for (const p of LAY.flyers) p.name = flyers[0]?.name || p.name;
+      FP.publish(cv, LAY);
+      return true;
+    }
+    const replace = () => { if (relayout() && typeof COMBAT2 !== "undefined" && COMBAT2.place) { const tb = cv.closest && cv.closest("#tbf"); if (tb) try { COMBAT2.place(tb, true); } catch (e) { /* the plate stays where it was */ } } };
+    replace();
     // [OURS] foe rigs (foerig.js): the foe is a little skeleton that breathes, winds up, flinches, staggers and falls
     const RIG = typeof FOERIG !== "undefined" && FOERIG.on() ? FOERIG.ctl(foeK, rec.foeName, { look: foeK === "player" ? matePerson(rec.foeLook) : null, foeLook: rec.foeLook, arch: typeof FOEGROUPS !== "undefined" ? FOEGROUPS.look(rec.f?.e) : null }) : null;
     const RIGKIT = { weapon, gearTorso, foeFig, person, H: ART.H }, RIGST = { t: 0, clip: null, u: 0, hitU: null, pose: null, pic: null, picH: 0, filter: null, dragon: null, kit: RIGKIT, jitter: false, still: false };
+    // [fightpos] the foes waiting their turn: the same kind of foe, idle, one rig shared by all of them
+    const RIGW = RIG && nWait ? FOERIG.ctl(foeK, rec.foeName, { look: foeK === "player" ? matePerson(rec.foeLook) : null, foeLook: rec.foeLook, arch: typeof FOEGROUPS !== "undefined" ? FOEGROUPS.look(rec.f?.e) : null }) : null;
+    const RIGWST = { ...RIGST, still: !!rm }, waitP = idlePose({}, null);
+    function drawWaiting(tt) {
+      const pic0 = foeK !== "player" && typeof ASSETS !== "undefined" ? ASSETS.img(ASSETS.foeKey(rec.foeName, foeK)) : null;
+      const pic = pic0 && typeof RIGLOOK !== "undefined" ? RIGLOOK.graded(pic0) : pic0, picH = (foeK === "dragon" ? 120 : 66) * Math.min(1.8, fSize);
+      curFoeLook = rec.foeLook; curArchLook = typeof FOEGROUPS !== "undefined" ? FOEGROUPS.look(rec.f?.e) : null; curDragon = null;
+      for (const w of LAY.waiting) {
+        wg.save(); wg.translate(w.x, w.y); wg.scale(-s * w.sc, s * w.sc); wg.globalAlpha = 0.86;
+        if (RIGW) { RIGWST.t = rm ? 0 : tt + w.x * 0.013; RIGWST.pose = isPerson || foeK === "player" ? waitP : null; RIGWST.pic = pic; RIGWST.picH = pic ? picH : 0; RIGW.draw(wg, RIGWST); }
+        else if (pic) { const wU = picH * pic.naturalWidth / pic.naturalHeight; wg.drawImage(pic, -wU / 2, -picH, wU, picH); }
+        else foeFig(wg, foeK, 0, tt + w.x * 0.013, isPerson ? waitP : null);
+        wg.restore();
+      }
+    }
     const pmul = rm ? 0.4 : 1;
+    // [arrowfx] bows and crossbows shoot a painted arrow or bolt (arrowfx.js); [movefx] every spell has its own painted effect (movefx.js)
+    const lowQ = !!(FS && FS.quality && FS.quality() === "low");
+    const AFX = typeof ARROWFX !== "undefined" ? ARROWFX.scene({ s, groundY, reduce: rm, low: lowQ }) : null;
+    const MFX = typeof MOVEFX !== "undefined" ? MOVEFX.scene({ s, W, H: Hh, groundY, reduce: rm, low: lowQ }) : null;
+    let seatLift = 0, muteFx = false;   // how high you sit in the saddle (shots leave from there); muteFx: movefx draws this impact, the shared bursts stay quiet
     // ---- state (all allocated once)
     let bi = 0, lt = 0, hitIdx = 0, phase = beats.length ? "play" : "end", phaseT = 0, real = 0, hitstop = 0, slowT = 0, shake = 0, zoom = 1, zoomT = 0, zcx = W / 2, zcy = Hh / 2, flash = 0, flashC = "#fff";
     let done = false, speed = rm ? 2 : 1, lastNow = performance.now(), raf = 0, revealed = -2;
@@ -786,6 +847,7 @@ const FIGHTART = (() => {
       px[i] = x; py[i] = y; pvx[i] = vx; pvy[i] = vy; pl[i] = pm[i] = life; ps[i] = size; pg[i] = grav; pt[i] = type; pc[i] = c;
     }
     function burst(x, y, n, type, cols, sp, life, size, grav, upward) {
+      if (muteFx) return;
       n = Math.max(1, Math.round(n * pmul));
       for (let i = 0; i < n; i++) { const a = upward ? -Math.PI / 2 + (Math.random() - 0.5) * 2.2 : Math.random() * 6.283, v = sp * (0.35 + Math.random() * 0.65);
         spawn(type, cols[i % cols.length], x, y, Math.cos(a) * v, Math.sin(a) * v, life * (0.6 + Math.random() * 0.6), size * (0.6 + Math.random() * 0.8), grav); }
@@ -854,9 +916,23 @@ const FIGHTART = (() => {
     const handX = (side, pose) => side > 0 ? hx0 + (pose.dx + 22) * s : fx0 - (pose.dx + 22) * s * (foeK === "dragon" ? 2.2 : 1);
     const handY = (side) => side > 0 ? groundY - 46 * s : foeK === "dragon" ? groundY - 80 * s : groundY - 46 * s * Math.min(1.4, fSize);
     const allyX = () => hx0 - 26 * s;
+    const GEO = { hand: [0, 0], hand2: [0, 0], from: [0, 0], to: [0, 0], ally: [0, 0], gy: groundY };   // [movefx] where things are this frame
+    function mfxGeo() {
+      const hx = handX(1, heroP), hy = handY(1) - seatLift;
+      GEO.hand[0] = hx; GEO.hand[1] = hy; GEO.hand2[0] = hx - 12 * s; GEO.hand2[1] = hy + 5 * s;
+      GEO.from[0] = hx0; GEO.from[1] = heroChest - seatLift; GEO.to[0] = fx0 - (foeP.dx || 0) * s; GEO.to[1] = foeChest; GEO.ally[0] = allyX(); GEO.ally[1] = groundY - 36 * s;
+      return GEO;
+    }
 
     // ---- the effects at the moment of impact
-    function impact(b, last) {
+    function impact(b, last) {   // [movefx] a beat movefx.js owns draws its own impact; the sound, the flinch, gore, knockback and hitstop stay
+      const own = !!(MFX && MFX.owns(b));
+      if (!own) return impact0(b, last);
+      MFX.hit(b, last);
+      const keep = [ringT, beamT, flash, flashC, claw]; muteFx = true;
+      try { impact0(b, last); } finally { muteFx = false; const fl = flash, fc = flashC; [ringT, beamT, flash, flashC, claw] = keep; if (b.final) { flash = fl; flashC = fc; } }
+    }
+    function impact0(b, last) {
       const me = b.who === "me", tx = me ? fx0 : (b.ally ? allyX() : hx0), ty = me ? foeChest : heroChest, dir = me ? 1 : -1;
       const fx = b.fx, cols = colOf(fx, b.el), big = b.power || b.final;
       if (last && CFX && typeof SOUND !== "undefined" && SOUND.fx && !["potion", "self", "wait"].includes(b.move)) SOUND.fx(CFX.soundOf(b, me ? foeK : "person", meleeOf(b), goreOn));
@@ -946,7 +1022,7 @@ const FIGHTART = (() => {
       done = true; rec.played = true; phase = f.tbMid ? "idle" : "end"; bi = beats.length; fall = f.tbMid ? 0 : 1;
       hpD = hpT = hpL = last.hp ?? hpT; ehpD = ehpT = ehpL = last.ehp ?? ehpT;
       for (let i = 0; i < NP; i++) pl[i] = 0; for (let i = 0; i < NF; i++) fl[i] = 0;
-      label = null; slowT = 0; shake = 0; zoomT = 0; zoom = 1; camF = 0.5; hitstop = 0; flash = 0; boltOn = 0;
+      label = null; slowT = 0; shake = 0; zoomT = 0; zoom = 1; camF = 0.5; hitstop = 0; flash = 0; boltOn = 0; AFX?.clear(); MFX?.clear();
       if (!f.tbMid) pickDeath();
       GS?.settle();   // what's in the air drops; what has landed stays
       revealLog(1e9); ctl?.remove();
@@ -990,6 +1066,7 @@ const FIGHTART = (() => {
           if (st.shock && Math.random() < (rm ? 0.08 : 0.25)) spawn(1, "#cfe7ff", X0 + (Math.random() - 0.5) * 20 * s, Y0 + (Math.random() - 0.5) * 20 * s, (Math.random() - 0.5) * 120 * s, (Math.random() - 0.5) * 120 * s, 0.25, 2, 0);
         } }
       if (GS) { if (phase === "play" && beats[bi]) GS.statusOf((f.log || [])[beats[bi].li]); GS.update(dt); }   // [OURS] gore.js
+      AFX?.tick(dt); MFX?.tick(dt);
       // particles
       alive = 0;
       for (let i = 0; i < NP; i++) { if (pl[i] <= 0) continue; alive++; pl[i] -= dt; pvy[i] += pg[i] * s * dt; const dr = pt[i] === 2 ? 0.96 : 0.985; pvx[i] *= dr; pvy[i] *= dr; px[i] += pvx[i] * dt; py[i] += pvy[i] * dt; if (pt[i] === 2) ps[i] += dt * 6; if (pt[i] === 4) px[i] += Math.sin(py[i] * 0.1) * 0.4; }
@@ -1000,10 +1077,11 @@ const FIGHTART = (() => {
         lt += dt * 1000 * speed * auto;
         const u = Math.min(1, lt / b.dur);
         // charging hands, projectiles in flight
-        if (m.charge && u > m.charge[0] && u < m.charge[1] && Math.random() < 0.7 * pmul) { const side = b.who === "me" ? 1 : -1, P0 = side > 0 ? heroP : foeP, c = colOf(b.fx, b.el); spawn(0, c[(Math.random() * c.length) | 0], handX(side, P0) + (Math.random() - 0.5) * 14 * s, handY(side) + (Math.random() - 0.5) * 14 * s, 0, -20 * s, 0.4, 1.8, 0); }
-        if (m.proj) projStep(b, m, u);
+        const own = MFX ? MFX.step(dt, b, (f.log || [])[b.li], m, u, mfxGeo()) : false;   // [movefx] this spell's own charge, delivery and impact
+        if (!own && m.charge && u > m.charge[0] && u < m.charge[1] && Math.random() < 0.7 * pmul) { const side = b.who === "me" ? 1 : -1, P0 = side > 0 ? heroP : foeP, c = colOf(b.fx, b.el); spawn(0, c[(Math.random() * c.length) | 0], handX(side, P0) + (Math.random() - 0.5) * 14 * s, handY(side) + (Math.random() - 0.5) * 14 * s, 0, -20 * s, 0.4, 1.8, 0); }
+        if (m.proj && !own) projStep(b, m, u);
         sampleTrail(b, m, u);
-        if (b.who === "me" && !b.miss && b.fx === "wall" && u > 0.45) for (let i = 0; i < 3; i++) if (Math.random() < 0.9 * pmul) {   // walls and storms: columns of fire, frost or lightning
+        if (!own && b.who === "me" && !b.miss && b.fx === "wall" && u > 0.45) for (let i = 0; i < 3; i++) if (Math.random() < 0.9 * pmul) {   // walls and storms: columns of fire, frost or lightning
           const cx = fx0 + (i - 1) * 16 * s, c = colOf("wall", b.el), down = b.el === "frost" && b.storm, x = cx + (Math.random() - 0.5) * 7 * s;
           spawn(b.el === "frost" ? 3 : 0, c[(Math.random() * c.length) | 0], x, down ? groundY - 90 * s : groundY, 0, (down ? 170 : -150) * s, 0.55, 3, 0);
           if (b.el === "frost" && Math.random() < 0.3) spawn(2, "#e0f4ff", x, groundY - 10 * s, 0, -20 * s, 0.9, 6, 0);
@@ -1040,6 +1118,17 @@ const FIGHTART = (() => {
     // projectiles: arrows, bolts, spell bolts, lightning, shouts, breath, drain streams
     function projStep(b, m, u) {
       const [a0, a1, ptype] = m.proj, me = b.who === "me", side = me ? 1 : -1, type = b.fx === "breath" ? "cone" : ptype;
+      if (AFX && (type === "arrow" || type === "bolt")) {   // [arrowfx] on the release of the draw: one painted shot from the bow to the target
+        if (u >= a0 && !b.shot) {
+          b.shot = 1;
+          const pace = speed * (b.li > 12 ? 1.35 : 1) * (real > 25 ? 6 : 1), dur = (a1 - a0) * b.dur / 1000 / pace;
+          const x0 = handX(side, me ? heroP : foeP) + side * 4 * s, y0 = handY(side) - (me ? seatLift : 0), x1 = me ? fx0 : (b.ally ? allyX() : hx0), y1 = me ? foeChest : heroChest - (b.ally ? 0 : seatLift);
+          const sp = ARROWFX.spec({ wt: type === "bolt" ? "crossbow" : "bow", el: b.enchant || (b.poison ? "poison" : null), power: b.power, sneak: !!b.sneak, crit: b.crit, ballista: b.ballista });
+          AFX.fire(null, { x0, y0, x1, y1, dur, sp, miss: b.miss, blocked: !me && !!b.blocked, gore: me && !!GS });
+          if (b.second) AFX.fire(null, { x0, y0: y0 + 3 * s, x1, y1: y1 - 6 * s, dur: dur * 1.15, sp, miss: b.miss, gore: me && !!GS });   // a second arrow right behind
+        }
+        projX = -1; return;
+      }
       if (u < a0 || u > a1 + 0.02) { if (u > a1) boltOn = 0; return; }
       const p = Math.max(0, Math.min(1, (u - a0) / (a1 - a0)));
       const breathMe = type === "cone" && me, x0 = breathMe ? hx0 + (heroP.dx + 12) * s : handX(side, me ? heroP : foeP), y0 = breathMe ? groundY - 56 * s : handY(side), x1 = me ? fx0 : (b.ally ? allyX() : hx0), y1 = me ? foeChest : heroChest;
@@ -1099,42 +1188,45 @@ const FIGHTART = (() => {
       if (cv.dataset.bs !== (art ? rec.art : "")) cv.dataset.bs = art ? rec.art : "";   // which painted scene is on (screen tests)
       const RL = typeof RIGLOOK !== "undefined" ? RIGLOOK : null; if (RL) RL.scene(art ? rec.art : null);   // [rigcohesion] the fighters take this scene's light (riglook.js)
       GS?.drawGround(wg);   // [OURS] gore.js: splats, pools and scorch marks on the ground (they stay for the fight)
+      MFX?.drawGround(wg);   // [movefx] scorch, frost creep, rune circles left by spells
+      const mOwn = !!(MFX && b && MFX.owns(b));
       // a rune waiting on the ground, a portal
       if (st.rune) rune(fx0, groundY, COL[st.rune]?.[0] || "#ffb347", tt);
-      if (b && b.fx === "rune" && b.who === "me" && u > 0.4) rune(fx0, groundY, COL[b.el]?.[0] || "#ffb347", tt);
-      if (b && b.fx === "summon" && b.who === "me" && u > 0.2) portal(hx0 + 46 * s, groundY, Math.min(1, (u - 0.2) * 3) * (u > 0.85 ? (1 - u) / 0.15 : 1), tt);
+      if (b && !mOwn && b.fx === "rune" && b.who === "me" && u > 0.4) rune(fx0, groundY, COL[b.el]?.[0] || "#ffb347", tt);
+      if (b && !mOwn && b.fx === "summon" && b.who === "me" && u > 0.2) portal(Math.min(hx0 + 46 * s, fx0 - 40 * s), groundY, Math.min(1, (u - 0.2) * 3) * (u > 0.85 ? (1 - u) / 0.15 : 1), tt);
+      // [fightpos] the foes still waiting their turn stand behind the one you fight (dimmer, a little smaller), idle
+      if (LAY && LAY.waiting.length) drawWaiting(tt);
       // allies behind you: each kind has its own figure (allyFig); dragons fly overhead
-      // up to 7 heroes stand with you (parties of 8): one line of 3, or two staggered lines when there are more
-      const ALLY_MAX = 7, mateTags = [], alist = rec.hero.list || [], groundL = alist.filter((a) => !FLYERS.has(a.kind)).slice(0, ALLY_MAX), flyers = alist.filter((a) => FLYERS.has(a.kind)).slice(0, 1);
-      const nGen = Math.max(0, Math.min(ALLY_MAX, rec.hero.allies) - groundL.length - flyers.length);
-      const slots = [...groundL, ...Array.from({ length: Math.min(ALLY_MAX - groundL.length, nGen) }, () => ({ kind: "soldier" }))];
+      // up to 7 other players plus followers stand with you, in depth rows from fightpos.js (the back rows drawn first)
+      const mateTags = [];
       const allyLunge0 = b && b.who === "me" && b.ally && u > 0.5 && u < 0.85 ? Math.sin((u - 0.5) / 0.35 * Math.PI) : 0;
       const AA = typeof ALLYANIM !== "undefined" ? ALLYANIM : null, named = !!(b && b.allyActs && b.allyActs.length), hitU0 = m && m.hits.length ? m.hits[0] : 0.5;
       const allyLunge = named ? 0 : allyLunge0;   // [OURS] named allies play their own clip (allyanim.js); the rest step in together as before
       const animOf = (a) => AA && a.name ? AA.anim(b, a.name, u, hitU0, beats.downEnd) : null;
       if (slots.length) { const tag = slots.map((a) => { const x = animOf(a); return x ? x.clip : "idle"; }).join(","); if (cv.dataset.allyClips !== tag) cv.dataset.allyClips = tag; }   // which clip each ally is on (screen tests)
-      const two = slots.length > 3, frontN = two ? Math.ceil(slots.length / 2) : slots.length;
-      const rowsA = two ? [slots.slice(frontN), slots.slice(0, frontN)] : [slots];   // the back line is drawn first
-      rowsA.forEach((row, ri) => {
-        const back = two && ri === 0, crowd = slots.length > 5 ? 0.86 : 1, rs = (back ? 0.8 : 1) * crowd, lift = back ? 9 : 0;
-        const backs = []; row.forEach((a, i) => backs.push(i ? backs[i - 1] + ((ALLY_W[a.kind] || 20) + (ALLY_W[row[i - 1].kind] || 20)) / 2 * rs : 26 + (back ? 10 : 0)));
-        const squeeze = backs.length ? Math.min(1, (back ? 86 : 76) / backs[backs.length - 1]) : 1;   // keep the whole line inside the scene
-        row.forEach((a, i) => {
-          const ax = hx0 - (backs[i] * squeeze - allyLunge * 14) * s, ay = groundY + 2 - i * 2 - lift * s, sc2 = s * rs;
-          if (a.name && !two && (a.kind === "mate" || a.kind === "follower" || a.kind === "valor" || a.kind === "dog")) mateTags.push([a.name, ax * z + ox + zcx - zcx * z, (ay - 66 * sc2) * z + oy + zcy - zcy * z]);
-          const an = animOf(a), al2 = an && an.clip === "attack" && !an.shoot ? Math.sin(Math.PI * Math.min(1, an.u / 0.8)) * (an.w ?? 1) : 0;
-          const ahc = a.kind === "mate" && typeof MOUNTFIGHT !== "undefined" && typeof HORSEBACK !== "undefined" && !(an && an.clip === "down") ? MOUNTFIGHT.allyHorse(f, a.name) : null;   // a teammate in the saddle (mountfight.js)
-          wg.save(); wg.translate(ax + al2 * 4 * s, ay); wg.scale(sc2, sc2); if (back) wg.globalAlpha = 0.92;
-          if (ahc) { const by = -30 - (HORSEBACK.riderBob ? HORSEBACK.riderBob(ahc, tt + i) : 0); wg.save(); wg.translate(0, by); allyFig(wg, a.kind, { lunge: allyLunge, t: tt, i, look: a.look, anim: an, ride: true, rideLayer: "far" }); wg.restore(); }
-          if (ahc) { HORSEBACK.drawHorse(wg, ahc, 0, tt + i, "back"); HORSEBACK.drawHorse(wg, ahc, 0, tt + i, "front"); wg.translate(0, -30 - (HORSEBACK.riderBob ? HORSEBACK.riderBob(ahc, tt + i) : 0)); }   // [riding] the horse first, the rider on it
-          allyFig(wg, a.kind, { lunge: allyLunge, t: tt, i, look: a.look, anim: an, ride: !!ahc });
-          wg.restore();
-          const sp = SPARK[a.kind]; if (sp && Math.random() < (two ? 0.09 : 0.18) * pmul) spawn(sp[1], sp[0], ax + (Math.random() - 0.5) * 18 * s, ay + (sp[2] - Math.random() * 30) * s, (Math.random() - 0.5) * 14 * s, -20 * s, 0.7, 2.2, 0);
-        });
-      });
-      if (two) { const named = slots.filter((a) => a.kind === "mate").length; mateTags.push([L(`⚑ ${named ? `${named} of your party` : `${slots.length} allies`} with you`), (hx0 - 50 * s) * z + ox + zcx - zcx * z, (groundY - 78 * s) * z + oy + zcy - zcy * z]); }   // a big party: one label instead of a pile of names
+      const two = slots.length > 3;
+      const order = slots.map((a, i) => ({ a, i, p: slotOf.get(i) || { x: hx0 - (26 + i * 20) * s, y: groundY, sc: 1, row: 0 } })).sort((p, q) => q.p.row - p.p.row || p.p.x - q.p.x);
+      const foeFront = ((FP && FP.FOE[foeK]) || [0, 15])[1] * FSC;
+      for (const { a, i, p } of order) {
+        const an = animOf(a), al2 = an && an.clip === "attack" && !an.shoot ? Math.sin(Math.PI * Math.min(1, an.u / 0.8)) * (an.w ?? 1) : 0;
+        // a melee blow: they step out of their row up to the foe, then back to their spot
+        const tx = fx0 - (foeFront + 16) * s, sc2 = s * (p.sc + (1 - p.sc) * al2), ax = p.x + Math.max(0, tx - p.x) * al2 + allyLunge * 14 * s, ay = p.y + (groundY - p.y) * al2;
+        if (a.name && !two && (a.kind === "mate" || a.kind === "follower" || a.kind === "valor" || a.kind === "dog")) mateTags.push([a.name, ax * z + ox + zcx - zcx * z, (ay - 66 * sc2) * z + oy + zcy - zcy * z]);
+        const ahc = a.kind === "mate" && typeof MOUNTFIGHT !== "undefined" && typeof HORSEBACK !== "undefined" && !(an && an.clip === "down") ? MOUNTFIGHT.allyHorse(f, a.name) : null;   // a teammate in the saddle (mountfight.js)
+        if (AFX && an && an.shoot && an.u >= 0.55 && b && phase === "play" && !(b.shotBy && b.shotBy.includes(a.name))) {   // [arrowfx] a follower or party archer looses at the foe
+          (b.shotBy = b.shotBy || []).push(a.name);
+          AFX.fire(null, { x0: ax + 16 * sc2, y0: ay - (ahc ? 74 : 44) * sc2, x1: fx0, y1: foeChest, dur: 0.24, sp: ARROWFX.spec({ wt: /crossbow/.test(a.look?.wt || "") ? "crossbow" : "bow" }), miss: false, gore: !!GS });
+        }
+        wg.save(); wg.translate(ax, ay); wg.scale(sc2, sc2); if (p.row && !al2) wg.globalAlpha = 0.94;
+        if (ahc) { const by = -30 - (HORSEBACK.riderBob ? HORSEBACK.riderBob(ahc, tt + i) : 0); wg.save(); wg.translate(0, by); allyFig(wg, a.kind, { lunge: allyLunge, t: tt, i, look: a.look, anim: an, ride: true, rideLayer: "far" }); wg.restore(); }
+        if (ahc) { HORSEBACK.drawHorse(wg, ahc, 0, tt + i, "back"); HORSEBACK.drawHorse(wg, ahc, 0, tt + i, "front"); wg.translate(0, -30 - (HORSEBACK.riderBob ? HORSEBACK.riderBob(ahc, tt + i) : 0)); }   // [riding] the horse first, the rider on it
+        allyFig(wg, a.kind, { lunge: allyLunge, t: tt, i, look: a.look, anim: an, ride: !!ahc });
+        wg.restore();
+        const sp = SPARK[a.kind]; if (sp && Math.random() < (two ? 0.09 : 0.18) * pmul) spawn(sp[1], sp[0], ax + (Math.random() - 0.5) * 18 * s, ay + (sp[2] - Math.random() * 30) * s, (Math.random() - 0.5) * 14 * s, -20 * s, 0.7, 2.2, 0);
+      }
+      if (two) { const named = slots.filter((a) => a.kind === "mate").length, tg = LAY && LAY.tag ? LAY.tag : { x: hx0 - 50 * s, y: groundY - 78 * s }; mateTags.push([L(`⚑ ${named ? `${named} of your party` : `${slots.length} allies`} with you`), tg.x * z + ox + zcx - zcx * z, tg.y * z + oy + zcy - zcy * z]); }   // a big party: one label instead of a pile of names
       for (const a of flyers) {   // a dragon circles above and dives in with fire when it strikes
-        const cx = hx0 - 10 * s + Math.sin(tt * 0.5) * 30 * s + allyLunge * (fx0 - hx0) * 0.35, cy = groundY - (44 - allyLunge * 10) * s + Math.sin(tt * 1.3) * 4 * s;
+        const fp0 = LAY && LAY.flyers[0], cx = Math.max(band[0] + 40 * s, (fp0 ? fp0.x : hx0 - 10 * s) + Math.sin(tt * 0.5) * 30 * s) + allyLunge * (fx0 - hx0) * 0.35, cy = (fp0 ? fp0.y : groundY - 44 * s) + allyLunge * 10 * s + Math.sin(tt * 1.3) * 4 * s;
         wg.save(); wg.translate(cx, cy); wg.scale(s, s); allyFig(wg, a.kind, { lunge: allyLunge, t: tt }); wg.restore();
         if (allyLunge > 0.3) for (let k = 0; k < 3; k++) if (Math.random() < pmul) spawn(0, ["#fff2c0", "#ffb347", "#e8653a"][k], cx + 40 * s, cy - 40 * s, (fx0 - cx) * (1.2 + Math.random() * 0.6), (groundY - 40 * s - cy) * (1.1 + Math.random() * 0.5), 0.6, 4, 0);
         if (a.name) mateTags.push([a.name, cx * z + ox + zcx - zcx * z, (cy - 50 * s) * z + oy + zcy - zcy * z]);
@@ -1142,8 +1234,10 @@ const FIGHTART = (() => {
       // your summon: the spectral wolf, a Dremora, an atronach
       const liveSum = f.tbMid && f.summonTurns > 0 && f.summonId ? summonKind(f.summonId, f.summonName) : null;   // a turn-by-turn fight: your summon stays in view between turns
       if ((st && b && b.wolf) || (b && b.fx === "summon" && b.who === "me" && u > 0.5) || liveSum) {
-        const lunge = wolfT < 1 ? Math.sin(wolfT * Math.PI) : 0, sk = (b && b.st && b.st.summon) || st.summon || liveSum || "familiar", sx = hx0 + (34 + lunge * 50) * s;
-        wg.save(); wg.translate(sx, groundY); wg.scale(s, s); allyFig(wg, sk, { lunge, t: tt }); wg.restore();
+        const lunge = wolfT < 1 ? Math.sin(wolfT * Math.PI) : 0, sk = (b && b.st && b.st.summon) || st.summon || liveSum || "familiar";
+        // [fightpos] one row back, just ahead of you and short of the foe; it bounds forward when it strikes
+        const sx0 = Math.min(hx0 + 34 * s, fx0 - (foeFront + 24) * s), sx = sx0 + lunge * Math.max(0, Math.min(50 * s, fx0 - (foeFront + 12) * s - sx0)), sy = groundY - (LAY ? 7 * s * (1 - lunge) : 0), ss = s * (LAY ? 0.9 + 0.1 * lunge : 1);
+        wg.save(); wg.translate(sx, sy); wg.scale(ss, ss); allyFig(wg, sk, { lunge, t: tt }); wg.restore();
         const sp = SPARK[sk]; if (sp && Math.random() < 0.25 * pmul) spawn(sp[1], sp[0], sx + (Math.random() - 0.5) * 16 * s, groundY + (sp[2] - Math.random() * 30) * s, (Math.random() - 0.5) * 12 * s, -24 * s, 0.6, 2.2, 0);
       }
       // you
@@ -1163,7 +1257,8 @@ const FIGHTART = (() => {
       const mp = rec.horse && !meDown && MFx ? MFx.pose(f, rfrac, b ? b.who : null) : null;   // mountfight.js: charge, getting on / off, thrown, the horse waiting or knocked down
       const onHorse = rec.horse && !meDown && typeof HORSEBACK !== "undefined" && (mp ? mp.ride : HORSEBACK.upAt(f, phase === "play" ? bi / Math.max(1, beats.length) : 1));   // the rider sits up on the horse
       if (mp && !mp.ride && mp.stand) MFx.drawStand(wg, rec.horse, mp, tt, rec.horseCoat);
-      heroP.ride = !!onHorse && (mp && MFx.seated ? MFx.seated(mp) : true);   // legs astride (not while you still stand beside it, getting on or off)
+      heroP.ride = !!onHorse && (mp && MFx.seated ? MFx.seated(mp) : true);
+      seatLift = onHorse && heroP.ride ? 30 * s : 0;   // [arrowfx] shots leave from the saddle   // legs astride (not while you still stand beside it, getting on or off)
       /* [riding] in the saddle the layers go: your far leg (in shade), the whole horse, then you with the near leg over its flank */
       const seatHere = () => { if (mp) MFx.seat(wg, mp, tt, rec.horse); else wg.translate(0, -30 - (HORSEBACK.riderBob ? HORSEBACK.riderBob(rec.horse, tt) : 0)); };
       if (onHorse && heroP.ride && rec.hero.look && !rec.hero.beast && !rec.hero.lord && !(b && b.st && (b.st.beast || b.st.lord))) { wg.save(); seatHere(); heroFig(wg, rec.hero, 0, tt, { ...heroP, rideLayer: "far" }); wg.restore(); }
@@ -1201,11 +1296,11 @@ const FIGHTART = (() => {
       // the foe (faces left)
       wg.save();
       const fleeing = over && won && turned ? fallE : 0;
-      wg.translate(fx0 - (foeP.dx - foeKnock - fdg * 18) * s + fleeing * W * 0.4, groundY + (foeP.dy - fdg * 3) * s); wg.scale(-s, s);
+      wg.translate(fx0 - (foeP.dx - foeKnock - fdg * 18) * s + fleeing * W * 0.4, groundY + (foeP.dy - fdg * 3) * s); wg.scale(-s * FSC, s * FSC);
       if (fleeing) wg.globalAlpha = 1 - fleeing;
       const dk = foeDown ? deathK : null, dT = phase === "fall" ? phaseT : 9;
       if (dk && goreOn && !GS && (bleed[2] === "blood" || bleed[2] === "oil") && !["ash", "shatter", "fade"].includes(dk)) {   // a pool spreads under the body
-        wg.save(); wg.scale(-1 / s, 1 / s); wg.globalAlpha = 0.75; wg.fillStyle = bleed[1];
+        wg.save(); wg.scale(-1 / (s * FSC), 1 / (s * FSC)); wg.globalAlpha = 0.75; wg.fillStyle = bleed[1];
         const pr = Math.min(1, dT / 1.3) * 16 * s * Math.min(1.6, fSize), pxo = (dk === "launch" ? 26 : isPerson ? 30 : 4) * s * fallE;
         wg.beginPath(); wg.ellipse(pxo, 1 * s, pr * 1.4, pr * 0.32, 0, 0, 7); wg.fill(); wg.restore();
       }
@@ -1264,19 +1359,19 @@ const FIGHTART = (() => {
       } else drawFoe();
       wg.filter = "none";
       wg.restore();
-      if (GS) GS.drawMarks(wg, "foe", fx0 - (foeP.dx - foeKnock - fdg * 18) * s, foeChest, s * Math.min(1.6, fSize), ehpD / ehpMax, foeDown || fleeing > 0 || (curDragon?.air && !foeDown));   // streaks, stuck arrows, char
+      if (GS) GS.drawMarks(wg, "foe", fx0 - (foeP.dx - foeKnock - fdg * 18) * s, foeChest, s * FSC * Math.min(1.6, fSize), ehpD / ehpMax, foeDown || fleeing > 0 || (curDragon?.air && !foeDown));   // streaks, stuck arrows, char
       if (dk === "decap") {   // ...and the head flies, tumbling, and rolls to a stop
         const vy = -95, gr = 300, yMax = -6 - (NECK - 8), tl = (-vy + Math.sqrt(vy * vy + 2 * gr * yMax)) / gr, t = Math.min(dT, tl);
         const hxo = -t * 70 - (dT > tl ? Math.min(dT - tl, 0.4) * 30 : 0), hyo = Math.min(yMax, vy * t + 0.5 * gr * t * t), rot = t * 8 + (dT > tl ? Math.min(dT - tl, 0.4) * 5 : 0);
-        wg.save(); wg.translate(fx0, groundY); wg.scale(-s, s); wg.translate(hxo, hyo); wg.translate(0, NECK - 8); wg.rotate(rot); wg.translate(0, -(NECK - 8));
+        wg.save(); wg.translate(fx0, groundY); wg.scale(-s * FSC, s * FSC); wg.translate(hxo, hyo); wg.translate(0, NECK - 8); wg.rotate(rot); wg.translate(0, -(NECK - 8));
         wg.beginPath(); wg.rect(-300, NECK - 300, 600, 300); wg.clip(); drawFoe(); wg.filter = "none"; wg.restore();
       }
       // states on the foe: paralysis crackle, fear swirls, soul trap glow
       if ((b && b.who === "them" && b.status === "para") || (b && b.who === "me" && (b.fx === "paralyze" || b.para) && u > 0.6 && !b.miss)) crackle(fx0, foeChest, "#9aff6a", tt);
-      if (b && ((b.who === "them" && b.status === "fear") || (b.who === "me" && b.fx === "illusion" && u > 0.6 && !b.miss))) swirl(fx0, foeChest - 20 * s, "#c89aff", tt);
+      if (b && ((b.who === "them" && b.status === "fear") || (b.who === "me" && b.fx === "illusion" && u > 0.6 && !b.miss && !mOwn))) swirl(fx0, foeChest - 20 * s, "#c89aff", tt);
       if (st.soul && phase === "play") { wg.save(); wg.globalAlpha = 0.25 + 0.1 * Math.sin(tt * 4); wg.drawImage(glowSprite("#b07aff"), fx0 - 30 * s, foeChest - 30 * s, 60 * s, 60 * s); wg.restore(); }
       // at-foe spells: sun beam, walls and storms, illusions
-      if (b && b.who === "me" && !b.miss) {
+      if (b && b.who === "me" && !b.miss && !mOwn) {
         if (b.fx === "sun" && u > 0.4 && u < 0.8) { const a = Math.sin((u - 0.4) / 0.4 * Math.PI); wg.save(); additive(); wg.globalAlpha = 0.7 * a; const gr = sunGrad(); wg.fillStyle = gr; wg.translate(fx0, 0); wg.fillRect(-18 * s * a, 0, 36 * s * a, groundY); wg.restore(); }
         if (b.fx === "wall" && b.el === "shock" && u > 0.5 && Math.random() < 0.3) { boltOn = 1; boltX0 = fx0 + (Math.random() - 0.5) * 30 * s; boltX1 = boltX0; boltY0 = groundY - 100 * s; boltY1 = groundY; boltC = "#c8b8ff"; jag(); }
         if (b.fx === "turn" && u > 0.4 && u < 0.9) rays(hx0, heroChest, (u - 0.4) / 0.5);
@@ -1295,6 +1390,7 @@ const FIGHTART = (() => {
       if (projX >= 0 && b && m && m.proj && u >= m.proj[0] && u <= m.proj[1]) projectile();
       projX = -1;
       if (boltOn) bolt();
+      if (AFX) { AFX.draw(wg); const n = String(AFX.fired()); if (cv.dataset.shots !== n) cv.dataset.shots = n; }   // [arrowfx] arrows and bolts in flight, stuck, broken or in the ground
       // shockwave ring
       if (beamT < 1) { wg.save(); additive(); wg.globalAlpha = (1 - beamT) * 0.85; wg.strokeStyle = beamC; wg.lineWidth = Math.max(2, 5 * (1 - beamT)) * s; wg.beginPath(); wg.moveTo(hx0 + 8 * s, groundY - 44 * s); wg.quadraticCurveTo((hx0 + allyX()) / 2, groundY - 70 * s, allyX(), groundY - 36 * s); wg.stroke(); wg.restore(); }   // [spellbook] support beam, colour by element
       if (ringT < 1) { wg.save(); additive(); wg.globalAlpha = (1 - ringT) * 0.8; wg.strokeStyle = ringC; wg.lineWidth = Math.max(2, 6 * (1 - ringT)) * s; wg.beginPath(); wg.ellipse(ringX, groundY, 70 * s * EASE.out(ringT), 14 * s * EASE.out(ringT), 0, 0, 7); wg.stroke(); wg.restore(); }
@@ -1302,6 +1398,7 @@ const FIGHTART = (() => {
       if (Math.abs(claw) > 0.05) { const cx = claw < 0 ? fx0 : hx0, a = Math.abs(claw); wg.save(); wg.globalAlpha = a; wg.strokeStyle = "#fff6e0"; wg.lineWidth = Math.max(1.6, 2.4 * s); for (let i = -1; i <= 1; i++) { wg.beginPath(); wg.moveTo(cx - 12 * s + i * 7 * s, heroChest - 18 * s); wg.lineTo(cx + 8 * s + i * 7 * s, heroChest + 12 * s); wg.stroke(); } wg.restore(); }
       // particles: dust and chunks first, then the glowing ones added on top
       drawParticles();
+      if (MFX) { MFX.drawFront(wg, now); const k = MFX.key() || ""; if (cv.dataset.mfx !== k && k) cv.dataset.mfx = k; }   // [movefx] the spell's own charge, delivery and impact
       if (GS) { if (done && !GS.settled) { GS.settle(); GS.settled = true; } GS.drawFront(wg); }   // [OURS] gore.js: drops, chips, sparks and flourishes in the air
       // screen flash
       if (flash > 0.01 && !rm) { wg.save(); wg.setTransform(1, 0, 0, 1, 0, 0); wg.globalAlpha = flash; wg.fillStyle = flashC; wg.fillRect(0, 0, work.width, work.height); wg.restore(); }
@@ -1314,7 +1411,7 @@ const FIGHTART = (() => {
         g.fillStyle = "#1c2128"; g.fillText(ftx[i], fxs[i] + 1.5, fys[i] + 1.5); g.fillStyle = fcl[i]; g.fillText(ftx[i], fxs[i], fys[i]);
       }
       g.globalAlpha = 1;
-      for (const [nm, tx2, ty2] of mateTags) { const ts = tagSz(), tu = ts / 11; g.font = `600 ${ts.toFixed(2)}px "Barlow Semi Condensed", sans-serif`; const w = g.measureText(nm).width + 10 * tu, tx3 = Math.max(w / 2 + 2, Math.min(W - w / 2 - 2, tx2)), ty3 = Math.max(26 * tu, ty2); g.fillStyle = "rgba(14,15,18,0.72)"; g.fillRect(tx3 - w / 2, ty3 - 11 * tu, w, 15 * tu); g.fillStyle = "#c8f0c0"; g.fillText(nm, tx3, ty3 + 0.5); }   // party members' names, crisp in both styles
+      for (const [nm, tx2, ty2] of mateTags) { const ts = tagSz(), tu = ts / 11; g.font = `600 ${ts.toFixed(2)}px "Barlow Semi Condensed", sans-serif`; const w = g.measureText(nm).width + 10 * tu, tx3 = Math.max(band[0] + w / 2 + 2, Math.min(band[1] - w / 2 - 2, tx2)), ty3 = Math.max(26 * tu, ty2); g.fillStyle = "rgba(14,15,18,0.72)"; g.fillRect(tx3 - w / 2, ty3 - 11 * tu, w, 15 * tu); g.fillStyle = "#c8f0c0"; g.fillText(nm, tx3, ty3 + 0.5); }   // party members' names, crisp in both styles
       if (label && labelT > 0) { const a = Math.min(1, labelT * 3), sz = lbl(20); g.globalAlpha = a; g.font = `700 ${sz}px Cinzel, Georgia, serif`; const y = Hh * 0.25 - (1 - a) * 8; g.fillStyle = "rgba(28,33,40,0.7)"; const pu = sz / 20, w = g.measureText(label).width + 18 * pu; g.fillRect(W / 2 - w / 2, y - sz + 2 * pu, w, sz + 8 * pu); g.fillStyle = labelC; g.fillText(label, W / 2, y); }
       g.restore();
       // end banner
