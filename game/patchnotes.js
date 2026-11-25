@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b224-meekofix", build: 224, date: "25 Nov 2026", title: "Meeko comes back", items: [
+      "Meeko the stray dog has no home town, so once he left you (Dismiss, or walking off when he got fed up) he was gone for good. Now he finds you again on the road.",
+      "Lost him already? He's out there looking for you. Travel without a follower and he'll come bounding up, with his old level and gear. Your journal and the Follower tab say so.",
+      "If he walked off because he was unhappy, give him three days first, like any other follower.",
+      "In fights Meeko is a dog again, not a person with his name. A friend's Meeko too.",
+    ] },
     { id: "b223-smallpolish", build: 223, date: "25 Nov 2026", title: "Small polish", items: [
       "The title screen's emblem is now the game's own helm under the northern star, inked in gold. The \"Web version · looking for friends\" line moved into Settings.",
       "Creating a character on a phone: all the tabs fit or slide into view, the open tab stays in sight, and the bottom bar is slimmer so the race card isn't hidden.",
