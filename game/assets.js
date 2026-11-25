@@ -48,6 +48,11 @@
                                          4×2: blood-decals (384² cells), oil/green/ichor/sap-decals (192² cells); <liquid>-drops (4×2 of
                                          48², flying drops, head right); blood-drips (4×128×160, body stains). The rest from
                                          scripts/make_gfx.py: dust bonedust frost embers motes (10×192²), shock (8×192²), sparks (8×160²).
+     mg-fishing-bg            2048×1152  painted lake at dusk for the fishing mini-game (fishart.js), 16:9, WebP q82. Water wobble,
+                                         glints, mist and weather are drawn over it; without it the ink lake stays.
+     fish-<kind>              ~720 wide  painted fish, transparent, side view facing right, trimmed, WebP q86 (fishart.js SPR maps
+       kinds: salmon trout perch pike goldcarp ghostfish     every game fish to one, some tinted; others keep the ink fish)
+     tool-fishing-rod         1400×71    painted rod, horizontal, tip on the right, trimmed; drawn in slices so it bends
      ui-panel                 1024×1024  tileable dark panel texture
      ui-parchment             1024×1024  tileable parchment texture
      ui-compass               1254×1254  transparent compass rose

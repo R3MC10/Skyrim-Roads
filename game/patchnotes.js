@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b193-mgfishing", build: 193, date: "25 Nov 2026", title: "Fishing gets a makeover", items: [
+      "Fishing now happens on a painted lake at dusk: the water moves and glints, fish rise here and there, and mist drifts along the far shore. Night, rain, snow and fog show on it too.",
+      "Your rod is painted and really bends: it flexes back when you aim, whips forward on the cast and bows deeper the tighter the line gets. The line arcs out with the float.",
+      "The float bobs with little rings, twitches on nibbles and goes under with a splash on the real bite.",
+      "While you reel, you see the fish's shadow dart under the water, and on a hard run it may leap right out.",
+      "A landed fish shows on a catch card with its painting, marked when it's rare or the first of its kind. Same fish, same rules: only the look is new.",
+    ] },
     { id: "b192-combos", build: 192, date: "25 Nov 2026", title: "Combat combos and teamwork", items: [
       "Set a foe up, then cash in. Freeze it and hit it with a power attack to Shatter the frost for big extra damage. Shield-bash it and follow with a power attack this round for an Exploit: it hits harder and the foe keeps reeling. Knock it off balance with a shout and your next blows land harder.",
       "New in the general store: the Oil Flask. Throw it at a foe, then any fire (a spell, a fire weapon, Fire Breath) sets the ground ablaze and burns it for a few rounds.",
