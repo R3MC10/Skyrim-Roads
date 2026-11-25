@@ -1565,7 +1565,7 @@
     openModal(`<h2>${what === "xdig" ? " Buried treasure" : " Searching"}</h2><p>${esc(r.text)}</p>${r.book ? `<button class="btn" data-act="xread" data-id="${esc(r.book.id)}" style="width:100%;margin-bottom:6px"> Read "${esc(r.book.title)}"</button>` : ""}<button class="btn pri" data-act="close" style="width:100%">Continue</button>`);
   }
   function dungeonAct(c, replay = false) {
-    if (lvUI && !replay && lvUI.memberLocked()) return toast("In a party only the leader decides. Their choice happens to you too.");
+    if (lvUI && !replay && lvUI.memberLocked()) return toast("In a party, everyone votes on each choice. Wait for the vote to open on your screen.");
     if (replay && typeof PTRAPS !== "undefined" && coopUI && S.dungeon?.run) c = PTRAPS.mine(S, coopUI.runs.find((x) => x.id === S.dungeon.run), c, PTRAPS.docs);   // a party trap: your own result, not the leader's
     const runId = S.dungeon?.run || null, roomType = S.dungeon?.room?.type, hp0 = G.curHealth(S), found0 = S.dungeon?.found.length || 0, gold0 = S.dungeon?.gold || 0;
     const act = () => {   // the party loot pile wraps the room; a fight inside it pauses on the turn-by-turn screen
