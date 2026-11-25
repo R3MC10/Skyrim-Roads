@@ -640,6 +640,7 @@
     $("#trip").addEventListener("click", onPanelClick);
     $("#raid").addEventListener("click", onPanelClick);
     { let gp = $("#gpop"); if (!gp) { gp = document.createElement("div"); gp.id = "gpop"; document.body.appendChild(gp); gp.addEventListener("click", onPanelClick); } }   // the Gathering card floating over the PC map (the side panel is hidden there)
+    { let gn = $("#gnear"); if (!gn) { gn = document.createElement("div"); gn.id = "gnear"; document.body.appendChild(gn); gn.addEventListener("click", onPanelClick); } }   // "Snowberries in reach: Gather" over the map, on the road too
     Store.watch("raids", (docs) => { raidDocs = docs; });
     if (typeof LEVELUP !== "undefined") LEVELUP.mount({ S: () => S, persist, toast, refresh: () => { bump(); renderPanel(true); if ($("#sky")) renderMenu(); }, publishCard: () => publishCard() });   // levelup.js: skill/level notices, the three pillars
     if (typeof ONBOARD !== "undefined") ONBOARD.mount({ S: () => S, persist, toast, renderPanel, click: onPanelClick, party: () => party, invites: () => invites });   // first-time tips (onboard.js)
@@ -841,7 +842,7 @@
     if (Math.floor(t) % 3 === 0) { const qm = QUESTS.check(S); if (qm.length) { persist(true); showMessage("Quest", qm.join(" ")); } }
     if (Math.floor(t) % 30 === 0) { publishCard(false); publishHome(); publishClan(); }
     if (Math.floor(t) % 60 === 0) BACKUP.autoSave(S);
-    renderTop(); renderVitals(); renderTrip(); renderGatherPop(); renderTabs(); hudCompass();
+    renderTop(); renderVitals(); renderTrip(); renderGatherPop(); renderGatherNear(); renderTabs(); hudCompass();
     if (version !== rendered || Date.now() - lastPanelRender > 20000) renderPanel(false);
   }
 
@@ -943,6 +944,13 @@
     if (on) { try { html = GATHER.card(S); } catch (e) { html = ""; } }
     if (el.dataset.html !== html) { el.innerHTML = html; el.dataset.html = html; }
   }
+  /* a ripe patch within reach (also while walking or riding): a small Gather prompt over the map (harvestgame.js) */
+  function renderGatherNear() {
+    const el = $("#gnear"); if (!el) return;
+    let html = "";
+    if (typeof HARVESTGAME !== "undefined" && (tab === "map" || tab === "places") && !S.dungeon && !HARVESTGAME.isOpen()) { try { html = HARVESTGAME.nearHTML(S); } catch (e) { html = ""; } }
+    if (el.dataset.html !== html) { el.innerHTML = html; el.dataset.html = html; }
+  }
   function renderTrip() {
     const el = $("#trip"), tr = S.trip;
     const put = (html) => { if (el.dataset.html !== html) { el.innerHTML = html; el.dataset.html = html; } };   // only redraw on change, so taps don't get lost
@@ -1028,7 +1036,7 @@
       discovered: S.discovered, explored: [...S.explored, pos], atPlace: !!S.location, others: others.filter((o) => sameMap(o) && seesHero(o)).map((o) => ({ name: typeof GREET !== "undefined" ? GREET.label(S, o, party) : (o.clan ? `[${o.clan}] ` : "") + o.name + (party?.members.some((m) => m.id === o.id) ? " ⚑" : ""), stranger: typeof GREET !== "undefined" && !GREET.knows(S, o.id, party), atPlace: !!o.loc, pos: otherPos(o), look: o.look, race: o.race, id: o.id, moving: !!o.moving, horse: typeof o.ride === "string" ? o.ride : null, side: typeof SIDES !== "undefined" ? SIDES.of(o.id) : null, party: !!party?.members.some((m) => m.id === o.id) })),
       rulers: Object.entries(WARS.rulers(S)).map(([hold, c]) => ({ hold, color: c.colors[0] })),
       banners: CLANS.banners(homeDocs, S, VISITS.record(S)).filter((b) => WORLD.places[b.town]).map((b) => ({ ...b, pos: WORLD.places[b.town].slice(0, 2) })),
-      cleared: clearedLeft(), bags: visibleBags(), selected: selected && WORLD.places[selected] ? selected : null, t: ts / 1000, zoom, center, reduceMotion, weather: WEVENTS.weather(pos).id, quest: questPos(), mask: typeof PRIESTS !== "undefined" ? PRIESTS.marker(S)?.pos : null, tmaps: typeof EXPLORE !== "undefined" ? EXPLORE.marks(S) : [], rumours: typeof RUMOURS !== "undefined" ? RUMOURS.marks(S) : [], herbs: typeof GATHER !== "undefined" ? GATHER.marks(S) : [], pins: (S.pins || []).map((p) => ({ pos: [p.x, p.y], label: `${p.icon} ${p.label}`, on: selected === "__pin:" + p.id })),
+      cleared: clearedLeft(), bags: visibleBags(), selected: selected && WORLD.places[selected] ? selected : null, t: ts / 1000, zoom, center, reduceMotion, weather: WEVENTS.weather(pos).id, quest: questPos(), mask: typeof PRIESTS !== "undefined" ? PRIESTS.marker(S)?.pos : null, tmaps: typeof EXPLORE !== "undefined" ? EXPLORE.marks(S) : [], rumours: typeof RUMOURS !== "undefined" ? RUMOURS.marks(S) : [], herbs: typeof GATHER !== "undefined" ? GATHER.marks(S) : [], herbRange: typeof HARVEST !== "undefined" && !S.dungeon && HARVEST.nearPrompt(S) ? { pos: [S.x, S.y], r: GATHER.REACH_PX / 1000 } : null, pins: (S.pins || []).map((p) => ({ pos: [p.x, p.y], label: `${p.icon} ${p.label}`, on: selected === "__pin:" + p.id })),
       routes: party ? others.filter((o) => o.moving && o.path?.length > 1 && party.members.some((m) => m.id === o.id)).map((o) => ({ path: o.path, from: otherPos(o), name: o.name })) : [], horse: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, led: typeof RIDING !== "undefined" ? RIDING.led(S) : null, gallop: HORSES.riding(S) && S.trip?.status === "travel" && Terrain.speedAt(pos) >= 1.2, cart: CARAVANS.hasCart(S), guards: typeof GUARDS !== "undefined" ? GUARDS.visible(S).map((p) => (p.visible || !myCone || !VISION.inCone(myCone, p.pos) ? p : { ...p, visible: true })) : null, caravans: CARAVANS.all().map((c) => { const cp = CARAVANS.pos(c); return { cp, c }; }).map(({ cp, c }) => ({ pos: cp, visible: G.pxDist(cp, pos) < 160 || (myCone && VISION.inCone(myCone, cp)) || S.discovered.some((n) => WORLD.places[n] && ["city", "town"].includes(WORLD.places[n][2]) && G.pxDist(cp, WORLD.places[n]) < 45), khajiit: c.line.khajiit, moving: c.phase === "road", mine: S.caravanJob?.id === c.id, id: c.id, near: typeof CVROAD !== "undefined" && c.phase === "road" && CVROAD.canMeet(S) && G.pxDist(cp, pos) <= CVROAD.TAP_RANGE, label: c.line.name.replace(/'s caravan$/, "") })).filter((c) => !(c.mine && S.trip?.caravan)), hall: S.discovered.includes(HALL.TOWN) || known(HALL.TOWN) ? { pos: HALL.POS, label: `Hall of the North · ${HALL.progress().name}` } : null,
     };
     WorldMap.draw($("#map"), view);
@@ -1522,12 +1530,29 @@
     if (dc === "pick" && typeof IMM !== "undefined" && IMM.wantsGame()) { IMM.pick("dungeon", dungeonAct, S); if (dg) DGAMES.mirror("lock"); return; }
     dungeonAct(dc);
   }
+  /* Gather by hand: the harvest mini-game (harvestgame.js), then the pick with how it went. Started in reach, so it still
+     counts if the road carries you on while you work (walking or riding). */
+  function harvestHand(id) {
+    const n = GATHER.nearby(S).find((x) => x.id === id);
+    if (!n || n.d > GATHER.REACH_PX + 1) return toast("That patch is too far away. Walk closer.");
+    if (!n.ripe) return toast("Already picked. It grows back in a couple of days.");
+    const before = HARVEST.progress(S, n.ing);
+    HARVESTGAME.open({ ing: n.ing, kind: HARVEST.kindOf(n.ing), name: D.ITEMS[n.ing]?.name || n.ing, tol: HARVEST.tolOf(S), fast: HARVEST.tolOf(S) > 1,
+      onDone: (grade) => {
+        let r; try { r = GATHER.act(S, "gpick", id, undefined, { grade, passing: true }); } catch (e) { console.error(e); r = { err: "Couldn't gather that. Please try again." }; }
+        if (r.ok) { G.note(S, ` ${r.text}`); SOUND.fx("coin"); persist(true); renderPanel(true); renderGatherPop(); }
+        return { ...r, before, after: HARVEST.progress(S, n.ing), thumb: G.P(S, "green_thumb") > 0 };
+      } });
+  }
   function gatherAct(what, id) {
+    if (what === "gpick" && typeof HARVESTGAME !== "undefined" && typeof HARVEST !== "undefined" && HARVESTGAME.ok()) {
+      try { return harvestHand(id); } catch (e) { console.error(e); }   // if the mini-game can't start, fall back to a plain pick below
+    }
     let r; try { r = GATHER.act(S, what, id); } catch (e) { console.error(e); return toast("Couldn't gather that. Please try again."); }   // never a silent dead button
     if (r.html) return openModal(r.html);
     if (r.err) return toast(r.err);
     SOUND.fx(what === "gauto" || what === "gunplant" ? "click" : "coin");
-    if (r.ok && /^g(pick|pickall|forage|plant)$/.test(what)) G.note(S, ` ${r.text}`);
+    if (r.ok && /^(g(pick|quick|pickall|forage|plant)|hdeliver)$/.test(what)) G.note(S, ` ${r.text}`);
     persist(true); renderPanel(true); renderGatherPop(); toast(r.text);
   }
   function exploreAct(what, id) {
@@ -3305,10 +3330,10 @@
       const selRows = alchSel.map((id) => ings.find((r) => r.id === id));
       const knownShared = selRows.length >= 2 ? [...new Set(selRows.flatMap(knownFx))].filter((e) => selRows.filter((r) => knownFx(r).includes(e)).length >= 2) : [];
       note = `Pick two or three ingredients that share an effect. You only see effects you've discovered: eat ingredients or experiment. Alchemy ${G.skill(S, "Alchemy")}.`;
-      body = ings.length ? (CQ ? CQ.alchTop(S) : "") + ingsShown.map((r) => `<div class="item ${alchSel.includes(r.id) ? "on" : ""}" data-act="alch" data-id="${r.id}" role="button" tabindex="0"><div class="t">${alchSel.includes(r.id) ? "" : "☐"} ${esc(D.ITEMS[r.item].name)} ×${r.qty}<span>${typeof GATHER !== "undefined" ? GATHER.fxHTML(S, r.item) : TOWNS.INGREDIENT_FX[r.item][1].map((e, i) => TOWNS.known(S, r.item)[i] ? esc(e) : "?").join(", ")}</span></div></div>`).join("")
+      body = (typeof HARVEST !== "undefined" ? HARVEST.orderHTML(S) : "") + (ings.length ? (CQ ? CQ.alchTop(S) : "") + ingsShown.map((r) => `<div class="item ${alchSel.includes(r.id) ? "on" : ""}" data-act="alch" data-id="${r.id}" role="button" tabindex="0"><div class="t">${alchSel.includes(r.id) ? "" : "☐"} ${esc(D.ITEMS[r.item].name)} ×${r.qty}${typeof HARVEST !== "undefined" ? HARVEST.tagHTML(S, r.item) : ""}<span>${typeof GATHER !== "undefined" ? GATHER.fxHTML(S, r.item) : TOWNS.INGREDIENT_FX[r.item][1].map((e, i) => TOWNS.known(S, r.item)[i] ? esc(e) : "?").join(", ")}</span></div></div>`).join("")
         + `<p class="sub" style="margin-top:8px">${selRows.length >= 2 ? (knownShared.length ? `Known shared effects: <b>${knownShared.map(esc).join(", ")}</b>` : "No shared effects you know of. Could be a discovery, or sludge.") : "Select ingredients above."}</p>
         <button class="btn pri" data-act="brew" style="width:100%" ${alchSel.length >= 2 ? "" : "disabled"}>Brew</button>${CQ ? CQ.alchBulk(S, selRows) : ""}`
-        : '<p class="sub">You have no ingredients. Gather them on the road, in dungeons, or buy them at the general store and court wizard.</p>';
+        : '<p class="sub">You have no ingredients. Gather them on the road, in dungeons, or buy them at the general store and court wizard.</p>');
     } else if (townShop === "forge") {
       const ftabs = `<div class="chips" style="margin-bottom:8px">${[["make", " Make"], ["refine", " Smelt & tan"], ["improve", " Improve"]].map(([k, l2]) => `<button class="chip ${forgeTab === k ? "on" : ""}" data-act="ftab" data-id="${k}">${l2}</button>`).join("")}</div>`;
       if (forgeTab === "make") {
@@ -3726,7 +3751,7 @@
       case "xsearch": case "xdig": case "xread": exploreAct(b.dataset.act, b.dataset.id); break;
       case "breach": if (typeof BLACKREACH !== "undefined") BLACKREACH.onClick(b); break;   // blackreach.js: the way down from Alftand / Raldbthar
       case "pstuff": if (typeof PLACESTUFF !== "undefined") PLACESTUFF.onClick(b, S, { toast, openModal, persist, renderPanel }); break;   // placestuff.js: something at every place
-      case "gpick": case "gpickall": case "gforage": case "gauto": case "gplant": case "gunplant": case "gnotes": gatherAct(b.dataset.act, b.dataset.id); break;
+      case "gpick": case "gquick": case "hdeliver": case "gpickall": case "gforage": case "gauto": case "gplant": case "gunplant": case "gnotes": gatherAct(b.dataset.act, b.dataset.id); break;
       case "spotpin": if (roamSpot) { const [x, y] = roamSpot; selected = null; renderPicked(); openPinDialog(x, y); } break;
       case "stop": if (S.trip?.carriage) { toast("The driver won't stop until you get there."); break; } if (S.trip?.boat) { toast("You're at sea. The Northern Maiden won't turn back now."); break; } if (S.trip?.status === "travel" || S.trip?.status === "event") { [S.x, S.y] = livePos(); S.trip = null; S.location = Object.keys(WORLD.places).find((n) => G.pxDist([S.x, S.y], WORLD.places[n]) < 12) || null; persist(true); toast("You stop and look around."); } break;
       case "openenc": openEncounter(); break;

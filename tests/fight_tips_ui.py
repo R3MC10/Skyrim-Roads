@@ -35,7 +35,10 @@ async def open_magic(b, vp, touch, tag, errs):
     await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&hub=0&p=ft{RUN}{tag}&tb"); await pg.wait_for_timeout(1500)
     await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Tipsy"); await pg.click("#begin"); await pg.wait_for_timeout(2500)
     await pg.evaluate(START); await pg.wait_for_timeout(500)
-    await pg.click("#modal [data-act=ev][data-c=fight]"); await pg.wait_for_timeout(900)
+    for _ in range(30):   # the event window can redraw under a click: press Fight from the page itself
+        if await pg.evaluate("()=>{ const b=document.querySelector('#modal [data-act=ev][data-c=fight]'); if (b) { b.click(); return true; } return false; }"): break
+        await pg.wait_for_timeout(300)
+    await pg.wait_for_timeout(900)
     for _ in range(40):
         if await pg.evaluate("!!document.querySelector('#tbf [data-tba=attack]')"): break
         await pg.wait_for_timeout(300)
@@ -64,7 +67,7 @@ async def main():
         if cast:
             bb = await cast.bounding_box(); await pg.mouse.move(bb["x"] + bb["width"] / 2, bb["y"] + bb["height"] / 2)
             await pg.wait_for_timeout(200); bx = await box(pg)
-            ok(bx is not None and "Flames" in bx["text"] and "AP" in bx["text"], "pc: hovering Cast shows the spell with its AP" + (f" got {bx['text'][:90]!r}" if bx else " (nothing)"))
+            ok(bx is not None and "Flames" in bx["text"] and "magicka" in bx["text"] and " AP" not in bx["text"], "pc: hovering Cast shows the spell with its magicka cost, no AP" + (f" got {bx['text'][:90]!r}" if bx else " (nothing)"))
             ok(bx is not None and bx["l"] >= 0 and bx["r"] <= bx["vw"] and bx["t"] >= 0 and bx["b"] <= bx["vh"], "pc: the tooltip is on screen")
             await pg.screenshot(path=f"{OUT}pc_cast.png")
         grey = await pg.query_selector("#tbf [data-tba='dual:greater_ward'][disabled], #tbf [data-tba='spell:greater_ward'][disabled], #tbf [data-tba^='dual:'][disabled]")
