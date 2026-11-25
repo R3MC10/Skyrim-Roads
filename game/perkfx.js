@@ -27,7 +27,7 @@ const PFX = (() => {
     [AR, "eagle_eye", "Eagle Eye", 1, [30], ["overdraw"], "Arrows hit 8% more often, and a flying dragon can't weave away from your arrows (full damage). [Skyrim: zoom in]", [["hit", 0.08, { sk: AR }], ["skyshot", 1, {}]]],
     [AR, "steady_hand", "Steady Hand", 2, [40, 60], ["eagle_eye"], "Bows do 5/10% more damage, and fog, storms and blizzards spoil your aim only half as much. Your timing ring's bright zone is 30% wider. [Skyrim: zoom slows time]", [["out", [0.05, 0.1], { sk: AR }], ["aimwx", 0.5, { sk: AR }], ["timing", 0.3, {}]]],
     [AR, "hunters_discipline", "Hunter's Discipline", 1, [50], ["critical_shot"], "You find twice as many of your arrows and bolts after a fight. [Skyrim]", [["ammo", 1, {}]]],
-    [AR, "ranger", "Ranger", 1, [60], ["hunters_discipline"], "Shooting power shots costs half the stamina, and bows do 15% more from the saddle. [Skyrim: move faster with a bow drawn]", [["pa", -0.5, { sk: AR }], ["out", 0.15, { sk: AR, mounted: 1 }]]],
+    [AR, "ranger", "Ranger", 1, [60], ["hunters_discipline"], "Shooting power shots costs half the stamina, and you travel 3% faster. [Skyrim: move faster with a bow drawn]", [["pa", -0.5, { sk: AR }], ["travel", 0.03, {}]]],
     [AR, "marksman", "Marksman", 1, [80], ["steady_hand", "ranger"], "Your first arrow of a fight is a sure hit that does 50% more. [OURS]", [["out", 0.5, { sk: AR, first: 1 }], ["sure", 1, { sk: AR, first: 1 }]]],
     // ---------------------------------------------------------------- Blocking (5 → 10)
     [ "Blocking", "deflect_arrows", "Deflect Arrows", 1, [30], ["shield_wall"], "A raised shield stops archers' arrows completely. [Skyrim]", [["in", -1, { blocking: 1, shield: 1, archerFoe: 1 }]]],
@@ -57,7 +57,7 @@ const PFX = (() => {
     [ "Spear", "keep_away", "Keep Away", 1, [30], ["long_reach"], "Spear hits stagger 15% of the time. [OURS]", [["stag", 0.15, { wt: ["spear"] }]]],
     [ "Spear", "spear_wall", "Spear Wall", 1, [40], ["long_reach"], "Raising your guard with a spear jabs the foe for 4 + Spear/20 damage. [OURS]", [["guardjab", 1, {}]]],
     [ "Spear", "skewer", "Skewer", 1, [50], ["impale"], "Spear power attacks make wounds bleed for 4 a turn for 3 turns. [OURS]", [["bleed", 4, { wt: ["spear"], power: 1 }]]],
-    [ "Spear", "lance", "Lance", 1, [60], ["keep_away"], "Spears do 20% more from the saddle. [OURS]", [["out", 0.2, { wt: ["spear"], mounted: 1 }]]],
+    [ "Spear", "lance", "Lance", 1, [60], ["keep_away"], "Spear power attacks do 10% more. [OURS]", [["out", 0.1, { wt: ["spear"], power: 1 }]]],
     [ "Spear", "pinning_strike", "Pinning Strike", 1, [80], ["skewer", "lance"], "Spear power attacks pin the foe in place 20% of the time (paralyzed 2 turns). [OURS]", [["para", 0.2, { wt: ["spear"], power: 1 }]]],
     [ "Spear", "dragon_spear", "Dragon Spear", 1, [100], ["pinning_strike"], "Spears do 25% more to dragons and giants. [OURS]", [["out", 0.25, { wt: ["spear"], big: 1 }]]],
     // ---------------------------------------------------------------- Hand-to-Hand (3 → 9)
@@ -302,6 +302,8 @@ const PFX = (() => {
     // ---------------------------------------------------------------- party votes in dungeons (partyvote.js)
     [ "Speechcraft", "voice_of_reason", "Voice of Reason", 1, [35], ["persuasion"], "In a party dungeon vote, your vote counts twice. [OURS]", [["pvweight", 1, {}]]],
     [ "Etiquette", "sworn_companion", "Sworn Companion", 1, [50], ["courtly_manners"], "Followers ask you for their personal quest at loyalty 65 instead of 80, and their signature move is 25% stronger. [OURS]", [["folquest", 15, {}], ["folsig", 0.25, {}]]],
+    // ---------------------------------------------------------------- pets (pets.js): Meeko and any animal that travels with you
+    [ "Etiquette", "pack_leader", "Pack Leader", 2, [30, 60], ["courtly_manners"], "Your pet bites 15/30% harder, shrugs off 10/20% of the blows it takes and has 10/20% more health. When it's knocked down it gets back up with more health after the fight. [OURS]", [["petdmg", [0.15, 0.3], {}], ["pettaken", [0.1, 0.2], {}], ["pethp", [0.1, 0.2], {}], ["petup", [0.1, 0.2], {}]]],
     // ---------------------------------------------------------------- the vampire war (dawnguard.js): one side's perks each, the other side can't take them
     [ "Archery", "dg_bolt_hunter", "Vampire Hunter", 1, [30], [], "Dawnguard only. Bows and crossbows do 25% more damage to vampires and the undead. [Skyrim: Dawnguard]", [["out", 0.25, { sk: AR, tag: ["undead"] }]]],
     [ "Heavy Armor", "dg_sun_ward", "Sun-Blessed Plate", 1, [35], [], "Dawnguard only. In heavy armor, vampires and the undead hit you 15% softer. [OURS]", [["in", -0.15, { heavy: 1, tag: ["undead"] }]]],

@@ -4,7 +4,7 @@ const fs = require("fs"), vm = require("vm");
 const W = process.env.W || __GAME + "";
 const c = { console, Math, Date, JSON, Float64Array, Float32Array, Uint8Array, Int32Array, Uint16Array, Int16Array, Object, Array, Set, Map, Proxy, Number, String };
 vm.createContext(c);
-for (const f of ["data.js", "world.js", "terrain.js", "solworld.js", "formulas.js", "perks.js", "legendary.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "weatherfx.js", "enchanting.js", "quests.js", "horses.js", "horseback.js", "cooking.js", "smithing.js", "ammo.js", "tomes.js", "magic.js", "combatai.js", "roam.js", "solstheim.js"])
+for (const f of ["data.js", "world.js", "terrain.js", "solworld.js", "formulas.js", "perks.js", "legendary.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "weatherfx.js", "enchanting.js", "quests.js", "horses.js", "horsetravel.js", "cooking.js", "smithing.js", "ammo.js", "tomes.js", "magic.js", "combatai.js", "roam.js", "solstheim.js"])
   if (fs.existsSync(W + f)) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
 vm.runInContext(`
 let n = 0; const OK = (x, m) => { if (!x) throw new Error("FAIL " + m); n++; };

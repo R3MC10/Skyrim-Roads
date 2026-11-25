@@ -160,6 +160,7 @@ const HSROOMS = (() => {
   // ---------------------------------------------------------------- followers who live there
   const FOL = (id) => (typeof TOWNS !== "undefined" ? TOWNS.FOLLOWERS[id] : null);
   const isSteward = (id) => String(id).startsWith("hs_");
+  const isPetId = (id) => typeof PETS !== "undefined" && PETS.isPet(id);
   function livesAt(s, id) { for (const pid of HS().owned(s)) if ((HS().plot(s, pid).res || []).some((r) => r.id === id)) return pid; return null; }
   function moveIn(s, pid, t = now()) {
     const h = norm(HS().plot(s, pid)); if (!h) return { err: "You don't own this land." };
@@ -174,6 +175,12 @@ const HSROOMS = (() => {
   }
   function callOut(s, pid, idx, t = now()) {
     const h = norm(HS().plot(s, pid)), r = h?.res?.[idx]; if (!r) return { err: "They don't live here." };
+    if (isPetId(r.id)) {   // a pet (Meeko) goes to the pet slot: your follower stays (pets.js)
+      if (s.pet) return { err: `You already have a pet with you (${FOL(s.pet.id)?.[0] || "a pet"}).` };
+      h.res.splice(idx, 1);
+      s.pet = { id: r.id, hp: PETS.maxHp(s, r.id), ts: t };
+      return { text: `${FOL(r.id)?.[0] || "Your pet"} bounds out of the house and falls in beside you.`, fx: "click" };
+    }
     if (s.follower) return { err: `${FOL(s.follower.id)?.[0] || "Someone"} is already with you. Leave them here first.` };
     h.res.splice(idx, 1);
     s.follower = { id: r.id, hp: TOWNS.followerMax(s, r.id), ts: t };
@@ -475,7 +482,7 @@ const HSROOMS = (() => {
   function householdHTML(s, pid, esc) {
     const h = norm(HS().plot(s, pid)), p = HS().PLOTS[pid];
     let b = `<p class="sub" style="margin-top:0">Followers can live here: up to ${RES_MAX} once the main hall stands. Every in-game day each one brings in 3 logs and 2 stone, and they fight beside you when raiders come. They get knocked down, never killed.</p>`;
-    b += h.res.length ? h.res.map((r, i) => `<div class="item">${typeof NPCART !== "undefined" ? NPCART.follower(r.id, 40) : ""}<div class="t">${esc(FOL(r.id)?.[0] || r.id)}<span>${esc(FOL(r.id)?.[5] || "")}</span></div>${btn("callout", i, "Take along", !s.follower, "pri")}</div>`).join("") : `<p class="sub">Nobody lives here yet.</p>`;
+    b += h.res.length ? h.res.map((r, i) => `<div class="item">${typeof NPCART !== "undefined" ? NPCART.follower(r.id, 40) : ""}<div class="t">${esc(FOL(r.id)?.[0] || r.id)}<span>${esc(FOL(r.id)?.[5] || "")}</span></div>${btn("callout", i, "Take along", isPetId(r.id) ? !s.pet : !s.follower, "pri")}</div>`).join("") : `<p class="sub">Nobody lives here yet.</p>`;
     if (s.follower && !isSteward(s.follower.id)) b += btn("movein", pid, `${esc(FOL(s.follower.id)?.[0] || "Your follower")} moves in`, !!h.hall && h.res.length < RES_MAX, "pri") + (h.hall ? "" : `<p class="sub">Build the main hall first.</p>`);
     const d = defenders(s, pid);
     b += `<h3 class="hsh">Raids</h3><p class="sub" style="margin-top:0">Every few in-game days raiders come for ${esc(p.name)}. Defenders at home now: ${d.length ? esc(d.map((a) => a.name).join(", ")) : "nobody"}. Driven off ${h.raids.won} · lost ${h.raids.lost}.</p>`

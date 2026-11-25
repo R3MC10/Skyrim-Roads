@@ -26,6 +26,8 @@ const ALLYANIM = (() => {
   function clipOf(seg) {
     const t = String(seg || "").toLowerCase();
     if (/fades away|breaks away|leaves the fight|looks for a potion/.test(t)) return null;
+    if (/catch(es)? (their|his|her|your) breath|break away|throws an oil flask|marks the|swings up onto|slides down from|'s [a-z]+ blade \d/.test(t)) return null;   // [phantom] not a blow: a teammate's Breathe, Flee, Oil flask, Mark, Mount; an enchanted blade's tick
+    if (/stands guard over/.test(t)) return "block";
     if (/pulled back from the brink|gets back up|back on (their|his|her) feet/.test(t)) return "getup";
     if (/raises their (shield|guard)|keeps their guard|guard up|steps in front|holds back|blocks/.test(t)) return "block";
     if (/\bcasts\b|conjures|lays a|\bheals\b|raises .*(around|soaks)|channels|\bmends\b/.test(t)) return "cast";
@@ -59,7 +61,7 @@ const ALLYANIM = (() => {
   }
   /* who is already down before these lines play: down now, minus those knocked down in them, plus those revived in them */
   function downAtStart(f, lines, names) {
-    const now = new Set([...(f?._downed || []).map((a) => a && a.name).filter(Boolean), ...(f?.followerDown ? [f.followerDown] : [])]);
+    const now = new Set([...(f?._downed || []).map((a) => a && a.name).filter(Boolean), ...(f?.followerDown ? [f.followerDown] : []), ...(f?.petDown ? [f.petDown] : [])]);
     for (const l of lines || []) {
       const fo = foeOn(l.them, names); if (fo && fo.clip === "down") now.delete(fo.name);
       for (const n of revivedIn(l.me, names)) now.add(n);
