@@ -133,6 +133,8 @@
      ui-panel                 1024×1024  tileable dark panel texture
      ui-parchment             1024×1024  tileable parchment texture
      ui-compass               1254×1254  transparent compass rose
+     ui-compass-ring          1024×1024  the compass ring alone (stays still)
+     ui-compass-star          1024×1024  the compass star alone (the part that moves)
      ui-compass3d             2240×2240  7x7 Blender renders of ui-compass tilted ±26° (scripts/compass3d.py)
      ui-nightsky              1080×1920  night sky for the skills (constellation) page
      ui-frame                 1024×1024  transparent 9-slice frame, 96px corners
@@ -304,7 +306,7 @@ const ASSETS = (() => {
     if (typeof ART !== "undefined" && ART.noteSrc) ART.noteSrc(1 / r);   // the file's pixels per drawing unit: ART.url draws it no blurrier
   }
   /* UI textures go to CSS variables so the stylesheet picks them up */
-  const CSS_KEYS = { "ui-panel": "--asset-panel", "ui-parchment": "--asset-parchment", "ui-compass": "--asset-compass", "ui-compass3d": "--asset-compass3d", "ui-nightsky": "--asset-nightsky", "ui-frame": "--asset-frame", title: "--asset-title" };
+  const CSS_KEYS = { "ui-panel": "--asset-panel", "ui-parchment": "--asset-parchment", "ui-compass": "--asset-compass", "ui-compass3d": "--asset-compass3d", "ui-compass-ring": "--asset-compass-ring", "ui-compass-star": "--asset-compass-star", "ui-nightsky": "--asset-nightsky", "ui-frame": "--asset-frame", title: "--asset-title" };
   function applyCss() {
     try {
       const root = document.documentElement;

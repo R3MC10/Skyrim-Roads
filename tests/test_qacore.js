@@ -101,7 +101,7 @@ ok(!/from the Hero tab/.test(src("dawnguard.js")), "Dawnguard names the Characte
   const I = " ";
   for (const en of Object.keys(vm.runInContext("I18N_EXTRA.QACORE_EVL", g))) { ok(P(en) && P(en) !== en, "Polish for choice: " + en); ok(P(I + en + " (40%)") === I + P(en).replace(/^Ukryj$/, "Ukryj się") + " (40%)" || /\(40%\)$/.test(P(I + en + " (40%)") || ""), "Polish for choice with icon and chance: " + en); }
   for (const en of ["Pray to Mara", "Pay 40 gold", I + "Buy (440 gold)", I + "Pick the lock (3 picks, 40%)", "You buy the Ebony Arrow.", "A Thalmor patrol", "A rich herb patch",
-    "You walk together a while. At the crossroads, they insist you take 30 gold.", "In the ruins of a wayside shrine sits an iron-banded chest. The lock looks novice.",
+    "You walk together a while. At the crossroads, they insist you take 30 gold.", "In the ruins of a wayside shrine sits an iron-banded chest. The lock looks simple (Novice).",
     "A ship's hull lies broken on the rocks below the road. Half-buried in the shingle: a captain's strongbox with an iron lock.", "Tap an item for options. You're in town: you can sell here.",
     "You have no ingredients. Gather them on the road, in dungeons, or buy them at the general store and court wizard.", "12% there"])
     ok(P(en) && !/\b(gold|the|you|lock|there)\b/i.test(P(en)), "road / pack line in Polish: " + en + " → " + P(en));
