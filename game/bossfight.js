@@ -390,7 +390,7 @@ const BOSSFIGHT = (() => {
     }
     if (!sess.bfIntro) { sess.bfIntro = true; intro(el, sess); }
     const ph = newEv.filter((e) => e && e.phase).pop();
-    if (ph) overlay("bfphase", `<div class="bfpc"><small>${esc(fmt("Phase {0}", ph.phase))}</small><h3>${esc(String(ph.banner || "").replace(/^[^:]*:\s*/, ""))}</h3></div>`, 2400, el);
+    if (ph) { const show = () => overlay("bfphase", `<div class="bfpc"><small>${esc(fmt("Phase {0}", ph.phase))}</small><h3>${esc(String(ph.banner || "").replace(/^[^:]*:\s*/, ""))}</h3></div>`, 2400, el); if (typeof NOTICES !== "undefined") NOTICES.fightTip("bfphase", show); else show(); }   // [notices] waits while a fight window is open
     if (sess.done && f.won && !f.escaped && f.ehp <= 0 && !sess.bfFin) {
       sess.bfFin = true;
       overlay("bffin", `<i class="bfl top"></i><i class="bfl bot"></i><div class="bfcard"><small>${esc(T("Boss defeated"))}</small><h2>${esc(say(f, "{0} falls"))}</h2></div>`, 3000, el);

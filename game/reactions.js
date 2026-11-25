@@ -367,7 +367,7 @@ const REACT = (() => {
       foe.appendChild(d);
     }
     const e = (newEv || []).filter((x) => x && x.rx).pop();
-    if (e) banner(e, sess);
+    if (e) { if (typeof NOTICES !== "undefined") NOTICES.fightTip("rx", () => banner(e, sess)); else banner(e, sess); }   // [notices] it waits while Items, Magic or a result is open
   }
 
   if (typeof TB !== "undefined" && Array.isArray(TB.FOE_KEYS) && !TB.FOE_KEYS.includes("rx")) TB.FOE_KEYS.push("rx");   // party fights: every phone sees the same setups
