@@ -280,17 +280,31 @@ const LOCKGAME = (() => {
   };
   const img = (k) => (typeof ASSETS !== "undefined" ? ASSETS.img(k) : null);
   const easeOut = (x) => 1 - Math.pow(1 - clamp(x, 0, 1), 3);
-  function layout(w, h) {
-    const D = Math.min(w * 0.74, h * 0.66, 760), cx = w / 2, cy = h * 0.56;
-    return { w, h, D, cx, cy, kx: cx, ky: cy - D * 0.1, pickLen: D * 0.92 };
+  /* top: where the title and the line under it end (CSS px from the canvas top), so the shackle starts below them.
+     The shackle reaches ~0.72 D above the centre; the pick stays short enough to end inside the wood. */
+  function layout(w, h, top = 0) {
+    const avail = Math.max(h * 0.5, h - top);
+    const D = Math.min(w * 0.74, avail * 0.62, h * 0.66, 760), cx = w / 2;
+    const cy = (h - avail) + D * 0.74 + Math.max(0, avail - D * 1.56) * 0.45;
+    const pickLen = Math.min(D * 0.92, Math.max(D * 0.6, (h - 8 - (cy - D * 0.1)) / 0.88));
+    return { w, h, D, cx, cy, kx: cx, ky: cy - D * 0.1, pickLen, top };
+  }
+  /* the bottom of the subtitle over the canvas, in CSS px (0 when the header isn't over it) */
+  function headTop(cv) {
+    try {
+      const wrap = cv.closest(".lgwrap"), sub = wrap && (wrap.querySelector(".lghead .lpsub") || wrap.querySelector(".lghead h3"));
+      if (!sub) return 0;
+      const zz = (cv.getBoundingClientRect().width / (cv.offsetWidth || 1)) || 1;
+      return Math.max(0, (sub.getBoundingClientRect().bottom - cv.getBoundingClientRect().top) / zz + 4);
+    } catch { return 0; }
   }
   /* the chest front behind the lock: planks, an iron band, candlelight; drawn once per size */
   function backdrop(w, h, k, face) {
-    const key = `${Math.round(w)}x${Math.round(h)}@${k}|${face}`;
+    const top = lp.top || 0, key = `${Math.round(w)}x${Math.round(h)}@${k}|${face}|${Math.round(top)}`;
     if (lp.bg && lp.bg.key === key) return lp.bg.cv;
     const c = document.createElement("canvas"); c.width = Math.max(1, Math.round(w * k)); c.height = Math.max(1, Math.round(h * k));
     const g = c.getContext("2d"); g.scale(k, k);
-    const r = rng(77), L = layout(w, h), D = L.D;
+    const r = rng(77), L = layout(w, h, top), D = L.D;
     const dwem = face === "dwemer";
     const wood = dwem ? ["#3a2a17", "#4a3820", "#2c1f10"] : face === "noble" ? ["#3b2114", "#4e2c1a", "#2a170d"] : ["#3c2716", "#4b321c", "#2b1b0e"];
     g.fillStyle = wood[0]; g.fillRect(0, 0, w, h);
@@ -404,7 +418,8 @@ const LOCKGAME = (() => {
     const L = lp; if (!L) return;
     const fit = typeof FITCANVAS !== "undefined" ? FITCANVAS.fill(cv) : (() => { const r = cv.getBoundingClientRect(); cv.width = r.width; cv.height = r.height; return { g: cv.getContext("2d"), w: r.width, h: r.height, k: 1 }; })();
     const { g, w, h, k } = fit, st = L.st, rm = reduce(), t = (now - L.t0) / 1000;
-    const ly = layout(w, h); L.lay = ly;
+    if (L.topFor !== `${w}x${h}`) { L.topFor = `${w}x${h}`; L.top = headTop(cv); }   // measured once per size
+    const ly = layout(w, h, L.top); L.lay = ly;
     const D = ly.D, R = D / 2;
     // the shown pick angle eases after the real one (it never lags more than a frame or two)
     L.disp += (st.angle - L.disp) * clamp(dt * 24, 0, 1);
@@ -473,6 +488,8 @@ const LOCKGAME = (() => {
       const age = now - p.t0; if (age > p.life) continue; keep.push(p); if (age < 0) continue;
       const u = age / p.life, s = Math.min(dt, 0.05);
       if (p.kind !== "flash" && p.kind !== "pop") { p.vy += (p.kind === "mote" ? -40 : 900) * s; p.x += p.vx * s; p.y += p.vy * s; p.rot = (p.rot || 0) + (p.vr || 0) * s; if (p.kind === "mote") { p.vx *= 0.97; p.vy *= 0.97; } }
+      // broken bits come to rest on the bottom edge of the chest instead of dropping out of the picture
+      if ((p.kind === "half" || p.kind === "tip" || p.kind === "shard") && p.y > ly.h - 12) { p.y = ly.h - 12; p.vy = -Math.abs(p.vy) * 0.25; p.vx *= 0.5; p.vr = (p.vr || 0) * 0.4; }
       g.save();
       if (p.kind === "half") {
         const im = img("tool-lockpick"), len = ly.pickLen * 0.62;

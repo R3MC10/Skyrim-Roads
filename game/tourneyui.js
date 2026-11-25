@@ -224,7 +224,9 @@ const TOURNEYUI = (() => {
     g.fillStyle = a.colors[1]; g.fillRect(bx + 2 * s, by + 4 * s + wave * 0.3, 11 * s, 2 * s);
     if (a.on && !rm) { g.strokeStyle = `rgba(255,224,138,${0.35 + 0.3 * (Math.sin((tt || 0) * 4) + 1) / 2})`; g.lineWidth = 2 * s; g.beginPath(); g.arc(x, y, 15 * s, 0, 7); g.stroke(); }
     const txt = LX(a.on ? a.name : `${a.name} (soon)`);
-    g.font = `700 ${Math.round(9 * s)}px sans-serif`; g.textAlign = "center"; g.lineWidth = 3 * s; g.strokeStyle = "rgba(20,14,8,.88)"; g.strokeText(txt, bx + 8 * s, by - 4 * s); g.fillStyle = "#ffe6a0"; g.fillText(txt, bx + 8 * s, by - 4 * s);
+    // the name to the right of the flag, clear of the town's marker (and your own name above it)
+    const tx = bx + 20 * s, ty = by + 6 * s + wave * 0.5;
+    g.font = `700 ${Math.round(9 * s)}px sans-serif`; g.textAlign = "left"; g.textBaseline = "middle"; g.lineJoin = "round"; g.lineWidth = 3 * s; g.strokeStyle = "rgba(20,14,8,.88)"; g.strokeText(txt, tx, ty); g.fillStyle = "#ffe6a0"; g.fillText(txt, tx, ty);
     g.restore();
   }
 

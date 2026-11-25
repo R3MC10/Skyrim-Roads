@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b202-tidy1", build: 202, date: "25 Nov 2026", title: "Weather on the lake and in the woods", items: [
+      "Fishing and hunting follow the clock and the sky: at night the scene goes dark blue with a moon, snow falls and turns it cold, rain and fog make it grey, and the day is brighter and less orange.",
+      "When hunting you now hold a painted bow that bends as you draw, and your arrows are painted too.",
+      "Mining: the little \"+2 Silver\" text no longer covers the mine name on small phones.",
+      "Lockpicking: on very wide screens and phones held sideways the lock sits below the title, and the pick stays inside the chest.",
+      "Festivals: on phones the compass button no longer covers the scores, and on the PC map the festival name sits next to its flag instead of on top of it.",
+    ] },
     { id: "b201-mgsmith", build: 201, date: "25 Nov 2026", title: "A real forge for smithing", items: [
       "Making weapons and armor at a forge is now a small scene at a painted smithy: heat the bar, hammer it into shape, then quench it.",
       "Heat: hold to pump the bellows and keep the glow in the gold band. Too hot and it burns, too cold and it won't move.",

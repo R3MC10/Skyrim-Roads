@@ -6,10 +6,11 @@
      legs: they graze with a nibbling bob, lift the head when they look up, flick ears and tail, raise the tail in alarm,
      gallop away (legs scissor, body rocks), flinch on a hit and fold up when the shot is clean. Other animals keep the
      drawn ink animal (huntgame.js drawAnimal), and with no backdrop the whole old ink picture comes back.
-   - Your bow (or crossbow) bottom left: raised and drawn over 0.8 s, breathing at full draw, the string snaps on release.
+   - Your bow (or crossbow) bottom left, painted (rig-w-bow, rig-w-bow-drawn; the line drawing until they load): raised and drawn over 0.8 s, breathing at full draw, the string snaps on release.
      The arrow flies a real arc, shrinking with distance, and sticks where it lands. Blood follows Settings → Gore:
      Off (fur and dust only), Reduced (a few dark drops) or Full (a spray, drops on the grass and a pool).
    - Skinning: the hide (cut from the painting, spine in the middle) stretched on a pole frame, a knife pass along its edge.
+     The scene is graded for the clock and the weather (scenegrade.js); the arrows are the painted rig-w-arrow.
    All drawing is in huntgame.js units (560×300); FITCANVAS keeps it sharp from 360 px phones to 3440 px screens.
    Visual-only randomness: a local generator (the shared rolls stay in huntgame.js). */
 const HUNTART = (() => {
@@ -40,6 +41,7 @@ const HUNTART = (() => {
   };
   const MAP = { deer: "deer", elk: "elk", fox: "fox", snowfox: "fox", hare: "hare" };
   const img = (k) => (typeof ASSETS !== "undefined" ? ASSETS.img(k) : null);
+  const still = () => { try { return typeof A11Y !== "undefined" && A11Y.reduceMotion(); } catch { return false; } };
   const goreLevel = () => { try { return typeof GORE !== "undefined" ? GORE.level() : "low"; } catch { return "low"; } };
   const ease = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -166,7 +168,9 @@ const HUNTART = (() => {
     const T = ts / 1000, dt = V.last ? clamp(T - V.last, 0, 0.05) : 0.016; V.last = T; V.T += dt;
     if (V.phase !== st.phase) { V.phase = st.phase; V.phT = 0; } else V.phT += dt;
     let base = 1; try { base = g.getTransform().a || 1; } catch { /* old webview */ }
-    let night = false; try { night = G.isNight(); } catch { /* fine */ }
+    // the clock and the sky here (looked up once every few seconds): graded over the painting below
+    if (!V.sky || V.T - V.skyT > 4) { V.skyT = V.T; V.sky = typeof SCENEGRADE !== "undefined" ? SCENEGRADE.look(st.opts && st.opts.pos) : { night: (() => { try { return G.isNight(); } catch { return false; } })(), wx: "clear" }; }
+    const night = V.sky.night, wx = V.sky.wx;
     const gore = goreLevel(), wind = G2.wind, wd = wind.dir * wind.str;
     // ---- the clearing: three layers spreading apart as you close in, a bob while you creep, a breath while you aim
     V.mv = lerp(V.mv, st.phase === "stalk" && st.moving && G2.dist > 18 ? 1 : 0, Math.min(1, dt * 6));
@@ -296,12 +300,21 @@ const HUNTART = (() => {
     }
     stepParts(g, V, dt);
     // ---- light: night, and a soft frame that tightens while you aim
-    if (night) { g.fillStyle = "rgba(10,16,34,.5)"; g.fillRect(0, 0, W, H); }
+    if (typeof SCENEGRADE !== "undefined") {
+      SCENEGRADE.grade(g, W, H, { night, wx, sun: [77 + bobX * 0.3, 44 + bobY * 0.3], moon: [420, 34], hz: 125, T: V.T, calm: still(), soft: true });
+      SCENEGRADE.front(g, W, H, { wx, T: V.T, calm: still(), wind: wd });
+    } else if (night) { g.fillStyle = "rgba(10,16,34,.5)"; g.fillRect(0, 0, W, H); }
     const vg = g.createRadialGradient(W / 2, H * 0.55, H * 0.35, W / 2, H * 0.55, W * 0.62);
     vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, `rgba(8,6,4,${aiming ? 0.62 : 0.42})`); g.fillStyle = vg; g.fillRect(0, 0, W, H);
     // ---- your bow, the aim and the arrow
-    if (st.phase === "aim" || st.phase === "flight" || st.phase === "stalk") bow(g, st, V, A, W, H);
-    if (st.phase === "flight" && st.arrow) flyingArrow(g, st, A);
+    if (st.phase === "aim" || st.phase === "flight" || st.phase === "stalk") {
+      const lit = typeof SCENEGRADE !== "undefined" ? SCENEGRADE.lamp({ night, wx }) : "none";
+      g.save(); if (lit !== "none" && "filter" in g) g.filter = lit;
+      bow(g, st, V, A, W, H);
+      if (st.phase === "flight" && st.arrow) flyingArrow(g, st, A);
+      g.restore();
+      if (aiming) { const [tx, ty] = aimAt(st, A); reticle(g, st, A, tx, ty); }
+    }
     windChip(g, wind, V.T, A.L);
     // ---- skinning, once it's down (or tracked down)
     if (kill) skinView(g, st, V, W, H, clean ? V.phT - 1.9 : V.phT - 1.6, P, A);
@@ -373,6 +386,13 @@ const HUNTART = (() => {
       if (aim) { g.strokeStyle = "#4b3a2a"; g.lineWidth = 3; g.beginPath(); g.moveTo(gx + dx * 20, gy + dy * 20); g.lineTo(fx + dx * 14, fy + dy * 14); g.stroke(); }
       g.restore(); return;
     }
+    const pic = img("rig-w-bow"), pd = img("rig-w-bow-drawn");
+    if (pic && pd) {   // the painted bow (riggear.js pictures): relaxed, cross-fading into the drawn one (arrow nocked) as you pull
+      // held further in than the line drawing so the string and the nocked arrow stay in the picture
+      const px = lerp(40, 96, up), py = lerp(H + 40, H - 76, up) + (gy - lerp(H + 24, H - 34, up)), pa = aim || fl ? Math.atan2(ty - py, tx - px) : -0.9;
+      paintedBow(g, pic, pd, px, py, pa, draw, fl ? Math.max(0, 1 - st.arrow.t * 4) : 0, V.T);
+      g.restore(); return;
+    }
     const lim = 78, curl = 12 + draw * 16;
     const t1 = [gx + nx * lim - dx * curl, gy + ny * lim - dy * curl], t2 = [gx - nx * lim - dx * curl, gy - ny * lim - dy * curl];
     // limbs: dark wood with a lighter face
@@ -397,7 +417,28 @@ const HUNTART = (() => {
     g.fillStyle = "#3b2618"; g.beginPath(); g.ellipse(gx - dx * 2, gy - dy * 2, 9, 7, a, 0, 7); g.fill();
     g.fillStyle = "rgba(160,120,80,.35)"; g.beginPath(); g.ellipse(gx - dx * 4 - nx * 2, gy - dy * 4 - ny * 2, 4, 2.5, a, 0, 7); g.fill();
     g.restore();
-    if (aim) reticle(g, st, A, tx, ty);
+  }
+  /* where the aim ring sits (the sway included), drawn over the bow and unshaded by the night */
+  function aimAt(st, A) {
+    let tx = st.aim[0], ty = st.aim[1];
+    const sw = A.swayAt(st.g, st.drawT * 1.7, st.drawT); return [tx + sw[0], ty + sw[1]];
+  }
+  /* BOWPIC in riggear.js: the riser sits at .68 (relaxed) / .69 (drawn) of the width, the drawn arrow at .48 of the height */
+  const BOWH = 160, BR = { riser: 0.68, nock: 0.04 }, BD = { riser: 0.69, nock: 0.02, y: 0.48 };
+  function paintedBow(g, pic, pd, gx, gy, a, draw, snap, T) {
+    const rw = BOWH * (pic.naturalWidth || pic.width) / Math.max(1, pic.naturalHeight || pic.height);
+    const dW = BOWH * (pd.naturalWidth || pd.width) / Math.max(1, pd.naturalHeight || pd.height);
+    const t = clamp((draw - 0.12) / 0.45, 0, 1);   // half-drawn already shows the drawn bow
+    g.translate(gx, gy); g.rotate(a); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = "high";
+    g.shadowColor = "rgba(0,0,0,.45)"; g.shadowBlur = 8; g.shadowOffsetY = 3;
+    if (t < 1) {   // relaxed: its own string, bending back a little as you start to pull, quivering after the shot
+      const sx = 1 + draw * 0.9 + Math.sin(T * 90) * 0.18 * snap;
+      g.globalAlpha = 1 - t; g.save(); g.scale(sx, 1); g.drawImage(pic, -rw * BR.riser, -BOWH / 2, rw, BOWH); g.restore();
+    }
+    if (t > 0) {   // drawn: stretched from a half pull to the full one
+      g.globalAlpha = t; g.save(); g.scale(lerp(0.6, 1, draw), 1); g.drawImage(pd, -dW * BD.riser, -BOWH * BD.y, dW, BOWH); g.restore();
+    }
+    g.globalAlpha = 1; g.shadowColor = "transparent";
   }
   /* a forgiving ring: bigger while your aim wanders, tighter when it settles */
   function reticle(g, st, A, x, y) {
@@ -420,6 +461,12 @@ const HUNTART = (() => {
   }
   function shaft(g, x, y, ang, len, alpha, bolt) {
     const dx = Math.cos(ang), dy = Math.sin(ang), nx = -dy, ny = dx;
+    const ar = !bolt && img("rig-w-arrow");
+    if (ar) {   // the painted arrow (tip at its right end), with the line drawing as the fallback
+      const h = Math.max(1.8, len * (ar.naturalHeight || ar.height) / Math.max(1, ar.naturalWidth || ar.width) * 1.15);
+      g.save(); g.globalAlpha = alpha; g.translate(x, y); g.rotate(ang); g.imageSmoothingEnabled = true; g.drawImage(ar, -len, -h / 2, len, h); g.restore();
+      return;
+    }
     g.save(); g.globalAlpha = alpha; g.lineCap = "round";
     g.strokeStyle = "#2c2016"; g.lineWidth = Math.max(1, len * 0.07); g.beginPath(); g.moveTo(x - dx * len, y - dy * len); g.lineTo(x, y); g.stroke();
     g.fillStyle = bolt ? "#5a5148" : "#d7ceb8"; const f = len * 0.22, b0 = [x - dx * len, y - dy * len];
