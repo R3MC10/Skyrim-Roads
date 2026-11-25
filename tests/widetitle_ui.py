@@ -2,8 +2,10 @@
 # usage: python3 widetitle_ui.py [port] [out_dir]   (serves ../game on the port; pictures need ?assets)
 import asyncio, sys, os, json
 from playwright.async_api import async_playwright
+_SHOTS = (__import__("os").environ.get("SHOTS") or __import__("os").path.join(__import__("tempfile").gettempdir(), "rotn_shots")).replace("\\", "/").rstrip("/") + "/"   # screenshots: $SHOTS or the temp folder
+__import__("os").makedirs(_SHOTS, exist_ok=True)
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"
-OUT = sys.argv[2] if len(sys.argv) > 2 else os.environ.get("OUT", "/home/claude/tests/")
+OUT = sys.argv[2] if len(sys.argv) > 2 else os.environ.get("OUT", _SHOTS)
 os.makedirs(OUT, exist_ok=True)
 # (width, height, pixel density): phones at 3x like real ones, PCs at 1x and a couple at 2x (the art is never blown up past its pixels)
 SIZES = [(390, 844, 3), (360, 800, 2), (1024, 768, 1), (1280, 720, 1), (1920, 1080, 1), (2560, 1080, 1), (3440, 1440, 1), (2000, 810, 1), (5120, 1440, 1), (2000, 810, 2), (2560, 1440, 2)]

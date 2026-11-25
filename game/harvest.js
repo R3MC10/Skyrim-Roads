@@ -228,6 +228,7 @@ const HARVEST = (() => {
   };
 
   brewHook(); econHook(); kitchenHooks();
+  if (typeof I18N !== "undefined" && I18N.add && typeof I18N_GATHER !== "undefined" && I18N_GATHER.TPL) I18N.add(I18N_GATHER.TPL);   // Polish lines with {markers}
   return { T, KINDS, kindOf, single, howTo, hs, canQuick, handPicked, quickAt, amount, YIELD, RARE, RARE_PER_DAY, rareChance, afterPick, primeOf, tagHTML,
     order, deliver, orderHTML, filled, ORDERS_PER_DAY, ORDER_CAP, nearPrompt, cardFoot, progress, SCORE, tolOf, dayOf };
 })();

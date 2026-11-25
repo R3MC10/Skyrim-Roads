@@ -75,7 +75,7 @@ async def run(b, style, reduce=False, plain=False):
 
 async def main():
     async with async_playwright() as p:
-        b = await p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-sandbox"])
+        b = await p.chromium.launch(executable_path=(__import__("os").environ.get("CHROME") or ("/usr/bin/google-chrome" if __import__("os").path.exists("/usr/bin/google-chrome") else None)), args=["--no-sandbox"])
         for st in ("ink",):
             r = await run(b, st)
             assert r["on"] and r["amb"] and r["xpbar"] and r["uline"] and r["modal_pop"] and r["ghost"] and r["ghost_gone"], r

@@ -23,7 +23,7 @@ const PAINTRIG = (() => {
 
   // ---------------------------------------------------------------- which set
   const IRONISH = /^(iron|banded|chain|imperial|stormcloak|ancient)/;
-  const FEM_FOLLOWER = /^f-(lydia|jenassa|aela|uthgerd|mjoll|serana|annekke|iona|jordis)\b/;   // followers' looks carry no sex: the women we know
+  const FEM_FOLLOWER = /^f-(lydia|jenassa|aela|uthgerd|mjoll|brelyna|annekke|borgakh|hs_pinewatch|serana|iona|jordis)\b/;   // a safety net for old looks with no sx (followers2.js sets it now)
   function setOf(sp, L) {
     if (!sp) return "nordm-leather";
     const who = sp.fem || (L && FEM_FOLLOWER.test(String(L.id))) ? "nordf" : "nordm";
@@ -60,9 +60,9 @@ const PAINTRIG = (() => {
   }
   /* another race's painted head (dunmer, khajiit, argonian; m/f), or null: the Nord head with a skin tint then */
   const HREC = new Map();
-  function raceHead(sp) {
+  function raceHead(sp, fem = sp && sp.fem) {
     if (!sp || !sp.r || sp.r === "nord" || !D || !D.HEADS || typeof ASSETS === "undefined") return null;
-    const key = sp.r + (sp.fem ? "f" : "m"), q = D.HEADS[key]; if (!q) return null;
+    const key = sp.r + (fem ? "f" : "m"), q = D.HEADS[key]; if (!q) return null;
     let h = HREC.get(key); if (h) return h;
     const im = ASSETS.img(D.headFile(key)); if (!im) return null;
     h = { key, set: key, Q: { head: q }, imgs: { head: im }, cache: new Map() }; HREC.set(key, h); return h;
@@ -194,7 +194,11 @@ const PAINTRIG = (() => {
     if (o.dying > 0) {   // a foe's death (foerig.js turns the body; the limbs give up)
       const H = sample("death", clamp(o.dying, 0, 0.78)); P.aim = H.aim; P.back = H.back; P.tilt = H.tilt; hand = "open";
     }
-    if (o.ride) { const B = sample("ride", (o.t || 0) / D.CLIPS.ride.len); P.lean = B.lean + (P.lean - 0.02) * 0.6; P.tilt = B.tilt; }   // the legs stay as the ink rider's: the horse's near side covers them
+    if (o.ride) {   // [riding] in the saddle: the body sways on the same beat as the horse's back (horseback.js riderBob), never on its own clock
+      const B = sample("ride", 0), s = Math.abs(Math.sin((o.t || 0) * 2.2));
+      P.lean = B.lean + 0.025 * s + (P.lean - 0.02) * 0.6; P.tilt = -0.015 * s; P.ride = true;   // legs bent over the flank (figure)
+      P.fn = [5.5, 0]; P.ff = [-5.5, 0];
+    }
     P.hand = hand; P.front = front; P.clip = clipName;
     return P;
   }
@@ -301,10 +305,25 @@ const PAINTRIG = (() => {
   }
   const WSC = 1.18;
   const TIPS = new Map(); let drawN = 0;   // the last blade tip drawn for each fighter (PAINTRIG.tip)   // weapons a touch bigger than on the ink figures: painted hands are big
+  /* [riding] a rider's leg in the saddle: thigh forward along the horse's back, knee bent, the shin down the flank and the
+     boot in the stirrup. STIRRUP is where the painted saddle's stirrup hangs in figure units (the fight scene seats the
+     rider 30 up and moves both with the same bob, so it stays put however the rider leans). far: the leg on the other
+     side, a little back and in shade, drawn before the horse */
+  const STIRRUP = [6, -5.5];
+  function rideLeg(g, ctx, B, far) {
+    const G = ctx.G, m = G.m, hip = add(B.H, far ? [-0.5 * m, -0.2 * m] : [0.6 * m, 0]);
+    const want = [(STIRRUP[0] - (far ? 1.5 : 0)) * m, (STIRRUP[1] - (far ? 0.5 : 0)) * m];
+    const [kn, an] = ik(hip[0], hip[1], want[0], want[1], G.thigh, G.shin, -1);
+    legAt(g, ctx, { hip, knee: kn, ankle: an, toe: 0.05 }, far ? "d" : "n");
+  }
   function figure(g, ctx, P, sp, o, wk) {
     const G = ctx.G, m = G.m, B = solve(G, P), kit = ctx.kit, st = ctx.st;
+    if (o.rideLayer === "far") {   // [riding] the first of two passes in the saddle: only the far leg, drawn before the horse so its body covers it
+      if (P.ride) rideLeg(g, ctx, B, true);
+      return B;
+    }
     const tintC = sp.r && sp.r !== "nord" && !sp.vamp ? sp.skin : null, sv = (d) => (tintC ? (d ? "dt:" : "t:") + tintC : d ? "d" : "n");
-    const rh = raceHead(sp);
+    const rh = raceHead(sp, sp.fem || String((ctx.r && ctx.r.set) || "").startsWith("nordf"));   // the head matches the body: a woman's body wears a woman's head
     const ranged = RANGED.has(wk), two = TWO_MELEE.has(wk) || wk === "staff" || wk === "spear";
     const tipA = wk && kit && kit.TIP[wk] ? Math.atan2(kit.TIP[wk][1], kit.TIP[wk][0]) : -Math.PI / 4;
     let wa = B.sa + P.aim;   // the weapon's frame, as on the ink figures
@@ -347,14 +366,9 @@ const PAINTRIG = (() => {
     if (o.off && kit) { g.save(); g.translate(fg[0], fg[1]); g.rotate(B.sa + 0.55 + (o.lunge || 0) * 0.7); g.scale(m * WSC, m * WSC); (gear || kit).weapon(g, sp, o.off, st, { plain: true, glow: glowC }); g.restore(); }
     if (shieldOn && !shieldFront) shieldHere(false);
     if (P.cast > 0.05 && kit) kit.glowAt(g, fg[0], fg[1], (5 + P.cast * 3) * m, castC, 0.75, st);
-    // legs: the far one in shade (in the saddle only the near leg shows, bent over the horse's flank)
-    if (P.ride) {
-      const q = ctx.Q["leg-bent"], hip = add(B.H, [0.6 * m, 0]);
-      if (q.noBoot) {   // [rigcohesion] a bent-leg picture with no boot (the women's leather): the thigh, shin and boot, folded over the horse's flank
-        const want = add(hip, rot(B.pa, [0.16 * G.thigh, 0.6 * (G.thigh + G.shin)])), [kn, an] = ik(hip[0], hip[1], want[0], want[1], G.thigh, G.shin, -1);
-        legAt(g, ctx, { hip, knee: kn, ankle: an, toe: 0.05 }, "n");
-      } else uprightAt(g, ctx, "leg-bent", "n", hip, B.pa - 0.12, 0);
-    } else { legAt(g, ctx, B.legF, "d"); legAt(g, ctx, B.legN, "n"); }
+    // legs: the far one in shade (in the saddle only the near leg here, bent over the horse's flank: the far one went first, behind the horse)
+    if (P.ride) rideLeg(g, ctx, B, false);   // [riding] thigh, shin and boot folded over the flank into the stirrup (every set: the old one-piece bent-leg picture stopped short of it)
+    else { legAt(g, ctx, B.legF, "d"); legAt(g, ctx, B.legN, "n"); }
     // the body: torso (its waist plug hidden), the hips over it, then the head
     const hk = B.sa * 0.55 + (P.tilt || 0), sw = ctx.sway ? ctx.sway.a : 0;
     // the head: the race's own (scaled so its neck fills this set's collar like the Nord neck) or the set's; its braids below the collar go behind the torso
@@ -378,8 +392,8 @@ const PAINTRIG = (() => {
     if (armedN && !openAll && !ranged && kit && kit.TIP[wk]) {   // where the blade really is (the fight scene's swing trail follows it), in canvas pixels
       const SP = (gear && gear.SPAN) || {}, GR = (gear && gear.GRIP) || {}, L = (SP[wk] || 33) * (1 - (GR[wk] || 0.16)) * m * WSC, a = wa + tipA;
       const T = g.getTransform(), at = (x, y) => [T.a * x + T.c * y + T.e, T.b * x + T.d * y + T.f];
-      const tp = at(grip[0] + Math.cos(a) * L, grip[1] + Math.sin(a) * L), bs = at(grip[0] + Math.cos(a) * L * 0.42, grip[1] + Math.sin(a) * L * 0.42);
-      TIPS.set(o.who || "me", { x: tp[0], y: tp[1], bx: bs[0], by: bs[1], n: ++drawN });
+      const tp = at(grip[0] + Math.cos(a) * L, grip[1] + Math.sin(a) * L), bs = at(grip[0] + Math.cos(a) * L * 0.42, grip[1] + Math.sin(a) * L * 0.42), gp = at(grip[0], grip[1]);
+      TIPS.set(o.who || "me", { x: tp[0], y: tp[1], bx: bs[0], by: bs[1], gx: gp[0], gy: gp[1], n: ++drawN });   // gx,gy: the grip (fightart.js lays an enchanted weapon's glow from here to the tip)
     }
     handAt(g, ctx, B.armN, handPart, sv(false), want);
     if (P.flask) flaskAt(g, grip[0], grip[1] - 0.5 * m, P.flask, m * 1.2);

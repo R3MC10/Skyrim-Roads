@@ -3,7 +3,7 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b232-gathering", build: 232, date: "25 Nov 2026", title: "Picking herbs by hand", items: [
+    { id: "b243-gathering", build: 243, date: "25 Nov 2026", title: "Picking herbs by hand", items: [
       "Gathering is now a short hands-on mini-game: snip flowers at the stem, dig roots up slowly, scrape fungus in one stroke, pick only the ripe berries, lift eggs gently and ease a fragile Nirnroot out of the mud. Do it well and you get more; even a clumsy try gives you something.",
       "Picked a plant three times by hand? A Quick button lets you skip the mini-game for a slightly smaller handful.",
       "Herbs nearby are easy to spot: painted markers on the map, a ring that shows how far you can reach, and a Gather button that pops up on the road, even while you ride past.",
@@ -12,6 +12,64 @@ const PATCHNOTES = (() => {
       "New recipes: Snowberry and Juniper Berry crostatas at the cooking fire, and Tundra Cotton twists into leather strips at the tanning rack.",
       "Four new Alchemy perks: Herbalist's Eye (more rare finds), Sure Hands (easier mini-game, Quick sooner), Anatomist (extra parts from beasts) and Master Gardener (more from every garden bed).",
       "In a party everyone picks their own share of each patch, so there's nothing to fight over.",
+    ] },
+    { id: "b242-noap", build: 242, date: "25 Nov 2026", title: "No more AP", items: [
+      "A plain attack takes just 1 of your 4 moves and some stamina. There are no action points any more, anywhere.",
+      "Potion and scroll tooltips in your pack still said they cost AP in a fight. They now say: 1 move, free.",
+      "Followers with a sword, axe, mace, spear or staff swing more often for a bit less each, so their turns feel quicker. Their damage a turn stays the same.",
+    ] },
+    { id: "b241-qaside3", build: 241, date: "25 Nov 2026", title: "Cleaner perk texts", items: [
+      "Fixed: a few perks (Duelist, Brute Force, Steady Hand, Disintegrate, Intimidation) showed a stray design note like [OURS] in the middle of their description.",
+      "Fixed: in Polish, the house, homestead and arena lines on the town board are translated.",
+    ] },
+    { id: "b240-qaside2", build: 240, date: "25 Nov 2026", title: "More Polish in towns", items: [
+      "Fixed: in Polish, the cooking pot, the forge, the notice board's weekly goals, the Hall of the North, the streets, trainers and hirelings are translated.",
+      "Fixed: in Polish, the Social tabs, the bard's song lines and the time left on world events are translated.",
+    ] },
+    { id: "b239-qacore1", build: 239, date: "25 Nov 2026", title: "Back button and first-trip fixes", items: [
+      "Fixed: the phone's back button did nothing in fishing, hunting, mining, lockpicking and the other mini-games, and pressing it again could close the app. Now it leaves the game, like its Done or Leave button.",
+      "Fixed: back in the barber's chair or at the rune table closes them instead of opening the compass behind them.",
+      "Fixed: back inside a shop, the inn or the forge goes to the town's list of places first, not straight to the compass.",
+      "Fixed: the first-trip guide said to open the Town tab; it's called Area now.",
+      "Fixed: in Polish, the first-trip guide, the first-time tips and the \"you set off\" and \"you arrived\" messages were still in English.",
+    ] },
+    { id: "b238-qaside", build: 238, date: "25 Nov 2026", title: "Company fixes", items: [
+      "Fixed: tapping Found twice quickly could pay for the company twice.",
+      "Fixed: tapping Put in twice quickly could put the same gold in the treasury twice and leave your purse below zero.",
+      "Fixed: tapping Give twice quickly could hand the same ingots to the stockpile twice.",
+      "Fixed: an app update no longer restarts the game while you're fishing, mining, hunting, at the forge or in any other mini-game, so you never lose a catch.",
+      "Fixed: more of the Social, jobs and fishing screens are in Polish.",
+    ] },
+    { id: "b237-mountcombat", build: 237, date: "25 Nov 2026", title: "Fight from the saddle", items: [
+      "Mounted combat is back: ride into a fight and stay in the saddle, or get on and off with the new Mount and Dismount moves.",
+      "Getting on takes 2 moves and 20 stamina. You can dual cast from the saddle for a bit more magicka.",
+      "New Destruction perk: Saddle Caster.",
+      "Your horse can be knocked down in a fight, but it always gets back up afterwards.",
+    ] },
+    { id: "b236-glowfix", build: 236, date: "25 Nov 2026", title: "No more glowing blob next to your weapon", items: [
+      "An enchanted weapon used to leave a big glowing blob floating in the air beside your hero in fights. The glow now sits on the weapon itself, as a slim shine along the blade.",
+    ] },
+    { id: "b235-testsgreen", build: 235, date: "25 Nov 2026", title: "Small Polish fixes", items: [
+      "In Polish, the \"stage done\" line of the vampire war quests is fully translated again.",
+      "The Coming next list is up to date.",
+    ] },
+    { id: "b234-riding", build: 234, date: "25 Nov 2026", title: "Riding on the map", items: [
+      "The map has a ride button next to zoom: tap it to get on or off your horse. You see the horse walk up and you climb into the saddle, or slide down.",
+      "On foot your horse walks along just behind you on the map.",
+      "Riders on the map have both legs now: the near leg over the horse's side, the far leg behind it, for every coat.",
+      "The rider moves smoothly with the horse's walk and gallop instead of jerking along.",
+    ] },
+    { id: "b233-folsex", build: 233, date: "25 Nov 2026", title: "Your followers look like themselves", items: [
+      "Jenassa, Lydia and the other women who follow you now look like themselves in fights.",
+      "Aela, Brelyna, Uthgerd, Mjoll, Annekke, Borgakh and Hrolfa at Pinewatch get a woman's face and body too, on your screen and on your party's.",
+      "A dark elf woman now wears a dark elf woman's face, not a man's.",
+    ] },
+    { id: "b232-arrivearea", build: 232, date: "25 Nov 2026", title: "The Area tab opens when you arrive", items: [
+      "When you reach a town, a dungeon entrance or another place on the map, the Area tab opens by itself, so shops, the inn and what you can do there are right in front of you.",
+      "If a fight, a road event or any window is still open, it waits until you close it.",
+      "Stopping at a spot you picked in the wilds or a map pin keeps you on the map.",
+      "In a party, if you follow the leader, it only switches when you're just looking at the map, never while you're reading something else.",
+      "Plants you can gather nearby also show at the top of the Area tab.",
     ] },
     { id: "b231-nomountfight", build: 231, date: "25 Nov 2026", title: "Horses wait at the edge of the fight", items: [
       "Horses now wait at the edge of the fight; you always fight on foot. That goes for solo fights, parties and co-op.",
@@ -1624,8 +1682,9 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 222;
+  const NEXT_AT = 240;
   const NEXT = [
+    "Hands-on gathering: a little harvest game for every kind of plant",
     "Mentoring: play side by side with friends of any level",
     "Shrines of your own: build a Daedric altar at your longhouse",
   ];

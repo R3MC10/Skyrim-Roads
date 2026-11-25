@@ -2,7 +2,7 @@ import asyncio
 from playwright.async_api import async_playwright
 async def main():
     async with async_playwright() as p:
-        b = await p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-sandbox"])
+        b = await p.chromium.launch(executable_path=(__import__("os").environ.get("CHROME") or ("/usr/bin/google-chrome" if __import__("os").path.exists("/usr/bin/google-chrome") else None)), args=["--no-sandbox"])
         pg = await b.new_page(viewport={"width": 390, "height": 844})
         logs=[]; pg.on("console", lambda m: logs.append(m.text)); pg.on("pageerror", lambda e: logs.append("ERR "+str(e)))
         await pg.goto("http://localhost:8765/index.html?p=hz2"); await pg.wait_for_timeout(1500)

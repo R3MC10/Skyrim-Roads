@@ -71,7 +71,7 @@ async def run(b, style, errs):
 async def main():
     errs = []
     async with async_playwright() as p:
-        b = await p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-sandbox"])
+        b = await p.chromium.launch(executable_path=(__import__("os").environ.get("CHROME") or ("/usr/bin/google-chrome" if __import__("os").path.exists("/usr/bin/google-chrome") else None)), args=["--no-sandbox"])
         out = {}
         for st in ("ink",):
             r = await run(b, st, errs); out[st] = r; print(st, r)

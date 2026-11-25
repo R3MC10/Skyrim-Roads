@@ -92,7 +92,9 @@ const PARTY = (() => {
     vorstag: { r: "nord", eq: { weapon: "iron_war_axe", chest: "steel_armor", head: "steel_helmet" } },
     stenvar: { r: "nord", eq: { weapon: "iron_greatsword", chest: "steel_armor" } },
   };
-  function followerLook(id) { const L = FOLLOWER_LOOK[id] || { r: "nord", eq: { weapon: "iron_sword", chest: "iron_armor" } }; return { r: L.r, id: "f-" + id, eq: { ...L.eq }, gl: {} }; }
+  function followerLook(id) { const L = FOLLOWER_LOOK[id] || { r: "nord", eq: { weapon: "iron_sword", chest: "iron_armor" } }; const out = { r: L.r, id: "f-" + id, eq: { ...L.eq }, gl: {} };
+    if (typeof FOL2 !== "undefined" && FOL2.sexOf(id) === "f") out.sx = "f";   // the women draw as women (followers2.js knows who)
+    return out; }
   /* the company on the road with you: party members travelling near you, then your follower */
   function companions(s, party, cards, me, posOf, near) {
     const out = [];

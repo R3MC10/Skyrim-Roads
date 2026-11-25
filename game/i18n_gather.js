@@ -1,8 +1,24 @@
-/* i18n_gather.js: Polish for gathering (gather.js, harvest.js, harvestgame.js) and its patch notes. Loaded after i18n.js:
-   exact lines go into I18N.PL (the screen translator), lines with {markers} go to I18N.add for HARVEST.T. [OURS] */
+/* i18n_gather.js: Polish for gathering (gather.js, harvest.js, harvestgame.js) and its patch notes. Loaded before i18n.js:
+   exact lines and number patterns go in I18N_EXTRA (the screen translator); lines with {markers} (TPL) are handed to
+   I18N.add by harvest.js, for HARVEST.T. [OURS] */
+var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, pat: [] };
 const I18N_GATHER = (() => {
   const PL = {
     "Couldn't gather that. Please try again.": "Nie udało się tego zebrać. Spróbuj jeszcze raz.",
+    // ---- the Gathering card (gather.js)
+    Picked: "Zebrane", "snip the stem": "utnij łodygę", "dig it up": "wykop", "scrape it off": "zeskrob", "fragile: ease it out": "delikatny: wyciągnij ostrożnie",
+    "pick the ripe ones": "zrywaj dojrzałe", "lift it out gently": "wyjmij delikatnie", "pry the clam open": "podważ muszlę",
+    "Nothing grows there.": "Nic tu nie rośnie.", "Nothing ripe within reach.": "W zasięgu nie ma nic dojrzałego.",
+    "Nothing to forage in town. Head out into the wild.": "W mieście nie ma czego szukać. Wyjdź na dzikie tereny.",
+    "You can't forage here.": "Tu nie możesz szukać ziół.",
+    "You search the ground for a while but find nothing worth taking.": "Przez chwilę przeszukujesz ziemię, ale nie znajdujesz nic wartego zabrania.",
+    "You don't own a house here.": "Nie masz tu domu.", "All three beds are planted. Clear one first.": "Wszystkie trzy grządki są obsadzone. Najpierw opróżnij jedną.",
+    "That won't grow in a garden.": "To nie wyrośnie w ogródku.", "You don't have any to plant.": "Nie masz czego posadzić.", "That bed is empty.": "Ta grządka jest pusta.",
+    "Carry a wild ingredient (flowers, berries, mushrooms) to plant it.": "Miej przy sobie dziki składnik (kwiaty, jagody, grzyby), żeby go posadzić.",
+    "No plants spotted right here. Patches you pass on the road show on the map as leaves.": "Tu nie widać roślin. Kępy mijane w drodze pokazują się na mapie jako liście.",
+    "Search the ground for whatever grows here": "Przeszukaj ziemię, czy coś tu rośnie", "Auto-pick: On": "Samozbieranie: wł.", "Auto-pick: Off": "Samozbieranie: wył.",
+    "You'll pick ripe plants as you pass them.": "Będziesz zbierać dojrzałe rośliny, gdy je mijasz.", "You'll only pick plants when you choose to.": "Rośliny zbierasz tylko wtedy, gdy sam zechcesz.",
+    "Clear bed": "Opróżnij grządkę",
     // ---- the hand harvest (harvestgame.js)
     Snip: "Utnij", "Dig up": "Wykop", Scrape: "Zeskrob", "Ease out": "Wyciągnij ostrożnie", Pick: "Zerwij", Lift: "Podnieś", "Pry open": "Podważ",
     "Swipe across the stem at the glowing mark.": "Przeciągnij palcem przez łodygę w świecącym miejscu.",
@@ -94,10 +110,19 @@ const I18N_GATHER = (() => {
     "Quick Gather unlocked for {item}.": "Szybkie zbieranie odblokowane: {item}.",
     "Hand-picked {n} of {m}: then Quick Gather opens.": "Zebrane ręcznie {n} z {m}: potem otworzy się szybkie zbieranie.",
   };
-  // short words ("Done", "Stop") may already mean something elsewhere: those keep their old Polish
-  const fresh = {};
-  if (typeof I18N !== "undefined" && I18N.PL) for (const [k, v] of Object.entries(PL)) if (!(k in I18N.PL)) fresh[k] = v;
-  if (typeof I18N !== "undefined" && I18N.add) I18N.add(TPL, fresh);
-  else if (typeof I18N !== "undefined" && I18N.PL) Object.assign(I18N.PL, fresh);
+  /* the Gathering card and garden lines, which have numbers in them */
+  const PAT = [
+    [/^(\d+) paces away$/, (m) => `${m[1]} kroków stąd`],
+    [/^([\d.]+) wt each$/, (m) => `${m[1]} wagi za sztukę`],
+    [/^grows back in ~(\d+) in-game h$/, (m) => `odrośnie za ~${m[1]} h w grze`],
+    [/^Gather all \((\d+)\)$/, (m) => `Zbierz wszystko (${m[1]})`],
+    [/^Already picked\. It grows back in about (\d+) in-game hours\.$/, (m) => `Już zebrane. Odrośnie za około ${m[1]} h w grze.`],
+    [/^Garden beds \((\d+)\/(\d+)\): each harvest gives (\d+) of every planted ingredient\.$/, (m) => `Grządki (${m[1]}/${m[2]}): każdy zbiór daje ${m[3]} szt. każdego posadzonego składnika.`],
+    [/^You plant (.+) in the garden\. It comes up with every harvest\.$/, (m) => `Sadzisz w ogródku: ${m[1]}. Wyrośnie przy każdym zbiorze.`],
+    [/^You dig up the (.+) bed\.$/, (m) => `Przekopujesz grządkę: ${m[1]}.`],
+    [/^You harvest the garden: (.+)\.$/, (m) => `Zbierasz plony z ogródka: ${m[1]}.`],
+  ];
+  for (const [k, v] of Object.entries(PL)) if (!(k in I18N_EXTRA.words)) I18N_EXTRA.words[k] = v;
+  I18N_EXTRA.pat.push(...PAT);
   return { PL, TPL };
 })();
