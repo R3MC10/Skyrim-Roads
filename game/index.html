@@ -5465,6 +5465,44 @@ html:has(#tbf.fz),html:has(#tbf.fz) body{overflow:hidden;overscroll-behavior:non
 .f30pc .f30b{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .f30pc .f30b .btn{min-height:36px;padding:0 14px;margin:0}
 .f30pc .f30b .linkbtn{margin-left:auto;font-size:12.5px;opacity:.8}
+/* [rewards] big and milestone reward scenes (rewards.js): full screen, a light burst and rays drawn in CSS, one at a time */
+.modal.rw-scene{z-index:60;place-items:center;background:radial-gradient(70% 55% at 50% 42%,rgba(60,46,18,.55),rgba(0,0,0,.9) 70%)}
+.modal.rw-scene .sheet.rw-sheet{position:relative;overflow:hidden;width:min(440px,calc(100vw - 32px));max-height:calc(100vh - 32px);padding:34px 22px 22px;text-align:center;border:1px solid rgba(226,187,100,.45);box-shadow:0 0 0 1px rgba(0,0,0,.6),0 18px 60px rgba(0,0,0,.7),inset 0 0 40px rgba(226,187,100,.08);animation:rwin .5s cubic-bezier(.2,.9,.25,1.15)}
+.rw-sheet>*{position:relative}
+.rw-sheet>.rw-burst,.rw-sheet>.rw-rays{position:absolute;left:50%;top:70px;pointer-events:none}
+.rw-burst{width:320px;height:320px;margin:-160px 0 0 -160px;border-radius:50%;background:radial-gradient(circle,rgba(255,236,180,.55),rgba(226,187,100,.18) 35%,transparent 68%);animation:rwburst 1.4s ease-out both}
+.rw-rays{width:520px;height:520px;margin:-260px 0 0 -260px;border-radius:50%;background:repeating-conic-gradient(rgba(255,230,160,.10) 0 6deg,transparent 6deg 22deg);-webkit-mask:radial-gradient(circle,#000 18%,transparent 62%);mask:radial-gradient(circle,#000 18%,transparent 62%);animation:rwrays 14s linear infinite,rwfade .9s ease-out both}
+.rw-crest{width:58px;height:58px;display:block;margin:0 auto 6px;fill:rgba(243,210,122,.18);stroke:#f3d27a;stroke-width:2;stroke-linejoin:round;filter:drop-shadow(0 0 8px rgba(243,210,122,.6));animation:rwpop .6s .15s cubic-bezier(.2,.9,.3,1.4) both}
+.rw-crest circle{fill:none;stroke:rgba(243,210,122,.55);stroke-width:1.5}
+.rw-k{margin:0;font:600 13px/1.2 var(--sk-ui,Cinzel,Georgia,serif);letter-spacing:.32em;text-transform:uppercase;color:#e2bb64}
+.rw-sheet h2.rw-t{margin:6px 0 10px;font:600 26px/1.15 Cinzel,Georgia,serif;letter-spacing:.06em;text-transform:none;color:#fff3d6;text-shadow:0 0 18px rgba(226,187,100,.45)}
+.rw-l{margin:0 auto 10px;max-width:34ch;color:#e6dfcf;font-size:15px;line-height:1.45}
+.rw-more,.rw-perk,.rw-q{margin:4px 0;color:#bdb4a0;font-size:13px}
+.rw-perk{color:#e2cf9a}
+.rw-acts{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+.rw-acts .btn{width:100%;min-height:46px}
+.rw-acts .rw-go{box-shadow:0 0 0 1px rgba(243,210,122,.5),0 0 18px rgba(226,187,100,.35)}
+.rw-milestone .sheet.rw-sheet{border-color:rgba(243,210,122,.8);box-shadow:0 0 0 1px rgba(0,0,0,.6),0 18px 60px rgba(0,0,0,.7),0 0 40px rgba(226,187,100,.25),inset 0 0 50px rgba(226,187,100,.12)}
+.rw-milestone .rw-t{font-size:30px}
+.mo-const.rw-const{z-index:61}
+@keyframes rwin{from{opacity:0;transform:scale(.92) translateY(10px)}to{opacity:1;transform:none}}
+@keyframes rwburst{0%{opacity:0;transform:scale(.3)}35%{opacity:1}100%{opacity:.75;transform:scale(1)}}
+@keyframes rwrays{to{transform:rotate(360deg)}}
+@keyframes rwfade{from{opacity:0}to{opacity:1}}
+@keyframes rwpop{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:none}}
+/* the new button glows for a moment once you find it */
+.rw-shine{position:relative;animation:rwshine 1.4s ease-in-out 3}
+@keyframes rwshine{0%,100%{box-shadow:0 0 0 0 rgba(243,210,122,0)}50%{box-shadow:0 0 0 2px rgba(243,210,122,.85),0 0 22px rgba(226,187,100,.6)}}
+/* "Level 5 brings: …" under the XP bar, the LEVEL UP notice, the level-up pillars and the hero card */
+.tw-xp small.tw-next{display:block;font-size:11px;letter-spacing:.03em;color:#a99f88;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lvn-next{margin:6px 0 0;font:500 12px/1.3 var(--sk-ui,Georgia,serif);color:#e2cf9a;text-align:center}
+.lvk-next{margin:14px auto 0;max-width:46ch;color:#e2cf9a;font-size:13px;text-align:center}
+.rw-nextl{color:#c9b98e}
+/* item names on the reward line in their rarity colour (.q-<tier> above); "rare" and "epic" are ready for the coming rarity field */
+.rw-qn{font-weight:600}.rw-qn.q-rare{color:var(--q-superior)}.rw-qn.q-epic{color:var(--q-exquisite)}
+@media (prefers-reduced-motion:reduce){.rw-scene .rw-sheet,.rw-burst,.rw-rays,.rw-crest,.rw-shine{animation:none!important}.rw-rays{opacity:.6}}
+html.a11y-still :is(.rw-scene .rw-sheet,.rw-burst,.rw-rays,.rw-crest,.rw-shine),.rw-still :is(.rw-sheet,.rw-burst,.rw-rays,.rw-crest){animation:none!important}
+@media (min-width:900px){.modal.rw-scene .sheet.rw-sheet{width:520px;padding:44px 34px 28px}.rw-sheet h2.rw-t{font-size:32px}.rw-acts{flex-direction:row-reverse}.rw-acts .btn{flex:1}}
 /* [fightcam] the fight camera (fightcam.js): the ring under the foe and its stars follow it; Calm and Off: the screen never shakes */
 #tbf.c2 .c2ov .fzring,#tbf.c2 .c2stars,#tbf.c2 .c2flash.foe{translate:var(--fcdx,0px) var(--fcdy,0px)}
 #tbf.fcam-calm .c2shake .tbscene,#tbf.fcam-off .c2shake .tbscene,#tbf.fcam-calm .tbstage.hurt,#tbf.fcam-off .tbstage.hurt{animation:none!important}
@@ -5670,6 +5708,7 @@ html:has(#tbf.fz),html:has(#tbf.fz) body{overflow:hidden;overscroll-behavior:non
 <script src="dawnguard.js"></script>
 <script src="sides.js"></script>
 <script src="sidequest.js"></script>
+<script src="introquests.js"></script>
 <script src="cloaks.js"></script>
 <script src="dwemer.js"></script>
 <script src="blackreach.js"></script>
@@ -5970,6 +6009,7 @@ html:has(#tbf.fz),html:has(#tbf.fz) body{overflow:hidden;overscroll-behavior:non
 <script src="i18n_smooth.js"></script>
 <script src="i18n_partyfoeturns.js"></script>
 <script src="i18n_first30.js"></script>
+<script src="i18n_rewards.js"></script>
 <script src="i18n_dollrig2.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
@@ -5993,6 +6033,7 @@ html:has(#tbf.fz),html:has(#tbf.fz) body{overflow:hidden;overscroll-behavior:non
 <script src="skillup.js"></script>
 <script src="notify.js"></script>
 <script src="notices.js"></script>
+<script src="rewards.js"></script>
 <script src="nocover.js"></script>
 <script src="invites.js"></script>
 <script src="friendjoin.js"></script>

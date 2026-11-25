@@ -44,7 +44,7 @@ const TABMENU = (() => {
     const need = (S.level + 3) * 25, xp = Math.max(0, Math.round(S.charXp || 0));
     const w = G.carried(S), cap = G.capacity(S);
     return { level: S.level, xp, need, pct: Math.max(0, Math.min(100, Math.round(xp / need * 100))), gold: S.gold, w: Math.round(w), cap: Math.round(cap), over: w > cap,
-      perks: (typeof PERKS !== "undefined" ? PERKS.pointsLeft(S) : 0) + (S.pendingLevels || 0), ready: (S.pendingLevels || 0) > 0, task: task(S) };
+      perks: (typeof PERKS !== "undefined" ? PERKS.pointsLeft(S) : 0) + (S.pendingLevels || 0), ready: (S.pendingLevels || 0) > 0, task: task(S), next: typeof REWARDS !== "undefined" ? REWARDS.nextText(S) : "" };   // [rewards] "Level 5 brings: …"
   }
   function task(S) {
     if (S.dungeon) return { k: "dun", icon: "", text: `Inside ${S.dungeon.place}`, sub: "Tap to go back in", hot: !!S.dungeon.room?.enemy };
@@ -210,7 +210,7 @@ const TABMENU = (() => {
   function barHTML(b) {
     const t = b.task;
     return `<button class="tw-task ${t.hot ? "hot" : ""}" data-twa="task" data-k="${t.k}"><span class="tw-ti">${t.icon}</span><span class="tw-tt"><b>${esc(t.text)}</b><small>${esc(t.sub)}</small></span>${t.progress != null ? `<i class="tw-tp"><i style="width:${t.progress}%"></i></i>` : ""}</button>
-      <div class="tw-stats"><div class="tw-lv${b.ready ? " tw-lvgo" : ""}"><span class="tw-lvn num" aria-label="Level ${b.level}"><span>${b.level}</span></span><span class="tw-xp"><small>Level ${b.level}${b.ready ? ` <em class="tw-lvup">· Level up!</em>` : b.perks ? ` <em class="gold">· ${b.perks} to spend</em>` : ""}<span class="num">${b.xp}/${b.need}</span></small><i class="tw-xpb"><i style="width:${b.pct}%"></i></i></span></div>
+      <div class="tw-stats"><div class="tw-lv${b.ready ? " tw-lvgo" : ""}"><span class="tw-lvn num" aria-label="Level ${b.level}"><span>${b.level}</span></span><span class="tw-xp"><small>Level ${b.level}${b.ready ? ` <em class="tw-lvup">· Level up!</em>` : b.perks ? ` <em class="gold">· ${b.perks} to spend</em>` : ""}<span class="num">${b.xp}/${b.need}</span></small><i class="tw-xpb"><i style="width:${b.pct}%"></i></i>${b.next ? `<small class="tw-next">${esc(b.next)}</small>` : ""}</span></div>
       <div class="tw-st gold">${ico("gold")}<b class="num">${b.gold}</b></div><div class="tw-st ${b.over ? "over" : ""}">${ico("weight")}<b class="num">${b.w}/${b.cap}</b></div></div>`;
   }
   function hubHTML(S) {

@@ -966,8 +966,8 @@
     if (version !== rendered || Date.now() - lastPanelRender > 20000) renderPanel(false);
   }
 
-  /* music follows what you're doing; little sounds for gold and level-ups */
-  let lastGold = null, lastPending = null;
+  /* music follows what you're doing; little sounds for gold (level-ups: levelup.js and rewards.js) */
+  let lastGold = null;
   /* what you'd hear right now: the scene, the weather, the ground under your feet ([OURS] sound.js ambience) */
   function ambState(raid) {
     const pos = livePos(), T = typeof Terrain !== "undefined" ? Terrain : null;
@@ -992,8 +992,7 @@
     try { SOUND.ambience?.(ambState(raid)); } catch (e) { /* sound never breaks the game */ }
     SOUND.mood(S.dungeon ? (S.dungeon.room?.enemy ? "combat" : "dungeon") : S.trip?.status === "encounter" || (raid && S.location === raid.town && !S.trip) ? "combat" : G.isNight() ? "night" : "day");
     if (lastGold != null && S.gold !== lastGold) { SOUND.fx("coin"); if (typeof POLISH !== "undefined") POLISH.gold(S.gold - lastGold); }
-    if (lastPending != null && S.pendingLevels > lastPending && !(typeof LEVELUP !== "undefined" && LEVELUP.live)) { SOUND.fx("levelup", 0.3); if (typeof POLISH !== "undefined") POLISH.levelUp(S.level); }   // levelup.js has its own LEVEL UP moment
-    lastGold = S.gold; lastPending = S.pendingLevels;
+    lastGold = S.gold;
     if (lastDragons != null && (S.dragons || 0) > lastDragons) tally("dragons", (S.dragons || 0) - lastDragons);
     lastDragons = S.dragons || 0;
   }
@@ -3192,7 +3191,7 @@
     const fp = placesFound();
     const card = `<div class="panel m2-hero"><h2>${esc(S.name)}</h2><div class="m2-herogrid"><div class="herobox">${typeof AVATAR !== "undefined" ? AVATAR.hero(S, HEROART.figure(S, 160, 220), true) : HEROART.figure(S, 160, 220)}</div><div class="m2-herotxt">
       ${(S.titles || []).length ? `<p class="sub m2-titles">${S.titles.map(esc).join(" · ")}</p>` : ""}<p class="sub">Level ${S.level} ${esc(D.RACES[S.race].name)} · ${esc(D.RACES[S.race].desc)}</p><p class="sub"> Places discovered: <b>${fp.got}</b> of ${fp.all}${S.horse ? ` · Horse: ${esc(S.horse.name)}` : ""}</p>
-      <div class="bar" style="margin-top:8px"><i style="width:${pct(S.charXp, need)}%;background:var(--gold)"></i></div><p class="sub num">${Math.round(S.charXp)}/${need} toward level ${S.level + 1}</p>
+      <div class="bar" style="margin-top:8px"><i style="width:${pct(S.charXp, need)}%;background:var(--gold)"></i></div><p class="sub num">${Math.round(S.charXp)}/${need} toward level ${S.level + 1}</p>${typeof REWARDS !== "undefined" ? `<p class="sub rw-nextl">${esc(REWARDS.nextText(S))}</p>` : ""}
       <div class="grid2 m2-attrs"><div class="slot">Health<b class="num">${G.maxHealth(S)}</b></div><div class="slot">Magicka<b class="num">${G.maxMagicka(S)}</b></div><div class="slot">Stamina<b class="num">${G.maxStamina(S)}</b></div></div>
       <div class="m2-links"><button class="btn sm" data-act="tabgo" data-id="stars">Skills</button><button class="btn sm" data-act="tabgo" data-id="perks">Perks${pts > 0 ? ` · ${pts}` : ""}</button><button class="btn sm" data-act="tabgo" data-id="stats">Stats</button></div></div></div>${amN?.best ? ammoNote() : ""}</div>`;
     const start = `<details class="panel m2-wipe"><summary class="sub">Start over</summary><p class="sub">Deletes this character for good.</p><button class="btn danger" data-act="wipe">Delete ${esc(S.name)}</button></details>`;
