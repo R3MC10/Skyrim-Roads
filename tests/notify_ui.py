@@ -1,5 +1,5 @@
 """One notification manager (notify.js), on a phone (390x844) and a PC (1920x1080).
-  python -m http.server 8765 --directory ../game &   then   python notify_ui.py 8765 [outdir]   — prints RESULT OK.
+  node serve.js 8765 &   then   python notify_ui.py 8765 [outdir]   — prints RESULT OK.
 Checks: a burst of 10 loot lines never puts more than 2 notices on screen and the same item three times reads "x3";
 "First Steps" and "Coin Hoarder" earned together come as one banner; with item details open a level-up banner waits
 and loot goes to the history only, then the banner shows once the details close; the history opens from the scroll

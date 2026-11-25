@@ -1,6 +1,6 @@
 """A living world (rumours.js) on a phone: inn crowd + asking for rumours, knocking at a closed shop,
 the lead card at the spot, the Journal page and the map mark, in both art styles.
-python rumours_ui.py <port> [out_dir]   (serve game/ first: python -m http.server <port> --directory game)"""
+python rumours_ui.py <port> [out_dir]   (serve game/ first: node tests/serve.js <port>)"""
 import asyncio, os, sys
 from playwright.async_api import async_playwright
 PORT = sys.argv[1] if len(sys.argv) > 1 else "9230"

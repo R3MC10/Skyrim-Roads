@@ -1,6 +1,6 @@
 # Fishing and hunting mini-games on screen: cast, bite, reel (tension meter); stalk, draw, shoot, skin; the road "Stalk and shoot"
 # choice. Phone and PC widths, ink and pixel art. Screenshots: fh_*.png next to this file.
-#   python3 -m http.server 8765 --directory ../game &   then   python3 fishhunt_ui.py 8765
+#   node serve.js 8765 &   then   python3 fishhunt_ui.py 8765
 # Chrome: CHROME=/path/to/chrome (default /usr/bin/google-chrome if it exists, else Playwright's own Chromium).
 import asyncio, os, sys
 from playwright.async_api import async_playwright

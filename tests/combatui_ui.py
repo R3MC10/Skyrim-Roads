@@ -1,5 +1,5 @@
 """Fight controls (fightctl.js): the action bar on the turn-based fight screen. Usage: python combatui_ui.py PORT -> RESULT OK
-Serve game/ first:  python -m http.server PORT --directory ../game
+Serve game/ first:  node serve.js PORT
 At 390x844 (phone, touch) and 1920x1080 (PC, mouse + keys), in both art styles:
 - big drawn-icon buttons, AP pips on every move, the AP counter, nothing wider than the screen
 - a move spends AP (tap on the phone, key 1 on the PC)

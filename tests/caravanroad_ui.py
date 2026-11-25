@@ -1,5 +1,5 @@
 # Meeting a caravan while travelling (caravanroad.js): the map ring, tapping the wagons, the meeting, trading, guarding.
-# Serve game/ first:  python3 -m http.server 8765 --directory ../game   then   python3 caravanroad_ui.py 8765
+# Serve game/ first:  node serve.js 8765   then   python3 caravanroad_ui.py 8765
 import asyncio, os, sys
 from playwright.async_api import async_playwright
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"

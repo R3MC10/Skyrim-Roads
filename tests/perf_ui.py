@@ -8,7 +8,7 @@ Options (environment): PERF_RATE (CPU slowdown, 4), PERF_SECS, PERF_GPU=1 (insta
 than software drawing), PERF_PROFILE=1 (top functions per scene), PERF_TRACE=1 (main-thread time by browser event).
   - JS heap after each scene and after a forced GC.
 Numbers wobble ~10% run to run; compare runs on the same machine. Screenshots of each scene go to SHOTS_DIR when given
-(for before/after comparisons). Needs a static server on PORT serving game/ (python -m http.server PORT --directory ../game)."""
+(for before/after comparisons). Needs a static server on PORT serving game/ (node serve.js PORT)."""
 import asyncio, sys, os, json
 from playwright.async_api import async_playwright
 

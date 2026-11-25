@@ -34,7 +34,7 @@ UNHIDE = """() => { for (const e of document.querySelectorAll('[data-dbg-hid]'))
 OPEN = """() => { const d = document.querySelector('#side details[data-m2f=bargains]'); if (!d) return false; d.open = true; d.scrollIntoView({ block: 'start' }); return true; }"""
 
 async def main():
-    srv = subprocess.Popen([sys.executable, "-m", "http.server", str(PORT), "--bind", "127.0.0.1", "--directory", os.path.join(ROOT, "game")], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    srv = subprocess.Popen(["node", os.path.join(ROOT, "tests", "serve.js"), str(PORT), os.path.join(ROOT, "game")], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)   # node: python's server refuses connections under load
     time.sleep(1.0)
     errs, bad, shots = [], [], []
     def check(ok, what):

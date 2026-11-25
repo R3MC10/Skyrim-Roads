@@ -1,7 +1,7 @@
 """Inventory helpers on phones (invqol.js): Keep, Drop, sort chips, ▲/▼ arrows, Sell all junk with its list and total,
 the confirm before selling something valuable, Buy back, and the too-heavy warning. Both art styles, 360 and 412 wide,
 normal and Biggest text.
-Run:  python -m http.server 9450 --directory game   then   python tests/inventory_ui.py 9450 [outdir]   — prints "inventory_ui: all good"."""
+Run:  node tests/serve.js 9450   then   python tests/inventory_ui.py 9450 [outdir]   — prints "inventory_ui: all good"."""
 import asyncio, os, sys, tempfile
 from playwright.async_api import async_playwright
 
@@ -102,7 +102,7 @@ async def main():
                 await pg.evaluate("document.querySelectorAll('#modal,#sky').forEach(m=>m.remove())")
                 await pg.evaluate("window.__ui?.closeMenu?.()")
                 await pg.evaluate("__ui.openMenu('items')"); await pg.wait_for_timeout(400)
-                await pg.evaluate("document.querySelectorAll('.sky-cat')[1]?.click()"); await pg.wait_for_timeout(300)
+                await pg.evaluate("document.querySelector('#sky .sky-cat[data-id=all]')?.click()"); await pg.wait_for_timeout(300)   # the shop's own category row (.trade-cats) can still be on the page
                 eid = await pg.evaluate("String(window.__dbg.save().inv.find(r=>r.item==='gem_emerald').id)")
                 await pg.click(f"#sky [data-act=skysel][data-id='{eid}']"); await pg.wait_for_timeout(300)
                 await pg.click("#sky [data-act=iqkeep]"); await pg.wait_for_timeout(300)
@@ -124,7 +124,7 @@ async def main():
                     await pg.evaluate("document.querySelector('.iq-shop')?.scrollIntoView({block:'start'})"); await shot(f"shop_text{size}")
                     if has_pack:
                         await pg.evaluate("__ui.openMenu('items')"); await pg.wait_for_timeout(300)
-                        await pg.evaluate("document.querySelectorAll('.sky-cat')[1]?.click()"); await pg.wait_for_timeout(1200)
+                        await pg.evaluate("document.querySelector('#sky .sky-cat[data-id=all]')?.click()"); await pg.wait_for_timeout(1200)
                         await shot(f"menu_text{size}")
                         await pg.evaluate("document.querySelectorAll('#modal,#sky').forEach(m=>m.remove())")
                 await pg.evaluate("typeof ACCESS!=='undefined' && ACCESS.pref('a11yText','0')")

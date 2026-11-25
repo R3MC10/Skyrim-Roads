@@ -8,6 +8,13 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "In Polish, the \"stage done\" line of the vampire war quests is fully translated again.":
       "Po polsku linijka o ukończonym etapie w zadaniach wojny z wampirami znowu jest w całości przetłumaczona.",
     "The Coming next list is up to date.": "Lista „Wkrótce” jest aktualna.",
+    "Coming next, refreshed": "Odświeżona lista „Wkrótce”",
+    "The Coming next list in Patch notes is up to date again.":
+      "Lista „Wkrótce” w informacjach o aktualizacjach znowu jest aktualna.",
+    "On a PC, tooltips near the bottom of the screen (like the one on your health bar) no longer slip off the edge when the interface is scaled up.":
+      "Na PC dymki przy dolnej krawędzi ekranu (np. przy pasku zdrowia) nie uciekają już poza ekran, gdy interfejs jest powiększony.",
+    "On a PC, resting the mouse on your gold or level in the bottom bar shows the full details, like on a phone.":
+      "Na PC najechanie myszą na złoto lub poziom w dolnym pasku pokazuje pełne szczegóły, tak jak na telefonie.",
     "Coming next, tidied": "Porządki na liście „Wkrótce”",
     "Picking herbs by hand is out now, so it left the Coming next list.":
       "Ręczne zbieranie ziół już jest w grze, więc zniknęło z listy „Wkrótce”.",

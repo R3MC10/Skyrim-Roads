@@ -1,5 +1,5 @@
 """Mounted combat (mountfight.js) on the turn-by-turn fight screen. Usage: py mountfight_ui.py PORT -> RESULT OK
-Serve game/ first:  py -m http.server PORT --directory ../game
+Serve game/ first:  node serve.js PORT
 At 390x844 (phone, touch) and 1920x1080 (PC), in the ink art style:
 - riding into a road fight: you start in the saddle, the rider sits on the horse in the fight picture, your horse's
   health bar is under yours, Dismount is offered with its AP

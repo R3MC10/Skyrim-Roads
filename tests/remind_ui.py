@@ -1,6 +1,6 @@
 """Reminders screen test (remind.js): the Today card, the number badges and the Go buttons, on two phone sizes,
 both art styles and the biggest text size.
-Run:  python -m http.server 9550 --directory game   then   python tests/remind_ui.py 9550 [outdir]
+Run:  node tests/serve.js 9550   then   python tests/remind_ui.py 9550 [outdir]
 Screenshots land in outdir (default: remind_shots in the temp folder). Fails on page errors, sideways scrolling,
 things sticking out of the screen, a missing card/badge, or a Go button that goes to the wrong place."""
 import asyncio, os, sys, tempfile

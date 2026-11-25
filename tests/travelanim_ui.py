@@ -6,7 +6,7 @@ Plays the live strip (you on a horse with Jenassa on foot, you on foot, you ridi
   - in the live strip everyone in the front row stands on the same feet line, the horses walk when anyone is on foot,
     and name tags sit above the heads without touching each other;
   - Reduce motion: the strip doesn't move.
-Run: py -m http.server 8790 --directory game  →  py tests/travelanim_ui.py 8790   (pictures in tests/out_travelanim)"""
+Run: node tests/serve.js 8790  →  py tests/travelanim_ui.py 8790   (pictures in tests/out_travelanim)"""
 import asyncio, base64, io, os, sys
 from playwright.async_api import async_playwright
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8790"
