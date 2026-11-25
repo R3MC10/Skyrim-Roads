@@ -736,6 +736,7 @@
         choose: (kind, key) => (kind === "way" ? dungeonRoom(key) : dunChoice(key)) });
       Store.watch("runs", () => pvUI.onRuns());
     }
+    if (typeof DUNEVENTS !== "undefined") DUNEVENTS.mount({ mates: () => others });   // mystery rooms: the party's best hero at a skill rolls (dunevents.js)
     if (typeof DGAMES !== "undefined") DGAMES.mount({ S: () => S, party: () => party, Store });   // watch the party leader's dungeon mini-games live
     if (typeof LIVECURSOR !== "undefined") LIVECURSOR.mount({ Store, uid: () => S.id, name: () => S.name });   // the player's pointer while others watch (livecursor.js)
     if (typeof PTRAPS !== "undefined" && coopUI) PTRAPS.mount({ S: () => S, runs: () => coopUI.runs, Store, toast, persist, act: (c) => dungeonAct(c) });   // the whole party plays each trap (partytraps.js)
@@ -1522,7 +1523,7 @@
     else if (r && r.type === "camp" && typeof DEEPDELVE !== "undefined") main = DEEPDELVE.campHTML(S);   // deep expedition: Extract / Rest / Descend
     else if (r) {
       const e = r.enemy;
-      main = `<div class="card ${e ? "foe" : ""} ${r.type === "rest" ? "rest" : ""}">${typeof DUNROOMS !== "undefined" ? DUNROOMS.room(r.type, d.theme, e) : PLACEART.room(r.type)}<h3>${DUNGEONS.ICON[r.type]} ${e ? esc(e.name) : DUNGEONS.LABEL[r.type]}</h3><p>${esc(r.text)}</p>
+      main = `<div class="card ${e ? "foe" : ""} ${r.type === "rest" ? "rest" : ""}">${typeof DUNROOMS !== "undefined" ? DUNROOMS.room(r.type, d.theme, e) : PLACEART.room(r.type)}<h3>${DUNGEONS.ICON[r.type]} ${e ? esc(e.name) : r.title ? esc(r.title) : DUNGEONS.LABEL[r.type]}</h3><p>${esc(r.text)}</p>
         ${e ? `<div class="vital"><small><span>${esc(e.name)}</span><span class="num">${e.hp}/${e.health} · hits for ~${Math.round(e.damage)}</span></small><div class="bar"><i style="width:100%;background:var(--ember)"></i></div></div>` : ""}
         <div class="evc">${DUNGEONS.roomChoices(S).map(([c, label]) => `<button class="btn ${["fight", "pick", "rest", "read", "pray", "open", "loot", "burn", "dash"].includes(c) || c.startsWith("set:") ? (e ? "danger" : "pri") : ""}" data-act="dact" data-c="${esc(c)}">${esc(label)}</button>`).join("")}</div>
         ${e ? `<p class="sub" style="margin-bottom:0">${typeof TB !== "undefined" && TB.enabled() ? `You play the fight turn by turn` : `Fighting uses ${aiOn() ? `<b>Smart AI</b> (${esc(S.loadout)} gear)` : `your <b>${esc(S.loadout)}</b> tactics`}`}.</p>` : ""}</div>`;
@@ -3368,7 +3369,7 @@
     else if (["general", "blacksmith", "wizard", "fence"].includes(townShop)) {
       note = `${G.shopsOpen() ? "Shops are open." : open ? "Night prices." : `Shops are closed for the night. They open at 08:00 (${esc(G.clockText())}).`} At Mercantile ${G.skill(S, "Mercantile")} you buy at about ${(fac / G.haggle(S)).toFixed(2)}× value.${townShop === "fence" ? " The fence buys stolen goods." : ""}`;
       body = barterHTML(townShop, open, wanted, shopRow);
-      if (townShop === "wizard" && l === "Whiterun" && !S.thaneWhiterun) body = `<div class="item">${NPCART.portrait(NPCART.who("Whiterun", "wizard"), 36)}<div class="t">Farengar, court wizard<span>Wants the Dragonstone from Bleak Falls Barrow. The Jarl rewards whoever brings it.</span></div><button class="btn sm pri" data-act="dragonstone" ${TOWNS.canDeliverDragonstone(S) ? "" : "disabled"}>Give it</button></div>` + body;   // players look for Farengar here, not under hirelings
+      if (townShop === "wizard" && l === "Whiterun" && !S.thaneWhiterun) body = `<div class="item">${NPCART.portrait(NPCART.who("Whiterun", "wizard"), 44)}<div class="t">Farengar, court wizard<span>Wants the Dragonstone from Bleak Falls Barrow. The Jarl rewards whoever brings it.</span></div><button class="btn sm pri" data-act="dragonstone" ${TOWNS.canDeliverDragonstone(S) ? "" : "disabled"}>Give it</button></div>` + body;   // players look for Farengar here, not under hirelings
     } else if (townShop === "inn") {
       note = "Sleep to heal fully and become Rested (skills improve 5% faster for 40 minutes; your own bed gives 10%). Buy a round and the locals talk." + (FEST.freeInn() ? "  New Life Festival: rooms are free!" : "");
       body = (S.vampire ? `<div class="item"><div class="t"> Feed on a sleeping traveller<span>Resets your hunger. Someone might wake up (bounty).</span></div><button class="btn sm danger" data-act="vfeed">Feed</button></div>` : "") + (FEST.freeInn() ? `<div class="item on"><div class="t"> The innkeeper's New Life gift<span>Once a day: a hot meal and a little gold</span></div><button class="btn sm pri" data-act="festgift">Take it</button></div>` : "") + `<div class="item"><div class="t">Rent a room<span>${G.rested(S) ? "You're already rested" : "Full health and Rested"}</span></div><span class="num gold">${TOWNS.roomPrice(S)}</span><button class="btn sm pri" data-act="inn" data-c="room" ${wanted ? "disabled" : ""}>Sleep</button></div>
@@ -3379,7 +3380,7 @@
       const n = TOWNS.trainedThisLevel(S);
       note = `Skyrim rules: 5 sessions per level (${5 - n} left), and trainers stop at 50 (common), 75 (expert) or 90 (master).`;
       body = TOWNS.TRAINERS[l].map(([who, sk, lvl]) => { const c = TOWNS.trainCost(S, sk), cur = S.skills[sk].lvl, ok = cur < TOWNS.CAP[lvl] && n < 5 && S.gold >= c && !wanted;
-        return `<div class="item">${NPCART.trainer(who, sk, 36)}<div class="t">${esc(who)}<span>${esc(sk)} ${cur} → ${cur + 1} · ${lvl} trainer (up to ${TOWNS.CAP[lvl]})</span></div><span class="num gold">${c}</span><button class="btn sm" data-act="train" data-id="${esc(who)}" ${ok ? "" : "disabled"}>Train</button></div>`; }).join("");
+        return `<div class="item">${NPCART.trainer(who, sk, 44)}<div class="t">${esc(who)}<span>${esc(sk)} ${cur} → ${cur + 1} · ${lvl} trainer (up to ${TOWNS.CAP[lvl]})</span></div><span class="num gold">${c}</span><button class="btn sm" data-act="train" data-id="${esc(who)}" ${ok ? "" : "disabled"}>Train</button></div>`; }).join("");
     } else if (townShop === "alchemy") {
       const ings = S.inv.filter((r) => D.ITEMS[r.item]?.slot === "ingredient");
       alchSel = alchSel.filter((id) => ings.some((r) => r.id === id));
@@ -3530,7 +3531,7 @@
         return `<div class="item"><div class="t">${esc(n)}<span>about ${fmtMin(mins)}</span></div><span class="num gold">${price}</span><button class="btn sm pri" data-act="carriage" data-id="${esc(n)}" ${S.gold >= price && !wanted ? "" : "disabled"}>Ride</button></div>`; }).join("");
     } else if (townShop === "hire") {
       note = "One follower at a time. They fight beside you, carry 100 for you and heal between fights. Badly hurt, they go down and get back up after the fight; they never die. Hirelings cost 500 gold.";
-      body = (l === "Whiterun" ? `<div class="item">${NPCART.portrait(NPCART.who("Whiterun", "wizard"), 36)}<div class="t">Farengar, court wizard<span>${S.thaneWhiterun ? "Thanks you again for the Dragonstone." : "Wants the Dragonstone from Bleak Falls Barrow. The Jarl rewards whoever brings it."}</span></div>${S.thaneWhiterun ? "" : `<button class="btn sm pri" data-act="dragonstone" ${TOWNS.canDeliverDragonstone(S) ? "" : "disabled"}>Give it</button>`}</div>` : "")
+      body = (l === "Whiterun" ? `<div class="item">${NPCART.portrait(NPCART.who("Whiterun", "wizard"), 44)}<div class="t">Farengar, court wizard<span>${S.thaneWhiterun ? "Thanks you again for the Dragonstone." : "Wants the Dragonstone from Bleak Falls Barrow. The Jarl rewards whoever brings it."}</span></div>${S.thaneWhiterun ? "" : `<button class="btn sm pri" data-act="dragonstone" ${TOWNS.canDeliverDragonstone(S) ? "" : "disabled"}>Give it</button>`}</div>` : "")
         + TOWNS.followersHere(S).map(([id, [name, , cost, hp, dmg, desc]]) => `<div class="item">${NPCART.follower(id, 36)}<div class="t">${esc(name)}<span>${esc(desc)} · ${TOWNS.followerMax(S, id)} health · hits for ~${Math.round(dmg * (1 + 0.05 * (S.level - 1)))}</span></div><span class="num gold">${cost || "free"}</span><button class="btn sm pri" data-act="hire" data-id="${id}" ${S.follower || S.gold < cost || wanted || (id === "lydia" && !S.thaneWhiterun) ? "disabled" : ""}>${S.follower?.id === id ? "With you" : "Hire"}</button></div>`).join("");
     } else if (townShop === "streets") {
       const b = TOWNS.bounty(S, hold);

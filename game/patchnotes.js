@@ -3,12 +3,24 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b268-stations", build: 268, date: "25 Nov 2026", title: "Places open on the work", items: [
+    { id: "b270-stations", build: 270, date: "25 Nov 2026", title: "Places open on the work", items: [
       "Opening the Forge, a shop, the inn or any other place in town now shows its tabs and list right away: the town news folds into one \"Town news\" row you can open, and the how-it-works note sits under the list.",
       "The \"New to the game?\" card only shows on the map and the town's board, not inside a place.",
       "Each place's painting is a little shorter on phones and the person who runs it takes one compact line.",
       "Hold status says in a word how each number is doing (Food 43 short, Security 66 safe), coloured green, gold or red.",
       "In the Company tab, the banner shrinks to a name strip when your painted longhouse is shown right below it.",
+    ] },
+    { id: "b269-mysteryrooms", build: 269, date: "25 Nov 2026", title: "Mystery rooms with real choices", items: [
+      "Unknown rooms in dungeons can now hold six new things: a sealed passage, a collapsed tunnel, a wounded traveller, a patrol (draugr in barrows), a cursed offering and an unstable rope bridge.",
+      "Each choice shows the skill it uses and your chance, like \"Lockpicking · 62%\", and what it can bring: a shortcut past the next rooms (never past the boss), gold and loot, a blessing for the rest of the dungeon, or an ambush where the foe is staggered and you move first.",
+      "Failing never leaves you stuck: you lose some health, the next foe hears you coming, or you end up in a fight on the way round. A curse fades when you leave.",
+      "In a party the whole party votes, and the best of you at that skill makes the attempt. Everyone sees how it went.",
+      "Patient Shadow (Sneak) now also makes these checks 10% easier.",
+    ] },
+    { id: "b268-npcportraits", build: 268, date: "25 Nov 2026", title: "Painted faces for the people you meet", items: [
+      "The smiths, innkeepers, court wizards and merchants of Whiterun, Riverwood, Solitude, Windhelm and Riften now have painted portraits, and so do four Jarls, Whiterun's steward and the Greybeard who greets you.",
+      "Guards, and Nord innkeepers and merchants who don't have their own painting yet, get a painted face too. Guards keep their hold's colours around the picture.",
+      "The face next to who you're talking to is bigger on a PC, and trainers' faces are a little bigger in their list.",
     ] },
     { id: "b267-itemdetail", build: 267, date: "25 Nov 2026", title: "Item details beside the list", items: [
       "On a PC, resting the mouse on an item in your pack shows its details in the right-hand panel instead of a box over the list. Click an item to keep it there; press Esc to let go.",

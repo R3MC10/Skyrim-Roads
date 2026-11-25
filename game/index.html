@@ -4722,7 +4722,7 @@ body.nf-p0 #pbanners,body.nf-p0 #skillup,body.nf-p0 #lvln,body.nf-p0 #hudlog{vis
 .au-in img.art.scene.sec{max-height:22vh;object-fit:cover;margin:6px 0 4px}
 @media (min-width:900px){.au-in img.art.scene.sec{max-height:150px}}
 .au-in .npctalk{gap:8px;margin:4px 0 6px;padding:5px 6px}
-.au-in .npctalk .npcport{width:40px!important;height:40px!important;flex:none;object-fit:cover}
+.au-in .npctalk .npcport{width:48px!important;height:48px!important;flex:none;object-fit:cover}
 .au-in .npctalk .npcport img{width:100%;height:100%;object-fit:cover}
 .au-in .npct{flex:1;min-width:0}
 .au-in .npct b{display:inline;font-size:13px;letter-spacing:.12em}
@@ -4734,6 +4734,14 @@ body.nf-p0 #pbanners,body.nf-p0 #skillup,body.nf-p0 #lvln,body.nf-p0 #hudlog{vis
 /* the Company banner as a name strip when the growing hall is painted right below it */
 .lng-banner.lng-strip{min-height:0;background:linear-gradient(90deg,rgba(40,30,16,.9),rgba(15,12,9,.85))}
 .lng-banner.lng-strip .lng-bt{position:static;background:none;padding:8px 12px}
+/* [npcportraits] painted NPC portraits (npcart.js): a slot the size of the drawing; a dark rounded panel like the race busts once the painting loads; guards get their hold's colour as the frame */
+.npcslot{display:inline-flex;flex:none;width:var(--nps,64px);height:var(--nps,64px);border-radius:6px;overflow:hidden;box-sizing:border-box;vertical-align:middle}
+.npcslot>img{display:block;width:100%;height:100%;max-width:none;border-radius:0}
+.npcslot.ok{background:radial-gradient(ellipse at 50% 38%,#353a43 0%,#1d2027 58%,#121418 100%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06),0 2px 6px rgba(0,0,0,.4)}
+.npcslot.ok img.npcimg{object-fit:cover;object-position:50% 20%;border:0;box-shadow:none}
+.npcslot.npcguard{border:2px solid var(--npch,#8a5a34)}
+.npctalk .npcport{width:64px;height:64px}
+@media (min-width:900px){.npctalk .npcport{width:96px;height:96px}}
 /* [itemdetail] itemcmp.js: an item against what you wear (Items side panel and the tooltip / phone sheet) */
 .ic-cmp{margin:8px 0 4px;padding:6px 0 4px;border-top:1px solid rgba(236,230,214,.12);font-size:.94em}
 .ic-cmp .ic-h{margin:0 0 3px;color:#a49d8c}.ic-cmp .ic-h b{color:#f4ecd8;font-weight:600}
@@ -4792,6 +4800,7 @@ body.nf-p0 #pbanners,body.nf-p0 #skillup,body.nf-p0 #lvln,body.nf-p0 #hudlog{vis
 <script src="events.js"></script>
 <script src="dunlines.js"></script>
 <script src="dungeons.js"></script>
+<script src="dunevents.js"></script>
 <script src="towns.js"></script>
 <script src="wevents.js"></script>
 <script src="weatherfx.js"></script>
@@ -5037,7 +5046,7 @@ body.nf-p0 #pbanners,body.nf-p0 #skillup,body.nf-p0 #lvln,body.nf-p0 #hudlog{vis
 <script src="i18n_balfear.js"></script>
 <script src="i18n_combat2.js"></script>
 <script src="i18n_fightdeclutter.js"></script>
-<script src="i18n_busts.js"></script>
+<script src="i18n_busts.js"></script><script src="i18n_npcportraits.js"></script>
 <script src="i18n_fightset.js"></script>
 <script src="i18n_stacks.js"></script>
 <script src="i18n_fighttips.js"></script>
@@ -5071,6 +5080,7 @@ body.nf-p0 #pbanners,body.nf-p0 #skillup,body.nf-p0 #lvln,body.nf-p0 #hudlog{vis
 <script src="i18n_holds.js"></script>
 <script src="i18n_partyvote.js"></script>
 <script src="i18n_deepdelve.js"></script>
+<script src="i18n_dunevents.js"></script>
 <script src="i18n_netsync.js"></script>
 <script src="i18n_pcmap.js"></script>
 <script src="i18n_eventart.js"></script>

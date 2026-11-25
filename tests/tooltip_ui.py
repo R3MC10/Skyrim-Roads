@@ -184,8 +184,14 @@ async def phone(b, style, errs):
         has_stars = await pg.evaluate("() => { try { window.__ui.go && window.__ui.go('hero'); } catch (e) {} return !!document.querySelector('[data-sk-perk], [data-act=perk]'); }")
     await pg.wait_for_timeout(400)
     sel = "[data-sk-perk]" if await pg.query_selector("[data-sk-perk]") else "[data-act=perk]"
-    if await pg.query_selector(sel): await hold(pg, cdp, sel, "perk", style, "perk")
-    else: print(f"skip {style} perk hold (no perk on screen)")
+    if await pg.query_selector(sel):
+        # since b247 the stars on a phone have no floating box: tapping a star shows it in the details panel under the sky
+        ok(not await pg.evaluate("!!document.querySelector('g[data-sk-perk][data-tip-k]')"), f"{style} phone: stars carry no floating tooltip")
+        await pg.evaluate("document.querySelector('g[data-sk-perk]')?.scrollIntoView({block:'center'})"); await pg.wait_for_timeout(300)
+        await tap(pg, cdp, "g[data-sk-perk]"); await pg.wait_for_timeout(500)
+        ok(await pg.evaluate("!!document.querySelector('g[data-sk-perk].sel, .skflash')"), f"{style} phone: tapping a star shows it in the panel")
+        bx = await pg.evaluate(BOX); ok(bx is None or bx["text"] == "" or "tt-sheet" in (await pg.evaluate("document.getElementById('tip')?.className || ''")), f"{style} phone: a star tap opens no floating box")
+    else: print(f"skip {style} perk (no perk on screen)")
     # a finger that slides is a scroll, not a hold
     bb = await (await pg.query_selector("#goldv")).bounding_box()
     await cdp.send("Input.dispatchTouchEvent", {"type": "touchStart", "touchPoints": [{"x": bb["x"] + 5, "y": bb["y"] + 5, "id": 3}]})
