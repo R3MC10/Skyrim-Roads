@@ -21,6 +21,7 @@ ok(K("\\uE130 Achievement: \\uE144 First Steps") === "ach" && N.classify(" Achie
 ok(K("Not enough gold.") === "info" && K("You can't carry more.") === "info", "errors show at once");
 ok(K("\\uE100 Main quest: “Bleak Falls Barrow” done!") === "questdone", "quest done");
 ok(N.bannerKind("level", "Level up") === "level" && N.bannerKind("quest", "Quest completed") === "questdone" && N.bannerKind("quest", "Quest started") === "queststart" && N.bannerKind("quest", "World event") === "event", "banner kinds");
+ok(N.bannerKind("level", "Promoted: Stormcloaks") === "promoted" && N.RULE.promoted[0] === 1, "a side promotion is its own P1 notice");
 ok(N.RULE.level[0] === 1 && N.RULE.level[1] === 3500 && N.RULE.skill[1] === 2500 && N.RULE.loot[1] === 2000 && N.RULE.vote[0] === 0, "priorities and times");
 
 // 2. merges

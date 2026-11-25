@@ -93,6 +93,16 @@ async def run(b, w, h):
         check(False, "item details opened")
     await pg.wait_for_timeout(3800)
 
+    # 3b. [notify-2] a side's promotion banner shows (skillup.js used to swallow every "level" banner)
+    await pg.evaluate("()=>POLISH.banner('level','Promoted: Stormcloaks','Ice-Veins')")
+    ok = False
+    for _ in range(25):
+        await pg.wait_for_timeout(100)
+        if any("Ice-Veins" in t for t in await pg.evaluate(BANS)): ok = True; break
+    check(ok, "a side promotion banner shows")
+    check(await pg.evaluate("NOTIFY.history.some(h=>h.kind==='promoted' && h.text==='Ice-Veins')"), "the promotion is in the history")
+    await pg.wait_for_timeout(3800)
+
     # 4. the history
     btn = await pg.query_selector("#nfhbtn")
     vis = btn and await btn.is_visible()

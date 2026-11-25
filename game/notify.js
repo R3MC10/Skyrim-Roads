@@ -19,7 +19,7 @@ const NOTIFY = (() => {
   // kind: [priority, ms on screen, history filter]
   const RULE = {
     vote: [0, 0, "party"], disconnect: [0, 0, "party"],
-    level: [1, 3500, "rewards"], questdone: [1, 3500, "quests"], trophy: [1, 3500, "rewards"],
+    level: [1, 3500, "rewards"], promoted: [1, 3500, "rewards"], questdone: [1, 3500, "quests"], trophy: [1, 3500, "rewards"],
     skill: [2, 2500, "rewards"], ach: [2, 2500, "rewards"], queststart: [2, 2500, "quests"], objective: [2, 2500, "quests"],
     event: [2, 2500, "world"], place: [2, 2500, "world"], party: [2, 2500, "party"],
     loot: [3, 2000, "rewards"], gold: [3, 2000, "rewards"], weather: [3, 2000, "world"],
@@ -45,7 +45,7 @@ const NOTIFY = (() => {
   /* a polish.js banner (kind, small title) → our kind */
   function bannerKind(kind, title) {
     const t = String(title || "");
-    if (kind === "level") return "level";
+    if (kind === "level") return /^Promoted/i.test(t) ? "promoted" : "level";   // a side rank-up: P1, drawn by polish.js
     if (kind === "skill") return "skill";
     if (kind === "ach") return "ach";
     if (kind === "place") return "place";
