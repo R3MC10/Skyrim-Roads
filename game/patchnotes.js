@@ -3,6 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b229-riding", build: 229, date: "25 Nov 2026", title: "Better riding", items: [
+      "You can dual cast from the saddle now. It costs a fifth more magicka up there; the new Destruction perk Saddle Caster removes that and adds a little power.",
+      "In a fight, getting on your horse takes two of your moves (one with Steady Steed) and getting off takes one. You see yourself climb up or slide down, and your horse waits nearby while you fight on foot.",
+      "Riders have both legs now: the near leg over the horse's side with the foot in the stirrup, the far leg behind it. In fights, on the map, for every coat.",
+      "The rider moves with the horse instead of jerking on top of it.",
+      "The map has a ride button next to zoom: tap it to get on or off. You see the horse walk up and you climb into the saddle, or slide down. On foot your horse walks behind you.",
+      "Horses still never die: a knocked-down horse throws you off and gets back up later.",
+    ] },
     { id: "b224-meekofix", build: 224, date: "25 Nov 2026", title: "Meeko comes back", items: [
       "Meeko the stray dog has no home town, so once he left you (Dismiss, or walking off when he got fed up) he was gone for good. Now he finds you again on the road.",
       "Lost him already? He's out there looking for you. Travel without a follower and he'll come bounding up, with his old level and gear. Your journal and the Follower tab say so.",

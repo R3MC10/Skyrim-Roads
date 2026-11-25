@@ -904,7 +904,7 @@ const WorldMap = (() => {
     for (const b of partyRes) { const i = boxes.indexOf(b); if (i >= 0) boxes.splice(i, 1); }   // party members' names take their reserved room
     otherLabels();
     if (HF) {   // you: walking, standing, or in the saddle, facing the way you travel
-      const r = HF.draw(g, hx, py, s, { id: "me", look: v.look, horse: v.horse, moving: v.moving, gallop: !!v.gallop, t: v.t, reduce: v.reduceMotion, heading: v.moving ? heading.a : null, ring: "#6ec8ff" });
+      const r = HF.draw(g, hx, py, s, { id: "me", look: v.look, horse: v.horse, led: v.led || null, moving: v.moving, gallop: !!v.gallop, t: v.t, reduce: v.reduceMotion, heading: v.moving ? heading.a : null, ring: "#6ec8ff" });
       if (v.fx && typeof FXART !== "undefined") FXART.mapOver(g, v.fx, P, s, hx, r.head, v.t, v.reduceMotion);
       label(g, v.name, hx, Math.min(myTop, r.top - 7 * s), s, 14, "#d8f0ff", 700, false, "center");
       arrow(hx, py - 2 * s, (v.horse ? 30 : 20) * s);

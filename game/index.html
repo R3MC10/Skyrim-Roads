@@ -4354,6 +4354,10 @@ canvas.dunfx{position:absolute;inset:0;width:100%;height:100%;pointer-events:non
   html.pcmap .pcquest{zoom:1.1}
   html.pcmap .pcb-clock,html.pcmap .pcb-stat,html.pcmap .pcb-btn{font-size:14.5px}
 }
+/* riding.js: the map's get on / get off button */
+.mapbtns .ridebtn{display:grid;place-items:center}
+.mapbtns .ridebtn.hide{display:none}
+.mapbtns .ridebtn.on{color:#ffe2a8;background:rgba(58,40,18,.88);box-shadow:inset 0 0 0 1px rgba(226,187,100,.7),0 0 10px rgba(226,187,100,.35)}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -4506,6 +4510,7 @@ canvas.dunfx{position:absolute;inset:0;width:100%;height:100%;pointer-events:non
 <script src="rig.js"></script>
 <script src="mapart.js"></script>
 <script src="maphero.js"></script>
+<script src="riding.js"></script>
 <script src="placeart.js"></script>
 <script src="lightfx.js"></script>
 <script src="paintedmap.js"></script>
@@ -4636,6 +4641,7 @@ canvas.dunfx{position:absolute;inset:0;width:100%;height:100%;pointer-events:non
 <script src="i18n_bleakfalls.js"></script>
 <script src="i18n_levelup.js"></script>
 <script src="i18n_mountfight.js"></script>
+<script src="i18n_riding.js"></script>
 <script src="i18n_bugreport.js"></script>
 <script src="i18n_paintedmap.js"></script>
 <script src="i18n_horsedown.js"></script>
