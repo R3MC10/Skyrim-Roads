@@ -68,6 +68,33 @@ const NOCOVER = (() => {
   }
   const hull = (rs) => rs.reduce((a, r) => rect(Math.min(a.left, r.left), Math.min(a.top, r.top), Math.max(a.right, r.right) - Math.min(a.left, r.left), Math.max(a.bottom, r.bottom) - Math.min(a.top, r.top)), rs[0]);
 
+  /* screen titles: the button never sits on their text (layout-3) */
+  const HEADS = ".uxh-t, #dun .hd > h2";
+  function textBoxes(el) {
+    const r = document.createRange(); r.selectNodeContents(el);
+    return [...r.getClientRects()].filter((q) => q.width > 1 && q.height > 1);
+  }
+  function headText(zone) {
+    const out = [];
+    for (const h of document.querySelectorAll(HEADS)) {
+      if (!shown(h) || h.closest(FLOAT)) continue;
+      for (const q of textBoxes(h)) if (area(q, zone)) out.push(q);
+    }
+    return out;
+  }
+  /* a left-aligned title under the button's home spot starts its text after the button (kept while the title lives) */
+  function roomForHome(home) {
+    for (const h of document.querySelectorAll(HEADS)) {
+      if (!shown(h) || h.closest(FLOAT)) continue;
+      const r = h.getBoundingClientRect();
+      if (!h.dataset.ncpad && (r.left > home.right || !textBoxes(h).some((q) => area(q, home)))) continue;
+      if (h.dataset.ncbase == null) h.dataset.ncbase = parseFloat(getComputedStyle(h).paddingLeft) || 0;
+      const pad = Math.max(+h.dataset.ncbase, Math.ceil(home.right + 8 - r.left));
+      h.dataset.ncpad = "1";
+      if (h.style.paddingLeft !== pad + "px") h.style.paddingLeft = pad + "px";
+    }
+  }
+
   /* the round message-history button */
   function hist(lane) {
     const b = DOM && document.getElementById("nfhbtn"); if (!b || !lane) return;
@@ -84,7 +111,9 @@ const NOCOVER = (() => {
     cands.push(home);
     for (let i = 1; i <= 6; i++) cands.push(rect(lr.left, lr.top + i * (HB + 8), HB, HB));   // step down the left edge
     for (let i = 1; i <= 4; i++) cands.push(rect(lr.left + i * (HB + 8), lr.top, HB, HB));   // or along the top
-    const c = pick(cands, controls(hull(cands)));
+    // a screen title under the home spot makes room: its row starts after the button (layout-3)
+    if (innerWidth < 900) roomForHome(home);
+    const c = pick(cands, controls(hull(cands)).concat(headText(hull(cands))));
     b.style.left = Math.round(c.left) + "px"; b.style.top = Math.round(c.top) + "px";
     lane.classList.toggle("nc-hb", c === home);   // the messages flow to its right
   }

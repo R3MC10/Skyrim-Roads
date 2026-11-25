@@ -530,6 +530,7 @@
       if ($("#sky") && !$("#modal") && escKey && sky.page === "items" && sky.sel != null && typeof ITEMCMP !== "undefined" && ITEMCMP.side($("#sky"))) { sky.sel = null; renderMenu(); return true; }   // [itemdetail] Esc lets go of the pinned item first
       if ($("#sky") && !$("#modal")) { closeMenu(); if (typeof TABMENU !== "undefined") TABMENU.menuClosed(); return true; }
       if ($("#modal")) { if (!$("#modal [data-act=enc], #modal [data-act=ev], #modal [data-act=guard]")) closeModal(); return true; }
+      if (typeof WAGONS !== "undefined" && WAGONS.isOpen()) { WAGONS.close(); return true; }   // [caravan-panel] a caravan's panel: back closes it
       if (typeof DWEMER !== "undefined" && DWEMER.closeOv()) return true;   // a lexicon / valve puzzle (dwemer.js)
       if (typeof BLACKREACH !== "undefined" && BLACKREACH.close()) return true;   // the Blackreach map (blackreach.js)
       if ($("#dun")) { closeDungeon(); return true; }
