@@ -21,7 +21,7 @@ ok(X.pref("gore", "low") && X.level() === "low" && !X.pref("other", "low"), "set
 X.setLevel("full");
 store.rotn_prefs = JSON.stringify({ gore: true }); ok(X.level() === "full", "an old On save reads as Full");
 const html = X.settingsHTML((k, opts, cur) => `${k}:${opts.map((o) => o[0]).join("/")}:${cur}`);
-ok(/Blood and gore/.test(html) && /gore:off\/low\/full:full/.test(html), "the setting row: Off / Low / Full");
+ok(/>Gore</.test(html) && /gore:off\/low\/full:full/.test(html) && /Reduced/.test(fs.readFileSync(W + "gore.js", "utf8")), "the setting row: Gore Off / Reduced / Full");
 ok(X.budget({ level: "low", reduce: false, lowGfx: false }) < X.budget({ level: "full", reduce: false, lowGfx: false }), "fewer particles on Low");
 ok(X.budget({ level: "full", reduce: true, lowGfx: false }) < X.budget({ level: "full", reduce: false, lowGfx: false }), "fewer with reduced motion");
 ok(X.budget({ level: "full", reduce: false, lowGfx: true }) < X.budget({ level: "full", reduce: false, lowGfx: false }), "fewer on low graphics");
@@ -126,8 +126,8 @@ ok(!/Math\.random/.test(fs.readFileSync(W + "gore.js", "utf8")), "gore.js never 
   ok(html.indexOf('src="gore.js"') > 0 && html.indexOf('src="gore.js"') < html.indexOf('src="fightart.js"'), "gore.js loads before fightart.js");
   ok(html.indexOf('src="i18n_gore.js"') > 0 && html.indexOf('src="i18n_gore.js"') < html.indexOf('src="i18n.js"'), "Polish loads before i18n.js");
   ok(/\.gorevig\{/.test(html), "the screen-edge flash has its style");
-  ok(/GORE\.settingsHTML\(seg\)/.test(ui) && /GORE\.pref\(k/.test(ui), "Settings → Fights shows Blood and gore");
-  ok(/"Blood and gore": "/.test(pl), "Polish for the setting");
+  ok(/GORE\.settingsHTML\(seg\)/.test(ui) && /GORE\.pref\(k/.test(ui), "Settings → Fights shows Gore");
+  ok(/"Gore": "/.test(pl) && /"Reduced": "/.test(pl), "Polish for the setting");
   ok(/GS\.hit\(/.test(fa) && /GS\.kill\(/.test(fa) && /GS\??\.drawGround\(/.test(fa) && /GS\.drawFront\(/.test(fa), "fightart.js calls the hooks"); }
 console.log(fails ? `gore: ${fails} FAILED of ${n}` : `gore ok · ${n} checks`);
 if (fails) process.exit(1);

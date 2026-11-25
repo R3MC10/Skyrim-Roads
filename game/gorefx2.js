@@ -130,7 +130,7 @@ const GOREFX2 = (() => {
     function decal(liq, x, y, w, r, kind) {   // kind: 0 splat · 1 pool · 2 spray
       const L = D.ground; if (L.length >= GROUND_MAX) { const j = L.findIndex((q) => !q.pool); L.splice(j < 0 ? 0 : j, 1); }   // pools stay longest
       const cells = kind === 1 ? [2, 5] : kind === 2 ? [3, 6] : [0, 1, 4, 7];
-      L.push({ liq, cell: cells[(r() * cells.length) | 0], x: x / W, y: (y - gy) / s, w: w / s, age: 0, flip: r() < 0.5 ? -1 : 1, grow: kind === 1 ? 0 : 1, pool: kind === 1 });
+      L.push({ liq, cell: cells[(r() * cells.length) | 0], x: x / W, y: (y - gy) / s, w: w / s, age: 0, flip: r() < 0.5 ? -1 : 1, grow: kind === 1 ? 0 : -0.7, pool: kind === 1 });   // a splatter shows once its drops have landed (~0.35 s)
     }
     function smear(side, liq, r, dir) {
       if (side !== "foe" && side !== "hero") return;
@@ -145,7 +145,7 @@ const GOREFX2 = (() => {
       drop(g, x, y, vx, vy, r, c, a, i) {
         const fam = famOfCol(c); if (!ready(fam)) return false;
         const im = img(DROPS[fam]), sp = Math.hypot(vx, vy), st = sp < 50 * s ? 0 : sp < 130 * s ? 1 : sp < 230 * s ? 2 : 3, C = 48;
-        const k = Math.max(0.12, (r * 0.8) / 7), w = C * k;   // the head is ~7 px in the cell
+        const k = Math.max(0.08, (r * 0.36) / 6), w = C * k;   // the head is ~6 px across in the cell; gore.js r is the ink line width
         g.save(); g.globalAlpha = a; g.translate(x, y); g.rotate(Math.atan2(vy, vx));
         g.drawImage(im, st * C, (i & 1) * C, C, C, -w * 0.62, -w / 2, w, w);
         g.restore();
@@ -232,7 +232,7 @@ const GOREFX2 = (() => {
       oUpd.call(S, dt);
       live = 0;
       for (const p of P) { if (!p.on) continue; p.t += dt; if (p.t >= p.dur) p.on = false; else live++; }
-      for (const q of D.ground) { q.age += dt; if (q.grow < 1) q.grow = Math.min(1, q.grow + dt / POOL_GROW); }
+      for (const q of D.ground) { q.age += dt; if (q.grow < 1) q.grow = Math.min(1, q.grow + dt / (q.pool ? POOL_GROW : 0.5)); }
       for (const q of D.spat) q.age += dt;
       for (const q of D.body) q.age += dt;
       if (D.ground.length && D.ground[0].age > GROUND_LIFE) D.ground.shift();
@@ -264,8 +264,9 @@ const GOREFX2 = (() => {
       if (!D.ground.length && !D.spat.length) return;
       g.save();
       for (const q of D.ground) {   // pools and big splatters, lying flat: squashed
-        const f = fadeOf(q.age, GROUND_LIFE), e = q.grow < 1 ? 1 - (1 - q.grow) * (1 - q.grow) : 1, w = q.w * s * (0.3 + 0.7 * e);
-        if (f > 0) cellDraw(g, q.liq, q.cell, q.x * W, gy + q.y * s, w, w * 0.3, 0.94 * f * (q.pool ? 0.6 + 0.4 * e : 1), q.flip);
+        if (q.grow <= 0) continue;
+        const f = fadeOf(q.age, GROUND_LIFE), e = q.grow < 1 ? 1 - (1 - q.grow) * (1 - q.grow) : 1, w = q.w * s * (q.pool ? 0.3 + 0.7 * e : 0.85 + 0.15 * e);
+        if (f > 0) cellDraw(g, q.liq, q.cell, q.x * W, gy + q.y * s, w, w * 0.3, 0.94 * f * (q.pool ? 0.6 + 0.4 * e : Math.min(1, e * 1.5)), q.flip);
       }
       for (const q of D.spat) {   // where the drops landed
         const f = fadeOf(q.age, SPAT_LIFE), w = q.w * s;

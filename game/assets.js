@@ -35,10 +35,12 @@
      map-world                2000×1400  hand-painted world map, exact 10:7, covering the world bounds edge to edge (x·width,
                                          y·height); replaces the procedural map ground (paintedmap.js). Reference to paint over:
                                          scripts/map_reference.py. Optional map-world-2x (3000×2100) for close zoom.
-     gfx-<effect>             strips     rendered combat effect sprites (scripts/make_gfx.py, drawn by gorefx2.js): frames side by side,
-                                         transparent WebP. blood-burst-1/2 (10×256²), blood-burst-3 (12×256²), blood-spray (8×256²),
-                                         oil-burst green-burst ichor-burst dust bonedust frost embers motes (10×192²), shock (8×192²),
-                                         sparks (8×160²); decal atlases 4×2: blood-decals (384² cells), oil-decals (128² cells).
+     gfx-<effect>             strips     rendered combat effect sprites, drawn by gorefx2.js: frames side by side, transparent WebP.
+                                         Liquids from scripts/make_blood.py: blood-burst-1/2 (10×256²), blood-burst-3 (12×256²),
+                                         blood-spray (8×256²), blood-mist (8×192²), oil/green/ichor/sap-burst (10×192²); decal atlases
+                                         4×2: blood-decals (384² cells), oil/green/ichor/sap-decals (192² cells); <liquid>-drops (4×2 of
+                                         48², flying drops, head right); blood-drips (4×128×160, body stains). The rest from
+                                         scripts/make_gfx.py: dust bonedust frost embers motes (10×192²), shock (8×192²), sparks (8×160²).
      ui-panel                 1024×1024  tileable dark panel texture
      ui-parchment             1024×1024  tileable parchment texture
      ui-compass               1254×1254  transparent compass rose

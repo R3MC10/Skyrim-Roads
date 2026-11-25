@@ -13,7 +13,7 @@ const keys = (p) => p.map((x) => x[0]);
 
 // what a blow plays
 ok(keys(F.planOf("slash", "blood", {})).some((k) => /^b[12]$/.test(k)), "a slash on a bandit sprays a blood burst");
-ok(!keys(F.planOf("slash", "blood", { level: "low" })).some((k) => /^b|jet/.test(k)), "Low: no rendered blood");
+ok(keys(F.planOf("slash", "blood", { level: "low" })).join() === "mist", "Reduced: just a mist, no big spray");
 const crit = keys(F.planOf("slash", "blood", { crit: true })), fin = keys(F.planOf("slash", "blood", { final: true }));
 ok(crit.includes("jet") && crit.length > keys(F.planOf("slash", "blood", {})).length, "a critical adds a jet");
 ok(fin.includes("jet") && fin.includes("b3"), "a finisher adds a jet and a wide splash");
@@ -34,7 +34,10 @@ ok(F.decalOf("slash", "blood", { crit: true }).ground === 1 && F.decalOf("slash"
 ok(F.decalOf("slash", "blood", { frac: 0.05 }).ground === 0, "a scratch leaves no splatter");
 ok(!F.decalOf("slash", "blood", { crit: true, side: "ally" }).body && !F.decalOf("slash", "blood", { crit: true, side: "horse" }).body, "followers and horses are never smeared");
 ok(F.decalOf("slash", "bone", { crit: true }).ground === 0 && F.decalOf("fire", "blood", { final: true }).ground === 0, "no blood splatter from bones or fire");
-ok(F.decalOf("slash", "blood", { crit: true, level: "low" }).ground === 0, "Low: no splatter decals");
+ok(F.decalOf("slash", "blood", { crit: true, level: "low" }).ground === 0 && !F.decalOf("slash", "blood", { crit: true, level: "low" }).body, "Reduced: no big splatter or body stains");
+ok(keys(F.planOf("slash", "sap", {})).includes("sap") && GORE.matOf("spriggan", "Spriggan") === "sap", "spriggans bleed sap");
+ok(F.splatOf(2, 300).cells.includes(3) && F.splatOf(2, 10).cells.includes(0) && F.splatOf(2, -300).flip === -1, "fast drops land as tailed spatter, the way they flew");
+ok(F.budgetK({ quality: "low" }) < F.budgetK({ quality: "med" }) && F.budgetK({ quality: "med" }) < F.budgetK({ quality: "high", lowGfx: false }), "Fight quality cuts the sprites");
 
 // the stage hook
 ok(GORE.scene.fx2 === true, "gore.js stages are wrapped");
@@ -48,7 +51,7 @@ ok(S.fx2count() > 0 && S.fx2count() <= 24, "live sprites are capped (" + S.fx2co
 ok(S.fx2decals().ground > 0 && S.fx2decals().ground <= 14 && S.fx2decals().body <= 6, "decals capped");
 for (let i = 0; i < 80; i++) S.update(0.1);
 ok(S.fx2count() === 0, "bursts end");
-const g0 = S.fx2decals().ground; for (let i = 0; i < 500; i++) S.update(0.1);
+const g0 = S.fx2decals().ground; for (let i = 0; i < 700; i++) S.update(0.1);
 ok(S.fx2decals().ground < g0, "splatters fade over the fight");
 const before = S.fx2decals().body;
 S.hit({ side: "ally", x: 100, y: 100 }, { type: "slash", frac: 0.9, crit: true, from: -1, key: "a" });
@@ -63,6 +66,13 @@ ok(S2.fx2decals().ground === S.fx2decals().ground, "splatters stay turn to turn"
 const g = new Proxy({}, { get: (t, k) => (k === "getTransform" ? () => ({ a: 2, b: 0 }) : k in t ? t[k] : () => {}), set: (t, k, v) => { t[k] = v; return true; } });
 let threw = false; try { S.drawGround(g); S.drawMarks(g, "foe", 300, 100, 1.2, 0.4, false); S.drawFront(g); } catch (e) { threw = e; }
 ok(!threw, "draws without pictures " + threw);
+// knocked down: a pool under the hero once, never under a friend or a horse
+{ const S3 = GORE.scene({ fight: {}, W: 400, H: 180, s: 1.2, foeK: "bandit", foeName: "Bandit outlaw", ehpMax: 120 });
+  const n0 = S3.fx2decals().ground;
+  ok(S3.down({ side: "ally", x: 100 }) === false && S3.down({ side: "horse", x: 100 }) === false && S3.fx2decals().ground === n0, "no pool under followers or horses");
+  ok(S3.down({ side: "hero", x: 100 }) === true && S3.fx2decals().ground === n0 + 1 && S3.down({ side: "hero", x: 100 }) === false, "a knocked-down hero gets one pool"); }
+// the liquid hook: gore.js falls back to ink while the pictures are missing
+ok(typeof S.liquid() === "object" && S.liquid().drop(g, 1, 1, 100, 0, 2, "#8e1010", 1, 0) === false && S.liquid().land(1, 1, 2, "#8e1010", 50) === false, "no pictures: gore.js keeps its ink drops");
 // Off: nothing
 GORE._setLevel("off");
 const So = GORE.scene({ W: 400, H: 180 });
@@ -76,6 +86,7 @@ for (const [k, v] of Object.entries(F.SH)) {
   ok(v[2] <= 256 && v[3] <= 256, k + " frames ≤256px");
   if (fs.existsSync(p)) ok(fs.statSync(p).size < 300 * 1024, k + " under 300 KB");
 }
+for (const f of Object.values(F.DROPS).concat([F.DRIPS[0]])) ok(fs.existsSync(W + f + ".webp"), "file " + f);
 for (const [k, v] of Object.entries(F.DEC)) { ok(fs.existsSync(W + v[0] + ".webp"), "decal atlas " + k); ok(v[1] <= 512, k + " decals ≤512px"); }
 ok(/gfx-<effect>[^]{0,400}blood-burst/.test(fs.readFileSync(W + "assets.js", "utf8")), "listed in assets.js");
 const idx = fs.readFileSync(W + "index.html", "utf8");

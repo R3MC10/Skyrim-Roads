@@ -3,6 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b184-blood2", build: 184, date: "25 Nov 2026", title: "Blood that looks like blood", items: [
+      "Blood in fights looks wet and real now: glossy dark red that runs together, see-through and brighter where it's thin, with a shine where the light catches it. No more red pills.",
+      "A hit throws blood out of the wound the way the blow went, as ropes that break into drops and a fine mist. The drops fly in an arc, fall, and leave small splats on the ground that slowly fade over the fight.",
+      "Critical hits and finishing blows spray much more. Heavy hits leave blood running down the fighter, which fades after a while. A fallen foe lies in a pool that spreads out, and so do you when you're knocked down.",
+      "Skeletons and draugr still only throw bone and dust, Dwemer machines spit black oil and sparks, daedra bleed dark ichor, Falmer bleed green, and spriggans now bleed amber sap.",
+      "New setting: Settings → Fights → Gore: Off, Reduced (just a mist and small splats) or Full. Full is the default.",
+      "Phones on Low or Medium fight quality show fewer splashes, so fights stay smooth. Followers and horses still only get knocked down: no pools under them.",
+    ] },
     { id: "b183-potionbal", build: 183, date: "25 Nov 2026", title: "Potions hit harder again", items: [
       "In a fight 60% of a potion now lands the moment you drink it, and the rest comes in over the next two rounds (small and big brewed ones: the next round). A potion saves you in a pinch again.",
       "Still one potion of a kind at a time: another of the same kind only helps once the last one has mostly done its work.",
@@ -1281,9 +1289,9 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 181;
+  const NEXT_AT = 184;
   const NEXT = [
-    "Painted fighters with realistic fight animations, and realistic blood and splatter",
+    "Painted fighters with realistic fight animations",
     "Makeovers for fishing, hunting, mining and lockpicking, plus painted festival and arena pictures",
     "Afflictions with an upside and a downside: lycanthropy, the Draugr curse and the Daedric mark",
     "An adventuring company longhouse: a shared base with a treasury, a trophy hall and stables",

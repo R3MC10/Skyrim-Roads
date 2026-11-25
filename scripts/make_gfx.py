@@ -444,16 +444,17 @@ if __name__ == "__main__":
     only = set(sys.argv[2:])
     def want(n):
         return not only or n in only
-    if want("blood"):
+    # blood, oil, green blood and ichor bursts and decals now come from make_blood.py (realistic liquid); ask for them by name here
+    if "blood" in only:
         liquid_burst("gfx-blood-burst-1", 11, 256, 10, BLOOD, spread=1.3, n_drops=120, mist_col=hexc("#5a0808"))
         liquid_burst("gfx-blood-burst-2", 23, 256, 10, BLOOD, spread=0.8, n_drops=100, speed=1.15, stretch=1.3, mist_col=hexc("#5a0808"))
         liquid_burst("gfx-blood-burst-3", 37, 256, 12, BLOOD, origin=(0.4, 0.5), spread=2.2, n_drops=150, speed=0.85, mist_col=hexc("#5a0808"))
         liquid_burst("gfx-blood-spray", 51, 256, 8, BLOOD, origin=(0.12, 0.45), spread=0.45, n_drops=90, n_mist=90, speed=1.35, stretch=1.6, mist_col=hexc("#5a0808"))
-    if want("other"):
+    if "other" in only:
         liquid_burst("gfx-oil-burst", 61, 192, 10, OIL, spread=1.2, n_drops=80, mist_col=hexc("#2c281e"))
         liquid_burst("gfx-green-burst", 71, 192, 10, GREEN, spread=1.2, n_drops=90)
         liquid_burst("gfx-ichor-burst", 81, 192, 10, ICHOR, spread=1.2, n_drops=90)
-    if want("decals"):
+    if "decals" in only:
         decals("gfx-blood-decals", [hexc("#2e0303"), hexc("#5e0808"), hexc("#8a1414")], 384, 7)
         decals("gfx-oil-decals", [hexc("#0c0b08"), hexc("#1e1c16"), hexc("#4a4636")], 128, 9)
     if want("dry"):

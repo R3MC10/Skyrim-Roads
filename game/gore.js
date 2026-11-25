@@ -66,6 +66,7 @@ const GORE = (() => {
   /* the material from the foe's kind (fightart.foeOf) and name */
   function matOf(kind, name = "", tags = []) {
     const n = String(name || "").toLowerCase(), tg = new Set(tags || []);
+    if (/spriggan/.test(n) || kind === "sol_spriggan" || kind === "spriggan") return "sap";   // [blood2] spriggans bleed amber sap
     if (/ghost|spectral|spectre|wraith|shade|spirit|wisp|apparition/.test(n) || kind === "wisp") return "spirit";
     if (/dremora|daedr|seeker|lurker|xivilai|scamp|clannfear|spider daedra/.test(n) || kind === "sol_seeker" || kind === "sol_lurker") return "ichor";
     if (kind === "atronach" || /atronach/.test(n)) return "essence";
@@ -73,7 +74,6 @@ const GORE = (() => {
     if (["sphere", "centurion", "dspider"].includes(kind) || /dwarven|dwemer|centurion|sphere|construct|automaton/.test(n) || tg.has("construct")) return "oil";
     if (kind === "dragon" || tg.has("dragon")) return "dragon";
     if (kind === "falmer" || kind === "spider" || /falmer|chaurus|frostbite|spider/.test(n)) return "green";
-    if (/spriggan/.test(n) || kind === "sol_spriggan" || kind === "spriggan") return "sap";   // [blood2] spriggans bleed amber sap
     if (/ash spawn|ash hopper/.test(n) || kind === "sol_spawn") return "bone";   // ash: dust and chips
     return "blood";
   }
