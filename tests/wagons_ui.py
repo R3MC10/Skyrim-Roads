@@ -1,6 +1,6 @@
 # Wagons you can tap (wagons.js): tap a caravan far away -> its card, open its packs, stand beside it -> buy;
 # on a PC the pointer lights the wagons up and a tap on a group pin zooms in. Phone 390x844 and PC 1440x900.
-# Serve game/ first:  python3 -m http.server 8765 --directory ../game   then   python3 wagons_ui.py 8765 [outdir]
+# Serve game/ first:  node serve.js 8765   then   python3 wagons_ui.py 8765 [outdir]
 import asyncio, os, sys
 from playwright.async_api import async_playwright
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"

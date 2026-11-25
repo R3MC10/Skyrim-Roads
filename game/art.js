@@ -91,6 +91,7 @@ const ART = (() => {
     const want = opts.scale ? sc : budget(w);
     const k = opts.key ? `${opts.key}|${w}x${h}|${Math.round(want * 4)}` : null;
     if (k && cache.has(k)) return cache.get(k);
+    if (typeof document === "undefined") return "";   // no page to paint on (node sims): no picture, no warning
     let u = "";
     try {
       srcPU = 0;

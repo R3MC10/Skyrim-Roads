@@ -246,7 +246,7 @@ const TIP = (() => {
     [".qhead", (el) => { const c = el.closest(".qcard[id^='q-']"); return c ? "quest:" + c.id.slice(2) : null; }],
     [".fol2head", () => { const s = state(); return s?.follower ? "follower:" + s.follower.id : null; }],
     [".hb.hp", () => "stat:health"], [".hb.mp", () => "stat:magicka"], [".hb.sp", () => "stat:stamina"], [".carry", () => "stat:carry"],
-    ["#lvlb", () => "stat:level"], ["#goldv,.sky-foot .gold", () => "cur:gold"],
+    ["#lvlb,.pcb-lv", () => "stat:level"], ["#goldv,.sky-foot .gold,.pcb-gold", () => "cur:gold"],   // .pcb-*: the PC bottom bar (pcmap.js)
     [".item", (el) => {   // a list row: the one thing it's about (buy an item, take a perk, travel somewhere, a player)
       const one = (sel) => { const l = el.querySelectorAll(sel); return l.length === 1 ? l[0] : null; };
       const items = new Set([...el.querySelectorAll("[data-item]")].map((x) => x.dataset.item)); if (items.size === 1) return "item:" + [...items][0];   // a shop row (Buy, ×20)
@@ -311,8 +311,11 @@ const TIP = (() => {
     const cs = getComputedStyle(probe), n = (v) => parseFloat(cs[v]) || 0;
     return { t: n("paddingTop"), r: n("paddingRight"), b: n("paddingBottom"), l: n("paddingLeft") };
   }
-  function place(rect) {
-    const vv = window.visualViewport, vw = vv ? vv.width : innerWidth, vh = vv ? vv.height : innerHeight, ox = vv ? vv.offsetLeft : 0, oy = vv ? vv.offsetTop : 0;
+  function place(r0) {
+    // a zoomed page (PC interface size, access.js text zoom): rects come back zoomed, left/top are set before the zoom
+    const z = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
+    const rect = z === 1 ? r0 : { left: r0.left / z, top: r0.top / z, right: r0.right / z, bottom: r0.bottom / z, width: r0.width / z, height: r0.height / z };
+    const vv = window.visualViewport, vw = (vv ? vv.width : innerWidth) / z, vh = (vv ? vv.height : innerHeight) / z, ox = (vv ? vv.offsetLeft : 0) / z, oy = (vv ? vv.offsetTop : 0) / z;
     const ins = insets(), M = 8, L = ox + ins.l + M, R = ox + vw - ins.r - M, T = oy + ins.t + M, B = oy + vh - ins.b - M;
     box.style.maxWidth = Math.max(160, Math.min(340, R - L)) + "px"; box.style.width = "";   // (a fight-bar line set a width)
     box.style.left = "0px"; box.style.top = "0px";

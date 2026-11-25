@@ -4,7 +4,7 @@ bandit mine (its trap room borrows the cave painting). Checks: the room shows a 
 an ink drawing with tap targets on the next rooms, the trail overlay is there, and on PC nothing scrolls (the room column
 and the map both fit the window). Phones get the route strip and two-to-a-row actions on screen (dungeonphone).
 Screenshots go to OUT (default tests/out_dunrooms).
-Run: py -m http.server 8790 --directory game  →  py tests/dunrooms_ui.py 8790"""
+Run: node tests/serve.js 8790  →  py tests/dunrooms_ui.py 8790"""
 import asyncio, os, sys
 from playwright.async_api import async_playwright
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8790"

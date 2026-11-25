@@ -1,7 +1,7 @@
 """Party votes on the road, two phones: the leader meets something, the member gets the same window and votes,
 the voter's face pops up by their pick on both phones, a changed vote moves the face, and only the leader's tap acts
 (the member's window closes and they hear the pick). Road events and encounters.
-Usage: python3 partyvote_ui.py PORT   (serve game/ first: python3 -m http.server PORT --directory ../game)"""
+Usage: python3 partyvote_ui.py PORT   (serve game/ first: node serve.js PORT)"""
 import asyncio, os, sys
 from playwright.async_api import async_playwright
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"

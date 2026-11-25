@@ -1,5 +1,5 @@
 """Menu tabs screen test (menus.js): the seven bottom tabs, every sub-tab, and a reachability checklist of every screen.
-Run:  python -m http.server 9400 --directory game   then   python tests/tabs_ui.py 9400 [outdir]
+Run:  node tests/serve.js 9400   then   python tests/tabs_ui.py 9400 [outdir]
 Everything is reached by TAPS (bottom tab -> sub-tab -> button), never by code, on 360x780 and 412x915, in both art styles,
 at Normal and Biggest text, with one-hand mode on for the Biggest pass. Fails on page errors, sideways scrolling, clipped tab
 labels, tabs thinner than a thumb, and any screen on the checklist that can't be reached. Screenshots land in outdir."""
@@ -25,13 +25,12 @@ def checklist():
         ("Character sheet", [("tab", "hero"), ("sub", "hero")], "Powers & shouts"),
         ("Skills (constellations)", [("sub", "stars")], "perk point"),
         ("Perks", [("sub", "perks")], "Ready to take"),
-        ("Tactics", [("sub", "tactics")], "Tactics"),
+        ("Follower", [("sub", "follower")], "Follower"),   # the Tactics tab went with auto fighting (a8ba9c1)
         ("Stats", [("sub", "stats")], ""),
         ("Achievements", [("sub", "ach")], "Achievements"),
         ("Library (discoveries, lore books)", [("sub", "library")], "Library"),
         ("Diary", [("sub", "diary")], "Diary"),
         ("Settings (in a tab)", [("sub", "settings")], "Accessibility"),
-        ("Settings: Art style", [], "Pixel art"),
         ("Patch notes", [("act", "#side [data-act=notes]")], "Patch Notes"),
         ("Guide", [("close",), ("act", "#side [data-act=guide]")], "Guide"),
         ("Backup", [("close",), ("act", "#side [data-bk=openbackup]")], "Back up"),
@@ -55,7 +54,7 @@ def checklist():
         ("Social: clans + leaderboard (Realm)", [("act", "#side [data-act=soctab][data-id=realm]")], "lan"),
         ("Town", [("tab", "town")], "Town"),
         ("Town: homestead", [("act", "#side [data-id=homestead]")], "Pinewatch"),
-        ("Compass (Tab menu)", [("act", "#twBtn")], "Swipe or tap"),
+        ("Compass (Tab menu)", [("act", "#twBtn")], "direction"),
         ("Compass -> Skills page", [("act", "#tw [data-twgo=char]")], "perk point"),
         ("Compass Skills page -> Settings", [("act", "#twbar [data-twb=settings]")], "Accessibility"),
     ]

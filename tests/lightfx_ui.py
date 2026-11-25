@@ -1,7 +1,7 @@
 """Lighting and atmosphere (lightfx.js): before/after phone screenshots of the map at dawn, noon, dusk, night and in a
 storm, in both art styles, plus a few place pictures; then idle map frame time with Lighting Off / Low / High under
 a 4x CPU throttle.
-   python3 -m http.server 8765 --directory ../game &
+   node serve.js 8765 &
    python3 lightfx_ui.py 8765            # screenshots go to tests/out_light/
    python3 lightfx_ui.py 8765 noperf     # skip the timing part (noshots: timing only)
 """

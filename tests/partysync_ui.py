@@ -2,7 +2,7 @@
 Beta's phone opens the same fight on the full fight screen (not the small "Fighting beside" box). On Beta's turn she casts
 a real spell with her own magicka from her own Magic menu; both screens then show the same foe health and Beta's line
 in the log; the leader's moves show on Beta's screen under his name. The fight ends the same for both.
-Usage: python partysync_ui.py PORT  (serve game/ first: python -m http.server PORT --directory ../game)
+Usage: python partysync_ui.py PORT  (serve game/ first: node serve.js PORT)
 Screenshots in tests/out_partysync/."""
 import asyncio, sys, os
 from playwright.async_api import async_playwright

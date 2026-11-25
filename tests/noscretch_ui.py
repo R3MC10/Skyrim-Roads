@@ -7,7 +7,7 @@ desktop sizes in both art styles with the painted pictures on (?assets), saves a
   * overlap   — two runs of text drawn on top of each other (reported, not failed: some are badges on purpose)
 Fails (exit 1) on stretch, blurry, bgstretch and overflow.
 
-Run:  python -m http.server 9460 --directory game   then
+Run:  node tests/serve.js 9460   then
       python tests/noscretch_ui.py 9460 [outdir] [--quick] [--vp=360x740,1920x1080] [--style=ink] [--only=map,items]
 Screenshots go to tests/out_noscretch/ (or outdir); a summary is written to report.json there. Prints "noscretch_ui: all good"."""
 import asyncio, json, os, sys

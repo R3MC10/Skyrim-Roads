@@ -2,7 +2,7 @@
 own terrain, tinted, with magenta dots at every city and town at pixel (x*w, y*h)) and checks that each dot lands under
 its place on the real map screen, zoomed out and zoomed in (where the 2x picture takes over). Screenshots of the
 procedural map, the placeholder, zoomed in, with roads off, in tests/out_paintedmap/.
-   python3 -m http.server 8765 --directory ../game &
+   node serve.js 8765 &
    python3 paintedmap_ui.py 8765
 """
 import asyncio, sys, os, json

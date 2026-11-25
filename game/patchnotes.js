@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b264-testsgreen", build: 264, date: "25 Nov 2026", title: "Coming next, refreshed", items: [
+      "The Coming next list in Patch notes is up to date again.",
+      "On a PC, tooltips near the bottom of the screen (like the one on your health bar) no longer slip off the edge when the interface is scaled up.",
+      "On a PC, resting the mouse on your gold or level in the bottom bar shows the full details, like on a phone.",
+    ] },
     { id: "b263-raceheads", build: 263, date: "25 Nov 2026", title: "Every race has its own painted face", items: [
       "Imperials, Bretons, Redguards, Altmer, Bosmer and Orcs now have their own painted heads, for men and women, in fights and in character creation. Every race in the game has one now.",
       "Switching race in character creation no longer flashes a Nord head for a moment: the hero appears once the right face is ready.",
@@ -1792,7 +1797,7 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 249;
+  const NEXT_AT = 264;
   const NEXT = [
     "Mentoring: play side by side with friends of any level",
     "Shrines of your own: build a Daedric altar at your longhouse",

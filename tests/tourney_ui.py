@@ -76,7 +76,7 @@ async def main():
                 await pg.wait_for_selector(".tn-pic", timeout=15000)
                 ok(await pg.query_selector(".tn-pic h3") is not None, f"{name}: painted festival header with its title")
             else:
-                ok(await pg.query_selector("img.tn-art") is not None, f"{name}: ink festival banner")
+                ok(await pg.query_selector("img.tn-art, .tn-pic") is not None, f"{name}: festival banner (ink, or the painted header when the pictures are on)")
             ok(await pg.evaluate("() => [...document.querySelectorAll('.tn-board li')].some(l => /Brynjolf/.test(l.textContent))"), f"{name}: the other player is on the board")
             ok(await pg.query_selector("[data-tact=pvp][data-id=BR1]:not([disabled])") is not None, f"{name}: friendly duel offered")
             ok(await pg.evaluate("() => document.querySelectorAll('.tn-cal li').length") == 4, f"{name}: the calendar shows what's next")

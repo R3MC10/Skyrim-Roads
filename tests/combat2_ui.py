@@ -1,7 +1,7 @@
 """Immersive fight screen (combat2.js): plays a real fight on a phone (360x780) and a wide PC screen (2000x837), ink style.
 Attack, cast a spell from the Magic drawer, drink a potion from the Items drawer, end the turn; the fight screen never
 scrolls, the foe card sits inside the scene, and buff/debuff icons show. Screenshots go to tests/out_combat2/.
-  python -m http.server 8765 --directory ../game &   then   python combat2_ui.py 8765"""
+  node serve.js 8765 &   then   python combat2_ui.py 8765"""
 import asyncio, sys, os
 from playwright.async_api import async_playwright
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"

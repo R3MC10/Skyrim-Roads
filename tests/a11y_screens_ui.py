@@ -1,7 +1,7 @@
 """Accessibility screen sweep (access.js): the main screens at Huge text, Small text and in each colour-blind mode,
 on a phone and on a PC. Fails on page errors, sideways scrolling and controls that stick out or clip their text.
 Also checks the colour-blind shapes/patterns show up and that Easy timing reaches the mining game.
-Run:  py -m http.server 9151 --directory game   then   py tests/a11y_screens_ui.py 9151 [outdir]"""
+Run:  node tests/serve.js 9151   then   py tests/a11y_screens_ui.py 9151 [outdir]"""
 import asyncio, os, sys, tempfile
 from playwright.async_api import async_playwright
 

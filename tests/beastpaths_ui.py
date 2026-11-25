@@ -1,5 +1,5 @@
 """Werewolf and vampire paths (beastpaths.js) on the turn-based fight screen. Usage: python beastpaths_ui.py PORT -> RESULT OK
-Serve game/ first:  python -m http.server PORT --directory ../game
+Serve game/ first:  node serve.js PORT
 At 390x844 (phone, touch) and 1920x1080 (PC), in both art styles:
 - a werewolf meets the werewolf on the road at night; Beast Form sits in the quick slots
 - changing swaps the action bar for the wolf's own moves (Claws, Maul, Pounce, then Howl / Feast / Change back), each with its stamina cost
