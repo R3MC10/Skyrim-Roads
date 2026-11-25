@@ -146,7 +146,7 @@ const TOURNEYUI = (() => {
     const t = Date.now(), c = T.current(t), nx = T.next(t);
     const pic = (f, on) => painted(f.id, `<h3>${chip(f)}${esc(f.name)}</h3>`, on);
     const pc = c ? pic(c, true) : pic(nx, false);
-    const head = c ? `<div class="tn-hero${pc ? " tn-hp" : ""}">${pc || banner(c)}<div>${pc ? "" : `<h3>${chip(c)}${esc(c.name)}</h3>`}<p class="sub">${esc(c.place)}${c.hold ? `, ${esc(c.hold)}` : ""} · on now · ends in ${span(c.end - t)}</p><p class="sub">${esc(c.text)}</p></div></div>`
+    const head = c ? `<div class="tn-hero${pc ? " tn-hp" : ""}">${pc || banner(c)}<div>${pc ? "" : `<h3>${chip(c)}${esc(c.name)}</h3>`}<p class="sub">${esc(c.place)}${c.hold && c.hold !== c.place ? `, ${esc(c.hold)}` : ""} · on now · ends in ${span(c.end - t)}</p><p class="sub">${esc(c.text)}</p></div></div>`
       : `<div class="tn-hero${pc ? " tn-hp" : ""}">${pc || banner(nx, 320, 110, false)}<div>${pc ? "" : `<h3>${chip(nx)}${esc(nx.name)}</h3>`}<p class="sub">${esc(nx.place)} · starts in ${span(nx.start - t)}</p><p class="sub">${esc(nx.text)}</p></div></div>`;
     let main = "";
     if (c && T.here(s, c.place)) {

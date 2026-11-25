@@ -85,7 +85,7 @@
     " Harkon's blood burns through you.": " Krew Harkona pali cię od środka.", "You're a vampire now, and once a day in a fight you can take the Vampire Lord's form.": "Jesteś teraz wampirem i raz dziennie w walce możesz przybrać postać Wampirzego Lorda.",
     "Two Vampire Lord perks are ready.": "Czekają na ciebie dwa atuty Wampirzego Lorda.",
     "Gunmar keeps the troll armour for now.": "Gunmar na razie zatrzymuje zbroję dla trolla.",
-    "Gunmar hands you troll armour for a follower.": "Gunmar daje ci trollową zbroję dla towarzysza.", "Give it to one from the Hero tab.": "Daj ją któremuś w zakładce Bohater.",
+    "Gunmar hands you troll armour for a follower.": "Gunmar daje ci trollową zbroję dla towarzysza.", "Give it to one from the Character tab (Follower).": "Daj ją któremuś w zakładce Postać (Towarzysz).",
     "Gunmar hands you troll armour, but your follower can't carry it.": "Gunmar daje ci trollową zbroję, ale twój towarzysz nie da rady jej unieść.", "Give it to them later.": "Daj mu ją później.",
     "Gunmar fits your follower with troll armour.": "Gunmar dopasowuje twojemu towarzyszowi trollową zbroję.", "They're wearing it now.": "Już ją nosi.",
     // ---- items

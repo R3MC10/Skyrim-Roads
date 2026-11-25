@@ -30,7 +30,7 @@ const scroll = Object.entries(D.ITEMS).find(([, it]) => it.spell && M.SPELL[it.s
 if (scroll) ok(M.keyOf({ who: "me" }, { a: "scroll:" + scroll[0] }) === "spell:" + scroll[1].spell, "a scroll plays its spell's effect");
 ok(M.keyOf({ who: "me" }, { a: "dual:fireball" }) === "dual:fireball" && M.keyOf({ who: "me", dual: true }, { a: "spell:fireball" }) === "dual:fireball", "dual casting has its own, bigger effect");
 ok(M.keyOf({ who: "them" }, { a: "spell:fireball" }) === null && M.keyOf({ who: "me", allyOnly: true }, { a: "spell:fireball" }) === null, "only your own casts are drawn this way");
-ok(M.keyOf({ who: "me" }, { a: "attack" }) === null, "weapon blows keep their own effects (for now)");
+ok(M.keyOf({ who: "me", move: "bow" }, { a: "attack" }) === null && M.keyOf({ who: "me", move: "crossbow" }, { a: "attack" }) === null, "bow and crossbow shots are arrowfx.js arrows, not move effects");
 // fire, frost and shock spells of the same element look different
 const by = (el) => spells.filter(([, sp]) => sp.element === el && sp.kind === "damage").map(([id]) => M.SPELL[id].d + "/" + M.SPELL[id].i);
 for (const el of ["fire", "frost", "shock"]) { const d = by(el); ok(new Set(d).size >= Math.min(d.length, 5), `${el} damage spells fly differently (${d.join(" ")})`); }
@@ -51,6 +51,52 @@ for (const low of [false, true]) {
   ok(maxN <= S.cap && S.cap === (low ? 70 : 180), `${low ? "Low quality" : "normal"}: particles stay within the cap (${maxN}/${S.cap})`);
   ok(S.shapes() <= 28, "shapes stay within their pool");
   S.clear(); ok(S.shapes() === 0 && S.key() === null, "clear() empties the scene");
+}
+
+// ---- 2b. every weapon move, shout, power and form has its own effect too (batch 2)
+const melee = F.WEAPONS.filter((w) => !["bow", "crossbow", "staff"].includes(w));
+for (const w of melee) {
+  ok(M.recipe("atk:" + w) && M.recipe("pow:" + w), `${w}: an attack and a power attack effect`);
+  ok(M.keyOf({ who: "me", move: w, power: false }, { a: "attack" }) === "atk:" + w, `${w}: a plain blow plays atk:${w}`);
+  ok(M.keyOf({ who: "me", move: w, power: true }, { a: "power_attack" }) === "pow:" + w, `${w}: a power attack plays pow:${w}`);
+  ok(M.recipe("pow:" + w).z > M.recipe("atk:" + w).z && M.recipe("pow:" + w).c === "glint" && M.recipe("pow:" + w).g, `${w}: the power attack winds up, is bigger and marks the ground`);
+}
+const fightShouts = Object.keys(c.POWERS.SHOUTS).filter((id) => !c.POWERS.ROAD_SHOUTS.includes(id));
+for (const id of fightShouts) ok(M.keyOf({ who: "me", move: "shout" }, { a: "shout:" + id }) === "shout:" + id, `the ${id} shout has its own effect`);
+for (const id of Object.keys(c.POWERS.RACE)) ok(M.keyOf({ who: "me", move: "self" }, { a: "power:" + id }) === "race:" + id, `the ${id} race power has its own effect`);
+ok(M.keyOf({ who: "me" }, { a: "power:beast" }) === "beast:howl" && M.keyOf({ who: "me" }, { a: "power:lord" }) === "lord:rise", "changing into a werewolf or a Vampire Lord has its own effect");
+for (const id of Object.keys(c.BEASTPATH.MOVES)) ok(M.keyOf({ who: "me", move: "claw" }, { a: id }) === id, `${id} has its own effect`);
+for (const id of c.REACT.MOVES) ok(M.keyOf({ who: "me", move: "sword" }, { a: id }) === id, `${id} has its own effect`);
+ok(M.keyOf({ who: "me", move: "bash" }, { a: "bash" }) === "bash" && M.keyOf({ who: "me", move: "block" }, { a: "block" }) === "guard", "a shield bash and raising your guard have their own effects");
+ok(M.keyOf({ who: "me", move: "claw", st: { beast: true } }, { a: "attack" }) === "beast:claw" && M.keyOf({ who: "me", move: "claw", st: { lord: true } }, { a: "attack" }) === "lord:claw", "a plain attack in a beast form rakes with claws");
+ok(M.keyOf({ who: "me", move: "staff" }, { a: "attack" }) === null, "staffs keep their own bolt");
+{ const sw = new Set(melee.map((w) => M.recipe("atk:" + w).d + "/" + M.recipe("atk:" + w).i + "/" + M.recipe("atk:" + w).k)); ok(sw.size >= 6, `weapons swing differently (${[...sw].join(" ")})`); }
+// beats from a real fight log land on these keys
+{ const hb = (wt, l) => F.beatsOf({ e: { name: "Bandit outlaw" }, hp0: 200, ehp0: 120, wt0: wt, wt, allies: [], log: [l] }, { wt, list: [] }).filter((b) => b.who === "me")[0];
+  const kOf = (wt, l) => M.keyOf(hb(wt, l), l);
+  ok(kOf("greatsword", { me: "Attack: 20", them: "", hp: 200, ehp: 100, a: "attack", wt: "greatsword" }) === "atk:greatsword", "a greatsword blow from the log plays atk:greatsword");
+  ok(kOf("warhammer", { me: "Power attack: 40", them: "", hp: 200, ehp: 80, a: "power_attack", wt: "warhammer" }) === "pow:warhammer", "a warhammer power attack from the log plays pow:warhammer");
+  ok(kOf("sword", { me: "Shield bash: 8", them: "", hp: 200, ehp: 112, a: "bash", wt: "sword" }) === "bash", "a shield bash from the log plays bash");
+  ok(kOf("sword", { me: "Unrelenting Force: it staggers", them: "", hp: 200, ehp: 110, a: "shout:unrelenting_force", wt: "sword" }) === "shout:unrelenting_force", "a shout from the log plays its own effect"); }
+for (const low of [false, true]) {   // every move key plays (hits, misses, crits, sneak, enchant, combos) without errors and inside the caps
+  const S = M.scene({ s: 1.6, W: 520, H: 240, groundY: 192, low });
+  let maxN = 0, threw = null;
+  for (const key of Object.keys(M.MOVE)) for (const miss of [false, true]) {
+    const r = M.recipe(key), wk = key.split(":")[1];
+    const mv = r.w ? (F.MOVES[wk] ? wk : key === "bash" ? "bash" : "claw") : r.mouth || key.startsWith("shout:") ? "shout" : key === "guard" ? "block" : r.d === "none" || r.d === "rift" ? "self" : "cast";
+    const m = F.MOVES[mv], b = { who: "me", move: mv, miss, power: key.startsWith("pow:"), crit: !miss, sneak: miss ? null : "SNEAK ATTACK ×3", enchant: "shock", final: true, st: {} };
+    const line = { a: key.startsWith("atk:") ? "attack" : key.startsWith("pow:") ? "power_attack" : key === "guard" ? "block" : key.startsWith("race:") ? "power:" + wk : key === "lord:rise" ? "power:lord" : key, me: "Attack: 20 · Shatter! · Overload · Steam · Thermal shock · Opening" };
+    if (key === "beast:claw" || key === "lord:claw") b.st[key.split(":")[0]] = true;
+    try {
+      ok(M.keyOf(b, line) === key || key === "beast:maul" || key === "beast:howl", `${key}: a beat finds its own effect (${M.keyOf(b, line)})`);
+      let hi = 0;
+      for (let u = 0; u <= 1; u += 0.04) { S.tick(0.04); S.step(0.04, b, line, m, u, G); while (hi < m.hits.length && u >= m.hits[hi]) { S.hit(b, hi === m.hits.length - 1); hi++; } S.drawGround(ctx); S.drawFront(ctx, u * 1000); }
+    } catch (e) { threw = threw || key + ": " + e.message; }
+    maxN = Math.max(maxN, S.count());
+  }
+  ok(!threw, (low ? "low: " : "") + "every weapon move, shout and power plays and draws without errors " + (threw || ""));
+  ok(maxN <= S.cap, `moves: particles stay within the cap (${maxN}/${S.cap})`);
+  ok(S.shapes() <= 28, "moves: shapes stay within their pool");
 }
 
 // ---- 3. bows and crossbows shoot a real projectile
