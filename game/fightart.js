@@ -687,6 +687,16 @@ const FIGHTART = (() => {
     }
     return sp;
   }
+  // [blood3] dust, smoke and mist puffs: a soft round haze with no hard edge (it used to be a flat disc)
+  const softSprites = new Map();
+  function softSprite(c) {
+    let sp = softSprites.get(c);
+    if (!sp && typeof document !== "undefined") {
+      sp = document.createElement("canvas"); sp.width = sp.height = 32; const x = sp.getContext("2d"), gr = x.createRadialGradient(16, 16, 0, 16, 16, 16);
+      gr.addColorStop(0, c); gr.addColorStop(0.35, c + "b0"); gr.addColorStop(0.7, c + "40"); gr.addColorStop(1, c + "00"); x.fillStyle = gr; x.fillRect(0, 0, 32, 32); softSprites.set(c, sp);
+    }
+    return sp;
+  }
   let MANUAL = false; const LIVE = new Set();
   const PERF = new Float32Array(2000); let perfN = 0;
   const prefs = () => { try { return JSON.parse(localStorage.getItem("rotn_prefs") || "{}"); } catch { return {}; } };
@@ -791,6 +801,7 @@ const FIGHTART = (() => {
     // [OURS] blood and gore (gore.js): sprays, splats that stay for the fight, streaks on the hurt, pools, flourishes. Seeded, so every phone sees the same.
     const fightOf = f.tbTall && Object.getPrototypeOf(f) !== Object.prototype ? Object.getPrototypeOf(f) : f;   // a turn-by-turn screen is a view of the whole fight: its splats stay turn to turn
     const GS = typeof GORE !== "undefined" && GORE.on() ? GORE.scene({ fight: fightOf, W, H: Hh, groundY, s, pixel: false, reduce: rm, foeK, foeName: rec.foeName, tags: f.e?.tags, ehpMax }) : null;
+    const foeMetal = bleed[2] === "oil" || (typeof GOREFX2 !== "undefined" && GOREFX2.metal ? GOREFX2.metal(rec.foeName) : false);   // [blood3] plate or a machine: a blade sparks on it
     const goreKey = (b, i) => `${(f.log || [])[b.li]?.turn ?? b.li}|${b.li}|${b.who}|${b.dmg ?? 0}|${i}`;
     let deathK = null, camF = 0.5;
     const meleeOf = (b) => !!b && !MOVES[b.move]?.proj && !["self", "potion", "wait", "block", "cast", "shout"].includes(b.move);
@@ -875,10 +886,11 @@ const FIGHTART = (() => {
         if (mfx === "slam") { ringT = 0; ringX = tx; shake = Math.max(shake, 7); }
         if (mfx === "claw") claw = me ? -1 : 1;
         if (mfx === "punch") burst(tx, ty, 8, 2, COL.dust, 80 * s, 0.4, 4, 0);
-        burst(tx - dir * 6 * s, ty, (mfx === "stab" || mfx === "bite" ? 8 : 14) * n, 1, COL.spark, 240 * s, 0.35, 2, 260);
+        if (!GS) burst(tx - dir * 6 * s, ty, (mfx === "stab" || mfx === "bite" ? 8 : 14) * n, 1, COL.spark, 240 * s, 0.35, 2, 260);
+        else if (me && foeMetal && mfx !== "bite" && mfx !== "claw") burst(tx - dir * 6 * s, ty, 5 * n, 1, COL.spark, 280 * s, 0.18, 1.5, 200);   // [blood3] with blood on, sparks only off metal: few, bright, quick
         if (b.enchant) burst(tx, ty, 12, 0, COL[b.enchant] || COL.glow, 120 * s, 0.5, 3, 0);
         if (hurt && !b.ally) bloodAt(tx - dir * 2 * s, ty - 4 * s, dir, (b.final ? 26 : b.crit || b.sneak ? 18 : b.power ? 14 : 8) * (mfx === "stab" || mfx === "bite" ? 0.7 : 1), !me);
-        { const gr = !me ? rec.hero.gearO?.gear : null; if (gr && gr.w === "heavy" && gr.metal) burst(tx, ty, 10 * n, 3, [gr.trim, "#ffffff", "#ffe8a0"], 200 * s, 0.4, 2.2, 320); }   // armour clank: bright chips off plate
+        { const gr = !me ? rec.hero.gearO?.gear : null; if (gr && gr.w === "heavy" && gr.metal) burst(tx, ty, 6 * n, 1, ["#ffffff", "#ffe8a0", "#fff2c0"], 280 * s, 0.2, 1.5, 220); }   // armour clank: a few quick sparks off plate [blood3]
       } else if (fx === "fire" || b.el === "fire" && fx !== "breath" && fx !== "fus") {
         burst(tx, ty, 26 * n, 0, COL.fire, 200 * s, 0.6, 4, 120); burst(tx, ty, 8, 2, COL.smoke, 40 * s, 1.3, 9, -40, true); ringT = 0; ringX = tx; ringC = "#ffb347";
       } else if (fx === "frost" || b.el === "frost" && fx !== "breath") {
@@ -1001,7 +1013,10 @@ const FIGHTART = (() => {
         if (deathK === "fry" && phaseT < 0.7 && Math.random() < 0.6 * pmul) spawn(1, Math.random() < 0.5 ? "#c8b8ff" : "#ffffff", fx0 + (Math.random() - 0.5) * 26 * s, foeChest + (Math.random() - 0.5) * 30 * s, (Math.random() - 0.5) * 200 * s, (Math.random() - 0.5) * 200 * s, 0.2, 2, 0);
         const lb = beats[beats.length - 1];
         if (lb && lb.st && lb.st.soul && won && phaseT < 0.9 && Math.random() < pmul) spawn(0, "#b07aff", fx0, foeChest, (hx0 - fx0) * 1.3, -30 * s, 0.7, 3, 0);   // the soul streams into you
-        if (phaseT > 0.7 && phaseT - dt <= 0.7 && !rm) { burst(won ? fx0 : hx0, groundY, 14, 2, COL.dust, 120 * s, 0.8, 6, -10, true); shake = Math.max(shake, 3); }
+        if (phaseT > 0.7 && phaseT - dt <= 0.7 && !rm) {   // [blood3] the body hits the ground: a low, faint puff of dust that settles fast (no discs floating up)
+          const bx = won ? fx0 : hx0; for (let i = 0, nn = Math.max(2, Math.round(8 * pmul)); i < nn; i++) { const sd = (i % 2 ? 1 : -1) * (0.4 + Math.random() * 0.6); spawn(2, COL.dust[i % 3], bx + sd * 14 * s, groundY - (1 + Math.random() * 3) * s, sd * 70 * s, -(4 + Math.random() * 8) * s, 0.45 + Math.random() * 0.2, 3.5 + Math.random() * 2, 0); }
+          shake = Math.max(shake, 3);
+        }
         if (phaseT > 1.4) { done = true; rec.played = true; phase = "end"; revealLog(1e9); ctl?.remove(); }
       }
     }
@@ -1271,8 +1286,9 @@ const FIGHTART = (() => {
           if (pl[i] <= 0) continue; const ty = pt[i], glow = ty === 0 || ty === 1 || ty === 4; if (glow !== (pass === 1)) continue;
           const a = pl[i] / pm[i], sz = ps[i] * s;
           wg.globalAlpha = ty === 2 ? a * 0.45 : Math.min(1, a * 1.3);
-          if (ty === 1) { wg.strokeStyle = pc[i]; wg.lineWidth = Math.max(1, sz * 0.6); wg.beginPath(); wg.moveTo(px[i], py[i]); wg.lineTo(px[i] - pvx[i] * 0.04, py[i] - pvy[i] * 0.04); wg.stroke(); }
+          if (ty === 1) { wg.strokeStyle = pc[i]; wg.lineCap = "round"; wg.lineWidth = Math.max(1, sz * 0.4); wg.beginPath(); wg.moveTo(px[i], py[i]); wg.lineTo(px[i] - pvx[i] * 0.022, py[i] - pvy[i] * 0.022); wg.stroke(); }   // [blood3] a spark: a thin bright flick, not a stick
           else if (ty === 0 || ty === 4) { const r = sz * 3; wg.drawImage(glowSprite(pc[i]), px[i] - r, py[i] - r, r * 2, r * 2); }
+          else if (ty === 2 && /^#[0-9a-f]{6}$/i.test(pc[i]) && softSprite(pc[i])) { const r = sz * 1.5; wg.drawImage(softSprite(pc[i]), px[i] - r, py[i] - r, r * 2, r * 2); }   // [blood3] soft puff, no hard-edged disc
           else { wg.fillStyle = pc[i]; if (ty === 3) wg.fillRect(px[i] - sz / 2, py[i] - sz / 2, sz, sz); else { wg.beginPath(); wg.arc(px[i], py[i], sz, 0, 6.283); wg.fill(); } }
         }
       }
