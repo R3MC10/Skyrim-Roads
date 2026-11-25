@@ -3,6 +3,15 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b203-rigcohesion", build: 203, date: "25 Nov 2026", title: "Fighters that belong in the scene", items: [
+      "Fighters and foes now take on the light of the place you fight in: cold and blue in the snow, warm and torch-lit in caves, dim in barrows, with a faint edge of light on their backs.",
+      "Fighters are a touch softer so they match the painted backdrops instead of looking pasted on top.",
+      "Everyone casts a soft shadow under their feet and body, so they stand on the ground.",
+      "Hair, braids, belts and fur sway and trail a little when fighters move or take a hit.",
+      "Elbows and knees no longer show a gap when arms and legs bend.",
+      "The sword swing is now a small soft smear right behind the blade, only at the end of the swing.",
+      "Women on horseback have their boots back, and long braids no longer get cut off at the collar.",
+    ] },
     { id: "b202-tidy1", build: 202, date: "25 Nov 2026", title: "Weather on the lake and in the woods", items: [
       "Fishing and hunting follow the clock and the sky: at night the scene goes dark blue with a moon, snow falls and turns it cold, rain and fog make it grey, and the day is brighter and less orange.",
       "When hunting you now hold a painted bow that bends as you draw, and your arrows are painted too.",
