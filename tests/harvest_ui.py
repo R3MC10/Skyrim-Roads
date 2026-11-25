@@ -94,8 +94,9 @@ async def polish(b, w, h, phone, bad):
     await pg.evaluate("document.querySelector('[data-tab=log]')?.click()"); await pg.wait_for_timeout(300)
     await pg.evaluate("document.querySelector('[data-tab=map]')?.click()"); await pg.wait_for_timeout(1800)
     await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
-    card = await pg.evaluate("()=>[...document.querySelectorAll('.gcard')].map(c=>c.innerText).join(' | ')")
     near = await pg.evaluate("()=>document.querySelector('#gnear')?.innerText||''")
+    await pg.evaluate("document.querySelector('[data-tab=town]')?.click()"); await pg.wait_for_timeout(1200)   # [gatherarea] the card lives in the Area tab
+    card = await pg.evaluate("()=>[...document.querySelectorAll('.gcard')].map(c=>c.innerText).join(' | ')")
     ok("kroków stąd" in card and "wagi za sztukę" in card, f"the Gathering card is in Polish ({card[:90]!r})")
     ok("paces away" not in card and "wt each" not in card, "no English distance or weight left on the card")
     ok("w zasięgu" in near and "gather" not in near.lower(), f"the road prompt is in Polish ({near[:60]!r})")

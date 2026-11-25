@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b301-gatherarea", build: 301, date: "25 Nov 2026", title: "Gathering moved to the Area tab", items: [
+      "Gathering no longer floats over the map. It's now its own section in the Area tab: the plants around you, which ones are ripe and when picked ones grow back, Gather or Quick pick for each, Forage here (with how long until you can search again), Herbalist's notes and the Auto-pick switch.",
+      "The how-it-works text hides behind a small \"?\" next to the heading.",
+      "On the map a ripe plant in reach still shows its own Gather button, so you can pick it without leaving the map. In a party everyone still picks their own share.",
+    ] },
     { id: "b300-pets", build: 300, date: "25 Nov 2026", title: "Pets: Meeko walks with your follower", items: [
       "Meeko is a pet now, not a follower. You can have a follower and a pet with you at the same time.",
       "The Follower tab has two parts, Follower and Pet, and each one has its own Dismiss.",
