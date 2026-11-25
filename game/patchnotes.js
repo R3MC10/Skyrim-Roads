@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b310-fightnums", build: 310, date: "25 Nov 2026", title: "Fight numbers you can read", items: [
+      "Damage, heal and crit numbers in fights have a thick dark outline and grow with your screen, so they're easy to read on a phone and on a big PC monitor. Crits are big and gold.",
+      "Each kind has its own look: damage in its element's colour, heals green with a glow, magicka and stamina as small blue and green chips, and Miss, Blocked and Dodged as words.",
+      "Several hits in a row no longer pile up on each other: every number finds its own free spot next to whoever it hit, never on the foe's bar, the turn order, the log or your fight buttons, and never off the screen.",
+      "Big foes (giants, trolls, spiders, dragons) and groups always fit fully on a phone screen: no more arm or wing cut off at the right edge.",
+      "The turn order, your health orb's numbers and your party's bars are a bit bigger on a phone.",
+    ] },
     { id: "b309-fptravel", build: 309, date: "25 Nov 2026", title: "Through your own eyes", items: [
       "On the road you now look down the road through your own eyes, in a band at the top of the map. The compass runs along its top edge, and the place you're heading for rises under its marker and grows as you get closer.",
       "The road bends with your route, and the land is the region you're crossing: tundra, pine forest, the Rift's birches, marsh, snow, ash wastes, rocky hills, river fords, bridges, and the open sea on a ship.",

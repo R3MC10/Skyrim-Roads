@@ -214,6 +214,7 @@ const COMBAT2 = (() => {
         p.style.animationDelay = (0.2 * (i + j)).toFixed(2) + "s";
         p.innerHTML = `<i>${ic}</i>${esc(txt)}`;
         layer.appendChild(p);
+        if (typeof FIGHTNUMS !== "undefined") FIGHTNUMS.nudge(p);   // [fightnums] off the foe's plate and the buttons
         setTimeout(() => p.remove(), 2700 + 200 * (i + j));
       });
       i += Math.min(4, pops.length);

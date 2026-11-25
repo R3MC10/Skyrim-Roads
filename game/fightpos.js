@@ -92,6 +92,11 @@ const FIGHTPOS = (() => {
       const q = clamp(fs * (1 - Math.max(0, -avail) / ((fz[0] + reach) * fs * s)), Math.min(fs, Math.max(minFs, fs * 0.7)), fs);
       fs = q; fx = fx2(fs); hx = Math.min(hx, maxH(fs));
     }
+    {   // [fightnums] the whole foe stays on screen: a painted one wider than the band shrinks until it fits, edge to edge
+      const fw0 = (fz[0] + fz[1]) * s;
+      if (fw0 * fs > BW - 2 * pad) { fs = (BW - 2 * pad) / fw0; fx = r - pad - fz[0] * fs * s; hx = Math.min(hx, maxH(fs)); }
+      else if (fx - fz[1] * fs * s < l + pad) fx = l + pad + fz[1] * fs * s;
+    }
     if (allies.length > 3) hx = Math.max(hx, Math.min(maxH(fs), Math.max(l + BW * 0.46, l + pad + (Math.ceil(allies.length / MAX_ROWS) * per + hz[0] + 2) * s)));   // a crowd: you step up so they all fit behind you
     hx = Math.max(hx, l + pad + hz[0] * s);
     const hero = fig(hx, gy, 1, hz, { ride: !!o.ride });
