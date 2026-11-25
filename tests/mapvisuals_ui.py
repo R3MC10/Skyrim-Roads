@@ -85,7 +85,11 @@ async def main():
                     elif d:
                         ok(d["disp"] == "contents", f"{tag}: phone keeps the cards in the page under the map ({d['disp']})")
                 if name == "z4_5":
-                    ok(st.get("ink", 0) > 0.99 and st.get("paintAlpha", 1) == 0, f"{tag}: close up, the ink chart takes over from the painting")
+                    if st.get("tileLevel"):   # with the tile pyramid the painting stays, sharp, from its top level, grain on
+                        ok(st.get("tileLevel") == 2 and st.get("tiles", 0) > 0 and st.get("paintAlpha", 0) == 1 and st.get("ink", 1) == 0 and st.get("grain", 0) > 0,
+                           f"{tag}: close up, the painting stays from its 8000 px tiles ({st.get('tiles')} tiles, grain {st.get('grain')})")
+                    else:
+                        ok(st.get("ink", 0) > 0.99 and st.get("paintAlpha", 1) == 0, f"{tag}: close up, the ink chart takes over from the painting")
             ok(not errs, f"{tag}: no page errors {errs[:2]}")
             await ctx.close()
         await b.close()

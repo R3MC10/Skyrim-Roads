@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b229-map4k", build: 229, date: "25 Nov 2026", title: "Sharp painted map, close up", items: [
+      "The painted world map stays sharp now, even zoomed all the way in on a phone or a big 4K screen. It used to turn soft and then swap to a plain drawn chart.",
+      "Zoom in and the map loads finer pieces of the painting just for the part you look at, so it stays light on your phone. Until they arrive you see the normal painting.",
+      "Up close you can see fine brushwork: grass on the plains, snow, rock and little waves on the sea, with a faint paper grain on top.",
+      "Names, roads, fog, pins and your hero sit exactly where they did before.",
+    ] },
     { id: "b228-companyart", build: 228, date: "25 Nov 2026", title: "Painted company art", items: [
       "The Company screen opens with a painted banner of your longhouse at dusk, with the name in clear light letters.",
       "The Rooms tab shows your longhouse, and it changes as you build: the library lights more windows, the forge makes the doorway glow, the trophy hall hangs antlers and shields, the stables add lanterns and the planning table puts up company banners.",

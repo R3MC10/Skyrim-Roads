@@ -130,6 +130,8 @@ const MAPTILES = (() => {
   const stats = () => ({ ...lastDraw, cached: cache.size, loading, off });
   /* tests: forget everything */
   const reset = () => { cache.clear(); off = false; okCount = failCount = 0; loading = 0; frame = 0; };
-  return { TILE, LEVELS, TOP, MAX_TILES, levelFor, tilesIn, draw, pending, stats, reset, grain, get off() { return off; } };
+  /* switch the pyramid off/on (tests that hand the game a placeholder painting turn it off so only theirs is seen) */
+  const enable = (v = true) => { off = !v; };
+  return { TILE, LEVELS, TOP, MAX_TILES, levelFor, tilesIn, draw, pending, stats, reset, grain, enable, get off() { return off; } };
 })();
 if (typeof module !== "undefined") module.exports = MAPTILES;
