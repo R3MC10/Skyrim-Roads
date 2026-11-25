@@ -21,6 +21,10 @@
                                          hooves on the bottom edge, trimmed. poses stand gallop rear down (lying, head right).
                                          Have: grey (all four), bay (stand). A missing coat borrows the grey picture, tinted;
                                          add new files to HORSEART.HAVE (and their seat point to META). WebP q88.
+     rig-<who>-<set>-<part>   ~300-1100  painted fighter parts (rig.js; joints measured in rigdata.js): transparent, side view
+                                         facing right, 2x Lanczos of the trimmed cut-outs, WebP q84. who: nordm nordf · set: leather
+                                         iron steel (nordf: leather) · part: head torso pelvis uparm forearm hand-open hand-fist thigh
+                                         shin foot leg-bent. A set is used once all 11 parts load; until then the ink figure stays.
      shop-<id>                1200×375   painted banners for town sections (shown above each shop's list)
        ids: general forge (also blacksmith) inn (also cook) alchemy wizard (also enchanter) market stables home hall
             fence arena mine — raw 3:2 paintings go through art/conv: crop the middle band, WebP q80

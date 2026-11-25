@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b189-paintrig", build: 189, date: "25 Nov 2026", title: "Painted fighters that really move", items: [
+      "In fights you, your party mates and your followers are now painted like the foes, in leather, iron or steel to match what you wear.",
+      "They move joint by joint: a sword swing winds up behind the head and cuts through, a power attack sinks low, two-handers swing wide, bows draw and loose, spells glow in the hand, shields block and bash.",
+      "When hit they flinch and stagger; when knocked down they fall and get back up. Your weapon and shield sit in your hands.",
+      "On phones you and the follower behind you are no longer cut off at the left edge.",
+    ] },
     { id: "b188-blood3", build: 188, date: "25 Nov 2026", title: "Cleaner blood", items: [
       "No more grey circles floating over a fallen foe: the dust when a body hits the ground is a low, soft puff that settles fast.",
       "A critical hit now throws thin streams of blood that break into drops of all sizes, plus a quick fine spray. No more red pills or pale sticks.",
@@ -1312,9 +1318,9 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 185;
+  const NEXT_AT = 189;
   const NEXT = [
-    "Painted fighters with realistic fight animations",
+    "Painted riders on the road and on the map",
     "Makeovers for fishing, hunting, mining and lockpicking, plus painted festival and arena pictures",
     "Afflictions with an upside and a downside: lycanthropy, the Draugr curse and the Daedric mark",
     "An adventuring company longhouse: a shared base with a treasury, a trophy hall and stables",

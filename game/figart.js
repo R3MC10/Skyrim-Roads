@@ -946,7 +946,9 @@ const FIGART = (() => {
   }
   /* the fight replay drives the same rig: its numbers become the controls, the rig solves the bones */
   function fight(g, src, o = {}) {
-    const sp = specOf(lookFor(src, o)), dev = devScale(g) * Math.max(sp.bw, sp.bh);
+    const L0 = lookFor(src, o), sp = specOf(L0);
+    if (typeof PAINTRIG !== "undefined" && PAINTRIG.fight(g, L0, o, sp)) return;   // [OURS] the painted figure (rig.js), once its parts have loaded
+    const dev = devScale(g) * Math.max(sp.bw, sp.bh);
     const k = Math.max(0.25, Math.round(dev * 4) / 4), st = styleOf(k);
     const lunge = o.lunge || 0, wk = o.wt === undefined ? sp.wk : o.wt || null;
     const P = { aim: o.aim != null ? o.aim : wk === "bow" || wk === "crossbow" ? 0 : -0.5 + lunge * 1.1, back: o.back || 0, lean: (o.hunch || 0) + lunge * 0.25, dy: 0, ox: 0, tilt: 0,
@@ -965,7 +967,7 @@ const FIGART = (() => {
   }
 
   const STRIDE = { walk: 28.8, horse: { stand: 0, walk: 2 * GAIT.walk.S / GAIT.walk.duty, gallop: 2 * GAIT.gallop.S / GAIT.gallop.duty } };   // units travelled per cycle
-  return { POSES, LOOP, RIG, STRIDE, sprite, draw, drawHorse, contact, fight, animator, specOf, lookOf, lookFor, poseOf, poseAt, blend, solve, clipsFor, tone, clear: () => { SPRITES.clear(); LAYERS.clear(); SPECS.clear(); CLIPS.clear(); },
+  return { POSES, LOOP, RIG, STRIDE, kit: { weapon, shieldAt, glowAt, styleOf, devScale, TIP, TWO }, sprite, draw, drawHorse, contact, fight, animator, specOf, lookOf, lookFor, poseOf, poseAt, blend, solve, clipsFor, tone, clear: () => { SPRITES.clear(); LAYERS.clear(); SPECS.clear(); CLIPS.clear(); },
     /* [OURS] forget the cached frames of one look (character creation makes a new look on every click; chargen.js) */
     drop: (src) => { const k = specOf(lookFor(src)).key + "|"; for (const m of [SPRITES, LAYERS]) for (const key of [...m.keys()]) if (key.startsWith(k)) m.delete(key); } };
 })();

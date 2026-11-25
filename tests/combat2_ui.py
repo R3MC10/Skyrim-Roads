@@ -7,8 +7,9 @@ from playwright.async_api import async_playwright
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out_combat2")
 os.makedirs(OUT, exist_ok=True)
-SIZES = [(360, 780), (2000, 837), (1366, 768)]
-ASSETS = "&assets" if os.environ.get("ASSETS") else ""   # ASSETS=1: load the painted pictures (backdrops, foes) like the real game
+SIZES = [(360, 780), (412, 915), (2000, 837), (1366, 768), (3440, 1440)]
+ASSETS = "&assets" if os.environ.get("ASSETS") else ""   # ASSETS=1: load the painted pictures (backdrops, foes, the painted fighters) like the real game
+SHOTS = os.environ.get("SHOTS")   # a folder: also save each screenshot there as rig_<size>_<name>.png
 fails = 0
 def ok(c, msg):
     global fails
@@ -35,7 +36,9 @@ async def main():
             tag = f"{w}x{h}"
             ctx = await b.new_context(viewport={"width": w, "height": h}, device_scale_factor=1, has_touch=w < 900)
             pg = await ctx.new_page(); errs = []; pg.on("pageerror", lambda e: errs.append(str(e)))
-            async def shot(n): await pg.screenshot(path=os.path.join(OUT, f"{tag}_{n}.png"))
+            async def shot(n):
+                await pg.screenshot(path=os.path.join(OUT, f"{tag}_{n}.png"))
+                if SHOTS: await pg.screenshot(path=os.path.join(SHOTS, f"rig_{tag}_{n}.png"))
             async def my_turn():
                 for _ in range(60):
                     await pg.evaluate(CLEAN)
@@ -63,6 +66,9 @@ async def main():
             ok(await pg.evaluate("!!document.querySelector('#tbf.c2') && typeof COMBAT2!=='undefined'"), f"{tag}: the immersive screen is on")
             ok(await pg.evaluate("!!document.querySelector('#tbf .tbstage .c2ov .tbu.foe') && !document.querySelector('#tbf .tbvit')"), f"{tag}: the foe card sits inside the scene")
             ok(await pg.evaluate("!!document.querySelector('#tbf .tbu.me')"), f"{tag}: your HUD is there")
+            if ASSETS:   # rig.js: with the pictures loaded you are drawn as the painted fighter
+                painted = await pg.evaluate("""async()=>{ const L=FIGART.lookOf(window.__dbg.save()); for(let i=0;i<60;i++){ if(PAINTRIG.can(L)) return true; await new Promise(r=>setTimeout(r,150)); } return false; }""")
+                ok(painted and not await pg.evaluate("PAINTRIG.broken"), f"{tag}: you are drawn as the painted fighter")
             await noscroll("start")
             # attack
             n0 = await evn(); await pg.click("#tbf [data-tba=attack]"); await pg.mouse.move(2, 2)
