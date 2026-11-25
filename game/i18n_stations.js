@@ -1,5 +1,5 @@
 /* i18n_stations.js: Polish for the place pages that open on the work (ui.js "Town news" row), the plain words on the
-   Hold status card (crises.js word()) and patch note b266. Loaded before i18n.js; adds to I18N_STORY.ex (never replaces
+   Hold status card (crises.js word()) and patch note b268. Loaded before i18n.js; adds to I18N_STORY.ex (never replaces
    a line that's already translated), so the screen translator finds it. */
 (() => {
   /* Hold status words (Security / Food / Prosperity / Corruption): translated at the source by crises.js T(), not by
@@ -12,7 +12,7 @@
   });
   const PL = {
     "Town news": "Wieści z miasta",
-    // patch note b266
+    // patch note b268
     "Places open on the work": "Miejsca otwierają się na robocie",
     "Opening the Forge, a shop, the inn or any other place in town now shows its tabs and list right away: the town news folds into one \"Town news\" row you can open, and the how-it-works note sits under the list.":
       "Otwarcie kuźni, sklepu, karczmy czy innego miejsca w mieście od razu pokazuje jego zakładki i listę: wieści z miasta chowają się w jednym wierszu „Wieści z miasta”, który można rozwinąć, a opis działania jest pod listą.",

@@ -3,12 +3,25 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b266-stations", build: 266, date: "25 Nov 2026", title: "Places open on the work", items: [
+    { id: "b268-stations", build: 268, date: "25 Nov 2026", title: "Places open on the work", items: [
       "Opening the Forge, a shop, the inn or any other place in town now shows its tabs and list right away: the town news folds into one \"Town news\" row you can open, and the how-it-works note sits under the list.",
       "The \"New to the game?\" card only shows on the map and the town's board, not inside a place.",
       "Each place's painting is a little shorter on phones and the person who runs it takes one compact line.",
       "Hold status says in a word how each number is doing (Food 43 short, Security 66 safe), coloured green, gold or red.",
       "In the Company tab, the banner shrinks to a name strip when your painted longhouse is shown right below it.",
+    ] },
+    { id: "b267-itemdetail", build: 267, date: "25 Nov 2026", title: "Item details beside the list", items: [
+      "On a PC, resting the mouse on an item in your pack shows its details in the right-hand panel instead of a box over the list. Click an item to keep it there; press Esc to let go.",
+      "Weapons, armour, shields and jewellery now show how they compare with what you wear: damage, armour, weight and value, better in green and worse in red. A two-handed weapon is compared with both your hands.",
+      "On a phone, the item details panel at the bottom is solid (the list no longer shows through) and never takes more than about half the screen.",
+      "When you pick one category, the middle column says what it shows: Damage, Armor or Effect.",
+    ] },
+    { id: "b266-perksky", build: 266, date: "25 Nov 2026", title: "The perk stars open on what you can take", items: [
+      "Opening a skill's stars now shows the perks you can take right away, instead of the top of the sky. On a phone the first stars at the bottom are no longer cut off.",
+      "Stars tell you more at a glance: perks you have are gold (with gold lines), ones you can take now shine bright with a slowly pulsing ring, ones that need a higher skill are blue-grey, and ones that need another perk first are dim.",
+      "Long lines that jump over a row are now faint dashed curves, so the sky no longer looks like a tangle of wires. They light up when you pick one of their stars.",
+      "On a phone, every star is easier to tap, and the \"Tap a star\" hint sits under the stars instead of covering the bottom row.",
+      "On a PC, the stars grow to fill the panel.",
     ] },
     { id: "b265-qacore3", build: 265, date: "25 Nov 2026", title: "Crafting in Polish", items: [
       "Fixed: in Polish, the arcane enchanter, parts of the alchemy lab and one cooking recipe were still in English.",

@@ -102,7 +102,7 @@ const TABMENU = (() => {
       <div class="bar"><i style="width:${Math.round(Math.min(1, s.xp / need) * 100)}%;background:var(--frost)"></i></div>
       ${info ? `<p class="sub">${esc(info)}</p>` : ""}</div>
       ${tree.length && typeof SKYUI !== "undefined" ? `<div class="tw-bigw"><div class="skc tw-big">${SKYUI.svg(sk, S, { sel: starPick })}</div></div>` : ""}
-      <div class="tw-sdet">${detail}</div></div>`;   // tw-sleft / tw-sdet: plain blocks on a phone, the left column beside the stars on a PC (pcfit)
+      <div class="tw-sdet${pk ? "" : " hint"}">${detail}</div></div>`;   // tw-sleft / tw-sdet: plain blocks on a phone, the left column beside the stars on a PC (pcfit)
   }
   /* the werewolf's or the Vampire Lord's own sky, chosen from the same row of cards */
   function beastStars(S, list, beastT) {
@@ -306,6 +306,7 @@ const TABMENU = (() => {
     setCharTab(t);
   }
   function setCharTab(t) {
+    if (t === "stars") { starPick = null; typeof SKYUI !== "undefined" && SKYUI.refocus?.(); }   // the Skills page opens on what you can take
     ui().go?.(t);
     const side = document.getElementById("side"); if (side) side.scrollTop = 0;
     markChar(t);
@@ -437,8 +438,8 @@ const TABMENU = (() => {
     // the Skills page's own taps (skill cards, stars, links)
     document.addEventListener("click", (e) => {
       const a = e.target.closest?.("[data-twa]");
-      if (a && a.dataset.twa === "skill") { starSkill = a.dataset.id; starPick = null; ui().refresh?.(); requestAnimationFrame(() => document.querySelector(".tw-card.on")?.scrollIntoView({ inline: "center", block: "nearest" })); return; }
-      if (a && a.dataset.twa === "starsof") { starSkill = a.dataset.id; starPick = null; if (charMode) setCharTab("stars"); else ui().go?.("stars"); return; }
+      if (a && a.dataset.twa === "skill") { starSkill = a.dataset.id; starPick = null; typeof SKYUI !== "undefined" && SKYUI.refocus?.(); ui().refresh?.(); requestAnimationFrame(() => document.querySelector(".tw-card.on")?.scrollIntoView({ inline: "center", block: "nearest" })); return; }
+      if (a && a.dataset.twa === "starsof") { starSkill = a.dataset.id; starPick = null; typeof SKYUI !== "undefined" && SKYUI.refocus?.(); if (charMode) setCharTab("stars"); else ui().go?.("stars"); return; }
       const st = e.target.closest?.(".tw-big [data-sk-perk]");
       if (st) { starPick = +st.dataset.skPerk; ui().refresh?.(); requestAnimationFrame(() => document.querySelector(".tw-perk")?.scrollIntoView({ block: "nearest" })); }
     });
@@ -508,5 +509,5 @@ const TABMENU = (() => {
     if (!skip && (force || !navigator.webdriver)) setTimeout(openHub, 60);
   }
   return { RING, DIR, CHAR_TABS, swipeDir, ring, step, bar, task, mini, stars, perks, mount, openHub, closeHub, go, back, afterPanel, menuClosed, fromBar, swiped,
-    get open() { return hubOpen; }, set maxMs(v) { MAXMS = v; }, get charMode() { return charMode; }, get starSkill() { return starSkill; }, set starSkill(v) { starSkill = v; starPick = null; } };
+    get open() { return hubOpen; }, set maxMs(v) { MAXMS = v; }, get charMode() { return charMode; }, get starSkill() { return starSkill; }, set starSkill(v) { starSkill = v; starPick = null; typeof SKYUI !== "undefined" && SKYUI.refocus?.(); } };
 })();
