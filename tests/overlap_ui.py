@@ -3,7 +3,7 @@ Visits the map, the Area board, the Forge, Items (+ an item's details), the perk
 with a message showing and character creation at 360x800, 390x844, 412x915 and 1920x1080. Fails when the message-history
 button (#nfhbtn), the gather prompt (#gnear), the compass button (#twBtn) or a big banner (#pbanners) sits on a visible
 button, tab or dungeon node, when the history or compass button sits on a screen title, when the Journal's chosen tab has
-contrast under 4.5 or the AI & Loadouts sub-tab strip hides tabs without a fade, or when the character creator's canvas has ink in its top 2% of rows (a cut-off sword).
+contrast under 4.5 or the Character sub-tab strip hides tabs without a fade, or when the character creator's canvas has ink in its top 2% of rows (a cut-off sword).
 Run:  node tests/serve.js 9161   then   py tests/overlap_ui.py 9161 [outdir]"""
 import asyncio, os, sys, tempfile
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -52,7 +52,7 @@ CHECK = r"""([where, end])=>{
     }
   }
   return bad; }"""
-# the floating round buttons keep off the text of a screen title (Area, Journal, Social, AI & Loadouts, the dungeon's name)
+# the floating round buttons keep off the text of a screen title (Area, Journal, Social, Diary, the dungeon's name)
 HEADS = ".uxh-t, #dun .hd > h2, #side .panel > h2, #side h1"
 HEADCHK = r"""([where, heads])=>{
   const shown = (e) => { if (!e || !e.isConnected) return false; const r = e.getBoundingClientRect(); if (r.width < 2 || r.height < 2) return false;
@@ -198,19 +198,19 @@ async def run(b, w, h, fails):
     await pg.evaluate("document.querySelector('[data-id=forge]')?.click()"); await pg.wait_for_timeout(1000); await clr()
     await check("forge"); await to_end("forge")
 
-    # the Journal (its chosen tab readable on the parchment), AI & Loadouts (the sub-tab strip shows it hides more), Social
+    # the Journal (its chosen tab readable on the parchment), Diary (the sub-tab strip shows it hides more), Social
     await clr(); await pg.evaluate("__ui.go('log')"); await pg.wait_for_timeout(1000); await clr()
     await check("journal")
     cr = await tab_contrast(pg)
     print(tag, "journal tab contrast", cr)
     if cr is None or cr < 4.5: fails.append(f"{tag} journal: the chosen tab's text has contrast {cr} on the parchment (needs 4.5)")
     await pg.evaluate("scrollTo(0, 0)"); await pg.wait_for_timeout(600)
-    await clr(); await pg.evaluate("__ui.go('tactics')"); await pg.wait_for_timeout(1000); await clr()
-    await check("loadouts")
+    await clr(); await pg.evaluate("__ui.go('diary')"); await pg.wait_for_timeout(1000); await clr()
+    await check("diary")
     sub = await pg.evaluate("""()=>{ const s = document.querySelector('#side .mn-sub'); if (!s) return null; const on = s.querySelector('button.on'), r = s.getBoundingClientRect(), q = on.getBoundingClientRect();
       return { more: s.scrollWidth > s.clientWidth + 2, fade: s.classList.contains('mn-fl') || s.classList.contains('mn-fr'), room: Math.round(Math.min(q.left - r.left, r.right - q.right)) }; }""")
-    if sub and sub["more"] and not sub["fade"]: fails.append(f"{tag} loadouts: the sub-tab strip hides tabs with no fade at its edge {sub}")
-    if sub and sub["more"] and sub["room"] < 16: fails.append(f"{tag} loadouts: the chosen sub-tab isn't fully in view with 16 px to spare {sub}")
+    if sub and sub["more"] and not sub["fade"]: fails.append(f"{tag} diary: the sub-tab strip hides tabs with no fade at its edge {sub}")
+    if sub and sub["more"] and sub["room"] < 16: fails.append(f"{tag} diary: the chosen sub-tab isn't fully in view with 16 px to spare {sub}")
     await clr(); await pg.evaluate("__ui.go('social')"); await pg.wait_for_timeout(1000); await clr()
     await check("social")
 

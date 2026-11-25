@@ -217,7 +217,7 @@ const UIART = (() => {
     champion: (g) => { shield(g, "#8e2b25"); line(g, [[12, 10], [28, 28]], "#c8ccce", 2.2); line(g, [[28, 10], [12, 28]], "#c8ccce", 2.2); }, stablemaster: (g) => horseHead(g, "#8a5a3b", true), rich: (g) => { for (const [x, y] of [[14, 26], [22, 28], [18, 20], [26, 21], [20, 13]]) { ell(g, x, y, 6, 2.6, "#d6b25e"); } },
   };
   const GUIDE = {
-    travel: (g) => SKILL.Athletics(g), trade: SKILL.Mercantile, tactics: (g) => { line(g, [[10, 10], [30, 30]], "#c8ccce", 2.6); line(g, [[30, 10], [10, 30]], "#c8ccce", 2.6); }, dungeon: G_.candle,
+    travel: (g) => SKILL.Athletics(g), trade: SKILL.Mercantile, dungeon: G_.candle,
     level: (g) => star(g, 20, 20, 12, 5, "#d6b25e"), smith: SKILL.Smithing, cook: (g) => { ell(g, 20, 24, 12, 8, "#3a3440"); ell(g, 20, 18, 12, 3.4, "#7a5232"); for (const x of [15, 20, 25]) line(g, [[x, 13], [x + 2, 8], [x, 4]], "rgba(255,255,255,.8)", 1.2); },
     friends: (g) => { for (const [x, c] of [[14, "#8a5a34"], [26, "#2f5f9a"]]) { circ(g, x, 13, 4.5, "#e9c6a1"); poly(g, [[x - 7, 33], [x - 6, 21], [x + 6, 21], [x + 7, 33]], c); } }, home: ACH.homeowner, arena: ACH.champion,
   };

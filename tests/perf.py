@@ -32,7 +32,7 @@ async def main():
         cdp = await pg.context.new_cdp_session(pg); await cdp.send("Emulation.setCPUThrottlingRate", {"rate": 4})
         await pg.wait_for_timeout(2000)
         # tab switch cost
-        for t in ["log","town","hero","tactics","map","log"]:
+        for t in ["log","town","hero","map","log"]:
             ms = await pg.evaluate(f"()=>{{const t0=performance.now(); document.querySelector('[data-tab={t}]').click(); return Math.round(performance.now()-t0);}}")
             print(f"tab {t}: {ms} ms")
             for _ in range(3):
