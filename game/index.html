@@ -4713,6 +4713,27 @@ body.nf-p0 #pbanners,body.nf-p0 #skillup,body.nf-p0 #lvln,body.nf-p0 #hudlog{vis
 #tbf .fc-aimbar .fc-who:active{background:rgba(96,66,24,.95)}
 /* [notify-2] an onboarding tip waits, hidden, while it would cover the dungeon route strip */
 #obtip.obwait{visibility:hidden;pointer-events:none}
+/* [stations] a place's page opens on the work: folded town news, a capped painting, the keeper on one line, the note under the list */
+.au-news{margin:0 0 4px}
+#side .au-newsb{display:flex;align-items:center;gap:6px;width:100%;min-height:40px;padding:6px 10px;background:rgba(20,16,12,.55);border:1px solid rgba(214,178,94,.25);border-radius:6px;color:var(--sk-mute,#9d978a);font:600 13px/1.2 var(--sk-ui,GameIcons,system-ui);letter-spacing:.05em;text-transform:uppercase;cursor:pointer;text-align:left}
+#side .au-newsb .au-nn{color:var(--gold)}#side .au-newsb .au-chev{margin-left:auto;font-size:12px}
+.au-news.on .au-newsb{border-bottom-left-radius:0;border-bottom-right-radius:0;color:var(--sk-ink,#ece8de)}
+.au-newsin{padding:2px 8px 4px;border:1px solid rgba(214,178,94,.25);border-top:0;border-radius:0 0 6px 6px}
+.au-in img.art.scene.sec{max-height:22vh;object-fit:cover;margin:6px 0 4px}
+@media (min-width:900px){.au-in img.art.scene.sec{max-height:150px}}
+.au-in .npctalk{gap:8px;margin:4px 0 6px;padding:5px 6px}
+.au-in .npctalk .npcport{width:40px!important;height:40px!important;flex:none;object-fit:cover}
+.au-in .npctalk .npcport img{width:100%;height:100%;object-fit:cover}
+.au-in .npct{flex:1;min-width:0}
+.au-in .npct b{display:inline;font-size:13px;letter-spacing:.12em}
+.au-in .npcrole{display:inline;margin-left:6px;font-size:10px}
+.au-in .npct q{display:block;margin-top:2px;font-size:13px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.au-in .list+p.au-note,.au-in .list+.au-more{margin-top:10px}
+.au-in .rw-day{margin-top:6px}
+.cr-chip .cr-w{font-style:normal;font-weight:600}
+/* the Company banner as a name strip when the growing hall is painted right below it */
+.lng-banner.lng-strip{min-height:0;background:linear-gradient(90deg,rgba(40,30,16,.9),rgba(15,12,9,.85))}
+.lng-banner.lng-strip .lng-bt{position:static;background:none;padding:8px 12px}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -5055,6 +5076,7 @@ body.nf-p0 #pbanners,body.nf-p0 #skillup,body.nf-p0 #lvln,body.nf-p0 #hudlog{vis
 <script src="i18n_gptqa.js"></script>
 <script src="i18n_perklayout.js"></script>
 <script src="i18n_crafticons.js"></script>
+<script src="i18n_stations.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>

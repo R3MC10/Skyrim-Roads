@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b266-stations", build: 266, date: "25 Nov 2026", title: "Places open on the work", items: [
+      "Opening the Forge, a shop, the inn or any other place in town now shows its tabs and list right away: the town news folds into one \"Town news\" row you can open, and the how-it-works note sits under the list.",
+      "The \"New to the game?\" card only shows on the map and the town's board, not inside a place.",
+      "Each place's painting is a little shorter on phones and the person who runs it takes one compact line.",
+      "Hold status says in a word how each number is doing (Food 43 short, Security 66 safe), coloured green, gold or red.",
+      "In the Company tab, the banner shrinks to a name strip when your painted longhouse is shown right below it.",
+    ] },
     { id: "b265-qacore3", build: 265, date: "25 Nov 2026", title: "Crafting in Polish", items: [
       "Fixed: in Polish, the arcane enchanter, parts of the alchemy lab and one cooking recipe were still in English.",
       "Fixed: in Polish, the messages after brewing, cooking, eating a meal and improving gear were half in English.",
