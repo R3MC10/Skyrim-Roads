@@ -41,7 +41,7 @@ const RULES = [
   [/^lock-(iron|steel|nordic|dwemer|noble)$/, 700, 700, 1, 0.01], [/^tool-lockpick$/, 900, 70, null], [/^tool-tension-wrench$/, 680, 100, null],
   [/^room-/, 1280, 720, null],
   [/^mg-hunting-bg$/, 2048, 1152, 16 / 9, 0.01], [/^animal-/, 500, 320, null],
-  [/^rig-w-(bow|bow-drawn|shield|shield-side|shield-kite|shield-kite-side)$/, 30, 190, null], [/^rig-w-/, 190, 20, null], [/^horse-/, 1000, 1000, null], [/^icon-192/, 192, 192, 1, 0], [/^icon-/, 256, 256, 1, 0],
+  [/^rig-w-(bow|bow-drawn|shield|shield-side|shield-kite|shield-kite-side)$/, 30, 190, null], [/^rig-w-/, 190, 20, null], [/^rig-nord[mf]-/, 250, 220, null], [/^rig-head-/, 400, 480, null], [/^horse-/, 1000, 1000, null], [/^icon-192/, 192, 192, 1, 0], [/^icon-/, 256, 256, 1, 0],
 ];
 const files = fs.readdirSync(W).filter((f) => /\.(webp|png|jpe?g)$/i.test(f));
 const keys = new Set();

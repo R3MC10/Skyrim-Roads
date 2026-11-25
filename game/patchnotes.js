@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b200-rigraces", build: 200, date: "25 Nov 2026", title: "Painted races and a softer swing", items: [
+      "Women in iron or steel armour now wear it in fights too, painted to match, instead of always showing up in leather.",
+      "Dark Elves, Khajiit and Argonians get their own painted faces in fights, for men and women, sized to sit right on the armour. Other races keep the tinted face for now.",
+      "Your sword swing leaves a soft, fading arc that follows the blade, instead of a hard white line shooting up into the sky.",
+      "Damage numbers on the fight screen pop up next to the fighter who took the hit, not floating high in the sky.",
+    ] },
     { id: "b199-horsecoats", build: 199, date: "25 Nov 2026", title: "Black and chestnut horses", items: [
       "Black and chestnut horses are painted too: a glossy black with a white star, and a copper chestnut with a light mane, a white blaze and white socks. They stand, gallop and lie down like the grey.",
       "Chestnut is a new coat at the stables. The stables now show the whole horse in the coat you pick before you buy.",

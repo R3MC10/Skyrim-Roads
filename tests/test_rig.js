@@ -75,7 +75,15 @@ const sp = { wk: "sword", r: "nord", skin: "#e2b894" };
 const fall = R.controls({ clip: "down", from: "hit", w: 0.6 }, sp, "sword"), lying = R.controls({ clip: "down", u: 0 }, sp, "sword"), up = R.controls({ clip: "idle", from: "down", w: 0.5 }, sp, "sword");
 ok(fall.clip === "down" && lying.clip === "down" && up.clip === "getup", "followers fall, lie and get up (no death)");
 ok(R.controls({ move: "sword", mu: 0.44, hitU: 0.44 }, sp, "sword").clip === "swing", "the replay's sword move plays the swing");
-ok(R.setOf({ fem: true, heavy: true }) === "nordf-leather" && R.setOf({ heavy: true, ck: "iron" }) === "nordm-iron" && R.setOf({ heavy: true, ck: "ebony" }) === "nordm-steel" && R.setOf({ light: true }) === "nordm-leather" && R.setOf({ bare: true }) === "nordm-leather", "gear picks the painted set");
+ok(R.setOf({ fem: true, heavy: true }) === "nordf-steel" && R.setOf({ fem: true, heavy: true, ck: "iron" }) === "nordf-iron" && R.setOf({ fem: true, light: true }) === "nordf-leather" && R.setOf({ heavy: true, ck: "iron" }) === "nordm-iron" && R.setOf({ heavy: true, ck: "ebony" }) === "nordm-steel" && R.setOf({ light: true }) === "nordm-leather" && R.setOf({ bare: true }) === "nordm-leather", "gear picks the painted set");
 ok(R.setOf({}, { id: "f-lydia" }) === "nordf-leather", "Lydia wears the women's set");
+// the other races' heads: on disk at 2x, the neck point inside, and every set's head has a neck width to scale them to
+for (const [k, q] of Object.entries(D.HEADS)) {
+  const f = path.join(W, D.headFile(k) + ".webp");
+  ok(fs.existsSync(f) && fs.statSync(f).size < 400 * 1024, `head ${k}: file there, under 400 KB`);
+  ok(q.p[0] > 0 && q.p[0] < q.w && q.p[1] > q.h * 0.5 && q.p[1] <= q.h && q.nw > 50, `head ${k}: neck point low in the picture, neck width set`);
+}
+for (const r of ["dunmer", "khajiit", "argonian"]) for (const x of ["m", "f"]) ok(!!D.HEADS[r + x], `a painted head for ${r} ${x}`);
+ok(Object.values(D.SETS).every((S) => S.parts.head.nw > 50), "every set's head has its neck width");
 console.log(fails ? `${fails} FAILED` : "ALL OK");
 process.exit(fails ? 1 : 0);

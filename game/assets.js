@@ -24,8 +24,11 @@
                                          add new files to HORSEART.HAVE (and their seat point to META). WebP q88.
      rig-<who>-<set>-<part>   ~300-1100  painted fighter parts (rig.js; joints measured in rigdata.js): transparent, side view
                                          facing right, 2x Lanczos of the trimmed cut-outs, WebP q84. who: nordm nordf · set: leather
-                                         iron steel (nordf: leather) · part: head torso pelvis uparm forearm hand-open hand-fist thigh
-                                         shin foot leg-bent. A set is used once all 11 parts load; until then the ink figure stays.
+                                         iron steel (both nordm and nordf) · part: head torso pelvis uparm forearm hand-open hand-fist
+                                         thigh shin foot leg-bent. A set is used once all 11 parts load; until then the ink figure stays.
+     rig-head-<race><m|f>     ~430-650   painted heads for other races on the same bodies (rig.js; RIGDATA.HEADS): dunmer khajiit
+                                         argonian, m/f. Scaled so the neck is 110 px at 1x (like the Nord necks), trimmed, 2x, WebP q84.
+                                         A missing one keeps the Nord head with a skin tint.
      rig-w-<pic>              ~200-460   painted weapons and shields the painted fighters hold (riggear.js; grip points in its
                                          PIV table): transparent, trimmed, WebP q86. Weapons lie flat, point right: sword
                                          sword-iron dagger greatsword axe battleaxe mace staff (360/330/200/460/320/440/330/460
