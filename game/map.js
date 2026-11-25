@@ -2,6 +2,10 @@
    A hand-painted picture (paintedmap.js, ASSETS "map-world") takes the procedural base's place when it is in the game folder. */
 const WorldMap = (() => {
   const LX = (x) => (typeof I18N_SWEEP !== "undefined" ? I18N_SWEEP.c(x) : x);   // words drawn on canvas, in the player's language
+  /* names of places, holds and lands come from the names table (names.js), by id; here=true: in the player's language, as LX did */
+  const PN = (n) => (typeof NAMES !== "undefined" ? NAMES.place(n) : n);
+  const HN = (n, here) => (typeof NAMES !== "undefined" ? (here ? NAMES.local(n, { type: "hold" }) : NAMES.hold(n)) : here ? LX(n) : n);
+  const RN = (n, here) => (typeof NAMES !== "undefined" ? (here ? NAMES.local(n, { type: "region" }) : NAMES.get(n, { type: "region" })) : here ? LX(n) : n);
   const heading = { a: null, last: null };   // the way your marker last moved
   const W = 1000, H = 700, S0 = 2.4;         // painted at 2.4× so zooming in stays crisp
   const T = Terrain.T;
@@ -86,7 +90,7 @@ const WorldMap = (() => {
     g.save(); g.textAlign = "center"; g.textBaseline = "middle"; g.lineJoin = "round";
     let drawn = 0;
     for (const [name, v] of Object.entries(WORLD.holds)) {
-      const text = LX(name).toUpperCase(), x = v[0][0] * W, y0 = v[0][1] * H;
+      const text = HN(name, true).toUpperCase(), x = v[0][0] * W, y0 = v[0][1] * H;
       g.font = FONT(sz * s, 600); if (g.letterSpacing !== undefined) g.letterSpacing = `${sp * s}px`;
       const w = g.measureText(text).width + sp * s, h = sz * s * 1.1;
       const y = [0, -1.6, 1.6, -3.2, 3.2].map((d) => y0 + d * h).find((yy) => !hit([x - w / 2, yy - h / 2, w, h]));
@@ -98,14 +102,14 @@ const WorldMap = (() => {
     for (const [name, x, y, rot] of WORLD.beyond || []) {
       g.save(); g.translate(x * W, y * H); g.rotate(rot * Math.PI / 180); g.font = FONT(sz * 1.1 * s, 600);
       if (g.letterSpacing !== undefined) g.letterSpacing = `${sp * 1.6 * s}px`;
-      const text = LX(name).toUpperCase(), tw = g.measureText(text).width, th = sz * 1.2 * s, a = rot * Math.PI / 180;
+      const text = RN(name, true).toUpperCase(), tw = g.measureText(text).width, th = sz * 1.2 * s, a = rot * Math.PI / 180;
       const bw = tw * Math.abs(Math.cos(a)) + th * Math.abs(Math.sin(a)), bh = tw * Math.abs(Math.sin(a)) + th * Math.abs(Math.cos(a));
       if (hit([x * W - bw / 2, y * H - bh / 2, bw, bh])) { g.restore(); continue; }   // e.g. under a card docked at the left
       g.globalAlpha = 0.5 * fade; g.fillStyle = "rgba(246,238,220,1)"; g.fillText(text, 0, 0); g.restore();
     }
     const sl = WORLD.seaLabel || [0.4, 0.05];
     g.font = FONT(sz * 1.15 * s, 600, "italic"); if (g.letterSpacing !== undefined) g.letterSpacing = `${sp * 0.6 * s}px`;
-    { const t = LX("Sea of Ghosts"), tw = g.measureText(t).width, th = sz * 1.3 * s;
+    { const t = RN("Sea of Ghosts", true), tw = g.measureText(t).width, th = sz * 1.3 * s;
       if (!hit([sl[0] * W - tw / 2, sl[1] * H - th / 2, tw, th])) { g.globalAlpha = 0.6 * fade; g.fillStyle = "rgba(200,222,230,1)"; g.fillText(t, sl[0] * W, sl[1] * H); } }
     if (g.letterSpacing !== undefined) g.letterSpacing = "0px";
     g.restore();
@@ -130,13 +134,13 @@ const WorldMap = (() => {
       g.textAlign = "center"; g.textBaseline = "middle";
       for (const [name, v] of Object.entries(WORLD.holds)) {
         g.font = FONT(17, 700, "italic"); g.fillStyle = "rgba(92,56,38,.78)";
-        g.save(); g.translate(v[0][0] * W, v[0][1] * H); if (g.letterSpacing !== undefined) g.letterSpacing = "3px"; g.fillText(name.toUpperCase(), 0, 0); g.restore();
+        g.save(); g.translate(v[0][0] * W, v[0][1] * H); if (g.letterSpacing !== undefined) g.letterSpacing = "3px"; g.fillText(HN(name).toUpperCase(), 0, 0); g.restore();
       }
       for (const [name, x, y, rot] of WORLD.beyond) {
         g.save(); g.translate(x * W, y * H); g.rotate(rot * Math.PI / 180); g.font = FONT(15, 700); g.fillStyle = "rgba(245,240,230,.55)";
-        if (g.letterSpacing !== undefined) g.letterSpacing = "6px"; g.fillText(name, 0, 0); g.restore();
+        if (g.letterSpacing !== undefined) g.letterSpacing = "6px"; g.fillText(RN(name), 0, 0); g.restore();
       }
-      g.font = FONT(20, 600, "italic"); g.fillStyle = "rgba(190,214,222,.75)"; g.fillText(LX("Sea of Ghosts"), (WORLD.seaLabel || [0.4])[0] * W, (WORLD.seaLabel || [0, 0.05])[1] * H);
+      g.font = FONT(20, 600, "italic"); g.fillStyle = "rgba(190,214,222,.75)"; g.fillText(RN("Sea of Ghosts", true), (WORLD.seaLabel || [0.4])[0] * W, (WORLD.seaLabel || [0, 0.05])[1] * H);
     }
     if (ON("compass")) {   // compass
       const cx = WORLD.border ? 64 : W - 52, cy = WORLD.border ? H - 64 : H - 70;   // over Hammerfell, off the land
@@ -733,7 +737,7 @@ const WorldMap = (() => {
       if (rt < 1) g.globalAlpha = rt;
       const [bx, by] = P(v.route[v.route.length - 1]);
       g.strokeStyle = "#fff0cd"; g.lineWidth = 2.4 * s; g.beginPath(); g.arc(bx, by, 9 * s, 0, 7); g.stroke();
-      if (v.dest && !v.discovered.includes(v.dest.name)) { const dt = v.dest.roam ? " " + v.dest.name : v.dest.name + " ?"; g.font = FONT(15 * s, 700, ""); boxes.push([bx + 11 * s, by - 10 * s, g.measureText(dt).width + 4 * s, 20 * s]); label(g, dt, bx + 13 * s, by, s, 15, "#ffeac0", 700, false, "left"); }
+      if (v.dest && !v.discovered.includes(v.dest.name)) { const dt = v.dest.roam ? " " + v.dest.name : PN(v.dest.name) + " ?"; g.font = FONT(15 * s, 700, ""); boxes.push([bx + 11 * s, by - 10 * s, g.measureText(dt).width + 4 * s, 20 * s]); label(g, dt, bx + 13 * s, by, s, 15, "#ffeac0", 700, false, "left"); }
       boxes.push([bx - 11 * s, by - 11 * s, 22 * s, 22 * s]);
       g.globalAlpha = 1;
     }
@@ -770,14 +774,14 @@ const WorldMap = (() => {
       if (!(v.zoom >= KIND_MIN_ZOOM[kind] || v.selected === n)) continue;
       const size = kind === "city" ? 16 : 14, italic = ["dungeon", "fort", "camp", "lair", "stone", "shrine"].includes(kind);
       g.font = FONT(size * s, kind === "city" ? 700 : 600, italic ? "italic" : "");
-      const w = g.measureText(n).width, bx = x * W - w / 2 - 2 * s, bw = w + 4 * s, bh = size * s * 1.2, dy0 = (MA ? (kind === "city" ? 20 : 16) : 17) * s;
+      const nm = PN(n), w = g.measureText(nm).width, bx = x * W - w / 2 - 2 * s, bw = w + 4 * s, bh = size * s * 1.2, dy0 = (MA ? (kind === "city" ? 20 : 16) : 17) * s;
       const tries = n === v.selected || !(kind === "city" || kind === "town") ? [dy0] : [dy0, dy0 + bh, -dy0 - 6 * s];
       const free = (dy) => { const by = y * H + dy - 11 * s; return !boxes.some(([X, Y, Wd, Hd]) => bx < X + Wd && bx + bw > X && by < Y + Hd && by + bh > Y); };
       const dy = n === v.selected ? dy0 : tries.find(free);
       if (dy === undefined) continue;
       if (dy !== dy0) stats.placeNamesMoved++;
       boxes.push([bx, y * H + dy - 11 * s, bw, bh]);
-      label(g, n, x * W, y * H + dy, s, size, "#fbf3dc", kind === "city" ? 700 : 600, italic);
+      label(g, nm, x * W, y * H + dy, s, size, "#fbf3dc", kind === "city" ? 700 : 600, italic);
     }
     /* [smallpolish] event labels (great events and what they leave behind, festivals) find a free spot too: clear of
        your party, the objective, town names and icons. They go in before the hold names, so a hold name steps aside
@@ -810,7 +814,7 @@ const WorldMap = (() => {
       const gs = left * G.GAME_SPEED, dd = Math.floor(gs / 86400), h = Math.floor(gs / 3600), mm = Math.ceil(gs / 60);
       label(g, ` ${dd ? dd + "d" : h ? h + "h" : mm + "m"}`, x * W + 9 * s, y * H - 10 * s, s, 11, "#e8c98a", 700, false, "left");
     }
-    if (v.selected && !v.discovered.includes(v.selected)) { const [x, y] = WORLD.places[v.selected]; g.strokeStyle = "#9fd0f0"; g.lineWidth = 2.6 * s; g.beginPath(); g.arc(x * W, y * H, 14 * s, 0, 7); g.stroke(); label(g, v.selected, x * W, y * H + 20 * s, s, 14); }
+    if (v.selected && !v.discovered.includes(v.selected)) { const [x, y] = WORLD.places[v.selected]; g.strokeStyle = "#9fd0f0"; g.lineWidth = 2.6 * s; g.beginPath(); g.arc(x * W, y * H, 14 * s, 0, 7); g.stroke(); label(g, PN(v.selected), x * W, y * H + 20 * s, s, 14); }
     // from here on the places' icons count too, so a camp's or a patrol's name never sits on a farm's house
     for (const [, x, y] of shown) boxes.push([x * W - 8 * s, y * H - 11 * s, 16 * s, 18 * s]);
     // people and bags: try a few spots around each dot and take the first that doesn't cover another label

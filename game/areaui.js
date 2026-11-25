@@ -104,10 +104,11 @@ const AREAUI = (() => {
     return `<div class="au">${now ? `<div class="au-nowl"><div class="au-gh">Right now</div>${now}</div>` : ""}${groups}</div>`;
   }
   /* the strip on top of an open place: back to the board, its name and what it's for, and its neighbours */
+  const PN = (n) => (typeof NAMES !== "undefined" ? NAMES.place(n) : n);   // the place's shown name (names.js); l stays its id
   function head(o) {
     const { l, sections, names, cur, desc } = o, sibs = siblings(sections, cur);
     const lab = GROUPS.find(([g]) => g === groupOf(cur))?.[1] || "";
-    return `<div class="au-head"><button class="btn sm au-back" data-act="areahub" aria-label="Back to all of ${esc(l)}">‹ ${esc(l)}</button><div class="au-ht"><small>${esc(lab)}</small><b class="au-name" role="button" tabindex="0" data-act="shop" data-id="${esc(cur)}">${ICON[cur] ? `<span aria-hidden="true">${ICON[cur]}</span> ` : ""}${esc(plain(names[cur]))}</b></div></div>
+    return `<div class="au-head"><button class="btn sm au-back" data-act="areahub" aria-label="Back to all of ${esc(PN(l))}">‹ ${esc(PN(l))}</button><div class="au-ht"><small>${esc(lab)}</small><b class="au-name" role="button" tabindex="0" data-act="shop" data-id="${esc(cur)}">${ICON[cur] ? `<span aria-hidden="true">${ICON[cur]}</span> ` : ""}${esc(plain(names[cur]))}</b></div></div>
       ${sibs.length > 1 ? `<div class="au-sibs" role="tablist">${sibs.map((id) => `<button class="${id === cur ? "on" : ""}" role="tab" aria-selected="${id === cur}" data-act="shop" data-id="${esc(id)}">${esc(label(id, names))}</button>`).join("")}</div>` : ""}
       ${desc ? `<p class="tg-desc">${esc(desc)}</p>` : ""}`;
   }

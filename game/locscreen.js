@@ -18,6 +18,8 @@ const LOCSCREEN = (() => {
   const live = typeof document !== "undefined" && typeof document.addEventListener === "function" && typeof window !== "undefined";   // (node tests stub a bare document)
   const esc = (x) => String(x ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const safe = (fn, d) => { try { return fn(); } catch { return d; } };
+  /* shown names come from the names table (names.js); l and hold stay ids (data-place, layouts, pictures) */
+  const PN = (n) => (typeof NAMES !== "undefined" ? NAMES.place(n) : n), HN = (n) => (typeof NAMES !== "undefined" && n ? NAMES.hold(n) : n);
   const AU = () => (typeof AREAUI !== "undefined" ? AREAUI : null);
 
   // ------------------------------------------------------------ backdrops
@@ -188,10 +190,10 @@ const LOCSCREEN = (() => {
       : `<span class="ls-who${p.player ? " pl" : ""}" title="${esc(p.sub)}"><span class="ls-wp" aria-hidden="true">${p.pic}</span><span class="ls-wn">${esc(p.name)}</span></span>`).join("");
     const sheets = Object.entries(o.sheets || {}).filter(([, h]) => h).map(([id, h]) => `<section class="ls-sheet" data-sheet="${esc(id)}" ${sheetOpen === id ? "" : "hidden"} aria-label="${esc(id)}"><button class="ls-x" data-act="locsheet" data-id="" aria-label="Close">✕</button>${h}</section>`).join("");
     const flav = FLAVOUR[l] || KIND_LINE[kind] || "";
-    return `<div class="ls ls-${esc(kind)} tod-${sk.tod} wx-${esc(sk.wx)}${indoor ? " indoor" : ""}${sheetOpen ? " sheet-on" : ""}" data-place="${esc(l)}" role="region" aria-label="${esc(l)}">
+    return `<div class="ls ls-${esc(kind)} tod-${sk.tod} wx-${esc(sk.wx)}${indoor ? " indoor" : ""}${sheetOpen ? " sheet-on" : ""}" data-place="${esc(l)}" role="region" aria-label="${esc(PN(l))}">
       <div class="ls-stage"><div class="ls-bg" style='background-image:${bg}'></div><div class="ls-tint"></div><div class="ls-wx" aria-hidden="true"></div></div>
       <ul class="ls-spots" role="list">${pins}</ul>
-      <header class="ls-head"><div class="ls-tt"><small class="ls-hold"><span>${esc(KIND_NAME[kind] || "")}</span> · <span>${esc(hold)}</span></small><div class="ls-nrow"><i aria-hidden="true"></i><h1 class="ls-name">${esc(l)}</h1>${typeof LOCINTRO !== "undefined" ? LOCINTRO.viewBtn() : ""}</div><p class="ls-flav">${esc(flav)}</p>${o.wanted ? `<div class="ls-wanted">${o.wanted}</div>` : ""}</div>
+      <header class="ls-head"><div class="ls-tt"><small class="ls-hold"><span>${esc(KIND_NAME[kind] || "")}</span> · <span>${esc(HN(hold))}</span></small><div class="ls-nrow"><i aria-hidden="true"></i><h1 class="ls-name">${esc(PN(l))}</h1>${typeof LOCINTRO !== "undefined" ? LOCINTRO.viewBtn() : ""}</div><p class="ls-flav">${esc(flav)}</p>${o.wanted ? `<div class="ls-wanted">${o.wanted}</div>` : ""}</div>
         <div class="ls-meta"><span class="ls-clock">${esc(sk.clock)}</span>${sk.wxName ? `<span class="ls-wxn">${esc(sk.wxName)}</span>` : ""}${S ? `<span class="ls-gold"><b class="gold">${S.gold}</b> gold</span>` : ""}</div>
         <div class="ls-btns"><button class="btn ls-list" data-act="locmode" data-id="list" aria-label="Show as a list"><span>List</span></button><button class="btn pri ls-leave" data-act="locleave"><span>Leave</span></button></div></header>
       ${ppl ? `<footer class="ls-people" aria-label="People here">${ppl}</footer>` : ""}
