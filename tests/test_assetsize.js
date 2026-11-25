@@ -36,6 +36,7 @@ const RULES = [
   [/^map-world$/, 2000, 1400, 10 / 7, 0.01], [/^map-world-2x$/, 3000, 2100, 10 / 7, 0.01],
   [/^ui-compass3d$/, 2240, 2240, 1, 0], [/^ui-(compass|frame|panel|parchment)$/, 1024, 1024, 1, 0],
   [/^fest-/, 1600, 600, 8 / 3, 0.01],
+  [/^mg-smithing-bg$/, 2048, 1152, 16 / 9, 0.01], [/^mg-smith-blade\d$/, 1100, 110, null], [/^mg-smith-(hammer|tongs)$/, 700, 150, null],
   [/^room-/, 1280, 720, null],
   [/^rig-w-(bow|bow-drawn|shield|shield-side|shield-kite|shield-kite-side)$/, 30, 190, null], [/^rig-w-/, 190, 20, null], [/^icon-192/, 192, 192, 1, 0], [/^icon-/, 256, 256, 1, 0],
 ];

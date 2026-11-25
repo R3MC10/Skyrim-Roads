@@ -166,17 +166,20 @@ const SMITHGAME = (() => {
       if (S.pt > 2.8) S.over = true;
     }
   }
-  /* a bot that plays well (or badly): used by the Node test and the balance numbers in the patch note */
+  /* a bot that plays well (skillful 1) or badly (0): the Node test, the balance numbers and the screen tests use it */
+  function botStep(S, skillful = 1, rnd = Math.random) {
+    if (S.phase === "heat") press(S, rnd() < skillful ? S.temp < (S.T.lo + S.T.hi) / 2 - 0.03 : rnd() < 0.5);
+    if (S.phase === "hammer") {
+      if (skillful > 0.5 && canReheat(S) && S.temp < S.T.lo - 0.08 && !S.spot) reheat(S);
+      else if (S.spot && S.spot.t >= S.spot.T * (skillful >= 1 ? 1 : 1 + (rnd() - 0.5) * (1 - skillful) * 1.2)) press(S, true);
+      else if (skillful > 0 && S.temp < TOO_COLD) reheat(S);
+    }
+    if (S.phase === "quench" && S.pt > 0.5 && Math.abs(S.temp - QUENCH_AT) < 0.01 + (1 - skillful) * 0.15 * rnd()) press(S, true);
+  }
   function simulate(o = {}, skillful = 1, rnd = Math.random) {
     const S = create(o, rnd), dt = 1 / 60;
-    for (let i = 0; i < 60 * 90 && !S.over; i++) {
-      if (S.phase === "heat") press(S, rnd() < skillful ? S.temp < (S.T.lo + S.T.hi) / 2 - 0.03 : rnd() < 0.5);
-      if (S.phase === "hammer") {
-        if (skillful > 0.5 && canReheat(S) && S.temp < S.T.lo - 0.08 && !S.spot) reheat(S);
-        else if (S.spot && S.spot.t >= S.spot.T * (skillful >= 1 ? 1 : 1 + (rnd() - 0.5) * (1 - skillful) * 1.2)) press(S, true);
-        else if (S.temp < TOO_COLD) reheat(S);
-      }
-      if (S.phase === "quench" && S.pt > 0.5 && Math.abs(S.temp - QUENCH_AT) < 0.01 + (1 - skillful) * 0.15 * rnd()) press(S, true);
+    for (let i = 0; i < 60 * 120 && !S.over; i++) {
+      botStep(S, skillful, rnd);
       if (S.phase === "reveal") S.over = true;
       step(S, dt);
     }
@@ -191,7 +194,7 @@ const SMITHGAME = (() => {
   const FORGE = { x: 205, y: 520, fx: 200, fy: 430 };
   const WATER = { x: 1850, y: 622 };
   const CAMS = {   // [focus x, focus y, zoom on wide screens, zoom on tall screens]
-    heat: [430, 520, 1.5, 1], hammer: [1020, 680, 1.12, 1], carry: [1300, 640, 1.1, 1], quench: [1720, 470, 1.25, 1], steam: [1720, 470, 1.25, 1], reveal: [1020, 600, 1, 1],
+    heat: [430, 520, 1.5, 1], hammer: [1020, 680, 1.12, 1], carry: [1300, 640, 1.1, 1], quench: [1720, 440, 1.05, 1], steam: [1720, 440, 1.05, 1], reveal: [1020, 600, 1, 1],
   };
   const fb = {};
   const asset = (k) => (typeof ASSETS !== "undefined" ? ASSETS.img(k) : null);
@@ -269,6 +272,7 @@ const SMITHGAME = (() => {
         <div class="sgrow sglow"><button class="btn" id="sgquick">Quick craft</button>
           <label class="lppref"><input type="checkbox" id="sgpref" ${pref("craftGame", true) ? "checked" : ""}> Always play crafting mini-games</label></div></div></div>`;
     document.body.appendChild(el);
+    document.body.classList.add("sgopen");   // the forge covers the screen: don't paint the game behind it (smooth on big monitors, saves battery)
     const cv = el.querySelector("#sgc"), act = el.querySelector("#sgact");
     st = { S, o, done, el, cv, cam: null, sparks: [], embers: [], steam: [], drops: [], flash: [], shake: 0, hm: { a: 0.85, t: 9, x: null }, last: "", popT: 0 };
     const toBg = (e) => { const b = cv.getBoundingClientRect(), c = st.cam; if (!c) return null; return { x: (e.clientX - b.left - c.w / 2) / c.sc + c.cx, y: (e.clientY - b.top - c.h / 2) / c.sc + c.cy }; };
@@ -411,7 +415,13 @@ const SMITHGAME = (() => {
   let lastDraw = 0;
   function draw() {
     const S = st.S, cv = st.cv;
-    const fit = typeof FITCANVAS !== "undefined" ? FITCANVAS.fill(cv) : (() => { const r = cv.getBoundingClientRect(), k = devicePixelRatio || 1; cv.width = r.width * k; cv.height = r.height * k; const g = cv.getContext("2d"); g.setTransform(k, 0, 0, k, 0, 0); return { g, w: r.width, h: r.height, k }; })();
+    // backing pixels: screen density, but never more than ~2.6 million (the painting is 2048 wide; a 3440 monitor
+    // at full size would only burn the GPU and drop frames)
+    const r = cv.getBoundingClientRect(), bw0 = Math.max(1, r.width), bh0 = Math.max(1, r.height);
+    const kk = Math.min(typeof FITCANVAS !== "undefined" ? FITCANVAS.dpr() : Math.min(2.5, devicePixelRatio || 1), Math.sqrt(2.6e6 / (bw0 * bh0)));
+    const pw = Math.max(1, Math.round(bw0 * kk)), pgh = Math.max(1, Math.round(bh0 * kk));
+    if (cv.width !== pw || cv.height !== pgh) { cv.width = pw; cv.height = pgh; }
+    const fit = { g: cv.getContext("2d"), w: bw0, h: bh0, k: pw / bw0 };
     const { g, w, h, k } = fit;
     const now = performance.now(), dt = lastDraw ? Math.min(0.05, (now - lastDraw) / 1000) : 0; lastDraw = now;
     const c = st.cam = camera(w, h, S.phase, dt);
@@ -459,8 +469,8 @@ const SMITHGAME = (() => {
       g.restore();
       drawTongs(g, tx + 26 * Math.cos(ang), ty + 26 * Math.sin(ang), false, ang);
       if (dip > 0) { g.strokeStyle = "rgba(220,235,240,.5)"; g.lineWidth = px(2); for (let i = 0; i < 3; i++) { const r = ((st.plungeT * 140 + i * 50) % 160) + 20; g.globalAlpha = clamp(1 - r / 180, 0, 1); g.beginPath(); g.ellipse(tipX, WATER.y + 4, r * 1.6, r * 0.25, 0, 0, Math.PI * 2); g.stroke(); } g.globalAlpha = 1; }
-    } else if (ph === "reveal") {
-      drawBlade(g, 4, ANVIL.x, ANVIL.y, ANVIL.s, 0, 0, c);
+    } else if (ph === "reveal" && S.pt < 0.35) {
+      drawBlade(g, 4, ANVIL.x, ANVIL.y, ANVIL.s, 0, 0, c);   // fades into the close-up; after that only the close-up shows
     }
     // sparks, flashes, steam
     g.globalCompositeOperation = "lighter";
@@ -592,6 +602,7 @@ const SMITHGAME = (() => {
     cancelAnimationFrame(st.raf);
     if (st.key) { removeEventListener("keydown", st.key, true); removeEventListener("keyup", st.key, true); }
     st.el?.remove(); st = null; lastDraw = 0;
+    document.body.classList.remove("sgopen");
   }
 
   // ====================================================================== hooks into crafting (craftgames.js)
@@ -615,5 +626,5 @@ const SMITHGAME = (() => {
   }
   /* tests: hand a result in as if the game had just been played */
   const _pend = (p) => { pending = p; };
-  return { STRIKES, SHAPE_AT, TOO_COLD, QUENCH_AT, heatRGB, heatCSS, tune, heatFactor, strikeScore, quenchScore, total, saveChance, saveRoll, create, step, press, reheat, canReheat, simulate, play, close, state: () => st && st.S, _pend, DIMS };
+  return { STRIKES, SHAPE_AT, TOO_COLD, QUENCH_AT, heatRGB, heatCSS, tune, heatFactor, strikeScore, quenchScore, total, saveChance, saveRoll, create, step, press, reheat, canReheat, simulate, botStep, play, close, state: () => st && st.S, _pend, DIMS };
 })();

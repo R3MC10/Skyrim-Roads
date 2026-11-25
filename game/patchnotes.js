@@ -3,6 +3,15 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b194-mgsmith", build: 194, date: "25 Nov 2026", title: "A real forge for smithing", items: [
+      "Making weapons and armor at a forge is now a small scene at a painted smithy: heat the bar, hammer it into shape, then quench it.",
+      "Heat: hold to pump the bellows and keep the glow in the gold band. Too hot and it burns, too cold and it won't move.",
+      "Hammer: tap the glowing spots as the rings close on them. Sparks fly and the bar turns into a rough blade, then a shaped one. The metal cools while you work, so reheat it when the glow fades.",
+      "Quench: dip the blade in the water barrel when it cools to cherry red. Steam bursts up and you see the finished blade.",
+      "Good work gives the same small, capped bonus as before (a point or two of damage or armor). Great work can also save one piece of the main material now and then. The forge still uses up everything else.",
+      "Quick craft skips it, like the other crafting games. The Smithing contest at festivals uses the new forge too.",
+      "New Smithing perk, Forge Sense: wider gold bands, slower cooling, and a better chance to save material.",
+    ] },
     { id: "b193-rigpolish", build: 193, date: "25 Nov 2026", title: "Painted weapons and better swings", items: [
       "Fighters swing like they mean it: a sword goes up and back over the shoulder, then comes down and forward in one arc, the body turning into the blow and the weight stepping onto the front foot. No more blade sliding through your own head.",
       "Bows are drawn properly: the bow arm straight, the string hand pulled back to the cheek, then the hand flies back as the arrow goes.",
