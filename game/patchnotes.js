@@ -11,6 +11,18 @@ const PATCHNOTES = (() => {
       "Riding in a party, every horse moves in its own rhythm, so a group of eight doesn't march in step, and when the line gets crowded only your name and the leader's stay over the riders.",
       "Reduce motion in Settings still keeps the horses calm and still.",
     ] },
+    { id: "b332-fightscreen", build: 332, date: "25 Nov 2026", title: "A clearer fight screen", items: [
+      "On a phone the fight screen now has three parts: the turn order, the foe's next move, its health and the latest line of the fight at the top; the battle in the middle with nothing covering the fighters; your health, your party and the move buttons at the bottom, in easy reach of your thumbs.",
+      "On a PC your party stands down the left side, the foe you're fighting and the whole fight story down the right, and the battle in the middle.",
+      "A gold ring under the foe shows who your blows go to.",
+      "Only one big banner shows at a time (Your turn, a new round, a combo, a boss's new phase), and they appear above the fighters' heads instead of over them.",
+      "A boss's introduction plays once per fight, and the first-fight tips and Your turn wait until it's over.",
+    ] },
+    { id: "b331-partyfoeturns", build: 331, date: "25 Nov 2026", title: "Foes take proper turns in party fights", items: [
+      "In a party fight the foe now says who its next move goes for, and that's who it really hits. Before, it could say \"you\" and then hit a teammate.",
+      "When a fast foe moves twice in a round, its 1st move always comes before its 2nd in the turn strip.",
+      "With a big party, or a phone that was slow for a moment, every teammate still sees every one of the foe's moves play out, round by round, the same as the leader.",
+    ] },
     { id: "b330-fightfeel", build: 330, date: "25 Nov 2026", title: "Blows that land with weight", items: [
       "Swings now wind up and hold for a moment before they snap through. A dagger is quick, a sword is steady and a warhammer takes its time.",
       "When a blow lands, both fighters freeze for a split second, then the one who got hit is knocked back, staggers and finds their stance again. A miss never freezes anyone, and the fight doesn't get any slower.",
