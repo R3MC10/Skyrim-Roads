@@ -216,6 +216,7 @@ const FAI = (() => {
   /* Smart AI for followers: the best option per point of pace, with the tactic's leanings. Returns one option or null. */
   function decide(fight, al, ap = al.ap || 6) {
     let opts = options(fight, al, ap);
+    if (typeof BONDS2 !== "undefined") opts = BONDS2.aiOpts(fight, al, opts);   // Trusted followers choose better (bonds.js)
     if (al.order === "hold" && typeof STRAT !== "undefined") opts = opts.filter((o) => STRAT.allowed(al, o));   // your order: Hold back (strategy.js)
     if (!opts.length) return null;
     let best = null, bv = -1;

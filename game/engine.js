@@ -284,7 +284,7 @@ const G = (() => {
   const theFoe = (e, cap) => { const n = String((e && e.name) || "foe"), named = !!(e && (e.named || e.unique || e.legend)) || /^the\s/i.test(n); const t = named ? n.replace(/^The\s/, "the ") : "the " + n; return cap ? t.charAt(0).toUpperCase() + t.slice(1) : t; };
   const withHorse = (s) => (typeof HORSES !== "undefined" ? HORSES.present(s) : !!s.horse);
   const capacity = (s) => F.BASE_CARRY + Math.floor(s.spBonus / F.ATTRIBUTE_PER_LEVEL) * F.CARRY_PER_STAMINA_LEVEL
-    + (withHorse(s) ? (typeof HORSES !== "undefined" ? HORSES.carry(s) : D.HORSE_CARRY) : 0) + (P(s, "extra_pockets") ? 100 : 0) + fxSum(s, "carry") + (typeof PFX !== "undefined" ? PFX.num(s, "carry") : 0) + (s.stone === "steed" ? 100 : 0) + (s.follower ? 100 : 0)   // [OURS] a follower carries 100 for you
+    + (withHorse(s) ? (typeof HORSES !== "undefined" ? HORSES.carry(s) : D.HORSE_CARRY) : 0) + (P(s, "extra_pockets") ? 100 : 0) + fxSum(s, "carry") + (typeof PFX !== "undefined" ? PFX.num(s, "carry") : 0) + (s.stone === "steed" ? 100 : 0) + (s.follower ? 100 + (typeof BONDS2 !== "undefined" ? BONDS2.carry(s) : 0) : 0)   // [OURS] a follower carries 100 for you (more from Companion rank, bonds.js)
     + (typeof HALL !== "undefined" ? HALL.carryBonus() : 0)   // [OURS] Jarl's Keep tier of the shared hall
     + (typeof CARAVANS !== "undefined" ? CARAVANS.cartCarry(s) : 0);   // [OURS] a cart behind your horse
   const overweight = (s) => carried(s) > capacity(s);

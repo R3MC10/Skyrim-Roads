@@ -3,6 +3,22 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b208-crisespolish", build: 208, date: "25 Nov 2026", title: "Crises, smoothed out", items: [
+      "Deliver food now says it plainly: bring the steward 3 pieces of food per delivery, and it counts your deliveries (up to 4).",
+      "On a PC map a crisis sign no longer hides behind the cards on the left: it moves to the other side of the town, or just past the cards with a thin line back to it.",
+      "Achievements and other messages no longer pile up over the title of an open window. While a window is open you see only the newest one, above the window or below it.",
+      "Ringleaders: a Run away rule in your tactics now works in crisis fights too, and the boss card warns you when the fight is risky at your level.",
+      "Heroes under level 10 face a slightly softer ringleader, so they're no longer beaten more often than not.",
+    ] },
+    { id: "b207-bonds", build: 207, date: "25 Nov 2026", title: "Bonds with followers and horses", items: [
+      "Followers now have ranks: Hireling, Companion, Trusted and Sworn. They climb as loyalty grows, and each rank gives something real.",
+      "Companion: they carry 25 more for you. Trusted: they fight smarter, stepping in front of you when you're badly hurt, healing you sooner and finishing off wounded foes. Sworn: a signature move once per fight, even before their personal quest.",
+      "Loyalty now also grows from time on the road together and from hard fights won side by side (bosses, dragons, dangerous foes).",
+      "Personal quests show the QUEST STARTED and objective banners like every other quest.",
+      "Horses have a bond level from 1 to 5. It grows as you ride on the road, win fights in the saddle, hunt on horseback and groom them at a stables.",
+      "At bond level 3 you pick one speciality at a stables: warhorse, mountain horse, courier, packhorse or hunter's horse. It gets stronger at levels 4 and 5. You can retrain later for gold.",
+      "New perks: Fellow Traveller in Etiquette (road time counts double, your follower carries more) and Horse Whisperer in Athletics (your horse bonds twice as fast, its speciality works better).",
+    ] },
     { id: "b206-crises", build: 206, date: "25 Nov 2026", title: "Hard times in the holds", items: [
       "Every hold now has four numbers you can see: Security, Food, Prosperity and Corruption. They drift with time and the weather, and they follow what players do.",
       "Escorting caravans and beating bandits makes a hold safer, bringing food feeds it, and bribes, pickpocketing and selling stolen goods make it more crooked.",
