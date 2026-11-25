@@ -3601,6 +3601,16 @@ html.art-pixel .lh-paint{border-radius:0;image-rendering:pixelated}html.art-pixe
 /* [c2polish] a long next-move chip on the foe's plate wraps inside the plate instead of printing over itself (phones) */
 #tbf.c2 .c2ov .tbu.foe .tbint{flex-wrap:wrap;white-space:normal;max-width:100%;box-sizing:border-box;row-gap:1px}
 #tbf.c2 .c2ov .tbu.foe .tbint>*{flex:none;white-space:nowrap}
+/* afflictions (afflictions.js) */
+.affgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;margin:6px 0}
+.affcard{border:1px solid var(--line);border-left:3px solid var(--affc,var(--gold));border-radius:8px;padding:10px 12px;background:linear-gradient(135deg,color-mix(in srgb,var(--affc,#888) 12%,transparent),rgba(255,255,255,.02))}
+.affhead{display:flex;align-items:center;gap:10px}.affhead .t{font-weight:600;display:flex;flex-direction:column}.affhead .t span{font-weight:400;font-size:13px;color:var(--mute)}
+.afficon{font-size:26px;line-height:1;color:var(--affc,var(--gold));width:32px;text-align:center}
+.affbar{margin:8px 0 6px;height:6px}.affbar i{background:var(--affc,var(--gold))}
+.afflist{list-style:none;margin:4px 0;padding:0;font-size:14px}.afflist li{margin:3px 0;line-height:1.35}.afflist .affup{color:#9fd49a}.afflist .affdown{color:#e0928a}
+.affbtns{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px}.affcard .sub{margin:4px 0}
+.affbadge{margin-left:6px;font-size:14px;letter-spacing:2px}.affbadge i{font-style:normal}
+.affparty{margin-top:8px}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -3871,6 +3881,7 @@ html.art-pixel .lh-paint{border-radius:0;image-rendering:pixelated}html.art-pixe
 <script src="i18n_fishhunt.js"></script>
 <script src="i18n_esckey.js"></script>
 <script src="i18n_comingnext.js"></script>
+<script src="i18n_afflictions.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>
@@ -3892,6 +3903,7 @@ html.art-pixel .lh-paint{border-radius:0;image-rendering:pixelated}html.art-pixe
 <script src="netsync.js"></script>
 <script src="sideui.js"></script>
 <script src="leghunt.js"></script>
+<script src="afflictions.js"></script>
 <script src="ui.js"></script>
 </body>
 </html>
