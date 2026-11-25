@@ -28,7 +28,6 @@ async def main():
             await pg.evaluate("window.__r=null; CG.run('hammer',{skill:25,skillName:'Smithing',what:'Iron Sword',id:'iron_sword',s:window.__dbg.save()},(g)=>window.__r=g)")
             await pg.wait_for_selector("#smithgame", timeout=5000)
             await pg.wait_for_function("['mg-smithing-bg','mg-smith-blade1','mg-smith-hammer','mg-smith-tongs'].every(k=>ASSETS.state(k)!=='loading')", timeout=15000)
-            res[name + "_art"] = await pg.evaluate("['mg-smithing-bg','mg-smith-blade1','mg-smith-blade2','mg-smith-blade3','mg-smith-blade4','mg-smith-hammer','mg-smith-tongs'].map(k=>ASSETS.state(k))")
             # 1. heat: pump, then look while the glow sits in the band
             await pg.evaluate("window.__bot=setInterval(()=>{const S=SMITHGAME.state(); if(S && !window.__hold) SMITHGAME.botStep(S,1)},16)")
             await pg.wait_for_function("SMITHGAME.state()?.phase==='heat' && SMITHGAME.state().pt>2.2", timeout=10000)
@@ -37,10 +36,10 @@ async def main():
             await pg.wait_for_function("SMITHGAME.state()?.phase==='hammer' && SMITHGAME.state().spot && SMITHGAME.state().spot.t > SMITHGAME.state().spot.T*0.55", timeout=15000)
             await pg.evaluate("window.__hold=1"); await pg.wait_for_timeout(120); await shot("2hammer"); await pg.evaluate("window.__hold=0")
             n0 = await pg.evaluate("SMITHGAME.state().strikes.length")
-            await pg.wait_for_function(f"SMITHGAME.state()?.strikes.length>{n0}", timeout=8000); await pg.wait_for_timeout(150)
+            await pg.wait_for_function(f"SMITHGAME.state()?.strikes.length>{n0}", timeout=25000); await pg.wait_for_timeout(150)
             await shot("3sparks")
             # 3. cooling: let the metal go cold, the Reheat button lights up
-            await pg.evaluate("window.__hold=1; const S=SMITHGAME.state(); S.temp=S.T.lo-0.12;")
+            await pg.wait_for_function("(()=>{const S=SMITHGAME.state(); if(S?.phase!=='hammer') return false; window.__hold=1; S.temp=S.T.lo-0.12; return true})()", timeout=25000)
             await pg.wait_for_timeout(350); await shot("4cold")
             res[name + "_reheat_btn"] = await pg.evaluate("!document.querySelector('#sgreheat').hidden && document.querySelector('#sgreheat').classList.contains('sgwarn')")
             await pg.click("#sgreheat"); await pg.wait_for_timeout(200)
@@ -59,6 +58,8 @@ async def main():
             await shot("8reveal")
             await pg.wait_for_function("window.__r", timeout=8000)
             res[name + "_grade"] = await pg.evaluate("window.__r")
+            # every picture the game used has loaded by the end (the later blade stages load as they're needed)
+            res[name + "_art"] = await pg.evaluate("['mg-smithing-bg','mg-smith-blade1','mg-smith-blade2','mg-smith-blade3','mg-smith-blade4','mg-smith-hammer','mg-smith-tongs'].map(k=>ASSETS.state(k))")
             await pg.evaluate("clearInterval(window.__bot)")
             if name == "phone412":
                 # quick craft from the real forge button: plain result, no game left on screen
