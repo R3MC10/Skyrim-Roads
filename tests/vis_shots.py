@@ -25,7 +25,6 @@ async def main():
             await clear(); await pg.evaluate(f"()=>{{window.__ui.closeMenu(); window.__ui.go('{t}')}}"); await pg.wait_for_timeout(500); await clear()
             await pg.screenshot(path=f"{OUT}{name}_{STYLE}.png")
         await go("map", "travel"); await go("town", "town"); await go("hero", "hero"); await go("log", "journal"); await go("social", "social")
-        await go("tactics", "tactics")
         for m in ["items", "magic"]:
             await clear(); await pg.evaluate(f"()=>window.__ui.openMenu('{m}')"); await pg.wait_for_timeout(500)
             if m == "items": await pg.evaluate("()=>document.querySelector('#sky [data-act=skycat][data-id=all]')?.click()"); await pg.wait_for_timeout(300)

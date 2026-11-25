@@ -202,9 +202,12 @@ const HUD2 = (() => {
     if (document.body.classList.contains("fab-away")) return;   // wait until the page stops moving
     const x = lefty ? 12 : innerWidth - right - size, base = { left: x, top: tabTop - 12 - size };
     const blockers = [];
-    const seen = new Set();
-    for (let i = 0; i < 5; i++) {
-      const top = base.top - i * 58;
+    const seen = new Set(), minTop = safeTop() + 60;
+    /* [perf] one slot at a time, lowest first, stopping at the first free one: the usual case (nothing under the button)
+       costs 5 hit tests instead of 25 */
+    let i = 0;
+    for (let j = 0; j < 5; j++) {
+      const top = base.top - j * 58; if (top < minTop) break;
       for (const [px, py] of [[0.5, 0.5], [0.12, 0.12], [0.88, 0.12], [0.12, 0.88], [0.88, 0.88]]) {
         for (const e of document.elementsFromPoint(x + size * px, top + size * py)) {
           if (e === b || b.contains(e)) continue;
@@ -212,8 +215,8 @@ const HUD2 = (() => {
           if (t && !seen.has(t) && !t.closest("#twBtn, #hudlane, #pbanners, #tabs")) { seen.add(t); blockers.push(t.getBoundingClientRect()); }
         }
       }
+      if (!blockers.some((r) => hit({ left: base.left, right: base.left + size, top, bottom: top + size }, r, 4))) { i = j; break; }
     }
-    const i = freeSlot(base, size, 58, 5, blockers, safeTop() + 60);
     b.style.bottom = Math.round(baseBottom + i * 58) + "px";
   }
 

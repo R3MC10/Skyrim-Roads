@@ -191,6 +191,6 @@ const VISION = (() => {
     if (label) label(name, x, y);
   }
   const reset = () => { memo.clear(); for (const k in heads) delete heads[k]; veilKey = ""; };   // forget cached sights (tests, new character)
-  return { BASE_RANGE, BASE_HALF, MIN_RANGE, MAX_RANGE, WEATHER, SPOT, night, params, cone, see, inCone, forPos, track, step, sprite, veil, edges, foe, wrap, reset };
+  return { BASE_RANGE, BASE_HALF, MIN_RANGE, MAX_RANGE, WEATHER, SPOT, night, params, cone, see, inCone, forPos, track, step, sprite, veil, edges, foe, wrap, reset, get veilKey() { return veilKey; } };
 })();
 if (typeof module !== "undefined") module.exports = VISION;

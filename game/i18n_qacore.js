@@ -67,9 +67,7 @@ const I18N_QACORE = (() => {
     "Web version": "Wersja przeglądarkowa", "Saved in this browser": "Zapisane w tej przeglądarce", "App": "Aplikacja",
     "Controls": "Sterowanie", "Action bar": "Pasek akcji", "Cards / wheel": "Karty / koło", "Ideas on Travel": "Pomysły w Podróży",
     // updater (what phone players see under Updates)
-    "You're playing the web version, which is always up to date. The phone app downloads new versions by itself and switches over when you next open it.":
-      "Grasz w wersję przeglądarkową, która zawsze jest aktualna. Aplikacja na telefon sama pobiera nowe wersje i przełącza się na nie przy następnym uruchomieniu.",
-    "Checking for a new version…": "Sprawdzam, czy jest nowa wersja…", "You have the newest version:": "Masz najnowszą wersję:", "Check again": "Sprawdź jeszcze raz",
+    "Checking for a new version…": "Sprawdzam, czy jest nowa wersja…", "Check again": "Sprawdź jeszcze raz",
     "A new version is ready:": "Nowa wersja jest gotowa:", "What's new": "Co nowego", "Update now": "Zaktualizuj teraz", "Updating…": "Aktualizuję…",
     // How to Play
     "Fights": "Walki", "Playing together": "Gra z innymi", "Dying": "Śmierć",
