@@ -3,12 +3,33 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b309-mappanels", build: 309, date: "25 Nov 2026", title: "Everything on the map opens in a panel", items: [
+    { id: "b312-mappanels", build: 312, date: "25 Nov 2026", title: "Everything on the map opens in a panel", items: [
       "Places, dungeons, caves, forts, camps, shrines, standing stones and landmarks now open in the same panel as caravans: on a PC it sits on the right and the map stays usable beside it; on a phone it slides up above the menu bar.",
       "The panel shows the place's marker, its hold, how far it is, whether you've been there, and what's going on: a quest or a rumour there, when a cleared dungeon fills up again, a crisis or your bounty in that hold.",
       "Travel, Go inside and Mine ore are big rows with a line under them saying what they do. Your pins and spots in the wilds (Walk here, Pin, Share, Remove) open there too.",
       "Tapping another hero opens their panel too: Greet a stranger, Invite them to your party, Trade or Add as a friend right from the map.",
       "Tap another marker and the panel switches to it. Tap empty map, press X, Esc or your phone's back button to close it.",
+    ] },
+    { id: "b311-commissions", build: 311, date: "25 Nov 2026", title: "The Commissions board", items: [
+      "Your company's longhouse has a Commissions board: open Social, then Company, then Commissions.",
+      "Every game day the towns post 3 to 5 orders for your company: a Jarl's steward, a blacksmith, an innkeeper or a temple priest wants crafted goods (swords, boots, stews, potions), gathered goods (ore, firewood, pelts, herbs), an outlaw camp cleared, or a caravan taken safely to another town.",
+      "The bigger your company grows (rooms built, renown earned), the more orders there are and the more they ask and pay.",
+      "Everyone in the company can help. Goods you hand in are used up. When an order is filled, each helper gets their share of the gold (in a party it's split evenly), the company gets renown and materials for its stockpile, and sometimes whoever finished it gets an item too.",
+      "New perks: Commission Broker (Speech) makes your commission gold 15/30% bigger, and Master's Mark (Smithing) gives the company more materials and a better chance of an item from orders for crafted goods.",
+    ] },
+    { id: "b310-friendjoin", build: 310, date: "25 Nov 2026", title: "See what your friends are up to", items: [
+      "Your Friends list now shows what each friend online is doing: where they are (a town, a dungeon or on the road), whether they're fighting, trading or taking it easy, and their level.",
+      "It also shows whether they're in a party and how full it is (up to 8 players; followers don't count).",
+      "New Ask to join button: it asks their party leader (or your friend, if they're alone). The leader gets a card with Accept and Decline, and if they accept you join the party straight away.",
+      "You can't ask while their party is full or they're inside a dungeon run; ask again when they're out. A request with no answer runs out after a minute.",
+    ] },
+    { id: "b309-fptravel", build: 309, date: "25 Nov 2026", title: "Through your own eyes", items: [
+      "On the road you now look down the road through your own eyes, in a band at the top of the map. The compass runs along its top edge, and the place you're heading for rises under its marker and grows as you get closer.",
+      "The road bends with your route, and the land is the region you're crossing: tundra, pine forest, the Rift's birches, marsh, snow, ash wastes, rocky hills, river fords, bridges, and the open sea on a ship.",
+      "The sky is the real time of day and weather: sun, moon, stars, the aurora, snow, rain, lightning, fog and ash.",
+      "Riding, you see your horse's ears and your hands on the reins, in your own gloves. On foot the view sways with your steps.",
+      "Your follower's lines show at the bottom of the view.",
+      "Route, time left, the places you'll pass, Walk/Ride and Stop sit in one slim bar under the view. The arrow button folds the view away (it remembers your choice).",
     ] },
     { id: "b308-locscreen", build: 308, date: "25 Nov 2026", title: "Every place opens full screen", items: [
       "Arriving in a town, a farm, a camp, a cave mouth, a shrine or any other place now opens it full screen: a painted picture of the place, its name in big letters, the hold, a short line about it, the time and the weather.",

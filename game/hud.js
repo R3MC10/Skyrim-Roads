@@ -56,7 +56,7 @@ const HUD = (() => {
   const FOV = 200;   // degrees shown across the strip
   const bearing = (from, to, W, H) => { const dx = (to[0] - from[0]) * W, dy = (to[1] - from[1]) * H; return (Math.atan2(dx, -dy) * 180 / Math.PI + 360) % 360; };
   const rel = (b) => { let d = b - heading; while (d > 180) d -= 360; while (d < -180) d += 360; return d; };
-  /* d = { pos, target (where you're heading, or null), W, H, quest:{pos,name}, places:[{name,pos,kind,known}], players:[{name,pos}], raid:{town,pos} } */
+  /* d = { pos, target (where you're heading, or null), W, H, quest:{pos,name}, places:[{name,pos,kind,known}], players:[{name,pos}], raid:{town,pos}, dest:{name,pos} } */
   function compass(d) {
     if (!comp || !d || !d.pos) return;
     const W = d.W || 1, H = d.H || 1;
@@ -80,6 +80,7 @@ const HUD = (() => {
     for (const p of d.places || []) put(p.known ? "pl" : "unk", p.known ? svg(KIND[p.kind] || KIND.landmark) : "<em>?</em>", bearing(d.pos, p.pos, W, H), "", p.known ? p.name : "", p.known ? p.name : "Something nearby");
     for (const o of d.players || []) put("pp", "<i></i>", bearing(d.pos, o.pos, W, H), "", "", o.name);
     if (d.raid) put("raid", svg(DRAGON), bearing(d.pos, d.raid.pos, W, H), "", d.raid.town, `Dragon at ${d.raid.town}`);
+    if (d.dest && d.dest.pos) put("dest", svg('<path d="M6 21V3M6 4h11l-3 4 3 4H6"/>'), bearing(d.pos, d.dest.pos, W, H), "", d.dest.name || "", d.dest.name || "");   // where the trip goes (fptravel.js draws it under this marker)
     if (d.quest) put("quest", svg('<path d="M12 21L5 8h14z"/>'), bearing(d.pos, d.quest.pos, W, H), "", d.quest.name || "", d.quest.name || "Quest");
     const key = Math.round(heading) + "|" + width + "|" + marks.join("").length + "|" + items.join("");
     if (key === lastKey) return;

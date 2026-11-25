@@ -735,5 +735,6 @@ const TRAVELART = (() => {
   /* for tests: where everyone stood in the last picture of the live strip (strip units: feet line, each figure's x and
      feet, the name tags after placing) */
   const debug = () => (V && V.dbg ? JSON.parse(JSON.stringify(V.dbg)) : null);
-  return { mount, frame, debug, W, H, U, FEET, BIOME, GROUND, figure, weatherKind, speedOf };
+  return { mount, frame, debug, W, H, U, FEET, BIOME, GROUND, CITY_LOOK, figure, weatherKind, speedOf,
+    draw: { pine, broad, birch, dead, boulder, reeds, bush, treeCols, landmark, destination, light } };   // fptravel.js paints the first-person road with these
 })();

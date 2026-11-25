@@ -11,7 +11,7 @@ const INVITES = (() => {
   const NOS_KEEP = 8;            // a party/run keeps the last few "declined" notes for its leader
   const NO_MEMORY = 86400;       // a declined clan invite stays hidden for a day (seconds)
   const SHOW = 3;                // cards on screen at once; the rest wait behind a "+N more" line
-  const ICON = { party: "\uE106", coop: "\uE101", clan: "\uE13E", duel: "\uE101", trade: "\uE198" };
+  const ICON = { party: "\uE106", coop: "\uE101", clan: "\uE13E", duel: "\uE101", trade: "\uE198", join: "\uE106" };
   const nowS = () => (typeof G !== "undefined" && G.now ? G.now() : Date.now() / 1000);
 
   /* ---------------------------------------------------------------- pure part
@@ -44,6 +44,7 @@ const INVITES = (() => {
       add({ key: "trade:" + d.id, kind: "trade", id: d.id, from: d.fromName, t: d.t || d.arrive || 0, text: `${d.fromName} offers you a trade`,
         sub: `Offer: ${d.what || "something"} · ${d.ask ? `for ${d.ask} gold` : "as a gift"}`, can, why: can ? "" : `You need ${d.ask} gold` });
     }
+    for (const c of src.joins || []) add(c);   // "Kacper asks to join your party" (friendjoin.js)
     return out.sort((a, b) => b.t - a.t);
   }
   /* the invitee says no: leave a short note on the party/run record for its leader */

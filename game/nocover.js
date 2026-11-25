@@ -127,7 +127,8 @@ const NOCOVER = (() => {
     if (!kids.length) return;
     const st = o.st || 0, m = o.m && o.m.right > 0 && o.m.bottom > 0 ? o.m : null, dun = shown(document.getElementById("dun"));
     const hdr = document.querySelector(".app .top"), hr = shown(hdr) ? hdr.getBoundingClientRect() : null;
-    const y0 = hr && hr.bottom > 0 && hr.bottom < innerHeight * 0.3 ? hr.bottom + 4 : st + 6;
+    const fpt = document.getElementById("fpt"), fr = shown(fpt) ? fpt.getBoundingClientRect() : null;   // fptravel.js: never over the travel band
+    const y0 = Math.max(hr && hr.bottom > 0 && hr.bottom < innerHeight * 0.3 ? hr.bottom + 4 : st + 6, fr && fr.bottom < innerHeight * 0.6 ? fr.bottom + 6 : 0);
     const y1 = Math.max(y0, innerHeight * (m || dun ? 0.2 : 0.3));
     const L = m ? Math.max(0, m.left) : 0, R = m ? Math.min(innerWidth, m.right) : innerWidth;
     pb.classList.add("nc-fit");

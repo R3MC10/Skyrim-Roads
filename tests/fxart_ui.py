@@ -55,12 +55,12 @@ async def main():
         for style in ["ink"]:
             await pg.evaluate("()=>{ const S=window.__dbg.save(); S.vampire=null; S.werewolf=false; S.location='Whiterun'; [S.x,S.y]=WORLD.places.Whiterun; S.trip=null; const e=G.startTrip(S,'Riverwood',WORLD.places.Riverwood.slice(0,2)); return e; }")
             await pg.evaluate(clear); await pg.click("[data-tab=map]"); await pg.wait_for_timeout(1500); await pg.evaluate(clear)
-            has = await pg.evaluate("!!document.querySelector('#trip .tripvig canvas')")
-            el = await pg.query_selector("#trip")
+            has = await pg.evaluate("!!document.querySelector('#fpt .fpt-view canvas')")
+            el = await pg.query_selector("#fpt")
             if el: await el.screenshot(path=OUT + f"trip_{style}_a.png")
             await pg.wait_for_timeout(1200)
             if el: await el.screenshot(path=OUT + f"trip_{style}_b.png")
-            off = await pg.evaluate("document.querySelector('#trip .tripvig canvas') ? 1 : 0")
+            off = await pg.evaluate("document.querySelector('#fpt .fpt-view canvas') ? 1 : 0")
             print(style, "vignette mounted:", has, off)
         # riding
         await pg.evaluate("()=>{ const S=window.__dbg.save(); HORSES.buy?.(S,'Bess','bay'); S.gold=9999; }")

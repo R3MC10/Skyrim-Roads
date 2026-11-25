@@ -72,7 +72,7 @@
     const card = { name: S.name, race: S.race, level: S.level, x: S.x, y: S.y,
       t0: tr ? tr.lastTick : G.now(), moving: !!(tr && tr.status === "travel"), dest: tr ? tr.dest : null,
       path: tr && tr.status === "travel" ? [[S.x, S.y], ...tr.path.slice(tr.idx + 1)].slice(0, 120) : null,
-      speed: G.speed(S), loc: S.location || null, region: WORLD.regionOf([S.x, S.y]), look: HEROART.lookOf(S), ride: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, party: party?.id || null, hiding: !!S.ambush, facing: S.facing ?? null, ...(typeof SNEAKMODE !== "undefined" ? SNEAKMODE.cardBits(S) : {}), clan: myClan()?.tag || null, ...(typeof SIDES !== "undefined" ? SIDES.cardBits(S) : {}), ...MP.stats(S), coop: coopUI?.card() || null, ...(typeof PARTY !== "undefined" ? PARTY.cardBits(S, party) : {}), ...(typeof LIVING !== "undefined" ? LIVING.cardBits(S, party) : {}), ...(typeof LEVELUP !== "undefined" ? LEVELUP.cardBits(S) : {}), ...(typeof AFFL !== "undefined" ? AFFL.cardBits(S) : {}) };
+      speed: G.speed(S), loc: S.location || null, region: WORLD.regionOf([S.x, S.y]), look: HEROART.lookOf(S), ride: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, party: party?.id || null, hiding: !!S.ambush, facing: S.facing ?? null, ...(typeof SNEAKMODE !== "undefined" ? SNEAKMODE.cardBits(S) : {}), clan: myClan()?.tag || null, ...(typeof SIDES !== "undefined" ? SIDES.cardBits(S) : {}), ...MP.stats(S), coop: coopUI?.card() || null, ...(typeof PARTY !== "undefined" ? PARTY.cardBits(S, party) : {}), ...(typeof LIVING !== "undefined" ? LIVING.cardBits(S, party) : {}), ...(typeof LEVELUP !== "undefined" ? LEVELUP.cardBits(S) : {}), ...(typeof AFFL !== "undefined" ? AFFL.cardBits(S) : {}), ...(typeof FRIENDJOIN !== "undefined" ? FRIENDJOIN.bits(S, party) : {}) };
     const json = JSON.stringify({ ...card, t0: 0, cur: Math.round(card.cur / 10) });
     if (!force && json === lastCardJson) return;
     lastCardJson = json;
@@ -683,6 +683,7 @@
     if (typeof EXPEDITION !== "undefined") EXPEDITION.mount({ S: () => S, persist, toast, render: () => { if (document.getElementById("lng-root")) renderPanel(true); }, party: () => party, cardOf,
       online: (id) => { const c = cardOf(id); return !!c && (typeof SOCIAL === "undefined" || SOCIAL.status(c).online); } });   // the Expedition Table: tonight's adventure (expedition.js)
     if (typeof LONGHOUSE !== "undefined") LONGHOUSE.mount({ S: () => S, persist, toast, showMessage, render: () => renderPanel(true), party: () => party });   // the adventuring company longhouse (longhouse.js)
+    if (typeof COMMISSIONS !== "undefined") COMMISSIONS.mount({ S: () => S, persist, toast, render: () => { if (document.getElementById("lng-root")) renderPanel(true); }, party: () => party });   // the company's Commissions board (commissions.js)
     if (typeof HOLDUI !== "undefined") HOLDUI.mount({ S: () => S, persist, toast, showFightResult, postNews, refresh: () => { bump(); renderPanel(true); }, party: () => party });   // player-run holds: Jarl, tax, raids (holdui.js)
     if (typeof TOURNEYUI !== "undefined") TOURNEYUI.mount({ S: () => S, persist, toast, showFightResult, postNews, tbCall, refresh: () => { bump(); renderPanel(true); }, party: () => party, allies: () => allies() });   // festivals, contests and the Grand Arena (tourneyui.js)
     Store.watch("trades", (docs) => onTrades(docs));
@@ -738,6 +739,9 @@
     }
     if (typeof INVITES !== "undefined") INVITES.mount({ list: inviteList, answer: answerInviteCard, toast, onNew: () => SOUND.fx("page"),   // Accept / Decline cards on top (invites.js)
       openSocial: () => { closeMenu(); tab = "social"; socTab = "party"; bump(); renderTabs(); renderPanel(true); } });
+    if (typeof FRIENDJOIN !== "undefined") FRIENDJOIN.mount({ S: () => S, party: () => party, cardOf, Store, toast, invite: (c) => invite(c), invites: () => invites, acceptInvite: (pid) => acceptInvite(pid),   // friends: what they're doing + Ask to join (friendjoin.js)
+      fighting: () => (typeof TB !== "undefined" && TB.open) || !!S?.encounter, trading: () => tab === "town" && !!townShop && townShop !== "inn", publishCard: (f) => publishCard(f), refreshInvites: invRefresh,
+      bump: () => { if (tab === "social") bump(); }, render: () => { if (tab === "social") renderPanel(true); } });
     if (typeof PARTYPLAY !== "undefined") {   // party play: the leader leads, ready checks, shared spoils (partyplay.js)
       ppUI = PARTYPLAY.ui({ S: () => S, party: () => party, others: () => others, cardOf, otherPos: (c) => otherPos(c), livePos: () => livePos(), Store, toast, esc,
         persist, publishCard, renderPanel, bump, travelNow: (name, pos) => travelTo(name, true, pos), modalOpen: () => !!$("#modal"), openModal, closeModal,
@@ -970,7 +974,8 @@
     HUD.compass({ pos, target, W, H, places: [...near.slice(0, 8), ...unk.slice(0, 3)],
       players: others.filter((o) => !o.hiding && sameMap(o) && seesHero(o)).map((o) => ({ name: typeof GREET !== "undefined" ? GREET.label(S, o, party) : o.name, pos: otherPos(o) })).filter((o) => G.pxDist(pos, o.pos) < 220).slice(0, 8),
       quest: qp ? { pos: qp, name: qa ? QUESTS.target(qa.st) : "" } : null,
-      raid: raid && WORLD.places[raid.town] ? { town: raid.town, pos: WORLD.places[raid.town] } : null });
+      raid: raid && WORLD.places[raid.town] ? { town: raid.town, pos: WORLD.places[raid.town] } : null,
+      dest: tr && tr.status === "travel" && tr.dest && !tr.boat ? { name: tr.destName, pos: tr.dest } : null });
     if (typeof HUD2 !== "undefined") { const tq = QUESTS.tracked(S); HUD2.objective(tq && tq.st ? { title: tq.st.title, where: QUESTS.target(tq.st) } : null); }   // hud2.js: the objective line under the compass
   }
   function renderVitals() {
@@ -999,6 +1004,8 @@
     const el = $("#trip"), tr = S.trip;
     if (typeof RIDING !== "undefined") RIDING.sync(S);   // cheap: only toggles classes on the map's ride button
     const put =(html) => { if (el.dataset.html !== html) { el.innerHTML = html; el.dataset.html = html; } };   // only redraw on change, so taps don't get lost
+    const fpt = typeof FPT !== "undefined" && $("#mapwrap");   // fptravel.js: on the road the trip is a first-person band at the top of the map
+    if (fpt && !(tr && tr.status === "travel" && !S.dungeon)) FPT.hide();
     if (S.dungeon) { put(`<div class="trip enc"><div class="row"><b> You're inside ${esc(S.dungeon.place)}</b><button class="btn danger sm" data-act="dun">Go back in</button></div></div>`); return; }
     if (!tr) { put(""); return; }
     if (tr.status === "event") {
@@ -1016,14 +1023,51 @@
     const mins = tripMinutesLeft(), total = Math.max(mins, tr.total || mins), p = pct(total - mins, total);
     const here = livePos(), ground = Terrain.NAMES[Terrain.typeAtPos(here)], sp = Terrain.speedAt(here);
     const pace = sp >= 1.2 ? "fast going" : sp >= 0.95 ? "steady" : sp >= 0.6 ? "slow going" : "very slow going";
+    if (fpt) { put(""); FPT.show($("#mapwrap"), fptInfo(tr, here, ground, pace, mins), onPanelClick); return; }
     const html = `<div class="trip"><div class="row"><b>${esc(tr.origin)} → ${esc(tr.destName)}</b><span class="num sub">${fmtMin(mins)}</span>${!tr.carriage && !tr.boat && HORSES.present(S) && HORSES.downed(S) ? `<span class="chip hdownchip">\uE12D Downed</span>` : ""}${!tr.carriage && !tr.boat && HORSES.present(S) && !HORSES.downed(S) ? `<button class="btn sm" data-act="hride">${HORSES.riding(S) ? "Walk" : "Ride"}</button>` : ""}${tr.follow ? `<span class="chip ppfollow">⚑ following</span>` : `<button class="btn sm" data-act="stop">Stop</button>`}</div>
       <div class="bar"><i style="background:var(--frost)"></i></div>
       <div class="sub">${tr.boat ? `\uE12F aboard ${esc(tr.ship || "the ship")} · nothing attacks a ship at sea` : tr.carriage ? "\uE12D by carriage · safe on the Jarl's roads" : `${esc(ground)} · ${pace} · ${HORSES.riding(S) ? `riding ${esc(S.horse.name)}` : HORSES.present(S) && HORSES.downed(S) ? `on foot · ${esc(S.horse.name)} is downed and limps beside you` : HORSES.present(S) ? `walking beside ${esc(S.horse.name)}` : G.overweight(S) ? "too heavy to run" : "on foot"}`}${S.follower ? ` · ${esc(TOWNS.FOLLOWERS[S.follower.id][0])} with you` : ""}</div>
-      ${tr.log.length ? `<div class="sub">${esc(tr.log[0])}</div>` : `<div class="sub">The trip keeps going while the page is closed.</div>`}</div>`;
+      ${tr.log.length ? `<div class="sub">${esc(tr.log[0])}</div>` : ""}</div>`;
     put(html.replace(/<\/div>$/, `<div class="tripvig"></div></div>`));
     const bar = el.querySelector(".bar i"); if (bar) bar.style.width = `${p}%`;
     if (tr.boat && typeof SOLART !== "undefined") { const tv = el.querySelector(".tripvig"); if (tv && !tv.dataset.sea) { tv.dataset.sea = 1; tv.innerHTML = SOLART.sea(); } }   // at sea (solart.js)
     else if (typeof FXART !== "undefined") FXART.vignette(el.querySelector(".tripvig"), { ground, progress: p / 100, dest: tr.destName, origin: tr.origin, riding: HORSES.riding(S), carriage: !!tr.carriage, boat: !!tr.boat, horse: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, led: typeof RIDING !== "undefined" ? RIDING.led(S) : null, look: myLook(), company: typeof PARTY !== "undefined" ? PARTY.companions(S, party, others, here, (o) => otherPos(o), MP.NEAR_PX) : [], reduce: reduceMotion, sky: typeof SKY !== "undefined" ? SKY.state(here) : null });
+  }
+  /* what the first-person travel band needs (fptravel.js): route, time, stops on the way, mount, company, sky, heading */
+  let fptStops = { key: "", list: [] };
+  function fptInfo(tr, here, ground, pace, mins) {
+    const W = G.MAP_W, H = G.MAP_H, brg = (a, b) => (Math.atan2((b[0] - a[0]) * W, -(b[1] - a[1]) * H) * 180 / Math.PI + 360) % 360;
+    const path = tr.path || [], idx = Math.max(0, Math.min(tr.idx || 0, path.length - 1));
+    // distance along the route: the bar and the places you pass on it
+    const segs = []; let tot = 0; for (let i = 1; i < path.length; i++) { const d = G.pxDist(path[i - 1], path[i]); segs.push(tot); tot += d; }
+    let done = 0; if (path.length > 1) { done = (segs[Math.min(idx, segs.length - 1)] || 0) + G.pxDist(path[idx], here); }
+    const f = tot > 0 ? Math.max(0, Math.min(1, done / tot)) : Math.max(0, Math.min(1, 1 - mins / Math.max(mins, tr.total || mins || 1)));
+    const key = tr.destName + "|" + path.length + "|" + (tr.start || []).join(",");
+    if (fptStops.key !== key) {
+      const list = [];
+      if (tot > 0) for (const [n, pp] of Object.entries(WORLD.places)) {
+        if (n === tr.destName || n === tr.origin || !known(n)) continue;
+        let best = 9, at = 0;
+        for (let i = 1; i < path.length; i++) { const a = path[i - 1], b = path[i], dx = (b[0] - a[0]) * W, dy = (b[1] - a[1]) * H, L2 = dx * dx + dy * dy || 1, u = Math.max(0, Math.min(1, ((pp[0] - a[0]) * W * dx + (pp[1] - a[1]) * H * dy) / L2)), d = Math.hypot((a[0] + (b[0] - a[0]) * u - pp[0]) * W, (a[1] + (b[1] - a[1]) * u - pp[1]) * H); if (d < best) { best = d; at = segs[i - 1] + Math.sqrt(L2) * u; } }
+        if (best < 8) list.push({ name: n, f: at / tot });
+      }
+      fptStops = { key, list: list.sort((a, b) => a.f - b.f).filter((s, i, a) => !i || s.f - a[i - 1].f > 0.03).slice(0, 8) };
+    }
+    // the bend ahead: where the road goes after the next waypoint, against where you're looking now
+    const ahead = path.slice(idx + 1).filter((q) => G.pxDist(here, q) > 4), nx = ahead[0] || tr.dest, far = ahead.find((q) => G.pxDist(nx, q) > 25) || tr.dest;
+    const heading = typeof HUD !== "undefined" ? HUD.heading : brg(here, nx);
+    let turn = ((brg(nx, far) - brg(here, nx)) % 360 + 540) % 360 - 180; if (G.pxDist(here, tr.dest) < 12) turn = 0;
+    const hp = HORSES.present(S), downed = hp && HORSES.downed(S), riding = HORSES.riding(S);
+    let say = null;
+    try { if (S.follower && typeof BONDS !== "undefined") { const e = BONDS.bond(S, S.follower.id)?.bond?.log?.[0]; if (e && G.now() - e.t < 20 && e.w) say = { who: e.w, line: e.dog ? e.l : `"${BONDS.T(e.l)}"` }; } } catch { /* no line */ }
+    const wx = WEVENTS.weather(here);
+    return { id: S.id || S.name, origin: tr.origin, dest: tr.destName, timeText: fmtMin(mins), p: tr.boat ? Math.max(0, Math.min(1, 1 - mins / Math.max(mins, tr.total || 1))) : f,
+      stops: fptStops.list.map((s) => ({ ...s, passed: s.f <= f })), ground, pace: tr.boat || tr.carriage ? "" : pace, slow: pace === "very slow going",
+      riding: riding && !tr.carriage && !tr.boat, canRide: !tr.carriage && !tr.boat && hp && !downed, horse: hp ? { name: S.horse.name, coat: HORSES.coat(S.horse.coat)[2] } : null, downed,
+      heavy: G.overweight(S), carriage: !!tr.carriage, boat: !!tr.boat, ship: tr.ship, follow: !!tr.follow, weather: wx && wx.id !== "clear" ? wx.name : "",
+      sky: typeof SKY !== "undefined" ? SKY.state(here) : null, heading, turn, destBear: tr.dest ? brg(here, tr.dest) : null, look: myLook(),
+      company: typeof PARTY !== "undefined" ? PARTY.companions(S, party, others, here, (o) => otherPos(o), MP.NEAR_PX).map((c) => ({ name: c.name, player: !!c.player, riding: !!c.riding })) : [],
+      pet: S.pet ? (S.pet.name || S.pet.id || "") : "", say, reduce: reduceMotion };
   }
   function renderTabs() {
     tabsEl.querySelectorAll(".tab").forEach((b) => {
@@ -2636,8 +2680,8 @@
       const adds = SOCIAL.addedMe(friendDocs, S);
       body = `${adds.length ? `<h3>Added you</h3>${adds.map((d) => `<div class="item on"><div class="t">${esc(d.name)}<span>wants to be friends</span></div><button class="btn sm pri" data-act="faddrec" data-id="${esc(d.id)}">Add back</button></div>`).join("")}` : ""}
         <h3 style="margin-top:8px">Your friends · ${fr.length}</h3>
-        ${fr.length ? fr.map((f) => `<div class="item" style="flex-wrap:wrap">${HEROART.portrait(f.card || { race: "nord", id: f.id }, 38)}${f.card?.look ? `<span class="pgear">${HEROART.figure({ look: f.card.look }, 30, 42, { bare: true })}</span>` : ""}<div class="t"><i class="onl ${f.st.online ? "on" : ""}"></i>${esc(f.name)}<span>${esc(f.st.text)}</span></div>
-          <div class="fbtns"><button class="btn sm" data-act="fmsg" data-id="${esc(f.id)}"> Message</button><button class="btn sm" data-act="ftrade" data-id="${esc(f.id)}"> Trade</button>${fRemoveAsk === f.id ? `<button class="btn sm danger" data-act="fdel" data-id="${esc(f.id)}">Really remove?</button>` : `<button class="btn sm" data-act="fdelask" data-id="${esc(f.id)}" aria-label="Remove friend">✕</button>`}</div></div>`).join("")
+        ${fr.length ? fr.map((f) => `<div class="item" style="flex-wrap:wrap">${HEROART.portrait(f.card || { race: "nord", id: f.id }, 38)}${f.card?.look ? `<span class="pgear">${HEROART.figure({ look: f.card.look }, 30, 42, { bare: true })}</span>` : ""}${(() => { const fj = typeof FRIENDJOIN !== "undefined" ? FRIENDJOIN.rowHTML(f.card, esc) : null; f.fj = fj; return fj ? `<div class="t fj-t"><i class="onl on"></i>${esc(f.name)}${fj.act}<span>${esc(fj.line)}</span><span class="fj-party${fj.full ? " full" : ""}">${esc(fj.party)}</span>${fj.why ? `<span class="fj-why">${esc(fj.why)}</span>` : ""}</div>` : `<div class="t"><i class="onl ${f.st.online ? "on" : ""}"></i>${esc(f.name)}<span>${esc(f.st.text)}</span></div>`; })()}
+          <div class="fbtns">${f.fj?.btn || ""}<button class="btn sm" data-act="fmsg" data-id="${esc(f.id)}"> Message</button><button class="btn sm" data-act="ftrade" data-id="${esc(f.id)}"> Trade</button>${fRemoveAsk === f.id ? `<button class="btn sm danger" data-act="fdel" data-id="${esc(f.id)}">Really remove?</button>` : `<button class="btn sm" data-act="fdelask" data-id="${esc(f.id)}" aria-label="Remove friend">✕</button>`}</div></div>`).join("")
           : `<p class="sub">No friends yet. Add people from Social → Party (travellers near you), or search below.</p>`}
         <h3 style="margin-top:12px">Add a friend</h3>
         <input id="socsearch" placeholder="Type a name" value="${esc(socSearch)}" autocomplete="off" aria-label="Search players by name">
@@ -2886,7 +2930,7 @@
     if (!S || typeof INVITES === "undefined" || !Store.online) return [];
     const t = G.now(), c = myClan();
     return INVITES.list(S, { parties: invites, runs: coopUI?.myInvites ? coopUI.myInvites() : [], clans: myClanInvites().filter((x) => x.id !== c?.id), inClan: !!c,
-      duels: duels.filter((d) => d.to === S.id && d.status === "open" && t - d.t < ARENA.OPEN_MIN * 60), trades: myIncoming().map((d) => ({ ...d, what: MP.describe(d) })), gold: S.gold });
+      duels: duels.filter((d) => d.to === S.id && d.status === "open" && t - d.t < ARENA.OPEN_MIN * 60), trades: myIncoming().map((d) => ({ ...d, what: MP.describe(d) })), gold: S.gold, joins: typeof FRIENDJOIN !== "undefined" ? FRIENDJOIN.cards() : [] });
   }
   async function answerInviteCard(kind, id, yes) {
     if (kind === "party") await (yes ? acceptInvite(id) : declineInvite(id));
@@ -2894,6 +2938,7 @@
     else if (kind === "clan") yes ? clanJoin(id) : clanDecline(id);
     else if (kind === "duel") await answerDuel(id, yes);
     else if (kind === "trade") await answerTrade(id, yes);
+    else if (kind === "join" && typeof FRIENDJOIN !== "undefined") await FRIENDJOIN.reply(id, yes);
     bump(); if (tab === "social" || tab === "town") renderPanel(true);
   }
   function clanJoin(id) { const r = CLANS.join(S, CLANS.byId(id)); if (r.err) return toast(r.err); persist(true); say(r.text); }
@@ -4116,6 +4161,7 @@
       case "fadd": case "faddrec": { const c = cardOf(b.dataset.id) || (() => { const d = friendDocs.find((x) => x.id === b.dataset.id); return d ? { id: d.id, name: d.name } : null; })(); if (!c) return toast("They're not around."); const m = SOCIAL.add(S, c); persist(true); publishFriends(); toast(m); renderPanel(true); renderTabs(); break; }
       case "fdelask": fRemoveAsk = b.dataset.id; renderPanel(true); break;
       case "fdel": toast(SOCIAL.remove(S, b.dataset.id)); fRemoveAsk = null; persist(true); publishFriends(); renderPanel(true); break;
+      case "fjoin": if (typeof FRIENDJOIN !== "undefined") FRIENDJOIN.ask(b.dataset.id); break;
       case "fmsg": socTab = "msgs"; socWith = b.dataset.id; tab = "social"; renderTabs(); renderPanel(true); setTimeout(() => { const cl = $("#chatlog"); if (cl) cl.scrollTop = cl.scrollHeight; }, 20); break;
       case "dmback": socWith = null; renderPanel(true); break;
       case "dmsend": sendDM(); break;
