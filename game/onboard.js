@@ -5,11 +5,14 @@
      They show as rows in the Travel tab's "What to do next" card; each can be hidden (✕), all can be switched off
      (Settings → Help & tips), and they stop for veterans (level 15+).
    - first-time tips: a small card at the top of the screen the first time something happens (over-encumbered, level-up,
-     a dungeon, a turn-by-turn fight, a party invite, a rumour). One at a time, never blocks a tap elsewhere, with
-     "Don't show tips". Seen tips live in the save (s.onb.seen); the two switches live in this phone's prefs.
+     a dungeon, a party invite, a rumour). One at a time, never blocks a tap elsewhere, with "Don't show tips". A tip
+     waits while a window or a result is open (overlays.js ranks them). Seen tips live in the save (s.onb.seen); the two
+     switches live in this phone's prefs.
+   - the first turn-by-turn fight: no wall of text, but one-line hints pinned to the control they explain (turn order,
+     your moves, End turn). Each goes away once you use that control (or tap it), all of them at the result card.
    ui.js calls ONBOARD.mount({...}) once, ONBOARD.rows() inside nextCard(), ONBOARD.settingsHTML()/pref() in Settings. */
 const ONBOARD = (() => {
-  const VETERAN = 15;            // from this level on: no ideas, no tips (except the turn-by-turn one, which is new for everyone)
+  const VETERAN = 15;            // from this level on: no ideas, no tips (the fight hints still show: turn-by-turn is new for everyone)
   const PREFS_KEY = "rotn_prefs";
   const DOM = typeof document !== "undefined";
   const esc = (x) => String(x ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -95,14 +98,13 @@ const ONBOARD = (() => {
   /* id, applies(s, ctx), title, text (may depend on ctx) */
   const TIPS = [
     ["welcome", (s, c) => !c.fightOpen && s.tut && !s.tut.off && s.tut.step === 1 && !s.trip, "Welcome to Skyrim", (s) => `The gold card under the map (<b>Your first trip</b>) shows you what to do, one step at a time. Tips like this one pop up the first time something new happens.`, { btn: ["@tut", "Show me"] }],
-    ["tbfight", (s, c) => c.fightOpen, "Turn-by-turn fights", (s, c) => `The row at the top is the turn order: highest initiative (the number) goes first, and a foe can get more than one turn a round. On your turn, make up to 4 moves: blows and power attacks cost stamina, spells cost magicka, dark magic costs a little health (the same move again costs more). Press End turn when you're done; moves you don't make turn into guard. Under the foe, Next shows what it will do and how hard it will hit; the stripes on the health bars show what's about to come off.${c.party ? " In a party everyone plays their own turn on their own phone; after 90 seconds that turn ends on guard." : ""}`, { any: true }],
     ["level", (s) => s.pendingLevels > 0 && (s.level || 1) <= 4, "Level up!", () => "Open <b>Hero</b>: pick Health, Magicka or Stamina, then spend your perk point on a skill you use. Skills rise by using them.", { btn: ["hero", "Open Hero"] }],
     ["heavy", (s) => typeof G.overweight === "function" && G.overweight(s), "Too heavy", () => "You're carrying more than you can, so you walk slowly. Sell loot in a town, keep things in a house chest, or let a horse or follower carry them."],
     ["dungeon", (s) => !!s.dungeon && !cleared(s), "Your first dungeon", () => "Go room by room. Each room may hold foes, a trap or loot; you can leave between rooms and come back later. The boss and the best chest wait at the end."],
     ["invite", (s, c) => c.invites > 0, "A party invite", () => (typeof INVITES !== "undefined" ? "Someone wants you in their party. Tap Accept on the card at the top to join, or Decline. The leader picks where to go and you travel together; gold is split evenly." : "Someone wants you in their party. Open \uE106 <b>Friends → Party</b> to join. The leader picks where to go and you travel together; gold is split evenly."), { btn: ["social", "Friends"] }],
     ["rumour", (s) => (typeof RUMOURS !== "undefined") && RUMOURS.leads(s).length > 0, "You've got a lead", () => "Rumours are marked on your map and listed in the Journal → Misc. Go there to see if it's true: some are just gossip."],
   ];
-  let bound = null, shown = null, timer = null;
+  let bound = null, shown = null, timer = null, hTimer = null;
   function ctxNow() {
     const b = bound || {};
     return { fightOpen: (typeof TB !== "undefined") && TB.open, party: !!(b.party && b.party()), invites: (b.invites && b.invites().length) || 0 };
@@ -113,47 +115,39 @@ const ONBOARD = (() => {
     const seen = st(s).seen;
     for (const [id, ok, title, text, o = {}] of TIPS) {
       if (seen[id] || (veteran(s) && !o.any)) continue;
-      if (c.fightOpen && id !== "tbfight") continue;          // nothing over a fight but the fight's own tip
+      if (c.fightOpen) continue;                                 // nothing over a fight (its hints are pinned to the controls)
       try { if (ok(s, c)) return { id, title, text: text(s, c), btn: o.btn || null }; } catch { /* a module isn't loaded */ }
     }
     return null;
   }
   function markSeen(s, id) { st(s).seen[id] = 1; }
+  const zoom = () => (typeof FITCANVAS !== "undefined" ? FITCANVAS.zoom() : 1);   // zoomed page (PC, bigger text): screen px → page px
+  const OV = () => (typeof OVERLAYS !== "undefined" ? OVERLAYS : null);
+  /* a window or a result is on screen: tips wait (overlays.js) */
+  const held = () => { const o = OV(); return !!o && o.level() >= o.LEVEL.decision; };
   function render(tip) {
     let el = document.getElementById("obtip");
     if (!tip) { if (el) el.remove(); shown = null; return; }
     if (!el) { el = document.createElement("div"); el.id = "obtip"; el.setAttribute("role", "status"); el.addEventListener("click", onTipClick); document.body.appendChild(el); }
-    el.className = "obtip" + (tip.id === "tbfight" ? " infight" : "");
-    el.innerHTML = `<div class="obtip-h"><b> ${esc(tip.title)}</b><button class="obx" data-obt="ok" aria-label="Close tip">✕</button></div><p>${tip.text}</p>
+    el.className = "obtip";
+    el.innerHTML = `<div class="obtip-h"><b> ${esc(tip.title)}</b><button class="obx" data-obt="ok" aria-label="Close tip">✕</button></div><p>${tip.text}</p>
       <div class="obtip-b">${tip.btn ? `<button class="btn sm pri" data-obt="go" data-id="${tip.btn[0]}">${esc(tip.btn[1])}</button>` : ""}<button class="btn sm" data-obt="ok">Got it</button><button class="linkbtn" data-obt="off">Don't show tips</button></div>`;
     shown = tip.id;
     place();
   }
-  /* in a fight: sit in the free space just above the action buttons, never over them (over the picture if there's no room) */
+  /* just under the top bar, so Menu and Friends stay tappable */
   function place() {
     const el = document.getElementById("obtip"); if (!el) return;
     if (shown === "invite" && typeof INVITES !== "undefined") { el.style.top = "auto"; el.style.bottom = "calc(84px + env(safe-area-inset-bottom))"; return; }   // the invite card sits on top: keep clear of it
-    if (!el.classList.contains("infight")) {   // elsewhere: just under the top bar, so Menu and Friends stay tappable
-      const bar = document.querySelector("#dun .hd") || document.querySelector("#app .top"), b = bar ? bar.getBoundingClientRect().bottom / (typeof FITCANVAS !== "undefined" ? FITCANVAS.zoom() : 1) : 0;
-      el.style.top = Math.max(10, Math.min(b + 6, innerHeight * 0.3)) + "px"; el.style.bottom = "auto";
-      return;
-    }
-    const z = typeof FITCANVAS !== "undefined" ? FITCANVAS.zoom() : 1;   // zoomed page (PC, bigger text): screen px → page px
-    const grid = document.querySelector("#tbf .tbgrid, #tbf .tbmenu, #tbf .tbdone");
-    const above = [...document.querySelectorAll("#tbf .tbap, #tbf .tblog:not([hidden]), #tbf .tbwait, #tbf .tballies")].reduce((m, x) => Math.max(m, x.getBoundingClientRect().bottom / z), 0);
-    const scene = document.querySelector("#tbf .tbscene");
-    const gTop = (grid ? grid.getBoundingClientRect().top : innerHeight) / z;
-    const room = gTop - above - 12;
-    el.style.maxHeight = ""; el.style.top = ""; el.style.bottom = "";
-    if (room >= Math.min(el.scrollHeight, 150)) { el.style.bottom = Math.max(4, innerHeight / z - gTop + 6) + "px"; el.style.top = "auto"; el.style.maxHeight = room + "px"; }
-    else { const t = scene ? Math.max(4, scene.getBoundingClientRect().top / z) : 8; el.style.top = t + "px"; el.style.bottom = "auto"; el.style.maxHeight = Math.max(120, gTop - t - 8) + "px"; }
+    const bar = document.querySelector("#dun .hd") || document.querySelector("#app .top"), b = bar ? bar.getBoundingClientRect().bottom / zoom() : 0;
+    el.style.top = Math.max(10, Math.min(b + 6, innerHeight * 0.3)) + "px"; el.style.bottom = "auto";
   }
   function onTipClick(e) {
     const b = e.target.closest("[data-obt]"); if (!b || !bound) return;
     const s = bound.S(); if (!s) return;
     const k = b.dataset.obt;
     if (shown) markSeen(s, shown);
-    if (k === "off") { setPrefRaw("obTips", false); bound.toast?.("Tips are off. Switch them back on in  Settings → Help & tips."); }
+    if (k === "off") { setPrefRaw("obTips", false); bound.toast?.("Tips are off. Switch them back on in  Settings → Help & tips."); }
     if (k === "go" && b.dataset.id === "@tut") { const t = document.querySelector("#side .tut"); if (t) t.scrollIntoView({ behavior: "smooth", block: "center" }); }
     else if (k === "go" && bound.click) { const x = document.createElement("button"); x.dataset.act = "uxtab"; x.dataset.id = b.dataset.id; try { bound.click({ target: x }); } catch { /* ignore */ } }
     bound.persist?.();
@@ -166,14 +160,116 @@ const ONBOARD = (() => {
       const def = TIPS.find((x) => x[0] === shown);
       const cx = ctxNow();
       let still = true; try { still = !def || def[1](s, cx); } catch { /* keep it */ }
-      if (cx.fightOpen && shown !== "tbfight") render(null);              // a fight started: put it away, it comes back later
-      else if (!still) { markSeen(s, shown); render(null); bound.persist?.(); }   // the moment has passed (you set off, the fight ended...)
+      if (cx.fightOpen) render(null);                              // a fight started: put it away, it comes back later
+      else if (!still) { if (!held()) markSeen(s, shown); render(null); bound.persist?.(); }   // the moment has passed (you set off...); one held under a window was never read
       else if (!tipsOn()) render(null);
       else place();
       return;
     }
+    if (held()) return;                                            // a window or a result is open: the next tip waits for it
     const tip = pickTip(s);
     if (tip) render(tip);
+  }
+
+  // ------------------------------------------------------------------ fight hints: one line pinned to the control it explains
+  /* id, the control, the side of it, the line. Shown in the first turn-by-turn fights until each control is used. */
+  const HINTS = [
+    ["order", "#tbf .tbtop .tbord|#tbf .tbtop", "below", "Turn order: the highest number acts first. A foe can act twice a round."],
+    ["moves", "#tbf .tbap", "above", "Up to 4 moves a turn. Blows cost stamina, spells magicka."],
+    ["end", '#tbf [data-tba="end"]', "above", "Done? End turn. Moves you don't make become guard."],
+  ];
+  const HKEY = (id) => "tbf-" + id;
+  let hmem = { turns: 0, wasMine: false, endShown: false };
+  /* pure: which hints show now. seen = s.onb.seen; f = {open, done, mine, acts, result} */
+  function hintsFor(seen, f) {
+    if (!f || !f.open || f.done || f.result || seen.tbfight) return [];   // seen.tbfight: the old big fight tip, or every hint, was read already
+    if (!f.mine) return [];
+    const out = [];
+    if (f.acts === 0) { if (!seen[HKEY("order")]) out.push("order"); if (!seen[HKEY("moves")]) out.push("moves"); }
+    else if (!seen[HKEY("end")]) out.push("end");
+    return out;
+  }
+  /* mark one hint used; all of them used = the fight lesson is learnt */
+  function useHint(s, id) {
+    const seen = st(s).seen; if (seen[HKEY(id)]) return false;
+    seen[HKEY(id)] = 1;
+    if (HINTS.every(([h]) => seen[HKEY(h)])) seen.tbfight = 1;
+    return true;
+  }
+  function hintState() {
+    const B = typeof TB !== "undefined" ? TB : null, sess = B && B.open ? B.session : null, o = OV();
+    return { open: !!sess, done: !!(sess && sess.done), mine: !!document.querySelector('#tbf [data-tba="end"]'), acts: sess ? sess.myActs || 0 : 0,
+      result: !!(o && o.level() >= o.LEVEL.result) || !!document.querySelector("#tbf .tbdone") };
+  }
+  function hintTick(s) {
+    if (!DOM) return;
+    const f = hintState();
+    let ch = false;
+    if (f.open && f.mine && f.acts > 0)                            // a move made: the turn order and moves lines did their job
+      for (const id of ["order", "moves"]) if (document.querySelector(`#fhints [data-h="${id}"]`)) ch = useHint(s, id) || ch;
+    if (f.open && f.mine !== hmem.wasMine) {                       // a turn of yours ended with the End turn line up: after two turns it's learnt
+      if (!f.mine && hmem.endShown) { hmem.turns++; hmem.endShown = false; if (hmem.turns >= 2) ch = useHint(s, "end") || ch; }
+      hmem.wasMine = f.mine;
+    }
+    if (!f.open) hmem = { turns: 0, wasMine: false, endShown: false };
+    if (ch) bound.persist?.();
+    drawHints(tipsOn() ? hintsFor(st(s).seen, f) : []);
+  }
+  function drawHints(ids) {
+    let box = document.getElementById("fhints");
+    if (!ids.length) { if (box) box.remove(); return; }
+    if (!box) { box = document.createElement("div"); box.id = "fhints"; box.setAttribute("role", "status"); box.addEventListener("click", onHintClick); document.body.appendChild(box); }
+    const key = ids.join(",");
+    if (box.dataset.k !== key) {
+      box.dataset.k = key;
+      box.innerHTML = ids.map((id) => { const h = HINTS.find((x) => x[0] === id); return `<div class="fhint ${h[2]}" data-h="${id}"><span>${esc(h[3])}</span><i class="fh-ar" aria-hidden="true"></i></div>`; }).join("");
+    }
+    placeHints();
+    if (ids.includes("end")) hmem.endShown = true;
+  }
+  /* pure: slide a w×h box from y (up for "above", down for "below") until it touches none of the blockers */
+  function freeY(x, y, w, h, dir, blockers, minY = 4, maxY = 1e5) {
+    const hit = (b) => x < b.right + 4 && b.left < x + w + 4 && y < b.bottom + 4 && b.top < y + h + 4;
+    for (let i = 0; i < 12; i++) {
+      const b = blockers.find(hit); if (!b) break;
+      y = dir === "above" ? b.top - 8 - h : b.bottom + 8;
+    }
+    return Math.max(minY, Math.min(maxY - h, y));
+  }
+  /* pin each line next to its control, over the picture: never on top of a button, the bars, the foe card or the log.
+     A line whose control isn't on screen hides. */
+  function placeHints() {
+    const box = document.getElementById("fhints"); if (!box) return;
+    const z = zoom(), W = innerWidth / z, H = innerHeight / z;
+    const sc = (r) => ({ left: r.left / z, top: r.top / z, right: r.right / z, bottom: r.bottom / z });
+    const blockers = [...document.querySelectorAll("#tbf .tbtop, #tbf .tblog:not([hidden]), #tbf .tbu, #tbf .tbdock, #tbf .tballies, #tbf .bfwrap")]
+      .filter((e) => e.getClientRects().length).map((e) => sc(e.getBoundingClientRect())).filter((r) => r.right > r.left);
+    const dock = document.querySelector("#tbf .tbdock"), dockTop = dock && dock.getClientRects().length ? dock.getBoundingClientRect().top / z : H;
+    for (const el of box.querySelectorAll(".fhint")) {
+      const h = HINTS.find((x) => x[0] === el.dataset.h), a = h && h[1].split("|").map((q) => document.querySelector(q)).find((x) => x && x.getClientRects().length);
+      const r = a && a.getClientRects().length ? sc(a.getBoundingClientRect()) : null;
+      if (!r || r.right <= r.left) { el.hidden = true; continue; }
+      el.hidden = false;
+      el.style.maxWidth = Math.min(320, W - 16) + "px";
+      const ew = el.offsetWidth || 240, eh = el.offsetHeight || 40, cx = (r.left + r.right) / 2;
+      const left = Math.max(8, Math.min(W - ew - 8, cx - ew / 2));
+      const y = h[2] === "below" ? freeY(left, r.bottom + 8, ew, eh, "below", blockers, 4, dockTop - 4)
+        : freeY(left, Math.min(r.top, dockTop) - 8 - eh, ew, eh, "above", blockers, 4, H);
+      el.style.left = Math.round(left) + "px"; el.style.top = Math.round(y) + "px"; el.style.bottom = "auto";
+      el.style.setProperty("--ax", Math.round(Math.max(14, Math.min(ew - 14, cx - left))) + "px");
+      blockers.push({ left, top: y, right: left + ew, bottom: y + eh });   // the next line keeps clear of this one
+    }
+  }
+  function onHintClick(e) {
+    const h = e.target.closest(".fhint"); if (!h || !bound) return;
+    const s = bound.S(); if (!s) return;
+    useHint(s, h.dataset.h); bound.persist?.();
+    h.remove();
+  }
+  /* pressing End turn is using it */
+  function onFightClick(e) {
+    if (!bound || !e.target.closest?.('#tbf [data-tba="end"]') || !document.querySelector('#fhints [data-h="end"]')) return;
+    const s = bound.S(); if (s && useHint(s, "end")) bound.persist?.();
   }
   /* ui.js: once, at the start of the game */
   function mount(b) {
@@ -182,6 +278,10 @@ const ONBOARD = (() => {
     const side = document.getElementById("side");
     if (side) side.addEventListener("click", onPanelClick);
     clearInterval(timer); timer = setInterval(tick, 1000);
+    clearInterval(hTimer); hTimer = setInterval(() => {   // fight hints follow their controls closely
+      try { const s = bound.S(); if (s && typeof TB !== "undefined" && TB.open) hintTick(s); else drawHints([]); } catch { /* layout only */ }
+    }, 250);
+    document.addEventListener("click", onFightClick, true);
   }
   function onPanelClick(e) {
     const b = e.target.closest("[data-ob]"); if (!b || !bound) return;
@@ -204,5 +304,5 @@ const ONBOARD = (() => {
     return true;
   }
 
-  return { VETERAN, TIPS, candidates, ideas, rows, foot, pickTip, markSeen, mount, tick, settingsHTML, pref, ideasOn, tipsOn, veteran };
+  return { VETERAN, TIPS, HINTS, hintsFor, freeY, candidates, ideas, rows, foot, pickTip, markSeen, mount, tick, settingsHTML, pref, ideasOn, tipsOn, veteran };
 })();

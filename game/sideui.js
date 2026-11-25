@@ -84,6 +84,8 @@ const SIDEUI = (() => {
   // ---------------------------------------------------------------- the courier's letter
   function letter() {
     const s = S(), q = Q(); if (!s || !q || !SIDES.shouldPrompt(s) || !q.active(s) || document.getElementById("modal")) return;
+    const O = typeof OVERLAYS !== "undefined" ? OVERLAYS : null;   // an uninvited letter waits out fights, open menus and other windows (overlays.js)
+    if (O && (O.fightOpen() || O.menuOpen() || O.level() >= O.LEVEL.decision)) return;
     s.sideAsked = true; api.persist(true);   // shown once; the quest keeps it in the Journal
     api.openModal(`<div class="sletter"><div class="sem3">${SIDES.IDS.map((id) => SIDES.emblem(id, 46)).join("")}</div>
       <h2>Three letters</h2><p>${esc(q.LETTER)}</p>

@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b215-overlays", build: 215, date: "25 Nov 2026", title: "One thing on screen at a time", items: [
+      "The first-fight tip no longer sits on top of the VICTORY card. Results always come first, then windows that ask you something, then tips, then messages.",
+      "In your first turn-by-turn fight the big wall of text is gone. Instead you get short one-line hints right next to the turn order, your moves and End turn, and each one goes away as soon as you use it.",
+      "A tip that pops up while a window is open waits until you close it, instead of covering it.",
+      "Letters that arrive on their own (like the courier with three letters) wait until you're out of a fight and out of the menus.",
+      "Messages at the top left get a dark backing over menus, so they don't blur into the titles underneath.",
+    ] },
     { id: "b214-daedric", build: 214, date: "25 Nov 2026", title: "Daedric bargains and artifacts that wake up", items: [
       "Black shrines by the road can now carry an offer from one of six Daedric princes: Mehrunes Dagon, Azura, Nocturnal, Hircine, Boethiah and Meridia (from level 8).",
       "Accept a contract and do three things your prince likes, counted from how you really play: slaying foes, winning at night, picking pockets and locks, hunting beasts, fighting alone or putting the dead to rest.",

@@ -157,7 +157,7 @@ const HUD2 = (() => {
     }
     if (typeof SKILLUP !== "undefined") top += SKILLUP.dock({ top, m: onMap || (m && m.right > 0) ? m : null, st, tw }) || 0;   // skillup.js: the skill-up toast takes the top of the lane
     // a window is open (Hold status, a shop...): only the newest message, in the free room above the window (or below it), never over its title
-    const sh = tw ? null : document.querySelector("#modal .sheet"), inModal = shown(sh);
+    const sh = tw ? null : typeof OVERLAYS !== "undefined" ? OVERLAYS.sheet() : document.querySelector("#modal .sheet"), inModal = shown(sh);   // overlays.js: a window or a result card
     L.classList.toggle("inmodal", inModal);
     if (inModal) {
       const r = sh.getBoundingClientRect(), up = r.top - st - 8, down = innerHeight - r.bottom - 8;

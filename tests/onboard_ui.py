@@ -63,15 +63,16 @@ async def run(b, vw, vh, style, fails):
     await shot("encounter")
     enc = await pg.evaluate("document.querySelector('#modal')?.innerText || ''")
     check("turn by turn" in enc, "encounter sheet still says fights are automatic")
-    # 4. fight it turn by turn: the first-fight tip shows and doesn't cover the buttons
+    # 4. fight it turn by turn: one-line hints pinned to the turn order and the moves, not covering any button (overlays task)
     await pg.click("#modal [data-act=enc][data-a=fight]"); await pg.wait_for_timeout(2500)
     await shot("fight_tip")
-    tip = await pg.evaluate(TIP); print(tag, "4 fight tip:", tip[:90])
-    check("initiative" in tip.lower(), "no turn-by-turn tip in the first fight")
-    covered = await pg.evaluate("""(()=>{ const t=document.querySelector('#obtip'); if(!t) return []; const r=t.getBoundingClientRect(); return [...document.querySelectorAll('#tbf .tbact')].filter(b=>{const q=b.getBoundingClientRect(); return q.width && q.bottom>r.top && q.top<r.bottom && q.right>r.left && q.left<r.right;}).map(b=>b.innerText.split('\\n')[0]); })()""")
-    check(not covered, f"fight tip covers buttons {covered}")
-    await pg.click("#obtip [data-obt=ok]"); await pg.wait_for_timeout(300)
-    check(await pg.evaluate("!document.querySelector('#obtip')"), "tip didn't close")
+    hints = await pg.evaluate("[...document.querySelectorAll('#fhints .fhint:not([hidden])')].map(e=>e.innerText).join(' | ')"); print(tag, "4 fight hints:", hints[:120])
+    check("turn order" in hints.lower(), "no turn-order hint in the first fight")
+    check(await pg.evaluate("!document.querySelector('#obtip')"), "a tip card over the fight")
+    covered = await pg.evaluate("""(()=>{ const out=[]; for (const t of document.querySelectorAll('#fhints .fhint:not([hidden])')) { const r=t.getBoundingClientRect(); for (const b of document.querySelectorAll('#tbf .tbact')) { const q=b.getBoundingClientRect(); if (q.width && q.bottom>r.top && q.top<r.bottom && q.right>r.left && q.left<r.right) out.push(b.innerText.split('\\n')[0]); } } return out; })()""")
+    check(not covered, f"fight hints cover buttons {covered}")
+    await pg.click("#fhints .fhint"); await pg.wait_for_timeout(400)
+    check(await pg.evaluate("document.querySelectorAll('#fhints .fhint').length") <= 1, "a tapped hint didn't go away")
     if await pg.query_selector("#tbf .tbgrid"): await pg.evaluate("(()=>{const g=document.querySelector('#tbf .tbgrid')||document.querySelector('#tbf');const b=document.createElement('button');b.dataset.tbx='autoall';g.append(b);b.click()})()")
     for _ in range(80):
         if await pg.query_selector("#tbf [data-tbx=done]"): break
