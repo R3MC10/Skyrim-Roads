@@ -82,6 +82,7 @@ const FIGHTCTL = (() => {
     try {
       const w = sess.why ? sess.why(a) : ""; if (w) return w;
       if (typeof STRAT !== "undefined" && STRAT.owns(a)) return STRAT.why(f, a);
+      if (typeof REACT !== "undefined" && REACT.owns(a)) return REACT.why(f, a);   // reactions.js
       if (a === "flee") return f.e.boss ? "Not from a boss" : !f.canFlee ? "No way out here" : "";
       if (typeof MOUNTFIGHT !== "undefined") { const mw = MOUNTFIGHT.why(f, a); if (mw) return mw; }   // the saddle
       if (a === "power_attack") return "Not enough stamina";
@@ -105,7 +106,7 @@ const FIGHTCTL = (() => {
     if (typeof UIART === "undefined") return `<span class="em">${api.iconOf(f, a)}</span>`;
     try {
       const sk = f.weapon?.skill || (f.wt === "bow" || f.wt === "crossbow" ? "Archery" : "Hand-to-Hand");
-      if (/^(beast|lord|vamp):|^power:(beast|lord)$/.test(a)) return `<span class="em">${api.iconOf(f, a)}</span>`;   // a werewolf's / vampire's own moves (beastpaths.js)
+      if (/^(beast|lord|vamp|rx):|^power:(beast|lord)$/.test(a)) return `<span class="em">${api.iconOf(f, a)}</span>`;   // a werewolf's / vampire's own moves (beastpaths.js)
       if (a === "attack") return UIART.skill(sk, size);
       if (a === "power_attack") return UIART.skill(sk === "Archery" ? "Archery" : "Two-Handed", size);
       if (a === "magic") return UIART.skill("Destruction", size);
@@ -139,6 +140,7 @@ const FIGHTCTL = (() => {
     if (k === "shout") return arg.toUpperCase();
     if (k === "power") return "Power";
     if (a === "mount" || a === "dismount") return a === "mount" ? "Mount" : "Dismount";
+    if (k === "rx" && typeof REACT !== "undefined") { const m = REACT.moves(f).find((x) => x[0] === a); if (m) return m[1]; }   // Oil flask, Mark target, Cover allies
     return a;
   }
   function dock(sess, api) {
@@ -157,6 +159,7 @@ const FIGHTCTL = (() => {
     const q = quick(f);
     for (const [a] of bx.list) if (q.length < MAXQ + 2 && !q.some((x) => x.a === a)) q.unshift({ a });
     if (typeof MOUNTFIGHT !== "undefined") for (const [a] of MOUNTFIGHT.moves(f)) q.unshift({ a });   // Mount / Dismount (mountfight.js)
+    if (typeof REACT !== "undefined") for (const [a] of REACT.moves(f)) if ((REACT.worth ? REACT.worth(f, a) : REACT.can(f, a)) && !q.some((x) => x.a === a)) q.push({ a });   // Oil flask, Mark target, Cover allies (reactions.js): only when they are worth it, the tray stays short
     const tray = q.map((x, i) => btn(sess, api, x.a, { label: shortName(f, x.a), extra: "fc-q" + (x.sugg ? " sugg" : "") + (/^(shout|power):/.test(x.a) ? " shout" : ""), key: String(4 + i), badge: x.a.startsWith("potion:") ? potCount(f, x.a.split(":")[1]) : null })).join("");
     const nSp = (s.spells || []).filter((id) => D.SPELLS[id] && D.SPELLS[id].kind !== "utility").length;
     const nPot = ["health", "magicka", "stamina"].reduce((t, k) => t + potCount(f, k), 0);

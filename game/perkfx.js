@@ -315,6 +315,10 @@ const PFX = (() => {
     // ---------------------------------------------------------------- boss fights (bossfight.js)
     [ "One-Handed", "giant_slayer", "Giant Slayer", 1, [40], ["armsman"], "Bosses take 10% more damage from you, and 20% more once they reach their last phase. [OURS]", [["out", 0.1, { bossFoe: 1 }], ["out", 0.1, { bossLast: 1 }]]],
     [ "Blocking", "read_the_signs", "Read the Signs", 1, [30], ["shield_wall"], "A boss's big attacks (the ones it shows a turn ahead) hurt you 25% less. [OURS]", [["bftele", 0.25, {}]]],
+    // ---------------------------------------------------------------- combat combos (reactions.js)
+    [ "Two-Handed", "cold_breaker", "Cold Breaker", 1, [30], ["barbarian"], "Shatter (a power attack on a chilled foe) hits 40% harder, and it can take a bigger bite out of the foe. [OURS]", [["shatter", 0.4, {}]]],
+    [ "Speechcraft", "tactician", "Tactician", 1, [40], ["leadership"], "Combo setups last a round longer: oil, a mark, a bash or a shout leave the foe open one more round, and burning ground burns one round more. [OURS]", [["rxlong", 1, {}]]],
+    [ "Blocking", "bodyguard", "Bodyguard", 1, [35], ["shield_wall"], "When you cover your allies, the blows you take for them hit another 25% softer (60% in all). [OURS]", [["rxcover", 0.25, {}]]],
     // ---------------------------------------------------------------- player-run holds (holdrule.js)
     [ "Speechcraft", "fair_dues", "Fair Dues", 2, [20, 45], [], "A hold's tax costs you half as much when you shop there (rank 2: you pay none). [OURS]", [["holdtax", 0.5, {}]]],
     [ "Speechcraft", "jarls_favour", "Jarl's Favour", 1, [50], ["fair_dues"], "In a hold your side rules, shops sell to you another 5% cheaper, and while you're its Jarl, taxes fill the treasury 20% faster. [OURS]", [["jarlfav", 0.05, {}], ["jarlpurse", 0.2, {}]]],

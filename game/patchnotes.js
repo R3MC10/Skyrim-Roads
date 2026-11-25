@@ -3,6 +3,15 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b192-combos", build: 192, date: "25 Nov 2026", title: "Combat combos and teamwork", items: [
+      "Set a foe up, then cash in. Freeze it and hit it with a power attack to Shatter the frost for big extra damage. Shield-bash it and follow with a power attack this round for an Exploit: it hits harder and the foe keeps reeling. Knock it off balance with a shout and your next blows land harder.",
+      "New in the general store: the Oil Flask. Throw it at a foe, then any fire (a spell, a fire weapon, Fire Breath) sets the ground ablaze and burns it for a few rounds.",
+      "New moves when they fit: Mark target (when you or a friend has a bow, the next three arrows at it are critical hits) and Cover allies (blows meant for your friends come to you, softer).",
+      "Combos are made for teamwork: one friend freezes, another shatters, and done by two different fighters a combo hits harder. Your follower and the Smart AI (Auto) look for combos too.",
+      "A move that would set off a combo right now glows and gets a small icon, and a short banner shows when a combo lands.",
+      "Bosses have two new big moves you see a turn ahead: Withering Hex (wash it off with a potion or a healing spell) and Marked for Death, which goes for a friend unless you cover them.",
+      "Three new perks: Cold Breaker (Two-Handed: Shatter hits harder), Tactician (Speechcraft: setups last a round longer) and Bodyguard (Blocking: covering friends hurts you less).",
+    ] },
     { id: "b191-afflictions", build: 191, date: "25 Nov 2026", title: "Afflictions", items: [
       "Dark gifts with an upside and a downside: catch the Draugr Curse in the deepest barrows, take a Daedric Mark at a black shrine by the road, or pick up the Dwemer Resonance in Dwemer ruins.",
       "Each grows in three stages with what you do, and works in every fight: frost hurts a Draugr-cursed hero less but potions heal them less, the marked hit daedra harder but bad luck follows them, the Dwemer hum boosts shock but drains your magicka outside the ruins.",
@@ -1331,13 +1340,13 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 191;
+  const NEXT_AT = 192;
   const NEXT = [
     "Painted riders on the road and on the map",
     "Makeovers for fishing, hunting, mining and lockpicking",
     "An adventuring company longhouse: a shared base with a treasury, a trophy hall and stables",
     "Daedric bargains and artifacts that awaken, plus regional crises and heists",
-    "Combat combos (frost + heavy = Shatter, oil + fire), follower and horse bonds, and spell crafting",
+    "Follower and horse bonds, and spell crafting",
   ];
   const KEY = "rotn_notes_seen";
   const latest = () => LIST[0];
