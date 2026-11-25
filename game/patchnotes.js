@@ -3,11 +3,29 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b208-stables", build: 208, date: "25 Nov 2026", title: "Tidier stables", items: [
+    { id: "b210-stables", build: 210, date: "25 Nov 2026", title: "Tidier stables", items: [
       "The stables screen is now fully in Polish: saddlebags, horseshoes, horse armor, breeds, coats, the cart and renaming your horse.",
       "Your horse's card shows its painted picture in its own coat, in a proper frame, instead of a tiny icon. A knocked-down horse lies down in the picture.",
       "The bond bar now says what it measures, for example 4/100 toward level 4, so a nearly empty bar right after a new level doesn't look broken.",
       "The banners in the corner, like Quest started, Objective and Skill increased, are in Polish now too.",
+    ] },
+    { id: "b209-crisespolish", build: 209, date: "25 Nov 2026", title: "Crises, smoothed out", items: [
+      "Deliver food now says it plainly: bring the steward 3 pieces of food per delivery, and it counts your deliveries (up to 4).",
+      "On a PC map a crisis sign no longer hides behind the cards on the left: it moves to the other side of the town, or just past the cards with a thin line back to it.",
+      "Achievements and other messages no longer pile up over the title of an open window. While a window is open you see only the newest one, above the window or below it. Big quest banners slide down to the bottom edge instead of covering the middle.",
+      "Ringleaders: a Run away rule in your tactics now works in crisis fights too, and the boss card warns you when the fight is risky at your level.",
+      "Heroes under level 10 face a slightly softer ringleader, so they're no longer beaten more often than not.",
+    ] },
+    { id: "b208-runecraft", build: 208, date: "25 Nov 2026", title: "Rune crafting: make your own spells", items: [
+      "A new Rune table at the College of Winterhold and at every arcane enchanter: build your own spell from an element, a delivery and a modifier.",
+      "Elements: fire, frost, shock, poison, healing and ward. Deliveries: bolt, touch, rune trap, cloak, area and over time. Modifiers: chain, lingering, slow, piercing, cheap and quick.",
+      "You find runes as you play: reading spell tomes, learning Words of Power at word walls, clearing Dwemer ruins and doing the College's tasks. The Runes page tells you where to look for the ones you're missing.",
+      "How strong your spell can be depends on your Destruction or Restoration skill. A crafted spell is never stronger than the best spell you can buy at your level, it's just made your way. Turn the power down to save magicka.",
+      "Every spell gets its own name (or name it yourself) and its own drawn icon. It shows in the Magic tab and works in both kinds of fight.",
+      "Frost spells chill, so a power attack Shatters the foe. Lingering fire leaves burning ground. Poison barely touches undead and machines.",
+      "New perks: Rune Scholar (a bigger power budget), Spellwright (two modifiers on one spell) and Runic Echo (crafted cloaks and walls last longer, rune traps re-arm once).",
+      "The old spell combining at the College is still there.",
+      "The Coming next list is up to date: painted backdrops, hold crises, bonds and spell crafting are in the game now.",
     ] },
     { id: "b207-bonds", build: 207, date: "25 Nov 2026", title: "Bonds with followers and horses", items: [
       "Followers now have ranks: Hireling, Companion, Trusted and Sworn. They climb as loyalty grows, and each rank gives something real.",
@@ -1458,13 +1476,11 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 204;
+  const NEXT_AT = 208;
   const NEXT = [
-    "14 more painted battle backdrops",
     "An adventuring company longhouse: a shared base with a treasury, a trophy hall and stables",
     "Daedric bargains and artifacts that awaken",
-    "Regional crises and heists",
-    "Follower and horse bonds, and spell crafting",
+    "Heists in the big cities",
   ];
   const KEY = "rotn_notes_seen";
   const latest = () => LIST[0];
