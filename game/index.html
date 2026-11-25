@@ -4962,6 +4962,10 @@ body:has(#tbf) #gnear{display:none!important}
 .cgsexb.on{color:#f3e7c4;border-color:var(--gold);background:linear-gradient(0deg,rgba(226,187,100,.18),rgba(226,187,100,.06));box-shadow:inset 0 0 0 1px rgba(226,187,100,.35)}
 .cgsexb:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
 @media (min-width:900px){.cgsex{padding:8px 20px 6px}}
+/* [fight-tooltips-top] tooltips sit above everything: the fight, its Magic / Items picker, minigames, damage numbers, windows */
+.tip{z-index:10000}.tbtip{z-index:10000}
+.tip.tt-scroll{overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+.tip.tt-scroll::after,.tip:not(.tt-above):not(.tt-below)::after{display:none}
 /* [itemcards2] item cards: what else changes when you put it on (itemcmp.js notes) */
 .ic-cmp .ic-note{margin:4px 0 0;padding-left:14px;text-indent:-14px;color:#e8c77a;line-height:1.35}.ic-cmp .ic-note::before{content:"▸ ";color:#c9a24a}
 </style>
