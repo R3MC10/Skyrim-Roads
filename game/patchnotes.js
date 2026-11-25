@@ -3,7 +3,7 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b194-mgsmith", build: 194, date: "25 Nov 2026", title: "A real forge for smithing", items: [
+    { id: "b197-mgsmith", build: 197, date: "25 Nov 2026", title: "A real forge for smithing", items: [
       "Making weapons and armor at a forge is now a small scene at a painted smithy: heat the bar, hammer it into shape, then quench it.",
       "Heat: hold to pump the bellows and keep the glow in the gold band. Too hot and it burns, too cold and it won't move.",
       "Hammer: tap the glowing spots as the rings close on them. Sparks fly and the bar turns into a rough blade, then a shaped one. The metal cools while you work, so reheat it when the glow fades.",
@@ -12,6 +12,25 @@ const PATCHNOTES = (() => {
       "Quick craft skips it, like the other crafting games. The Smithing contest at festivals uses the new forge too.",
       "New Smithing perk, Forge Sense: wider gold bands, slower cooling, and a better chance to save material.",
     ] },
+    { id: "b196-mgmining", build: 196, date: "25 Nov 2026", title: "Mining looks and feels new", items: [
+      "The mining game now happens in a painted cave. The rock face is real stone cut from the painting, and you can see chunks of ore poking out of the veins.",
+      "Tap a stone and your pickaxe swings in and lands on it: the rock cracks, chips and dust fly, ore glints and sparks, and the pieces you break out jump into your haul.",
+      "A Perfect blow shakes the screen a little. When you're done, a haul card shows everything you dug, with how many Perfect blows you landed.",
+      "Works on small phones and big PC screens, in both the ink and pixel styles. Quick dig still skips straight to the result.",
+    ] },
+    { id: "b195-afflart", build: 195, date: "25 Nov 2026", title: "Painted affliction scenes", items: [
+      "The black shrine by the road is now a painting: an obsidian altar in a ring of standing stones under the moon, glowing purple.",
+      "Catching the Draugr Curse shows a frozen barrow altar, and catching the Dwemer Resonance (or the humming pipe on the road) shows a glowing Dwemer pipe in a ruined hall.",
+      "The priests' rites at a temple (lifting the curse, or the Vow of Cleansing) now open with a candlelit temple of Arkay.",
+      "Werewolf moments (the Change and the silver-trap hunters) show a werewolf howling at the full moon.",
+    ] },
+    { id: "b194-lockgame", build: 194, date: "25 Nov 2026", title: "Painted lockpicking", items: [
+      "Picking a lock is now a painted close-up: a real lock on a chest, your pick and the tension wrench. Drag on the lock to aim the pick (it points at your finger), then hold Turn.",
+      "The lock shakes harder the further you are from the sweet spot. Keep forcing it and the pick bends, glows and snaps, with bits of metal flying. Turn it all the way and the shackle clicks open in a little burst of light.",
+      "Every place has its own lock: Nordic knotwork in barrows and temples, Dwemer brass in the ruins, gilded locks in rich places and on master locks, steel on harder chests and plain iron elsewhere.",
+      "Your Lockpicking skill and perks still make the sweet spot wider, just like they made the old roll easier. New perk: Steady Pick (Lockpicking) makes it wider still and your picks last longer.",
+      "Works with a finger on phones, and with the mouse or the keyboard on PC (A/D or the arrows to aim, Space to turn). Rather roll the dice? Settings → Crafting → When you pick a lock → Quick pick.",
+    ]},
     { id: "b193-rigpolish", build: 193, date: "25 Nov 2026", title: "Painted weapons and better swings", items: [
       "Fighters swing like they mean it: a sword goes up and back over the shoulder, then comes down and forward in one arc, the body turning into the blow and the weight stepping onto the front foot. No more blade sliding through your own head.",
       "Bows are drawn properly: the bow arm straight, the string hand pulled back to the cheek, then the hand flies back as the arrow goes.",

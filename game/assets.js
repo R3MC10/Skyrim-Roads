@@ -35,6 +35,9 @@
             fence arena mine — raw 3:2 paintings go through art/conv: crop the middle band, WebP q80
      fest-<id>                1600×600   8:3 painted headers for the festival and Grand Arena screens (tourneyui.js), WebP q85.
        ids: harvest olaf tourney derby hunt forgefire midwinter arena. The ink drawing stays as the fallback.
+     gev-<scene>              1280×480   8:3 painted affliction scenes (afflictions.js PAINT → EVENTART.PAINTED), WebP q82: black-shrine
+                                         draugr-altar dwemer-pipe arkay-temple werewolf-moon. Shown in road events and story popups
+                                         (cover-fit into 360×150); the drawing stays until the file loads. (gev-<kind> are the Great Events.)
      room-<type>-<theme>      1600×900   painted dungeon rooms (dunrooms.js), shown above the room text. WebP q80.
        types: fight elite trap treasure puzzle rest boss (mystery optional). themes: cave barrow dwemer mine forsworn
        vampire temple fort banditcamp thalmor giantcamp lair. Just drop a file in: a missing one borrows the closest
@@ -47,6 +50,10 @@
      map-world                2000×1400  hand-painted world map, exact 10:7, covering the world bounds edge to edge (x·width,
                                          y·height); replaces the procedural map ground (paintedmap.js). Reference to paint over:
                                          scripts/map_reference.py. Optional map-world-2x (3000×2100) for close zoom.
+     mg-mining-bg             2048×1152  painted mine wall for the mining mini-game (minegame.js), WebP q80. The stones are cut from
+                                         its middle square (x 550-1450, y 110-1010, the iron vein); blurred behind them as the cave.
+     ore-<iron|silver|gold|ebony> ~320   painted ore chunks, transparent, trimmed (minegame.js). Other ores borrow one, tinted.
+     tool-pickaxe             768×356    painted pickaxe, transparent, trimmed, head on the right (minegame.js swings it).
      gfx-<effect>             strips     rendered combat effect sprites, drawn by gorefx2.js: frames side by side, transparent WebP.
                                          Liquids from scripts/make_blood.py: blood-burst-1/2 (10×256²), blood-burst-3 (12×256²),
                                          blood-spray (8×256²), blood-mist (8×192²), oil/green/ichor/sap-burst (10×192²); decal atlases
@@ -58,6 +65,10 @@
      mg-smith-blade1 … 4      ~1170-1350 ×~125  blade stages (bar, rough, cooling, finished), transparent, tang left, tip right,
                                          trimmed, all cut from one sheet at the same scale (keep it). WebP q85.
      mg-smith-hammer, -tongs  785×278, 892×169  transparent tools, horizontal, head / jaws on the right. WebP q85.
+     lock-<face>              720×720    painted lock faces for the lockpicking game (lockgame.js), transparent, keyhole centre
+                                         at (0.5, 0.40): iron steel nordic dwemer noble. GPT art, trimmed, 1.5x Lanczos, WebP q86.
+     tool-lockpick            933×80     the pick, horizontal, hook tip on the right; tool-tension-wrench 705×116, bend on the right.
+                                         Missing files: lockgame.js draws the lock and tools in code.
      ui-panel                 1024×1024  tileable dark panel texture
      ui-parchment             1024×1024  tileable parchment texture
      ui-compass               1254×1254  transparent compass rose

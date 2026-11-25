@@ -32,11 +32,13 @@ const RULES = [
   [/^(place|biome)-/, 1600, 900, 16 / 9, 0.01], [/^shop-/, 1200, 320, null],
   [/^foe-dragon$/, 1536, 1024, 1.5, 0.01], [/^foe-/, 1254, 1254, 1, 0.01],
   [/^bs-(forest|snow|tundra|cave|barrow|dwemer|town)$/, 2808, 1290, 2808 / 1290, 0.01], [/^bs-/, 1480, 680, 1480 / 680, 0.01], [/^bsf-/, 1480, 40, null], [/^bsp-/, 60, 60, null],
-  [/^(gev|wev)-.*-thumb$/, 280, 200, null], [/^(gev|wev)-/, 1280, 440, null],
+  [/^(gev|wev)-.*-thumb$/, 280, 200, null], [/^gev-(black-shrine|draugr-altar|dwemer-pipe|arkay-temple|werewolf-moon)$/, 1280, 480, 8 / 3, 0.01], [/^(gev|wev)-/, 1280, 440, null],
   [/^map-world$/, 2000, 1400, 10 / 7, 0.01], [/^map-world-2x$/, 3000, 2100, 10 / 7, 0.01],
   [/^ui-compass3d$/, 2240, 2240, 1, 0], [/^ui-(compass|frame|panel|parchment)$/, 1024, 1024, 1, 0],
   [/^fest-/, 1600, 600, 8 / 3, 0.01],
   [/^mg-smithing-bg$/, 2048, 1152, 16 / 9, 0.01], [/^mg-smith-blade\d$/, 1100, 110, null], [/^mg-smith-(hammer|tongs)$/, 700, 150, null],
+  [/^mg-.*-bg$/, 1600, 900, 16 / 9, 0.01], [/^ore-(iron|silver|gold|ebony)$/, 256, 220, null], [/^tool-pickaxe$/, 600, 250, null],
+  [/^lock-(iron|steel|nordic|dwemer|noble)$/, 700, 700, 1, 0.01], [/^tool-lockpick$/, 900, 70, null], [/^tool-tension-wrench$/, 680, 100, null],
   [/^room-/, 1280, 720, null],
   [/^rig-w-(bow|bow-drawn|shield|shield-side|shield-kite|shield-kite-side)$/, 30, 190, null], [/^rig-w-/, 190, 20, null], [/^icon-192/, 192, 192, 1, 0], [/^icon-/, 256, 256, 1, 0],
 ];
@@ -54,6 +56,8 @@ for (const f of files) {
   if (asp && Math.abs(sz[0] / sz[1] / asp - 1) > (tol || 0) + 0.005) bad(`${f}: shape ${sz[0]}x${sz[1]} should be ${asp.toFixed(3)} wide per high`);
 }
 if (n < 150) bad(`only ${n} painted files found in ${W}`);
+// the painted affliction scenes afflictions.js asks for (PAINT)
+for (const k of ["black-shrine", "draugr-altar", "dwemer-pipe", "arkay-temple", "werewolf-moon"]) if (!keys.has("gev-" + k)) bad(`gev-${k}.webp is missing (afflictions.js PAINT)`);
 
 // art_gpt/REGEN_LIST.md allow lines
 const rl = path.join(ROOT, "art_gpt", "REGEN_LIST.md");
