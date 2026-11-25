@@ -3,8 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b247-testsgreen", build: 247, date: "25 Nov 2026", title: "Coming next, tidied", items: [
+    { id: "b248-testsgreen", build: 248, date: "25 Nov 2026", title: "Coming next, tidied", items: [
       "Picking herbs by hand is out now, so it left the Coming next list.",
+    ] },
+    { id: "b247-movefx1", build: 247, date: "25 Nov 2026", title: "Real arrows and spell effects", items: [
+      "Bows and crossbows shoot a real arrow or bolt now: it leaves the string, arcs over (a bolt flies flatter and faster), and sticks in, breaks on a shield, or sails past on a miss and lands in the ground behind.",
+      "Archer foes, crossbowmen and the Dwarven ballista shoot too, and your followers and party members loose their own arrows. Shots leave from the saddle when you ride.",
+      "Fire, frost, shock, poison and life-drain arrows leave a coloured trail; power shots and sneak shots are bigger.",
+      "Every spell now has its own look: Flames is a jet, Firebolt a comet, Fireball a lob that bursts, Ice Spike a shard, Icy Spear a big spear, Lightning Bolt a jagged arc, Chain Lightning forks from foe to foe, and so on through healing, wards, flesh spells, summons, illusions and the rest. Dual casting looks bigger, from both hands.",
     ] },
     { id: "b246-gathering", build: 246, date: "25 Nov 2026", title: "Picking herbs by hand", items: [
       "Gathering is now a short hands-on mini-game: snip flowers at the stem, dig roots up slowly, scrape fungus in one stroke, pick only the ripe berries, lift eggs gently and ease a fragile Nirnroot out of the mud. Do it well and you get more; even a clumsy try gives you something.",
@@ -1699,7 +1705,7 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 247;
+  const NEXT_AT = 248;
   const NEXT = [
     "Mentoring: play side by side with friends of any level",
     "Shrines of your own: build a Daedric altar at your longhouse",
