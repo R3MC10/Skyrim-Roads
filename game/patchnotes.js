@@ -3,7 +3,7 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b228-gatherfix", build: 228, date: "25 Nov 2026", title: "Picking herbs fixed", items: [
+    { id: "b229-gatherfix", build: 229, date: "25 Nov 2026", title: "Picking herbs fixed", items: [
       "On a PC the Gathering card sat in the side panel, which the big map hides, so there was no way to pick plants or forage. It now floats on the left of the map whenever plants are in reach.",
       "Some older saves made the Gather button do nothing. Those heroes pick plants, forage and plant gardens normally again.",
       "If picking ever goes wrong, you now get a short message instead of a button that does nothing.",

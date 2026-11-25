@@ -2,7 +2,7 @@
 const I18N_GATHER = (() => {
   const PL = {
     "Couldn't gather that. Please try again.": "Nie udało się tego zebrać. Spróbuj jeszcze raz.",
-    // patch note b228-gatherfix
+    // patch note b229-gatherfix
     "Picking herbs fixed": "Naprawione zbieranie ziół",
     "On a PC the Gathering card sat in the side panel, which the big map hides, so there was no way to pick plants or forage. It now floats on the left of the map whenever plants are in reach.":
       "Na komputerze karta Zbieranie siedziała w bocznym panelu, który zasłania duża mapa, więc nie dało się zbierać roślin ani szukać ziół. Teraz unosi się po lewej stronie mapy, gdy rośliny są w zasięgu.",
