@@ -186,7 +186,7 @@ for (const x of ["Security", "Food", "Prosperity", "Corruption", "Thriving", "St
 const missing = [...strs].filter((k) => !has(k));
 ok(!missing.length, "Polish for every line (missing: " + missing.join(" | ") + ")");
 for (const v of [...Object.values(L10N.tpl), ...Object.values(L10N.words)]) ok(typeof v === "string" && v.length, "non-empty Polish");
-ok(/b204-crises|-crises"/.test(PN), "patch note entry");
+ok(/b206-crises|-crises"/.test(PN), "patch note entry");
 const pn = /id: "b\\d+-crises"[^\\]]*items: \\[([\\s\\S]*?)\\] \\}/.exec(PN);
 if (pn) for (const m of pn[1].matchAll(/^\\s*"((?:[^"\\\\]|\\\\.)*)",/gm)) ok(has(JSON.parse('"' + m[1] + '"')), "patch note line in Polish: " + m[1].slice(0, 40));
 

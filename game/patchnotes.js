@@ -3,7 +3,7 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b204-crises", build: 204, date: "25 Nov 2026", title: "Hard times in the holds", items: [
+    { id: "b206-crises", build: 206, date: "25 Nov 2026", title: "Hard times in the holds", items: [
       "Every hold now has four numbers you can see: Security, Food, Prosperity and Corruption. They drift with time and the weather, and they follow what players do.",
       "Escorting caravans and beating bandits makes a hold safer, bringing food feeds it, and bribes, pickpocketing and selling stolen goods make it more crooked.",
       "Low numbers make shops dearer (food most of all when food is short) and trouble finds you more often on that hold's roads. Good numbers do the opposite.",
@@ -13,6 +13,21 @@ const PATCHNOTES = (() => {
       "Nothing is required: a crisis left alone burns out after 40 hours and leaves the hold poorer for a day. Everyone sees the same crises at the same time.",
       "See it on the map (a sign and five pips by the capital), in the notices under the world event card, and on every town page: tap Hold status for the full card.",
       "New perks: Hard Times Trader (Mercantile) halves crisis price rises, and Jarl's Agent (Etiquette) makes your contracts count more and pays more.",
+    ] },
+    { id: "b205-artround3", build: 205, date: "25 Nov 2026", title: "Fresh paint for fights and mini-games", items: [
+      "Fourteen more fight places are freshly painted, bigger and sharper: the arena, ash wastes, autumn woods, bandit camps, Forsworn cliffs, forts, giant camps, lairs, marshes, mines, rocky highlands, temples, Thalmor halls and vampire lairs.",
+      "Fighters pick up the light of each of these places, so they match the new paintings.",
+      "The shiny floor in Thalmor halls reflects a bit less, so it doesn't steal the show.",
+      "Black and chestnut horses now rear up in their own colours when you get thrown from the saddle.",
+      "Lockpicking happens on a painted chest front, with the lock sitting right on its iron plate. When a chest opens, its lid lifts a little.",
+      "Hunting: branches hang in from the top corners and grass grows along the bottom, swaying in the wind, without hiding the animals or your aim.",
+      "Fishing: painted splashes and rings on the water when the line lands, on every nibble, on the bite and when you land the fish.",
+    ] },
+    { id: "b204-tidy2", build: 204, date: "25 Nov 2026", title: "Arrows you can see, and a fresh Coming next", items: [
+      "Hunting: the arrow stuck in an animal is now sized to the animal, with its feathers sticking out, so you can see where you hit.",
+      "Mining: the mine's name and the line under it stay on top when the pickaxe swings at the top row on small phones.",
+      "Forge: on a PC the heat strip moves to the left while you quench, so it no longer covers the blade. On phones \"A perfect quench!\" and the other calls sit on a dark plate and are easy to read.",
+      "The Coming next list is up to date: afflictions, combos, the new mini-games, painted fighters, races, horse coats and fighters that match the scene are in the game now, so they're off the list.",
     ] },
     { id: "b203-rigcohesion", build: 203, date: "25 Nov 2026", title: "Fighters that belong in the scene", items: [
       "Fighters and foes now take on the light of the place you fight in: cold and blue in the snow, warm and torch-lit in caves, dim in barrows, with a faint edge of light on their backs.",
@@ -1428,12 +1443,12 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 192;
+  const NEXT_AT = 204;
   const NEXT = [
-    "Painted riders on the road and on the map",
-    "Makeovers for fishing, hunting, mining and lockpicking",
+    "14 more painted battle backdrops",
     "An adventuring company longhouse: a shared base with a treasury, a trophy hall and stables",
-    "Daedric bargains and artifacts that awaken, plus regional crises and heists",
+    "Daedric bargains and artifacts that awaken",
+    "Regional crises and heists",
     "Follower and horse bonds, and spell crafting",
   ];
   const KEY = "rotn_notes_seen";

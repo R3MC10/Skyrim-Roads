@@ -10,7 +10,9 @@
      easier. Steady Pick (perkfx "lockfeel") widens it again and makes picks last longer. Easy timing widens it too.
    - Painted faces (lock-<face>.webp, tool-lockpick.webp, tool-tension-wrench.webp; GPT art): Nordic for barrows and
      temples, Dwemer for ruins, noble for rich places and master locks, steel for adept/expert, iron otherwise.
-     Any missing picture is drawn in code instead.
+     Any missing picture is drawn in code instead. Behind the lock a painted plate: the front of a chest
+     (mg-lockpick-chest-bg, iron plate centred at 54% of its height) or a door (mg-lockpick-door-bg, plate dead centre),
+     placed so its plate sits right under the lock; o.plate "chest" | "door" (a title with "door" or "gate" → door).
    - Deterministic: a seed plus a list of small input events [tick, key, a] replays a lock exactly (30 ticks a second),
      like dungeongames.js. Party members watch the leader's lock through DGAMES.mirror (it reads IMM.lock).
    - Settings → Crafting → "When you pick a lock": Mini-game / Quick pick (the old roll). Automated tests keep the
@@ -46,6 +48,15 @@ const LOCKGAME = (() => {
     if (o.rich || /thalmor|vampire|noble|manor|palace/.test(th) || tier >= 4) return "noble";
     if (tier >= 2 || /fort/.test(th)) return "steel";
     return "iron";
+  }
+
+  /* which painted plate is behind the lock: the iron plate's centre in the picture (fractions) and the chest lid's
+     bottom edge (lifts a little when it opens) */
+  const PLATES = { chest: { key: "mg-lockpick-chest-bg", px: 0.5, py: 0.54, lid: 0.215 }, door: { key: "mg-lockpick-door-bg", px: 0.5, py: 0.5 } };
+  const PLATE_D = 0.65;   // the lock's width as a share of the plate picture's height (what the plates were painted for)
+  function plateFor(o = {}) {
+    if (o.plate === "door" || o.plate === "chest") return o.plate;
+    return /(door|gate)/i.test(String(o.title || "")) ? "door" : "chest";
   }
 
   // ====================================================================== the rules (pure: no DOM, no Math.random)
@@ -143,9 +154,10 @@ const LOCKGAME = (() => {
     const seed = o.seed != null ? o.seed >>> 0 : (Math.random() * 2147483647) | 0;
     const st = make(seed, optsFor(o.s, o));
     const face = FACES.includes(o.face) ? o.face : faceFor({ theme: o.theme, tier: o.tier });
-    ["lock-" + face, "tool-lockpick", "tool-tension-wrench"].forEach(img);   // ask for the paintings now (drawn in code until they arrive)
+    const plate = plateFor(o);
+    ["lock-" + face, "tool-lockpick", "tool-tension-wrench", PLATES[plate].key].forEach(img);   // ask for the paintings now (drawn in code until they arrive)
     const el = document.createElement("div");
-    el.id = "lockpick"; el.className = `lockpick lgame lg-${face}`;
+    el.id = "lockpick"; el.className = `lockpick lgame lg-${face} lg-${plate}`;
     const help = st.o.feel ? ` · ${LX("Steady Pick")}` : "";
     el.innerHTML = `<div class="lgwrap" role="dialog" aria-label="Lockpicking">
       <div class="lghead"><h3>${esc(o.title || "A locked chest")}</h3><p class="lpsub">${TIERS[o.tier] || "Novice"} lock · Lockpicking ${o.skill ?? ""}${help}</p></div>
@@ -157,7 +169,7 @@ const LOCKGAME = (() => {
       </div></div>`;
     document.body.appendChild(el);
     const cv = el.querySelector("#lpc"), turn = el.querySelector("#lpturn"), ang = el.querySelector("#lpang");
-    lp = { st, o, face, done, el, cv, ang, acc: 0, last: performance.now(), t0: performance.now(), now: 0, fx: [], disp: 90, seenBroken: 0, insertAt: performance.now(), openAt: 0, finishAt: 0, jolt: 0, creak: 0, bg: null, lastHint: "" };
+    lp = { st, o, face, plate, done, el, cv, ang, acc: 0, last: performance.now(), t0: performance.now(), now: 0, fx: [], disp: 90, seenBroken: 0, insertAt: performance.now(), openAt: 0, finishAt: 0, jolt: 0, creak: 0, bg: null, lastHint: "" };
     const send = (k, a) => { if (!lp || lp.st.over) return; const ev = [lp.st.tick, k]; if (a !== undefined) ev.push(Math.round(a * 2) / 2); input(lp.st, ev); };
     const hold = (v) => (e) => { e.preventDefault(); if (!lp) return; if (v && !lp.st.holding) { send("d"); if (lp.st.holding) sfx("click"); } else if (!v && lp.st.holding) send("u"); };
     turn.addEventListener("pointerdown", hold(true));
@@ -282,8 +294,15 @@ const LOCKGAME = (() => {
   const easeOut = (x) => 1 - Math.pow(1 - clamp(x, 0, 1), 3);
   /* top: where the title and the line under it end (CSS px from the canvas top), so the shackle starts below them.
      The shackle reaches ~0.72 D above the centre; the pick stays short enough to end inside the wood. */
-  function layout(w, h, top = 0) {
+  function layout(w, h, top = 0, painted = false) {
     const avail = Math.max(h * 0.5, h - top);
+    if (painted) {   // on a painted plate there is no shackle: the lock sits on the plate, about 65% of the screen tall
+      const vh = DOM ? innerHeight || h : h;
+      const D = Math.max(80, Math.min(w * 0.8, vh * 0.65, avail - 16, 900)), cx = w / 2;
+      const cy = (h - avail) + avail / 2 + Math.min(D * 0.04, Math.max(0, avail - D - 16) / 2);
+      const pickLen = Math.min(D * 0.92, Math.max(D * 0.6, (h - 8 - (cy - D * 0.1)) / 0.88));
+      return { w, h, D, cx, cy, kx: cx, ky: cy - D * 0.1, pickLen, top, painted };
+    }
     const D = Math.min(w * 0.74, avail * 0.62, h * 0.66, 760), cx = w / 2;
     const cy = (h - avail) + D * 0.74 + Math.max(0, avail - D * 1.56) * 0.45;
     const pickLen = Math.min(D * 0.92, Math.max(D * 0.6, (h - 8 - (cy - D * 0.1)) / 0.88));
@@ -299,11 +318,28 @@ const LOCKGAME = (() => {
     } catch { return 0; }
   }
   /* the chest front behind the lock: planks, an iron band, candlelight; drawn once per size */
+  /* where the painted plate picture goes: scaled so its iron plate fits the lock, its plate centre on the lock's centre,
+     and never smaller than the screen (then the plate is a little bigger than the lock) */
+  function plateRect(L, P, iw, ih) {
+    const s = Math.max(L.D / (PLATE_D * ih), L.w / iw, L.cy / (P.py * ih), (L.h - L.cy) / ((1 - P.py) * ih), (L.cx / P.px) / iw, ((L.w - L.cx) / (1 - P.px)) / iw);
+    const dw = iw * s, dh = ih * s;
+    return { x: L.cx - P.px * dw, y: L.cy - P.py * dh, w: dw, h: dh };
+  }
   function backdrop(w, h, k, face) {
-    const top = lp.top || 0, key = `${Math.round(w)}x${Math.round(h)}@${k}|${face}|${Math.round(top)}`;
+    const top = lp.top || 0, P = PLATES[lp.plate] || PLATES.chest, pim = img(P.key);
+    const key = `${Math.round(w)}x${Math.round(h)}@${k}|${face}|${Math.round(top)}|${pim ? lp.plate : "-"}`;
     if (lp.bg && lp.bg.key === key) return lp.bg.cv;
     const c = document.createElement("canvas"); c.width = Math.max(1, Math.round(w * k)); c.height = Math.max(1, Math.round(h * k));
     const g = c.getContext("2d"); g.scale(k, k);
+    if (pim) {
+      const L = layout(w, h, top, true), b = plateRect(L, P, pim.width || pim.naturalWidth, pim.height || pim.naturalHeight);
+      g.imageSmoothingQuality = "high"; g.drawImage(pim, b.x, b.y, b.w, b.h);
+      const vg = g.createRadialGradient(L.cx, L.cy, L.D * 0.55, L.cx, L.cy, Math.max(w, h) * 0.8);   // the plates are lit already: only darker corners
+      vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(0,0,0,.5)");
+      g.fillStyle = vg; g.fillRect(0, 0, w, h);
+      lp.bg = { key, cv: c, rect: b, P };
+      return c;
+    }
     const r = rng(77), L = layout(w, h, top), D = L.D;
     const dwem = face === "dwemer";
     const wood = dwem ? ["#3a2a17", "#4a3820", "#2c1f10"] : face === "noble" ? ["#3b2114", "#4e2c1a", "#2a170d"] : ["#3c2716", "#4b321c", "#2b1b0e"];
@@ -352,6 +388,17 @@ const LOCKGAME = (() => {
     g.fillStyle = vg; g.fillRect(0, 0, w, h);
     lp.bg = { key, cv: c };
     return c;
+  }
+  /* the chest opens: the lid (the plate picture above its bottom edge) lifts a few pixels, warm light in the gap */
+  function lidLift(g, bgc, bg, k, w, h, ot, rm) {
+    const ly = bg.rect.y + bg.P.lid * bg.rect.h; if (!(ly > 2 && ly < h)) return;
+    const u = clamp((ot - 0.25) / 0.45, 0, 1); if (u <= 0) return;
+    const d = (rm ? 1 : easeOut(u)) * Math.max(4, h * 0.018);
+    g.fillStyle = "#0c0704"; g.fillRect(0, ly - d, w, d + 1);
+    const gl = g.createLinearGradient(0, ly - d, 0, ly + 1);
+    gl.addColorStop(0, "rgba(255,190,100,0)"); gl.addColorStop(1, `rgba(255,200,120,${0.55 * u})`);
+    g.fillStyle = gl; g.fillRect(0, ly - d, w, d + 1);
+    g.drawImage(bgc, 0, 0, w * k, ly * k, 0, -d, w, ly);
   }
   function rrect(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
   function rivet(g, x, y, r) {
@@ -419,7 +466,8 @@ const LOCKGAME = (() => {
     const fit = typeof FITCANVAS !== "undefined" ? FITCANVAS.fill(cv) : (() => { const r = cv.getBoundingClientRect(); cv.width = r.width; cv.height = r.height; return { g: cv.getContext("2d"), w: r.width, h: r.height, k: 1 }; })();
     const { g, w, h, k } = fit, st = L.st, rm = reduce(), t = (now - L.t0) / 1000;
     if (L.topFor !== `${w}x${h}`) { L.topFor = `${w}x${h}`; L.top = headTop(cv); }   // measured once per size
-    const ly = layout(w, h, L.top); L.lay = ly;
+    const painted = !!img((PLATES[L.plate] || PLATES.chest).key);
+    const ly = layout(w, h, L.top, painted); L.lay = ly;
     const D = ly.D, R = D / 2;
     // the shown pick angle eases after the real one (it never lags more than a frame or two)
     L.disp += (st.angle - L.disp) * clamp(dt * 24, 0, 1);
@@ -431,17 +479,18 @@ const LOCKGAME = (() => {
     const sx = (sa * D * 0.012 + jolt * D * 0.02) * n1, sy = (sa * D * 0.008 + jolt * D * 0.012) * n2;
     g.setTransform(k, 0, 0, k, 0, 0);
     g.clearRect(0, 0, w, h);
-    g.drawImage(backdrop(w, h, k, L.face), 0, 0, w, h);
+    const bgc = backdrop(w, h, k, L.face), ot = L.openAt ? (now - L.openAt) / 1000 : 0;
+    g.drawImage(bgc, 0, 0, w, h);
+    if (painted && L.bg?.P?.lid && L.openAt) lidLift(g, bgc, L.bg, k, w, h, ot, rm);
     g.save(); g.translate(sx, sy);
     // shackle (behind the lock)
-    const ot = L.openAt ? (now - L.openAt) / 1000 : 0;
     let lift = 0, swing = 0;
     if (L.openAt) {
       const u = Math.max(0, ot - 0.08);
       lift = rm ? D * 0.12 : D * 0.12 * (1 - Math.exp(-u * 9) * Math.cos(u * 20));
       swing = rm ? 0.2 : clamp((ot - 0.35) / 0.4, 0, 1) * 0.35;
     }
-    shackle(g, ly, L.face, lift, easeOut(swing / 0.35) * 0.35);
+    if (!painted) shackle(g, ly, L.face, lift, easeOut(swing / 0.35) * 0.35);
     // the face turns as one with the wrench, in a dark socket on the hasp plate; the light stays put
     const rotA = st.rot * Math.PI / 2 + (rm ? 0 : sa * 0.03 * n2), face = img("lock-" + L.face);
     g.save(); g.translate(ly.cx, ly.cy);
@@ -545,7 +594,7 @@ const LOCKGAME = (() => {
     try { Object.defineProperty(IMM, "lock", { configurable: true, enumerable: true, get: () => (lp ? Object.assign(lp.st, { face: lp.face }) : null) }); } catch { /* old IMM */ }
   }
 
-  return { HZ, TICK, STRAIN, FACES, TIERS, rng, allowed, make, input, step, advance, replay, faceFor, optsFor, baseWidth, widthMul, strainMax, wants, pick, open, close, drawWatch,
+  return { HZ, TICK, STRAIN, FACES, TIERS, rng, allowed, make, input, step, advance, replay, faceFor, plateFor, optsFor, baseWidth, widthMul, strainMax, wants, pick, open, close, drawWatch,
     get live() { return lp; } };
 })();
 if (typeof module !== "undefined") module.exports = LOCKGAME;
