@@ -23,10 +23,15 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
       "Ręczne zbieranie ziół już jest w grze, więc zniknęło z listy „Wkrótce”.",
     "Hands-on gathering: a little harvest game for every kind of plant":
       "Zbieranie na serio: mała gra przy zbiorze każdego rodzaju rośliny",
-    "Mentoring: play side by side with friends of any level":
-      "Mentorowanie: graj ramię w ramię z przyjaciółmi na dowolnym poziomie",
-    "Shrines of your own: build a Daedric altar at your longhouse":
-      "Własne kapliczki: zbuduj daedryczny ołtarz w swojej siedzibie",
+    "A turn order you can read at a glance: who acts next, and in what order":
+      "Kolejność tur czytelna na pierwszy rzut oka: kto rusza się następny i w jakiej kolejności",
+    "Parts of the game open up step by step as you level, so there's less to take in at the start":
+      "Części gry odblokowują się krok po kroku wraz z poziomem, więc na początku jest mniej do ogarnięcia",
+    "The menus in five simple tabs":
+      "Menu w pięciu prostych zakładkach",
+    "A fresh Coming next": "Świeża lista „Wkrótce”",
+    "The Coming next list in Patch notes shows what's really being built now: a clearer turn order, parts of the game that open up as you level, and simpler menus.":
+      "Lista „Wkrótce” w informacjach o aktualizacjach pokazuje, nad czym naprawdę teraz pracujemy: czytelniejsza kolejność tur, części gry odblokowywane wraz z poziomem i prostsze menu.",
     "Regional crises and heists":
       "Kryzysy w regionach i skoki",
     "Follower and horse bonds, and spell crafting":
