@@ -4587,6 +4587,15 @@ html.pcmap.pc-home #gpop .gcard{margin:0;box-shadow:0 8px 26px rgba(0,0,0,.55);b
 .gnear .gn-t small{color:var(--mute,#a9a395);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .gnear .btn{min-height:40px}
 .hg-order .item{align-items:center}
+/* [rewardtips] reward icons: the item card on hover / tap (rewardtips.js) */
+.tip .tt-have{color:var(--mute);font-size:.92em;margin-top:4px}.tip .tt-stack{color:var(--gold);font-size:.92em}
+[data-rtip]{cursor:help;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+[data-rtip]:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:6px}
+.dloot.rt img.ico{transition:transform .15s,filter .15s}.dloot.rt:hover img.ico,.dloot.rt:focus-visible img.ico{transform:translateY(-2px);filter:brightness(1.15)}
+.exp-it[data-rtip]{border-bottom:1px dotted currentColor}
+.lv-ico{display:inline-flex;flex:none}.bfcard li[data-rtip]{display:flex;align-items:center;gap:6px}.bfcard li[data-rtip] img.ico{flex:none}
+.mk-ico{display:inline-flex;flex:none}.dbg-glyph{display:inline-flex}
+.fh-got{justify-content:center}
 /* riding.js: the map's get on / get off button */
 .mapbtns .ridebtn{display:grid;place-items:center}
 .mapbtns .ridebtn.hide{display:none}
@@ -5262,6 +5271,7 @@ body:has(#tbf) #gnear{display:none!important}
 <script src="i18n_treasure.js"></script>
 <script src="i18n_heists.js"></script>
 <script src="i18n_chargen.js"></script>
+<script src="i18n_tacticsaccess.js"></script>
 <script src="i18n_gore.js"></script>
 <script src="i18n_appicon.js"></script>
 <script src="i18n_smallpolish.js"></script>
@@ -5293,6 +5303,7 @@ body:has(#tbf) #gnear{display:none!important}
 <script src="i18n_stations.js"></script>
 <script src="i18n_itemdetail.js"></script>
 <script src="i18n_roadart.js"></script>
+<script src="i18n_rewardtips.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>
@@ -5306,6 +5317,7 @@ body:has(#tbf) #gnear{display:none!important}
 <script src="beastpaths.js"></script>
 <script src="itemcmp.js"></script>
 <script src="tooltip.js"></script>
+<script src="rewardtips.js"></script>
 <script src="fighttips.js"></script>
 <script src="bossfight.js"></script>
 <script src="hud2.js"></script>

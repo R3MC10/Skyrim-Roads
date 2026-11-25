@@ -25,7 +25,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "You need the Rune table: at the College of Winterhold or an arcane enchanter.": "Potrzebujesz stołu run: w Kolegium Zimowej Twierdzy albo przy stole zaklinacza.",
     "You can keep 10 rune spells. Forget one first.": "Możesz mieć 10 zaklęć z run. Najpierw zapomnij jedno.",
     "You don't have that spell.": "Nie masz tego zaklęcia.",
-    "Add it to your tactics or cast it from the Magic tab.": "Dodaj je do taktyki albo rzucaj z zakładki Magia.",
+    "Cast it from the Magic menu.": "Rzucaj je z menu Magii.",
     // what the runes do
     "Burns. Sets foes burning and lights oil into burning ground.": "Pali. Podpala wrogów i zamienia olej w płonącą ziemię.",
     "Chills and slows. A power attack on a chilled foe Shatters it.": "Mrozi i spowalnia. Potężny cios w zmrożonego wroga go Roztrzaskuje.",
@@ -80,8 +80,8 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
   const list = (s) => s.split(", ").map((k) => RUNE[k] || k).join(", ");
   I18N_EXTRA.pat.push(
     [/^(\S+ )?chilled: (\d+)$/, (m) => `${m[1] || ""}zmrożony: ${m[2]}`],   // the frost hit line (perkfx.js), bought spells too
-    [/^You trace the runes and bind them: "(.+)" \((\d+) gold\)\. Add it to your tactics or cast it from the Magic tab\.(.*)$/,
-      (m) => `Kreślisz runy i wiążesz je: „${tr(m[1])}” (${m[2]} złota). Dodaj je do taktyki albo rzucaj z zakładki Magia.${m[3] ? " " + tr(m[3].trim()) : ""}`],
+    [/^You trace the runes and bind them: "(.+)" \((\d+) gold\)\. Cast it from the Magic menu\.(.*)$/,
+      (m) => `Kreślisz runy i wiążesz je: „${tr(m[1])}” (${m[2]} złota). Rzucaj je z menu Magii.${m[3] ? " " + tr(m[3].trim()) : ""}`],
     [/^New runes? for the Rune table: (.+)\.$/, (m) => `${m[1].includes(", ") ? "Nowe runy" : "Nowa runa"} do stołu run: ${list(m[1])}.`],
     [/^(.+?) New runes? for the Rune table: (.+)\.$/, (m) => `${tr(m[1])} ${m[2].includes(", ") ? "Nowe runy" : "Nowa runa"} do stołu run: ${list(m[2])}.`],
     [/^You let "(.+)" fade from memory\.$/, (m) => `Pozwalasz, by „${tr(m[1])}” uleciało z pamięci.`],

@@ -17,7 +17,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
       "Wrodzy magowie i uzdrowiciele nie wyleczą się już do pełna: ich leczenie zatrzymuje się na mniej więcej dwóch trzecich zdrowia, przez całą walkę daje najwyżej jedną trzecią, a zaklęcie leczące potrzebuje kilku tur, żeby wrócić. Mikstury i wysysanie życia też się liczą.",
     "Aspect of Terror (Illusion) now also keeps bosses and elite foes afraid a turn longer.":
       "Aspekt grozy (Iluzja) sprawia teraz też, że bossowie i elitarni wrogowie boją się o turę dłużej.",
-    // patch note b281 (engine.js: one blow takes at most 60% of a strong foe in instant fights)
+    // patch note b283 (engine.js: one blow takes at most 60% of a strong foe in instant fights)
     "No one-hit wins on strong foes": "Koniec wygranych jednym ciosem z silnymi wrogami",
     "With turn-based fights switched off, a strong foe (a troll, a vampire, a Thalmor patrol, an elite or a boss) can no longer drop to a single blow or spell from full health: one hit takes at most 60% of it. A foe that's already beaten down still falls to the blow that finishes it.":
       "Gdy walki turowe są wyłączone, silny wróg (troll, wampir, patrol Thalmoru, elitarny wróg albo boss) nie padnie już od jednego ciosu ani zaklęcia przy pełnym zdrowiu: jedno trafienie zabiera mu najwyżej 60%. Wróg, który jest już mocno poobijany, nadal pada od ciosu, który go dobija.",

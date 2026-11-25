@@ -1246,7 +1246,8 @@
   function showMessage(title, text, bad, prestige) {
     if (/quest/i.test(title) || //.test(text)) SOUND.fx("quest");
     if (typeof POLISH !== "undefined") POLISH.fromText(text);
-    openModal(`${/^You died/.test(title) ? UIART.death(320, 120) : typeof EVENTART !== "undefined" ? EVENTART.story(title, text) : ""}<h2>${esc(title)}</h2><p>${esc(text)}</p><button class="btn ${bad ? "danger" : "pri"}" data-act="close" style="width:100%">Continue</button>`, bad ? "enc" : (prestige || title === "Quest") ? "prestige" : "");
+    const got = typeof RTIP !== "undefined" && !bad ? RTIP.take() : [];   // [rewardtips] a quest or crisis reward: its icons, with tooltips
+    openModal(`${/^You died/.test(title) ? UIART.death(320, 120) : typeof EVENTART !== "undefined" ? EVENTART.story(title, text) : ""}<h2>${esc(title)}</h2><p>${esc(text)}</p>${got.length ? RTIP.strip(0, got) : ""}<button class="btn ${bad ? "danger" : "pri"}" data-act="close" style="width:100%">Continue</button>`, bad ? "enc" : (prestige || title === "Quest") ? "prestige" : "");
   }
   function fightLog(f) {
     return `${typeof FIGHTART !== "undefined" ? FIGHTART.placeholder(f, S) : ""}<details ${f.log.length < 9 ? "open" : ""}><summary class="sub" style="cursor:pointer;min-height:36px">Fight log (${f.turn} turns)${f.wx && f.wx.lines.length ? ` · ${f.wx.icon} ${esc(f.wx.name)}` : ""} — ${f.ai ? (f.hybrid ? "[n] = your rule fired · [AI] = Smart AI" : "[AI] = Smart AI's move") : "[n] is the tactic rule that fired"}</summary><div class="flog">${f.fpLine ? `<div class="fpline"><span class="r"></span><span>${esc(f.e.name)} · ${esc(f.fpLine)}</span></div>` : ""}${f.log.map((l) =>
@@ -1345,10 +1346,10 @@
   function lootList(r) {
     const idOf = (n) => (typeof FASTQOL !== "undefined" && FASTQOL.itemsNamed ? FASTQOL.itemsNamed(n)[0] : null);
     const rows = (r.loot || []).map((line) => {
-      const m = String(line).match(/^(.*?)(?: ×(\d+))?$/), id = idOf(m[1]), it = id && D.ITEMS[id], q = +(m[2] || 1);
-      return `<div class="loot-row"${it ? ` data-tip-k="item:${esc(id)}"` : ""}>${it ? ICONART.item(id, 28) : '<span class="lr-i">•</span>'}<span class="nm">${esc(m[1])}${q > 1 ? ` <small>×${q}</small>` : ""}${TI && TI.isTome(id) ? `<small class="ti-line">${esc(TI.line(S, id))}</small>` : ""}</span><span class="num">${it ? +(it.weight * q).toFixed(1) : ""}</span><span class="num gold">${it ? it.value * q : ""}</span></div>`;
+      const m = String(line).match(/^(.*?)(?: ×(\d+))?$/), id = (typeof RTIP !== "undefined" && RTIP.idOf(m[1], S)) || idOf(m[1]), it = id && D.ITEMS[id], q = +(m[2] || 1);
+      return `<div class="loot-row"${it ? (typeof RTIP !== "undefined" ? RTIP.attr(id, q) : ` data-tip-k="item:${esc(id)}"`) : ""}>${it ? (typeof RTIP !== "undefined" ? RTIP.icon(id, 28) : ICONART.item(id, 28)) : '<span class="lr-i">•</span>'}<span class="nm">${esc(m[1])}${q > 1 ? ` <small>×${q}</small>` : ""}${TI && TI.isTome(id) ? `<small class="ti-line">${esc(TI.line(S, id))}</small>` : ""}</span><span class="num">${it ? +(it.weight * q).toFixed(1) : ""}</span><span class="num gold">${it ? it.value * q : ""}</span></div>`;
     });
-    if (r.gold) rows.unshift(`<div class="loot-row"><span class="lr-i"></span><span class="nm">Gold</span><span></span><span class="num gold">${r.gold}</span></div>`);
+    if (r.gold) rows.unshift(`<div class="loot-row"${typeof RTIP !== "undefined" ? RTIP.goldAttr(r.gold) : ""}><span class="lr-i"></span><span class="nm">Gold</span><span></span><span class="num gold">${r.gold}</span></div>`);
     return rows.length ? `<div class="lootbox" role="list" aria-label="Loot"><div class="loot-h"><span></span><span>Loot</span><span>Wt</span><span>Value</span></div>${rows.join("")}</div>` : "";
   }
   function showFightResult(r) {
@@ -1363,9 +1364,11 @@
     }
     if (!r.fight && S.trip?.status === "encounter") return openEncounter(r.text);
     const loot = r.fight ? [r.gold ? `${r.gold} gold` : "", ...(r.loot || [])].filter(Boolean) : [];
+    const gotNow = typeof RTIP !== "undefined" ? RTIP.take() : [];   // [rewardtips] road events, quests...: icons for what you were just given
+    const gotStrip = !loot.length && gotNow.length ? RTIP.strip(0, gotNow) : "";
     if (typeof BOSSFIGHT !== "undefined") BOSSFIGHT.reveal(r);   // a beaten boss: the big loot card
     openModal(`<h2>${r.title ? esc(r.title) : r.fled ? "Got away" : r.fight ? "Victory" : "Away"}</h2><p>${esc(r.text)}</p>${r.fight ? fightLog(r.fight) : ""}
-      ${loot.length ? lootList(r) : ""}${typeof FASTQOL !== "undefined" ? FASTQOL.lootHTML(S, r) : ""}${skills}
+      ${loot.length ? lootList(r) : gotStrip}${typeof FASTQOL !== "undefined" ? FASTQOL.lootHTML(S, r) : ""}${skills}
       <button class="btn pri" data-act="close" style="width:100%">Continue to ${esc(S.trip?.destName || "the road")}</button>`);
   }
 
@@ -1908,7 +1911,7 @@
     el.innerHTML = `<div class="sky-in">
       <div class="sky-top"><button class="iconbtn" data-act="skyclose" aria-label="Close menu">✕</button>
         <div class="sky-pages">${[["items", "Items"], ["magic", "Magic"], ["skills", "Skills"]].map(([p, l]) => `<button class="sky-page ${p === sky.page ? "on" : ""}" data-act="skytab" data-id="${p}">${l}</button>`).join("")}</div><button class="uxi sky-i" data-act="uxhelp" data-id="pack" aria-label="What is this screen?" aria-expanded="${uxHelpOpen === "pack"}">ⓘ</button></div>
-      ${uxHelpOpen === "pack" ? `<div class="uxpop" role="note"><p>${sky.page === "items" ? SCREEN_HELP.pack[2] : sky.page === "magic" ? "Your spells, powers and shouts. Tap one to read it and to add it to your fight tactics." : "Your skills. They grow as you use them; tap one to see its perk tree and how to raise it."}</p>${typeof CC !== "undefined" ? CC.legend() : ""}<button class="btn sm" data-act="uxhelp" data-id="pack">Got it</button></div>` : ""}
+      ${uxHelpOpen === "pack" ? `<div class="uxpop" role="note"><p>${sky.page === "items" ? SCREEN_HELP.pack[2] : sky.page === "magic" ? "Your spells, powers and shouts. Tap one to read it or use it." : "Your skills. They grow as you use them; tap one to see its perk tree and how to raise it."}</p>${typeof CC !== "undefined" ? CC.legend() : ""}<button class="btn sm" data-act="uxhelp" data-id="pack">Got it</button></div>` : ""}
       <div class="sky-cats" role="tablist">${cats.map(([k, l]) => `<button class="sky-cat ${k === sky.cat ? "on" : ""}" data-act="skycat" data-id="${k}" role="tab" aria-selected="${k === sky.cat}" aria-label="${l}">${svgI(k)}<span>${l}</span>${M2c && cnt ? MENUS2.badge(k === "gear" ? 0 : cnt[k]) : ""}</button>`).join("")}</div>
       <div class="sky-mid">${sky.page !== "skills" && !(sky.page === "items" && sky.cat === "gear") ? `<input id="skysearch" class="uxsearch sky-search" type="search" placeholder="${sky.page === "magic" ? " Find a spell by name" : " Find an item by name"}" value="${esc(sky.q || "")}" autocomplete="off" aria-label="${sky.page === "magic" ? "Find a spell" : "Find an item"}">` : ""}
       ${head}<div class="sky-list">${list}</div></div>${detail || (M2c && !(sky.page === "items" && sky.cat === "gear") ? MENUS2.pickHint(sky.page) : "")}
@@ -2131,7 +2134,7 @@
   }
   function marketHTML(l) {
     const forSale = MARKET.inTown(stalls, l, S.id), own = MARKET.mine(stalls, S.id), hereOwn = own.filter((d) => d.town === l), house = (S.homes || {})[l] || MARKET.hallShop(S, l);
-    const row = (d, btn) => `<div class="item${btn === "buy" ? tiCls(d.row.item) : ""}">${ICONART.item(d.row.item, 34, d.row)}<div class="t">${esc(MARKET.itemName(d.row))}${d.row.qty > 1 ? ` ×${d.row.qty}` : ""}${btn === "buy" ? iqB(d.row.item, d.row) : ""}<span>${btn === "buy" ? `${d.hall ? ` ${esc(d.hallName || d.sellerName + "'s hall")}` : `${esc(d.sellerName)}'s stall`} · ${esc(G.itemStats(d.row.item))}` : d.hall ? "on your hall counter" : "on your stall"}</span></div><span class="num gold">${d.price}</span>${btn === "buy" ? `<button class="btn sm pri" data-act="mbuy" data-id="${esc(d.id)}" ${S.gold >= d.price ? "" : "disabled"}>Buy</button>` : `<button class="btn sm" data-act="mpull" data-id="${esc(d.id)}">Take back</button>`}${btn === "buy" ? tiBox(d.row.item) : ""}</div>`;
+    const row = (d, btn) => `<div class="item${btn === "buy" ? tiCls(d.row.item) : ""}"><span class="mk-ico"${typeof RTIP !== "undefined" ? RTIP.attr(d.row.item, d.row.qty || 1) : ""}>${ICONART.item(d.row.item, 34, d.row)}</span><div class="t">${esc(MARKET.itemName(d.row))}${d.row.qty > 1 ? ` ×${d.row.qty}` : ""}${btn === "buy" ? iqB(d.row.item, d.row) : ""}<span>${btn === "buy" ? `${d.hall ? ` ${esc(d.hallName || d.sellerName + "'s hall")}` : `${esc(d.sellerName)}'s stall`} · ${esc(G.itemStats(d.row.item))}` : d.hall ? "on your hall counter" : "on your stall"}</span></div><span class="num gold">${d.price}</span>${btn === "buy" ? `<button class="btn sm pri" data-act="mbuy" data-id="${esc(d.id)}" ${S.gold >= d.price ? "" : "disabled"}>Buy</button>` : `<button class="btn sm" data-act="mpull" data-id="${esc(d.id)}">Take back</button>`}${btn === "buy" ? tiBox(d.row.item) : ""}</div>`;
     let h = `<h3>For sale here</h3>${forSale.length ? forSale.map((d) => row(d, "buy")).join("") : `<p class="sub">No player stalls in ${esc(l)} right now.</p>`}`;
     if (!house) return h + `<p class="sub" style="margin-top:10px">Own a house in ${esc(l)}, or a hall here with a shop counter, to run your own stall.</p>`;
     const pack = G.handable(S).filter((r) => !r.stolen && D.ITEMS[r.item]).slice(0, 40);   // worn gear never shows here
@@ -2294,7 +2297,7 @@
     if (S.vampire) {
       const st = CURSE.stage(S), dd = CURSE.daysUnfed ? CURSE.daysUnfed(S) : CURSE.hoursUnfed(S) / 2, dtxt = dd < 1 ? `${Math.round(dd * 24)} in-game hours` : `${dd.toFixed(1)} in-game days`;
       return `<div class="panel" style="border-color:#7a1414"><h2> Vampire</h2><p class="sub">Hunger: stage ${st} of 4 (${dtxt} since you fed; one stage per day). The hungrier you are, the stronger your Destruction and Illusion and your night-time blows, the less frost hurts you, and the more fire burns. Poison barely touches you. By day the sun slows your healing outside. Feed at an inn (Area tab), or win a fight as a Vampire Lord.</p>
-        <div class="item"><div class="t"> Vampire Lord<span>Once a day, in your Tactics: for ${CURSE.LORD_TURNS || 12} turns you drain the foe's life every turn and take less damage. No potions while changed.</span></div><span class="num sub">${CURSE.lordReady(S) ? "Ready" : "Used today"}</span></div>
+        <div class="item"><div class="t"> Vampire Lord<span>Once a day, from the Magic menu (Powers): for ${CURSE.LORD_TURNS || 12} turns you drain the foe's life every turn and take less damage. No potions while changed.</span></div><span class="num sub">${CURSE.lordReady(S) ? "Ready" : "Used today"}</span></div>
         ${bpx("lord")}${cureQ("cure_vamp")}${tree("lord")}</div>`;
     }
     if (S.moonblood && typeof BEASTPATH !== "undefined") return BEASTPATH.moonPanel(S);
@@ -2953,7 +2956,7 @@
     map: ["Map", "Pick where to go", "The card at the top says what to do next. Press Go to walk there: trips keep going while the app is closed. The gold ◆ on the map is your current quest; tap empty ground to roam off the road."],
     hero: ["Character", "Level, skills and perks", "Skills grow as you use them. When you level up, choose Health, Magicka or Stamina and spend perk points in a skill's tree. Below are your powers, shouts, standing stone and achievements."],
     pack: ["Pack", "What you carry and wear", "Open your things to wear, use, compare or drop them. Use the search box to find an item by name. Heavy packs slow you down: sell things or store them at home."],
-    tactics: ["Tactics", "How you fight", "Fights play out by themselves. Your rules are checked from the top every turn, like “health below 40% → drink a potion”. Test them against a dummy before a real fight."],
+    tactics: ["AI & Loadouts", "Gear sets and auto-play rules", "Loadouts are gear sets you switch between. The Smart AI or your own rules play your turn when the game plays it for you (in a party, if you take too long). Rules are checked from the top every turn, like “health below 40% → drink a potion”. Test them against a dummy before a real fight."],
     town: ["Area", "Places in this town", "Places are grouped like a town: Inn, Market, Services & trainers, Work & jobs, Your home, and Events & fun. Tap one to open it; the ‹ button brings you back. Things ready for you show on top under Right now. Shops close at night (20:00–08:00)."],
     log: ["Journal", "Your quests", "Active quests sit on shelves: main story, Solstheim, Civil War, guilds, Daedric and side quests. Misc holds jobs, bounties, cures and treasure maps. ☆ Track a quest to steer the compass, the map and the What to do next card. Chat, party and the world moved to  Friends; stats and the diary to Character."],
     social: ["Social", "Friends, messages and trades", "Add players as friends, send them messages, and trade by courier from anywhere."],
@@ -3062,7 +3065,7 @@
         ${(typeof SHOUTS !== "undefined" ? SHOUTS.outside(id) : POWERS.ROAD_SHOUTS.includes(id)) && lv ? `<button class="btn sm pri" data-act="roadshout" data-id="${id}" ${POWERS.voiceReady(S) ? "" : "disabled"}>Shout</button>` : ""}</div></div>`; }).join("");
     const fol = typeof FOLTAB !== "undefined" ? (S.follower ? `<div class="panel ft-sum">${FOLTAB.summary(S, esc)}</div>` : "") : typeof FOL2 !== "undefined" ? FOL2.panel(S, esc) : S.follower ? `<div class="panel"><h2>Follower</h2><div class="item">${NPCART.follower(S.follower.id, 36)}<div class="t">${esc(TOWNS.FOLLOWERS[S.follower.id][0])}<span>${Math.round(TOWNS.followerHp(S))}/${TOWNS.followerMax(S, S.follower.id)} health · fights beside you · carries 100 for you · goes down instead of dying</span></div><button class="btn sm" data-act="dismiss">Dismiss</button></div></div>` : "";
     const powersHtml = `<div class="list">
-      <div class="item">${UIART.power(S.race, 30)}<div class="t">${esc(rp[0])} <span class="num">${cd(S.powerAt)}</span><span>${esc(rp[1])} Once a day: put "Use my racial power" in your tactics.</span></div></div>
+      <div class="item">${UIART.power(S.race, 30)}<div class="t">${esc(rp[0])} <span class="num">${cd(S.powerAt)}</span><span>${esc(rp[1])} Once a day, from the Magic menu (Powers).</span></div></div>
       <div class="item">${S.stone ? UIART.stone(S.stone, 30) : ""}<div class="t">${S.stone ? esc(POWERS.STONES[S.stone][0]) : "No standing stone"}${S.stone && POWERS.stoneHasPower(S) ? ` <span class="num">${cd(S.stonePowerAt)}</span>` : ""}<span>${S.stone ? esc(POWERS.STONES[S.stone][1]) : "Visit one of the 13 standing stones (Guardian Stones are near Riverwood) to take its blessing."}</span></div></div>
       ${shoutRows || `<p class="sub">No Words of Power yet. Word Walls wait at the end of Nordic barrows (Bleak Falls Barrow has one), and the Greybeards at High Hrothgar teach Unrelenting Force.</p>`}</div>
       <p class="sub" style="margin-top:8px">Dragon souls: <b>${S.souls || 0}</b>${S.dragons ? ` · dragons slain: ${S.dragons}` : ""}. Kill a dragon to absorb its soul; each soul unlocks one word.${!POWERS.voiceReady(S) ? ` Your voice recovers in ${Math.ceil(S.voiceAt - tnow)} s.` : ""}</p>`;
@@ -4169,7 +4172,7 @@
       case "rjoin": tacticsDraft.join = tacticsDraft.join === "or" ? "and" : "or"; renderPanel(true); break;
       case "rnot": { const k = +b.dataset.i, c = k ? tacticsDraft.extra[k - 1] : tacticsDraft; c.not = !c.not; renderPanel(true); break; }
       case "sharecopy": { const code = AISET.encode(L); shareMsg = "";
-        const done = () => { shareMsg = "Share code copied. Send it to a friend: they paste it in Character → Tactics."; renderPanel(true); };
+        const done = () => { shareMsg = "Share code copied. Send it to a friend: they paste it in Character → AI & Loadouts."; renderPanel(true); };
         try { if (navigator.clipboard?.writeText) navigator.clipboard.writeText(code).then(done, () => { shareMsg = code; renderPanel(true); }); else { shareMsg = code; renderPanel(true); } } catch { shareMsg = code; renderPanel(true); }
         break; }
       case "shareopen": shareOpen = !shareOpen; shareMsg = ""; renderPanel(true); break;

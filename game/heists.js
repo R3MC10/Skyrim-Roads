@@ -464,7 +464,7 @@ const HEISTS = (() => {
     const body = `<div class="hz-card hz-${h.id}">${typeof HEISTSCENE !== "undefined" ? HEISTSCENE.card(h.id) : ""}<div class="hz-scene" aria-hidden="true"><span class="hz-moon"></span><span class="hz-roofs"></span><span class="hz-win"></span></div>
       <div class="hz-head"><h3>${esc(h.name[0])}</h3><span class="hz-tier t${h.tier}">${esc(tierTag(h))}</span></div>
       <p class="hz-blurb">${esc(h.blurb[0])}</p>
-      <div class="item hz-prize">${typeof ICONART !== "undefined" ? ICONART.item(h.prize, 32) : ""}<div class="t">${esc(pz.name)}<span>${esc(done ? "Taken once already. The house hid the rest better." : "The prize. A fence pays well for it.")}</span></div></div>
+      <div class="item hz-prize"${typeof RTIP !== "undefined" ? RTIP.attr(h.prize, 1) : ""}>${typeof ICONART !== "undefined" ? ICONART.item(h.prize, 32) : ""}<div class="t">${esc(pz.name)}<span>${esc(done ? "Taken once already. The house hid the rest better." : "The prize. A fence pays well for it.")}</span></div></div>
       ${why && !(r && r.id === h.id) ? `<p class="sub hz-why">${esc(why)}</p>` : ""}${mem ? `<p class="sub">${esc("In a party your leader plans the heist. Vote when they ask.")}</p>` : ""}
       <div class="hz-btns">${btn}</div>${stats}</div>`;
     return { note, body };
@@ -504,8 +504,9 @@ const HEISTS = (() => {
     const rows = [res.gold ? [` ${"Gold"}`, `${res.gold}`] : null, res.cut && res.gold ? ["Fence's cut", `${pct(res.cut)}%`] : null,
       res.prize ? ["Prize", PRIZES[res.prize].name] : null, res.bounty ? ["Bounty", `${res.bounty} (${res.hold})`] : null,
       res.deeds?.length ? ["Corruption in " + res.hold, "Up"] : null].filter(Boolean);
+    const strip = typeof RTIP !== "undefined" && (res.gold || (res.prize && res.outcome !== "caught")) ? RTIP.strip(res.gold || 0, res.prize && res.outcome !== "caught" && D.ITEMS[res.prize] ? [[res.prize, 1]] : []) : "";   // [rewardtips] the take, with item cards
     return `<div class="hz-modal hz-end ${cls}"><h2>${esc0(title)}</h2><p class="sub">${esc0(h ? h.name[0] : "")}</p>
-      ${res.lines.map((l) => `<p class="hz-say">${esc0(l)}</p>`).join("")}${rows.length ? `<div class="hz-sum">${rows.map(([a, b]) => `<div><span>${esc0(a)}</span><b>${esc0(b)}</b></div>`).join("")}</div>` : ""}
+      ${res.lines.map((l) => `<p class="hz-say">${esc0(l)}</p>`).join("")}${strip}${rows.length ? `<div class="hz-sum">${rows.map(([a, b]) => `<div><span>${esc0(a)}</span><b>${esc0(b)}</b></div>`).join("")}</div>` : ""}
       ${extra ? `<p class="sub">${esc0(extra)}</p>` : ""}<button class="btn pri" data-act="close" style="width:100%">${esc0("Continue")}</button></div>`;
   }
   function show() {

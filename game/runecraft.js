@@ -254,7 +254,7 @@ const RUNECRAFT = (() => {
     register(s);
     const sk = G.useSkill ? G.useSkill(s, d.school, 15 + d.cost / 5) : [];
     if (G.useSkill && G.skill(s, "Enchanting") != null && s.skills?.Enchanting) G.useSkill(s, "Enchanting", 8);
-    return { id, rec, text: `You trace the runes and bind them: "${nm}" (${price} gold). Add it to your tactics or cast it from the Magic tab.` + (sk && sk.length ? " " + sk.join(". ") : "") };
+    return { id, rec, text: `You trace the runes and bind them: "${nm}" (${price} gold). Cast it from the Magic menu.` + (sk && sk.length ? " " + sk.join(". ") : "") };
   }
   function forget(s, id) {
     const c = (s.runeSpells || []).find((x) => x.id === id); if (!c) return "You don't have that spell.";
