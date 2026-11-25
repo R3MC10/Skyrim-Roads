@@ -3,7 +3,8 @@
    and "combat log should be scrollable".
    combat2.js lays the immersive fight screen out; this runs right after it (and after every re-layout) and:
    - The foe's plate is Skyrim-style: a small-caps name and a thin health bar, no dark box, status icons in one row under
-     the bar, its next move as one small chip. Numbers and the rest of its moves show on hover (PC) or a tap on the plate.
+     the bar, its next move as one small chip. Numbers and the rest of its moves show on hover (PC) or a tap on the plate
+     (phonefight.js: on a phone the health numbers always show; on every screen its status icons carry their stack count).
      A boss already has its name and bar at the top of the screen, so its plate keeps only the icons and the next move.
    - The plate floats ABOVE the foe's head with a gap and never sits on a fighter: when there is no room above (a tall
      foe under the boss bar) it moves beside the foe, into the gap toward you, or behind it.

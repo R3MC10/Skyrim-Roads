@@ -7,6 +7,9 @@
    - The foe's health shows as numbers under its bar all the time (on a PC they show on hover), in a readable size.
    - The move buttons keep their 44px+ size (index.html CSS) and the dock stays at the bottom; fight tips
      (onboard.js) already keep clear of the dock, phonefight_ui.py checks it.
+   - Every screen size: each status icon (fxicons.js, on the foe's plate, your orb and party plates) shows its stack
+     count or turns left as a readable badge; the classic fight screen's chips (tbfight.js, fightread.js) got the
+     missing stacking statuses with their numbers too. Owner: "statuses should show their stack numbers".
    The CSS sits at the end of index.html ("phonefight"). */
 const PHONEFIGHT = (() => {
   const DOM = typeof document !== "undefined";
