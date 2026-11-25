@@ -578,7 +578,7 @@
     },
     /* for the Tab compass (tabmenu.js) */
     openMenu: (p) => openMenu(p), closeMenu: () => closeMenu(), refresh: () => { bump(); renderPanel(true); }, fight: (r) => showFightResult(r), tbCall: (fn, done) => tbCall(fn, done),   // tbCall: event fights open the turn-by-turn screen (noautoplay.js)
-    go(t) { closeMenu(); tab = t; testResult = null; bump(); renderTabs(); renderPanel(true); },
+    go(t) { closeMenu(); tab = t; testResult = null; bump(); renderTabs(); renderPanel(true); if (typeof MENUTOP !== "undefined") MENUTOP.top(); },   // a screen opens at its top
     get tab() { return tab; },
     /* [remind] Go buttons: open a screen ({ tab, shop, jtab, soc, anchor }) or pick a place on the map ({ place }) */
     remindData: () => ({ trades, stalls }),
@@ -632,7 +632,7 @@
     tabsEl.classList.remove("hide");
     window.scrollTo(0, 0);
     if (!(typeof MENUS !== "undefined" && MENUS.bar(tabsEl, tab))) tabsEl.innerHTML = TABS.map(([id, label, svg]) => `<button class="tab ${id === tab ? "on" : ""}" role="tab" aria-selected="${id === tab}" data-tab="${id}"><svg viewBox="0 0 24 24">${svg}</svg>${label}</button>`).join("");
-    tabsEl.onclick = (e) => { const b = e.target.closest("[data-tab]"); if (!b) return; SOUND.fx("click"); if (typeof TABMENU !== "undefined" && TABMENU.fromBar) TABMENU.fromBar(); const to = typeof MENUS !== "undefined" ? MENUS.pick(b.dataset.tab) : b.dataset.tab; if (to === "pack" || to[0] === "@") return openMenu(to === "pack" ? "items" : to.slice(1)); closeMenu(); tab = to; testResult = null; bump(); renderTabs(); renderPanel(true); if (typeof POLISH !== "undefined") POLISH.swap($("#side")); if (typeof MOTION !== "undefined") MOTION.panel($("#side")); $("#side").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" }); };
+    tabsEl.onclick = (e) => { const b = e.target.closest("[data-tab]"); if (!b) return; SOUND.fx("click"); if (typeof TABMENU !== "undefined" && TABMENU.fromBar) TABMENU.fromBar(); const to = typeof MENUS !== "undefined" ? MENUS.pick(b.dataset.tab) : b.dataset.tab; if (to === "pack" || to[0] === "@") return openMenu(to === "pack" ? "items" : to.slice(1)); closeMenu(); tab = to; testResult = null; bump(); renderTabs(); renderPanel(true); if (typeof POLISH !== "undefined") POLISH.swap($("#side")); if (typeof MOTION !== "undefined") MOTION.panel($("#side")); if (typeof MENUTOP !== "undefined") MENUTOP.top(); else $("#side").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" }); };   // menutop.js: the top of the screen (a smooth scroll stopped short while the panel slid in)
     $("#zoomBtn").onclick = () => { mapTouchedAt = performance.now(); kickMap(); zoom = zoom > 1.01 ? 1 : 2.4; follow = true; $("#zoomBtn").textContent = zoom > 1.01 ? "－" : "＋"; };
     if ($("#sneakBtn")) $("#sneakBtn").onclick = () => {
       if (!S) return; const onNow = SNEAKMODE.toggle(S); SOUND.fx("click"); persist(true);
@@ -655,7 +655,7 @@
       go: (t) => window.__ui.go(t), openMenu: (p) => openMenu(p), closeMenu: () => closeMenu(), jump: (o) => window.__ui.jump(o), toast });
     if (typeof HUD !== "undefined") HUD.mount($("#mapwrap"), (name) => { if (WORLD.places[name]) { SOUND.fx("click"); selected = name; roamSpot = null; renderPicked(); } });
     $("#sndBtn").onclick = openSound;
-    $("#socBtn").onclick = () => { SOUND.fx("click"); closeMenu(); tab = "social"; bump(); renderTabs(); renderPanel(true); $("#side").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" }); };
+    $("#socBtn").onclick = () => { SOUND.fx("click"); closeMenu(); tab = "social"; bump(); renderTabs(); renderPanel(true); if (typeof MENUTOP !== "undefined") MENUTOP.top(); else $("#side").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" }); };
     $("#side").addEventListener("click", onPanelClick);
     { let ls = $("#locs"); if (!ls) { ls = document.createElement("div"); ls.id = "locs"; ls.hidden = true; document.body.appendChild(ls); } ls.addEventListener("click", onPanelClick); ls.addEventListener("change", onPanelChange); }   // locscreen.js: the place full screen
     $("#side").addEventListener("change", onPanelChange);
@@ -1276,7 +1276,7 @@
     m.innerHTML = `<div class="sheet ${cls}" role="dialog" aria-modal="true">${html}</div>`;
     m.addEventListener("click", onPanelClick);
     document.body.appendChild(m);
-    m.querySelector("button")?.focus();
+    if (typeof MENUTOP !== "undefined") MENUTOP.focusFirst(m); else m.querySelector("button")?.focus();   // a window opens at its top
   }
   const closeModal = () => $("#modal")?.remove();
   /* [lightmenus] the gold knotwork frame is kept for prestige moments only (a quest done, a company founded, a crisis won);
@@ -1947,6 +1947,7 @@
     const armor = Math.round(f.armorRating().rating);
     let dmg = 0; for (let i = 0; i < 8; i++) dmg += f.weaponDamage(); dmg = Math.round(dmg / 8);
     const hp = G.curHealth(S), mh = G.maxHealth(S);
+    const mtRestore = typeof MENUTOP !== "undefined" ? MENUTOP.keepList(el, sky) : null;   // menutop.js: same list keeps its place, a new one starts at the top
     el.innerHTML = `<div class="sky-in">
       <div class="sky-top"><button class="iconbtn" data-act="skyclose" aria-label="Close menu">✕</button>
         <div class="sky-pages">${[["items", "Items"], ["magic", "Magic"], ["skills", "Skills"]].map(([p, l]) => `<button class="sky-page ${p === sky.page ? "on" : ""}" data-act="skytab" data-id="${p}">${l}</button>`).join("")}</div><button class="uxi sky-i" data-act="uxhelp" data-id="pack" aria-label="What is this screen?" aria-expanded="${uxHelpOpen === "pack"}">ⓘ</button></div>
@@ -1957,6 +1958,7 @@
       <div class="sky-foot">${sky.page === "magic" ? `<span>Magicka <b class="num">${G.maxMagicka(S)}</b></span><span title="Magicka that comes back each fight round">Regen a round <b class="num">+${Math.round((f.regenMp || 0) * 3.2)}</b></span>` : `<span>Armor <b class="num">${armor}</b></span><span>Damage <b class="num">${dmg}</b></span><span>Weight <b class="num">${G.carried(S).toFixed(0)}/${G.capacity(S)}</b></span>`}<span class="gold">${S.gold} gold</span></div>
       <div class="sky-vitals"><div class="bar"><i style="width:${pct(hp, mh)}%;background:var(--hp)"></i></div><div class="bar"><i style="width:100%;background:var(--mp)"></i></div><div class="bar"><i style="width:100%;background:var(--sp)"></i></div></div>
     </div>`;
+    if (mtRestore) mtRestore();
     if (typeof FAVWHEEL !== "undefined") FAVWHEEL.afterMenu(el, S, sky);   // ★ Favourite in the details
     if (typeof MOTION !== "undefined") MOTION.menu(el, sky.page, sky.cat);
     if (typeof MENUS !== "undefined") MENUS.skyOn(sky.page, el);
@@ -3031,6 +3033,7 @@
     if (typeof RIDING !== "undefined" && S) RIDING.sync(S);   // the map's ride button: a horse just bought, back on its feet, out of a dungeon …
     if (!force && side.contains(document.activeElement) && document.activeElement.matches("input,select")) return;
     rendered = version; lastPanelRender = Date.now();
+    const mtFresh = typeof MENUTOP !== "undefined" && MENUTOP.fresh(side, MENUTOP.panelKey(tab, tab === "log" ? jTab : "", tab === "social" ? socTab : ""));   // menutop.js: a new screen starts at its top
     side.dataset.tab = tab; townCtx = null;
     const openD = [...side.querySelectorAll("details")].map((d) => d.open), y = scrollY;
     const twp = typeof TABMENU !== "undefined" ? { stars: () => TABMENU.stars(S), perks: () => TABMENU.perks(S) } : {};
@@ -3042,6 +3045,7 @@
     if (tab === "town" && typeof AREAUI !== "undefined") AREAUI.fitSoon(side);   // areaui.js: one or two columns of places
     if (typeof LOCSCREEN !== "undefined") LOCSCREEN.show(locScene());   // locscreen.js: the place full screen
     if (!force) { side.querySelectorAll("details").forEach((d, i) => { if (openD[i] != null) d.open = openD[i]; }); scrollTo(0, y); }
+    else if (mtFresh) MENUTOP.top();
     const cl = $("#chatlog"); if (cl) cl.scrollTop = cl.scrollHeight;
   }
 
@@ -3231,7 +3235,7 @@
     if (to.shop) { if (S.location && G.shopTypes) { townShop = to.shop; townShopAt = S.location; } }
     if (to.tab === "social") socTab = "friends";
     renderTabs(); renderPanel(true);
-    $("#side").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+    if (typeof MENUTOP !== "undefined") MENUTOP.top(); else $("#side").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
     toast(` ${st[1]}: ${st[2]}`);
   }
   function guideCard() {
@@ -3877,7 +3881,7 @@
     switch (a) {
       case "go": travelTo(b.dataset.place); renderPanel(true); break;
       case "uxall": uxAllPlaces = !uxAllPlaces; renderPanel(true); break;
-      case "uxtab": tab = b.dataset.id; renderTabs(); renderPanel(true); scrollTo(0, 0); break;
+      case "uxtab": tab = b.dataset.id; renderTabs(); renderPanel(true); if (typeof MENUTOP !== "undefined") MENUTOP.top(); else scrollTo(0, 0); break;
       case "uxhelp": uxHelpOpen = uxHelpOpen === b.dataset.id ? null : b.dataset.id; renderPanel(true); if ($("#sky")) renderMenu(); break;
       case "jfold": { const f = jFolds(); f[b.dataset.id] = !f[b.dataset.id]; try { localStorage.setItem("ux_jfold", JSON.stringify(f)); } catch { /* fine */ } renderPanel(true); break; }
       case "unpick": selected = null; roamSpot = null; renderPicked(); break;
@@ -4061,10 +4065,10 @@
       case "bpick": if (typeof BEASTART !== "undefined") BEASTART.pick = BEASTART.pick === b.dataset.id ? null : b.dataset.id; renderPanel(true); break;
       case "bperk": { const [tr, id] = b.dataset.id.split(":"); const m = CURSE.takePerk(S, tr, id); persist(true); SOUND.fx(/: /.test(m) ? "levelup" : "click"); toast(m); renderPanel(true); break; }
       case "vfeed": say(CURSE.feed(S)); break;
-      case "jtab": jTab = b.dataset.id; renderPanel(true); scrollTo(0, 0); break;
+      case "jtab": jTab = b.dataset.id; renderPanel(true); if (typeof MENUTOP !== "undefined") MENUTOP.top(); else scrollTo(0, 0); break;
       case "qtrack": { const id = b.dataset.id; S.trackQ = QUESTS.tracked(S)?.id === id && S.trackQ === id ? null : id; persist(); renderPanel(true); bump(); toast(S.trackQ ? `★ Tracking ${QUESTS.L[id]?.name || "the quest"}.` : "No quest tracked: the first active quest shows."); break; }
       case "qmap": { const n = b.dataset.place, p = WORLD.places[n]; if (!p) break; closeMenu?.(); tab = "map"; selected = n; follow = false; center = [p[0], p[1]]; if (zoom < 2) zoom = 2.4; testResult = null; renderTabs(); renderPanel(true); renderPicked(); bump(); scrollTo(0, 0); break; }
-      case "tabgo": closeMenu?.(); tab = b.dataset.id; testResult = null; renderTabs(); renderPanel(true); bump(); if (b.closest(".mn-sub")) $("#side").scrollIntoView({ block: "start" }); else scrollTo(0, 0); break;
+      case "tabgo": closeMenu?.(); tab = b.dataset.id; testResult = null; renderTabs(); renderPanel(true); bump(); if (typeof MENUTOP !== "undefined") MENUTOP.top(); else if (b.closest(".mn-sub")) $("#side").scrollIntoView({ block: "start" }); else scrollTo(0, 0); break;
       case "jgo": { const id = b.dataset.id, to = MOVED[id] || ["log", "active"]; closeMenu?.(); tab = to[0]; if (to[0] === "social") { socTab = to[1]; socWith = null; } if (to[0] === "log") jTab = to[1]; renderTabs(); renderPanel(true); bump(); requestAnimationFrame(() => { const el = $("#j-" + id); if (el) { const y = el.getBoundingClientRect().top + scrollY - 64; scrollTo({ top: y, behavior: "auto" }); } else scrollTo(0, 0); }); break; }
       case "festclaim": { const m = FEST.claim(S); if (!m) break; SOUND.fx("levelup"); say(m); publishCard(); break; }
       case "festgift": { const m = FEST.innGift(S); if (m) { SOUND.fx("coin"); say(m); } break; }

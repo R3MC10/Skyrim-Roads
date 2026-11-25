@@ -3,10 +3,16 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b316-dunchoices", build: 316, date: "25 Nov 2026", title: "Dungeon forks show what's ahead", items: [
+    { id: "b317-dunchoices", build: 317, date: "25 Nov 2026", title: "Dungeon forks show what's ahead", items: [
       "At a fork every way is now a card: a picture of the room, its name, how risky it is, what it pays, and which rooms come after it.",
       "Risk goes from Safe to Deadly and follows how dangerous the dungeon is. A Rest room tells you when you could really use it.",
       "In a party the same cards are the vote: each one shows how many votes it has and who picked it, the leading way lights up, and the vote says plainly that a tie goes the leader's way.",
+    ] },
+    { id: "b316-menutop", build: 316, date: "25 Nov 2026", title: "Menus open at the top", items: [
+      "On a phone, every tab and sub-tab (Character, Map, Journal, Social, Area and the rest) now opens at its top, instead of half way down an old list or on the map above it.",
+      "The compass's Area, Journal and Social links take you straight to that screen, and the full-screen Character page always starts at the top.",
+      "In Items and Magic a new category starts at the top, while picking or equipping something keeps the list where you were.",
+      "Windows like the patch notes and the guide open at their top.",
     ] },
     { id: "b315-hourlyupdates", build: 315, date: "25 Nov 2026", title: "Updates arrive on time", items: [
       "New versions now reach the app reliably within about an hour of a change, instead of sometimes waiting many hours.",
