@@ -3,10 +3,18 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b303-perkkeys", build: 303, date: "25 Nov 2026", title: "Perk stars with the keyboard", items: [
+    { id: "b304-perkkeys", build: 304, date: "25 Nov 2026", title: "Perk stars with the keyboard", items: [
       "On a PC the Skills page now works like Skyrim's: A and D (or the arrows) step through the skills, W and S move up and down the list, and the stars on the right follow the skill you're on.",
       "E, Enter or Space takes you into the stars. There W A S D jump to the nearest star that way (stars joined by a line first), its perk shows on the left, and E takes it if you can.",
       "Tab, Esc or Backspace (or S at the bottom) go back to the skills. A bright ring shows where you are, and a small key hint sits at the bottom. The mouse and phones work as before.",
+    ] },
+    { id: "b303-pcupdates", build: 303, date: "25 Nov 2026", title: "The PC game updates itself", items: [
+      "On Windows the game now updates by itself in the background, the installed and the portable version alike: no more downloading a new setup for every build.",
+      "Usually only the files that changed get downloaded, so an update is often just a few megabytes. A card in the corner shows how far along it is.",
+      "When it's ready the card says Restart to update. On the title screen it switches over by itself, and otherwise the new version starts the next time you open the game. Your saves stay.",
+      "If a new version ever fails to start, the game goes back to the one before by itself and skips the broken one.",
+      "The title screen's Update page now works on PC too. The whole app only downloads again when the app itself changes.",
+      "Older PC copies need the new version once (from the GitHub page); after that they keep themselves up to date.",
     ] },
     { id: "b302-hotbardnd", build: 302, date: "25 Nov 2026", title: "Drag and drop on the hotbar, single or dual cast", items: [
       "In Edit hotbar you can now drag moves, spells, potions and poisons from the list onto a slot, drag one slot onto another to swap them, or drag a slot off the bar to empty it. With a mouse just drag; on a phone hold a row for a moment until it lifts, then drag. Tapping still works too.",

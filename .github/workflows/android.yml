@@ -105,6 +105,7 @@ jobs:
             After that, the app updates itself in the background: no reinstalling needed.
 
             **PC (Windows):** download **RoadsOfTheNorth-PC-setup.exe** (installs, adds a Start menu icon) or **RoadsOfTheNorth-PC-portable.exe** (just run it).
+            Both update the game by themselves in the background: no new download needed.
             Windows may say "unrecognised app": click *More info*, then *Run anyway*. Esc works as Back; F11 toggles full screen.
 
   windows:
