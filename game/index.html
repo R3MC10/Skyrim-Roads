@@ -3638,6 +3638,15 @@ html.art-pixel .rxban,html.art-pixel #tbf .tbact.rxon .rxbadge{border-radius:0;i
 .affbtns{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px}.affcard .sub{margin:4px 0}
 .affbadge{margin-left:6px;font-size:14px;letter-spacing:2px}.affbadge i{font-style:normal}
 .affparty{margin-top:8px}
+/* huntart.js: the painted hunt gets a bigger picture on PCs and big screens; skinning loot pops in as chips */
+#huntgame .fhcard{width:min(1040px,100%)}
+#huntgame .fhcard canvas{max-width:min(100%,1000px,calc((100vh - 300px) * 1.867))!important;max-width:min(100%,1000px,calc((100dvh - 300px) * 1.867))!important;border-radius:6px;box-shadow:0 0 0 1px rgba(228,220,200,.22),0 10px 30px rgba(0,0,0,.5)}
+.hgloot{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin:2px 0 4px;min-height:0}
+.hgloot:empty{display:none}
+.hgchip{padding:4px 10px;font-size:14px;color:#efe6cf;background:linear-gradient(180deg,rgba(60,44,28,.85),rgba(30,22,14,.9));box-shadow:inset 0 0 0 1px rgba(205,184,140,.45);border-radius:3px;opacity:0;animation:hgchip .35s ease-out forwards}
+@keyframes hgchip{from{opacity:0;transform:translateY(6px) scale(.92)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.hgchip{animation:none;opacity:1}}
+html.a11y-still .hgchip{animation:none;opacity:1}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -3834,6 +3843,7 @@ html.art-pixel .rxban,html.art-pixel #tbf .tbact.rxon .rxbadge{border-radius:0;i
 <script src="hunting.js"></script>
 <script src="fishing.js"></script>
 <script src="huntgame.js"></script>
+<script src="huntart.js"></script>
 <script src="craftqol.js"></script>
 <script src="polish.js"></script>
 <script src="caravans.js"></script>

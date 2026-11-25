@@ -48,6 +48,10 @@
                                          4×2: blood-decals (384² cells), oil/green/ichor/sap-decals (192² cells); <liquid>-drops (4×2 of
                                          48², flying drops, head right); blood-drips (4×128×160, body stains). The rest from
                                          scripts/make_gfx.py: dust bonedust frost embers motes (10×192²), shock (8×192²), sparks (8×160²).
+     mg-hunting-bg            2048×1152  painted misty clearing for the hunting mini-game (huntart.js), layered for parallax. WebP q84.
+     animal-<slug>            ~500-720   painted game animals for hunting (huntart.js): transparent, side view facing right,
+                                         trimmed, WebP q88. slugs: deer elk fox hare (snow fox borrows the fox, bleached).
+                                         Cut into body/head/ear/tail by huntart.js RIG; any other animal keeps the ink drawing.
      ui-panel                 1024×1024  tileable dark panel texture
      ui-parchment             1024×1024  tileable parchment texture
      ui-compass               1254×1254  transparent compass rose
