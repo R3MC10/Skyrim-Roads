@@ -3,11 +3,49 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b215-housekeeping", build: 215, date: "25 Nov 2026", title: "More of the game in Polish", items: [
+    { id: "b221-housekeeping", build: 221, date: "25 Nov 2026", title: "More of the game in Polish", items: [
       "Playing in Polish? The trip line on the map, the Journal and its quests, the inn, the market, road events, the fight log and the townsfolk greetings are now in Polish too.",
       "Lines that start with a little game icon now get translated as well, so buttons like Fight, Pay or Something by the road show up in Polish.",
       "The warhorse now shows a proper game icon instead of an odd symbol.",
       "Tidied the patch notes: a few empty repeats of old entries are gone.",
+    ] },
+    { id: "b220-fightdeclutter", build: 220, date: "25 Nov 2026", title: "A calmer fight screen", items: [
+      "The fight screen is tidier, mostly on phones. The top is one slim strip with the round and the turn order; the fight log and the combat wheel sit in the new … menu.",
+      "The foe's card shows its name and kind on one line and only its next move. Tap the card to see everything it plans this round.",
+      "The target is a thin ring on the ground under the foe. The dashed line to it only shows while you aim.",
+      "Your health, magicka and stamina live only in the orb now; its striped band shows how much the foe is about to take. No more bars over your hero or numbers in the Moves row.",
+      "The Moves diamonds and \"Your turn\" share one thin line, and a move's description shows as a fixed line just above your buttons, never on top of them.",
+      "End turn is a plain button in its own corner. Snow falls as soft round flakes.",
+    ] },
+    { id: "b219-mapread", build: 219, date: "25 Nov 2026", title: "An easier map to read", items: [
+      "Land you've already explored now sits under a light mist instead of the heavy one. Places you've never been stay dark.",
+      "Names no longer pile up: your party and your objective always show first, then towns, then everything else. A town's name steps aside instead of vanishing.",
+      "Zoomed out, guard patrols and passing wagons that stand close together turn into one pin with a number. Zoom in and they split up again.",
+      "Crisis signs find a free spot next to their town, with a thin line back to it if they had to move.",
+      "Map names have a thinner dark outline, so the painting shows through more.",
+      "Everyday world news (prices, rebuilding, battles far away) now folds into one World news button. Tap it to read it all. Things you can act on right now, like a reward to claim or a ringleader to fight, stay open.",
+    ] },
+    { id: "b218-expedition", build: 218, date: "25 Nov 2026", title: "The Expedition Table: tonight's adventure", items: [
+      "The company's planning table now lays out three expeditions every day: a short, a medium and a long one. Open Social, then Company, then Expeditions.",
+      "Everyone in the company sees the same three, and new ones come every day. Missing a day costs nothing.",
+      "Each one is a short chain of things already in the game: a road event on the way, then a dungeon, a legendary beast's trail, a heist or a hold in trouble, then a fight or a boss.",
+      "In a party, everyone votes on which one to take and what to do on the road. Most votes win, a tie goes to the leader, and Not tonight is always a choice.",
+      "Finish one and you get your own gold and loot, and the company gets renown. Reach the weekly goal and everyone who went out that week opens the company chest.",
+      "Without a planning table only the short expedition is open. Building it opens all three, and every level adds a bit of gold.",
+      "New perks: Expedition Leader (Etiquette) lets you ask for fresh offers once or twice a day, and Seasoned Scout (Sneak) shows how each road event choice will turn out.",
+    ] },
+    { id: "b217-lightmenus", build: 217, date: "25 Nov 2026", title: "Lighter menus", items: [
+      "Social has four big tabs now: Party, Company, Friends and Realm. Messages, Trades, Chat and Faction sit in a small More row just under them, with their counters, so everything is still one tap away.",
+      "Every button now has the same plain look: a thin line, small corners and no shine. Main buttons are a bit taller so they're easy to hit.",
+      "The big gold knotwork frame is saved for special moments: a quest done, a company founded, a crisis won. Other windows (heists, Hold status, messages) get a thin line and more room for text.",
+      "The bar at the bottom now lights up Items or Magic while that menu is open, not Map.",
+      "Long crisis names (like The Long Winter) wrap onto a second line instead of being cut off.",
+    ] },
+    { id: "b216-dungeonphone", build: 216, date: "25 Nov 2026", title: "Dungeons fit your phone better", items: [
+      "A strip above the room shows how deep you are and the rooms you can go to next. Tap one to go there, or tap Map for the whole chart.",
+      "The room's choices sit two to a row, so Fight, Sneak, Run and your potion fit on the screen without scrolling.",
+      "No more snow or rain inside caves and ruins. Instead you see dust in the torchlight in barrows, water dripping in caves, and sparks drifting in Dwemer ruins and by campfires.",
+      "The foe waiting in a room now stands in the painting, so a draugr that opens its eyes is really there.",
     ] },
     { id: "b214-daedric", build: 214, date: "25 Nov 2026", title: "Daedric bargains and artifacts that wake up", items: [
       "Black shrines by the road can now carry an offer from one of six Daedric princes: Mehrunes Dagon, Azura, Nocturnal, Hircine, Boethiah and Meridia (from level 8).",
@@ -1511,7 +1549,7 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 215;
+  const NEXT_AT = 221;
   const NEXT = [
     "Mentoring: play side by side with friends of any level",
     "Shrines of your own: build a Daedric altar at your longhouse",

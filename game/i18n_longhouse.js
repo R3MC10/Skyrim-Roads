@@ -35,7 +35,7 @@ var I18N_LONGHOUSE = (() => {
     "No such setting.": "Nie ma takiego ustawienia.",
     "A trophy for the longhouse: {name}": "Trofeum dla długiego domu: {name}",
     "The company library: you take in more ({n}% of the next level).": "Biblioteka kompanii: uczysz się więcej ({n}% następnego poziomu).",
-    "Your longhouse is founded.": "Twój długi dom został założony.", "Gold put in.": "Złoto wpłacone.", "Gold taken out.": "Złoto wypłacone.",
+    "Your longhouse is founded.": "Twój długi dom został założony.", "Company founded": "Kompania założona", "Gold put in.": "Złoto wpłacone.", "Gold taken out.": "Złoto wypłacone.",
     "Given to the stockpile.": "Oddano do magazynu.", "Built!": "Zbudowane!", "Plan set.": "Plan ustalony.", "Plan cleared.": "Plan odwołany.",
     "Invitation sent.": "Zaproszenie wysłane.", "Welcome to the company!": "Witaj w kompanii!", "You left the company.": "Opuszczono kompanię.", "Done.": "Gotowe.",
     "{who} invites you to the company {name} (Social → Company)": "{who} zaprasza cię do kompanii {name} (Społeczność → Kompania)",
@@ -71,7 +71,7 @@ var I18N_LONGHOUSE = (() => {
       "Załóż kompanię z drużyną albo przyjaciółmi (do 8 graczy). Dzielcie skarbiec, a potem zbudujcie kuźnię, bibliotekę, salę trofeów, stajnie i stół narad, które pomagają każdemu członkowi.",
     "Found a longhouse": "Załóż długi dom", "Company name": "Nazwa kompanii", "Found it ({n} gold)": "Załóż ({n} sztuk złota)", "It will stand in {place}.": "Stanie w {place}.",
     "You're playing offline: the longhouse is shared once you go online.": "Grasz offline: długi dom będzie wspólny, gdy wejdziesz do sieci.",
-    Company: "Kompania", Rooms: "Sale", Plan: "Plan", Trophies: "Trofea", Treasury: "Skarbiec", Log: "Dziennik",
+    Company: "Kompania", Rooms: "Sale", Plan: "Plan", Trophies: "Trofea", Treasury: "Skarbiec", Log: "Dziennik", Expeditions: "Wyprawy",
     Founder: "Założyciel", Officer: "Oficer", Member: "Członek", "Founder only": "Tylko założyciel", "Founder and officers": "Założyciel i oficerowie", Everyone: "Wszyscy",
     // ---- rooms
     Forge: "Kuźnia", Library: "Biblioteka", "Trophy hall": "Sala trofeów", Stables: "Stajnie", "Planning table": "Stół narad",

@@ -95,7 +95,7 @@ const FIGHTART = (() => {
     if (kind === "arena") { g.fillStyle = "#8f7a66"; g.fillRect(0, h * 0.45, w, ground - h * 0.45); for (let x = 0; x < w; x += 26) H.poly(g, [[x, ground - 2], [x, h * 0.45], [x + 22, h * 0.45], [x + 22, ground - 2]], "#a48f78", P.ink, 1); }
     if (kind === "arena" && typeof RAIDART !== "undefined") RAIDART.stands(g, w, h, h * 0.08, h * 0.45);   // the crowd in the stands (raidart.js)
     g.fillStyle = grounds[kind] || P.tundra; g.fillRect(0, ground, w, h - ground); H.inkPath(g, [[0, ground], [w, ground]], false, 1.4);
-    if (kind === "snow" && !sky) { const r = H.seeded("flk"); g.fillStyle = "#fff"; for (let i = 0; i < 40; i++) g.fillRect(r() * w, r() * ground, 1.6, 1.6); }
+    if (kind === "snow" && !sky) { const r = H.seeded("flk"); g.fillStyle = "rgba(255,255,255,0.85)"; g.beginPath(); for (let i = 0; i < 40; i++) { const x = r() * w, y = r() * ground, rr = 0.6 + (i % 3) * 0.35; g.moveTo(x + rr, y); g.arc(x, y, rr, 0, 6.2832); } g.fill(); }   // round flakes in three sizes
     if (sky) { if (kind !== "snow") SKY.snowCover(g, w, h, ground, sky.snow, kind); SKY.overlay(g, H, w, h, sky, { seed: kind, ground, cover: false, weather: false }); }   // seasons and the light of the hour
   }
   const bgCache = new Map();

@@ -335,6 +335,7 @@ const PLACEART = (() => {
   }
   /* light and atmosphere over the finished picture (lightfx.js) */
   const lit = (g, w, h, st, name) => { if (typeof LIGHTFX !== "undefined") LIGHTFX.picture(g, w, h, st, { seed: name, ground: h * 0.7 }); };
+  const INDOOR_PIC = /^biome-(cave|nordruin|dwemerruin|falmercave)$/;   // painted from inside: no weather on them
   function weatherId(name) { try { const p = WORLD.places[name]; return p && typeof WEVENTS !== "undefined" ? WEVENTS.weather(p).id : "clear"; } catch { return "clear"; } }
 
   /* the big picture for a place (360×160), as an <img> string */
@@ -343,21 +344,26 @@ const PLACEART = (() => {
     const d = drawerFor(name), clim = climateOf(name);
     const fest = typeof FXART !== "undefined" && ["town", "city"].includes(kindOf(name)) ? FXART.festId() : null;   // festival decorations (fxart.js)
     const deco = (g, H, w, h) => { if (fest) FXART.festDecor(g, H, w, h, fest, name); };
-    const pic = typeof ASSETS !== "undefined" ? ASSETS.img(ASSETS.placeKey(name) || ASSETS.biomeKey(name)) : null;   // a painted backdrop dropped in the game folder
+    const pkey = typeof ASSETS !== "undefined" ? ASSETS.placeKey(name) || ASSETS.biomeKey(name) : null;
+    const pic = pkey ? ASSETS.img(pkey) : null;   // a painted backdrop dropped in the game folder
+    // [dungeonphone] indoors: a painted cave/ruin interior, or opts.indoor (the place you're inside right now). No sky over it: no snow,
+    // rain, stars or sun shafts falling through a stone ceiling (dunfx.js adds dust, drips or embers on top instead)
+    const indoor = !!(opts.indoor || (pic && INDOOR_PIC.test(pkey)));
     if (typeof SKY !== "undefined") {   // shared sky: time of day, season, weather, moons and aurora
       const st = SKY.forOpts(WORLD.places[name], { mood: opts.mood, tod: opts.tod, weather: opts.weather, season: opts.season });
       const draw = (g, H, w, h) => {
         curSky = st;
         try {
+          if (pic && indoor) { ASSETS.cover(g, pic, w, h, 0.5, 0.55); frame(g, w, h); return; }   // a painted interior: as painted
           if (pic) { ASSETS.cover(g, pic, w, h, 0.5, 0.55); deco(g, H, w, h); SKY.overlay(g, H, w, h, st, { seed: name, ground: h * 0.7, cover: false }); lit(g, w, h, st, name); frame(g, w, h); return; }   // a painted backdrop
           if (d.back) backdrop(g, H, w, h, clim, name, SKY.mood(st)); else SKY.backdrop(g, H, w, h, st, { horizon: 0.62, seed: name });
           d.draw(g, H, w, h, clim); deco(g, H, w, h);
-          SKY.overlay(g, H, w, h, st, { seed: name, ground: h * 0.7, cover: false }); lit(g, w, h, st, name); frame(g, w, h);
+          SKY.overlay(g, H, w, h, st, indoor ? { seed: name, ground: h * 0.7, cover: false, weather: false, season: false } : { seed: name, ground: h * 0.7, cover: false }); if (!indoor) lit(g, w, h, st, name); frame(g, w, h);
         } finally { curSky = null; }
       };
-      return ART.html(W, HH, draw, { key: `place|${name}|${st.key}|${fest || ""}|${pic ? "pic" : ""}|${typeof LIGHTFX !== "undefined" ? LIGHTFX.key() : ""}`, cls: "scene", alt: name });
+      return ART.html(W, HH, draw, { key: `place|${name}|${st.key}|${fest || ""}|${pic ? "pic" : ""}|${indoor ? "in" : ""}|${typeof LIGHTFX !== "undefined" ? LIGHTFX.key() : ""}`, cls: "scene", alt: name });
     }
-    const md = opts.mood || mood(), wx = opts.weather || weatherId(name);
+    const md = opts.mood || mood(), wx = indoor ? "clear" : opts.weather || weatherId(name);
     const draw = (g, H, w, h) => {
       if (d.back) backdrop(g, H, w, h, clim, name, md); else H.sky(g, w, h, md === "night" ? "night" : clim === "snow" ? "snow" : md === "dusk" ? "dusk" : "day");
       d.draw(g, H, w, h, clim); deco(g, H, w, h);

@@ -8,7 +8,8 @@
      first: the target was knocked down or left (a new roll), or a follower steps in front of you ("cover"). A wind-up or
      a "takes aim" keeps its target for the blow that follows.
    - On screen: "→ Lydia" on each intent chip, a red crosshair on the card of whoever is targeted (the next blow's target
-     gets a red outline), and a dashed arrow in the battle scene from the foe to them (still under reduce motion).
+     gets a red outline), a thin ellipse on the ground under them in the battle scene, and a faint dashed arc from the
+     foe to them while you aim (fightdeclutter.js; still under reduce motion).
    - Shared party fights: the targets live on the fight (f.foeTgts, one of TB.FOE_KEYS), so every phone shows the same
      ones; "you" is whoever is looking.
    Pure helpers (roll, plan, refresh, next, labels) work in node; decorate() needs a page. */
@@ -228,10 +229,12 @@ const FOEINTENT = (() => {
     const sv = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     sv.setAttribute("class", "fitarrow" + (nx.it?.big ? " big" : ""));
     sv.setAttribute("viewBox", `0 0 ${W.toFixed(0)} ${H.toFixed(0)}`); sv.setAttribute("aria-hidden", "true");
-    const lw = Math.max(2, 2.2 * s / 1.6);
-    sv.innerHTML = `<defs><marker id="fitah" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah"/></marker></defs>
-      <path class="ln" d="M${fx.toFixed(1)},${y0.toFixed(1)} Q${mx.toFixed(1)},${my.toFixed(1)} ${(tx + 10 * s).toFixed(1)},${y1.toFixed(1)}" stroke-width="${lw.toFixed(1)}" marker-end="url(#fitah)"/>
-      <g class="tgt" transform="translate(${tx.toFixed(1)},${(gy - 40 * s).toFixed(1)})"><circle r="${(15 * s).toFixed(1)}"/><path d="M${(-20 * s).toFixed(1)},0 H${(-8 * s).toFixed(1)} M${(8 * s).toFixed(1)},0 H${(20 * s).toFixed(1)} M0,${(-20 * s).toFixed(1)} V${(-8 * s).toFixed(1)} M0,${(8 * s).toFixed(1)} V${(20 * s).toFixed(1)}"/></g>`;
+    /* [fightdeclutter] a thin ellipse on the ground under the target, and a 2px dashed arc that the CSS only shows
+       while you aim a move or rest on the foe's card (no big red crosshair) */
+    const lw = 2;
+    sv.innerHTML = `<defs><marker id="fitah" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah"/></marker></defs>
+      <path class="ln" d="M${fx.toFixed(1)},${y0.toFixed(1)} Q${mx.toFixed(1)},${my.toFixed(1)} ${(tx + 10 * s).toFixed(1)},${y1.toFixed(1)}" stroke-width="${lw}" marker-end="url(#fitah)"/>
+      <g class="tgt" transform="translate(${tx.toFixed(1)},${(gy - 1.5 * s).toFixed(1)})"><ellipse class="gnd" rx="${(19 * s).toFixed(1)}" ry="${(4.2 * s).toFixed(1)}"/></g>`;
     stage.appendChild(sv);
   }
 

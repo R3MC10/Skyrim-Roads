@@ -634,7 +634,9 @@
     if (typeof BLACKREACH !== "undefined") BLACKREACH.mount({ S: () => S, persist, toast, showFightResult, showMessage, renderPanel, tb: tbCall });   // the cavern under Alftand (blackreach.js)
     if (typeof GREATEV !== "undefined") GREATEV.mount({ S: () => S, persist, toast, showFightResult, showMessage, openModal, closeModal, postNews, click: onPanelClick, party: () => party });   // great world events: banner + countdown (greatevents.js)
     if (typeof CRISES !== "undefined") CRISES.mount({ S: () => S, persist, toast, showFightResult, showMessage, openModal, closeModal, postNews, party: () => party });   // regional crises: hold status, contracts, bosses (crises.js)
-    if (typeof LONGHOUSE !== "undefined") LONGHOUSE.mount({ S: () => S, persist, toast, render: () => renderPanel(true), party: () => party });   // the adventuring company longhouse (longhouse.js)
+    if (typeof EXPEDITION !== "undefined") EXPEDITION.mount({ S: () => S, persist, toast, render: () => { if (document.getElementById("lng-root")) renderPanel(true); }, party: () => party, cardOf,
+      online: (id) => { const c = cardOf(id); return !!c && (typeof SOCIAL === "undefined" || SOCIAL.status(c).online); } });   // the Expedition Table: tonight's adventure (expedition.js)
+    if (typeof LONGHOUSE !== "undefined") LONGHOUSE.mount({ S: () => S, persist, toast, showMessage, render: () => renderPanel(true), party: () => party });   // the adventuring company longhouse (longhouse.js)
     if (typeof HOLDUI !== "undefined") HOLDUI.mount({ S: () => S, persist, toast, showFightResult, postNews, refresh: () => { bump(); renderPanel(true); }, party: () => party });   // player-run holds: Jarl, tax, raids (holdui.js)
     if (typeof TOURNEYUI !== "undefined") TOURNEYUI.mount({ S: () => S, persist, toast, showFightResult, postNews, tbCall, refresh: () => { bump(); renderPanel(true); }, party: () => party, allies: () => allies() });   // festivals, contests and the Grand Arena (tourneyui.js)
     Store.watch("trades", (docs) => onTrades(docs));
@@ -794,7 +796,7 @@
         if (out.died) { SOUND.fx("death"); showMessage("You died", out.died, true); }
         else if (out.encounter) { openEncounter(); ppUI?.leaderHalt("encounter", out.encounter.name, out.encounter.text); }
         else if (out.arrived) {
-          SOUND.fx("arrive"); tally("arrivals"); festCount("arrive");
+          SOUND.fx("arrive"); tally("arrivals"); festCount("arrive"); if (typeof EXPEDITION !== "undefined") EXPEDITION.hook("arrive", { place: out.arrived });
           if (typeof IMM !== "undefined") IMM.bark(S, out.arrived);
           if (!WORLD.places[out.arrived]) {   // free roam or a pin: say what's around
             const near = ROAM.around(S), msg = `You stop in ${ROAM.isRoam(out.arrived) ? out.arrived : `the spot you marked (${out.arrived})`}. ${Terrain.NAMES[Terrain.typeAtPos([S.x, S.y])]} all around.${near.length ? ` Nearby: ${near.join(", ")}.` : " Nothing you know of nearby."}`;
@@ -942,7 +944,7 @@
   }
   function renderTabs() {
     tabsEl.querySelectorAll(".tab").forEach((b) => {
-      const on = b.dataset.tab === (typeof MENUS !== "undefined" ? MENUS.groupOf(tab) : tab);
+      const on = b.dataset.tab === (typeof MENUS !== "undefined" ? MENUS.activeGroup(tab, $("#sky") ? sky?.page : null) : tab);
       b.classList.toggle("on", on); b.setAttribute("aria-selected", on);
       const needDot = (b.dataset.tab === "hero" && (S.pendingLevels > 0 || PERKS.pointsLeft(S) > 0)) || (b.dataset.tab === "log" && journalNew()) || (b.dataset.tab === "social" && socialBadge() > 0);
       if (needDot && !b.querySelector(".dot")) b.insertAdjacentHTML("beforeend", '<span class="dot"></span>');
@@ -1162,10 +1164,12 @@
     m.querySelector("button")?.focus();
   }
   const closeModal = () => $("#modal")?.remove();
-  function showMessage(title, text, bad) {
+  /* [lightmenus] the gold knotwork frame is kept for prestige moments only (a quest done, a company founded, a crisis won);
+     every other window gets the plain SkyUI hairline */
+  function showMessage(title, text, bad, prestige) {
     if (/quest/i.test(title) || //.test(text)) SOUND.fx("quest");
     if (typeof POLISH !== "undefined") POLISH.fromText(text);
-    openModal(`${/^You died/.test(title) ? UIART.death(320, 120) : typeof EVENTART !== "undefined" ? EVENTART.story(title, text) : ""}<h2>${esc(title)}</h2><p>${esc(text)}</p><button class="btn ${bad ? "danger" : "pri"}" data-act="close" style="width:100%">Continue</button>`, bad ? "enc" : "");
+    openModal(`${/^You died/.test(title) ? UIART.death(320, 120) : typeof EVENTART !== "undefined" ? EVENTART.story(title, text) : ""}<h2>${esc(title)}</h2><p>${esc(text)}</p><button class="btn ${bad ? "danger" : "pri"}" data-act="close" style="width:100%">Continue</button>`, bad ? "enc" : (prestige || title === "Quest") ? "prestige" : "");
   }
   function fightLog(f) {
     return `${typeof FIGHTART !== "undefined" ? FIGHTART.placeholder(f, S) : ""}<details ${f.log.length < 9 ? "open" : ""}><summary class="sub" style="cursor:pointer;min-height:36px">Fight log (${f.turn} turns)${f.wx && f.wx.lines.length ? ` · ${f.wx.icon} ${esc(f.wx.name)}` : ""} — ${f.ai ? (f.hybrid ? "[n] = your rule fired · [AI] = Smart AI" : "[AI] = Smart AI's move") : "[n] is the tactic rule that fired"}</summary><div class="flog">${f.fpLine ? `<div class="fpline"><span class="r"></span><span>${esc(f.e.name)} · ${esc(f.fpLine)}</span></div>` : ""}${f.log.map((l) =>
@@ -1272,7 +1276,7 @@
   function showFightResult(r) {
     shareSpoils(r);
     if (r.fight) { const inf = CURSE.maybeInfect(S, r.fight.e); if (inf) { persist(); setTimeout(() => toast(inf), 1800); } }
-    if (r.fight && !r.died && !r.fled && !r.fight.nonlethal) { tally("foes"); warPoint("fight", G.holdAt(livePos())); if (typeof CRISES !== "undefined") CRISES.onFight(S, r.fight.e, G.holdAt(livePos())); if (typeof LONGHOUSE !== "undefined") LONGHOUSE.onFight(S, r.fight.e); if ((r.fight.e?.tags || []).includes("undead")) festCount("undead"); }
+    if (r.fight && !r.died && !r.fled && !r.fight.nonlethal) { tally("foes"); warPoint("fight", G.holdAt(livePos())); if (typeof CRISES !== "undefined") CRISES.onFight(S, r.fight.e, G.holdAt(livePos())); if (typeof LONGHOUSE !== "undefined") LONGHOUSE.onFight(S, r.fight.e); if (typeof EXPEDITION !== "undefined") EXPEDITION.hook("fight", { e: r.fight.e, hold: G.holdAt(livePos()) }); if ((r.fight.e?.tags || []).includes("undead")) festCount("undead"); }
     if (r.fight || r.died) SOUND.fight(r); else if (/potion|drink/i.test(r.text || "")) SOUND.fx("potion");
     const skills = skillsHTML(r.skills);
     if (r.died) {
@@ -1443,13 +1447,13 @@
     else if (r && r.type === "camp" && typeof DEEPDELVE !== "undefined") main = DEEPDELVE.campHTML(S);   // deep expedition: Extract / Rest / Descend
     else if (r) {
       const e = r.enemy;
-      main = `<div class="card ${e ? "foe" : ""} ${r.type === "rest" ? "rest" : ""}">${typeof DUNROOMS !== "undefined" ? DUNROOMS.room(r.type, d.theme) : PLACEART.room(r.type)}<h3>${DUNGEONS.ICON[r.type]} ${e ? esc(e.name) : DUNGEONS.LABEL[r.type]}</h3><p>${esc(r.text)}</p>
+      main = `<div class="card ${e ? "foe" : ""} ${r.type === "rest" ? "rest" : ""}">${typeof DUNROOMS !== "undefined" ? DUNROOMS.room(r.type, d.theme, e) : PLACEART.room(r.type)}<h3>${DUNGEONS.ICON[r.type]} ${e ? esc(e.name) : DUNGEONS.LABEL[r.type]}</h3><p>${esc(r.text)}</p>
         ${e ? `<div class="vital"><small><span>${esc(e.name)}</span><span class="num">${e.hp}/${e.health} · hits for ~${Math.round(e.damage)}</span></small><div class="bar"><i style="width:100%;background:var(--ember)"></i></div></div>` : ""}
         <div class="evc">${DUNGEONS.roomChoices(S).map(([c, label]) => `<button class="btn ${["fight", "pick", "rest", "read", "pray", "open", "loot", "burn", "dash"].includes(c) || c.startsWith("set:") ? (e ? "danger" : "pri") : ""}" data-act="dact" data-c="${esc(c)}">${esc(label)}</button>`).join("")}</div>
         ${e ? `<p class="sub" style="margin-bottom:0">${typeof TB !== "undefined" && TB.enabled() ? `You play the fight turn by turn` : `Fighting uses ${aiOn() ? `<b>Smart AI</b> (${esc(S.loadout)} gear)` : `your <b>${esc(S.loadout)}</b> tactics`}`}.</p>` : ""}</div>`;
     } else {
       const nx = DUNGEONS.nextChoices(S), row = d.rows[d.row + 1];
-      main = `<div class="card">${d.row < 0 ? PLACEART.scene(d.place) : ""}<h3>${d.row < 0 ? "The entrance" : "Which way?"}</h3><p class="sub">${d.row < 0 ? `You light a torch and step into ${esc(d.place)}.` : "The passage splits."} Tap a glowing room on the map, or pick here:</p>
+      main = `<div class="card">${d.row < 0 ? `<div class="dentrance">${PLACEART.scene(d.place, { indoor: true })}</div>` : ""}<h3>${d.row < 0 ? "The entrance" : "Which way?"}</h3><p class="sub">${d.row < 0 ? `You light a torch and step into ${esc(d.place)}.` : "The passage splits."} Tap a glowing room on the map, or pick here:</p>
         <div class="evc">${nx.map((c) => `<button class="btn ${row[c].type === "boss" ? "danger" : ""}" data-act="droom" data-c="${c}">${DUNGEONS.ICON[row[c].type]} ${DUNGEONS.LABEL[row[c].type]}</button>`).join("")}</div></div>`;
     }
     const lvRun = lvUI && d.run && LOOTVOTE.partyRun(coopUI?.runs.find((x) => x.id === d.run));
@@ -1461,11 +1465,12 @@
       <div class="hd"><h2>\uE10E ${esc(d.place)}</h2><button class="btn sm" data-act="dmin">\uE152 Pack</button>${d.done || r?.type === "boss" ? "" : `<button class="btn sm" data-act="dleave">Leave</button>`}</div>
       <div class="vital"><small><span>Health${r ? "" : " · no natural healing in here"}</span><span class="num">${Math.round(hp)}/${mh}</span></small><div class="bar"><i style="width:${pct(hp, mh)}%;background:var(--hp)"></i></div></div>
       ${typeof DEEPDELVE !== "undefined" ? DEEPDELVE.bannerHTML(S) : ""}${coopUI && d.run ? coopUI.bar() : ""}<p class="sub" style="margin:0">Room ${step} of ${total} · found ${d.gold} gold${d.found.length ? ` and ${d.found.length} item${d.found.length > 1 ? "s" : ""}` : ""} · ${G.countRestore(S, "health")} healing potions</p>
-      ${res}${main}</div>
+      ${typeof DUNSTRIP !== "undefined" ? DUNSTRIP.html(d) : ""}${res}${main}</div>
       <div class="card dmapcard">${DUNART.legendHTML(d)}<div class="dmapfit">${DUNART.mapHTML(d)}</div></div>
     </div>`;
     el.scrollTop = 0;
     DUNART.after(el, reduceMotion);
+    if (typeof DUNFX !== "undefined") DUNFX.attach(el, d.theme, reduceMotion);   // dust, drips or embers instead of weather
     if (pvUI) pvUI.paint();
     if (dunNote?.hurt && !reduceMotion) { el.classList.remove("hurt"); void el.offsetWidth; el.classList.add("hurt"); }
   }
@@ -1522,7 +1527,7 @@
     r.roomType = roomType; r.hurt = roomType === "trap" && G.curHealth(S) < hp0 - 0.5;
     if (r.fight) { const inf = CURSE.maybeInfect(S, r.fight.e); if (inf) setTimeout(() => toast(inf), 1800); }
     if (r.fight && !r.died) shareSpoils(r);
-    if (r.fight && !r.died) { tally("foes"); warPoint("fight", G.holdAt(WORLD.places[S.dungeon?.place] || livePos())); if ((r.fight.e?.tags || []).includes("undead")) festCount("undead"); }
+    if (r.fight && !r.died) { tally("foes"); warPoint("fight", G.holdAt(WORLD.places[S.dungeon?.place] || livePos())); if (typeof EXPEDITION !== "undefined") EXPEDITION.hook("fight", { e: r.fight.e, hold: G.holdAt(WORLD.places[S.dungeon?.place] || livePos()) }); if ((r.fight.e?.tags || []).includes("undead")) festCount("undead"); }
     if (r.fight || r.died) SOUND.fight(r); else if (r.trap || /trap|dart|blade/i.test(r.text || "")) SOUND.fx("hit");
     if (r.bag) Store.addBag(r.bag);
     persist(true);
@@ -1535,7 +1540,7 @@
         members: party.members, place: S.dungeon?.place || "", byName: S.name, t: G.now() });
       postNews(` ${S.name}'s party cleared ${S.dungeon?.place}. The chest is waiting to be shared.`);
     } else if (r.partyChest) { S.gold += r.partyChest.gold; r.partyChest.items.forEach((i) => G.give(S, i)); }
-    if (r.cleared) { tally("dungeons"); warPoint("dungeon", G.holdAt(WORLD.places[S.dungeon?.place] || livePos())); const jm = TOWNS.checkJobs(S); if (jm.length) { tally("jobs", jm.length); r.text += " " + jm.join(" "); } postNews(` ${S.name} cleared ${S.dungeon?.place}.`); }
+    if (r.cleared) { tally("dungeons"); warPoint("dungeon", G.holdAt(WORLD.places[S.dungeon?.place] || livePos())); if (typeof EXPEDITION !== "undefined") EXPEDITION.hook("dungeon", { place: S.dungeon?.place, hold: G.holdAt(WORLD.places[S.dungeon?.place] || livePos()) }); const jm = TOWNS.checkJobs(S); if (jm.length) { tally("jobs", jm.length); r.text += " " + jm.join(" "); } postNews(` ${S.name} cleared ${S.dungeon?.place}.`); }
     persist(true);
     if (typeof BOSSFIGHT !== "undefined") BOSSFIGHT.reveal(r);   // the boss room: the big loot card
     dunNote = r; renderDungeon();
@@ -2498,7 +2503,13 @@
   function friendCard(id) { return cardOf(id) || (SOCIAL.friends(S)[id] ? { id, name: SOCIAL.friends(S)[id].name } : null); }
   function panelSocial() {
     const nDm = SOCIAL.unread(S, dmDocs), nAdd = SOCIAL.addedMe(friendDocs, S).length, inc = myIncoming(), nParty = partyNews(), nChat = chatUnread();
-    const chips = `<div class="seg socseg">${[["friends", `Friends${nAdd ? ` (${nAdd})` : ""}`], ["msgs", `Messages${nDm ? ` (${nDm})` : ""}`], ["trades", `Trades${inc.length ? ` (${inc.length})` : ""}`], ["party", `Party${nParty ? ` (${nParty})` : ""}`], ["chat", `Chat${nChat ? ` (${nChat})` : ""}`], ...(typeof SIDEUI !== "undefined" ? [["faction", `Faction${SIDEUI.badge() ? " (!)" : ""}`]] : []), ...(typeof LONGHOUSE !== "undefined" ? [["company", `Company${LONGHOUSE.badge(S) ? " (!)" : ""}`]] : []), ["realm", "Realm"]].map(([k, l]) => `<button class="${socTab === k ? "on" : ""}" data-act="soctab" data-id="${k}">${l}</button>`).join("")}</div>`;
+    /* [lightmenus] four big tabs (Party, Company, Friends, Realm); Messages, Trades, Chat and Faction sit in a small "More" row
+       under them, badges and all, so every screen is still one tap away */
+    const tabBtn = ([k, l]) => `<button class="${socTab === k ? "on" : ""}" data-act="soctab" data-id="${k}" aria-pressed="${socTab === k}">${l}</button>`;
+    const cnt = (n) => n ? `<span class="socn"> (${n})</span>` : "";   // the counter sits in its own span so the label still translates
+    const prim = [["party", `Party${cnt(nParty)}`], ...(typeof LONGHOUSE !== "undefined" ? [["company", `Company${cnt(LONGHOUSE.badge(S) ? "!" : 0)}`]] : []), ["friends", `Friends${cnt(nAdd)}`], ["realm", "Realm"]];
+    const more = [["msgs", `Messages${cnt(nDm)}`], ["trades", `Trades${cnt(inc.length)}`], ["chat", `Chat${cnt(nChat)}`], ...(typeof SIDEUI !== "undefined" ? [["faction", `Faction${cnt(SIDEUI.badge() ? "!" : 0)}`]] : [])];
+    const chips = `<div class="seg socseg" role="group" aria-label="Social">${prim.map(tabBtn).join("")}</div><div class="socmore" role="group" aria-label="More"><span class="socmore-l">More</span>${more.map(tabBtn).join("")}</div>`;
     const off = Store.online ? "" : `<p class="sub">You're playing offline. Go online (Map tab) to see friends and messages.</p>`;
     let body = "";
     if (socTab === "friends") {
@@ -3753,6 +3764,7 @@
       case "droom": if (pvUI && pvUI.gate("way", b.dataset.c)) break; dungeonRoom(b.dataset.c); break;
       case "pvv": case "pvnow": if (pvUI) pvUI.act(b); break;
       case "dact": if (pvUI && pvUI.gate("act", b.dataset.c)) break; dunChoice(b.dataset.c); break;
+      case "dmapjump": if (typeof DUNSTRIP !== "undefined") DUNSTRIP.jump($("#dun")); break;
       case "dmin": closeDungeon(); tab = "pack"; renderTabs(); renderPanel(true); break;
       case "dleave": { if (S.dungeon?.run && lvUI) { S.lastRun = S.dungeon.run; lvUI.leaderLeaving(); } if (S.dungeon?.run && coopUI) coopUI.left(); if (typeof IMM !== "undefined") IMM.loading("Back to the open road…"); const m = DUNGEONS.leave(S); dunNote = null; persist(true); closeDungeon(); renderPanel(true); showMessage("Back outside", m); break; }
       case "ev": if (b.dataset.c === "pick" && typeof IMM !== "undefined" && IMM.wantsGame()) { IMM.pick("event", eventAction, S); break; } eventAction(b.dataset.c); break;
