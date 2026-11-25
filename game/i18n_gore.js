@@ -38,7 +38,7 @@ Object.assign(I18N_EXTRA.words, {
     "Krew i flaki na Pełne pokazuje wszystko; Niskie zostawia kurz, iskry i efekty czarów bez realistycznej krwi; Wył. nie pokazuje nic.",
 });
 
-/* blood2 (b184-blood2): realistic liquid blood, the Gore setting */
+/* blood2 (b185-blood2): realistic liquid blood, the Gore setting */
 Object.assign(I18N_EXTRA.words, {
   "Gore": "Krew",
   "Reduced": "Mniej",
