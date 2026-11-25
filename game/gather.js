@@ -175,7 +175,14 @@ const GATHER = (() => {
   const byId = (id) => nodes().find((n) => n.id === id);
 
   // ------------------------------------------------------------------ the player's record
-  const st = (s) => (s.gather = s.gather || { seen: {}, picked: {}, beds: {}, auto: false, forage: 0, got: {} });
+  // a save can carry a half-filled record (an old build, a synced copy): fill in what's missing so picking never throws
+  function st(s) {
+    const g = (s.gather = s.gather && typeof s.gather === "object" ? s.gather : {});
+    for (const k of ["seen", "picked", "beds", "got"]) if (!g[k] || typeof g[k] !== "object") g[k] = {};
+    if (typeof g.auto !== "boolean") g.auto = false;
+    if (!Number.isFinite(g.forage)) g.forage = 0;
+    return g;
+  }
   const ripe = (s, n, t = G.now()) => !(st(s).picked[n.id] && t - st(s).picked[n.id] < respawn(s));
   const growsIn = (s, n, t = G.now()) => Math.max(0, respawn(s) - (t - (st(s).picked[n.id] || 0)));
   const thumb = (s) => (G.P(s, "green_thumb") ? 2 : 1);
@@ -201,7 +208,7 @@ const GATHER = (() => {
   function pick(s, id, t = G.now(), passing = false) {
     const n = byId(id);
     if (!n) return { err: "Nothing grows there." };
-    if (!passing && pxd([s.x, s.y], n.pos) > REACH_PX + 1) return { err: "That patch is too far away. Walk closer." };
+    if (!passing && !(pxd([s.x, s.y], n.pos) <= REACH_PX + 1)) return { err: "That patch is too far away. Walk closer." };
     if (!ripe(s, n, t)) return { err: `Already picked. It grows back in about ${Math.ceil(growsIn(s, n, t) / 300)} in-game hours.` };
     const k = (n.ing === "ing_nirnroot" || /pearl/.test(n.ing) ? 1 : rint(1, 3)) * thumb(s);   // [Skyrim] Nirnroot and clams give one; [OURS] other plants 1–3
     st(s).seen[n.id] = 1; st(s).picked[n.id] = t;
