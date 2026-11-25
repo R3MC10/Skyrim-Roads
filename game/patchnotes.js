@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b231-nomountfight", build: 231, date: "25 Nov 2026", title: "Horses wait at the edge of the fight", items: [
+      "Horses now wait at the edge of the fight; you always fight on foot. That goes for solo fights, parties and co-op.",
+      "Nobody goes for your horse and it never gets knocked down in a fight. If you rode in, you're back in the saddle when it's over.",
+      "Dual casting works in every fight again, since everyone is on foot.",
+    ] },
     { id: "b230-map4k", build: 230, date: "25 Nov 2026", title: "Sharp painted map, close up", items: [
       "The painted world map stays sharp now, even zoomed all the way in on a phone or a big 4K screen. It used to turn soft and then swap to a plain drawn chart.",
       "Zoom in and the map loads finer pieces of the painting just for the part you look at, so it stays light on your phone. Until they arrive you see the normal painting.",
