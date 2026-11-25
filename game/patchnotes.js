@@ -3,11 +3,22 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b246-movefx1", build: 246, date: "25 Nov 2026", title: "Real arrows and spell effects", items: [
+    { id: "b247-movefx1", build: 247, date: "25 Nov 2026", title: "Real arrows and spell effects", items: [
       "Bows and crossbows shoot a real arrow or bolt now: it leaves the string, arcs over (a bolt flies flatter and faster), and sticks in, breaks on a shield, or sails past on a miss and lands in the ground behind.",
       "Archer foes, crossbowmen and the Dwarven ballista shoot too, and your followers and party members loose their own arrows. Shots leave from the saddle when you ride.",
       "Fire, frost, shock, poison and life-drain arrows leave a coloured trail; power shots and sneak shots are bigger.",
       "Every spell now has its own look: Flames is a jet, Firebolt a comet, Fireball a lob that bursts, Ice Spike a shard, Icy Spear a big spear, Lightning Bolt a jagged arc, Chain Lightning forks from foe to foe, and so on through healing, wards, flesh spells, summons, illusions and the rest. Dual casting looks bigger, from both hands.",
+    ] },
+    { id: "b246-gathering", build: 246, date: "25 Nov 2026", title: "Picking herbs by hand", items: [
+      "Gathering is now a short hands-on mini-game: snip flowers at the stem, dig roots up slowly, scrape fungus in one stroke, pick only the ripe berries, lift eggs gently and ease a fragile Nirnroot out of the mud. Do it well and you get more; even a clumsy try gives you something.",
+      "Picked a plant three times by hand? A Quick pick button lets you skip the mini-game for a slightly smaller handful.",
+      "Herbs nearby are easy to spot: painted markers on the map, a ring that shows how far you can reach, and a Gather button that pops up on the road, even while you ride past.",
+      "Now and then you find a perfect or a glowing plant. The next potion you brew with it is 15% or 25% stronger.",
+      "Each town's alchemist posts a daily herb order that pays well, and more when the hold is in trouble. That herb also sells for more there that day.",
+      "New recipes: Snowberry and Juniper Berry crostatas at the cooking fire, and Tundra Cotton twists into leather strips at the tanning rack.",
+      "Four new Alchemy perks: Herbalist's Eye (more rare finds), Sure Hands (easier mini-game, Quick pick sooner), Anatomist (extra parts from beasts) and Master Gardener (more from every garden bed).",
+      "In a party everyone picks their own share of each patch, so there's nothing to fight over.",
+      "In Polish the Gathering card is fully translated now: distance, weight, regrowth time and the garden.",
     ] },
     { id: "b245-lhgrow", build: 245, date: "25 Nov 2026", title: "The longhouse grows", items: [
       "Every room you build now shows on the longhouse picture: a smithy at the side, trophies on the gable, a war table inside the doors, lit library windows and a stable with horses.",

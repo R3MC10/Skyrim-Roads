@@ -106,6 +106,9 @@
                                          built room (window light, forge glow, trophies, banners, a stable lantern), placed in a
                                          1024×576 frame: keep the hall where it is if it's repainted. longhouse-plate-wide: spare,
                                          a calmer view of the same hall (not used yet).
+     harvest-<kind>           256×256    painted plants for the harvest mini-game (harvestgame.js) and the map's plant markers,
+                                         transparent, bottom-aligned, WebP q82: flower root fungus nirn berry egg. The
+                                         mini-game knows where the berries and the egg sit in these pictures (BERRIES, EGG).
      lhgrow-<room>-<1|2|3>    ~250-580   painted room patches over longhouse-plate (longhouse.js GROW): transparent, cut from
                                          ChatGPT paint-overs of the plate at its own 2048 px scale, one fixed box per room
                                          (forge trophy plan library stables) so none overlap; only the highest level shows. WebP q80.

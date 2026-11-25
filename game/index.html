@@ -4523,6 +4523,45 @@ html.mo-on .evc-fx{display:block}
 #gpop{display:none}
 html.pcmap.pc-home #gpop:not(:empty){display:block;position:fixed;left:14px;bottom:96px;width:340px;max-height:min(52vh,calc(100vh - 400px));overflow:auto;z-index:4;overscroll-behavior:contain}
 html.pcmap.pc-home #gpop .gcard{margin:0;box-shadow:0 8px 26px rgba(0,0,0,.55);background:linear-gradient(180deg,rgba(26,28,31,.95),rgba(12,13,15,.95))}
+/* hands-on harvesting (harvestgame.js): the mini-game, its SkyUI-style result list, the "in reach" prompt over the map */
+.hg-wrap{position:fixed;inset:0;z-index:61;display:grid;place-items:center;background:radial-gradient(70% 60% at 50% 45%,rgba(0,0,0,.62),rgba(0,0,0,.9));padding:12px}
+.hg-box{position:relative;width:min(380px,100%);max-height:100%;overflow:auto;background:linear-gradient(180deg,rgba(16,17,19,.97),rgba(6,7,8,.985));box-shadow:0 0 0 1px rgba(228,220,200,.18),0 20px 60px rgba(0,0,0,.6);padding:12px 12px 14px}
+.hg-head{display:flex;align-items:center;gap:8px}
+.hg-title{flex:1;font-family:"Barlow Condensed",Cinzel,serif;letter-spacing:.18em;text-transform:uppercase;font-size:17px;font-weight:600}
+.hg-x{background:none;border:1px solid rgba(228,220,200,.25);color:var(--mute,#a9a395);width:36px;height:36px;font-size:16px;cursor:pointer}
+.hg-tip{margin:4px 0 8px;color:var(--mute,#a9a395);font-size:14px;min-height:1.3em}
+.hg-stage{position:relative}
+.hg-stage canvas{width:100%;max-width:340px;height:auto;aspect-ratio:320/340;display:block;margin:0 auto;touch-action:none;user-select:none;-webkit-user-select:none;border-radius:4px;box-shadow:inset 0 0 0 1px rgba(228,220,200,.12)}
+.hg-time{height:5px;margin:8px auto 0;max-width:340px;background:rgba(255,255,255,.08)}
+.hg-time i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#8fc46a,#e0b04a)}
+.hg-over .hg-stage{opacity:.35;transition:opacity .3s}
+.hg-over .hg-tip{visibility:hidden}
+.hg-res{position:absolute;left:12px;right:12px;top:58px}
+.hg-res:empty{display:none}
+.hg-result{background:rgba(8,9,10,.93);box-shadow:0 0 0 1px rgba(228,220,200,.2),0 14px 40px rgba(0,0,0,.6);padding:14px;animation:hgIn .25s ease-out}
+@keyframes hgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.hg-grade{font-family:"Barlow Condensed",Cinzel,serif;text-transform:uppercase;letter-spacing:.22em;font-size:20px;text-align:center}
+.hg-perfect{color:#f1cf72;text-shadow:0 0 12px rgba(241,207,114,.45)}.hg-good{color:#b9dc8a}.hg-fail{color:#b8b0a0}
+.hg-why{margin:4px 0 0;text-align:center;color:var(--mute,#a9a395);font-size:13px}
+.hg-list{margin:10px 0 6px;border-top:1px solid rgba(228,220,200,.22)}
+.hg-cap{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--mute,#a9a395);padding:6px 4px 2px}
+.hg-row{display:flex;align-items:center;gap:8px;padding:7px 4px;border-bottom:1px solid rgba(228,220,200,.1);font-size:15px}
+.hg-row .hg-nm{flex:1}.hg-row .hg-n{color:#e8e1cf;font-variant-numeric:tabular-nums}
+.hg-row.hg-sub{color:var(--mute,#a9a395);font-size:13px}
+.hg-row.hg-rare{background:linear-gradient(90deg,rgba(241,207,114,.14),transparent);color:#f1dc9a}
+.hg-row.hg-rare.hg-l{background:linear-gradient(90deg,rgba(160,215,255,.16),transparent);color:#cfeaff}
+.hg-note{font-size:13px;color:var(--mute,#a9a395);margin:6px 0 10px}
+.hg-done{width:100%;min-height:44px}
+.hg-tag{font-weight:600;font-size:11px;letter-spacing:.04em;padding:0 4px;border-radius:3px;white-space:nowrap}
+.hg-tag.hg-p{color:#f1cf72;background:rgba(241,207,114,.12)}.hg-tag.hg-l{color:#cfeaff;background:rgba(160,215,255,.14)}
+.hg-foot{font-size:12px;margin-top:6px}
+#gnear{display:none}
+#gnear:not(:empty){display:block;position:fixed;left:12px;right:72px;margin:0 auto;max-width:420px;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:5}
+.gnear{display:flex;align-items:center;gap:8px;padding:8px 10px;background:linear-gradient(180deg,rgba(26,30,24,.95),rgba(10,12,9,.96));box-shadow:0 0 0 1px rgba(170,220,130,.35),0 8px 24px rgba(0,0,0,.55);animation:hgIn .25s ease-out}
+.gnear .gn-t{flex:1;display:flex;flex-direction:column;line-height:1.2;min-width:0}
+.gnear .gn-t small{color:var(--mute,#a9a395);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gnear .btn{min-height:40px}
+.hg-order .item{align-items:center}
 /* riding.js: the map's get on / get off button */
 .mapbtns .ridebtn{display:grid;place-items:center}
 .mapbtns .ridebtn.hide{display:none}
@@ -4906,6 +4945,8 @@ html.pcmap.pc-home #gpop .gcard{margin:0;box-shadow:0 8px 26px rgba(0,0,0,.55);b
 <script src="expedition.js"></script>
 <script src="longhouse.js"></script>
 <script src="eventcards.js"></script>
+<script src="harvest.js"></script>
+<script src="harvestgame.js"></script>
 <script src="ui.js"></script>
 </body>
 </html>

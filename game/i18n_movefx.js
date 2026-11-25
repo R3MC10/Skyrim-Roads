@@ -2,7 +2,7 @@
 var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, pat: [] };
 (() => {
   Object.assign(I18N_EXTRA.words, {
-    // patch note b246
+    // patch note b247
     "Real arrows and spell effects": "Prawdziwe strzały i efekty czarów",
     "Bows and crossbows shoot a real arrow or bolt now: it leaves the string, arcs over (a bolt flies flatter and faster), and sticks in, breaks on a shield, or sails past on a miss and lands in the ground behind.":
       "Łuki i kusze wystrzeliwują teraz prawdziwą strzałę albo bełt: zrywa się z cięciwy, leci łukiem (bełt leci płasko i szybciej), po czym wbija się, łamie na tarczy albo przy pudle przelatuje obok i wbija się w ziemię za celem.",
