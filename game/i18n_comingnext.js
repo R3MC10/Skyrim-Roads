@@ -2,6 +2,9 @@
 var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, pat: [] };
 (() => {
   Object.assign(I18N_EXTRA.words, {
+    "Quiet start": "Cichy start",
+    "Tapping \"Tap to begin\" on the title screen no longer plays a sound.":
+      "Stuknięcie „Dotknij, aby zacząć” na ekranie tytułowym nie odtwarza już dźwięku.",
     "14 more painted battle backdrops":
       "14 nowych malowanych teł bitew",
     "Small Polish fixes": "Drobne poprawki tłumaczenia",
