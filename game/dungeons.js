@@ -195,13 +195,16 @@ const DUNGEONS = (() => {
 
   function buildRoom(s, type) {
     const d = s.dungeon, T = THEMES[d.theme];
-    if (type === "fight") { const e = foe(s, weighted(T.foes), d.tier); return { type, enemy: e, text: e.text }; }
-    if (type === "elite") { const e = foe(s, pick(T.elite), d.tier); return { type, enemy: e, text: e.text }; }
+    // road foes (bandits, wolves, spiders...) get an indoor line instead of their road text (dunlines.js)
+    const inside = (key, e) => (typeof DUNLINES !== "undefined" && DUNLINES.line(key, d.theme)) || e.text;
+    if (type === "fight") { const key = weighted(T.foes), e = foe(s, key, d.tier); return { type, enemy: e, text: inside(key, e) }; }
+    if (type === "elite") { const key = pick(T.elite), e = foe(s, key, d.tier); return { type, enemy: e, text: inside(key, e) }; }
     if (type === "boss" && d.deep?.level && typeof DEEPDELVE !== "undefined") return DEEPDELVE.bossRoom(s, (k, b) => foe(s, k, d.tier, b));   // the major fight of a deeper level
     if (type === "boss") {
       const key = d.boss || T.boss[d.tier - 1], e = foe(s, key, d.tier, true);
       e.boss = true;
-      return { type, enemy: e, text: d.boss ? e.text : `${e.text} This is the master of ${d.place}.` };
+      const tx = inside(key, e);
+      return { type, enemy: e, text: d.boss ? tx : `${tx} This is the master of ${d.place}.` };
     }
     if (type === "trap") { const trap = pick(T.traps); return { type, trap, text: `The way ahead is guarded by ${trap}.` }; }
     if (type === "treasure") { const tier = clamp(d.tier - 1 + rint(0, 2), 0, 4); return { type, tier, tries: 3, text: `A heavy chest sits in an alcove. The lock looks ${LOCK_TIERS[tier][0].toLowerCase()}.` }; }
@@ -511,5 +514,5 @@ const DUNGEONS = (() => {
   function hasDragonstone(s) {
     return (s.inv || []).some((x) => x.item === "dragonstone") || Object.values(s.homes || {}).some((h) => (h?.chest || []).some((x) => x.item === "dragonstone"));
   }
-  return { odds, parseChoice, REFILL_SECONDS, enterable, info, describe, refillLeft, enter, nextChoices, enterRoom, roomChoices, act, leave, repair, ICON, LABEL, THEMES, ENEMY, layout, hasDragonstone };
+  return { odds, parseChoice, REFILL_SECONDS, enterable, info, describe, refillLeft, enter, nextChoices, enterRoom, roomChoices, act, leave, repair, ICON, LABEL, THEMES, ENEMY, layout, hasDragonstone, buildRoom };
 })();

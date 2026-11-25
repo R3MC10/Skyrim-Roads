@@ -50,7 +50,8 @@ const TIP = (() => {
     const D_ = g("D"), G_ = g("G"); const it = D_?.ITEMS?.[itemId]; if (!it) return null;
     const CC_ = g("CC"), tier = CC_ ? CC_.tier(itemId, r) : "common";
     const name = (r?.tq && g("TOWNS")?.QUALITY ? g("TOWNS").QUALITY[r.tq] + " " : "") + it.name + (r?.nm ? ` “${r.nm}”` : "");
-    const kind = it.slot === "weapon" ? `${it.hands === 2 ? "Two-handed" : "One-handed"} ${it.skill === "Archery" ? "bow" : "weapon"} · ${it.skill}`
+    const hd = it.hands === 2 ? "Two-handed" : "One-handed";   // the skill only when it says something new ("One-handed weapon", not "· One-Handed" again)
+    const kind = it.slot === "weapon" ? `${hd} ${it.skill === "Archery" ? "bow" : "weapon"}${it.skill && String(it.skill).toLowerCase() !== hd.toLowerCase() ? ` · ${it.skill}` : ""}`
       : (G_?.ARMOR_SLOTS || []).includes(it.slot) ? `${it.type ? it.type[0].toUpperCase() + it.type.slice(1) + " " : ""}${it.slot === "chest" ? "body armor" : it.slot}`
       : { potion: "Potion", poison: "Poison", food: "Food", ingredient: "Ingredient", tome: "Spell tome", scroll: "Scroll", soulgem: "Soul gem", ammo: "Ammo", material: "Crafting material", valuable: "Valuable", trophy: "Trophy", recipe: "Forge recipe", misc: "Item" }[it.slot] || "Item";
     const q = r?.qty || 1;
@@ -90,7 +91,7 @@ const TIP = (() => {
       L.push(dmg && s ? `Hits for about ${dmg} with your ${it.skill} skill and perks` : `${it.damage} base damage, more as your ${it.skill} skill grows`);
     }
     if (it.slot === "ammo") L.push(`Shot from a ${/bolt/.test(itemId) ? "crossbow" : "bow"}: ${it.damage} damage added to each shot`);
-    if (["potion", "scroll"].includes(it.slot) && (it.restore || D_.SPELLS[it.spell])) st.push(["In a fight", `${it.slot === "scroll" ? 2 : 1} AP`]);
+    if (["potion", "scroll"].includes(it.slot) && (it.restore || D_.SPELLS[it.spell])) st.push(["In a fight", "1 move, free"]);   // no action points since build 145: a potion or scroll takes one of your 4 moves, no stamina
     if (it.slot === "soulgem") L.push(`Holds ${it.charge} charge for recharging enchanted weapons`);
     if (it.slot === "ingredient" && s && g("TOWNS")?.INGREDIENT_FX?.[itemId]) { const T = g("TOWNS"); L.push("Effects: " + T.INGREDIENT_FX[itemId][1].map((e, i) => (T.known(s, itemId)[i] ? e : "?")).join(", ")); }
     if (it.slot === "material") L.push("Used at the forge to improve gear.");
