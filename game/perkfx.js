@@ -283,7 +283,7 @@ const PFX = (() => {
     // ---------------------------------------------------------------- dungeon mini-games (dungeongames.js): each game reads its key as "ease"
     [ "Acrobatics", "blade_dancer", "Blade Dancer", 1, [45], ["tumbler"], "Dashing past traps: the blades swing slower and block the way for less of each swing. [OURS]", [["dgdash", 0.3, {}]]],
     [ "Sneak", "trap_sense", "Trap Sense", 1, [35], ["stealth"], "Finding the trigger: the pressure plate glints more often, sits lower, and you get one more wrong guess. [OURS]", [["dgspot", 0.3, {}]]],
-    [ "Sneak", "patient_shadow", "Patient Shadow", 1, [50], ["muffled_movement"], "Sneaking past a foe in a dungeon: you're noticed a third slower, the shadows are wider and you hear it turn sooner. [OURS]", [["dgsneak", 0.3, {}]]],
+    [ "Sneak", "patient_shadow", "Patient Shadow", 1, [50], ["muffled_movement"], "Sneaking past a foe in a dungeon: you're noticed a third slower, the shadows are wider and you hear it turn sooner. Odd things in Unknown rooms (sealed doors, patrols, rope bridges...) go 10% better for you. [OURS]", [["dgsneak", 0.3, {}], ["dunev", 0.1, {}]]],
     [ "Two-Handed", "lid_breaker", "Lid Breaker", 1, [25], ["barbarian"], "Smashing chests open: the bright zone on the swing is a third wider. [OURS]", [["dgsmash", 0.3, {}]]],
     [ "Athletics", "sprinter", "Sprinter", 1, [30], ["long_strider"], "Running from a dungeon fight: a quarter fewer steps to get away. [OURS]", [["dgflee", 0.25, {}]]],
     // ---------------------------------------------------------------- party traps (partytraps.js)
