@@ -3,10 +3,15 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b291-caravanpanel", build: 291, date: "25 Nov 2026", title: "Caravans open in a panel", items: [
+    { id: "b292-caravanpanel", build: 292, date: "25 Nov 2026", title: "Caravans open in a panel", items: [
       "Tapping a caravan on the map now opens a proper panel instead of a small floating card. On a PC it sits on the right side of the screen, full height, and the map stays visible beside it; on a phone it slides up from the bottom and sits above the menu bar.",
       "Every button (Catch up, Trade, Escort, Ask for news, Help, Rob) is always reachable now: nothing hides under the bottom bar any more, and a long list of their wares scrolls inside the panel.",
       "Close it with the X, Esc, or your phone's back button.",
+    ] },
+    { id: "b291-herocard", build: 291, date: "25 Nov 2026", title: "Your hero card looks like you", items: [
+      "The figure in the Items menu (and on the Hero page, title cards and other players' cards) is now the same painted hero you see in fights: your sex, race, hair and the armour and weapon you wear. It changes as soon as you change gear or look.",
+      "A woman no longer shows up as a bearded man there, and a raised weapon stays inside the card.",
+      "The small round race portrait next to it only shows when it matches your hero's sex.",
     ] },
     { id: "b290-itemcards2", build: 290, date: "25 Nov 2026", title: "Item cards say what changes", items: [
       "The damage at the top of a weapon's card is now what it really hits for in your hands, with your skill and perks, the same number as in the comparison below. The weapon's own number is shown next to it as \"base\".",
