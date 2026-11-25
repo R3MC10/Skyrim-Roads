@@ -3,6 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b342-difficulty", build: 342, date: "26 Nov 2026", title: "Pick your difficulty: Story, Normal or Hard", items: [
+      "Choose how tough fights are: Story, Normal or Hard. Pick it when you make a new hero, or change it any time in Settings → Fights → Difficulty.",
+      "Story: foes hit softer, fall a bit sooner and fight plainly, and the timing games in fights are easier. Hard: foes hit harder, have a bit more health, use their tricks more and go for whoever is hurt; timing is tighter. Normal stays as it was.",
+      "XP, gold and loot are the same on every difficulty. Hard is about danger, not longer fights.",
+      "In a party the leader's setting counts for everyone. The Party panel shows which one you're on.",
+      "A fight keeps the difficulty it started with: changing it in the middle of a fight changes the next one. A small tag on the fight screen shows which one is on.",
+      "World events, world bosses and fights against other players are the same for everyone (Normal).",
+    ] },
     { id: "b341-first30", build: 341, date: "25 Nov 2026", title: "A guided start for new heroes", items: [
       "New characters no longer get a welcome popup and a pile of tips. Instead there's one short quest line, Before the Storm, with one goal at a time and one button that does it.",
       "Your first fight starts a minute after you make your hero: a bandit at Riverwood's mill. While you fight, one short hint at a time shows you how to attack, how to read what the foe does next, and how to guard when it winds up a huge blow.",

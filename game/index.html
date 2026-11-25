@@ -5573,6 +5573,17 @@ html.a11y-still :is(.rw-scene .rw-sheet,.rw-burst,.rw-rays,.rw-crest,.rw-shine),
 #tbf .chb.r-cancel .chb-fl{background:#6d6a66}
 #tbf .chb.still,#tbf .chb.still .chb-fl{animation:none!important;transition:none!important}
 @media (prefers-reduced-motion:reduce){#tbf .chb,#tbf .chb .chb-fl{animation:none!important;transition:none!important}}
+/* [difficulty] Story / Normal / Hard (difficulty.js): the chip on the fight screen and the party panel, the Settings note, the picker in hero creation */
+.diffchip{display:inline-flex;align-items:center;flex:none;height:20px;padding:0 7px;border-radius:10px;font:600 11px/1 "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;border:1px solid rgba(226,187,100,.55);color:#e9d7a6;background:rgba(10,10,12,.6)}
+.diffchip.d-story{border-color:rgba(143,208,138,.6);color:#b9e3b4}
+.diffchip.d-hard{border-color:rgba(224,122,106,.75);color:#f0a89a;background:rgba(60,14,10,.55)}
+.tbtop .diffchip{margin-left:2px}
+.diffnote{margin:2px 0 8px;font-size:13px}.diffparty{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 6px}
+.cgdiffs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.cgdiff{display:flex;flex-direction:column;gap:3px;text-align:left;min-height:64px;padding:8px;border-radius:4px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.03);color:inherit}
+.cgdiff b{font-size:.9rem}.cgdiff span{font-size:.76rem;color:var(--mute)}
+.cgdiff.on{border-color:var(--gold);background:rgba(226,187,100,.1)}
+@media (max-width:520px){.cgdiffs{grid-template-columns:1fr}.cgdiff{min-height:0}}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -5652,6 +5663,7 @@ html.a11y-still :is(.rw-scene .rw-sheet,.rw-burst,.rw-rays,.rw-crest,.rw-shine),
 <script src="combatai.js"></script>
 <script src="sneak2.js"></script>
 <script src="aiset.js"></script>
+<script src="difficulty.js"></script>
 <script src="minigame.js"></script>
 <script src="tbradial.js"></script>
 <script src="tbfight.js"></script>
@@ -6011,6 +6023,7 @@ html.a11y-still :is(.rw-scene .rw-sheet,.rw-burst,.rw-rays,.rw-crest,.rw-shine),
 <script src="i18n_first30.js"></script>
 <script src="i18n_rewards.js"></script>
 <script src="i18n_dollrig2.js"></script>
+<script src="i18n_difficulty.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>

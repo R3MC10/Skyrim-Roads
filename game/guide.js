@@ -24,6 +24,7 @@ const GUIDE = (() => {
     ["How do I get to Solstheim?", "Go to Windhelm and open Area →  Docks. The Northern Maiden sails to Raven Rock for 250 gold (about 10 in-game hours at sea, safe). The map switches to the island while you're there, and you only see other players on the same map. The boat back leaves from the Raven Rock docks."],
     ["Do my bows need arrows?", "Yes. Bows shoot arrows and crossbows shoot bolts; the best ones you carry are used automatically. Buy them at blacksmiths and general stores, or make them at the forge."],
     ["Where do I learn new spells?", "Read spell tomes. Every court wizard sells Novice and some Apprentice tomes (and staffs); each court wizard has a few rarer ones (Farengar in Whiterun, Wuunferth in Windhelm, Calcelmo in Markarth…); the College in Winterhold has them all, up to Master, which it only teaches once your skill in that school is 90. Spells above your level cost more magicka and sometimes fizzle. Utility spells like Candlelight, Transmute and Clairvoyance are cast from the Magic menu, outside fights."],
+    ["Fights are too hard (or too easy). Can I change that?", "Yes: Settings → Fights → Difficulty. Story makes foes softer, Hard makes them tougher and smarter. XP, gold and loot stay the same on all three. In a party, the leader's setting counts."],   // difficulty.js
   ];
   const progress = (s) => { const done = STEPS.filter((st) => st[3](s)).length; return { done, total: STEPS.length }; };
   return { STEPS, FAQ, mark, flag, progress };

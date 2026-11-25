@@ -50,6 +50,7 @@ const SHAREDFIGHT = (() => {
       if (typeof CHANNEL !== "undefined") CHANNEL.fromHost(this, d);   // [channel] teammates preparing a move: their bars and poses, results from the leader's phone
       if (d.t !== this.lastT) { this.lastT = d.t; this.heard = Date.now(); }
       this.host = d.owner; this.hostName = d.ownerName || "Your leader";
+      if (d.diff && typeof DIFF !== "undefined") DIFF.adopt(f, d.diff);   // the leader's difficulty snapshot (difficulty.js)
       const myName = f.s.name || "You";
       // the events since last time, as you see them
       for (const e of d.evs || []) {

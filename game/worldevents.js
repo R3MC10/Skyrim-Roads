@@ -164,7 +164,7 @@ const WORLDEV = (() => {
     const list = pool.length ? pool.slice(-3) : [DAEDRA[0]];
     const base = list[Math.floor(Math.random() * list.length)];
     const e = G.scaleEnemy({ ...base, tags: [...base.tags], text: "" }, lv);
-    e.hold = G.holdAt(WORLD.places[s.location] || [s.x, s.y]);
+    e.hold = G.holdAt(WORLD.places[s.location] || [s.x, s.y]); e.wev = true;   // shared world event: Normal for everyone (difficulty.js)
     return e;
   }
   const hurt = (s, t) => G.curHealth(s, t) < G.maxHealth(s) * 0.3;
@@ -236,7 +236,7 @@ const WORLDEV = (() => {
     const lv = G.fightLevel(s), young = lv < 22;
     const name = young ? "Young dragon" : DRAGON_NAMES[Math.floor(Math.random() * (lv >= 36 ? 4 : lv >= 28 ? 3 : 2))];
     const e = G.scaleEnemy({ name, ...dragonBase(lv), tags: ["big", "dragon", "elite"], gold: [100, 300], text: "" }, lv);
-    e.hold = ev.hold;
+    e.hold = ev.hold; e.wev = true;   // shared world event: Normal for everyone (difficulty.js)
     const f = new G.Fight(s, e, null, t);
     f.run({ t, maxTurns: 40 });
     const skills = f.apply(t);   // the killing blow takes the dragon's soul (Fight.apply)
