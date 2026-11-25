@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b290-layout3", build: 290, date: "25 Nov 2026", title: "Titles you can read, hotbar in order", items: [
+      "On phones the round message history button no longer sits on a screen's title (Area, Journal, Social, AI & Loadouts, a dungeon's name): the title makes room for it.",
+      "The fight hotbar on phones shows its slots in key order again: 1 to 5 on top, 6 to 0 below. Catch your breath no longer jumps out of line.",
+      "Tab strips that don't fit the screen (like Character's Skills, Character, Follower, AI & Loadouts...) fade out at the edge that has more tabs, and the chosen tab is always fully in view.",
+      "The Journal's chosen tab (Active, Misc, Completed) is now dark ink with a gold underline, easy to read on the parchment.",
+    ] },
     { id: "b289-followersize", build: 289, date: "25 Nov 2026", title: "Followers at full size, softer glows", items: [
       "In fights your follower and your party now stand as tall as you do (women and some races a touch shorter, like in Skyrim) instead of looking like dwarves next to you. Everyone still fits on screen, and name tags sit just above their heads.",
       "Enchanted weapons no longer hide under a big glowing blob. Now a thin shine runs along the blade's edges in the enchantment's colour (fire orange, frost pale blue, shock violet, absorb purple) and gently pulses; axes and maces glow faintly around the head, bows along the limb.",

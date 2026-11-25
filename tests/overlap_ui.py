@@ -77,7 +77,7 @@ HEADCHK = r"""([where, heads])=>{
   return bad; }"""
 # WCAG contrast of the Journal's chosen tab: its text colour against the painted parchment under it
 CONTRAST = r"""()=>{ const b = document.querySelector('#side[data-tab=log] .jseg button.on'); if (!b) return null;
-  b.scrollIntoView({ block: 'center' }); const r = b.getBoundingClientRect();
+  const r = b.getBoundingClientRect();
   return { fg: getComputedStyle(b).color.match(/[\d.]+/g).slice(0, 3).map(Number), box: { x: r.left, y: r.top, width: r.width, height: r.height } }; }"""
 
 
@@ -91,11 +91,18 @@ async def tab_contrast(pg):
     """text colour of the Journal's chosen tab against the most common colour painted in its box"""
     from PIL import Image
     import io
+    await pg.evaluate("document.querySelector('#side[data-tab=log] .jseg button.on')?.scrollIntoView({ block: 'center', behavior: 'instant' })")
+    await pg.wait_for_timeout(700)
     o = await pg.evaluate(CONTRAST)
     if not o: return None
-    await pg.wait_for_timeout(200)
     im = Image.open(io.BytesIO(await pg.screenshot(clip=o["box"]))).convert("RGB")
-    bg = max(im.getcolors(im.width * im.height), key=lambda t: t[0])[1]
+    im.save(os.path.join(OUT, f"journal_tab_{pg.viewport_size['width']}.png"))
+    im = im.crop((0, 0, im.width, max(1, im.height - 5)))   # leave out the underline: it's a solid stripe, not the paper
+    # the paper's shade: the most common colour, counted in coarse steps (the parchment is a gradient)
+    cnt = {}
+    for c in im.getdata(): k = tuple(v // 6 * 6 for v in c); cnt[k] = cnt.get(k, 0) + 1
+    bg = max(cnt, key=cnt.get)
+    print("   journal tab text", o["fg"], "on", bg)
     a, b = lum(o["fg"]), lum(bg)
     return round((max(a, b) + 0.05) / (min(a, b) + 0.05), 2)
 INK = r"""()=>{ const c = document.querySelector('.cgcan'); if (!c || !c.width) return -1;
