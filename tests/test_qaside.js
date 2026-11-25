@@ -19,6 +19,6 @@ for (const f of ["perks.js", "perkfx.js"]) {
 const lng = src("longhouse.js");
 ok(/if \(busy\) return;\s*busy = true;\s*try \{ await act\(/.test(lng), "longhouse.js: actions wait for the one before");
 // 3. no update restart while a mini-game is open
-const ui = src("ui.js"), safe = ui.slice(ui.indexOf("safeToUpdate"), ui.indexOf("safeToUpdate") + 2500);
+const ui = src("ui.js"), at = ui.indexOf("safeToUpdate() {"), safe = at < 0 ? "" : ui.slice(at, at + 2500);   // the method itself, not an earlier call
 for (const cls of [".craftgame", ".lockpick", ".smithgame", ".xgame", ".rct-wrap"]) ok(safe.includes(cls), "safeToUpdate waits for " + cls);
 console.log("qaside ok · " + n + " checks");
