@@ -134,7 +134,7 @@ const GREET = (() => {
     const race = o.race ? o.race[0].toUpperCase() + o.race.slice(1) : "";
     const where = o.loc || (typeof G !== "undefined" && G.holdAt ? G.holdAt(ctx.otherPos(o)) : "");
     const acts = [];
-    if (!kn) acts.push({ act: "greet", label: L("Greet"), sub: can.ok ? L("Greet them back and you'll both know each other's names.") : can.why, pri: true, off: !can.ok });
+    if (!kn) acts.push({ act: "greet", label: L("Greet"), sub: can.ok ? L("Say hello: once they answer, you'll both know each other's names") : can.why, pri: true, off: !can.ok });
     try { for (const a of (ctx.acts ? ctx.acts(o, kn) : []) || []) acts.push(a); } catch { /* no extra rows */ }
     if (typeof MAPSHEET === "undefined") return;
     MAPSHEET.open({ id: "hero:" + o.id, owner: "hero", domId: "greetcard", label: kn ? label(S, o, party) : L("Stranger"),

@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b300-mappanels", build: 300, date: "25 Nov 2026", title: "Everything on the map opens in a panel", items: [
+      "Places, dungeons, caves, forts, camps, shrines, standing stones and landmarks now open in the same panel as caravans: on a PC it sits on the right and the map stays usable beside it; on a phone it slides up above the menu bar.",
+      "The panel shows the place's marker, its hold, how far it is, whether you've been there, and what's going on: a quest or a rumour there, when a cleared dungeon fills up again, a crisis or your bounty in that hold.",
+      "Travel, Go inside and Mine ore are big rows with a line under them saying what they do. Your pins and spots in the wilds (Walk here, Pin, Share, Remove) open there too.",
+      "Tapping another hero opens their panel too: Greet a stranger, Invite them to your party, Trade or Add as a friend right from the map.",
+      "Tap another marker and the panel switches to it. Tap empty map, press X, Esc or your phone's back button to close it.",
+    ] },
     { id: "b299-netfix", build: 299, date: "25 Nov 2026", title: "Players can see each other again", items: [
       "Players can see each other again. Since accounts came in, players who signed in and players who didn't were in two separate worlds, so friends vanished from each other's map, Social tab and parties.",
       "Signed in, your phone now joins both: the account world and the phone-to-phone world. Signed in or not, you see each other, chat, trade and team up like before.",

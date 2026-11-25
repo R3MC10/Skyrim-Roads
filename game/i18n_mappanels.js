@@ -15,7 +15,7 @@ Object.assign(I18N_EXTRA.words, {
   "Your pin": "Twoja pinezka", "Set off for your pin": "Ruszaj do swojej pinezki", "Your party sees it on their maps": "Twoja drużyna zobaczy ją na swoich mapach",
   "Take the pin off your map": "Zdejmij pinezkę z mapy", "Tap somewhere on land to roam there.": "Dotknij lądu, żeby tam powędrować.",
   // another hero's panel
-  "Between you": "Między wami", Strangers: "Obcy", travelling: "w podróży", "in a dungeon": "w lochu",
+  // (greet.js's own lines live in i18n_pcmap.js, like the rest of greet.js)
   "Invite to your party": "Zaproś do drużyny", "Only your party leader can invite": "Zapraszać może tylko przywódca drużyny",
   "They'll see it under Social → Party": "Zobaczą to w Społeczność → Drużyna", "Swap items and gold": "Wymień się przedmiotami i złotem",
   "Get to the same place to trade": "Bądźcie w tym samym miejscu, żeby handlować", "Add as a friend": "Dodaj do przyjaciół",
