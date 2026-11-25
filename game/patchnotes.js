@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b238-qaside", build: 238, date: "25 Nov 2026", title: "Company fixes", items: [
+      "Fixed: tapping Found twice quickly could pay for the company twice.",
+      "Fixed: tapping Put in twice quickly could put the same gold in the treasury twice and leave your purse below zero.",
+      "Fixed: tapping Give twice quickly could hand the same ingots to the stockpile twice.",
+      "Fixed: an app update no longer restarts the game while you're fishing, mining, hunting, at the forge or in any other mini-game, so you never lose a catch.",
+      "Fixed: more of the Social, jobs and fishing screens are in Polish.",
+    ] },
     { id: "b237-mountcombat", build: 237, date: "25 Nov 2026", title: "Fight from the saddle", items: [
       "Mounted combat is back: ride into a fight and stay in the saddle, or get on and off with the new Mount and Dismount moves.",
       "Getting on takes 2 moves and 20 stamina. You can dual cast from the saddle for a bit more magicka.",
