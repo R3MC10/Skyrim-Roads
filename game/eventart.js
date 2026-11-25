@@ -424,6 +424,7 @@ const EVENTART = (() => {
   function storyKind(title = "", text = "") {
     const t = String(title), x = String(text);
     if (/^You died/i.test(t)) return null;
+    const ak = typeof AFFL !== "undefined" && AFFL.storyKind ? AFFL.storyKind(t, x) : null; if (ak) return ak;   // afflictions: their exact catch and cure lines (afflictions.js)
     const sk = typeof SOLART !== "undefined" ? SOLART.storyKind(t, x) : null; if (sk) return sk;   // Solstheim's scenes (solart.js)                              // UIART.death already draws this
     const wk = typeof DWART !== "undefined" ? DWART.storyKind(t, x) : null; if (wk) return wk;   // the Dwemer line and Blackreach (dwart.js)
     const dk = typeof DGART !== "undefined" ? DGART.storyKind(t, x) : null; if (dk) return dk;   // the vampire war's scenes (dgart.js)
@@ -455,9 +456,36 @@ const EVENTART = (() => {
   // how much to enlarge each road scene's subject, anchored on the road, so it fills the picture
   const ZOOM = { herbs: 1.7, chest: 1.5, caravan: 1.3, injured: 1.6, toll: 1.25, book: 2, sleeper: 1.4, shrine: 1.45, climb: 1, camp: 1.4, peddler: 1.55 };
 
+  /* [afflart] painted scenes: a road event id or a story kind -> a painted file (assets.js, e.g. gev-black-shrine).
+     Filled by the modules that own the scenes (afflictions.js). The drawing stays as the fallback: while the file is
+     still loading the drawn picture shows, tagged data-paint, and is swapped for the painting when it arrives. */
+  const PAINTED = { road: {}, story: {} };
+  function paintedHTML(kind, id) {
+    const a = PAINTED[kind][id]; if (!a || typeof ASSETS === "undefined") return "";
+    const im = ASSETS.img(a); if (!im) return "";
+    return ART.html(W, H0, (g, H, w, h) => { ASSETS.cover(g, im, w, h); frame(g, w, h); }, { key: `paint|${a}`, cls: "scene evt", alt: "" });
+  }
+  const waitPaint = (html, kind, id) => {
+    const a = PAINTED[kind][id];
+    return html && a && typeof ASSETS !== "undefined" && ASSETS.stateOf(a) === "loading" ? html.replace("<img ", `<img data-paint="${kind}:${id}" `) : html;
+  };
+  function swapPainted() {
+    try {
+      for (const im of document.querySelectorAll("img[data-paint]")) {
+        const [kind, id] = im.dataset.paint.split(":"), u = PAINTED[kind] ? paintedHTML(kind, id) : "";
+        if (u) im.outerHTML = u; else if (!PAINTED[kind] || ASSETS.stateOf(PAINTED[kind][id]) !== "loading") im.removeAttribute("data-paint");
+      }
+    } catch { /* no page: tests */ }
+  }
+  if (typeof ASSETS !== "undefined" && ASSETS.on) ASSETS.on(swapPainted);
+
   // ---------------------------------------------------------------- public: <img> strings, cached
   function road(ev, opts = {}) {
     if (!ev || !ROAD[ev.id]) return "";
+    const pd = paintedHTML("road", ev.id); if (pd) return pd;
+    return waitPaint(drawnRoad(ev, opts), "road", ev.id);
+  }
+  function drawnRoad(ev, opts) {
     const pos = opts.pos || (typeof S !== "undefined" && S ? [S.x, S.y] : [0.5, 0.5]);
     const ground = opts.ground || groundHere(pos), md = opts.mood || moodNow(), wx = opts.weather || weatherHere(pos);
     const variant = ev.id === "shrine" ? ev.god : ev.id === "herbs" ? ev.item : ev.id === "chest" ? ev.tier : "";
@@ -483,8 +511,9 @@ const EVENTART = (() => {
   }
   function story(title, text, opts = {}) {
     const k = opts.kind || storyKind(title, text); if (!k || !STORY[k]) return "";
+    const pd = paintedHTML("story", k); if (pd) return pd;
     const o = { town: opts.town || "" };
-    return ART.html(W, H0, (g, H, w, h) => { STORY[k](g, H, w, h, o); frame(g, w, h); }, { key: `story|${k}|${o.town}`, cls: "scene evt", alt: "" });
+    return waitPaint(ART.html(W, H0, (g, H, w, h) => { STORY[k](g, H, w, h, o); frame(g, w, h); }, { key: `story|${k}|${o.town}`, cls: "scene evt", alt: "" }), "story", k);
   }
   /* the dragon over a town, for the raid banner in the Journal */
   function raid(town, done, opts = {}) {
@@ -492,5 +521,5 @@ const EVENTART = (() => {
     return ART.html(W, 110, (g, H, w, h) => { STORY[k](g, H, w, h, { town }); frame(g, w, h); }, { key: `raid|${k}|${town}`, cls: "scene evt", alt: "" });
   }
   const kit = { P, rnd, poly, rect, line, glow, fire, smoke, shadow, person, sleeper, tree, godSign, dragon, ZOOM };   // for encart.js
-  return { road, story, raid, storyKind, ROAD, STORY, GROUND, W, H: H0, kit };
+  return { road, story, raid, storyKind, ROAD, STORY, GROUND, PAINTED, W, H: H0, kit };
 })();

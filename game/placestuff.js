@@ -316,7 +316,7 @@ const PLACESTUFF = (() => {
       if (left(s, n, "stash")) return ui.toast("The strongbox is empty for now.");
       if (typeof IMM !== "undefined" && IMM.wantsGame && IMM.wantsGame() && IMM.open) {
         const i = stashInfo(s, n);
-        return IMM.open({ tier: i.tier, picks: i.tries, chance: i.chance, unbreakable: G.P(s, "unbreakable"), skill: G.skill(s, "Lockpicking"), title: `A strongbox at ${n}` },
+        return IMM.open({ tier: i.tier, picks: i.tries, chance: i.chance, unbreakable: G.P(s, "unbreakable"), skill: G.skill(s, "Lockpicking"), title: `A strongbox at ${n}`, s },
           (res) => { if (!res.opened && !res.broken && !res.auto) return; done(stash(s, n, res.opened ? true : res.auto ? undefined : false), ` ${n}`); });
       }
       return done(stash(s, n), ` ${n}`);

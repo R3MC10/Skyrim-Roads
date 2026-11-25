@@ -141,6 +141,14 @@ const plain = POOL.filter((e) => !/daedra|construct/.test(e.tags.join()) && !/Dr
 const bP = sim(null, { pool: plain }), daP = sim("daedric", { pool: plain }), drP = sim("draugr", { pool: plain }), bPm = sim(null, { pool: plain, mage: true }), dwP = sim("dwemer", { pool: plain, mage: true });
 log("  plain foes (no daedra, machines or frost): clean", bP.win + "%", "· daedric", daP.win + "%", "· draugr", drP.win + "%", "· mage clean", bPm.win + "%", "· dwemer mage", dwP.win + "%");
 ok(daP.win <= bP.win + 2 && drP.win <= bP.win + 2 && dwP.win <= bPm.win + 2, "against plain foes an affliction never helps");
+// ---- painted scenes (afflart): road events and story popups ask for the gev-* paintings, the catch and cure lines pick them
+// (after the sims, so their seeded dice stay the same)
+ok(A.PAINT.road.aff_black_shrine === "gev-black-shrine" && A.PAINT.road.aff_dwemer_hum === "gev-dwemer-pipe" && A.PAINT.road.aff_wolf_hunters === "gev-werewolf-moon", "road events: painted shrine, pipe, werewolf");
+ok(A.PAINT.story.affDraugr === "gev-draugr-altar" && A.PAINT.story.affTemple === "gev-arkay-temple" && A.PAINT.story.wolf === "gev-werewolf-moon", "story scenes: barrow altar, temple, werewolf");
+{ const t = hero(); ok(A.storyKind("", "Boss down. " + A.give(t, "draugr")) === "affDraugr", "catching the Draugr Curse picks the barrow altar");
+  const u = hero(); ok(A.storyKind("", A.give(u, "dwemer")) === "affDwemer", "catching the Dwemer Resonance picks the pipe");
+  t.location = "Whiterun"; ok(A.storyKind("At the temple", A.priestCure(t)) === "affTemple", "the priest's cure picks the temple");
+  ok(A.storyKind("", "You find 20 gold.") === null && A.scene("You find 20 gold.") === "", "an ordinary note gets no scene"); }
 `, c);
 console.log(fail ? `afflictions FAILED ${fail}/${n}` : `afflictions ok · ${n} checks`);
 process.exit(fail ? 1 : 0);

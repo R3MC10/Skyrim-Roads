@@ -3,6 +3,34 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b196-mghunt", build: 196, date: "25 Nov 2026", title: "Painted hunting", items: [
+      "Hunting is now a painted scene: a misty clearing at sunrise, with trees, ferns and heather that slide apart as you creep closer, and the animal grows as you close in.",
+      "Deer, elk, foxes, snow foxes and hares are painted and move: they graze with their head down, look up when they hear you, flick their ears and tail, and bolt away in a real run. Other animals keep their drawing.",
+      "The wind shows in the grass, with leaves and seeds drifting the way it blows.",
+      "You see your bow come up and draw, and the arrow flies in a real arc. A hit makes the animal flinch or drop; blood follows the Gore setting (Off, Reduced, Full).",
+      "Skinning shows the hide stretched on a frame, and what you got pops up below.",
+    ] },
+    { id: "b195-afflart", build: 195, date: "25 Nov 2026", title: "Painted affliction scenes", items: [
+      "The black shrine by the road is now a painting: an obsidian altar in a ring of standing stones under the moon, glowing purple.",
+      "Catching the Draugr Curse shows a frozen barrow altar, and catching the Dwemer Resonance (or the humming pipe on the road) shows a glowing Dwemer pipe in a ruined hall.",
+      "The priests' rites at a temple (lifting the curse, or the Vow of Cleansing) now open with a candlelit temple of Arkay.",
+      "Werewolf moments (the Change and the silver-trap hunters) show a werewolf howling at the full moon.",
+    ] },
+    { id: "b194-lockgame", build: 194, date: "25 Nov 2026", title: "Painted lockpicking", items: [
+      "Picking a lock is now a painted close-up: a real lock on a chest, your pick and the tension wrench. Drag on the lock to aim the pick (it points at your finger), then hold Turn.",
+      "The lock shakes harder the further you are from the sweet spot. Keep forcing it and the pick bends, glows and snaps, with bits of metal flying. Turn it all the way and the shackle clicks open in a little burst of light.",
+      "Every place has its own lock: Nordic knotwork in barrows and temples, Dwemer brass in the ruins, gilded locks in rich places and on master locks, steel on harder chests and plain iron elsewhere.",
+      "Your Lockpicking skill and perks still make the sweet spot wider, just like they made the old roll easier. New perk: Steady Pick (Lockpicking) makes it wider still and your picks last longer.",
+      "Works with a finger on phones, and with the mouse or the keyboard on PC (A/D or the arrows to aim, Space to turn). Rather roll the dice? Settings → Crafting → When you pick a lock → Quick pick.",
+    ]},
+    { id: "b193-rigpolish", build: 193, date: "25 Nov 2026", title: "Painted weapons and better swings", items: [
+      "Fighters swing like they mean it: a sword goes up and back over the shoulder, then comes down and forward in one arc, the body turning into the blow and the weight stepping onto the front foot. No more blade sliding through your own head.",
+      "Bows are drawn properly: the bow arm straight, the string hand pulled back to the cheek, then the hand flies back as the arrow goes.",
+      "Painted weapons and shields: swords, daggers, greatswords, axes, battleaxes, maces, staffs, bows (relaxed and drawn) and round or kite shields are now painted like the fighters, with a soft shadow. Glass, ebony and other coloured gear gets its colour.",
+      "Getting hit looks like it: the head snaps back, the body follows and a foot steps back to catch the weight, then it settles.",
+      "The numbers for what you spend (stamina, magicka) float above your name, side by side, and never land on top of each other or your name.",
+      "On small phones the move buttons fit: quick slots share their row instead of sliding under Flee, and long move names wrap onto two lines instead of being cut off.",
+    ] },
     { id: "b192-combos", build: 192, date: "25 Nov 2026", title: "Combat combos and teamwork", items: [
       "Set a foe up, then cash in. Freeze it and hit it with a power attack to Shatter the frost for big extra damage. Shield-bash it and follow with a power attack this round for an Exploit: it hits harder and the foe keeps reeling. Knock it off balance with a shout and your next blows land harder.",
       "New in the general store: the Oil Flask. Throw it at a foe, then any fire (a spell, a fire weapon, Fire Breath) sets the ground ablaze and burns it for a few rounds.",

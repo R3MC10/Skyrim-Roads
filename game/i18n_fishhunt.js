@@ -41,6 +41,17 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "deer": "jeleń", "elk": "łoś", "mountain goat": "kozica", "hare": "zając", "fox": "lis", "snow fox": "lis polarny", "horker": "horker", "bristleback": "szczeciniak",
     "Tools": "Narzędzia", "river": "rzeka", "lake": "jezioro", "sea": "morze",
     // ---- patch note
+    "Painted hunting": "Malowane polowanie",
+    "Hunting is now a painted scene: a misty clearing at sunrise, with trees, ferns and heather that slide apart as you creep closer, and the animal grows as you close in.":
+      "Polowanie to teraz malowana scena: mglista polana o wschodzie słońca, a drzewa, paprocie i wrzosy rozsuwają się, gdy podkradasz się bliżej, i zwierzę rośnie w miarę, jak się zbliżasz.",
+    "Deer, elk, foxes, snow foxes and hares are painted and move: they graze with their head down, look up when they hear you, flick their ears and tail, and bolt away in a real run. Other animals keep their drawing.":
+      "Jelenie, łosie, lisy, lisy polarne i zające są malowane i się ruszają: pasą się z łbem przy ziemi, podnoszą go, gdy cię usłyszą, strzygą uszami i machają ogonem, a spłoszone naprawdę uciekają. Inne zwierzęta zostają przy rysunku.",
+    "The wind shows in the grass, with leaves and seeds drifting the way it blows.":
+      "Wiatr widać w trawie, a liście i nasiona dryfują w stronę, w którą wieje.",
+    "You see your bow come up and draw, and the arrow flies in a real arc. A hit makes the animal flinch or drop; blood follows the Gore setting (Off, Reduced, Full).":
+      "Widzisz, jak unosisz i napinasz łuk, a strzała leci prawdziwym łukiem. Trafione zwierzę drga albo pada; krew zależy od ustawienia Krew (Wył., Mniej, Pełne).",
+    "Skinning shows the hide stretched on a frame, and what you got pops up below.":
+      "Przy skórowaniu skóra rozpina się na ramie, a pod spodem pojawia się to, co zdobyłeś.",
     "Gone fishing, gone hunting": "Na ryby i na polowanie",
     "Fishing is a proper little game now: cast (time the power bar for a long cast), wait for the float to go right under, then hold to reel and let go to ease off. Keep the needle in the safe band: too tight and the line snaps, too slack and the fish gets away. Works with a finger or the Space bar.":
       "Wędkowanie to teraz porządna mini-gra: zarzuć (złap moment na pasku siły, żeby rzucić daleko), poczekaj, aż spławik całkiem zniknie, potem przytrzymaj, żeby zwijać, i puść, żeby popuścić. Trzymaj wskazówkę w bezpiecznym pasku: za mocno i żyłka pęknie, za luźno i ryba ucieknie. Działa palcem albo Spacją.",
