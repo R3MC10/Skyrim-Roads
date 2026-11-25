@@ -4,7 +4,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
 (() => {
   Object.assign(I18N_EXTRA.words, {
     "Roads on the map": "Drogi na mapie",
-    // patch note b229-map4k
+    // patch note b230-map4k
     "Sharp painted map, close up": "Malowana mapa jest teraz ostra z bliska",
     "The painted world map stays sharp now, even zoomed all the way in on a phone or a big 4K screen. It used to turn soft and then swap to a plain drawn chart.":
       "Malowana mapa świata jest teraz ostra nawet przy pełnym zbliżeniu, na telefonie i na dużym ekranie 4K. Wcześniej robiła się rozmyta, a potem zamieniała się w zwykłą rysowaną mapę.",

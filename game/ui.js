@@ -624,6 +624,7 @@
     $("#side").addEventListener("keydown", (e) => { if (e.target.id === "chatin" && e.key === "Enter") { e.preventDefault(); chatSend(e.target.value); } if (e.target.id === "dmin" && e.key === "Enter") { e.preventDefault(); sendDM(); } });
     $("#trip").addEventListener("click", onPanelClick);
     $("#raid").addEventListener("click", onPanelClick);
+    { let gp = $("#gpop"); if (!gp) { gp = document.createElement("div"); gp.id = "gpop"; document.body.appendChild(gp); gp.addEventListener("click", onPanelClick); } }   // the Gathering card floating over the PC map (the side panel is hidden there)
     Store.watch("raids", (docs) => { raidDocs = docs; });
     if (typeof LEVELUP !== "undefined") LEVELUP.mount({ S: () => S, persist, toast, refresh: () => { bump(); renderPanel(true); if ($("#sky")) renderMenu(); }, publishCard: () => publishCard() });   // levelup.js: skill/level notices, the three pillars
     if (typeof ONBOARD !== "undefined") ONBOARD.mount({ S: () => S, persist, toast, renderPanel, click: onPanelClick, party: () => party, invites: () => invites });   // first-time tips (onboard.js)
@@ -823,7 +824,7 @@
     if (Math.floor(t) % 3 === 0) { const qm = QUESTS.check(S); if (qm.length) { persist(true); showMessage("Quest", qm.join(" ")); } }
     if (Math.floor(t) % 30 === 0) { publishCard(false); publishHome(); publishClan(); }
     if (Math.floor(t) % 60 === 0) BACKUP.autoSave(S);
-    renderTop(); renderVitals(); renderTrip(); renderTabs(); hudCompass();
+    renderTop(); renderVitals(); renderTrip(); renderGatherPop(); renderTabs(); hudCompass();
     if (version !== rendered || Date.now() - lastPanelRender > 20000) renderPanel(false);
   }
 
@@ -915,6 +916,15 @@
     const row = (label, cur, max, color) => `<div class="vital"><small><span>${label}</span><span class="num">${Math.round(cur)}/${max}</span></small><div class="bar"><i style="width:${pct(cur, max)}%;background:${color}"></i></div></div>`;
     const w = G.carried(S), cap = G.capacity(S);
     $("#vitals").innerHTML = row("Health", hp, mh, "var(--hp)") + row("Magicka", G.maxMagicka(S), G.maxMagicka(S), "var(--mp)") + row(G.overweight(S) ? "Weight · too heavy" : "Weight", w, cap, w > cap ? "var(--ember)" : "#8a7a5c");
+  }
+  /* PC map home screen: the side panel (and the Gathering card in it) is hidden, so the card floats over the map instead.
+     Without this a PC player could never pick a plant patch or forage. Only redraws on change, so taps don't get lost. */
+  function renderGatherPop() {
+    const el = $("#gpop"); if (!el) return;
+    const on = typeof GATHER !== "undefined" && typeof PCMAP !== "undefined" && PCMAP.on() && (tab === "map" || tab === "places") && !S.dungeon;
+    let html = "";
+    if (on) { try { html = GATHER.card(S); } catch (e) { html = ""; } }
+    if (el.dataset.html !== html) { el.innerHTML = html; el.dataset.html = html; }
   }
   function renderTrip() {
     const el = $("#trip"), tr = S.trip;
@@ -1496,12 +1506,12 @@
     dungeonAct(dc);
   }
   function gatherAct(what, id) {
-    const r = GATHER.act(S, what, id);
+    let r; try { r = GATHER.act(S, what, id); } catch (e) { console.error(e); return toast("Couldn't gather that. Please try again."); }   // never a silent dead button
     if (r.html) return openModal(r.html);
     if (r.err) return toast(r.err);
     SOUND.fx(what === "gauto" || what === "gunplant" ? "click" : "coin");
     if (r.ok && /^g(pick|pickall|forage|plant)$/.test(what)) G.note(S, ` ${r.text}`);
-    persist(true); renderPanel(true); toast(r.text);
+    persist(true); renderPanel(true); renderGatherPop(); toast(r.text);
   }
   function exploreAct(what, id) {
     const r = EXPLORE.act(S, what, id);

@@ -1,5 +1,5 @@
 /* inkmap.js: the close-up ink chart under the painted world map. [OURS]
-   Since b229 only the fallback: with the tile pyramid in the game folder (maptiles.js) the painting itself stays sharp.
+   Since b230 only the fallback: with the tile pyramid in the game folder (maptiles.js) the painting itself stays sharp.
    The painting (map-world.webp, 2000×1400) only has so many pixels: blown up past ~1.3× it turns soft. So map.js
    never draws it bigger than that (PAINT_MAX). Zoomed in further the painting fades out and this takes over:
    - a watercolour wash: the painting's colours sampled per terrain cell and per kind of ground (plains, forest, snow,
