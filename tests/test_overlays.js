@@ -42,6 +42,11 @@ ok(ONBOARD.freeY(10, 600, 300, 40, "above", [R(0, 570, 250, 90)]) === 570 - 8 - 
 ok(ONBOARD.freeY(10, 60, 300, 40, "below", [R(0, 55, 250, 40)]) === 95 + 8, "the log in the way: goes below it");
 ok(ONBOARD.freeY(10, 600, 300, 40, "above", [R(320, 500, 50, 200)]) === 600, "a box beside it doesn't count");
 ok(ONBOARD.freeY(10, 20, 300, 40, "above", [R(0, 0, 400, 100)], 4) === 4, "never off the top");
+// [notify-2] an onboarding tip never covers the dungeon route strip: below it, or wait
+ok(ONBOARD.clearTop(60, 80, 0, 390, [], 600) === 60, "tip: nothing in the way, stays under the header");
+ok(ONBOARD.clearTop(60, 80, 0, 390, [R(0, 100, 390, 50)], 600) === 156, "tip: the route strip in the way, goes below it");
+ok(ONBOARD.clearTop(60, 80, 0, 390, [R(0, 100, 390, 50)], 200) === -1, "tip: no room below, waits");
+ok(ONBOARD.clearTop(60, 80, 0, 300, [R(320, 100, 50, 50)], 600) === 60, "tip: a strip beside it doesn't count");
 `, c);
 
 // 4. hooks: script order, CSS in the second style block, hud2 and the letter, patch note
