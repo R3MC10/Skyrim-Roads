@@ -2,7 +2,8 @@
 Visits the map, the Area board, the Forge, Items (+ an item's details), the perk tree, Company, a dungeon room, a fight
 with a message showing and character creation at 360x800, 390x844, 412x915 and 1920x1080. Fails when the message-history
 button (#nfhbtn), the gather prompt (#gnear), the compass button (#twBtn) or a big banner (#pbanners) sits on a visible
-button, tab or dungeon node, or when the character creator's canvas has ink in its top 2% of rows (a cut-off sword).
+button, tab or dungeon node, when the history or compass button sits on a screen title, when the Journal's chosen tab has
+contrast under 4.5 or the AI & Loadouts sub-tab strip hides tabs without a fade, or when the character creator's canvas has ink in its top 2% of rows (a cut-off sword).
 Run:  node tests/serve.js 9161   then   py tests/overlap_ui.py 9161 [outdir]"""
 import asyncio, os, sys, tempfile
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -51,6 +52,52 @@ CHECK = r"""([where, end])=>{
     }
   }
   return bad; }"""
+# the floating round buttons keep off the text of a screen title (Area, Journal, Social, AI & Loadouts, the dungeon's name)
+HEADS = ".uxh-t, #dun .hd > h2, #side .panel > h2, #side h1"
+HEADCHK = r"""([where, heads])=>{
+  const shown = (e) => { if (!e || !e.isConnected) return false; const r = e.getBoundingClientRect(); if (r.width < 2 || r.height < 2) return false;
+    for (let a = e; a && a.nodeType === 1; a = a.parentElement) { const c = getComputedStyle(a); if (c.display === 'none' || c.visibility === 'hidden' || +c.opacity < 0.05) return false; }
+    return r.bottom > 0 && r.top < innerHeight; };
+  const bad = [];
+  for (const sel of ['#nfhbtn', '#twBtn']) for (const c of document.querySelectorAll(sel)) {
+    if (!shown(c)) continue;
+    const r = c.getBoundingClientRect();
+    for (const h of document.querySelectorAll(heads)) {
+      if (!shown(h) || h.closest('#hudlane,#pbanners')) continue;
+      const rg = document.createRange(); rg.selectNodeContents(h);
+      for (const q of rg.getClientRects()) {
+        const x0 = Math.max(r.left, q.left), x1 = Math.min(r.right, q.right), y0 = Math.max(r.top, q.top), y1 = Math.min(r.bottom, q.bottom);
+        if (x1 - x0 <= 2 || y1 - y0 <= 2) continue;
+        // only when the title is really painted there (not under a window)
+        const top = document.elementsFromPoint((x0 + x1) / 2, (y0 + y1) / 2).find((e) => !e.closest('#hudlane,#pbanners,#twBtn'));
+        if (top && (top === h || h.contains(top))) { bad.push(`${where}: ${sel} sits on the title "${h.textContent.trim().slice(0, 24)}"`); break; }
+      }
+    }
+  }
+  return bad; }"""
+# WCAG contrast of the Journal's chosen tab: its text colour against the painted parchment under it
+CONTRAST = r"""()=>{ const b = document.querySelector('#side[data-tab=log] .jseg button.on'); if (!b) return null;
+  b.scrollIntoView({ block: 'center' }); const r = b.getBoundingClientRect();
+  return { fg: getComputedStyle(b).color.match(/[\d.]+/g).slice(0, 3).map(Number), box: { x: r.left, y: r.top, width: r.width, height: r.height } }; }"""
+
+
+def lum(c):
+    f = lambda v: v / 12.92 if v <= 0.03928 else ((v + 0.055) / 1.055) ** 2.4
+    r, g, b = [f(x / 255) for x in c[:3]]
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+
+async def tab_contrast(pg):
+    """text colour of the Journal's chosen tab against the most common colour painted in its box"""
+    from PIL import Image
+    import io
+    o = await pg.evaluate(CONTRAST)
+    if not o: return None
+    await pg.wait_for_timeout(200)
+    im = Image.open(io.BytesIO(await pg.screenshot(clip=o["box"]))).convert("RGB")
+    bg = max(im.getcolors(im.width * im.height), key=lambda t: t[0])[1]
+    a, b = lum(o["fg"]), lum(bg)
+    return round((max(a, b) + 0.05) / (min(a, b) + 0.05), 2)
 INK = r"""()=>{ const c = document.querySelector('.cgcan'); if (!c || !c.width) return -1;
   const rows = Math.max(1, Math.round(c.height * 0.02)), d = c.getContext('2d').getImageData(0, 0, c.width, rows).data;
   let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 40) n++; return n; }"""
@@ -91,6 +138,7 @@ async def run(b, w, h, fails):
     async def check(name, settle=500, end=False):
         await pg.wait_for_timeout(settle)
         bad = await pg.evaluate(CHECK, [f"{tag} {name}", end])
+        if not end: bad += await pg.evaluate(HEADCHK, [f"{tag} {name}", HEADS])
         await pg.screenshot(path=os.path.join(OUT, f"{tag}_{name}.png"))
         if bad: fails.extend(bad[:4])
         print(tag, name, "ok" if not bad else f"{len(bad)} overlaps")
@@ -142,6 +190,22 @@ async def run(b, w, h, fails):
     await check("area"); await to_end("area")
     await pg.evaluate("document.querySelector('[data-id=forge]')?.click()"); await pg.wait_for_timeout(1000); await clr()
     await check("forge"); await to_end("forge")
+
+    # the Journal (its chosen tab readable on the parchment), AI & Loadouts (the sub-tab strip shows it hides more), Social
+    await clr(); await pg.evaluate("__ui.go('log')"); await pg.wait_for_timeout(1000); await clr()
+    await check("journal")
+    cr = await tab_contrast(pg)
+    print(tag, "journal tab contrast", cr)
+    if cr is None or cr < 4.5: fails.append(f"{tag} journal: the chosen tab's text has contrast {cr} on the parchment (needs 4.5)")
+    await pg.evaluate("scrollTo(0, 0)"); await pg.wait_for_timeout(600)
+    await clr(); await pg.evaluate("__ui.go('tactics')"); await pg.wait_for_timeout(1000); await clr()
+    await check("loadouts")
+    sub = await pg.evaluate("""()=>{ const s = document.querySelector('#side .mn-sub'); if (!s) return null; const on = s.querySelector('button.on'), r = s.getBoundingClientRect(), q = on.getBoundingClientRect();
+      return { more: s.scrollWidth > s.clientWidth + 2, fade: s.classList.contains('mn-fl') || s.classList.contains('mn-fr'), room: Math.round(Math.min(q.left - r.left, r.right - q.right)) }; }""")
+    if sub and sub["more"] and not sub["fade"]: fails.append(f"{tag} loadouts: the sub-tab strip hides tabs with no fade at its edge {sub}")
+    if sub and sub["more"] and sub["room"] < 16: fails.append(f"{tag} loadouts: the chosen sub-tab isn't fully in view with 16 px to spare {sub}")
+    await clr(); await pg.evaluate("__ui.go('social')"); await pg.wait_for_timeout(1000); await clr()
+    await check("social")
 
     # Items, and one item's details
     await clr(); await pg.evaluate("__ui.openMenu('items')"); await pg.wait_for_timeout(700)
