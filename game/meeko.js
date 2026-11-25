@@ -44,7 +44,7 @@ const MEEKO = (() => {
     [TXT.lost]: "Meeko jakiś czas temu zgubił się na drogach. Wciąż cię szuka: podróżuj bez towarzysza, a cię znajdzie.",
     [TXT.tab]: "Meeko jest gdzieś na drogach i cię szuka. Podróżuj bez towarzysza, a cię znajdzie.",
     [TXT.sulk]: "Meeko wciąż się gdzieś dąsa na drogach. Daj mu kilka dni.",
-    // the patch note (b223)
+    // the patch note (b224)
     "Meeko comes back": "Meeko wraca",
     "Meeko the stray dog has no home town, so once he left you (Dismiss, or walking off when he got fed up) he was gone for good. Now he finds you again on the road.":
       "Bezpański pies Meeko nie ma rodzinnego miasta, więc gdy raz cię opuścił (Odpraw albo odejście, gdy miał dość), znikał na zawsze. Teraz znowu znajdzie cię na drodze.",
