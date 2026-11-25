@@ -9,7 +9,7 @@
    after about 6 in-game hours (30 real minutes), after you sleep, or straight away if a stablehand tends it (cheap).
    Old saves where it had limped off to a stables (or was ever marked dead/lost) come back as downed. [OURS] numbers unless marked. */
 const HORSES = (() => {
-  const COATS = [["bay", "Bay", "#8a5a3b"], ["black", "Black", "#2b2724"], ["grey", "Dapple grey", "#9b9b97"], ["white", "White", "#ebe6da"], ["palomino", "Palomino", "#d6aa5b"], ["paint", "Paint", "#b77d52"]];
+  const COATS = [["bay", "Bay", "#8a5a3b"], ["chestnut", "Chestnut", "#9a4b26"], ["black", "Black", "#2b2724"], ["grey", "Dapple grey", "#9b9b97"], ["white", "White", "#ebe6da"], ["palomino", "Palomino", "#d6aa5b"], ["paint", "Paint", "#b77d52"]];
   const ARMOR = {
     none: { name: "No armor", price: 0, hp: 0, guard: 0 },
     steel: { name: "Steel horse armor", price: 1200, hp: 100, guard: 0.25 },

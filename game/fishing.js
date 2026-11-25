@@ -199,7 +199,7 @@ const FISHGAME = (() => {
   const isRare = (id) => !!FISH[id]?.rare;
 
   // ====================================================================== the screen
-  const W = 560, H = 300, WL = 132;   // drawing units; the waterline
+  const W = 640, H = 360, WL = 132;   // drawing units (16:9, fishart.js draws the scene); the ink backdrop's waterline (560×300 units, scaled ×1.2)
   let st = null;
   const WATER = { river: "A river", lake: "A lake", sea: "The Sea of Ghosts" };
   /* open the game. done() runs when the player closes it */
@@ -230,6 +230,7 @@ const FISHGAME = (() => {
     el.querySelector("#fhdone").onclick = () => finish();
     st.key = (e) => { if (e.code === "Space" || e.code === "Enter") { e.preventDefault(); if (e.type === "keydown") { if (!e.repeat) down(); } else up(); } else if (e.code === "Escape" && e.type === "keydown") finish(); };
     addEventListener("keydown", st.key); addEventListener("keyup", st.key);
+    if (typeof FISHART !== "undefined") FISHART.warm();
     setPhase("aim");
     const loop = (ts) => { if (!st) return; tick(Math.min(0.05, (ts - st.last) / 1000)); st.last = ts; draw(ts); st.raf = requestAnimationFrame(loop); };
     st.raf = requestAnimationFrame(loop);
@@ -265,6 +266,7 @@ const FISHGAME = (() => {
       st.ctx.cast = 0.15 + power() * 0.85; st.held = false;
       st.seed = castSeed(st.ctx, st.casts = (st.casts || 0) + 1);
       st.wait = waitFor(st.ctx, rng(st.seed + "|wait")); st.fish = roll(st.s, st.ctx, rng(st.seed + "|fish"));
+      if (typeof FISHART !== "undefined") FISHART.warm(st.fish);
       sfx("click"); setPhase("fly", st.ctx.cast > 0.8 ? "A long cast, out over the deep water." : st.ctx.cast < 0.4 ? "A short cast, close to the bank." : "You cast your line.");
     } else if (p === "wait") {
       st.held = false;
@@ -322,7 +324,14 @@ const FISHGAME = (() => {
   function draw(ts) {
     const cv = document.querySelector("#fhcv"); if (!cv) return;
     const g = typeof FITCANVAS !== "undefined" ? FITCANVAS.fixed(cv, W, H) : cv.getContext("2d");
-    const night = st.ctx.night, wx = st.ctx.wx, T = ts / 1000;
+    if (typeof FISHART === "undefined") { inkBack(g, ts / 1000); return; }
+    FISHART.draw(g, st, ts, { inkBack, inkFish: drawFish, isRare, name: (id) => L(D.ITEMS[id]?.name || id) });
+  }
+  /* the ink backdrop (when the painted lake isn't there): drawn in the old 560×300 units, scaled to fill 640×360 */
+  function inkBack(g, T) {
+    const night = st.ctx.night, wx = st.ctx.wx;
+    g.save(); g.translate(-16, 0); g.scale(1.2, 1.2);
+    const W = 560, H = 300;
     // sky and far hills: an ink wash
     const sky = g.createLinearGradient(0, 0, 0, WL);
     sky.addColorStop(0, night ? "#1d2430" : wx === "rain" || wx === "storm" ? "#8d9396" : wx === "snow" || wx === "blizzard" ? "#c9ccce" : "#d8cfb8");
@@ -352,46 +361,14 @@ const FISHGAME = (() => {
     g.beginPath(); g.moveTo(0, H); g.lineTo(0, 210); g.quadraticCurveTo(60, 200, 110, 230); g.quadraticCurveTo(150, 262, 170, H); g.closePath(); g.fill(); g.stroke();
     g.lineWidth = 1.3;
     for (let k = 0; k < 9; k++) { const x = 8 + k * 15, sw = Math.sin(T * 1.3 + k) * 3; g.beginPath(); g.moveTo(x, 222 + (k % 3) * 6); g.quadraticCurveTo(x + sw, 190, x + 4 + sw * 1.6, 168 + (k % 4) * 7); g.stroke(); }
-    // rod
-    const p = st.phase, tipX = 170, tipY = 64 + (p === "reel" ? Math.min(30, st.g.tension * 30) : 0) + (p === "aim" ? -power() * 18 : 0);
-    g.strokeStyle = "#3b2a1a"; g.lineWidth = 4; g.beginPath(); g.moveTo(30, 262); g.lineTo(tipX, tipY); g.stroke();
-    g.strokeStyle = INK; g.lineWidth = 1.2; g.beginPath(); g.moveTo(30, 262); g.lineTo(tipX, tipY); g.stroke();
-    g.fillStyle = "#3b2a1a"; g.beginPath(); g.arc(52, 240, 5, 0, 7); g.fill();
-    // line and float
-    if (p === "fly") {
-      const k = Math.min(1, st.pt / 0.7), bx = tipX + (bobX() - tipX) * k, by = tipY + (WL + 14 - tipY) * k - Math.sin(k * Math.PI) * 60;
-      g.strokeStyle = "rgba(35,29,23,.8)"; g.lineWidth = 1; g.beginPath(); g.moveTo(tipX, tipY); g.quadraticCurveTo((tipX + bx) / 2, by - 30, bx, by); g.stroke(); floatAt(g, bx, by, 0);
-    } else if (p === "wait" || (p === "done" && !st.result && st.wait)) {
-      const bx = bobX(), under = p === "wait" && st.bit, nib = st.ripple.some((r) => r.small && r.t < 0.25);
-      const by = WL + 14 + Math.sin(T * 2.2) * 2 + (under ? 9 : nib ? 4 : 0);
-      g.strokeStyle = "rgba(35,29,23,.7)"; g.lineWidth = 1; g.beginPath(); g.moveTo(tipX, tipY); g.quadraticCurveTo((tipX + bx) / 2, WL + 30, bx, by); g.stroke();
-      floatAt(g, bx, by, under ? 1 : 0);
-    } else if (p === "reel") {
-      const G2 = st.g, fx = tipX + 40 + Math.min(1.25, G2.dist) * 300 + Math.sin(T * 3) * 10 + (G2.run > 0 ? Math.sin(T * 14) * 8 : 0), fy = WL + 40 + Math.sin(T * 1.7) * 10 + (1 - Math.min(1, G2.dist)) * 20;
-      const tens = Math.min(1, G2.tension);
-      g.strokeStyle = tens > G2.band[1] ? "#8a1e12" : "rgba(35,29,23,.85)"; g.lineWidth = 1 + tens; g.beginPath(); g.moveTo(tipX, tipY);
-      g.quadraticCurveTo((tipX + fx) / 2, (tipY + fy) / 2 + (1 - tens) * 50, fx, fy); g.stroke();
-      // the fish: a dark shape under the water
-      g.save(); g.globalAlpha = 0.55; g.fillStyle = "#11161a"; g.translate(fx + 16, fy + 6); g.rotate(Math.sin(T * 6) * 0.15);
-      g.beginPath(); g.ellipse(0, 0, 14 + G2.str * 3, 5 + G2.str, 0, 0, 7); g.fill(); g.beginPath(); g.moveTo(12 + G2.str * 3, 0); g.lineTo(24 + G2.str * 3, -7); g.lineTo(24 + G2.str * 3, 7); g.fill(); g.restore();
-      if (G2.run > 0) { g.strokeStyle = "rgba(240,240,240,.6)"; g.lineWidth = 1.2; for (let k = 0; k < 3; k++) { g.beginPath(); g.arc(fx + 10, fy - 30, 6 + k * 5 + (T * 20) % 5, Math.PI * 1.1, Math.PI * 1.9); g.stroke(); } }
-    }
-    // ripples
-    for (const r of st.ripple) { g.strokeStyle = `rgba(${night ? "230,235,240" : "35,29,23"},${(1 - r.t / 1.4) * (r.small ? 0.4 : 0.7)})`; g.lineWidth = 1; g.beginPath(); g.ellipse(r.x, WL + 16, 6 + r.t * (r.small ? 14 : 30), 2 + r.t * (r.small ? 4 : 8), 0, 0, 7); g.stroke(); }
-    // the catch
-    if (p === "done" && st.result) drawFish(g, st.result.item, W / 2 + 40, 92, 1.5, T);
+    g.restore();
   }
-  function floatAt(g, x, y, under) {
-    g.fillStyle = "#b6372a"; g.strokeStyle = INK; g.lineWidth = 1.2;
-    g.beginPath(); g.ellipse(x, y - (under ? 0 : 3), 4, under ? 2 : 5, 0, 0, 7); g.fill(); g.stroke();
-    if (!under) { g.fillStyle = "#efe6cf"; g.beginPath(); g.ellipse(x, y + 1, 4, 2, 0, 0, Math.PI); g.fill(); }
-  }
-  /* an ink fish for the catch card */
-  function drawFish(g, id, x, y, k, T) {
+  /* an ink fish for the catch card (and the leap, for fish without a painted picture) */
+  function drawFish(g, id, x, y, k, T, noName, noPlate) {
     const col = FISHCOL[id] || "#8a8a7a", crab = id === "fish_mudcrab";
     g.save(); g.translate(x, y); g.scale(k, k); g.rotate(Math.sin(T * 2) * 0.05);
     g.fillStyle = "rgba(240,232,210,.85)"; g.strokeStyle = INK; g.lineWidth = 1.2;
-    g.beginPath(); g.ellipse(0, 0, 70, 38, 0, 0, 7); g.fill();
+    if (!noPlate) { g.beginPath(); g.ellipse(0, 0, 70, 38, 0, 0, 7); g.fill(); }
     g.fillStyle = col; g.lineWidth = 1.6;
     if (crab) {
       g.beginPath(); g.ellipse(0, 4, 26, 16, 0, 0, 7); g.fill(); g.stroke();
@@ -407,6 +384,7 @@ const FISHGAME = (() => {
       if (isRare(id)) { g.strokeStyle = "rgba(226,187,100,.9)"; g.lineWidth = 1.4; for (let k2 = 0; k2 < 6; k2++) { const a = k2 + T; g.beginPath(); g.moveTo(Math.cos(a) * 62, Math.sin(a) * 32); g.lineTo(Math.cos(a) * 70, Math.sin(a) * 36); g.stroke(); } }
     }
     g.restore();
+    if (noName) return;
     g.fillStyle = INK; g.font = "600 15px 'Barlow Condensed', serif"; g.textAlign = "center";
     g.fillText(L(D.ITEMS[id]?.name || id), x, y + 38 * k + 14);
   }
