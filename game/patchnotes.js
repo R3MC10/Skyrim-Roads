@@ -3,7 +3,7 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b206-bonds", build: 206, date: "25 Nov 2026", title: "Bonds with followers and horses", items: [
+    { id: "b207-bonds", build: 207, date: "25 Nov 2026", title: "Bonds with followers and horses", items: [
       "Followers now have ranks: Hireling, Companion, Trusted and Sworn. They climb as loyalty grows, and each rank gives something real.",
       "Companion: they carry 25 more for you. Trusted: they fight smarter, stepping in front of you when you're badly hurt, healing you sooner and finishing off wounded foes. Sworn: a signature move once per fight, even before their personal quest.",
       "Loyalty now also grows from time on the road together and from hard fights won side by side (bosses, dragons, dangerous foes).",
@@ -11,6 +11,17 @@ const PATCHNOTES = (() => {
       "Horses have a bond level from 1 to 5. It grows as you ride on the road, win fights in the saddle, hunt on horseback and groom them at a stables.",
       "At bond level 3 you pick one speciality at a stables: warhorse, mountain horse, courier, packhorse or hunter's horse. It gets stronger at levels 4 and 5. You can retrain later for gold.",
       "New perks: Fellow Traveller in Etiquette (road time counts double, your follower carries more) and Horse Whisperer in Athletics (your horse bonds twice as fast, its speciality works better).",
+    ] },
+    { id: "b206-crises", build: 206, date: "25 Nov 2026", title: "Hard times in the holds", items: [
+      "Every hold now has four numbers you can see: Security, Food, Prosperity and Corruption. They drift with time and the weather, and they follow what players do.",
+      "Escorting caravans and beating bandits makes a hold safer, bringing food feeds it, and bribes, pickpocketing and selling stolen goods make it more crooked.",
+      "Low numbers make shops dearer (food most of all when food is short) and trouble finds you more often on that hold's roads. Good numbers do the opposite.",
+      "When a hold is under pressure, a crisis starts: The Long Winter, Outlaw Roads, The Blight, Rot in the Court or Beasts at the Door. Each gets worse in five stages, for example snowstorm, caravans cut, shortage, bandits, then the Jarl's call.",
+      "From stage 2 the Jarl posts contracts in the hold's capital: escort the supply wagons, clear out bandits, hunt the pack, deliver food or expose a crooked guard. Enough help from everyone draws out the ringleader for a boss fight.",
+      "Beat the ringleader and the hold recovers with cheaper shops for a day. Everyone who helped can claim a reward, and the one who struck him down earns the title Shield of the Hold.",
+      "Nothing is required: a crisis left alone burns out after 40 hours and leaves the hold poorer for a day. Everyone sees the same crises at the same time.",
+      "See it on the map (a sign and five pips by the capital), in the notices under the world event card, and on every town page: tap Hold status for the full card.",
+      "New perks: Hard Times Trader (Mercantile) halves crisis price rises, and Jarl's Agent (Etiquette) makes your contracts count more and pays more.",
     ] },
     { id: "b205-artround3", build: 205, date: "25 Nov 2026", title: "Fresh paint for fights and mini-games", items: [
       "Fourteen more fight places are freshly painted, bigger and sharper: the arena, ash wastes, autumn woods, bandit camps, Forsworn cliffs, forts, giant camps, lairs, marshes, mines, rocky highlands, temples, Thalmor halls and vampire lairs.",

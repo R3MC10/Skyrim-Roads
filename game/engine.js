@@ -1246,7 +1246,7 @@ const G = (() => {
         if (ce) { const e = scaleEnemy(ce, fightLevel(s)); tr.status = "encounter"; tr.encounter = e; out.encounter = e; note(s, ` Caravan ambush: ${e.name}`); return out; }
         continue;
       }
-      const rate = tr.carriage || tr.follow ? 0 : ENCOUNTER_PER_MIN * (isNight(stepT) ? D.NIGHT_ENCOUNTER_MULT : 1) * (typeof WEVENTS !== "undefined" ? WEVENTS.weather([s.x, s.y], stepT).encounters : 1) * (typeof SNEAKMODE !== "undefined" ? SNEAKMODE.encounterMult(s) : 1) * (typeof CVROAD !== "undefined" ? CVROAD.ambushMult(s, stepT) : 1);   // nobody robs a carriage on a Jarl's road; party members following their leader leave the road to them (partyplay.js)
+      const rate = tr.carriage || tr.follow ? 0 : ENCOUNTER_PER_MIN * (isNight(stepT) ? D.NIGHT_ENCOUNTER_MULT : 1) * (typeof WEVENTS !== "undefined" ? WEVENTS.weather([s.x, s.y], stepT).encounters : 1) * (typeof SNEAKMODE !== "undefined" ? SNEAKMODE.encounterMult(s) : 1) * (typeof CRISES !== "undefined" ? CRISES.encounterMult(s, [s.x, s.y], stepT) : 1) * (typeof CVROAD !== "undefined" ? CVROAD.ambushMult(s, stepT) : 1);   // nobody robs a carriage on a Jarl's road; party members following their leader leave the road to them (partyplay.js)
       if (Math.random() < 1 - (1 - rate) ** (dt / 60)) {
         const e = rollEncounter(s, stepT);
         if (e.danger === "low" && e.kind === "event") {   // every fight is yours to play: the trip stops for it (no auto fighting)
@@ -1380,7 +1380,8 @@ const G = (() => {
       * (typeof WARS !== "undefined" && town && PLACES[town] ? WARS.discount(s, holdAt(PLACES[town])) : 1)   // your clan rules this hold
       * (typeof RUMOURS !== "undefined" && town ? RUMOURS.priceMult(s, town) : 1)   // local hero discount; knocked-up shop at night (rumours.js)
       * (typeof BEASTPATH !== "undefined" && town ? BEASTPATH.priceMult(s, town) : 1)   // a hungry vampire, a werewolf seen in town (beastpaths.js)
-      * (typeof GREATEV !== "undefined" && town ? GREATEV.priceMult(s, town) : 1)));   // a fair in town, a burned town, a plundered or grateful hold (greatevents.js)
+      * (typeof GREATEV !== "undefined" && town ? GREATEV.priceMult(s, town) : 1)   // a fair in town, a burned town, a plundered or grateful hold (greatevents.js)
+      * (typeof CRISES !== "undefined" && town ? CRISES.priceMult(s, town, item) : 1)));   // the hold's food, trade and corruption (crises.js)
   };
   function sellPrice(s, row, town = s.location, extra = 0) {
     const it = D.ITEMS[row.item];

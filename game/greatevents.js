@@ -510,7 +510,8 @@ const GREATEV = (() => {
   }
   function bannerHTML(S, t = nowS()) {
     const ev = current(t), rc = recent(t, 1).filter((e) => claimable(S, e, t)), af = aftermath(S, t);
-    if (!ev && !rc.length && !af.length) return "";
+    const cx = typeof CRISES !== "undefined" ? CRISES.strips(S, t) : [];   // holds in crisis (crises.js)
+    if (!ev && !rc.length && !af.length && !cx.length) return "";
     let h = "", cd = null, st = "";
     if (ev) {
       cd = countdown(ev, t); st = stage(ev, t); const tl = ev.kind === "fair" ? null : tallyCached(ev, S);
@@ -522,6 +523,7 @@ const GREATEV = (() => {
     /* each strip carries a key naming its news, so the × on it (gevstack.js) hides it until the news changes */
     const strips = [];
     for (const e of rc) strips.push({ key: "claim:" + e.id, html: `<div class="gev-strip" data-gev="open" data-id="${e.id}"><span>${e.icon} ${esc(T("{name}: over, your reward is waiting", { name: e.name }))}</span><button class="btn sm pri" data-gev="claim" data-id="${e.id}">${T("Claim")}</button></div>` });
+    strips.push(...cx);
     for (const a of af) strips.push({ key: "after:" + a.ev.id + ":" + a.out, html: `<div class="gev-strip gev-after"><span>${a.kind === "dragon" ? "" : a.kind === "rift" ? "" : a.out === "won" ? "" : ""} ${esc(aftermathLine(a))}</span></div>` });
     if (typeof GEVSTACK !== "undefined") return GEVSTACK.compose({ id: S.id, ev, evKey: ev ? ev.id + ":" + st : "", end: ev ? (st === "warn" ? ev.start : ev.end) : 0, cdTxt: cd ? cd.txt : "", banner: h, strips }, t);
     return `<div class="gev-card">${h}${strips.map((x) => x.html).join("")}</div>`;
@@ -608,7 +610,7 @@ const GREATEV = (() => {
   function render(force) {
     const S = me(), el = document.getElementById("gev"); if (!S || !el) return;
     const t = nowS(), ev = current(t);
-    const sig = (ev ? `${ev.id}|${stage(ev, t)}|${statusLine(ev, S, t)}|${ev.kind === "fair" ? "" : tallyCached(ev, S).total}|${claimable(S, ev, t)}` : "") + `|${S.location}|${S.trip?.status || ""}|${recent(t, 1).filter((e) => claimable(S, e, t)).length}|${aftermath(S, t).map((a) => a.ev.id + Math.round(a.rebuilt * 100)).join()}|${partyOf()?.leader || ""}|${typeof GEVSTACK !== "undefined" ? GEVSTACK.sig() : ""}`;
+    const sig = (ev ? `${ev.id}|${stage(ev, t)}|${statusLine(ev, S, t)}|${ev.kind === "fair" ? "" : tallyCached(ev, S).total}|${claimable(S, ev, t)}` : "") + `|${S.location}|${S.trip?.status || ""}|${recent(t, 1).filter((e) => claimable(S, e, t)).length}|${aftermath(S, t).map((a) => a.ev.id + Math.round(a.rebuilt * 100)).join()}|${partyOf()?.leader || ""}|${typeof GEVSTACK !== "undefined" ? GEVSTACK.sig() : ""}|${typeof CRISES !== "undefined" ? CRISES.sig(S, t) : ""}`;
     if (!force && sig === lastSig) return;
     lastSig = sig; el.innerHTML = bannerHTML(S, t);
   }
