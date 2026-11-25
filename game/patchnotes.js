@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b187-fightlength", build: 187, date: "25 Nov 2026", title: "Fights last long enough again", items: [
+      "Since a turn holds up to four moves, strong heroes were ending fights in three or four rounds, even against bosses and legendary beasts. A foe's health now follows what you can really do in a turn with your stamina and magicka (a power attack and a few blows, or a few spells and a summon), so fights at higher levels last as long as they should.",
+      "Bosses and legendary beasts take about 15 rounds again, and knowing a beast's weakness still makes the hunt a good bit shorter. Ordinary road fights stay short.",
+      "Heroes at low levels meet about the same fights as before.",
+      "Riding is a little less overpowering: the charge hits softer and horses dodge less, so the saddle still helps but doesn't win every fight for you.",
+      "Dawnguard and Dwarven quest foes hit a bit softer, and the Volkihar courtyard and the Silent City guardians are a touch easier.",
+    ] },
     { id: "b186-backdrops2", build: 186, date: "25 Nov 2026", title: "Sharper fight backdrops and a town street", items: [
       "The pine forest, snow pass, tundra road, cave, burial barrow and Dwemer vault behind your fights are painted again, much bigger and with more detail. They stay sharp on big PC screens and ultrawide monitors.",
       "New: a town street. Fights in a town or city, or on the road right outside one (guards, bounty hunters, brawls, festival duels), now happen among Nordic longhouses with the hold's hall on the hill.",

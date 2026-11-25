@@ -11,7 +11,7 @@
    clears, so a party clears them as a co-op run and votes on the loot (coop.js, lootvote.js).
    Story beats follow the Dawnguard questline, retold in our own words; [OURS] the places used for each stage, numbers. */
 const DAWNGUARD = (() => {
-  const E = (name, health, damage, tags, extra = {}) => ({ name, health: Math.round(health * 0.84), damage: Math.round(damage * 0.9), tags, level: 10, danger: "high", gold: [0, 0], text: "", hitCap: 0.36, ...extra });   // hitCap: one blow never takes more than 36% of your health (engine.js)
+  const E = (name, health, damage, tags, extra = {}) => ({ name, health: Math.round(health * 0.84), damage: Math.round(damage * 0.84), tags, level: 10, danger: "high", gold: [0, 0], text: "", hitCap: 0.36, ...extra });   // hitCap: one blow never takes more than 36% of your health (engine.js)
   // ---- rewards ([Skyrim] names, close-to-Skyrim stats; ids keep the weapon type the engine reads from them)
   Object.assign(D.ITEMS, {
     dawnguard_helmet: { name: "Dawnguard Helmet", slot: "head", type: "heavy", armor: 19, weight: 6, value: 300 },
@@ -44,7 +44,7 @@ const DAWNGUARD = (() => {
       { title: "Unseen Visions", rec: 20, text: "The Moth Priest says the prophecy needs a second Elder Scroll. The Dwemer hid one deep in Raldbthar. Clear it.",
         obj: { clear: "Raldbthar" }, reward: { gold: 350 } },
       { title: "Chasing Echoes", rec: 22, text: "Serana's mother hid the last Scroll. Her notes are somewhere in Castle Volkihar's old courtyard. Slip in unseen.",
-        obj: { talk: "Castle Volkihar", label: "Sneak into the courtyard", check: { skill: "Sneak", need: 40, fight: E("Volkihar thralls", 520, 45, ["undead", "humanoid", "elite"]) } }, reward: { gold: 400 } },
+        obj: { talk: "Castle Volkihar", label: "Sneak into the courtyard", check: { skill: "Sneak", need: 40, fight: E("Volkihar thralls", 480, 42, ["undead", "humanoid", "elite"]) } }, reward: { gold: 400 } },
       { title: "The Blood Nest", rec: 24, text: "Harkon feeds his court from a nest of vampires at Bloodlet Throne. Burn it out before the last fight.",
         obj: { clear: "Bloodlet Throne" }, reward: { gold: 450 } },
       { title: "Kindred Judgment", rec: 28, text: "The Scrolls are read. Harkon means to blot out the sun for good. Storm Castle Volkihar with Isran, Serana and the trolls, and end him.",
