@@ -123,7 +123,7 @@ const PCMAP = (() => {
       compass: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 3.5l2.2 8.5L12 20.5 9.8 12z" fill="currentColor" opacity=".8"/></svg>',
     };
     const out = `<div class="pcb-who"><span class="pcb-lv num" aria-label="${esc(L("Level"))}">${b.level}</span><div class="pcb-nm"><b>${esc(S.name)}</b>
-        <div class="pcb-xp" title="${esc(L("Experience"))} ${b.xp}/${b.need}"><i style="width:${b.pct}%"></i></div>${typeof UNLOCKS !== "undefined" ? UNLOCKS.teaserHTML(S, "ul-tz-pcb", 1) : ""}</div>${b.perks ? `<span class="pcb-perk" title="${esc(L("Perk points to spend"))}">+${b.perks}</span>` : ""}</div>
+        <div class="pcb-xp" title="${esc(L("Experience"))} ${b.xp}/${b.need}"><i style="width:${b.pct}%"></i></div></div>${b.perks ? `<span class="pcb-perk" title="${esc(L("Perk points to spend"))}">+${b.perks}</span>` : ""}</div>
       <span class="pcb-stat pcb-gold num" aria-label="${esc(L("Gold"))} ${b.gold}">◉ ${b.gold}</span>
       <span class="pcb-stat num${b.over ? " over" : ""}" title="${esc(L("Carry weight"))}"> ${b.w}/${b.cap}</span>
       ${clock ? `<span class="pcb-stat pcb-clock">${esc(clock)}</span>` : ""}

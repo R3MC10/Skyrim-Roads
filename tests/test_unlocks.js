@@ -31,7 +31,7 @@ const s1 = hero(1);
 ok(!U.open(s1, "perks") && !U.open(s1, "smithing") && !U.open(s1, "worldevents"), "a level-1 hero has nothing big open");
 ok(U.next(s1, 2).map((f) => f.id).join() === "perks,gathering", "next two at level 1: perks, gathering (" + U.next(s1, 2).map((f) => f.id) + ")");
 ok(U.next(s1, 1).length === 1 && U.next(s1, 0).length === 0, "next(n) gives n features");
-ok(/Next unlock/.test(U.teaserHTML(s1)) && /Level 2/.test(U.teaserHTML(s1)) && /Perks/.test(U.teaserHTML(s1)), "teaser names the next unlock");
+ok(U.next(s1, 1)[0].name === "Perks" && U.next(s1, 1)[0].level === 2 && !!U.next(s1, 1)[0].teaser, "next() gives what rewards.js needs: name, level, teaser");
 const s4 = hero(4);
 ok(U.open(s4, "perks") && U.open(s4, "smithing") && !U.open(s4, "followers"), "level 4: smithing open, followers not yet");
 ok(U.next(s4, 2).map((f) => f.id).join() === "followers,alchemy", "next at level 4: followers, alchemy");
@@ -39,7 +39,7 @@ ok(U.justOpened(s4).join() === "smithing", "justOpened at 4 = smithing");
 ok(U.justOpened(hero(5)).sort().join() === "alchemy,followers", "justOpened at 5 = followers + alchemy");
 ok(U.justOpened(hero(13)).length === 0, "level 13 opens nothing");
 const s20 = hero(20);
-ok(U.TABLE.every((f) => U.open(s20, f.id)) && U.next(s20, 2).length === 0 && U.teaserHTML(s20) === "", "level 20: everything open, no teaser");
+ok(U.TABLE.every((f) => U.open(s20, f.id)) && U.next(s20, 2).length === 0, "level 20: everything open, no teaser");
 
 // ---- areas, buttons, tabs, encounters
 ok(!U.section(s1, "forge") && U.section(s4, "forge") && U.section(s1, "inn") && U.section(s1, "general"), "forge hidden until 4; inn and shop always");

@@ -122,7 +122,7 @@ async def desktop(b, style, errs):
     bb = await (await pg.query_selector(f"#sky .sky-row[data-id='{sid}']")).bounding_box()
     await pg.mouse.move(bb["x"] + bb["width"] / 2, bb["y"] + bb["height"] / 2); await pg.wait_for_timeout(600)
     det = await pg.evaluate("() => document.querySelector('#sky .sky-detail')?.textContent || ''")
-    ok("Steel Sword" in det and "Damage" in det and "Weight" in det and "Value" in det, f"{style} desktop: hovering the sword fills the side panel with damage, weight, value")
+    ok("Steel Sword" in det and ("Hits for" in det or "Damage" in det) and "Weight" in det and "Value" in det, f"{style} desktop: hovering the sword fills the side panel with damage, weight, value")
     ok(await pg.evaluate(BOX) is None, f"{style} desktop: no floating tooltip over the Items list")
     await hover(pg, "#sky .sky-foot .gold", "menu_gold", style, "gold", shot=False)
     # moving off hides it

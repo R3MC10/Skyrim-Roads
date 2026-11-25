@@ -7,6 +7,7 @@ import asyncio, sys, os, time, tempfile
 try: sys.stdout.reconfigure(encoding="utf-8")
 except Exception: pass
 from playwright.async_api import async_playwright
+from roadfight import open_fight, wait_my_turn
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"
 RUN = str(int(time.time()) % 100000)
 OUT = os.environ.get("SHOTS") or os.path.join(tempfile.gettempdir(), "out_movepreview")
@@ -26,19 +27,13 @@ STATE = """() => { const el = document.getElementById('tbf'); if (!el) return nu
     use: el.querySelectorAll('.tbap i.ap.mpv-use').length, guard: (el.querySelector('.mpv-guard') || {}).textContent || '',
     mp: TB.session ? Math.round(TB.session.f.mp) : -1, ev: TB.session ? TB.session.ev.length : -1 }; }"""
 
-async def open_fight(b, vp, touch, tag, errs):
+async def new_fight(b, vp, touch, tag, errs):
     ctx = await b.new_context(viewport=vp, device_scale_factor=1, has_touch=touch, is_mobile=touch)
     pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(f"{tag} {e}"))
     await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&hub=0&p=mp{RUN}{tag}&tb"); await pg.wait_for_timeout(1500)
     await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Peek"); await pg.click("#begin"); await pg.wait_for_timeout(2500)
-    await pg.evaluate(START); await pg.wait_for_timeout(500)
-    for _ in range(30):
-        if await pg.evaluate("()=>{ const b=document.querySelector('#modal [data-act=ev][data-c=fight]'); if (b) { b.click(); return true; } return false; }"): break
-        await pg.wait_for_timeout(300)
-    await pg.wait_for_timeout(900)
-    for _ in range(40):
-        if await pg.evaluate("!!document.querySelector('#tbf [data-tba=attack]')"): break
-        await pg.wait_for_timeout(300)
+    await open_fight(pg, START)   # waits for the fight screen, not a fixed pause (roadfight.py)
+    await wait_my_turn(pg)
     await pg.evaluate("()=>{ TB.session.f.mp = G.maxMagicka(TB.session.f.s); TB.redraw && TB.redraw(TB.session, {turn:'me'}); }"); await pg.wait_for_timeout(400)
     return ctx, pg
 
@@ -54,7 +49,7 @@ async def main():
         b = await p.chromium.launch(args=["--no-sandbox"])
         errs = []
         # ---- PC: hover Attack, then End turn
-        ctx, pg = await open_fight(b, {"width": 1366, "height": 768}, False, "pc", errs)
+        ctx, pg = await new_fight(b, {"width": 1366, "height": 768}, False, "pc", errs)
         ok(await pg.evaluate("TB.open"), "pc: the fight opens")
         await pg.screenshot(path=os.path.join(OUT, "pc_before.png"))
         c = await center(pg, "#tbf [data-tba=attack]")
@@ -79,7 +74,7 @@ async def main():
             await pg.mouse.move(5, 5)
         await ctx.close()
         # ---- phone 390px: hold Fireball
-        ctx, pg = await open_fight(b, {"width": 390, "height": 844}, True, "ph", errs)
+        ctx, pg = await new_fight(b, {"width": 390, "height": 844}, True, "ph", errs)
         cdp = await ctx.new_cdp_session(pg)
         sel = "#tbf [data-tba='spell:fireball']"
         if not await pg.query_selector(sel):

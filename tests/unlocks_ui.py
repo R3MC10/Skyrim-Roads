@@ -57,9 +57,8 @@ async def run(p, name, vp, mobile):
     ok(not await vis("#gnear"), f"{name} L1: no gather bar")
     ok(not await vis("#rideBtn"), f"{name} L1: no horse button")
     ok(not await vis(".mn-sub [data-id=world]"), f"{name} L1: no World news sub-tab")
-    ok(await vis(".ul-tz"), f"{name} L1: next-unlock teaser shows")
-    tz = await pg.evaluate("document.querySelector('.ul-tz')?.innerText||''")
-    ok("Level 2" in tz and "Perks" in tz, f"{name} L1: teaser names the next unlock ({tz!r})")
+    tz = await pg.evaluate("typeof REWARDS!=='undefined' ? REWARDS.nextText(__dbg.save()) : ''")
+    ok("Level 2" in tz and "Perks" in tz, f"{name} L1: 'Level 2 brings' names the next unlock ({tz!r})")
     await tab("town"); await shot("L1_area")
     ok(not await vis("[data-act=shop][data-id=forge]"), f"{name} L1: no forge in Whiterun")
     ok(not await vis("[data-act=shop][data-id=stables]"), f"{name} L1: no stables")
@@ -68,7 +67,7 @@ async def run(p, name, vp, mobile):
     await tab("hero"); await shot("L1_character")
     ok(not await vis(".mn-sub [data-id=perks]"), f"{name} L1: no Perks sub-tab yet")
     ok(not await vis(".mn-sub [data-id=follower]"), f"{name} L1: no Follower sub-tab yet")
-    ok(await vis("#side .ul-tz"), f"{name} L1: teaser on the Character screen")
+    ok(await vis("#side .rw-nextl"), f"{name} L1: 'Level 2 brings' on the Character screen")
     # a locked button reached another way does nothing bad
     msg = await pg.evaluate("""()=>{const b=document.createElement('button'); b.dataset.act='shop'; b.dataset.id='forge'; b.hidden=true; document.querySelector('#side').appendChild(b); b.click(); return document.querySelector('#side').innerText.includes('Smithing') || true}""")
     # ---- level 4: smithing open

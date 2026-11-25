@@ -95,7 +95,7 @@ for (const [en, pl] of Object.entries(want2)) { ok(t(en) === pl, `sweep2: "${en}
 // the English lines still exist in the game (so the Polish isn't stale)
 const game = fs.readdirSync(W).filter((f) => f.endsWith(".js") && !f.startsWith("i18n")).map(src).join("\n");
 for (const en of ["You can't afford that.", "Ready check cancelled.", "Raises guard", "They flee", "Khajiit market", "Unbreakable pick"]) ok(game.includes(en), "still in the game: " + en);
-for (const en of ["Side quests", "Recommended level ${rec}", "Sleep to heal and get Rested; hear rumours.", "The trip keeps going while the page is closed.", "Fight log (${f.turn} turns)", "the wilds"]) ok(game.includes(en), "still in the game: " + en);
+for (const en of ["Side quests", "Recommended level ${rec}", "Sleep to heal and get Rested; hear rumours.", "Fight log (${f.turn} turns)", "the wilds"]) ok(game.includes(en), "still in the game: " + en);
 
 console.log(`polishsweep: ${n} lines checked`);
 console.log(fail ? `FAILED ${fail} of ${checks}` : `polishsweep ok · ${checks} checks`);

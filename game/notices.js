@@ -10,6 +10,8 @@
    - Fight tips (combo banners, a boss's phase card, the pinned first-fight hints): never on top of the action
      buttons (they slide up above them), and while a fight window is open (Items, Magic, the result card) they wait.
      A boss's phase card no longer swallows taps meant for the buttons under it.
+   - Reward scenes (rewards.js, NOTICES.scene): full-screen moments ride the same window queue, but never on a tap and
+     never during a party vote, the dungeon screen or the level-up pillars; one at a time, and a pushed-off one comes back.
    The queue and the stacking are plain functions (core(), stack()) so tests/test_notices.js can check them. */
 const NOTICES = (() => {
   const DOM = typeof document !== "undefined" && typeof window !== "undefined";
@@ -21,26 +23,31 @@ const NOTICES = (() => {
   function core() {
     const queue = [];
     let cur = null, closedAt = -1e9;
-    /* a window wants to open: {key, run}. scr = {modal, fight, menu, input, cur} → "show" | "queued" | "merged" */
+    /* a window wants to open: {key, run, scene?}. scr = {modal, fight, menu, input, cur, busy} → "show" | "queued" | "merged"
+       A reward scene (rewards.js, scene: true) never opens just because you tapped, and also waits out busy (a party vote,
+       the dungeon screen, the level-up pillars, character creation): big moments come after what you're doing, one at a time. */
     function ask(o, now, scr = {}) {
       if (o.key && cur && cur.key === o.key && scr.cur) { cur.n++; return "merged"; }   // the same one is on screen
       const dup = o.key && queue.find((q) => q.key === o.key);
       if (dup) { dup.n++; return "merged"; }
       const it = { ...o, n: 1, t: now };
-      if (!scr.fight && (scr.input || (!scr.modal && !scr.menu && !queue.length))) { cur = it; return "show"; }
+      const clear = !scr.modal && !scr.menu && !queue.length;
+      if (!scr.fight && (o.scene ? clear && !scr.busy && !scr.cur : scr.input || clear)) { cur = it; return "show"; }
       queue.push(it);
       return "queued";
     }
-    /* what to open now (or null) */
+    /* what to open now (or null): the first in line that may open (a scene waits out busy, the windows behind it don't) */
     function tick(now, scr = {}) {
       if (cur && !scr.cur) { cur = null; closedAt = now; }
       if (!queue.length || scr.fight || scr.modal || scr.menu || cur || now - closedAt < GAP) return null;
-      cur = queue.shift();
+      const i = queue.findIndex((q) => !(q.scene && scr.busy));
+      if (i < 0) return null;
+      cur = queue.splice(i, 1)[0];
       return cur;
     }
-    /* another window is about to replace ours: put ours back at the front (unless the player's tap closes it) */
+    /* another window is about to replace ours: put ours back at the front (unless the player's tap closes it; a scene always comes back) */
     function displaced(scr = {}) {
-      if (!cur || scr.input) { if (scr.input) cur = null; return false; }
+      if (!cur || (scr.input && !cur.scene)) { if (cur && scr.input) cur = null; return false; }
       queue.unshift(cur); cur = null;
       return true;
     }
@@ -88,8 +95,11 @@ const NOTICES = (() => {
       menu: typeof OVERLAYS !== "undefined" && OVERLAYS.menuOpen(),
       input: Date.now() - lastInput < INPUT_MS,
       cur: !!document.querySelector("#modal[data-nq]"),
+      busy: busy(),
     };
   }
+  /* a party vote, the dungeon screen, the level-up pillars, character creation or the title: a reward scene waits */
+  const busy = () => anyVis(".pvote, #dun, #lvlpick, .cg-over, .cgrow, #title, #nfhist") || (typeof LEVELUP !== "undefined" && !!LEVELUP.isOpen);
   const mark = (key) => { const m = DOM && document.getElementById("modal"); if (m) m.dataset.nq = key || "1"; };
   function open(it) {
     running = true;
@@ -100,6 +110,13 @@ const NOTICES = (() => {
   function modal(key, run) {
     if (!DOM) { run(); return "show"; }
     const r = C.ask({ key, run }, Date.now(), scr());
+    if (r === "show") open(C.cur);
+    return r;
+  }
+  /* rewards.js: a full-screen reward scene. run() draws it as #modal, so it takes its turn with every other window */
+  function scene(key, run) {
+    if (!DOM) { run(); return "show"; }
+    const r = C.ask({ key, run, scene: true }, Date.now(), scr());
     if (r === "show") open(C.cur);
     return r;
   }
@@ -180,7 +197,7 @@ const NOTICES = (() => {
     if (document.body) start(); else addEventListener("DOMContentLoaded", start);
   }
 
-  return { GAP, INPUT_MS, core, stack, hit, modal, opening, fightTip, pump, layout, C, get queued() { return C.queue.length; }, get waiting() { return later.length; },
+  return { GAP, INPUT_MS, core, stack, hit, modal, scene, opening, fightTip, pump, layout, C, get queued() { return C.queue.length; }, get waiting() { return later.length; },
     _input(t) { lastInput = t; } };
 })();
 if (typeof module !== "undefined") module.exports = NOTICES;

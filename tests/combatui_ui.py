@@ -10,6 +10,7 @@ At 390x844 (phone, touch) and 1920x1080 (PC, mouse + keys), in both art styles:
 Screenshots in SHOTS/out_combatui/ (default: the system temp folder), never in tests/."""
 import asyncio, sys, os
 from playwright.async_api import async_playwright
+from roadfight import open_fight, wait_my_turn
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"
 import tempfile
 OUT = os.path.join(os.environ.get("SHOTS") or tempfile.gettempdir(), "out_combatui") + os.sep; os.makedirs(OUT, exist_ok=True)
@@ -51,8 +52,7 @@ async def run(p, w, h, touch):
     tag0 = f"{w}x{h}"
     for style in ["ink"]:
         tag = f"{tag0}_{style}"
-        await pg.evaluate(START, style); await pg.wait_for_timeout(400)
-        await pg.click("#modal [data-act=ev][data-c=fight]"); await pg.wait_for_timeout(800)
+        await open_fight(pg, START, style)   # waits for the fight screen, not a fixed pause (roadfight.py)
         await pg.evaluate("document.querySelector('[data-obt=off]')?.click(); document.querySelectorAll('#obtip').forEach(e=>e.remove())")
         ok(await pg.evaluate("!!document.querySelector('#tbf') && TB.open"), f"{tag}: fight screen opens")
         if not await my_turn(pg): ok(False, f"{tag}: my turn comes"); await pg.evaluate(AUTO); continue

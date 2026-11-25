@@ -19,11 +19,10 @@
      UNLOCKS.encounter(S, id)   → may this road encounter roll? (the elite ones wait)
      UNLOCKS.lockedFor(members, id) → names of party members for whom `id` is still locked
      UNLOCKS.note(id)           → the gentle "unlocks at level X" line for a guest
-     UNLOCKS.teaserHTML(S, cls) → the small "Next unlock · Level 4 · Smithing" line
      UNLOCKS.skipTip(S, id)     → true when another character on this account already got that far (skip its tutorial)
      UNLOCKS.applyBody(S)       → sets body classes (ul-lock-<id>) so locked cards, buttons and markers are hidden by CSS
    Rules from the owner:
-   - Locked features are HIDDEN, not greyed out. Only the next 1-2 show as a small teaser.
+   - Locked features are HIDDEN, not greyed out. What the next level brings is shown by rewards.js (REWARDS.nextText, from UNLOCKS.next).
    - Friends, chat, party invites and playing together are never gated.
    - Anything an old character already used stays open (S.unlocks; S.unlocked was taken by shout words long ago).
    - Someone who reaches a locked place another way (a quest, a party, a link) comes in as a guest with a gentle note. */
@@ -195,12 +194,6 @@ const UNLOCKS = (() => {
   }
   const note = (id) => (BY[id] ? `You're here as a guest. ${BY[id].name} opens for you at level ${BY[id].level}.` : "");
   const lockedLine = (id) => (BY[id] ? `${BY[id].name} opens at level ${BY[id].level}.` : "");
-  function teaserHTML(S, cls = "", n = 2) {
-    const nx = next(S, n);
-    if (!nx.length) return "";
-    const one = (f) => `<span class="ul-tz-i"><b>Level ${f.level}</b> · ${esc(f.name)}</span>`;
-    return `<div class="ul-tz ${esc(cls)}" title="${esc(nx[0].teaser)}"><span class="ul-tz-k">Next unlock</span>${nx.map(one).join('<span class="ul-tz-s" aria-hidden="true">·</span>')}</div>`;
-  }
 
   // ------------------------------------------------------------ events
   const subs = [];
@@ -242,5 +235,5 @@ const UNLOCKS = (() => {
   try { if (typeof LEVELUP !== "undefined" && LEVELUP.on) LEVELUP.on("level", (d) => { if (d && d.s) sync(d.s); }); } catch { /* node without levelup.js */ }
 
   return { TABLE, get, level, name, open, next, justOpened, on, migrate, sync, section, sections, sectionFeature, act, tab, tabNow, openNow, dungeon, encounter, featureOfAct,
-    lockedFor, note, lockedLine, dungeonLine, cardBits, teaserHTML, skipTip, skipFirstTrip, newHero, bestLevel, applyBody, css, questLeads };
+    lockedFor, note, lockedLine, dungeonLine, cardBits, skipTip, skipFirstTrip, newHero, bestLevel, applyBody, css, questLeads };
 })();

@@ -461,6 +461,7 @@ const TRAVELART = (() => {
       if (name === "Markarth") P([[-56, 4], [-50, -40], [-30, -52], [-10, -44], [6, -60], [30, -38], [56, 4]], "#8a7660");
       P([[-44, 2], [-44, -16], [44, -16], [44, 2]], st);
       for (let i = -44; i < 44; i += 6) P([[i, -16], [i, -19], [i + 3, -19], [i + 3, -16]], st);
+      if (p > 0.3) { P([[-7, 2], [-7, -10], [-4, -14], [4, -14], [7, -10], [7, 2]], mix(st, "#000000", 0.12)); P([[-4.5, 2], [-4.5, -9], [0, -12], [4.5, -9], [4.5, 2]], "#2a221a"); }   // the gate, once you're close enough to see it
       for (const tx of [-44, -14, 18, 44]) { P([[tx - 4, -14], [tx - 4, -26], [tx + 4, -26], [tx + 4, -14]], mix(st, "#000000", 0.08)); P([[tx - 5.5, -26], [tx, -34], [tx + 5.5, -26]], rf); win.push([tx, -20]); }
       for (let i = 0; i < 7; i++) { const hx = -36 + i * 11 + r() * 4, hh = 6 + r() * 6; P([[hx - 4, -16], [hx - 4, -16 - hh], [hx + 4, -16 - hh], [hx + 4, -16]], "#a8946e"); P([[hx - 5.5, -16 - hh], [hx, -22 - hh], [hx + 5.5, -16 - hh]], rf); win.push([hx, -18 - hh * 0.5]); }
       const keep = city?.keep || "castle";
@@ -470,6 +471,7 @@ const TRAVELART = (() => {
     } else if (kind === "fort") {
       P([[-26, 2], [-26, -18], [26, -18], [26, 2]], "#8a8478");
       for (let i = -26; i < 26; i += 5) P([[i, -18], [i, -21], [i + 2.5, -21], [i + 2.5, -18]], "#8a8478");
+      if (p > 0.3) P([[-3.5, 2], [-3.5, -7], [0, -9.5], [3.5, -7], [3.5, 2]], "#2a221a");   // the gate
       P([[-8, -18], [-8, -36], [8, -36], [8, -18]], "#7e786c"); for (let i = -8; i < 8; i += 4) P([[i, -36], [i, -39], [i + 2, -39], [i + 2, -36]], "#7e786c");
       win.push([0, -28], [-16, -10]);
     } else if (kind === "dungeon" || kind === "lair" || kind === "landmark" || kind === "college") {
@@ -487,6 +489,7 @@ const TRAVELART = (() => {
     } else {   // a town, farm or mill: a cluster of homes and a little smoke
       const n = kind === "farm" ? 3 : 6;
       for (let i = 0; i < n; i++) { const hx = -n * 7 + i * 14 + r() * 4, hh = 7 + r() * 5, hw = 6 + r() * 2; P([[hx - hw, 2], [hx - hw, -hh], [hx + hw, -hh], [hx + hw, 2]], "#a08a66"); P([[hx - hw - 2, -hh], [hx, -hh - 9], [hx + hw + 2, -hh]], "#6a4a30"); win.push([hx - 2, -hh * 0.45]); }
+      if (kind !== "farm" && p > 0.5) { g.fillStyle = haze("#6a5034"); for (let i = -n * 7 - 8; i <= n * 7 + 8; i += 2.4) if (Math.abs(i) > 3) g.fillRect(x + i * s, base - 4 * s, 1.1 * s, 6 * s); g.fillRect(x + (-n * 7 - 8) * s, base - 2.5 * s, (n * 14 + 16) * s, 0.8 * s); }   // a palisade round the town as you near it
       if (kind === "farm") { g.fillStyle = haze("#b8a050"); for (let i = 0; i < 4; i++) g.fillRect(x + (-34 + i * 8) * s, base + 0.5 * s, 6 * s, 1.4 * s); }
     }
     // chimney smoke drifting with the wind

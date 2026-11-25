@@ -3,12 +3,41 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b337-unlocks", build: 337, date: "25 Nov 2026", title: "New things open as you level up", items: [
+    { id: "b341-unlocks", build: 341, date: "25 Nov 2026", title: "New things open as you level up", items: [
       "A new hero no longer gets every system at once. The big ones open one by one as you level up: perks at level 2, gathering and cooking at 3, the forge at 4, followers and alchemy at 5, horses at 6, hard dungeons at 7, clans and houses at 8, and so on up to legendary hunts at 20.",
-      "Under your level bar and on the Character screen a small line shows what opens next. When a level opens something, you get a short note about it.",
       "Your old characters keep everything they already used: if you have a horse, a house or a follower, they stay.",
       "Friends, chat, parties and playing together are open from the start. In a party, a friend who hasn't reached a hard dungeon yet comes along as your guest, and the leader gets a heads-up first.",
       "A new character on an account that already got far skips the first tips and the guided first trip.",
+    ] },
+    { id: "b340-rewards", build: 340, date: "25 Nov 2026", title: "Rewards that feel like rewards", items: [
+      "Loot, gold and skill practice now share one quiet line at the top, like \"+24 gold · +15 One-Handed · Iron Dagger ×2\". What comes together is added up, and during a fight it waits and comes out as one line after.",
+      "Better items on that line show their name in their rarity colour.",
+      "A short toast tells you when you pick up something better than what you wear, learn a spell or get a new word for your shouts.",
+      "Big moments get a full screen: a level that opens something new (\"LEVEL 4 · Smithing unlocked\"), your first follower, your first horse, your first shout. Legendary finds, your first dragon and your own clan too.",
+      "These never pop up in the middle of a fight, a mini-game, a party vote or a dungeon: they wait until you're done, and only one shows at a time.",
+      "New first quests for smithing, gathering, followers, horses and your first proper dungeon: one step each, with a small useful reward. Start them from the big screen.",
+      "Under your level bar you now see what the next level brings.",
+    ] },
+    { id: "b339-fightfixes", build: 339, date: "25 Nov 2026", title: "Small fixes on the road and in hero creation", items: [
+      "A new quest popping up no longer wipes the choices of a road encounter (Pay, Talk, Fight...). It waits until you've made your pick.",
+      "On small phones the round compass button no longer sits on your health, magicka and stamina bars.",
+      "The male and female symbols on the new hero screen show as plain symbols on every phone, not as colourful emoji.",
+    ] },
+    { id: "b338-travelview", build: 338, date: "25 Nov 2026", title: "A road worth watching", items: [
+      "The road view on a trip is much richer: hills and bends you can see coming, mountains, ridges and treelines that fade into the haze, and trees, rocks and signs that grow as you ride up to them and slide past.",
+      "Every land looks like itself, read from the map around you: open tundra, thick pine forest, snowy mountains, rocky hills, misty marsh, ash under a smoking volcano, the coast with the sea on its real side, green river valleys and the Rift's golden birches.",
+      "Things happen along the way: deer bolt, a fox darts across, wolves pace you, mammoths roam, horkers lie on the shore, guards in their hold's colours march by, a merchant's cart passes, and now and then a watchtower, a waterfall, an old camp, giants or a dragon in the sky.",
+      "The same road shows the same landmarks every time you take it; the animals and travellers are different on each trip.",
+      "Your destination grows as you near it, and cities show their gate when you get close. Your horse's mane and reins move as you ride.",
+      "Light and weather fit the land: drifting ash, snow blown off the drifts, falling leaves, fireflies on summer nights, salt haze by the sea.",
+    ] },
+    { id: "b337-fightcam", build: 337, date: "25 Nov 2026", title: "A cinematic fight camera", items: [
+      "The camera now moves only on big moments: it leans in a little when your turn starts, closes in on a wind-up, a critical hit, a broken guard and a killing blow, and slowly pulls in on a win. A boss gets a close-up when the fight starts. Ordinary swings keep the picture calm.",
+      "A critical hit plays for a moment in slow motion. The fight doesn't get any longer: the next turn comes just as fast.",
+      "The battlefield has depth: the sky and far mountains move less than the ground the fighters stand on. You never see the edge of the picture.",
+      "Only the battlefield moves. The turn order, the cards, the boss's health bar and your buttons stay where they are, and damage numbers and names follow the fighters at the same size.",
+      "In a party fight another player's big moment never moves your camera while you're choosing a move or playing a minigame.",
+      "New in Settings → Fights: Fight camera. Cinematic (the default), Calm (gentle, no shaking, no slow motion) or Off. With Reduce motion on, the camera is always Calm.",
     ] },
     { id: "b336-channel", build: 336, date: "25 Nov 2026", title: "See your friends get ready", items: [
       "In a party fight, when a friend casts a spell, swings, draws a bow or uses a skill from an item, you now see them get ready for it: their hero raises a hand with embers, gathers frost or sparks, pulls back their weapon or draws the bowstring, and a small bar over their head fills while they play their minigame.",
@@ -2232,7 +2261,7 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 297;
+  const NEXT_AT = 338;
   const NEXT = [
     "Mentoring: play side by side with friends of any level",
     "Shrines of your own: build a Daedric altar at your longhouse",

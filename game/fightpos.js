@@ -219,6 +219,8 @@ const FIGHTPOS = (() => {
     const k = rc.width / L.W;
     const p = who === "me" ? L.hero : who === "foe" ? L.foe : L.allies.find((a) => a.name === who) || L.flyers.find((a) => a.name === who) || null;
     if (!p) return null;
+    const C = cv.__cam;   // [fightcam] the fight camera has moved: where it shows now (fightcam.js; same size labels, so k stays)
+    if (C) { const c = C(p.x, p.y), z = Math.hypot(C(p.x + 1, p.y)[0] - c[0], C(p.x + 1, p.y)[1] - c[1]); return { x: rc.left + c[0] * k, y: rc.top + c[1] * k, top: rc.top + C(p.x, p.top)[1] * k, left: rc.left + C(p.left, p.y)[0] * k, right: rc.left + C(p.right, p.y)[0] * k, sc: p.sc * z, k, s: L.s * k * z }; }
     return { x: rc.left + p.x * k, y: rc.top + p.y * k, top: rc.top + p.top * k, left: rc.left + p.left * k, right: rc.left + p.right * k, sc: p.sc, k, s: L.s * k };
   }
   /* [fightfeel] how much of each fighter shows: the middle 60 % of each figure's box, covered by the figures standing in

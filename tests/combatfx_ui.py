@@ -61,7 +61,7 @@ async def main():
                 shots, prev = [], 0
                 for t in AFTER:
                     st = await pg.evaluate(f"FIGHTART.advance({t - prev})"); prev = t
-                    if t == AFTER[1]: ok(st[0]["cam"][0] > 1.08 and st[0]["cam"][1] > 0.55 and st[0]["cam"][2] == kind, f"{style} {kind}: the camera closes in on the dying foe {st[0]['cam']}")
+                    if t == AFTER[1]: ok(st[0]["cam"][0] > 1.02 and st[0]["cam"][3] in ("kill", "victory") and st[0]["cam"][2] == kind, f"{style} {kind}: the camera (fightcam.js) closes in on the win {st[0]['cam']}")
                     shots.append(Image.open(io.BytesIO(await el.screenshot())))
                 rows.append((f"{kind}: {foe}", shots))
             # an enchanted blade mid-fight: the glow and a coloured trail
