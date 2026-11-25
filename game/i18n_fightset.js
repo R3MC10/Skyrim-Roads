@@ -36,7 +36,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
       "Na telefonach przytrzymanie ruchu pokazuje podpowiedź nad paskiem umiejętności, więc nie zasłania już rzędu Ruchy.",
     "The short fight log in the corner sits on a soft dark strip, so a single line reads clearly instead of looking half faded.":
       "Krótki dziennik walki w rogu leży na miękkim ciemnym pasku, więc pojedyncza linijka jest czytelna i nie wygląda na wyblakłą.",
-    // build 186 patch note
+    // build 187 patch note
     "Fights last long enough again": "Walki znów trwają tyle, ile powinny",
     "Since a turn holds up to four moves, strong heroes were ending fights in three or four rounds, even against bosses and legendary beasts. A foe's health now follows what you can really do in a turn with your stamina and magicka (a power attack and a few blows, or a few spells and a summon), so fights at higher levels last as long as they should.":
       "Odkąd tura mieści do czterech ruchów, silni bohaterowie kończyli walki w trzy albo cztery rundy, nawet z bossami i legendarnymi bestiami. Zdrowie wroga zależy teraz od tego, co naprawdę zrobisz w turze za swoją wytrzymałość i magię (silny cios i kilka uderzeń albo kilka zaklęć i przywołaniec), więc walki na wyższych poziomach trwają tyle, ile powinny.",
