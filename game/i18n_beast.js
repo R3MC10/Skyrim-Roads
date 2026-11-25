@@ -39,6 +39,12 @@ const I18N_BEAST = (() => {
     "Once per change": "Raz na przemianę", "Once a fight": "Raz na walkę", "Ready in 1 round": "Gotowe za 1 rundę", "Ready in 2 rounds": "Gotowe za 2 rundy", "Ready in 3 rounds": "Gotowe za 3 rundy",
     "Not enough stamina": "Za mało wytrzymałości", "Not hungry enough": "Za mały głód", "Wear it down first": "Najpierw go osłab", "It won't listen": "Nie da się uwieść",
     "Not in Beast Form": "Nie w postaci bestii",
+    "Where Beast Form lives": "Gdzie jest postać bestii",
+    "Fixed: the werewolf card on the Character tab still sent you to the old Tactics page for Beast Form. It now says the truth: it's in the Magic menu, under Powers.":
+      "Poprawka: karta wilkołaka na zakładce Postać wciąż odsyłała cię po postać bestii do starej strony Taktyki. Teraz mówi prawdę: jest w menu Magii, w Mocach.",
+    // the werewolf panel on the Character tab (ui.js; Beast Form moved from the old Tactics page to the Magic menu)
+    "Beast Form, once a day, is in your Magic menu under Powers: for 10 turns you hit much harder, take less damage and heal a bit, but can't drink potions. Win a fight in Beast Form against a person and you feed: it heals you and grows your werewolf perks. Beds no longer make you Rested, and you can't catch diseases.":
+      "Postać bestii, raz dziennie, znajdziesz w menu Magii, w Mocach: przez 10 tur bijesz dużo mocniej, dostajesz mniej obrażeń i trochę się leczysz, ale nie możesz pić mikstur. Wygraj walkę w postaci bestii z człowiekiem, a pożywisz się: to cię leczy i rozwija twoje atuty wilkołaka. Łóżka nie dają już premii Wypoczęty i nie łapiesz chorób.",
     // the action bar's other "why it's greyed out" lines (fightctl.js)
     "Not from a boss": "Nie przed bossem", "No way out here": "Stąd nie ma ucieczki", "Not with a bow": "Nie z łukiem", "None left": "Nic nie zostało", "Not ready yet": "Jeszcze niegotowe",
     "Beast Form moves": "Ruchy postaci bestii", "Vampire Lord moves": "Ruchy Wampirzego Lorda",

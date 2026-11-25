@@ -30,7 +30,7 @@ async def main():
             ctx = await b.new_context(viewport={"width": 412, "height": 915}, device_scale_factor=2, has_touch=True)
             await ctx.add_init_script(f"localStorage.setItem('rotn_prefs', JSON.stringify({{artStyle:'{style}',obTips:false}}))")
             pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(style + " " + str(e)))
-            await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&tb&fightanim&assets&p=f3{style}"); await pg.wait_for_timeout(2000)
+            await pg.goto(f"http://127.0.0.1:{PORT}/index.html?net=bc&notut&tb&fightanim&assets&p=f3{style}"); await pg.wait_for_timeout(2000)
             await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Teacher"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
             ok(await pg.evaluate(HIRE, style) == "marcurio", f"{style}: hired Marcurio")
             async def clean(): await pg.evaluate("() => document.querySelectorAll('#modal,.modal,#xgame').forEach(m => m.remove())")

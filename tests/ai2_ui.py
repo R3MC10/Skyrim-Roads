@@ -2,13 +2,15 @@
 # encounter card. python3 ai2_ui.py [port]  -> RESULT OK
 import asyncio, sys
 from playwright.async_api import async_playwright
+_SHOTS = (__import__("os").environ.get("SHOTS") or __import__("os").path.join(__import__("tempfile").gettempdir(), "rotn_shots")).replace("\\", "/").rstrip("/") + "/"   # screenshots: $SHOTS or the temp folder
+__import__("os").makedirs(_SHOTS, exist_ok=True)
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8854"
 
 async def run(b, style, errs, bad):
     ctx = await b.new_context(viewport={"width": 412, "height": 915}, device_scale_factor=2)
     await ctx.add_init_script(f"localStorage.setItem('rotn_prefs', JSON.stringify({{artStyle:'{style}'}}))")
     pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(style + " " + str(e)))
-    await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=ai2{style}"); await pg.wait_for_timeout(1500)
+    await pg.goto(f"http://127.0.0.1:{PORT}/index.html?net=bc&notut&p=ai2{style}"); await pg.wait_for_timeout(1500)
     await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Tactician"); await pg.click("#begin"); await pg.wait_for_timeout(1200)
     kill = "document.querySelectorAll('#modal').forEach(m=>m.remove())"
     await pg.evaluate(kill)
@@ -22,7 +24,7 @@ async def run(b, style, errs, bad):
             except Exception: pass
         await pg.click(sel)
     lo = "window.__dbg.save().loadouts[window.__dbg.save().loadout]"
-    await click("[data-tab=hero]"); await pg.wait_for_timeout(250); await click("[data-act=tabgo][data-id=tactics]"); await pg.wait_for_timeout(500)
+    await pg.evaluate(kill); await pg.evaluate("window.__ui.go('tactics')"); await pg.wait_for_timeout(500)   # the Tactics screen (rules, loadouts, test fight) has no menu button since fights went turn-based; open it directly
     if not await pg.query_selector("#aisetbox"): bad.append(style + " no AI settings card")
     await click("#aisetbox > summary"); await pg.wait_for_timeout(300)
     await click("[data-act=aiset][data-k=style][data-v=careful]"); await pg.wait_for_timeout(200)
@@ -37,7 +39,7 @@ async def run(b, style, errs, bad):
     tr = await pg.evaluate("document.querySelector('#aisetbox')?.innerText || ''")
     print(style, "training:", tr)
     if "Destruction" not in tr: bad.append(style + " training list")
-    el = await pg.query_selector("#aisetbox"); await el.screenshot(path=f"ai2_settings_{style}.png")
+    el = await pg.query_selector("#aisetbox"); await el.screenshot(path=_SHOTS + f"ai2_settings_{style}.png")
     # Hybrid + a rule with two conditions
     await click("[data-act=aimode][data-id=hybrid]"); await pg.wait_for_timeout(300)
     await pg.select_option("#tc", "first_turn"); await pg.wait_for_timeout(300)
@@ -63,13 +65,13 @@ async def run(b, style, errs, bad):
     after = [r["do"] for r in await pg.evaluate(f"{lo}.rules")]
     print(style, "drag:", before, "->", after)
     if after[:2] != [before[1], before[0]]: bad.append(style + " drag reorder")
-    el = await pg.query_selector("#side .rulesbox"); await el.screenshot(path=f"ai2_rules_{style}.png")
+    el = await pg.query_selector("#side .rulesbox"); await el.screenshot(path=_SHOTS + f"ai2_rules_{style}.png")
     # preview 20 fights
     await click("[data-act=preview]"); await pg.wait_for_timeout(1500)
     res = await pg.evaluate("document.querySelector('.aiprev')?.innerText || ''")
     print(style, "preview:", res.replace("\n", " "))
     if "%" not in res: bad.append(style + " preview")
-    el = await pg.query_selector(".aiprev"); el = await el.evaluate_handle("e=>e.closest('.panel')"); await el.as_element().screenshot(path=f"ai2_preview_{style}.png")
+    el = await pg.query_selector(".aiprev"); el = await el.evaluate_handle("e=>e.closest('.panel')"); await el.as_element().screenshot(path=_SHOTS + f"ai2_preview_{style}.png")
     # share: copy, change, import back
     code = await pg.evaluate(f"AISET.encode({lo})")
     await click("[data-act=sharecopy]"); await pg.wait_for_timeout(300)
@@ -100,7 +102,7 @@ async def run(b, style, errs, bad):
     print(style, "card:", card.replace("\n", " | "), "·", sp)
     if "%" not in card or "%" not in sp: bad.append(style + " sneak chance on card")
     sh = await pg.query_selector("#modal .sheet")
-    if sh: await sh.screenshot(path=f"ai2_encounter_{style}.png")
+    if sh: await sh.screenshot(path=_SHOTS + f"ai2_encounter_{style}.png")
     await pg.click("[data-act=enc][data-a=fight]")
     try: await pg.wait_for_selector("#modal .flog", timeout=8000)
     except Exception:
