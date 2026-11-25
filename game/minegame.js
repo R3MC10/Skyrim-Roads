@@ -278,7 +278,7 @@ const MINEGAME = (() => {
   function paintGot() {
     const row = $("#mggot"); if (!row) return;
     const got = st.bag || {};
-    row.innerHTML = Object.entries(got).map(([id, n]) => `<span data-id="${esc(id)}"><b class="mgico">${chunk(id)}</b>${n} ${esc(D.ITEMS[id]?.name || id)}</span>`).join("") || `<span class="mute">Nothing yet</span>`;
+    row.innerHTML = Object.entries(got).map(([id, n]) => `<span data-id="${esc(id)}"${typeof RTIP !== "undefined" ? RTIP.attr(id, n) : ""}><b class="mgico">${chunk(id)}</b>${n} ${esc(D.ITEMS[id]?.name || id)}</span>`).join("") || `<span class="mute">Nothing yet</span>`;
   }
   const short = (id) => (D.ITEMS[id]?.name || id).replace(/ Ore$/, "").replace(/^Flawless /, "");
   function oreColour(id) {

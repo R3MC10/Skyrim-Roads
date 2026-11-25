@@ -371,7 +371,15 @@ const BARGAIN = (() => {
   const glyph = (p) => SV(GLYPH[p] || GLYPH.dagon);
   /* the artifact's painted icon (art-<prince>, assets.js) once it has loaded, else the line glyph */
   const artIcon = (p, cls = "") => { let u = ""; try { u = typeof ASSETS !== "undefined" && PR[p] ? ASSETS.url("art-" + p) : ""; } catch { u = ""; }
-    return u ? `<img class="dbg-art${cls ? " " + cls : ""}" src="${u}" alt="${esc(T(PR[p].art))}" loading="lazy">` : glyph(p); };
+    const tip = PR[p] ? ` data-tip-k="dbart:${p}" data-rtip="1" tabindex="0"` : "";   // [rewardtips] the artifact's card on hover / tap
+    return u ? `<img class="dbg-art${cls ? " " + cls : ""}" src="${u}" alt="${esc(T(PR[p].art))}" loading="lazy"${tip}>` : `<span class="dbg-glyph"${tip}>${glyph(p)}</span>`; };
+  if (typeof TIP !== "undefined") TIP.register("dbart", (p, s) => {   // a pact artifact: what it is and what each stage does
+    const d = PR[p]; if (!d) return null;
+    let pw = null; try { pw = s ? powers(s, p) : null; } catch { pw = null; }
+    const sg = s && artOf(s, p) ? stage(s, p) : 0;
+    return `<b class="tt-h q-legendary">${esc(T(d.art))}</b><div class="tt-sub"><span>Daedric artifact</span> · ${esc(T(d.prince))}${sg ? ` · ${esc(T(STAGES[sg - 1]))}` : ""}</div><p>${esc(T(d.desc))}</p>`
+      + (pw ? pw.pow.map((x, i) => `<p class="${i < sg ? "tt-up" : "tt-hint"}">✦ ${esc(T(STAGES[i]))}: ${esc(x)}</p>`).join("") + (pw.curse ? `<p class="tt-dn">${esc(T("Curse"))}: ${esc(pw.curse[0])}</p>` : "") : "");
+  });
   function track(sg, rdy) {
     return `<ol class="dbg-track">${STAGES.map((x, i) => `<li class="${i + 1 < sg ? "past" : i + 1 === sg ? "now" : i === 2 && rdy ? "ready" : ""}"><i></i><span>${esc(T(x))}</span></li>`).join("")}</ol>`;
   }

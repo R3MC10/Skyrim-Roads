@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b282-rewardtips", build: 282, date: "25 Nov 2026", title: "Item cards on rewards", items: [
+      "Every loot and reward icon now shows the full item card, like in your pack: damage or armour, weight, value, the enchantment and what it does, potion effects, how many you already have, and the same \"against what you wear\" lines as the Items menu (damage, weight and value, better in green, worse in red).",
+      "On a PC rest the mouse on an icon. On a phone tap it: the card slides up from the bottom of the screen, so it never covers the loot or the buttons. Tap anywhere else to close it.",
+      "Dungeon loot, fight loot, boss loot, the party loot vote, road events, quest and crisis rewards, expeditions, heists, Daedric artifacts, fishing, hunting, mining and market stalls all have it.",
+      "Gold and stacks get a short card too.",
+    ] },
     { id: "b281-tacticsaccess", build: 281, date: "25 Nov 2026", title: "Loadouts and fight rules are back", items: [
       "Your loadouts, the Smart AI / Hybrid / Custom switch and your own fight rules have a home again: Character → AI & Loadouts. On the compass: Skills, then the AI & Loadouts tab.",
       "Messages about new spells, shouts and powers no longer tell you to add them to your tactics: they say where to find them (the Magic menu) and to use them in a fight.",
