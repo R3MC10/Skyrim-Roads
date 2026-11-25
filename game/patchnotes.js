@@ -3,6 +3,10 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b345-names", build: 345, date: "26 Nov 2026", title: "One list of names", items: [
+      "Behind the scenes: the names of towns, holds, items and foes now come from one list. Nothing looks different today.",
+      "This lets us give places and things their own names later in one go, without breaking your saves, quests or bags.",
+    ] },
     { id: "b344-tabs5", build: 344, date: "26 Nov 2026", title: "Five tabs instead of seven", items: [
       "The bar at the bottom now has five tabs: World, Area, Hero, Journal and Social.",
       "World is the map: under it you see the one thing to do next and a big Where to? button for every place you know. World news has its own page there once world events are open for you.",
