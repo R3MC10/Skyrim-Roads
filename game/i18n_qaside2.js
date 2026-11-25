@@ -32,6 +32,13 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "Rough work, but it holds.": "Toporna robota, ale trzyma.", "Great work.": "Świetna robota.", "Masterful work!": "Mistrzowska robota!", "Perfect work!": "Doskonała robota!",
     "The heat runs wild and the ore turns to slag.": "Żar wymyka się spod kontroli i ruda zamienia się w żużel.",
     "Your knife slips and the hide tears.": "Nóż ci się ześlizguje i skóra się rozdziera.",
+    // patch note b252
+    "Forge and lockpicking fixes": "Poprawki kuźni i otwierania zamków",
+    "Fixed: in Polish, the forge was still mostly in English: the Make, Smelt & tan and Improve tabs, batch crafting, what's missing, and the line you get after making something.":
+      "Naprawione: po polsku kuźnia była wciąż prawie cała po angielsku: zakładki Wykuj, Przetop i garbuj oraz Ulepsz, robienie partiami, czego brakuje i komunikat po wykuciu czegoś.",
+    "Fixed: in Polish, the lockpicking hint under the lock is translated.": "Naprawione: po polsku podpowiedź pod zamkiem przy otwieraniu jest przetłumaczona.",
+    "Fixed: after a festival smithing contest, your next forged item could get a free chance to save a material it never earned.":
+      "Naprawione: po konkursie kowalskim na festynie następny wykuty przedmiot mógł dostać darmową szansę na odzyskanie materiału, na którą nie zapracował.",
   });
   I18N_EXTRA.pat.push(
     [/^Make as many as you can \((\d+)\)$/, (m) => `Zrób tyle, ile się da (${m[1]})`],
