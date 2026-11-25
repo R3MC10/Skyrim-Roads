@@ -3,10 +3,17 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b335-fightfixes", build: 335, date: "25 Nov 2026", title: "Small fixes on the road and in hero creation", items: [
+    { id: "b336-fightfixes", build: 336, date: "25 Nov 2026", title: "Small fixes on the road and in hero creation", items: [
       "A new quest popping up no longer wipes the choices of a road encounter (Pay, Talk, Fight...). It waits until you've made your pick.",
       "On small phones the round compass button no longer sits on your health, magicka and stamina bars.",
       "The male and female symbols on the new hero screen show as plain symbols on every phone, not as colourful emoji.",
+    ] },
+    { id: "b335-dollrig2", build: 335, date: "25 Nov 2026", title: "Your hero stands face-on on the Items screen", items: [
+      "On the Items screen your hero now faces you, like in Skyrim's inventory, and stands relaxed with their gear: they breathe, sway a little, their cape and hair lag behind, and now and then they shift their grip.",
+      "A one-handed weapon hangs from the right hand, a two-hander rests point-down in both hands, a bow sits in the left hand and a staff or spear stands planted by the right foot.",
+      "Your shield sits on your left arm in front of your body, and every weapon is held by its handle with the fist closed round it.",
+      "In fights the same goes for your fighter: the main weapon is always in the right hand and the shield or second weapon in the left, each drawn in its own layer, so arms, shields and blades don't overlap into weird shapes anymore.",
+      "Reduce motion in Settings keeps your hero still, and they stop moving while the game is in the background.",
     ] },
     { id: "b334-locintro", build: 334, date: "25 Nov 2026", title: "Every arrival shows the place", items: [
       "Every time you arrive somewhere (a town, a hold's capital, a dungeon, a camp, a shrine...), the place fills the screen for a moment: its painting, its name, the time, the weather and the season. Night and bad weather tint the picture.",
@@ -2215,7 +2222,7 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 335;
+  const NEXT_AT = 336;
   const NEXT = [
     "Mentoring: play side by side with friends of any level",
     "Shrines of your own: build a Daedric altar at your longhouse",
