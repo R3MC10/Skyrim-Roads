@@ -44,6 +44,10 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
       "Bossowie i legendarne bestie znów wymagają około 15 rund, a znajomość słabości bestii wciąż wyraźnie skraca łowy. Zwykłe walki na drodze zostają krótkie.",
     "Heroes at low levels meet about the same fights as before.":
       "Bohaterowie na niskich poziomach trafiają na mniej więcej takie same walki jak wcześniej.",
+    "Riding is a little less overpowering: the charge hits softer and horses dodge less, so the saddle still helps but doesn't win every fight for you.":
+      "Jazda konno jest trochę mniej przegięta: szarża uderza słabiej, a konie rzadziej robią uniki, więc siodło nadal pomaga, ale nie wygrywa za ciebie każdej walki.",
+    "Dawnguard and Dwarven quest foes hit a bit softer, and the Volkihar courtyard and the Silent City guardians are a touch easier.":
+      "Wrogowie z zadań Straży Świtu i Dwemerów biją trochę słabiej, a dziedziniec Volkihar i strażnicy Cichego Miasta są odrobinę łatwiejsi.",
     // Coming next
     "Mounted combat: fight from the saddle": "Walka konno: bij się z siodła",
     "Pick a side in the civil war": "Wybierz stronę w wojnie domowej",

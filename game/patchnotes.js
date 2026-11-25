@@ -7,6 +7,8 @@ const PATCHNOTES = (() => {
       "Since a turn holds up to four moves, strong heroes were ending fights in three or four rounds, even against bosses and legendary beasts. A foe's health now follows what you can really do in a turn with your stamina and magicka (a power attack and a few blows, or a few spells and a summon), so fights at higher levels last as long as they should.",
       "Bosses and legendary beasts take about 15 rounds again, and knowing a beast's weakness still makes the hunt a good bit shorter. Ordinary road fights stay short.",
       "Heroes at low levels meet about the same fights as before.",
+      "Riding is a little less overpowering: the charge hits softer and horses dodge less, so the saddle still helps but doesn't win every fight for you.",
+      "Dawnguard and Dwarven quest foes hit a bit softer, and the Volkihar courtyard and the Silent City guardians are a touch easier.",
     ] },
     { id: "b185-blood2", build: 185, date: "25 Nov 2026", title: "Blood that looks like blood", items: [
       "Blood in fights looks wet and real now: glossy dark red that runs together, see-through and brighter where it's thin, with a shine where the light catches it. No more red pills.",

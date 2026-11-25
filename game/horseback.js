@@ -7,8 +7,8 @@
      on in the same fight on foot; afterwards it stays with you, downed, until it gets back up (horses.js). */
 const HORSEBACK = (() => {
   const SP_MAX = 100, SP_REGEN = 4, COST = { charge: 35, attack: 12, power: 20 };
-  const BONUS = { sword: 1.05, axe: 1.05, mace: 1.05, dagger: 1.03, spear: 1.1, bow: 1.05, fist: 1 };
-  const CHARGE = { spear: 1.7, def: 1.4 };
+  const BONUS = { sword: 1.03, axe: 1.03, mace: 1.03, dagger: 1.02, spear: 1.06, bow: 1.03, fist: 1 };
+  const CHARGE = { spear: 1.5, def: 1.2 };
   const FALL = 0.05;   // you lose 5% of your max health when you're thrown
   const FOOT = new Set(["greatsword", "battleaxe", "warhammer"]);
   const hn = (f) => f.s.horse?.name || "your horse";
@@ -33,7 +33,7 @@ const HORSEBACK = (() => {
       if (m.sp >= COST.charge) {
         m.sp -= COST.charge;
         const mult = (CHARGE[f.wt] || CHARGE.def) * (power ? 1.15 : 1);
-        if (Math.random() < 0.25) f.stagger = true;
+        if (Math.random() < 0.15) f.stagger = true;
         return { mult, label: `Mounted charge ×${mult.toFixed(1).replace(/\.0$/, "")}${f.stagger ? ", knocks them back" : ""}`, sure: true };
       }
     }
