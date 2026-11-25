@@ -1262,7 +1262,7 @@
     if (!e) return;
     openModal(`<p class="sub danger-${e.danger}" style="margin:0">${e.danger === "high" ? "Deadly" : e.danger === "medium" ? "Dangerous" : "Minor"} encounter · ${esc(e.hold)}${G.isNight() ? " · night" : ""}</p>
       <h2 style="margin:4px 0 8px">${esc(e.name)}</h2>${typeof FOEPERKS !== "undefined" ? FOEPERKS.html(e, esc) : ""}<p>${esc(e.text)}</p>
-      ${note ? `<p class="sub">${esc(note)}</p>` : ""}${(() => { const am = typeof AMMO !== "undefined" ? AMMO.status(S) : null; return am && !am.best ? ammoNote() : ""; })()}${typeof HORSEBACK !== "undefined" ? (typeof MOUNTCOMBAT !== "undefined" && !MOUNTCOMBAT.enabled ? MOUNTCOMBAT.note(S) : HORSEBACK.note(S)) : ""}${typeof WFX !== "undefined" ? WFX.noteHTML(S) : ""}
+      ${note ? `<p class="sub">${esc(note)}</p>` : ""}${(() => { const am = typeof AMMO !== "undefined" ? AMMO.status(S) : null; return am && !am.best ? ammoNote() : ""; })()}${typeof MOUNTCOMBAT !== "undefined" ? MOUNTCOMBAT.note(S) : ""}${typeof WFX !== "undefined" ? WFX.noteHTML(S) : ""}
       <div class="grid2" style="margin:10px 0"><div class="vital"><small><span>You</span><span class="num">${Math.round(G.curHealth(S))}/${G.maxHealth(S)}</span></small><div class="bar"><i style="width:${pct(G.curHealth(S), G.maxHealth(S))}%;background:var(--hp)"></i></div></div>
       <div class="vital"><small><span>${esc(e.name)}</span><span class="num">${e.hp}/${e.health}</span></small><div class="bar"><i style="width:${pct(e.hp, e.health)}%;background:var(--ember)"></i></div></div></div>
       <div class="grid2">

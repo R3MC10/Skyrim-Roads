@@ -3,6 +3,15 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b296-nomountfight", build: 296, date: "25 Nov 2026", title: "Horses are for travel", items: [
+      "Horses are for travel now: fights always happen on foot.",
+      "Riding when a fight starts on the road? You get down and fight on foot. Your horse waits beside you, safe: nobody goes for it and a fight never hurts it. You ride on afterwards.",
+      "No more Mount and Dismount moves, charges or trampling in fights, and no horse health bar in the fight.",
+      "The old saddle perks help on the road instead: Cavalry Charge lets you ride 8% faster, Horse Archer means 20% fewer fights find you while you ride, Steady Steed lets your horse carry 25/50 more, Trample makes it 10% faster off the road, and Saddle Caster makes dual-cast destruction spells 5% cheaper.",
+      "Ranger now makes you travel 3% faster, and Lance makes spear power attacks 10% stronger.",
+      "The warhorse speciality now means fewer fights find you while you ride.",
+      "An ambush on the road no longer hurts your horse.",
+    ] },
     { id: "b295-phantomattacks", build: 295, date: "25 Nov 2026", title: "No one swings on their own any more", items: [
       "In a fight, you, your friends and the foe only swing when they really strike. Catching your breath, the end-of-round burns, bleeds and poison, marking the foe and covering your friends used to show you swinging your weapon. Now they don't.",
       "When the foe winds up a big blow, takes aim, roars a war cry, drinks a potion, raises a ward or a shield, or slips into the shadows, it no longer swings at you. A short word over the picture says what it did (\"Winds up!\", \"Takes aim!\", \"War cry!\").",
