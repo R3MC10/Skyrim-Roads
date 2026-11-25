@@ -10,6 +10,10 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "Fixed: tapping Give twice quickly could hand the same ingots to the stockpile twice.": "Naprawione: szybkie dwukrotne stuknięcie w Oddaj mogło oddać te same sztabki do magazynu dwa razy.",
     "Fixed: an app update no longer restarts the game while you're fishing, mining, hunting, at the forge or in any other mini-game, so you never lose a catch.": "Naprawione: aktualizacja aplikacji nie restartuje już gry w trakcie łowienia, kopania, polowania, kucia ani innej minigry, więc nie stracisz zdobyczy.",
     "Fixed: more of the Social, jobs and fishing screens are in Polish.": "Naprawione: więcej tekstów na ekranach Społeczność, zleceń i łowienia jest po polsku.",
+    // patch note b240
+    "More Polish in towns": "Więcej polskiego w miastach",
+    "Fixed: in Polish, the cooking pot, the forge, the notice board's weekly goals, the Hall of the North, the streets, trainers and hirelings are translated.": "Naprawione: po polsku są już kocioł, kuźnia, tygodniowe cele z tablicy ogłoszeń, Hala Północy, ulice, trenerzy i najemnicy.",
+    "Fixed: in Polish, the Social tabs, the bard's song lines and the time left on world events are translated.": "Naprawione: po polsku są już zakładki Społeczności, wersy pieśni barda i czas do końca wydarzeń świata.",
     // social
     "Word on the road": "Wieści z gościńca",
     "Quiet, for now.": "Na razie cisza.",
