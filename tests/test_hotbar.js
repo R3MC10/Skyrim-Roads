@@ -75,6 +75,61 @@ for (const b of ["warrior", "mage", "archer", "spellsword", "twohand"]) {
   const d = H.layout(s, f), ok = d.filter((a) => a && !ss.why(a));
   OK(ok.length >= 3, "at least three default slots can be used at once " + ok);
   r = ss.act(d[0]); OK(!r.err, "slot 1 plays a real move " + (r.err || "")); }
+// ---- drag and drop + single / dual cast (b292)
+{ const { s, f } = fight("mage", 20);
+  for (const id of ["flames", "healing", "conjure_familiar"]) if (!s.spells.includes(id)) s.spells.push(id);
+  OK(H.mode("spell:flames") === 1 && H.mode("dual:flames") === 2 && H.mode("attack") === 0 && H.mode(null) === 0, "slot modes: spell 1x, dual 2x, the rest none");
+  const cat = H.catalog(s, f);
+  OK(cat.spells.length && cat.spells.every((e) => e.a.startsWith("spell:")), "the picker lists each spell once (the slot's 1x/2x picks dual)");
+  // a drop on a slot is a put: a spell dropped from the picker starts as a single cast
+  H.store(s, Array(10).fill(null));
+  H.put(s, 4, "spell:flames", f); OK(s.hotbar[4] === "spell:flames" && H.mode(s.hotbar[4]) === 1, "dropping a spell on a slot puts it there, single cast");
+  H.put(s, 0, "attack", f); H.swap(s, 0, 4, f); OK(s.hotbar[0] === "spell:flames" && s.hotbar[4] === "attack", "dragging a slot onto another swaps them");
+  H.clear(s, 4, f); OK(s.hotbar[4] === null, "dragging a slot off the bar clears it");
+  // 1x -> 2x and back
+  OK(H.dualWhy("flames") === "", "Flames can be dual cast");
+  OK(H.toggle(s, 0, f) && s.hotbar[0] === "dual:flames", "the 1x/2x badge makes a slot dual cast");
+  OK(H.toggle(s, 0, f) && s.hotbar[0] === "spell:flames", "and back to single");
+  // the same spell twice, once each way
+  H.put(s, 1, "spell:flames", f); OK(s.hotbar[1] === "spell:flames" && s.hotbar[0] === null, "the same single cast can't sit twice (it moves)");
+  H.put(s, 0, "spell:flames", f); H.put(s, 1, "dual:flames", f);
+  OK(s.hotbar[0] === "spell:flames" && s.hotbar[1] === "dual:flames", "the same spell can sit in two slots, one single and one dual");
+  OK(H.toggle(s, 0, f) && s.hotbar[0] === "dual:flames" && s.hotbar[1] === "spell:flames", "switching one of them trades modes with the other (both stay)");
+  OK(JSON.stringify(H.clean(s.hotbar)) === JSON.stringify(s.hotbar), "a bar with both modes is a clean bar");
+  // a spell that can't be dual cast
+  const why = H.dualWhy("conjure_familiar");
+  OK(why && /dual/i.test(why), "a summon can't be dual cast and says why: " + why);
+  H.put(s, 2, "spell:conjure_familiar", f);
+  OK(!H.toggle(s, 2, f) && s.hotbar[2] === "spell:conjure_familiar", "its badge can't switch it to 2x");
+  OK(!H.toggle(s, 3, f) && !H.toggle(s, 99, f), "an empty slot or a slot off the bar has no mode");
+  s.hotbar[3] = "dual:conjure_familiar";   // e.g. an old save or a rule that changed
+  OK(H.known(s, f, "dual:conjure_familiar") && H.dualWhy("conjure_familiar"), "an impossible dual slot stays (dimmed with a reason, not 'not known')");
+  // drawing: the play bar marks 2x slots, the impossible one is disabled with the reason; edit mode has the badges
+  const ss = new TB.Session(f, { trySneak: false }); ss.begin();
+  const ui = { btn: (_s, _a, a, o) => '<button class="tbact fc-b ' + o.extra + '" data-tba="' + a + '"><b>' + o.label + '</b></button>', icon: () => "" };
+  const html = H.bar(ss, {}, ui);
+  OK(/data-hbs="0"[^>]*>(?:(?!<\\/button>).)*hb-x2/s.test(html.replace(/\\n/g, "")) || html.includes('hb-dual" data-tba="dual:flames"') && html.includes("hb-x2"), "the play bar shows a 2x badge on a dual slot");
+  OK(/hb-gone[^"]*" type="button" disabled data-hbs="3" data-tip="[^"]*dual/i.test(html), "an impossible dual slot is dimmed with the reason in its tooltip");
+  H.setEdit(true); const eh = H.bar(ss, {}, ui); H.setEdit(false);
+  OK((eh.match(/data-hbmode=/g) || []).length === 4, "edit mode: each spell slot has a 1x/2x switch (4 spell slots)");
+  OK(/data-hbmode="2" disabled/.test(eh), "edit mode: the summon's switch is disabled");
+  OK(/hb-mode x2[^>]*data-hbmode="0"/.test(eh), "edit mode: a dual slot's switch reads 2x"); }
+// ---- old saves: spell slots stay single casts, old dual slots stay dual
+{ const { s, f } = fight("mage", 20); if (!s.spells.includes("flames")) s.spells.push("flames");
+  s.hotbar = ["attack", "spell:flames", null, "dual:flames"];
+  const l = H.layout(s, f);
+  OK(l[1] === "spell:flames" && H.mode(l[1]) === 1 && l[3] === "dual:flames" && H.mode(l[3]) === 2 && l.length === 10, "an old save's spell slots load as single casts (and old dual slots as dual)");
+  s.hotbar = { slots: ["spell:flames"] }; OK(H.layout(s, f)[0] === "spell:flames", "an old object-shaped save loads too");
+  const back = JSON.parse(JSON.stringify({ hotbar: ["spell:flames", "dual:flames"] })); OK(H.layout(back, f)[1] === "dual:flames", "a dual slot survives a save and load"); }
+// ---- a dual slot casts the dual version (more magicka, the dual move in the log)
+{ const { s, f, ss } = fight("mage", 20); if (!s.spells.includes("flames")) s.spells.push("flames");
+  s.hotbar = ["dual:flames", "spell:flames"]; let r = ss.begin(); let g = 0;
+  while (r.turn !== "me" && g++ < 50) r = ss.advance();
+  f.mp = G.maxMagicka(s); const mp0 = f.mp, n0 = ss.ev.length;
+  const slot = H.layout(s, f)[0]; r = ss.act(slot);
+  const used = mp0 - f.mp, single = G.spellCost(s, D.SPELLS.flames);
+  OK(!r.err && ss.ev.slice(n0).some((e) => e.a === "dual:flames"), "slot 1 (2x) plays the dual cast " + (r.err || ""));
+  OK(used > single * 1.5, "and costs the dual price (" + Math.round(used) + " vs " + Math.round(single) + " single)"); }
 console.log(fails ? fails + " FAILED (" + n + " ok)" : "ALL OK (" + n + " checks)");
 if (fails) process.exitCode = 1;
 `, c);
