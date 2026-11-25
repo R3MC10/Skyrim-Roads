@@ -5452,6 +5452,9 @@ html:has(#tbf.fz),html:has(#tbf.fz) body{overflow:hidden;overscroll-behavior:non
   #tbf.c2.fz .fc.fc-hb:not(.fc-pick) .hb-side>.tbact{grid-column:1;min-height:44px;--d:30px}
   #tbf.c2.fz .fc.fc-hb:not(.fc-pick) .hb-side>.tbact.end{grid-column:2;grid-row:1 / span 3;min-height:0;min-width:0;width:76px;padding:6px 3px}
 }
+/* [fightcam] the fight camera (fightcam.js): the ring under the foe and its stars follow it; Calm and Off: the screen never shakes */
+#tbf.c2 .c2ov .fzring,#tbf.c2 .c2stars,#tbf.c2 .c2flash.foe{translate:var(--fcdx,0px) var(--fcdy,0px)}
+#tbf.fcam-calm .c2shake .tbscene,#tbf.fcam-off .c2shake .tbscene,#tbf.fcam-calm .tbstage.hurt,#tbf.fcam-off .tbstage.hurt{animation:none!important}
 /* ==== locintro.js: arriving somewhere, the place fills the screen for a moment ==== */
 #locintro{position:fixed;inset:0;z-index:65;overflow:hidden;background:#050506;cursor:pointer;-webkit-tap-highlight-color:transparent;animation:liin .5s ease-out both}
 #locintro.li-short{animation-duration:.25s}
@@ -5628,6 +5631,7 @@ html:has(#tbf.fz),html:has(#tbf.fz) body{overflow:hidden;overscroll-behavior:non
 <script src="phonefight.js"></script>
 <script src="fightzones.js"></script>
 <script src="fightpres.js"></script>
+<script src="fightcam.js"></script>
 <script src="channel.js"></script>
 <script src="movepreview.js"></script>
 <script src="guide.js"></script>
@@ -5834,6 +5838,7 @@ html:has(#tbf.fz),html:has(#tbf.fz) body{overflow:hidden;overscroll-behavior:non
 <script src="i18n_movepreview.js"></script>
 <script src="i18n_busts.js"></script><script src="i18n_avatars.js"></script><script src="i18n_npcportraits.js"></script>
 <script src="i18n_fightset.js"></script>
+<script src="i18n_fightcam.js"></script>
 <script src="i18n_stacks.js"></script>
 <script src="i18n_fighttips.js"></script>
 <script src="i18n_pickaxe.js"></script>
