@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b316-menutop", build: 316, date: "25 Nov 2026", title: "Menus open at the top", items: [
+      "On a phone, every tab and sub-tab (Character, Map, Journal, Social, Area and the rest) now opens at its top, instead of half way down an old list or on the map above it.",
+      "The compass's Area, Journal and Social links take you straight to that screen, and the full-screen Character page always starts at the top.",
+      "In Items and Magic a new category starts at the top, while picking or equipping something keeps the list where you were.",
+      "Windows like the patch notes and the guide open at their top.",
+    ] },
     { id: "b315-hourlyupdates", build: 315, date: "25 Nov 2026", title: "Updates arrive on time", items: [
       "New versions now reach the app reliably within about an hour of a change, instead of sometimes waiting many hours.",
     ] },
