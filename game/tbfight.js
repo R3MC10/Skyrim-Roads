@@ -70,7 +70,7 @@ const TB = (() => {
     if (a === "bash") { const c = typeof SHIELDFX !== "undefined" ? SHIELDFX.cost(f) : 35; return { sp: c, eng: { sp: c } }; }
     if (k === "spell" || k === "dual") {
       const sp = D.SPELLS[arg]; if (!sp) return {};
-      const c = G.spellCost(s, sp) * (k === "dual" ? (typeof MAGIC !== "undefined" && MAGIC.DUAL_COST) || 2 : 1);
+      const c = G.spellCost(s, sp) * (k === "dual" ? ((typeof MAGIC !== "undefined" && MAGIC.DUAL_COST) || 2) * (typeof MOUNTFIGHT !== "undefined" ? MOUNTFIGHT.dualMul(f) : 1) : 1);   // from the saddle a dual cast takes a little more (mountfight.js)
       const dark = sp.kind === "absorb" || sp.kind === "reanimate";   // dark magic takes a little blood too
       return { mp: c, hp: dark ? DARK_HP * G.maxHealth(s) : 0, eng: { mp: c } };
     }
@@ -81,7 +81,7 @@ const TB = (() => {
   function cost(f, a, sess) {
     if (a === "end" || a === "flee") return { sp: 0, mp: 0, hp: 0, n: 0 };
     const b = base(f, a), n = (sess && sess.used && sess.used[a]) || 0, m = 1 + REPEAT * n, st = (sess && sess.st) || {};
-    return { sp: Math.round((b.sp || 0) * m * (1 - (st.spCut || 0))), mp: Math.round((b.mp || 0) * m * (1 - (st.mpCut || 0))), hp: Math.round((b.hp || 0) * m), n, eng: b.eng || null };
+    return { sp: Math.round((b.sp || 0) * m * (1 - (st.spCut || 0))), mp: Math.round((b.mp || 0) * m * (1 - (st.mpCut || 0))), hp: Math.round((b.hp || 0) * m), n, eng: b.eng || null, acts: b.acts > 1 ? b.acts : 1 };   // acts: moves it takes (getting on a horse: two)
   }
   /* "9 stamina", "24 magicka · 4 health", "free" */
   function costTxt(c) {
@@ -277,6 +277,7 @@ const TB = (() => {
       if (/^potion:/.test(a) && this.pots >= this.st.pots) return `${this.st.pots} potions a turn`;
       if (a === "power_attack" && (this.used.power_attack || 0) >= 1) return "Once a turn";   // a power attack puts everything into one blow
       const c = cost(f, a, this);
+      if (c.acts > 1 && this.myActs + c.acts > this.st.acts) return `Takes ${c.acts} moves`;   // climbing onto your horse (mountfight.js)
       if (c.sp > f.sp + 0.01 && !(a === "attack" && this.myActs === 0)) return `Need ${Math.ceil(c.sp - f.sp)} more stamina`;   // out of breath you can still swing once a turn (as in Skyrim)
       if (c.mp > f.mp + 0.01) return `Need ${Math.ceil(c.mp - f.mp)} more magicka`;
       if (c.hp > 0 && c.hp >= f.hp) return "Too hurt";
@@ -297,7 +298,7 @@ const TB = (() => {
       f.sp = clamp(f.sp - (c.sp - (e.sp || 0)), 0, G.maxStamina(f.s));
       f.mp = clamp(f.mp - (c.mp - (e.mp || 0)), 0, G.maxMagicka(f.s));
       if (c.hp > 0) f.hp = Math.max(1, f.hp - c.hp);
-      this.used[a] = (this.used[a] || 0) + 1; this.myActs++;
+      this.used[a] = (this.used[a] || 0) + 1; this.myActs += c.acts > 1 ? c.acts : 1;
       if (/^potion:/.test(a)) this.pots++;
     }
     act(a, tgt, mult, grade) {   // mult: how the minigame went (minigame.js), 1 = normal; grade.cls "perfect" adds a stack

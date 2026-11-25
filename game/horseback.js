@@ -86,9 +86,12 @@ const HORSEBACK = (() => {
   const PSEAT = 52;   // the painted horse: its saddle seat this high above the ground line (the rider stands 30 up, legs behind the barrel)
   /* fight scene: draw the horse under the rider (FIGHTART calls this with the hero's transform set).
      part "back" = legs, tail, neck and head (behind the rider); part "front" = the barrel and saddle cloth over the rider's legs */
+  /* how far the painted horse's back lifts with its breathing / stride at time tt: the rider's seat moves by exactly this, so
+     horse and rider never jerk apart (the ink horse's body stays still, only its legs swing) */
+  const riderBob = (color, tt, lunge = 0) => (typeof HORSEART !== "undefined" && HORSEART.ok(color, "stand") ? Math.abs(Math.sin(tt * 2.2)) * 0.7 + lunge * 2 : 0);
   function drawHorse(g, color, lunge, tt, part = "back") {
-    if (typeof HORSEART !== "undefined" && HORSEART.ok(color, "stand")) {   // [OURS] the painted horse (horseart.js): whole behind you, its barrel over your legs
-      const bob = Math.abs(Math.sin(tt * 2.2)) * 0.7 + lunge * 2;
+    if (typeof HORSEART !== "undefined" && HORSEART.ok(color, "stand")) {   // [OURS] the painted horse (horseart.js); fightart draws the rider's far leg before it and the near leg after
+      const bob = riderBob(color, tt, lunge);
       g.save(); g.translate(lunge * 6, 0);
       HORSEART.ride(g, color, "stand", PSEAT, { bob, clip: part === "front" ? "barrel" : null });
       g.restore(); return;
@@ -144,5 +147,5 @@ const HORSEBACK = (() => {
     g.restore();
   }
 
-  return { SP_MAX, COST, BONUS, CHARGE, engage, up, strike, enemyTurn, tick, after, note, drawHorse, upAt, downAt, drawDowned };
+  return { SP_MAX, COST, BONUS, CHARGE, engage, up, strike, enemyTurn, tick, after, note, drawHorse, riderBob, upAt, downAt, drawDowned };
 })();

@@ -15,7 +15,7 @@ from playwright.async_api import async_playwright
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"
 SHOTS = sys.argv[2] if len(sys.argv) > 2 else None
 if SHOTS: os.makedirs(SHOTS, exist_ok=True)
-CHROME = os.environ.get("CHROME", "/usr/bin/google-chrome")   # falls back to Playwright's own Chromium when missing
+CHROME = (__import__("os").environ.get("CHROME") or ("/usr/bin/google-chrome" if __import__("os").path.exists("/usr/bin/google-chrome") else None))   # falls back to Playwright's own Chromium when missing
 RATE = float(os.environ.get("PERF_RATE", "4"))
 SECS = float(os.environ.get("PERF_SECS", "5"))   # quiet window per scene (busy %, long tasks, map draws)
 FPS_SECS = float(os.environ.get("PERF_FPS_SECS", "2"))   # then the frame-counting window (fps, frame gaps)
@@ -114,7 +114,7 @@ async def heap(cdp, gc=False):
 
 async def main():
     async with async_playwright() as p:
-        kw = {"executable_path": CHROME, "args": ["--no-sandbox"]} if os.path.exists(CHROME) else {}
+        kw = {"executable_path": CHROME, "args": ["--no-sandbox"]} if CHROME and os.path.exists(CHROME) else {}
         if os.environ.get("PERF_GPU"):   # use the machine's real GPU (closer to a phone than software drawing); uses installed Google Chrome
             kw = {**kw, "channel": os.environ.get("PERF_GPU") if os.environ.get("PERF_GPU") in ("chrome", "msedge", "chromium") else "chrome","args": kw.get("args", []) + ["--enable-gpu", "--ignore-gpu-blocklist", "--enable-gpu-rasterization"]}
         b = await p.chromium.launch(**kw)

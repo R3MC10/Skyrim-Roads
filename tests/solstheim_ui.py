@@ -2,8 +2,10 @@
 # a quest stage, an ash storm, both art styles, no page errors, map speed. Usage: python3 solstheim_ui.py [port]
 import asyncio, sys, json
 from playwright.async_api import async_playwright
+_SHOTS = (__import__("os").environ.get("SHOTS") or __import__("os").path.join(__import__("tempfile").gettempdir(), "rotn_shots")).replace("\\", "/").rstrip("/") + "/"   # screenshots: $SHOTS or the temp folder
+__import__("os").makedirs(_SHOTS, exist_ok=True)
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8803
-OUT = "/home/claude/tests/"
+OUT = _SHOTS
 STRONG = """()=>{const S=window.__dbg.save(); S.level=40; S.hpBonus=234; S.spBonus=156; for(const k of Object.keys(S.skills)) S.skills[k].lvl=100;
   for(const it of ["stalhrim_heavy_armor","stalhrim_heavy_helmet","bonemold_gauntlets","bonemold_boots","bonemold_shield","stalhrim_sword"]){const id=G.give(S,it); G.equip(S,id);}
   for(let i=0;i<10;i++) G.give(S,"potion_health"); S.perks={...(S.perks||{}),armsman:5,juggernaut:5}; G.setHealth(S,G.maxHealth(S)); return G.maxHealth(S);}"""
@@ -11,7 +13,7 @@ async def close_modals(pg):
     await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
 async def main():
     async with async_playwright() as p:
-        b = await p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-sandbox"])
+        b = await p.chromium.launch(executable_path=(__import__("os").environ.get("CHROME") or ("/usr/bin/google-chrome" if __import__("os").path.exists("/usr/bin/google-chrome") else None)), args=["--no-sandbox"])
         ctx = await b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2)
         errs = []
         pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(str(e))); pg.set_default_timeout(120000)

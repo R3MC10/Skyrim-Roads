@@ -6,7 +6,7 @@ import asyncio, sys, os
 from playwright.async_api import async_playwright
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"
 OUT = sys.argv[2] if len(sys.argv) > 2 else os.path.join(os.path.dirname(os.path.abspath(__file__)), "out_gatherfix")
-CHROME = "/usr/bin/google-chrome"
+CHROME = (__import__("os").environ.get("CHROME") or ("/usr/bin/google-chrome" if __import__("os").path.exists("/usr/bin/google-chrome") else None))
 CNT = "()=>window.__dbg.save().inv.filter(r=>D.ITEMS[r.item]&&D.ITEMS[r.item].slot==='ingredient').reduce((a,r)=>a+r.qty,0)"
 
 async def run(b, w, h, phone, bad, old=False):
@@ -47,7 +47,7 @@ async def run(b, w, h, phone, bad, old=False):
 
 async def main():
     async with async_playwright() as p:
-        b = await (p.chromium.launch(executable_path=CHROME, args=["--no-sandbox"]) if os.path.exists(CHROME) else p.chromium.launch())
+        b = await (p.chromium.launch(executable_path=CHROME, args=["--no-sandbox"]) if CHROME and os.path.exists(CHROME) else p.chromium.launch())
         bad = []
         await run(b, 390, 844, True, bad)
         await run(b, 1600, 900, False, bad)

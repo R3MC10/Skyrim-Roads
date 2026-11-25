@@ -10,7 +10,7 @@ TOASTS = "() => { window.__toasts = []; let last = ''; setInterval(() => { const
 
 async def main():
     async with async_playwright() as p:
-        exe = "/usr/bin/google-chrome" if os.path.exists("/usr/bin/google-chrome") else None
+        exe = os.environ.get("CHROME") or ("/usr/bin/google-chrome" if os.path.exists("/usr/bin/google-chrome") else None)
         b = await p.chromium.launch(executable_path=exe, args=["--no-sandbox"]) if exe else await p.chromium.launch()
         ctx = await b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2)
         errs = []
