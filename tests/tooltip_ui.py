@@ -36,8 +36,12 @@ async def start(b, style, vp, touch, tag, errs):
     ctx = await b.new_context(viewport=vp, device_scale_factor=1 if not touch else 2, has_touch=touch, is_mobile=touch)
     await ctx.add_init_script(f"try{{localStorage.setItem('rotn_prefs', JSON.stringify({{artStyle:'{style}'}}))}}catch(e){{}}")
     pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(f"{style} {tag} {e}"))
-    await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&hub=0&p=tt{RUN}{style}{tag}"); await pg.wait_for_timeout(1500)
-    await pg.click(".press"); await pg.wait_for_timeout(300); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Tippa"); await pg.click("#begin"); await pg.wait_for_timeout(1200)
+    await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&hub=0&p=tt{RUN}{style}{tag}")
+    # the title screen (titlelogo.js) can take a while on a busy machine: wait for it instead of a fixed pause
+    await pg.wait_for_selector(".press", timeout=60000); await pg.wait_for_timeout(300)
+    await pg.click(".press"); await pg.wait_for_selector(".mi[data-t=new]", timeout=30000); await pg.click(".mi[data-t=new]")
+    await pg.wait_for_selector("#nm", timeout=30000); await pg.fill("#nm", "Tippa"); await pg.click("#begin")
+    await pg.wait_for_function("() => window.__dbg && window.__dbg.save() && document.querySelector('canvas#map')", timeout=30000); await pg.wait_for_timeout(1200)
     await pg.evaluate("setInterval(() => document.querySelectorAll('#modal').forEach((m) => { if (!m.querySelector('.dpick,.doll')) m.remove(); }), 300)")
     await pg.evaluate(SETUP)
     return ctx, pg
@@ -143,8 +147,11 @@ async def desktop(b, style, errs):
       const p = WORLD.places[window.__dbg.save().location || 'Riverwood'] || WORLD.places.Riverwood, r = c.getBoundingClientRect(), {k, ox, oy} = v.transform;
       return [r.left + ox + p[0] * WorldMap.W * k, r.top + oy + p[1] * WorldMap.H * k, r.left, r.top, r.right, r.bottom]; }""")
     if pt and pt[2] <= pt[0] <= pt[4] and pt[3] <= pt[1] <= pt[5]:
-        await pg.mouse.move(pt[0] + 30, pt[1] + 30); await pg.wait_for_timeout(100); await pg.mouse.move(pt[0], pt[1]); await pg.wait_for_timeout(50); await pg.mouse.move(pt[0] + 1, pt[1]); await pg.wait_for_timeout(700)
-        bx = await wait_box(pg, 1200)
+        bx = None
+        for _ in range(3):   # a busy machine can drop a mouse move while the map redraws: rest on the town again
+            await pg.mouse.move(pt[0] + 30, pt[1] + 30); await pg.wait_for_timeout(150); await pg.mouse.move(pt[0], pt[1]); await pg.wait_for_timeout(50); await pg.mouse.move(pt[0] + 1, pt[1]); await pg.wait_for_timeout(700)
+            bx = await wait_box(pg, 1200)
+            if bx: break
         at = "" if bx else await pg.evaluate("([x, y]) => (document.elementFromPoint(x, y)?.outerHTML || '').slice(0, 80)", pt[:2])
         ok(bx is not None and on_screen(bx), f"{style} desktop: hovering a town on the map names it" + (f" ({bx['text'][:40]!r})" if bx else f" under the mouse: {at}"))
         await take(pg, f"{OUT}{style}_desktop_map_place.png", f"{style} desktop map_place")
