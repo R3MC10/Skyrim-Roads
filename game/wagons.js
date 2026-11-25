@@ -422,8 +422,13 @@ const WAGONS = (() => {
     // phones: docked at the bottom of the map; wide screens: beside the wagon
     const wide = (wrap.clientWidth || 400) >= 700;
     el.classList.toggle("dock", !wide);
-    if (wide) { el.style.left = Math.max(8, Math.min((wrap.clientWidth || 400) - 330, lastXY[0] + 18)) + "px"; el.style.top = Math.max(8, Math.min((wrap.clientHeight || 400) - el.offsetHeight - 8, lastXY[1] - 40)) + "px"; }
-    else { el.style.left = ""; el.style.top = ""; }
+    if (wide) {
+      // keep clear of the PC bottom bar that sits over the map's lower edge
+      const bar = document.getElementById("pcbar")?.getBoundingClientRect(), wr = wrap.getBoundingClientRect();
+      const floor = Math.min(wrap.clientHeight || 400, bar && bar.height && bar.top > wr.top ? bar.top - wr.top : (wrap.clientHeight || 400) - 56) - 8;
+      el.style.maxHeight = Math.max(220, floor - 8) + "px";
+      el.style.left = Math.max(8, Math.min((wrap.clientWidth || 400) - 330, lastXY[0] + 18)) + "px"; el.style.top = Math.max(8, Math.min(floor - el.offsetHeight, lastXY[1] - 40)) + "px";
+    } else { el.style.left = ""; el.style.top = ""; el.style.maxHeight = ""; }
   }
   function onClick(e) {
     const b = e.target.closest("[data-wg]"); if (!b || b.disabled || !api) return;

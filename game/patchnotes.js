@@ -3,6 +3,16 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b232-wagons", build: 232, date: "25 Nov 2026", title: "Caravans you can talk to", items: [
+      "Tap or click any caravan's wagons on the map to see who they are, where they're going, what they carry and how they're doing: rolling, resting in town, broken down, under attack, guarded or robbed.",
+      "Catch up sends you to where you'll meet them on their road. When you reach them, whatever you picked on the card happens.",
+      "Trade right from the card when you're beside them. Their packs follow their cargo, and when the hold they're heading for is in crisis they carry relief goods and their prices follow that crisis.",
+      "Escorting them pays when they arrive. If that hold's Jarl is paying for supply escorts, it counts as one and helps end the crisis.",
+      "Ask for news: a lead or a new place on your map, and how things stand where they're going.",
+      "Now and then a wagon breaks down or gets attacked on the road. Fix the wheel or fight beside their guards for a reward and a better name in the hold. Everyone sees who helped.",
+      "Robbing wagons is a crime: a bounty, a fight with their guards and a worse name. You can't rob wagons another hero is guarding.",
+      "On a PC the wagons light up under the mouse. Zoomed out, tapping a group pin zooms in on it. In a party the leader decides.",
+    ] },
     { id: "b231-nomountfight", build: 231, date: "25 Nov 2026", title: "Horses wait at the edge of the fight", items: [
       "Horses now wait at the edge of the fight; you always fight on foot. That goes for solo fights, parties and co-op.",
       "Nobody goes for your horse and it never gets knocked down in a fight. If you rode in, you're back in the saddle when it's over.",

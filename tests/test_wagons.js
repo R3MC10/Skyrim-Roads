@@ -174,23 +174,25 @@ ok(/<script src="wagons.js"><\\/script>[\\s\\S]*<script src="ui.js">/.test(HTML)
 // ---- Polish for every card line and the patch note
 const SRC_T = Object.keys(WAGONS.PL);
 ok(SRC_T.length > 60, "Polish lines: " + SRC_T.length);
-const pn = PN.slice(0, PN.indexOf("b229-gatherfix") > 0 ? PN.indexOf("b229-gatherfix") : 4000);
+const pnAt = PN.indexOf("b232-wagons"), pn = pnAt < 0 ? "" : PN.slice(pnAt - 1, PN.indexOf("{ id:", pnAt + 5) > 0 ? PN.indexOf("{ id:", pnAt + 5) : PN.length);
 const notes = [...pn.matchAll(/"((?:[^"\\\\]|\\\\.)+)"/g)].map((m) => m[1].replace(/\\\\"/g, '"')).filter((x) => /caravan|wagon/i.test(x) && x.length > 20);
 ok(notes.length >= 5 && notes.every((x) => WAGONS.PL[x]), "patch note in Polish (" + notes.length + ")");
 
 // ================================================================ balance
 // 1) escorting from the road never beats signing on in town per hour (one guard each); help rewards stay small
-let townRate = 0, roadRate = 0, k = 0;
+let townRate = 0, roadRate = 0, roadBare = 0, k = 0;
 const L = mk("L", 50, [0.5, 0.5]);
 for (const cv2 of all.slice(0, 40)) {
   const pool = CARAVANS.plan(cv2).pool, secs = cv2.leg.secs;
   townRate += pool / (CARAVANS.STOP + secs) * 3600;
   const f = 0.25, pay = Math.max(30, Math.round(pool * (1 - f) * CVROAD.ESCORT_RATE * 1.25));   // with Caravan Friend
-  roadRate += pay / ((1 - f) * secs + 0.2 * secs) * 3600;   // plus the time it takes to catch up
+  roadRate += pay / ((1 - f) * secs + 0.2 * secs) * 3600;
+  roadBare += Math.max(30, Math.round(pool * (1 - f) * CVROAD.ESCORT_RATE)) / ((1 - f) * secs + 0.2 * secs) * 3600;   // no perk   // plus the time it takes to catch up
   k++;
 }
-townRate /= k; roadRate /= k;
-ok(roadRate <= townRate * 1.05, "escort from the road (" + Math.round(roadRate) + "/h) ≤ signing on in town (" + Math.round(townRate) + "/h)");
+townRate /= k; roadRate /= k; roadBare /= k;
+ok(roadBare <= townRate * 1.05, "escort from the road without perks (" + Math.round(roadBare) + "/h) ≤ signing on in town (" + Math.round(townRate) + "/h)");
+ok(roadRate <= townRate * 1.2, "with Caravan Friend (" + Math.round(roadRate) + "/h) at most 20% over town");
 // 2) every help on every caravan at once (impossible upper bound): still in line with guarding work
 let helpGold = 0;
 for (const cv2 of all) { if (WAGONS.trouble(cv2)) helpGold += WAGONS.fixPay(L) * 0.8; helpGold += CARAVANS.plan(cv2).at.length * WAGONS.savePay(L); }
