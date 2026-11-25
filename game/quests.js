@@ -67,9 +67,9 @@ const QUESTS = (() => {
   const foeFor = (s, id, i, def) => G.scaleQuestFoe({ ...def }, G.fightLevel ? G.fightLevel(s) : s.level, recOf(id, i));
   const q = (s) => (s.quests = s.quests || {});
   function ensure(s) {
-    if (!q(s).main) q(s).main = { stage: 0, t: G.now(), bf: 1 };   // everyone is on the main quest
+    if (!q(s).main && !(q(s).opening && !q(s).opening.done)) q(s).main = { stage: 0, t: G.now(), bf: 1 };   // everyone is on the main quest (after the opening, first30.js)
     const m = q(s).main;   // Bleak Falls Barrow became two stages (clear it, then tell Farengar): later stages of old saves move up one
-    if (!m.bf) { m.bf = 1; if (!m.done && m.stage >= 2) m.stage++; }
+    if (m && !m.bf) { m.bf = 1; if (!m.done && m.stage >= 2) m.stage++; }
     const th = q(s).thieves;   // the Thieves Guild line grew from 4 to 10 stages: finished old runs pick up the new chapters
     if (!q(s).masks && L.masks && typeof PRIESTS !== "undefined" && PRIESTS.shouldStart(s)) { q(s).masks = { stage: 0, t: G.now() }; G.note(s, " New quest: Masks of the Dragon Priests (Journal)."); }   // [Skyrim] the dragon priests
     if (th && !th.v2) { th.v2 = true; if (th.done) { th.done = false; th.stage = 3; th.t = G.now(); G.note(s, " Brynjolf has more work for you: the Thieves Guild story goes on (Journal)."); } }
@@ -87,6 +87,7 @@ const QUESTS = (() => {
   function target(st) { const o = st.obj; return o.go || o.clear || o.talk || o.at || (o.flag === "thaneWhiterun" ? "Whiterun" : o.flag === "greybeards" ? "High Hrothgar" : null); }
   function met(s, id, st, v) {
     const o = st.obj;
+    if (typeof o.test === "function") { try { return !!o.test(s, v); } catch { return false; } }   // introquests.js: "work the forge", "hire a follower"...
     if (o.masks) return typeof PRIESTS !== "undefined" && PRIESTS.count(s) >= o.masks;
     if (o.go) return s.location === o.go;
     if ((o.or && s[o.or]) || (o.orItem && (s.inv || []).some((r) => r.item === o.orItem))) return true;
@@ -102,11 +103,12 @@ const QUESTS = (() => {
     if (r.flag) s[r.flag] = true;
     if (r.title && !(s.titles || []).includes(r.title)) s.titles = [...(s.titles || []), r.title];
     if (r.horse && typeof GUILDS !== "undefined") GUILDS.giveHorse(s, r.horse, msgs);
+    const extra = r.run ? r.run(s) || "" : "";   // [first30] a reward that does something (first30.js)
     const got = [r.gold ? `${r.gold} gold` : "", ...(r.items || []).map((i) => D.ITEMS[i].name), r.title ? `the title ${r.title}` : ""].filter(Boolean).join(", ");
-    msgs.push(` ${L[id].name}: “${st.title}” done${got ? ` (${got})` : ""}.`);
+    msgs.push(` ${L[id].name}: “${st.title}” done${got ? ` (${got})` : ""}.${extra}`);
     G.note(s, msgs[msgs.length - 1]);
     v.stage++; v.t = G.now(); v.base = { ...(s.stats || {}) };
-    if (v.stage >= L[id].stages.length) { v.done = true; msgs.push(` ${L[id].name} complete!`); }
+    if (v.stage >= L[id].stages.length) { v.done = true; msgs.push(` ${L[id].name} complete!`); if (L[id].then) L[id].then(s, msgs); }   // [first30] what a line does when it ends (first30.js)
     else msgs.push(`New objective: ${L[id].stages[v.stage].title}. ${L[id].stages[v.stage].text}`);
   }
   /* run after anything that might finish an objective; returns messages */
@@ -148,11 +150,12 @@ const QUESTS = (() => {
       (o.allies || []).forEach(([name, dmg]) => f.allies.push({ name, dmg }));   // [Skyrim] you don't face these alone
       f.run({ t }); const skills = f.apply(t);
       if (!f.won) {
-        if (o.nonlethal) { G.setHealth(s, G.maxHealth(s) * 0.25, t); return { text: `${e.name} puts you on your back. "Again, when you're ready."`, fight: f, skills }; }
+        if (o.nonlethal) { G.setHealth(s, G.maxHealth(s) * (o.nonlethal === "retry" ? 1 : 0.25), t);   // "retry": back on your feet for another go (first30.js)
+        return { text: o.loseText || `${e.name} puts you on your back. "Again, when you're ready."`, fight: f, skills }; }
         const d = G.die(s, e.name, t, true); return { text: `${e.name} was too much for you.`, fight: f, skills, died: d.msg, bag: d.bag };
       }
       advance(s, id, msgs);
-      return { text: quiet + (o.nonlethal ? `You win the bout. Vilkas grunts approval.` : `${e.name} falls.`), fight: f, skills, msgs };
+      return { text: quiet + (o.winText || (o.nonlethal ? `You win the bout. Vilkas grunts approval.` : `${e.name} falls.`)), fight: f, skills, msgs };
     }
     advance(s, id, msgs);
     return { text: quiet + st.title, msgs };

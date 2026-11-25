@@ -55,15 +55,11 @@ async def run(b, style, reduce=False, plain=False):
     res["stagger"] = await pg.evaluate("(()=>{document.querySelector('#tabs [data-tab=log]').click(); return document.querySelectorAll('#side .mo-st').length})()")
     await pg.wait_for_timeout(800)
     # level up constellation
-    await pg.evaluate("()=>POLISH.levelUp(2)")
+    await pg.evaluate("()=>MOTION.celebrate()")
     await pg.wait_for_timeout(700)
     res["const"] = await pg.evaluate("window.__seen.has('mo-const')")
     if not reduce and not plain: await pg.screenshot(path=f"mo_level_{tag}.png")
-    # arrival veil
-    await pg.evaluate("()=>{const S=window.__dbg.save(); S.location='Whiterun';}")
-    await pg.wait_for_timeout(1500)
-    res["veil"] = await pg.evaluate("window.__seen.has('mo-veil')")
-    if not reduce and not plain: await pg.screenshot(path=f"mo_veil_{tag}.png")
+    # (the arrival name veil moved to locintro.js: tests/locintro_ui.py)
     # settings toggle
     await pg.evaluate("()=>MOTION.setPref('off')")
     res["off"] = await pg.evaluate("!document.documentElement.classList.contains('mo-on')")
@@ -79,11 +75,11 @@ async def main():
         for st in ("ink",):
             r = await run(b, st)
             assert r["on"] and r["amb"] and r["xpbar"] and r["uline"] and r["modal_pop"] and r["ghost"] and r["ghost_gone"], r
-            assert r["menu_enter"] and r["page_slide"] and r["stagger"] > 0 and r["const"] and r["veil"] and r["off"], r
+            assert r["menu_enter"] and r["page_slide"] and r["stagger"] > 0 and r["const"] and r["off"], r
             assert r["gold_mid"] != r["gold_end"], r
             assert not r["errs"], r["errs"]
         r = await run(b, "ink", reduce=True)
-        assert not r["on"] and not r["amb"] and not r["modal_pop"] and not r["ghost"] and not r["menu_enter"] and not r["const"] and not r["veil"] and r["stagger"] == 0, r
+        assert not r["on"] and not r["amb"] and not r["modal_pop"] and not r["ghost"] and not r["menu_enter"] and not r["const"] and r["stagger"] == 0, r
         assert r["gold_1200"] == r["gold_end"] and not r["errs"], r
         r = await run(b, "ink", plain=True)   # automation without ?motion: everything still, existing tests unaffected
         assert not r["on"] and not r["modal_pop"] and not r["ghost"] and not r["errs"], r

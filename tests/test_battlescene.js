@@ -83,7 +83,7 @@ for (const [W0, k] of [[412, 0.46], [412, 0.66], [520, 0.46], [300, 0.66]]) {
   ok(Math.abs(fr.pw / Hh - 1850 / 850) < 1e-9 && Math.abs(fr.left + fr.pw / 2 - W0 / 2) < 1e-9 && fr.pw >= W0 - 2, `stage ${W0}×${Hh}: plate fills the height, centred (${fr.pw.toFixed(0)} wide, left ${fr.left.toFixed(1)})`);
   ok(Math.abs(DATA.frames.groundY * Hh - Hh * 0.8) < 1e-9, "floor at 80%, where fightart puts the fighters' feet");
 }
-ok(B.camOf(0, 400) === 0 && B.camOf(1e6, 400) === 1 && B.camOf(-1e6, 400) === -1, "camera parallax is bounded");
+ok(B.camOf === undefined, "the parallax is the fight camera's now (fightcam.js)");
 ok(DATA.planes.far < DATA.planes.middle && DATA.planes.middle < DATA.planes.near, "far planes move least");
 ok(/groundY = Hh \* 0\.8/.test(FA), "fightart's ground line is still 80%");
 

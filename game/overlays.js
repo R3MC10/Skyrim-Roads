@@ -2,7 +2,8 @@
    Players saw a first-time tip sitting on top of the VICTORY card, and a courier's letter popping over a menu they were
    reading. Everything that floats over the game now has a rank, and only the highest one owns the screen:
      result   (4)  the fight's VICTORY / defeat card, a level-up sheet, a result window
-     decision (3)  any other window that asks you something (an encounter, a letter, a shop sheet...)
+     decision (3)  any other window that asks you something (an encounter, a letter, a shop sheet...), and the
+                   arrival picture of a place (locintro.js)
      tip      (2)  first-time tips (onboard.js) and the fight hints pinned to a control
      toast    (1)  messages in the top-left lane (hud2.js)
    - level() / top(): what is on screen now. body[data-ovl] carries its name, so CSS can hold the lower ones back.
@@ -18,7 +19,7 @@ const OVERLAYS = (() => {
   const DOM = typeof document !== "undefined" && typeof window !== "undefined";
   // what counts as what (first match wins, highest level first)
   const RESULT = ["#tbf .tbdone", "#tbf .c2rescard", "#modal .sheet.lv", "#modal .sheet.result", "#lvlpick"];
-  const DECISION = ["#modal .sheet", "#wgcard", "#nfhist .nf-sheet"];   // a wagon's card (wagons.js) and the message history (notify.js) ask you something too; the party-invite bar is small and the invite tip points at it, so it doesn't count
+  const DECISION = ["#modal .sheet", "#wgcard", "#nfhist .nf-sheet", "#locintro"];   // the arrival picture (locintro.js) holds tips and letters back too; a wagon's card (wagons.js) and the message history (notify.js) ask you something too; the party-invite bar is small and the invite tip points at it, so it doesn't count
   const TIP = ["#obtip", "#fhints .fhint"];
   const TOAST = ["#hudlane #hudlog .toast:not(.hide)", "#toast:not(.hide)"];
 
@@ -96,8 +97,10 @@ const OVERLAYS = (() => {
 
   // ------------------------------------------------------------ Polish
   const PL = {
-    "Turn order: the highest number acts first. A foe can act twice a round.": "Kolejność tur: najwyższa liczba działa pierwsza. Wróg może działać dwa razy w rundzie.",
-    "Up to 4 moves a turn. Blows cost stamina, spells magicka.": "Do 4 ruchów na turę. Ciosy kosztują wytrzymałość, czary magię.",
+    // [first30] the fight hints, one at a time (onboard.js HINTS)
+    "Tap Attack to hit. You get a few moves each turn.": "Dotknij Atak, żeby uderzyć. W każdej turze masz kilka ruchów.",
+    "This is what your foe does next. Plan around it.": "Tak wygląda następny ruch wroga. Zaplanuj swoje pod niego.",
+    "A huge blow is coming! Bash or guard now, or end your turn: unused moves guard.": "Nadchodzi potężny cios! Uderz tarczą albo się zasłoń, albo zakończ turę: niewykorzystane ruchy to osłona.",
     "Done? End turn. Moves you don't make become guard.": "Gotowe? Zakończ turę. Niewykonane ruchy stają się gardą.",
     "Tap to hide": "Dotknij, by ukryć",
     // the patch note

@@ -28,10 +28,10 @@ async def main():
         for st in ["ink"]:
             row = []
             for r in RACES:
-                await pg.click(f"[data-race={r}]"); await pg.wait_for_timeout(80)
+                await pg.click(f".rpick[data-race={r}]"); await pg.wait_for_timeout(80)
                 row.append(img_of(await pg.get_attribute(".heroprev img", "src")))
             sheets["races_" + st] = row
-        await pg.fill("#nm", "Hero"); await pg.click("[data-race=nord]"); await pg.fill("#nm", "Hero"); await pg.click("#begin"); await pg.wait_for_timeout(1200)
+        await pg.fill("#nm", "Hjalmar"); await pg.click(".rpick[data-race=nord]"); await pg.fill("#nm", "Hjalmar"); await pg.click("#begin"); await pg.wait_for_function("!!(window.__dbg && window.__dbg.save())", timeout=15000)   # "Hero" is a refused generic nickname (nickname.js)
         for st in ["ink"]:
             row = []
             for i, (name, items) in enumerate(SETS.items()):

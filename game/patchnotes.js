@@ -3,7 +3,7 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b337-tabs5", build: 337, date: "25 Nov 2026", title: "Five tabs instead of seven", items: [
+    { id: "b343-tabs5", build: 343, date: "26 Nov 2026", title: "Five tabs instead of seven", items: [
       "The bar at the bottom now has five tabs: World, Area, Hero, Journal and Social.",
       "World is the map: under it you see the one thing to do next and a big Where to? button for every place you know. World news has its own page there once world events are open for you.",
       "Hero holds everything about your hero in one place: your gear, items, magic, skills, perks, stats, your follower and Settings, in the strip on top.",
@@ -12,6 +12,71 @@ const PATCHNOTES = (() => {
       "Back works the same as before: from a page inside a tab it goes to that tab's first page, then to the map.",
       "On a PC: the bottom bar has the same five tabs, the open one lights up, and keys 1 to 5 open them (or M, A, C, J, O; I and P still open Items and Magic, L opens Where to?). Hover a tab to see its keys.",
       "On a PC, Hero, Journal and Social use the whole screen: the pages of a tab are listed down the left and the cards sit in two columns. Places and World news open beside the map so you can still see it.",
+    ] },
+    { id: "b342-redtests", build: 342, date: "26 Nov 2026", title: "A fresh Coming next", items: [
+      "The Coming next list in Patch notes shows what's really being built now: a clearer turn order, parts of the game that open up as you level, and simpler menus.",
+    ] },
+    { id: "b341-first30", build: 341, date: "25 Nov 2026", title: "A guided start for new heroes", items: [
+      "New characters no longer get a welcome popup and a pile of tips. Instead there's one short quest line, Before the Storm, with one goal at a time and one button that does it.",
+      "Your first fight starts a minute after you make your hero: a bandit at Riverwood's mill. While you fight, one short hint at a time shows you how to attack, how to read what the foe does next, and how to guard when it winds up a huge blow.",
+      "Then you put on the armour he drops, walk to Whiterun, meet the Jarl, reach level 2, pick your first perk, and face a tougher bandit chief. The last step pays well and tells you what comes next.",
+      "Losing one of these fights costs nothing: you get back up at full health and try again.",
+      "On a PC the goal, its button and Skip sit in the quest tracker at the top right of the map.",
+      "Don't need it? Tap Skip the tutorial on the goal card and the main quest carries on as before. Heroes you already have aren't affected.",
+    ] },
+    { id: "b340-rewards", build: 340, date: "25 Nov 2026", title: "Rewards that feel like rewards", items: [
+      "Loot, gold and skill practice now share one quiet line at the top, like \"+24 gold · +15 One-Handed · Iron Dagger ×2\". What comes together is added up, and during a fight it waits and comes out as one line after.",
+      "Better items on that line show their name in their rarity colour.",
+      "A short toast tells you when you pick up something better than what you wear, learn a spell or get a new word for your shouts.",
+      "Big moments get a full screen: a level that opens something new (\"LEVEL 4 · Smithing unlocked\"), your first follower, your first horse, your first shout. Legendary finds, your first dragon and your own clan too.",
+      "These never pop up in the middle of a fight, a mini-game, a party vote or a dungeon: they wait until you're done, and only one shows at a time.",
+      "New first quests for smithing, gathering, followers, horses and your first proper dungeon: one step each, with a small useful reward. Start them from the big screen.",
+      "Under your level bar you now see what the next level brings.",
+    ] },
+    { id: "b339-fightfixes", build: 339, date: "25 Nov 2026", title: "Small fixes on the road and in hero creation", items: [
+      "A new quest popping up no longer wipes the choices of a road encounter (Pay, Talk, Fight...). It waits until you've made your pick.",
+      "On small phones the round compass button no longer sits on your health, magicka and stamina bars.",
+      "The male and female symbols on the new hero screen show as plain symbols on every phone, not as colourful emoji.",
+    ] },
+    { id: "b338-travelview", build: 338, date: "25 Nov 2026", title: "A road worth watching", items: [
+      "The road view on a trip is much richer: hills and bends you can see coming, mountains, ridges and treelines that fade into the haze, and trees, rocks and signs that grow as you ride up to them and slide past.",
+      "Every land looks like itself, read from the map around you: open tundra, thick pine forest, snowy mountains, rocky hills, misty marsh, ash under a smoking volcano, the coast with the sea on its real side, green river valleys and the Rift's golden birches.",
+      "Things happen along the way: deer bolt, a fox darts across, wolves pace you, mammoths roam, horkers lie on the shore, guards in their hold's colours march by, a merchant's cart passes, and now and then a watchtower, a waterfall, an old camp, giants or a dragon in the sky.",
+      "The same road shows the same landmarks every time you take it; the animals and travellers are different on each trip.",
+      "Your destination grows as you near it, and cities show their gate when you get close. Your horse's mane and reins move as you ride.",
+      "Light and weather fit the land: drifting ash, snow blown off the drifts, falling leaves, fireflies on summer nights, salt haze by the sea.",
+    ] },
+    { id: "b337-fightcam", build: 337, date: "25 Nov 2026", title: "A cinematic fight camera", items: [
+      "The camera now moves only on big moments: it leans in a little when your turn starts, closes in on a wind-up, a critical hit, a broken guard and a killing blow, and slowly pulls in on a win. A boss gets a close-up when the fight starts. Ordinary swings keep the picture calm.",
+      "A critical hit plays for a moment in slow motion. The fight doesn't get any longer: the next turn comes just as fast.",
+      "The battlefield has depth: the sky and far mountains move less than the ground the fighters stand on. You never see the edge of the picture.",
+      "Only the battlefield moves. The turn order, the cards, the boss's health bar and your buttons stay where they are, and damage numbers and names follow the fighters at the same size.",
+      "In a party fight another player's big moment never moves your camera while you're choosing a move or playing a minigame.",
+      "New in Settings → Fights: Fight camera. Cinematic (the default), Calm (gentle, no shaking, no slow motion) or Off. With Reduce motion on, the camera is always Calm.",
+    ] },
+    { id: "b336-channel", build: 336, date: "25 Nov 2026", title: "See your friends get ready", items: [
+      "In a party fight, when a friend casts a spell, swings, draws a bow or uses a skill from an item, you now see them get ready for it: their hero raises a hand with embers, gathers frost or sparks, pulls back their weapon or draws the bowstring, and a small bar over their head fills while they play their minigame.",
+      "Each kind of move has its own colour: fire orange, frost ice blue, shock violet, healing gold, blows steel grey, bows green.",
+      "A great hit flashes gold, a fumble makes them stumble, and if a move gets called off the bar just fades away.",
+      "Your own hero takes the same stance behind your minigame, in solo fights too.",
+      "A minigame can't hold up the fight any more: after 12 seconds the move is called off and you keep your guard up.",
+      "Fixed: in a party fight, an update from your friends could close your minigame halfway through. It now stays open until you finish it.",
+    ] },
+    { id: "b335-dollrig2", build: 335, date: "25 Nov 2026", title: "Your hero stands face-on on the Items screen", items: [
+      "On the Items screen your hero now faces you, like in Skyrim's inventory, and stands relaxed with their gear: they breathe, sway a little, their cape and hair lag behind, and now and then they shift their grip.",
+      "A one-handed weapon hangs from the right hand, a two-hander rests point-down in both hands, a bow sits in the left hand and a staff or spear stands planted by the right foot.",
+      "Your shield sits on your left arm in front of your body, and every weapon is held by its handle with the fist closed round it.",
+      "In fights the same goes for your fighter: the main weapon is always in the right hand and the shield or second weapon in the left, each drawn in its own layer, so arms, shields and blades don't overlap into weird shapes anymore.",
+      "Reduce motion in Settings keeps your hero still, and they stop moving while the game is in the background.",
+    ] },
+    { id: "b334-locintro", build: 334, date: "25 Nov 2026", title: "Every arrival shows the place", items: [
+      "Every time you arrive somewhere (a town, a hold's capital, a dungeon, a camp, a shrine...), the place fills the screen for a moment: its painting, its name, the time, the weather and the season. Night and bad weather tint the picture.",
+      "The first time you see a place you get the full view for a few seconds. Coming back, a shorter one. Tap anywhere or press Esc to skip; it fades out by itself and never holds up the game.",
+      "Up to two lines say what's new since your last visit: friends or party members here, new jobs on the notice board, fresh spell tomes or a caravan in town.",
+      "In a party, everyone sees it on their own when they arrive. If you're already there when friends walk in, you don't see it again.",
+      "In the Area tab, the little landscape button next to the place's name shows the picture again, until you tap it away.",
+      "Settings → Look → Location introductions: Always, First visit only or Off.",
+      "It waits its turn: never on top of a window, a tip or a fight. It replaces the old quick \"You arrive at\" name over the map.",
     ] },
     { id: "b333-maprider", build: 333, date: "25 Nov 2026", title: "Your rider on the map looks like you", items: [
       "On the world map your hero now looks like they really do: your race, your helmet, your armour, your shield and weapon, the same as on the hero screen. That goes for walking and standing too.",
@@ -2211,10 +2276,11 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 297;
+  const NEXT_AT = 342;
   const NEXT = [
-    "Mentoring: play side by side with friends of any level",
-    "Shrines of your own: build a Daedric altar at your longhouse",
+    "A turn order you can read at a glance: who acts next, and in what order",
+    "Parts of the game open up step by step as you level, so there's less to take in at the start",
+    "The menus in five simple tabs",
   ];
   const KEY = "rotn_notes_seen";
   const latest = () => LIST[0];

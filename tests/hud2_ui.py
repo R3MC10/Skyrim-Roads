@@ -3,11 +3,11 @@ in both art styles. Checks: top bar buttons, compass, objective line, map button
 the bottom bar (labels fit), the bars fading when full, one speech bubble at a time,
 the ★ favourites button docked in the top bar, no sideways scrolling.
    node serve.js 8765 &
-   python3 hud2_ui.py 8765            (screenshots go to hud2/)"""
-import asyncio, sys, os, shutil
+   python3 hud2_ui.py 8765            (screenshots go to SHOTS/out_hud2, default the system temp folder)"""
+import asyncio, sys, os, shutil, tempfile
 from playwright.async_api import async_playwright
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"
-os.makedirs("hud2", exist_ok=True)
+OUT = os.path.join(os.environ.get("SHOTS") or tempfile.gettempdir(), "out_hud2"); os.makedirs(OUT, exist_ok=True)
 CHROME = os.environ.get("CHROME") or ("/usr/bin/google-chrome" if os.path.exists("/usr/bin/google-chrome") else None)
 SIZES = [(360, 740), (390, 844), (430, 932), (1920, 1080)]
 fails = []
@@ -48,7 +48,7 @@ async def main():
                 ctx = await b.new_context(viewport={"width": w, "height": h}, has_touch=w < 600)
                 pg = await ctx.new_page(); errs = []
                 pg.on("pageerror", lambda e: errs.append(str(e)))
-                await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=hud2{w}{style}"); await pg.wait_for_timeout(1500)
+                await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=hud2{w}{style}" + ("&nopcmap" if w >= 1000 else "")); await pg.wait_for_timeout(1500)
                 await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Hrolfdir"); await pg.click("#begin"); await pg.wait_for_timeout(1600)
                 clear = "document.querySelectorAll('#modal').forEach(m=>m.remove())"
                 await pg.evaluate(clear)
@@ -63,7 +63,7 @@ async def main():
                 ok(r["favDocked"], f"{tag} star docked in the top bar")
                 ok(r["fullBars"] and max(r["fullBars"]) < 0.05, f"{tag} full bars faded {r['fullBars']}")
                 ok(await pg.evaluate("!!document.querySelector('#hudobj:not(.hide)')"), f"{tag} objective line under the compass")
-                await pg.screenshot(path=f"hud2/{tag}_idle.png")
+                await pg.screenshot(path=os.path.join(OUT, f"{tag}_idle.png"))
                 # busy: messages, a new objective, a skill banner and two speech bubbles at once
                 for t in ["You picked up an Iron Sword.", "Smithing increased to 21", "You sell 3 Ruby for 147 gold.", "Achievement unlocked: First steps"]:
                     await pg.evaluate("t=>window.__dbg.toast(t)", t); await pg.wait_for_timeout(120)
@@ -81,7 +81,7 @@ async def main():
                 ok(await pg.evaluate("!document.querySelector('body > #bark, body > #folbark')"), f"{tag} bubbles live in the lane")
                 r = await pg.evaluate(PROBE)
                 ok(not r["pairs"], f"{tag} busy overlaps {r['pairs']}")
-                await pg.screenshot(path=f"hud2/{tag}_busy.png")
+                await pg.screenshot(path=os.path.join(OUT, f"{tag}_busy.png"))
                 await pg.wait_for_timeout(5200)
                 say2 = await pg.evaluate("[...document.querySelectorAll('#hudlane .hl-say > :not(.gone)')].map(e=>e.id)")
                 ok(say2 == ["folbark"], f"{tag} the waiting bubble shows next {say2}")

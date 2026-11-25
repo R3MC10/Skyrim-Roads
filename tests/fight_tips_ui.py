@@ -6,6 +6,7 @@ import asyncio, sys, os, time
 try: sys.stdout.reconfigure(encoding="utf-8")
 except Exception: pass
 from playwright.async_api import async_playwright
+from roadfight import open_fight, wait_my_turn
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"
 RUN = str(int(time.time()) % 100000)
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out_fighttips") + os.sep
@@ -34,14 +35,8 @@ async def open_magic(b, vp, touch, tag, errs):
     pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(f"{tag} {e}"))
     await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&hub=0&p=ft{RUN}{tag}&tb"); await pg.wait_for_timeout(1500)
     await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Tipsy"); await pg.click("#begin"); await pg.wait_for_timeout(2500)
-    await pg.evaluate(START); await pg.wait_for_timeout(500)
-    for _ in range(30):   # the event window can redraw under a click: press Fight from the page itself
-        if await pg.evaluate("()=>{ const b=document.querySelector('#modal [data-act=ev][data-c=fight]'); if (b) { b.click(); return true; } return false; }"): break
-        await pg.wait_for_timeout(300)
-    await pg.wait_for_timeout(900)
-    for _ in range(40):
-        if await pg.evaluate("!!document.querySelector('#tbf [data-tba=attack]')"): break
-        await pg.wait_for_timeout(300)
+    await open_fight(pg, START)   # waits for the fight screen, not a fixed pause (roadfight.py)
+    await wait_my_turn(pg)
     await pg.evaluate("()=>{ TB.session.f.mp = Math.max(60, Math.ceil(G.spellCost(TB.session.f.s, D.SPELLS.flames)) + 5); TB.redraw && TB.redraw(); }")
     await pg.evaluate("()=>document.querySelector('#tbf [data-tbm=magic]').click()"); await pg.wait_for_timeout(500)
     return ctx, pg

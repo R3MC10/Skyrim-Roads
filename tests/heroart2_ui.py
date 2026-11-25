@@ -38,7 +38,7 @@ async def main():
         errs = []
         pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
         await pg.goto(f"http://127.0.0.1:{PORT}/index.html?net=bc&notut&fightanim&assets&p=h2"); await pg.wait_for_timeout(1500)
-        await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Torvald"); await pg.click("[data-race=nord]"); await pg.fill("#nm", "Torvald"); await pg.click("#begin"); await pg.wait_for_timeout(1200)
+        await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Torvald"); await pg.click(".rpick[data-race=nord]"); await pg.fill("#nm", "Torvald"); await pg.click("#begin"); await pg.wait_for_function("!!(window.__dbg && window.__dbg.save())", timeout=15000)
         await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
         await pg.evaluate("()=>{" + LOOKS + "}"); await pg.evaluate("()=>{" + FIGHT_JS + "}")
         files = []

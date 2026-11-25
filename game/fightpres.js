@@ -45,6 +45,7 @@ const FIGHTPRES = (() => {
     if (!DOM || !node) return;
     const Z = typeof FIGHTZONES !== "undefined" ? FIGHTZONES.bannerY() : null;
     if (Z && kind === "combo") { node.style.top = Z.y.toFixed(0) + "px"; node.style.left = Z.x.toFixed(0) + "px"; }
+    if (typeof FIGHTCAM !== "undefined") try { FIGHTCAM.banner(kind, node); } catch (e) { /* the camera is only a nicety */ }   // [fightcam] your turn, a boss, a break, the win: the camera's moment
   }
   function drop(node) { if (node && node.parentNode) node.parentNode.removeChild(node); }
   function intro(on) { if (DOM && document.body) document.body.classList.toggle("fp-intro", !!on); }

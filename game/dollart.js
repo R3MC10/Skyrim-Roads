@@ -56,12 +56,18 @@ const DOLL = (() => {
   }
   /* the equipment screen: slots | figure | slots, then the numbers. [dollrig] both columns start level with the top of
      the figure, so the weapon sits across from the head and the shield across from the chest */
+  /* [dollrig2] your hero face-on with a calm idle (dollfront.js): the still figure now, the moving one once it lands */
+  function figure(s) {
+    const still = HEROART.figure(s, 200, 290);
+    if (typeof DOLLFRONT === "undefined") return still;
+    return DOLLFRONT.html(HEROART.lookOf(s), 200, 290, s, still, HEROART.figure(s, 200, 290, { back: true }));
+  }
   function screen(s, stats) {
     const eq = G.equipment(s), am = typeof AMMO !== "undefined" ? AMMO.status(s) : null;
     const ammoRow = am ? (() => { const b = am.best && s.inv.find((x) => D.ITEMS[x.item]?.name === am.best); return `<div class="dammo ${am.best ? "" : "warn"}">${b ? ICONART.item(b.item, 28, b) : emptyIcon("ammo", 28)}<span>${am.best ? `${am.n} ${esc(am.best)}s <i>(best is used)</i>` : "No ammo for your bow"}</span></div>`; })() : "";
     return `<div class="doll">
       <div class="dcol">${LEFT.map((sl) => slotBtn(s, sl, eq)).join("")}</div>
-      <div class="dfig">${HEROART.figure(s, 200, 290)}${typeof AVATAR !== "undefined" ? AVATAR.badge(s, 50) : ""}</div>
+      <div class="dfig">${figure(s)}${typeof AVATAR !== "undefined" ? AVATAR.badge(s, 50) : ""}</div>
       <div class="dcol">${RIGHT.map((sl) => slotBtn(s, sl, eq)).join("")}</div>
     </div>
     <div class="djewel" aria-label="Amulet and rings">${JEWEL.map((sl) => slotBtn(s, sl, eq, 40)).join("")}</div>${ammoRow}
