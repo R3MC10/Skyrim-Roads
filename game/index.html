@@ -3607,6 +3607,15 @@ html.art-pixel .rxban,html.art-pixel #tbf .tbact.rxon .rxbadge{border-radius:0;i
 .affbtns{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px}.affcard .sub{margin:4px 0}
 .affbadge{margin-left:6px;font-size:14px;letter-spacing:2px}.affbadge i{font-style:normal}
 .affparty{margin-top:8px}
+/* fishart.js: the painted lake is 16:9 and grows with the screen (phone: full width; PC: up to 1400px, never taller than the window allows) */
+#fishgame .fhcard{width:min(1440px,100%)}
+#fishgame .fhcard canvas{max-width:min(100%,1400px,calc((100vh - 290px) * 1.778))!important;max-width:min(100%,1400px,calc((100dvh - 290px) * 1.778))!important;border-radius:3px;box-shadow:0 0 0 1px rgba(228,220,200,.28),0 10px 30px rgba(0,0,0,.55)}
+#fishgame .fhmeter,#fishgame .fhdist,#fishgame .fhmsg,#fishgame .cgrow,#fishgame .cghint{max-width:760px;margin-left:auto;margin-right:auto}
+#fishgame .cgrow{display:flex;gap:10px;border-bottom:0;padding:4px 0}#fishgame .cgrow .btn{flex:1 1 0;min-height:48px}#fishgame .cgrow .btn.fhbig{flex:1.6 1 0;min-height:56px}
+#fishgame .fhmeter{border-radius:2px;background:linear-gradient(180deg,rgba(18,20,22,.92),rgba(34,36,38,.92));box-shadow:inset 0 0 0 1px rgba(228,220,200,.3),inset 0 2px 6px rgba(0,0,0,.6)}
+#fishgame .fhmeter .fhband{background:linear-gradient(180deg,rgba(160,200,150,.5),rgba(110,150,105,.42))}
+#fishgame .fhdist{border-radius:3px;margin-top:4px}
+#fishgame .fhdist i{border-radius:3px;transition:width .1s linear}
 /* lockpicking mini-game, painted (lockgame.js) */
 .lockpick.lgame{place-items:stretch;background:#070605;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
 .lgwrap{position:relative;display:flex;flex-direction:column;width:100%;height:100%;max-width:1180px;margin:0 auto;background:#0d0a08;box-shadow:0 0 0 1px rgba(228,220,200,.16),0 30px 80px rgba(0,0,0,.7);overflow:hidden}
@@ -3929,6 +3938,7 @@ html.a11y-still .hgchip{animation:none;opacity:1}
 <script src="livecursor.js"></script>
 <script src="partytraps.js"></script>
 <script src="hunting.js"></script>
+<script src="fishart.js"></script>
 <script src="fishing.js"></script>
 <script src="huntgame.js"></script>
 <script src="huntart.js"></script>
@@ -3975,6 +3985,7 @@ html.a11y-still .hgchip{animation:none;opacity:1}
 <script src="i18n_potionfx.js"></script>
 <script src="i18n_backdrops2.js"></script>
 <script src="i18n_festart.js"></script>
+<script src="i18n_mgfishing.js"></script>
 <script src="i18n_paintrig.js"></script>
 <script src="i18n_sweep.js"></script>
 <script src="i18n_balfear.js"></script>

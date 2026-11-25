@@ -36,6 +36,7 @@ const RULES = [
   [/^map-world$/, 2000, 1400, 10 / 7, 0.01], [/^map-world-2x$/, 3000, 2100, 10 / 7, 0.01],
   [/^ui-compass3d$/, 2240, 2240, 1, 0], [/^ui-(compass|frame|panel|parchment)$/, 1024, 1024, 1, 0],
   [/^fest-/, 1600, 600, 8 / 3, 0.01],
+  [/^mg-fishing-bg$/, 1920, 1080, 16 / 9, 0.01], [/^fish-(salmon|trout|perch|pike|goldcarp|ghostfish)$/, 540, 200, null], [/^tool-fishing-rod$/, 1200, 50, null],
   [/^mg-.*-bg$/, 1600, 900, 16 / 9, 0.01], [/^ore-(iron|silver|gold|ebony)$/, 256, 220, null], [/^tool-pickaxe$/, 600, 250, null],
   [/^lock-(iron|steel|nordic|dwemer|noble)$/, 700, 700, 1, 0.01], [/^tool-lockpick$/, 900, 70, null], [/^tool-tension-wrench$/, 680, 100, null],
   [/^room-/, 1280, 720, null],

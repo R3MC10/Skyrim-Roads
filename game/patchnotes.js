@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b198-mgfishing", build: 198, date: "25 Nov 2026", title: "Fishing gets a makeover", items: [
+      "Fishing now happens on a painted lake at dusk: the water moves and glints, fish rise here and there, and mist drifts along the far shore. Night, rain, snow and fog show on it too.",
+      "Your rod is painted and really bends: it flexes back when you aim, whips forward on the cast and bows deeper the tighter the line gets. The line arcs out with the float.",
+      "The float bobs with little rings, twitches on nibbles and goes under with a splash on the real bite.",
+      "While you reel, you see the fish's shadow dart under the water, and on a hard run it may leap right out.",
+      "A landed fish shows on a catch card with its painting, marked when it's rare or the first of its kind. Same fish, same rules: only the look is new.",
+    ] },
     { id: "b197-mghunt", build: 197, date: "25 Nov 2026", title: "Painted hunting", items: [
       "Hunting is now a painted scene: a misty clearing at sunrise, with trees, ferns and heather that slide apart as you creep closer, and the animal grows as you close in.",
       "Deer, elk, foxes, snow foxes and hares are painted and move: they graze with their head down, look up when they hear you, flick their ears and tail, and bolt away in a real run. Other animals keep their drawing.",
