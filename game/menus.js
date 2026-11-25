@@ -34,6 +34,9 @@ const MENUS = (() => {
   // ------------------------------------------------------------ pure helpers (tested in node)
   /* which bottom tab a screen belongs to */
   const groupOf = (tab) => OWNER[tab] || (BY[tab] ? tab : "map");
+  /* the bottom tab to light: an open item/spell menu wins over the screen behind it (that used to be the map, so Map lit up
+     while Items or Magic was open) */
+  const activeGroup = (tab, skyPage) => skyPage === "items" ? "pack" : skyPage === "magic" ? "magic" : skyPage === "skills" ? "hero" : groupOf(tab || "map");
   /* tapping a bottom tab: the screen to show ("@items"/"@magic" = open that menu). Remembers the last sub-tab. */
   function pick(g) {
     const grp = BY[g]; if (!grp) return g;
@@ -70,7 +73,7 @@ const MENUS = (() => {
   /* the SkyUI item/spell menu opened or closed: light its bottom tab, and offer the plain pack list */
   function skyOn(page, el) {
     if (!live) return;
-    const g = page === "items" ? "pack" : page === "magic" ? "magic" : page === "skills" ? "hero" : groupOf(window.__ui?.tab || "map");
+    const g = activeGroup(window.__ui?.tab, page);
     document.querySelectorAll("#tabs .tab").forEach((b) => { const on = b.dataset.tab === g; b.classList.toggle("on", on); b.setAttribute("aria-selected", on); });
     if (el && page === "items" && !el.querySelector(".mn-list")) el.querySelector(".sky-top")?.insertAdjacentHTML("beforeend", '<button class="btn sm mn-list" data-act="tabgo" data-id="pack" aria-label="Show your pack as a plain list">List</button>');
   }
@@ -105,5 +108,5 @@ const MENUS = (() => {
     if (typeof ResizeObserver !== "undefined") document.addEventListener("DOMContentLoaded", () => { const t = document.getElementById("tabs"); if (t) new ResizeObserver(fit).observe(t); });
     setInterval(fit, 2000);
   }
-  return { HOTKEYS, GROUPS, groupOf, pick, charTabs, screens, bar, subnav, afterPanel, skyOn, panels };
+  return { HOTKEYS, GROUPS, groupOf, activeGroup, pick, charTabs, screens, bar, subnav, afterPanel, skyOn, panels };
 })();
