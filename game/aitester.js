@@ -114,7 +114,7 @@ const AITEST = (() => {
       });
     }
     const d = COMBATAI.decide(f);   // the real choice, from the fight's own code
-    const why = d.rule ? `your rule ${d.rule} fired` : mode === "custom" ? "no rule fired, so you attack" : COMBATAI.shortWhy(d.action, d.why);
+    const why = d.rule ? (rows[d.rule - 1] && rows[d.rule - 1].why) || `your rule ${d.rule} fired` : mode === "custom" ? "no rule fired, so you attack" : COMBATAI.shortWhy(d.action, d.why);
     const alts = d.rule || mode === "custom" ? [] : COMBATAI.rank(f, 4).filter((x) => x.a !== d.action).slice(0, 2).map((x) => G.describeAction(x.a));
     return { mode, action: d.action, label: G.describeAction(d.action), rule: d.rule || 0, why, alts, rows, fired, foe: f.e.name };
   }

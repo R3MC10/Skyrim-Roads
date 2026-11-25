@@ -55,7 +55,7 @@ const real = (s, o) => { const f = AITEST.build(s, o); const [rule, a] = f.choos
   ok(x.mode === "hybrid" && x.rule === 0 && x.rows[1].state === "skip" && /filler/.test(x.rows[1].why), "Hybrid: filler skipped, Smart AI picks (" + x.action + ": " + x.why + ")");
   ok(x.why && typeof x.why === "string", "Smart AI's pick has a reason");
   const y = AITEST.run(s, { hp: 20, sp: 100, mp: 100, ehp: 100, foe: "strong", n: 1, down: false });
-  ok(y.rule === 1 && y.action === "block" && /your rule 1/.test(y.why), "Hybrid: your rule wins when it fires"); }
+  ok(y.rule === 1 && y.action === "block" && /health is 20%/.test(y.why), "Hybrid: your rule wins when it fires"); }
 
 // 3) Smart AI: no rule rows, a reason, next best moves
 { const s = hero(), L = G.loadout(s); L.mode = "smart";
