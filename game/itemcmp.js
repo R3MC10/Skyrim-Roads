@@ -1,12 +1,12 @@
 /* itemcmp.js: an item next to what you wear in the same place. [itemdetail]
    Used by the Items details panel (ui.js itemDetail) and the item tooltip / phone sheet (tooltip.js itemHTML).
-   "Against what you wear: Iron Sword" then Damage 7 → 8 (+1), Weight 9 → 10 (+1), Value 25 → 45 (+20):
+   "Against what you wear: Iron Sword" then Hits for 7 → 8 (+1), Weight 9 → 10 (+1), Value 25 → 45 (+20):
    better green, worse red. Damage is what it really hits for in your hands (skill and perks, the "Hits for about N"
    number), armour is the piece's rating plus any improvement. A two-handed weapon is compared against both hands
    (your weapon and your shield or left-hand weapon); a ring against your rings (a free finger counts as nothing worn). */
 const ITEMCMP = (() => {
   const esc = (x) => String(x ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-  const mod = (n) => { try { return { D: typeof D !== "undefined" ? D : undefined, G: typeof G !== "undefined" ? G : undefined, F: typeof F !== "undefined" ? F : undefined }[n]; } catch { return undefined; } };
+  const mod = (n) => { try { return { D: typeof D !== "undefined" ? D : undefined, G: typeof G !== "undefined" ? G : undefined, F: typeof F !== "undefined" ? F : undefined, AMMO_: typeof AMMO !== "undefined" ? AMMO : undefined }[n]; } catch { return undefined; } };
 
   /* what a weapon hits for in your hands: the same sum as the fight (engine.js weaponDamage, without the dice) */
   function hits(s, itemId, r = null) {
@@ -37,34 +37,68 @@ const ITEMCMP = (() => {
     return eq[it.slot] ? [eq[it.slot]] : [];
   }
 
-  /* { wearing, names, rows: [[label, now, with, higherIsBetter]] } or null */
+  /* [itemcards2] what else changes when you put it on: gear that comes off, a different skill, ammo. Plain lines.
+     Two-hander over a shield → "Takes both hands: your Hide Shield comes off (−15 armour, no Shield bash)";
+     a shield under a two-hander → "Your Iron Greatsword needs both hands: it comes off"; a bow with no arrows says so;
+     a weapon of another skill → "Uses Two-Handed (yours: 24) instead of One-Handed (41)". */
+  function notes(s, row) {
+    const D_ = mod("D"), G_ = mod("G"); if (!s || !row || !D_ || !G_?.equipment) return [];
+    const it = D_.ITEMS[row.item]; if (!it || !(G_.SLOTS || []).includes(it.slot)) return [];
+    let eq; try { eq = G_.equipment(s); } catch { return []; }
+    if (row.id != null && Object.values(eq).some((x) => x && x.id === row.id)) return [];   // already worn
+    const lo = (() => { try { return G_.loadout ? G_.loadout(s).equipment : {}; } catch { return {}; } })();
+    const off = lo.offhand != null ? (s.inv || []).find((x) => x.id === lo.offhand) : null;
+    const nm = (r) => { const i = D_.ITEMS[r?.item]; return i ? i.name + (r.nm ? ` “${r.nm}”` : "") : ""; };
+    const A = mod("AMMO_"), out = [];
+    if (it.slot === "weapon") {
+      if (it.hands === 2 && eq.shield) {
+        const a = armorOf(D_.ITEMS[eq.shield.item], eq.shield);
+        out.push(`Takes both hands: your ${nm(eq.shield)} comes off (${a ? `−${a} armour, ` : ""}no Shield bash)`);
+      } else if (it.hands === 2 && off && off.id !== eq.weapon?.id && off.id !== row.id) out.push(`Takes both hands: your ${nm(off)} in the left hand comes off`);
+      const kind = A?.kindFor ? A.kindFor(it, row.item) : null;
+      if (kind && !A.count(s, kind)) out.push(`You have no ${A.label(kind)}: it can only bash until you get some`);
+      const w = eq.weapon, wi = w && D_.ITEMS[w.item];
+      if (wi && !wi.staff && !it.staff && wi.skill && it.skill && wi.skill !== it.skill) {
+        const lv = (k) => { try { return Math.floor(G_.skill(s, k)); } catch { return 15; } };
+        out.push(`Uses ${it.skill} (yours: ${lv(it.skill)}) instead of ${wi.skill} (${lv(wi.skill)})`);
+      }
+    } else if (it.slot === "shield") {
+      const w = eq.weapon, wi = w && D_.ITEMS[w.item];
+      if (wi && wi.hands === 2) out.push(`Your ${nm(w)} needs both hands: it comes off`);
+      else if (off && off.id !== w?.id) out.push(`Your ${nm(off)} in the left hand comes off`);
+    }
+    return out;
+  }
+
+  /* { wearing, names, rows: [[label, now, with, higherIsBetter]], notes: [line] } or null */
   function data(s, row) {
     const D_ = mod("D"); const w = worn(s, row); if (!w) return null;
-    if (w.some((x) => x.id === row.id)) return { wearing: true, names: [], rows: [] };
+    if (w.some((x) => x.id === row.id)) return { wearing: true, names: [], rows: [], notes: [] };
     const it = D_.ITEMS[row.item], items = w.map((x) => [x, D_.ITEMS[x.item]]).filter(([, x]) => x);
     const rows = [];
     if (it.slot === "weapon") {
       const mainW = items.find(([, x]) => x.slot === "weapon");
-      if (!it.staff) rows.push(["Damage", mainW ? hits(s, mainW[0].item, mainW[0]) : 0, hits(s, row.item, row), true]);
+      if (!it.staff) rows.push(["Hits for", mainW ? hits(s, mainW[0].item, mainW[0]) : 0, hits(s, row.item, row), true]);
       const sh = items.find(([, x]) => x.slot === "shield");
       if (sh) rows.push(["Armor", armorOf(sh[1], sh[0]), 0, true]);   // the shield comes off for a two-hander
     } else if ((mod("G")?.ARMOR_SLOTS || []).includes(it.slot)) rows.push(["Armor", items.reduce((a, [x, i]) => a + armorOf(i, x), 0), armorOf(it, row), true]);
     const sum = (f) => +items.reduce((a, [x, i]) => a + f(i, x), 0).toFixed(2);
     rows.push(["Weight", sum((i) => i.weight || 0), +(it.weight || 0).toFixed(2), false], ["Value", sum((i) => i.value || 0), it.value || 0, true]);
-    return { wearing: false, names: items.map(([x, i]) => (x.nm ? `${i.name} “${x.nm}”` : i.name)), rows };
+    return { wearing: false, names: items.map(([x, i]) => (x.nm ? `${i.name} “${x.nm}”` : i.name)), rows, notes: notes(s, row) };
   }
 
   /* the block as html (cls: extra class, e.g. "tt-cmp" inside the tooltip) */
   function html(s, row, cls = "") {
     const d = data(s, row); if (!d) return "";
     if (d.wearing) return `<p class="tt-eq ic-wearing">◆ ${esc("You're wearing this")}</p>`;
-    if (!d.names.length) return `<div class="ic-cmp ${cls}"><p class="ic-h tt-up">${esc("Nothing worn there yet")}</p></div>`;
+    const nt = (d.notes || []).map((x) => `<p class="ic-note">${esc(x)}</p>`).join("");   // [itemcards2] what else changes
+    if (!d.names.length) return `<div class="ic-cmp ${cls}"><p class="ic-h tt-up">${esc("Nothing worn there yet")}</p>${nt}</div>`;
     const fmt = (n) => String(+(+n).toFixed(2));
     const lines = d.rows.map(([k, a, b, up]) => {
       const dv = +(b - a).toFixed(2), good = dv === 0 ? "" : (dv > 0) === up ? "ic-up tt-up" : "ic-dn tt-dn";
       return `<div class="ic-r ${good}"><span>${esc(k)}</span><b class="num">${fmt(a)} → ${fmt(b)}${dv ? ` (${dv > 0 ? "+" : ""}${fmt(dv)})` : ""}</b></div>`;
     }).join("");
-    return `<div class="ic-cmp ${cls}"><p class="ic-h">${esc("Against what you wear:")} <b>${esc(d.names.join(" + "))}</b></p>${lines}</div>`;
+    return `<div class="ic-cmp ${cls}"><p class="ic-h">${esc("Against what you wear:")} <b>${esc(d.names.join(" + "))}</b></p>${lines}${nt}</div>`;
   }
 
   /* ---- PC: the Items details sit in a side panel (index.html makes .sky-in a grid from 1000 px). Resting the mouse on a
@@ -97,6 +131,6 @@ const ITEMCMP = (() => {
     sky.addEventListener("pointerleave", () => { last = null; });   // leaving the menu keeps what's shown
   }
 
-  return { hits, worn, data, html, side, ownsHover, bind };
+  return { hits, worn, notes, data, html, side, ownsHover, bind };
 })();
 if (typeof module !== "undefined") module.exports = ITEMCMP;

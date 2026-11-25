@@ -19,13 +19,13 @@ ok(/Nothing worn there yet/.test(ITEMCMP.html(s, rowOf(steel))), "an empty hand 
 G.equip(s, iron);
 const d = ITEMCMP.data(s, rowOf(steel));
 ok(d && !d.wearing && d.names[0] === "Iron Sword", "steel compares against the worn iron sword " + JSON.stringify(d));
-const dmg = d.rows.find((r) => r[0] === "Damage");
+const dmg = d.rows.find((r) => r[0] === "Hits for");
 ok(dmg && dmg[1] === ITEMCMP.hits(s, "iron_sword") && dmg[2] === ITEMCMP.hits(s, "steel_sword"), "damage uses the with-skill-and-perks number");
 ok(dmg[2] - dmg[1] === 1, "iron 7 → steel 8 is +1 at a low skill " + dmg);
 const h = ITEMCMP.html(s, rowOf(steel)); const t = text(h);
 ok(/Against what you wear: Iron Sword/.test(t) && /\\(\\+1\\)/.test(t), "the block reads 'Against what you wear: Iron Sword' and +1: " + t);
 const cls = (k) => (h.match(new RegExp('class="ic-r ([^"]*)"><span>' + k)) || [])[1] || "";
-ok(/ic-up/.test(cls("Damage")), "more damage is green");
+ok(/ic-up/.test(cls("Hits for")), "more damage is green");
 ok(/ic-dn/.test(cls("Weight")), "more weight is red");
 ok(/ic-up/.test(cls("Value")), "more value is green");
 ok(/Value/.test(t) && /25 → 45/.test(t), "value 25 → 45: " + t);
@@ -40,6 +40,27 @@ const two = G.give(s, gs), d2 = ITEMCMP.data(s, rowOf(two));
 ok(d2.names.length === 2 && d2.names.includes("Hide Shield"), "a two-hander compares against both hands " + d2.names);
 ok(d2.rows.some((r) => r[0] === "Armor" && r[2] === 0 && r[1] > 0), "and shows the shield's armour going");
 ok(d2.rows.find((r) => r[0] === "Weight")[1] === +(D.ITEMS.iron_sword.weight + D.ITEMS.hide_shield.weight).toFixed(2), "weights of both hands add up");
+// [itemcards2] what else changes: the shield comes off, the skill switch, bows without arrows, a shield under a two-hander
+{ const n2 = ITEMCMP.notes(s, rowOf(two)), t2 = text(ITEMCMP.html(s, rowOf(two)));
+  ok(n2.some((x) => /^Takes both hands: your Hide Shield comes off \\(−\\d+ armour, no Shield bash\\)$/.test(x)), "a two-hander over sword + shield says the shield comes off " + n2);
+  ok(n2.some((x) => /^Uses Two-Handed \\(yours: \\d+\\) instead of One-Handed \\(\\d+\\)$/.test(x)), "and names the skill switch with both levels " + n2);
+  ok(t2.includes("Hide Shield comes off") && /class="ic-note"/.test(ITEMCMP.html(s, rowOf(two))), "the lines are in the card " + t2);
+  ok(/Takes both hands/.test(text(TIP.html("inv:" + two))) && /Takes both hands/.test(text(TIP.html("item:" + gs))), "tooltip / phone sheet / shop card show it too");
+  const st2 = G.give(s, "steel_sword");
+  ok(ITEMCMP.notes(s, rowOf(st2)).length === 0 && !/ic-note/.test(ITEMCMP.html(s, rowOf(st2))), "one-hander vs one-hander: no extra lines");
+  const hits2 = ITEMCMP.hits(s, gs), hd = text(TIP.html("item:" + gs));
+  ok(hd.includes("Hits for " + hits2 + " (" + D.ITEMS[gs].damage + " base)") && hd.includes("→ " + hits2), "header and compare show the same with-skill number " + hd);
+  const bow = Object.keys(D.ITEMS).find((k) => D.ITEMS[k].slot === "weapon" && D.ITEMS[k].skill === "Archery" && !/crossbow/.test(k) && !k.startsWith("ench|"));
+  s.inv = s.inv.filter((r) => D.ITEMS[r.item]?.slot !== "ammo");
+  if (bow) { const b = G.give(s, bow); ok(ITEMCMP.notes(s, rowOf(b)).some((x) => /no arrows/.test(x)), "a bow with no arrows says so");
+    G.give(s, "arrow_iron", 10); ok(!ITEMCMP.notes(s, rowOf(b)).some((x) => /no arrows/.test(x)), "with arrows it doesn't"); }
+  G.equip(s, two); const sh2 = G.give(s, "hide_shield");
+  ok(ITEMCMP.notes(s, rowOf(sh2)).some((x) => x === "Your " + D.ITEMS[gs].name + " needs both hands: it comes off"), "a shield under a two-hander says the weapon comes off " + ITEMCMP.notes(s, rowOf(sh2)));
+  ok(/needs both hands/.test(ITEMCMP.html(s, rowOf(sh2))), "even with no shield worn the line shows");
+  G.equip(s, sh2); const eqx = G.equipment(s);
+  ok(eqx.shield?.id === sh2 && !eqx.weapon, "putting the shield on takes the two-hander off (as the card said)");
+  G.equip(s, iron); G.equip(s, sh);
+}
 // armour and rings
 const helm = G.give(s, "iron_helmet"); ok(/Nothing worn there yet/.test(ITEMCMP.html(s, rowOf(helm))), "an empty head slot");
 const ringIds = Object.keys(D.ITEMS).filter((k) => D.ITEMS[k].slot === "ring").slice(0, 3);
