@@ -2,7 +2,7 @@
    buttons give under your thumb, tab underlines glide, gold and level count up, the XP bar fills with a
    shimmer, a constellation lights up for a big reward (rewards.js), things you buy or make fly to your pack, toasts bounce in,
    popups pop over a soft blur, pins drop on the map, the route draws itself, fog wipes away from new places,
-   the title breathes with mist and embers, and arriving in a town fades its name in.
+   and the title breathes with mist and embers. (Arriving somewhere shows the place full screen: locintro.js.)
    Rules: only transform and opacity move (so phones stay at 60 fps), everything is decoration that never blocks
    taps, and it all switches off with the system's reduced-motion setting or Settings → Look → Motion.
    Under browser automation it stays off unless
@@ -202,18 +202,6 @@ const MOTION = (() => {
     setTimeout(() => el.remove(), 2600);
   }
 
-  // ---- arriving in a town: its name fades in over a veil
-  let lastPlace;
-  function place(name, isTown = true) {
-    const prev = lastPlace; lastPlace = name || null;
-    if (prev === undefined || !name || name === prev || !isTown || !on()) return;
-    const el = document.createElement("div"); el.className = "mo-veil"; el.setAttribute("aria-hidden", "true");
-    const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-    el.innerHTML = `<div class="mo-vname"><small>You arrive at</small><b>${esc(name)}</b><i></i></div>`;
-    document.body.appendChild(el);
-    setTimeout(() => el.remove(), 1900);
-  }
-
   // ---- the map: route drawing, pin drops, fog wiping off new places
   const routeSeen = new Map(), pinSeen = new Map(), lifts = [];
   let mapPrimedAt = 0, lastDisc = null;
@@ -341,7 +329,7 @@ const MOTION = (() => {
   }
   if (DOM) { if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else setTimeout(init, 0); }
 
-  return { DUR, EASE, ease, spring, tween, on, lite, pref: () => pref, setPref, apply, count, xp, underline, tabs, stagger, menu, panel, fly, constellation, celebrate, place,
+  return { DUR, EASE, ease, spring, tween, on, lite, pref: () => pref, setPref, apply, count, xp, underline, tabs, stagger, menu, panel, fly, constellation, celebrate,
     routeT, cutPath, pinDrop, trackDiscoveries, fogLift, mapBusy, titleAmbient, _onToast: onToast };
 })();
 if (typeof module !== "undefined") module.exports = MOTION;
