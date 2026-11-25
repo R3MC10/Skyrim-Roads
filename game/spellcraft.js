@@ -69,10 +69,15 @@ const SPELLCRAFT = (() => {
   const autoName = (d) => d.parts.map((p) => p.label).join(" & ");
 
   /* put a save's crafted spells into D.SPELLS (on load, and after crafting) */
+  /* one crafted spell and its hidden parts into D.SPELLS: yours, or a teammate's in a shared party fight (partyspells.js) */
+  function define(c) {
+    c.parts.forEach((p, i) => { D.SPELLS[`${c.id}~${i}`] = { ...p, name: p.label, hidden: true }; });
+    D.SPELLS[c.id] = { name: c.name, school: c.school, level: c.level, cost: c.base, kind: "custom", amount: 1, xp: 0, parts: c.parts.map((_, i) => `${c.id}~${i}`), custom: true };
+    return D.SPELLS[c.id];
+  }
   function register(s) {
     for (const c of s.customSpells || []) {
-      c.parts.forEach((p, i) => { D.SPELLS[`${c.id}~${i}`] = { ...p, name: p.label, hidden: true }; });
-      D.SPELLS[c.id] = { name: c.name, school: c.school, level: c.level, cost: c.base, kind: "custom", amount: 1, xp: 0, parts: c.parts.map((_, i) => `${c.id}~${i}`), custom: true };
+      define(c);
       if (!s.spells.includes(c.id)) s.spells.push(c.id);
     }
     return s;
@@ -115,5 +120,5 @@ const SPELLCRAFT = (() => {
     MAGIC.costMult = (s, id) => (D.SPELLS[id]?.parts ? 1 : cost0(s, id));
     MAGIC.dualable = (sp) => (sp?.parts ? sp.parts.some((p) => D.SPELLS[p] && dual0(D.SPELLS[p])) : dual0(sp));
   }
-  return { MAX, TOWN, FEE_MULT, PREMIUM, components, design, castCost, fee, autoName, register, craft, forget, compName };
+  return { MAX, TOWN, FEE_MULT, PREMIUM, components, design, castCost, fee, autoName, register, define, craft, forget, compName };
 })();

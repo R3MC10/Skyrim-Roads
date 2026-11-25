@@ -46,6 +46,7 @@ const SHAREDFIGHT = (() => {
     sync(d) {
       const f = this.f, me = this.me;
       if (!d || this.done) return;
+      if (typeof PARTYSPELLS !== "undefined") PARTYSPELLS.learn(d.spells, f.s);   // the crafted spells cast in this fight (partyspells.js)
       if (d.t !== this.lastT) { this.lastT = d.t; this.heard = Date.now(); }
       this.host = d.owner; this.hostName = d.ownerName || "Your leader";
       const myName = f.s.name || "You";
@@ -141,7 +142,9 @@ const SHAREDFIGHT = (() => {
         allies.push(x);
       }
       const armorUp = (f.armorSpell || 0) > t0.armor;
-      return { pid: this.me, tid: this.myTurn?.tid || null, round: this.round, wave: this.wave, e0: t0.ehp, ehp: f.ehp, fs,
+      const mine = this.ev.slice(t0.ev).filter((e) => e.who === "me");
+      const spells = typeof PARTYSPELLS !== "undefined" ? PARTYSPELLS.used(f.s, mine) : {};   // your crafted spells, so every phone knows them (partyspells.js)
+      return { ...(Object.keys(spells).length ? { spells } : {}), pid: this.me, tid: this.myTurn?.tid || null, round: this.round, wave: this.wave, e0: t0.ehp, ehp: f.ehp, fs,
         hp0: t0.hp, hp: f.hp, hpMax: G.maxHealth(f.s), guard: f.tbGuard || 0,
         self: { ward: (f.ward || 0) > t0.ward ? f.ward : 0, armorRed: armorUp ? Math.min(0.5, f.armorSpell * 0.0012) : 0, armorT: armorUp ? 6 : 0 },   // [Skyrim] 0.12% less damage per armour point
         allies, summon: f.summonTurns > 0 ? { turns: f.summonTurns, dmg: f.summonDmg, name: f.summonName || "summon" } : null,

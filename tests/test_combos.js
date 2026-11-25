@@ -210,11 +210,16 @@ function landed(build, L, base, prep, a, look, tries = 25) {
   const ROWS = [["twohand", 25, CHIEF, false], ["mage", 25, TROLL, false], ["warrior", 25, CHIEF, "lydia"], ["archer", 40, TROLL, "faendal"], ["warrior", 25, CHIEF, false, true], ["mage", 40, TROLL, "lydia", true], ["twohand", 10, CHIEF, false, true]].filter((r) => !process.env.ONLY || r[0] === process.env.ONLY);
   console.log("build      L  foe           fol      boss | off: win rnds | on: win rnds combos/fight  biggest blow");
   let worst = 0;
-  for (const [build, L, base, fol, boss] of ROWS) {
+  /* each fight rolls the same dice with combos on and off (a seeded Math.random), so the two columns compare like with
+     like and the table is the same on every run (a lucky or unlucky dozen fights used to flip a row) */
+  const rng = (seed) => { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
+  const rnd0 = Math.random;
+  for (const [ri, [build, L, base, fol, boss]] of ROWS.entries()) {
     const res = {};
     for (const off of [true, false]) {
       RX.off = off; let w = 0, r = 0, cb = 0, big = 0;
       for (let i = 0; i < N; i++) {
+        Math.random = rng(1000 * (ri + 1) + i);
         const f = fightOf(build, L, foeOf(base, L, boss ? { boss: true } : {}), fol);
         if (build === "mage" || build === "archer") f.s.inv.push({ id: "oil" + i, item: "oil_flask", qty: 1 });
         const s = TB.simulate(f, { trySneak: false });
@@ -222,6 +227,7 @@ function landed(build, L, base, prep, a, look, tries = 25) {
         const mx = s.ehpMax || 1; let prev = null;
         for (const e of s.ev) { if ((e.who === "me" || e.kind === "ally") && e.dmg > 0) big = Math.max(big, e.dmg / mx); }
       }
+      Math.random = rnd0;
       res[off ? "off" : "on"] = { w: w / N, r: r / N, cb: cb / N, big };
     }
     RX.off = false;

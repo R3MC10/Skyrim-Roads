@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b211-partyspells", build: 211, date: "25 Nov 2026", title: "Your own spells in party fights", items: [
+      "Spells you made at the Rune table or combined at the College now show up properly on your friends' phones in a party fight: the right name, icon and effect in the battle scene.",
+      "Only the spells you actually cast in that fight are sent, and nobody can change your spell on your phone.",
+      "In a party fight, the target a foe shows is now always the one it hits, healers included.",
+    ] },
     { id: "b210-stables", build: 210, date: "25 Nov 2026", title: "Tidier stables", items: [
       "The stables screen is now fully in Polish: saddlebags, horseshoes, horse armor, breeds, coats, the cart and renaming your horse.",
       "Your horse's card shows its painted picture in its own coat, in a proper frame, instead of a tiny icon. A knocked-down horse lies down in the picture.",
