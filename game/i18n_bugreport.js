@@ -11,6 +11,8 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "What happened?": "Co się stało?",
     "e.g. Can't sell the iron sword": "np. Nie mogę sprzedać żelaznego miecza",
     "What did you do, what did you expect, what happened instead?": "Co robiłeś, czego się spodziewałeś, co stało się zamiast tego?",
+    "We also attach the game build, your device type and screen size, your art style, where you are, your level and the game's recent error log. Nothing personal beyond your player and hero names.":
+      "Dołączamy też wersję gry, rodzaj urządzenia i rozmiar ekranu, styl grafiki, miejsce, w którym jesteś, twój poziom i ostatnie błędy gry. Nic osobistego poza nazwą gracza i imieniem bohatera.",
     "We also attach the game build, your device type and screen size, your art style, where you are, your level and the game's recent error log. Nothing personal beyond your hero's name.":
       "Dołączamy też wersję gry, rodzaj urządzenia i rozmiar ekranu, styl grafiki, miejsce, w którym jesteś, twój poziom i ostatnie błędy gry. Nic osobistego poza imieniem bohatera.",
     "Sending…": "Wysyłanie…",
@@ -28,7 +30,14 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
       "Zgłoszenie zabiera ze sobą to, co pomaga znaleźć problem: wersję gry, rodzaj urządzenia, rozmiar ekranu, styl grafiki, miejsce, w którym jesteś, twój poziom i ostatnie błędy gry. Nic osobistego poza imieniem bohatera.",
     "No connection? The report waits on your device and sends itself later.":
       "Brak internetu? Zgłoszenie poczeka na urządzeniu i wyśle się samo później.",
+    // patch note: your name goes with reports
+    "Reports show who sent them": "Zgłoszenia pokazują, kto je wysłał",
+    "When you report a problem, your player name (your account name, or your hero's name if you're not signed in) now goes with it, so we know who to ask if we need more details.":
+      "Gdy zgłaszasz problem, dołączamy teraz twoją nazwę gracza (nazwę konta, a bez logowania imię bohatera), żebyśmy wiedzieli, kogo dopytać o szczegóły.",
+    "The report window shows the name it's sent as, right above the Send button.": "Okno zgłoszenia pokazuje, pod jaką nazwą je wyślesz, tuż nad przyciskiem Wyślij.",
   });
+  I18N_EXTRA.pat = I18N_EXTRA.pat || [];
+  I18N_EXTRA.pat.push([/^Sent as (.+)$/, (m) => `Wysyłasz jako ${m[1]}`]);
   // short words: only add them if no other file already translates them (so nothing else changes)
   const SHORT = { "Help": "Pomoc", "Kind": "Rodzaj", "Bug": "Błąd", "Balance": "Balans", "Art": "Grafika", "Text": "Tekst", "Idea": "Pomysł", "Cancel": "Anuluj", "Send": "Wyślij" };
   for (const [en, pl] of Object.entries(SHORT)) if (!(en in I18N_EXTRA.words)) I18N_EXTRA.words[en] = pl;
