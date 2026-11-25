@@ -305,7 +305,7 @@ const G = (() => {
     const cur = equipment(s);
     let extra = "";
     if (it.slot === "weapon" && it.hands === 2 && eq.shield) { delete eq.shield; extra = " Shield taken off (two-handed weapon)."; }
-    if (it.slot === "shield" && cur.weapon && D.ITEMS[cur.weapon.item].hands === 2) return "You can't use a shield with a two-handed weapon.";
+    if (it.slot === "shield" && cur.weapon && D.ITEMS[cur.weapon.item].hands === 2) { delete eq.weapon; extra = ` ${D.ITEMS[cur.weapon.item].name} taken off (needs both hands).`; }   // [itemcards2] like Skyrim: the shield wins, the two-hander comes off (the item card says so first)
     if (eq.offhand != null) {   // [OURS] dual wielding: a shield or a two-handed weapon frees the left hand; one sword can't be in both hands
       const offR = invRow(s, eq.offhand);
       if (it.slot === "shield" || (it.slot === "weapon" && it.hands === 2)) { delete eq.offhand; extra += " Left-hand weapon put away."; }
@@ -1041,7 +1041,7 @@ const G = (() => {
         this.turn++;
         const [rule, a] = this.choose();
         const line = { turn: this.turn, rule, me: this.act(a), them: "", a, wt: this.wt };   // a / wt: what was done, for the fight scene only
-        if (this.ai && !rule) { line.ai = true; if (this.aiWhy && this.aiWhy !== this.aiLastWhy) line.why = this.aiWhy; this.aiLastWhy = this.aiWhy; }   // why the AI did it (shown when the reason changes)
+        if (this.ai && !rule) { line.ai = true; const w = COMBATAI.shortWhy ? COMBATAI.shortWhy(a, this.aiWhy) : this.aiWhy; if (w && w !== this.aiLastWhy) line.why = w; this.aiLastWhy = w; }   // why the AI did it (shown when the reason changes; plain moves get a short reason too)
         if (this.bleed.length && this.ehp > 0) { const b = this.bleed.reduce((x, y) => x + y.dmg, 0); this.ehp -= b; this.bleed = this.bleed.map((y) => ({ ...y, turns: y.turns - 1 })).filter((y) => y.turns > 0); line.me += ` · bleeds ${Math.round(b)}`; }
         for (const al of [...this.allies]) if (this.ehp > 0) { if (al.coop && typeof COOP !== "undefined") { line.me += COOP.allyAct(this, al); continue; } if (al.pet && typeof PETS !== "undefined") { line.me += PETS.turn(this, al); continue; } if (al.follower && typeof FOL2 !== "undefined") { const ft = FOL2.turn(this, al); if (ft) { line.me += ft; continue; } } if (al.follower && this.ai) { line.me += COMBATAI.followerAct(this, al); continue; } const d = al.dmg * rnd(...F.DAMAGE_SPREAD); this.ehp -= d; line.me += ` · ${al.name} ${Math.round(d)}`; }
         if (typeof PFX !== "undefined") PFX.tick(this, line);   // burning, chills and jolts
@@ -1279,15 +1279,14 @@ const G = (() => {
         if (ce) { const e = scaleEnemy(ce, fightLevel(s)); tr.status = "encounter"; tr.encounter = e; out.encounter = e; note(s, ` Caravan ambush: ${e.name}`); return out; }
         continue;
       }
-      const rate = tr.carriage || tr.follow ? 0 : ENCOUNTER_PER_MIN * (isNight(stepT) ? D.NIGHT_ENCOUNTER_MULT : 1) * (typeof WEVENTS !== "undefined" ? WEVENTS.weather([s.x, s.y], stepT).encounters : 1) * (typeof SNEAKMODE !== "undefined" ? SNEAKMODE.encounterMult(s) : 1) * (typeof CRISES !== "undefined" ? CRISES.encounterMult(s, [s.x, s.y], stepT) : 1) * (typeof CVROAD !== "undefined" ? CVROAD.ambushMult(s, stepT) : 1);   // nobody robs a carriage on a Jarl's road; party members following their leader leave the road to them (partyplay.js)
+      const rate = tr.carriage || tr.follow ? 0 : ENCOUNTER_PER_MIN * (isNight(stepT) ? D.NIGHT_ENCOUNTER_MULT : 1) * (typeof WEVENTS !== "undefined" ? WEVENTS.weather([s.x, s.y], stepT).encounters : 1) * (typeof SNEAKMODE !== "undefined" ? SNEAKMODE.encounterMult(s) : 1) * (typeof CRISES !== "undefined" ? CRISES.encounterMult(s, [s.x, s.y], stepT) : 1) * (typeof CVROAD !== "undefined" ? CVROAD.ambushMult(s, stepT) : 1) * (typeof HORSETRAVEL !== "undefined" ? HORSETRAVEL.encounterMult(s) : 1);   // nobody robs a carriage on a Jarl's road; party members following their leader leave the road to them (partyplay.js)
       if (Math.random() < 1 - (1 - rate) ** (dt / 60)) {
         const e = rollEncounter(s, stepT);
         if (e.danger === "low" && e.kind === "event") {   // every fight is yours to play: the trip stops for it (no auto fighting)
           const g = rint(...e.gold); s.gold += g;
           tripLog(s, e.text + (g ? ` (+${g} gold)` : ""));
         } else {
-          const hm = typeof HORSES !== "undefined" ? HORSES.hurt(s, e, stepT, 0.25) : null;   // horses go down, they never die
-          if (hm) tripLog(s, hm);
+          // your horse is never hurt by a road fight: it waits beside you, safe (horses are for travel)
           tr.status = "encounter"; tr.encounter = e;
           out.encounter = e;
           note(s, ` Encounter: ${e.name}`);
@@ -1336,7 +1335,7 @@ const G = (() => {
       enemyFirst = true; lines.unshift(`A twig snaps. ${theFoe(e, true)} spots you!`);
     }
     const f = new Fight(s, e, null, t);
-    if (typeof HORSEBACK !== "undefined" && (typeof MOUNTCOMBAT === "undefined" || MOUNTCOMBAT.enabled)) HORSEBACK.engage(f, t);   // [OURS] riding? you fight from the saddle (mountcombat.js: off for now, everyone fights on foot)
+    // [OURS] no mounted combat: riding into a fight, you get down and fight on foot; your horse waits, safe (horsetravel.js)
     f.canFlee = true;   // a "flee" tactic can break off a road fight
     f.run({ enemyFirst, t, hidden: opts.hidden ?? null });
     const skillMsgs = f.apply(t);

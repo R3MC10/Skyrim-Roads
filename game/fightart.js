@@ -517,6 +517,20 @@ const FIGHTART = (() => {
   const REACH = { bear: 0.88, cat: 0.9, mammoth: 0.55, giant: 0.72, troll: 0.78, centurion: 0.66, skeever: 1.06, dragon: 0.5 };
   const SIZE = { giant: 1.5, troll: 1.35, centurion: 1.6, mammoth: 1.5, dragon: 1.1, werewolf: 1.25 };
   const moveFor = (wt) => MOVES[wt] ? wt : "sword";
+  // [phantom] only a real blow is drawn as one. Your moves that aren't blows (Breathe, Mark, Cover, Mount, an end-of-round
+  // tick: a burn, bleed or poison doing its work) and the foe's turns that aren't blows (winding up, taking aim, a war cry,
+  // a potion, a ward, bracing behind a shield, a new foe stepping in) used to fall through to a weapon swing.
+  const MY_KNOWN = new Set(["attack", "power_attack", "block", "bash", "spell", "dual", "scroll", "potion", "shout", "power", "beast", "lord", "vamp"]);
+  const FOE_PREP = [[/winding up|lifts the weapon high/, "Winds up!"], [/takes careful aim/, "Takes aim!"], [/war cry|howls, hackles/, "War cry!"],
+    [/gulps down|casts a healing spell|wounds close up/, "Heals"], [/raises a ward/, "Ward up"], [/raises a shield and braces/, "Braces"], [/slips into the shadows/, "Hides"],
+    [/circles overhead/, "Takes flight"], [/steps in!/, null]];
+  const FOE_BLOW = /\bhits\b|misses|goes for|attacks, but|steps on your|is absorbed|passes through|soaks|reflected|knocks/;
+  function foePrep(them) {   // a foe's turn that isn't a blow -> [label] (the text is already lower case, the foe's name cut out)
+    const t = String(them || "").replace(/^ ?ambush! /, "").split(" · ").filter((x) => !/^ *you take \d+ from /.test(x)).join(" · ").replace(/\([^)]*\)/g, "");
+    if (FOE_BLOW.test(t)) return null;
+    const p = FOE_PREP.find(([re]) => re.test(t));
+    return p ? [p[1]] : !/\S/.test(t) ? [null] : null;
+  }
   function beatsOf(f, h) {
     const lines = f.log || [], beats = [];
     let hp = f.hp0 ?? null, ehp = f.ehp0 ?? null;
@@ -540,11 +554,19 @@ const FIGHTART = (() => {
       if (me) {
         const [k, arg] = (l.a || "").split(":");
         const b = { who: "me", li, move: "wait", wt: h.wt, fx: null, el: null, miss: false, crit: false, power: false, sneak: null, dmg: null, heal: null, hpT: hp, ehpT: nehp,
-          ally: /· (?!bleeds|familiar|Your )[A-Z][^·]* \d+/.test(" · " + extra) && (f.allies || []).length > 0, wolf: /familiar \d|^Your .+ strikes \d| · Your .+ strikes \d/.test(extra), burn: /bleeds|wall|storm|blizzard/i.test(extra) ? elementOf(extra) || "dust" : null, flask: null };
+          ally: /· (?!bleeds|familiar|Your )[A-Z][^·]* \d+/.test(" · " + extra) && (f.allies || []).length > 0 && (!anames.length || extra.split(" · ").some((x) => /\d/.test(x) && anames.some((n) => x.startsWith(n + " ")))), wolf: /familiar \d|^Your .+ strikes \d| · Your .+ strikes \d/.test(extra), burn: /bleeds|wall|storm|blizzard/i.test(extra) ? elementOf(extra) || "dust" : null, flask: null };
         let lwt = l.wt || base; if (lwt === base) lwt = h.wt;   // staffs and crossbows are told apart by the scene, not the engine
         if (l.wt && l.wt !== base) st.bound = true;
         const spellish = k === "spell" || k === "dual" || k === "scroll" || (!k && (elementOf(me) || /ward|cloak|heal|bound|summon|familiar|rune|wall|conjur|raise|paralyz|calm|fear|courage|invisib|soul|turn|oakflesh|dragonhide|armor/i.test(me)) && !/^(power )?attack|^sneak attack/i.test(me));
-        if (k === "beast" || k === "lord" || k === "vamp") {   // a form's own moves and a vampire's powers (beastpaths.js)
+        if (k === "tick") {   // [phantom] the end of the round: burns, bleeds and poison tick, nobody swings
+          b.tick = true; b.ally = false;
+          if (nehp != null && ehp != null && nehp < ehp) b.burn = elementOf(raw) || (/poison|venom/i.test(raw) ? "dust" : "fire");
+        } else if (k && !MY_KNOWN.has(k)) {   // [phantom] a move that isn't a blow: no swing
+          const a0 = l.a;
+          if (a0 === "rx:cover") { b.move = "block"; st.guard = true; }
+          else if (a0 === "rx:oil") Object.assign(b, { move: "cast", fx: "dust" });
+          b.tag = a0 === "recover" ? "Catch breath" : a0 === "rx:mark" ? "Marked!" : a0 === "rx:cover" ? "Cover!" : null;
+        } else if (k === "beast" || k === "lord" || k === "vamp") {   // a form's own moves and a vampire's powers (beastpaths.js)
           if (k === "beast") st.beast = true; if (k === "lord") st.lord = true;
           if (arg === "howl") Object.assign(b, { move: "shout", fx: "fus", el: null });
           else if (arg === "raise") { st.summon = "zombie"; Object.assign(b, { move: "self", fx: "necro", el: null }); }
@@ -588,6 +610,7 @@ const FIGHTART = (() => {
             b.crit = /\(critical\)/.test(me);
             const sn = me.match(/^Sneak attack ×(\d+)/i); if (sn) b.sneak = `SNEAK ATTACK ×${sn[1]}`;
             b.second = /second arrow/.test(me);
+            if (/\(riposte\)/.test(me)) b.tag = "Riposte!";   // [phantom] a dodge set it up: say why this blow is extra strong
             const en = me.match(/\+(fire|frost|shock|absorb)/); if (en) b.enchant = en[1] === "absorb" ? "drain" : en[1];
             if (!b.enchant && /poison/i.test(raw) && (b.move === "bow" || b.move === "crossbow")) b.poison = true;   // [arrowfx] a poisoned arrow drips green
             if (/paralyzes/.test(me)) b.para = true;
@@ -603,15 +626,17 @@ const FIGHTART = (() => {
         if (st.lord && /drain life/.test(extra)) b.drain = true;
         Object.assign(b, { st: { ...st } });
         if (/change back/.test(extra)) { st.beast = false; st.lord = false; }
-        if (AA) { b.allyActs = AA.actsOf(extra, anames); for (const n of AA.revivedIn(me, anames)) if (!b.allyActs.some((a) => a.name === n)) b.allyActs.push({ name: n, clip: "getup" }); }
+        if (AA && !b.tick) { b.allyActs = AA.actsOf(extra, anames); for (const n of AA.revivedIn(me, anames)) if (!b.allyActs.some((a) => a.name === n)) b.allyActs.push({ name: n, clip: "getup" }); }
         beats.push(track(b));
       }
       if (them) {
         const b = { who: "them", li, move: "wait", wt: null, fx: null, el: null, miss: false, dmg: hp != null && nhp != null ? Math.max(0, Math.round(hp - nhp)) : null, hpT: nhp, ehpT: nehp, ally: false };
-        const fo = AA ? AA.foeOn(them, anames) : null;   // the blow goes for one of your allies
+        let pr = null; const fo = AA ? AA.foeOn(them, anames) : null;   // the blow goes for one of your allies
         if (/steps on your/.test(them)) b.rune = st.rune || "fire", st.rune = null;
         if (/cowers|can't find you|isn't fighting|is paralyzed|is staggered|frozen|flees|obeys|shrugs/.test(them) && !/ hits | misses/.test(them)) {
           b.status = /paralyz|frozen/.test(them) ? "para" : /stagger/.test(them) ? "stagger" : /can't find/.test(them) ? "lost" : "fear";
+        } else if ((pr = foePrep(them))) {   // [phantom] its turn went into something else than a blow: no swing, a label says what
+          b.prep = true; b.tag = pr[0];
         } else if (fo || (/goes for|knocks .* to their knees| hits (?!\d)[a-z]/.test(them) && ((f.allies || []).length || f.followerDown || f.petDown))) {
           Object.assign(b, { move: FOE_MOVE[kind] || "sword", ally: true, allyActs: fo ? [fo] : [] });
         } else if (/(^| )(misses|attacks, but you dodge)/.test(them)) {
@@ -632,6 +657,8 @@ const FIGHTART = (() => {
           b.reflect = /reflected/.test(them);
           if (/ward soaks[^)]*breaks/.test(them)) st.ward = false;
         }
+        if (!b.tag && /punch back \d/.test(them)) Object.assign(b, { tag: "Counter!", tagU: 0.55 });   // [phantom] your blow back on its miss (Counterpunch): said on the picture too
+        else if (!b.tag && /thorns \d/.test(them)) Object.assign(b, { tag: "Thorns!", tagU: 0.55 });
         b.guard = st.guard; st.guard = false;
         b.st = { ...st };
         beats.push(track(b));
@@ -647,7 +674,7 @@ const FIGHTART = (() => {
     const won = f.won ?? true;
     for (const b of beats) if ((won ? b.ehpT != null && b.ehpT <= 0 : b.hpT != null && b.hpT <= 0) || b.turned) { b.final = true; break; }
     if (!beats.some((b) => b.final) && beats.length) beats[beats.length - 1].final = f.won != null;
-    for (const b of beats) { const m = MOVES[b.move] || MOVES.wait; b.dur = b.allyOnly ? 820 : m.dur * (b.power ? 1.15 : 1); b.num = b.dmg ? String(b.dmg) : null; }
+    for (const b of beats) { const m = MOVES[b.move] || MOVES.wait; b.dur = b.allyOnly ? 820 : b.tag && b.move === "wait" ? 760 : m.dur * (b.power ? 1.15 : 1); b.num = b.dmg ? String(b.dmg) : null; }
     beats.downEnd = downs;   // who is still down once it has all played
     return beats;
   }
@@ -1083,6 +1110,7 @@ const FIGHTART = (() => {
         const auto = (b.li > 12 ? 1.35 : 1) * (real > 25 ? 6 : 1);
         lt += dt * 1000 * speed * auto;
         const u = Math.min(1, lt / b.dur);
+        if (b.tag && !b.tagShown && u >= (b.tagU || 0)) { b.tagShown = true; label = L(b.tag); labelT = 1.1; labelC = b.who === "me" ? "#e9dcc0" : "#ffb070"; }   // [phantom] "Winds up!", "Counter!": what this beat is when it isn't a plain blow
         // charging hands, projectiles in flight
         const own = MFX ? MFX.step(dt, b, (f.log || [])[b.li], m, u, mfxGeo()) : false;   // [movefx] this spell's own charge, delivery and impact
         if (!own && m.charge && u > m.charge[0] && u < m.charge[1] && Math.random() < 0.7 * pmul) { const side = b.who === "me" ? 1 : -1, P0 = side > 0 ? heroP : foeP, c = colOf(b.fx, b.el); spawn(0, c[(Math.random() * c.length) | 0], handX(side, P0) + (Math.random() - 0.5) * 14 * s, handY(side) + (Math.random() - 0.5) * 14 * s, 0, -20 * s, 0.4, 1.8, 0); }
