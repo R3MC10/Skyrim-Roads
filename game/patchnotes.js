@@ -3,6 +3,16 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b232-gathering", build: 232, date: "25 Nov 2026", title: "Picking herbs by hand", items: [
+      "Gathering is now a short hands-on mini-game: snip flowers at the stem, dig roots up slowly, scrape fungus in one stroke, pick only the ripe berries, lift eggs gently and ease a fragile Nirnroot out of the mud. Do it well and you get more; even a clumsy try gives you something.",
+      "Picked a plant three times by hand? A Quick button lets you skip the mini-game for a slightly smaller handful.",
+      "Herbs nearby are easy to spot: painted markers on the map, a ring that shows how far you can reach, and a Gather button that pops up on the road, even while you ride past.",
+      "Now and then you find a perfect or a glowing plant. The next potion you brew with it is 15% or 25% stronger.",
+      "Each town's alchemist posts a daily herb order that pays well, and more when the hold is in trouble. That herb also sells for more there that day.",
+      "New recipes: Snowberry and Juniper Berry crostatas at the cooking fire, and Tundra Cotton twists into leather strips at the tanning rack.",
+      "Four new Alchemy perks: Herbalist's Eye (more rare finds), Sure Hands (easier mini-game, Quick sooner), Anatomist (extra parts from beasts) and Master Gardener (more from every garden bed).",
+      "In a party everyone picks their own share of each patch, so there's nothing to fight over.",
+    ] },
     { id: "b231-nomountfight", build: 231, date: "25 Nov 2026", title: "Horses wait at the edge of the fight", items: [
       "Horses now wait at the edge of the fight; you always fight on foot. That goes for solo fights, parties and co-op.",
       "Nobody goes for your horse and it never gets knocked down in a fight. If you rode in, you're back in the saddle when it's over.",
