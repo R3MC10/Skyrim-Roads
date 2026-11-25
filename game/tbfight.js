@@ -452,6 +452,7 @@ const TB = (() => {
       let t;
       if (al.player && move && move !== "auto") t = this.playerMove(al, move);
       else if (al.coop && typeof COOP !== "undefined") t = COOP.allyAct(f, al);
+      else if (al.pet && typeof PETS !== "undefined") t = PETS.turn(f, al);   // your pet: its signature move or a bite (pets.js)
       else if (al.follower && f.ai && typeof COMBATAI !== "undefined") t = COMBATAI.followerAct(f, al);
       else { const d = al.dmg * (0.85 + Math.random() * 0.3); f.ehp -= d; t = ` · ${al.name} ${Math.round(d)}`; if (al.fsum && typeof COMBO !== "undefined") t += COMBO.phys(f, b, "al" + f.allies.indexOf(al)); }   // followers2: summons can shatter too
       t = String(t || "").replace(/^ · /, "");
@@ -928,7 +929,7 @@ const TB = (() => {
       const was = ui.prevAl.get(a) ?? hp; ui.prevAl.set(a, hp);
       const fx = [a.ward > 0 ? "" : "", a.armorT > 0 ? "" : "", a.imbue?.turns > 0 ? "" : "", a.heroT > 0 ? "⚑" : "", a.unseen > 0 ? "" : "", a.guard ? "" : "", typeof POTFX !== "undefined" ? POTFX.allyIcons(a) : ""].join("");
       const ic = a.player ? "" : a.follower ? "" : a.summon ? "✦" : "";
-      const role = a.role ? ` · ${a.role}` : a.follower ? " · follower" : a.player ? " · player" : "";
+      const role = a.role ? ` · ${a.role}` : a.follower ? " · follower" : a.pet || a.partyPet ? " · pet" : a.player ? " · player" : "";
       const tip = `${a.name}${role}. ${down ? "Knocked down" : `${hp} / ${mx} health`}.${down ? " A Rescue spell can bring them back." : " Drag a healing spell, scroll or potion here to use it on them."}`;
       return `<div class="tbu ally${down ? " down" : ""}" data-tbzone="${down ? "ally" : "self ally"}" data-ally="${down ? 1000 + i : i}" data-tip="${esc(tip)}"><small class="nm">${ic} ${esc(a.name)}${fx ? ` <span class="fx">${fx}</span>` : ""}</small>
         <div class="tbbar mid hp"><b class="gh" style="width:${pc(Math.max(hp, was), mx)}%" data-to="${pc(hp, mx)}"></b><i style="width:${pc(hp, mx)}%"></i><span class="num">${down ? "down" : `${hp} / ${mx}`}</span></div>${!down && typeof FAI !== "undefined" ? FAI.frame(a) : ""}</div>`;

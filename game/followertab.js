@@ -151,7 +151,7 @@ const FOLTAB = (() => {
     const need = (id) => id === "lydia" ? "Becomes yours when you're made Thane of Whiterun (bring Farengar the Dragonstone)." : F && F.NEEDS[id] ? (F.NEEDS[id] === "college" ? "Join the College of Winterhold first." : "Join the Companions first.") : "";
     const row = ([id, r]) => `<div class="item ft-hire">${typeof NPCART !== "undefined" ? NPCART.follower(id, 36) : ""}<div class="t">${esc(r[0])} <span class="num">${r[2] ? `${r[2]} gold` : "Free"}</span><span>${esc(r[1])} · ${esc(r[5] || "")}${need(id) ? ` ${esc(need(id))}` : ""}</span></div></div>`;
     return `<div class="panel ft-empty"><h2>Follower</h2>
-      <p class="ft-lead">You're travelling alone for now.</p>${typeof MEEKO !== "undefined" && MEEKO.tabLine(s) ? `<p class="sub ft-meeko">${esc(MEEKO.tabLine(s))}</p>` : ""}
+      <p class="ft-lead">${s.pet ? "No follower with you right now." : "You're travelling alone for now."}</p>${typeof PETS === "undefined" && typeof MEEKO !== "undefined" && MEEKO.tabLine(s) ? `<p class="sub ft-meeko">${esc(MEEKO.tabLine(s))}</p>` : ""}
       <p class="sub">A follower fights beside you, carries some of your things, levels up with you and picks their own perks. They never die: when a fight goes badly they're knocked down and get back up after.</p>
       ${here.length ? `<div class="ft-here"><b>Here in ${esc(s.location)}:</b><div class="list">${here.map(row).join("")}</div><button class="btn sm pri" data-act="uxtab" data-id="town">Go to the inn (Area)</button></div>` : ""}
       <h3>Where to find one</h3><p class="sub">Look in the inn or hall of these towns, then hire them from the Area tab.</p>
@@ -163,20 +163,21 @@ const FOLTAB = (() => {
     for (const [id, r] of list) (by[r[1]] = by[r[1]] || []).push([id, r]);
     return Object.keys(by).sort().map((t) => `<p class="ft-town"><b>${esc(t)}</b><span>${by[t].map(([, r]) => `${esc(r[0])} <i>${r[2] ? `${r[2]} gold` : "Free"}</i>`).join(" · ")}</span></p>`).join("");
   }
-  /* the whole tab */
+  /* the whole tab: two sections, Follower and Pet (pets.js), each with its own Dismiss */
+  const petPart = (s, esc) => (typeof PETS !== "undefined" ? PETS.panel(s, esc) : "");
   function panel(s, esc = E, iconFn) {
     if (iconFn) icon = iconFn;
-    const F = F2(); if (!F) return empty(s, esc);
+    const F = F2(); if (!F) return empty(s, esc) + petPart(s, esc);
     F.install();
-    if (!s.follower || typeof TOWNS === "undefined" || !TOWNS.FOLLOWERS[s.follower.id]) return empty(s, esc);
-    return F.panel(s, esc);
+    if (!s.follower || typeof TOWNS === "undefined" || !TOWNS.FOLLOWERS[s.follower.id] || (typeof PETS !== "undefined" && PETS.isPet(s.follower.id))) return empty(s, esc) + petPart(s, esc);
+    return F.panel(s, esc) + petPart(s, esc);
   }
   /* one line on the Character page */
   function summary(s, esc = E) {
-    const F = F2();
-    if (!F || !s.follower || typeof TOWNS === "undefined" || !TOWNS.FOLLOWERS[s.follower.id]) return "";
+    const F = F2(), pet = typeof PETS !== "undefined" ? PETS.summary(s, esc) : "";
+    if (!F || !s.follower || typeof TOWNS === "undefined" || !TOWNS.FOLLOWERS[s.follower.id]) return pet;
     const id = s.follower.id, f = F.st(s);
-    return `<button class="item ft-line" data-act="tabgo" data-id="follower">${typeof NPCART !== "undefined" ? NPCART.follower(id, 28) : ""}<div class="t">${esc(F.nameOf(id))} <span class="num">Lv ${f.lvl}</span><span>${Math.round(TOWNS.followerHp(s))}/${F.maxHp(s, id)} health · Follower tab ›</span></div></button>`;
+    return `<button class="item ft-line" data-act="tabgo" data-id="follower">${typeof NPCART !== "undefined" ? NPCART.follower(id, 28) : ""}<div class="t">${esc(F.nameOf(id))} <span class="num">Lv ${f.lvl}</span><span>${Math.round(TOWNS.followerHp(s))}/${F.maxHp(s, id)} health · Follower tab ›</span></div></button>` + pet;
   }
   return { CATS, SORTS, catOf, typeOf, giveable, rows, sortRows, counts, compare, giveEquip, act, gear, empty, panel, summary, ui };
 })();

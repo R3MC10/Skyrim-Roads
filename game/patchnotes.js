@@ -3,10 +3,18 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b300-gatherarea", build: 300, date: "25 Nov 2026", title: "Gathering moved to the Area tab", items: [
+    { id: "b301-gatherarea", build: 301, date: "25 Nov 2026", title: "Gathering moved to the Area tab", items: [
       "Gathering no longer floats over the map. It's now its own section in the Area tab: the plants around you, which ones are ripe and when picked ones grow back, Gather or Quick pick for each, Forage here (with how long until you can search again), Herbalist's notes and the Auto-pick switch.",
       "The how-it-works text hides behind a small \"?\" next to the heading.",
       "On the map a ripe plant in reach still shows its own Gather button, so you can pick it without leaving the map. In a party everyone still picks their own share.",
+    ] },
+    { id: "b300-pets", build: 300, date: "25 Nov 2026", title: "Pets: Meeko walks with your follower", items: [
+      "Meeko is a pet now, not a follower. You can have a follower and a pet with you at the same time.",
+      "The Follower tab has two parts, Follower and Pet, and each one has its own Dismiss.",
+      "Pets don't wear gear. If Meeko was holding anything, it's back in your pack. His loyalty, his quest and his Pounce stay.",
+      "In fights Meeko has his own turn and his own health bar next to your follower. He's a bit weaker than a follower, gets knocked down and never dies, and carries a little for you.",
+      "New Etiquette perk, Pack Leader: your pet bites harder, takes less and gets up stronger.",
+      "Your party sees your pet and it fights beside them too. Pets never count toward the 8 players.",
     ] },
     { id: "b299-netfix", build: 299, date: "25 Nov 2026", title: "Players can see each other again", items: [
       "Players can see each other again. Since accounts came in, players who signed in and players who didn't were in two separate worlds, so friends vanished from each other's map, Social tab and parties.",
