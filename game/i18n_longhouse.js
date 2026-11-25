@@ -101,6 +101,11 @@ var I18N_LONGHOUSE = (() => {
     "giants and mammoths": "olbrzymy i mamuty", beasts: "bestie", "bandits and other people": "bandyci i inni ludzie",
   };
   const words = {
+    "The longhouse grows": "Długi dom rośnie",
+    "Every room you build now shows on the longhouse picture: a smithy at the side, trophies on the gable, a war table inside the doors, lit library windows and a stable with horses.": "Każdą zbudowaną salę widać teraz na obrazku długiego domu: kuźnia z boku, trofea na szczycie, stół wojenny w drzwiach, oświetlone okna biblioteki i stajnia z końmi.",
+    "Each room looks bigger and richer at levels 2 and 3, and a new level fades in right after you build it.": "Na poziomach 2 i 3 każda sala wygląda okazalej, a nowy poziom pojawia się płynnie zaraz po budowie.",
+    "Tap a room on the picture to jump to its card.": "Dotknij sali na obrazku, by przejść do jej karty.",
+    "Every room you build shows on the hall. Tap one to find it.": "Każdą zbudowaną salę widać na długim domu. Dotknij jej, by ją znaleźć.",
     // perks (shown as they are)
     "Company Purse": "Sakiewka kompanii", "War Council": "Rada wojenna", "Trophy Mounter": "Wieszacz trofeów",
     "You drive a hard bargain with builders: founding a longhouse and building its rooms cost 20% less when you pay.":

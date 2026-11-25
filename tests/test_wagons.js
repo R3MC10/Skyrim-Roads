@@ -174,7 +174,7 @@ ok(/<script src="wagons.js"><\\/script>[\\s\\S]*<script src="ui.js">/.test(HTML)
 // ---- Polish for every card line and the patch note
 const SRC_T = Object.keys(WAGONS.PL);
 ok(SRC_T.length > 60, "Polish lines: " + SRC_T.length);
-const pnAt = PN.indexOf("b237-wagons"), pn = pnAt < 0 ? "" : PN.slice(pnAt - 1, PN.indexOf("{ id:", pnAt + 5) > 0 ? PN.indexOf("{ id:", pnAt + 5) : PN.length);
+const pnAt = PN.indexOf("b248-wagons"), pn = pnAt < 0 ? "" : PN.slice(pnAt - 1, PN.indexOf("{ id:", pnAt + 5) > 0 ? PN.indexOf("{ id:", pnAt + 5) : PN.length);
 const notes = [...pn.matchAll(/"((?:[^"\\\\]|\\\\.)+)"/g)].map((m) => m[1].replace(/\\\\"/g, '"')).filter((x) => /caravan|wagon/i.test(x) && x.length > 20);
 ok(notes.length >= 5 && notes.every((x) => WAGONS.PL[x]), "patch note in Polish (" + notes.length + ")");
 

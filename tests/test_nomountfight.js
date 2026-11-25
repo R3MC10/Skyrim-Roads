@@ -9,7 +9,8 @@ for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js",
   if (fs.existsSync(W + f)) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
 vm.runInContext(`
 let fails = 0, checks = 0; const ok = (c, m) => { checks++; if (!c) { fails++; console.log("FAIL", m); } };
-ok(typeof MOUNTCOMBAT !== "undefined" && MOUNTCOMBAT.enabled === false, "mounted combat is off by default");
+ok(typeof MOUNTCOMBAT !== "undefined" && MOUNTCOMBAT.enabled === true, "mounted combat is on for everyone (b237)");
+MOUNTCOMBAT.enabled = false;   // the rest of this test checks the switched-off path
 for (let i = 0; i < 40; i++) {
   const T = G.now(), s = G.newSave("nm" + i, "Rider", "nord"); s._test = true; s.level = 20; s.gold = 10000; s.hpBonus = 400;
   s.location = "Whiterun"; [s.x, s.y] = WORLD.places.Whiterun;

@@ -3,7 +3,7 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b237-wagons", build: 237, date: "25 Nov 2026", title: "Caravans you can talk to", items: [
+    { id: "b248-wagons", build: 248, date: "25 Nov 2026", title: "Caravans you can talk to", items: [
       "Tap or click any caravan's wagons on the map to see who they are, where they're going, what they carry and how they're doing: rolling, resting in town, broken down, under attack, guarded or robbed.",
       "Catch up sends you to where you'll meet them on their road. When you reach them, whatever you picked on the card happens.",
       "Trade right from the card when you're beside them. Their packs follow their cargo, and when the hold they're heading for is in crisis they carry relief goods and their prices follow that crisis.",
@@ -14,6 +14,69 @@ const PATCHNOTES = (() => {
       "On a PC the wagons light up under the mouse. Zoomed out, tapping a group pin zooms in on it. In a party the leader decides.",
       "Caravan Friend (Speech) now also makes caravans on the road sell to you 10% cheaper.",
       "In Polish, everything about caravans is now in Polish too: their names on the map, meetings on the road, the caravan board in town, your caravan job, your cart and the wares they sell.",
+    ] },
+    { id: "b247-movefx1", build: 247, date: "25 Nov 2026", title: "Real arrows and spell effects", items: [
+      "Bows and crossbows shoot a real arrow or bolt now: it leaves the string, arcs over (a bolt flies flatter and faster), and sticks in, breaks on a shield, or sails past on a miss and lands in the ground behind.",
+      "Archer foes, crossbowmen and the Dwarven ballista shoot too, and your followers and party members loose their own arrows. Shots leave from the saddle when you ride.",
+      "Fire, frost, shock, poison and life-drain arrows leave a coloured trail; power shots and sneak shots are bigger.",
+      "Every spell now has its own look: Flames is a jet, Firebolt a comet, Fireball a lob that bursts, Ice Spike a shard, Icy Spear a big spear, Lightning Bolt a jagged arc, Chain Lightning forks from foe to foe, and so on through healing, wards, flesh spells, summons, illusions and the rest. Dual casting looks bigger, from both hands.",
+    ] },
+    { id: "b246-gathering", build: 246, date: "25 Nov 2026", title: "Picking herbs by hand", items: [
+      "Gathering is now a short hands-on mini-game: snip flowers at the stem, dig roots up slowly, scrape fungus in one stroke, pick only the ripe berries, lift eggs gently and ease a fragile Nirnroot out of the mud. Do it well and you get more; even a clumsy try gives you something.",
+      "Picked a plant three times by hand? A Quick pick button lets you skip the mini-game for a slightly smaller handful.",
+      "Herbs nearby are easy to spot: painted markers on the map, a ring that shows how far you can reach, and a Gather button that pops up on the road, even while you ride past.",
+      "Now and then you find a perfect or a glowing plant. The next potion you brew with it is 15% or 25% stronger.",
+      "Each town's alchemist posts a daily herb order that pays well, and more when the hold is in trouble. That herb also sells for more there that day.",
+      "New recipes: Snowberry and Juniper Berry crostatas at the cooking fire, and Tundra Cotton twists into leather strips at the tanning rack.",
+      "Four new Alchemy perks: Herbalist's Eye (more rare finds), Sure Hands (easier mini-game, Quick pick sooner), Anatomist (extra parts from beasts) and Master Gardener (more from every garden bed).",
+      "In a party everyone picks their own share of each patch, so there's nothing to fight over.",
+      "In Polish the Gathering card is fully translated now: distance, weight, regrowth time and the garden.",
+    ] },
+    { id: "b245-lhgrow", build: 245, date: "25 Nov 2026", title: "The longhouse grows", items: [
+      "Every room you build now shows on the longhouse picture: a smithy at the side, trophies on the gable, a war table inside the doors, lit library windows and a stable with horses.",
+      "Each room looks bigger and richer at levels 2 and 3, and a new level fades in right after you build it.",
+      "Tap a room on the picture to jump to its card.",
+    ] },
+    { id: "b244-fighthotfix", build: 244, date: "25 Nov 2026", title: "Fight fix", items: [
+      "Fixed: in some fights your attacks did nothing. If the little timing game after a move gets stuck or vanishes, your next press goes through as a normal hit.",
+    ] },
+    { id: "b243-gptqa", build: 243, date: "25 Nov 2026", title: "Dungeon rooms and small fixes", items: [
+      "Fixed: foes in dungeons were met with road lines, like webs stretched \"across the road\" deep in a barrow. Bandits, wolves, spiders, draugr and the rest now get their own lines for caves, mines, forts, barrows and other places.",
+      "Fixed: a weapon's details said \"One-handed weapon · One-Handed\". Now it just says \"One-handed weapon\".",
+      "Fixed: the turn order at the top of a fight could show three bandits when only one was there. A foe that moves 2 or 3 times a round still has a mark for each move, but the later ones now say 2nd and 3rd and look smaller, so you can see it's the same foe.",
+    ] },
+    { id: "b242-noap", build: 242, date: "25 Nov 2026", title: "No more AP", items: [
+      "A plain attack takes just 1 of your 4 moves and some stamina. There are no action points any more, anywhere.",
+      "Potion and scroll tooltips in your pack still said they cost AP in a fight. They now say: 1 move, free.",
+      "Followers with a sword, axe, mace, spear or staff swing more often for a bit less each, so their turns feel quicker. Their damage a turn stays the same.",
+    ] },
+    { id: "b241-qaside3", build: 241, date: "25 Nov 2026", title: "Cleaner perk texts", items: [
+      "Fixed: a few perks (Duelist, Brute Force, Steady Hand, Disintegrate, Intimidation) showed a stray design note like [OURS] in the middle of their description.",
+      "Fixed: in Polish, the house, homestead and arena lines on the town board are translated.",
+    ] },
+    { id: "b240-qaside2", build: 240, date: "25 Nov 2026", title: "More Polish in towns", items: [
+      "Fixed: in Polish, the cooking pot, the forge, the notice board's weekly goals, the Hall of the North, the streets, trainers and hirelings are translated.",
+      "Fixed: in Polish, the Social tabs, the bard's song lines and the time left on world events are translated.",
+    ] },
+    { id: "b239-qacore1", build: 239, date: "25 Nov 2026", title: "Back button and first-trip fixes", items: [
+      "Fixed: the phone's back button did nothing in fishing, hunting, mining, lockpicking and the other mini-games, and pressing it again could close the app. Now it leaves the game, like its Done or Leave button.",
+      "Fixed: back in the barber's chair or at the rune table closes them instead of opening the compass behind them.",
+      "Fixed: back inside a shop, the inn or the forge goes to the town's list of places first, not straight to the compass.",
+      "Fixed: the first-trip guide said to open the Town tab; it's called Area now.",
+      "Fixed: in Polish, the first-trip guide, the first-time tips and the \"you set off\" and \"you arrived\" messages were still in English.",
+    ] },
+    { id: "b238-qaside", build: 238, date: "25 Nov 2026", title: "Company fixes", items: [
+      "Fixed: tapping Found twice quickly could pay for the company twice.",
+      "Fixed: tapping Put in twice quickly could put the same gold in the treasury twice and leave your purse below zero.",
+      "Fixed: tapping Give twice quickly could hand the same ingots to the stockpile twice.",
+      "Fixed: an app update no longer restarts the game while you're fishing, mining, hunting, at the forge or in any other mini-game, so you never lose a catch.",
+      "Fixed: more of the Social, jobs and fishing screens are in Polish.",
+    ] },
+    { id: "b237-mountcombat", build: 237, date: "25 Nov 2026", title: "Fight from the saddle", items: [
+      "Mounted combat is back: ride into a fight and stay in the saddle, or get on and off with the new Mount and Dismount moves.",
+      "Getting on takes 2 moves and 20 stamina. You can dual cast from the saddle for a bit more magicka.",
+      "New Destruction perk: Saddle Caster.",
+      "Your horse can be knocked down in a fight, but it always gets back up afterwards.",
     ] },
     { id: "b236-glowfix", build: 236, date: "25 Nov 2026", title: "No more glowing blob next to your weapon", items: [
       "An enchanted weapon used to leave a big glowing blob floating in the air beside your hero in fights. The glow now sits on the weapon itself, as a slim shine along the blade.",
@@ -1651,7 +1714,7 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 235;
+  const NEXT_AT = 240;
   const NEXT = [
     "Hands-on gathering: a little harvest game for every kind of plant",
     "Mentoring: play side by side with friends of any level",

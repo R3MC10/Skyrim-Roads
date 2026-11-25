@@ -15,7 +15,7 @@ const FAI = (() => {
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const rnd = () => 0.85 + Math.random() * 0.3;
   const TIERC = { Novice: 2, Apprentice: 3, Adept: 4, Expert: 5, Master: 6 };     // how much of their pace a spell takes
-  const WCOST = { dagger: 2, fist: 2, sword: 3, axe: 3, mace: 3, spear: 3, staff: 3, greatsword: 4, battleaxe: 4, warhammer: 4, bow: 4, crossbow: 5 };
+  const WCOST = { dagger: 2, fist: 2, sword: 2, axe: 2, mace: 2, spear: 2, staff: 2, greatsword: 4, battleaxe: 4, warhammer: 4, bow: 4, crossbow: 5 };
   const REQ = { Novice: 0, Apprentice: 25, Adept: 50, Expert: 75, Master: 90 };   // [OURS] school skill a follower needs to learn a tome
   const TIER_EFF = { Novice: 1, Apprentice: 1.08, Adept: 1.15, Expert: 1.25, Master: 1.4 };   // bigger spells do more per point of pace
   const BACK = 0.6, FRONT = 1, TAUNT = 1.3;   // how many blows each row draws (you count as 1)
@@ -116,8 +116,8 @@ const FAI = (() => {
   // ------------------------------------------------------------------ numbers for one action
   /* what one point of pace is worth: their usual blow spread over their pace (so a turn of attacks = one old blow) */
   const blow = (al) => al.melee ?? al.dmg ?? 4;   // a mage's fists are weak: their damage is in their spells
-  const unit = (al) => { const wc = WCOST[al.wt] || 3; return blow(al) / (Math.max(1, Math.floor((al.ap || 6) / wc)) * wc); };
-  const powerHit = (al) => Math.min(unit(al) * (WCOST[al.wt] || 3) * 2, blow(al) * 1.15);   // a power attack: about a turn of blows, plus the stagger   // slow weapons and bows: one shot a turn still = one old blow
+  const unit = (al) => { const wc = WCOST[al.wt] || 2; return blow(al) / (Math.max(1, Math.floor((al.ap || 6) / wc)) * wc); };
+  const powerHit = (al) => Math.min(unit(al) * (WCOST[al.wt] || 2) * 2, blow(al) * 1.15);   // a power attack: about a turn of blows, plus the stagger   // slow weapons and bows: one shot a turn still = one old blow
   /* the power behind their spells: like followers2's spell estimate, from the skill of the school, per point of pace */
   function spellUnit(fight, al, sp) {
     const f = folOf(fight, al); if (!f) return unit(al);
@@ -142,7 +142,7 @@ const FAI = (() => {
 
   /* everything this follower could do now, with what it costs. kind: attack | power | guard | cover | cast | potion */
   function options(fight, al, ap) {
-    const f = folOf(fight, al), out = [], tac = al.tactic || "auto", wc = WCOST[al.wt] || 3;
+    const f = folOf(fight, al), out = [], tac = al.tactic || "auto", wc = WCOST[al.wt] || 2;
     const pp = playerPct(fight), me = selfPct(al), boss = isBoss(fight);
     const cv = al.order === "defend" ? 0.7 : 0.45;   // ordered to defend you: steps in front of you sooner (strategy.js)
     out.push({ k: "attack", c: wc, v: unit(al) * wc * opener(fight, al) * comboPhys(fight, al) });
@@ -293,7 +293,7 @@ const FAI = (() => {
     if (o.k === "guard") { al.guard = 1; return { text: `${n} ${al.shield ? "raises their shield" : "keeps their guard up"}` }; }
     if (o.k === "cover") { fight.coverAl = al; al.guard = 1; return { text: `${n} steps in front of you` }; }
     // attack / power attack
-    const wc = WCOST[al.wt] || 3, power = o.k === "power";
+    const wc = WCOST[al.wt] || 2, power = o.k === "power";
     if (power) al.sp -= 25;
     if (Math.random() > (typeof F !== "undefined" ? F.HIT_CHANCE + 0.05 : 0.9) + (al.px?.hit || 0)) return { text: `${n} ${power ? "swings hard and" : ""} misses`.replace("  ", " ") };
     let d = (power ? powerHit(al) * (al.px?.pow || 1) : unit(al) * wc) * (al.px?.out || 1) * rnd(), tag = "";   // their perks (folbuild.js mods)
