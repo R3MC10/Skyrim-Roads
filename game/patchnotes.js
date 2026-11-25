@@ -3,10 +3,28 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b232-rewardtips", build: 232, date: "25 Nov 2026", title: "Item cards on rewards", items: [
+    { id: "b235-rewardtips", build: 235, date: "25 Nov 2026", title: "Item cards on rewards", items: [
       "Every loot and reward icon now shows the full item card, like in your pack: damage or armour, weight, value, the enchantment and what it does, potion effects, a green or red comparison with what you wear, and how many you already have. On a PC rest the mouse on it; on a phone tap the icon (tap anywhere else to close).",
       "Dungeon loot, fight loot, boss loot, the party loot vote, road events, quest and crisis rewards, expeditions, heists, Daedric artifacts, fishing, hunting, mining and market stalls all have it.",
       "Gold and stacks get a short card too, and the box never covers the buttons.",
+    ] },
+    { id: "b234-riding", build: 234, date: "25 Nov 2026", title: "Riding on the map", items: [
+      "The map has a ride button next to zoom: tap it to get on or off your horse. You see the horse walk up and you climb into the saddle, or slide down.",
+      "On foot your horse walks along just behind you on the map.",
+      "Riders on the map have both legs now: the near leg over the horse's side, the far leg behind it, for every coat.",
+      "The rider moves smoothly with the horse's walk and gallop instead of jerking along.",
+    ] },
+    { id: "b233-folsex", build: 233, date: "25 Nov 2026", title: "Your followers look like themselves", items: [
+      "Jenassa, Lydia and the other women who follow you now look like themselves in fights.",
+      "Aela, Brelyna, Uthgerd, Mjoll, Annekke, Borgakh and Hrolfa at Pinewatch get a woman's face and body too, on your screen and on your party's.",
+      "A dark elf woman now wears a dark elf woman's face, not a man's.",
+    ] },
+    { id: "b232-arrivearea", build: 232, date: "25 Nov 2026", title: "The Area tab opens when you arrive", items: [
+      "When you reach a town, a dungeon entrance or another place on the map, the Area tab opens by itself, so shops, the inn and what you can do there are right in front of you.",
+      "If a fight, a road event or any window is still open, it waits until you close it.",
+      "Stopping at a spot you picked in the wilds or a map pin keeps you on the map.",
+      "In a party, if you follow the leader, it only switches when you're just looking at the map, never while you're reading something else.",
+      "Plants you can gather nearby also show at the top of the Area tab.",
     ] },
     { id: "b231-nomountfight", build: 231, date: "25 Nov 2026", title: "Horses wait at the edge of the fight", items: [
       "Horses now wait at the edge of the fight; you always fight on foot. That goes for solo fights, parties and co-op.",

@@ -4532,6 +4532,10 @@ html.pcmap.pc-home #gpop .gcard{margin:0;box-shadow:0 8px 26px rgba(0,0,0,.55);b
 .lv-ico{display:inline-flex;flex:none}.bfcard li[data-rtip]{display:flex;align-items:center;gap:6px}.bfcard li[data-rtip] img.ico{flex:none}
 .mk-ico{display:inline-flex;flex:none}.dbg-glyph{display:inline-flex}
 .fh-got{justify-content:center}
+/* riding.js: the map's get on / get off button */
+.mapbtns .ridebtn{display:grid;place-items:center}
+.mapbtns .ridebtn.hide{display:none}
+.mapbtns .ridebtn.on{color:#ffe2a8;background:rgba(58,40,18,.88);box-shadow:inset 0 0 0 1px rgba(226,187,100,.7),0 0 10px rgba(226,187,100,.35)}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -4687,6 +4691,7 @@ html.pcmap.pc-home #gpop .gcard{margin:0;box-shadow:0 8px 26px rgba(0,0,0,.55);b
 <script src="rig.js"></script>
 <script src="mapart.js"></script>
 <script src="maphero.js"></script>
+<script src="riding.js"></script>
 <script src="placeart.js"></script>
 <script src="lightfx.js"></script>
 <script src="paintedmap.js"></script>
@@ -4820,6 +4825,8 @@ html.pcmap.pc-home #gpop .gcard{margin:0;box-shadow:0 8px 26px rgba(0,0,0,.55);b
 <script src="i18n_levelup.js"></script>
 <script src="i18n_mountfight.js"></script>
 <script src="i18n_mountcombat.js"></script>
+<script src="i18n_folsex.js"></script>
+<script src="i18n_riding.js"></script>
 <script src="i18n_bugreport.js"></script>
 <script src="i18n_paintedmap.js"></script>
 <script src="i18n_horsedown.js"></script>
@@ -4857,6 +4864,7 @@ html.pcmap.pc-home #gpop .gcard{margin:0;box-shadow:0 8px 26px rgba(0,0,0,.55);b
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>
 <script src="overlays.js"></script>
+<script src="arrivearea.js"></script>
 <script src="onboard.js"></script>
 <script src="search.js"></script>
 <script src="remind.js"></script>
