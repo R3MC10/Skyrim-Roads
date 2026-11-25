@@ -3,7 +3,7 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b217-expedition", build: 217, date: "25 Nov 2026", title: "The Expedition Table: tonight's adventure", items: [
+    { id: "b218-expedition", build: 218, date: "25 Nov 2026", title: "The Expedition Table: tonight's adventure", items: [
       "The company's planning table now lays out three expeditions every day: a short, a medium and a long one. Open Social, then Company, then Expeditions.",
       "Everyone in the company sees the same three, and new ones come every day. Missing a day costs nothing.",
       "Each one is a short chain of things already in the game: a road event on the way, then a dungeon, a legendary beast's trail, a heist or a hold in trouble, then a fight or a boss.",
@@ -11,6 +11,13 @@ const PATCHNOTES = (() => {
       "Finish one and you get your own gold and loot, and the company gets renown. Reach the weekly goal and everyone who went out that week opens the company chest.",
       "Without a planning table only the short expedition is open. Building it opens all three, and every level adds a bit of gold.",
       "New perks: Expedition Leader (Etiquette) lets you ask for fresh offers once or twice a day, and Seasoned Scout (Sneak) shows how each road event choice will turn out.",
+    ] },
+    { id: "b217-lightmenus", build: 217, date: "25 Nov 2026", title: "Lighter menus", items: [
+      "Social has four big tabs now: Party, Company, Friends and Realm. Messages, Trades, Chat and Faction sit in a small More row just under them, with their counters, so everything is still one tap away.",
+      "Every button now has the same plain look: a thin line, small corners and no shine. Main buttons are a bit taller so they're easy to hit.",
+      "The big gold knotwork frame is saved for special moments: a quest done, a company founded, a crisis won. Other windows (heists, Hold status, messages) get a thin line and more room for text.",
+      "The bar at the bottom now lights up Items or Magic while that menu is open, not Map.",
+      "Long crisis names (like The Long Winter) wrap onto a second line instead of being cut off.",
     ] },
     { id: "b216-dungeonphone", build: 216, date: "25 Nov 2026", title: "Dungeons fit your phone better", items: [
       "A strip above the room shows how deep you are and the rooms you can go to next. Tap one to go there, or tap Map for the whole chart.",

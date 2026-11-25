@@ -525,7 +525,8 @@ const LONGHOUSE = (() => {
     else if (a === "leave") { err = await leave(S); ok = T("You left the company."); }
     else if (a === "role") { err = await setRole(S, id, b.dataset.r); ok = T("Done."); }
     else return;
-    if (err) api.toast(err); else { if (ok) api.toast(ok); api.persist(true); }
+    if (err) api.toast(err); else if (a === "found" && api.showMessage) { api.persist(true); api.showMessage(T("Company founded"), ok, false, true); }   // a prestige moment: the gold frame
+    else { if (ok) api.toast(ok); api.persist(true); }
     api.render();
   }
   async function onChange(ev) {

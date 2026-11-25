@@ -4160,6 +4160,36 @@ body:has(#modal .sheet) #pbanners{top:auto!important;bottom:calc(6px + env(safe-
 .exp-done h3{margin:0;font-family:"Cinzel",serif;font-size:18px;letter-spacing:.05em;color:var(--gold)}.exp-done p{margin:0;font-size:15px}.exp-done .btn{align-self:stretch;min-height:44px}
 @media (max-width:900px){.exp-offers{grid-template-columns:1fr}.exp-art{aspect-ratio:16/5}}
 @media (min-width:901px){#exp-layer{inset:0;align-items:center;background:rgba(0,0,0,.35)}.exp-sheet{border-radius:6px;animation:none}}
+/* [lightmenus] one SkyUI button family: flat dark fill, 1px rule, 3px corners; secondary 44px, primary 52px; no gloss or glow */
+.btn{min-height:44px;border-radius:3px;border:1px solid rgba(236,232,222,.28);background:rgba(255,255,255,.045);box-shadow:none;text-shadow:none}
+.btn.sm{min-height:44px}
+.btn:hover:not(:disabled){background:rgba(255,255,255,.10);border-color:rgba(236,232,222,.55)}
+.btn.pri{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.70);color:#fff;box-shadow:none;text-shadow:none}
+.btn.pri:not(.sm){min-height:52px}
+.btn.pri:hover:not(:disabled){background:rgba(255,255,255,.22);border-color:#fff}
+.btn.danger{background:rgba(176,52,40,.26);border-color:rgba(214,90,74,.62);color:#f6dcd6}
+.btn.danger:hover:not(:disabled){background:rgba(176,52,40,.38)}
+.iconbtn,.uxi{border-radius:3px}
+.uxi{width:44px;height:44px}
+.hz-opt{border-radius:3px;background:rgba(255,255,255,.04)}
+.hz-opt:hover:not([disabled]),.hz-opt:focus-visible{background:rgba(232,196,106,.10)}
+/* gold knotwork only for prestige moments (a quest done, a company founded, a crisis won); other windows get a 1px rule */
+:root.has-ui-frame .modal .sheet{border:1px solid rgba(226,187,100,.30);border-image:none}
+:root.has-ui-frame .modal .sheet.enc{border-color:rgba(214,90,74,.55)}
+:root.has-ui-frame .modal .sheet.prestige{border:24px solid transparent;border-image:var(--asset-frame) 96 fill / 24px stretch}
+/* Social: four big tabs, then a small "More" row */
+.seg.socseg{flex-wrap:nowrap;margin-bottom:0}
+.socseg button{flex:1 1 0;min-width:0;min-height:48px;padding:4px 2px;font-size:14px;letter-spacing:.08em;line-height:1.15;white-space:normal;overflow-wrap:anywhere}
+.socmore{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:8px 0 4px}
+.socmore-l{grid-column:1/-1;font-family:var(--sk-ui);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--sk-mute,#8f8a7e)}
+.socmore button{min-width:0;min-height:44px;padding:2px 4px;border:1px solid rgba(236,232,222,.16);border-radius:3px;background:rgba(255,255,255,.035);color:var(--sk-mute,#b9b2a1);font-family:var(--sk-ui);font-size:13px;letter-spacing:.06em;text-transform:uppercase;line-height:1.15;overflow-wrap:anywhere}
+.socmore button:hover{border-color:rgba(236,232,222,.5);color:var(--ink)}
+.socmore button.on{background:var(--sk-sel,#2b2b2b);border-color:rgba(255,255,255,.7);color:#fff}
+.socn{letter-spacing:.02em}
+@media (max-width:420px){.socseg button{font-size:13px;letter-spacing:.04em}}
+@media (min-width:900px){.socmore{display:flex;flex-wrap:wrap;align-items:center}.socmore-l{margin-right:8px}.socmore button{flex:0 0 auto;padding:2px 20px}}
+/* the crisis title wraps instead of being cut ("The Long Wint…") */
+.cr-ch b{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;line-height:1.2}
 /* [dungeonphone] dungeon screen on phones: route strip above the room (dunstrip.js), compact 2-column actions (the main
    one full width when the count is odd), the foe's figure in its room (dunrooms.js), indoor dust/drips/embers (dunfx.js) */
 .dstrip{display:flex;align-items:center;gap:10px;padding:6px 8px 6px 10px;min-height:46px;background:linear-gradient(90deg,rgba(0,0,0,.72),rgba(0,0,0,.5));border-top:1px solid var(--sk-line2);border-bottom:1px solid var(--sk-line2);position:sticky;top:-12px;z-index:3;backdrop-filter:blur(3px)}
@@ -4459,6 +4489,7 @@ canvas.dunfx{position:absolute;inset:0;width:100%;height:100%;pointer-events:non
 <script src="i18n_festart.js"></script>
 <script src="i18n_mgfishing.js"></script>
 <script src="i18n_tidy1.js"></script>
+<script src="i18n_lightmenus.js"></script>
 <script src="i18n_paintrig.js"></script>
 <script src="i18n_rigraces.js"></script>
 <script src="i18n_rigcohesion.js"></script>
