@@ -22,6 +22,17 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "Show world events": "Pokaż wydarzenia świata",
     "Hide world events": "Schowaj wydarzenia świata",
     "Hide this notice": "Schowaj tę wiadomość",
+    // [mapread] the world news drawer
+    "World news ({n})": "Wieści ze świata ({n})",
+    "An easier map to read": "Mapa, którą łatwiej czytać",
+    "Land you've already explored now sits under a light mist instead of the heavy one. Places you've never been stay dark.": "Ziemie, które już zwiedziłeś, kryje teraz lekka mgiełka zamiast gęstej mgły. Miejsca, w których nigdy nie byłeś, zostają ciemne.",
+    "Names no longer pile up: your party and your objective always show first, then towns, then everything else. A town's name steps aside instead of vanishing.": "Nazwy już się nie piętrzą: najpierw zawsze widać twoją drużynę i cel, potem miasta, a potem całą resztę. Nazwa miasta przesuwa się na bok, zamiast znikać.",
+    "Zoomed out, guard patrols and passing wagons that stand close together turn into one pin with a number. Zoom in and they split up again.": "Po oddaleniu patrole straży i przejeżdżające wozy stojące blisko siebie łączą się w jedną pinezkę z liczbą. Przybliż, a znów się rozdzielą.",
+    "Crisis signs find a free spot next to their town, with a thin line back to it if they had to move.": "Znaki kryzysów same znajdują wolne miejsce obok swojego miasta, a jeśli musiały się przesunąć, prowadzi do niego cienka linia.",
+    "Map names have a thinner dark outline, so the painting shows through more.": "Nazwy na mapie mają cieńszy ciemny obrys, więc lepiej widać malowidło.",
+    "Everyday world news (prices, rebuilding, battles far away) now folds into one World news button. Tap it to read it all. Things you can act on right now, like a reward to claim or a ringleader to fight, stay open.": "Codzienne wieści ze świata (ceny, odbudowa, dalekie bitwy) chowają się teraz pod jednym przyciskiem Wieści ze świata. Stuknij, by przeczytać wszystko. To, co możesz zrobić od razu, jak nagroda do odebrania czy herszt do pokonania, zostaje na wierzchu.",
+    "Show world news": "Pokaż wieści ze świata",
+    "Hide world news": "Schowaj wieści ze świata",
     // patch note
     "Esc menu and a card you can fold away": "Menu pod Esc i karta, którą można schować",
     "On PC, Esc now steps back one thing at a time, just like the back button on a phone: a tooltip, then a window, then the menu you're in, then the compass.":

@@ -72,9 +72,20 @@ const T0 = 1e9;
 const parts = (o = {}) => ({ id: "hero1", ev, evKey: "gev-100:on", end: T0 + 2698, cdTxt: "44:58", banner: '<div class="gev-banner">siege</div>',
   strips: [{ key: "after:gev-90:lost", html: '<div class="gev-strip gev-after"><span>Morthal burned</span></div>' }, { key: "after:gev-91:lost", html: '<div class="gev-strip gev-after"><span>Windhelm burned</span></div>' }], ...o });
 let h = GS.compose(parts(), T0, 0);
-ok(h.includes("gevs-fold") && h.includes("siege") && (h.match(/data-gevs="dismiss"/g) || []).length === 2, "open: the card, a fold button and an × on each notice");
+ok(h.includes("gevs-fold") && h.includes("siege") && h.includes("World news (2)") && !h.includes("Morthal") && !(h.match(/data-gevs="dismiss"/g) || []).length, "open: the card, a fold button and the notices folded into one World news (2) button");
 ok(!h.includes("gevs-pill"), "starts unfolded");
-let st = GS.load("hero1"); GS.setCollapsed(st, true); GS.save("hero1", st);
+let st = GS.load("hero1"); GS.setNews(st, true); GS.save("hero1", st);
+h = GS.compose(parts(), T0, 0);
+ok(h.includes("gevs-drawer") && h.includes("Morthal") && (h.match(/data-gevs="dismiss"/g) || []).length === 2 && h.includes('aria-expanded="true"'), "news drawer open: every notice with its ×");
+GS.setNews(st, false); GS.save("hero1", st);
+// [mapread] urgent notices (a claim, a ringleader) stay open on the card, economy news goes into the drawer
+const sp = GS.split([{ key: "after:gev-1:lost" }, { key: "claim:gev-2" }, { key: "cr:fam:active:2" }, { key: "cr:fam:claim" }, { key: "cr:x:boss:5" }, { key: "y", urgent: true }, { key: "claim:z", urgent: false }]);
+ok(sp.urgent.map((x) => x.key).join() === "claim:gev-2,cr:fam:claim,cr:x:boss:5,y" && sp.news.length === 3, "split: claims, ringleaders and flagged cards are urgent, the rest is news");
+h = GS.compose(parts({ strips: [{ key: "claim:gev-5", html: '<div class="gev-strip"><span>Claim your reward</span></div>' }, ...parts().strips] }), T0, 0);
+ok(h.includes("Claim your reward") && !h.includes("Morthal") && h.includes("World news (2)"), "an urgent card stays open beside the shut drawer");
+h = GS.compose(parts({ ev: null, evKey: "", banner: "" }), T0, 0);
+ok(h.includes("gevs-newspill") && !h.includes("gev-banner") && !h.includes("Morthal"), "no event, only news: a lone World news pill");
+st = GS.load("hero1"); GS.setCollapsed(st, true); GS.save("hero1", st);
 h = GS.compose(parts(), T0, 1000);
 ok(h.includes("gevs-pill") && !h.includes("gev-banner") && h.includes("Siege of Markarth") && h.includes("2 notices") && h.includes("44:58") && h.includes(`data-gev-end="${T0 + 2698}"`), "folded: one pill with the event, its live clock and the notice count");
 ok(!/[\u{1F300}-\u{1FAFF}⚔]/u.test(h.replace(/<span>[^<]*<\/span>/g, "")), "the pill and its buttons use drawn icons, not emoji");
@@ -88,7 +99,7 @@ h = GS.compose(parts({ ev: { ...ev, id: "gev-101" }, evKey: "gev-101:warn" }), T
 ok(h.includes("gevs-pill") && h.includes("gevs-new"), "a new event glows on the folded pill instead of opening it");
 ok(GS.compose(parts({ ev: { ...ev, id: "gev-101" }, evKey: "gev-101:warn" }), T0, 20000).includes("gevs-new") === false, "the glow stops after a few seconds");
 // unfold, dismiss one notice
-st = GS.load("hero1"); GS.setCollapsed(st, false); GS.dismiss(st, "after:gev-90:lost", T0); GS.save("hero1", st);
+st = GS.load("hero1"); GS.setCollapsed(st, false); GS.setNews(st, true); GS.dismiss(st, "after:gev-90:lost", T0); GS.save("hero1", st);
 h = GS.compose(parts(), T0, 30000);
 ok(!h.includes("Morthal") && h.includes("Windhelm"), "× hides that notice only");
 GS._test.setStorage({ getItem: (k) => (k in disk ? disk[k] : null), setItem: (k, v) => { disk[k] = String(v); } });

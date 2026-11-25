@@ -194,6 +194,18 @@ ok(/b206-crises|-crises"/.test(PN), "patch note entry");
 const pn = /id: "b\\d+-crises"[^\\]]*items: \\[([\\s\\S]*?)\\] \\}/.exec(PN);
 if (pn) for (const m of pn[1].matchAll(/^\\s*"((?:[^"\\\\]|\\\\.)*)",/gm)) ok(has(JSON.parse('"' + m[1] + '"')), "patch note line in Polish: " + m[1].slice(0, 40));
 
+// [mapread] map signs keep clear of labels placed before them (party, objective, town names)
+{
+const g = { font: "", measureText: (t) => ({ width: t.length * 5 }) };
+const a = C.signSpot(g, 500, 300, 1, "Shortage", [], []);
+ok(a.ox < 500 && !a.line, "sign: left of the town when nothing is in the way");
+const b = C.signSpot(g, 500, 300, 1, "Shortage", [], [a.box]);
+ok(b.ox > 500, "sign: moves to the right when a label holds the left spot");
+const all = [[380, 240, 120, 120]];
+const d = C.signSpot(g, 500, 300, 1, "Shortage", [], all);
+ok(d.ox > 500 && !(d.box[0] < 500 && d.box[0] + d.box[2] > 380 && d.box[1] < 360 && d.box[1] + d.box[3] > 240), "sign: picks a spot free of the label boxes");
+ok(typeof C.plan === "function", "plan() exported for map.js");
+}
 console.log(fails ? fails + " FAILED of " + n : "crises ok · " + n + " checks");
 if (fails) throw new Error("crises failed");
 `, c);
