@@ -6,6 +6,7 @@ const __GAME = process.env.W || require("path").join(__dirname, "../game/");
    3. The "set off" and "arrived" toasts have Polish patterns.
    4. Every perk description has Polish with the same numbers, rank text says "Następna ranga", hireling lines,
       title/settings lines and patch-note dates are Polish, and the level-up tip names the Character tab.
+   5. Crafting, riding and road-event messages are Polish, the ride button re-syncs on refresh, and only painted icons are requested.
    W=/path/to/game/ node test_qacore.js — prints "qacore ok". */
 const fs = require("fs"), vm = require("vm");
 const W = process.env.W || __GAME + "";
@@ -71,4 +72,56 @@ ok(descs.length >= 7, "hireling lines found: " + descs.length);
 for (const d of descs) ok(T(d) && T(d) !== d, "Polish for hireling line: " + d.slice(0, 50));
 ok(/"Open <b>Character<\/b>/.test(ob) && /\["hero", "Open Character"\]/.test(ob) && !/Open <b>Hero<\/b>/.test(ob), "the level-up tip names the Character tab");
 ok(!/from the Hero tab/.test(src("dawnguard.js")), "Dawnguard names the Character tab");
+// 5. batch 3: crafting, riding, road events and missing pictures
+{
+  const files = [...html.matchAll(/<script src="([^"]+)"/g)].map((m) => m[1]);
+  const g = { console: { log() {}, warn() {}, error() {} }, Math, Date, JSON, Object, Array, Set, Map, WeakMap, Proxy, Number, String, RegExp, Float64Array, Float32Array, Uint8Array, Int32Array, Uint16Array, Int16Array, Uint8ClampedArray,
+    setTimeout() {}, clearTimeout() {}, setInterval() {}, navigator: { languages: ["pl-PL"], language: "pl-PL", userAgent: "node" },
+    localStorage: { getItem: () => JSON.stringify({ lang: "pl" }), setItem() {}, removeItem() {} }, location: { search: "", hostname: "localhost", href: "" },
+    addEventListener() {}, matchMedia: () => ({ matches: false, addEventListener() {} }) };
+  g.window = g; g.self = g; vm.createContext(g);
+  for (const f of files) { try { vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/gm, "var $1 ="), g, { filename: f }); } catch (e) { /* screen-only files need a browser */ } }
+  const P = (s) => vm.runInContext(`I18N.tr(${JSON.stringify(s)})`, g);
+  // crafting: every enchantment and every alchemy effect has Polish; brew / cook / temper / enchant messages are whole Polish
+  const tpl = vm.runInContext(`[...Object.values(ENCH.WEAPON).map(v=>v[5]), ...Object.values(ENCH.ARMOR).map(v=>v[7])]`, g);
+  ok(tpl.length >= 40, "enchantments load: " + tpl.length);
+  for (const t of tpl) ok(P(t.replace(/\{m\}/g, "12")) != null, "Polish for enchantment: " + t);
+  const fx = vm.runInContext(`[...new Set(Object.values(TOWNS.INGREDIENT_FX).flatMap(v=>v[1]))]`, g);
+  for (const e of fx) ok(P(e) != null, "Polish for alchemy effect: " + e);
+  for (const [en, re] of [["You brew a Potion of Restore Health: Restore Health 22. Worth 40 gold. Great work. +12% strength.", /^Warzysz: .+ Wartość: 40 złota\. Świetna robota\. \+12% mocy\.$/],
+    ["The soul pours into the Iron Sword. You made Iron Sword of Fire: 12 fire damage on a hit, and it may set them burning. Enchanting 15 → 16", /^Dusza wlewa się w/],
+    ["Sell Iron Sword ×2?", /^Sprzedać: /], ["You need an inn's cooking pot or a campfire.", /^Potrzebujesz kotła/]])
+    ok(re.test(P(en) || ""), "crafting message in Polish: " + en + " → " + P(en));
+  // riding: getting on / off / a downed horse
+  for (const en of ["You get down and walk beside Biscuit. It still carries your things.", "Your horse isn't with you.", "Biscuit is downed and can't carry a rider yet. Sleep, wait a few hours, or have a stablehand tend them."])
+    ok(P(en) && !/walk beside|carries your|isn't with|stablehand/.test(P(en)), "riding message in Polish: " + P(en));
+  ok(/RIDING\.sync\(S\)/.test(ui.slice(ui.indexOf("function renderPanel("), ui.indexOf("function renderPanel(") + 600)), "the panel refresh re-syncs the ride button (shows right after buying a horse)");
+  ok(/RIDING\.sync\(S\)/.test(ui.slice(ui.indexOf("function renderTrip("), ui.indexOf("function renderTrip(") + 300)), "the trip strip re-syncs the ride button");
+  // road events: every choice label, every plain text and every outcome we can roll has Polish
+  const I = " ";
+  for (const en of Object.keys(vm.runInContext("I18N_EXTRA.QACORE_EVL", g))) { ok(P(en) && P(en) !== en, "Polish for choice: " + en); ok(P(I + en + " (40%)") === I + P(en).replace(/^Ukryj$/, "Ukryj się") + " (40%)" || /\(40%\)$/.test(P(I + en + " (40%)") || ""), "Polish for choice with icon and chance: " + en); }
+  for (const en of ["Pray to Mara", "Pay 40 gold", I + "Buy (440 gold)", I + "Pick the lock (3 picks, 40%)", "You buy the Ebony Arrow.", "A Thalmor patrol", "A rich herb patch",
+    "You walk together a while. At the crossroads, they insist you take 30 gold.", "In the ruins of a wayside shrine sits an iron-banded chest. The lock looks novice.",
+    "A ship's hull lies broken on the rocks below the road. Half-buried in the shingle: a captain's strongbox with an iron lock.", "Tap an item for options. You're in town: you can sell here.",
+    "You have no ingredients. Gather them on the road, in dungeons, or buy them at the general store and court wizard.", "12% there"])
+    ok(P(en) && !/\b(gold|the|you|lock|there)\b/i.test(P(en)), "road / pack line in Polish: " + en + " → " + P(en));
+  let rolled = 0;
+  vm.runInContext(`var __seen = []; for (let i = 0; i < 1500; i++) { const s = G.newSave("q" + i, "Q", "nord"); s.level = 1 + i % 30; const e = ROAD_EVENTS.roll(s); if (!e) continue;
+    for (const [key, label] of (ROAD_EVENTS.choices(e, s) || [])) { const s2 = JSON.parse(JSON.stringify(s)); const r = ROAD_EVENTS.choose(s2, e, key); __seen.push([e.id, e.title || "", label, r && r.text || ""]); } }`, g);
+  for (const [id, title, label, text] of vm.runInContext("__seen", g)) {
+    rolled++;
+    const pl = (x) => P(x) != null || P(x.trim()) != null || /[ąćęłńóśźż„]/i.test(x);
+    if (/^(dbg|aff)_/.test(id)) continue;   // bargains.js / afflictions.js write their events in Polish directly
+    if (title && id !== "book") ok(pl(title), `Polish for event title ${id}: ${title}`);   // book events are titled with the book's name
+    ok(pl(label), `Polish for choice ${id}: ${label}`);
+    ok(!/undefined|NaN|\[object/.test(text), `clean outcome ${id}: ${text}`);
+  }
+  ok(rolled > 500, "road events rolled and answered: " + rolled);
+  // pictures: only icons that are really painted are asked for, so no 404s
+  const assets = src("assets.js"), painted = [...(assets.match(/const PAINTED = new Set\(\[([^\]]*)\]\)/) || [, ""])[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]).sort();
+  const onDisk = fs.readdirSync(W).filter((f) => /^icon-.+\.(webp|png|jpg)$/.test(f) && !/^icon-\d+\./.test(f)).map((f) => f.replace(/\.(webp|png|jpg)$/, "")).sort();
+  ok(JSON.stringify(painted) === JSON.stringify([...new Set(onDisk)]), "assets.js PAINTED lists exactly the icon files in game/: " + painted.join(",") + " / " + onDisk.join(","));
+  ok(/guessed\(key\) && !PAINTED\.has\(key\)\) return rec/.test(assets), "unpainted icons are not requested");
+  ok(/key === "map-world-2x"/.test(assets) && (fs.existsSync(W + "map-world-2x.webp") ? painted.includes("map-world-2x") : !painted.includes("map-world-2x")), "map-world-2x is only asked for when it exists");
+}
 console.log(`qacore ok (${n} checks)`);

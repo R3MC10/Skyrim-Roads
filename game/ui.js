@@ -982,7 +982,8 @@
   }
   function renderTrip() {
     const el = $("#trip"), tr = S.trip;
-    const put = (html) => { if (el.dataset.html !== html) { el.innerHTML = html; el.dataset.html = html; } };   // only redraw on change, so taps don't get lost
+    if (typeof RIDING !== "undefined") RIDING.sync(S);   // cheap: only toggles classes on the map's ride button
+    const put =(html) => { if (el.dataset.html !== html) { el.innerHTML = html; el.dataset.html = html; } };   // only redraw on change, so taps don't get lost
     if (S.dungeon) { put(`<div class="trip enc"><div class="row"><b> You're inside ${esc(S.dungeon.place)}</b><button class="btn danger sm" data-act="dun">Go back in</button></div></div>`); return; }
     if (!tr) { put(""); return; }
     if (tr.status === "event") {
@@ -2941,6 +2942,7 @@
   }
   function renderPanel(force) {
     const side = $("#side"); if (!side) return;   // the game screen isn't up yet (title or intro)
+    if (typeof RIDING !== "undefined" && S) RIDING.sync(S);   // the map's ride button: a horse just bought, back on its feet, out of a dungeon …
     if (!force && side.contains(document.activeElement) && document.activeElement.matches("input,select")) return;
     rendered = version; lastPanelRender = Date.now();
     side.dataset.tab = tab;
