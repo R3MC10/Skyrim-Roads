@@ -21,7 +21,7 @@ const I18N_SWEEP2 = (() => {
     "Tidied the patch notes: a few empty repeats of old entries are gone.": "Uporządkowano informacje o zmianach: zniknęło kilka pustych powtórek starych wpisów.",
     // the trip line and the road
     "the wilds": "dzicz", "Out in the wilds": "Na pustkowiu", "fast going": "szybko", steady: "równym krokiem", "slow going": "wolno", "very slow going": "bardzo wolno",
-    "on foot": "pieszo", "too heavy to run": "za ciężko, by biec", "The trip keeps going while the page is closed.": "Podróż trwa, nawet gdy strona jest zamknięta.",
+    "on foot": "pieszo", "too heavy to run": "za ciężko, by biec",
     "You keep travelling even with the app closed.": "Podróżujesz dalej, nawet gdy aplikacja jest zamknięta.", "Something by the road": "Coś przy drodze",
     "Tap to take a look": "Dotknij, żeby zobaczyć", "On the road": "W drodze", Stop: "Zatrzymaj się", "Standing stone": "Kamień przeznaczenia", Skill: "Umiejętność",
     // ground kinds (terrain.js NAMES)
