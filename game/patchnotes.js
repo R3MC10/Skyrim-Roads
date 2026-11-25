@@ -3,6 +3,17 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b319-partyinvites", build: 319, date: "25 Nov 2026", title: "Your party goes in together", items: [
+      "When your party leader starts a co-op dungeon run, everyone in the party is in it straight away: no separate invites and no Accept cards for people already in your party.",
+      "Invites in the co-op lobby are only for friends and others outside your party, and only while there's room (up to 8 heroes in all; followers don't count).",
+      "In a party, only the leader starts co-op runs. If you step out of your party's run, a Rejoin button takes you back in.",
+      "Friends and travellers who are already in your party show \"In your party\" instead of an Invite or Ask to join button.",
+      "Old invites and join requests for someone who has since joined your party are cleared away, with no leftover pop-ups.",
+    ] },
+    { id: "b318-partytrain", build: 318, date: "25 Nov 2026", title: "Your party walks in a line", items: [
+      "Travelling as a party, everyone now walks in a line on the map so you can see each of you: the leader in front, the rest following one behind another along the road.",
+      "Standing in a town, your party lines up in a row next to the town instead of all on one spot, so every name is readable.",
+    ] },
     { id: "b317-dunchoices", build: 317, date: "25 Nov 2026", title: "Dungeon forks show what's ahead", items: [
       "At a fork every way is now a card: a picture of the room, its name, how risky it is, what it pays, and which rooms come after it.",
       "Risk goes from Safe to Deadly and follows how dangerous the dungeon is. A Rest room tells you when you could really use it.",

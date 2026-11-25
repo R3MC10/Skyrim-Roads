@@ -5350,6 +5350,9 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
   .dcpic{aspect-ratio:16/9;min-height:0}
   .dun .dcol .evc.dcards>.btn.dchoice .dctx{font-size:15px}.dcwhat,.dcgain{font-size:14.5px}.dcthen{font-size:13.5px}
 }
+/* ==== party members never get invites: an "In your party" tag instead (friendjoin.js, coop.js, Social → Travellers) ==== */
+.inparty{display:inline-flex;align-items:center;min-height:32px;padding:2px 4px;font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#d8c69a}.inparty::before{content:"\2691";margin-right:6px;font-size:13px}
+.coop .coopinparty{font-weight:600;color:#d8c69a}.coop .coopparty{margin-top:6px;font-style:italic}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -5488,6 +5491,7 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 <script src="store.js"></script>
 <script src="inkmap.js"></script>
 <script src="maptiles.js"></script>
+<script src="partytrain.js"></script>
 <script src="map.js"></script>
 <script src="backup.js"></script>
 <script src="sound.js"></script>
@@ -5695,6 +5699,7 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 <script src="i18n_netsync.js"></script>
 <script src="i18n_netfix.js"></script>
 <script src="i18n_pcmap.js"></script>
+<script src="i18n_partytrain.js"></script>
 <script src="i18n_eventart.js"></script>
 <script src="i18n_assetquality.js"></script>
 <script src="i18n_treasure.js"></script>
@@ -5751,6 +5756,7 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 <script src="i18n_phantom.js"></script>
 <script src="i18n_pcupdate.js"></script>
 <script src="i18n_friendjoin.js"></script>
+<script src="i18n_partyinvites.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>
