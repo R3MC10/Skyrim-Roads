@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b315-partyinvites", build: 315, date: "25 Nov 2026", title: "Your party goes in together", items: [
+      "When your party leader starts a co-op dungeon run, everyone in the party is in it straight away: no separate invites and no Accept cards for people already in your party.",
+      "Invites in the co-op lobby are only for friends and others outside your party, and only while there's room (up to 8 heroes in all; followers don't count).",
+      "In a party, only the leader starts co-op runs. If you step out of your party's run, a Rejoin button takes you back in.",
+      "Friends and travellers who are already in your party show \"In your party\" instead of an Invite or Ask to join button.",
+      "Old invites and join requests for someone who has since joined your party are cleared away, with no leftover pop-ups.",
+    ] },
     { id: "b314-reportname", build: 314, date: "25 Nov 2026", title: "Reports show who sent them", items: [
       "When you report a problem, your player name (your account name, or your hero's name if you're not signed in) now goes with it, so we know who to ask if we need more details.",
       "The report window shows the name it's sent as, right above the Send button.",
