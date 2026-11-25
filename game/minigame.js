@@ -10,6 +10,9 @@
      points drift about, Conjuration is a five-point star.
    Good = the normal hit. Perfect = 25% more (40% for a power attack) and +1 stack of the move's effect (stacks.js).
    Miss = 20% less (25% for a power attack). Higher skill and some perks ("timing") widen the zone and slow the clock.
+   Moves from items [itemgames]: Shield bash is a timed shove (the parry ring), a staff draws its spell's rune, a scroll
+   its spell's rune, an oil flask is thrown (strike bar: a Perfect soaks the foe a round longer, a Miss a round shorter).
+   Potions, poisons (poisonfight.js), food and fleeing have no game.
    Auto and the AI never play it (normal damage). Settings → Fights → Minigames turns it off.
    In a party fight each player plays it on their own phone in their own turn (sharedfight.js uses the same screen). */
 const MINIGAME = (() => {

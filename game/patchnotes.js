@@ -3,6 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b288-itemgames", build: 288, date: "25 Nov 2026", title: "Shield bash minigame, poisons in fights", items: [
+      "Shield bash now has its own quick game in turn-based fights: slam as your shield meets the foe. A Perfect hits harder and gives Might and Haste, a Miss hits softer. Guard had the same problem and works again too.",
+      "A staff now draws the rune of its spell's school instead of the sword bar, and scrolls draw their spell's rune.",
+      "Throwing an oil flask is a quick game too: a Perfect throw keeps the foe soaked a round longer, a miss splashes most of it on the ground (a round shorter).",
+      "Poisons work in fights: open Items and tap Coat (or put the poison on your hotbar). It takes one move, uses the poison up, and your next hit delivers it. Bows coat their arrows. Not in Beast Form, and not while your weapon is still coated.",
+      "Holding or resting on a poison shows what your next hit will carry.",
+      "In party fights a Perfect from the minigame now adds its bonus too.",
+    ] },
     { id: "b287-chargensex", build: 287, date: "25 Nov 2026", title: "Pick man or woman first", items: [
       "Character creation now starts with a big Male / Female switch at the top, above the tabs, so it's the first thing you pick.",
       "Switching keeps your race and everything else you chose; a woman just loses the beard. Randomise now keeps the one you picked.",
