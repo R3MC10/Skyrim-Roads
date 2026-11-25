@@ -77,6 +77,14 @@ jobs:
             if [ $((SIZE * 10)) -ge $((FULL * 8)) ]; then rm "game-shell${SHELL_V}-from${FROM}.zip"; fi
           done
           ls -la game-shell*.zip
+      - name: Write latest.json (newest build, file sizes and SHA-256 checksums the app checks)
+        continue-on-error: true   # without it phones fall back to the GitHub API
+        env:
+          TO: ${{ github.run_number }}
+        run: |
+          SHELL_V=$(grep -o 'int SHELL = [0-9]*' android/app/src/main/java/com/r3mc10/roadsofthenorth/UpdaterPlugin.java | grep -o '[0-9]*$')
+          node scripts/latestjson.mjs "$TO" "$SHELL_V" . > latest.json
+          cat latest.json
       - name: Publish it as a download
         uses: softprops/action-gh-release@v2
         with:
@@ -86,6 +94,7 @@ jobs:
           files: |
             RoadsOfTheNorth.apk
             game-shell*.zip
+            latest.json
           body: |
             ${{ env.CHANGES }}
 

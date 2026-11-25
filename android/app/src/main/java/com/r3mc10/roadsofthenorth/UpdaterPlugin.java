@@ -32,6 +32,7 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.security.MessageDigest;
 
 /**
  * In-app updater: downloads a new APK from the game's GitHub releases and hands it to
@@ -67,14 +68,47 @@ public class UpdaterPlugin extends Plugin {
         ret.put("canInstall", canInstall());
         ret.put("shell", SHELL);
         ret.put("delta", 1);   // this app can patch the game with only the files that changed (patchGame)
+        ret.put("hash", 1);    // downloadGame / patchGame check "sha256" when given
+        ret.put("rollback", 1);   // a build that fails to start goes back to the last one that worked
+        ret.put("bad", getContext().getSharedPreferences(OTA_PREFS, Context.MODE_PRIVATE).getString("bad", ""));   // builds that failed to start
         call.resolve(ret);
     }
 
     /** the game started fine on the current files: stop counting failed starts */
     @PluginMethod
     public void gameReady(PluginCall call) {
-        getContext().getSharedPreferences(OTA_PREFS, Context.MODE_PRIVATE).edit().putInt("trial", 0).apply();
+        SharedPreferences ota = getContext().getSharedPreferences(OTA_PREFS, Context.MODE_PRIVATE);
+        String path = getContext().getSharedPreferences(CAP_PREFS, Context.MODE_PRIVATE).getString(CAP_PATH, "");
+        SharedPreferences.Editor e = ota.edit().putInt("trial", 0);
+        // remember these files as the last ones that worked: a later build that fails to start comes back here
+        if (path != null && !path.isEmpty() && new File(path, "index.html").exists()) e.putString("goodPath", path).putLong("goodBuild", ota.getLong("gameBuild", 0L));
+        e.apply();
         call.resolve();
+    }
+
+    /** reads a small text file (the release's latest.json) from github.com, following its redirects */
+    @PluginMethod
+    public void getText(PluginCall call) {
+        final String url = call.getString("url");
+        if (url == null || !isAllowed(url)) { call.reject("Not an update address"); return; }
+        new Thread(() -> {
+            HttpURLConnection conn = null;
+            try {
+                conn = openConn(url, "application/json");
+                java.io.ByteArrayOutputStream b = new java.io.ByteArrayOutputStream();
+                try (InputStream in = conn.getInputStream()) {
+                    byte[] buf = new byte[8 * 1024]; int n;
+                    while ((n = in.read(buf)) > 0) { b.write(buf, 0, n); if (b.size() > 256 * 1024) throw new Exception("Too big"); }
+                }
+                JSObject ret = new JSObject();
+                ret.put("text", new String(b.toByteArray(), StandardCharsets.UTF_8));
+                call.resolve(ret);
+            } catch (Exception ex) {
+                call.reject(ex.getMessage() == null ? "Couldn't read it" : ex.getMessage());
+            } finally {
+                if (conn != null) conn.disconnect();
+            }
+        }).start();
     }
 
     /** downloads game-shellN.zip, unpacks it next to the app's data and returns its folder */
@@ -83,6 +117,7 @@ public class UpdaterPlugin extends Plugin {
         final String url = call.getString("url");
         final long expected = call.getLong("size", 0L);
         final long build = call.getLong("build", 0L);
+        final String sha = call.getString("sha256", "");
         if (url == null || !isAllowed(url) || build <= 0) { call.reject("Not an update address"); return; }
         if (busy) { call.reject("Already downloading"); return; }
         busy = true;
@@ -91,7 +126,7 @@ public class UpdaterPlugin extends Plugin {
             File root = new File(getContext().getFilesDir(), "ota");
             File dest = new File(root, "build-" + build), tmp = new File(root, "build-" + build + ".part");
             try {
-                fetch(url, expected, zip);
+                fetch(url, expected, zip, sha);
                 deleteTree(tmp);
                 tmp.mkdirs();
                 unzip(zip, tmp);
@@ -115,6 +150,7 @@ public class UpdaterPlugin extends Plugin {
         final String url = call.getString("url");
         final long expected = call.getLong("size", 0L);
         final long build = call.getLong("build", 0L), from = call.getLong("from", 0L);
+        final String sha = call.getString("sha256", "");
         if (url == null || !isAllowed(url) || build <= 0 || from <= 0) { call.reject("Not an update address"); return; }
         if (busy) { call.reject("Already downloading"); return; }
         busy = true;
@@ -132,7 +168,7 @@ public class UpdaterPlugin extends Plugin {
                 boolean onGame = cur != null && new File(cur, "index.html").exists() && game > code;
                 long have = onGame ? game : code;
                 if (have != from) throw new Exception("This patch is for build " + from + ", the game is on " + have);
-                fetch(url, expected, zip);
+                fetch(url, expected, zip, sha);
                 deleteTree(tmp);
                 tmp.mkdirs();
                 if (onGame) copyTree(cur, tmp); else copyAssets(getContext().getAssets(), "public", tmp);
@@ -182,10 +218,11 @@ public class UpdaterPlugin extends Plugin {
         deleteTree(dest);
         if (!tmp.renameTo(dest)) throw new Exception("Couldn't save the update");
         zip.delete();
-        // tidy older unpacked builds, keeping the one in use
+        // tidy older unpacked builds, keeping the one in use and the last one that worked (to go back to)
         String inUse = getContext().getSharedPreferences(CAP_PREFS, Context.MODE_PRIVATE).getString(CAP_PATH, "");
+        String good = getContext().getSharedPreferences(OTA_PREFS, Context.MODE_PRIVATE).getString("goodPath", "");
         File[] old = root.listFiles();
-        if (old != null) for (File f : old) if (!f.equals(dest) && !f.getAbsolutePath().equals(inUse)) deleteTree(f);
+        if (old != null) for (File f : old) if (!f.equals(dest) && !f.getAbsolutePath().equals(inUse) && !f.getAbsolutePath().equals(good)) deleteTree(f);
         JSObject ret = new JSObject();
         ret.put("path", dest.getAbsolutePath());
         call.resolve(ret);
@@ -284,7 +321,7 @@ public class UpdaterPlugin extends Plugin {
         busy = true;
         new Thread(() -> {
             try {
-                fetch(url, expected, new File(new File(getContext().getCacheDir(), "updates"), "update.apk"));
+                fetch(url, expected, new File(new File(getContext().getCacheDir(), "updates"), "update.apk"), "");
                 JSObject ret = new JSObject();
                 ret.put("ok", true);
                 call.resolve(ret);
@@ -296,32 +333,40 @@ public class UpdaterPlugin extends Plugin {
         }).start();
     }
 
-    /** https download (following GitHub's redirects) into done, via a .part file; reports "progress" */
-    private void fetch(String url, long expected, File done) throws Exception {
+    /** opens an https connection, following GitHub's redirects (github.com sends release files on to
+        objects.githubusercontent.com / release-assets.githubusercontent.com); only https hops are followed */
+    private static HttpURLConnection openConn(String url, String accept) throws Exception {
+        URL u = new URL(url);
+        for (int hops = 0; hops < 6; hops++) {
+            HttpURLConnection conn = (HttpURLConnection) u.openConnection();
+            conn.setInstanceFollowRedirects(false);
+            conn.setConnectTimeout(20000);
+            conn.setReadTimeout(30000);
+            conn.setRequestProperty("Accept", accept);
+            int code = conn.getResponseCode();
+            if (code >= 300 && code < 400) {
+                String loc = conn.getHeaderField("Location");
+                conn.disconnect();
+                if (loc == null) throw new Exception("Bad redirect");
+                u = new URL(u, loc);
+                if (!"https".equals(u.getProtocol())) throw new Exception("Insecure redirect");
+                continue;
+            }
+            if (code != 200) { conn.disconnect(); throw new Exception("Server said " + code); }
+            return conn;
+        }
+        throw new Exception("Too many redirects");
+    }
+
+    /** https download into done, via a .part file; reports "progress". With sha256 (hex) the file must match it. */
+    private void fetch(String url, long expected, File done, String sha256) throws Exception {
         HttpURLConnection conn = null;
         File dir = done.getParentFile(), part = new File(dir, done.getName() + ".part");
         try {
             dir.mkdirs();
             part.delete();
-            URL u = new URL(url);
-            for (int hops = 0; hops < 6; hops++) {
-                conn = (HttpURLConnection) u.openConnection();
-                conn.setInstanceFollowRedirects(false);
-                conn.setConnectTimeout(20000);
-                conn.setReadTimeout(30000);
-                conn.setRequestProperty("Accept", "application/octet-stream");
-                int code = conn.getResponseCode();
-                if (code >= 300 && code < 400) {
-                    String loc = conn.getHeaderField("Location");
-                    conn.disconnect();
-                    if (loc == null) throw new Exception("Bad redirect");
-                    u = new URL(u, loc);
-                    if (!"https".equals(u.getProtocol())) throw new Exception("Insecure redirect");
-                    continue;
-                }
-                if (code != 200) throw new Exception("Server said " + code);
-                break;
-            }
+            conn = openConn(url, "application/octet-stream");
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
             long total = conn.getContentLengthLong();
             if (total <= 0) total = expected;
             try (InputStream in = conn.getInputStream(); OutputStream out = new FileOutputStream(part)) {
@@ -329,6 +374,7 @@ public class UpdaterPlugin extends Plugin {
                 long got = 0; int n, lastPct = -1;
                 while ((n = in.read(buf)) > 0) {
                     out.write(buf, 0, n);
+                    md.update(buf, 0, n);
                     got += n;
                     int pct = total > 0 ? (int) (got * 100 / total) : -1;
                     if (pct != lastPct) {
@@ -340,6 +386,11 @@ public class UpdaterPlugin extends Plugin {
                     }
                 }
                 if (expected > 0 && got != expected) throw new Exception("Download was cut short");
+            }
+            if (sha256 != null && !sha256.isEmpty()) {
+                StringBuilder hex = new StringBuilder();
+                for (byte x : md.digest()) hex.append(String.format("%02x", x));
+                if (!hex.toString().equalsIgnoreCase(sha256.trim())) throw new Exception("The download was damaged (checksum didn't match)");
             }
             done.delete();
             if (!part.renameTo(done)) throw new Exception("Couldn't save the download");

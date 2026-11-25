@@ -266,6 +266,8 @@
     $("#tbody").innerHTML = body;
     if (titlePage !== "press") inner.querySelector(".mi, .page .btn")?.focus({ preventScroll: true });
     if (titlePage !== "menu" && titlePage !== "press") inner.scrollTop = 0;
+    // the phone app's updater counts these game files as working only once the title has drawn (app.js)
+    if (!window.__rotnTitleDrawn) { window.__rotnTitleDrawn = true; try { window.__app?.ready?.(); } catch { /* web version */ } }
   }
   const backBtn = `<button class="btn" data-t="menu">Back</button>`;
   function titleSubpage() {
