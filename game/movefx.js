@@ -295,8 +295,7 @@ const MOVEFX = (() => {
     }
     /* one step of a beat. G: positions this frame { hand, hand2, from, to, ally, gy }. Returns true when this file draws the beat */
     function step(dt, b, line, m, u, G) {
-      if (!cur || cur.b !== b) begin(b, line, m);
-      tick(dt);
+      if (!cur || cur.b !== b) begin(b, line, m);   // fightart ticks the scene itself
       if (!cur) return false;
       cur.u = u; cur.G = G; cur.dt = dt;
       const r = cur.r, pal = cur.pal, z = r.z, ch = m.charge || [0.08, Math.max(0.1, (m.hits?.[0] ?? 0.5) - 0.12)];
