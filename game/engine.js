@@ -285,7 +285,7 @@ const G = (() => {
   const theFoe = (e, cap) => { const n = String((e && e.name) || "foe"), named = !!(e && (e.named || e.unique || e.legend)) || /^the\s/i.test(n); const t = named ? n.replace(/^The\s/, "the ") : "the " + n; return cap ? t.charAt(0).toUpperCase() + t.slice(1) : t; };
   const withHorse = (s) => (typeof HORSES !== "undefined" ? HORSES.present(s) : !!s.horse);
   const capacity = (s) => F.BASE_CARRY + Math.floor(s.spBonus / F.ATTRIBUTE_PER_LEVEL) * F.CARRY_PER_STAMINA_LEVEL
-    + (withHorse(s) ? (typeof HORSES !== "undefined" ? HORSES.carry(s) : D.HORSE_CARRY) : 0) + (P(s, "extra_pockets") ? 100 : 0) + fxSum(s, "carry") + (typeof PFX !== "undefined" ? PFX.num(s, "carry") : 0) + (s.stone === "steed" ? 100 : 0) + (s.follower ? 100 : 0)   // [OURS] a follower carries 100 for you
+    + (withHorse(s) ? (typeof HORSES !== "undefined" ? HORSES.carry(s) : D.HORSE_CARRY) : 0) + (P(s, "extra_pockets") ? 100 : 0) + fxSum(s, "carry") + (typeof PFX !== "undefined" ? PFX.num(s, "carry") : 0) + (s.stone === "steed" ? 100 : 0) + (s.follower ? 100 + (typeof BONDS2 !== "undefined" ? BONDS2.carry(s) : 0) : 0)   // [OURS] a follower carries 100 for you (more from Companion rank, bonds.js)
     + (typeof HALL !== "undefined" ? HALL.carryBonus() : 0)   // [OURS] Jarl's Keep tier of the shared hall
     + (typeof CARAVANS !== "undefined" ? CARAVANS.cartCarry(s) : 0);   // [OURS] a cart behind your horse
   const overweight = (s) => carried(s) > capacity(s);
@@ -1247,7 +1247,7 @@ const G = (() => {
         if (ce) { const e = scaleEnemy(ce, fightLevel(s)); tr.status = "encounter"; tr.encounter = e; out.encounter = e; note(s, ` Caravan ambush: ${e.name}`); return out; }
         continue;
       }
-      const rate = tr.carriage || tr.follow ? 0 : ENCOUNTER_PER_MIN * (isNight(stepT) ? D.NIGHT_ENCOUNTER_MULT : 1) * (typeof WEVENTS !== "undefined" ? WEVENTS.weather([s.x, s.y], stepT).encounters : 1) * (typeof SNEAKMODE !== "undefined" ? SNEAKMODE.encounterMult(s) : 1) * (typeof CVROAD !== "undefined" ? CVROAD.ambushMult(s, stepT) : 1);   // nobody robs a carriage on a Jarl's road; party members following their leader leave the road to them (partyplay.js)
+      const rate = tr.carriage || tr.follow ? 0 : ENCOUNTER_PER_MIN * (isNight(stepT) ? D.NIGHT_ENCOUNTER_MULT : 1) * (typeof WEVENTS !== "undefined" ? WEVENTS.weather([s.x, s.y], stepT).encounters : 1) * (typeof SNEAKMODE !== "undefined" ? SNEAKMODE.encounterMult(s) : 1) * (typeof CRISES !== "undefined" ? CRISES.encounterMult(s, [s.x, s.y], stepT) : 1) * (typeof CVROAD !== "undefined" ? CVROAD.ambushMult(s, stepT) : 1);   // nobody robs a carriage on a Jarl's road; party members following their leader leave the road to them (partyplay.js)
       if (Math.random() < 1 - (1 - rate) ** (dt / 60)) {
         const e = rollEncounter(s, stepT);
         if (e.danger === "low" && e.kind === "event") {   // every fight is yours to play: the trip stops for it (no auto fighting)
@@ -1381,7 +1381,8 @@ const G = (() => {
       * (typeof WARS !== "undefined" && town && PLACES[town] ? WARS.discount(s, holdAt(PLACES[town])) : 1)   // your clan rules this hold
       * (typeof RUMOURS !== "undefined" && town ? RUMOURS.priceMult(s, town) : 1)   // local hero discount; knocked-up shop at night (rumours.js)
       * (typeof BEASTPATH !== "undefined" && town ? BEASTPATH.priceMult(s, town) : 1)   // a hungry vampire, a werewolf seen in town (beastpaths.js)
-      * (typeof GREATEV !== "undefined" && town ? GREATEV.priceMult(s, town) : 1)));   // a fair in town, a burned town, a plundered or grateful hold (greatevents.js)
+      * (typeof GREATEV !== "undefined" && town ? GREATEV.priceMult(s, town) : 1)   // a fair in town, a burned town, a plundered or grateful hold (greatevents.js)
+      * (typeof CRISES !== "undefined" && town ? CRISES.priceMult(s, town, item) : 1)));   // the hold's food, trade and corruption (crises.js)
   };
   function sellPrice(s, row, town = s.location, extra = 0) {
     const it = D.ITEMS[row.item];

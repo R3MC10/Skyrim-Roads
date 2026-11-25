@@ -632,6 +632,7 @@
     if (typeof LEGHUNT !== "undefined") LEGHUNT.mount({ S: () => S, persist, toast, showMessage, renderPanel });   // legendary monster contracts (leghunt.js)
     if (typeof BLACKREACH !== "undefined") BLACKREACH.mount({ S: () => S, persist, toast, showFightResult, showMessage, renderPanel, tb: tbCall });   // the cavern under Alftand (blackreach.js)
     if (typeof GREATEV !== "undefined") GREATEV.mount({ S: () => S, persist, toast, showFightResult, showMessage, openModal, closeModal, postNews, click: onPanelClick, party: () => party });   // great world events: banner + countdown (greatevents.js)
+    if (typeof CRISES !== "undefined") CRISES.mount({ S: () => S, persist, toast, showFightResult, showMessage, openModal, closeModal, postNews, party: () => party });   // regional crises: hold status, contracts, bosses (crises.js)
     if (typeof HOLDUI !== "undefined") HOLDUI.mount({ S: () => S, persist, toast, showFightResult, postNews, refresh: () => { bump(); renderPanel(true); }, party: () => party });   // player-run holds: Jarl, tax, raids (holdui.js)
     if (typeof TOURNEYUI !== "undefined") TOURNEYUI.mount({ S: () => S, persist, toast, showFightResult, postNews, tbCall, refresh: () => { bump(); renderPanel(true); }, party: () => party, allies: () => allies() });   // festivals, contests and the Grand Arena (tourneyui.js)
     Store.watch("trades", (docs) => onTrades(docs));
@@ -1269,7 +1270,7 @@
   function showFightResult(r) {
     shareSpoils(r);
     if (r.fight) { const inf = CURSE.maybeInfect(S, r.fight.e); if (inf) { persist(); setTimeout(() => toast(inf), 1800); } }
-    if (r.fight && !r.died && !r.fled && !r.fight.nonlethal) { tally("foes"); warPoint("fight", G.holdAt(livePos())); if ((r.fight.e?.tags || []).includes("undead")) festCount("undead"); }
+    if (r.fight && !r.died && !r.fled && !r.fight.nonlethal) { tally("foes"); warPoint("fight", G.holdAt(livePos())); if (typeof CRISES !== "undefined") CRISES.onFight(S, r.fight.e, G.holdAt(livePos())); if ((r.fight.e?.tags || []).includes("undead")) festCount("undead"); }
     if (r.fight || r.died) SOUND.fight(r); else if (/potion|drink/i.test(r.text || "")) SOUND.fx("potion");
     const skills = skillsHTML(r.skills);
     if (r.died) {
@@ -3157,7 +3158,8 @@
     let paid = false;
     await Store.change("guards", a.recId, (d) => { const nd = CARAVANS.claim(d || { caravanId: a.recId.split("-").slice(0, 3).join("-"), uid: S.id, name: S.name }, a.pay); if (nd) paid = true; return nd || d; });
     if (!paid) { persist(true); return; }
-    S.gold += a.pay; persist(true); SOUND.fx("coin");
+    S.gold += a.pay; if (typeof CRISES !== "undefined" && WORLD.places[a.to]) CRISES.deed(S, G.holdAt(WORLD.places[a.to]), "escort");   // a safe caravan makes the hold safer (crises.js)
+    persist(true); SOUND.fx("coin");
     showMessage("Caravan", ` ${a.name} rolls safely into ${a.to}. The caravan master counts out your share: ${a.pay} gold${a.n > 1 ? ` (${a.n} guards)` : ""}.`);
   }
   function stablesHTML(open, wanted) {
@@ -3180,6 +3182,7 @@
           <button class="btn pri" data-act="htend" style="width:100%" ${open && S.gold >= tp ? "" : "disabled"}>Tend ${esc(h.name)} (${tp} gold)</button>`
         : `${hp < mh ? `<button class="btn sm" data-act="htend" style="float:right;margin-top:6px" ${open && S.gold >= tp ? "" : "disabled"}>Tend (${tp} gold)</button>` : ""}<div class="vital" style="margin-top:8px"><small><span>Health</span><span class="num">${Math.round(hp)}/${mh}</span></small><div class="bar"><i style="width:${pct(hp, mh)}%;background:var(--sp)"></i></div></div>`}
         <div class="chatrow" style="margin-top:8px"><input id="hname" maxlength="16" placeholder="New name" autocomplete="off" aria-label="New name"><button class="btn" data-act="hrename">Rename</button></div></div>
+      ${typeof BONDS2 !== "undefined" ? BONDS2.horseHTML(S, esc) : ""}
       <h3 style="margin-top:12px">Saddlebags</h3>${HORSES.BAGS.map((b, i) => (b ? `<div class="item"><div class="t">${esc(b.name)}<span>carries ${b.carry} more</span></div><span class="num gold">${HORSES.cost(S, b.price)}</span><button class="btn sm" data-act="hbags" ${i !== h.bags + 1 || !open || S.gold < HORSES.cost(S, b.price) || wanted ? "disabled" : ""}>${i <= h.bags ? "Owned" : "Buy"}</button></div>` : "")).join("")}
       <h3 style="margin-top:12px">Horseshoes</h3>${Object.entries(HORSES.SHOES).filter(([id]) => id !== "none").map(([id, a]) => { const have = HORSES.SHOES[h.shoes].speed >= a.speed; return `<div class="item"><div class="t">${esc(a.name)}<span>ride ${Math.round(a.speed * 100)}% faster</span></div><span class="num gold">${HORSES.cost(S, a.price)}</span><button class="btn sm" data-act="hshoes" data-id="${id}" ${have || !open || S.gold < HORSES.cost(S, a.price) || wanted ? "disabled" : ""}>${h.shoes === id ? "Worn" : have ? "Have better" : "Buy"}</button></div>`; }).join("")}
       <h3 style="margin-top:12px">Horse armor</h3>${Object.entries(HORSES.ARMOR).filter(([id]) => id !== "none").map(([id, a]) => `<div class="item"><div class="t">${esc(a.name)}<span>+${a.hp} health · takes ${Math.round(a.guard * 100)}% less damage</span></div><span class="num gold">${HORSES.cost(S, a.price)}</span><button class="btn sm" data-act="harmor" data-id="${id}" ${h.armor === id || !open || S.gold < HORSES.cost(S, a.price) || wanted ? "disabled" : ""}>${h.armor === id ? "Worn" : "Buy"}</button></div>`).join("")}`;
@@ -3209,7 +3212,7 @@
     if (AU && townShopAt !== l) { if (townShopAt != null) townShop = ""; townShopAt = l; }   // a new town opens on its board
     townShop = sections.includes(townShop) ? townShop : AU ? "" : sections[0];
     const names = { general: "General goods", blacksmith: "Blacksmith", wizard: "Court wizard", stables: "Stables", fence: "Ragged Flagon (fence)", inn: TOWNS.INNS[l] || "Inn", train: "Trainers", alchemy: "Alchemy lab", forge: "Forge", jobs: "Jobs", streets: "Streets", hire: l === "Whiterun" ? "Dragonsreach & hirelings" : "Hirelings", hall: "⚑ Hall of the North", halls: "\uE119 Halls & shops", notice: "\uE103 Jarl's bounty", homes: "\uE11C Neighbours", market: "\uE133 Market stalls", mine: "\uE12A Mine", craft: "\uE10A Spell crafting", caravans: "\uE13B Caravans", cook: "\uE148 Cooking pot", arena: "\uE101 The Arena", fish: "\uE146 Fishing", hunt: "\uE10C Hunting grounds", carriage: "Carriage", enchanter: "Arcane enchanter", home: TOWNS.home(S, l) ? `\uE11D ${TOWNS.HOMES[l]?.[0]}` : `Buy ${TOWNS.HOMES[l]?.[0]}`, ...(typeof SOL !== "undefined" ? SOL.NAMES : {}), ...(typeof HOMESTEAD !== "undefined" ? HOMESTEAD.names(S, l) : {}), ...(typeof TOURNEYUI !== "undefined" ? TOURNEYUI.names(S, l) : {}), ...(typeof LEGHUNT !== "undefined" ? LEGHUNT.names() : {}) };
-    const townTop = `${typeof CIVILWAR !== "undefined" ? CIVILWAR.townLine(S, l) : ""}${typeof HOLDUI !== "undefined" ? HOLDUI.townLine(S, l) : ""}${typeof TOURNEYUI !== "undefined" ? TOURNEYUI.townLine(S, l) : ""}${wanted ? `<p class="sub danger-high">You're wanted in ${esc(hold)}. Shops, inns and trainers turn you away.</p>` : ""}`;
+    const townTop = `${typeof CIVILWAR !== "undefined" ? CIVILWAR.townLine(S, l) : ""}${typeof HOLDUI !== "undefined" ? HOLDUI.townLine(S, l) : ""}${typeof CRISES !== "undefined" ? CRISES.townLine(S, l) : ""}${typeof TOURNEYUI !== "undefined" ? TOURNEYUI.townLine(S, l) : ""}${wanted ? `<p class="sub danger-high">You're wanted in ${esc(hold)}. Shops, inns and trainers turn you away.</p>` : ""}`;
     if (AU && !townShop) return `<div class="panel au-panel"><h2>${esc(l)}</h2>${PLACEART.scene(l)}${townTop}${typeof RUMOURS !== "undefined" ? RUMOURS.townHTML(S, l, "", open) : ""}${AU.hub({ S, l, sections, names, open, hold })}<p class="sub au-gold">You have <b class="gold">${S.gold} gold</b>.</p></div>`;
     const fac = F.priceFactor(G.skill(S, "Mercantile"));
     let body = "", note = "";

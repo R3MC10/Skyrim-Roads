@@ -246,6 +246,9 @@ const PFX = (() => {
     [ "One-Handed", "siege_breaker", "Siege Breaker", 1, [40], ["armsman"], "Bandit raiders, ram crews and warlords take 15% more damage from you, and your charges against a siege count 20% more. [OURS]", [["out", 0.15, { tag: ["siege"] }], ["gevsiege", 0.2, {}]]],
     [ "Mercantile", "fairgoer", "Fairgoer", 1, [30], ["haggling"], "At a town fair the shops sell to you another 10% cheaper, and every fair game gives you 1 more point. [OURS]", [["gevshop", 0.1, {}], ["gevgame", 1, {}]]],
     [ "Etiquette", "hero_of_the_hour", "Hero of the Hour", 1, [35], ["courtly_manners"], "Rewards from great world events and fair prizes pay you 20% more gold. [OURS]", [["gevgold", 0.2, {}]]],
+    // ---------------------------------------------------------------- regional crises (crises.js)
+    [ "Mercantile", "hard_times_trader", "Hard Times Trader", 1, [35], ["haggling"], "When a hold runs short of food, trade or honesty, its shops raise their prices on you only half as much. [OURS]", [["crisisprice", 0.5, {}]]],
+    [ "Etiquette", "jarls_agent", "Jarl's Agent", 1, [35], ["courtly_manners"], "The Jarl trusts you: your contracts in a hold crisis count 25% more, exposing crooked guards is easier, and crisis rewards pay 25% more gold. [OURS]", [["crisisrelief", 0.25, {}]]],
     // ---------------------------------------------------------------- homesteads (homestead.js)
     [ "Smithing", "carpenter", "Carpenter", 1, [30], ["steel_smithing"], "Building at your homestead takes 25% fewer materials. [OURS, from Hearthfire]", [["hsmats", 0.25, {}]]],
     [ "Athletics", "woodsman", "Woodsman", 1, [30], ["long_strider"], "The sawmill, quarry and clay pit at your homestead give 50% more. [OURS]", [["hsyield", 0.5, {}]]],
@@ -288,6 +291,9 @@ const PFX = (() => {
     // ---------------------------------------------------------------- followers become people (followerbonds.js)
     [ "Speechcraft", "kindred_spirit", "Kindred Spirit", 1, [25], [], "Your follower warms to you 50% faster when you do things they like, and cools 25% slower when you don't. [OURS]", [["folbond", 0.5, {}], ["folgrudge", 0.25, {}]]],
     [ "Speechcraft", "heart_to_heart", "Heart to Heart", 1, [45], ["kindred_spirit"], "Talking with your follower does twice as much for their loyalty, and they never refuse your orders, however unhappy. [OURS]", [["foltalk", 1, {}], ["folobey", 1, {}]]],
+    // ---------------------------------------------------------------- follower and horse bonds (bonds.js)
+    [ "Etiquette", "fellow_traveller", "Fellow Traveller", 1, [30], ["courtly_manners"], "Time on the road counts double for your follower's loyalty, and from Companion rank they carry another 25 for you. [OURS]", [["foltravel", 1, {}], ["folcarry", 25, {}]]],
+    [ "Athletics", "horse_whisperer", "Horse Whisperer", 1, [25], ["long_strider"], "Your horse bonds twice as fast, and its speciality works 20% better. [OURS]", [["horsebond", 1, {}], ["horsespec", 0.2, {}]]],
     // ---------------------------------------------------------------- party votes in dungeons (partyvote.js)
     [ "Speechcraft", "voice_of_reason", "Voice of Reason", 1, [35], ["persuasion"], "In a party dungeon vote, your vote counts twice. [OURS]", [["pvweight", 1, {}]]],
     [ "Etiquette", "sworn_companion", "Sworn Companion", 1, [50], ["courtly_manners"], "Followers ask you for their personal quest at loyalty 65 instead of 80, and their signature move is 25% stronger. [OURS]", [["folquest", 15, {}], ["folsig", 0.25, {}]]],

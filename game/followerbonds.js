@@ -470,7 +470,7 @@ const BONDS = (() => {
     else if (Math.random() < 0.35) line = dog ? "*wags proudly*" : pick(["Easy.", "Next.", "Is that all?", "Good fight."]);
     return line;
   }
-  function sigOf(s, id = s.follower?.id) { const f = id && bond(s, id); return f?.bond.sig ? questOf(id)?.[8] || null : null; }
+  function sigOf(s, id = s.follower?.id) { const f = id && bond(s, id); if (!f) return null; if (f.bond.sig) return questOf(id)?.[8] || null; return typeof BONDS2 !== "undefined" ? BONDS2.rankSig(s, id) : null; }   // Sworn rank: a move before the quest (bonds.js)
   /* once per fight, at the start of their turn: their move. Returns the fight-log text or "". */
   function signature(fight, al) {
     const s = fight?.s; if (!s || !al || al.sigUsed || al.fid !== s.follower?.id || fight.ehp <= 0 || al.down) return "";

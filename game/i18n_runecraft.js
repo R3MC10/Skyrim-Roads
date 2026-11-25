@@ -71,7 +71,8 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "Every spell gets its own name (or name it yourself) and its own drawn icon. It shows in the Magic tab and works in both kinds of fight.": "Każde zaklęcie dostaje własną nazwę (albo nazwij je sam) i własną rysowaną ikonę. Widać je w zakładce Magia i działa w obu rodzajach walki.",
     "Frost spells chill, so a power attack Shatters the foe. Lingering fire leaves burning ground. Poison barely touches undead and machines.": "Zaklęcia mrozu mrożą, więc potężny cios Roztrzaskuje wroga. Trwały ogień zostawia płonącą ziemię. Trucizna ledwie rusza nieumarłych i maszyny.",
     "New perks: Rune Scholar (a bigger power budget), Spellwright (two modifiers on one spell) and Runic Echo (crafted cloaks and walls last longer, rune traps re-arm once).": "Nowe atuty: Uczony run (większy budżet mocy), Twórca zaklęć (dwa modyfikatory w jednym zaklęciu) i Runiczne echo (stworzone płaszcze i ściany trwają dłużej, runy-pułapki raz się odnawiają).",
-    "Follower and horse bonds": "Więzi z towarzyszami i końmi",
+    "Heists in the big cities": "Skoki w wielkich miastach",
+    "The Coming next list is up to date: painted backdrops, hold crises, bonds and spell crafting are in the game now.": "Lista „Wkrótce” jest aktualna: malowane tła, kryzysy w regionach, więzi i tworzenie zaklęć są już w grze.",
     "The old spell combining at the College is still there.": "Stare łączenie zaklęć w Kolegium wciąż jest dostępne.",
   });
   const runeNames = Object.keys(RUNE).sort((a, b) => b.length - a.length).map((k) => k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
