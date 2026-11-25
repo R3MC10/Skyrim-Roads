@@ -25,8 +25,8 @@ ok(M.subnav("log")===""&&M.subnav("town")===""&&M.subnav("social")==="","single 
 ok(M.charTabs().map(t=>t[0]).join()==="stars,hero,follower,perks,tactics,stats,ach,library,diary,settings","compass Skills page tabs");
 // every screen the tabs lead to is one ui.js can draw
 const drawn=new Set(["stars","perks","ach","library","world","settings"]);
-const m=UI_SRC.match(/\\{ \\.\\.\\.mnp, ([^}]+)\\}\\[tab\\]/); ok(m,"renderPanel map found");
-for (const k of m[1].split(",")) { const id=k.split(":")[0].trim(); if (id && !id.startsWith("...")) drawn.add(id); }
+const m=UI_SRC.match(/\\{ \\.\\.\\.mnp, ([\\s\\S]+?)\\}\\[tab\\]/); ok(m,"renderPanel map found");   // entries can be inline functions with braces
+for (const k of m[1].matchAll(/(?:^|, )([a-z]\\w*): /g)) drawn.add(k[1]);
 for (const s of M.screens()) ok(drawn.has(s),"ui.js draws "+s);
 for (const id of ["map","hero","pack","town","log","social","stats","diary","places"]) ok(M.screens().includes(id),"old screen still reachable: "+id);
 // the built panels (with stand-ins for ui.js parts)

@@ -10,6 +10,7 @@ Phone 390x844 (touch) and PC 1920x1080 / 1366x768, a bandit chief boss and a gro
 Screenshots in SHOTS/out_foepanel/ (default: the system temp folder), never in tests/."""
 import asyncio, sys, os, tempfile
 from playwright.async_api import async_playwright
+from roadfight import open_fight
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"
 OUT = os.path.join(os.environ.get("SHOTS") or tempfile.gettempdir(), "out_foepanel") + os.sep; os.makedirs(OUT, exist_ok=True)
 fails = []
@@ -53,11 +54,7 @@ async def run(p, kind, w, h, touch):
     pg.on("pageerror", lambda e: errs.append(str(e)))
     await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=fpl{kind}{w}&tb"); await pg.wait_for_timeout(1800)
     await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Plate"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
-    for _ in range(4):   # the toll event sometimes opens on another screen first: try again
-        await pg.evaluate(START, [kind]); await pg.wait_for_timeout(600)
-        try: await pg.wait_for_selector("#modal [data-act=ev][data-c=fight]", timeout=6000); break
-        except Exception: pass
-    await pg.evaluate("document.querySelector('#modal [data-act=ev][data-c=fight]').click()"); await pg.wait_for_timeout(1200)
+    ok(await open_fight(pg, START, [kind]), f"{tag}: the fight opens")   # waits for the fight screen, not a fixed pause (roadfight.py)
     await to_turn(pg)
     # a long fight: fill the log with many lines
     await pg.evaluate("""()=>{ const sess=TB.session; for (let i=0;i<30;i++) sess.ev.push({kind:'me', text:'Test line '+i+': you hit for '+(10+i)}); }""")
@@ -81,7 +78,7 @@ async def run(p, kind, w, h, touch):
     else:
         ok(g["at"] == "over" and g["plate"]["bottom"] <= g["foe"]["top"] + 1, f"{tag}: the plate floats over the foe's head ({g['at']}, {g['plate']['bottom']:.0f} <= {g['foe']['top']:.0f})")
     ok(not any(hit(g["plate"], f, 2) for f in g["figs"]) or kind == "chief", f"{tag}: the plate never sits on a fighter")
-    ok(g["log"] and not any(hit(g["log"], f, 2) for f in g["figs"]), f"{tag}: the log sits clear of every fighter {g['log']}")
+    ok(g["log"] and not any(hit(g["log"], f, 2) for f in g["figs"]), f"{tag}: the log sits clear of every fighter {g['log']} figs={g['figs']}")
     ok(g["log"] and not hit(g["log"], g["plate"]), f"{tag}: the log and the plate don't overlap")
     s = g["lgs"]
     ok(s and s["n"] >= 30 and s["sh"] > s["ch"] + 20, f"{tag}: the log holds the whole fight ({s and s['n']} lines)")

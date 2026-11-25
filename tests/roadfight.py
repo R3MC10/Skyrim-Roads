@@ -10,7 +10,7 @@ in the page (no Playwright actionability wait that can time out), and returns on
 Returns True when the fight screen is open."""
 
 FIGHT_BTN = "#modal [data-act=ev][data-c=fight]"
-FIGHT_UP = "() => !!(window.TB && TB.open && TB.session && document.querySelector('#tbf'))"
+FIGHT_UP = "() => !!(typeof TB !== 'undefined' && TB.open && TB.session && document.querySelector('#tbf'))"
 
 
 async def open_fight(pg, start_js, arg=None, timeout_ms=20000):
@@ -20,7 +20,7 @@ async def open_fight(pg, start_js, arg=None, timeout_ms=20000):
     while waited < timeout_ms:
         may_click = waited - last_click >= 2000   # one press, then give the game time to open the fight before pressing again
         state = await pg.evaluate("""(mayClick) => {
-          if (window.TB && TB.open && TB.session && document.querySelector('#tbf')) return 'fight';
+          if (typeof TB !== 'undefined' && TB.open && TB.session && document.querySelector('#tbf')) return 'fight';
           const b = document.querySelector('%s');
           if (b) { if (!mayClick) return 'waiting'; b.click(); return 'clicked'; }
           const s = window.__dbg && window.__dbg.save();

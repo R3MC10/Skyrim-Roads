@@ -108,6 +108,15 @@ const FOEPANEL = (() => {
       : [[L, topB], [R, topB], [R, bot - h], [L, (me ? me.top : bot) - h - 6]];
     const b = pick(cands, w, h, avoid, { left: 6, right: o.W - 6, top, bottom: bot });
     if (!b) return;
+    if (b.hit) {   // no clear corner (a big boss): narrow the log on its side until it clears the fighters it touches
+      const q = box(b.L, b.T, w, h), on = avoid.filter((a) => area(q, a) > 0), rightSide = b.L + w / 2 > o.W / 2;
+      const nl = rightSide ? Math.max(...on.map((a) => a.right)) + 2 : b.L, nr = rightSide ? b.L + w : Math.min(...on.map((a) => a.left)) - 2;
+      if (nr - nl >= 170) {
+        lg.style.width = Math.round(nr - nl) + "px";
+        const h2 = lg.offsetHeight || h, T2 = clamp(b.T + (b.T + h > bot - 1 ? h - h2 : 0), top, bot - h2), q2 = box(nl, T2, nr - nl, h2);   // narrower can mean taller: a bottom corner grows upwards
+        if (!avoid.some((a) => area(q2, a) > 0)) { b.L = nl; b.T = T2; } else lg.style.width = w + "px";
+      }
+    }
     lg.style.left = b.L.toFixed(1) + "px"; lg.style.top = b.T.toFixed(1) + "px"; lg.classList.add("fpl-at");
     if (!log.held) lg.scrollTop = lg.scrollHeight;   // its width changed: keep the newest line in view
   }

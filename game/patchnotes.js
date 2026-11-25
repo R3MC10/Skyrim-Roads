@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b314-fightfixes", build: 314, date: "25 Nov 2026", title: "Small fixes around fights", items: [
+      "A new quest popping up no longer wipes the choices of a road encounter (Pay, Talk, Fight...). It waits until you've made your pick.",
+      "On small phones the round compass button no longer sits on your health, magicka and stamina bars.",
+      "Fighting a big boss, the fight log narrows a little so it doesn't cover the boss.",
+    ] },
     { id: "b313-fightnums", build: 313, date: "25 Nov 2026", title: "Fight numbers you can read", items: [
       "Damage, heal and crit numbers in fights have a thick dark outline and grow with your screen, so they're easy to read on a phone and on a big PC monitor. Crits are big and gold.",
       "Each kind has its own look: damage in its element's colour, heals green with a glow, magicka and stamina as small blue and green chips, and Miss, Blocked and Dodged as words.",
@@ -2088,7 +2093,7 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 297;
+  const NEXT_AT = 314;
   const NEXT = [
     "Mentoring: play side by side with friends of any level",
     "Shrines of your own: build a Daedric altar at your longhouse",
