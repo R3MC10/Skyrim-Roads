@@ -3,6 +3,10 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b273-roadart", build: 273, date: "25 Nov 2026", title: "Painted road encounters", items: [
+      "Almost everything you meet on the road now has its own painting: bandits' tolls, caravans, shipwrecks, avalanches, giants, wisps, hagravens, peddlers, shrines and many more.",
+      "You see it when the encounter starts, on the result after you choose, and in the party vote.",
+    ] },
     { id: "b272-nocover", build: 272, date: "25 Nov 2026", title: "Nothing covers your buttons", items: [
       "The round message history button now sits at the left end of the messages (on a PC, next to World news) and steps aside when there's a button under it. It used to land on Leave in a dungeon, the info button in a town and other buttons in the corner. It hides while a menu, the character creator, the perk stars or a mini-game is open.",
       "Big banners (quest done, achievements) stay in a slim strip near the top and pick a spot with no buttons under it. On the map and in a dungeon they never drop below the top fifth of the screen, so the dungeon route stays readable.",
