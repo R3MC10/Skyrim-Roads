@@ -3,6 +3,9 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b315-hourlyupdates", build: 315, date: "25 Nov 2026", title: "Updates arrive on time", items: [
+      "New versions now reach the app reliably within about an hour of a change, instead of sometimes waiting many hours.",
+    ] },
     { id: "b314-reportname", build: 314, date: "25 Nov 2026", title: "Reports show who sent them", items: [
       "When you report a problem, your player name (your account name, or your hero's name if you're not signed in) now goes with it, so we know who to ask if we need more details.",
       "The report window shows the name it's sent as, right above the Send button.",
