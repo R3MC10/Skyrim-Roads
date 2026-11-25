@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b333-channel", build: 333, date: "25 Nov 2026", title: "See your friends get ready", items: [
+      "In a party fight, when a friend casts a spell, swings, draws a bow or uses a skill from an item, you now see them get ready for it: their hero raises a hand with embers, gathers frost or sparks, pulls back their weapon or draws the bowstring, and a small bar over their head fills while they play their minigame.",
+      "Each kind of move has its own colour: fire orange, frost ice blue, shock violet, healing gold, blows steel grey, bows green.",
+      "A great hit flashes gold, a fumble makes them stumble, and if a move gets called off the bar just fades away.",
+      "Your own hero takes the same stance behind your minigame, in solo fights too.",
+      "A minigame can't hold up the fight any more: after 12 seconds the move is called off and you keep your guard up.",
+    ] },
     { id: "b332-fightscreen", build: 332, date: "25 Nov 2026", title: "A clearer fight screen", items: [
       "On a phone the fight screen now has three parts: the turn order, the foe's next move, its health and the latest line of the fight at the top; the battle in the middle with nothing covering the fighters; your health, your party and the move buttons at the bottom, in easy reach of your thumbs.",
       "On a PC your party stands down the left side, the foe you're fighting and the whole fight story down the right, and the battle in the middle.",
