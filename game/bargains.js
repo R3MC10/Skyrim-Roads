@@ -369,6 +369,9 @@ const BARGAIN = (() => {
     meridia: '<path d="M9 5h6M10 5V3h4v2M8 7h8l-1 11H9z"/><path d="M12 15c-1.4-.8-1.4-2.4 0-3.6 1.4 1.2 1.4 2.8 0 3.6zM9 21h6"/>',
   };
   const glyph = (p) => SV(GLYPH[p] || GLYPH.dagon);
+  /* the artifact's painted icon (art-<prince>, assets.js) once it has loaded, else the line glyph */
+  const artIcon = (p, cls = "") => { let u = ""; try { u = typeof ASSETS !== "undefined" && PR[p] ? ASSETS.url("art-" + p) : ""; } catch { u = ""; }
+    return u ? `<img class="dbg-art${cls ? " " + cls : ""}" src="${u}" alt="${esc(T(PR[p].art))}" loading="lazy">` : glyph(p); };
   function track(sg, rdy) {
     return `<ol class="dbg-track">${STAGES.map((x, i) => `<li class="${i + 1 < sg ? "past" : i + 1 === sg ? "now" : i === 2 && rdy ? "ready" : ""}"><i></i><span>${esc(T(x))}</span></li>`).join("")}</ol>`;
   }
@@ -382,7 +385,7 @@ const BARGAIN = (() => {
     }).join("");
     return `<div class="dbg-card dbg-con" style="--dbc:${d.color}"><div class="dbg-head">${glyph(k.p)}<div class="t">${esc(T(d.contract))}<span>${esc(T("Contract with {prince}", { prince: T(d.prince) }))}</span></div></div>
       <ul class="dbg-steps">${rows}</ul>
-      <p class="sub">${esc(T("Reward: {art}. {desc}", { art: T(d.art), desc: T(d.desc) }))}</p>
+      <div class="dbg-reward">${artIcon(k.p, "sm")}<p class="sub">${esc(T("Reward: {art}. {desc}", { art: T(d.art), desc: T(d.desc) }))}</p></div>
       <div class="dbg-btns"><button class="btn sm" data-act="dbgbreak">${esc(T("Break the contract"))}</button></div></div>`;
   }
   function artCard(s, p) {
@@ -396,7 +399,7 @@ const BARGAIN = (() => {
     let btns = isB ? `<span class="dbg-bound">${esc(T("Bound"))}</span>` : `<button class="btn sm" data-act="dbgbind" data-id="${p}">${esc(T("Bind this one"))}</button>`;
     if (rdy) btns += `<button class="btn sm dbg-asc" data-act="dbgasc" data-id="${p}">${esc(T("Accept the curse and ascend"))}</button>${a.refused ? "" : `<button class="btn sm" data-act="dbgref" data-id="${p}">${esc(T("Refuse"))}</button>`}`;
     if (sg >= 3) btns += `<button class="btn sm" data-act="dbgsleep" data-id="${p}">${esc(T("Let it sleep"))}</button>`;
-    return `<div class="dbg-card${isB ? " dbg-on" : ""}${rdy ? " dbg-rdy" : ""}" style="--dbc:${d.color}"><div class="dbg-head">${glyph(p)}<div class="t">${esc(T(d.art))}<span>${esc(T(d.prince))} · ${esc(T(STAGES[sg - 1]))}</span></div></div>
+    return `<div class="dbg-card${isB ? " dbg-on" : ""}${rdy ? " dbg-rdy" : ""}" style="--dbc:${d.color}"><div class="dbg-head">${artIcon(p)}<div class="t">${esc(T(d.art))}<span>${esc(T(d.prince))} · ${esc(T(STAGES[sg - 1]))}</span></div></div>
       ${track(sg, rdy)}<div class="bar dbg-bar"><i style="width:${Math.round(100 * Math.max(0, Math.min(1, bar)))}%"></i></div>
       <ul class="dbg-pow">${lines}${curse}</ul>
       <p class="sub">${esc(T(d.grow))} ${esc(nextTxt)}${isB ? "" : " " + esc(T("Only the bound artifact grows and works."))}</p>
@@ -431,5 +434,5 @@ const BARGAIN = (() => {
   install();
   return { PR, IDS, STAGES, MIN_LEVEL, SHRINE, EV_ID, stage, ready, bound, owned, artOf, nums, powers, deedMult, powMult, curseMult,
     outMult, inMult, tick, after, deed, offer, breakIt, bind, ascend, refuse, sleep, finish, canOffer, makeEvent, rollEvent, evChoices, evChoose,
-    potionMult, priceMult, panel, act, cardBits, ctxOf, install, glyph };
+    potionMult, priceMult, panel, act, cardBits, ctxOf, install, glyph, artIcon };
 })();

@@ -52,6 +52,7 @@ var I18N_LONGHOUSE = (() => {
     // ---- the screen
     "Longhouse in {place}": "Długi dom w {place}", "{n} of {m} players": "{n} z {m} graczy", "gold in the treasury": "sztuk złota w skarbcu",
     "Not built yet.": "Jeszcze nie zbudowano.", "Next: level {n}": "Dalej: poziom {n}", gold: "sztuk złota", Upgrade: "Rozbuduj", Build: "Zbuduj", Finished: "Ukończone",
+    "Your longhouse": "Twój długi dom", "Every room you build shows on the hall.": "Każdą zbudowaną salę widać na długim domu.",
     "Build the planning table to choose a battle plan for dungeons and hold crises.": "Zbuduj stół narad, by wybrać plan bitwy na lochy i kryzysy w krainach.",
     "The plan works for every member in dungeon fights and hold crisis fights.": "Plan działa dla każdego członka w walkach w lochach i w kryzysach krain.",
     "Planning table level {n}": "Stół narad, poziom {n}",

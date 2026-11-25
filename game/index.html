@@ -4476,6 +4476,49 @@ html.mo-on .evc-fx{display:block}
   html.pcmap .pcquest{zoom:1.1}
   html.pcmap .pcb-clock,html.pcmap .pcb-stat,html.pcmap .pcb-btn{font-size:14.5px}
 }
+/* company art (longhouse.js, expedition.js, bargains.js): painted banner, the hall with its rooms, the Expedition Table */
+.lng-banner img.lng-paint{height:auto;aspect-ratio:15/4;min-height:112px;opacity:1}
+.lng-banner:has(img.lng-paint) .lng-bt{background:linear-gradient(0deg,rgba(0,0,0,.35),rgba(0,0,0,.25) 70%,rgba(0,0,0,0))}
+.lng-banner:has(img.lng-paint) .lng-name{color:#f3ead6;text-shadow:0 1px 3px rgba(0,0,0,.9),0 0 12px rgba(0,0,0,.6)}
+.lng-banner:has(img.lng-paint) .lng-sub{color:#e4dac4;text-shadow:0 1px 2px #000}
+.lng-banner:has(img.lng-paint) .lng-purse{color:#f3ead6;text-shadow:0 1px 2px #000}
+.lng-view{position:relative;margin:0 0 10px;border:1px solid rgba(214,178,94,.35);border-radius:4px;overflow:hidden;background:#15120d;aspect-ratio:16/9;max-height:420px}
+.lng-view img,.lng-view svg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.lng-view svg{mix-blend-mode:normal}
+.lng-view svg ellipse[fill^="url"]{mix-blend-mode:screen}
+.lng-vcap{position:absolute;left:0;right:0;bottom:0;margin:0;padding:14px 10px 6px;font-size:12px;letter-spacing:.04em;color:#e4dac4;background:linear-gradient(0deg,rgba(0,0,0,.55),rgba(0,0,0,0));text-shadow:0 1px 2px #000}
+.exp-root.exp-ontbl{position:relative;overflow:clip;padding:0 8px 12px;margin:0 -8px;gap:14px}
+.exp-root.exp-ontbl .exp-offers{gap:14px}
+.exp-bg{position:sticky;top:0;height:100vh;margin-bottom:-100vh;z-index:0;pointer-events:none;overflow:hidden}
+.exp-root.exp-ontbl>.exp-bg+*{margin-top:8px}
+.exp-bg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.6)}
+.exp-root.exp-ontbl>:not(.exp-bg){position:relative;z-index:1}
+.exp-candle{position:absolute;width:46vmax;height:46vmax;margin:-23vmax 0 0 -23vmax;border-radius:50%;background:radial-gradient(closest-side,rgba(255,176,80,.28),rgba(255,140,50,.08) 55%,rgba(255,140,50,0));mix-blend-mode:screen;animation:expflick 3.1s ease-in-out infinite}
+.exp-candle.c1{left:88%;top:14%}.exp-candle.c2{left:6%;top:46%;animation-duration:2.6s;animation-delay:-1.2s}
+@keyframes expflick{0%,100%{opacity:.85}18%{opacity:.62}31%{opacity:.95}47%{opacity:.7}63%{opacity:1}79%{opacity:.66}}
+@media (prefers-reduced-motion:reduce){.exp-candle{animation:none}}
+.exp-head.on-table{background:rgba(14,11,8,.5)}.exp-head.on-table .exp-ht{background:none}
+.exp-root.exp-ontbl .exp-card,.exp-root.exp-ontbl .exp-week,.exp-root.exp-ontbl .exp-pbar,.exp-root.exp-ontbl .exp-track{background:rgba(16,13,10,.8)}
+.exp-root.exp-ontbl .exp-seg{background:rgba(14,11,8,.8)}
+.exp-root.exp-ontbl .exp-he{background:rgba(16,13,10,.82);padding-left:8px;padding-right:8px}
+.exp-body h3{font-family:"Cinzel",Georgia,serif;color:#f3ead6;font-size:17px}
+.exp-meta{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;font-size:13px}
+.exp-risk{display:inline-flex;align-items:center;gap:6px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:12px}
+.exp-risk i{width:10px;height:10px;border-radius:50%;background:currentColor;box-shadow:0 0 6px currentColor}
+.exp-risk.r-low{color:#8fcf74}.exp-risk.r-mid{color:#e8b54a}.exp-risk.r-high{color:#e2604c}
+.exp-dur{color:var(--mute);letter-spacing:.04em}
+.exp-more summary{cursor:pointer;font-size:13px;color:var(--gold);letter-spacing:.06em;text-transform:uppercase;padding:2px 0;list-style:none}
+.exp-more summary::-webkit-details-marker{display:none}.exp-more summary::after{content:" ›"}.exp-more[open] summary::after{content:" ⌄"}
+.exp-more[open]{display:flex;flex-direction:column;gap:6px}
+.exp-card .exp-loot{margin:0}
+.exp-votes{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 8px;border:1px solid rgba(226,187,100,.35);background:rgba(226,187,100,.06);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}
+.exp-faces{display:flex;flex-direction:row-reverse;padding-left:9px}
+.exp-faces .pvchip{animation:none;width:26px;height:26px}
+.exp-card.voted{border-color:rgba(226,187,100,.55)}
+.dbg-art{width:44px;height:44px;flex:0 0 44px;object-fit:contain;filter:drop-shadow(0 0 7px color-mix(in srgb,var(--dbc,#c9a45a) 55%,transparent)) drop-shadow(0 2px 2px rgba(0,0,0,.6))}
+.dbg-art.sm{width:36px;height:36px;flex-basis:36px}
+.dbg-reward{display:flex;align-items:center;gap:8px}.dbg-reward .sub{margin:4px 0}
+.dbg-reward .dbg-ic{width:26px;height:26px;flex:0 0 26px;color:var(--dbc,var(--gold))}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>

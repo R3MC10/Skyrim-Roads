@@ -64,7 +64,8 @@ const EXPEDITION = (() => {
   const beast = (id) => beasts().find((b) => b.id === id) || null;
 
   // ---------------------------------------------------------------- the expeditions
-  /* art: existing paintings until the expedition art lands (see the PR: expedition-table, exp-<id> 1280x480) */
+  /* art: painted thumbnails exp-<id> (1280x480, assets.js) over the table (expedition-table); "art" is the older picture
+     shown until the painting loads */
   const TPL = {
     courier: { name: "The missing courier", art: "biome-pineforest.webp", slots: ["short", "medium"],
       blurb: "A Jarl's courier never reached {town}. Find out what happened on the road.",
@@ -363,7 +364,20 @@ const EXPEDITION = (() => {
   const party = () => { try { const p = api?.party?.(); return p && (p.members || []).length >= 2 && p.members.some((m) => m.id === S()?.id) ? p : null; } catch { return null; } };
   const changeParty = (fn) => { const p = party(); return p && typeof Store !== "undefined" ? Store.change("parties", p.id, (x) => (x ? fn(x) || x : x)) : Promise.resolve(null); };
   const onlineIds = (p) => (p.members || []).map((m) => m.id).filter((id) => id === S()?.id || (api?.online ? api.online(id) : true));
-  const art = (o) => TPL[o.tpl]?.art || "shop-hall.webp";
+  /* painted art (assets.js): the file's URL once it has loaded, else the older picture */
+  const pic = (k, fb) => { try { return (typeof ASSETS !== "undefined" && ASSETS.url(k)) || fb; } catch { return fb; } };
+  const art = (o) => pic("exp-" + o.tpl, TPL[o.tpl]?.art || "shop-hall.webp");
+  /* how dangerous an offer is for you: by its length, one step worse when you're below its level */
+  const RISK = [["low", "Low risk"], ["mid", "Some risk"], ["high", "High risk"]];
+  const riskOf = (s, o) => RISK[clamp({ short: 0, medium: 1, long: 2 }[o.slot] + ((s?.level || 1) < o.lvl ? 1 : 0), 0, 2)];
+  /* the party's vote on this offer: small portraits of who voted for it, or the whole party once it's their pick */
+  function votesRow(o) {
+    const p = party(); if (!p) return "";
+    if (p.exped?.key === o.key) return `<div class="exp-votes on"><span>${T("Your party's pick")}</span><span class="exp-faces">${(p.members || []).map((m) => faceOf(m.id)).join("")}</span></div>`;
+    const pv = p.exv?.pv; if (!pv || pv.res || p.exv.kind !== "pick" || !PV()) return "";
+    const who = PV().tally(pv)[o.key] || [];
+    return who.length ? `<div class="exp-votes"><span>${T("Votes")}</span><span class="exp-faces">${who.map(faceOf).join("")}</span></div>` : "";
+  }
   const stepRow = (x, st, i) => {
     const done = x ? x.done[i] : 0, on = x && cur(x) === i, n = st.k === "fights" || st.k === "help" ? st.n || 1 : 0;
     const cnt = x && n && !done ? ` <span class="num">${Math.min(n, x.cnt[i] || 0)}/${n}</span>` : "";
@@ -375,11 +389,15 @@ const EXPEDITION = (() => {
     const p = party(), btn = mine ? `<span class="exp-tag">${T("You're on it")}</span>`
       : !open ? `<span class="exp-why">${T("Build the planning table to open this one.")}</span>`
       : p ? "" : `<button class="btn pri" data-exp="go" data-k="${esc(o.key)}"${may ? "" : " disabled"}>${T("Set out")}</button>`;
+    const [rk, rl] = riskOf(s, o);
     return `<article class="exp-card s-${o.slot}${mine ? " mine" : ""}${open ? "" : " shut"}">
-      <div class="exp-art"><img src="${art(o)}" alt="" loading="lazy"><span class="exp-slot">${T(SLOT_NAME[o.slot])} · ${T(SLOT_TIME[o.slot])}</span></div>
-      <div class="exp-body"><h3>${esc(titleOf(o))}</h3><p class="exp-where">${esc(o.place)} · ${esc(T(o.hold))}${low ? ` · <span class="lng-short">${T("best from level {n}", { n: o.lvl })}</span>` : ""}</p>
-      <p class="exp-blurb">${esc(blurbOf(o))}</p><ol class="exp-steps">${o.steps.map((st, i) => stepRow(mine ? x : null, st, i)).join("")}</ol>
-      <p class="exp-loot"><b class="gold">${r.gold} ${T("gold")}</b>, ${loot} · <span>${T("+{n} renown", { n: r.renown })}</span></p>${btn}</div></article>`;
+      <div class="exp-art"><img src="${art(o)}" alt="" loading="lazy"></div>
+      <div class="exp-body"><h3>${esc(titleOf(o))}</h3>
+      <div class="exp-meta"><span class="exp-risk r-${rk}"><i></i>${T(rl)}</span><span class="exp-dur">${T(SLOT_NAME[o.slot])} · ${T(SLOT_TIME[o.slot])}</span></div>
+      <p class="exp-loot"><b class="gold">${r.gold} ${T("gold")}</b>, ${loot} · <span>${T("+{n} renown", { n: r.renown })}</span></p>
+      <p class="exp-where">${esc(o.place)} · ${esc(T(o.hold))}${low ? ` · <span class="lng-short">${T("best from level {n}", { n: o.lvl })}</span>` : ""}</p>
+      <details class="exp-more"${mine ? " open" : ""}><summary>${T("Details")}</summary><p class="exp-blurb">${esc(blurbOf(o))}</p><ol class="exp-steps">${o.steps.map((st, i) => stepRow(mine ? x : null, st, i)).join("")}</ol></details>
+      ${votesRow(o)}${btn}</div></article>`;
   }
   function trackerHTML(s) {
     const x = live(s); if (!x) return "";
@@ -411,13 +429,15 @@ const EXPEDITION = (() => {
     const day = dayOf(), list = offers(d.id, day, rollOf(d, day)), x = live(s), p = party();
     const left = rollsLeft(s, d, day), pv = p?.exv?.pv, voting = pv && !pv.res;
     const h = Math.floor((DAY - (nowS() % DAY)) / 3600), m = Math.floor(((DAY - (nowS() % DAY)) % 3600) / 60);
-    const head = `<div class="exp-head"><img src="ui-parchment.webp" alt="" loading="lazy"><div class="exp-ht"><div class="exp-title">${T("The Expedition Table")}</div>
+    const tbl = pic("expedition-table", "");
+    const bg = tbl ? `<div class="exp-bg" aria-hidden="true"><img src="${tbl}" alt=""><i class="exp-candle c1"></i><i class="exp-candle c2"></i></div>` : "";
+    const head = `<div class="exp-head${tbl ? " on-table" : ""}">${tbl ? "" : `<img src="ui-parchment.webp" alt="" loading="lazy">`}<div class="exp-ht"><div class="exp-title">${T("The Expedition Table")}</div>
       <div class="sub">${T("Three expeditions a day for the company. New ones in {h} h {m} min. Missing a day costs nothing.", { h, m })}</div></div></div>`;
     const tabs = `<div class="seg exp-seg">${[["offers", T("Tonight")], ["hist", T("History")]].map(([k, l]) => `<button class="${tab === k ? "on" : ""}" data-exp="tab" data-k="${k}">${l}</button>`).join("")}</div>`;
-    if (tab === "hist") return `<div class="exp-root">${head}${tabs}${weekHTML(s, d)}<h3>${T("Expedition history")}</h3>${histHTML(s, d)}</div>`;
+    if (tab === "hist") return `<div class="exp-root${tbl ? " exp-ontbl" : ""}">${bg}${head}${tabs}${weekHTML(s, d)}<h3>${T("Expedition history")}</h3>${histHTML(s, d)}</div>`;
     const partyBar = p ? `<div class="exp-pbar">${voting ? `<span>${T("Your party is voting on tonight's expedition.")}</span>` : `<span>${T("In a party, the party votes. Most votes win; a tie goes the leader's way.")}</span><button class="btn pri" data-exp="vote">${T("Put it to the party")}</button>`}</div>` : "";
     const roll = left ? `<button class="btn sm" data-exp="roll">${T("Ask for fresh offers ({n} left today)", { n: left })}</button>` : "";
-    return `<div class="exp-root">${head}${tabs}${trackerHTML(s)}${partyBar}<div class="exp-offers">${list.map((o) => offerCard(s, o, d, x, !p)).join("")}</div>
+    return `<div class="exp-root${tbl ? " exp-ontbl" : ""}">${bg}${head}${tabs}${trackerHTML(s)}${partyBar}<div class="exp-offers">${list.map((o) => offerCard(s, o, d, x, !p)).join("")}</div>
       <div class="exp-foot">${roll}</div>${weekHTML(s, d)}</div>`;
   }
 

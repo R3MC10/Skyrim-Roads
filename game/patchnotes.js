@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b228-companyart", build: 228, date: "25 Nov 2026", title: "Painted company art", items: [
+      "The Company screen opens with a painted banner of your longhouse at dusk, with the name in clear light letters.",
+      "The Rooms tab shows your longhouse, and it changes as you build: the library lights more windows, the forge makes the doorway glow, the trophy hall hangs antlers and shields, the stables add lanterns and the planning table puts up company banners.",
+      "The Expedition Table now sits on a painted war table lit by candles. Each offer has its own painting, a clear risk colour (green, amber or red), the reward and how long it takes, with the step list under Details.",
+      "In a party vote, small portraits on each expedition card show who voted for it.",
+      "The six Daedric artifacts have painted pictures on their cards and on the contract that rewards them.",
+    ] },
     { id: "b227-eventcards", build: 227, date: "25 Nov 2026", title: "Painted event cards", items: [
       "Dragon attacks on towns now show a hand-painted picture instead of the flat drawing: a dragon breathing fire over the rooftops.",
       "Great events, crises and raids on your house get paintings too: bandits with torches for sieges and outlaws, a vampire lord in the town square, a giant smashing through a farm, and a caravan lost in a blizzard for the Long Winter.",
