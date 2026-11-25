@@ -49,7 +49,7 @@ const TOURNEY = (() => {
       what: "A friendly bout with one of the festival's champions. Win with health to spare for more points. Nobody gets hurt for real." },
     archery: { name: "Archery butts", icon: "\uE10C", game: "precise", skills: ["Archery"], max: 125, what: "Three arrows at the straw target. Loose when the ring meets the mark." },
     joust: { name: "Ring-tilting", icon: "\uE12D", game: "precise", skills: ["One-Handed"], horse: true, max: 125, what: "Ride at the hanging rings with a lance. Bring your own horse." },
-    smith: { name: "Smithing contest", icon: "\uE14E", game: "hammer", skills: ["Smithing"], max: 125, what: "Forge a blade from the fair's own iron in three strikes. The judges keep it." },
+    smith: { name: "Smithing contest", icon: "\uE14E", game: "hammer", skills: ["Smithing"], max: 125, what: "Forge a blade from the fair's own iron: heat it, hammer it, quench it. The judges keep it." },
     fish: { name: "Fishing derby", icon: "\uE146", game: "fish", skills: [], max: 120, what: "Three casts with a borrowed rod. Rare fish score most. You keep what you catch." },
     hunt: { name: "The hunt", icon: "\uE115", game: "precise", skills: ["Archery", "Sneak"], max: 140, what: "The huntsmen drive a beast past your hide. Take one clean shot. Bigger game, more points." },
     mine: { name: "Mining race", icon: "\uE12A", game: "mine", skills: ["Smithing"], max: 110, what: "One rock face and a borrowed pick. Ore and gems score points. You keep what you dig." },

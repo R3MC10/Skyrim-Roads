@@ -3169,7 +3169,7 @@
       return `<div class="card"><h3>Buy a horse · ${bp} gold</h3><p class="sub">Riding, you travel faster and flee more easily. Your horse carries things for you even when you walk beside it. Horses never die: at 0 health they are downed. A downed horse stays with you and still carries your things, but you can't ride it until it gets back up (a few hours, a night's sleep, or a stablehand's care).</p>
       <div class="hbreeds">${Object.entries(HORSES.BREEDS).map(([id, b]) => `<button class="hbreed ${id === horseBreed ? "on" : ""}" data-act="hbreed" data-id="${id}" aria-pressed="${id === horseBreed}"><b>${esc(b.name)}</b><span class="num gold">${HORSES.price(S, id)}</span>${statRow(b)}<small>${esc(b.text)}</small></button>`).join("")}</div>
       <p class="sub" style="margin:6px 0 2px">Every horse is a little different: its numbers can come out up to ${Math.round(HORSES.ROLL * 100)}% better or worse than its breed's.</p>
-      <div class="coats">${HORSES.COATS.map((c) => swatch(c, c[0] === horseCoat, true)).join("")}</div><p class="sub" style="margin:4px 0 0">${esc(HORSES.coat(horseCoat)[1])}</p>
+      <div class="coats">${HORSES.COATS.map((c) => swatch(c, c[0] === horseCoat, true)).join("")}</div><div class="hcoatrow">${typeof HORSEART !== "undefined" ? HORSEART.card(horseCoat, 120) : ""}<p class="sub" style="margin:4px 0 0">${esc(HORSES.coat(horseCoat)[1])}</p></div>
       <div class="chatrow"><input id="hname" maxlength="16" placeholder="Name your horse" autocomplete="off" aria-label="Horse name"><button class="btn pri" data-act="hbuy" ${open && !wanted && S.gold >= bp ? "" : "disabled"}>Buy ${esc(br.name)}</button></div>
       ${!open ? `<p class="sub">The stables open at 08:00.</p>` : S.gold < bp ? `<p class="sub">You have ${S.gold} gold.</p>` : ""}</div>`;
     }
@@ -3946,7 +3946,7 @@
       case "fgroup": forgeGroup = b.dataset.id; renderPanel(true); break;
       case "smake": { const id = b.dataset.id, inf = SMITH.atForge(S) && SMITH.info(S, id);
         const go = (g) => { const m = CG.smithMake(S, id, g); if (/^You make/.test(m)) { GUIDE.mark(S, "smith"); SOUND.fx("clang"); tally("crafted"); publishCard(); } if (/^(You make|Botched)/.test(m)) persist(true); say(m); };
-        if (inf && !inf.block) CG.run(CG.gameFor("smith", id), { skill: G.skill(S, "Smithing"), skillName: "Smithing", what: D.ITEMS[id].name }, go); else go(CG.QUICK); break; }
+        if (inf && !inf.block) CG.run(CG.gameFor("smith", id), { skill: G.skill(S, "Smithing"), skillName: "Smithing", what: D.ITEMS[id].name, id, s: S }, go); else go(CG.QUICK); break; }
       case "srefine": case "srefineall": { const k = +b.dataset.id, all = a === "srefineall", inf = SMITH.atForge(S) && SMITH.refineInfo(S, k);
         const go = (g) => { const m = CG.refine(S, k, all, g); if (/^(You (smelt|tan)|You work|The heat|Your knife)/.test(m)) persist(true); say(m); };
         if (inf && inf.times) CG.run(CG.gameFor("refine", k), { skill: G.skill(S, "Smithing"), skillName: "Smithing", what: `${inf.n * (all ? inf.times : 1)} ${D.ITEMS[inf.out].name}` }, go); else go(CG.QUICK); break; }

@@ -200,6 +200,7 @@ const PFX = (() => {
     [ "Smithing", "glass_smithing", "Glass Smithing", 1, [70], ["advanced_armors", "elven_smithing"], "Improving adds another 1. [Skyrim]", [["temper", 1, {}]]],
     [ "Smithing", "dragon_armor", "Dragon Armor", 1, [100], ["daedric_smithing", "glass_smithing"], "Weapons you wear hit 5% harder and armor you wear protects 5% more. [Skyrim]", [["out", 0.05, { weapon: 1 }], ["armorpct", 0.05, {}]]],
     [ "Smithing", "whetstone", "Whetstone Master", 1, [40], ["steel_smithing"], "Improved weapons hit 5% harder. [OURS]", [["out", 0.05, { tempered: 1 }]]],
+    [ "Smithing", "forge_sense", "Forge Sense", 2, [15, 45], [], "Forging mini-game: the gold heat and quench bands are 25% wider per rank, the metal cools 20% slower per rank (the rings close slower too), and great work saves material a little more often. [OURS]", [["forgeheat", 0.25, {}], ["forgecool", 0.2, {}], ["forgesave", 0.03, {}]]],
     // ---------------------------------------------------------------- Enchanting (3 → 14)
     [ "Enchanting", "fire_enchanter", "Fire Enchanter", 1, [30], ["soul_squeezer"], "Fire enchantments are 25% stronger. [Skyrim]", [["ench", 0.25, { el: "fire" }]]],
     [ "Enchanting", "frost_enchanter", "Frost Enchanter", 1, [40], ["fire_enchanter"], "Frost enchantments are 25% stronger. [Skyrim]", [["ench", 0.25, { el: "frost" }]]],

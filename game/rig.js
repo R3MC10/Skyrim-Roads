@@ -13,7 +13,8 @@
      PAINTRIG.draw(g, look, { clip, u, t }) → one clip frame on its own (the viewer, tests)
      PAINTRIG.setOf(sp)   → which painted set a look wears · PAINTRIG.geo(set) → its skeleton in units (tests)
    Gear: light armour, robes and plain clothes → leather; iron (and banded, chain) → iron; steel and heavier → steel;
-   women → the women's leather set for now. Other races wear the Nord parts with a gentle skin tint on face and hands. */
+   women get the women's sets the same way. Dunmer, Khajiit and Argonians wear their own painted head (RIGDATA.HEADS, scaled
+   to the set's neck) on the Nord body, hands tinted to their skin; other races wear the Nord head with a gentle skin tint. */
 const PAINTRIG = (() => {
   const D = typeof RIGDATA !== "undefined" ? RIGDATA : typeof require !== "undefined" ? require("./rigdata.js") : null;
   const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
@@ -25,9 +26,9 @@ const PAINTRIG = (() => {
   const FEM_FOLLOWER = /^f-(lydia|jenassa|aela|uthgerd|mjoll|serana|annekke|iona|jordis)\b/;   // followers' looks carry no sex: the women we know
   function setOf(sp, L) {
     if (!sp) return "nordm-leather";
-    if (sp.fem || (L && FEM_FOLLOWER.test(String(L.id)))) return "nordf-leather";
-    if (sp.heavy) return IRONISH.test(sp.ck || "") ? "nordm-iron" : "nordm-steel";
-    return "nordm-leather";
+    const who = sp.fem || (L && FEM_FOLLOWER.test(String(L.id))) ? "nordf" : "nordm";
+    if (sp.heavy) return who + (IRONISH.test(sp.ck || "") ? "-iron" : "-steel");
+    return who + "-leather";
   }
 
   // ---------------------------------------------------------------- the skeleton of one set (in that set's units)
@@ -57,6 +58,15 @@ const PAINTRIG = (() => {
     if (!ok) return null;
     const r = { set, imgs, G: geo(set), cache: new Map() }; REC.set(set, r); return r;
   }
+  /* another race's painted head (dunmer, khajiit, argonian; m/f), or null: the Nord head with a skin tint then */
+  const HREC = new Map();
+  function raceHead(sp) {
+    if (!sp || !sp.r || sp.r === "nord" || !D || !D.HEADS || typeof ASSETS === "undefined") return null;
+    const key = sp.r + (sp.fem ? "f" : "m"), q = D.HEADS[key]; if (!q) return null;
+    let h = HREC.get(key); if (h) return h;
+    const im = ASSETS.img(D.headFile(key)); if (!im) return null;
+    h = { key, set: key, Q: { head: q }, imgs: { head: im }, cache: new Map() }; HREC.set(key, h); return h;
+  }
   const mk = (w, h) => { const c = document.createElement("canvas"); c.width = Math.max(1, Math.round(w)); c.height = Math.max(1, Math.round(h)); return c; };
   /* level 0 is the file; each level below is half the size (drawn smoothly), so a small figure never shimmers */
   function level(r, part, v, lv) {
@@ -68,7 +78,7 @@ const PAINTRIG = (() => {
     r.cache.set(key, c); return c;
   }
   function pic(r, part, v, need) {
-    const q = D.SETS[r.set].parts[part]; let lv = 0;
+    const q = (r.Q || D.SETS[r.set].parts)[part]; let lv = 0;
     while (lv < 4 && (q.w * D.RES) / (1 << (lv + 1)) >= need * 1.15) lv++;
     return level(r, part, v, lv);
   }
@@ -255,10 +265,12 @@ const PAINTRIG = (() => {
     g.beginPath(); g.moveTo(-1.6, -1); g.lineTo(1.6, -1); g.lineTo(2, -4.6); g.lineTo(0.5, -5.6); g.lineTo(0.5, -7); g.lineTo(-0.5, -7); g.lineTo(-0.5, -5.6); g.lineTo(-2, -4.6); g.closePath();
     g.fillStyle = col; g.fill(); g.strokeStyle = "rgba(30,20,12,0.8)"; g.lineWidth = 0.4; g.stroke(); g.restore();
   }
-  const WSC = 1.18;   // weapons a touch bigger than on the ink figures: painted hands are big
+  const WSC = 1.18;
+  const TIPS = new Map(); let drawN = 0;   // the last blade tip drawn for each fighter (PAINTRIG.tip)   // weapons a touch bigger than on the ink figures: painted hands are big
   function figure(g, ctx, P, sp, o, wk) {
     const G = ctx.G, m = G.m, B = solve(G, P), kit = ctx.kit, st = ctx.st;
     const tintC = sp.r && sp.r !== "nord" && !sp.vamp ? sp.skin : null, sv = (d) => (tintC ? (d ? "dt:" : "t:") + tintC : d ? "d" : "n");
+    const rh = raceHead(sp);
     const ranged = RANGED.has(wk), two = TWO_MELEE.has(wk) || wk === "staff" || wk === "spear";
     const tipA = wk && kit && kit.TIP[wk] ? Math.atan2(kit.TIP[wk][1], kit.TIP[wk][0]) : -Math.PI / 4;
     let wa = B.sa + P.aim;   // the weapon's frame, as on the ink figures
@@ -311,7 +323,10 @@ const PAINTRIG = (() => {
     const hk = B.sa * 0.55 + (P.tilt || 0);
     uprightAt(g, ctx, "torso", "n", B.W, B.sa, ctx.Q.torso.cut);
     uprightAt(g, ctx, "pelvis", "n", B.W, B.pa, 0);
-    uprightAt(g, ctx, "head", sv(false), B.N, hk, 0);
+    if (rh) {   // the race's own head, scaled so its neck fills this set's collar like the Nord neck
+      const q = rh.Q.head, k = (ctx.Q.head.nw || q.nw) / q.nw, u = G.u * k;
+      put(g, pic(rh, "head", "n", q.w * u * ctx.dev), q, u, B.N[0], B.N[1], hk, q.cut || 0);
+    } else uprightAt(g, ctx, "head", sv(false), B.N, hk, 0);
     if (shieldFront) shieldHere(true);
     // the near arm: upper arm, forearm, then whatever is in the hand, then the hand over its grip
     limbAt(g, ctx, "uparm", "n", B.armN.sh, B.armN.el);
@@ -323,6 +338,12 @@ const PAINTRIG = (() => {
     let ha = fa; if (want != null) { let d = want - fa; d = Math.atan2(Math.sin(d), Math.cos(d)); ha = fa + clamp(d, -1, 1); }
     const glen = Math.hypot(q.e[0] - q.p[0], q.e[1] - q.p[1]) * G.u * 0.55, grip = [B.armN.wr[0] + Math.cos(ha) * glen, B.armN.wr[1] + Math.sin(ha) * glen];
     if (armedN && kit && !openAll) { g.save(); g.translate(grip[0], grip[1]); g.rotate(wa); g.scale(m * WSC, m * WSC); (gear || kit).weapon(g, sp, wk, st, { draw: P.draw, pull: bowPull, arrow: bowArrow, glow: glowC, plain: wk !== sp.wk }); g.restore(); }
+    if (armedN && !openAll && !ranged && kit && kit.TIP[wk]) {   // where the blade really is (the fight scene's swing trail follows it), in canvas pixels
+      const SP = (gear && gear.SPAN) || {}, GR = (gear && gear.GRIP) || {}, L = (SP[wk] || 33) * (1 - (GR[wk] || 0.16)) * m * WSC, a = wa + tipA;
+      const T = g.getTransform(), at = (x, y) => [T.a * x + T.c * y + T.e, T.b * x + T.d * y + T.f];
+      const tp = at(grip[0] + Math.cos(a) * L, grip[1] + Math.sin(a) * L), bs = at(grip[0] + Math.cos(a) * L * 0.42, grip[1] + Math.sin(a) * L * 0.42);
+      TIPS.set(o.who || "me", { x: tp[0], y: tp[1], bx: bs[0], by: bs[1], n: ++drawN });
+    }
     handAt(g, ctx, B.armN, handPart, sv(false), want);
     if (P.flask) flaskAt(g, grip[0], grip[1] - 0.5 * m, P.flask, m * 1.2);
     if (P.cast > 0.05 && kit) kit.glowAt(g, grip[0] + 1.6 * m, grip[1] - 0.6 * m, (5 + P.cast * 3.4) * m, castC, 0.85, st);
@@ -354,6 +375,7 @@ const PAINTRIG = (() => {
     const r = ready(setOf(sp, look)); if (!r) return false;
     const wk = o.wt === undefined ? sp.wk : o.wt || null;
     try {
+      TIPS.delete(o.who || "me");
       const P = controls(o, sp, wk);
       P.flask = o.flask || null; P.down = o.down || 0;
       render(g, r, sp, P, o, wk);
@@ -370,6 +392,9 @@ const PAINTRIG = (() => {
     render(g, r, sp, P, { shield: o.shield === undefined ? !!sp.shield : o.shield, glow: o.glow, t: o.t, ride: P.ride }, wk);
     return true;
   }
-  return { setOf, geo, can, fight, draw, sample, warp, controls, solve, ready, get broken() { return broken; }, reset: () => { broken = false; REC.clear(); } };
+  /* the blade of the figure last drawn for who ("me" by default): tip x,y and a point 42% up the blade (bx,by), in the
+     canvas's pixels at draw time; n counts draws, so a caller can tell a fresh one (null: no blade) */
+  const tip = (who) => TIPS.get(who || "me") || null;
+  return { setOf, geo, raceHead, tip, can, fight, draw, sample, warp, controls, solve, ready, get broken() { return broken; }, reset: () => { broken = false; REC.clear(); HREC.clear(); } };
 })();
 if (typeof module !== "undefined") module.exports = PAINTRIG;

@@ -3,6 +3,33 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b202-tidy1", build: 202, date: "25 Nov 2026", title: "Weather on the lake and in the woods", items: [
+      "Fishing and hunting follow the clock and the sky: at night the scene goes dark blue with a moon, snow falls and turns it cold, rain and fog make it grey, and the day is brighter and less orange.",
+      "When hunting you now hold a painted bow that bends as you draw, and your arrows are painted too.",
+      "Mining: the little \"+2 Silver\" text no longer covers the mine name on small phones.",
+      "Lockpicking: on very wide screens and phones held sideways the lock sits below the title, and the pick stays inside the chest.",
+      "Festivals: on phones the compass button no longer covers the scores, and on the PC map the festival name sits next to its flag instead of on top of it.",
+    ] },
+    { id: "b201-mgsmith", build: 201, date: "25 Nov 2026", title: "A real forge for smithing", items: [
+      "Making weapons and armor at a forge is now a small scene at a painted smithy: heat the bar, hammer it into shape, then quench it.",
+      "Heat: hold to pump the bellows and keep the glow in the gold band. Too hot and it burns, too cold and it won't move.",
+      "Hammer: tap the glowing spots as the rings close on them. Sparks fly and the bar turns into a rough blade, then a shaped one. The metal cools while you work, so reheat it when the glow fades.",
+      "Quench: dip the blade in the water barrel when it cools to cherry red. Steam bursts up and you see the finished blade.",
+      "Good work gives the same small, capped bonus as before (a point or two of damage or armor). Great work can also save one piece of the main material now and then. The forge still uses up everything else.",
+      "Quick craft skips it, like the other crafting games. The Smithing contest at festivals uses the new forge too.",
+      "New Smithing perk, Forge Sense: wider gold bands, slower cooling, and a better chance to save material.",
+    ] },
+    { id: "b200-rigraces", build: 200, date: "25 Nov 2026", title: "Painted races and a softer swing", items: [
+      "Women in iron or steel armour now wear it in fights too, painted to match, instead of always showing up in leather.",
+      "Dark Elves, Khajiit and Argonians get their own painted faces in fights, for men and women, sized to sit right on the armour. Other races keep the tinted face for now.",
+      "Your sword swing leaves a soft, fading arc that follows the blade, instead of a hard white line shooting up into the sky.",
+      "Damage numbers on the fight screen pop up next to the fighter who took the hit, not floating high in the sky.",
+    ] },
+    { id: "b199-horsecoats", build: 199, date: "25 Nov 2026", title: "Black and chestnut horses", items: [
+      "Black and chestnut horses are painted too: a glossy black with a white star, and a copper chestnut with a light mane, a white blaze and white socks. They stand, gallop and lie down like the grey.",
+      "Chestnut is a new coat at the stables. The stables now show the whole horse in the coat you pick before you buy.",
+      "Wild horses by the road can be chestnut too.",
+    ] },
     { id: "b198-mgfishing", build: 198, date: "25 Nov 2026", title: "Fishing gets a makeover", items: [
       "Fishing now happens on a painted lake at dusk: the water moves and glints, fish rise here and there, and mist drifts along the far shore. Night, rain, snow and fog show on it too.",
       "Your rod is painted and really bends: it flexes back when you aim, whips forward on the cast and bows deeper the tighter the line gets. The line arcs out with the float.",

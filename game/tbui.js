@@ -79,10 +79,11 @@ const TBUI = (() => {
       s.textContent = (p.n > 0 ? "+" : "") + Math.round(p.n) + (p.tag ? " " + p.tag : "") + (p.crit ? "!" : "");
       // damage rises from the fighter in the scene; spent magicka/stamina from your own frame
       const overScene = sr && !p.tag;
-      /* [rigpolish] a little inside and above the fighter, so it never sits on the big number the scene itself draws on them */
-      const x = overScene ? (p.at === "foe" ? sr.left + sr.width * 0.62 : sr.left + sr.width * 0.36) : r.left + r.width * 0.5;
-      const y = overScene ? sr.top + sr.height * (sr.width > sr.height * 1.4 ? 0.3 : 0.52) : r.top + 6;   // tall phone scenes: the foe card sits up there
-      s.style.left = (x - hb.left + (k % 2 ? 26 : -18)) + "px";
+      /* [rigraces] beside the fighter at chest height, on the outer side (the scene puts the foe at 72% across and you near
+         30%, the ground at 80% down): off the big number the scene draws over their head, and never up in the sky */
+      const x = overScene ? (p.at === "foe" ? sr.left + sr.width * 0.83 : sr.left + sr.width * 0.17) : r.left + r.width * 0.5;
+      const y = overScene ? sr.top + sr.height * 0.58 : r.top + 6;
+      s.style.left = (Math.max(8, Math.min(innerWidth - 60, x + (k % 2 ? 26 : -18))) - hb.left) + "px";
       s.style.top = (y - hb.top - k * 26) + "px";   // a line apart (the numbers are 22px tall), never on top of each other
       s.style.animationDelay = (reduce() ? 0 : i * 170) + "ms";
       host.appendChild(s); setTimeout(() => s.remove(), 1500 + i * 170);

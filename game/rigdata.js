@@ -11,6 +11,7 @@
        torso: s = shoulder socket, n = neck, cut = the row below which the round waist plug is hidden in the pelvis
        pelvis: hip = the point between the hip joints (the thighs hang from here)
        foot: sole = the row the boot stands on
+       head: nw = the neck's width (the other races' heads, HEADS below, are scaled to it)
    Per set: ppu = measured pixels per drawing unit (the fight figures are about 61 units tall, feet at 0,0).
    The skeleton (bone lengths, where the shoulder and neck sit) is worked out from these points, so each armour set
    gets its own proportions and nothing floats: limbs meet at the painted joint ends. */
@@ -19,7 +20,7 @@ const RIGDATA = (() => {
   const PARTS = ["head", "torso", "pelvis", "uparm", "forearm", "hand-open", "hand-fist", "thigh", "shin", "foot", "leg-bent"];
   const SETS = {
     "nordm-leather": { ppu: 23.6, parts: {
-      head: { w: 282, h: 372, p: [158, 236] },
+      head: { w: 282, h: 372, p: [158, 236], nw: 105 },
       torso: { w: 391, h: 503, p: [225, 452], s: [120, 205], n: [236, 52], cut: 440 },
       pelvis: { w: 423, h: 445, p: [225, 32], hip: [222, 150] },
       uparm: { w: 248, h: 372, p: [131, 84], e: [88, 321] },
@@ -32,7 +33,7 @@ const RIGDATA = (() => {
       "leg-bent": { w: 285, h: 473, p: [107, 105], e: [140, 454] },
     } },
     "nordm-iron": { ppu: 23.6, parts: {
-      head: { w: 335, h: 507, p: [170, 312] },
+      head: { w: 335, h: 507, p: [170, 312], nw: 136 },
       torso: { w: 317, h: 461, p: [160, 420], s: [78, 178], n: [160, 40], cut: 410 },
       pelvis: { w: 436, h: 448, p: [230, 30], hip: [230, 150] },
       uparm: { w: 242, h: 363, p: [123, 79], e: [72, 321] },
@@ -45,7 +46,7 @@ const RIGDATA = (() => {
       "leg-bent": { w: 320, h: 497, p: [160, 64], e: [128, 476] },
     } },
     "nordm-steel": { ppu: 23.6, parts: {
-      head: { w: 350, h: 535, p: [190, 305] },
+      head: { w: 350, h: 535, p: [190, 305], nw: 132 },
       torso: { w: 335, h: 475, p: [165, 430], s: [55, 140], n: [170, 30], cut: 420 },
       pelvis: { w: 419, h: 469, p: [215, 30], hip: [215, 150] },
       uparm: { w: 250, h: 342, p: [125, 73], e: [79, 303] },
@@ -58,7 +59,7 @@ const RIGDATA = (() => {
       "leg-bent": { w: 321, h: 492, p: [159, 72], e: [149, 470] },
     } },
     "nordf-leather": { ppu: 21.5, parts: {
-      head: { w: 295, h: 494, p: [165, 285] },
+      head: { w: 295, h: 494, p: [165, 285], nw: 106 },
       torso: { w: 291, h: 424, p: [150, 390], s: [68, 130], n: [150, 30], cut: 380 },
       pelvis: { w: 398, h: 357, p: [200, 25], hip: [200, 120] },
       uparm: { w: 223, h: 337, p: [109, 76], e: [64, 303] },
@@ -70,7 +71,43 @@ const RIGDATA = (() => {
       foot: { w: 268, h: 155, p: [60, 40], sole: 148 },
       "leg-bent": { w: 262, h: 431, p: [132, 60], e: [70, 401] },
     } },
+    "nordf-iron": { ppu: 23.6, parts: {
+      head: { w: 323, h: 553, p: [181, 290], nw: 114 },
+      torso: { w: 340, h: 471, p: [190, 425], s: [88, 150], n: [175, 30], cut: 415 },
+      pelvis: { w: 441, h: 423, p: [235, 25], hip: [235, 135] },
+      uparm: { w: 250, h: 389, p: [130, 84], e: [77, 355] },
+      forearm: { w: 169, h: 365, p: [84, 51], e: [95, 332] },
+      "hand-open": { w: 283, h: 186, p: [57, 64], e: [252, 104] },
+      "hand-fist": { w: 230, h: 159, p: [60, 68], e: [211, 77] },
+      thigh: { w: 208, h: 521, p: [106, 49], e: [81, 481] },
+      shin: { w: 217, h: 471, p: [112, 95], e: [98, 443] },
+      foot: { w: 285, h: 208, p: [75, 50], sole: 196 },
+      "leg-bent": { w: 354, h: 516, p: [174, 78], e: [155, 496] },
+    } },
+    "nordf-steel": { ppu: 23.6, parts: {
+      head: { w: 323, h: 558, p: [178, 292], nw: 115 },
+      torso: { w: 359, h: 493, p: [200, 445], s: [82, 155], n: [185, 25], cut: 435 },
+      pelvis: { w: 460, h: 482, p: [235, 25], hip: [235, 140] },
+      uparm: { w: 275, h: 392, p: [139, 85], e: [83, 353] },
+      forearm: { w: 162, h: 399, p: [81, 50], e: [87, 371] },
+      "hand-open": { w: 293, h: 191, p: [61, 68], e: [265, 103] },
+      "hand-fist": { w: 249, h: 166, p: [62, 70], e: [229, 87] },
+      thigh: { w: 212, h: 521, p: [107, 44], e: [86, 483] },
+      shin: { w: 222, h: 472, p: [115, 95], e: [99, 448] },
+      foot: { w: 298, h: 216, p: [80, 45], sole: 205 },
+      "leg-bent": { w: 359, h: 499, p: [179, 75], e: [165, 478] },
+    } },
   };
+  /* heads for the other races (rig-head-<race><m|f>.webp), worn on any set: nw is the neck width (1x px), and the head is
+     drawn at set head nw / this nw, so the neck fills the set's collar the way the Nord head does (the pictures were scaled
+     so the faces match the Nord faces); p = the neck, set as far below the chin as on the Nord heads; cut = the row below
+     which the rest of the painted neck stub is hidden (it would lie over the armour's collar) */
+  const HEADS = {
+    dunmerm: { w: 295, h: 356, p: [116, 309], nw: 110, cut: 322 }, dunmerf: { w: 354, h: 554, p: [157, 347], nw: 110, cut: 361 },
+    khajiitm: { w: 303, h: 373, p: [104, 305], nw: 110, cut: 318 }, khajiitf: { w: 377, h: 597, p: [158, 372], nw: 110, cut: 385 },
+    argonianm: { w: 362, h: 374, p: [123, 275], nw: 110, cut: 289 }, argonianf: { w: 407, h: 444, p: [155, 310], nw: 110, cut: 323 },
+  };
+  const headFile = (k) => `rig-head-${k}`;
   const file = (set, part) => `rig-${set}-${part}`;
 
   /* ---- clips, in the same controls as figart.js (so the fight replay's numbers drive both):
@@ -173,6 +210,6 @@ const RIGDATA = (() => {
      effects stay where the scene puts them); the body, legs, hips and head follow these clips. */
   const MOVE_CLIP = { sword: "swing", dagger: "thrust", axe: "swing", mace: "swing", club: "swing", fist: "thrust", spear: "thrust", greatsword: "swing2h", battleaxe: "swing2h", warhammer: "swing2h",
     bow: "bow", crossbow: "bow", bash: "bash", block: "block", cast: "cast", staff: "cast", self: "cast", drain: "cast", shout: "cast", potion: "idle", wait: "idle" };
-  return { RES, PARTS, SETS, CLIPS, MOVE_CLIP, file };
+  return { RES, PARTS, SETS, HEADS, CLIPS, MOVE_CLIP, file, headFile };
 })();
 if (typeof module !== "undefined") module.exports = RIGDATA;

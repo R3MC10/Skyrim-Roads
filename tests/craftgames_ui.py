@@ -26,32 +26,30 @@ async def main():
         async def wait_game(name):
             await pg.wait_for_selector("#craftgame", timeout=5000)
             return await pg.evaluate("CG.state()?.game")
+        async def wait_forge():
+            await pg.wait_for_selector("#smithgame", timeout=5000)
+            return "hammer" if await pg.evaluate("!!SMITHGAME.state()") else None
         async def play_hammer(good=True, shot=None):
-            await pg.evaluate("CG.state().speed=0.03")   # slow the marker: the test machine is too laggy to aim at full speed
-            for i in range(3):
-                for _ in range(400):
-                    d = await pg.evaluate("(()=>{const s=CG.state(); return s? Math.abs(s.pos-s.center) - s.zone/5 : -1})()")
-                    if (d <= 0) == good: break
-                    await pg.wait_for_timeout(8)
-                if shot and i == 1: await (await pg.query_selector(".cgcard")).screenshot(path=shot)
-                if good: await pg.evaluate("(()=>{const s=CG.state(); if(s){ s.pos=s.center; s.speed=0.0; } })()")   # aim exactly (the laggy test machine can't time it), then a real tap
-                await tap("pointerdown"); await tap("pointerup")
-                await pg.evaluate("CG.state() && (CG.state().speed=0.03)")
-                await pg.wait_for_timeout(60)
-            await pg.wait_for_selector("#craftgame", state="detached", timeout=20000)
+            # weapons and armor now go through the forging game (smithgame.js): its bot plays it, well or not at all
+            await pg.evaluate("(g)=>{clearInterval(window.__sgbot); window.__sgbot=setInterval(()=>{const S=SMITHGAME.state(); if(S) SMITHGAME.botStep(S, g?1:0)},16)}", good)
+            if shot:
+                await pg.wait_for_function("SMITHGAME.state()?.phase==='hammer' && SMITHGAME.state().spot", timeout=15000)
+                await (await pg.query_selector("#smithgame")).screenshot(path=shot)
+            await pg.wait_for_selector("#smithgame", state="detached", timeout=60000)
+            await pg.evaluate("clearInterval(window.__sgbot)")
         # ---- smithing: hammer, played well → masterful/perfect and a temper bonus
         await click(pg, "[data-tab=map]"); await click(pg, "[data-tab=town]"); await pg.wait_for_timeout(300); await click(pg, "[data-id=forge]"); await pg.wait_for_timeout(300)
         await click(pg, "[data-act=smake][data-id=iron_sword]")
-        res["hammer"] = await wait_game("hammer")
+        res["hammer"] = await wait_forge()
         await play_hammer(True, "cg_hammer_ink.png")
         res["sword_msg"] = await pg.evaluate("[...document.querySelectorAll('.toast,#toast,.msg')].map(e=>e.innerText).join('|').slice(0,200)")
         res["sword"] = await pg.evaluate("(()=>{const r=window.__dbg.save().inv.filter(r=>r.item==='iron_sword').pop(); return [r?.mw, r?.temper]})()")
         # quick craft button: plain result
-        await clean(pg); await click(pg, "[data-act=smake][data-id=iron_dagger]"); await wait_game("hammer"); await pg.click("#cgquick"); await pg.wait_for_selector("#craftgame", state="detached", timeout=3000)
+        await clean(pg); await click(pg, "[data-act=smake][data-id=iron_dagger]"); await wait_forge(); await pg.click("#sgquick"); await pg.wait_for_selector("#smithgame", state="detached", timeout=3000)
         res["dagger_quick"] = await pg.evaluate("(()=>{const r=window.__dbg.save().inv.filter(r=>r.item==='iron_dagger').pop(); return [r?.mw||null, r?.temper||0]})()")
         # a second, badly played hammer
         await clean(pg)
-        await click(pg, "[data-act=smake][data-id=iron_war_axe]"); await wait_game("hammer"); await play_hammer(False, "cg_hammer_bad.png")
+        await click(pg, "[data-act=smake][data-id=iron_war_axe]"); await wait_forge(); await play_hammer(False, "cg_hammer_bad.png")
         res["axe_bad"] = await pg.evaluate("(()=>{const r=window.__dbg.save().inv.filter(r=>r.item==='iron_war_axe').pop(); return [r?.mw||null, r?.temper||0, SMITH.count(window.__dbg.save(),'iron_war_axe')]})()")
         # ---- jewellery: precision ring
         await clean(pg); await click(pg, "[data-act=fgroup][data-id=jewel]"); await pg.wait_for_timeout(200)
@@ -123,7 +121,7 @@ async def main():
         await pg.click("#cgquick"); await pg.wait_for_function("window.__rg", timeout=4000); res["rune_quick"] = await pg.evaluate("window.__rg")
         # ---- "always play" checkbox is remembered in settings
         await pg.evaluate("window.__rg=null; CG.run('hammer',{skill:20},(g)=>window.__rg=g)")
-        await pg.click("#cgpref"); await pg.click("#cgquick"); await pg.wait_for_function("window.__rg", timeout=5000)
+        await pg.click("#sgpref"); await pg.click("#sgquick"); await pg.wait_for_function("window.__rg", timeout=5000)
         res["pref_off"] = [await pg.evaluate("window.__rg"), await pg.evaluate("JSON.parse(localStorage.getItem('rotn_prefs')||'{}').craftGame")]
         await pg.screenshot(path="cg_page.png")
         print("results:", res)

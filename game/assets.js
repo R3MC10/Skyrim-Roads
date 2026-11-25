@@ -19,12 +19,16 @@
               frostatronach stormatronach dremora chaurus mudcrab horker riekling ashspawn
      horse-<coat>-<pose>      ~1024 max  painted horses (horseart.js): transparent, side view facing right, saddled, no rider,
                                          hooves on the bottom edge, trimmed. poses stand gallop rear down (lying, head right).
-                                         Have: grey (all four), bay (stand). A missing coat borrows the grey picture, tinted;
+                                         Have: grey (all four), black and chestnut (stand gallop down),
+                                         bay (stand). A missing coat borrows the grey picture, tinted;
                                          add new files to HORSEART.HAVE (and their seat point to META). WebP q88.
      rig-<who>-<set>-<part>   ~300-1100  painted fighter parts (rig.js; joints measured in rigdata.js): transparent, side view
                                          facing right, 2x Lanczos of the trimmed cut-outs, WebP q84. who: nordm nordf · set: leather
-                                         iron steel (nordf: leather) · part: head torso pelvis uparm forearm hand-open hand-fist thigh
-                                         shin foot leg-bent. A set is used once all 11 parts load; until then the ink figure stays.
+                                         iron steel (both nordm and nordf) · part: head torso pelvis uparm forearm hand-open hand-fist
+                                         thigh shin foot leg-bent. A set is used once all 11 parts load; until then the ink figure stays.
+     rig-head-<race><m|f>     ~430-650   painted heads for other races on the same bodies (rig.js; RIGDATA.HEADS): dunmer khajiit
+                                         argonian, m/f. Scaled so the neck is 110 px at 1x (like the Nord necks), trimmed, 2x, WebP q84.
+                                         A missing one keeps the Nord head with a skin tint.
      rig-w-<pic>              ~200-460   painted weapons and shields the painted fighters hold (riggear.js; grip points in its
                                          PIV table): transparent, trimmed, WebP q86. Weapons lie flat, point right: sword
                                          sword-iron dagger greatsword axe battleaxe mace staff (360/330/200/460/320/440/330/460
@@ -60,6 +64,11 @@
                                          4×2: blood-decals (384² cells), oil/green/ichor/sap-decals (192² cells); <liquid>-drops (4×2 of
                                          48², flying drops, head right); blood-drips (4×128×160, body stains). The rest from
                                          scripts/make_gfx.py: dust bonedust frost embers motes (10×192²), shock (8×192²), sparks (8×160²).
+     mg-smithing-bg           2048×1152  painted smithy for the forging mini-game (smithgame.js): forge left, anvil centre, quench
+                                         barrel right. WebP q80. Drawn fallback if missing.
+     mg-smith-blade1 … 4      ~1170-1350 ×~125  blade stages (bar, rough, cooling, finished), transparent, tang left, tip right,
+                                         trimmed, all cut from one sheet at the same scale (keep it). WebP q85.
+     mg-smith-hammer, -tongs  785×278, 892×169  transparent tools, horizontal, head / jaws on the right. WebP q85.
      mg-fishing-bg            2048×1152  painted lake at dusk for the fishing mini-game (fishart.js), 16:9, WebP q82. Water wobble,
                                          glints, mist and weather are drawn over it; without it the ink lake stays.
      fish-<kind>              ~720 wide  painted fish, transparent, side view facing right, trimmed, WebP q86 (fishart.js SPR maps
