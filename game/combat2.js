@@ -167,7 +167,7 @@ const COMBAT2 = (() => {
       if (ar && mem.sess && typeof FOEINTENT !== "undefined") { try { FOEINTENT.decorate(el, mem.sess); } catch { /* the arrow is a nicety */ } }
     }
     // the foe's plate: over its head, inside the screen, under the ribbon (and the boss bar)
-    const plate = el.querySelector(".c2ov .tbu.foe");
+    const plate = typeof FOEPANEL !== "undefined" ? null : el.querySelector(".c2ov .tbu.foe");   // [foepanel] places it (below)
     if (plate) {
       const bf = el.querySelector(".bfwrap"), minTop = Math.max(top, bf ? bf.getBoundingClientRect().bottom - tin.getBoundingClientRect().top : 0) + 4;
       const pw = plate.offsetWidth, ph = plate.offsetHeight;
@@ -178,6 +178,7 @@ const COMBAT2 = (() => {
       if (lg && !wide) lg.style.maxWidth = px(Math.max(120, Math.min(W * 0.62, Tp < top + 70 ? L - 14 : W * 0.62)));
     }
     if (FF) { FF.party(el, { W, H, top, dh, wide }); FF.unclash(el, { W, H, top, dh }); }   // a full party: more columns / slimmer plates instead of running off screen
+    if (typeof FOEPANEL !== "undefined") FOEPANEL.place(el, { W, H, top, dh, wide });   // [foepanel] the plate over the foe's head (never on a fighter), the log in a free corner
   }
   let rsT = null;
   if (DOM && typeof addEventListener === "function") addEventListener("resize", () => { clearTimeout(rsT); rsT = setTimeout(() => { const el = document.getElementById("tbf"); if (el) place(el); }, 60); });

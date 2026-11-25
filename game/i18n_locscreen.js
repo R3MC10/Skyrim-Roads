@@ -31,7 +31,7 @@ Object.assign(I18N_EXTRA.words, {
   "Legendary beast": "Legendarna bestia", "A contract nearby": "Zlecenie w pobliżu", "Cleared for now": "Na razie oczyszczone", "Go inside": "Wejdź do środka",
   "Your stone": "Twój kamień", "Take its blessing": "Przyjmij błogosławieństwo", "Leave an offering": "Zostaw dar", "Work, trade, rest": "Praca, handel, odpoczynek",
   "See who holds it": "Zobacz, kto go trzyma", "What's here": "Co tu jest",
-  // patch note b302
+  // patch note b307
   "Every place opens full screen": "Każde miejsce otwiera się na pełnym ekranie",
   "Arriving in a town, a farm, a camp, a cave mouth, a shrine or any other place now opens it full screen: a painted picture of the place, its name in big letters, the hold, a short line about it, the time and the weather.":
     "Przybycie do miasta, na farmę, do obozu, przed wejście do jaskini, do kapliczki czy w inne miejsce otwiera je teraz na pełnym ekranie: malowany obraz miejsca, jego nazwa wielkimi literami, władztwo, krótki opis, godzina i pogoda.",
