@@ -34,6 +34,11 @@
                                          sword-iron dagger greatsword axe battleaxe mace staff (360/330/200/460/320/440/330/460
                                          wide). bow bow-drawn arrow, shield shield-side shield-kite shield-kite-side (200-300 tall).
                                          Missing ones (warhammer spear club crossbow) use the shaded drawings.
+     bust-<race>              512×512    painted race busts (bustart.js): transparent, head and shoulders, 3/4 view facing right,
+                                         plain linen tunic, bottom fades out. WebP q85. races: nord imperial breton redguard altmer
+                                         bosmer dunmer orc khajiit argonian. One sex each (BUSTART.SEX: m f f m f m f m f m); for the
+                                         other sex the bust shows as a round race crest. Shown in the race picker, the Hero page and
+                                         the paper doll's corner; the drawn portrait stays until the file loads.
      shop-<id>                1200×375   painted banners for town sections (shown above each shop's list)
        ids: general forge (also blacksmith) inn (also cook) alchemy wizard (also enchanter) market stables home hall
             fence arena mine — raw 3:2 paintings go through art/conv: crop the middle band, WebP q80

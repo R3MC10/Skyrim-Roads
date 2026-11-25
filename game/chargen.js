@@ -86,9 +86,11 @@ const CHARGEN = (() => {
     return `<div class="cgrow cgsws"><span class="cglab" id="cgl-${k}">${esc(L(label))}</span>
       <div class="cgsw" role="radiogroup" aria-labelledby="cgl-${k}">${cols.map((c, i) => `<button class="sw ${st.app[k] === i ? "on" : ""}" data-cg="set" data-k="${k}" data-v="${i}" role="radio" aria-checked="${st.app[k] === i}" aria-label="${esc(L(label))} ${i + 1}" style="--c:${c}"></button>`).join("")}</div></div>`;
   }
+  /* the painted race bust on a dark panel (bustart.js); the drawn round portrait until it loads */
+  const raceFace = (id) => { const f = HEROART.portrait({ race: id, id: "preview-" + id }, 52); return typeof BUSTART !== "undefined" ? BUSTART.pick(id, f) : f; };
   function raceTab() {
     const r = D.RACES[st.race], ab = RACEFX.ability(st.race), pw = typeof POWERS !== "undefined" && POWERS.RACE ? POWERS.RACE[st.race] : null;
-    return `<div class="rgrid cgraces">${Object.entries(D.RACES).map(([id, x]) => `<button class="rpick ${id === st.race ? "on" : ""}" data-race="${id}" aria-pressed="${id === st.race}">${HEROART.portrait({ race: id, id: "preview-" + id }, 52)}<span>${esc(x.name)}</span></button>`).join("")}</div>
+    return `<div class="rgrid cgraces bustgrid">${Object.entries(D.RACES).map(([id, x]) => `<button class="rpick ${id === st.race ? "on" : ""}" data-race="${id}" aria-pressed="${id === st.race}">${raceFace(id)}<span>${esc(x.name)}</span></button>`).join("")}</div>
       <div class="rshow cgcard"><div class="rfig heroprev" title="${esc(L("In your starting gear"))}">${HEROART.figure({ look: lookNow(true) }, 120, 165)}</div>
         <div class="rtxt"><h3>${esc(r.name)}</h3><p class="sub">${esc(L(RACEFX.lore(st.race)))}</p>
           <h4>${esc(L("Starting skills"))}</h4>

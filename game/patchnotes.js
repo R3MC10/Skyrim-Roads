@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b224-busts", build: 224, date: "25 Nov 2026", title: "Painted faces for every race", items: [
+      "Picking a race now shows a painted portrait of each one on a dark panel, with the race name underneath.",
+      "The Character page shows your race's painted portrait, and the Worn screen in your inventory has a small one in the corner of your paper doll.",
+      "There is one painting per race, of a man or a woman. If your hero is the other sex, the painting shows as a round race crest instead of as your face.",
+      "Fights and the paper doll still show your hero in the gear you wear.",
+    ] },
     { id: "b222-overlays", build: 222, date: "25 Nov 2026", title: "One thing on screen at a time", items: [
       "The first-fight tip no longer sits on top of the VICTORY card. Results always come first, then windows that ask you something, then tips, then messages.",
       "In your first turn-by-turn fight the big wall of text is gone. Instead you get short one-line hints right next to the turn order, your moves and End turn, and each one goes away as soon as you use it.",

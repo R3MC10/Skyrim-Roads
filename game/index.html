@@ -4326,6 +4326,20 @@ canvas.dunfx{position:absolute;inset:0;width:100%;height:100%;pointer-events:non
   .dun .dmapcard{scroll-margin-top:8px}
 }
 @media (min-width:900px) and (min-height:520px){.dstrip{display:none}}
+/* [busts] painted race busts (bustart.js): race picker tiles, Hero page portrait, inventory crest */
+.bustslot{display:inline-flex;align-items:center;justify-content:center;flex:none}
+.bustslot img.bustimg{display:block;width:100%;height:100%;object-fit:contain;border:0;box-shadow:none;border-radius:0;max-width:none}
+.bustgrid .rpick{padding:4px 4px 6px;justify-content:flex-start}
+.bust-pick.ok{width:100%;max-width:132px;aspect-ratio:1/1;border-radius:3px;overflow:hidden;background:radial-gradient(ellipse at 50% 38%,#353a43 0%,#1d2027 58%,#121418 100%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.05),inset 0 -14px 18px rgba(0,0,0,.35)}
+.bustgrid .rpick.on .bust-pick.ok{box-shadow:inset 0 0 0 1px rgba(226,187,100,.55),inset 0 0 18px rgba(226,187,100,.18)}
+.bustgrid .rpick:not(.on) .bust-pick.ok img{filter:saturate(.82) brightness(.9)}
+.bustgrid .rpick:hover .bust-pick.ok img{filter:none}
+.bust-hero.ok{width:220px;height:220px;border:1px solid #4a4237;border-radius:8px;overflow:hidden;background:radial-gradient(ellipse at 50% 36%,#383d46 0%,#1e2128 60%,#121418 100%);box-shadow:0 2px 10px rgba(0,0,0,.35),inset 0 -18px 24px rgba(0,0,0,.35)}
+.bust-hero.ok.bust-crest{width:196px;height:196px;margin:12px;border-radius:50%;border:1px solid rgba(214,178,94,.45);box-shadow:0 0 0 4px #15171b,0 0 0 5px rgba(214,178,94,.22),0 2px 12px rgba(0,0,0,.45)}
+.bust-hero.ok.bust-crest img{filter:saturate(.7) sepia(.12);transform:scale(1.04) translateY(4px)}
+.dfig{position:relative}
+.bust-badge.ok{position:absolute;top:-8px;left:max(0px,calc(50% - 99px));width:var(--bs,60px);height:var(--bs,60px);border-radius:50%;overflow:hidden;border:1px solid rgba(214,178,94,.5);background:radial-gradient(ellipse at 50% 38%,#353a43 0%,#16181d 100%);box-shadow:0 2px 8px rgba(0,0,0,.5);pointer-events:none}
+.dfig .bust-badge img.bustimg{border:0;border-radius:0;box-shadow:none;transform:scale(1.2) translateY(6%)}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -4471,6 +4485,7 @@ canvas.dunfx{position:absolute;inset:0;width:100%;height:100%;pointer-events:non
 <script src="beastart.js"></script>
 <script src="gearlook.js"></script>
 <script src="heroart.js"></script>
+<script src="bustart.js"></script>
 <script src="figart.js"></script>
 <script src="rigdata.js"></script>
 <script src="riggear.js"></script>
