@@ -11,7 +11,7 @@ async def main():
         await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=ro"); await pg.wait_for_timeout(1800)
         await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Roamer"); await pg.click("#begin"); await pg.wait_for_timeout(1200)
         await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
-        await pg.click("[data-tab=map]"); await pg.evaluate("scrollTo(0,0)"); await pg.wait_for_timeout(400)
+        await pg.click("[data-tab=world]"); await pg.evaluate("scrollTo(0,0)"); await pg.wait_for_timeout(400)
         print("hint:", "roam there" in await pg.inner_text("#side"))
         box = await pg.locator("#map").bounding_box()
         picked = None

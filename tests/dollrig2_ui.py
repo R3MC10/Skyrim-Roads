@@ -113,7 +113,7 @@ async def main():
                     await pg.evaluate("document.querySelectorAll('#modal,.toast').forEach(m=>m.remove())")
                     try:
                         if nm == "pc": await pg.keyboard.press("i")   # the PC bar: I opens Items
-                        else: await pg.click("[data-tab=pack]", timeout=2000)
+                        else: await pg.click("[data-tab=hero]", timeout=2000); await pg.click("#side .mn-sub [data-id=\"@items\"]", timeout=2000)   # Hero -> Items
                         await pg.wait_for_selector(".dfront", timeout=2500); break
                     except Exception: await pg.wait_for_timeout(300)
                 for _ in range(40):

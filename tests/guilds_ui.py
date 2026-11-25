@@ -15,7 +15,7 @@ async def main():
                 except Exception: await pg.wait_for_timeout(300)
             await pg.click(sel, timeout=3000)
         async def journal():
-            await click("[data-tab=map]"); await click("[data-tab=log]"); await pg.wait_for_timeout(300)
+            await click("[data-tab=world]"); await click("[data-tab=log]"); await pg.wait_for_timeout(300)
             await pg.evaluate("document.querySelector('#j-quests')?.scrollIntoView()")
         await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=gu"); await pg.wait_for_timeout(1500)
         await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Sly"); await pg.click("#begin"); await pg.wait_for_timeout(1200)

@@ -48,10 +48,10 @@ const MAPPANEL = (() => {
 
   // ------------------------------------------------------------ drawing
   /* the merged card. rows as for merge(); foot = extra HTML under the list (the ideas' switch-off line) */
-  function card(rows, foot = "") {
+  function card(rows, foot = "", max = 0) {   // max: rows shown before "Show more" (the World screen shows one goal: tabs5)
     const list = merge(rows); if (!list.length) return "";
-    const ready = list.filter((r) => r.kind === "ready").length;
-    const keep = showAll ? list : list.slice(0, MAX), more = list.length - MAX;
+    const ready = list.filter((r) => r.kind === "ready").length, lim = max > 0 ? max : MAX;
+    const keep = showAll ? list : list.slice(0, lim), more = list.length - lim;
     return `<div class="panel nextcard rmd-card" id="rmd-card"><h2>What to do next${ready ? ` <b class="rmd-n">${ready} ready</b>` : ""}</h2><div class="list">${keep.map((r) => r.html).join("")}</div>
       ${more > 0 ? `<button class="linkbtn mp-more" data-mp="more" aria-expanded="${showAll}">${showAll ? "Show less" : `Show ${more} more`}</button>` : ""}${foot}</div>`;
   }

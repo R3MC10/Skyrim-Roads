@@ -18,7 +18,7 @@ async def main():
             await pg.wait_for_timeout(1500); await clear(pg)
             return pg
         async def town(pg, sec):
-            await clear(pg); await pg.click("[data-tab=map]"); await pg.click("[data-tab=town]"); await pg.wait_for_timeout(200); await pg.click(f"[data-id={sec}]"); await pg.wait_for_timeout(300)
+            await clear(pg); await pg.click("[data-tab=world]"); await pg.click("[data-tab=town]"); await pg.wait_for_timeout(200); await pg.click(f"[data-id={sec}]"); await pg.wait_for_timeout(300)
         A = await phone("va", "Alfa"); B = await phone("vb", "Beta")
         await town(A, "home"); await A.click("[data-act=buyhome], [data-act=home]") if await A.query_selector("[data-act=buyhome]") else print("buttons:", await A.evaluate("[...document.querySelectorAll('#side [data-act]')].map(b=>b.dataset.act).join(',')"))
         await A.wait_for_timeout(300)

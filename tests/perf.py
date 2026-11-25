@@ -32,13 +32,13 @@ async def main():
         cdp = await pg.context.new_cdp_session(pg); await cdp.send("Emulation.setCPUThrottlingRate", {"rate": 4})
         await pg.wait_for_timeout(2000)
         # tab switch cost
-        for t in ["log","town","hero","map","log"]:
+        for t in ["log","town","hero","world","log"]:
             ms = await pg.evaluate(f"()=>{{const t0=performance.now(); document.querySelector('[data-tab={t}]').click(); return Math.round(performance.now()-t0);}}")
             print(f"tab {t}: {ms} ms")
             for _ in range(3):
                 if await pg.query_selector("#modal"): await pg.evaluate("document.querySelector('#modal').remove()")
         # long tasks + frame rate on map
-        await pg.evaluate("document.querySelector('[data-tab=map]').click(); scrollTo(0,0)")
+        await pg.evaluate("document.querySelector('[data-tab=world]').click(); scrollTo(0,0)")
         stats = await pg.evaluate("""()=>new Promise(res=>{const long=[]; const ob=new PerformanceObserver(l=>l.getEntries().forEach(e=>long.push(Math.round(e.duration)))); ob.observe({entryTypes:['longtask']});
           let n=0, t0=performance.now(), last=t0, worst=0; const f=(ts)=>{n++; worst=Math.max(worst, ts-last); last=ts; if(ts-t0<5000) requestAnimationFrame(f); else { ob.disconnect(); res({fps: Math.round(n/((ts-t0)/1000)), worstFrame: Math.round(worst), longTasks: long.length, longest: Math.max(0,...long)}); } }; requestAnimationFrame(f);})""")
         print("map 5 s at 4x slower CPU:", stats)

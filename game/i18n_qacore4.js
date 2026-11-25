@@ -117,7 +117,7 @@ const I18N_QACORE4 = (() => {
     for (const [en, pl] of I18N_STORY.pats.slice()) if (ICON.test(en)) { const k = en.replace(ICON, ""); if (!have.has(k) && /[a-z]{2}/i.test(k.replace(/\{\w+\}/g, ""))) { have.add(k); I18N_STORY.pats.push([k, pl.replace(ICON, "")]); } }   // never a bare "{0}"
     I18N_STORY.pats.push(
       ["A dragon soul will unlock it (Magic → Shouts).", "Odblokujesz je duszą smoka (Magia → Okrzyki)."],
-      ["A dragon soul will unlock it (Character tab).", "Odblokujesz je duszą smoka (zakładka Postać)."],
+      ["A dragon soul will unlock it (Hero tab).", "Odblokujesz je duszą smoka (zakładka Bohater)."],
       ["This is the master of {0}.", "Oto pan tego miejsca: {0}."],
       ["good from about level {0}.", "w sam raz mniej więcej od poziomu {0}."],
       ["You light a torch and step into {0}.", "Zapalasz pochodnię i wchodzisz do: {0}."],

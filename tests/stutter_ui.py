@@ -100,7 +100,7 @@ async def make_char(pg, name, prof):
 
 async def to_map(pg):
     await pg.evaluate(CLEAR)
-    await pg.evaluate("()=>{ if (typeof TABMENU!=='undefined' && TABMENU.closeHub) TABMENU.closeHub(); document.querySelector('#sky') && window.__ui?.back?.(); const t=document.querySelector('[data-tab=map]'); t && t.click(); scrollTo(0,0); }")
+    await pg.evaluate("()=>{ if (typeof TABMENU!=='undefined' && TABMENU.closeHub) TABMENU.closeHub(); document.querySelector('#sky') && window.__ui?.back?.(); const t=document.querySelector('[data-tab=world]'); t && t.click(); scrollTo(0,0); }")
     await pg.wait_for_timeout(1200); await pg.evaluate(CLEAR)
 
 PROFILE = os.environ.get("PERF_PROFILE")

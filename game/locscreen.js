@@ -82,7 +82,7 @@ const LOCSCREEN = (() => {
     home: [13, 28], homes: [25, 28], halls: [75, 28], mine: [87, 28],
     homestead: [13, 39], train: [25, 39], wizard: [38, 39], hire: [50, 39], hall: [62, 39], enchanter: [75, 39], alchemy: [87, 39],
     blacksmith: [13, 50], forge: [25, 50], market: [38, 50], notice: [50, 50], jobs: [62, 50], inn: [75, 50], cook: [87, 50],
-    stables: [13, 61], general: [25, 61], news: [50, 61], streets: [62, 61], fish: [87, 61],
+    stables: [13, 61], general: [25, 61], temple: [38, 61], news: [50, 61], streets: [62, 61], fish: [87, 61],
     carriage: [13, 72], gather: [25, 72], caravans: [87, 72] };
   const SITE_POS = { main: [50, 50], gather: [25, 72], camp: [75, 72], hunt: [87, 50], news: [50, 72] };
   const KIND_POS = { city: TOWN_POS, town: TOWN_POS, farm: SITE_POS, dungeon: SITE_POS, camp: SITE_POS, fort: SITE_POS, lair: SITE_POS, stone: SITE_POS, shrine: SITE_POS, landmark: SITE_POS };

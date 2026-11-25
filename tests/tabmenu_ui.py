@@ -90,7 +90,7 @@ async def main():
         await pg.evaluate("__ui.back()"); await pg.wait_for_timeout(300); s = await st(); ok(s["hub"], "back from skills -> compass")
         await pg.click("#tw [data-twgo=map]"); await pg.wait_for_timeout(400); s = await st(); ok(not s["hub"] and s["tab"] == "map", "tap Map")
         await pg.screenshot(path=OUT + "map_btn.png")
-        await pg.click("#twBtn"); await pg.wait_for_timeout(400); s = await st(); ok(s["hub"], "compass button opens compass")
+        await pg.evaluate("TABMENU.openHub()"); await pg.wait_for_timeout(400); s = await st(); ok(s["hub"], "Tab key / swipe opens the compass")
         await pg.click("#tw [data-twq=log]"); await pg.wait_for_timeout(400); s = await st(); ok(s["tab"] == "log" and not s["hub"], "quick Journal")
         # travelling: task line
         await pg.evaluate("""()=>{const S=__dbg.save(); S.location=null; G.startTrip(S,'Riverwood',WORLD.places.Riverwood.slice(0,2)); }""")

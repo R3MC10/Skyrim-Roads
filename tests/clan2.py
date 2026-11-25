@@ -16,7 +16,7 @@ async def main():
             await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", name); await pg.click("#begin"); await pg.wait_for_timeout(4000)
             await clear(pg); return pg
         async def log(pg):
-            await clear(pg); await pg.click("[data-tab=map]"); await pg.click("[data-tab=log]"); await pg.wait_for_timeout(300)
+            await clear(pg); await pg.click("[data-tab=world]"); await pg.click("[data-tab=log]"); await pg.wait_for_timeout(300)
         A = await phone("ca1", "Alfa"); B = await phone("cb1", "Beta")
         await log(A)
         await A.fill("#clanname", "Sons of the North"); await A.fill("#clantag", "sotn")
@@ -36,7 +36,7 @@ async def main():
         # house + banner: give A a house in Riften
         await A.evaluate("()=>{const S=window.__dbg.save(); S.homes={Riften:{chest:[],garden:0}}; S.discovered.push('Riften'); S.location='Riften'; [S.x,S.y]=WORLD.places.Riften;}")
         await A.wait_for_timeout(31000)
-        await clear(A); await A.click("[data-tab=map]"); await A.evaluate("scrollTo(0,0)"); await A.wait_for_timeout(800)
+        await clear(A); await A.click("[data-tab=world]"); await A.evaluate("scrollTo(0,0)"); await A.wait_for_timeout(800)
         await A.screenshot(path="clan_map.png", clip={"x":0,"y":120,"width":390,"height":480})
         print("B card tag seen by A:", await A.evaluate("(document.querySelector('#side').innerText.match(/\\[SOTN\\]/)||[''])[0]"))
         print("errors:", errs)

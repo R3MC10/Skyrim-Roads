@@ -5,7 +5,7 @@ const GUIDE = (() => {
   function mark(s, k) { if (!s || flag(s, k)) return false; s.guide = { ...(s.guide || {}), [k]: 1 }; return true; }
   //  id, title, what to do (plain words), done(s), where "Show me" goes: {tab, shop?, soc?}
   const STEPS = [
-    ["travel", "Travel to a town", "Open Travel, tap a town on the map or press Go in the list. You keep walking even when the app is closed.", (s) => s.discovered.length > D.START_DISCOVERED.length, { tab: "map" }],
+    ["travel", "Travel to a town", "On the World tab, tap a town on the map or pick one under Where to?. You keep walking even when the app is closed.", (s) => s.discovered.length > D.START_DISCOVERED.length, { tab: "map" }],
     ["trade", "Buy and sell", "In a town, open Area → General goods. Switch between Buy and Sell at the top. Your most valuable things are listed first.", (s) => flag(s, "trade"), { tab: "town", shop: "general" }],
     ["dungeon", "Clear a dungeon", "Travel to a dungeon (the list shows how far) and press Go inside. Pick your way room by room down to the boss. You can leave between rooms.", (s) => Object.keys(s.cleared || {}).length > 0, { tab: "map" }],
     ["level", "Level up and pick a perk", "Skills grow as you use them. When you level up, a dot appears on Hero: choose Health, Magicka or Stamina, then spend your perk point.", (s) => s.level >= 2 && Object.keys(s.perks || {}).length > 0, { tab: "hero" }],

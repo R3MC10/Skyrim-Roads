@@ -19,7 +19,7 @@ async def main():
         print("toast:", await pg.evaluate("document.querySelector('#toast')?.textContent"))
         await pg.click("[data-act=harmor][data-id=steel]"); await pg.wait_for_timeout(300)
         el = await pg.query_selector("#side"); await el.screenshot(path="horse_stables.png")
-        await pg.click("[data-tab=map]"); await pg.wait_for_timeout(200)
+        await pg.click("[data-tab=world]"); await pg.wait_for_timeout(200)
         await pg.click("[data-act=go] >> nth=0"); await pg.wait_for_timeout(800)
         await close()
         print("trip:", (await pg.inner_text("#fpt .fpt-bar")).replace("\n"," | ")[:160])

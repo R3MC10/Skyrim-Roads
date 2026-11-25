@@ -52,7 +52,7 @@ async def main():
             place = await A.evaluate(PLACE_JS)
             check(f"[{style}] a deep dungeon exists", bool(place), str(place))
             await A.evaluate(SETUP, place); await clean(A)
-            await A.click("[data-tab=map]"); await A.wait_for_timeout(400); await clean(A)
+            await A.click("[data-tab=world]"); await A.wait_for_timeout(400); await clean(A)
             card = await wait_for(A, "() => !!document.querySelector('.dd-card')", tries=10)
             chips = await A.evaluate("() => [...document.querySelectorAll('.dd-card [data-act=ddtier]')].map(b => b.dataset.t + (b.disabled ? '-off' : '')).join()")
             check(f"[{style}] the place card has the difficulty picker", card and chips == "normal,veteran,legendary,mythic", chips)

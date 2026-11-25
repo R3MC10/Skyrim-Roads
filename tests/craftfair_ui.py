@@ -18,7 +18,7 @@ async def main():
         await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Forger"); await pg.click("#begin"); await pg.wait_for_timeout(1200)
         await pg.evaluate("()=>{const S=window.__dbg.save(); S.location='Whiterun'; [S.x,S.y]=WORLD.places.Whiterun; G.give(S,'mat_iron',6); G.give(S,'mat_strips',4); G.give(S,'recipe_ancient_nord',1); G.give(S,'mat_steel',4);}")
         for _ in range(4): await clear(pg); await pg.wait_for_timeout(300)
-        await click(pg, "[data-tab=map]"); await click(pg, "[data-tab=town]"); await pg.wait_for_timeout(300); await click(pg, "[data-id=forge]"); await pg.wait_for_timeout(300)
+        await click(pg, "[data-tab=world]"); await click(pg, "[data-tab=town]"); await pg.wait_for_timeout(300); await click(pg, "[data-id=forge]"); await pg.wait_for_timeout(300)
         await click(pg, "[data-act=smake][data-id=iron_sword]"); await pg.wait_for_timeout(300)
         print("forge btns:", await pg.evaluate("[...document.querySelectorAll('#side [data-id=forge]')].map(e=>e.outerHTML.slice(0,120)).join(' || ')"))
         for _ in range(3):
@@ -29,7 +29,7 @@ async def main():
         side = await pg.inner_text("#side"); print("found group shows lock:", "Ancient Nord Smithing" in side and "recipe needed" in side, "| forge text:", side[:300].replace("\n"," / "))
         await (await pg.query_selector("#side")).screenshot(path="cf_found.png")
         # open the pack menu, read the recipe
-        await click(pg, "[data-tab=pack]"); await pg.wait_for_timeout(300)
+        await pg.evaluate("__ui.go('items')"); await pg.wait_for_timeout(300)
         rid = await pg.evaluate("window.__dbg.save().inv.find(r=>r.item==='recipe_ancient_nord').id")
         sid = await pg.evaluate("window.__dbg.save().inv.find(r=>r.item==='iron_sword'&&r.cv!=null).id")
         await pg.evaluate("document.querySelector('[data-act=skycat][data-id=all], [data-id=all]')?.click()"); await pg.wait_for_timeout(300)

@@ -26,7 +26,7 @@ async def clear(pg):
 
 async def enter(pg, place, rows=None):
     await pg.evaluate(SETUP, place); await pg.wait_for_timeout(200)
-    await clear(pg); await pg.evaluate("document.querySelector('.tab[data-tab=map], button[data-tab=map]')?.click()"); await pg.wait_for_timeout(300); await clear(pg)   # #side also carries data-tab (hidden on PC)
+    await clear(pg); await pg.evaluate("document.querySelector('.tab[data-tab=world], button[data-tab=world]')?.click()"); await pg.wait_for_timeout(300); await clear(pg)   # #side also carries data-tab (hidden on PC)
     await pg.evaluate("document.querySelector('#dun') || document.querySelector('#side [data-act=enter], [data-act=enter]')?.click()")
     await pg.wait_for_timeout(600)
     check(await pg.evaluate("window.__dbg.save().dungeon?.place") == place, f"inside {place}")

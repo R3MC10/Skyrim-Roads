@@ -19,7 +19,7 @@ async def main():
         await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Buyer"); await pg.click("#begin"); await pg.wait_for_timeout(2500)
         await pg.evaluate("""()=>{ document.querySelectorAll('#modal').forEach(m=>m.remove()); const S=window.__dbg.save(); S.location='Whiterun'; [S.x,S.y]=WORLD.places.Whiterun; S.gold=5000;
           if(!S.discovered.includes('Whiterun')) S.discovered.push('Whiterun'); G.shopsOpen=()=>true; }""")
-        await pg.click("[data-tab=map]"); await pg.click("[data-tab=town]"); await pg.wait_for_timeout(400)
+        await pg.click("[data-tab=world]"); await pg.click("[data-tab=town]"); await pg.wait_for_timeout(400)
         for _ in range(6):
             await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove()); document.querySelectorAll('.toast,#toast').forEach(m=>m.remove())"); await pg.wait_for_timeout(500)
         await pg.evaluate("document.querySelector('[data-act=shop][data-id=wizard]')?.click()"); await pg.wait_for_timeout(900)

@@ -71,7 +71,7 @@ async def main():
             # 2. Alftand: the way down (fight on the lift skipped: straight to the Tower stage)
             await pg.evaluate("""() => { const S = window.__dbg.save(); S.quests.dw_lexicon.stage = DWEMER.STAGE.mzark; DWEMER.sync(S);
               S.location = 'Alftand'; [S.x, S.y] = WORLD.places['Alftand']; S.reach = { at: null, cleared: { warren: G.now(), city: G.now() } }; window.__dbg.publish(); }""")
-            await tab("map")
+            await tab("world")
             try: await pg.wait_for_selector("[data-act=breach][data-k=enter]", state="attached", timeout=20000)
             except Exception: pass
             card = await pg.query_selector("[data-act=breach][data-k=enter]")

@@ -16,7 +16,7 @@ async def main():
             async def clear():
                 await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
             await pg.evaluate("(st)=>{ const S=window.__dbg.save(); const n='Bleak Falls Barrow'; S.location=n; [S.x,S.y]=WORLD.places[n]; S.discovered.push(n); S.cleared={}; S.level=20; S.hpBonus=3000; G.setHealth(S,G.maxHealth(S)); S.skills.Lockpicking.lvl=30; }", style)
-            await clear(); await pg.click("[data-tab=map]"); await pg.wait_for_timeout(300); await clear()
+            await clear(); await pg.click("[data-tab=world]"); await pg.wait_for_timeout(300); await clear()
             # loading card on entering
             await pg.click("[data-act=enter]"); await pg.wait_for_timeout(250)
             lc = await pg.query_selector("#loadcard")
