@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b267-itemdetail", build: 267, date: "25 Nov 2026", title: "Item details beside the list", items: [
+      "On a PC, resting the mouse on an item in your pack shows its details in the right-hand panel instead of a box over the list. Click an item to keep it there; press Esc to let go.",
+      "Weapons, armour, shields and jewellery now show how they compare with what you wear: damage, armour, weight and value, better in green and worse in red. A two-handed weapon is compared with both your hands.",
+      "On a phone, the item details panel at the bottom is solid (the list no longer shows through) and never takes more than about half the screen.",
+      "When you pick one category, the middle column says what it shows: Damage, Armor or Effect.",
+    ] },
     { id: "b266-perksky", build: 266, date: "25 Nov 2026", title: "The perk stars open on what you can take", items: [
       "Opening a skill's stars now shows the perks you can take right away, instead of the top of the sky. On a phone the first stars at the bottom are no longer cut off.",
       "Stars tell you more at a glance: perks you have are gold (with gold lines), ones you can take now shine bright with a slowly pulsing ring, ones that need a higher skill are blue-grey, and ones that need another perk first are dim.",
