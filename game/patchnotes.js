@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b251-fightpos", build: 251, date: "25 Nov 2026", title: "Everyone stands in the right place", items: [
+      "In a fight your party, followers and summons now stand in neat rows behind you, all of them on screen, even a full party of 8 on a phone. Before, some stood off the edge of the screen.",
+      "Foes still waiting their turn now stand behind the one you're fighting, so you can see what's coming.",
+      "Big foes like dragons and giants keep their size but always fit on screen, and the foe's health bar sits over its head, even over a dragon's.",
+      "When a party member swings at the foe, they step up to it and then go back to their place.",
+      "The ring under the one the foe is about to hit is now under the right person.",
+    ] },
     { id: "b250-qafight", build: 250, date: "25 Nov 2026", title: "Fight fixes", items: [
       "Fixed: on phones, casting a heal with a follower along asked you to tap a portrait, but the Magic menu covered every portrait. The bar at the top now has a button for each person you can heal.",
       "Fixed: if the last foe fell between your moves, End turn and every other button could do nothing and the fight never ended. Any tap now finishes the fight.",
