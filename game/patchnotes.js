@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b295-phantomattacks", build: 295, date: "25 Nov 2026", title: "No one swings on their own any more", items: [
+      "In a fight, you, your friends and the foe only swing when they really strike. Catching your breath, the end-of-round burns, bleeds and poison, marking the foe and covering your friends used to show you swinging your weapon. Now they don't.",
+      "When the foe winds up a big blow, takes aim, roars a war cry, drinks a potion, raises a ward or a shield, or slips into the shadows, it no longer swings at you. A short word over the picture says what it did (\"Winds up!\", \"Takes aim!\", \"War cry!\").",
+      "Opening a menu or tapping the hotbar while a blow is still playing no longer plays that blow a second time. In a party fight the picture no longer starts the last move over when news comes from the leader's phone.",
+      "Blows that happen on their own say so on the picture: \"Counter!\" when you punch back after a miss, \"Thorns!\" when your armour bites back, \"Riposte!\" after a dodge.",
+    ] },
     { id: "b294-aitester", build: 294, date: "25 Nov 2026", title: "What would the AI do?", items: [
       "Character → AI & Loadouts has a new card, What would the AI do?: set your health, stamina and magicka, the foe's health, what kind of foe (normal, strong, boss, dragon, caster), how many and whether a friend is down, and it shows the move your loadout would play right now and why.",
       "In Custom and Hybrid it goes through your rules from the top: a tick for the one that fires, a cross and the reason for the ones it skips (like \"health is 80%, rule needs below 40%\").",
