@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b199-rigraces", build: 199, date: "25 Nov 2026", title: "Painted races and a softer swing", items: [
+      "Women in iron or steel armour now wear it in fights too, painted to match, instead of always showing up in leather.",
+      "Dark Elves, Khajiit and Argonians get their own painted faces in fights, for men and women, sized to sit right on the armour. Other races keep the tinted face for now.",
+      "Your sword swing leaves a soft, fading arc that follows the blade, instead of a hard white line shooting up into the sky.",
+      "Damage numbers on the fight screen pop up next to the fighter who took the hit, not floating high in the sky.",
+    ] },
     { id: "b193-rigpolish", build: 193, date: "25 Nov 2026", title: "Painted weapons and better swings", items: [
       "Fighters swing like they mean it: a sword goes up and back over the shoulder, then comes down and forward in one arc, the body turning into the blow and the weight stepping onto the front foot. No more blade sliding through your own head.",
       "Bows are drawn properly: the bow arm straight, the string hand pulled back to the cheek, then the hand flies back as the arrow goes.",
