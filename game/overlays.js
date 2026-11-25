@@ -31,7 +31,7 @@ const OVERLAYS = (() => {
   /* pure: may something at `want` show while `cur` is on screen? (same level is fine: one replaces the other) */
   const allows = (want, cur) => (LEVEL[want] ?? +want) >= (LEVEL[cur] ?? +cur);
 
-  const vis = (el) => !!el && el.isConnected && el.getClientRects().length > 0 && !el.classList.contains("hide") && getComputedStyle(el).visibility !== "hidden" && getComputedStyle(el).display !== "none";
+  const vis = (el) => { if (!el || !el.isConnected || el.classList.contains("hide")) return false; const cs = getComputedStyle(el); return cs.display !== "none" && cs.visibility !== "hidden" && el.getClientRects().length > 0; };   // [perf] cheapest checks first, one style read
   const first = (list) => { for (const q of list) for (const el of document.querySelectorAll(q)) if (vis(el)) return el; return null; };
   /* what is showing now: {level, name, el} */
   function top() {

@@ -73,14 +73,21 @@ const ART = (() => {
   /* How sharp to draw a picture for an <img> tag. A picture in a wide PC panel needs many more pixels than its drawing
      size: aim for the biggest box it can get on this screen (side panel or popup). Backing pixels per drawing unit. */
   const SCENE_CAP = 6;
+  /* [perf] the screen box is measured at most every 2 s (and again after a resize): reading the page's layout on every
+     ART.url call (the clock's sky icon asks once a second) made the browser lay the whole page out again mid-tick */
+  let boxPx = 0, boxAt = -1e9, boxW = 0;
+  function screenPx() {
+    const t = typeof performance !== "undefined" ? performance.now() : Date.now();
+    if (boxPx && innerWidth === boxW && t - boxAt < 2000) return boxPx;
+    const z = parseFloat(getComputedStyle(document.documentElement).zoom) || 1, d = (typeof devicePixelRatio !== "undefined" && devicePixelRatio) || 1;
+    const side = innerWidth >= 1100 ? document.getElementById("side") : null, sw = side ? side.getBoundingClientRect().width : 0;
+    const box = innerWidth >= 1100 ? Math.max(sw, Math.min(innerWidth * 0.5, 980) * z) : Math.min(innerWidth, 640) * z;   // screen px the picture may fill
+    boxPx = box * Math.min(3, d); boxAt = t; boxW = innerWidth;
+    return boxPx;
+  }
   function budget(w) {
     let px = 0;
-    try {
-      const z = parseFloat(getComputedStyle(document.documentElement).zoom) || 1, d = (typeof devicePixelRatio !== "undefined" && devicePixelRatio) || 1;
-      const side = document.getElementById("side"), sw = side ? side.getBoundingClientRect().width : 0;
-      const box = innerWidth >= 1100 ? Math.max(sw, Math.min(innerWidth * 0.5, 980) * z) : Math.min(innerWidth, 640) * z;   // screen px the picture may fill
-      px = box * Math.min(3, d);
-    } catch { /* no window: tests */ }
+    try { px = screenPx(); } catch { /* no window: tests */ }
     return Math.max(DPR(), Math.min(SCENE_CAP, px / w));
   }
   /* a cached data URL, for <img> tags inside HTML templates. A picture with a painted file inside is redrawn as sharp as

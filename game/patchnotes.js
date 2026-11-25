@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b316-smooth", build: 316, date: "25 Nov 2026", title: "Smoother map, travel and fights", items: [
+      "The map is much lighter to draw: the painted ground and the fog are kept ready while you look around, so the map no longer stutters and your phone stays cooler.",
+      "The first-person travel view rests between its pictures instead of waking up all the time.",
+      "Fight scenes that are scrolled away stop redrawing, and quick turns no longer pile up extra work, so fights stay smooth.",
+      "Fewer little hitches every second on every screen, and saving your game is quicker.",
+    ] },
     { id: "b313-fightnums", build: 313, date: "25 Nov 2026", title: "Fight numbers you can read", items: [
       "Damage, heal and crit numbers in fights have a thick dark outline and grow with your screen, so they're easy to read on a phone and on a big PC monitor. Crits are big and gold.",
       "Each kind has its own look: damage in its element's colour, heals green with a glow, magicka and stamina as small blue and green chips, and Miss, Blocked and Dodged as words.",

@@ -118,16 +118,19 @@ const FPT = (() => {
   }
 
   // ------------------------------------------------------------------ the live loop
-  let raf = 0, io = null, seen = true, lastTs = 0, travel = 0, headS = null, curveS = 0, walkPh = 0, last = null;
+  let raf = 0, wait = 0, io = null, seen = true, lastTs = 0, travel = 0, headS = null, curveS = 0, walkPh = 0, last = null;
   const phone = () => typeof matchMedia !== "undefined" && (matchMedia("(pointer: coarse)").matches || innerWidth < 760);
-  function kick() { if (!raf && band && info) { lastTs = 0; raf = requestAnimationFrame(loop); } }
-  function stop() { if (raf) cancelAnimationFrame(raf); raf = 0; }
+  function kick() { if (!raf && !wait && band && info) { lastTs = 0; raf = requestAnimationFrame(loop); } }
+  function stop() { if (raf) cancelAnimationFrame(raf); raf = 0; if (wait) clearTimeout(wait); wait = 0; }
+  /* [perf] between pictures the loop sleeps on a timer instead of waking every screen refresh just to skip it
+     (a 120 Hz phone woke it 120 times a second to draw 30) */
+  function later(ms) { if (ms > 20) wait = setTimeout(() => { wait = 0; raf = requestAnimationFrame(loop); }, ms - 12); else raf = requestAnimationFrame(loop); }
   function loop(ts) {
     raf = 0;
     if (!band || !band.isConnected || !info || isShut()) return;
     if (typeof document !== "undefined" && document.hidden) { setTimeout(kick, 500); return; }
     const gap = phone() ? 33 : 22;
-    if (lastTs && ts - lastTs < gap - 3) { raf = requestAnimationFrame(loop); return; }
+    if (lastTs && ts - lastTs < gap - 3) { later(gap - (ts - lastTs)); return; }
     const dt = lastTs ? Math.min(0.1, (ts - lastTs) / 1000) : 0; lastTs = ts;
     const cv = band.querySelector(".fpt-view canvas"), host = cv.parentNode;
     const w = host.clientWidth, h = host.clientHeight;
@@ -139,7 +142,7 @@ const FPT = (() => {
       paint(g, w, h, info, ts / 1000);
     }
     if (info.reduce) return;   // reduced motion: one still frame per update
-    if (seen) raf = requestAnimationFrame(loop);
+    if (seen) later(gap);
   }
   /* move the world on: distance down the road, the head turning toward the route, the bend ahead */
   function step(I, dt) {
@@ -421,6 +424,6 @@ const FPT = (() => {
     [travel, headS, curveS, walkPh] = keep;
     return c;
   }
-  const debug = () => (last ? { ...last, travel, heading: headS, curve: curveS, running: !!raf, shut: band ? band.classList.contains("shut") : null } : null);
+  const debug = () => (last ? { ...last, travel, heading: headS, curve: curveS, running: !!(raf || wait), shut: band ? band.classList.contains("shut") : null } : null);
   return { show, hide, frame, debug, LAYERS, FOV, get el() { return band; } };
 })();

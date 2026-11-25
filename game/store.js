@@ -9,6 +9,7 @@ const Store = (() => {
   const ls = {
     get(k) { try { return JSON.parse(localStorage.getItem(NS + k)); } catch { return null; } },
     set(k, v) { try { localStorage.setItem(NS + k, JSON.stringify(v)); } catch { /* storage unavailable */ } },
+    raw(k, json) { try { localStorage.setItem(NS + k, json); } catch { /* storage unavailable */ } },   // [perf] already turned into text
   };
   let db = null, uid = null, mode = "local", writable = true;
   /* ---- phone-to-phone world ("p2p"): every phone keeps a full copy of the shared world and merges with each
@@ -252,7 +253,7 @@ const Store = (() => {
     if (typeof TB !== "undefined" && TB.safeSave) state = TB.safeSave(state);   // mid turn-by-turn fight: save the game as it was before it
     const json = JSON.stringify(state);
     if (json === lastSaveJson) return;
-    if (mode === "local" || mode === "p2p") { ls.set("sk.save", state); lastSaveJson = json; if (typeof ACCOUNT !== "undefined") ACCOUNT.onSave(state, json); return; }   // [OURS] and to your account (account.js)
+    if (mode === "local" || mode === "p2p") { ls.raw("sk.save", json); lastSaveJson = json; if (typeof ACCOUNT !== "undefined") ACCOUNT.onSave(state, json); return; }   // [OURS] and to your account (account.js)
     if (!writable) return;
     pendingSave = json;
     if (saving) return;
