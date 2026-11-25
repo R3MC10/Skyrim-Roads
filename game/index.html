@@ -3946,6 +3946,37 @@ html.a11y-still .hgchip{animation:none;opacity:1}
 .hsp.lock{opacity:.6}
 .hsp-tag{font-family:"Barlow Condensed",sans-serif;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#9fe08a;white-space:nowrap}
 .hsp .btn{flex:0 0 auto;white-space:nowrap}
+/* the adventuring company longhouse (longhouse.js) */
+.lng h2{font-family:"Cinzel",serif;letter-spacing:.06em}
+.lng-banner{position:relative;margin:2px 0 10px;border:1px solid rgba(214,178,94,.35);border-radius:4px;overflow:hidden;min-height:110px;background:#15120d}
+.lng-banner img{display:block;width:100%;height:120px;object-fit:cover;opacity:.62}
+.lng-bt{position:absolute;inset:auto 0 0 0;padding:10px 12px;background:linear-gradient(0deg,rgba(12,10,7,.92),rgba(12,10,7,0))}
+.lng-name{font-family:"Cinzel",serif;font-size:20px;letter-spacing:.07em;color:var(--gold);text-shadow:0 1px 3px #000}
+.lng-sub{font-size:13px;color:var(--mute)}.lng-purse{font-size:15px;margin-top:2px;color:var(--ink)}
+.lng-seg{flex-wrap:wrap}.lng-seg button{flex:1 1 30%;min-width:0;padding:6px 4px;font-size:14px}
+.lng-rooms{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px}
+.lng-room{border:1px solid var(--line);border-left:3px solid #4a4237;background:rgba(255,255,255,.02);padding:9px 10px;display:flex;flex-direction:column;gap:5px;min-width:0}
+.lng-room.built{border-left-color:var(--gold)}
+.lng-rh{display:flex;align-items:center;gap:8px}.lng-rh b{font-family:"Cinzel",serif;letter-spacing:.05em;flex:1}
+.lng-ic{font-size:20px;color:var(--gold);width:24px;text-align:center}
+.lng-pips{display:inline-flex;gap:3px}.lng-pips i{width:9px;height:9px;transform:rotate(45deg);border:1px solid var(--gold);display:inline-block}.lng-pips i.on{background:var(--gold)}
+.lng-fx{margin:0;font-size:14px;line-height:1.35}.lng-next{font-size:13px;color:var(--mute)}.lng-lbl{color:var(--ink);font-weight:600}
+.lng-cost{font-size:13px}.lng-short{color:var(--ember)}.lng-done{font-size:13px;color:var(--gold);letter-spacing:.08em;text-transform:uppercase}
+.lng-room .btn{align-self:flex-start}
+.lng-plans{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px}
+.lng-plan{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:9px 10px;background:rgba(255,255,255,.02);border:1px solid var(--line);color:var(--ink);font:inherit;min-height:56px}
+.lng-plan b{font-family:"Cinzel",serif;letter-spacing:.04em}.lng-plan span{font-size:13px;color:var(--mute)}
+.lng-plan.on{border-color:var(--gold);background:rgba(226,187,100,.1)}.lng-plan.on b{color:var(--gold)}.lng-plan:disabled{opacity:.45}
+.lng-troph{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px}
+.lng-tr{display:flex;gap:8px;align-items:center;padding:7px 9px;border:1px solid var(--line);opacity:.55}.lng-tr.on{opacity:1;border-color:rgba(214,178,94,.45)}
+.lng-tr div{display:flex;flex-direction:column;min-width:0}.lng-tr span{font-size:13px;color:var(--mute)}
+.lng-gold{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.lng-gold input{flex:1 1 140px;min-width:0}
+.lng-mats{display:flex;flex-direction:column}
+.lng-mat{display:flex;align-items:center;gap:8px;padding:6px 2px;border-bottom:1px solid var(--line)}
+.lng-mat>span:first-child{flex:1;min-width:0}.lng-mat b{min-width:34px;text-align:right;color:var(--gold)}.lng-have{font-size:12px;color:var(--mute);min-width:52px}
+.lng-perm{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid var(--line);font-size:14px}.lng-perm select{max-width:52%}
+.lng-log{display:flex;flex-direction:column}.lng-le{display:flex;gap:8px;justify-content:space-between;padding:5px 2px;border-bottom:1px solid var(--line);font-size:14px}.lng-le i{color:var(--mute);font-size:12px;white-space:nowrap}
+@media (max-width:420px){.lng-rooms,.lng-plans,.lng-troph{grid-template-columns:1fr}.lng-banner img{height:96px}}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -4243,6 +4274,7 @@ html.a11y-still .hgchip{animation:none;opacity:1}
 <script src="i18n_comingnext.js"></script>
 <script src="i18n_afflictions.js"></script>
 <script src="i18n_crises.js"></script>
+<script src="i18n_longhouse.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>
@@ -4266,6 +4298,7 @@ html.a11y-still .hgchip{animation:none;opacity:1}
 <script src="leghunt.js"></script>
 <script src="afflictions.js"></script>
 <script src="crises.js"></script>
+<script src="longhouse.js"></script>
 <script src="ui.js"></script>
 </body>
 </html>
