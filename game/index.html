@@ -3918,6 +3918,11 @@ html.a11y-still .hgchip{animation:none;opacity:1}
 .minegame .mghead{position:relative;z-index:5}
 .sgpop{text-shadow:0 0 4px #000,0 0 10px #000,0 2px 3px #000,0 0 22px rgba(255,150,60,.6)}
 @media (max-width:600px){.sgpop{left:50%;right:auto;width:max-content;max-width:calc(100% - 24px);padding:5px 14px;border-radius:10px;background:rgba(10,7,5,.72);box-shadow:0 0 0 1px rgba(232,198,106,.35),0 6px 18px rgba(0,0,0,.6);margin-left:0;translate:-50% 0}}
+.cr-boss .cr-warn{margin:4px 0 2px;padding:5px 8px;border-left:3px solid #e0703a;background:rgba(0,0,0,.28);color:#ffd2b8;font-size:13px;line-height:1.35}
+/* a window is open: the message lane keeps to the room above it (hud2.js), newest message only */
+#hudlane.inmodal{overflow:hidden}
+#hudlane.inmodal #hudlog .hlog,#hudlane.inmodal .hl-say{display:none}
+body:has(#modal .sheet) #pbanners{top:auto!important;bottom:calc(6px + env(safe-area-inset-bottom))}   /* big banners drop to the bottom edge instead of over the window's middle */
 /* follower ranks and horse bonds (bonds.js): rank ladder on the Bond tab, horse bond and specialities at the stables */
 .bondranks{margin:8px 0 6px;padding:7px 8px;border:1px solid rgba(214,178,94,.28);background:rgba(0,0,0,.22);border-radius:4px}
 .bondrkh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;font-family:"Barlow Condensed",sans-serif;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:#cbbf9f}
@@ -4010,6 +4015,23 @@ html.a11y-still .hgchip{animation:none;opacity:1}
 .hz-sum b{color:var(--ink);text-align:right;overflow:hidden;text-overflow:ellipsis}
 @media (max-width:420px){.hz-track b{font-size:10.5px;letter-spacing:.02em}.hz-sum{grid-template-columns:1fr}.hz-opt .t b{font-size:14px}}
 @media (min-width:900px){.sheet.hz{max-width:560px}}
+/* stables polish: the horse's painted portrait in a SkyUI-style frame, the bond bar says what it measures */
+.hhead{display:flex;gap:12px;align-items:stretch}
+.hport{flex:none;width:128px;height:128px;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;position:relative;border:1px solid rgba(214,178,94,.38);background:radial-gradient(ellipse at 50% 85%,rgba(226,187,100,.16),transparent 62%),linear-gradient(180deg,rgba(255,255,255,.04),rgba(0,0,0,.42));box-shadow:inset 0 0 0 1px rgba(0,0,0,.6),inset 0 -18px 24px -14px rgba(0,0,0,.7)}
+.hport::before,.hport::after{content:"";position:absolute;left:6px;right:6px;height:1px;z-index:1;background:linear-gradient(90deg,transparent,rgba(232,196,106,.55),transparent)}
+.hport::before{top:3px}.hport::after{bottom:3px}
+.hport .hcoatpic{display:block;width:118px;max-width:none;height:auto;margin:0 auto 5px;filter:drop-shadow(0 3px 4px rgba(0,0,0,.6))}
+.hport.down .hcoatpic{width:120px;margin:0 auto 14px;filter:saturate(.75) drop-shadow(0 2px 3px rgba(0,0,0,.5))}
+.hport .hcoatwait{width:120px;height:120px}
+.hport>:not(.hcoatpic):not(.hcoatwait){margin:auto}
+.hinfo{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:3px}
+.hinfo h3{margin:0;font-family:"Barlow Condensed",sans-serif;font-size:21px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#f1ead8;padding-bottom:4px;border-bottom:1px solid rgba(214,178,94,.28);overflow-wrap:anywhere}
+.hinfo .sub{line-height:1.3}
+.hinfo .hstats{gap:12px;font-size:13px}
+.hbond .bondl{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.hbond .bondnx{text-transform:none;letter-spacing:.02em;color:#a89c80}
+.hbreed>b{padding-right:42px}
+@media (max-width:360px){.hport{width:104px;height:104px}.hport .hcoatpic{width:96px;margin:0 auto 4px}.hinfo h3{font-size:18px}}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -4203,6 +4225,7 @@ html.a11y-still .hgchip{animation:none;opacity:1}
 <script src="craftgames.js"></script>
 <script src="smithgame.js"></script>
 <script src="runecraft.js"></script>
+<script src="partyspells.js"></script>
 <script src="minegame.js"></script>
 <script src="dungeongames.js"></script>
 <script src="lockgame.js"></script>
@@ -4242,6 +4265,7 @@ html.a11y-still .hgchip{animation:none;opacity:1}
 <script src="i18n_living.js"></script>
 <script src="i18n_bonds.js"></script>
 <script src="i18n_bonds2.js"></script>
+<script src="i18n_stables.js"></script>
 <script src="i18n_dawnguard.js"></script>
 <script src="i18n_sides.js"></script>
 <script src="i18n_dwemer.js"></script>
@@ -4306,6 +4330,7 @@ html.a11y-still .hgchip{animation:none;opacity:1}
 <script src="i18n_partytraps.js"></script>
 <script src="i18n_fishhunt.js"></script>
 <script src="i18n_esckey.js"></script>
+<script src="i18n_partyspells.js"></script>
 <script src="i18n_comingnext.js"></script>
 <script src="i18n_afflictions.js"></script>
 <script src="i18n_crises.js"></script>

@@ -3178,7 +3178,9 @@
     }
     const c = HORSES.coat(h.coat), mh = HORSES.maxHp(h), hp = HORSES.hp(S), dn = HORSES.downed(S);
     const mins = Math.ceil(HORSES.readyIn(S) / 60), hrs = Math.max(1, Math.round(mins / 5)), tp = HORSES.tendPrice(S);
-    return `<div class="card${dn ? " hdown" : ""}"><div class="row" style="display:flex;gap:10px;align-items:center">${UIART.horse(h.coat, 44, h.armor && h.armor !== "none", dn)}<div style="flex:1"><h3 style="margin:0">${esc(h.name)}${dn ? ` <span class="hdowntag">Downed</span>` : ""}</h3><span class="sub">${esc(HORSES.breed(h.breed).name)} · ${esc(c[1])} · ${esc(HORSES.ARMOR[h.armor].name)}</span>${statRow({ speed: HORSES.speed(S), carry: HORSES.carry(S), hp: mh })}</div></div>
+    const armd = !!h.armor && h.armor !== "none";
+    const pic = (typeof HORSEART !== "undefined" && HORSEART.card(h.coat, 160, dn ? "down" : "stand")) || UIART.horse(h.coat, 72, armd, dn);   // the painted horse in its coat, else the drawn head
+    return `<div class="card hstab${dn ? " hdown" : ""}"><div class="hhead"><div class="hport${dn ? " down" : ""}" aria-hidden="true">${pic}</div><div class="hinfo"><h3>${esc(h.name)}${dn ? ` <span class="hdowntag">Downed</span>` : ""}</h3><span class="sub">${esc(HORSES.breed(h.breed).name)} · ${esc(c[1])} · ${esc(HORSES.ARMOR[h.armor].name)}</span>${statRow({ speed: HORSES.speed(S), carry: HORSES.carry(S), hp: mh })}</div></div>
         ${dn ? `<p>${esc(h.name)} is downed: they limp along beside you but can't be ridden. Back on their feet in about ${hrs} ${hrs === 1 ? "hour" : "hours"} (${mins} min), or after you sleep.</p>
           <button class="btn pri" data-act="htend" style="width:100%" ${open && S.gold >= tp ? "" : "disabled"}>Tend ${esc(h.name)} (${tp} gold)</button>`
         : `${hp < mh ? `<button class="btn sm" data-act="htend" style="float:right;margin-top:6px" ${open && S.gold >= tp ? "" : "disabled"}>Tend (${tp} gold)</button>` : ""}<div class="vital" style="margin-top:8px"><small><span>Health</span><span class="num">${Math.round(hp)}/${mh}</span></small><div class="bar"><i style="width:${pct(hp, mh)}%;background:var(--sp)"></i></div></div>`}

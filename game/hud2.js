@@ -156,6 +156,15 @@ const HUD2 = (() => {
       else if (m.right > 0) { left = Math.max(8, m.left + 8); width = Math.max(180, Math.min(440, m.width - 16)); }
     }
     if (typeof SKILLUP !== "undefined") top += SKILLUP.dock({ top, m: onMap || (m && m.right > 0) ? m : null, st, tw }) || 0;   // skillup.js: the skill-up toast takes the top of the lane
+    // a window is open (Hold status, a shop...): only the newest message, in the free room above the window (or below it), never over its title
+    const sh = tw ? null : document.querySelector("#modal .sheet"), inModal = shown(sh);
+    L.classList.toggle("inmodal", inModal);
+    if (inModal) {
+      const r = sh.getBoundingClientRect(), up = r.top - st - 8, down = innerHeight - r.bottom - 8;
+      left = 8; width = Math.min(440, innerWidth - 16);
+      if (up >= 26 || up >= down) { top = st + 4; L.style.maxHeight = Math.max(26, Math.round(up)) + "px"; }
+      else { top = r.bottom + 4; L.style.maxHeight = Math.round(down) + "px"; }
+    } else L.style.maxHeight = "";
     L.style.left = Math.round(left) + "px"; L.style.top = Math.round(top) + "px"; L.style.width = Math.round(width) + "px";
     L.classList.toggle("onmap", onMap);
     // big banners: centred on the map, below the lane, above the bars
@@ -254,6 +263,7 @@ const HUD2 = (() => {
     new MutationObserver((ms) => {
       for (const m of ms) for (const n of m.addedNodes) if (SAY(n) && n.parentNode === document.body) adopt(n);
       if (ms.some((m) => m.type === "attributes")) { dockFav(); soon(); }
+      else if (ms.some((m) => [...m.addedNodes, ...m.removedNodes].some((n) => n.id === "modal"))) soon();   // a window opened or closed: move the messages out of its way
     }).observe(document.body, { childList: true, attributes: true, attributeFilter: ["class"] });
     new MutationObserver(() => dockFav()).observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
     addEventListener("scroll", soon, { passive: true, capture: true });

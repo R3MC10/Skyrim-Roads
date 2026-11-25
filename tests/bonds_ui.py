@@ -66,6 +66,13 @@ async def main():
             ok(await tap(".hsp [data-op=hbond][data-id=warhorse]"), f"{name}: tap Choose on Warhorse")
             spec = await pg.evaluate("() => BONDS2.spec(window.__dbg.save())")
             ok(spec == "warhorse", f"{name}: the horse is now a warhorse ({spec})")
+            # stables polish: a framed portrait in the header, the bond bar labelled, no English left in Polish
+            nx = await pg.evaluate("() => document.querySelector('.hbond .bondnx')?.textContent || ''")
+            ok(("toward level 4" if LANG == "en" else "do poziomu 4") in nx, f"{name}: bond bar says how far to the next level ({nx})")
+            ok(await pg.evaluate("() => !!document.querySelector('.hstab .hport')"), f"{name}: horse portrait in the header")
+            if LANG == "pl":
+                left = await pg.evaluate("() => ['Rename', 'Saddlebags', 'Big saddlebags', 'No armor', 'Horseshoes', 'Horse armor', 'carries 50 more'].filter(w => [...document.querySelectorAll('.hstab, .hstab ~ *')].some(e => e.textContent.includes(w)))")
+                ok(not left, f"{name}: stables in Polish ({left})")
             fit = await pg.evaluate("() => [...document.querySelectorAll('.hsp')].filter(e => e.getBoundingClientRect().right > innerWidth + 1).length")
             ok(fit == 0, f"{name}: speciality rows fit the screen")
             await shot(".hbond", f"bonds_horse_{name}.png")

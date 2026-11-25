@@ -3,6 +3,24 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b211-partyspells", build: 211, date: "25 Nov 2026", title: "Your own spells in party fights", items: [
+      "Spells you made at the Rune table or combined at the College now show up properly on your friends' phones in a party fight: the right name, icon and effect in the battle scene.",
+      "Only the spells you actually cast in that fight are sent, and nobody can change your spell on your phone.",
+      "In a party fight, the target a foe shows is now always the one it hits, healers included.",
+    ] },
+    { id: "b210-stables", build: 210, date: "25 Nov 2026", title: "Tidier stables", items: [
+      "The stables screen is now fully in Polish: saddlebags, horseshoes, horse armor, breeds, coats, the cart and renaming your horse.",
+      "Your horse's card shows its painted picture in its own coat, in a proper frame, instead of a tiny icon. A knocked-down horse lies down in the picture.",
+      "The bond bar now says what it measures, for example 4/100 toward level 4, so a nearly empty bar right after a new level doesn't look broken.",
+      "The banners in the corner, like Quest started, Objective and Skill increased, are in Polish now too.",
+    ] },
+    { id: "b209-crisespolish", build: 209, date: "25 Nov 2026", title: "Crises, smoothed out", items: [
+      "Deliver food now says it plainly: bring the steward 3 pieces of food per delivery, and it counts your deliveries (up to 4).",
+      "On a PC map a crisis sign no longer hides behind the cards on the left: it moves to the other side of the town, or just past the cards with a thin line back to it.",
+      "Achievements and other messages no longer pile up over the title of an open window. While a window is open you see only the newest one, above the window or below it. Big quest banners slide down to the bottom edge instead of covering the middle.",
+      "Ringleaders: a Run away rule in your tactics now works in crisis fights too, and the boss card warns you when the fight is risky at your level.",
+      "Heroes under level 10 face a slightly softer ringleader, so they're no longer beaten more often than not.",
+    ] },
     { id: "b208-runecraft", build: 208, date: "25 Nov 2026", title: "Rune crafting: make your own spells", items: [
       "A new Rune table at the College of Winterhold and at every arcane enchanter: build your own spell from an element, a delivery and a modifier.",
       "Elements: fire, frost, shock, poison, healing and ward. Deliveries: bolt, touch, rune trap, cloak, area and over time. Modifiers: chain, lingering, slow, piercing, cheap and quick.",

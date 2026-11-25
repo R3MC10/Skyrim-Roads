@@ -110,13 +110,15 @@ const CRISES = (() => {
     clear: { name: "Clear out the {foe:lc}", text: "Find their camp and drive them off.", kind: "fight", relief: 3, deed: { sec: 2 } },
     patrol: { name: "Ride with the night patrol", text: "Walk the roads with the hold guard after dark.", kind: "fight", relief: 3, deed: { sec: 3 } },
     hunt: { name: "Hunt the pack", text: "Track the beasts back to their den.", kind: "fight", relief: 3, deed: { sec: 2, food: 1 } },
-    food: { name: "Deliver food", text: "Hand {n} pieces of food to the steward.", kind: "food", relief: 2, deed: { food: 3 } },
+    food: { name: "Deliver food", text: "Bring the steward {n} pieces of food per delivery.", kind: "food", relief: 2, deed: { food: 3 } },
     expose: { name: "Expose a crooked guard", text: "Talk your way into the barracks and find the ledger.", kind: "talk", relief: 2, deed: { cor: -3 } },
   };
   /* contract foes and bosses at your own level (G.scaleEnemy grows them); balance sim in tests/test_crises.js */
   const FOE = { health: 90, damage: 10 };
   const BOSS = { health: 210, damage: 13 };
   const ALLY_ADD = 0.6;   // each party member beside you: the boss is 60% tougher
+  const LOW_LV = 10, LOW_CUT = 0.91;   // below level 10 the ringleader has 9% less health and damage: the sim had heroes under 10 dying over half the time
+  const lowCut = (lv) => (lv < LOW_LV ? LOW_CUT : 1);
   const NEED_SOLO = 10, NEED_PER = 6;
   const needFor = (people) => NEED_SOLO + NEED_PER * Math.max(0, Math.min(8, people) - 1);
 
@@ -347,8 +349,8 @@ const CRISES = (() => {
   function foodRows(s) { return (s.inv || []).filter((r) => typeof D !== "undefined" && D.ITEMS[r.item]?.slot === "food" && !r.stolen && r.qty > 0); }
   const foodCount = (s) => foodRows(s).reduce((a, r) => a + r.qty, 0);
   function makeFoe(s, cr, boss) {
-    const ch = CHAINS[cr.chain], lv = G.fightLevel(s), B = boss ? BOSS : FOE;
-    const e = G.scaleEnemy({ name: boss ? ch.boss.name : T(ch.foe.name), level: lv, health: B.health, damage: B.damage, tags: [...(boss ? ch.boss.tags : ch.foe.tags)], danger: boss ? "high" : "medium", gold: boss ? [40, 90] : [8, 24], text: "" }, lv);
+    const ch = CHAINS[cr.chain], lv = G.fightLevel(s), B = boss ? BOSS : FOE, k = boss ? lowCut(lv) : 1;
+    const e = G.scaleEnemy({ name: boss ? ch.boss.name : T(ch.foe.name), level: lv, health: Math.round(B.health * k), damage: Math.round(B.damage * k * 10) / 10, tags: [...(boss ? ch.boss.tags : ch.foe.tags)], danger: boss ? "high" : "medium", gold: boss ? [40, 90] : [8, 24], text: "" }, lv);
     e.hold = cr.hold; e.crisis = cr.id;
     if (boss) e.noGroup = true;
     return e;
@@ -401,9 +403,11 @@ const CRISES = (() => {
     // a fight contract
     const e = makeFoe(s, cr, false);
     const f = new G.Fight(s, e, null, t);
+    f.canFlee = true;   // a "Run away" tactic breaks off the fight, as on the road
     f.run({ t, trySneak: false });
     const skills = f.apply(t);
     const out = { cr, fight: f, skills, relief: 0, gold: 0, loot: [], title: name };
+    if (f.fled && !f.won && f.hp > 0) { out.fled = true; out.text = T("You break off the fight and get away. Try again when you're ready."); dirty(); return out; }
     if (f.won && f.hp > 0) {
       const rl = relief(s, c.relief); m.rel[cr.id] = (m.rel[cr.id] || 0) + rl; addFx(m, cr.hold, c.deed);
       out.gold = Math.round(10 + 2 * (s.level || 1)); s.gold += out.gold; out.relief = rl;
@@ -437,10 +441,12 @@ const CRISES = (() => {
     const mates = [...new Set((f.allies || []).filter((a) => a && a.party && typeof a.uid === "string").map((a) => a.uid))].slice(0, 7);
     const grow = 1 + ALLY_ADD * mates.length;
     if (grow > 1) { f.ehp = f.ehp0 = Math.round(f.ehp * grow); e.health = e.hp = f.ehp; }
+    f.canFlee = true;   // the ringleader isn't a dungeon boss: a "Run away" tactic can still save you
     f.run({ t, trySneak: false });
     const skills = f.apply(t);
     const out = { cr, fight: f, skills, slain: false, gold: 0, loot: [], mates: mates.length };
-    if (f.won && f.hp > 0) {
+    if (f.fled && !f.won && f.hp > 0) out.text = T("You break off the fight and get away from {boss}. Heal up and try again.", { boss: ch.boss.name }), out.fled = true;
+    else if (f.won && f.hp > 0) {
       out.slain = true; m.won[cr.id] = t; m.rel[cr.id] = Math.max(m.rel[cr.id] || 0, 1);
       out.text = T("{boss} falls! The crisis in {hold} is over and the Jarl's people cheer.", { boss: ch.boss.name, hold: cr.hold });
       out.title = T("Victory");
@@ -558,12 +564,13 @@ const CRISES = (() => {
         if (!st.open) body += `<p class="sub">${esc(T("The Jarl hasn't asked for help yet. Contracts open at stage 2 (in {time}).", { time: until(cr.start + STAGE - t) }))}</p>`;
         else if (st.state === "boss") {
           const err = bossBlock(S, cr, t, partyOf());
-          body += `<div class="cr-boss"><b>${esc(ch.boss.name)}</b><span class="sub">${esc(T(ch.boss.what))}</span>${err && !here_ ? `<button class="btn wev-wide" data-act="go" data-place="${esc(cr.place)}">${esc(T("Travel to {place}", { place: cr.place }))}</button>` : `<button class="btn danger wev-wide" data-cr="boss" data-id="${cr.id}" ${err ? "disabled" : ""}>${esc(err && here_ ? err : T("Fight the ringleader"))}</button>`}</div>`;
+          const lv = S.level || 1, warn = lv < 15 ? `<span class="cr-warn">${esc(T(lv < LOW_LV ? "Deadly at your level: heroes under level 10 often lose this fight. Bring friends and potions, or add a Run away rule to your tactics." : "A hard fight at your level. Bring potions, or add a Run away rule to your tactics."))}</span>` : "";
+          body += `<div class="cr-boss"><b>${esc(ch.boss.name)}</b><span class="sub">${esc(T(ch.boss.what))}</span>${warn}${err && !here_ ? `<button class="btn wev-wide" data-act="go" data-place="${esc(cr.place)}">${esc(T("Travel to {place}", { place: cr.place }))}</button>` : `<button class="btn danger wev-wide" data-cr="boss" data-id="${cr.id}" ${err ? "disabled" : ""}>${esc(err && here_ ? err : T("Fight the ringleader"))}</button>`}</div>`;
         }
         if (st.open && st.state === "active") {
           body += `<h3 class="cr-h3">${esc(T("The Jarl's contracts"))}</h3><div class="list cr-list">${contractsOf(cr).map((id) => {
             const c = CONTRACTS[id], err = contractBlock(S, cr, id, t, partyOf());
-            const txt = T(c.text, { n: FOOD_N }) + (c.kind === "food" ? " " + T("({n} of {m} given)", { n: mine(S, t).food[cr.id] || 0, m: FOOD_MAX }) : "");
+            const txt = T(c.text, { n: FOOD_N }) + (c.kind === "food" ? " " + T("(deliveries: {n} of {m})", { n: mine(S, t).food[cr.id] || 0, m: FOOD_MAX }) : "");
             return `<div class="item"><div class="t">${esc(contractName(cr, id))}<span>${esc(txt)} · ${esc(T("+{n} relief", { n: relief(S, c.relief) }))}</span></div><button class="btn sm ${err ? "" : "pri"}" data-cr="do" data-id="${cr.id}" data-c="${id}" ${err ? `disabled title="${esc(err)}"` : ""}>${esc(T(c.kind === "food" ? "Give" : c.kind === "talk" ? "Try" : "Take it"))}</button></div>`;
           }).join("")}</div>`;
           if (!here_) body += `<p class="sub">${esc(T("Contracts are handed out in {place}.", { place: cr.place }))}</p><button class="btn wev-wide" data-act="go" data-place="${esc(cr.place)}">${esc(T("Travel to {place}", { place: cr.place }))}</button>`;
@@ -617,7 +624,21 @@ const CRISES = (() => {
     else { g.arc(x, y + r * 0.35, r * 0.5, 0, 7); for (const [dx, dy] of [[-0.6, -0.3], [0.6, -0.3], [-0.25, -0.8], [0.25, -0.8]]) { g.moveTo(x + dx * r + r * 0.2, y + dy * r); g.arc(x + dx * r, y + dy * r, r * 0.2, 0, 7); } }
     g.stroke();
   }
-  function drawMap(g, P, s, t, rm) {
+  /* where the sign goes: left of the town by default; if a card docked over the map (mapdock.js) would cover it, the right
+     side of the town, else nudged out just past the card's edge with a thin line back to the town */
+  function signSpot(g, x, y, s, txt, dock) {
+    g.font = `700 ${Math.round(8.5 * s)}px GameIcons, sans-serif`;
+    const tw = g.measureText(txt).width, pad = 4 * s;
+    const box = (ox, oy, right) => right ? [ox - 10 * s, oy - 10 * s, 22 * s + tw + pad, 26 * s] : [ox - 12 * s - tw - pad, oy - 10 * s, 22 * s + tw + pad, 26 * s];
+    const hits = (b) => (dock || []).filter(([X, Y, Wd, Hd]) => b[0] < X + Wd && b[0] + b[2] > X && b[1] < Y + Hd && b[1] + b[3] > Y);
+    const left = { ox: x - 26 * s, oy: y - 8 * s, right: false };
+    if (!hits(box(left.ox, left.oy, false)).length) return left;
+    const right = { ox: x + 26 * s, oy: y - 8 * s, right: true };
+    if (!hits(box(right.ox, right.oy, true)).length) return right;
+    const edge = Math.max(...hits(box(right.ox, right.oy, true)).map(([X, , Wd]) => X + Wd));
+    return { ox: edge + 14 * s, oy: y - 8 * s, right: true, line: true };
+  }
+  function drawMap(g, P, s, t, rm, dock) {
     const S = me(); if (!S || typeof WORLD === "undefined") return;
     const now = nowS(), tt = rm ? 0 : t || 0;
     let list = []; try { list = around(now); } catch (e) { return; }
@@ -625,18 +646,20 @@ const CRISES = (() => {
       const p = WORLD.places[cr.place]; if (!p) continue;
       const st = status(cr, S, now); if (st.state !== "active" && st.state !== "boss") continue;
       const [x, y] = P(p), ch = CHAINS[cr.chain], pu = rm ? 0.5 : (Math.sin(tt * 2 + cr.c) + 1) / 2;
-      const ox = x - 26 * s, oy = y - 8 * s;   // beside the town, clear of the great event marker
+      const txt = st.state === "boss" ? T("Ringleader!") : T(ch.stages[st.stage - 1][0]);
       g.save();
+      const sp = signSpot(g, x, y, s, txt, dock), ox = sp.ox, oy = sp.oy;   // beside the town, clear of the great event marker and the docked cards
       g.strokeStyle = ch.color; g.globalAlpha = 0.35 + 0.35 * pu; g.lineWidth = 2 * s;
       g.beginPath(); g.arc(x, y, (22 + st.stage * 2 + 3 * pu) * s, 0, 7); g.stroke();
       g.globalAlpha = 1;
+      if (sp.line) { g.strokeStyle = ch.color; g.globalAlpha = 0.7; g.lineWidth = 1.2 * s; g.beginPath(); g.moveTo(x + 6 * s, y - 3 * s); g.lineTo(ox - 9 * s, oy); g.stroke(); g.globalAlpha = 1; }
       g.fillStyle = "rgba(20,14,8,.85)"; g.beginPath(); g.arc(ox, oy, 9 * s, 0, 7); g.fill();
       g.strokeStyle = st.state === "boss" ? "#ffb38a" : ch.color; g.lineWidth = 1.4 * s; g.beginPath(); g.arc(ox, oy, 9 * s, 0, 7); g.stroke();
       g.lineCap = "round"; drawGlyph(g, ch.icon, ox, oy, 5 * s);
       // five stage pips under the glyph
       for (let i = 0; i < STAGES; i++) { g.fillStyle = i < st.stage ? (st.state === "boss" ? "#ffb38a" : ch.color) : "rgba(20,14,8,.7)"; g.beginPath(); g.arc(ox - 8 * s + i * 4 * s, oy + 13 * s, 1.5 * s, 0, 7); g.fill(); }
-      const txt = st.state === "boss" ? T("Ringleader!") : T(ch.stages[st.stage - 1][0]);
-      g.font = `700 ${Math.round(8.5 * s)}px GameIcons, sans-serif`; g.textAlign = "right"; g.lineWidth = 3 * s; g.strokeStyle = "rgba(20,14,8,.88)"; g.strokeText(txt, ox - 12 * s, oy + 3 * s); g.fillStyle = st.state === "boss" ? "#ffb38a" : "#f1e4c6"; g.fillText(txt, ox - 12 * s, oy + 3 * s);
+      const tx = sp.right ? ox + 12 * s : ox - 12 * s;
+      g.font = `700 ${Math.round(8.5 * s)}px GameIcons, sans-serif`; g.textAlign = sp.right ? "left" : "right"; g.lineWidth = 3 * s; g.strokeStyle = "rgba(20,14,8,.88)"; g.strokeText(txt, tx, oy + 3 * s); g.fillStyle = st.state === "boss" ? "#ffb38a" : "#f1e4c6"; g.fillText(txt, tx, oy + 3 * s);
       g.restore();
     }
   }
