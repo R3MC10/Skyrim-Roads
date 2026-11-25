@@ -168,7 +168,8 @@ const HUD2 = (() => {
     L.style.left = Math.round(left) + "px"; L.style.top = Math.round(top) + "px"; L.style.width = Math.round(width) + "px";
     L.classList.toggle("onmap", onMap);
     // big banners: centred on the map, below the lane, above the bars
-    const pb = document.getElementById("pbanners");
+    const pb = typeof NOCOVER === "undefined" ? document.getElementById("pbanners") : null;   // nocover.js places them (and the history button, the Gather prompt)
+    if (typeof NOCOVER !== "undefined") NOCOVER.run({ lane: L, m, st, tw, onMap });
     if (pb) {
       if (m && m.bottom > 160 && m.top < innerHeight - 160 && !tw) {
         const lb = L.getBoundingClientRect(), lowest = lb.height > 4 ? lb.bottom + 10 : top;

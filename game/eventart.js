@@ -457,9 +457,61 @@ const EVENTART = (() => {
   const ZOOM = { herbs: 1.7, chest: 1.5, caravan: 1.3, injured: 1.6, toll: 1.25, book: 2, sleeper: 1.4, shrine: 1.45, climb: 1, camp: 1.4, peddler: 1.55 };
 
   /* [afflart] painted scenes: a road event id or a story kind -> a painted file (assets.js, e.g. gev-black-shrine).
-     Filled by the modules that own the scenes (afflictions.js). The drawing stays as the fallback: while the file is
+     Other modules can register their own painted scenes. The drawing stays as the fallback: while the file is
      still loading the drawn picture shows, tagged data-paint, and is swapped for the painting when it arrives. */
-  const PAINTED = { road: {}, story: {} };
+  const PAINTED = {
+    road: {
+      banditToll: "road-bandit-toll",
+      khajiit: "road-roadside-caravan",
+      caravan: "road-roadside-caravan",
+      injured: "road-injured-traveller",
+      wreck: "road-shipwreck",
+      avalanche: "road-avalanche",
+      thalmor: "road-thalmor",
+      courier: "road-courier",
+      bard: "road-bard",
+      vigilant: "road-vigilant",
+      hunters: "road-hunters",
+      giant: "road-giant",
+      dragonfly: "road-dragonfly",
+      escort: "road-escort",
+      wizard: "road-wizard",
+      necro: "road-necro",
+      pilgrims: "road-pilgrims",
+      dog: "road-dog",
+      thugs: "road-thugs",
+      assassin: "road-assassin",
+      hagraven: "road-hagraven",
+      wildhorse: "road-wildhorse",
+      cart: "road-cart",
+      rare: "road-rare",
+      stranger: "road-stranger",
+      wordrumour: "road-wordrumour",
+      herbpatch: "road-herbpatch",
+      ashfall: "road-ashfall",
+      riekraid: "road-riekraid",
+      nightvamp: "road-nightvamp",
+      wisp: "road-wisp",
+      lost: "road-lost",
+      mudcrab: "road-mudcrab",
+      herbs: "road-herbs",
+      chest: "road-chest",
+      toll: "road-toll",
+      book: "road-book",
+      sleeper: "road-sleeper",
+      shrine: "road-shrine",
+      climb: "road-climb",
+      camp: "road-camp",
+      peddler: "road-peddler",
+      cvmeet_k: "road-cvmeet-k",
+      cvmeet_n: "road-cvmeet-n",
+      aff_dae_luck: "road-aff-dae-luck",
+      aff_dae_cultist: "road-aff-dae-cultist",
+      aff_draugr_dogs: "road-aff-draugr-dogs",
+      aff_draugr_crone: "road-aff-draugr-crone",
+    },
+    story: {},
+  };
   function paintedHTML(kind, id) {
     const a = PAINTED[kind][id]; if (!a || typeof ASSETS === "undefined") return "";
     const im = ASSETS.img(a); if (!im) return "";

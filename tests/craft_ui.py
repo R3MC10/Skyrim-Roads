@@ -20,6 +20,10 @@ OVERFLOW = """(()=>{ const W=innerWidth, bad=[];
     if (r.right > W + 1 || r.left < -1) bad.push((e.dataset.act||e.className||e.tagName)+' x '+Math.round(r.left)+'..'+Math.round(r.right));
   }
   return bad; })()"""
+SEEN = """(()=>{ const nav=Math.min(innerHeight, ...[...document.querySelectorAll('[data-tab]')].map(b=>b.getBoundingClientRect()).filter(r=>r.height && r.top>innerHeight/2).map(r=>r.top));
+  const ok=(sel)=>{ const e=document.querySelector(sel); if(!e) return false; const r=e.getBoundingClientRect();
+  return !!r.width && r.top >= 0 && r.bottom <= nav; };
+  return [ok('#side [data-act=ftab]'), ok('#side [data-act=smake]')]; })()"""
 SETUP = """()=>{ const S=window.__dbg.save(); S.location='Whiterun'; [S.x,S.y]=WORLD.places.Whiterun; S.trip=null; S.gold=20000;
   S.inv=S.inv.filter(r=>!/^(mat_|ore_|ing_|food_|fish_|pelt_)/.test(r.item));
   G.give(S,'mat_iron',23); G.give(S,'mat_strips',12); G.give(S,'ore_iron',9); G.give(S,'pelt_wolf',2); G.give(S,'mat_firewood',4);
@@ -31,7 +35,7 @@ async def main():
     fails = []
     async with async_playwright() as p:
         b = await p.chromium.launch(executable_path=os.environ.get("CHROME") or None, args=["--no-sandbox"])
-        for vw, vh, style, big in [(360, 780, "ink", True), (360, 780, "ink", False), (412, 915, "ink", False), (412, 915, "ink", True)]:
+        for vw, vh, style, big in [(390, 844, "ink", False), (360, 780, "ink", True), (360, 780, "ink", False), (412, 915, "ink", False), (412, 915, "ink", True)]:
             tag = f"{vw}_{style}{'_big' if big else ''}"
             ctx = await b.new_context(viewport={"width": vw, "height": vh}, device_scale_factor=1)
             pg = await ctx.new_page(); errs = []
@@ -58,6 +62,7 @@ async def main():
                 await pg.click(sel, timeout=3000)
             async def go_town(section):
                 await tap("[data-tab=map]"); await tap("[data-tab=town]"); await pg.wait_for_timeout(250)
+                await pg.evaluate("document.querySelector('#side [data-act=areahub]')?.click()"); await pg.wait_for_timeout(200)   # back to the town's board (areaui.js)
                 await tap(f"[data-id={section}]"); await pg.wait_for_timeout(250)
             async def batch(sel, label):
                 await tap(sel); await pg.wait_for_selector("#modal [data-act=cqgo]", timeout=3000)
@@ -70,6 +75,27 @@ async def main():
             await go_town("forge")
             await pg.evaluate(CLEAR)
             await shot("forge_make")
+            if vw == 390:   # [stations] the Forge opens on the work: tabs and the first recipe on screen, town lines folded
+                vis = await pg.evaluate(SEEN)
+                if not vis[0]: fails.append(f"{tag} first Make/Smelt/Improve tab not on screen when the Forge opens")
+                if not vis[1]: fails.append(f"{tag} first Make button not on screen when the Forge opens")
+                if await pg.query_selector("#side .cr-town"): fails.append(f"{tag} Hold status card on the Forge page")
+                if await pg.query_selector("#side .tut"): fails.append(f"{tag} guide/tip card on the Forge page")
+                if await pg.query_selector("#side [data-act=townnews]"):
+                    await tap("#side [data-act=townnews]"); await pg.wait_for_timeout(250)
+                    if not await pg.query_selector("#side .au-newsin"): fails.append(f"{tag} Town news did not open")
+                    await shot("forge_news")
+                    await tap("#side [data-act=townnews]"); await pg.wait_for_timeout(250)
+                    if await pg.query_selector("#side .au-newsin"): fails.append(f"{tag} Town news did not close")
+                else: print(tag, "no town news in Whiterun right now")
+                await tap("[data-act=areahub]"); await pg.wait_for_timeout(250)
+                ids_all = await pg.evaluate("[...new Set([...document.querySelectorAll('#side .au-tile[data-act=shop]')].map(b=>b.dataset.id))]")
+                for sid in ids_all:
+                    await pg.evaluate(CLEAR); await pg.evaluate(f"document.querySelector('#side .au-tile[data-id=\"{sid}\"]')?.click() || document.querySelector('#side [data-act=areahub]')?.click()"); await pg.wait_for_timeout(200)
+                    if await pg.query_selector("#side .au-in") and await pg.query_selector("#side .cr-town"): fails.append(f"{tag} Hold status card on the {sid} page")
+                    await pg.evaluate("document.querySelector('#side [data-act=areahub]')?.click()"); await pg.wait_for_timeout(150)
+                print(tag, "section pages checked:", len(ids_all))
+                await go_town("forge"); await pg.evaluate(CLEAR)
             if not await pg.query_selector("[data-act=cqonly]"): fails.append(f"{tag} no Can make now chip at the forge")
             txt = await pg.inner_text("#side")
             rows_st = await pg.evaluate("[document.querySelectorAll('[data-act=smake]').length, document.querySelectorAll('.cqrow .cqst').length]")
@@ -98,9 +124,9 @@ async def main():
                 await pg.evaluate(f"G.give({S},'mat_iron',3); G.give({S},'mat_strips',2)"); await pg.evaluate(CLEAR)
                 await tap("[data-act=fgroup][data-id=iron]"); await pg.wait_for_timeout(200)
                 await tap("[data-act=smake][data-id=iron_dagger]")
-                try: await pg.wait_for_selector("#craftgame", timeout=3000); print(tag, "single Make → mini-game opens")
+                try: await pg.wait_for_selector("#smithgame, #craftgame", timeout=3000); print(tag, "single Make → mini-game opens")   # the forge plays smithgame.js
                 except Exception: fails.append(f"{tag} single Make did not open the mini-game")
-                await pg.evaluate("document.querySelector('#cgquick')?.click()"); await pg.wait_for_timeout(300)
+                await pg.evaluate("(document.querySelector('#sgquick') || document.querySelector('#cgquick'))?.click()"); await pg.wait_for_timeout(300)
                 await pg.evaluate("history.replaceState(null,'',location.href.replace('&craftgame',''))")
             # ---- smelt & tan
             await pg.evaluate(CLEAR); await tap("[data-act=ftab][data-id=refine]"); await pg.wait_for_timeout(250)

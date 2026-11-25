@@ -114,8 +114,12 @@ async def desktop(b, style, errs):
     await pg.evaluate("__ui.openMenu('items')"); await pg.wait_for_timeout(400)
     await pg.click("#sky [data-act=skycat][data-id=all]"); await pg.wait_for_timeout(300)
     sid = await pg.evaluate("window.__dbg.save().inv.find(r => r.item === 'steel_sword').id")
-    await hover(pg, f"#sky .sky-row[data-id='{sid}']", "inventory_sword", style, "Steel Sword")
-    bx = await pg.evaluate(BOX); ok(bx is not None and "Damage" in bx["text"] and "Weight" in bx["text"] and "Value" in bx["text"], f"{style} desktop: sword tooltip has damage, weight, value")
+    # [itemdetail] on a PC the Items rows fill the side panel instead of a floating box (itemdetail_ui.py checks it in full)
+    bb = await (await pg.query_selector(f"#sky .sky-row[data-id='{sid}']")).bounding_box()
+    await pg.mouse.move(bb["x"] + bb["width"] / 2, bb["y"] + bb["height"] / 2); await pg.wait_for_timeout(600)
+    det = await pg.evaluate("() => document.querySelector('#sky .sky-detail')?.textContent || ''")
+    ok("Steel Sword" in det and "Damage" in det and "Weight" in det and "Value" in det, f"{style} desktop: hovering the sword fills the side panel with damage, weight, value")
+    ok(await pg.evaluate(BOX) is None, f"{style} desktop: no floating tooltip over the Items list")
     await hover(pg, "#sky .sky-foot .gold", "menu_gold", style, "gold", shot=False)
     # moving off hides it
     await pg.mouse.move(3, 1076); await pg.wait_for_timeout(400)
@@ -180,8 +184,14 @@ async def phone(b, style, errs):
         has_stars = await pg.evaluate("() => { try { window.__ui.go && window.__ui.go('hero'); } catch (e) {} return !!document.querySelector('[data-sk-perk], [data-act=perk]'); }")
     await pg.wait_for_timeout(400)
     sel = "[data-sk-perk]" if await pg.query_selector("[data-sk-perk]") else "[data-act=perk]"
-    if await pg.query_selector(sel): await hold(pg, cdp, sel, "perk", style, "perk")
-    else: print(f"skip {style} perk hold (no perk on screen)")
+    if await pg.query_selector(sel):
+        # since b247 the stars on a phone have no floating box: tapping a star shows it in the details panel under the sky
+        ok(not await pg.evaluate("!!document.querySelector('g[data-sk-perk][data-tip-k]')"), f"{style} phone: stars carry no floating tooltip")
+        await pg.evaluate("document.querySelector('g[data-sk-perk]')?.scrollIntoView({block:'center'})"); await pg.wait_for_timeout(300)
+        await tap(pg, cdp, "g[data-sk-perk]"); await pg.wait_for_timeout(500)
+        ok(await pg.evaluate("!!document.querySelector('g[data-sk-perk].sel, .skflash')"), f"{style} phone: tapping a star shows it in the panel")
+        bx = await pg.evaluate(BOX); ok(bx is None or bx["text"] == "" or "tt-sheet" in (await pg.evaluate("document.getElementById('tip')?.className || ''")), f"{style} phone: a star tap opens no floating box")
+    else: print(f"skip {style} perk (no perk on screen)")
     # a finger that slides is a scroll, not a hold
     bb = await (await pg.query_selector("#goldv")).bounding_box()
     await cdp.send("Input.dispatchTouchEvent", {"type": "touchStart", "touchPoints": [{"x": bb["x"] + 5, "y": bb["y"] + 5, "id": 3}]})

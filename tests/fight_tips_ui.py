@@ -60,7 +60,8 @@ async def main():
             bb = await row.bounding_box(); await pg.mouse.move(5, 5); await pg.mouse.move(bb["x"] + 10, bb["y"] + bb["height"] / 2)
             bx = await box(pg)
             t = bx["text"].lower() if bx else ""
-            ok("flames" in t and "destruction" in t and "magicka" in t and "fire damage" in t, "pc: hovering the spell row shows what it does" + (f" got {t[:90]!r}" if bx else " (nothing)"))
+            # the skill bar's tip is a compact line above the bar (tooltip.js dockLine): name, cost and effect, no school line
+            ok("flames" in t and "magicka" in t and "fire damage" in t, "pc: hovering the spell row shows what it does" + (f" got {t[:90]!r}" if bx else " (nothing)"))
             ok("burns" in t and "turns" in t, "pc: with the burn's numbers and how long it lasts")
             await pg.screenshot(path=f"{OUT}pc_spell_row.png")
         cast = await pg.query_selector("#tbf [data-tba='spell:flames']")

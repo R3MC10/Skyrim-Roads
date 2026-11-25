@@ -153,7 +153,8 @@ const COOP = (() => {
       potAt: potRule ? potRule.pct || 40 : 0, pots: potRule ? Math.min(2, G.countRestore(s, "health")) : 0, potAmt: 50 };
   }
   const ROLE = { healer: "Healer", guard: "Guard", striker: "Striker", fighter: "Fighter" };
-  const card = (s) => (s.dungeon?.run ? { run: s.dungeon.run, step: s.dungeon.cstep || 0, busy: !!s.dungeon.room, prof: profile(s) } : null);
+  const card = (s) => (s.dungeon?.run ? { run: s.dungeon.run, step: s.dungeon.cstep || 0, busy: !!s.dungeon.room, prof: profile(s),
+    ...(typeof DUNEVENTS !== "undefined" ? { msk: DUNEVENTS.sheet(s) } : {}) } : null);   // msk: the skills a mystery room's check can use (the party's best rolls)
   /* players in your room: same run, same step */
   function allies(s, cards) {
     const d = s.dungeon;

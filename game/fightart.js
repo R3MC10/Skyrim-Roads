@@ -814,7 +814,7 @@ const FIGHTART = (() => {
     const RIGW = RIG && nWait ? FOERIG.ctl(foeK, rec.foeName, { look: foeK === "player" ? matePerson(rec.foeLook) : null, foeLook: rec.foeLook, arch: typeof FOEGROUPS !== "undefined" ? FOEGROUPS.look(rec.f?.e) : null }) : null;
     const RIGWST = { ...RIGST, still: !!rm }, waitP = idlePose({}, null);
     function drawWaiting(tt) {
-      const pic0 = foeK !== "player" && typeof ASSETS !== "undefined" ? ASSETS.img(ASSETS.foeKey(rec.foeName, foeK)) : null;
+      const pic0 = foeK !== "player" && typeof ASSETS !== "undefined" ? ASSETS.img(ASSETS.foeKey(rec.foeName, foeK, rec.f?.e?.arch)) : null;
       const pic = pic0 && typeof RIGLOOK !== "undefined" ? RIGLOOK.graded(pic0) : pic0, picH = (foeK === "dragon" ? 120 : 66) * Math.min(1.8, fSize);
       curFoeLook = rec.foeLook; curArchLook = typeof FOEGROUPS !== "undefined" ? FOEGROUPS.look(rec.f?.e) : null; curDragon = null;
       for (const w of LAY.waiting) {
@@ -1328,7 +1328,7 @@ const FIGHTART = (() => {
       }
       const lhP = typeof LEGHUNT !== "undefined" && LEGHUNT.paintOf ? LEGHUNT.paintOf(rec.f?.e) : null;   // a legendary beast: its own painted picture, colour-graded and a little bigger (leghunt.js)
       const picK0 = () => (lhP ? lhP.scale : 1);
-      const foePic0 = foeK !== "player" && typeof ASSETS !== "undefined" ? ASSETS.img(lhP ? lhP.key : ASSETS.foeKey(rec.foeName, foeK)) : null;
+      const foePic0 = foeK !== "player" && typeof ASSETS !== "undefined" ? ASSETS.img(lhP ? lhP.key : ASSETS.foeKey(rec.foeName, foeK, rec.f?.e?.arch)) : null;
       const foePic = foePic0 && RL ? RL.graded(foePic0) : foePic0;   // [rigcohesion] in the scene's light
       if (foePic && RL && !curDragon?.air) RL.shadow(wg, foeK === "dragon" ? -10 : 2, 0.4, (foeK === "dragon" ? 60 : 20) * Math.min(1.8, fSize) * picK0(), 4.2 * Math.min(1.8, fSize), foeDown ? 0.4 : 0.75);   // its contact shadow
       const picK = picK0();
