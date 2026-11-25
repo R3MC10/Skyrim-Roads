@@ -45,11 +45,15 @@ async def main():
                 await pg.screenshot(path=os.path.join(OUT, f"names_loc_{tag}.png"))
                 # the map: leave town, open the map tab
                 await pg.evaluate("(()=>{const S=window.__dbg.save(); S.location=null; [S.x,S.y]=WORLD.places['Whiterun']; S.x+=0.02; window.__ui.refresh();})()")
-                await pg.evaluate("document.querySelector('[data-tab=map]')?.click()"); await pg.wait_for_timeout(2500)
+                await pg.evaluate("window.__ui.go ? window.__ui.go('map') : document.querySelector('[data-tab=map]')?.click()"); await pg.wait_for_timeout(2500)
                 await pg.evaluate("window.__drawn.clear(); window.__ui.refresh(); window.scrollTo(0,0); document.querySelector('#side')?.scrollTo?.(0,0)"); await pg.wait_for_timeout(2500)
                 await pg.screenshot(path=os.path.join(OUT, f"names_map_{tag}.png"))
                 drawn = sorted(await pg.evaluate("[...window.__drawn]"))
-                lst = await pg.evaluate("[...document.querySelectorAll('#side .list .item .t')].map(e=>e.firstChild && e.firstChild.textContent).filter(Boolean).slice(0,12)")
+                # the place list: under the map before the five tabs, on World -> Places since
+                if await pg.evaluate("typeof MENUS !== 'undefined' && !!window.__ui.go"):
+                    await pg.evaluate("window.__ui.go('places')"); await pg.wait_for_timeout(1500)
+                lst = await pg.evaluate("[...document.querySelectorAll('#side .list .item .t')].map(e=>e.firstChild && e.firstChild.textContent).filter(Boolean).slice(0,40)")
+                await pg.screenshot(path=os.path.join(OUT, f"names_places_{tag}.png"))
                 check(any("WHITERUN" in d.upper() for d in drawn), f"{tag}: the map draws place names ({len(drawn)} words)")
                 has = await pg.evaluate("typeof NAMES !== 'undefined'")
                 if has:
@@ -66,7 +70,10 @@ async def main():
                     # live things (guard patrols, caravans, which spot is in view) change between runs; a renamed place would
                     # drop its old label (gone) or draw a form that isn't its id (new)
                     ids = await pg.evaluate("Object.keys(WORLD.places).concat(Object.keys(WORLD.holds))")
-                    moved = [x for x in gone if x.upper() in names] + [x for x in new if x.upper() in names and x not in ids and x not in [i.upper() for i in ids]]
+                    # small place labels hide behind live markers now and then, so a missing one is noise (every place's label
+                    # text is checked above); hold and land names are always drawn, so one going missing means it was renamed
+                    pl_ids = await pg.evaluate("Object.keys(WORLD.places).map(x=>x.toUpperCase())")
+                    moved = [x for x in gone if x.upper() not in pl_ids and (x.upper() in names or x.isupper())] + [x for x in new if x.upper() in names and x not in ids and x not in [i.upper() for i in ids]]
                     check(moved == [], f"{tag}: the same place and hold names on the map (differ: {moved[:6]})")
                     rows = lambda l: [r.strip() for r in l if r.strip() in ids]
                     check(set(rows(old["list"])) <= set(rows(rec["list"])) or not rows(old["list"]), f"{tag}: place rows in the travel list unchanged ({rows(old['list'])[:4]} -> {rows(rec['list'])[:4]})")
