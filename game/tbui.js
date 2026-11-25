@@ -102,7 +102,7 @@ const TBUI = (() => {
       if (o.hurt) { stage.classList.remove("hurt", "big"); void stage.offsetWidth; stage.classList.add("hurt"); if (o.big) { stage.classList.add("big"); buzz(30); } }
       else if (o.hit) { stage.classList.remove("struck"); void stage.offsetWidth; stage.classList.add("struck"); }
     }
-    const lg = el.querySelector(".tblog"); if (lg) requestAnimationFrame(() => { lg.scrollTop = lg.scrollHeight; });
+    const lg = el.querySelector(".tblog"); if (lg) requestAnimationFrame(() => { if (typeof FOEPANEL === "undefined" || !FOEPANEL.logHeld()) lg.scrollTop = lg.scrollHeight; });   // [foepanel] not while you read back up
   }
 
   // ------------------------------------------------------------------ tooltips: hold a finger on something, or hover with a mouse
