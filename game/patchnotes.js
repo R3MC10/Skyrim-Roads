@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b266-npcportraits", build: 266, date: "25 Nov 2026", title: "Painted faces for the people you meet", items: [
+      "The smiths, innkeepers, court wizards and merchants of Whiterun, Riverwood, Solitude, Windhelm and Riften now have painted portraits, and so do four Jarls, Whiterun's steward and the Greybeard who greets you.",
+      "Guards, and Nord innkeepers and merchants who don't have their own painting yet, get a painted face too. Guards keep their hold's colours around the picture.",
+      "The face next to who you're talking to is bigger on a PC, and trainers' faces are a little bigger in their list.",
+    ] },
     { id: "b265-qacore3", build: 265, date: "25 Nov 2026", title: "Crafting in Polish", items: [
       "Fixed: in Polish, the arcane enchanter, parts of the alchemy lab and one cooking recipe were still in English.",
       "Fixed: in Polish, the messages after brewing, cooking, eating a meal and improving gear were half in English.",

@@ -242,10 +242,39 @@ const NPCART = (() => {
     g.strokeStyle = PL.ink; g.lineWidth = 1.5; g.strokeRect(0.75, 0.75, S - 1.5, S - 1.5);
   }
   function keyOf(n) { return [n.name, n.race, n.sex, n.role, n.mat || "", n.robe || "", n.hold || ""].join("|"); }
+  /* [npcportraits] painted portraits: npc-<name-slug> for a named person, else npcg-<role>-<race>-<sex> for guards,
+     merchants and innkeepers, else the drawing. Only names in ASSETS.NPC are asked for. The painting sits in a slot the
+     same size as the drawing, which shows until the file loads (then swaps in, see fill()). Guards keep their hold
+     colours as a tinted frame. */
+  const slugOf = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  const GENERIC = { guard: 1, merchant: 1, innkeeper: 1 };
+  function paintKey(n) {
+    const list = typeof ASSETS !== "undefined" && ASSETS.NPC; if (!list || !n) return null;
+    const k = "npc-" + slugOf(n.name);
+    if (!n.generic && n.role !== "guard" && list.has(k)) return k;
+    if (GENERIC[n.role]) { const g = `npcg-${n.role}-${n.race}-${n.sex === "f" ? "f" : "m"}`; if (list.has(g)) return g; }
+    return null;
+  }
+  const escA = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const pimg = (u, alt) => `<img class="npcimg" src="${escA(u)}" alt="${escA(alt)}" draggable="false" decoding="async">`;
   function portrait(n, size = 64) {
     if (!n) return "";
-    return ART.html(size, size, (g, H, w) => draw(g, H, n, w), { key: "npc|" + keyOf(n) + "|" + size, alt: n.name, cls: "npcport" });
+    const k = paintKey(n);
+    const drawn = ART.html(size, size, (g, H, w) => draw(g, H, n, w), { key: "npc|" + keyOf(n) + "|" + size, alt: n.name, cls: k ? "npcdraw" : "npcport" });
+    if (!k) return drawn;
+    const u = ASSETS.url(k), guard = n.role === "guard" && HOLD_COLOR[n.hold];
+    return `<span class="npcport npcslot${u ? " ok" : ""}${guard ? " npcguard" : ""}" data-npck="${k}" data-alt="${escA(n.name)}" style="--nps:${size | 0}px${guard ? `;--npch:${guard}` : ""}">${u ? pimg(u, n.name) : drawn}</span>`;
   }
+  /* pictures that arrive later: swap them into the slots still showing the drawing */
+  function fill() {
+    try {
+      for (const el of document.querySelectorAll(".npcslot:not(.ok)")) {
+        const u = ASSETS.url(el.dataset.npck); if (!u) continue;
+        el.innerHTML = pimg(u, el.dataset.alt || ""); el.classList.add("ok");
+      }
+    } catch { /* no page */ }
+  }
+  try { if (typeof ASSETS !== "undefined") ASSETS.on(fill); } catch { /* ignore */ }
   function trainer(name, skill, size = 36) {
     const [race, sex] = TRAINER_RACE[name] || ["nord", hash(name) % 2 ? "m" : "f"];
     return portrait({ name, race, sex, ...trainerRole(skill) }, size);
@@ -317,7 +346,7 @@ const NPCART = (() => {
     const n = who(town, section);
     if (!n) return "";
     const line = greeting(n, s);
-    return `<div class="npctalk">${portrait(n, 64)}<div class="npct"><b>${n.name.replace(/[<>&"]/g, "")}</b><span class="npcrole">${(n.title || "").replace(/[<>&"]/g, "")}</span>${line ? `<q>${line.replace(/[<>&"]/g, "")}</q>` : ""}</div></div>`;
+    return `<div class="npctalk">${portrait(n, 96)}<div class="npct"><b>${n.name.replace(/[<>&"]/g, "")}</b><span class="npcrole">${(n.title || "").replace(/[<>&"]/g, "")}</span>${line ? `<q>${line.replace(/[<>&"]/g, "")}</q>` : ""}</div></div>`;
   }
-  return { TOWN, who, talk, portrait, trainer, follower, giver, steward, jarlOf, greeting, HOLD_COLOR, CAPITAL, FOLLOWER_LOOK, TRAINER_RACE };
+  return { TOWN, who, talk, portrait, paintKey, slugOf, trainer, follower, giver, steward, jarlOf, greeting, HOLD_COLOR, CAPITAL, FOLLOWER_LOOK, TRAINER_RACE };
 })();

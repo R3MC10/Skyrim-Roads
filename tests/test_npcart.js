@@ -7,6 +7,7 @@ const doc={createElement:()=>({width:0,height:0,style:{},dataset:{},getContext:(
 const c={calls,console,Math,Date,JSON,Float64Array,Float32Array,Uint8Array,Int32Array,Uint16Array,Int16Array,Object,Array,Set,Map,Proxy,Number,String,document:doc,localStorage:{getItem:()=>null,setItem(){}},devicePixelRatio:2};vm.createContext(c);
 const files=fs.readFileSync(W+"index.html","utf8").match(/<script src="([a-z0-9]+\.js)">/g).map(s=>s.match(/"(.*)"/)[1]).filter(f=>!["store.js","p2pnet.js","ui.js","sound.js","map.js","backup.js","skillinfo.js"].includes(f));
 for(const f of files) vm.runInContext(fs.readFileSync(W+f,"utf8").replace(/^const (\w+) =/m,"var $1 ="),c);
+c.__ASRC=fs.readFileSync(W+"assets.js","utf8");
 vm.runInContext(`
 const ok=(c,m)=>{ if(!c) throw new Error("FAIL "+m); };
 const towns=Object.keys(WORLD.places).filter(n=>G.shopTypes(n).length||TOWNS.isTown(n));
@@ -31,5 +32,22 @@ for(const q of ["main","companions","thieves","college"]) ok(/<img/.test(NPCART.
 ok(/Arngeir/.test(NPCART.talk("High Hrothgar","greybeard",s)),"greybeard");
 // greetings: bounty changes what guards say
 s.bounty={Whiterun:40}; ok(/wanted/i.test(NPCART.greeting(NPCART.who("Whiterun","streets"),s)),"guard bounty line");
-console.log("npcart ok · cards",cards,"(named",named,"generic",gens,") · trainers",tr,"· canvas calls",calls.n);
+// [npcportraits] the first painted batch: every name maps to a key listed in assets.js; with no file the drawing shows in a slot of the same size
+const ASRC=__ASRC;
+const BATCH=[["Whiterun","blacksmith"],["Whiterun","inn"],["Whiterun","wizard"],["Whiterun","general"],["Whiterun","alchemy"],["Riverwood","blacksmith"],["Riverwood","inn"],["Riverwood","general"],
+  ["Solitude","blacksmith"],["Solitude","inn"],["Solitude","wizard"],["Solitude","general"],["Windhelm","blacksmith"],["Windhelm","inn"],["Windhelm","wizard"],["Windhelm","general"],
+  ["Riften","blacksmith"],["Riften","inn"],["Riften","wizard"],["Riften","general"],["High Hrothgar","greybeard"]];
+const keys=new Set();
+for(const [t,sec] of BATCH){ const n=NPCART.who(t,sec); const k=NPCART.paintKey(n); ok(k&&ASSETS.NPC.has(k)&&ASRC.includes('"'+k+'"'),"painted key "+t+"/"+sec+" "+k); keys.add(k); }
+for(const h of ["Whiterun","Haafingar","Eastmarch","The Rift"]){ const k=NPCART.paintKey({...NPCART.jarlOf(h),role:"jarl"}); ok(k&&ASSETS.NPC.has(k),"jarl key "+h+" "+k); keys.add(k); }
+{ const k=NPCART.paintKey({...NPCART.TOWN.Whiterun.steward,role:"steward"}); ok(k==="npc-proventus-avenicci","steward key"); keys.add(k); }
+for(const [role,sex] of [["guard","m"],["guard","f"],["merchant","m"],["merchant","f"],["innkeeper","m"],["innkeeper","f"]]){ const k=NPCART.paintKey({name:"Somebody",race:"nord",sex,role,generic:1}); ok(k==="npcg-"+role+"-nord-"+sex&&ASSETS.NPC.has(k)&&ASRC.includes('"'+k+'"'),"generic "+role+sex); keys.add(k); }
+ok(keys.size===32&&ASSETS.NPC.size===32,"32 painted portraits, got "+keys.size+"/"+ASSETS.NPC.size);
+ok(NPCART.paintKey(NPCART.who("Ivarstead","inn"))==="npcg-innkeeper-nord-m","unpainted innkeeper borrows the generic");
+ok(NPCART.paintKey({name:"Ghorza gra-Bagol",race:"orc",sex:"f",role:"smith"})===null,"no picture: drawing");
+const g=NPCART.who("Whiterun","streets"); ok(NPCART.paintKey(g)==="npcg-guard-nord-"+g.sex,"guard generic");
+ok(/npcguard/.test(NPCART.portrait(g,44))&&NPCART.portrait(g,44).includes(NPCART.HOLD_COLOR.Whiterun),"guard keeps hold colour frame");
+for(const sz of [44,64,96]){ const h=NPCART.portrait(NPCART.who("Whiterun","blacksmith"),sz);
+  ok(/class="npcport npcslot"/.test(h)&&h.includes("--nps:"+sz+"px")&&h.includes('width="'+sz+'" height="'+sz+'"')&&/<img class="art npcdraw"/.test(h),"drawn fallback in a "+sz+" slot: "+h.slice(0,160)); }
+ok(/class="art npcport"/.test(NPCART.portrait({name:"Ghorza gra-Bagol",race:"orc",sex:"f",role:"smith"},44)),"unpainted people unchanged");console.log("npcart ok · cards",cards,"(named",named,"generic",gens,") · trainers",tr,"· canvas calls",calls.n);
 `,c);

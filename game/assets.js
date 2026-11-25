@@ -39,6 +39,10 @@
                                          bosmer dunmer orc khajiit argonian. One sex each (BUSTART.SEX: m f f m f m f m f m); for the
                                          other sex the bust shows as a round race crest. Shown in the race picker, the Hero page and
                                          the paper doll's corner; the drawn portrait stays until the file loads.
+     npc-<name-slug>          256×256    painted NPC portraits (npcart.js): transparent, chest up, 3/4 view facing right, upper-left
+                                         light, same painted look as bust-*.webp, WebP q85 (made at 512, shipped at 256). Named people
+                                         first (npc-adrianne-avenicci), then generics npcg-<role>-<race>-<sex> (guard, merchant,
+                                         innkeeper). Only the names in ASSETS.NPC below are asked for; the drawn face stays until it loads.
      shop-<id>                1200×375   painted banners for town sections (shown above each shop's list)
        ids: general forge (also blacksmith) inn (also cook) alchemy wizard (also enchanter) market stables home hall
             fence arena mine — raw 3:2 paintings go through art/conv: crop the middle band, WebP q80
@@ -152,6 +156,13 @@ const ASSETS = (() => {
   const PAINTED = new Set(["icon-hs-brooch", "icon-hs-compass", "icon-hs-draught", "icon-hs-goblet", "icon-hs-papers", "icon-hs-signet", "icon-hs-torc",
     "icon-ing-blue-flower", "icon-ing-fire-salts", "icon-ing-garlic", "icon-ing-lavender", "icon-ing-salt", "icon-ing-wheat",
     "icon-mat-dwarven", "icon-mat-firewood", "icon-mat-iron", "icon-mat-leather", "icon-mat-moonstone", "icon-mat-steel"]);
+  /* [npcportraits] painted NPC portraits in the game folder (npcart.js only asks for these). Add a name when its file lands. */
+  const NPC = new Set(["npc-adrianne-avenicci", "npc-belethor", "npc-farengar-secret-fire", "npc-hulda", "npc-arcadia", "npc-balgruuf-the-greater", "npc-proventus-avenicci",
+    "npc-alvor", "npc-orgnar", "npc-lucan-valerius",
+    "npc-beirand", "npc-corpulus-vinius", "npc-sybille-stentor", "npc-sayma", "npc-elisif-the-fair",
+    "npc-oengul-war-anvil", "npc-elda-early-dawn", "npc-wuunferth-the-unliving", "npc-revyn-sadri", "npc-ulfric-stormcloak",
+    "npc-balimund", "npc-keerava", "npc-wylandriah", "npc-bersi-honey-hand", "npc-laila-law-giver", "npc-arngeir",
+    "npcg-guard-nord-m", "npcg-guard-nord-f", "npcg-merchant-nord-m", "npcg-merchant-nord-f", "npcg-innkeeper-nord-m", "npcg-innkeeper-nord-f"]);
   const guessed = (key) => /^icon-/.test(key) || key === "map-world-2x";
   const wantHi = () => { try { return innerWidth >= 1100 || (devicePixelRatio || 1) > 1.5; } catch { return false; } };
   const state = new Map();   // key -> { st: "loading"|"ok"|"none", img, url }
@@ -295,5 +306,5 @@ const ASSETS = (() => {
 
   const loading = (i) => img(`bg-loading-${1 + (Math.abs(i | 0) % 4)}`);
   const status = () => [...state].map(([k, r]) => [k, r.st]);
-  return { HI, PAINTED, img, url, state: stateOf, stateOf, provide, on, enable, placeKey, biomeKey, foeKey, cover, loading, status, slug, CSS_KEYS, get pending() { return pending; } };
+  return { HI, PAINTED, NPC, img, url, state: stateOf, stateOf, provide, on, enable, placeKey, biomeKey, foeKey, cover, loading, status, slug, CSS_KEYS, get pending() { return pending; } };
 })();
