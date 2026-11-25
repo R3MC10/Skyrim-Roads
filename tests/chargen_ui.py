@@ -34,6 +34,34 @@ async def main():
             await pg.wait_for_selector(".mi[data-t=new]", state="attached", timeout=10000); await pg.evaluate("document.querySelector('.mi[data-t=new]').click()")
             await pg.wait_for_selector(".cg .cgcan", timeout=10000); await pg.wait_for_timeout(700)
             ok(await pg.evaluate("document.querySelectorAll('.cg .cgtab').length") == 7, f"{tag}: seven tabs")
+            # [chargensex] the Male / Female switch sits above the tabs: big buttons, switches the preview, keeps the race, no beard for a woman
+            ok(await pg.evaluate("document.querySelectorAll('.cgsex .cgsexb').length") == 2, f"{tag}: Male / Female switch above the tabs")
+            ok(await pg.evaluate("(()=>{const s=document.querySelector('.cgsex').getBoundingClientRect(), t=document.querySelector('.cgtabs').getBoundingClientRect(); return s.bottom<=t.top+1 && s.height>0;})()"), f"{tag}: switch is above the tabs")
+            szs = await pg.evaluate("[...document.querySelectorAll('.cgsexb')].map(b=>{const r=b.getBoundingClientRect(); return Math.min(r.width,r.height);})")
+            ok(min(szs) >= 44, f"{tag}: switch buttons at least 44px {szs}")
+            await pg.click(f".rpick[data-race={race}]"); await pg.wait_for_timeout(300)
+            try: await pg.wait_for_function("document.querySelector('.cg').classList.contains('cg-painted')", timeout=30000)
+            except Exception: pass
+            await pg.wait_for_timeout(500)
+            await pg.screenshot(path=os.path.join(OUT, f"cs_{tag}_male.png"))
+            await pg.click(".cgsexb[data-v=f]"); await pg.wait_for_timeout(400)
+            af = json.loads(await pg.evaluate(APP))
+            ok(af["sx"] == "f" and af["beard"] == "none" and await pg.evaluate("CHARGEN.state.race") == race, f"{tag}: Female picked, race kept, no beard")
+            ok(await pg.evaluate("document.querySelector('.cgsexb[data-v=f]').getAttribute('aria-checked')") == "true", f"{tag}: Female button marked")
+            ok("Brynja" in await pg.evaluate("document.querySelector('#nm').placeholder"), f"{tag}: name example follows the sex")
+            for _ in range(4):
+                await pg.click("[data-cg=rand]"); await pg.wait_for_timeout(120)
+                ok(json.loads(await pg.evaluate(APP))["sx"] == "f", f"{tag}: Randomise keeps Female")
+            try: await pg.wait_for_function("document.querySelector('.cg').classList.contains('cg-painted')", timeout=30000)
+            except Exception: pass
+            await pg.wait_for_timeout(500)
+            ok(await pg.evaluate(INK) > 0.01, f"{tag}: female preview draws")
+            ok(await pg.evaluate("FIGART.specOf(FIGART.lookFor({look:CHARGEN.state && (()=>{const L={r:CHARGEN.state.race,id:'t',eq:{},gl:{},a:APPEAR.compact(CHARGEN.state.app)};return L;})()})).fem"), f"{tag}: the preview figure is a woman")
+            await pg.screenshot(path=os.path.join(OUT, f"cs_{tag}_female.png"))
+            # the keyboard: arrows on the switch flip it back
+            await pg.focus(".cgsexb[data-v=f]"); await pg.keyboard.press("ArrowLeft"); await pg.wait_for_timeout(250)
+            ok(json.loads(await pg.evaluate(APP))["sx"] == "m" and await pg.evaluate("document.activeElement?.dataset.v") == "m", f"{tag}: arrow keys flip the switch")
+            await pg.click(".cgsexb[data-v=f]"); await pg.wait_for_timeout(300)   # make a woman for the rest of the run
             # race tab: pick a race, its card shows lore + gift + power
             await pg.click(f".rpick[data-race={race}]"); await pg.wait_for_timeout(500)
             card = await pg.evaluate("document.querySelector('.rshow')?.innerText||''")
@@ -80,7 +108,8 @@ async def main():
             await pg.screenshot(path=os.path.join(OUT, f"cg_{tag}_start_named.png"))
             want = await pg.evaluate(APP)
             await pg.click("#begin"); await pg.wait_for_timeout(1800)
-            s = json.loads(await pg.evaluate("JSON.stringify((({race,app,stone,name,location})=>({race,app,stone,name,location}))(__dbg.save()))"))
+            s = json.loads(await pg.evaluate("JSON.stringify((({race,app,stone,name,location,sex})=>({race,app,stone,name,location,sex}))(__dbg.save()))"))
+            ok(s["app"]["sx"] == "f" and s.get("sex") == "f", f"{tag}: save keeps Female (app.sx and sex)")
             ok(s["race"] == race and s["stone"] == "warrior", f"{tag}: save has race {s['race']} and stone {s['stone']}")
             ok(json.dumps(s["app"], sort_keys=True) == json.dumps(json.loads(want), sort_keys=True), f"{tag}: save has the look made on screen")
             ok(await pg.evaluate("!document.querySelector('.cg')"), f"{tag}: creation screen closed")

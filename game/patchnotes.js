@@ -3,6 +3,10 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b287-chargensex", build: 287, date: "25 Nov 2026", title: "Pick man or woman first", items: [
+      "Character creation now starts with a big Male / Female switch at the top, above the tabs, so it's the first thing you pick.",
+      "Switching keeps your race and everything else you chose; a woman just loses the beard. Randomise now keeps the one you picked.",
+    ] },
     { id: "b286-titlesilent", build: 286, date: "25 Nov 2026", title: "Quiet start", items: [
       "Tapping \"Tap to begin\" on the title screen no longer plays a sound.",
     ] },
