@@ -5070,6 +5070,17 @@ body:has(#tbf) #gnear{display:none!important}
 .ft-line.pet-line{margin-top:6px}
 /* [itemcards2] item cards: what else changes when you put it on (itemcmp.js notes) */
 .ic-cmp .ic-note{margin:4px 0 0;padding-left:14px;text-indent:-14px;color:#e8c77a;line-height:1.35}.ic-cmp .ic-note::before{content:"▸ ";color:#c9a24a}
+/* [perkkeys] perkkeys.js: the Skills / perk stars page on a keyboard (SkyUI-style focus ring + a key hint line, PC only) */
+.pkk-hint{display:none}
+@media (hover:hover) and (pointer:fine){
+  .tw-starp .tw-car>button.pkk-f{outline:2px solid #f3e2b0;outline-offset:1px;box-shadow:0 0 14px rgba(243,226,176,.45),inset 0 0 0 1px rgba(243,226,176,.35);position:relative;z-index:1}
+  .tw-starp[data-pkk=star] .tw-car>button.pkk-f{outline-color:rgba(243,226,176,.35);box-shadow:none}
+  .tw-big g.st circle.pkk-ring{fill:none;stroke:#f3e2b0;stroke-width:1.6;opacity:.95;filter:drop-shadow(0 0 4px rgba(243,226,176,.8));pointer-events:none}
+  .tw-big g.st.pkk-f .lbl{fill:#fff4cf}
+  .pkk-hint{display:block;grid-column:1/-1;margin:8px 0 0;padding:5px 8px 0;border-top:1px solid rgba(160,180,220,.16);font-family:var(--sk-ui);font-size:12px;letter-spacing:.08em;color:#aeb8cc;text-align:center;text-transform:uppercase}
+}
+.tw-perk button.pkk-no{animation:pkkno .3s}
+@keyframes pkkno{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 /* [gatherarea] the Gathering section of the Area tab (gatherui.js): SkyUI rows like the Area board */
 .gcard .ghead{display:flex;align-items:center;gap:8px}.gcard .ghead h2{margin:0;flex:0 1 auto}
 .gcard .ghead .au-gn{color:var(--gold);font-size:12px;letter-spacing:.08em;text-transform:uppercase}
@@ -5331,6 +5342,7 @@ body:has(#tbf) #gnear{display:none!important}
 <script src="menus.js"></script>
 <script src="menus2.js"></script>
 <script src="tabmenu.js"></script>
+<script src="perkkeys.js"></script>
 <script src="fabdodge.js"></script>
 <script src="nickname.js"></script>
 <script src="desktop.js"></script>
@@ -5414,6 +5426,7 @@ body:has(#tbf) #gnear{display:none!important}
 <script src="i18n_enchants2.js"></script>
 <script src="i18n_invites.js"></script>
 <script src="i18n_tabkeys.js"></script>
+<script src="i18n_perkkeys.js"></script>
 <script src="i18n_holds.js"></script>
 <script src="i18n_partyvote.js"></script>
 <script src="i18n_deepdelve.js"></script>
