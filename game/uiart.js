@@ -247,6 +247,7 @@ const UIART = (() => {
     const [k, a] = String(id).split(":");
     if ((k === "spell" || k === "dual") && D.SPELLS[a]) return drawSpell(a);
     if (k === "potion") return (g) => { tile(g); poly(g, [[16, 7], [24, 7], [24, 13], [30, 22], [28, 33], [12, 33], [10, 22], [16, 13]], "#efe4cc"); poly(g, [[11, 22], [29, 22], [28, 33], [12, 33]], { health: "#c43a3a", magicka: "#3a6ac4", stamina: "#3a9a4a" }[a] || "#c43a3a", INK, 1); rect(g, 16, 4, 8, 4, "#7a5232"); };
+    if (k === "poison") return (g) => { tile(g); poly(g, [[16, 7], [24, 7], [24, 13], [30, 22], [28, 33], [12, 33], [10, 22], [16, 13]], "#efe4cc"); poly(g, [[11, 22], [29, 22], [28, 33], [12, 33]], "#4a7a3a", INK, 1); rect(g, 16, 4, 8, 4, "#7a5232"); circ(g, 20, 27, 3, "#e9dcc0", INK, 0.8); };   // [itemgames] a green flask with a little skull
     if (k === "scroll") return (g) => { tile(g); rect(g, 9, 12, 22, 16, "#efe4cc"); ell(g, 9, 20, 3, 8, "#d9c9a2"); ell(g, 31, 20, 3, 8, "#d9c9a2"); circ(g, 20, 29, 3.4, "#8e2b25"); };
     if (k === "shout") return drawShout(a);
     if (k === "power" && a === "lord") return (g) => { medal(g, "#4a1a24"); poly(g, [[20, 14], [26, 9], [33, 10], [30, 15], [34, 19], [27, 20], [23, 26], [20, 22], [17, 26], [13, 20], [6, 19], [10, 15], [7, 10], [14, 9]], "#2a1a2a", INK, 1.1); circ(g, 18.3, 16, 0.9, "#ff3030", null); circ(g, 21.7, 16, 0.9, "#ff3030", null); };   // a bat: Vampire Lord

@@ -97,6 +97,7 @@ const HOTBAR = (() => {
     const hit2 = bestSpell(s, hitSpell, [hit]);
     if (hit2) add("spell:" + hit2);
     if (typeof REACT !== "undefined" && f) { try { for (const [a] of REACT.moves(f)) add(a); } catch { /* none */ } }
+    if (typeof POISONFX !== "undefined") { try { const p = POISONFX.list(f, s)[0]; if (p) add(p[0]); } catch { /* none */ } }   // a poison you carry (poisonfight.js)
     while (out.length < N) out.push(null);
     return out;
   }
@@ -132,6 +133,7 @@ const HOTBAR = (() => {
     if (k === "dual") return "Dual " + (D.SPELLS[arg]?.name || arg);
     if (k === "potion") return cap(arg) + " potion";
     if (k === "scroll") return D.ITEMS[arg]?.name || "Scroll";
+    if (k === "poison") return typeof POISONFX !== "undefined" ? POISONFX.name(s || f?.s, a) : "Poison";
     if (k === "shout") return (typeof POWERS !== "undefined" && POWERS.SHOUTS[arg]?.[0]) || cap(arg);
     if (k === "power") return arg === "race" ? "Racial power" : arg === "stone" ? "Standing stone" : cap(arg);
     if (k === "rx") return ({ oil: "Oil flask", mark: "Mark target", cover: "Cover allies" })[arg] || cap(arg);
@@ -142,6 +144,7 @@ const HOTBAR = (() => {
     const [k, arg] = a.split(":");
     if (k === "potion") return cap(arg);
     if (k === "scroll") return names(s, f, a).replace(/^Scroll of /i, "");
+    if (k === "poison") return names(s, f, a).replace(/^Poison of /i, "");
     if (k === "shout") { const w = typeof POWERS !== "undefined" && POWERS.SHOUTS[arg]?.[1]?.[0]; return w || names(s, f, a); }
     if (a === "power_attack") return "Power";
     if (a === "bash") return "Bash";
@@ -165,6 +168,7 @@ const HOTBAR = (() => {
     const scrolls = new Set();
     try { for (const r of s.inv || []) { const it = D.ITEMS[r.item]; if (it?.spell && D.SPELLS[it.spell] && (f && f.left ? f.left(r.id) : r.qty) > 0) scrolls.add(r.item); } } catch { /* none */ }
     for (const it of [...scrolls].slice(0, 12)) R("items", "scroll:" + it, "Scroll");
+    if (typeof POISONFX !== "undefined") for (const [a, , n] of POISONFX.list(f, s).slice(0, 8)) R("items", a, `Poison · ${n} left`);   // coat your weapon (poisonfight.js)
     if (typeof STRAT !== "undefined") R("abilities", "recover", "Get your breath back");
     if (typeof REACT !== "undefined") { R("abilities", "rx:oil", "Combo"); R("abilities", "rx:mark", "Combo"); R("abilities", "rx:cover", "Combo"); }
     return out;
@@ -232,7 +236,7 @@ const HOTBAR = (() => {
   }
   function catOf(a) {
     const k = a.split(":")[0];
-    return k === "spell" || k === "dual" ? "spells" : k === "shout" || k === "power" ? "shouts" : k === "potion" || k === "scroll" ? "items" : a === "recover" || k === "rx" ? "abilities" : "weapons";
+    return k === "spell" || k === "dual" ? "spells" : k === "shout" || k === "power" ? "shouts" : k === "potion" || k === "scroll" || k === "poison" ? "items" : a === "recover" || k === "rx" ? "abilities" : "weapons";
   }
   /* true when the click was ours (the caller redraws) */
   function click(b, sess) {
