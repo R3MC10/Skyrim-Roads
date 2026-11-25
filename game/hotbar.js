@@ -368,8 +368,15 @@ const HOTBAR = (() => {
     if (src.dataset.hbp && ev.pointerType === "touch") {   // the list scrolls under a finger: hold first
       drag.lp = true;
       const d = drag;
-      d.t = setTimeout(() => { if (drag !== d) return; d.armed = true; src.classList.add("hb-lift"); buzz(15); start(d, d.x, d.y); }, LIFT);
+      d.t = setTimeout(() => { if (drag !== d) return; d.armed = true; src.classList.add("hb-lift"); buzz(15); hush(d.id); start(d, d.x, d.y); }, LIFT);
     }
+  }
+  /* the lift is a drag, not a hold: tell the hold-for-a-tooltip (tooltip.js: a row's name shows after 450ms and eats the
+     next tap) and the move preview that this finger is taken, with a pointercancel our own handler ignores */
+  let hushing = false;
+  function hush(id) {
+    hushing = true;
+    try { document.dispatchEvent(new PointerEvent("pointercancel", { bubbles: true, pointerId: id, pointerType: "touch" })); } catch { /* old browser */ } finally { hushing = false; }
   }
   function start(d, x, y) {
     if (d.on) return;
@@ -388,7 +395,7 @@ const HOTBAR = (() => {
   function cancelDrag() {
     const d = drag; drag = null; if (!d) return;
     clearTimeout(d.t); d.g?.remove(); d.over?.classList.remove("hb-over"); d.src.classList.remove("hb-lift"); root()?.classList.remove("hb-dragging");
-    if (d.on) swallowT = Date.now() + 400;
+    if (d.on) swallowT = Date.now() + 250;   // the click the browser sends right after the drop is not a tap
   }
   let pendSel = -1;
   function onMove(ev) {
@@ -403,7 +410,7 @@ const HOTBAR = (() => {
     follow(drag, ev.clientX, ev.clientY);
   }
   function onUp(ev) {
-    if (!drag || ev.pointerId !== drag.id) return;
+    if (!drag || ev.pointerId !== drag.id || hushing) return;
     const d = drag;
     if (!d.on || ev.type !== "pointerup") { cancelDrag(); return; }   // a plain tap: the click does it. pointercancel: nothing changes
     const moved = Math.hypot(ev.clientX - d.x, ev.clientY - d.y) >= 8;

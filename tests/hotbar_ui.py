@@ -4,6 +4,9 @@ empty slot) opens the picker; tap a slot then a spell puts it there; tap two slo
 move onto a slot and a slot off the bar works; the layout is kept in the save; pressing 3 casts the spell in slot 3; a key
 pressed while typing (or with the … menu open) does nothing; on screen the slots read 1-0 row by row. Phones 360/390/412 wide and PCs: the bar fits the b276
 fight layout (above the bottom edge, clear of your orb), and resting on / holding a slot still shows the move preview.
+Drag and drop (b294): a mouse drags a spell onto a slot (PC 1440/1920), a finger holds a row until it lifts and drags
+(phones; a quick swipe only scrolls), the slot under it lights up; the 1x/2x switch makes a slot dual cast, the same
+spell sits twice, the 2x slot's key casts the dual version, and a 2x slot of a spell that can't be dual cast is dimmed.
 Screenshots go to the system temp folder (SHOTS=folder: there instead), never into tests/.
   node serve.js 8765 ../game &   then   python hotbar_ui.py 8765"""
 import asyncio, sys, os, tempfile
@@ -164,6 +167,62 @@ async def main():
                 L5 = await slots()
                 ok(L5[0] == L4[1] and L5[1] == L4[0], f"{tag}: dragging a slot onto another swaps them")
                 await pg.mouse.move(d1["x"] + 20, d1["y"] + 20); await pg.mouse.down(); await pg.mouse.move(d2["x"] + 20, d2["y"] + 20, steps=8); await pg.mouse.up(); await pg.wait_for_timeout(300)
+            # ---- drag and drop + 1x / 2x (b294): Healing onto slot 8, then 2x on it
+            await tap('#tbf .hb-tab[data-hbtab="spells"]'); await pg.wait_for_timeout(150)
+            ok(await pg.evaluate("[...document.querySelectorAll('#tbf .hb-list [data-hbp]')].every(e=>e.dataset.hbp.startsWith('spell:'))"), f"{tag}: the Spells list shows each spell once (no separate Dual rows)")
+            sbox = await (await pg.query_selector('#tbf [data-hbp="spell:healing"]')).bounding_box()
+            dbox = await (await pg.query_selector('#tbf .hb-slot[data-hbs="7"]')).bounding_box()
+            sx, sy = sbox["x"] + 30, sbox["y"] + sbox["height"] / 2; dx, dy = dbox["x"] + dbox["width"] / 2, dbox["y"] + dbox["height"] / 2
+            if phone:
+                # a quick swipe on a row is a scroll: no drag
+                await pg.evaluate(f"""(()=>{{const e=document.querySelector('#tbf [data-hbp="spell:healing"]');
+                  e.dispatchEvent(new PointerEvent('pointerdown',{{bubbles:true,pointerType:'touch',pointerId:21,clientX:{sx},clientY:{sy},isPrimary:true}}));
+                  e.dispatchEvent(new PointerEvent('pointermove',{{bubbles:true,pointerType:'touch',pointerId:21,clientX:{sx},clientY:{sy - 30},isPrimary:true}}));}})()""")
+                await pg.wait_for_timeout(600)
+                sw = await pg.evaluate("[!!document.querySelector('.hb-ghost'), !!document.querySelector('#tbf .hb-lift')]")
+                await pg.evaluate(f"window.dispatchEvent(new PointerEvent('pointerup',{{bubbles:true,pointerType:'touch',pointerId:21,clientX:{sx},clientY:{sy - 30}}}))"); await pg.wait_for_timeout(200)
+                ok(sw == [False, False], f"{tag}: a swipe on the list scrolls, it doesn't pick the row up {sw}")
+                # hold, then drag (touch)
+                await pg.evaluate(f"""(()=>{{const e=document.querySelector('#tbf [data-hbp="spell:healing"]');
+                  e.dispatchEvent(new PointerEvent('pointerdown',{{bubbles:true,pointerType:'touch',pointerId:22,clientX:{sx},clientY:{sy},isPrimary:true}}));}})()""")
+                await pg.wait_for_timeout(600)
+                lift = await pg.evaluate("[!!document.querySelector('.hb-ghost'), !!document.querySelector('#tbf .hb-lift')]")
+                ok(lift == [True, True], f"{tag}: holding a row lifts it (ghost shows) {lift}")
+                for k in range(1, 9):
+                    x = sx + (dx - sx) * k / 8; y = sy + (dy - sy) * k / 8
+                    await pg.evaluate(f"(document.elementFromPoint({x},{y})||window).dispatchEvent(new PointerEvent('pointermove',{{bubbles:true,cancelable:true,pointerType:'touch',pointerId:22,clientX:{x},clientY:{y},isPrimary:true}}))")
+                    await pg.wait_for_timeout(30)
+                hi = await pg.evaluate("document.querySelector('#tbf .hb-slot.hb-over')?.dataset.hbs")
+                ok(hi == "7", f"{tag}: the slot under the finger lights up ({hi})")
+                await shot("5_touchdrag")
+                await pg.evaluate(f"(document.elementFromPoint({dx},{dy})||window).dispatchEvent(new PointerEvent('pointerup',{{bubbles:true,pointerType:'touch',pointerId:22,clientX:{dx},clientY:{dy},isPrimary:true}}))")
+                await pg.wait_for_timeout(350)
+            else:
+                await pg.mouse.move(sx, sy); await pg.mouse.down(); await pg.mouse.move(sx + 30, sy - 30, steps=4)
+                await pg.mouse.move(dx, dy, steps=10); await pg.wait_for_timeout(100)
+                hi = await pg.evaluate("[document.querySelector('#tbf .hb-slot.hb-over')?.dataset.hbs, !!document.querySelector('.hb-ghost')]")
+                ok(hi == ["7", True], f"{tag}: dragging shows a ghost and lights up the slot under it {hi}")
+                await shot("5_mousedrag")
+                await pg.mouse.up(); await pg.wait_for_timeout(350)
+            L6 = await slots()
+            ok(L6[7] == "spell:healing" and L6.count("spell:healing") == 1, f"{tag}: the dropped spell sits in slot 8, single cast {L6[7]}")
+            ok(await pg.evaluate("!document.querySelector('.hb-ghost') && !document.querySelector('#tbf .hb-lift, #tbf .hb-over')"), f"{tag}: the ghost and highlights go away after the drop")
+            mode = await pg.evaluate("document.querySelector('#tbf [data-hbmode=\"7\"]')?.textContent")
+            ok(mode == "1×", f"{tag}: the spell slot shows a 1× switch ({mode})")
+            await tap('#tbf [data-hbmode="7"]'); await pg.wait_for_timeout(250)
+            L7 = await slots()
+            ok(L7[7] == "dual:healing", f"{tag}: tapping 1× makes the slot a dual cast {L7[7]}")
+            ok(await pg.evaluate("document.querySelector('#tbf [data-hbmode=\"7\"]')?.textContent") == "2×", f"{tag}: and it reads 2×")
+            # the same spell once more, single, in slot 9 (index 8)
+            if phone:
+                await tap('#tbf .hb-slot[data-hbs="8"]'); await pg.wait_for_timeout(150)
+                await tap('#tbf [data-hbp="spell:healing"]'); await pg.wait_for_timeout(250)
+            else:
+                s1 = await (await pg.query_selector('#tbf [data-hbp="spell:healing"]')).bounding_box(); d9 = await (await pg.query_selector('#tbf .hb-slot[data-hbs="8"]')).bounding_box()
+                await pg.mouse.move(s1["x"] + 30, s1["y"] + 15); await pg.mouse.down(); await pg.mouse.move(d9["x"] + d9["width"] / 2, d9["y"] + d9["height"] / 2, steps=10); await pg.mouse.up(); await pg.wait_for_timeout(300)
+            L8 = await slots()
+            ok(L8[7] == "dual:healing" and L8[8] == "spell:healing", f"{tag}: the same spell sits twice, 2× and 1× {L8[7:9]}")
+            await shot("6_dual")
             ok(await pg.evaluate("Array.isArray(window.__dbg.save().hotbar) && window.__dbg.save().hotbar[2]==='spell:flames'"), f"{tag}: the layout is kept in the hero's save")
             await shot("3_edited")
             await tap("#tbf [data-hbx=done]"); await pg.wait_for_timeout(300)
@@ -196,6 +255,27 @@ async def main():
             await pg.keyboard.press("1"); await pg.wait_for_timeout(500)
             post = await pg.evaluate("JSON.stringify([TB.session.ev.length, TB.session.f.sp, TB.session.round, TB.session.ev.at(-1)?.a])")
             ok(pre != post, f"{tag}: with nothing open, 1 uses slot 1 {pre} -> {post}")
+            # ---- the 2× slot: the bar marks it, its key casts the dual version (b294)
+            await my_turn()
+            await pg.evaluate("TB.session.myActs=0; TB.session.pots=0; TB.session.f.mp=G.maxMagicka(TB.session.f.s); document.querySelector('#tbf [data-tbm=magic]').click()"); await pg.wait_for_timeout(150)
+            await pg.evaluate("document.querySelector('#tbf [data-tbm=\"\"]')?.click()"); await pg.wait_for_timeout(200)
+            x2 = await pg.evaluate("[!!document.querySelector('#tbf .hb-bar [data-hbs=\"7\"] .hb-x2'), !document.querySelector('#tbf .hb-bar [data-hbs=\"8\"] .hb-x2'), document.querySelector('#tbf .hb-bar [data-hbs=\"7\"]')?.dataset.tba]")
+            ok(x2 == [True, True, "dual:healing"], f"{tag}: on the bar the 2× slot shows a 2× mark, the 1× one doesn't {x2}")
+            await shot("7_bar2x")
+            n0 = await evn(); mp0 = await pg.evaluate("TB.session.f.mp")
+            await pg.mouse.move(2, 2); await pg.keyboard.press("8"); await pg.wait_for_timeout(400)
+            for _ in range(20):   # the rune minigame (if it shows) plays for a dual cast too: let it run out
+                if await pg.evaluate(f"TB.session.ev.slice({n0}).some(e=>e.a==='dual:healing')"): break
+                await pg.wait_for_timeout(250)
+            dual = await pg.evaluate(f"[TB.session.ev.slice({n0}).some(e=>e.a==='dual:healing'), Math.round({mp0} - TB.session.f.mp), Math.round(G.spellCost(TB.session.f.s, D.SPELLS.healing))]")
+            ok(dual[0] and dual[1] > dual[2] * 1.5, f"{tag}: pressing 8 casts the dual version (magicka used vs single cost) {dual}")
+            # a spell that can't be dual cast, saved as 2× (an old save): dimmed, with the reason
+            await my_turn()
+            await pg.evaluate("(()=>{const s=TB.session.f.s; if(!s.spells.includes('conjure_familiar')) s.spells.push('conjure_familiar'); s.hotbar[9]='dual:conjure_familiar'; document.querySelector('#tbf [data-tbm=magic]').click()})()"); await pg.wait_for_timeout(150)
+            await pg.evaluate("document.querySelector('#tbf [data-tbm=\"\"]')?.click()"); await pg.wait_for_timeout(200)
+            imp = await pg.evaluate("(()=>{const b=document.querySelector('#tbf .hb-bar [data-hbs=\"9\"]'); return b && [b.disabled, b.dataset.tip||'', b.querySelector('.fc-why')?.textContent||'']})()")
+            ok(imp and imp[0] and "dual" in imp[1].lower() and imp[2], f"{tag}: a 2× slot of a spell that can't be dual cast is dimmed and says why {imp}")
+            await pg.evaluate("TB.session.f.s.hotbar[9]=null")
             ok(not errs, f"{tag}: no page errors {errs[:3]}")
             await ctx.close()
         await b.close()

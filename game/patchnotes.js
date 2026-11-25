@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b294-hotbardnd", build: 294, date: "25 Nov 2026", title: "Drag and drop on the hotbar, single or dual cast", items: [
+      "In Edit hotbar you can now drag moves, spells, potions and poisons from the list onto a slot, drag one slot onto another to swap them, or drag a slot off the bar to empty it. With a mouse just drag; on a phone hold a row for a moment until it lifts, then drag. Tapping still works too.",
+      "Every spell slot has a small 1× / 2× switch: 1× casts with one hand, 2× casts with both hands (stronger, costs more, with your dual casting perks). The same spell can sit in two slots, once each way, and the key or a tap uses the slot's way. The rune game plays for both.",
+      "A spell that can't be dual cast (like a summon) can't be switched to 2×, and an old 2× slot of one shows greyed out and says why.",
+      "The list shows each spell once now; your bar keeps what it had (old Dual slots stay 2×).",
+    ] },
     { id: "b293-layout3", build: 293, date: "25 Nov 2026", title: "Titles you can read, hotbar in order", items: [
       "On phones the round message history button no longer sits on a screen's title (Area, Journal, Social, AI & Loadouts, a dungeon's name): the title makes room for it.",
       "The fight hotbar on phones shows its slots in key order again: 1 to 5 on top, 6 to 0 below. Catch your breath no longer jumps out of line.",
