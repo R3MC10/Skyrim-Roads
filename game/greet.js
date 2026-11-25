@@ -138,7 +138,7 @@ const GREET = (() => {
     try { for (const a of (ctx.acts ? ctx.acts(o, kn) : []) || []) acts.push(a); } catch { /* no extra rows */ }
     if (typeof MAPSHEET === "undefined") return;
     MAPSHEET.open({ id: "hero:" + o.id, owner: "hero", domId: "greetcard", label: kn ? label(S, o, party) : L("Stranger"),
-      icon: o.look && typeof HEROART !== "undefined" && HEROART.portrait ? HEROART.portrait(o, 40) : "",
+      icon: o.look && typeof AVATAR !== "undefined" ? AVATAR.portrait(o, 40) : "",
       title: kn ? label(S, o, party) : L("Stranger"), sub: [race, o.level ? `${L("level")} ${o.level}` : ""].filter(Boolean).join(" · "),
       rows: [where ? [L("Where"), where + (o.moving ? " · " + L("travelling") : "") + (o.dungeon ? " · " + L("in a dungeon") : "")] : null,
         [L("Between you"), kn ? (inParty(party, o.id) ? L("In your party.") : L("You know each other.")) : L("Strangers"), kn ? "good" : ""]],
