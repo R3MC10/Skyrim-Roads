@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b223-eventcards", build: 223, date: "25 Nov 2026", title: "Painted event cards", items: [
+      "Dragon attacks on towns now show a hand-painted picture instead of the flat drawing: a dragon breathing fire over the rooftops.",
+      "Great events, crises and raids on your house get paintings too: bandits with torches for sieges and outlaws, a vampire lord in the town square, a giant smashing through a farm, and a caravan lost in a blizzard for the Long Winter.",
+      "The name of the event sits under the picture, with a small coloured diamond next to it that shows how bad things are: green when it's over, yellow for trouble, orange for danger, red when it's deadly.",
+      "Cards fade in gently, and a few faint embers, wisps of red mist or snowflakes drift over them. With reduced motion on they stay still.",
+    ] },
     { id: "b222-overlays", build: 222, date: "25 Nov 2026", title: "One thing on screen at a time", items: [
       "The first-fight tip no longer sits on top of the VICTORY card. Results always come first, then windows that ask you something, then tips, then messages.",
       "In your first turn-by-turn fight the big wall of text is gone. Instead you get short one-line hints right next to the turn order, your moves and End turn, and each one goes away as soon as you use it.",

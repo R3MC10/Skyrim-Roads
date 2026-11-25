@@ -554,7 +554,10 @@ const GREATEV = (() => {
     }
     const cl = claimable(S, ev, t) ? `<button class="btn pri wev-wide" data-gev="claim" data-id="${ev.id}">${T("Claim your reward")}</button>` : "";
     const ph = ev.kind === "fair" ? 0 : Math.min(2, tally(ev, S).phase);
-    return `<div class="gev-sheet">${pic(ev.kind, 320, 120, ev.dKind || "", ph)}<h2>${ev.icon} ${esc(ev.name)}</h2>
+    /* a painted card for the dragon and the siege (eventcards.js): the title sits under the painting */
+    const won = ev.kind !== "fair" && tally(ev, S).done;
+    const card = typeof EVCARDS !== "undefined" ? EVCARDS.html("gev:" + ev.kind, { title: `${ev.icon} ${esc(ev.name)}`, tag: "h2", sev: won || (st !== "warn" && st !== "on") ? "calm" : st === "warn" ? "mid" : ph >= 2 ? "dire" : "high" }) : "";
+    return `<div class="gev-sheet">${card || `${pic(ev.kind, 320, 120, ev.dKind || "", ph)}<h2>${ev.icon} ${esc(ev.name)}</h2>`}
       <p class="sub">${st === "warn" || st === "on" ? `${cd.label} <b class="gev-cd" data-gev-end="${st === "warn" ? ev.start : ev.end}">${cd.txt}</b> · ` : T("Over") + " · "}${T("everyone in the North sees this")}</p>
       ${body}${cl}<details class="wev-rules"><summary class="sub">${T("How it works")}</summary><p class="sub">${T(RULES[ev.kind], { tries: TRIES })}</p></details>
       <button class="btn wev-wide" data-act="close">${T("Close")}</button></div>`;

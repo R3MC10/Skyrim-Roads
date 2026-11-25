@@ -1846,7 +1846,9 @@
       : `${tl.total}/${tl.need} damage dealt${tl.people ? ` by ${tl.people} ${tl.people === 1 ? "fighter" : "fighters"}` : ""}. Everyone who hurts it gets its soul, 300 gold, dragon bone and scales. It flies at first (melee only grazes it) and lands when badly hurt.`;
     const btn = done ? "" : !here ? `<button class="btn" data-act="go" data-place="${esc(r.town)}" style="width:100%">Travel to ${esc(r.town)}</button>`
       : ph === "gather" ? `<button class="btn" disabled style="width:100%"> Waiting for the ${esc(dn)}... ${clock}</button>` : `<button class="btn danger" data-act="raidfight" style="width:100%"> Fight the ${esc(dn)}</button>`;
-    el.innerHTML = `<div class="trip enc" style="margin-top:10px">${typeof EVENTART !== "undefined" ? EVENTART.raid(r.town, done) : ""}<div class="row"><b> ${title}</b><span class="num sub">${done ? "" : clock}</span></div>
+    /* the painted dragon card (eventcards.js): title under the painting, a severity diamond beside it; the old drawing until it loads */
+    const card = typeof EVCARDS !== "undefined" ? EVCARDS.html("raid", { title: ` ${title}`, sev: done ? "calm" : ph === "gather" ? "high" : "dire", right: done ? "" : `<span class="num sub">${clock}</span>` }) : "";
+    el.innerHTML = `<div class="trip enc${card ? " evc-box" : ""}" style="margin-top:10px">${card || `${typeof EVENTART !== "undefined" ? EVENTART.raid(r.town, done) : ""}<div class="row"><b> ${title}</b><span class="num sub">${done ? "" : clock}</span></div>`}
       ${typeof RAIDART !== "undefined" ? RAIDART.raidHealth(tl, raidDocs, r, S, raPortrait) : `<div class="bar"><i style="width:${pct(tl.total, tl.need)}%;background:var(--ember)"></i></div>`}
       <div class="sub">${sub}</div>${btn}</div>`;
   }
