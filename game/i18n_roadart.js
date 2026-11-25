@@ -13,5 +13,8 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "A new title": "Nowy tytuł",
     "The main menu has a new title: the O in NORTH is now a compass.": "Menu główne ma nowy tytuł: litera O w NORTH jest teraz kompasem.",
     "A dotted road leaves the compass and winds round the words, past little mountains and pine trees, to a waypoint. It draws itself when the menu opens.": "Kropkowana droga wychodzi z kompasu i wije się wokół napisu, obok małych gór i sosen, aż do celu. Rysuje się sama, gdy otwiera się menu.",
+    "Compass fix": "Poprawka kompasu",
+    "The main menu compass ring no longer drifts and spins: it stays still.": "Pierścień kompasu w menu głównym już nie dryfuje i nie obraca się: stoi w miejscu.",
+    "The star now slides flat, straight up, down, left or right toward the direction you swipe.": "Gwiazda przesuwa się teraz płasko, prosto w górę, w dół, w lewo lub w prawo, w stronę przesunięcia palca.",
   });
 })();

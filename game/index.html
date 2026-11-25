@@ -4825,10 +4825,10 @@ body:has(#tbf) #gnear{display:none!important}
 #tbf.c2.c2wide .c2ov .tbparty.c2cols .tbu.ally .fairow{display:none}
 
 /* compass in two layers: the ring stays put, only the star tilts and follows your finger (like it used to) */
-.tw-ring{display:none}
-:root.has-ui-compass-ring.has-ui-compass-star .tw-ring{display:block;position:absolute;left:50%;top:50%;width:calc(var(--R)*2);height:calc(var(--R)*2);margin:calc(var(--R)*-1) 0 0 calc(var(--R)*-1);background:var(--asset-compass-ring) center/100% no-repeat;filter:drop-shadow(0 6px 10px rgba(0,0,0,.6));pointer-events:none}
-:root.has-ui-compass-ring.has-ui-compass-star .tw-disc{transform:translate3d(calc(var(--tx,0)*.35px),calc(var(--ty,0)*.35px),0) rotateY(calc(var(--tx,0)*.42deg)) rotateX(calc(var(--ty,0)*-.42deg));transition:transform .65s cubic-bezier(.25,1.7,.5,1);animation:twbob 6s ease-in-out infinite}
-:root.has-ui-compass-ring.has-ui-compass-star .tw.drag .tw-disc{transition:transform .06s linear;animation:none}
+.tw-ringart{display:none}
+:root.has-ui-compass-ring.has-ui-compass-star .tw-ringart{display:block;position:absolute;left:50%;top:50%;width:calc(var(--R)*2);height:calc(var(--R)*2);margin:calc(var(--R)*-1) 0 0 calc(var(--R)*-1);background:var(--asset-compass-ring) center/100% no-repeat;filter:drop-shadow(0 6px 10px rgba(0,0,0,.6));pointer-events:none}
+:root.has-ui-compass-ring.has-ui-compass-star .tw-disc{transform:translate(calc(var(--tx,0)*.35px),calc(var(--ty,0)*.35px));transition:none;animation:none}
+:root.has-ui-compass-ring.has-ui-compass-star .tw.drag .tw-disc{transition:none;animation:none}
 :root.has-ui-compass-ring.has-ui-compass-star .tw-face,:root.has-ui-compass-ring.has-ui-compass-star .tw-face.art-flat{inset:0;background:var(--asset-compass-star) center/100% no-repeat;filter:drop-shadow(0 calc(6px + var(--pull,0)*10px) calc(8px + var(--pull,0)*8px) rgba(0,0,0,.75))}
 :root.has-ui-compass-ring.has-ui-compass-star .tw[data-glow] .tw-face{filter:drop-shadow(0 0 calc(4px + var(--pull,0)*14px) rgba(255,206,110,.6)) drop-shadow(0 12px 12px rgba(0,0,0,.7))}
 :root.has-ui-compass-ring.has-ui-compass-star .tw-shine,:root.has-ui-compass-ring.has-ui-compass-star .tw-depth{display:none}

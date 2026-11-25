@@ -3,6 +3,10 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b278-compassfix", build: 278, date: "25 Nov 2026", title: "Compass fix", items: [
+      "The main menu compass ring no longer drifts and spins: it stays still.",
+      "The star now slides flat, straight up, down, left or right toward the direction you swipe.",
+    ] },
     { id: "b277-titlelogo", build: 277, date: "25 Nov 2026", title: "A new title", items: [
       "The main menu has a new title: the O in NORTH is now a compass.",
       "A dotted road leaves the compass and winds round the words, past little mountains and pine trees, to a waypoint. It draws itself when the menu opens.",
