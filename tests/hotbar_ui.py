@@ -2,7 +2,7 @@
 and a PC (1440x900): the bar shows 10 numbered slots filled from the hero and fits the screen; Edit (the … menu, or a tap on an
 empty slot) opens the picker; tap a slot then a spell puts it there; tap two slots swaps them; on a PC dragging a
 move onto a slot and a slot off the bar works; the layout is kept in the save; pressing 3 casts the spell in slot 3; a key
-pressed while typing (or with the … menu open) does nothing. Phones 360/390/412 wide and a PC: the bar fits the b276
+pressed while typing (or with the … menu open) does nothing; on screen the slots read 1-0 row by row. Phones 360/390/412 wide and PCs: the bar fits the b276
 fight layout (above the bottom edge, clear of your orb), and resting on / holding a slot still shows the move preview.
 Screenshots go to the system temp folder (SHOTS=folder: there instead), never into tests/.
   node serve.js 8765 ../game &   then   python hotbar_ui.py 8765"""
@@ -12,7 +12,7 @@ PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"
 SHOTS = os.environ.get("SHOTS")
 OUT = SHOTS or os.path.join(tempfile.gettempdir(), "rotn_hotbar")
 os.makedirs(OUT, exist_ok=True)
-SIZES = [(360, 780), (390, 844), (412, 915), (1440, 900)]
+SIZES = [(360, 780), (390, 844), (412, 915), (1440, 900), (1920, 1080)]
 fails = 0
 def ok(c, msg):
     global fails
@@ -33,6 +33,8 @@ FIT = """(()=>{ const b=[...document.querySelectorAll('#tbf .hb-bar [data-hbs]')
   let clash=0; for(let i=0;i<all.length;i++) for(let j=i+1;j<all.length;j++) if(over(all[i],all[j])) clash++;
   const orb=document.querySelector('#tbf .c2ov .tbu.me .c2orb')?.getBoundingClientRect(); const barTop=Math.min(...all.map(r=>r.top));
   return { orbClear: !orb || !orb.height || orb.bottom <= barTop + 2, n:b.length, inside: all.every(r=>r.left>=0&&r.right<=innerWidth+0.5&&r.bottom<=innerHeight+0.5&&r.width>20), clash, wide: document.scrollingElement.scrollWidth<=innerWidth+1, w: Math.round(Math.min(...b.map(r=>r.width))) }; })()"""
+ONSCREEN = """(()=>{ const s=[...document.querySelectorAll('#tbf .hb-bar [data-hbs]')].map(e=>({r:e.getBoundingClientRect(),k:e.querySelector('.fc-k')?.textContent||'?'}));
+  s.sort((a,b)=>Math.abs(a.r.top-b.r.top)>a.r.height/2 ? a.r.top-b.r.top : a.r.left-b.r.left); return s.map(x=>x.k).join(''); })()"""
 
 async def main():
     async with async_playwright() as p:
@@ -88,7 +90,10 @@ async def main():
             ok(fit["w"] >= 38, f"{tag}: slots stay thumb-sized ({fit['w']}px)")
             keys = await pg.evaluate("[...document.querySelectorAll('#tbf .hb-bar [data-hbs]')].map(e=>e.querySelector('.fc-k')?.textContent).join('')")
             ok(keys == "1234567890", f"{tag}: slots numbered 1-0 ({keys})")
+            # on screen (row by row, left to right) the slots read 1-0 too: no CSS grid spot pulls one out of line (layout-3)
+            seen = await pg.evaluate(ONSCREEN)
             L = await slots()
+            ok(seen == "1234567890", f"{tag}: slots sit in key order on screen ({seen}; Catch your breath in slot {L.index('recover') + 1 if 'recover' in L else '-'})")
             ok(L[0] == "attack" and L[1] == "power_attack" and sum(1 for a in L if a) >= 6, f"{tag}: the bar fills itself from the hero {L}")
             ok("spell:flames" in L and "potion:health" in L, f"{tag}: the default holds your attack spell and a health potion")
             badge = await pg.evaluate("document.querySelector('#tbf .hb-bar [data-tba=\"potion:health\"] .fc-n')?.textContent")

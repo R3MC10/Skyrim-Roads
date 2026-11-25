@@ -2789,16 +2789,6 @@ html.art-pixel .lvk-p,html.art-pixel .lvlprompt,html.art-pixel .lvn-xb{border-ra
 @media (min-width:900px){#lvln{top:calc(16vh + env(safe-area-inset-top))}.lvn{min-width:440px;padding:12px 60px 14px}.lvk-p{min-height:250px}.lvn-t{font-size:19px}.lvn-big{font-size:36px}.lvn-level{padding:22px 90px}}
 @media (max-width:380px){.lvk-p{min-height:176px;padding:14px 3px 12px}.lvk-p b{font-size:14px}.lvk-v{font-size:13px}.lvn-big{font-size:21px}}
 @media (prefers-reduced-motion:reduce){.lvn,.lvk,.lvn-n,.lvlprompt,.tw-dir .tw-lvlready{animation:none}.lvn-xb>i,.lvn-sb>i{transition:none}}
-/* [mountfight] your horse's health bar in a fight (mountfight.js) */
-#tbf .mfhorse{position:relative;height:14px;margin-top:3px;border-radius:7px;background:rgba(120,80,40,.18);border:1px solid rgba(200,160,110,.45);overflow:hidden}
-#tbf .mfhorse i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,rgba(150,100,50,.6),rgba(210,170,110,.85));transition:width .45s ease}
-#tbf .mfhorse span{position:relative;display:block;font-size:10.5px;line-height:13px;text-align:center;color:#fff4e2;text-shadow:0 1px 2px #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#tbf .mfhorse.by{opacity:.75}
-#tbf .mfhorse.down{border-color:rgba(200,90,70,.6)}
-#tbf .mfhorse.down i{background:rgba(160,60,50,.5)}
-#tbf .mfst{margin-top:2px;font-size:10.5px}
-#tbf .mfst .st{font-style:normal;padding:0 5px;border-radius:6px;background:rgba(230,200,90,.18);border:1px solid rgba(230,200,90,.45);color:#f3e2a8}
-#tbf .tbact.mount{border-color:rgba(200,160,110,.6)}
 /* [OURS] gore.js: a red flash round the screen edges when you take a big hit */
 .gorevig{position:fixed;inset:0;pointer-events:none;z-index:9000;opacity:0;background:radial-gradient(ellipse at center,rgba(90,0,0,0) 52%,rgba(110,6,6,.55) 82%,rgba(70,0,0,.85) 100%)}
 .gorevig.on{animation:gorevig .75s ease-out forwards}
@@ -4952,6 +4942,48 @@ body:has(#tbf) #gnear{display:none!important}
 #tbf.hb-dragging{cursor:grabbing}
 #tbf .tbtop .tbff.hb-ed svg{display:block;margin:auto}
 #tbf.c2 .tbtop .fdc-menu .tbff.hb-ed svg{flex:none;margin:0}
+/* ==== "What would the AI do?" tester and folded rules (aitester.js) ==== */
+.ai-smart .rulesbox{opacity:1;filter:none}
+.rulesfold{margin:0 0 8px;border:1px solid var(--line);background:rgba(0,0,0,.18);padding:0 10px}
+.rulesfold>summary{cursor:pointer;min-height:44px;display:flex;align-items:center;color:var(--mute);font-size:15px}
+.rulesfold[open]>summary{color:var(--ink)}
+.aitest{margin-top:12px}
+.aitest h3{margin:0 0 2px}
+.aitsl{display:grid;grid-template-columns:1fr;gap:2px;margin:6px 0}
+@media (min-width:700px){.aitsl{grid-template-columns:1fr 1fr;column-gap:16px}}
+.aitrow{display:grid;grid-template-columns:96px 1fr 46px;align-items:center;gap:8px;font-size:14px;min-height:40px}
+.aitrow input{width:100%;accent-color:var(--gold);height:32px;margin:0}
+.aitrow b{text-align:right}
+.aitchips{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:4px 0}
+.aitchips .chip{min-height:36px;padding:0 9px;letter-spacing:.08em}
+.aitl{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin-right:2px}
+.aitchips .aitl+.chip{margin-left:0}.aitchips .chip+.aitl{margin-left:8px}
+.aitout{margin-top:8px}
+.aitpick{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid rgba(214,178,94,.45);background:rgba(214,178,94,.07)}
+.aitpick>div{display:flex;flex-direction:column;min-width:0}
+.aitpick small{color:var(--mute);font-size:13px}
+.aitpick b{font-size:17px;color:var(--gold)}
+.aitwhy{font-size:14px}
+.aitalt{margin-top:2px}
+.aitrules{margin-top:8px}
+.aitsubh{margin:0 0 4px}
+.aitrule{display:grid;grid-template-columns:18px 22px 1fr;gap:6px;align-items:start;padding:5px 6px;border-left:3px solid transparent;font-size:14px}
+.aitrule small{display:block;color:var(--mute);font-size:13px;overflow-wrap:anywhere}
+.aitrule .aitn{font-family:var(--title,inherit);opacity:.7;text-align:center}
+.aitrule .aitrt{min-width:0;overflow-wrap:anywhere}
+.aitrule.fire{border-left-color:var(--sp);background:rgba(79,163,92,.12)}
+.aitrule.fire .aitmark{color:var(--sp);font-weight:700}
+.aitrule.skip .aitmark{color:var(--ember)}
+.aitrule.later{opacity:.5}
+/* [layout3] the hotbar keeps key order 1-0 (the old skill bar's Catch-your-breath / Flee spots don't apply to its slots);
+   sub-tab strips fade at an end that hides more tabs; the Journal's chosen tab in dark ink with a gold underline */
+#tbf.c2 .fc.fc-hb .hb-bar>.hb-s{grid-row:auto!important;grid-column:auto!important}
+.mn-fl{-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 30px);mask-image:linear-gradient(90deg,transparent 0,#000 30px)}
+.mn-fr{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 30px),transparent 100%);mask-image:linear-gradient(90deg,#000 calc(100% - 30px),transparent 100%)}
+.mn-fl.mn-fr{-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 30px,#000 calc(100% - 30px),transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 30px,#000 calc(100% - 30px),transparent 100%)}
+#side[data-tab=log] .seg{border-color:rgba(90,62,30,.35)}
+#side[data-tab=log] .seg button{color:#5e4a33;text-shadow:none}
+#side[data-tab=log] .seg button.on{color:#2e1f0d;background:linear-gradient(0deg,rgba(90,62,30,.16),rgba(90,62,30,.04));box-shadow:inset 0 -3px 0 #a8791f;text-shadow:none}
 /* [chargensex] Male / Female switch above the creator's tabs */
 .cgsex{display:flex;align-items:center;gap:6px;padding:6px 14px 4px}
 .cgsexl{flex:none;margin-right:4px;font-family:"Cinzel",serif;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold)}
@@ -5011,8 +5043,7 @@ body:has(#tbf) #gnear{display:none!important}
 <script src="civilwar.js"></script>
 <script src="daedric.js"></script>
 <script src="horses.js"></script>
-<script src="horseback.js"></script>
-<script src="mountfight.js"></script>
+<script src="horsetravel.js"></script>
 <script src="hall.js"></script>
 <script src="bounty.js"></script>
 <script src="visits.js"></script>
@@ -5044,6 +5075,7 @@ body:has(#tbf) #gnear{display:none!important}
 <script src="combatai.js"></script>
 <script src="sneak2.js"></script>
 <script src="aiset.js"></script>
+<script src="aitester.js"></script>
 <script src="minigame.js"></script>
 <script src="tbradial.js"></script>
 <script src="tbfight.js"></script>
@@ -5118,6 +5150,7 @@ body:has(#tbf) #gnear{display:none!important}
 <script src="foerig.js"></script>
 <script src="allyanim.js"></script>
 <script src="arrowfx.js"></script>
+<script src="weaponfx.js"></script>
 <script src="movefx.js"></script>
 <script src="fightart.js"></script>
 <script src="beastart.js"></script>
@@ -5265,12 +5298,14 @@ body:has(#tbf) #gnear{display:none!important}
 <script src="i18n_pcfit.js"></script>
 <script src="i18n_widetitle.js"></script>
 <script src="i18n_horseart.js"></script>
+<script src="i18n_mapheroanim.js"></script>
 <script src="i18n_followeranim.js"></script>
 <script src="i18n_shouts.js"></script>
 <script src="i18n_bleakfalls.js"></script>
 <script src="i18n_levelup.js"></script>
 <script src="i18n_mountfight.js"></script>
 <script src="i18n_mountcombat.js"></script>
+<script src="i18n_horsetravel.js"></script>
 <script src="i18n_fighthotfix.js"></script>
 <script src="i18n_herorig.js"></script>
 <script src="i18n_herocard.js"></script>
@@ -5291,6 +5326,7 @@ body:has(#tbf) #gnear{display:none!important}
 <script src="i18n_deepdelve.js"></script>
 <script src="i18n_dunevents.js"></script>
 <script src="i18n_netsync.js"></script>
+<script src="i18n_netfix.js"></script>
 <script src="i18n_pcmap.js"></script>
 <script src="i18n_eventart.js"></script>
 <script src="i18n_assetquality.js"></script>
@@ -5298,6 +5334,7 @@ body:has(#tbf) #gnear{display:none!important}
 <script src="i18n_heists.js"></script>
 <script src="i18n_chargen.js"></script>
 <script src="i18n_tacticsaccess.js"></script>
+<script src="i18n_aitester.js"></script>
 <script src="i18n_gore.js"></script>
 <script src="i18n_appicon.js"></script>
 <script src="i18n_smallpolish.js"></script>
@@ -5323,6 +5360,7 @@ body:has(#tbf) #gnear{display:none!important}
 <script src="i18n_gptqa.js"></script>
 <script src="i18n_perklayout.js"></script>
 <script src="i18n_nocover.js"></script>
+<script src="i18n_layout3.js"></script>
 <script src="i18n_followersize.js"></script>
 <script src="i18n_caravanpanel.js"></script>
 <script src="i18n_magicaim.js"></script>
@@ -5335,6 +5373,8 @@ body:has(#tbf) #gnear{display:none!important}
 <script src="i18n_rewardtips.js"></script>
 <script src="i18n_updater.js"></script>
 <script src="i18n_mappanels.js"></script>
+<script src="i18n_weaponfx.js"></script>
+<script src="i18n_phantom.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>
