@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b194-afflart", build: 194, date: "25 Nov 2026", title: "Painted affliction scenes", items: [
+      "The black shrine by the road is now a painting: an obsidian altar in a ring of standing stones under the moon, glowing purple.",
+      "Catching the Draugr Curse shows a frozen barrow altar, and catching the Dwemer Resonance (or the humming pipe on the road) shows a glowing Dwemer pipe in a ruined hall.",
+      "The priests' rites at a temple (lifting the curse, or the Vow of Cleansing) now open with a candlelit temple of Arkay.",
+      "Werewolf moments (the Change and the silver-trap hunters) show a werewolf howling at the full moon.",
+    ] },
     { id: "b193-rigpolish", build: 193, date: "25 Nov 2026", title: "Painted weapons and better swings", items: [
       "Fighters swing like they mean it: a sword goes up and back over the shoulder, then comes down and forward in one arc, the body turning into the blow and the weight stepping onto the front foot. No more blade sliding through your own head.",
       "Bows are drawn properly: the bow arm straight, the string hand pulled back to the cheek, then the hand flies back as the arrow goes.",

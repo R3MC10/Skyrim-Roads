@@ -120,7 +120,7 @@ var I18N_AFFL = (() => {
     "Keep away from my lamp, it flickers when you pass.": "Trzymaj się z dala od mojej lampy, mruga, gdy przechodzisz.",
     "You've got a hungry look about you.": "Wyglądasz na głodnego.",
     "Wolves were howling all night. Funny, they stopped when you arrived.": "Wilki wyły całą noc. Zabawne, przestały, gdy przyszedłeś.",
-    "Daedric favour": "Łaska daedry", "Ill omen": "Zły omen",
+    "Daedric favour": "Łaska daedry", "Ill omen": "Zły omen", "At the temple": "W świątyni",
   };
   const words = {
     // ---- perks
@@ -135,6 +135,12 @@ var I18N_AFFL = (() => {
     "Cures: a priest at a temple, the Vow of Cleansing (slay three daedra), or two Void Salts.": "Lekarstwa: kapłan w świątyni, Ślub Oczyszczenia (zabij trzy daedry) albo dwie sole pustki.",
     "People on the road and in town notice, and your party sees your afflictions and feels a little of them in a fight together.": "Ludzie na drodze i w mieście to zauważają, a drużyna widzi twoje przypadłości i trochę je czuje we wspólnej walce.",
     "New perks: Embrace the Curse (Illusion, upsides stronger) and Warding Rites (Restoration, downsides weaker).": "Nowe atuty: Przyjmij klątwę (Iluzja, dobre strony silniejsze) i Obrzędy ochronne (Przywracanie, złe strony słabsze).",
+    // ---- patch note: painted affliction scenes (b194)
+    "Painted affliction scenes": "Malowane sceny przypadłości",
+    "The black shrine by the road is now a painting: an obsidian altar in a ring of standing stones under the moon, glowing purple.": "Czarna kapliczka przy drodze jest teraz obrazem: obsydianowy ołtarz w kręgu kamieni pod księżycem, w fioletowej poświacie.",
+    "Catching the Draugr Curse shows a frozen barrow altar, and catching the Dwemer Resonance (or the humming pipe on the road) shows a glowing Dwemer pipe in a ruined hall.": "Złapanie klątwy draugrów pokazuje zamarznięty ołtarz w kurhanie, a złapanie rezonansu Dwemerów (albo brzęcząca rura przy drodze) pokazuje świecącą rurę Dwemerów w zrujnowanej sali.",
+    "The priests' rites at a temple (lifting the curse, or the Vow of Cleansing) now open with a candlelit temple of Arkay.": "Obrzędy kapłanów w świątyni (zdjęcie klątwy albo Ślub Oczyszczenia) otwierają się teraz obrazem świątyni Arkaya w blasku świec.",
+    "Werewolf moments (the Change and the silver-trap hunters) show a werewolf howling at the full moon.": "Chwile wilkołaka (Przemiana i łowcy ze srebrnymi pułapkami) pokazują wilkołaka wyjącego do pełni.",
   };
   for (const [k, v] of Object.entries(TPL)) if (!k.includes("{")) words[k] = words[k] || v;
   if (typeof I18N_STORY !== "undefined" && I18N_STORY.ex) for (const [k, v] of Object.entries(words)) if (!(k in I18N_STORY.ex)) I18N_STORY.ex[k] = v;
