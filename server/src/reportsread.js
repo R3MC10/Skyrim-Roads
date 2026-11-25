@@ -20,7 +20,7 @@ function view(x) {
   const out = {
     id: x.id, at: x.at, done: x.doneAt != null, doneAt: x.doneAt ?? null,
     title: r.title || "", category: r.category || "bug", text: r.text || "",
-    character: r.character || null,
+    player: r.player || null, character: r.character || null,
     version: { build: info.build ?? null, notes: info.notes ?? null, appBuild: info.appBuild ?? null },
     platform: info.platform ?? null,
     info,

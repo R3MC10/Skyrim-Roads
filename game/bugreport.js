@@ -2,7 +2,8 @@
    F12 on a PC, or Settings → Report a problem on a phone, opens a small window: a short title, what happened and a
    kind (bug, balance, art, text, idea). Sending it posts to our server (POST /api/report), which turns it into a
    GitHub issue labelled player-report that Claude picks up and fixes.
-   The report carries what helps find the problem and nothing personal beyond the hero's name: the game build,
+   The report carries who sent it (the player's account name, or the hero's name when not signed in, plus the
+   hero's name) and what helps find the problem, nothing else personal: the game build,
    PC or Android, screen size, art style, language, which screen is open, where you are, your level, the last 40
    lines of the game's own error log (kept here: console.error, uncaught errors, failed promises) and a small
    snapshot of the game (fight summary, item counts, quest stages). No screenshot (that would need a new library).
@@ -90,6 +91,14 @@ const BUGREPORT = (() => {
       view: screenId(), location: S?.location || null, level: S?.level ?? null,
     };
   }
+  /* who's sending: the account name used for friends and parties when signed in, else the hero's name, else null */
+  function playerName(S) {
+    let n = null;
+    try { if (typeof ACCOUNT !== "undefined" && (!ACCOUNT.signedIn || ACCOUNT.signedIn())) n = ACCOUNT.user?.()?.username || null; } catch (e) { /* no account module */ }
+    if (!n && S?.name) n = S.name;
+    n = n == null ? "" : String(n).replace(/[\x00-\x1f\x7f]/g, "").trim().slice(0, 40);
+    return n || null;
+  }
   /* the payload the server gets; form = { title, text, category } */
   function payload(form, ctx = {}) {
     const S = "S" in ctx ? ctx.S : game();
@@ -98,6 +107,7 @@ const BUGREPORT = (() => {
       title: String(form.title || "").trim().slice(0, LIM.title),
       text: String(form.text || "").trim().slice(0, LIM.text),
       category: cat,
+      player: playerName(S),
       character: S?.name ? String(S.name).slice(0, 40) : null,
       info: info(S, ctx),
       log: lines(),
@@ -158,7 +168,7 @@ const BUGREPORT = (() => {
   // ---------------------------------------------------------------- the window
   let box = null, extraCtx = {};
   const isOpen = () => !!box;
-  function html() {
+  function html(who = playerName(game())) {
     return `<div class="sheet brsheet" role="dialog" aria-modal="true" aria-labelledby="brh">
       <h2 id="brh">Report a problem</h2>
       <p class="mute brsub">Tell us what went wrong or what could be better. It goes straight to the people fixing the game.</p>
@@ -168,7 +178,8 @@ const BUGREPORT = (() => {
       <textarea id="brtext" rows="5" maxlength="${LIM.text}" placeholder="What did you do, what did you expect, what happened instead?"></textarea>
       <div class="brl">Kind</div>
       <div class="seg brcats" role="group">${CATS.map(([k, l], i) => `<button type="button" data-brcat="${k}" class="${i ? "" : "on"}" aria-pressed="${!i}">${l}</button>`).join("")}</div>
-      <p class="mute brnote">We also attach the game build, your device type and screen size, your art style, where you are, your level and the game's recent error log. Nothing personal beyond your hero's name.</p>
+      <p class="mute brnote">We also attach the game build, your device type and screen size, your art style, where you are, your level and the game's recent error log. Nothing personal beyond your player and hero names.</p>
+      ${who ? `<p class="brfrom">Sent as ${esc(who)}</p>` : ""}
       <p class="brmsg" id="brmsg" role="status"></p>
       <div class="grid2"><button type="button" class="btn" data-brep="cancel">Cancel</button><button type="button" class="btn pri" data-brep="send">Send</button></div>
     </div>`;
@@ -230,7 +241,7 @@ const BUGREPORT = (() => {
     addEventListener("online", () => flush());
     setTimeout(() => { if (queue().length) flush(); }, 5000);
   }
-  return { CATS, LIM, QKEY, log, lines, hook, payload, info, stateSnapshot, screenId, queue, post, send, flush, open, close, isOpen, submit, onKey, settingsHTML,
+  return { CATS, LIM, QKEY, log, lines, hook, payload, playerName, html, info, stateSnapshot, screenId, queue, post, send, flush, open, close, isOpen, submit, onKey, settingsHTML,
     _reset() { ring.length = 0; close(); setQueue([]); category = "bug"; extraCtx = {}; } };
 })();
 if (typeof module !== "undefined") module.exports = BUGREPORT;
