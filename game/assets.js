@@ -42,6 +42,10 @@
      map-world                2000×1400  hand-painted world map, exact 10:7, covering the world bounds edge to edge (x·width,
                                          y·height); replaces the procedural map ground (paintedmap.js). Reference to paint over:
                                          scripts/map_reference.py. Optional map-world-2x (3000×2100) for close zoom.
+     mg-mining-bg             2048×1152  painted mine wall for the mining mini-game (minegame.js), WebP q80. The stones are cut from
+                                         its middle square (x 550-1450, y 110-1010, the iron vein); blurred behind them as the cave.
+     ore-<iron|silver|gold|ebony> ~320   painted ore chunks, transparent, trimmed (minegame.js). Other ores borrow one, tinted.
+     tool-pickaxe             768×356    painted pickaxe, transparent, trimmed, head on the right (minegame.js swings it).
      gfx-<effect>             strips     rendered combat effect sprites, drawn by gorefx2.js: frames side by side, transparent WebP.
                                          Liquids from scripts/make_blood.py: blood-burst-1/2 (10×256²), blood-burst-3 (12×256²),
                                          blood-spray (8×256²), blood-mist (8×192²), oil/green/ichor/sap-burst (10×192²); decal atlases
