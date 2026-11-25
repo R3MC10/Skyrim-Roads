@@ -3,11 +3,22 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b279-rewardtips", build: 279, date: "25 Nov 2026", title: "Item cards on rewards", items: [
+    { id: "b281-rewardtips", build: 281, date: "25 Nov 2026", title: "Item cards on rewards", items: [
       "Every loot and reward icon now shows the full item card, like in your pack: damage or armour, weight, value, the enchantment and what it does, potion effects, how many you already have, and the same \"against what you wear\" lines as the Items menu (damage, weight and value, better in green, worse in red).",
       "On a PC rest the mouse on an icon. On a phone tap it: the card slides up from the bottom of the screen, so it never covers the loot or the buttons. Tap anywhere else to close it.",
       "Dungeon loot, fight loot, boss loot, the party loot vote, road events, quest and crisis rewards, expeditions, heists, Daedric artifacts, fishing, hunting, mining and market stalls all have it.",
       "Gold and stacks get a short card too.",
+    ] },
+    { id: "b280-hotbar", build: 280, date: "25 Nov 2026", title: "Your own hotbar in fights", items: [
+      "Your moves in a fight now sit on a hotbar of 10 slots, numbered 1 to 0. Put anything you like on it: blows, power attacks, guard, spells (your own rune spells too), shouts, potions, scrolls and abilities like Breathe or an oil flask.",
+      "To change it, pick Edit hotbar in the … menu or tap an empty slot. Tap a slot, then tap what goes in it; tap two slots to swap them. With a mouse you can also drag things on, between and off the bar.",
+      "Nobody starts empty: the bar fills itself from your hero until you change it, and Default puts that back. Each hero keeps their own bar, in the cloud too.",
+      "On a PC the number keys 1 to 0 use the slots. They do nothing while you type in chat or while a menu is open.",
+      "A slot greys out when you can't use it and says why, and a potion slot shows how many you have left.",
+      "Rest the mouse on a slot, or hold a finger on it, to see what the move will do before you use it.",
+    ] },
+    { id: "b279-beasthint", build: 279, date: "25 Nov 2026", title: "Where Beast Form lives", items: [
+      "Fixed: the werewolf card on the Character tab still sent you to the old Tactics page for Beast Form. It now says the truth: it's in the Magic menu, under Powers.",
     ] },
     { id: "b278-compassfix", build: 278, date: "25 Nov 2026", title: "Compass fix", items: [
       "The main menu compass ring no longer drifts and spins: it stays still.",
