@@ -3,7 +3,7 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b244-gathering", build: 244, date: "25 Nov 2026", title: "Picking herbs by hand", items: [
+    { id: "b245-gathering", build: 245, date: "25 Nov 2026", title: "Picking herbs by hand", items: [
       "Gathering is now a short hands-on mini-game: snip flowers at the stem, dig roots up slowly, scrape fungus in one stroke, pick only the ripe berries, lift eggs gently and ease a fragile Nirnroot out of the mud. Do it well and you get more; even a clumsy try gives you something.",
       "Picked a plant three times by hand? A Quick pick button lets you skip the mini-game for a slightly smaller handful.",
       "Herbs nearby are easy to spot: painted markers on the map, a ring that shows how far you can reach, and a Gather button that pops up on the road, even while you ride past.",
@@ -13,6 +13,9 @@ const PATCHNOTES = (() => {
       "Four new Alchemy perks: Herbalist's Eye (more rare finds), Sure Hands (easier mini-game, Quick pick sooner), Anatomist (extra parts from beasts) and Master Gardener (more from every garden bed).",
       "In a party everyone picks their own share of each patch, so there's nothing to fight over.",
       "In Polish the Gathering card is fully translated now: distance, weight, regrowth time and the garden.",
+    ] },
+    { id: "b244-fighthotfix", build: 244, date: "25 Nov 2026", title: "Fight fix", items: [
+      "Fixed: in some fights your attacks did nothing. If the little timing game after a move gets stuck or vanishes, your next press goes through as a normal hit.",
     ] },
     { id: "b243-gptqa", build: 243, date: "25 Nov 2026", title: "Dungeon rooms and small fixes", items: [
       "Fixed: foes in dungeons were met with road lines, like webs stretched \"across the road\" deep in a barrow. Bandits, wolves, spiders, draugr and the rest now get their own lines for caves, mines, forts, barrows and other places.",
