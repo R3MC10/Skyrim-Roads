@@ -159,7 +159,7 @@ const FIGHTCTL = (() => {
     const q = quick(f);
     for (const [a] of bx.list) if (q.length < MAXQ + 2 && !q.some((x) => x.a === a)) q.unshift({ a });
     if (typeof MOUNTFIGHT !== "undefined") for (const [a] of MOUNTFIGHT.moves(f)) q.unshift({ a });   // Mount / Dismount (mountfight.js)
-    if (typeof REACT !== "undefined") for (const [a] of REACT.moves(f)) if (REACT.can(f, a) && !q.some((x) => x.a === a)) q.push({ a });   // Oil flask, Mark target, Cover allies (reactions.js): only when you can use them, the tray stays short
+    if (typeof REACT !== "undefined") for (const [a] of REACT.moves(f)) if ((REACT.worth ? REACT.worth(f, a) : REACT.can(f, a)) && !q.some((x) => x.a === a)) q.push({ a });   // Oil flask, Mark target, Cover allies (reactions.js): only when they are worth it, the tray stays short
     const tray = q.map((x, i) => btn(sess, api, x.a, { label: shortName(f, x.a), extra: "fc-q" + (x.sugg ? " sugg" : "") + (/^(shout|power):/.test(x.a) ? " shout" : ""), key: String(4 + i), badge: x.a.startsWith("potion:") ? potCount(f, x.a.split(":")[1]) : null })).join("");
     const nSp = (s.spells || []).filter((id) => D.SPELLS[id] && D.SPELLS[id].kind !== "utility").length;
     const nPot = ["health", "magicka", "stamina"].reduce((t, k) => t + potCount(f, k), 0);

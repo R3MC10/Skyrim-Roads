@@ -7,8 +7,8 @@
    - Burning ground: throw an Oil flask (Items, or the quick slots), then any fire (a spell, a fire weapon, Fire Breath)
      sets the oil ablaze: the ground burns the foe for 3 rounds.
    - Exploit: a power attack on a foe someone shield-bashed this round: extra damage, and it reels (loses a move).
-   - Precision: Mark target (a cheap move when you or a friend carries a bow) makes every arrow or bolt at it a
-     critical hit for 2 rounds.
+   - Precision: Mark target (a cheap move when you or a friend carries a bow) makes the next 3 arrows or bolts at it
+     critical hits (for up to 3 rounds).
    - Stagger exploit: after a shout (Unrelenting Force knocks it flat) the next blows find it off balance.
    - Intercept: Cover allies (a defensive stance that ends your turn): blows meant for your friends come to you, and
      you take them 35% softer. A boss's Marked for Death can be intercepted the same way.
@@ -33,7 +33,7 @@ const REACT = (() => {
   const C = {
     shatter: { bonus: 0.5, perStack: 0.1, cap: [0.1, 0.06] },
     exploit: { bonus: 0.6, cap: [0.09, 0.045] },
-    precision: { bonus: 0.6, cap: [0.07, 0.035] },
+    precision: { bonus: 0.3, cap: [0.04, 0.02], shots: 3 },   // a mark is good for 3 critical shots
     force: { bonus: 0.5, cap: [0.07, 0.035] },
     burn: { share: 0.4, cap: [0.035, 0.018], rounds: 3 },
     team: 1.3,            // done by two different fighters
@@ -116,6 +116,7 @@ const REACT = (() => {
     if (bow && p.mark) {
       const team = p.markBy != null && p.markBy !== who;
       const d = deal(f, hit * C.precision.bonus * (team ? C.team : 1), capOf(f, C.precision.cap), team);
+      const mk = st(f).mark; if (mk && --mk.shots <= 0) delete st(f).mark;
       return { text: say("precision", "Precision! A critical shot at the mark: +{0}", R(d)), key: "precision" };
     }
     if (p.force) {
@@ -140,6 +141,13 @@ const REACT = (() => {
     if (a === "rx:cover") return liveAllies(f).length > 0 && f.sp >= SP.cover;
     return false;
   }
+  /* worth a quick slot right now (fightctl.js): Cover only while a foe is going for a friend, so the phone tray stays short */
+  function worth(f, a) {
+    if (!can(f, a)) return false;
+    if (a !== "rx:cover") return true;
+    const names = new Set(liveAllies(f).map((x) => x.name));
+    return (f.foeTgts || []).some((t) => t && names.has(t.n));
+  }
   function why(f, a) {
     if (can(f, a)) return "";
     if (a === "rx:oil") return flaskRow(f) ? "Already soaked" : "No oil flasks";
@@ -159,7 +167,7 @@ const REACT = (() => {
   const ends = (a) => a === "rx:cover";   // a stance: the rest of your turn goes into it
   function tip(f, a) {
     if (a === "rx:oil") return fmt("Throw an oil flask ({0} left): the foe is soaked for {1} rounds. Then any fire (a spell, a fire weapon, Fire Breath) sets the ground ablaze and burns it for {2} rounds.", flasks(f), WIN.oil + 1 + longer(f), C.burn.rounds + longer(f));
-    if (a === "rx:mark") return fmt("Mark the foe for {0} rounds: every arrow or bolt at it, yours or a friend's, lands as a critical hit.", WIN.mark + 1 + longer(f));
+    if (a === "rx:mark") return fmt("Mark the foe for {0} rounds: the next {1} arrows or bolts at it, yours or a friend's, land as critical hits.", WIN.mark + 1 + longer(f), C.precision.shots + longer(f));
     if (a === "rx:cover") return fmt("Defensive stance, ends your turn: until your next turn, blows meant for your friends come to you, {0}% softer.", R(coverCut(f) * 100));
     return "";
   }
@@ -173,7 +181,7 @@ const REACT = (() => {
       return fmt("You throw an oil flask: the {0} is soaked. Fire will set the ground ablaze.", foeName(f));
     }
     if (a === "rx:mark") {
-      setup(f, "mark", who(f));
+      setup(f, "mark", who(f), { shots: C.precision.shots + longer(f) });
       return fmt("You mark the {0}: arrows and bolts at it land as critical hits", foeName(f));
     }
     if (a === "rx:cover") {
@@ -365,7 +373,7 @@ const REACT = (() => {
   if (typeof TB !== "undefined" && Array.isArray(TB.FOE_KEYS) && !TB.FOE_KEYS.includes("rx")) TB.FOE_KEYS.push("rx");   // party fights: every phone sees the same setups
   return {
     C, WIN, IC, NAME, MOVES, owns, cost, can, why, moves, ends, tip, act, pre, after, ally, blow, tick, ignite, install,
-    beginTurn, foePre, foePost, retarget, covering: coverOn, coverCut, ready, ai, value, chips, decorate, flasks, items,
+    beginTurn, foePre, foePost, retarget, covering: coverOn, coverCut, ready, ai, value, chips, decorate, flasks, items, worth,
     get off() { return off; }, set off(v) { off = !!v; },
   };
 })();

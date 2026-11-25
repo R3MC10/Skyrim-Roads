@@ -27,8 +27,8 @@
     "You have no oil flask": "Nie masz flaszki oleju",
     "Throw an oil flask ({0} left): the foe is soaked for {1} rounds. Then any fire (a spell, a fire weapon, Fire Breath) sets the ground ablaze and burns it for {2} rounds.":
       "Rzuć flaszkę oleju (zostało: {0}): wróg ocieka olejem przez {1} rundy. Potem każdy ogień (czar, ognista broń, Ognisty Oddech) podpala ziemię i pali go przez {2} rundy.",
-    "Mark the foe for {0} rounds: every arrow or bolt at it, yours or a friend's, lands as a critical hit.":
-      "Oznacz wroga na {0} rundy: każda strzała i bełt w niego, twoje czy przyjaciela, trafia krytycznie.",
+    "Mark the foe for {0} rounds: the next {1} arrows or bolts at it, yours or a friend's, land as critical hits.":
+      "Oznacz wroga na {0} rundy: następne strzały i bełty w niego ({1}), twoje czy przyjaciela, trafią krytycznie.",
     "Defensive stance, ends your turn: until your next turn, blows meant for your friends come to you, {0}% softer.":
       "Postawa obronna, kończy twoją turę: do twojej następnej tury ciosy wymierzone w przyjaciół spadają na ciebie, o {0}% słabsze.",
     "Already soaked": "Już ocieka olejem", "No oil flasks": "Brak flaszek oleju", "Already marked": "Już oznaczony",
@@ -58,3 +58,23 @@
   };
   for (const k in PL) if (!(k in I18N_STORY.ex)) I18N_STORY.ex[k] = PL[k];   // never overwrite an older translation
 })();
+// the patch note (patchnotes.js b191) and the Coming next line
+var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, pat: [] };
+Object.assign(I18N_EXTRA.words, {
+  "Combat combos and teamwork": "Kombinacje w walce i praca zespołowa",
+  "Follower and horse bonds, and spell crafting": "Więzi z towarzyszami i końmi oraz tworzenie zaklęć",
+  "Set a foe up, then cash in. Freeze it and hit it with a power attack to Shatter the frost for big extra damage. Shield-bash it and follow with a power attack this round for an Exploit: it hits harder and the foe keeps reeling. Knock it off balance with a shout and your next blows land harder.":
+    "Przygotuj wroga, a potem to wykorzystaj. Zamroź go i uderz silnym atakiem, żeby Roztrzaskać lód i zadać dużo dodatkowych obrażeń. Uderz go tarczą i dołóż silny atak w tej samej rundzie, a będzie Wykorzystanie: cios bije mocniej, a wróg dalej się zatacza. Wytrąć go z równowagi krzykiem, a twoje następne ciosy zabolą bardziej.",
+  "New in the general store: the Oil Flask. Throw it at a foe, then any fire (a spell, a fire weapon, Fire Breath) sets the ground ablaze and burns it for a few rounds.":
+    "Nowość w sklepach ogólnych: Flaszka oleju. Rzuć nią we wroga, a potem każdy ogień (czar, ognista broń, Ognisty Oddech) podpali ziemię i będzie go palić przez kilka rund.",
+  "New moves when they fit: Mark target (when you or a friend has a bow, the next three arrows at it are critical hits) and Cover allies (blows meant for your friends come to you, softer).":
+    "Nowe ruchy, kiedy pasują: Oznacz cel (gdy ty albo przyjaciel macie łuk, trzy następne strzały w niego trafiają krytycznie) i Osłoń sojuszników (ciosy wymierzone w przyjaciół spadają na ciebie, słabsze).",
+  "Combos are made for teamwork: one friend freezes, another shatters, and done by two different fighters a combo hits harder. Your follower and the Smart AI (Auto) look for combos too.":
+    "Kombinacje są stworzone do gry zespołowej: jeden przyjaciel zamraża, drugi roztrzaskuje, a kombinacja zrobiona przez dwie różne osoby bije mocniej. Twój towarzysz i Sprytna SI (Auto) też szukają kombinacji.",
+  "A move that would set off a combo right now glows and gets a small icon, and a short banner shows when a combo lands.":
+    "Ruch, który teraz odpaliłby kombinację, świeci się i ma małą ikonkę, a gdy kombinacja wejdzie, pojawia się krótki napis.",
+  "Bosses have two new big moves you see a turn ahead: Withering Hex (wash it off with a potion or a healing spell) and Marked for Death, which goes for a friend unless you cover them.":
+    "Bossowie mają dwa nowe wielkie ataki widoczne turę wcześniej: Wyniszczającą klątwę (zmyjesz ją miksturą albo czarem leczenia) i Naznaczenie na śmierć, które spada na przyjaciela, chyba że go osłonisz.",
+  "Three new perks: Cold Breaker (Two-Handed: Shatter hits harder), Tactician (Speechcraft: setups last a round longer) and Bodyguard (Blocking: covering friends hurts you less).":
+    "Trzy nowe atuty: Łamacz lodu (Broń dwuręczna: Roztrzaskanie bije mocniej), Taktyk (Elokwencja: przygotowania trwają rundę dłużej) i Obrońca (Blokowanie: osłanianie przyjaciół mniej cię boli).",
+});
