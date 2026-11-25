@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b263-testsgreen", build: 263, date: "25 Nov 2026", title: "Coming next, refreshed", items: [
+      "The Coming next list in Patch notes is up to date again, with painted faces for every race in character creation added.",
+      "On a PC, tooltips near the bottom of the screen (like the one on your health bar) no longer slip off the edge when the interface is scaled up.",
+      "On a PC, resting the mouse on your gold or level in the bottom bar shows the full details, like on a phone.",
+    ] },
     { id: "b262-phonelayout", build: 262, date: "25 Nov 2026", title: "Tidier screens on phones", items: [
       "On a phone, the Area tab lists places in full-width rows: icon, name and whether it's open. Open places come first; shut ones fold away under \"Closed\". Two columns only when every name fits.",
       "On a phone, the Company tab shows your longhouse right under the Party / Company / Friends / Realm row. Messages, trades and chat fold away under More.",
@@ -1787,10 +1792,11 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 249;
+  const NEXT_AT = 263;
   const NEXT = [
     "Mentoring: play side by side with friends of any level",
     "Shrines of your own: build a Daedric altar at your longhouse",
+    "Painted faces for every race in character creation",
   ];
   const KEY = "rotn_notes_seen";
   const latest = () => LIST[0];
