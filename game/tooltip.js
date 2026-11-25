@@ -324,14 +324,29 @@ const TIP = (() => {
     return [...root.querySelectorAll("button, .btn, [data-act]:not([data-rtip])")].map((b) => { const q = b.getBoundingClientRect(); return { left: q.left / z, right: q.right / z, top: q.top / z, bottom: q.bottom / z, width: q.width, height: q.height }; }).filter((r) => r.width && r.height);
   }
   const hits = (x, y, w, h, rs) => rs.some((r) => x < r.right && x + w > r.left && y < r.bottom && y + h > r.top);
+  /* [fight-tooltips-top] bars a tip never sits under: the fight's top bar (turn order), and the bottom nav outside fights.
+     The thing being pointed at may be in one of them: then that bar doesn't count. */
+  function bars(el, z, T, B, vh) {
+    let t = T, b = B;
+    const inFight = !!el?.closest?.("#tbf");
+    const top = inFight && document.querySelector("#tbf .tbtop");
+    if (top && !top.contains(el)) { const q = top.getBoundingClientRect(); if (q.height > 0 && q.bottom / z < vh * 0.4) t = Math.max(t, q.bottom / z + 6); }
+    const nav = !inFight && !(typeof TB !== "undefined" && TB.open) && document.getElementById("tabs");
+    if (nav && !nav.contains(el)) { const q = nav.getBoundingClientRect(); if (q.height > 0 && q.width > 0 && q.top / z > vh * 0.6 && getComputedStyle(nav).visibility !== "hidden") b = Math.min(b, q.top / z - 6); }
+    return b - t >= 140 ? [t, b] : [T, B];   // a tiny screen: use all of it
+  }
   function place(r0, el = null) {
     // a zoomed page (PC interface size, access.js text zoom): rects come back zoomed, left/top are set before the zoom
     const z = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
     const rect = z === 1 ? r0 : { left: r0.left / z, top: r0.top / z, right: r0.right / z, bottom: r0.bottom / z, width: r0.width / z, height: r0.height / z };
     const vv = window.visualViewport, vw = (vv ? vv.width : innerWidth) / z, vh = (vv ? vv.height : innerHeight) / z, ox = (vv ? vv.offsetLeft : 0) / z, oy = (vv ? vv.offsetTop : 0) / z;
-    const ins = insets(), M = 8, L = ox + ins.l + M, R = ox + vw - ins.r - M, T = oy + ins.t + M, B = oy + vh - ins.b - M;
+    const ins = insets(), M = 8, L = ox + ins.l + M, R = ox + vw - ins.r - M;
+    const [T, B] = bars(el, z, oy + ins.t + M, oy + vh - ins.b - M, oy + vh);
     box.style.maxWidth = Math.max(160, Math.min(340, R - L)) + "px"; box.style.width = "";   // (a fight-bar line set a width)
     box.style.left = "0px"; box.style.top = "0px";
+    // a long tip on a short screen: as tall as fits, the rest scrolls inside it (never off the screen)
+    box.style.maxHeight = ""; box.classList.remove("tt-scroll");
+    if (box.offsetHeight > B - T) { box.style.maxHeight = Math.floor(B - T) + "px"; box.classList.add("tt-scroll"); }
     const tw = box.offsetWidth, th = box.offsetHeight, gap = 10;
     const cx = rect.left + rect.width / 2;
     let x = Math.max(L, Math.min(R - tw, cx - tw / 2));
@@ -351,6 +366,13 @@ const TIP = (() => {
     }
     if (above >= T) { y = above; side = "above"; }
     else if (below + th <= B) { y = below; side = "below"; }
+    else if (rect.right + gap + tw <= R || rect.left - gap - tw >= L) {   // no room above or below: beside it, never over it
+      const sx = rect.right + gap + tw <= R ? rect.right + gap : rect.left - gap - tw;
+      const sy = Math.max(T, Math.min(B - th, rect.top + rect.height / 2 - th / 2));
+      box.style.left = Math.round(sx) + "px"; box.style.top = Math.round(sy) + "px";
+      box.classList.remove("tt-above", "tt-below");
+      return;
+    }
     else { side = rect.top - T > B - rect.bottom ? "above" : "below"; y = side === "above" ? T : Math.max(T, B - th); }   // no room either way: as far from the finger as fits
     y = Math.max(T, Math.min(B - th, y));
     box.style.left = Math.round(x) + "px"; box.style.top = Math.round(y) + "px";
@@ -359,11 +381,16 @@ const TIP = (() => {
   }
   /* [c2polish] a button on the fight screen's skill bar: the box goes above the whole bar (not over the Moves row) */
   function anchor(el) {
-    const r = el.getBoundingClientRect(), bar = el.closest?.("#tbf.c2 .tbdock");
+    // [fight-tooltips-top] a card in the fight's Magic / Items picker: the tip keeps off the whole card (its Cast and Dual too)
+    const card = el.closest?.("#tbf .fc-pick .tbsp");
+    if (card) return card.getBoundingClientRect();
+    const r = el.getBoundingClientRect(), bar = pickerFree(el.closest?.("#tbf.c2 .tbdock"), el);
     if (!bar) return r;
     const b = bar.getBoundingClientRect();
     return { left: r.left, width: r.width, right: r.right, top: Math.min(r.top, b.top), bottom: r.bottom, height: r.bottom - Math.min(r.top, b.top) };
   }
+  /* the picker sheet (Magic / Items) sits in the skill bar's dock, but its cards get a full tip beside them, not the bar's line */
+  const pickerFree = (bar, el) => (bar && !el.closest?.(".fc-pick") ? bar : null);
   /* [fightdeclutter] a move on the fight screen's skill bar: its tip is a fixed info line right above the bar, as wide
      as the bar (at most 620px), never over the buttons or under the finger */
   function dockLine(bar) {
@@ -375,7 +402,8 @@ const TIP = (() => {
     box.style.maxWidth = w + "px"; box.style.width = w + "px";
     box.style.left = Math.round(Math.max(8, b.left + (b.width - w) / 2)) + "px";
     box.style.top = "0px";
-    box.style.top = Math.round(Math.max(8, b.top - box.offsetHeight - 6)) + "px";
+    const tb = document.querySelector("#tbf .tbtop"), t0 = tb ? Math.max(8, tb.getBoundingClientRect().bottom / z + 6) : 8;   // never under the top bar
+    box.style.top = Math.round(Math.max(t0, b.top - box.offsetHeight - 6)) + "px";
     box.classList.remove("tt-below"); box.classList.add("tt-above");
   }
   let gate = null;   // [rewardtips] (el) => false keeps a tip from showing (a result card covers that icon: overlays.js)
@@ -389,7 +417,8 @@ const TIP = (() => {
     if (!box.isConnected) document.body.appendChild(box);
     box.innerHTML = body;
     cur = hit; hit.rect = rect;
-    const dock = !rect && hit.el?.closest?.("#tbf.c2 .tbdock");
+    const dock = !rect && pickerFree(hit.el?.closest?.("#tbf.c2 .tbdock"), hit.el);
+    box.style.maxHeight = ""; box.classList.remove("tt-scroll");
     /* [phonelayout] a finger on a phone: the tip is a bottom sheet (35-45% of the screen), not a box over the list, and the
        list underneath keeps its place. Not on the fight screen (its buttons sit at the bottom). */
     const sheet = !dock && !rect && (!!press || !!hit.tap) && sheetFits() && !hit.el?.closest?.("#tbf, .tbf, #fight");

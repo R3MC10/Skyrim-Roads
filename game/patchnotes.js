@@ -3,12 +3,17 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b307-locscreen", build: 307, date: "25 Nov 2026", title: "Every place opens full screen", items: [
+    { id: "b308-locscreen", build: 308, date: "25 Nov 2026", title: "Every place opens full screen", items: [
       "Arriving in a town, a farm, a camp, a cave mouth, a shrine or any other place now opens it full screen: a painted picture of the place, its name in big letters, the hold, a short line about it, the time and the weather.",
       "Everything you can do there stands on the picture as a signpost (blacksmith, inn, general goods, the jarl, the notice board, caravans, gathering...) with a few words on what's going on: open or closed, a job to hand in, a caravan in town. Tap one to open it; its back button brings you back to the place.",
       "People here (other players, your follower, the townsfolk you can talk to) sit as small portraits along the bottom. Pictures drift slowly, nights are darker, and snow or rain falls when the weather turns.",
       "On a phone the signposts turn into a readable list over the lower half of the picture. On a PC, arrows or WASD walk between them, Enter opens one and Esc leaves to the map.",
       "Prefer the old plain list? Press List; the game remembers it, and Scene view brings the picture back.",
+    ] },
+    { id: "b307-fighttipstop", build: 307, date: "25 Nov 2026", title: "Fight tooltips show in full", items: [
+      "In a fight, the cards in the Magic and Items lists now show their whole tooltip right next to the card: above it, below it or beside it, wherever it fits.",
+      "Tooltips in fights are never cut off, never hidden under the list or the top bar, and never cover the card you're pointing at. A very long one scrolls inside instead.",
+      "Tooltips now always sit on top of everything else on the screen, minigames and damage numbers included.",
     ] },
     { id: "b306-remakeonce", build: 306, date: "25 Nov 2026", title: "Everyone gets to remake their hero once", items: [
       "Everyone gets to remake their hero once: pick race, sex and look again.",

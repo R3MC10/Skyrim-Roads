@@ -5044,6 +5044,10 @@ body:has(#tbf) #gnear{display:none!important}
 .cgsexb.on{color:#f3e7c4;border-color:var(--gold);background:linear-gradient(0deg,rgba(226,187,100,.18),rgba(226,187,100,.06));box-shadow:inset 0 0 0 1px rgba(226,187,100,.35)}
 .cgsexb:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
 @media (min-width:900px){.cgsex{padding:8px 20px 6px}}
+/* [fight-tooltips-top] tooltips sit above everything: the fight, its Magic / Items picker, minigames, damage numbers, windows */
+.tip{z-index:10000}.tbtip{z-index:10000}
+.tip.tt-scroll{overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+.tip.tt-scroll::after,.tip:not(.tt-above):not(.tt-below)::after{display:none}
 /* [hotbardnd] hotbar drag and drop + 1x / 2x (single / dual cast) per spell slot */
 #tbf .hb-cell{position:relative;display:flex;min-width:0}
 #tbf .hb-cell>.hb-slot{flex:1;min-width:0}
@@ -5582,6 +5586,7 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 <script src="i18n_rewardtips.js"></script>
 <script src="i18n_updater.js"></script>
 <script src="i18n_gatherarea.js"></script>
+<script src="i18n_fighttipstop.js"></script>
 <script src="i18n_weaponfx.js"></script>
 <script src="i18n_phantom.js"></script>
 <script src="i18n_pcupdate.js"></script>
