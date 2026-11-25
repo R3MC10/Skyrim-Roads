@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b238-qaside", build: 238, date: "25 Nov 2026", title: "Company fixes", items: [
+      "Fixed: tapping Found twice quickly could pay for the company twice.",
+      "Fixed: tapping Put in twice quickly could put the same gold in the treasury twice and leave your purse below zero.",
+      "Fixed: tapping Give twice quickly could hand the same ingots to the stockpile twice.",
+      "Fixed: an app update no longer restarts the game while you're fishing, mining, hunting, at the forge or in any other mini-game, so you never lose a catch.",
+      "Fixed: more of the Social, jobs and fishing screens are in Polish.",
+    ] },
     { id: "b236-glowfix", build: 236, date: "25 Nov 2026", title: "No more glowing blob next to your weapon", items: [
       "An enchanted weapon used to leave a big glowing blob floating in the air beside your hero in fights. The glow now sits on the weapon itself, as a slim shine along the blade.",
     ] },
