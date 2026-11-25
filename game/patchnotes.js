@@ -3,9 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b315-partytrain", build: 315, date: "25 Nov 2026", title: "Your party walks in a line", items: [
+    { id: "b316-partytrain", build: 316, date: "25 Nov 2026", title: "Your party walks in a line", items: [
       "Travelling as a party, everyone now walks in a line on the map so you can see each of you: the leader in front, the rest following one behind another along the road.",
       "Standing in a town, your party lines up in a row next to the town instead of all on one spot, so every name is readable.",
+    ] },
+    { id: "b315-hourlyupdates", build: 315, date: "25 Nov 2026", title: "Updates arrive on time", items: [
+      "New versions now reach the app reliably within about an hour of a change, instead of sometimes waiting many hours.",
     ] },
     { id: "b314-reportname", build: 314, date: "25 Nov 2026", title: "Reports show who sent them", items: [
       "When you report a problem, your player name (your account name, or your hero's name if you're not signed in) now goes with it, so we know who to ask if we need more details.",
