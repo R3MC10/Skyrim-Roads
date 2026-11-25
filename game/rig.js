@@ -91,7 +91,7 @@ const PAINTRIG = (() => {
   // ---------------------------------------------------------------- clips
   const EASE = { lin: (t) => t, io: (t) => (t < 0.5 ? 2 * t * t : 1 - 2 * (1 - t) * (1 - t)), in: (t) => t * t * t, out: (t) => 1 - Math.pow(1 - t, 3),
     back: (t) => { const c = 1.4; return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); } };
-  const BASE = { aim: -0.55, back: 0.1, lean: 0.02, dy: 0, ox: 0, rot: 0, tilt: 0, hipx: 0, fn: [5.5, 0], ff: [-5.5, 0], draw: 0, cast: 0 };
+  const BASE = { aim: -0.55, back: 0.1, lean: 0.02, dy: 0, ox: 0, rot: 0, tilt: 0, hipx: 0, fn: [5.5, 0], ff: [-5.5, 0], draw: 0, cast: 0, hk: 0, hx: 0, hy: 0, twist: 0, loose: 0 };
   function mix(a, b, w) {
     const o = {};
     for (const k in BASE) {
@@ -123,6 +123,17 @@ const PAINTRIG = (() => {
   }
   const ALLY_HIT = 0.55;   // where allyanim.js / figart.js put the contact of an attack
 
+  /* the fight scene hands us how hard you were just hit (o.knock) and lets it die away as exp(-7 t) from the blow; the
+     first value after a rise is the blow's strength, so the time since the blow is ln(peak / knock) / 7, and the hit
+     clip (a stagger for a hard blow) plays at its own pace: head snap, step back, follow-through, settle */
+  const KN = new Map();
+  function recoil(o) {
+    const id = o.who || "me", k = o.knock; let r = KN.get(id);
+    if (!r || k > r.last + 0.25) { r = { peak: k, last: k }; KN.set(id, r); }
+    r.last = k;
+    const hard = r.peak >= 13, t = Math.log(Math.max(1, r.peak / Math.max(1e-3, k))) / 7, C = D.CLIPS[hard ? "stagger" : "hit"];
+    return { hard, u: clamp(t / C.len, 0, 1) };
+  }
   /* the controls for one fight figure */
   function controls(o, sp, wk) {
     const lunge = o.lunge || 0, ranged = RANGED.has(wk);
@@ -146,20 +157,24 @@ const PAINTRIG = (() => {
     } else {
       const name = o.move ? D.MOVE_CLIP[o.move] : null;
       if (name && o.mu != null) {   // the replay's arms, this clip's legs, hips and head
-        const C = D.CLIPS[name], B = sample(name, warp(o.mu, o.hitU, C.hit)), pw = o.power ? 1.3 : 1;
+        const C = D.CLIPS[name], B = sample(name, C.nowarp ? o.mu : warp(o.mu, o.hitU, C.hit)), pw = o.power ? 1.3 : 1;
         P.fn = [B.fn[0] * (B.fn[0] > 6 ? pw : 1), B.fn[1]]; P.ff = B.ff; P.dy = B.dy * pw; P.hipx = B.hipx * pw; P.tilt = B.tilt; P.ox = B.ox;
         P.lean = P.lean * 0.7 + B.lean * 0.5 * pw; clipName = name;
         if (name === "cast") { P.cast = B.cast; hand = "open"; }
+        if (C.arms) {   // swings and the bow play their own arm path (the contact still lands on the scene's hit frame)
+          P.aim = B.aim; P.back = B.back; P.hk = B.hk; P.hx = B.hx; P.hy = B.hy; P.twist = B.twist * (o.power ? 1.2 : 1); P.loose = B.loose;
+          if (C.bow) P.draw = B.draw;
+        }
       } else if (!(lunge > 0.05)) {   // standing: breathing
         const B = sample("idle", (o.t || 0) / D.CLIPS.idle.len);
         P.dy = B.dy; P.tilt = B.tilt; P.lean += B.lean; clipName = "idle";
       }
     }
-    if (o.knock > 0.5 && !(o.down > 0)) {   // just hit: a flinch, a stagger when it was a hard one
-      const hard = o.knock >= 13, H = sample(hard ? "stagger" : "hit", hard ? 0.18 : 0.2), w = clamp(o.knock / (hard ? 16 : 9), 0, 1) * 0.9;
+    if (o.knock > 0.3 && !(o.down > 0)) {   // just hit: the reaction plays in real time from the blow (see recoil)
+      const R = recoil(o), H = sample(R.hard ? "stagger" : "hit", R.u), w = clamp((1 - R.u) * 4, 0, 1);
       const keep = { ox: P.ox };
-      P = mix(P, H, w); P.ox = keep.ox;   // the scene already pushes the whole figure back
-    }
+      P = mix(P, H, w); P.ox = keep.ox + (H.ox || 0) * w * 0.5;   // the scene already pushes the whole figure back
+    } else if (o.knock != null) KN.delete(o.who || "me");
     if (o.dying > 0) {   // a foe's death (foerig.js turns the body; the limbs give up)
       const H = sample("death", clamp(o.dying, 0, 0.78)); P.aim = H.aim; P.back = H.back; P.tilt = H.tilt; hand = "open";
     }
@@ -185,9 +200,12 @@ const PAINTRIG = (() => {
     const m = G.m, sa = P.lean || 0, pa = sa * 0.3;
     const fn = [P.fn[0] * m, P.fn[1] * m], ff = [P.ff[0] * m, P.ff[1] * m];
     const H = [((P.ox || 0) + (P.hipx || 0)) * m + (fn[0] + ff[0]) * 0.3, G.hipY + (P.dy || 0) * m];
-    const W = add(H, rot(pa, G.waist)), S = add(W, rot(sa, G.sh)), SF = add(S, rot(sa, [2.4 * m, -0.4 * m])), N = add(W, rot(sa, G.nk));
-    const ka = (G.upper + G.fore) / 21.6, aim = P.aim, bk = P.back;
-    const hn = add(S, rot(sa, [ka * (3 + Math.cos(aim) * 11 - Math.sin(aim) * 6), ka * (4 + Math.sin(aim) * 11 + Math.cos(aim) * 6)]));
+    const tw = P.twist || 0;   // the shoulders turning: the near one back and the far one forward (-), or the other way (+)
+    const W = add(H, rot(pa, G.waist)), S = add(W, rot(sa, [G.sh[0] + tw * 1.4 * m, G.sh[1]])), SF = add(S, rot(sa, [(2.4 - tw * 2.2) * m, -0.4 * m])), N = add(W, rot(sa, [G.nk[0] + tw * 0.4 * m, G.nk[1]]));
+    const ka = (G.upper + G.fore) / 21.6, aim = P.aim, bk = P.back, hk = clamp(P.hk || 0, 0, 1);
+    let hn = add(S, rot(sa, [ka * (3 + Math.cos(aim) * 11 - Math.sin(aim) * 6), ka * (4 + Math.sin(aim) * 11 + Math.cos(aim) * 6)]));
+    if (hk > 0) { const own = add(S, rot(sa, [ka * (P.hx || 0), ka * (P.hy || 0)])); hn = [hn[0] + (own[0] - hn[0]) * hk, hn[1] + (own[1] - hn[1]) * hk]; }   // the hand on its own path
+    if (P.nearHand) hn = P.nearHand;
     const hf = P.farHand || add(SF, rot(sa, [ka * (-0.5 - 3 * Math.cos(bk) - 13 * Math.sin(bk)), ka * (0.5 - 3 * Math.sin(bk) + 14 * Math.cos(bk))]));
     const [eN, wN] = ik(S[0], S[1], hn[0], hn[1], G.upper, G.fore, 1), [eF, wF] = ik(SF[0], SF[1], hf[0], hf[1], G.upper, G.fore, 1);
     const hipN = add(H, [0.5 * m, 0]), hipF = add(H, [-0.6 * m, 0]);
@@ -243,13 +261,32 @@ const PAINTRIG = (() => {
     const tintC = sp.r && sp.r !== "nord" && !sp.vamp ? sp.skin : null, sv = (d) => (tintC ? (d ? "dt:" : "t:") + tintC : d ? "d" : "n");
     const ranged = RANGED.has(wk), two = TWO_MELEE.has(wk) || wk === "staff" || wk === "spear";
     const tipA = wk && kit && kit.TIP[wk] ? Math.atan2(kit.TIP[wk][1], kit.TIP[wk][0]) : -Math.PI / 4;
-    const wa = B.sa + P.aim;   // the weapon's frame, as on the ink figures
+    let wa = B.sa + P.aim;   // the weapon's frame, as on the ink figures
+    const gear = typeof RIGGEAR !== "undefined" ? RIGGEAR : null;
     const armedN = !!wk && wk !== "fist" && !P.flask, openAll = P.hand === "open";
     const glowC = o.glow ? sp.ench || "#7fb6ff" : null, castC = wk === "staff" ? sp.staffC : sp.ench || "#9fd0f0";
     // where the far hand goes when it helps: on the bow string, under a crossbow, low on a two-handed grip
     const nearGrip = () => { const q = ctx.Q["hand-fist"], len = Math.hypot(q.e[0] - q.p[0], q.e[1] - q.p[1]) * G.u * 0.55, wr = B.armN.wr, fa = angOf(B.armN.el, wr); return [wr[0] + Math.cos(fa) * len, wr[1] + Math.sin(fa) * len]; };
-    let farOn = null;
-    if (!P.ride && !(P.down > 0) && !openAll) {
+    let farOn = null, bowPull = null, bowArrow = false;
+    if (wk === "bow" && gear && !P.ride && !(P.down > 0) && !openAll) {
+      /* a real draw: the bow arm goes out straight from the shoulder at cheek height, the string hand pulls back to the
+         cheek, the arrow runs level from the cheek to the bow; on the loose the string hand flies back past the ear */
+      const r = clamp((-(P.back || 0) - 0.25) / 0.6, 0, 1), dr = clamp(P.draw || 0, 0, 1), ls = clamp(P.loose || 0, 0, 1);
+      const reach = (G.upper + G.fore) * 0.985, cheek = add(B.N, rot(B.sa, [2.6 * m, -2.4 * m]));
+      if (r > 0) {
+        const A = Math.asin(clamp((cheek[1] + 0.6 * m - B.S[1]) / reach, -0.9, 0.9)) + (P.aim || 0) * 0.5;
+        const want = add(B.S, [Math.cos(A) * reach, Math.sin(A) * reach]), h0 = B.armN.wr;
+        P.nearHand = [h0[0] + (want[0] - h0[0]) * r, h0[1] + (want[1] - h0[1]) * r];
+        Object.assign(B, solve(G, P));
+        const gp = nearGrip(); let d = angOf(cheek, gp) - wa; d = Math.atan2(Math.sin(d), Math.cos(d)); wa += d * r;
+        const gp2 = nearGrip(), k = m * WSC, rest = add(gp2, rot(wa, [-gear.BRACE * k, 0]));
+        let str = [rest[0] + (cheek[0] - rest[0]) * dr, rest[1] + (cheek[1] - rest[1]) * dr];
+        bowPull = Math.hypot(gp2[0] - str[0], gp2[1] - str[1]) / k; bowArrow = dr > 0.4;   // the arrow shows once it is half drawn
+        if (ls > 0) { const fly = add(cheek, rot(wa, [-6 * m, -1.6 * m])); str = [str[0] + (fly[0] - str[0]) * ls, str[1] + (fly[1] - str[1]) * ls]; }
+        const q = ctx.Q["hand-fist"], len = Math.hypot(q.e[0] - q.p[0], q.e[1] - q.p[1]) * G.u * 0.55;
+        if (r > 0.05 || dr > 0.05) farOn = add(str, rot(wa, [-len, 0]));
+      }
+    } else if (!P.ride && !(P.down > 0) && !openAll) {
       if (wk === "bow" && (P.back < -0.5 || P.draw > 0.05)) farOn = add(nearGrip(), rot(wa, [(2.9 - P.draw * 13) * m * WSC, 0]));
       else if (wk === "crossbow") farOn = add(nearGrip(), rot(wa, [7 * m * WSC, 1.5 * m]));
       else if (two && !o.shield) farOn = add(nearGrip(), rot(wa + tipA, [-4.5 * m * WSC, 0]));
@@ -257,11 +294,11 @@ const PAINTRIG = (() => {
     if (farOn) { P.farHand = farOn; Object.assign(B, solve(G, P)); }
     const shieldOn = !!o.shield && !two && !ranged, shieldFront = shieldOn && (P.front || P.back < -0.8);
     const kS = m * 1.35;
-    const shieldHere = (front) => { if (!kit) return; const wr = B.armF.wr; g.save(); g.translate(wr[0], wr[1]); g.rotate(B.sa); g.scale(kS, kS); kit.shieldAt(g, sp, 0, 0, front, st); g.restore(); };
+    const shieldHere = (front) => { if (!kit) return; const wr = B.armF.wr; g.save(); g.translate(wr[0], wr[1]); g.rotate(B.sa); g.scale(kS, kS); if (gear) gear.shield(g, sp, front, st); else kit.shieldAt(g, sp, 0, 0, front, st); g.restore(); };
     // the far arm, in shade, behind everything
     const farPart = shieldOn || o.off || farOn ? "hand-fist" : "hand-open";
     const fg = armAt(g, ctx, B.armF, "d", farPart, sv(true), farOn && wk === "bow" ? wa : null);
-    if (o.off && kit) { g.save(); g.translate(fg[0], fg[1]); g.rotate(B.sa + 0.55 + (o.lunge || 0) * 0.7); g.scale(m * WSC, m * WSC); kit.weapon(g, sp, o.off, st, { plain: true, glow: glowC }); g.restore(); }
+    if (o.off && kit) { g.save(); g.translate(fg[0], fg[1]); g.rotate(B.sa + 0.55 + (o.lunge || 0) * 0.7); g.scale(m * WSC, m * WSC); (gear || kit).weapon(g, sp, o.off, st, { plain: true, glow: glowC }); g.restore(); }
     if (shieldOn && !shieldFront) shieldHere(false);
     if (P.cast > 0.05 && kit) kit.glowAt(g, fg[0], fg[1], (5 + P.cast * 3) * m, castC, 0.75, st);
     // legs: the far one in shade (in the saddle only the near leg shows, bent over the horse's flank)
@@ -285,7 +322,7 @@ const PAINTRIG = (() => {
     const q = ctx.Q[handPart], fa = angOf(B.armN.el, B.armN.wr);
     let ha = fa; if (want != null) { let d = want - fa; d = Math.atan2(Math.sin(d), Math.cos(d)); ha = fa + clamp(d, -1, 1); }
     const glen = Math.hypot(q.e[0] - q.p[0], q.e[1] - q.p[1]) * G.u * 0.55, grip = [B.armN.wr[0] + Math.cos(ha) * glen, B.armN.wr[1] + Math.sin(ha) * glen];
-    if (armedN && kit && !openAll) { g.save(); g.translate(grip[0], grip[1]); g.rotate(wa); g.scale(m * WSC, m * WSC); kit.weapon(g, sp, wk, st, { draw: P.draw, glow: glowC, plain: wk !== sp.wk }); g.restore(); }
+    if (armedN && kit && !openAll) { g.save(); g.translate(grip[0], grip[1]); g.rotate(wa); g.scale(m * WSC, m * WSC); (gear || kit).weapon(g, sp, wk, st, { draw: P.draw, pull: bowPull, arrow: bowArrow, glow: glowC, plain: wk !== sp.wk }); g.restore(); }
     handAt(g, ctx, B.armN, handPart, sv(false), want);
     if (P.flask) flaskAt(g, grip[0], grip[1] - 0.5 * m, P.flask, m * 1.2);
     if (P.cast > 0.05 && kit) kit.glowAt(g, grip[0] + 1.6 * m, grip[1] - 0.6 * m, (5 + P.cast * 3.4) * m, castC, 0.85, st);
