@@ -16,6 +16,6 @@ ok(/portable/.test(P.text(130, 131, "portable")) && /saves stay/.test(P.text(130
 // wiring
 const html = fs.readFileSync(path.join(W, "index.html"), "utf8"), main = fs.readFileSync(path.join(__dirname, "../desktop/main.js"), "utf8");
 ok(/<script src="pcupdate.js"><\/script>/.test(html) && /#pcupd\{/.test(html), "loaded and styled");
-ok(/index\.html\?pc=\$\{process\.env\.PORTABLE_EXECUTABLE_DIR \? "portable" : "setup"\}&v=/.test(main), "the PC app says which kind it is and its version");
+ok(/index\.html\?pc=\$\{KIND\}&v=1\.0\.\$\{games\.activeBuild\(\)\}/.test(main) && /KIND = process\.env\.PORTABLE_EXECUTABLE_DIR \? "portable" : "setup"/.test(main), "the PC app says which kind it is and the game build it runs");
 console.log(fails ? `failed: ${fails}` : `pcupdate: all ok · ${n} checks`);
 process.exit(fails ? 1 : 0);
