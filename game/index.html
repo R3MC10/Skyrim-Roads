@@ -3690,7 +3690,7 @@ body.sgopen>:not(#smithgame){visibility:hidden}
 .mgbg{position:absolute;inset:-16px;pointer-events:none;z-index:0}
 .minegame.mgart .mgbg{background:var(--mgbgi) 50% 42%/cover no-repeat;filter:blur(2px) brightness(.5) saturate(.95)}
 .mgbg::after{content:"";position:absolute;inset:0;background:radial-gradient(75% 65% at 50% 45%,transparent 35%,rgba(0,0,0,.78))}
-.mgstage{position:relative;z-index:1;width:var(--mgw);max-height:100%;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;text-align:center;display:flex;flex-direction:column;gap:8px;padding:4px 0;transition:filter .3s}
+.mgstage{position:relative;z-index:auto;width:var(--mgw);max-height:100%;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;text-align:center;display:flex;flex-direction:column;gap:8px;padding:4px 0;transition:filter .3s}
 .mgstage::-webkit-scrollbar{display:none}
 .mghead h3{font-family:"Barlow Condensed",Cinzel,serif;letter-spacing:.24em;text-transform:uppercase;font-size:clamp(17px,2.3vh,25px);margin:0;color:#f1e6c8;text-shadow:0 2px 8px #000,0 0 18px rgba(0,0,0,.8)}
 .mghead .cgsub{margin:2px 0 0;text-shadow:0 1px 4px #000}
@@ -3779,6 +3779,10 @@ html.a11y-still .hgchip{animation:none;opacity:1}
 /* [tidy1] festivals on a phone: the round compass button sits bottom right, so the boards keep their scores clear of it and the page scrolls past it */
 @media (max-width:759px){.tn{padding-bottom:72px}.tn-board li{padding-right:50px}html.a11y-1h-left .tn-board li{padding-right:4px;padding-left:50px}}
 .hcoatrow{display:flex;align-items:flex-end;gap:10px;margin-top:6px}.hcoatrow .hcoatpic{display:block;width:120px;height:auto;flex:none;filter:drop-shadow(0 2px 3px rgba(0,0,0,.45))}.hcoatwait{height:120px}
+/* [tidy2] mining: the mine's name and the line under it stay on top of the swinging pickaxe; forge: the quench call reads on phones */
+.minegame .mghead{position:relative;z-index:5}
+.sgpop{text-shadow:0 0 4px #000,0 0 10px #000,0 2px 3px #000,0 0 22px rgba(255,150,60,.6)}
+@media (max-width:600px){.sgpop{left:50%;right:auto;width:max-content;max-width:calc(100% - 24px);padding:5px 14px;border-radius:10px;background:rgba(10,7,5,.72);box-shadow:0 0 0 1px rgba(232,198,106,.35),0 6px 18px rgba(0,0,0,.6);margin-left:0;translate:-50% 0}}
 /* follower ranks and horse bonds (bonds.js): rank ladder on the Bond tab, horse bond and specialities at the stables */
 .bondranks{margin:8px 0 6px;padding:7px 8px;border:1px solid rgba(214,178,94,.28);background:rgba(0,0,0,.22);border-radius:4px}
 .bondrkh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;font-family:"Barlow Condensed",sans-serif;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:#cbbf9f}
@@ -4060,6 +4064,7 @@ html.a11y-still .hgchip{animation:none;opacity:1}
 <script src="i18n_paintrig.js"></script>
 <script src="i18n_rigraces.js"></script>
 <script src="i18n_rigcohesion.js"></script>
+<script src="i18n_artround3.js"></script>
 <script src="i18n_sweep.js"></script>
 <script src="i18n_balfear.js"></script>
 <script src="i18n_combat2.js"></script>

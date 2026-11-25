@@ -3,7 +3,7 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b204-bonds", build: 204, date: "25 Nov 2026", title: "Bonds with followers and horses", items: [
+    { id: "b206-bonds", build: 206, date: "25 Nov 2026", title: "Bonds with followers and horses", items: [
       "Followers now have ranks: Hireling, Companion, Trusted and Sworn. They climb as loyalty grows, and each rank gives something real.",
       "Companion: they carry 25 more for you. Trusted: they fight smarter, stepping in front of you when you're badly hurt, healing you sooner and finishing off wounded foes. Sworn: a signature move once per fight, even before their personal quest.",
       "Loyalty now also grows from time on the road together and from hard fights won side by side (bosses, dragons, dangerous foes).",
@@ -11,6 +11,21 @@ const PATCHNOTES = (() => {
       "Horses have a bond level from 1 to 5. It grows as you ride on the road, win fights in the saddle, hunt on horseback and groom them at a stables.",
       "At bond level 3 you pick one speciality at a stables: warhorse, mountain horse, courier, packhorse or hunter's horse. It gets stronger at levels 4 and 5. You can retrain later for gold.",
       "New perks: Fellow Traveller in Etiquette (road time counts double, your follower carries more) and Horse Whisperer in Athletics (your horse bonds twice as fast, its speciality works better).",
+    ] },
+    { id: "b205-artround3", build: 205, date: "25 Nov 2026", title: "Fresh paint for fights and mini-games", items: [
+      "Fourteen more fight places are freshly painted, bigger and sharper: the arena, ash wastes, autumn woods, bandit camps, Forsworn cliffs, forts, giant camps, lairs, marshes, mines, rocky highlands, temples, Thalmor halls and vampire lairs.",
+      "Fighters pick up the light of each of these places, so they match the new paintings.",
+      "The shiny floor in Thalmor halls reflects a bit less, so it doesn't steal the show.",
+      "Black and chestnut horses now rear up in their own colours when you get thrown from the saddle.",
+      "Lockpicking happens on a painted chest front, with the lock sitting right on its iron plate. When a chest opens, its lid lifts a little.",
+      "Hunting: branches hang in from the top corners and grass grows along the bottom, swaying in the wind, without hiding the animals or your aim.",
+      "Fishing: painted splashes and rings on the water when the line lands, on every nibble, on the bite and when you land the fish.",
+    ] },
+    { id: "b204-tidy2", build: 204, date: "25 Nov 2026", title: "Arrows you can see, and a fresh Coming next", items: [
+      "Hunting: the arrow stuck in an animal is now sized to the animal, with its feathers sticking out, so you can see where you hit.",
+      "Mining: the mine's name and the line under it stay on top when the pickaxe swings at the top row on small phones.",
+      "Forge: on a PC the heat strip moves to the left while you quench, so it no longer covers the blade. On phones \"A perfect quench!\" and the other calls sit on a dark plate and are easy to read.",
+      "The Coming next list is up to date: afflictions, combos, the new mini-games, painted fighters, races, horse coats and fighters that match the scene are in the game now, so they're off the list.",
     ] },
     { id: "b203-rigcohesion", build: 203, date: "25 Nov 2026", title: "Fighters that belong in the scene", items: [
       "Fighters and foes now take on the light of the place you fight in: cold and blue in the snow, warm and torch-lit in caves, dim in barrows, with a faint edge of light on their backs.",
@@ -1426,12 +1441,12 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 192;
+  const NEXT_AT = 204;
   const NEXT = [
-    "Painted riders on the road and on the map",
-    "Makeovers for fishing, hunting, mining and lockpicking",
+    "14 more painted battle backdrops",
     "An adventuring company longhouse: a shared base with a treasury, a trophy hall and stables",
-    "Daedric bargains and artifacts that awaken, plus regional crises and heists",
+    "Daedric bargains and artifacts that awaken",
+    "Regional crises and heists",
     "Follower and horse bonds, and spell crafting",
   ];
   const KEY = "rotn_notes_seen";
