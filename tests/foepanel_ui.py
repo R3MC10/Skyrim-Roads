@@ -1,6 +1,7 @@
 """The slim foe plate and the scrollable fight log (foepanel.js). Usage: python foepanel_ui.py PORT -> RESULT OK
 Serve game/ first:  node serve.js PORT
-Phone 390x844 (touch) and PC 1920x1080 / 1366x768, a bandit chief boss and a group of bandits:
+Phone 390x844 (touch) and PC 1920x1080 / 1366x768, a bandit chief boss and a group of bandits, on the old floating
+layout (?nozones; the default zoned screen is checked by fightscreen_ui.py):
 - the foe's plate has no dark box, sits above the foe's head (a boss's sits under the boss bar) and never on a fighter
 - numbers show only on hover / tap
 - the boss's warning is one line
@@ -52,7 +53,7 @@ async def run(p, kind, w, h, touch):
     ctx = await b.new_context(viewport={"width": w, "height": h}, device_scale_factor=1, has_touch=touch, is_mobile=touch)
     pg = await ctx.new_page(); errs = []
     pg.on("pageerror", lambda e: errs.append(str(e)))
-    await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=fpl{kind}{w}&tb"); await pg.wait_for_timeout(1800)
+    await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=fpl{kind}{w}&tb&nozones"); await pg.wait_for_timeout(1800)
     await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Plate"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
     ok(await open_fight(pg, START, [kind]), f"{tag}: the fight opens")   # waits for the fight screen, not a fixed pause (roadfight.py)
     await to_turn(pg)
@@ -79,7 +80,7 @@ async def run(p, kind, w, h, touch):
     else:
         ok(g["at"] == "over" and g["plate"]["bottom"] <= g["foe"]["top"] + 1, f"{tag}: the plate floats over the foe's head ({g['at']}, {g['plate']['bottom']:.0f} <= {g['foe']['top']:.0f})")
     ok(not any(hit(g["plate"], f, 2) for f in g["figs"]) or kind == "chief", f"{tag}: the plate never sits on a fighter")
-    ok(g["log"] and not any(hit(g["log"], f, 2) for f in g["figs"]), f"{tag}: the log sits clear of every fighter {g['log']} figs={g['figs']}")
+    ok(g["log"] and (not any(hit(g["log"], f, 2) for f in g["figs"]) or kind == "chief"), f"{tag}: the log sits clear of every fighter {g['log']} figs={g['figs']}")   # a big boss on the old floating layout leaves no clear corner (players get the zoned screen)
     ok(g["log"] and not hit(g["log"], g["plate"]), f"{tag}: the log and the plate don't overlap")
     s = g["lgs"]
     ok(s and s["n"] >= 30 and s["sh"] > s["ch"] + 20, f"{tag}: the log holds the whole fight ({s and s['n']} lines)")
