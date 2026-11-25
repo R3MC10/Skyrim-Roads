@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b257-qaside2b", build: 257, date: "25 Nov 2026", title: "Halls, inns and festivals in Polish", items: [
+      "Fixed: a festival in a hold's capital said the place twice, like \"Falkreath, Falkreath\".",
+      "Fixed: in Polish, the Hall of the North's sizes and shared chest, buying a house or a hall plot, the neighbours list, renting a room and writing a bard's verse are translated.",
+      "Fixed: in Polish, festival times, the player search box and the \"% there\" under your skills are translated.",
+    ] },
     { id: "b256-qacore2", build: 256, date: "25 Nov 2026", title: "Title screen in Polish and the level-up tip", items: [
       "Fixed: in Polish, the title screen, How to Play, Credits, Settings and the Updates page still had lines in English.",
       "Fixed: in Polish, every perk description, the hirelings' descriptions and the patch-note dates were still in English.",

@@ -30,6 +30,12 @@ const want = {
   "Blacksmiths sell the common ones; dungeons hide the rest. Your Smithing (20) sets how far: every 20 points allows one more quality level.": /^Kowale.*(20)/,
   "Each improvement uses one piece of the item's material (ingots, leather, firewood, moonstone or dwarven metal).": /^Każde/,
   "Drag on the lock to aim the pick, then hold Turn. If it shakes, let go before the pick snaps.": /./,
+  // batch 2: halls, neighbours, the inn, festivals
+  "Buy Breezehome": /^Kup: Breezehome$/, "Buy a hall plot in Whiterun": /działkę.*Whiterun/, "Other halls in Whiterun": /^Inne dwory w: Whiterun$/,
+  "○ Mead Hall · 15,000": /Miodosytnia · 15,000/, "Shared chest": /Wspólna skrzynia/, "Rent a room": /Wynajmij/, "Write": /Napisz/,
+  "Other players who own Breezehome in their own world. Drop in to see their trophies, or leave a gift.": /^Inni gracze.*Breezehome/,
+  "Nobody else has a house here yet.": /^Nikt/, "Falkreath · on now · ends in 1d 13h": /^Falkreath · trwa · koniec za 1d 13h$/,
+  "Great Hunt is on in Falkreath. Ends in 1d 13h.": /trwa teraz \(Falkreath\)/, "40% there": /^40% /, "Type a name": /Wpisz/,
 };
 for (const [en, re] of Object.entries(want)) { const r = tr(en); ok(r && r !== en && re.test(r), "pl: " + en + " => " + r); }
 
@@ -37,6 +43,10 @@ for (const [en, re] of Object.entries(want)) { const r = tr(en); ok(r && r !== e
 { const src = fs.readFileSync(path.join(W, "lockgame.js"), "utf8");
   const hint = (src.match(/id="lphint">([^\n]*)<\/p>/) || [])[1] || "";
   ok(hint && !/<b>/.test(hint) && /LX\(/.test(hint), "lock hint is one translated sentence: " + hint); }
+
+// 2b. a festival held in a hold's own capital doesn't say "Falkreath, Falkreath"
+{ const src = fs.readFileSync(path.join(W, "tourneyui.js"), "utf8");
+  ok(/c\.hold && c\.hold !== c\.place \? `, \$\{esc\(c\.hold\)\}`/.test(src), "festival hold shown only when it differs from the place"); }
 
 // 3. a contest or smelt game (no item id) leaves no save roll for the next real craft
 { const g = { console, Math, Date, JSON, Float64Array, Float32Array, Uint8Array, Int32Array, Uint16Array, Int16Array, Object, Array, Set, Map, Proxy, Number, String };
