@@ -3,6 +3,15 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b207-bonds", build: 207, date: "25 Nov 2026", title: "Bonds with followers and horses", items: [
+      "Followers now have ranks: Hireling, Companion, Trusted and Sworn. They climb as loyalty grows, and each rank gives something real.",
+      "Companion: they carry 25 more for you. Trusted: they fight smarter, stepping in front of you when you're badly hurt, healing you sooner and finishing off wounded foes. Sworn: a signature move once per fight, even before their personal quest.",
+      "Loyalty now also grows from time on the road together and from hard fights won side by side (bosses, dragons, dangerous foes).",
+      "Personal quests show the QUEST STARTED and objective banners like every other quest.",
+      "Horses have a bond level from 1 to 5. It grows as you ride on the road, win fights in the saddle, hunt on horseback and groom them at a stables.",
+      "At bond level 3 you pick one speciality at a stables: warhorse, mountain horse, courier, packhorse or hunter's horse. It gets stronger at levels 4 and 5. You can retrain later for gold.",
+      "New perks: Fellow Traveller in Etiquette (road time counts double, your follower carries more) and Horse Whisperer in Athletics (your horse bonds twice as fast, its speciality works better).",
+    ] },
     { id: "b206-crises", build: 206, date: "25 Nov 2026", title: "Hard times in the holds", items: [
       "Every hold now has four numbers you can see: Security, Food, Prosperity and Corruption. They drift with time and the weather, and they follow what players do.",
       "Escorting caravans and beating bandits makes a hold safer, bringing food feeds it, and bribes, pickpocketing and selling stolen goods make it more crooked.",
