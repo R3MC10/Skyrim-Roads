@@ -222,13 +222,15 @@ const BONDS2 = (() => {
     const l = hlevel(s), m = tier(s), sp = spec(s), n = s.horse.name, at = atStables(s);
     const lo = HLV[l - 1], hi = HLV[l] ?? HLV[HLV.length - 1], pct = l >= HLV.length ? 100 : Math.round(((b.xp - lo) / Math.max(1, hi - lo)) * 100);
     const groomLeft = Math.max(0, DAY - (now() - (b.groomAt || 0)));
+    // the bar is progress toward the next level, so say so ("4/100 toward level 4"), or that the top level is reached
+    const nextLabel = l >= HLV.length ? T("Highest level") : F("{0}/{1} toward level {2}", Math.max(0, Math.floor(b.xp - lo)), hi - lo, l + 1);
     const cards = Object.entries(SPECS).map(([k, v]) => {
       const on = sp === k, can = l >= SPEC_AT && at && !on && (!b.spec || s.gold >= RETRAIN_COST);
       const btn = on ? `<span class="hsp-tag">${esc(T("Chosen"))}</span>` : l < SPEC_AT ? "" : `<button class="btn sm${b.spec ? "" : " pri"}" data-act="fol2" data-op="hbond" data-b="spec" data-id="${k}" ${can ? "" : "disabled"}>${esc(b.spec ? F("Retrain ({0})", RETRAIN_COST) : T("Choose"))}</button>`;
       return `<div class="hsp${on ? " on" : ""}${l < SPEC_AT ? " lock" : ""}"><i class="hsp-ic" aria-hidden="true">${v.icon}</i><div class="t"><b>${esc(T(v.name))}</b><span>${esc(specText(k, on ? m : Math.max(1, m)))}</span></div>${btn}</div>`;
     }).join("");
     return `<div class="hbond"><h3 style="margin-top:12px">${esc(F("Bond with {0}", n))}</h3>
-      <div class="hbondm"><span class="bondl">${esc(T("Level"))} <b>${l}</b>/5 · ${esc(T(HNAMES[l - 1]))}</span><div class="bondbar hbbar"><i style="width:${pct}%"></i></div></div>
+      <div class="hbondm"><span class="bondl"><span>${esc(T("Level"))} <b>${l}</b>/5 · ${esc(T(HNAMES[l - 1]))}</span><span class="bondnx num">${esc(nextLabel)}</span></span><div class="bondbar hbbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><i style="width:${pct}%"></i></div></div>
       <p class="sub">${esc(T("Grows as you ride on the road, win fights in the saddle, hunt on horseback and groom them."))}${l < SPEC_AT ? " " + esc(F("At level {0} you pick one speciality.", SPEC_AT)) : ""}</p>
       <div class="chips"><button class="btn sm" data-act="fol2" data-op="hbond" data-b="groom" ${at && !groomLeft && s.gold >= GROOM_COST ? "" : "disabled"}>${esc(F("Groom ({0} gold)", GROOM_COST))}${groomLeft ? ` · ${Math.ceil(groomLeft / 60)} min` : ""}</button></div>
       <div class="hsps">${cards}</div></div>`;
