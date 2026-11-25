@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b189-festart", build: 189, date: "25 Nov 2026", title: "Painted festival headers", items: [
+      "Every festival now has a painted picture on top of its screen: the Harvest Fair, the Burning of King Olaf, the Jarl's Tourney, the Fishing Derby, the Great Hunt, Forgefire Days and the Midwinter Feast.",
+      "The Grand Arena in Windhelm has its own painting too: the sand pit, the crowd on the stone tiers and two duellists.",
+      "The festival's name sits on a soft dark shade so you can read it over the picture. While a festival is still to come, its picture is a little faded.",
+    ] },
     { id: "b187-fightlength", build: 187, date: "25 Nov 2026", title: "Fights last long enough again", items: [
       "Since a turn holds up to four moves, strong heroes were ending fights in three or four rounds, even against bosses and legendary beasts. A foe's health now follows what you can really do in a turn with your stamina and magicka (a power attack and a few blows, or a few spells and a summon), so fights at higher levels last as long as they should.",
       "Bosses and legendary beasts take about 15 rounds again, and knowing a beast's weakness still makes the hunt a good bit shorter. Ordinary road fights stay short.",
@@ -1306,10 +1311,10 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 185;
+  const NEXT_AT = 189;
   const NEXT = [
     "Painted fighters with realistic fight animations",
-    "Makeovers for fishing, hunting, mining and lockpicking, plus painted festival and arena pictures",
+    "Makeovers for fishing, hunting, mining and lockpicking",
     "Afflictions with an upside and a downside: lycanthropy, the Draugr curse and the Daedric mark",
     "An adventuring company longhouse: a shared base with a treasury, a trophy hall and stables",
     "Daedric bargains and artifacts that awaken, plus regional crises and heists",
