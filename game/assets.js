@@ -19,7 +19,8 @@
               frostatronach stormatronach dremora chaurus mudcrab horker riekling ashspawn
      horse-<coat>-<pose>      ~1024 max  painted horses (horseart.js): transparent, side view facing right, saddled, no rider,
                                          hooves on the bottom edge, trimmed. poses stand gallop rear down (lying, head right).
-                                         Have: grey (all four), bay (stand). A missing coat borrows the grey picture, tinted;
+                                         Have: grey (all four), black and chestnut (stand gallop down),
+                                         bay (stand). A missing coat borrows the grey picture, tinted;
                                          add new files to HORSEART.HAVE (and their seat point to META). WebP q88.
      rig-<who>-<set>-<part>   ~300-1100  painted fighter parts (rig.js; joints measured in rigdata.js): transparent, side view
                                          facing right, 2x Lanczos of the trimmed cut-outs, WebP q84. who: nordm nordf · set: leather

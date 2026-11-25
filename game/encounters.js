@@ -217,7 +217,7 @@ const ENC = (() => {
 
   add({ id: "wildhorse", title: "A wild horse", weight: 1.5,
     when: (s, c) => !s.horse && !c.sol && /Tundra|Grassland/.test(c.ground) && typeof HORSES !== "undefined",
-    make: () => ({ coat: pick(["bay", "black", "grey", "white", "palomino", "paint"]), text: "A wild horse grazes alone by the road. It lifts its head and watches you, ears forward." }),
+    make: () => ({ coat: pick(["bay", "chestnut", "black", "grey", "white", "palomino", "paint"]), text: "A wild horse grazes alone by the road. It lifts its head and watches you, ears forward." }),
     choices: (e, s) => [["calm", ` Approach slowly and calm it (${pct(tameCh(s))})`], ["leave", "Let it be"]],
     calm: (s, e) => { const ch = tameCh(s);
       if (Math.random() < ch) { s.horse = { name: "Wildmane", coat: e.coat, armor: "none", hp: HORSES.BASE_HP, hpT: G.now(), mounted: false }; return { text: "It snorts, then lowers its head into your hand. Wildmane is yours. (Ride it from the Travel tab.)", skills: xp(s, "Athletics", 20) }; }

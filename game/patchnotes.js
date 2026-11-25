@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b199-horsecoats", build: 199, date: "25 Nov 2026", title: "Black and chestnut horses", items: [
+      "Black and chestnut horses are painted too: a glossy black with a white star, and a copper chestnut with a light mane, a white blaze and white socks. They stand, gallop and lie down like the grey.",
+      "Chestnut is a new coat at the stables. The stables now show the whole horse in the coat you pick before you buy.",
+      "Wild horses by the road can be chestnut too.",
+    ] },
     { id: "b198-mgfishing", build: 198, date: "25 Nov 2026", title: "Fishing gets a makeover", items: [
       "Fishing now happens on a painted lake at dusk: the water moves and glints, fish rise here and there, and mist drifts along the far shore. Night, rain, snow and fog show on it too.",
       "Your rod is painted and really bends: it flexes back when you aim, whips forward on the cast and bows deeper the tighter the line gets. The line arcs out with the float.",
