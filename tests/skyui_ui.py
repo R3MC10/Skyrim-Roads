@@ -5,7 +5,7 @@ _SHOTS = (__import__("os").environ.get("SHOTS") or __import__("os").path.join(__
 __import__("os").makedirs(_SHOTS, exist_ok=True)
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8795"
 TAG = sys.argv[2] if len(sys.argv) > 2 else "after"
-OUT = _SHOTS + "skyui/"
+OUT = _SHOTS + "skyui/"; __import__("os").makedirs(OUT, exist_ok=True)
 async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch(executable_path=(__import__("os").environ.get("CHROME") or ("/usr/bin/google-chrome" if __import__("os").path.exists("/usr/bin/google-chrome") else None)), args=["--no-sandbox"])
@@ -23,8 +23,8 @@ async def main():
           const t=G.now(); let k=t; while(!G.shopsOpen(k)) k+=600; window.__shopT=k; }""")
         await pg.wait_for_timeout(500); await clear()
         async def tab(t, name, full=True):
-            await clear(); await (pg.click("[data-tab=hero]") if t == "tactics" else pg.click(f"[data-tab={t}]")); await pg.wait_for_timeout(300)
-            if t == "tactics": await pg.click("[data-act=tabgo][data-id=tactics]")   # Tactics lives under Character now
+            await clear(); await (pg.click("[data-tab=hero]") if t == "follower" else pg.click(f"[data-tab={t}]")); await pg.wait_for_timeout(300)
+            if t == "follower": await pg.click("[data-act=tabgo][data-id=follower]")   # Character -> Follower (the Tactics page is gone)
             await pg.wait_for_timeout(600); await clear()
             await pg.screenshot(path=OUT + f"{TAG}_{name}.png", full_page=full)
             el = await pg.query_selector("#side")
@@ -32,12 +32,15 @@ async def main():
         await tab("map", "travel", False)
         await pg.evaluate("window.scrollTo(0, 700)"); await pg.wait_for_timeout(200); await pg.screenshot(path=OUT + f"{TAG}_travel_panel.png")
         await tab("hero", "hero")
-        await tab("tactics", "tactics")
+        await tab("follower", "follower")
         await tab("town", "town")
         # shop (barter)
         await clear(); await pg.click("[data-act=shop][data-id=general]"); await pg.wait_for_timeout(400)
         el = await pg.query_selector("#side"); await el.screenshot(path=OUT + f"{TAG}_shop.png")
-        await clear(); await pg.click("[data-act=shop][data-id=inn]"); await pg.wait_for_timeout(400)
+        # the Area tab groups places into tiles (areaui.js): back to the board, then the Inn tile
+        await clear(); await pg.evaluate("window.__ui.go('town')"); await pg.wait_for_timeout(400)
+        await pg.evaluate("(document.querySelector('[data-act=shop][data-id=inn]') || document.querySelector('#side .au-tile[data-id=inn]'))?.click()"); await pg.wait_for_timeout(400)
+        await pg.evaluate("document.querySelector('[data-act=shop][data-id=inn]')?.click()"); await pg.wait_for_timeout(400)
         el = await pg.query_selector("#side"); await el.screenshot(path=OUT + f"{TAG}_inn.png")
         await tab("log", "journal")
         # pack menu (items / magic / skills)
