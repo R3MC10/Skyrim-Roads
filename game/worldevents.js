@@ -516,7 +516,9 @@ const WORLDEV = (() => {
         : `<p class="sub">The caravan is camped outside ${esc(ev.town)} for ${left(ev, t)} more.</p><button class="btn wev-wide" data-act="go" data-place="${esc(ev.town)}">Travel to ${esc(ev.town)}</button>`;
     }
     const cl = claimable(S, ev, t) ? `<button class="btn pri wev-wide" data-wev="claim" data-id="${ev.id}">Claim your reward</button>` : "";
-    return `<div class="wev-sheet">${pic(ev.kind, 320, 110, ev.kind === "fest" ? ev.variant : "")}<h2>${ev.icon} ${esc(ev.name)}</h2><p class="sub">${left(ev, t)} left · everyone in the North shares this</p>
+    /* a dragon migration gets the painted dragon card (eventcards.js), title under the painting */
+    const card = typeof EVCARDS !== "undefined" ? EVCARDS.html("wev:" + ev.kind, { title: `${ev.icon} ${esc(ev.name)}`, tag: "h2", sev: p.done ? "calm" : "high" }) : "";
+    return `<div class="wev-sheet">${card || `${pic(ev.kind, 320, 110, ev.kind === "fest" ? ev.variant : "")}<h2>${ev.icon} ${esc(ev.name)}</h2>`}<p class="sub">${left(ev, t)} left · everyone in the North shares this</p>
       ${body}${cl}<details class="wev-rules"><summary class="sub">How it works</summary><p class="sub">${RULES[ev.kind]}</p></details>
       <button class="btn wev-wide" data-act="close">Close</button></div>`;
   }

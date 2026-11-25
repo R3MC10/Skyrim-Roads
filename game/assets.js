@@ -34,6 +34,11 @@
                                          sword-iron dagger greatsword axe battleaxe mace staff (360/330/200/460/320/440/330/460
                                          wide). bow bow-drawn arrow, shield shield-side shield-kite shield-kite-side (200-300 tall).
                                          Missing ones (warhammer spear club crossbow) use the shaded drawings.
+     bust-<race>              512×512    painted race busts (bustart.js): transparent, head and shoulders, 3/4 view facing right,
+                                         plain linen tunic, bottom fades out. WebP q85. races: nord imperial breton redguard altmer
+                                         bosmer dunmer orc khajiit argonian. One sex each (BUSTART.SEX: m f f m f m f m f m); for the
+                                         other sex the bust shows as a round race crest. Shown in the race picker, the Hero page and
+                                         the paper doll's corner; the drawn portrait stays until the file loads.
      shop-<id>                1200×375   painted banners for town sections (shown above each shop's list)
        ids: general forge (also blacksmith) inn (also cook) alchemy wizard (also enchanter) market stables home hall
             fence arena mine — raw 3:2 paintings go through art/conv: crop the middle band, WebP q80
@@ -42,6 +47,10 @@
      gev-<scene>              1280×480   8:3 painted affliction scenes (afflictions.js PAINT → EVENTART.PAINTED), WebP q82: black-shrine
                                          draugr-altar dwemer-pipe arkay-temple werewolf-moon. Shown in road events and story popups
                                          (cover-fit into 360×150); the drawing stays until the file loads. (gev-<kind> are the Great Events.)
+     raid-<card>              1280×480   8:3 painted event cards (eventcards.js), WebP q80, no text: dragon (a dragon over a town:
+                                         raids, the great dragon assault, migrations), bandits (the siege, outlaw crises, bandits at
+                                         your house), vampire (vampires at your house), giant (beast crises, frost trolls at your house),
+                                         blizzard (the Long Winter crisis). Title under the painting; the old drawing until it loads.
      room-<type>-<theme>      1600×900   painted dungeon rooms (dunrooms.js), shown above the room text. WebP q80.
        types: fight elite trap treasure puzzle rest boss (mystery optional). themes: cave barrow dwemer mine forsworn
        vampire temple fort banditcamp thalmor giantcamp lair. Just drop a file in: a missing one borrows the closest
@@ -89,6 +98,15 @@
      hunt-fg-branch-left/-right 745×773, 637x690  transparent overhanging branches, opaque on the corner they hang from
                                          (top-left / top-right); hunt-fg-grass 1536×556, grass along the bottom edge, stretched
                                          to the screen width. Drawn in front of the animals by huntart.js with a slow sway. WebP q80.
+     longhouse-banner         2400×640   painted longhouse at dusk, the banner on top of the Company screen (longhouse.js), WebP q80
+     longhouse-plate          2048×1152  the longhouse close up (Rooms tab). longhouse.js draws light overlays over it for every
+                                         built room (window light, forge glow, trophies, banners, a stable lantern), placed in a
+                                         1024×576 frame: keep the hall where it is if it's repainted. longhouse-plate-wide: spare,
+                                         a calmer view of the same hall (not used yet).
+     art-<prince>             256×256    painted Daedric artifact icons (bargains.js), transparent, WebP q85:
+                                         dagon azura nocturnal hircine boethiah meridia. The line glyph stays as the fallback.
+     expedition-table         1920×1080  the Expedition Table backdrop (expedition.js), shown darkened behind the offers, WebP q80
+     exp-<id>                 1280×480   8:3 offer thumbnails (expedition.js TPL): courier wolves relic caravan outlaw beast. No text.
      heist-<house>            2048×1152  painted night scene of each heist house (heistscene.js), lit window as the focus, calm
                                          dark yard in the bottom third for the choices. WebP q80. houses: battleborn
                                          shattershield erikur silverblood blackbriar (the ids in heists.js HOUSES)

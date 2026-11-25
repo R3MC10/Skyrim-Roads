@@ -86,7 +86,7 @@ const DUNFX = (() => {
     if (live.size && !document.hidden) raf = requestAnimationFrame(tick); else last = 0;
   }
   function go() { if (!raf && live.size && !document.hidden) raf = requestAnimationFrame(tick); }
-  if (typeof document !== "undefined") document.addEventListener("visibilitychange", go);
+  if (typeof document !== "undefined" && document.addEventListener) document.addEventListener("visibilitychange", go);
 
   function attach(root, theme, reduce) {
     if (!root || typeof document === "undefined") return;

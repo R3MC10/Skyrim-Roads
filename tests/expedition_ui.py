@@ -15,6 +15,7 @@ def free_port():
             except OSError: pass
     raise SystemExit("no free port in 9600-9699")
 
+QA = "&assets" if os.environ.get("ASSETS") else ""   # ASSETS=1: load the painted art too
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 and sys.argv[1] != "0" else free_port()
 SETUP = """async () => {
   const S = window.__dbg.save(), L = LONGHOUSE; S.level = Math.max(S.level, 14); S.trip = null; S.dungeon = null; S.location = "Whiterun"; [S.x, S.y] = WORLD.places.Whiterun;
@@ -66,7 +67,7 @@ async def main():
                     await tap("[data-act=soctab][data-id=company]"); await pg.wait_for_timeout(500)
                     await tap("[data-lng=tab][data-id=exp]"); await pg.wait_for_timeout(500)
                 for _ in range(3):
-                    await pg.goto(f"http://localhost:{PORT}/index.html?notut&p=exp{tag}")
+                    await pg.goto(f"http://localhost:{PORT}/index.html?notut&p=exp{tag}{QA}")
                     try: await pg.wait_for_selector(".press", timeout=10000); break
                     except Exception: print(tag, "title screen didn't come up, reloading")
                 await pg.wait_for_timeout(800)
@@ -120,6 +121,14 @@ async def main():
                 nv = await pg.evaluate("document.querySelectorAll('#exp-layer .pvopt').length")
                 check(nv == 4, f"{tag}: the party vote shows three offers and Not tonight ({nv})")
                 await shot("vote", None)
+                # the offers under the vote: who voted for what, as small portraits on the cards
+                await pg.evaluate("() => { const l = document.getElementById('exp-layer'); if (l) l.style.display = 'none'; }")
+                await table(); await pg.wait_for_timeout(400)
+                nf = await pg.evaluate("document.querySelectorAll('#lng-root .exp-votes .pvchip').length")
+                check(nf == 2, f"{tag}: vote portraits on the cards ({nf})")
+                if QA: check(await pg.evaluate("!!document.querySelector('#lng-root .exp-bg img') && document.querySelectorAll('#lng-root .exp-risk').length === 3"), f"{tag}: the table backdrop and risk labels")
+                await pg.evaluate("() => { const c = document.querySelectorAll('#lng-root .exp-card')[1]; c && c.scrollIntoView({ block: 'center' }); }")
+                await shot("offers_vote")
                 await ctx.close()
             await b.close()
     finally:
