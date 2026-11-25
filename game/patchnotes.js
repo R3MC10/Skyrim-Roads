@@ -3,12 +3,17 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b301-foepanel", build: 301, date: "25 Nov 2026", title: "A cleaner look at your foe", items: [
+    { id: "b302-foepanel", build: 302, date: "25 Nov 2026", title: "A cleaner look at your foe", items: [
       "The foe's name and health float above its head as a thin Skyrim-style bar with no dark box, and never cover the foe or anyone else. Its statuses are small icons in one row under the bar.",
       "The exact numbers and the rest of its moves show when you hover over it on a PC or tap it on the phone. A boss keeps its big bar at the top, with its icons and next move just under it.",
       "A boss's big attack warning is one slim line now. Hover or hold it to read how to answer it.",
       "The fight log holds the whole fight: scroll it with your finger or the mouse wheel. It stays on the newest line unless you scrolled up, and a small \"newest\" button takes you back down.",
       "The log finds a corner where nobody is standing, and its help bubble no longer covers the lines.",
+    ] },
+    { id: "b301-gatherarea", build: 301, date: "25 Nov 2026", title: "Gathering moved to the Area tab", items: [
+      "Gathering no longer floats over the map. It's now its own section in the Area tab: the plants around you, which ones are ripe and when picked ones grow back, Gather or Quick pick for each, Forage here (with how long until you can search again), Herbalist's notes and the Auto-pick switch.",
+      "The how-it-works text hides behind a small \"?\" next to the heading.",
+      "On the map a ripe plant in reach still shows its own Gather button, so you can pick it without leaving the map. In a party everyone still picks their own share.",
     ] },
     { id: "b300-pets", build: 300, date: "25 Nov 2026", title: "Pets: Meeko walks with your follower", items: [
       "Meeko is a pet now, not a follower. You can have a follower and a pet with you at the same time.",
