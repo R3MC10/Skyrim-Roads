@@ -73,7 +73,7 @@ var I18N_LONGHOUSE = (() => {
       "Załóż kompanię z drużyną albo przyjaciółmi (do 8 graczy). Dzielcie skarbiec, a potem zbudujcie kuźnię, bibliotekę, salę trofeów, stajnie i stół narad, które pomagają każdemu członkowi.",
     "Found a longhouse": "Załóż długi dom", "Company name": "Nazwa kompanii", "Found it ({n} gold)": "Załóż ({n} sztuk złota)", "It will stand in {place}.": "Stanie w {place}.",
     "You're playing offline: the longhouse is shared once you go online.": "Grasz offline: długi dom będzie wspólny, gdy wejdziesz do sieci.",
-    Company: "Kompania", Rooms: "Sale", Plan: "Plan", Trophies: "Trofea", Treasury: "Skarbiec", Log: "Dziennik", Expeditions: "Wyprawy",
+    Company: "Kompania", Rooms: "Sale", Plan: "Plan", Trophies: "Trofea", Treasury: "Skarbiec", Log: "Dziennik", Expeditions: "Wyprawy", Commissions: "Zlecenia",
     Founder: "Założyciel", Officer: "Oficer", Member: "Członek", "Founder only": "Tylko założyciel", "Founder and officers": "Założyciel i oficerowie", Everyone: "Wszyscy",
     // ---- rooms
     Forge: "Kuźnia", Library: "Biblioteka", "Trophy hall": "Sala trofeów", Stables: "Stajnie", "Planning table": "Stół narad",

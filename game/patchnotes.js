@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b311-commissions", build: 311, date: "25 Nov 2026", title: "The Commissions board", items: [
+      "Your company's longhouse has a Commissions board: open Social, then Company, then Commissions.",
+      "Every game day the towns post 3 to 5 orders for your company: a Jarl's steward, a blacksmith, an innkeeper or a temple priest wants crafted goods (swords, boots, stews, potions), gathered goods (ore, firewood, pelts, herbs), an outlaw camp cleared, or a caravan taken safely to another town.",
+      "The bigger your company grows (rooms built, renown earned), the more orders there are and the more they ask and pay.",
+      "Everyone in the company can help. Goods you hand in are used up. When an order is filled, each helper gets their share of the gold (in a party it's split evenly), the company gets renown and materials for its stockpile, and sometimes whoever finished it gets an item too.",
+      "New perks: Commission Broker (Speech) makes your commission gold 15/30% bigger, and Master's Mark (Smithing) gives the company more materials and a better chance of an item from orders for crafted goods.",
+    ] },
     { id: "b310-friendjoin", build: 310, date: "25 Nov 2026", title: "See what your friends are up to", items: [
       "Your Friends list now shows what each friend online is doing: where they are (a town, a dungeon or on the road), whether they're fighting, trading or taking it easy, and their level.",
       "It also shows whether they're in a party and how full it is (up to 8 players; followers don't count).",

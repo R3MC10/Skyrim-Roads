@@ -5246,6 +5246,34 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 .gcard .grow .au-ic{font-size:20px;line-height:1;width:30px;text-align:center;color:var(--gold);flex:0 0 30px}
 .gcard .grow .btn{flex:0 0 auto;min-width:76px}
 .gcard .gsw.on{box-shadow:inset 0 0 0 1px rgba(226,187,100,.55)}
+/* the company's Commissions board (commissions.js): SkyUI-style order cards in a grid, one column on a phone */
+.cms-root{display:flex;flex-direction:column;gap:10px}
+.cms-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:6px 14px;padding:10px 12px;border:1px solid rgba(214,178,94,.35);border-radius:4px;background:linear-gradient(90deg,rgba(12,10,7,.9),rgba(30,25,17,.55))}
+.cms-ht{flex:1 1 260px;min-width:0}
+.cms-title{font-family:"Cinzel",serif;font-size:20px;letter-spacing:.07em;color:var(--gold);text-shadow:0 1px 3px #000}
+.cms-head .sub{margin-top:3px;font-size:13px;line-height:1.35}
+.cms-lv{display:flex;flex-direction:column;align-items:flex-end;gap:1px}.cms-lv b{font-family:"Cinzel",serif;letter-spacing:.05em;color:#f1ead8;font-size:15px}.cms-lv span{font-size:13px;color:var(--gold)}
+.cms-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+.cms-card{display:flex;flex-direction:column;gap:7px;min-width:0;padding:10px 11px 11px;border:1px solid var(--sk-line2,var(--line));border-left:3px solid #6a5d45;background:linear-gradient(180deg,rgba(0,0,0,.62),rgba(0,0,0,.48))}
+.cms-card.k-camp{border-left-color:var(--ember)}.cms-card.k-escort{border-left-color:#8c7340}.cms-card.k-craft{border-left-color:var(--gold)}
+.cms-card.done{opacity:.6}.cms-card.last{box-shadow:inset 0 0 0 1px rgba(214,90,74,.35)}
+.cms-hd{display:flex;align-items:center;gap:8px;padding-bottom:6px;border-bottom:1px solid var(--sk-line,var(--line))}
+.cms-ic{font-size:20px;line-height:1;width:26px;text-align:center;color:var(--gold);flex:0 0 26px}
+.cms-who{flex:1;min-width:0;display:flex;flex-direction:column}.cms-who b{font-family:var(--sk-ui,inherit);font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--sk-ink,var(--ink));font-weight:600}.cms-who span{font-size:13px;color:var(--mute)}
+.cms-last{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ember);border:1px solid rgba(214,90,74,.5);padding:2px 6px;white-space:nowrap}
+.cms-body{display:flex;gap:10px;align-items:flex-start}
+.cms-pic{flex:0 0 48px;width:48px;height:48px;display:flex;align-items:center;justify-content:center;border:1px solid var(--sk-line,var(--line));background:rgba(255,255,255,.03)}
+.cms-kic{font-size:26px;color:var(--gold)}
+.cms-tx{min-width:0;flex:1}.cms-tx h3{margin:0 0 2px;font-family:"Cinzel",serif;font-size:16px;letter-spacing:.04em;color:#f1ead8}.cms-tx p{margin:0;font-size:14px;line-height:1.35}
+.cms-prog{display:flex;align-items:center;gap:8px}.cms-prog .bar{flex:1;height:6px}.cms-prog .bar i{background:var(--gold)}.cms-prog .num{font-size:13px;color:var(--ink);min-width:36px;text-align:right}
+.cms-help{margin:0;font-size:12px;color:var(--mute)}
+.cms-pay{margin:0;font-size:13px;line-height:1.4;color:var(--mute)}.cms-pay .gold{color:var(--gold)}.cms-pay>span:not(.cms-maybe){color:var(--gold)}.cms-maybe{color:var(--frost)}
+.cms-act{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-top:auto}.cms-act .btn{min-height:40px}.cms-act .btn:not(.sm){flex:1 1 160px}
+.cms-why{font-size:13px;color:var(--mute);flex:1 1 100%}
+.cms-tag{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);border:1px solid rgba(226,187,100,.5);padding:3px 8px}
+.cms-foot{margin:0}
+@media (max-width:420px){.cms-list{grid-template-columns:1fr}.cms-lv{align-items:flex-start}}
+@media (min-width:1200px){.cms-list{grid-template-columns:repeat(3,minmax(0,1fr))}}
 /* ==== friends: what they're doing + Ask to join (friendjoin.js) ==== */
 .fj-t .fj-act{display:inline-block;margin-left:8px;padding:1px 7px;border:1px solid rgba(214,190,140,.35);border-radius:3px;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#d8c69a;vertical-align:middle}
 .fj-t .fj-fight{color:#f0a08a;border-color:rgba(240,120,100,.45)}.fj-t .fj-dungeon{color:#b6a6e8;border-color:rgba(170,150,230,.45)}.fj-t .fj-trade{color:#e8cf7a;border-color:rgba(230,200,110,.45)}
@@ -5610,6 +5638,7 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 <script src="i18n_bargains.js"></script>
 <script src="i18n_longhouse.js"></script>
 <script src="i18n_expedition.js"></script>
+<script src="i18n_commissions.js"></script>
 <script src="i18n_sweep2.js"></script>
 <script src="i18n_gather.js"></script>
 <script src="i18n_caravans.js"></script>
@@ -5675,6 +5704,7 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 <script src="bargains.js"></script>
 <script src="expedition.js"></script>
 <script src="longhouse.js"></script>
+<script src="commissions.js"></script>
 <script src="eventcards.js"></script>
 <script src="wagons.js"></script>
 <script src="harvest.js"></script>
