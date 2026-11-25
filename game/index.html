@@ -5311,6 +5311,16 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 .fj-t .fj-fight{color:#f0a08a;border-color:rgba(240,120,100,.45)}.fj-t .fj-dungeon{color:#b6a6e8;border-color:rgba(170,150,230,.45)}.fj-t .fj-trade{color:#e8cf7a;border-color:rgba(230,200,110,.45)}
 .fj-t .fj-party{display:block;color:#cbb98f}.fj-t .fj-party.full{color:#e39a7c}.fj-t .fj-why{display:block;font-style:italic;opacity:.75}
 .fbtns .btn[data-act=fjoin][disabled]{opacity:.45;cursor:not-allowed}
+/* [samever] samever.js: "Update ready" / "Update to play together" card, above the menu bar on phones */
+#samever{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(86px + env(safe-area-inset-bottom));z-index:9001;width:min(380px,calc(100vw - 24px));background:var(--panel);border:1px solid var(--gold);border-radius:10px;padding:12px 14px;box-shadow:0 8px 28px rgba(0,0,0,.55);display:grid;gap:8px;animation:samIn .35s ease-out}
+@keyframes samIn{from{opacity:0}to{opacity:1}}
+#samever .t{color:var(--gold);font-weight:600;letter-spacing:.04em;text-transform:uppercase;font-size:13px}
+#samever .d{color:var(--ink);font-size:14px;line-height:1.4}
+#samever .b{display:flex;gap:8px;justify-content:flex-end}
+@media (min-width:900px){#samever{left:auto;right:16px;transform:none;bottom:16px}}
+.upd-st{display:grid;gap:2px;margin:6px 0 10px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:rgba(0,0,0,.25)}
+.upd-st p{margin:0}
+.upd-st .err{color:var(--ember)}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -5564,6 +5574,7 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 <script src="nickname.js"></script>
 <script src="desktop.js"></script>
 <script src="pcupdate.js"></script>
+<script src="samever.js"></script>
 <script src="treasure.js"></script>
 <script src="heistscene.js"></script>
 <script src="heists.js"></script>
@@ -5708,6 +5719,7 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 <script src="i18n_phantom.js"></script>
 <script src="i18n_pcupdate.js"></script>
 <script src="i18n_friendjoin.js"></script>
+<script src="i18n_samever.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>
