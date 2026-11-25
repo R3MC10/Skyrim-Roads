@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b239-noap", build: 239, date: "25 Nov 2026", title: "No more AP", items: [
+      "A plain attack takes just 1 of your 4 moves and some stamina. There are no action points any more, anywhere.",
+      "Potion and scroll tooltips in your pack still said they cost AP in a fight. They now say: 1 move, free.",
+      "Followers with a sword, axe, mace, spear or staff swing more often for a bit less each, so their turns feel quicker. Their damage a turn stays the same.",
+    ] },
     { id: "b238-qaside", build: 238, date: "25 Nov 2026", title: "Company fixes", items: [
       "Fixed: tapping Found twice quickly could pay for the company twice.",
       "Fixed: tapping Put in twice quickly could put the same gold in the treasury twice and leave your purse below zero.",
