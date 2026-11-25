@@ -18,7 +18,7 @@ const OVERLAYS = (() => {
   const DOM = typeof document !== "undefined" && typeof window !== "undefined";
   // what counts as what (first match wins, highest level first)
   const RESULT = ["#tbf .tbdone", "#tbf .c2rescard", "#modal .sheet.lv", "#modal .sheet.result", "#lvlpick"];
-  const DECISION = ["#modal .sheet", "#nfhist .nf-sheet"];   // notify.js: the message history   // the party-invite bar is small and the invite tip points at it, so it doesn't count
+  const DECISION = ["#modal .sheet", "#wgcard", "#nfhist .nf-sheet"];   // a wagon's card (wagons.js) and the message history (notify.js) ask you something too; the party-invite bar is small and the invite tip points at it, so it doesn't count
   const TIP = ["#obtip", "#fhints .fhint"];
   const TOAST = ["#hudlane #hudlog .toast:not(.hide)", "#toast:not(.hide)"];
 
