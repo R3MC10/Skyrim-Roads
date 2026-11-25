@@ -954,15 +954,6 @@ img.mo-fly{object-fit:contain;filter:drop-shadow(0 0 6px rgba(240,205,120,.9))}
 .mo-const circle{fill:#fff6dc;filter:drop-shadow(0 0 4px #f0d38a);transform:scale(0);animation:mostar .45s var(--mo-back) forwards;animation-delay:var(--d)}
 @keyframes moline{to{stroke-dashoffset:0}}@keyframes mostar{to{transform:scale(1)}}
 @keyframes moconst{0%{opacity:0}8%{opacity:1}75%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-14px)}}
-/* arriving in a town */
-.mo-veil{position:fixed;inset:0;z-index:8;pointer-events:none;display:grid;place-items:center;background:radial-gradient(70% 50% at 50% 45%,rgba(4,5,6,.55),rgba(4,5,6,.85));animation:moveil 1.9s ease forwards}
-.mo-vname{text-align:center;color:#f3e6c4;text-shadow:0 2px 10px #000;animation:movname 1.9s var(--mo-out) forwards}
-.mo-vname small{display:block;font:600 11px/1 var(--sk-ui,sans-serif);letter-spacing:.4em;text-transform:uppercase;color:#b9ab8a;margin-bottom:8px}
-.mo-vname b{display:block;font:700 30px/1.1 Cinzel,Georgia,serif;letter-spacing:.14em}
-.mo-vname i{display:block;height:1px;margin:10px auto 0;width:180px;background:linear-gradient(90deg,transparent,#e2bb64,transparent);transform:scaleX(0);animation:movline .8s var(--mo-out) .25s forwards}
-@keyframes moveil{0%{opacity:0}18%{opacity:1}70%{opacity:1}100%{opacity:0}}
-@keyframes movname{0%{opacity:0;transform:translateY(10px);letter-spacing:.3em}25%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0;transform:translateY(-6px)}}
-@keyframes movline{to{transform:scaleX(1)}}
 /* title: mist and embers */
 .mo-amb{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0;--px:0;--py:0}
 .mo-amb .mist{position:absolute;left:-30%;width:160%;height:45%;border-radius:50%;background:radial-gradient(closest-side,rgba(200,210,220,.10),rgba(200,210,220,0));will-change:transform}
@@ -973,7 +964,7 @@ img.mo-fly{object-fit:contain;filter:drop-shadow(0 0 6px rgba(240,205,120,.9))}
 .mo-amb .emb span{position:absolute;bottom:-8px;width:3px;height:3px;border-radius:50%;background:#ffcf7a;box-shadow:0 0 6px #ff9a3c;opacity:0;animation:moember var(--t) linear infinite;animation-delay:var(--d)}
 @keyframes moember{0%{opacity:0;transform:translate(0,0)}10%{opacity:.9}100%{opacity:0;transform:translate(var(--x),-70vh)}}
 html:not(.mo-on) .mo-amb{display:none}
-@media (prefers-reduced-motion:reduce){.mo-amb,.mo-const,.mo-veil,.mo-fly{display:none!important}.mo-st,.mo-ghost,.mo-press{animation:none!important}}
+@media (prefers-reduced-motion:reduce){.mo-amb,.mo-const,.mo-fly{display:none!important}.mo-st,.mo-ghost,.mo-press{animation:none!important}}
 /* ==== favourites wheel (favwheel.js): Skyrim's Q menu as a touch wheel ==== */
 .favbtn{position:fixed;right:12px;bottom:calc(128px + env(safe-area-inset-bottom));z-index:9;width:42px;height:42px;border-radius:50%;padding:0;cursor:pointer;font-size:20px;line-height:1;color:#e2bb64;background:radial-gradient(circle at 50% 40%,#2a2c30,#0b0c0e);border:1.5px solid rgba(226,187,100,.6);box-shadow:0 4px 12px rgba(0,0,0,.55)}
 body.tw-on .favbtn{bottom:auto;top:calc(56px + env(safe-area-inset-top))}
@@ -1335,7 +1326,7 @@ html.a11y-hc .seg button.on{background:#ece6d8!important;color:#000!important}
 html.a11y-hc :focus-visible{outline:3px solid #fff!important;outline-offset:2px}
 /* reduce motion: everything lands at once */
 html.a11y-still *,html.a11y-still *::before,html.a11y-still *::after{animation-duration:1ms!important;animation-delay:0s!important;animation-iteration-count:1!important;transition-duration:1ms!important;transition-delay:0s!important;scroll-behavior:auto!important}
-html.a11y-still :is(.mo-amb,.mo-const,.mo-veil,.mo-fly){display:none!important}
+html.a11y-still :is(.mo-amb,.mo-const,.mo-fly){display:none!important}
 /* one-hand mode: the main buttons gather at the bottom, right (default) or left */
 html.a11y-1h .top :is(.soc,.snd){position:fixed;right:12px;z-index:6;width:48px;height:48px;border-radius:50%;background:rgba(10,11,13,.82);box-shadow:0 0 0 1px rgba(226,187,100,.45),0 6px 16px rgba(0,0,0,.5)}
 html.a11y-1h .top .snd{right:66px;bottom:calc(124px + env(safe-area-inset-bottom))}
@@ -5374,6 +5365,31 @@ body.nq-fighthold .rxban,body.nq-fighthold #fhints,body.nq-fighthold .bfov.bfpha
 .upd-st{display:grid;gap:2px;margin:6px 0 10px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:rgba(0,0,0,.25)}
 .upd-st p{margin:0}
 .upd-st .err{color:var(--ember)}
+/* ==== [dollrig2] the paper doll face-on with a calm idle (dollfront.js): each body layer is a canvas made once; CSS moves
+   them. A 3 s breath (chest swells, shoulders, arms and head rise), a slow weight shift from the feet, the cape lagging,
+   and now and then the weapon hand settles its grip. Only while on screen; never under reduced motion. ==== */
+.dfront{position:relative;max-width:100%;line-height:0}
+.dfront>img{display:block}
+.dfront .dfback{display:none}
+.dfront.dfon>img{visibility:hidden}
+.dfront.dfon .dfback{display:block;position:absolute;inset:0}
+.dfront.dfon .dfback img{width:100%!important;height:100%!important}
+.dfrig{position:absolute;inset:1px;overflow:hidden;border-radius:8px;pointer-events:none}
+.dfrig .dfg,.dfrig .dfl{position:absolute;inset:0;width:100%;height:100%}
+.dfrun .dfl-torso{animation:dfbreath 3s ease-in-out infinite}
+.dfrun .dfg-up{animation:dfrise 3s ease-in-out infinite}
+.dfrun .dfl-head{animation:dfhead 3s ease-in-out infinite}
+.dfrun .dfg-all{animation:dfsway 7s ease-in-out infinite}
+.dfrun .dfl-back{animation:dfcape 7s ease-in-out infinite;animation-delay:-6.2s}
+.dfrun.dfh-hang .dfg-grip{animation:dfgrip 9s ease-in-out infinite;animation-delay:-3s}
+@keyframes dfbreath{0%,100%{transform:none}50%{transform:scale(1.008,1.018)}}
+@keyframes dfrise{0%,100%{transform:none}50%{transform:translateY(-.55%)}}
+@keyframes dfhead{0%,100%{transform:none}60%{transform:translateY(-.15%) rotate(-.6deg)}}
+@keyframes dfsway{0%,100%{transform:none}25%{transform:rotate(.45deg)}75%{transform:rotate(-.45deg)}}
+@keyframes dfcape{0%,100%{transform:none}25%{transform:translateX(-.35%) rotate(-.35deg)}75%{transform:translateX(.35%) rotate(.35deg)}}
+@keyframes dfgrip{0%,80%,100%{transform:none}86%{transform:rotate(-4deg)}92%{transform:rotate(1.5deg)}}
+.dfhidden .dfront .dfg,.dfhidden .dfront .dfl,.dfront.dfcalm .dfg,.dfront.dfcalm .dfl{animation:none!important}
+@media (prefers-reduced-motion:reduce){.dfront .dfg,.dfront .dfl{animation:none!important}}
 /* [fightscreen] fightzones.js: the fight screen in three zones. Phone: turn order, boss bar, the foe's card and the event
    line on top; the battlefield in the middle (nothing permanent over it); your orb, the party, tips and the dock at the
    bottom. PC: party left, the selected foe + fight history right, the battlefield in the centre. fightpres.js: one banner. */
@@ -5449,6 +5465,76 @@ html:has(#tbf.fz),html:has(#tbf.fz) body{overflow:hidden;overscroll-behavior:non
 .f30pc .f30b{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .f30pc .f30b .btn{min-height:36px;padding:0 14px;margin:0}
 .f30pc .f30b .linkbtn{margin-left:auto;font-size:12.5px;opacity:.8}
+/* [fightcam] the fight camera (fightcam.js): the ring under the foe and its stars follow it; Calm and Off: the screen never shakes */
+#tbf.c2 .c2ov .fzring,#tbf.c2 .c2stars,#tbf.c2 .c2flash.foe{translate:var(--fcdx,0px) var(--fcdy,0px)}
+#tbf.fcam-calm .c2shake .tbscene,#tbf.fcam-off .c2shake .tbscene,#tbf.fcam-calm .tbstage.hurt,#tbf.fcam-off .tbstage.hurt{animation:none!important}
+/* ==== locintro.js: arriving somewhere, the place fills the screen for a moment ==== */
+#locintro{position:fixed;inset:0;z-index:65;overflow:hidden;background:#050506;cursor:pointer;-webkit-tap-highlight-color:transparent;animation:liin .5s ease-out both}
+#locintro.li-short{animation-duration:.25s}
+#locintro.gone{opacity:0;transition:opacity .45s ease-in;pointer-events:none}
+@keyframes liin{from{opacity:0}}
+.li-stage{position:absolute;inset:0;pointer-events:none}
+.li-bg{position:absolute;inset:-2%;background-size:cover;background-position:center 55%;background-repeat:no-repeat;animation:lizoom 4.4s cubic-bezier(.2,.7,.2,1) both}
+.li-short .li-bg{animation-duration:2.4s}
+@keyframes lizoom{from{scale:1.12}to{scale:1.02}}
+#locintro .ls-tint{background:linear-gradient(180deg,rgba(4,5,7,.35) 0%,rgba(4,5,7,0) 22%)}
+.li-shade{position:absolute;inset:0;background:radial-gradient(ellipse 85% 50% at 50% 78%,rgba(4,5,7,.66),rgba(4,5,7,0) 72%),linear-gradient(180deg,rgba(4,5,7,0) 50%,rgba(4,5,7,.72) 100%)}
+.li-text{position:absolute;left:0;right:0;bottom:calc(12% + env(safe-area-inset-bottom));padding:0 16px;text-align:center;pointer-events:none}
+.li-kind{display:flex;align-items:center;justify-content:center;gap:8px;font:600 14px/1.2 "Barlow Semi Condensed",sans-serif;letter-spacing:.24em;text-transform:uppercase;color:#d9c48f;text-shadow:0 1px 4px #000;animation:liup .7s .3s ease-out both}
+.li-kind::before,.li-kind::after{content:"";flex:0 1 80px;height:1px;background:linear-gradient(90deg,transparent,#e2bb64)}
+.li-kind::after{background:linear-gradient(270deg,transparent,#e2bb64)}
+.li-name{margin:6px 0 0;font:700 clamp(36px,6.6vw,96px)/1.02 Cinzel,serif;letter-spacing:.08em;text-transform:uppercase;color:#f4ead0;text-shadow:0 2px 18px rgba(0,0,0,.9),0 0 3px #000;overflow-wrap:anywhere;animation:liname 1.2s .15s cubic-bezier(.2,.7,.2,1) both}
+.li-name::after{content:"";display:block;margin:10px auto 0;width:min(380px,70%);height:1px;background:linear-gradient(90deg,transparent,rgba(226,187,100,.95),transparent);animation:liline .9s .7s ease-out both}
+@keyframes liname{from{opacity:0;letter-spacing:.32em;translate:0 8px}}
+@keyframes liline{from{transform:scaleX(0)}}
+@keyframes liup{from{opacity:0;translate:0 6px}}
+.li-flav{margin:10px auto 0;max-width:640px;font:600 italic 21px/1.25 "Cormorant Garamond",serif;color:#efe6cf;text-shadow:0 1px 8px #000;animation:liup .7s .95s ease-out both}
+.li-meta{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:2px 0;margin:10px 0 0;font:600 14px/1.3 "Barlow Semi Condensed",sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#d9c48f;text-shadow:0 1px 4px #000;animation:liup .7s 1.2s ease-out both}
+.li-meta i{margin:0 10px;font-style:normal;color:#e2bb64}
+.li-new{list-style:none;margin:14px auto 0;padding:0;display:inline-flex;flex-direction:column;align-items:flex-start;gap:5px;max-width:min(560px,100%);text-align:left}
+.li-new li{font:600 16px/1.3 "Barlow Semi Condensed",sans-serif;color:#fff3d6;background:rgba(8,9,11,.6);border-left:2px solid #e2bb64;padding:5px 12px;text-shadow:0 1px 3px #000;animation:liup .6s 1.5s ease-out both}
+.li-new li+li{animation-delay:1.7s}
+.li-skip{position:absolute;left:0;right:0;bottom:calc(12px + env(safe-area-inset-bottom));margin:0;text-align:center;font:600 12px/1 "Barlow Semi Condensed",sans-serif;letter-spacing:.2em;text-transform:uppercase;color:rgba(233,220,190,.6);text-shadow:0 1px 3px #000;pointer-events:none;animation:liup .6s 1.6s ease-out both}
+/* coming back: the same picture, quicker */
+.li-short .li-kind,.li-short .li-name,.li-short .li-flav,.li-short .li-meta,.li-short .li-new li,.li-short .li-skip{animation-duration:.35s;animation-delay:.05s}
+.li-short .li-name::after{animation-duration:.4s;animation-delay:.1s}
+.li-short .li-meta,.li-short .li-new li,.li-short .li-skip{animation-delay:.2s}
+#locintro.still,#locintro.still *,#locintro.still *::after{animation:none!important;transition:none!important}
+@media (prefers-reduced-motion:reduce){#locintro,#locintro *,#locintro *::after{animation:none!important}}
+@media (max-width:699px){
+  .li-text{bottom:calc(14% + env(safe-area-inset-bottom))}
+  .li-name{font-size:clamp(30px,10.5vw,46px)}
+  .li-kind{font-size:12px;letter-spacing:.18em}
+  .li-flav{font-size:18px}
+  .li-meta{font-size:12.5px;letter-spacing:.1em}
+  .li-meta i{margin:0 7px}
+  .li-new li{font-size:15px}
+}
+/* the Area tab's "View location" button: a small landscape next to the place's name */
+.ls-nrow{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px}
+.ls-nrow>.li-viewbtn{justify-self:start}
+.li-viewbtn:not(.btn){width:44px;height:44px;flex:none;display:inline-grid;place-items:center;padding:0;border-radius:50%;border:1px solid rgba(226,187,100,.6);background:rgba(8,9,11,.62);color:#e2bb64;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.5)}
+.li-viewbtn:not(.btn):hover,.li-viewbtn:not(.btn):focus-visible{background:rgba(44,34,18,.9);color:#f4ead0}
+.li-viewbtn.btn{float:right;display:inline-flex;align-items:center;gap:6px;min-height:44px;margin:0 0 6px 8px}
+.li-viewbtn.btn svg{color:var(--gold)}
+/* [channel] channel.js: a teammate (or you) preparing a move: a small bar over their head with the move's icon, coloured by
+   its kind; it stays put while the figure animates, under your own minigame (z 90) and above the fight picture */
+#tbf .chbars{position:fixed;left:0;top:0;width:0;height:0;z-index:80;pointer-events:none}
+#tbf .chb{position:fixed;left:0;top:0;width:56px;height:16px;display:flex;align-items:center;gap:3px;padding:1px 4px 1px 2px;border-radius:9px;background:rgba(10,11,14,.72);box-shadow:0 0 0 1px rgba(255,255,255,.14),0 1px 4px rgba(0,0,0,.5);pointer-events:none;will-change:transform,opacity;contain:layout paint}
+#tbf .chb[hidden]{display:none}
+#tbf .chb .chb-ic{font-style:normal;font-size:11px;line-height:1;width:13px;text-align:center;color:var(--chc,#ccc);text-shadow:0 0 4px var(--chc,#ccc)}
+#tbf .chb .chb-tr{flex:1;height:5px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden;position:relative}
+#tbf .chb .chb-fl{position:absolute;inset:0;background:var(--chc,#ccc);transform-origin:left center;transform:scaleX(0);transition:transform .2s linear}
+#tbf .chb.pulse .chb-fl{animation:chpulse 1s ease-in-out infinite;transition:none}
+@keyframes chpulse{0%,100%{opacity:.25}50%{opacity:.8}}
+#tbf .chb.r-crit{box-shadow:0 0 0 1px #ffd76a,0 0 10px 2px rgba(255,215,106,.7)}
+#tbf .chb.r-crit .chb-fl{background:#ffd76a}
+#tbf .chb.r-fail .chb-fl,#tbf .chb.r-miss .chb-fl{background:#8a8580}
+#tbf .chb.r-fail,#tbf .chb.r-miss{animation:chfumble .3s ease-out 1}
+@keyframes chfumble{30%{margin-left:-3px}60%{margin-left:3px}}
+#tbf .chb.r-cancel .chb-fl{background:#6d6a66}
+#tbf .chb.still,#tbf .chb.still .chb-fl{animation:none!important;transition:none!important}
+@media (prefers-reduced-motion:reduce){#tbf .chb,#tbf .chb .chb-fl{animation:none!important;transition:none!important}}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -5559,6 +5645,8 @@ html:has(#tbf.fz),html:has(#tbf.fz) body{overflow:hidden;overscroll-behavior:non
 <script src="phonefight.js"></script>
 <script src="fightzones.js"></script>
 <script src="fightpres.js"></script>
+<script src="fightcam.js"></script>
+<script src="channel.js"></script>
 <script src="movepreview.js"></script>
 <script src="guide.js"></script>
 <script src="patchnotes.js"></script>
@@ -5619,6 +5707,7 @@ html:has(#tbf.fz),html:has(#tbf.fz) body{overflow:hidden;overscroll-behavior:non
 <script src="avatar.js"></script>
 <script src="figart.js"></script>
 <script src="rigdata.js"></script>
+<script src="gripdata.js"></script>
 <script src="riggear.js"></script>
 <script src="riglook.js"></script>
 <script src="rig.js"></script>
@@ -5645,6 +5734,7 @@ html:has(#tbf.fz),html:has(#tbf.fz) body{overflow:hidden;overscroll-behavior:non
 <script src="dunstrip.js"></script>
 <script src="dunchoice.js"></script>
 <script src="dunfx.js"></script>
+<script src="dollfront.js"></script>
 <script src="dollart.js"></script>
 <script src="raidart.js"></script>
 <script src="homeart.js"></script>
@@ -5654,6 +5744,8 @@ html:has(#tbf.fz),html:has(#tbf.fz) body{overflow:hidden;overscroll-behavior:non
 <script src="remake.js"></script>
 <script src="fxart.js"></script>
 <script src="travelart.js"></script>
+<script src="fpscene.js"></script>
+<script src="fpworld.js"></script>
 <script src="fptravel.js"></script>
 <script src="solart.js"></script>
 <script src="dgart.js"></script>
@@ -5757,10 +5849,12 @@ html:has(#tbf.fz),html:has(#tbf.fz) body{overflow:hidden;overscroll-behavior:non
 <script src="i18n_foepanel.js"></script>
 <script src="i18n_phonefight.js"></script>
 <script src="i18n_fightscreen.js"></script>
+<script src="i18n_channel.js"></script>
 <script src="i18n_hotbar.js"></script>
 <script src="i18n_movepreview.js"></script>
 <script src="i18n_busts.js"></script><script src="i18n_avatars.js"></script><script src="i18n_npcportraits.js"></script>
 <script src="i18n_fightset.js"></script>
+<script src="i18n_fightcam.js"></script>
 <script src="i18n_stacks.js"></script>
 <script src="i18n_fighttips.js"></script>
 <script src="i18n_pickaxe.js"></script>
@@ -5846,6 +5940,7 @@ html:has(#tbf.fz),html:has(#tbf.fz) body{overflow:hidden;overscroll-behavior:non
 <script src="i18n_followersize.js"></script>
 <script src="i18n_caravanpanel.js"></script>
 <script src="i18n_locscreen.js"></script>
+<script src="i18n_locintro.js"></script>
 <script src="i18n_hotbardnd.js"></script>
 <script src="i18n_magicaim.js"></script>
 <script src="i18n_perksky.js"></script>
@@ -5855,12 +5950,14 @@ html:has(#tbf.fz),html:has(#tbf.fz) body{overflow:hidden;overscroll-behavior:non
 <script src="i18n_itemcards2.js"></script>
 <script src="i18n_roadart.js"></script>
 <script src="i18n_fptravel.js"></script>
+<script src="i18n_travelview.js"></script>
 <script src="i18n_rewardtips.js"></script>
 <script src="i18n_updater.js"></script>
 <script src="i18n_mappanels.js"></script>
 <script src="i18n_gatherarea.js"></script>
 <script src="i18n_fighttipstop.js"></script>
 <script src="i18n_fightnums.js"></script>
+<script src="i18n_fightfixes.js"></script>
 <script src="i18n_weaponfx.js"></script>
 <script src="i18n_phantom.js"></script>
 <script src="i18n_pcupdate.js"></script>
@@ -5873,6 +5970,7 @@ html:has(#tbf.fz),html:has(#tbf.fz) body{overflow:hidden;overscroll-behavior:non
 <script src="i18n_smooth.js"></script>
 <script src="i18n_partyfoeturns.js"></script>
 <script src="i18n_first30.js"></script>
+<script src="i18n_dollrig2.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>
@@ -5883,6 +5981,7 @@ html:has(#tbf.fz),html:has(#tbf.fz) body{overflow:hidden;overscroll-behavior:non
 <script src="remind.js"></script>
 <script src="areaui.js"></script>
 <script src="locscreen.js"></script>
+<script src="locintro.js"></script>
 <script src="mappanel.js"></script>
 <script src="beastpaths.js"></script>
 <script src="itemcmp.js"></script>

@@ -8,7 +8,7 @@
    The mouse keeps working: hover moves the ring, a click puts the keys where you clicked. A key-hint line shows
    on a PC (hidden on touch screens). Runs before the map's own W A S D (pcmap.js) and the tab letters (desktop.js). */
 const PERKKEYS = (() => {
-  const live = typeof document !== "undefined" && typeof addEventListener === "function";
+  const live = typeof document !== "undefined" && typeof document.getElementById === "function" && typeof addEventListener === "function";   // (node tests stub a bare document)
   const L = (en) => { try { if (typeof I18N !== "undefined" && I18N.lang() === "pl" && typeof I18N_EXTRA !== "undefined" && I18N_EXTRA.words[en]) return I18N_EXTRA.words[en]; } catch { /* English */ } return en; };
   const HINT = { skill: "A/D skill · W/S row · E stars · Tab menu", star: "WASD move · E take · Tab back" };
   const DIRS = { w: [0, -1], arrowup: [0, -1], s: [0, 1], arrowdown: [0, 1], a: [-1, 0], arrowleft: [-1, 0], d: [1, 0], arrowright: [1, 0] };

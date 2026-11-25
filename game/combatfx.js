@@ -1,9 +1,9 @@
-/* Combat effects: blood, finishing moves, deaths, enchanted-weapon glows and the fight camera. [OURS]
+/* Combat effects: blood, finishing moves, deaths and enchanted-weapon glows. [OURS]
    Remigiusz: "We need gore in the game too. Decapitations for last hit blows. Unique death animations. Enchanted weapons
    should have nice particle glows that are colour coded. We also need cinematic combat camera that follows blows,
    critical hits etc."
    - fightart.js draws the fight; this file decides WHAT happens (which death, what bleeds, what colour a weapon glows,
-     where the camera looks) so the rules stay small and testable in node.
+     which sound) so the rules stay small and testable in node. The camera is fightcam.js.
    - Blood can be turned off in Settings → Fights ("Blood"). With it off, nobody bleeds and nobody loses their head.
    - Things without blood don't bleed: skeletons drop bone chips, dwarven machines leak oil and sparks, spirits fade. */
 const COMBATFX = (() => {
@@ -59,25 +59,7 @@ const COMBATFX = (() => {
     const en = f?.weapon?.enchant || f?.off?.enchant || null;
     return en ? en.effect || en.id || "magicka" : null;
   }
-  /* the camera: where it looks and how close, for one moment of a beat.
-     Returns [focus x 0..1 of the stage width, zoom]. It leans toward whoever is swinging, follows the blow to the target,
-     punches in on criticals and heavy blows, and holds on the killing blow. */
-  function camFor(b, u, o = {}) {
-    const hx = o.hx ?? 0.27, fx = o.fx ?? 0.72, mid = (hx + fx) / 2;
-    if (!b) return [0.5, 1];
-    const me = b.who === "me", from = me ? hx : fx, to = me ? fx : hx, hitU = o.hitU ?? 0.55;
-    if (b.move === "potion" || b.move === "self" || b.move === "wait" || b.move === "block") return [mid + (from - mid) * 0.35, 1.04];
-    const before = u < hitU, big = b.final ? (o.boss ? 1.32 : 1.22) : b.crit || b.sneak ? 1.16 : b.power ? 1.1 : 1.05;
-    if (before) return [mid + (from - mid) * 0.3, 1.03 + (big - 1) * 0.3 * (u / Math.max(0.01, hitU))];
-    const after = Math.min(1, (u - hitU) / 0.25);
-    return [mid + (to - mid) * (0.25 + 0.35 * after), big];
-  }
-  /* keep a zoomed camera from showing past the picture's edges: the pan (in px) for a focus point */
-  function pan(focus, z, size, centre) {
-    if (z <= 1) return 0;
-    const want = -(focus - centre) * z, lo = -(size - centre) * (z - 1), hi = centre * (z - 1);
-    return Math.max(lo, Math.min(hi, want));
-  }
+  /* the camera lives in fightcam.js now ([fightcam]: one move at a time, by priority) */
   /* which sound goes with an impact (the names fall back: hit-gore → hit) */
   const WSND = { axe: "hit-axe", battleaxe: "hit-axe", mace: "hit-mace", warhammer: "hit-mace", bow: "hit-bow", crossbow: "hit-bow" };
   function soundOf(b, foeK, melee = false, goreOn = gore()) {
@@ -93,6 +75,6 @@ const COMBATFX = (() => {
     if (bleedOf(foeK)[2] === "oil") return "clang";
     return "hit";
   }
-  return { gore, bleedOf, deathOf, glowOf, enchantOf, camFor, pan, soundOf, EDGED, BLUNT, HEADLESS, GLOW };
+  return { gore, bleedOf, deathOf, glowOf, enchantOf, soundOf, EDGED, BLUNT, HEADLESS, GLOW };
 })();
 if (typeof module !== "undefined") module.exports = COMBATFX;

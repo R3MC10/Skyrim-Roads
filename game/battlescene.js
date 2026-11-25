@@ -81,7 +81,6 @@ const BSCENE = (() => {
   const animated = (id) => !!scene(id)?.els.some((e) => e.m);
 
   /* ---------------------------------------------------------------- drawing */
-  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   /* a strip the width of the plate; where a camera shift opens a gap at an edge, the edge is mirrored into it */
   function strip(g, im, x, y, w, h, W) {
     g.drawImage(im, x, y, w, h);
@@ -96,10 +95,8 @@ const BSCENE = (() => {
   }
   /* the plate is drawn to the stage height (ground line kept) and centred: the taller stage crops its sides */
   function frameOf(W, Hh) { const pw = Hh * RATIO; return { pw, left: (W - pw) / 2 }; }
-  /* how far the fight camera has moved, as a -1..1 "camera slider" for the parallax planes */
-  const camOf = (ox, W) => clamp((ox || 0) / Math.max(1, W * 0.12), -1, 1);
-  function element(g, e, im, t, left, pw, Hh, pan) {
-    const x = left + (e.x + pan) * pw, y = e.y * Hh, ih = e.h * Hh, iw = e.w ? e.w * pw : ih * im.width / im.height;
+  function element(g, e, im, t, left, pw, Hh) {
+    const x = left + e.x * pw, y = e.y * Hh, ih = e.h * Hh, iw = e.w ? e.w * pw : ih * im.width / im.height;
     const swing = Math.sin(t * (e.m === "sway" ? 1.45 : 2.8) + e.x * 17);
     g.save();
     g.globalAlpha = e.o ?? 1;
@@ -168,22 +165,27 @@ const BSCENE = (() => {
     ovCache.set(k, cv);
     return cv;
   }
-  /* behind the fighters: plate, light and weather, then every prop in manifest order. o: { W, Hh, t, ox, sky, wagon } */
+  /* behind the fighters: plate, light and weather, then every prop in manifest order. o: { W, Hh, t, sky, wagon, lay }
+     [fightcam] o.lay: the fight camera's painter (fightcam.js layers): the plate is cut into rows that move at their own
+     depth (sky least, the ground with the fighters), each prop moves with the row it stands on, the edges are mirrored */
   function back(g, sc, o) {
-    const { W, Hh } = o, { pw, left } = frameOf(W, Hh), cam = camOf(o.ox, W), P = DATA.planes, t = o.t || 0;
-    strip(g, img(sc.bg), left + cam * P.far * pw, 0, pw, Hh, W);
-    const gt = groundTexture(), gy = Hh * DATA.frames.groundY; if (gt) strip(g, gt, left + cam * P.far * pw, gy, pw, Hh - gy, W);
-    const ov = overlayFor(W, Hh, o); if (ov) g.drawImage(ov, 0, 0, W, Hh);
-    for (const e of sc.els) { const im = img(e.k); if (im) element(g, e, im, t, left, pw, Hh, cam * (P[e.p] ?? P.middle)); }
+    const { W, Hh } = o, { pw, left } = frameOf(W, Hh), t = o.t || 0, L = o.lay || null, bg = img(sc.bg);
+    if (L) L.paint(bg, 0, 0, bg.width, bg.height, left, 0, pw, Hh, { top: true }); else strip(g, bg, left, 0, pw, Hh, W);
+    const gt = groundTexture(), gy = Hh * DATA.frames.groundY;
+    if (gt) { if (L) L.paint(gt, 0, 0, gt.width, gt.height, left, gy, pw, Hh - gy, { bottom: true }); else strip(g, gt, left, gy, pw, Hh - gy, W); }
+    const ov = overlayFor(W, Hh, o);
+    if (ov) { if (L) { L.set(1); const m = W * 0.08; g.drawImage(ov, -m, -m, W + 2 * m, Hh + 2 * m); } else g.drawImage(ov, 0, 0, W, Hh); }   // a soft tint: a little larger, so a tilt never shows its edge
+    for (const e of sc.els) { const im = img(e.k); if (!im) continue; if (L) L.set(L.pOf(Math.min(1, e.y))); element(g, e, im, t, left, pw, Hh); }
   }
-  /* in front of the fighters: the near-edge strip along the bottom */
+  /* in front of the fighters: the near-edge strip along the bottom (with the camera: it moves a little more than they do) */
   function front(g, sc, o) {
-    const { W, Hh } = o, { pw, left } = frameOf(W, Hh), cam = camOf(o.ox, W), h = sc.fgH * Hh, im = img(sc.fg);
-    if (im) strip(g, im, left + cam * DATA.planes.near * pw, Hh - h, pw, h, W);
+    const { W, Hh } = o, { pw, left } = frameOf(W, Hh), h = sc.fgH * Hh, im = img(sc.fg), L = o.lay || null;
+    if (!im) return;
+    if (L) L.paint(im, 0, 0, im.width, im.height, left, Hh - h, pw, h, { p: L.near || 1.15, bottom: true }); else strip(g, im, left, Hh - h, pw, h, W);
   }
 
   /* ---------------------------------------------------------------- for tests and tools */
   const list = () => (DATA ? Object.keys(DATA.scenes) : []);
-  return { DATA, artOf, roadArt, townAt, artOfPlace, keys, prefetch, ready, failed, animated, back, front, frameOf, camOf, list, has };
+  return { DATA, artOf, roadArt, townAt, artOfPlace, keys, prefetch, ready, failed, animated, back, front, frameOf, list, has };
 })();
 if (typeof module !== "undefined") module.exports = BSCENE;
