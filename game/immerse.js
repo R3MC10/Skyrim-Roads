@@ -246,8 +246,8 @@ const IMM = (() => {
 
   // ====================================================================== loading cards
   const TIPS = [
-    "Fights play out by themselves, following your Tactics. Put a healing potion rule at the top.",
-    "Rules are checked from the top down. The first one that fits is used.",
+    "You play fights turn by turn. Bring healing potions and use them early.",
+    "Your rules in AI & Loadouts are checked from the top down. The first one that fits is used.",
     "Cleared dungeons fill up again after three in-game days.",
     "One in-game day passes every two real hours.",
     "Shops close at night. Come back after 8 in the morning.",

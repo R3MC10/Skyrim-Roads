@@ -3,6 +3,10 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b281-tacticsaccess", build: 281, date: "25 Nov 2026", title: "Loadouts and fight rules are back", items: [
+      "Your loadouts, the Smart AI / Hybrid / Custom switch and your own fight rules have a home again: Character → AI & Loadouts. On the compass: Skills, then the AI & Loadouts tab.",
+      "Messages about new spells, shouts and powers no longer tell you to add them to your tactics: they say where to find them (the Magic menu) and to use them in a fight.",
+    ] },
     { id: "b280-hotbar", build: 280, date: "25 Nov 2026", title: "Your own hotbar in fights", items: [
       "Your moves in a fight now sit on a hotbar of 10 slots, numbered 1 to 0. Put anything you like on it: blows, power attacks, guard, spells (your own rune spells too), shouts, potions, scrolls and abilities like Breathe or an oil flask.",
       "To change it, pick Edit hotbar in the … menu or tap an empty slot. Tap a slot, then tap what goes in it; tap two slots to swap them. With a mouse you can also drag things on, between and off the bar.",
