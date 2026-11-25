@@ -18,12 +18,9 @@ async def main():
         await pg.click("[data-act=go][data-place=Whiterun]"); await pg.wait_for_timeout(500)
         await pg.wait_for_timeout(2500)
         await pg.screenshot(path="/home/claude/tests/s3_travel.png")
-        for t in ["hero", "pack", "tactics", "town", "log"]:
+        for t in ["hero", "pack", "town", "log"]:
             await pg.click(f"[data-tab={t}]"); await pg.wait_for_timeout(400)
             await pg.screenshot(path=f"/home/claude/tests/s_{t}.png", full_page=True)
-        await pg.click("[data-tab=tactics]"); await pg.wait_for_timeout(300)
-        await pg.click("[data-act=test]"); await pg.wait_for_timeout(400)
-        await pg.screenshot(path="/home/claude/tests/s_test.png", full_page=True)
         # force an encounter
         await pg.evaluate("""() => { }""")
         print("errors:", errs)

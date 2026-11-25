@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b322-noaitab", build: 322, date: "25 Nov 2026", title: "One set of gear, no fight robot settings", items: [
+      "Character → AI & Loadouts is gone: the fight rules editor, share codes, the AI tester and gear loadouts. You pick every move in a fight yourself, so they had nothing left to do.",
+      "You wear one set of gear. If you had several loadouts, you keep the gear of the one you had on; nothing leaves your pack.",
+      "Old saves load as before. Hint texts that pointed to AI & Loadouts now give a real tip instead.",
+    ] },
     { id: "b321-dollrig", build: 321, date: "25 Nov 2026", title: "Your hero holds their gear properly", items: [
       "On the Items screen your hero now stands calmly with the weapon gripped in the fist, the shield strapped on the arm in front of the body and the helmet on the head.",
       "In fights your hero, party members and followers wear their helmets too, and the shield arm comes up into a guard in front of the chest instead of hanging behind the hip.",

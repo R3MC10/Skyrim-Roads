@@ -573,7 +573,7 @@ const CRISES = (() => {
         if (!st.open) body += `<p class="sub">${esc(T("The Jarl hasn't asked for help yet. Contracts open at stage 2 (in {time}).", { time: until(cr.start + STAGE - t) }))}</p>`;
         else if (st.state === "boss") {
           const err = bossBlock(S, cr, t, partyOf());
-          const lv = S.level || 1, warn = lv < 15 ? `<span class="cr-warn">${esc(T(lv < LOW_LV ? "Deadly at your level: heroes under level 10 often lose this fight. Bring friends and potions, or add a Run away rule under AI & Loadouts." : "A hard fight at your level. Bring potions, or add a Run away rule under AI & Loadouts."))}</span>` : "";
+          const lv = S.level || 1, warn = lv < 15 ? `<span class="cr-warn">${esc(T(lv < LOW_LV ? "Deadly at your level: heroes under level 10 often lose this fight. Bring friends and plenty of potions." : "A hard fight at your level. Bring friends and potions."))}</span>` : "";
           body += `<div class="cr-boss"><b>${esc(ch.boss.name)}</b><span class="sub">${esc(T(ch.boss.what))}</span>${warn}${err && !here_ ? `<button class="btn wev-wide" data-act="go" data-place="${esc(cr.place)}">${esc(T("Travel to {place}", { place: cr.place }))}</button>` : `<button class="btn danger wev-wide" data-cr="boss" data-id="${cr.id}" ${err ? "disabled" : ""}>${esc(err && here_ ? err : T("Fight the ringleader"))}</button>`}</div>`;
         }
         if (st.open && st.state === "active") {
