@@ -152,7 +152,7 @@ const BONDS2 = (() => {
   const SPEC_AT = 3, GROOM_COST = 20, GROOM_XP = 6, RETRAIN_COST = 500;
   const XP = { ride: 1, fight: 4, hunt: 3 };   // per real minute ridden on the road / fight won in the saddle / animal taken from the saddle
   const SPECS = {
-    warhorse: { name: "Warhorse", icon: "⚔", text: "Trained for battle." },
+    warhorse: { name: "Warhorse", icon: "", text: "Trained for battle." },
     mountain: { name: "Mountain horse", icon: "▲", text: "Sure-footed off the road." },
     courier: { name: "Courier", icon: "➤", text: "Built for long roads." },
     packhorse: { name: "Packhorse", icon: "▣", text: "Strong back, steady pace." },

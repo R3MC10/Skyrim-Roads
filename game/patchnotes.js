@@ -3,12 +3,18 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b221-overlays", build: 221, date: "25 Nov 2026", title: "One thing on screen at a time", items: [
+    { id: "b222-overlays", build: 222, date: "25 Nov 2026", title: "One thing on screen at a time", items: [
       "The first-fight tip no longer sits on top of the VICTORY card. Results always come first, then windows that ask you something, then tips, then messages.",
       "In your first turn-by-turn fight the big wall of text is gone. Instead you get short one-line hints right next to the turn order, your moves and End turn, and each one goes away as soon as you use it.",
       "A tip that pops up while a window is open waits until you close it, instead of covering it.",
       "Letters that arrive on their own (like the courier with three letters) wait until you're out of a fight and out of the menus.",
       "Messages at the top left get a dark backing over menus, so they don't blur into the titles underneath.",
+    ] },
+    { id: "b221-housekeeping", build: 221, date: "25 Nov 2026", title: "More of the game in Polish", items: [
+      "Playing in Polish? The trip line on the map, the Journal and its quests, the inn, the market, road events, the fight log and the townsfolk greetings are now in Polish too.",
+      "Lines that start with a little game icon now get translated as well, so buttons like Fight, Pay or Something by the road show up in Polish.",
+      "The warhorse now shows a proper game icon instead of an odd symbol.",
+      "Tidied the patch notes: a few empty repeats of old entries are gone.",
     ] },
     { id: "b220-fightdeclutter", build: 220, date: "25 Nov 2026", title: "A calmer fight screen", items: [
       "The fight screen is tidier, mostly on phones. The top is one slim strip with the round and the turn order; the fight log and the combat wheel sit in the new … menu.",
@@ -939,13 +945,9 @@ const PATCHNOTES = (() => {
       "On a big PC monitor, the +gold number, flying loot and fight tips now show up where they should instead of off to the side (they used to push the page sideways).",
       "Phones with a notch or camera cut-out: menus and popups now stay clear of it, also in landscape.",
     ] },
-    { id: "b136-5", build: 136, date: "24 Nov 2026", title: "A proper road picture while you travel", items: [
-    ] },
     { id: "b135-compass", build: 135, date: "24 Nov 2026", title: "A real 3D compass", items: [
       "The golden compass on the home screen is now a proper 3D piece: drag it and it tilts toward your finger, catching the light and showing its thick bronze edge, then springs back when you let go.",
       "Skills, Magic, Items and Map now sit around the compass instead of on top of it, on phones held upright or sideways.",
-    ] },
-    { id: "b136-4", build: 136, date: "24 Nov 2026", title: "A proper road picture while you travel", items: [
     ] },
     { id: "b136places", build: 136, date: "24 Nov 2026", title: "Something at every place", items: [
       "Every place on the map now has something to do. 52 spots that used to be just a picture (farms, mills, shrines, cabins, groves, old ruins, the All-Maker Stones) now offer a stall, work, a job, a blessing, a hidden strongbox, herbs or a spot worth searching. Look under \"What's here\" when you arrive.",
@@ -961,8 +963,6 @@ const PATCHNOTES = (() => {
       "Travelling together: when the party leader runs into a foe or something by the road, everyone with them now gets the same window with the same choices, not just a \"wait\" note.",
       "Members tap a choice to vote for it. Your little portrait pops up next to the option you picked, on everyone's phone, the leader's too, and moves as people change their minds. Tap it again to take your vote back, or Just watch to close the window.",
       "Only the leader's tap actually happens. When they choose, everyone's window closes and you see what they picked and how it went.",
-    ] },
-    { id: "b136-3", build: 136, date: "24 Nov 2026", title: "Meet caravans on the road", items: [
     ] },
     { id: "b137-tomeinfo", build: 137, date: "24 Nov 2026", title: "Know the spell before you buy the tome", items: [
       "Spell tomes for sale now tell you what you'd learn: the school, the level (Novice to Master), how much magicka and how many AP it costs, and what it does, with your own numbers.",
@@ -998,8 +998,6 @@ const PATCHNOTES = (() => {
       "Everything you wear shows up: helmet, armour and its colours, cloak, shield, weapon, even an amulet or ring.",
       "Your hero now actually walks on the road, rides the horse properly, sits on the wagon bench, and swings, blocks, casts and gets knocked down in fights. Moves flow smoothly from one into the next.",
       "Party members, followers and other players use the same new look, on the road, in fights, in portraits and on the hero tab. Works in both the hand-drawn and the pixel style.",
-    ] },
-    { id: "b136-2-2-2-4", build: 136, date: "24 Nov 2026", title: "Meet caravans on the road", items: [
     ] },
     { id: "b136-2-2-2-3", build: 136, date: "24 Nov 2026", title: "Meet caravans on the road", items: [
       "Caravans on the map are now something you can meet while you travel. When you're close, their wagons get a gold ring and say \"tap to meet\": tap them, or just walk up beside them and you'll be asked to stop.",
@@ -1558,7 +1556,7 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 221;
+  const NEXT_AT = 222;
   const NEXT = [
     "Mentoring: play side by side with friends of any level",
     "Shrines of your own: build a Daedric altar at your longhouse",
