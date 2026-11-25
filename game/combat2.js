@@ -46,7 +46,7 @@ const COMBAT2 = (() => {
   let mem = { sess: null, dock: 0, hp: null, mp: null, sp: null, mine: false };
   function portraitOf(o, f) {
     try {
-      if (o.id === "me" && typeof HEROART !== "undefined") return HEROART.portrait(f.s, 30);
+      if (o.id === "me" && typeof AVATAR !== "undefined") return AVATAR.portrait(f.s, 30);   // [avatars] your chosen portrait
       const al = o.al;
       if (al && al.fid && typeof UIART !== "undefined" && UIART.follower) { const p = UIART.follower(al.fid, 30); if (p) return p; }
     } catch { /* fall back to a letter */ }

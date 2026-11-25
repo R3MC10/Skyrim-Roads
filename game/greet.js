@@ -120,7 +120,7 @@ const GREET = (() => {
     let best = null, bd = 22;
     for (const o of v.others) {
       if (!o.id) continue;
-      const x = (o.drawX ?? o.pos[0]) * W * k + ox, y = o.pos[1] * H * k + oy - 14;   // the figure stands above its feet
+      const x = (o.drawX ?? o.pos[0]) * W * k + ox, y = (o.drawY ?? o.pos[1]) * H * k + oy - 14;   // the figure stands above its feet
       const d = Math.hypot(x - sx, y - sy); if (d < bd) { bd = d; best = o; }
     }
     if (!best) return false;
@@ -138,7 +138,7 @@ const GREET = (() => {
     try { for (const a of (ctx.acts ? ctx.acts(o, kn) : []) || []) acts.push(a); } catch { /* no extra rows */ }
     if (typeof MAPSHEET === "undefined") return;
     MAPSHEET.open({ id: "hero:" + o.id, owner: "hero", domId: "greetcard", label: kn ? label(S, o, party) : L("Stranger"),
-      icon: o.look && typeof HEROART !== "undefined" && HEROART.portrait ? HEROART.portrait(o, 40) : "",
+      icon: o.look && typeof AVATAR !== "undefined" ? AVATAR.portrait(o, 40) : "",
       title: kn ? label(S, o, party) : L("Stranger"), sub: [race, o.level ? `${L("level")} ${o.level}` : ""].filter(Boolean).join(" · "),
       rows: [where ? [L("Where"), where + (o.moving ? " · " + L("travelling") : "") + (o.dungeon ? " · " + L("in a dungeon") : "")] : null,
         [L("Between you"), kn ? (inParty(party, o.id) ? L("In your party.") : L("You know each other.")) : L("Strangers"), kn ? "good" : ""]],

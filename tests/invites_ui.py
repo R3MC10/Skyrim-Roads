@@ -74,6 +74,10 @@ async def main():
         await B.click("#invbar .invcard[data-kind=party] [data-inv=yes]")
         ok(await heard(B, "That party is full (8 heroes at most)."), "accepting a full party says it's full")
         ok(await B.evaluate("() => window.__dbg.party()?.id === 'pty1'"), "still in the old party")
+        # Beta leaves Alfa's party: a co-op invite from your own party leader never shows (you're put in the run instead)
+        await B.evaluate(f"() => Store.change('parties', 'pty1', x => ({{ ...x, members: x.members.filter(m => m.id !== '{idb}') }}))")
+        await B.wait_for_timeout(800)
+        ok(await B.evaluate("() => !window.__dbg.party()"), "Beta left the party")
 
         # ---- co-op run, clan, Arena challenge, trade offer: all at once, newest first, +N more
         await A.evaluate(f"""() => {{ const t = G.now();

@@ -2,7 +2,7 @@
    A big live preview (left on a PC, on top on a phone) drawn with the painted fight rig (chargenrig.js; the ink FIGART
    figure until its parts load); it idles,
    turns (drag it, or the arrow keys) and zooms to the face. Tabs: Race · Body · Head · Face · Hair · Scars & Paint · Start,
-   with Back/Next, Randomise and Undo. A Male / Female switch sits above the tabs ([chargensex]). The look is plain data (appear.js) saved in s.app and sent on your player card,
+   with Back/Next, Randomise and Undo. The Race tab also has the portrait picker ([avatars], avatar.js). A Male / Female switch sits above the tabs ([chargensex]). The look is plain data (appear.js) saved in s.app and sent on your player card,
    so everyone sees the same face. Race abilities: racefx.js.
    The same screen without the Race and Start tabs is the barber at an inn (small fee) and the mirror in your house (free).
      CHARGEN.create(host, { onBegin({ name, race, app, stone }), onBack(), startExtra(), afterRender(root), toast(text) })
@@ -34,14 +34,15 @@ const CHARGEN = (() => {
   function fresh(mode, o) {
     const save = o.save || null, race = save ? save.race : o.race || "nord";
     const app = save ? APPEAR.norm(save.app || APPEAR.fromSeed(save.id || save.name || "x", race, save.sex === "f"), race) : APPEAR.fromSeed("cg-" + race, race, false);
-    return { mode, o, save, race, app, app0: JSON.stringify(app), stone: "", tab: mode === "create" || mode === "remake" ? "race" : "body", name: mode === "remake" && save ? save.name || "" : "", undo: [], touched: false,
+    const avatar = save && typeof AVATAR !== "undefined" ? AVATAR.chosen(save) : "";   // [avatars] "" = Automatic
+    return { mode, o, save, race, app, app0: JSON.stringify(app), stone: "", avatar, avAll: false, tab: mode === "create" || mode === "remake" ? "race" : "body", name: mode === "remake" && save ? save.name || "" : "", undo: [], touched: false,
       angle: 0, angleTo: 0, zoom: 0, pose: "idle", gear: true, root: null, can: null, buf: null, raf: 0, ver: 1, drawn: "", prevLook: null, drag: null };
   }
   const tabs = () => (st.mode === "create" ? TABS : st.mode === "remake" ? TABS.filter(([id]) => id !== "start") : TABS.filter(([id]) => id !== "race" && id !== "start"));
   const named = () => st.mode === "create" || st.mode === "remake";   // the name box shows
   const raceName = (r) => (D.RACES[r] || {}).name || r;
   const beast = () => APPEAR.beasts(st.race);
-  function snapshot() { return JSON.stringify({ race: st.race, app: st.app, stone: st.stone }); }
+  function snapshot() { return JSON.stringify({ race: st.race, app: st.app, stone: st.stone, avatar: st.avatar }); }
   function change(fn) {
     const before = snapshot();
     fn();
@@ -53,7 +54,7 @@ const CHARGEN = (() => {
   }
   function undo() {
     const s = st.undo.pop(); if (!s) return;
-    const o = JSON.parse(s); st.race = o.race; st.app = APPEAR.norm(o.app, o.race); st.stone = o.stone || ""; st.ver++;
+    const o = JSON.parse(s); st.race = o.race; st.app = APPEAR.norm(o.app, o.race); st.stone = o.stone || ""; st.avatar = o.avatar || ""; st.ver++;
     update();
   }
   function setRace(r) {
@@ -107,15 +108,18 @@ const CHARGEN = (() => {
   function raceTab() {
     const r = D.RACES[st.race], ab = RACEFX.ability(st.race), pw = typeof POWERS !== "undefined" && POWERS.RACE ? POWERS.RACE[st.race] : null;
     return `<div class="rgrid cgraces bustgrid">${Object.entries(D.RACES).map(([id, x]) => `<button class="rpick ${id === st.race ? "on" : ""}" data-race="${id}" aria-pressed="${id === st.race}">${raceFace(id)}<span>${esc(x.name)}</span></button>`).join("")}</div>
-      <div class="rshow cgcard"><div class="rfig heroprev cgbust">${typeof BUSTART !== "undefined" ? BUSTART.hero({ race: st.race, app: st.app }, HEROART.figure({ look: lookNow(true) }, 120, 165)) : HEROART.figure({ look: lookNow(true) }, 120, 165)}</div>
+      <div class="rshow cgcard"><div class="rfig heroprev cgbust">${typeof AVATAR !== "undefined" ? AVATAR.hero(heroNow(), HEROART.figure({ look: lookNow(true) }, 120, 165)) : HEROART.figure({ look: lookNow(true) }, 120, 165)}</div>
         <div class="rtxt"><h3>${esc(r.name)}</h3><p class="sub">${esc(L(RACEFX.lore(st.race)))}</p>
           <h4>${esc(L("Starting skills"))}</h4>
           <div class="rsk">${r.skills.map(skillName).map((k, i) => `<span class="rskill">${typeof UIART !== "undefined" ? UIART.skill(k, 22) : ""}<b>+${i === 0 ? 10 : 5}</b> ${esc(k)}</span>`).join("")}</div>
           <h4>${esc(L("Racial power"))}</h4>
           <p class="rpow">${typeof UIART !== "undefined" ? UIART.power(st.race, 24) : ""}<span><b>${esc(r.power)}</b> · ${esc(L(pw ? pw[1] : ""))} <i class="sub">${esc(L("Once a day."))}</i></span></p>
           <h4>${esc(L("Born with"))}</h4>
-          <p class="rpow"><span class="cgab" aria-hidden="true">✦</span><span><b>${esc(L(ab.name))}</b> · ${esc(L(ab.desc))}</span></p></div></div>`;
+          <p class="rpow"><span class="cgab" aria-hidden="true">✦</span><span><b>${esc(L(ab.name))}</b> · ${esc(L(ab.desc))}</span></p></div></div>
+      ${typeof AVATAR !== "undefined" ? `<h4 class="cgavh">${esc(L("Portrait"))}</h4><p class="sub">${esc(L("The face friends see next to your name. You can change it later on your Character page."))}</p>${AVATAR.grid(heroNow(), st.avatar, st.avAll)}` : ""}`;
   }
+  /* [avatars] the hero being made, for the portrait (avatar.js) */
+  const heroNow = () => ({ race: st.race, app: st.app, avatar: st.avatar, id: "cg-" + (st.save?.id || "new") });
   function bodyTab() {
     return row("build", "Build", APPEAR.BUILDS) + row("height", "Height", APPEAR.HEIGHTS)
       + swatches("skin", st.race === "argonian" ? "Scales" : st.race === "khajiit" ? "Fur" : "Skin tone", APPEAR.skins(st.race));
@@ -208,7 +212,7 @@ const CHARGEN = (() => {
     const R = st.root; if (!R) return;
     const T = tabs(), i = T.findIndex(([id]) => id === st.tab);
     // keep keyboard focus on the same control after the panel is redrawn
-    const a = document.activeElement, keep = a && R.contains(a) && a.closest(".cgpanel,.cgtabs,.cgsex") ? [a.dataset.cg, a.dataset.k, a.dataset.v, a.dataset.race, a.dataset.stone, a.dataset.tab].join("|") : null;
+    const a = document.activeElement, keep = a && R.contains(a) && a.closest(".cgpanel,.cgtabs,.cgsex") ? [a.dataset.cg, a.dataset.k, a.dataset.v, a.dataset.race, a.dataset.stone, a.dataset.tab, a.dataset.av].join("|") : null;
     R.querySelector(".cgtabs").innerHTML = T.map(([id, t], j) => `<button class="cgtab ${id === st.tab ? "on" : ""}" role="tab" id="cgt-${id}" data-cg="tab" data-tab="${id}" aria-selected="${id === st.tab}" tabindex="${id === st.tab ? 0 : -1}"><span class="cgtn">${j + 1}</span> ${esc(L(t))}</button>`).join("");
     { const tb = R.querySelector(".cgtabs"), on = tb.querySelector(".cgtab.on"); if (on && tb.scrollWidth > tb.clientWidth) tb.scrollLeft = Math.max(0, on.offsetLeft - (tb.clientWidth - on.offsetWidth) / 2); }   // [smallpolish] the open tab stays in sight on a phone
     { const sb = R.querySelector(".cgsex"); if (sb) sb.innerHTML = sexBar(); const nm = R.querySelector("#" + nmId()); if (nm) nm.placeholder = L(namePh()); }
@@ -224,7 +228,7 @@ const CHARGEN = (() => {
     R.querySelector("[data-cg=gear]").setAttribute("aria-pressed", String(st.gear));
     const cf = R.querySelector(".cscene .cfig"); if (cf) cf.dataset.race = st.race;
     tag(); detail();
-    if (keep) { const el = [...pane.querySelectorAll("button"), ...R.querySelectorAll(".cgtab,.cgsexb")].find((b) => [b.dataset.cg, b.dataset.k, b.dataset.v, b.dataset.race, b.dataset.stone, b.dataset.tab].join("|") === keep); if (el) el.focus(); }
+    if (keep) { const el = [...pane.querySelectorAll("button"), ...R.querySelectorAll(".cgtab,.cgsexb")].find((b) => [b.dataset.cg, b.dataset.k, b.dataset.v, b.dataset.race, b.dataset.stone, b.dataset.tab, b.dataset.av].join("|") === keep); if (el) el.focus(); }
     if (st.o.afterRender) try { st.o.afterRender(R); } catch (e) { console.warn("chargen", e); }
     paint(true);
   }
@@ -312,6 +316,8 @@ const CHARGEN = (() => {
     const b = e.target.closest("button"); if (!b || b.disabled || !st) return;
     if (b.dataset.race) return setRace(b.dataset.race);
     if (b.dataset.stone !== undefined && b.classList.contains("cgstone")) return change(() => { st.stone = b.dataset.stone; });
+    if (b.dataset.av !== undefined) return change(() => { st.avatar = AVATAR.valid(b.dataset.av) ? b.dataset.av : ""; });   // [avatars]
+    if (b.dataset.avAll) { st.avAll = true; return update(); }
     switch (b.dataset.cg) {
       case "tab": return setTab(b.dataset.tab, true);
       case "dec": return nudge(b.dataset.k, -1);
@@ -394,7 +400,7 @@ const CHARGEN = (() => {
       st.o.toast?.(L(bad)); const f = st.root.querySelector("#nm"); if (f) { f.classList.add("nm-bad"); f.focus(); }
       return;
     }
-    const out = { name, race: st.race, app: APPEAR.norm(st.app, st.race), stone: st.stone || null };
+    const out = { name, race: st.race, app: APPEAR.norm(st.app, st.race), stone: st.stone || null, avatar: st.avatar || "" };
     stop(); st.o.onBegin?.(out);
   }
   /* the barber or the mirror: a full-screen layer over the game */
@@ -421,7 +427,7 @@ const CHARGEN = (() => {
     if (ok) {
       const name = nameNow(), bad = nameProblem(name);
       if (bad) { o.toast?.(L(bad)); const f = st.root.querySelector("#" + nmId()); if (f) { f.classList.add("nm-bad"); f.focus(); } return; }
-      const out = { name, race: st.race, app: APPEAR.norm(st.app, st.race) };
+      const out = { name, race: st.race, app: APPEAR.norm(st.app, st.race), avatar: st.avatar || "" };
       stop(); document.querySelector(".cg-over")?.remove(); st = null;
       return o.onDone?.(out);
     }
