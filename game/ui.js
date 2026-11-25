@@ -107,6 +107,12 @@
     if (!o.moving || !o.path || o.path.length < 2) return [o.x, o.y];
     return Terrain.moveAlong(o.path, 0, o.path[0], Math.max(0, t - o.t0), (o.speed || 30) / 60).pos;
   }
+  /* the road a party member has walked so far on their trip (the map lines the party up behind its leader on it: partytrain.js) */
+  function otherTrail(o, t = G.now()) {
+    if (!o.moving || !o.path || o.path.length < 2) return null;
+    const r = Terrain.moveAlong(o.path, 0, o.path[0], Math.max(0, t - o.t0), (o.speed || 30) / 60);
+    return [...o.path.slice(0, r.idx + 1), r.pos];
+  }
   const tripMinutesLeft = () => Math.max(0, G.minutesLeft(S) - (S.trip?.status === "travel" ? (G.now() - S.trip.lastTick) / 60 : 0));
   // cities and the old towns are on every map; everything in WORLD.hidden has to be found first
   const known = (n) => S.discovered.includes(n) || (["city", "town"].includes(WORLD.places[n][2]) && !WORLD.hidden?.has(n));
@@ -1119,10 +1125,10 @@
       cones, foe: S.trip?.status === "encounter" && !S.trip.encounter?.prey ? S.trip.encounter?.name : null,
       region: WORLD.regionOf(pos),
       raid: raidNow ? raidView(raidNow) : null, fx: fxNow,
-      player: pos, name: S.name, look: myLook(), side: typeof SIDES !== "undefined" ? SIDES.mine(S) : null, moving: S.trip?.status === "travel", trail: S.trip?.trail, dest: S.trip ? { pos: S.trip.dest, name: S.trip.destName, roam: !!S.trip.roam } : null, spot: selected === "__spot" ? roamSpot : null,
+      player: pos, me: S.id, party: party ? { leader: party.leader, ids: party.members.map((m) => m.id) } : null, name: S.name, look: myLook(), side: typeof SIDES !== "undefined" ? SIDES.mine(S) : null, moving: S.trip?.status === "travel", trail: S.trip?.trail, dest: S.trip ? { pos: S.trip.dest, name: S.trip.destName, roam: !!S.trip.roam } : null, spot: selected === "__spot" ? roamSpot : null,
       route: S.trip && !S.trip.boat ? (S.trip.status === "travel" ? S.trip.path.slice(S.trip.idx + 1) : [S.trip.dest]) : null,
       sight: typeof SNEAKMODE !== "undefined" && !S.location && !S.dungeon ? SNEAKMODE.SIGHT_PX : 0, sneakRing: typeof SNEAKMODE !== "undefined" && S.sneak ? SNEAKMODE.myRange(S) : 0,
-      discovered: S.discovered, explored: [...S.explored, pos], atPlace: !!S.location, others: others.filter((o) => sameMap(o) && seesHero(o)).map((o) => ({ name: typeof GREET !== "undefined" ? GREET.label(S, o, party) : (o.clan ? `[${o.clan}] ` : "") + o.name + (party?.members.some((m) => m.id === o.id) ? " ⚑" : ""), stranger: typeof GREET !== "undefined" && !GREET.knows(S, o.id, party), atPlace: !!o.loc, pos: otherPos(o), look: o.look, race: o.race, id: o.id, moving: !!o.moving, horse: typeof o.ride === "string" ? o.ride : null, side: typeof SIDES !== "undefined" ? SIDES.of(o.id) : null, party: !!party?.members.some((m) => m.id === o.id) })),
+      discovered: S.discovered, explored: [...S.explored, pos], atPlace: !!S.location, others: others.filter((o) => sameMap(o) && seesHero(o)).map((o) => ({ name: typeof GREET !== "undefined" ? GREET.label(S, o, party) : (o.clan ? `[${o.clan}] ` : "") + o.name + (party?.members.some((m) => m.id === o.id) ? " ⚑" : ""), stranger: typeof GREET !== "undefined" && !GREET.knows(S, o.id, party), atPlace: !!o.loc, pos: otherPos(o), trail: party?.members.some((m) => m.id === o.id) ? otherTrail(o) : null, look: o.look, race: o.race, id: o.id, moving: !!o.moving, horse: typeof o.ride === "string" ? o.ride : null, side: typeof SIDES !== "undefined" ? SIDES.of(o.id) : null, party: !!party?.members.some((m) => m.id === o.id) })),
       rulers: Object.entries(WARS.rulers(S)).map(([hold, c]) => ({ hold, color: c.colors[0] })),
       banners: CLANS.banners(homeDocs, S, VISITS.record(S)).filter((b) => WORLD.places[b.town]).map((b) => ({ ...b, pos: WORLD.places[b.town].slice(0, 2) })),
       cleared: clearedLeft(), bags: visibleBags(), selected: selected && WORLD.places[selected] ? selected : null, t: ts / 1000, zoom, center, reduceMotion, weather: WEVENTS.weather(pos).id, quest: questPos(), mask: typeof PRIESTS !== "undefined" ? PRIESTS.marker(S)?.pos : null, tmaps: typeof EXPLORE !== "undefined" ? EXPLORE.marks(S) : [], rumours: typeof RUMOURS !== "undefined" ? RUMOURS.marks(S) : [], herbs: typeof GATHER !== "undefined" ? GATHER.marks(S) : [], herbRange: typeof HARVEST !== "undefined" && !S.dungeon && HARVEST.nearPrompt(S) ? { pos: [S.x, S.y], r: GATHER.REACH_PX / 1000 } : null, pins: (S.pins || []).map((p) => ({ pos: [p.x, p.y], label: `${p.icon} ${p.label}`, on: selected === "__pin:" + p.id })),
