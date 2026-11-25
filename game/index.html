@@ -4526,7 +4526,7 @@ html.pcmap.pc-home #gpop .gcard{margin:0;box-shadow:0 8px 26px rgba(0,0,0,.55);b
 /* a caravan's panel (wagons.js): SkyUI-style; PC: docked on the right; phones: a sheet above the nav bar */
 .wgcard{position:fixed;z-index:8;display:flex;flex-direction:column;overscroll-behavior:contain;border-radius:3px;background:linear-gradient(180deg,rgba(20,21,23,.96),rgba(8,9,10,.96));border:1px solid rgba(226,187,100,.3);border-top:2px solid rgba(226,187,100,.55);box-shadow:0 12px 40px rgba(0,0,0,.65);color:#e9e5da;font-size:14px;animation:pcslide .22s ease-out}
 /* phones and narrow windows: a sheet across the bottom, sitting on top of the nav bar (wagons.js sets bottom / max-height) */
-.wgcard.sheet{left:0;right:0;bottom:0;max-height:72vh;border-radius:6px 6px 0 0;border-left:0;border-right:0}
+.wgcard.sheet{left:0;right:0;bottom:0;max-height:72vh;background:linear-gradient(180deg,#141517,#08090a);box-shadow:0 -10px 34px rgba(0,0,0,.7);border-radius:6px 6px 0 0;border-left:0;border-right:0}
 /* a wide window that isn't the PC map: the same sheet, on the right */
 .wgcard.sheet.wide{left:auto;right:12px;width:400px;border-radius:4px;border:1px solid rgba(226,187,100,.3);border-top:2px solid rgba(226,187,100,.55)}
 /* PC: docked on the right, full height between the top and the bottom bar, like the other side panels */
@@ -5319,6 +5319,7 @@ body:has(#tbf) #gnear{display:none!important}
 <script src="i18n_perklayout.js"></script>
 <script src="i18n_nocover.js"></script>
 <script src="i18n_followersize.js"></script>
+<script src="i18n_caravanpanel.js"></script>
 <script src="i18n_magicaim.js"></script>
 <script src="i18n_perksky.js"></script>
 <script src="i18n_crafticons.js"></script>
