@@ -3,6 +3,10 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b271-roadart", build: 271, date: "25 Nov 2026", title: "Painted road encounters", items: [
+      "Almost everything you meet on the road now has its own painting: bandits' tolls, caravans, shipwrecks, avalanches, giants, wisps, hagravens, peddlers, shrines and many more.",
+      "You see it when the encounter starts, on the result after you choose, and in the party vote.",
+    ] },
     { id: "b270-stations", build: 270, date: "25 Nov 2026", title: "Places open on the work", items: [
       "Opening the Forge, a shop, the inn or any other place in town now shows its tabs and list right away: the town news folds into one \"Town news\" row you can open, and the how-it-works note sits under the list.",
       "The \"New to the game?\" card only shows on the map and the town's board, not inside a place.",
