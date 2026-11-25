@@ -3,13 +3,22 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b218-fightdeclutter", build: 218, date: "25 Nov 2026", title: "A calmer fight screen", items: [
+    { id: "b219-fightdeclutter", build: 219, date: "25 Nov 2026", title: "A calmer fight screen", items: [
       "The fight screen is tidier, mostly on phones. The top is one slim strip with the round and the turn order; the fight log and the combat wheel sit in the new … menu.",
       "The foe's card shows its name and kind on one line and only its next move. Tap the card to see everything it plans this round.",
       "The target is a thin ring on the ground under the foe. The dashed line to it only shows while you aim.",
       "Your health, magicka and stamina live only in the orb now; its striped band shows how much the foe is about to take. No more bars over your hero or numbers in the Moves row.",
       "The Moves diamonds and \"Your turn\" share one thin line, and a move's description shows as a fixed line just above your buttons, never on top of them.",
       "End turn is a plain button in its own corner. Snow falls as soft round flakes.",
+    ] },
+    { id: "b218-expedition", build: 218, date: "25 Nov 2026", title: "The Expedition Table: tonight's adventure", items: [
+      "The company's planning table now lays out three expeditions every day: a short, a medium and a long one. Open Social, then Company, then Expeditions.",
+      "Everyone in the company sees the same three, and new ones come every day. Missing a day costs nothing.",
+      "Each one is a short chain of things already in the game: a road event on the way, then a dungeon, a legendary beast's trail, a heist or a hold in trouble, then a fight or a boss.",
+      "In a party, everyone votes on which one to take and what to do on the road. Most votes win, a tie goes to the leader, and Not tonight is always a choice.",
+      "Finish one and you get your own gold and loot, and the company gets renown. Reach the weekly goal and everyone who went out that week opens the company chest.",
+      "Without a planning table only the short expedition is open. Building it opens all three, and every level adds a bit of gold.",
+      "New perks: Expedition Leader (Etiquette) lets you ask for fresh offers once or twice a day, and Seasoned Scout (Sneak) shows how each road event choice will turn out.",
     ] },
     { id: "b217-lightmenus", build: 217, date: "25 Nov 2026", title: "Lighter menus", items: [
       "Social has four big tabs now: Party, Company, Friends and Realm. Messages, Trades, Chat and Faction sit in a small More row just under them, with their counters, so everything is still one tap away.",

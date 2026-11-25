@@ -4160,6 +4160,69 @@ body:has(#modal .sheet) #pbanners{top:auto!important;bottom:calc(6px + env(safe-
 .tip.tt-dock::after,.tip.tt-dock::before{display:none}
 .tip.tt-dock .tt-h{display:inline;margin-right:7px;font-size:1em}
 .tip.tt-dock .tt-sub,.tip.tt-dock .tt-stats,.tip.tt-dock .tt-hint{display:none}
+/* the Expedition Table (expedition.js): three painted offer cards, a step tracker, the weekly goal, a bottom sheet for votes and road events */
+.exp-root{display:flex;flex-direction:column;gap:10px}
+.exp-head{position:relative;border:1px solid rgba(214,178,94,.35);border-radius:4px;overflow:hidden;background:#15120d;min-height:84px}
+.exp-head img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.28}
+.exp-ht{position:relative;padding:12px 14px;background:linear-gradient(90deg,rgba(12,10,7,.85),rgba(12,10,7,.35))}
+.exp-title{font-family:"Cinzel",serif;font-size:20px;letter-spacing:.07em;color:var(--gold);text-shadow:0 1px 3px #000}
+.exp-head .sub{margin-top:3px;font-size:13px;line-height:1.35}
+.exp-seg button{flex:1 1 0;padding:6px 4px}
+.exp-offers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.exp-card{display:flex;flex-direction:column;min-width:0;border:1px solid var(--line);border-top:3px solid #4a4237;background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(0,0,0,.18))}
+.exp-card.s-medium{border-top-color:#8c7340}.exp-card.s-long{border-top-color:var(--gold)}
+.exp-card.mine{border-color:rgba(226,187,100,.6);box-shadow:0 0 0 1px rgba(226,187,100,.25)}
+.exp-card.shut{opacity:.62}.exp-card.shut .exp-art img{filter:grayscale(.7)}
+.exp-art{position:relative;aspect-ratio:8/3;overflow:hidden;background:#15120d}
+.exp-art img{display:block;width:100%;height:100%;object-fit:cover}
+.exp-slot{position:absolute;left:0;bottom:0;padding:3px 9px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#f1e3c0;background:rgba(12,10,7,.82);border-top-right-radius:3px}
+.exp-body{padding:9px 11px 11px;display:flex;flex-direction:column;gap:6px;flex:1}
+.exp-body h3{margin:0;font-family:"Cinzel",serif;font-size:16px;letter-spacing:.04em;color:#f1ead8}
+.exp-where{margin:0;font-size:13px;color:var(--mute)}
+.exp-blurb{margin:0;font-size:14px;line-height:1.35}
+.exp-steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.exp-steps li{display:flex;gap:8px;align-items:flex-start;font-size:13px;line-height:1.3;color:var(--mute)}
+.exp-steps .d{flex:none;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #6a5d45;border-radius:50%;font-size:10px;margin-top:1px}
+.exp-steps li.on{color:var(--ink)}.exp-steps li.on .d{border-color:var(--gold);color:var(--gold)}
+.exp-steps li.done{color:#8f9a80}.exp-steps li.done .d{background:var(--gold);border-color:var(--gold);color:#15120d}
+.exp-loot{margin:auto 0 0;font-size:13px;line-height:1.35}.exp-loot .gold,.exp-loot span{color:var(--gold)}
+.exp-body .btn{align-self:stretch;min-height:40px}
+.exp-tag{align-self:flex-start;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);border:1px solid rgba(226,187,100,.5);padding:3px 8px}
+.exp-why{font-size:13px;color:var(--ember)}
+.exp-track{border:1px solid rgba(226,187,100,.45);border-left:3px solid var(--gold);background:rgba(226,187,100,.06);padding:9px 11px;display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+.exp-th{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}.exp-th b{font-family:"Cinzel",serif;letter-spacing:.04em;color:var(--gold)}.exp-th span{font-size:13px;color:var(--mute)}
+.exp-tb{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.exp-track>.sub{margin:0;font-size:12px}
+.exp-pbar{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;justify-content:space-between;padding:8px 10px;border:1px solid var(--line);background:rgba(255,255,255,.02);font-size:14px}
+.exp-pbar span{flex:1 1 220px}
+.exp-foot{display:flex;justify-content:flex-end}.exp-foot:empty{display:none}
+.exp-week{border:1px solid var(--line);padding:9px 11px;display:flex;flex-direction:column;gap:6px}
+.exp-wh{display:flex;justify-content:space-between;gap:8px}.exp-wh b{font-family:"Cinzel",serif;letter-spacing:.05em}.exp-wh .num{color:var(--gold)}
+.exp-week .bar{height:8px;background:#0f0d0a;border:1px solid #4a4237}.exp-week .bar i{display:block;height:100%;background:linear-gradient(90deg,#8c7340,var(--gold))}
+.exp-week .sub{margin:0;font-size:13px}.exp-week .btn{align-self:flex-start}
+.exp-root>h3{margin:4px 0 0;font-family:"Cinzel",serif;font-size:16px;letter-spacing:.05em}
+.exp-hist{display:flex;flex-direction:column}
+.exp-he{display:flex;gap:8px;justify-content:space-between;align-items:center;padding:6px 2px;border-bottom:1px solid var(--line)}
+.exp-he div{display:flex;flex-direction:column;min-width:0}.exp-he span{font-size:13px;color:var(--mute)}.exp-he i{font-size:12px;color:var(--mute);white-space:nowrap}
+#exp-layer{position:fixed;inset:auto 0 0 0;z-index:420;display:flex;justify-content:center;padding:0 8px calc(8px + env(safe-area-inset-bottom));pointer-events:none}
+.exp-sheet{pointer-events:auto;width:100%;max-width:560px;max-height:78vh;overflow:auto;border:1px solid rgba(232,198,106,.45);border-radius:8px 8px 4px 4px;background:linear-gradient(180deg,#1d1914,#110f0c);box-shadow:0 -8px 30px rgba(0,0,0,.65);animation:expup .28s ease-out both}
+.exp-sheet .pvote{margin:0;border:0;border-radius:0}.exp-sheet .pvote .pvopt{padding-right:56px}
+@keyframes expup{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.exp-sheet{animation:none}}
+.exp-ev{display:flex;flex-direction:column;gap:8px;padding-bottom:12px}
+.exp-evart{position:relative;aspect-ratio:8/3;overflow:hidden}
+.exp-evart img{display:block;width:100%;height:100%;object-fit:cover}
+.exp-evart b{position:absolute;left:0;right:0;bottom:0;padding:16px 14px 8px;font-family:"Cinzel",serif;font-size:19px;letter-spacing:.06em;color:#f1e3c0;background:linear-gradient(0deg,rgba(12,10,7,.95),rgba(12,10,7,0))}
+.exp-say{margin:0;padding:0 14px;font-size:15px;line-height:1.4}
+.exp-sheet .pvote .exp-say{padding:0;margin-bottom:4px}
+.exp-evo{display:flex;flex-direction:column;gap:8px;padding:0 14px}
+.exp-evo .btn{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;min-height:52px;padding:8px 12px}
+.exp-evo .btn small{font-size:12px;color:var(--mute)}
+.exp-ev>.sub{margin:0;padding:0 14px;font-size:12px}
+.exp-scout{font-style:normal;font-size:12px;letter-spacing:.04em}.exp-scout.good{color:#9ccf7a}.exp-scout.bad{color:var(--ember)}
+.exp-done{padding:16px;display:flex;flex-direction:column;gap:8px}
+.exp-done h3{margin:0;font-family:"Cinzel",serif;font-size:18px;letter-spacing:.05em;color:var(--gold)}.exp-done p{margin:0;font-size:15px}.exp-done .btn{align-self:stretch;min-height:44px}
+@media (max-width:900px){.exp-offers{grid-template-columns:1fr}.exp-art{aspect-ratio:16/5}}
+@media (min-width:901px){#exp-layer{inset:0;align-items:center;background:rgba(0,0,0,.35)}.exp-sheet{border-radius:6px;animation:none}}
 /* [lightmenus] one SkyUI button family: flat dark fill, 1px rule, 3px corners; secondary 44px, primary 52px; no gloss or glow */
 .btn{min-height:44px;border-radius:3px;border:1px solid rgba(236,232,222,.28);background:rgba(255,255,255,.045);box-shadow:none;text-shadow:none}
 .btn.sm{min-height:44px}
@@ -4543,6 +4606,7 @@ canvas.dunfx{position:absolute;inset:0;width:100%;height:100%;pointer-events:non
 <script src="i18n_crises.js"></script>
 <script src="i18n_bargains.js"></script>
 <script src="i18n_longhouse.js"></script>
+<script src="i18n_expedition.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>
@@ -4567,6 +4631,7 @@ canvas.dunfx{position:absolute;inset:0;width:100%;height:100%;pointer-events:non
 <script src="afflictions.js"></script>
 <script src="crises.js"></script>
 <script src="bargains.js"></script>
+<script src="expedition.js"></script>
 <script src="longhouse.js"></script>
 <script src="ui.js"></script>
 </body>
