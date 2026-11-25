@@ -8,7 +8,7 @@
    - Moving into your homestead is untouched (he lives there and you fetch him there).
    - Old saves that lost him (he followed you once, he isn't with you or at your homestead) get the same road event,
      plus one journal line saying so. Nothing is forced on you: when he finds you, you choose to take him or not.
-   The event only shows while you travel without a follower. */
+   The event only shows while you travel without a pet. Since pets.js he is a pet (s.pet), so he never blocks a follower. */
 var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, pat: [] };
 const MEEKO = (() => {
   const ID = "meeko", DAY = 2 * 3600;                 // one in-game day = 2 real hours
@@ -20,29 +20,29 @@ const MEEKO = (() => {
   const leftAt = (s) => s?.folData?.[ID]?.bond?.leftAt || 0;
 
   const TXT = {
-    dismiss: "Meeko trots off down the road, tail up. He'll find you again when you travel without a follower.",
+    dismiss: "Meeko trots off down the road, tail up. He'll find you again when you travel without a pet.",
     title: "Meeko finds you",
     text: "A familiar bark. Meeko comes bounding down the road, muddy and very pleased with himself, and drops a stick at your feet.",
     take: " \"Good boy. Come on, then.\" (take him along)",
     wave: "Not now, boy",
     took: "Meeko falls in beside you again as if he'd never been gone.",
     waved: "Meeko sniffs your hand, wags his tail and trots off. He'll be around.",
-    busy: "You already have someone with you. Meeko trots off again.",
-    lost: "Meeko got lost on the roads a while back. He's still out there looking for you: travel without a follower and he'll find you.",
-    tab: "Meeko is out on the roads looking for you. Travel without a follower and he'll find you.",
+    busy: "You already have a pet with you. Meeko trots off again.",
+    lost: "Meeko got lost on the roads a while back. He's still out there looking for you: travel without a pet and he'll find you.",
+    tab: "Meeko is out on the roads looking for you. Travel without a pet and he'll find you.",
     sulk: "Meeko is still sulking somewhere out on the roads. Give him a few days.",
   };
   Object.assign(I18N_EXTRA.words, {
-    [TXT.dismiss]: "Meeko odbiega drogą z zadartym ogonem. Znajdzie cię znowu, gdy będziesz podróżować bez towarzysza.",
+    [TXT.dismiss]: "Meeko odbiega drogą z zadartym ogonem. Znajdzie cię znowu, gdy będziesz podróżować bez zwierzaka.",
     [TXT.title]: "Meeko cię znajduje",
     [TXT.text]: "Znajome szczeknięcie. Meeko pędzi drogą, ubłocony i bardzo z siebie zadowolony, i kładzie ci patyk pod nogami.",
     [TXT.take]: " „Dobry piesek. No chodź”. (weź go ze sobą)",
     [TXT.wave]: "Nie teraz, piesku",
     [TXT.took]: "Meeko znowu idzie przy twojej nodze, jakby nigdy nie zniknął.",
     [TXT.waved]: "Meeko obwąchuje ci dłoń, macha ogonem i odbiega. Będzie gdzieś w pobliżu.",
-    [TXT.busy]: "Ktoś już z tobą idzie. Meeko znowu odbiega.",
-    [TXT.lost]: "Meeko jakiś czas temu zgubił się na drogach. Wciąż cię szuka: podróżuj bez towarzysza, a cię znajdzie.",
-    [TXT.tab]: "Meeko jest gdzieś na drogach i cię szuka. Podróżuj bez towarzysza, a cię znajdzie.",
+    [TXT.busy]: "Masz już ze sobą zwierzaka. Meeko znowu odbiega.",
+    [TXT.lost]: "Meeko jakiś czas temu zgubił się na drogach. Wciąż cię szuka: podróżuj bez zwierzaka, a cię znajdzie.",
+    [TXT.tab]: "Meeko jest gdzieś na drogach i cię szuka. Podróżuj bez zwierzaka, a cię znajdzie.",
     [TXT.sulk]: "Meeko wciąż się gdzieś dąsa na drogach. Daj mu kilka dni.",
     // the patch note (b224)
     "Meeko comes back": "Meeko wraca",
@@ -59,19 +59,19 @@ const MEEKO = (() => {
   /* where Meeko is: "with" you, at your "home"stead, "sulking" (walked out under three days ago), "away" (can find you), "never" met */
   function where(s, t = now()) {
     if (!s) return "never";
-    if (s.follower?.id === ID) return "with";
+    if (s.pet?.id === ID || s.follower?.id === ID) return "with";   // a pet now (pets.js); old saves had him as the follower
     if (atHome(s)) return "home";
     if (!s.folData?.[ID] && !flags(s).meekoAway) return "never";
     const l = leftAt(s);
     if (l && t - l < REJOIN_AFTER) return "sulking";
     return "away";
   }
-  const canFind = (s, t = now()) => known() && !s.follower && where(s, t) === "away" && !((flags(s).meekoNext || 0) > t);
+  const canFind = (s, t = now()) => known() && !s.pet && where(s, t) === "away" && !((flags(s).meekoNext || 0) > t);
 
   /* he comes back: same bond and gear as before; a walk-out is forgiven up to 30 loyalty (like rehiring anyone else) */
   function rejoin(s, t = now()) {
-    if (s.follower) return { text: TXT.busy };
-    s.follower = { id: ID, hp: TOWNS.followerMax(s, ID), ts: t };
+    if (s.pet) return { text: TXT.busy };
+    s.pet = { id: ID, hp: typeof PETS !== "undefined" ? PETS.maxHp(s, ID) : TOWNS.followerMax(s, ID), ts: t };   // he's a pet (pets.js): your follower stays
     const f = typeof BONDS !== "undefined" ? BONDS.bond(s, ID) : typeof FOL2 !== "undefined" ? FOL2.st(s, ID) : null;
     if (f) { if (f.bond) delete f.bond.leftAt; f.loyal = Math.max(typeof f.loyal === "number" ? f.loyal : 50, 30); }
     if (typeof BONDS !== "undefined" && BONDS.snap) s.bondSnap = BONDS.snap(s);   // he reacts to what you do from now on, not to everything since he left
@@ -89,8 +89,13 @@ const MEEKO = (() => {
     wave: (s) => { flags(s).meekoNext = now() + WAVE_WAIT; return { text: TXT.waved }; },
   };
 
-  /* one line for the empty Follower tab */
-  function tabLine(s) { const w = known() && !s?.follower ? where(s) : ""; return w === "away" ? TXT.tab : w === "sulking" ? TXT.sulk : ""; }
+  /* he was dismissed from the pet slot: he trots off and finds you again on the road */
+  function sentAway(s) {
+    const fl = flags(s); fl.meekoAway = { t: now(), why: "dismiss" }; fl.meekoRecov = 1; delete fl.meekoNext;
+    return TXT.dismiss;
+  }
+  /* one line for the empty Pet section of the Follower tab */
+  function tabLine(s) { const w = known() && !s?.pet ? where(s) : ""; return w === "away" ? TXT.tab : w === "sulking" ? TXT.sulk : ""; }
 
   /* old saves: he followed you once (his follower data is there), he isn't with you or at home, and he didn't just walk out:
      tell the player once that he's out there. The road event does the rest. */
@@ -123,6 +128,6 @@ const MEEKO = (() => {
     if (typeof G !== "undefined" && G.migrate) { const m0 = G.migrate; G.migrate = (s, ...a) => { const r = m0(s, ...a); try { recover(r || s); } catch (e) { /* never block a load */ } return r; }; }
   }
   install();
-  return { ID, REJOIN_AFTER, WAVE_WAIT, WEIGHT, TXT, EVENT, where, canFind, rejoin, recover, tabLine, install };
+  return { ID, REJOIN_AFTER, WAVE_WAIT, WEIGHT, TXT, EVENT, where, canFind, rejoin, sentAway, recover, tabLine, install };
 })();
 if (typeof module !== "undefined") module.exports = MEEKO;
