@@ -3951,6 +3951,70 @@ body:has(#modal .sheet) #pbanners{top:auto!important;bottom:calc(6px + env(safe-
 .hsp.lock{opacity:.6}
 .hsp-tag{font-family:"Barlow Condensed",sans-serif;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#9fe08a;white-space:nowrap}
 .hsp .btn{flex:0 0 auto;white-space:nowrap}
+/* heists (heists.js): the town card and the heist window, SkyUI style */
+.hz-card{position:relative;border:1px solid rgba(214,178,94,.35);border-radius:8px;overflow:hidden;background:linear-gradient(180deg,rgba(14,16,22,.92),rgba(10,10,12,.96))}
+.hz-scene{position:relative;height:92px;background:radial-gradient(ellipse at 78% 30%,rgba(160,180,220,.22),transparent 40%),linear-gradient(180deg,#141b2c 0%,#1c2333 55%,#0d0f14 100%);border-bottom:1px solid rgba(214,178,94,.25)}
+.hz-moon{position:absolute;right:16%;top:14px;width:22px;height:22px;border-radius:50%;background:#e8e2cc;box-shadow:0 0 18px 4px rgba(232,226,204,.35)}
+.hz-roofs{position:absolute;left:0;right:0;bottom:0;height:54px;background:linear-gradient(135deg,transparent 49%,#07080b 50%) 0 0/46px 30px repeat-x,linear-gradient(225deg,transparent 49%,#07080b 50%) 23px 0/46px 30px repeat-x;opacity:.95}
+.hz-roofs::after{content:"";position:absolute;left:0;right:0;top:28px;bottom:0;background:#07080b}
+.hz-win{position:absolute;left:38%;bottom:12px;width:9px;height:12px;background:#f0b85a;box-shadow:0 0 10px 2px rgba(240,184,90,.55),26px -6px 0 0 #f0b85a,96px 2px 0 0 rgba(240,184,90,.7);z-index:1}
+.hz-head{display:flex;align-items:center;gap:8px;padding:10px 12px 0}
+.hz-head h3{flex:1;min-width:0;margin:0;font-family:"Cinzel",serif;font-size:1.08em;letter-spacing:.05em;color:#efe4c6}
+.hz-tier{flex:0 0 auto;font-family:"Barlow Condensed",sans-serif;font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border:1px solid rgba(214,178,94,.45);border-radius:3px;color:#e8c46a}
+.hz-tier.t3,.hz-tier.t4{color:#f08a72;border-color:rgba(240,138,114,.5)}
+.hz-blurb{margin:6px 12px 8px;font-size:var(--fs-sm,14px);line-height:1.4;color:#cfc4ab}
+.hz-card .hz-prize{margin:0 12px 8px}
+.hz-why{margin:0 12px 6px}
+.hz-btns{display:flex;flex-wrap:wrap;gap:6px;padding:0 12px 12px}
+.hz-btns .btn{flex:1 1 auto}
+.hz-vote .hz-btns{padding:0}
+.hz-stats{display:flex;flex-wrap:wrap;gap:4px 12px;padding:8px 12px;border-top:1px solid rgba(255,255,255,.06);font-size:var(--fs-xs,12px);color:var(--mute);text-transform:uppercase;letter-spacing:.05em}
+.hz-stats b{color:var(--ink);margin-left:3px}
+.hz-modal{text-align:left;min-width:0}
+.hz-top h2{font-family:"Cinzel",serif;letter-spacing:.06em;margin:0 0 2px;padding-bottom:6px;border-bottom:1px solid rgba(214,178,94,.35)}
+.hz-track{display:flex;gap:3px;list-style:none;margin:10px 0 8px;padding:0}
+.hz-track li{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:5px 2px;border-bottom:2px solid rgba(255,255,255,.08);color:var(--mute)}
+.hz-track .d{width:22px;height:22px;display:grid;place-items:center;border:1px solid rgba(214,178,94,.35);border-radius:50%;font-size:12px;background:rgba(0,0,0,.3)}
+.hz-track b{font-family:"Barlow Condensed",sans-serif;font-weight:500;font-size:12px;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.hz-track li.done{color:#b9ae90;border-bottom-color:rgba(214,178,94,.45)}
+.hz-track li.done .d{color:#9fe08a}
+.hz-track li.on{color:#efe4c6;border-bottom-color:#e8c46a}
+.hz-track li.on .d{border-color:#e8c46a;color:#e8c46a;box-shadow:0 0 8px rgba(232,196,106,.35)}
+.hz-heat{display:grid;grid-template-columns:auto 1fr 2.4em;align-items:center;gap:8px;padding:7px 10px;border:1px solid rgba(255,255,255,.08);border-radius:6px;background:rgba(8,9,11,.55);font-size:var(--fs-xs,12px)}
+.hz-heat .l{text-transform:uppercase;letter-spacing:.06em;color:var(--mute);white-space:nowrap}
+.hz-heat .bar{position:relative;height:7px;border-radius:2px;background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px rgba(0,0,0,.5);overflow:hidden}
+.hz-heat .bar i{position:absolute;left:0;top:0;bottom:0;background:#8fb36a;transition:width .3s}
+.hz-heat.warm .bar i{background:#e2a24a}
+.hz-heat.alarm{border-color:rgba(214,90,74,.6);background:rgba(60,14,10,.6)}
+.hz-heat.alarm .l{color:#f08a72}
+.hz-heat.alarm .bar i{background:#d65a4a}
+.hz-heat .v{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink)}
+.hz-say{margin:10px 0;padding:8px 10px;border-left:2px solid rgba(214,178,94,.45);background:rgba(0,0,0,.25);font-size:var(--fs-sm,14px);line-height:1.45;color:#e2d8bf}
+.hz-opts{display:flex;flex-direction:column;gap:5px;margin-top:6px}
+.hz-opt{display:flex;align-items:center;gap:10px;width:100%;min-height:48px;padding:7px 10px;text-align:left;color:var(--ink);font:inherit;background:linear-gradient(90deg,rgba(30,32,38,.9),rgba(18,19,23,.9));border:1px solid rgba(255,255,255,.08);border-left:3px solid rgba(214,178,94,.3);border-radius:4px;cursor:pointer}
+.hz-opt:hover:not([disabled]),.hz-opt:focus-visible{border-left-color:#e8c46a;background:linear-gradient(90deg,rgba(232,196,106,.14),rgba(18,19,23,.9));outline:none}
+.hz-opt[disabled]{opacity:.5;cursor:default}
+.hz-opt.pri{border-left-color:#e8c46a}
+.hz-opt.danger{border-left-color:rgba(214,90,74,.7)}
+.hz-opt.mine{box-shadow:inset 0 0 0 1px rgba(232,196,106,.7)}
+.hz-opt .i{flex:0 0 28px;height:28px;display:grid;place-items:center;font-size:16px;color:#e8c46a;border:1px solid rgba(214,178,94,.4);border-radius:50%;background:rgba(0,0,0,.3)}
+.hz-opt.danger .i{color:#f08a72;border-color:rgba(240,138,114,.45)}
+.hz-opt .t{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
+.hz-opt .t b{font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:15px;letter-spacing:.04em;text-transform:uppercase;color:#efe4c6}
+.hz-opt .t small{font-size:12.5px;line-height:1.3;color:#b9ae90}
+.hz-ch{flex:0 0 auto;min-width:3.2em;text-align:center;padding:2px 6px;border-radius:3px;font-variant-numeric:tabular-nums;font-size:13px;border:1px solid currentColor}
+.hz-ch.hi{color:#9fe08a}.hz-ch.mid{color:#e8c46a}.hz-ch.lo{color:#f08a72}
+.hz-votes{flex:0 0 auto;min-width:1.8em;text-align:center;padding:2px 5px;border-radius:10px;background:rgba(232,196,106,.18);color:#ffe6a0;font-size:12px}
+.hz-vote{margin:8px 0;padding:8px 10px;border:1px solid rgba(214,178,94,.35);border-radius:6px;background:rgba(40,32,14,.45)}
+.hz-vote p{margin:0 0 6px}
+.hz-end h2{font-family:"Cinzel",serif;letter-spacing:.06em;margin:0 0 2px}
+.hz-end.ok h2{color:#9fe08a}.hz-end.warn h2{color:#e8c46a}.hz-end.bad h2{color:#f08a72}
+.hz-sum{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;margin:8px 0 12px;padding:8px 10px;border:1px solid rgba(255,255,255,.08);border-radius:6px;background:rgba(8,9,11,.55)}
+.hz-sum div{display:flex;justify-content:space-between;gap:6px;min-width:0;font-size:var(--fs-sm,14px)}
+.hz-sum span{color:var(--mute);white-space:nowrap}
+.hz-sum b{color:var(--ink);text-align:right;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:420px){.hz-track b{font-size:10.5px;letter-spacing:.02em}.hz-sum{grid-template-columns:1fr}.hz-opt .t b{font-size:14px}}
+@media (min-width:900px){.sheet.hz{max-width:560px}}
 /* stables polish: the horse's painted portrait in a SkyUI-style frame, the bond bar says what it measures */
 .hhead{display:flex;gap:12px;align-items:stretch}
 .hport{flex:none;width:128px;height:128px;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;position:relative;border:1px solid rgba(214,178,94,.38);background:radial-gradient(ellipse at 50% 85%,rgba(226,187,100,.16),transparent 62%),linear-gradient(180deg,rgba(255,255,255,.04),rgba(0,0,0,.42));box-shadow:inset 0 0 0 1px rgba(0,0,0,.6),inset 0 -18px 24px -14px rgba(0,0,0,.7)}
@@ -4193,6 +4257,7 @@ body:has(#modal .sheet) #pbanners{top:auto!important;bottom:calc(6px + env(safe-
 <script src="desktop.js"></script>
 <script src="pcupdate.js"></script>
 <script src="treasure.js"></script>
+<script src="heists.js"></script>
 <script src="chargebar.js"></script>
 <script src="i18n_story.js"></script>
 <script src="i18n_beast.js"></script>
@@ -4257,6 +4322,7 @@ body:has(#modal .sheet) #pbanners{top:auto!important;bottom:calc(6px + env(safe-
 <script src="i18n_eventart.js"></script>
 <script src="i18n_assetquality.js"></script>
 <script src="i18n_treasure.js"></script>
+<script src="i18n_heists.js"></script>
 <script src="i18n_chargen.js"></script>
 <script src="i18n_gore.js"></script>
 <script src="i18n_appicon.js"></script>
