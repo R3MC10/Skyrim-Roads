@@ -39,6 +39,15 @@ async def main():
             card = await pg.evaluate("document.querySelector('.rshow')?.innerText||''")
             ok(len(card) > 80, f"{tag}: race card for {race} has lore, gift and power ({len(card)} chars)")
             ok(await pg.evaluate("!!document.querySelector('.rshow .heroprev img')"), f"{tag}: race card portrait")
+            # [chargenrig] the preview is the painted fight figure (chargenrig.js) once its parts load, in every pose
+            try: await pg.wait_for_function("document.querySelector('.cg').classList.contains('cg-painted')", timeout=30000)
+            except Exception: pass
+            ok(await pg.evaluate("document.querySelector('.cg').classList.contains('cg-painted')"), f"{tag}: preview uses the painted fight figure")
+            ok(await pg.evaluate("!!document.querySelector('.rshow .bust-hero')"), f"{tag}: race card shows the painted bust")
+            for pose in ["walk", "attack", "idle"]:
+                await pg.click(f"[data-cg=pose][data-pose={pose}]"); await pg.wait_for_timeout(300)
+                ink = await pg.evaluate(INK)
+                ok(ink > 0.01 and await pg.evaluate("document.querySelector('.cg').classList.contains('cg-painted')"), f"{tag}: painted {pose} pose draws ({ink:.3f})")
             for t in TABS:
                 await pg.click(f".cgtab[data-tab={t}]"); await pg.wait_for_timeout(250)
                 ok(await pg.evaluate(f"document.querySelector('.cgtab[data-tab={t}]').getAttribute('aria-selected')") == "true", f"{tag}: {t} tab selected")

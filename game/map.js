@@ -801,12 +801,24 @@ const WorldMap = (() => {
       g.beginPath(); g.moveTo(fx, fy); path.forEach((p) => g.lineTo(...P(p))); g.stroke(); g.setLineDash([]);
       const [ex, ey] = P(path[path.length - 1] || r.from); g.fillStyle = "#cde0ff"; g.strokeStyle = "#13243a"; g.lineWidth = 2 * s; g.beginPath(); g.arc(ex, ey, 4.5 * s, 0, 7); g.fill(); g.stroke();
     }
-    if (v.zoom >= 1.3) for (const h of v.herbs || []) {   // plant patches you've spotted (gather.js): green leaf ripe, grey picked
-      const [x, y] = P(h.pos), r = 5.4 * s;
-      g.fillStyle = h.ripe ? "#6fb04a" : "#7d7a6e"; g.strokeStyle = "#16210c"; g.lineWidth = 1.2 * s;
-      g.beginPath(); g.moveTo(x, y - r * 1.3); g.quadraticCurveTo(x + r * 1.2, y - r * 0.2, x, y + r); g.quadraticCurveTo(x - r * 1.2, y - r * 0.2, x, y - r * 1.3); g.fill(); g.stroke();
-      g.beginPath(); g.moveTo(x, y - r); g.lineTo(x, y + r * 0.8); g.strokeStyle = h.ripe ? "#2e5a1c" : "#4a483f"; g.lineWidth = 0.8 * s; g.stroke();
-      if (v.zoom >= 2.6) smartLabel(h.label, x, y - r * 1.4, 10, h.ripe ? "#d8f0c0" : "#c8c4b4");
+    if (v.herbRange) {   // how close you must be to gather (gather.js REACH_PX): a soft dashed ring while a ripe patch is near
+      const [cx, cy] = P(v.herbRange.pos), [ex] = P([v.herbRange.pos[0] + v.herbRange.r, v.herbRange.pos[1]]), R = Math.abs(ex - cx);
+      if (R > 6) { g.setLineDash([4 * s, 5 * s]); g.strokeStyle = "rgba(170,220,130,.75)"; g.lineWidth = 1.6 * s; g.beginPath(); g.arc(cx, cy, R, 0, 7); g.stroke(); g.setLineDash([]); g.fillStyle = "rgba(140,200,100,.07)"; g.fill(); }
+    }
+    if (v.zoom >= 1) for (const h of v.herbs || []) {   // plant patches you've spotted (gather.js): a painted plant per kind (harvest.js), or a leaf tinted by kind; faded when picked
+      const [x, y] = P(h.pos), r = 5.4 * s * (v.zoom >= 1.3 ? 1 : 0.8), col = (typeof HARVEST !== "undefined" && HARVEST.KINDS[h.kind]?.color) || "#6fb04a";
+      const pic = typeof ASSETS !== "undefined" && v.zoom >= 1.3 ? ASSETS.img("harvest-" + (h.kind === "clam" ? "egg" : h.kind || "flower")) : null;
+      g.globalAlpha = h.ripe ? 1 : 0.5;
+      g.fillStyle = "rgba(20,16,8,.55)"; g.beginPath(); g.arc(x, y, r * 1.55, 0, 7); g.fill();
+      g.strokeStyle = h.ripe ? col : "#7d7a6e"; g.lineWidth = 1.4 * s; g.stroke();
+      if (pic && h.kind !== "clam") g.drawImage(pic, x - r * 1.45, y - r * 1.5, r * 2.9, r * 2.9);
+      else {
+        g.fillStyle = h.ripe ? col : "#7d7a6e"; g.strokeStyle = "#16210c"; g.lineWidth = 1 * s;
+        g.beginPath(); g.moveTo(x, y - r * 1.1); g.quadraticCurveTo(x + r, y - r * 0.15, x, y + r * 0.85); g.quadraticCurveTo(x - r, y - r * 0.15, x, y - r * 1.1); g.fill(); g.stroke();
+        g.beginPath(); g.moveTo(x, y - r * 0.8); g.lineTo(x, y + r * 0.7); g.strokeStyle = "rgba(20,30,10,.7)"; g.lineWidth = 0.8 * s; g.stroke();
+      }
+      g.globalAlpha = 1;
+      if (v.zoom >= 2.6) smartLabel(h.label, x, y - r * 1.7, 10, h.ripe ? "#d8f0c0" : "#c8c4b4");
     }
     for (const m of v.tmaps || []) {   // treasure maps: a red X
       const [x, y] = P(m.pos), r = 7 * s;
@@ -882,8 +894,10 @@ const WorldMap = (() => {
       if (CL.skip.has(c)) continue;   // in a cluster pin
       const [cx, cy] = P(c.pos), bob2 = c.moving && !v.reduceMotion ? Math.sin(v.t * 6 + cx) * 0.8 * s : 0;
       if (c.near) { const pu = v.reduceMotion ? 0.5 : (Math.sin(v.t * 4) + 1) / 2; g.strokeStyle = `rgba(255,224,138,${0.45 + 0.4 * pu})`; g.lineWidth = 2.2 * s; g.beginPath(); g.arc(cx, cy - 10 * s, (20 + 4 * pu) * s, 0, 7); g.stroke(); }   // close enough to hail: tap the wagons (caravanroad.js)
+      if ((c.hover || c.open) && !c.near) { g.fillStyle = "rgba(255,236,180,.16)"; g.strokeStyle = "rgba(255,236,180,.85)"; g.lineWidth = 1.6 * s; g.beginPath(); g.arc(cx, cy - 10 * s, 22 * s, 0, 7); g.fill(); g.stroke(); }   // under the mouse / its card is open (wagons.js)
       g.drawImage(sp, cx - 21 * s, cy - 25 * s + bob2, 42 * s, 30 * s);
-      if (v.zoom >= 1.5 || c.near) tidyLabel(g, c.near ? `${c.label} · tap to meet` : c.label, cx, cy + 12 * s, s, 11, c.mine || c.near ? "#ffe6a0" : "#f3e7c4", 700, true, !!(c.near || c.mine));
+      if (c.trouble) { const bx = cx + 15 * s, by = cy - 26 * s; g.fillStyle = c.trouble === "attacked" ? "#b8322a" : "#c98a2a"; g.strokeStyle = "#1a1206"; g.lineWidth = 1.4 * s; g.beginPath(); g.arc(bx, by, 6.5 * s, 0, 7); g.fill(); g.stroke(); g.fillStyle = "#fff6dc"; g.font = `800 ${Math.round(9 * s)}px system-ui, sans-serif`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("!", bx, by + 0.5 * s); }   // broken down or under attack (wagons.js)
+      if (v.zoom >= 1.5 || c.near || c.hover) tidyLabel(g, c.near ? `${LX(c.label)} · ${LX("tap to meet")}` : LX(c.label), cx, cy + 12 * s, s, 11, c.mine || c.near || c.hover ? "#ffe6a0" : "#f3e7c4", 700, true, !!(c.near || c.mine || c.hover));
     }
     if (v.guards && typeof GUARDS !== "undefined") GUARDS.drawMap(g, CL.skip.size ? v.guards.filter((q) => !CL.skip.has(q)) : v.guards, P, s, v.t, v.reduceMotion, v.zoom, tidyLabel);   // hold guards on patrol (guards.js)
     for (const pin of CL.pins) drawCluster(g, pin, s, boxes);
