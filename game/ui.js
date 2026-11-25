@@ -891,7 +891,7 @@
     followParty(); ppUI?.tick(); checkAmbush(); renderRaid(); soundTick();
     if (S.tut?.step > 0 && TUT[S.tut.step]?.done()) bump();
     if (Math.floor(t) % 5 === 0) { checkAch(); bloodTick(); }
-    if (Math.floor(t) % 3 === 0) { const qm = QUESTS.check(S); if (qm.length) { persist(true); showMessage("Quest", qm.join(" ")); } }
+    if (Math.floor(t) % 3 === 0 && !$("#modal")) { const qm = QUESTS.check(S); if (qm.length) { persist(true); showMessage("Quest", qm.join(" ")); } }   // a quest popup waits for an open window (a road encounter's choices) to close instead of replacing it
     if (Math.floor(t) % 30 === 0) { publishCard(false); publishHome(); publishClan(); }
     if (Math.floor(t) % 60 === 0) BACKUP.autoSave(S);
     renderTop(); renderVitals(); renderTrip(); renderGatherNear(); renderTabs(); hudCompass();

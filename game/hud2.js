@@ -213,6 +213,7 @@ const HUD2 = (() => {
         }
       }
     }
+    const hb = $("#vitals .hbars"); if (shown(hb)) blockers.push(hb.getBoundingClientRect());   // the health/magicka/stamina bars (a full one is faded out but comes back)
     const i = freeSlot(base, size, 58, 5, blockers, safeTop() + 60);
     b.style.bottom = Math.round(baseBottom + i * 58) + "px";
   }
