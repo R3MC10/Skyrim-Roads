@@ -14,6 +14,7 @@ def free_port():
             except OSError: pass
     raise SystemExit("no free port in 9600-9699")
 
+QA = "&assets" if os.environ.get("ASSETS") else ""   # ASSETS=1: load the painted art too
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 and sys.argv[1] != "0" else free_port()
 # found a company, fill the treasury, build rooms, hang trophies, set a plan, add two members
 SETUP = """async () => {
@@ -68,7 +69,7 @@ async def main():
                     await clear(); await pg.evaluate("() => window.__ui.go('social')"); await pg.wait_for_timeout(400)
                     await tap("[data-act=soctab][data-id=company]"); await pg.wait_for_timeout(500)
                 for _ in range(3):
-                    await pg.goto(f"http://localhost:{PORT}/index.html?notut&p=lng{tag}")
+                    await pg.goto(f"http://localhost:{PORT}/index.html?notut&p=lng{tag}{QA}")
                     try: await pg.wait_for_selector(".press", timeout=10000); break
                     except Exception: print(tag, "title screen didn't come up, reloading")
                 await pg.wait_for_timeout(800)
@@ -98,6 +99,17 @@ async def main():
                 txt = await pg.evaluate("document.querySelector('#lng-root')?.textContent || ''")
                 if pl: check("Dziennik" in txt and "Rooms" not in txt and "Treasury" not in txt, f"{tag}: Polish screen")
                 await tap("[data-lng=tab][data-id=rooms]"); await pg.wait_for_timeout(300)
+                if QA:
+                    await pg.wait_for_timeout(1500); await company(); await tap("[data-lng=tab][data-id=rooms]"); await pg.wait_for_timeout(500)
+                    check(await pg.evaluate("!!document.querySelector('#lng-root .lng-view svg') && !!document.querySelector('#lng-root .lng-banner img.lng-paint')"), f"{tag}: the painted hall and banner")
+                    el = await pg.query_selector("#lng-root .lng-view")
+                    if el: await el.screenshot(path=os.path.join(OUT, f"longhouse_{tag}_hall.png"))
+                    # every room at level 3, then nothing built: the overlays change with the rooms
+                    for nm, lv in [("hall_max", 3), ("hall_none", 0)]:
+                        await pg.evaluate("(lv) => { const v = document.querySelector('#lng-root .lng-view'); const R = {}; for (const r of LONGHOUSE.ROOM_IDS) R[r] = lv; v.outerHTML = LONGHOUSE.hallView({ rooms: R }); }", lv)
+                        await pg.wait_for_timeout(300); el = await pg.query_selector("#lng-root .lng-view")
+                        if el: await el.screenshot(path=os.path.join(OUT, f"longhouse_{tag}_{nm}.png"))
+                    await company(); await tap("[data-lng=tab][data-id=rooms]"); await pg.wait_for_timeout(300)
                 await pg.evaluate("scrollTo(0, 0)"); await shot("screen", True)
                 await ctx.close()
             await b.close()

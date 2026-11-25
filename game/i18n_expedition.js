@@ -3,6 +3,13 @@
    the exact lines also go to I18N_EXTRA.words so the screen translator knows them. */
 var I18N_EXPEDITION = (() => {
   const TPL = {
+    // ---- the patch note (b224)
+    "Painted company art": "Malowane obrazy kompanii",
+    "The Company screen opens with a painted banner of your longhouse at dusk, with the name in clear light letters.": "Ekran kompanii otwiera malowany baner z twoim długim domem o zmierzchu, a nazwa jest napisana jasnymi, czytelnymi literami.",
+    "The Rooms tab shows your longhouse, and it changes as you build: the library lights more windows, the forge makes the doorway glow, the trophy hall hangs antlers and shields, the stables add lanterns and the planning table puts up company banners.": "Zakładka Sale pokazuje twój długi dom, który zmienia się, gdy budujesz: biblioteka zapala więcej okien, kuźnia rozjaśnia drzwi, sala trofeów wiesza poroże i tarcze, stajnie dodają latarnie, a stół narad stawia sztandary kompanii.",
+    "The Expedition Table now sits on a painted war table lit by candles. Each offer has its own painting, a clear risk colour (green, amber or red), the reward and how long it takes, with the step list under Details.": "Stół wypraw leży teraz na malowanym stole narad oświetlonym świecami. Każda oferta ma swój obraz, wyraźny kolor ryzyka (zielony, żółty albo czerwony), nagrodę i czas trwania, a lista kroków jest pod Szczegółami.",
+    "In a party vote, small portraits on each expedition card show who voted for it.": "Podczas głosowania drużyny małe portrety na każdej karcie wyprawy pokazują, kto na nią głosował.",
+    "The six Daedric artifacts have painted pictures on their cards and on the contract that rewards them.": "Sześć artefaktów daedrycznych ma malowane obrazki na swoich kartach i na kontrakcie, który je daje.",
     // ---- the table
     "Expeditions": "Wyprawy",
     "The Expedition Table": "Stół wypraw",
@@ -12,6 +19,7 @@ var I18N_EXPEDITION = (() => {
     "about 15 minutes": "około 15 minut", "about 25 minutes": "około 25 minut", "40 minutes or more": "40 minut lub więcej",
     "You're on it": "W drodze", "Build the planning table to open this one.": "Zbuduj stół narad, żeby otworzyć tę wyprawę.",
     "Set out": "Wyrusz", "best from level {n}": "najlepiej od poziomu {n}", "gold": "złota", "+{n} renown": "+{n} sławy", "renown": "sławy",
+    "Low risk": "Małe ryzyko", "Some risk": "Średnie ryzyko", "High risk": "Duże ryzyko", "Details": "Szczegóły", "Votes": "Głosy", "Your party's pick": "Wybór drużyny",
     "Look around": "Rozejrzyj się", "Your leader looks around; you'll vote on what to do.": "Przywódca się rozgląda; zagłosujecie, co robić.",
     "Give it up": "Porzuć", "Giving up costs nothing.": "Porzucenie nic nie kosztuje.",
     "This week's goal": "Cel tygodnia",

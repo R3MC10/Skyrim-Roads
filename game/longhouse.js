@@ -411,13 +411,52 @@ const LONGHOUSE = (() => {
     if (e.k === "sum") return T("Older gold and materials, added up ({n} gold)", { n: e.g || 0 });
     return "";
   }
+  /* painted art (assets.js): the file's URL once it has loaded, else the older picture */
+  const pic = (k, fb) => { try { return (typeof ASSETS !== "undefined" && ASSETS.url(k)) || fb; } catch { return fb; } };
+  const bannerImg = () => { const u = pic("longhouse-banner", ""); return `<img src="${u || "shop-hall.webp"}" alt="" loading="lazy"${u ? ' class="lng-paint"' : ""}>`; };
+  /* the longhouse itself (longhouse-plate), with light painted over it for every room the company has built.
+     Spots are in the plate's own 1024x576 frame: windows, the door, the gable, the fence posts. */
+  const WIN = [[587, 343], [676, 343], [747, 343], [866, 343]];
+  function hallView(x) {
+    const u = pic("longhouse-plate", ""); if (!u) return "";
+    const R = x.rooms || {}, f = R.forge || 0, lib = R.library || 0, tr = R.trophy || 0, st = R.stables || 0, pl = R.plan || 0;
+    const glow = (cx, cy, rx, ry, o, c = "lngW") => `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="url(#${c})" opacity="${o.toFixed(2)}"/>`;
+    let g = "";
+    // library: more windows lit (the rest shuttered), and their light spills out
+    const lit = Math.min(4, 1 + lib);
+    WIN.forEach(([cx, cy], i) => {
+      if (i >= lit) g += `<g class="lng-shut"><rect x="${cx - 13}" y="${cy - 14}" width="26" height="29" rx="2" fill="#17131a" opacity=".9"/><path d="M${cx - 13} ${cy - 5}h26M${cx - 13} ${cy + 5}h26" stroke="#3a2c22" stroke-width="2"/></g>`;
+      else if (lib) g += glow(cx, cy + 4, 34 + 6 * lib, 26 + 4 * lib, 0.3 + 0.15 * lib);
+    });
+    // forge: the doorway burns brighter (cold and dim until it's built), embers above the smoke hole
+    g += f ? glow(360, 372, 70 + 25 * f, 46 + 12 * f, 0.25 + 0.17 * f, "lngF") : `<ellipse cx="360" cy="368" rx="44" ry="44" fill="#0c0a10" opacity=".5"/>`;
+    if (f >= 2) g += [[505, 178, 3], [520, 160, 2.4], [498, 146, 2], [530, 132, 1.8], [512, 118, 1.5]].slice(0, f === 3 ? 5 : 3).map(([cx, cy, r]) => `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#ffb347" opacity=".85"/>`).join("") + glow(510, 190, 30, 18, 0.35, "lngF");
+    // trophy hall: an antlered skull on the gable, then shields on the wall
+    if (tr) g += `<g class="lng-trophy" transform="translate(358 270)"><path d="M-6 0c-10-6-14-16-12-26M-12-16l-8-4M-14-24l-6-8M6 0c10-6 14-16 12-26M12-16l8-4M14-24l6-8" stroke="#efe2c4" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M-7-2h14l-2 14-5 6-5-6z" fill="#e9dcc0"/><circle cx="-3" cy="4" r="1.6" fill="#2a2018"/><circle cx="3" cy="4" r="1.6" fill="#2a2018"/></g>`;
+    const shield = (cx, cy, c) => `<g transform="translate(${cx} ${cy})"><circle r="11" fill="${c}" stroke="#c9a45a" stroke-width="2.2"/><circle r="3" fill="#c9a45a"/></g>`;
+    if (tr >= 2) g += shield(632, 352, "#7a2a22") + shield(806, 352, "#22406a");
+    if (tr >= 3) g += shield(711, 320, "#2f5a34") + glow(711, 335, 120, 40, 0.18);
+    // stables: a lantern by the fence, then a second one, then a horseshoe over the door
+    if (st) g += glow(905, 372, 34 + 8 * st, 30 + 6 * st, 0.4 + 0.12 * st) + `<rect x="900" y="364" width="10" height="13" rx="2" fill="#ffd27a"/>`;
+    if (st >= 2) g += glow(66, 372, 40, 32, 0.55) + `<rect x="61" y="364" width="10" height="13" rx="2" fill="#ffd27a"/>`;
+    if (st >= 3) g += `<path d="M350 300a10 10 0 1 1 20 0" fill="none" stroke="#d8c7a0" stroke-width="4" stroke-linecap="round" transform="rotate(180 360 300)"/>`;
+    // planning table: company banners by the door, then a pennant on the dragon head
+    const flag = (px) => `<g transform="translate(${px} 300)"><path d="M0 0v112" stroke="#3b2a1c" stroke-width="3"/><path d="M2 4h26v40l-13-8-13 8z" fill="#8e2a22" stroke="#d6b25e" stroke-width="1.5"/><path d="M15 14l5 7-5 7-5-7z" fill="#d6b25e"/></g>`;
+    if (pl) g += flag(196);
+    if (pl >= 2) g += flag(496);
+    if (pl >= 3) g += `<path d="M846 186v-34l28 9-28 9" fill="#8e2a22" stroke="#d6b25e" stroke-width="1.5"/>`;
+    return `<div class="lng-view"><img src="${u}" alt="${T("Your longhouse")}" loading="lazy"><svg viewBox="0 0 1024 576" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs><radialGradient id="lngW"><stop offset="0" stop-color="#ffcf7a" stop-opacity=".95"/><stop offset="1" stop-color="#ff9a3c" stop-opacity="0"/></radialGradient>
+      <radialGradient id="lngF"><stop offset="0" stop-color="#ffb04a" stop-opacity="1"/><stop offset=".6" stop-color="#ff6a1f" stop-opacity=".35"/><stop offset="1" stop-color="#ff5a10" stop-opacity="0"/></radialGradient></defs>${g}</svg>
+      <p class="lng-vcap">${T("Every room you build shows on the hall.")}</p></div>`;
+  }
   function banner(d, x) {
-    return `<div class="lng-banner"><img src="shop-hall.webp" alt="" loading="lazy"><div class="lng-bt"><div class="lng-name">${esc(d.name)}</div>
+    return `<div class="lng-banner">${bannerImg()}<div class="lng-bt"><div class="lng-name">${esc(d.name)}</div>
       <div class="lng-sub">${T("Longhouse in {place}", { place: esc(d.site || "?") })} · ${T("{n} of {m} players", { n: x.n, m: MAXM })}</div>
       <div class="lng-purse"> ${x.gold} ${T("gold in the treasury")}</div></div></div>`;
   }
   function roomsHTML(S, d, x) {
-    return `<div class="lng-rooms">${ROOM_IDS.map((r) => {
+    return `${hallView(x)}<div class="lng-rooms">${ROOM_IDS.map((r) => {
       const R = ROOMS[r], lv = x.rooms[r], c = lv < 3 ? costOf(r, lv + 1, x.n, S) : null;
       const okG = c && x.gold >= c.g, okM = c && Object.entries(c.m).every(([k, q]) => (x.mats[k] || 0) >= q), may = can(d, S.id, "build");
       return `<div class="lng-room${lv ? " built" : ""}"><div class="lng-rh"><span class="lng-ic">${R.icon}</span><b>${T(R.name)}</b>${pips(lv)}</div>
@@ -483,7 +522,7 @@ const LONGHOUSE = (() => {
   }
   function outsideHTML(S) {
     const inv = invitesFor(S), c = foundCost(S);
-    return `<div class="lng-banner"><img src="shop-hall.webp" alt="" loading="lazy"><div class="lng-bt"><div class="lng-name">${T("Adventuring company")}</div><div class="lng-sub">${T("A longhouse for you and your friends")}</div></div></div>
+    return `<div class="lng-banner">${bannerImg()}<div class="lng-bt"><div class="lng-name">${T("Adventuring company")}</div><div class="lng-sub">${T("A longhouse for you and your friends")}</div></div></div>
       ${inv.length ? `<h3>${T("Invitations")}</h3>${inv.map((d) => `<div class="item on"><div class="t">${esc(d.name)}<span>${T("{who} invites you · {n} of {m} players", { who: esc(d.invites[S.id].by), n: countOf(d), m: MAXM })}</span></div><div class="fbtns"><button class="btn sm pri" data-lng="join" data-id="${esc(d.id)}">${T("Join")}</button><button class="btn sm" data-lng="decline" data-id="${esc(d.id)}">${T("No thanks")}</button></div></div>`).join("")}` : ""}
       <p class="sub">${T("Found a company with your party or your friends (up to 8 players). Share a treasury, then build a forge, a library, a trophy hall, stables and a planning table that help every member.")}</p>
       <h3>${T("Found a longhouse")}</h3>
@@ -548,6 +587,6 @@ const LONGHOUSE = (() => {
   return { COL, MAXM, FOUND, ROOMS, ROOM_IDS, PLANS, FAMS, LEG, SLOTS, MATS, sizeMult, costOf, foundCost, famOf, trophyInfo, trophyHits,
     setDocs, mine, derive, can, capOf, takenToday, fold, found, deposit, withdraw, giveMat, build, setPlan, invite, invitesFor, join, decline, leave,
     setRole, setPerm, rename, badge: (s) => (s ? invitesFor(s).length : 0), addTrophy, onFight, pollTrophies, pfx, xpMult, horseMult, horseCarry, onBook, runeOpen, hook, panel, mount,
-    _api: (a) => { api = a; }, _tab: (t) => { tab = t; } };
+    hallView, _api: (a) => { api = a; }, _tab: (t) => { tab = t; } };
 })();
 if (typeof module !== "undefined") module.exports = LONGHOUSE;

@@ -15,6 +15,7 @@ def free_port():
             except OSError: pass
     raise SystemExit("no free port in 9600-9699")
 
+QA = "&assets" if os.environ.get("ASSETS") else ""   # ASSETS=1: load the painted art too
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 and sys.argv[1] != "0" else free_port()
 HERO = """() => { document.querySelectorAll('#modal').forEach(m=>m.remove());
   const S = window.__dbg.save(); S.level = 22; S._test = true; S.gold = 900; G.setHealth(S, G.maxHealth(S)); S.dungeon = null;
@@ -56,11 +57,12 @@ async def main():
                     shots.append(path)
                     if el: await pg.evaluate(UNHIDE)
                 for _ in range(3):
-                    await pg.goto(f"http://127.0.0.1:{PORT}/index.html?notut&p=dbg{tag}")
+                    await pg.goto(f"http://127.0.0.1:{PORT}/index.html?notut&p=dbg{tag}{QA}")
                     try: await pg.wait_for_selector(".press", timeout=10000); break
                     except Exception: print(tag, "title screen didn't come up, reloading")
                 await pg.wait_for_timeout(800)
                 await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Hrodny"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
+                await pg.wait_for_function("() => !!window.__dbg?.save?.()", timeout=20000)   # painted art (?assets) can make the start slower
                 await pg.evaluate(HERO)
                 # 1. the shrine on the road
                 for _ in range(4):   # other game popups (quests, news) can land on top: try again until ours is the one showing
@@ -97,7 +99,7 @@ async def main():
                     check(await pg.evaluate("!!document.querySelector('#side [data-act=dbgasc][data-id=hircine]')"), f"{tag}: Ascend button on the ready artifact")
                     ov = await pg.evaluate("[...document.querySelectorAll('#side details[data-m2f=bargains] *')].filter(e => e.getBoundingClientRect().right > innerWidth + 1).map(e => e.className).slice(0, 5)")
                     check(ov == [], f"{tag}: nothing spills off the screen {ov}")
-                    await shot("fold", fold)
+                    await pg.wait_for_timeout(800); await shot("fold", await pg.query_selector("#side details[data-m2f=bargains]"))
                     await pg.evaluate("document.querySelector('#side [data-act=dbgasc][data-id=hircine]').scrollIntoView({block:'center'})")
                     await shot("screen")
                     await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove()); document.querySelector('#side [data-act=dbgasc][data-id=hircine]').click()"); await pg.wait_for_timeout(900)
@@ -107,7 +109,7 @@ async def main():
                     await pg.evaluate(OPEN); await pg.wait_for_timeout(400)
                     check(await pg.evaluate("!!document.querySelector('#side [data-act=dbgsleep][data-id=hircine]')"), f"{tag}: Let it sleep after ascending")
                     fold = await pg.query_selector("#side details[data-m2f=bargains]")
-                    if fold: await shot("fold_after", fold)
+                    if fold: await shot("fold_after", await pg.query_selector("#side details[data-m2f=bargains]"))
                 await ctx.close()
             await b.close()
     finally:

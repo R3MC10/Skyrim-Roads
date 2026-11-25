@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b224-companyart", build: 224, date: "25 Nov 2026", title: "Painted company art", items: [
+      "The Company screen opens with a painted banner of your longhouse at dusk, with the name in clear light letters.",
+      "The Rooms tab shows your longhouse, and it changes as you build: the library lights more windows, the forge makes the doorway glow, the trophy hall hangs antlers and shields, the stables add lanterns and the planning table puts up company banners.",
+      "The Expedition Table now sits on a painted war table lit by candles. Each offer has its own painting, a clear risk colour (green, amber or red), the reward and how long it takes, with the step list under Details.",
+      "In a party vote, small portraits on each expedition card show who voted for it.",
+      "The six Daedric artifacts have painted pictures on their cards and on the contract that rewards them.",
+    ] },
     { id: "b222-overlays", build: 222, date: "25 Nov 2026", title: "One thing on screen at a time", items: [
       "The first-fight tip no longer sits on top of the VICTORY card. Results always come first, then windows that ask you something, then tips, then messages.",
       "In your first turn-by-turn fight the big wall of text is gone. Instead you get short one-line hints right next to the turn order, your moves and End turn, and each one goes away as soon as you use it.",
