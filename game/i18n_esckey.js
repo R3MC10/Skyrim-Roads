@@ -22,6 +22,10 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "Show world events": "Pokaż wydarzenia świata",
     "Hide world events": "Schowaj wydarzenia świata",
     "Hide this notice": "Schowaj tę wiadomość",
+    // [mapread] the world news drawer
+    "World news ({n})": "Wieści ze świata ({n})",
+    "Show world news": "Pokaż wieści ze świata",
+    "Hide world news": "Schowaj wieści ze świata",
     // patch note
     "Esc menu and a card you can fold away": "Menu pod Esc i karta, którą można schować",
     "On PC, Esc now steps back one thing at a time, just like the back button on a phone: a tooltip, then a window, then the menu you're in, then the compass.":

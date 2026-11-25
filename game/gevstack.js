@@ -5,6 +5,9 @@
      (another event, or the rebuild finishing and a new line taking its place)
    - folded or not is remembered per hero on this device (localStorage, never required)
    - a new event never forces the card open: if you folded it, the pill glows for a few seconds instead
+   - [mapread] everyday news (a town rebuilding, prices up after a raid, a hold's crisis stage) folds into one
+     "World news (3)" drawer, shut by default so the map keeps its room; only urgent, actionable strips (a reward to
+     claim, a crisis ringleader out) stay open. Opening the drawer is remembered like folding; new news makes it glow.
    greatevents.js builds the parts (bannerHTML) and hands them to compose(); clicks come back through mount(). */
 const GEVSTACK = (() => {
   const KEY = "rotn_gevui";
@@ -16,7 +19,7 @@ const GEVSTACK = (() => {
   const esc = (x) => String(x ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
   // ------------------------------------------------------------ remembered state (per hero, this device)
-  const blank = () => ({ c: false, d: {}, seen: "" });
+  const blank = () => ({ c: false, d: {}, seen: "", n: false, ns: "" });
   let mem = {};   // id → state, a copy when storage is blocked
   let store = null;
   function storage() { if (store) return store; try { if (typeof localStorage !== "undefined") return localStorage; } catch { /* blocked */ } return null; }
@@ -24,7 +27,7 @@ const GEVSTACK = (() => {
     const k = KEY + ":" + (id || "anon");
     if (mem[k]) return mem[k];
     let st = blank();
-    try { const raw = storage()?.getItem(k); if (raw) { const j = JSON.parse(raw); if (j && typeof j === "object") st = { c: !!j.c, d: j.d && typeof j.d === "object" ? j.d : {}, seen: String(j.seen || "") }; } } catch { /* broken or blocked: start fresh */ }
+    try { const raw = storage()?.getItem(k); if (raw) { const j = JSON.parse(raw); if (j && typeof j === "object") st = { c: !!j.c, d: j.d && typeof j.d === "object" ? j.d : {}, seen: String(j.seen || ""), n: !!j.n, ns: String(j.ns || "") }; } } catch { /* broken or blocked: start fresh */ }
     mem[k] = st; return st;
   }
   function save(id, st) {
@@ -42,6 +45,11 @@ const GEVSTACK = (() => {
   function setCollapsed(st, on) { st.c = !!on; return st; }
   /* a new event (or a new stage of one) since the player last saw the stack: the pill glows if it's folded */
   function fresh(st, evKey) { return !!evKey && st.seen !== evKey; }
+  /* urgent strips stay in sight: something to claim, or a crisis ringleader out; the rest is news for the drawer */
+  const urgent = (s) => !!s && (s.urgent === true || (s.urgent !== false && /(^|:)claim(:|$)|:boss(:|$)/.test(String(s.key || ""))));
+  function split(strips) { const u = [], n = []; for (const s of strips || []) (urgent(s) ? u : n).push(s); return { urgent: u, news: n }; }
+  function setNews(st, on) { st.n = !!on; return st; }
+  const newsText = (n) => T("World news ({n})", { n });
   function pillText(ev, n) {
     const parts = [];
     if (ev) parts.push(ev.name);
@@ -65,8 +73,16 @@ const GEVSTACK = (() => {
   const still = () => { try { return typeof MOTION !== "undefined" ? !MOTION.on() : matchMedia("(prefers-reduced-motion: reduce)").matches; } catch { return false; } };
 
   // ------------------------------------------------------------ the HTML
-  let hiUntil = 0, curId = "", lastT = 0;
-  /* parts: { id: hero id, ev: current event or null, evKey, end: countdown end (s), cdTxt, banner: html, strips: [{ key, html }] }
+  let hiUntil = 0, newsHi = 0, curId = "", lastT = 0;
+  const xBtn = (s) => s.key ? s.html.replace(/<\/div>\s*$/, `<button type="button" class="gevs-x" data-gevs="dismiss" data-key="${esc(s.key)}" aria-label="${esc(T("Hide this notice"))}" title="${esc(T("Hide this notice"))}">${CROSS}</button></div>`) : s.html;
+  /* the "World news (n)" drawer: a slim button, and the news strips under it when it's open */
+  function drawer(news, st, now, alone) {
+    if (!news.length) return "";
+    const open = !!st.n, hi = !open && now < newsHi;
+    const btn = `<button type="button" class="gevs-news${alone && !open ? " gevs-newspill" : ""}${hi ? " gevs-new" + (still() ? " gevs-still" : "") : ""}" data-gevs="news" aria-expanded="${open}" aria-label="${esc(T(open ? "Hide world news" : "Show world news"))}">${icon("notice")}<span class="gevs-txt">${esc(newsText(news.length))}</span>${open ? CHEV_UP : CHEV_DN}</button>`;
+    return open ? `<div class="gevs-drawer">${btn}${news.map(xBtn).join("")}</div>` : btn;
+  }
+  /* parts: { id: hero id, ev: current event or null, evKey, end: countdown end (s), cdTxt, banner: html, strips: [{ key, html, urgent? }] }
      returns the stack's HTML ("" when there's nothing to show) */
   function compose(p, t, now = Date.now()) {
     const st = prune(load(p.id), t); curId = p.id; lastT = t;
@@ -76,15 +92,23 @@ const GEVSTACK = (() => {
       if (st.c && p.ev) hiUntil = now + 8000;
       st.seen = p.evKey; save(p.id, st);
     }
+    const { urgent: urg, news } = split(strips);
+    const nk = news.map((s) => s.key).join(",");
+    if (nk && st.ns !== nk) {   // news the player hasn't seen yet: the shut drawer glows for a few seconds, it never pops open
+      const old = st.ns ? st.ns.split(",") : [];
+      if (old.length && !st.n && news.some((s) => !old.includes(s.key))) newsHi = now + 8000;
+      st.ns = nk; save(p.id, st);
+    }
     if (st.c) {
       const hi = now < hiUntil, cd = p.ev && p.end ? ` <b class="gevs-cd" data-gev-end="${p.end}">${esc(p.cdTxt || "")}</b>` : "";
       return `<button type="button" class="gevs-pill${hi ? " gevs-new" + (still() ? " gevs-still" : "") : ""}${p.ev ? " gevs-" + p.ev.kind : ""}" data-gevs="open" aria-expanded="false" aria-label="${esc(T("Show world events"))}">${icon(p.ev ? p.ev.kind : "notice")}<span class="gevs-txt">${esc(pillText(p.ev, strips.length))}</span>${cd}${CHEV_DN}</button>`;
     }
-    const body = (p.banner || "") + strips.map((s) => s.key ? s.html.replace(/<\/div>\s*$/, `<button type="button" class="gevs-x" data-gevs="dismiss" data-key="${esc(s.key)}" aria-label="${esc(T("Hide this notice"))}" title="${esc(T("Hide this notice"))}">${CROSS}</button></div>`) : s.html).join("");
+    if (!p.banner && !urg.length) return drawer(news, st, now, true);   // only news: just the drawer, no card around it
+    const body = (p.banner || "") + urg.map(xBtn).join("") + drawer(news, st, now, false);
     return `<div class="gev-card gevs-card"><button type="button" class="gevs-fold" data-gevs="fold" aria-expanded="true" aria-label="${esc(T("Hide world events"))}" title="${esc(T("Hide world events"))}">${CHEV_UP}</button>${body}</div>`;
   }
   /* part of greatevents' "did anything change?" signature */
-  const sig = (now = Date.now()) => ver + (now < hiUntil ? "h" : "");
+  const sig = (now = Date.now()) => ver + (now < hiUntil ? "h" : "") + (now < newsHi ? "n" : "");
 
   // ------------------------------------------------------------ clicks
   let onChange = null;
@@ -95,18 +119,20 @@ const GEVSTACK = (() => {
     if (a === "fold") setCollapsed(st, true);
     else if (a === "open") { setCollapsed(st, false); hiUntil = 0; }
     else if (a === "dismiss") dismiss(st, b.dataset.key, t);
+    else if (a === "news") { setNews(st, !st.n); newsHi = 0; }
     else return;
     save(curId, st);
     try { if (typeof SOUND !== "undefined") SOUND.fx("click"); } catch { /* quiet */ }
     if (onChange) onChange();
+    if (a === "news") requestAnimationFrame?.(() => document.querySelector("#gev .gevs-news")?.focus?.({ preventScroll: true }));
     if (a === "open" || a === "fold") requestAnimationFrame?.(() => document.querySelector(a === "open" ? "#gev .gevs-fold" : "#gev .gevs-pill")?.focus?.({ preventScroll: true }));
   }
   function mount(refresh) {
     onChange = refresh;
     if (!mount.done && typeof document !== "undefined" && document.addEventListener) { mount.done = true; document.addEventListener("click", click, true); }
   }
-  const _test = { reset() { mem = {}; hiUntil = 0; ver = 0; }, setStorage(s) { store = s; mem = {}; } };
+  const _test = { reset() { mem = {}; hiUntil = 0; newsHi = 0; ver = 0; }, setStorage(s) { store = s; mem = {}; } };
 
-  return { KEY, load, save, prune, shown, dismiss, setCollapsed, fresh, pillText, compose, sig, mount, click, _test };
+  return { KEY, load, save, prune, shown, dismiss, setCollapsed, setNews, split, urgent, newsText, fresh, pillText, compose, sig, mount, click, _test };
 })();
 if (typeof module !== "undefined") module.exports = GEVSTACK;
