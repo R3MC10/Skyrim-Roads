@@ -754,7 +754,7 @@ const FOERIG = (() => {
     const I = (nm) => R.idx[nm] * 5, r = I("root"), up = I("upper"), hp = I("hips");
     try {
       g.save(); g.translate(out[r + 1], out[r + 2] + out[hp + 2] * 0.6); g.rotate(out[r]); g.scale(out[r + 3], out[r + 4]);
-      HEROART.fightFigure(g, card, { t: ctx.t, aim: -0.5 + out[I("armF")], back: out[I("armB")], hunch: out[up], lunge: ctx.lunge || 0, draw: ctx.draw, wt: ctx.wt || undefined });
+      HEROART.fightFigure(g, card, { t: ctx.t, aim: -0.5 + out[I("armF")], back: out[I("armB")], hunch: out[up], lunge: ctx.lunge || 0, draw: ctx.draw, wt: ctx.wt || undefined, dying: ctx.clip === "death" ? ctx.u : 0 });
       g.restore(); return true;
     } catch (e) { g.restore(); heroOK = false; return false; }   // not the API this expects: fall back to this file's own people for good
   }

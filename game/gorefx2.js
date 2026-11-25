@@ -27,7 +27,7 @@ const GOREFX2 = (() => {
     oil: ["gfx-oil-burst", 10, 192, 192, 0.3, 0.55, 0.5, 0], green: ["gfx-green-burst", 10, 192, 192, 0.3, 0.55, 0.5, 0],
     ichor: ["gfx-ichor-burst", 10, 192, 192, 0.3, 0.55, 0.5, 0], sap: ["gfx-sap-burst", 10, 192, 192, 0.3, 0.55, 0.5, 0],
     dust: ["gfx-dust", 10, 192, 192, 0.5, 0.72, 0.8, 0], bone: ["gfx-bonedust", 10, 192, 192, 0.5, 0.7, 0.8, 0],
-    sparks: ["gfx-sparks", 8, 160, 160, 0.5, 0.5, 0.4, 1], frost: ["gfx-frost", 10, 192, 192, 0.4, 0.5, 0.65, 0],
+    sparks: ["gfx-sparks", 8, 160, 160, 0.5, 0.5, 0.26, 1], frost: ["gfx-frost", 10, 192, 192, 0.4, 0.5, 0.65, 0],
     embers: ["gfx-embers", 10, 192, 192, 0.5, 0.6, 0.9, 1], shock: ["gfx-shock", 8, 192, 192, 0.5, 0.5, 0.42, 1],
     motes: ["gfx-motes", 10, 192, 192, 0.5, 0.5, 0.85, 1],
   };
@@ -40,7 +40,7 @@ const GOREFX2 = (() => {
   const FAM = { blood: "blood", dragon: "blood", green: "green", ichor: "ichor", sap: "sap", oil: "oil" };   // material → which liquid pictures
   const img = (k) => (typeof ASSETS !== "undefined" && ASSETS.img ? ASSETS.img(k) : null);
   const G = () => (typeof GORE !== "undefined" ? GORE : null);
-  const ARMOUR = /bandit|soldier|guard|legion|stormcloak|imperial|thalmor|knight|warlord|chief|mercenar|dremora|dawnguard|vigilant|orc|sellsword|marauder/i;   // a blade on plate throws sparks
+  const ARMOUR = /soldier|guard|legion|stormcloak|imperial|thalmor|knight|warlord|chief|mercenar|dremora|dawnguard|vigilant|orc|sellsword|marauder/i;   // a blade on plate throws sparks
 
   /* how much this phone draws: Fight quality, Lite motion / Low lighting, reduced motion → 0.3 … 1 (pure) */
   function budgetK(o = {}) {
@@ -74,7 +74,7 @@ const GOREFX2 = (() => {
     if (phys && mat === "oil") { if (full) out.push(["oil", 56 * k]); out.push(["sparks", 50 * k]); }
     if (phys && type === "blunt" && mat !== "bone") out.push(["dust", 58 * k]);
     if (phys && (mat === "essence" || mat === "spirit")) out.push([mat === "essence" ? "embers" : "motes", 56 * k]);
-    if (o.metal && phys && type !== "blunt" && mat !== "oil") out.push(["sparks", 40 * k]);
+    if (o.metal && phys && type !== "blunt" && mat !== "oil") out.push(["sparks", 30 * k]);
     return out;
   }
   /* does this blow leave a splatter on the ground / a stain on the figure? (pure) */
@@ -91,6 +91,20 @@ const GOREFX2 = (() => {
     return { cells: fast ? [3, 6] : [0, 1, 4, 7], w: r * (fast ? 5.2 : 3.6) * (1 + Math.min(0.8, Math.abs(vx) / (400 * s))), flip: vx < 0 ? -1 : 1 };
   }
 
+  // [blood3] pool colours: [middle, body, rim] per liquid, and a soft lobe picture made once per liquid
+  const POOLC = { blood: ["#120101", "#2c0303", "#4a0606"], oil: ["#070604", "#16140f", "#26231b"], green: ["#1a2408", "#34460f", "#566e1c"], ichor: ["#0a030c", "#200a26", "#3a1240"], sap: ["#2c1a02", "#5a380a", "#8a5a12"] };
+  const LOBES = new Map();
+  function lobeSprite(k) {
+    if (LOBES.has(k)) return LOBES.get(k);
+    let sp = null;
+    if (typeof document !== "undefined" && document.createElement) {
+      sp = document.createElement("canvas"); sp.width = sp.height = 64; const x = sp.getContext("2d"), gr = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+      if (k === "shine") { gr.addColorStop(0, "rgba(255,236,230,1)"); gr.addColorStop(0.5, "rgba(255,236,230,0.35)"); gr.addColorStop(1, "rgba(255,236,230,0)"); }
+      else { const c = POOLC[k] || POOLC.blood; gr.addColorStop(0, c[0]); gr.addColorStop(0.5, c[1]); gr.addColorStop(0.84, c[2] + "e8"); gr.addColorStop(0.94, c[2] + "70"); gr.addColorStop(1, c[2] + "00"); }
+      x.fillStyle = gr; x.fillRect(0, 0, 64, 64);
+    }
+    LOBES.set(k, sp); return sp;
+  }
   const DECALS = new WeakMap();   // the fight → its splatters (turn-by-turn fights keep them turn to turn)
   const GROUND_MAX = 14, BODY_MAX = 6, SPAT_MAX = 48, GROUND_LIFE = 60, SPAT_LIFE = 40, BODY_LIFE = 20, POOL_GROW = 2.2;
   // drop colour (gore.js MAT and its poison drips) → liquid family
@@ -119,18 +133,95 @@ const GOREFX2 = (() => {
     if (!D.spat) D.spat = []; if (!D.down) D.down = {};
     const seed0 = (o.seed ?? g0.hash(`${o.foeName || "foe"}|${o.ehpMax || 0}|fx2`)) >>> 0;
 
-    function play(key, x, y, size, dir, r, alpha = 1) {
+    function play(key, x, y, size, dir, r, alpha = 1, ground = gy) {
       const sh = SH[key]; if (!sh) return;
       let p = null;
       for (let n = 0; n < CAP; n++) { const q = P[(cur + n) % CAP]; if (!q.on) { p = q; cur = (cur + n + 1) % CAP; break; } }
       if (!p) { p = P[cur]; cur = (cur + 1) % CAP; }   // full: the oldest goes
       p.on = true; p.sh = sh; p.x = x; p.y = y; p.w = size * s; p.flip = dir < 0 ? -1 : 1;
-      p.rot = (r() - 0.5) * (sh[7] ? 3.14 : 0.35); p.t = 0; p.dur = sh[6] * (0.9 + r() * 0.2); p.a = alpha;
+      p.rot = (r() - 0.5) * (sh[7] ? 3.14 : 0.35); p.t = 0; p.dur = sh[6] * (0.9 + r() * 0.2); p.a = alpha; p.proc = null;
+      // [blood3] the jet and the mist are drawn live, not from the strips: thin streams that break into drops, a fine spray, a faint haze
+      if (key === "jet") { p.proc = { st: streams(x, y, dir, size / 70, r, ground), sp: spray(x, y, dir, size / 70, r, 1), hz: null }; p.dur = 1.1; }
+      else if (key === "mist") { p.proc = { st: null, sp: spray(x, y, dir, size / 56, r, 0.55), hz: { R: size * s * 0.3, dx: dir * 6 * s } }; p.dur = 0.32; }
+    }
+    // ---- [blood3] live liquid: streams, spray, haze (seeded with the blow, so every phone sees the same)
+    const RED = g0.MAT ? g0.MAT.blood : ["#8e1010", "#4a0606"];
+    function streams(x, y, dir, k2, r, ground) {
+      const out = [], n = 2 + (r() < 0.5 ? 1 : 0) + (k2 > 1.15 ? 1 : 0), N = 9, kk = Math.sqrt(Math.max(0.4, Math.min(2.2, k2)));
+      for (let j = 0; j < n; j++) {
+        const th = -(0.12 + (j / Math.max(1, n - 1)) * 0.6 + (r() - 0.5) * 0.18), v0 = (190 + r() * 150) * s * kk, R = (1.1 + r() * 0.7) * s * kk, beads = [];
+        for (let k = 0; k < N; k++) {
+          const a = th + (r() - 0.5) * 0.05, v = v0 * (1 - k * 0.05);
+          beads.push({ x, y, vx: Math.cos(a) * v * dir, vy: Math.sin(a) * v, r: R * (1 - 0.7 * k / (N - 1)) * (0.85 + r() * 0.3), born: k * 0.011, on: true });
+        }
+        out.push({ beads, brk: 0.07 + r() * 0.06, x0: x, y0: y, ground: ground + (r() - 0.3) * 6 * s, col: r() < 0.8 ? RED[0] : RED[1] });
+      }
+      return out;
+    }
+    function spray(x, y, dir, k2, r, amt) {
+      const n = Math.max(6, Math.min(34, Math.round(24 * amt * Math.min(1.8, k2) * bk))), d = new Float32Array(n * 5);
+      for (let i = 0; i < n; i++) {
+        const a = -0.25 + (r() - 0.5) * 1.2, v = (90 + r() * 260) * s;
+        d.set([x + (r() - 0.5) * 3 * s, y + (r() - 0.5) * 3 * s, Math.cos(a) * v * dir, Math.sin(a) * v, (0.25 + r() * 0.45) * s], i * 5);
+      }
+      return { d, n, life: 0.2 + r() * 0.06 };
+    }
+    function stepProc(p, dt) {
+      const pr = p.proc;
+      if (pr.sp && p.t <= pr.sp.life + dt) { const d = pr.sp.d; for (let i = 0; i < pr.sp.n; i++) { const j = i * 5; d[j + 2] *= 0.93; d[j + 3] = d[j + 3] * 0.93 + 260 * s * dt; d[j] += d[j + 2] * dt; d[j + 1] += d[j + 3] * dt; } }
+      if (pr.st) for (const st of pr.st) for (const b of st.beads) {
+        if (!b.on || p.t < b.born) continue;
+        b.vy += 520 * s * dt; b.vx *= 0.996; b.x += b.vx * dt; b.y += b.vy * dt;
+        if (b.vy > 0 && b.y >= st.ground) { b.on = false; if (b.r > 0.5 * s) liquid.land(b.x, st.ground, b.r * 1.4, st.col, b.vx); }
+      }
+    }
+    /* a drop of liquid: a round head with a short tail behind it (st = how stretched by speed, 1 = round) */
+    function blob(g, x, y, ang, rr, st, col, a) {
+      const tl = rr * 1.6 * (st - 1);
+      g.save(); g.globalAlpha = a; g.translate(x, y); g.rotate(ang); g.fillStyle = col;
+      g.beginPath(); g.arc(0, 0, rr, -Math.PI / 2, Math.PI / 2); g.quadraticCurveTo(-rr * 0.4 - tl * 0.35, rr * 0.9, -rr - tl, 0); g.quadraticCurveTo(-rr * 0.4 - tl * 0.35, -rr * 0.9, 0, -rr); g.fill();
+      if (rr > 0.9 * s) { g.globalAlpha = a * 0.28; g.fillStyle = "#ffd6d0"; g.beginPath(); g.arc(rr * 0.25, -rr * 0.38, rr * 0.28, 0, 6.283); g.fill(); }   // a glint
+      g.restore();
+    }
+    function drawProc(g, p) {
+      const pr = p.proc, u = p.t / p.dur;
+      if (pr.hz) {   // a faint red haze that opens and is gone in a third of a second
+        const R = pr.hz.R * (0.6 + 0.6 * Math.min(1, u * 1.4)), k = u < 0.18 ? u / 0.18 : Math.pow(1 - (u - 0.18) / 0.82, 2), cx = p.x + pr.hz.dx * u, gr = g.createRadialGradient(cx, p.y, 0, cx, p.y, R);
+        gr.addColorStop(0, "rgba(120,8,8,0.2)"); gr.addColorStop(0.5, "rgba(110,6,6,0.08)"); gr.addColorStop(1, "rgba(100,4,4,0)");
+        g.globalAlpha = p.a * k; g.fillStyle = gr; g.beginPath(); g.arc(cx, p.y, R, 0, 6.283); g.fill();
+      }
+      if (pr.sp && p.t < pr.sp.life) {   // the fine spray
+        const d = pr.sp.d; g.globalAlpha = p.a * 0.8 * (1 - p.t / pr.sp.life); g.fillStyle = RED[0]; g.beginPath();
+        for (let i = 0; i < pr.sp.n; i++) { const j = i * 5; g.moveTo(d[j] + d[j + 4], d[j + 1]); g.arc(d[j], d[j + 1], d[j + 4], 0, 6.283); }
+        g.fill();
+      }
+      if (pr.st) {
+        const fade = p.t > p.dur - 0.25 ? Math.max(0, (p.dur - p.t) / 0.25) : 1;
+        g.lineCap = "round"; g.lineJoin = "round";
+        for (const st of pr.st) {
+          const B = st.beads;
+          if (p.t < st.brk) {   // still one thin stream from the wound, thick at the head, thinning behind
+            g.globalAlpha = p.a * 0.95; g.strokeStyle = st.col;
+            let last = -1;
+            for (let k = 0; k < B.length - 1; k++) {
+              const b0 = B[k], b1 = B[k + 1]; if (p.t < b0.born) break; last = k;
+              const x1 = p.t < b1.born ? st.x0 : b1.x, y1 = p.t < b1.born ? st.y0 : b1.y;
+              g.lineWidth = (b0.r + b1.r) * (1 - 0.35 * p.t / st.brk); g.beginPath(); g.moveTo(b0.x, b0.y); g.lineTo(x1, y1); g.stroke();
+            }
+            if (last >= 0) blob(g, B[0].x, B[0].y, Math.atan2(B[0].vy, B[0].vx), B[0].r * 1.1, 1.2, st.col, p.a);
+          } else for (let k = 0; k < B.length; k++) {   // broken up: a line of drops, big at the front, small behind
+            const b = B[k]; if (!b.on) continue;
+            blob(g, b.x, b.y, Math.atan2(b.vy, b.vx), b.r * (k % 3 === 2 ? 0.7 : 0.95), 1 + Math.min(0.9, Math.hypot(b.vx, b.vy) / (360 * s)), st.col, p.a * fade);
+          }
+        }
+      }
     }
     function decal(liq, x, y, w, r, kind) {   // kind: 0 splat · 1 pool · 2 spray
       const L = D.ground; if (L.length >= GROUND_MAX) { const j = L.findIndex((q) => !q.pool); L.splice(j < 0 ? 0 : j, 1); }   // pools stay longest
       const cells = kind === 1 ? [2, 5] : kind === 2 ? [3, 6] : [0, 1, 4, 7];
-      L.push({ liq, cell: cells[(r() * cells.length) | 0], x: x / W, y: (y - gy) / s, w: w / s, age: 0, flip: r() < 0.5 ? -1 : 1, grow: kind === 1 ? 0 : -0.7, pool: kind === 1 });   // a splatter shows once its drops have landed (~0.35 s)
+      const q = { liq, cell: cells[(r() * cells.length) | 0], x: x / W, y: (y - gy) / s, w: w / s, age: 0, flip: r() < 0.5 ? -1 : 1, grow: kind === 1 ? 0 : -0.7, pool: kind === 1 };
+      if (q.pool) { q.lobes = [[0, 0, 0.5, 1]]; for (let i = 0; i < 8; i++) q.lobes.push([(r() - 0.5) * 0.7, (r() - 0.5) * 0.09, 0.14 + r() * 0.2, 0.7 + r() * 0.6]); }   // [blood3] a pool is a few soft lobes that spread at their own pace: an uneven edge
+      L.push(q);   // a splatter shows once its drops have landed (~0.35 s)
     }
     function smear(side, liq, r, dir) {
       if (side !== "foe" && side !== "hero") return;
@@ -144,11 +235,9 @@ const GOREFX2 = (() => {
     const liquid = {
       drop(g, x, y, vx, vy, r, c, a, i) {
         const fam = famOfCol(c); if (!ready(fam)) return false;
-        const im = img(DROPS[fam]), sp = Math.hypot(vx, vy), st = sp < 50 * s ? 0 : sp < 130 * s ? 1 : sp < 230 * s ? 2 : 3, C = 48;
-        const k = Math.max(0.08, (r * 0.36) / 6), w = C * k;   // the head is ~6 px across in the cell; gore.js r is the ink line width
-        g.save(); g.globalAlpha = a; g.translate(x, y); g.rotate(Math.atan2(vy, vx));
-        g.drawImage(im, st * C, (i & 1) * C, C, C, -w * 0.62, -w / 2, w, w);
-        g.restore();
+        // [blood3] round drops of mixed size (mostly small), stretched only a little by speed: liquid, not pills
+        const sp = Math.hypot(vx, vy), u = (((i + 1) * 2654435761) >>> 0) % 997 / 997, rr = Math.max(0.3 * s, r * 0.2 * (0.4 + 1.1 * u * u * u));
+        blob(g, x, y, Math.atan2(vy, vx), rr, 1 + Math.min(0.9, sp / (360 * s)), c, a);
         return true;
       },
       land(x, y, r, c, vx) {
@@ -188,9 +277,8 @@ const GOREFX2 = (() => {
       const opt = { level: lv, side, frac, crit: !!h.crit, final: !!h.final, power: !!h.power, pick, metal: armoured && (type === "slash" || type === "pierce") && (pick === 0 || !!h.crit) };
       const ground = t.ground ?? gy;
       if (t.live !== false) for (const [key, size] of planOf(type, mat, opt)) {
-        const sh = SH[key], low = key === "dust" || key === "bone";
-        play(key, t.x + (low ? dir * 4 * s : 0), low ? Math.min(ground, t.y + 26 * s) : t.y, size * extra, dir, r, side === "foe" || side === "hero" ? 1 : 0.8);
-        if (sh && key === "jet") P[(cur + CAP - 1) % CAP].rot = (r() - 0.5) * 0.5 - 0.15;
+        const low = key === "dust" || key === "bone";
+        play(key, t.x + (low ? dir * 4 * s : 0), low ? Math.min(ground, t.y + 26 * s) : t.y, size * extra, dir, r, side === "foe" || side === "hero" ? 1 : 0.8, ground);
       }
       const dc = decalOf(type, mat, opt);
       if (dc.ground) {
@@ -208,11 +296,11 @@ const GOREFX2 = (() => {
         if (res.burst) onHit({ ...t, side: "foe" }, { type: k.type || "slash", frac: 0.6, final: true, crit: !!k.crit, power: !!k.power, from: dir, key: `kill${k.key ?? 0}` }, k.crit || k.slowmo ? 1.15 : 1);
         if (full && FAM[mat] && !["ash", "shatter", "fade"].includes(death) && k.type !== "fire") {
           const r = g0.rng((seed0 ^ g0.hash(`kill|${k.key ?? 0}|fx2`)) >>> 0);
-          decal(FAM[mat], t.bodyX ?? t.x, (t.ground ?? gy) + 2 * s, 74 * Math.min(1.8, t.size || 1) * (mat === "dragon" ? 1.5 : 1) * s, r, 1);
+          decal(FAM[mat], t.bodyX ?? t.x, (t.ground ?? gy) + 2 * s, 80 * Math.min(1.8, t.size || 1) * (mat === "dragon" ? 1.5 : 1) * s, r, 1);
         }
       } else if (res && t && k.instant && full && FAM[matOf(t)] && !["ash", "shatter", "fade"].includes(k.death || "topple")) {   // a fight shown already over: the pool is just there
         const r = g0.rng((seed0 ^ g0.hash(`kill|${k.key ?? 0}|fx2`)) >>> 0);
-        decal(FAM[matOf(t)], t.bodyX ?? t.x, (t.ground ?? gy) + 2 * s, 74 * Math.min(1.8, t.size || 1) * s, r, 1);
+        decal(FAM[matOf(t)], t.bodyX ?? t.x, (t.ground ?? gy) + 2 * s, 80 * Math.min(1.8, t.size || 1) * s, r, 1);
         D.ground[D.ground.length - 1].grow = 1;
       }
       return res;
@@ -223,7 +311,7 @@ const GOREFX2 = (() => {
       if (!full || (side !== "hero" && side !== "foe") || D.down[side]) return false;
       D.down[side] = true;
       const r = g0.rng((seed0 ^ g0.hash(`down|${side}`)) >>> 0);
-      decal("blood", t.x, (t.ground ?? gy) + 2 * s, 56 * s, r, 1);
+      decal("blood", t.x, (t.ground ?? gy) + 2 * s, 60 * s, r, 1);
       if (t.instant) D.ground[D.ground.length - 1].grow = 1;
       return true;
     };
@@ -231,7 +319,7 @@ const GOREFX2 = (() => {
     S.update = function (dt) {
       oUpd.call(S, dt);
       live = 0;
-      for (const p of P) { if (!p.on) continue; p.t += dt; if (p.t >= p.dur) p.on = false; else live++; }
+      for (const p of P) { if (!p.on) continue; p.t += dt; if (p.t >= p.dur) p.on = false; else { live++; if (p.proc) stepProc(p, dt); } }
       for (const q of D.ground) { q.age += dt; if (q.grow < 1) q.grow = Math.min(1, q.grow + dt / (q.pool ? POOL_GROW : 0.5)); }
       for (const q of D.spat) q.age += dt;
       for (const q of D.body) q.age += dt;
@@ -257,6 +345,17 @@ const GOREFX2 = (() => {
       if (flip < 0) { g.save(); g.translate(cx, cy); g.scale(-1, 1); g.drawImage(im, sx, sy, c, c, -ww / 2, -hh / 2, ww, hh); g.restore(); }
       else g.drawImage(im, sx, sy, c, c, cx - ww / 2, cy - hh / 2, ww, hh);
     }
+    /* [blood3] a pool: soft lobes (dark middle, soft rim) spreading over ~2 s, and a faint wet shine */
+    function drawPool(g, q, f) {
+      const lob = lobeSprite(q.liq), shine = lobeSprite("shine"); if (!lob || !img(DEC[q.liq]?.[0])) return;
+      const W0 = q.w * s, cx = q.x * W, cy = gy + q.y * s, e = q.grow < 1 ? 1 - Math.pow(1 - q.grow, 2.2) : 1;
+      g.globalAlpha = 0.9 * f;
+      for (const [dx, dy, rad, gk] of q.lobes) {
+        const ee = Math.min(1, e * gk), rr = W0 * rad * (0.15 + 0.85 * ee), lx = cx + dx * W0 * (0.4 + 0.6 * ee) * q.flip, ly = cy + dy * W0;
+        g.drawImage(lob, lx - rr, ly - rr * 0.3, rr * 2, rr * 0.6);
+      }
+      if (shine) { g.globalAlpha = 0.2 * f * e; const sw = W0 * 0.34 * (0.3 + 0.7 * e); g.drawImage(shine, cx - W0 * 0.1 * q.flip - sw / 2, cy - W0 * 0.035, sw, sw * 0.12); }
+    }
     const fadeOf = (age, life) => Math.max(0, 1 - Math.max(0, age - life * 0.5) / (life * 0.5));
     const oGround = S.drawGround;
     S.drawGround = function (g) {
@@ -266,6 +365,7 @@ const GOREFX2 = (() => {
       for (const q of D.ground) {   // pools and big splatters, lying flat: squashed
         if (q.grow <= 0) continue;
         const f = fadeOf(q.age, GROUND_LIFE), e = q.grow < 1 ? 1 - (1 - q.grow) * (1 - q.grow) : 1, w = q.w * s * (q.pool ? 0.3 + 0.7 * e : 0.85 + 0.15 * e);
+        if (q.pool && q.lobes) { if (f > 0) drawPool(g, q, f); continue; }
         if (f > 0) cellDraw(g, q.liq, q.cell, q.x * W, gy + q.y * s, w, w * 0.3, 0.94 * f * (q.pool ? 0.6 + 0.4 * e : Math.min(1, e * 1.5)), q.flip);
       }
       for (const q of D.spat) {   // where the drops landed
@@ -302,6 +402,7 @@ const GOREFX2 = (() => {
       g.save();
       for (const p of P) {
         if (!p.on) continue;
+        if (p.proc) { if (ready("blood")) { g.globalCompositeOperation = "source-over"; drawProc(g, p); } continue; }
         const sh = p.sh, im = img(sh[0]); if (!im) continue;
         const n = sh[1], fw = sh[2], fh = sh[3], u = p.t / p.dur, fi = Math.min(n - 1, (u * n) | 0);
         // the burst opens over its first ~150 ms (20% → 100% wide), as in the frames
@@ -329,6 +430,6 @@ const GOREFX2 = (() => {
     scene.fx2 = true;
     GORE.scene = scene;
   }
-  return { SH, DEC, DROPS, DRIPS, KEYS, FAM, planOf, decalOf, splatOf, budgetK, wrap };
+  return { SH, DEC, DROPS, DRIPS, KEYS, FAM, planOf, decalOf, splatOf, budgetK, wrap, metal: (name) => ARMOUR.test(String(name || "")) };
 })();
 if (typeof module !== "undefined") module.exports = GOREFX2;

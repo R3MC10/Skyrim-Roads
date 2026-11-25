@@ -3540,6 +3540,14 @@ img.tn-art{display:block;width:100%;max-width:440px;height:auto;border-radius:8p
 .tn-reel .tn-z{position:absolute;top:0;bottom:0;background:rgba(110,190,110,.55)}
 .tn-reel .tn-nd{position:absolute;top:-2px;bottom:-2px;width:4px;margin-left:-2px;background:#ffe6a0;box-shadow:0 0 6px #ffe6a0}
 @media (min-width:760px){.tn-hero{grid-template-columns:minmax(0,1fr) minmax(0,1.1fr)}.tn-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* [festart] painted festival and Grand Arena headers (fest-*.webp, 8:3): cropped never squashed, the title sits on a soft dark vignette */
+.tn-hero.tn-hp{grid-template-columns:minmax(0,1fr)}
+.tn-pic{position:relative;width:100%;aspect-ratio:8/3;max-height:min(46vh,420px);background-size:cover;background-position:center;border-radius:8px;border:1px solid #4a4237;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.45)}
+.tn-pic::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 70% 62% at 50% 56%,rgba(8,6,4,.72) 0%,rgba(8,6,4,.5) 45%,rgba(8,6,4,0) 100%),linear-gradient(180deg,rgba(8,6,4,0) 55%,rgba(8,6,4,.6) 100%)}
+.tn-pic.tn-off{filter:saturate(.55) brightness(.85)}
+.tn-pt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:8px 14px}
+.tn-pt h3{margin:0;font-size:clamp(17px,3.2vw,30px);color:#f3e6c4;text-shadow:0 1px 2px #000,0 0 12px rgba(0,0,0,.95),0 0 28px rgba(0,0,0,.8);position:relative}
+@media (min-width:760px){.tn-hero.tn-hp{grid-template-columns:minmax(0,1fr)}}
 @media (min-width:1100px){.tn-fest .tn-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 /* [folbuild] followers learn like you: their build, level, skills with bars and perks (folbuild.js), SkyUI style */
 .fb-build{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;margin:6px 0 10px;border:1px solid rgba(214,178,94,.35);border-radius:4px;background:linear-gradient(180deg,rgba(40,34,22,.45),rgba(14,13,11,.55))}
@@ -3755,6 +3763,8 @@ html.art-pixel .lh-paint{border-radius:0;image-rendering:pixelated}html.art-pixe
 <script src="gearlook.js"></script>
 <script src="heroart.js"></script>
 <script src="figart.js"></script>
+<script src="rigdata.js"></script>
+<script src="rig.js"></script>
 <script src="mapart.js"></script>
 <script src="maphero.js"></script>
 <script src="placeart.js"></script>
@@ -3844,6 +3854,8 @@ html.art-pixel .lh-paint{border-radius:0;image-rendering:pixelated}html.art-pixe
 <script src="i18n_spells.js"></script>
 <script src="i18n_potionfx.js"></script>
 <script src="i18n_backdrops2.js"></script>
+<script src="i18n_festart.js"></script>
+<script src="i18n_paintrig.js"></script>
 <script src="i18n_sweep.js"></script>
 <script src="i18n_balfear.js"></script>
 <script src="i18n_combat2.js"></script>
