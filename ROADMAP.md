@@ -1,6 +1,7 @@
 # Roads of the North: upgrade loop
 
-Each round: build one batch, test it (Node sims in /home/claude/tests + headless phone screenshots), push here
+Each round:- Claude: Daedric bargains and artifact awakening (bargains.js new, i18n_bargains.js; builds on daedric.js and the Daedric Mark in afflictions.js): shrine contracts from six princes (Mehrunes Dagon, Azura, Nocturnal, Hircine, Boethiah, Meridia) offered at black shrines on the road, each a short chain of themed deeds from real play (kills, night fights, thefts, beasts, lone fights, undead); the contract ends in a pact artifact that grows Dormant → Awakened → Ascendant with more deeds, a distinct effect per stage in both fight systems, and Ascendant asks you to accept or refuse a curse; perks Princely Favour, Bound Will, Awakened Bond. Branch claude/daedric.
+ build one batch, test it (Node sims in /home/claude/tests + headless phone screenshots), push here
 (GitHub builds the APK), and update the web link. Rules: real Skyrim numbers where they exist ([Skyrim]),
 our own marked [OURS]; plain-language UI; phone first.
 

@@ -1,4 +1,21 @@
-/* Patch notes:     { id: "b213-longhouse", build: 213, date: "25 Nov 2026", title: "Your own adventuring company", items: [
+/* Patch notes: what changed in each build, newest first, in plain words. [OURS]
+   To add a build: put a new entry at the TOP of LIST with a new id. The newest id is what the
+   one-time "What's new" popup keys on. */
+const PATCHNOTES = (() => {
+  const LIST = [
+    { id: "b214-daedric", build: 214, date: "25 Nov 2026", title: "Daedric bargains and artifacts that wake up", items: [
+      "Black shrines by the road can now carry an offer from one of six Daedric princes: Mehrunes Dagon, Azura, Nocturnal, Hircine, Boethiah and Meridia (from level 8).",
+      "Accept a contract and do three things your prince likes, counted from how you really play: slaying foes, winning at night, picking pockets and locks, hunting beasts, fighting alone or putting the dead to rest.",
+      "Finish it and the prince's artifact is yours. Bind one at a time: it starts Dormant, wakes up with more of those deeds and can become Ascendant. Every stage adds a new power in every kind of fight.",
+      "Ascendant comes with a curse, and you choose: accept it, or refuse and stay Awakened. You can let it sleep again later.",
+      "The Daedric Mark matters here: carrying it, shrines call twice as often and your deeds count more. Accepting a curse brands you with the Mark, and the Vow of Cleansing makes the princes turn away.",
+      "Artifacts help, but never more than going from good gear to the best you can forge.",
+      "Find it all on the Character screen under Daedric bargains.",
+      "New perks: Princely Favour (Mysticism, deeds count more), Bound Will (Restoration, curses half as strong) and Awakened Bond (Enchanting, artifact powers stronger).",
+      "Daedric bargains are off the Coming next list: they're in the game now.",
+      "The notes for the adventuring company (build 213) were hidden by mistake. They show up now.",
+    ] },
+    { id: "b213-longhouse", build: 213, date: "25 Nov 2026", title: "Your own adventuring company", items: [
       "Found an adventuring company with your party or your friends: up to 8 players (followers don't count). Open Social, then Company.",
       "Founding costs 3000 gold in a town or village, and that's where your longhouse stands. Everyone in the company sees the same longhouse, live.",
       "A shared treasury: anyone can put gold in, and the founder chooses who may take it out and how much a day. Every coin and every gift is in the log.",
@@ -8,11 +25,6 @@
       "Stables: your horse's bond grows faster, and at the top level horses carry more. Planning table: pick a battle plan that helps every member in dungeons and hold crises.",
       "New perks: Company Purse (Mercantile) makes founding and building cheaper, War Council (Etiquette) makes the battle plan stronger for you, and Trophy Mounter (Smithing) doubles your trophy bonuses.",
     ] },
-what changed in each build, newest first, in plain words. [OURS]
-   To add a build: put a new entry at the TOP of LIST with a new id. The newest id is what the
-   one-time "What's new" popup keys on. */
-const PATCHNOTES = (() => {
-  const LIST = [
     { id: "b212-heists", build: 212, date: "25 Nov 2026", title: "Heists in the big cities", items: [
       "Every big city has a rich house to rob: Olfrid Battle-Born in Whiterun, the Shatter-Shields in Windhelm, Thane Erikur in Solitude, the Silver-Bloods in Markarth and Maven Black-Briar in Riften. Find it in town under Work & jobs.",
       "Plan it, get in, get past the locked door, grab the prize and get out. Case the house first, and buy forged papers or a Draught of Shadows if you like.",
@@ -1501,10 +1513,10 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 213;
+  const NEXT_AT = 214;
   const NEXT = [
-    "Daedric bargains and artifacts that awaken",
     "Mentoring: play side by side with friends of any level",
+    "Shrines of your own: build a Daedric altar at your longhouse",
   ];
   const KEY = "rotn_notes_seen";
   const latest = () => LIST[0];

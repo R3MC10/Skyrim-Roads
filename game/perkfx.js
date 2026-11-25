@@ -356,6 +356,10 @@ const PFX = (() => {
     [ "Destruction", "rune_scholar", "Rune Scholar", 2, [30, 60], ["novice_destruction"], "Spells you craft at the Rune table get a 5/10% bigger power budget. [OURS]", [["rcbudget", [0.05, 0.1], {}]]],
     [ "Mysticism", "spellwright", "Spellwright", 1, [40], ["spell_absorption"], "Spells you craft at the Rune table can carry two modifiers. [OURS]", [["rcmods", 1, {}]]],
     [ "Destruction", "runic_echo", "Runic Echo", 1, [50], ["rune_master"], "Your crafted cloaks, walls and healing circles last a round longer, and a crafted rune trap re-arms once at half strength. [OURS]", [["rcturns", 1, {}]]],
+    // Daedric bargains (bargains.js reads dbdeed / dbcurse / dbpow)
+    [ "Mysticism", "princely_favour", "Princely Favour", 1, [30], [], "Daedric princes see the old arts in you: deeds for their contracts and for your pact artifact count 50% more. [OURS]", [["dbdeed", 0.5, {}]]],
+    [ "Restoration", "bound_will", "Bound Will", 1, [40], ["novice_restoration"], "You keep your own mind: an Ascendant artifact's curse is half as strong. [OURS]", [["dbcurse", 0.5, {}]]],
+    [ "Enchanting", "awakened_bond", "Awakened Bond", 1, [40], ["enchanter"], "You understand what sleeps in a Daedric artifact: your pact artifact's powers are 25% stronger. [OURS]", [["dbpow", 0.25, {}]]],
     // the adventuring company longhouse (longhouse.js reads lhcost / lhplan / lhtrophy)
     [ "Mercantile", "lng_purse", "Company Purse", 1, [30], ["haggling"], "You drive a hard bargain with builders: founding a longhouse and building its rooms cost 20% less when you pay. [OURS]", [["lhcost", 0.2, {}]]],
     [ "Etiquette", "lng_council", "War Council", 1, [35], ["courtly_manners"], "You know how to read a plan aloud: the company's battle plan is 50% stronger for you. [OURS]", [["lhplan", 0.5, {}]]],

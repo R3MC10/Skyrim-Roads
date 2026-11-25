@@ -3951,6 +3951,36 @@ body:has(#modal .sheet) #pbanners{top:auto!important;bottom:calc(6px + env(safe-
 .hsp.lock{opacity:.6}
 .hsp-tag{font-family:"Barlow Condensed",sans-serif;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#9fe08a;white-space:nowrap}
 .hsp .btn{flex:0 0 auto;white-space:nowrap}
+/* [daedric] Daedric bargains (bargains.js): contract card, pact artifact cards with a SkyUI stage track */
+.dbg-chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}
+.dbg-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px 4px 6px;border:1px solid var(--line);border-radius:999px;font-size:13px;color:var(--mute);background:rgba(0,0,0,.18)}
+.dbg-chip .dbg-ic{width:18px;height:18px;color:var(--dbc)}.dbg-chip b{font-weight:600;color:var(--ink,#e8dcc0)}.dbg-chip small{font-size:12px;opacity:.85}
+.dbg-chip.have{border-color:color-mix(in srgb,var(--dbc) 60%,transparent);background:color-mix(in srgb,var(--dbc) 14%,transparent)}.dbg-chip.now{border-color:var(--gold);box-shadow:0 0 0 1px rgba(226,187,100,.25) inset}
+.dbg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;margin:6px 0}
+.dbg-card{border:1px solid var(--line);border-left:3px solid var(--dbc,var(--gold));border-radius:6px;padding:10px 12px;background:linear-gradient(135deg,color-mix(in srgb,var(--dbc,#888) 13%,transparent),rgba(255,255,255,.02) 70%)}
+.dbg-card.dbg-on{box-shadow:0 0 0 1px color-mix(in srgb,var(--dbc) 45%,transparent),0 0 18px color-mix(in srgb,var(--dbc) 18%,transparent)}
+.dbg-card.dbg-rdy{border-color:color-mix(in srgb,var(--dbc) 70%,transparent)}
+.dbg-head{display:flex;align-items:center;gap:10px}.dbg-head .dbg-ic{width:34px;height:34px;flex:0 0 34px;color:var(--dbc,var(--gold));filter:drop-shadow(0 0 6px color-mix(in srgb,var(--dbc) 45%,transparent))}
+.dbg-head .t{display:flex;flex-direction:column;font:600 15px Cinzel,"Barlow Condensed",serif;letter-spacing:.06em;text-transform:uppercase}.dbg-head .t span{font:400 13px "Barlow Semi Condensed",sans-serif;letter-spacing:.04em;color:var(--mute);text-transform:uppercase}
+.dbg-track{display:flex;list-style:none;margin:10px 0 4px;padding:0;gap:0}
+.dbg-track li{flex:1;position:relative;text-align:center;font:600 11px "Barlow Semi Condensed",sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#6f685b}
+.dbg-track li i{display:block;width:12px;height:12px;margin:0 auto 4px;transform:rotate(45deg);border:1px solid #5d5547;background:#16120d}
+.dbg-track li:not(:first-child)::before{content:"";position:absolute;top:6px;right:calc(50% + 10px);left:calc(-50% + 10px);height:1px;background:#4a4337}
+.dbg-track li.past,.dbg-track li.now{color:#e8dcc0}.dbg-track li.past i{background:var(--dbc);border-color:var(--dbc)}
+.dbg-track li.now i{background:var(--dbc);border-color:#f3e3b8;box-shadow:0 0 10px var(--dbc)}.dbg-track li.ready{color:var(--gold)}.dbg-track li.ready i{border-color:var(--gold);box-shadow:0 0 8px rgba(226,187,100,.6)}
+.dbg-bar{margin:4px 0 6px;height:5px}.dbg-bar i{background:var(--dbc,var(--gold))}
+.dbg-pow,.dbg-steps{list-style:none;margin:6px 0;padding:0;font-size:14px}
+.dbg-pow li{margin:4px 0;line-height:1.35;padding-left:2px}.dbg-pow li em{font-style:normal;font:600 11px "Barlow Semi Condensed",sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--dbc);margin-right:6px}
+.dbg-pow li.off{color:#7b7466}.dbg-pow li.off em{color:#6f685b}.dbg-pow li.on{color:#e8dcc0}
+.dbg-pow li.dbg-curse.on{color:#e0928a}.dbg-pow li.dbg-curse em{color:#c96a60}.dbg-pow li.dbg-curse.off{color:#8a6e69}
+.dbg-steps li{display:flex;justify-content:space-between;gap:10px;padding:5px 8px;border-bottom:1px solid rgba(255,255,255,.06);color:#7b7466}
+.dbg-steps li b{font:600 13px "Barlow Semi Condensed",sans-serif;white-space:nowrap}.dbg-steps li.now{color:#e8dcc0;background:linear-gradient(90deg,color-mix(in srgb,var(--dbc) 18%,transparent),transparent)}
+.dbg-steps li.done{color:#9fd49a}.dbg-steps li.done span{text-decoration:line-through;text-decoration-color:rgba(159,212,154,.5)}
+.dbg-btns{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px}.dbg-card .sub{margin:4px 0}
+.dbg-bound{font:600 12px "Barlow Semi Condensed",sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--dbc);border:1px solid color-mix(in srgb,var(--dbc) 55%,transparent);border-radius:4px;padding:3px 8px}
+.dbg-asc{border-color:var(--gold)!important;color:var(--gold)!important}
+.dbg-mark{color:#d98a92}
+@media (max-width:420px){.dbg-grid{grid-template-columns:1fr}.dbg-chip small{display:none}}
 /* the adventuring company longhouse (longhouse.js) */
 .lng h2{font-family:"Cinzel",serif;letter-spacing:.06em}
 .lng-banner{position:relative;margin:2px 0 10px;border:1px solid rgba(214,178,94,.35);border-radius:4px;overflow:hidden;min-height:110px;background:#15120d}
@@ -4369,6 +4399,7 @@ body:has(#modal .sheet) #pbanners{top:auto!important;bottom:calc(6px + env(safe-
 <script src="i18n_comingnext.js"></script>
 <script src="i18n_afflictions.js"></script>
 <script src="i18n_crises.js"></script>
+<script src="i18n_bargains.js"></script>
 <script src="i18n_longhouse.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
@@ -4393,6 +4424,7 @@ body:has(#modal .sheet) #pbanners{top:auto!important;bottom:calc(6px + env(safe-
 <script src="leghunt.js"></script>
 <script src="afflictions.js"></script>
 <script src="crises.js"></script>
+<script src="bargains.js"></script>
 <script src="longhouse.js"></script>
 <script src="ui.js"></script>
 </body>

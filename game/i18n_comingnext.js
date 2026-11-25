@@ -4,10 +4,10 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
   Object.assign(I18N_EXTRA.words, {
     "14 more painted battle backdrops":
       "14 nowych malowanych teł bitew",
-    "Daedric bargains and artifacts that awaken":
-      "Daedryczne układy i artefakty, które się budzą",
     "Mentoring: play side by side with friends of any level":
       "Mentorowanie: graj ramię w ramię z przyjaciółmi na dowolnym poziomie",
+    "Shrines of your own: build a Daedric altar at your longhouse":
+      "Własne kapliczki: zbuduj daedryczny ołtarz w swojej siedzibie",
     "Regional crises and heists":
       "Kryzysy w regionach i skoki",
     "Follower and horse bonds, and spell crafting":
