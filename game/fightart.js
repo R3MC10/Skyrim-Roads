@@ -296,7 +296,7 @@ const FIGHTART = (() => {
       const w2 = wt === "fist" ? null : wt;
       return HEROART.fightFigure(g, { look: h.look }, { t: glowT, wt: w2, shield: h.shield && !TWO_HANDED.has(wt), off: !TWO_HANDED.has(wt) && wt !== "fist" ? h.off : null, lunge,
         glow: pose ? pose.glow : h.bound, aim: pose?.aim, back: pose?.back, hunch: pose?.lean || 0, draw: pose?.draw, flask: pose?.flask,
-        move: pose?.move, mu: pose?.mu, hitU: pose?.hitU, power: pose?.power, knock: pose?.knock || 0, down: pose?.down || 0, ride: !!pose?.ride });
+        move: pose?.move, mu: pose?.mu, hitU: pose?.hitU, power: pose?.power, knock: pose?.knock || 0, down: pose?.down || 0, ride: !!pose?.ride, dx: pose?.dx || 0 });
     }
     const go = h.gearO || {};
     person(g, { skin: h.skin, body: h.body, head: go.head || (h.helm ? "helm" : "hair"), helmColor: go.helmColor, hoodColor: go.hoodColor, armC: go.armC, pants: go.pants, boots: go.boots, legs: go.legs, gear: go.gear, wmat: go.wmat,
@@ -1096,6 +1096,7 @@ const FIGHTART = (() => {
       const artO = art ? { W, Hh, t: rm ? 0 : tt, ox, sky: rec.sky, wagon: rec.wagon } : null;
       if (art) BSCENE.back(wg, art, artO); else wg.drawImage(bg, 0, 0, W, Hh);
       if (cv.dataset.bs !== (art ? rec.art : "")) cv.dataset.bs = art ? rec.art : "";   // which painted scene is on (screen tests)
+      const RL = typeof RIGLOOK !== "undefined" ? RIGLOOK : null; if (RL) RL.scene(art ? rec.art : null);   // [rigcohesion] the fighters take this scene's light (riglook.js)
       GS?.drawGround(wg);   // [OURS] gore.js: splats, pools and scorch marks on the ground (they stay for the fight)
       // a rune waiting on the ground, a portal
       if (st.rune) rune(fx0, groundY, COL[st.rune]?.[0] || "#ffb347", tt);
@@ -1221,8 +1222,11 @@ const FIGHTART = (() => {
         wg.translate(0, -(22 + Math.sin(tt * 1.7) * 5));
       }
       const lhP = typeof LEGHUNT !== "undefined" && LEGHUNT.paintOf ? LEGHUNT.paintOf(rec.f?.e) : null;   // a legendary beast: its own painted picture, colour-graded and a little bigger (leghunt.js)
-      const foePic = foeK !== "player" && typeof ASSETS !== "undefined" ? ASSETS.img(lhP ? lhP.key : ASSETS.foeKey(rec.foeName, foeK)) : null;
-      const picK = lhP && foePic ? lhP.scale : 1;
+      const picK0 = () => (lhP ? lhP.scale : 1);
+      const foePic0 = foeK !== "player" && typeof ASSETS !== "undefined" ? ASSETS.img(lhP ? lhP.key : ASSETS.foeKey(rec.foeName, foeK)) : null;
+      const foePic = foePic0 && RL ? RL.graded(foePic0) : foePic0;   // [rigcohesion] in the scene's light
+      if (foePic && RL && !curDragon?.air) RL.shadow(wg, foeK === "dragon" ? -10 : 2, 0.4, (foeK === "dragon" ? 60 : 20) * Math.min(1.8, fSize) * picK0(), 4.2 * Math.min(1.8, fSize), foeDown ? 0.4 : 0.75);   // its contact shadow
+      const picK = picK0();
       if (RIG) {   // [OURS] the rig picks its clip from the beat: an attack locked to the move's timing, the fall, a gloat, a stagger...
         const R = RIGST, them = b && b.who === "them";
         R.t = rm ? 0 : tt; R.clip = null; R.u = 0; R.hitU = null; R.jitter = false; R.still = !!rm;
@@ -1267,6 +1271,7 @@ const FIGHTART = (() => {
         if (b.fx === "wall" && b.el === "shock" && u > 0.5 && Math.random() < 0.3) { boltOn = 1; boltX0 = fx0 + (Math.random() - 0.5) * 30 * s; boltX1 = boltX0; boltY0 = groundY - 100 * s; boltY1 = groundY; boltC = "#c8b8ff"; jag(); }
         if (b.fx === "turn" && u > 0.4 && u < 0.9) rays(hx0, heroChest, (u - 0.4) / 0.5);
       }
+      if (RL) RL.scene(null);   // figures drawn anywhere else (character screens) stay ungraded
       if (art) BSCENE.front(wg, art, artO);   // the near-edge strip goes over the fighters' feet, under the weather and the HUD
       // weather in front of the fighters
       if (wxp) { const dt = Math.min(0.05, Math.max(0, (now - lastNow) / 1000)); lastNow = now; wxp.step(wg, done ? 0 : dt); }
@@ -1325,24 +1330,29 @@ const FIGHTART = (() => {
       }
       wg.restore();
     }
-    /* a soft crescent along the blade's path: its outer edge the tip, its inner edge part way down the blade, thin and
-       clear at the tail, full and bright at the blade; drawn twice (a wide faint glow, then the core) so it has no hard edge */
+    /* [rigcohesion] a faint motion smear hugging the blade: only the blade's last ~75° of travel, a few feathered streaks
+       from the tip to part way down the blade, each a soft wide pass and a thin one, clear at the tail and at most about
+       0.35 strong at the blade (additive), so it reads as speed, never as a white sector in the sky */
     function trail(kind, a, power) {
-      const now = nowS(), life = kind === "stab" ? 0.1 : 0.15;
+      const now = nowS(), life = kind === "stab" ? 0.08 : 0.12;
       while (TRL.length && now - TRL[0].t > life) TRL.shift();
-      const n = TRL.length; if (n < 2) return;
-      const wk = kind === "wide" ? 1 : kind === "stab" ? 0.35 : 0.8, c = power ? "#ffe0a0" : trailC, h = TRL[n - 1], t0 = TRL[0];
-      const rgb = /^#[0-9a-f]{6}$/i.test(c) ? [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16)).join(",") : "244,246,255";
-      wg.save(); additive();
-      for (let pass = 0; pass < 2; pass++) {
-        const wf = wk * (pass ? 0.55 : 1), al = a * (pass ? 0.75 : 0.28);
-        const gr = wg.createLinearGradient(t0.x, t0.y, h.x, h.y);
-        gr.addColorStop(0, `rgba(${rgb},0)`); gr.addColorStop(0.55, `rgba(${rgb},${(al * 0.45).toFixed(3)})`); gr.addColorStop(1, `rgba(${rgb},${al.toFixed(3)})`);
-        wg.fillStyle = gr; wg.beginPath(); wg.moveTo(TRL[0].x, TRL[0].y);
-        for (let i = 1; i < n; i++) { const p = TRL[i - 1], q = TRL[i]; wg.quadraticCurveTo(p.x, p.y, (p.x + q.x) / 2, (p.y + q.y) / 2); }
-        wg.lineTo(h.x, h.y);
-        for (let i = n - 1; i >= 0; i--) { const q = TRL[i], f = Math.pow(i / (n - 1), 1.4) * wf; wg.lineTo(q.x + (q.bx - q.x) * f, q.y + (q.by - q.y) * f); }
-        wg.closePath(); wg.fill();
+      if (TRL.length < 2) return;
+      const bladeA = (q) => Math.atan2(q.y - q.by, q.x - q.bx), maxTurn = kind === "stab" ? 0.6 : 1.3;
+      let turned = 0, from = TRL.length - 1;
+      for (let i = TRL.length - 1; i > 0; i--) { let d = bladeA(TRL[i]) - bladeA(TRL[i - 1]); d = Math.atan2(Math.sin(d), Math.cos(d)); turned += Math.abs(d); if (turned > maxTurn) break; from = i - 1; }
+      const pts = TRL.slice(from), n = pts.length; if (n < 2) return;
+      const c = power ? "#ffe6b0" : trailC, rgb = /^#[0-9a-f]{6}$/i.test(c) ? [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16)).join(",") : "244,246,255";
+      const top = 0.35 * Math.min(1, a / 0.75), reach = kind === "wide" ? 0.5 : kind === "stab" ? 0.2 : 0.4, h = pts[n - 1], t0 = pts[0];
+      const at = (q, f) => [q.x + (q.bx - q.x) * f, q.y + (q.by - q.y) * f];
+      wg.save(); additive(); wg.lineCap = "round"; wg.lineJoin = "round";
+      for (let k = 0; k < 4; k++) {
+        const f = (k / 3) * reach, al = top * (1 - k * 0.2), A = at(t0, f), Z = at(h, f);
+        for (const [lw, am] of [[4.2, 0.28], [1.3, 1]]) {
+          const gr = wg.createLinearGradient(A[0], A[1], Z[0], Z[1]);
+          gr.addColorStop(0, `rgba(${rgb},0)`); gr.addColorStop(1, `rgba(${rgb},${(al * am).toFixed(3)})`);
+          wg.strokeStyle = gr; wg.lineWidth = Math.max(0.8, lw * (1 - k * 0.15) * s);
+          wg.beginPath(); for (let i = 0; i < n; i++) { const p = at(pts[i], f); i ? wg.lineTo(p[0], p[1]) : wg.moveTo(p[0], p[1]); } wg.stroke();
+        }
       }
       wg.restore();
     }

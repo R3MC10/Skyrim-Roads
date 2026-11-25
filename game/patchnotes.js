@@ -3,11 +3,20 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b203-tidy2", build: 203, date: "25 Nov 2026", title: "Arrows you can see, and a fresh Coming next", items: [
+    { id: "b204-tidy2", build: 204, date: "25 Nov 2026", title: "Arrows you can see, and a fresh Coming next", items: [
       "Hunting: the arrow stuck in an animal is now sized to the animal, with its feathers sticking out, so you can see where you hit.",
       "Mining: the mine's name and the line under it stay on top when the pickaxe swings at the top row on small phones.",
       "Forge: on a PC the heat strip moves to the left while you quench, so it no longer covers the blade. On phones \"A perfect quench!\" and the other calls sit on a dark plate and are easy to read.",
-      "The Coming next list is up to date: afflictions, combos, the new mini-games, painted fighters, races and horse coats are in the game now, so they're off the list.",
+      "The Coming next list is up to date: afflictions, combos, the new mini-games, painted fighters, races, horse coats and fighters that match the scene are in the game now, so they're off the list.",
+    ] },
+    { id: "b203-rigcohesion", build: 203, date: "25 Nov 2026", title: "Fighters that belong in the scene", items: [
+      "Fighters and foes now take on the light of the place you fight in: cold and blue in the snow, warm and torch-lit in caves, dim in barrows, with a faint edge of light on their backs.",
+      "Fighters are a touch softer so they match the painted backdrops instead of looking pasted on top.",
+      "Everyone casts a soft shadow under their feet and body, so they stand on the ground.",
+      "Hair, braids, belts and fur sway and trail a little when fighters move or take a hit.",
+      "Elbows and knees no longer show a gap when arms and legs bend.",
+      "The sword swing is now a small soft smear right behind the blade, only at the end of the swing.",
+      "Women on horseback have their boots back, and long braids no longer get cut off at the collar.",
     ] },
     { id: "b202-tidy1", build: 202, date: "25 Nov 2026", title: "Weather on the lake and in the woods", items: [
       "Fishing and hunting follow the clock and the sky: at night the scene goes dark blue with a moon, snow falls and turns it cold, rain and fog make it grey, and the day is brighter and less orange.",
@@ -1414,9 +1423,9 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 203;
+  const NEXT_AT = 204;
   const NEXT = [
-    "Painted fighters that blend into every scene, and 14 more painted battle backdrops",
+    "14 more painted battle backdrops",
     "An adventuring company longhouse: a shared base with a treasury, a trophy hall and stables",
     "Daedric bargains and artifacts that awaken",
     "Regional crises and heists",
