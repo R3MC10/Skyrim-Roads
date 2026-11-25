@@ -3946,7 +3946,7 @@
       case "fgroup": forgeGroup = b.dataset.id; renderPanel(true); break;
       case "smake": { const id = b.dataset.id, inf = SMITH.atForge(S) && SMITH.info(S, id);
         const go = (g) => { const m = CG.smithMake(S, id, g); if (/^You make/.test(m)) { GUIDE.mark(S, "smith"); SOUND.fx("clang"); tally("crafted"); publishCard(); } if (/^(You make|Botched)/.test(m)) persist(true); say(m); };
-        if (inf && !inf.block) CG.run(CG.gameFor("smith", id), { skill: G.skill(S, "Smithing"), skillName: "Smithing", what: D.ITEMS[id].name }, go); else go(CG.QUICK); break; }
+        if (inf && !inf.block) CG.run(CG.gameFor("smith", id), { skill: G.skill(S, "Smithing"), skillName: "Smithing", what: D.ITEMS[id].name, id, s: S }, go); else go(CG.QUICK); break; }
       case "srefine": case "srefineall": { const k = +b.dataset.id, all = a === "srefineall", inf = SMITH.atForge(S) && SMITH.refineInfo(S, k);
         const go = (g) => { const m = CG.refine(S, k, all, g); if (/^(You (smelt|tan)|You work|The heat|Your knife)/.test(m)) persist(true); say(m); };
         if (inf && inf.times) CG.run(CG.gameFor("refine", k), { skill: G.skill(S, "Smithing"), skillName: "Smithing", what: `${inf.n * (all ? inf.times : 1)} ${D.ITEMS[inf.out].name}` }, go); else go(CG.QUICK); break; }

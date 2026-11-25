@@ -64,6 +64,11 @@
                                          4×2: blood-decals (384² cells), oil/green/ichor/sap-decals (192² cells); <liquid>-drops (4×2 of
                                          48², flying drops, head right); blood-drips (4×128×160, body stains). The rest from
                                          scripts/make_gfx.py: dust bonedust frost embers motes (10×192²), shock (8×192²), sparks (8×160²).
+     mg-smithing-bg           2048×1152  painted smithy for the forging mini-game (smithgame.js): forge left, anvil centre, quench
+                                         barrel right. WebP q80. Drawn fallback if missing.
+     mg-smith-blade1 … 4      ~1170-1350 ×~125  blade stages (bar, rough, cooling, finished), transparent, tang left, tip right,
+                                         trimmed, all cut from one sheet at the same scale (keep it). WebP q85.
+     mg-smith-hammer, -tongs  785×278, 892×169  transparent tools, horizontal, head / jaws on the right. WebP q85.
      mg-fishing-bg            2048×1152  painted lake at dusk for the fishing mini-game (fishart.js), 16:9, WebP q82. Water wobble,
                                          glints, mist and weather are drawn over it; without it the ink lake stays.
      fish-<kind>              ~720 wide  painted fish, transparent, side view facing right, trimmed, WebP q86 (fishart.js SPR maps

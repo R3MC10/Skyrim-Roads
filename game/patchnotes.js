@@ -3,6 +3,15 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b201-mgsmith", build: 201, date: "25 Nov 2026", title: "A real forge for smithing", items: [
+      "Making weapons and armor at a forge is now a small scene at a painted smithy: heat the bar, hammer it into shape, then quench it.",
+      "Heat: hold to pump the bellows and keep the glow in the gold band. Too hot and it burns, too cold and it won't move.",
+      "Hammer: tap the glowing spots as the rings close on them. Sparks fly and the bar turns into a rough blade, then a shaped one. The metal cools while you work, so reheat it when the glow fades.",
+      "Quench: dip the blade in the water barrel when it cools to cherry red. Steam bursts up and you see the finished blade.",
+      "Good work gives the same small, capped bonus as before (a point or two of damage or armor). Great work can also save one piece of the main material now and then. The forge still uses up everything else.",
+      "Quick craft skips it, like the other crafting games. The Smithing contest at festivals uses the new forge too.",
+      "New Smithing perk, Forge Sense: wider gold bands, slower cooling, and a better chance to save material.",
+    ] },
     { id: "b200-rigraces", build: 200, date: "25 Nov 2026", title: "Painted races and a softer swing", items: [
       "Women in iron or steel armour now wear it in fights too, painted to match, instead of always showing up in leather.",
       "Dark Elves, Khajiit and Argonians get their own painted faces in fights, for men and women, sized to sit right on the armour. Other races keep the tinted face for now.",
