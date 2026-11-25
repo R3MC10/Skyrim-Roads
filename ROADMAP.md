@@ -69,6 +69,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Smart AI combat (default; custom tactics optional), crafting mini-games, motion design (63)
 
 ## In progress (write your name before you start)
+- Claude: combat combos and reactions (reactions.js): Shatter (frost + power attack), Burning ground (oil flask + fire), Exploit (shield bash + power attack), Precision (Mark + archer crits), Stagger exploit (Unrelenting Force + attack), Intercept (cover a teammate); boss hexes to cleanse and allies to protect via the "Next:" telegraph; combo icon on moves + combo banner; perks Cold Breaker, Tactician, Bodyguard; tests/test_combos.js. Branch claude/combos.
 <<<<<<< HEAD
 - Claude: fight balance after the 4-moves turn (tbfight.js estimate): foe health follows the stamina / magicka a hero can really spend in a turn (power attack + blows, casts, summon), so strong heroes no longer end fights in 3-5 rounds; sims in test_tbfight / test_bossfight / test_leghunt. Deep-expedition tiers untouched. Branch claude/bal-postcombat2.
 =======
