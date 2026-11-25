@@ -83,6 +83,14 @@ const TOURNEYUI = (() => {
       fx(w / 2 - 20, 1); g.fillStyle = "#5a3a2a"; g.beginPath(); g.ellipse(w / 2 + 22, h * 0.66, 14, 8, 0, 0, Math.PI * 2); g.fill(); g.stroke(); g.fillStyle = ink;
     }, { key: `pit|${w}x${h}`, cls: "tn-art", alt: "The Grand Arena", style: "ink" });
   }
+  /* the painted header (fest-<id>.webp, 1600x600; the Grand Arena is fest-arena): shown when the picture has loaded, with the title on a soft dark vignette.
+     Returns "" while it's missing or loading, and the ink drawing stands in. */
+  function painted(id, titleHTML, on = true) {
+    let u = "";
+    try { u = typeof ASSETS !== "undefined" ? ASSETS.url("fest-" + id) : ""; } catch { u = ""; }
+    if (!u) return "";
+    return `<div class="tn-pic${on ? "" : " tn-off"}" role="img" aria-label="${esc(id)}" style="background-image:url('${u}')"><div class="tn-pt">${titleHTML}</div></div>`;
+  }
   /* a small banner chip for a festival on the map and in lists */
   const chip = (f) => `<span class="tn-chip" style="background:linear-gradient(180deg,${f.colors[0]} 0 60%,${f.colors[1]} 60%)" aria-hidden="true"></span>`;
 
@@ -136,8 +144,10 @@ const TOURNEYUI = (() => {
   /* the Festivals place in any city or town */
   function festHTML(s, l) {
     const t = Date.now(), c = T.current(t), nx = T.next(t);
-    const head = c ? `<div class="tn-hero">${banner(c)}<div><h3>${chip(c)}${esc(c.name)}</h3><p class="sub">${esc(c.place)}${c.hold ? `, ${esc(c.hold)}` : ""} · on now · ends in ${span(c.end - t)}</p><p class="sub">${esc(c.text)}</p></div></div>`
-      : `<div class="tn-hero">${banner(nx, 320, 110, false)}<div><h3>${chip(nx)}${esc(nx.name)}</h3><p class="sub">${esc(nx.place)} · starts in ${span(nx.start - t)}</p><p class="sub">${esc(nx.text)}</p></div></div>`;
+    const pic = (f, on) => painted(f.id, `<h3>${chip(f)}${esc(f.name)}</h3>`, on);
+    const pc = c ? pic(c, true) : pic(nx, false);
+    const head = c ? `<div class="tn-hero${pc ? " tn-hp" : ""}">${pc || banner(c)}<div>${pc ? "" : `<h3>${chip(c)}${esc(c.name)}</h3>`}<p class="sub">${esc(c.place)}${c.hold ? `, ${esc(c.hold)}` : ""} · on now · ends in ${span(c.end - t)}</p><p class="sub">${esc(c.text)}</p></div></div>`
+      : `<div class="tn-hero${pc ? " tn-hp" : ""}">${pc || banner(nx, 320, 110, false)}<div>${pc ? "" : `<h3>${chip(nx)}${esc(nx.name)}</h3>`}<p class="sub">${esc(nx.place)} · starts in ${span(nx.start - t)}</p><p class="sub">${esc(nx.text)}</p></div></div>`;
     let main = "";
     if (c && T.here(s, c.place)) {
       main = `${repHTML(s)}<div class="tn-grid">${c.contests.map((k) => contestHTML(s, c, k)).join("")}${duelsHTML(s, c)}</div><h4>Glory</h4>${gloryHTML(c.key, s)}`;
@@ -152,7 +162,8 @@ const TOURNEYUI = (() => {
     const t = Date.now(), wk = T.pitWeek(t), fk = T.pitKey(t), P = T.pitSt(s, t), run = P.run, rl = role(s), no = T.pitWhy(s, rl);
     const e = T.entry(s, fk, false), best = e?.sc?.pit;
     const allies = partyCards();
-    return `<div class="tn tn-pit"><div class="tn-hero">${pitArt()}<div><h3>The Grand Arena</h3><p class="sub">${T.PIT_ROUNDS} rounds of monsters, each one harder. Your health carries over; the healers patch you up a little between rounds. Nobody dies in the Pit and nothing you wear is lost.</p>
+    const pc = painted("arena", `<h3>The Grand Arena</h3>`);
+    return `<div class="tn tn-pit"><div class="tn-hero${pc ? " tn-hp" : ""}">${pc || pitArt()}<div>${pc ? "" : `<h3>The Grand Arena</h3>`}<p class="sub">${T.PIT_ROUNDS} rounds of monsters, each one harder. Your health carries over; the healers patch you up a little between rounds. Nobody dies in the Pit and nothing you wear is lost.</p>
       <p class="sub">This week's board closes in ${span(T.pitEnds(wk) - t)}.${best != null ? ` Your best: <b class="num">${best}</b>.` : ""}</p></div></div>
       ${prizesHTML(s)}
       <div class="tn-grid"><div class="tn-card"><div class="tn-ch"><span class="tn-ic" aria-hidden="true">\uE11F</span><b>${run ? `Round ${run.r} of ${T.PIT_ROUNDS}` : "A new run"}</b>${run ? `<span class="sub num">${Math.round(run.hp * 100)}% health</span>` : ""}</div>

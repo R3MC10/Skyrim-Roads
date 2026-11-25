@@ -28,6 +28,8 @@
      shop-<id>                1200×375   painted banners for town sections (shown above each shop's list)
        ids: general forge (also blacksmith) inn (also cook) alchemy wizard (also enchanter) market stables home hall
             fence arena mine — raw 3:2 paintings go through art/conv: crop the middle band, WebP q80
+     fest-<id>                1600×600   8:3 painted headers for the festival and Grand Arena screens (tourneyui.js), WebP q85.
+       ids: harvest olaf tourney derby hunt forgefire midwinter arena. The ink drawing stays as the fallback.
      room-<type>-<theme>      1600×900   painted dungeon rooms (dunrooms.js), shown above the room text. WebP q80.
        types: fight elite trap treasure puzzle rest boss (mystery optional). themes: cave barrow dwemer mine forsworn
        vampire temple fort banditcamp thalmor giantcamp lair. Just drop a file in: a missing one borrows the closest

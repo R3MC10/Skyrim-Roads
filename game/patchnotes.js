@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b190-festart", build: 190, date: "25 Nov 2026", title: "Painted festival headers", items: [
+      "Every festival now has a painted picture on top of its screen: the Harvest Fair, the Burning of King Olaf, the Jarl's Tourney, the Fishing Derby, the Great Hunt, Forgefire Days and the Midwinter Feast.",
+      "The Grand Arena in Windhelm has its own painting too: the sand pit, the crowd on the stone tiers and two duellists.",
+      "The festival's name sits on a soft dark shade so you can read it over the picture. While a festival is still to come, its picture is a little faded.",
+    ] },
     { id: "b189-paintrig", build: 189, date: "25 Nov 2026", title: "Painted fighters that really move", items: [
       "In fights you, your party mates and your followers are now painted like the foes, in leather, iron or steel to match what you wear.",
       "They move joint by joint: a sword swing winds up behind the head and cuts through, a power attack sinks low, two-handers swing wide, bows draw and loose, spells glow in the hand, shields block and bash.",
@@ -1318,10 +1323,10 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 189;
+  const NEXT_AT = 190;
   const NEXT = [
     "Painted riders on the road and on the map",
-    "Makeovers for fishing, hunting, mining and lockpicking, plus painted festival and arena pictures",
+    "Makeovers for fishing, hunting, mining and lockpicking",
     "Afflictions with an upside and a downside: lycanthropy, the Draugr curse and the Daedric mark",
     "An adventuring company longhouse: a shared base with a treasury, a trophy hall and stables",
     "Daedric bargains and artifacts that awaken, plus regional crises and heists",
