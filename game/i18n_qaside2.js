@@ -32,6 +32,13 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "Rough work, but it holds.": "Toporna robota, ale trzyma.", "Great work.": "Świetna robota.", "Masterful work!": "Mistrzowska robota!", "Perfect work!": "Doskonała robota!",
     "The heat runs wild and the ore turns to slag.": "Żar wymyka się spod kontroli i ruda zamienia się w żużel.",
     "Your knife slips and the hide tears.": "Nóż ci się ześlizguje i skóra się rozdziera.",
+    // patch note b256
+    "Halls, inns and festivals in Polish": "Dwory, karczmy i festyny po polsku",
+    "Fixed: a festival in a hold's capital said the place twice, like \"Falkreath, Falkreath\".": "Naprawione: festyn w stolicy włości podawał miejsce dwa razy, np. „Falkreath, Falkreath”.",
+    "Fixed: in Polish, the Hall of the North's sizes and shared chest, buying a house or a hall plot, the neighbours list, renting a room and writing a bard's verse are translated.":
+      "Naprawione: po polsku są już rozmiary i wspólna skrzynia Dworu Północy, kupno domu i działki pod dwór, lista sąsiadów, wynajem pokoju i pisanie zwrotki dla barda.",
+    "Fixed: in Polish, festival times, the player search box and the \"% there\" under your skills are translated.":
+      "Naprawione: po polsku są już czasy festynów, pole szukania graczy i procent postępu pod umiejętnościami.",
     // patch note b252
     "Forge and lockpicking fixes": "Poprawki kuźni i otwierania zamków",
     "Fixed: in Polish, the forge was still mostly in English: the Make, Smelt & tan and Improve tabs, batch crafting, what's missing, and the line you get after making something.":
