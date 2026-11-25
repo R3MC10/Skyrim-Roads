@@ -1,7 +1,7 @@
 """Painted horses (horseart.js): the horse pictures in a mounted fight, the travel strip, the world map hero and the
 stable card, on a phone and a wide PC window, plus a gallery straight from the drawers (every coat, standing,
 galloping, ridden in a fight and knocked down). Needs ?assets so the pictures load.
-Run:  python -m http.server 8770 --directory game   then   python tests/horseart_ui.py 8770 [outdir]
+Run:  node tests/serve.js 8770   then   python tests/horseart_ui.py 8770 [outdir]
 Fails on page errors or if the painted horse never loads."""
 import asyncio, base64, os, sys, tempfile
 from playwright.async_api import async_playwright

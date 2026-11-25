@@ -5,7 +5,7 @@ For every main screen at 2000x837, 1920x1080, 1366x768 and 2560x1080 it checks:
   * the header, map, side panel, map place card, menus and popups stay inside the window and above the bottom bar
 Then a 360x780 phone run checks phones are untouched (the page still scrolls, the column layout is unchanged).
 
-Run:  python -m http.server 9460 --directory game   then
+Run:  node tests/serve.js 9460   then
       python tests/pcfit_ui.py 9460 [--vp=2000x837,360x780] [--only=map,items]
 Screenshots go to tests/out_pcfit/. Prints "pcfit_ui: all good"."""
 import asyncio, json, os, sys

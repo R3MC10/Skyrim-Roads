@@ -1,5 +1,5 @@
 """Something at every place: the "What's here" card at a farm, a shrine and a cabin, in both art styles.
-   python3 -m http.server 8765 --directory ../game &   then   python3 fullmap_ui.py 8765
+   node serve.js 8765 &   then   python3 fullmap_ui.py 8765
    Screenshots go to tests/out_fullmap/."""
 import asyncio, os, sys, shutil
 from playwright.async_api import async_playwright

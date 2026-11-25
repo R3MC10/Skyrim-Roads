@@ -1,7 +1,7 @@
 """Charge bars on screen (chargebar.js): the Items menu (icons, "no charge", the detail card), a mouse tooltip on PC,
 the shop's sell list and the wizard's staffs, the paper doll's weapon picker, and the charge meter in a turn-by-turn fight.
 Hand-drawn style, a 390x844 phone and a 1920x1080 PC, painted assets on (?assets).
-Run:  python -m http.server 8765 --directory game   then   python tests/chargebar_ui.py 8765 [outdir]   — prints "chargebar_ui: all good".
+Run:  node tests/serve.js 8765   then   python tests/chargebar_ui.py 8765 [outdir]   — prints "chargebar_ui: all good".
 Screenshots in tests/out_chargebar/ (gitignored) unless an outdir is given."""
 import asyncio, os, sys
 from playwright.async_api import async_playwright

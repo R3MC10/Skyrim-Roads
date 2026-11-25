@@ -3,7 +3,7 @@ The world map fills the window as the home screen; the bottom bar, the quest tra
 brought back from the edge tab), the town's places in the side panel, the Tab compass over the dimmed map, a menu
 full-screen over the blurred map, wheel zoom and keys. Then a second player in the same town: a "Stranger" on the map
 until A greets them and B accepts, after which both see each other's names. A phone stays as it was.
-Run:  py -m http.server 8765 --directory game   then   py tests/pcmap_ui.py 8765 [outdir]
+Run:  node tests/serve.js 8765   then   py tests/pcmap_ui.py 8765 [outdir]
 Screenshots land in outdir (default: tests/out_pcmap)."""
 import asyncio, os, sys
 from playwright.async_api import async_playwright

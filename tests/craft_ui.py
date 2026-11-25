@@ -2,7 +2,7 @@
 arcane enchanter and homestead workbench on two phone sizes, both art styles, and the biggest text size at 360 px.
 Checks: "Can make now" filter, "Can make N" / "Missing:" lines, pinning a favourite to the top, ×5 / Max with one
 confirm and one summary toast, single Make still opens the mini-game, no page errors, nothing sticking out sideways.
-Run:  python -m http.server 9650 --directory game   then   python tests/craft_ui.py 9650 [outdir]
+Run:  node tests/serve.js 9650   then   python tests/craft_ui.py 9650 [outdir]
 (On Windows: set PYTHONIOENCODING=utf-8.) Screenshots land in outdir (default: craft_shots in the temp folder)."""
 import asyncio, os, sys, tempfile
 from playwright.async_api import async_playwright

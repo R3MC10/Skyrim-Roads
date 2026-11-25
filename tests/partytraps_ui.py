@@ -2,7 +2,7 @@
 and EVERY hero gets the trap game. Alfa (leader) finds the plate, Beta runs out of time, Ceta closes the app (counts as
 caught after the time limit). Everyone sees the results card; Beta takes the hit. Then the leader picks a chest lock
 and Beta watches it live with Alfa's named cursor on screen. Both art styles.
-Screenshots go to tests/out_partytraps/. Usage: py partytraps_ui.py PORT   (serve: py -m http.server PORT --directory game)"""
+Screenshots go to tests/out_partytraps/. Usage: py partytraps_ui.py PORT   (serve: node tests/serve.js PORT)"""
 import asyncio, sys, os, time
 RUN = str(int(time.time()) % 100000)
 from playwright.async_api import async_playwright
@@ -14,6 +14,16 @@ def ok(c, m):
     if not c: fails.append(m)
 
 ROWS = "[[{type:'trap',links:[0]}],[{type:'treasure',links:[0]}],[{type:'rest',links:[0]}],[{type:'boss',links:[]}]]"
+
+VOTE = """(k) => { const b = document.querySelector(`.pvote [data-act=pvv][data-k="${k}"]`); if (!b) return false; if (!b.classList.contains('pvmine')) b.click(); return true; }"""
+async def pvote(pages, key, tries=16):
+    """party votes (partyvote.js): in a party run every dungeon choice is a vote; the members tap the same option as the leader"""
+    left = list(pages)
+    for _ in range(tries):
+        left = [pg for pg in left if not await pg.evaluate(VOTE, key)]
+        if not left: return True
+        await pages[0].wait_for_timeout(300)
+    return False
 
 async def main():
     os.makedirs(OUT, exist_ok=True)
@@ -51,6 +61,7 @@ async def main():
                 if err: print("join:", err)
             # Alfa steps into the trap room
             await A.evaluate("() => { const b = document.createElement('button'); b.dataset.act = 'droom'; b.dataset.c = '0'; (document.querySelector('#dun') || document.querySelector('#side')).appendChild(b); b.click(); b.remove(); }")
+            await pvote([B, C], '0', 8)   # a fork is a vote too (only when there are two ways)
             await A.wait_for_timeout(600)
             await A.evaluate("() => document.querySelectorAll('#modal').forEach(m => m.remove())")
             rt = await A.evaluate("() => window.__dbg.save().dungeon?.room?.type")
@@ -58,6 +69,7 @@ async def main():
             trap = await A.evaluate("() => window.__dbg.save().dungeon?.room?.trap")
             hb0 = await B.evaluate("() => G.curHealth(window.__dbg.save())")
             await A.evaluate("() => { const b = document.createElement('button'); b.dataset.act = 'dact'; b.dataset.c = 'trigger'; (document.querySelector('#dun') || document.querySelector('#side')).appendChild(b); b.click(); b.remove(); }")
+            ok(await pvote([B, C], 'trigger'), f"[{style}] Beta and Ceta vote to step on it too")
             # everyone gets the game
             opened = {}
             for _ in range(16):
@@ -108,8 +120,13 @@ async def main():
             await A.evaluate("() => { const S = window.__dbg.save(); S.dungeon.room = { type: 'treasure', tier: 1, tries: 3, text: 'A chest.' }; }")
             await A.evaluate("() => { IMM.wantsGame = () => true; }")
             await A.evaluate("() => { const b = document.createElement('button'); b.dataset.act = 'dact'; b.dataset.c = 'pick'; document.querySelector('#side').appendChild(b); b.click(); b.remove(); }")
-            await A.wait_for_timeout(500)
-            lp = await A.query_selector("#lpc") or await A.query_selector(".lockpick canvas")
+            await pvote([B], 'pick', 10)
+            await A.wait_for_timeout(400); await A.evaluate("() => document.querySelector('.pvote [data-act=pvnow]')?.click()")   # Ceta left: the leader doesn't wait out her vote
+            lp = None
+            for _ in range(20):   # the vote closes, then the leader's phone carries it out
+                await A.wait_for_timeout(400)
+                lp = await A.query_selector("#lpc") or await A.query_selector(".lockpick canvas")
+                if lp: break
             ok(lp is not None, f"[{style}] Alfa's lock opens")
             lk = None
             for _ in range(12):

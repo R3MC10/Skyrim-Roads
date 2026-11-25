@@ -1,5 +1,5 @@
 # Cone of sight on the map (vision.js), in both art styles: you + a party member travelling, by day and in a night blizzard.
-# python -m http.server 8851 --directory ../game &   then   python visioncone_ui.py 8851
+# node serve.js 8851 &   then   python visioncone_ui.py 8851
 import asyncio, sys, os
 from playwright.async_api import async_playwright
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8851"

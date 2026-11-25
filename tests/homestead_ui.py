@@ -1,5 +1,5 @@
 # Homesteads screen (homestead.js) on a phone, in both art styles.
-# python -m http.server 9040 --directory game ; python tests/homestead_ui.py 9040 [screenshot dir]
+# node tests/serve.js 9040 ; python tests/homestead_ui.py 9040 [screenshot dir]
 import asyncio, sys, os, shutil
 from playwright.async_api import async_playwright
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8847"

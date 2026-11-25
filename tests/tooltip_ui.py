@@ -53,9 +53,15 @@ def on_screen(bx):
     return bx is not None and bx["l"] >= 0 and bx["t"] >= 0 and bx["r"] <= bx["vw"] + 0.5 and bx["b"] <= bx["vh"] + 0.5
 
 async def hover(pg, sel, name, style, expect, shot=True):
-    el = await pg.query_selector(sel)
-    if not el: ok(False, f"{style} desktop: {name} found ({sel})"); return
-    await el.scroll_into_view_if_needed(); bb = await el.bounding_box()
+    bb = None
+    for _ in range(4):   # the HUD redraws now and then: a handle can go stale, so look it up again
+        el = await pg.query_selector(sel)
+        if not el: break
+        try: await el.scroll_into_view_if_needed(timeout=3000); bb = await el.bounding_box()
+        except Exception: bb = None
+        if bb: break
+        await pg.wait_for_timeout(200)
+    if not bb: ok(False, f"{style} desktop: {name} found ({sel})"); return
     await pg.mouse.move(5, 5); await pg.wait_for_timeout(150)
     await pg.mouse.move(bb["x"] + bb["width"] / 2, bb["y"] + bb["height"] / 2); await pg.wait_for_timeout(350)
     bx = await wait_box(pg, 1500)

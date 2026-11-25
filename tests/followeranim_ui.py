@@ -1,7 +1,7 @@
 """Followers animate in the fight scene: a follower's strike ("Lydia hits 14", a turn-by-turn ally line) plays the
 attack clip on her figure. Grabs two frames of her swing and checks the pixels where she stands really change (much
 more than her idle breathing does), and that the scene reports her clip. Both art styles, one run.
-Usage: python -m http.server 8765 --directory ../game &  then  python followeranim_ui.py 8765
+Usage: node serve.js 8765 &  then  python followeranim_ui.py 8765
 Screenshots in tests/out_followeranim/."""
 import asyncio, sys, os, io, re
 from playwright.async_api import async_playwright

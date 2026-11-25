@@ -1,5 +1,5 @@
 """A brand-new character's first ~10 actions (onboard.js + the guided first trip), on two phone sizes and both art styles.
-Run:  python -m http.server 9700 --directory game   then   python tests/onboard_ui.py 9700 [outdir]
+Run:  node tests/serve.js 9700   then   python tests/onboard_ui.py 9700 [outdir]
 Screenshots land in outdir (default: onboard_shots in the temp folder). LOOK at them for confusing moments.
 Fails on page errors, sideways scrolling, a tip that covers the fight buttons, and missing tips/ideas."""
 import asyncio, os, sys, tempfile
@@ -100,7 +100,8 @@ async def run(b, vw, vh, style, fails):
     tip = await pg.evaluate(TIP); print(tag, "8 heavy tip:", tip[:60]); check("heavy" in tip.lower(), "no over-encumbered tip")
     await tab("map"); await pg.evaluate("scrollTo(0,0)"); await shot("heavy_tip")
     await pg.click("#obtip [data-obt=ok]")
-    # 8. the ideas in What to do next
+    # 8. the ideas in What to do next (mappanel.js shows 5 rows; ideas sort last, so open "Show more" when it's there)
+    await pg.evaluate("document.querySelector('[data-mp=more][aria-expanded=false]')?.click()"); await pg.wait_for_timeout(300)
     nx = await pg.evaluate("[...document.querySelectorAll('.obrow .t')].map(x=>x.firstChild.textContent.trim())"); print(tag, "9 ideas:", nx)
     check(1 <= len(nx) <= 3, f"expected 1-3 ideas, got {nx}")
     await pg.evaluate("document.querySelector('.nextcard')?.scrollIntoView({block:'start'})"); await shot("ideas")
@@ -112,8 +113,11 @@ async def run(b, vw, vh, style, fails):
     # a level 3 with gold: a dungeon and a horse come up
     await pg.evaluate("(()=>{const S=__dbg.save(); S.level=3; S.pendingLevels=0; S.gold=1400; S.lt={...(S.lt||{}), foes:9};})()"); await pg.wait_for_timeout(1200); await tab("map")
     print(tag, "state:", await pg.evaluate("(()=>{const S=__dbg.save(); return [S.level, S.gold, S.lt.foes, JSON.stringify(S.onb.hid)]})()"))
+    await pg.evaluate("document.querySelector('[data-mp=more][aria-expanded=false]')?.click()"); await pg.wait_for_timeout(300)
     nx3 = await pg.evaluate("[...document.querySelectorAll('.obrow .t')].map(x=>x.firstChild.textContent.trim())"); print(tag, "10 ideas lvl3:", nx3)
-    check(any("dungeon" in x.lower() for x in nx3) and not any("road fights" in x.lower() for x in nx3), f"level 3 with gold: expected the dungeon idea first, got {nx3}")
+    # the card drops an idea for a place another row already sends you to (mappanel.js), so the dungeon may come as the quest's Go
+    dgo = await pg.evaluate("[...document.querySelectorAll('.nextcard [data-act=go][data-place]')].map(b=>b.dataset.place).filter(n=>DUNGEONS.enterable(n))")
+    check((any("dungeon" in x.lower() for x in nx3) or dgo) and not any("road fights" in x.lower() for x in nx3), f"level 3 with gold: expected a dungeon to go to, got {nx3} / {dgo}")
     cand = await pg.evaluate("ONBOARD.candidates(__dbg.save(), {}).map(c=>c.id)"); check("horse" in cand and "dungeon" in cand, f"no horse/dungeon among the ideas: {cand}")
     await pg.evaluate("document.querySelector('.nextcard')?.scrollIntoView({block:'start'})"); await shot("ideas_lvl3")
     # 9. first dungeon

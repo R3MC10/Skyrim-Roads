@@ -2,7 +2,7 @@
 in both art styles. Checks: top bar buttons, compass, objective line, map buttons, the message lane, big banners, the
 floating compass button, the bottom bar (labels fit), the bars fading when full, one speech bubble at a time,
 the ★ favourites button docked in the top bar, no sideways scrolling.
-   python3 -m http.server 8765 --directory ../game &
+   node serve.js 8765 &
    python3 hud2_ui.py 8765            (screenshots go to hud2/)"""
 import asyncio, sys, os, shutil
 from playwright.async_api import async_playwright

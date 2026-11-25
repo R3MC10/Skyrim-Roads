@@ -1,7 +1,7 @@
 """Party votes in dungeons (partyvote.js), three phones in one co-op run: at the first fork everyone sees the same vote,
 each voter's face pops up next to their pick on every phone, a changed vote moves the face, and when everyone has voted
 the leader's phone settles it and all three walk into the same room. Ink and pixel art, phone (portrait) and PC.
-Usage: py dungeonvote_ui.py PORT   (serve game/ first: py -m http.server PORT --directory ../game)
+Usage: py dungeonvote_ui.py PORT   (serve game/ first: node serve.js PORT)
 Screenshots go to tests/out_dungeonvote/."""
 import asyncio, os, sys
 from playwright.async_api import async_playwright
