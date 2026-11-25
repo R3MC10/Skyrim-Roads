@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b305-perkkeys", build: 305, date: "25 Nov 2026", title: "Perk stars with the keyboard", items: [
+      "On a PC the Skills page now works like Skyrim's: A and D (or the arrows) step through the skills, W and S move up and down the list, and the stars on the right follow the skill you're on.",
+      "E, Enter or Space takes you into the stars. There W A S D jump to the nearest star that way (stars joined by a line first), its perk shows on the left, and E takes it if you can.",
+      "Tab, Esc or Backspace (or S at the bottom) go back to the skills. A bright ring shows where you are, and a small key hint sits at the bottom. The mouse and phones work as before.",
+    ] },
     { id: "b304-foepanel", build: 304, date: "25 Nov 2026", title: "A cleaner look at your foe", items: [
       "The foe's name and health float above its head as a thin Skyrim-style bar with no dark box, and never cover the foe or anyone else. Its statuses are small icons in one row under the bar.",
       "The exact numbers and the rest of its moves show when you hover over it on a PC or tap it on the phone. A boss keeps its big bar at the top, with its icons and next move just under it.",
