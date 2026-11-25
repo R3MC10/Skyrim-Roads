@@ -99,7 +99,7 @@ const FIGHTCAM = (() => {
     }
     // never past the picture: the whole canvas window stays on the stage
     cx = clamp(cx, ax / z, W - (W - ax) / z); cy = clamp(cy, ay / z, H - (H - ay) / z);
-    return { z, cx, cy, ax, ay };
+    return { z, cx, cy, ax, ay, W, H };
   }
   /* the stage -> screen matrix [a, b, c, d, e, f] for a layer moving at p of the camera (1: the fighters) */
   function matrix(V, p, sx, sy) {
@@ -246,8 +246,17 @@ const FIGHTCAM = (() => {
     const set = (p) => { const m = matrix(V, p, shx, shy); g.setTransform(m[0] * k, m[1] * k, m[2] * k, m[3] * k, m[4] * k, m[5] * k); };
     /* what a layer at p shows of the stage (with room for the shake and the tilt) */
     const win = (p) => {
-      const z = 1 + (V.z - 1) * p, cx = V.ax + (V.cx - V.ax) * p, cy = V.ay + (V.cy - V.ay) * p, m = (Math.abs(shx) + Math.abs(shy) + Math.abs(V.rot || 0) * p * (W + H) * 0.6) / z + 1;
+      const z = 1 + (V.z - 1) * p, cx = V.ax + (V.cx - V.ax) * p, cy = V.ay + (V.cy - V.ay) * p, m = (Math.abs(shx) + Math.abs(shy) + Math.abs(V.rot || 0) * (W + H) * 0.6) / z + (flat ? 0 : 1);
       return [cx - V.ax / z - m, cy - V.ay / z - m, cx + (W - V.ax) / z + m, cy + (H - V.ay) / z + m];
+    };
+    /* one row of the backdrop: across, it moves at its own parallax; up and down, each of its edges sits where the
+       parallax at that height puts it (Ys), so neighbouring rows always meet with no seam. One tilt for every row. */
+    const zP = (p) => 1 + (V.z - 1) * p, cxP = (p) => V.ax + (V.cx - V.ax) * p, cyP = (p) => V.ay + (V.cy - V.ay) * p;
+    const Ys = (y) => { const p = pOf(y / H); return V.ay + zP(p) * (y - cyP(p)); };
+    const co = Math.cos(V.rot || 0), si = Math.sin(V.rot || 0);
+    const row = (p, y0, y1) => {
+      const ux = zP(p), vs = (Ys(y1) - Ys(y0)) / (y1 - y0), X0 = -ux * cxP(p), Y0 = Ys(y0) - V.ay - vs * y0;
+      g.setTransform(co * ux * k, si * ux * k, -si * vs * k, co * vs * k, (V.ax + shx + co * X0 - si * Y0) * k, (V.ay + shy + si * X0 + co * Y0) * k);
     };
     /* draw a picture's (sx, sy, sw, sh) into the stage rect (dx, dy, dw, dh), cut into rows that each move at their own
        parallax (o.p fixes one factor); where the camera would see past the rect, the picture's edge is mirrored, up to
@@ -260,7 +269,7 @@ const FIGHTCAM = (() => {
       for (let i = 0; i < n; i++) {
         const y0 = dy + i * rh, y1 = i === n - 1 ? dy + dh : y0 + rh + 1 / k, p = o.p != null ? o.p : pOf((y0 + rh / 2) / H);
         const srcY = sy + (y0 - dy) * sk, srcH = Math.min(sy + sh - srcY, (y1 - y0) * sk);
-        set(p);
+        if (o.p != null || flat) set(p); else row(p, y0, y0 + rh);
         g.drawImage(im, sx, srcY, sw, srcH, dx, y0, dw, y1 - y0);
         const w = win(p), gl = Math.min(maxX + Math.max(0, dx), dx - w[0]), gr = Math.min(maxX + Math.max(0, W - dx - dw), w[2] - (dx + dw));   // the gap a narrow plate always leaves, plus the overscan
         if (gl > 0) { const sp = Math.min(sw, Math.ceil((gl + 1) * kx)); g.save(); g.translate(dx, 0); g.scale(-1, 1); g.drawImage(im, sx, srcY, sp, srcH, 0, y0, sp / kx, y1 - y0); g.restore(); }
@@ -270,7 +279,7 @@ const FIGHTCAM = (() => {
         if (i === n - 1 && o.bottom) { const gb = Math.min(maxY + Math.max(0, H - dy - dh), w[3] - (dy + dh)); if (gb > 0) { const sp = Math.min(sh, Math.ceil((gb + 1) * sk)); g.save(); g.translate(0, dy + dh); g.scale(1, -1); g.drawImage(im, sx, sy + sh - sp, sw, sp, L, -sp / sk, R - L, sp / sk); g.restore(); } }
       }
     }
-    return { flat, set, paint, pOf, near: CFG.near, toScreen: (x, y) => toScreen(V, x, y), toStage: (qx, qy) => toStage(V, k, qx, qy, shx, shy), V };
+    return { flat, set, paint, pOf, Ys, near: CFG.near, toScreen: (x, y) => toScreen(V, x, y), toStage: (qx, qy) => toStage(V, k, qx, qy, shx, shy), V };
   }
 
   /* ------------------------------------------------------------------ the fight screen's camera and its events */

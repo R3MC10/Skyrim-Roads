@@ -986,7 +986,7 @@ const FIGHTART = (() => {
       if (cam.active() && !cam.still) camRaf = requestAnimationFrame(camLoop);
     }
     const camOff = cam ? cam.onWake(camWake) : null;
-    if (cam) { CAMS.add({ cv, step(ms) { if (done && camMine()) { cam.tick(ms); draw(performance.now()); } } }); while (CAMS.size > 4) CAMS.delete(CAMS.values().next().value); }
+    if (cam) { CAMS.add({ cv, step(ms) { if (done && camMine()) { for (let l = ms; l > 0; l -= 16) cam.tick(Math.min(16, l)); draw(performance.now()); } } }); while (CAMS.size > 4) CAMS.delete(CAMS.values().next().value); }
     const meleeOf = (b) => !!b && !MOVES[b.move]?.proj && !["self", "potion", "wait", "block", "cast", "shout"].includes(b.move);
     function pickDeath() {
       if (deathK || !CFX || !won || turned) return;
@@ -1434,7 +1434,7 @@ const FIGHTART = (() => {
           const wt = heroP.wt || "sword", GL = COMBATFX.GLOW, col = SHINE.find(([k]) => GL[k] === c)?.[1] || c[0];
           const dx = tx2 - hxH, dy = ty2 - hyH, len = Math.hypot(dx, dy) || 1, ux = dx / len, uy = dy / len, nx = -uy, ny = ux;
           const pulse = 0.75 + 0.25 * Math.sin(tt * 2.6), at = (q, o) => [hxH + dx * q + nx * o, hyH + dy * q + ny * o];
-          wg.save(); wg.lineCap = "round"; wg.lineJoin = "round"; wg.strokeStyle = col; wg.shadowColor = col; wg.shadowBlur = 3 * s * k * z;
+          wg.save(); wg.lineCap = "round"; wg.lineJoin = "round"; wg.strokeStyle = col; wg.shadowColor = col; wg.shadowBlur = 3 * s * k * (V ? V.z : 1);
           if (/axe|mace|hammer|staff/.test(wt)) {   // a head at the end of a haft: a faint rim around the head, the haft stays plain
             const r = (/battleaxe|warhammer/.test(wt) ? 5 : /staff/.test(wt) ? 2.5 : 3.6) * s, [cx, cy] = at(heroRig ? 0.9 : 0.92, 0);
             wg.globalAlpha = 0.34 * pulse; wg.lineWidth = 0.7 * s; wg.beginPath(); wg.arc(cx, cy, r, 0, Math.PI * 2); wg.stroke();

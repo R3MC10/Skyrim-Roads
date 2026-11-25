@@ -3,6 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b334-fightcam", build: 334, date: "25 Nov 2026", title: "A cinematic fight camera", items: [
+      "The camera now moves only on big moments: it leans in a little when your turn starts, closes in on a wind-up, a critical hit, a broken guard and a killing blow, and slowly pulls in on a win. A boss gets a close-up when the fight starts. Ordinary swings keep the picture calm.",
+      "A critical hit plays for a moment in slow motion. The fight doesn't get any longer: the next turn comes just as fast.",
+      "The battlefield has depth: the sky and far mountains move less than the ground the fighters stand on. You never see the edge of the picture.",
+      "Only the battlefield moves. The turn order, the cards, the boss's health bar and your buttons stay where they are, and damage numbers and names follow the fighters at the same size.",
+      "In a party fight another player's big moment never moves your camera while you're choosing a move or playing a minigame.",
+      "New in Settings → Fights: Fight camera. Cinematic (the default), Calm (gentle, no shaking, no slow motion) or Off. With Reduce motion on, the camera is always Calm.",
+    ] },
     { id: "b333-maprider", build: 333, date: "25 Nov 2026", title: "Your rider on the map looks like you", items: [
       "On the world map your hero now looks like they really do: your race, your helmet, your armour, your shield and weapon, the same as on the hero screen. That goes for walking and standing too.",
       "Your horse on the map has a new body that really moves: it walks, trots and gallops, and it picks the one that fits how fast you're going. On a road you gallop; in deep snow or rough hills you slow down to a trot or a walk.",
