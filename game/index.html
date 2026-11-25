@@ -3840,6 +3840,10 @@ html.a11y-still .hgchip{animation:none;opacity:1}
 .minegame .mghead{position:relative;z-index:5}
 .sgpop{text-shadow:0 0 4px #000,0 0 10px #000,0 2px 3px #000,0 0 22px rgba(255,150,60,.6)}
 @media (max-width:600px){.sgpop{left:50%;right:auto;width:max-content;max-width:calc(100% - 24px);padding:5px 14px;border-radius:10px;background:rgba(10,7,5,.72);box-shadow:0 0 0 1px rgba(232,198,106,.35),0 6px 18px rgba(0,0,0,.6);margin-left:0;translate:-50% 0}}
+.cr-boss .cr-warn{margin:4px 0 2px;padding:5px 8px;border-left:3px solid #e0703a;background:rgba(0,0,0,.28);color:#ffd2b8;font-size:13px;line-height:1.35}
+/* a window is open: the message lane keeps to the room above it (hud2.js), newest message only */
+#hudlane.inmodal{overflow:hidden}
+#hudlane.inmodal #hudlog .hlog,#hudlane.inmodal .hl-say{display:none}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
