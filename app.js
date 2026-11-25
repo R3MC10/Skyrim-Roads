@@ -204,7 +204,8 @@
         }
       } finally { sub?.remove?.(); }
     },
-    /* game-only update: download the game files in the background, then switch to them (now, or on next start) */
+    /* game-only update: download the game files in the background, then switch to them now (now = true), or stage them
+       for the app's next start: the "Update ready" card and the title screen switch over sooner (autoCheck below) */
     async quickUpdate(lat, now, onStep = () => {}) {
       if (running) await running.catch(() => {});   // a download is already going (say, in the background): use it
       if (staged !== lat.build) {
@@ -256,37 +257,39 @@
   };
   window.__app = updater;
 
-  /* updates are forced: once the new game files are downloaded, switch over at the first safe moment
-     (the game says when: not mid-fight, dungeon, trade, menu or typing). Progress is saved first. */
-  let forceTimer = null;
-  function applyWhenSafe(r) {
-    clearInterval(forceTimer);
-    const tryNow = async () => {
-      let safe = false;
-      try { safe = !!window.__ui?.safeToUpdate?.(); } catch (e) { safe = false; }
-      if (!safe) return;
-      clearInterval(forceTimer); forceTimer = null;
-      try { window.__ui?.save?.(); } catch (e) { /* nothing to save yet */ }
-      try { await updater.quickUpdate(r.latest, true); } catch (e) { /* try again on the next check */ }
-    };
-    forceTimer = setInterval(tryNow, 15000);
-    tryNow();
+  /* everyone plays the same build: new game files download in the background as soon as a release is out. On the
+     title screen the game switches over at once; during play a small "Update ready" card offers Restart now (never mid
+     fight or dungeon: samever.js asks the game) and it switches by itself once back on the title screen, or when the app
+     comes back from the background at a quiet moment. Progress is saved first. */
+  const onTitleNow = () => !!document.querySelector("#title") && !document.querySelector("#title input:focus");
+  const quiet = () => { try { return !!window.__ui?.safeToUpdate?.(); } catch (e) { return false; } };
+  let titleTimer = null;
+  function offerStaged(r) {
+    const go = () => updater.quickUpdate(r.latest, true);
+    window.__ui?.updateStaged?.(r, go);   // the "Update ready" card + the Updates page (ui.js -> samever.js)
+    clearInterval(titleTimer);
+    titleTimer = setInterval(async () => {
+      if (!onTitleNow() || !quiet()) return;
+      clearInterval(titleTimer); titleTimer = null;
+      try { await go(); } catch (e) { /* try again on the next check */ }
+    }, 15000);
   }
-  async function autoCheck() {
+  const dlStep = (b) => (txt, pct) => { try { window.__ui?.updateProgress?.(b, pct); } catch (e) { /* older game files */ } };
+  async function autoCheck(back = false) {
     try {
-      const r = await updater.check();
+      const r = await updater.check(true);
       if (!r.newer || r.bad) return;   // a build that already failed to start here isn't pushed again (Update now still can)
       if (r.quick) {
-        if (staged === r.latest.build) { if (!forceTimer) applyWhenSafe(r); return; }
-        // download quietly; it switches over the next time the game opens (or right away on the title screen)
-        const onTitle = !!document.querySelector("#title") && !document.querySelector("#title input:focus");
-        await updater.quickUpdate(r.latest, onTitle);
-        if (!onTitle) { window.__ui?.updateStaged?.(r); applyWhenSafe(r); }
+        const now = onTitleNow() || (back && quiet());   // the title screen, or just back from the background with nothing going on
+        if (staged === r.latest.build) { if (now) await updater.quickUpdate(r.latest, true); else offerStaged(r); return; }
+        await updater.quickUpdate(r.latest, now, dlStep(r.latest.build));
+        if (!now) offerStaged(r);
         return;
       }
       window.__ui?.updateAvailable?.(r);
-    } catch (e) { if (e?.message) lastFail = String(e.message); /* offline or a bad download: try again on the next check */ }
+    } catch (e) { if (e?.message) lastFail = String(e.message); try { window.__ui?.updateProgress?.(0, -1, lastFail); } catch (x) { /* older game files */ } /* offline or a bad download: try again on the next check */ }
   }
+  updater.auto = autoCheck;
 
   App?.addListener("backButton", () => { if (!window.__ui?.back()) App.minimizeApp(); });
   App?.addListener("pause", () => { window.ROTN_NATIVE.bg = true; window.__ui?.save(); scheduleAway(); });
@@ -295,7 +298,7 @@
     clearAll();
     document.dispatchEvent(new Event("visibilitychange"));
     if (waitingForPermission) { waitingForPermission = false; window.__ui?.permissionBack?.(); }
-    setTimeout(autoCheck, 3000);   // back in the game: look for a new version
+    setTimeout(() => autoCheck(true), 3000);   // back in the game: look for a new version (and switch to one already here)
   });
   setTimeout(() => SplashScreen?.hide(), 400);
   setTimeout(askOnce, 2500);
@@ -325,5 +328,5 @@
   setTimeout(launchUpdate, 300);
   // the game calls __app.ready() once its title screen has drawn (ui.js): only then do these files count as working
   if (window.__rotnTitleDrawn) updater.ready();
-  setInterval(autoCheck, 10 * 60000);
+  setInterval(() => autoCheck(), 10 * 60000);
 })();

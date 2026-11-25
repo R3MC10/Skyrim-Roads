@@ -359,7 +359,7 @@ const COMBATAI = (() => {
   }
   const settingsOf = (L) => (typeof AISET !== "undefined" ? AISET.get(L) : null);
 
-  /* ---- read-only helpers for the "What would the AI do?" tester (aitester.js) and the fight log. They never change
+  /* ---- read-only helpers for the fight log (the old "What would the AI do?" tester is gone). They never change
      a decision: rank() scores the same options choose() looks at, shortWhy() only words a reason. */
   const WHY0 = { attack: "steady damage", power_attack: "enough stamina for a heavy blow", block: "guards against a big hit",
     "potion:health": "badly hurt", "potion:magicka": "out of magicka", "potion:stamina": "out of stamina", flee: "gets out while it can" };

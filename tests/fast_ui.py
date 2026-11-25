@@ -1,7 +1,7 @@
 """Quicker travel and fights (fastqol.js) at phone size, both art styles. Usage: python fast_ui.py PORT [outdir] — prints RESULT OK.
 Recent-trip chips on the travel screen (and that they start the trip), the too-heavy loot question, no speed or Skip
 buttons (gone in build 146), tap-anywhere to finish a replay (result card and the turn-by-turn screen), "Carry on" after road
-fights, the new settings rows, and Fight again on the test dummy. 360x780 runs at the Biggest text size.
+fights, and the new settings rows. 360x780 runs at the Biggest text size.
 Screenshots in outdir (default: fast_shots in the temp folder)."""
 import asyncio, os, sys, tempfile
 from playwright.async_api import async_playwright
@@ -115,19 +115,6 @@ async def main():
                 ok(not bad, f"{tag}: settings fit {bad[:3]}")
                 await shot("settings")
                 await pg.evaluate(CLEAR)
-
-                # ---- Fight again on the test dummy, remembered foe
-                await pg.evaluate("window.__dbg.save().trip=null; window.__ui.go('tactics')"); await pg.wait_for_timeout(400)
-                foe = await pg.evaluate("(()=>{ const o=[...document.querySelectorAll('#te option')]; return o[Math.min(2,o.length-1)].textContent; })()")
-                await pg.select_option("#te", label=foe)
-                await pg.click("[data-act=test]"); await pg.wait_for_timeout(500)
-                ok(await pg.evaluate("!!document.querySelector('.fqagain[data-act=test]')"), f"{tag}: Fight again under the test result")
-                await pg.evaluate("document.querySelector('.fqagain')?.scrollIntoView({block:'center'})")
-                await shot("again")
-                await pg.click(".fqagain"); await pg.wait_for_timeout(500)
-                ok(await pg.evaluate("!!document.querySelector('.fqagain')"), f"{tag}: fought again")
-                await pg.evaluate("window.__ui.go('tactics')"); await pg.wait_for_timeout(300)
-                ok(await pg.evaluate(f"document.querySelector('#te').value === {foe!r}"), f"{tag}: remembers the test foe ({foe})")
 
                 # ---- turn by turn: tap anywhere finishes the scene
                 await pg.evaluate("""()=>{ const S=window.__dbg.save(); G.setHealth(S,G.maxHealth(S)); S.dungeon=null; S.trip=null; S.location=null; [S.x,S.y]=WORLD.places.Whiterun.slice(0,2);

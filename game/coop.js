@@ -455,6 +455,7 @@ const COOP = (() => {
       } else if (a === "coopinv") {
         const run = mine();
         if (!run) return;
+        if (typeof SAMEVER !== "undefined" && SAMEVER.blockWith(ctx.cardOf?.(id), b.dataset.name)) return;   // another build: say why (samever.js)
         let err = null;
         await ctx.Store.change("runs", run.id, (x) => { const o = invite(x, id, b.dataset.name, party()); err = o.err; return o.run || x; });
         if (err) return toast(err);
@@ -463,6 +464,7 @@ const COOP = (() => {
       } else if (a === "coopjoin") {
         const old = mine(); if (old && old.id !== id) await ctx.Store.change("runs", old.id, (x) => removeMember(x, s.id));
         const pre = runs.find((r) => r.id === id);
+        if (pre && typeof SAMEVER !== "undefined" && SAMEVER.blockWith(ctx.cardOf?.(pre.leader), pre.leaderName)) return;   // the leader is on another build: update first
         if (pre && live(pre) && !isMember(pre, s.id) && activeMembers(pre).length >= MAX_MEMBERS) {   // full: say so and drop the invite
           await ctx.Store.change("runs", id, (x) => decline(x, s.id));
           return toast(`That run is full (${MAX_MEMBERS} heroes at most).`);

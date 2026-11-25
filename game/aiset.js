@@ -16,8 +16,9 @@
      support    true/false                           support allies first (heal / shield friends)
    Loadout modes: "smart" (Smart AI), "custom" (your rules), "hybrid" (your rules first, Smart AI fills the gaps).
 
-   Rules can join several conditions with AND / OR, each can be NOT. Presets build rules for your kit. Share codes
-   ("ROTN1-…") copy a loadout's tactics and settings to a friend; they are cleaned on import. */
+   Rules can join several conditions with AND / OR, each can be NOT. Presets build rules for your kit.
+   Players no longer edit any of this (the AI & Loadouts tab, share codes and the test-fight preview are gone); it stays
+   for auto-played turns (party timeouts, arena duels) and the balance sims. */
 const AISET = (() => {
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const num = (v, d, a, b) => (typeof v === "number" && isFinite(v) ? clamp(Math.round(v), a, b) : d);
@@ -236,63 +237,6 @@ const AISET = (() => {
     return b;
   }
 
-  // ---------------------------------------------------------------- share codes
-  const b64e = (str) => (typeof btoa === "function" ? btoa(unescape(encodeURIComponent(str))) : Buffer.from(str, "utf8").toString("base64"));
-  const b64d = (str) => (typeof atob === "function" ? decodeURIComponent(escape(atob(str))) : Buffer.from(str, "base64").toString("utf8"));
-  function validAction(a) {
-    if (typeof a !== "string" || a.length > 60) return false;
-    if (["attack", "power_attack", "block", "flee"].includes(a)) return true;
-    const [k, arg, more] = a.split(":"); if (more !== undefined || !arg) return false;
-    if (k === "spell" || k === "dual") return !!D.SPELLS[arg];
-    if (k === "potion") return ["health", "magicka", "stamina"].includes(arg);
-    if (k === "scroll") return D.ITEMS[arg]?.slot === "scroll";
-    if (k === "shout") return typeof POWERS !== "undefined" ? !!POWERS.SHOUTS[arg] : /^[a-z_]+$/.test(arg);
-    if (k === "power") return ["race", "stone", "beast", "lord"].includes(arg);
-    return false;
-  }
-  function cleanRule(r) {
-    if (!r || typeof r !== "object" || !D.CONDITIONS[r.if] || !validAction(r.do)) return null;
-    const o = { if: r.if, do: r.do }; const kind = D.CONDITIONS[r.if][1];
-    if (kind) o.pct = num(+r.pct, kind === "turn" ? 3 : 50, kind === "turn" ? 1 : 0, kind === "turn" ? 60 : 100);
-    if (r.off) o.off = true; if (r.not) o.not = true;
-    if (Array.isArray(r.conds) && r.conds.length) {
-      const cs = r.conds.slice(0, 4).filter((c) => c && D.CONDITIONS[c.if]).map((c) => { const k2 = D.CONDITIONS[c.if][1], x = { if: c.if }; if (k2) x.pct = num(+c.pct, k2 === "turn" ? 3 : 50, k2 === "turn" ? 1 : 0, k2 === "turn" ? 60 : 100); if (c.not) x.not = true; return x; });
-      if (cs.length) { o.conds = cs; o.join = r.join === "or" ? "or" : "and"; o.if = cs[0].if; if (cs[0].pct != null) o.pct = cs[0].pct; else delete o.pct; }
-    }
-    return o;
-  }
-  function encode(L) {
-    const st = get(L);
-    return "ROTN1-" + b64e(JSON.stringify({ v: 1, mode: L.mode || "smart", ai: st, rules: (L.rules || []).map(cleanRule).filter(Boolean) }));
-  }
-  function decode(code) {
-    code = String(code || "").trim();
-    const m = /^ROTN1-([A-Za-z0-9+/=]+)$/.exec(code); if (!m || code.length > 12000) return null;
-    let d; try { d = JSON.parse(b64d(m[1])); } catch { return null; }
-    if (!d || typeof d !== "object") return null;
-    return { mode: pick(d.mode, ["smart", "custom", "hybrid"], "smart"), ai: clean(d.ai), rules: (Array.isArray(d.rules) ? d.rules : []).map(cleanRule).filter(Boolean).slice(0, D.MAX_RULES) };
-  }
-  function importInto(L, code) {
-    const d = decode(code); if (!d) return false;
-    L.mode = d.mode; L.ai = d.ai; L.rules = d.rules.length ? d.rules : [R("always", "attack")];
-    return true;
-  }
-
-  // ---------------------------------------------------------------- test-fight preview: 20 practice fights
-  function preview(s, foeName, lv = s.level, n = 20) {
-    const base = D.ENCOUNTERS.find((x) => x.name === foeName && x.health) || (typeof DUNGEONS !== "undefined" ? Object.values(DUNGEONS.ENEMY || {}).find((x) => x.name === foeName) : null);
-    if (!base) return null;
-    let win = 0, turns = 0, hpLeft = 0; const xp = {};
-    for (let i = 0; i < n; i++) {
-      const sim = G.clone(s); sim._test = true; sim.health = G.maxHealth(sim); sim.healthTs = G.now();
-      const f = new G.Fight(sim, G.scaleEnemy({ ...base }, lv)); f.run({});
-      if (f.won) win++; turns += f.turn; hpLeft += f.won ? 100 * f.hp / G.maxHealth(sim) : 0;
-      for (const [k, v] of Object.entries(f.xp)) xp[k] = (xp[k] || 0) + v / n;
-    }
-    for (const k of Object.keys(xp)) xp[k] = Math.round(xp[k]);
-    return { n, foe: foeName, win: Math.round(100 * win / n), turns: Math.round(10 * turns / n) / 10, hpLeft: win ? Math.round(hpLeft / win) : 0, xp };
-  }
-
   // ---------------------------------------------------------------- several foes: who goes first
   function pickTarget(L, foes) {
     const t = (L && L.ai && L.ai.target) || "weakest", hp = (e) => e.hp ?? e.health ?? 0;
@@ -303,6 +247,6 @@ const AISET = (() => {
     return list.sort((a, b) => hp(a) - hp(b));
   }
 
-  return { SCHOOLS, PREFER, STYLES, NEWCOND, PRESETS, clean, get, classOf, isHeal, allow, tune, trainable, trainPick, skillOf, cond, makeRule, describe, condLabel, applyPreset, encode, decode, importInto, validAction, preview, pickTarget };
+  return { SCHOOLS, PREFER, STYLES, NEWCOND, PRESETS, clean, get, classOf, isHeal, allow, tune, trainable, trainPick, skillOf, cond, makeRule, describe, condLabel, applyPreset, pickTarget };
 })();
 if (typeof module !== "undefined") module.exports = AISET;
