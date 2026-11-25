@@ -8,7 +8,7 @@ const c = { process: { env: process.env }, console, Math, Date, JSON, Float64Arr
 vm.createContext(c);
 const tbsrc = fs.readFileSync(path.join(__dirname, "test_tbfight.js"), "utf8");
 const list = JSON.parse(tbsrc.match(/for \(const f of (\[[^\]]*"tbfight\.js"[^\]]*\])/)[1]);
-const EXTRA = ["guilds.js", "priests.js", "horseback.js", "market.js", "craftfair.js", "followers2.js", "followerai.js", "combo.js", "dragons.js", "foekit.js", "fightread.js", "foeintent.js", "tbfight.js", "sharedfight.js", "fightctl.js", "hotbar.js"];
+const EXTRA = ["guilds.js", "priests.js", "horsetravel.js", "market.js", "craftfair.js", "followers2.js", "followerai.js", "combo.js", "dragons.js", "foekit.js", "fightread.js", "foeintent.js", "tbfight.js", "sharedfight.js", "fightctl.js", "hotbar.js"];
 for (const f of [...new Set(list.filter((x) => x !== "tbfight.js").concat(EXTRA))]) if (fs.existsSync(W + f)) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
 const helpers = tbsrc.slice(tbsrc.indexOf("const LEVELS"), tbsrc.indexOf("if (!process.env.SIMONLY)"));
 vm.runInContext(helpers + `
@@ -75,7 +75,7 @@ for (const b of ["warrior", "mage", "archer", "spellsword", "twohand"]) {
   const d = H.layout(s, f), ok = d.filter((a) => a && !ss.why(a));
   OK(ok.length >= 3, "at least three default slots can be used at once " + ok);
   r = ss.act(d[0]); OK(!r.err, "slot 1 plays a real move " + (r.err || "")); }
-// ---- drag and drop + single / dual cast (b292)
+// ---- drag and drop + single / dual cast (b300)
 { const { s, f } = fight("mage", 20);
   for (const id of ["flames", "healing", "conjure_familiar"]) if (!s.spells.includes(id)) s.spells.push(id);
   OK(H.mode("spell:flames") === 1 && H.mode("dual:flames") === 2 && H.mode("attack") === 0 && H.mode(null) === 0, "slot modes: spell 1x, dual 2x, the rest none");

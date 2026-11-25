@@ -3,11 +3,51 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b294-hotbardnd", build: 294, date: "25 Nov 2026", title: "Drag and drop on the hotbar, single or dual cast", items: [
+    { id: "b300-hotbardnd", build: 300, date: "25 Nov 2026", title: "Drag and drop on the hotbar, single or dual cast", items: [
       "In Edit hotbar you can now drag moves, spells, potions and poisons from the list onto a slot, drag one slot onto another to swap them, or drag a slot off the bar to empty it. With a mouse just drag; on a phone hold a row for a moment until it lifts, then drag. Tapping still works too.",
       "Every spell slot has a small 1× / 2× switch: 1× casts with one hand, 2× casts with both hands (stronger, costs more, with your dual casting perks). The same spell can sit in two slots, once each way, and the key or a tap uses the slot's way. The rune game plays for both.",
       "A spell that can't be dual cast (like a summon) can't be switched to 2×, and an old 2× slot of one shows greyed out and says why.",
       "The list shows each spell once now; your bar keeps what it had (old Dual slots stay 2×).",
+    ] },
+    { id: "b299-netfix", build: 299, date: "25 Nov 2026", title: "Players can see each other again", items: [
+      "Players can see each other again. Since accounts came in, players who signed in and players who didn't were in two separate worlds, so friends vanished from each other's map, Social tab and parties.",
+      "Signed in, your phone now joins both: the account world and the phone-to-phone world. Signed in or not, you see each other, chat, trade and team up like before.",
+      "A friend who signed in on an older version still only sees players who signed in. If someone is missing, ask them to update the game.",
+    ] },
+    { id: "b298-mapheroanim", build: 298, date: "25 Nov 2026", title: "Your hero moves on the map", items: [
+      "Your horse on the world map is alive now: standing, it breathes, shifts its weight, tosses its head now and then and flicks its tail.",
+      "On the road its legs swing as it walks or gallops, its body bobs and rocks, and you sit into each stride in the saddle.",
+      "Little puffs of dust kick up behind the hooves (or your boots) while you travel, and walking and standing on foot look smoother too.",
+      "Your friends' figures on the map move the same way. Reduce motion in Settings still keeps everyone still.",
+    ] },
+    { id: "b297-weaponfx", build: 297, date: "25 Nov 2026", title: "Weapon hits that fit the weapon", items: [
+      "Weapon effects in fights are much smaller now and match what you swing: a sword leaves a thin slash, an axe a short chop, a mace or warhammer a heavy thud with a puff of dust (no slash), a dagger a quick little stab, a spear a thrust.",
+      "The hit now shows up the moment the weapon actually connects, right where it meets the body, instead of a big white swoosh popping up early in front of the foe.",
+      "A dagger's two stabs each get their own quick trail, and every hit plays once. A miss is just a faint swish, with no sparks.",
+      "A staff's spell now gathers and flies from the top of the staff, not from your chest.",
+      "When your follower steps in and hits the foe, you now see the blow land.",
+      "Power attacks get a small gleam on the blade instead of a star floating in the air, and only they crack the ground.",
+    ] },
+    { id: "b296-nomountfight", build: 296, date: "25 Nov 2026", title: "Horses are for travel", items: [
+      "Horses are for travel now: fights always happen on foot.",
+      "Riding when a fight starts on the road? You get down and fight on foot. Your horse waits beside you, safe: nobody goes for it and a fight never hurts it. You ride on afterwards.",
+      "No more Mount and Dismount moves, charges or trampling in fights, and no horse health bar in the fight.",
+      "The old saddle perks help on the road instead: Cavalry Charge lets you ride 8% faster, Horse Archer means 20% fewer fights find you while you ride, Steady Steed lets your horse carry 25/50 more, Trample makes it 10% faster off the road, and Saddle Caster makes dual-cast destruction spells 5% cheaper.",
+      "Ranger now makes you travel 3% faster, and Lance makes spear power attacks 10% stronger.",
+      "The warhorse speciality now means fewer fights find you while you ride.",
+      "An ambush on the road no longer hurts your horse.",
+    ] },
+    { id: "b295-phantomattacks", build: 295, date: "25 Nov 2026", title: "No one swings on their own any more", items: [
+      "In a fight, you, your friends and the foe only swing when they really strike. Catching your breath, the end-of-round burns, bleeds and poison, marking the foe and covering your friends used to show you swinging your weapon. Now they don't.",
+      "When the foe winds up a big blow, takes aim, roars a war cry, drinks a potion, raises a ward or a shield, or slips into the shadows, it no longer swings at you. A short word over the picture says what it did (\"Winds up!\", \"Takes aim!\", \"War cry!\").",
+      "Opening a menu or tapping the hotbar while a blow is still playing no longer plays that blow a second time. In a party fight the picture no longer starts the last move over when news comes from the leader's phone.",
+      "Blows that happen on their own say so on the picture: \"Counter!\" when you punch back after a miss, \"Thorns!\" when your armour bites back, \"Riposte!\" after a dodge.",
+    ] },
+    { id: "b294-aitester", build: 294, date: "25 Nov 2026", title: "What would the AI do?", items: [
+      "Character → AI & Loadouts has a new card, What would the AI do?: set your health, stamina and magicka, the foe's health, what kind of foe (normal, strong, boss, dragon, caster), how many and whether a friend is down, and it shows the move your loadout would play right now and why.",
+      "In Custom and Hybrid it goes through your rules from the top: a tick for the one that fires, a cross and the reason for the ones it skips (like \"health is 80%, rule needs below 40%\").",
+      "With Smart AI on, your own rules fold into one row (they're kept for Custom and Hybrid) instead of sitting there greyed out.",
+      "In fights, moves the AI plays for you end with a short [AI] reason in the log. Moves you pick yourself don't.",
     ] },
     { id: "b293-layout3", build: 293, date: "25 Nov 2026", title: "Titles you can read, hotbar in order", items: [
       "On phones the round message history button no longer sits on a screen's title (Area, Journal, Social, AI & Loadouts, a dungeon's name): the title makes room for it.",
@@ -1962,7 +2002,7 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 285;
+  const NEXT_AT = 297;
   const NEXT = [
     "Mentoring: play side by side with friends of any level",
     "Shrines of your own: build a Daedric altar at your longhouse",
