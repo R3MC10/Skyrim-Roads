@@ -288,7 +288,7 @@ const MAPART = (() => {
     // cloud shadows drifting west → east
     const dark = darkness(nowS);
     if (!["fog", "blizzard"].includes(v.weather) && dark < 0.3) {
-      const cs = cloudSprite(); g.globalAlpha = v.weather === "cloudy" || v.weather === "storm" ? 0.42 : 0.24;
+      const cs = cloudSprite(); g.globalAlpha = (v.weather === "cloudy" || v.weather === "storm" ? 0.42 : 0.24) * (1 - 0.7 * (v.close || 0));   // fainter on the close-up chart
       for (let i = 0; i < 5; i++) {
         const sp = 6 + i * 2.5, x = ((i * 233 + t * sp) % (W + 400)) - 300, y = (i * 151 + 40) % (H - 120);
         g.drawImage(cs, x, y, 320, 180);

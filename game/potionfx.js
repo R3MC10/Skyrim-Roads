@@ -3,7 +3,7 @@
    - In a fight a potion gives 60% the moment you drink it (it still saves you in a pinch), the rest evenly at the end of
      the next rounds. Ordinary potions take 3 rounds in all, small ones (30 or less) and big brewed ones (over 75) 2.
      Another of the same kind (no bigger) is wasted until the last one has under a quarter left. The Alchemy perk Quick Draught takes off a
-     round per rank (never under 2) and adds 5% per rank to the first share. (b182 rebalance: was half at round end over 5/4/3.)
+     round per rank (never under 2) and adds 5% per rank to the first share. (b183 rebalance: was half at round end over 5/4/3.)
    - On the road (map, towns, dungeons) the same potion takes that many seconds, and the health bar fills as it goes.
      A potion still working when a fight starts carries on in the fight; one still working when a fight ends carries on
      on the road.
@@ -24,7 +24,7 @@ const POTFX = (() => {
   const pnum = (s, k) => { try { return s && typeof PFX !== "undefined" ? PFX.num(s, k) : 0; } catch (e) { return 0; } };
   const tr = (t) => { try { return typeof I18N !== "undefined" && I18N.lang?.() === "pl" ? I18N.tr(t) ?? t : t; } catch (e) { return t; } };
   const rounds = (n) => `${n} ${n === 1 ? "round" : "rounds"}`;
-  const FIRST = 0.6;   // share of a potion that lands the moment you drink it in a fight (balance sim, b182)
+  const FIRST = 0.6;   // share of a potion that lands the moment you drink it in a fight (balance sim, b183)
   /* the share that lands at once: Quick Draught adds 5% per rank */
   const firstOf = (s) => Math.min(0.7, FIRST + 0.05 * Math.round(pnum(s, "potfast")));
 
