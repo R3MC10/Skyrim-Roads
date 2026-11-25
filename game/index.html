@@ -5490,6 +5490,9 @@ html:has(#tbf.fz),html:has(#tbf.fz) body{overflow:hidden;overscroll-behavior:non
 @media (prefers-reduced-motion:reduce){.rw-scene .rw-sheet,.rw-burst,.rw-rays,.rw-crest,.rw-shine{animation:none!important}.rw-rays{opacity:.6}}
 html.a11y-still :is(.rw-scene .rw-sheet,.rw-burst,.rw-rays,.rw-crest,.rw-shine),.rw-still :is(.rw-sheet,.rw-burst,.rw-rays,.rw-crest){animation:none!important}
 @media (min-width:900px){.modal.rw-scene .sheet.rw-sheet{width:520px;padding:44px 34px 28px}.rw-sheet h2.rw-t{font-size:32px}.rw-acts{flex-direction:row-reverse}.rw-acts .btn{flex:1}}
+/* [fightcam] the fight camera (fightcam.js): the ring under the foe and its stars follow it; Calm and Off: the screen never shakes */
+#tbf.c2 .c2ov .fzring,#tbf.c2 .c2stars,#tbf.c2 .c2flash.foe{translate:var(--fcdx,0px) var(--fcdy,0px)}
+#tbf.fcam-calm .c2shake .tbscene,#tbf.fcam-off .c2shake .tbscene,#tbf.fcam-calm .tbstage.hurt,#tbf.fcam-off .tbstage.hurt{animation:none!important}
 /* ==== locintro.js: arriving somewhere, the place fills the screen for a moment ==== */
 #locintro{position:fixed;inset:0;z-index:65;overflow:hidden;background:#050506;cursor:pointer;-webkit-tap-highlight-color:transparent;animation:liin .5s ease-out both}
 #locintro.li-short{animation-duration:.25s}
@@ -5666,6 +5669,7 @@ html.a11y-still :is(.rw-scene .rw-sheet,.rw-burst,.rw-rays,.rw-crest,.rw-shine),
 <script src="phonefight.js"></script>
 <script src="fightzones.js"></script>
 <script src="fightpres.js"></script>
+<script src="fightcam.js"></script>
 <script src="channel.js"></script>
 <script src="movepreview.js"></script>
 <script src="guide.js"></script>
@@ -5765,6 +5769,8 @@ html.a11y-still :is(.rw-scene .rw-sheet,.rw-burst,.rw-rays,.rw-crest,.rw-shine),
 <script src="remake.js"></script>
 <script src="fxart.js"></script>
 <script src="travelart.js"></script>
+<script src="fpscene.js"></script>
+<script src="fpworld.js"></script>
 <script src="fptravel.js"></script>
 <script src="solart.js"></script>
 <script src="dgart.js"></script>
@@ -5873,6 +5879,7 @@ html.a11y-still :is(.rw-scene .rw-sheet,.rw-burst,.rw-rays,.rw-crest,.rw-shine),
 <script src="i18n_movepreview.js"></script>
 <script src="i18n_busts.js"></script><script src="i18n_avatars.js"></script><script src="i18n_npcportraits.js"></script>
 <script src="i18n_fightset.js"></script>
+<script src="i18n_fightcam.js"></script>
 <script src="i18n_stacks.js"></script>
 <script src="i18n_fighttips.js"></script>
 <script src="i18n_pickaxe.js"></script>
@@ -5968,12 +5975,14 @@ html.a11y-still :is(.rw-scene .rw-sheet,.rw-burst,.rw-rays,.rw-crest,.rw-shine),
 <script src="i18n_itemcards2.js"></script>
 <script src="i18n_roadart.js"></script>
 <script src="i18n_fptravel.js"></script>
+<script src="i18n_travelview.js"></script>
 <script src="i18n_rewardtips.js"></script>
 <script src="i18n_updater.js"></script>
 <script src="i18n_mappanels.js"></script>
 <script src="i18n_gatherarea.js"></script>
 <script src="i18n_fighttipstop.js"></script>
 <script src="i18n_fightnums.js"></script>
+<script src="i18n_fightfixes.js"></script>
 <script src="i18n_weaponfx.js"></script>
 <script src="i18n_phantom.js"></script>
 <script src="i18n_pcupdate.js"></script>

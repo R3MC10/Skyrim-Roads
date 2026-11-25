@@ -11,6 +11,7 @@ Screenshots go to the system temp folder (SHOTS=folder: there instead), never in
   node serve.js 8765 ../game &   then   python hotbar_ui.py 8765"""
 import asyncio, sys, os, tempfile
 from playwright.async_api import async_playwright
+from roadfight import open_fight, wait_my_turn
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"
 SHOTS = os.environ.get("SHOTS")
 OUT = SHOTS or os.path.join(tempfile.gettempdir(), "rotn_hotbar")
@@ -77,13 +78,7 @@ async def main():
                 print("   reload, missing:", [u.split('/')[-1] for u in bad[:4]])
             await pg.click(".press"); await pg.wait_for_timeout(300); await pg.click(".mi[data-t=new]"); await pg.wait_for_selector("#nm"); await pg.fill("#nm", "Tester"); await pg.click("#begin"); await pg.wait_for_timeout(1200)
             await pg.evaluate("localStorage.setItem('rotn_prefs', JSON.stringify({...JSON.parse(localStorage.getItem('rotn_prefs')||'{}'), tips:false}))")
-            for _ in range(3):   # the event window can redraw under a click: press Fight from the page itself (set it up again if it never shows)
-                await pg.evaluate(START); await pg.wait_for_timeout(500)
-                for _ in range(6):
-                    if await pg.evaluate("!!document.querySelector('#tbf')"): break
-                    await pg.evaluate("document.querySelector('#modal [data-act=ev][data-c=fight]')?.click()"); await pg.wait_for_timeout(400)
-                if await pg.evaluate("!!document.querySelector('#tbf')"): break
-            await pg.wait_for_timeout(300)
+            await open_fight(pg, START)   # waits for the fight screen, not a fixed pause (roadfight.py)
             ok(await my_turn(), f"{tag}: the fight starts on your turn")
             # ---- the bar
             fit = await pg.evaluate(FIT)
