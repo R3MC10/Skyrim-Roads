@@ -1849,7 +1849,9 @@
       : `${tl.total}/${tl.need} damage dealt${tl.people ? ` by ${tl.people} ${tl.people === 1 ? "fighter" : "fighters"}` : ""}. Everyone who hurts it gets its soul, 300 gold, dragon bone and scales. It flies at first (melee only grazes it) and lands when badly hurt.`;
     const btn = done ? "" : !here ? `<button class="btn" data-act="go" data-place="${esc(r.town)}" style="width:100%">Travel to ${esc(r.town)}</button>`
       : ph === "gather" ? `<button class="btn" disabled style="width:100%"> Waiting for the ${esc(dn)}... ${clock}</button>` : `<button class="btn danger" data-act="raidfight" style="width:100%"> Fight the ${esc(dn)}</button>`;
-    el.innerHTML = `<div class="trip enc" style="margin-top:10px">${typeof EVENTART !== "undefined" ? EVENTART.raid(r.town, done) : ""}<div class="row"><b> ${title}</b><span class="num sub">${done ? "" : clock}</span></div>
+    /* the painted dragon card (eventcards.js): title under the painting, a severity diamond beside it; the old drawing until it loads */
+    const card = typeof EVCARDS !== "undefined" ? EVCARDS.html("raid", { title: ` ${title}`, sev: done ? "calm" : ph === "gather" ? "high" : "dire", right: done ? "" : `<span class="num sub">${clock}</span>` }) : "";
+    el.innerHTML = `<div class="trip enc${card ? " evc-box" : ""}" style="margin-top:10px">${card || `${typeof EVENTART !== "undefined" ? EVENTART.raid(r.town, done) : ""}<div class="row"><b> ${title}</b><span class="num sub">${done ? "" : clock}</span></div>`}
       ${typeof RAIDART !== "undefined" ? RAIDART.raidHealth(tl, raidDocs, r, S, raPortrait) : `<div class="bar"><i style="width:${pct(tl.total, tl.need)}%;background:var(--ember)"></i></div>`}
       <div class="sub">${sub}</div>${btn}</div>`;
   }
@@ -2944,7 +2946,7 @@
     /* [menus2] one hero card on top, then sections that fold away (Skills and Perks have their own tabs too) */
     const fold = typeof MENUS2 !== "undefined" ? MENUS2.fold : (id, title, html) => `<div class="panel"><h2>${title}</h2>${html}</div>`;
     const fp = placesFound();
-    const card = `<div class="panel m2-hero"><h2>${esc(S.name)}</h2><div class="m2-herogrid"><div class="herobox">${HEROART.figure(S, 160, 220)}</div><div class="m2-herotxt">
+    const card = `<div class="panel m2-hero"><h2>${esc(S.name)}</h2><div class="m2-herogrid"><div class="herobox">${typeof BUSTART !== "undefined" ? BUSTART.hero(S, HEROART.figure(S, 160, 220)) : HEROART.figure(S, 160, 220)}</div><div class="m2-herotxt">
       ${(S.titles || []).length ? `<p class="sub m2-titles">${S.titles.map(esc).join(" · ")}</p>` : ""}<p class="sub">Level ${S.level} ${esc(D.RACES[S.race].name)} · ${esc(D.RACES[S.race].desc)}</p><p class="sub"> Places discovered: <b>${fp.got}</b> of ${fp.all}${S.horse ? ` · Horse: ${esc(S.horse.name)}` : ""}</p>
       <div class="bar" style="margin-top:8px"><i style="width:${pct(S.charXp, need)}%;background:var(--gold)"></i></div><p class="sub num">${Math.round(S.charXp)}/${need} toward level ${S.level + 1}</p>
       <div class="grid2 m2-attrs"><div class="slot">Health<b class="num">${G.maxHealth(S)}</b></div><div class="slot">Magicka<b class="num">${G.maxMagicka(S)}</b></div><div class="slot">Stamina<b class="num">${G.maxStamina(S)}</b></div></div>

@@ -556,7 +556,11 @@ const CRISES = (() => {
     let body = "";
     if (cr) {
       const st = status(cr, S, t), ch = CHAINS[cr.chain], tl = st.tl, here_ = here(S, cr), lead = leaderOnly(partyOf(), S);
-      body += `<div class="cr-crisis" style="--cr:${ch.color}"><div class="cr-ch">${glyph(cr.chain)}<div><span class="cr-k">${esc(T(st.state === "won" ? "Crisis over" : st.state === "lost" ? "Crisis burned out" : "Crisis"))}</span><b>${esc(T(ch.name))}</b></div><span class="cr-stn">${st.state === "won" ? esc(T("Won")) : esc(T("Stage {n} of {m}", { n: st.stage, m: STAGES }))}</span></div>
+      const stn = st.state === "won" ? esc(T("Won")) : esc(T("Stage {n} of {m}", { n: st.stage, m: STAGES }));
+      /* snow, outlaws and beasts get a painted card (eventcards.js); the title and stage sit under the painting */
+      const card = typeof EVCARDS !== "undefined" ? EVCARDS.html("cr:" + cr.chain, { title: esc(T(ch.name)), tag: "h3", right: `<span class="cr-stn">${stn}</span>`,
+        sev: st.state === "won" || st.state === "lost" ? "calm" : st.state === "boss" || st.stage >= 5 ? "dire" : st.stage >= 3 ? "high" : "mid" }) : "";
+      body += `<div class="cr-crisis${card ? " evc-box" : ""}" style="--cr:${ch.color}">${card || `<div class="cr-ch">${glyph(cr.chain)}<div><span class="cr-k">${esc(T(st.state === "won" ? "Crisis over" : st.state === "lost" ? "Crisis burned out" : "Crisis"))}</span><b>${esc(T(ch.name))}</b></div><span class="cr-stn">${st.state === "won" ? esc(T("Won")) : esc(T("Stage {n} of {m}", { n: st.stage, m: STAGES }))}</span></div>`}
         ${stageTrack(cr, st)}<p class="sub cr-now">${esc(stateLine(cr, st, t))}</p>`;
       if (st.state === "active" || st.state === "boss") {
         body += `<div class="cr-relief"><span>${esc(T("Relief"))}</span><span class="cr-bar"><i style="width:${Math.round(tl.frac * 100)}%"></i></span><b>${Math.min(tl.total, tl.need)}/${tl.need}</b></div>

@@ -3,7 +3,7 @@
    the exact lines also go to I18N_EXTRA.words so the screen translator knows them. */
 var I18N_EXPEDITION = (() => {
   const TPL = {
-    // ---- the patch note (b226)
+    // ---- the patch note (b228)
     "Painted company art": "Malowane obrazy kompanii",
     "The Company screen opens with a painted banner of your longhouse at dusk, with the name in clear light letters.": "Ekran kompanii otwiera malowany baner z twoim długim domem o zmierzchu, a nazwa jest napisana jasnymi, czytelnymi literami.",
     "The Rooms tab shows your longhouse, and it changes as you build: the library lights more windows, the forge makes the doorway glow, the trophy hall hangs antlers and shields, the stables add lanterns and the planning table puts up company banners.": "Zakładka Sale pokazuje twój długi dom, który zmienia się, gdy budujesz: biblioteka zapala więcej okien, kuźnia rozjaśnia drzwi, sala trofeów wiesza poroże i tarcze, stajnie dodają latarnie, a stół narad stawia sztandary kompanii.",

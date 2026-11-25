@@ -438,7 +438,8 @@ const HSROOMS = (() => {
     if (h?.last) out += `<p class="sub hslast">${esc(h.last)}</p>`;
     if (!h?.raid) return out;
     const R = RAIDERS[h.raid.kind] || RAIDERS.bandits, d = defenders(s, pid);
-    return out + `<div class="card hsraid"><h3> Raid on the house</h3><p class="sub">${esc(R[6])}. ${d.length ? `${esc(d.map((a) => a.name).join(", "))} will fight beside you.` : "Nobody else is home to help."}</p>
+    const card = typeof EVCARDS !== "undefined" ? EVCARDS.html("hs:" + h.raid.kind, { title: " Raid on the house", tag: "h3", sev: "high" }) : "";   // the painted raid card (eventcards.js)
+    return out + `<div class="card hsraid${card ? " evc-box" : ""}">${card || `<h3> Raid on the house</h3>`}<p class="sub">${esc(R[6])}. ${d.length ? `${esc(d.map((a) => a.name).join(", "))} will fight beside you.` : "Nobody else is home to help."}</p>
       <div class="hsbtns">${btn("defend", pid, "Defend the house", true, "danger")}${h.raid.kind !== "trolls" ? btn("parley", pid, "Talk them down", !h.raid.talked) : ""}</div>
       <p class="sub">Leave it and your household deals with it within a day. If the raiders win they take materials and the goods waiting in the wings.</p></div>`;
   }

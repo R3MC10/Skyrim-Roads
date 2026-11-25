@@ -3,6 +3,7 @@
 "use strict";
 const A = require("./auth");
 const { createReports } = require("./reports");
+const { createReportsReader } = require("./reportsread");
 
 const LIMITS = {
   user: /^[A-Za-z0-9_-]{3,20}$/,
@@ -33,6 +34,8 @@ const fail = (status, code, message, extra) => { throw new HttpError(status, cod
 function createApp({ store, now = () => Date.now(), origins = null, trustProxy = true, events = null, reportEnv = process.env, reportFetch = globalThis.fetch, log = (m) => console.log(m) } = {}) {
   const loginByUser = limiter(10, 10 * 60e3, now), loginByIp = limiter(60, 10 * 60e3, now), registerByIp = limiter(20, 60 * 60e3, now);
   const report = createReports({ store, limiter: (max, ms) => limiter(max, ms, now), env: reportEnv, fetch: reportFetch, log, now });   // player reports → GitHub issues (reports.js)
+  const reader = createReportsReader({ store, env: reportEnv, now });   // reading stored reports back, behind REPORTS_READ_KEY (reportsread.js)
+  const asHttp = async (fn) => { try { return await fn(); } catch (e) { if (e.status) fail(e.status, e.code, e.message); throw e; } };
   const allowed = origins && origins.length ? new Set(origins) : null;
 
   function cors(req, res) {
@@ -130,6 +133,7 @@ function createApp({ store, now = () => Date.now(), origins = null, trustProxy =
       try { return await report(b, ipOf(req)); }
       catch (e) { if (e.status) fail(e.status, e.code, e.message); throw e; }
     },
+    "GET /api/reports": async (req) => asHttp(() => reader.list(req, new URL(req.url || "/", "http://x").searchParams, ipOf(req))),
     "GET /api/characters": async (req) => { const { account } = await auth(req); return { characters: (await store.listCharacters(account.id)).map(({ accountId, deletedAt, ...c }) => c) }; },
   };
   /* /api/characters/:id */
@@ -170,6 +174,8 @@ function createApp({ store, now = () => Date.now(), origins = null, trustProxy =
     try {
       const key = `${req.method} ${path}`;
       const m = /^\/api\/characters\/([^/]+)$/.exec(path);
+      const rd = req.method === "POST" && /^\/api\/reports\/([^/]+)\/done$/.exec(path);
+      if (rd) { send(res, 200, await asHttp(() => reader.done(req, decodeURIComponent(rd[1]), ipOf(req)))); return; }
       if (!routes[key] && !m) fail(404, "no_route", "Nothing here.");
       const b = req.method === "POST" || req.method === "PUT" ? await readBody(req) : {};
       const out = m ? await character(req, req.method, decodeURIComponent(m[1]), b) : await routes[key](req, b);

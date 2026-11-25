@@ -48,7 +48,10 @@ function memoryStore() {
     async loadWorld() { return [...worldRecs.entries()].map(([k, doc]) => { const [col, id] = k.split("\u0000"); return { col, id, doc: JSON.parse(doc) }; }); },
     async putWorld(rows) { for (const { col, id, doc } of rows) { const k = col + "\u0000" + id; if (doc == null) worldRecs.delete(k); else worldRecs.set(k, JSON.stringify(doc)); } },
     async saveReport({ id, at, report }) { reports.push({ id, at, report: copy(report) }); if (reports.length > 500) reports.shift(); },   // player reports kept when GitHub can't take them
-    async listReports(limit = 50) { return reports.slice(-limit).reverse().map(copy); },
+    async listReports(limit = 50, { since = null, open = false } = {}) {
+      return reports.filter((x) => (since == null || x.at > since) && (!open || x.doneAt == null)).reverse().sort((a, b) => b.at - a.at).slice(0, limit).map((x) => ({ doneAt: null, ...copy(x) }));
+    },
+    async markReportDone(id, at) { const x = reports.find((r) => r.id === id); if (!x) return false; if (x.doneAt == null) x.doneAt = at; return true; },
     async deleteCharacter(id, accountId, now) { const c = chars.get(id); if (!c || c.accountId !== accountId || c.deletedAt) return false; c.deletedAt = now; return true; },
   };
 }

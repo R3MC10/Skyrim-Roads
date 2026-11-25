@@ -71,6 +71,7 @@ I have characters on different devices and can't reach them from the others."
 3. Variables: `ALLOWED_ORIGINS` (optional, comma separated; default allows the app and the web copy).
 4. The start command and health check come from `server/railway.json`; tables are created on first start.
 5. Copy the public URL into `game/account.js` (`DEFAULT_SERVER`) in a pull request.
+6. **`REPORTS_READ_KEY`** (owner sets it; Railway is Kacper's): a long random secret, e.g. the output of `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`. It turns on `GET /api/reports` (stored player reports, `?limit` up to 200, `?since=`, `?open=1`) and `POST /api/reports/:id/done`, both with the header `Authorization: Bearer <key>`. Unset → those routes are 404. Read them with `REPORTS_READ_KEY=… node scripts/reports.mjs` (`--done <id>` marks one handled). Keep the key out of the repo and chat logs.
 Secrets live only in Railway, never in the repo.
 
 ### Testing

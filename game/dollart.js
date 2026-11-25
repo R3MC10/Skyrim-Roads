@@ -60,7 +60,7 @@ const DOLL = (() => {
     const ammoRow = am ? (() => { const b = am.best && s.inv.find((x) => D.ITEMS[x.item]?.name === am.best); return `<div class="dammo ${am.best ? "" : "warn"}">${b ? ICONART.item(b.item, 28, b) : emptyIcon("ammo", 28)}<span>${am.best ? `${am.n} ${esc(am.best)}s <i>(best is used)</i>` : "No ammo for your bow"}</span></div>`; })() : "";
     return `<div class="doll">
       <div class="dcol">${LEFT.map((sl) => slotBtn(s, sl, eq)).join("")}</div>
-      <div class="dfig">${HEROART.figure(s, 150, 206)}</div>
+      <div class="dfig">${HEROART.figure(s, 150, 206)}${typeof BUSTART !== "undefined" ? BUSTART.crest(s, 60) : ""}</div>
       <div class="dcol">${RIGHT.map((sl) => slotBtn(s, sl, eq)).join("")}</div>
     </div>
     <div class="djewel" aria-label="Amulet and rings">${JEWEL.map((sl) => slotBtn(s, sl, eq, 40)).join("")}</div>${ammoRow}
@@ -93,7 +93,7 @@ const DOLL = (() => {
   const starter = {};
   function starterSave(race) { if (!starter[race]) { try { starter[race] = G.newSave("preview-" + race, "", race); } catch { starter[race] = { race, id: "preview-" + race }; } } return starter[race]; }
   function racePicker(cur) {
-    return `<div class="rgrid">${Object.entries(D.RACES).map(([id, r]) => `<button class="rpick ${id === cur ? "on" : ""}" data-race="${id}" aria-pressed="${id === cur}">${HEROART.portrait({ race: id, id: "preview-" + id }, 52)}<span>${esc(r.name)}</span></button>`).join("")}</div>`;
+    return `<div class="rgrid bustgrid">${Object.entries(D.RACES).map(([id, r]) => `<button class="rpick ${id === cur ? "on" : ""}" data-race="${id}" aria-pressed="${id === cur}">${typeof BUSTART !== "undefined" ? BUSTART.pick(id, HEROART.portrait({ race: id, id: "preview-" + id }, 52)) : HEROART.portrait({ race: id, id: "preview-" + id }, 52)}<span>${esc(r.name)}</span></button>`).join("")}</div>`;
   }
   function showcase(race) {
     const r = D.RACES[race], sk = r.skills.map(skillName);
