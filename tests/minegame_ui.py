@@ -35,7 +35,12 @@ async def main():
         ok(got >= 2, f"two veins broken out: {got} pieces")
         await pg.screenshot(path=OUT + "minegame.png")
         before = await pg.evaluate("SMITH.count(window.__dbg.save(),'ore_iron')+SMITH.count(window.__dbg.save(),'ore_corundum')+SMITH.count(window.__dbg.save(),'ore_silver')")
+        await pg.wait_for_timeout(700)   # the blows land (the pickaxe swing) and the ore flies to the haul row
+        ok(await pg.evaluate("document.querySelectorAll('#minegame .mgc.broken').length") >= 3, "broken stones show as holes")
         await pg.click("#mgdone"); await pg.wait_for_timeout(500)
+        ok(await pg.query_selector("#minegame .mgres #mgok") is not None, "the haul card shows what you dug")
+        await pg.screenshot(path=OUT + "minegame_haul.png")
+        await pg.click("#mgok"); await pg.wait_for_timeout(500)
         after = await pg.evaluate("SMITH.count(window.__dbg.save(),'ore_iron')+SMITH.count(window.__dbg.save(),'ore_corundum')+SMITH.count(window.__dbg.save(),'ore_silver')")
         ok(await pg.query_selector("#minegame") is None and after > before, f"done: the ore is in your pack ({before} → {after})")
         ok(await pg.evaluate("SMITH.mineLeft(window.__dbg.save(),'Embershard Mine')") > 0, "the veins are bare now")

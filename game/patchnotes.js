@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b196-mgmining", build: 196, date: "25 Nov 2026", title: "Mining looks and feels new", items: [
+      "The mining game now happens in a painted cave. The rock face is real stone cut from the painting, and you can see chunks of ore poking out of the veins.",
+      "Tap a stone and your pickaxe swings in and lands on it: the rock cracks, chips and dust fly, ore glints and sparks, and the pieces you break out jump into your haul.",
+      "A Perfect blow shakes the screen a little. When you're done, a haul card shows everything you dug, with how many Perfect blows you landed.",
+      "Works on small phones and big PC screens, in both the ink and pixel styles. Quick dig still skips straight to the result.",
+    ] },
     { id: "b195-afflart", build: 195, date: "25 Nov 2026", title: "Painted affliction scenes", items: [
       "The black shrine by the road is now a painting: an obsidian altar in a ring of standing stones under the moon, glowing purple.",
       "Catching the Draugr Curse shows a frozen barrow altar, and catching the Dwemer Resonance (or the humming pipe on the road) shows a glowing Dwemer pipe in a ruined hall.",
