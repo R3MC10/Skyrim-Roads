@@ -23,7 +23,7 @@ const PAINTRIG = (() => {
 
   // ---------------------------------------------------------------- which set
   const IRONISH = /^(iron|banded|chain|imperial|stormcloak|ancient)/;
-  const FEM_FOLLOWER = /^f-(lydia|jenassa|aela|uthgerd|mjoll|serana|annekke|iona|jordis)\b/;   // followers' looks carry no sex: the women we know
+  const FEM_FOLLOWER = /^f-(lydia|jenassa|aela|uthgerd|mjoll|brelyna|annekke|borgakh|hs_pinewatch|serana|iona|jordis)\b/;   // a safety net for old looks with no sx (followers2.js sets it now)
   function setOf(sp, L) {
     if (!sp) return "nordm-leather";
     const who = sp.fem || (L && FEM_FOLLOWER.test(String(L.id))) ? "nordf" : "nordm";
@@ -60,9 +60,9 @@ const PAINTRIG = (() => {
   }
   /* another race's painted head (dunmer, khajiit, argonian; m/f), or null: the Nord head with a skin tint then */
   const HREC = new Map();
-  function raceHead(sp) {
+  function raceHead(sp, fem = sp && sp.fem) {
     if (!sp || !sp.r || sp.r === "nord" || !D || !D.HEADS || typeof ASSETS === "undefined") return null;
-    const key = sp.r + (sp.fem ? "f" : "m"), q = D.HEADS[key]; if (!q) return null;
+    const key = sp.r + (fem ? "f" : "m"), q = D.HEADS[key]; if (!q) return null;
     let h = HREC.get(key); if (h) return h;
     const im = ASSETS.img(D.headFile(key)); if (!im) return null;
     h = { key, set: key, Q: { head: q }, imgs: { head: im }, cache: new Map() }; HREC.set(key, h); return h;
@@ -304,7 +304,7 @@ const PAINTRIG = (() => {
   function figure(g, ctx, P, sp, o, wk) {
     const G = ctx.G, m = G.m, B = solve(G, P), kit = ctx.kit, st = ctx.st;
     const tintC = sp.r && sp.r !== "nord" && !sp.vamp ? sp.skin : null, sv = (d) => (tintC ? (d ? "dt:" : "t:") + tintC : d ? "d" : "n");
-    const rh = raceHead(sp);
+    const rh = raceHead(sp, sp.fem || String((ctx.r && ctx.r.set) || "").startsWith("nordf"));   // the head matches the body: a woman's body wears a woman's head
     const ranged = RANGED.has(wk), two = TWO_MELEE.has(wk) || wk === "staff" || wk === "spear";
     const tipA = wk && kit && kit.TIP[wk] ? Math.atan2(kit.TIP[wk][1], kit.TIP[wk][0]) : -Math.PI / 4;
     let wa = B.sa + P.aim;   // the weapon's frame, as on the ink figures
