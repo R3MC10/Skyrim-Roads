@@ -40,6 +40,18 @@ const I18N_QACORE = (() => {
   };
   Object.assign(I18N_EXTRA.words, {
     "Welcome to Skyrim": "Witaj w Skyrim", "Too heavy": "Za ciężko", "Your first dungeon": "Twój pierwszy loch", "A party invite": "Zaproszenie do drużyny",
+    // patch note b239
+    "Back button and first-trip fixes": "Poprawki przycisku Wstecz i pierwszej podróży",
+    "Fixed: the phone's back button did nothing in fishing, hunting, mining, lockpicking and the other mini-games, and pressing it again could close the app. Now it leaves the game, like its Done or Leave button.":
+      "Naprawione: przycisk Wstecz w telefonie nic nie robił w łowieniu ryb, polowaniu, kopaniu, otwieraniu zamków i innych minigrach, a kolejne naciśnięcie mogło zamknąć aplikację. Teraz wychodzi z gry, jak jej przycisk Gotowe albo Odejdź.",
+    "Fixed: back in the barber's chair or at the rune table closes them instead of opening the compass behind them.":
+      "Naprawione: Wstecz u fryzjera albo przy stole run zamyka je, zamiast otwierać kompas pod spodem.",
+    "Fixed: back inside a shop, the inn or the forge goes to the town's list of places first, not straight to the compass.":
+      "Naprawione: Wstecz w sklepie, karczmie albo kuźni wraca najpierw do listy miejsc w mieście, a nie od razu do kompasu.",
+    "Fixed: the first-trip guide said to open the Town tab; it's called Area now.":
+      "Naprawione: samouczek pierwszej podróży kazał otworzyć zakładkę Miasto; teraz nazywa się Okolica.",
+    "Fixed: in Polish, the first-trip guide, the first-time tips and the \"you set off\" and \"you arrived\" messages were still in English.":
+      "Naprawione: po polsku samouczek pierwszej podróży, wskazówki na start i komunikaty o wyruszeniu i dotarciu były jeszcze po angielsku.",
     "You've got a lead": "Masz trop", "Open Hero": "Otwórz Bohatera", "Got it": "Rozumiem", "Don't show tips": "Nie pokazuj wskazówek", "Close tip": "Zamknij wskazówkę",
     // tab tips (ui.js TAB_TIPS)
     "Start with the “What to do next” card. Press Go to travel; tap any place on the map to see how far it is.": "Zacznij od karty „Co dalej”. Naciśnij Idź, żeby ruszyć; dotknij dowolnego miejsca na mapie, żeby zobaczyć, jak daleko jest.",
