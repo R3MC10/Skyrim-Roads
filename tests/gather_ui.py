@@ -2,7 +2,7 @@ import asyncio, sys, os
 from playwright.async_api import async_playwright
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8847"
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out_gather")
-CHROME = "/usr/bin/google-chrome"
+CHROME = (__import__("os").environ.get("CHROME") or ("/usr/bin/google-chrome" if __import__("os").path.exists("/usr/bin/google-chrome") else None))
 
 async def rows_layout(b, bad):
     """the Gathering card on the Map side panel: each herb row (and the Auto-pick row) gets its own line, at phone and PC width"""
@@ -38,7 +38,7 @@ async def rows_layout(b, bad):
 
 async def main():
     async with async_playwright() as p:
-        b = await (p.chromium.launch(executable_path=CHROME, args=["--no-sandbox"]) if os.path.exists(CHROME) else p.chromium.launch())
+        b = await (p.chromium.launch(executable_path=CHROME, args=["--no-sandbox"]) if CHROME and os.path.exists(CHROME) else p.chromium.launch())
         bad = []
         await rows_layout(b, bad)
         if "--rows" in sys.argv:

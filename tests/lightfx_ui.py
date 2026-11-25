@@ -12,12 +12,12 @@ PERF = "noperf" not in sys.argv
 SHOTS = "noshots" not in sys.argv
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out_light") + os.sep
 os.makedirs(OUT, exist_ok=True)
-CHROME = "/usr/bin/google-chrome"
+CHROME = (__import__("os").environ.get("CHROME") or ("/usr/bin/google-chrome" if __import__("os").path.exists("/usr/bin/google-chrome") else None))
 SCENES = [("dawn", 6.4, "clear"), ("noon", 13.0, "clear"), ("dusk", 19.0, "clear"), ("night", 23.5, "clear"), ("storm", 14.0, "storm")]
 
 async def main():
     async with async_playwright() as p:
-        b = await p.chromium.launch(**({"executable_path": CHROME} if os.path.exists(CHROME) else {}), args=["--no-sandbox"] + (os.environ.get("LFX_ARGS", "").split() if os.environ.get("LFX_ARGS") else []))
+        b = await p.chromium.launch(**({"executable_path": CHROME} if CHROME and os.path.exists(CHROME) else {}), args=["--no-sandbox"] + (os.environ.get("LFX_ARGS", "").split() if os.environ.get("LFX_ARGS") else []))
         ctx = await b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2)
         errs = []
         pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))

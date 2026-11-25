@@ -11,7 +11,7 @@ LANG = os.environ.get("LANG_UI", "en")
 OUT = os.environ.get("OUT") or (os.path.join(os.path.dirname(os.path.abspath(__file__)), "out_tourney") + os.sep); os.makedirs(OUT, exist_ok=True)
 PFX = os.environ.get("PFX", "")   # screenshot name prefix, e.g. festart_
 ASSETS_ON = bool(os.environ.get("ASSETS"))   # ASSETS=1: wait for the painted pictures and check the painted headers
-CHROME = os.environ.get("CHROME", "/usr/bin/google-chrome")
+CHROME = (__import__("os").environ.get("CHROME") or ("/usr/bin/google-chrome" if __import__("os").path.exists("/usr/bin/google-chrome") else None))
 fails = []
 def ok(c, m):
     print(("ok   " if c else "FAIL ") + m)
@@ -38,7 +38,7 @@ SETUP = """() => { ART.setStyle && ART.setStyle('ink'); const S = window.__dbg.s
 
 async def main():
     async with async_playwright() as p:
-        kw = {"executable_path": CHROME, "args": ["--no-sandbox"]} if os.path.exists(CHROME) else {}
+        kw = {"executable_path": CHROME, "args": ["--no-sandbox"]} if CHROME and os.path.exists(CHROME) else {}
         b = await p.chromium.launch(**kw)
         errs = []
         VPS = [("phone", {"width": 390, "height": 844}, True), ("pc", {"width": 1280, "height": 800}, False)]

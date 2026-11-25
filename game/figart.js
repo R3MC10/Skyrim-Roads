@@ -241,7 +241,7 @@ const FIGART = (() => {
       block: { front: true, keys: keyed([0, 0.5], [-0.08, -0.02].map((lean) => ({ back: -1.45, aim: TWO.has(wk) ? -1.4 : -0.15, lean, fn: [7, 0], ff: [-7, 0], dy: 0.8 }))) },
       hit: { keys: keyed([0, 0.5], [-0.27, -0.16].map((lean) => ({ lean, aim: -1.7, back: 0.95, fn: [3, -0.6], ff: [-7, 0], tilt: -0.25, ox: -2, cape: 0.5 }))) },
       down: { armed: false, keys: [[0, { rot: -Math.PI / 2, aim: 1.4, back: 0.5, fn: [4, -4], ff: [-1, 0], lean: 0, tilt: 0.25 }]] },
-      ride: { armed: false, ride: true, noFar: true, keys: cyc(4, (p) => { const b = Math.sin(p * 2); return { dy: -12 + b * 0.6, ox: -3, lean: 0.1 + b * 0.03, fn: [5.5, -19.5], ff: [5.5, -19.5], aim: 0.55, back: -0.25, cape: 0.9 }; }) },
+      ride: { armed: false, ride: true, noFar: true, keys: cyc(4, (p) => { const b = Math.sin(p * 2); return { dy: -12 + b * 0.4, ox: -3, lean: 0.1 + b * 0.03, fn: [5.5, -19.5], ff: [5.5, -19.5], aim: 0.55, back: -0.25, cape: 0.9 }; }) },
       sit: { armed: false, keys: [[0, { dy: 15, fn: [11, 0], ff: [9, 0], aim: 0.6, back: -0.3, lean: 0.04 }]] },
     };
     CLIPS.set(ck, C); return C;
@@ -812,6 +812,9 @@ const FIGART = (() => {
   function drawPose(g, sp, P, st, layers) {
     g.save(); g.lineJoin = "round"; g.lineCap = "round";
     if (P.rot) { g.translate(26 * Math.min(1, Math.abs(P.rot) / (Math.PI / 2)), -4.6 * Math.min(1, Math.abs(P.rot) / (Math.PI / 2))); g.rotate(P.rot); }
+    if (P.ride && P.horseC && P.noFar) {   // [riding] the far leg, in shade, before the horse: its body hides all but the boot under the belly
+      g.save(); g.scale(sp.bw, sp.bh); const B0 = solve(sp, P); leg(g, sp, B0.thighF, B0.shinF, B0.footF, st, true); g.restore();
+    }
     if (P.ride && P.horseC) horse(g, P.horseC, P.frame || 0, st, "back", P.gait);
     g.scale(sp.bw, sp.bh);
     const B = solve(sp, P), S = B.spine, hn = B.handN, hf = B.handF;
@@ -948,6 +951,7 @@ const FIGART = (() => {
   function fight(g, src, o = {}) {
     const L0 = lookFor(src, o), sp = specOf(L0);
     if (typeof PAINTRIG !== "undefined" && PAINTRIG.fight(g, L0, o, sp)) return;   // [OURS] the painted figure (rig.js), once its parts have loaded
+    if (o.rideLayer === "far") return;   // [riding] the ink rider's far leg stays hidden behind the horse
     const dev = devScale(g) * Math.max(sp.bw, sp.bh);
     const k = Math.max(0.25, Math.round(dev * 4) / 4), st = styleOf(k);
     const lunge = o.lunge || 0, wk = o.wt === undefined ? sp.wk : o.wt || null;
@@ -962,6 +966,7 @@ const FIGART = (() => {
       P.armed = C.armed !== false; P.front = !!C.front; P.breath = 0; P.lunge = 0;
       if (P.cast) P.castC = wk === "staff" ? sp.staffC : sp.ench || "#9fd0f0";
     }
+    if (o.ride && !o.clip) { P.fn = [5.5, -19.5]; P.ff = [5.5, -19.5]; P.noFar = true; }   // [riding] in the saddle: the near leg bent over the horse's flank, as on the map rider
     const put = (c) => { const [bx, by, bw, bh] = c.box; g.drawImage(c, bx, by, bw, bh); };
     drawPose(g, sp, P, st, { back: () => put(layer(sp, "back", k, P)), front: () => put(layer(sp, "front", k, P)) });
   }

@@ -6,7 +6,7 @@ from playwright.async_api import async_playwright
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out_fullmap")
 os.makedirs(OUT, exist_ok=True)
-CHROME = next((p for p in ["/usr/bin/google-chrome"] if os.path.exists(p)), None)
+CHROME = os.environ.get("CHROME") or next((p for p in ["/usr/bin/google-chrome"] if os.path.exists(p)), None)
 
 async def closeModals(pg):
     for _ in range(5):
