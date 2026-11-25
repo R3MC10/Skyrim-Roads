@@ -3,7 +3,7 @@
 var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, pat: [] };
 (() => {
   Object.assign(I18N_EXTRA.words, {
-    // patch note b254
+    // patch note b257
     "Everyone stands in the right place": "Każdy stoi na swoim miejscu",
     "In a fight your party, followers and summons now stand in neat rows behind you, all of them on screen, even a full party of 8 on a phone. Before, some stood off the edge of the screen.":
       "W walce drużyna, towarzysze i przywołańce stoją teraz w równych rzędach za tobą i wszyscy są na ekranie, nawet pełna drużyna 8 osób na telefonie. Wcześniej niektórzy stali poza krawędzią ekranu.",

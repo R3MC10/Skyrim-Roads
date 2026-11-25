@@ -38,9 +38,12 @@
   // ------------------------------------------------------------ helpers
   const hudIcon = (k, fallback) => (typeof HUD !== "undefined" ? HUD.icon(k) : fallback);
   const CQ = typeof CRAFTQOL !== "undefined" ? CRAFTQOL : null;   // crafting shortcuts (craftqol.js)
-  function toast(text) {
+  /* [notify] loot, gold, skill and quest lines take turns through notify.js (merged, never on top of a blocking screen); plain messages show at once */
+  function toast(text) { if (typeof NOTIFY !== "undefined") NOTIFY.msg(text, showToast); else showToast(text); }
+  function showToast(text, o) {
     let el = $("#toast");
     if (!el) { el = document.createElement("div"); el.id = "toast"; el.className = "toast"; el.setAttribute("role", "status"); document.body.appendChild(el); }
+    if (o && o.replace) el.dataset.last = text;   // a merged line ("×3") replaces itself instead of pushing the old one down the log
     if (typeof HUD !== "undefined") HUD.log(el, text);
     el.textContent = text; el.classList.remove("hide");
     if (typeof POLISH !== "undefined") POLISH.toast(el, text);
@@ -514,6 +517,7 @@
       const escKey = !!(opts && opts.esc);
       if (typeof PAUSEM !== "undefined" && PAUSEM.isOpen()) { PAUSEM.close(); return true; }   // the Esc menu is the very top
       if (typeof BUGREPORT !== "undefined" && BUGREPORT.isOpen()) { BUGREPORT.close(); return true; }   // the report window sits on top of everything
+      if (typeof NOTIFY !== "undefined" && NOTIFY.closeHist()) return true;   // [notify] the message history
       if (S && typeof CHARGEN !== "undefined" && document.querySelector(".cg-over")) { CHARGEN.close(false); return true; }   // [qa-core] the barber / mirror: back = Cancel, never something hidden under it
       { const x = backOutOfGame(); if (x) return x; }   // [qa-core] a mini-game or the rune table: back leaves it (its own Leave / Done button)
       if ($("#title")) { if (titlePage !== "menu" && titlePage !== "press") { titlePage = "menu"; renderTitle(); return true; } return false; }
@@ -1596,7 +1600,7 @@
     openModal(`<h2>${what === "xdig" ? " Buried treasure" : " Searching"}</h2><p>${esc(r.text)}</p>${r.book ? `<button class="btn" data-act="xread" data-id="${esc(r.book.id)}" style="width:100%;margin-bottom:6px"> Read "${esc(r.book.title)}"</button>` : ""}<button class="btn pri" data-act="close" style="width:100%">Continue</button>`);
   }
   function dungeonAct(c, replay = false) {
-    if (lvUI && !replay && lvUI.memberLocked()) return toast("In a party only the leader decides. Their choice happens to you too.");
+    if (lvUI && !replay && lvUI.memberLocked()) return toast("In a party, everyone votes on each choice. Wait for the vote to open on your screen.");
     if (replay && typeof PTRAPS !== "undefined" && coopUI && S.dungeon?.run) c = PTRAPS.mine(S, coopUI.runs.find((x) => x.id === S.dungeon.run), c, PTRAPS.docs);   // a party trap: your own result, not the leader's
     const runId = S.dungeon?.run || null, roomType = S.dungeon?.room?.type, hp0 = G.curHealth(S), found0 = S.dungeon?.found.length || 0, gold0 = S.dungeon?.gold || 0;
     const act = () => {   // the party loot pile wraps the room; a fight inside it pauses on the turn-by-turn screen
@@ -2299,7 +2303,8 @@
     const fresh = ACH.check(S);
     if (!fresh.length) return;
     persist(true);
-    fresh.forEach((a, i) => setTimeout(() => { SOUND.fx("levelup"); toast(` Achievement: ${a.icon} ${a.name}`); }, 1200 * i));
+    if (typeof NOTIFY !== "undefined") NOTIFY.ach(fresh);   // [notify] ones earned together share one banner
+    else fresh.forEach((a, i) => setTimeout(() => { SOUND.fx("levelup"); toast(` Achievement: ${a.icon} ${a.name}`); }, 1200 * i));
     for (const a of fresh) if (Store.online) postNews(` ${S.name} earned “${a.name}”.`);
   }
 
