@@ -350,6 +350,7 @@ const DGAMES = (() => {
     },
     // ---- mirrors of the other mini-games (watch-only)
     lock(g, m, C) {
+      if (typeof LOCKGAME !== "undefined") return LOCKGAME.drawWatch(g, m, 300, 200);   // the painted lock (lockgame.js)
       const cx = 150, cy = 100;
       g.fillStyle = "#6b5530"; g.beginPath(); g.arc(cx, cy, 70, 0, 7); g.fill(); g.strokeStyle = C.gold; g.lineWidth = 3; g.stroke();
       g.save(); g.translate(cx, cy); g.rotate((m.rot || 0) * Math.PI / 2); g.fillStyle = "#8a7448"; g.beginPath(); g.arc(0, 0, 42, 0, 7); g.fill(); g.fillStyle = "#120e09"; g.fillRect(-4, -12, 8, 24); g.restore();
@@ -415,7 +416,7 @@ const DGAMES = (() => {
     mirrorT = setInterval(() => {
       if (!out) { stopCur(); return clearInterval(mirrorT); }
       let m = null;
-      if (kind === "lock" && typeof IMM !== "undefined" && IMM.lock) { const L = IMM.lock; m = { angle: Math.round(L.angle), rot: Math.round(L.rot * 100) / 100, strain: Math.round(L.strain * 100) / 100, picks: L.picks, unb: !!L.unbreakable }; }
+      if (kind === "lock" && typeof IMM !== "undefined" && IMM.lock) { const L = IMM.lock; m = { angle: Math.round(L.angle), rot: Math.round(L.rot * 100) / 100, strain: Math.round(L.strain * 100) / 100, picks: L.picks, unb: !!L.unbreakable, face: L.face }; }
       if (kind === "ring" && typeof EXPLORE !== "undefined" && EXPLORE.game) { const x = EXPLORE.game; m = { rings: x.rings, idx: x.idx.slice(), claw: !!x.claw }; }
       if (m) { gone = 0; out.doc.m = m; push(); return; }
       if (++gone >= 2) { out.doc.done = true; push(true); clearInterval(mirrorT); stopCur(); setTimeout(() => { if (out?.doc.mirror) out = null; }, 4000); }
