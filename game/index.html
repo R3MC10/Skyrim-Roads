@@ -3015,11 +3015,9 @@ html.pcmap div:has(> #mapwrap) > #mapwrap,html.pcmap div:has(> #mapwrap) > #vita
 html.pcmap #mapwrap::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(140% 110% at 50% 50%,rgba(0,0,0,0) 62%,rgba(0,0,0,.42) 100%)}
 html.pcmap .mapbtns{top:auto;right:14px;bottom:62px;z-index:4}
 html.pcmap.pc-side .mapbtns{right:494px}
-html.pcmap #picked{left:50%;right:auto;bottom:62px;transform:translateX(-50%);width:min(560px,60vw);z-index:4;border-radius:4px;background:linear-gradient(180deg,rgba(26,28,31,.95),rgba(12,13,15,.95));border-color:rgba(226,187,100,.38);box-shadow:0 8px 26px rgba(0,0,0,.55)}
 html.pcmap #vitals{position:fixed;left:14px;bottom:56px;width:300px;z-index:4;margin:0}
 html.pcmap #trip{position:fixed;left:50%;transform:translateX(-50%);bottom:56px;width:min(560px,46vw);z-index:4}
 html.pcmap #trip .trip{margin:0;box-shadow:0 8px 26px rgba(0,0,0,.5)}
-html.pcmap:has(#picked:not(.hide)) #trip{bottom:132px}
 html.pcmap #raid{position:fixed;left:50%;top:12px;transform:translateX(-50%);width:min(620px,50vw);z-index:5}
 /* a road event or something blocking the road: a card in the middle of the map, the hero has stopped */
 html.pcmap #trip:has([data-act="openenc"],[data-act="openev"],.ppfollow~*){bottom:auto;top:38%;width:min(480px,80vw)}
@@ -5074,6 +5072,10 @@ body:has(#tbf) #gnear{display:none!important}
 .ft-line.pet-line{margin-top:6px}
 /* [itemcards2] item cards: what else changes when you put it on (itemcmp.js notes) */
 .ic-cmp .ic-note{margin:4px 0 0;padding-left:14px;text-indent:-14px;color:#e8c77a;line-height:1.35}.ic-cmp .ic-note::before{content:"▸ ";color:#c9a24a}
+/* [map-panels] every map panel (mapsheet.js) shares the caravan panel's look above; a place's marker or a pin's glyph in the header */
+.wgcard.mpanel .wg-pic img{width:40px;height:40px;display:block}
+.wgcard .mp-glyph{font-size:26px;line-height:1;color:#e8d6a6}
+.wgcard .wg-body > .wg-note:first-child{margin:8px 0 4px}
 /* ==== [travelhud] fptravel.js: on the road the trip is a first-person band at the top of the map; the compass runs along its top edge ==== */
 .fpt{position:absolute;top:4px;left:6px;right:6px;z-index:3;display:flex;flex-direction:column;border:1px solid rgba(214,182,110,.42);border-radius:4px;background:linear-gradient(180deg,rgba(16,17,20,.95),rgba(8,9,11,.95));box-shadow:0 8px 24px rgba(0,0,0,.55);overflow:hidden;min-width:0}
 .fpt-view{position:relative;aspect-ratio:3.1/1;min-height:100px;max-height:240px;line-height:0;overflow:hidden}
@@ -5246,6 +5248,68 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 .gcard .grow .au-ic{font-size:20px;line-height:1;width:30px;text-align:center;color:var(--gold);flex:0 0 30px}
 .gcard .grow .btn{flex:0 0 auto;min-width:76px}
 .gcard .gsw.on{box-shadow:inset 0 0 0 1px rgba(226,187,100,.55)}
+/* [fightnums] fightnums.js: fight numbers you can read on a phone and a PC. A thick dark outline, colours by type (damage in
+   its element's colour, heals green with a glow, magicka / stamina as small chips, block and miss as grey-steel words),
+   big gold crits; each number on its own free spot (left / top are its top-left corner). Turn order, orb and party bars
+   a little bigger at phone size. */
+.tbpop.fn{transform:none;transform-origin:50% 60%;font:800 clamp(21px,calc(14px + .75vw),30px)/1 Cinzel,serif;letter-spacing:.02em;padding:1px 3px;
+  text-shadow:0 0 2px #000,1px 1px 0 #000,-1px 1px 0 #000,1px -1px 0 #000,-1px -1px 0 #000,2px 2px 0 #000,-2px 2px 0 #000,2px -2px 0 #000,-2px -2px 0 #000,0 3px 6px rgba(0,0,0,.85);
+  animation:fnpop 1.45s cubic-bezier(.2,.8,.3,1) both;z-index:61}
+.tbpop.fn.el-phys{color:#fff3da}.tbpop.fn.el-fire{color:#ff9a4a}.tbpop.fn.el-frost{color:#9fe0ff}.tbpop.fn.el-shock{color:#d2a8ff}.tbpop.fn.el-poison{color:#d9e84a}.tbpop.fn.el-shout{color:#eef3ff}
+.tbpop.fn.fn-heal{color:#5cf08e;text-shadow:0 0 2px #021,1px 1px 0 #021,-1px 1px 0 #021,1px -1px 0 #021,-1px -1px 0 #021,2px 2px 0 #021,-2px 2px 0 #021,2px -2px 0 #021,-2px -2px 0 #021,0 0 14px rgba(60,240,130,.65)}
+.tbpop.fn.crit{font-size:clamp(30px,calc(20px + 1.1vw),44px);color:#ffd54a;animation-name:fnpopcrit;z-index:62;
+  text-shadow:0 0 2px #2a1200,2px 2px 0 #2a1200,-2px 2px 0 #2a1200,2px -2px 0 #2a1200,-2px -2px 0 #2a1200,0 3px 0 #2a1200,0 0 18px rgba(255,170,40,.8)}
+.tbpop.fn.fn-res{font:700 clamp(13px,calc(10px + .3vw),16px)/1 "Barlow Semi Condensed",sans-serif;padding:3px 8px;border-radius:999px;background:rgba(8,10,16,.82);border:1px solid currentColor;text-shadow:0 1px 2px #000}
+.tbpop.fn.el-mp{color:#a9c4ff}.tbpop.fn.el-sp{color:#b9ef8e}
+.tbpop.fn.fn-word{font:italic 700 clamp(16px,calc(11px + .5vw),22px)/1 Cinzel,serif;letter-spacing:.06em}
+.tbpop.fn.el-miss{color:#d9d4c8}.tbpop.fn.el-block{color:#b8d6f2}
+@keyframes fnpop{0%{opacity:0;transform:translateY(8px) scale(.6)}14%{opacity:1;transform:translateY(-2px) scale(1.12)}28%{transform:translateY(-4px) scale(1)}80%{opacity:1}100%{opacity:0;transform:translateY(-26px)}}
+@keyframes fnpopcrit{0%{opacity:0;transform:translateY(6px) scale(.4) rotate(-6deg)}15%{opacity:1;transform:translateY(-4px) scale(1.35) rotate(3deg)}32%{transform:translateY(-6px) scale(1) rotate(0)}85%{opacity:1}100%{opacity:0;transform:translateY(-26px)}}
+#c2pops .c2pop{font-size:14px;text-shadow:0 0 2px #000,0 1px 2px #000}
+/* turn order, your orb and the party's bars: readable on a phone */
+#tbf.c2 .tbini{font-size:12px}
+#tbf.c2 .tbini i{font-size:11.5px;font-weight:700;opacity:.9;text-shadow:0 1px 2px #000}
+#tbf.c2 .tbini .c2pt{width:28px;height:28px}
+#tbf.c2 .c2glass small.num{font-size:11.5px;opacity:1}
+#tbf.c2 .c2mpn,#tbf.c2 .c2spn{font-size:12.5px;text-shadow:0 0 2px #000,0 1px 2px #000,0 0 5px #000}
+#tbf.c2 .tbparty .tbu.ally .nm{font-size:11.5px}
+#tbf.c2 .tbparty .tbu.ally .tbbar.mid{height:11px}#tbf.c2 .tbparty .tbu.ally .tbbar .num{font-size:10px;line-height:11px;text-shadow:0 0 2px #000,0 1px 1px #000}
+#tbf.c2.c2wide .tbini{font-size:13px}#tbf.c2.c2wide .tbini i{font-size:12.5px}
+@media (prefers-reduced-motion:reduce){.tbpop.fn,.tbpop.fn.crit{animation:fnfade 1.45s both}}
+@keyframes fnfade{0%,80%{opacity:1}100%{opacity:0}}
+/* the company's Commissions board (commissions.js): SkyUI-style order cards in a grid, one column on a phone */
+.cms-root{display:flex;flex-direction:column;gap:10px}
+.cms-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:6px 14px;padding:10px 12px;border:1px solid rgba(214,178,94,.35);border-radius:4px;background:linear-gradient(90deg,rgba(12,10,7,.9),rgba(30,25,17,.55))}
+.cms-ht{flex:1 1 260px;min-width:0}
+.cms-title{font-family:"Cinzel",serif;font-size:20px;letter-spacing:.07em;color:var(--gold);text-shadow:0 1px 3px #000}
+.cms-head .sub{margin-top:3px;font-size:13px;line-height:1.35}
+.cms-lv{display:flex;flex-direction:column;align-items:flex-end;gap:1px}.cms-lv b{font-family:"Cinzel",serif;letter-spacing:.05em;color:#f1ead8;font-size:15px}.cms-lv span{font-size:13px;color:var(--gold)}
+.cms-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+.cms-card{display:flex;flex-direction:column;gap:7px;min-width:0;padding:10px 11px 11px;border:1px solid var(--sk-line2,var(--line));border-left:3px solid #6a5d45;background:linear-gradient(180deg,rgba(0,0,0,.62),rgba(0,0,0,.48))}
+.cms-card.k-camp{border-left-color:var(--ember)}.cms-card.k-escort{border-left-color:#8c7340}.cms-card.k-craft{border-left-color:var(--gold)}
+.cms-card.done{opacity:.6}.cms-card.last{box-shadow:inset 0 0 0 1px rgba(214,90,74,.35)}
+.cms-hd{display:flex;align-items:center;gap:8px;padding-bottom:6px;border-bottom:1px solid var(--sk-line,var(--line))}
+.cms-ic{font-size:20px;line-height:1;width:26px;text-align:center;color:var(--gold);flex:0 0 26px}
+.cms-who{flex:1;min-width:0;display:flex;flex-direction:column}.cms-who b{font-family:var(--sk-ui,inherit);font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--sk-ink,var(--ink));font-weight:600}.cms-who span{font-size:13px;color:var(--mute)}
+.cms-last{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ember);border:1px solid rgba(214,90,74,.5);padding:2px 6px;white-space:nowrap}
+.cms-body{display:flex;gap:10px;align-items:flex-start}
+.cms-pic{flex:0 0 48px;width:48px;height:48px;display:flex;align-items:center;justify-content:center;border:1px solid var(--sk-line,var(--line));background:rgba(255,255,255,.03)}
+.cms-kic{font-size:26px;color:var(--gold)}
+.cms-tx{min-width:0;flex:1}.cms-tx h3{margin:0 0 2px;font-family:"Cinzel",serif;font-size:16px;letter-spacing:.04em;color:#f1ead8}.cms-tx p{margin:0;font-size:14px;line-height:1.35}
+.cms-prog{display:flex;align-items:center;gap:8px}.cms-prog .bar{flex:1;height:6px}.cms-prog .bar i{background:var(--gold)}.cms-prog .num{font-size:13px;color:var(--ink);min-width:36px;text-align:right}
+.cms-help{margin:0;font-size:12px;color:var(--mute)}
+.cms-pay{margin:0;font-size:13px;line-height:1.4;color:var(--mute)}.cms-pay .gold{color:var(--gold)}.cms-pay>span:not(.cms-maybe){color:var(--gold)}.cms-maybe{color:var(--frost)}
+.cms-act{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-top:auto}.cms-act .btn{min-height:40px}.cms-act .btn:not(.sm){flex:1 1 160px}
+.cms-why{font-size:13px;color:var(--mute);flex:1 1 100%}
+.cms-tag{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);border:1px solid rgba(226,187,100,.5);padding:3px 8px}
+.cms-foot{margin:0}
+@media (max-width:420px){.cms-list{grid-template-columns:1fr}.cms-lv{align-items:flex-start}}
+@media (min-width:1200px){.cms-list{grid-template-columns:repeat(3,minmax(0,1fr))}}
+/* ==== friends: what they're doing + Ask to join (friendjoin.js) ==== */
+.fj-t .fj-act{display:inline-block;margin-left:8px;padding:1px 7px;border:1px solid rgba(214,190,140,.35);border-radius:3px;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#d8c69a;vertical-align:middle}
+.fj-t .fj-fight{color:#f0a08a;border-color:rgba(240,120,100,.45)}.fj-t .fj-dungeon{color:#b6a6e8;border-color:rgba(170,150,230,.45)}.fj-t .fj-trade{color:#e8cf7a;border-color:rgba(230,200,110,.45)}
+.fj-t .fj-party{display:block;color:#cbb98f}.fj-t .fj-party.full{color:#e39a7c}.fj-t .fj-why{display:block;font-style:italic;opacity:.75}
+.fbtns .btn[data-act=fjoin][disabled]{opacity:.45;cursor:not-allowed}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -5338,6 +5402,7 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 <script src="shieldfx.js"></script>
 <script src="tbtips.js"></script>
 <script src="tbui.js"></script>
+<script src="fightnums.js"></script>
 <script src="fightctl.js"></script>
 <script src="hotbar.js"></script>
 <script src="fightread.js"></script>
@@ -5418,6 +5483,8 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 <script src="placeart.js"></script>
 <script src="lightfx.js"></script>
 <script src="paintedmap.js"></script>
+<script src="mapsheet.js"></script>
+<script src="placepanel.js"></script>
 <script src="greet.js"></script>
 <script src="mapfx.js"></script>
 <script src="pcmap.js"></script>
@@ -5605,6 +5672,7 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 <script src="i18n_bargains.js"></script>
 <script src="i18n_longhouse.js"></script>
 <script src="i18n_expedition.js"></script>
+<script src="i18n_commissions.js"></script>
 <script src="i18n_sweep2.js"></script>
 <script src="i18n_gather.js"></script>
 <script src="i18n_caravans.js"></script>
@@ -5630,11 +5698,14 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 <script src="i18n_fptravel.js"></script>
 <script src="i18n_rewardtips.js"></script>
 <script src="i18n_updater.js"></script>
+<script src="i18n_mappanels.js"></script>
 <script src="i18n_gatherarea.js"></script>
 <script src="i18n_fighttipstop.js"></script>
+<script src="i18n_fightnums.js"></script>
 <script src="i18n_weaponfx.js"></script>
 <script src="i18n_phantom.js"></script>
 <script src="i18n_pcupdate.js"></script>
+<script src="i18n_friendjoin.js"></script>
 <script src="i18n.js"></script>
 <script src="invqol.js"></script>
 <script src="fastqol.js"></script>
@@ -5657,6 +5728,7 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 <script src="notify.js"></script>
 <script src="nocover.js"></script>
 <script src="invites.js"></script>
+<script src="friendjoin.js"></script>
 <script src="tourney.js"></script>
 <script src="holdui.js"></script>
 <script src="tourneyui.js"></script>
@@ -5668,6 +5740,7 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 <script src="bargains.js"></script>
 <script src="expedition.js"></script>
 <script src="longhouse.js"></script>
+<script src="commissions.js"></script>
 <script src="eventcards.js"></script>
 <script src="wagons.js"></script>
 <script src="harvest.js"></script>

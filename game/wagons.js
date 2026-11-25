@@ -321,8 +321,6 @@ const WAGONS = (() => {
     api = a;
     sink = (id, doc) => { try { a.Store?.put("wagons", id, doc); } catch (e) { /* offline */ } };
     if (a.Store?.watch && !mount.w) { mount.w = true; a.Store.watch("wagons", (docs) => { setShared(docs); if (openId) render(); }); }
-    if (live && !mount.k) { mount.k = true; document.addEventListener("keydown", (e) => { if (e.key === "Escape" && openId && !e.defaultPrevented) { e.preventDefault(); close(); } });   // Esc closes the panel and nothing else (desktop.js skips a handled Esc)
-      addEventListener("resize", () => { const el = openId && document.getElementById("wgcard"); if (el) place(el); }); }
   }
   const MW = () => (typeof WorldMap !== "undefined" ? WorldMap.W : 1000), MH = () => (typeof WorldMap !== "undefined" ? WorldMap.H : 700);
   function screen(v, pos) { const { k, ox, oy } = v.transform; return [pos[0] * MW() * k + ox, pos[1] * MH() * k + oy]; }
@@ -381,12 +379,13 @@ const WAGONS = (() => {
     if (cl) { const z = api.zoom ? api.zoom() : v.zoom; api.zoomAt?.(Math.max(z * 1.8, (WorldMap.CLUSTER_ZOOM || 3) + 0.3), cl.x, cl.y); return true; }
     const c = wagonAt(v, sx, sy, canvas);
     if (!c) return false;
-    if (typeof OVERLAYS !== "undefined" && OVERLAYS.level() >= OVERLAYS.LEVEL.decision && !document.getElementById("wgcard")) return false;   // a window or result is up: it comes first
+    if (typeof OVERLAYS !== "undefined" && OVERLAYS.level() >= OVERLAYS.LEVEL.decision && !(typeof MAPSHEET !== "undefined" && MAPSHEET.isOpen())) return false;   // a window or result is up: it comes first
     open(c.id, sx, sy);
     return true;
   }
   function open(cid, sx, sy) { openId = cid; showTrade = false; if (sx != null) lastXY = [sx, sy]; render(); api?.kick?.(); }
-  function close() { document.getElementById("wgcard")?.remove(); if (live) document.documentElement.classList.remove("wg-open"); openId = null; showTrade = false; api?.kick?.(); }
+  function close() { if (typeof MAPSHEET !== "undefined") MAPSHEET.close("wagon"); closed(); }
+  function closed(why) { if (why === "swap" && typeof MAPSHEET !== "undefined" && MAPSHEET.isOpen("wagon")) return; openId = null; showTrade = false; api?.kick?.(); }   // another caravan swapped in: it is still ours
   const mins = (sec) => { const m = Math.max(1, Math.round(sec / 60)); return m >= 60 ? `${Math.floor(m / 60)} h ${m % 60} min` : `${m} min`; };
   function render() {
     if (!live || !api || !openId) return;
@@ -396,8 +395,7 @@ const WAGONS = (() => {
     const lead = api.canDecide ? api.canDecide() : true;
     const stCls = { attacked: "bad", broken: "warn", robbed: "warn", escorted: "good" }[I.state.k] || "";
     const cu = I.catchUp, cuTxt = !cu ? "" : cu.near ? T("Right beside you") : cu.resting ? T("{n} to {town}", { n: mins(cu.secs), town: cu.town }) : cu.late ? T("Too far: meet them in {town} ({n})", { town: cu.town, n: mins(cu.secs) }) : T("About {n} to catch them", { n: mins(cu.secs) });
-    const row = (k, v, cls = "") => `<div class="wg-row"><span>${esc(k)}</span><b class="${cls}">${esc(v)}</b></div>`;
-    const btn = (act, label, sub, o = {}) => `<button class="wg-act${o.pri ? " pri" : ""}${o.danger ? " danger" : ""}" data-wg="${act}"${o.off ? " disabled" : ""}><span>${esc(label)}</span>${sub ? `<small>${esc(sub)}</small>` : ""}</button>`;
+    const btn = (act, label, sub, o = {}) => ({ act, label, sub, ...o });
     const far = !I.near, gate = !lead ? T("Your party's leader decides on the road") : far ? T("Catch up first · {n}", { n: cu && !cu.near ? mins(cu.secs) : "" }) : "";
     const acts = [];
     if (far) acts.push(btn("catch", T("Catch up"), lead ? cuTxt : T("Your party's leader decides on the road"), { pri: true, off: !lead || (I.phase === "road" && cu?.late && false) }));
@@ -409,35 +407,13 @@ const WAGONS = (() => {
     if (I.phase === "road") acts.push(btn("rob", T("Rob them"), I.robOk ? T("A crime: bounty and a worse name in {hold}", { hold: G.holdAt(I.pos) }) : T("Not these wagons"), { danger: true, off: !lead || !I.robOk }));
     const trade = showTrade ? `<div class="wg-trade" role="list">${I.stock.map((i) => { const p = price(S, c, i, t), left = BUY_MAX - boughtOf(S, c.id, i); return `<div class="wg-item" role="listitem"><span class="nm">${esc(D.ITEMS[i].name)}<small>${esc(D.ITEMS[i].weight)} wt${left < BUY_MAX ? ` · ${left} ${esc(T("left"))}` : ""}</small></span><b class="gold">${p}</b><button class="btn sm" data-wg="buy" data-item="${esc(i)}"${I.near && S.gold >= p && left > 0 ? "" : " disabled"}>${esc(T("Buy"))}</button></div>`; }).join("")}
       <p class="wg-note">${esc(I.near ? T("You have {g} gold.", { g: S.gold }) : T("Catch up with them to buy."))}${I.crisis ? " " + esc(T("Prices follow the crisis in {hold}.", { hold: I.crisis.hold })) : ""}</p></div>` : "";
-    let el = document.getElementById("wgcard");
-    if (!el) { el = document.createElement("div"); el.id = "wgcard"; el.className = "wgcard"; el.setAttribute("role", "dialog"); el.onclick = onClick; document.body.appendChild(el); }
-    const keep = el.querySelector(".wg-body")?.scrollTop || 0;   // a refresh (shared state, a purchase) keeps your place in the list
-    el.setAttribute("aria-label", I.name);
-    el.innerHTML = `<div class="wg-top"><button class="iconbtn wg-x" data-wg="x" aria-label="${esc(T("Close"))}">✕</button>
-      <div class="wg-h"><span class="wg-pic">${CARAVANS.wagonHTML ? CARAVANS.wagonHTML(58, 40, { khajiit: I.khajiit, cover: true }) : ""}</span><div><b>${esc(I.name)}</b><span>${esc(I.khajiit ? T("Khajiit caravan") : T("Nord merchant wagons"))}</span></div></div>
-      <div class="wg-route"><span>${esc(I.from)}</span><i><em style="width:${Math.round(I.frac * 100)}%"></em></i><span>${esc(I.to)}</span></div></div>
-      <div class="wg-body">${row(T("Cargo"), I.cargo)}${row(T("State"), I.stateText, stCls)}
-      ${I.phase === "road" ? row(T("Arrives"), T("in {n}", { n: mins(I.arrive - t) })) : ""}
-      ${I.crisis ? row(T("Heading into"), `${I.crisis.hold}: ${I.crisis.name}`, "warn") : ""}
-      <div class="wg-acts">${acts.join("")}</div>${trade}</div>`;
-    const body = el.querySelector(".wg-body"); if (body && keep) body.scrollTop = keep;
-    place(el);
-    document.documentElement.classList.add("wg-open");
-  }
-  /* PC map: a panel docked on the right (CSS). Anywhere else: a sheet sitting on top of the bottom nav bar, never under it */
-  function place(el) {
-    const pc = document.documentElement.classList.contains("pcmap");
-    el.classList.toggle("sheet", !pc);
-    el.classList.toggle("wide", !pc && innerWidth >= 760);
-    if (pc) { el.style.bottom = ""; el.style.maxHeight = ""; return; }
-    let navTop = innerHeight;
-    for (const n of document.querySelectorAll("#tabs, .tabs, .mn-bar")) {
-      const r = n.getBoundingClientRect(), cs = getComputedStyle(n);
-      if (r.height > 0 && cs.display !== "none" && cs.visibility !== "hidden" && (cs.position === "fixed" || cs.position === "sticky") && r.top > innerHeight / 2) navTop = Math.min(navTop, r.top);
-    }
-    const bottom = Math.max(0, Math.round(innerHeight - navTop));
-    el.style.bottom = bottom + "px";
-    el.style.maxHeight = Math.max(240, Math.min(Math.round(innerHeight * 0.72), navTop - 56)) + "px";
+    if (typeof MAPSHEET === "undefined") return;
+    MAPSHEET.open({ id: "wagon:" + c.id, owner: "wagon", domId: "wgcard", label: I.name,
+      icon: CARAVANS.wagonHTML ? CARAVANS.wagonHTML(58, 40, { khajiit: I.khajiit, cover: true }) : "",
+      title: I.name, sub: I.khajiit ? T("Khajiit caravan") : T("Nord merchant wagons"),
+      head: `<div class="wg-route"><span>${esc(I.from)}</span><i><em style="width:${Math.round(I.frac * 100)}%"></em></i><span>${esc(I.to)}</span></div>`,
+      rows: [[T("Cargo"), I.cargo], [T("State"), I.stateText, stCls], I.phase === "road" ? [T("Arrives"), T("in {n}", { n: mins(I.arrive - t) })] : null, I.crisis ? [T("Heading into"), `${I.crisis.hold}: ${I.crisis.name}`, "warn"] : null],
+      actions: acts, post: trade, onClick, onClose: closed });
   }
   function onClick(e) {
     const b = e.target.closest("[data-wg]"); if (!b || b.disabled || !api) return;
@@ -561,6 +537,6 @@ const WAGONS = (() => {
   return { BREAK_P, BREAK_LEN, ATK_PRE, ATK_POST, FIX_MAX, SAVE_MAX, ROAD_CUT, BUY_MAX, HIT_PX, PL,
     seeded, frac, trouble, state, stateText, cargo, stock, price, buy, intercept, news, fixPay, savePay, canHelp, helpLabel, help, crisisEscort, guardedByOthers,
     chase, takeIntent, info, setShared, share, shared: () => shared, setSink: (f) => { sink = f; }, wrap,
-    mount, tap, hover, decorate, clusterAt, wagonAt, open, close, render, isOpen: () => !!openId, hovered: () => hoverId };
+    mount, tap, hover, decorate, clusterAt, wagonAt, open, close, render, isOpen: () => !!openId && (typeof MAPSHEET === "undefined" || MAPSHEET.isOpen("wagon")), hovered: () => hoverId };
 })();
 if (typeof module !== "undefined") module.exports = WAGONS;

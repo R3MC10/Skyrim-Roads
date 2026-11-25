@@ -918,6 +918,7 @@ const TB = (() => {
     for (const e of evs) { if (e.mpUp > 0) out.push({ at: "me", n: e.mpUp, el: "mp", tag: "MP" }); if (e.spUp > 0) out.push({ at: "me", n: e.spUp, el: "sp", tag: "SP" }); }   // a magicka or stamina potion working (potionfx.js)
     if (now.mp < was.mp - 0.5) out.push({ at: "me", n: now.mp - was.mp, el: "mp", tag: "MP" });
     if (now.sp < was.sp - 0.5) out.push({ at: "me", n: now.sp - was.sp, el: "sp", tag: "SP" });
+    if (typeof FIGHTNUMS !== "undefined") FIGHTNUMS.extra(evs, out);   // [fightnums] Miss / Blocked / Dodged
     return out.slice(-8);
   }
   /* your party, readable at a glance: one frame per teammate (players and followers) with health numbers, what's on them,
