@@ -9,6 +9,7 @@ const PATCHNOTES = (() => {
       "Your Friends list shows each friend's painted portrait, the one they picked. Friends who are offline keep the portrait you last saw; someone you've never seen shows a plain outline.",
       "The tiny figure squeezed next to each face in the Friends and travellers lists is gone, so rows are easier to read.",
       "Party lists, party vote chips, Ask to join and party invite cards, and your face in fights all show the same portrait.",
+    ] },
     { id: "b315-hourlyupdates", build: 315, date: "25 Nov 2026", title: "Updates arrive on time", items: [
       "New versions now reach the app reliably within about an hour of a change, instead of sometimes waiting many hours.",
     ] },
