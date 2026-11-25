@@ -359,7 +359,31 @@ const COMBATAI = (() => {
   }
   const settingsOf = (L) => (typeof AISET !== "undefined" ? AISET.get(L) : null);
 
+  /* ---- read-only helpers for the "What would the AI do?" tester (aitester.js) and the fight log. They never change
+     a decision: rank() scores the same options choose() looks at, shortWhy() only words a reason. */
+  const WHY0 = { attack: "steady damage", power_attack: "enough stamina for a heavy blow", block: "guards against a big hit",
+    "potion:health": "badly hurt", "potion:magicka": "out of magicka", "potion:stamina": "out of stamina", flee: "gets out while it can" };
+  function shortWhy(a, why) {
+    if (why) return why;
+    if (!a) return "";
+    if (WHY0[a]) return WHY0[a];
+    const k = a.split(":")[0];
+    return k === "spell" ? "the best move it sees" : k === "dual" ? "a double-strength cast pays off" : k === "scroll" ? "a free spell from a scroll"
+      : k === "shout" || k === "power" ? "a good moment for it" : "the best move it sees";
+  }
+  function rank(f, n = 3) {
+    const p = picture(f), st = settingsFor(f), out = [];
+    let opts = options(f);
+    if (st) opts = opts.filter((a) => AISET.allow(f, a, st));
+    for (const a of opts) {
+      let r; try { r = value(f, p, a); if (st) r = AISET.tune(f, p, a, r, st); } catch { continue; }
+      if (r && isFinite(r.v)) out.push({ a, v: r.v, why: r.why || "" });
+    }
+    out.sort((x, y) => y.v - x.v);
+    return out.slice(0, n);
+  }
+
   const DESC = "Smart AI picks the best move every turn: the right spell for the foe's weakness, power attacks when you have the stamina, healing only when the fight is close, potions and shouts saved for when they matter.";
-  return { isSmart, choose, decide, settingsOf, settingsFor, followerAct, coopProfile, incoming, swing, options, picture, value, DESC };
+  return { isSmart, choose, decide, settingsOf, settingsFor, followerAct, coopProfile, incoming, swing, options, picture, value, shortWhy, rank, DESC };
 })();
 if (typeof module !== "undefined") module.exports = COMBATAI;

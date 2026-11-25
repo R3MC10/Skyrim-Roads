@@ -4954,6 +4954,39 @@ body:has(#tbf) #gnear{display:none!important}
 #tbf.hb-dragging{cursor:grabbing}
 #tbf .tbtop .tbff.hb-ed svg{display:block;margin:auto}
 #tbf.c2 .tbtop .fdc-menu .tbff.hb-ed svg{flex:none;margin:0}
+/* ==== "What would the AI do?" tester and folded rules (aitester.js) ==== */
+.ai-smart .rulesbox{opacity:1;filter:none}
+.rulesfold{margin:0 0 8px;border:1px solid var(--line);background:rgba(0,0,0,.18);padding:0 10px}
+.rulesfold>summary{cursor:pointer;min-height:44px;display:flex;align-items:center;color:var(--mute);font-size:15px}
+.rulesfold[open]>summary{color:var(--ink)}
+.aitest{margin-top:12px}
+.aitest h3{margin:0 0 2px}
+.aitsl{display:grid;grid-template-columns:1fr;gap:2px;margin:6px 0}
+@media (min-width:700px){.aitsl{grid-template-columns:1fr 1fr;column-gap:16px}}
+.aitrow{display:grid;grid-template-columns:96px 1fr 46px;align-items:center;gap:8px;font-size:14px;min-height:40px}
+.aitrow input{width:100%;accent-color:var(--gold);height:32px;margin:0}
+.aitrow b{text-align:right}
+.aitchips{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:4px 0}
+.aitchips .chip{min-height:36px;padding:0 9px;letter-spacing:.08em}
+.aitl{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin-right:2px}
+.aitchips .aitl+.chip{margin-left:0}.aitchips .chip+.aitl{margin-left:8px}
+.aitout{margin-top:8px}
+.aitpick{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid rgba(214,178,94,.45);background:rgba(214,178,94,.07)}
+.aitpick>div{display:flex;flex-direction:column;min-width:0}
+.aitpick small{color:var(--mute);font-size:13px}
+.aitpick b{font-size:17px;color:var(--gold)}
+.aitwhy{font-size:14px}
+.aitalt{margin-top:2px}
+.aitrules{margin-top:8px}
+.aitsubh{margin:0 0 4px}
+.aitrule{display:grid;grid-template-columns:18px 22px 1fr;gap:6px;align-items:start;padding:5px 6px;border-left:3px solid transparent;font-size:14px}
+.aitrule small{display:block;color:var(--mute);font-size:13px;overflow-wrap:anywhere}
+.aitrule .aitn{font-family:var(--title,inherit);opacity:.7;text-align:center}
+.aitrule .aitrt{min-width:0;overflow-wrap:anywhere}
+.aitrule.fire{border-left-color:var(--sp);background:rgba(79,163,92,.12)}
+.aitrule.fire .aitmark{color:var(--sp);font-weight:700}
+.aitrule.skip .aitmark{color:var(--ember)}
+.aitrule.later{opacity:.5}
 /* [layout3] the hotbar keeps key order 1-0 (the old skill bar's Catch-your-breath / Flee spots don't apply to its slots);
    sub-tab strips fade at an end that hides more tabs; the Journal's chosen tab in dark ink with a gold underline */
 #tbf.c2 .fc.fc-hb .hb-bar>.hb-s{grid-row:auto!important;grid-column:auto!important}
@@ -5051,6 +5084,7 @@ body:has(#tbf) #gnear{display:none!important}
 <script src="combatai.js"></script>
 <script src="sneak2.js"></script>
 <script src="aiset.js"></script>
+<script src="aitester.js"></script>
 <script src="minigame.js"></script>
 <script src="tbradial.js"></script>
 <script src="tbfight.js"></script>
@@ -5303,6 +5337,7 @@ body:has(#tbf) #gnear{display:none!important}
 <script src="i18n_heists.js"></script>
 <script src="i18n_chargen.js"></script>
 <script src="i18n_tacticsaccess.js"></script>
+<script src="i18n_aitester.js"></script>
 <script src="i18n_gore.js"></script>
 <script src="i18n_appicon.js"></script>
 <script src="i18n_smallpolish.js"></script>
