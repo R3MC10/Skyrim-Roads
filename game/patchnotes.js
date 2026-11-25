@@ -8,6 +8,7 @@ const PATCHNOTES = (() => {
       "The fight hotbar on phones shows its slots in key order again: 1 to 5 on top, 6 to 0 below. Catch your breath no longer jumps out of line.",
       "Tab strips that don't fit the screen (like Character's Skills, Character, Follower, AI & Loadouts...) fade out at the edge that has more tabs, and the chosen tab is always fully in view.",
       "The Journal's chosen tab (Active, Misc, Completed) is now dark ink with a gold underline, easy to read on the parchment.",
+    ] },
     { id: "b291-herocard", build: 291, date: "25 Nov 2026", title: "Your hero card looks like you", items: [
       "The figure in the Items menu (and on the Hero page, title cards and other players' cards) is now the same painted hero you see in fights: your sex, race, hair and the armour and weapon you wear. It changes as soon as you change gear or look.",
       "A woman no longer shows up as a bearded man there, and a raised weapon stays inside the card.",
