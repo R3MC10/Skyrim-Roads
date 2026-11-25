@@ -260,6 +260,7 @@ const COMBAT2 = (() => {
   }
 
   // ------------------------------------------------------------------ after each redraw (tbfight.js render)
+  const later = { raf: 0, t: [] };   // the layout passes still to come after the last redraw
   function layout(el, sess, o = {}) {
     if (!DOM || !el) return;
     const use = on();
@@ -335,8 +336,10 @@ const COMBAT2 = (() => {
     result(el, sess, o);
     place(el);
     fxPops(ov, fxNow, !!sess.done);
-    requestAnimationFrame(() => place(el, true));
-    setTimeout(() => place(el, true), 140); setTimeout(() => place(el, true), 450);   // the scene draws its canvas a moment later; the boss bar lands after this
+    // [perf] the follow-up passes of an older redraw are dropped: quick turns used to stack up four layout passes each
+    cancelAnimationFrame(later.raf); later.t.forEach(clearTimeout);
+    later.raf = requestAnimationFrame(() => place(el, true));
+    later.t = [setTimeout(() => place(el, true), 140), setTimeout(() => place(el, true), 450)];   // the scene draws its canvas a moment later; the boss bar lands after this
   }
 
   return { on, settingsHTML, layout, place, portraitOf, aspect, wideOf, shapeOf, tally };

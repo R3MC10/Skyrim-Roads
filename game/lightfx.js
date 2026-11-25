@@ -244,6 +244,7 @@ const LIGHTFX = (() => {
     const T = g.getTransform(), toBuf = (bg) => bg.setTransform(T.a * f, T.b * f, T.c * f, T.d * f, T.e * f, T.f * f);
     const sl = screenLayers(cw, ch, L, hcOn, dpr, !!o.sol);
     g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = true;
+    g.imageSmoothingQuality = "low";   // [perf] these are soft quarter-size washes: plain smoothing looks the same and costs a fraction of "high"
     // 1) the grade and vignette, over the painted ground (the markers and names come after, so they stay readable)
     if (sl.mul) { g.globalCompositeOperation = "multiply"; g.drawImage(sl.mul, 0, 0, cw, ch); }
     if (!o.sol && L.desat > 0.02) { g.globalCompositeOperation = "saturation"; g.globalAlpha = L.desat * (hcOn ? 0.5 : 1); g.fillStyle = "#808080"; g.fillRect(0, 0, cw, ch); g.globalAlpha = 1; }

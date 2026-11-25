@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b326-smooth", build: 326, date: "25 Nov 2026", title: "Smoother map, travel and fights", items: [
+      "The map is much lighter to draw: the painted ground and the fog are kept ready while you look around, so the map no longer stutters and your phone stays cooler.",
+      "The first-person travel view rests between its pictures instead of waking up all the time.",
+      "Fight scenes that are scrolled away stop redrawing, and quick turns no longer pile up extra work, so fights stay smooth.",
+      "Fewer little hitches every second on every screen, and saving your game is quicker.",
+    ] },
     { id: "b325-dundropout", build: 325, date: "25 Nov 2026", title: "When someone leaves a dungeon run", items: [
       "If someone in a co-op dungeon run closes the game or loses their connection for about half a minute, the run now ends for everyone in it, party or not. A short network hiccup or a quick switch to another app doesn't count.",
       "Everyone is taken safely back to the dungeon's entrance: a fight that was going on just stops (nobody dies), you keep everything you picked up, and the party's loot pile is shared out by the usual vote, gold split evenly.",
