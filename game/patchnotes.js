@@ -3,6 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b215-fightdeclutter", build: 215, date: "25 Nov 2026", title: "A calmer fight screen", items: [
+      "The fight screen is tidier, mostly on phones. The top is one slim strip with the round and the turn order; the fight log and the combat wheel sit in the new … menu.",
+      "The foe's card shows its name and kind on one line and only its next move. Tap the card to see everything it plans this round.",
+      "The target is a thin ring on the ground under the foe. The dashed line to it only shows while you aim.",
+      "Your health, magicka and stamina live only in the orb now; its striped band shows how much the foe is about to take. No more bars over your hero or numbers in the Moves row.",
+      "The Moves diamonds and \"Your turn\" share one thin line, and a move's description shows as a fixed line just above your buttons, never on top of them.",
+      "End turn is a plain button in its own corner. Snow falls as soft round flakes.",
+    ] },
     { id: "b214-daedric", build: 214, date: "25 Nov 2026", title: "Daedric bargains and artifacts that wake up", items: [
       "Black shrines by the road can now carry an offer from one of six Daedric princes: Mehrunes Dagon, Azura, Nocturnal, Hircine, Boethiah and Meridia (from level 8).",
       "Accept a contract and do three things your prince likes, counted from how you really play: slaying foes, winning at night, picking pockets and locks, hunting beasts, fighting alone or putting the dead to rest.",

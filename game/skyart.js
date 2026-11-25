@@ -149,7 +149,7 @@ const SKY = (() => {
     const falling = opts.weather !== false;   // false: snowflakes and raindrops move elsewhere (fight replays); haze and fog stay
     if (st.weather === "snow" || st.weather === "blizzard") {
       g.fillStyle = "rgba(255,255,255,0.92)"; const n = st.weather === "blizzard" ? 140 : 60;
-      if (falling) for (let i = 0; i < n; i++) { const s = 1.2 + r() * 1.6; g.fillRect(r() * w, r() * h, s, s); }
+      if (falling) { const ps = []; for (let i = 0; i < n; i++) { const s = 1 + r() * 1.2; ps.push({ x: r() * w, y: r() * h, s }); } flakes(g, ps, 1); }   // soft round flakes, not squares
       if (st.weather === "blizzard") { g.fillStyle = "rgba(232,238,242,0.38)"; g.fillRect(0, 0, w, h); }
     }
     if (st.weather === "rain" || st.weather === "storm") {
@@ -176,6 +176,22 @@ const SKY = (() => {
       if (st.season === "summer" && st.tod === "day") { g.fillStyle = "rgba(255,246,196,0.7)"; for (let i = 0; i < 10; i++) g.fillRect(r() * w, gy * 0.5 + r() * (h - gy * 0.5), 1.4, 1.4); }
       if ((st.season === "summer" || st.season === "spring") && (st.tod === "night" || st.tod === "dusk")) for (let i = 0; i < 12; i++) { const x = r() * w, y = gy * 0.7 + r() * (h - gy * 0.7); const gl = g.createRadialGradient(x, y, 0, x, y, 5); gl.addColorStop(0, "rgba(230,255,140,0.9)"); gl.addColorStop(1, "rgba(230,255,140,0)"); g.fillStyle = gl; g.fillRect(x - 5, y - 5, 10, 10); }
       if (st.season === "winter" && st.tod === "night") { g.fillStyle = "rgba(235,240,246,0.16)"; for (let i = 0; i < 5; i++) { g.beginPath(); g.ellipse(r() * w, h * (0.82 + r() * 0.15), 30 + r() * 40, 5 + r() * 4, 0, 0, 7); g.fill(); } }
+    }
+  }
+
+  /* [fightdeclutter] soft round snowflakes in three sizes (small ones fainter, like they're further off), each with a
+     faint halo; zk = screen pixels per drawing unit, so they keep the same size on a phone and on a big PC window */
+  const FLAKE = [[1.4, 0.9, 0.55], [1.8, 1.4, 0.75], [9, 2.1, 0.9]];   // [p.s below, radius in screen px, alpha]
+  function flakes(g, parts, zk = 1) {
+    let lo = 0;
+    for (const [top, rad, al] of FLAKE) {
+      const rr = rad / zk;
+      for (const [k, a] of [[2.1, al * 0.22], [1, al]]) {
+        g.fillStyle = `rgba(255,255,255,${a.toFixed(3)})`; g.beginPath();
+        for (const p of parts) if (p.s >= lo && p.s < top) { const r2 = rr * k; g.moveTo(p.x + r2, p.y); g.arc(p.x, p.y, r2, 0, 6.2832); }
+        g.fill();
+      }
+      lo = top;
     }
   }
 
@@ -207,7 +223,7 @@ const SKY = (() => {
         // opts.scale(): screen pixels per drawing unit. A small stage blown up to a wide PC window keeps flakes and
         // raindrops their phone size (round, not big squares)
         const zk = opts.scale ? Math.max(1, opts.scale() || 1) : 1, big = zk > 1.4;
-        if (kind === "snow") { g.fillStyle = "rgba(255,255,255,0.9)"; if (big) { g.beginPath(); for (const p of parts) { const rr = (p.s * 1.05) / zk; g.moveTo(p.x + rr, p.y); g.arc(p.x, p.y, rr, 0, 7); } g.fill(); } else for (const p of parts) g.fillRect(p.x, p.y, p.s * 1.4, p.s * 1.4); }
+        if (kind === "snow") flakes(g, parts, zk);
         else if (kind === "rain") { g.strokeStyle = "rgba(205,218,230,0.6)"; g.lineWidth = big ? 1.5 / zk : 1; g.beginPath(); for (const p of parts) { g.moveTo(p.x, p.y); g.lineTo(p.x - 2 - wind * 5, p.y + 8); } g.stroke(); }
         else if (kind === "ash") { for (const p of parts) { g.fillStyle = p.s > 1.6 ? "rgba(60,52,46,0.75)" : "rgba(120,110,100,0.6)"; g.fillRect(p.x, p.y, p.s * 2.2, p.s * 1.4); } }
         else if (kind === "mist") { for (const p of parts) { const rr = (40 + p.s * 40) * (w / 400); const gr = g.createRadialGradient(p.x, p.y * 0.6 + h * 0.35, 0, p.x, p.y * 0.6 + h * 0.35, rr); gr.addColorStop(0, "rgba(222,228,232,0.32)"); gr.addColorStop(1, "rgba(220,226,230,0)"); g.fillStyle = gr; g.fillRect(p.x - rr, p.y * 0.6 + h * 0.35 - rr, rr * 2, rr * 2); } }
