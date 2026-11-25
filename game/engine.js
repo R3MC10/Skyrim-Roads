@@ -304,7 +304,7 @@ const G = (() => {
     const cur = equipment(s);
     let extra = "";
     if (it.slot === "weapon" && it.hands === 2 && eq.shield) { delete eq.shield; extra = " Shield taken off (two-handed weapon)."; }
-    if (it.slot === "shield" && cur.weapon && D.ITEMS[cur.weapon.item].hands === 2) return "You can't use a shield with a two-handed weapon.";
+    if (it.slot === "shield" && cur.weapon && D.ITEMS[cur.weapon.item].hands === 2) { delete eq.weapon; extra = ` ${D.ITEMS[cur.weapon.item].name} taken off (needs both hands).`; }   // [itemcards2] like Skyrim: the shield wins, the two-hander comes off (the item card says so first)
     if (eq.offhand != null) {   // [OURS] dual wielding: a shield or a two-handed weapon frees the left hand; one sword can't be in both hands
       const offR = invRow(s, eq.offhand);
       if (it.slot === "shield" || (it.slot === "weapon" && it.hands === 2)) { delete eq.offhand; extra += " Left-hand weapon put away."; }

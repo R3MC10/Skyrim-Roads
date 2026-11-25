@@ -45,6 +45,10 @@ async def start(b, w, h, phone):
 
 OPEN_QUEST = """()=>{const S=window.__dbg.save(); RTIP.forget(); G.give(S,'steel_sword'); G.give(S,'potion_health_minor',3);
   window.__dbg.message('Quest', 'The jarl thanks you and hands you a sword and some potions.'); }"""
+# [itemcards2] sword + shield in hand, then a two-handed find
+TWOHAND = """()=>{const S=window.__dbg.save(); const lo=G.loadout(S).equipment; delete lo.offhand;
+  const sw=G.give(S,'iron_sword'), sh=G.give(S,'hide_shield'); G.equip(S,sw); G.equip(S,sh); RTIP.forget(); G.give(S,'iron_greatsword');
+  window.__dbg.message('Quest', 'The smith hands you a greatsword.'); }"""
 TIP = """()=>{const t=document.querySelector('#tip'); if(!t||!t.classList.contains('on')) return null; const r=t.getBoundingClientRect();
   const btns=[...document.querySelectorAll('#modal button, #modal .btn')].map(b=>b.getBoundingClientRect()).filter(q=>q.width);
   const cover=btns.some(q=>r.left<q.right&&r.right>q.left&&r.top<q.bottom&&r.bottom>q.top);
@@ -58,7 +62,7 @@ async def pc(b):
     await pg.hover("#modal .rt-strip [data-tip-k^='rw:steel_sword']"); await pg.wait_for_timeout(700)
     t = await pg.evaluate(TIP)
     ok(bool(t) and not t["sheet"], f"1920 hover: a floating card, not a sheet ({t and t['sheet']})")
-    ok(bool(t) and "Steel Sword" in t["text"] and "Damage" in t["text"] and "Weight" in t["text"], "1920 card: name, damage, weight")
+    ok(bool(t) and "Steel Sword" in t["text"] and "Hits for" in t["text"] and "Weight" in t["text"], "1920 card: name, damage, weight")
     ok(bool(t) and t["cmp"] and "Against what you wear" in t["text"] and "Iron Dagger" in t["text"], "1920 card: itemcmp's compare block against the worn dagger")
     ok(bool(t) and not t["cover"], "1920 card covers no button of the window")
     await pg.screenshot(path=os.path.join(OUT, "pc_1920_quest.png"))
@@ -77,6 +81,22 @@ async def pc(b):
     if rows:
         await pg.hover("#modal .loot-row[data-tip-k='rwgold:26']"); await pg.wait_for_timeout(700)
         t = await pg.evaluate(TIP); ok(bool(t) and "26 gold" in t["text"], "1920 gold card")
+    # [itemcards2] the Items menu shows the same lines (PC side panel on hover)
+    await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
+    await pg.evaluate(TWOHAND); await pg.wait_for_timeout(500)
+    await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
+    await pg.evaluate("__ui.openMenu('items')"); await pg.wait_for_timeout(500)
+    await pg.evaluate("document.querySelector('#sky [data-act=skycat][data-id=all]')?.click()"); await pg.wait_for_timeout(400)
+    gid = await pg.evaluate("window.__dbg.save().inv.filter(r => r.item === 'iron_greatsword').pop().id")
+    el = await pg.query_selector(f"#sky .sky-row[data-id='{gid}']")
+    if el:
+        await el.scroll_into_view_if_needed(); bb = await el.bounding_box()
+        await pg.mouse.move(bb["x"] + bb["width"] / 2, bb["y"] + bb["height"] / 2); await pg.wait_for_timeout(700)
+    d = await pg.evaluate("() => document.querySelector('#sky .sky-detail')?.innerText || ''")
+    ok("Takes both hands: your Hide Shield comes off" in d and "instead of One-Handed" in d, f"1920 Items: the greatsword says the shield comes off + the skill switch ({d[-260:]!r})")
+    hn = await pg.evaluate("ITEMCMP.hits(window.__dbg.save(), 'iron_greatsword')")
+    ok(f"{hn} (15 base)" in d and f"→ {hn}" in d, f"1920 Items: header and compare show the same with-skill number {hn}")
+    await pg.screenshot(path=os.path.join(OUT, "pc_1920_items_twohander.png"))
     ok(not errs, f"1920 no page errors {errs[:3]}")
     await ctx.close()
 
@@ -100,6 +120,14 @@ async def phone(b):
     t = await pg.evaluate(TIP)
     ok(bool(t) and t["sheet"] and "Stack of 3" in t["text"], "390 another icon: its sheet, and it stays open (no made-up mouse hover closes it)")
     await pg.tap("#modal h2"); await pg.wait_for_timeout(400)
+    # [itemcards2] a two-handed reward while holding sword + shield: the sheet says what comes off
+    await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())"); await pg.wait_for_timeout(1100)
+    await pg.evaluate(TWOHAND); await pg.wait_for_timeout(700)
+    await pg.tap("#modal .rt-strip [data-tip-k^='rw:iron_greatsword']", timeout=5000); await pg.wait_for_timeout(600)
+    t = await pg.evaluate(TIP)
+    ok(bool(t) and t["sheet"] and "Takes both hands: your Hide Shield comes off" in t["text"] and "instead of One-Handed" in t["text"], f"390 two-hander sheet: shield comes off + skill switch ({t and t['text'][-200:]!r})")
+    await pg.evaluate("()=>{const t=document.querySelector('#tip'); if(t) t.scrollTop=t.scrollHeight;}"); await pg.wait_for_timeout(200)
+    await pg.screenshot(path=os.path.join(OUT, "phone_390_twohander.png"))
     ok(not errs, f"390 no page errors {errs[:3]}")
     await ctx.close()
 

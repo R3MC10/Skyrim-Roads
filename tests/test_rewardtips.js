@@ -31,7 +31,7 @@ ok(TIP.keyForText(D.ITEMS[mace].name) === "item:" + mace, "tooltip.js finds ench
 
 { const h = TIP.html("rw:" + mace), t = text(h);
   ok(clean(h), "mace card is clean " + t);
-  ok(/Damage/.test(t) && t.includes(String(D.ITEMS[mace].damage)), "damage shown " + t);
+  ok(/Hits for \\d+ \\(/.test(t) && t.includes("(" + D.ITEMS[mace].damage + " base)"), "damage shown: with-skill number and its base " + t);
   ok(/Weight/.test(t) && /Value/.test(t), "weight and value shown");
   ok(/One-handed|Two-handed/.test(t), "type and hands shown");
   ok(/Numbing Cold/.test(t) && /frost damage/.test(t), "the enchantment and what it does " + t);
@@ -45,7 +45,7 @@ ok(TIP.keyForText(D.ITEMS[mace].name) === "item:" + mace, "tooltip.js finds ench
   if (worn.skill === D.ITEMS[mace].skill) ok(/tt-up/.test(TIP.html("rw:" + mace)), "a better weapon shows green");
   const sw = Object.keys(D.ITEMS).filter((k) => D.ITEMS[k].slot === "weapon" && D.ITEMS[k].skill === worn.skill && !k.startsWith("ench|"));
   const weaker = sw.find((k) => D.ITEMS[k].damage < worn.damage), better = sw.find((k) => D.ITEMS[k].damage > worn.damage);
-  const dmg = (k) => (String(TIP.html("rw:" + k)).match(/<div class="ic-r ([^"]*)"><span>Damage/) || [])[1];
+  const dmg = (k) => (String(TIP.html("rw:" + k)).match(/<div class="ic-r ([^"]*)"><span>Hits for/) || [])[1];
   ok(/Against what you wear/.test(text(TIP.html("rw:" + mace))) && text(TIP.html("rw:" + mace)).includes(worn.name), "compares against the worn weapon by name");
   if (weaker) ok(/ic-dn/.test(dmg(weaker) || ""), "a weaker weapon's damage shows red " + dmg(weaker));
   if (better) ok(/ic-up/.test(dmg(better) || ""), "a better weapon's damage shows green " + dmg(better));
@@ -77,6 +77,13 @@ ok(TIP.keyForText(D.ITEMS[mace].name) === "item:" + mace, "tooltip.js finds ench
 }
 // the inventory's own rows stay as they were (no "Already have" on your own pack row)
 { const r = s.inv.find((x) => x.item === mace); ok(!/Already have/.test(TIP.html("inv:" + r.id)), "pack rows unchanged"); }
+// [itemcards2] a loot card for a two-hander while you hold a sword and shield says the shield comes off and the skill changes
+{ const sw = G.give(s, "iron_sword"), shd = G.give(s, "hide_shield"); G.equip(s, sw); G.equip(s, shd);
+  const gs = Object.keys(D.ITEMS).find((k) => D.ITEMS[k].slot === "weapon" && D.ITEMS[k].hands === 2 && D.ITEMS[k].skill === "Two-Handed" && !k.startsWith("ench|"));
+  const t = text(TIP.html("rw:" + gs));
+  ok(/Takes both hands: your Hide Shield comes off/.test(t) && /Uses Two-Handed [(]yours: [0-9]+[)] instead of One-Handed [(][0-9]+[)]/.test(t), "reward card: shield comes off + skill switch " + t);
+  ok(!/comes off|instead of/.test(text(TIP.html("rw:steel_sword"))), "a one-hander reward has neither line");
+}
 console.log(fails ? fails + " of " + n + " failed" : "rewardtips ok (" + n + " checks)");
 if (fails) process.exitCode = 1;
 `, c);
