@@ -988,12 +988,13 @@ const WorldMap = (() => {
     }
     if (v.guards && typeof GUARDS !== "undefined") GUARDS.drawMap(g, CL.skip.size ? v.guards.filter((q) => !CL.skip.has(q)) : v.guards, P, s, v.t, v.reduceMotion, v.zoom, tidyLabel);   // hold guards on patrol (guards.js)
     for (const pin of CL.pins) drawCluster(g, pin, s, boxes);
-    if (v.raid && typeof RAIDART !== "undefined") RAIDART.mapRaid(g, v.raid, P, s, v.t, v.reduceMotion);   // a dragon over a town (raidart.js)
-    if (typeof WORLDEV !== "undefined") WORLDEV.drawMap(g, P, s, v.t, v.reduceMotion);   // gates, dragon flights, the Khajiit market (worldevents.js)
-    if (typeof GREATEV !== "undefined") GREATEV.drawMap(g, P, s, v.t, v.reduceMotion, gevPlan);
-    if (typeof CRISES !== "undefined") CRISES.drawMap(g, P, s, v.t, v.reduceMotion, dockBoxes, crSigns);   // a hold in crisis: sign and stage pips by its capital, kept clear of the docked cards (crises.js)
-    if (typeof LEGHUNT !== "undefined" && !SV) LEGHUNT.drawMap(g, P, s, null, v.t, v.reduceMotion);   // legendary hunts: rough search areas, never exact (leghunt.js)   // dragon assaults, rifts, sieges, fairs and what they leave behind (greatevents.js)
-    if (typeof TOURNEYUI !== "undefined") TOURNEYUI.drawMap(g, P, s, v.t, v.reduceMotion, tnPlan);   // a festival banner over the host town (tourneyui.js)
+    const UL = (id) => typeof UNLOCKS === "undefined" || UNLOCKS.openNow(id);   // unlocks.js: world events and bosses show from their level
+    if (v.raid && typeof RAIDART !== "undefined" && UL("worldevents")) RAIDART.mapRaid(g, v.raid, P, s, v.t, v.reduceMotion);   // a dragon over a town (raidart.js)
+    if (typeof WORLDEV !== "undefined" && UL("worldevents")) WORLDEV.drawMap(g, P, s, v.t, v.reduceMotion);   // gates, dragon flights, the Khajiit market (worldevents.js)
+    if (typeof GREATEV !== "undefined" && UL("worldbosses")) GREATEV.drawMap(g, P, s, v.t, v.reduceMotion, gevPlan);
+    if (typeof CRISES !== "undefined" && UL("worldevents")) CRISES.drawMap(g, P, s, v.t, v.reduceMotion, dockBoxes, crSigns);   // a hold in crisis: sign and stage pips by its capital, kept clear of the docked cards (crises.js)
+    if (typeof LEGHUNT !== "undefined" && !SV && UL("legendary")) LEGHUNT.drawMap(g, P, s, null, v.t, v.reduceMotion);   // legendary hunts: rough search areas, never exact (leghunt.js)   // dragon assaults, rifts, sieges, fairs and what they leave behind (greatevents.js)
+    if (typeof TOURNEYUI !== "undefined" && UL("worldevents")) TOURNEYUI.drawMap(g, P, s, v.t, v.reduceMotion, tnPlan);   // a festival banner over the host town (tourneyui.js)
     if (v.cart && typeof CARAVANS !== "undefined") { const sp = CARAVANS.sprite(false, false); if (sp) { const back = HF && MAPHERO.flipped("me") ? 16 : -50; g.drawImage(sp, hx + back * s, hy - 16 * s, 34 * s, 24 * s); } }
     if (v.fx && typeof FXART !== "undefined") FXART.mapUnder(g, v.fx, P, s, hx, hy, v.t, v.reduceMotion, v);   // spells and shouts around you (fxart.js)
     const pulse = v.reduceMotion ? 0.5 : (Math.sin(v.t * 3) + 1) / 2;

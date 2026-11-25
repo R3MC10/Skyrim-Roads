@@ -198,6 +198,19 @@ const PARTYPLAY = (() => {
     const atPlace = (p, place) => (p ? p.members.filter((m) => m.id !== me().id && (() => { const c = ctx.cardOf(m.id); return c && !c.dungeon && (c.loc === place || G.pxDist(ctx.otherPos(c), [me().x, me().y]) <= NEAR); })()).map((m) => m.id) : []);
     const change = (fn) => { const p = party(); return p ? Store.change("parties", p.id, (x) => (x ? fn(x) || x : x)) : Promise.resolve(null); };
 
+    /* unlocks.js: before the leader takes the party somewhere some members can't enter yet (a hard dungeon), warn once and
+       name them; a second tap goes, and they come along as guests (co-op fights already grow with the party: coop.js) */
+    let ulWarn = null;
+    function ulWarnFor(p, who, place) {
+      if (typeof UNLOCKS === "undefined" || !place || !who.length) return null;
+      const id = UNLOCKS.dungeon({ level: 999 }, place).id; if (!id) return null;
+      const names = UNLOCKS.lockedFor(who.map((mid) => ({ ...(ctx.cardOf(mid) || {}), name: nameOf(p, mid) })), id);
+      if (!names.length) return null;
+      const key = place + "|" + names.join(",");
+      if (ulWarn && ulWarn.key === key && Date.now() - ulWarn.t < 60000) return null;
+      ulWarn = { key, t: Date.now() };
+      return `${names.join(", ")} can't go into ${place} on their own yet (${UNLOCKS.name(id)} open at level ${UNLOCKS.level(id)}). They can still come along as your guests. Tap again to go.`;
+    }
     /* travelTo asks first. Returns a message to show instead of travelling, "check" if a ready check started, or null to go */
     function beforeTravel(name, pos) {
       const s = me(), p = party(), r = role(s, p);
@@ -208,6 +221,7 @@ const PARTYPLAY = (() => {
       if (r !== "leader" || s.trip) return null;
       const who = withMe(p);
       if (!who.length) return null;
+      { const w = ulWarnFor(p, who, name); if (w) return w; }
       if (p.ready && checkLive(p)) return "Your party is already getting ready. Depart, or cancel the check first.";
       change((x) => startCheck(x, s.id, { kind: "travel", destName: name, dest: pos }, who));
       toast(`⚑ Ready check: waiting for ${who.map((id) => nameOf(p, id)).join(", ")}.`);
@@ -223,6 +237,7 @@ const PARTYPLAY = (() => {
       }
       if (r !== "leader") return null;
       const who = atPlace(p, s.location);
+      { const w = ulWarnFor(p, who, s.location); if (w) return w; }
       if (!who.length || typeof COOP === "undefined") return null;
       if (p.ready && checkLive(p)) return "Your party is already getting ready.";
       change((x) => startCheck(x, s.id, { kind: "dungeon", place: s.location }, who));

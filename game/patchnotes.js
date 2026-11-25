@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b346-unlocks", build: 346, date: "26 Nov 2026", title: "New things open as you level up", items: [
+      "A new hero no longer gets every system at once. The big ones open one by one as you level up: perks at level 2, gathering and cooking at 3, the forge at 4, followers and alchemy at 5, horses at 6, hard dungeons at 7, clans and houses at 8, and so on up to legendary hunts at 20.",
+      "Your old characters keep everything they already used: if you have a horse, a house or a follower, they stay.",
+      "Friends, chat, parties and playing together are open from the start. In a party, a friend who hasn't reached a hard dungeon yet comes along as your guest, and the leader gets a heads-up first.",
+      "A new character on an account that already got far skips the first tips and the guided first trip.",
+    ] },
     { id: "b345-difficulty", build: 345, date: "26 Nov 2026", title: "Pick your difficulty: Story, Normal or Hard", items: [
       "Choose how tough fights are: Story, Normal or Hard. Pick it when you make a new hero, or change it any time in Settings → Fights → Difficulty.",
       "Story: foes hit softer, fall a bit sooner and fight plainly, and the timing games in fights are easier. Hard: foes hit harder, have a bit more health, use their tricks more and go for whoever is hurt; timing is tighter. Normal stays as it was.",
@@ -2291,11 +2297,10 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 342;
+  const NEXT_AT = 346;
   const NEXT = [
     "A turn order you can read at a glance: who acts next, and in what order",
-    "Parts of the game open up step by step as you level, so there's less to take in at the start",
-    "The menus in five simple tabs",
+    "Mentoring: play side by side with friends of any level",
   ];
   const KEY = "rotn_notes_seen";
   const latest = () => LIST[0];

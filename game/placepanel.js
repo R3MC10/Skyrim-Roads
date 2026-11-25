@@ -54,7 +54,7 @@ const PLACEPANEL = (() => {
     const visited = (S.discovered || []).includes(sel);
     const acts = [];
     if (here) {
-      if (safe(() => DUNGEONS.enterable(sel)) && !S.trip) acts.push({ label: T("Go inside"), sub: T("Fight your way through, room by room"), danger: true, pri: true, data: { act: "enter" } });
+      if (safe(() => DUNGEONS.enterable(sel)) && !S.trip && (typeof UNLOCKS === "undefined" || UNLOCKS.dungeon(S, sel).ok)) acts.push({ label: T("Go inside"), sub: T("Fight your way through, room by room"), danger: true, pri: true, data: { act: "enter" } });
       if (safe(() => SMITH.MINES[sel]) && !S.trip) acts.push({ label: T("Mine ore"), sub: T("Swing a pick for iron and more"), data: { act: "mine" } });
     } else acts.push({ label: T("Travel"), sub: T("About {n}", { n: fm(mins) }), pri: true, data: { act: "go", place: sel } });
     return { ...base, id: "place:" + sel, icon: pic(kind), title: sel, sub: `${T(ctx.KIND[kind] || "Place")} · ${hold}`,

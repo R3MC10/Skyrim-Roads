@@ -533,7 +533,8 @@ const GREATEV = (() => {
     return T("{phase} · {n} fighting", { phase: PHASES[ev.kind][tl.phase].title, n: tl.people || 0 });
   }
   function bannerHTML(S, t = nowS()) {
-    const ev = current(t), rc = recent(t, 1).filter((e) => claimable(S, e, t)), af = aftermath(S, t);
+    const bossOk = typeof UNLOCKS === "undefined" || UNLOCKS.open(S, "worldbosses");   // unlocks.js: great events (world bosses) open at 12; crisis news shows from 11
+    const ev = bossOk ? current(t) : null, rc = bossOk ? recent(t, 1).filter((e) => claimable(S, e, t)) : [], af = bossOk ? aftermath(S, t) : [];
     const cx = typeof CRISES !== "undefined" ? CRISES.strips(S, t) : [];   // holds in crisis (crises.js)
     if (!ev && !rc.length && !af.length && !cx.length) return "";
     let h = "", cd = null, st = "";
@@ -615,7 +616,7 @@ const GREATEV = (() => {
   function announce(S, t) {
     const ev = current(t); if (!ev) return;
     S.gevSeen = S.gevSeen || {};
-    const st = stage(ev, t), key = ev.id + ":" + st, quiet = (S.level || 1) < 3;
+    const st = stage(ev, t), key = ev.id + ":" + st, quiet = (S.level || 1) < 3 || (typeof UNLOCKS !== "undefined" && !UNLOCKS.open(S, "worldbosses"));   // unlocks.js: world bosses open at 12
     if (S.gevSeen[key]) return;
     S.gevSeen[key] = ev.end;
     for (const [k, end] of Object.entries(S.gevSeen)) if (!(end > t - 2 * DAY)) delete S.gevSeen[k];
