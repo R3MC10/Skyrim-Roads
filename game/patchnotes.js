@@ -3,6 +3,10 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b260-crafticons", build: 260, date: "25 Nov 2026", title: "Painted crafting icons", items: [
+      "Iron, steel and dwarven ingots, leather, firewood and refined moonstone have painted icons in your pack and at the forge.",
+      "So do six alchemy and cooking ingredients: blue mountain flower, lavender, wheat, salt, garlic and fire salts.",
+    ] },
     { id: "b259-movefx2", build: 259, date: "25 Nov 2026", title: "Every blow and shout has its own look", items: [
       "Every weapon swings its own way now: a sword leaves a diagonal slash, a greatsword a wide sweep, axes and warhammers chop down from above, maces and clubs crack in with a dust ring, daggers stab twice and spears drive straight through.",
       "Power attacks wind up with a gleam along the blade, hit bigger and leave a gouge or cracks in the ground. A critical flashes white, a sneak attack leaves a dark second cut, and an enchanted weapon sprays fire, frost or sparks.",
