@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b316-dundropout", build: 316, date: "25 Nov 2026", title: "When someone leaves a dungeon run", items: [
+      "If someone in a co-op dungeon run closes the game or loses their connection for about half a minute, the run now ends for everyone in it, party or not. A short network hiccup or a quick switch to another app doesn't count.",
+      "Everyone is taken safely back to the dungeon's entrance: a fight that was going on just stops (nobody dies), you keep everything you picked up, and the party's loot pile is shared out by the usual vote, gold split evenly.",
+      "A notice tells you who left, with Go back in together (a new run with the same group), Wait for them (shows when they're back online) and OK.",
+      "The one who left sees what happened when they come back, with Back to the map or Ask the group to go again. Their share of the loot waits for them.",
+    ] },
     { id: "b315-hourlyupdates", build: 315, date: "25 Nov 2026", title: "Updates arrive on time", items: [
       "New versions now reach the app reliably within about an hour of a change, instead of sometimes waiting many hours.",
     ] },
