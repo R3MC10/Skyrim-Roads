@@ -3,11 +3,26 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b247-perklayout", build: 247, date: "25 Nov 2026", title: "Tidier perk stars", items: [
+    { id: "b250-perklayout", build: 250, date: "25 Nov 2026", title: "Tidier perk stars", items: [
       "Perk names in the star trees never sit on top of each other any more, and long names are never cut short with \"…\": they wrap onto a second line instead.",
       "Each perk now sits right above the perks it needs, with the first ones at the bottom, so the trees read from the ground up.",
       "On a phone, pinch the stars to zoom in or out and drag to look around. Zoomed far out, only the perks you can take keep their names.",
       "On a phone, tapping a star shows the perk in a panel at the bottom of the screen instead of a pop-up over the stars.",
+    ] },
+    { id: "b249-testsgreen", build: 249, date: "25 Nov 2026", title: "Coming next, tidied", items: [
+      "Picking herbs by hand is out now, so it left the Coming next list.",
+    ] },
+    { id: "b248-chargenrig", build: 248, date: "25 Nov 2026", title: "Character creation shows your real fighter", items: [
+      "Character creation now shows the same painted hero you fight with: armour, weapon and all. Stand, Walk and Fight show how you'll really look on the road and in battle.",
+      "Picking a race swaps the painted head (Dunmer, Khajiit and Argonian have their own) and skin colour; everything else you chose stays.",
+      "Face zooms right in on your hero's head. On the Head, Face, Hair and Scars tabs a small close-up shows the details you pick.",
+      "The race card shows the painted bust of the race instead of the little drawn figure.",
+    ] },
+    { id: "b247-movefx1", build: 247, date: "25 Nov 2026", title: "Real arrows and spell effects", items: [
+      "Bows and crossbows shoot a real arrow or bolt now: it leaves the string, arcs over (a bolt flies flatter and faster), and sticks in, breaks on a shield, or sails past on a miss and lands in the ground behind.",
+      "Archer foes, crossbowmen and the Dwarven ballista shoot too, and your followers and party members loose their own arrows. Shots leave from the saddle when you ride.",
+      "Fire, frost, shock, poison and life-drain arrows leave a coloured trail; power shots and sneak shots are bigger.",
+      "Every spell now has its own look: Flames is a jet, Firebolt a comet, Fireball a lob that bursts, Ice Spike a shard, Icy Spear a big spear, Lightning Bolt a jagged arc, Chain Lightning forks from foe to foe, and so on through healing, wards, flesh spells, summons, illusions and the rest. Dual casting looks bigger, from both hands.",
     ] },
     { id: "b246-gathering", build: 246, date: "25 Nov 2026", title: "Picking herbs by hand", items: [
       "Gathering is now a short hands-on mini-game: snip flowers at the stem, dig roots up slowly, scrape fungus in one stroke, pick only the ripe berries, lift eggs gently and ease a fragile Nirnroot out of the mud. Do it well and you get more; even a clumsy try gives you something.",
@@ -1702,9 +1717,8 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 240;
+  const NEXT_AT = 249;
   const NEXT = [
-    "Hands-on gathering: a little harvest game for every kind of plant",
     "Mentoring: play side by side with friends of any level",
     "Shrines of your own: build a Daedric altar at your longhouse",
   ];
