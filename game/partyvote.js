@@ -91,7 +91,8 @@ const PARTYVOTE = (() => {
 
   // ------------------------------------------------------------ screens
   function ui(ctx) {
-    /* ctx: { S(), runs(), Store, toast, esc, cardOf(id), online(id), persist(pub), renderDungeon(), choose(kind, key) } */
+    /* ctx: { S(), runs(), Store, toast, esc, cardOf(id), online(id), persist(pub), renderDungeon(), choose(kind, key),
+       optHTML(pv, key, mine) → a whole option button of its own, or "" for the plain one (the dungeon's way cards, dunchoice.js) } */
     const { S, Store, toast, esc } = ctx;
     let executing = false, seen = 0, popped = new Set(), opening = null;
     const run = () => { const id = S().dungeon?.run; return id ? (ctx.runs() || []).find((r) => r.id === id) || null : null; };
@@ -168,13 +169,21 @@ const PARTYVOTE = (() => {
       const l = left(pv), f = Math.max(0, Math.min(1, l / VOTE_SECONDS)), C = 2 * Math.PI * 15;
       return `<span class="pvring" aria-label="${l} seconds left"><svg viewBox="0 0 36 36" aria-hidden="true"><circle class="bg" cx="18" cy="18" r="15"/><circle class="fg" cx="18" cy="18" r="15" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${(C * (1 - f)).toFixed(1)}"/></svg><b class="num">${l}</b></span>`;
     }
+    /* how it's decided, said plainly; while two ways are level it says the leader's pick settles it */
+    const tied = (pv) => { const sc = score(pv), v = Object.values(sc); return v.length > 1 && v.filter((x) => x === Math.max(...v)).length > 1; };
+    const ruleText = (pv) => (tied(pv) ? "Tied right now: the leader's pick wins." : "Most votes wins. A tie goes the leader's way.");
+    const hintText = (pv, mine) => (mine ? "Your face is by your pick. Tap another to change your vote." : left(pv) ? "Tap a choice to vote." : "Time's up: the first vote decides.");
+    const votesText = (n) => (n ? `${n} vote${n > 1 ? "s" : ""}` : "");
     function cardHTML(pv) {
       const r = run(), lead = isLeader(r), mine = pv.votes?.[me()], n = voted(pv), of = pv.who.length;
-      const opts = pv.opts.map(([k, l, c]) => `<button class="btn pvopt ${esc(c)} ${mine === k ? "pvmine" : ""}" data-act="pvv" data-k="${esc(k)}"><span class="pvlab">${esc(l)}</span><span class="pvchips" data-k="${esc(k)}"></span></button>`).join("");
+      let cards = false;
+      const opts = pv.opts.map(([k, l, c]) => { const own = ctx.optHTML ? ctx.optHTML(pv, k, mine === k) : ""; if (own) { cards = true; return own; }
+        return `<button class="btn pvopt ${esc(c)} ${mine === k ? "pvmine" : ""}" data-act="pvv" data-k="${esc(k)}"><span class="pvlab"><span>${esc(l)}</span> <span class="pvn num"></span></span><span class="pvchips" data-k="${esc(k)}"></span></button>`; }).join("");
       return `<div class="pvote" data-pv="${esc(pv.id)}" data-kind="${esc(pv.kind)}">
         <div class="pvhd">${ring(pv)}<div class="pvtt"><h3>${esc(pv.title || "Party vote")}</h3><p class="sub pvcount"><span>Party vote</span> · <span class="num">${n}/${of}</span></p></div></div>
-        <div class="evc pvopts">${opts}</div>
-        <p class="sub pvhint">${mine ? "Your face is by your pick. Tap another to change your vote." : "Tap a choice to vote. Most votes wins; a tie goes the leader's way."}</p>
+        <p class="sub pvrule">${ruleText(pv)}</p>
+        <div class="evc pvopts${cards ? " dcards" : ""}">${opts}</div>
+        <p class="sub pvhint">${hintText(pv, mine)}</p>
         ${lead ? `<button class="btn sm pvnow" data-act="pvnow" ${n ? "" : "disabled"}>⚑ Decide now</button>` : ""}</div>`;
     }
     /* the dungeon screen's main card: the choice buttons become the vote */
@@ -185,7 +194,8 @@ const PARTYVOTE = (() => {
       const pot = isLeader() && s.dungeon?.room ? DUNGEONS.roomChoices(s).find((o) => o[0] === "potion") : null;   // your own potion: never a vote
       const potBtn = pot ? `<button class="btn sm pvpot" data-act="dact" data-c="potion">${esc(pot[1])}</button>` : "";
       html = html.replace(/<div class="card lv-wait">[\s\S]*?<\/div>/, "");
-      if (/<div class="evc">[\s\S]*?<\/div>/.test(html)) return html.replace(/<div class="evc">[\s\S]*?<\/div>/, card + potBtn);
+      const evc = /<div class="evc(?: [^"]*)?">[\s\S]*?<\/div>/;   // the choices block (the way cards carry a second class)
+      if (evc.test(html)) return html.replace(evc, card + potBtn);
       return `<div class="card">${card}</div>` + html;
     }
     /* faces by the options and the timer ring, without rebuilding the screen (only new faces pop in) */
@@ -193,7 +203,7 @@ const PARTYVOTE = (() => {
       const box = document.querySelector("#dun .pvote");
       const pv = shown();
       if (!box || !pv || box.dataset.pv !== pv.id) return;
-      const t = tally(pv), mine = pv.votes?.[me()];
+      const t = tally(pv), mine = pv.votes?.[me()], sc = score(pv), top = Math.max(0, ...Object.values(sc));
       box.querySelectorAll(".pvchips").forEach((ch) => {
         const want = t[ch.dataset.k] || [];
         ch.querySelectorAll(".pvchip").forEach((c) => { if (!want.includes(c.dataset.uid)) c.remove(); });
@@ -204,13 +214,17 @@ const PARTYVOTE = (() => {
           el.title = actives(run()).find((m) => m.id === uid)?.name || ""; el.innerHTML = face(uid);
           ch.appendChild(el); popped.add(tag);
         }
-        ch.closest(".pvopt")?.classList.toggle("pvhas", want.length > 0);
-        ch.closest(".pvopt")?.classList.toggle("pvmine", mine === ch.dataset.k);
+        const opt = ch.closest(".pvopt");
+        opt?.classList.toggle("pvhas", want.length > 0);
+        opt?.classList.toggle("pvmine", mine === ch.dataset.k);
+        opt?.classList.toggle("pvlead", top > 0 && sc[ch.dataset.k] === top);   // in front right now (or level at the front)
+        const pn = opt?.querySelector(".pvn"); if (pn && pn.textContent !== votesText(want.length)) pn.textContent = votesText(want.length);
       });
       const n = voted(pv), cnt = box.querySelector(".pvcount .num"); if (cnt) cnt.textContent = `${n}/${pv.who.length}`;
       const rg = box.querySelector(".pvring"); if (rg) rg.outerHTML = ring(pv);
       const now_ = box.querySelector(".pvnow"); if (now_) now_.disabled = !n;
-      const hint = box.querySelector(".pvhint"); if (hint) hint.textContent = mine ? "Your face is by your pick. Tap another to change your vote." : left(pv) ? "Tap a choice to vote. Most votes wins; a tie goes the leader's way." : "Time's up: the first vote decides.";
+      const hint = box.querySelector(".pvhint"); if (hint && hint.textContent !== hintText(pv, mine)) hint.textContent = hintText(pv, mine);
+      const rule = box.querySelector(".pvrule"); if (rule && rule.textContent !== ruleText(pv)) rule.textContent = ruleText(pv);
       if (popped.size > 400) popped = new Set([...popped].slice(-200));
     }
 
