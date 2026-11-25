@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b293-mapheroanim", build: 293, date: "25 Nov 2026", title: "Your hero moves on the map", items: [
+      "Your horse on the world map is alive now: standing, it breathes, shifts its weight, tosses its head now and then and flicks its tail.",
+      "On the road its legs swing as it walks or gallops, its body bobs and rocks, and you sit into each stride in the saddle.",
+      "Little puffs of dust kick up behind the hooves (or your boots) while you travel, and walking and standing on foot look smoother too.",
+      "Your friends' figures on the map move the same way. Reduce motion in Settings still keeps everyone still.",
+    ] },
     { id: "b290-itemcards2", build: 290, date: "25 Nov 2026", title: "Item cards say what changes", items: [
       "The damage at the top of a weapon's card is now what it really hits for in your hands, with your skill and perks, the same number as in the comparison below. The weapon's own number is shown next to it as \"base\".",
       "Item cards now say what else changes when you put something on: a two-handed weapon takes your shield off (and with it its armour and Shield bash), a shield takes a two-handed weapon off, and a bow or crossbow tells you when you have nothing to shoot.",

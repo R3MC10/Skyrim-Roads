@@ -41,6 +41,15 @@ for (const [moving, gallop, gait] of [[false, false, "stand"], [true, false, "wa
 }
 // the horse gaits draw (figart.js) without NaN in both styles
 for (const gait of ["stand", "walk", undefined]) for (let f = 0; f < 4; f++) for (const style of ["ink"]) ok(FIGART.sprite({ look }, { pose: "ride", frame: f, horse: "#9b9b97", gait, style, h: 30 }).width > 0, "gait sprite " + gait);
+// [mapheroanim] the painted horse's motion: finite, standing has a head toss and a tail flick, walking and galloping swing the legs
+{ const M = (gt, c) => HORSEART.motion(gt, c), fin = (m) => Object.values(m).every((v) => typeof v === "number" && isFinite(v));
+  for (const gt of ["stand", "walk", "gallop"]) for (let c = 0; c <= 1; c += 0.05) ok(fin(M(gt, c)), "motion finite " + gt);
+  ok(M("stand", 0.65).head < -0.15, "standing horse tosses its head"); ok(Math.abs(M("stand", 0.15).tail) > 0.15, "and flicks its tail");
+  ok(Math.abs(M("stand", 0).head) < 0.05 && Math.abs(M("stand", 0).kH) < 1e-9, "calm at the start of the idle loop");
+  ok(Math.abs(M("walk", 0.25).kH) > 0.2 && Math.abs(M("gallop", 0.25).kH) > 0.3 && Math.abs(M("gallop", 0.25).bob) > 0.03, "legs swing, the gallop rocks");
+  ok(HORSEART.CUTS.stand && HORSEART.CUTS.gallop, "cut lines for both pictures"); }
+// the map passes hanim (moving pieces) to the rider sprite; reduce motion doesn't
+MAPHERO.draw(g, 495, 300, 0.5, { id: "rider", look, horse: "#2b2724", moving: false, t: 1 }); ok(seen.at(-1).hanim === true, "map rider animated"); tick(1000);
 // reduce motion: one still frame, no puff
 MAPHERO.draw(g, 400, 300, 0.5, { id: "calm", look, t: 5, moving: true, reduce: true });
 ok(seen.at(-1).pose === "idle" && seen.at(-1).frame === 0, "reduce motion: still");
