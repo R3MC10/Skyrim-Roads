@@ -587,14 +587,14 @@ const WorldMap = (() => {
         g.drawImage(m.c, x * W - w / 2, y * H - h * 0.62, w, h);
       }
     } else for (const [n, x, y, kind] of shown) icon(g, kind, x * W, y * H, s * (kind === "city" || kind === "town" || v.selected === n ? 1 : small), v.selected === n);
-    const boxes = [];
+    const boxes = [], dockBoxes = [];
     // the cards docked over the map (event, raid, caravan: mapdock.js) and the party / quest panels: no names under them
     stats.dockBlocks = 0;
     if (typeof MAPDOCK !== "undefined" && g.getTransform && canvas.getBoundingClientRect) try {
       const cr = canvas.getBoundingClientRect(), inv = g.getTransform().invertSelf(), kx = canvas.width / (cr.width || 1), ky = canvas.height / (cr.height || 1);
       for (const r of MAPDOCK.rects()) {
         const a = inv.transformPoint({ x: (r.left - cr.left) * kx, y: (r.top - cr.top) * ky }), b = inv.transformPoint({ x: (r.right - cr.left) * kx, y: (r.bottom - cr.top) * ky });
-        boxes.push([Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(b.x - a.x), Math.abs(b.y - a.y)]); stats.dockBlocks++;
+        const db = [Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(b.x - a.x), Math.abs(b.y - a.y)]; boxes.push(db); dockBoxes.push(db); stats.dockBlocks++;
       }
     } catch { /* no layout to ask: draw names as before */ }
     for (const [n, x, y, kind] of shown) {
@@ -775,7 +775,7 @@ const WorldMap = (() => {
     if (v.raid && typeof RAIDART !== "undefined") RAIDART.mapRaid(g, v.raid, P, s, v.t, v.reduceMotion);   // a dragon over a town (raidart.js)
     if (typeof WORLDEV !== "undefined") WORLDEV.drawMap(g, P, s, v.t, v.reduceMotion);   // gates, dragon flights, the Khajiit market (worldevents.js)
     if (typeof GREATEV !== "undefined") GREATEV.drawMap(g, P, s, v.t, v.reduceMotion);
-    if (typeof CRISES !== "undefined") CRISES.drawMap(g, P, s, v.t, v.reduceMotion);   // a hold in crisis: sign and stage pips by its capital (crises.js)
+    if (typeof CRISES !== "undefined") CRISES.drawMap(g, P, s, v.t, v.reduceMotion, dockBoxes);   // a hold in crisis: sign and stage pips by its capital, kept clear of the docked cards (crises.js)
     if (typeof LEGHUNT !== "undefined" && !SV) LEGHUNT.drawMap(g, P, s, null, v.t, v.reduceMotion);   // legendary hunts: rough search areas, never exact (leghunt.js)   // dragon assaults, rifts, sieges, fairs and what they leave behind (greatevents.js)
     if (typeof TOURNEYUI !== "undefined") TOURNEYUI.drawMap(g, P, s, v.t, v.reduceMotion);   // a festival banner over the host town (tourneyui.js)
     if (v.cart && typeof CARAVANS !== "undefined") { const sp = CARAVANS.sprite(false, false); if (sp) { const back = HF && MAPHERO.flipped("me") ? 16 : -50; g.drawImage(sp, px + back * s, py - 16 * s, 34 * s, 24 * s); } }
