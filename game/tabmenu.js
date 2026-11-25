@@ -220,7 +220,7 @@ const TABMENU = (() => {
     const quick = [inTown ? ["town", "Area", "town"] : null, ["log", "Journal", "log"], ["social", "Social", "people"], ["settings", "Settings", "gear"], typeof SEARCH !== "undefined" ? ["search", "Search", "search"] : null].filter(Boolean);
     return `<div class="tw-bg" aria-hidden="true"></div><div class="tw-veil" aria-hidden="true"></div>${starsBG()}
       <div class="tw-top"><b class="tw-where"></b><span class="tw-when"></span><small class="tw-fc"></small></div>
-      <div class="tw-rose"><i class="tw-ring" aria-hidden="true"></i><div class="tw-disc" aria-hidden="true"><i class="tw-depth"></i><div class="tw-face">${roseSVG()}</div><i class="tw-shine"></i></div>${dir("up")}${dir("left")}${dir("right")}${dir("down")}</div>
+      <div class="tw-rose"><i class="tw-ringart" aria-hidden="true"></i><div class="tw-disc" aria-hidden="true"><i class="tw-depth"></i><div class="tw-face">${roseSVG()}</div><i class="tw-shine"></i></div>${dir("up")}${dir("left")}${dir("right")}${dir("down")}</div>
       <p class="tw-hint"><span class="tw-touch">Swipe or tap a direction</span><span class="tw-keys">Press WASD or click a direction · Tab closes the menu</span></p>
       <div class="tw-quick">${quick.map(([id, l, k], i) => `<button class="tw-q" data-twq="${id}" aria-label="${l}">${ico(k)}<span>${l}</span><kbd class="tw-k" aria-hidden="true">${i + 1}</kbd></button>`).join("")}</div>
       <div class="tw-bar"></div>`;
@@ -368,7 +368,8 @@ const TABMENU = (() => {
     const k = Math.min(1, Math.max(ax, ay) / 90); el.style.setProperty("--pull", k.toFixed(2));
     // the compass follows the finger, with a rubber-band give so it never leaves the screen
     const band = (v) => Math.sign(v) * 70 * (1 - Math.exp(-Math.abs(v) / 110));
-    tilt(el, band(dx), band(dy));
+    // straight lines only: the compass follows the finger along the main direction, never diagonally
+    if (ax > ay) tilt(el, band(dx), 0); else tilt(el, 0, band(dy));
   }
   /* the 3D compass is a sheet of 7x7 Blender renders (scripts/compass3d.py): pick the one matching the tilt */
   let tiltNow = [0, 0], springT = 0;
