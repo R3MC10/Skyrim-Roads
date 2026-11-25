@@ -3,10 +3,22 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b189-festart", build: 189, date: "25 Nov 2026", title: "Painted festival headers", items: [
+    { id: "b190-festart", build: 190, date: "25 Nov 2026", title: "Painted festival headers", items: [
       "Every festival now has a painted picture on top of its screen: the Harvest Fair, the Burning of King Olaf, the Jarl's Tourney, the Fishing Derby, the Great Hunt, Forgefire Days and the Midwinter Feast.",
       "The Grand Arena in Windhelm has its own painting too: the sand pit, the crowd on the stone tiers and two duellists.",
       "The festival's name sits on a soft dark shade so you can read it over the picture. While a festival is still to come, its picture is a little faded.",
+    ] },
+    { id: "b189-paintrig", build: 189, date: "25 Nov 2026", title: "Painted fighters that really move", items: [
+      "In fights you, your party mates and your followers are now painted like the foes, in leather, iron or steel to match what you wear.",
+      "They move joint by joint: a sword swing winds up behind the head and cuts through, a power attack sinks low, two-handers swing wide, bows draw and loose, spells glow in the hand, shields block and bash.",
+      "When hit they flinch and stagger; when knocked down they fall and get back up. Your weapon and shield sit in your hands.",
+      "On phones you and the follower behind you are no longer cut off at the left edge.",
+    ] },
+    { id: "b188-blood3", build: 188, date: "25 Nov 2026", title: "Cleaner blood", items: [
+      "No more grey circles floating over a fallen foe: the dust when a body hits the ground is a low, soft puff that settles fast.",
+      "A critical hit now throws thin streams of blood that break into drops of all sizes, plus a quick fine spray. No more red pills or pale sticks.",
+      "Sparks only fly when a blade hits metal (plate armour or a machine), and they're small, bright and quick.",
+      "The pool under a fallen foe (or under you when you're knocked down) spreads wider over two seconds, with a soft, uneven edge, a darker middle and a wet shine.",
     ] },
     { id: "b187-fightlength", build: 187, date: "25 Nov 2026", title: "Fights last long enough again", items: [
       "Since a turn holds up to four moves, strong heroes were ending fights in three or four rounds, even against bosses and legendary beasts. A foe's health now follows what you can really do in a turn with your stamina and magicka (a power attack and a few blows, or a few spells and a summon), so fights at higher levels last as long as they should.",
@@ -1311,9 +1323,9 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 189;
+  const NEXT_AT = 190;
   const NEXT = [
-    "Painted fighters with realistic fight animations",
+    "Painted riders on the road and on the map",
     "Makeovers for fishing, hunting, mining and lockpicking",
     "Afflictions with an upside and a downside: lycanthropy, the Draugr curse and the Daedric mark",
     "An adventuring company longhouse: a shared base with a treasury, a trophy hall and stables",
