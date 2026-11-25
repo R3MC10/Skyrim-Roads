@@ -483,8 +483,9 @@ const LONGHOUSE = (() => {
       <radialGradient id="lngF"><stop offset="0" stop-color="#ffb04a" stop-opacity="1"/><stop offset=".6" stop-color="#ff6a1f" stop-opacity=".35"/><stop offset="1" stop-color="#ff5a10" stop-opacity="0"/></radialGradient></defs>${lay.h}${g}${ROOM_IDS.map((r) => { const [bx, by, bw, bh] = GROW[r]; return `<rect class="lng-tap" data-lng="room" data-id="${r}" x="${bx}" y="${by}" width="${bw}" height="${bh}"><title>${T(ROOMS[r].name)}</title></rect>`; }).join("")}</svg>
       <p class="lng-vcap">${T("Every room you build shows on the hall. Tap one to find it.")}</p></div>`;
   }
-  function banner(d, x) {
-    return `<div class="lng-banner">${bannerImg()}<div class="lng-bt"><div class="lng-name">${esc(d.name)}</div>
+  /* [stations] strip = the growing-hall painting shows below, so the banner is just a name strip (no second longhouse picture) */
+  function banner(d, x, strip = false) {
+    return `<div class="lng-banner${strip ? " lng-strip" : ""}">${strip ? "" : bannerImg()}<div class="lng-bt"><div class="lng-name">${esc(d.name)}</div>
       <div class="lng-sub">${T("Longhouse in {place}", { place: esc(d.site || "?") })} · ${T("{n} of {m} players", { n: x.n, m: MAXM })}</div>
       <div class="lng-purse"> ${x.gold} ${T("gold in the treasury")}</div></div></div>`;
   }
@@ -575,7 +576,7 @@ const LONGHOUSE = (() => {
     const more = [["plan", T("Plan")], ["trophy", T("Trophies")], ["log", T("Log")]];
     const tbtn = ([k, l]) => `<button class="${tab === k ? "on" : ""}" data-lng="tab" data-id="${k}" aria-pressed="${tab === k}">${l}</button>`;
     const body = tab === "exp" && typeof EXPEDITION !== "undefined" ? EXPEDITION.panelHTML(S, d) : tab === "plan" ? planHTML(S, d, x) : tab === "trophy" ? trophyHTML(S, x) : tab === "gold" ? treasuryHTML(S, d, x) : tab === "members" ? membersHTML(S, d) : tab === "log" ? logHTML(x) : roomsHTML(S, d, x);
-    return wrap(`${banner(d, x)}${off}
+    return wrap(`${banner(d, x, body.includes('class="lng-view"'))}${off}
       <div class="seg lng-seg" role="group" aria-label="${T("Company")}">${tabs.map(tbtn).join("")}</div><div class="socmore lng-more" role="group" aria-label="${T("More")}"><span class="socmore-l">${T("More")}</span>${more.map(tbtn).join("")}</div>${body}`);
   }
   /* an invitation pops up once */

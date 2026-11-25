@@ -3,11 +3,18 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b270-movepreview", build: 270, date: "25 Nov 2026", title: "See a move before you make it", items: [
+    { id: "b271-movepreview", build: 271, date: "25 Nov 2026", title: "See a move before you make it", items: [
       "In a fight, rest the mouse on a move (or hold your finger on it on a phone): the foe's health bar shows a striped piece for what it could lose, from the lowest to the highest hit.",
       "Your stamina or magicka dims by what the move costs, and one of your move diamonds fades. Healing spells show the health you'd get back; End turn shows the guard you keep.",
       "The numbers match the tooltip, and a strong foe never shows more than 40% gone from one blow. A quick tap still does the move right away.",
       "Bandit archers now carry a bow instead of an axe, bandit mages a staff and a spell, and Forsworn and draugr archers have their own pictures too.",
+    ] },
+    { id: "b270-stations", build: 270, date: "25 Nov 2026", title: "Places open on the work", items: [
+      "Opening the Forge, a shop, the inn or any other place in town now shows its tabs and list right away: the town news folds into one \"Town news\" row you can open, and the how-it-works note sits under the list.",
+      "The \"New to the game?\" card only shows on the map and the town's board, not inside a place.",
+      "Each place's painting is a little shorter on phones and the person who runs it takes one compact line.",
+      "Hold status says in a word how each number is doing (Food 43 short, Security 66 safe), coloured green, gold or red.",
+      "In the Company tab, the banner shrinks to a name strip when your painted longhouse is shown right below it.",
     ] },
     { id: "b269-mysteryrooms", build: 269, date: "25 Nov 2026", title: "Mystery rooms with real choices", items: [
       "Unknown rooms in dungeons can now hold six new things: a sealed passage, a collapsed tunnel, a wounded traveller, a patrol (draugr in barrows), a cursed offering and an unstable rope bridge.",

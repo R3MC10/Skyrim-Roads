@@ -281,6 +281,11 @@ const CRISES = (() => {
     return good >= 65 ? "Thriving" : good >= 45 ? "Steady" : good >= 28 ? "Strained" : "Dire";
   }
 
+  /* [stations] one plain word per number on the town card, from the same levels (good / so-so / bad / very bad) */
+  const WORD = { sec: ["safe", "steady", "shaky", "lawless"], food: ["plenty", "enough", "short", "starving"], pro: ["booming", "steady", "slow", "broke"], cor: ["low", "some", "high", "rampant"] };
+  const LEVELS = ["Thriving", "Steady", "Strained", "Dire"], WORD_CLS = ["danger-low", "danger-low", "danger-medium", "danger-high"];
+  function word(v, x) { const i = LEVELS.indexOf(level(v, x)); return { text: WORD[v][i], cls: WORD_CLS[i], i }; }
+
   // ---------------------------------------------------------------- what the numbers do
   /* shop prices in a town of the hold (engine.js buyPrice); food costs more again when food is short */
   function priceMult(s, town, item, t = nowS()) {
@@ -598,7 +603,8 @@ const CRISES = (() => {
     if (!S || typeof WORLD === "undefined" || !WORLD.places[place] || !["city", "town"].includes(WORLD.places[place][2])) return "";
     const hold = G.holdAt(WORLD.places[place]); if (!BASE[hold]) return "";
     const v = values(hold, S, t), cr = crisisIn(hold, t), st = cr ? status(cr, S, t) : null, on = st && (st.state === "active" || st.state === "boss");
-    const chips = VARS.map((x) => `<span class="cr-chip${(x === "cor" ? v[x] >= 62 : v[x] < 35) ? " cr-bad" : ""}" title="${esc(T(VAR_NAME[x]))}"><i style="background:${VAR_COL[x]}"></i>${esc(T(VAR_NAME[x]))} ${v[x]}</span>`).join("");
+    const chips = VARS.map((x) => { const w = word(x, v[x]);
+      return `<span class="cr-chip${(x === "cor" ? v[x] >= 62 : v[x] < 35) ? " cr-bad" : ""}" title="${esc(T(VAR_NAME[x]))} ${v[x]}"><i style="background:${VAR_COL[x]}"></i>${esc(T(VAR_NAME[x]))} ${v[x]} <em class="cr-w ${w.cls}">${esc(T(w.text))}</em></span>`; }).join("");
     const cl = cr && claimable(S, cr, t);
     const crisis = on ? `<span class="cr-tag" style="--cr:${CHAINS[cr.chain].color}">${glyph(cr.chain)}${esc(T(CHAINS[cr.chain].name))} · ${esc(st.state === "boss" ? T("the ringleader is out!") : T("{stage} ({n}/{m})", { stage: T(CHAINS[cr.chain].stages[st.stage - 1][0]), n: st.stage, m: STAGES }))}</span>` : cl ? `<span class="cr-tag">${esc(T("Crisis won: reward waiting"))}</span>` : "";
     return `<div class="cr-town" data-cr="hold" data-hold="${esc(hold)}" role="button" tabindex="0"><div class="cr-tl"><b>${esc(T("Hold status"))}</b>${crisis}</div><div class="cr-chips">${chips}</div></div>`;
@@ -765,7 +771,7 @@ const CRISES = (() => {
   if (typeof I18N !== "undefined" && I18N.add && typeof I18N_CRISES !== "undefined") I18N.add(I18N_CRISES.tpl, I18N_CRISES.words);
 
   return { HOLDS, CAPITAL, VARS, BASE, CHAINS, CONTRACTS, CYCLE, STAGE, SPAN, STAGES, AFTER, FOE, BOSS, NEED_SOLO, NEED_PER, PLAYER_CAP, ALL_CAP, FOOD_N, FOOD_MAX, CONTRACT_CD, BOSS_CD,
-    cycleAt, baseline, snowiness, pressure, picks, byId, around, setDocs, mine, record, rows, deeds, tally, status, crisisIn, values, level, needFor,
+    cycleAt, baseline, snowiness, pressure, picks, byId, around, setDocs, mine, record, rows, deeds, tally, status, crisisIn, values, level, word, needFor,
     priceMult, encounterMult, deed, onFight, contract, contractBlock, boss, bossBlock, makeFoe, claimable, claim, foodCount,
     sheetHTML, townLine, strips, sig, drawMap, plan, signSpot, mount, openSheet, hookWorld, _dirty: () => isDirty };
 })();
