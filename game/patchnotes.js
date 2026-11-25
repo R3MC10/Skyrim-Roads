@@ -3,7 +3,7 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b245-gathering", build: 245, date: "25 Nov 2026", title: "Picking herbs by hand", items: [
+    { id: "b246-gathering", build: 246, date: "25 Nov 2026", title: "Picking herbs by hand", items: [
       "Gathering is now a short hands-on mini-game: snip flowers at the stem, dig roots up slowly, scrape fungus in one stroke, pick only the ripe berries, lift eggs gently and ease a fragile Nirnroot out of the mud. Do it well and you get more; even a clumsy try gives you something.",
       "Picked a plant three times by hand? A Quick pick button lets you skip the mini-game for a slightly smaller handful.",
       "Herbs nearby are easy to spot: painted markers on the map, a ring that shows how far you can reach, and a Gather button that pops up on the road, even while you ride past.",
@@ -13,6 +13,11 @@ const PATCHNOTES = (() => {
       "Four new Alchemy perks: Herbalist's Eye (more rare finds), Sure Hands (easier mini-game, Quick pick sooner), Anatomist (extra parts from beasts) and Master Gardener (more from every garden bed).",
       "In a party everyone picks their own share of each patch, so there's nothing to fight over.",
       "In Polish the Gathering card is fully translated now: distance, weight, regrowth time and the garden.",
+    ] },
+    { id: "b245-lhgrow", build: 245, date: "25 Nov 2026", title: "The longhouse grows", items: [
+      "Every room you build now shows on the longhouse picture: a smithy at the side, trophies on the gable, a war table inside the doors, lit library windows and a stable with horses.",
+      "Each room looks bigger and richer at levels 2 and 3, and a new level fades in right after you build it.",
+      "Tap a room on the picture to jump to its card.",
     ] },
     { id: "b244-fighthotfix", build: 244, date: "25 Nov 2026", title: "Fight fix", items: [
       "Fixed: in some fights your attacks did nothing. If the little timing game after a move gets stuck or vanishes, your next press goes through as a normal hit.",
