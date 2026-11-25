@@ -3,6 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b309-fptravel", build: 309, date: "25 Nov 2026", title: "Through your own eyes", items: [
+      "On the road you now look down the road through your own eyes, in a band at the top of the map. The compass runs along its top edge, and the place you're heading for rises under its marker and grows as you get closer.",
+      "The road bends with your route, and the land is the region you're crossing: tundra, pine forest, the Rift's birches, marsh, snow, ash wastes, rocky hills, river fords, bridges, and the open sea on a ship.",
+      "The sky is the real time of day and weather: sun, moon, stars, the aurora, snow, rain, lightning, fog and ash.",
+      "Riding, you see your horse's ears and your hands on the reins, in your own gloves. On foot the view sways with your steps.",
+      "Your follower's lines show at the bottom of the view.",
+      "Route, time left, the places you'll pass, Walk/Ride and Stop sit in one slim bar under the view. The arrow button folds the view away (it remembers your choice).",
+    ] },
     { id: "b308-locscreen", build: 308, date: "25 Nov 2026", title: "Every place opens full screen", items: [
       "Arriving in a town, a farm, a camp, a cave mouth, a shrine or any other place now opens it full screen: a painted picture of the place, its name in big letters, the hold, a short line about it, the time and the weather.",
       "Everything you can do there stands on the picture as a signpost (blacksmith, inn, general goods, the jarl, the notice board, caravans, gathering...) with a few words on what's going on: open or closed, a job to hand in, a caravan in town. Tap one to open it; its back button brings you back to the place.",

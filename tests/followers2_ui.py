@@ -98,8 +98,8 @@ async def main():
                 await tap(pg, "[data-tab=map]"); await pg.wait_for_timeout(1500)
                 comp = await pg.evaluate("() => { const S = window.__dbg.save(); return PARTY.companions(S, window.__dbg.party(), window.__dbg.others(), [S.x, S.y], (o) => [o.x, o.y], MP.NEAR_PX).map(m => m.name) }")
                 check(want in comp, style + " " + nm + " sees " + want + " walking along: " + str(comp))
-                got = await snap(pg, ".tripvig canvas", f"{SHOT}{style}_travel_{nm}.png")
-                if not got: await pg.wait_for_timeout(1500); got = await snap(pg, ".tripvig canvas", f"{SHOT}{style}_travel_{nm}.png")
+                got = await snap(pg, "#fpt .fpt-view canvas", f"{SHOT}{style}_travel_{nm}.png")
+                if not got: await pg.wait_for_timeout(1500); got = await snap(pg, "#fpt .fpt-view canvas", f"{SHOT}{style}_travel_{nm}.png")
                 check(got, style + " " + nm + " travel picture")
             # ---- a road fight on A's side with B next to A: Jenassa fights for A too
             posA = await A.evaluate("() => { const S = window.__dbg.save(); return [S.x, S.y]; }")

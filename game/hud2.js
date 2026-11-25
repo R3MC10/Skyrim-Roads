@@ -149,7 +149,7 @@ const HUD2 = (() => {
     if (tw) { const tb = $("#twbar") || $(".tw-top") || null; top = (tb ? tb.getBoundingClientRect().bottom : st + 52) + 6; }
     else if (shown(mw)) {
       m = mw.getBoundingClientRect();
-      const ob = $("#hudobj"), comp = $("#compass"), anchor = (shown(ob) ? ob : comp)?.getBoundingClientRect();
+      const ob = $("#hudobj"), comp = $("#compass"), fpt = $("#fpt"), anchor = (shown(ob) ? ob : shown(fpt) ? fpt : comp)?.getBoundingClientRect();   // fptravel.js: under the travel band
       if (anchor && anchor.bottom > st + 4 && m.bottom > anchor.bottom + 120) { left = m.left + 8; top = anchor.bottom + 6; width = Math.max(180, Math.min(440, m.width - 64)); onMap = true;
         if (typeof MAPDOCK !== "undefined") { const dr = MAPDOCK.right(top); if (dr) left = Math.max(left, dr + 12); }   // PC: messages start right of the cards docked at the left (mapdock.js)
       }
