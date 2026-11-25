@@ -3,6 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b333-travelview", build: 333, date: "25 Nov 2026", title: "A road worth watching", items: [
+      "The road view on a trip is much richer: hills and bends you can see coming, mountains, ridges and treelines that fade into the haze, and trees, rocks and signs that grow as you ride up to them and slide past.",
+      "Every land looks like itself, read from the map around you: open tundra, thick pine forest, snowy mountains, rocky hills, misty marsh, ash under a smoking volcano, the coast with the sea on its real side, green river valleys and the Rift's golden birches.",
+      "Things happen along the way: deer bolt, a fox darts across, wolves pace you, mammoths roam, horkers lie on the shore, guards in their hold's colours march by, a merchant's cart passes, and now and then a watchtower, a waterfall, an old camp, giants or a dragon in the sky.",
+      "The same road shows the same landmarks every time you take it; the animals and travellers are different on each trip.",
+      "Your destination grows as you near it, and cities show their gate when you get close. Your horse's mane and reins move as you ride.",
+      "Light and weather fit the land: drifting ash, snow blown off the drifts, falling leaves, fireflies on summer nights, salt haze by the sea.",
+    ] },
     { id: "b330-fightfeel", build: 330, date: "25 Nov 2026", title: "Blows that land with weight", items: [
       "Swings now wind up and hold for a moment before they snap through. A dagger is quick, a sword is steady and a warhammer takes its time.",
       "When a blow lands, both fighters freeze for a split second, then the one who got hit is knocked back, staggers and finds their stance again. A miss never freezes anyone, and the fight doesn't get any slower.",
