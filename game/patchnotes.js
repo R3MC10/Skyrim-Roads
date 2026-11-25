@@ -3,11 +3,17 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b293-phantomattacks", build: 293, date: "25 Nov 2026", title: "No one swings on their own any more", items: [
+    { id: "b294-phantomattacks", build: 294, date: "25 Nov 2026", title: "No one swings on their own any more", items: [
       "In a fight, you, your friends and the foe only swing when they really strike. Catching your breath, the end-of-round burns, bleeds and poison, marking the foe and covering your friends used to show you swinging your weapon. Now they don't.",
       "When the foe winds up a big blow, takes aim, roars a war cry, drinks a potion, raises a ward or a shield, or slips into the shadows, it no longer swings at you. A short word over the picture says what it did (\"Winds up!\", \"Takes aim!\", \"War cry!\").",
       "Opening a menu or tapping the hotbar while a blow is still playing no longer plays that blow a second time. In a party fight the picture no longer starts the last move over when news comes from the leader's phone.",
       "Blows that happen on their own say so on the picture: \"Counter!\" when you punch back after a miss, \"Thorns!\" when your armour bites back, \"Riposte!\" after a dodge.",
+    ] },
+    { id: "b293-layout3", build: 293, date: "25 Nov 2026", title: "Titles you can read, hotbar in order", items: [
+      "On phones the round message history button no longer sits on a screen's title (Area, Journal, Social, AI & Loadouts, a dungeon's name): the title makes room for it.",
+      "The fight hotbar on phones shows its slots in key order again: 1 to 5 on top, 6 to 0 below. Catch your breath no longer jumps out of line.",
+      "Tab strips that don't fit the screen (like Character's Skills, Character, Follower, AI & Loadouts...) fade out at the edge that has more tabs, and the chosen tab is always fully in view.",
+      "The Journal's chosen tab (Active, Misc, Completed) is now dark ink with a gold underline, easy to read on the parchment.",
     ] },
     { id: "b292-caravanpanel", build: 292, date: "25 Nov 2026", title: "Caravans open in a panel", items: [
       "Tapping a caravan on the map now opens a proper panel instead of a small floating card. On a PC it sits on the right side of the screen, full height, and the map stays visible beside it; on a phone it slides up from the bottom and sits above the menu bar.",
