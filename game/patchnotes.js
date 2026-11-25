@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b320-avatars", build: 320, date: "25 Nov 2026", title: "Your portrait follows your sex", items: [
+      "Your round portrait now always shows someone of your hero's sex. A Breton man no longer gets the Breton woman's face: until every race has a painting of both a man and a woman, you get the closest one of your sex.",
+      "Pick your own portrait: tap it on your Character page, or choose one on the Race tab when you make a hero (or remake one). Automatic follows your race and sex.",
+      "Your Friends list shows each friend's painted portrait, the one they picked. Friends who are offline keep the portrait you last saw; someone you've never seen shows a plain outline.",
+      "The tiny figure squeezed next to each face in the Friends and travellers lists is gone, so rows are easier to read.",
+      "Party lists, party vote chips, Ask to join and party invite cards, and your face in fights all show the same portrait.",
+    ] },
     { id: "b319-partyinvites", build: 319, date: "25 Nov 2026", title: "Your party goes in together", items: [
       "When your party leader starts a co-op dungeon run, everyone in the party is in it straight away: no separate invites and no Accept cards for people already in your party.",
       "Invites in the co-op lobby are only for friends and others outside your party, and only while there's room (up to 8 heroes in all; followers don't count).",

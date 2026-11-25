@@ -72,7 +72,7 @@
     const card = { name: S.name, race: S.race, level: S.level, x: S.x, y: S.y,
       t0: tr ? tr.lastTick : G.now(), moving: !!(tr && tr.status === "travel"), dest: tr ? tr.dest : null,
       path: tr && tr.status === "travel" ? [[S.x, S.y], ...tr.path.slice(tr.idx + 1)].slice(0, 120) : null,
-      speed: G.speed(S), loc: S.location || null, region: WORLD.regionOf([S.x, S.y]), look: HEROART.lookOf(S), ride: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, party: party?.id || null, hiding: !!S.ambush, facing: S.facing ?? null, ...(typeof SNEAKMODE !== "undefined" ? SNEAKMODE.cardBits(S) : {}), clan: myClan()?.tag || null, ...(typeof SIDES !== "undefined" ? SIDES.cardBits(S) : {}), ...MP.stats(S), coop: coopUI?.card() || null, ...(typeof PARTY !== "undefined" ? PARTY.cardBits(S, party) : {}), ...(typeof LIVING !== "undefined" ? LIVING.cardBits(S, party) : {}), ...(typeof LEVELUP !== "undefined" ? LEVELUP.cardBits(S) : {}), ...(typeof AFFL !== "undefined" ? AFFL.cardBits(S) : {}), ...(typeof FRIENDJOIN !== "undefined" ? FRIENDJOIN.bits(S, party) : {}) };
+      speed: G.speed(S), loc: S.location || null, region: WORLD.regionOf([S.x, S.y]), look: HEROART.lookOf(S), ride: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, party: party?.id || null, hiding: !!S.ambush, facing: S.facing ?? null, ...(typeof SNEAKMODE !== "undefined" ? SNEAKMODE.cardBits(S) : {}), clan: myClan()?.tag || null, ...(typeof SIDES !== "undefined" ? SIDES.cardBits(S) : {}), ...MP.stats(S), coop: coopUI?.card() || null, ...(typeof PARTY !== "undefined" ? PARTY.cardBits(S, party) : {}), ...(typeof LIVING !== "undefined" ? LIVING.cardBits(S, party) : {}), ...(typeof LEVELUP !== "undefined" ? LEVELUP.cardBits(S) : {}), ...(typeof AFFL !== "undefined" ? AFFL.cardBits(S) : {}), ...(typeof FRIENDJOIN !== "undefined" ? FRIENDJOIN.bits(S, party) : {}), ...(typeof AVATAR !== "undefined" ? AVATAR.cardBits(S) : {}) };
     const json = JSON.stringify({ ...card, t0: 0, cur: Math.round(card.cur / 10) });
     if (!force && json === lastCardJson) return;
     lastCardJson = json;
@@ -158,9 +158,10 @@
       toast, startExtra: status,
       afterRender: (root) => { const b = root.querySelector("#online"); if (b) b.onclick = openOnline; },
       onBack: () => { app.innerHTML = ""; showTitle("menu"); },
-      onBegin: ({ name, race, app: look, stone }) => {
+      onBegin: ({ name, race, app: look, stone, avatar }) => {
         S = G.newSave(Store.uid, name, race);
         APPEAR.apply(S, look);   // the face you made (appear.js)
+        if (typeof AVATAR !== "undefined") AVATAR.set(S, avatar);   // the portrait you picked ("" = Automatic)
         if (stone && POWERS.STONES[stone]) { S.stone = stone; S.stonePowerAt = 0; }   // the Guardian Stone you picked: its skills improve 20% faster
         if (typeof PATCHNOTES !== "undefined") PATCHNOTES.markSeen();   // a new character starts on the current version
         if (!/[?&]notut/.test(location.search)) S.tut = { step: 1, seen: {} };   // new characters get the guided first trip
@@ -1975,7 +1976,7 @@
 
   // ------------------------------------------------------------ dragon attacks (world events)
   // ---- raid / arena / clan art helpers (raidart.js)
-  const raPortrait = (id, size) => { if (typeof HEROART === "undefined") return ""; const c = id === S.id ? S : cardOf(id) || ladderDocs.find((d) => d.id === id); return c ? HEROART.portrait(c, size) : ""; };
+  const raPortrait = (id, size) => { if (typeof HEROART === "undefined") return ""; const c = id === S.id ? S : cardOf(id) || ladderDocs.find((d) => d.id === id); return c ? (typeof AVATAR !== "undefined" ? AVATAR.portrait(c, size) : HEROART.portrait(c, size)) : ""; };
   function raidView(r) {
     const tl = WEVENTS.tally(r, raidDocs, S), visible = S.discovered.includes(r.town) || G.pxDist(livePos(), WORLD.places[r.town]) < 160;
     return visible ? { pos: WORLD.places[r.town].slice(0, 2), done: tl.total >= tl.need, left: tl.need ? Math.max(0, tl.need - tl.total) / tl.need : 1, fighters: tl.people } : null;
@@ -2686,13 +2687,14 @@
     const off = Store.online ? "" : `<p class="sub">You're playing offline. Go online (Map tab) to see friends and messages.</p>`;
     let body = "";
     if (socTab === "friends") {
-      const fr = Object.entries(SOCIAL.friends(S)).map(([id, f]) => ({ id, name: f.name, card: cardOf(id) })).map((f) => ({ ...f, st: SOCIAL.status(f.card) })).sort((a, b) => b.st.online - a.st.online || a.name.localeCompare(b.name));
+      if (typeof AVATAR !== "undefined") for (const id of Object.keys(SOCIAL.friends(S))) AVATAR.remember(S, id, cardOf(id));   // [avatars] their portrait, kept for when they're offline
+      const fr = Object.entries(SOCIAL.friends(S)).map(([id, f]) => ({ id, name: f.name, pic: f.pic, card: cardOf(id) })).map((f) => ({ ...f, st: SOCIAL.status(f.card) })).sort((a, b) => b.st.online - a.st.online || a.name.localeCompare(b.name));
       const q = socSearch.trim().toLowerCase();
       const found = q.length >= 2 ? others.filter((o) => o.name?.toLowerCase().includes(q) && !SOCIAL.isFriend(S, o.id)).slice(0, 8) : [];
       const adds = SOCIAL.addedMe(friendDocs, S);
       body = `${adds.length ? `<h3>Added you</h3>${adds.map((d) => `<div class="item on"><div class="t">${esc(d.name)}<span>wants to be friends</span></div><button class="btn sm pri" data-act="faddrec" data-id="${esc(d.id)}">Add back</button></div>`).join("")}` : ""}
         <h3 style="margin-top:8px">Your friends · ${fr.length}</h3>
-        ${fr.length ? fr.map((f) => `<div class="item" style="flex-wrap:wrap">${HEROART.portrait(f.card || { race: "nord", id: f.id }, 38)}${f.card?.look ? `<span class="pgear">${HEROART.figure({ look: f.card.look }, 30, 42, { bare: true })}</span>` : ""}${(() => { const fj = typeof FRIENDJOIN !== "undefined" ? FRIENDJOIN.rowHTML(f.card, esc) : null; f.fj = fj; return fj ? `<div class="t fj-t"><i class="onl on"></i>${esc(f.name)}${fj.act}<span>${esc(fj.line)}</span><span class="fj-party${fj.full ? " full" : ""}">${esc(fj.party)}</span>${fj.why ? `<span class="fj-why">${esc(fj.why)}</span>` : ""}</div>` : `<div class="t"><i class="onl ${f.st.online ? "on" : ""}"></i>${esc(f.name)}<span>${esc(f.st.text)}</span></div>`; })()}
+        ${fr.length ? fr.map((f) => `<div class="item frow" style="flex-wrap:wrap">${typeof AVATAR !== "undefined" ? AVATAR.face(f.card, f.pic, 44) : HEROART.portrait(f.card || { race: "nord", id: f.id }, 38)}${(() => { const fj = typeof FRIENDJOIN !== "undefined" ? FRIENDJOIN.rowHTML(f.card, esc) : null; f.fj = fj; return fj ? `<div class="t fj-t"><i class="onl on"></i>${esc(f.name)}${fj.act}<span>${esc(fj.line)}</span><span class="fj-party${fj.full ? " full" : ""}">${esc(fj.party)}</span>${fj.why ? `<span class="fj-why">${esc(fj.why)}</span>` : ""}</div>` : `<div class="t"><i class="onl ${f.st.online ? "on" : ""}"></i>${esc(f.name)}<span>${esc(f.st.text)}</span></div>`; })()}
           <div class="fbtns">${f.fj?.btn || ""}<button class="btn sm" data-act="fmsg" data-id="${esc(f.id)}"> Message</button><button class="btn sm" data-act="ftrade" data-id="${esc(f.id)}"> Trade</button>${fRemoveAsk === f.id ? `<button class="btn sm danger" data-act="fdel" data-id="${esc(f.id)}">Really remove?</button>` : `<button class="btn sm" data-act="fdelask" data-id="${esc(f.id)}" aria-label="Remove friend">✕</button>`}</div></div>`).join("")
           : `<p class="sub">No friends yet. Add people from Social → Party (travellers near you), or search below.</p>`}
         <h3 style="margin-top:12px">Add a friend</h3>
@@ -2943,7 +2945,7 @@
     if (!S || typeof INVITES === "undefined" || !Store.online) return [];
     const t = G.now(), c = myClan();
     return INVITES.list(S, { parties: invites, runs: coopUI?.myInvites ? coopUI.myInvites() : [], clans: myClanInvites().filter((x) => x.id !== c?.id), inClan: !!c,
-      duels: duels.filter((d) => d.to === S.id && d.status === "open" && t - d.t < ARENA.OPEN_MIN * 60), trades: myIncoming().map((d) => ({ ...d, what: MP.describe(d) })), gold: S.gold, joins: typeof FRIENDJOIN !== "undefined" ? FRIENDJOIN.cards() : [] });
+      duels: duels.filter((d) => d.to === S.id && d.status === "open" && t - d.t < ARENA.OPEN_MIN * 60), trades: myIncoming().map((d) => ({ ...d, what: MP.describe(d) })), gold: S.gold, face: typeof AVATAR !== "undefined" ? (uid) => AVATAR.face(cardOf(uid), SOCIAL.friends(S)[uid]?.pic, 30) : null, joins: typeof FRIENDJOIN !== "undefined" ? FRIENDJOIN.cards() : [] });
   }
   async function answerInviteCard(kind, id, yes) {
     if (kind === "party") await (yes ? acceptInvite(id) : declineInvite(id));
@@ -3148,7 +3150,7 @@
     /* [menus2] one hero card on top, then sections that fold away (Skills and Perks have their own tabs too) */
     const fold = typeof MENUS2 !== "undefined" ? MENUS2.fold : (id, title, html) => `<div class="panel"><h2>${title}</h2>${html}</div>`;
     const fp = placesFound();
-    const card = `<div class="panel m2-hero"><h2>${esc(S.name)}</h2><div class="m2-herogrid"><div class="herobox">${typeof BUSTART !== "undefined" ? BUSTART.hero(S, HEROART.figure(S, 160, 220)) : HEROART.figure(S, 160, 220)}</div><div class="m2-herotxt">
+    const card = `<div class="panel m2-hero"><h2>${esc(S.name)}</h2><div class="m2-herogrid"><div class="herobox">${typeof AVATAR !== "undefined" ? AVATAR.hero(S, HEROART.figure(S, 160, 220), true) : HEROART.figure(S, 160, 220)}</div><div class="m2-herotxt">
       ${(S.titles || []).length ? `<p class="sub m2-titles">${S.titles.map(esc).join(" · ")}</p>` : ""}<p class="sub">Level ${S.level} ${esc(D.RACES[S.race].name)} · ${esc(D.RACES[S.race].desc)}</p><p class="sub"> Places discovered: <b>${fp.got}</b> of ${fp.all}${S.horse ? ` · Horse: ${esc(S.horse.name)}` : ""}</p>
       <div class="bar" style="margin-top:8px"><i style="width:${pct(S.charXp, need)}%;background:var(--gold)"></i></div><p class="sub num">${Math.round(S.charXp)}/${need} toward level ${S.level + 1}</p>
       <div class="grid2 m2-attrs"><div class="slot">Health<b class="num">${G.maxHealth(S)}</b></div><div class="slot">Magicka<b class="num">${G.maxMagicka(S)}</b></div><div class="slot">Stamina<b class="num">${G.maxStamina(S)}</b></div></div>
@@ -3362,7 +3364,7 @@
     }
     return list.map((c) => {
       const g = guardDocs.filter((d) => d.caravanId === c.id && d.status !== "left"), mine = j?.id === c.id, sh = CARAVANS.share(c.id, mine ? g : [...g, { caravanId: c.id }], c.from, c.to), p = CARAVANS.plan(c);
-      const guards = g.length ? `<div class="cvguards">${g.map((d) => `<span>${typeof HEROART !== "undefined" ? HEROART.portrait(cardOf(d.uid) || { race: d.race || "nord", id: d.uid, name: d.name }, 26) : ""}${esc(d.name)} · ${d.level || 1}</span>`).join("")}</div>` : `<p class="sub" style="margin:4px 0">No guards yet.</p>`;
+      const guards = g.length ? `<div class="cvguards">${g.map((d) => `<span>${typeof AVATAR !== "undefined" ? AVATAR.portrait(cardOf(d.uid) || { race: d.race || "nord", id: d.uid, name: d.name }, 26) : ""}${esc(d.name)} · ${d.level || 1}</span>`).join("")}</div>` : `<p class="sub" style="margin:4px 0">No guards yet.</p>`;
       const goods = c.here ? CARAVANS.stock(c).map((i) => `<div class="item${tiCls(i)}">${typeof ICONART !== "undefined" ? ICONART.item(i, 32) : ""}<div class="t">${esc(D.ITEMS[i].name)}<span>${esc(G.itemStats(i))}</span></div><span class="num gold">${CARAVANS.price(S, i)}</span><button class="btn sm" data-act="cvbuy" data-id="${esc(c.id)}" data-item="${esc(i)}" ${S.gold >= CARAVANS.price(S, i) ? "" : "disabled"}>Buy</button>${tiBox(i)}</div>`).join("") : "";
       return `<div class="card cvcard"><div class="cvhead">${CARAVANS.wagonHTML(110, 72, { khajiit: c.line.khajiit })}<div><h3 style="margin:0">${esc(c.line.name)}</h3><p class="sub" style="margin:2px 0 0">${c.here ? `To ${esc(c.to)} · leaves in ${cdSpan(c.depart)}` : `Arriving from ${esc(c.from)} in ${cdSpan(c.arrive)}`}</p></div></div>
         ${c.here ? `<p class="sub" style="margin:6px 0 0">Expect ${p.at.length === 2 ? "two ambushes" : "an ambush"} on the road. Pay: about <b class="gold">${sh.each}</b> gold each with ${sh.n} guard${sh.n > 1 ? "s" : ""} (more guards, bigger contract).</p>${guards}
@@ -3661,7 +3663,7 @@
     const canAmbush = shared && !S.trip && !S.location && !S.dungeon;
     const travellers = `<div class="panel"><h2>Travellers</h2>${shared
       ? (ppl.length ? `<div class="list">${ppl.map((o) => { const near = !MP.canTarget(S, o, me, o.pos), war = typeof SIDES !== "undefined" && !inParty(o.id) && SIDES.canAttack(S, o, { party, myPos: me, theirPos: o.pos }).mode === "war", os = typeof SIDES !== "undefined" ? SIDES.of(o.id) : null;
-          return `<div class="item" style="flex-wrap:wrap">${HEROART.portrait(o, 38)}${os ? `<span class="sideico" title="${esc(SIDES.LIST[os].name)}">${SIDES.emblem(os, 16)}</span>` : ""}${o.look ? `<span class="pgear" title="What ${esc(o.name)} is wearing">${HEROART.figure({ look: o.look }, 30, 42, { bare: true })}</span>` : ""}<div class="t">${esc(o.name)}${inParty(o.id) ? " ⚑" : ""}<span>Level ${o.level} ${esc(D.RACES[o.race]?.name || "")}${typeof LEVELUP !== "undefined" ? LEVELUP.cardText(o) : ""} · ${esc(o.loc || G.holdAt(o.pos))}${o.moving ? " · travelling" : ""}${o.dungeon ? " · in a dungeon" : ""}${o.bounty ? ` · wanted (${o.bounty})` : ""}</span></div>
+          return `<div class="item" style="flex-wrap:wrap">${typeof AVATAR !== "undefined" ? AVATAR.portrait(o, 44) : HEROART.portrait(o, 38)}${os ? `<span class="sideico" title="${esc(SIDES.LIST[os].name)}">${SIDES.emblem(os, 16)}</span>` : ""}<div class="t">${esc(o.name)}${inParty(o.id) ? " ⚑" : ""}<span>Level ${o.level} ${esc(D.RACES[o.race]?.name || "")}${typeof LEVELUP !== "undefined" ? LEVELUP.cardText(o) : ""} · ${esc(o.loc || G.holdAt(o.pos))}${o.moving ? " · travelling" : ""}${o.dungeon ? " · in a dungeon" : ""}${o.bounty ? ` · wanted (${o.bounty})` : ""}</span></div>
           <span class="num sub">${near ? "here" : o.d < 60 ? "nearby" : "~" + fmtMin(o.d * 1.1 / G.speed(S)) + " away"}</span>
           <div style="display:flex;gap:6px;width:100%;flex-wrap:wrap">${SOCIAL.isFriend(S, o.id) ? "" : `<button class="btn sm" data-act="fadd" data-id="${esc(o.id)}">＋ Friend</button>`}${inParty(o.id) ? `<span class="inparty">In your party</span>` : `<button class="btn sm" data-act="invite" data-id="${esc(o.id)}">Invite</button>`}
           ${near ? `<button class="btn sm" data-act="trade" data-id="${esc(o.id)}">Trade</button>` : ""}${near && !inParty(o.id) ? `<button class="btn sm" data-act="pick" data-id="${esc(o.id)}" ${MP.pickWait?.(S, o.id) ? `disabled title="Try again in ${Math.ceil(MP.pickWait(S, o.id) / 60)} min"` : ""}>Pickpocket</button>` : ""}${(near || war) && !inParty(o.id) ? `<button class="btn sm danger" data-act="attack" data-id="${esc(o.id)}">Attack</button>` : ""}</div></div>`; }).join("")}</div>
@@ -4165,6 +4167,8 @@
         Store.put("verselikes", r.id, r.doc); if (!likeDocs.some((x) => x.id === r.id)) likeDocs.push({ ...r.doc, id: r.id }); SOUND.fx("click"); toast(` You cheer for ${v.name}'s verse.`); renderPanel(true); break; }
       case "bardsing": singSong(); break;
       case "barber": case "mirror": openLookChange(a); break;
+      case "avatar": case "avall": openModal(AVATAR.sheet(S, a === "avall"), "avsheet"); break;   // [avatars] choose your portrait (avatar.js)
+      case "avpick": { AVATAR.set(S, b.dataset.id); closeModal(); persist(true); publishCard(true); renderPanel(true); toast(AVATAR.chosen(S) ? "New portrait chosen." : "Your portrait follows your race and sex again."); break; }
       case "inn": say(b.dataset.c === "room" ? TOWNS.rentRoom(S) : TOWNS.rumour(S)); break;
       case "train": say(TOWNS.train(S, b.dataset.id)); publishCard(); break;
       case "alch": { const id = +b.dataset.id; alchSel = alchSel.includes(id) ? alchSel.filter((x) => x !== id) : [...alchSel, id].slice(-3); renderPanel(true); break; }

@@ -60,7 +60,7 @@ const DOLL = (() => {
     const ammoRow = am ? (() => { const b = am.best && s.inv.find((x) => D.ITEMS[x.item]?.name === am.best); return `<div class="dammo ${am.best ? "" : "warn"}">${b ? ICONART.item(b.item, 28, b) : emptyIcon("ammo", 28)}<span>${am.best ? `${am.n} ${esc(am.best)}s <i>(best is used)</i>` : "No ammo for your bow"}</span></div>`; })() : "";
     return `<div class="doll">
       <div class="dcol">${LEFT.map((sl) => slotBtn(s, sl, eq)).join("")}</div>
-      <div class="dfig">${HEROART.figure(s, 150, 206)}${typeof BUSTART !== "undefined" ? BUSTART.crest(s, 60) : ""}</div>
+      <div class="dfig">${HEROART.figure(s, 150, 206)}${typeof AVATAR !== "undefined" ? AVATAR.badge(s, 60) : ""}</div>
       <div class="dcol">${RIGHT.map((sl) => slotBtn(s, sl, eq)).join("")}</div>
     </div>
     <div class="djewel" aria-label="Amulet and rings">${JEWEL.map((sl) => slotBtn(s, sl, eq, 40)).join("")}</div>${ammoRow}

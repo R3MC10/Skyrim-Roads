@@ -1273,7 +1273,6 @@ h3[class*="cat-"]{color:var(--cat)}
 .gearprev figure{margin:0;text-align:center}
 .gearprev figcaption{font-size:11px;color:var(--muted,#b8ab90);margin-top:2px}
 .gearprev img{border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.35)}
-.pgear{flex:0 0 auto;margin-right:6px;border-radius:6px;overflow:hidden;line-height:0}
 /* [world events] worldevents.js: the strips under the map, the event sheet and the Journal panel */
 #wev:empty{display:none}
 .wev-card{display:flex;flex-direction:column;gap:6px;margin:8px 0}
@@ -4347,7 +4346,7 @@ html.mo-on .evc-fx{display:block}
 @keyframes evc-wind{0%{opacity:0;transform:translate(0,0)}15%{opacity:.55}85%{opacity:.4}100%{opacity:0;transform:translate(-190px,105px)}}
 @media (prefers-reduced-motion:reduce){.evc-fx{display:none!important}.evc.evc-in{animation:none!important}}
 .a11y-still .evc-fx{display:none!important}.a11y-still .evc.evc-in{animation:none!important}
-/* [busts] painted race busts (bustart.js): race picker tiles, Hero page portrait, inventory crest */
+/* [busts] painted race busts (bustart.js): race picker tiles; your round portrait (avatar.js) on the Character sheet and the paper doll */
 .bustslot{display:inline-flex;align-items:center;justify-content:center;flex:none}
 .bustslot img.bustimg{display:block;width:100%;height:100%;object-fit:contain;border:0;box-shadow:none;border-radius:0;max-width:none}
 .bustgrid .rpick{padding:4px 4px 6px;justify-content:flex-start}
@@ -4356,8 +4355,8 @@ html.mo-on .evc-fx{display:block}
 .bustgrid .rpick:not(.on) .bust-pick.ok img{filter:saturate(.82) brightness(.9)}
 .bustgrid .rpick:hover .bust-pick.ok img{filter:none}
 .bust-hero.ok{width:220px;height:220px;border:1px solid #4a4237;border-radius:8px;overflow:hidden;background:radial-gradient(ellipse at 50% 36%,#383d46 0%,#1e2128 60%,#121418 100%);box-shadow:0 2px 10px rgba(0,0,0,.35),inset 0 -18px 24px rgba(0,0,0,.35)}
-.bust-hero.ok.bust-crest{width:196px;height:196px;margin:12px;border-radius:50%;border:1px solid rgba(214,178,94,.45);box-shadow:0 0 0 4px #15171b,0 0 0 5px rgba(214,178,94,.22),0 2px 12px rgba(0,0,0,.45)}
-.bust-hero.ok.bust-crest img{filter:saturate(.7) sepia(.12);transform:scale(1.04) translateY(4px)}
+.bust-hero.ok.bust-av{width:196px;height:196px;margin:12px;border-radius:50%;border:1px solid rgba(214,178,94,.45);box-shadow:0 0 0 4px #15171b,0 0 0 5px rgba(214,178,94,.22),0 2px 12px rgba(0,0,0,.45)}
+.bust-hero.ok.bust-av img{transform:scale(1.04) translateY(4px)}
 .dfig{position:relative}
 .bust-badge.ok{position:absolute;top:-8px;left:max(0px,calc(50% - 99px));width:var(--bs,60px);height:var(--bs,60px);border-radius:50%;overflow:hidden;border:1px solid rgba(214,178,94,.5);background:radial-gradient(ellipse at 50% 38%,#353a43 0%,#16181d 100%);box-shadow:0 2px 8px rgba(0,0,0,.5);pointer-events:none}
 .dfig .bust-badge img.bustimg{border:0;border-radius:0;box-shadow:none;transform:scale(1.2) translateY(6%)}
@@ -4691,7 +4690,7 @@ body.nf-p0 #pbanners,body.nf-p0 #skillup,body.nf-p0 #lvln,body.nf-p0 #hudlog{vis
 .cgdetail img{border-radius:50%;box-shadow:0 0 0 2px rgba(214,178,94,.5),0 2px 10px rgba(0,0,0,.55);margin:0}
 .cgdetail span{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:#d9cfb6;text-shadow:0 1px 3px #000}
 .rshow .cgbust .bust-hero.ok{width:150px;height:150px}
-.rshow .cgbust .bust-hero.ok.bust-crest{width:136px;height:136px;margin:7px}
+.rshow .cgbust .bust-hero.ok.bust-av{width:136px;height:136px;margin:7px}
 @media (min-width:900px){.cg-painted .cgdetail.on{left:24px;top:96px}.cgdetail img{width:104px;height:104px}}
 
 /* [longhousegrow] painted room patches on the hall, the crossfade after a build, and the tap areas */
@@ -5311,6 +5310,31 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 .fj-t .fj-fight{color:#f0a08a;border-color:rgba(240,120,100,.45)}.fj-t .fj-dungeon{color:#b6a6e8;border-color:rgba(170,150,230,.45)}.fj-t .fj-trade{color:#e8cf7a;border-color:rgba(230,200,110,.45)}
 .fj-t .fj-party{display:block;color:#cbb98f}.fj-t .fj-party.full{color:#e39a7c}.fj-t .fj-why{display:block;font-style:italic;opacity:.75}
 .fbtns .btn[data-act=fjoin][disabled]{opacity:.45;cursor:not-allowed}
+/* [avatars] your round painted portrait (avatar.js): player lists, friends, party, invite cards; the picker on the
+   Character sheet and in character creation; a plain silhouette for a friend never seen */
+.avport,.avsil{width:var(--av,40px);height:var(--av,40px);border-radius:50%;overflow:hidden;flex:none;align-self:center;margin-right:10px;background:radial-gradient(ellipse at 50% 38%,#3a3f48 0%,#1c1f25 70%,#121418 100%);box-shadow:0 0 0 1px rgba(214,178,94,.45),0 1px 4px rgba(0,0,0,.5)}
+.avport img.bustimg{transform:scale(1.28) translate(-3%,8%)}
+.avport>img.heroport{width:100%;height:100%;margin:0}
+.avsil{display:inline-flex;align-items:flex-end;justify-content:center}
+.avsil svg{width:86%;height:86%;fill:#6b6455;opacity:.75}
+.pvchip .avport,.invic .avport,.invic .avsil{margin:0}
+.invic.invpic{border:0;background:none;overflow:visible}
+.avbtn{position:relative;display:inline-flex;padding:0;border:0;background:none;cursor:pointer;border-radius:50%;color:inherit}
+.avbtn:focus-visible{outline:2px solid var(--gold,#d6b25e);outline-offset:2px}
+.avedit{position:absolute;right:18px;bottom:18px;width:34px;height:34px;display:grid;place-items:center;border-radius:50%;background:#15171b;border:1px solid rgba(214,178,94,.6);color:#e8d9ae;font-size:16px;box-shadow:0 2px 6px rgba(0,0,0,.5)}
+.avbtn:hover .avedit{background:#23262c}
+.avgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px;margin:8px 0}
+.avtile{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border:1px solid rgba(255,255,255,.08);border-radius:3px;background:rgba(255,255,255,.02);color:inherit;cursor:pointer;min-height:44px;font:inherit}
+.avtile:hover{background:rgba(255,255,255,.05)}
+.avtile.on{border-color:rgba(226,187,100,.7);background:rgba(226,187,100,.08);box-shadow:inset 0 0 14px rgba(226,187,100,.14)}
+.avtile .avface{width:64px;height:64px;border-radius:50%;overflow:hidden;margin-bottom:4px;background:radial-gradient(ellipse at 50% 38%,#3a3f48 0%,#1c1f25 70%,#121418 100%);box-shadow:0 0 0 1px rgba(214,178,94,.35)}
+.avtile .avface img.bustimg{transform:scale(1.2) translate(-2%,7%)}
+.avtile .avface>img{width:100%;height:100%;margin:0;border:0;box-shadow:none}
+.avtile b{font-size:.85rem;line-height:1.1}
+.avtile span{font-size:.75rem;color:#b9b0a0}
+.avtile i{font-size:.7rem;font-style:normal;color:#d6b25e;letter-spacing:.04em}
+.avall{width:100%}
+.cgavh{margin-top:14px}
 /* [dunchoices] the ways at a dungeon fork as cards (dunchoice.js): the room's painting, its name, a risk tag, the reward and
    what comes next. Phones: one card per row, picture on the left. PC: side by side, picture on top. In a party vote the
    same cards carry the voters' faces and a vote count on the picture (partyvote.js). */
@@ -5516,6 +5540,7 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 <script src="gearlook.js"></script>
 <script src="heroart.js"></script>
 <script src="bustart.js"></script>
+<script src="avatar.js"></script>
 <script src="figart.js"></script>
 <script src="rigdata.js"></script>
 <script src="riggear.js"></script>
@@ -5653,7 +5678,7 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 <script src="i18n_foepanel.js"></script>
 <script src="i18n_hotbar.js"></script>
 <script src="i18n_movepreview.js"></script>
-<script src="i18n_busts.js"></script><script src="i18n_npcportraits.js"></script>
+<script src="i18n_busts.js"></script><script src="i18n_avatars.js"></script><script src="i18n_npcportraits.js"></script>
 <script src="i18n_fightset.js"></script>
 <script src="i18n_stacks.js"></script>
 <script src="i18n_fighttips.js"></script>
