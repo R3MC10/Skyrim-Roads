@@ -5,7 +5,7 @@ A) One phone, level 36, at a deadly dungeon: the place card shows the difficulty
    Phone (412x915) and PC (1280x800) screenshots.
 B) Two phones in one co-op run, both at the camp: the Extract / Rest / Descend choice is a party vote with faces;
    when both vote Descend, both go down to the same level I map.
-Usage: py deepdelve_ui.py PORT   (serve game/ first: py -m http.server PORT --directory ../game)
+Usage: py deepdelve_ui.py PORT   (serve game/ first: node serve.js PORT)
 Screenshots go to tests/out_deepdelve/."""
 import asyncio, os, sys
 from playwright.async_api import async_playwright

@@ -1,8 +1,10 @@
 """Tab compass menu (tabmenu.js): swipes open the right menus, the bottom bar shows the right values. Usage: python3 tabmenu_ui.py PORT"""
 import asyncio, sys, json, os
 from playwright.async_api import async_playwright
+_SHOTS = (__import__("os").environ.get("SHOTS") or __import__("os").path.join(__import__("tempfile").gettempdir(), "rotn_shots")).replace("\\", "/").rstrip("/") + "/"   # screenshots: $SHOTS or the temp folder
+__import__("os").makedirs(_SHOTS, exist_ok=True)
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"
-OUT = "/home/claude/tests/tabmenu/"
+OUT = _SHOTS + "tabmenu/"
 fails = []
 def ok(c, m):
     print(("ok   " if c else "FAIL ") + m)
@@ -74,8 +76,11 @@ async def main():
         after = await pg.evaluate("PERKS.rank(__dbg.save(),'armsman')"); ok(after == before + 1, f"take perk from star {before}->{after}")
         await pg.evaluate(clear)
         await pg.screenshot(path=OUT + "stars_perk.png")
-        # swipe left on header -> character, perks, stats
-        for want in ["hero", "perks", "stats"]:
+        # swipe left on header -> character, perks, stats (spend the waiting level first: its picker (#lvlpick) covers the screen on the Character page)
+        await pg.evaluate("()=>{ __dbg.save().pendingLevels=0; document.querySelector('#lvlpick')?.remove(); }")
+        order = await pg.evaluate("[...document.querySelectorAll('#twbar .twbar-t')].map(b=>b.dataset.twb)")   # Skills, Character, (Follower,) Perks, Stats...
+        i0 = order.index("stars") if "stars" in order else 0
+        for want in order[i0 + 1:i0 + 4]:
             await swipe(330, 30, 120, 30); s = await st(); ok(s["char"] and s["tab"] == want and s["sub"] == want, f"swipe to {want} {s}")
             await pg.evaluate(clear); await pg.screenshot(path=OUT + f"char_{want}.png")
         # swipe left inside the scrolling page body also flips tabs (horizontal only)
@@ -108,3 +113,4 @@ async def main():
         await b.close()
     print("RESULT", "OK" if not fails else f"FAIL {len(fails)}")
 asyncio.run(main())
+sys.exit(1 if fails else 0)

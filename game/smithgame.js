@@ -594,7 +594,7 @@ const SMITHGAME = (() => {
     if (!st) return;
     const { S, o, done } = st;
     const g = quick ? CG.QUICK : CG.grade(S.q || total(S.heatQ, S.strikes, S.quenchQ));
-    pending = quick ? null : { id: o.id || null, grade: g, q: S.q };
+    pending = quick || !o.id ? null : { id: o.id, grade: g, q: S.q };   // only a forged item (o.id) can save a scrap: a festival contest or a smelt never carries over to the next craft
     close();
     done(g);
   }
@@ -621,7 +621,7 @@ const SMITHGAME = (() => {
     CG.smithMake = (s, id, g = CG.QUICK, rnd = Math.random) => {
       const p = pending; pending = null;
       const m = rawMake(s, id, g);
-      if (!p || p.grade !== g || (p.id && p.id !== id) || !/^You make/.test(m)) return m;
+      if (!p || p.grade !== g || p.id !== id || !/^You make/.test(m)) return m;
       return m + saveRoll(s, id, p.q, rnd);
     };
   }

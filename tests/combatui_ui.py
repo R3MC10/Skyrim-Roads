@@ -1,18 +1,19 @@
 """Fight controls (fightctl.js): the action bar on the turn-based fight screen. Usage: python combatui_ui.py PORT -> RESULT OK
-Serve game/ first:  python -m http.server PORT --directory ../game
+Serve game/ first:  node serve.js PORT
 At 390x844 (phone, touch) and 1920x1080 (PC, mouse + keys), in both art styles:
 - big drawn-icon buttons, AP pips on every move, the AP counter, nothing wider than the screen
 - a move spends AP (tap on the phone, key 1 on the PC)
-- Magic picker with filters and ★ pins; a pinned spell lands in the quick slots
+- Magic picker with filters and ★ pins; a pinned spell lands on the self-filling hotbar (hotbar.js)
 - a healing spell with a follower beside you asks who gets it; tapping the follower casts it there
 - greyed-out moves say why ("Need 2 more AP")
 - Space ends the turn; Auto finishes the fight; Space presses Continue
-Screenshots in tests/out_combatui/ (gitignored)."""
+Screenshots in SHOTS/out_combatui/ (default: the system temp folder), never in tests/."""
 import asyncio, sys, os
 from playwright.async_api import async_playwright
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"
-OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out_combatui") + os.sep; os.makedirs(OUT, exist_ok=True)
-CHROME = os.environ.get("CHROME", "/usr/bin/google-chrome")   # falls back to Playwright's own Chromium when missing
+import tempfile
+OUT = os.path.join(os.environ.get("SHOTS") or tempfile.gettempdir(), "out_combatui") + os.sep; os.makedirs(OUT, exist_ok=True)
+CHROME = (__import__("os").environ.get("CHROME") or ("/usr/bin/google-chrome" if __import__("os").path.exists("/usr/bin/google-chrome") else None))   # falls back to Playwright's own Chromium when missing
 fails = []
 def ok(c, m):
     print(("ok   " if c else "FAIL ") + m)
@@ -39,7 +40,7 @@ async def my_turn(pg, tries=60):
     return False
 
 async def run(p, w, h, touch):
-    kw = {"executable_path": CHROME, "args": ["--no-sandbox"]} if os.path.exists(CHROME) else {}
+    kw = {"executable_path": CHROME, "args": ["--no-sandbox"]} if CHROME and os.path.exists(CHROME) else {}
     b = await p.chromium.launch(**kw)
     ctx = await b.new_context(viewport={"width": w, "height": h}, device_scale_factor=2 if touch else 1, has_touch=touch, is_mobile=touch)
     errs = []
@@ -56,15 +57,13 @@ async def run(p, w, h, touch):
         ok(await pg.evaluate("!!document.querySelector('#tbf') && TB.open"), f"{tag}: fight screen opens")
         if not await my_turn(pg): ok(False, f"{tag}: my turn comes"); await pg.evaluate(AUTO); continue
         await pg.wait_for_timeout(700)
-        ok(await pg.evaluate("!!document.querySelector('#tbf .fc .fc-main') && !!document.querySelector('#tbf .fc .fc-row [data-tba=end]')"), f"{tag}: the action bar is up")
+        ok(await pg.evaluate("document.querySelectorAll('#tbf .fc .hb-bar [data-hbs]').length===10 && !!document.querySelector('#tbf .fc [data-tba=end]')"), f"{tag}: the action bar (hotbar, 10 slots) is up")
         mn = await pg.evaluate("Math.min(...[...document.querySelectorAll('#tbf .fc .tbact')].map(b=>b.getBoundingClientRect().height))")
         ok(mn >= 44, f"{tag}: every button is a thumb-sized target ({mn:.0f}px)")
-        big = await pg.evaluate("Math.min(...[...document.querySelectorAll('#tbf .fc .tbact.big')].map(b=>b.getBoundingClientRect().height))")
-        ok(big >= 60, f"{tag}: big moves are big ({big:.0f}px)")
-        ok(await pg.evaluate("document.querySelectorAll('#tbf .fc-main .ic img, #tbf .fc-main .ic canvas').length") == 3, f"{tag}: big moves have drawn icons")
+        ok(await pg.evaluate("document.querySelectorAll('#tbf .hb-bar .ic img, #tbf .hb-bar .ic canvas').length") >= 3, f"{tag}: the hotbar's moves have drawn icons")
         ok(await pg.evaluate("[...document.querySelectorAll('#tbf .fc .tbact[data-tba]:not([data-tba=end])')].every(b=>b.querySelector('.cp em.rc'))"), f"{tag}: every move shows its cost")
         ok(await pg.evaluate("/\\d/.test(document.querySelector('#tbf .tbap .fc-apn')?.textContent||'')"), f"{tag}: the moves counter shows")
-        ok(await pg.evaluate("document.querySelector('#tbf .fc-tray .tbact') !== null"), f"{tag}: quick slots suggest something")
+        ok(await pg.evaluate("document.querySelectorAll('#tbf .hb-bar .tbact').length") >= 5, f"{tag}: the hotbar fills itself from the hero")
         ow = await pg.evaluate("Math.max(document.querySelector('#tbf .tbin').scrollWidth, document.documentElement.scrollWidth) <= innerWidth + 1")
         ok(ow, f"{tag}: nothing wider than the screen")
         bot = await pg.evaluate("document.querySelector('#tbf .fc').getBoundingClientRect().bottom <= innerHeight + 1")
@@ -96,7 +95,7 @@ async def run(p, w, h, touch):
                 ok(await pg.evaluate("!!document.querySelector('#tbf .fc-aimbar') && document.querySelectorAll('#tbf .tbu.fc-tgt').length >= 2"), f"{tag}: healing asks who gets it")
                 await pg.screenshot(path=OUT + f"{tag}_aim.png")
                 ap0 = await pg.evaluate("-TB.session.myActs")
-                await pg.click("#tbf .tbu.ally.fc-tgt"); await pg.wait_for_timeout(600)
+                await pg.click("#tbf .fc-aimbar .fc-who:not(.me)"); await pg.wait_for_timeout(600)   # the name button (the open Magic menu covers the portraits on phones)
                 ap1 = await pg.evaluate("TB.session ? -TB.session.myActs : -1")
                 ok(not await pg.evaluate("!!document.querySelector('#tbf .fc-aimbar')") and (ap1 < ap0 or ap1 == -1 or not await pg.evaluate("!!document.querySelector('#tbf .fc [data-tba=attack]')")), f"{tag}: tapping the follower casts it on them")
                 ok(await pg.evaluate(r"/Healing on Lydia: \+\d/.test([...document.querySelectorAll('#tbf .tbl')].map(e=>e.textContent).join(' '))"), f"{tag}: the log shows the heal on the follower")
@@ -105,7 +104,7 @@ async def run(p, w, h, touch):
                 await pg.evaluate("document.querySelector('#tbf [data-tbm=\"\"]')?.click()")
             if await my_turn(pg, 4):
                 await pg.evaluate("document.querySelector('#tbf [data-tbm=\"\"]')?.click()"); await pg.wait_for_timeout(200)
-                ok(await pg.evaluate("!!document.querySelector(\"#tbf .fc-tray [data-tba='spell:sparks']\") && !!document.querySelector(\"#tbf .fc-tray [data-tba='potion:health']\")"), f"{tag}: the pinned spell joins the quick slots (suggestions kept)")
+                ok(await pg.evaluate("!!document.querySelector(\"#tbf .hb-bar [data-tba='spell:sparks']\") && !!document.querySelector(\"#tbf .hb-bar [data-tba='potion:health']\")"), f"{tag}: the pinned spell joins the self-filling hotbar (the potion stays)")
                 # greyed out with a reason
                 await pg.evaluate("TB.session.myActs=TB.session.st.acts; document.querySelector('#tbf [data-tbm=magic]').click(); document.querySelector('#tbf [data-tbm=\"\"]').click()"); await pg.wait_for_timeout(300)
                 why = await pg.evaluate("[...document.querySelectorAll('#tbf .fc .fc-why')].map(e=>e.textContent)")

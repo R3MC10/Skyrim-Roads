@@ -572,8 +572,11 @@ const WorldMap = (() => {
     const Pcss = k / dpr;                 // CSS px per map unit
     // the painting is never shown bigger than PAINT_MAX × its own pixels (it would turn soft): past PAINT_FADE it fades
     // into the close-up ink chart (inkmap.js), a wash of its own colours with crisp hand-inked detail on top
-    const IK = painted && typeof INKMAP !== "undefined" ? INKMAP : null;
-    const pscale = painted ? (W * Pcss) / painted.naturalWidth : 0;
+    // with the tile pyramid (maptiles.js) the painting has 8000 px across: it stays the map at every zoom, with a fine
+    // painted grain past its own pixels, and the ink chart is only the fallback for builds without the tiles
+    const MT = painted && typeof MAPTILES !== "undefined" && !MAPTILES.off ? MAPTILES : null;
+    const IK = painted && !MT && typeof INKMAP !== "undefined" ? INKMAP : null;
+    const pscale = painted ? (W * Pcss) / (MT ? MT.LEVELS[MT.TOP][0] : painted.naturalWidth) : 0;
     const pa = !painted ? 1 : !IK ? 1 : Math.max(0, Math.min(1, (PAINT_MAX - pscale) / (PAINT_MAX - PAINT_FADE)));
     // how far into the close-up we are (0 at the painting's own size … 1 well into the ink chart): the sky's light shafts,
     // cloud shadows, mist and town glows tone down with it so the chart stays clear (lightfx.js, mapart.js)
@@ -582,6 +585,7 @@ const WorldMap = (() => {
     stats.paintScale = pa > 0 ? pscale : 0; stats.paintAlpha = painted ? pa : 0; stats.ink = IK ? 1 - pa : 0; stats.roads = ROAD_STYLE; stats.dpr = dpr;
     if (IK && pa < 1) { g.save(); g.setTransform(1, 0, 0, 1, 0, 0); IK.draw(g, painted, k, ox, oy, canvas.width, canvas.height, dpr, 1); g.restore(); }
     if (bimg && pa > 0) { g.globalAlpha = pa; g.drawImage(bimg, 0, 0, W, H); g.globalAlpha = 1; }   // the painting is stretched over the world bounds: world (x, y) → (x·W, y·H)
+    if (MT) { const over = MT.draw(g, k, ox, oy, canvas.width, canvas.height); const ts = MT.stats(); stats.tiles = ts.tiles; stats.tileLevel = ts.level; stats.grain = ts.grain; stats.tileOver = +over.toFixed(2); }   // sharp tiles over the base painting (same world → screen mapping)
     else if (!bimg) { g.fillStyle = "#26404c"; g.fillRect(0, 0, W, H); }
     if (painted) { if (PM.roads()) paintRoads(g, s / UI); paintChrome(g, s / UI); }   // roads (Settings → Graphics), compass, frame (the names come after the places)
     const sl = SV ? null : seasonLayer(v.season ?? (typeof WEVENTS !== "undefined" ? WEVENTS.season() : null)); if (sl) g.drawImage(sl, 0, 0, W, H);   // winter snow, autumn colours, spring green
@@ -797,12 +801,24 @@ const WorldMap = (() => {
       g.beginPath(); g.moveTo(fx, fy); path.forEach((p) => g.lineTo(...P(p))); g.stroke(); g.setLineDash([]);
       const [ex, ey] = P(path[path.length - 1] || r.from); g.fillStyle = "#cde0ff"; g.strokeStyle = "#13243a"; g.lineWidth = 2 * s; g.beginPath(); g.arc(ex, ey, 4.5 * s, 0, 7); g.fill(); g.stroke();
     }
-    if (v.zoom >= 1.3) for (const h of v.herbs || []) {   // plant patches you've spotted (gather.js): green leaf ripe, grey picked
-      const [x, y] = P(h.pos), r = 5.4 * s;
-      g.fillStyle = h.ripe ? "#6fb04a" : "#7d7a6e"; g.strokeStyle = "#16210c"; g.lineWidth = 1.2 * s;
-      g.beginPath(); g.moveTo(x, y - r * 1.3); g.quadraticCurveTo(x + r * 1.2, y - r * 0.2, x, y + r); g.quadraticCurveTo(x - r * 1.2, y - r * 0.2, x, y - r * 1.3); g.fill(); g.stroke();
-      g.beginPath(); g.moveTo(x, y - r); g.lineTo(x, y + r * 0.8); g.strokeStyle = h.ripe ? "#2e5a1c" : "#4a483f"; g.lineWidth = 0.8 * s; g.stroke();
-      if (v.zoom >= 2.6) smartLabel(h.label, x, y - r * 1.4, 10, h.ripe ? "#d8f0c0" : "#c8c4b4");
+    if (v.herbRange) {   // how close you must be to gather (gather.js REACH_PX): a soft dashed ring while a ripe patch is near
+      const [cx, cy] = P(v.herbRange.pos), [ex] = P([v.herbRange.pos[0] + v.herbRange.r, v.herbRange.pos[1]]), R = Math.abs(ex - cx);
+      if (R > 6) { g.setLineDash([4 * s, 5 * s]); g.strokeStyle = "rgba(170,220,130,.75)"; g.lineWidth = 1.6 * s; g.beginPath(); g.arc(cx, cy, R, 0, 7); g.stroke(); g.setLineDash([]); g.fillStyle = "rgba(140,200,100,.07)"; g.fill(); }
+    }
+    if (v.zoom >= 1) for (const h of v.herbs || []) {   // plant patches you've spotted (gather.js): a painted plant per kind (harvest.js), or a leaf tinted by kind; faded when picked
+      const [x, y] = P(h.pos), r = 5.4 * s * (v.zoom >= 1.3 ? 1 : 0.8), col = (typeof HARVEST !== "undefined" && HARVEST.KINDS[h.kind]?.color) || "#6fb04a";
+      const pic = typeof ASSETS !== "undefined" && v.zoom >= 1.3 ? ASSETS.img("harvest-" + (h.kind === "clam" ? "egg" : h.kind || "flower")) : null;
+      g.globalAlpha = h.ripe ? 1 : 0.5;
+      g.fillStyle = "rgba(20,16,8,.55)"; g.beginPath(); g.arc(x, y, r * 1.55, 0, 7); g.fill();
+      g.strokeStyle = h.ripe ? col : "#7d7a6e"; g.lineWidth = 1.4 * s; g.stroke();
+      if (pic && h.kind !== "clam") g.drawImage(pic, x - r * 1.45, y - r * 1.5, r * 2.9, r * 2.9);
+      else {
+        g.fillStyle = h.ripe ? col : "#7d7a6e"; g.strokeStyle = "#16210c"; g.lineWidth = 1 * s;
+        g.beginPath(); g.moveTo(x, y - r * 1.1); g.quadraticCurveTo(x + r, y - r * 0.15, x, y + r * 0.85); g.quadraticCurveTo(x - r, y - r * 0.15, x, y - r * 1.1); g.fill(); g.stroke();
+        g.beginPath(); g.moveTo(x, y - r * 0.8); g.lineTo(x, y + r * 0.7); g.strokeStyle = "rgba(20,30,10,.7)"; g.lineWidth = 0.8 * s; g.stroke();
+      }
+      g.globalAlpha = 1;
+      if (v.zoom >= 2.6) smartLabel(h.label, x, y - r * 1.7, 10, h.ripe ? "#d8f0c0" : "#c8c4b4");
     }
     for (const m of v.tmaps || []) {   // treasure maps: a red X
       const [x, y] = P(m.pos), r = 7 * s;
@@ -878,8 +894,10 @@ const WorldMap = (() => {
       if (CL.skip.has(c)) continue;   // in a cluster pin
       const [cx, cy] = P(c.pos), bob2 = c.moving && !v.reduceMotion ? Math.sin(v.t * 6 + cx) * 0.8 * s : 0;
       if (c.near) { const pu = v.reduceMotion ? 0.5 : (Math.sin(v.t * 4) + 1) / 2; g.strokeStyle = `rgba(255,224,138,${0.45 + 0.4 * pu})`; g.lineWidth = 2.2 * s; g.beginPath(); g.arc(cx, cy - 10 * s, (20 + 4 * pu) * s, 0, 7); g.stroke(); }   // close enough to hail: tap the wagons (caravanroad.js)
+      if ((c.hover || c.open) && !c.near) { g.fillStyle = "rgba(255,236,180,.16)"; g.strokeStyle = "rgba(255,236,180,.85)"; g.lineWidth = 1.6 * s; g.beginPath(); g.arc(cx, cy - 10 * s, 22 * s, 0, 7); g.fill(); g.stroke(); }   // under the mouse / its card is open (wagons.js)
       g.drawImage(sp, cx - 21 * s, cy - 25 * s + bob2, 42 * s, 30 * s);
-      if (v.zoom >= 1.5 || c.near) tidyLabel(g, c.near ? `${c.label} · tap to meet` : c.label, cx, cy + 12 * s, s, 11, c.mine || c.near ? "#ffe6a0" : "#f3e7c4", 700, true, !!(c.near || c.mine));
+      if (c.trouble) { const bx = cx + 15 * s, by = cy - 26 * s; g.fillStyle = c.trouble === "attacked" ? "#b8322a" : "#c98a2a"; g.strokeStyle = "#1a1206"; g.lineWidth = 1.4 * s; g.beginPath(); g.arc(bx, by, 6.5 * s, 0, 7); g.fill(); g.stroke(); g.fillStyle = "#fff6dc"; g.font = `800 ${Math.round(9 * s)}px system-ui, sans-serif`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("!", bx, by + 0.5 * s); }   // broken down or under attack (wagons.js)
+      if (v.zoom >= 1.5 || c.near || c.hover) tidyLabel(g, c.near ? `${LX(c.label)} · ${LX("tap to meet")}` : LX(c.label), cx, cy + 12 * s, s, 11, c.mine || c.near || c.hover ? "#ffe6a0" : "#f3e7c4", 700, true, !!(c.near || c.mine || c.hover));
     }
     if (v.guards && typeof GUARDS !== "undefined") GUARDS.drawMap(g, CL.skip.size ? v.guards.filter((q) => !CL.skip.has(q)) : v.guards, P, s, v.t, v.reduceMotion, v.zoom, tidyLabel);   // hold guards on patrol (guards.js)
     for (const pin of CL.pins) drawCluster(g, pin, s, boxes);
@@ -904,7 +922,7 @@ const WorldMap = (() => {
     for (const b of partyRes) { const i = boxes.indexOf(b); if (i >= 0) boxes.splice(i, 1); }   // party members' names take their reserved room
     otherLabels();
     if (HF) {   // you: walking, standing, or in the saddle, facing the way you travel
-      const r = HF.draw(g, hx, py, s, { id: "me", look: v.look, horse: v.horse, moving: v.moving, gallop: !!v.gallop, t: v.t, reduce: v.reduceMotion, heading: v.moving ? heading.a : null, ring: "#6ec8ff" });
+      const r = HF.draw(g, hx, py, s, { id: "me", look: v.look, horse: v.horse, led: v.led || null, moving: v.moving, gallop: !!v.gallop, t: v.t, reduce: v.reduceMotion, heading: v.moving ? heading.a : null, ring: "#6ec8ff" });
       if (v.fx && typeof FXART !== "undefined") FXART.mapOver(g, v.fx, P, s, hx, r.head, v.t, v.reduceMotion);
       label(g, v.name, hx, Math.min(myTop, r.top - 7 * s), s, 14, "#d8f0ff", 700, false, "center");
       arrow(hx, py - 2 * s, (v.horse ? 30 : 20) * s);

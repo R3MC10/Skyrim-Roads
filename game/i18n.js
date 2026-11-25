@@ -112,7 +112,7 @@ const I18N = (() => {
   const PAT = [
     [/^Level (\d+)$/, (m) => `Poziom ${m[1]}`],
     [/^(\d+) gold$/, (m) => `${m[1]} złota`],
-    [/^Build (\d+) · (.+)$/, (m) => `Wersja ${m[1]} · ${m[2]}`],
+    [/^Build (\d+) · (.+)$/, (m) => `Wersja ${m[1]} · ${tr(m[2]) ?? m[2]}`],
     [/^(.+?) (\d+)$/, (m) => (SKILLS[m[1]] ? `${SKILLS[m[1]]} ${m[2]}` : null)],
     [/^(.+?) (\d+) → (\d+)$/, (m) => (SKILLS[m[1]] ? `${SKILLS[m[1]]} ${m[2]} → ${m[3]}` : null)],
     [/^Health: (.+)$/, (m) => `Zdrowie: ${m[1]}`], [/^Magicka: (.+)$/, (m) => `Magia: ${m[1]}`], [/^Stamina: (.+)$/, (m) => `Wytrzymałość: ${m[1]}`],
@@ -156,6 +156,7 @@ const I18N = (() => {
       p.names.forEach((n, i) => { const v = m[i + 1]; out = out.split(n).join(fillList(v, s, d)); });
       return out;
     }
+    if (d < 3) { const pp = pat(s); if (pp != null) return pp; }   // a sentence with a name or number in it ("The draugr falls.")
     const ic = s.match(/^([^\p{L}\p{N}\s"“„«(]{1,4}\s+)(.+)$/su);   // an icon in front: translate the rest
     if (ic && d < 3) { const r = sentence(ic[2], d + 1); if (r != null) return ic[1] + r; }
     const q = s.match(QUOTE);   // a sentence that opens or closes a quote: translate what's inside

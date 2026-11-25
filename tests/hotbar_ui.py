@@ -1,16 +1,18 @@
 """The fight hotbar (hotbar.js): 10 slots, keys 1-0, set up by the player. Plays a real fight on a phone (390x844, touch)
-and a PC (1440x900): the bar shows 10 numbered slots filled from the hero and fits the screen; Edit (the … menu, or a long
-press on a phone) opens the picker; tap a slot then a spell puts it there; tap two slots swaps them; on a PC dragging a
+and a PC (1440x900): the bar shows 10 numbered slots filled from the hero and fits the screen; Edit (the … menu, or a tap on an
+empty slot) opens the picker; tap a slot then a spell puts it there; tap two slots swaps them; on a PC dragging a
 move onto a slot and a slot off the bar works; the layout is kept in the save; pressing 3 casts the spell in slot 3; a key
-pressed while typing (or with the … menu open) does nothing. Screenshots go to tests/out_hotbar/ (SHOTS=folder: also there).
-  python -m http.server 8765 --directory ../game &   then   python hotbar_ui.py 8765"""
-import asyncio, sys, os
+pressed while typing (or with the … menu open) does nothing. Phones 360/390/412 wide and a PC: the bar fits the b276
+fight layout (above the bottom edge, clear of your orb), and resting on / holding a slot still shows the move preview.
+Screenshots go to the system temp folder (SHOTS=folder: there instead), never into tests/.
+  node serve.js 8765 ../game &   then   python hotbar_ui.py 8765"""
+import asyncio, sys, os, tempfile
 from playwright.async_api import async_playwright
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"
-OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out_hotbar")
-os.makedirs(OUT, exist_ok=True)
 SHOTS = os.environ.get("SHOTS")
-SIZES = [(390, 844), (1440, 900)]
+OUT = SHOTS or os.path.join(tempfile.gettempdir(), "rotn_hotbar")
+os.makedirs(OUT, exist_ok=True)
+SIZES = [(360, 780), (390, 844), (412, 915), (1440, 900)]
 fails = 0
 def ok(c, msg):
     global fails
@@ -29,7 +31,8 @@ FIT = """(()=>{ const b=[...document.querySelectorAll('#tbf .hb-bar [data-hbs]')
   const side=[...document.querySelectorAll('#tbf .hb-side > *')].map(e=>e.getBoundingClientRect());
   const all=[...b,...side]; const over=(r,q)=>r.left<q.right-1&&q.left<r.right-1&&r.top<q.bottom-1&&q.top<r.bottom-1;
   let clash=0; for(let i=0;i<all.length;i++) for(let j=i+1;j<all.length;j++) if(over(all[i],all[j])) clash++;
-  return { n:b.length, inside: all.every(r=>r.left>=0&&r.right<=innerWidth+0.5&&r.bottom<=innerHeight+0.5&&r.width>20), clash, wide: document.scrollingElement.scrollWidth<=innerWidth+1, w: Math.round(Math.min(...b.map(r=>r.width))) }; })()"""
+  const orb=document.querySelector('#tbf .c2ov .tbu.me .c2orb')?.getBoundingClientRect(); const barTop=Math.min(...all.map(r=>r.top));
+  return { orbClear: !orb || !orb.height || orb.bottom <= barTop + 2, n:b.length, inside: all.every(r=>r.left>=0&&r.right<=innerWidth+0.5&&r.bottom<=innerHeight+0.5&&r.width>20), clash, wide: document.scrollingElement.scrollWidth<=innerWidth+1, w: Math.round(Math.min(...b.map(r=>r.width))) }; })()"""
 
 async def main():
     async with async_playwright() as p:
@@ -41,8 +44,7 @@ async def main():
             bad = []; pg.on("requestfailed", lambda r: bad.append(r.url) if "localhost" in r.url or "127.0.0.1" in r.url else None)
             async def shot(n):
                 await pg.evaluate(CLEAN)
-                await pg.screenshot(path=os.path.join(OUT, f"{tag}_{n}.png"))
-                if SHOTS: await pg.screenshot(path=os.path.join(SHOTS, f"hotbar_{'phone' if phone else 'pc'}_{n}.png"))
+                await pg.screenshot(path=os.path.join(OUT, f"hotbar_{tag}_{n}.png"))
             async def my_turn():
                 for _ in range(80):
                     await pg.evaluate(CLEAN)
@@ -63,20 +65,27 @@ async def main():
                     await tap("#tbf .fdc-mb"); await pg.wait_for_timeout(200)
                 await tap("#tbf [data-tbx=hbedit]"); await pg.wait_for_timeout(300)
             for _ in range(5):   # a busy local server sometimes drops a script: load again rather than test half a game
-                bad.clear(); errs.clear(); await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=hb{w}&tb"); await pg.wait_for_timeout(2000)
+                bad.clear(); errs.clear(); await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&hub=0&p=hb{w}&tb"); await pg.wait_for_timeout(2000)
                 if not bad and await pg.evaluate("typeof ENC!=='undefined' && typeof HOTBAR!=='undefined' && typeof POWERS!=='undefined' && typeof COMBAT2!=='undefined'"):
                     try: await pg.wait_for_selector(".press", timeout=15000); break
                     except Exception: pass
                 print("   reload, missing:", [u.split('/')[-1] for u in bad[:4]])
             await pg.click(".press"); await pg.wait_for_timeout(300); await pg.click(".mi[data-t=new]"); await pg.wait_for_selector("#nm"); await pg.fill("#nm", "Tester"); await pg.click("#begin"); await pg.wait_for_timeout(1200)
             await pg.evaluate("localStorage.setItem('rotn_prefs', JSON.stringify({...JSON.parse(localStorage.getItem('rotn_prefs')||'{}'), tips:false}))")
-            await pg.evaluate(START); await pg.wait_for_timeout(300)
-            await pg.click("#modal [data-act=ev][data-c=fight]"); await pg.wait_for_timeout(600)
+            for _ in range(3):   # the event window can redraw under a click: press Fight from the page itself (set it up again if it never shows)
+                await pg.evaluate(START); await pg.wait_for_timeout(500)
+                for _ in range(6):
+                    if await pg.evaluate("!!document.querySelector('#tbf')"): break
+                    await pg.evaluate("document.querySelector('#modal [data-act=ev][data-c=fight]')?.click()"); await pg.wait_for_timeout(400)
+                if await pg.evaluate("!!document.querySelector('#tbf')"): break
+            await pg.wait_for_timeout(300)
             ok(await my_turn(), f"{tag}: the fight starts on your turn")
             # ---- the bar
             fit = await pg.evaluate(FIT)
             ok(fit["n"] == 10, f"{tag}: 10 slots ({fit['n']})")
             ok(fit["inside"] and fit["clash"] == 0 and fit["wide"], f"{tag}: the bar and its buttons fit the screen, nothing overlaps {fit}")
+            ok(fit["orbClear"], f"{tag}: your health orb stays above the bar {fit}")
+            ok(fit["w"] >= 38, f"{tag}: slots stay thumb-sized ({fit['w']}px)")
             keys = await pg.evaluate("[...document.querySelectorAll('#tbf .hb-bar [data-hbs]')].map(e=>e.querySelector('.fc-k')?.textContent).join('')")
             ok(keys == "1234567890", f"{tag}: slots numbered 1-0 ({keys})")
             L = await slots()
@@ -93,14 +102,22 @@ async def main():
             ok(g and g[0] and "magicka" in g[1] and g[2], f"{tag}: a spell you can't pay for is greyed out, says why and still shows its cost {g}")
             await shot("1b_grey")
             await pg.evaluate("TB.session.f.mp=G.maxMagicka(TB.session.f.s)")
-            # ---- edit: open from the … menu (phone: also by a long press)
+            # ---- the move preview (movepreview.js) still works on a slot: rest the mouse on it (PC) or hold a finger on it (phone)
+            sel1 = '#tbf .hb-bar [data-tba="attack"]'
             if phone:
-                await pg.evaluate("""(()=>{const b=document.querySelector('#tbf .hb-bar [data-hbs="4"]'); const r=b.getBoundingClientRect();
+                await pg.evaluate("""(()=>{const b=document.querySelector('#tbf .hb-bar [data-tba="attack"]'); const r=b.getBoundingClientRect();
                   b.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,pointerType:'touch',pointerId:7,clientX:r.left+10,clientY:r.top+10,isPrimary:true}));})()""")
                 await pg.wait_for_timeout(900)
-                await pg.evaluate("window.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,pointerType:'touch',pointerId:7}))"); await pg.wait_for_timeout(450)   # (a real lift is followed by a click, which is eaten)
-                ok(await pg.evaluate("!!document.querySelector('#tbf .hb-edit') && HOTBAR.sel===4"), f"{tag}: a long press on a slot opens edit mode on that slot")
-                await tap("#tbf [data-hbx=done]"); await pg.wait_for_timeout(250)
+            else:
+                await pg.hover(sel1); await pg.wait_for_timeout(300)
+            pv = await pg.evaluate("[!!document.querySelector('#tbf.mpv-on'), document.querySelectorAll('#tbf .mpv').length, !!document.querySelector('#tbf .hb-edit')]")
+            ok(pv[0] and pv[1] > 0 and not pv[2], f"{tag}: {'holding' if phone else 'resting the mouse on'} a slot shows the move preview (and doesn't open edit mode) {pv}")
+            await shot("1c_preview")
+            if phone: await pg.evaluate("window.dispatchEvent(new PointerEvent('pointercancel',{bubbles:true,pointerType:'touch',pointerId:7}))")
+            else: await pg.mouse.move(2, 2)
+            await pg.wait_for_timeout(200)
+            ok(await pg.evaluate("!document.querySelector('#tbf.mpv-on')"), f"{tag}: letting go clears the preview")
+            # ---- edit: open from the … menu
             await open_edit()
             ok(await pg.evaluate("!!document.querySelector('#tbf .hb-edit .hb-list [data-hbp]') && document.querySelectorAll('#tbf .hb-edit .hb-slot').length===10"), f"{tag}: Edit hotbar opens the picker and the 10 slots")
             tabs = await pg.evaluate("[...document.querySelectorAll('#tbf .hb-tab')].map(e=>e.firstChild.textContent).join(',')")

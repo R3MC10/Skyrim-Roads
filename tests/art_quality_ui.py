@@ -13,7 +13,7 @@ then into a data-URL <img> or the fight canvas, keeps its scale all the way to t
 
 At the end it prints every painted file that is smaller than its biggest box on a PC (the game shows those at their own
 size instead of blowing them up) with the pixel size it would need, so it can be painted again bigger.
-Run:  python -m http.server 9471 --directory game   then
+Run:  node tests/serve.js 9471   then
       python tests/art_quality_ui.py 9471 [--vp=2000x837@1] [--only=shop_inn,fight]
 Screenshots go to tests/out_artq/. Prints "art_quality_ui: all good"."""
 import asyncio, json, os, sys

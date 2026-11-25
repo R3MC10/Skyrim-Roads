@@ -70,7 +70,7 @@ const TB = (() => {
     if (a === "bash") { const c = typeof SHIELDFX !== "undefined" ? SHIELDFX.cost(f) : 35; return { sp: c, eng: { sp: c } }; }
     if (k === "spell" || k === "dual") {
       const sp = D.SPELLS[arg]; if (!sp) return {};
-      const c = G.spellCost(s, sp) * (k === "dual" ? (typeof MAGIC !== "undefined" && MAGIC.DUAL_COST) || 2 : 1);
+      const c = G.spellCost(s, sp) * (k === "dual" ? ((typeof MAGIC !== "undefined" && MAGIC.DUAL_COST) || 2) * (typeof MOUNTFIGHT !== "undefined" ? MOUNTFIGHT.dualMul(f) : 1) : 1);   // from the saddle a dual cast takes a little more (mountfight.js)
       const dark = sp.kind === "absorb" || sp.kind === "reanimate";   // dark magic takes a little blood too
       return { mp: c, hp: dark ? DARK_HP * G.maxHealth(s) : 0, eng: { mp: c } };
     }
@@ -81,7 +81,44 @@ const TB = (() => {
   function cost(f, a, sess) {
     if (a === "end" || a === "flee") return { sp: 0, mp: 0, hp: 0, n: 0 };
     const b = base(f, a), n = (sess && sess.used && sess.used[a]) || 0, m = 1 + REPEAT * n, st = (sess && sess.st) || {};
-    return { sp: Math.round((b.sp || 0) * m * (1 - (st.spCut || 0))), mp: Math.round((b.mp || 0) * m * (1 - (st.mpCut || 0))), hp: Math.round((b.hp || 0) * m), n, eng: b.eng || null };
+    return { sp: Math.round((b.sp || 0) * m * (1 - (st.spCut || 0))), mp: Math.round((b.mp || 0) * m * (1 - (st.mpCut || 0))), hp: Math.round((b.hp || 0) * m), n, eng: b.eng || null, acts: b.acts > 1 ? b.acts : 1 };   // acts: moves it takes (getting on a horse: two)
+  }
+  /* [movepreview] what a move will do before you make it: { lo, hi } damage to the foe (the low and high end of the
+     dice), { heal } for you, plus its cost. The fight tooltips (tbtips.js) and the striped "could lose" piece on the
+     foe's bar (movepreview.js) both read this one function, so the words and the bar always agree. It keeps the
+     no-one-shot rule: one blow takes at most 40% of a strong foe's health unless it finishes it (capFoe below). */
+  function preview(f, a, sess) {
+    const out = { a, lo: 0, hi: 0, heal: 0, guard: 0, c: cost(f, a, sess) };
+    if (!f) return out;
+    if (a === "end") { out.guard = sess && sess.guardLeft ? sess.guardLeft() : 0; return out; }
+    const [k, arg] = String(a).split(":"), [s0, s1] = typeof F !== "undefined" && F.DAMAGE_SPREAD ? F.DAMAGE_SPREAD : [0.8, 1.2];
+    const cut = (d) => (f.e && f.e.red ? d * (1 - f.e.red) : d);
+    let lo = 0, hi = 0;
+    if (a === "attack" || a === "power_attack") {
+      let d = 0; try { d = f.weaponDamage(); } catch (e) { d = 0; }
+      d = cut(d * (a === "power_attack" ? (typeof F !== "undefined" ? F.POWER_ATTACK_DAMAGE : 2) : 1));
+      lo = d * s0; hi = d * s1;
+    } else if (k === "spell" || k === "dual" || k === "scroll") {
+      const sp = spellOf(a);
+      if (sp && sp.kind === "damage") {
+        const MG = typeof MAGIC !== "undefined" ? MAGIC : null;
+        let d = typeof G.spellDamage === "function" ? G.spellDamage(f.s, sp) : sp.amount || 0;
+        if (k === "dual") d *= ((MG && MG.DUAL_POWER) || 2.2) * (typeof MOUNTFIGHT !== "undefined" && MOUNTFIGHT.dualPow ? MOUNTFIGHT.dualPow(f) : 1);
+        if (MG && MG.elem && sp.element !== "sun" && f.tags) { try { d *= MG.elem(f, sp.element); } catch (e) { /* no foe tags */ } }
+        if (f.fp && f.fp.ward) d *= 1 - f.fp.ward;
+        if (sp.element === "sun" && f.tags && !f.tags.has("undead")) d = 0;
+        lo = hi = d;
+      } else if (sp && sp.kind === "heal") {
+        out.heal = Math.round((typeof G.spellHeal === "function" ? G.spellHeal(f.s, sp) : sp.amount || 0) * (k === "dual" ? ((typeof MAGIC !== "undefined" && MAGIC.DUAL_POWER) || 2.2) : 1));
+      }
+    }
+    lo = Math.max(lo > 0 ? 1 : 0, Math.round(lo)); hi = Math.max(lo, Math.round(hi));
+    out.raw = [lo, hi];
+    // the foe can't lose more than it has, nor more than the blow cap (a finishing blow on a nearly beaten foe is fine)
+    const before = Math.max(0, f.ehp || 0), max = (sess && sess.ehpMax) || before, cap = HIT_CAP * max, trash = sess ? sess.trash : false;
+    const capped = (d) => { d = Math.min(d, before); if (!sess || trash || before <= cap || d <= cap) return d; return d >= before && before <= cap * 1.2 ? d : Math.round(cap); };
+    out.lo = capped(lo); out.hi = capped(hi); out.capped = out.hi < Math.min(hi, before);
+    return out;
   }
   /* "9 stamina", "24 magicka · 4 health", "free" */
   function costTxt(c) {
@@ -124,6 +161,9 @@ const TB = (() => {
     if (foes.length < 2 || typeof AISET === "undefined" || !AISET.pickTarget) return foes;
     try { return AISET.pickTarget(G.loadout(f.s), foes); } catch (e) { return foes; }
   }
+  /* which of the foe's moves this round a turn-order entry is: "foe" is its 1st, "foe2" its 2nd... (one foe, several moves) */
+  const moveNo = (o) => { const m = /^foe(\d+)$/.exec(o?.id || ""); return m ? +m[1] : 1; };
+  const ORD = (n) => (n === 2 ? "2nd" : n === 3 ? "3rd" : n + "th");
   // ------------------------------------------------------------------ one fight, played round by round
   class Session {
     constructor(f, opts = {}) {
@@ -277,6 +317,7 @@ const TB = (() => {
       if (/^potion:/.test(a) && this.pots >= this.st.pots) return `${this.st.pots} potions a turn`;
       if (a === "power_attack" && (this.used.power_attack || 0) >= 1) return "Once a turn";   // a power attack puts everything into one blow
       const c = cost(f, a, this);
+      if (c.acts > 1 && this.myActs + c.acts > this.st.acts) return `Takes ${c.acts} moves`;   // climbing onto your horse (mountfight.js)
       if (c.sp > f.sp + 0.01 && !(a === "attack" && this.myActs === 0)) return `Need ${Math.ceil(c.sp - f.sp)} more stamina`;   // out of breath you can still swing once a turn (as in Skyrim)
       if (c.mp > f.mp + 0.01) return `Need ${Math.ceil(c.mp - f.mp)} more magicka`;
       if (c.hp > 0 && c.hp >= f.hp) return "Too hurt";
@@ -297,11 +338,12 @@ const TB = (() => {
       f.sp = clamp(f.sp - (c.sp - (e.sp || 0)), 0, G.maxStamina(f.s));
       f.mp = clamp(f.mp - (c.mp - (e.mp || 0)), 0, G.maxMagicka(f.s));
       if (c.hp > 0) f.hp = Math.max(1, f.hp - c.hp);
-      this.used[a] = (this.used[a] || 0) + 1; this.myActs++;
+      this.used[a] = (this.used[a] || 0) + 1; this.myActs += c.acts > 1 ? c.acts : 1;
       if (/^potion:/.test(a)) this.pots++;
     }
     act(a, tgt, mult, grade) {   // mult: how the minigame went (minigame.js), 1 = normal; grade.cls "perfect" adds a stack
-      if (this.cur?.id !== "me" || this.over) return null;
+      if (this.cur?.id !== "me") return null;
+      if (this.over) { this.apSet = false; this.idx++; return { turn: "next" }; }   // the foe fell outside your moves (a tick, a teammate): any tap wraps the fight up instead of doing nothing
       const f = this.f;
       const al = tgt != null && tgt !== "" ? (+tgt >= 1000 ? (f._downed || [])[+tgt - 1000] : f.allies[+tgt]) : null;
       if (a === "end") return this.endTurn();
@@ -772,7 +814,10 @@ const TB = (() => {
     const pe = playing ? vis[vis.length - 1] : null;
     const acting = (o) => (pe ? (pe.kind === "foe" ? o.id.startsWith("foe") : pe.kind === "me" ? o.id === "me" : pe.kind === "ally" ? o.name === pe.name || (pe.pid && o.pid === pe.pid) : pe.kind === "sum" ? o.id === "sum" : false) : o.id === sess.cur?.id && !sess.done);
     const actIdx = sess.order.findIndex(acting);
-    const order = sess.order.map((o, i) => `<span class="tbini ${acting(o) ? "now" : ""} ${(playing ? actIdx >= 0 && i < actIdx : i < sess.idx) ? "gone" : ""} ${o.id.startsWith("foe") ? "foe" : o.id === "me" ? "me" : "ally"}" data-tip="${esc(o.name)}: initiative ${o.init}. Higher initiative acts earlier in the round.">${icon(o, f)} ${esc(o.name.split(" ")[0])}<i>${o.init}</i></span>`).join("");
+    // a foe that acts 2 or 3 times a round has one chip per move: the later ones are marked as its 2nd/3rd move, so the bar
+    // doesn't read as three bandits when one is standing there (a group's next foe only steps in when this one falls)
+    const order = sess.order.map((o, i) => { const mv = moveNo(o);
+      return `<span class="tbini ${acting(o) ? "now" : ""} ${(playing ? actIdx >= 0 && i < actIdx : i < sess.idx) ? "gone" : ""} ${o.id.startsWith("foe") ? "foe" : o.id === "me" ? "me" : "ally"}${mv > 1 ? " again" : ""}" data-tip="${mv > 1 ? `${esc(o.name)} acts again: its ${ORD(mv)} move this round.` : `${esc(o.name)}: initiative ${o.init}. Higher initiative acts earlier in the round.`}">${icon(o, f)} ${esc(o.name.split(" ")[0])}${mv > 1 ? `<b class="tbag">${ORD(mv)}</b>` : ""}<i>${o.init}</i></span>`; }).join("");
     const pips = (n, m, cls) => Array.from({ length: m }, (_, i) => `<i class="${i < n ? "on" : ""} ${cls}"></i>`).join("");
     const allies = partyHTML(f);
     const mine = state.turn === "me";
@@ -908,6 +953,7 @@ const TB = (() => {
     const keep = fast() && !sess.done ? lines.filter((l, i) => l.me || i === lines.map((x) => !!x.them).lastIndexOf(true)) : lines;   // Fast: your moves and the foe's last blow
     const v = Object.create(f);
     v.log = keep.length ? keep : lines; v.hp0 = ui.lastHp ?? f.hp0; v.ehp0 = ui.lastEhp ?? f.ehp0; v.won = sess.done ? f.won : undefined;
+    v.tbWait = sess.done ? 0 : Math.max(0, (sess.waves || 1) - (sess.wave || 1));   // [fightpos] the foes still to come stand behind this one
     v.tbTall = true; v.tbAspect = typeof COMBAT2 !== "undefined" && COMBAT2.aspect ? COMBAT2.aspect() : null; v.tbMid = !sess.done; v.tbHud = typeof COMBAT2 !== "undefined" && COMBAT2.on(); v.tbHpMax = G.maxHealth(f.s); v.tbEhpMax = sess.ehpMax;   // fightart: stay standing between turns, bars against full health
     ui.lastHp = lines[lines.length - 1].hp; ui.lastEhp = lines[lines.length - 1].ehp;
     return FIGHTART.placeholder(v, f.s);
@@ -916,7 +962,14 @@ const TB = (() => {
     render(r || { turn: ui.sess.done ? "done" : ui.sess.cur?.id === "me" ? "me" : "auto" });
   }
   function onClick(ev) {
-    if (!ui || ui.timing) return;   // the timing ring is up
+    if (!ui) return;
+    if (ui.timing) {   // the timing ring / minigame is up: it owns the clicks...
+      // ...unless it is stuck (hotfix build 232): nothing on screen any more, or up far longer than any minigame lasts.
+      // A stuck flag used to swallow every click for the rest of the fight ("I press Attack and nothing happens").
+      const live = document.querySelector("#tbf .tbtime:not(.hit)");
+      if (live && Date.now() - (ui.timingAt || 0) < 12000) return;
+      ui.timing = false; ui.timingTok = (ui.timingTok || 0) + 1; live?.remove();   // the old game's result is dropped
+    }
     const b = ev.target.closest("button"); if (!b || b.disabled) return;
     const sess = ui.sess;
     if (b.dataset.tbx === "wheel") { TBRADIAL.toggle(); return step(); }
@@ -935,7 +988,9 @@ const TB = (() => {
       const go = (g) => {
         if (!ui || ui.sess !== sess) return;
         const was = { sp: f.sp, mp: f.mp, hp: f.hp };
-        let r = sess.act(a, tgt, g ? g.mult : 1, g);
+        let r;
+        try { r = sess.act(a, tgt, g ? g.mult : 1, g); }
+        catch (e) { console.error("fight move", a, e); if (hooks.toast) hooks.toast("That move didn't work, try another"); return step(); }   // never leave the screen dead
         if (r?.err) { if (hooks.toast) hooks.toast(r.err); return; }
         const d = { sp: was.sp - f.sp, mp: was.mp - f.mp, hp: f.hp - was.hp };
         if (r?.turn === "next") r = sess.advance();
@@ -946,14 +1001,18 @@ const TB = (() => {
       // the minigames (minigame.js): every blow, guard and spell you make yourself; Auto never plays them
       if (typeof MINIGAME !== "undefined" && MINIGAME.on() && MINIGAME.kindFor(f, a) && sess.canAfford(a)) {
         const sp = spellOf(a);
-        ui.timing = true;
-        return MINIGAME.play(root, f, a, { icon: iconOf(f, a), label: sp ? sp.name : a === "power_attack" ? "Power attack" : a === "bash" ? "Shield bash" : a === "block" ? "Guard" : f.wt === "bow" || f.wt === "crossbow" ? "Shoot" : "Attack" })
-          .then((g) => { if (ui) ui.timing = false; go(g); }, () => { if (ui) ui.timing = false; go(null); });
+        ui.timing = true; ui.timingAt = Date.now();
+        let game;
+        try { game = MINIGAME.play(root, f, a, { icon: iconOf(f, a), label: sp ? sp.name : a === "power_attack" ? "Power attack" : a === "bash" ? "Shield bash" : a === "block" ? "Guard" : f.wt === "bow" || f.wt === "crossbow" ? "Shoot" : "Attack" }); }
+        catch (e) { console.error("minigame", a, e); game = null; }   // a broken minigame must not lock the fight: the move goes in as a normal hit
+        if (!game || typeof game.then !== "function") { ui.timing = false; return go(null); }
+        const tok = ui.timingTok;
+        return game.then((g) => { if (!ui || ui.timingTok !== tok) return; ui.timing = false; go(g); }, () => { if (!ui || ui.timingTok !== tok) return; ui.timing = false; go(null); });
       }
       // the old timing ring (wheel only, when the minigames are off)
       if (typeof TBRADIAL !== "undefined" && TBRADIAL.on() && !fast() && TBRADIAL.timed(a, zoneOf(a)) && sess.canAfford(a) && typeof MINIGAME === "undefined") {
         const sp = spellOf(a), perk = typeof PFX !== "undefined" ? PFX.num(f.s, "timing") : 0;
-        ui.timing = true;
+        ui.timing = true; ui.timingAt = Date.now();
         return TBRADIAL.ring(root, { z: TBRADIAL.zone(TBRADIAL.skillFor(f, a, sp), perk), icon: iconOf(f, a), label: sp ? sp.name : a === "power_attack" ? "Power attack" : a === "bash" ? "Shield bash" : f.wt === "bow" || f.wt === "crossbow" ? "Shoot" : "Attack" })
           .then((g) => { if (ui) ui.timing = false; go(g); });
       }
@@ -1102,5 +1161,5 @@ const TB = (() => {
 
   /* sharedfight.js: open a teammate's view of a fight, and redraw it when the leader's phone sends news */
   function redraw(sess, state) { if (ui && ui.sess === sess && open) render(state || sess.advance()); }
-  return { T, stats, cost, aiPick, targetOrder, Session, simulate, call, enabled, init, remoteFor, watchTurns, safeSave, zoneOf, play, redraw, fightState, voice, FOE_KEYS, BUFF_KEYS, costTxt, costHTML, base, close: () => { if (open) close(); }, get open() { return open; }, get session() { return open && ui ? ui.sess : null; }, ATK_SP, MAX_ACTS, MAX_POTS, REPEAT, HIT_CAP, FOE_HP, PARTY_HP, TURN_SECONDS, syncInPlace, _origRun: origRun };
+  return { T, stats, cost, preview, aiPick, targetOrder, Session, simulate, call, enabled, init, remoteFor, watchTurns, safeSave, zoneOf, play, redraw, fightState, voice, FOE_KEYS, BUFF_KEYS, costTxt, costHTML, base, close: () => { if (open) close(); }, get open() { return open; }, get session() { return open && ui ? ui.sess : null; }, ATK_SP, MAX_ACTS, MAX_POTS, REPEAT, HIT_CAP, FOE_HP, PARTY_HP, TURN_SECONDS, syncInPlace, _origRun: origRun };
 })();

@@ -1,6 +1,6 @@
 # Homestead rooms (hsrooms.js): build every room, plant the garden, display cases, cellar, a follower moving in,
 # a raid (talked down and fought), and a party member visiting the leader's house. Phone and desktop, both art styles.
-# python -m http.server 9041 --directory game ; PYTHONIOENCODING=utf-8 python tests/hsrooms_ui.py 9041 [screenshot dir] [en|pl]
+# node tests/serve.js 9041 ; PYTHONIOENCODING=utf-8 python tests/hsrooms_ui.py 9041 [screenshot dir] [en|pl]
 import asyncio, sys, os, shutil
 from playwright.async_api import async_playwright
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8847"

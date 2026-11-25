@@ -3,6 +3,289 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b279-hotbar", build: 279, date: "25 Nov 2026", title: "Your own hotbar in fights", items: [
+      "Your moves in a fight now sit on a hotbar of 10 slots, numbered 1 to 0. Put anything you like on it: blows, power attacks, guard, spells (your own rune spells too), shouts, potions, scrolls and abilities like Breathe or an oil flask.",
+      "To change it, pick Edit hotbar in the … menu or tap an empty slot. Tap a slot, then tap what goes in it; tap two slots to swap them. With a mouse you can also drag things on, between and off the bar.",
+      "Nobody starts empty: the bar fills itself from your hero until you change it, and Default puts that back. Each hero keeps their own bar, in the cloud too.",
+      "On a PC the number keys 1 to 0 use the slots. They do nothing while you type in chat or while a menu is open.",
+      "A slot greys out when you can't use it and says why, and a potion slot shows how many you have left.",
+      "Rest the mouse on a slot, or hold a finger on it, to see what the move will do before you use it.",
+    ] },
+    { id: "b278-compassfix", build: 278, date: "25 Nov 2026", title: "Compass fix", items: [
+      "The main menu compass ring no longer drifts and spins: it stays still.",
+      "The star now slides flat, straight up, down, left or right toward the direction you swipe.",
+    ] },
+    { id: "b277-titlelogo", build: 277, date: "25 Nov 2026", title: "A new title", items: [
+      "The main menu has a new title: the O in NORTH is now a compass.",
+      "A dotted road leaves the compass and winds round the words, past little mountains and pine trees, to a waypoint. It draws itself when the menu opens.",
+    ] },
+    { id: "b276-magicaim", build: 276, date: "25 Nov 2026", title: "Cast on anyone, see everyone", items: [
+      "With Magic or Items open in a fight, the scene, your health orb and your party's plates now move up above the menu instead of hiding under it, so you can tap or drag a heal onto anyone.",
+      "When a heal or a ward asks who gets it, tap their name in the bar at the top, their plate, or just tap them in the scene.",
+      "A full party (up to 8 players plus followers) now fits on the screen: everyone stands between the turn strip and the bottom bar, and the party plates get more columns or slimmer plates instead of running off the screen.",
+      "On a phone held sideways the Magic menu is slimmer (one line per spell), and on a PC or a wide screen the scene slides up so nobody's feet are under the bar.",
+    ] },
+    { id: "b275-compass", build: 275, date: "25 Nov 2026", title: "A livelier compass", items: [
+      "On the main menu compass, the ring now stays still and only the star tilts and follows your finger.",
+      "The direction you're heading for lights up in gold.",
+    ] },
+    { id: "b274-qacore4", build: 274, date: "25 Nov 2026", title: "Foes speak Polish", items: [
+      "Fixed: in Polish, foe names in road fights and dungeons (like the Imperial escort or a flame atronach) were in English.",
+      "Locked chests now say how hard the lock is in plain words: simple, fairly easy, tricky, hard or very hard.",
+      "Fixed: in Polish, the dungeon screens (room choices, traps, chests, the map of rooms) and the fight log were partly in English.",
+      "Fixed: in Polish, some quest titles and journal lines (like the one about the Bannered Mare) still had English in them.",
+      "Fixed: in Polish, a few road meetings (the stray dog, the vanishing stranger, the waterlogged book) were in English.",
+    ] },
+    { id: "b273-roadart", build: 273, date: "25 Nov 2026", title: "Painted road encounters", items: [
+      "Almost everything you meet on the road now has its own painting: bandits' tolls, caravans, shipwrecks, avalanches, giants, wisps, hagravens, peddlers, shrines and many more.",
+      "You see it when the encounter starts, on the result after you choose, and in the party vote.",
+    ] },
+    { id: "b272-nocover", build: 272, date: "25 Nov 2026", title: "Nothing covers your buttons", items: [
+      "The round message history button now sits at the left end of the messages (on a PC, next to World news) and steps aside when there's a button under it. It used to land on Leave in a dungeon, the info button in a town and other buttons in the corner. It hides while a menu, the character creator, the perk stars or a mini-game is open.",
+      "Big banners (quest done, achievements) stay in a slim strip near the top and pick a spot with no buttons under it. On the map and in a dungeon they never drop below the top fifth of the screen, so the dungeon route stays readable.",
+      "On a phone, the Gather prompt is a strip right on top of the bottom bar, and the page gets room for it at the end. On a PC it no longer shows when the Gathering card already has the same Gather button.",
+      "Character creation: a raised sword is never cut off at the top and never touches the turn and Face buttons.",
+    ] },
+    { id: "b271-movepreview", build: 271, date: "25 Nov 2026", title: "See a move before you make it", items: [
+      "In a fight, rest the mouse on a move (or hold your finger on it on a phone): the foe's health bar shows a striped piece for what it could lose, from the lowest to the highest hit.",
+      "Your stamina or magicka dims by what the move costs, and one of your move diamonds fades. Healing spells show the health you'd get back; End turn shows the guard you keep.",
+      "The numbers match the tooltip, and a strong foe never shows more than 40% gone from one blow. A quick tap still does the move right away.",
+      "Bandit archers now carry a bow instead of an axe, bandit mages a staff and a spell, and Forsworn and draugr archers have their own pictures too.",
+    ] },
+    { id: "b270-stations", build: 270, date: "25 Nov 2026", title: "Places open on the work", items: [
+      "Opening the Forge, a shop, the inn or any other place in town now shows its tabs and list right away: the town news folds into one \"Town news\" row you can open, and the how-it-works note sits under the list.",
+      "The \"New to the game?\" card only shows on the map and the town's board, not inside a place.",
+      "Each place's painting is a little shorter on phones and the person who runs it takes one compact line.",
+      "Hold status says in a word how each number is doing (Food 43 short, Security 66 safe), coloured green, gold or red.",
+      "In the Company tab, the banner shrinks to a name strip when your painted longhouse is shown right below it.",
+    ] },
+    { id: "b269-mysteryrooms", build: 269, date: "25 Nov 2026", title: "Mystery rooms with real choices", items: [
+      "Unknown rooms in dungeons can now hold six new things: a sealed passage, a collapsed tunnel, a wounded traveller, a patrol (draugr in barrows), a cursed offering and an unstable rope bridge.",
+      "Each choice shows the skill it uses and your chance, like \"Lockpicking · 62%\", and what it can bring: a shortcut past the next rooms (never past the boss), gold and loot, a blessing for the rest of the dungeon, or an ambush where the foe is staggered and you move first.",
+      "Failing never leaves you stuck: you lose some health, the next foe hears you coming, or you end up in a fight on the way round. A curse fades when you leave.",
+      "In a party the whole party votes, and the best of you at that skill makes the attempt. Everyone sees how it went.",
+      "Patient Shadow (Sneak) now also makes these checks 10% easier.",
+    ] },
+    { id: "b268-npcportraits", build: 268, date: "25 Nov 2026", title: "Painted faces for the people you meet", items: [
+      "The smiths, innkeepers, court wizards and merchants of Whiterun, Riverwood, Solitude, Windhelm and Riften now have painted portraits, and so do four Jarls, Whiterun's steward and the Greybeard who greets you.",
+      "Guards, and Nord innkeepers and merchants who don't have their own painting yet, get a painted face too. Guards keep their hold's colours around the picture.",
+      "The face next to who you're talking to is bigger on a PC, and trainers' faces are a little bigger in their list.",
+    ] },
+    { id: "b267-itemdetail", build: 267, date: "25 Nov 2026", title: "Item details beside the list", items: [
+      "On a PC, resting the mouse on an item in your pack shows its details in the right-hand panel instead of a box over the list. Click an item to keep it there; press Esc to let go.",
+      "Weapons, armour, shields and jewellery now show how they compare with what you wear: damage, armour, weight and value, better in green and worse in red. A two-handed weapon is compared with both your hands.",
+      "On a phone, the item details panel at the bottom is solid (the list no longer shows through) and never takes more than about half the screen.",
+      "When you pick one category, the middle column says what it shows: Damage, Armor or Effect.",
+    ] },
+    { id: "b266-perksky", build: 266, date: "25 Nov 2026", title: "The perk stars open on what you can take", items: [
+      "Opening a skill's stars now shows the perks you can take right away, instead of the top of the sky. On a phone the first stars at the bottom are no longer cut off.",
+      "Stars tell you more at a glance: perks you have are gold (with gold lines), ones you can take now shine bright with a slowly pulsing ring, ones that need a higher skill are blue-grey, and ones that need another perk first are dim.",
+      "Long lines that jump over a row are now faint dashed curves, so the sky no longer looks like a tangle of wires. They light up when you pick one of their stars.",
+      "On a phone, every star is easier to tap, and the \"Tap a star\" hint sits under the stars instead of covering the bottom row.",
+      "On a PC, the stars grow to fill the panel.",
+    ] },
+    { id: "b265-qacore3", build: 265, date: "25 Nov 2026", title: "Crafting in Polish", items: [
+      "Fixed: in Polish, the arcane enchanter, parts of the alchemy lab and one cooking recipe were still in English.",
+      "Fixed: in Polish, the messages after brewing, cooking, eating a meal and improving gear were half in English.",
+      "Fixed: in Polish, road events (titles, choices and outcomes) were partly in English.",
+      "Fixed: in Polish, getting on and off your horse showed a half-English message.",
+      "Fixed: the ride button on the map now shows up right after you buy a horse.",
+      "Fixed: the game no longer asks for item pictures that don't exist yet (fewer errors, faster loading).",
+    ] },
+    { id: "b264-testsgreen", build: 264, date: "25 Nov 2026", title: "Coming next, refreshed", items: [
+      "The Coming next list in Patch notes is up to date again.",
+      "On a PC, tooltips near the bottom of the screen (like the one on your health bar) no longer slip off the edge when the interface is scaled up.",
+      "On a PC, resting the mouse on your gold or level in the bottom bar shows the full details, like on a phone.",
+    ] },
+    { id: "b263-raceheads", build: 263, date: "25 Nov 2026", title: "Every race has its own painted face", items: [
+      "Imperials, Bretons, Redguards, Altmer, Bosmer and Orcs now have their own painted heads, for men and women, in fights and in character creation. Every race in the game has one now.",
+      "Switching race in character creation no longer flashes a Nord head for a moment: the hero appears once the right face is ready.",
+      "On a phone, your hero's head and a raised sword stay below the turn and Face buttons instead of hiding behind them.",
+    ] },
+    { id: "b262-phonelayout", build: 262, date: "25 Nov 2026", title: "Tidier screens on phones", items: [
+      "On a phone, the Area tab lists places in full-width rows: icon, name and whether it's open. Open places come first; shut ones fold away under \"Closed\". Two columns only when every name fits.",
+      "On a phone, the Company tab shows your longhouse right under the Party / Company / Friends / Realm row. Messages, trades and chat fold away under More.",
+      "On a phone, the Items menu has one Sort button (pick what to sort by) next to the up/down switch, instead of a row of tiny buttons.",
+      "On a phone, holding a finger on an item opens its details in a panel at the bottom of the screen. The list stays where it was; tap elsewhere to close it.",
+      "On a PC map, the floating Gathering card and the world event cards on the left no longer cover each other: the cards stop above it and scroll.",
+    ] },
+    { id: "b261-notify2", build: 261, date: "25 Nov 2026", title: "Promotions and tips back in their place", items: [
+      "When you're promoted on a side, the banner shows again (it was quietly swallowed before).",
+      "The tips for new players no longer sit on top of the dungeon's route buttons: they move below them, or wait until there's room.",
+    ] },
+    { id: "b260-crafticons", build: 260, date: "25 Nov 2026", title: "Painted crafting icons", items: [
+      "Iron, steel and dwarven ingots, leather, firewood and refined moonstone have painted icons in your pack and at the forge.",
+      "So do six alchemy and cooking ingredients: blue mountain flower, lavender, wheat, salt, garlic and fire salts.",
+    ] },
+    { id: "b259-movefx2", build: 259, date: "25 Nov 2026", title: "Every blow and shout has its own look", items: [
+      "Every weapon swings its own way now: a sword leaves a diagonal slash, a greatsword a wide sweep, axes and warhammers chop down from above, maces and clubs crack in with a dust ring, daggers stab twice and spears drive straight through.",
+      "Power attacks wind up with a gleam along the blade, hit bigger and leave a gouge or cracks in the ground. A critical flashes white, a sneak attack leaves a dark second cut, and an enchanted weapon sprays fire, frost or sparks.",
+      "Combos show too: Shatter bursts into ice, Overload forks with lightning, Steam puffs up and an opening rings gold.",
+      "Shield bash knocks stars around the foe's head. Every shout rolls out of your mouth in its own colour (Unrelenting Force kicks up a dust wave, Fire Breath is a stream of flame), and every race power, werewolf move and Vampire Lord power has its own look.",
+    ] },
+    { id: "b258-fightpos", build: 258, date: "25 Nov 2026", title: "Everyone stands in the right place", items: [
+      "In a fight your party, followers and summons now stand in neat rows behind you, all of them on screen, even a full party of 8 on a phone. Before, some stood off the edge of the screen.",
+      "Foes still waiting their turn now stand behind the one you're fighting, so you can see what's coming.",
+      "Big foes like dragons and giants keep their size but always fit on screen, and the foe's health bar sits over its head, even over a dragon's.",
+      "When a party member swings at the foe, they step up to it and then go back to their place.",
+      "The ring under the one the foe is about to hit is now under the right person.",
+    ] },
+    { id: "b257-qaside2b", build: 257, date: "25 Nov 2026", title: "Halls, inns and festivals in Polish", items: [
+      "Fixed: a festival in a hold's capital said the place twice, like \"Falkreath, Falkreath\".",
+      "Fixed: in Polish, the Hall of the North's sizes and shared chest, buying a house or a hall plot, the neighbours list, renting a room and writing a bard's verse are translated.",
+      "Fixed: in Polish, festival times, the player search box and the \"% there\" under your skills are translated.",
+    ] },
+    { id: "b256-qacore2", build: 256, date: "25 Nov 2026", title: "Title screen in Polish and the level-up tip", items: [
+      "Fixed: in Polish, the title screen, How to Play, Credits, Settings and the Updates page still had lines in English.",
+      "Fixed: in Polish, every perk description, the hirelings' descriptions and the patch-note dates were still in English.",
+      "Fixed: the first level-up tip and one Dawnguard line still sent you to the Hero tab; it's called Character now."
+    ] },
+    { id: "b255-notify", build: 255, date: "25 Nov 2026", title: "Tidier pop-ups", items: [
+      "All the pop-up messages now take turns: at most one message and one banner at a time, never on top of each other. Level ups and finished quests go first.",
+      "Loot and gold that arrive together are added up into one line (\"Iron Dagger ×3\", one gold total), and a skill that rises a few times in a row shows as \"21 → 24\".",
+      "Achievements earned together share one banner, so \"First Steps\" and \"Coin Hoarder\" no longer pop one after the other when you start.",
+      "Nothing pops up over the perk stars, item details, character creation, mini-games, party votes or your fight buttons any more. Big news waits until you're done; small loot lines go straight to the history.",
+      "New: a message history. Tap the little scroll next to the messages at the top left to see the last 200, sorted into Rewards, Quests, Party and World.",
+    ] },
+    { id: "b254-qafight", build: 254, date: "25 Nov 2026", title: "Party dungeon fixes", items: [
+      "Fixed: in a party dungeon, the waiting screen still said only the leader decides. It now says everyone votes on each choice.",
+    ] },
+    { id: "b253-wagons", build: 253, date: "25 Nov 2026", title: "Caravans you can talk to", items: [
+      "Tap or click any caravan's wagons on the map to see who they are, where they're going, what they carry and how they're doing: rolling, resting in town, broken down, under attack, guarded or robbed.",
+      "Catch up sends you to where you'll meet them on their road. When you reach them, whatever you picked on the card happens.",
+      "Trade right from the card when you're beside them. Their packs follow their cargo, and when the hold they're heading for is in crisis they carry relief goods and their prices follow that crisis.",
+      "Escorting them pays when they arrive. If that hold's Jarl is paying for supply escorts, it counts as one and helps end the crisis.",
+      "Ask for news: a lead or a new place on your map, and how things stand where they're going.",
+      "Now and then a wagon breaks down or gets attacked on the road. Fix the wheel or fight beside their guards for a reward and a better name in the hold. Everyone sees who helped.",
+      "Robbing wagons is a crime: a bounty, a fight with their guards and a worse name. You can't rob wagons another hero is guarding.",
+      "On a PC the wagons light up under the mouse. Zoomed out, tapping a group pin zooms in on it. In a party the leader decides.",
+      "Caravan Friend (Speech) now also makes caravans on the road sell to you 10% cheaper.",
+      "In Polish, everything about caravans is now in Polish too: their names on the map, meetings on the road, the caravan board in town, your caravan job, your cart and the wares they sell.",
+    ] },
+    { id: "b252-qaside2a", build: 252, date: "25 Nov 2026", title: "Forge and lockpicking fixes", items: [
+      "Fixed: in Polish, the forge was still mostly in English: the Make, Smelt & tan and Improve tabs, batch crafting, what's missing, and the line you get after making something.",
+      "Fixed: in Polish, the lockpicking hint under the lock is translated.",
+      "Fixed: after a festival smithing contest, your next forged item could get a free chance to save a material it never earned.",
+    ] },
+    { id: "b251-perklayout", build: 251, date: "25 Nov 2026", title: "Tidier perk stars", items: [
+      "Perk names in the star trees never sit on top of each other any more, and long names are never cut short with \"…\": they wrap onto a second line instead.",
+      "Each perk now sits right above the perks it needs, with the first ones at the bottom, so the trees read from the ground up.",
+      "On a phone, pinch the stars to zoom in or out and drag to look around. Zoomed far out, only the perks you can take keep their names.",
+      "On a phone, tapping a star shows the perk in a panel at the bottom of the screen instead of a pop-up over the stars.",
+    ] },
+    { id: "b250-qafight", build: 250, date: "25 Nov 2026", title: "Fight fixes", items: [
+      "Fixed: on phones, casting a heal with a follower along asked you to tap a portrait, but the Magic menu covered every portrait. The bar at the top now has a button for each person you can heal.",
+      "Fixed: if the last foe fell between your moves, End turn and every other button could do nothing and the fight never ended. Any tap now finishes the fight.",
+      "Fixed: more of the fight screen is in Polish (choosing who gets a heal, Your turn, Dual, the Magic and Items hints).",
+    ] },
+    { id: "b249-testsgreen", build: 249, date: "25 Nov 2026", title: "Coming next, tidied", items: [
+      "Picking herbs by hand is out now, so it left the Coming next list.",
+    ] },
+    { id: "b248-chargenrig", build: 248, date: "25 Nov 2026", title: "Character creation shows your real fighter", items: [
+      "Character creation now shows the same painted hero you fight with: armour, weapon and all. Stand, Walk and Fight show how you'll really look on the road and in battle.",
+      "Picking a race swaps the painted head (Dunmer, Khajiit and Argonian have their own) and skin colour; everything else you chose stays.",
+      "Face zooms right in on your hero's head. On the Head, Face, Hair and Scars tabs a small close-up shows the details you pick.",
+      "The race card shows the painted bust of the race instead of the little drawn figure.",
+    ] },
+    { id: "b247-movefx1", build: 247, date: "25 Nov 2026", title: "Real arrows and spell effects", items: [
+      "Bows and crossbows shoot a real arrow or bolt now: it leaves the string, arcs over (a bolt flies flatter and faster), and sticks in, breaks on a shield, or sails past on a miss and lands in the ground behind.",
+      "Archer foes, crossbowmen and the Dwarven ballista shoot too, and your followers and party members loose their own arrows. Shots leave from the saddle when you ride.",
+      "Fire, frost, shock, poison and life-drain arrows leave a coloured trail; power shots and sneak shots are bigger.",
+      "Every spell now has its own look: Flames is a jet, Firebolt a comet, Fireball a lob that bursts, Ice Spike a shard, Icy Spear a big spear, Lightning Bolt a jagged arc, Chain Lightning forks from foe to foe, and so on through healing, wards, flesh spells, summons, illusions and the rest. Dual casting looks bigger, from both hands.",
+    ] },
+    { id: "b246-gathering", build: 246, date: "25 Nov 2026", title: "Picking herbs by hand", items: [
+      "Gathering is now a short hands-on mini-game: snip flowers at the stem, dig roots up slowly, scrape fungus in one stroke, pick only the ripe berries, lift eggs gently and ease a fragile Nirnroot out of the mud. Do it well and you get more; even a clumsy try gives you something.",
+      "Picked a plant three times by hand? A Quick pick button lets you skip the mini-game for a slightly smaller handful.",
+      "Herbs nearby are easy to spot: painted markers on the map, a ring that shows how far you can reach, and a Gather button that pops up on the road, even while you ride past.",
+      "Now and then you find a perfect or a glowing plant. The next potion you brew with it is 15% or 25% stronger.",
+      "Each town's alchemist posts a daily herb order that pays well, and more when the hold is in trouble. That herb also sells for more there that day.",
+      "New recipes: Snowberry and Juniper Berry crostatas at the cooking fire, and Tundra Cotton twists into leather strips at the tanning rack.",
+      "Four new Alchemy perks: Herbalist's Eye (more rare finds), Sure Hands (easier mini-game, Quick pick sooner), Anatomist (extra parts from beasts) and Master Gardener (more from every garden bed).",
+      "In a party everyone picks their own share of each patch, so there's nothing to fight over.",
+      "In Polish the Gathering card is fully translated now: distance, weight, regrowth time and the garden.",
+    ] },
+    { id: "b245-lhgrow", build: 245, date: "25 Nov 2026", title: "The longhouse grows", items: [
+      "Every room you build now shows on the longhouse picture: a smithy at the side, trophies on the gable, a war table inside the doors, lit library windows and a stable with horses.",
+      "Each room looks bigger and richer at levels 2 and 3, and a new level fades in right after you build it.",
+      "Tap a room on the picture to jump to its card.",
+    ] },
+    { id: "b244-fighthotfix", build: 244, date: "25 Nov 2026", title: "Fight fix", items: [
+      "Fixed: in some fights your attacks did nothing. If the little timing game after a move gets stuck or vanishes, your next press goes through as a normal hit.",
+    ] },
+    { id: "b243-gptqa", build: 243, date: "25 Nov 2026", title: "Dungeon rooms and small fixes", items: [
+      "Fixed: foes in dungeons were met with road lines, like webs stretched \"across the road\" deep in a barrow. Bandits, wolves, spiders, draugr and the rest now get their own lines for caves, mines, forts, barrows and other places.",
+      "Fixed: a weapon's details said \"One-handed weapon · One-Handed\". Now it just says \"One-handed weapon\".",
+      "Fixed: the turn order at the top of a fight could show three bandits when only one was there. A foe that moves 2 or 3 times a round still has a mark for each move, but the later ones now say 2nd and 3rd and look smaller, so you can see it's the same foe.",
+    ] },
+    { id: "b242-noap", build: 242, date: "25 Nov 2026", title: "No more AP", items: [
+      "A plain attack takes just 1 of your 4 moves and some stamina. There are no action points any more, anywhere.",
+      "Potion and scroll tooltips in your pack still said they cost AP in a fight. They now say: 1 move, free.",
+      "Followers with a sword, axe, mace, spear or staff swing more often for a bit less each, so their turns feel quicker. Their damage a turn stays the same.",
+    ] },
+    { id: "b241-qaside3", build: 241, date: "25 Nov 2026", title: "Cleaner perk texts", items: [
+      "Fixed: a few perks (Duelist, Brute Force, Steady Hand, Disintegrate, Intimidation) showed a stray design note like [OURS] in the middle of their description.",
+      "Fixed: in Polish, the house, homestead and arena lines on the town board are translated.",
+    ] },
+    { id: "b240-qaside2", build: 240, date: "25 Nov 2026", title: "More Polish in towns", items: [
+      "Fixed: in Polish, the cooking pot, the forge, the notice board's weekly goals, the Hall of the North, the streets, trainers and hirelings are translated.",
+      "Fixed: in Polish, the Social tabs, the bard's song lines and the time left on world events are translated.",
+    ] },
+    { id: "b239-qacore1", build: 239, date: "25 Nov 2026", title: "Back button and first-trip fixes", items: [
+      "Fixed: the phone's back button did nothing in fishing, hunting, mining, lockpicking and the other mini-games, and pressing it again could close the app. Now it leaves the game, like its Done or Leave button.",
+      "Fixed: back in the barber's chair or at the rune table closes them instead of opening the compass behind them.",
+      "Fixed: back inside a shop, the inn or the forge goes to the town's list of places first, not straight to the compass.",
+      "Fixed: the first-trip guide said to open the Town tab; it's called Area now.",
+      "Fixed: in Polish, the first-trip guide, the first-time tips and the \"you set off\" and \"you arrived\" messages were still in English.",
+    ] },
+    { id: "b238-qaside", build: 238, date: "25 Nov 2026", title: "Company fixes", items: [
+      "Fixed: tapping Found twice quickly could pay for the company twice.",
+      "Fixed: tapping Put in twice quickly could put the same gold in the treasury twice and leave your purse below zero.",
+      "Fixed: tapping Give twice quickly could hand the same ingots to the stockpile twice.",
+      "Fixed: an app update no longer restarts the game while you're fishing, mining, hunting, at the forge or in any other mini-game, so you never lose a catch.",
+      "Fixed: more of the Social, jobs and fishing screens are in Polish.",
+    ] },
+    { id: "b237-mountcombat", build: 237, date: "25 Nov 2026", title: "Fight from the saddle", items: [
+      "Mounted combat is back: ride into a fight and stay in the saddle, or get on and off with the new Mount and Dismount moves.",
+      "Getting on takes 2 moves and 20 stamina. You can dual cast from the saddle for a bit more magicka.",
+      "New Destruction perk: Saddle Caster.",
+      "Your horse can be knocked down in a fight, but it always gets back up afterwards.",
+    ] },
+    { id: "b236-glowfix", build: 236, date: "25 Nov 2026", title: "No more glowing blob next to your weapon", items: [
+      "An enchanted weapon used to leave a big glowing blob floating in the air beside your hero in fights. The glow now sits on the weapon itself, as a slim shine along the blade.",
+    ] },
+    { id: "b235-testsgreen", build: 235, date: "25 Nov 2026", title: "Small Polish fixes", items: [
+      "In Polish, the \"stage done\" line of the vampire war quests is fully translated again.",
+      "The Coming next list is up to date.",
+    ] },
+    { id: "b234-riding", build: 234, date: "25 Nov 2026", title: "Riding on the map", items: [
+      "The map has a ride button next to zoom: tap it to get on or off your horse. You see the horse walk up and you climb into the saddle, or slide down.",
+      "On foot your horse walks along just behind you on the map.",
+      "Riders on the map have both legs now: the near leg over the horse's side, the far leg behind it, for every coat.",
+      "The rider moves smoothly with the horse's walk and gallop instead of jerking along.",
+    ] },
+    { id: "b233-folsex", build: 233, date: "25 Nov 2026", title: "Your followers look like themselves", items: [
+      "Jenassa, Lydia and the other women who follow you now look like themselves in fights.",
+      "Aela, Brelyna, Uthgerd, Mjoll, Annekke, Borgakh and Hrolfa at Pinewatch get a woman's face and body too, on your screen and on your party's.",
+      "A dark elf woman now wears a dark elf woman's face, not a man's.",
+    ] },
+    { id: "b232-arrivearea", build: 232, date: "25 Nov 2026", title: "The Area tab opens when you arrive", items: [
+      "When you reach a town, a dungeon entrance or another place on the map, the Area tab opens by itself, so shops, the inn and what you can do there are right in front of you.",
+      "If a fight, a road event or any window is still open, it waits until you close it.",
+      "Stopping at a spot you picked in the wilds or a map pin keeps you on the map.",
+      "In a party, if you follow the leader, it only switches when you're just looking at the map, never while you're reading something else.",
+      "Plants you can gather nearby also show at the top of the Area tab.",
+    ] },
+    { id: "b231-nomountfight", build: 231, date: "25 Nov 2026", title: "Horses wait at the edge of the fight", items: [
+      "Horses now wait at the edge of the fight; you always fight on foot. That goes for solo fights, parties and co-op.",
+      "Nobody goes for your horse and it never gets knocked down in a fight. If you rode in, you're back in the saddle when it's over.",
+      "Dual casting works in every fight again, since everyone is on foot.",
+    ] },
+    { id: "b230-map4k", build: 230, date: "25 Nov 2026", title: "Sharp painted map, close up", items: [
+      "The painted world map stays sharp now, even zoomed all the way in on a phone or a big 4K screen. It used to turn soft and then swap to a plain drawn chart.",
+      "Zoom in and the map loads finer pieces of the painting just for the part you look at, so it stays light on your phone. Until they arrive you see the normal painting.",
+      "Up close you can see fine brushwork: grass on the plains, snow, rock and little waves on the sea, with a faint paper grain on top.",
+      "Names, roads, fog, pins and your hero sit exactly where they did before.",
+    ] },
     { id: "b229-gatherfix", build: 229, date: "25 Nov 2026", title: "Picking herbs fixed", items: [
       "On a PC the Gathering card sat in the side panel, which the big map hides, so there was no way to pick plants or forage. It now floats on the left of the map whenever plants are in reach.",
       "Some older saves made the Gather button do nothing. Those heroes pick plants, forage and plant gardens normally again.",
@@ -1603,7 +1886,7 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 222;
+  const NEXT_AT = 264;
   const NEXT = [
     "Mentoring: play side by side with friends of any level",
     "Shrines of your own: build a Daedric altar at your longhouse",

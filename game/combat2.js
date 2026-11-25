@@ -58,8 +58,8 @@ const COMBAT2 = (() => {
     const chips = el.querySelectorAll(".tbtop .tbord .tbini");
     chips.forEach((c, i) => {
       const o = sess.order[i]; if (!o) return;
-      const ini = c.querySelector("i")?.textContent || "";
-      c.innerHTML = `<span class="c2pt" aria-hidden="true">${portraitOf(o, sess.f)}</span><span class="c2nm">${esc(String(o.name || "").split(" ")[0])}</span><i>${esc(ini)}</i>`;
+      const ini = c.querySelector("i")?.textContent || "", ag = c.querySelector(".tbag")?.textContent || "";   // the same foe's 2nd/3rd move this round (tbfight.js)
+      c.innerHTML = `<span class="c2pt" aria-hidden="true">${portraitOf(o, sess.f)}</span><span class="c2nm">${esc(String(o.name || "").split(" ")[0])}</span>${ag ? `<b class="tbag">${esc(ag)}</b>` : ""}<i>${esc(ini)}</i>`;
     });
     const rb = el.querySelector(".tbtop > b");
     if (rb && !rb.classList.contains("c2rd")) { rb.classList.add("c2rd"); rb.innerHTML = `<small>${esc(T("Round"))}</small>${esc(String(sess.round))}`; }
@@ -129,12 +129,19 @@ const COMBAT2 = (() => {
     const mainUp = !!dock?.querySelector(".fc:not(.fc-pick), .tbgrid, .tbwheel");
     const dockH = dock ? dock.getBoundingClientRect().height : 0;   // (Fight UI size zooms the bar: measure what's on screen)
     if (mainUp && dockH > 40) mem.dock = dockH;
-    const dh = Math.max(mem.dock || 0, wide ? 118 : 178);
     const top = (el.querySelector(".tbtop")?.offsetHeight || 40) + 4;
+    /* [magicaim] the list in Magic / Items is capped from the screen's height (never from the bar itself: no loop), and
+       the scene, your orb and the party plates make room for what the bar covers right now, Magic drawer included,
+       so the drawer never hides anyone you could cast on (fightfit.js) */
+    const FF = typeof FIGHTFIT !== "undefined" ? FIGHTFIT : null;
+    if (FF) tin.style.setProperty("--c2list", FF.listMax(W, H, wide) + "px");
+    const cover = FF ? FF.cover(tin, dock) : 0;
+    const dh = Math.max(mem.dock || 0, cover, wide ? 118 : 178);
     const aH = H - dh;
     let ch, cw, cx, cy;
     if (wide) {   // the whole window: the picture is drawn at this shape (aspect() above), so nothing is cut off
       cw = W; ch = W * shapeOf(W, H); cx = 0; cy = ch > H ? (H - ch) * 0.6 : (H - ch) / 2;
+      if (FF) ({ cw, ch, cx, cy } = FF.wideStage(W, H, cw, ch, cx, cy, top, dh));   // feet above the bar, heads under the turn strip
     } else {
       ch = Math.max(110, Math.min(aH * 0.8, (W * 1.34) / A));
       cw = ch * A; cx = (W - cw) / 2;
@@ -142,7 +149,10 @@ const COMBAT2 = (() => {
       if (cy + ch > aH + 10) cy = Math.max(0, aH + 10 - ch);
     }
     const s = ch / 150, gy = cy + ch * 0.8;
-    const hx = cx + cw * 0.27, hy = gy - 66 * s, fx = cx + cw * 0.72, fy = gy - 74 * s;
+    let hx = cx + cw * 0.27, hy = gy - 66 * s, fx = cx + cw * 0.72, fy = gy - 74 * s;
+    // [fightpos] where fightart.js really put you and the foe (fightpos.js): the plate, pop-ups and flashes follow them
+    const FL = tin.querySelector(".fscene canvas")?.__fp;
+    if (FL && FL.W && FL.Hh) { const kx = cw / FL.W, ky = ch / FL.Hh; hx = cx + FL.hero.x * kx; hy = cy + (FL.hero.top + 6 * FL.s) * ky; fx = cx + FL.foe.x * kx; fy = cy + FL.foe.top * ky; }
     const st = tin.style, px = (v) => v.toFixed(1) + "px";
     st.setProperty("--c2cw", px(cw)); st.setProperty("--c2ch", px(ch)); st.setProperty("--c2cx", px(cx)); st.setProperty("--c2cy", px(cy));
     st.setProperty("--c2dock", px(dh)); st.setProperty("--c2top", px(top)); st.setProperty("--c2ah", px(aH));
@@ -152,6 +162,7 @@ const COMBAT2 = (() => {
     const geo = [cx, cy, cw].map((v) => Math.round(v)).join();
     if (geo !== mem.geo || late) {
       mem.geo = geo;
+      try { tin.querySelector(".fscene canvas")?.__fpRe?.(); } catch { /* the scene lays out on its next frame */ }
       const ar = el.querySelector(".fitarrow");
       if (ar && mem.sess && typeof FOEINTENT !== "undefined") { try { FOEINTENT.decorate(el, mem.sess); } catch { /* the arrow is a nicety */ } }
     }
@@ -166,6 +177,7 @@ const COMBAT2 = (() => {
       const lg = el.querySelector(".c2ov .tblog");
       if (lg && !wide) lg.style.maxWidth = px(Math.max(120, Math.min(W * 0.62, Tp < top + 70 ? L - 14 : W * 0.62)));
     }
+    if (FF) { FF.party(el, { W, H, top, dh, wide }); FF.unclash(el, { W, H, top, dh }); }   // a full party: more columns / slimmer plates instead of running off screen
   }
   let rsT = null;
   if (DOM && typeof addEventListener === "function") addEventListener("resize", () => { clearTimeout(rsT); rsT = setTimeout(() => { const el = document.getElementById("tbf"); if (el) place(el); }, 60); });

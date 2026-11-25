@@ -64,7 +64,7 @@ const AREAUI = (() => {
     const r = safe(() => {
       const open = o.open !== false;
       switch (id) {
-        case "general": case "blacksmith": case "wizard": case "fence": return { text: open ? (G.shopsOpen() ? "Open" : "Night prices") : "Closed till 08:00", dim: !open };
+        case "general": case "blacksmith": case "wizard": case "fence": return { text: open ? (G.shopsOpen() ? "Open" : "Night prices") : "Closed till 08:00", dim: !open, closed: !open };
         case "inn": return { text: `Room ${TOWNS.roomPrice(S)} gold` };
         case "hire": return S.follower ? { text: "You have a follower" } : null;
         case "train": { const n = 5 - TOWNS.trainedThisLevel(S); return { text: n > 0 ? `${n} lesson${n > 1 ? "s" : ""} left` : "None left this level", dim: n <= 0 }; }
@@ -95,7 +95,12 @@ const AREAUI = (() => {
     const tile = (id) => { const st = status(S, l, id, o), hot = st.hot || hotShop.has(id);
       return `<button class="au-tile${hot ? " hot" : ""}${st.dim ? " dim" : ""}${st.warn ? " warn" : ""}" data-act="shop" data-id="${esc(id)}" aria-label="${esc(label(id, names))}"><span class="au-ic" aria-hidden="true">${ICON[id] || "•"}</span><b>${esc(label(id, names))}</b><small>${esc(st.text)}</small>${hot ? '<i class="au-dot" aria-hidden="true"></i>' : ""}</button>`; };
     const now = ready.slice(0, 4).map((x) => `<button class="au-now${x.state === "ready" ? " hot" : ""}" data-act="shop" data-id="${esc(x.go.shop)}"><span aria-hidden="true">${esc(x.icon)}</span><span class="t"><b>${esc(x.title)}</b><small>${esc(x.sub)}</small></span><span class="au-go">Open</span></button>`).join("");
-    const groups = group(sections).map(([g, lab, ids]) => `<details class="au-g" data-g="${g}" ${f[g] ? "open" : ""}><summary><span class="au-gh">${esc(lab)}</span><span class="au-gn">${ids.length}</span></summary><div class="au-tiles">${ids.map(tile).join("")}</div></details>`).join("");
+    /* open places first; shut ones fold away under "Closed (N)" at the end of their group */
+    const groups = group(sections).map(([g, lab, ids]) => {
+      const st = ids.map((id) => [id, status(S, l, id, o)]), shut = st.filter(([id, x]) => x.closed && !hotShop.has(id)).map(([id]) => id), on = ids.filter((id) => !shut.includes(id));
+      const closed = shut.length ? `<details class="au-closed" data-g="${g}" ${f["c_" + g] ? "open" : ""}><summary><span class="au-cl">Closed</span><span class="au-gn">${shut.length}</span></summary><div class="au-tiles">${shut.map(tile).join("")}</div></details>` : "";
+      return `<details class="au-g" data-g="${g}" ${f[g] ? "open" : ""}><summary><span class="au-gh">${esc(lab)}</span><span class="au-gn">${ids.length}</span></summary>${on.length ? `<div class="au-tiles">${on.map(tile).join("")}</div>` : ""}${closed}</details>`;
+    }).join("");
     return `<div class="au">${now ? `<div class="au-nowl"><div class="au-gh">Right now</div>${now}</div>` : ""}${groups}</div>`;
   }
   /* the strip on top of an open place: back to the board, its name and what it's for, and its neighbours */
@@ -108,10 +113,27 @@ const AREAUI = (() => {
   }
 
   if (live) document.addEventListener("toggle", (e) => {
-    const d = e.target; if (!d || !d.classList || !d.classList.contains("au-g")) return;
-    const f = fold(); f[d.dataset.g] = d.open; try { localStorage.setItem("ux_aufold", JSON.stringify(f)); } catch { /* storage blocked */ }
+    const d = e.target; if (!d || !d.classList) return;
+    const k = d.classList.contains("au-g") ? d.dataset.g : d.classList.contains("au-closed") ? "c_" + d.dataset.g : null; if (!k) return;
+    const f = fold(); f[k] = d.open; try { localStorage.setItem("ux_aufold", JSON.stringify(f)); } catch { /* storage blocked */ }
+    if (d.open) fit(d);
   }, true);
 
-  return { GROUPS, ICON, group, groupOf, siblings, plain, label, note, status, hub, head };
+  /* phones: full-width rows; two columns only when every name in the group fits on one line (no "Blacksmit/h").
+     Tries two columns, measures, and falls back to one. Runs after the board is drawn and when the screen turns. */
+  function fit(root) {
+    if (!live || !root || !root.querySelectorAll) return;
+    root.querySelectorAll(".au-tiles").forEach((t) => {
+      if (!t.offsetParent) return;   // folded away: measured when it opens
+      t.classList.add("au-two");
+      const two = [...t.querySelectorAll(".au-tile b")].every((b) => b.scrollWidth <= b.clientWidth + 1);
+      if (!two) t.classList.remove("au-two");
+    });
+  }
+  /* again once the Polish screen translator and the fonts have had their turn (names change width) */
+  function fitSoon(root) { fit(root); setTimeout(() => fit(root), 90); try { document.fonts.ready.then(() => fit(root)); } catch { /* no font API */ } }
+  if (live && typeof window !== "undefined") window.addEventListener("resize", () => fit(document.getElementById("side")));
+
+  return { GROUPS, ICON, group, groupOf, siblings, plain, label, note, status, hub, head, fit, fitSoon };
 })();
 if (typeof module !== "undefined") module.exports = AREAUI;

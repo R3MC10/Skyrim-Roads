@@ -11,7 +11,7 @@ LANG = os.environ.get("LANG_UI", "en")
 OUT = os.environ.get("OUT") or (os.path.join(os.path.dirname(os.path.abspath(__file__)), "out_tourney") + os.sep); os.makedirs(OUT, exist_ok=True)
 PFX = os.environ.get("PFX", "")   # screenshot name prefix, e.g. festart_
 ASSETS_ON = bool(os.environ.get("ASSETS"))   # ASSETS=1: wait for the painted pictures and check the painted headers
-CHROME = os.environ.get("CHROME", "/usr/bin/google-chrome")
+CHROME = (__import__("os").environ.get("CHROME") or ("/usr/bin/google-chrome" if __import__("os").path.exists("/usr/bin/google-chrome") else None))
 fails = []
 def ok(c, m):
     print(("ok   " if c else "FAIL ") + m)
@@ -38,7 +38,7 @@ SETUP = """() => { ART.setStyle && ART.setStyle('ink'); const S = window.__dbg.s
 
 async def main():
     async with async_playwright() as p:
-        kw = {"executable_path": CHROME, "args": ["--no-sandbox"]} if os.path.exists(CHROME) else {}
+        kw = {"executable_path": CHROME, "args": ["--no-sandbox"]} if CHROME and os.path.exists(CHROME) else {}
         b = await p.chromium.launch(**kw)
         errs = []
         VPS = [("phone", {"width": 390, "height": 844}, True), ("pc", {"width": 1280, "height": 800}, False)]
@@ -76,7 +76,7 @@ async def main():
                 await pg.wait_for_selector(".tn-pic", timeout=15000)
                 ok(await pg.query_selector(".tn-pic h3") is not None, f"{name}: painted festival header with its title")
             else:
-                ok(await pg.query_selector("img.tn-art") is not None, f"{name}: ink festival banner")
+                ok(await pg.query_selector("img.tn-art, .tn-pic") is not None, f"{name}: festival banner (ink, or the painted header when the pictures are on)")
             ok(await pg.evaluate("() => [...document.querySelectorAll('.tn-board li')].some(l => /Brynjolf/.test(l.textContent))"), f"{name}: the other player is on the board")
             ok(await pg.query_selector("[data-tact=pvp][data-id=BR1]:not([disabled])") is not None, f"{name}: friendly duel offered")
             ok(await pg.evaluate("() => document.querySelectorAll('.tn-cal li').length") == 4, f"{name}: the calendar shows what's next")

@@ -26,7 +26,7 @@
   const tiBox = (item) => (TI ? TI.box(S, item) : "");
   const tiCls = (item) => (TI && TI.isTome(item) ? " ti-row" : "");
   let zoom = innerWidth < 700 ? 2.4 : 1, follow = true, center = [0.5, 0.5], view = {}, version = 0, rendered = -1, lastPanelRender = 0;
-  let tacticsDraft = { if: "hp_below", pct: 40, do: "potion:health", edit: null }, testResult = null, townShop = null, townShopAt = null, forgeTab = "make", forgeGroup = "iron", packOpen = null, searchText = "", uxAllPlaces = false, uxHelpOpen = null, packSearch = "";
+  let tacticsDraft = { if: "hp_below", pct: 40, do: "potion:health", edit: null }, testResult = null, townShop = null, townShopAt = null, townNews = false, forgeTab = "make", forgeGroup = "iron", packOpen = null, searchText = "", uxAllPlaces = false, uxHelpOpen = null, packSearch = "";
   let raidDocs = [], raidSeen = null, raidJoined = null, raidAuto = null, enchDraft = {};
   let chatDocs = [], chatRaw = [], chatCh = "world", chatDraft = "", chatSeen = 0, chatSeenIds = new Set(), lastChatSend = 0;
   const bootT = Date.now() / 1000;
@@ -38,9 +38,12 @@
   // ------------------------------------------------------------ helpers
   const hudIcon = (k, fallback) => (typeof HUD !== "undefined" ? HUD.icon(k) : fallback);
   const CQ = typeof CRAFTQOL !== "undefined" ? CRAFTQOL : null;   // crafting shortcuts (craftqol.js)
-  function toast(text) {
+  /* [notify] loot, gold, skill and quest lines take turns through notify.js (merged, never on top of a blocking screen); plain messages show at once */
+  function toast(text) { if (typeof NOTIFY !== "undefined") NOTIFY.msg(text, showToast); else showToast(text); }
+  function showToast(text, o) {
     let el = $("#toast");
     if (!el) { el = document.createElement("div"); el.id = "toast"; el.className = "toast"; el.setAttribute("role", "status"); document.body.appendChild(el); }
+    if (o && o.replace) el.dataset.last = text;   // a merged line ("×3") replaces itself instead of pushing the old one down the log
     if (typeof HUD !== "undefined") HUD.log(el, text);
     el.textContent = text; el.classList.remove("hide");
     if (typeof POLISH !== "undefined") POLISH.toast(el, text);
@@ -244,7 +247,7 @@
   }
   function renderTitle() {
     const inner = $("#tinner"); if (!inner) return;
-    if (!$("#thead")) inner.innerHTML = `<div id="thead" style="display:flex;flex-direction:column;align-items:center">${EMBLEM}<h1>Roads of the North</h1><div class="tag">A shared journey across Skyrim</div></div><div id="tbody" style="display:flex;flex-direction:column;align-items:center;width:100%;flex:1"></div>`;
+    if (!$("#thead")) { inner.innerHTML = `<div id="thead" style="display:flex;flex-direction:column;align-items:center">${typeof TITLELOGO !== "undefined" ? TITLELOGO.html() : EMBLEM + "<h1>Roads of the North</h1>"}<div class="tag">A shared journey across Skyrim</div></div><div id="tbody" style="display:flex;flex-direction:column;align-items:center;width:100%;flex:1"></div>`; if (typeof TITLELOGO !== "undefined") TITLELOGO.mount(inner.querySelector(".tlogo")); }
     let body = "";
     if (titlePage === "press") body = `<button class="press" data-t="menu">Tap to begin</button>`;
     else if (titlePage === "menu") {
@@ -500,16 +503,29 @@
   /* phone back button: close what's on top, step back to the map, and only then leave the app */
   /* opts.esc: the PC's Esc key (desktop.js). It walks the same steps, except that the compass isn't "home" on a PC and
      a fight isn't left alone: false then means "nothing left to close", and Esc opens the pause menu (pausemenu.js) */
+  /* [qa-core] full-screen mini-games sit over everything, so the phone's back button used to reach the screens under them
+     (and at last minimised the app) while the game stayed open. Press the game's own way out instead, as a player would */
+  const GAME_EXITS = ["#fishgame #fhdone", "#huntgame #hglow", "#huntgame #hgfin", "#huntgame #hgdone", "#minegame #mgok", "#minegame #mgdone",
+    "#lockpick #lpleave", "#pickgame #ppleave", "#smithgame #sgquick", "#craftgame #cgquick", "#xgame [data-act=close]"];
+  function backOutOfGame() {
+    for (const sel of GAME_EXITS) { const b = document.querySelector(sel); if (b && !b.disabled && b.offsetParent !== null) { b.click(); return true; } }
+    const rc = $("#rct"); if (rc) { rc.click(); return true; }   // runecraft.js closes when its backdrop is tapped
+    return false;
+  }
   window.__ui = {
     back(opts) {
       const escKey = !!(opts && opts.esc);
       if (typeof PAUSEM !== "undefined" && PAUSEM.isOpen()) { PAUSEM.close(); return true; }   // the Esc menu is the very top
       if (typeof BUGREPORT !== "undefined" && BUGREPORT.isOpen()) { BUGREPORT.close(); return true; }   // the report window sits on top of everything
+      if (typeof NOTIFY !== "undefined" && NOTIFY.closeHist()) return true;   // [notify] the message history
+      if (S && typeof CHARGEN !== "undefined" && document.querySelector(".cg-over")) { CHARGEN.close(false); return true; }   // [qa-core] the barber / mirror: back = Cancel, never something hidden under it
+      { const x = backOutOfGame(); if (x) return x; }   // [qa-core] a mini-game or the rune table: back leaves it (its own Leave / Done button)
       if ($("#title")) { if (titlePage !== "menu" && titlePage !== "press") { titlePage = "menu"; renderTitle(); return true; } return false; }
       if (!S && $("#toTitle")) { app.innerHTML = ""; showTitle("menu"); return true; }
       if (typeof TB !== "undefined" && TB.open) { if ($("#modal.pm-top")) { closeModal(); return true; } return !escKey; }   // a turn-based fight is on: finish it (or Flee); Esc pauses
       if (typeof FAVWHEEL !== "undefined" && FAVWHEEL.open) { FAVWHEEL.hide(); return true; }
       if (typeof LEVELUP !== "undefined" && LEVELUP.isOpen) { LEVELUP.close(); return true; }   // the level-up pillars: decide later
+      if ($("#sky") && !$("#modal") && escKey && sky.page === "items" && sky.sel != null && typeof ITEMCMP !== "undefined" && ITEMCMP.side($("#sky"))) { sky.sel = null; renderMenu(); return true; }   // [itemdetail] Esc lets go of the pinned item first
       if ($("#sky") && !$("#modal")) { closeMenu(); if (typeof TABMENU !== "undefined") TABMENU.menuClosed(); return true; }
       if ($("#modal")) { if (!$("#modal [data-act=enc], #modal [data-act=ev], #modal [data-act=guard]")) closeModal(); return true; }
       if (typeof DWEMER !== "undefined" && DWEMER.closeOv()) return true;   // a lexicon / valve puzzle (dwemer.js)
@@ -518,6 +534,7 @@
       if (selected) { selected = null; renderPicked(); return true; }
       if (S && (tab === "stats" || tab === "diary") && !document.body.classList.contains("tw-char")) { tab = "hero"; renderTabs(); renderPanel(true); return true; }   // [journal] Character sub-pages
       if (S && tab === "places") { tab = "map"; renderTabs(); renderPanel(true); return true; }
+      if (S && tab === "town" && townShop && $("#side .au-back")) { townShop = ""; renderPanel(true); return true; }   // [qa-core] in a shop or the inn: back goes to the town's board first, like its ‹ button
       if (typeof TABMENU !== "undefined") { const r = TABMENU.back(opts); if (r !== null) return r; }   // the compass is home (tabmenu.js); on a PC the map is
       if (S && tab !== "map") { tab = "map"; bump(); renderTabs(); renderPanel(true); return true; }
       return false;
@@ -536,6 +553,8 @@
       if ($("#title")) return true;
       if (!S || S.dungeon || S.trip?.event || S.encounter) return false;
       if (["modal", "tbf", "tbwatch", "lockpick", "pickgame", "sky", "tw", "nickbox", "breach", "dwgame", "bugrep", "lvlpick"].some((id) => document.getElementById(id))) return false;
+      // any mini-game on screen (fishing, mining, hunting, the forge, brewing, rune table, tourney games, dungeon locks...): a restart would lose the catch
+      if (document.querySelector(".craftgame, .lockpick, .smithgame, .xgame, .rct-wrap, #exp-layer:not(:empty)")) return false;
       if ((coopUI?.runs || []).length) return false;
       return true;
     },
@@ -584,7 +603,7 @@
       <div class="layout">
         <div>
           <div class="mapwrap" id="mapwrap"><canvas id="map" aria-label="Map of Skyrim"></canvas>
-            <div class="mapbtns"><button class="iconbtn" id="zoomBtn" aria-label="Zoom map">${zoom === 1 ? "＋" : "－"}</button><button class="iconbtn" id="centerBtn" aria-label="Centre on me">◎</button>${typeof HUNT !== "undefined" ? `<button class="iconbtn sneakbtn huntbtn${S?.hunting ? " on" : ""}" id="huntBtn" aria-label="Hunt" aria-pressed="${!!S?.hunting}" title="Hunt: slower, but you run into animals far more often"><svg viewBox="0 0 24 24" aria-hidden="true" width="20" height="20"><path d="M6 3c5 3 5 15 0 18" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M6 3v18" stroke="currentColor" stroke-width="1" opacity=".7"/><path d="M4 12h15m0 0-3-3m3 3-3 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>` : ""}${typeof SNEAKMODE !== "undefined" ? `<button class="iconbtn sneakbtn${S?.sneak ? " on" : ""}" id="sneakBtn" aria-label="Sneak" aria-pressed="${!!S?.sneak}" title="Sneak: slower, fewer fights, harder to spot"><svg viewBox="0 0 24 24" aria-hidden="true" width="20" height="20"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg></button>` : ""}</div>
+            <div class="mapbtns">${typeof RIDING !== "undefined" ? RIDING.button(S) : ""}<button class="iconbtn" id="zoomBtn" aria-label="Zoom map">${zoom === 1 ? "＋" : "－"}</button><button class="iconbtn" id="centerBtn" aria-label="Centre on me">◎</button>${typeof HUNT !== "undefined" ? `<button class="iconbtn sneakbtn huntbtn${S?.hunting ? " on" : ""}" id="huntBtn" aria-label="Hunt" aria-pressed="${!!S?.hunting}" title="Hunt: slower, but you run into animals far more often"><svg viewBox="0 0 24 24" aria-hidden="true" width="20" height="20"><path d="M6 3c5 3 5 15 0 18" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M6 3v18" stroke="currentColor" stroke-width="1" opacity=".7"/><path d="M4 12h15m0 0-3-3m3 3-3 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>` : ""}${typeof SNEAKMODE !== "undefined" ? `<button class="iconbtn sneakbtn${S?.sneak ? " on" : ""}" id="sneakBtn" aria-label="Sneak" aria-pressed="${!!S?.sneak}" title="Sneak: slower, fewer fights, harder to spot"><svg viewBox="0 0 24 24" aria-hidden="true" width="20" height="20"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg></button>` : ""}</div>
             <div class="picked hide" id="picked"></div></div>
           <div class="vitals" id="vitals"></div>
           <div id="trip"></div>
@@ -607,8 +626,10 @@
       const b = $("#huntBtn"); b.classList.toggle("on", onNow); b.setAttribute("aria-pressed", String(onNow));
       toast(onNow ? " You're hunting. You travel a little slower, but you'll run into deer, elk and worse far more often." : "You stop tracking game.");
     };
+    if (typeof RIDING !== "undefined") RIDING.bind($("#rideBtn"), () => S, (m) => { liveCache.key = ""; if (S.trip) S.trip.total = G.minutesLeft(S); kickMap(); toast(m); renderTrip(); publishCard(); persist(true); });   // riding.js: get on / off from the map
     $("#centerBtn").onclick = () => { mapTouchedAt = performance.now(); kickMap(); follow = true; if (zoom === 1) zoom = 2.4; $("#zoomBtn").textContent = "－"; };
     bindMap();
+    if (typeof WAGONS !== "undefined") WAGONS.mount({ S: () => S, Store, toast, persist: () => persist(), livePos: () => livePos(), kick: () => kickMap(), message: (t, x) => showMessage(t, x), canDecide: () => (typeof PARTYPLAY === "undefined" || PARTYPLAY.canDecide(S)), secsTo: (p) => G.minutesTo(S, p) * 60, zoom: () => zoom, zoomAt: (z, x, y) => { mapZoomAt?.(z, x, y); mapTouchedAt = performance.now(); kickMap(); }, go: (cid, intent) => chaseCaravan(cid, intent) });   // tap a caravan's wagons on the map: their card (wagons.js)
     if (typeof GREET !== "undefined") GREET.mount({ S: () => S, Store, toast, persist: () => persist(), others: () => others, party: () => party, otherPos: (o) => otherPos(o), livePos: () => livePos() });   // Strangers until you greet each other (greet.js)
     if (typeof PCMAP !== "undefined") PCMAP.mount({ S: () => S, party: () => party, others: () => others, otherPos: (o) => otherPos(o), livePos: () => livePos(), tab: () => tab, skyPage: () => sky?.page,   // PC: the map is the home screen (pcmap.js)
       view: () => ({ zoom, center, transform: view.transform }), setView: (z, cn) => { zoom = z; center = cn; follow = false; mapTouchedAt = performance.now(); kickMap(); const zb = $("#zoomBtn"); if (zb) zb.textContent = zoom > 1.01 ? "－" : "＋"; },
@@ -625,6 +646,7 @@
     $("#trip").addEventListener("click", onPanelClick);
     $("#raid").addEventListener("click", onPanelClick);
     { let gp = $("#gpop"); if (!gp) { gp = document.createElement("div"); gp.id = "gpop"; document.body.appendChild(gp); gp.addEventListener("click", onPanelClick); } }   // the Gathering card floating over the PC map (the side panel is hidden there)
+    { let gn = $("#gnear"); if (!gn) { gn = document.createElement("div"); gn.id = "gnear"; document.body.appendChild(gn); gn.addEventListener("click", onPanelClick); } }   // "Snowberries in reach: Gather" over the map, on the road too
     Store.watch("raids", (docs) => { raidDocs = docs; });
     if (typeof LEVELUP !== "undefined") LEVELUP.mount({ S: () => S, persist, toast, refresh: () => { bump(); renderPanel(true); if ($("#sky")) renderMenu(); }, publishCard: () => publishCard() });   // levelup.js: skill/level notices, the three pillars
     if (typeof ONBOARD !== "undefined") ONBOARD.mount({ S: () => S, persist, toast, renderPanel, click: onPanelClick, party: () => party, invites: () => invites });   // first-time tips (onboard.js)
@@ -714,6 +736,7 @@
         choose: (kind, key) => (kind === "way" ? dungeonRoom(key) : dunChoice(key)) });
       Store.watch("runs", () => pvUI.onRuns());
     }
+    if (typeof DUNEVENTS !== "undefined") DUNEVENTS.mount({ mates: () => others });   // mystery rooms: the party's best hero at a skill rolls (dunevents.js)
     if (typeof DGAMES !== "undefined") DGAMES.mount({ S: () => S, party: () => party, Store });   // watch the party leader's dungeon mini-games live
     if (typeof LIVECURSOR !== "undefined") LIVECURSOR.mount({ Store, uid: () => S.id, name: () => S.name });   // the player's pointer while others watch (livecursor.js)
     if (typeof PTRAPS !== "undefined" && coopUI) PTRAPS.mount({ S: () => S, runs: () => coopUI.runs, Store, toast, persist, act: (c) => dungeonAct(c) });   // the whole party plays each trap (partytraps.js)
@@ -771,6 +794,30 @@
     if (!ev || ev.err) { if (!auto) toast(ev?.err || "That caravan has moved on."); return; }
     lastEventAt = Date.now(); SOUND.fx?.("arrive");
     persist(); ppUI?.leaderHalt("event", ev.name, ev.text); openEvent();
+    const intent = typeof WAGONS !== "undefined" ? WAGONS.takeIntent(S, cid) : null;   // what you picked on the wagon's card
+    if (intent && G.eventChoices(S).some((x) => x[0] === intent)) eventAction(intent);
+  }
+  /* the wagon card's Catch up (wagons.js): travel to where you'll meet the caravan; beside it, stop and meet it now */
+  function chaseCaravan(cid, intent) {
+    const t = G.now(), c = CARAVANS.all(t).find((x) => x.id === cid);
+    if (!c) return toast("That caravan has moved on.");
+    if (S.dungeon) return toast("Finish what you're doing first.");
+    if (S.trip && S.trip.status !== "travel") return toast("Deal with what's in front of you first.");
+    if (S.trip?.caravan) return toast("You're already guarding a caravan.");
+    if (typeof PARTYPLAY !== "undefined" && !PARTYPLAY.canDecide(S)) return toast("Only your party's leader can stop for a caravan.");
+    const pos = livePos();
+    if (S.trip) { [S.x, S.y] = pos; }
+    const ic = WAGONS.intercept(c, t, pos, (p) => G.minutesTo(S, p) * 60);
+    WAGONS.chase(S, cid, intent, ic.secs, t);
+    if (ic.near) {
+      if (S.trip?.status !== "travel" || S.trip.carriage || S.trip.boat) { roamSpot = CARAVANS.pos(c, t + 120); travelTo(CARAVANS.roamBlocked(S) ? c.to : "__spot", true); }
+      if (S.trip?.status === "travel") return meetCaravan(cid);
+      return;
+    }
+    if (ic.town) { if (S.location === ic.town) return toast(`${c.line.name} is here in ${ic.town}. Find them in the Area tab.`); return travelTo(ic.town); }
+    if (CARAVANS.roamBlocked(S)) return travelTo(c.to);   // a cart keeps to the roads: follow their road
+    roamSpot = ic.pos; travelTo("__spot");
+    if (S.trip) toast(`You set off after ${c.line.name}. About ${fmtMin(ic.secs / 60)} to catch them.`);
   }
   function maybeCaravan() {
     if (typeof CVROAD === "undefined" || document.hidden || $("#modal") || S.trip?.status !== "travel" || Date.now() - lastEventAt < 8000) return;
@@ -792,6 +839,7 @@
     if (typeof LIVING !== "undefined") { const lm = LIVING.tick(S, t); if (lm) { toast(lm); bump(); } }   // deeds remembered, whispers come true, the party leader's world (livingworld.js)
     if (typeof IMM !== "undefined") { IMM.tick(S); if (S.lastSeen && t - S.lastSeen > 3600 && !S.trip?.status) IMM.loading("Welcome back to Skyrim"); S.lastSeen = t; }
     if (S.trip?.status === "travel") {
+      const wasFollow = !!S.trip.follow && party?.leader !== S.id;   // following the party leader (arrivearea.js)
       const out = G.advance(S, t, reachableBags());
       if (out.taken.length || out.bag || out.died || out.encounter || out.arrived) {
         out.taken.forEach((id) => Store.takeBag(id));
@@ -814,6 +862,7 @@
           const qa = QUESTS.active(S).find((a) => a.st.obj.talk === out.arrived);
           if (qa) setTimeout(() => toast(` ${qa.st.title}: "${qa.st.obj.label}" is waiting in the Journal.`), 2500);
           if (out.solIntro) { persist(true); setTimeout(() => showMessage("Quest", out.solIntro), 700); }
+          if (typeof ARRIVEAREA !== "undefined") ARRIVEAREA.arrive({ s: S, place: out.arrived, known: !!WORLD.places[out.arrived], follower: wasFollow, tab, menu: !!$("#sky"), go: goArea });   // the Area tab opens (once the screen is clear)
         }
       } else { Store.save(S); maybeRoadEvent(); maybeCaravan(); }
     }
@@ -824,7 +873,7 @@
     if (Math.floor(t) % 3 === 0) { const qm = QUESTS.check(S); if (qm.length) { persist(true); showMessage("Quest", qm.join(" ")); } }
     if (Math.floor(t) % 30 === 0) { publishCard(false); publishHome(); publishClan(); }
     if (Math.floor(t) % 60 === 0) BACKUP.autoSave(S);
-    renderTop(); renderVitals(); renderTrip(); renderGatherPop(); renderTabs(); hudCompass();
+    renderTop(); renderVitals(); renderTrip(); renderGatherPop(); renderGatherNear(); renderTabs(); hudCompass();
     if (version !== rendered || Date.now() - lastPanelRender > 20000) renderPanel(false);
   }
 
@@ -926,9 +975,19 @@
     if (on) { try { html = GATHER.card(S); } catch (e) { html = ""; } }
     if (el.dataset.html !== html) { el.innerHTML = html; el.dataset.html = html; }
   }
+  /* a ripe patch within reach (also while walking or riding): a small Gather prompt over the map (harvestgame.js) */
+  function renderGatherNear() {
+    const el = $("#gnear"); if (!el) return;
+    let html = "";
+    if (typeof HARVESTGAME !== "undefined" && (tab === "map" || tab === "places") && !S.dungeon && !HARVESTGAME.isOpen()) { try { html = HARVESTGAME.nearHTML(S); } catch (e) { html = ""; } }
+    // [nocover] PC: the Gathering card already shows this patch's Gather button, so the prompt would be the same action twice
+    if (html && innerWidth >= 900) { const id = (html.match(/data-act="gpick" data-id="([^"]*)"/) || [])[1]; if ([...document.querySelectorAll("[data-act=gpick]")].some((b) => !b.closest("#gnear") && b.getClientRects().length && (!id || b.dataset.id === id))) html = ""; }
+    if (el.dataset.html !== html) { el.innerHTML = html; el.dataset.html = html; }
+  }
   function renderTrip() {
     const el = $("#trip"), tr = S.trip;
-    const put = (html) => { if (el.dataset.html !== html) { el.innerHTML = html; el.dataset.html = html; } };   // only redraw on change, so taps don't get lost
+    if (typeof RIDING !== "undefined") RIDING.sync(S);   // cheap: only toggles classes on the map's ride button
+    const put =(html) => { if (el.dataset.html !== html) { el.innerHTML = html; el.dataset.html = html; } };   // only redraw on change, so taps don't get lost
     if (S.dungeon) { put(`<div class="trip enc"><div class="row"><b> You're inside ${esc(S.dungeon.place)}</b><button class="btn danger sm" data-act="dun">Go back in</button></div></div>`); return; }
     if (!tr) { put(""); return; }
     if (tr.status === "event") {
@@ -953,7 +1012,7 @@
     put(html.replace(/<\/div>$/, `<div class="tripvig"></div></div>`));
     const bar = el.querySelector(".bar i"); if (bar) bar.style.width = `${p}%`;
     if (tr.boat && typeof SOLART !== "undefined") { const tv = el.querySelector(".tripvig"); if (tv && !tv.dataset.sea) { tv.dataset.sea = 1; tv.innerHTML = SOLART.sea(); } }   // at sea (solart.js)
-    else if (typeof FXART !== "undefined") FXART.vignette(el.querySelector(".tripvig"), { ground, progress: p / 100, dest: tr.destName, origin: tr.origin, riding: HORSES.riding(S), carriage: !!tr.carriage, boat: !!tr.boat, horse: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, look: myLook(), company: typeof PARTY !== "undefined" ? PARTY.companions(S, party, others, here, (o) => otherPos(o), MP.NEAR_PX) : [], reduce: reduceMotion, sky: typeof SKY !== "undefined" ? SKY.state(here) : null });
+    else if (typeof FXART !== "undefined") FXART.vignette(el.querySelector(".tripvig"), { ground, progress: p / 100, dest: tr.destName, origin: tr.origin, riding: HORSES.riding(S), carriage: !!tr.carriage, boat: !!tr.boat, horse: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, led: typeof RIDING !== "undefined" ? RIDING.led(S) : null, look: myLook(), company: typeof PARTY !== "undefined" ? PARTY.companions(S, party, others, here, (o) => otherPos(o), MP.NEAR_PX) : [], reduce: reduceMotion, sky: typeof SKY !== "undefined" ? SKY.state(here) : null });
   }
   function renderTabs() {
     tabsEl.querySelectorAll(".tab").forEach((b) => {
@@ -991,7 +1050,7 @@
     if (!mapResized && (!mapOnScreen || mapCovered())) return 200;
     const moving = S?.trip?.status === "travel" || performance.now() - mapTouchedAt < 1500;
     const wx = WEVENTS.weather(livePos()).id, weatherAnim = !reduceMotion && !["clear", "cloudy", "fog"].includes(wx);
-    const mapAnim = (typeof INKMAP !== "undefined" && INKMAP.pending()) || (typeof MAPART !== "undefined" && MAPART.active()) || (typeof MOTION !== "undefined" && MOTION.mapBusy()) || (typeof MAPHERO !== "undefined" && MAPHERO.active());   // a discovery burst or an arrival puff playing   // a discovery burst playing
+    const mapAnim = (typeof INKMAP !== "undefined" && INKMAP.pending()) || (typeof MAPTILES !== "undefined" && MAPTILES.pending()) || (typeof MAPART !== "undefined" && MAPART.active()) || (typeof MOTION !== "undefined" && MOTION.mapBusy()) || (typeof MAPHERO !== "undefined" && MAPHERO.active());   // a discovery burst or an arrival puff playing   // a discovery burst playing
     const raidNow = typeof RAIDART !== "undefined" && WEVENTS.activeRaid();
     const fxNow = typeof FXART !== "undefined" && S ? FXART.state(S) : null;   // spell and shout effects on the map
     const PC = typeof PCMAP !== "undefined" && PCMAP.on();   // PC map home screen (pcmap.js): smooth pan and zoom, living map (mapfx.js)
@@ -1011,9 +1070,10 @@
       discovered: S.discovered, explored: [...S.explored, pos], atPlace: !!S.location, others: others.filter((o) => sameMap(o) && seesHero(o)).map((o) => ({ name: typeof GREET !== "undefined" ? GREET.label(S, o, party) : (o.clan ? `[${o.clan}] ` : "") + o.name + (party?.members.some((m) => m.id === o.id) ? " ⚑" : ""), stranger: typeof GREET !== "undefined" && !GREET.knows(S, o.id, party), atPlace: !!o.loc, pos: otherPos(o), look: o.look, race: o.race, id: o.id, moving: !!o.moving, horse: typeof o.ride === "string" ? o.ride : null, side: typeof SIDES !== "undefined" ? SIDES.of(o.id) : null, party: !!party?.members.some((m) => m.id === o.id) })),
       rulers: Object.entries(WARS.rulers(S)).map(([hold, c]) => ({ hold, color: c.colors[0] })),
       banners: CLANS.banners(homeDocs, S, VISITS.record(S)).filter((b) => WORLD.places[b.town]).map((b) => ({ ...b, pos: WORLD.places[b.town].slice(0, 2) })),
-      cleared: clearedLeft(), bags: visibleBags(), selected: selected && WORLD.places[selected] ? selected : null, t: ts / 1000, zoom, center, reduceMotion, weather: WEVENTS.weather(pos).id, quest: questPos(), mask: typeof PRIESTS !== "undefined" ? PRIESTS.marker(S)?.pos : null, tmaps: typeof EXPLORE !== "undefined" ? EXPLORE.marks(S) : [], rumours: typeof RUMOURS !== "undefined" ? RUMOURS.marks(S) : [], herbs: typeof GATHER !== "undefined" ? GATHER.marks(S) : [], pins: (S.pins || []).map((p) => ({ pos: [p.x, p.y], label: `${p.icon} ${p.label}`, on: selected === "__pin:" + p.id })),
-      routes: party ? others.filter((o) => o.moving && o.path?.length > 1 && party.members.some((m) => m.id === o.id)).map((o) => ({ path: o.path, from: otherPos(o), name: o.name })) : [], horse: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, gallop: HORSES.riding(S) && S.trip?.status === "travel" && Terrain.speedAt(pos) >= 1.2, cart: CARAVANS.hasCart(S), guards: typeof GUARDS !== "undefined" ? GUARDS.visible(S).map((p) => (p.visible || !myCone || !VISION.inCone(myCone, p.pos) ? p : { ...p, visible: true })) : null, caravans: CARAVANS.all().map((c) => { const cp = CARAVANS.pos(c); return { cp, c }; }).map(({ cp, c }) => ({ pos: cp, visible: G.pxDist(cp, pos) < 160 || (myCone && VISION.inCone(myCone, cp)) || S.discovered.some((n) => WORLD.places[n] && ["city", "town"].includes(WORLD.places[n][2]) && G.pxDist(cp, WORLD.places[n]) < 45), khajiit: c.line.khajiit, moving: c.phase === "road", mine: S.caravanJob?.id === c.id, id: c.id, near: typeof CVROAD !== "undefined" && c.phase === "road" && CVROAD.canMeet(S) && G.pxDist(cp, pos) <= CVROAD.TAP_RANGE, label: c.line.name.replace(/'s caravan$/, "") })).filter((c) => !(c.mine && S.trip?.caravan)), hall: S.discovered.includes(HALL.TOWN) || known(HALL.TOWN) ? { pos: HALL.POS, label: `Hall of the North · ${HALL.progress().name}` } : null,
+      cleared: clearedLeft(), bags: visibleBags(), selected: selected && WORLD.places[selected] ? selected : null, t: ts / 1000, zoom, center, reduceMotion, weather: WEVENTS.weather(pos).id, quest: questPos(), mask: typeof PRIESTS !== "undefined" ? PRIESTS.marker(S)?.pos : null, tmaps: typeof EXPLORE !== "undefined" ? EXPLORE.marks(S) : [], rumours: typeof RUMOURS !== "undefined" ? RUMOURS.marks(S) : [], herbs: typeof GATHER !== "undefined" ? GATHER.marks(S) : [], herbRange: typeof HARVEST !== "undefined" && !S.dungeon && HARVEST.nearPrompt(S) ? { pos: [S.x, S.y], r: GATHER.REACH_PX / 1000 } : null, pins: (S.pins || []).map((p) => ({ pos: [p.x, p.y], label: `${p.icon} ${p.label}`, on: selected === "__pin:" + p.id })),
+      routes: party ? others.filter((o) => o.moving && o.path?.length > 1 && party.members.some((m) => m.id === o.id)).map((o) => ({ path: o.path, from: otherPos(o), name: o.name })) : [], horse: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, led: typeof RIDING !== "undefined" ? RIDING.led(S) : null, gallop: HORSES.riding(S) && S.trip?.status === "travel" && Terrain.speedAt(pos) >= 1.2, cart: CARAVANS.hasCart(S), guards: typeof GUARDS !== "undefined" ? GUARDS.visible(S).map((p) => (p.visible || !myCone || !VISION.inCone(myCone, p.pos) ? p : { ...p, visible: true })) : null, caravans: CARAVANS.all().map((c) => { const cp = CARAVANS.pos(c); return { cp, c }; }).map(({ cp, c }) => ({ pos: cp, visible: G.pxDist(cp, pos) < 160 || (myCone && VISION.inCone(myCone, cp)) || S.discovered.some((n) => WORLD.places[n] && ["city", "town"].includes(WORLD.places[n][2]) && G.pxDist(cp, WORLD.places[n]) < 45), khajiit: c.line.khajiit, moving: c.phase === "road", mine: S.caravanJob?.id === c.id, id: c.id, near: typeof CVROAD !== "undefined" && c.phase === "road" && CVROAD.canMeet(S) && G.pxDist(cp, pos) <= CVROAD.TAP_RANGE, label: c.line.name.replace(/'s caravan$/, "") })).filter((c) => !(c.mine && S.trip?.caravan)), hall: S.discovered.includes(HALL.TOWN) || known(HALL.TOWN) ? { pos: HALL.POS, label: `Hall of the North · ${HALL.progress().name}` } : null,
     };
+    if (typeof WAGONS !== "undefined") WAGONS.decorate(view, S);   // hovered wagons, wagons in trouble
     WorldMap.draw($("#map"), view);
     return gap;
   }
@@ -1037,6 +1097,7 @@
     if (k !== lookCache.k) lookCache = { k, v: HEROART.lookOf(S) };
     return lookCache.v;
   }
+  let mapZoomAt = null;   // bindMap's zoom-around-a-point, for wagons.js (a tapped cluster pin zooms in)
   function bindMap() {
     const c = $("#map"), pts = new Map();
     let down = null, moved = false, pinch = null;
@@ -1051,6 +1112,7 @@
       }
       zoom = z; $("#zoomBtn").textContent = zoom > 1.01 ? "－" : "＋";
     };
+    mapZoomAt = setZoom;
     let press = null, pressed = false;
     c.addEventListener("pointerdown", (e) => {
       pts.set(e.pointerId, [e.clientX, e.clientY]); c.setPointerCapture(e.pointerId); mapTouchedAt = performance.now(); kickMap();
@@ -1065,6 +1127,7 @@
       else { down = { x: e.clientX, y: e.clientY, c: [...center] }; moved = false; }
     });
     c.addEventListener("pointermove", (e) => {
+      if (e.pointerType === "mouse" && !pts.size && view.transform && typeof WAGONS !== "undefined") { const r = c.getBoundingClientRect(); WAGONS.hover(view, e.clientX - r.left, e.clientY - r.top, c); }   // PC: wagons light up under the mouse
       if (!pts.has(e.pointerId)) return;
       mapTouchedAt = performance.now(); kickMap();
       pts.set(e.pointerId, [e.clientX, e.clientY]);
@@ -1091,6 +1154,7 @@
       if (typeof GREET !== "undefined") { GREET.close(); if (GREET.tap(view, e.clientX - r.left, e.clientY - r.top)) return; }   // another hero: their card, Greet (greet.js)
       const cvTap = typeof CVROAD !== "undefined" && S.trip?.status === "travel" ? CVROAD.hit(view.caravans, screenToWorld(e.clientX - r.left, e.clientY - r.top), WorldMap.W, WorldMap.H, 24 / view.transform.k) : null;
       if (cvTap) return meetCaravan(cvTap.id);   // tapped a caravan's wagons while travelling: stop and meet them
+      if (typeof WAGONS !== "undefined") { if (WAGONS.tap(view, e.clientX - r.left, e.clientY - r.top, c)) return; if (WAGONS.isOpen()) WAGONS.close(); }   // any other wagon: its card; a cluster pin: zoom in (wagons.js)
       const pin = pinAt(e.clientX - r.left, e.clientY - r.top);
       selected = pin ? "__pin:" + pin.id : WorldMap.placeAt(view, e.clientX - r.left, e.clientY - r.top, known);
       if (!selected) { const w = screenToWorld(e.clientX - r.left, e.clientY - r.top); if (WORLD.onMap(w)) { roamSpot = w; selected = "__spot"; } }
@@ -1194,7 +1258,7 @@
     if (!e) return;
     openModal(`<p class="sub danger-${e.danger}" style="margin:0">${e.danger === "high" ? "Deadly" : e.danger === "medium" ? "Dangerous" : "Minor"} encounter · ${esc(e.hold)}${G.isNight() ? " · night" : ""}</p>
       <h2 style="margin:4px 0 8px">${esc(e.name)}</h2>${typeof FOEPERKS !== "undefined" ? FOEPERKS.html(e, esc) : ""}<p>${esc(e.text)}</p>
-      ${note ? `<p class="sub">${esc(note)}</p>` : ""}${(() => { const am = typeof AMMO !== "undefined" ? AMMO.status(S) : null; return am && !am.best ? ammoNote() : ""; })()}${typeof HORSEBACK !== "undefined" ? HORSEBACK.note(S) : ""}${typeof WFX !== "undefined" ? WFX.noteHTML(S) : ""}
+      ${note ? `<p class="sub">${esc(note)}</p>` : ""}${(() => { const am = typeof AMMO !== "undefined" ? AMMO.status(S) : null; return am && !am.best ? ammoNote() : ""; })()}${typeof HORSEBACK !== "undefined" ? (typeof MOUNTCOMBAT !== "undefined" && !MOUNTCOMBAT.enabled ? MOUNTCOMBAT.note(S) : HORSEBACK.note(S)) : ""}${typeof WFX !== "undefined" ? WFX.noteHTML(S) : ""}
       <div class="grid2" style="margin:10px 0"><div class="vital"><small><span>You</span><span class="num">${Math.round(G.curHealth(S))}/${G.maxHealth(S)}</span></small><div class="bar"><i style="width:${pct(G.curHealth(S), G.maxHealth(S))}%;background:var(--hp)"></i></div></div>
       <div class="vital"><small><span>${esc(e.name)}</span><span class="num">${e.hp}/${e.health}</span></small><div class="bar"><i style="width:${pct(e.hp, e.health)}%;background:var(--ember)"></i></div></div></div>
       <div class="grid2">
@@ -1216,7 +1280,8 @@
   function openEvent(note) {
     const ev = S.trip?.event;
     if (!ev) return;
-    const shop = ev.shop ? `<div class="list" style="margin:8px 0">${ev.shop.map((i) => { const p = G.buyPrice(S, i, null); return `<div class="item${tiCls(i)}"><div class="t">${esc(D.ITEMS[i].name)}<span>${esc(G.itemStats(i))} · ${D.ITEMS[i].weight} wt</span></div><span class="num gold">${p}</span><button class="btn sm" data-act="evbuy" data-item="${i}" ${S.gold >= p ? "" : "disabled"}>Buy</button>${tiBox(i)}</div>`; }).join("")}</div><p class="sub">You have ${S.gold} gold.</p>` : "";
+    const cvp = typeof WAGONS !== "undefined" && ev.cid && /^cvmeet_/.test(ev.id || "");   // a caravan's packs: crisis prices (wagons.js)
+    const shop = ev.shop ? `<div class="list" style="margin:8px 0">${ev.shop.map((i) => { const p = cvp ? WAGONS.price(S, ev, i) : G.buyPrice(S, i, null); return `<div class="item${tiCls(i)}"><div class="t">${esc(D.ITEMS[i].name)}<span>${esc(G.itemStats(i))} · ${D.ITEMS[i].weight} wt</span></div><span class="num gold">${p}</span><button class="btn sm" data-act="evbuy" data-item="${i}" ${S.gold >= p ? "" : "disabled"}>Buy</button>${tiBox(i)}</div>`; }).join("")}</div><p class="sub">You have ${S.gold} gold.</p>` : "";
     const choices = ev.shop ? [["leave", "Say goodbye and move on"]] : G.eventChoices(S);
     openModal(`${typeof EVENTART !== "undefined" ? EVENTART.road(ev) : ""}<p class="sub" style="margin:0">On the road · ${esc(G.holdAt([S.x, S.y]))} · ${esc(Terrain.NAMES[Terrain.typeAtPos([S.x, S.y])])}</p>
       <h2 style="margin:4px 0 8px">${esc(ev.title || "Something by the road")}</h2><p>${esc(ev.text)}</p>
@@ -1460,7 +1525,7 @@
     else if (r && r.type === "camp" && typeof DEEPDELVE !== "undefined") main = DEEPDELVE.campHTML(S);   // deep expedition: Extract / Rest / Descend
     else if (r) {
       const e = r.enemy;
-      main = `<div class="card ${e ? "foe" : ""} ${r.type === "rest" ? "rest" : ""}">${typeof DUNROOMS !== "undefined" ? DUNROOMS.room(r.type, d.theme, e) : PLACEART.room(r.type)}<h3>${DUNGEONS.ICON[r.type]} ${e ? esc(e.name) : DUNGEONS.LABEL[r.type]}</h3><p>${esc(r.text)}</p>
+      main = `<div class="card ${e ? "foe" : ""} ${r.type === "rest" ? "rest" : ""}">${typeof DUNROOMS !== "undefined" ? DUNROOMS.room(r.type, d.theme, e) : PLACEART.room(r.type)}<h3>${DUNGEONS.ICON[r.type]} ${e ? esc(e.name) : r.title ? esc(r.title) : DUNGEONS.LABEL[r.type]}</h3><p>${esc(r.text)}</p>
         ${e ? `<div class="vital"><small><span>${esc(e.name)}</span><span class="num">${e.hp}/${e.health} · hits for ~${Math.round(e.damage)}</span></small><div class="bar"><i style="width:100%;background:var(--ember)"></i></div></div>` : ""}
         <div class="evc">${DUNGEONS.roomChoices(S).map(([c, label]) => `<button class="btn ${["fight", "pick", "rest", "read", "pray", "open", "loot", "burn", "dash"].includes(c) || c.startsWith("set:") ? (e ? "danger" : "pri") : ""}" data-act="dact" data-c="${esc(c)}">${esc(label)}</button>`).join("")}</div>
         ${e ? `<p class="sub" style="margin-bottom:0">${typeof TB !== "undefined" && TB.enabled() ? `You play the fight turn by turn` : `Fighting uses ${aiOn() ? `<b>Smart AI</b> (${esc(S.loadout)} gear)` : `your <b>${esc(S.loadout)}</b> tactics`}`}.</p>` : ""}</div>`;
@@ -1505,12 +1570,29 @@
     if (dc === "pick" && typeof IMM !== "undefined" && IMM.wantsGame()) { IMM.pick("dungeon", dungeonAct, S); if (dg) DGAMES.mirror("lock"); return; }
     dungeonAct(dc);
   }
+  /* Gather by hand: the harvest mini-game (harvestgame.js), then the pick with how it went. Started in reach, so it still
+     counts if the road carries you on while you work (walking or riding). */
+  function harvestHand(id) {
+    const n = GATHER.nearby(S).find((x) => x.id === id);
+    if (!n || n.d > GATHER.REACH_PX + 1) return toast("That patch is too far away. Walk closer.");
+    if (!n.ripe) return toast("Already picked. It grows back in a couple of days.");
+    const before = HARVEST.progress(S, n.ing);
+    HARVESTGAME.open({ ing: n.ing, kind: HARVEST.kindOf(n.ing), name: D.ITEMS[n.ing]?.name || n.ing, tol: HARVEST.tolOf(S), fast: HARVEST.tolOf(S) > 1,
+      onDone: (grade) => {
+        let r; try { r = GATHER.act(S, "gpick", id, undefined, { grade, passing: true }); } catch (e) { console.error(e); r = { err: "Couldn't gather that. Please try again." }; }
+        if (r.ok) { G.note(S, ` ${r.text}`); SOUND.fx("coin"); persist(true); renderPanel(true); renderGatherPop(); }
+        return { ...r, before, after: HARVEST.progress(S, n.ing), thumb: G.P(S, "green_thumb") > 0 };
+      } });
+  }
   function gatherAct(what, id) {
+    if (what === "gpick" && typeof HARVESTGAME !== "undefined" && typeof HARVEST !== "undefined" && HARVESTGAME.ok()) {
+      try { return harvestHand(id); } catch (e) { console.error(e); }   // if the mini-game can't start, fall back to a plain pick below
+    }
     let r; try { r = GATHER.act(S, what, id); } catch (e) { console.error(e); return toast("Couldn't gather that. Please try again."); }   // never a silent dead button
     if (r.html) return openModal(r.html);
     if (r.err) return toast(r.err);
     SOUND.fx(what === "gauto" || what === "gunplant" ? "click" : "coin");
-    if (r.ok && /^g(pick|pickall|forage|plant)$/.test(what)) G.note(S, ` ${r.text}`);
+    if (r.ok && /^(g(pick|quick|pickall|forage|plant)|hdeliver)$/.test(what)) G.note(S, ` ${r.text}`);
     persist(true); renderPanel(true); renderGatherPop(); toast(r.text);
   }
   function exploreAct(what, id) {
@@ -1523,7 +1605,7 @@
     openModal(`<h2>${what === "xdig" ? " Buried treasure" : " Searching"}</h2><p>${esc(r.text)}</p>${r.book ? `<button class="btn" data-act="xread" data-id="${esc(r.book.id)}" style="width:100%;margin-bottom:6px"> Read "${esc(r.book.title)}"</button>` : ""}<button class="btn pri" data-act="close" style="width:100%">Continue</button>`);
   }
   function dungeonAct(c, replay = false) {
-    if (lvUI && !replay && lvUI.memberLocked()) return toast("In a party only the leader decides. Their choice happens to you too.");
+    if (lvUI && !replay && lvUI.memberLocked()) return toast("In a party, everyone votes on each choice. Wait for the vote to open on your screen.");
     if (replay && typeof PTRAPS !== "undefined" && coopUI && S.dungeon?.run) c = PTRAPS.mine(S, coopUI.runs.find((x) => x.id === S.dungeon.run), c, PTRAPS.docs);   // a party trap: your own result, not the leader's
     const runId = S.dungeon?.run || null, roomType = S.dungeon?.room?.type, hp0 = G.curHealth(S), found0 = S.dungeon?.found.length || 0, gold0 = S.dungeon?.gold || 0;
     const act = () => {   // the party loot pile wraps the room; a fight inside it pauses on the turn-by-turn screen
@@ -1629,6 +1711,7 @@
     if (it.aenchant) lines.push(`While worn: ${ENCH.lines ? ENCH.lines(it).join(" ") : [it.aenchant, ...(it.aenchant.more || [])].map((e) => e.key.startsWith("dae:") ? e.name : `${e.name} ${e.mag}`).join(" · ")}`);
     else if ((it.slot === "ring" || it.slot === "amulet") && !it.unique) lines.push(`Plain ${it.slot === "ring" ? "ring" : "amulet"}: an arcane enchanter can put magic on it${(it.jpow || 1) > 1 ? ` (holds ${Math.round(((it.jpow || 1) - 1) * 100)}% more magic than plain silver)` : ""}.`);
     if (it.desc) lines.push(it.desc);   // Daedric artifacts and other named items
+    if (it.slot === "weapon" && typeof ITEMCMP !== "undefined" && ITEMCMP.hits(S, r.item, r)) lines.push(`Hits for about ${ITEMCMP.hits(S, r.item, r)} with your ${it.skill} skill and perks`);   // [itemdetail] the number the compare uses
     if (it.effects) lines.push(it.effects.map(([e, m, dd]) => `${e} ${m}${dd * 5 >= 60 ? ` for ${Math.round(dd * 5 / 60)} min` : ""}`).join(" · "));
     else if (it.restore) lines.push(`Restores ${it.restore[1]} ${it.restore[0]}`);
     if (it.slot === "scroll" || (it.slot === "tome" && !TI)) lines.push(`${it.slot === "tome" ? "Teaches" : "Casts"} ${D.SPELLS[it.spell].name}${it.slot === "tome" && S.spells.includes(it.spell) ? " (you know it)" : ""}`);
@@ -1656,7 +1739,18 @@
     if (typeof INVQOL !== "undefined") acts.push(...INVQOL.acts(S, r, eq, false));   // Keep / Drop (invqol.js)
     if (typeof ECON !== "undefined" && !it.noTrade && !["golden_claw", "dragonstone"].includes(r.item)) { const bp = ECON.bestPlace(S, r); if (bp && bp.p > 1) lines.push(`Sells best in ${bp.to} right now (about ${bp.p} gold each).`); }
     return `<div class="sky-detail"><div class="sky-ico">${ICONART.item(r.item, 64, r)}</div><h3 class="q-${typeof CC !== "undefined" ? CC.tier(r.item, r) : "common"}">${esc(row.name)}</h3>${typeof CC !== "undefined" ? `<p class="tierline q-${CC.tier(r.item, r)}">${CC.TIER_NAME[CC.tier(r.item, r)]}${r.stolen ? ' · <span class="is-stolen">Stolen</span>' : ""}</p>` : ""}<div class="sky-stats">${stats.map(([k, v]) => `<div><span>${k}</span><b class="num">${esc(String(v))}</b></div>`).join("")}</div>
-      ${lines.map((l) => `<p class="sub">${esc(l)}</p>`).join("")}${typeof CHARGE !== "undefined" ? CHARGE.detail(r.item, r, S) : ""}${it.slot === "tome" && TI ? TI.html(S, r.item, { head: false }) : ""}${gearPreview(r, it, eq)}<div class="sky-acts">${acts.join("")}</div></div>`;
+      ${lines.map((l) => `<p class="sub">${esc(l)}</p>`).join("")}${typeof CHARGE !== "undefined" ? CHARGE.detail(r.item, r, S) : ""}${it.slot === "tome" && TI ? TI.html(S, r.item, { head: false }) : ""}${typeof ITEMCMP !== "undefined" ? ITEMCMP.html(S, r) : ""}${gearPreview(r, it, eq)}<div class="sky-acts">${acts.join("")}</div></div>`;
+  }
+  /* [itemdetail] PC: the mouse rests on an Items row: show it in the side panel (only the panel is redrawn, the list keeps its scroll) */
+  function skyPreview(id) {
+    const el = $("#sky"); if (!el || sky.page !== "items" || sky.cat === "gear" || sky.sel != null || id == null) return;
+    if (String(sky.hov) === String(id) && el.querySelector(".sky-in>.sky-detail")) return;
+    sky.hov = id;
+    const row = itemRows().find((r) => String(r.id) === String(id)); if (!row) return;
+    const old = el.querySelector(".sky-in>.sky-detail, .sky-in>.m2-pick"); if (!old) return;
+    const t = document.createElement("div"); t.innerHTML = itemDetail(row);
+    const nu = t.firstElementChild; if (!nu) return;
+    nu.classList.add("ic-hover"); old.replaceWith(nu);
   }
   /* [gear] a paper doll of you wearing this piece, next to you as you are now — what others will see */
   function gearPreview(r, it, eq) {
@@ -1777,6 +1871,7 @@
     if (!el) {
       el = document.createElement("div"); el.id = "sky"; el.className = "sky"; el.setAttribute("role", "dialog"); el.setAttribute("aria-label", "Menu");
       el.addEventListener("click", onPanelClick); document.body.appendChild(el);
+      if (typeof ITEMCMP !== "undefined") ITEMCMP.bind(el, { preview: skyPreview });   // [itemdetail] PC: hover fills the side panel
       el.addEventListener("input", (e) => { if (e.target.id !== "skysearch") return; sky.q = e.target.value; if (sky.q && sky.cat === "gear") sky.cat = "all"; const pos = e.target.selectionStart; renderMenu(); const q = $("#skysearch"); if (q) { q.focus(); q.setSelectionRange(pos, pos); } });
     }
     const cats = sky.page === "items" ? ITEM_CATS : sky.page === "magic" ? MAGIC_CATS : SKILL_CATS;
@@ -1784,10 +1879,10 @@
     if (sky.page === "items" && sky.cat === "gear") {
       list = `<div class="sky-doll">${dollScreen()}${typeof AMMO !== "undefined" && AMMO.status(S) && !AMMO.status(S).best ? ammoNote() : ""}<p class="sub" style="text-align:center;margin:8px 0 0">Tap a slot to change what you wear. Loadout: <b>${esc(S.loadout)}</b></p></div>`;
     } else if (sky.page === "items") {
-      const rows = itemRows(); const sel = rows.find((r) => r.id === sky.sel) || null;
+      const rows = itemRows(); const sel = rows.find((r) => r.id === sky.sel) || (sky.sel == null && sky.hov != null ? rows.find((r) => String(r.id) === String(sky.hov)) : null) || null;   // [itemdetail] PC: the row under the mouse until one is pinned
       const M2 = typeof MENUS2 !== "undefined", sk2 = sky.sort === "dmg" || sky.sort === "arm" ? "stat" : sky.sort;
       const arrow = (k) => sk2 === k && (M2 || !S.invSort) ? ((sky.dir || 1) > 0 ? " ▾" : " ▴") : "";
-      head = `${M2 ? MENUS2.itemSortBar(sky) : typeof INVQOL !== "undefined" ? INVQOL.sortHTML(S) : ""}<div class="sky-head sky-cols"><button data-act="skysort" data-id="name">Name${arrow("name")}</button><button data-act="skysort" data-id="${sky.cat === "apparel" ? "arm" : sky.cat === "weapons" ? "dmg" : "stat"}">${{ weapons: "Dmg", apparel: "Armor", potions: "Power" }[sky.cat] || "Stat"}${arrow("stat")}</button><button data-act="skysort" data-id="weight">Wt${arrow("weight")}</button><button data-act="skysort" data-id="value">Value${arrow("value")}</button></div>`;
+      head = `${M2 ? MENUS2.itemSortBar(sky) : typeof INVQOL !== "undefined" ? INVQOL.sortHTML(S) : ""}<div class="sky-head sky-cols"><button data-act="skysort" data-id="name">Name${arrow("name")}</button><button data-act="skysort" data-id="${sky.cat === "apparel" ? "arm" : sky.cat === "weapons" ? "dmg" : "stat"}">${{ weapons: "Damage", apparel: "Armor", potions: "Effect", food: "Effect" }[sky.cat] || "Stat"}${arrow("stat")}</button><button data-act="skysort" data-id="weight">Wt${arrow("weight")}</button><button data-act="skysort" data-id="value">Value${arrow("value")}</button></div>`;
       list = rows.map((r) => `<button class="sky-row sky-cols ${r.id === sky.sel ? "sel" : ""} ${r.eq ? "eq" : ""}" data-act="skysel" data-id="${r.id}"><span class="nm q-${typeof CC !== "undefined" ? CC.tier(r.r.item, r.r) : "common"}${r.r.stolen ? " is-stolen" : ""}">${r.eq ? '<b class="eqm" title="Equipped" aria-label="Equipped">◆</b>' : ""}${ICONART.item(r.r.item, 24, r.r)}${r.eq ? "" : iqB(r.r.item, r.r)}${esc(r.name)}${r.r.qty > 1 ? ` <i>(${r.r.qty})</i>` : ""}${r.it.enchant || r.it.aenchant ? ' <i class="ench">✦</i>' : ""}${typeof CHARGE !== "undefined" ? CHARGE.tag(r.r.item, r.r, S) : ""}${r.r.stolen ? ' <i class="stolen">\uE15E</i>' : ""}</span><span class="num">${r.stat ?? "–"}</span><span class="num">${r.weight}</span><span class="num">${r.value}</span></button>`).join("") || `<p class="sub sky-empty">${sky.q ? `Nothing called “${esc(sky.q)}” here. Try “All”, or part of the name.` : "Nothing here. Buy things in town or loot them on the road."}</p>`;
       detail = sel ? itemDetail(sel) : "";
     } else if (sky.page === "magic") {
@@ -1936,12 +2031,15 @@
   // ------------------------------------------------------------ the Jarl's bounty board
   let lastDragons = null;
   // ------------------------------------------------------------ tutorial: a guided first trip, then one tip per tab
+  /* [qa-core] tutorial lines are translated whole (i18n_qacore.js): the on-screen swap can't reach sentences split by <b> */
+  const LT = (en, v) => typeof I18N !== "undefined" && I18N.t ? I18N.t(en, v) : en.replace(/\{(\w+)\}/g, (m, k) => (v && k in v ? String(v[k]) : m));
+  if (typeof I18N !== "undefined" && I18N.add && typeof I18N_QACORE !== "undefined") I18N.add(I18N_QACORE.tpl);
   const TUT = [
     null,
-    { title: "Your first trip", text: () => ppUI && party && !ppUI.canDecide() ? `Welcome to Skyrim, ${S.name}. You're in a party: the leader picks where to go and you travel with them. Watch the map; the next step starts when you set off.` : `Welcome to Skyrim, ${S.name}. Everything happens in real time. Tap <b>Whiterun</b> on the map and press <b>Travel</b>, or press <b>Go</b> next to it in the list below.${party ? " Your party comes along." : ""}`, done: () => !!S.trip || S.location === "Whiterun" },
-    { title: "On the road", text: () => `You're walking. Trips keep going even when the app is closed, and something may happen by the road${typeof TB !== "undefined" && TB.enabled() ? ": if it's a fight, you play it turn by turn (or press Auto)" : ""}. You can ride a horse later, or take a carriage between cities.`, done: () => !S.trip },
-    { title: "You've arrived", text: () => `Open the <b>Town</b> tab. In towns and cities it has shops, the inn, trainers, the forge, jobs and more${S.location && TOWNS.isTown(S.location) ? "" : " (this spot is out in the wilds, so it shows what you can do here)"}.`, done: () => tab === "town" },
-    { title: "Quests", text: () => "Now open the <b>Journal</b>. Your quests are there, and the gold diamond on the map shows where to go next. Chat and other players are under <b>Social</b>.", done: () => tab === "log" },
+    { title: "Your first trip", text: () => ppUI && party && !ppUI.canDecide() ? LT("Welcome to Skyrim, {name}. You're in a party: the leader picks where to go and you travel with them. Watch the map; the next step starts when you set off.", { name: esc(S.name) }) : LT("Welcome to Skyrim, {name}. Everything happens in real time. Tap <b>Whiterun</b> on the map and press <b>Travel</b>, or press <b>Go</b> next to it in the list below.", { name: esc(S.name) }) + (party ? " " + LT("Your party comes along.") : ""), done: () => !!S.trip || S.location === "Whiterun" },
+    { title: "On the road", text: () => typeof TB !== "undefined" && TB.enabled() ? LT("You're walking. Trips keep going even when the app is closed, and something may happen by the road: if it's a fight, you play it turn by turn (or press Auto). You can ride a horse later, or take a carriage between cities.") : LT("You're walking. Trips keep going even when the app is closed, and something may happen by the road. You can ride a horse later, or take a carriage between cities."), done: () => !S.trip },
+    { title: "You've arrived", text: () => S.location && TOWNS.isTown(S.location) ? LT("Open the <b>Area</b> tab. In towns and cities it has shops, the inn, trainers, the forge, jobs and more.") : LT("Open the <b>Area</b> tab. This spot is out in the wilds, so it shows what you can do here."), done: () => tab === "town" },   // [qa-core] the tab is called Area now
+    { title: "Quests", text: () => LT("Now open the <b>Journal</b>. Your quests are there, and the gold diamond on the map shows where to go next. Chat and other players are under <b>Social</b>."), done: () => tab === "log" },
   ];
   const TAB_TIPS = {
     map: "Start with the “What to do next” card. Press Go to travel; tap any place on the map to see how far it is.",
@@ -1952,17 +2050,19 @@
     log: "Only your quests live here: Active, Misc and Completed. ☆ Track the one you're on and the compass and map follow it.",
   };
 
-  const guideOffer = () => !S.guideOffered && S.level < 10 && (!S.tut || S.tut.off || S.tut.step === 0)
+  /* [stations] a place's own page (forge, inn, a shop...) opens on the work: no guide card or tab tip on top of it */
+  const atStation = () => tab === "town" && !!townShop && townShopAt === S.location && typeof AREAUI !== "undefined";
+  const guideOffer = () => !S.guideOffered && S.level < 10 && (tab === "map" || (tab === "town" && !atStation())) && (!S.tut || S.tut.off || S.tut.step === 0)
     ? `<div class="tut"><div class="tut-h"><b> New to the game?</b></div><p>The guide walks you through your first hour: trading, fighting, dungeons, smithing, friends and more.</p><div style="display:flex;gap:8px"><button class="btn sm pri" data-act="guide">Open the guide</button><button class="btn sm" data-act="guideno">Not now</button></div></div>` : "";
   function tutTip() {
     const t = S.tut; if (!t || t.off) return guideOffer();
     if (t.step > 0 && t.step < TUT.length) {
       while (t.step < TUT.length && TUT[t.step].done()) t.step++;
       if (t.step >= TUT.length) { t.step = 0; S.gold += 100; Store.save(S); setTimeout(() => { SOUND.fx("quest"); toast("Tutorial done. Riverwood's steward sends you 100 gold for the road."); }, 300); }
-      else { const st = TUT[t.step]; return `<div class="tut"><div class="tut-h"><b>${esc(st.title)}</b><span class="sub">${t.step} of ${TUT.length - 1}</span></div><p>${st.text()}</p><button class="linkbtn" data-act="tutskip">Skip the tutorial</button></div>`; }
+      else { const st = TUT[t.step]; return `<div class="tut"><div class="tut-h"><b>${esc(LT(st.title))}</b><span class="sub">${esc(LT("{n} of {m}", { n: t.step, m: TUT.length - 1 }))}</span></div><p>${st.text()}</p><button class="linkbtn" data-act="tutskip">${esc(LT("Skip the tutorial"))}</button></div>`; }
     }
     if (guideOffer()) return guideOffer();
-    if (TAB_TIPS[tab] && !t.seen?.[tab]) return `<div class="tut"><p> ${TAB_TIPS[tab]}</p><button class="btn sm" data-act="tutseen">Got it</button></div>`;
+    if (TAB_TIPS[tab] && !t.seen?.[tab] && !atStation()) return `<div class="tut"><p> ${TAB_TIPS[tab]}</p><button class="btn sm" data-act="tutseen">Got it</button></div>`;
     return "";
   }
 
@@ -2223,7 +2323,8 @@
     const fresh = ACH.check(S);
     if (!fresh.length) return;
     persist(true);
-    fresh.forEach((a, i) => setTimeout(() => { SOUND.fx("levelup"); toast(` Achievement: ${a.icon} ${a.name}`); }, 1200 * i));
+    if (typeof NOTIFY !== "undefined") NOTIFY.ach(fresh);   // [notify] ones earned together share one banner
+    else fresh.forEach((a, i) => setTimeout(() => { SOUND.fx("levelup"); toast(` Achievement: ${a.icon} ${a.name}`); }, 1200 * i));
     for (const a of fresh) if (Store.online) postNews(` ${S.name} earned “${a.name}”.`);
   }
 
@@ -2516,6 +2617,8 @@
   }
   function publishFriends() { if (Store.online) Store.put("friends", S.id, SOCIAL.record(S)); }
   function friendCard(id) { return cardOf(id) || (SOCIAL.friends(S)[id] ? { id, name: SOCIAL.friends(S)[id].name } : null); }
+  let socMoreOpen = false;   // the folded More row on Social, opened by hand
+  document.addEventListener("toggle", (e) => { if (e.target?.classList?.contains("socmore-d")) socMoreOpen = e.target.open; }, true);
   function panelSocial() {
     const nDm = SOCIAL.unread(S, dmDocs), nAdd = SOCIAL.addedMe(friendDocs, S).length, inc = myIncoming(), nParty = partyNews(), nChat = chatUnread();
     /* [lightmenus] four big tabs (Party, Company, Friends, Realm); Messages, Trades, Chat and Faction sit in a small "More" row
@@ -2524,7 +2627,9 @@
     const cnt = (n) => n ? `<span class="socn"> (${n})</span>` : "";   // the counter sits in its own span so the label still translates
     const prim = [["party", `Party${cnt(nParty)}`], ...(typeof LONGHOUSE !== "undefined" ? [["company", `Company${cnt(LONGHOUSE.badge(S) ? "!" : 0)}`]] : []), ["friends", `Friends${cnt(nAdd)}`], ["realm", "Realm"]];
     const more = [["msgs", `Messages${cnt(nDm)}`], ["trades", `Trades${cnt(inc.length)}`], ["chat", `Chat${cnt(nChat)}`], ...(typeof SIDEUI !== "undefined" ? [["faction", `Faction${cnt(SIDEUI.badge() ? "!" : 0)}`]] : [])];
-    const chips = `<div class="seg socseg" role="group" aria-label="Social">${prim.map(tabBtn).join("")}</div><div class="socmore" role="group" aria-label="More"><span class="socmore-l">More</span>${more.map(tabBtn).join("")}</div>`;
+    /* [phonelayout] the More row folds under one "More" line (its badges add up on it) and opens by itself when you're on one of its screens */
+    const moreN = nDm + inc.length + nChat + (typeof SIDEUI !== "undefined" && SIDEUI.badge() ? 1 : 0), inMore = more.some(([k]) => k === socTab);
+    const chips = `<div class="seg socseg" role="group" aria-label="Social">${prim.map(tabBtn).join("")}</div><details class="socmore-d"${inMore || socMoreOpen ? " open" : ""}><summary><span class="socmore-l">More</span><span class="socmore-s">Messages, trades, chat</span>${moreN ? `<b class="socmore-n">${moreN}</b>` : ""}</summary><div class="socmore" role="group" aria-label="More">${more.map(tabBtn).join("")}</div></details>`;
     const off = Store.online ? "" : `<p class="sub">You're playing offline. Go online (Map tab) to see friends and messages.</p>`;
     let body = "";
     if (socTab === "friends") {
@@ -2555,7 +2660,7 @@
           + (more.length ? `<h3 style="margin-top:10px">Write to a friend</h3>${more.map(([id, f]) => `<div class="item"><div class="t">${esc(f.name)}</div><button class="btn sm" data-act="fmsg" data-id="${esc(id)}"> Write</button></div>`).join("")}` : "");
       }
     } else if (socTab === "company" && typeof LONGHOUSE !== "undefined") {
-      return `<div class="panel"><h2> Friends & messages</h2>${chips}${off}</div>${LONGHOUSE.panel()}`;   // longhouse.js: the adventuring company
+      return `<div class="panel soc-co"><h2> Friends & messages</h2>${chips}${LONGHOUSE.panel({ inner: true })}${off}</div>`;   // longhouse.js: the adventuring company, its hall right under the tab row
     } else if (socTab === "faction" && typeof SIDEUI !== "undefined") {
       return `<div class="panel"><h2> Friends & messages</h2>${chips}${off}</div>${idPanel("faction", SIDEUI.panel())}`;   // sides.js: your side, rank, cloaks, the war
     } else if (socTab === "party" || socTab === "chat" || socTab === "realm") {
@@ -2667,6 +2772,13 @@
     if (typeof PARTY !== "undefined") return PARTY.allies(S, party, others, me, (o) => otherPos(o), MP.NEAR_PX);   // party members close by, each fighting by their own tactics
     return others.filter((o) => party.members.some((m) => m.id === o.id) && (S.dungeon ? o.dungeon === S.dungeon.place : (!o.dungeon && G.pxDist(otherPos(o), me) <= MP.NEAR_PX)))
       .map(MP.allyFromCard);
+  }
+  /* open the Area tab after arriving (arrivearea.js); like tapping it, without scrolling a phone away from the map */
+  function goArea() {
+    if (tab === "town" && !$("#sky")) return;
+    closeMenu(); tab = "town"; testResult = null; bump(); renderTabs(); renderPanel(true);
+    if (typeof PCMAP !== "undefined" && PCMAP.on()) PCMAP.refresh();
+    if (typeof MOTION !== "undefined") MOTION.panel($("#side"));
   }
   function followParty() {
     const tr = party?.trip;
@@ -2853,16 +2965,18 @@
   }
   function renderPanel(force) {
     const side = $("#side"); if (!side) return;   // the game screen isn't up yet (title or intro)
+    if (typeof RIDING !== "undefined" && S) RIDING.sync(S);   // the map's ride button: a horse just bought, back on its feet, out of a dungeon …
     if (!force && side.contains(document.activeElement) && document.activeElement.matches("input,select")) return;
     rendered = version; lastPanelRender = Date.now();
     side.dataset.tab = tab;
     const openD = [...side.querySelectorAll("details")].map((d) => d.open), y = scrollY;
     const twp = typeof TABMENU !== "undefined" ? { stars: () => TABMENU.stars(S), perks: () => TABMENU.perks(S) } : {};
     const mnp = typeof MENUS !== "undefined" ? MENUS.panels({ S, ach: achPanel, settings: settingsHTML, fest: festPanel, idPanel, update }) : {};   // menus.js: tab homes
-    side.innerHTML = tutTip() + (typeof MENUS !== "undefined" ? MENUS.subnav(tab) : "") + screenHead() + ({ ...mnp, map: panelTravel, hero: panelHero, pack: panelPack, tactics: panelTactics, town: panelTown, log: panelLog, social: panelSocial, stats: panelStats, diary: panelDiary, places: panelPlaces, follower: () => typeof FOLTAB !== "undefined" ? FOLTAB.panel(S, esc, svgI) : "", ...twp }[tab] || panelTravel)();
+    side.innerHTML = tutTip() + (typeof MENUS !== "undefined" ? MENUS.subnav(tab) : "") + screenHead() + ({ ...mnp, map: panelTravel, hero: panelHero, pack: panelPack, tactics: panelTactics, town: () => (typeof ARRIVEAREA !== "undefined" ? ARRIVEAREA.gatherHTML(S) : "") + panelTown(), log: panelLog, social: panelSocial, stats: panelStats, diary: panelDiary, places: panelPlaces, follower: () => typeof FOLTAB !== "undefined" ? FOLTAB.panel(S, esc, svgI) : "", ...twp }[tab] || panelTravel)();
     if (typeof TABMENU !== "undefined") TABMENU.afterPanel(tab);
     if (typeof MENUS !== "undefined") MENUS.afterPanel(tab);
     if (typeof MENUS2 !== "undefined") MENUS2.afterPanel(tab, side);   // menus2.js: Find a quest
+    if (tab === "town" && typeof AREAUI !== "undefined") AREAUI.fitSoon(side);   // areaui.js: one or two columns of places
     if (!force) { side.querySelectorAll("details").forEach((d, i) => { if (openD[i] != null) d.open = openD[i]; }); scrollTo(0, y); }
     const cl = $("#chatlog"); if (cl) cl.scrollTop = cl.scrollHeight;
   }
@@ -3244,7 +3358,11 @@
     if (AU && townShopAt !== l) { if (townShopAt != null) townShop = ""; townShopAt = l; }   // a new town opens on its board
     townShop = sections.includes(townShop) ? townShop : AU ? "" : sections[0];
     const names = { general: "General goods", blacksmith: "Blacksmith", wizard: "Court wizard", stables: "Stables", fence: "Ragged Flagon (fence)", inn: TOWNS.INNS[l] || "Inn", train: "Trainers", alchemy: "Alchemy lab", forge: "Forge", jobs: "Jobs", streets: "Streets", hire: l === "Whiterun" ? "Dragonsreach & hirelings" : "Hirelings", hall: "⚑ Hall of the North", halls: "\uE119 Halls & shops", notice: "\uE103 Jarl's bounty", homes: "\uE11C Neighbours", market: "\uE133 Market stalls", mine: "\uE12A Mine", craft: "\uE10A Spell crafting", caravans: "\uE13B Caravans", cook: "\uE148 Cooking pot", arena: "\uE101 The Arena", fish: "\uE146 Fishing", hunt: "\uE10C Hunting grounds", carriage: "Carriage", enchanter: "Arcane enchanter", home: TOWNS.home(S, l) ? `\uE11D ${TOWNS.HOMES[l]?.[0]}` : `Buy ${TOWNS.HOMES[l]?.[0]}`, ...(typeof SOL !== "undefined" ? SOL.NAMES : {}), ...(typeof HOMESTEAD !== "undefined" ? HOMESTEAD.names(S, l) : {}), ...(typeof TOURNEYUI !== "undefined" ? TOURNEYUI.names(S, l) : {}), ...(typeof LEGHUNT !== "undefined" ? LEGHUNT.names() : {}), ...(typeof HEISTS !== "undefined" ? HEISTS.names() : {}) };
-    const townTop = `${typeof CIVILWAR !== "undefined" ? CIVILWAR.townLine(S, l) : ""}${typeof HOLDUI !== "undefined" ? HOLDUI.townLine(S, l) : ""}${typeof CRISES !== "undefined" ? CRISES.townLine(S, l) : ""}${typeof TOURNEYUI !== "undefined" ? TOURNEYUI.townLine(S, l) : ""}${wanted ? `<p class="sub danger-high">You're wanted in ${esc(hold)}. Shops, inns and trainers turn you away.</p>` : ""}`;
+    const news = [typeof CIVILWAR !== "undefined" ? CIVILWAR.townLine(S, l) : "", typeof HOLDUI !== "undefined" ? HOLDUI.townLine(S, l) : "", typeof CRISES !== "undefined" ? CRISES.townLine(S, l) : "", typeof TOURNEYUI !== "undefined" ? TOURNEYUI.townLine(S, l) : ""].filter(Boolean);
+    const wantedLine = wanted ? `<p class="sub danger-high">You're wanted in ${esc(hold)}. Shops, inns and trainers turn you away.</p>` : "";
+    const townTop = news.join("") + wantedLine;
+    /* [stations] on a place's own page the town lines the board already shows fold into one "Town news (N)" row; being wanted stays in view */
+    const newsRow = news.length ? `<div class="au-news${townNews ? " on" : ""}"><button class="au-newsb" data-act="townnews" aria-expanded="${townNews}"><span>Town news</span> <span class="au-nn">(${news.length})</span><span class="au-chev" aria-hidden="true">${townNews ? "▴" : "▾"}</span></button>${townNews ? `<div class="au-newsin">${news.join("")}</div>` : ""}</div>` : "";
     if (AU && !townShop) return `<div class="panel au-panel"><h2>${esc(l)}</h2>${PLACEART.scene(l)}${townTop}${typeof RUMOURS !== "undefined" ? RUMOURS.townHTML(S, l, "", open) : ""}${AU.hub({ S, l, sections, names, open, hold })}<p class="sub au-gold">You have <b class="gold">${S.gold} gold</b>.</p></div>`;
     const fac = F.priceFactor(G.skill(S, "Mercantile"));
     let body = "", note = "";
@@ -3253,7 +3371,7 @@
     else if (["general", "blacksmith", "wizard", "fence"].includes(townShop)) {
       note = `${G.shopsOpen() ? "Shops are open." : open ? "Night prices." : `Shops are closed for the night. They open at 08:00 (${esc(G.clockText())}).`} At Mercantile ${G.skill(S, "Mercantile")} you buy at about ${(fac / G.haggle(S)).toFixed(2)}× value.${townShop === "fence" ? " The fence buys stolen goods." : ""}`;
       body = barterHTML(townShop, open, wanted, shopRow);
-      if (townShop === "wizard" && l === "Whiterun" && !S.thaneWhiterun) body = `<div class="item">${NPCART.portrait(NPCART.who("Whiterun", "wizard"), 36)}<div class="t">Farengar, court wizard<span>Wants the Dragonstone from Bleak Falls Barrow. The Jarl rewards whoever brings it.</span></div><button class="btn sm pri" data-act="dragonstone" ${TOWNS.canDeliverDragonstone(S) ? "" : "disabled"}>Give it</button></div>` + body;   // players look for Farengar here, not under hirelings
+      if (townShop === "wizard" && l === "Whiterun" && !S.thaneWhiterun) body = `<div class="item">${NPCART.portrait(NPCART.who("Whiterun", "wizard"), 44)}<div class="t">Farengar, court wizard<span>Wants the Dragonstone from Bleak Falls Barrow. The Jarl rewards whoever brings it.</span></div><button class="btn sm pri" data-act="dragonstone" ${TOWNS.canDeliverDragonstone(S) ? "" : "disabled"}>Give it</button></div>` + body;   // players look for Farengar here, not under hirelings
     } else if (townShop === "inn") {
       note = "Sleep to heal fully and become Rested (skills improve 5% faster for 40 minutes; your own bed gives 10%). Buy a round and the locals talk." + (FEST.freeInn() ? "  New Life Festival: rooms are free!" : "");
       body = (S.vampire ? `<div class="item"><div class="t"> Feed on a sleeping traveller<span>Resets your hunger. Someone might wake up (bounty).</span></div><button class="btn sm danger" data-act="vfeed">Feed</button></div>` : "") + (FEST.freeInn() ? `<div class="item on"><div class="t"> The innkeeper's New Life gift<span>Once a day: a hot meal and a little gold</span></div><button class="btn sm pri" data-act="festgift">Take it</button></div>` : "") + `<div class="item"><div class="t">Rent a room<span>${G.rested(S) ? "You're already rested" : "Full health and Rested"}</span></div><span class="num gold">${TOWNS.roomPrice(S)}</span><button class="btn sm pri" data-act="inn" data-c="room" ${wanted ? "disabled" : ""}>Sleep</button></div>
@@ -3264,7 +3382,7 @@
       const n = TOWNS.trainedThisLevel(S);
       note = `Skyrim rules: 5 sessions per level (${5 - n} left), and trainers stop at 50 (common), 75 (expert) or 90 (master).`;
       body = TOWNS.TRAINERS[l].map(([who, sk, lvl]) => { const c = TOWNS.trainCost(S, sk), cur = S.skills[sk].lvl, ok = cur < TOWNS.CAP[lvl] && n < 5 && S.gold >= c && !wanted;
-        return `<div class="item">${NPCART.trainer(who, sk, 36)}<div class="t">${esc(who)}<span>${esc(sk)} ${cur} → ${cur + 1} · ${lvl} trainer (up to ${TOWNS.CAP[lvl]})</span></div><span class="num gold">${c}</span><button class="btn sm" data-act="train" data-id="${esc(who)}" ${ok ? "" : "disabled"}>Train</button></div>`; }).join("");
+        return `<div class="item">${NPCART.trainer(who, sk, 44)}<div class="t">${esc(who)}<span>${esc(sk)} ${cur} → ${cur + 1} · ${lvl} trainer (up to ${TOWNS.CAP[lvl]})</span></div><span class="num gold">${c}</span><button class="btn sm" data-act="train" data-id="${esc(who)}" ${ok ? "" : "disabled"}>Train</button></div>`; }).join("");
     } else if (townShop === "alchemy") {
       const ings = S.inv.filter((r) => D.ITEMS[r.item]?.slot === "ingredient");
       alchSel = alchSel.filter((id) => ings.some((r) => r.id === id));
@@ -3273,10 +3391,10 @@
       const selRows = alchSel.map((id) => ings.find((r) => r.id === id));
       const knownShared = selRows.length >= 2 ? [...new Set(selRows.flatMap(knownFx))].filter((e) => selRows.filter((r) => knownFx(r).includes(e)).length >= 2) : [];
       note = `Pick two or three ingredients that share an effect. You only see effects you've discovered: eat ingredients or experiment. Alchemy ${G.skill(S, "Alchemy")}.`;
-      body = ings.length ? (CQ ? CQ.alchTop(S) : "") + ingsShown.map((r) => `<div class="item ${alchSel.includes(r.id) ? "on" : ""}" data-act="alch" data-id="${r.id}" role="button" tabindex="0"><div class="t">${alchSel.includes(r.id) ? "" : "☐"} ${esc(D.ITEMS[r.item].name)} ×${r.qty}<span>${typeof GATHER !== "undefined" ? GATHER.fxHTML(S, r.item) : TOWNS.INGREDIENT_FX[r.item][1].map((e, i) => TOWNS.known(S, r.item)[i] ? esc(e) : "?").join(", ")}</span></div></div>`).join("")
+      body = (typeof HARVEST !== "undefined" ? HARVEST.orderHTML(S) : "") + (ings.length ? (CQ ? CQ.alchTop(S) : "") + ingsShown.map((r) => `<div class="item ${alchSel.includes(r.id) ? "on" : ""}" data-act="alch" data-id="${r.id}" role="button" tabindex="0"><div class="t">${alchSel.includes(r.id) ? "" : "☐"} ${esc(D.ITEMS[r.item].name)} ×${r.qty}${typeof HARVEST !== "undefined" ? HARVEST.tagHTML(S, r.item) : ""}<span>${typeof GATHER !== "undefined" ? GATHER.fxHTML(S, r.item) : TOWNS.INGREDIENT_FX[r.item][1].map((e, i) => TOWNS.known(S, r.item)[i] ? esc(e) : "?").join(", ")}</span></div></div>`).join("")
         + `<p class="sub" style="margin-top:8px">${selRows.length >= 2 ? (knownShared.length ? `Known shared effects: <b>${knownShared.map(esc).join(", ")}</b>` : "No shared effects you know of. Could be a discovery, or sludge.") : "Select ingredients above."}</p>
         <button class="btn pri" data-act="brew" style="width:100%" ${alchSel.length >= 2 ? "" : "disabled"}>Brew</button>${CQ ? CQ.alchBulk(S, selRows) : ""}`
-        : '<p class="sub">You have no ingredients. Gather them on the road, in dungeons, or buy them at the general store and court wizard.</p>';
+        : '<p class="sub">You have no ingredients. Gather them on the road, in dungeons, or buy them at the general store and court wizard.</p>');
     } else if (townShop === "forge") {
       const ftabs = `<div class="chips" style="margin-bottom:8px">${[["make", " Make"], ["refine", " Smelt & tan"], ["improve", " Improve"]].map(([k, l2]) => `<button class="chip ${forgeTab === k ? "on" : ""}" data-act="ftab" data-id="${k}">${l2}</button>`).join("")}</div>`;
       if (forgeTab === "make") {
@@ -3415,7 +3533,7 @@
         return `<div class="item"><div class="t">${esc(n)}<span>about ${fmtMin(mins)}</span></div><span class="num gold">${price}</span><button class="btn sm pri" data-act="carriage" data-id="${esc(n)}" ${S.gold >= price && !wanted ? "" : "disabled"}>Ride</button></div>`; }).join("");
     } else if (townShop === "hire") {
       note = "One follower at a time. They fight beside you, carry 100 for you and heal between fights. Badly hurt, they go down and get back up after the fight; they never die. Hirelings cost 500 gold.";
-      body = (l === "Whiterun" ? `<div class="item">${NPCART.portrait(NPCART.who("Whiterun", "wizard"), 36)}<div class="t">Farengar, court wizard<span>${S.thaneWhiterun ? "Thanks you again for the Dragonstone." : "Wants the Dragonstone from Bleak Falls Barrow. The Jarl rewards whoever brings it."}</span></div>${S.thaneWhiterun ? "" : `<button class="btn sm pri" data-act="dragonstone" ${TOWNS.canDeliverDragonstone(S) ? "" : "disabled"}>Give it</button>`}</div>` : "")
+      body = (l === "Whiterun" ? `<div class="item">${NPCART.portrait(NPCART.who("Whiterun", "wizard"), 44)}<div class="t">Farengar, court wizard<span>${S.thaneWhiterun ? "Thanks you again for the Dragonstone." : "Wants the Dragonstone from Bleak Falls Barrow. The Jarl rewards whoever brings it."}</span></div>${S.thaneWhiterun ? "" : `<button class="btn sm pri" data-act="dragonstone" ${TOWNS.canDeliverDragonstone(S) ? "" : "disabled"}>Give it</button>`}</div>` : "")
         + TOWNS.followersHere(S).map(([id, [name, , cost, hp, dmg, desc]]) => `<div class="item">${NPCART.follower(id, 36)}<div class="t">${esc(name)}<span>${esc(desc)} · ${TOWNS.followerMax(S, id)} health · hits for ~${Math.round(dmg * (1 + 0.05 * (S.level - 1)))}</span></div><span class="num gold">${cost || "free"}</span><button class="btn sm pri" data-act="hire" data-id="${id}" ${S.follower || S.gold < cost || wanted || (id === "lydia" && !S.thaneWhiterun) ? "disabled" : ""}>${S.follower?.id === id ? "With you" : "Hire"}</button></div>`).join("");
     } else if (townShop === "streets") {
       const b = TOWNS.bounty(S, hold);
@@ -3424,10 +3542,14 @@
         <div class="item"><div class="t">Your bounty in ${esc(hold)}<span>${b ? `${b} gold${wanted ? " · you resisted arrest: shops won't serve you" : ""}` : "Clean. For now."}</span></div>${b ? `<button class="btn sm" data-act="guardopen">Talk to a guard</button>` : ""}</div>
         <p class="sub" style="margin-top:8px">Stolen goods only sell to a fence: the Ragged Flagon in Riften, or anywhere with the Fence perk.</p>`;
     }
-    if (typeof RUMOURS !== "undefined") body = RUMOURS.townHTML(S, l, townShop, open) + body;   // day and night, rumours, your name here
+    let dayLine = "";
+    if (typeof RUMOURS !== "undefined") { let rw = RUMOURS.townHTML(S, l, townShop, open);   // day and night, rumours, your name here
+      if (AU) { const m = rw.match(/^<p class="rw-day">[\s\S]*?<\/p>/); if (m) { dayLine = m[0]; rw = rw.slice(m[0].length); } }   // [stations] the time-of-day line sits under the list
+      body = rw + body; }
     if (typeof SOL !== "undefined") body += SOL.extraHTML(S, l, townShop, esc);   // Skaal smith's technique, Raven Rock's forge
-    if (AU) return `<div class="panel au-panel au-in">${AU.head({ l, sections, names, cur: townShop, desc: TOWN_DESC[townShop] })}${townTop}
-      ${(townShop === "home" && TOWNS.home(S, l)) || (townShop === "hall" && typeof HOMEART !== "undefined") || townShop === "halls" ? "" : PLACEART.section(townShop === "hire" ? "hall" : townShop === "cook" ? "inn" : townShop === "home" && TOWNS.home(S, l) ? "home" : townShop)}${typeof NPCART !== "undefined" ? NPCART.talk(l, townShop, S) : ""}${AU.note(note)}<div class="list">${body}</div><p class="sub" style="margin-top:10px">You have <b class="gold">${S.gold} gold</b>.</p></div>`;
+    /* [stations] head → painting → who's here (one line) → the place's own tabs and list → how-it-works note */
+    if (AU) return `<div class="panel au-panel au-in">${AU.head({ l, sections, names, cur: townShop, desc: TOWN_DESC[townShop] })}${wantedLine}${newsRow}
+      ${(townShop === "home" && TOWNS.home(S, l)) || (townShop === "hall" && typeof HOMEART !== "undefined") || townShop === "halls" ? "" : PLACEART.section(townShop === "hire" ? "hall" : townShop === "cook" ? "inn" : townShop === "home" && TOWNS.home(S, l) ? "home" : townShop)}${typeof NPCART !== "undefined" ? NPCART.talk(l, townShop, S) : ""}<div class="list">${body}</div>${AU.note(note)}${dayLine}<p class="sub" style="margin-top:10px">You have <b class="gold">${S.gold} gold</b>.</p></div>`;
     return `<div class="panel"><h2>${esc(l)}</h2>${PLACEART.scene(l)}${townTop}
       ${townGroups(sections, names)}
       ${(townShop === "home" && TOWNS.home(S, l)) || (townShop === "hall" && typeof HOMEART !== "undefined") || townShop === "halls" ? "" : PLACEART.section(townShop === "hire" ? "hall" : townShop === "cook" ? "inn" : townShop === "home" && TOWNS.home(S, l) ? "home" : townShop)}${typeof NPCART !== "undefined" ? NPCART.talk(l, townShop, S) : ""}${note ? `<p class="sub" style="margin-top:8px">${note}</p>` : ""}<div class="list">${body}</div><p class="sub" style="margin-top:10px">You have <b class="gold">${S.gold} gold</b>.</p></div>`;
@@ -3694,7 +3816,7 @@
       case "xsearch": case "xdig": case "xread": exploreAct(b.dataset.act, b.dataset.id); break;
       case "breach": if (typeof BLACKREACH !== "undefined") BLACKREACH.onClick(b); break;   // blackreach.js: the way down from Alftand / Raldbthar
       case "pstuff": if (typeof PLACESTUFF !== "undefined") PLACESTUFF.onClick(b, S, { toast, openModal, persist, renderPanel }); break;   // placestuff.js: something at every place
-      case "gpick": case "gpickall": case "gforage": case "gauto": case "gplant": case "gunplant": case "gnotes": gatherAct(b.dataset.act, b.dataset.id); break;
+      case "gpick": case "gquick": case "hdeliver": case "gpickall": case "gforage": case "gauto": case "gplant": case "gunplant": case "gnotes": gatherAct(b.dataset.act, b.dataset.id); break;
       case "spotpin": if (roamSpot) { const [x, y] = roamSpot; selected = null; renderPicked(); openPinDialog(x, y); } break;
       case "stop": if (S.trip?.carriage) { toast("The driver won't stop until you get there."); break; } if (S.trip?.boat) { toast("You're at sea. The Northern Maiden won't turn back now."); break; } if (S.trip?.status === "travel" || S.trip?.status === "event") { [S.x, S.y] = livePos(); S.trip = null; S.location = Object.keys(WORLD.places).find((n) => G.pxDist([S.x, S.y], WORLD.places[n]) < 12) || null; persist(true); toast("You stop and look around."); } break;
       case "openenc": openEncounter(); break;
@@ -3783,7 +3905,7 @@
       case "dmin": closeDungeon(); tab = "pack"; renderTabs(); renderPanel(true); break;
       case "dleave": { if (S.dungeon?.run && lvUI) { S.lastRun = S.dungeon.run; lvUI.leaderLeaving(); } if (S.dungeon?.run && coopUI) coopUI.left(); if (typeof IMM !== "undefined") IMM.loading("Back to the open road…"); const m = DUNGEONS.leave(S); dunNote = null; persist(true); closeDungeon(); renderPanel(true); showMessage("Back outside", m); break; }
       case "ev": if (b.dataset.c === "pick" && typeof IMM !== "undefined" && IMM.wantsGame()) { IMM.pick("event", eventAction, S); break; } eventAction(b.dataset.c); break;
-      case "evbuy": { const m = G.buyFrom(S, b.dataset.item); persist(); openEvent(m); break; }
+      case "evbuy": { const ev = S.trip?.event, m = typeof WAGONS !== "undefined" && ev?.cid && /^cvmeet_/.test(ev.id || "") ? WAGONS.buy(S, ev, b.dataset.item) : G.buyFrom(S, b.dataset.item); persist(); openEvent(m); break; }
       case "enc": encounterAction(b.dataset.a); break;
       case "close": if (S?.pickTemple && typeof PVPDEATH !== "undefined") PVPDEATH.stay(S); closeModal(); break;
       case "pvptemple": toast(PVPDEATH.goTo(S, b.dataset.id)); persist(true); publishCard(); closeModal(); renderPanel(true); break;
@@ -3832,6 +3954,7 @@
       case "buy": { const m = G.buy(S, b.dataset.item, 1); if (/^Bought/.test(m)) GUIDE.mark(S, "trade"); say(m); break; }
       case "buyn": { const m = G.buy(S, b.dataset.item, +b.dataset.n || 1); if (/^Bought/.test(m)) GUIDE.mark(S, "trade"); say(m); break; }
       case "shop": { const fromHub = tab === "town" && !townShop && typeof AREAUI !== "undefined"; townShop = b.dataset.id; if (townShop === "halls") hallView = null; renderPanel(true); if (fromHub) $("#side .au-head")?.scrollIntoView({ block: "nearest" }); break; }
+      case "townnews": townNews = !townNews; renderPanel(true); break;   // [stations] the folded town lines on a place's page
       case "areahub": townShop = ""; renderPanel(true); $("#side")?.scrollIntoView({ block: "start" }); break;   // areaui.js: back to the board
       case "pskill": perkSkill = b.dataset.id; renderPanel(true); break;
       case "skinfo": heroSkill = heroSkill === b.dataset.id ? null : b.dataset.id; renderPanel(true); if (heroSkill) setTimeout(() => $(".skcard")?.scrollIntoView({ block: "nearest", behavior: reduceMotion ? "auto" : "smooth" }), 30); break;
@@ -3934,7 +4057,7 @@
       case "hrename": say(HORSES.rename(S, $("#hname")?.value)); break;
       case "harmor": say(HORSES.buyArmor(S, b.dataset.id)); break;
       case "htend": say(HORSES.tend(S)); publishCard(); break;
-      case "hride": { const m = HORSES.toggle(S); liveCache.key = ""; S.trip && (S.trip.total = G.minutesLeft(S)); say(m); renderTrip(); publishCard(); break; }
+      case "hride": { const m = HORSES.toggle(S); liveCache.key = ""; S.trip && (S.trip.total = G.minutesLeft(S)); say(m); renderTrip(); publishCard(); if (typeof RIDING !== "undefined") RIDING.sync(S); break; }
       case "bclaim": { const m = BOUNTY.claim(S, +b.dataset.w, b.dataset.id); if (!m) return toast("Nothing to claim there."); SOUND.fx("quest"); say(m); publishCard(); break; }
       case "hallgold": case "hallmat": {
         const r = a === "hallgold" ? HALL.donateGold(S, +b.dataset.id) : HALL.donateMat(S, +b.dataset.id, +b.dataset.n);

@@ -1,12 +1,13 @@
 """Tooltips in the browser (tooltip.js): hover with a mouse on a 1920x1080 screen, and hold a finger on a 390x844 phone,
 over inventory rows, spells, perks, skills, HUD bars, gold, the doll and the map. Both art styles.
 Checks the box shows the right thing, stays on screen, and that holding a finger does NOT press what's underneath
-(while a normal tap still does). Screenshots go to tests/out_tooltips/. Usage: python3 tooltip_ui.py PORT"""
+(while a normal tap still does). Screenshots go to $SHOTS/out_tooltips/ (or the temp folder). Usage: python3 tooltip_ui.py PORT"""
 import asyncio, sys, os, time
 from playwright.async_api import async_playwright
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"
 RUN = str(int(time.time()) % 100000)
-OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out_tooltips") + os.sep
+import tempfile
+OUT = os.path.join(os.environ.get("SHOTS") or tempfile.gettempdir(), "out_tooltips") + os.sep
 fails = []
 def ok(c, m):
     print(("ok   " if c else "FAIL ") + m)
@@ -53,9 +54,15 @@ def on_screen(bx):
     return bx is not None and bx["l"] >= 0 and bx["t"] >= 0 and bx["r"] <= bx["vw"] + 0.5 and bx["b"] <= bx["vh"] + 0.5
 
 async def hover(pg, sel, name, style, expect, shot=True):
-    el = await pg.query_selector(sel)
-    if not el: ok(False, f"{style} desktop: {name} found ({sel})"); return
-    await el.scroll_into_view_if_needed(); bb = await el.bounding_box()
+    bb = None
+    for _ in range(4):   # the HUD redraws now and then: a handle can go stale, so look it up again
+        el = await pg.query_selector(sel)
+        if not el: break
+        try: await el.scroll_into_view_if_needed(timeout=3000); bb = await el.bounding_box()
+        except Exception: bb = None
+        if bb: break
+        await pg.wait_for_timeout(200)
+    if not bb: ok(False, f"{style} desktop: {name} found ({sel})"); return
     await pg.mouse.move(5, 5); await pg.wait_for_timeout(150)
     await pg.mouse.move(bb["x"] + bb["width"] / 2, bb["y"] + bb["height"] / 2); await pg.wait_for_timeout(350)
     bx = await wait_box(pg, 1500)
@@ -101,13 +108,18 @@ async def tap(pg, cdp, sel):
 async def desktop(b, style, errs):
     ctx, pg = await start(b, style, {"width": 1920, "height": 1080}, False, "d", errs)
     await hover(pg, "#vitals .hb.hp", "health_bar", style, "Health")
-    await hover(pg, "#goldv", "gold", style, "777 gold")
-    await hover(pg, "#lvlb", "level", style, "Level")
+    # on a PC the map is the home screen: gold and level sit in the bottom bar (pcmap.js), not the phone's top strip
+    await hover(pg, ".pcb-gold", "gold", style, "777 gold")
+    await hover(pg, ".pcb-lv", "level", style, "Level")
     await pg.evaluate("__ui.openMenu('items')"); await pg.wait_for_timeout(400)
     await pg.click("#sky [data-act=skycat][data-id=all]"); await pg.wait_for_timeout(300)
     sid = await pg.evaluate("window.__dbg.save().inv.find(r => r.item === 'steel_sword').id")
-    await hover(pg, f"#sky .sky-row[data-id='{sid}']", "inventory_sword", style, "Steel Sword")
-    bx = await pg.evaluate(BOX); ok(bx is not None and "Damage" in bx["text"] and "Weight" in bx["text"] and "Value" in bx["text"], f"{style} desktop: sword tooltip has damage, weight, value")
+    # [itemdetail] on a PC the Items rows fill the side panel instead of a floating box (itemdetail_ui.py checks it in full)
+    bb = await (await pg.query_selector(f"#sky .sky-row[data-id='{sid}']")).bounding_box()
+    await pg.mouse.move(bb["x"] + bb["width"] / 2, bb["y"] + bb["height"] / 2); await pg.wait_for_timeout(600)
+    det = await pg.evaluate("() => document.querySelector('#sky .sky-detail')?.textContent || ''")
+    ok("Steel Sword" in det and "Damage" in det and "Weight" in det and "Value" in det, f"{style} desktop: hovering the sword fills the side panel with damage, weight, value")
+    ok(await pg.evaluate(BOX) is None, f"{style} desktop: no floating tooltip over the Items list")
     await hover(pg, "#sky .sky-foot .gold", "menu_gold", style, "gold", shot=False)
     # moving off hides it
     await pg.mouse.move(3, 1076); await pg.wait_for_timeout(400)
@@ -120,9 +132,11 @@ async def desktop(b, style, errs):
     await hover(pg, "#sky .sky-row[data-id='Destruction']", "skill_destruction", style, "Destruction")
     await pg.evaluate("__ui.closeMenu()"); await pg.wait_for_timeout(300)
     # keyboard: Escape hides
-    await hover(pg, "#goldv", "gold_again", style, "gold", shot=False)
+    await hover(pg, ".pcb-gold", "gold_again", style, "gold", shot=False)
     await pg.keyboard.press("Escape"); await pg.wait_for_timeout(200)
     ok(await pg.evaluate(BOX) is None, f"{style} desktop: Escape hides it")
+    ok(not await pg.evaluate("typeof PAUSEM !== 'undefined' && PAUSEM.isOpen()"), f"{style} desktop: that Escape only closed the tip (no pause menu)")
+    await pg.evaluate("() => { try { if (PAUSEM.isOpen()) PAUSEM.close(); } catch (e) {} }")
     # the map: rest the mouse on the town you're in (a place you know)
     await pg.evaluate("() => { try { TABMENU.closeHub(); } catch (e) {} }"); await pg.wait_for_timeout(400)
     pt = await pg.evaluate("""() => { const c = document.querySelector('canvas#map'), v = window.__dbg.view(); if (!c || !v || !v.transform) return null;
@@ -149,7 +163,9 @@ async def phone(b, style, errs):
     row = f"#sky .sky-row[data-id='{sid}']"
     await hold(pg, cdp, row, "inventory_sword", style, "Steel Sword")
     ok(await pg.query_selector(f"{row}.sel") is None, f"{style} phone: holding the row did not select it")
-    # a plain tap still selects it, and lifting hides any box
+    # on a phone the details stay up as a bottom sheet until a tap elsewhere; close it, then a plain tap still selects
+    # the row, and lifting shows no box
+    await pg.evaluate("TIP.hide()"); await pg.wait_for_timeout(250)
     await tap(pg, cdp, row)
     ok(await pg.query_selector(f"{row}.sel") is not None, f"{style} phone: a normal tap still selects the row")
     bx = await pg.evaluate(BOX); ok(bx is None, f"{style} phone: a tap shows no tooltip" + (f" got {bx['text'][:60]!r}" if bx else ""))
@@ -168,8 +184,14 @@ async def phone(b, style, errs):
         has_stars = await pg.evaluate("() => { try { window.__ui.go && window.__ui.go('hero'); } catch (e) {} return !!document.querySelector('[data-sk-perk], [data-act=perk]'); }")
     await pg.wait_for_timeout(400)
     sel = "[data-sk-perk]" if await pg.query_selector("[data-sk-perk]") else "[data-act=perk]"
-    if await pg.query_selector(sel): await hold(pg, cdp, sel, "perk", style, "perk")
-    else: print(f"skip {style} perk hold (no perk on screen)")
+    if await pg.query_selector(sel):
+        # since b247 the stars on a phone have no floating box: tapping a star shows it in the details panel under the sky
+        ok(not await pg.evaluate("!!document.querySelector('g[data-sk-perk][data-tip-k]')"), f"{style} phone: stars carry no floating tooltip")
+        await pg.evaluate("document.querySelector('g[data-sk-perk]')?.scrollIntoView({block:'center'})"); await pg.wait_for_timeout(300)
+        await tap(pg, cdp, "g[data-sk-perk]"); await pg.wait_for_timeout(500)
+        ok(await pg.evaluate("!!document.querySelector('g[data-sk-perk].sel, .skflash')"), f"{style} phone: tapping a star shows it in the panel")
+        bx = await pg.evaluate(BOX); ok(bx is None or bx["text"] == "" or "tt-sheet" in (await pg.evaluate("document.getElementById('tip')?.className || ''")), f"{style} phone: a star tap opens no floating box")
+    else: print(f"skip {style} perk (no perk on screen)")
     # a finger that slides is a scroll, not a hold
     bb = await (await pg.query_selector("#goldv")).bounding_box()
     await cdp.send("Input.dispatchTouchEvent", {"type": "touchStart", "touchPoints": [{"x": bb["x"] + 5, "y": bb["y"] + 5, "id": 3}]})

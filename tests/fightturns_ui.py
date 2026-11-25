@@ -3,7 +3,7 @@ Plays a real fight on a phone (360x780) and a PC (1600x837), ink style, with ?ga
 the foe's intent chip shows icon + NAME + numbers + target, the turn order lights whoever acts (also while the foe's turn
 plays out, with a banner naming its move), an Attack opens the strike minigame, a Destruction spell opens the rune
 minigame, both resolve and come back to you, and no button says AP. Screenshots go to tests/out_combat2/.
-  python -m http.server 8765 --directory ../game &   then   python fightturns_ui.py 8765"""
+  node serve.js 8765 &   then   python fightturns_ui.py 8765"""
 import asyncio, sys, os, re
 from playwright.async_api import async_playwright
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"

@@ -3,9 +3,11 @@
 Usage: python3 levelup_ui.py PORT [outdir]"""
 import asyncio, sys, os
 from playwright.async_api import async_playwright
+_SHOTS = (__import__("os").environ.get("SHOTS") or __import__("os").path.join(__import__("tempfile").gettempdir(), "rotn_shots")).replace("\\", "/").rstrip("/") + "/"   # screenshots: $SHOTS or the temp folder
+__import__("os").makedirs(_SHOTS, exist_ok=True)
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"
 HOST = os.environ.get("HOST", "localhost")
-OUT = (sys.argv[2] if len(sys.argv) > 2 else "/home/claude/tests/levelup") .rstrip("/\\") + "/"
+OUT = (sys.argv[2] if len(sys.argv) > 2 else _SHOTS + "levelup") .rstrip("/\\") + "/"
 os.makedirs(OUT, exist_ok=True)
 fails = []
 def ok(c, m):

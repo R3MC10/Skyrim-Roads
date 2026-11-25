@@ -85,7 +85,7 @@
     " Harkon's blood burns through you.": " Krew Harkona pali cię od środka.", "You're a vampire now, and once a day in a fight you can take the Vampire Lord's form.": "Jesteś teraz wampirem i raz dziennie w walce możesz przybrać postać Wampirzego Lorda.",
     "Two Vampire Lord perks are ready.": "Czekają na ciebie dwa atuty Wampirzego Lorda.",
     "Gunmar keeps the troll armour for now.": "Gunmar na razie zatrzymuje zbroję dla trolla.",
-    "Gunmar hands you troll armour for a follower.": "Gunmar daje ci trollową zbroję dla towarzysza.", "Give it to one from the Hero tab.": "Daj ją któremuś w zakładce Bohater.",
+    "Gunmar hands you troll armour for a follower.": "Gunmar daje ci trollową zbroję dla towarzysza.", "Give it to one from the Character tab (Follower).": "Daj ją któremuś w zakładce Postać (Towarzysz).",
     "Gunmar hands you troll armour, but your follower can't carry it.": "Gunmar daje ci trollową zbroję, ale twój towarzysz nie da rady jej unieść.", "Give it to them later.": "Daj mu ją później.",
     "Gunmar fits your follower with troll armour.": "Gunmar dopasowuje twojemu towarzyszowi trollową zbroję.", "They're wearing it now.": "Już ją nosi.",
     // ---- items
@@ -124,5 +124,9 @@
     [" {0}: “{1}” done.", " {0}: „{1}” ukończone."],
     ["{9}  {0}: “{1}” done ({2}).", "{9}  {0}: „{1}” ukończone ({2})."],
     ["{9}  {0}: “{1}” done.", "{9}  {0}: „{1}” ukończone."],
-    ["Find them at {0}.", "Znajdziesz ich tu: {0}."]);
+    ["Find them at {0}.", "Gdzie szukać: {0}."]);
+  // the same line once the icon in front is split off (i18n_sweep2.js translates the rest of an icon-led line);
+  // put first so the looser "{0}: {1} gold, {2}." festival line doesn't grab it
+  I18N_STORY.pats.unshift(["{0}: “{1}” done ({2}).", "{0}: „{1}” ukończone ({2})."], ["{0}: “{1}” done.", "{0}: „{1}” ukończone."],
+    ["“{0}” done ({1}).", "„{0}” ukończone ({1})."], ["“{0}” done.", "„{0}” ukończone."]);
 })();

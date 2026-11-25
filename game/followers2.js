@@ -304,8 +304,17 @@ const FOL2 = (() => {
 
   // ---- how they look (your screen and everyone else's)
   const raceOf = (id) => INFO[id]?.[2] || "nord";
+  /* [Skyrim] who is a woman: npcart.js's portrait table first (race, sex, role), then this list, so the fight rig, the
+     travel strip and party members' screens all draw Lydia, Jenassa and the rest as themselves. Meeko is a dog. */
+  const WOMEN = ["lydia", "jenassa", "uthgerd", "mjoll", "aela", "brelyna", "annekke", "borgakh", "hs_pinewatch"];
+  function sexOf(id) {
+    if (!id || id === "meeko") return "m";
+    const t = typeof NPCART !== "undefined" && NPCART.FOLLOWER_LOOK ? NPCART.FOLLOWER_LOOK[id] : null;
+    return t && (t[1] === "f" || t[1] === "m") ? t[1] : WOMEN.includes(id) ? "f" : "m";
+  }
+  const withSex = (L, id) => (sexOf(id) === "f" ? { ...L, sx: "f" } : L);
   const eqItems = (f) => { const o = {}; for (const slot of eqSlots()) { const r = worn(f, slot); if (r) o[slot] = r.item; } return o; };
-  function look(s, id = s.follower?.id) { const f = st(s, id); return { r: raceOf(id), id: "f-" + id, eq: f ? eqItems(f) : {}, gl: {} }; }
+  function look(s, id = s.follower?.id) { const f = st(s, id); return withSex({ r: raceOf(id), id: "f-" + id, eq: f ? eqItems(f) : {}, gl: {} }, id); }
   /* the small summary that goes in your player card, so party members can see and fight beside them */
   function card(s) {
     const id = s.follower?.id; if (!id) return null;
@@ -314,7 +323,7 @@ const FOL2 = (() => {
       cur: Math.round(typeof TOWNS !== "undefined" ? TOWNS.followerHp(s) : mx), red: Math.round((1 - taken(s)) * 100) / 100, role: a.role, heals: healer(f) ? 2 : 0, ha: healAmt(f), sn: !!a.sneaky,
       ...(FB() ? FB().card(f) : {}) };   // their top skills and perk count, for party members' screens
   }
-  const lookFromCard = (c) => (c?.fold ? { r: c.fold.r || "nord", id: "f-" + c.fold.id + "-" + c.id, eq: { ...(c.fold.eq || {}) }, gl: {} } : null);
+  const lookFromCard = (c) => (c?.fold ? withSex({ r: c.fold.r || "nord", id: "f-" + c.fold.id + "-" + c.id, eq: { ...(c.fold.eq || {}) }, gl: {} }, c.fold.id) : null);
   /* someone else's follower, fighting beside you on your phone from their card ([OURS] same fighting code as co-op allies) */
   function cardAllies(c) {
     const p = c?.fold; if (!p || !p.id) return [];
@@ -415,6 +424,6 @@ const FOL2 = (() => {
 
   install();
   return { ARCH, INFO, MORE, NEEDS, st, pseudo, skillOf, spend, setArch, equip, unequip, bestEquip, give, takeBack, weight, carry, rawHit, dmg, armorRating, taken, maxHp,
-    ally, turn, gain, need, look, card, lookFromCard, cardAllies, install, panel, act, reset, capOf, archOf, slotName, wearable, canOff, eqSlots, worn, nameOf, get view() { return view; } };
+    ally, turn, gain, need, look, card, lookFromCard, sexOf, WOMEN, cardAllies, install, panel, act, reset, capOf, archOf, slotName, wearable, canOff, eqSlots, worn, nameOf, get view() { return view; } };
 })();
 if (typeof module !== "undefined") module.exports = FOL2;

@@ -36,7 +36,7 @@ SETUP = """async () => {
   return null; }"""
 
 async def main():
-    srv = subprocess.Popen([sys.executable, "-m", "http.server", str(PORT), "--directory", os.path.join(ROOT, "game")], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    srv = subprocess.Popen(["node", os.path.join(ROOT, "tests", "serve.js"), str(PORT), os.path.join(ROOT, "game")], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)   # node: python's server refuses connections under load
     time.sleep(1.0)
     errs, bad, shots = [], [], []
     def check(ok, what):
@@ -68,10 +68,11 @@ async def main():
                 async def company():
                     await clear(); await pg.evaluate("() => window.__ui.go('social')"); await pg.wait_for_timeout(400)
                     await tap("[data-act=soctab][data-id=company]"); await pg.wait_for_timeout(500)
+                n0 = len(errs)
                 for _ in range(3):
                     await pg.goto(f"http://localhost:{PORT}/index.html?notut&p=lng{tag}{QA}")
                     try: await pg.wait_for_selector(".press", timeout=10000); break
-                    except Exception: print(tag, "title screen didn't come up, reloading")
+                    except Exception: print(tag, "title screen didn't come up, reloading"); del errs[n0:]   # a half-loaded page doesn't count
                 await pg.wait_for_timeout(800)
                 await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Hrodny"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
                 await pg.evaluate("() => { const S = window.__dbg.save(); S.gold = 4000; S.location = 'Whiterun'; S.trip = null; }")
@@ -101,7 +102,10 @@ async def main():
                 await tap("[data-lng=tab][data-id=rooms]"); await pg.wait_for_timeout(300)
                 if QA:
                     await pg.wait_for_timeout(1500); await company(); await tap("[data-lng=tab][data-id=rooms]"); await pg.wait_for_timeout(500)
-                    check(await pg.evaluate("!!document.querySelector('#lng-root .lng-view svg') && !!document.querySelector('#lng-root .lng-banner img.lng-paint')"), f"{tag}: the painted hall and banner")
+                    check(await pg.evaluate("!!document.querySelector('#lng-root .lng-view svg') && !!document.querySelector('#lng-root .lng-banner.lng-strip') && !document.querySelector('#lng-root .lng-banner img')"), f"{tag}: the painted hall, banner shrunk to a name strip")
+                    await tap("[data-lng=tab][data-id=gold]"); await pg.wait_for_timeout(300)
+                    check(await pg.evaluate("!!document.querySelector('#lng-root .lng-banner img.lng-paint')"), f"{tag}: painted banner on tabs without the hall")
+                    await tap("[data-lng=tab][data-id=rooms]"); await pg.wait_for_timeout(300)
                     el = await pg.query_selector("#lng-root .lng-view")
                     if el: await el.screenshot(path=os.path.join(OUT, f"longhouse_{tag}_hall.png"))
                     # every room at level 3, then nothing built: the overlays change with the rooms

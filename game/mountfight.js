@@ -4,23 +4,24 @@
    wraps engage / after / tick, so horseback.js itself stays as it was):
    - Outdoors only: a road fight (the only place HORSEBACK.engage is called) with your horse beside you. Riding when it
      starts: you start in the saddle. Walking beside it: it stands by and you can get on.
-   - Mount / Dismount are moves in the fight: Mount costs 20 stamina (Steady Steed: 15) and takes one of your moves, Dismount is free.
-     Getting back on gives you a fresh charge.
+   - Mount / Dismount are moves in the fight: Mount costs 20 stamina and two of your moves (Steady Steed: 15 stamina and one
+     move), Dismount takes one move. Getting back on gives you a fresh charge. riding.js plays the climb and the slide.
    - Charge: your first blow from the saddle is a sure hit, ×1.4 (spear ×1.7), and can knock the foe back (it loses
      its next move). Cavalry Charge: +30% and it always knocks them back.
    - Trample: small foes (wolves, skeevers, mudcrabs...) also take the hooves: +12% (Trample perk: +32% and it can
      knock them down).
    - Up high, foot soldiers with swords and axes have a hard time reaching you (10% of their blows go wide), but
      archers, mages, spearmen and big beasts go for your horse more often and can drag you out of the saddle.
-   - No two-handed power attacks, no dual casting and no Master spells in the saddle; a two-hander swings clumsily
-     (−15%); arrows go wide 15% of the time unless you have Horse Archer.
+   - No two-handed power attacks and no Master spells in the saddle; dual casting works but takes 20% more magicka (Saddle
+     Caster: no extra); a two-hander swings clumsily (−15%); arrows go wide 15% of the time unless you have Horse Archer.
    - The horse has its own health bar. At 0 it's knocked down (it never dies): you're thrown clear (5% of your health,
      never the last of it) and staggered (one move fewer on your next turn), you fight on on foot, and afterwards
      it stays with you, downed, until it gets back up (horses.js: a few hours, a night's sleep or a stablehand).
    - Party fights: everyone's mount state and horse health travel in the leader's fight record (roster[].mt). Blows on a
      teammate's horse are rolled once, on the leader's phone; a teammate's own phone plays their charges and
      Mount / Dismount and sends the result back with their turn (reply.mt). Every phone draws the same riders.
-   - Perks with real effects: Cavalry Charge (One-Handed), Horse Archer (Archery), Steady Steed and Trample (Athletics).
+   - Perks with real effects: Cavalry Charge (One-Handed), Horse Archer (Archery), Steady Steed and Trample (Athletics),
+     Saddle Caster (Destruction).
    Numbers are [OURS], balanced with tests/test_mountfight.js. */
 const MOUNTFIGHT = (() => {
   const HB = typeof HORSEBACK !== "undefined" ? HORSEBACK : null;
@@ -32,7 +33,7 @@ const MOUNTFIGHT = (() => {
     dodge: 0.02,                                      // swords and axes on foot can't reach you well
     fall: 0.05, stagAp: 1,   // stagAp: moves lost on your next turn
     bowMiss: 0.15, twoH: 0.85, trample: 0.12, trampleStag: 0.25, chargeStag: 0.15,
-    getUp: 0.25,                                      // a knocked-down horse gets back up after the fight with this much health
+    getUp: 0.25, mountActs: 2, dualMp: 0.2,           // getting on takes two moves; dual casting from the saddle costs 20% more magicka                                      // a knocked-down horse gets back up after the fight with this much health
     allyHp: 200,
   };
   const TWO = new Set(["greatsword", "battleaxe", "warhammer"]);
@@ -54,13 +55,15 @@ const MOUNTFIGHT = (() => {
   const PERKS_ADD = [
     ["One-Handed", "cavalry_charge", "Cavalry Charge", 1, [30], ["armsman"], "A charge from the saddle hits 30% harder and always knocks the foe back (it loses its next move). [OURS]", [["mcharge", 0.3, {}]]],
     ["Archery", "horse_archer", "Horse Archer", 1, [35], ["overdraw"], "Shooting from the saddle: your arrows never go wide from the moving horse, and they do 10% more. [OURS]", [["mbow", 1, {}], ["out", 0.1, { sk: "Archery", mounted: 1 }]]],
-    ["Athletics", "steady_steed", "Steady Steed", 2, [25, 55], ["long_strider"], "Your horse takes 20/40% less damage in fights, foes pull you out of the saddle half as often, foot soldiers miss you 5/10% more, and getting on costs 5 stamina less. [OURS]", [["msteady", [0.2, 0.4], {}]]],
+    ["Athletics", "steady_steed", "Steady Steed", 2, [25, 55], ["long_strider"], "Your horse takes 20/40% less damage in fights, foes pull you out of the saddle half as often, foot soldiers miss you 5/10% more, and getting on takes one move instead of two and 5 stamina less. [OURS]", [["msteady", [0.2, 0.4], {}]]],
+    ["Destruction", "saddle_caster", "Saddle Caster", 1, [35], ["destruction_dual_casting"], "Dual casting from the saddle costs no extra magicka, and your dual-cast spells do 10% more while you ride. [OURS]", [["mdual", 1, {}]]],
     ["Athletics", "trample", "Trample", 1, [50], ["steady_steed"], "From the saddle your horse tramples small foes (wolves, skeevers, mudcrabs...): +20% more damage and a 25% chance to knock them down. [OURS]", [["mtrample", 0.2, {}]]],
   ];
   if (typeof PERKS !== "undefined") {
     for (const [sk, id, name, ranks, req, needs, desc, fx] of PERKS_ADD) {
       const tree = PERKS.TREES[sk];
       if (!tree || PERKS.BY_ID[id]) continue;
+      if (id === "saddle_caster" && !(typeof MOUNTCOMBAT === "undefined" || MOUNTCOMBAT.enabled)) continue;   // new with mounted combat: hidden while that's off (mountcombat.js)
       tree.push([id, name, ranks, req, needs, desc]);
       PERKS.BY_ID[id] = { id, name, ranks, req, needs, desc, skill: sk };
       if (typeof PFX !== "undefined" && PFX.FX) PFX.FX[id] = fx;
@@ -88,6 +91,7 @@ const MOUNTFIGHT = (() => {
     const m = fresh(Math.max(1, +hp || N.allyHp), Math.max(1, +max || N.allyHp), name || `${al.name}'s horse`, al.ride);
     m.up = true; return m;
   }
+  const mcOn = () => typeof MOUNTCOMBAT === "undefined" || !!MOUNTCOMBAT.enabled;   // mountcombat.js: the switch (off: every fight on foot)
   const origEngage = HB?.engage;
   /* a road fight starts: riding = in the saddle (horseback.js); walking beside your horse = it stands by */
   function engage(f, t) {
@@ -196,7 +200,6 @@ const MOUNTFIGHT = (() => {
     if (!m?.up) return "";
     const [k, arg] = String(a).split(":");
     if (a === "power_attack" && TWO.has(f.wt)) return "No room to swing a two-hander that hard in the saddle";
-    if (k === "dual") return "You need a hand for the reins";
     if (k === "spell" && typeof D !== "undefined" && (D.SPELLS[arg]?.level === "Master" || (typeof TOMES !== "undefined" && TOMES.level && TOMES.level(arg) === "Master"))) return "Too much to channel from the saddle";
     return "";
   };
@@ -208,7 +211,11 @@ const MOUNTFIGHT = (() => {
     return f.mount?.up && blocked(f, a) ? false : null;
   }
   /* what getting on takes, in tbfight.js terms (stamina, paid here in act); getting off is free */
-  function cost(f, a) { return a === "mount" ? { sp: mSp(f), eng: { sp: mSp(f) } } : {}; }
+  const mActs = (f) => (pfx(f?.s, "msteady") > 0 ? 1 : N.mountActs);
+  function cost(f, a) { return a === "mount" ? { sp: mSp(f), eng: { sp: mSp(f) }, acts: mActs(f) } : { acts: 1 }; }
+  /* dual casting from the saddle: a little more magicka (one hand still steadies you), none with Saddle Caster */
+  const dualMul = (f) => (f?.mount?.up && !(pfx(f.s, "mdual") > 0) ? 1 + N.dualMp : 1);
+  const dualPow = (f) => (f?.mount?.up && pfx(f.s, "mdual") > 0 ? 1.1 : 1);   // Saddle Caster: dual casts hit 10% harder from the saddle
   function act(f, a) {
     const m = f.mount;
     if (!can(f, a)) return a === "mount" ? `You can't get on ${hn(m)} now` : "You're already on foot";
@@ -229,8 +236,8 @@ const MOUNTFIGHT = (() => {
   }
   function tip(f, a) {
     const m = f?.mount;
-    if (a === "dismount") return `Get down from ${hn(m)}. On foot you can power attack with a two-hander and dual cast, and foes stop going for your horse.`;
-    return `Swing up onto ${hn(m)} (${mSp(f)} stamina). Your next blow is a charge: a sure hit that does more and can knock the foe back. In the saddle swords and axes on foot miss you more, but archers, mages and spears can pull you down.`;
+    if (a === "dismount") return `Slide down from ${hn(m)} (one move). On foot you can power attack with a two-hander, and foes stop going for your horse. ${hn(m)} waits nearby.`;
+    return `Climb up onto ${hn(m)} (${mSp(f)} stamina, ${mActs(f) > 1 ? `${mActs(f)} moves` : "one move"}). Your next blow is a charge: a sure hit that does more and can knock the foe back. In the saddle swords and axes on foot miss you more, but archers, mages and spears can pull you down.`;
   }
 
   // ------------------------------------------------------------------ every round, and after the fight
@@ -269,12 +276,13 @@ const MOUNTFIGHT = (() => {
   const out = (m) => (m && m.ok !== false ? { up: !!m.up, hp: Math.max(0, Math.round(m.hp || 0)), max: Math.round(m.max || 1), down: !!(m.down || m.hp <= 0), name: m.name || null, coat: m.coat || null } : null);
   /* tbfight.js shared(): the leader's horse on the host entry, each riding teammate's on theirs */
   function roster(f, all, list) {
-    if (!list?.length) return;
+    if (!list?.length || !mcOn()) return;
     if (f.mount?.ok && !f.mount.foot || f.mount?.rode) list[0].mt = out(f.mount);
     for (const r of list.slice(1)) { const a = all.find((x) => x.tbk === r.k); if (a?.mt) r.mt = out(a.mt); }
   }
   /* sharedfight.js Mirror.sync: your own horse as the leader's phone keeps it, and your teammates' for the picture */
   function mirror(sess, d) {
+    if (!mcOn()) { if (sess.f?.mount) sess.f.mount = null; return; }   // mounted combat off (mountcombat.js): a stray record from an older phone draws no horse
     const f = sess.f, me = sess.me, list = d?.roster || [];
     for (const r of list) {
       const mine = r.k === "p:" + me || (r.pid && r.pid === me);
@@ -347,20 +355,37 @@ const MOUNTFIGHT = (() => {
   }
   /* is the rider up at this point (the old horseback.js question) */
   const upAt = (f, frac) => { const p = pose(f, frac); return p.ride && p.ev !== "thrown"; };
+  const ease = (x) => { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); };
+  /* getting on (mount) / off (dismount), u 0..1: the horse walks up beside you, you step into the stirrup, pull yourself
+     up and swing the far leg over, then settle (getting off plays it backwards: swing the leg over, slide down, the horse
+     steps back to wait nearby). {x, y} = the rider's feet from the seat's ground spot, k = how far the horse has come up
+     (1 = under you), sit = legs astride yet */
+  function climb(p) {
+    const u = Math.max(0, Math.min(1, p?.u || 0)), off = p?.ev === "dismount", v = off ? 1 - u : u;   // v: 0 on foot .. 1 seated
+    const k = off ? 1 - ease((u - 0.68) / 0.32) : ease(v / 0.34);
+    const up = ease((v - 0.34) / 0.38), y = v < 0.72 ? -34 * up : -34 + 4 * ease((v - 0.72) / 0.28);
+    return { x: -5 * (1 - up), y, k, sit: v >= 0.56, lean: 0.25 * Math.sin(Math.PI * ease((v - 0.34) / 0.38)) };
+  }
+  /* legs astride the horse at this point (false while you still stand beside it, getting on or off) */
+  const seated = (p) => !!p && !!p.ride && (p.ev === "mount" || p.ev === "dismount" ? climb(p).sit : true);
+  /* how high the painted horse's back rides with its breathing / stride (the rider moves with it, so the two never jerk apart) */
+  const bobOf = (coat, tt, lunge = 0) => (HB?.riderBob ? HB.riderBob(coat, tt, lunge) : 0);
   /* the rider's seat over the horse for this pose (called inside the hero's transform, feet at y 0) */
-  function seat(g, p) {
-    if (!p || !p.ev) { g.translate(0, -30); return; }
+  function seat(g, p, tt = 0, coat = null) {
+    const lunge = p?.lunge || 0, bob = bobOf(coat, tt, lunge);
+    if (!p || !p.ev || p.ev === "charge") { g.translate(16 * lunge, -30 - bob); return; }   // the horse lunges 16 forward in a charge: you go with it
     const u = Math.max(0, Math.min(1, p.u));
     if (p.ev === "thrown") { const k = Math.min(1, u * 1.3); g.translate(-34 * k, -30 * (1 - k) - 22 * Math.sin(Math.PI * k)); g.rotate(-1.3 * Math.sin(Math.PI * Math.min(1, k * 0.9))); return; }
-    if (p.ev === "mount") { g.translate(-18 * (1 - u), -30 * u); return; }
-    if (p.ev === "dismount") { g.translate(-18 * u, -30 * (1 - u)); return; }
-    g.translate(0, -30);
+    if (p.ev === "mount" || p.ev === "dismount") { const c = climb(p); g.translate(c.x, c.y - (c.sit ? bob : 0)); if (c.lean) { g.translate(0, -18); g.rotate(c.lean); g.translate(0, 18); } return; }
+    g.translate(0, -30 - bob);
   }
-  /* the horse under the rider, with a gallop for a charge and a rear when you're thrown */
+  /* the horse under the rider, with a gallop for a charge and a rear when you're thrown; getting on / off it walks up from
+     where it waited (58 back, a little smaller) or steps back there */
   function drawMount(g, color, p, tt, part, coat = null) {
     if (!HB?.drawHorse) return;
     const rear = p?.ev === "thrown" ? Math.sin(Math.PI * Math.min(1, p.u)) : 0, lunge = p?.lunge || 0;
     g.save();
+    if (p && (p.ev === "mount" || p.ev === "dismount")) { const k = climb(p).k; g.translate(-58 * (1 - k), 0); const sc = 0.8 + 0.2 * k; g.scale(sc, sc); }
     if (rear > 0.3 && typeof HORSEART !== "undefined" && HORSEART.ok(coat || color, "rear")) {   // the painted rear (each coat has one): up on its hind legs
       if (part !== "front") HORSEART.ride(g, coat || color, "rear", 52, { bob: -2 * (rear - 0.3) });
       g.restore(); return;
@@ -390,6 +415,7 @@ const MOUNTFIGHT = (() => {
   }
   /* a teammate's horse for the picture (their colour), or null */
   function allyHorse(f, name) {
+    if (!mcOn()) return null;
     const a = (f?.allies || []).find((x) => x && x.name === name);
     return a?.mt?.up ? a.mt.coat || "#6b4a2e" : null;
   }
@@ -406,6 +432,6 @@ const MOUNTFIGHT = (() => {
 
   // ------------------------------------------------------------------ take over from horseback.js
   if (HB) Object.assign(HB, { engage, strike, enemyTurn, tick, after, note, upAt });
-  return { N, PERKS_ADD, owns, can, why, blocked, allow, cost, act, moves, tip, engage, strike, enemyTurn, allyTurn, riderTurn, foeKind, small, stagger, staggered, tick, after, note,
-    out, roster, mirror, fromMate, allyMount, pose, upAt, seat, drawMount, drawStand, allyHorse, barHTML };
+  return { N, PERKS_ADD, owns, can, why, blocked, allow, cost, mActs, dualMul, dualPow, act, moves, tip, engage, strike, enemyTurn, allyTurn, riderTurn, foeKind, small, stagger, staggered, tick, after, note,
+    out, roster, mirror, fromMate, allyMount, pose, upAt, seat, seated, climb, bobOf, drawMount, drawStand, allyHorse, barHTML };
 })();

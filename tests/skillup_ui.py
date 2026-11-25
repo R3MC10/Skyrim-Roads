@@ -1,6 +1,6 @@
 """Skill-up toasts (skillup.js) in the browser: win a fight that raises two skills and your level, capture the toast
 mid-animation (ink on a phone, pixel on PC), check the fight result no longer lists skill-ups and the follower line stays.
-   python3 -m http.server 8765 --directory ../game &
+   node serve.js 8765 &
    python3 skillup_ui.py 8765            (screenshots go to out_skillup/)"""
 import asyncio, sys, os
 from playwright.async_api import async_playwright

@@ -8,14 +8,14 @@ Options (environment): PERF_RATE (CPU slowdown, 4), PERF_SECS, PERF_GPU=1 (insta
 than software drawing), PERF_PROFILE=1 (top functions per scene), PERF_TRACE=1 (main-thread time by browser event).
   - JS heap after each scene and after a forced GC.
 Numbers wobble ~10% run to run; compare runs on the same machine. Screenshots of each scene go to SHOTS_DIR when given
-(for before/after comparisons). Needs a static server on PORT serving game/ (python -m http.server PORT --directory ../game)."""
+(for before/after comparisons). Needs a static server on PORT serving game/ (node serve.js PORT)."""
 import asyncio, sys, os, json
 from playwright.async_api import async_playwright
 
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"
 SHOTS = sys.argv[2] if len(sys.argv) > 2 else None
 if SHOTS: os.makedirs(SHOTS, exist_ok=True)
-CHROME = os.environ.get("CHROME", "/usr/bin/google-chrome")   # falls back to Playwright's own Chromium when missing
+CHROME = (__import__("os").environ.get("CHROME") or ("/usr/bin/google-chrome" if __import__("os").path.exists("/usr/bin/google-chrome") else None))   # falls back to Playwright's own Chromium when missing
 RATE = float(os.environ.get("PERF_RATE", "4"))
 SECS = float(os.environ.get("PERF_SECS", "5"))   # quiet window per scene (busy %, long tasks, map draws)
 FPS_SECS = float(os.environ.get("PERF_FPS_SECS", "2"))   # then the frame-counting window (fps, frame gaps)
@@ -114,7 +114,7 @@ async def heap(cdp, gc=False):
 
 async def main():
     async with async_playwright() as p:
-        kw = {"executable_path": CHROME, "args": ["--no-sandbox"]} if os.path.exists(CHROME) else {}
+        kw = {"executable_path": CHROME, "args": ["--no-sandbox"]} if CHROME and os.path.exists(CHROME) else {}
         if os.environ.get("PERF_GPU"):   # use the machine's real GPU (closer to a phone than software drawing); uses installed Google Chrome
             kw = {**kw, "channel": os.environ.get("PERF_GPU") if os.environ.get("PERF_GPU") in ("chrome", "msedge", "chromium") else "chrome","args": kw.get("args", []) + ["--enable-gpu", "--ignore-gpu-blocklist", "--enable-gpu-rasterization"]}
         b = await p.chromium.launch(**kw)

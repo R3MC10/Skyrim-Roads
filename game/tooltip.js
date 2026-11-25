@@ -21,6 +21,7 @@ const TIP = (() => {
     CHARGE: () => (typeof CHARGE !== "undefined" ? CHARGE : undefined),   // chargebar.js: the charge bar of enchanted weapons and staffs
     COOK: () => (typeof COOK !== "undefined" ? COOK : undefined),
     POTFX: () => (typeof POTFX !== "undefined" ? POTFX : undefined),   // potionfx.js: potions work over a few rounds
+    ITEMCMP: () => (typeof ITEMCMP !== "undefined" ? ITEMCMP : undefined),   // itemcmp.js: against what you wear (also the Items side panel)
   };
   const g = (n) => { try { return MODS[n] ? MODS[n]() : undefined; } catch { return undefined; } };
   const has = (n) => g(n) !== undefined;
@@ -50,7 +51,8 @@ const TIP = (() => {
     const D_ = g("D"), G_ = g("G"); const it = D_?.ITEMS?.[itemId]; if (!it) return null;
     const CC_ = g("CC"), tier = CC_ ? CC_.tier(itemId, r) : "common";
     const name = (r?.tq && g("TOWNS")?.QUALITY ? g("TOWNS").QUALITY[r.tq] + " " : "") + it.name + (r?.nm ? ` “${r.nm}”` : "");
-    const kind = it.slot === "weapon" ? `${it.hands === 2 ? "Two-handed" : "One-handed"} ${it.skill === "Archery" ? "bow" : "weapon"} · ${it.skill}`
+    const hd = it.hands === 2 ? "Two-handed" : "One-handed";   // the skill only when it says something new ("One-handed weapon", not "· One-Handed" again)
+    const kind = it.slot === "weapon" ? `${hd} ${it.skill === "Archery" ? "bow" : "weapon"}${it.skill && String(it.skill).toLowerCase() !== hd.toLowerCase() ? ` · ${it.skill}` : ""}`
       : (G_?.ARMOR_SLOTS || []).includes(it.slot) ? `${it.type ? it.type[0].toUpperCase() + it.type.slice(1) + " " : ""}${it.slot === "chest" ? "body armor" : it.slot}`
       : { potion: "Potion", poison: "Poison", food: "Food", ingredient: "Ingredient", tome: "Spell tome", scroll: "Scroll", soulgem: "Soul gem", ammo: "Ammo", material: "Crafting material", valuable: "Valuable", trophy: "Trophy", recipe: "Forge recipe", misc: "Item" }[it.slot] || "Item";
     const q = r?.qty || 1;
@@ -90,7 +92,7 @@ const TIP = (() => {
       L.push(dmg && s ? `Hits for about ${dmg} with your ${it.skill} skill and perks` : `${it.damage} base damage, more as your ${it.skill} skill grows`);
     }
     if (it.slot === "ammo") L.push(`Shot from a ${/bolt/.test(itemId) ? "crossbow" : "bow"}: ${it.damage} damage added to each shot`);
-    if (["potion", "scroll"].includes(it.slot) && (it.restore || D_.SPELLS[it.spell])) st.push(["In a fight", `${it.slot === "scroll" ? 2 : 1} AP`]);
+    if (["potion", "scroll"].includes(it.slot) && (it.restore || D_.SPELLS[it.spell])) st.push(["In a fight", "1 move, free"]);   // no action points since build 145: a potion or scroll takes one of your 4 moves, no stamina
     if (it.slot === "soulgem") L.push(`Holds ${it.charge} charge for recharging enchanted weapons`);
     if (it.slot === "ingredient" && s && g("TOWNS")?.INGREDIENT_FX?.[itemId]) { const T = g("TOWNS"); L.push("Effects: " + T.INGREDIENT_FX[itemId][1].map((e, i) => (T.known(s, itemId)[i] ? e : "?")).join(", ")); }
     if (it.slot === "material") L.push("Used at the forge to improve gear.");
@@ -107,7 +109,8 @@ const TIP = (() => {
     if (r?.stolen) L.push("\uE15E Stolen. Only a fence will buy it.");
     // better or worse than what you wear (the same sums as the ▲/▼ marks in lists)
     let cmp = "";
-    if (s && G_?.equipment && (G_.SLOTS || []).includes(it.slot)) {
+    if (s && g("ITEMCMP")) cmp = g("ITEMCMP").html(s, r || { id: null, item: itemId }, "tt-cmp");   // [itemdetail] Damage 7 → 8 (+1), Weight, Value
+    else if (s && G_?.equipment && (G_.SLOTS || []).includes(it.slot)) {
       const w = G_.equipment(s)[it.slot], wit = w && D_.ITEMS[w.item];
       const stat = (x, rr) => (x.slot === "weapon" ? x.damage : x.armor || 0) + (rr?.temper || 0);
       if (w && r && w.id === r.id) cmp = `<p class="tt-eq">◆ You're wearing this</p>`;
@@ -245,7 +248,7 @@ const TIP = (() => {
     [".qhead", (el) => { const c = el.closest(".qcard[id^='q-']"); return c ? "quest:" + c.id.slice(2) : null; }],
     [".fol2head", () => { const s = state(); return s?.follower ? "follower:" + s.follower.id : null; }],
     [".hb.hp", () => "stat:health"], [".hb.mp", () => "stat:magicka"], [".hb.sp", () => "stat:stamina"], [".carry", () => "stat:carry"],
-    ["#lvlb", () => "stat:level"], ["#goldv,.sky-foot .gold", () => "cur:gold"],
+    ["#lvlb,.pcb-lv", () => "stat:level"], ["#goldv,.sky-foot .gold,.pcb-gold", () => "cur:gold"],   // .pcb-*: the PC bottom bar (pcmap.js)
     [".item", (el) => {   // a list row: the one thing it's about (buy an item, take a perk, travel somewhere, a player)
       const one = (sel) => { const l = el.querySelectorAll(sel); return l.length === 1 ? l[0] : null; };
       const items = new Set([...el.querySelectorAll("[data-item]")].map((x) => x.dataset.item)); if (items.size === 1) return "item:" + [...items][0];   // a shop row (Buy, ×20)
@@ -310,8 +313,11 @@ const TIP = (() => {
     const cs = getComputedStyle(probe), n = (v) => parseFloat(cs[v]) || 0;
     return { t: n("paddingTop"), r: n("paddingRight"), b: n("paddingBottom"), l: n("paddingLeft") };
   }
-  function place(rect) {
-    const vv = window.visualViewport, vw = vv ? vv.width : innerWidth, vh = vv ? vv.height : innerHeight, ox = vv ? vv.offsetLeft : 0, oy = vv ? vv.offsetTop : 0;
+  function place(r0) {
+    // a zoomed page (PC interface size, access.js text zoom): rects come back zoomed, left/top are set before the zoom
+    const z = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
+    const rect = z === 1 ? r0 : { left: r0.left / z, top: r0.top / z, right: r0.right / z, bottom: r0.bottom / z, width: r0.width / z, height: r0.height / z };
+    const vv = window.visualViewport, vw = (vv ? vv.width : innerWidth) / z, vh = (vv ? vv.height : innerHeight) / z, ox = (vv ? vv.offsetLeft : 0) / z, oy = (vv ? vv.offsetTop : 0) / z;
     const ins = insets(), M = 8, L = ox + ins.l + M, R = ox + vw - ins.r - M, T = oy + ins.t + M, B = oy + vh - ins.b - M;
     box.style.maxWidth = Math.max(160, Math.min(340, R - L)) + "px"; box.style.width = "";   // (a fight-bar line set a width)
     box.style.left = "0px"; box.style.top = "0px";
@@ -359,13 +365,20 @@ const TIP = (() => {
     box.innerHTML = body;
     cur = hit; hit.rect = rect;
     const dock = !rect && hit.el?.closest?.("#tbf.c2 .tbdock");
+    /* [phonelayout] a finger on a phone: the tip is a bottom sheet (35-45% of the screen), not a box over the list, and the
+       list underneath keeps its place. Not on the fight screen (its buttons sit at the bottom). */
+    const sheet = !dock && !rect && !!press && sheetFits() && !hit.el?.closest?.("#tbf, .tbf, #fight");
     box.classList.toggle("tt-dock", !!dock);
+    box.classList.toggle("tt-sheet", sheet);
     if (dock) dockLine(dock);
+    else if (sheet) { box.style.left = "0px"; box.style.top = "auto"; box.style.width = "100%"; box.style.maxWidth = "none"; box.classList.remove("tt-above", "tt-below"); box.scrollTop = 0; }
     else place(rect || anchor(hit.el));
     box.classList.add("on");
     if (hit.el?.id) hit.el.setAttribute("aria-describedby", "tip");
     clearInterval(watchT); watchT = setInterval(watch, 300);
   }
+  const sheetFits = () => (window.visualViewport ? window.visualViewport.width : innerWidth) < 700;
+  const isSheet = () => !!box && box.classList.contains("tt-sheet") && box.classList.contains("on");
   function hide() {
     clearTimeout(showT); clearTimeout(hideT); clearInterval(watchT);
     if (cur?.el?.getAttribute?.("aria-describedby") === "tip") cur.el.removeAttribute("aria-describedby");
@@ -374,7 +387,7 @@ const TIP = (() => {
   /* screens redraw often: follow the thing to its new copy, or let go */
   function watch() {
     if (!cur) return clearInterval(watchT);
-    if (cur.rect || cur.el.isConnected) return;
+    if (cur.rect || cur.el.isConnected || isSheet()) return;   // a sheet keeps its words when the screen redraws
     const at = press ? [press.x, press.y] : lastXY;   // the finger still held, or the mouse resting
     if (at) { const t = document.elementFromPoint(at[0], at[1]), h = t && find(t); if (h) { if (press) press.h = h; return show(h); } }
     hide();
@@ -388,7 +401,8 @@ const TIP = (() => {
   function over(e) {
     if (isTouch(e) || press) return;
     lastKey = false; lastXY = [e.clientX, e.clientY];
-    const h = find(e.target);
+    let h = find(e.target);
+    if (h && g("ITEMCMP")?.ownsHover?.(h.el)) h = null;   // [itemdetail] PC Items rows: the side panel shows the item instead
     if (h && cur && h.el === cur.el) return;
     clearTimeout(showT);
     if (!h) { if (cur && !cur.rect) hideT = setTimeout(hide, 80); return; }
@@ -410,6 +424,7 @@ const TIP = (() => {
   // finger: hold
   const HOLD = 450;
   function down(e) {
+    if (isSheet() && e.target?.closest?.("#tip")) { clearTimeout(hideT); return; }   // scrolling the sheet itself keeps it
     if (!isTouch(e)) { clearTimeout(showT); if (cur) hide(); return; }
     if (cur) hide();
     clearTimeout(press?.timer); press = null;
@@ -436,7 +451,7 @@ const TIP = (() => {
   function up(e) {
     if (!press || e.pointerId !== press.id) return;
     clearTimeout(press.timer);
-    if (press.shown) { swallowUntil = Date.now() + 700; clearTimeout(hideT); hideT = setTimeout(hide, 1800); }   // the lift doesn't press what's under it; the box stays a moment to finish reading
+    if (press.shown) { swallowUntil = Date.now() + 700; clearTimeout(hideT); if (!isSheet()) hideT = setTimeout(hide, 1800); }   // a sheet stays till the next tap   // the lift doesn't press what's under it; the box stays a moment to finish reading
     press = null;
   }
   function eatClick(e) {

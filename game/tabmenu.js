@@ -101,8 +101,8 @@ const TABMENU = (() => {
       <div class="tw-skt"><span class="tw-skn">${typeof UIART !== "undefined" ? UIART.skill(sk, 30) : ""}<b>${esc(sk)}</b> <span class="num">${s.lvl}</span></span><span class="sub num">${Math.round(s.xp)}/${Math.round(need)}</span></div>
       <div class="bar"><i style="width:${Math.round(Math.min(1, s.xp / need) * 100)}%;background:var(--frost)"></i></div>
       ${info ? `<p class="sub">${esc(info)}</p>` : ""}</div>
-      ${tree.length && typeof SKYUI !== "undefined" ? `<div class="tw-bigw"><div class="skc tw-big">${SKYUI.svg(sk, S)}</div></div>` : ""}
-      <div class="tw-sdet">${detail}</div></div>`;   // tw-sleft / tw-sdet: plain blocks on a phone, the left column beside the stars on a PC (pcfit)
+      ${tree.length && typeof SKYUI !== "undefined" ? `<div class="tw-bigw"><div class="skc tw-big">${SKYUI.svg(sk, S, { sel: starPick })}</div></div>` : ""}
+      <div class="tw-sdet${pk ? "" : " hint"}">${detail}</div></div>`;   // tw-sleft / tw-sdet: plain blocks on a phone, the left column beside the stars on a PC (pcfit)
   }
   /* the werewolf's or the Vampire Lord's own sky, chosen from the same row of cards */
   function beastStars(S, list, beastT) {
@@ -220,7 +220,7 @@ const TABMENU = (() => {
     const quick = [inTown ? ["town", "Area", "town"] : null, ["log", "Journal", "log"], ["social", "Social", "people"], ["settings", "Settings", "gear"], typeof SEARCH !== "undefined" ? ["search", "Search", "search"] : null].filter(Boolean);
     return `<div class="tw-bg" aria-hidden="true"></div><div class="tw-veil" aria-hidden="true"></div>${starsBG()}
       <div class="tw-top"><b class="tw-where"></b><span class="tw-when"></span><small class="tw-fc"></small></div>
-      <div class="tw-rose"><div class="tw-disc" aria-hidden="true"><i class="tw-depth"></i><div class="tw-face">${roseSVG()}</div><i class="tw-shine"></i></div>${dir("up")}${dir("left")}${dir("right")}${dir("down")}</div>
+      <div class="tw-rose"><i class="tw-ringart" aria-hidden="true"></i><div class="tw-disc" aria-hidden="true"><i class="tw-depth"></i><div class="tw-face">${roseSVG()}</div><i class="tw-shine"></i></div>${dir("up")}${dir("left")}${dir("right")}${dir("down")}</div>
       <p class="tw-hint"><span class="tw-touch">Swipe or tap a direction</span><span class="tw-keys">Press WASD or click a direction · Tab closes the menu</span></p>
       <div class="tw-quick">${quick.map(([id, l, k], i) => `<button class="tw-q" data-twq="${id}" aria-label="${l}">${ico(k)}<span>${l}</span><kbd class="tw-k" aria-hidden="true">${i + 1}</kbd></button>`).join("")}</div>
       <div class="tw-bar"></div>`;
@@ -306,6 +306,7 @@ const TABMENU = (() => {
     setCharTab(t);
   }
   function setCharTab(t) {
+    if (t === "stars") { starPick = null; typeof SKYUI !== "undefined" && SKYUI.refocus?.(); }   // the Skills page opens on what you can take
     ui().go?.(t);
     const side = document.getElementById("side"); if (side) side.scrollTop = 0;
     markChar(t);
@@ -367,7 +368,8 @@ const TABMENU = (() => {
     const k = Math.min(1, Math.max(ax, ay) / 90); el.style.setProperty("--pull", k.toFixed(2));
     // the compass follows the finger, with a rubber-band give so it never leaves the screen
     const band = (v) => Math.sign(v) * 70 * (1 - Math.exp(-Math.abs(v) / 110));
-    tilt(el, band(dx), band(dy));
+    // straight lines only: the compass follows the finger along the main direction, never diagonally
+    if (ax > ay) tilt(el, band(dx), 0); else tilt(el, 0, band(dy));
   }
   /* the 3D compass is a sheet of 7x7 Blender renders (scripts/compass3d.py): pick the one matching the tilt */
   let tiltNow = [0, 0], springT = 0;
@@ -437,8 +439,8 @@ const TABMENU = (() => {
     // the Skills page's own taps (skill cards, stars, links)
     document.addEventListener("click", (e) => {
       const a = e.target.closest?.("[data-twa]");
-      if (a && a.dataset.twa === "skill") { starSkill = a.dataset.id; starPick = null; ui().refresh?.(); requestAnimationFrame(() => document.querySelector(".tw-card.on")?.scrollIntoView({ inline: "center", block: "nearest" })); return; }
-      if (a && a.dataset.twa === "starsof") { starSkill = a.dataset.id; starPick = null; if (charMode) setCharTab("stars"); else ui().go?.("stars"); return; }
+      if (a && a.dataset.twa === "skill") { starSkill = a.dataset.id; starPick = null; typeof SKYUI !== "undefined" && SKYUI.refocus?.(); ui().refresh?.(); requestAnimationFrame(() => document.querySelector(".tw-card.on")?.scrollIntoView({ inline: "center", block: "nearest" })); return; }
+      if (a && a.dataset.twa === "starsof") { starSkill = a.dataset.id; starPick = null; typeof SKYUI !== "undefined" && SKYUI.refocus?.(); if (charMode) setCharTab("stars"); else ui().go?.("stars"); return; }
       const st = e.target.closest?.(".tw-big [data-sk-perk]");
       if (st) { starPick = +st.dataset.skPerk; ui().refresh?.(); requestAnimationFrame(() => document.querySelector(".tw-perk")?.scrollIntoView({ block: "nearest" })); }
     });
@@ -508,5 +510,5 @@ const TABMENU = (() => {
     if (!skip && (force || !navigator.webdriver)) setTimeout(openHub, 60);
   }
   return { RING, DIR, CHAR_TABS, swipeDir, ring, step, bar, task, mini, stars, perks, mount, openHub, closeHub, go, back, afterPanel, menuClosed, fromBar, swiped,
-    get open() { return hubOpen; }, set maxMs(v) { MAXMS = v; }, get charMode() { return charMode; }, get starSkill() { return starSkill; }, set starSkill(v) { starSkill = v; starPick = null; } };
+    get open() { return hubOpen; }, set maxMs(v) { MAXMS = v; }, get charMode() { return charMode; }, get starSkill() { return starSkill; }, set starSkill(v) { starSkill = v; starPick = null; typeof SKYUI !== "undefined" && SKYUI.refocus?.(); } };
 })();

@@ -5,12 +5,14 @@
      cast, a shout or power, a potion or scroll, or an ability (Breathe, Oil flask, Mark target, Cover allies).
    - Nobody starts empty: until you change it, the bar fills itself from your hero (blows, your best attack and healing
      spells, a health potion, your shouts, Breathe...). Your old ★ pins and favourites wheel come along.
-   - Edit: "Edit hotbar" in the … menu, a long press on a slot (phones), or a tap on an empty slot. Then tap a slot and tap
+   - Edit: "Edit hotbar" in the … menu, or a tap on an empty slot. Then tap a slot and tap
      what goes in it (or drag it there with a mouse); tap two slots (or drag one onto another) to swap them; Clear empties
      the slot you picked (or drag a slot off the bar). Default puts the self-filling bar back.
    - Saved per hero in the save file (s.hotbar), so it goes to the cloud with the rest. A save without one gets the default.
    - Keys on a PC: 1-9 and 0 use the slot, the same as a tap (a heal with teammates around asks who gets it). Nothing fires
      while you type in chat or a field, while the … menu, the fight log or a window is open. In edit mode the keys pick slots.
+   - Resting the mouse on a slot (or holding a finger on it) shows what the move will do, the same as any move
+     (movepreview.js), so there's no long press to edit.
    - A slot greys out when you can't use it (not enough stamina or magicka, a shout still cooling down, none left) and says
      why; a potion slot shows how many you have. In a party fight each player's phone shows their own hero's bar.
    Pure parts (layout, defaults, keys, cleaning bad saves) work without a page: tests/test_hotbar.js. */
@@ -180,7 +182,7 @@ const HOTBAR = (() => {
   }
 
   // ------------------------------------------------------------------ edit mode state
-  let editing = false, sel = -1, tab = "weapons", swallowT = 0, hold = null, drag = null;
+  let editing = false, sel = -1, tab = "weapons", swallowT = 0, drag = null;
   const root = () => (DOM ? document.getElementById("tbf") : null);
   const sessS = (sess) => sess?.f?.s || null;
   /* the layout lives in the hero's save (s.hotbar). A fight works on the live save and keeps it when it ends
@@ -211,7 +213,7 @@ const HOTBAR = (() => {
       const at = where.get(e.a);
       return `<button class="hb-p${at != null ? " in" : ""}" type="button" data-hbp="${esc(e.a)}" aria-label="${esc(e.name)}${at != null ? `, in slot ${slotKey(at)}` : ""}"><span class="hb-pic" aria-hidden="true">${ui.icon(f, e.a, 26)}</span><span class="hb-pn">${esc(e.name)}<small>${esc(e.sub)}</small></span>${at != null ? `<kbd class="hb-at">${slotKey(at)}</kbd>` : ""}</button>`;
     }).join("") || `<p class="sub">Nothing here yet.</p>`;
-    const slots = L.map((a, i) => `<button class="hb-slot${i === sel ? " sel" : ""}${a ? "" : " empty"}${a && !known(s, f, a) ? " gone" : ""}" type="button" data-hbs="${i}" aria-pressed="${i === sel}" aria-label="Slot ${slotKey(i)}: ${a ? esc(names(s, f, a)) : "empty"}"><span class="ic" aria-hidden="true">${a ? ui.icon(f, a, 26) : "+"}</span><b>${a ? esc(short(s, f, a)) : ""}</b><kbd class="fc-k" aria-hidden="true">${slotKey(i)}</kbd></button>`).join("");
+    const slots = L.map((a, i) => `<button class="hb-slot${i === sel ? " sel" : ""}${a ? "" : " hb-none"}${a && !known(s, f, a) ? " gone" : ""}" type="button" data-hbs="${i}" aria-pressed="${i === sel}" aria-label="Slot ${slotKey(i)}: ${a ? esc(names(s, f, a)) : "empty"}"><span class="ic" aria-hidden="true">${a ? ui.icon(f, a, 26) : "+"}</span><b>${a ? esc(short(s, f, a)) : ""}</b><kbd class="fc-k" aria-hidden="true">${slotKey(i)}</kbd></button>`).join("");
     const fine = typeof matchMedia === "function" && matchMedia("(hover: hover) and (pointer: fine)").matches;
     const hint = sel >= 0 ? `Slot ${slotKey(sel)}: tap a move to put it here, or another slot to swap.` : fine ? "Drag a move onto a slot. Drag slots to swap, or off the bar to clear. Or click a slot, then a move." : "Tap a slot, then tap what goes in it. Tap two slots to swap them.";
     return `<div class="hb-edit" role="group" aria-label="Edit hotbar">
@@ -298,26 +300,17 @@ const HOTBAR = (() => {
     ev.preventDefault(); r.querySelector(`.hb-slot[data-hbs="${i}"]`)?.click(); return true;
   }
 
-  // ------------------------------------------------------------------ long press (phones) and dragging (mouse) in the page
+  // ------------------------------------------------------------------ dragging (mouse) in edit mode
+  /* no long press on the bar any more: holding a slot shows what the move will do (movepreview.js) and its tooltip,
+     so edit mode opens from the … menu or a tap on an empty slot */
   function onDown(ev) {
-    const r = root(); if (!r) return;
-    if (!editing) {
-      const b = ev.target.closest?.("#tbf .hb-bar .hb-s[data-hbs]"); if (!b || ev.pointerType === "mouse" || ev.button > 0) return;
-      hold = { i: +b.dataset.hbs, x: ev.clientX, y: ev.clientY, id: ev.pointerId, t: setTimeout(() => {
-        if (!hold) return; const i = hold.i; hold = null;
-        lpId = ev.pointerId; buzz(25);   // the click that follows this finger's lift is eaten (set on pointerup)
-        const btn = r.querySelector('[data-tbx="hbedit"]');
-        if (btn) { pendSel = i; btn.click(); }
-      }, 650) };
-      return;
-    }
+    const r = root(); if (!r || !editing) return;
     const src = ev.target.closest?.("#tbf .hb-edit [data-hbp], #tbf .hb-edit .hb-slot[data-hbs]"); if (!src || ev.button > 0) return;
     if (src.dataset.hbp && ev.pointerType !== "mouse" && ev.pointerType !== "pen") return;   // the list scrolls under a finger: taps only
     drag = { src, x: ev.clientX, y: ev.clientY, id: ev.pointerId, on: false };
   }
-  let pendSel = -1, lpId = null;
+  let pendSel = -1;
   function onMove(ev) {
-    if (hold && ev.pointerId === hold.id && Math.hypot(ev.clientX - hold.x, ev.clientY - hold.y) > 10) { clearTimeout(hold.t); hold = null; }
     if (!drag || ev.pointerId !== drag.id) return;
     if (!drag.on) {
       if (Math.hypot(ev.clientX - drag.x, ev.clientY - drag.y) < 8) return;
@@ -332,8 +325,6 @@ const HOTBAR = (() => {
     if (over !== drag.over) { drag.over?.classList.remove("hb-over"); over?.classList.add("hb-over"); drag.over = over; }
   }
   function onUp(ev) {
-    if (hold && ev.pointerId === hold.id) { clearTimeout(hold.t); hold = null; }
-    if (lpId !== null && ev.pointerId === lpId) { lpId = null; swallowT = Date.now() + 350; }
     if (!drag || ev.pointerId !== drag.id) return;
     const d = drag; drag = null;
     if (!d.on) return;   // a plain tap: the click does it

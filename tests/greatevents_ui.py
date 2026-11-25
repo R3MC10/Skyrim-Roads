@@ -1,12 +1,13 @@
 """Great world events on screen (greatevents.js): the banner with its countdown, the map markers, the event sheets,
 a charge at the dragon, the fair games and a burned town rebuilding. Phone (390x844) and desktop (1920x1080),
 the hand-drawn art style.
-Run from the repo root:  PYTHONIOENCODING=utf-8 python tests/greatevents_ui.py   (screenshots land in tests/out_gev/)"""
+Run from the repo root:  PYTHONIOENCODING=utf-8 python tests/greatevents_ui.py   (screenshots land in $SHOTS or the temp folder)"""
 import asyncio, os, socket, subprocess, sys, time
 from playwright.async_api import async_playwright
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = os.path.join(ROOT, "tests", "out_gev"); os.makedirs(OUT, exist_ok=True)
+import tempfile
+OUT = os.environ.get("SHOTS") or os.path.join(tempfile.gettempdir(), "out_gev"); os.makedirs(OUT, exist_ok=True)
 
 def free_port():
     for p in range(9400, 9500):
@@ -39,7 +40,7 @@ OVERLAP = """() => { const vis = (el) => { const r = el.getBoundingClientRect(),
   return { shown: pb.map((p) => p[0]), hits }; }"""
 
 async def main():
-    srv = subprocess.Popen([sys.executable, "-m", "http.server", str(PORT), "--directory", os.path.join(ROOT, "game")], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    srv = subprocess.Popen(["node", os.path.join(ROOT, "tests", "serve.js"), str(PORT), os.path.join(ROOT, "game")], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)   # node: python's server refuses connections under load
     time.sleep(1.0)
     errs, bad, shots = [], [], []
     def check(ok, what):
@@ -68,12 +69,13 @@ async def main():
                         await pg.wait_for_timeout(600)
                         if await pg.query_selector(".gevsheet"): return
                 async def to_map():
-                    await clear(); await pg.click("[data-tab=map]"); await pg.wait_for_timeout(900); await clear()
+                    await clear(); await pg.evaluate("window.__ui.go('map')"); await pg.wait_for_timeout(900); await clear()   # #side carries data-tab too
                 if pl: await ctx.add_init_script("localStorage.setItem('rotn_prefs', JSON.stringify({ lang: 'pl' }))")
+                n0 = len(errs)
                 for _ in range(3):   # python's little test server sometimes drops a script under a burst of requests: reload
                     await pg.goto(f"http://localhost:{PORT}/index.html?notut&p=gev{tag}")
                     try: await pg.wait_for_selector(".press", timeout=10000); break
-                    except Exception: print(tag, "title screen didn't come up, reloading")
+                    except Exception: print(tag, "title screen didn't come up, reloading"); del errs[n0:]   # a half-loaded page doesn't count
                 await pg.wait_for_timeout(800)
                 await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Hrodny"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
                 for st in ["ink"]:
@@ -153,6 +155,9 @@ async def main():
                       for (let b = b0 + 2; b < b0 + 30; b++) { const ev = GREATEV.eventIn(b); if (ev.kind !== 'dragon') continue; const nx = GREATEV.eventIn(b + 1);
                         const t = Math.min(ev.end + 8 * 3600, nx.warn - 60); window.__off = (t - t0) * 1000; const S = window.__dbg.save(); S.location = ev.place; [S.x, S.y] = WORLD.places[ev.place]; return ev.name; } }""")
                     await pg.wait_for_timeout(1500); await to_map(); await pg.evaluate("scrollTo(0, 0)"); await pg.wait_for_timeout(1300)
+                    # aftermath strips are news: they sit in the "World news" drawer (gevstack.js), shut by default
+                    for sel in ("#gev [data-gevs=open]", "#gev [data-gevs=news][aria-expanded=false]"):
+                        if await pg.query_selector(sel): await pg.click(sel); await pg.wait_for_timeout(500)
                     check(await pg.evaluate("document.querySelectorAll('#gev .gev-after').length") >= 1, f"{tag}/{st}: the burned town shows under the map ({ev})")
                     await shot(f"{st}_aftermath")
                     g = await pg.query_selector("#gev")

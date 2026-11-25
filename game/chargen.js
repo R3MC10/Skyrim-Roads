@@ -1,5 +1,6 @@
 /* chargen.js: character creation, Skyrim RaceMenu style. [OURS]
-   A big live preview (left on a PC, on top on a phone) drawn with the same rig as fights and the map (FIGART); it idles,
+   A big live preview (left on a PC, on top on a phone) drawn with the painted fight rig (chargenrig.js; the ink FIGART
+   figure until its parts load); it idles,
    turns (drag it, or the arrow keys) and zooms to the face. Tabs: Race · Body · Head · Face · Hair · Scars & Paint · Start,
    with Back/Next, Randomise and Undo. The look is plain data (appear.js) saved in s.app and sent on your player card,
    so everyone sees the same face. Race abilities: racefx.js.
@@ -32,7 +33,7 @@ const CHARGEN = (() => {
     const save = o.save || null, race = save ? save.race : o.race || "nord";
     const app = save ? APPEAR.norm(save.app || APPEAR.fromSeed(save.id || save.name || "x", race, save.sex === "f"), race) : APPEAR.fromSeed("cg-" + race, race, false);
     return { mode, o, save, race, app, app0: JSON.stringify(app), stone: "", tab: mode === "create" ? "race" : "body", undo: [], touched: false,
-      angle: 0, angleTo: 0, zoom: 0, pose: "idle", gear: mode !== "create", root: null, can: null, buf: null, raf: 0, ver: 1, drawn: "", prevLook: null, drag: null };
+      angle: 0, angleTo: 0, zoom: 0, pose: "idle", gear: true, root: null, can: null, buf: null, raf: 0, ver: 1, drawn: "", prevLook: null, drag: null };
   }
   const tabs = () => (st.mode === "create" ? TABS : TABS.filter(([id]) => id !== "race" && id !== "start"));
   const raceName = (r) => (D.RACES[r] || {}).name || r;
@@ -91,7 +92,7 @@ const CHARGEN = (() => {
   function raceTab() {
     const r = D.RACES[st.race], ab = RACEFX.ability(st.race), pw = typeof POWERS !== "undefined" && POWERS.RACE ? POWERS.RACE[st.race] : null;
     return `<div class="rgrid cgraces bustgrid">${Object.entries(D.RACES).map(([id, x]) => `<button class="rpick ${id === st.race ? "on" : ""}" data-race="${id}" aria-pressed="${id === st.race}">${raceFace(id)}<span>${esc(x.name)}</span></button>`).join("")}</div>
-      <div class="rshow cgcard"><div class="rfig heroprev" title="${esc(L("In your starting gear"))}">${HEROART.figure({ look: lookNow(true) }, 120, 165)}</div>
+      <div class="rshow cgcard"><div class="rfig heroprev cgbust">${typeof BUSTART !== "undefined" ? BUSTART.hero({ race: st.race, app: st.app }, HEROART.figure({ look: lookNow(true) }, 120, 165)) : HEROART.figure({ look: lookNow(true) }, 120, 165)}</div>
         <div class="rtxt"><h3>${esc(r.name)}</h3><p class="sub">${esc(L(RACEFX.lore(st.race)))}</p>
           <h4>${esc(L("Starting skills"))}</h4>
           <div class="rsk">${r.skills.map(skillName).map((k, i) => `<span class="rskill">${typeof UIART !== "undefined" ? UIART.skill(k, 22) : ""}<b>+${i === 0 ? 10 : 5}</b> ${esc(k)}</span>`).join("")}</div>
@@ -149,6 +150,7 @@ const CHARGEN = (() => {
         ${create && typeof TITLEART !== "undefined" ? TITLEART.createScene(st.race) : `<div class="cgbg" aria-hidden="true"></div>`}
         <canvas class="cgcan" tabindex="0" role="img" aria-label="${esc(L("Your character. Drag, or use the arrow keys, to turn; up and down zoom to the face."))}"></canvas>
         <div class="cgtag" aria-hidden="true"></div>
+        <div class="cgdetail" aria-hidden="true"></div>
         <div class="cgctl">
           <button class="cgic" data-cg="turnL" aria-label="${esc(L("Turn left"))}">⟲</button>
           <button class="cgic cgzoom" data-cg="zoom" aria-pressed="false">${esc(L("Face"))}</button>
@@ -194,7 +196,7 @@ const CHARGEN = (() => {
     R.querySelectorAll("[data-cg=pose]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.pose === st.pose)));
     R.querySelector("[data-cg=gear]").setAttribute("aria-pressed", String(st.gear));
     const cf = R.querySelector(".cscene .cfig"); if (cf) cf.dataset.race = st.race;
-    tag();
+    tag(); detail();
     if (keep) { const el = [...pane.querySelectorAll("button"), ...R.querySelectorAll(".cgtab")].find((b) => [b.dataset.cg, b.dataset.k, b.dataset.v, b.dataset.race, b.dataset.stone, b.dataset.tab].join("|") === keep); if (el) el.focus(); }
     if (st.o.afterRender) try { st.o.afterRender(R); } catch (e) { console.warn("chargen", e); }
     paint(true);
@@ -203,6 +205,15 @@ const CHARGEN = (() => {
     const el = st.root?.querySelector(".cgtag"); if (!el) return;
     const nm = st.mode === "create" ? nameNow() : st.save?.name || "";
     el.innerHTML = `<b>${esc(nm || L("Nameless"))}</b><span>${esc(raceName(st.race))}${st.stone ? " · " + esc(L((POWERS.STONES[st.stone] || [""])[0])) : ""}</span>`;
+  }
+  /* [chargenrig] the painted figure wears one painted head per race, so on the Head, Face, Hair and Scars tabs a small
+     drawn close-up shows the details you pick (shown only while the painted figure is up: .cg-painted) */
+  const DETAIL_TABS = new Set(["head", "face", "hair", "marks"]);
+  function detail() {
+    const el = st.root?.querySelector(".cgdetail"); if (!el) return;
+    const on = DETAIL_TABS.has(st.tab);
+    el.classList.toggle("on", on);
+    el.innerHTML = on ? HEROART.portrait({ look: lookNow(false) }, 84) + `<span>${esc(L("Close-up"))}</span>` : "";
   }
   function setTab(id, focus) {
     if (!tabs().some(([t]) => t === id)) return;
@@ -233,11 +244,18 @@ const CHARGEN = (() => {
     st.prevLook = key;
     const face = st.zoom > 0.5, pose = face ? "idle" : st.pose;
     const frame = anim ? Math.floor((now / FIGART.LOOP[pose]) * FIGART.POSES[pose]) % FIGART.POSES[pose] : 0;
-    const sig = [key, W, H, face, pose, face ? Math.round(now * 6) : frame, st.angle.toFixed(3)].join("|");
+    const live = typeof CGRIG !== "undefined" && CGRIG.ok(Lk);   // the painted figure moves every frame
+    const sig = [key, W, H, face, pose, live ? Math.round(now * 30) : face ? Math.round(now * 6) : frame, st.angle.toFixed(3), live].join("|");
     if (!force && sig === st.drawn) return;
     st.drawn = sig;
     const g = c.getContext("2d"); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, W, H);
     const sp = FIGART.specOf(Lk), cs = Math.cos(st.angle), sx = (cs < 0 ? -1 : 1) * Math.max(0.18, Math.abs(cs));
+    // [chargenrig] the painted fight figure (chargenrig.js) once its parts load; the ink figure below until then
+    const chips = st.root?.querySelector(".cgposes")?.getBoundingClientRect(), floor = chips && chips.height ? (chips.top - r.top - 6) * dpr : 0;   // the feet stand just above the pose chips
+    const ctl = st.root?.querySelector(".cgctl")?.getBoundingClientRect(), top = ctl && ctl.height ? (ctl.bottom - r.top + 6) * dpr : 0;   // [raceheads] and the head stays below the rotate / Face buttons
+    const painted = typeof CGRIG !== "undefined" && CGRIG.paint(g, W, H, Lk, { pose, face, t: anim ? now : 0, sx, floor, top });
+    if (st.root) st.root.classList.toggle("cg-painted", !!painted);
+    if (painted) { g.setTransform(1, 0, 0, 1, 0, 0); return; }
     try {
       if (!face) {
         const fh = Math.min(H * 0.74 / Math.max(1, sp.bh), W * 0.9), k = fh / 61;

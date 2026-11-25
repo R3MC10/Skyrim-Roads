@@ -2,7 +2,7 @@
 The foe is chilled and soaked in oil: the power attack and the fire spell glow with a combo icon, the foe shows the
 combo chips, the Oil flask / Mark / Cover moves sit in the dock, a power attack Shatters and the banner shows.
 Then the same in Polish. Screenshots go to tests/out_combos/ (and SHOTS=<folder> as combo_<size>_<name>.png).
-  python -m http.server 8765 --directory ../game &   then   python combos_ui.py 8765"""
+  node serve.js 8765 &   then   python combos_ui.py 8765"""
 import asyncio, sys, os
 from playwright.async_api import async_playwright
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"

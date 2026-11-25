@@ -3,13 +3,13 @@ from playwright.async_api import async_playwright
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8821"
 async def main():
     async with async_playwright() as p:
-        b = await p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-sandbox"])
+        b = await p.chromium.launch(executable_path=(__import__("os").environ.get("CHROME") or ("/usr/bin/google-chrome" if __import__("os").path.exists("/usr/bin/google-chrome") else None)), args=["--no-sandbox"])
         errs = []
         for style in ["ink"]:
             ctx = await b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2)
             await ctx.add_init_script(f"localStorage.setItem('rotn_prefs', JSON.stringify({{artStyle:'{style}'}}))")
             pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(style + " " + str(e)))
-            await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=hb{style}"); await pg.wait_for_timeout(1500)
+            await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=hb{style}&mountcombat"); await pg.wait_for_timeout(1500)
             await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Rider"); await pg.click("#begin"); await pg.wait_for_timeout(1200)
             await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
             await pg.evaluate("""()=>{ const S=window.__dbg.save(); S.location='Whiterun'; [S.x,S.y]=WORLD.places.Whiterun; S.level=8; S.hpBonus=60; S.gold=5000; G.setHealth(S,G.maxHealth(S));

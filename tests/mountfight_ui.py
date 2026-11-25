@@ -1,5 +1,5 @@
 """Mounted combat (mountfight.js) on the turn-by-turn fight screen. Usage: py mountfight_ui.py PORT -> RESULT OK
-Serve game/ first:  py -m http.server PORT --directory ../game
+Serve game/ first:  node serve.js PORT
 At 390x844 (phone, touch) and 1920x1080 (PC), in the ink art style:
 - riding into a road fight: you start in the saddle, the rider sits on the horse in the fight picture, your horse's
   health bar is under yours, Dismount is offered with its AP
@@ -12,7 +12,7 @@ import asyncio, sys, os
 from playwright.async_api import async_playwright
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out_mountfight") + os.sep; os.makedirs(OUT, exist_ok=True)
-CHROME = os.environ.get("CHROME", "/usr/bin/google-chrome")
+CHROME = (__import__("os").environ.get("CHROME") or ("/usr/bin/google-chrome" if __import__("os").path.exists("/usr/bin/google-chrome") else None))
 fails = []
 def ok(c, m):
     print(("ok   " if c else "FAIL ") + m)
@@ -59,13 +59,13 @@ async def finish(pg):
 
 async def run(p, w, h, touch, lang=None):
     PL = lang == "pl"
-    kw = {"executable_path": CHROME, "args": ["--no-sandbox"]} if os.path.exists(CHROME) else {}
+    kw = {"executable_path": CHROME, "args": ["--no-sandbox"]} if CHROME and os.path.exists(CHROME) else {}
     b = await p.chromium.launch(**kw)
     ctx = await b.new_context(viewport={"width": w, "height": h}, device_scale_factor=2 if touch else 1, has_touch=touch, is_mobile=touch)
     errs = []
     if PL: await ctx.add_init_script("try{const k='rotn_prefs';localStorage.setItem(k,JSON.stringify({...JSON.parse(localStorage.getItem(k)||'{}'),lang:'pl'}))}catch(e){}")
     pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(str(e)))
-    await pg.goto(f"http://localhost:{PORT}/index.html?assets&net=bc&notut&p=mf{w}&tb&fightanim"); await pg.wait_for_timeout(2000)
+    await pg.goto(f"http://localhost:{PORT}/index.html?assets&net=bc&notut&p=mf{w}&tb&fightanim&mountcombat"); await pg.wait_for_timeout(2000)
     await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Rider"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
     await pg.evaluate("localStorage.setItem('rotn_prefs', JSON.stringify({...JSON.parse(localStorage.getItem('rotn_prefs')||'{}'), tips:false}))")
     tag0 = f"{w}x{h}" + ("_pl" if PL else "")

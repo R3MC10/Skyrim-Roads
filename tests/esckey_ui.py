@@ -33,7 +33,7 @@ ST = """() => ({ modal: !!document.querySelector('#modal'), sky: !!document.quer
   tab: __ui.tab, pause: !!document.querySelector('#pausem'), focus: document.activeElement?.dataset?.pm || null, tb: typeof TB !== 'undefined' && !!TB.open })"""
 
 async def main():
-    srv = subprocess.Popen([sys.executable, "-m", "http.server", str(PORT), "--directory", os.path.join(ROOT, "game")], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    srv = subprocess.Popen(["node", os.path.join(ROOT, "tests", "serve.js"), str(PORT), os.path.join(ROOT, "game")], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)   # node: python's server refuses connections under load
     time.sleep(1.0)
     errs, bad, shots = [], [], []
     def check(c, what):
