@@ -3,10 +3,18 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b338-fightfixes", build: 338, date: "25 Nov 2026", title: "Small fixes on the road and in hero creation", items: [
+    { id: "b339-fightfixes", build: 339, date: "25 Nov 2026", title: "Small fixes on the road and in hero creation", items: [
       "A new quest popping up no longer wipes the choices of a road encounter (Pay, Talk, Fight...). It waits until you've made your pick.",
       "On small phones the round compass button no longer sits on your health, magicka and stamina bars.",
       "The male and female symbols on the new hero screen show as plain symbols on every phone, not as colourful emoji.",
+    ] },
+    { id: "b338-travelview", build: 338, date: "25 Nov 2026", title: "A road worth watching", items: [
+      "The road view on a trip is much richer: hills and bends you can see coming, mountains, ridges and treelines that fade into the haze, and trees, rocks and signs that grow as you ride up to them and slide past.",
+      "Every land looks like itself, read from the map around you: open tundra, thick pine forest, snowy mountains, rocky hills, misty marsh, ash under a smoking volcano, the coast with the sea on its real side, green river valleys and the Rift's golden birches.",
+      "Things happen along the way: deer bolt, a fox darts across, wolves pace you, mammoths roam, horkers lie on the shore, guards in their hold's colours march by, a merchant's cart passes, and now and then a watchtower, a waterfall, an old camp, giants or a dragon in the sky.",
+      "The same road shows the same landmarks every time you take it; the animals and travellers are different on each trip.",
+      "Your destination grows as you near it, and cities show their gate when you get close. Your horse's mane and reins move as you ride.",
+      "Light and weather fit the land: drifting ash, snow blown off the drifts, falling leaves, fireflies on summer nights, salt haze by the sea.",
     ] },
     { id: "b337-fightcam", build: 337, date: "25 Nov 2026", title: "A cinematic fight camera", items: [
       "The camera now moves only on big moments: it leans in a little when your turn starts, closes in on a wind-up, a critical hit, a broken guard and a killing blow, and slowly pulls in on a win. A boss gets a close-up when the fight starts. Ordinary swings keep the picture calm.",
