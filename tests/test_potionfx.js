@@ -11,7 +11,7 @@ const c = { process: { env: process.env }, console, Math: M, Date, JSON, Float64
 vm.createContext(c);
 for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js",
   "enchanting.js", "quests.js", "horses.js", "hall.js", "bounty.js", "visits.js", "cooking.js", "arena.js", "achievements.js", "clans.js", "festivals.js", "wars.js", "curses.js",
-  "smithing.js", "social.js", "roam.js", "ammo.js", "tomes.js", "magic.js", "spellbook.js", "mp.js", "coop.js", "party.js", "followers2.js", "followerai.js", "combatai.js", "tbfight.js",
+  "smithing.js", "social.js", "roam.js", "ammo.js", "tomes.js", "magic.js", "spellbook.js", "mp.js", "coop.js", "party.js", "followers2.js", "followerai.js", "combatai.js", "initiative.js", "tbfight.js",
   "potionfx.js"])
   if (fs.existsSync(W + f)) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
 vm.runInContext(`

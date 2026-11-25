@@ -130,7 +130,7 @@ const FIGHTTIPS = (() => {
     const f = sess.f, st = sess.st || {};
     let arm = 0, red = 0; safe(() => { const { rating, pieces } = f.armorRating(); arm = r0(rating); red = r0(100 * mod("F").damageReduction(rating, pieces)); });
     const blk = safe(() => r0(100 * mod("SHIELDFX").passive(f)), 0);
-    return head(f.s.name || "You") + sub("You") + stats([["Armour", arm], ["Blows weaker", `${red}%`], blk ? ["Shield block", `${blk}%`] : null, ["Moves a turn", st.acts ?? 4], ["Initiative", st.init]])
+    return head(f.s.name || "You") + sub("You") + stats([["Armour", arm], ["Blows weaker", `${red}%`], blk ? ["Shield block", `${blk}%`] : null, ["Moves a turn", st.acts ?? 4], ["Speed", st.speed]])
       + hint("Drop healing spells and potions here to use them on yourself.");
   }
   function foeHTML(sess) {

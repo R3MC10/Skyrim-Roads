@@ -96,7 +96,7 @@ const OVERLAYS = (() => {
 
   // ------------------------------------------------------------ Polish
   const PL = {
-    "Turn order: the highest number acts first. A foe can act twice a round.": "Kolejność tur: najwyższa liczba działa pierwsza. Wróg może działać dwa razy w rundzie.",
+    "Turn order: the highest number acts first. Heroes side by side act together, and a fast foe has two turns (① ②). Tap + for the whole order.": "Kolejność tur: najwyższa liczba działa pierwsza. Bohaterowie obok siebie działają razem, a szybki wróg ma dwie tury (① ②). Dotknij +, żeby zobaczyć całą kolejność.",
     "Up to 4 moves a turn. Blows cost stamina, spells magicka.": "Do 4 ruchów na turę. Ciosy kosztują wytrzymałość, czary magię.",
     "Done? End turn. Moves you don't make become guard.": "Gotowe? Zakończ turę. Niewykonane ruchy stają się gardą.",
     "Tap to hide": "Dotknij, by ukryć",

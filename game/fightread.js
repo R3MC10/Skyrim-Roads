@@ -69,8 +69,15 @@ const FIGHTREAD = (() => {
   function foeLeft(sess) {
     const ord = sess.order || [];
     let n = 0;
-    for (let i = Math.max(0, sess.idx || 0); i < ord.length; i++) if (ord[i].id.startsWith("foe")) n++;
+    for (let i = Math.max(0, sess.idx || 0); i < ord.length; i++) { const o = ord[i]; if (String(o.id).startsWith("foe") && !o.done && !o.skip && !o.out) n++; }   // [initiative] a lost (stunned, frozen) or played slot isn't coming
     return n;
+  }
+  /* how many moves the foe makes next round (initiative.js keeps the order a whole fight) */
+  function nextFoe(sess) {
+    try {
+      const nx = sess.mirror ? (sess.next || []) : typeof INIT !== "undefined" ? INIT.predict(sess) : [];
+      return nx.filter((o) => o.side === "foe" || String(o.id).startsWith("foe")).reduce((t, o) => t + (o.moves || 1), 0);
+    } catch (e) { return 0; }
   }
   function plan(sess) {
     const f = sess.f;
@@ -95,14 +102,17 @@ const FIGHTREAD = (() => {
   function intents(sess) {
     const f = sess.f;
     if (sess.done || f.ehp <= 0) return [];
-    const n = foeLeft(sess); if (!n) return [];
-    const stunned = f.tbStunLeft > 0;   // your shield bash: it loses its turns this round
+    let n = foeLeft(sess);
+    if (!n && sess.ini) n = nextFoe(sess);   // [initiative] its turns this round are over; the order is fixed a whole fight, so show next round's
+    if (!n) return [];
+    const ini = !!sess.ini;   // [initiative] the turn order already took the lost slots out (initiative.js); a stagger only moves a slot back
+    const stunned = !ini && f.tbStunLeft > 0;   // older fights without it: your shield bash costs its turns this round
     const [lo, hi, mid] = blow(sess), cap = capOf(sess), hpNow = f.hp;
     const capd = (v) => (hpNow > cap ? Math.min(v, cap) : v);
     const out = [];
     const pl = f.kit?.plan || [];
     for (let i = 0; i < n; i++) {
-      if (stunned || (f.eParalyzed || 0) > i || (i === 0 && f.stagger) || (f.calmTurns || 0) > i) { out.push({ ic: "", label: stunned ? "Stunned" : (f.calmTurns || 0) > i ? "Not fighting" : "Can't act", lo: 0, hi: 0, mid: 0, skip: true }); continue; }
+      if (stunned || (!ini && ((f.eParalyzed || 0) > i || (i === 0 && f.stagger))) || (f.calmTurns || 0) > i) { out.push({ ic: "", label: stunned ? "Stunned" : (f.calmTurns || 0) > i ? "Not fighting" : "Can't act", lo: 0, hi: 0, mid: 0, skip: true }); continue; }
       if (f.dStance && !pl[i]?.bf) { out.push({ ic: "", label: "Dragon", lo: capd(lo), hi: capd(hi * 1.3), mid: capd(mid), unknown: true }); continue; }
       const p = pl[i];
       const key = !p ? "blow" : p.id === "land" ? p.wind : p.id;
@@ -296,6 +306,6 @@ const FIGHTREAD = (() => {
   }
   function stop() { clearInterval(beatT); beatT = null; }
 
-  return { INTENT, BLOWS, blowOf, actName, stkTxt, LOW, plan, foeLeft, blow, intents, forecast, panels, myChips, barMarks, paced, delay, summary, banner, bannerHTML, who, cue, play, low, stop };
+  return { INTENT, BLOWS, blowOf, actName, stkTxt, LOW, plan, foeLeft, nextFoe, blow, intents, forecast, panels, myChips, barMarks, paced, delay, summary, banner, bannerHTML, who, cue, play, low, stop };
 })();
 if (typeof module !== "undefined") module.exports = FIGHTREAD;

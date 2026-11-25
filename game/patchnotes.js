@@ -3,6 +3,14 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b333-initiative", build: 333, date: "25 Nov 2026", title: "A smarter turn order", items: [
+      "Who goes first is rolled once when a fight starts: a roll of 1 to 4 plus your speed. Light armour makes you a bit quicker, heavy armour a bit slower, and some perks help.",
+      "The turn order now changes during the fight. A stunned or frozen foe loses its next turn, a staggered one is pushed back two places, haste moves you up and slow moves you down. Every change slides into place so you can see it happen, with the reason flashing on the portrait.",
+      "No stun-locking: after losing a turn to a stun or a freeze, a foe shrugs off the next ones until the next round ends. Bosses act twice a round, so they only ever lose one of the two.",
+      "Fast foes have two turns a round, marked ① and ②, each with its own next move. Speed decides when you act, never how many moves you get.",
+      "Heroes next to each other in the order share one turn: in a party everyone in it plays at the same time, and followers act on their orders. There's no timer: the fight waits until everyone is done. If someone goes quiet for 30 seconds, the party leader can skip them, and a player who loses the connection just guards.",
+      "The turn strip at the top shows portraits in order, brackets round shared turns and the next round dimmed after a marker. Tap a portrait for its initiative, statuses and next move, or the + button for the whole order.",
+    ] },
     { id: "b332-fightscreen", build: 332, date: "25 Nov 2026", title: "A clearer fight screen", items: [
       "On a phone the fight screen now has three parts: the turn order, the foe's next move, its health and the latest line of the fight at the top; the battle in the middle with nothing covering the fighters; your health, your party and the move buttons at the bottom, in easy reach of your thumbs.",
       "On a PC your party stands down the left side, the foe you're fighting and the whole fight story down the right, and the battle in the middle.",

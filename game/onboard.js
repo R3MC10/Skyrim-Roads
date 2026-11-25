@@ -188,7 +188,7 @@ const ONBOARD = (() => {
   // ------------------------------------------------------------------ fight hints: one line pinned to the control it explains
   /* id, the control, the side of it, the line. Shown in the first turn-by-turn fights until each control is used. */
   const HINTS = [
-    ["order", "#tbf .tbtop .tbord|#tbf .tbtop", "below", "Turn order: the highest number acts first. A foe can act twice a round."],
+    ["order", "#tbf .tbtop .tbord|#tbf .tbtop", "below", "Turn order: the highest number acts first. Heroes side by side act together, and a fast foe has two turns (① ②). Tap + for the whole order."],
     ["moves", "#tbf .tbap", "above", "Up to 4 moves a turn. Blows cost stamina, spells magicka."],
     ["end", '#tbf [data-tba="end"]', "above", "Done? End turn. Moves you don't make become guard."],
   ];

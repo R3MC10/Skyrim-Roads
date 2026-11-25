@@ -6,7 +6,7 @@ const W = process.env.W || path.join(__dirname, "../game/");
 const quick = process.argv.includes("--quick");
 const TBT = fs.readFileSync(path.join(__dirname, "test_tbfight.js"), "utf8");
 const LIST = JSON.parse(TBT.match(/for \(const f of (\[[^\]]+\])\)/)[1]).filter((f) => f !== "tbfight.js" && f !== "foeintent.js")
-  .concat(["foeperks.js", "dragons.js", "priests.js", "daedric.js", "foekit.js", "fightread.js", "foeintent.js", "tbfight.js", "bossfight.js"]);
+  .concat(["foeperks.js", "dragons.js", "priests.js", "daedric.js", "foekit.js", "fightread.js", "foeintent.js", "initiative.js", "tbfight.js", "bossfight.js"]);
 function game(withCap) {
   const c = vm.createContext({ process: { env: process.env }, console, Math, Date, JSON, Float64Array, Float32Array, Uint8Array, Int32Array, Uint16Array, Int16Array, Object, Array, Set, Map, WeakMap, Proxy, Number, String, RUNS: 10 });
   for (const f of [...new Set(LIST)]) if ((withCap || f !== "foecap.js") && fs.existsSync(W + f)) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);

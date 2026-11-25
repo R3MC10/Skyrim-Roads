@@ -8,7 +8,7 @@ const rand = { v: null };
 const M = Object.create(Math); M.random = () => (rand.v == null ? Math.random() : rand.v);
 const c = { process: { env: process.env }, console, Math: M, Date, JSON, Float64Array, Float32Array, Uint8Array, Int32Array, Uint16Array, Int16Array, Object, Array, Set, Map, Proxy, Number, String, RegExp, structuredClone, rand, RUNS };
 vm.createContext(c);
-for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "shieldfx.js", "foegroups.js", "legendary.js", "powers.js", "engine.js", "foecap.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "weatherfx.js", "enchanting.js", "quests.js", "horses.js", "hall.js", "bounty.js", "visits.js", "cooking.js", "arena.js", "achievements.js", "clans.js", "festivals.js", "wars.js", "curses.js", "smithing.js", "social.js", "roam.js", "ammo.js", "tomes.js", "magic.js", "spellbook.js", "mp.js", "spellcraft.js", "shouts2.js", "coop.js", "party.js", "combatai.js", "foeintent.js", "tbfight.js", "jewelry.js", "shopcap.js", "enchants2.js"])
+for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "shieldfx.js", "foegroups.js", "legendary.js", "powers.js", "engine.js", "foecap.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "weatherfx.js", "enchanting.js", "quests.js", "horses.js", "hall.js", "bounty.js", "visits.js", "cooking.js", "arena.js", "achievements.js", "clans.js", "festivals.js", "wars.js", "curses.js", "smithing.js", "social.js", "roam.js", "ammo.js", "tomes.js", "magic.js", "spellbook.js", "mp.js", "spellcraft.js", "shouts2.js", "coop.js", "party.js", "combatai.js", "foeintent.js", "initiative.js", "tbfight.js", "jewelry.js", "shopcap.js", "enchants2.js"])
   if (fs.existsSync(W + f)) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
 vm.runInContext(`
 let pass = 0, fails = 0; const ok = (v, m) => { if (v) pass++; else { fails++; console.log("FAIL " + m); } };
@@ -139,7 +139,7 @@ const wear = (s, ...ids) => { for (const i of ids) G.equip(s, G.give(s, i)); };
 { const s = fresh(); wear(s, "ench|leather_bracers|fortune|25|0"); const f = new G.Fight(s, foe()); f.won = true; f.ehp = 0; f.apply(G.now());
   ok(f.e.gold[0] === 13 && f.e.gold[1] === 25, "fortune: fuller purse " + f.e.gold); }
 { const s = fresh(); const i0 = PFX.num(s, "tbinit"); wear(s, "ench|leather_boots|swiftness|4|0"); ok(PFX.num(s, "tbinit") === i0 + 4, "swiftness: +4 initiative");
-  ok(TB.stats(s, new G.Fight(s, foe())).init >= 14, "it shows in the turn-based stats"); }
+  { const f0 = TB.stats(fresh(), new G.Fight(fresh(), foe())), f1 = TB.stats(s, new G.Fight(s, foe())); ok(f1.speed === f0.speed + 1, "it shows in the turn-based stats as +1 speed (initiative.js) " + f0.speed + "→" + f1.speed); } }
 { const s = fresh(); const dr = foe({ name: "Dragon", tags: ["dragon", "big"] }); const k0 = PFX.inMult(new G.Fight(s, dr), {});
   wear(s, "ench|steel_shield|dragonward|30|0"); ok(PFX.inMult(new G.Fight(s, dr), {}) < k0 - 0.25, "dragonward");
   wear(s, "ench|iron_helmet|gravewarden|25|0"); ok(PFX.inMult(new G.Fight(s, foe({ name: "Draugr", tags: ["undead"] })), {}) <= 0.76, "gravewarden"); }

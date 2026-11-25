@@ -10,7 +10,7 @@ const RUNS = +(process.env.RUNS || process.argv[2] || 16);
 const TUNE = process.env.TUNE ? JSON.parse(process.env.TUNE) : null;
 const c = { process: { env: process.env }, console, Math, Date, JSON, Float64Array, Float32Array, Uint8Array, Int32Array, Uint16Array, Int16Array, Object, Array, Set, Map, Proxy, Number, String, RUNS, structuredClone };
 vm.createContext(c);
-for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "shieldfx.js", "foegroups.js", "legendary.js", "powers.js", "engine.js", "foecap.js", "stacks.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "weatherfx.js", "enchanting.js", "quests.js", "horses.js", "hall.js", "bounty.js", "visits.js", "cooking.js", "arena.js", "achievements.js", "clans.js", "festivals.js", "wars.js", "curses.js", "smithing.js", "social.js", "roam.js", "ammo.js", "tomes.js", "magic.js", "spellbook.js", "mp.js", "spellcraft.js", "shouts2.js", "coop.js", "party.js", "combatai.js", "foeintent.js", "tbfight.js", "followers2.js", "followerai.js", "strategy.js"])
+for (const f of ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "shieldfx.js", "foegroups.js", "legendary.js", "powers.js", "engine.js", "foecap.js", "stacks.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "weatherfx.js", "enchanting.js", "quests.js", "horses.js", "hall.js", "bounty.js", "visits.js", "cooking.js", "arena.js", "achievements.js", "clans.js", "festivals.js", "wars.js", "curses.js", "smithing.js", "social.js", "roam.js", "ammo.js", "tomes.js", "magic.js", "spellbook.js", "mp.js", "spellcraft.js", "shouts2.js", "coop.js", "party.js", "combatai.js", "foeintent.js", "initiative.js", "tbfight.js", "followers2.js", "followerai.js", "strategy.js"])
   if (fs.existsSync(W + f)) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
 vm.runInContext(`
 const LEVELS = [5, 10, 20, 30, 40];
@@ -170,7 +170,7 @@ ok(T.smart.open > 0, "Auto cashes in openings");
 { const s = fresh("warrior", 20), f = new G.Fight(s, enc("Bandit outlaw", 20)), ss = new TB.Session(f, { trySneak: false });
   let a = 0, b = 0;
   for (let i = 0; i < 200; i++) { f.foeSt = {}; a += ss.rollOrder().find((o) => o.id === "foe").init; f.foeSt = { chill: { turns: 2 } }; b += ss.rollOrder().find((o) => o.id === "foe").init; }
-  ok(a / 200 - b / 200 > STRAT.INIT_CUT - 1.5, "a chilled foe acts later (initiative " + (a / 200).toFixed(1) + " -> " + (b / 200).toFixed(1) + ")"); f.foeSt = {}; }
+  ok(a / 200 - b / 200 >= 1.5, "a chilled foe acts later (initiative " + (a / 200).toFixed(1) + " -> " + (b / 200).toFixed(1) + ")"); f.foeSt = {}; }
 { const s = fresh("warrior", 20); s.follower = { id: "lydia", hp: TOWNS.followerMax(s, "lydia"), ts: G.now() };
   const f = new G.Fight(s, enc("Bandit outlaw", 20)), al = f.allies.find((x) => x.fai);
   if (al) {

@@ -264,9 +264,9 @@ const PFX = (() => {
     [ "Smithing", "hearth_forge", "Hearth Forge", 1, [40], ["carpenter"], "At your homestead's armory, improving gear adds 1 more, and the armory makes 6 more arrows a day. [OURS]", [["hsforge", 1, {}]]],
     [ "Speechcraft", "gracious_host", "Gracious Host", 1, [30], [], "Your display cases earn twice as much from visitors, and party members who stay over at your homestead always wake Well Rested. [OURS]", [["hshost", 1, {}]]],
     [ "Speechcraft", "call_to_arms", "Call to Arms", 1, [45], ["bribery"], "When raiders come for your homestead, talking them down works 25% more often, and your steward and the followers living there hit 25% harder and hold the house better while you're away. [OURS]", [["hsparley", 0.25, {}], ["hsdefend", 0.25, {}]]],
-    // ---------------------------------------------------------------- turn-by-turn fights (tbfight.js): move costs and initiative
+    // ---------------------------------------------------------------- turn-by-turn fights (tbfight.js): move costs and speed (initiative.js: every 3 tbinit points is +1 speed, at most +2)
     [ "Athletics", "battle_rhythm", "Battle Rhythm", 2, [30, 70], ["long_strider"], "In turn-by-turn fights your weapon blows, power attacks and guards cost 10/20% less stamina. [OURS]", [["tbap", 1, {}]]],
-    [ "Acrobatics", "quick_start", "Quick Start", 2, [25, 60], ["sure_footed"], "In turn-by-turn fights you act sooner: +3/+6 initiative. [OURS]", [["tbinit", 3, {}]]],
+    [ "Acrobatics", "quick_start", "Quick Start", 2, [25, 60], ["sure_footed"], "In turn-by-turn fights you act sooner: +1/+2 speed. [OURS]", [["tbinit", 3, {}]]],
     // ---------------------------------------------------------------- sneak mode on the road (sneakmode.js)
     [ "Sneak", "silent_roads", "Silent Roads", 1, [25], ["stealth"], "Sneaking on the road is 15% faster, and other heroes have to be 25% closer to spot you. [OURS]", [["sneakmove", 0.15, {}], ["sneakseen", 0.25, {}]]],
     [ "Sneak", "shadow_paths", "Shadow Paths", 1, [55], ["silent_roads"], "While sneaking on the road, half as many bandits and beasts find you. [OURS]", [["sneakenc", 0.5, {}]]],
@@ -274,9 +274,9 @@ const PFX = (() => {
     [AR, "far_sight", "Far Sight", 2, [30, 60], ["eagle_eye"], "A hunter's eyes: on the map you see 15/30% further ahead, and your cone of sight is 10/20% wider. You spot places, travellers and caravans sooner. [OURS]", [["sightrange", [0.15, 0.3], {}], ["sightwide", [0.1, 0.2], {}]]],
     [ "Sneak", "owl_eyes", "Owl Eyes", 1, [35], ["stealth"], "Night, fog, storms and blizzards shorten your sight on the map only half as much. [OURS]", [["sightdark", 0.5, {}]]],
     [ "Blocking", "watch_drills", "Watch Drills", 1, [30], ["shield_wall"], "You know how hold guards fight: they hit you 15% softer and you hit them 10% harder. [OURS]", [["in", -0.15, { tag: ["guard"] }], ["out", 0.1, { tag: ["guard"] }]]],
-    [ "Sneak", "first_move", "First Move", 1, [40], ["stealth"], "You read a fight before it starts: +4 initiative in turn-by-turn fights. [OURS]", [["tbinit", 4, {}]]],
+    [ "Sneak", "first_move", "First Move", 1, [40], ["stealth"], "You read a fight before it starts: +1 speed in turn-by-turn fights. [OURS]", [["tbinit", 4, {}]]],
     [ "Alteration", "quickened_casting", "Quickened Casting", 1, [40], ["apprentice_alteration"], "In turn-by-turn fights your spells cost 10% less magicka. [OURS]", [["tbspap", 1, {}]]],
-    [ "Heavy Armor", "drilled_in_steel", "Drilled in Steel", 1, [50], ["juggernaut"], "Heavy armor slows you only half as much in turn-by-turn fights (initiative). [OURS]", [["tbheavy", 0.5, {}]]],
+    [ "Heavy Armor", "drilled_in_steel", "Drilled in Steel", 1, [50], ["juggernaut"], "Heavy armor no longer slows you in turn-by-turn fights. [OURS]", [["tbheavy", 1, {}]]],
     // ---------------------------------------------------------------- something at every place (placestuff.js)
     [ "Lockpicking", "wayfarers_nose", "Wayfarer's Nose", 1, [35], ["apprentice_locks"], "Hidden strongboxes at cabins, shacks and lodges hold 30% more gold and fill up again a day sooner. [OURS]", [["stash", 0.3, {}]]],
     [ "Restoration", "pilgrim", "Pilgrim", 1, [30], ["novice_restoration"], "Blessings from shrines and stones last two days instead of one. [OURS]", [["bless", 1, {}]]],
@@ -339,7 +339,7 @@ const PFX = (() => {
     [ "Speechcraft", "fair_dues", "Fair Dues", 2, [20, 45], [], "A hold's tax costs you half as much when you shop there (rank 2: you pay none). [OURS]", [["holdtax", 0.5, {}]]],
     [ "Speechcraft", "jarls_favour", "Jarl's Favour", 1, [50], ["fair_dues"], "In a hold your side rules, shops sell to you another 5% cheaper, and while you're its Jarl, taxes fill the treasury 20% faster. [OURS]", [["jarlfav", 0.05, {}], ["jarlpurse", 0.2, {}]]],
     [ "Etiquette", "hold_warden", "Hold Warden", 1, [35], ["courtly_manners"], "In hold challenges and raids, the champion and the defenders have 10% less health and hit 10% softer. [OURS]", [["holdfight", 0.1, {}]]],
-    [ "Two-Handed", "break_their_focus", "Break Their Focus", 1, [35], ["barbarian"], "Any blow that takes a tenth of a boss's health breaks the big attack it's getting ready, and it reels and loses its next move. [OURS]", [["bfbreak", 1, {}]]],
+    [ "Two-Handed", "break_their_focus", "Break Their Focus", 1, [35], ["barbarian"], "Any blow that takes a tenth of a boss's health breaks the big attack it's getting ready, and it reels: its next turn comes later. [OURS]", [["bfbreak", 1, {}]]],
     // ---------------------------------------------------------------- shouts and weather (thuum.js, wxmatters.js, weatherfx.js)
     [ "Speechcraft", "thuum_mastery", "Thu'um Mastery", 2, [75, 95], ["commanding_voice"], "Your voice comes back sooner: every shout cools down another 10/20% (all cooldown cuts together stop at half). [OURS]", [["shoutcd", [0.1, 0.2], {}]]],
     [ "Acrobatics", "weathered_traveller", "Weathered Traveller", 2, [30, 60], ["sure_footed"], "Snow, rain, fog and storms slow your travel 25/50% less, and the cold creeps in 25/50% slower. [OURS]", [["wxslow", [0.25, 0.5], {}], ["coldslow", [0.25, 0.5], {}]]],

@@ -50,7 +50,7 @@ function partyFight(np, L, foeBase) {
       for (const x of mates) { if (!x.m) x.m = SHAREDFIGHT.build(x.s, d, () => {}); else x.m.sync(d); }
       const mt = mates.find((x) => x.s.id === ss.waiting.pid); mt.m.send = (x) => { sent = x; };
       if (mt.m.advance().turn === "me") mt.m.autoTurn();
-      if (sent) ss.waiting.reply = sent; else ss.waiting.until = 0;
+      if (sent) ss.waiting.reply = sent; else ss.waiting.skip = true;   // no timer: the leader skips them
       r = ss.advance(); continue;
     }
     r = ss.advance();
@@ -67,7 +67,7 @@ for (const np of [2, 3, 4, 8]) {
     st.fights++; st.rounds += ss.round; if (f.won) st.won++;
     // every foe move in the order was played (rounds that were played to the end)
     const per = {}, rounds = ss.ev.filter((e) => e.kind === "round");
-    for (const e of ss.ev) if (e.kind === "foe" && !/steps in/.test(e.text)) per[e.round] = (per[e.round] || 0) + 1;
+    for (const e of ss.ev) if (e.kind === "foe" && !/steps in/.test(e.text)) per[e.round] = (per[e.round] || 0) + (e.skipped || 1);   // a stunned or frozen slot is lost whole (initiative.js)
     for (const e of rounds) {
       const ids = e.order.filter((o) => /^foe/.test(o.id)).map((o) => o.id);
       if (ids.length >= 2) st.twice++;

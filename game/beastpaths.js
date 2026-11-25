@@ -164,7 +164,7 @@ const BEASTPATH = (() => {
       }
       case "lord:raise": {
         const n = R(s, "lord", "grave_servants") ? 2 : 1, dmg = 5 + 0.6 * lv;
-        for (let i = 0; i < n; i++) f.allies.push({ name: "Risen thrall", dmg, kind: "zombie", thrall: true, left: 6, hp: 40 + 3 * lv, maxHp: 40 + 3 * lv, init: 5 });
+        for (let i = 0; i < n; i++) f.allies.push({ name: "Risen thrall", dmg, kind: "zombie", thrall: true, left: 6, hp: 40 + 3 * lv, maxHp: 40 + 3 * lv, speed: 4 });
         return n > 1 ? "Raise Dead: two corpses claw their way up to fight for you" : "Raise Dead: a corpse claws its way up to fight for you";
       }
       case "lord:revert": f.pw.lord = 0; return "You fold your wings and change back";

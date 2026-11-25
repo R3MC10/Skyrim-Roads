@@ -58,7 +58,7 @@
     "(the big attack is lost)": "(wielki atak przepada)", "(winded ×{0})": "(zadyszka ×{0})",
     "(you saw it coming: {0})": "(widzisz, co nadchodzi: {0})", "blocked": "zablokowane", "warded": "osłonięte", "dodged": "uniknięte",
     "(you cut down {0})": "(powalasz: {0})", "({0} takes {1})": "({0} przyjmuje {1})", "(you break its {0}!)": "(przerywasz: {0}!)",
-    "(it reels and loses its next move)": "(zatacza się i traci następny ruch)",
+    "(it reels and its next turn comes later)": "(zatacza się, a jego następna tura przychodzi później)",
     // cards and the bar
     "Tap to fight": "Dotknij, by walczyć", "takes some of your blows": "przyjmuje część twoich ciosów", "{0}: {1} a round": "{0}: {1} na rundę",
     "+{0}% damage": "+{0}% obrażeń", "Boss: the marks on the bar are where it changes how it fights.": "Boss: znaczniki na pasku pokazują, gdzie zmienia sposób walki.",
@@ -81,7 +81,7 @@
     "Giant Slayer": "Pogromca olbrzymów", "Read the Signs": "Czytanie znaków", "Break Their Focus": "Wybicie z rytmu",
     "Bosses take 10% more damage from you, and 20% more once they reach their last phase.": "Bossowie dostają od ciebie o 10% więcej obrażeń, a w ostatniej fazie o 20% więcej.",
     "A boss's big attacks (the ones it shows a turn ahead) hurt you 25% less.": "Wielkie ataki bossa (te, które widać turę wcześniej) ranią cię o 25% słabiej.",
-    "Any blow that takes a tenth of a boss's health breaks the big attack it's getting ready, and it reels and loses its next move.": "Każdy cios, który zabiera bossowi dziesiątą część zdrowia, przerywa wielki atak, który szykuje, a boss zatacza się i traci następny ruch.",
+    "Any blow that takes a tenth of a boss's health breaks the big attack it's getting ready, and it reels: its next turn comes later.": "Każdy cios, który zabiera bossowi dziesiątą część zdrowia, przerywa wielki atak, który szykuje, a boss zatacza się: jego następna tura przychodzi później.",
   };
   for (const [k, v] of Object.entries(PL)) if (!(k in I18N_STORY.ex)) I18N_STORY.ex[k] = v;
 })();

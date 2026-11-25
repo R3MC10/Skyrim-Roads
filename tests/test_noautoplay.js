@@ -36,7 +36,7 @@ vm.createContext(c);
 const FILES = ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "shieldfx.js", "foegroups.js", "legendary.js", "powers.js", "engine.js", "foecap.js", "events.js", "dungeons.js", "towns.js",
   "wevents.js", "weatherfx.js", "enchanting.js", "quests.js", "horses.js", "hall.js", "bounty.js", "visits.js", "cooking.js", "arena.js", "achievements.js", "clans.js", "festivals.js", "wars.js", "curses.js", "smithing.js",
   "social.js", "roam.js", "ammo.js", "tomes.js", "magic.js", "spellbook.js", "mp.js", "spellcraft.js", "shouts2.js", "coop.js", "party.js", "combatai.js", "foeintent.js", "dragons.js",
-  "tbfight.js", "sharedfight.js", "noautoplay.js", "greatevents.js", "worldevents.js", "rumours.js", "livingworld.js"];
+  "initiative.js", "tbfight.js", "sharedfight.js", "noautoplay.js", "greatevents.js", "worldevents.js", "rumours.js", "livingworld.js"];
 for (const f of FILES) if (fs.existsSync(W + f)) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c, { filename: f });
 c.__fs = fs; c.__W = W; c.__docL = docL;
 
@@ -87,7 +87,7 @@ function playOut(sess, label) {
   let g = 0, r = { turn: "me" };
   while (!sess.done && g++ < 400) {
     if (sess.cur && sess.cur.id === "me") { r = sess.act("attack"); if (r && r.err) r = sess.act("end"); if (r && r.turn === "next") r = sess.advance(); }
-    else if (sess.waiting) { sess.waiting.until = 0; r = sess.advance(); }
+    else if (sess.waiting) { sess.waiting.skip = true; r = sess.advance(); }
     else r = sess.advance();
   }
   ok(sess.done, label + ": the fight ended");
@@ -109,14 +109,14 @@ const H = 3600;
   for (const party of [false, true]) {
     const label = "great event " + ev.kind + (party ? " (party)" : " (solo)");
     G.now = () => t;
-    S = mk("gev" + party, 30, ev.place); results = [];
+    S = mk("gev" + party, 30, ev.place); results = []; asked.length = 0;   // with initiative, Beta can share your turn, so she is asked as soon as the group starts
     const mate = party ? { ...COOP.allyFromCard({ id: "mate1", name: "Beta", coop: { prof: { dmg: 20, hp: 300, red: 0.2, role: "fighter" } } }), uid: "mate1", party: true } : null;
     G.setAllyProvider(() => (mate ? [mate] : []));
     click("data-gev", { gev: "fight" });
     const sess = onMyTurn(label);
     if (sess) {
       ok(sess.f.e.pool && sess.waves === 1, label + ": a charge against the event's shared health (no extra foes or health boost)");
-      if (party) { remoteLive = true; asked.length = 0; let g = 0, r; while (!sess.done && !sess.waiting && g++ < 60) { r = sess.cur.id === "me" ? sess.act("end") : sess.advance(); if (r && r.turn === "next") sess.advance(); }
+      if (party) { remoteLive = true; let g = 0, r; while (!sess.done && !sess.waiting && g++ < 60) { r = sess.cur.id === "me" ? sess.act("end") : sess.advance(); if (r && r.turn === "next") sess.advance(); }
         ok(sess.waiting && asked.includes("mate1"), label + ": Beta's turn waits for her own phone"); }
       const out = playOut(sess, label);
       ok(out && out.fight && out.fight.tbPlayed, label + ": the result is the fight you played");
@@ -159,7 +159,7 @@ const H = 3600;
     let r = ss.begin(), g = 0, sawTurn = false;
     while (!ss.done && g++ < 400) {
       if (r.turn === "me") { sawTurn = true; r = ss.act("attack"); if (r.err) r = ss.act("end"); if (r.turn === "next") r = ss.advance(); continue; }
-      if (r.turn === "wait") { ss.waiting.until = 0; r = ss.advance(); continue; }
+      if (r.turn === "wait") { ss.waiting.skip = true; r = ss.advance(); continue; }
       r = ss.advance();
     }
     ok(sawTurn, label + ": you got your own turns");

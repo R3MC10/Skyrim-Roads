@@ -14,7 +14,7 @@
        Vulnerable N              +3% damage taken per stack     Sunder N   +3% from weapons per stack
        Weak N                    its blows land 4% softer per stack
        Winded N / Drained N      you start your turn with 4% less stamina / magicka per stack
-       Might N                   you hit 4% harder per stack    Haste N    +2 initiative per stack
+       Might N                   you hit 4% harder per stack    Haste      +2 speed (initiative.js)
        Regen N                   N × the stack's healing every turn   Ward N   a ward that soaks 4% of your health per stack
    - Hard control (paralysed, calmed, afraid): a fresh one adds its turns to what's left, but every one that lands gives
      the foe Resolve (2 for elites and bosses), and Resolve takes that many turns off the next one. foecap.js still caps
@@ -175,9 +175,6 @@ const STACKS = (() => {
     const c = f.foeSt?.chill?.turns || 0, w = (f.stk && f.stk.foe && f.stk.foe.weak) || 0;
     return Math.min(0.3, 0.05 * eff(c) + 0.04 * eff(w));
   }
-  /* initiative: Chill slows the foe, Haste speeds you */
-  const foeInit = (f) => Math.round(eff(f?.foeSt?.chill?.turns || 0));
-  const myInit = (f) => Math.round(2 * eff((f?.stk && f.stk.me && f.stk.me.haste) || 0));
   const allyBonus = (al) => (al && al.stk ? 0.04 * eff(al.stk.might || 0) : 0);
 
   /* tooltip line under a status chip */
@@ -186,10 +183,10 @@ const STACKS = (() => {
     bleed: "Each stack bleeds a little more every turn.", poison: "Each stack poisons a little more every turn.", regen: "Each stack heals a little more every turn.",
     vuln: "Each stack: +3% damage taken.", sunder: "Each stack: +3% damage from weapons.", weak: "Each stack: its blows land 4% softer.",
     resolve: "Each stack takes a turn off the next stun, calm or fear.", winded: "Each stack: −4% stamina at the start of your turn.",
-    drained: "Each stack: −4% magicka at the start of your turn.", might: "Each stack: +4% damage.", haste: "Each stack: +2 initiative.",
+    drained: "Each stack: −4% magicka at the start of your turn.", might: "Each stack: +4% damage.", haste: "Hasted: +2 speed, you act earlier in the round.",
   };
   const tipFor = (k, n) => (n > 0 ? ` ${n} stack${n === 1 ? "" : "s"}. ${TIP[key(k)] || "Each stack makes it stronger."} Drops by 1 each turn.` : "");
 
-  return { CAP, CC_CAP, GEN, TIP, eff, perFor, add, get, fold, sync, tick, beginTurn, hitBonus, after, foeSoften, foeInit, myInit, allyBonus, tipFor, big, elite, key };
+  return { CAP, CC_CAP, GEN, TIP, eff, perFor, add, get, fold, sync, tick, beginTurn, hitBonus, after, foeSoften, allyBonus, tipFor, big, elite, key };
 })();
 if (typeof module !== "undefined") module.exports = STACKS;

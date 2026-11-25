@@ -62,7 +62,7 @@ const SKILLINFO = (() => {
       now: (s, L) => [row("Running speed", (x) => `×${(1.75 + x / 100).toFixed(2)}`, L), row("Action points a turn in turn-by-turn fights", (x) => `${Math.min(11, 6 + Math.floor(x / 40))} (+1 for every 150 Stamina over 150)`, L)],
       raise: ["Travel on foot (not riding, and not carrying too much).", "Flee from fights."], code: ['useSkill(s, "Athletics"'] },
     "Acrobatics": { what: "Jumping and dodging: get past traps and tricky ground.",
-      now: (s, L) => [row("Diving past a dungeon trap", (x) => pc(clamp(0.45 + x / 150, 0.1, 0.95)), L), row("Initiative in turn-by-turn fights", (x) => `+${Math.round(x / 8)}`, L)],
+      now: (s, L) => [row("Diving past a dungeon trap", (x) => pc(clamp(0.45 + x / 150, 0.1, 0.95)), L), row("Speed in turn-by-turn fights", () => "Quick Start perk", L)],
       raise: ["Dash past traps in dungeons.", "Climb or jump when the road asks for it."], code: ['useSkill(s, "Acrobatics"', 'xp(s, "Acrobatics"'] },
     "Mercantile": { what: "Better prices when you buy and sell.",
       now: (s, L) => [row("Shops charge", (x) => `×${F.priceFactor(x).toFixed(2)} value`, L), row("Shops pay", (x) => pc(1 / F.priceFactor(x)) + " of value", L)],

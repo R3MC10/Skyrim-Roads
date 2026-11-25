@@ -60,7 +60,7 @@ const TBTIPS = (() => {
     let arm = 0, red = 0;
     try { const { rating, pieces } = f.armorRating(); arm = r0(rating); red = r0(100 * F.damageReduction(rating, pieces)); } catch (e) { /* no armour info */ }
     const blk = typeof SHIELDFX !== "undefined" ? r0(100 * SHIELDFX.passive(f)) : 0;
-    return `You. Armour ${arm} (blows ${red}% weaker)${blk ? `, ${blk}% chance to block with your shield` : ""}. Up to ${st.acts || 4} moves a turn, initiative ${st.init}.`;
+    return `You. Armour ${arm} (blows ${red}% weaker)${blk ? `, ${blk}% chance to block with your shield` : ""}. Up to ${st.acts || 4} moves a turn, speed ${st.speed}.`;
   }
   /* text for the foe's frame */
   function foe(f, ehpMax) {
@@ -68,7 +68,7 @@ const TBTIPS = (() => {
     const kind = f.tags?.has?.("boss") ? "Boss" : f.tags?.has?.("tough") ? "Tough foe" : "Foe";
     return `${kind}: ${e.name}. ${r0(Math.max(0, f.ehp))} / ${r0(ehpMax)} health, hits for about ${range(e.damage || 0)}.${e.red ? ` Armour blunts ${r0(e.red * 100)}% of your blows.` : ""}${tags.length ? ` (${tags.join(", ")})` : ""}${typeof FOEKIT !== "undefined" && FOEKIT.names(f).length ? ` Can use: ${FOEKIT.names(f).join(", ")}.` : ""}`;
   }
-  const STATUS = { burn: "Burning: takes fire damage each turn", chill: "Chilled: slower and clumsier, misses more", shock: "Shocked: loses magicka and takes shock damage", para: "Paralyzed: can't act", stag: "Staggered: loses their next move", stun: "Stunned by your shield: loses their next turn" };
+  const STATUS = { burn: "Burning: takes fire damage each turn", chill: "Chilled: slower and clumsier, misses more", shock: "Shocked: loses magicka and takes shock damage", para: "Paralyzed: can't act", stag: "Staggered: its next turn moves 2 places back in the turn order", stun: "Stunned by your shield: loses their next turn" };
   return { action, me, foe, STATUS, pvTxt, rangeOf };
 })();
 if (typeof module !== "undefined") module.exports = TBTIPS;

@@ -9,7 +9,7 @@
    - Openings: hit a foe that is staggered, stunned or paralyzed and the blow does 30% more (a power attack 45%);
      a chilled foe takes 15% more from a power attack. Bash or stagger first, then cash in. At most 7% of the foe's
      health per blow (half that on a boss), so still no one-shots.
-   - Frost slows: a chilled or slowed foe rolls 4 lower initiative, so you and your followers act before it.
+   - Frost slows: a chilled or slowed foe has 2 less speed (initiative.js), so you and your followers act before it.
    - Orders for your follower in the middle of a fight: Attack (front row, hits hard), Defend me (front row, draws
      blows, steps in front of you), Hold back (back row, only guards, heals and drinks potions). Free, any time on
      your turn; tap the little buttons on their card. They go back to their usual tactic after the fight.
@@ -20,7 +20,6 @@
 const STRAT = (() => {
   const REC = { sp: 0.35, mp: 0.25 };
   const OPEN = { hit: 0.3, power: 0.45, chill: 0.15, cap: 0.07 };
-  const INIT_CUT = 4;
   const ORDERS = {
     attack: { ic: "", name: "Attack", tip: "Attack: front row, goes all out with power attacks and damage spells." },
     defend: { ic: "", name: "Defend me", tip: "Defend me: front row, draws blows and steps in front of you when you're hurt." },
@@ -79,7 +78,6 @@ const STRAT = (() => {
     return was === "open" ? ` · opening! +${Math.round(extra)}` : ` · shatters the frost! +${Math.round(extra)}`;
   }
   /* chill stacks slow it more (stacks.js: +1 lower per stack, half past 4) */
-  const foeInitCut = (f) => (f && (f.foeSt?.chill || f.slowed > 0) ? INIT_CUT + (typeof STACKS !== "undefined" && f.foeSt?.chill ? Math.max(0, STACKS.foeInit(f) - 1) : 0) : 0);
 
   // ------------------------------------------------------------------ Smart play for Auto
   /* sess: the tbfight Session, a: what the Smart AI picked. Returns the move to make instead (or a). */
@@ -130,5 +128,5 @@ const STRAT = (() => {
   }
   if (typeof document !== "undefined" && document.addEventListener) document.addEventListener("click", onClick, true);
 
-  return { REC, OPEN, ORDERS, INIT_CUT, owns, cost, ends, can, why, act, tip, setup, after, foeInitCut, ai, order, allowed, ordersHTML };
+  return { REC, OPEN, ORDERS, owns, cost, ends, can, why, act, tip, setup, after, ai, order, allowed, ordersHTML };
 })();
