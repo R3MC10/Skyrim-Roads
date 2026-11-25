@@ -72,6 +72,7 @@ our own marked [OURS]; plain-language UI; phone first.
 - Smart AI combat (default; custom tactics optional), crafting mini-games, motion design (63)
 
 ## In progress (write your name before you start)
+- Claude: QA side systems (qa-side-*; longhouse.js, ui.js safeToUpdate, i18n_qaside.js new, tests/qaside_ui.py new): play minigames, company, bonds, social, events in phone/PC and EN/PL; fix what breaks. Batch 1: company double-tap guard, no update restart mid mini-game, Polish for social/jobs/fishing lines. Branch claude/qa-side-1 (b238).
 - Claude: mounted combat on for everyone (mountcombat-on; mountcombat.js flag true, patch note b237). Branch claude/mountcombat-on.
 - Claude: painted hero rig fixes (herorig; rig.js, rigdata.js, riggear.js, fightart.js, i18n_herorig.js new): the enchant glow follows the painted blade (no floating blob), weapons sit in the fist for every weapon type, far arm and neck joins hidden, torso/belt order, followers at full height, fight overlay leftovers. Branches claude/herorig-glow (b236) then claude/herorig.
 - Claude: tests green (testsgreen; tests/*, small game fixes only): run every node + screen test on main and fix the red ones; screen tests take CHROME=/path (else /usr/bin/google-chrome, else Playwright's Chromium) and a port argument. Branch claude/testsgreen (b235).
