@@ -13,9 +13,10 @@ const PARTY = (() => {
     try { return typeof COOP !== "undefined" ? COOP.profile(s) : null; } catch { return null; }
   }
   function cardBits(s, party) {
-    if (!party) return s.follower && typeof FOL2 !== "undefined" ? { fol: s.follower.id, fold: FOL2.card(s) } : {};   // co-op runs see your follower too
+    const pet = typeof PETS !== "undefined" ? PETS.card(s) : null;   // your pet walks and fights with them too (pets.js); never a member
+    if (!party) return { ...(s.follower && typeof FOL2 !== "undefined" ? { fol: s.follower.id, fold: FOL2.card(s) } : {}), ...(pet ? { pet } : {}) };   // co-op runs see your follower too
     const riding = typeof HORSES !== "undefined" && HORSES.riding(s);
-    return { pp: prof(s), ride: riding ? HORSES.coat(s.horse.coat)[2] : null, rideHp: riding ? [Math.round(HORSES.hp(s)), HORSES.maxHp(s.horse), s.horse.name] : null, fol: s.follower?.id || null, fold: typeof FOL2 !== "undefined" ? FOL2.card(s) : null };   // followers aren't members, but they walk and fight with the party
+    return { pet, pp: prof(s), ride: riding ? HORSES.coat(s.horse.coat)[2] : null, rideHp: riding ? [Math.round(HORSES.hp(s)), HORSES.maxHp(s.horse), s.horse.name] : null, fol: s.follower?.id || null, fold: typeof FOL2 !== "undefined" ? FOL2.card(s) : null };   // followers aren't members, but they walk and fight with the party
   }
 
   /* members close enough to fight with you: same dungeon, or near you on the map and not inside anywhere */

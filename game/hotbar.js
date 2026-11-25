@@ -15,7 +15,7 @@
      (movepreview.js), so there's no long press to edit.
    - A slot greys out when you can't use it (not enough stamina or magicka, a shout still cooling down, none left) and says
      why; a potion slot shows how many you have. In a party fight each player's phone shows their own hero's bar.
-   - Drag and drop (build 300, "the combat hotbar should work with drag and drop for either single or dual cast spells"):
+   - Drag and drop (build 301, "the combat hotbar should work with drag and drop for either single or dual cast spells"):
      drag a move from the picker onto a slot, a slot onto another (they swap) or off the bar (it's cleared). A mouse drags
      straight away; a finger holds a picker row for a moment (it lifts, the phone buzzes) and then drags, so the list
      still scrolls under a quick swipe. Slots drag straight away under a finger too (the bar doesn't scroll). A ghost

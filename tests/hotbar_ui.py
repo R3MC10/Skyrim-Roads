@@ -4,7 +4,7 @@ empty slot) opens the picker; tap a slot then a spell puts it there; tap two slo
 move onto a slot and a slot off the bar works; the layout is kept in the save; pressing 3 casts the spell in slot 3; a key
 pressed while typing (or with the … menu open) does nothing; on screen the slots read 1-0 row by row. Phones 360/390/412 wide and PCs: the bar fits the b276
 fight layout (above the bottom edge, clear of your orb), and resting on / holding a slot still shows the move preview.
-Drag and drop (b300): a mouse drags a spell onto a slot (PC 1440/1920), a finger holds a row until it lifts and drags
+Drag and drop (b301): a mouse drags a spell onto a slot (PC 1440/1920), a finger holds a row until it lifts and drags
 (phones; a quick swipe only scrolls), the slot under it lights up; the 1x/2x switch makes a slot dual cast, the same
 spell sits twice, the 2x slot's key casts the dual version, and a 2x slot of a spell that can't be dual cast is dimmed.
 Screenshots go to the system temp folder (SHOTS=folder: there instead), never into tests/.
@@ -167,7 +167,7 @@ async def main():
                 L5 = await slots()
                 ok(L5[0] == L4[1] and L5[1] == L4[0], f"{tag}: dragging a slot onto another swaps them")
                 await pg.mouse.move(d1["x"] + 20, d1["y"] + 20); await pg.mouse.down(); await pg.mouse.move(d2["x"] + 20, d2["y"] + 20, steps=8); await pg.mouse.up(); await pg.wait_for_timeout(300)
-            # ---- drag and drop + 1x / 2x (b300): Healing onto slot 8, then 2x on it
+            # ---- drag and drop + 1x / 2x (b301): Healing onto slot 8, then 2x on it
             await tap('#tbf .hb-tab[data-hbtab="spells"]'); await pg.wait_for_timeout(150)
             ok(await pg.evaluate("[...document.querySelectorAll('#tbf .hb-list [data-hbp]')].every(e=>e.dataset.hbp.startsWith('spell:'))"), f"{tag}: the Spells list shows each spell once (no separate Dual rows)")
             sbox = await (await pg.query_selector('#tbf [data-hbp="spell:healing"]')).bounding_box()
@@ -255,7 +255,7 @@ async def main():
             await pg.keyboard.press("1"); await pg.wait_for_timeout(500)
             post = await pg.evaluate("JSON.stringify([TB.session.ev.length, TB.session.f.sp, TB.session.round, TB.session.ev.at(-1)?.a])")
             ok(pre != post, f"{tag}: with nothing open, 1 uses slot 1 {pre} -> {post}")
-            # ---- the 2× slot: the bar marks it, its key casts the dual version (b300)
+            # ---- the 2× slot: the bar marks it, its key casts the dual version (b301)
             await my_turn()
             await pg.evaluate("TB.session.myActs=0; TB.session.pots=0; TB.session.f.mp=G.maxMagicka(TB.session.f.s); document.querySelector('#tbf [data-tbm=magic]').click()"); await pg.wait_for_timeout(150)
             await pg.evaluate("document.querySelector('#tbf [data-tbm=\"\"]')?.click()"); await pg.wait_for_timeout(200)
