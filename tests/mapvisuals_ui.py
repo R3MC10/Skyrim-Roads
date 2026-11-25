@@ -5,7 +5,8 @@ close on Whiterun at three zoom levels. Checks:
 - zoomed out on a PC the map fills the window (no empty band beside it)
 - no orphan gold bar: every world-event progress bar's own card is on top at the bar's spot (not hidden under the map)
 - roads are drawn in the new hand-inked style
-- the painting is never drawn bigger than ~1.3x its own pixels (past that the ink chart takes over)
+- the painting is never drawn bigger than ~1.3x its own pixels (past that the ink chart takes over), or with the
+  tile pyramid (maptiles.js) no more than 3x its 8000 px top level, with the painted grain on
 - PC: the event / caravan cards sit in one column at the left edge (mapdock.js), at most ~380px wide, and the map
   keeps names out from under them; on the phone they stay in the page as before
 Popups, banners, toasts and tooltips are closed before every shot so the map itself is what's seen.
@@ -66,7 +67,10 @@ async def main():
                 s = await pg.evaluate(PROBE); st = s["stats"]
                 ok(s["w"] == round(s["cw"] * s["dpr"]) and s["h"] == round(s["ch"] * s["dpr"]), f"{tag} {name}: canvas {s['w']}x{s['h']} = {s['cw']}x{s['ch']} x DPR {s['dpr']}")
                 ok(st.get("roads") == "ink", f"{tag} {name}: roads drawn as hand-inked paths ({st.get('roads')})")
-                ok(st.get("paintScale", 0) <= 1.3 + 1e-6, f"{tag} {name}: painting drawn at {st.get('paintScale', 0):.2f}x its pixels (max 1.3)")
+                if st.get("tileLevel"):   # the 8000 px tile pyramid (maptiles.js): never past ~3x, with the painted grain on once past its pixels
+                    ok(st.get("paintScale", 0) <= 3 and (st.get("paintScale", 0) <= 1 or st.get("grain", 0) > 0), f"{tag} {name}: painting tiles at {st.get('paintScale', 0):.2f}x their pixels, grain {st.get('grain', 0)}")
+                else:
+                    ok(st.get("paintScale", 0) <= 1.3 + 1e-6, f"{tag} {name}: painting drawn at {st.get('paintScale', 0):.2f}x its pixels (max 1.3)")
                 ok(all(x["inside"] for x in s["bars"]), f"{tag} {name}: no orphan gold bar ({len(s['bars'])} event bars, all on their cards)")
                 if name == "out" and s["pc"]:
                     cw, ch = s["cw"] * s["dpr"], s["ch"] * s["dpr"]
