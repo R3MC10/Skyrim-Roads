@@ -2,7 +2,8 @@
    The painted map fills the window; everything else floats over it:
    - a slim bar along the bottom: level and XP, gold, carry weight, time and weather, and buttons for the menus
    - party cards in a column on the left (their heroes walk the map too)
-   - the quest tracker top-right: the quest you follow and where to go; Q or its ‹ button slides it off the edge and
+   - the quest tracker top-right: the quest you follow and where to go (during the opening quest line: its step, one
+     button and Skip, first30.js); Q or its ‹ button slides it off the edge and
      leaves a small tab there that slides it back
    - clicking the town you stand in opens its places (inn, shops, Jarl, jobs) in a side panel on the right
    - Journal, Character, Social... open full-screen over a blurred map; Items and Magic too; Tab's compass over a dimmed map
@@ -156,12 +157,13 @@ const PCMAP = (() => {
     const out = qa ? `<div class="pcq-h"><span>${esc(L("Quest"))}</span><button class="iconbtn pcq-x" data-q="hide" aria-label="${esc(L("Hide the quest tracker"))}" title="${esc(L("Hide"))} (Q)">›</button></div>
         <b class="pcq-name" data-q="log">${esc(qa.def?.name || "")}</b>
         ${qa.st?.title ? `<div class="pcq-obj"><span class="pcq-dot" aria-hidden="true">◆</span><span>${esc(qa.st.title)}</span></div>` : ""}
-        ${target && WORLD.places[target] && target !== S.location ? `<button class="pcq-go" data-q="map" data-place="${esc(target)}">➜ ${esc(target)}</button>` : target === S.location ? `<div class="pcq-here">${esc(L("You're there."))}</div>` : ""}`
+        ${typeof FIRST30 !== "undefined" && FIRST30.active(S) ? FIRST30.pcHTML(S) : target && WORLD.places[target] && target !== S.location ? `<button class="pcq-go" data-q="map" data-place="${esc(target)}">➜ ${esc(target)}</button>` : target === S.location ? `<div class="pcq-here">${esc(L("You're there."))}</div>` : ""}`
       : `<div class="pcq-h"><span>${esc(L("Quest"))}</span><button class="iconbtn pcq-x" data-q="hide" aria-label="${esc(L("Hide the quest tracker"))}" title="${esc(L("Hide"))} (Q)">›</button></div><div class="pcq-none">${esc(L("No quest followed. Open the Journal (J) to pick one."))}</div>`;
     if (out === lastQuest) return;
     lastQuest = out; el.innerHTML = out;
   }
   function onQuestClick(e) {
+    if (typeof FIRST30 !== "undefined" && FIRST30.pcClick(e)) { lastQuest = ""; refresh(); return; }   // the opening quest's button and Skip (first30.js)
     const b = e.target.closest("[data-q]"); if (!b) return;
     if (b.dataset.q === "hide") return toggleQuest(false);
     if (b.dataset.q === "log") return act("log");

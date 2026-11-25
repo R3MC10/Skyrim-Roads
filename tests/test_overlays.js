@@ -22,15 +22,17 @@ ok(OVERLAYS.allows("result", "decision") && !OVERLAYS.allows("decision", "result
 ok(OVERLAYS.level() === 0 && OVERLAYS.sheet() === null, "no page: nothing on screen");
 let ran = 0; ok(OVERLAYS.when("decision", () => ran++) && ran === 1, "a clear screen runs it at once");
 
-// 2. fight hints: pinned lines, one control each, gone once used
+// 2. fight hints: one pinned line at a time, each when it matters, gone once used [first30]
 const H = (seen, f) => ONBOARD.hintsFor(seen, f).join();
-ok(H({}, { open: true, mine: true, acts: 0 }) === "order,moves", "your first turn: turn order and moves");
-ok(H({}, { open: true, mine: true, acts: 1 }) === "end", "after a move: End turn");
+ok(H({}, { open: true, mine: true, acts: 0 }) === "attack", "your first turn: Attack");
+ok(H({ "tbf-attack": 1 }, { open: true, mine: true, acts: 1, ints: true }) === "intent", "after a move: what the foe does next");
+ok(H({ "tbf-attack": 1, "tbf-intent": 1 }, { open: true, mine: true, acts: 1 }) === "end", "then End turn");
+ok(H({}, { open: true, mine: true, acts: 0, windup: true }) === "attack" && H({}, { open: true, mine: true, acts: 1, windup: true }) === "guard", "a huge blow coming: Guard, right after the first Attack");
 ok(H({}, { open: true, mine: false, acts: 0 }) === "", "not your turn: nothing");
 ok(H({}, { open: true, mine: true, acts: 0, result: true }) === "" && H({}, { open: true, mine: true, acts: 0, done: true }) === "", "the result card: every hint closes");
 ok(H({}, { open: false, mine: true }) === "", "no fight, no hints");
-ok(H({ "tbf-order": 1 }, { open: true, mine: true, acts: 0 }) === "moves", "a used hint stays gone");
-ok(H({ "tbf-order": 1, "tbf-moves": 1 }, { open: true, mine: true, acts: 0 }) === "", "both used: a clean first turn");
+ok(H({ "tbf-attack": 1 }, { open: true, mine: true, acts: 0 }) === "", "a used hint stays gone");
+ok(H({ "tbf-attack": 1, "tbf-intent": 1, "tbf-guard": 1, "tbf-end": 1 }, { open: true, mine: true, acts: 1, windup: true }) === "", "all used: a clean turn");
 ok(H({ tbfight: 1 }, { open: true, mine: true, acts: 0 }) === "", "read the old fight tip already: no hints");
 ok(ONBOARD.HINTS.every((h) => typeof h[3] === "string" && h[3].length <= 80 && /^(above|below)$/.test(h[2])), "short lines, above or below");
 ok(OVERLAYS.PL && ONBOARD.HINTS.every((h) => OVERLAYS.PL[h[3]]), "every hint has Polish");

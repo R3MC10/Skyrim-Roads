@@ -23,8 +23,10 @@ const NOTIFY = (() => {
     skill: [2, 2500, "rewards"], ach: [2, 2500, "rewards"], queststart: [2, 2500, "quests"], objective: [2, 2500, "quests"],
     event: [2, 2500, "world"], place: [2, 2500, "world"], party: [2, 2500, "party"],
     loot: [3, 2000, "rewards"], gold: [3, 2000, "rewards"], weather: [3, 2000, "world"],
+    // rewards.js weights: tiny = the quiet stacked line ("+24 gold · +15 One-Handed"), small = a short toast, medium = a short notice
+    tiny: [3, 2400, "rewards"], small: [2, 2500, "rewards"], medium: [1, 3500, "rewards"],
   };
-  const WINDOW = { loot: 1500, gold: 2000, skill: 3000, ach: 2000, weather: 60000 };   // merge windows (ms); quests: never
+  const WINDOW = { loot: 1500, gold: 2000, skill: 3000, ach: 2000, weather: 60000, tiny: 2500 };   // merge windows (ms); quests: never
   const GAP = 400, HIST = 200, P3_WAITING = 2;
   const FILTERS = [["all", "All"], ["rewards", "Rewards"], ["quests", "Quests"], ["party", "Party"], ["world", "World"]];
 
@@ -65,6 +67,7 @@ const NOTIFY = (() => {
     if (it.kind === "gold" && it.tpl) return it.tpl.replace("{n}", it.amt.toLocaleString("en-US"));
     if (it.kind === "skill" && it.key && it.to > it.from + 1) return `${it.key} ${it.from} → ${it.to}`;
     if (it.kind === "ach" && it.names && it.names.length > 1) return it.names.join(" · ");
+    if (it.kind === "tiny" && it.parts && typeof REWARDS !== "undefined") return REWARDS.line(it.parts);
     return it.base;
   }
   /* can `it` be folded into `prev`? (mutates prev and returns true) */
@@ -76,6 +79,7 @@ const NOTIFY = (() => {
     else if (it.kind === "skill") { if (prev.key !== it.key) return false; prev.to = Math.max(prev.to, it.to); prev.from = Math.min(prev.from, it.from); }
     else if (it.kind === "ach") { prev.names.push(...it.names); if (prev.title) prev.title = "Achievements"; }
     else if (it.kind === "weather") { prev.base = it.base; prev.title = it.title; }
+    else if (it.kind === "tiny") { if (!prev.parts || !it.parts || typeof REWARDS === "undefined") return false; prev.parts = REWARDS.merge(prev.parts, it.parts); }
     prev.tl = it.t; prev.text = render(prev);
     if (prev.rec) { prev.rec.text = prev.text; prev.rec.title = prev.title || ""; prev.rec.t = it.t; }
     return true;
@@ -98,8 +102,7 @@ const NOTIFY = (() => {
       for (let i = queue.length - 1; i >= 0; i--) if (fold(queue[i], it)) return "merged";
       const cur = showing[it.slot];
       if (cur && fold(cur, it)) { cur.end = Math.max(cur.end, now + Math.min(1200, cur.ms)); cur.dirty = true; return "update"; }
-      it.rec = { t: now, kind: it.kind, cat: it.cat, title: it.title || "", text: it.text };
-      hist.unshift(it.rec); if (hist.length > HIST) hist.length = HIST;
+      if (it.kind !== "tiny") { it.rec = { t: now, kind: it.kind, cat: it.cat, title: it.title || "", text: it.text }; hist.unshift(it.rec); if (hist.length > HIST) hist.length = HIST; }   // the tiny line: each loot/gold line is in the history already (note)
       queue.push(it);
       // a burst of small rewards: only the newest few wait, the rest are in the history
       const small = queue.filter((q) => q.p >= 3 && q.slot === it.slot);
@@ -160,9 +163,14 @@ const NOTIFY = (() => {
     }
     /* a plain message shown at once (errors, answers): it owns the line for its time */
     function direct(now) { showing.msg = { kind: "info", slot: "msg", p: 3, end: now + 2000 }; }
+    /* the history only (a loot or gold line that rewards.js shows on its tiny line instead) */
+    function note(o, now) {
+      const r = RULE[o.kind] || RULE.event;
+      hist.unshift({ t: now, kind: o.kind, cat: r[2], title: o.title || "", text: String(o.text || "") }); if (hist.length > HIST) hist.length = HIST;
+    }
     function load(list) { if (Array.isArray(list)) for (const r of list.slice(0, HIST)) if (r && r.text) hist.push({ t: +r.t || 0, kind: String(r.kind || ""), cat: String(r.cat || "world"), title: String(r.title || ""), text: String(r.text) }); }
     const filter = (cat) => (cat && cat !== "all" ? hist.filter((h) => h.cat === cat) : hist.slice());
-    return { push, lease, tick, pause, resume, direct, load, filter, queue, hist, showing, get paused() { return !!pausedAt; } };
+    return { push, note, lease, tick, pause, resume, direct, load, filter, queue, hist, showing, get paused() { return !!pausedAt; } };
   }
 
   // ------------------------------------------------------------ Polish
@@ -219,7 +227,7 @@ const NOTIFY = (() => {
   function run(a) {
     const it = a.item;
     if (a.slot === "msg") {
-      if (a.act === "show" || a.act === "update") { if (it.show || msgShow) (it.show || msgShow)(it.text, { replace: a.act === "update" }); }
+      if (a.act === "show" || a.act === "update") { if (it.show || msgShow) (it.show || msgShow)(it.text, { replace: a.act === "update", item: it }); }
       return;
     }
     if (a.act === "show") {
@@ -249,6 +257,7 @@ const NOTIFY = (() => {
     const c = classify(text);
     if (c.kind === "info") { C.direct(Date.now()); show(text, {}); return; }
     if (c.kind === "ach") { ach([{ name: c.name, id: "" }]); return; }   // achievements are banners
+    if ((c.kind === "loot" || c.kind === "gold") && typeof REWARDS !== "undefined" && REWARDS.fromToast(c, text)) { C.note({ ...c, text }, Date.now()); save(); return; }   // [rewards] loot and gold join the quiet tiny line (each line still in the history)
     C.push({ ...c, slot: "msg", text, show }, Date.now());
     pump();
   }
@@ -267,6 +276,18 @@ const NOTIFY = (() => {
       const icon = typeof UIART !== "undefined" && a.id ? (() => { try { return UIART.ach(a.id, 36); } catch { return ""; } })() : "";
       C.push({ kind: "ach", bkind: "ach", slot: "ban", title: "Achievement", text: a.name, name: a.name, icon, id: a.id ? "ach:" + a.id : undefined }, Date.now());
     }
+    if (DOM) pump();
+  }
+  /* rewards.js: the tiny line (its parts merge into the line on screen or waiting) and the small / medium banners */
+  function tiny(parts) {
+    if (!DOM) return;
+    const base = msgShow || ((t) => { try { if (window.__dbg?.toast) window.__dbg.toast(t); } catch { /* no game yet */ } });
+    const show = (t, o) => { base(t, o); try { if (typeof REWARDS !== "undefined") REWARDS.paint(document.getElementById("toast"), (o && o.item && o.item.parts) || parts); } catch { /* colour is a nicety */ } };   // item names in their rarity colour
+    C.push({ kind: "tiny", slot: "msg", parts, text: typeof REWARDS !== "undefined" ? REWARDS.line(parts) : "", show }, Date.now());
+    pump();
+  }
+  function reward(kind, title, text, icon = "") {
+    C.push({ kind, bkind: kind === "medium" ? "level" : "quest", slot: "ban", title, text, icon }, Date.now());
     if (DOM) pump();
   }
   /* skillup.js / levelup.js: may I show my own notice now? */
@@ -319,7 +340,7 @@ const NOTIFY = (() => {
     document.addEventListener("visibilitychange", () => { if (document.hidden) C.pause(Date.now()); else { C.resume(Date.now()); soon(); } });   // Esc / the back button close the history via ui.js back()
   }
 
-  return { RULE, WINDOW, GAP, FILTERS, classify, bannerKind, render, core, msg, banner, ach, lease, hold, clear, openHist, closeHist, screen, pump, PL, C,
+  return { RULE, WINDOW, GAP, FILTERS, classify, bannerKind, render, core, msg, banner, ach, tiny, reward, lease, hold, clear, openHist, closeHist, screen, pump, PL, C,
     get history() { return C.hist; }, get queued() { return C.queue.length; } };
 })();
 if (typeof module !== "undefined") module.exports = NOTIFY;

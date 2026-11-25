@@ -145,6 +145,7 @@
     try { await Promise.race([document.fonts?.ready, new Promise((r) => setTimeout(r, 2500))]); } catch { /* fonts optional */ }
     S = await Store.loadSave();
     if (S) S = G.migrate(S);
+    if (S && S.tut) delete S.tut;   // the old guided first trip (the opening quest line replaced it, first30.js)
     if (typeof ACCOUNT !== "undefined") ACCOUNT.init({ getSave: () => S, onTitle: () => !!$("#title"), rerender: () => { if ($("#title") && titlePage === "account") renderTitle(); } });   // [OURS] accounts (account.js)
     if (getPref("zoomFar", false)) zoom = 1;
     let open = null; try { open = sessionStorage.getItem("rotn_open"); sessionStorage.removeItem("rotn_open"); } catch { /* ignore */ }
@@ -164,7 +165,7 @@
         if (typeof AVATAR !== "undefined") AVATAR.set(S, avatar);   // the portrait you picked ("" = Automatic)
         if (stone && POWERS.STONES[stone]) { S.stone = stone; S.stonePowerAt = 0; }   // the Guardian Stone you picked: its skills improve 20% faster
         if (typeof PATCHNOTES !== "undefined") PATCHNOTES.markSeen();   // a new character starts on the current version
-        if (!/[?&]notut/.test(location.search)) S.tut = { step: 1, seen: {} };   // new characters get the guided first trip
+        if (!/[?&]notut/.test(location.search) && typeof FIRST30 !== "undefined") FIRST30.start(S);   // new characters get the opening quest line (first30.js)
         const wantIntro = !/[?&]notut/.test(location.search) && (!navigator.webdriver || /[?&]intro/.test(location.search));
         if (wantIntro) S.introSeen = true;
         persist(true);
@@ -308,7 +309,7 @@
       <h3>Quests</h3><p>The Journal tab shows your quests. The gold diamond on the map marks where to go next.</p>
       <h3>Playing together</h3><p>Everyone with the app shares one world. Form a party, trade, fight dragons that attack towns, or rob each other. Watch your back.</p>
       <h3>Dying</h3><p>You wake at the nearest town and drop a bag with your gold. Get back to it within ten minutes before someone else does.</p>
-      ${S ? `<button class="btn pri" data-t="tutorial">Play the guided tutorial with ${esc(S.name)}</button>` : ""}${backBtn}`;
+      ${S && typeof FIRST30 !== "undefined" && FIRST30.canStart(S) ? `<button class="btn pri" data-t="tutorial">Play the opening quest with ${esc(S.name)}</button>` : ""}${backBtn}`;
     if (titlePage === "credits") return `<h2>Credits</h2>
       <p><b>Created by</b> Remigiusz (R3MC10)</p><p><b>Built with</b> Claude</p>
       <p><b>Music and sound</b> composed live on your device</p>
@@ -325,7 +326,7 @@
     if (!(t === "menu" && titlePage === "press")) SOUND.fx("click");   // "Tap to begin" stays silent
     switch (t) {
       case "continue": closeTitle(); startGame(); break;
-      case "tutorial": S.tut = { step: 1, seen: {} }; Store.save(S); closeTitle(); startGame(); break;
+      case "tutorial": if (typeof FIRST30 !== "undefined") FIRST30.start(S); Store.save(S); closeTitle(); startGame(); break;
       case "new": if (S) { titlePage = "confirmNew"; renderTitle(); } else { closeTitle(); showCreate(); } break;
       case "wipe": if (typeof ACCOUNT !== "undefined" && ACCOUNT.signedIn() && ACCOUNT.linked()) { ACCOUNT.newCharacter(); break; }   // signed in: the old one stays on the account, the new one gets its own id
         Store.wipe().then(() => { S = null; closeTitle(); showCreate(); }); break;
@@ -720,6 +721,7 @@
     { let gn = $("#gnear"); if (!gn) { gn = document.createElement("div"); gn.id = "gnear"; document.body.appendChild(gn); gn.addEventListener("click", onPanelClick); } }   // "Snowberries in reach: Gather" over the map, on the road too
     Store.watch("raids", (docs) => { raidDocs = docs; });
     if (typeof LEVELUP !== "undefined") LEVELUP.mount({ S: () => S, persist, toast, refresh: () => { bump(); renderPanel(true); if ($("#sky")) renderMenu(); }, publishCard: () => publishCard() });   // levelup.js: skill/level notices, the three pillars
+    if (typeof FIRST30 !== "undefined") FIRST30.mount({ S: () => S, persist, toast, renderPanel, click: onPanelClick, openMenu: (p) => openMenu(p) });   // the opening quest's goal card (first30.js)
     if (typeof ONBOARD !== "undefined") ONBOARD.mount({ S: () => S, persist, toast, renderPanel, click: onPanelClick, party: () => party, invites: () => invites });   // first-time tips (onboard.js)
     if (typeof WORLDEV !== "undefined") WORLDEV.mount({ S: () => S, persist, toast, showFightResult, showMessage, openModal, closeModal, postNews, click: onPanelClick });   // world events (worldevents.js)
     if (typeof SIDEUI !== "undefined") SIDEUI.mount({ S: () => S, persist, toast, showMessage, openModal, closeModal, render: () => renderPanel(true), party: () => party, click: onPanelClick });   // pick a side: letters, recruiters, the Faction tab (sideui.js)
@@ -847,7 +849,7 @@
   function whatsNew(tries = 0) {
     if (typeof PATCHNOTES === "undefined" || !PATCHNOTES.unseen()) return;
     if (navigator.webdriver && !/[?&]whatsnew/.test(location.search)) return;   // automated checks don't want surprise popups
-    if (S.tut?.step) { PATCHNOTES.markSeen(); return; }                           // brand-new players get the tutorial instead
+    if (typeof FIRST30 !== "undefined" && FIRST30.active(S)) { PATCHNOTES.markSeen(); return; }   // brand-new players get the opening quest instead
     if ($("#modal") || document.querySelector(".intro")) { if (tries < 20) setTimeout(() => whatsNew(tries + 1), 3000); return; }
     PATCHNOTES.markSeen();
     openModal(`${PATCHNOTES.whatsNewHTML()}<div class="grid2" style="margin-top:12px"><button class="btn" data-act="notes">All patch notes</button><button class="btn pri" data-act="close">Continue</button></div>`, "pnsheet");
@@ -956,7 +958,6 @@
     caravanEscortPay();
     if (typeof LOCINTRO !== "undefined") LOCINTRO.tick(S, locIntroCtx());   // locintro.js: every arrival fills the screen with the place for a moment
     followParty(); ppUI?.tick(); checkAmbush(); renderRaid(); soundTick();
-    if (S.tut?.step > 0 && TUT[S.tut.step]?.done()) bump();
     if (Math.floor(t) % 5 === 0) { checkAch(); bloodTick(); }
     if (Math.floor(t) % 3 === 0 && !$("#modal")) { const qm = QUESTS.check(S); if (qm.length) { persist(true); showMessage("Quest", qm.join(" ")); } }   // a quest popup waits for an open window (a road encounter's choices) to close instead of replacing it
     if (Math.floor(t) % 30 === 0) { publishCard(false); publishHome(); publishClan(); }
@@ -965,8 +966,8 @@
     if (version !== rendered || Date.now() - lastPanelRender > 20000) renderPanel(false);
   }
 
-  /* music follows what you're doing; little sounds for gold and level-ups */
-  let lastGold = null, lastPending = null;
+  /* music follows what you're doing; little sounds for gold (level-ups: levelup.js and rewards.js) */
+  let lastGold = null;
   /* what you'd hear right now: the scene, the weather, the ground under your feet ([OURS] sound.js ambience) */
   function ambState(raid) {
     const pos = livePos(), T = typeof Terrain !== "undefined" ? Terrain : null;
@@ -991,8 +992,7 @@
     try { SOUND.ambience?.(ambState(raid)); } catch (e) { /* sound never breaks the game */ }
     SOUND.mood(S.dungeon ? (S.dungeon.room?.enemy ? "combat" : "dungeon") : S.trip?.status === "encounter" || (raid && S.location === raid.town && !S.trip) ? "combat" : G.isNight() ? "night" : "day");
     if (lastGold != null && S.gold !== lastGold) { SOUND.fx("coin"); if (typeof POLISH !== "undefined") POLISH.gold(S.gold - lastGold); }
-    if (lastPending != null && S.pendingLevels > lastPending && !(typeof LEVELUP !== "undefined" && LEVELUP.live)) { SOUND.fx("levelup", 0.3); if (typeof POLISH !== "undefined") POLISH.levelUp(S.level); }   // levelup.js has its own LEVEL UP moment
-    lastGold = S.gold; lastPending = S.pendingLevels;
+    lastGold = S.gold;
     if (lastDragons != null && (S.dragons || 0) > lastDragons) tally("dragons", (S.dragons || 0) - lastDragons);
     lastDragons = S.dragons || 0;
   }
@@ -2142,39 +2142,17 @@
 
   // ------------------------------------------------------------ the Jarl's bounty board
   let lastDragons = null;
-  // ------------------------------------------------------------ tutorial: a guided first trip, then one tip per tab
-  /* [qa-core] tutorial lines are translated whole (i18n_qacore.js): the on-screen swap can't reach sentences split by <b> */
-  const LT = (en, v) => typeof I18N !== "undefined" && I18N.t ? I18N.t(en, v) : en.replace(/\{(\w+)\}/g, (m, k) => (v && k in v ? String(v[k]) : m));
+  // ------------------------------------------------------------ the opening quest's goal card (first30.js), the guide offer
+  /* [qa-core] whole sentences with <b> words (the first-time tips) are translated through I18N.t (i18n_qacore.js) */
   if (typeof I18N !== "undefined" && I18N.add && typeof I18N_QACORE !== "undefined") I18N.add(I18N_QACORE.tpl);
-  const TUT = [
-    null,
-    { title: "Your first trip", text: () => ppUI && party && !ppUI.canDecide() ? LT("Welcome to Skyrim, {name}. You're in a party: the leader picks where to go and you travel with them. Watch the map; the next step starts when you set off.", { name: esc(S.name) }) : LT("Welcome to Skyrim, {name}. Everything happens in real time. Tap <b>Whiterun</b> on the map and press <b>Travel</b>, or press <b>Go</b> next to it in the list below.", { name: esc(S.name) }) + (party ? " " + LT("Your party comes along.") : ""), done: () => !!S.trip || S.location === "Whiterun" },
-    { title: "On the road", text: () => typeof TB !== "undefined" && TB.enabled() ? LT("You're walking. Trips keep going even when the app is closed, and something may happen by the road: if it's a fight, you play it turn by turn (or press Auto). You can ride a horse later, or take a carriage between cities.") : LT("You're walking. Trips keep going even when the app is closed, and something may happen by the road. You can ride a horse later, or take a carriage between cities."), done: () => !S.trip },
-    { title: "You've arrived", text: () => S.location && TOWNS.isTown(S.location) ? LT("Open the <b>Area</b> tab. In towns and cities it has shops, the inn, trainers, the forge, jobs and more.") : LT("Open the <b>Area</b> tab. This spot is out in the wilds, so it shows what you can do here."), done: () => tab === "town" },   // [qa-core] the tab is called Area now
-    { title: "Quests", text: () => LT("Now open the <b>Journal</b>. Your quests are there, and the gold diamond on the map shows where to go next. Chat and other players are under <b>Social</b>."), done: () => tab === "log" },
-  ];
-  const TAB_TIPS = {
-    map: "Start with the “What to do next” card. Press Go to travel; tap any place on the map to see how far it is.",
-    hero: "Your level, skills and perks. A dot on this tab means you can level up or spend a perk point.",
-    pack: "Everything you carry. Tap an item to wear or use it; search by name at the top of the list.",
-    town: "Places in town are grouped: Shops, Services, Guilds & jobs. Each town has different ones; shops close at night.",
-    log: "Only your quests live here: Active, Misc and Completed. ☆ Track the one you're on and the compass and map follow it.",
-  };
 
   /* [stations] a place's own page (forge, inn, a shop...) opens on the work: no guide card or tab tip on top of it */
   const atStation = () => tab === "town" && !!townShop && townShopAt === S.location && typeof AREAUI !== "undefined";
-  const guideOffer = () => !S.guideOffered && S.level < 10 && (tab === "map" || (tab === "town" && !atStation())) && (!S.tut || S.tut.off || S.tut.step === 0)
+  const guideOffer = () => !S.guideOffered && S.level < 10 && (tab === "map" || (tab === "town" && !atStation())) && !(typeof FIRST30 !== "undefined" && FIRST30.active(S))
     ? `<div class="tut"><div class="tut-h"><b> New to the game?</b></div><p>The guide walks you through your first hour: trading, fighting, dungeons, smithing, friends and more.</p><div style="display:flex;gap:8px"><button class="btn sm pri" data-act="guide">Open the guide</button><button class="btn sm" data-act="guideno">Not now</button></div></div>` : "";
   function tutTip() {
-    const t = S.tut; if (!t || t.off) return guideOffer();
-    if (t.step > 0 && t.step < TUT.length) {
-      while (t.step < TUT.length && TUT[t.step].done()) t.step++;
-      if (t.step >= TUT.length) { t.step = 0; S.gold += 100; Store.save(S); setTimeout(() => { SOUND.fx("quest"); toast("Tutorial done. Riverwood's steward sends you 100 gold for the road."); }, 300); }
-      else { const st = TUT[t.step]; return `<div class="tut"><div class="tut-h"><b>${esc(LT(st.title))}</b><span class="sub">${esc(LT("{n} of {m}", { n: t.step, m: TUT.length - 1 }))}</span></div><p>${st.text()}</p><button class="linkbtn" data-act="tutskip">${esc(LT("Skip the tutorial"))}</button></div>`; }
-    }
-    if (guideOffer()) return guideOffer();
-    if (TAB_TIPS[tab] && !t.seen?.[tab] && !atStation()) return `<div class="tut"><p> ${TAB_TIPS[tab]}</p><button class="btn sm" data-act="tutseen">Got it</button></div>`;
-    return "";
+    if (typeof FIRST30 !== "undefined" && FIRST30.active(S)) return atStation() ? "" : FIRST30.cardHTML(S, tab);   // one goal at a time
+    return guideOffer();
   }
 
   // ------------------------------------------------------------ clan wars over the holds
@@ -3124,6 +3102,7 @@
   /* [ux] "What to do next": the current quest goal, things waiting for you, the next guide step and a place nearby */
   function nextCard() {
     if (S.dungeon) return "";
+    if (typeof FIRST30 !== "undefined" && FIRST30.active(S)) return "";   // the opening quest's goal card is the one thing to do (first30.js)
     const here = livePos(), eta = (n) => fmtMin(G.pxDist(here, WORLD.places[n]) * 1.1 / G.speed(S));
     const rows = [], MP = typeof MAPPANEL !== "undefined" ? MAPPANEL : null, R = [];   // mappanel.js: one merged, sorted card (with remind.js's Today rows)
     const dist = (n) => (n && WORLD.places[n] ? G.pxDist(here, WORLD.places[n]) : 0);
@@ -3212,7 +3191,7 @@
     const fp = placesFound();
     const card = `<div class="panel m2-hero"><h2>${esc(S.name)}</h2><div class="m2-herogrid"><div class="herobox">${typeof AVATAR !== "undefined" ? AVATAR.hero(S, HEROART.figure(S, 160, 220), true) : HEROART.figure(S, 160, 220)}</div><div class="m2-herotxt">
       ${(S.titles || []).length ? `<p class="sub m2-titles">${S.titles.map(esc).join(" · ")}</p>` : ""}<p class="sub">Level ${S.level} ${esc(D.RACES[S.race].name)} · ${esc(D.RACES[S.race].desc)}</p><p class="sub"> Places discovered: <b>${fp.got}</b> of ${fp.all}${S.horse ? ` · Horse: ${esc(S.horse.name)}` : ""}</p>
-      <div class="bar" style="margin-top:8px"><i style="width:${pct(S.charXp, need)}%;background:var(--gold)"></i></div><p class="sub num">${Math.round(S.charXp)}/${need} toward level ${S.level + 1}</p>
+      <div class="bar" style="margin-top:8px"><i style="width:${pct(S.charXp, need)}%;background:var(--gold)"></i></div><p class="sub num">${Math.round(S.charXp)}/${need} toward level ${S.level + 1}</p>${typeof REWARDS !== "undefined" ? `<p class="sub rw-nextl">${esc(REWARDS.nextText(S))}</p>` : ""}
       <div class="grid2 m2-attrs"><div class="slot">Health<b class="num">${G.maxHealth(S)}</b></div><div class="slot">Magicka<b class="num">${G.maxMagicka(S)}</b></div><div class="slot">Stamina<b class="num">${G.maxStamina(S)}</b></div></div>
       <div class="m2-links"><button class="btn sm" data-act="tabgo" data-id="stars">Skills</button><button class="btn sm" data-act="tabgo" data-id="perks">Perks${pts > 0 ? ` · ${pts}` : ""}</button><button class="btn sm" data-act="tabgo" data-id="stats">Stats</button></div></div></div>${amN?.best ? ammoNote() : ""}</div>`;
     const start = `<details class="panel m2-wipe"><summary class="sub">Start over</summary><p class="sub">Deletes this character for good.</p><button class="btn danger" data-act="wipe">Delete ${esc(S.name)}</button></details>`;
@@ -4016,8 +3995,6 @@
       case "notes": openNotes(); break;
       case "guideno": S.guideOffered = true; persist(); renderPanel(true); toast("You can open the guide any time from  or the Journal."); break;
       case "guidego": guideGo(b.dataset.id); break;
-      case "tutskip": S.tut = { ...S.tut, step: 0, off: true }; persist(); renderPanel(true); toast("Tutorial skipped. You can replay it from How to Play in the main menu."); break;
-      case "tutseen": S.tut.seen = { ...(S.tut.seen || {}), [tab]: true }; persist(); renderPanel(true); break;
       case "pinicon": pinDraft.icon = b.dataset.id; { const v = $("#pinlabel")?.value || ""; openPinDialog(pinDraft.x, pinDraft.y); $("#pinlabel").value = v; } break;
       case "pinsave": { const id = addPin(pinDraft.x, pinDraft.y, $("#pinlabel")?.value, pinDraft.icon); closeModal(); if (id) { selected = "__pin:" + id; renderPicked(); SOUND.fx("click"); } break; }
       case "pindel": S.pins = (S.pins || []).filter((p) => p.id !== b.dataset.id); selected = null; renderPicked(); persist(); break;

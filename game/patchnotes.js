@@ -3,8 +3,25 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b340-redtests", build: 340, date: "25 Nov 2026", title: "A fresh Coming next", items: [
-      "The Coming next list in Patch notes shows what's really being built now: a clearer turn order, things that open up as you play, better rewards, a guided start and simpler menus.",
+    { id: "b342-redtests", build: 342, date: "26 Nov 2026", title: "A fresh Coming next", items: [
+      "The Coming next list in Patch notes shows what's really being built now: a clearer turn order, parts of the game that open up as you level, and simpler menus.",
+    ] },
+    { id: "b341-first30", build: 341, date: "25 Nov 2026", title: "A guided start for new heroes", items: [
+      "New characters no longer get a welcome popup and a pile of tips. Instead there's one short quest line, Before the Storm, with one goal at a time and one button that does it.",
+      "Your first fight starts a minute after you make your hero: a bandit at Riverwood's mill. While you fight, one short hint at a time shows you how to attack, how to read what the foe does next, and how to guard when it winds up a huge blow.",
+      "Then you put on the armour he drops, walk to Whiterun, meet the Jarl, reach level 2, pick your first perk, and face a tougher bandit chief. The last step pays well and tells you what comes next.",
+      "Losing one of these fights costs nothing: you get back up at full health and try again.",
+      "On a PC the goal, its button and Skip sit in the quest tracker at the top right of the map.",
+      "Don't need it? Tap Skip the tutorial on the goal card and the main quest carries on as before. Heroes you already have aren't affected.",
+    ] },
+    { id: "b340-rewards", build: 340, date: "25 Nov 2026", title: "Rewards that feel like rewards", items: [
+      "Loot, gold and skill practice now share one quiet line at the top, like \"+24 gold · +15 One-Handed · Iron Dagger ×2\". What comes together is added up, and during a fight it waits and comes out as one line after.",
+      "Better items on that line show their name in their rarity colour.",
+      "A short toast tells you when you pick up something better than what you wear, learn a spell or get a new word for your shouts.",
+      "Big moments get a full screen: a level that opens something new (\"LEVEL 4 · Smithing unlocked\"), your first follower, your first horse, your first shout. Legendary finds, your first dragon and your own clan too.",
+      "These never pop up in the middle of a fight, a mini-game, a party vote or a dungeon: they wait until you're done, and only one shows at a time.",
+      "New first quests for smithing, gathering, followers, horses and your first proper dungeon: one step each, with a small useful reward. Start them from the big screen.",
+      "Under your level bar you now see what the next level brings.",
     ] },
     { id: "b339-fightfixes", build: 339, date: "25 Nov 2026", title: "Small fixes on the road and in hero creation", items: [
       "A new quest popping up no longer wipes the choices of a road encounter (Pay, Talk, Fight...). It waits until you've made your pick.",
@@ -2249,11 +2266,10 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 340;
+  const NEXT_AT = 342;
   const NEXT = [
     "A turn order you can read at a glance: who acts next, and in what order",
-    "New things open up step by step as you play, and better rewards after fights and dungeons",
-    "A guided first half hour for new heroes",
+    "Parts of the game open up step by step as you level, so there's less to take in at the start",
     "The menus in five simple tabs",
   ];
   const KEY = "rotn_notes_seen";

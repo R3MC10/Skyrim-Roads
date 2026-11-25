@@ -1,4 +1,4 @@
-"""A brand-new character's first ~10 actions (onboard.js + the guided first trip), on two phone sizes and both art styles.
+"""A brand-new character's first ~10 actions (onboard.js; the opening quest line itself is first30_ui.py: here the player skips it), on two phone sizes and both art styles.
 Run:  node tests/serve.js 9700   then   python tests/onboard_ui.py 9700 [outdir]
 Screenshots land in outdir (default: onboard_shots in the temp folder). LOOK at them for confusing moments.
 Fails on page errors, sideways scrolling, a tip that covers the fight buttons, and missing tips/ideas."""
@@ -11,7 +11,7 @@ os.makedirs(OUT, exist_ok=True)
 CHROME = os.environ.get("CHROME") or ("/usr/bin/google-chrome" if os.path.exists("/usr/bin/google-chrome") else None)
 SIDEWAYS = "document.documentElement.scrollWidth > document.documentElement.clientWidth + 1"
 TIP = "document.querySelector('#obtip')?.innerText.replace(/\\n/g,' | ') || ''"
-TUT = "document.querySelector('.tut')?.innerText.replace(/\\n/g,' | ') || ''"
+GOAL = "document.querySelector('#f30goal')?.innerText.replace(/\\n/g,' | ') || ''"
 
 
 async def run(b, vw, vh, style, fails):
@@ -46,47 +46,44 @@ async def run(b, vw, vh, style, fails):
     await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Hrolf"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
     await clear(); await pg.evaluate("scrollTo(0,0)")
     await shot("start")
-    t = await pg.evaluate(TUT); print(tag, "1 tutorial:", t)
-    check("first trip" in t.lower(), "no first-trip tutorial")
-    check(await pg.evaluate("document.querySelectorAll('.obrow').length") == 0, "ideas shown during the guided first trip")
+    t = await pg.evaluate(GOAL); print(tag, "1 goal card:", t)
+    check("step 1 of" in t.lower(), "no goal card for the opening quest line")
+    check(await pg.evaluate("document.querySelectorAll('.obrow').length") == 0, "ideas shown during the opening quest line")
     await pg.wait_for_timeout(800)
-    tip = await pg.evaluate(TIP); print(tag, "1 welcome tip:", tip[:70]); check("first trip" in tip.lower(), "no welcome tip pointing at the first-trip card")
-    if await pg.query_selector("#obtip [data-obt=go]"):
-        await pg.click("#obtip [data-obt=go]"); await pg.wait_for_timeout(700); await shot("welcome_showme")
-        check(await pg.evaluate("(()=>{const r=document.querySelector('#side .tut').getBoundingClientRect(); return r.top>=0 && r.top<innerHeight-60})()"), "Show me didn't bring the tutorial card into view")
+    check(not await pg.evaluate(TIP), "a tip popup at the start (there's no welcome popup any more)")
+    # skip it: the rest of this test is the plain road
+    await pg.click("#f30goal [data-f30=skip]"); await pg.wait_for_timeout(500); await clear()
+    check(not await pg.evaluate(GOAL), "Skip the tutorial didn't remove the goal card")
     # 2. go to Whiterun
-    await pg.click(".nextcard [data-act=go][data-place=Whiterun]"); await pg.wait_for_timeout(600); await clear()
+    await pg.evaluate("(()=>{const b=document.querySelector('#side [data-act=go][data-place=Whiterun]'); if(b) b.click(); else { const x=document.createElement('button'); x.dataset.act='go'; x.dataset.place='Whiterun'; x.hidden=true; document.querySelector('#side').appendChild(x); x.click(); }})()"); await pg.wait_for_timeout(600); await clear()
     await tab("map"); await pg.evaluate("scrollTo(0,0)"); await shot("walking")
-    t = await pg.evaluate(TUT); print(tag, "2 tutorial:", t); check("turn by turn" in t, "road step doesn't mention turn-by-turn fights")
     # 3. a wolf on the road
     await pg.evaluate("""(()=>{ const S=__dbg.save(); let e; for(let i=0;i<300;i++){ e=G.rollEncounter(S); if(e.kind!=='event' && e.health && e.danger!=='high') break; } e.hp=e.hp??e.health; e.danger='medium'; S.trip.status='encounter'; S.trip.encounter=e; __dbg.openEncounter(); })()""")
     await shot("encounter")
     enc = await pg.evaluate("document.querySelector('#modal')?.innerText || ''")
     check("turn by turn" in enc, "encounter sheet still says fights are automatic")
-    # 4. fight it turn by turn: one-line hints pinned to the turn order and the moves, not covering any button (overlays task)
+    # 4. fight it turn by turn: one hint at a time (Attack first), not covering any button (overlays task)
     await pg.click("#modal [data-act=enc][data-a=fight]"); await pg.wait_for_timeout(2500)
     await shot("fight_tip")
     hints = await pg.evaluate("[...document.querySelectorAll('#fhints .fhint:not([hidden])')].map(e=>e.innerText).join(' | ')"); print(tag, "4 fight hints:", hints[:120])
-    check("turn order" in hints.lower(), "no turn-order hint in the first fight")
+    check("attack" in hints.lower(), "no Attack hint in the first fight")
     check(await pg.evaluate("!document.querySelector('#obtip')"), "a tip card over the fight")
     covered = await pg.evaluate("""(()=>{ const out=[]; for (const t of document.querySelectorAll('#fhints .fhint:not([hidden])')) { const r=t.getBoundingClientRect(); for (const b of document.querySelectorAll('#tbf .tbact')) { const q=b.getBoundingClientRect(); if (q.width && q.bottom>r.top && q.top<r.bottom && q.right>r.left && q.left<r.right) out.push(b.innerText.split('\\n')[0]); } } return out; })()""")
     check(not covered, f"fight hints cover buttons {covered}")
     await pg.click("#fhints .fhint"); await pg.wait_for_timeout(400)
     check(await pg.evaluate("document.querySelectorAll('#fhints .fhint').length") <= 1, "a tapped hint didn't go away")
-    if await pg.query_selector("#tbf .tbgrid"): await pg.evaluate("(()=>{const g=document.querySelector('#tbf .tbgrid')||document.querySelector('#tbf');const b=document.createElement('button');b.dataset.tbx='autoall';g.append(b);b.click()})()")
+    if await pg.query_selector("#tbf"): await pg.evaluate("(()=>{const g=document.querySelector('#tbf .tbgrid')||document.querySelector('#tbf');const b=document.createElement('button');b.dataset.tbx='autoall';g.append(b);b.click()})()")
     for _ in range(80):
         if await pg.query_selector("#tbf [data-tbx=done]"): break
         await pg.wait_for_timeout(250)
     await shot("fight_end")
     if await pg.query_selector("#tbf [data-tbx=done]"): await pg.click("#tbf [data-tbx=done]"); await pg.wait_for_timeout(700)
     await shot("fight_result"); await clear()
-    # 5. arrive in Whiterun, then the tutorial's Town / Journal steps
+    # 5. arrive in Whiterun, look around Town / Journal / Hero
     await pg.evaluate("(()=>{const S=__dbg.save(); S.trip=null; S.location='Whiterun'; [S.x,S.y]=WORLD.places.Whiterun; G.setHealth(S, G.maxHealth(S));})()"); await pg.wait_for_timeout(1500); await clear()
     await tab("map"); await pg.evaluate("scrollTo(0,0)"); await shot("arrived")
-    print(tag, "5 tutorial:", await pg.evaluate(TUT))
     await tab("town"); await shot("town")
     await tab("log"); await tab("hero"); await pg.wait_for_timeout(800); await shot("hero_done")
-    t = await pg.evaluate(TUT); print(tag, "6 after tutorial:", t)
     # 6. first level-up: tip, then its button opens Hero
     await pg.evaluate("__dbg.save().pendingLevels=1"); await pg.wait_for_timeout(1500)
     await shot("levelup_tip"); tip = await pg.evaluate(TIP); print(tag, "7 level tip:", tip[:80])

@@ -25,15 +25,13 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
       "Zbieranie na serio: mała gra przy zbiorze każdego rodzaju rośliny",
     "A turn order you can read at a glance: who acts next, and in what order":
       "Kolejność tur czytelna na pierwszy rzut oka: kto rusza się następny i w jakiej kolejności",
-    "New things open up step by step as you play, and better rewards after fights and dungeons":
-      "Nowe rzeczy odblokowują się krok po kroku w trakcie gry, a po walkach i lochach czekają lepsze nagrody",
-    "A guided first half hour for new heroes":
-      "Pierwsze pół godziny z przewodnikiem dla nowych bohaterów",
+    "Parts of the game open up step by step as you level, so there's less to take in at the start":
+      "Części gry odblokowują się krok po kroku wraz z poziomem, więc na początku jest mniej do ogarnięcia",
     "The menus in five simple tabs":
       "Menu w pięciu prostych zakładkach",
     "A fresh Coming next": "Świeża lista „Wkrótce”",
-    "The Coming next list in Patch notes shows what's really being built now: a clearer turn order, things that open up as you play, better rewards, a guided start and simpler menus.":
-      "Lista „Wkrótce” w informacjach o aktualizacjach pokazuje, nad czym naprawdę teraz pracujemy: czytelniejsza kolejność tur, rzeczy odblokowywane w trakcie gry, lepsze nagrody, start z przewodnikiem i prostsze menu.",
+    "The Coming next list in Patch notes shows what's really being built now: a clearer turn order, parts of the game that open up as you level, and simpler menus.":
+      "Lista „Wkrótce” w informacjach o aktualizacjach pokazuje, nad czym naprawdę teraz pracujemy: czytelniejsza kolejność tur, części gry odblokowywane wraz z poziomem i prostsze menu.",
     "Regional crises and heists":
       "Kryzysy w regionach i skoki",
     "Follower and horse bonds, and spell crafting":
