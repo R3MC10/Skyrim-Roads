@@ -9,7 +9,7 @@ const FIGHTART = (() => {
   const L = (x) => (typeof I18N_SWEEP !== "undefined" ? I18N_SWEEP.c(x) : x);   // words drawn on the picture, in the player's language
   const REG = new Map(), IDS = new WeakMap(); let nextId = 1;
   const IDLE = new Set();   // finished scenes still animating their painted backdrop (battlescene.js)
-  const reduce = () => typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const reduce = () => (typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches) || (typeof document !== "undefined" && !!document.documentElement && document.documentElement.classList.contains("a11y-still"));   // [fightfeel] the game's own Reduce motion too
 
   // ---------------------------------------------------------------- who and where
   const SKIN = { nord: "#e9c6a1", imperial: "#dcb48c", breton: "#ecc9a8", redguard: "#8d5a3b", altmer: "#e3cf8a", bosmer: "#c99a6e", dunmer: "#6d7f8a", orc: "#8fa070", khajiit: "#c79a5a", argonian: "#7f9a6a" };
@@ -863,6 +863,7 @@ const FIGHTART = (() => {
       curFoeLook = rec.foeLook; curArchLook = typeof FOEGROUPS !== "undefined" ? FOEGROUPS.look(rec.f?.e) : null; curDragon = null;
       for (const w of LAY.waiting) {
         wg.save(); wg.translate(w.x, w.y); wg.scale(-s * w.sc, s * w.sc); wg.globalAlpha = 0.86;
+        if (!RIGW || pic) feetShadow(wg, 2, (foeK === "dragon" ? 60 : 20) * Math.min(1.8, fSize), 4.2 * Math.min(1.8, fSize), 0.6);   // [fightfeel] its feet on the ground
         if (RIGW) { RIGWST.t = rm ? 0 : tt + w.x * 0.013; RIGWST.pose = isPerson || foeK === "player" ? waitP : null; RIGWST.pic = pic; RIGWST.picH = pic ? picH : 0; RIGW.draw(wg, RIGWST); }
         else if (pic) { const wU = picH * pic.naturalWidth / pic.naturalHeight; wg.drawImage(pic, -wU / 2, -picH, wU, picH); }
         else foeFig(wg, foeK, 0, tt + w.x * 0.013, isPerson ? waitP : null);
@@ -882,13 +883,25 @@ const FIGHTART = (() => {
     function trailWin(w, b, u) { if (w !== trW) { TRL.length = 0; trW = w; if (w >= 0 && b) wlog({ k: "trail", b: bi, u, i: w, who: b.who }); } }
     let seatLift = 0, muteFx = false;   // how high you sit in the saddle (shots leave from there); muteFx: movefx draws this impact, the shared bursts stay quiet
     // ---- state (all allocated once)
-    let bi = 0, lt = 0, hitIdx = 0, phase = beats.length ? "play" : "end", phaseT = 0, real = 0, hitstop = 0, slowT = 0, shake = 0, zoom = 1, zoomT = 0, zcx = W / 2, zcy = Hh / 2, flash = 0, flashC = "#fff";
+    let bi = 0, lt = 0, hitIdx = 0, phase = beats.length ? "play" : "end", phaseT = 0, real = 0, slowT = 0, shake = 0, zoom = 1, zoomT = 0, zcx = W / 2, zcy = Hh / 2, flash = 0, flashC = "#fff";
     let done = false, speed = rm ? 2 : 1, lastNow = performance.now(), raf = 0, revealed = -2;
     let hpD = hp0, hpT = hp0, hpL = hp0, hpLT = 0, ehpD = ehp0, ehpT = ehp0, ehpL = ehp0, ehpLT = 0;
     const heroP = idlePose({}, rec.hero.wt), foeP = idlePose({}, null), tmpP = {};
     let heroKnock = 0, foeKnock = 0, heroDodge = 1, foeDodge = 1, claw = 0, label = null, labelT = 0, labelC = P.gold, fall = 0, wolfT = 1;
+    /* [fightfeel] weight (fightfeel.js): a blow freezes the two fighters in it for 40-70 ms (stopT; only the beat's clock holds,
+       the scene's own clock, sparks, idle allies and waiting foes run on) and the beat makes that time back after the blow
+       (debt), so the next turn comes no later. Knock-back follows a push curve (rise, hold, recover past the stance);
+       heroKnock/foeKnock keep their exp decay for the painted rig's reaction clock. */
+    const FF = typeof FIGHTFEEL !== "undefined" ? FIGHTFEEL : null, FFX = FF ? FF.scene({ s, reduce: rm, low: lowQ }) : null, FLOG = [];
+    let stopT = 0, stopLast = 0, stopWho = "", debt = 0, hPk = 0, hPt = 9, fPk = 0, fPt = 9, hPush = 0, fPush = 0, windB = -1, poseU = 0;
+    const flog = (e) => { if (FLOG.length < 200) FLOG.push(e); };
+    const kHero = (v) => { heroKnock = v; hPk = v; hPt = 0; }, kFoe = (v) => { foeKnock = v; fPk = v; fPt = 0; };
+    const ffx = (kind, x, y, dir, big, force) => { if (FFX && (!muteFx || force) && FFX.add(kind, x, y, dir, big)) flog({ k: "fx", kind, b: bi }); };
+    const hstop = (b) => { const t = FF ? FF.stopFor(b, { reduce: rm, multi: (MOVES[b.move]?.hits.length || 1) > 1 }) : 0; if (t > 0) { stopT = Math.max(stopT, t); stopLast = t; debt += t; stopWho = b.who === "me" ? "foe" : b.ally ? "" : "hero"; flog({ k: "stop", ms: Math.round(t * 1000), b: bi, who: b.who }); } };
+    const feetShadow = (g, x, rx, ry, a) => { if (typeof RIGLOOK !== "undefined") RIGLOOK.shadow(g, x, 0.4, rx, ry, a); else { g.save(); g.globalAlpha *= a * 0.4; g.fillStyle = "#000"; g.beginPath(); g.ellipse(x, 0.4, rx, ry, 0, 0, 7); g.fill(); g.restore(); } };
+    cv.__feel = { log: FLOG, state: () => ({ stop: Math.max(0, stopT), stopLast, lt, real, debt, who: stopWho, tired: FF ? FF.tired(hpD / hpMax) : 0, fx: FFX ? FFX.count() : 0 }) };
     // particle pool: x, y, vx, vy, life, max, size, gravity; type 0 glow · 1 spark · 2 dust/smoke · 3 chunk · 4 mote
-    const NP = 160, px = new Float32Array(NP), py = new Float32Array(NP), pvx = new Float32Array(NP), pvy = new Float32Array(NP), pl = new Float32Array(NP), pm = new Float32Array(NP),
+    const NP = 120, px = new Float32Array(NP), py = new Float32Array(NP), pvx = new Float32Array(NP), pvy = new Float32Array(NP), pl = new Float32Array(NP), pm = new Float32Array(NP),
       ps = new Float32Array(NP), pg = new Float32Array(NP), pt = new Uint8Array(NP), pc = new Array(NP).fill("#fff");
     let pcur = 0, alive = 0;
     function spawn(type, c, x, y, vx, vy, life, size, grav) {
@@ -997,14 +1010,15 @@ const FIGHTART = (() => {
       const fx = b.fx, cols = colOf(fx, b.el), big = b.power || b.final;
       if (last && CFX && typeof SOUND !== "undefined" && SOUND.fx && !["potion", "self", "wait"].includes(b.move)) SOUND.fx(CFX.soundOf(b, me ? foeK : "person", meleeOf(b), goreOn));
       if (RIG && me && !["potion", "self", "wait"].includes(b.move) && (last || !b.miss)) RIG.event(b.miss ? "dodge" : b.blocked ? "block" : b.power || b.crit || b.final ? "stagger" : "hit");   // the foe flinches, reels or ducks aside
+      if (me && b.blocked && !b.miss) ffx("shield", fx0 - 16 * s * Math.min(1.6, fSize), foeChest, -1);   // [fightfeel] the foe takes it on its guard
       if (b.miss) {   // a whoosh, the other side steps aside
-        if (me) foeDodge = 0; else heroDodge = 0;
+        if (me) { foeDodge = 0; ffx("dodge", fx0, foeChest, -1); } else if (!b.ally) { heroDodge = 0; ffx("dodge", hx0, heroChest, 1); }   // [fightfeel] speed streaks behind the side-step
         if (last) float(tx, ty - 34 * s, "Miss", "#e9dcc0", 14);
         return;
       }
       if (!me && b.blocked) {   // sparks off your shield
         burst(hx0 + 10 * s, heroChest, 16, 1, COL.spark, 260 * s, 0.35, 2, 300); if (last) float(hx0 + 4, groundY - 76 * s, "Block!", "#d8f0ff", 15);
-        heroKnock = 5; shake = Math.max(shake, 2); hitstop = rm ? 0 : 0.05; return;
+        kHero(5); shake = rm ? 0 : Math.max(shake, 2); hstop(b); ffx("shield", hx0 + 13 * s, heroChest - 2 * s, 1); burst(hx0 - 6 * s, groundY - 2 * s, 5, 2, COL.dust, 40 * s, 0.4, 3, -10, true); return;   // [fightfeel] the shield flashes, your feet skid
       }
       if (!me && b.absorbed) { burst(hx0 + 14 * s, heroChest, 14, 0, COL.ward, 120 * s, 0.5, 3, 0); }
       const melee = !MOVES[b.move]?.proj && !["self", "potion", "wait", "block", "cast"].includes(b.move);
@@ -1027,7 +1041,7 @@ const FIGHTART = (() => {
         const horse = !me && !b.ally && rec.horse && b.li % 3 === 0, side = me ? "foe" : b.ally ? "ally" : horse ? "horse" : "hero";
         GS.hit({ side, x: tx - dir * 2 * s, y: horse ? groundY - 20 * s : ty - 4 * s, live: !done }, { dmg: b.dmg, frac: (b.dmg || 0) / (me ? ehpMax : hpMax), type: GORE.typeOf(b, MOVES[b.move] || {}), crit: !!(b.crit || b.sneak), power: !!b.power, final: !!b.final && me, from: dir, arrow: ["arrow", "bolt"].includes(MOVES[b.move]?.proj?.[2]), key: goreKey(b, hitIdx) });
       }
-      if (hurt) { if (me) foeKnock = b.final ? 20 : b.power ? 14 : 7; else if (!b.ally) heroKnock = b.final ? 20 : b.power ? 12 : 7; }
+      if (hurt) { if (me) kFoe(b.final ? 20 : b.power ? 14 : 7); else if (!b.ally) kHero(b.final ? 20 : b.power ? 12 : 7); }
       if (AT_FOE.has(fx) && me) {   // spells that happen where the foe stands
         if (fx === "sun") burst(tx, ty, 22, 4, COL.sun, 80 * s, 0.9, 3, -50, true);
         else if (fx === "wall") burst(tx, groundY, 18, b.el === "frost" ? 3 : 0, colOf("wall", b.el), 90 * s, 0.8, 3, -80, true);
@@ -1041,22 +1055,24 @@ const FIGHTART = (() => {
         if (mfx === "punch") burst(tx, ty, 8, 2, COL.dust, 80 * s, 0.4, 4, 0);
         if (!GS) burst(tx - dir * 6 * s, ty, (mfx === "stab" || mfx === "bite" ? 8 : 14) * n, 1, COL.spark, 240 * s, 0.35, 2, 260);
         else if (me && foeMetal && mfx !== "bite" && mfx !== "claw") burst(tx - dir * 6 * s, ty, 5 * n, 1, COL.spark, 280 * s, 0.18, 1.5, 200);   // [blood3] with blood on, sparks only off metal: few, bright, quick
-        if (b.enchant) burst(tx, ty, 12, 0, COL[b.enchant] || COL.glow, 120 * s, 0.5, 3, 0);
+        if (b.enchant) { burst(tx, ty, 12, 0, COL[b.enchant] || COL.glow, 120 * s, 0.5, 3, 0); if (["fire", "frost", "shock"].includes(b.enchant)) ffx(b.enchant, tx - dir * 4 * s, ty, dir, false, true); }   // [fightfeel] the enchantment's own drawn burst (on top of movefx's spray)
+        if (!me && !b.ally && foePicOn) ffx("swoosh", hx0 + 16 * s, heroChest - 4 * s, -1, big);   // [fightfeel] a painted foe has no blade to trail: a quick arc where its blow lands
         if (hurt && !b.ally) bloodAt(tx - dir * 2 * s, ty - 4 * s, dir, (b.final ? 26 : b.crit || b.sneak ? 18 : b.power ? 14 : 8) * (mfx === "stab" || mfx === "bite" ? 0.7 : 1), !me);
         { const gr = !me ? rec.hero.gearO?.gear : null; if (gr && gr.w === "heavy" && gr.metal) burst(tx, ty, 6 * n, 1, ["#ffffff", "#ffe8a0", "#fff2c0"], 280 * s, 0.2, 1.5, 220); }   // armour clank: a few quick sparks off plate [blood3]
       } else if (fx === "fire" || b.el === "fire" && fx !== "breath" && fx !== "fus") {
-        burst(tx, ty, 26 * n, 0, COL.fire, 200 * s, 0.6, 4, 120); burst(tx, ty, 8, 2, COL.smoke, 40 * s, 1.3, 9, -40, true); ringT = 0; ringX = tx; ringC = "#ffb347";
+        burst(tx, ty, 26 * n, 0, COL.fire, 200 * s, 0.6, 4, 120); burst(tx, ty, 8, 2, COL.smoke, 40 * s, 1.3, 9, -40, true); ringT = 0; ringX = tx; ringC = "#ffb347"; ffx("fire", tx, ty, dir, big);
       } else if (fx === "frost" || b.el === "frost" && fx !== "breath") {
-        burst(tx, ty, 16 * n, 3, COL.frost, 210 * s, 0.6, 2.6, 260); burst(tx, ty, 10, 2, ["#d8f0ff", "#bfe8ff"], 40 * s, 1.1, 10, -10);
+        burst(tx, ty, 16 * n, 3, COL.frost, 210 * s, 0.6, 2.6, 260); burst(tx, ty, 10, 2, ["#d8f0ff", "#bfe8ff"], 40 * s, 1.1, 10, -10); ffx("frost", tx, ty, dir, big);
       } else if (fx === "shock" || b.el === "shock") {
-        burst(tx, ty, 16 * n, 1, COL.shock, 260 * s, 0.4, 2, 0); flash = 0.25; flashC = "#d8d0ff";
+        burst(tx, ty, 16 * n, 1, COL.shock, 260 * s, 0.4, 2, 0); flash = 0.25; flashC = "#d8d0ff"; ffx("shock", tx, ty, dir, big);
       } else if (fx === "paralyze") burst(tx, ty, 16, 1, COL.paralyze, 160 * s, 0.5, 2, 0);
-      else if (fx === "fus") { burst(tx, groundY - 4 * s, 20, 2, COL.dust, 180 * s, 0.7, 6, -10, true); foeKnock = me ? 28 : foeKnock; if (!me) heroKnock = 24; shake = Math.max(shake, 6); }
-      else if (fx === "breath") burst(tx, ty, 14, b.el === "frost" ? 3 : 0, COL[b.el] || COL.fire, 140 * s, 0.6, 3, 60);
+      else if (fx === "fus") { burst(tx, groundY - 4 * s, 20, 2, COL.dust, 180 * s, 0.7, 6, -10, true); if (me) kFoe(28); else kHero(24); shake = Math.max(shake, 6); }
+      else if (fx === "breath") { burst(tx, ty, 14, b.el === "frost" ? 3 : 0, COL[b.el] || COL.fire, 140 * s, 0.6, 3, 60); ffx(b.el === "frost" ? "frost" : "fire", tx, ty, dir, big); }
       else if (b.move === "drain") burst(tx, ty, 10, 0, COL.drain, 80 * s, 0.5, 3, 0);
       else { burst(tx, ty, 14, 1, COL.spark, 220 * s, 0.35, 2, 260); if (["arrow", "bolt"].includes(MOVES[b.move]?.proj?.[2]) && !b.ally) bloodAt(tx, ty, dir, b.final || b.crit ? 12 : 6, !me); }
+      hstop(b);   // [fightfeel] (none with reduced motion)
       if (rm) { shake = 0; return; }
-      if (b.power) { hitstop = 0.08; shake = Math.max(shake, 5); }
+      if (b.power) shake = Math.max(shake, 5);
       if (b.crit || b.sneak) { slowT = 0.45; shake = Math.max(shake, 4); }
       if (b.final) { slowT = f.bf && b.who === "me" ? 1.4 : f.tbTall ? 1.3 : 0.6; /* [OURS] the blow that ends a turn-by-turn fight plays in slow motion */ shake = Math.max(shake, 8); zoomT = f.bf ? 1.5 : 0.9; if (!CFX) { zcx = tx; zcy = ty; } flash = Math.max(flash, 0.3); flashC = "#fff"; }
     }
@@ -1082,7 +1098,7 @@ const FIGHTART = (() => {
       done = true; rec.played = true; phase = f.tbMid ? "idle" : "end"; bi = beats.length; fall = f.tbMid ? 0 : 1;
       hpD = hpT = hpL = last.hp ?? hpT; ehpD = ehpT = ehpL = last.ehp ?? ehpT;
       for (let i = 0; i < NP; i++) pl[i] = 0; for (let i = 0; i < NF; i++) fl[i] = 0;
-      label = null; slowT = 0; shake = 0; zoomT = 0; zoom = 1; camF = 0.5; hitstop = 0; flash = 0; boltOn = 0; AFX?.clear(); MFX?.clear();
+      label = null; slowT = 0; shake = 0; zoomT = 0; zoom = 1; camF = 0.5; stopT = 0; debt = 0; FFX?.clear(); flash = 0; boltOn = 0; AFX?.clear(); MFX?.clear();
       if (!f.tbMid) pickDeath();
       GS?.settle();   // what's in the air drops; what has landed stays
       revealLog(1e9); ctl?.remove();
@@ -1097,9 +1113,11 @@ const FIGHTART = (() => {
     function update(dtr) {
       if (done) return;
       real += dtr;
-      if (hitstop > 0) { hitstop -= dtr; dtr = 0; }
-      let dt = dtr;
-      if (slowT > 0) { slowT -= dtr; dt *= 0.3; }
+      let fdt = dtr, pay = 0;   // [fightfeel] fdt: the fighters' clock (still in a hit-stop); the scene's own things run on dtr / wdt
+      if (stopT > 0) { stopT -= dtr; fdt = 0; } else if (debt > 0) { pay = Math.min(debt, dtr * 0.6); debt -= pay; }   // then the beat makes the time back
+      let dt = fdt;
+      if (slowT > 0) { slowT -= fdt; dt *= 0.3; }
+      const wdt = dtr * (slowT > 0 ? 0.3 : 1);
       if (RIG) RIG.update(dt);
       // bars drain smoothly, the white lag bar follows a moment later
       hpD += (hpT - hpD) * Math.min(1, dtr * 10); ehpD += (ehpT - ehpD) * Math.min(1, dtr * 10);
@@ -1113,7 +1131,8 @@ const FIGHTART = (() => {
         if (zoomT > 0) tz = Math.max(tz, 1.2);
         camF += (tf - camF) * Math.min(1, dtr * 4); zoom += (tz - zoom) * Math.min(1, dtr * (tz > zoom ? 7 : 3));
       } else zoom += ((zoomT > 0 && !rm ? 1.12 : 1) - zoom) * Math.min(1, dtr * 8);
-      heroKnock *= Math.exp(-dtr * 7); foeKnock *= Math.exp(-dtr * 7);
+      heroKnock *= Math.exp(-fdt * 7); foeKnock *= Math.exp(-fdt * 7); hPt += fdt; fPt += fdt;
+      hPush = FF ? FF.push(hPt, hPk) : heroKnock; fPush = FF ? FF.push(fPt, fPk) : foeKnock; FFX?.tick(wdt);
       heroDodge = Math.min(1, heroDodge + dtr * 2.6); foeDodge = Math.min(1, foeDodge + dtr * 2.6); wolfT = Math.min(1, wolfT + dtr * 1.4);
       claw *= Math.exp(-dtr * 5); if (labelT > 0) labelT -= dtr; ringT = Math.min(1, ringT + dtr * 2.2); beamT = Math.min(1, beamT + dtr * 1.8);
       for (let i = 0; i < NF; i++) if (fl[i] > 0) { fxs[i] += fvx[i] * dtr; fys[i] += fvy[i] * dtr; fvy[i] += 220 * dtr; fl[i] -= dtr * 0.9; }
@@ -1125,16 +1144,16 @@ const FIGHTART = (() => {
           if (st.chill && Math.random() < (rm ? 0.08 : 0.25)) spawn(2, "#e0f4ff", X0 + (Math.random() - 0.5) * 24 * s, Y0 + 10 * s, 0, -12 * s, 0.9, 5, 0);
           if (st.shock && Math.random() < (rm ? 0.08 : 0.25)) spawn(1, "#cfe7ff", X0 + (Math.random() - 0.5) * 20 * s, Y0 + (Math.random() - 0.5) * 20 * s, (Math.random() - 0.5) * 120 * s, (Math.random() - 0.5) * 120 * s, 0.25, 2, 0);
         } }
-      if (GS) { if (phase === "play" && beats[bi]) GS.statusOf((f.log || [])[beats[bi].li]); GS.update(dt); }   // [OURS] gore.js
-      AFX?.tick(dt); MFX?.tick(dt);
+      if (GS) { if (phase === "play" && beats[bi]) GS.statusOf((f.log || [])[beats[bi].li]); GS.update(wdt); }   // [OURS] gore.js
+      AFX?.tick(wdt); MFX?.tick(wdt);
       // particles
       alive = 0;
-      for (let i = 0; i < NP; i++) { if (pl[i] <= 0) continue; alive++; pl[i] -= dt; pvy[i] += pg[i] * s * dt; const dr = pt[i] === 2 ? 0.96 : 0.985; pvx[i] *= dr; pvy[i] *= dr; px[i] += pvx[i] * dt; py[i] += pvy[i] * dt; if (pt[i] === 2) ps[i] += dt * 6; if (pt[i] === 4) px[i] += Math.sin(py[i] * 0.1) * 0.4; }
+      for (let i = 0; i < NP; i++) { if (pl[i] <= 0) continue; alive++; pl[i] -= wdt; pvy[i] += pg[i] * s * wdt; const dr = pt[i] === 2 ? 0.96 : 0.985; pvx[i] *= dr; pvy[i] *= dr; px[i] += pvx[i] * wdt; py[i] += pvy[i] * wdt; if (pt[i] === 2) ps[i] += wdt * 6; if (pt[i] === 4) px[i] += Math.sin(py[i] * 0.1) * 0.4; }
       if (phase === "play") {
         const b = beats[bi], m = MOVES[b.move] || MOVES.wait;
         // the pace: real time at first, a little quicker after 12 turns, fast-forward past ~25 s
         const auto = (b.li > 12 ? 1.35 : 1) * (real > 25 ? 6 : 1);
-        lt += dt * 1000 * speed * auto;
+        lt += (dt + pay) * 1000 * speed * auto;
         const u = Math.min(1, lt / b.dur);
         if (b.tag && !b.tagShown && u >= (b.tagU || 0)) { b.tagShown = true; label = L(b.tag); labelT = 1.1; labelC = b.who === "me" ? "#e9dcc0" : "#ffb070"; }   // [phantom] "Winds up!", "Counter!": what this beat is when it isn't a plain blow
         // charging hands, projectiles in flight
@@ -1160,7 +1179,7 @@ const FIGHTART = (() => {
         if (u >= 1) {
           if (!m.hits.length) landNumbers(b);
           revealLog(b.li);
-          bi++; lt = 0; hitIdx = 0; boltOn = 0; TRL.length = 0; trW = -1;
+          bi++; lt = 0; hitIdx = 0; boltOn = 0; TRL.length = 0; trW = -1; debt = 0;
           if (bi >= beats.length) { phase = f.tbMid ? (CFX && !rm ? "settle" : "idle") : "fall"; phaseT = 0; if (phase === "idle") { done = true; rec.played = true; revealLog(1e9); ctl?.remove(); } if (phase === "fall") pickDeath(); }
         }
       } else if (phase === "settle") {   // a turn-by-turn fight: let the camera ease back before the scene rests
@@ -1220,13 +1239,24 @@ const FIGHTART = (() => {
 
     function poses(b, m, u, st, tt) {
       idlePose(heroP, rec.hero.wt); idlePose(foeP, null);
-      if (b && b.who === "me" && m) poseAt(m, u, heroP, 1);
-      if (b && b.who === "them" && m) { poseAt(m, u, foeP, reach); if (b.guard) { heroP.back = -1.66; heroP.aim = -0.6; } }
+      // [fightfeel] a swing reaches the top of its wind-up, holds a moment (a dagger barely, a warhammer longest) and snaps through; the blow still lands on its contact frame
+      const wu = FF && b && m && m.trail && !b.ally ? FF.windOf(m) : null, hu = wu != null ? m.hits[0] : 0, wt0 = b ? b.wt || b.move : "", pu = wu != null ? FF.warp(u, wu, hu, FF.holdOf(wt0)) : u, cr = wu != null ? FF.crouch(u, wu, hu) : 0;
+      poseU = pu;
+      if (wu != null && u > wu && windB !== bi && b.who === "me") { windB = bi; flog({ k: "wind", b: bi, wu, hu, hold: FF.holdOf(wt0) }); }
+      if (b && b.who === "me" && m) { poseAt(m, pu, heroP, 1); heroP.dx -= 4 * cr; heroP.lean -= 0.06 * cr; }
+      if (b && b.who === "them" && m) { poseAt(m, pu, foeP, reach); foeP.dx -= 4 * cr; foeP.lean -= 0.06 * cr; if (b.guard) { heroP.back = -1.66; heroP.aim = -0.6; } }
+      if (FF) {   // the blow's lean back, and a worn-out fighter's hunched stance (head down, weapon low, heavy breathing)
+        heroP.lean += FF.lean(hPt, hPk); foeP.lean += FF.lean(fPt, fPk);
+        const th = FF.tired(hpD / hpMax), tf = FF.tired(ehpD / ehpMax), br = rm ? 0 : Math.sin(tt * 3.4);
+        heroP.hunch = 0.14 * th; foeP.hunch = 0.14 * tf;
+        if (th && !(b && b.who === "me")) { heroP.lean += 0.1 * th; heroP.aim += 0.35 * th; heroP.dy += (0.6 + 0.5 * br) * th; }
+        if (tf && !(b && b.who === "them")) { foeP.lean += 0.1 * tf; foeP.aim += 0.35 * tf; foeP.dy += (0.6 + 0.5 * br) * tf; }
+      }
       if (b && b.who === "them" && b.status === "stagger") foeP.lean = Math.sin(tt * 12) * 0.08 - 0.12;
       heroP.wt = b && b.who === "me" && b.move !== "potion" ? b.wt : rec.hero.wt; heroP.glow = !!(st && st.bound); heroP.flask = b && b.move === "potion" && u > 0.15 && u < 0.85 ? b.flask : null;
       foeP.wt = b && b.who === "them" && b.wt ? b.wt : null;
       const mine = !!(b && b.who === "me" && m);   // [OURS] the painted figure (rig.js) plays the body of the move, its blow landing on the hit frame
-      heroP.move = mine ? b.move : null; heroP.mu = mine ? u : null; heroP.hitU = mine && m.hits ? m.hits[0] : null; heroP.power = mine && !!b.power;
+      heroP.move = mine ? b.move : null; heroP.mu = mine ? poseU : null; heroP.hitU = mine && m.hits ? m.hits[0] : null; heroP.power = mine && !!b.power;
     }
     function sampleTrail(b, m, u) {   // the weapon tip, every step, so the trail follows the real arc
       if (!m.trail) return;
@@ -1291,10 +1321,11 @@ const FIGHTART = (() => {
         if (an && an.clip === "attack" && !an.shoot && an.u >= 0.4 && b && phase === "play" && a.name && !(b.hitBy && b.hitBy.includes(a.name))) {   // [weaponfx] a follower's blow: one small hit on the foe as it lands
           (b.hitBy = b.hitBy || []).push(a.name);
           const ln = (f.log || [])[b.li], said = `${ln?.me || ""} ${ln?.them || ""}`, miss = said.includes(`${a.name} miss`);
-          if (!miss) { const hx = fx0 - (foeFront * 0.6 + 4) * s, hy = foeChest; burst(hx, hy, Math.round(5 * pmul) || 1, 1, COL.spark, 200 * s, 0.18, 1.5, 220); burst(hx, hy + 6 * s, 3, 2, COL.dust, 50 * s, 0.4, 4, -10, true); foeKnock = Math.max(foeKnock, 5); }
+          if (!miss) { const hx = fx0 - (foeFront * 0.6 + 4) * s, hy = foeChest; burst(hx, hy, Math.round(5 * pmul) || 1, 1, COL.spark, 200 * s, 0.18, 1.5, 220); burst(hx, hy + 6 * s, 3, 2, COL.dust, 50 * s, 0.4, 4, -10, true); if (foeKnock < 5) kFoe(5); }
           wlog({ k: miss ? "whiff" : "impact", b: bi, u, i: 0, who: "ally", name: a.name, kind: null, onFoe: !miss, onHero: false });
         }
         wg.save(); wg.translate(ax, ay); wg.scale(sc2, sc2); if (p.row && !al2) wg.globalAlpha = 0.94;
+        if (!ahc && !((a.kind === "mate" || a.kind === "follower") && a.look && rigged())) feetShadow(wg, 0, 15, 3.4, 0.55);   // [fightfeel] a drawn ally's contact shadow (the painted ones cast their own)
         if (ahc) { const by = -30 - (HORSEBACK.riderBob ? HORSEBACK.riderBob(ahc, tt + i) : 0); wg.save(); wg.translate(0, by); allyFig(wg, a.kind, { lunge: allyLunge, t: tt, i, look: a.look, anim: an, ride: true, rideLayer: "far" }); wg.restore(); }
         if (ahc) { HORSEBACK.drawHorse(wg, ahc, 0, tt + i, "back"); HORSEBACK.drawHorse(wg, ahc, 0, tt + i, "front"); wg.translate(0, -30 - (HORSEBACK.riderBob ? HORSEBACK.riderBob(ahc, tt + i) : 0)); }   // [riding] the horse first, the rider on it
         allyFig(wg, a.kind, { lunge: allyLunge, t: tt, i, look: a.look, anim: an, ride: !!ahc });
@@ -1314,7 +1345,7 @@ const FIGHTART = (() => {
         const lunge = wolfT < 1 ? Math.sin(wolfT * Math.PI) : 0, sk = (b && b.st && b.st.summon) || st.summon || liveSum || "familiar";
         // [fightpos] one row back, just ahead of you and short of the foe; it bounds forward when it strikes
         const sx0 = Math.min(hx0 + 34 * s, fx0 - (foeFront + 24) * s), sx = sx0 + lunge * Math.max(0, Math.min(50 * s, fx0 - (foeFront + 12) * s - sx0)), sy = groundY - (LAY ? 7 * s * (1 - lunge) : 0), ss = s * (LAY ? 0.9 + 0.1 * lunge : 1);
-        wg.save(); wg.translate(sx, sy); wg.scale(ss, ss); allyFig(wg, sk, { lunge, t: tt }); wg.restore();
+        wg.save(); wg.translate(sx, sy); wg.scale(ss, ss); feetShadow(wg, 0, 16, 3.4, 0.5); allyFig(wg, sk, { lunge, t: tt }); wg.restore();
         const sp = SPARK[sk]; if (sp && Math.random() < 0.14 * pmul) spawn(sp[1], sp[0], sx + (Math.random() - 0.5) * 16 * s, groundY + (sp[2] - Math.random() * 30) * s, (Math.random() - 0.5) * 12 * s, -24 * s, 0.6, 1.1, 0);   // [summonfx] a few small motes
       }
       // you
@@ -1325,7 +1356,8 @@ const FIGHTART = (() => {
       if (rec.horse && typeof HORSEBACK !== "undefined" && HORSEBACK.drawDowned && HORSEBACK.downAt(f, phase === "play" ? bi / Math.max(1, beats.length) : 1)) {   // [OURS] your horse is downed: it lies behind you, you fight on foot
         wg.save(); wg.translate(hx0 - 58 * s, groundY); wg.scale(s, s); HORSEBACK.drawDowned(wg, rec.horse, tt, L("Downed"), rec.horseCoat); wg.restore();
       }
-      wg.save(); wg.translate(hx0 + (heroP.dx - heroKnock - hdg * 18) * s, groundY + (heroP.dy - hdg * 3) * s); wg.scale(s, s);
+      const hjit = !rm && stopT > 0 && stopWho === "hero" ? FF.jitter(stopT, real) : 0, fjit = !rm && stopT > 0 && stopWho === "foe" ? FF.jitter(stopT, real) : 0;   // [fightfeel] the one struck shivers while frozen
+      wg.save(); wg.translate(hx0 + (heroP.dx - hPush - hdg * 18 + hjit) * s, groundY + (heroP.dy - hdg * 3) * s); wg.scale(s, s);
       const painted = !!rec.hero.look && !rec.hero.beast && typeof PAINTRIG !== "undefined" && PAINTRIG.can(rec.hero.look);   // the painted figure falls by itself
       heroP.knock = heroKnock; heroP.down = meDown && painted ? fallE : 0; heroRig = painted;
       if (meDown && !painted) { wg.translate(-6 * fallE, 0); wg.rotate(-Math.PI / 2 * fallE); wg.translate(0, 6 * fallE); }
@@ -1350,10 +1382,10 @@ const FIGHTART = (() => {
         } }   // werewolf or Vampire Lord while changed
       if (onHorse) wg.restore();
       wg.restore();
-      if (GS) GS.drawMarks(wg, "hero", hx0 + (heroP.dx - heroKnock - hdg * 18) * s, heroChest - (onHorse ? 30 * s : 0), s, hpD / hpMax, meDown || !!st.invis);
+      if (GS) GS.drawMarks(wg, "hero", hx0 + (heroP.dx - hPush - hdg * 18) * s, heroChest - (onHorse ? 30 * s : 0), s, hpD / hpMax, meDown || !!st.invis);
       if (rec.hero.ench && !meDown && heroP.wt !== "fist" && !heroP.flask) {   // [OURS] an enchanted weapon glows in its colour and sheds motes
         const c = rec.hero.ench; tipOf(1, heroP, heroP.wt, 24);
-        let hxH = handX(1, heroP) - (heroKnock + hdg * 18) * s, hyH = handY(1), tx2 = TR[24] - (heroKnock + hdg * 18) * s, ty2 = TR[25], glowOn = true;
+        let hxH = handX(1, heroP) - (hPush + hdg * 18) * s, hyH = handY(1), tx2 = TR[24] - (hPush + hdg * 18) * s, ty2 = TR[25], glowOn = true;
         if (heroRig) {   // [herorig] the painted figure holds its weapon somewhere else than the ink one: glow along the real blade (PAINTRIG.tip), or not at all (no stray blob in the air)
           const T = PAINTRIG.tip ? PAINTRIG.tip("me") : null; glowOn = false;
           if (T && T.gx != null) { try { const M = wg.getTransform().inverse(), g0 = M.transformPoint({ x: T.gx, y: T.gy }), t0 = M.transformPoint({ x: T.x, y: T.y }); hxH = g0.x; hyH = g0.y; tx2 = t0.x; ty2 = t0.y; glowOn = true; } catch (e) { glowOn = false; } }
@@ -1386,7 +1418,7 @@ const FIGHTART = (() => {
       // the foe (faces left)
       wg.save();
       const fleeing = over && won && turned ? fallE : 0;
-      wg.translate(fx0 - (foeP.dx - foeKnock - fdg * 18) * s + fleeing * W * 0.4, groundY + (foeP.dy - fdg * 3) * s); wg.scale(-s * FSC, s * FSC);
+      wg.translate(fx0 - (foeP.dx - fPush - fdg * 18 + fjit) * s + fleeing * W * 0.4, groundY + (foeP.dy - fdg * 3) * s); wg.scale(-s * FSC, s * FSC);
       if (fleeing) wg.globalAlpha = 1 - fleeing;
       const dk = foeDown ? deathK : null, dT = phase === "fall" ? phaseT : 9;
       if (dk && goreOn && !GS && (bleed[2] === "blood" || bleed[2] === "oil") && !["ash", "shatter", "fade"].includes(dk)) {   // a pool spreads under the body
@@ -1430,7 +1462,7 @@ const FIGHTART = (() => {
         if (foeDown) { if (dk === "decap") R.clip = "hit", R.u = 0.3; else if (dk === "ash" || dk === "shatter") R.clip = "stagger", R.u = Math.min(0.35, dT); else R.clip = "death", R.u = fallE; }
         else if (meDown) R.clip = "taunt";
         else if (them && b.status) { if (b.status === "stagger") R.clip = "stagger", R.u = u; else if (b.status === "para") R.clip = "para", R.u = 0.3, R.jitter = true; else if (b.status === "fear") R.clip = "cower"; }
-        else if (them && m && b.move !== "wait") { R.clip = RIG.clipFor(b.move); R.u = u; R.hitU = m.hits?.[0] ?? null; }
+        else if (them && m && b.move !== "wait") { R.clip = RIG.clipFor(b.move); R.u = poseU; R.hitU = m.hits?.[0] ?? null; }
         R.pic = foePic; R.picH = foePic ? (foeK === "dragon" ? 120 : 66) * Math.min(1.8, fSize) * picK : 0; R.filter = curDragon?.filter || (lhP && foePic ? lhP.filter : null);
         RIG.draw(wg, R);
         if (cv.dataset.rig !== RIG.state) cv.dataset.rig = RIG.state;   // which clip is on (screen tests)
@@ -1450,7 +1482,7 @@ const FIGHTART = (() => {
       } else drawFoe();
       wg.filter = "none";
       wg.restore();
-      if (GS) GS.drawMarks(wg, "foe", fx0 - (foeP.dx - foeKnock - fdg * 18) * s, foeChest, s * FSC * Math.min(1.6, fSize), ehpD / ehpMax, foeDown || fleeing > 0 || (curDragon?.air && !foeDown));   // streaks, stuck arrows, char
+      if (GS) GS.drawMarks(wg, "foe", fx0 - (foeP.dx - fPush - fdg * 18) * s, foeChest, s * FSC * Math.min(1.6, fSize), ehpD / ehpMax, foeDown || fleeing > 0 || (curDragon?.air && !foeDown));   // streaks, stuck arrows, char
       if (dk === "decap") {   // ...and the head flies, tumbling, and rolls to a stop
         const vy = -95, gr = 300, yMax = -6 - (NECK - 8), tl = (-vy + Math.sqrt(vy * vy + 2 * gr * yMax)) / gr, t = Math.min(dT, tl);
         const hxo = -t * 70 - (dT > tl ? Math.min(dT - tl, 0.4) * 30 : 0), hyo = Math.min(yMax, vy * t + 0.5 * gr * t * t), rot = t * 8 + (dT > tl ? Math.min(dT - tl, 0.4) * 5 : 0);
@@ -1490,6 +1522,7 @@ const FIGHTART = (() => {
       if (Math.abs(claw) > 0.05) { const cx = claw < 0 ? fx0 : hx0, a = Math.abs(claw); wg.save(); wg.globalAlpha = a; wg.strokeStyle = "#fff6e0"; wg.lineWidth = Math.max(1.6, 2.4 * s); for (let i = -1; i <= 1; i++) { wg.beginPath(); wg.moveTo(cx - 12 * s + i * 7 * s, heroChest - 18 * s); wg.lineTo(cx + 8 * s + i * 7 * s, heroChest + 12 * s); wg.stroke(); } wg.restore(); }
       // particles: dust and chunks first, then the glowing ones added on top
       drawParticles();
+      FFX?.draw(wg);   // [fightfeel] fire petals, frost shards, shock arcs, the shield flash, dodge streaks
       if (MFX) { MFX.drawFront(wg, now); const k = MFX.key() || ""; if (cv.dataset.mfx !== k && k) cv.dataset.mfx = k; }   // [movefx] the spell's own charge, delivery and impact
       if (GS) { if (done && !GS.settled) { GS.settle(); GS.settled = true; } GS.drawFront(wg); }   // [OURS] gore.js: drops, chips, sparks and flourishes in the air
       // screen flash

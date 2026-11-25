@@ -15,7 +15,7 @@
    Sizes are in drawing units at scale 1, feet at the origin: [back, front, height], "front" = toward the other side.
    Pure numbers, no drawing: tests/test_fightpos.js checks many party and foe combinations. */
 const FIGHTPOS = (() => {
-  const ROW_LIFT = 7, ROW_SC = 0.9, MAX_ROWS = 3, PAD = 4, GAP = 26;
+  const ROW_LIFT = 7, ROW_SC = 0.9, MAX_ROWS = 3, PAD = 4, GAP = 26, CROWD_LIFT = 1.9;
   // the foe's figure (fightart.js foeFig / foerig.js / a painted picture), its size already in
   const FOE = { person: [13, 15, 72], player: [13, 15, 72], bandit: [13, 15, 72], giant: [24, 26, 108], troll: [20, 22, 96], centurion: [22, 28, 104],
     mammoth: [52, 56, 100], dragon: [90, 90, 124], werewolf: [24, 30, 84], wolf: [26, 30, 34], wolves: [30, 30, 40], bear: [32, 34, 46], cat: [30, 30, 38],
@@ -58,6 +58,18 @@ const FIGHTPOS = (() => {
     }
     while (out.length > 1 && !out[out.length - 1].length) out.pop();
     return out;
+  }
+  /* [fightfeel] how much of figure f shows past the ones of `others` standing in front of it (feet lower = nearer): the
+     middle 60 % of each box, sampled 12x16; head = its top quarter. → { body, head } 0..1 */
+  function seen(f, others) {
+    const mid = (g) => [(g.left + g.right) / 2 - (g.right - g.left) * 0.3, (g.left + g.right) / 2 + (g.right - g.left) * 0.3];
+    const front = others.filter((g) => g && g !== f && g.y > f.y + 0.01).map((g) => [...mid(g), g.top, g.y]), [x0, x1] = mid(f);
+    let tot = 0, sn = 0, ht = 0, hs = 0;
+    for (let i = 0; i < 12; i++) for (let j = 0; j < 16; j++) {
+      const x = x0 + (x1 - x0) * (i + 0.5) / 12, y = f.top + (f.y - f.top) * (j + 0.5) / 16, cov = front.some(([a, b, t, y1]) => x > a && x < b && y > t && y < y1);
+      tot++; if (!cov) sn++; if (j < 4) { ht++; if (!cov) hs++; }
+    }
+    return { body: sn / tot, head: hs / ht };
   }
 
   /* o: { W, Hh, l, r (the visible band, stage px), t (the visible top, stage px: under the turn strip), groundY, ride (you on a horse), allies: [{ name, kind, ride }],
@@ -102,29 +114,38 @@ const FIGHTPOS = (() => {
     const hero = fig(hx, gy, 1, hz, { ride: !!o.ride });
     // ---- your company in rows behind you
     const L0 = l + pad, items = allies.map((a) => ({ a, sz: allySize(a) }));
-    const near = (row) => (row ? hx - (hz[0] * 0.3 - 6 * row) * s : hx - (hz[0] + 2) * s);
+    const near = (row) => (row ? hx - (hz[0] * (row === 1 ? 0.75 : 0.3) - 6 * row) * s : hx - (hz[0] + 2) * s);   // [fightfeel] the first back row peeks out just behind your shoulder, not hidden right behind you
     // a crowd that will not fit behind you: the back rows spread out across the gap too (smaller, higher, drawn behind you)
     const foeL = fx - reach * fs * s, wide = (row) => (row ? Math.max(near(row), foeL - (14 + 8 * row) * s) : near(row));
+    /* [fightfeel] a crowd: the back rows get smaller (down to 78%) and stand higher, so every head clears the row in
+       front and nobody is hidden behind another; a small party keeps the classic spots */
+    let CS = 1;
+    const rsc = (row) => (row ? ROW_SC ** row * CS : 1);
     function pick(rightOf) {
       let best = null;
       for (let R = 1; R <= MAX_ROWS + 2 && items.length; R++) {
         if (R > MAX_ROWS && best.worst >= (R > MAX_ROWS + 1 ? 0.35 : 0.6)) break;   // a fourth row only when three are packed, a fifth for a mounted crowd on a phone
-        const parts = split(items, R, (row) => Math.max(0, rightOf(row) - L0), (row) => ROW_SC ** row * s), ks = parts.map((p, row) => fitK(p, rightOf(row) - L0, ROW_SC ** row, s));
-        const worst = Math.min(...parts.map((p, row) => !p.length ? 9 : (rightOf(row) - L0) / Math.max(1, p.reduce((t, it) => t + (it.sz[0] + it.sz[1]) * ROW_SC ** row * s, 0))));   // room / what the row needs
+        const parts = split(items, R, (row) => Math.max(0, rightOf(row) - L0), (row) => rsc(row) * s), ks = parts.map((p, row) => fitK(p, rightOf(row) - L0, rsc(row), s));
+        const worst = Math.min(...parts.map((p, row) => !p.length ? 9 : (rightOf(row) - L0) / Math.max(1, p.reduce((t, it) => t + (it.sz[0] + it.sz[1]) * rsc(row) * s, 0))));   // room / what the row needs
         if (!best || worst > best.worst + 0.04) best = { R: parts.length, parts, ks, worst, rightOf };
         if (worst >= 0.95) break;
       }
       return best;
     }
-    let rows = items.length ? 1 : 0, best = pick(near);
-    if (best && best.worst < 0.55) { const b2 = pick(wide); if (b2.worst > best.worst + 0.02) best = b2; }
+    let rows = items.length ? 1 : 0, best = null;
+    for (const c of [1, 0.88, 0.78]) {
+      CS = c; best = pick(near);
+      if (best && best.worst < 0.55) { const b2 = pick(wide); if (b2.worst > best.worst + 0.02) best = b2; }
+      if (!best || best.R < 2 || best.worst >= 0.9) break;
+    }
     if (best) best.ks = best.ks.map((k) => clamp(k, 0.25, 1.3));   // a phone-wide party of 11 overlaps a little, never stacks
+    const crowd = !!best && best.R > 1, lift = crowd ? ROW_LIFT * CROWD_LIFT : ROW_LIFT;
     const placed = [];
     if (best) {
       rows = best.R;
       best.parts.forEach((p, row) => {
-        const sc = ROW_SC ** row, y = gy - row * ROW_LIFT * s, k = best.ks[row];
-        const stag = row % 2 ? 0.5 * (p[0]?.sz[0] || 12) * sc * s * k : 0;
+        const sc = rsc(row), y = gy - row * lift * s, k = best.ks[row];
+        const pitch = ((p[0]?.sz[0] || 12) + (p[0]?.sz[1] || 14)) * sc * s * k, stag = crowd && best.R > 2 && k >= 0.9 ? ((row * pitch) / best.R) % pitch : row % 2 ? 0.5 * (p[0]?.sz[0] || 12) * sc * s * k : 0;   // [fightfeel] three rows: each a third of a step over, so they fill each other's gaps
         const xs = line(p, best.rightOf(row) - stag, -1, sc * s, k), n1 = xs.length - 1, lo = n1 >= 0 ? L0 + p[n1].sz[0] * sc * s : 0;
         if (n1 > 0 && xs[n1] < lo) { const top = Math.max(xs[0], lo + n1 * 8 * sc * s); for (let i = 0; i <= n1; i++) xs[i] = top - ((top - lo) * i) / n1; }   // too many for the room: squeeze the whole line evenly (never a pile at the edge)
         p.forEach((it, i) => placed.push(fig(Math.max(L0 + it.sz[0] * sc * s, xs[i]), y, sc, it.sz, { name: it.a.name, kind: it.a.kind, ride: !!it.a.ride, row })));
@@ -137,26 +158,51 @@ const FIGHTPOS = (() => {
     // ---- the foe and the ones waiting behind it
     const foe = fig(fx, gy, fs, [fz[1], fz[0], fz[2]], { kind: fk, fs });   // on screen its front is to the left
     foe.left = fx - fz[1] * fs * s; foe.right = fx + fz[0] * fs * s;
-    const nWait = Math.max(0, o.waiting | 0), maxW = o.maxWait ?? (BW < 600 ? 3 : 5), waiting = [];
+    const nWait = Math.max(0, o.waiting | 0), maxW = o.maxWait ?? (BW < 600 ? 4 : 5), waiting = [];
     const fw = (fz[0] + fz[1]) * fs * s;
     let shown = 0;
-    const put = (x, row) => { const sc = ROW_SC ** row, f2 = fig(x, gy - row * ROW_LIFT * s, sc * fs, [fz[1], fz[0], fz[2]], { row }); f2.left = x - fz[1] * fs * sc * s; f2.right = x + fz[0] * fs * sc * s; waiting.push(f2); };
+    let wsc = 1, wlift = ROW_LIFT;   // [fightfeel] a big group: the ones waiting get smaller and stand higher so more of them show
+    const put = (x, row, y) => { const sc = ROW_SC ** row * (row ? wsc : 1), f2 = fig(x, y ?? gy - row * wlift * s, sc * fs, [fz[1], fz[0], fz[2]], { row }); f2.left = x - fz[1] * fs * sc * s; f2.right = x + fz[0] * fs * sc * s; waiting.push(f2); };
     {   // one row back: from half behind the foe to the edge, shoulder to shoulder; then the second row in the gaps between them
-      const want = Math.min(nWait, maxW), sc = ROW_SC, w = fw * sc, last = r - pad - fz[0] * fs * sc * s;   // its feet: the furthest it can stand and stay on screen
-      const x0 = Math.min(last, fx + 0.55 * fw);
+      const want = Math.min(nWait, maxW);
+      let sc = ROW_SC, w = fw * sc, last = r - pad - fz[0] * fs * sc * s, x0 = Math.min(last, fx + 0.55 * fw), n = 0;
+      for (const c of [1, 0.88, 0.78]) {
+        sc = ROW_SC * c; w = fw * sc; last = r - pad - fz[0] * fs * sc * s; x0 = Math.min(last, fx + 0.55 * fw);   // its feet: the furthest it can stand and stay on screen
+        n = Math.min(want, 1 + Math.floor((last - x0) / (w * 0.62))); wsc = c; wlift = c < 1 ? ROW_LIFT * CROWD_LIFT : ROW_LIFT;
+        if (x0 >= fx + 0.3 * fw && (n >= Math.min(want, 2) || want - n <= 0)) break;
+      }
       if (want && x0 >= fx + 0.3 * fw) {   // (not when it would hide right behind the foe)
-        const n = Math.min(want, 1 + Math.floor((last - x0) / (w * 0.62))), gap = n > 1 ? Math.min(w * 0.9, (last - x0) / (n - 1)) : 0, xs = [];
+        const gap = n > 1 ? Math.min(w * 0.9, (last - x0) / (n - 1)) : 0, xs = [];
         for (let j = 0; j < n; j++) { xs.push(x0 + j * gap); put(x0 + j * gap, 1); }
         shown = n;
-        const mids = [fx, ...xs].slice(0, -1).map((x, j) => (x + xs[j]) / 2).filter((x) => x - fx >= 0.3 * fw);   // between two of them, never hidden behind the foe
-        for (const x of mids) { if (shown >= want) break; put(x, 2); shown++; }
+        const mids = [...xs.slice(1).map((x, j) => (x + xs[j]) / 2), (fx + xs[0]) / 2].filter((x) => x - fx >= 0.25 * fw);   // between two of them (the gaps further out first)
+        for (const x of mids) {
+          if (shown >= want) break;
+          put(x, 2);
+          if (seen(waiting[waiting.length - 1], [foe, ...waiting.filter((q) => q.row === 1)]).head < 0.5) waiting.pop();   // [fightfeel] never with its head hidden behind the foe
+          else shown++;
+        }
+      }
+      if (shown < want) {   // [fightfeel] no more room beside the foe (a big party pushed it to the edge): the rest stand further back and higher, over its shoulders
+        wsc = Math.min(wsc, 0.88); wlift = ROW_LIFT * CROWD_LIFT;
+        for (const row of [1, 2]) {   // their feet further back, so each head clears the foe's (as far as the top of the stage allows)
+          const sc = ROW_SC ** row * wsc, h = fz[2] * fs * sc * s, y = Math.max(tv + h, gy - (row + 1) * wlift * s, Math.min(gy - row * wlift * s, foe.top + (row === 1 ? 0.72 : 0.45) * h));   // never floating: at most one row further back than usual
+          const lo = Math.max(l + pad + fz[1] * fs * sc * s, y < foe.y - 0.3 * (foe.y - foe.top) ? Math.max(hero.right + 0.5 * fw * sc, fx - 0.9 * fw) : fx + 0.08 * fw), hi = r - pad - fz[0] * fs * sc * s, K = 5;
+          for (let j = 0; j < K && shown < want && hi > lo; j++) {
+            const x = lo + (hi - lo) * (row === 1 ? j / (K - 1) : (j + 0.5) / K);
+            if (waiting.some((q) => q.row === row && Math.abs(q.x - x) < 0.5 * fw * sc)) continue;
+            put(x, row, y);
+            const me = waiting[waiting.length - 1];
+            if (seen(me, [hero, foe, ...waiting.filter((q) => q.row < row)]).head < 0.5) waiting.pop(); else shown++;
+          }
+        }
       }
     }
     waiting.sort((p, q) => q.row - p.row);   // drawn back to front
     // ---- the "N of your party" tag: over the middle of the company, inside the band
     let tag = null;
     if (placed.length) { const xs = placed.map((p) => p.x), top = Math.min(...placed.map((p) => p.top)); tag = { x: clamp((Math.min(...xs) + Math.max(...xs)) / 2, l + 40, r - 40), y: Math.max(Hh * 0.12, top - 8 * s) }; }
-    return { W, Hh, s, gy, l, r, hero, foe, allies: placed, flyers, summon, waiting, more: nWait - shown, rows, tag };
+    return { W, Hh, s, gy, l, r, hero, foe, allies: placed, flyers, summon, waiting, more: nWait - shown, rows, tag, lift, wlift, rowSc: Array.from({ length: Math.max(1, rows) }, (_, i) => rsc(i)), wsc };
   }
 
   /* --------------------------------------------------------------- shared with the screen: where each one is */
@@ -175,6 +221,12 @@ const FIGHTPOS = (() => {
     if (!p) return null;
     return { x: rc.left + p.x * k, y: rc.top + p.y * k, top: rc.top + p.top * k, left: rc.left + p.left * k, right: rc.left + p.right * k, sc: p.sc, k, s: L.s * k };
   }
-  return { layout, publish, screenOf, FOE, ALLY, HERO, HORSE, ROW_LIFT, ROW_SC };
+  /* [fightfeel] how much of each fighter shows: the middle 60 % of each figure's box, covered by the figures standing in
+     front of it (a lower row, nearer the camera). [{ who, body, head }] (head: its top quarter), 0..1 */
+  function visible(L) {
+    const figs = [["hero", L.hero], ...L.allies.map((a, i) => ["a" + i, a]), ["foe", L.foe], ...L.waiting.map((w, i) => ["w" + i, w])];
+    return figs.map(([who, f]) => ({ who, ...seen(f, figs.map(([, g]) => g)) }));
+  }
+  return { layout, publish, screenOf, visible, FOE, ALLY, HERO, HORSE, ROW_LIFT, ROW_SC };
 })();
 if (typeof module !== "undefined") module.exports = FIGHTPOS;
