@@ -106,7 +106,7 @@ const LONGHOUSE = (() => {
   }
 
   // ---------------------------------------------------------------- the shared records
-  let docs = {}, api = null, loopT = null, tab = "rooms", draft = { gold: "", name: "" }, seenInv = new Set();
+  let docs = {}, api = null, loopT = null, tab = "rooms", draft = { gold: "", name: "" }, seenInv = new Set(), busy = false;
   const cache = typeof WeakMap !== "undefined" ? new WeakMap() : null;
   function setDocs(list) {
     const nx = {};
@@ -554,6 +554,13 @@ const LONGHOUSE = (() => {
     const amt = document.getElementById("lng-amt"); if (amt) draft.gold = amt.value;
     const nm = document.getElementById("lng-name"); if (nm) draft.name = nm.value;
     if (a === "tab") { tab = id; api.render(); return; }
+    /* one action at a time: a quick double tap used to found twice, deposit twice (gold below zero) or give the
+       same ingots twice (the checks run before the shared record answers) */
+    if (busy) return;
+    busy = true;
+    try { await act(S, a, id, b); } finally { busy = false; }
+  }
+  async function act(S, a, id, b) {
     let err = null, ok = "";
     if (a === "found") { err = await found(S, draft.name); ok = T("Your longhouse is founded."); if (!err) draft.name = ""; }
     else if (a === "dep") { err = await deposit(S, draft.gold); ok = T("Gold put in."); if (!err) draft.gold = ""; }

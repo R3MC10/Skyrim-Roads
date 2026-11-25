@@ -536,6 +536,8 @@
       if ($("#title")) return true;
       if (!S || S.dungeon || S.trip?.event || S.encounter) return false;
       if (["modal", "tbf", "tbwatch", "lockpick", "pickgame", "sky", "tw", "nickbox", "breach", "dwgame", "bugrep", "lvlpick"].some((id) => document.getElementById(id))) return false;
+      // any mini-game on screen (fishing, mining, hunting, the forge, brewing, rune table, tourney games, dungeon locks...): a restart would lose the catch
+      if (document.querySelector(".craftgame, .lockpick, .smithgame, .xgame, .rct-wrap, #exp-layer:not(:empty)")) return false;
       if ((coopUI?.runs || []).length) return false;
       return true;
     },
