@@ -1,4 +1,4 @@
-/* i18n_fightcam.js: Polish for the fight camera (fightcam.js): Settings → Fights → Fight camera, and the build 334 patch note.
+/* i18n_fightcam.js: Polish for the fight camera (fightcam.js): Settings → Fights → Fight camera, and the build 337 patch note.
    Loaded before i18n.js; exact lines go in I18N_EXTRA.words. */
 var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, pat: [] };
 (() => {

@@ -3,13 +3,37 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b334-fightcam", build: 334, date: "25 Nov 2026", title: "A cinematic fight camera", items: [
+    { id: "b337-fightcam", build: 337, date: "25 Nov 2026", title: "A cinematic fight camera", items: [
       "The camera now moves only on big moments: it leans in a little when your turn starts, closes in on a wind-up, a critical hit, a broken guard and a killing blow, and slowly pulls in on a win. A boss gets a close-up when the fight starts. Ordinary swings keep the picture calm.",
       "A critical hit plays for a moment in slow motion. The fight doesn't get any longer: the next turn comes just as fast.",
       "The battlefield has depth: the sky and far mountains move less than the ground the fighters stand on. You never see the edge of the picture.",
       "Only the battlefield moves. The turn order, the cards, the boss's health bar and your buttons stay where they are, and damage numbers and names follow the fighters at the same size.",
       "In a party fight another player's big moment never moves your camera while you're choosing a move or playing a minigame.",
       "New in Settings → Fights: Fight camera. Cinematic (the default), Calm (gentle, no shaking, no slow motion) or Off. With Reduce motion on, the camera is always Calm.",
+    ] },
+    { id: "b336-channel", build: 336, date: "25 Nov 2026", title: "See your friends get ready", items: [
+      "In a party fight, when a friend casts a spell, swings, draws a bow or uses a skill from an item, you now see them get ready for it: their hero raises a hand with embers, gathers frost or sparks, pulls back their weapon or draws the bowstring, and a small bar over their head fills while they play their minigame.",
+      "Each kind of move has its own colour: fire orange, frost ice blue, shock violet, healing gold, blows steel grey, bows green.",
+      "A great hit flashes gold, a fumble makes them stumble, and if a move gets called off the bar just fades away.",
+      "Your own hero takes the same stance behind your minigame, in solo fights too.",
+      "A minigame can't hold up the fight any more: after 12 seconds the move is called off and you keep your guard up.",
+      "Fixed: in a party fight, an update from your friends could close your minigame halfway through. It now stays open until you finish it.",
+    ] },
+    { id: "b335-dollrig2", build: 335, date: "25 Nov 2026", title: "Your hero stands face-on on the Items screen", items: [
+      "On the Items screen your hero now faces you, like in Skyrim's inventory, and stands relaxed with their gear: they breathe, sway a little, their cape and hair lag behind, and now and then they shift their grip.",
+      "A one-handed weapon hangs from the right hand, a two-hander rests point-down in both hands, a bow sits in the left hand and a staff or spear stands planted by the right foot.",
+      "Your shield sits on your left arm in front of your body, and every weapon is held by its handle with the fist closed round it.",
+      "In fights the same goes for your fighter: the main weapon is always in the right hand and the shield or second weapon in the left, each drawn in its own layer, so arms, shields and blades don't overlap into weird shapes anymore.",
+      "Reduce motion in Settings keeps your hero still, and they stop moving while the game is in the background.",
+    ] },
+    { id: "b334-locintro", build: 334, date: "25 Nov 2026", title: "Every arrival shows the place", items: [
+      "Every time you arrive somewhere (a town, a hold's capital, a dungeon, a camp, a shrine...), the place fills the screen for a moment: its painting, its name, the time, the weather and the season. Night and bad weather tint the picture.",
+      "The first time you see a place you get the full view for a few seconds. Coming back, a shorter one. Tap anywhere or press Esc to skip; it fades out by itself and never holds up the game.",
+      "Up to two lines say what's new since your last visit: friends or party members here, new jobs on the notice board, fresh spell tomes or a caravan in town.",
+      "In a party, everyone sees it on their own when they arrive. If you're already there when friends walk in, you don't see it again.",
+      "In the Area tab, the little landscape button next to the place's name shows the picture again, until you tap it away.",
+      "Settings → Look → Location introductions: Always, First visit only or Off.",
+      "It waits its turn: never on top of a window, a tip or a fight. It replaces the old quick \"You arrive at\" name over the map.",
     ] },
     { id: "b333-maprider", build: 333, date: "25 Nov 2026", title: "Your rider on the map looks like you", items: [
       "On the world map your hero now looks like they really do: your race, your helmet, your armour, your shield and weapon, the same as on the hero screen. That goes for walking and standing too.",

@@ -148,8 +148,8 @@ ok(/fsCamMode/.test(FSs) && />Fight camera</.test(FSs) && /FIGHTCAM\.banner/.tes
 { const src = read("i18n_fightcam.js"); const E = new Function(src + "; return I18N_EXTRA;")();
   for (const w of ["Fight camera", "Cinematic", "Calm"]) ok(!!E.words[w], "Polish for " + w);
   const PN = require(W0 + "patchnotes.js"), top = PN.LIST[0];
-  ok(top.id === "b334-fightcam" || PN.LIST.some((e) => e.id === "b334-fightcam"), "patch note");
-  const mine = PN.LIST.find((e) => e.id === "b334-fightcam"); for (const s of [mine.title, ...mine.items]) ok(!!E.words[s], "Polish for the patch note: " + s.slice(0, 40)); }
+  ok(top.id === "b337-fightcam" || PN.LIST.some((e) => e.id === "b337-fightcam"), "patch note");
+  const mine = PN.LIST.find((e) => e.id === "b337-fightcam"); for (const s of [mine.title, ...mine.items]) ok(!!E.words[s], "Polish for the patch note: " + s.slice(0, 40)); }
 
 console.log(bad ? `fightcam: ${bad} FAILED of ${n}` : `fightcam: all ok · ${n} checks`);
 process.exit(bad ? 1 : 0);
