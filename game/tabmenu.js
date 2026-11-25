@@ -129,7 +129,7 @@ const TABMENU = (() => {
       : `<p class="sub">${pts > 0 ? "No perk is open yet. Raise a skill to reach the next star." : "No perk points to spend. You get one each level."}</p>`;
     const hadHtml = Object.keys(had).length ? Object.entries(had).map(([sk, l]) => `<h3 style="margin-top:12px">${ic(sk, 20)} ${esc(sk)} <button class="linkbtn" data-twa="starsof" data-id="${esc(sk)}">stars</button></h3><div class="list">${l.map(([id, name, rk, ranks]) => `<div class="item on"><div class="t">${esc(name)}${ranks > 1 ? ` <span class="num">${rk}/${ranks}</span>` : " ✓"}<span>${desc(id)}</span></div></div>`).join("")}</div>`).join("")
       : `<p class="sub">You haven't taken any perks yet.</p>`;
-    return `<div class="panel"><h2>Perks ${pts > 0 ? `<span class="gold">· ${pts} to spend</span>` : ""}</h2><h3>Ready to take</h3><div class="list">${canHtml}</div></div><div class="panel"><h2>Your perks</h2>${hadHtml}</div>`;
+    return `<div class="panel"><h2>Perks ${pts > 0 ? `<span class="gold">· ${pts} to spend</span>` : ""}</h2><h3>Ready to take</h3><div class="list">${canHtml}</div></div><div class="panel"><h2>Your perks</h2>${hadHtml}</div>${typeof PERKRESET !== "undefined" ? PERKRESET.hint(S) : ""}`;   // perkreset.js: where to take them back
   }
 
   // ------------------------------------------------------------ the compass (browser only)

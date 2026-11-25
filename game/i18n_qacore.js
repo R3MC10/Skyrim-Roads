@@ -87,10 +87,7 @@ const I18N_QACORE = (() => {
     "Making and improving weapons and armor at a forge.": "Wykuwanie i ulepszanie broni oraz pancerzy w kuźni.",
     "Putting magic on your gear, and recharging enchanted weapons more cheaply.": "Nakładanie magii na ekwipunek i tańsze ładowanie zaklętej broni.",
     "Brewing potions and poisons from ingredients.": "Warzenie mikstur i trucizn ze składników.",
-    // respec (respec.js)
-    "Respec": "Nowy rozwój", "gold.": "złota.", "Yes, respec": "Tak, zacznij od nowa", "Keep my build": "Zostaw jak jest",
-    "Start your build over: every perk and every Health/Magicka/Stamina choice goes back to the pool. Skills and level stay. Costs":
-      "Zacznij rozwój postaci od nowa: każdy atut i każdy wybór Zdrowia, Magii i Wytrzymałości wraca do puli. Umiejętności i poziom zostają. Kosztuje",
+    "gold.": "złota.",
     // hirelings' one-line descriptions on the hire list (towns.js FOLLOWERS)
     "Your steward at Pinewatch Hollow. Swings an axe at trees and bandits alike.": "Twój zarządca w Pinewatch Hollow. Rąbie toporem drzewa i bandytów bez różnicy.",
     "Your steward at Fenhollow Rise. Knows a few spells and every path through the marsh.": "Twój zarządca w Fenhollow Rise. Zna kilka czarów i każdą ścieżkę przez bagno.",
@@ -353,7 +350,6 @@ const I18N_QACORE = (() => {
     [/^(\d{1,2}) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) (\d{4})$/, (m) => `${m[1]} ${{ Jan: "sty", Feb: "lut", Mar: "mar", Apr: "kwi", May: "maj", Jun: "cze", Jul: "lip", Aug: "sie", Sep: "wrz", Oct: "paź", Nov: "lis", Dec: "gru" }[m[2]]} ${m[3]}`],
     [/^needs (.+?) (\d+)(?: and (.+))?$/, (m) => `wymaga: ${T(m[1])} ${m[2]}${m[3] ? ` i ${T(m[3])}` : ""}`],
     [/^You need ([\d,]+) gold\.$/, (m) => `Potrzebujesz ${m[1].replace(/,/g, " ")} złota.`],
-    [/^Respec · ([\d,]+) gold$/, (m) => `Nowy rozwój · ${m[1].replace(/,/g, " ")} złota`],
     [/^Sure\? This takes back (\d+) perk points? and (\d+) level-up choices? for ([\d,]+) gold\.$/, (m) => `Na pewno? Odbierze to punkty atutów: ${m[1]} i wybory przy awansie: ${m[2]} za ${m[3].replace(/,/g, " ")} złota.`],
     [/^build (\d+)$/, (m) => `wersja ${m[1]}`],
     [/^\. You have build (\d+)\.$/, (m) => `. Masz wersję ${m[1]}.`],
