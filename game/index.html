@@ -3742,6 +3742,8 @@ html.art-pixel .minegame .mgbg,html.art-pixel .minegame .mgs,html.art-pixel .min
 @keyframes hgchip{from{opacity:0;transform:translateY(6px) scale(.92)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.hgchip{animation:none;opacity:1}}
 html.a11y-still .hgchip{animation:none;opacity:1}
+/* [tidy1] festivals on a phone: the round compass button sits bottom right, so the boards keep their scores clear of it and the page scrolls past it */
+@media (max-width:759px){.tn{padding-bottom:72px}.tn-board li{padding-right:50px}html.a11y-1h-left .tn-board li{padding-right:4px;padding-left:50px}}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -3938,6 +3940,7 @@ html.a11y-still .hgchip{animation:none;opacity:1}
 <script src="livecursor.js"></script>
 <script src="partytraps.js"></script>
 <script src="hunting.js"></script>
+<script src="scenegrade.js"></script>
 <script src="fishart.js"></script>
 <script src="fishing.js"></script>
 <script src="huntgame.js"></script>
