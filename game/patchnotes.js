@@ -3,6 +3,9 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b238-fighthotfix", build: 238, date: "25 Nov 2026", title: "Fight fix", items: [
+      "Fixed: in some fights your attacks did nothing. If the little timing game after a move gets stuck or vanishes, your next press goes through as a normal hit.",
+    ] },
     { id: "b237-mountcombat", build: 237, date: "25 Nov 2026", title: "Fight from the saddle", items: [
       "Mounted combat is back: ride into a fight and stay in the saddle, or get on and off with the new Mount and Dismount moves.",
       "Getting on takes 2 moves and 20 stamina. You can dual cast from the saddle for a bit more magicka.",
