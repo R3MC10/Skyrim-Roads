@@ -3,12 +3,31 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b297-foepanel", build: 297, date: "25 Nov 2026", title: "A cleaner look at your foe", items: [
+    { id: "b300-foepanel", build: 300, date: "25 Nov 2026", title: "A cleaner look at your foe", items: [
       "The foe's name and health float above its head as a thin Skyrim-style bar with no dark box, and never cover the foe or anyone else. Its statuses are small icons in one row under the bar.",
       "The exact numbers and the rest of its moves show when you hover over it on a PC or tap it on the phone. A boss keeps its big bar at the top, with its icons and next move just under it.",
       "A boss's big attack warning is one slim line now. Hover or hold it to read how to answer it.",
       "The fight log holds the whole fight: scroll it with your finger or the mouse wheel. It stays on the newest line unless you scrolled up, and a small \"newest\" button takes you back down.",
       "The log finds a corner where nobody is standing, and its help bubble no longer covers the lines.",
+    ] },
+    { id: "b299-netfix", build: 299, date: "25 Nov 2026", title: "Players can see each other again", items: [
+      "Players can see each other again. Since accounts came in, players who signed in and players who didn't were in two separate worlds, so friends vanished from each other's map, Social tab and parties.",
+      "Signed in, your phone now joins both: the account world and the phone-to-phone world. Signed in or not, you see each other, chat, trade and team up like before.",
+      "A friend who signed in on an older version still only sees players who signed in. If someone is missing, ask them to update the game.",
+    ] },
+    { id: "b298-mapheroanim", build: 298, date: "25 Nov 2026", title: "Your hero moves on the map", items: [
+      "Your horse on the world map is alive now: standing, it breathes, shifts its weight, tosses its head now and then and flicks its tail.",
+      "On the road its legs swing as it walks or gallops, its body bobs and rocks, and you sit into each stride in the saddle.",
+      "Little puffs of dust kick up behind the hooves (or your boots) while you travel, and walking and standing on foot look smoother too.",
+      "Your friends' figures on the map move the same way. Reduce motion in Settings still keeps everyone still.",
+    ] },
+    { id: "b297-weaponfx", build: 297, date: "25 Nov 2026", title: "Weapon hits that fit the weapon", items: [
+      "Weapon effects in fights are much smaller now and match what you swing: a sword leaves a thin slash, an axe a short chop, a mace or warhammer a heavy thud with a puff of dust (no slash), a dagger a quick little stab, a spear a thrust.",
+      "The hit now shows up the moment the weapon actually connects, right where it meets the body, instead of a big white swoosh popping up early in front of the foe.",
+      "A dagger's two stabs each get their own quick trail, and every hit plays once. A miss is just a faint swish, with no sparks.",
+      "A staff's spell now gathers and flies from the top of the staff, not from your chest.",
+      "When your follower steps in and hits the foe, you now see the blow land.",
+      "Power attacks get a small gleam on the blade instead of a star floating in the air, and only they crack the ground.",
     ] },
     { id: "b296-nomountfight", build: 296, date: "25 Nov 2026", title: "Horses are for travel", items: [
       "Horses are for travel now: fights always happen on foot.",
@@ -1984,7 +2003,7 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 285;
+  const NEXT_AT = 297;
   const NEXT = [
     "Mentoring: play side by side with friends of any level",
     "Shrines of your own: build a Daedric altar at your longhouse",
