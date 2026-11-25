@@ -172,6 +172,9 @@ const NOTIFY = (() => {
     "just now": "przed chwilą", "{0} min ago": "{0} min temu", "{0} h ago": "{0} godz. temu",
     // the patch note
     "Tidier pop-ups": "Porządniejsze powiadomienia",
+    "Promotions and tips back in their place": "Awanse i podpowiedzi na swoim miejscu",
+    "When you're promoted on a side, the banner shows again (it was quietly swallowed before).": "Gdy awansujesz u jakiejś strony, baner znów się pokazuje (wcześniej znikał bez śladu).",
+    "The tips for new players no longer sit on top of the dungeon's route buttons: they move below them, or wait until there's room.": "Podpowiedzi dla nowych graczy nie zasłaniają już przycisków trasy w lochu: przesuwają się pod nie albo czekają, aż będzie miejsce.",
     "All the pop-up messages now take turns: at most one message and one banner at a time, never on top of each other. Level ups and finished quests go first.":
       "Wszystkie wyskakujące komunikaty czekają teraz na swoją kolej: naraz najwyżej jedna wiadomość i jeden baner, nigdy jeden na drugim. Nowy poziom i ukończone zadania mają pierwszeństwo.",
     "Loot and gold that arrive together are added up into one line (\"Iron Dagger ×3\", one gold total), and a skill that rises a few times in a row shows as \"21 → 24\".":
