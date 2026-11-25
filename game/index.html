@@ -4997,6 +4997,16 @@ body:has(#tbf) #gnear{display:none!important}
 #tbf.c2 .c2ov .tbu.foe.fpl .tbints{flex-wrap:nowrap}
 #tbf.c2 .c2ov .tbu.foe.fpl.fpl-open .tbints{flex-wrap:wrap}
 #tbf.c2 .c2ov .tbu.foe.fpl:not(.fpl-open) .tbint{flex-wrap:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis}
+/* [chargensex] Male / Female switch above the creator's tabs */
+.cgsex{display:flex;align-items:center;gap:6px;padding:6px 14px 4px}
+.cgsexl{flex:none;margin-right:4px;font-family:"Cinzel",serif;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold)}
+.cgsexb{flex:1 1 0;min-height:44px;min-width:44px;display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:4px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.04);color:var(--mute);font-family:"Cinzel",serif;font-size:.95rem;letter-spacing:.08em;text-transform:uppercase}
+.cgsexb .cgsexi{font-family:system-ui,sans-serif;font-size:1.2rem;line-height:1}
+.cgsexb.on{color:#f3e7c4;border-color:var(--gold);background:linear-gradient(0deg,rgba(226,187,100,.18),rgba(226,187,100,.06));box-shadow:inset 0 0 0 1px rgba(226,187,100,.35)}
+.cgsexb:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+@media (min-width:900px){.cgsex{padding:8px 20px 6px}}
+/* [itemcards2] item cards: what else changes when you put it on (itemcmp.js notes) */
+.ic-cmp .ic-note{margin:4px 0 0;padding-left:14px;text-indent:-14px;color:#e8c77a;line-height:1.35}.ic-cmp .ic-note::before{content:"▸ ";color:#c9a24a}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -5032,6 +5042,7 @@ body:has(#tbf) #gnear{display:none!important}
 <script src="dungeons.js"></script>
 <script src="dunevents.js"></script>
 <script src="towns.js"></script>
+<script src="poisonfight.js"></script>
 <script src="wevents.js"></script>
 <script src="weatherfx.js"></script>
 <script src="enchanting.js"></script>
@@ -5267,6 +5278,7 @@ body:has(#tbf) #gnear{display:none!important}
 <script src="i18n_accounts.js"></script>
 <script src="i18n_spells.js"></script>
 <script src="i18n_potionfx.js"></script>
+<script src="i18n_itemgames.js"></script>
 <script src="i18n_backdrops2.js"></script>
 <script src="i18n_festart.js"></script>
 <script src="i18n_mgfishing.js"></script>
@@ -5280,6 +5292,7 @@ body:has(#tbf) #gnear{display:none!important}
 <script src="i18n_balfear.js"></script>
 <script src="i18n_combat2.js"></script>
 <script src="i18n_fightdeclutter.js"></script>
+<script src="i18n_foepanel.js"></script>
 <script src="i18n_hotbar.js"></script>
 <script src="i18n_movepreview.js"></script>
 <script src="i18n_busts.js"></script><script src="i18n_npcportraits.js"></script>
@@ -5301,6 +5314,7 @@ body:has(#tbf) #gnear{display:none!important}
 <script src="i18n_mountcombat.js"></script>
 <script src="i18n_fighthotfix.js"></script>
 <script src="i18n_herorig.js"></script>
+<script src="i18n_herocard.js"></script>
 <script src="i18n_folsex.js"></script>
 <script src="i18n_qaside.js"></script>
 <script src="i18n_qafight.js"></script>
@@ -5350,11 +5364,13 @@ body:has(#tbf) #gnear{display:none!important}
 <script src="i18n_gptqa.js"></script>
 <script src="i18n_perklayout.js"></script>
 <script src="i18n_nocover.js"></script>
+<script src="i18n_followersize.js"></script>
 <script src="i18n_magicaim.js"></script>
 <script src="i18n_perksky.js"></script>
 <script src="i18n_crafticons.js"></script>
 <script src="i18n_stations.js"></script>
 <script src="i18n_itemdetail.js"></script>
+<script src="i18n_itemcards2.js"></script>
 <script src="i18n_roadart.js"></script>
 <script src="i18n_rewardtips.js"></script>
 <script src="i18n_updater.js"></script>

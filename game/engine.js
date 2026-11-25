@@ -304,7 +304,7 @@ const G = (() => {
     const cur = equipment(s);
     let extra = "";
     if (it.slot === "weapon" && it.hands === 2 && eq.shield) { delete eq.shield; extra = " Shield taken off (two-handed weapon)."; }
-    if (it.slot === "shield" && cur.weapon && D.ITEMS[cur.weapon.item].hands === 2) return "You can't use a shield with a two-handed weapon.";
+    if (it.slot === "shield" && cur.weapon && D.ITEMS[cur.weapon.item].hands === 2) { delete eq.weapon; extra = ` ${D.ITEMS[cur.weapon.item].name} taken off (needs both hands).`; }   // [itemcards2] like Skyrim: the shield wins, the two-hander comes off (the item card says so first)
     if (eq.offhand != null) {   // [OURS] dual wielding: a shield or a two-handed weapon frees the left hand; one sword can't be in both hands
       const offR = invRow(s, eq.offhand);
       if (it.slot === "shield" || (it.slot === "weapon" && it.hands === 2)) { delete eq.offhand; extra += " Left-hand weapon put away."; }
@@ -455,6 +455,7 @@ const G = (() => {
     if (kind === "dual") return `Dual-cast ${D.SPELLS[arg]?.name || arg}`;
     if (kind === "potion") return `Drink a ${arg} potion`;
     if (kind === "scroll") return `Read ${D.ITEMS[arg]?.name || arg}`;
+    if (kind === "poison") return "Coat your weapon with a poison";
     if ((kind === "power" || kind === "shout") && typeof POWERS !== "undefined") return POWERS.describe(a);
     return a;
   }
@@ -663,6 +664,7 @@ const G = (() => {
       if (kind === "dual") return this.s.spells.includes(arg) && D.SPELLS[arg] && typeof MAGIC !== "undefined" && MAGIC.dualable(D.SPELLS[arg]) && this.mp >= spellCost(this.s, D.SPELLS[arg]) * MAGIC.DUAL_COST * (typeof MOUNTFIGHT !== "undefined" ? MOUNTFIGHT.dualMul(this) : 1);
       if (kind === "potion") return !!this.findPotion(arg) && !(typeof CURSE !== "undefined" && CURSE.noPotions(this));   // no potions in Beast Form
       if (kind === "scroll") return !!this.findItem(arg);
+      if (kind === "poison") return typeof POISONFX !== "undefined" && POISONFX.can(this, a);   // [OURS] coat your weapon mid-fight (poisonfight.js)
       return false;
     }
     choose() {
@@ -894,6 +896,7 @@ const G = (() => {
         this.used[r.id] = (this.used[r.id] || 0) + 1;
         return "Scroll: " + this.cast(D.ITEMS[arg].spell, true);
       }
+      if (kind === "poison" && typeof POISONFX !== "undefined") return POISONFX.act(this, a);   // [OURS] poisonfight.js
       return this.attack(false);
     }
     enemyTurn() {
