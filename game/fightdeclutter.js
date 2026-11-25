@@ -58,7 +58,7 @@ const FIGHTDC = (() => {
       const mb = t.closest?.("[data-fdc=menu]");
       if (mb) { ev.stopPropagation(); menuOpen = !menuOpen; const w = mb.closest(".fdc-more"); w?.classList.toggle("open", menuOpen); mb.setAttribute("aria-expanded", String(menuOpen)); return; }
       if (menuOpen && !t.closest?.(".fdc-menu")) { menuOpen = false; el.querySelector(".fdc-more")?.classList.remove("open"); }
-      else if (menuOpen && t.closest?.(".fdc-menu [data-tbx]")) menuOpen = false;   // tbfight.js handles the button and redraws
+      else if (menuOpen && t.closest?.(".fdc-menu [data-tbx]")) { menuOpen = false; setTimeout(() => document.querySelector("#tbf .fdc-more")?.classList.remove("open"), 0); }   // tbfight.js handles the button and redraws (maybe before this runs)
       // the foe's card: tap to see all its moves (not while picking a target, and not on a button inside it)
       const card = t.closest?.(".c2ov .tbu.foe");
       if (card && !el.classList.contains("fc-aiming") && !el.classList.contains("dragging") && (!t.closest("button") || t.closest("[data-fdc=int]"))) {

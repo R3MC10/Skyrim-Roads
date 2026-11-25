@@ -227,7 +227,7 @@ const TBUI = (() => {
     const root = DOM && document.getElementById("tbf"); if (!root) return;
     if (ev.ctrlKey || ev.metaKey || ev.altKey || /^(INPUT|TEXTAREA)$/.test(ev.target?.tagName || "")) return;
     if (ev.key === "Escape" && d) { d.hot = null; up({ pointerId: d.id, type: "pointercancel", preventDefault() {} }); return; }
-    if (/^[1-9]$/.test(ev.key)) {
+    if (/^[1-9]$/.test(ev.key) && !root.querySelector(".fc")) {   // the action bar (fightctl.js, hotbar.js) has its own keys
       const cards = [...root.querySelectorAll(".tbdock .tbact:not([disabled])")];
       const b = cards[+ev.key - 1]; if (b) { ev.preventDefault(); b.click(); }
     } else if (ev.key === "l" || ev.key === "L") { root.querySelector('[data-tbx="log"],[data-tbx="logx"]')?.click(); }
