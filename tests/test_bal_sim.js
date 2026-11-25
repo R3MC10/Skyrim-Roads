@@ -67,7 +67,7 @@ function make(build, L) {
   G.give(s, L >= 20 ? "potion_health" : "potion_health_minor", 2 + Math.floor(L / 10));
   const schools = MAIN[build].map(([k]) => k);
   for (const [id, sp] of Object.entries(D.SPELLS)) if (schools.includes(sp.school) && sp.kind !== "utility" && (typeof MAGIC === "undefined" || MAGIC.failChance(s, id) === 0) && !s.spells.includes(id)) s.spells.push(id);
-  const R = [{ if: "hp_below", pct: 40, do: "potion:health" }];
+  const R = [{ if: "hp_below", pct: 50, do: "potion:health" }];   // drinks at half health (potions work over a few rounds, potionfx.js)
   const heal = bestSpell(s, ["heal"], "Restoration"); if (heal) R.push({ if: "hp_below", pct: 55, do: "spell:" + heal });
   if (build === "mage") {
     const arm2 = bestSpell(s, ["armor"]); if (arm2) R.push({ if: "no_armor_spell", do: "spell:" + arm2 });

@@ -115,7 +115,7 @@ const fresh = (b, L) => { const s = make(b, L); s.health = G.maxHealth(s); s.hea
 { const s = fresh("warrior", 20); s.follower = { id: "lydia", hp: TOWNS.followerMax(s, "lydia"), ts: G.now() }; const f = new G.Fight(s, foe("Bandit outlaw", 20)); const al = f.allies.find((a) => a.follower);
   f.hp = G.maxHealth(s) * 0.2; const txt = COMBATAI.followerAct(f, al); ok(/steps in front/.test(txt) && f.coverAl === al, "follower covers you"); const t2 = f.enemyTurnInner(); ok(new RegExp(al.name).test(t2) || /isn't|paralyzed|staggered/.test(t2), "the foe goes for the follower: " + t2); }
 // 9. co-op: your ally profile comes from your own kit
-{ const s = fresh("spellsword", 20); const pr = COMBATAI.coopProfile(s); ok(pr.role && pr.potAt === 35, "co-op profile from kit: " + pr.role); }
+{ const s = fresh("spellsword", 20); const pr = COMBATAI.coopProfile(s); ok(pr.role && pr.potAt === 50, "co-op profile from kit: " + pr.role); }
 // 10. the reasons show up, but not every turn
 { const s = fresh("mage", 20), f = new G.Fight(s, foe("Dragon", 20)); f.run(); const whys = f.log.filter((l) => l.why).length; ok(whys >= 1 && (f.log.length < 3 || whys < f.log.length), \`reasons shown \${whys}/\${f.log.length}\`); }
 // 11. Smart AI is not worse than the default preset (small sim)

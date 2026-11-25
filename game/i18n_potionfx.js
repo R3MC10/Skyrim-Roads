@@ -15,10 +15,22 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "Potion": "Mikstura",
     // the perk (perkfx.js)
     "Quick Draught": "Szybki łyk",
-    "Restore Health, Magicka and Stamina potions work faster: everything comes in one round sooner per rank (a second sooner on the road), never in under two. [OURS]":
-      "Mikstury zdrowia, magii i wytrzymałości działają szybciej: wszystko przychodzi o jedną turę wcześniej na poziom (o sekundę wcześniej w drodze), nigdy szybciej niż w dwie. [OURS]",
-    "Restore Health, Magicka and Stamina potions work faster: everything comes in one round sooner per rank (a second sooner on the road), never in under two.":
-      "Mikstury zdrowia, magii i wytrzymałości działają szybciej: wszystko przychodzi o jedną turę wcześniej na poziom (o sekundę wcześniej w drodze), nigdy szybciej niż w dwie.",
+    "Restore Health, Magicka and Stamina potions work faster: everything comes in one round sooner per rank (a second sooner on the road), never in under two, and 5% more lands the moment you drink. [OURS]":
+      "Mikstury zdrowia, magii i wytrzymałości działają szybciej: wszystko przychodzi o jedną turę wcześniej na poziom (o sekundę wcześniej w drodze), nigdy szybciej niż w dwie, a w chwili wypicia wchodzi o 5% więcej. [OURS]",
+    "Restore Health, Magicka and Stamina potions work faster: everything comes in one round sooner per rank (a second sooner on the road), never in under two, and 5% more lands the moment you drink.":
+      "Mikstury zdrowia, magii i wytrzymałości działają szybciej: wszystko przychodzi o jedną turę wcześniej na poziom (o sekundę wcześniej w drodze), nigdy szybciej niż w dwie, a w chwili wypicia wchodzi o 5% więcej.",
+    // the patch note for b175 (patchnotes.js)
+    "Potions hit harder again": "Mikstury znów mocniej działają",
+    "In a fight 60% of a potion now lands the moment you drink it, and the rest comes in over the next two rounds (small and big brewed ones: the next round). A potion saves you in a pinch again.":
+      "W walce 60% mikstury wchodzi teraz w chwili wypicia, a reszta przez dwie kolejne tury (małe i duże warzone: w następnej turze). Mikstura znów ratuje w kryzysowej chwili.",
+    "Still one potion of a kind at a time: another of the same kind only helps once the last one has mostly done its work.":
+      "Nadal jedna mikstura danego rodzaju naraz: kolejna pomaga dopiero, gdy poprzednia w większości zadziałała.",
+    "Your tactics presets, followers and the Smart AI's party plans now drink a little earlier, at about half health, since potions take a moment to work.":
+      "Gotowe taktyki, towarzysze i plany Sprytnej SI dla drużyny piją teraz trochę wcześniej, przy mniej więcej połowie zdrowia, bo mikstury potrzebują chwili, żeby zadziałać.",
+    "Quick Draught is easier to reach (Alchemy 25 and 50) and each rank also makes 5% more of a potion land at once.":
+      "Szybki łyk jest łatwiej dostępny (Alchemia 25 i 50), a każdy poziom sprawia też, że od razu wchodzi o 5% więcej mikstury.",
+    "Relics, treasure hunts and the dig vote use proper game icons instead of phone emoji.":
+      "Relikwie, poszukiwanie skarbów i głosowanie o kopaniu mają teraz porządne ikony z gry zamiast emotek z telefonu.",
     // the patch note (patchnotes.js)
     "Potions work over time": "Mikstury działają z czasem",
     "Health, magicka and stamina potions no longer refill you all at once. They pour in over a few rounds in a fight, or a few seconds on the map: small potions over 5, ordinary ones over 4, the big brewed ones over 3. Half comes in right after you drink, so one still pulls you out of trouble.":
@@ -36,11 +48,15 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
   I18N_EXTRA.pat.push(
     // you, in a fight (engine.js via potionfx.js)
     [/^Drinks ([^·]+?): \+(\d+) (health|magicka|stamina) over (\d+) rounds?$/, (m) => `Pijesz: ${W(m[1])}: +${m[2]} ${RES[m[3]]} przez ${TUR(m[4])}`],
+    [/^Drinks ([^·]+?): \+(\d+) (health|magicka|stamina) now, the rest over the next (\d+) rounds?$/, (m) => `Pijesz: ${W(m[1])}: +${m[2]} ${RES[m[3]]} od razu, reszta przez ${TUR(m[4])}`],
     [/^Drinks ([^·]+?), but the last one is still working$/, (m) => `Pijesz: ${W(m[1])}, ale poprzednia jeszcze działa`],
     // each round's share
     [/^ \+(\d+) (health|magicka|stamina)$/, (m) => ` +${m[1]} ${RES[m[2]]}`],
     // followers, party members, coop allies
     [/^([^·]+?) drinks an? ([^·]+?): \+(\d+) over (\d+) rounds?$/, (m) => `${W(m[1])} pije: ${W(m[2])}: +${m[3]} przez ${TUR(m[4])}`],
+    [/^([^·]+?) drinks a potion: \+(\d+) now, the rest over the next (\d+) rounds?$/, (m) => `${W(m[1])} pije miksturę: +${m[2]} od razu, reszta przez ${TUR(m[3])}`],
+    [/^([^·]+?) drinks an? ([^·]+?): \+(\d+) now, the rest over the next (\d+) rounds?$/, (m) => `${W(m[1])} pije: ${W(m[2])}: +${m[3]} od razu, reszta przez ${TUR(m[4])}`],
+    [/^You give ([^·]+?) an? ([^·]+?): \+(\d+) now, the rest over the next (\d+) rounds?$/, (m) => `Dajesz ${W(m[1])}: ${W(m[2])}: +${m[3]} od razu, reszta przez ${TUR(m[4])}`],
     [/^([^·]+?) drinks an? ([^·]+?): the last one is still working$/, (m) => `${W(m[1])} pije: ${W(m[2])}, ale poprzednia jeszcze działa`],
     [/^You give ([^·]+?) an? ([^·]+?): \+(\d+) over (\d+) rounds?$/, (m) => `Dajesz ${W(m[1])}: ${W(m[2])}: +${m[3]} przez ${TUR(m[4])}`],
     [/^You give ([^·]+?) an? ([^·]+?): the last one is still working$/, (m) => `Dajesz ${W(m[1])}: ${W(m[2])}, ale poprzednia jeszcze działa`],
@@ -55,7 +71,11 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
       (m) => `${W(m[1])}: jeszcze +${m[2]} zdrowia przez ${SEK(m[3])}. ${SAME}`],
     [/^([^·]+?): \+(\d+) (health|magicka|stamina) at the end of this round, less after that, (\d+) more \((\d+) left\)\. Another one of the same kind doesn't stack\.$/,
       (m) => `${W(m[1])}: +${m[2]} ${RES[m[3]]} na koniec tej tury, potem mniej, jeszcze ${m[4]} (zostało ${m[5]}). ${SAME}`],
+    [/^([^·]+?): \+(\d+) (health|magicka|stamina) at the end of this round, (\d+) more \((\d+) left\)\. Another one of the same kind doesn't stack\.$/,
+      (m) => `${W(m[1])}: +${m[2]} ${RES[m[3]]} na koniec tej tury, jeszcze ${m[4]} (zostało ${m[5]}). ${SAME}`],
     // item tooltip line
+    [/^In a fight (\d+)% works at once, the rest over the next (\d+) rounds? \((\d+) seconds on the road\)\. Another of the same kind doesn't stack\.$/,
+      (m) => `W walce ${m[1]}% działa od razu, reszta przez ${TUR(m[2])} (${SEK(m[3])} w drodze). ${SAME}`],
     [/^Works over (\d+) rounds? in a fight \((\d+) seconds on the road\)\. Another of the same kind doesn't stack\.$/,
       (m) => `Działa przez ${TUR(m[1])} w walce (${SEK(m[2])} w drodze). ${SAME}`],
   );

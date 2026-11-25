@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b183-potionbal", build: 183, date: "25 Nov 2026", title: "Potions hit harder again", items: [
+      "In a fight 60% of a potion now lands the moment you drink it, and the rest comes in over the next two rounds (small and big brewed ones: the next round). A potion saves you in a pinch again.",
+      "Still one potion of a kind at a time: another of the same kind only helps once the last one has mostly done its work.",
+      "Your tactics presets, followers and the Smart AI's party plans now drink a little earlier, at about half health, since potions take a moment to work.",
+      "Quick Draught is easier to reach (Alchemy 25 and 50) and each rank also makes 5% more of a potion land at once.",
+      "Relics, treasure hunts and the dig vote use proper game icons instead of phone emoji.",
+    ] },
     { id: "b182-mappolish", build: 182, date: "25 Nov 2026", title: "Map polish: a clearer close-up and tidier cards", items: [
       "Zoomed in close, the hand-inked chart now uses the painting's own colours, so going from the painting to the chart is smooth. Plains, forests, snow and mountains each get their own calm wash on soft paper, with a gentle shade on the hills.",
       "Sun rays, cloud shadows, mist and town glows fade as you zoom in, so the close-up stays easy to read.",
