@@ -11,6 +11,7 @@
        torso: s = shoulder socket, n = neck, cut = the row below which the round waist plug is hidden in the pelvis
        pelvis: hip = the point between the hip joints (the thighs hang from here)
        foot: sole = the row the boot stands on
+       leg-bent: noBoot = the picture stops at the knee (no shin or boot): the rider's leg is built from thigh, shin and foot
        head: nw = the neck's width (the other races' heads, HEADS below, are scaled to it)
    Per set: ppu = measured pixels per drawing unit (the fight figures are about 61 units tall, feet at 0,0).
    The skeleton (bone lengths, where the shoulder and neck sit) is worked out from these points, so each armour set
@@ -69,7 +70,7 @@ const RIGDATA = (() => {
       thigh: { w: 217, h: 423, p: [117, 47], e: [77, 384] },
       shin: { w: 198, h: 344, p: [103, 75], e: [98, 316] },
       foot: { w: 268, h: 155, p: [60, 40], sole: 148 },
-      "leg-bent": { w: 262, h: 431, p: [132, 60], e: [70, 401] },
+      "leg-bent": { w: 262, h: 431, p: [132, 60], e: [70, 401], noBoot: 1 },   // the thigh only: in the saddle rig.js folds the thigh, shin and boot instead
     } },
     "nordf-iron": { ppu: 23.6, parts: {
       head: { w: 323, h: 553, p: [181, 290], nw: 114 },

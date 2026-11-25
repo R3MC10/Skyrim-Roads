@@ -3,6 +3,15 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b201-rigcohesion", build: 201, date: "25 Nov 2026", title: "Fighters that belong in the scene", items: [
+      "Fighters and foes now take on the light of the place you fight in: cold and blue in the snow, warm and torch-lit in caves, dim in barrows, with a faint edge of light on their backs.",
+      "Fighters are a touch softer so they match the painted backdrops instead of looking pasted on top.",
+      "Everyone casts a soft shadow under their feet and body, so they stand on the ground.",
+      "Hair, braids, belts and fur sway and trail a little when fighters move or take a hit.",
+      "Elbows and knees no longer show a gap when arms and legs bend.",
+      "The sword swing is now a small soft smear right behind the blade, only at the end of the swing.",
+      "Women on horseback have their boots back, and long braids no longer get cut off at the collar.",
+    ] },
     { id: "b200-rigraces", build: 200, date: "25 Nov 2026", title: "Painted races and a softer swing", items: [
       "Women in iron or steel armour now wear it in fights too, painted to match, instead of always showing up in leather.",
       "Dark Elves, Khajiit and Argonians get their own painted faces in fights, for men and women, sized to sit right on the armour. Other races keep the tinted face for now.",

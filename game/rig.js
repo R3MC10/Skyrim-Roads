@@ -77,10 +77,16 @@ const PAINTRIG = (() => {
     } else c = recolor(level(r, part, "n", lv), v);
     r.cache.set(key, c); return c;
   }
+  /* [rigcohesion] the part as drawn: at the level that fits, softened and graded for the fight scene it stands in
+     (riglook.js), made once per part, level and scene */
+  const LOOK = () => (typeof RIGLOOK !== "undefined" ? RIGLOOK : null);
   function pic(r, part, v, need) {
     const q = (r.Q || D.SETS[r.set].parts)[part]; let lv = 0;
     while (lv < 4 && (q.w * D.RES) / (1 << (lv + 1)) >= need * 1.15) lv++;
-    return level(r, part, v, lv);
+    const L = LOOK(); if (!L) return level(r, part, v, lv);
+    const key = part + "|" + v + "|" + lv + "|" + L.key(); let c = r.cache.get(key);
+    if (!c) { c = L.bake(level(r, part, v, lv), { soft: true, rim: 2.4 }); r.cache.set(key, c); }
+    return c;
   }
   const hexRGB = (c) => { const m = /^#([0-9a-f]{6})$/i.exec(c || ""); return m ? [parseInt(m[1].slice(0, 2), 16), parseInt(m[1].slice(2, 4), 16), parseInt(m[1].slice(4), 16)] : null; };
   /* v: "d" the far side (in shade), "t:#rrggbb" skin tinted, "dt:#rrggbb" both */
@@ -232,9 +238,37 @@ const PAINTRIG = (() => {
     g.restore();
   }
   /* a limb part along its bone: the part's p→e line turned onto the bone a→b */
-  function limbAt(g, ctx, part, v, a, b) {
-    const q = ctx.Q[part], img = pic(ctx.r, part, v, q.w * ctx.G.u * ctx.dev);
-    put(g, img, q, ctx.G.u, a[0], a[1], angOf(a, b) - Math.atan2(q.e[1] - q.p[1], q.e[0] - q.p[0]));
+  function limbAt(g, ctx, part, v, a, b, from) {
+    const q = ctx.Q[part], img = pic(ctx.r, part, v, q.w * ctx.G.u * ctx.dev), axis = Math.atan2(q.e[1] - q.p[1], q.e[0] - q.p[0]), ang = angOf(a, b);
+    if (from) {   // [rigcohesion] a bent elbow or knee: the limb's top end once more, turned halfway back toward the bone above and kept to a disc round the joint, so the outside of the bend shows no notch
+      const par = angOf(from, a); let d = ang - par; d = Math.atan2(Math.sin(d), Math.cos(d));
+      if (Math.abs(d) > 0.18) {
+        const r = Math.min(q.w, Math.abs(q.e[0] - q.p[0]) + q.w * 0.5) * 0.42 * ctx.G.u;
+        g.save(); g.beginPath(); g.arc(a[0], a[1], r, 0, TAU); g.clip(); put(g, img, q, ctx.G.u, a[0], a[1], par + d * 0.5 - axis); g.restore();
+      }
+    }
+    put(g, img, q, ctx.G.u, a[0], a[1], ang - axis);
+  }
+  /* [rigcohesion] an upright part drawn in pieces: R = [[x0, y0, x1, y1, k, ky], ...] in the part's measured pixels; a piece
+     with k is sheared about row ky (hair, braids, belt flaps and fur swinging), so it stays joined to the row above it */
+  function putR(g, img, q, u, x, y, a, R) {
+    const iw = img.width || img.naturalWidth, ih = img.height || img.naturalHeight, fx = iw / q.w, fy = ih / q.h;
+    g.save(); g.translate(x, y); if (a) g.rotate(a);
+    for (const r of R) {
+      const x0 = Math.max(0, r[0]), y0 = Math.max(0, r[1]), x1 = Math.min(q.w, r[2]), y1 = Math.min(q.h, r[3]), k = r[4] || 0;
+      if (x1 - x0 < 0.5 || y1 - y0 < 0.5) continue;
+      if (k) { g.save(); g.transform(1, 0, k, 1, -k * (r[5] - q.p[1]) * u, 0); }
+      g.drawImage(img, x0 * fx, y0 * fy, (x1 - x0) * fx, (y1 - y0) * fy, (x0 - q.p[0]) * u, (y0 - q.p[1]) * u, (x1 - x0) * u, (y1 - y0) * u);
+      if (k) g.restore();
+    }
+    g.restore();
+  }
+  /* a head in pieces: the hair and braids hanging behind the neck swing with k; layer "back" is only what hangs below
+     the collar cut (drawn behind the torso, so long braids are never cut off at the collar), "front" the rest */
+  function headR(q, k, layer) {
+    const cut = q.cut || q.h, nb = q.p[0] - (q.nw || q.w * 0.35) * 0.5, ky = q.p[1] - (q.nw || 100) * 0.25;
+    if (layer === "back") return cut < q.h ? [[0, cut, nb, q.h, k, ky]] : [];
+    return [[0, 0, q.w, Math.min(ky, cut) + 1], [0, ky, nb, cut, k, ky], [nb - 1, ky, q.w, cut]];
   }
   function uprightAt(g, ctx, part, v, at, a, cut) {
     const q = ctx.Q[part], img = pic(ctx.r, part, v, q.w * ctx.G.u * ctx.dev);
@@ -252,13 +286,13 @@ const PAINTRIG = (() => {
   }
   function armAt(g, ctx, arm, v, handPart, handV, want) {
     limbAt(g, ctx, "uparm", v, arm.sh, arm.el);
-    limbAt(g, ctx, "forearm", v, arm.el, arm.wr);
+    limbAt(g, ctx, "forearm", v, arm.el, arm.wr, arm.sh);
     return handPart ? handAt(g, ctx, arm, handPart, handV, want) : null;
   }
   function legAt(g, ctx, L, v) {
     limbAt(g, ctx, "thigh", v, L.hip, L.knee);
     uprightAt(g, ctx, "foot", v, L.ankle, L.toe);
-    limbAt(g, ctx, "shin", v, L.knee, L.ankle);
+    limbAt(g, ctx, "shin", v, L.knee, L.ankle, L.hip);
   }
   function flaskAt(g, x, y, col, k) {
     g.save(); g.translate(x, y); g.scale(k, k);
@@ -316,21 +350,24 @@ const PAINTRIG = (() => {
     // legs: the far one in shade (in the saddle only the near leg shows, bent over the horse's flank)
     if (P.ride) {
       const q = ctx.Q["leg-bent"], hip = add(B.H, [0.6 * m, 0]);
-      uprightAt(g, ctx, "leg-bent", "n", hip, B.pa - 0.12, 0);
-      void q;
+      if (q.noBoot) {   // [rigcohesion] a bent-leg picture with no boot (the women's leather): the thigh, shin and boot, folded over the horse's flank
+        const want = add(hip, rot(B.pa, [0.16 * G.thigh, 0.6 * (G.thigh + G.shin)])), [kn, an] = ik(hip[0], hip[1], want[0], want[1], G.thigh, G.shin, -1);
+        legAt(g, ctx, { hip, knee: kn, ankle: an, toe: 0.05 }, "n");
+      } else uprightAt(g, ctx, "leg-bent", "n", hip, B.pa - 0.12, 0);
     } else { legAt(g, ctx, B.legF, "d"); legAt(g, ctx, B.legN, "n"); }
     // the body: torso (its waist plug hidden), the hips over it, then the head
-    const hk = B.sa * 0.55 + (P.tilt || 0);
+    const hk = B.sa * 0.55 + (P.tilt || 0), sw = ctx.sway ? ctx.sway.a : 0;
+    // the head: the race's own (scaled so its neck fills this set's collar like the Nord neck) or the set's; its braids below the collar go behind the torso
+    const hq = rh ? rh.Q.head : ctx.Q.head, hu = rh ? G.u * (ctx.Q.head.nw || hq.nw) / hq.nw : G.u, himg = rh ? pic(rh, "head", "n", hq.w * hu * ctx.dev) : pic(ctx.r, "head", sv(false), hq.w * hu * ctx.dev);
+    const hairK = clamp(sw - hk * 0.4, -0.45, 0.45);   // hair hangs: it keeps to the vertical a little as the head turns
+    putR(g, himg, hq, hu, B.N[0], B.N[1], hk, headR(hq, hairK, "back"));
     uprightAt(g, ctx, "torso", "n", B.W, B.sa, ctx.Q.torso.cut);
-    uprightAt(g, ctx, "pelvis", "n", B.W, B.pa, 0);
-    if (rh) {   // the race's own head, scaled so its neck fills this set's collar like the Nord neck
-      const q = rh.Q.head, k = (ctx.Q.head.nw || q.nw) / q.nw, u = G.u * k;
-      put(g, pic(rh, "head", "n", q.w * u * ctx.dev), q, u, B.N[0], B.N[1], hk, q.cut || 0);
-    } else uprightAt(g, ctx, "head", sv(false), B.N, hk, 0);
+    { const q = ctx.Q.pelvis, ky = q.hip[1] - 10; putR(g, pic(ctx.r, "pelvis", "n", q.w * G.u * ctx.dev), q, G.u, B.W[0], B.W[1], B.pa, [[0, 0, q.w, ky + 1], [0, ky, q.w, q.h, clamp(sw * 0.55 - B.pa * 0.3, -0.25, 0.25), ky]]); }   // belt flaps, pouches and fur swing a little
+    putR(g, himg, hq, hu, B.N[0], B.N[1], hk, headR(hq, hairK, "front"));
     if (shieldFront) shieldHere(true);
     // the near arm: upper arm, forearm, then whatever is in the hand, then the hand over its grip
     limbAt(g, ctx, "uparm", "n", B.armN.sh, B.armN.el);
-    limbAt(g, ctx, "forearm", "n", B.armN.el, B.armN.wr);
+    limbAt(g, ctx, "forearm", "n", B.armN.el, B.armN.wr, B.armN.sh);
     const handPart = openAll || (!armedN && !P.flask && P.cast > 0.05) ? "hand-open" : armedN || P.flask ? "hand-fist" : "hand-open";
     const want = armedN ? (ranged ? wa : wa + tipA + Math.PI / 2) : null;
     // the grip point comes from the hand's angle, so work it out first, draw the weapon, then the hand on top
@@ -349,17 +386,49 @@ const PAINTRIG = (() => {
     if (P.cast > 0.05 && kit) kit.glowAt(g, grip[0] + 1.6 * m, grip[1] - 0.6 * m, (5 + P.cast * 3.4) * m, castC, 0.85, st);
     return B;
   }
+  /* [rigcohesion] secondary motion: one damped spring per fighter, driven by how fast the neck moves (the step in, the
+     lunge, the lean, the scene moving the figure: o.dx) and kicked by a blow. Its angle swings the hair and braids, the
+     belt flaps and fur (k > 0: the loose ends swing forward). No clock (o.t), no swing. */
+  const SW = new Map();
+  function sway(id, o, P) {
+    const t = o.t, x = (o.dx || 0) + (P.ox || 0) + (P.hipx || 0) + (P.fn[0] + P.ff[0]) * 0.3 + (P.lean || 0) * 32 + (o.lunge || 0) * 6;
+    let s = SW.get(id);
+    if (!s) { s = { x, t, a: 0, v: 0, kn: 0 }; SW.set(id, s); if (SW.size > 24) SW.delete(SW.keys().next().value); }
+    if (t == null || !(t > 0)) { s.a = 0; s.v = 0; s.x = x; s.t = t; return s; }
+    const dt = t - s.t;
+    if (!(dt > 0) || dt > 0.3) { s.x = x; s.t = t; return s; }
+    const vx = clamp((x - s.x) / dt, -260, 260); s.x = x; s.t = t;
+    const k = o.knock || 0; if (k > s.kn + 0.25) s.v += Math.min(5, k * 0.28); s.kn = k;   // a blow throws the body back: the loose ends fly forward
+    const want = clamp(-vx * 0.0055, -0.32, 0.32) + Math.sin(t * 1.25 + (id.length || 0)) * 0.025, w = 10, z = 0.3;
+    for (let left = Math.min(dt, 0.1); left > 1e-4; left -= 1 / 120) {
+      const h = Math.min(1 / 120, left); s.v += (w * w * (want - s.a) - 2 * z * w * s.v) * h; s.a = clamp(s.a + s.v * h, -0.45, 0.45);
+    }
+    return s;
+  }
+  /* [rigcohesion] contact shadows (riglook.js), in figure units on the ground line: a faint one under the body, a
+     darker soft one under each boot (lighter as the foot lifts); lying down, one long shadow under the body */
+  function shadows(g, sp, P) {
+    const L = LOOK(); if (!L || P.ride) return;
+    const f = P.rot ? Math.min(1, Math.abs(P.rot) / (Math.PI / 2)) : 0, bw = sp.bw || 1;
+    const hx = ((P.ox || 0) + (P.hipx || 0) + (P.fn[0] + P.ff[0]) * 0.3) * bw, bx = hx * (1 - f) - 6 * f;
+    L.shadow(g, bx + 1, 0.3, (17 + 16 * f) * bw, 3.6 + 1.4 * f, 0.62);
+    if (f < 0.6) for (const ft of [P.fn, P.ff]) {
+      const lift = clamp(-ft[1] / 6, 0, 1), sz = 1 - lift * 0.35;
+      L.shadow(g, (ft[0] + 2.4) * bw, 0.5, 7.5 * sz * bw, 2.3 * sz, 0.9 * (1 - lift * 0.8) * (1 - f / 0.6));
+    }
+  }
   /* draw a posed figure: g is in figure units (feet at 0,0, ~61 tall) */
-  function render(g, r, sp, P, o, wk) {
+  function render(g, r, sp, P, o, wk, sw) {
     const G = r.G, kN = 1 / G.m, kit = typeof FIGART !== "undefined" ? FIGART.kit : null;
     g.save();
+    shadows(g, sp, P);
     if (P.rot) {   // lying down: turned about the feet, then laid on the ground (on the back, head away from the foe)
       const f = Math.min(1, Math.abs(P.rot) / (Math.PI / 2));
       g.translate(24 * f, -10 * f); g.rotate(P.rot);
     }
     g.scale(kN * (sp.bw || 1), kN * (sp.bh || 1));
     const dev0 = kit ? kit.devScale(g) : 1;
-    const ctx = { r, G, Q: G.P, dev: dev0, kit, st: kit ? kit.styleOf(Math.max(0.25, Math.round(dev0 * G.m * 4) / 4)) : null };
+    const ctx = { r, G, Q: G.P, dev: dev0, kit, sway: sw || null, st: kit ? kit.styleOf(Math.max(0.25, Math.round(dev0 * G.m * 4) / 4)) : null };
     try { figure(g, ctx, P, sp, o, wk); } finally { g.restore(); }
   }
 
@@ -378,7 +447,7 @@ const PAINTRIG = (() => {
       TIPS.delete(o.who || "me");
       const P = controls(o, sp, wk);
       P.flask = o.flask || null; P.down = o.down || 0;
-      render(g, r, sp, P, o, wk);
+      render(g, r, sp, P, o, wk, sway(o.who || String(look.id), o, P));
       return true;
     } catch (e) { broken = true; if (typeof console !== "undefined") console.warn("paintrig", e); return false; }
   }
