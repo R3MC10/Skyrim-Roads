@@ -3289,7 +3289,7 @@
       body = caravansHTML(l);
     } else if (townShop === "craft") {
       note = "The College's spellwrights can bind effects from spells you know into a spell of your own. It costs a little more magicka than casting the parts on their own.";
-      body = craftHTML();
+      body = (typeof RUNECRAFT !== "undefined" ? RUNECRAFT.button(S) : "") + craftHTML();   // the Rune table (runecraft.js)
     } else if (townShop === "mine") {
       note = "Dig ore with a pickaxe, then smelt it into ingots at the forge.";
       body = mineHTML(l);
@@ -3352,7 +3352,7 @@
       const pv = enchDraft.item != null && enchDraft.eff && enchDraft.gem != null ? ENCH.preview(S, enchDraft.item, enchDraft.eff, enchDraft.gem) : null;
       const effName = (e) => (ENCH.WEAPON[e] || ENCH.ARMOR[e])[0];
       note = `Break an enchanted item to learn its effect (the item is destroyed), then put it on your own gear with a filled soul gem. Stronger with a bigger soul and higher Enchanting (${G.skill(S, "Enchanting")}).`;
-      body = `<h3>Effects you know</h3><p class="sub">${known.length ? known.map(effName).map(esc).join(", ") : "None yet. Find or buy enchanted gear and break it down here."}</p>
+      body = (typeof RUNECRAFT !== "undefined" ? RUNECRAFT.button(S) : "") + `<h3>Effects you know</h3><p class="sub">${known.length ? known.map(effName).map(esc).join(", ") : "None yet. Find or buy enchanted gear and break it down here."}</p>
         <h3 style="margin-top:10px">Break down (learn)</h3>${breakable.length ? breakable.map((r) => `<div class="item"><div class="t">${esc(D.ITEMS[r.item].name)}<span>${known.includes(ENCH.effectOf(r.item)) ? "You know this effect already" : `Teaches ${esc(effName(ENCH.effectOf(r.item)))}`}${typeof CHARGE !== "undefined" && CHARGE.info(r.item, r) ? " · " + CHARGE.inline(r.item, r, S) : ""}</span></div><button class="btn sm" data-act="disench" data-id="${r.id}" ${known.includes(ENCH.effectOf(r.item)) ? "disabled" : ""}>Break</button></div>`).join("") : '<p class="sub">No loose enchanted items in your pack (take equipped ones off first).</p>'}${(() => {   // chargebar.js: weapons and staffs that aren't full, with their bar and a soul gem to fill them
           if (typeof CHARGE === "undefined") return "";
           const low = S.inv.filter((r) => { const x = CHARGE.info(r.item, r, S); return x && x.pct < 0.999; });
@@ -3940,6 +3940,7 @@
       case "dmsend": sendDM(); break;
       case "ftrade": { const c = friendCard(b.dataset.id); if (c) { tradeSel = []; openTrade(c); } break; }
       case "craftgo": { const r = SPELLCRAFT.craft(S, craftChoices(), craftDraft.name); if (r.err) return toast(r.err); craftDraft = { a: "", am: 0, b: "", bm: 0, name: "" }; SOUND.fx("coin"); persist(true); say(r.text); renderPanel(true); break; }
+      case "runetable": RUNECRAFT.open(S, { save: () => persist(true), say: (m) => toast(m), refresh: () => renderPanel(true) }); break;
       case "craftdel": say(SPELLCRAFT.forget(S, b.dataset.id)); persist(true); renderPanel(true); break;
       case "mine": {
         const no = SMITH.mineBlock(S); if (no) { say(no); break; }

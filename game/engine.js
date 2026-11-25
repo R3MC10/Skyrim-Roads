@@ -140,6 +140,7 @@ const G = (() => {
     if (s.horse && typeof HORSES !== "undefined") HORSES.fix(s);   // a horse once sent off to a stables (or marked dead or lost) is yours again, downed
     if (fixTactics(s)) note(s, "\uE101 Your tactics were fixed: rules you added under \"Always → Attack\" never fired. They now come first.");
     if (typeof SPELLCRAFT !== "undefined") SPELLCRAFT.register(s);   // crafted spells back into the spellbook
+    if (typeof RUNECRAFT !== "undefined") { RUNECRAFT.research(s); RUNECRAFT.register(s); }   // rune spells too, and runes you earned (runecraft.js)
     // quests stuck on an old save move on: Bleak Falls Barrow already cleared moves the main quest to Farengar's hand-in
     // (no Dragonstone needed), and a missing quest item a stage needs comes back (questitems.js)
     if (typeof QUESTS !== "undefined") { QUESTS.ensure(s); QUESTS.check(s); }
