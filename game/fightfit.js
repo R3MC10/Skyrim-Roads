@@ -9,7 +9,8 @@
      drawer can't push itself around; short landscape phones get a slimmer drawer (no hint line, no filter chips).
    - wideStage(): on a PC or a wide landscape screen the scene fills the window behind a floating bar: it slides up
      so everyone's feet stand above the bar, and shrinks a little (blurred copy at the sides) when it can't fit
-     between the turn strip and the bar otherwise.
+     between the turn strip and the bar otherwise. [fightscreen] On the zoned screen (fightzones.js) the scene is
+     sized by the zones instead; fightzones.js still calls party() for the party plates.
    - party(): the party plates (up to 7 other players plus followers) get more columns, then slimmer plates, until
      they all fit between the turn strip and the bar and stay clear of your orb.
    fightctl.js adds the other half of the fix: while a heal waits for its target you can also tap the person's

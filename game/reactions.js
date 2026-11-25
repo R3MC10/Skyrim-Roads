@@ -346,6 +346,7 @@ const REACT = (() => {
     o.innerHTML = `<i aria-hidden="true">${IC[k] || "✦"}</i><b>${esc(T(NAME[k] || "Combo") + (k === "cleanse" ? "" : "!"))}</b>${num ? `<small>${esc(num)}</small>` : ""}${e.kind === "ally" || e.kind === "mate" ? `<em>${esc(e.name || "")}</em>` : `<em>${esc(T(k === "intercept" || k === "cleanse" ? "Reaction" : "Combo"))}</em>`}`;
     if (stage) { const r = stage.getBoundingClientRect(); o.style.left = `${r.left + r.width / 2}px`; o.style.top = `${r.top + Math.min(r.height * 0.3, 140)}px`; }
     document.body.appendChild(o);
+    if (typeof FIGHTPRES !== "undefined") FIGHTPRES.show("combo", o);   // [fightscreen] one big banner at a time, over the fighters' heads (fightpres.js)
     setTimeout(() => o.remove(), still() ? 1400 : 1900);
   }
   /* after tbfight.js render: icons on moves that would set off a combo, the chips, and the banner */

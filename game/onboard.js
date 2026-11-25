@@ -229,16 +229,19 @@ const ONBOARD = (() => {
     if (ch) bound.persist?.();
     drawHints(tipsOn() ? hintsFor(st(s).seen, f) : []);
   }
+  const FZ = () => (typeof FIGHTZONES !== "undefined" ? FIGHTZONES : null);
   function drawHints(ids) {
     let box = document.getElementById("fhints");
-    if (!ids.length) { if (box) box.remove(); return; }
+    if (ids.length > 1 && FZ() && FZ().short()) ids = ids.slice(0, 1);   // [fightscreen] a short phone: one tip at a time, so the battlefield keeps its room
+    if (!ids.length) { if (box) { box.remove(); FZ()?.relayout(); } return; }
     if (!box) { box = document.createElement("div"); box.id = "fhints"; box.setAttribute("role", "status"); box.addEventListener("click", onHintClick); document.body.appendChild(box); }
-    const key = ids.join(",");
-    if (box.dataset.k !== key) {
+    const key = ids.join(","), changed = box.dataset.k !== key;
+    if (changed) {
       box.dataset.k = key;
       box.innerHTML = ids.map((id) => { const h = HINTS.find((x) => x[0] === id); return `<div class="fhint ${h[2]}" data-h="${id}"><span>${esc(h[3])}</span><i class="fh-ar" aria-hidden="true"></i></div>`; }).join("");
     }
     placeHints();
+    if (changed && FZ()) { FZ().relayout(); placeHints(); }   // [fightscreen] the fight screen keeps a band for them (fightzones.js)
     if (ids.includes("end")) hmem.endShown = true;
   }
   /* pure: slide a w×h box from y (up for "above", down for "below") until it touches none of the blockers */
@@ -259,6 +262,9 @@ const ONBOARD = (() => {
     const blockers = [...document.querySelectorAll("#tbf .tbtop, #tbf .tblog:not([hidden]), #tbf .tbu, #tbf .tbdock, #tbf .tballies, #tbf .bfwrap")]
       .filter((e) => e.getClientRects().length).map((e) => sc(e.getBoundingClientRect())).filter((r) => r.right > r.left);
     const dock = document.querySelector("#tbf .tbdock"), dockTop = dock && dock.getClientRects().length ? dock.getBoundingClientRect().top / z : H;
+    // [fightscreen] on the zoned fight screen each tip has its own band: under the turn order, or just above the dock, never on the battlefield
+    const ZB = FZ() ? FZ().bands() : null;
+    let zTop = ZB ? ZB.top[0] / z : 0, zBot = ZB ? ZB.bot[1] / z : 0;
     for (const el of box.querySelectorAll(".fhint")) {
       const h = HINTS.find((x) => x[0] === el.dataset.h), a = h && h[1].split("|").map((q) => document.querySelector(q)).find((x) => x && x.getClientRects().length);
       const r = a && a.getClientRects().length ? sc(a.getBoundingClientRect()) : null;
@@ -267,7 +273,10 @@ const ONBOARD = (() => {
       el.style.maxWidth = Math.min(320, W - 16) + "px";
       const ew = el.offsetWidth || 240, eh = el.offsetHeight || 40, cx = (r.left + r.right) / 2;
       const left = Math.max(8, Math.min(W - ew - 8, cx - ew / 2));
-      const y = h[2] === "below" ? freeY(left, r.bottom + 8, ew, eh, "below", blockers, 4, dockTop - 4)
+      let y;
+      if (ZB && h[2] === "below") { y = zTop + 4; zTop += eh + 8; }
+      else if (ZB) { zBot -= eh + 8; y = zBot; }
+      else y = h[2] === "below" ? freeY(left, r.bottom + 8, ew, eh, "below", blockers, 4, dockTop - 4)
         : freeY(left, Math.min(r.top, dockTop) - 8 - eh, ew, eh, "above", blockers, 4, H);
       el.style.left = Math.round(left) + "px"; el.style.top = Math.round(y) + "px"; el.style.bottom = "auto";
       el.style.setProperty("--ax", Math.round(Math.max(14, Math.min(ew - 14, cx - left))) + "px");
@@ -278,7 +287,7 @@ const ONBOARD = (() => {
     const h = e.target.closest(".fhint"); if (!h || !bound) return;
     const s = bound.S(); if (!s) return;
     useHint(s, h.dataset.h); bound.persist?.();
-    h.remove();
+    h.remove(); FZ()?.relayout();
   }
   /* pressing End turn is using it */
   function onFightClick(e) {
