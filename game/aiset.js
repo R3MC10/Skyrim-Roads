@@ -172,8 +172,8 @@ const AISET = (() => {
     return false;
   }
   for (const [id, v] of Object.entries(NEWCOND)) if (!D.CONDITIONS[id]) D.CONDITIONS[id] = v;
-  // a "run away" move for your own rules (engine: road fights only, never from a boss; Smart AI never picks it)
-  if (D.BASIC_ACTIONS && !D.BASIC_ACTIONS.flee) D.BASIC_ACTIONS.flee = "Run away (road fights only, not from bosses)";
+  // a "run away" move for your own rules (engine: road fights and crisis fights (crises.js), never from a dungeon boss; Smart AI never picks it)
+  if (D.BASIC_ACTIONS && !D.BASIC_ACTIONS.flee) D.BASIC_ACTIONS.flee = "Run away (road and crisis fights, not in dungeons)";
 
   // ---------------------------------------------------------------- rules
   const cleanCond = (c) => { const o = { if: c.if }; if (D.CONDITIONS[c.if]?.[1]) o.pct = c.pct ?? (D.CONDITIONS[c.if][1] === "turn" ? 3 : 50); if (c.not) o.not = true; return o; };
