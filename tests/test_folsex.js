@@ -2,7 +2,7 @@
 // the men's don't, Meeko is left alone; the painted rig gives a woman's look a woman's body. W=/path/to/game/ node test_folsex.js
 const fs = require("fs"), vm = require("vm");
 const W = process.env.W || require("path").join(__dirname, "../game/");
-const FILES = ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "legendary.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "enchanting.js", "quests.js", "guilds.js", "priests.js", "horses.js", "horseback.js", "hall.js", "bounty.js", "visits.js", "cooking.js", "arena.js", "market.js", "smithing.js", "craftfair.js", "social.js", "ammo.js", "tomes.js", "magic.js", "combatai.js", "mp.js", "coop.js", "party.js", "followers2.js", "followerai.js", "encounters.js", "homestead.js", "rigdata.js", "rig.js"];
+const FILES = ["data.js", "world.js", "terrain.js", "formulas.js", "perks.js", "perkfx.js", "legendary.js", "powers.js", "engine.js", "events.js", "dungeons.js", "towns.js", "wevents.js", "enchanting.js", "quests.js", "guilds.js", "priests.js", "horses.js", "horsetravel.js", "hall.js", "bounty.js", "visits.js", "cooking.js", "arena.js", "market.js", "smithing.js", "craftfair.js", "social.js", "ammo.js", "tomes.js", "magic.js", "combatai.js", "mp.js", "coop.js", "party.js", "followers2.js", "followerai.js", "encounters.js", "homestead.js", "rigdata.js", "rig.js"];
 const WOMEN = ["lydia", "jenassa", "uthgerd", "mjoll", "aela", "brelyna", "annekke", "borgakh", "hs_pinewatch"];
 let n = 0;
 for (const withNpc of [true, false]) {   // with npcart.js's table and with only the fallback list

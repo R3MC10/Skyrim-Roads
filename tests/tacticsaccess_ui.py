@@ -40,11 +40,39 @@ async def run(b, name, vw, vh):
     ok(st["back"], f"{name}: back button")
     await pg.evaluate("window.scrollTo(0,0)")
     await pg.screenshot(path=_SHOTS + f"tacticsaccess_{name}.png")
+    # "What would the AI do?" (aitester.js): under Smart AI the rules fold into one row and the tester shows a pick
+    t0 = await pg.evaluate("""()=>({fold: !!document.querySelector('#side .rulesfold'), open: !!document.querySelector('#side .rulesfold[open]'),
+      card: !!document.querySelector('#aitcard'), pick: document.querySelector('#aitout .aitpick b')?.textContent || '', rows: document.querySelectorAll('#aitout .aitrule').length})""")
+    ok(t0["fold"] and not t0["open"], f"{name}: Smart AI folds your rules into one closed row")
+    ok(t0["card"] and t0["pick"] and t0["rows"] == 0, f"{name}: tester shows Smart AI's move ({t0['pick']}) without rule rows")
+    await pg.locator("#aitcard").scroll_into_view_if_needed(); await pg.wait_for_timeout(200)
+    await pg.locator("#aitcard").screenshot(path=_SHOTS + f"aitester_smart_{name}.png")
+    await pg.click("#side .rulesfold > summary"); await pg.wait_for_timeout(300)
+    ok(await pg.evaluate("!!document.querySelector('#side .rulesfold[open] .rlist')"), f"{name}: tapping the row unfolds the rules")
     # switching loadouts still works from here
     if st["lo"] >= 1:
         await pg.locator("#side .lochip").first.click(); await pg.wait_for_timeout(300)
     await pg.locator("#side .aimode button").last.click(); await pg.wait_for_timeout(300)
     ok(await pg.evaluate("G.loadout(window.__dbg.save()).mode") == "custom", f"{name}: AI mode switch works")
+    # Custom: the tester walks the rules; moving the health slider below 50 switches the ticked rule
+    await pg.evaluate("()=>{const L=G.loadout(window.__dbg.save()); L.rules=[{if:'hp_below',pct:50,do:'block'},{if:'enemy_hp_below',pct:30,do:'power_attack'},{if:'always',do:'attack'}]; AITEST.reset(); window.__ui.go('tactics')}")
+    await pg.wait_for_timeout(500)
+    fired = "()=>[...document.querySelectorAll('#aitout .aitrule')].findIndex(r=>r.classList.contains('fire'))+1"
+    ok(await pg.evaluate("document.querySelectorAll('#aitout .aitrule').length") == 3, f"{name}: three rule rows in the tester")
+    ok(await pg.evaluate(fired) == 3, f"{name}: at full health rule 3 (Always) fires")
+    why1 = await pg.evaluate("document.querySelector('#aitout .aitrule small')?.textContent || ''")
+    ok("health is 100%, rule needs below 50%" in why1, f"{name}: rule 1 says why it was skipped ({why1})")
+    await pg.locator("#aitcard .aitslide[data-k=hp]").fill("30"); await pg.wait_for_timeout(400)
+    ok(await pg.evaluate(fired) == 1, f"{name}: health 30% -> rule 1 fires")
+    ok(await pg.evaluate("document.querySelector('#aitcard [data-v=hp]').textContent") == "30%", f"{name}: slider value shown")
+    ok(await pg.evaluate("document.querySelector('#aitout .aitpick').dataset.action") == "block", f"{name}: the pick is the rule's move")
+    await pg.click("#aitcard [data-ait=foe][data-v=dragon]"); await pg.wait_for_timeout(300)
+    ok("ragon" in await pg.evaluate("document.querySelector('#aitout .aitpick small').textContent"), f"{name}: foe chip switches the foe")
+    st2 = await pg.evaluate("({sw: document.documentElement.scrollWidth, iw: innerWidth})")
+    ok(st2["sw"] <= st2["iw"] + 1, f"{name}: tester fits without sideways scroll")
+    await pg.locator("#aitcard").scroll_into_view_if_needed(); await pg.wait_for_timeout(200)
+    await pg.locator("#aitcard").screenshot(path=_SHOTS + f"aitester_custom_{name}.png")
+    ok(await pg.evaluate("I18N.PL['What would the AI do?']") == "Co zrobi SI?", f"{name}: tester in Polish")
     # 2. the back button goes to the compass
     await pg.click("#twbar [data-twb=hub]"); await pg.wait_for_timeout(400)
     ok(await pg.evaluate("!!document.querySelector('#tw')"), f"{name}: back returns to the compass")

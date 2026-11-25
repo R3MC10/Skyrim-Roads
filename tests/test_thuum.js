@@ -11,7 +11,7 @@ for (const f of ["data.js", "world.js", "terrain.js", "solworld.js", "formulas.j
 // a switch for the weather everywhere (under Clear Skies, which shouts2.js lays on top)
 vm.runInContext(`var FORCED = null; const __w0 = WEVENTS.weather;
 WEVENTS.weather = (pos, t) => FORCED ? { id: FORCED, name: WEVENTS.W[FORCED][0], icon: WEVENTS.W[FORCED][1], speed: WEVENTS.W[FORCED][2], sneak: WEVENTS.W[FORCED][3], encounters: WEVENTS.W[FORCED][4] } : __w0(pos, t);`, c);
-for (const f of ["weatherfx.js", "enchanting.js", "quests.js", "horses.js", "horseback.js", "cooking.js", "smithing.js", "ammo.js", "tomes.js", "magic.js", "combatai.js", "roam.js", "solstheim.js", "shouts2.js", "vision.js", "thuum.js", "wxmatters.js"]) load(f);
+for (const f of ["weatherfx.js", "enchanting.js", "quests.js", "horses.js", "horsetravel.js", "cooking.js", "smithing.js", "ammo.js", "tomes.js", "magic.js", "combatai.js", "roam.js", "solstheim.js", "shouts2.js", "vision.js", "thuum.js", "wxmatters.js"]) load(f);
 vm.runInContext(`
 let n = 0; const OK = (x, m) => { if (!x) throw new Error("FAIL " + m); n++; };
 const P = POWERS;

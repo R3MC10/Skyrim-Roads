@@ -321,7 +321,8 @@ const WAGONS = (() => {
     api = a;
     sink = (id, doc) => { try { a.Store?.put("wagons", id, doc); } catch (e) { /* offline */ } };
     if (a.Store?.watch && !mount.w) { mount.w = true; a.Store.watch("wagons", (docs) => { setShared(docs); if (openId) render(); }); }
-    if (live && !mount.k) { mount.k = true; document.addEventListener("keydown", (e) => { if (e.key === "Escape" && openId) close(); }); }
+    if (live && !mount.k) { mount.k = true; document.addEventListener("keydown", (e) => { if (e.key === "Escape" && openId && !e.defaultPrevented) { e.preventDefault(); close(); } });   // Esc closes the panel and nothing else (desktop.js skips a handled Esc)
+      addEventListener("resize", () => { const el = openId && document.getElementById("wgcard"); if (el) place(el); }); }
   }
   const MW = () => (typeof WorldMap !== "undefined" ? WorldMap.W : 1000), MH = () => (typeof WorldMap !== "undefined" ? WorldMap.H : 700);
   function screen(v, pos) { const { k, ox, oy } = v.transform; return [pos[0] * MW() * k + ox, pos[1] * MH() * k + oy]; }
@@ -385,7 +386,7 @@ const WAGONS = (() => {
     return true;
   }
   function open(cid, sx, sy) { openId = cid; showTrade = false; if (sx != null) lastXY = [sx, sy]; render(); api?.kick?.(); }
-  function close() { document.getElementById("wgcard")?.remove(); openId = null; showTrade = false; api?.kick?.(); }
+  function close() { document.getElementById("wgcard")?.remove(); if (live) document.documentElement.classList.remove("wg-open"); openId = null; showTrade = false; api?.kick?.(); }
   const mins = (sec) => { const m = Math.max(1, Math.round(sec / 60)); return m >= 60 ? `${Math.floor(m / 60)} h ${m % 60} min` : `${m} min`; };
   function render() {
     if (!live || !api || !openId) return;
@@ -409,26 +410,34 @@ const WAGONS = (() => {
     const trade = showTrade ? `<div class="wg-trade" role="list">${I.stock.map((i) => { const p = price(S, c, i, t), left = BUY_MAX - boughtOf(S, c.id, i); return `<div class="wg-item" role="listitem"><span class="nm">${esc(D.ITEMS[i].name)}<small>${esc(D.ITEMS[i].weight)} wt${left < BUY_MAX ? ` · ${left} ${esc(T("left"))}` : ""}</small></span><b class="gold">${p}</b><button class="btn sm" data-wg="buy" data-item="${esc(i)}"${I.near && S.gold >= p && left > 0 ? "" : " disabled"}>${esc(T("Buy"))}</button></div>`; }).join("")}
       <p class="wg-note">${esc(I.near ? T("You have {g} gold.", { g: S.gold }) : T("Catch up with them to buy."))}${I.crisis ? " " + esc(T("Prices follow the crisis in {hold}.", { hold: I.crisis.hold })) : ""}</p></div>` : "";
     let el = document.getElementById("wgcard");
-    const wrap = document.getElementById("mapwrap") || document.body;
-    if (!el) { el = document.createElement("div"); el.id = "wgcard"; el.className = "wgcard"; el.setAttribute("role", "dialog"); el.onclick = onClick; wrap.appendChild(el); }
+    if (!el) { el = document.createElement("div"); el.id = "wgcard"; el.className = "wgcard"; el.setAttribute("role", "dialog"); el.onclick = onClick; document.body.appendChild(el); }
+    const keep = el.querySelector(".wg-body")?.scrollTop || 0;   // a refresh (shared state, a purchase) keeps your place in the list
     el.setAttribute("aria-label", I.name);
-    el.innerHTML = `<button class="iconbtn wg-x" data-wg="x" aria-label="${esc(T("Close"))}">✕</button>
+    el.innerHTML = `<div class="wg-top"><button class="iconbtn wg-x" data-wg="x" aria-label="${esc(T("Close"))}">✕</button>
       <div class="wg-h"><span class="wg-pic">${CARAVANS.wagonHTML ? CARAVANS.wagonHTML(58, 40, { khajiit: I.khajiit, cover: true }) : ""}</span><div><b>${esc(I.name)}</b><span>${esc(I.khajiit ? T("Khajiit caravan") : T("Nord merchant wagons"))}</span></div></div>
-      <div class="wg-route"><span>${esc(I.from)}</span><i><em style="width:${Math.round(I.frac * 100)}%"></em></i><span>${esc(I.to)}</span></div>
-      ${row(T("Cargo"), I.cargo)}${row(T("State"), I.stateText, stCls)}
+      <div class="wg-route"><span>${esc(I.from)}</span><i><em style="width:${Math.round(I.frac * 100)}%"></em></i><span>${esc(I.to)}</span></div></div>
+      <div class="wg-body">${row(T("Cargo"), I.cargo)}${row(T("State"), I.stateText, stCls)}
       ${I.phase === "road" ? row(T("Arrives"), T("in {n}", { n: mins(I.arrive - t) })) : ""}
       ${I.crisis ? row(T("Heading into"), `${I.crisis.hold}: ${I.crisis.name}`, "warn") : ""}
-      <div class="wg-acts">${acts.join("")}</div>${trade}`;
-    // phones: docked at the bottom of the map; wide screens: beside the wagon
-    const wide = (wrap.clientWidth || 400) >= 700;
-    el.classList.toggle("dock", !wide);
-    if (wide) {
-      // keep clear of the PC bottom bar that sits over the map's lower edge
-      const bar = document.getElementById("pcbar")?.getBoundingClientRect(), wr = wrap.getBoundingClientRect();
-      const floor = Math.min(wrap.clientHeight || 400, bar && bar.height && bar.top > wr.top ? bar.top - wr.top : (wrap.clientHeight || 400) - 56) - 8;
-      el.style.maxHeight = Math.max(220, floor - 8) + "px";
-      el.style.left = Math.max(8, Math.min((wrap.clientWidth || 400) - 330, lastXY[0] + 18)) + "px"; el.style.top = Math.max(8, Math.min(floor - el.offsetHeight, lastXY[1] - 40)) + "px";
-    } else { el.style.left = ""; el.style.top = ""; el.style.maxHeight = ""; }
+      <div class="wg-acts">${acts.join("")}</div>${trade}</div>`;
+    const body = el.querySelector(".wg-body"); if (body && keep) body.scrollTop = keep;
+    place(el);
+    document.documentElement.classList.add("wg-open");
+  }
+  /* PC map: a panel docked on the right (CSS). Anywhere else: a sheet sitting on top of the bottom nav bar, never under it */
+  function place(el) {
+    const pc = document.documentElement.classList.contains("pcmap");
+    el.classList.toggle("sheet", !pc);
+    el.classList.toggle("wide", !pc && innerWidth >= 760);
+    if (pc) { el.style.bottom = ""; el.style.maxHeight = ""; return; }
+    let navTop = innerHeight;
+    for (const n of document.querySelectorAll("#tabs, .tabs, .mn-bar")) {
+      const r = n.getBoundingClientRect(), cs = getComputedStyle(n);
+      if (r.height > 0 && cs.display !== "none" && cs.visibility !== "hidden" && (cs.position === "fixed" || cs.position === "sticky") && r.top > innerHeight / 2) navTop = Math.min(navTop, r.top);
+    }
+    const bottom = Math.max(0, Math.round(innerHeight - navTop));
+    el.style.bottom = bottom + "px";
+    el.style.maxHeight = Math.max(240, Math.min(Math.round(innerHeight * 0.72), navTop - 56)) + "px";
   }
   function onClick(e) {
     const b = e.target.closest("[data-wg]"); if (!b || b.disabled || !api) return;
