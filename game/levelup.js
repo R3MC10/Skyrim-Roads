@@ -91,7 +91,7 @@ const LEVELUP = (() => {
     // a burst (a long fight, the Oghma): the same skill again in a row is one line, the newest number wins
     const same = queue[queue.length - 1];
     if (same && same.kind === "skill" && same.skill === skill) { same.lvl = Math.max(same.lvl, lvl); same.skPct = skPct; same.to = now; same.up = same.up || now.level > same.from.level; }
-    else queue.push({ kind: "skill", skill, lvl, skPct, from, to: now, up: now.level > from.level });
+    else queue.push({ kind: "skill", skill, lvl, sfrom: lvl - 1, skPct, from, to: now, up: now.level > from.level });
     pump();
   }
   function onLevel({ s, level }) {
@@ -105,6 +105,8 @@ const LEVELUP = (() => {
   function pump() {
     if (busy || !queue.length) return;
     if (blocked()) { clearTimeout(timer); timer = setTimeout(pump, 800); return; }
+    { const nx = queue[0], life = nx.kind === "level" ? 3400 : queue.length > 4 ? 1300 : 2300;   // [notify] one banner at a time across the game
+      if (typeof NOTIFY !== "undefined" && !NOTIFY.lease(nx.kind, nx.kind === "level" ? `Level ${nx.level}` : `${nx.skill} ${nx.lvl}`, life + 400, nx.skill, nx.sfrom, nx.lvl)) { clearTimeout(timer); timer = setTimeout(pump, 250); return; } }
     const it = queue.shift(), S = api.S();
     if (!S || (it.kind === "level" && S.level < it.level)) { pump(); return; }   // undone (sold back an item…): nothing to celebrate
     busy = true;
@@ -114,7 +116,7 @@ const LEVELUP = (() => {
     if (it.kind === "skill") {
       const skIc = typeof UIART !== "undefined" ? UIART.skill(it.skill, 22) : "";
       node.className = "lvn lvn-skill";
-      node.innerHTML = `<p class="lvn-t">${skIc}<span>${esc(it.skill)} increased to ${it.lvl}</span></p><i class="lvn-sb"><i style="width:0%" data-to="${it.skPct}"></i></i>${lvBar(it.from.level, it.from.pct, it.up ? 100 : it.to.pct)}`;
+      node.innerHTML = `<p class="lvn-t">${skIc}<span>${it.sfrom < it.lvl - 1 ? `${esc(it.skill)} ${it.sfrom} → ${it.lvl}` : `${esc(it.skill)} increased to ${it.lvl}`}</span></p><i class="lvn-sb"><i style="width:0%" data-to="${it.skPct}"></i></i>${lvBar(it.from.level, it.from.pct, it.up ? 100 : it.to.pct)}`;
       life = queue.length > 3 ? 1300 : 2300;
     } else {
       node.className = "lvn lvn-level";
