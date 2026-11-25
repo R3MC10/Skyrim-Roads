@@ -3,6 +3,12 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b276-magicaim", build: 276, date: "25 Nov 2026", title: "Cast on anyone, see everyone", items: [
+      "With Magic or Items open in a fight, the scene, your health orb and your party's plates now move up above the menu instead of hiding under it, so you can tap or drag a heal onto anyone.",
+      "When a heal or a ward asks who gets it, tap their name in the bar at the top, their plate, or just tap them in the scene.",
+      "A full party (up to 8 players plus followers) now fits on the screen: everyone stands between the turn strip and the bottom bar, and the party plates get more columns or slimmer plates instead of running off the screen.",
+      "On a phone held sideways the Magic menu is slimmer (one line per spell), and on a PC or a wide screen the scene slides up so nobody's feet are under the bar.",
+    ] },
     { id: "b273-roadart", build: 273, date: "25 Nov 2026", title: "Painted road encounters", items: [
       "Almost everything you meet on the road now has its own painting: bandits' tolls, caravans, shipwrecks, avalanches, giants, wisps, hagravens, peddlers, shrines and many more.",
       "You see it when the encounter starts, on the result after you choose, and in the party vote.",

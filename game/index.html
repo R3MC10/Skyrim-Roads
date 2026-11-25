@@ -4800,6 +4800,29 @@ body:has(#tbf) #gnear{display:none!important}
 @media (prefers-reduced-motion:reduce){.skc .st .ring{animation:none}}
 /* the "Tap a star..." hint sits under the sky, never over it (only a picked perk's panel docks at the bottom) */
 @media (max-width:899.98px){.tw-starp>.tw-sdet.hint{position:static;min-height:0;max-height:none;background:none}}
+/* [magicaim] fightfit.js: the Magic / Items drawer's list has a height from the screen size (the scene, your orb and the
+   party plates move up above the drawer, so it never hides anyone you can cast on); short landscape phones drop the
+   hint line and the filter chips; a full party gets more columns, then slim plates */
+#tbf.c2 .fc-list{max-height:var(--c2list,min(30vh,300px))}
+@media (max-height:559.98px){
+  #tbf.c2 .fc-pick .fc-head>small,#tbf.c2 .fc-pick .fc-chips{display:none}
+  #tbf.c2 .fc-pick .fc-back{min-height:34px}#tbf.c2 .fc-pick .fc-tab{min-height:32px}
+  #tbf.c2 .fc-pick .fc-list{grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:4px}
+  #tbf.c2 .fc-pick .tbsp{grid-template-columns:minmax(0,1fr) 64px 64px;grid-template-rows:auto;align-items:center;padding:3px 4px}
+  #tbf.c2 .fc-pick .tbsp .nm{grid-column:1;min-height:0;padding-right:32px}
+  #tbf.c2 .fc-pick .tbsp .fc-star{top:50%;right:140px;transform:translateY(-50%)}
+  #tbf.c2 .fc-pick .tbsp .tbact{min-height:40px}
+  #tbf.c2 .fc-pick .tbsp:has(>span:last-child:empty) .fc-cast{grid-column:2 / -1}
+  #tbf.c2 .c2ov .tbu.foe .tbints{flex-wrap:nowrap;overflow:hidden}
+}
+#tbf.c2 .c2ov .tbparty.c2slim .tbu.ally{padding:1px 4px 2px}
+#tbf.c2 .c2ov .tbparty.c2slim .tbu.ally .nm{font-size:9.5px;line-height:1.1}
+#tbf.c2 .c2ov .tbparty.c2slim .tbu.ally .tbbar.mid{height:5px}
+#tbf.c2 .c2ov .tbparty.c2slim .tbu.ally .tbbar .num,#tbf.c2 .c2ov .tbparty.c2slim .tbu.ally .c2fx,#tbf.c2 .c2ov .tbparty.c2slim .tbu.ally .c2ord{display:none}
+#tbf.c2.c2wide .c2ov .tbparty.c2cols{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,150px);width:auto;max-width:none}
+#tbf.c2.c2wide .c2ov .tbparty.c2cols.c2slim{grid-auto-columns:minmax(0,104px)}
+#tbf.c2.c2wide .c2ov .tbparty.c2cols .tbu.ally{width:auto;padding:3px 6px 4px}
+#tbf.c2.c2wide .c2ov .tbparty.c2cols .tbu.ally .fairow{display:none}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -4900,6 +4923,7 @@ body:has(#tbf) #gnear{display:none!important}
 <script src="strategy.js"></script>
 <script src="fightset.js"></script>
 <script src="combat2.js"></script>
+<script src="fightfit.js"></script>
 <script src="fightdeclutter.js"></script>
 <script src="movepreview.js"></script>
 <script src="guide.js"></script>
@@ -5146,6 +5170,7 @@ body:has(#tbf) #gnear{display:none!important}
 <script src="i18n_gptqa.js"></script>
 <script src="i18n_perklayout.js"></script>
 <script src="i18n_nocover.js"></script>
+<script src="i18n_magicaim.js"></script>
 <script src="i18n_perksky.js"></script>
 <script src="i18n_crafticons.js"></script>
 <script src="i18n_stations.js"></script>

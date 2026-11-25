@@ -788,16 +788,19 @@ const FIGHTART = (() => {
         const er = e.getBoundingClientRect(); lo = Math.max(lo, er.left); hi = Math.min(hi, er.right);
       }
       const l = Math.max(0, ((lo - rc.left) / rc.width) * W), r = Math.min(W, ((hi - rc.left) / rc.width) * W);
-      return r - l > W * 0.5 ? [Math.round(l), Math.round(r)] : [0, W];
+      // [magicaim] the top too: on a wide screen the stage can slide up under the turn strip (fightfit.js)
+      const strip = cv.closest && cv.closest("#tbf")?.querySelector(".tbtop"), sb = strip ? strip.getBoundingClientRect().bottom : 0;
+      const t = rc.height ? Math.max(0, Math.min(Hh * 0.5, ((Math.max(0, sb) - rc.top) / rc.height) * Hh)) : 0;
+      return r - l > W * 0.5 ? [Math.round(l), Math.round(r), Math.round(t)] : [0, W, Math.round(t)];
     }
     function relayout() {
       if (!FP) return false;
-      const nb = bandOf(); if (LAY && Math.abs(nb[0] - band[0]) < 3 && Math.abs(nb[1] - band[1]) < 3) return false;
+      const nb = bandOf(); if (LAY && Math.abs(nb[0] - band[0]) < 3 && Math.abs(nb[1] - band[1]) < 3 && Math.abs((nb[2] || 0) - (band[2] || 0)) < 3) return false;
       band = nb;
       const MF = typeof MOUNTFIGHT !== "undefined" && typeof HORSEBACK !== "undefined" ? MOUNTFIGHT : null;
       const al = slots.map((a, i) => ({ name: "#" + i, kind: a.kind, ride: !!(MF && a.kind === "mate" && a.name && MF.allyHorse(f, a.name)) }));
       for (const a of flyers) al.push({ name: "#fly", kind: a.kind });
-      LAY = FP.layout({ W, Hh, l: band[0], r: band[1], groundY, ride: !!rec.horse, allies: al, foe: { kind: foeK }, waiting: nWait });
+      LAY = FP.layout({ W, Hh, l: band[0], r: band[1], t: band[2] || 0, groundY, ride: !!rec.horse, allies: al, foe: { kind: foeK }, waiting: nWait });
       hx0 = LAY.hero.x; fx0 = LAY.foe.x; FSC = LAY.foe.fs; foeChest = groundY - 34 * s * fSize * FSC;
       slotOf.clear();
       for (const p of LAY.allies) { const i = +p.name.slice(1); slotOf.set(i, p); p.name = slots[i]?.name || p.name; }   // the target ring finds them by name
@@ -807,6 +810,7 @@ const FIGHTART = (() => {
     }
     const replace = () => { if (relayout() && typeof COMBAT2 !== "undefined" && COMBAT2.place) { const tb = cv.closest && cv.closest("#tbf"); if (tb) try { COMBAT2.place(tb, true); } catch (e) { /* the plate stays where it was */ } } };
     replace();
+    cv.__fpRe = replace;   // [magicaim] combat2.js: the stage moved (the Magic drawer opened): lay everyone out again
     // [OURS] foe rigs (foerig.js): the foe is a little skeleton that breathes, winds up, flinches, staggers and falls
     const RIG = typeof FOERIG !== "undefined" && FOERIG.on() ? FOERIG.ctl(foeK, rec.foeName, { look: foeK === "player" ? matePerson(rec.foeLook) : null, foeLook: rec.foeLook, arch: typeof FOEGROUPS !== "undefined" ? FOEGROUPS.look(rec.f?.e) : null }) : null;
     const RIGKIT = { weapon, gearTorso, foeFig, person, H: ART.H }, RIGST = { t: 0, clip: null, u: 0, hitU: null, pose: null, pic: null, picH: 0, filter: null, dragon: null, kit: RIGKIT, jitter: false, still: false };
