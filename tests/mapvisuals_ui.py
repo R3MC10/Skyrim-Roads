@@ -47,12 +47,15 @@ async def main():
             ctx = await b.new_context(viewport={"width": vw, "height": vh}, device_scale_factor=dpr, has_touch=dpr > 1, is_mobile=dpr > 1)
             pg = await ctx.new_page(); errs = []; pg.on("pageerror", lambda e: errs.append(str(e)))
             url = f"http://127.0.0.1:{PORT}/index.html?assets&net=bc&notut&p=mv{vw}"
-            await pg.goto(url)
-            try: await pg.wait_for_selector(".press", timeout=45000)
-            except Exception: await pg.goto(url); await pg.wait_for_selector(".press", timeout=45000)
-            await pg.wait_for_timeout(800)
-            await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.wait_for_selector("#nm", timeout=15000)
-            await pg.fill("#nm", "Tester"); await pg.click("#begin"); await pg.wait_for_timeout(1500)
+            for attempt in range(3):   # a cold start over a one-thread test server sometimes stalls: try again
+                try:
+                    await pg.goto(url); await pg.wait_for_selector(".press", timeout=45000); await pg.wait_for_timeout(800)
+                    await pg.click(".press"); await pg.wait_for_timeout(300); await pg.click(".mi[data-t=new]"); await pg.wait_for_selector("#nm", timeout=15000)
+                    await pg.fill("#nm", "Tester"); await pg.click("#begin"); await pg.wait_for_function("()=>!!__dbg.save()", timeout=15000)
+                    break
+                except Exception as e:
+                    errs.clear(); print(f"     {tag}: start attempt {attempt + 1} failed ({str(e).splitlines()[0][:80]})")
+            await pg.wait_for_timeout(1500)
             await pg.add_style_tag(content=QUIET)   # banners keep coming from a queue: hide them for the shots
             await pg.evaluate(CLEAR); await pg.evaluate(TOWN, "Whiterun"); await pg.evaluate(CLEAR); await pg.wait_for_timeout(1200)
             mz = await pg.evaluate("()=>typeof PCMAP!=='undefined'&&PCMAP.on()?PCMAP.minZoomFor(document.getElementById('map')):1")

@@ -2375,6 +2375,285 @@ body:has(#twBtn) .app{padding-bottom:calc(140px + env(safe-area-inset-bottom))}
 .pnbar.pn-sheet::before{content:"";flex:none;width:44px}
 .title .page .pnbar{top:-7vh;margin:-18px -18px 10px;padding:4px 10px;border-radius:4px 4px 0 0}
 .sheet.pnsheet .pnbar{top:-20px;margin:-20px -18px 10px;padding:4px 10px}
+html.art-pixel .pnbar,html.art-pixel .pnbar .pnback{border-radius:0}
+/* combat2.js: the immersive fight screen (the scene is the screen, cards float in it, a skill bar at the bottom) */
+#tbf.c2{overflow:hidden;background:#050506}
+#tbf.c2 .tbin{max-width:none;width:100%;height:100%;min-height:0;padding:0;display:block;position:relative;overflow:hidden}
+#tbf.c2 .tbstage{position:absolute;inset:0;border:0;border-radius:0;box-shadow:none;overflow:hidden;background:#0b0c0e}
+#tbf.c2 .c2bd{position:absolute;left:-40px;top:-40px;width:calc(100% + 80px);height:calc(100% + 80px);z-index:0;filter:blur(24px) brightness(.5) saturate(1.2);opacity:0;transition:opacity .8s;pointer-events:none}
+#tbf.c2 .c2bd.on{opacity:1}
+#tbf.c2.pixel .c2bd{left:0;top:0;width:100%;height:100%;filter:brightness(.4) saturate(1.1);image-rendering:pixelated}
+#tbf.c2 .tbstage .tbscene{position:absolute;inset:0;min-height:0;border-radius:0;background:none;z-index:1}
+#tbf.c2 .tbscene .fscene{position:absolute;left:var(--c2cx,0px);top:var(--c2cy,48px);width:var(--c2cw,100%);height:var(--c2ch,auto);
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent),linear-gradient(180deg,transparent,#000 8%,#000 90%,transparent);-webkit-mask-composite:source-in;mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent),linear-gradient(180deg,transparent,#000 8%,#000 90%,transparent);mask-composite:intersect}
+#tbf.c2 .tbscene .fscene canvas{display:block;width:100%;height:100%}
+#tbf.c2 .c2shake .tbscene{animation:c2shake .42s cubic-bezier(.36,.07,.19,.97)}
+@keyframes c2shake{10%,90%{transform:translate(-2px,1px)}20%,80%{transform:translate(4px,-2px)}30%,50%,70%{transform:translate(-6px,2px)}40%,60%{transform:translate(6px,-1px)}}
+#tbf.c2 .tbstage::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;transition:box-shadow .6s}
+#tbf.c2.c2mine .tbstage::after{box-shadow:inset 0 0 70px rgba(226,187,100,.16)}
+#tbf.c2.c2theirs .tbstage::after{box-shadow:inset 0 0 80px rgba(190,50,30,.22)}
+#tbf.c2.c2turn .tbstage::after{animation:c2turn 1.1s ease-out}
+@keyframes c2turn{0%{box-shadow:inset 0 0 0 rgba(255,220,140,0)}30%{box-shadow:inset 0 0 120px rgba(255,220,140,.45)}}
+#tbf.c2 .tbbub{display:none}
+#tbf.c2 .fitarrow{z-index:2}
+#tbf.c2 .tbban{top:36%;z-index:5;padding:12px 0;background:linear-gradient(90deg,transparent,rgba(0,0,0,.62) 18%,rgba(0,0,0,.62) 82%,transparent)}
+#tbf.c2 .tbhint{bottom:calc(var(--c2dock,180px) + 110px)}
+/* the turn order: a slim ribbon of portraits */
+#tbf.c2 .tbtop{position:absolute;left:0;right:0;top:0;z-index:6;padding:calc(6px + env(safe-area-inset-top)) 8px 12px;gap:6px;background:linear-gradient(180deg,rgba(5,5,6,.88),rgba(5,5,6,.5) 65%,transparent);pointer-events:none}
+#tbf.c2 .tbtop>*{pointer-events:auto}
+#tbf.c2 .tbtop>b.c2rd{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;border:1px solid rgba(226,187,100,.75);background:radial-gradient(circle at 40% 35%,#3d311d,#110d07);font:700 16px/1 Cinzel,serif;color:#f3d98b;box-shadow:0 0 12px rgba(226,187,100,.25),inset 0 0 6px #000}
+#tbf.c2 .tbtop>b.c2rd small{font:600 7px/1 "Barlow Semi Condensed",sans-serif;letter-spacing:.14em;text-transform:uppercase;opacity:.75;margin-bottom:2px}
+#tbf.c2 .tbord{gap:4px;align-items:center;padding:3px 2px}
+#tbf.c2 .tbini{display:flex;align-items:center;gap:4px;padding:2px;border-radius:999px;background:rgba(10,10,12,.62);border:1px solid rgba(255,255,255,.14);font:600 11px/1 "Barlow Semi Condensed",sans-serif;color:#e9e1cc;transition:transform .25s,opacity .25s,box-shadow .25s}
+#tbf.c2 .tbini .c2pt{flex:none;width:26px;height:26px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#1a1712;box-shadow:0 0 0 1.5px #9fb6d8}
+#tbf.c2 .tbini.foe .c2pt{box-shadow:0 0 0 1.5px #e0614a;background:radial-gradient(circle,#4a1610,#1a0806)}
+#tbf.c2 .tbini.ally .c2pt{box-shadow:0 0 0 1.5px #8fd08f}
+#tbf.c2 .tbini .c2pt img,#tbf.c2 .tbini .c2pt canvas{display:block;width:100%;height:100%}
+#tbf.c2 .c2gl{font-size:13px;line-height:1;color:#f3e7c8}
+#tbf.c2 .tbini .c2nm{display:none;max-width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#tbf.c2 .tbini i{margin:0 5px 0 0;font-size:10px;opacity:.6}
+#tbf.c2 .tbini.now{transform:scale(1.1);background:rgba(60,48,24,.85);border-color:#e2bb64;box-shadow:0 0 12px rgba(226,187,100,.45)}
+#tbf.c2 .tbini.now .c2nm{display:block;padding-left:2px}
+#tbf.c2 .tbini.gone{opacity:.35;filter:grayscale(1)}
+#tbf.c2 .tbtop .tbff{width:36px;height:36px;min-width:36px;min-height:36px;border-radius:50%;background:rgba(10,10,12,.62);border:1px solid rgba(214,178,94,.4)}
+#tbf.c2 .tbtop .tbff.on{background:rgba(214,178,94,.32)}
+/* boss bar and big-attack warnings: under the ribbon */
+#tbf.c2 .bfwrap{position:absolute;z-index:5;left:50%;transform:translateX(-50%);top:var(--c2top,48px);width:min(620px,calc(100% - 16px));margin:0}
+/* everything that floats in the scene */
+#tbf.c2 .c2ov{position:absolute;inset:0;z-index:3;pointer-events:none}
+#tbf.c2 .c2ov>*{pointer-events:auto}
+/* the foe's nameplate over its head */
+#tbf.c2 .c2ov .tbu.foe{position:absolute;left:calc(var(--c2fx,70%) - 95px);top:var(--c2top,48px);width:min(200px,54vw);padding:5px 8px 6px;border-radius:9px;background:linear-gradient(180deg,rgba(24,12,9,.8),rgba(10,7,6,.66));border:1px solid rgba(230,110,80,.5);box-shadow:0 8px 20px rgba(0,0,0,.5);transition:left .3s ease,top .3s ease,box-shadow .2s,border-color .2s}
+#tbf.c2 .c2ov .tbu.foe::after{content:"";position:absolute;left:50%;bottom:-6px;width:10px;height:10px;margin-left:-5px;transform:rotate(45deg);background:rgba(10,7,6,.8);border-right:1px solid rgba(230,110,80,.5);border-bottom:1px solid rgba(230,110,80,.5)}
+#tbf.c2 .tbu.foe .nm{font:700 12.5px/1.2 Cinzel,serif;color:#ffd9c9;text-shadow:0 1px 2px #000;margin-bottom:3px}
+#tbf.c2 .tbu.foe .nm .arch{font-family:"Barlow Semi Condensed",sans-serif;font-size:9.5px}
+#tbf.c2 .tbu.foe .tbbar.big{height:11px;border-radius:6px}
+#tbf.c2 .tbu.foe .tbbar.big .num{font-size:9.5px;line-height:11px}
+#tbf.c2 .tbu.foe .tbst{margin-top:4px;flex-wrap:wrap}
+#tbf.c2 .tbu.foe .tbst .st{font-size:11px;padding:0 4px}
+#tbf.c2 .tbu.foe .tbint{font-size:11px;padding:1px 6px;box-shadow:0 0 8px rgba(255,80,50,.25)}
+#tbf.c2 .tbu.foe.c2low{border-color:#ff5a3c;box-shadow:0 0 16px rgba(255,60,30,.45)}
+#tbf.c2 .tbu.foe.c2stun{animation:c2wob 1.4s ease-in-out infinite}
+@keyframes c2wob{25%{transform:rotate(-2.5deg)}75%{transform:rotate(2.5deg)}}
+#tbf.c2 .c2stars{position:absolute;left:var(--c2fx);top:calc(var(--c2fy) + 2px);width:64px;height:20px;margin-left:-32px;pointer-events:none!important}
+#tbf.c2 .c2stars i{position:absolute;left:50%;top:50%;font-style:normal;font-size:14px;color:#ffe680;text-shadow:0 0 6px #ffb800;animation:c2orbit 1.2s linear infinite}
+#tbf.c2 .c2stars i:nth-child(2){animation-delay:-.4s}#tbf.c2 .c2stars i:nth-child(3){animation-delay:-.8s}
+@keyframes c2orbit{0%{transform:translate(-50%,-50%) translate(26px,0) scale(1)}25%{transform:translate(-50%,-50%) translate(0,7px) scale(1.2)}50%{transform:translate(-50%,-50%) translate(-26px,0) scale(1)}75%{transform:translate(-50%,-50%) translate(0,-7px) scale(.7);opacity:.6}100%{transform:translate(-50%,-50%) translate(26px,0) scale(1)}}
+/* slim bars over your head; a drop spot on your figure */
+#tbf.c2 .c2head{position:absolute;left:var(--c2hx);top:var(--c2hy);transform:translate(-50%,-100%);width:clamp(48px,calc(var(--c2cw,400px) * .1),92px);display:flex;flex-direction:column;gap:1.5px;padding:2px;border-radius:3px;background:rgba(0,0,0,.6);box-shadow:0 1px 4px rgba(0,0,0,.6);pointer-events:none!important}
+#tbf.c2 .c2head i{display:block;height:4px;border-radius:2px;background:linear-gradient(180deg,#ff6a50,#b3241a);transition:width .5s}
+#tbf.c2 .c2head i.m{height:2.5px;background:#5b98ff}#tbf.c2 .c2head i.s{height:2.5px;background:#86d860}
+#tbf.c2 .c2hot{position:absolute;left:var(--c2hx);top:var(--c2hy);width:calc(var(--c2ch,300px) * .26);height:calc(var(--c2ch,300px) * .44);margin-left:calc(var(--c2ch,300px) * -.13);border-radius:40%;transition:box-shadow .15s}
+#tbf.c2 .c2hot.drop-ok{box-shadow:0 0 0 2px rgba(130,190,255,.55),0 0 26px rgba(130,190,255,.35)}
+#tbf.c2 .c2hot.drop-hot{box-shadow:0 0 0 3px #f3d98b,0 0 30px rgba(243,217,139,.6)!important;border:0!important}
+/* your HUD: health orb, magicka and stamina arcs, statuses */
+#tbf.c2 .c2ov .tbu.me{position:absolute;left:6px;bottom:calc(var(--c2dock,180px) + 6px);display:grid;grid-template-columns:86px minmax(0,1fr);column-gap:6px;row-gap:3px;align-content:end;align-items:end;width:min(270px,calc(100% - 150px));padding:0;border:0;border-radius:44px 12px 12px 44px;background:radial-gradient(120% 100% at 0% 100%,rgba(0,0,0,.55),rgba(0,0,0,0) 70%);box-shadow:none;overflow:visible}
+#tbf.c2 .tbu.me>*{grid-column:2;min-width:0;margin:0}
+#tbf.c2 .tbu.me>.c2orb{grid-column:1;grid-row:1 / span 6;align-self:end}
+#tbf.c2 .tbu.me>.tbbar.big,#tbf.c2 .tbu.me>.tbsub{display:none}
+#tbf.c2 .tbu.me>.nm{font:700 12px/1.15 Cinzel,serif;color:#f3e7c8;text-shadow:0 1px 3px #000;justify-content:flex-start;gap:4px}
+#tbf.c2 .tbu.me .tbst{margin:0}#tbf.c2 .tbu.me .tbst .st{font-size:10.5px}
+#tbf.c2 .tbu.me .tbward{margin:0}
+#tbf.c2 .tbu.me .fitm{top:-6px;right:auto;left:62px}
+#tbf.c2 .tbu.me.drop-ok .c2glass,#tbf.c2 .tbu.me.fc-tgt .c2glass{box-shadow:0 0 0 3px rgba(130,190,255,.6),0 0 22px rgba(130,190,255,.45)}
+#tbf.c2 .tbu.me.drop-ok,#tbf.c2 .tbu.me.drop-hot{outline:0;transform:none}
+#tbf.c2 .c2orb{position:relative;width:86px;height:86px}
+#tbf.c2 .c2arcs{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+#tbf.c2 .c2arcs path{fill:none;stroke-width:6.5;stroke-linecap:round;transition:stroke-dasharray .5s}
+#tbf.c2 .c2arcs .tr{stroke:rgba(0,0,0,.6)}
+#tbf.c2 .c2arcs .mp{stroke:#5b98ff;filter:drop-shadow(0 0 3px rgba(91,152,255,.8))}
+#tbf.c2 .c2arcs .sp{stroke:#86d860;filter:drop-shadow(0 0 3px rgba(134,216,96,.8))}
+#tbf.c2 .c2glass{position:absolute;inset:10px;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 40%,#2c0e0c,#090303);border:2px solid #b8913f;box-shadow:inset 0 0 14px #000,0 0 10px rgba(0,0,0,.8)}
+#tbf.c2 .c2glass .liq{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(180deg,#ff5d46,#a6170f 55%,#5c0706);transition:height .7s cubic-bezier(.3,.7,.3,1)}
+#tbf.c2 .c2glass .liq::before{content:"";position:absolute;left:0;top:-4px;width:200%;height:8px;background:radial-gradient(ellipse at 50% 100%,#ff6d55 0 55%,transparent 58%) 0 0/16px 8px repeat-x;animation:c2wave 2.2s linear infinite}
+@keyframes c2wave{to{transform:translateX(-50%)}}
+#tbf.c2 .c2glass .inc{position:absolute;left:0;right:0;z-index:1;background:repeating-linear-gradient(-45deg,rgba(255,236,210,.55) 0 3px,rgba(0,0,0,0) 3px 7px);animation:c2blink 1.3s ease-in-out infinite}
+@keyframes c2blink{50%{opacity:.35}}
+#tbf.c2 .c2glass::after{content:"";position:absolute;left:16%;top:7%;width:52%;height:30%;border-radius:50%;background:radial-gradient(ellipse at center,rgba(255,255,255,.32),transparent 70%);pointer-events:none}
+#tbf.c2 .c2glass b.num{position:absolute;left:0;right:0;top:30%;z-index:2;text-align:center;font:700 20px/1 "Barlow Semi Condensed",sans-serif;color:#fff;text-shadow:0 1px 3px #000}
+#tbf.c2 .c2glass small.num{position:absolute;left:0;right:0;top:58%;z-index:2;text-align:center;font:600 10px/1 "Barlow Semi Condensed",sans-serif;color:#f3dcd0;opacity:.85;text-shadow:0 1px 2px #000}
+#tbf.c2 .c2mpn,#tbf.c2 .c2spn{position:absolute;bottom:-2px;font:700 10px/1 "Barlow Semi Condensed",sans-serif;text-shadow:0 1px 2px #000,0 0 4px #000}
+#tbf.c2 .c2mpn{left:0;color:#a9c8ff}#tbf.c2 .c2spn{right:0;color:#c3f3a6}
+#tbf.c2 .c2orb.low .c2glass{animation:c2low 1s ease-in-out infinite}
+@keyframes c2low{50%{box-shadow:inset 0 0 14px #000,0 0 18px rgba(255,40,20,.8);border-color:#ff5a3c}}
+/* followers and party members: small plates in the scene */
+#tbf.c2 .c2ov .tbparty{position:absolute;right:6px;bottom:calc(var(--c2dock,180px) + 6px);display:flex;flex-wrap:wrap-reverse;justify-content:flex-end;gap:4px;width:auto;max-width:136px;margin:0;grid-template-columns:none}
+#tbf.c2 .c2ov .tbparty.many{max-width:136px}
+#tbf.c2 .c2ov .tbparty .tbu.ally{width:132px;padding:3px 6px 4px;border-radius:8px;background:rgba(8,12,8,.66);border:1px solid rgba(140,210,140,.35);box-shadow:0 3px 10px rgba(0,0,0,.45)}
+#tbf.c2 .c2ov .tbparty.many .tbu.ally{width:64px;padding:2px 4px 3px}
+#tbf.c2 .tbparty .tbu.ally .nm{font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+#tbf.c2 .tbparty .tbu.ally .tbbar.mid{height:9px}#tbf.c2 .tbparty .tbu.ally .tbbar .num{font-size:8.5px;line-height:9px}
+#tbf.c2 .tbparty .tbu.ally .fairow{display:none}
+#tbf.c2 .tbparty .tbu.ally.down{opacity:.6;filter:grayscale(.7)}
+/* the fight log: a short fading feed */
+#tbf.c2 .c2ov .tblog{position:absolute;left:6px;top:var(--c2top,48px);display:flex;flex-direction:column;justify-content:flex-end;width:auto;max-width:62%;min-height:0;max-height:62px;flex:none;overflow:hidden;padding:2px 4px;margin:0;background:rgba(8,10,14,.42);border:0;border-radius:6px;font-size:11.5px;line-height:1.25;text-shadow:0 1px 2px #000,0 0 6px #000,0 0 2px #000;-webkit-mask-image:linear-gradient(180deg,transparent,#000 30px);mask-image:linear-gradient(180deg,transparent,#000 30px);-webkit-mask-size:100% 62px;mask-size:100% 62px;-webkit-mask-position:bottom;mask-position:bottom;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
+#tbf.c2 .c2ov .tblog .tbl{flex:none;padding:0}
+#tbf.c2 .c2ov .tblog::after{display:none}
+/* the skill bar */
+#tbf.c2 .tbdock{position:absolute;left:0;right:0;bottom:0;z-index:6;margin:0;padding:5px 8px calc(8px + env(safe-area-inset-bottom));gap:4px;border-radius:18px 18px 0 0;border:0;border-top:1px solid rgba(214,178,94,.38);background:linear-gradient(180deg,rgba(20,17,13,.8),rgba(7,7,6,.95) 40%);box-shadow:0 -10px 30px rgba(0,0,0,.55)}
+#tbf.c2 .tbdock .tbap{justify-content:center;min-height:20px;gap:5px}
+#tbf.c2 .tbdock .tbap em{margin-left:8px;font-size:12px;letter-spacing:.08em}
+#tbf.c2 .tbdock .tbap .fc-pips i.on.ap{box-shadow:0 0 8px rgba(255,210,120,.85),0 0 2px #fff inset}
+#tbf.c2 .fc:not(.fc-pick){display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) 46px 46px 46px;grid-auto-rows:auto;gap:3px 5px;align-items:start}
+#tbf.c2 .fc:not(.fc-pick) .fc-main,#tbf.c2 .fc:not(.fc-pick) .fc-row{display:contents}
+#tbf.c2 .fc:not(.fc-pick) .fc-tray{grid-row:1;grid-column:1 / 5;display:flex;gap:4px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;padding:2px 2px 0;align-items:flex-start;min-width:0}
+#tbf.c2 .fc .fc-tray::-webkit-scrollbar{display:none}
+#tbf.c2 .fc:not(.fc-pick) [data-tbm=magic]{grid-row:1;grid-column:5}
+#tbf.c2 .fc:not(.fc-pick) [data-tbm=items]{grid-row:1;grid-column:6}
+#tbf.c2 .fc:not(.fc-pick) .fc-form{grid-row:1;grid-column:5 / 7;align-self:center;font-size:11px;text-align:center;color:#f3d98b}
+#tbf.c2 .fc:not(.fc-pick) .fc-main>.tbact:nth-child(1){grid-row:2;grid-column:1}
+#tbf.c2 .fc:not(.fc-pick) .fc-main>.tbact:nth-child(2){grid-row:2;grid-column:2}
+#tbf.c2 .fc:not(.fc-pick) .fc-main>.tbact:nth-child(3){grid-row:2;grid-column:3}
+#tbf.c2 .fc:not(.fc-pick) .tbact.flee{grid-row:2;grid-column:4}
+#tbf.c2 .fc:not(.fc-pick) .tbact.end{grid-row:2;grid-column:5 / 7}
+#tbf.c2 .fc-empty{grid-column:1 / 5;font-size:10.5px;padding:6px}
+/* a move: a round drawn medallion, AP gems on its rim, the name under it */
+#tbf.c2 .fc:not(.fc-pick) .tbact{--d:40px;min-height:52px;height:auto;padding:0 0 1px;gap:1px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;background:none;border:0;border-radius:10px;box-shadow:none;overflow:visible;flex:none}
+#tbf.c2 .fc:not(.fc-pick) .fc-tray .tbact{width:50px}
+#tbf.c2 .fc:not(.fc-pick) .tbact.big{--d:54px;min-height:72px}
+#tbf.c2 .fc:not(.fc-pick) .tbact::before{display:none}
+#tbf.c2 .fc:not(.fc-pick) .tbact .ic{position:relative;width:var(--d);height:var(--d);flex:none;border-radius:50%;background:radial-gradient(circle at 50% 32%,#54452f,#1d170f 68%,#0d0a06);border:1.5px solid rgba(214,178,94,.65);box-shadow:inset 0 2px 0 rgba(255,255,255,.14),inset 0 -7px 12px rgba(0,0,0,.65),0 3px 7px rgba(0,0,0,.65);transition:transform .14s cubic-bezier(.3,.7,.4,1.4),box-shadow .15s,border-color .15s}
+#tbf.c2 .fc:not(.fc-pick) .tbact .ic img,#tbf.c2 .fc:not(.fc-pick) .tbact .ic canvas{width:calc(var(--d) * .64);height:calc(var(--d) * .64)}
+#tbf.c2 .fc:not(.fc-pick) .tbact .ic .em{font-size:calc(var(--d) * .45)}
+#tbf.c2 .fc:not(.fc-pick) .tbact.pw .ic{background:radial-gradient(circle at 50% 32%,#6a3424,#24100a 68%,#100604)}
+#tbf.c2 .fc:not(.fc-pick) .tbact.gd .ic{background:radial-gradient(circle at 50% 32%,#2f4256,#0f161e 68%,#070a0e)}
+#tbf.c2 .fc:not(.fc-pick) .tbact[data-tz="foe"] .ic{border-color:rgba(240,130,96,.7)}
+#tbf.c2 .fc:not(.fc-pick) .tbact[data-tz="self"] .ic,#tbf.c2 .fc:not(.fc-pick) .tbact[data-tz="ally"] .ic{border-color:rgba(140,190,255,.7)}
+#tbf.c2 .fc:not(.fc-pick) .tbact.shout .ic{background:radial-gradient(circle at 50% 32%,#4b3a62,#1a1222 68%,#0c0811);border-color:rgba(200,160,255,.7)}
+#tbf.c2 .fc:not(.fc-pick) .tbact.sugg .ic{border-style:dashed}
+#tbf.c2 .fc:not(.fc-pick) .tbact b{font-size:10px;letter-spacing:.05em;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 1px;margin-top:5px}
+#tbf.c2 .fc:not(.fc-pick) .tbact.big b{font-size:11px}
+#tbf.c2 .fc:not(.fc-pick) .tbact small{display:none}
+#tbf.c2 .fc:not(.fc-pick) .tbact small.fc-why{display:block;font-size:8.5px;line-height:1.1;max-width:100%;margin-top:-1px}
+#tbf.c2 .fc:not(.fc-pick) .tbact .cp{position:absolute;left:50%;top:calc(var(--d) - 11px);bottom:auto;transform:translateX(-50%);display:flex;gap:2px;padding:1px 3px;border-radius:6px;background:rgba(0,0,0,.7);z-index:1}
+#tbf.c2 .fc:not(.fc-pick) .tbact .cp i{width:5px;height:5px}
+#tbf.c2 .fc:not(.fc-pick) .tbact .cp:empty{display:none}
+#tbf.c2 .fc:not(.fc-pick) .tbact .fc-k{top:-3px;right:calc(50% - var(--d) / 2 - 7px);z-index:2}
+#tbf.c2 .fc:not(.fc-pick) .tbact .fc-n{top:-3px;left:calc(50% - var(--d) / 2 - 6px);z-index:2}
+#tbf.c2 .fc:not(.fc-pick) .tbact:not([disabled]):hover .ic,#tbf.c2 .fc:not(.fc-pick) .tbact:not([disabled]):focus-visible .ic{transform:translateY(-2px) scale(1.06);border-color:#f3d98b;box-shadow:inset 0 2px 0 rgba(255,255,255,.2),0 0 0 2px rgba(243,217,139,.25),0 0 18px rgba(243,217,139,.45)}
+#tbf.c2 .fc:not(.fc-pick) .tbact:not([disabled]):hover,#tbf.c2 .fc:not(.fc-pick) .tbact:not([disabled]):focus-visible{box-shadow:none;border:0}
+#tbf.c2 .fc:not(.fc-pick) .tbact.fc-press .ic,#tbf.c2 .fc:not(.fc-pick) .tbact:not([disabled]):active .ic{transform:scale(.9);filter:brightness(1.35)}
+#tbf.c2 .fc:not(.fc-pick) .tbact:not([disabled]):active,#tbf.c2 .fc:not(.fc-pick) .tbact.fc-press{transform:none;filter:none}
+#tbf.c2 .fc:not(.fc-pick) .tbact[disabled]{opacity:1;filter:none}
+#tbf.c2 .fc:not(.fc-pick) .tbact[disabled] .ic{opacity:.45;filter:grayscale(.85);box-shadow:inset 0 -7px 12px rgba(0,0,0,.65)}
+#tbf.c2 .fc:not(.fc-pick) .tbact[disabled] b{opacity:.55}
+#tbf.c2 .fc:not(.fc-pick) .tbact.fc-armed .ic{border-color:#e2bb64;box-shadow:0 0 0 3px rgba(226,187,100,.55),0 0 18px rgba(226,187,100,.5)}
+/* End turn: a big seal with the guard you'd keep */
+#tbf.c2 .fc:not(.fc-pick) .tbact.end{min-height:66px;align-self:stretch;flex-wrap:nowrap;justify-content:center;gap:1px;padding:4px 4px 5px;border-radius:14px;background:radial-gradient(120% 90% at 50% 0%,#3a516b,#141c26 60%,#0a0e13);border:1.5px solid rgba(160,200,255,.6);box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 0 14px rgba(110,160,240,.25),0 3px 8px rgba(0,0,0,.6)}
+#tbf.c2 .fc:not(.fc-pick) .tbact.end .ic{width:auto;height:auto;background:none;border:0;box-shadow:none;color:#d8e8ff}
+#tbf.c2 .fc:not(.fc-pick) .tbact.end .ic svg{width:24px;height:24px;filter:drop-shadow(0 0 4px rgba(150,200,255,.8))}
+#tbf.c2 .fc:not(.fc-pick) .tbact.end b{font-size:12px;letter-spacing:.1em;margin:0}
+#tbf.c2 .fc:not(.fc-pick) .tbact.end small{display:block;font-size:8.5px;line-height:1.1;text-align:center;opacity:.85;white-space:normal;max-width:100%}
+#tbf.c2 .fc:not(.fc-pick) .tbact.end:not([disabled]):hover{border-color:#cfe1ff;box-shadow:0 0 0 1px rgba(200,225,255,.4),0 0 22px rgba(120,170,255,.5)}
+#tbf.c2 .fc:not(.fc-pick) .tbact.end.ready{background:radial-gradient(120% 90% at 50% 0%,#7a5d24,#2a1f0c 60%,#120d05);border-color:#e2bb64;animation:c2ready 1.5s ease-in-out infinite}
+#tbf.c2 .fc:not(.fc-pick) .tbact.end.ready .ic{color:#ffe3a0}
+@keyframes c2ready{50%{box-shadow:0 0 0 2px rgba(226,187,100,.45),0 0 28px rgba(226,187,100,.6)}}
+#tbf.c2 .fc:not(.fc-pick) .tbact.end.fc-press{transform:scale(.95)}
+#tbf.c2 .fc.enter>*,#tbf.c2 .fc.enter .fc-main>*,#tbf.c2 .fc.enter .fc-row>*{animation:fcrise .34s cubic-bezier(.2,.8,.3,1.1) backwards}
+#tbf.c2 .fc.enter .fc-main>:nth-child(2){animation-delay:.04s}#tbf.c2 .fc.enter .fc-main>:nth-child(3){animation-delay:.08s}#tbf.c2 .fc.enter .fc-row>*{animation-delay:.1s}
+/* Magic and Items: a drawer over the scene, spells as cards */
+#tbf.c2 .fc-pick .fc-sheet{padding:2px 0 0}
+#tbf.c2 .fc-pick.enter .fc-sheet{animation:c2drawer .3s cubic-bezier(.2,.8,.3,1)}
+@keyframes c2drawer{from{transform:translateY(40px);opacity:0}}
+#tbf.c2 .fc-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;max-height:max(180px,calc(var(--c2ah,60vh) - var(--c2top,48px) - 120px));align-content:start}
+#tbf.c2 .fc .tbsp{position:relative;grid-template-columns:1fr 1fr;grid-template-rows:auto auto;gap:4px;padding:6px;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(0,0,0,.25));border:1px solid rgba(214,178,94,.22)}
+#tbf.c2 .fc .tbsp .nm{grid-column:1 / -1;padding-right:34px;min-height:32px}
+#tbf.c2 .fc .tbsp .fc-star{position:absolute;top:4px;right:4px;width:30px;height:30px;font-size:14px}
+#tbf.c2 .fc .tbsp>span:last-child:empty{display:none}
+#tbf.c2 .fc .tbsp:has(>span:last-child:empty) .fc-cast{grid-column:1 / -1}
+#tbf.c2 .fc .tbsp .tbact{min-height:44px}
+#tbf.c2 .fc .tbsp .el-fire .fc-sic img{filter:drop-shadow(0 0 5px rgba(255,120,40,.6))}
+#tbf.c2 .fc .tbsp .el-frost .fc-sic img{filter:drop-shadow(0 0 5px rgba(120,190,255,.6))}
+#tbf.c2 .fc .tbsp .el-shock .fc-sic img{filter:drop-shadow(0 0 5px rgba(200,170,255,.6))}
+/* their turn, waiting, continue */
+#tbf.c2 .tbwait{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(var(--c2dock,180px) + 8px);z-index:5;padding:6px 12px;border-radius:999px;background:rgba(0,0,0,.65);white-space:nowrap}
+#tbf.c2 .tbdock .tbdone{margin:2px 0 0}
+#tbf.c2.fc-aiming .tbstage{opacity:1}
+#tbf.c2.fc-aiming .tbscene,#tbf.c2.fc-aiming .c2bd{opacity:.5}
+#tbf.c2.fc-aimfoe .tbstage{box-shadow:none}
+#tbf.c2.fc-aimfoe .tbscene .fscene{filter:drop-shadow(0 0 0 transparent)}
+/* hit flashes */
+#tbf.c2 .c2flash{position:absolute;z-index:4;pointer-events:none;width:calc(var(--c2ch,300px) * .55);height:calc(var(--c2ch,300px) * .55);border-radius:50%;transform:translate(-50%,-50%);animation:c2flash .55s ease-out forwards}
+#tbf.c2 .c2flash.foe{left:var(--c2fx);top:calc(var(--c2fy) + var(--c2ch,300px) * .2);background:radial-gradient(circle,rgba(255,244,214,.85),rgba(255,150,70,.35) 32%,transparent 66%)}
+#tbf.c2 .c2flash.foe.crit{width:calc(var(--c2ch,300px) * .9);height:calc(var(--c2ch,300px) * .9);background:radial-gradient(circle,rgba(255,255,255,.95),rgba(255,210,90,.55) 30%,transparent 66%)}
+#tbf.c2 .c2flash.me{left:var(--c2hx);top:calc(var(--c2hy) + var(--c2ch,300px) * .2);background:radial-gradient(circle,rgba(255,120,100,.7),rgba(190,20,10,.35) 35%,transparent 66%)}
+@keyframes c2flash{from{opacity:1;transform:translate(-50%,-50%) scale(.4)}to{opacity:0;transform:translate(-50%,-50%) scale(1.25)}}
+/* wide screens (PC, landscape tablets): one row of moves, cards in the margins beside the picture */
+#tbf.c2.c2wide .tbdock{left:50%;right:auto;bottom:10px;transform:translateX(-50%);width:min(1180px,calc(100% - 24px));border-radius:16px;border:1px solid rgba(214,178,94,.32);padding:5px 12px 8px}
+#tbf.c2.c2wide .fc:not(.fc-pick){grid-template-columns:minmax(0,1fr) repeat(3,84px) repeat(3,60px) 156px;gap:4px 8px}
+#tbf.c2.c2wide .fc:not(.fc-pick) .fc-tray{grid-column:1;grid-row:1;justify-content:flex-end}
+#tbf.c2.c2wide .fc:not(.fc-pick) .fc-main>.tbact:nth-child(1){grid-row:1;grid-column:2}
+#tbf.c2.c2wide .fc:not(.fc-pick) .fc-main>.tbact:nth-child(2){grid-row:1;grid-column:3}
+#tbf.c2.c2wide .fc:not(.fc-pick) .fc-main>.tbact:nth-child(3){grid-row:1;grid-column:4}
+#tbf.c2.c2wide .fc:not(.fc-pick) [data-tbm=magic]{grid-row:1;grid-column:5}
+#tbf.c2.c2wide .fc:not(.fc-pick) [data-tbm=items]{grid-row:1;grid-column:6}
+#tbf.c2.c2wide .fc:not(.fc-pick) .fc-form{grid-row:1;grid-column:5 / 7}
+#tbf.c2.c2wide .fc:not(.fc-pick) .tbact.flee{grid-row:1;grid-column:7}
+#tbf.c2.c2wide .fc:not(.fc-pick) .tbact.end{grid-row:1;grid-column:8;min-height:78px}
+#tbf.c2.c2wide .fc-empty{grid-column:1}
+#tbf.c2.c2wide .fc:not(.fc-pick) .tbact{--d:46px;min-height:60px}
+#tbf.c2.c2wide .fc:not(.fc-pick) .tbact.big{--d:60px;min-height:80px}
+#tbf.c2.c2wide .fc:not(.fc-pick) .fc-tray .tbact{width:60px}
+#tbf.c2.c2wide .fc:not(.fc-pick) .tbact b{font-size:11px}
+#tbf.c2.c2wide .fc:not(.fc-pick) .tbact.end b{font-size:14px}#tbf.c2.c2wide .fc:not(.fc-pick) .tbact.end small{font-size:10px}
+#tbf.c2.c2wide .fc-list{grid-template-columns:repeat(auto-fill,minmax(190px,1fr))}
+#tbf.c2.c2wide .c2ov .tbu.foe{width:250px}
+#tbf.c2.c2wide .tbu.foe .nm{font-size:14px}#tbf.c2.c2wide .tbu.foe .tbbar.big{height:13px}#tbf.c2.c2wide .tbu.foe .tbbar.big .num{font-size:10.5px;line-height:13px}
+#tbf.c2.c2wide .c2ov .tbu.me{left:16px;bottom:calc(var(--c2dock,130px) + 14px);width:min(320px,var(--c2side,300px));grid-template-columns:104px minmax(0,1fr)}
+#tbf.c2.c2wide .c2orb{width:104px;height:104px}
+#tbf.c2.c2wide .c2glass b.num{font-size:25px}#tbf.c2.c2wide .c2glass small.num{font-size:11.5px}
+#tbf.c2.c2wide .tbu.me>.nm{font-size:14px}
+#tbf.c2.c2wide .c2ov .tbparty{right:auto;left:16px;bottom:auto;top:calc(var(--c2top,48px) + 8px);flex-direction:column;flex-wrap:nowrap;max-width:none;width:min(240px,var(--c2side,240px))}
+#tbf.c2.c2wide .c2ov .tbparty .tbu.ally,#tbf.c2.c2wide .c2ov .tbparty.many .tbu.ally{width:100%;padding:5px 8px 6px}
+#tbf.c2.c2wide .tbparty .tbu.ally .nm{font-size:12px}#tbf.c2.c2wide .tbparty .tbu.ally .tbbar.mid{height:12px}#tbf.c2.c2wide .tbparty .tbu.ally .tbbar .num{font-size:10px;line-height:12px}
+#tbf.c2.c2wide .tbparty .tbu.ally .fairow{display:block}
+#tbf.c2.c2wide .c2ov .tblog{left:auto;right:16px;top:auto;bottom:calc(var(--c2dock,130px) + 14px);width:min(380px,var(--c2side,360px));max-width:none;max-height:132px;font-size:13px;padding:4px 8px;-webkit-mask-image:linear-gradient(180deg,transparent,#000 48px);mask-image:linear-gradient(180deg,transparent,#000 48px);-webkit-mask-size:100% 132px;mask-size:100% 132px}
+#tbf.c2.c2wide .tbord{flex:0 1 auto;margin:0 auto}
+#tbf.c2.c2wide .tbini .c2nm{display:block;padding-left:2px}
+#tbf.c2.c2wide .tbini .c2pt{width:30px;height:30px}
+#tbf.c2.c2wide .tbban{font-size:34px}
+/* pixel art: square, hard-edged */
+#tbf.c2.pixel .tbini,#tbf.c2.pixel .tbini .c2pt,#tbf.c2.pixel .tbtop .tbff,#tbf.c2.pixel .tbtop>b.c2rd,#tbf.c2.pixel .c2ov .tbu,#tbf.c2.pixel .c2head,#tbf.c2.pixel .c2head i,#tbf.c2.pixel .tbdock,#tbf.c2.pixel .fc:not(.fc-pick) .tbact .ic,#tbf.c2.pixel .fc:not(.fc-pick) .tbact .cp,#tbf.c2.pixel .fc .tbsp,#tbf.c2.pixel .tbwait,#tbf.c2.pixel .c2ov .tbu.foe::after{border-radius:0}
+#tbf.c2.pixel .fc:not(.fc-pick) .tbact .ic{border-width:2px;box-shadow:inset -3px -3px 0 rgba(0,0,0,.55),inset 3px 3px 0 rgba(255,255,255,.12),3px 3px 0 rgba(0,0,0,.6)}
+#tbf.c2.pixel .fc:not(.fc-pick) .tbact.end{border-radius:0;border-width:2px;box-shadow:inset -3px -3px 0 rgba(0,0,0,.5),3px 3px 0 rgba(0,0,0,.6)}
+#tbf.c2.pixel .c2ov .tbu{border-width:2px;box-shadow:3px 3px 0 rgba(0,0,0,.6)}
+#tbf.c2.pixel .c2ov .tbu.me{border:0;box-shadow:none;background:none}
+#tbf.c2.pixel .c2glass{border-radius:0;border-width:3px;box-shadow:inset -4px -4px 0 rgba(0,0,0,.5),3px 3px 0 rgba(0,0,0,.6)}
+#tbf.c2.pixel .c2glass .liq{background:linear-gradient(180deg,#e04030 0 18%,#a01810 18% 100%);transition-timing-function:steps(6)}
+#tbf.c2.pixel .c2glass .liq::before{background:repeating-linear-gradient(90deg,#ff6d55 0 4px,transparent 4px 8px);height:3px;top:-3px}
+#tbf.c2.pixel .c2arcs path{stroke-linecap:butt}
+#tbf.c2.pixel .c2glass::after{border-radius:0;background:rgba(255,255,255,.22);width:22%;height:12%;left:16%;top:12%}
+#tbf.c2.pixel .tbtop>b.c2rd,#tbf.c2.pixel .tbu.foe .nm,#tbf.c2.pixel .tbu.me>.nm{font-family:inherit}
+#tbf.c2.pixel .fc:not(.fc-pick) .tbact .ic img,#tbf.c2.pixel .tbini .c2pt img{image-rendering:pixelated}
+@media (prefers-reduced-motion:reduce){#tbf.c2 .c2shake .tbscene,#tbf.c2 .c2flash,#tbf.c2 .c2stars i,#tbf.c2 .tbu.foe.c2stun,#tbf.c2 .c2glass .liq::before,#tbf.c2 .c2glass .inc,#tbf.c2.c2turn .tbstage::after,#tbf.c2 .tbact.end.ready,#tbf.c2 .c2orb.low .c2glass{animation:none!important}#tbf.c2 .tbscene .fscene{transition:none}}
+#tbf.c2 .fc:not(.fc-pick) .tbact>*{flex-shrink:0}
+#tbf.c2 .tbu.me .fitm{top:auto;bottom:-2px;left:50px}
+#tbf.c2 .tbu.me.fit-next{border:0;box-shadow:none;animation:none}
+#tbf.c2 .tbu.me.fit-next::after{display:none}
+#tbf.c2 .tbu.me.fit-next .c2glass{animation:c2low 1.6s ease-in-out infinite}
+#tbf.c2 .fc:not(.fc-pick) .tbact .cp .fc-all{font-size:7.5px;line-height:1;letter-spacing:.04em;white-space:nowrap;text-transform:uppercase;color:#f3d98b}
+#tbf.c2 .fc:not(.fc-pick) .tbact.flee .cp{display:none}
+#tbf.c2 .fc:not(.fc-pick) .tbact.end .fc-k{top:3px;right:4px}
+#tbf.c2 .fc:not(.fc-pick) .tbact.end small{padding:0 18px 0 0}
+#tbf.c2.c2wide .fc:not(.fc-pick) .tbact.end small{padding:0}
+html.a11y-still #tbf.c2 .c2shake .tbscene,html.a11y-still #tbf.c2 .c2flash,html.a11y-still #tbf.c2 .c2stars i,html.a11y-still #tbf.c2 .tbu.foe.c2stun,html.a11y-still #tbf.c2 .c2glass .liq::before{animation:none!important}
+/* fxicons.js: buffs (green rim) and debuffs (red rim) as round icons with turns left */
+#tbf.c2 .c2fx{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px}
+#tbf.c2 .c2e{position:relative;display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;font-style:normal;font-size:12px;line-height:1;cursor:help;background:radial-gradient(circle at 40% 35%,#3a3326,#120f0a);box-shadow:0 1px 3px rgba(0,0,0,.7)}
+#tbf.c2 .c2e.buff{border:1.5px solid #8fd08f;box-shadow:0 0 6px rgba(143,208,143,.35),0 1px 3px rgba(0,0,0,.7)}
+#tbf.c2 .c2e.debuff{border:1.5px solid #e0614a;background:radial-gradient(circle at 40% 35%,#4a1a12,#160806);box-shadow:0 0 6px rgba(224,97,74,.4),0 1px 3px rgba(0,0,0,.7)}
+#tbf.c2 .c2e small{position:absolute;right:-5px;bottom:-4px;min-width:12px;height:12px;padding:0 2px;box-sizing:border-box;border-radius:6px;background:#0b0a08;border:1px solid rgba(255,255,255,.35);font:700 8.5px/10px "Barlow Semi Condensed",sans-serif;color:#fff;text-align:center}
+#tbf.c2 .c2fx.ally{margin-top:2px;gap:2px}#tbf.c2 .c2fx.ally .c2e{width:17px;height:17px;font-size:9.5px}#tbf.c2 .c2fx.ally .c2e small{font-size:7.5px;height:10px;line-height:8px;min-width:10px;right:-4px;bottom:-3px}
+#tbf.c2.c2wide .c2e{width:26px;height:26px;font-size:14px}#tbf.c2.c2wide .c2fx.ally .c2e{width:20px;height:20px;font-size:11px}
+#tbf.c2 .tbu.me>.c2fx{margin:0}
+#c2pops{position:fixed;inset:0;z-index:70;pointer-events:none;overflow:hidden}
+#c2pops .c2pop{position:absolute;transform:translate(-50%,-50%);display:inline-flex;align-items:center;gap:4px;padding:3px 9px 3px 5px;border-radius:999px;white-space:nowrap;font:700 13px/1.1 "Barlow Semi Condensed",sans-serif;letter-spacing:.02em;color:#fff;text-shadow:0 1px 2px #000;opacity:0;animation:c2pop 2.4s cubic-bezier(.2,.8,.3,1) forwards}
+#c2pops .c2pop i{font-style:normal;font-size:13px}
+#c2pops .c2pop.buff{background:linear-gradient(180deg,rgba(40,90,40,.92),rgba(16,40,16,.92));border:1px solid #8fd08f;color:#e4ffd8}
+#c2pops .c2pop.debuff{background:linear-gradient(180deg,rgba(120,30,18,.92),rgba(50,10,6,.92));border:1px solid #ff7a5a;color:#ffe0d6}
+#c2pops .c2pop.gone{background:rgba(20,20,22,.85);border:1px solid rgba(255,255,255,.3);color:#cfcfcf;font-weight:600}
+@keyframes c2pop{0%{opacity:0;transform:translate(-50%,-30%) scale(.7)}12%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}20%{transform:translate(-50%,-50%) scale(1)}75%{opacity:1}100%{opacity:0;transform:translate(-50%,-160%)}}
+@media (prefers-reduced-motion:reduce){#c2pops{display:none}}
 /* ==== skill-up toast (skillup.js): Skyrim's "X increased to N" with a thin ornate bar; hud2.js docks it at the top of the lane ==== */
 #skillup{position:fixed;left:max(4vw,calc(50% - 220px));top:calc(env(safe-area-inset-top) + 8px);z-index:26;width:min(92vw,440px);display:none;pointer-events:auto;cursor:pointer;-webkit-tap-highlight-color:transparent}
 #skillup.on{display:block;animation:suin .22s ease-out}
@@ -2445,6 +2724,54 @@ html.a11y-still #skillup.on{animation:none}
   .sky-row.ft-cols .nm img.art.ico{width:22px;height:22px;margin-right:5px}
   .ft-cats .sky-cat{min-width:54px;padding:4px 3px}
 }
+/* [strategy] Catch your breath on the skill bar; orders on your follower's card (strategy.js) */
+#tbf .fc-row{grid-template-columns:repeat(4,minmax(0,1fr)) minmax(0,2.3fr)}
+#tbf.c2 .fc:not(.fc-pick) .fc-tray{grid-column:1 / 4}
+#tbf.c2 .fc-empty{grid-column:1 / 4}
+#tbf.c2 .fc:not(.fc-pick) .tbact.flee{grid-row:1;grid-column:4}
+#tbf.c2 .fc:not(.fc-pick) .tbact.rec{grid-row:2;grid-column:4}
+#tbf.c2.c2wide .fc:not(.fc-pick){grid-template-columns:minmax(0,1fr) repeat(3,84px) repeat(4,60px) 156px}
+#tbf.c2.c2wide .fc:not(.fc-pick) .fc-tray{grid-column:1}
+#tbf.c2.c2wide .fc-empty{grid-column:1}
+#tbf.c2.c2wide .fc:not(.fc-pick) .tbact.rec{grid-row:1;grid-column:7}
+#tbf.c2.c2wide .fc:not(.fc-pick) .tbact.flee{grid-row:1;grid-column:8}
+#tbf.c2.c2wide .fc:not(.fc-pick) .tbact.end{grid-column:9}
+#tbf .c2ord{display:flex;gap:3px;margin-top:3px;justify-content:center}
+#tbf .c2ord .c2o{flex:1 1 0;min-width:0;height:22px;padding:0;border-radius:6px;border:1px solid rgba(214,178,94,.35);background:rgba(20,16,10,.75);color:#e9e1cc;font-size:12px;line-height:20px;cursor:pointer}
+#tbf .c2ord .c2o.on{border-color:#f3d98b;background:linear-gradient(180deg,#5a4524,#2a1f10);box-shadow:0 0 8px rgba(243,217,139,.45)}
+#tbf .c2ord .c2o:disabled{opacity:.45;cursor:default}
+#tbf.c2.c2wide .c2ord .c2o{height:26px;font-size:14px}
+/* build 145: move costs in stamina / magicka / health (tbfight.js), stack numbers (stacks.js), minigames (minigame.js) */
+.rc{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:16px;padding:0 4px;border-radius:8px;font-style:normal;font-size:11px;font-weight:700;line-height:1;color:#10100c;font-variant-numeric:tabular-nums}
+.rc.sp{background:linear-gradient(180deg,#9fe39a,#4fa34b)}.rc.mp{background:linear-gradient(180deg,#9cc4ff,#3f72d1);color:#fff}.rc.hp{background:linear-gradient(180deg,#ff9a8a,#c23a2c);color:#fff}.rc.free{background:rgba(214,178,94,.25);color:var(--gold)}
+.tbact .cp .rc{transform:none;width:auto;height:15px;opacity:1}
+#tbf .fc .tbact .cp{gap:2px}#tbf .fc .tbact .cp .rc{width:auto;height:15px;background-clip:padding-box;box-shadow:0 1px 2px rgba(0,0,0,.5)}
+#tbf .fc .tbact .cp .rc.sp{background:linear-gradient(180deg,#9fe39a,#4fa34b)}#tbf .fc .tbact .cp .rc.mp{background:linear-gradient(180deg,#9cc4ff,#3f72d1)}#tbf .fc .tbact .cp .rc.hp{background:linear-gradient(180deg,#ff9a8a,#c23a2c)}#tbf .fc .tbact .cp .rc.free{background:rgba(214,178,94,.25)}
+#tbf .fc .tbact[disabled] .cp .rc{filter:grayscale(1) brightness(.7)}
+#tbf .tbap .fc-res{display:inline-flex;gap:4px;margin:0 6px}
+#tbf .fc-end{min-width:96px}#tbf .fc-end b{font-size:15px;letter-spacing:.04em}
+.c2e b,.c2fx .c2e b{font-variant-numeric:tabular-nums}
+.tbtime.mg .mg-in{gap:8px}
+.mg-bar{position:relative;width:min(78vw,320px);height:26px;border-radius:13px;background:rgba(20,18,15,.85);border:2px solid #3c372e;overflow:hidden}
+.mg-bar .mg-zone{position:absolute;top:0;bottom:0;background:rgba(226,187,100,.55)}.mg-bar .mg-pz{position:absolute;top:0;bottom:0;background:#fff3c4;box-shadow:0 0 8px #ffd36a}
+.mg-bar .mg-mark{position:absolute;top:-3px;bottom:-3px;width:4px;margin-left:-2px;background:#ebe5d6;box-shadow:0 0 6px #fff}
+.mg-power .mg-bar{border-color:#8a3b22}.mg-power .mg-bar .mg-zone{background:rgba(255,120,70,.55)}
+.mg svg{width:min(66vw,240px,40vh);height:auto}
+.mg-parry .mg-shield{fill:rgba(226,187,100,.25);stroke:#e2bb64;stroke-width:4}.mg-parry .mg-blow{fill:none;stroke:#ff6a4a;stroke-width:4;filter:drop-shadow(0 0 4px #ff6a4a)}
+.mg-aim .mg-tg{fill:none;stroke:#fff3c4;stroke-width:1.5}.mg-aim .mg-tgw{fill:none;stroke:rgba(226,187,100,.35)}.mg-aim .mg-ret{fill:none;stroke:#ebe5d6;stroke-width:2.5;stroke-dasharray:6 4}.mg-aim .mg-x{stroke:#ebe5d6;stroke-width:1.5}
+.mg-aim.drawing .mg-ret,.mg.drawing .mg-ret{stroke:#fff3c4}
+.mg-rune .mg-path{fill:none;stroke:var(--mgc,#e2bb64);stroke-width:1.5;opacity:.45;stroke-dasharray:3 3}
+.mg-rune .mg-clock{fill:none;stroke:var(--mgc,#e2bb64);stroke-width:2.5;stroke-dasharray:295;opacity:.7;transform:rotate(-90deg);transform-origin:50% 50%}
+.mg-rune .mg-pt circle{fill:rgba(20,18,15,.85);stroke:var(--mgc,#e2bb64);stroke-width:2}.mg-rune .mg-pt text{font-size:8px;text-anchor:middle;fill:var(--mgc,#e2bb64);font-weight:700}
+.mg-rune .mg-pt.on circle{fill:var(--mgc,#e2bb64);filter:drop-shadow(0 0 6px var(--mgc,#e2bb64));animation:mgpulse .7s ease-in-out infinite}.mg-rune .mg-pt.on text{fill:#10100c}
+.mg-rune .mg-pt.done circle{fill:var(--mgc,#e2bb64);opacity:.45}.mg-rune .mg-pt.done text{fill:#10100c}
+@keyframes mgpulse{50%{opacity:.6}}
+@media (prefers-reduced-motion:reduce){.mg-rune .mg-pt.on circle{animation:none}}
+/* build 145: named foe intents (fightread.js) and the lit turn order while turns play out (tbfight.js) */
+.tbint i.ic{font-style:normal;font-size:14px}.tbint b.w{font-size:12px;letter-spacing:.01em}.tbint b.n{opacity:.9}
+.tbint em.sk{margin-left:2px;padding:0 4px;border-radius:6px;background:rgba(0,0,0,.35);font-size:10px;color:var(--el-poison,#a6ec7a)}
+.tbban.foe.act{font-size:20px;letter-spacing:.02em}.tbban.foe.act small{opacity:.85}.tbban.foe.act.big{color:#ffd0c0;text-shadow:0 0 12px rgba(255,80,40,.7)}
+.tbini.now{box-shadow:0 0 0 2px rgba(214,178,94,.35),0 0 10px rgba(214,178,94,.45)}.tbini.foe.now{background:rgba(200,60,40,.35);border-color:#ff7a5a}
 /* ==== levelling like Skyrim (levelup.js): skill notice + level bar, the LEVEL UP moment, the three pillars, the prompt ==== */
 #lvln{position:fixed;top:calc(64px + env(safe-area-inset-top));left:0;right:0;display:flex;flex-direction:column;align-items:center;pointer-events:none;z-index:88}
 .lvn{display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 30px 10px;min-width:min(86vw,320px);max-width:92vw;background:radial-gradient(ellipse at center,rgba(6,7,8,.82) 0,rgba(6,7,8,.6) 55%,transparent 75%);animation:lvnin .35s var(--ease) both}
@@ -2866,12 +3193,12 @@ html.pcmap.pc-home:has(.pcparty.on) .vitals{left:14px}
   body.tw-char #side>.tw-starp{max-width:min(1640px,100%);width:100%}
   /* the Skills stars want room: the side panel takes the bigger share while they're open */
   html:not(.pcmap) .app>.layout:has(>#side>.tw-starp .tw-bigw){grid-template-columns:minmax(0,1fr) minmax(0,1.2fr)}
-  /* the fight: the scene big on the left, who's who and your actions on the right; nothing scrolls */
-  .tbf .tbin{max-width:min(1560px,100%);padding-left:16px;padding-right:16px;display:grid;grid-template-columns:minmax(0,1fr) clamp(400px,30vw,560px);grid-template-rows:auto auto minmax(0,1fr);column-gap:18px;align-content:center;align-items:start}
-  .tbf .tbin>*{grid-column:2;min-width:0}
-  .tbf .tbin>.tbstage{grid-column:1;grid-row:1/4;align-self:center;justify-self:center;width:min(100%,calc((100vh - 40px) * 1.45))}
-  .tbf .tbin>.tbdock{align-self:end}
-  .tbf .tbin .tbord{flex-wrap:wrap;overflow:visible}
+  /* the classic fight: the scene big on the left, who's who and your actions on the right; nothing scrolls (the immersive one, .c2, fills the window itself) */
+  .tbf:not(.c2) .tbin{max-width:min(1560px,100%);padding-left:16px;padding-right:16px;display:grid;grid-template-columns:minmax(0,1fr) clamp(400px,30vw,560px);grid-template-rows:auto auto minmax(0,1fr);column-gap:18px;align-content:center;align-items:start}
+  .tbf:not(.c2) .tbin>*{grid-column:2;min-width:0}
+  .tbf:not(.c2) .tbin>.tbstage{grid-column:1;grid-row:1/4;align-self:center;justify-self:center;width:min(100%,calc((100vh - 40px) * 1.45))}
+  .tbf:not(.c2) .tbin>.tbdock{align-self:end}
+  .tbf:not(.c2) .tbin .tbord{flex-wrap:wrap;overflow:visible}
   #side:has(>.tw-starp .tw-bigw){display:flex;flex-direction:column}
   #side:has(>.tw-starp .tw-bigw)>*{flex:none}
   #side:has(>.tw-starp .tw-bigw)>.tw-starp{flex:1 1 auto;min-height:min(460px,100%)}
@@ -2894,7 +3221,7 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 .tw-bg img.art[data-maxw]{max-width:none!important}
 :root.has-ui-compass3d .tw-face.art-flat{inset:0;background:var(--asset-compass) center/100% no-repeat}   /* face bigger than a 3D render: the flat painted compass */   /* the compass's blurred backdrop: blurred on purpose, it fills the screen */
 /* the fight stage shows the middle of a 1480 px painted plate: past ~1100 screen pixels wide it would be blown up */
-@media (min-width:700px){ .tbf .tbstage{max-width:calc(1100px / var(--art-k,1));margin-left:auto;margin-right:auto} }
+@media (min-width:700px){ .tbf:not(.c2) .tbstage{max-width:calc(1100px / var(--art-k,1));margin-left:auto;margin-right:auto} }
 @media (min-width:1100px) and (orientation:landscape){
   .loadcard.haspic{background-size:auto,min(100%,calc(1080px / var(--art-k,1))) auto;background-color:#07090c}
 }
@@ -3003,6 +3330,25 @@ img.art[data-maxw]{margin-left:auto;margin-right:auto;object-fit:cover}
 .breach .br-pin:disabled{cursor:default}
 .breach .br-acts{display:grid;gap:8px;margin-top:8px}
 @media (max-width:420px){.breach .br-pin span{font-size:10px;max-width:84px}}
+/* [assetquality] the snowy road on the new-character screen stays a picture, not a wall: on a wide PC window it keeps
+   a sensible size (and fits under the name box) instead of filling the whole width */
+.cscene:not(.cgstage){max-width:min(100%,max(340px,min(760px,calc((100vh - 300px) * 360 / 170))));margin-left:auto;margin-right:auto}
+/* Treasure maps and relics (treasure.js) */
+.tmcard .tm-row .t span{display:block;font-size:.82em;opacity:.8}
+.tm-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.tm-btns .btn{flex:1 1 140px}.tm-btns.col{flex-direction:column}.tm-btns.col .btn{flex:none;width:100%}
+.tm-look h2{margin:0 0 8px}.tm-sheet{display:flex;justify-content:center}.tm-sheet img,.tm-sketch{max-width:100%;height:auto;filter:drop-shadow(0 3px 6px rgba(0,0,0,.45))}
+.tm-pieces{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}.tm-pieces img{width:46%;height:auto}
+.tm-journal{background:#e9dcc0;color:#3b2c1e;border-radius:4px;padding:12px 14px;font-family:Georgia,"Times New Roman",serif;font-style:italic;box-shadow:inset 0 0 18px rgba(90,55,20,.35)}
+.tm-journal h3{margin:0 0 6px;font-style:normal;color:#5a3a1e}.tm-journal p{margin:4px 0;line-height:1.35}.tm-journal.sm{font-size:.85em;padding:8px 10px}
+.tm-hints{margin:8px 0;padding:8px 10px;border-left:3px solid #b8863a;background:rgba(184,134,58,.12)}.tm-hints p{margin:3px 0}
+.tm-hintnew{padding:6px 8px;border-left:3px solid #b8863a;background:rgba(184,134,58,.12)}
+.tm-tomb{padding:8px;border:1px solid rgba(142,43,37,.6);background:rgba(142,43,37,.12);margin-bottom:8px}.tm-tomb p{margin:0 0 6px}
+.tmpin{position:fixed;right:10px;bottom:calc(74px + env(safe-area-inset-bottom,0px));z-index:60;width:236px;max-width:calc(100vw - 20px);background:rgba(20,16,12,.92);border:1px solid #7a6a4a;border-radius:6px;padding:6px;box-shadow:0 6px 18px rgba(0,0,0,.55)}
+.tmpin.big{width:min(480px,calc(100vw - 20px))}.tmpin img{width:100%;height:auto;display:block}
+.tmpin-hd{display:flex;align-items:center;gap:6px;font-size:.8em;margin-bottom:4px}.tmpin-hd b{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tmpin-hd button{background:none;border:1px solid #7a6a4a;color:inherit;border-radius:4px;min-width:30px;min-height:30px;cursor:pointer}
+.tmpin-tip{margin:4px 0 0;font-size:.74em;opacity:.75}
+@media (min-width:1000px){.tmpin{top:80px;bottom:auto;right:20px}}
 /* [esckey] gevstack.js: the world event card folds into a pill, notices hide with an x */
 .gevs-card{position:relative}
 .gevs-card>.gev-banner{padding-right:40px}
@@ -3044,6 +3390,27 @@ html.pcmap #gev>.gevs-pill{margin:0}
 .pm-keys{margin:0;font-size:12px;color:#7d7668;letter-spacing:.06em}
 @media (prefers-reduced-motion:reduce){.pausem{-webkit-backdrop-filter:none;backdrop-filter:none}}
 .modal.pm-top,.bugrep.pm-top{z-index:96}
+/* deep expeditions and difficulty tiers (deepdelve.js): tier picker on the place card, banner inside, the camp */
+.dd-card{margin-top:10px;padding:10px;border:1px solid rgba(228,220,200,.18);border-left:3px solid #8a7a5a;border-radius:6px;background:rgba(10,10,12,.35)}
+.dd-card[data-tier=veteran]{border-left-color:#c9a24a}.dd-card[data-tier=legendary]{border-left-color:#d0703a}.dd-card[data-tier=mythic]{border-left-color:#b04ad0}
+.dd-card h4{margin:0 0 2px;font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:#f1e3c0}
+.dd-tiers{margin-top:6px}.dd-tier small{opacity:.7;font-size:11px;margin-left:2px}
+.dd-tier.on[data-t=veteran]{border-color:#c9a24a;background:rgba(201,162,74,.2)}.dd-tier.on[data-t=legendary]{border-color:#d0703a;background:rgba(208,112,58,.2)}.dd-tier.on[data-t=mythic]{border-color:#b04ad0;background:rgba(176,74,208,.22)}
+.dd-tier:disabled{opacity:.4}
+.dd-mods{display:grid;gap:6px;margin-top:6px}
+.dd-mod{padding:6px 8px;border-radius:4px;background:rgba(255,255,255,.05);border:1px solid rgba(228,220,200,.12)}
+.dd-mod .dd-mn{display:block;font-size:14px;color:#f1e3c0;margin-bottom:2px}.dd-mod .dd-md{display:block;font-size:12.5px;opacity:.85;line-height:1.3}
+.dd-deepnote{margin-top:8px}
+.dd-banner{display:flex;flex-wrap:wrap;gap:4px 6px;margin:6px 0 2px;font-size:12px}
+.dd-banner>*{padding:2px 7px;border-radius:999px;background:rgba(255,255,255,.07);border:1px solid rgba(228,220,200,.15);white-space:nowrap}
+.dd-banner .dd-t{color:#e8c66a;border-color:rgba(232,198,106,.5)}.dd-banner .dd-depth{color:#9fd0ff;border-color:rgba(120,180,240,.5)}
+.dd-banner .dd-inj{color:#ffb0a0}.dd-banner .dd-curse{color:#d8a0ff;border-color:rgba(200,140,255,.4)}.dd-banner .dd-uns{color:#e8c66a}
+.dd-camp h3{margin-top:6px}
+.dd-stats{display:flex;flex-wrap:wrap;gap:6px 12px;margin:6px 0;font-size:13px}
+.dd-stats .dd-curse{color:#d8a0ff}
+.dd-next{margin:6px 0}
+.dd-camp .evc{display:grid;gap:8px}
+@media (min-width:900px){.dd-mods{grid-template-columns:1fr 1fr}.dd-banner{font-size:13px}}
 /* party traps (partytraps.js) and the live cursor (livecursor.js) */
 .dgparty{color:#e8b86a}
 .ptlist{display:flex;flex-direction:column;gap:4px;margin:10px 0 4px;text-align:left}
@@ -3059,6 +3426,34 @@ html.pcmap #gev>.gevs-pill{margin:0}
 .lcur.down svg{transform:scale(.82)}.lcur.down::before{content:"";position:absolute;left:-9px;top:-9px;width:18px;height:18px;border-radius:50%;border:2px solid #f3d27a;opacity:.8}
 .lcur.wait{opacity:.55}
 @media (prefers-reduced-motion:reduce){.lcur svg{transition:none}}
+/* build 146: no Skip button; while a turn plays, tapping anywhere on the fight hurries it along (an invisible layer) */
+#tbf .tbin{position:relative}
+#tbf .tbskip.tbhurry{position:absolute;inset:0;z-index:30;margin:0;padding:0;min-height:0;border:0;border-radius:0;background:transparent;color:transparent;font-size:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#tbf .tbskip.tbhurry:focus-visible{outline:2px solid rgba(214,178,94,.6);outline-offset:-4px}
+/* [pc] the fight fills a PC window (combat2.js): the picture runs edge to edge, only a soft edge into the skill bar */
+#tbf.c2.c2wide .tbscene .fscene{-webkit-mask-image:linear-gradient(180deg,#000 84%,rgba(0,0,0,.4));mask-image:linear-gradient(180deg,#000 84%,rgba(0,0,0,.4))}
+#tbf.c2.c2wide .c2bd{display:none}
+/* Settings → Fights (fightset.js): Fight UI size zooms the skill bar, the turn ribbon and the side cards; Camera shake scales the shake */
+#tbf.c2 .tbdock,#tbf.c2 .tbtop,#tbf.c2 .c2ov .tbparty{zoom:var(--c2ui,1)}
+@keyframes c2shake{10%,90%{transform:translate(calc(-2px*var(--c2cam,1)),calc(1px*var(--c2cam,1)))}20%,80%{transform:translate(calc(4px*var(--c2cam,1)),calc(-2px*var(--c2cam,1)))}30%,50%,70%{transform:translate(calc(-6px*var(--c2cam,1)),calc(2px*var(--c2cam,1)))}40%,60%{transform:translate(calc(6px*var(--c2cam,1)),calc(-1px*var(--c2cam,1)))}}
+.sndrow.fsrow span{width:auto;min-width:70px;flex:0 0 auto}.sndrow.fsrow b.num{min-width:3em;text-align:right;font-size:14px;color:var(--gold,#e2bb64)}
+/* the result card after the slow-motion finisher (combat2.js) */
+#tbf .c2res{position:absolute;inset:0;z-index:40;display:grid;place-items:center;padding:16px;background:radial-gradient(ellipse at center,rgba(0,0,0,.3),rgba(0,0,0,.72));opacity:0;pointer-events:none;transition:opacity .45s}
+#tbf .c2res.on{opacity:1;pointer-events:auto}
+#tbf .c2rescard{width:min(100%,400px);padding:16px 20px 14px;text-align:center;background:linear-gradient(180deg,rgba(20,18,15,.96),rgba(8,8,9,.97));border:1px solid rgba(214,178,94,.55);border-radius:14px;box-shadow:0 10px 40px rgba(0,0,0,.6),inset 0 0 0 1px rgba(255,255,255,.04);transform:scale(.92);transition:transform .45s cubic-bezier(.2,1.4,.4,1)}
+#tbf .c2res.on .c2rescard{transform:none}
+#tbf .c2rescard h2{margin:2px 0;font:700 30px/1.1 Cinzel,Georgia,serif;letter-spacing:.12em;text-transform:uppercase;color:#f3d98b;text-shadow:0 0 18px rgba(226,187,100,.45)}
+#tbf .c2res.lose h2{color:#ff9a86;text-shadow:0 0 18px rgba(255,80,50,.4)}
+#tbf .c2res.away h2{color:#cfe3ff;text-shadow:0 0 18px rgba(120,170,255,.35)}
+#tbf .c2resr{display:block;font:600 11px/1 "Barlow Semi Condensed",sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#a9a294}
+#tbf .c2resfoe{margin:0 0 12px;color:#cfc6b0;font-size:14px}
+#tbf .c2resst{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:14px}
+#tbf .c2resst span{display:flex;flex-direction:column;gap:2px;padding:7px 4px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
+#tbf .c2resst b{font-size:21px;color:#fff3d6}#tbf .c2resst small{font-size:11px;color:#a9a294;line-height:1.2}
+#tbf .c2rescard .tbdone{width:100%;margin:0}
+html.art-pixel #tbf .c2rescard,html.art-pixel #tbf .c2resst span{border-radius:0}
+@media (prefers-reduced-motion:reduce){#tbf .c2res,#tbf .c2rescard{transition:none}}
+html.a11y-still #tbf .c2res,html.a11y-still #tbf .c2rescard{transition:none}
 /* fishing.js + huntgame.js: the fishing and hunting mini-games (one screen on PC, phone friendly) */
 .fhgame .fhcard{width:min(600px,100%);max-height:100%;overflow:auto;padding:12px 12px 10px}
 .fhgame .fhcard canvas{max-width:min(100%,560px,calc((100vh - 300px) * 1.867))!important;max-width:min(100%,560px,calc((100dvh - 300px) * 1.867))!important;box-shadow:0 0 0 1px rgba(228,220,200,.22)}
@@ -3099,6 +3494,53 @@ html.pcmap #gev>.gevs-pill{margin:0}
 .title .foot{font-size:14px;color:#b5ad9a}
 .title .press,.title .mi,.title .foot,.title .tag,.title .mi small{text-shadow:0 1px 2px rgba(0,0,0,1),0 0 10px rgba(0,0,0,.95),0 0 26px rgba(0,0,0,.7)}
 .title h1{filter:drop-shadow(0 2px 3px rgba(0,0,0,.9)) drop-shadow(0 0 18px rgba(0,0,0,.6))}
+/* festivals, contests and the Grand Arena (tourneyui.js) */
+.tn{display:grid;gap:10px}
+.tn h3{margin:0 0 2px;font-size:19px;letter-spacing:.04em}
+.tn h4{margin:6px 0 4px;font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:var(--gold)}
+.tn-hero{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;align-items:start}
+.tn-hero .sub{margin:2px 0}
+img.tn-art{display:block;width:100%;max-width:440px;height:auto;border-radius:8px;border:1px solid #4a4237}
+.tn-chip{display:inline-block;width:12px;height:16px;border-radius:2px;border:1px solid rgba(0,0,0,.55);vertical-align:middle;margin-right:7px}
+.tn-town{display:flex;align-items:center;flex-wrap:wrap}
+.tn-rep{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.tn-rep .sub{margin-right:2px}
+.tn-hold{min-height:36px;max-width:12em;background:var(--panel2,#1f1c18);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:4px 6px}
+.tn-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
+.tn-card{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:rgba(255,255,255,.025);display:grid;gap:6px;align-content:start}
+.tn-card .sub{margin:0}
+.tn-ch{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tn-ch b{font-size:16px}
+.tn-ch .sub{margin-left:auto;font-size:12px}
+.tn-ic{font-size:20px;width:26px;text-align:center}
+.tn-board{list-style:none;margin:0;padding:0;border-top:1px solid rgba(226,187,100,.3)}
+.tn-board li{display:grid;grid-template-columns:2em minmax(0,1fr) auto;gap:6px;align-items:center;padding:3px 4px;font-size:14px;border-bottom:1px solid var(--line)}
+.tn-board li:nth-child(odd){background:rgba(255,255,255,.02)}
+.tn-board li.me{background:linear-gradient(90deg,rgba(226,187,100,.22),rgba(226,187,100,0));color:var(--gold)}
+.tn-board li.npc{color:var(--mute)}
+.tn-board li.tn-gap{display:block;text-align:center;color:var(--mute);padding:0}
+.tn-board small{color:var(--mute);font-size:11px}
+.tn-board .tn-rp{color:var(--frost)}
+.tn-n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tn-go{width:100%;min-height:40px}
+.tn-why{color:var(--mute);font-size:12px}
+.tn-glory{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.tn-cal{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.tn-cal li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:6px;align-items:center;padding:4px;border-bottom:1px solid var(--line)}
+.tn-cal .tn-n{display:grid;white-space:normal}
+.tn-cal small{color:var(--mute)}
+.tn-cal .sub{text-align:right;font-size:12px;margin:0}
+.tn-rules{font-size:12px}
+.tn-away{border-left:3px solid var(--gold);padding-left:8px}
+.tn-bar{height:8px;border-radius:4px;background:#3a2b22;overflow:hidden}
+.tn-bar i{display:block;height:100%;background:linear-gradient(90deg,#b84a3a,#e0a060)}
+.tn-mugs{min-height:30px;font-size:22px;text-align:center;letter-spacing:2px}
+.tn-mugs span{font-size:13px;margin:0 4px;color:var(--gold)}
+.tn-reel{position:relative;height:26px;border-radius:13px;background:#2a2622;border:1px solid #5a4c3a;margin:10px 0;overflow:hidden}
+.tn-reel .tn-z{position:absolute;top:0;bottom:0;background:rgba(110,190,110,.55)}
+.tn-reel .tn-nd{position:absolute;top:-2px;bottom:-2px;width:4px;margin-left:-2px;background:#ffe6a0;box-shadow:0 0 6px #ffe6a0}
+@media (min-width:760px){.tn-hero{grid-template-columns:minmax(0,1fr) minmax(0,1.1fr)}.tn-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (min-width:1100px){.tn-fest .tn-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 /* [folbuild] followers learn like you: their build, level, skills with bars and perks (folbuild.js), SkyUI style */
 .fb-build{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;margin:6px 0 10px;border:1px solid rgba(214,178,94,.35);border-radius:4px;background:linear-gradient(180deg,rgba(40,34,22,.45),rgba(14,13,11,.55))}
 .fb-build .t{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
@@ -3115,6 +3557,8 @@ html.pcmap #gev>.gevs-pill{margin:0}
 .fb-tree h4{margin:0 0 3px;font:600 13px "Barlow Semi Condensed",sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#d6b25e}
 .fb-tree ul{margin:0;padding:0 0 0 14px;color:#e8dcc0;font-size:13px}.fb-tree li{margin:1px 0}
 @media (max-width:420px){.fb-build{flex-direction:column}.fb-skills{grid-template-columns:1fr 1fr}}
+/* [assetquality] a hero picture in a flex row keeps its shape (a stretched row used to pull it tall and squash the figure) */
+.heroprev img,.herobox img{align-self:flex-start;object-fit:contain}
 /* [mapvisuals] PC map: the cards floating over the map (world events, news) sit above the fixed map canvas, so a
    card can never hide under the map and leave only its progress bar showing as a stray gold line */
 html.pcmap div:has(> #mapwrap) > :not(#mapwrap,#vitals){position:relative;z-index:1}
@@ -3128,6 +3572,35 @@ html.pcmap .compass i.cl{left:5%}html.pcmap .compass i.cr{right:5%}
 /* [mappolish] mapdock.js: on a PC the event card, its notices, the raid card and the caravan strips sit in one column at the left edge */
 html.pcmap div:has(> #mapwrap) > #topcards,html.pcmap #topcards{position:fixed;z-index:6;left:14px;top:var(--dock-top,12px);transform:none;width:min(380px,30vw);max-height:var(--dock-max,calc(100vh - 220px));align-items:flex-start}
 html.pcmap #topcards #wev{margin:0}
+/* Legendary hunts (leghunt.js): Jarl contract posters, the hunt card, the bestiary */
+.lh-poster,.lh-card{display:flex;gap:10px;align-items:flex-start;padding:10px;margin:8px 0;border:1px solid var(--line);border-radius:10px;background:rgba(40,30,18,.35)}
+.lh-poster.here{border-color:var(--gold);box-shadow:inset 0 0 0 1px rgba(226,187,100,.25)}
+.lh-card.lh-hunt{border-color:var(--ember);background:rgba(70,24,16,.3)}
+.lh-poster .t,.lh-card .t{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
+.lh-poster small{color:var(--mute);font-style:italic}
+.lh-poster span,.lh-card span{font-size:13px;line-height:1.35}
+.lh-pic{flex:none;width:92px;height:92px;border-radius:8px;background:#e9dcc0;border:1px solid #6a5636;object-fit:contain}
+.lh-card .lh-pic{width:72px;height:72px}.lh-best .lh-pic{width:48px;height:48px}
+.lh-ph{display:flex;align-items:center;justify-content:center;font-size:34px}
+.lh-traits{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px}.lh-traits span{font-size:12px!important}
+.lh-unk{color:var(--mute)}
+.lh-dots{display:inline-flex;gap:3px;vertical-align:middle}.lh-dots i{width:10px;height:10px;border-radius:50%;border:1px solid var(--gold);display:inline-block}.lh-dots i.on{background:var(--gold)}
+.lh-tag{align-self:flex-start;font-size:11px!important;padding:1px 6px;border-radius:6px;border:1px solid var(--line);color:var(--mute)}.lh-tag.on{border-color:var(--ember);color:var(--ember)}
+.lh-btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.lh-poster .btn{align-self:flex-start;margin-top:4px}
+@media (max-width:420px){.lh-pic{width:64px;height:64px}.lh-card .lh-pic{width:56px;height:56px}}
+/* painted legends: the foe picture in a gold frame on a dark, glowing ground */
+.lh-paint{display:flex;align-items:flex-end;justify-content:center;overflow:hidden;position:relative;border:2px solid #d8b04a;border-radius:8px;
+  background:radial-gradient(circle at 50% 40%,#3a2c1c,#120c08);background:radial-gradient(circle at 50% 62%,color-mix(in srgb,var(--lhglow,#d8b04a) 30%,transparent),transparent 68%),radial-gradient(circle at 50% 40%,#3a2c1c,#120c08);
+  box-shadow:0 0 0 1px #4a3410,inset 0 0 0 1px rgba(255,226,150,.35),0 0 10px rgba(216,176,74,.35)}
+.lh-paint img{width:100%;height:100%;object-fit:contain;display:block}
+.lh-paint::after{content:"";position:absolute;inset:3px;border:1px solid rgba(255,226,150,.28);border-radius:5px;pointer-events:none}
+html.art-pixel .lh-paint{border-radius:0;image-rendering:pixelated}html.art-pixel .lh-paint::after{border-radius:0}
+/* [c2polish] the fight feed: no empty bar before the first line */
+#tbf.c2 .c2ov .tblog[hidden]{display:none}
+/* [c2polish] a long next-move chip on the foe's plate wraps inside the plate instead of printing over itself (phones) */
+#tbf.c2 .c2ov .tbu.foe .tbint{flex-wrap:wrap;white-space:normal;max-width:100%;box-sizing:border-box;row-gap:1px}
+#tbf.c2 .c2ov .tbu.foe .tbint>*{flex:none;white-space:nowrap}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -3155,6 +3628,7 @@ html.pcmap #topcards #wev{margin:0}
 <script src="powers.js"></script>
 <script src="engine.js"></script>
 <script src="foecap.js"></script>
+<script src="stacks.js"></script>
 <script src="events.js"></script>
 <script src="dungeons.js"></script>
 <script src="towns.js"></script>
@@ -3200,6 +3674,7 @@ html.pcmap #topcards #wev{margin:0}
 <script src="combatai.js"></script>
 <script src="sneak2.js"></script>
 <script src="aiset.js"></script>
+<script src="minigame.js"></script>
 <script src="tbradial.js"></script>
 <script src="tbfight.js"></script>
 <script src="sharedfight.js"></script>
@@ -3217,6 +3692,10 @@ html.pcmap #topcards #wev{margin:0}
 <script src="spellfx.js"></script>
 <script src="potionfx.js"></script>
 <script src="foeintent.js"></script>
+<script src="fxicons.js"></script>
+<script src="strategy.js"></script>
+<script src="fightset.js"></script>
+<script src="combat2.js"></script>
 <script src="guide.js"></script>
 <script src="patchnotes.js"></script>
 <script src="market.js"></script>
@@ -3234,6 +3713,7 @@ html.pcmap #topcards #wev{margin:0}
 <script src="partyplay.js"></script>
 <script src="lootvote.js"></script>
 <script src="partyvote.js"></script>
+<script src="deepdelve.js"></script>
 <script src="dawnguard.js"></script>
 <script src="sides.js"></script>
 <script src="sidequest.js"></script>
@@ -3332,6 +3812,7 @@ html.pcmap #topcards #wev{margin:0}
 <script src="nickname.js"></script>
 <script src="desktop.js"></script>
 <script src="pcupdate.js"></script>
+<script src="treasure.js"></script>
 <script src="chargebar.js"></script>
 <script src="i18n_story.js"></script>
 <script src="i18n_beast.js"></script>
@@ -3341,6 +3822,7 @@ html.pcmap #topcards #wev{margin:0}
 <script src="i18n_dawnguard.js"></script>
 <script src="i18n_sides.js"></script>
 <script src="i18n_dwemer.js"></script>
+<script src="i18n_leghunt.js"></script>
 <script src="i18n_areaui.js"></script>
 <script src="i18n_menus2.js"></script>
 <script src="i18n_followertab.js"></script>
@@ -3353,6 +3835,9 @@ html.pcmap #topcards #wev{margin:0}
 <script src="i18n_potionfx.js"></script>
 <script src="i18n_sweep.js"></script>
 <script src="i18n_balfear.js"></script>
+<script src="i18n_combat2.js"></script>
+<script src="i18n_fightset.js"></script>
+<script src="i18n_stacks.js"></script>
 <script src="i18n_fighttips.js"></script>
 <script src="i18n_pickaxe.js"></script>
 <script src="i18n_pcfit.js"></script>
@@ -3371,12 +3856,16 @@ html.pcmap #topcards #wev{margin:0}
 <script src="i18n_tabkeys.js"></script>
 <script src="i18n_holds.js"></script>
 <script src="i18n_partyvote.js"></script>
+<script src="i18n_deepdelve.js"></script>
 <script src="i18n_netsync.js"></script>
 <script src="i18n_pcmap.js"></script>
 <script src="i18n_eventart.js"></script>
+<script src="i18n_assetquality.js"></script>
+<script src="i18n_treasure.js"></script>
 <script src="i18n_chargen.js"></script>
 <script src="i18n_gore.js"></script>
 <script src="i18n_appicon.js"></script>
+<script src="i18n_tourney.js"></script>
 <script src="i18n_partytraps.js"></script>
 <script src="i18n_fishhunt.js"></script>
 <script src="i18n_esckey.js"></script>
@@ -3395,9 +3884,12 @@ html.pcmap #topcards #wev{margin:0}
 <script src="hud2.js"></script>
 <script src="skillup.js"></script>
 <script src="invites.js"></script>
+<script src="tourney.js"></script>
 <script src="holdui.js"></script>
+<script src="tourneyui.js"></script>
 <script src="netsync.js"></script>
 <script src="sideui.js"></script>
+<script src="leghunt.js"></script>
 <script src="ui.js"></script>
 </body>
 </html>

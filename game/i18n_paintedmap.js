@@ -29,7 +29,13 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
       "Naprawiono zabłąkaną złotą linię pod kartami wydarzeń świata: to był pasek postępu karawany, widoczny, gdy jego karta chowała się pod mapą.",
     "The compass at the top of the PC map is one centred bar, like in Skyrim.":
       "Kompas na górze mapy na PC to jeden wyśrodkowany pasek, jak w Skyrim.",
-    // patch note b175-mappolish
+    // patch note b180-mappolish
+    "Followers with their own quests, opinions and banter":
+      "Towarzysze z własnymi zadaniami, opiniami i pogawędkami",
+    "Townsfolk with their own day: work, the inn at night, home to sleep":
+      "Mieszkańcy z własnym dniem: praca, wieczorem karczma, potem dom i sen",
+    "Faster on older phones, and kinder to the battery":
+      "Szybciej na starszych telefonach i oszczędniej dla baterii",
     "Map polish: a clearer close-up and tidier cards":
       "Szlif mapy: czytelniejsze zbliżenie i porządek w kartach",
     "Zoomed in close, the hand-inked chart now uses the painting's own colours, so going from the painting to the chart is smooth. Plains, forests, snow and mountains each get their own calm wash on soft paper, with a gentle shade on the hills.":

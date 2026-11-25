@@ -47,18 +47,17 @@ vm.runInContext(`(() => {
   ok(JSON.parse(JSON.stringify(s)).fqTrips.recent.length === 6, "saved with the character");
   // ---- settings
   ok(F.speed() === 1 && F.autoRoad() === false, "defaults: x1, wait for me");
-  ok(F.pref("fightSpeed", "4") && F.speed() === 4, "speed x4");
-  ok(F.pref("fightSpeed", "3") && F.speed() === 4, "bad speed ignored");
+  ok(F.pref("fightSpeed", "4") && F.speed() === 1, "an old saved speed is ignored (no speed button since build 146)");
   ok(F.pref("fqAutoRoad", "true") && F.autoRoad() === true, "carry on");
   ok(F.pref("lang", "en") === false, "other settings untouched");
   const seg = (k, opts, cur) => k + ":" + opts.map(([v, l]) => (String(v) === String(cur) ? "[" + l + "]" : l)).join(",");
   const sh = F.settingsHTML(seg);
-  ok(/fightSpeed:×1,×2,\\[×4\\]/.test(sh) && /fqAutoRoad:Wait for me,\\[Carry on\\]/.test(sh), "settings rows " + sh);
+  ok(!/fightSpeed/.test(sh) && /fqAutoRoad:Wait for me,\\[Carry on\\]/.test(sh), "settings rows " + sh);
   // ---- remembered picks
   ok(F.mem("arenaStake", 100) === 100, "default bet");
   F.setMem("arenaStake", 500); F.setMem("testFoe", "Bandit");
   ok(F.mem("arenaStake", 100) === 500 && F.mem("testFoe") === "Bandit", "remembered");
-  ok(F.speed() === 4, "remembering doesn't touch other prefs");
+  ok(F.autoRoad() === true, "remembering doesn't touch other prefs");
   // ---- too heavy after a fight
   const s2 = G.newSave("fq2", "Mule", "nord"); s2._test = true;
   ok(F.lootHTML(s2, { fight: { won: true }, loot: ["Iron Sword"] }) === "", "not heavy: no question");
@@ -96,8 +95,7 @@ vm.runInContext(`(() => {
 
 // ---- the hooks in shared files
 const fa = fs.readFileSync(W + "fightart.js", "utf8"), ui = fs.readFileSync(W + "ui.js", "utf8"), html = fs.readFileSync(W + "index.html", "utf8");
-ok(/\[1, 2, 4\]\.includes\(prefs\(\)\.fightSpeed\)/.test(fa) && /speed === 1 \? 2 : speed === 2 \? 4 : 1/.test(fa), "fightart: x1/x2/x4");
-ok(/Skip to result/.test(fa) && /finishAll, playing/.test(fa), "fightart: Skip to result, finishAll");
+ok(!/prefs\(\)\.fightSpeed/.test(fa) && !/data-fsx|data-fss|Skip to result/.test(fa) && /finishAll, playing/.test(fa), "fightart: no speed or Skip buttons, saved speed ignored, finishAll kept");
 ok(/FASTQOL\.recentHTML\(S\)/.test(ui) && /FASTQOL\.lootHTML\(S, r\)/.test(ui) && /FASTQOL\.againHTML\("test"\)/.test(ui) && /FASTQOL\.againHTML\("duel"/.test(ui) && /FASTQOL\.settingsHTML\(seg\)/.test(ui) && /FASTQOL\.pref\(k/.test(ui), "ui.js hooks");
 for (const m of ui.matchAll(/[^\n]*FASTQOL\.[^\n]*/g)) ok(/typeof FASTQOL !== "undefined"/.test(m[0]), "guarded: " + m[0].trim().slice(0, 80));
 const iF = html.indexOf('src="fastqol.js"'), iU = html.indexOf('src="ui.js"'), iA = html.indexOf('src="fightart.js"');

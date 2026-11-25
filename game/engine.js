@@ -280,6 +280,8 @@ const G = (() => {
   }
   /* horses: riding gives speed; a horse that's with you (ridden or led) carries for you */
   const riding = (s) => (typeof HORSES !== "undefined" ? HORSES.riding(s) : !!s.horse);
+  /* "the wolf", but just "Whitefang the Frost Troll" or "the Mudcrab King": named foes don't take another "the" */
+  const theFoe = (e, cap) => { const n = String((e && e.name) || "foe"), named = !!(e && (e.named || e.unique || e.legend)) || /^the\s/i.test(n); const t = named ? n.replace(/^The\s/, "the ") : "the " + n; return cap ? t.charAt(0).toUpperCase() + t.slice(1) : t; };
   const withHorse = (s) => (typeof HORSES !== "undefined" ? HORSES.present(s) : !!s.horse);
   const capacity = (s) => F.BASE_CARRY + Math.floor(s.spBonus / F.ATTRIBUTE_PER_LEVEL) * F.CARRY_PER_STAMINA_LEVEL
     + (withHorse(s) ? (typeof HORSES !== "undefined" ? HORSES.carry(s) : D.HORSE_CARRY) : 0) + (P(s, "extra_pockets") ? 100 : 0) + fxSum(s, "carry") + (typeof PFX !== "undefined" ? PFX.num(s, "carry") : 0) + (s.stone === "steed" ? 100 : 0) + (s.follower ? 100 : 0)   // [OURS] a follower carries 100 for you
@@ -517,6 +519,7 @@ const G = (() => {
       if (typeof PFX !== "undefined") { const ab = Math.min(0.5, PFX.sum(s, "allies", null, {})); if (ab) for (const al of this.allies) if (al.dmg) al.dmg *= 1 + ab; }   // Inspiring, Rally, Thane's Guard
       this.foeSt = {}; this.meSt = {}; this.bashed = false; this.avoidUsed = false; this.riposte = false;
       this.bleed = []; this.eParalyzed = 0; this.flurry = 0; this.firstHit = true; this.shadowUsed = false; this.sneakNext = false;
+      this.dd = typeof DEEPDELVE !== "undefined" ? DEEPDELVE.fight(this) : null;   // dungeon tier modifiers, deep-expedition injuries and curses (deepdelve.js)
     }
     addXp(k, v) { this.xp[k] = (this.xp[k] || 0) + v; }
     weaponSkill() { return this.bound ? this.bound.skill : this.weapon ? this.weapon.skill : "Hand-to-Hand"; }
@@ -1010,6 +1013,7 @@ const G = (() => {
         if (this.bleed.length && this.ehp > 0) { const b = this.bleed.reduce((x, y) => x + y.dmg, 0); this.ehp -= b; this.bleed = this.bleed.map((y) => ({ ...y, turns: y.turns - 1 })).filter((y) => y.turns > 0); line.me += ` · bleeds ${Math.round(b)}`; }
         for (const al of [...this.allies]) if (this.ehp > 0) { if (al.coop && typeof COOP !== "undefined") { line.me += COOP.allyAct(this, al); continue; } if (al.follower && typeof FOL2 !== "undefined") { const ft = FOL2.turn(this, al); if (ft) { line.me += ft; continue; } } if (al.follower && this.ai) { line.me += COMBATAI.followerAct(this, al); continue; } const d = al.dmg * rnd(...F.DAMAGE_SPREAD); this.ehp -= d; line.me += ` · ${al.name} ${Math.round(d)}`; }
         if (typeof PFX !== "undefined") PFX.tick(this, line);   // burning, chills and jolts
+        if (this.dd) DEEPDELVE.tick(this, line);   // frost stacks, blood moon, overcharge, the restless dead
         if (this.summonTurns > 0 && this.ehp > 0) { this.summonTurns--; this.ehp -= this.summonDmg; line.me += ` · familiar ${this.summonDmg}`; }
         if (typeof MAGIC !== "undefined" && !this.endWon) MAGIC.tick(this, line);   // cloaks, burning walls, healing circles
         { const g = this.healGuard(rule); if (g) line.me += " · " + g; }
@@ -1094,6 +1098,7 @@ const G = (() => {
     if (tags.has("beast") && typeof SMITH !== "undefined") { const p = SMITH.peltFor(e.name); if (p && Math.random() < 0.7) { give(s, p); got.push(D.ITEMS[p].name); } }   // [Skyrim] pelts from animals
     if (e.hunt && typeof HUNT !== "undefined") got.push(...HUNT.loot(s, e));
     if (typeof JEWELRY !== "undefined") got.push(...JEWELRY.loot(s, e));   // rings and amulets, often enchanted (jewelry.js)   // venison and hides from game (hunting.js)
+    if (typeof TREASURE !== "undefined") got.push(...TREASURE.loot(s, e));   // treasure maps, old journals, torn map pieces (treasure.js)
     if (typeof GATHER !== "undefined") got.push(...GATHER.creatureParts(s, e));   // [Skyrim] claws, teeth, eggs, jelly (gather.js)
     return got;
   }
@@ -1290,12 +1295,12 @@ const G = (() => {
     if (action === "flee") {
       const ch = 0.55 + skill(s, "Athletics") / 250 - (e.danger === "high" ? 0.2 : 0) + (riding(s) ? 0.15 : 0);   // [OURS]
       lines.push(...useSkill(s, "Athletics", 10 * F.ATHLETICS_XP_PER_SECOND));
-      if (Math.random() < ch) { tr.status = "travel"; tr.encounter = null; tr.lastTick = t; tripLog(s, ` Escaped the ${e.name}`); const ds = e.caravan && typeof CARAVANS !== "undefined" ? CARAVANS.deserted(s) : null; return { text: `You ${riding(s) ? "ride" : "run"} and lose the ${e.name}.${ds ? " " + ds : ""}`, skills: lines }; }
-      enemyFirst = true; lines.unshift(`You try to escape, but the ${e.name} catches you!`);
+      if (Math.random() < ch) { tr.status = "travel"; tr.encounter = null; tr.lastTick = t; tripLog(s, ` Escaped ${theFoe(e)}`); const ds = e.caravan && typeof CARAVANS !== "undefined" ? CARAVANS.deserted(s) : null; return { text: `You ${riding(s) ? "ride" : "run"} and lose ${theFoe(e)}.${ds ? " " + ds : ""}`, skills: lines }; }
+      enemyFirst = true; lines.unshift(`You try to escape, but ${theFoe(e)} catches you!`);
     } else if (action === "sneak") {
       lines.push(...useSkill(s, "Sneak", 2.5 + 0.625 * 10));   // [Skyrim] 2.5 for hiding + 0.625/s hidden
-      if (Math.random() < hiddenChance(s, e, t)) { tr.status = "travel"; tr.encounter = null; tr.lastTick = t; tripLog(s, ` Slipped past the ${e.name}`); return { text: `You slip past the ${e.name} unseen.`, skills: lines }; }
-      enemyFirst = true; lines.unshift(`A twig snaps. The ${e.name} spots you!`);
+      if (Math.random() < hiddenChance(s, e, t)) { tr.status = "travel"; tr.encounter = null; tr.lastTick = t; tripLog(s, ` Slipped past ${theFoe(e)}`); return { text: `You slip past ${theFoe(e)} unseen.`, skills: lines }; }
+      enemyFirst = true; lines.unshift(`A twig snaps. ${theFoe(e, true)} spots you!`);
     }
     const f = new Fight(s, e, null, t);
     if (typeof HORSEBACK !== "undefined") HORSEBACK.engage(f, t);   // [OURS] riding? you fight from the saddle
@@ -1303,14 +1308,14 @@ const G = (() => {
     f.run({ enemyFirst, t, hidden: opts.hidden ?? null });
     const skillMsgs = f.apply(t);
     if (f.fled && !f.won && f.hp > 0) {
-      tr.status = "travel"; tr.encounter = null; tr.lastTick = t; tripLog(s, ` Broke off the fight with the ${e.name}`);
-      return { text: [...lines, `You break off the fight and leave the ${e.name} behind.`].join(" "), fight: f, fled: true, skills: skillMsgs };
+      tr.status = "travel"; tr.encounter = null; tr.lastTick = t; tripLog(s, ` Broke off the fight with ${theFoe(e)}`);
+      return { text: [...lines, `You break off the fight and leave ${theFoe(e)} behind.`].join(" "), fight: f, fled: true, skills: skillMsgs };
     }
     if (f.won) {
       const g = rint(...e.gold); s.gold += g; const loot = rollLoot(s, e);
       tr.status = "travel"; tr.encounter = null; tr.lastTick = t;
-      tripLog(s, ` Defeated the ${e.name}${g ? ` (+${g} gold)` : ""}`);
-      return { text: lines.join(" ") || `You defeat the ${e.name}.`, fight: f, gold: g, loot, skills: skillMsgs };
+      tripLog(s, ` Defeated ${theFoe(e)}${g ? ` (+${g} gold)` : ""}`);
+      return { text: lines.join(" ") || `You defeat ${theFoe(e)}.`, fight: f, gold: g, loot, skills: skillMsgs };
     }
     const d = die(s, e.name, t);
     return { text: lines.join(" "), fight: f, died: d.msg, bag: d.bag, skills: skillMsgs };
@@ -1473,7 +1478,7 @@ const G = (() => {
     riding, withHorse, STACKABLE, give, take, invRow, wornCount, freeQty, handable, carried, capacity, overweight, equipment, equip, unequip, equipOff, canOffhand, countRestore, itemStats,
     loadout: lo, addRule, ruleSlot, deadRules, fixTactics, saveLoadoutAs, deleteLoadout, spellCost, describeRule, describeAction, Fight, scaleEnemy, scaleQuestFoe, questLevel, rollLoot,
     rollEncounter, die, speed, discoverRadius, startTrip, startEvent, eventChoices, eventChoice, buyFrom, minutesLeft, minutesTo, posAfter, advance, encounterAction, migrate, PLACES,
-    spellDamage, spellHeal, spellArmor, spellSummon, spellCalm, dualCost, shopTypes, shopStock, buyPrice, sellPrice, lotPrice, buy, sell, readTome, drinkPotion, recharge, clone, note,
+    theFoe, spellDamage, spellHeal, spellArmor, spellSummon, spellCalm, dualCost, shopTypes, shopStock, buyPrice, sellPrice, lotPrice, buy, sell, readTome, drinkPotion, recharge, clone, note,
   };
 })();
 if (typeof module !== "undefined") module.exports = G;
