@@ -102,7 +102,7 @@
      longhouse-plate          2048×1152  the longhouse close up (Rooms tab). longhouse.js draws light overlays over it for every
                                          built room (window light, forge glow, trophies, banners, a stable lantern), placed in a
                                          1024×576 frame: keep the hall where it is if it's repainted. longhouse-plate-wide: spare,
-                                         a calmer view of the same hall (shown before a company is founded).
+                                         a calmer view of the same hall (not used yet).
      art-<prince>             256×256    painted Daedric artifact icons (bargains.js), transparent, WebP q85:
                                          dagon azura nocturnal hircine boethiah meridia. The line glyph stays as the fallback.
      expedition-table         1920×1080  the Expedition Table backdrop (expedition.js), shown darkened behind the offers, WebP q80
