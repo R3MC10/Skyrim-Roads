@@ -869,6 +869,7 @@ const TB = (() => {
     if (R) { el.classList.toggle("tbplay", playing); R.low(el, hpNow / Math.max(1, hpMax), !sess.done); }
     if (f.bf && typeof BOSSFIGHT !== "undefined") { try { BOSSFIGHT.decorate(el, sess, newEv, ehpNow, playing); } catch (e) { console.warn("boss", e); } }   // boss bar, phases, big attacks
     if (typeof REACT !== "undefined") { try { REACT.decorate(el, sess, newEv, playing); } catch (e) { console.warn("combos", e); } }   // combo icons on moves, the combo banner
+    if (typeof HOTBAR !== "undefined") { try { HOTBAR.decorate(el, sess); } catch (e) { console.warn("hotbar", e); } }   // "Edit hotbar" for the … menu (hotbar.js)
     if (typeof FIGHTDC !== "undefined") { try { FIGHTDC.decorate(el, sess); } catch (e) { console.warn("declutter", e); } }   // the "…" menu, the foe's folded moves (fightdeclutter.js)
   }
   /* floating numbers for what just happened: damage coloured by element, heals, crits, and what you spent */
@@ -979,6 +980,7 @@ const TB = (() => {
     if (b.dataset.tbx === "skip") { ui.skip = true; try { FIGHTART.finishAll(); } catch (e) { /* nothing playing */ } return render(ui.pendState || { turn: sess.done ? "done" : sess.cur?.id === "me" ? "me" : "auto" }); }
     if (b.dataset.tbx === "log") { ui.logOpen = true; return step(); }
     if (b.dataset.tbx === "logx") { ui.logOpen = false; return step(); }
+    if (typeof HOTBAR !== "undefined" && HOTBAR.click(b, sess)) { ui.menu = null; return step(); }   // hotbar.js: Edit hotbar, slots and the picker
     if (b.dataset.tba) {
       ui.menu = null;
       const root = document.getElementById("tbf"), tgt = root?.dataset.tbt; if (root) delete root.dataset.tbt;
@@ -1033,6 +1035,7 @@ const TB = (() => {
     clearInterval(waitT);
     if (ui) clearTimeout(ui.paceT);
     if (typeof FIGHTREAD !== "undefined") FIGHTREAD.stop();
+    if (typeof HOTBAR !== "undefined") HOTBAR.reset0();
     const cb = ui?.onDone;
     if (ui?.sess?.remote) ui.sess.remote.end?.();
     ui = null; open = false;

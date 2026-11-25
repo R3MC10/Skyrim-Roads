@@ -11,7 +11,7 @@
      yourself). Dragging still works as before (tbui.js).
    - Press feedback (glow, a small squash, a short buzz on phones), the bar rises in at the start of your turn and the
      move pip you just used bursts away.
-   - PC keys: 1-9 the numbered moves, Space ends the turn (or hurries the foe's turn / continues), R Breathe (no F key any more: build 146), M magic, I items, Esc back or cancel.
+   - PC keys: 1-9 and 0 the hotbar slots (hotbar.js), Space ends the turn (or hurries the foe's turn / continues), R Breathe (no F key any more: build 146), M magic, I items, Esc back or cancel.
    The old cards and the combat wheel are still there: Settings → Fights → Controls. */
 const FIGHTCTL = (() => {
   const DOM = typeof document !== "undefined";
@@ -151,6 +151,7 @@ const FIGHTCTL = (() => {
     if (api.menu === "magic" || api.menu === "items") return picker(sess, api, enter);
     const bx = typeof BEASTPATH !== "undefined" ? BEASTPATH.moves(f) : { form: null, list: [] };   // Beast Form / Vampire Lord / vampire powers (beastpaths.js)
     if (bx.form) return beastDock(sess, api, bx, enter);
+    if (typeof HOTBAR !== "undefined") return hotDock(sess, api, enter);   // hotbar.js: 10 slots you set up yourself, keys 1-0
     const bow = f.wt === "bow" || f.wt === "crossbow";
     const guard = f.shield && typeof SHIELDFX !== "undefined" ? ["bash", "Shield bash"] : ["block", "Guard"];
     const main = [btn(sess, api, "attack", { label: bow ? "Shoot" : "Attack", extra: "main big", key: "1" }),
@@ -169,6 +170,20 @@ const FIGHTCTL = (() => {
       <div class="fc-tray" role="group" aria-label="Quick slots" style="--n:${Math.max(3, q.length)}">${tray || `<p class="fc-empty">Quick slots: tap ★ next to a spell or potion to pin it here</p>`}</div>
       <div class="tbgrid fc-main">${main}</div>
       <div class="fc-row">${menuB("magic", "Magic", `${nSp} spell${nSp === 1 ? "" : "s"}`, "M", iconFor(f, "magic", api, 26))}${menuB("items", "Items", `${nPot} potion${nPot === 1 ? "" : "s"}`, "I", iconFor(f, "items", api, 26))}${typeof STRAT !== "undefined" ? btn(sess, api, "recover", { label: "Breathe", extra: "rec fc-m", key: "R" }) : ""}${btn(sess, api, "flee", { label: "Flee", extra: "flee fc-m" })}${end}</div>
+    </div>`;
+  }
+  /* the hotbar (hotbar.js) and beside it Magic, Items, Flee and End turn */
+  function hotDock(sess, api, enter) {
+    const f = sess.f, s = f.s;
+    const ui = { btn, icon: (ff, a, sz) => iconFor(ff, a, api, sz || 34) };
+    if (HOTBAR.editing) return `<div class="fc fc-hb hb-on${enter ? " enter" : ""}" data-fcmode="edit">${HOTBAR.bar(sess, api, ui)}</div>`;
+    const nSp = (s.spells || []).filter((id) => D.SPELLS[id] && D.SPELLS[id].kind !== "utility").length;
+    const nPot = ["health", "magicka", "stamina"].reduce((t, k) => t + potCount(f, k), 0);
+    const menuB = (m, label, sub, k, ic) => `<button class="tbact menu fc-m" data-tbm="${m}" data-fk="${k}" aria-label="${label}, ${sub}"><span class="ic" aria-hidden="true">${ic}</span><b>${label}</b><small>${sub}</small>${keyLbl(k)}</button>`;
+    const extra = (typeof MOUNTFIGHT !== "undefined" ? MOUNTFIGHT.moves(f) : []).map(([a, n]) => btn(sess, api, a, { label: n, extra: "fc-m mount" })).join("");
+    return `<div class="fc fc-hb${enter ? " enter" : ""}" data-fcmode="main">
+      ${HOTBAR.bar(sess, api, ui)}
+      <div class="hb-side">${menuB("magic", "Magic", `${nSp} spell${nSp === 1 ? "" : "s"}`, "M", iconFor(f, "magic", api, 26))}${menuB("items", "Items", `${nPot} potion${nPot === 1 ? "" : "s"}`, "I", iconFor(f, "items", api, 26))}${extra}${btn(sess, api, "flee", { label: "Flee", extra: "flee fc-m" })}${endBtn(sess, f)}</div>
     </div>`;
   }
   /* changed into a beast or a Vampire Lord: the form's own moves, big; no magic or items (beastpaths.js) */
@@ -302,6 +317,12 @@ const FIGHTCTL = (() => {
     zone?.classList.add("fc-hitme"); buzz(14);
     x.b.click();
   }
+  /* a key press on a move: the same as a tap, so a heal with teammates around asks who gets it */
+  function press(b) {
+    if (aim && aim.b === b) return b.click();   // the same key again: on yourself
+    const z = root()?.dataset.tbt == null ? needsTarget(b) : null;
+    if (z) startAim(b, z); else b.click();
+  }
   /* [magicaim] a tap on someone's figure in the fight scene (fightpos.js knows where everyone stands): their plate */
   function sceneTgt(r, ev) {
     if (typeof FIGHTPOS === "undefined" || ev.clientX == null || !ev.target.closest?.(".tbstage")) return null;
@@ -377,8 +398,10 @@ const FIGHTCTL = (() => {
   // ------------------------------------------------------------------ keys on a PC
   function key(ev) {
     const r = root(); if (!r || !r.querySelector(".fc, .tbdone, .tbskip")) return;
-    if (ev.ctrlKey || ev.metaKey || ev.altKey || /^(INPUT|TEXTAREA|SELECT)$/.test(ev.target?.tagName || "")) return;
+    if (ev.ctrlKey || ev.metaKey || ev.altKey || /^(INPUT|TEXTAREA|SELECT)$/.test(ev.target?.tagName || "") || ev.target?.isContentEditable) return;
     if (document.querySelector(".tbtime")) return;      // the timing ring has the keys
+    if (typeof HOTBAR !== "undefined" && /^[0-9]$/.test(ev.key) && HOTBAR.blocked(ev)) { ev.stopImmediatePropagation(); return; }   // typing, a menu or a window: number keys do nothing
+    if (typeof HOTBAR !== "undefined" && HOTBAR.editKey(ev)) { ev.stopImmediatePropagation(); return; }   // edit mode: keys pick slots
     const hit = (el) => { if (!el || el.disabled) return false; ev.preventDefault(); ev.stopImmediatePropagation(); el.classList.add("fc-press"); el.click(); return true; };
     const k = ev.key;
     if (k === "Escape") {
@@ -392,11 +415,11 @@ const FIGHTCTL = (() => {
       return hit(r.querySelector(".tbdone")) || hit(r.querySelector(".tbskip")) || hit(r.querySelector('.fc [data-tba="end"]'));
     }
     const fc = r.querySelector(".fc"); if (!fc) return;
-    if (/^[1-9]$/.test(k)) { ev.preventDefault(); ev.stopImmediatePropagation(); const b = fc.querySelector(`[data-fk="${k}"]`); if (b && !b.disabled) { b.classList.add("fc-press"); b.click(); } return; }
+    if (/^[0-9]$/.test(k)) { ev.preventDefault(); ev.stopImmediatePropagation(); const b = fc.querySelector(`[data-fk="${k}"]`); if (b && !b.disabled) { b.classList.add("fc-press"); press(b); } return; }
     const ch = k.length === 1 ? k.toUpperCase() : "";
     if (ch === "M") return hit(fc.querySelector('[data-tbm="magic"]:not(.on)')) || hit(fc.querySelector('[data-tbm=""]'));
     if (ch === "I") return hit(fc.querySelector('[data-tbm="items"]:not(.on)')) || hit(fc.querySelector('[data-tbm=""]'));
-    if (ch === "R") return hit(fc.querySelector('[data-fk="R"]'));   // Catch your breath (strategy.js)
+    if (ch === "R") return hit(fc.querySelector('[data-fk="R"]')) || hit(fc.querySelector('.hb-bar [data-tba="recover"]'));   // Catch your breath (strategy.js)
   }
 
   if (DOM && typeof addEventListener === "function") {
@@ -408,6 +431,6 @@ const FIGHTCTL = (() => {
     addEventListener("focusin", focusIn, true);
     addEventListener("keydown", key, true);
   }
-  return { on, dock, apHTML, click, settingsHTML, quick, reason, suggest, toggleFav, favs, get aiming() { return !!aim; }, cancelAim };
+  return { on, dock, apHTML, click, settingsHTML, quick, reason, suggest, toggleFav, favs, press, get aiming() { return !!aim; }, cancelAim };
 })();
 if (typeof module !== "undefined") module.exports = FIGHTCTL;
