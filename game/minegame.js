@@ -321,6 +321,10 @@ const MINEGAME = (() => {
     tag.textContent = r.broke && r.item ? `+${r.n} ${short(r.item)}` : dmg === PERFECT ? "Perfect!" : dmg === GOOD ? "Good" : "Glancing";
     const zz = st.zz || 1; tag.style.left = x / zz + "px"; tag.style.top = rc.top / zz + "px";
     st.el.appendChild(tag); setTimeout(() => tag.remove(), 900);
+    // keep it clear of the mine's name and the line under it (it rises ~1.9× its height), and inside the screen sideways
+    const hd = $(".mghead")?.getBoundingClientRect(), th = tag.offsetHeight || 30, tw = tag.offsetWidth || 80, vw = st.el.clientWidth || innerWidth;
+    if (hd) tag.style.top = Math.max(rc.top / zz, hd.bottom / zz + th * 1.95) + "px";
+    tag.style.left = Math.min(vw - tw / 2 - 6, Math.max(tw / 2 + 6, x / zz)) + "px";
     if (r.broke && r.item) for (let k = 0; k < r.n; k++) setTimeout(() => fly(r.item, x, y, k), 60 + k * 110);
     if (st.g.over) st.timers.push(setTimeout(() => finish(false), 650 + (r.broke && r.item ? 700 : 0)));
   }

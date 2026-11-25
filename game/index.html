@@ -3607,6 +3607,40 @@ html.art-pixel .rxban,html.art-pixel #tbf .tbact.rxon .rxbadge{border-radius:0;i
 .affbtns{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px}.affcard .sub{margin:4px 0}
 .affbadge{margin-left:6px;font-size:14px;letter-spacing:2px}.affbadge i{font-style:normal}
 .affparty{margin-top:8px}
+/* ==== forging mini-game (smithgame.js) ==== */
+body.sgopen>:not(#smithgame){visibility:hidden}
+.smithgame{position:fixed;inset:0;z-index:60;display:flex;justify-content:center;background:radial-gradient(80% 70% at 50% 40%,#1a120b,#060504 70%);padding:max(8px,env(safe-area-inset-top,0px)) max(8px,env(safe-area-inset-right,0px)) max(8px,env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px))}
+.sgwrap{display:flex;flex-direction:column;width:min(100%,1700px);height:100%;gap:8px;min-height:0}
+.sgtop{display:flex;align-items:baseline;gap:4px 12px;flex-wrap:wrap;padding:0 4px}
+.sgtop h3{font-family:Cinzel,"Barlow Condensed",serif;font-weight:700;letter-spacing:.16em;text-transform:uppercase;font-size:17px;margin:0;color:#f1e4c2;text-shadow:0 0 12px rgba(255,140,50,.35)}
+.sgsub{color:var(--mute,#a9a395);font-size:13px;letter-spacing:.05em}
+.sgsteps{display:flex;gap:4px;list-style:none;margin:0 0 0 auto;padding:0;counter-reset:sg}
+.sgsteps li{counter-increment:sg;font:600 12px "Barlow Semi Condensed",sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#7d7566;padding:3px 9px;border:1px solid #3a332a;border-radius:999px}
+.sgsteps li::before{content:counter(sg) "  ";opacity:.6}
+.sgsteps li.on{color:#1b1408;background:linear-gradient(180deg,#f6d690,#d99a3e);border-color:#f3c46a;box-shadow:0 0 12px rgba(255,170,70,.45)}
+.sgsteps li.done{color:#d9c48f;border-color:#6b5a3a}
+.sgstage{position:relative;width:100%;aspect-ratio:16/9;flex:0 1 auto;min-height:0;margin:0 auto;border-radius:6px;overflow:hidden;box-shadow:0 0 0 1px rgba(228,200,150,.22),0 18px 60px rgba(0,0,0,.7);background:#0b0907}
+@media (max-aspect-ratio:4/5){.sgstage{aspect-ratio:auto;flex:1 1 auto}}
+.sgstage canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;user-select:none;-webkit-user-select:none;cursor:pointer}
+.sgpop{position:absolute;left:0;right:0;top:86px;text-align:center;pointer-events:none;font:700 22px Cinzel,serif;letter-spacing:.08em;color:#fff1cf;text-shadow:0 0 10px #000,0 0 18px rgba(255,150,60,.75);opacity:0}
+.sgpop.go{animation:sgpop 1.3s ease-out both}
+@keyframes sgpop{0%{opacity:0;transform:translateY(8px) scale(1.25)}12%{opacity:1;transform:none}75%{opacity:1}100%{opacity:0;transform:translateY(-10px)}}
+.sgresult{position:absolute;left:0;right:0;top:58%;display:flex;flex-direction:column;align-items:center;gap:2px;pointer-events:none;animation:cgres .7s ease-out both}
+.sgresult b{font:700 clamp(28px,4.2vw,52px) Cinzel,serif;letter-spacing:.22em;text-transform:uppercase;color:#f1ead8;text-shadow:0 0 14px #000,0 0 26px rgba(214,178,94,.7)}
+.sgresult small{font:500 15px "Barlow Semi Condensed",sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#d9c48f;text-shadow:0 0 8px #000}
+.sgresult.g-perfect b,.sgresult.g-masterful b{color:#ffe29a}.sgresult.g-botched b{color:#ff8a7a}
+.sgbar{flex:0 0 auto;width:100%;max-width:760px;margin:0 auto;text-align:center}
+.sghint{font-size:14px;color:#cfc4ad;margin:0 0 6px;min-height:2.6em;line-height:1.3}
+.sgrow{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-top:6px}.sgrow .btn{min-height:48px}
+#sgprog{flex:1;min-width:96px;font-size:13px;letter-spacing:.05em;color:#e9dcc0;text-align:left}
+#sgact{flex:1.4;font-size:16px;letter-spacing:.06em;user-select:none;-webkit-user-select:none;touch-action:none;background:linear-gradient(180deg,rgba(255,170,70,.28),rgba(160,70,20,.28));border-color:rgba(255,190,110,.7);color:#fff3dc}
+#sgact:disabled{opacity:.45}
+#sgreheat{flex:1}#sgreheat.sgwarn{border-color:#ff8a4a;color:#ffd0a8;box-shadow:0 0 0 1px #ff8a4a,0 0 14px rgba(255,120,50,.55);animation:sgwarn 1s ease-in-out infinite}
+@keyframes sgwarn{50%{box-shadow:0 0 0 1px #ff8a4a,0 0 4px rgba(255,120,50,.2)}}
+.sglow{justify-content:center;flex-wrap:wrap}.sglow .btn{flex:0 1 auto;padding:0 18px}.sglow .lppref{margin:0;font-size:13px}
+@media (max-width:480px){.sgtop h3{font-size:15px}.sgsteps{margin-left:0}.sghint{font-size:13px}.sgpop{top:70px;font-size:19px}}
+@media (max-height:520px) and (min-aspect-ratio:4/3){.sgwrap{gap:4px}.sghint{min-height:0;margin:0}.sgtop{display:none}.sgrow{margin-top:4px}}
+@media (prefers-reduced-motion:reduce){.sgpop.go,.sgresult,#sgreheat.sgwarn{animation:none;opacity:1}}
 /* fishart.js: the painted lake is 16:9 and grows with the screen (phone: full width; PC: up to 1400px, never taller than the window allows) */
 #fishgame .fhcard{width:min(1440px,100%)}
 #fishgame .fhcard canvas{max-width:min(100%,1400px,calc((100vh - 290px) * 1.778))!important;max-width:min(100%,1400px,calc((100dvh - 290px) * 1.778))!important;border-radius:3px;box-shadow:0 0 0 1px rgba(228,220,200,.28),0 10px 30px rgba(0,0,0,.55)}
@@ -3742,6 +3776,8 @@ html.art-pixel .minegame .mgbg,html.art-pixel .minegame .mgs,html.art-pixel .min
 @keyframes hgchip{from{opacity:0;transform:translateY(6px) scale(.92)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.hgchip{animation:none;opacity:1}}
 html.a11y-still .hgchip{animation:none;opacity:1}
+/* [tidy1] festivals on a phone: the round compass button sits bottom right, so the boards keep their scores clear of it and the page scrolls past it */
+@media (max-width:759px){.tn{padding-bottom:72px}.tn-board li{padding-right:50px}html.a11y-1h-left .tn-board li{padding-right:4px;padding-left:50px}}
 .hcoatrow{display:flex;align-items:flex-end;gap:10px;margin-top:6px}.hcoatrow .hcoatpic{display:block;width:120px;height:auto;flex:none;filter:drop-shadow(0 2px 3px rgba(0,0,0,.45))}.hcoatwait{height:120px}
 </style>
 <script src="gameicons.js"></script>
@@ -3934,12 +3970,14 @@ html.a11y-still .hgchip{animation:none;opacity:1}
 <script src="motion.js"></script>
 <script src="favwheel.js"></script>
 <script src="craftgames.js"></script>
+<script src="smithgame.js"></script>
 <script src="minegame.js"></script>
 <script src="dungeongames.js"></script>
 <script src="lockgame.js"></script>
 <script src="livecursor.js"></script>
 <script src="partytraps.js"></script>
 <script src="hunting.js"></script>
+<script src="scenegrade.js"></script>
 <script src="fishart.js"></script>
 <script src="fishing.js"></script>
 <script src="huntgame.js"></script>
@@ -3988,6 +4026,7 @@ html.a11y-still .hgchip{animation:none;opacity:1}
 <script src="i18n_backdrops2.js"></script>
 <script src="i18n_festart.js"></script>
 <script src="i18n_mgfishing.js"></script>
+<script src="i18n_tidy1.js"></script>
 <script src="i18n_paintrig.js"></script>
 <script src="i18n_rigraces.js"></script>
 <script src="i18n_rigcohesion.js"></script>
@@ -3998,6 +4037,7 @@ html.a11y-still .hgchip{animation:none;opacity:1}
 <script src="i18n_stacks.js"></script>
 <script src="i18n_fighttips.js"></script>
 <script src="i18n_pickaxe.js"></script>
+<script src="i18n_smithgame.js"></script>
 <script src="i18n_mgmining.js"></script>
 <script src="i18n_pcfit.js"></script>
 <script src="i18n_widetitle.js"></script>

@@ -8,6 +8,7 @@ android/app/roads.keystore
 android/keystore.properties
 
 # screen test screenshots
+tests/fh_*.png
 tests/tbf/
 tests/gore/
 tests/acct/

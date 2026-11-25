@@ -2,7 +2,7 @@
    Owner: "Use gpt to create art for minigames, they also should get a graphical and animation overhaul."
    Drawing units 640×360 (16:9, the painting's shape), sized by FITCANVAS.fixed in fishing.js.
    - mg-fishing-bg: the painted lake at dusk. The water moves (a gentle wobble of the painted rows, glints, fish rising),
-     mist drifts along the far shore; night, rain, snow and fog are laid over it.
+     mist drifts along the far shore; night, rain, snow and fog are graded over it (scenegrade.js).
    - tool-fishing-rod: painted rod, drawn in slices along a bending spine: it flexes back on the aim, whips on the cast and
      bends like a spring with the line's tension. The line arcs out with the float on the cast and sags while you wait.
    - The float bobs with rings, twitches on nibbles and goes under with a splash on the real bite.
@@ -188,24 +188,9 @@ const FISHART = (() => {
       gr.addColorStop(0, `rgba(232,226,214,${a})`); gr.addColorStop(1, "rgba(232,226,214,0)");
       g.fillStyle = gr; g.beginPath(); g.arc(0, 0, m2.r, 0, 7); g.fill(); g.restore();
     }
-    // time and weather over the painting
-    const wx = st.ctx.wx;
-    if (st.ctx.night) {
-      const sun = g.createRadialGradient(73, 43, 0, 73, 43, 120); sun.addColorStop(0, "rgba(10,16,30,.55)"); sun.addColorStop(1, "rgba(10,16,30,0)");
-      g.fillStyle = sun; g.fillRect(0, 0, 260, 200);
-      g.fillStyle = "rgba(9,16,34,.6)"; g.fillRect(0, 0, W, H);
-      const mo = g.createRadialGradient(540, 46, 0, 540, 46, 70); mo.addColorStop(0, "rgba(220,228,240,.32)"); mo.addColorStop(1, "rgba(220,228,240,0)");
-      g.fillStyle = mo; g.fillRect(440, 0, 200, 130);
-      g.fillStyle = "#e9e6da"; g.beginPath(); g.arc(540, 46, 9, 0, 7); g.fill();
-      g.fillStyle = "rgba(140,160,190,.35)"; g.beginPath(); g.arc(544, 43, 8, 0, 7); g.fill();
-      // the moon's path on the water: broken glints
-      g.save(); g.globalCompositeOperation = "lighter";
-      for (let j = 0; j < 16; j++) { const y = 150 + j * 7 + (j % 3), w = 4 + j * 0.9, x = 538 + Math.sin(j * 2.3 + T * (still() ? 0 : 1.4)) * (2 + j * 0.6), a = 0.1 + 0.12 * Math.max(0, Math.sin(T * 2 + j * 1.9));
-        g.fillStyle = `rgba(205,218,238,${a.toFixed(3)})`; g.fillRect(x - w / 2, y, w, 1.1); }
-      g.restore();
-    } else if (wx === "rain" || wx === "storm") { g.fillStyle = "rgba(40,48,60,.36)"; g.fillRect(0, 0, W, H); }
-    else if (wx === "snow" || wx === "blizzard") { g.fillStyle = "rgba(196,206,222,.18)"; g.fillRect(0, 0, W, H); }
-    else if (wx === "fog") { g.fillStyle = "rgba(200,200,196,.2)"; g.fillRect(0, 0, W, H); }
+    // time and weather over the painting (scenegrade.js): night dark blue with the sun covered and a moon, day brighter,
+    // rain and fog greyer, snow colder. The painted sun sits at 73,43, the far shore at HZ.
+    if (typeof SCENEGRADE !== "undefined") SCENEGRADE.grade(g, W, H, { night: st.ctx.night, wx: st.ctx.wx, sun: [73, 43], moon: [540, 46], hz: HZ, moonPath: 150, T, calm });
   }
   function weatherFront(g, st, T) {
     const wx = st.ctx.wx, calm = still();
