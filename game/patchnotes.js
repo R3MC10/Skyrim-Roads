@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b252-qaside2a", build: 252, date: "25 Nov 2026", title: "Forge and lockpicking fixes", items: [
+      "Fixed: in Polish, the forge was still mostly in English: the Make, Smelt & tan and Improve tabs, batch crafting, what's missing, and the line you get after making something.",
+      "Fixed: in Polish, the lockpicking hint under the lock is translated.",
+      "Fixed: after a festival smithing contest, your next forged item could get a free chance to save a material it never earned.",
+    ] },
     { id: "b251-perklayout", build: 251, date: "25 Nov 2026", title: "Tidier perk stars", items: [
       "Perk names in the star trees never sit on top of each other any more, and long names are never cut short with \"…\": they wrap onto a second line instead.",
       "Each perk now sits right above the perks it needs, with the first ones at the bottom, so the trees read from the ground up.",
