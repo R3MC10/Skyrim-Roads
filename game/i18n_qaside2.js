@@ -75,6 +75,37 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     ];
     for (const p of PATS) if (!I18N_STORY.pats.some(([en]) => en === p[0])) I18N_STORY.pats.push(p);
   }
+  // halls, the Hall of the North, neighbours, the inn and festivals (ui.js, tourneyui.js)
+  const HALLT = { Camp: "Obóz", Longhouse: "Długi dom", "Mead Hall": "Miodosytnia", "Fortified Hall": "Warowny dwór", "Jarl's Keep": "Twierdza jarla" };
+  Object.assign(I18N_EXTRA.words, HALLT, {
+    "Shared chest": "Wspólna skrzynia", "Empty for now.": "Na razie pusto.", "Put something in": "Włóż coś",
+    "Rent a room": "Wynajmij pokój", "You're already rested": "Już jesteś wypoczęty", "Write": "Napisz", "Your verse": "Twoja zwrotka",
+    "Hall name": "Nazwa dworu", "None yet.": "Na razie nic.", "None yet (or you're playing offline).": "Na razie nic (albo grasz offline).",
+    "Nobody else has a house here yet.": "Nikt inny nie ma tu jeszcze domu.", "Nobody else has a house here yet (or you're playing offline).": "Nikt inny nie ma tu jeszcze domu (albo grasz offline).",
+    "Visit": "Odwiedź", "Your hold": "Twoje włości", "Type a name": "Wpisz imię",
+    "Your own hall: build a forge, a shrine, a trophy room, storage and a shop counter; decorate it; hire a shopkeeper, a steward and a guard.":
+      "Twój własny dwór: zbuduj kuźnię, kapliczkę, salę trofeów, magazyn i ladę sklepu; urządź go; zatrudnij sklepikarza, zarządcę i strażnika.",
+  });
+  I18N_EXTRA.pat.push(
+    [/^Buy ([A-Z][\w' ]+)$/, (m) => `Kup: ${m[1]}`],
+    [/^Buy a hall plot in (.+)$/, (m) => `Kup działkę pod dwór w: ${m[1]}`],
+    [/^Other halls in (.+)$/, (m) => `Inne dwory w: ${m[1]}`],
+    [/^○ (Camp|Longhouse|Mead Hall|Fortified Hall|Jarl's Keep)( · [\d,. ]+)?$/, (m) => `○ ${HALLT[m[1]]}${m[2] || ""}`],
+    [/^Other players who own (.+) in their own world\. Drop in to see their trophies, or leave a gift\.$/,
+      (m) => `Inni gracze, którzy mają ${m[1]} we własnym świecie. Wpadnij obejrzeć ich trofea albo zostaw prezent.`],
+    [/^Guild hall · (.+)$/, (m) => `Dwór gildii · ${m[1]}`],
+    [/^(.+) · (\d+) rooms?( · has a shop)?$/, (m) => `${m[1]} · pokoje: ${m[2]}${m[3] ? " · ma sklep" : ""}`],
+    [/^Level (\d+) · (\d+) dragon skulls?(.*)$/, (m) => `Poziom ${m[1]} · smocze czaszki: ${m[2]}${m[3]}`],
+    [/^(.+) · on now · ends in (.+)$/, (m) => `${m[1]} · trwa · koniec za ${m[2]}`],
+    [/^ends in (.+)$/, (m) => `koniec za ${m[1]}`],
+    [/^(\d+)% there$/, (m) => `${m[1]}% do następnego poziomu`],
+  );
+  // "Great Hunt in Falkreath is on in Falkreath." read as "trwa w: Falkreath"; say it plainly
+  if (typeof I18N_STORY !== "undefined") {
+    const fix = { "{0} is on in {1}.": "{0} trwa teraz ({1})." };
+    for (const p of I18N_STORY.pats) if (fix[p[0]]) p[1] = fix[p[0]];
+    for (const [en, pl] of Object.entries(fix)) if (!I18N_STORY.pats.some(([e]) => e === en)) I18N_STORY.pats.push([en, pl]);
+  }
   // "1 more Leather Strips" inside "Missing ..."
   I18N_EXTRA.pat.push([/^(\d+) more (.+)$/, (m) => `jeszcze ${m[1]} ${m[2]}`]);
   // "Iron Sword is now Fine" (batch improve) and "→ Fine" chips
