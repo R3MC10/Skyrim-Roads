@@ -1,12 +1,14 @@
 import asyncio, sys
 from playwright.async_api import async_playwright
+_SHOTS = (__import__("os").environ.get("SHOTS") or __import__("os").path.join(__import__("tempfile").gettempdir(), "rotn_shots")).replace("\\", "/").rstrip("/") + "/"   # screenshots: $SHOTS or the temp folder
+__import__("os").makedirs(_SHOTS, exist_ok=True)
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8835"
-SHOT = "/home/claude/tests/party_"
+SHOT = _SHOTS + "party_"
 GEAR_B = """() => { const S = window.__dbg.save(); for (const id of ['steel_sword','steel_armor','steel_helmet','steel_shield']) { if (!D.ITEMS[id]) continue; G.give(S, id); const r = S.inv.find(x => x.item === id); try { G.equip(S, r.id); } catch (e) {} } }"""
 GEAR_A = """() => { const S = window.__dbg.save(); for (const id of ['iron_war_axe','leather_armor','hide_helmet']) { if (!D.ITEMS[id]) continue; G.give(S, id); const r = S.inv.find(x => x.item === id); try { G.equip(S, r.id); } catch (e) {} } }"""
 async def main():
     async with async_playwright() as p:
-        b = await p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-sandbox"])
+        b = await p.chromium.launch(executable_path=(__import__("os").environ.get("CHROME") or ("/usr/bin/google-chrome" if __import__("os").path.exists("/usr/bin/google-chrome") else None)), args=["--no-sandbox"])
         errs = []; ok = True
         for style in ["ink"]:
             ctx = await b.new_context(viewport={"width": 412, "height": 915}, device_scale_factor=2)

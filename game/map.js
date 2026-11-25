@@ -885,7 +885,7 @@ const WorldMap = (() => {
       if ((c.hover || c.open) && !c.near) { g.fillStyle = "rgba(255,236,180,.16)"; g.strokeStyle = "rgba(255,236,180,.85)"; g.lineWidth = 1.6 * s; g.beginPath(); g.arc(cx, cy - 10 * s, 22 * s, 0, 7); g.fill(); g.stroke(); }   // under the mouse / its card is open (wagons.js)
       g.drawImage(sp, cx - 21 * s, cy - 25 * s + bob2, 42 * s, 30 * s);
       if (c.trouble) { const bx = cx + 15 * s, by = cy - 26 * s; g.fillStyle = c.trouble === "attacked" ? "#b8322a" : "#c98a2a"; g.strokeStyle = "#1a1206"; g.lineWidth = 1.4 * s; g.beginPath(); g.arc(bx, by, 6.5 * s, 0, 7); g.fill(); g.stroke(); g.fillStyle = "#fff6dc"; g.font = `800 ${Math.round(9 * s)}px system-ui, sans-serif`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("!", bx, by + 0.5 * s); }   // broken down or under attack (wagons.js)
-      if (v.zoom >= 1.5 || c.near || c.hover) tidyLabel(g, c.near ? `${c.label} · tap to meet` : c.label, cx, cy + 12 * s, s, 11, c.mine || c.near || c.hover ? "#ffe6a0" : "#f3e7c4", 700, true, !!(c.near || c.mine || c.hover));
+      if (v.zoom >= 1.5 || c.near || c.hover) tidyLabel(g, c.near ? `${LX(c.label)} · ${LX("tap to meet")}` : LX(c.label), cx, cy + 12 * s, s, 11, c.mine || c.near || c.hover ? "#ffe6a0" : "#f3e7c4", 700, true, !!(c.near || c.mine || c.hover));
     }
     if (v.guards && typeof GUARDS !== "undefined") GUARDS.drawMap(g, CL.skip.size ? v.guards.filter((q) => !CL.skip.has(q)) : v.guards, P, s, v.t, v.reduceMotion, v.zoom, tidyLabel);   // hold guards on patrol (guards.js)
     for (const pin of CL.pins) drawCluster(g, pin, s, boxes);
@@ -910,7 +910,7 @@ const WorldMap = (() => {
     for (const b of partyRes) { const i = boxes.indexOf(b); if (i >= 0) boxes.splice(i, 1); }   // party members' names take their reserved room
     otherLabels();
     if (HF) {   // you: walking, standing, or in the saddle, facing the way you travel
-      const r = HF.draw(g, hx, py, s, { id: "me", look: v.look, horse: v.horse, moving: v.moving, gallop: !!v.gallop, t: v.t, reduce: v.reduceMotion, heading: v.moving ? heading.a : null, ring: "#6ec8ff" });
+      const r = HF.draw(g, hx, py, s, { id: "me", look: v.look, horse: v.horse, led: v.led || null, moving: v.moving, gallop: !!v.gallop, t: v.t, reduce: v.reduceMotion, heading: v.moving ? heading.a : null, ring: "#6ec8ff" });
       if (v.fx && typeof FXART !== "undefined") FXART.mapOver(g, v.fx, P, s, hx, r.head, v.t, v.reduceMotion);
       label(g, v.name, hx, Math.min(myTop, r.top - 7 * s), s, 14, "#d8f0ff", 700, false, "center");
       arrow(hx, py - 2 * s, (v.horse ? 30 : 20) * s);

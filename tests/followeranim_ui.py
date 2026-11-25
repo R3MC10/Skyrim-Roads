@@ -9,7 +9,7 @@ from PIL import Image, ImageChops
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "out_followeranim") + os.sep; os.makedirs(OUT, exist_ok=True)
-CHROME = os.environ.get("CHROME", "/usr/bin/google-chrome")
+CHROME = (__import__("os").environ.get("CHROME") or ("/usr/bin/google-chrome" if __import__("os").path.exists("/usr/bin/google-chrome") else None))
 JS = re.search(r'JS = r"""(.*?)"""', open(os.path.join(HERE, "fight2_ui.py"), encoding="utf-8").read(), re.S).group(1)
 fails = []
 def ok(c, m):
@@ -37,7 +37,7 @@ async def frames(pg, me, t1, t2):
 
 async def main():
     async with async_playwright() as p:
-        kw = {"executable_path": CHROME, "args": ["--no-sandbox"]} if os.path.exists(CHROME) else {}
+        kw = {"executable_path": CHROME, "args": ["--no-sandbox"]} if CHROME and os.path.exists(CHROME) else {}
         br = await p.chromium.launch(**kw)
         errs = []
         for style in ["ink"]:

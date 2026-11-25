@@ -199,7 +199,7 @@ const WAGONS = (() => {
   }
   function helpLabel(s, c, t = nowS()) {
     const h = canHelp(s, c, t); if (!h) return null;
-    return h.kind === "fix" ? T("Help fix the wheel ({g} gold)", { g: fixPay(s) }) : T("Fight off the {foe} ({g} gold)", { foe: h.x.name.toLowerCase(), g: savePay(s) });
+    return h.kind === "fix" ? T("Help fix the wheel ({g} gold)", { g: fixPay(s) }) : T("Fight off the {foe:lc} ({g} gold)", { foe: h.x.name, g: savePay(s) });
   }
   const repDeed = (s, hold, pts, line, t) => { try { if (typeof LIVING !== "undefined" && hold) LIVING.deed(s, "guard", hold, pts, line, t); } catch (e) { /* ignore */ } };
   /* returns a road-event result: {text} for a repair, {text, foe, afterFn} for a fight beside the guards */
@@ -471,7 +471,7 @@ const WAGONS = (() => {
     "\"There's a place off the road near {town} you might not know: {spot}.\" It's marked on your map now.": "„Niedaleko {town}, z dala od drogi, jest miejsce, którego możesz nie znać: {spot}.” Masz je teraz na mapie.",
     "\"Quiet roads, thank the Eight. Nothing worth telling.\"": "„Spokojne drogi, dzięki Ośmiorgu. Nic wartego opowiadania.”",
     "Help fix the wheel ({g} gold)": "Pomóż naprawić koło ({g} złota)",
-    "Fight off the {foe} ({g} gold)": "Odeprzyj napastników: {foe} ({g} złota)",
+    "Fight off the {foe:lc} ({g} gold)": "Odeprzyj napastników: {foe:lc} ({g} złota)",
     "They don't need a hand right now.": "Teraz nie potrzebują pomocy.",
     "You heave and hammer, but the axle's cracked through. The wagon master thanks you anyway and sends a rider for a new one.": "Dźwigasz i stukasz, ale oś pękła na wylot. Woźnica i tak dziękuje i posyła jeźdźca po nową.",
     "You fit a new iron pin from your pack and the wheel goes back on. ": "Wbijasz nowy żelazny sworzeń z plecaka i koło wraca na miejsce. ",
@@ -543,6 +543,8 @@ const WAGONS = (() => {
       "Na PC wozy podświetlają się pod myszką. Po oddaleniu dotknięcie pinezki z grupą przybliża mapę. W drużynie decyduje przywódca.",
     "Caravan Friend (Speech) now also makes caravans on the road sell to you 10% cheaper.":
       "Przyjaciel karawan (Mowa) daje teraz też 10% taniej u karawan spotkanych w drodze.",
+    "In Polish, everything about caravans is now in Polish too: their names on the map, meetings on the road, the caravan board in town, your caravan job, your cart and the wares they sell.":
+      "Po polsku wszystko, co dotyczy karawan, jest teraz też po polsku: ich nazwy na mapie, spotkania w drodze, tablica karawan w mieście, twoja praca przy karawanie, twój wóz i towary, które sprzedają.",
   };
   if (typeof I18N !== "undefined" && I18N.add) I18N.add(PL, PL);
 

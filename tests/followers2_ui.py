@@ -2,8 +2,10 @@
 other's followers in the travel picture and fighting beside them. python3 followers2_ui.py <port>  -> RESULT OK"""
 import asyncio, sys
 from playwright.async_api import async_playwright
+_SHOTS = (__import__("os").environ.get("SHOTS") or __import__("os").path.join(__import__("tempfile").gettempdir(), "rotn_shots")).replace("\\", "/").rstrip("/") + "/"   # screenshots: $SHOTS or the temp folder
+__import__("os").makedirs(_SHOTS, exist_ok=True)
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8852"
-SHOT = "/home/claude/tests/fol2_"
+SHOT = _SHOTS + "fol2_"
 HIRE = """(id) => { const S = window.__dbg.save(); S.gold = 5000; S.thaneWhiterun = true; S.location = 'Whiterun'; [S.x, S.y] = WORLD.places.Whiterun; S.trip = null; S.level = 14; S.hpBonus = 80; G.setHealth(S, G.maxHealth(S));
   const home = TOWNS.FOLLOWERS[id][1]; S.location = home; const m = TOWNS.hire(S, id); S.location = 'Whiterun'; window.__dbg.publish(); return m; }"""
 async def main():

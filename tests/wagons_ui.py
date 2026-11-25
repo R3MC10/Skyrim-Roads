@@ -40,8 +40,9 @@ CLUSTER = """()=>{
   return pin ? { x: r.left + pin.x, y: r.top + pin.y - 8 * UI, n: pin.n, zoom: v.zoom } : { pins: CL.pins.length, zoom: v.zoom, at: CL.pins.map(p => { const e = document.elementFromPoint(r.left + p.x, r.top + p.y - 8 * UI); return [Math.round(p.x), Math.round(p.y), p.items.map(i => i.kind).join(','), e ? (e.id || e.className) : null]; }) };
 }"""
 
-async def start(b, vp, tag, errs):
+async def start(b, vp, tag, errs, lang=None):
     ctx = await b.new_context(viewport=vp, device_scale_factor=2 if vp["width"] < 700 else 1)
+    if lang: await ctx.add_init_script("try { const p = JSON.parse(localStorage.getItem('rotn_prefs') || '{}'); p.lang = '%s'; localStorage.setItem('rotn_prefs', JSON.stringify(p)); } catch (e) {}" % lang)
     pg = await ctx.new_page(); pg.on("pageerror", lambda e: errs.append(f"{tag}: {e}"))
     bad = []; pg.on("requestfailed", lambda r: bad.append(r.url) if "127.0.0.1" in r.url else None)
     for attempt in range(8):   # a busy local server sometimes drops a script: load again rather than test half a game
@@ -130,12 +131,58 @@ async def run(b, vp, tag, errs, res):
         else: print("  no group pin with a wagon in view (skipped)")
     await pg.context.close()
 
+# text nodes inside a box that still read as English
+ENGLISH = r"""(sel) => { const out = []; for (const root of document.querySelectorAll(sel)) { const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT); let n;
+  while ((n = w.nextNode())) { const t = n.nodeValue.trim().replace(/The (Pale|Rift|Reach)/g, ""); if (t.length > 2 && /\b(the|you|your|they|them|with|wagons?|caravans?|guards?|trade|road|gold|leaves|arrives|cart|news|catch|rob|state|cargo)\b/i.test(t)) out.push(t); } }
+  return [...new Set(out)]; }"""
+
+async def run_pl(b, errs, res):
+    """Polish: the card, its packs, the meeting on the road and the town's caravan board have no English left"""
+    pg = await start(b, {"width": 390, "height": 844}, "pl", errs, lang="pl")
+    info = await pg.evaluate(SETUP, 3.6); print("pl caravan:", info)
+    await pg.evaluate("document.querySelector('#mapwrap')?.scrollIntoView({block:'start'})"); await pg.wait_for_timeout(1200)
+    await pg.evaluate(f"WAGONS.open({info['id']!r})"); await pg.wait_for_timeout(500)
+    await pg.click("#wgcard [data-wg=trade]"); await pg.wait_for_timeout(500)
+    names = await pg.evaluate("""(() => { const ids = new Set(); for (const c of CARAVANS.all(G.now())) for (const i of WAGONS.stock(window.__dbg.save(), c)) ids.add(i); for (const i of Object.values(WAGONS.RELIEF || {}).flat()) if (D.ITEMS[i]) ids.add(i);
+      return [...ids].map(i => D.ITEMS[i].name).filter(n => I18N.tr(n) == null); })()""")
+    print("  caravan wares with no Polish name:", names)
+    res[f"pl every caravan ware has a Polish name ({len(names)} missing)"] = not names
+    left = await pg.evaluate(ENGLISH, "#wgcard"); print("  card english:", left)
+    res[f"pl card and packs in Polish ({len(left)} English)"] = not left
+    await pg.screenshot(path=os.path.join(OUT, "wagons_pl_card.png"))
+    await pg.evaluate("WAGONS.close()"); await pg.evaluate(BESIDE, info["id"]); await pg.wait_for_timeout(600)
+    await pg.evaluate(f"WAGONS.open({info['id']!r})"); await pg.wait_for_timeout(300)
+    await pg.click("#wgcard [data-wg=meet]"); await pg.wait_for_timeout(1500)
+    has = await pg.evaluate("!!document.querySelector('#modal')")
+    left = await pg.evaluate(ENGLISH, "#modal") if has else ["(no meeting window)"]
+    print("  meeting english:", left)
+    res[f"pl meeting on the road in Polish ({len(left)} English)"] = not left
+    await pg.screenshot(path=os.path.join(OUT, "wagons_pl_meet.png"))
+    await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
+    # the town's caravan board: stand in a town where a caravan is resting
+    town = await pg.evaluate("""(() => { const S = window.__dbg.save(), c = CARAVANS.all(G.now()).find(x => x.phase !== 'road' && CARAVANS.at(x.from).length); if (!c) return null;
+      S.trip = null; S.location = c.from; [S.x, S.y] = WORLD.places[c.from]; return c.from; })()""")
+    if town:
+        try: await pg.click("[data-tab=town]", timeout=3000)
+        except Exception: await pg.evaluate("document.querySelector('[data-tab=town]')?.click()")
+        await pg.wait_for_timeout(1200)
+        await pg.evaluate("document.querySelector('[data-act=shop][data-id=caravans]')?.click()"); await pg.wait_for_timeout(1000)
+        await pg.evaluate("document.querySelector('.cvcard')?.scrollIntoView({block:'center'})"); await pg.wait_for_timeout(500)
+        if await pg.evaluate("!!document.querySelector('.cvcard')"):
+            left = await pg.evaluate(ENGLISH, ".cvcard"); print("  board english:", left)
+            res[f"pl caravan board in Polish ({len(left)} English)"] = not left
+            await pg.screenshot(path=os.path.join(OUT, "wagons_pl_board.png"))
+        else: print("  no caravan board on the Area tab in", town, "(skipped)", await pg.evaluate("[...document.querySelectorAll('[data-act=shop]')].map(b => b.dataset.id).join(',') + ' | ' + (document.querySelector('[data-tab].on,[data-tab][aria-selected=true]')?.dataset.tab)"))
+    await pg.context.close()
+
 async def main():
     async with async_playwright() as p:
         b = await (p.chromium.launch(executable_path=EXE, args=["--no-sandbox"]) if EXE else p.chromium.launch(args=["--no-sandbox"]))
         errs, res = [], {}
-        await run(b, {"width": 390, "height": 844}, "phone", errs, res)
-        await run(b, {"width": 1440, "height": 900}, "pc", errs, res)
+        if os.environ.get("ONLY") != "pl":   # ONLY=pl: just the Polish pass
+            await run(b, {"width": 390, "height": 844}, "phone", errs, res)
+            await run(b, {"width": 1440, "height": 900}, "pc", errs, res)
+        await run_pl(b, errs, res)
         await b.close()
     for k, v in res.items(): print(("ok  " if v else "FAIL"), k)
     print("errors:", errs[:6])

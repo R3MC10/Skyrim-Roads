@@ -584,7 +584,7 @@
       <div class="layout">
         <div>
           <div class="mapwrap" id="mapwrap"><canvas id="map" aria-label="Map of Skyrim"></canvas>
-            <div class="mapbtns"><button class="iconbtn" id="zoomBtn" aria-label="Zoom map">${zoom === 1 ? "＋" : "－"}</button><button class="iconbtn" id="centerBtn" aria-label="Centre on me">◎</button>${typeof HUNT !== "undefined" ? `<button class="iconbtn sneakbtn huntbtn${S?.hunting ? " on" : ""}" id="huntBtn" aria-label="Hunt" aria-pressed="${!!S?.hunting}" title="Hunt: slower, but you run into animals far more often"><svg viewBox="0 0 24 24" aria-hidden="true" width="20" height="20"><path d="M6 3c5 3 5 15 0 18" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M6 3v18" stroke="currentColor" stroke-width="1" opacity=".7"/><path d="M4 12h15m0 0-3-3m3 3-3 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>` : ""}${typeof SNEAKMODE !== "undefined" ? `<button class="iconbtn sneakbtn${S?.sneak ? " on" : ""}" id="sneakBtn" aria-label="Sneak" aria-pressed="${!!S?.sneak}" title="Sneak: slower, fewer fights, harder to spot"><svg viewBox="0 0 24 24" aria-hidden="true" width="20" height="20"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg></button>` : ""}</div>
+            <div class="mapbtns">${typeof RIDING !== "undefined" ? RIDING.button(S) : ""}<button class="iconbtn" id="zoomBtn" aria-label="Zoom map">${zoom === 1 ? "＋" : "－"}</button><button class="iconbtn" id="centerBtn" aria-label="Centre on me">◎</button>${typeof HUNT !== "undefined" ? `<button class="iconbtn sneakbtn huntbtn${S?.hunting ? " on" : ""}" id="huntBtn" aria-label="Hunt" aria-pressed="${!!S?.hunting}" title="Hunt: slower, but you run into animals far more often"><svg viewBox="0 0 24 24" aria-hidden="true" width="20" height="20"><path d="M6 3c5 3 5 15 0 18" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M6 3v18" stroke="currentColor" stroke-width="1" opacity=".7"/><path d="M4 12h15m0 0-3-3m3 3-3 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>` : ""}${typeof SNEAKMODE !== "undefined" ? `<button class="iconbtn sneakbtn${S?.sneak ? " on" : ""}" id="sneakBtn" aria-label="Sneak" aria-pressed="${!!S?.sneak}" title="Sneak: slower, fewer fights, harder to spot"><svg viewBox="0 0 24 24" aria-hidden="true" width="20" height="20"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg></button>` : ""}</div>
             <div class="picked hide" id="picked"></div></div>
           <div class="vitals" id="vitals"></div>
           <div id="trip"></div>
@@ -607,6 +607,7 @@
       const b = $("#huntBtn"); b.classList.toggle("on", onNow); b.setAttribute("aria-pressed", String(onNow));
       toast(onNow ? " You're hunting. You travel a little slower, but you'll run into deer, elk and worse far more often." : "You stop tracking game.");
     };
+    if (typeof RIDING !== "undefined") RIDING.bind($("#rideBtn"), () => S, (m) => { liveCache.key = ""; if (S.trip) S.trip.total = G.minutesLeft(S); kickMap(); toast(m); renderTrip(); publishCard(); persist(true); });   // riding.js: get on / off from the map
     $("#centerBtn").onclick = () => { mapTouchedAt = performance.now(); kickMap(); follow = true; if (zoom === 1) zoom = 2.4; $("#zoomBtn").textContent = "－"; };
     bindMap();
     if (typeof WAGONS !== "undefined") WAGONS.mount({ S: () => S, Store, toast, persist: () => persist(), livePos: () => livePos(), kick: () => kickMap(), message: (t, x) => showMessage(t, x), canDecide: () => (typeof PARTYPLAY === "undefined" || PARTYPLAY.canDecide(S)), secsTo: (p) => G.minutesTo(S, p) * 60, zoom: () => zoom, zoomAt: (z, x, y) => { mapZoomAt?.(z, x, y); mapTouchedAt = performance.now(); kickMap(); }, go: (cid, intent) => chaseCaravan(cid, intent) });   // tap a caravan's wagons on the map: their card (wagons.js)
@@ -817,6 +818,7 @@
     if (typeof LIVING !== "undefined") { const lm = LIVING.tick(S, t); if (lm) { toast(lm); bump(); } }   // deeds remembered, whispers come true, the party leader's world (livingworld.js)
     if (typeof IMM !== "undefined") { IMM.tick(S); if (S.lastSeen && t - S.lastSeen > 3600 && !S.trip?.status) IMM.loading("Welcome back to Skyrim"); S.lastSeen = t; }
     if (S.trip?.status === "travel") {
+      const wasFollow = !!S.trip.follow && party?.leader !== S.id;   // following the party leader (arrivearea.js)
       const out = G.advance(S, t, reachableBags());
       if (out.taken.length || out.bag || out.died || out.encounter || out.arrived) {
         out.taken.forEach((id) => Store.takeBag(id));
@@ -839,6 +841,7 @@
           const qa = QUESTS.active(S).find((a) => a.st.obj.talk === out.arrived);
           if (qa) setTimeout(() => toast(` ${qa.st.title}: "${qa.st.obj.label}" is waiting in the Journal.`), 2500);
           if (out.solIntro) { persist(true); setTimeout(() => showMessage("Quest", out.solIntro), 700); }
+          if (typeof ARRIVEAREA !== "undefined") ARRIVEAREA.arrive({ s: S, place: out.arrived, known: !!WORLD.places[out.arrived], follower: wasFollow, tab, menu: !!$("#sky"), go: goArea });   // the Area tab opens (once the screen is clear)
         }
       } else { Store.save(S); maybeRoadEvent(); maybeCaravan(); }
     }
@@ -978,7 +981,7 @@
     put(html.replace(/<\/div>$/, `<div class="tripvig"></div></div>`));
     const bar = el.querySelector(".bar i"); if (bar) bar.style.width = `${p}%`;
     if (tr.boat && typeof SOLART !== "undefined") { const tv = el.querySelector(".tripvig"); if (tv && !tv.dataset.sea) { tv.dataset.sea = 1; tv.innerHTML = SOLART.sea(); } }   // at sea (solart.js)
-    else if (typeof FXART !== "undefined") FXART.vignette(el.querySelector(".tripvig"), { ground, progress: p / 100, dest: tr.destName, origin: tr.origin, riding: HORSES.riding(S), carriage: !!tr.carriage, boat: !!tr.boat, horse: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, look: myLook(), company: typeof PARTY !== "undefined" ? PARTY.companions(S, party, others, here, (o) => otherPos(o), MP.NEAR_PX) : [], reduce: reduceMotion, sky: typeof SKY !== "undefined" ? SKY.state(here) : null });
+    else if (typeof FXART !== "undefined") FXART.vignette(el.querySelector(".tripvig"), { ground, progress: p / 100, dest: tr.destName, origin: tr.origin, riding: HORSES.riding(S), carriage: !!tr.carriage, boat: !!tr.boat, horse: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, led: typeof RIDING !== "undefined" ? RIDING.led(S) : null, look: myLook(), company: typeof PARTY !== "undefined" ? PARTY.companions(S, party, others, here, (o) => otherPos(o), MP.NEAR_PX) : [], reduce: reduceMotion, sky: typeof SKY !== "undefined" ? SKY.state(here) : null });
   }
   function renderTabs() {
     tabsEl.querySelectorAll(".tab").forEach((b) => {
@@ -1037,7 +1040,7 @@
       rulers: Object.entries(WARS.rulers(S)).map(([hold, c]) => ({ hold, color: c.colors[0] })),
       banners: CLANS.banners(homeDocs, S, VISITS.record(S)).filter((b) => WORLD.places[b.town]).map((b) => ({ ...b, pos: WORLD.places[b.town].slice(0, 2) })),
       cleared: clearedLeft(), bags: visibleBags(), selected: selected && WORLD.places[selected] ? selected : null, t: ts / 1000, zoom, center, reduceMotion, weather: WEVENTS.weather(pos).id, quest: questPos(), mask: typeof PRIESTS !== "undefined" ? PRIESTS.marker(S)?.pos : null, tmaps: typeof EXPLORE !== "undefined" ? EXPLORE.marks(S) : [], rumours: typeof RUMOURS !== "undefined" ? RUMOURS.marks(S) : [], herbs: typeof GATHER !== "undefined" ? GATHER.marks(S) : [], pins: (S.pins || []).map((p) => ({ pos: [p.x, p.y], label: `${p.icon} ${p.label}`, on: selected === "__pin:" + p.id })),
-      routes: party ? others.filter((o) => o.moving && o.path?.length > 1 && party.members.some((m) => m.id === o.id)).map((o) => ({ path: o.path, from: otherPos(o), name: o.name })) : [], horse: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, gallop: HORSES.riding(S) && S.trip?.status === "travel" && Terrain.speedAt(pos) >= 1.2, cart: CARAVANS.hasCart(S), guards: typeof GUARDS !== "undefined" ? GUARDS.visible(S).map((p) => (p.visible || !myCone || !VISION.inCone(myCone, p.pos) ? p : { ...p, visible: true })) : null, caravans: CARAVANS.all().map((c) => { const cp = CARAVANS.pos(c); return { cp, c }; }).map(({ cp, c }) => ({ pos: cp, visible: G.pxDist(cp, pos) < 160 || (myCone && VISION.inCone(myCone, cp)) || S.discovered.some((n) => WORLD.places[n] && ["city", "town"].includes(WORLD.places[n][2]) && G.pxDist(cp, WORLD.places[n]) < 45), khajiit: c.line.khajiit, moving: c.phase === "road", mine: S.caravanJob?.id === c.id, id: c.id, near: typeof CVROAD !== "undefined" && c.phase === "road" && CVROAD.canMeet(S) && G.pxDist(cp, pos) <= CVROAD.TAP_RANGE, label: c.line.name.replace(/'s caravan$/, "") })).filter((c) => !(c.mine && S.trip?.caravan)), hall: S.discovered.includes(HALL.TOWN) || known(HALL.TOWN) ? { pos: HALL.POS, label: `Hall of the North · ${HALL.progress().name}` } : null,
+      routes: party ? others.filter((o) => o.moving && o.path?.length > 1 && party.members.some((m) => m.id === o.id)).map((o) => ({ path: o.path, from: otherPos(o), name: o.name })) : [], horse: HORSES.riding(S) ? HORSES.coat(S.horse.coat)[2] : null, led: typeof RIDING !== "undefined" ? RIDING.led(S) : null, gallop: HORSES.riding(S) && S.trip?.status === "travel" && Terrain.speedAt(pos) >= 1.2, cart: CARAVANS.hasCart(S), guards: typeof GUARDS !== "undefined" ? GUARDS.visible(S).map((p) => (p.visible || !myCone || !VISION.inCone(myCone, p.pos) ? p : { ...p, visible: true })) : null, caravans: CARAVANS.all().map((c) => { const cp = CARAVANS.pos(c); return { cp, c }; }).map(({ cp, c }) => ({ pos: cp, visible: G.pxDist(cp, pos) < 160 || (myCone && VISION.inCone(myCone, cp)) || S.discovered.some((n) => WORLD.places[n] && ["city", "town"].includes(WORLD.places[n][2]) && G.pxDist(cp, WORLD.places[n]) < 45), khajiit: c.line.khajiit, moving: c.phase === "road", mine: S.caravanJob?.id === c.id, id: c.id, near: typeof CVROAD !== "undefined" && c.phase === "road" && CVROAD.canMeet(S) && G.pxDist(cp, pos) <= CVROAD.TAP_RANGE, label: c.line.name.replace(/'s caravan$/, "") })).filter((c) => !(c.mine && S.trip?.caravan)), hall: S.discovered.includes(HALL.TOWN) || known(HALL.TOWN) ? { pos: HALL.POS, label: `Hall of the North · ${HALL.progress().name}` } : null,
     };
     if (typeof WAGONS !== "undefined") WAGONS.decorate(view, S);   // hovered wagons, wagons in trouble
     WorldMap.draw($("#map"), view);
@@ -2699,6 +2702,13 @@
     return others.filter((o) => party.members.some((m) => m.id === o.id) && (S.dungeon ? o.dungeon === S.dungeon.place : (!o.dungeon && G.pxDist(otherPos(o), me) <= MP.NEAR_PX)))
       .map(MP.allyFromCard);
   }
+  /* open the Area tab after arriving (arrivearea.js); like tapping it, without scrolling a phone away from the map */
+  function goArea() {
+    if (tab === "town" && !$("#sky")) return;
+    closeMenu(); tab = "town"; testResult = null; bump(); renderTabs(); renderPanel(true);
+    if (typeof PCMAP !== "undefined" && PCMAP.on()) PCMAP.refresh();
+    if (typeof MOTION !== "undefined") MOTION.panel($("#side"));
+  }
   function followParty() {
     const tr = party?.trip;
     if (!tr || party.leader === S.id || tr.t <= (S.followT || 0) || S.dungeon || (S.trip && S.trip.status !== "travel")) return;
@@ -2890,7 +2900,7 @@
     const openD = [...side.querySelectorAll("details")].map((d) => d.open), y = scrollY;
     const twp = typeof TABMENU !== "undefined" ? { stars: () => TABMENU.stars(S), perks: () => TABMENU.perks(S) } : {};
     const mnp = typeof MENUS !== "undefined" ? MENUS.panels({ S, ach: achPanel, settings: settingsHTML, fest: festPanel, idPanel, update }) : {};   // menus.js: tab homes
-    side.innerHTML = tutTip() + (typeof MENUS !== "undefined" ? MENUS.subnav(tab) : "") + screenHead() + ({ ...mnp, map: panelTravel, hero: panelHero, pack: panelPack, tactics: panelTactics, town: panelTown, log: panelLog, social: panelSocial, stats: panelStats, diary: panelDiary, places: panelPlaces, follower: () => typeof FOLTAB !== "undefined" ? FOLTAB.panel(S, esc, svgI) : "", ...twp }[tab] || panelTravel)();
+    side.innerHTML = tutTip() + (typeof MENUS !== "undefined" ? MENUS.subnav(tab) : "") + screenHead() + ({ ...mnp, map: panelTravel, hero: panelHero, pack: panelPack, tactics: panelTactics, town: () => (typeof ARRIVEAREA !== "undefined" ? ARRIVEAREA.gatherHTML(S) : "") + panelTown(), log: panelLog, social: panelSocial, stats: panelStats, diary: panelDiary, places: panelPlaces, follower: () => typeof FOLTAB !== "undefined" ? FOLTAB.panel(S, esc, svgI) : "", ...twp }[tab] || panelTravel)();
     if (typeof TABMENU !== "undefined") TABMENU.afterPanel(tab);
     if (typeof MENUS !== "undefined") MENUS.afterPanel(tab);
     if (typeof MENUS2 !== "undefined") MENUS2.afterPanel(tab, side);   // menus2.js: Find a quest
@@ -3965,7 +3975,7 @@
       case "hrename": say(HORSES.rename(S, $("#hname")?.value)); break;
       case "harmor": say(HORSES.buyArmor(S, b.dataset.id)); break;
       case "htend": say(HORSES.tend(S)); publishCard(); break;
-      case "hride": { const m = HORSES.toggle(S); liveCache.key = ""; S.trip && (S.trip.total = G.minutesLeft(S)); say(m); renderTrip(); publishCard(); break; }
+      case "hride": { const m = HORSES.toggle(S); liveCache.key = ""; S.trip && (S.trip.total = G.minutesLeft(S)); say(m); renderTrip(); publishCard(); if (typeof RIDING !== "undefined") RIDING.sync(S); break; }
       case "bclaim": { const m = BOUNTY.claim(S, +b.dataset.w, b.dataset.id); if (!m) return toast("Nothing to claim there."); SOUND.fx("quest"); say(m); publishCard(); break; }
       case "hallgold": case "hallmat": {
         const r = a === "hallgold" ? HALL.donateGold(S, +b.dataset.id) : HALL.donateMat(S, +b.dataset.id, +b.dataset.n);
