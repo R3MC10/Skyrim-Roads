@@ -250,7 +250,7 @@ const MAGIC = (() => {
   function castOut(s, id, t = G.now()) {
     const sp = D.SPELLS[id];
     if (!s.spells.includes(id)) return "You don't know that spell.";
-    if (!outOfFight(sp)) return "That spell is for fights. Put it in your tactics.";
+    if (!outOfFight(sp)) return "That spell is for fights. Cast it during a fight.";
     if (s.dungeon == null && s.trip?.status === "encounter") return "Not now: you're in a fight.";
     const left = cdLeft(s, id, t); if (left > 0) return `You need ${left > 120 ? Math.ceil(left / 60) + " more minutes" : Math.ceil(left) + " s"} to gather your magicka again.`;
     if (Math.random() < failChance(s, id)) { s.castAt = { ...(s.castAt || {}), [id]: t }; return `${sp.name} fizzles. It's beyond your ${sp.school} for now.`; }

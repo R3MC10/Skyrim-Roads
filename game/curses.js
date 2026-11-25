@@ -1,6 +1,6 @@
 /* Werewolf and vampire paths. Both are optional and curable.
    Werewolf: the Circle of the Companions offers the beast blood once you finish their quest line.
-     Beast Form once a day in a fight (a power in your tactics): hits much harder and shrugs off blows
+     Beast Form once a day in a fight (a power in the Magic menu): hits much harder and shrugs off blows
      for a while, but you can't drink potions while transformed. Like Skyrim, beds no longer make you Rested.
    Vampire: a vampire you fight at night may infect you (Sanguinare Vampiris). Drink a Cure Disease potion
      or pray at a shrine within 3 hours, or you turn. A vampire is stronger at night and with Destruction
@@ -35,7 +35,7 @@ const CURSE = (() => {
     if (!s.quests?.companions?.done) return "Only the Circle can offer the beast blood.";
     if (s.vampire) return "Aela sniffs and steps back. \"You already carry one curse. The blood won't take.\"";
     s.werewolf = { since: nowS() }; s.wolfDeclined = false;
-    return "In the Underforge, Aela opens her wrist and you drink. The world goes red. You are one of the Circle now: Beast Form is in your tactics, once a day.";
+    return "In the Underforge, Aela opens her wrist and you drink. The world goes red. You are one of the Circle now: Beast Form is in your Magic menu under Powers, once a day.";
   }
   const declineWolf = (s) => { s.wolfDeclined = true; return "You tell the Circle no. Farkas shrugs: \"The offer stands, if you change your mind.\""; };
   function cureWolf(s) {   // the end of Purity of the Blood

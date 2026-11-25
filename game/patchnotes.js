@@ -3,6 +3,10 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b280-tacticsaccess", build: 280, date: "25 Nov 2026", title: "Loadouts and fight rules are back", items: [
+      "Your loadouts, the Smart AI / Hybrid / Custom switch and your own fight rules have a home again: Character → AI & Loadouts. On the compass: Skills, then the AI & Loadouts tab.",
+      "Messages about new spells, shouts and powers no longer tell you to add them to your tactics: they say where to find them (the Magic menu) and to use them in a fight.",
+    ] },
     { id: "b279-beasthint", build: 279, date: "25 Nov 2026", title: "Where Beast Form lives", items: [
       "Fixed: the werewolf card on the Character tab still sent you to the old Tactics page for Beast Form. It now says the truth: it's in the Magic menu, under Powers.",
     ] },

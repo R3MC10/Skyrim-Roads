@@ -90,7 +90,7 @@ const SOL = (() => {
     for (const [flag, w] of WORD_FLAGS) if (s[flag] && !(POWERS.known(s, w) && POWERS.unlocked(s, w))) {
       POWERS.learnWord(s, w); s.unlocked = [...new Set([...(s.unlocked || []), w])]; got.push(w);
     }
-    if (got.length) G.note(s, ` You understand ${got.join(" and ")} (Bend Will). Add it to your tactics.`);
+    if (got.length) G.note(s, ` You understand ${got.join(" and ")} (Bend Will). Shout it in your next fight.`);
     return got;
   }
   const check0 = QUESTS.check;
