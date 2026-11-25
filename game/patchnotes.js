@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b332-fightscreen", build: 332, date: "25 Nov 2026", title: "A clearer fight screen", items: [
+      "On a phone the fight screen now has three parts: the turn order, the foe's next move, its health and the latest line of the fight at the top; the battle in the middle with nothing covering the fighters; your health, your party and the move buttons at the bottom, in easy reach of your thumbs.",
+      "On a PC your party stands down the left side, the foe you're fighting and the whole fight story down the right, and the battle in the middle.",
+      "A gold ring under the foe shows who your blows go to.",
+      "Only one big banner shows at a time (Your turn, a new round, a combo, a boss's new phase), and they appear above the fighters' heads instead of over them.",
+      "A boss's introduction plays once per fight, and the first-fight tips and Your turn wait until it's over.",
+    ] },
     { id: "b331-partyfoeturns", build: 331, date: "25 Nov 2026", title: "Foes take proper turns in party fights", items: [
       "In a party fight the foe now says who its next move goes for, and that's who it really hits. Before, it could say \"you\" and then hit a teammate.",
       "When a fast foe moves twice in a round, its 1st move always comes before its 2nd in the turn strip.",

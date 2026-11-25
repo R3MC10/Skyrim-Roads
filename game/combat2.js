@@ -15,6 +15,9 @@
    - The action bar is a skill bar: round drawn-icon moves with their stamina / magicka / health cost, quick slots, Magic and Items open as a drawer
      over the scene, and a big End turn seal that shows the guard you'd get.
    - Hits flash, crits shake, a stunned foe gets circling stars.
+   - [fightscreen] Where things go is now fightzones.js: three zones on a phone (turn order + foe card + event line at
+     the top, the battle in the middle, you + party + buttons at the bottom), side columns on a PC. place() asks it
+     first and only falls back to the old floating layout with ?nozones. A gold ring marks the foe your blows go to.
    Settings → Fights → Fight screen: Immersive / Classic. */
 const COMBAT2 = (() => {
   const DOM = typeof document !== "undefined";
@@ -118,6 +121,7 @@ const COMBAT2 = (() => {
     if (!DOM || !on()) return null;
     const tin = document.querySelector("#tbf .tbin");
     const W = (tin && tin.clientWidth) || (typeof innerWidth === "number" ? innerWidth : 0), H = (tin && tin.clientHeight) || (typeof innerHeight === "number" ? innerHeight : 0);
+    if (typeof FIGHTZONES !== "undefined" && FIGHTZONES.on()) return null;   // [fightscreen] the zones size the picture (0.66, clipped to the centre on a PC)
     return W && H && wideOf(W, H) ? shapeOf(W, H) : null;
   }
   function place(el, late) {
@@ -139,7 +143,10 @@ const COMBAT2 = (() => {
     const dh = Math.max(mem.dock || 0, cover, wide ? 118 : 178);
     const aH = H - dh;
     let ch, cw, cx, cy;
-    if (wide) {   // the whole window: the picture is drawn at this shape (aspect() above), so nothing is cut off
+    // [fightscreen] three zones (fightzones.js): the cards dock at the top / sides / bottom, the picture fills the middle
+    const Z = typeof FIGHTZONES !== "undefined" ? FIGHTZONES.place(el, { W, H, top, dh, wide }) : null;
+    if (Z) ({ cw, ch, cx, cy } = Z);
+    else if (wide) {   // the whole window: the picture is drawn at this shape (aspect() above), so nothing is cut off
       cw = W; ch = W * shapeOf(W, H); cx = 0; cy = ch > H ? (H - ch) * 0.6 : (H - ch) / 2;
       if (FF) ({ cw, ch, cx, cy } = FF.wideStage(W, H, cw, ch, cx, cy, top, dh));   // feet above the bar, heads under the turn strip
     } else {
@@ -152,11 +159,12 @@ const COMBAT2 = (() => {
     let hx = cx + cw * 0.27, hy = gy - 66 * s, fx = cx + cw * 0.72, fy = gy - 74 * s;
     // [fightpos] where fightart.js really put you and the foe (fightpos.js): the plate, pop-ups and flashes follow them
     const FL = tin.querySelector(".fscene canvas")?.__fp;
-    if (FL && FL.W && FL.Hh) { const kx = cw / FL.W, ky = ch / FL.Hh; hx = cx + FL.hero.x * kx; hy = cy + (FL.hero.top + 6 * FL.s) * ky; fx = cx + FL.foe.x * kx; fy = cy + FL.foe.top * ky; }
+    let fg = gy, fw = cw * 0.12;   // [fightscreen] the foe's feet and width: the target ring under it (fightzones.js)
+    if (FL && FL.W && FL.Hh) { const kx = cw / FL.W, ky = ch / FL.Hh; hx = cx + FL.hero.x * kx; hy = cy + (FL.hero.top + 6 * FL.s) * ky; fx = cx + FL.foe.x * kx; fy = cy + FL.foe.top * ky; fg = cy + FL.foe.y * ky; fw = (FL.foe.right - FL.foe.left) * kx; }
     const st = tin.style, px = (v) => v.toFixed(1) + "px";
-    st.setProperty("--c2cw", px(cw)); st.setProperty("--c2ch", px(ch)); st.setProperty("--c2cx", px(cx)); st.setProperty("--c2cy", px(cy));
+    st.setProperty("--c2cw", px(cw)); st.setProperty("--c2ch", px(ch)); st.setProperty("--c2cx", px(cx - (Z ? Z.ox : 0))); st.setProperty("--c2cy", px(cy));   // (on a PC with zones the scene starts at the left column's edge)
     st.setProperty("--c2dock", px(dh)); st.setProperty("--c2top", px(top)); st.setProperty("--c2ah", px(aH));
-    st.setProperty("--c2hx", px(hx)); st.setProperty("--c2hy", px(hy)); st.setProperty("--c2fx", px(fx)); st.setProperty("--c2fy", px(fy));
+    st.setProperty("--c2hx", px(hx)); st.setProperty("--c2hy", px(hy)); st.setProperty("--c2fx", px(fx)); st.setProperty("--c2fy", px(fy)); st.setProperty("--c2fg", px(fg)); st.setProperty("--c2fw", px(fw));
     st.setProperty("--c2side", px(wide ? Math.max(240, Math.min(340, W * 0.18)) : Math.max(150, cx - 24)));
     // the foe's arrow (foeintent.js) is measured off the picture: draw it again when the picture moved
     const geo = [cx, cy, cw].map((v) => Math.round(v)).join();
@@ -167,7 +175,7 @@ const COMBAT2 = (() => {
       if (ar && mem.sess && typeof FOEINTENT !== "undefined") { try { FOEINTENT.decorate(el, mem.sess); } catch { /* the arrow is a nicety */ } }
     }
     // the foe's plate: over its head, inside the screen, under the ribbon (and the boss bar)
-    const plate = typeof FOEPANEL !== "undefined" ? null : el.querySelector(".c2ov .tbu.foe");   // [foepanel] places it (below)
+    const plate = typeof FOEPANEL !== "undefined" || Z ? null : el.querySelector(".c2ov .tbu.foe");   // [foepanel] places it (below)
     if (plate) {
       const bf = el.querySelector(".bfwrap"), minTop = Math.max(top, bf ? bf.getBoundingClientRect().bottom - tin.getBoundingClientRect().top : 0) + 4;
       const pw = plate.offsetWidth, ph = plate.offsetHeight;
@@ -177,8 +185,11 @@ const COMBAT2 = (() => {
       const lg = el.querySelector(".c2ov .tblog");
       if (lg && !wide) lg.style.maxWidth = px(Math.max(120, Math.min(W * 0.62, Tp < top + 70 ? L - 14 : W * 0.62)));
     }
-    if (FF) { FF.party(el, { W, H, top, dh, wide }); FF.unclash(el, { W, H, top, dh }); }   // a full party: more columns / slimmer plates instead of running off screen
-    if (typeof FOEPANEL !== "undefined") FOEPANEL.place(el, { W, H, top, dh, wide });   // [foepanel] the plate over the foe's head (never on a fighter), the log in a free corner
+    if (Z) { /* fightzones.js docked the foe's card, the log and the party already */ }
+    else {
+      if (FF) { FF.party(el, { W, H, top, dh, wide }); FF.unclash(el, { W, H, top, dh }); }   // a full party: more columns / slimmer plates instead of running off screen
+      if (typeof FOEPANEL !== "undefined") FOEPANEL.place(el, { W, H, top, dh, wide });
+    }   // [foepanel] the plate over the foe's head (never on a fighter), the log in a free corner
     if (typeof PHONEFIGHT !== "undefined") PHONEFIGHT.place(el);   // [phonefight] the log's fold arrow follows the log
   }
   let rsT = null;
@@ -318,6 +329,7 @@ const COMBAT2 = (() => {
     }
     // a hot spot over you in the scene: drag a heal or a potion onto yourself there
     const hot = document.createElement("div"); hot.className = "c2hot"; hot.dataset.tbzone = "self"; hot.setAttribute("aria-hidden", "true"); ov.appendChild(hot);
+    if (foe && f && !sess.done && typeof FIGHTZONES !== "undefined" && FIGHTZONES.on()) { const rg = document.createElement("i"); rg.className = "fzring"; rg.setAttribute("aria-hidden", "true"); ov.prepend(rg); }   // [fightscreen] the foe you're fighting: a ring at its feet
     stage.appendChild(ov);
     el.querySelector(".tbvit")?.remove();
     // turn mood: your turn warm, theirs red
