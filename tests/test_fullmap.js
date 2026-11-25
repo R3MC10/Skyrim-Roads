@@ -105,7 +105,7 @@ function put(s,n){ s.location=n; s.trip=null; s.dungeon=null; const p=WORLD.plac
 {
   const s=hero(20); put(s,"Loreius Farm"); const t=G.now();
   const j=PLACESTUFF.jobOffer(s,"Loreius Farm",t);
-  ok(j && j.type==="clear" && DUNGEONS.enterable(j.target) && j.reward<300, "a farmer's job: clear "+(j&&j.target)+" for "+(j&&j.reward));
+  ok(j && j.type==="clear" && DUNGEONS.enterable(j.target) && j.reward>0 && j.reward<=(70+90*DUNGEONS.info(j.target).tier)*1.75, "a farmer's job: clear "+(j&&j.target)+" for "+(j&&j.reward));
   const r=PLACESTUFF.takeJob(s,"Loreius Farm",t);
   ok(r.text && s.jobs.length===1 && !PLACESTUFF.jobOffer(s,"Loreius Farm",t), "job taken, no second one today");
   s.cleared=s.cleared||{}; s.cleared[j.target]=t+100; const g0=s.gold;

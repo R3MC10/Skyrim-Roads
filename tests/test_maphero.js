@@ -37,7 +37,7 @@ ok(MAPHERO.active(), "arrival puff playing"); tick(1000); ok(!MAPHERO.active(), 
 for (const [moving, gallop, gait] of [[false, false, "stand"], [true, false, "walk"], [true, true, null]]) {
   const fr = new Set(); for (let t = 0; t < 3; t += 0.1) { MAPHERO.draw(g, 495, 300, 0.5, { id: "rider", look, horse: "#2b2724", moving, gallop, t }); fr.add(seen.at(-1).frame); }
   const o = seen.at(-1); ok(o.pose === "ride" && o.horse === "#2b2724" && (o.gait || null) === gait, "riding gait " + gait);
-  ok(fr.size === 4, "horse animates " + gait);
+  ok(fr.size >= 4, "horse animates " + gait);   // [riding] the saddle frames are cut finer (RIDE_STEPS)
 }
 // the horse gaits draw (figart.js) without NaN in both styles
 for (const gait of ["stand", "walk", undefined]) for (let f = 0; f < 4; f++) for (const style of ["ink"]) ok(FIGART.sprite({ look }, { pose: "ride", frame: f, horse: "#9b9b97", gait, style, h: 30 }).width > 0, "gait sprite " + gait);

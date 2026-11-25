@@ -7,7 +7,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "blows hit softer until your next turn": "ciosy trafiają słabiej do twojej następnej tury",
     "No guard left: you used all your moves": "Brak gardy: wykorzystałeś wszystkie ruchy",
     " (one blow can't take more than 40% of a strong foe)": " (jeden cios nie zabierze silnemu wrogowi więcej niż 40%)",
-    // patch note (build 266)
+    // patch note (build 270)
     "See a move before you make it": "Zobacz ruch, zanim go wykonasz",
     "In a fight, rest the mouse on a move (or hold your finger on it on a phone): the foe's health bar shows a striped piece for what it could lose, from the lowest to the highest hit.":
       "W walce najedź myszką na ruch (albo przytrzymaj go palcem na telefonie): pasek zdrowia wroga pokazuje paskowany kawałek tego, co może stracić, od najsłabszego do najmocniejszego trafienia.",

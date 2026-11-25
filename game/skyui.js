@@ -131,7 +131,7 @@ const SKYUI = (() => {
       pos[id] = [Math.round(res.x[id] + dx), Math.round(res.y[id] + dy), 1];
       labels[id] = { x: Math.round(b.x + dx), y: Math.round(b.y + dy), w: Math.round(b.w), h: Math.round(b.h), at: b.at, lines: b.lines };
     });
-    return { pos, labels, W: Math.ceil(x1 - x0 + 2 * PAD), H: Math.ceil(y1 - y0 + 2 * PAD), byId: T.byId, fs: M.fs, lh, mode: opt.mode || (wideScreen() ? "pc" : "phone"), sx: res.sx, sy: res.sy };
+    return { pos, labels, W: Math.ceil(x1 - x0 + 2 * PAD), H: Math.ceil(y1 - y0 + 2 * PAD), byId: T.byId, tier: T.tier, row: T.line, fs: M.fs, lh, mode: opt.mode || (wideScreen() ? "pc" : "phone"), sx: res.sx, sy: res.sy };
   }
 
   // ---- drawing. opt.sel: index of the picked perk; opt.mode as in layout
@@ -140,11 +140,33 @@ const SKYUI = (() => {
     const L = layout(tree, opt), { pos, labels, W, H } = L, r = seeded(skill), phone = L.mode === "phone";
     let bg = ""; const nBg = Math.min(160, Math.round((W * H) / 2800));
     for (let i = 0; i < nBg; i++) bg += `<circle cx="${(r() * W).toFixed(1)}" cy="${(r() * H).toFixed(1)}" r="${(0.4 + r() * 0.9).toFixed(2)}" fill="#cfd8ea" opacity="${(0.25 + r() * 0.5).toFixed(2)}" ${r() < 0.3 ? 'class="twinkle"' : ""}/>`;
+    // star state: on (taken, gold) / can (take it now, pulsing ring) / low (skill too low) / lock (needs another perk first)
+    const sl = s.skills?.[skill]?.lvl ?? 0, state = {};
+    tree.forEach((p) => {
+      const id = p[0], rk = PERKS.rank(s, id), d = PERKS.BY_ID?.[id], needs = (d?.needs || p[4] || []).filter((n) => pos[n] && n !== id);
+      const can = rk < p[2] && !PERKS.canTake(s, id), met = !needs.length || needs.some((n) => PERKS.rank(s, n) > 0);
+      state[id] = { rk, can, lock: rk < p[2] && !can && !met, low: rk < p[2] && !can && met && d && sl < (d.req?.[rk] ?? 0) };
+    });
+    const selId = opt.sel != null ? tree[opt.sel]?.[0] : null;
+    // lines: between neighbouring rows straight; a line that skips a row (a wide tier is drawn as several rows) is a faint dashed curve that lights up only when an end is picked or both are taken
     let lines = "";
-    for (const p of tree) for (const n of p[4] || []) if (pos[n] && n !== p[0]) { const on = PERKS.rank(s, p[0]) > 0 && PERKS.rank(s, n) > 0; lines += `<line x1="${pos[n][0]}" y1="${pos[n][1]}" x2="${pos[p[0]][0]}" y2="${pos[p[0]][1]}" class="${on ? "on" : ""}"/>`; }
+    for (const p of tree) for (const n of p[4] || []) if (pos[n] && n !== p[0]) {
+      const on = state[p[0]].rk > 0 && state[n].rk > 0, [x1, y1] = pos[n], [x2, y2] = pos[p[0]];
+      if (Math.abs((L.row[p[0]] ?? 0) - (L.row[n] ?? 0)) < 2) { lines += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="${on ? "on" : ""}"/>`; continue; }
+      // bow it outward (away from the middle of the sky), so it clears the stars it skips
+      const mx = (x1 + x2) / 2, my = (y1 + y2) / 2, len = Math.hypot(x2 - x1, y2 - y1) || 1, bend = Math.min(60, len * 0.18);
+      let px = -(y2 - y1) / len, py = (x2 - x1) / len; if (px * (mx - W / 2 || 1) < 0) { px = -px; py = -py; }
+      const cx = Math.round(mx + px * bend), cy = Math.round(my + py * bend);
+      const lit = on ? "on" : selId && (selId === n || selId === p[0]) ? "pick" : "";
+      lines += `<path class="lk ${lit}" d="M${x1} ${y1} Q${cx} ${cy} ${x2} ${y2}"/>`;
+    }
+    // where the box opens: the lowest perk you can take now, else the roots
+    const ids = tree.map((p) => p[0]), low = (arr) => arr.sort((a, b) => pos[b][1] - pos[a][1] || Math.abs(pos[a][0] - W / 2) - Math.abs(pos[b][0] - W / 2))[0];
+    const focus = low(ids.filter((id) => state[id].can)) || low(ids.filter((id) => !(L.tier[id] > 0))) || ids[0];
+    const hitR = phone ? 26 : 18;
     let stars = "";
     tree.forEach((p, i) => {
-      const [x, y] = pos[p[0]], rk = PERKS.rank(s, p[0]), can = !PERKS.canTake(s, p[0]) && rk < p[2], lb = labels[p[0]];
+      const [x, y] = pos[p[0]], st = state[p[0]], rk = st.rk, can = st.can, lb = labels[p[0]];
       const text = lb.lines.slice();   // laid out with "0/N"; the real rank has the same digits' width
       if (p[2] > 1) text[text.length - 1] = text[text.length - 1].replace(/(^| )0\/(\d+)$/, `$1${rk}/$2`);
       const anchor = lb.at === "right" ? "start" : lb.at === "left" ? "end" : "middle";
@@ -152,12 +174,13 @@ const SKYUI = (() => {
       const ty0 = lb.y + GAP + L.fs * 0.95;
       const tsp = text.map((t, k) => `<tspan x="${Math.round(tx)}" y="${Math.round(ty0 + k * L.lh)}">${esc(t)}</tspan>`).join("");
       const tip = phone ? "" : ` data-tip-k="perk:${esc(p[0])}"`;   // no floating tooltip over the stars on a phone: the panel below says it
-      stars += `<g class="st ${rk ? "on" : ""} ${can ? "can" : ""} ${opt.sel === i ? "sel" : ""}" data-sk-perk="${i}"${tip} role="button" tabindex="0" aria-label="${esc(p[1])}${rk ? " (taken)" : can ? " (can take)" : ""}">
-        <circle class="glow" cx="${x}" cy="${y}" r="14"/><circle cx="${x}" cy="${y}" r="18" fill="transparent"/>
-        <circle class="core" cx="${x}" cy="${y}" r="${rk ? 4.2 : 3.2}"/>${can ? `<circle cx="${x}" cy="${y}" r="7.5" fill="none" stroke="#cfe3ff" stroke-width="1" stroke-dasharray="2 2"/>` : ""}${opt.sel === i ? `<circle cx="${x}" cy="${y}" r="10" fill="none" stroke="#ffe7a8" stroke-width="1.5"/>` : ""}
+      const cls = ["st", rk ? "on" : "", can ? "can" : "", st.low ? "low" : "", st.lock ? "lock" : "", opt.sel === i ? "sel" : ""].filter(Boolean).join(" ");
+      stars += `<g class="${cls}" data-sk-perk="${i}"${tip} role="button" tabindex="0" aria-label="${esc(p[1])}${rk ? " (taken)" : can ? " (can take)" : st.lock ? " (needs another perk first)" : st.low ? " (skill too low)" : ""}">
+        <circle class="glow" cx="${x}" cy="${y}" r="14"/><circle class="hit" data-sk-perk="${i}" cx="${x}" cy="${y}" r="${hitR}" fill="transparent"/>
+        <circle class="core" cx="${x}" cy="${y}" r="${rk ? 4.2 : 3.2}"/>${can ? `<circle class="ring" cx="${x}" cy="${y}" r="7.5"/>` : ""}${opt.sel === i ? `<circle class="pk" cx="${x}" cy="${y}" r="10"/>` : ""}
         <text class="lbl" text-anchor="${anchor}">${tsp}</text></g>`;
     });
-    return `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" data-w="${W}" data-h="${H}" data-sky="${esc(skill)}" data-mode="${L.mode}" style="--skfs:${L.fs}px" aria-label="${esc(skill)} perk stars"><defs><radialGradient id="skglow"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset=".4" stop-color="#bcd6ff" stop-opacity=".35"/><stop offset="1" stop-color="#bcd6ff" stop-opacity="0"/></radialGradient></defs>${bg}${lines}${stars}</svg>`;
+    return `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" data-w="${W}" data-h="${H}" data-sky="${esc(skill)}" data-mode="${L.mode}" data-fx="${pos[focus][0]}" data-fy="${pos[focus][1]}" style="--skfs:${L.fs}px" aria-label="${esc(skill)} perk stars"><defs><radialGradient id="skglow"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset=".4" stop-color="#bcd6ff" stop-opacity=".35"/><stop offset="1" stop-color="#bcd6ff" stop-opacity="0"/></radialGradient><radialGradient id="skglowg"><stop offset="0" stop-color="#fff6d8" stop-opacity=".95"/><stop offset=".4" stop-color="#f0c860" stop-opacity=".4"/><stop offset="1" stop-color="#f0c860" stop-opacity="0"/></radialGradient></defs>${bg}${lines}${stars}</svg>`;
   }
 
   // ---- zoom + pan: the .skc box scrolls, the svg is sized W*z by H*z. Zoom and scroll are kept per sky across redraws.
@@ -172,29 +195,47 @@ const SKYUI = (() => {
     const ax = (box.scrollLeft + fx) / old, ay = (box.scrollTop + fy) / old;
     el.style.width = Math.round(W * z) + "px"; el.style.height = Math.round(H * z) + "px";
     box.classList.toggle("far", el.dataset.mode === "phone" && z < FAR);   // a PC has room: names always show
+    hits(box, z);
     box.scrollLeft = ax * z - fx; box.scrollTop = ay * z - fy;
     v.sl = box.scrollLeft; v.st = box.scrollTop;
+  }
+  // the invisible hit circle stays at least 44 px on a phone at any zoom
+  function hits(box, z) {
+    const el = box.querySelector("svg[data-w]"); if (!el || el.dataset.mode !== "phone") return;
+    const r = Math.max(18, Math.round(22 / z + 0.5));
+    box.querySelectorAll("circle.hit").forEach((c) => c.setAttribute("r", r));
+  }
+  // scroll the box so the star in data-fx/fy (the lowest perk you can take, else the roots) sits in its lower third
+  function focus(box, el, z) {
+    const cw = box.clientWidth, ch = box.clientHeight, W = +el.dataset.w, H = +el.dataset.h;
+    const fx = el.dataset.fx != null ? +el.dataset.fx * z : W * z / 2, fy = el.dataset.fy != null ? +el.dataset.fy * z : H * z;
+    box.scrollLeft = Math.max(0, fx - cw / 2); box.scrollTop = Math.max(0, fy - ch * 0.66);
   }
   function fit(root) {
     for (const box of (root || document).querySelectorAll(".skc")) {
       const el = box.querySelector(":scope>svg[data-w]"); if (!el || el.dataset.fit) continue;
+      if (!box.clientWidth) { if (!box.dataset.wait) { box.dataset.wait = "1"; setTimeout(() => { delete box.dataset.wait; if (box.isConnected) fit(box.parentElement); }, 120); } continue; }   // not laid out yet: try again
       el.dataset.fit = "1"; box.classList.add("skv");
       const k = el.dataset.sky + "|" + el.dataset.mode, v = view[k], W = +el.dataset.w, H = +el.dataset.h;
-      if (v && v.z) {
+      if (v && v.z && !v.focus) {
         el.style.width = Math.round(W * v.z) + "px"; el.style.height = Math.round(H * v.z) + "px"; box.classList.toggle("far", el.dataset.mode === "phone" && v.z < FAR);
         box.scrollLeft = v.sl || 0; box.scrollTop = v.st || 0;
+        hits(box, v.z);
       } else {
-        // first look: as big as fits (never past 1x, never so small the names hide), roots (bottom) in view
-        const cw = box.clientWidth || W, ch = el.dataset.mode === "pc" && box.clientHeight > 80 ? box.clientHeight : Infinity;
-        const z = Math.max(el.dataset.mode === "pc" ? 0.6 : FAR, Math.min(1, cw / W, ch / H));
+        // a fresh look: as big as fits (a phone never past 1x nor so small the names hide; a PC grows up to 1.4x to fill
+        // the panel), then the perk you can take now in view. A zoom you pinched before is kept.
+        const pc = el.dataset.mode === "pc", cw = box.clientWidth || W, ch = pc && box.clientHeight > 80 ? box.clientHeight : Infinity;
+        const z = v && v.z ? v.z : pc ? Math.max(0.6, Math.min(1.4, cw / W, ch / H)) : Math.max(FAR, Math.min(1, cw / W));
         view[k] = { z };
-        el.style.width = Math.round(W * z) + "px"; el.style.height = Math.round(H * z) + "px";
-        box.scrollLeft = Math.max(0, (W * z - cw) / 2); box.scrollTop = H * z;
+        el.style.width = Math.round(W * z) + "px"; el.style.height = Math.round(H * z) + "px"; box.classList.toggle("far", !pc && z < FAR);
+        focus(box, el, z); hits(box, z);
         view[k].sl = box.scrollLeft; view[k].st = box.scrollTop;
       }
       if (!box.dataset.zoomable) wire(box);
     }
   }
+  /* the next time a sky is drawn it opens on what you can take (a new skill picked, the Skills page opened) */
+  function refocus() { for (const k in view) view[k].focus = true; }
   function wire(box) {
     box.dataset.zoomable = "1";
     const key = () => { const el = box.querySelector("svg[data-w]"); return el ? el.dataset.sky + "|" + el.dataset.mode : ""; };
@@ -241,5 +282,5 @@ const SKYUI = (() => {
     document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", boot) : boot();
     setInterval(() => { const side = document.getElementById("side"); if (side && !side.dataset.skyui) init(); }, 1000);
   }
-  return { svg, layout, decorate, fit, setZoom, MODES };
+  return { svg, layout, decorate, fit, setZoom, refocus, MODES };
 })();
