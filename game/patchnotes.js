@@ -3,9 +3,29 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b337-redtests", build: 337, date: "25 Nov 2026", title: "Small fixes and a fresh Coming next", items: [
-      "Character creation: the Male / Female switch now just says Male and Female, so it no longer shows phone emoji on some phones.",
-      "The Coming next list in Patch notes shows what's really being built now: turn order, a fight camera, things that open up as you play, better rewards, a guided start and simpler menus.",
+    { id: "b340-redtests", build: 340, date: "25 Nov 2026", title: "A fresh Coming next", items: [
+      "The Coming next list in Patch notes shows what's really being built now: a clearer turn order, things that open up as you play, better rewards, a guided start and simpler menus.",
+    ] },
+    { id: "b339-fightfixes", build: 339, date: "25 Nov 2026", title: "Small fixes on the road and in hero creation", items: [
+      "A new quest popping up no longer wipes the choices of a road encounter (Pay, Talk, Fight...). It waits until you've made your pick.",
+      "On small phones the round compass button no longer sits on your health, magicka and stamina bars.",
+      "The male and female symbols on the new hero screen show as plain symbols on every phone, not as colourful emoji.",
+    ] },
+    { id: "b338-travelview", build: 338, date: "25 Nov 2026", title: "A road worth watching", items: [
+      "The road view on a trip is much richer: hills and bends you can see coming, mountains, ridges and treelines that fade into the haze, and trees, rocks and signs that grow as you ride up to them and slide past.",
+      "Every land looks like itself, read from the map around you: open tundra, thick pine forest, snowy mountains, rocky hills, misty marsh, ash under a smoking volcano, the coast with the sea on its real side, green river valleys and the Rift's golden birches.",
+      "Things happen along the way: deer bolt, a fox darts across, wolves pace you, mammoths roam, horkers lie on the shore, guards in their hold's colours march by, a merchant's cart passes, and now and then a watchtower, a waterfall, an old camp, giants or a dragon in the sky.",
+      "The same road shows the same landmarks every time you take it; the animals and travellers are different on each trip.",
+      "Your destination grows as you near it, and cities show their gate when you get close. Your horse's mane and reins move as you ride.",
+      "Light and weather fit the land: drifting ash, snow blown off the drifts, falling leaves, fireflies on summer nights, salt haze by the sea.",
+    ] },
+    { id: "b337-fightcam", build: 337, date: "25 Nov 2026", title: "A cinematic fight camera", items: [
+      "The camera now moves only on big moments: it leans in a little when your turn starts, closes in on a wind-up, a critical hit, a broken guard and a killing blow, and slowly pulls in on a win. A boss gets a close-up when the fight starts. Ordinary swings keep the picture calm.",
+      "A critical hit plays for a moment in slow motion. The fight doesn't get any longer: the next turn comes just as fast.",
+      "The battlefield has depth: the sky and far mountains move less than the ground the fighters stand on. You never see the edge of the picture.",
+      "Only the battlefield moves. The turn order, the cards, the boss's health bar and your buttons stay where they are, and damage numbers and names follow the fighters at the same size.",
+      "In a party fight another player's big moment never moves your camera while you're choosing a move or playing a minigame.",
+      "New in Settings → Fights: Fight camera. Cinematic (the default), Calm (gentle, no shaking, no slow motion) or Off. With Reduce motion on, the camera is always Calm.",
     ] },
     { id: "b336-channel", build: 336, date: "25 Nov 2026", title: "See your friends get ready", items: [
       "In a party fight, when a friend casts a spell, swings, draws a bow or uses a skill from an item, you now see them get ready for it: their hero raises a hand with embers, gathers frost or sparks, pulls back their weapon or draws the bowstring, and a small bar over their head fills while they play their minigame.",
@@ -2229,10 +2249,9 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 337;
+  const NEXT_AT = 340;
   const NEXT = [
     "A turn order you can read at a glance: who acts next, and in what order",
-    "A fight camera that leans in on the big hits",
     "New things open up step by step as you play, and better rewards after fights and dungeons",
     "A guided first half hour for new heroes",
     "The menus in five simple tabs",

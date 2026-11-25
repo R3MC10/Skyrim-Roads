@@ -15,7 +15,7 @@
    ui.js decides when the scene is up (Area tab, standing at a place, no shop open) and hands in what's there;
    this file only lays it out. Nothing here changes game rules. Tested in tests/test_locscreen.js. */
 const LOCSCREEN = (() => {
-  const live = typeof document !== "undefined" && typeof document.addEventListener === "function" && typeof window !== "undefined";
+  const live = typeof document !== "undefined" && typeof document.addEventListener === "function" && typeof window !== "undefined";   // (node tests stub a bare document)
   const esc = (x) => String(x ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const safe = (fn, d) => { try { return fn(); } catch { return d; } };
   const AU = () => (typeof AREAUI !== "undefined" ? AREAUI : null);

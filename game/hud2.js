@@ -202,6 +202,7 @@ const HUD2 = (() => {
     if (document.body.classList.contains("fab-away")) return;   // wait until the page stops moving
     const x = lefty ? 12 : innerWidth - right - size, base = { left: x, top: tabTop - 12 - size };
     const blockers = [];
+    const hb = $("#vitals .hbars"); if (shown(hb)) blockers.push(hb.getBoundingClientRect());   // the health/magicka/stamina bars (a full one is faded out but comes back)
     const seen = new Set(), minTop = safeTop() + 60;
     /* [perf] one slot at a time, lowest first, stopping at the first free one: the usual case (nothing under the button)
        costs 5 hit tests instead of 25 */

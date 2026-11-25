@@ -373,7 +373,7 @@
     if (typeof I18N !== "undefined" && I18N.pref(k, b.dataset.v)) return true;
     if (typeof ACCESS !== "undefined" && ACCESS.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }
     if (typeof ONBOARD !== "undefined" && ONBOARD.pref(k, b.dataset.v)) { SOUND.fx("click"); if (S) { try { renderPanel(true); } catch { /* title */ } } return true; }
-    if (typeof FIGHTSET !== "undefined" && FIGHTSET.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }   // Fights → Fight quality, Frame rate (fightset.js)
+    if (typeof FIGHTSET !== "undefined" && FIGHTSET.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }   // Fights → Fight quality, Fight camera, Frame rate (fightset.js)
     if (typeof GORE !== "undefined" && GORE.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }   // Fights → Blood and gore: Off / Low / Full (gore.js)
     if (typeof FASTQOL !== "undefined" && FASTQOL.pref(k, b.dataset.v)) { SOUND.fx("click"); return true; }   // replay speed, carry on after road events
     if (k === "survival") { if (S) { S.survival = v; if (!v) S.coldV = 0; persist(); try { renderPanel(true); } catch { /* title */ } } SOUND.fx("click"); return true; }
@@ -958,7 +958,7 @@
     followParty(); ppUI?.tick(); checkAmbush(); renderRaid(); soundTick();
     if (S.tut?.step > 0 && TUT[S.tut.step]?.done()) bump();
     if (Math.floor(t) % 5 === 0) { checkAch(); bloodTick(); }
-    if (Math.floor(t) % 3 === 0) { const qm = QUESTS.check(S); if (qm.length) { persist(true); showMessage("Quest", qm.join(" ")); } }
+    if (Math.floor(t) % 3 === 0 && !$("#modal")) { const qm = QUESTS.check(S); if (qm.length) { persist(true); showMessage("Quest", qm.join(" ")); } }   // a quest popup waits for an open window (a road encounter's choices) to close instead of replacing it
     if (Math.floor(t) % 30 === 0) { publishCard(false); publishHome(); publishClan(); }
     if (Math.floor(t) % 60 === 0) BACKUP.autoSave(S);
     renderTop(); renderVitals(); renderTrip(); renderGatherNear(); renderTabs(); hudCompass();
@@ -1131,7 +1131,7 @@
       heavy: G.overweight(S), carriage: !!tr.carriage, boat: !!tr.boat, ship: tr.ship, follow: !!tr.follow, weather: wx && wx.id !== "clear" ? wx.name : "",
       sky: typeof SKY !== "undefined" ? SKY.state(here) : null, heading, turn, destBear: tr.dest ? brg(here, tr.dest) : null, look: myLook(),
       company: typeof PARTY !== "undefined" ? PARTY.companions(S, party, others, here, (o) => otherPos(o), MP.NEAR_PX).map((c) => ({ name: c.name, player: !!c.player, riding: !!c.riding })) : [],
-      pet: S.pet ? (S.pet.name || S.pet.id || "") : "", say, reduce: reduceMotion };
+      pet: S.pet ? (S.pet.name || S.pet.id || "") : "", say, reduce: reduceMotion, pos: here };   // pos: the road view reads the land around you (fpscene.js)
   }
   function renderTabs() {
     tabsEl.querySelectorAll(".tab").forEach((b) => {

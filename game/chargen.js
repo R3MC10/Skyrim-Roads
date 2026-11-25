@@ -159,8 +159,8 @@ const CHARGEN = (() => {
   /* [chargensex] the Male / Female switch at the top of the screen, above the tabs (two big segmented buttons) */
   function sexBar() {
     const f = st.app.sx === "f";
-    return `<span class="cgsexl" id="cgl-sex">${esc(L("Sex"))}</span>${[["m", "Male"], ["f", "Female"]].map(([v, t]) => { const on = (v === "f") === f;
-      return `<button class="cgsexb ${on ? "on" : ""}" data-cg="sex" data-v="${v}" role="radio" aria-checked="${on}" tabindex="${on ? 0 : -1}">${esc(L(t))}</button>`; }).join("")}`;
+    return `<span class="cgsexl" id="cgl-sex">${esc(L("Sex"))}</span>${[["m", "\u2642\uFE0E", "Male"], ["f", "\u2640\uFE0E", "Female"]].map(([v, ic, t]) => { const on = (v === "f") === f;
+      return `<button class="cgsexb ${on ? "on" : ""}" data-cg="sex" data-v="${v}" role="radio" aria-checked="${on}" tabindex="${on ? 0 : -1}"><span class="cgsexi" aria-hidden="true">${ic}</span> ${esc(L(t))}</button>`; }).join("")}`;
   }
   const namePh = () => (st.app.sx === "f" ? "Your name, e.g. Brynja" : "Your name, e.g. Remigiusz");
   const nmId = () => (st.mode === "remake" ? "rmknm" : "nm");   // [remake] the top bar already has a #nm
