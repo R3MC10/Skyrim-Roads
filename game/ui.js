@@ -1706,7 +1706,8 @@
     const canShop = S.location && G.shopTypes(S.location).length && (G.shopsOpen() || (typeof RUMOURS !== "undefined" && RUMOURS.knocked(S)));
     const gems = S.inv.filter((x) => D.ITEMS[x.item]?.slot === "soulgem");
     const stats = [];
-    if (it.slot === "weapon") stats.push(["Damage", it.damage + (r.temper ? ` (+${r.temper})` : "")], ["Skill", it.skill], ["Hands", it.hands === 2 ? "Two" : "One"]);
+    const hitN = it.slot === "weapon" && !it.staff && typeof ITEMCMP !== "undefined" ? ITEMCMP.hits(S, r.item, r) : 0;   // [itemcards2] the with-skill number, as in the compare
+    if (it.slot === "weapon") stats.push(hitN ? ["Hits for", `${hitN} (${it.damage + (r.temper || 0)} base)`] : ["Damage", it.damage + (r.temper ? ` (+${r.temper})` : "")], ["Skill", it.skill], ["Hands", it.hands === 2 ? "Two" : "One"]);
     if (G.ARMOR_SLOTS.includes(it.slot)) stats.push(["Armor", (it.armor || 0) + (r.temper ? ` (+${r.temper})` : "")], ["Type", it.type || "—"], ["Slot", it.slot]);
     if (it.slot === "ring" || it.slot === "amulet") stats.push(["Slot", it.slot === "ring" ? "Ring (two can be worn)" : "Amulet"]);
     stats.push(["Weight", +(it.weight * r.qty).toFixed(2)], ["Value", it.value]);
