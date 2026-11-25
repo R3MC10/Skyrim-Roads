@@ -122,6 +122,19 @@ const GORE = (() => {
   const DROP = 0, SPARK = 1, PUFF = 2, CHIP = 3, WISP = 4, SHARD = 5, GEAR = 6, EMBER = 7;
   const STAINS = new WeakMap();   // the fight → its stains, so splats stay for every turn of a turn-by-turn fight
   let active = null, vigEl = null, vigT = 0;
+  const PUFFS = new Map();   // [blood3] colour → a soft round haze (canvas), made once
+  function puffSprite(c) {
+    let sp = PUFFS.get(c);
+    if (sp === undefined) {
+      sp = null;
+      if (typeof document !== "undefined" && document.createElement && /^#[0-9a-f]{6}$/i.test(c)) {
+        sp = document.createElement("canvas"); sp.width = sp.height = 32; const x = sp.getContext("2d"), gr = x.createRadialGradient(16, 16, 0, 16, 16, 16);
+        gr.addColorStop(0, c); gr.addColorStop(0.35, c + "b0"); gr.addColorStop(0.7, c + "40"); gr.addColorStop(1, c + "00"); x.fillStyle = gr; x.fillRect(0, 0, 32, 32);
+      }
+      PUFFS.set(c, sp);
+    }
+    return sp;
+  }
   function scene(o = {}) {
     const W = o.W || 400, Hh = o.H || 180, gy = o.groundY ?? Hh * 0.8, s = o.s || Hh / 150, pixel = !!o.pixel, rm = !!o.reduce;
     const lv = o.level || level(), CAP = Math.min(CAP_MAX, o.cap || budget({ level: lv, reduce: rm, lowGfx: o.lowGfx })), SPL = lv === "low" ? 32 : SPL_MAX;
@@ -337,6 +350,7 @@ const GORE = (() => {
           if (sp > 60 * s) { g.lineWidth = Math.max(1, r); g.beginPath(); g.moveTo(x[i], y[i]); g.lineTo(x[i] - vx[i] * 0.025, y[i] - vy[i] * 0.025); g.stroke(); }
           else { g.beginPath(); g.arc(x[i], y[i], Math.max(0.8, r * 0.6), 0, 6.283); g.fill(); }
         } else if (t === SPARK) { g.strokeStyle = col[i]; g.lineWidth = Math.max(1, r * 0.6); g.beginPath(); g.moveTo(x[i], y[i]); g.lineTo(x[i] - vx[i] * 0.03, y[i] - vy[i] * 0.03); g.stroke(); }
+        else if (t === PUFF && puffSprite(col[i])) { const rr = r * 1.5; g.drawImage(puffSprite(col[i]), x[i] - rr, y[i] - rr, rr * 2, rr * 2); }   // [blood3] a soft puff of dust, no hard-edged disc
         else if (t === PUFF || t === WISP || t === EMBER) { g.beginPath(); g.arc(x[i], y[i], t === EMBER ? Math.max(1, r * 0.7) : r, 0, 6.283); g.fill(); }
         else if (t === GEAR) { g.save(); g.translate(x[i], y[i]); g.rotate(rot[i]); g.strokeStyle = col[i]; g.lineWidth = Math.max(1, r * 0.45); g.beginPath(); g.arc(0, 0, r, 0, 6.283); g.stroke(); for (let k2 = 0; k2 < 6; k2++) { const an = k2 * 1.047; g.fillRect(Math.cos(an) * r - r * 0.2, Math.sin(an) * r - r * 0.2, r * 0.4, r * 0.4); } g.restore(); }
         else { g.save(); g.translate(x[i], y[i]); g.rotate(rot[i]); g.beginPath(); if (t === SHARD) { g.moveTo(0, -r); g.lineTo(r * 0.45, r * 0.6); g.lineTo(-r * 0.45, r * 0.6); } else { g.moveTo(-r * 0.6, -r * 0.4); g.lineTo(r * 0.6, -r * 0.2); g.lineTo(r * 0.3, r * 0.5); g.lineTo(-r * 0.5, r * 0.3); } g.closePath(); g.fill(); g.restore(); }

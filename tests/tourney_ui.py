@@ -8,7 +8,9 @@ import asyncio, sys, os, time
 from playwright.async_api import async_playwright
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8765"
 LANG = os.environ.get("LANG_UI", "en")
-OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out_tourney") + os.sep; os.makedirs(OUT, exist_ok=True)
+OUT = os.environ.get("OUT") or (os.path.join(os.path.dirname(os.path.abspath(__file__)), "out_tourney") + os.sep); os.makedirs(OUT, exist_ok=True)
+PFX = os.environ.get("PFX", "")   # screenshot name prefix, e.g. festart_
+ASSETS_ON = bool(os.environ.get("ASSETS"))   # ASSETS=1: wait for the painted pictures and check the painted headers
 CHROME = os.environ.get("CHROME", "/usr/bin/google-chrome")
 fails = []
 def ok(c, m):
@@ -39,8 +41,11 @@ async def main():
         kw = {"executable_path": CHROME, "args": ["--no-sandbox"]} if os.path.exists(CHROME) else {}
         b = await p.chromium.launch(**kw)
         errs = []
-        for dev, vp, touch in [d for d in [("phone", {"width": 390, "height": 844}, True), ("pc", {"width": 1280, "height": 800}, False)] if d[0] in os.environ.get("DEVS", "phone,pc")]:
-            name = dev + ("" if LANG == "en" else "_" + LANG)
+        VPS = [("phone", {"width": 390, "height": 844}, True), ("pc", {"width": 1280, "height": 800}, False)]
+        if os.environ.get("VIEWPORTS"):   # e.g. VIEWPORTS=phone412:412x915:1,pc1366:1366x768:0 (names starting "phone" count as phones)
+            VPS = [(n, {"width": int(sz.split("x")[0]), "height": int(sz.split("x")[1])}, t == "1") for n, sz, t in (v.split(":") for v in os.environ["VIEWPORTS"].split(","))]
+        for dev, vp, touch in [d for d in VPS if d[0] in os.environ.get("DEVS", ",".join(v[0] for v in VPS))]:
+            name = PFX + dev + ("" if LANG == "en" else "_" + LANG)
             ctx = await b.new_context(viewport=vp, device_scale_factor=2 if touch else 1, has_touch=touch)
             await ctx.add_init_script(CLOCK)
             await ctx.add_init_script(f"localStorage.setItem('rotn_prefs', JSON.stringify({{artStyle:'ink',obTips:false,lang:'{LANG}'}}))")
@@ -67,13 +72,17 @@ async def main():
             await town("festival")
             ok(await pg.query_selector(".tn-fest") is not None, f"{name}: Festivals screen opens")
             ok(await pg.evaluate("() => document.querySelectorAll('.tn-card[data-kind]').length") == 3, f"{name}: three contests")
-            ok(await pg.query_selector("img.tn-art") is not None, f"{name}: ink festival banner")
+            if ASSETS_ON:
+                await pg.wait_for_selector(".tn-pic", timeout=15000)
+                ok(await pg.query_selector(".tn-pic h3") is not None, f"{name}: painted festival header with its title")
+            else:
+                ok(await pg.query_selector("img.tn-art") is not None, f"{name}: ink festival banner")
             ok(await pg.evaluate("() => [...document.querySelectorAll('.tn-board li')].some(l => /Brynjolf/.test(l.textContent))"), f"{name}: the other player is on the board")
             ok(await pg.query_selector("[data-tact=pvp][data-id=BR1]:not([disabled])") is not None, f"{name}: friendly duel offered")
             ok(await pg.evaluate("() => document.querySelectorAll('.tn-cal li').length") == 4, f"{name}: the calendar shows what's next")
             ok(await pg.evaluate("() => !!document.querySelector('.tn-town')"), f"{name}: the town line announces the festival")
             cols = await pg.evaluate("() => getComputedStyle(document.querySelector('.tn-grid')).gridTemplateColumns.split(' ').length")
-            ok(cols == (1 if dev == "phone" else 2) or (dev == "pc" and cols >= 2), f"{name}: {cols} column(s) of contests")
+            ok(cols == (1 if dev.startswith("phone") else 2) or (not dev.startswith("phone") and cols >= 2), f"{name}: {cols} column(s) of contests")
             wide = await pg.evaluate("() => document.documentElement.scrollWidth <= window.innerWidth + 1")
             ok(wide, f"{name}: no sideways scrolling")
             await shot(f"{name}_1_festival.png", ".tn-fest")
