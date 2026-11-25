@@ -108,6 +108,7 @@ var I18N_CHARGEN = {
 })();
 
 
+
 // [chargenrig] patch note
 Object.assign(I18N_EXTRA.words, {
   "Character creation shows your real fighter": "Tworzenie postaci pokazuje twojego prawdziwego wojownika",
