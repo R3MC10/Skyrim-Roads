@@ -3,9 +3,16 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
-    { id: "b274-compass", build: 274, date: "25 Nov 2026", title: "A livelier compass", items: [
+    { id: "b275-compass", build: 275, date: "25 Nov 2026", title: "A livelier compass", items: [
       "On the main menu compass, the ring now stays still and only the star tilts and follows your finger.",
       "The direction you're heading for lights up in gold.",
+    ] },
+    { id: "b274-qacore4", build: 274, date: "25 Nov 2026", title: "Foes speak Polish", items: [
+      "Fixed: in Polish, foe names in road fights and dungeons (like the Imperial escort or a flame atronach) were in English.",
+      "Locked chests now say how hard the lock is in plain words: simple, fairly easy, tricky, hard or very hard.",
+      "Fixed: in Polish, the dungeon screens (room choices, traps, chests, the map of rooms) and the fight log were partly in English.",
+      "Fixed: in Polish, some quest titles and journal lines (like the one about the Bannered Mare) still had English in them.",
+      "Fixed: in Polish, a few road meetings (the stray dog, the vanishing stranger, the waterlogged book) were in English.",
     ] },
     { id: "b273-roadart", build: 273, date: "25 Nov 2026", title: "Painted road encounters", items: [
       "Almost everything you meet on the road now has its own painting: bandits' tolls, caravans, shipwrecks, avalanches, giants, wisps, hagravens, peddlers, shrines and many more.",
