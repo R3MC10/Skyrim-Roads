@@ -10,6 +10,12 @@ const PATCHNOTES = (() => {
       "Fixed: an app update no longer restarts the game while you're fishing, mining, hunting, at the forge or in any other mini-game, so you never lose a catch.",
       "Fixed: more of the Social, jobs and fishing screens are in Polish.",
     ] },
+    { id: "b237-mountcombat", build: 237, date: "25 Nov 2026", title: "Fight from the saddle", items: [
+      "Mounted combat is back: ride into a fight and stay in the saddle, or get on and off with the new Mount and Dismount moves.",
+      "Getting on takes 2 moves and 20 stamina. You can dual cast from the saddle for a bit more magicka.",
+      "New Destruction perk: Saddle Caster.",
+      "Your horse can be knocked down in a fight, but it always gets back up afterwards.",
+    ] },
     { id: "b236-glowfix", build: 236, date: "25 Nov 2026", title: "No more glowing blob next to your weapon", items: [
       "An enchanted weapon used to leave a big glowing blob floating in the air beside your hero in fights. The glow now sits on the weapon itself, as a slim shine along the blade.",
     ] },
