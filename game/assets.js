@@ -47,6 +47,10 @@
      gev-<scene>              1280×480   8:3 painted affliction scenes (afflictions.js PAINT → EVENTART.PAINTED), WebP q82: black-shrine
                                          draugr-altar dwemer-pipe arkay-temple werewolf-moon. Shown in road events and story popups
                                          (cover-fit into 360×150); the drawing stays until the file loads. (gev-<kind> are the Great Events.)
+     raid-<card>              1280×480   8:3 painted event cards (eventcards.js), WebP q80, no text: dragon (a dragon over a town:
+                                         raids, the great dragon assault, migrations), bandits (the siege, outlaw crises, bandits at
+                                         your house), vampire (vampires at your house), giant (beast crises, frost trolls at your house),
+                                         blizzard (the Long Winter crisis). Title under the painting; the old drawing until it loads.
      room-<type>-<theme>      1600×900   painted dungeon rooms (dunrooms.js), shown above the room text. WebP q80.
        types: fight elite trap treasure puzzle rest boss (mystery optional). themes: cave barrow dwemer mine forsworn
        vampire temple fort banditcamp thalmor giantcamp lair. Just drop a file in: a missing one borrows the closest
