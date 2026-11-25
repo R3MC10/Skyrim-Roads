@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b330-partyfoeturns", build: 330, date: "25 Nov 2026", title: "Foes take proper turns in party fights", items: [
+      "In a party fight the foe now says who its next move goes for, and that's who it really hits. Before, it could say \"you\" and then hit a teammate.",
+      "When a fast foe moves twice in a round, its 1st move always comes before its 2nd in the turn strip.",
+      "With a big party, or a phone that was slow for a moment, every teammate still sees every one of the foe's moves play out, round by round, the same as the leader.",
+    ] },
     { id: "b329-notices", build: 329, date: "25 Nov 2026", title: "Pop-ups take turns", items: [
       "Windows that pop up on their own (a quest, a courier, a world event) now open one at a time. If one arrives while another window, a fight or a menu is open, it waits and opens right after, instead of replacing the one you were reading.",
       "The same message arriving twice shows once.",

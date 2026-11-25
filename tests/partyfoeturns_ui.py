@@ -71,7 +71,7 @@ async def main():
             await pg.evaluate(LIT)
 
         shot = False; g = 0
-        while g < 260:
+        while g < 900:
             g += 1
             st = [await pg.evaluate(STATE) for pg in pages]
             if all(s is None or s["done"] for s in st): break
