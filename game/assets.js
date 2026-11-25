@@ -88,7 +88,7 @@ const ASSETS = (() => {
     if (state.has(key)) return state.get(key);
     const rec = { st: "none", img: null, url: "" };
     state.set(key, rec);
-    if (!auto || missing[key]) return rec;
+    if (!auto || missing[key] || typeof Image === "undefined") return rec;   // no pictures outside a browser (node tests)
     rec.st = "loading"; pending++;
     const hi = HI.has(key) && wantHi();
     const tryExt = (i) => {
