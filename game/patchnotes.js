@@ -3,6 +3,9 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b254-qafight", build: 254, date: "25 Nov 2026", title: "Party dungeon fixes", items: [
+      "Fixed: in a party dungeon, the waiting screen still said only the leader decides. It now says everyone votes on each choice.",
+    ] },
     { id: "b253-wagons", build: 253, date: "25 Nov 2026", title: "Caravans you can talk to", items: [
       "Tap or click any caravan's wagons on the map to see who they are, where they're going, what they carry and how they're doing: rolling, resting in town, broken down, under attack, guarded or robbed.",
       "Catch up sends you to where you'll meet them on their road. When you reach them, whatever you picked on the card happens.",
