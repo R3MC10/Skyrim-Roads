@@ -89,6 +89,9 @@
      hunt-fg-branch-left/-right 745×773, 637x690  transparent overhanging branches, opaque on the corner they hang from
                                          (top-left / top-right); hunt-fg-grass 1536×556, grass along the bottom edge, stretched
                                          to the screen width. Drawn in front of the animals by huntart.js with a slow sway. WebP q80.
+     heist-<house>            2048×1152  painted night scene of each heist house (heistscene.js), lit window as the focus, calm
+                                         dark yard in the bottom third for the choices. WebP q80. houses: battleborn
+                                         shattershield erikur silverblood blackbriar (the ids in heists.js HOUSES)
      ui-panel                 1024×1024  tileable dark panel texture
      ui-parchment             1024×1024  tileable parchment texture
      ui-compass               1254×1254  transparent compass rose
@@ -100,6 +103,7 @@
        armour sets (helmet/armor/gauntlets/boots/shield) hide leather iron steel chainmail elven dwarven ancient-nord
        stalhrim chitin bonemold forsworn guild nightingale shrouded; weapons iron/steel/elven/dwarven/ancient-nord/
        stalhrim/skyforge-steel swords, war axes, greatswords, battleaxes, daggers, maces, bows, crossbows, staffs.
+       Painted so far: the heist loot and tools icon-hs-signet -compass -goblet -torc -brooch -papers -draught (WebP q85).
 
    API: ASSETS.img(key) → a loaded HTMLImageElement or null (asks for the file the first time).
         ASSETS.state(key) → "ok" | "loading" | "none" (asks for the file the first time).
