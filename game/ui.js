@@ -247,7 +247,7 @@
   }
   function renderTitle() {
     const inner = $("#tinner"); if (!inner) return;
-    if (!$("#thead")) inner.innerHTML = `<div id="thead" style="display:flex;flex-direction:column;align-items:center">${EMBLEM}<h1>Roads of the North</h1><div class="tag">A shared journey across Skyrim</div></div><div id="tbody" style="display:flex;flex-direction:column;align-items:center;width:100%;flex:1"></div>`;
+    if (!$("#thead")) { inner.innerHTML = `<div id="thead" style="display:flex;flex-direction:column;align-items:center">${typeof TITLELOGO !== "undefined" ? TITLELOGO.html() : EMBLEM + "<h1>Roads of the North</h1>"}<div class="tag">A shared journey across Skyrim</div></div><div id="tbody" style="display:flex;flex-direction:column;align-items:center;width:100%;flex:1"></div>`; if (typeof TITLELOGO !== "undefined") TITLELOGO.mount(inner.querySelector(".tlogo")); }
     let body = "";
     if (titlePage === "press") body = `<button class="press" data-t="menu">Tap to begin</button>`;
     else if (titlePage === "menu") {

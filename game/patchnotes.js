@@ -3,6 +3,10 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b277-titlelogo", build: 277, date: "25 Nov 2026", title: "A new title", items: [
+      "The main menu has a new title: the O in NORTH is now a compass.",
+      "A dotted road leaves the compass and winds round the words, past little mountains and pine trees, to a waypoint. It draws itself when the menu opens.",
+    ] },
     { id: "b276-magicaim", build: 276, date: "25 Nov 2026", title: "Cast on anyone, see everyone", items: [
       "With Magic or Items open in a fight, the scene, your health orb and your party's plates now move up above the menu instead of hiding under it, so you can tap or drag a heal onto anyone.",
       "When a heal or a ward asks who gets it, tap their name in the bar at the top, their plate, or just tap them in the scene.",

@@ -10,5 +10,8 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "A livelier compass": "Żywszy kompas",
     "On the main menu compass, the ring now stays still and only the star tilts and follows your finger.": "Na kompasie w menu głównym pierścień stoi w miejscu, a tylko gwiazda przechyla się i podąża za palcem.",
     "The direction you're heading for lights up in gold.": "Kierunek, w który zmierzasz, świeci na złoto.",
+    "A new title": "Nowy tytuł",
+    "The main menu has a new title: the O in NORTH is now a compass.": "Menu główne ma nowy tytuł: litera O w NORTH jest teraz kompasem.",
+    "A dotted road leaves the compass and winds round the words, past little mountains and pine trees, to a waypoint. It draws itself when the menu opens.": "Kropkowana droga wychodzi z kompasu i wije się wokół napisu, obok małych gór i sosen, aż do celu. Rysuje się sama, gdy otwiera się menu.",
   });
 })();

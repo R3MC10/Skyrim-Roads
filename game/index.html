@@ -4839,6 +4839,29 @@ body:has(#tbf) #gnear{display:none!important}
 .tw[data-glow=up] .tw-up small,.tw[data-glow=down] .tw-down small,.tw[data-glow=left] .tw-left small,.tw[data-glow=right] .tw-right small{color:#e8cf8f}
 @media (hover:hover){.tw-dir:hover b,.tw-dir:focus-visible b{color:#ffe7a6;text-shadow:0 0 6px rgba(255,214,120,.95),0 0 18px rgba(240,180,70,.75),0 2px 6px #000}.tw-dir:hover .tw-i,.tw-dir:focus-visible .tw-i{stroke:#ffd98a;filter:drop-shadow(0 0 6px rgba(255,200,100,.9))}}
 .tw-dir b,.tw-dir .tw-i,.tw-dir small{transition:color .15s,text-shadow .2s,stroke .15s,filter .2s}
+
+/* main-menu title (titlelogo.js): ROADS / of the / N✦RTH with a map trail, mountains and pines round it */
+.title .tlogo{position:relative;font-size:clamp(40px,15vw,72px);text-align:center;margin:.42em 0 .66em;padding-left:.22em;line-height:1;animation:tfade 1.4s ease both}
+.tlogo .tl-road{position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:1}
+.tlogo .tl-l1{position:relative;z-index:2;font-family:Cinzel,serif;font-weight:700;font-size:.606em;letter-spacing:.32em;padding-left:.32em;background:linear-gradient(180deg,#fffaf0 0%,#ddd5c2 50%,#9e9581 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2px 3px rgba(0,0,0,.9)) drop-shadow(0 0 16px rgba(0,0,0,.6))}
+.tlogo .tl-of{position:relative;z-index:2;font-family:"Cormorant Garamond",Georgia,serif;font-style:italic;font-weight:600;font-size:.379em;margin:.48em 0 .64em;color:#e8d3a0;text-shadow:0 2px 6px #000}
+.tlogo .tl-of span{padding:0 10px}
+.tlogo .tl-l2{position:relative;z-index:2;font-family:Cinzel,serif;font-weight:700;letter-spacing:.05em;display:flex;justify-content:center;align-items:center}
+.tlogo .tl-g{background:linear-gradient(180deg,#fff7dc 0%,#f0d595 30%,#c99a4b 62%,#8c6428 85%,#6a4a1c 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 1px 0 rgba(255,240,200,.25)) drop-shadow(0 -1px 0 rgba(40,25,5,.6)) drop-shadow(0 3px 3px rgba(0,0,0,.85)) drop-shadow(0 0 18px rgba(0,0,0,.55))}
+.tlogo .tl-cmp{position:relative;display:inline-block;width:1.03em;height:1.03em;margin:0 .045em 0 .075em}
+.tlogo .tl-cmp i{position:absolute;inset:0;background:center/100% no-repeat}
+.tlogo .tl-cmp .tl-o{font-style:normal;display:grid;place-items:center;line-height:1}
+.tlogo .tl-cmp .tl-r,.tlogo .tl-cmp .tl-s{display:none}
+:root.has-ui-compass-ring.has-ui-compass-star .tlogo .tl-cmp .tl-o{display:none}
+:root.has-ui-compass-ring.has-ui-compass-star .tlogo .tl-cmp .tl-r{display:block;background-image:var(--asset-compass-ring);transform:scale(.94)}
+:root.has-ui-compass-ring.has-ui-compass-star .tlogo .tl-cmp .tl-s{display:block;background-image:var(--asset-compass-star);transform:scale(1.04);filter:drop-shadow(0 3px 4px rgba(0,0,0,.8));animation:tlspin 1.6s cubic-bezier(.2,1.4,.4,1) both}
+.tlogo .tl-cmp:before{content:"";position:absolute;inset:-30%;border-radius:50%;background:radial-gradient(circle,rgba(255,200,110,.28),transparent 62%)}
+@keyframes tlspin{0%{transform:scale(1.04) rotate(-140deg);opacity:0}25%{opacity:1}100%{transform:scale(1.04) rotate(0)}}
+.tlogo .tl-grow{stroke-dasharray:1 1;stroke-dashoffset:0}
+.tlogo .tl-grow.go{animation:tlgrow 1.5s .35s ease-in-out both}
+@keyframes tlgrow{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+.tlogo .tl-decos.go{animation:tfade 1s 1.2s ease both}
+@media (prefers-reduced-motion:reduce){.tlogo,.tlogo .tl-cmp .tl-s,.tlogo .tl-grow.go,.tlogo .tl-decos.go{animation:none!important}}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -5229,6 +5252,7 @@ body:has(#tbf) #gnear{display:none!important}
 <script src="wagons.js"></script>
 <script src="harvest.js"></script>
 <script src="harvestgame.js"></script>
+<script src="titlelogo.js"></script>
 <script src="ui.js"></script>
 </body>
 </html>
