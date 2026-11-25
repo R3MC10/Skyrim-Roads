@@ -36,7 +36,7 @@ Every merge to `main` builds a new APK release; phones that already have build 6
 cd tests
 node test_engine.js            # any node test, uses ../game/
 W=/path/to/game/ node test_x.js
-python3 -m http.server 8765 --directory ../game &   # for screen tests
+node serve.js 8765 &   # for screen tests (python -m http.server drops scripts on busy machines -> fake "X is not defined" errors)
 python3 tabmenu_ui.py 8765
 ```
 Long balance sims: `test_bal_sim.js`, `test_qscale.js` (skip in quick runs).

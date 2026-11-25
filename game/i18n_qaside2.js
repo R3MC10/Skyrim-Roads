@@ -32,7 +32,7 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
     "Rough work, but it holds.": "Toporna robota, ale trzyma.", "Great work.": "Świetna robota.", "Masterful work!": "Mistrzowska robota!", "Perfect work!": "Doskonała robota!",
     "The heat runs wild and the ore turns to slag.": "Żar wymyka się spod kontroli i ruda zamienia się w żużel.",
     "Your knife slips and the hide tears.": "Nóż ci się ześlizguje i skóra się rozdziera.",
-    // patch note b256
+    // patch note b257
     "Halls, inns and festivals in Polish": "Dwory, karczmy i festyny po polsku",
     "Fixed: a festival in a hold's capital said the place twice, like \"Falkreath, Falkreath\".": "Naprawione: festyn w stolicy włości podawał miejsce dwa razy, np. „Falkreath, Falkreath”.",
     "Fixed: in Polish, the Hall of the North's sizes and shared chest, buying a house or a hall plot, the neighbours list, renting a room and writing a bard's verse are translated.":

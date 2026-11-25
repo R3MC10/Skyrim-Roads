@@ -129,7 +129,7 @@ const DAWNGUARD = (() => {
   function trollArmor(s) {
     const row = (s.inv || []).find((r) => r.item === "troll_armor");
     if (!row) return "Gunmar keeps the troll armour for now.";
-    if (!s.follower || typeof FOL2 === "undefined" || !FOL2.st(s)) return "Gunmar hands you troll armour for a follower. Give it to one from the Hero tab.";
+    if (!s.follower || typeof FOL2 === "undefined" || !FOL2.st(s)) return "Gunmar hands you troll armour for a follower. Give it to one from the Character tab (Follower).";
     const msg = FOL2.give(s, row.id, 1), f = FOL2.st(s), mine = f?.inv?.slice().reverse().find((r) => r.item === "troll_armor");
     if (!mine) return "Gunmar hands you troll armour, but your follower can't carry it. Give it to them later.";
     FOL2.equip(s, mine.id);
