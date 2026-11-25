@@ -14,8 +14,10 @@ async def run(b, w, h, phone, bad, old=False):
     ok = lambda c, m: (print(("ok   " if c else "FAIL ") + tag + " " + m), None if c else bad.append(tag + " " + m))
     ctx = await b.new_context(viewport={"width": w, "height": h}, has_touch=phone, is_mobile=phone)
     pg = await ctx.new_page(); errs = []; pg.on("pageerror", lambda e: errs.append(str(e)))
-    await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=gfx{w}{int(old)}"); await pg.wait_for_timeout(1800)
-    await pg.click(".press"); await pg.click(".mi[data-t=new]"); await pg.fill("#nm", "Herba"); await pg.click("#begin"); await pg.wait_for_timeout(1200)
+    for _ in range(3):   # a busy local server sometimes drops a script: load again
+        errs.clear(); await pg.goto(f"http://localhost:{PORT}/index.html?net=bc&notut&p=gfx{w}{int(old)}"); await pg.wait_for_timeout(1800)
+        if not errs and await pg.evaluate("typeof GATHER!=='undefined'"): break
+    await pg.click(".press"); await pg.wait_for_timeout(400); await pg.click(".mi[data-t=new]"); await pg.wait_for_selector("#nm"); await pg.fill("#nm", "Herba"); await pg.click("#begin"); await pg.wait_for_timeout(1200)
     await pg.evaluate("document.querySelectorAll('#modal').forEach(m=>m.remove())")
     await pg.evaluate("""(old)=>{const S=window.__dbg.save(); const n=GATHER.nodes().find(n=>n.ing==='ing_juniper'); S.location=null; S.x=n.pos[0]; S.y=n.pos[1];
        if (old) S.gather={seen:{},picked:{}};
