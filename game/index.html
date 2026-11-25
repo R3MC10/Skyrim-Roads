@@ -5250,6 +5250,17 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 .fj-t .fj-fight{color:#f0a08a;border-color:rgba(240,120,100,.45)}.fj-t .fj-dungeon{color:#b6a6e8;border-color:rgba(170,150,230,.45)}.fj-t .fj-trade{color:#e8cf7a;border-color:rgba(230,200,110,.45)}
 .fj-t .fj-party{display:block;color:#cbb98f}.fj-t .fj-party.full{color:#e39a7c}.fj-t .fj-why{display:block;font-style:italic;opacity:.75}
 .fbtns .btn[data-act=fjoin][disabled]{opacity:.45;cursor:not-allowed}
+/* ==== someone dropped out of a co-op dungeon run (dundropout.js) ==== */
+.modal.ddnote{z-index:30}
+.ddrop-sheet{max-width:min(94vw,520px);width:100%}
+.ddrop .ddrop-line{font-size:17px;line-height:1.4;margin:10px 0 6px;color:var(--sk-ink,var(--ink))}
+.ddrop .ddrop-line b{color:var(--gold)}
+.ddrop .sub{margin:0 0 12px}
+.ddrop-acts{display:flex;flex-wrap:wrap;gap:8px}.ddrop-acts .btn{flex:1 1 150px;min-height:44px}
+.ddwait{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(132px + env(safe-area-inset-bottom));z-index:19;display:flex;flex-wrap:wrap;align-items:center;gap:8px;width:min(94vw,560px);padding:8px 12px;background:linear-gradient(180deg,rgba(30,32,36,.96),rgba(14,15,17,.96));border:1px solid rgba(226,187,100,.35);box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.ddwait .t{flex:1 1 100%;font-size:15px}.ddwait .btn{min-height:40px;flex:1 1 140px}
+.ddwait.back{border-color:rgba(120,200,120,.6)}
+@media (min-width:1000px){.ddwait{bottom:24px}}
 /* [avatars] your round painted portrait (avatar.js): player lists, friends, party, invite cards; the picker on the
    Character sheet and in character creation; a plain silhouette for a friend never seen */
 .avport,.avsil{width:var(--av,40px);height:var(--av,40px);border-radius:50%;overflow:hidden;flex:none;align-self:center;margin-right:10px;background:radial-gradient(ellipse at 50% 38%,#3a3f48 0%,#1c1f25 70%,#121418 100%);box-shadow:0 0 0 1px rgba(214,178,94,.45),0 1px 4px rgba(0,0,0,.5)}
@@ -5567,6 +5578,7 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 <script src="lockgame.js"></script>
 <script src="livecursor.js"></script>
 <script src="partytraps.js"></script>
+<script src="dundropout.js"></script>
 <script src="hunting.js"></script>
 <script src="bonds.js"></script>
 <script src="meeko.js"></script>
@@ -5745,6 +5757,7 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 <script src="i18n_phantom.js"></script>
 <script src="i18n_pcupdate.js"></script>
 <script src="i18n_friendjoin.js"></script>
+<script src="i18n_dundropout.js"></script>
 <script src="i18n_dollrig.js"></script>
 <script src="i18n_partyinvites.js"></script>
 <script src="i18n_samever.js"></script>
