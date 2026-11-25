@@ -217,14 +217,20 @@ const FOEINTENT = (() => {
     if (stage.querySelector(".fitarrow")) return;
     const sr = stage.getBoundingClientRect();
     const f = sess.f, s = r.height / 150, gy = r.top - sr.top + r.height * 0.8;
-    const fx = r.left - sr.left + r.width * 0.72, hx = r.left - sr.left + r.width * 0.27;
-    let tx = hx;
-    if (!nx.me) {   // someone in the line behind you (on a teammate's phone the leader stands there too)
+    let fx = r.left - sr.left + r.width * 0.72, hx = r.left - sr.left + r.width * 0.27;
+    let tx = hx, ty = gy, rk = 1, y0 = gy - 70 * s, y1 = gy - 62 * s;
+    const FP = typeof FIGHTPOS !== "undefined" ? FIGHTPOS : null, fo = FP && FP.screenOf(cv, "foe");
+    if (fo) {   // [fightpos] the spots fightart.js really drew everyone at (fightpos.js)
+      const me = FP.screenOf(cv, "me"); fx = fo.x - sr.left; hx = me.x - sr.left; tx = hx;
+      y0 = Math.max(fo.top - sr.top + 10 * s, gy - 70 * s); y1 = me.top - sr.top + 10 * s;
+      const who = nx.me ? null : (f.allies || []).find((a) => keyOf(a) === nx.k), tg = who && FP.screenOf(cv, who.name);
+      if (tg) { tx = tg.x - sr.left; ty = tg.y - sr.top; rk = tg.sc; y1 = tg.top - sr.top + 8 * s * tg.sc; }
+    } else if (!nx.me) {   // someone in the line behind you (on a teammate's phone the leader stands there too)
       const ground = (f.allies || []).filter((a) => !a.down && !a.flyer);
       const i = Math.max(0, ground.findIndex((a) => keyOf(a) === nx.k));
       tx = hx - (26 + Math.min(i, 2) * 22) * s * (ground.length > 3 ? 0.7 : 1);
     }
-    const y0 = gy - 70 * s, y1 = gy - 62 * s, mx = (fx + tx) / 2, my = Math.min(y0, y1) - 34 * s;
+    const mx = (fx + tx) / 2, my = Math.min(y0, y1) - 34 * s;
     const W = sr.width, H = sr.height;
     const sv = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     sv.setAttribute("class", "fitarrow" + (nx.it?.big ? " big" : ""));
@@ -234,7 +240,7 @@ const FOEINTENT = (() => {
     const lw = 2;
     sv.innerHTML = `<defs><marker id="fitah" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah"/></marker></defs>
       <path class="ln" d="M${fx.toFixed(1)},${y0.toFixed(1)} Q${mx.toFixed(1)},${my.toFixed(1)} ${(tx + 10 * s).toFixed(1)},${y1.toFixed(1)}" stroke-width="${lw}" marker-end="url(#fitah)"/>
-      <g class="tgt" transform="translate(${tx.toFixed(1)},${(gy - 1.5 * s).toFixed(1)})"><ellipse class="gnd" rx="${(19 * s).toFixed(1)}" ry="${(4.2 * s).toFixed(1)}"/></g>`;
+      <g class="tgt" transform="translate(${tx.toFixed(1)},${(ty - 1.5 * s * rk).toFixed(1)})"><ellipse class="gnd" rx="${(19 * s * rk).toFixed(1)}" ry="${(4.2 * s * rk).toFixed(1)}"/></g>`;
     stage.appendChild(sv);
   }
 

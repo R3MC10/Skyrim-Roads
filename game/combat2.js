@@ -142,7 +142,10 @@ const COMBAT2 = (() => {
       if (cy + ch > aH + 10) cy = Math.max(0, aH + 10 - ch);
     }
     const s = ch / 150, gy = cy + ch * 0.8;
-    const hx = cx + cw * 0.27, hy = gy - 66 * s, fx = cx + cw * 0.72, fy = gy - 74 * s;
+    let hx = cx + cw * 0.27, hy = gy - 66 * s, fx = cx + cw * 0.72, fy = gy - 74 * s;
+    // [fightpos] where fightart.js really put you and the foe (fightpos.js): the plate, pop-ups and flashes follow them
+    const FL = tin.querySelector(".fscene canvas")?.__fp;
+    if (FL && FL.W && FL.Hh) { const kx = cw / FL.W, ky = ch / FL.Hh; hx = cx + FL.hero.x * kx; hy = cy + (FL.hero.top + 6 * FL.s) * ky; fx = cx + FL.foe.x * kx; fy = cy + FL.foe.top * ky; }
     const st = tin.style, px = (v) => v.toFixed(1) + "px";
     st.setProperty("--c2cw", px(cw)); st.setProperty("--c2ch", px(ch)); st.setProperty("--c2cx", px(cx)); st.setProperty("--c2cy", px(cy));
     st.setProperty("--c2dock", px(dh)); st.setProperty("--c2top", px(top)); st.setProperty("--c2ah", px(aH));
