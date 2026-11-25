@@ -22,6 +22,7 @@ const FIGHTTIPS = (() => {
     MAGIC: () => (typeof MAGIC !== "undefined" ? MAGIC : undefined), TOMES: () => (typeof TOMES !== "undefined" ? TOMES : undefined), TIP: () => (typeof TIP !== "undefined" ? TIP : undefined),
     TBTIPS: () => (typeof TBTIPS !== "undefined" ? TBTIPS : undefined), FIGHTCTL: () => (typeof FIGHTCTL !== "undefined" ? FIGHTCTL : undefined), POWERS: () => (typeof POWERS !== "undefined" ? POWERS : undefined),
     SHIELDFX: () => (typeof SHIELDFX !== "undefined" ? SHIELDFX : undefined), FOEKIT: () => (typeof FOEKIT !== "undefined" ? FOEKIT : undefined),
+    POISONFX: () => (typeof POISONFX !== "undefined" ? POISONFX : undefined),
   };
   const mod = (n) => { try { return MODS[n] ? MODS[n]() : undefined; } catch { return undefined; } };
   const safe = (fn, d) => { try { const v = fn(); return v === undefined ? d : v; } catch { return d; } };
@@ -79,12 +80,19 @@ const FIGHTTIPS = (() => {
     return (T?.itemHTML ? T.itemHTML(item, f.s) : head(it.name)) + (sp ? safe(() => mod("MAGIC").infoHTML(f.s, it.spell), "") : "")
       + stats([["Magicka", "none"], apStat(sess, a, c)]) + line("Reading it uses the scroll up.", "tt-hint") + whyHTML(sess, a, c) + hint(ZONE[zoneOf(a)] || "");
   }
+  /* [itemgames] a poison: what it is, what the next hit delivers (poisonfight.js) */
+  function poisonHTML(sess, a) {
+    const f = sess.f, c = apOf(f, a, sess), T = mod("TIP"), PX = mod("POISONFX"), r = PX ? PX.rowOf(f, a) : null; if (!r) return null;
+    return (T?.itemHTML ? T.itemHTML(r.item, f.s, r) : head(D.ITEMS[r.item].name)) + line(PX.note(f, a))
+      + stats([["Left", Math.max(0, f.left ? f.left(r.id) : r.qty)], apStat(sess, a, c)]) + line("Coating uses the poison up. Bows coat their arrows.", "tt-hint") + whyHTML(sess, a, c) + hint(ZONE[zoneOf(a)] || "");
+  }
   const NAMES = { attack: "Attack", power_attack: "Power attack", block: "Guard", bash: "Shield bash", flee: "Flee", end: "End turn" };
   function moveHTML(sess, a) {
     const f = sess.f, c = apOf(f, a, sess), [k, arg] = a.split(":"), TT = mod("TBTIPS"), T = mod("TIP");
     if (k === "spell" || k === "dual") return spellHTML(sess, arg, k === "dual");
     if (k === "potion") return potionHTML(sess, arg);
     if (k === "scroll") return scrollHTML(sess, arg);
+    if (k === "poison") { const h = poisonHTML(sess, a); if (h) return h; }
     let body = "";
     if (k === "shout" && T) { const PW = mod("POWERS"), id = PW && Object.keys(PW.SHOUTS).find((x) => PW.SHOUTS[x][1][0] === String(arg).toUpperCase()); body = id ? T.html("shout:" + id, f.s) || "" : ""; }
     if (k === "power" && T) body = T.html("power:race", f.s) || "";
@@ -145,7 +153,7 @@ const FIGHTTIPS = (() => {
       if (id === "foe") return foeHTML(sess);
       if (id === "hp" || id === "mp" || id === "sp") return barHTML(sess, id);
       if (id === "menu:magic") { const n = (sess.f.s.spells || []).filter((x) => D.SPELLS[x] && D.SPELLS[x].kind !== "utility").length; return head("Magic") + line(`Your ${n} fighting spell${n === 1 ? "" : "s"}: cast one, or ★ it to pin it to the quick slots.`) + hint("Key: M"); }
-      if (id === "menu:items") return head("Items") + line("Potions and scrolls: drink or read one, or ★ it to pin it to the quick slots.") + hint("Key: I");
+      if (id === "menu:items") return head("Items") + line("Potions, scrolls and poisons: drink, read or coat your weapon, or ★ one to pin it to the quick slots.") + hint("Key: I");
       if (id === "back") return head("Back") + line("Back to your moves.") + hint("Key: Esc");
       if (id.startsWith("filter:")) { const v = id.slice(7); return line(v === "all" ? "Show all your spells." : v === "fav" ? "Show only the spells you pinned with ★." : `Show only ${v} spells.`); }
       return moveHTML(sess, id);

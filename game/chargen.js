@@ -2,7 +2,7 @@
    A big live preview (left on a PC, on top on a phone) drawn with the painted fight rig (chargenrig.js; the ink FIGART
    figure until its parts load); it idles,
    turns (drag it, or the arrow keys) and zooms to the face. Tabs: Race · Body · Head · Face · Hair · Scars & Paint · Start,
-   with Back/Next, Randomise and Undo. The look is plain data (appear.js) saved in s.app and sent on your player card,
+   with Back/Next, Randomise and Undo. A Male / Female switch sits above the tabs ([chargensex]). The look is plain data (appear.js) saved in s.app and sent on your player card,
    so everyone sees the same face. Race abilities: racefx.js.
    The same screen without the Race and Start tabs is the barber at an inn (small fee) and the mirror in your house (free).
      CHARGEN.create(host, { onBegin({ name, race, app, stone }), onBack(), startExtra(), afterRender(root), toast(text) })
@@ -57,7 +57,19 @@ const CHARGEN = (() => {
     if (!D.RACES[r] || r === st.race) return;
     change(() => { const keep = st.touched; st.race = r; st.app = keep ? APPEAR.forRace(st.app, r) : APPEAR.fromSeed("cg-" + r, r, st.app.sx === "f"); });
   }
-  function randomise() { change(() => { st.app = APPEAR.random(st.race, Math.random() < 0.5 ? "f" : "m"); }); }
+  function randomise() { change(() => { st.app = APPEAR.random(st.race, st.app.sx === "f" ? "f" : "m"); }); }   // [chargensex] Randomise keeps the sex you picked
+  /* [chargensex] Male / Female: an untouched starting look becomes the race's default look for that sex; a look you've
+     already shaped keeps everything that carries over (APPEAR.norm drops the beard for a woman) */
+  function setSex(sx) {
+    sx = sx === "f" ? "f" : "m";
+    if ((st.app.sx === "f" ? "f" : "m") === sx) return;
+    change(() => {
+      if (!st.touched) { st.app = APPEAR.fromSeed("cg-" + st.race, st.race, sx === "f"); return; }
+      const a = { ...st.app, sx, bl: undefined };
+      if (sx === "f" && a.hair === "bald" && !beast()) a.hair = "long";   // a bald man becomes a long-haired woman, not a bald one
+      st.app = a;
+    });
+  }
 
   // ---------------------------------------------------------------- the look shown
   function baseLook() {
@@ -102,7 +114,7 @@ const CHARGEN = (() => {
           <p class="rpow"><span class="cgab" aria-hidden="true">✦</span><span><b>${esc(L(ab.name))}</b> · ${esc(L(ab.desc))}</span></p></div></div>`;
   }
   function bodyTab() {
-    return row("sx", "Sex", [["m", "Male"], ["f", "Female"]]) + row("build", "Build", APPEAR.BUILDS) + row("height", "Height", APPEAR.HEIGHTS)
+    return row("build", "Build", APPEAR.BUILDS) + row("height", "Height", APPEAR.HEIGHTS)
       + swatches("skin", st.race === "argonian" ? "Scales" : st.race === "khajiit" ? "Fur" : "Skin tone", APPEAR.skins(st.race));
   }
   function headTab() {
@@ -137,6 +149,13 @@ const CHARGEN = (() => {
       ${st.o.startExtra ? st.o.startExtra() : ""}`;
   }
   const PANES = { race: raceTab, body: bodyTab, head: headTab, face: faceTab, hair: hairTab, marks: marksTab, start: startTab };
+  /* [chargensex] the Male / Female switch at the top of the screen, above the tabs (two big segmented buttons) */
+  function sexBar() {
+    const f = st.app.sx === "f";
+    return `<span class="cgsexl" id="cgl-sex">${esc(L("Sex"))}</span>${[["m", "♂", "Male"], ["f", "♀", "Female"]].map(([v, ic, t]) => { const on = (v === "f") === f;
+      return `<button class="cgsexb ${on ? "on" : ""}" data-cg="sex" data-v="${v}" role="radio" aria-checked="${on}" tabindex="${on ? 0 : -1}"><span class="cgsexi" aria-hidden="true">${ic}</span> ${esc(L(t))}</button>`; }).join("")}`;
+  }
+  const namePh = () => (st.app.sx === "f" ? "Your name, e.g. Brynja" : "Your name, e.g. Remigiusz");
   const nameNow = () => (st.root?.querySelector("#nm")?.value || st.name || "").trim().slice(0, 24);
   const nameProblem = (n) => (typeof NICK !== "undefined" ? NICK.problem(n) : n.length >= 2 ? "" : "Pick a nickname (at least 2 letters).");
 
@@ -163,10 +182,11 @@ const CHARGEN = (() => {
       </div>
       <div class="cgside">
         <div class="cghead"><div><h2>${esc(title)}</h2><p class="sub">${esc(sub)}</p></div>${create ? `<button class="btn sm" id="toTitle">${esc(L("Back to the main menu"))}</button>` : ""}</div>
+        <div class="cgsex" role="radiogroup" aria-labelledby="cgl-sex"></div>
         <div class="cgtabs" role="tablist" aria-label="${esc(L("Character creation"))}"></div>
         <div class="cgpanel" role="tabpanel" tabindex="-1"></div>
         <div class="cgfoot">
-          ${create ? `<div class="cgnm"><label class="sub" for="nm">Your name</label><input id="nm" maxlength="24" autocomplete="off" placeholder="Your name, e.g. Remigiusz" value="${esc(st.name || "")}"></div>` : ""}
+          ${create ? `<div class="cgnm"><label class="sub" for="nm">Your name</label><input id="nm" maxlength="24" autocomplete="off" placeholder="${esc(L(namePh()))}" value="${esc(st.name || "")}"></div>` : ""}
           <div class="cgbar">
             <button class="btn" data-cg="rand" title="${esc(L("Randomise"))}"><span aria-hidden="true"></span> <span>${esc(L("Randomise"))}</span></button>
             <button class="btn" data-cg="undo" title="${esc(L("Undo"))}"><span aria-hidden="true">↶</span> <span>${esc(L("Undo"))}</span></button>
@@ -182,9 +202,10 @@ const CHARGEN = (() => {
     const R = st.root; if (!R) return;
     const T = tabs(), i = T.findIndex(([id]) => id === st.tab);
     // keep keyboard focus on the same control after the panel is redrawn
-    const a = document.activeElement, keep = a && R.contains(a) && a.closest(".cgpanel,.cgtabs") ? [a.dataset.cg, a.dataset.k, a.dataset.v, a.dataset.race, a.dataset.stone, a.dataset.tab].join("|") : null;
+    const a = document.activeElement, keep = a && R.contains(a) && a.closest(".cgpanel,.cgtabs,.cgsex") ? [a.dataset.cg, a.dataset.k, a.dataset.v, a.dataset.race, a.dataset.stone, a.dataset.tab].join("|") : null;
     R.querySelector(".cgtabs").innerHTML = T.map(([id, t], j) => `<button class="cgtab ${id === st.tab ? "on" : ""}" role="tab" id="cgt-${id}" data-cg="tab" data-tab="${id}" aria-selected="${id === st.tab}" tabindex="${id === st.tab ? 0 : -1}"><span class="cgtn">${j + 1}</span> ${esc(L(t))}</button>`).join("");
     { const tb = R.querySelector(".cgtabs"), on = tb.querySelector(".cgtab.on"); if (on && tb.scrollWidth > tb.clientWidth) tb.scrollLeft = Math.max(0, on.offsetLeft - (tb.clientWidth - on.offsetWidth) / 2); }   // [smallpolish] the open tab stays in sight on a phone
+    { const sb = R.querySelector(".cgsex"); if (sb) sb.innerHTML = sexBar(); const nm = R.querySelector("#nm"); if (nm) nm.placeholder = L(namePh()); }
     const pane = R.querySelector(".cgpanel");
     pane.setAttribute("aria-labelledby", "cgt-" + st.tab);
     pane.innerHTML = PANES[st.tab]();
@@ -197,7 +218,7 @@ const CHARGEN = (() => {
     R.querySelector("[data-cg=gear]").setAttribute("aria-pressed", String(st.gear));
     const cf = R.querySelector(".cscene .cfig"); if (cf) cf.dataset.race = st.race;
     tag(); detail();
-    if (keep) { const el = [...pane.querySelectorAll("button"), ...R.querySelectorAll(".cgtab")].find((b) => [b.dataset.cg, b.dataset.k, b.dataset.v, b.dataset.race, b.dataset.stone, b.dataset.tab].join("|") === keep); if (el) el.focus(); }
+    if (keep) { const el = [...pane.querySelectorAll("button"), ...R.querySelectorAll(".cgtab,.cgsexb")].find((b) => [b.dataset.cg, b.dataset.k, b.dataset.v, b.dataset.race, b.dataset.stone, b.dataset.tab].join("|") === keep); if (el) el.focus(); }
     if (st.o.afterRender) try { st.o.afterRender(R); } catch (e) { console.warn("chargen", e); }
     paint(true);
   }
@@ -290,6 +311,7 @@ const CHARGEN = (() => {
       case "dec": return nudge(b.dataset.k, -1);
       case "inc": return nudge(b.dataset.k, 1);
       case "set": return change(() => { st.app[b.dataset.k] = +b.dataset.v; });
+      case "sex": return setSex(b.dataset.v);
       case "turnL": return turn(-0.7);
       case "turnR": return turn(0.7);
       case "zoom": return zoom();
@@ -316,6 +338,7 @@ const CHARGEN = (() => {
       if (e.key === "ArrowLeft" || e.key === "ArrowRight") { e.preventDefault(); return turn(e.key === "ArrowLeft" ? -0.4 : 0.4); }
       if (e.key === "ArrowUp" || e.key === "ArrowDown" || e.key === "+" || e.key === "-") { e.preventDefault(); return zoom(e.key === "ArrowUp" || e.key === "+" ? 1 : 0); }
     }
+    if (t.classList?.contains("cgsexb") && ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) { e.preventDefault(); setSex(st.app.sx === "f" ? "m" : "f"); return st.root.querySelector(".cgsexb.on")?.focus(); }
     if (t.classList?.contains("cgarr") && (e.key === "ArrowLeft" || e.key === "ArrowRight")) { e.preventDefault(); return nudge(t.dataset.k, e.key === "ArrowLeft" ? -1 : 1); }
     if (t.id === "nm" && e.key === "Enter") { e.preventDefault(); return begin(); }
     if (e.key === "Escape" && st.mode !== "create") { e.preventDefault(); return close(false); }
