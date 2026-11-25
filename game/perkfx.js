@@ -223,6 +223,11 @@ const PFX = (() => {
     [ "Alchemy", "field_medic", "Field Medic", 1, [40], ["physician"], "Healing potions you drink in a fight heal 20% more. [OURS]", [["potion", 0.2, {}]]],
     [ "Alchemy", "forager", "Forager", 1, [20], ["alchemist"], "You spot plant patches from twice as far away, and foraging turns up one more ingredient. [OURS, gathering]", [["gspot", 1, {}], ["forage", 1, {}]]],
     [ "Alchemy", "wildcrafter", "Wildcrafter", 1, [50], ["forager"], "Picked patches grow back twice as fast, and rare finds (Nirnroot, pearls, glowing fungi) turn up when you forage. [OURS, gathering]", [["regrow", 0.5, {}], ["grare", 1, {}]]],
+    // hands-on harvesting (harvest.js, harvestgame.js)
+    [ "Alchemy", "herbalists_eye", "Herbalist's Eye", 1, [30], ["forager"], "When you harvest by hand, perfect and glowing specimens turn up half again as often. [OURS, gathering]", [["hrare", 0.5, {}]]],
+    [ "Alchemy", "sure_hands", "Sure Hands", 1, [35], ["forager"], "Hand harvesting is easier and quicker: wider sweet spots, less work, a second more on the clock, and Quick Gather opens after two harvests instead of three. [OURS, gathering]", [["hfast", 1, {}]]],
+    [ "Alchemy", "anatomist", "Anatomist", 1, [40], ["forager"], "Beasts you kill give one extra part 30% of the time. [OURS, gathering]", [["hparts", 0.3, {}]]],
+    [ "Alchemy", "master_gardener", "Master Gardener", 1, [75], ["green_thumb"], "Every garden bed gives one more ingredient each harvest. [OURS, gathering]", [["hgarden", 1, {}]]],
     [ "Alchemy", "quick_draught", "Quick Draught", 2, [25, 50], ["physician"], "Restore Health, Magicka and Stamina potions work faster: everything comes in one round sooner per rank (a second sooner on the road), never in under two, and 5% more lands the moment you drink. [OURS]", [["potfast", 1, {}]]],
     [ "Alchemy", "master_alchemist", "Master Alchemist", 1, [100], ["purity", "green_thumb"], "Everything you brew is another 10% stronger. [OURS]", [["alch", 0.1, {}]]],
     // ---------------------------------------------------------------- road encounters (encounters.js)
