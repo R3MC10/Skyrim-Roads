@@ -25,11 +25,19 @@
                                          facing right, 2x Lanczos of the trimmed cut-outs, WebP q84. who: nordm nordf · set: leather
                                          iron steel (nordf: leather) · part: head torso pelvis uparm forearm hand-open hand-fist thigh
                                          shin foot leg-bent. A set is used once all 11 parts load; until then the ink figure stays.
+     rig-w-<pic>              ~200-460   painted weapons and shields the painted fighters hold (riggear.js; grip points in its
+                                         PIV table): transparent, trimmed, WebP q86. Weapons lie flat, point right: sword
+                                         sword-iron dagger greatsword axe battleaxe mace staff (360/330/200/460/320/440/330/460
+                                         wide). bow bow-drawn arrow, shield shield-side shield-kite shield-kite-side (200-300 tall).
+                                         Missing ones (warhammer spear club crossbow) use the shaded drawings.
      shop-<id>                1200×375   painted banners for town sections (shown above each shop's list)
        ids: general forge (also blacksmith) inn (also cook) alchemy wizard (also enchanter) market stables home hall
             fence arena mine — raw 3:2 paintings go through art/conv: crop the middle band, WebP q80
      fest-<id>                1600×600   8:3 painted headers for the festival and Grand Arena screens (tourneyui.js), WebP q85.
        ids: harvest olaf tourney derby hunt forgefire midwinter arena. The ink drawing stays as the fallback.
+     gev-<scene>              1280×480   8:3 painted affliction scenes (afflictions.js PAINT → EVENTART.PAINTED), WebP q82: black-shrine
+                                         draugr-altar dwemer-pipe arkay-temple werewolf-moon. Shown in road events and story popups
+                                         (cover-fit into 360×150); the drawing stays until the file loads. (gev-<kind> are the Great Events.)
      room-<type>-<theme>      1600×900   painted dungeon rooms (dunrooms.js), shown above the room text. WebP q80.
        types: fight elite trap treasure puzzle rest boss (mystery optional). themes: cave barrow dwemer mine forsworn
        vampire temple fort banditcamp thalmor giantcamp lair. Just drop a file in: a missing one borrows the closest
@@ -42,6 +50,10 @@
      map-world                2000×1400  hand-painted world map, exact 10:7, covering the world bounds edge to edge (x·width,
                                          y·height); replaces the procedural map ground (paintedmap.js). Reference to paint over:
                                          scripts/map_reference.py. Optional map-world-2x (3000×2100) for close zoom.
+     mg-mining-bg             2048×1152  painted mine wall for the mining mini-game (minegame.js), WebP q80. The stones are cut from
+                                         its middle square (x 550-1450, y 110-1010, the iron vein); blurred behind them as the cave.
+     ore-<iron|silver|gold|ebony> ~320   painted ore chunks, transparent, trimmed (minegame.js). Other ores borrow one, tinted.
+     tool-pickaxe             768×356    painted pickaxe, transparent, trimmed, head on the right (minegame.js swings it).
      gfx-<effect>             strips     rendered combat effect sprites, drawn by gorefx2.js: frames side by side, transparent WebP.
                                          Liquids from scripts/make_blood.py: blood-burst-1/2 (10×256²), blood-burst-3 (12×256²),
                                          blood-spray (8×256²), blood-mist (8×192²), oil/green/ichor/sap-burst (10×192²); decal atlases
@@ -53,6 +65,14 @@
      fish-<kind>              ~720 wide  painted fish, transparent, side view facing right, trimmed, WebP q86 (fishart.js SPR maps
        kinds: salmon trout perch pike goldcarp ghostfish     every game fish to one, some tinted; others keep the ink fish)
      tool-fishing-rod         1400×71    painted rod, horizontal, tip on the right, trimmed; drawn in slices so it bends
+     lock-<face>              720×720    painted lock faces for the lockpicking game (lockgame.js), transparent, keyhole centre
+                                         at (0.5, 0.40): iron steel nordic dwemer noble. GPT art, trimmed, 1.5x Lanczos, WebP q86.
+     tool-lockpick            933×80     the pick, horizontal, hook tip on the right; tool-tension-wrench 705×116, bend on the right.
+                                         Missing files: lockgame.js draws the lock and tools in code.
+     mg-hunting-bg            2048×1152  painted misty clearing for the hunting mini-game (huntart.js), layered for parallax. WebP q84.
+     animal-<slug>            ~500-720   painted game animals for hunting (huntart.js): transparent, side view facing right,
+                                         trimmed, WebP q88. slugs: deer elk fox hare (snow fox borrows the fox, bleached).
+                                         Cut into body/head/ear/tail by huntart.js RIG; any other animal keeps the ink drawing.
      ui-panel                 1024×1024  tileable dark panel texture
      ui-parchment             1024×1024  tileable parchment texture
      ui-compass               1254×1254  transparent compass rose

@@ -1712,37 +1712,6 @@ body:has(#favBtn) .app,body:has(#twBtn) .app{padding-bottom:calc(190px + env(saf
 .hbreed small{opacity:.75;font-size:11.5px;line-height:1.3}
 .hbreed.on{border-color:var(--gold);box-shadow:0 0 0 2px rgba(226,187,100,.3),inset 0 0 18px rgba(226,187,100,.08)}
 .hstats{display:flex;gap:10px;font-size:12px;margin-top:2px}.hstats b{font-weight:600;white-space:nowrap}
-/* ==== mining mini-game (minegame.js) ==== */
-.mgmeter{position:relative;height:22px;margin:6px 2px 10px;border-radius:11px;background:linear-gradient(180deg,#1b1a18,#2a2723);box-shadow:inset 0 1px 4px rgba(0,0,0,.8),0 0 0 1px rgba(228,220,200,.16);overflow:hidden}
-.mgz{position:absolute;top:0;bottom:0;background:linear-gradient(180deg,rgba(226,187,100,.45),rgba(226,187,100,.22));transition:left .18s ease-out}
-.mgp{position:absolute;top:0;bottom:0;background:linear-gradient(180deg,#ffe29a,#e2bb64);box-shadow:0 0 10px rgba(255,226,154,.7);transition:left .18s ease-out}
-.mgn{position:absolute;top:-2px;bottom:-2px;width:4px;margin-left:-2px;background:#f6f0e2;border-radius:2px;box-shadow:0 0 8px rgba(255,255,255,.8)}
-.mgwall{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:7px;border-radius:6px;background:radial-gradient(120% 90% at 50% 30%,#3b342d,#1a1714);box-shadow:inset 0 0 22px rgba(0,0,0,.85)}
-.mgc{position:relative;aspect-ratio:1;border:0;border-radius:9px 7px 10px 6px;padding:0;cursor:pointer;color:#f1ead8;font:inherit;
-  background:radial-gradient(70% 60% at 35% 30%,#7d7368,#5a5148 55%,#3f3831);box-shadow:inset -3px -4px 0 rgba(0,0,0,.35),inset 2px 2px 0 rgba(255,255,255,.08),0 2px 3px rgba(0,0,0,.6);touch-action:manipulation;overflow:hidden}
-.mgc:nth-child(3n){border-radius:6px 11px 7px 10px}.mgc:nth-child(4n+1){background:radial-gradient(70% 60% at 60% 30%,#776c62,#544b43 55%,#3a332d)}
-.mgc.glint::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 30% 35%,rgba(255,240,200,.9) 0 2px,transparent 3px),radial-gradient(circle at 68% 62%,rgba(255,240,200,.8) 0 1.5px,transparent 3px),radial-gradient(circle at 55% 25%,rgba(255,240,200,.7) 0 1px,transparent 2.5px);animation:mgglint 1.8s ease-in-out infinite}
-.mgc.glint.gem::after{background:radial-gradient(circle at 45% 45%,rgba(200,170,255,.95) 0 2px,transparent 4px),radial-gradient(circle at 70% 30%,rgba(255,200,220,.8) 0 1.5px,transparent 3px)}
-@keyframes mgglint{0%,100%{opacity:.25}50%{opacity:1}}
-.mgcr{position:absolute;inset:0;pointer-events:none}
-.mgc.cr1 .mgcr{background:linear-gradient(35deg,transparent 46%,rgba(0,0,0,.7) 47% 49%,transparent 50%)}
-.mgc.cr2 .mgcr,.mgc.cr3 .mgcr{background:linear-gradient(35deg,transparent 46%,rgba(0,0,0,.7) 47% 49%,transparent 50%),linear-gradient(-50deg,transparent 52%,rgba(0,0,0,.7) 53% 55%,transparent 56%)}
-.mgc.broken{cursor:default;background:radial-gradient(70% 60% at 50% 40%,#2a2520,#151210);box-shadow:inset 0 3px 8px rgba(0,0,0,.9)}
-.mgc.broken:disabled{opacity:1}
-.mgc .mgo{position:absolute;left:50%;top:42%;width:46%;height:38%;transform:translate(-50%,-50%) rotate(-12deg);border-radius:40% 55% 45% 50%;background:radial-gradient(circle at 35% 30%,#fff8,transparent 40%),var(--oc);box-shadow:0 0 12px var(--oc),inset -2px -3px 0 rgba(0,0,0,.35);animation:mgpop .35s cubic-bezier(.2,1.6,.5,1) both}
-.mgc.broken.gem .mgo{border-radius:20%;transform:translate(-50%,-50%) rotate(45deg);width:34%;height:34%}
-.mgc small{position:absolute;left:0;right:0;bottom:3px;font-size:10px;letter-spacing:.04em;opacity:.85}
-@keyframes mgpop{from{transform:translate(-50%,-50%) scale(.2)}}
-.mgc.shake{animation:mgshake .22s}
-@keyframes mgshake{25%{transform:translate(-2px,1px) rotate(-2deg)}50%{transform:translate(2px,-1px) rotate(2deg)}75%{transform:translate(-1px,0)}}
-.mgtag{position:absolute;transform:translate(-50%,-100%);font-family:"Barlow Condensed",Cinzel,serif;font-size:16px;letter-spacing:.08em;color:#f1ead8;text-shadow:0 0 6px #000;pointer-events:none;animation:mgtag .9s ease-out both;white-space:nowrap}
-.mgtag.p3{color:#ffe29a;font-size:19px}.mgtag.p1{color:#bdb3a3}
-@keyframes mgtag{to{transform:translate(-50%,-180%);opacity:0}}
-.mgchip{position:absolute;width:4px;height:4px;border-radius:1px;pointer-events:none;animation:mgchip .55s ease-out both}
-@keyframes mgchip{to{transform:translate(var(--dx),calc(var(--dy) + 24px)) rotate(200deg);opacity:0}}
-.mggot{display:flex;flex-wrap:wrap;gap:6px 10px;justify-content:center;min-height:22px;font-size:13px}
-.mggot span{display:inline-flex;align-items:center;gap:5px}.mggot i{width:10px;height:10px;border-radius:3px;background:var(--oc);box-shadow:0 0 6px var(--oc)}.mggot .mute{opacity:.6}
-@media (prefers-reduced-motion:reduce){.mgc.glint::after,.mgc.shake,.mgtag,.mgchip,.mgc .mgo{animation:none}}
 /* PC: "new version" card (pcupdate.js) */
 #pcupd{position:fixed;right:16px;bottom:16px;z-index:9000;max-width:min(360px,calc(100vw - 32px));background:var(--panel);border:1px solid var(--gold);border-radius:10px;padding:12px 14px;box-shadow:0 8px 28px rgba(0,0,0,.55);display:grid;gap:8px;animation:pcupdIn .35s ease-out}
 #pcupd .t{color:var(--gold);font-weight:600;letter-spacing:.04em;text-transform:uppercase;font-size:13px}
@@ -3647,6 +3616,132 @@ html.art-pixel .rxban,html.art-pixel #tbf .tbact.rxon .rxbadge{border-radius:0;i
 #fishgame .fhmeter .fhband{background:linear-gradient(180deg,rgba(160,200,150,.5),rgba(110,150,105,.42))}
 #fishgame .fhdist{border-radius:3px;margin-top:4px}
 #fishgame .fhdist i{border-radius:3px;transition:width .1s linear}
+/* lockpicking mini-game, painted (lockgame.js) */
+.lockpick.lgame{place-items:stretch;background:#070605;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
+.lgwrap{position:relative;display:flex;flex-direction:column;width:100%;height:100%;max-width:1180px;margin:0 auto;background:#0d0a08;box-shadow:0 0 0 1px rgba(228,220,200,.16),0 30px 80px rgba(0,0,0,.7);overflow:hidden}
+.lghead{position:absolute;left:0;right:0;top:0;z-index:2;text-align:center;padding:12px 16px 26px;background:linear-gradient(180deg,rgba(0,0,0,.78),rgba(0,0,0,0));pointer-events:none}
+.lghead h3{font-family:"Barlow Condensed",Cinzel,serif;letter-spacing:.22em;text-transform:uppercase;font-size:clamp(16px,2.2vw,24px);margin:0;color:#efe3c6;text-shadow:0 2px 8px #000}
+.lghead .lpsub{margin:2px 0 0;text-shadow:0 1px 4px #000}
+.lgstage{position:relative;flex:1;min-height:0}
+.lgstage canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
+.lgstage canvas:active{cursor:grabbing}
+.lgpicks{position:absolute;left:12px;bottom:10px;z-index:2;font-family:"Barlow Condensed",sans-serif;font-size:15px;letter-spacing:.12em;text-transform:uppercase;color:#efe3c6;background:rgba(0,0,0,.55);border:1px solid rgba(214,178,94,.35);padding:3px 10px;border-radius:3px;pointer-events:none}
+.lgfoot{flex:none;padding:8px 16px 12px;background:linear-gradient(180deg,rgba(14,12,10,.96),rgba(6,5,4,.99));border-top:1px solid rgba(214,178,94,.22)}
+.lgfoot input[type=range]{display:block;width:100%;max-width:620px;margin:4px auto 2px;accent-color:#d6b25e;height:28px}
+.lgfoot .lphint{text-align:center;min-height:2.6em;margin:2px auto 6px;max-width:620px;color:#cfc6b2}
+.lgfoot .lprow{max-width:620px;margin:0 auto}.lgfoot #lpleave{flex:0 0 32%}
+.lgame #lpturn{min-height:58px;font-size:17px;letter-spacing:.08em;transition:transform .08s,box-shadow .12s}
+.lgame #lpturn.on{transform:scale(.97);box-shadow:inset 0 0 0 2px rgba(255,220,150,.55),0 0 18px rgba(214,178,94,.35)}
+.lockpick.lgame.won .lgwrap{animation:lgwon 1.25s ease-in forwards}@keyframes lgwon{0%,70%{opacity:1}100%{opacity:0;transform:scale(1.02)}}
+.lockpick.lgame.out .lgwrap{animation:lgout .9s ease-in forwards}@keyframes lgout{0%,60%{opacity:1}100%{opacity:0}}
+@media (min-width:900px) and (min-height:560px){.lockpick.lgame{place-items:center;padding:12px;background:radial-gradient(70% 60% at 50% 45%,rgba(0,0,0,.72),rgba(0,0,0,.94))}.lgwrap{height:min(94vh,1000px);border-radius:6px}}
+@media (max-height:520px) and (orientation:landscape){.lgfoot{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;align-items:center}.lgfoot .lphint{grid-column:1/-1;order:-1;min-height:0;margin:0}.lgfoot input[type=range]{margin:0}.lgfoot .lprow{margin:0}.lghead{padding-bottom:8px}}
+@media (prefers-reduced-motion:reduce){.lockpick.lgame.won .lgwrap,.lockpick.lgame.out .lgwrap{animation:none}}
+/* [rigpolish] narrow phones: the quick slots shrink to share their row (none slides under Flee), and move names wrap to
+   two small lines instead of being cut off */
+#tbf.c2 .fc:not(.fc-pick) .fc-tray .tbact b{white-space:normal;text-overflow:clip;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.08;text-align:center}
+@media (max-width:440px){
+  #tbf.c2:not(.c2wide) .fc:not(.fc-pick) .fc-tray{gap:2px;overflow-x:auto}
+  #tbf.c2:not(.c2wide) .fc:not(.fc-pick) .fc-tray .tbact{--d:34px;flex:1 1 0;width:auto;min-width:38px;max-width:50px}
+  #tbf.c2:not(.c2wide) .fc:not(.fc-pick) .tbact small.fc-why{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:8px;text-align:center}
+  #tbf.c2:not(.c2wide) .fc:not(.fc-pick) .tbact:not(.end) b{white-space:normal;overflow:hidden;text-overflow:clip;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-size:8.5px;line-height:1.08;letter-spacing:.02em;text-align:center;overflow-wrap:anywhere;margin-top:4px}
+  #tbf.c2:not(.c2wide) .fc:not(.fc-pick) .tbact.big:not(.end) b{font-size:9.5px}
+  #tbf.c2:not(.c2wide) .fc:not(.fc-pick) .fc-tray .tbact b{font-size:7.2px;letter-spacing:-.01em;padding:0}
+  #tbf.c2:not(.c2wide) .fc:not(.fc-pick) .tbact:is(.flee,.rec,[data-tbm]) b{display:block;white-space:nowrap;overflow:visible;max-width:none;font-size:8px;letter-spacing:0}
+  #tbf.c2:not(.c2wide) .fc:not(.fc-pick) .tbact.big{--d:50px}
+}
+/* ==== mining mini-game (minegame.js): painted cave, a stone wall cut from the painting, pickaxe swing, chips and dust ==== */
+.minegame{--mgw:min(calc(100vw - 24px),max(240px,calc(100vh - 330px)),760px);overflow:hidden;background:radial-gradient(80% 70% at 50% 40%,#211b16,#080706)}
+@supports (height:100dvh){.minegame{--mgw:min(calc(100vw - 24px),max(240px,calc(100dvh - 330px)),760px)}}
+.mgbg{position:absolute;inset:-16px;pointer-events:none;z-index:0}
+.minegame.mgart .mgbg{background:var(--mgbgi) 50% 42%/cover no-repeat;filter:blur(2px) brightness(.5) saturate(.95)}
+.mgbg::after{content:"";position:absolute;inset:0;background:radial-gradient(75% 65% at 50% 45%,transparent 35%,rgba(0,0,0,.78))}
+.mgstage{position:relative;z-index:1;width:var(--mgw);max-height:100%;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;text-align:center;display:flex;flex-direction:column;gap:8px;padding:4px 0;transition:filter .3s}
+.mgstage::-webkit-scrollbar{display:none}
+.mghead h3{font-family:"Barlow Condensed",Cinzel,serif;letter-spacing:.24em;text-transform:uppercase;font-size:clamp(17px,2.3vh,25px);margin:0;color:#f1e6c8;text-shadow:0 2px 8px #000,0 0 18px rgba(0,0,0,.8)}
+.mghead .cgsub{margin:2px 0 0;text-shadow:0 1px 4px #000}
+.mgwall{position:relative;display:grid;grid-template-columns:repeat(4,1fr);gap:calc(var(--mgw) * .01);padding:calc(var(--mgw) * .016);border-radius:8px;background:radial-gradient(120% 90% at 50% 30%,#2a231d,#0e0b09);box-shadow:0 18px 50px rgba(0,0,0,.75),0 0 0 1px rgba(228,220,200,.1),inset 0 0 24px rgba(0,0,0,.9)}
+.mgwall::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;background:radial-gradient(90% 80% at 12% 6%,rgba(255,190,110,.2),transparent 60%);mix-blend-mode:screen;animation:mglamp 3.2s ease-in-out infinite}
+@keyframes mglamp{0%,100%{opacity:.85}30%{opacity:1}55%{opacity:.7}70%{opacity:.95}}
+.mgc{position:relative;aspect-ratio:1;border:0;padding:0;background:none;cursor:pointer;color:#f1ead8;font:inherit;touch-action:manipulation;filter:drop-shadow(0 3px 2px rgba(0,0,0,.85));-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+.mgc:disabled{opacity:1;cursor:default}.mgc:focus-visible{outline:2px solid #e2bb64;outline-offset:2px}
+.mgs{position:absolute;inset:0;overflow:hidden;background:radial-gradient(70% 60% at 35% 30%,#7d7368,#5a5148 55%,#3f3831);transition:transform .25s cubic-bezier(.5,0,1,.5),opacity .3s,filter .15s}
+.minegame.mgart .mgs{background-image:var(--mgbgi);background-repeat:no-repeat;filter:brightness(var(--lit,1)) contrast(1.06)}
+.mgs::before{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(140deg,rgba(255,226,180,.24),transparent 34%,transparent 58%,rgba(0,0,0,.5));box-shadow:inset 2px 2px 0 rgba(255,235,200,.16),inset -3px -4px 0 rgba(0,0,0,.4)}
+.mgc:not(:disabled):hover .mgs{filter:brightness(1.12)}.minegame.mgart .mgc:not(:disabled):hover .mgs{filter:brightness(calc(var(--lit,1) * 1.14)) contrast(1.06)}
+.mgc.glint .mgs::after{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;background:radial-gradient(circle at 30% 35%,rgba(255,240,200,.95) 0 2px,transparent 3.5px),radial-gradient(circle at 68% 62%,rgba(255,240,200,.85) 0 1.5px,transparent 3px),radial-gradient(circle at 55% 25%,rgba(255,240,200,.75) 0 1px,transparent 2.5px);animation:mgglint 1.8s ease-in-out infinite}
+.mgc.glint.gem .mgs::after{background:radial-gradient(circle at 45% 45%,rgba(220,190,255,.95) 0 2px,transparent 4px),radial-gradient(circle at 70% 30%,rgba(255,200,220,.85) 0 1.5px,transparent 3px)}
+@keyframes mgglint{0%,100%{opacity:.25}50%{opacity:1}}
+.mgv{position:absolute;inset:0;z-index:1;display:grid;place-items:center;pointer-events:none}
+.mgv:not(:empty)::before{content:"";position:absolute;inset:14%;border-radius:46% 40% 50% 42%;background:radial-gradient(closest-side,rgba(12,7,4,.6),transparent)}
+.mgv .mgimg{position:relative;width:70%;height:auto;transform:rotate(var(--rot,0deg));-webkit-mask-image:radial-gradient(closest-side,#000 70%,transparent 100%);mask-image:radial-gradient(closest-side,#000 70%,transparent 100%)}
+.minegame .mgo{display:block;border-radius:40% 55% 45% 50%;background:radial-gradient(circle at 35% 30%,#fff8,transparent 40%),var(--oc);box-shadow:0 0 12px var(--oc),inset -2px -3px 0 rgba(0,0,0,.35)}
+.minegame .mgo.gem{border-radius:12%;background:conic-gradient(from 45deg,rgba(255,255,255,.55),transparent 25%,rgba(0,0,0,.35) 50%,transparent 75%,rgba(255,255,255,.55)),radial-gradient(circle at 35% 30%,#fff9,transparent 45%),var(--oc);box-shadow:0 0 8px var(--oc),inset 0 0 0 1px rgba(255,255,255,.35),inset -2px -2px 0 rgba(0,0,0,.35)}
+.mgv .mgo{position:relative;width:46%;height:38%;transform:rotate(var(--rot,0deg))}.mgv .mgo.gem{width:24%;height:24%;transform:rotate(45deg);opacity:.92}
+.mgcr{position:absolute;inset:0;z-index:2;width:100%;height:100%;pointer-events:none;overflow:visible}
+.mgcr g{opacity:0}.mgcr polyline{fill:none;stroke:#0d0907;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset .14s ease-out}
+.mgcr polyline.hl{stroke:rgba(255,225,185,.3);stroke-width:1.2;transform:translate(1.2px,1.2px)}
+.mgc.cr1 .k1,.mgc.cr2 .k1,.mgc.cr2 .k2,.mgc.cr3 g{opacity:1}
+.mgc.cr1 .k1 polyline,.mgc.cr2 .k1 polyline,.mgc.cr2 .k2 polyline,.mgc.cr3 polyline{stroke-dashoffset:0}
+.mgc.cr2 .mgs{transform:scale(.97)}.mgc.cr3 .mgs{transform:scale(.94)}
+.mgc.broken .mgs{opacity:0;transform:scale(.82) translateY(8%)}
+.mgh{position:absolute;inset:0;opacity:0;transition:opacity .2s .05s;pointer-events:none;background:radial-gradient(closest-side,#030202 30%,#0d0a08 62%,#2a221b 92%,#3a3028);box-shadow:inset 0 6px 12px rgba(0,0,0,.9)}
+.minegame.mgart .mgh{background-image:radial-gradient(circle at 30% 80%,#6b6158 0 2.5%,transparent 3.5%),radial-gradient(closest-side,rgba(2,1,1,.97) 38%,rgba(8,6,4,.88) 66%,rgba(10,7,5,.45) 92%,rgba(0,0,0,.2)),var(--mgbgi);background-repeat:no-repeat;filter:brightness(var(--lit,1))}
+.mgc.broken .mgh{opacity:1}
+.mgh small{position:absolute;left:0;right:0;bottom:6%;font-size:clamp(10px,calc(var(--mgw) * .028),14px);letter-spacing:.05em;color:#cdbf9f;opacity:.85;text-shadow:0 1px 2px #000}
+.mgc.shake .mgs{animation:mgshake .22s}
+@keyframes mgshake{25%{transform:translate(-3%,1%) rotate(-2deg)}50%{transform:translate(3%,-1%) rotate(2deg)}75%{transform:translate(-1%,0)}}
+.mgmeter{position:relative;height:clamp(22px,3vh,30px);margin:2px 4px;border-radius:4px;background:linear-gradient(180deg,#14110e,#26211c 60%,#191512);border:2px solid #3b332b;box-shadow:0 0 0 1px #0a0807,0 4px 14px rgba(0,0,0,.6),inset 0 2px 6px rgba(0,0,0,.85);overflow:hidden}
+.mgz{position:absolute;top:0;bottom:0;background:linear-gradient(180deg,rgba(226,187,100,.5),rgba(180,130,60,.25));box-shadow:inset 0 0 0 1px rgba(255,220,150,.2);transition:left .18s ease-out}
+.mgp{position:absolute;top:0;bottom:0;background:linear-gradient(180deg,#fff0bf,#e2bb64 60%,#b98a3a);box-shadow:0 0 12px rgba(255,226,154,.8);transition:left .18s ease-out}
+.mgn{position:absolute;top:-3px;bottom:-3px;width:5px;margin-left:-2.5px;border-radius:2px;background:linear-gradient(90deg,#9a958c,#fffaf0,#9a958c);box-shadow:0 0 10px rgba(255,248,225,.9)}
+.mgmeter.flash{animation:mgflash .4s ease-out}
+@keyframes mgflash{0%{box-shadow:0 0 0 1px #0a0807,0 0 26px 6px rgba(255,214,120,.85),inset 0 2px 6px rgba(0,0,0,.85)}}
+.minegame .cghint{margin:0;font-size:13px;text-shadow:0 1px 3px #000}
+.mggot{display:flex;flex-wrap:wrap;gap:6px 10px;justify-content:center;align-items:center;min-height:30px;font-size:14px;text-shadow:0 1px 3px #000}
+.mggot span{display:inline-flex;align-items:center;gap:6px;padding:2px 10px 2px 4px;border-radius:14px;background:rgba(10,8,6,.65);box-shadow:0 0 0 1px rgba(228,220,200,.14)}
+.mggot span.mute{opacity:.7;background:none;box-shadow:none;padding:2px}
+.mggot span.pulse{animation:mgbag .45s ease-out}
+@keyframes mgbag{40%{transform:scale(1.15);box-shadow:0 0 0 1px rgba(255,226,154,.6),0 0 16px rgba(255,214,120,.55)}}
+.mgico{width:26px;height:26px;display:grid;place-items:center}.mgico .mgimg{width:26px;height:auto}.mgico .mgo{width:12px;height:11px}.mgico .mgo.gem{width:10px;height:10px;transform:rotate(45deg)}
+.minegame .cgrow{display:flex;gap:10px;margin:0;padding:0;border:0}.minegame .cgrow .btn{flex:1;min-height:48px}
+.minegame .cgpref{margin:0 auto;text-shadow:0 1px 3px #000}
+.mgpick{position:absolute;left:0;top:0;width:0;height:0;z-index:3;pointer-events:none;transform-origin:0 0;display:none;will-change:transform;filter:drop-shadow(-6px 12px 10px rgba(0,0,0,.65));transition:opacity .2s}
+.minegame.mghaspick .mgpick{display:block}
+.mgpick img{position:absolute;max-width:none;transform:scaleX(-1);user-select:none}
+.mgfx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:4}
+.minegame .mgtag{position:absolute;z-index:5;transform:translate(-50%,-100%);font-family:"Barlow Condensed",Cinzel,serif;font-size:clamp(16px,calc(var(--mgw) * .048),26px);letter-spacing:.08em;color:#f1ead8;text-shadow:0 0 6px #000,0 2px 4px #000;pointer-events:none;animation:mgtag .9s ease-out both;white-space:nowrap}
+.minegame .mgtag.p3{color:#ffe29a;font-size:clamp(19px,calc(var(--mgw) * .058),32px)}.minegame .mgtag.p1{color:#bdb3a3}
+@keyframes mgtag{0%{transform:translate(-50%,-60%) scale(.7);opacity:0}15%{transform:translate(-50%,-100%) scale(1.1);opacity:1}to{transform:translate(-50%,-190%);opacity:0}}
+.mgfly{position:absolute;left:0;top:0;z-index:5;pointer-events:none;display:grid;place-items:center;will-change:transform;filter:drop-shadow(0 5px 6px rgba(0,0,0,.7))}
+.mgfly .mgimg{width:100%;height:auto}.mgfly .mgo{width:60%;height:50%}.mgfly .mgo.gem{width:44%;height:44%;transform:rotate(45deg)}
+.mgres{position:absolute;inset:0;z-index:6;display:grid;place-items:center;padding:16px;background:radial-gradient(60% 50% at 50% 50%,rgba(0,0,0,.4),rgba(0,0,0,.8));animation:mgfade .3s ease-out both}
+.mgrescard{width:min(440px,100%);text-align:center;padding:20px 18px 16px;border-radius:4px;background:linear-gradient(180deg,rgba(24,20,17,.97),rgba(8,7,6,.98));box-shadow:0 0 0 1px rgba(228,220,200,.2),0 0 0 5px rgba(0,0,0,.4),0 24px 70px rgba(0,0,0,.8);animation:mgrise .45s cubic-bezier(.2,1.3,.5,1) both}
+.mgrescard h3{font-family:"Barlow Condensed",Cinzel,serif;letter-spacing:.24em;text-transform:uppercase;font-size:22px;color:#f1e0b0;margin:0 0 12px;padding-bottom:10px;border-bottom:1px solid rgba(226,187,100,.3)}
+.mgresitems{display:flex;flex-wrap:wrap;justify-content:center;gap:12px 18px;margin:8px 0 10px}
+.mgresitems .mute{margin:8px 0;color:var(--mute,#a9a395)}
+.mgri{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:76px;animation:mgpopin .5s cubic-bezier(.2,1.6,.5,1) var(--d) both}
+.mgrart{position:relative;width:68px;height:68px;display:grid;place-items:center}
+.mgrart::before{content:"";position:absolute;inset:-8px;border-radius:50%;background:radial-gradient(closest-side,rgba(255,214,120,.32),transparent);animation:mgglow 2.2s ease-in-out infinite}
+.mgrart .mgimg{position:relative;width:68px;height:auto}.mgrart .mgo{position:relative;width:38px;height:32px}.mgrart .mgo.gem{width:28px;height:28px;transform:rotate(45deg)}
+.mgri b{font-size:19px;color:#ffe29a;font-family:"Barlow Condensed",Cinzel,serif;letter-spacing:.05em}.mgri small{font-size:12px;color:var(--mute,#a9a395);max-width:9em}
+.mgresst{font-size:13px;color:var(--mute,#a9a395);margin:4px 0 14px;letter-spacing:.04em}
+.mgrescard .btn{width:100%;min-height:48px}
+.minegame.mgend .mgstage{filter:blur(2px) brightness(.55);pointer-events:none}.minegame.mgend .mgpick{opacity:0}
+@keyframes mgfade{from{opacity:0}}@keyframes mgrise{from{transform:translateY(24px) scale(.94);opacity:0}}@keyframes mgpopin{from{transform:scale(.2);opacity:0}}@keyframes mgglow{50%{opacity:.45}}
+html.art-pixel .minegame .mgs{clip-path:none!important}
+html.art-pixel .minegame .mgwall,html.art-pixel .minegame .mgmeter,html.art-pixel .mgrescard,html.art-pixel .mggot span,html.art-pixel .minegame .mgh,html.art-pixel .minegame .mgo,html.art-pixel .minegame .mgv:not(:empty)::before{border-radius:0}
+html.art-pixel .minegame .mgbg,html.art-pixel .minegame .mgs,html.art-pixel .minegame .mgimg{image-rendering:pixelated}
+@media (prefers-reduced-motion:reduce){.minegame .mgs,.mgc.glint .mgs::after,.minegame .mgtag,.mgri,.mgrescard,.mgres,.mgwall::after,.mggot span.pulse,.mgrart::before,.mgmeter.flash{animation:none!important}}
+/* huntart.js: the painted hunt gets a bigger picture on PCs and big screens; skinning loot pops in as chips */
+#huntgame .fhcard{width:min(1040px,100%)}
+#huntgame .fhcard canvas{max-width:min(100%,1000px,calc((100vh - 300px) * 1.867))!important;max-width:min(100%,1000px,calc((100dvh - 300px) * 1.867))!important;border-radius:6px;box-shadow:0 0 0 1px rgba(228,220,200,.22),0 10px 30px rgba(0,0,0,.5)}
+.hgloot{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin:2px 0 4px;min-height:0}
+.hgloot:empty{display:none}
+.hgchip{padding:4px 10px;font-size:14px;color:#efe6cf;background:linear-gradient(180deg,rgba(60,44,28,.85),rgba(30,22,14,.9));box-shadow:inset 0 0 0 1px rgba(205,184,140,.45);border-radius:3px;opacity:0;animation:hgchip .35s ease-out forwards}
+@keyframes hgchip{from{opacity:0;transform:translateY(6px) scale(.92)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.hgchip{animation:none;opacity:1}}
+html.a11y-still .hgchip{animation:none;opacity:1}
 </style>
 <script src="gameicons.js"></script>
 <script src="pausemenu.js"></script>
@@ -3793,6 +3888,7 @@ html.art-pixel .rxban,html.art-pixel #tbf .tbact.rxon .rxbadge{border-radius:0;i
 <script src="heroart.js"></script>
 <script src="figart.js"></script>
 <script src="rigdata.js"></script>
+<script src="riggear.js"></script>
 <script src="rig.js"></script>
 <script src="mapart.js"></script>
 <script src="maphero.js"></script>
@@ -3838,12 +3934,14 @@ html.art-pixel .rxban,html.art-pixel #tbf .tbact.rxon .rxbadge{border-radius:0;i
 <script src="craftgames.js"></script>
 <script src="minegame.js"></script>
 <script src="dungeongames.js"></script>
+<script src="lockgame.js"></script>
 <script src="livecursor.js"></script>
 <script src="partytraps.js"></script>
 <script src="hunting.js"></script>
 <script src="fishart.js"></script>
 <script src="fishing.js"></script>
 <script src="huntgame.js"></script>
+<script src="huntart.js"></script>
 <script src="craftqol.js"></script>
 <script src="polish.js"></script>
 <script src="caravans.js"></script>
@@ -3881,6 +3979,7 @@ html.art-pixel .rxban,html.art-pixel #tbf .tbact.rxon .rxbadge{border-radius:0;i
 <script src="i18n_noequip.js"></script>
 <script src="i18n_boss.js"></script>
 <script src="i18n_combos.js"></script>
+<script src="i18n_lockgame.js"></script>
 <script src="i18n_accounts.js"></script>
 <script src="i18n_spells.js"></script>
 <script src="i18n_potionfx.js"></script>
@@ -3895,6 +3994,7 @@ html.art-pixel .rxban,html.art-pixel #tbf .tbact.rxon .rxbadge{border-radius:0;i
 <script src="i18n_stacks.js"></script>
 <script src="i18n_fighttips.js"></script>
 <script src="i18n_pickaxe.js"></script>
+<script src="i18n_mgmining.js"></script>
 <script src="i18n_pcfit.js"></script>
 <script src="i18n_widetitle.js"></script>
 <script src="i18n_horseart.js"></script>
