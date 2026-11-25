@@ -14,7 +14,7 @@ if a file gets bigger than ~1.5 MB, add a `<name>@2x.webp` and put the name in `
 
 | Asset | Now (px) | Needed (px) | Where it shows / worst screen |
 |---|---|---|---|
-| bs-* fight plates (20 files, e.g. bs-tundra) | 1480x680 | 2808x1290 (2200x1010 at least) | fight stage; 3840x2160@2 and 2000x837@2 PC. The pack originals were 1850x850; they are not in the repo. On a 390@3 phone they need 1581x726. |
+| bs-* fight plates still at the old size (14 files: arena, ash, autumn, banditcamp, forsworn, fort, giantcamp, lair, marsh, mine, rocky, temple, thalmor, vampire) | 1480x680 | 2808x1290 (2200x1010 at least) | fight stage; 3840x2160@2 and 2000x837@2 PC. On a 390@3 phone they need 1581x726. forest, snow, tundra, cave, barrow, dwemer (and the new town) are done at 2808x1290. |
 | bsf-* foreground strips (13 files) | 1480x~90 | ~2830x170 | the ground strip in front of the fighters, same screens as bs-* |
 | bsp-* props (e.g. bsp-tundra-grass, bsp-tundra-waystone) | 300-320 px | ~2x (e.g. 674x354, 554x601) | props on the fight stage on 3840x2160@2 |
 | foe-* | 1254x1254 (dragon 1536x1024) | ~2040x2040 | the foe on the fight stage on 3840x2160@2; already re-exported at the full size of the art branch originals, so this needs new paintings |

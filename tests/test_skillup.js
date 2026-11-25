@@ -69,8 +69,8 @@ ok(p.top === 32, "a pop-up on screen: at the very top");
 
 // Polish words and the patch note
 ok(SU.PL["{0} increased to {1}"] && SU.PL["Level up"], "Polish words");
-const note = PATCHNOTES.LIST.slice(0, 40).find((e) => e.id === "b143-skillup") || { items: [] };   // near the top: several features ship together, only one note can be first
-ok(note.id === "b143-skillup" && note.build >= 143, "patch note near the top");
+const note = PATCHNOTES.LIST.find((e) => e.id === "b143-skillup") || { items: [] };   // several features ship together; the note slides down as newer ones land
+ok(note.id === "b143-skillup" && note.build >= 143, "patch note is there");
 ok(note.items.every((x) => SU.PL[x]) && SU.PL[note.title], "patch note in Polish");
 ok(new Set(PATCHNOTES.LIST.map((e) => e.id)).size === PATCHNOTES.LIST.length, "patch note ids are unique");
 if (fails) process.exitCode = 1;

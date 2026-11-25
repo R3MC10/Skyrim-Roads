@@ -1115,6 +1115,7 @@ const FIGHTART = (() => {
       // you
       const over = phase !== "play" && phase !== "idle" && phase !== "settle";   // "idle": one turn of a turn-by-turn fight has played, both still stand
       const meDown = over && !won, foeDown = over && won && !turned, fallE = EASE.out(fall);
+      if (GS && meDown && GS.down && !GS.downDone) { GS.downDone = true; GS.down({ side: "hero", x: hx0 - 14 * s, ground: groundY, instant: done }); }   // [blood2] knocked down: a pool spreads under you (gorefx2.js; never under friends or horses)
       const hdg = heroDodge < 1 ? Math.sin(heroDodge * Math.PI) : 0, fdg = foeDodge < 1 ? Math.sin(foeDodge * Math.PI) : 0;
       if (rec.horse && typeof HORSEBACK !== "undefined" && HORSEBACK.drawDowned && HORSEBACK.downAt(f, phase === "play" ? bi / Math.max(1, beats.length) : 1)) {   // [OURS] your horse is downed: it lies behind you, you fight on foot
         wg.save(); wg.translate(hx0 - 58 * s, groundY); wg.scale(s, s); HORSEBACK.drawDowned(wg, rec.horse, tt, L("Downed"), rec.horseCoat); wg.restore();

@@ -31,7 +31,7 @@ const RULES = [
   [/^title$/, 1080, 1920, null], [/^bg-loading-\d$/, 1080, 1920, 9 / 16, 0.02], [/^ui-nightsky$/, 1080, 1920, 9 / 16, 0.02],
   [/^(place|biome)-/, 1600, 900, 16 / 9, 0.01], [/^shop-/, 1200, 320, null],
   [/^foe-dragon$/, 1536, 1024, 1.5, 0.01], [/^foe-/, 1254, 1254, 1, 0.01],
-  [/^bs-/, 1480, 680, null], [/^bsf-/, 1480, 40, null], [/^bsp-/, 60, 60, null],
+  [/^bs-(forest|snow|tundra|cave|barrow|dwemer|town)$/, 2808, 1290, 2808 / 1290, 0.01], [/^bs-/, 1480, 680, 1480 / 680, 0.01], [/^bsf-/, 1480, 40, null], [/^bsp-/, 60, 60, null],
   [/^(gev|wev)-.*-thumb$/, 280, 200, null], [/^(gev|wev)-/, 1280, 440, null],
   [/^map-world$/, 2000, 1400, 10 / 7, 0.01], [/^map-world-2x$/, 3000, 2100, 10 / 7, 0.01],
   [/^ui-compass3d$/, 2240, 2240, 1, 0], [/^ui-(compass|frame|panel|parchment)$/, 1024, 1024, 1, 0],

@@ -37,3 +37,23 @@ Object.assign(I18N_EXTRA.words, {
   "Blood and gore on Full shows all of it; Low keeps the dust, sparks and spell effects without the realistic blood; Off shows none.":
     "Krew i flaki na Pełne pokazuje wszystko; Niskie zostawia kurz, iskry i efekty czarów bez realistycznej krwi; Wył. nie pokazuje nic.",
 });
+
+/* blood2 (b185-blood2): realistic liquid blood, the Gore setting */
+Object.assign(I18N_EXTRA.words, {
+  "Gore": "Krew",
+  "Reduced": "Mniej",
+  "Blood that looks like blood": "Krew, która wygląda jak krew",
+  "Blood in fights looks wet and real now: glossy dark red that runs together, see-through and brighter where it's thin, with a shine where the light catches it. No more red pills.":
+    "Krew w walkach wygląda teraz na mokrą i prawdziwą: lśniąca ciemna czerwień, która się zlewa, prześwituje i jaśnieje tam, gdzie jest cienka, i błyszczy w świetle. Koniec z czerwonymi pigułkami.",
+  "A hit throws blood out of the wound the way the blow went, as ropes that break into drops and a fine mist. The drops fly in an arc, fall, and leave small splats on the ground that slowly fade over the fight.":
+    "Cios wyrzuca krew z rany w kierunku uderzenia: strugi rwą się na krople i drobną mgiełkę. Krople lecą łukiem, spadają i zostawiają na ziemi małe plamy, które powoli bledną w trakcie walki.",
+  "Critical hits and finishing blows spray much more. Heavy hits leave blood running down the fighter, which fades after a while. A fallen foe lies in a pool that spreads out, and so do you when you're knocked down.":
+    "Trafienia krytyczne i dobicia pryskają dużo mocniej. Po mocnych ciosach krew spływa po walczącym i po chwili blednie. Pokonany wróg leży w rozlewającej się kałuży, i ty też, gdy padniesz powalony.",
+  "Skeletons and draugr still only throw bone and dust, Dwemer machines spit black oil and sparks, daedra bleed dark ichor, Falmer bleed green, and spriggans now bleed amber sap.":
+    "Szkielety i draugry dalej sypią tylko kośćmi i kurzem, krasnoludzkie maszyny plują czarnym olejem i iskrami, daedra krwawią ciemną posoką, Falmerowie na zielono, a sprigganom cieknie teraz bursztynowy sok.",
+  "New setting: Settings → Fights → Gore: Off, Reduced (just a mist and small splats) or Full. Full is the default.":
+    "Nowe ustawienie: Ustawienia → Walki → Krew: Wył., Mniej (tylko mgiełka i małe plamy) albo Pełne. Domyślnie Pełne.",
+  "Phones on Low or Medium fight quality show fewer splashes, so fights stay smooth. Followers and horses still only get knocked down: no pools under them.":
+    "Na telefonach z niską lub średnią jakością walki jest mniej rozbryzgów, żeby walka szła płynnie. Towarzysze i konie dalej tylko padają powaleni: bez kałuż pod nimi.",
+  "Painted fighters with realistic fight animations": "Malowani wojownicy z realistycznymi animacjami walki",
+});

@@ -5,6 +5,10 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
   Object.assign(I18N_EXTRA.words, {
     // moves and reasons
     Mount: "Dosiądź", Dismount: "Zsiądź",
+    "Small fixes after a big update": "Drobne poprawki po dużej aktualizacji",
+    "A horse knocked down in a fight now stays downed beside you afterwards, like everywhere else, until it gets back up (a few hours, a night's sleep or a stablehand).": "Koń powalony w walce zostaje potem przy tobie powalony, tak jak wszędzie indziej, aż sam wstanie (kilka godzin, noc snu albo stajenny).",
+    "You only see one notice when a skill goes up, not two.": "Gdy umiejętność rośnie, widzisz jedno powiadomienie, nie dwa.",
+    "Patch notes use the new game icons too.": "Notatki o zmianach też używają nowych ikon gry.",
     "No horse here": "Nie ma tu konia",
     "You're on foot": "Jesteś pieszo",
     "Already in the saddle": "Już siedzisz w siodle",

@@ -1,7 +1,8 @@
 // Hold guards: patrols on a shared timetable, always your level, and fighting them gives no XP, gold or loot. node test_guards.js
 const fs = require("fs"), vm = require("vm"), path = require("path");
 const W = process.env.W || path.join(__dirname, "../game/");
-const c = vm.createContext({ process: { env: process.env }, console, Math, Date, JSON, Float64Array, Float32Array, Uint8Array, Int32Array, Uint16Array, Int16Array, Object, Array, Set, Map, Proxy, Number, String, RUNS: 10 });
+let sd = +(process.env.SEED || 7) >>> 0; const SMATH = Object.create(Math); SMATH.random = () => { sd = (sd + 0x6D2B79F5) >>> 0; let t = sd; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };   // seeded dice: the Watch Drills sim is the same every run (SEED=n to try others)
+const c = vm.createContext({ process: { env: process.env }, console, Math: SMATH, Date, JSON, Float64Array, Float32Array, Uint8Array, Int32Array, Uint16Array, Int16Array, Object, Array, Set, Map, Proxy, Number, String, RUNS: 10 });
 const TBT = fs.readFileSync(path.join(__dirname, "test_tbfight.js"), "utf8");
 const FILES = JSON.parse(TBT.match(/for \(const f of (\[[^\]]+\])\)/)[1]).filter((f) => f !== "tbfight.js").concat(["dragons.js", "foekit.js", "guards.js", "tbfight.js"]);
 for (const f of FILES) if (fs.existsSync(W + f)) vm.runInContext(fs.readFileSync(W + f, "utf8").replace(/^const (\w+) =/m, "var $1 ="), c);
