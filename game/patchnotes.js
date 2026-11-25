@@ -3,6 +3,11 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b339-fightfixes", build: 339, date: "25 Nov 2026", title: "Small fixes on the road and in hero creation", items: [
+      "A new quest popping up no longer wipes the choices of a road encounter (Pay, Talk, Fight...). It waits until you've made your pick.",
+      "On small phones the round compass button no longer sits on your health, magicka and stamina bars.",
+      "The male and female symbols on the new hero screen show as plain symbols on every phone, not as colourful emoji.",
+    ] },
     { id: "b338-travelview", build: 338, date: "25 Nov 2026", title: "A road worth watching", items: [
       "The road view on a trip is much richer: hills and bends you can see coming, mountains, ridges and treelines that fade into the haze, and trees, rocks and signs that grow as you ride up to them and slide past.",
       "Every land looks like itself, read from the map around you: open tundra, thick pine forest, snowy mountains, rocky hills, misty marsh, ash under a smoking volcano, the coast with the sea on its real side, green river valleys and the Rift's golden birches.",
@@ -2241,7 +2246,7 @@ const PATCHNOTES = (() => {
   ];
   // Coming next: refresh this list whenever you add a patch note that ships one of its lines (or every few builds).
   // NEXT_AT is the build it was last written for; tests/test_comingnext.js fails once it is 4+ builds behind the newest note.
-  const NEXT_AT = 297;
+  const NEXT_AT = 338;
   const NEXT = [
     "Mentoring: play side by side with friends of any level",
     "Shrines of your own: build a Daedric altar at your longhouse",
