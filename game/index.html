@@ -4326,6 +4326,50 @@ canvas.dunfx{position:absolute;inset:0;width:100%;height:100%;pointer-events:non
   .dun .dmapcard{scroll-margin-top:8px}
 }
 @media (min-width:900px) and (min-height:520px){.dstrip{display:none}}
+/* eventcards.js: painted event cards. Title under the painting (never darkened), severity diamond, 220 ms fade-in, faint particles */
+.evc{margin:0;min-width:0}
+.evc-art{position:relative;aspect-ratio:8/3;width:100%;overflow:hidden;border-radius:4px;border:1px solid rgba(214,178,94,.38);background:#140d09;box-shadow:0 2px 10px rgba(0,0,0,.35)}
+.evc-art>img{display:block;width:100%;height:100%;object-fit:cover;user-select:none;-webkit-user-drag:none}
+.evc-cap{display:flex;align-items:center;gap:8px;min-width:0;padding:8px 2px 0;text-align:left}
+.evc-cap .evc-t{flex:1 1 auto;min-width:0;margin:0;font-family:"Cinzel",serif;font-weight:700;font-size:14px;line-height:1.25;letter-spacing:.03em;color:#f3e7c4;text-transform:none;border:0;padding:0}
+.evc-cap h2.evc-t{font-size:18px}.evc-cap h3.evc-t{font-size:16px}.evc-cap .evc-t::before,.evc-cap .evc-t::after{display:none}.evc-cap .evc-t{background:none;box-shadow:none;border-image:none}
+.evc-cap .evc-r{flex:0 0 auto;margin-left:auto;white-space:nowrap}
+.evc-sev{flex:0 0 auto;width:9px;height:9px;transform:rotate(45deg);border-radius:1px;background:var(--sev);box-shadow:0 0 0 1px rgba(20,12,8,.9),0 0 7px var(--sev)}
+.evc-sev.sev-calm{--sev:#8fbf6a}.evc-sev.sev-mid{--sev:#e0b860}.evc-sev.sev-high{--sev:#e8742a}.evc-sev.sev-dire{--sev:#d23a2a}
+.gev-sheet .evc,.wev-sheet .evc{margin:0 0 6px}
+.cr-crisis.evc-box .evc{margin:0 0 6px}
+.hs .card.hsraid.evc-box .evc{margin:0 0 6px}.hs .card.hsraid.evc-box .evc-t{color:#ffb39a;font-size:14px;letter-spacing:.06em}
+.trip.evc-box{gap:8px}
+html.mo-on .evc.evc-in{animation:evc-in 220ms cubic-bezier(.2,.8,.2,1) both}
+@keyframes evc-in{from{opacity:0;transform:scale(.98)}to{opacity:1;transform:none}}
+/* particles: sparse and faint, plain CSS; only while motion is on */
+.evc-fx{position:absolute;inset:0;overflow:hidden;pointer-events:none;display:none}
+html.mo-on .evc-fx{display:block}
+.evc-fx i{position:absolute;left:var(--x);display:block;border-radius:50%;opacity:0;will-change:transform,opacity;animation:var(--an) var(--d) linear var(--dl) infinite}
+.evc-embers i{--an:evc-ember;bottom:-6%;width:calc(2px + var(--s) * 2.5px);height:calc(2px + var(--s) * 2.5px);background:radial-gradient(circle,#ffe2a0 0,#ff9a3a 45%,rgba(255,110,30,0) 75%)}
+@keyframes evc-ember{0%{opacity:0;transform:translate(0,0)}15%{opacity:.75}70%{opacity:.45}100%{opacity:0;transform:translate(calc(var(--dx) * 30px),-180px)}}
+.evc-mist i{--an:evc-mist;top:calc(var(--y) * .6 + 20%);width:calc(40% + var(--s) * 30%);height:60%;margin-left:-20%;border-radius:50%;background:radial-gradient(closest-side,rgba(170,20,40,.55),rgba(120,10,30,0));filter:blur(6px)}
+@keyframes evc-mist{0%{opacity:0;transform:translateX(-12%)}30%{opacity:.32}70%{opacity:.26}100%{opacity:0;transform:translateX(14%)}}
+.evc-snow i{--an:evc-snow;top:-6%;width:calc(2px + var(--s) * 2px);height:calc(2px + var(--s) * 2px);background:#f4f6f8}
+@keyframes evc-snow{0%{opacity:0;transform:translate(0,0)}12%{opacity:.6}85%{opacity:.5}100%{opacity:0;transform:translate(calc(var(--dx) * 18px),200px)}}
+.evc-wind i{--an:evc-wind;top:calc(var(--y) * .9 - 12%);left:calc(var(--x) + 18%);width:calc(5px + var(--s) * 6px);height:1.5px;border-radius:2px;background:rgba(240,246,250,.9);rotate:-28deg}
+@keyframes evc-wind{0%{opacity:0;transform:translate(0,0)}15%{opacity:.55}85%{opacity:.4}100%{opacity:0;transform:translate(-190px,105px)}}
+@media (prefers-reduced-motion:reduce){.evc-fx{display:none!important}.evc.evc-in{animation:none!important}}
+.a11y-still .evc-fx{display:none!important}.a11y-still .evc.evc-in{animation:none!important}
+/* [busts] painted race busts (bustart.js): race picker tiles, Hero page portrait, inventory crest */
+.bustslot{display:inline-flex;align-items:center;justify-content:center;flex:none}
+.bustslot img.bustimg{display:block;width:100%;height:100%;object-fit:contain;border:0;box-shadow:none;border-radius:0;max-width:none}
+.bustgrid .rpick{padding:4px 4px 6px;justify-content:flex-start}
+.bust-pick.ok{width:100%;max-width:132px;aspect-ratio:1/1;border-radius:3px;overflow:hidden;background:radial-gradient(ellipse at 50% 38%,#353a43 0%,#1d2027 58%,#121418 100%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.05),inset 0 -14px 18px rgba(0,0,0,.35)}
+.bustgrid .rpick.on .bust-pick.ok{box-shadow:inset 0 0 0 1px rgba(226,187,100,.55),inset 0 0 18px rgba(226,187,100,.18)}
+.bustgrid .rpick:not(.on) .bust-pick.ok img{filter:saturate(.82) brightness(.9)}
+.bustgrid .rpick:hover .bust-pick.ok img{filter:none}
+.bust-hero.ok{width:220px;height:220px;border:1px solid #4a4237;border-radius:8px;overflow:hidden;background:radial-gradient(ellipse at 50% 36%,#383d46 0%,#1e2128 60%,#121418 100%);box-shadow:0 2px 10px rgba(0,0,0,.35),inset 0 -18px 24px rgba(0,0,0,.35)}
+.bust-hero.ok.bust-crest{width:196px;height:196px;margin:12px;border-radius:50%;border:1px solid rgba(214,178,94,.45);box-shadow:0 0 0 4px #15171b,0 0 0 5px rgba(214,178,94,.22),0 2px 12px rgba(0,0,0,.45)}
+.bust-hero.ok.bust-crest img{filter:saturate(.7) sepia(.12);transform:scale(1.04) translateY(4px)}
+.dfig{position:relative}
+.bust-badge.ok{position:absolute;top:-8px;left:max(0px,calc(50% - 99px));width:var(--bs,60px);height:var(--bs,60px);border-radius:50%;overflow:hidden;border:1px solid rgba(214,178,94,.5);background:radial-gradient(ellipse at 50% 38%,#353a43 0%,#16181d 100%);box-shadow:0 2px 8px rgba(0,0,0,.5);pointer-events:none}
+.dfig .bust-badge img.bustimg{border:0;border-radius:0;box-shadow:none;transform:scale(1.2) translateY(6%)}
 /* [heistart] the heist screen over its house painting (heistscene.js): full screen on phones, a big window on PCs.
    The colour grade, vignettes and ambience sit on the picture only; the choices never move. */
 .modal .sheet.hz.hz-fs{padding:0;overflow:hidden;display:flex;flex-direction:column;width:min(880px,96vw);max-width:none;height:min(90vh,860px);max-height:none;background:#08090b}
@@ -4577,6 +4621,7 @@ canvas.dunfx{position:absolute;inset:0;width:100%;height:100%;pointer-events:non
 <script src="beastart.js"></script>
 <script src="gearlook.js"></script>
 <script src="heroart.js"></script>
+<script src="bustart.js"></script>
 <script src="figart.js"></script>
 <script src="rigdata.js"></script>
 <script src="riggear.js"></script>
@@ -4700,6 +4745,7 @@ canvas.dunfx{position:absolute;inset:0;width:100%;height:100%;pointer-events:non
 <script src="i18n_balfear.js"></script>
 <script src="i18n_combat2.js"></script>
 <script src="i18n_fightdeclutter.js"></script>
+<script src="i18n_busts.js"></script>
 <script src="i18n_fightset.js"></script>
 <script src="i18n_stacks.js"></script>
 <script src="i18n_fighttips.js"></script>
@@ -4774,6 +4820,7 @@ canvas.dunfx{position:absolute;inset:0;width:100%;height:100%;pointer-events:non
 <script src="bargains.js"></script>
 <script src="expedition.js"></script>
 <script src="longhouse.js"></script>
+<script src="eventcards.js"></script>
 <script src="ui.js"></script>
 </body>
 </html>
