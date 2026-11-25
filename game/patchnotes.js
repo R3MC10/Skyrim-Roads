@@ -3,6 +3,10 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b241-qaside3", build: 241, date: "25 Nov 2026", title: "Cleaner perk texts", items: [
+      "Fixed: a few perks (Duelist, Brute Force, Steady Hand, Disintegrate, Intimidation) showed a stray design note like [OURS] in the middle of their description.",
+      "Fixed: in Polish, the house, homestead and arena lines on the town board are translated.",
+    ] },
     { id: "b240-qaside2", build: 240, date: "25 Nov 2026", title: "More Polish in towns", items: [
       "Fixed: in Polish, the cooking pot, the forge, the notice board's weekly goals, the Hall of the North, the streets, trainers and hirelings are translated.",
       "Fixed: in Polish, the Social tabs, the bard's song lines and the time left on world events are translated.",
