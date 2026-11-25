@@ -407,6 +407,7 @@ const LONGHOUSE = (() => {
     if (e.k === "found") return T("{who} founded the company", { who });
     if (e.k === "plan") return e.plan ? T("{who} set the plan: {name}", { who, name: T(PLANS[e.plan]?.name || e.plan) }) : T("{who} cleared the plan", { who });
     if (e.k === "role") return e.role === "out" ? T("{who} sent {whom} away", { who, whom: esc(e.whom) }) : T("{who} made {whom} {role}", { who, whom: esc(e.whom), role: T(ROLE[e.role] || e.role).toLowerCase() });
+    if (e.k === "exp" && typeof EXPEDITION !== "undefined") return EXPEDITION.logLine(e);   // expedition.js
     if (e.k === "sum") return T("Older gold and materials, added up ({n} gold)", { n: e.g || 0 });
     return "";
   }
@@ -493,10 +494,10 @@ const LONGHOUSE = (() => {
     const S = me(); if (!S) return "";
     const d = mine(S);
     const off = typeof Store !== "undefined" && !Store.online ? `<p class="sub">${T("You're playing offline: the longhouse is shared once you go online.")}</p>` : "";
-    if (!d) return `<div class="panel lng" id="lng-root"><h2> ${T("Company")}</h2>${off}${outsideHTML(S)}</div>`;
+    if (!d) return `<div class="panel lng" id="lng-root"><h2> ${T("Company")}</h2>${off}${typeof EXPEDITION !== "undefined" ? EXPEDITION.trackerHTML(S) : ""}${outsideHTML(S)}</div>`;
     const x = derive(d);
-    const tabs = [["rooms", T("Rooms")], ["plan", T("Plan")], ["trophy", T("Trophies")], ["gold", T("Treasury")], ["members", T("Members")], ["log", T("Log")]];
-    const body = tab === "plan" ? planHTML(S, d, x) : tab === "trophy" ? trophyHTML(S, x) : tab === "gold" ? treasuryHTML(S, d, x) : tab === "members" ? membersHTML(S, d) : tab === "log" ? logHTML(x) : roomsHTML(S, d, x);
+    const tabs = [["rooms", T("Rooms")], ...(typeof EXPEDITION !== "undefined" ? [["exp", T("Expeditions")]] : []), ["plan", T("Plan")], ["trophy", T("Trophies")], ["gold", T("Treasury")], ["members", T("Members")], ["log", T("Log")]];
+    const body = tab === "exp" && typeof EXPEDITION !== "undefined" ? EXPEDITION.panelHTML(S, d) : tab === "plan" ? planHTML(S, d, x) : tab === "trophy" ? trophyHTML(S, x) : tab === "gold" ? treasuryHTML(S, d, x) : tab === "members" ? membersHTML(S, d) : tab === "log" ? logHTML(x) : roomsHTML(S, d, x);
     return `<div class="panel lng" id="lng-root"><h2> ${T("Company")}</h2>${off}${banner(d, x)}
       <div class="seg lng-seg">${tabs.map(([k, l]) => `<button class="${tab === k ? "on" : ""}" data-lng="tab" data-id="${k}">${l}</button>`).join("")}</div>${body}</div>`;
   }

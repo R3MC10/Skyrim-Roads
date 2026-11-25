@@ -364,6 +364,9 @@ const PFX = (() => {
     [ "Mercantile", "lng_purse", "Company Purse", 1, [30], ["haggling"], "You drive a hard bargain with builders: founding a longhouse and building its rooms cost 20% less when you pay. [OURS]", [["lhcost", 0.2, {}]]],
     [ "Etiquette", "lng_council", "War Council", 1, [35], ["courtly_manners"], "You know how to read a plan aloud: the company's battle plan is 50% stronger for you. [OURS]", [["lhplan", 0.5, {}]]],
     [ "Smithing", "lng_trophies", "Trophy Mounter", 1, [30], ["steel_smithing"], "You mount the company's trophies properly: their bonuses against each kind of foe count double for you. [OURS]", [["lhtrophy", 1, {}]]],
+    // the Expedition Table (expedition.js reads exreroll / exscout)
+    [ "Etiquette", "exp_leader", "Expedition Leader", 2, [30, 60], ["courtly_manners"], "The company listens when you plan: once a day (twice at rank 2) you can ask the Expedition Table for three fresh offers, for the whole company. [OURS]", [["exreroll", [1, 2], {}]]],
+    [ "Sneak", "exp_scout", "Seasoned Scout", 1, [30], ["stealth"], "You read the road: an expedition's road event shows you how each choice will turn out, and its choices go 10% better for you. [OURS]", [["exscout", 1, {}]]],
   ];
   const FX = {};
   if (typeof PERKS !== "undefined") {
