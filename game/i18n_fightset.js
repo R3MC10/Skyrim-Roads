@@ -36,6 +36,18 @@ var I18N_EXTRA = typeof I18N_EXTRA !== "undefined" ? I18N_EXTRA : { words: {}, p
       "Na telefonach przytrzymanie ruchu pokazuje podpowiedź nad paskiem umiejętności, więc nie zasłania już rzędu Ruchy.",
     "The short fight log in the corner sits on a soft dark strip, so a single line reads clearly instead of looking half faded.":
       "Krótki dziennik walki w rogu leży na miękkim ciemnym pasku, więc pojedyncza linijka jest czytelna i nie wygląda na wyblakłą.",
+    // build 187 patch note
+    "Fights last long enough again": "Walki znów trwają tyle, ile powinny",
+    "Since a turn holds up to four moves, strong heroes were ending fights in three or four rounds, even against bosses and legendary beasts. A foe's health now follows what you can really do in a turn with your stamina and magicka (a power attack and a few blows, or a few spells and a summon), so fights at higher levels last as long as they should.":
+      "Odkąd tura mieści do czterech ruchów, silni bohaterowie kończyli walki w trzy albo cztery rundy, nawet z bossami i legendarnymi bestiami. Zdrowie wroga zależy teraz od tego, co naprawdę zrobisz w turze za swoją wytrzymałość i magię (silny cios i kilka uderzeń albo kilka zaklęć i przywołaniec), więc walki na wyższych poziomach trwają tyle, ile powinny.",
+    "Bosses and legendary beasts take about 15 rounds again, and knowing a beast's weakness still makes the hunt a good bit shorter. Ordinary road fights stay short.":
+      "Bossowie i legendarne bestie znów wymagają około 15 rund, a znajomość słabości bestii wciąż wyraźnie skraca łowy. Zwykłe walki na drodze zostają krótkie.",
+    "Heroes at low levels meet about the same fights as before.":
+      "Bohaterowie na niskich poziomach trafiają na mniej więcej takie same walki jak wcześniej.",
+    "Riding is a little less overpowering: the charge hits softer and horses dodge less, so the saddle still helps but doesn't win every fight for you.":
+      "Jazda konno jest trochę mniej przegięta: szarża uderza słabiej, a konie rzadziej robią uniki, więc siodło nadal pomaga, ale nie wygrywa za ciebie każdej walki.",
+    "Dawnguard and Dwarven quest foes hit a bit softer, and the Volkihar courtyard and the Silent City guardians are a touch easier.":
+      "Wrogowie z zadań Straży Świtu i Dwemerów biją trochę słabiej, a dziedziniec Volkihar i strażnicy Cichego Miasta są odrobinę łatwiejsi.",
     // Coming next
     "Mounted combat: fight from the saddle": "Walka konno: bij się z siodła",
     "Pick a side in the civil war": "Wybierz stronę w wojnie domowej",

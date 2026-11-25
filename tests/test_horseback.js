@@ -19,7 +19,7 @@ function hero(weapon, horse=true){
 const foe=(hp=400,dmg=8,tags=["humanoid"])=>({name:"Bandit",health:hp,hp,damage:dmg,tags,gold:[0,0]});
 ok(D.CONDITIONS?.mounted || (D.RULE_IFS||D.IFS||{}).mounted || /mounted/.test(JSON.stringify(D)), "mounted condition listed");
 
-// 1. a charge opens the fight: sure hit, bigger than a normal swing
+// 1. a charge opens the fight: sure hit, bigger than a normal swing (x1.2 since the riding balance pass, so 1.4x an average swing with its misses)
 { let charged=0, n=0, d1=0, d0=0;
   for(let i=0;i<200;i++){
     const s=hero("iron_sword"), f=new G.Fight(s,foe(),null,T); ok(HORSEBACK.engage(f,T),"engaged when riding");
@@ -28,7 +28,7 @@ ok(D.CONDITIONS?.mounted || (D.RULE_IFS||D.IFS||{}).mounted || /mounted/.test(JS
     const s2=hero("iron_sword",false), f2=new G.Fight(s2,foe(),null,T); ok(!HORSEBACK.engage(f2,T),"no horse, no mount"); f2.run({t:T,trySneak:false,maxTurns:1}); d0+=400-f2.ehp; n++;
   }
   ok(charged===200, "always a charge on turn 1: "+charged);
-  ok(d1/charged > 1.7*d0/n, "charge hits harder "+(d1/charged).toFixed(1)+" vs "+(d0/n).toFixed(1));
+  ok(d1/charged > 1.4*d0/n, "charge hits harder "+(d1/charged).toFixed(1)+" vs "+(d0/n).toFixed(1));
 }
 // 2. riding bonus after the charge (sword), stamina runs out
 { const s=hero("iron_sword"), f=new G.Fight(s,foe(5000,0),null,T); HORSEBACK.engage(f,T); f.run({t:T,trySneak:false,maxTurns:30});

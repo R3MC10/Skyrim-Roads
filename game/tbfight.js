@@ -31,7 +31,8 @@ const TB = (() => {
   /* foe toughness and actions per round, by kind of foe (tuned with the sim in tests/test_tbfight.js) */
   const T = { hp: { normal: 2.0, tough: 2.6, boss: 3.0 }, acts: { normal: 2.4, tough: 2.5, boss: 2.5 },
     rounds: { normal: 8, tough: 12, boss: 16 },                          // how long a fight should roughly last
-    min: { normal: 1.2, tough: 1.5, boss: 1.8 }, max: { normal: 6, tough: 7, boss: 8 } };   // bounds on the health boost
+    est: { k: 0.7, pool: 1, mk: 0.85, mix: 0.25, sum: 0.8 },   // [post-combat2] share of the damage your stamina / magicka pays for in a round that foe health is sized for
+    min: { normal: 1.2, tough: 1.5, boss: 1.8 }, max: { normal: 7, tough: 9, boss: 10 } };   // bounds on the health boost
   const FOE_HP = T.hp.normal;
   const PARTY_HP = 0.45;        // +45% foe health per extra real player in the fight (shared out over the extra foes below)
   const MAX_FOES = 6;           // [OURS] a party meets one foe per hero, one after another (like dungeon rooms), at most 6; bosses stay alone
@@ -163,15 +164,28 @@ const TB = (() => {
     }
     /* rough damage a round from you and your allies (a typical turn of weapon swings, or your best damage spell) */
     estimate(f) {
-      const s = f.s, st = this.st;
+      const s = f.s, st = this.st, R = T.rounds[this.kind] || T.rounds.normal;
       let w = 0, m = 0;
-      try { const sw = typeof COMBATAI !== "undefined" && COMBATAI.swing ? COMBATAI.swing(f, false) : f.weaponDamage(); w = sw * (SWINGS[f.wt] || 2) * 0.8; } catch (e) { w = 0; }
+      try {
+        const ai = typeof COMBATAI !== "undefined" && COMBATAI.swing, sw = ai ? COMBATAI.swing(f, false) : f.weaponDamage();
+        if (f.regenSp > 0 && G.maxStamina) {
+          /* [post-combat2 balance] a turn holds up to 4 moves paid in stamina, so what you deal a round follows your
+             stamina: what comes back each round plus your pool spread over the fight, a power attack first when you can
+             afford it. (A flat "two swings a turn" guess let strong heroes end fights in 3-5 rounds.) */
+          const cut = 1 - (st.spCut || 0), atk = Math.max(1, (ATK_SP[f.wt] || 9) * cut), pa = (f.paCost || 0) * cut;
+          let B = f.regenSp * SP_REGEN + T.est.pool * G.maxStamina(s) / R, n = 0;
+          if (ai && pa > 0 && B >= pa) { w = COMBATAI.swing(f, true); B -= pa; n = 1; }
+          w = (w + sw * clamp(B / atk, n ? 0 : 1, MAX_ACTS - n)) * T.est.k;
+        } else w = sw * (SWINGS[f.wt] || 2) * 0.8;
+      } catch (e) { w = 0; }
       for (const id of s.spells || []) {
         const sp = D.SPELLS[id]; if (!sp || sp.kind !== "damage") continue;
-        try { const d = G.spellDamage(s, sp), c = Math.max(1, G.spellCost(s, sp)), casts = Math.min(2.5, Math.max(1, (f.mp / c) / 4)); m = Math.max(m, d * casts * 0.85); } catch (e) { /* skip */ }
+        try { const d = G.spellDamage(s, sp), c = Math.max(1, G.spellCost(s, sp)), casts = clamp((f.regenMp * MP_REGEN + T.est.pool * f.mp / R) / c, 1, MAX_ACTS - 1); m = Math.max(m, d * casts * T.est.mk); } catch (e) { /* skip */ }   // casts a round your magicka pays for (like stamina above)
       }
+      let sm = 0;   // a summon you can afford fights beside you
+      for (const id of s.spells || []) { const sp = D.SPELLS[id]; if (!sp || sp.kind !== "summon" || !G.spellSummon) continue; try { if (G.spellCost(s, sp) <= f.mp) sm = Math.max(sm, G.spellSummon(s, sp, f).dmg || 0); } catch (e) { /* skip */ } }
       const al = f.allies.reduce((a, x) => a + (x.dmg || 0), 0);
-      return Math.max(w, m) + al;
+      return Math.max(w, m) + T.est.mix * Math.min(w, m) + T.est.sum * sm + al;   // spellswords mix blades and spells
     }
     emit(who, text, kind, extra = {}) {
       const e = { who, text, kind, round: this.round, hp: Math.max(0, Math.round(this.f.hp)), ehp: Math.max(0, Math.round(this.f.ehp)), ...extra };
