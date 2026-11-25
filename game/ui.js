@@ -647,7 +647,8 @@
     $("#side").addEventListener("keydown", (e) => { if (e.target.id === "chatin" && e.key === "Enter") { e.preventDefault(); chatSend(e.target.value); } if (e.target.id === "dmin" && e.key === "Enter") { e.preventDefault(); sendDM(); } });
     $("#trip").addEventListener("click", onPanelClick);
     $("#raid").addEventListener("click", onPanelClick);
-    { let gp = $("#gpop"); if (!gp) { gp = document.createElement("div"); gp.id = "gpop"; document.body.appendChild(gp); gp.addEventListener("click", onPanelClick); } }   // the Gathering card floating over the PC map (the side panel is hidden there)
+    // [gatherarea] the Gathering card no longer floats over the map (#gpop): it is a section of the Area tab (gatherui.js)
+    if (typeof GATHERUI !== "undefined") GATHERUI.bind((what, id) => gatherAct(what, id));   // a screen hosting GATHERUI.render() hands its taps here
     { let gn = $("#gnear"); if (!gn) { gn = document.createElement("div"); gn.id = "gnear"; document.body.appendChild(gn); gn.addEventListener("click", onPanelClick); } }   // "Snowberries in reach: Gather" over the map, on the road too
     Store.watch("raids", (docs) => { raidDocs = docs; });
     if (typeof LEVELUP !== "undefined") LEVELUP.mount({ S: () => S, persist, toast, refresh: () => { bump(); renderPanel(true); if ($("#sky")) renderMenu(); }, publishCard: () => publishCard() });   // levelup.js: skill/level notices, the three pillars
@@ -875,7 +876,7 @@
     if (Math.floor(t) % 3 === 0) { const qm = QUESTS.check(S); if (qm.length) { persist(true); showMessage("Quest", qm.join(" ")); } }
     if (Math.floor(t) % 30 === 0) { publishCard(false); publishHome(); publishClan(); }
     if (Math.floor(t) % 60 === 0) BACKUP.autoSave(S);
-    renderTop(); renderVitals(); renderTrip(); renderGatherPop(); renderGatherNear(); renderTabs(); hudCompass();
+    renderTop(); renderVitals(); renderTrip(); renderGatherNear(); renderTabs(); hudCompass();
     if (version !== rendered || Date.now() - lastPanelRender > 20000) renderPanel(false);
   }
 
@@ -967,15 +968,6 @@
     const row = (label, cur, max, color) => `<div class="vital"><small><span>${label}</span><span class="num">${Math.round(cur)}/${max}</span></small><div class="bar"><i style="width:${pct(cur, max)}%;background:${color}"></i></div></div>`;
     const w = G.carried(S), cap = G.capacity(S);
     $("#vitals").innerHTML = row("Health", hp, mh, "var(--hp)") + row("Magicka", G.maxMagicka(S), G.maxMagicka(S), "var(--mp)") + row(G.overweight(S) ? "Weight · too heavy" : "Weight", w, cap, w > cap ? "var(--ember)" : "#8a7a5c");
-  }
-  /* PC map home screen: the side panel (and the Gathering card in it) is hidden, so the card floats over the map instead.
-     Without this a PC player could never pick a plant patch or forage. Only redraws on change, so taps don't get lost. */
-  function renderGatherPop() {
-    const el = $("#gpop"); if (!el) return;
-    const on = typeof GATHER !== "undefined" && typeof PCMAP !== "undefined" && PCMAP.on() && (tab === "map" || tab === "places") && !S.dungeon;
-    let html = "";
-    if (on) { try { html = GATHER.card(S); } catch (e) { html = ""; } }
-    if (el.dataset.html !== html) { el.innerHTML = html; el.dataset.html = html; }
   }
   /* a ripe patch within reach (also while walking or riding): a small Gather prompt over the map (harvestgame.js) */
   function renderGatherNear() {
@@ -1585,7 +1577,7 @@
     HARVESTGAME.open({ ing: n.ing, kind: HARVEST.kindOf(n.ing), name: D.ITEMS[n.ing]?.name || n.ing, tol: HARVEST.tolOf(S), fast: HARVEST.tolOf(S) > 1,
       onDone: (grade) => {
         let r; try { r = GATHER.act(S, "gpick", id, undefined, { grade, passing: true }); } catch (e) { console.error(e); r = { err: "Couldn't gather that. Please try again." }; }
-        if (r.ok) { G.note(S, ` ${r.text}`); SOUND.fx("coin"); persist(true); renderPanel(true); renderGatherPop(); }
+        if (r.ok) { G.note(S, ` ${r.text}`); SOUND.fx("coin"); persist(true); renderPanel(true); }
         return { ...r, before, after: HARVEST.progress(S, n.ing), thumb: G.P(S, "green_thumb") > 0 };
       } });
   }
@@ -1598,7 +1590,7 @@
     if (r.err) return toast(r.err);
     SOUND.fx(what === "gauto" || what === "gunplant" ? "click" : "coin");
     if (r.ok && /^(g(pick|quick|pickall|forage|plant)|hdeliver)$/.test(what)) G.note(S, ` ${r.text}`);
-    persist(true); renderPanel(true); renderGatherPop(); toast(r.text);
+    persist(true); renderPanel(true); toast(r.text);
   }
   function exploreAct(what, id) {
     const r = EXPLORE.act(S, what, id);
@@ -3028,7 +3020,7 @@
       .map((n) => ({ n, d: G.pxDist(here, WORLD.places[n]), kind: WORLD.places[n][2], visited: S.discovered.includes(n) })).sort((a, b) => a.d - b.d);
     const places = MP ? all.filter((p) => MP.match(p.kind, p.visited)) : all;
     const bag = myBag();
-    return `${ppUI ? ppUI.panelHTML() : ""}${typeof WFX !== "undefined" ? WFX.coldHTML(S) : ""}${nextCard()}${typeof REMIND !== "undefined" && typeof MAPPANEL === "undefined" ? REMIND.card(S) : ""}${placeHere()}${typeof EXPLORE !== "undefined" ? EXPLORE.placeCard(S) : ""}${typeof RUMOURS !== "undefined" ? RUMOURS.card(S) : ""}${typeof GATHER !== "undefined" ? GATHER.card(S) : ""}<div class="panel"><h2>Where to?</h2><p class="sub">Tap a place on the map, or press <b>Go</b> below. Tap empty ground on the map to roam off the road.</p>${typeof FASTQOL !== "undefined" ? FASTQOL.recentHTML(S) : ""}
+    return `${ppUI ? ppUI.panelHTML() : ""}${typeof WFX !== "undefined" ? WFX.coldHTML(S) : ""}${nextCard()}${typeof REMIND !== "undefined" && typeof MAPPANEL === "undefined" ? REMIND.card(S) : ""}${placeHere()}${typeof EXPLORE !== "undefined" ? EXPLORE.placeCard(S) : ""}${typeof RUMOURS !== "undefined" ? RUMOURS.card(S) : ""}<div class="panel"><h2>Where to?</h2><p class="sub">Tap a place on the map, or press <b>Go</b> below. Tap empty ground on the map to roam off the road.</p>${typeof FASTQOL !== "undefined" ? FASTQOL.recentHTML(S) : ""}
       <input id="search" placeholder="Search places" value="${esc(searchText)}" autocomplete="off" aria-label="Search places">${MP ? MP.chips(MP.countAll(all)) : ""}
       <div class="list">${bag ? `<div class="item on"><div class="t"> Your lost bag<span>${bag.gold} gold · ${Math.max(0, Math.floor((bag.expires - G.now()) / 60))} min left before it's fair game</span></div><button class="btn pri sm" data-act="go" data-place="__bag">Go</button></div>` : ""}
       ${places.slice(0, searchText || uxAllPlaces ? 40 : 8).map(({ n, d }) => { const k = WORLD.places[n][2]; return `<div class="item"><div class="t">${esc(n)}<span>${KIND[k]} · ${esc(G.holdAt(WORLD.places[n]))}${typeof PLACESTUFF !== "undefined" ? PLACESTUFF.tag(n) : ""}${S.discovered.includes(n) ? "" : " · unvisited"}${(() => { const lf = DUNGEONS.enterable(n) ? DUNGEONS.refillLeft(S, n) : 0; return lf ? ` ·  opens in ${cdSpan(G.now() + lf)}` : ""; })()}</span></div><span class="num sub">${d * 1.1 / G.speed(S) < 1 ? "" : "~"}${fmtMin(d * 1.1 / G.speed(S))}</span><button class="btn sm" data-act="go" data-place="${esc(n)}">Go</button></div>`; }).join("") || (searchText ? `<p class="sub">No places match “${esc(searchText)}”. Try part of the name, like “riv”.</p>` : `<p class="sub">No places of this kind yet. Tap All to see every place.</p>`)}${!searchText && places.length > 8 ? `<button class="btn" data-act="uxall" style="width:100%;margin-top:8px">${uxAllPlaces ? "Show only the nearest" : `Show all ${places.length} places`}</button>` : ""}${(() => { const n = Object.keys(clearedLeft()).length; return `<button class="btn" data-act="tabgo" data-id="places" style="width:100%;margin-top:8px"> Locations: cleared places${n ? ` (${n})` : ""}</button>`; })()}</div>
