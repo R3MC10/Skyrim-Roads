@@ -179,6 +179,7 @@ const COMBAT2 = (() => {
     }
     if (FF) { FF.party(el, { W, H, top, dh, wide }); FF.unclash(el, { W, H, top, dh }); }   // a full party: more columns / slimmer plates instead of running off screen
     if (typeof FOEPANEL !== "undefined") FOEPANEL.place(el, { W, H, top, dh, wide });   // [foepanel] the plate over the foe's head (never on a fighter), the log in a free corner
+    if (typeof PHONEFIGHT !== "undefined") PHONEFIGHT.place(el);   // [phonefight] the log's fold arrow follows the log
   }
   let rsT = null;
   if (DOM && typeof addEventListener === "function") addEventListener("resize", () => { clearTimeout(rsT); rsT = setTimeout(() => { const el = document.getElementById("tbf"); if (el) place(el); }, 60); });
