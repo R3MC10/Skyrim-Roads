@@ -6,7 +6,7 @@
    - The battle scene fills the screen. Where it doesn't reach (tall phones, wide PCs) a soft, blurred copy of it does,
      so there are no empty bars.
    - The foe's card becomes a nameplate floating over the foe: slim health bar, status icons, its next moves.
-     You get slim health / magicka / stamina bars over your own head.
+     (Your own numbers live only in the orb below: fightdeclutter.js.)
    - Your vitals sit in a HUD in the corner: a health orb (with what's about to come off it striped), magicka and
      stamina arcs around it, your statuses next to it.
    - Followers and party members are small plates in the scene (still drop targets for heals).
@@ -88,14 +88,7 @@ const COMBAT2 = (() => {
     me.prepend(d);
     if (h !== was) requestAnimationFrame(() => requestAnimationFrame(() => { const q = d.querySelector(".liq"); if (q) q.style.height = h.toFixed(1) + "%"; }));
     mem.hp = h;
-    // the slim bars over your head
     return { h, m: pc(mp), s: pc(sp) };
-  }
-  function overhead(ov, v, cls) {
-    const o = document.createElement("div");
-    o.className = "c2head " + cls; o.setAttribute("aria-hidden", "true");
-    o.innerHTML = `<i class="h" style="width:${v.h.toFixed(1)}%"></i>${v.m != null ? `<i class="m" style="width:${v.m.toFixed(1)}%"></i><i class="s" style="width:${v.s.toFixed(1)}%"></i>` : ""}`;
-    ov.appendChild(o);
   }
 
   // ------------------------------------------------------------------ the blurred copy of the scene behind it
@@ -304,8 +297,7 @@ const COMBAT2 = (() => {
     }
     if (me) {
       me.classList.add("c2hud");
-      const v = orb(me, sess, o.playing);
-      if (v) overhead(ov, v, "me");
+      orb(me, sess, o.playing);   // [fightdeclutter] the orb is the one place for your numbers: no slim bars over your head any more
       ov.appendChild(me);
     }
     // a hot spot over you in the scene: drag a heal or a potion onto yourself there

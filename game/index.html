@@ -4111,6 +4111,69 @@ html.a11y-still #fhints .fhint{animation:none}
 /* messages over menus (the map isn't behind them): only the newest, on a solid plate, so it never blurs into a title */
 #hudlane:not(.onmap) #hudlog .hlog{display:none}
 #hudlane:not(.onmap) #hudlog .toast{background:rgba(8,9,11,.94);box-shadow:0 4px 14px rgba(0,0,0,.5)}
+/* [fightdeclutter] a calmer fight screen, phone first (fightdeclutter.js, foeintent.js, tooltip.js) */
+/* the top: one slim strip with the round and the turn order; Log and Wheel live in the "..." menu */
+#tbf.c2 .tbtop{box-sizing:border-box;height:calc(48px + env(safe-area-inset-top));flex-wrap:nowrap;align-items:center;gap:6px;padding:calc(5px + env(safe-area-inset-top)) 8px 5px;background:linear-gradient(180deg,rgba(5,5,6,.8),rgba(5,5,6,.38) 78%,transparent)}
+#tbf.c2 .tbtop>b.c2rd{width:34px;height:34px;font-size:15px}
+#tbf.c2 .tbtop>b.c2rd small{font-size:6.5px}
+#tbf.c2 .tbord{flex:1 1 auto;min-width:0;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;padding:3px 4px}
+#tbf.c2 .tbini{padding:1px;height:30px;box-sizing:border-box}
+#tbf.c2 .tbini .c2pt{width:24px;height:24px}
+#tbf.c2 .tbini.now{transform:none;box-shadow:0 0 0 1px rgba(226,187,100,.5)}
+#tbf.c2.c2wide .tbord{flex:0 1 auto}
+#tbf.c2 .fdc-more{position:relative;flex:none;margin-left:auto}
+#tbf.c2 .fdc-mb{display:flex;align-items:center;justify-content:center;gap:3px;width:38px;height:38px;padding:0;border-radius:4px;background:rgba(10,10,12,.55);border:1px solid rgba(236,230,214,.2);cursor:pointer}
+#tbf.c2 .fdc-mb i{display:block;width:4px;height:4px;border-radius:50%;background:#e9e1cc}
+#tbf.c2 .fdc-mb:hover,#tbf.c2 .fdc-mb:focus-visible,#tbf.c2 .fdc-more.open .fdc-mb{border-color:rgba(226,187,100,.8)}
+#tbf.c2 .fdc-menu{display:none;position:absolute;right:0;top:calc(100% + 6px);z-index:30;min-width:200px;padding:4px 0;background:linear-gradient(180deg,rgba(14,14,13,.97),rgba(8,8,8,.97));border:1px solid rgba(236,230,214,.14);border-top-color:rgba(226,187,100,.7);border-bottom-color:rgba(226,187,100,.7);box-shadow:0 10px 28px rgba(0,0,0,.6)}
+#tbf.c2 .fdc-more.open .fdc-menu{display:block}
+#tbf.c2 .tbtop .fdc-menu .tbff{display:flex;align-items:center;gap:10px;width:100%;height:46px;min-height:46px;padding:0 14px;border:0;border-radius:0;background:none;color:#ece6d6;font:500 16px/1 "Barlow Semi Condensed",sans-serif;letter-spacing:.04em;text-align:left;white-space:nowrap;cursor:pointer}
+#tbf.c2 .tbtop .fdc-menu .tbff+.tbff{border-top:1px solid rgba(236,230,214,.08)}
+#tbf.c2 .tbtop .fdc-menu .tbff:hover,#tbf.c2 .tbtop .fdc-menu .tbff:focus-visible{background:rgba(226,187,100,.13)}
+#tbf.c2 .tbtop .fdc-menu .tbff.on{background:none}
+#tbf.c2 .tbtop .fdc-menu .tbff.on::after{content:"\2713";margin-left:auto;color:var(--gold,#d6b25e)}
+#tbf.c2 .fdc-lb{flex:1}
+/* the foe's card: name and kind on one line, a thin rule instead of the red glow, only its next move */
+#tbf.c2:not(.c2wide) .c2ov .tbu.foe{width:min(236px,62vw)}
+#tbf.c2 .c2ov .tbu.foe{padding:5px 8px 6px;border-radius:4px;background:linear-gradient(180deg,rgba(16,13,12,.86),rgba(8,8,8,.78));border:1px solid rgba(236,230,214,.14);border-top-color:rgba(226,187,100,.55);box-shadow:0 4px 14px rgba(0,0,0,.45)}
+#tbf.c2 .c2ov .tbu.foe.c2low{border-color:rgba(255,110,80,.55);box-shadow:0 4px 14px rgba(0,0,0,.45)}
+#tbf.c2 .c2ov .tbu.foe.fit-next,#tbf.c2 .c2ov .tbu.foe.drop-ok{box-shadow:0 4px 14px rgba(0,0,0,.45)}
+#tbf.c2 .tbu.foe .nm{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#tbf.c2 .tbu.foe .nm .arch{border:0;background:none;padding:0;margin-left:3px;font:600 10px "Barlow Semi Condensed",sans-serif;letter-spacing:.1em;color:#a49d8c;vertical-align:1px}
+#tbf.c2 .tbu.foe .nm .arch::before{content:"\00b7\00a0"}
+#tbf.c2 .c2ov .tbu.foe .tbints{flex-wrap:wrap;gap:4px;margin-top:4px}
+#tbf.c2 .c2ov .tbu.foe .tbints.fdc-fold .tbint~.tbint{display:none}
+#tbf.c2 .c2ov .tbu.foe .tbint{box-shadow:none;border-radius:3px;border-color:rgba(255,140,120,.3);background:rgba(0,0,0,.45);animation:none}
+#tbf.c2 .c2ov .tbu.foe .tbint.big{border-color:rgba(255,110,80,.8);background:rgba(110,22,12,.6)}
+#tbf.c2 .fdc-intx{flex:none;min-width:32px;height:22px;padding:0 7px;border-radius:3px;border:1px solid rgba(236,230,214,.25);background:rgba(0,0,0,.4);color:#e9e1cc;font:600 12px/20px "Barlow Semi Condensed",sans-serif;cursor:pointer}
+#tbf.c2 .fdc-intx:hover,#tbf.c2 .fdc-intx:focus-visible{border-color:rgba(226,187,100,.8)}
+/* the target: a thin ellipse on the ground; the faint dashed arc only while you aim (or rest on the foe's card) */
+#tbf.c2 .fitarrow .ln{stroke:rgba(232,160,140,.62);stroke-dasharray:5 6;filter:none;animation:none;opacity:0;transition:opacity .2s}
+#tbf.c2 .fitarrow .ah{fill:rgba(232,160,140,.7)}
+#tbf.c2.dragging .fitarrow .ln,#tbf.c2.fc-aiming .fitarrow .ln,#tbf.c2:has(.c2ov .tbu.foe:hover) .fitarrow .ln{opacity:1}
+#tbf.c2 .fitarrow .tgt .gnd{fill:rgba(255,120,90,.07);stroke:rgba(255,150,120,.7);stroke-width:1.5}
+#tbf.c2 .fitarrow.big .tgt .gnd{stroke:rgba(255,110,80,.95);fill:rgba(255,90,60,.12)}
+#tbf.c2 .tbu.me .fitm{background:rgba(0,0,0,.55);border-color:rgba(255,140,110,.4);color:#ecd2c8;box-shadow:none}
+/* your numbers live in the orb: no "-52" badge (the orb's stripe shows it) */
+#tbf.c2 .tbu.me .tbfcl,#tbf.c2 .c2head{display:none}
+/* the Moves strip: diamonds, moves left and "Your turn" in one 32px line */
+#tbf.c2 .tbdock .tbap{box-sizing:border-box;height:32px;min-height:32px;flex-wrap:nowrap;overflow:hidden}
+/* End turn: a plain SkyUI button in its own corner, no blue glow, no fast-forward icon */
+#tbf.c2 .fc:not(.fc-pick) .tbact.end{border-radius:4px;background:linear-gradient(180deg,rgba(32,30,26,.96),rgba(12,11,10,.98));border:1px solid rgba(236,230,214,.2);border-top-color:rgba(226,187,100,.6);box-shadow:none;animation:none}
+#tbf.c2 .fc:not(.fc-pick) .tbact.end .ic{display:none}
+#tbf.c2 .fc:not(.fc-pick) .tbact.end{position:relative;display:flex;flex-direction:column;flex-wrap:nowrap;align-items:center;justify-content:center;align-content:center;gap:2px;padding:6px 8px}
+#tbf.c2 .fc:not(.fc-pick) .tbact.end small{padding:0;flex-basis:auto}
+#tbf.c2 .fc:not(.fc-pick) .tbact.end .fc-k{position:absolute;top:3px;right:4px}
+#tbf.c2 .fc:not(.fc-pick) .tbact.end b{color:#f1ead8;letter-spacing:.05em;text-transform:uppercase;white-space:normal;overflow:visible;text-overflow:clip;text-align:center;line-height:1.1;max-width:100%}
+#tbf.c2 .fc:not(.fc-pick) .tbact.end small{color:#a49d8c}
+#tbf.c2 .fc:not(.fc-pick) .tbact.end:not([disabled]):hover,#tbf.c2 .fc:not(.fc-pick) .tbact.end:focus-visible{border-color:rgba(226,187,100,.9);box-shadow:none}
+#tbf.c2 .fc:not(.fc-pick) .tbact.end.ready{background:linear-gradient(180deg,rgba(66,52,24,.96),rgba(22,17,8,.98));border-color:rgba(226,187,100,.85);box-shadow:none;animation:none}
+#tbf.c2 .fc:not(.fc-pick) .tbact.end.ready small{color:#e8d4a0}
+/* a move's tip: a fixed line just above the skill bar (tooltip.js), never over the buttons */
+.tip.tt-dock{min-width:0;padding:6px 11px 7px;font-size:13.5px;line-height:1.32;max-height:calc(4 * 1.32em + 14px);overflow:hidden;transform:none}
+.tip.tt-dock::after,.tip.tt-dock::before{display:none}
+.tip.tt-dock .tt-h{display:inline;margin-right:7px;font-size:1em}
+.tip.tt-dock .tt-sub,.tip.tt-dock .tt-stats,.tip.tt-dock .tt-hint{display:none}
 /* [mapread] gevstack.js: everyday world news folds into one "World news (n)" drawer; urgent strips stay open */
 #gev .gevs-news{display:flex;align-items:center;gap:7px;width:100%;min-height:34px;margin:0;padding:5px 12px 5px 9px;border:1px solid rgba(214,178,94,.32);border-left:3px solid #b08a4a;border-radius:8px;background:rgba(20,16,12,.72);color:#e9dcb8;font:600 var(--fs-sm,14px)/1.2 "Barlow Semi Condensed",system-ui,sans-serif;text-align:left;cursor:pointer}
 #gev .gevs-news .gevs-ic{flex:0 0 auto;color:#d8b46a}
@@ -4358,6 +4421,7 @@ canvas.dunfx{position:absolute;inset:0;width:100%;height:100%;pointer-events:non
 <script src="strategy.js"></script>
 <script src="fightset.js"></script>
 <script src="combat2.js"></script>
+<script src="fightdeclutter.js"></script>
 <script src="guide.js"></script>
 <script src="patchnotes.js"></script>
 <script src="market.js"></script>
@@ -4527,6 +4591,7 @@ canvas.dunfx{position:absolute;inset:0;width:100%;height:100%;pointer-events:non
 <script src="i18n_sweep.js"></script>
 <script src="i18n_balfear.js"></script>
 <script src="i18n_combat2.js"></script>
+<script src="i18n_fightdeclutter.js"></script>
 <script src="i18n_fightset.js"></script>
 <script src="i18n_stacks.js"></script>
 <script src="i18n_fighttips.js"></script>
