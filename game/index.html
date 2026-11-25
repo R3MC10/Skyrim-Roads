@@ -3015,11 +3015,9 @@ html.pcmap div:has(> #mapwrap) > #mapwrap,html.pcmap div:has(> #mapwrap) > #vita
 html.pcmap #mapwrap::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(140% 110% at 50% 50%,rgba(0,0,0,0) 62%,rgba(0,0,0,.42) 100%)}
 html.pcmap .mapbtns{top:auto;right:14px;bottom:62px;z-index:4}
 html.pcmap.pc-side .mapbtns{right:494px}
-html.pcmap #picked{left:50%;right:auto;bottom:62px;transform:translateX(-50%);width:min(560px,60vw);z-index:4;border-radius:4px;background:linear-gradient(180deg,rgba(26,28,31,.95),rgba(12,13,15,.95));border-color:rgba(226,187,100,.38);box-shadow:0 8px 26px rgba(0,0,0,.55)}
 html.pcmap #vitals{position:fixed;left:14px;bottom:56px;width:300px;z-index:4;margin:0}
 html.pcmap #trip{position:fixed;left:50%;transform:translateX(-50%);bottom:56px;width:min(560px,46vw);z-index:4}
 html.pcmap #trip .trip{margin:0;box-shadow:0 8px 26px rgba(0,0,0,.5)}
-html.pcmap:has(#picked:not(.hide)) #trip{bottom:132px}
 html.pcmap #raid{position:fixed;left:50%;top:12px;transform:translateX(-50%);width:min(620px,50vw);z-index:5}
 /* a road event or something blocking the road: a card in the middle of the map, the hero has stopped */
 html.pcmap #trip:has([data-act="openenc"],[data-act="openev"],.ppfollow~*){bottom:auto;top:38%;width:min(480px,80vw)}
@@ -5074,6 +5072,10 @@ body:has(#tbf) #gnear{display:none!important}
 .ft-line.pet-line{margin-top:6px}
 /* [itemcards2] item cards: what else changes when you put it on (itemcmp.js notes) */
 .ic-cmp .ic-note{margin:4px 0 0;padding-left:14px;text-indent:-14px;color:#e8c77a;line-height:1.35}.ic-cmp .ic-note::before{content:"▸ ";color:#c9a24a}
+/* [map-panels] every map panel (mapsheet.js) shares the caravan panel's look above; a place's marker or a pin's glyph in the header */
+.wgcard.mpanel .wg-pic img{width:40px;height:40px;display:block}
+.wgcard .mp-glyph{font-size:26px;line-height:1;color:#e8d6a6}
+.wgcard .wg-body > .wg-note:first-child{margin:8px 0 4px}
 /* ==== [travelhud] fptravel.js: on the road the trip is a first-person band at the top of the map; the compass runs along its top edge ==== */
 .fpt{position:absolute;top:4px;left:6px;right:6px;z-index:3;display:flex;flex-direction:column;border:1px solid rgba(214,182,110,.42);border-radius:4px;background:linear-gradient(180deg,rgba(16,17,20,.95),rgba(8,9,11,.95));box-shadow:0 8px 24px rgba(0,0,0,.55);overflow:hidden;min-width:0}
 .fpt-view{position:relative;aspect-ratio:3.1/1;min-height:100px;max-height:240px;line-height:0;overflow:hidden}
@@ -5451,6 +5453,8 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 <script src="placeart.js"></script>
 <script src="lightfx.js"></script>
 <script src="paintedmap.js"></script>
+<script src="mapsheet.js"></script>
+<script src="placepanel.js"></script>
 <script src="greet.js"></script>
 <script src="mapfx.js"></script>
 <script src="pcmap.js"></script>
@@ -5664,6 +5668,7 @@ button.ls-who{cursor:pointer}button.ls-who:hover,button.ls-who:focus-visible{bor
 <script src="i18n_fptravel.js"></script>
 <script src="i18n_rewardtips.js"></script>
 <script src="i18n_updater.js"></script>
+<script src="i18n_mappanels.js"></script>
 <script src="i18n_gatherarea.js"></script>
 <script src="i18n_fighttipstop.js"></script>
 <script src="i18n_weaponfx.js"></script>

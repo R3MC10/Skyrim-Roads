@@ -3,6 +3,13 @@
    one-time "What's new" popup keys on. */
 const PATCHNOTES = (() => {
   const LIST = [
+    { id: "b312-mappanels", build: 312, date: "25 Nov 2026", title: "Everything on the map opens in a panel", items: [
+      "Places, dungeons, caves, forts, camps, shrines, standing stones and landmarks now open in the same panel as caravans: on a PC it sits on the right and the map stays usable beside it; on a phone it slides up above the menu bar.",
+      "The panel shows the place's marker, its hold, how far it is, whether you've been there, and what's going on: a quest or a rumour there, when a cleared dungeon fills up again, a crisis or your bounty in that hold.",
+      "Travel, Go inside and Mine ore are big rows with a line under them saying what they do. Your pins and spots in the wilds (Walk here, Pin, Share, Remove) open there too.",
+      "Tapping another hero opens their panel too: Greet a stranger, Invite them to your party, Trade or Add as a friend right from the map.",
+      "Tap another marker and the panel switches to it. Tap empty map, press X, Esc or your phone's back button to close it.",
+    ] },
     { id: "b311-commissions", build: 311, date: "25 Nov 2026", title: "The Commissions board", items: [
       "Your company's longhouse has a Commissions board: open Social, then Company, then Commissions.",
       "Every game day the towns post 3 to 5 orders for your company: a Jarl's steward, a blacksmith, an innkeeper or a temple priest wants crafted goods (swords, boots, stews, potions), gathered goods (ore, firewood, pelts, herbs), an outlaw camp cleared, or a caravan taken safely to another town.",

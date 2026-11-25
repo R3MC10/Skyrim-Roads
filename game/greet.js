@@ -124,30 +124,33 @@ const GREET = (() => {
       const d = Math.hypot(x - sx, y - sy); if (d < bd) { bd = d; best = o; }
     }
     if (!best) return false;
-    show(best.id, sx, sy);
+    show(best.id);
     return true;
   }
-  function show(id, sx, sy) {
+  /* their panel (mapsheet.js): who they are, and Greet / Invite / Trade / Friend (ctx.acts gives the ui.js rows) */
+  function show(id) {
     const S = ctx.S(), o = (ctx.others() || []).find((x) => x.id === id); if (!S || !o) return;
     const party = ctx.party(), kn = knows(S, o.id, party), can = canGreet(S, o, ctx.livePos(), ctx.otherPos(o), party, docs);
-    document.getElementById("greetcard")?.remove();
-    const el = document.createElement("div"); el.id = "greetcard"; el.className = "greetcard"; el.setAttribute("role", "dialog");
     const race = o.race ? o.race[0].toUpperCase() + o.race.slice(1) : "";
-    el.innerHTML = `<button class="iconbtn gc-x" data-g="x" aria-label="${esc(L("Close"))}">✕</button>
-      <b>${esc(kn ? label(S, o, party) : L("Stranger"))}</b><span>${esc([race, o.level ? `${L("level")} ${o.level}` : "", o.loc ? o.loc : ""].filter(Boolean).join(" · "))}</span>
-      ${kn ? `<p class="gc-n">${esc(inParty(party, o.id) ? L("In your party.") : L("You know each other."))}</p>`
-        : can.ok ? `<button class="btn pri sm" data-g="greet"> ${esc(L("Greet"))}</button>` : `<p class="gc-n">${esc(can.why)}</p>`}`;
-    const wrap = document.getElementById("mapwrap") || document.body;
-    el.style.left = Math.max(8, Math.min((wrap.clientWidth || 400) - 250, sx + 14)) + "px";
-    el.style.top = Math.max(8, Math.min((wrap.clientHeight || 400) - 140, sy - 20)) + "px";
-    el.onclick = (e) => {
-      const b = e.target.closest("[data-g]"); if (!b) return;
-      if (b.dataset.g === "greet") { const S2 = ctx.S(); const c2 = canGreet(S2, o, ctx.livePos(), ctx.otherPos(o), ctx.party(), docs); if (c2.ok) { put(ask(S2, o)); ctx.toast?.(L("You greet the stranger. Wait for them to answer.")); } else ctx.toast?.(c2.why); }
-      el.remove(); card = null;
-    };
-    wrap.appendChild(el); card = id;
+    const where = o.loc || (typeof G !== "undefined" && G.holdAt ? G.holdAt(ctx.otherPos(o)) : "");
+    const acts = [];
+    if (!kn) acts.push({ act: "greet", label: L("Greet"), sub: can.ok ? L("Say hello: once they answer, you'll both know each other's names") : can.why, pri: true, off: !can.ok });
+    try { for (const a of (ctx.acts ? ctx.acts(o, kn) : []) || []) acts.push(a); } catch { /* no extra rows */ }
+    if (typeof MAPSHEET === "undefined") return;
+    MAPSHEET.open({ id: "hero:" + o.id, owner: "hero", domId: "greetcard", label: kn ? label(S, o, party) : L("Stranger"),
+      icon: o.look && typeof HEROART !== "undefined" && HEROART.portrait ? HEROART.portrait(o, 40) : "",
+      title: kn ? label(S, o, party) : L("Stranger"), sub: [race, o.level ? `${L("level")} ${o.level}` : ""].filter(Boolean).join(" · "),
+      rows: [where ? [L("Where"), where + (o.moving ? " · " + L("travelling") : "") + (o.dungeon ? " · " + L("in a dungeon") : "")] : null,
+        [L("Between you"), kn ? (inParty(party, o.id) ? L("In your party.") : L("You know each other.")) : L("Strangers"), kn ? "good" : ""]],
+      actions: acts,
+      onClick: (e, b) => {
+        if (b.dataset.wg === "greet") { e.stopPropagation(); const S2 = ctx.S(); const c2 = canGreet(S2, o, ctx.livePos(), ctx.otherPos(o), ctx.party(), docs); if (c2.ok) { put(ask(S2, o)); ctx.toast?.(L("You greet the stranger. Wait for them to answer.")); } else ctx.toast?.(c2.why); return close(); }
+        if (b.dataset.act && ctx.onAct) { ctx.onAct(e); if (b.dataset.keep == null) close(); }
+      },
+      onClose: (why) => { if (why === "swap" && MAPSHEET.isOpen("hero")) return; card = null; } });
+    card = id;
   }
-  const close = () => { document.getElementById("greetcard")?.remove(); card = null; };
+  const close = () => { if (typeof MAPSHEET !== "undefined") MAPSHEET.close("hero"); card = null; };
   return { TTL, NEAR, pairId, knows, label, learn, samePlace, canGreet, ask, accept, decline, sync, mount, tap, show, close, docs: () => docs, _setDocs: (d) => { docs = d; } };
 })();
 if (typeof module !== "undefined") module.exports = GREET;
